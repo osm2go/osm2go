@@ -1,0 +1,13 @@
+#! /bin/sh
+
+# The clock might be wrong and we know that we need to update the icon
+# cache so we just force it.
+
+gtk-update-icon-cache -f /usr/share/icons/hicolor
+
+oldversion="$2"
+if [ -z "$oldversion" ]; then
+  maemo-select-menu-location osm2go.desktop
+fi
+
+exit 0

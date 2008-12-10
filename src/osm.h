@@ -1,0 +1,243 @@
+/*
+ * Copyright (C) 2008 Till Harbaum <till@harbaum.org>.
+ *
+ * This file is part of OSM2Go.
+ *
+ * OSM2Go is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * OSM2Go is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#ifndef OSM_H
+#define OSM_H
+
+#include <math.h>
+
+#define OSM_FLAG_DIRTY    (1<<0)
+#define OSM_FLAG_DELETED  (1<<1)
+#define OSM_FLAG_NEW      (1<<2)
+#define OSM_FLAG_HIDDEN   (1<<3)
+
+typedef gulong item_id_t;
+
+#define ID_ILLEGAL  ((item_id_t)0)
+
+/* icon stuff is required since nodes may held a icon reference */
+struct icon_s;
+
+typedef struct bounds_s {
+  pos_t ll_min, ll_max;
+  lpos_t min, max;
+  lpos_t center;
+  float scale;
+} bounds_t;
+
+typedef struct user_s {
+  char *name;
+  struct user_s *next;
+} user_t;
+
+typedef struct tag_s {
+  char *key, *value;
+  struct tag_s *next;
+} tag_t;
+
+typedef struct node_s {
+  item_id_t id;
+  pos_t pos;
+  lpos_t lpos;
+  user_t *user;
+  gboolean visible;
+  time_t time;
+  tag_t *tag;
+  int ways;
+  int flags;
+  float zoom_max;
+
+  /* icon */
+  GdkPixbuf *icon_buf;
+
+  /* a link to the visual representation on screen */
+  struct map_item_chain_s *map_item_chain;
+
+  struct node_s *next;
+} node_t;
+
+typedef struct node_chain {
+  node_t *node;
+  struct node_chain *next;
+} node_chain_t;
+
+#define OSM_DRAW_FLAG_AREA  (1<<0)
+#define OSM_DRAW_FLAG_BG    (1<<1)
+
+typedef struct way_s {
+  item_id_t id;
+  user_t *user;
+  gboolean visible;
+  time_t time;
+  tag_t *tag;
+  node_chain_t *node_chain;
+  int flags;
+
+  /* visual representation from elemstyle */
+  struct {
+    guint flags;
+    gulong color;
+    gint width;
+    float zoom_max;
+
+    union {
+      struct {
+	gulong color;
+	gint width;
+      } bg;
+      
+      struct {
+	gulong color;
+      } area;
+    };     
+  } draw;
+  
+  /* a link to the visual representation on screen */
+  struct map_item_chain_s *map_item_chain;
+
+  struct way_s *next;
+} way_t;
+
+typedef struct way_chain {
+  way_t *way;
+  struct way_chain *next;
+} way_chain_t;
+
+typedef struct relation_s {
+  item_id_t id;
+  user_t *user;
+  gboolean visible;
+  time_t time;
+  tag_t *tag;
+  struct member_s *member;
+  int flags;
+
+  struct relation_s *next;
+} relation_t;
+
+typedef struct relation_chain_s {
+  relation_t *relation;
+  struct relation_chain_s *next;
+} relation_chain_t;
+
+typedef enum {
+  ILLEGAL=0, NODE, WAY, RELATION, NODE_ID, WAY_ID, RELATION_ID
+} type_t;
+
+typedef struct member_s {
+  type_t type; 
+  char   *role;
+
+  union {
+    node_t *node;
+    way_t *way;
+    relation_t *relation;
+    item_id_t id;
+  };
+
+  struct member_s *next;
+} member_t;
+
+typedef struct osm_s {
+  bounds_t *bounds;   // original bounds as they appear in the file
+  user_t *user;
+  node_t *node;
+  way_t  *way;
+  relation_t  *relation;
+} osm_t;
+
+#include <libxml/parser.h>
+#include <libxml/tree.h>
+
+osm_t *osm_parse(char *filename);
+gboolean osm_sanity_check(GtkWidget *parent, osm_t *osm);
+tag_t *osm_parse_osm_tag(osm_t *osm, xmlDocPtr doc, xmlNode *a_node);
+node_chain_t *osm_parse_osm_way_nd(osm_t *osm, xmlDocPtr doc, xmlNode *a_node);
+member_t *osm_parse_osm_relation_member(osm_t *osm, xmlDocPtr doc, xmlNode *a_node);
+void osm_dump(osm_t *osm);
+void osm_free(struct icon_s **icon, osm_t *osm);
+
+char *osm_node_get_value(node_t *node, char *key);
+gboolean osm_node_has_tag(node_t *node);
+
+void osm_node_dump(node_t *node);
+
+void osm_way_free(way_t *way);
+void osm_way_dump(way_t *way);
+char *osm_way_get_value(way_t *way, char *key);
+gboolean osm_node_has_value(node_t *node, char *str);
+gboolean osm_way_has_value(way_t *way, char *str);
+void osm_way_append_node(way_t *way, node_t *node);
+
+gboolean osm_node_in_way(way_t *way, node_t *node);
+
+void osm_node_chain_free(node_chain_t *node_chain);
+int osm_node_chain_length(node_chain_t *node_chain);
+void osm_node_free(struct icon_s **icon, node_t *node);
+
+void osm_members_free(member_t *member);
+void osm_member_free(member_t *member);
+
+void osm_tag_free(tag_t *tag);
+void osm_tags_free(tag_t *tag);
+char *osm_tag_get_by_key(tag_t *tag, char *key);
+gboolean osm_is_creator_tag(tag_t *tag);
+gboolean osm_tag_key_and_value_present(tag_t *haystack, tag_t *tag);
+gboolean osm_tag_key_other_value_present(tag_t *haystack, tag_t *tag);
+
+char *osm_generate_xml_node(osm_t *osm, node_t *node);
+char *osm_generate_xml_way(osm_t *osm, way_t *way);
+char *osm_generate_xml_relation(osm_t *osm, relation_t *relation);
+
+node_t *osm_get_node_by_id(osm_t *osm, item_id_t id);
+way_t *osm_get_way_by_id(osm_t *osm, item_id_t id);
+relation_t *osm_get_relation_by_id(osm_t *osm, item_id_t id);
+
+guint osm_way_number_of_nodes(way_t *way);
+relation_chain_t *osm_node_to_relation(osm_t *osm, node_t *node);
+relation_chain_t *osm_way_to_relation(osm_t *osm, way_t *way);
+way_chain_t *osm_node_to_way(osm_t *osm, node_t *node);
+
+/* ----------- edit functions ----------- */
+node_t *osm_node_new(osm_t *osm, gint x, gint y);
+void osm_node_attach(osm_t *osm, node_t *node);
+way_chain_t *osm_node_delete(osm_t *osm, struct icon_s **icon, node_t *node, 
+			     gboolean permanently, gboolean affect_ways);
+void osm_way_delete(osm_t *osm, struct icon_s **icon, way_t *way, 
+		    gboolean permanently);
+
+way_t *osm_way_new(void);
+void osm_way_attach(osm_t *osm, way_t *way);
+
+gboolean osm_position_within_bounds(osm_t *osm, gint x, gint y);
+item_id_t osm_new_way_id(osm_t *osm);
+gboolean osm_way_ends_with_node(way_t *way, node_t *node);
+
+void osm_way_revert(way_t *way);
+
+void osm_node_remove_from_relation(osm_t *osm, node_t *node);
+void osm_way_remove_from_relation(osm_t *osm, way_t *way);
+
+node_t *osm_way_get_last_node(way_t *way);
+node_t *osm_way_get_first_node(way_t *way);
+void osm_way_rotate(way_t *way, gint offset);
+
+tag_t *osm_tags_copy(tag_t *tag, gboolean update_creator);
+
+#endif /* OSM_H */

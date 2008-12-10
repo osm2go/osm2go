@@ -1,0 +1,140 @@
+<!-- josm elemstyles.xml resembling then potlatch style -->
+<!-- written for osm2go may be compatible with josm -->
+
+<rules>
+  <rule>
+    <condition k="highway" v="motorway"/>
+    <line width="3" colour="#809BC0" width_bg="6" colour_bg="#606060"/>
+  </rule>
+
+  <rule>
+    <condition k="highway" v="motorway_link"/>
+    <line width="3" colour="#809BC0" width_bg="6" colour_bg="#606060"/>
+  </rule>
+
+  <rule>
+    <condition k="highway" v="trunk"/>
+    <line width="3" colour="#7FC97F" width_bg="6" colour_bg="#606060"/>
+  </rule>
+
+  <rule>
+    <condition k="highway" v="trunk_link"/>
+    <line width="3" colour="#7FC97F" width_bg="6" colour_bg="#606060"/>
+  </rule>
+
+  <rule>
+    <condition k="highway" v="primary"/>
+    <line width="3" colour="#E46D71" width_bg="6" colour_bg="#606060"/>
+  </rule>
+
+  <rule>
+    <condition k="highway" v="primary_link"/>
+    <line width="3" colour="#E46D71" width_bg="6" colour_bg="#606060"/>
+  </rule>
+
+  <rule>
+    <condition k="highway" v="secondary"/>
+    <line width="3" colour="#FDBF6F" width_bg="6" colour_bg="#606060"/>
+  </rule>
+
+  <rule>
+    <condition k="highway" v="tertiary"/>
+    <line width="3" colour="#FEFECB" width_bg="6" colour_bg="#606060"/>
+  </rule>
+
+  <rule>
+    <condition k="highway" v="unclassified"/>
+    <line width="3" colour="#E8E8E8" width_bg="6" colour_bg="#606060"/>
+  </rule>
+
+  <rule>
+    <condition k="highway" v="residential"/>
+    <line width="3" colour="#E8E8E8" width_bg="6" colour_bg="#606060"/>
+  </rule>
+
+  <rule>
+    <condition v="footway"/>
+    <line width="3" colour="#FF6644"/>
+  </rule>
+
+  <rule>
+    <condition k="highway" v="cycleway"/>
+    <line width="3" colour="#FF6644"/>
+  </rule>
+
+  <rule>
+    <condition k="highway" v="bridleway"/>
+    <line width="3" colour="#FF6644"/>
+  </rule>
+
+  <rule>
+    <condition k="railway" v="rail"/>
+    <line width="3" colour="#000001"/>
+  </rule>
+
+  <rule>
+    <condition k="waterway" v="river"/>
+    <line width="3" colour="#8888FF"/>
+  </rule>
+
+  <rule>
+    <condition k="waterway" v="canal"/>
+    <line width="3" colour="#8888FF"/>
+  </rule>
+
+  <rule>
+    <condition k="waterway" v="stream"/>
+    <line width="3" colour="#8888FF"/>
+  </rule>
+
+  <!-- areas -->
+  <rule>
+    <condition k="leisure"/>
+    <area colour="#8CD6B5"/>
+  </rule>
+  
+  <rule>
+    <condition k="amenity"/>
+    <area colour="#ADCEB5"/>
+  </rule>
+
+  <rule>
+    <condition k="shop"/>
+    <area colour="#ADCEB5"/>
+  </rule>
+
+  <rule>
+    <condition k="tourism"/>
+    <area colour="#F7CECE"/>
+  </rule>
+
+  <rule>
+    <condition k="historic"/>
+    <area colour="#F7F7DE"/>
+  </rule>
+  
+<!-- ruins is always a value of a historic key -->
+<!-- ruins                   -                       -       0xF7F7DE -->
+
+  <rule>
+    <condition k="landuse"/>
+    <area colour="#444444"/>
+  </rule>
+
+  <rule>
+    <condition k="military"/>
+    <area colour="#D6D6D6"/>
+  </rule>
+
+  <rule>
+    <condition k="natural"/>
+    <area colour="#ADD6A5"/>
+  </rule>
+
+  <rule>
+    <condition k="sport"/>
+    <area colour="#8CD6B5"/>
+  </rule>
+
+</rules>
+

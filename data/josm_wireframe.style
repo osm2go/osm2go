@@ -1,0 +1,16 @@
+<!-- paramters for a josm like user interface using wireframes -->
+<!-- and showing all nodes, even the untagged ones             -->
+<style name="JOSM wireframe">
+       	<elemstyles filename="elemstyles.xml"/>
+       	<node radius="2" border-radius="3" fill-color="red" color="red" show-untagged="true"/>
+       	<way width="2" color="#c0c0c0"/>
+       	<area border-width="1" opaque="0%"/>
+       	<background color="black"/>
+       	<track width="6" color="#0000ff" opaque="25%" gps-color="#000080"/>
+       	<highlight color="#ffff00" node-color="#ff0000"  touch-color="#0000ff" opaque="75%" width="2"/>
+
+	<frisket mult="3" opaque="0%">
+  		<border width="20" color="#ff0000" opaque="75%"/>
+	</frisket>
+	<icon enable="false"/>
+</style>

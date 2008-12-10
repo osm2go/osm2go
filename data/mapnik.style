@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<!--
+  Style resembling the current Mapnik default rendering
+  Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
+-->
+<style name="Mapnik">
+    <elemstyles filename="elemstyles-mapnik.xml"/>
+    
+    <node radius="3" border-radius="1" fill-color="#00cc99" color="#004433" scale-max="10000"/>
+      <!-- Bit brighter than the Potlatch ones, and with a 1m border like most
+           of the other objects -->
+
+    <way width="1" color="#cccccc" scale-max="40000"/>
+    
+    <area border-width="1" border-color="#cccccc" opaque="40%" scale-max="20000"/>
+      <!--
+      Ultimately I'd like this to have a really fine grey edge for all areas to
+      gently emphasise where they end. Parts of OSM2Go's core will need to be
+      fixed to support non-integer edge widths first though.
+      -->
+
+    <background color="#f2eee8"/>
+
+    <track width="5" color="#0000ff" opaque="40%" gps-color="#000080"/>
+    
+    <highlight color="#ffff00" node-color="#ff0000" arrow-color="#0000ff" touch-color="#0000ff" opaque="50%" width="3" arrow-limit="4"/>
+	
+    <frisket mult="3" opaque="100%">
+  		<border width="6" color="#000000" opaque="100%"/>
+	</frisket>
+	
+    <icon enable="true" scale="0.80" path-prefix="mapnik"/>
+</style>

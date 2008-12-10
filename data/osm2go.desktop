@@ -1,0 +1,6 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=OSM2Go
+Exec=/usr/bin/osm2go
+Type=Application
+Icon=osm2go
