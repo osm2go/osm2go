@@ -54,18 +54,6 @@ static char *osm_http_message(int id) {
 }
 
 typedef struct {
-  GtkWidget *wait_dialog;
-  GtkWidget *pbar;
-  char *url, *filename;
-  gboolean cancelled;
-  CURLcode res;
-  long response;
-  char buffer[CURL_ERROR_SIZE];
-
-  int percent;
-} osm_download_context_t;
-
-typedef struct {
   appdata_t *appdata;
   GtkWidget *dialog;
   osm_t *osm;
@@ -78,76 +66,9 @@ typedef struct {
 
 } osm_upload_context_t;
 
-#if 0 // todo: figure out how to stop a curl transfer
-/* Our usual callback function */
-static void on_cancel(GtkWidget *widget, gpointer data) {
-  osm_download_context_t *context = (osm_download_context_t*)data;
-  context->cancelled = TRUE;
-}
-#endif
+gboolean osm_download(GtkWidget *parent, project_t *project) {
+  printf("download osm ...\n");
 
-static int my_progress_func(osm_download_context_t *context,
-			    double t, /* dltotal */ double d, /* dlnow */
-			    double ultotal, double ulnow) {
-  //  printf("%f / %f (%g %%)\n", d, t, d*100.0/t);
-  if(t) context->percent = d*100.0/t;
-  else  context->percent = 0;
-  
-  return 0;
-}
-
-static void *my_thread(void *ptr) {
-  osm_download_context_t *context = (osm_download_context_t*)ptr;
-  CURL *curl;
-  FILE *outfile;
-
-  curl = curl_easy_init();
-  if(curl) {
-    outfile = fopen(context->filename, "w");
-    if(outfile) {
-      curl_easy_setopt(curl, CURLOPT_URL, context->url);
-      curl_easy_setopt(curl, CURLOPT_WRITEDATA, outfile);
-      curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, fwrite);
-      curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
-      curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, my_progress_func);
-      curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, context);
-      curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, context->buffer);
-      
-      context->res = curl_easy_perform(curl);
-      printf("curl perform returned with %d\n", context->res);
-    
-      curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &context->response);
-
-      fclose(outfile);
-    }
-
-    /* always cleanup */
-    curl_easy_cleanup(curl);
-  }
-  
-  printf("thread exiting\n");
-  context->percent = 100;
-
-  return NULL;
-}
-
-static gint wait_dialog_destroy_event(GtkWidget *widget, gpointer data) {
-  osm_download_context_t *context = (osm_download_context_t*)data;
-
-  printf("destroying wait dialog\n");
-
-  context->wait_dialog = NULL;
-
-  /* todo: terminate http transfer!! */
-
-  return FALSE;
-}
-
- gboolean osm_download(GtkWidget *parent, project_t *project) {
-  printf("download ...\n");
-
-  /* ------------ busy dialog -------------- */
-  osm_download_context_t *context = g_new0(osm_download_context_t, 1);
   char minlon[G_ASCII_DTOSTR_BUF_SIZE], minlat[G_ASCII_DTOSTR_BUF_SIZE];
   char maxlon[G_ASCII_DTOSTR_BUF_SIZE], maxlat[G_ASCII_DTOSTR_BUF_SIZE];
 
@@ -156,75 +77,12 @@ static gint wait_dialog_destroy_event(GtkWidget *widget, gpointer data) {
   g_ascii_dtostr(maxlon, sizeof(maxlon), project->max.lon);
   g_ascii_dtostr(maxlat, sizeof(maxlat), project->max.lat);
 
-  context->url = g_strdup_printf("%s/map?bbox=%s,%s,%s,%s",
+  char *url = g_strdup_printf("%s/map?bbox=%s,%s,%s,%s",
 		project->server, minlon, minlat, maxlon, maxlat);
 
-  context->filename = strdup(project->osm);
-  printf("going to fetch %s to %s\n", context->url, context->filename);
+  gboolean result = net_io_download_file(parent, url, project->osm);
 
-  context->wait_dialog = gtk_dialog_new();
-  gtk_dialog_set_has_separator(GTK_DIALOG(context->wait_dialog), FALSE);
-  gtk_window_set_title(GTK_WINDOW(context->wait_dialog), _("Downloading..."));
-  gtk_window_set_default_size(GTK_WINDOW(context->wait_dialog), 300, 10);
-
-  gtk_window_set_modal(GTK_WINDOW(context->wait_dialog), TRUE);
-  gtk_window_set_transient_for(GTK_WINDOW(context->wait_dialog), 
-			       GTK_WINDOW(parent));
-  GtkAdjustment *adj = (GtkAdjustment*)gtk_adjustment_new(0, 0, 100, 0, 0, 0);
-  context->pbar = gtk_progress_bar_new_with_adjustment(adj);
-  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(context->wait_dialog)->vbox), 
-			      context->pbar);
-
-#if 0  
-  GtkWidget *button = gtk_button_new_with_label(_("Cancel"));
-  gtk_signal_connect(GTK_OBJECT(button), "clicked",
-		     GTK_SIGNAL_FUNC(on_cancel), (gpointer)context);
-  gtk_container_add(GTK_CONTAINER(GTK_DIALOG(context->wait_dialog)->
-				  action_area), button);
-#endif  
-
-  gtk_signal_connect(GTK_OBJECT(context->wait_dialog), 
-	     "destroy", G_CALLBACK(wait_dialog_destroy_event), context);
- 
-  gtk_widget_show_all(context->wait_dialog);
-      
-  if(!g_thread_create(&my_thread, context, FALSE, NULL) != 0)
-    g_warning("can't create the thread");
-
-  /* wait for download to finish */
-  int percent = -1;
-  while(context->wait_dialog) {
-    if(context->percent != percent) {
-      gtk_progress_set_value(GTK_PROGRESS(context->pbar), 
-			     context->percent);
-      
-      percent = context->percent;
-
-      printf("context->percent = %d\n", context->percent);
-      if(percent == 100)
-	gtk_widget_destroy(context->wait_dialog);
-    } else
-      usleep(1000000);
-
-    while(gtk_events_pending())
-      gtk_main_iteration();
-  }
-
-  gboolean result = (context->res == 0);
-  if(!result) 
-    errorf(parent, _("Download failed with message:\n\n%s"), context->buffer);
-
-  if(context->response != 200) {
-    errorf(parent, _("Download failed with code %ld:\n\n%s\n"), 
-	   context->response, osm_http_message(context->response));
-    g_remove(context->filename);
-  }
-
-  printf("clean up\n");
-  /* clean up */
-  if(context->url) g_free(context->url);
-  g_free(context);
-
+  g_free(url);
   return result;
 }
 

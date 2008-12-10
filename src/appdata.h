@@ -117,6 +117,8 @@ typedef struct appdata_s {
   GtkWidget *menu_view;
 
   GtkWidget *menu_osm;
+  GtkWidget *menu_item_osm_upload;
+  GtkWidget *menu_item_osm_diff;
 
   GtkWidget *menu_wms;
   GtkWidget *menu_item_wms_clear;
@@ -148,5 +150,6 @@ typedef struct appdata_s {
 #include "map_edit.h"
 #include "josm_elemstyles.h"
 #include "style.h"
+#include "net_io.h"
 
 #endif // APPDATA_H

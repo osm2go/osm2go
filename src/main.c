@@ -23,8 +23,9 @@
 #include "appdata.h"
 
 /* disable/enable main screen control dependant on presence of open project */
-static void main_project_loaded(appdata_t *appdata) {
-  gboolean loaded = (appdata->project != NULL);
+static void main_ui_enable(appdata_t *appdata) {
+  gboolean project_valid = (appdata->project != NULL);
+  gboolean osm_valid = (appdata->osm != NULL);
 
   /* cancel any action in progress */
   if(GTK_WIDGET_FLAGS(appdata->iconbar->cancel) & GTK_SENSITIVE) 
@@ -33,7 +34,7 @@ static void main_project_loaded(appdata_t *appdata) {
   /* ---- set project name as window title ----- */
 #ifndef USE_HILDON
   char *str = NULL;
-  if(loaded) 
+  if(project_valid) 
     str = g_strdup_printf("OSM2Go - %s", appdata->project->name);
   else 
     str = g_strdup_printf("OSM2Go");
@@ -41,24 +42,26 @@ static void main_project_loaded(appdata_t *appdata) {
   gtk_window_set_title(GTK_WINDOW(appdata->window), str);
   g_free(str);
 #else
-  if(loaded) 
+  if(project_valid) 
     gtk_window_set_title(GTK_WINDOW(appdata->window), appdata->project->name);
   else
     gtk_window_set_title(GTK_WINDOW(appdata->window), "");
 #endif
 
   if(appdata->iconbar && appdata->iconbar->toolbar)
-    gtk_widget_set_sensitive(appdata->iconbar->toolbar, loaded);
+    gtk_widget_set_sensitive(appdata->iconbar->toolbar, osm_valid);
 
   /* disable all menu entries related to map */
-  gtk_widget_set_sensitive(appdata->track.menu_track, loaded);
-  gtk_widget_set_sensitive(appdata->menu_view, loaded);
-  gtk_widget_set_sensitive(appdata->menu_osm, loaded);
-  gtk_widget_set_sensitive(appdata->menu_wms, loaded);
-  gtk_widget_set_sensitive(appdata->menu_map, loaded);
-  gtk_widget_set_sensitive(appdata->menu_item_project_close, loaded);
+  gtk_widget_set_sensitive(appdata->menu_osm, project_valid);
+  gtk_widget_set_sensitive(appdata->menu_item_osm_upload, osm_valid);
+  gtk_widget_set_sensitive(appdata->menu_item_osm_diff, osm_valid);
+  gtk_widget_set_sensitive(appdata->track.menu_track, osm_valid);
+  gtk_widget_set_sensitive(appdata->menu_view, osm_valid);
+  gtk_widget_set_sensitive(appdata->menu_wms, osm_valid);
+  gtk_widget_set_sensitive(appdata->menu_map, osm_valid);
+  gtk_widget_set_sensitive(appdata->menu_item_project_close, project_valid);
 
-  if(!loaded)
+  if(!project_valid)
     statusbar_set(appdata, _("Plase load or create a project"), FALSE);
 }
 
@@ -81,14 +84,14 @@ static void
 cb_menu_project_open(GtkWidget *window, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
   project_load(appdata, NULL);
-  main_project_loaded(appdata);
+  main_ui_enable(appdata);
 }
 
 static void 
 cb_menu_project_close(GtkWidget *window, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
   project_close(appdata);
-  main_project_loaded(appdata);
+  main_ui_enable(appdata);
 }
 
 static void 
@@ -136,19 +139,26 @@ cb_menu_upload(GtkWidget *window, gpointer data) {
 static void 
 cb_menu_download(GtkWidget *window, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
-  if(!appdata->osm || !appdata->project) return;
+  if(!appdata->project) return;
 
-  /* redraw the entire map by destroying all map items and redrawing them */
-  diff_save(appdata->project, appdata->osm);
-  map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
-  osm_free(&appdata->icon, appdata->osm);
+  /* if we have valid osm data loaded: save state first */
+  if(appdata->osm) {
+    /* redraw the entire map by destroying all map items and redrawing them */
+    diff_save(appdata->project, appdata->osm);
+    map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
+    osm_free(&appdata->icon, appdata->osm);
+
+    appdata->osm = NULL;
+  }
 
   // download
-  osm_download(GTK_WIDGET(appdata->window), appdata->project);
+  if(osm_download(GTK_WIDGET(appdata->window), appdata->project)) {
+    appdata->osm = osm_parse(appdata->project->osm);
+    diff_restore(appdata, appdata->project, appdata->osm);
+    map_paint(appdata);
+  }
 
-  appdata->osm = osm_parse(appdata->project->osm);
-  diff_restore(appdata, appdata->project, appdata->osm);
-  map_paint(appdata);
+  main_ui_enable(appdata);
 }
 
 static void 
@@ -373,7 +383,8 @@ void menu_create(appdata_t *appdata) {
 
   item = gtk_menu_item_new_with_label( _("Zoom -") );
   gtk_menu_append(GTK_MENU_SHELL(submenu), item);
-  g_signal_connect(item, "activate", GTK_SIGNAL_FUNC(cb_menu_zoomout), appdata);
+  g_signal_connect(item, "activate", 
+		   GTK_SIGNAL_FUNC(cb_menu_zoomout), appdata);
 
   /* -------------------- OSM submenu -------------------- */
 
@@ -382,17 +393,20 @@ void menu_create(appdata_t *appdata) {
   submenu = gtk_menu_new();
   gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), submenu);
 
-  item = gtk_menu_item_new_with_label( _("Upload...") );
+  appdata->menu_item_osm_upload = item = 
+    gtk_menu_item_new_with_label( _("Upload...") );
   gtk_menu_append(GTK_MENU_SHELL(submenu), item);
   g_signal_connect(item, "activate", GTK_SIGNAL_FUNC(cb_menu_upload), appdata);
 
   item = gtk_menu_item_new_with_label( _("Download...") );
   gtk_menu_append(GTK_MENU_SHELL(submenu), item);
-  g_signal_connect(item, "activate", GTK_SIGNAL_FUNC(cb_menu_download), appdata);
+  g_signal_connect(item, "activate", 
+		   GTK_SIGNAL_FUNC(cb_menu_download), appdata);
 
   gtk_menu_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
 
-  item = gtk_menu_item_new_with_label( _("Save diff file") );
+  appdata->menu_item_osm_diff = item = 
+    gtk_menu_item_new_with_label( _("Save diff file") );
   gtk_menu_append(GTK_MENU_SHELL(submenu), item);
   g_signal_connect(item, "activate", GTK_SIGNAL_FUNC(cb_menu_save_changes), 
 		   appdata);
@@ -716,11 +730,13 @@ int main(int argc, char *argv[]) {
   if(appdata.settings->project)
     project_load(&appdata, appdata.settings->project);
 
-  main_project_loaded(&appdata);
+  main_ui_enable(&appdata);
 
   /* ------------ jump into main loop ---------------- */
 
   gtk_main();
+
+  puts("gtk_main() left");
 
   track_save(appdata.project, appdata.track.track);
 

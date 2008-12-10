@@ -19,10 +19,6 @@
 
 #include "appdata.h"
 
-#include <curl/curl.h>
-#include <curl/types.h> /* new for v7 */
-#include <curl/easy.h> /* new for v7 */
-
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 
@@ -75,80 +71,6 @@ typedef struct {
   wms_service_t *service;
   wms_cap_t *cap;  
 } wms_t;
-
-typedef struct {
-  char *ptr;
-  int len;
-} curl_data_t;
-
-static size_t write_callback(void *ptr, size_t size, size_t nmemb, 
-			     void *stream) {
-  curl_data_t *p = (curl_data_t*)stream;
-
-  p->ptr = g_realloc(p->ptr, p->len + size*nmemb + 1);
-  if(p->ptr) {
-    memcpy(p->ptr+p->len, ptr, size*nmemb);
-    p->len += size*nmemb;
-    p->ptr[p->len] = 0;
-  }
-  return nmemb;
-}
-
-static char *wms_download(char *url, char *filename) {
-  CURL *curl;
-  CURLcode res;
-  char buffer[CURL_ERROR_SIZE];
-  curl_data_t write_data;
-  FILE *write_file = NULL;
-
-  if(filename) {
-    write_file = fopen(filename, "w");
-  } else {
-    write_data.ptr = NULL;
-    write_data.len = 0;
-  }
-
-  printf("download of \"%s\"\n", url);
-
-  curl = curl_easy_init();
-  if(curl) {
-    curl_easy_setopt(curl, CURLOPT_URL, url);
-    curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, buffer);
-    
-    if(filename) {
-      curl_easy_setopt(curl, CURLOPT_WRITEDATA, write_file);
-      curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, fwrite);
-    } else {
-      curl_easy_setopt(curl, CURLOPT_WRITEDATA, &write_data);
-      curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
-    }
-
-    res = curl_easy_perform(curl);
-
-    long response;
-    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response);
-
-    curl_easy_cleanup(curl);
-
-    if(filename) {
-      /* just a flag that everything went well */
-      write_data.ptr = (char*)TRUE;
-      fclose(write_file);
-    }
-
-    /* erase reply buffer/file if there was an error */
-    if((res != 0) || (response != 200)) {
-      if(filename) 
-	g_remove(filename);
-      else 
-	g_free(write_data.ptr);
-
-      write_data.ptr = NULL;
-    }
-  }
-  
-  return write_data.ptr;
-}
 
 gboolean xmlTextIs(xmlDocPtr doc, xmlNodePtr list, char *str) {
   char *nstr = (char*)xmlNodeListGetString(doc, list, 1);
@@ -826,7 +748,7 @@ void wms_import(appdata_t *appdata) {
 			      "&REQUEST=GetCapabilities",
 			      wms->server, wms->path, append_char);
 
-  char *cap = wms_download(url, NULL);
+  char *cap = net_io_download_mem(GTK_WIDGET(appdata->window), url);
   g_free(url);
 
   /* ----------- parse capabilities -------------- */
@@ -961,7 +883,7 @@ void wms_import(appdata_t *appdata) {
   /* remove any existing image before */
   wms_remove(appdata);
 
-  if(!wms_download(url, filename)) {
+  if(!net_io_download_file(GTK_WIDGET(appdata->window), url, filename)) {
     g_free(filename);
     g_free(url);
     wms_free(wms);

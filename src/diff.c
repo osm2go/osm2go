@@ -215,7 +215,7 @@ gboolean diff_is_clean(osm_t *osm, gboolean honor_hidden_flags) {
 }
 
 void diff_save(project_t *project, osm_t *osm) {
-  if(!project) return;
+  if(!project || !osm) return;
 
   char *diff_name = 
   g_strdup_printf("%s/%s.diff", project->path, project->name);
@@ -628,8 +628,10 @@ void diff_restore_relation(xmlDoc *doc, xmlNodePtr node_rel, osm_t *osm) {
 }
 
 void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) {
+  if(!project || !osm) return;
+
   char *diff_name = g_strdup_printf("%s/%s.diff", project->path, project->name);
-  
+
   if(!g_file_test(diff_name, G_FILE_TEST_EXISTS)) {
     printf("no diff present!\n");
     g_free(diff_name);

@@ -1049,10 +1049,7 @@ gboolean project_open(appdata_t *appdata, char *name) {
 
   printf("project_load: loading osm\n");
   appdata->osm = osm_parse(project->osm);
-  if(!appdata->osm) {
-    errorf(GTK_WIDGET(appdata->window), _("Parsing of OSM data failed!"));
-    return FALSE;
-  }
+  if(!appdata->osm) return FALSE;
 
   printf("parsing ok\n");
 
