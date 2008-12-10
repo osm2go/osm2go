@@ -47,121 +47,123 @@ $(APP): $(OBJS)
 clean:
 	rm -f osm2go *.o *~ */*~ \#*\# version.h *.bak
 
-dep:
+dep: version.h
 	makedepend -Y *.c
 
 # DO NOT DELETE
 
-area_edit.o: appdata.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h
-area_edit.o: project.h statusbar.h area_edit.h settings.h diff.h iconbar.h
-area_edit.o: icon.h info.h track.h gps.h wms.h josm_presets.h relation_edit.h
-area_edit.o: misc.h map_edit.h josm_elemstyles.h style.h net_io.h
-canvas_gnomecanvas.o: appdata.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h
-canvas_gnomecanvas.o: project.h statusbar.h area_edit.h settings.h diff.h
-canvas_gnomecanvas.o: iconbar.h icon.h info.h track.h gps.h wms.h
+area_edit.o: appdata.h version.h pos.h osm.h canvas.h map.h map_hl.h
+area_edit.o: osm_api.h project.h statusbar.h area_edit.h settings.h diff.h
+area_edit.o: iconbar.h icon.h info.h track.h gps.h wms.h josm_presets.h
+area_edit.o: relation_edit.h misc.h map_edit.h josm_elemstyles.h style.h
+area_edit.o: net_io.h
+canvas_gnomecanvas.o: appdata.h version.h pos.h osm.h canvas.h map.h map_hl.h
+canvas_gnomecanvas.o: osm_api.h project.h statusbar.h area_edit.h settings.h
+canvas_gnomecanvas.o: diff.h iconbar.h icon.h info.h track.h gps.h wms.h
 canvas_gnomecanvas.o: josm_presets.h relation_edit.h misc.h map_edit.h
 canvas_gnomecanvas.o: josm_elemstyles.h style.h net_io.h
-canvas_goocanvas.o: appdata.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h
-canvas_goocanvas.o: project.h statusbar.h area_edit.h settings.h diff.h
-canvas_goocanvas.o: iconbar.h icon.h info.h track.h gps.h wms.h
+canvas_goocanvas.o: appdata.h version.h pos.h osm.h canvas.h map.h map_hl.h
+canvas_goocanvas.o: osm_api.h project.h statusbar.h area_edit.h settings.h
+canvas_goocanvas.o: diff.h iconbar.h icon.h info.h track.h gps.h wms.h
 canvas_goocanvas.o: josm_presets.h relation_edit.h misc.h map_edit.h
 canvas_goocanvas.o: josm_elemstyles.h style.h net_io.h
-dbus.o: appdata.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h project.h
-dbus.o: statusbar.h area_edit.h settings.h diff.h iconbar.h icon.h info.h
-dbus.o: track.h gps.h wms.h josm_presets.h relation_edit.h misc.h map_edit.h
-dbus.o: josm_elemstyles.h style.h net_io.h
-diff.o: appdata.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h project.h
-diff.o: statusbar.h area_edit.h settings.h diff.h iconbar.h icon.h info.h
-diff.o: track.h gps.h wms.h josm_presets.h relation_edit.h misc.h map_edit.h
-diff.o: josm_elemstyles.h style.h net_io.h
-gps.o: appdata.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h project.h
-gps.o: statusbar.h area_edit.h settings.h diff.h iconbar.h icon.h info.h
-gps.o: track.h gps.h wms.h josm_presets.h relation_edit.h misc.h map_edit.h
-gps.o: josm_elemstyles.h style.h net_io.h
-icon.o: appdata.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h project.h
-icon.o: statusbar.h area_edit.h settings.h diff.h iconbar.h icon.h info.h
-icon.o: track.h gps.h wms.h josm_presets.h relation_edit.h misc.h map_edit.h
-icon.o: josm_elemstyles.h style.h net_io.h
-iconbar.o: appdata.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h project.h
-iconbar.o: statusbar.h area_edit.h settings.h diff.h iconbar.h icon.h info.h
-iconbar.o: track.h gps.h wms.h josm_presets.h relation_edit.h misc.h
-iconbar.o: map_edit.h josm_elemstyles.h style.h net_io.h
-info.o: appdata.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h project.h
-info.o: statusbar.h area_edit.h settings.h diff.h iconbar.h icon.h info.h
-info.o: track.h gps.h wms.h josm_presets.h relation_edit.h misc.h map_edit.h
-info.o: josm_elemstyles.h style.h net_io.h
-josm_elemstyles.o: appdata.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h
-josm_elemstyles.o: project.h statusbar.h area_edit.h settings.h diff.h
-josm_elemstyles.o: iconbar.h icon.h info.h track.h gps.h wms.h josm_presets.h
-josm_elemstyles.o: relation_edit.h misc.h map_edit.h josm_elemstyles.h
-josm_elemstyles.o: style.h net_io.h
-josm_presets.o: appdata.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h
-josm_presets.o: project.h statusbar.h area_edit.h settings.h diff.h iconbar.h
-josm_presets.o: icon.h info.h track.h gps.h wms.h josm_presets.h
+dbus.o: appdata.h version.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h
+dbus.o: project.h statusbar.h area_edit.h settings.h diff.h iconbar.h icon.h
+dbus.o: info.h track.h gps.h wms.h josm_presets.h relation_edit.h misc.h
+dbus.o: map_edit.h josm_elemstyles.h style.h net_io.h
+diff.o: appdata.h version.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h
+diff.o: project.h statusbar.h area_edit.h settings.h diff.h iconbar.h icon.h
+diff.o: info.h track.h gps.h wms.h josm_presets.h relation_edit.h misc.h
+diff.o: map_edit.h josm_elemstyles.h style.h net_io.h
+gps.o: appdata.h version.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h
+gps.o: project.h statusbar.h area_edit.h settings.h diff.h iconbar.h icon.h
+gps.o: info.h track.h gps.h wms.h josm_presets.h relation_edit.h misc.h
+gps.o: map_edit.h josm_elemstyles.h style.h net_io.h
+icon.o: appdata.h version.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h
+icon.o: project.h statusbar.h area_edit.h settings.h diff.h iconbar.h icon.h
+icon.o: info.h track.h gps.h wms.h josm_presets.h relation_edit.h misc.h
+icon.o: map_edit.h josm_elemstyles.h style.h net_io.h
+iconbar.o: appdata.h version.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h
+iconbar.o: project.h statusbar.h area_edit.h settings.h diff.h iconbar.h
+iconbar.o: icon.h info.h track.h gps.h wms.h josm_presets.h relation_edit.h
+iconbar.o: misc.h map_edit.h josm_elemstyles.h style.h net_io.h
+info.o: appdata.h version.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h
+info.o: project.h statusbar.h area_edit.h settings.h diff.h iconbar.h icon.h
+info.o: info.h track.h gps.h wms.h josm_presets.h relation_edit.h misc.h
+info.o: map_edit.h josm_elemstyles.h style.h net_io.h
+josm_elemstyles.o: appdata.h version.h pos.h osm.h canvas.h map.h map_hl.h
+josm_elemstyles.o: osm_api.h project.h statusbar.h area_edit.h settings.h
+josm_elemstyles.o: diff.h iconbar.h icon.h info.h track.h gps.h wms.h
+josm_elemstyles.o: josm_presets.h relation_edit.h misc.h map_edit.h
+josm_elemstyles.o: josm_elemstyles.h style.h net_io.h
+josm_presets.o: appdata.h version.h pos.h osm.h canvas.h map.h map_hl.h
+josm_presets.o: osm_api.h project.h statusbar.h area_edit.h settings.h diff.h
+josm_presets.o: iconbar.h icon.h info.h track.h gps.h wms.h josm_presets.h
 josm_presets.o: relation_edit.h misc.h map_edit.h josm_elemstyles.h style.h
 josm_presets.o: net_io.h
-main.o: appdata.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h project.h
-main.o: statusbar.h area_edit.h settings.h diff.h iconbar.h icon.h info.h
-main.o: track.h gps.h wms.h josm_presets.h relation_edit.h misc.h map_edit.h
-main.o: josm_elemstyles.h style.h net_io.h
-map.o: appdata.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h project.h
-map.o: statusbar.h area_edit.h settings.h diff.h iconbar.h icon.h info.h
-map.o: track.h gps.h wms.h josm_presets.h relation_edit.h misc.h map_edit.h
-map.o: josm_elemstyles.h style.h net_io.h
-map_edit.o: appdata.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h project.h
-map_edit.o: statusbar.h area_edit.h settings.h diff.h iconbar.h icon.h info.h
-map_edit.o: track.h gps.h wms.h josm_presets.h relation_edit.h misc.h
-map_edit.o: map_edit.h josm_elemstyles.h style.h net_io.h
-map_hl.o: appdata.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h project.h
-map_hl.o: statusbar.h area_edit.h settings.h diff.h iconbar.h icon.h info.h
-map_hl.o: track.h gps.h wms.h josm_presets.h relation_edit.h misc.h
-map_hl.o: map_edit.h josm_elemstyles.h style.h net_io.h
-misc.o: appdata.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h project.h
-misc.o: statusbar.h area_edit.h settings.h diff.h iconbar.h icon.h info.h
-misc.o: track.h gps.h wms.h josm_presets.h relation_edit.h misc.h map_edit.h
-misc.o: josm_elemstyles.h style.h net_io.h
-net_io.o: appdata.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h project.h
-net_io.o: statusbar.h area_edit.h settings.h diff.h iconbar.h icon.h info.h
-net_io.o: track.h gps.h wms.h josm_presets.h relation_edit.h misc.h
-net_io.o: map_edit.h josm_elemstyles.h style.h net_io.h
-osm.o: appdata.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h project.h
-osm.o: statusbar.h area_edit.h settings.h diff.h iconbar.h icon.h info.h
-osm.o: track.h gps.h wms.h josm_presets.h relation_edit.h misc.h map_edit.h
-osm.o: josm_elemstyles.h style.h net_io.h
-osm_api.o: appdata.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h project.h
-osm_api.o: statusbar.h area_edit.h settings.h diff.h iconbar.h icon.h info.h
-osm_api.o: track.h gps.h wms.h josm_presets.h relation_edit.h misc.h
-osm_api.o: map_edit.h josm_elemstyles.h style.h net_io.h
-pos.o: appdata.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h project.h
-pos.o: statusbar.h area_edit.h settings.h diff.h iconbar.h icon.h info.h
-pos.o: track.h gps.h wms.h josm_presets.h relation_edit.h misc.h map_edit.h
-pos.o: josm_elemstyles.h style.h net_io.h
-project.o: appdata.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h project.h
-project.o: statusbar.h area_edit.h settings.h diff.h iconbar.h icon.h info.h
-project.o: track.h gps.h wms.h josm_presets.h relation_edit.h misc.h
-project.o: map_edit.h josm_elemstyles.h style.h net_io.h
-relation_edit.o: appdata.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h
-relation_edit.o: project.h statusbar.h area_edit.h settings.h diff.h
-relation_edit.o: iconbar.h icon.h info.h track.h gps.h wms.h josm_presets.h
-relation_edit.o: relation_edit.h misc.h map_edit.h josm_elemstyles.h style.h
-relation_edit.o: net_io.h
-settings.o: appdata.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h project.h
-settings.o: statusbar.h area_edit.h settings.h diff.h iconbar.h icon.h info.h
-settings.o: track.h gps.h wms.h josm_presets.h relation_edit.h misc.h
-settings.o: map_edit.h josm_elemstyles.h style.h net_io.h
-statusbar.o: appdata.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h
-statusbar.o: project.h statusbar.h area_edit.h settings.h diff.h iconbar.h
-statusbar.o: icon.h info.h track.h gps.h wms.h josm_presets.h relation_edit.h
-statusbar.o: misc.h map_edit.h josm_elemstyles.h style.h net_io.h
-style.o: appdata.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h project.h
-style.o: statusbar.h area_edit.h settings.h diff.h iconbar.h icon.h info.h
-style.o: track.h gps.h wms.h josm_presets.h relation_edit.h misc.h map_edit.h
-style.o: josm_elemstyles.h style.h net_io.h
-track.o: appdata.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h project.h
-track.o: statusbar.h area_edit.h settings.h diff.h iconbar.h icon.h info.h
-track.o: track.h gps.h wms.h josm_presets.h relation_edit.h misc.h map_edit.h
-track.o: josm_elemstyles.h style.h net_io.h
-wms.o: appdata.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h project.h
-wms.o: statusbar.h area_edit.h settings.h diff.h iconbar.h icon.h info.h
-wms.o: track.h gps.h wms.h josm_presets.h relation_edit.h misc.h map_edit.h
-wms.o: josm_elemstyles.h style.h net_io.h
+main.o: appdata.h version.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h
+main.o: project.h statusbar.h area_edit.h settings.h diff.h iconbar.h icon.h
+main.o: info.h track.h gps.h wms.h josm_presets.h relation_edit.h misc.h
+main.o: map_edit.h josm_elemstyles.h style.h net_io.h
+map.o: appdata.h version.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h
+map.o: project.h statusbar.h area_edit.h settings.h diff.h iconbar.h icon.h
+map.o: info.h track.h gps.h wms.h josm_presets.h relation_edit.h misc.h
+map.o: map_edit.h josm_elemstyles.h style.h net_io.h
+map_edit.o: appdata.h version.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h
+map_edit.o: project.h statusbar.h area_edit.h settings.h diff.h iconbar.h
+map_edit.o: icon.h info.h track.h gps.h wms.h josm_presets.h relation_edit.h
+map_edit.o: misc.h map_edit.h josm_elemstyles.h style.h net_io.h
+map_hl.o: appdata.h version.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h
+map_hl.o: project.h statusbar.h area_edit.h settings.h diff.h iconbar.h
+map_hl.o: icon.h info.h track.h gps.h wms.h josm_presets.h relation_edit.h
+map_hl.o: misc.h map_edit.h josm_elemstyles.h style.h net_io.h
+misc.o: appdata.h version.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h
+misc.o: project.h statusbar.h area_edit.h settings.h diff.h iconbar.h icon.h
+misc.o: info.h track.h gps.h wms.h josm_presets.h relation_edit.h misc.h
+misc.o: map_edit.h josm_elemstyles.h style.h net_io.h
+net_io.o: appdata.h version.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h
+net_io.o: project.h statusbar.h area_edit.h settings.h diff.h iconbar.h
+net_io.o: icon.h info.h track.h gps.h wms.h josm_presets.h relation_edit.h
+net_io.o: misc.h map_edit.h josm_elemstyles.h style.h net_io.h
+osm.o: appdata.h version.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h
+osm.o: project.h statusbar.h area_edit.h settings.h diff.h iconbar.h icon.h
+osm.o: info.h track.h gps.h wms.h josm_presets.h relation_edit.h misc.h
+osm.o: map_edit.h josm_elemstyles.h style.h net_io.h
+osm_api.o: appdata.h version.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h
+osm_api.o: project.h statusbar.h area_edit.h settings.h diff.h iconbar.h
+osm_api.o: icon.h info.h track.h gps.h wms.h josm_presets.h relation_edit.h
+osm_api.o: misc.h map_edit.h josm_elemstyles.h style.h net_io.h
+pos.o: appdata.h version.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h
+pos.o: project.h statusbar.h area_edit.h settings.h diff.h iconbar.h icon.h
+pos.o: info.h track.h gps.h wms.h josm_presets.h relation_edit.h misc.h
+pos.o: map_edit.h josm_elemstyles.h style.h net_io.h
+project.o: appdata.h version.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h
+project.o: project.h statusbar.h area_edit.h settings.h diff.h iconbar.h
+project.o: icon.h info.h track.h gps.h wms.h josm_presets.h relation_edit.h
+project.o: misc.h map_edit.h josm_elemstyles.h style.h net_io.h
+relation_edit.o: appdata.h version.h pos.h osm.h canvas.h map.h map_hl.h
+relation_edit.o: osm_api.h project.h statusbar.h area_edit.h settings.h
+relation_edit.o: diff.h iconbar.h icon.h info.h track.h gps.h wms.h
+relation_edit.o: josm_presets.h relation_edit.h misc.h map_edit.h
+relation_edit.o: josm_elemstyles.h style.h net_io.h
+settings.o: appdata.h version.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h
+settings.o: project.h statusbar.h area_edit.h settings.h diff.h iconbar.h
+settings.o: icon.h info.h track.h gps.h wms.h josm_presets.h relation_edit.h
+settings.o: misc.h map_edit.h josm_elemstyles.h style.h net_io.h
+statusbar.o: appdata.h version.h pos.h osm.h canvas.h map.h map_hl.h
+statusbar.o: osm_api.h project.h statusbar.h area_edit.h settings.h diff.h
+statusbar.o: iconbar.h icon.h info.h track.h gps.h wms.h josm_presets.h
+statusbar.o: relation_edit.h misc.h map_edit.h josm_elemstyles.h style.h
+statusbar.o: net_io.h
+style.o: appdata.h version.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h
+style.o: project.h statusbar.h area_edit.h settings.h diff.h iconbar.h icon.h
+style.o: info.h track.h gps.h wms.h josm_presets.h relation_edit.h misc.h
+style.o: map_edit.h josm_elemstyles.h style.h net_io.h
+track.o: appdata.h version.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h
+track.o: project.h statusbar.h area_edit.h settings.h diff.h iconbar.h icon.h
+track.o: info.h track.h gps.h wms.h josm_presets.h relation_edit.h misc.h
+track.o: map_edit.h josm_elemstyles.h style.h net_io.h
+wms.o: appdata.h version.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h
+wms.o: project.h statusbar.h area_edit.h settings.h diff.h iconbar.h icon.h
+wms.o: info.h track.h gps.h wms.h josm_presets.h relation_edit.h misc.h
+wms.o: map_edit.h josm_elemstyles.h style.h net_io.h
