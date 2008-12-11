@@ -740,7 +740,7 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 
       if(ways2join_cnt > 2) {
 	messagef(GTK_WIDGET(appdata->window), _("Too many ways to join"), 
-		 _("More than two ways now end in this node. Joining more "
+		 _("More than two ways now end on this node. Joining more "
 		   "than two ways is not yet implemented, sorry"));
 	
       } else if(ways2join_cnt == 2) {

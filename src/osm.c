@@ -893,12 +893,12 @@ osm_t *osm_parse(char *filename) {
 
 gboolean osm_sanity_check(GtkWidget *parent, osm_t *osm) {
   if(!osm->bounds) {
-    errorf(parent, _("Ivalid data in OSM file:\n"
+    errorf(parent, _("Invalid data in OSM file:\n"
 		     "Boundary box missing!"));
     return FALSE;
   }
   if(!osm->node) {
-    errorf(parent, _("Ivalid data in OSM file:\n"
+    errorf(parent, _("Invalid data in OSM file:\n"
 		     "No drawable content found!"));
     return FALSE;
   }

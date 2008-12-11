@@ -62,7 +62,7 @@ static void main_ui_enable(appdata_t *appdata) {
   gtk_widget_set_sensitive(appdata->menu_item_project_close, project_valid);
 
   if(!project_valid)
-    statusbar_set(appdata, _("Plase load or create a project"), FALSE);
+    statusbar_set(appdata, _("Please load or create a project"), FALSE);
 }
 
 /******************** begin of menu *********************/
@@ -230,7 +230,7 @@ cb_menu_save_changes(GtkWidget *window, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
 
   diff_save(appdata->project, appdata->osm);
-  statusbar_set(appdata, _("Saved all changes in projects diff file"), FALSE);
+  statusbar_set(appdata, _("Saved all changes made to this project so far"), FALSE);
 }
 
 
