@@ -17,6 +17,8 @@
  * along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define OSM_STREAM_PARSER
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -52,6 +54,7 @@ static void osm_bounds_dump(bounds_t *bounds) {
 	 bounds->ll_min.lon, bounds->ll_max.lon);
 }
 
+#ifndef OSM_STREAM_PARSER
 static bounds_t *osm_parse_osm_bounds(osm_t *osm, 
 		     xmlDocPtr doc, xmlNode *a_node) {
   char *prop;
@@ -92,7 +95,7 @@ static bounds_t *osm_parse_osm_bounds(osm_t *osm,
 	   bounds->ll_min.lat, bounds->ll_min.lon, 
 	   bounds->ll_max.lat, bounds->ll_max.lon);
 
-    g_free(bounds);
+    osm_bounds_free(bounds);
     return NULL;
   }
 
@@ -122,6 +125,7 @@ static bounds_t *osm_parse_osm_bounds(osm_t *osm,
 
   return bounds;
 }
+#endif
 
 /* ------------------------- user handling --------------------- */
 
@@ -319,6 +323,7 @@ void osm_nodes_dump(node_t *node) {
   }
 }
 
+#ifndef OSM_STREAM_PARSER
 static node_t *osm_parse_osm_node(osm_t *osm, 
 			  xmlDocPtr doc, xmlNode *a_node) {
   xmlNode *cur_node = NULL;
@@ -375,6 +380,7 @@ static node_t *osm_parse_osm_node(osm_t *osm,
 
   return node;
 }
+#endif
 
 /* ------------------- way handling ------------------- */
 
@@ -485,6 +491,7 @@ node_chain_t *osm_parse_osm_way_nd(osm_t *osm,
   return NULL;
 }
 
+#ifndef OSM_STREAM_PARSER
 static way_t *osm_parse_osm_way(osm_t *osm, 
 			  xmlDocPtr doc, xmlNode *a_node) {
   xmlNode *cur_node = NULL;
@@ -534,6 +541,7 @@ static way_t *osm_parse_osm_way(osm_t *osm,
 
   return way;
 }
+#endif
 
 /* ------------------- relation handling ------------------- */
 
@@ -688,6 +696,7 @@ member_t *osm_parse_osm_relation_member(osm_t *osm,
   return member;
 }
 
+#ifndef OSM_STREAM_PARSER
 static relation_t *osm_parse_osm_relation(osm_t *osm, 
 			  xmlDocPtr doc, xmlNode *a_node) {
   xmlNode *cur_node = NULL;
@@ -854,6 +863,7 @@ static osm_t *osm_parse_doc(xmlDocPtr doc) {
 
   return osm;
 }
+#endif
 
 /* ------------------ osm handling ----------------- */
 
@@ -876,19 +886,532 @@ void osm_dump(osm_t *osm) {
   osm_relations_dump(osm->relation);
 }
 
+#ifdef OSM_STREAM_PARSER
+/* -------------------------- stream parser tests ------------------- */
+
+#include <libxml/xmlreader.h>
+
+static gint my_strcmp(const xmlChar *a, const xmlChar *b) {
+  if(!a && !b) return 0;
+  if(!a) return -1;
+  if(!b) return +1;
+  return strcmp((char*)a,(char*)b);
+}
+
+/* skip current element incl. everything below (mainly for testing) */
+/* returns FALSE if something failed */
+static gboolean skip_element(xmlTextReaderPtr reader) {
+  g_assert(xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT);
+  const xmlChar *name = xmlTextReaderConstName(reader);
+  g_assert(name);
+  int depth = xmlTextReaderDepth(reader);
+
+  if(xmlTextReaderIsEmptyElement(reader))
+    return TRUE;
+
+  int ret = xmlTextReaderRead(reader);
+  while((ret == 1) && 
+	((xmlTextReaderNodeType(reader) != XML_READER_TYPE_END_ELEMENT) ||
+	 (xmlTextReaderDepth(reader) > depth) ||
+	 (my_strcmp(xmlTextReaderConstName(reader), name) != 0))) {
+    ret = xmlTextReaderRead(reader);
+  }
+  return(ret == 1);
+}
+
+/* parse bounds */
+static bounds_t *process_bounds(xmlTextReaderPtr reader) {
+  char *prop = NULL;
+  bounds_t *bounds = g_new0(bounds_t, 1);
+
+  bounds->ll_min.lat = bounds->ll_min.lon = NAN;
+  bounds->ll_max.lat = bounds->ll_max.lon = NAN;
+
+  if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "minlat"))) {
+    bounds->ll_min.lat = g_ascii_strtod(prop, NULL);
+    xmlFree(prop);
+  }
+
+  if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "maxlat"))) {
+    bounds->ll_max.lat = g_ascii_strtod(prop, NULL);
+    xmlFree(prop);
+  }
+
+  if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "minlon"))) {
+    bounds->ll_min.lon = g_ascii_strtod(prop, NULL);
+    xmlFree(prop);
+  }
+
+  if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "maxlon"))) {
+    bounds->ll_max.lon = g_ascii_strtod(prop, NULL); 
+    xmlFree(prop); 
+  }
+
+  if(isnan(bounds->ll_min.lat) || isnan(bounds->ll_min.lon) || 
+     isnan(bounds->ll_max.lat) || isnan(bounds->ll_max.lon)) {
+    errorf(NULL, "Invalid coordinate in bounds (%f/%f/%f/%f)",
+	   bounds->ll_min.lat, bounds->ll_min.lon, 
+	   bounds->ll_max.lat, bounds->ll_max.lon);
+
+    osm_bounds_free(bounds);
+    return NULL;
+  }
+
+  /* skip everything below */
+  skip_element(reader);
+
+  /* calculate map zone which will be used as a reference for all */
+  /* drawing/projection later on */
+  pos_t center = { (bounds->ll_max.lat + bounds->ll_min.lat)/2, 
+		   (bounds->ll_max.lon + bounds->ll_min.lon)/2 };
+
+  pos2lpos_center(&center, &bounds->center);
+
+  /* the scale is needed to accomodate for "streching" */
+  /* by the mercartor projection */
+  bounds->scale = cos(DEG2RAD(center.lat));
+
+  pos2lpos_center(&bounds->ll_min, &bounds->min);
+  bounds->min.x -= bounds->center.x;
+  bounds->min.y -= bounds->center.y;
+  bounds->min.x *= bounds->scale;
+  bounds->min.y *= bounds->scale;
+
+  pos2lpos_center(&bounds->ll_max, &bounds->max);
+  bounds->max.x -= bounds->center.x;
+  bounds->max.y -= bounds->center.y;
+  bounds->max.x *= bounds->scale;
+  bounds->max.y *= bounds->scale;
+
+  return bounds;
+}
+
+static tag_t *process_tag(xmlTextReaderPtr reader) {
+  /* allocate a new tag structure */
+  tag_t *tag = g_new0(tag_t, 1);
+
+  char *prop;
+  if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "k"))) {
+    if(strlen(prop) > 0) tag->key = g_strdup(prop);
+    xmlFree(prop);
+  }
+
+  if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "v"))) {
+    if(strlen(prop) > 0) tag->value = g_strdup(prop);
+    xmlFree(prop);
+  }
+
+  if(!tag->key || !tag->value) {
+    printf("incomplete tag key/value %s/%s\n", tag->key, tag->value);
+    osm_tags_free(tag);
+    tag = NULL;
+  }
+
+  skip_element(reader);
+  return tag;
+}
+
+static node_t *process_node(xmlTextReaderPtr reader, osm_t *osm) {
+
+  /* allocate a new node structure */
+  node_t *node = g_new0(node_t, 1);
+  node->pos.lat = node->pos.lon = NAN;
+
+  char *prop;
+  if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "id"))) {
+    node->id = strtoul(prop, NULL, 10);
+    xmlFree(prop);
+  }
+
+  if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "lat"))) {
+    node->pos.lat = g_ascii_strtod(prop, NULL);
+    xmlFree(prop);
+  }
+
+  if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "lon"))) {
+    node->pos.lon = g_ascii_strtod(prop, NULL);
+    xmlFree(prop);
+  }
+
+  if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "user"))) {
+    node->user = osm_user(osm, prop);
+    xmlFree(prop);
+  }
+
+  if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "visible"))) {
+    node->visible = (strcasecmp(prop, "true") == 0);
+    xmlFree(prop);
+  }
+
+  if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "timestamp"))) {
+    node->time = convert_iso8601(prop);
+    xmlFree(prop);
+  }
+
+  pos2lpos(osm->bounds, &node->pos, &node->lpos);
+
+  /* just an empty element? then return the node as it is */
+  if(xmlTextReaderIsEmptyElement(reader))
+    return node;
+
+  /* parse tags if present */  
+  int depth = xmlTextReaderDepth(reader);
+
+  /* scan all elements on same level or its children */
+  tag_t **tag = &node->tag;
+  int ret = xmlTextReaderRead(reader);
+  while((ret == 1) && 
+	((xmlTextReaderNodeType(reader) != XML_READER_TYPE_END_ELEMENT) ||
+	 (xmlTextReaderDepth(reader) != depth))) {
+
+    if(xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT) {
+      char *subname = (char*)xmlTextReaderConstName(reader);
+      if(strcasecmp(subname, "tag") == 0) {
+	*tag = process_tag(reader);
+	if(*tag) tag = &(*tag)->next;
+      } else
+	skip_element(reader);
+    }
+
+    ret = xmlTextReaderRead(reader);
+  }
+
+  return node;
+}
+
+static node_chain_t *process_nd(xmlTextReaderPtr reader, osm_t *osm) {
+  char *prop;
+
+  if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "ref"))) {
+    item_id_t id = strtoul(prop, NULL, 10);
+    node_chain_t *node_chain = g_new0(node_chain_t, 1);
+    
+    /* search matching node */
+    node_chain->node = osm->node;
+    while(node_chain->node && node_chain->node->id != id)
+      node_chain->node = node_chain->node->next;
+    
+    if(!node_chain->node) printf("Node id %lu not found\n", id);
+
+    if(node_chain->node) 
+      node_chain->node->ways++;
+
+    xmlFree(prop);
+
+    skip_element(reader);
+    return node_chain;
+  }
+
+  skip_element(reader);
+  return NULL;
+}
+
+static way_t *process_way(xmlTextReaderPtr reader, osm_t *osm) {
+  /* allocate a new way structure */
+  way_t *way = g_new0(way_t, 1);
+
+  char *prop;
+  if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "id"))) {
+    way->id = strtoul(prop, NULL, 10);
+    xmlFree(prop);
+  }
+
+  if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "user"))) {
+    way->user = osm_user(osm, prop);
+    xmlFree(prop);
+  }
+
+  if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "visible"))) {
+    way->visible = (strcasecmp(prop, "true") == 0);
+    xmlFree(prop);
+  }
+
+  if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "timestamp"))) {
+    way->time = convert_iso8601(prop);
+    xmlFree(prop);
+  }
+
+  /* just an empty element? then return the way as it is */
+  /* (this should in fact never happen as this would be a way without nodes) */
+  if(xmlTextReaderIsEmptyElement(reader))
+    return way;
+
+  /* parse tags/nodes if present */  
+  int depth = xmlTextReaderDepth(reader);
+
+  /* scan all elements on same level or its children */
+  tag_t **tag = &way->tag;
+  node_chain_t **node_chain = &way->node_chain;
+  int ret = xmlTextReaderRead(reader);
+  while((ret == 1) && 
+	((xmlTextReaderNodeType(reader) != XML_READER_TYPE_END_ELEMENT) ||
+	 (xmlTextReaderDepth(reader) != depth))) {
+
+    if(xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT) {
+      char *subname = (char*)xmlTextReaderConstName(reader);
+      if(strcasecmp(subname, "nd") == 0) {
+	*node_chain = process_nd(reader, osm);
+	if(*node_chain) node_chain = &(*node_chain)->next;
+      } else if(strcasecmp(subname, "tag") == 0) {
+	*tag = process_tag(reader);
+	if(*tag) tag = &(*tag)->next;
+      } else
+	skip_element(reader);
+    }
+    ret = xmlTextReaderRead(reader);
+  }
+
+  return way;
+}
+
+static member_t *process_member(xmlTextReaderPtr reader, osm_t *osm) {
+  char *prop;
+  member_t *member = g_new0(member_t, 1);
+  member->type = ILLEGAL;
+
+  if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "type"))) {
+    if(strcasecmp(prop, "way") == 0)           member->type = WAY;
+    else if(strcasecmp(prop, "node") == 0)     member->type = NODE;
+    else if(strcasecmp(prop, "relation") == 0) member->type = RELATION;
+    xmlFree(prop);
+  }
+
+  if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "ref"))) {
+    item_id_t id = strtoul(prop, NULL, 10);
+
+    switch(member->type) {
+    case ILLEGAL:
+      printf("Unable to store illegal type\n");
+      break;
+
+    case WAY:
+      /* search matching way */
+      member->way = osm->way;
+      while(member->way && member->way->id != id)
+	member->way = member->way->next;
+
+      if(!member->way) {
+	member->type = WAY_ID;
+	member->id = id;
+      }
+      break;
+
+    case NODE:
+      /* search matching node */
+      member->node = osm->node;
+      while(member->node && member->node->id != id)
+	member->node = member->node->next;
+
+      if(!member->node) {
+	member->type = NODE_ID;
+	member->id = id;
+      }
+      break;
+
+    case RELATION:
+      /* search matching relation */
+      member->relation = osm->relation;
+      while(member->relation && member->relation->id != id)
+	member->relation = member->relation->next;
+
+      if(!member->relation) {
+	member->type = NODE_ID;
+	member->id = id;
+      }
+      break;
+
+    case WAY_ID:
+    case NODE_ID:
+    case RELATION_ID:
+      break;
+    }
+
+    xmlFree(prop);
+  }
+
+  if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "role"))) {
+    if(strlen(prop) > 0) member->role = g_strdup(prop);
+    xmlFree(prop);
+  }
+
+  return member;
+}
+
+static relation_t *process_relation(xmlTextReaderPtr reader, osm_t *osm) {
+  /* allocate a new relation structure */
+  relation_t *relation = g_new0(relation_t, 1);
+
+  char *prop;
+  if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "id"))) {
+    relation->id = strtoul(prop, NULL, 10);
+    xmlFree(prop);
+  }
+
+  if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "user"))) {
+    relation->user = osm_user(osm, prop);
+    xmlFree(prop);
+  }
+
+  if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "visible"))) {
+    relation->visible = (strcasecmp(prop, "true") == 0);
+    xmlFree(prop);
+  }
+
+  if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "timestamp"))) {
+    relation->time = convert_iso8601(prop);
+    xmlFree(prop);
+  }
+
+  /* just an empty element? then return the relation as it is */
+  /* (this should in fact never happen as this would be a relation */
+  /* without members) */
+  if(xmlTextReaderIsEmptyElement(reader))
+    return relation;
+
+  /* parse tags/member if present */  
+  int depth = xmlTextReaderDepth(reader);
+
+  /* scan all elements on same level or its children */
+  tag_t **tag = &relation->tag;
+  member_t **member = &relation->member;
+  int ret = xmlTextReaderRead(reader);
+  while((ret == 1) && 
+	((xmlTextReaderNodeType(reader) != XML_READER_TYPE_END_ELEMENT) ||
+	 (xmlTextReaderDepth(reader) != depth))) {
+
+    if(xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT) {
+      char *subname = (char*)xmlTextReaderConstName(reader);
+      if(strcasecmp(subname, "nd") == 0) {
+	*member = process_member(reader, osm);
+	if(*member) member = &(*member)->next;
+      } else if(strcasecmp(subname, "tag") == 0) {
+	*tag = process_tag(reader);
+	if(*tag) tag = &(*tag)->next;
+      } else
+	skip_element(reader);
+    }
+    ret = xmlTextReaderRead(reader);
+  }
+
+  return relation;
+}
+
+static osm_t *process_osm(xmlTextReaderPtr reader) {
+  /* alloc osm structure */
+  osm_t *osm = g_new0(osm_t, 1);
+
+  node_t **node = &osm->node;
+  way_t **way = &osm->way;
+  relation_t **relation = &osm->relation;
+  
+  /* no attributes of interest */
+
+  const xmlChar *name = xmlTextReaderConstName(reader);
+  g_assert(name);
+
+  /* read next node */
+  int ret = xmlTextReaderRead(reader);
+  while(ret == 1) {
+
+    switch(xmlTextReaderNodeType(reader)) {
+    case XML_READER_TYPE_ELEMENT:
+
+      g_assert(xmlTextReaderDepth(reader) == 1);
+      char *name = (char*)xmlTextReaderConstName(reader);
+      if(strcasecmp(name, "bounds") == 0) {
+	osm->bounds = process_bounds(reader);
+      } else if(strcasecmp(name, "node") == 0) {
+	*node = process_node(reader, osm);
+	if(*node) node = &(*node)->next;
+      } else if(strcasecmp(name, "way") == 0) {
+	*way = process_way(reader, osm);
+	if(*way) way = &(*way)->next;
+      } else if(strcasecmp(name, "relation") == 0) {
+	*relation = process_relation(reader, osm);
+	if(*relation) relation = &(*relation)->next;
+      } else {
+	printf("something unknown found\n");
+	g_assert(0);
+	skip_element(reader);
+      }
+      break;
+      
+    case XML_READER_TYPE_END_ELEMENT:
+      /* end element must be for the current element */
+      g_assert(xmlTextReaderDepth(reader) == 0);
+      return osm;
+      break;
+      
+    default:
+      break;
+    }
+    ret = xmlTextReaderRead(reader);
+  }
+
+  g_assert(0);
+  return NULL;
+}
+
+static osm_t *process_file(const char *filename) {
+  osm_t *osm = NULL;
+  xmlTextReaderPtr reader;
+  int ret;
+  
+  reader = xmlReaderForFile(filename, NULL, 0);
+  if (reader != NULL) {
+    ret = xmlTextReaderRead(reader);
+    if(ret == 1) {
+      char *name = (char*)xmlTextReaderConstName(reader);
+      if(name && strcasecmp(name, "osm") == 0)
+	osm = process_osm(reader);
+    } else
+      printf("file empty\n");
+
+    xmlFreeTextReader(reader);
+  } else {
+    fprintf(stderr, "Unable to open %s\n", filename);
+  }
+  return osm;
+}
+
+/* ----------------------- end of stream parser tests ------------------- */
+#endif
+
+#include <sys/time.h>
+
 osm_t *osm_parse(char *filename) {
-  xmlDoc *doc = NULL;
+
+  struct timeval start;
+  gettimeofday(&start, NULL);
 
   LIBXML_TEST_VERSION;
 
+#ifdef OSM_STREAM_PARSER
+  // use stream parser
+  osm_t *osm = process_file(filename);
+  xmlCleanupParser();
+
+#else
+  // parse into a tree
   /* parse the file and get the DOM */
+  xmlDoc *doc = NULL;
   if ((doc = xmlReadFile(filename, NULL, 0)) == NULL) {
     xmlErrorPtr	errP = xmlGetLastError();
     errorf(NULL, "While parsing \"%s\":\n\n%s", filename, errP->message);
     return NULL;
   }
   
-  return osm_parse_doc(doc); 
+  osm_t *osm = osm_parse_doc(doc); 
+#endif
+
+  struct timeval end;
+  gettimeofday(&end, NULL);
+
+  printf("total parse time: %ldms\n", 
+	 (end.tv_usec - start.tv_usec)/1000 +
+	 (end.tv_sec - start.tv_sec)*1000);
+
+  return osm;
 }
 
 gboolean osm_sanity_check(GtkWidget *parent, osm_t *osm) {
@@ -1468,7 +1991,7 @@ way_chain_t *osm_node_to_way(osm_t *osm, node_t *node) {
       cur_chain = &((*cur_chain)->next);
     }
 
-    way = way->next;
+     way = way->next;
   }
 
   return chain;
