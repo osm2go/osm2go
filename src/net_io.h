@@ -20,7 +20,7 @@
 #ifndef NET_IO_H
 #define NET_IO_H
 
-gboolean net_io_download_file(GtkWidget *parent, char *url, char *file);
-void *net_io_download_mem(GtkWidget *parent, char *url);
+gboolean net_io_download_file(GtkWidget *parent, char *url, char *filename);
+gboolean net_io_download_mem(GtkWidget *parent, char *url, char **mem);
 
 #endif // NET_IO_H

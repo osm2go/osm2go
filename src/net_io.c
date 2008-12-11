@@ -47,13 +47,14 @@ typedef struct {
   int len;
 } curl_mem_t;
 
-typedef enum { NET_IO_FILE, NET_IO_MEM } net_io_type_t;
+typedef enum { NET_IO_DL_FILE, NET_IO_DL_MEM, NET_IO_DELETE } net_io_type_t;
 
+/* structure shared between worker and master thread */
 typedef struct {
   net_io_type_t type;
   gint refcount;       /* reference counter for master and worker thread */ 
 
-  char *url;
+  char *url, *user;
   gboolean cancel;
   float progress;
 
@@ -62,9 +63,10 @@ typedef struct {
   long response;
   char buffer[CURL_ERROR_SIZE];
 
+  /* request specific fields */
   union {
-    char *filename;
-    curl_mem_t mem;
+    char *filename;   /* used for NET_IO_DL_FILE */
+    curl_mem_t mem;   /* used for NET_IO_DL_MEM */
   };
 
 } net_io_request_t;
@@ -123,8 +125,19 @@ static GtkWidget *busy_dialog(GtkWidget *parent, GtkWidget **pbar,
 }
 
 static void request_free(net_io_request_t *request) {
-  g_free(request->url);
-  if(request->type == NET_IO_FILE)
+  /* decrease refcount and only free structure if no references are left */
+  request->refcount--;
+  if(request->refcount) {
+    printf("still %d references, keeping request\n", request->refcount);
+    return;
+  }
+
+  printf("no references left, freeing request\n");
+  if(request->url)  g_free(request->url);
+  if(request->user) g_free(request->user);
+
+  /* filename is only a valid filename in NET_IO_DL_FILE mode */
+  if(request->type == NET_IO_DL_FILE && request->filename)
     g_free(request->filename);
 
   g_free(request);
@@ -160,35 +173,63 @@ static void *worker_thread(void *ptr) {
     FILE *outfile = NULL;
     gboolean ok = FALSE;
 
-    if(request->type == NET_IO_FILE) {
+    /* prepare target (file, memory, ...) */
+    switch(request->type) {
+    case NET_IO_DL_FILE:
       outfile = fopen(request->filename, "w");
       ok = (outfile != NULL);
-    } else {
+      break;
+
+    case NET_IO_DL_MEM:
       request->mem.ptr = NULL;
       request->mem.len = 0;
       ok = TRUE;
+      break;
+
+    default:
+      ok = TRUE;
+      break;
     }
 
     if(ok) {
       curl_easy_setopt(curl, CURLOPT_URL, request->url);
-      if(request->type == NET_IO_FILE) {
+      
+      switch(request->type) {
+      case NET_IO_DL_FILE:
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, outfile);
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, fwrite);
-      } else {
+	break;
+
+      case NET_IO_DL_MEM:
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &request->mem);
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, mem_write);
+	break;
+	
+      case NET_IO_DELETE:
+	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "DELETE"); 
+	break;
       }
+
+      /* set user name and password for the authentication */
+      if(request->user)
+	curl_easy_setopt(curl, CURLOPT_USERPWD, request->user);
+
+      /* setup progress notification */
       curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
       curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, curl_progress_func);
       curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, request);
+
       curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, request->buffer);
-      
+
+      /* play nice and report some user agent */
+      curl_easy_setopt(curl, CURLOPT_USERAGENT, PACKAGE "-libcurl/" VERSION); 
+ 
       request->res = curl_easy_perform(curl);
       printf("thread: curl perform returned with %d\n", request->res);
     
       curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &request->response);
 
-      if(request->type == NET_IO_FILE) 
+      if(request->type == NET_IO_DL_FILE) 
 	fclose(outfile);
     }
 
@@ -197,22 +238,19 @@ static void *worker_thread(void *ptr) {
   }
   
   printf("thread: io done\n");
-  
-  if(request->refcount < 2) {
-    printf("thread: master has prematurely released request\n");
-
-    request_free(request);
-  } else {
-    printf("thread: informing master about result\n");
-
-    request->refcount--;
-  }
+  request_free(request);
 
   printf("thread: terminating\n");
   return NULL;
 }
 
 static gboolean net_io_do(GtkWidget *parent, net_io_request_t *request) {
+  /* the request structure is shared between master and worker thread. */
+  /* typically the master thread will do some waiting until the worker */
+  /* thread returns. But the master may very well stop waiting since e.g. */
+  /* the user activated some cancel button. The client will learn this */
+  /* from the fact that it's holding the only reference to the request */
+
   GtkWidget *pbar = NULL;
   GtkWidget *dialog = busy_dialog(parent, &pbar, &request->cancel);
   
@@ -222,7 +260,7 @@ static gboolean net_io_do(GtkWidget *parent, net_io_request_t *request) {
     g_warning("failed to create the worker thread");
 
     /* free request and return error */
-    request_free(request);
+    request->refcount--;    /* decrease by one for dead worker thread */
     gtk_widget_destroy(dialog);
     return FALSE;
   }
@@ -241,7 +279,7 @@ static gboolean net_io_do(GtkWidget *parent, net_io_request_t *request) {
       if(!progress) 
 	gtk_progress_bar_pulse(GTK_PROGRESS_BAR(pbar));
 
-    usleep(10000);
+    usleep(100000);
   }
 
   gtk_widget_destroy(dialog);
@@ -249,6 +287,39 @@ static gboolean net_io_do(GtkWidget *parent, net_io_request_t *request) {
   /* user pressed cancel */
   if(request->refcount > 1) {
     printf("operation cancelled, leave worker alone\n");
+    return FALSE;
+  }
+
+  printf("worker thread has ended\n");
+
+  /* --------- evaluate result --------- */
+
+  /* the http connection itself may have failed */
+  if(request->res != 0) {
+    errorf(parent, _("Download failed with message:\n\n%s"), request->buffer);
+    return FALSE;
+  }
+
+  /* a valid http connection may have returned an error */
+  if(request->response != 200) {
+    errorf(parent, _("Download failed with code %ld:\n\n%s\n"), 
+	   request->response, http_message(request->response));
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+gboolean net_io_download_file(GtkWidget *parent, char *url, char *filename) {
+  net_io_request_t *request = g_new0(net_io_request_t, 1);
+
+  printf("net_io: download %s to file %s\n", url, filename);
+  request->type = NET_IO_DL_FILE;
+  request->url = g_strdup(url);
+  request->filename = g_strdup(filename);
+
+  gboolean result = net_io_do(parent, request);
+  if(!result) {
 
     /* remove the file that may have been written by now. the kernel */
     /* should cope with the fact that the worker thread may still have */
@@ -257,74 +328,28 @@ static gboolean net_io_do(GtkWidget *parent, net_io_request_t *request) {
     /* worker some time to come to the point to delete this file. If the */
     /* user has restarted the download by then, the worker will erase that */
     /* newly written file */
-    g_remove(request->filename);
 
-    request->refcount--;
-    return FALSE;
+    g_remove(filename);
   }
 
-  printf("worker thread has ended\n");
-
-  /* --------- evaluate result --------- */
-
-  if(request->res != 0) {
-    errorf(parent, _("Download failed with message:\n\n%s"), request->buffer);
-    g_remove(request->filename);
-    request_free(request);
-    return FALSE;
-  }
-
-  if(request->response != 200) {
-    errorf(parent, _("Download failed with code %ld:\n\n%s\n"), 
-	   request->response, http_message(request->response));
-    g_remove(request->filename);
-    request_free(request);
-    return FALSE;
-  }
-
-  /* memory transfer needs the result as it contains the result pointer */
-  if(request->type != NET_IO_MEM)
-    request_free(request);
-
-  return TRUE;
-}
-
-gboolean net_io_download_file(GtkWidget *parent, char *url, char *filename) {
-  /* the request structure is shared between master and worker thread. */
-  /* typically the master thread will do some waiting until the worker */
-  /* thread returns. But the master may very well stop waiting since e.g. */
-  /* the user activated some cancel button. The client will learn this */
-  /* from the fact that it's holding the only reference to the request */
-  net_io_request_t *request = g_new0(net_io_request_t, 1);
-
-  printf("net_io: download %s to file %s\n", url, filename);
-  request->type = NET_IO_FILE;
-  request->url = g_strdup(url);
-  request->filename = g_strdup(filename);
-
-  return net_io_do(parent, request);
+  request_free(request);
+  return result;
 }
 
 
-void *net_io_download_mem(GtkWidget *parent, char *url) {
-  /* the request structure is shared between master and worker thread. */
-  /* typically the master thread will do some waiting until the worker */
-  /* thread returns. But the master may very well stop waiting since e.g. */
-  /* the user activated some cancel button. The client will learn this */
-  /* from the fact that it's holding the only reference to the request */
+gboolean net_io_download_mem(GtkWidget *parent, char *url, char **mem) {
   net_io_request_t *request = g_new0(net_io_request_t, 1);
 
   printf("net_io: download %s to memory\n", url);
-  request->type = NET_IO_MEM;
+  request->type = NET_IO_DL_MEM;
   request->url = g_strdup(url);
 
-  if(!net_io_do(parent, request)) 
-    return NULL;
-
-  printf("ptr = %p, len = %d\n", 
-	 request->mem.ptr, request->mem.len);
-
-  char *retval = request->mem.ptr;
+  gboolean result = net_io_do(parent, request);
+  if(result) {
+    printf("ptr = %p, len = %d\n", request->mem.ptr, request->mem.len);
+    *mem = request->mem.ptr;
+  }
+  
   request_free(request);
-  return retval;
+  return result;
 }

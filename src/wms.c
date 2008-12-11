@@ -748,7 +748,8 @@ void wms_import(appdata_t *appdata) {
 			      "&REQUEST=GetCapabilities",
 			      wms->server, wms->path, append_char);
 
-  char *cap = net_io_download_mem(GTK_WIDGET(appdata->window), url);
+  char *cap = NULL;
+  net_io_download_mem(GTK_WIDGET(appdata->window), url, &cap);
   g_free(url);
 
   /* ----------- parse capabilities -------------- */
