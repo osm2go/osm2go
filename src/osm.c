@@ -42,7 +42,7 @@
 #define OSM_SORT_LAST
 // #define OSM_SORT_FIRST
 
-/* ------------------------- user handling --------------------- */
+/* ------------------------- bounds handling --------------------- */
 
 static void osm_bounds_free(bounds_t *bounds) {
   free(bounds);

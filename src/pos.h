@@ -22,6 +22,8 @@
 
 #include <math.h>
 
+typedef double pos_float_t;
+
 #ifndef NAN
 #define NAN (0.0/0.0)
 #endif
@@ -37,7 +39,7 @@
 
 /* global position */
 typedef struct pos {
-  double lat, lon;
+  pos_float_t lat, lon;
 } pos_t;
 
 /* local position */
@@ -50,31 +52,31 @@ void pos2lpos(struct bounds_s *bounds, pos_t *pos, lpos_t *lpos);
 void pos2lpos_center(pos_t *pos, lpos_t *lpos);
 void lpos2pos(struct bounds_s *bounds, lpos_t *lpos, pos_t *pos);
 
-void pos_lat_str(char *str, int len, double latitude);
-void pos_lon_str(char *str, int len, double longitude);
+void pos_lat_str(char *str, int len, pos_float_t latitude);
+void pos_lon_str(char *str, int len, pos_float_t longitude);
 
-double pos_parse_lat(char *str);
-double pos_parse_lon(char *str);
+pos_float_t pos_parse_lat(char *str);
+pos_float_t pos_parse_lon(char *str);
 
-GtkWidget *pos_lat_entry_new(double lat);
-GtkWidget *pos_lon_entry_new(double lon);
-void pos_lat_entry_set(GtkWidget *label, double lat);
-void pos_lon_entry_set(GtkWidget *label, double lon);
+GtkWidget *pos_lat_entry_new(pos_float_t lat);
+GtkWidget *pos_lon_entry_new(pos_float_t lon);
+void pos_lat_entry_set(GtkWidget *label, pos_float_t lat);
+void pos_lon_entry_set(GtkWidget *label, pos_float_t lon);
 
-GtkWidget *pos_lat_label_new(double lat);
-GtkWidget *pos_lon_label_new(double lon);
-void pos_lat_label_set(GtkWidget *label, double lat);
-void pos_lon_label_set(GtkWidget *label, double lon);
+GtkWidget *pos_lat_label_new(pos_float_t lat);
+GtkWidget *pos_lon_label_new(pos_float_t lon);
+void pos_lat_label_set(GtkWidget *label, pos_float_t lat);
+void pos_lon_label_set(GtkWidget *label, pos_float_t lon);
 
-double pos_lat_get(GtkWidget *widget);
-double pos_lon_get(GtkWidget *widget);
+pos_float_t pos_lat_get(GtkWidget *widget);
+pos_float_t pos_lon_get(GtkWidget *widget);
 
-gboolean pos_lat_valid(double lat);
-gboolean pos_lon_valid(double lon);
+gboolean pos_lat_valid(pos_float_t lat);
+gboolean pos_lon_valid(pos_float_t lon);
 
-double pos_parse_dist(char *str, gboolean is_mil);
-void pos_dist_str(char *str, int len, double dist, gboolean is_mil);
-void pos_dist_entry_set(GtkWidget *entry, double dist, gboolean is_mil);
-double pos_dist_get(GtkWidget *widget, gboolean is_mil);
+pos_float_t pos_parse_dist(char *str, gboolean is_mil);
+void pos_dist_str(char *str, int len, pos_float_t dist, gboolean is_mil);
+void pos_dist_entry_set(GtkWidget *entry, pos_float_t dist, gboolean is_mil);
+pos_float_t pos_dist_get(GtkWidget *widget, gboolean is_mil);
 
 #endif // POS_H

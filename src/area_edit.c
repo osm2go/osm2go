@@ -40,16 +40,16 @@ typedef struct {
 
 } context_t;
 
-static void parse_and_set_lat(GtkWidget *src, GtkWidget *dst, double *store) {
-  double i = pos_parse_lat((char*)gtk_entry_get_text(GTK_ENTRY(src)));
+static void parse_and_set_lat(GtkWidget *src, GtkWidget *dst, pos_float_t *store) {
+  pos_float_t i = pos_parse_lat((char*)gtk_entry_get_text(GTK_ENTRY(src)));
   if(pos_lat_valid(i)) {
     *store = i;
     pos_lat_label_set(dst, i);
   }
 }
 
-static void parse_and_set_lon(GtkWidget *src, GtkWidget *dst, double *store) {
-  double i = pos_parse_lon((char*)gtk_entry_get_text(GTK_ENTRY(src)));
+static void parse_and_set_lon(GtkWidget *src, GtkWidget *dst, pos_float_t *store) {
+  pos_float_t i = pos_parse_lon((char*)gtk_entry_get_text(GTK_ENTRY(src)));
   if(pos_lon_valid(i)) {
     *store = i;
     pos_lon_label_set(dst, i);
@@ -66,8 +66,8 @@ static void direct_update(context_t *context) {
 
 /* update the contents of the extent tab */
 static void extent_update(context_t *context) {
-  double center_lat = (context->max.lat + context->min.lat)/2;
-  double center_lon = (context->max.lon + context->min.lon)/2;
+  pos_float_t center_lat = (context->max.lat + context->min.lat)/2;
+  pos_float_t center_lon = (context->max.lon + context->min.lon)/2;
 
   pos_lat_entry_set(context->extent.lat, center_lat);
   pos_lat_entry_set(context->extent.lon, center_lon);
@@ -106,8 +106,8 @@ static void callback_modified_extent(GtkWidget *widget, gpointer data) {
   if(gtk_notebook_get_current_page(GTK_NOTEBOOK(context->notebook)) != 1)
     return;
 
-  double center_lat = pos_lat_get(context->extent.lat);
-  double center_lon = pos_lon_get(context->extent.lon);
+  pos_float_t center_lat = pos_lat_get(context->extent.lat);
+  pos_float_t center_lon = pos_lon_get(context->extent.lon);
 
   if(!pos_lat_valid(center_lat) || !pos_lon_valid(center_lon))
     return;
@@ -178,8 +178,8 @@ static void callback_fetch_mm_clicked(GtkButton *button, gpointer data) {
     return;
 
   /* maemo mapper pos data ... */
-  double center_lat = context->area->mmpos->pos.lat;
-  double center_lon = context->area->mmpos->pos.lon;
+  pos_float_t center_lat = context->area->mmpos->pos.lat;
+  pos_float_t center_lon = context->area->mmpos->pos.lon;
   int zoom = context->area->mmpos->zoom;
 
   if(!pos_lat_valid(center_lat) || !pos_lon_valid(center_lon))

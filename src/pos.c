@@ -23,7 +23,7 @@
 
 #define TAG_STATE  GTK_STATE_PRELIGHT
 
-void pos_lat_str(char *str, int len, double latitude) {
+void pos_lat_str(char *str, int len, pos_float_t latitude) {
   snprintf(str, len-1, "%.5f", latitude);
   /* eliminate trailing zeros */
   if((strchr(str, '.') != NULL) || (strchr(str, ',') != NULL)) {
@@ -35,7 +35,7 @@ void pos_lat_str(char *str, int len, double latitude) {
   strcat(str, "°");
 }
 
-void pos_lon_str(char *str, int len, double longitude) {
+void pos_lon_str(char *str, int len, pos_float_t longitude) {
   snprintf(str, len-1, "%.5f", longitude);
   /* eliminate trailing zeros */
   if((strchr(str, '.') != NULL) || (strchr(str, ',') != NULL)) {
@@ -47,19 +47,19 @@ void pos_lon_str(char *str, int len, double longitude) {
   strcat(str, "°");
 }
 
-double pos_parse_lat(char *str) {
+pos_float_t pos_parse_lat(char *str) {
   return g_strtod(str, NULL);
 }
 
-double pos_parse_lon(char *str) {
+pos_float_t pos_parse_lon(char *str) {
   return g_strtod(str, NULL);
 }
 
-gboolean pos_lat_valid(double lat) {
+gboolean pos_lat_valid(pos_float_t lat) {
   return(!isnan(lat) && (lat >= -90.0) && (lat <= 90.0));
 }
 
-gboolean pos_lon_valid(double lon) {
+gboolean pos_lon_valid(pos_float_t lon) {
   return(!isnan(lon) && (lon >= -180.0) && (lon <= 180.0));
 }
 
@@ -69,12 +69,12 @@ static gboolean mark(GtkWidget *widget, gboolean valid) {
 }
 
 static void callback_modified_lat(GtkWidget *widget, gpointer data ) {
-  double i = pos_parse_lat((char*)gtk_entry_get_text(GTK_ENTRY(widget)));
+  pos_float_t i = pos_parse_lat((char*)gtk_entry_get_text(GTK_ENTRY(widget)));
   mark(widget, pos_lat_valid(i));
 }
 
 /* a entry that is colored red when being "active" */
-GtkWidget *pos_lat_entry_new(double lat) {
+GtkWidget *pos_lat_entry_new(pos_float_t lat) {
   GdkColor color;
   GtkWidget *widget = gtk_entry_new();
   gdk_color_parse("red", &color);
@@ -91,12 +91,12 @@ GtkWidget *pos_lat_entry_new(double lat) {
 }
 
 static void callback_modified_lon(GtkWidget *widget, gpointer data ) {
-  double i = pos_parse_lon((char*)gtk_entry_get_text(GTK_ENTRY(widget)));
+  pos_float_t i = pos_parse_lon((char*)gtk_entry_get_text(GTK_ENTRY(widget)));
   mark(widget, pos_lon_valid(i));
 }
 
 /* a entry that is colored red when filled with invalid coordinate */
-GtkWidget *pos_lon_entry_new(double lon) {
+GtkWidget *pos_lon_entry_new(pos_float_t lon) {
   GdkColor color;
   GtkWidget *widget = gtk_entry_new();
   gdk_color_parse("#ff0000", &color);
@@ -112,47 +112,47 @@ GtkWidget *pos_lon_entry_new(double lon) {
   return widget;
 }
 
-double pos_lat_get(GtkWidget *widget) {
+pos_float_t pos_lat_get(GtkWidget *widget) {
   char *p = (char*)gtk_entry_get_text(GTK_ENTRY(widget));
   return pos_parse_lat(p);
 }
 
-double pos_lon_get(GtkWidget *widget) {
+pos_float_t pos_lon_get(GtkWidget *widget) {
   char *p = (char*)gtk_entry_get_text(GTK_ENTRY(widget));
   return pos_parse_lon(p);
 }
 
-void pos_lat_entry_set(GtkWidget *entry, double lat) {
+void pos_lat_entry_set(GtkWidget *entry, pos_float_t lat) {
   char str[32]; 
   pos_lat_str(str, sizeof(str), lat);
   gtk_entry_set_text(GTK_ENTRY(entry), str);
 }
 
-void pos_lon_entry_set(GtkWidget *entry, double lon) {
+void pos_lon_entry_set(GtkWidget *entry, pos_float_t lon) {
   char str[32];
   pos_lon_str(str, sizeof(str), lon);
   gtk_entry_set_text(GTK_ENTRY(entry), str);
 }
 
-GtkWidget *pos_lat_label_new(double lat) {
+GtkWidget *pos_lat_label_new(pos_float_t lat) {
   char str[32];
   pos_lat_str(str, sizeof(str), lat);
   return gtk_label_new(str);
 }
 
-GtkWidget *pos_lon_label_new(double lon) {
+GtkWidget *pos_lon_label_new(pos_float_t lon) {
   char str[32];
   pos_lon_str(str, sizeof(str), lon);
   return gtk_label_new(str);
 }
 
-void pos_lat_label_set(GtkWidget *label, double lat) {
+void pos_lat_label_set(GtkWidget *label, pos_float_t lat) {
   char str[32]; 
   pos_lat_str(str, sizeof(str), lat);
   gtk_label_set_text(GTK_LABEL(label), str);
 }
 
-void pos_lon_label_set(GtkWidget *label, double lon) {
+void pos_lon_label_set(GtkWidget *label, pos_float_t lon) {
   char str[32];
   pos_lon_str(str, sizeof(str), lon);
   gtk_label_set_text(GTK_LABEL(label), str);
@@ -182,7 +182,7 @@ void lpos2pos(bounds_t *bounds, lpos_t *lpos, pos_t *pos) {
   pos->lat = RAD2DEG(2 * atan(exp(tmp.y/POS_EQ_RADIUS)) - M_PI/2);
 }
 
-void pos_dist_str(char *str, int len, double dist, gboolean is_mil) {
+void pos_dist_str(char *str, int len, pos_float_t dist, gboolean is_mil) {
   /* is this to be displayed as miles? */
   if(is_mil) dist /= KMPMIL;  // kilometer per mile
 
@@ -196,17 +196,17 @@ void pos_dist_str(char *str, int len, double dist, gboolean is_mil) {
   }
 }
 
-void pos_dist_entry_set(GtkWidget *entry, double dist, gboolean is_mil) {
+void pos_dist_entry_set(GtkWidget *entry, pos_float_t dist, gboolean is_mil) {
   char str[32];
   pos_dist_str(str, sizeof(str), dist, is_mil);
   gtk_entry_set_text(GTK_ENTRY(entry), str);
 }
 
-double pos_parse_dist(char *str, gboolean is_mil) {
+pos_float_t pos_parse_dist(char *str, gboolean is_mil) {
   return g_strtod(str, NULL) * (is_mil?KMPMIL:1.0);
 }
 
-double pos_dist_get(GtkWidget *widget, gboolean is_mil) {
+pos_float_t pos_dist_get(GtkWidget *widget, gboolean is_mil) {
   char *p = (char*)gtk_entry_get_text(GTK_ENTRY(widget));
   return pos_parse_dist(p, is_mil);
 }
