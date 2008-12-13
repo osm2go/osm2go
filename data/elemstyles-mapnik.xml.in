@@ -98,10 +98,12 @@ Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
   -->
 
   <rule>
-    <!--
-        FIXME: this can be an area: "area=yes".
-        We'll need multiple conditions 1st though.
-    -->
+    <condition k="highway" v="unclassified"/>
+    <area colour="#ffffff"/>
+    <scale_min>1</scale_min>
+    <scale_max>40000</scale_max>
+  </rule>
+  <rule>
     <condition k="highway" v="unclassified"/>
     <line width="8" colour="#ffffff" width_bg="10" colour_bg="#b8b8b8"/>
     <scale_min>1</scale_min>
@@ -109,7 +111,12 @@ Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
   </rule>
 
   <rule>
-    <!-- FIXME: this can be an area too.  -->
+    <condition k="highway" v="pedestrian"/>
+    <area colour="#e8e8e8"/>
+    <scale_min>1</scale_min>
+    <scale_max>30000</scale_max>
+  </rule>
+  <rule>
     <condition k="highway" v="pedestrian"/>
     <line width="8" colour="#e8e8e8" width_bg="10" colour_bg="#a0a0a0"/>
     <scale_min>1</scale_min>

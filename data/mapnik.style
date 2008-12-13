@@ -10,7 +10,7 @@
       <!-- Bit brighter than the Potlatch ones, and with a 1m border like most
            of the other objects -->
 
-    <way width="1" color="#cccccc" scale-max="40000"/>
+    <way width="3" color="#999999" scale-max="40000"/>
     
     <area border-width="1" border-color="#cccccc" opaque="40%" scale-max="20000"/>
       <!--
