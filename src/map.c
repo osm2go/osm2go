@@ -969,6 +969,76 @@ static void map_scroll_towards_centre(map_t *map, gdouble amt) {
     map->state->scroll_offset.y = sy;
 }
 #endif // #if 0
+
+/*
+ * Scroll the map to a point if that point is currently offscreen.
+ */
+void map_scroll_to_if_offscreen(map_t *map, lpos_t *lpos) {
+
+  // Ignore anything outside the working area
+  if (!(map && map->appdata && map->appdata->osm)) {
+    return;
+  }
+  gint min_x, min_y, max_x, max_y;
+  min_x = map->appdata->osm->bounds->min.x;
+  min_y = map->appdata->osm->bounds->min.y;
+  max_x = map->appdata->osm->bounds->max.x;
+  max_y = map->appdata->osm->bounds->max.y;
+  if (   (lpos->x > max_x) || (lpos->x < min_x)
+      || (lpos->y > max_y) || (lpos->y < min_y)) {
+    printf("cannot scroll to (%d, %d): outside the working area\n");
+    return;
+  }
+
+  // Viewport dimensions in canvas space
+  gdouble zoom = goo_canvas_get_scale(GOO_CANVAS(map->canvas));
+  GtkAllocation *a = &GTK_WIDGET(map->canvas)->allocation;
+  gdouble aw = a->width / zoom;
+  gdouble ah = a->height / zoom;
+
+  // Is the point still onscreen?
+  gboolean vert_recentre_needed = FALSE;
+  gboolean horiz_recentre_needed = FALSE;
+  gint sx, sy;
+  canvas_get_scroll_offsets(map->canvas, &sx, &sy);
+  gint viewport_left   = (sx/zoom);
+  gint viewport_right  = (sx/zoom)+aw;
+  gint viewport_top    = (sy/zoom);
+  gint viewport_bottom = (sy/zoom)+ah;
+  if (lpos->x > viewport_right) {
+    printf("** off right edge (%d > %d)\n", lpos->x, viewport_right);
+    horiz_recentre_needed = TRUE;
+  }
+  if (lpos->x < viewport_left) {
+    printf("** off left edge (%d < %d)\n", lpos->x, viewport_left);
+    horiz_recentre_needed = TRUE;
+  }
+  if (lpos->y > viewport_bottom) {
+    printf("** off bottom edge (%d > %d)\n", lpos->y, viewport_bottom);
+    vert_recentre_needed = TRUE;
+  }
+  if (lpos->y < viewport_top) {
+    printf("** off top edge (%d < %d)\n", lpos->y, viewport_top);
+    vert_recentre_needed = TRUE;
+  }
+
+  if (horiz_recentre_needed || vert_recentre_needed) {
+    gint new_sx, new_sy;
+#if 0
+    // Only recentre the drifting axis.
+    new_sx = horiz_recentre_needed ? zoom*(lpos->x - (aw/2)) : sx;
+    new_sy = vert_recentre_needed  ? zoom*(lpos->y - (ah/2)) : sy;
+    // Not sure about this. I don't think it really buys us anything.
+#else
+    // Just centre both at once
+    new_sx = zoom * (lpos->x - (aw/2));
+    new_sy = zoom * (lpos->y - (ah/2));
+#endif
+    map_limit_scroll(map, &new_sx, &new_sy);
+    canvas_scroll_to(map->canvas, new_sx, new_sy);
+  }
+}
+
 #endif // #ifdef USE_GOOCANVAS
 
 /* Deselects the current way or node if its zoom_max

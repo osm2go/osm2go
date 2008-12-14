@@ -533,6 +533,10 @@ static void track_append_position(appdata_t *appdata, pos_t *pos) {
 	map_track_update_seg(appdata->map, track->cur_seg);
       }
     }
+
+#ifdef USE_GOOCANVAS
+    map_scroll_to_if_offscreen(appdata->map, &lpos);
+#endif
   }
 }
 

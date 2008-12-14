@@ -182,6 +182,10 @@ void map_show_all(appdata_t *appdata);
 
 void map_set_zoom(map_t *map, double zoom, gboolean update_scroll_offsets);
 
+#ifdef USE_GOOCANVAS
+void map_scroll_to_if_offscreen(map_t *map, lpos_t *lpos);
+#endif
+
 /* various functions required by map_edit */
 gboolean map_item_is_selected_node(map_t *map, map_item_t *map_item);
 gboolean map_item_is_selected_way(map_t *map, map_item_t *map_item);
