@@ -54,10 +54,13 @@ typedef struct settings_s {
   char *server, *username, *password;
 
   /* changed in wms.c */
-  char *wms_server, *wms_path;
+  struct wms_server_s *wms_server;
 
   /* changed in style.c */
   char *style;
+
+  /* changed in main.c */
+  gboolean no_icons;
 
 } settings_t;
 

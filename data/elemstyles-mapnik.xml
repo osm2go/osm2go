@@ -132,7 +132,7 @@ Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
   -->
   <rule>
     <condition k="highway" v="pedestrian"/>
-    <line width="8" colour="#e8e8e8" width_bg="10" colour_bg="#a0a0a0"/>
+    <line width="4" colour="#e8e8e8" width_bg="6" colour_bg="#a0a0a0"/>
     <scale_min>1</scale_min>
     <scale_max>30000</scale_max>
   </rule>

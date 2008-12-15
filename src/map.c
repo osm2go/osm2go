@@ -146,7 +146,8 @@ static void map_node_select(appdata_t *appdata, node_t *node) {
 
   float radius = map->style->highlight.width + map->style->node.radius;
   if(!node->ways) radius += map->style->node.border_radius;
-  if(node->icon_buf && map->style->icon.enable) {
+  if(node->icon_buf && map->style->icon.enable && 
+     !appdata->settings->no_icons) {
     gint w = gdk_pixbuf_get_width(map_item->node->icon_buf);
     gint h = gdk_pixbuf_get_height(map_item->node->icon_buf);
     /* icons are technically square, so a radius slightly bigger */
@@ -366,7 +367,8 @@ static canvas_item_t *map_node_new(map_t *map, node_t *node, gint radius,
   map_item->type = MAP_TYPE_NODE;
   map_item->node = node;
 
-  if(!node->icon_buf || !map->style->icon.enable)
+  if(!node->icon_buf || !map->style->icon.enable || 
+     map->appdata->settings->no_icons)
     map_item->item = canvas_circle_new(map, CANVAS_GROUP_NODES, 
        node->lpos.x, node->lpos.y, radius, width, fill, border);
   else
@@ -990,7 +992,8 @@ void map_scroll_to_if_offscreen(map_t *map, lpos_t *lpos) {
   max_y = map->appdata->osm->bounds->max.y;
   if (   (lpos->x > max_x) || (lpos->x < min_x)
       || (lpos->y > max_y) || (lpos->y < min_y)) {
-    printf("cannot scroll to (%d, %d): outside the working area\n");
+    printf("cannot scroll to (%d, %d): outside the working area\n",
+	   lpos->x, lpos->y);
     return;
   }
 

@@ -20,8 +20,16 @@
 #ifndef WMS_H
 #define WMS_H
 
+typedef struct wms_server_s {
+  char *name, *server, *path;
+  struct wms_server_s *next;
+} wms_server_t;
+
 void wms_import(appdata_t *appdata);
 void wms_load(appdata_t *appdata);
 void wms_remove(appdata_t *appdata);
+wms_server_t *wms_server_get_default(void);
+void wms_servers_free(wms_server_t *wms_server);
+void wms_server_free(wms_server_t *wms_server);
 
 #endif // WMS_H

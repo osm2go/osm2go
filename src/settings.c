@@ -51,6 +51,9 @@ static store_t store[] = {
   /* style */
   { "style",            STORE_STRING, OFFSET(style)     },
 
+  /* map */
+  { "no_icons",         STORE_BOOL,   OFFSET(no_icons)  },
+
   { NULL, -1, -1 }
 };
 
@@ -86,9 +89,6 @@ settings_t *settings_load(void) {
     settings->password = g_strdup(p);
   else
     settings->password = strdup("<password>");
-
-  settings->wms_server = g_strdup("http://onearth.jpl.nasa.gov");
-  settings->wms_path = g_strdup("/wms.cgi");
 
   settings->style = g_strdup(DEFAULT_STYLE);
 
@@ -137,6 +137,48 @@ settings_t *settings_load(void) {
     }
   }
 
+  /* restore wms server list */
+  char *key = g_strdup_printf("/apps/" PACKAGE "/wms/count");
+  GConfValue *value = gconf_client_get(client, key, NULL);
+  if(value) {
+    gconf_value_free(value); 
+
+    int i, count = gconf_client_get_int(client, key, NULL);
+    g_free(key);
+
+    wms_server_t **cur = &settings->wms_server;
+    for(i=0;i<count;i++) {
+      key = g_strdup_printf("/apps/" PACKAGE "/wms/name%d", i);
+      char *name = gconf_client_get_string(client, key, NULL);
+      g_free(key);
+      key = g_strdup_printf("/apps/" PACKAGE "/wms/server%d", i);
+      char *server = gconf_client_get_string(client, key, NULL);
+      g_free(key);
+      key = g_strdup_printf("/apps/" PACKAGE "/wms/path%d", i);
+      char *path = gconf_client_get_string(client, key, NULL);
+      g_free(key);
+      
+      /* apply valid entry to list */
+      if(name && server && path) {
+	*cur = g_new0(wms_server_t, 1);
+	(*cur)->name = name;
+	(*cur)->server = server;
+	(*cur)->path = path;
+	cur = &(*cur)->next;
+      } else {
+	if(name) g_free(name);
+	if(server) g_free(server);
+	if(path) g_free(path);
+      }
+    }
+  } else {
+    g_free(key);
+
+    /* add default server(s) */
+    printf("No WMS servers configured, adding default\n");
+    settings->wms_server = wms_server_get_default();
+  }
+
   return settings;
 }
 
@@ -178,15 +220,35 @@ void settings_save(settings_t *settings) {
     g_free(key);
     st++;
   }
+
+  /* store list of wms servers */
+  wms_server_t *cur = settings->wms_server;
+  int count = 0;
+  while(cur) {
+    char *key = g_strdup_printf("/apps/" PACKAGE "/wms/name%d", count);
+    gconf_client_set_string(client, key, cur->name, NULL);
+    g_free(key);
+    key = g_strdup_printf("/apps/" PACKAGE "/wms/server%d", count);
+    gconf_client_set_string(client, key, cur->server, NULL);
+    g_free(key);
+    key = g_strdup_printf("/apps/" PACKAGE "/wms/path%d", count);
+    gconf_client_set_string(client, key, cur->path, NULL);
+    g_free(key);
+    
+    count++;
+    cur = cur->next;
+  }
+
+  char *key = g_strdup_printf("/apps/" PACKAGE "/wms/count");
+  gconf_client_set_int(client, key, count, NULL);
+  g_free(key);
 }
 
 void settings_free(settings_t *settings) {
   store_t *st = store;
 
-  /* this is only required because wms_xxx is not yet stored properly */
-  g_free(settings->wms_server);
-  g_free(settings->wms_path);
-
+  wms_servers_free(settings->wms_server);
+  
   while(st->key) {
     void **ptr = ((void*)settings) + st->offset;
 

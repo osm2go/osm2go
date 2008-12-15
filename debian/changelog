@@ -2,6 +2,8 @@ osm2go (0.6-7) unstable; urgency=low
 
   * Changed directory layout for SVN import
   * Asynchronous network io
+  * Global and more flexible WMS server settings
+  * Global option to disable icons unless the n810 issue is solved
 	
  -- Till Harbaum <harbaum@metis>  Tue, 09 Dec 2008 20:47:45 +0100
 

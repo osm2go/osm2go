@@ -193,7 +193,7 @@ cb_menu_map_show_all(GtkWidget *window, gpointer data) {
   map_show_all(appdata);
 }
 
-/* ----------------------------------------------- ----------- */
+/* ---------------------------------------------------------- */
 
 #if 1  // mainly for testing
 static void 
@@ -219,18 +219,29 @@ cb_menu_redraw(GtkWidget *window, gpointer data) {
 #endif
 
 static void 
-cb_menu_style(GtkWidget *window, gpointer data) {
+cb_menu_style(GtkWidget *widget, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
 
   style_select(GTK_WIDGET(appdata->window), appdata);
 }
 
 static void 
-cb_menu_save_changes(GtkWidget *window, gpointer data) {
+cb_menu_map_no_icons(GtkWidget *widget, gpointer data) {
+  appdata_t *appdata = (appdata_t*)data;
+
+  map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
+  appdata->settings->no_icons = 
+    gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget));
+  map_paint(appdata);
+}
+
+static void 
+cb_menu_save_changes(GtkWidget *widget, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
 
   diff_save(appdata->project, appdata->osm);
-  statusbar_set(appdata, _("Saved all changes made to this project so far"), FALSE);
+  statusbar_set(appdata, _("Saved all changes made "
+			   "to this project so far"), FALSE);
 }
 
 
@@ -470,6 +481,16 @@ void menu_create(appdata_t *appdata) {
   gtk_menu_append(GTK_MENU_SHELL(submenu), item);
   g_signal_connect(item, "activate", GTK_SIGNAL_FUNC(cb_menu_style), appdata);
 
+  gtk_menu_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
+
+  appdata->menu_item_map_no_icons = 
+    item = gtk_check_menu_item_new_with_label( _("No Icons") );
+  gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item), 
+				 appdata->settings->no_icons);
+  gtk_menu_append(GTK_MENU_SHELL(submenu), item);
+  g_signal_connect(item, "activate", GTK_SIGNAL_FUNC(cb_menu_map_no_icons), 
+		   appdata);
+
   /* -------------------- track submenu -------------------- */
 
   appdata->track.menu_track = item = gtk_menu_item_new_with_label(_("Track"));
@@ -688,11 +709,11 @@ int main(int argc, char *argv[]) {
   g_signal_connect(G_OBJECT(appdata.window), "key_press_event",
  		   G_CALLBACK(on_window_key_press), &appdata);
 
-  appdata.vbox = gtk_vbox_new(FALSE,0);
-  menu_create(&appdata);
-
   /* user specific init */
   appdata.settings = settings_load();  
+
+  appdata.vbox = gtk_vbox_new(FALSE,0);
+  menu_create(&appdata);
 
   /* ----------------------- setup main window ---------------- */
 

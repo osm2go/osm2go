@@ -154,14 +154,6 @@ static gboolean project_read(appdata_t *appdata,
   xmlFreeDoc(doc);
   xmlCleanupParser();
 
-  /* ------------ set some default that may be missing ----------- */
-  /* ------- e.g. from project files saved by old versions ------- */
-  if(!project->wms_server)
-    project->wms_server = g_strdup(appdata->settings->wms_server);
-
-  if(!project->wms_path)
-    project->wms_path = g_strdup(appdata->settings->wms_path);
-
   return TRUE;
 }
 
@@ -221,8 +213,10 @@ gboolean project_save(GtkWidget *parent, project_t *project) {
   }
 
   node = xmlNewChild(root_node, NULL, BAD_CAST "wms", NULL);
-  xmlNewProp(node, BAD_CAST "server", BAD_CAST project->wms_server);
-  xmlNewProp(node, BAD_CAST "path", BAD_CAST project->wms_path);
+  if(project->wms_server)
+    xmlNewProp(node, BAD_CAST "server", BAD_CAST project->wms_server);
+  if(project->wms_path)
+    xmlNewProp(node, BAD_CAST "path", BAD_CAST project->wms_path);
   snprintf(str, sizeof(str), "%d", project->wms_offset.x);
   xmlNewProp(node, BAD_CAST "x-offset", BAD_CAST str);
   snprintf(str, sizeof(str), "%d", project->wms_offset.y);
@@ -519,10 +513,6 @@ project_t *project_new(select_context_t *context) {
   /* use global server/access settings */
   project->server   = g_strdup(context->settings->server);
   
-  /* dito for wms settings */
-  project->wms_server = g_strdup(context->settings->wms_server);
-  project->wms_path   = g_strdup(context->settings->wms_path);
-  
   /* build project osm file name */
   project->osm = g_strdup_printf("%s%s.osm", project->path, project->name);
 
@@ -546,6 +536,9 @@ project_t *project_new(select_context_t *context) {
 
     project = NULL;
   }
+
+  /* enable/disable edit/remove buttons */
+  view_selected(context, project);
 
   return project;
 }
@@ -626,6 +619,9 @@ static void on_project_edit(GtkButton *button, gpointer data) {
 
     
   }
+
+  /* enable/disable edit/remove buttons */
+  view_selected(context, project);
 }
 
 static GtkWidget *project_list_widget(select_context_t *context) {
