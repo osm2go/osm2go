@@ -44,6 +44,7 @@ typedef gulong elemstyle_color_t;
 typedef struct {
   gint width;
   elemstyle_color_t color;
+  gboolean dashed;
 
   struct {
     gboolean valid;
@@ -97,3 +98,5 @@ void josm_elemstyles_colorize_way(struct style_s *style, way_t *way);
 void josm_elemstyles_colorize_world(struct style_s *style, osm_t *osm);
 
 #endif // JOSM_ELEMSTYLES_H
+
+// vim:et:ts=8:sw=2:sts=2:ai

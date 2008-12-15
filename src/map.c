@@ -442,6 +442,10 @@ static canvas_item_t *map_way_new(map_t *map, canvas_group_t group,
 
   canvas_item_set_zoom_max(map_item->item, way->draw.zoom_max);
 
+  if (group != CANVAS_GROUP_WAYS_OL)
+    if (way->draw.dashed)
+      canvas_item_set_dashed(map_item->item);
+
   /* attach map_item to ways map_item_chain */
   map_item_chain_t **chain = &way->map_item_chain;
   while(*chain) chain = &(*chain)->next;
@@ -2263,3 +2267,4 @@ void map_show_all(appdata_t *appdata) {
 
   gtk_widget_set_sensitive(appdata->menu_item_map_show_all, FALSE);
 }
+// vim:et:ts=8:sw=2:sts=2:ai

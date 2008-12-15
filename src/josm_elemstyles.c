@@ -85,6 +85,24 @@ static gboolean parse_scale_max(xmlNode *a_node, float *val) {
     return FALSE;
 }
 
+static gboolean parse_gboolean(xmlNode *a_node, char *name, gboolean *val) {
+  char *bool_str = (char*)xmlGetProp(a_node, BAD_CAST name);
+  if (!bool_str) {
+    *val = FALSE;
+    return FALSE;
+  }
+  static const char *true_str[]  = { "1", "yes", "true", 0 };
+  int i;
+  for (i=0; true_str[i]; ++i) {
+    if (strcasecmp(bool_str, true_str[i])==0) {
+      *val = TRUE;
+      return TRUE;
+    }
+  }
+  *val = FALSE;
+  return TRUE;
+}
+
 static elemstyle_line_t *parse_line(xmlDocPtr doc, xmlNode *a_node) {
   elemstyle_line_t *line = g_new0(elemstyle_line_t, 1);
 
@@ -98,6 +116,8 @@ static elemstyle_line_t *parse_line(xmlDocPtr doc, xmlNode *a_node) {
   line->bg.valid = 
     parse_gint(a_node, "width_bg", &line->bg.width) &&
     parse_color(a_node, "colour_bg", &line->bg.color);
+
+  parse_gboolean(a_node, "dashed", &line->dashed);
 
   return line;
 }
@@ -382,6 +402,7 @@ void josm_elemstyles_colorize_way(style_t *style, way_t *way) {
 	else {
 	  way->draw.zoom_max = style->way.zoom_max;
 	}
+        way->draw.dashed = elemstyle->line->dashed;
 	return;
 	break;
 
@@ -432,3 +453,5 @@ void josm_elemstyles_colorize_way(style_t *style, way_t *way) {
     node = node->next;
   }
 }
+
+// vim:et:ts=8:sw=2:sts=2:ai

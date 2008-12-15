@@ -109,6 +109,19 @@ void canvas_item_set_zoom_max(canvas_item_t *item, float zoom_max) {
                NULL);
 }
 
+void canvas_item_set_dashed(canvas_item_t *item) {
+  static GooCanvasLineDash *dash;
+  if (!dash) {
+    dash = goo_canvas_line_dash_new(2, 3.0, 4.0, 0);
+    goo_canvas_line_dash_ref(dash);
+  }
+  // TODO: make the pattern width-dependent, or extend the elemstyles language
+  // to allow line patterns to be specified.
+  g_object_set(G_OBJECT(item),
+               "line-dash", dash,
+               NULL);
+}
+
 void canvas_item_destroy(canvas_item_t *item) {
   goo_canvas_item_remove(item);
 }

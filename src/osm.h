@@ -95,6 +95,7 @@ typedef struct way_s {
     gulong color;
     gint width;
     float zoom_max;
+    gboolean dashed;
 
     union {
       struct {
@@ -241,3 +242,5 @@ void osm_way_rotate(way_t *way, gint offset);
 tag_t *osm_tags_copy(tag_t *tag, gboolean update_creator);
 
 #endif /* OSM_H */
+
+// vim:et:ts=8:sw=2:sts=2:ai

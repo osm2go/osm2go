@@ -113,6 +113,10 @@ void canvas_item_set_zoom_max(canvas_item_t *item, float zoom_max) {
     /* This is a no-op for gnomecanvas for now. */
 }
 
+void canvas_item_set_dashed(canvas_item_t *item) {
+    /* no-op */
+}
+
 void canvas_item_to_bottom(canvas_item_t *item) {
   gnome_canvas_item_lower_to_bottom(item);
 }
