@@ -83,3 +83,4 @@ o remove double first/last points from polygons (not worth the effort)
 - determine nice default scroll position for new projects
 + redo file structure before svn import
 - unify download management, cope with none/invalid osm file present
+- fix inconsistant RGB/RGBA usage

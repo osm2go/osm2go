@@ -209,6 +209,8 @@ void map_way_select(appdata_t *appdata, way_t *way) {
       diff.x = node_chain->node->lpos.x - last->lpos.x;
       diff.y = node_chain->node->lpos.y - last->lpos.y;
 
+      /* only draw arrow if there's sufficient space */
+      /* TODO: what if there's not enough space anywhere? */
       float len = sqrt(pow(diff.x, 2)+pow(diff.y, 2));
       if(len > map->style->highlight.arrow_limit*arrow_width) {
 	len /= arrow_width;
@@ -771,7 +773,7 @@ map_item_t *map_item_at(map_t *map, gint x, gint y) {
     return NULL;
   }
     
-  if(map_item->highlight)
+  if(map_item->highlight) 
     printf("  item is highlight\n");    
 
   switch(map_item->type) {
@@ -790,7 +792,7 @@ map_item_t *map_item_at(map_t *map, gint x, gint y) {
 }    
 
 /* get the real item (no highlight) at x, y */
-static map_item_t *map_real_item_at(map_t *map, gint x, gint y) { 
+map_item_t *map_real_item_at(map_t *map, gint x, gint y) { 
   map_item_t *map_item = map_item_at(map, x, y);
 
   /* no item or already a real one */
@@ -1626,7 +1628,7 @@ static gboolean map_motion_notify_event(GtkWidget *widget,
   case MAP_ACTION_NODE_ADD:
     map_hl_cursor_draw(map, x, y, FALSE, map->style->node.radius);
     break;
-    
+
   case MAP_ACTION_WAY_ADD:
     map_hl_cursor_draw(map, x, y, FALSE, map->style->node.radius);
     map_touchnode_update(appdata, x, y);
@@ -1634,13 +1636,13 @@ static gboolean map_motion_notify_event(GtkWidget *widget,
 
   case MAP_ACTION_WAY_NODE_ADD:
     map_hl_cursor_clear(map);
-    map_item_t *item = map_item_at(map, x, y);
+    map_item_t *item = map_real_item_at(map, x, y);
     if(item) map_edit_way_node_add_highlight(map, item, x, y);
     break;
 
   case MAP_ACTION_WAY_CUT:
     map_hl_cursor_clear(map);
-    item = map_item_at(map, x, y);
+    item = map_real_item_at(map, x, y);
     if(item) map_edit_way_cut_highlight(map, item, x, y);
     break;
 

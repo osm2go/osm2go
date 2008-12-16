@@ -2,6 +2,12 @@
 <!-- written for osm2go may be compatible with josm -->
 
 <rules>
+
+  <rule>
+    <condition k="bridge" v="yes"/>
+    <linemod width_bg="+2"/>
+  </rule>
+    
   <rule>
     <condition k="highway" v="motorway"/>
     <line width="3" colour="#809BC0" width_bg="6" colour_bg="#606060"/>

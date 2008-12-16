@@ -191,6 +191,7 @@ gboolean map_item_is_selected_node(map_t *map, map_item_t *map_item);
 gboolean map_item_is_selected_way(map_t *map, map_item_t *map_item);
 void map_item_chain_destroy(map_item_chain_t **chainP);
 map_item_t *map_item_at(map_t *map, gint x, gint y);
+map_item_t *map_real_item_at(map_t *map, gint x, gint y);
 void map_item_deselect(appdata_t *appdata);
 void map_way_delete(appdata_t *appdata, way_t *way);
 void map_way_draw(map_t *map, way_t *way);

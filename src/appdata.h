@@ -119,6 +119,7 @@ typedef struct appdata_s {
   GtkWidget *menu_osm;
   GtkWidget *menu_item_osm_upload;
   GtkWidget *menu_item_osm_diff;
+  GtkWidget *menu_item_osm_undo_changes;
 
   GtkWidget *menu_wms;
   GtkWidget *menu_item_wms_clear;

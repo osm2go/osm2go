@@ -55,6 +55,7 @@ static void main_ui_enable(appdata_t *appdata) {
   gtk_widget_set_sensitive(appdata->menu_osm, project_valid);
   gtk_widget_set_sensitive(appdata->menu_item_osm_upload, osm_valid);
   gtk_widget_set_sensitive(appdata->menu_item_osm_diff, osm_valid);
+  gtk_widget_set_sensitive(appdata->menu_item_osm_undo_changes, osm_valid);
   gtk_widget_set_sensitive(appdata->track.menu_track, osm_valid);
   gtk_widget_set_sensitive(appdata->menu_view, osm_valid);
   gtk_widget_set_sensitive(appdata->menu_wms, osm_valid);
@@ -244,6 +245,26 @@ cb_menu_save_changes(GtkWidget *widget, gpointer data) {
 			   "to this project so far"), FALSE);
 }
 
+static void 
+cb_menu_undo_changes(GtkWidget *widget, gpointer data) {
+  appdata_t *appdata = (appdata_t*)data;
+
+  if(!yes_no_f(GTK_WIDGET(appdata->window), NULL, 0, 0,
+	       _("Undo all changes?"), 
+	       _("Do you really want to undo all your changes "
+		 "not uploaded so far? This cannot be undone!")))
+    return;
+     
+  map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
+  osm_free(&appdata->icon, appdata->osm);
+  diff_remove(appdata->project);
+  appdata->osm = osm_parse(appdata->project->osm);
+  map_paint(appdata);
+
+  statusbar_set(appdata, _("All changes made "
+			   "so far have been reset"), FALSE);
+}
+
 
 #ifdef USE_HILDON
 static void 
@@ -420,6 +441,12 @@ void menu_create(appdata_t *appdata) {
     gtk_menu_item_new_with_label( _("Save diff file") );
   gtk_menu_append(GTK_MENU_SHELL(submenu), item);
   g_signal_connect(item, "activate", GTK_SIGNAL_FUNC(cb_menu_save_changes), 
+		   appdata);
+
+  appdata->menu_item_osm_undo_changes = item = 
+    gtk_menu_item_new_with_label( _("Undo all changes...") );
+  gtk_menu_append(GTK_MENU_SHELL(submenu), item);
+  g_signal_connect(item, "activate", GTK_SIGNAL_FUNC(cb_menu_undo_changes), 
 		   appdata);
 
   /* -------------------- wms submenu -------------------- */

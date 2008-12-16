@@ -4,6 +4,7 @@ osm2go (0.6-7) unstable; urgency=low
   * Asynchronous network io
   * Global and more flexible WMS server settings
   * Global option to disable icons unless the n810 issue is solved
+  * Support for dashed lines and line mods
 	
  -- Till Harbaum <harbaum@metis>  Tue, 09 Dec 2008 20:47:45 +0100
 

@@ -168,11 +168,14 @@ GtkWidget *icon_add(GtkWidget *vbox, appdata_t *appdata,
 }
 
 static GtkWidget *tool_add(GtkWidget *toolbar, appdata_t *appdata, 
-		    char *icon_str, 
+		    char *icon_str,
+		    char *tooltip_str,
 		    void(*func)(GtkButton*, gpointer)) {
   GtkWidget *item = 
     GTK_WIDGET(gtk_tool_button_new(
 	   icon_widget_load(&appdata->icon, icon_str), NULL));
+
+  gtk_widget_set_tooltip_text(item, tooltip_str);
 
   if(func)
     gtk_signal_connect(GTK_OBJECT(item), "clicked",
@@ -200,39 +203,39 @@ GtkWidget *iconbar_new(appdata_t *appdata) {
   gtk_toolbar_set_style(GTK_TOOLBAR(iconbar->toolbar), GTK_TOOLBAR_ICONS);
 
   /* -------------------------------------------------------- */
-  iconbar->trash = tool_add(iconbar->toolbar, appdata, 
-			    "trash", on_trash_clicked);
+  iconbar->trash = tool_add(iconbar->toolbar, appdata,
+			    "trash", "Delete item", on_trash_clicked);
 
   /* -------------------------------------------------------- */
   gtk_toolbar_insert(GTK_TOOLBAR(iconbar->toolbar), 
 		     gtk_separator_tool_item_new(),-1);
-  iconbar->info = tool_add(iconbar->toolbar, appdata, "info", on_info_clicked);
+  iconbar->info = tool_add(iconbar->toolbar, appdata, "info", _("Properties"), on_info_clicked);
 
   /* -------------------------------------------------------- */
   gtk_toolbar_insert(GTK_TOOLBAR(iconbar->toolbar), 
 		     gtk_separator_tool_item_new(),-1);
 
-  iconbar->node_add = tool_add(iconbar->toolbar, appdata, "node_add", 
+  iconbar->node_add = tool_add(iconbar->toolbar, appdata, "node_add", _("Add node"), 
 			       on_node_add_clicked);
 
   /* -------------------------------------------------------- */
   gtk_toolbar_insert(GTK_TOOLBAR(iconbar->toolbar), 
 		     gtk_separator_tool_item_new(),-1);
 
-  iconbar->way_add = tool_add(iconbar->toolbar, appdata, "way_add", 
+  iconbar->way_add = tool_add(iconbar->toolbar, appdata, "way_add", _("Add way"),
 			      on_way_add_clicked);
-  iconbar->way_node_add = tool_add(iconbar->toolbar, appdata, "way_node_add", 
+  iconbar->way_node_add = tool_add(iconbar->toolbar, appdata, "way_node_add", _("Add a node to a way"),
 			      on_way_node_add_clicked);
-  iconbar->way_cut = tool_add(iconbar->toolbar, appdata, "way_cut", 
+  iconbar->way_cut = tool_add(iconbar->toolbar, appdata, "way_cut", _("Split way at a given node"),
 			      on_way_cut_clicked);
-  iconbar->way_reverse = tool_add(iconbar->toolbar, appdata, "way_reverse", 
+  iconbar->way_reverse = tool_add(iconbar->toolbar, appdata, "way_reverse", _("Reverse way"),
 			      on_way_reverse_clicked);
 
   /* -------------------------------------------------------- */
   gtk_toolbar_insert(GTK_TOOLBAR(iconbar->toolbar), 
 		     gtk_separator_tool_item_new(),-1);
 
-  iconbar->relation_add = tool_add(iconbar->toolbar, appdata, "relation_add", 
+  iconbar->relation_add = tool_add(iconbar->toolbar, appdata, "relation_add", _("Add relation"),
 			      on_relation_add_clicked);
 
   gtk_box_pack_start(GTK_BOX(box), iconbar->toolbar, TRUE, TRUE, 0);

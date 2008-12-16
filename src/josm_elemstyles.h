@@ -29,7 +29,8 @@ float zoom_to_scaledn(const float zoom);
 typedef enum { 
   ES_TYPE_NONE = 0, 
   ES_TYPE_LINE, 
-  ES_TYPE_AREA 
+  ES_TYPE_AREA,
+  ES_TYPE_LINE_MOD
 } elemstyle_type_t;
 
 typedef gulong elemstyle_color_t;
@@ -60,6 +61,25 @@ typedef struct {
   float zoom_max;   // XXX probably belongs in elemstyle_s
 } elemstyle_line_t;
 
+/* attribute modifiers */
+typedef enum { 
+  ES_MOD_NONE = 0,  // don't change attribute
+  ES_MOD_ADD,       // add constant value
+  ES_MOD_SUB,       // subtract constant value
+  ES_MOD_PERCENT    // scale by x percent
+} elemstyle_mod_mode_t;
+
+/* a width with modifier */
+typedef struct {
+  elemstyle_mod_mode_t mod;
+  gint width;
+} elemstyle_width_mod_t;
+
+
+typedef struct {
+  elemstyle_width_mod_t line, bg;
+} elemstyle_line_mod_t;
+
 typedef struct {
   elemstyle_color_t color;
   float zoom_max;   // XXX probably belongs in elemstyle_s
@@ -80,6 +100,7 @@ typedef struct elemstyle_s {
   elemstyle_type_t type;
 
   union {
+    elemstyle_line_mod_t *line_mod;
     elemstyle_line_t *line;
     elemstyle_area_t *area;
   };

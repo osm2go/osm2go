@@ -17,6 +17,10 @@
  * along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*
+  http://josm.openstreetmap.de/svn/trunk/styles/standard/elemstyles.xml
+*/
+
 #include "appdata.h"
 
 #include <libxml/parser.h>
@@ -122,6 +126,34 @@ static elemstyle_line_t *parse_line(xmlDocPtr doc, xmlNode *a_node) {
   return line;
 }
 
+/* parse "+123", "-123" and "123%" */
+static void parse_width_mod(xmlNode *a_node, char *name, 
+			    elemstyle_width_mod_t *value) {
+  char *mod_str = (char*)xmlGetProp(a_node, BAD_CAST name);
+  if(mod_str && strlen(mod_str) > 0) {
+    if(mod_str[0] == '+') {
+      value->mod = ES_MOD_ADD;
+      value->width = strtoul(mod_str+1, NULL, 10);
+    } else if(mod_str[0] == '-') {
+      value->mod = ES_MOD_SUB;
+      value->width = strtoul(mod_str+1, NULL, 10);
+    } else if(mod_str[strlen(mod_str)-1] == '%') {
+      value->mod = ES_MOD_PERCENT;
+      value->width = strtoul(mod_str, NULL, 10);
+    } else
+      printf("warning: unable to parse modifier %s\n", mod_str);
+  }
+}
+
+static elemstyle_line_mod_t *parse_line_mod(xmlDocPtr doc, xmlNode *a_node) {
+  elemstyle_line_mod_t *line_mod = g_new0(elemstyle_line_mod_t, 1);
+
+  parse_width_mod(a_node, "width", &line_mod->line);
+  parse_width_mod(a_node, "width_bg", &line_mod->bg);
+
+  return line_mod;
+}
+
 static elemstyle_area_t *parse_area(xmlDocPtr doc, xmlNode *a_node) {
   elemstyle_area_t *area = g_new0(elemstyle_area_t, 1);
 
@@ -159,11 +191,17 @@ static elemstyle_t *parse_rule(xmlDocPtr doc, xmlNode *a_node) {
 	/* ------ parse condition ------ */
 	elemstyle->condition.key   = (char*)xmlGetProp(cur_node, BAD_CAST "k");
 	elemstyle->condition.value = (char*)xmlGetProp(cur_node, BAD_CAST "v");
+	/* todo: add support for "b" (boolean) value */
       } else if(strcasecmp((char*)cur_node->name, "line") == 0) {
 	/* ------ parse line ------ */
 	g_assert(elemstyle->type == ES_TYPE_NONE);
 	elemstyle->type = ES_TYPE_LINE;
 	elemstyle->line = parse_line(doc, cur_node);
+      } else if(strcasecmp((char*)cur_node->name, "linemod") == 0) {
+	/* ------ parse linemod ------ */
+	g_assert(elemstyle->type == ES_TYPE_NONE);
+	elemstyle->type = ES_TYPE_LINE_MOD;
+	elemstyle->line_mod = parse_line_mod(doc, cur_node);
       } else if(strcasecmp((char*)cur_node->name, "area") == 0) { 
 	/* ------ parse area ------ */
 	g_assert(elemstyle->type == ES_TYPE_NONE);
@@ -186,7 +224,8 @@ static elemstyle_t *parse_rule(xmlDocPtr doc, xmlNode *a_node) {
             parse_scale_max(cur_node, &elemstyle->icon->zoom_max);
 	  }
 	  else {
-	    printf("scale_max for unhandled elemstyletype=0x02%x\n", elemstyle->type);
+	    printf("scale_max for unhandled elemstyletype=0x02%x\n", 
+		   elemstyle->type);
 	  }
 	  break;
 	}
@@ -270,6 +309,10 @@ static void free_line(elemstyle_line_t *line) {
   g_free(line);
 }
 
+static void free_line_mod(elemstyle_line_mod_t *line_mod) {
+  g_free(line_mod);
+}
+
 static void free_area(elemstyle_area_t *area) {
   g_free(area);
 }
@@ -291,6 +334,9 @@ static void elemstyle_free(elemstyle_t *elemstyle) {
     break;
   case ES_TYPE_AREA:
     free_area(elemstyle->area);
+    break;
+  case ES_TYPE_LINE_MOD:
+    free_line_mod(elemstyle->line_mod);
     break;
   }
   if(elemstyle->icon) free_icon(elemstyle->icon);
@@ -349,6 +395,25 @@ void josm_elemstyles_colorize_node(style_t *style, node_t *node) {
   }
 }
 
+static void line_mod_apply(gint *width, elemstyle_width_mod_t *mod) {
+  switch(mod->mod) {
+  case ES_MOD_NONE:
+    break;
+    
+  case ES_MOD_ADD:
+    *width += mod->width;
+    break;
+    
+  case ES_MOD_SUB:
+    *width -= mod->width;
+    break;
+      
+  case ES_MOD_PERCENT:
+    *width = 100 * *width / mod->width;
+    break;
+  }
+}
+
 void josm_elemstyles_colorize_way(style_t *style, way_t *way) {
   elemstyle_t *elemstyle = style->elemstyles;
 
@@ -358,6 +423,10 @@ void josm_elemstyles_colorize_way(style_t *style, way_t *way) {
   way->draw.flags = 0;
   way->draw.zoom_max = 0;   // draw at all zoom levels
 
+  /* during the elemstyle search a line_mod may be found. save it here */
+  elemstyle_line_mod_t *line_mod = NULL;
+  
+  gboolean way_processed = FALSE;
   gboolean way_is_closed = 
     (osm_way_get_last_node(way) == osm_way_get_first_node(way));
 
@@ -389,25 +458,32 @@ void josm_elemstyles_colorize_way(style_t *style, way_t *way) {
 	break;
 
       case ES_TYPE_LINE:
-	way->draw.color = (elemstyle->line->color << 8) | 0xff;
-	way->draw.width =  WIDTH_SCALE * elemstyle->line->width;
-	if(elemstyle->line->bg.valid) {
-	  way->draw.flags |= OSM_DRAW_FLAG_BG;
-	  way->draw.bg.color = (elemstyle->line->bg.color << 8) | 0xff;
-	  way->draw.bg.width =  WIDTH_SCALE * elemstyle->line->bg.width;
+	if(!way_processed) {
+	  way->draw.color = (elemstyle->line->color << 8) | 0xff;
+	  way->draw.width =  WIDTH_SCALE * elemstyle->line->width;
+	  if(elemstyle->line->bg.valid) {
+	    way->draw.flags |= OSM_DRAW_FLAG_BG;
+	    way->draw.bg.color = (elemstyle->line->bg.color << 8) | 0xff;
+	    way->draw.bg.width =  WIDTH_SCALE * elemstyle->line->bg.width;
+	  }
+	  if (elemstyle->line->zoom_max > 0) {
+	    way->draw.zoom_max = elemstyle->line->zoom_max;
+	  }
+	  else {
+	    way->draw.zoom_max = style->way.zoom_max;
+	  }
+	  way->draw.dashed = elemstyle->line->dashed;
+	  way_processed = TRUE;
 	}
-	if (elemstyle->line->zoom_max > 0) {
-	  way->draw.zoom_max = elemstyle->line->zoom_max;
-	}
-	else {
-	  way->draw.zoom_max = style->way.zoom_max;
-	}
-        way->draw.dashed = elemstyle->line->dashed;
-	return;
+	break;
+
+      case ES_TYPE_LINE_MOD:
+	/* just save the fact that a line mod was found for later */
+	line_mod = elemstyle->line_mod;
 	break;
 
       case ES_TYPE_AREA:
-	if(way_is_closed) {
+	if(way_is_closed && !way_processed) {
 	  way->draw.flags |= OSM_DRAW_FLAG_AREA;
 	  /* comment the following line for grey border around all areas */
 	  /* (potlatch style) */
@@ -426,12 +502,32 @@ void josm_elemstyles_colorize_way(style_t *style, way_t *way) {
 	  else {
 	    way->draw.zoom_max = style->area.zoom_max;
 	  }
-	  return;
+	  way_processed = TRUE;
 	}
 	break;
       }
     }
     elemstyle = elemstyle->next;
+  }
+
+  /* apply the last line mod entry that has been found during search */
+  if(line_mod) {
+    printf("applying last matching line mod to way #%ld\n", way->id);
+    line_mod_apply(&way->draw.width, &line_mod->line);
+
+    /* special case: the way does not have a background, but it is to */
+    /* be modified */
+    if((line_mod->bg.mod != ES_MOD_NONE) && 
+       (!(way->draw.flags & OSM_DRAW_FLAG_BG))) {
+      printf("forcing background\n");
+
+      /* add a background in black color */
+      way->draw.flags |= OSM_DRAW_FLAG_BG;
+      way->draw.bg.color = (0) | 0xff;
+      way->draw.bg.width =  way->draw.width;
+    }
+
+    line_mod_apply(&way->draw.bg.width, &line_mod->bg);
   }
 }
 
