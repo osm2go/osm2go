@@ -175,7 +175,9 @@ static GtkWidget *tool_add(GtkWidget *toolbar, appdata_t *appdata,
     GTK_WIDGET(gtk_tool_button_new(
 	   icon_widget_load(&appdata->icon, icon_str), NULL));
 
+#ifndef USE_HILDON
   gtk_widget_set_tooltip_text(item, tooltip_str);
+#endif
 
   if(func)
     gtk_signal_connect(GTK_OBJECT(item), "clicked",
