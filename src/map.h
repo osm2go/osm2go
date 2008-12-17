@@ -29,8 +29,7 @@
 #define MAP_COLOR_NONE   0x0
 #define NO_COLOR         CANVAS_COLOR(0x00,0x00,0x00,0x00)
 
-#define RGB2CANVAS(a)    (((a)<<8) | 0xff) 
-#define RGBA2CANVAS(a,b) (((a)<<8) | (b)) 
+#define RGBA_COMBINE(a,b) (((a)&~0xff) | ((b)&0xff)) 
 
 #define ZOOM_FACTOR_MENU   (1.5)
 #define ZOOM_FACTOR_WHEEL  (1.1)

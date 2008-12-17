@@ -1,3 +1,9 @@
+osm2go (0.6-8) unstable; urgency=low
+
+  * Unified internal color model <till@harbaum.org>
+	
+ -- Till Harbaum <till@harbaum.org>  Wed, 17 Dec 2008 20:02:24 +0100
+
 osm2go (0.6-7) unstable; urgency=low
 
   * Changed directory layout for SVN import

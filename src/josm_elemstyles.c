@@ -50,16 +50,56 @@ inline float zoom_to_scaledn(const float zoom) {
 
 /* --------------------- elemstyles.xml parsing ----------------------- */
 
+static int get_hex_digit(char c) {
+  if((c >= '0')&&(c <= '9')) return c-'0';
+  if((c >= 'a')&&(c <= 'f')) return c-'a'+10;
+  if((c >= 'A')&&(c <= 'F')) return c-'A'+10;
+  return -1;
+}
+
+static int get_hex_byte(char *str) {
+  int d0 = get_hex_digit(str[0]);
+  int d1 = get_hex_digit(str[1]);
+
+  if((d0 < 0) || (d1 < 0)) return -1;
+
+  return 16*d0+d1;
+}
+
 gboolean parse_color(xmlNode *a_node, char *name, 
 		     elemstyle_color_t *color) {
   char *color_str = (char*)xmlGetProp(a_node, BAD_CAST name);
   if(color_str) {
+    /* if the color name contains a # it's a hex representation */
+    /* we parse this directly since gdk_color_parse doesn't cope */
+    /* with the alpha channel that may be present */
+    if(strchr(color_str, '#')) {
+      char *begin = strchr(color_str, '#')+1;
+
+      g_assert(strlen(begin) >= 6);
+      int r = get_hex_byte(begin+0);
+      int g = get_hex_byte(begin+2);
+      int b = get_hex_byte(begin+4);
+
+      /* get alpha channel if present, 0xff otherwise */
+      int a = 0xff;
+      if(strlen(begin) >= 8) {
+	a = get_hex_byte(begin+6);
+	if(a < 0) a = 0xff;
+      }
+      
+      *color = (r<<24) + (g<<16) + (b<<8) + a;
+      xmlFree(color_str);
+      return TRUE;
+    }
+
     GdkColor gdk_color;
     if(gdk_color_parse(color_str, &gdk_color)) {
       *color = 
-	((gdk_color.red   << 8) & 0xff0000) |
-	((gdk_color.green     ) & 0xff00) |
-	((gdk_color.blue  >> 8) & 0xff);
+	((gdk_color.red   << 16) & 0xff000000) |
+	((gdk_color.green <<  8) & 0xff0000) |
+	((gdk_color.blue       ) & 0xff00) |
+	(0xff);
       
       xmlFree(color_str);
       return TRUE;
@@ -80,13 +120,13 @@ static gboolean parse_gint(xmlNode *a_node, char *name, gint *val) {
 }
 
 static gboolean parse_scale_max(xmlNode *a_node, float *val) {
-    xmlChar *val_str = xmlNodeGetContent(a_node);
-    if (val_str) {
-        *val = scaledn_to_zoom(strtod((char *)val_str, NULL));
-        xmlFree(val_str);
-        return TRUE;
-    }
-    return FALSE;
+  xmlChar *val_str = xmlNodeGetContent(a_node);
+  if (val_str) {
+    *val = scaledn_to_zoom(strtod((char *)val_str, NULL));
+    xmlFree(val_str);
+    return TRUE;
+  }
+  return FALSE;
 }
 
 static gboolean parse_gboolean(xmlNode *a_node, char *name, gboolean *val) {
@@ -418,7 +458,7 @@ void josm_elemstyles_colorize_way(style_t *style, way_t *way) {
   elemstyle_t *elemstyle = style->elemstyles;
 
   /* use dark grey/no stroke/not filled for everything unknown */
-  way->draw.color = RGB2CANVAS(style->way.color);
+  way->draw.color = style->way.color;
   way->draw.width = style->way.width;
   way->draw.flags = 0;
   way->draw.zoom_max = 0;   // draw at all zoom levels
@@ -459,11 +499,11 @@ void josm_elemstyles_colorize_way(style_t *style, way_t *way) {
 
       case ES_TYPE_LINE:
 	if(!way_processed) {
-	  way->draw.color = (elemstyle->line->color << 8) | 0xff;
+	  way->draw.color = elemstyle->line->color;
 	  way->draw.width =  WIDTH_SCALE * elemstyle->line->width;
 	  if(elemstyle->line->bg.valid) {
 	    way->draw.flags |= OSM_DRAW_FLAG_BG;
-	    way->draw.bg.color = (elemstyle->line->bg.color << 8) | 0xff;
+	    way->draw.bg.color = elemstyle->line->bg.color;
 	    way->draw.bg.width =  WIDTH_SCALE * elemstyle->line->bg.width;
 	  }
 	  if (elemstyle->line->zoom_max > 0) {
@@ -489,13 +529,14 @@ void josm_elemstyles_colorize_way(style_t *style, way_t *way) {
 	  /* (potlatch style) */
 
 	  if(style->area.has_border_color)
-	    way->draw.color =  (style->area.border_color << 8) | 0xff;
+	    way->draw.color = style->area.border_color;
 	  else
-	    way->draw.color =  (elemstyle->area->color << 8) | 0xff;
+	    way->draw.color = elemstyle->area->color;
 
 	  way->draw.width =  WIDTH_SCALE * style->area.border_width;
-	  way->draw.area.color = (elemstyle->area->color << 8) | 
-	                        style->area.opaque;
+	  /* apply area alpha */
+	  way->draw.area.color = 
+	    RGBA_COMBINE(elemstyle->area->color, style->area.color);
 	  if (elemstyle->area->zoom_max > 0) {
 	    way->draw.zoom_max = elemstyle->area->zoom_max;
 	  }

@@ -4,13 +4,13 @@
        	<elemstyles filename="elemstyles.xml"/>
        	<node radius="2" border-radius="3" fill-color="red" color="red" show-untagged="true"/>
        	<way width="2" color="#c0c0c0"/>
-       	<area border-width="1" opaque="0%"/>
+       	<area border-width="1" color="#00000000"/>
        	<background color="black"/>
-       	<track width="6" color="#0000ff" opaque="25%" gps-color="#000080"/>
-       	<highlight color="#ffff00" node-color="#ff0000"  touch-color="#0000ff" opaque="75%" width="2"/>
+       	<track width="6" color="#0000ff40" gps-color="#00008040"/>
+       	<highlight color="#ffff00c0" node-color="#ff0000c0"  touch-color="#0000ffc0" width="2"/>
 
-	<frisket mult="3" opaque="0%">
-  		<border width="20" color="#ff0000" opaque="75%"/>
+	<frisket mult="3" color="#00000000">
+  		<border width="20" color="#ff0000c0"/>
 	</frisket>
 	<icon enable="false"/>
 </style>

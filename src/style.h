@@ -46,13 +46,13 @@ typedef struct style_s {
     gboolean has_border_color;
     elemstyle_color_t border_color;
     float border_width;
-    gint opaque;
+    elemstyle_color_t color;
     float zoom_max;
   } area;
 
   struct {
     float mult;
-    gint opaque;
+    elemstyle_color_t color;      
 
     struct {
       gboolean present;
@@ -62,7 +62,6 @@ typedef struct style_s {
   } frisket;
 
   struct {
-    gboolean has_fill_color;   // not filled if no color is set
     float radius, border_radius;
     elemstyle_color_t fill_color, color;
     gboolean show_untagged;

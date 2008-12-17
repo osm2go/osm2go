@@ -34,13 +34,6 @@ static void xml_get_prop_float(xmlNode *node, char *prop, float *value) {
   }
 }
 
-static int xml_get_prop_opaque(xmlNode *node, char *prop) {
-  float opaque = 100;
-  xml_get_prop_float(node, prop, &opaque);
-  if(opaque > 255) opaque = 255;
-  return(0xff & (int)(0.5 + opaque * 2.55));
-}
-
 static gboolean xml_prop_is(xmlNode *node, char *prop, char *str) {
   char *prop_str = (char*)xmlGetProp(node, BAD_CAST prop);
   if(!prop_str) return FALSE;
@@ -58,27 +51,26 @@ static style_t *parse_style(xmlDocPtr doc, xmlNode *a_node) {
 
   /* -------------- setup defaults -------------------- */
   /* (the defaults are pretty much the potlatch style) */
-  style->background.color       = 0xffffff;   // white
+  style->background.color       = 0xffffffff; // white
 
   style->area.border_width      = 2.0;
-  style->area.opaque            = 0x60;       // 37.5%
+  style->area.color             = 0x00000060; // 37.5%
   style->area.zoom_max          = 0.1111;     // zoom factor above which an area is visible & selectable
 
   style->node.radius            = 4.0;
   style->node.border_radius     = 2.0;
-  style->node.color             = 0x000000;   // black
-  style->node.has_fill_color    = TRUE;       // is filled ...
-  style->node.fill_color        = 0x008800;   // ... in dark green
+  style->node.color             = 0x000000ff; // black with filling ...
+  style->node.fill_color        = 0x008800ff; // ... in dark green
   style->node.show_untagged     = FALSE;
   style->node.zoom_max          = 0.4444;     // zoom factor above which a node is visible & selectable
 
   style->track.width            = 6.0;
   style->track.color            = 0x0000ff40; // blue
-  style->track.gps_color        = 0x000080;
+  style->track.gps_color        = 0x000080ff;
 
   style->way.width              = 3.0;
-  style->way.color              = 0x606060;   // grey
-  style->way.zoom_max           = 0.2222;       // zoom above which it's visible & selectable
+  style->way.color              = 0x606060ff; // grey
+  style->way.zoom_max           = 0.2222;     // zoom above which it's visible & selectable
 
   style->highlight.width        = 3.0;
   style->highlight.color        = 0xffff0080;
@@ -88,7 +80,7 @@ static style_t *parse_style(xmlDocPtr doc, xmlNode *a_node) {
   style->highlight.arrow_limit  = 4.0;
 
   style->frisket.mult           = 3.0;
-  style->frisket.opaque         = 0xff;
+  style->frisket.color          = 0xffffffff;
   style->frisket.border.present = TRUE;
   style->frisket.border.width   = 6.0;
   style->frisket.border.color   = 0x00000099;
@@ -106,8 +98,7 @@ static style_t *parse_style(xmlDocPtr doc, xmlNode *a_node) {
 	/* ---------- node ------------------------------------- */
       } else if(strcasecmp((char*)cur_node->name, "node") == 0) {
 	parse_color(cur_node, "color", &style->node.color);
-	style->node.has_fill_color = 
-	  parse_color(cur_node, "fill-color", &style->node.fill_color);
+	parse_color(cur_node, "fill-color", &style->node.fill_color);
 	xml_get_prop_float(cur_node, "radius", &style->node.radius);
 	xml_get_prop_float(cur_node, "border-radius", 
 			   &style->node.border_radius);
@@ -124,7 +115,8 @@ static style_t *parse_style(xmlDocPtr doc, xmlNode *a_node) {
 	/* ---------- icon ------------------------------------- */
       } else if(strcasecmp((char*)cur_node->name, "icon") == 0) {
 	xml_get_prop_float(cur_node, "scale", &style->icon.scale);
-        style->icon.path_prefix = (char*)xmlGetProp(cur_node, BAD_CAST "path-prefix");
+        style->icon.path_prefix = 
+	  (char*)xmlGetProp(cur_node, BAD_CAST "path-prefix");
 	style->icon.enable = xml_prop_is(cur_node, "enable", "true");
 
 	/* ---------- way ------------------------------------- */
@@ -141,7 +133,7 @@ static style_t *parse_style(xmlDocPtr doc, xmlNode *a_node) {
 	/* ---------- frisket --------------------------------- */
       } else if(strcasecmp((char*)cur_node->name, "frisket") == 0) {
 	xml_get_prop_float(cur_node, "mult", &style->frisket.mult);
-	style->frisket.opaque = xml_get_prop_opaque(cur_node, "opaque");
+	parse_color(cur_node, "arrow-color", &style->frisket.color);
 	style->frisket.border.present = FALSE;
 
 	for(sub_node = cur_node->children; sub_node; sub_node=sub_node->next) {
@@ -151,63 +143,40 @@ static style_t *parse_style(xmlDocPtr doc, xmlNode *a_node) {
 	      xml_get_prop_float(sub_node, "width", 
 				 &style->frisket.border.width);
 
-	      gboolean color_set = 
-		parse_color(sub_node, "color", &style->frisket.border.color);
-	      int opaque = xml_get_prop_opaque(sub_node, "opaque");
-	      if(color_set)
-		style->frisket.border.color = 
-		  (style->frisket.border.color<<8) | opaque;
+	      parse_color(sub_node, "color", &style->frisket.border.color);
 	    }
 	  }
 	}
 
 	/* ---------- highlight ------------------------------- */
       } else if(strcasecmp((char*)cur_node->name, "highlight") == 0) {
-	gboolean color_set = 
-	  parse_color(cur_node, "color", &style->highlight.color);
-	gboolean node_color_set = 
-	  parse_color(cur_node, "node-color", &style->highlight.node_color);
-	gboolean touch_color_set = 
-	  parse_color(cur_node, "touch-color", &style->highlight.touch_color);
-	gboolean arrow_color_set = 
-	  parse_color(cur_node, "arrow-color", &style->highlight.arrow_color);
+	parse_color(cur_node, "color", &style->highlight.color);
+	parse_color(cur_node, "node-color", &style->highlight.node_color);
+	parse_color(cur_node, "touch-color", &style->highlight.touch_color);
+	parse_color(cur_node, "arrow-color", &style->highlight.arrow_color);
 	xml_get_prop_float(cur_node, "width", &style->highlight.width);
 	xml_get_prop_float(cur_node, "arrow-limit", 
 			   &style->highlight.arrow_limit);
 
-	int op = xml_get_prop_opaque(cur_node, "opaque");
-	if(color_set) 
-	  style->highlight.color = (style->highlight.color << 8) | op;
-	if(node_color_set) 
-	  style->highlight.node_color =(style->highlight.node_color << 8)|op;
-	if(touch_color_set) 
-	  style->highlight.touch_color =(style->highlight.touch_color << 8)|op;
-	if(arrow_color_set)
-	  style->highlight.arrow_color =(style->highlight.arrow_color << 8)|op;
-
 	/* ---------- track ------------------------------------ */
       } else if(strcasecmp((char*)cur_node->name, "track") == 0) {
-	gboolean color_set = 
-	  parse_color(cur_node, "color", &style->track.color);
+	parse_color(cur_node, "color", &style->track.color);
 	parse_color(cur_node, "gps-color", &style->track.gps_color);
 	xml_get_prop_float(cur_node, "width", &style->track.width);
-
-	int opaque = xml_get_prop_opaque(cur_node, "opaque");
-	if(color_set) style->track.color = (style->track.color<<8) | opaque;
 
 	/* ---------- area ------------------------------------- */
       } else if(strcasecmp((char*)cur_node->name, "area") == 0) {
 	style->area.has_border_color = 
 	  parse_color(cur_node, "border-color", &style->area.border_color);
 	xml_get_prop_float(cur_node,"border-width", &style->area.border_width);
-    float scale_max = 0;
+	float scale_max = 0;
 	xml_get_prop_float(cur_node, "scale-max", &scale_max);
-    if (scale_max > 0)
+	if (scale_max > 0)
 	  style->area.zoom_max = scaledn_to_zoom(scale_max);
 	else
-      style->area.zoom_max = 0;
+	  style->area.zoom_max = 0;
 
-	style->area.opaque = xml_get_prop_opaque(cur_node, "opaque");
+	parse_color(cur_node, "color", &style->area.color);
 
 	/* ---------- background ------------------------------- */
       } else if(strcasecmp((char*)cur_node->name, "background") == 0) {

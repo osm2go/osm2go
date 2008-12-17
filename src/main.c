@@ -19,6 +19,7 @@
 #include <string.h>
 
 #include <curl/curl.h>
+#include <gdk/gdkkeysyms.h>
 
 #include "appdata.h"
 
@@ -75,8 +76,8 @@ static struct {
   char *title;
   GCallback c_handler;
 } menu[] = {
-  { MENU_SUB, "OSM", NULL },
-
+  { MENU_SUB, "_OSM", NULL },
+  
   { MENU_END,  NULL, NULL },
 };
 #endif
@@ -265,8 +266,6 @@ cb_menu_undo_changes(GtkWidget *widget, gpointer data) {
 			   "so far have been reset"), FALSE);
 }
 
-
-#ifdef USE_HILDON
 static void 
 cb_menu_fullscreen(GtkWidget *widget, gpointer data) {
   appdata_t *appdata = (appdata_t *)data;
@@ -276,7 +275,6 @@ cb_menu_fullscreen(GtkWidget *widget, gpointer data) {
   else
     gtk_window_unfullscreen(GTK_WINDOW(appdata->window));
 }
-#endif
 
 static void 
 cb_menu_zoomin(GtkWidget *widget, appdata_t *appdata) {
@@ -401,13 +399,11 @@ void menu_create(appdata_t *appdata) {
   submenu = gtk_menu_new();
   gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), submenu);
   
-#ifdef USE_HILDON
-  appdata->fullscreen_menu_item = 
+  appdata->menu_item_view_fullscreen = 
     item = gtk_check_menu_item_new_with_label( _("Fullscreen") );
   gtk_menu_append(GTK_MENU_SHELL(submenu), item);
   g_signal_connect(item, "activate", GTK_SIGNAL_FUNC(cb_menu_fullscreen), 
 		   appdata);
-#endif
 
   item = gtk_menu_item_new_with_label( _("Zoom +" ));
   gtk_menu_append(GTK_MENU_SHELL(submenu), item);
@@ -507,8 +503,6 @@ void menu_create(appdata_t *appdata) {
   item = gtk_menu_item_new_with_label( _("Style...") );
   gtk_menu_append(GTK_MENU_SHELL(submenu), item);
   g_signal_connect(item, "activate", GTK_SIGNAL_FUNC(cb_menu_style), appdata);
-
-  gtk_menu_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
 
   appdata->menu_item_map_no_icons = 
     item = gtk_check_menu_item_new_with_label( _("No Icons") );
@@ -642,34 +636,28 @@ gboolean on_window_key_press(GtkWidget *widget,
   appdata_t *appdata = (appdata_t*)data;
   int handled = FALSE;
 
-  //  printf("key event %d\n", event->keyval);
-
   // the map handles some keys on its own ...
   switch(event->keyval) {
-#ifdef USE_HILDON
 
-#if 0
-  case HILDON_HARDKEY_SELECT:
+#ifdef USE_HILDON
+    /* this is in fact a mapping to GDK_F6 */
+  case HILDON_HARDKEY_FULLSCREEN:
+#else
+  case GDK_F11:
+#endif
+    if(!gtk_check_menu_item_get_active(
+             GTK_CHECK_MENU_ITEM(appdata->menu_item_view_fullscreen))) {
+      gtk_window_fullscreen(GTK_WINDOW(appdata->window));
+      gtk_check_menu_item_set_active(
+	     GTK_CHECK_MENU_ITEM(appdata->menu_item_view_fullscreen), TRUE);
+      } else {
+	gtk_window_unfullscreen(GTK_WINDOW(appdata->window));
+	gtk_check_menu_item_set_active(
+	     GTK_CHECK_MENU_ITEM(appdata->menu_item_view_fullscreen), FALSE);
+      }
+    
     handled = TRUE;
     break;
-#endif
-    
-  case HILDON_HARDKEY_FULLSCREEN:
-    {
-      gboolean fullscreen = !gtk_check_menu_item_get_active(
-	       GTK_CHECK_MENU_ITEM(appdata->fullscreen_menu_item));
-      gtk_check_menu_item_set_active(
-	       GTK_CHECK_MENU_ITEM(appdata->fullscreen_menu_item), fullscreen);
-
-      if(fullscreen)
-	gtk_window_fullscreen(GTK_WINDOW(appdata->window));
-      else
-	gtk_window_unfullscreen(GTK_WINDOW(appdata->window));
-
-      handled = TRUE;
-    }
-    break;
-#endif
   }
 
   /* forward unprocessed key presses to map */
@@ -750,7 +738,15 @@ int main(int argc, char *argv[]) {
 #ifdef PORTRAIT
   gtk_box_pack_start(GTK_BOX(vbox), iconbar_new(&appdata), FALSE, FALSE, 0);
 #endif
-  gtk_box_pack_start(GTK_BOX(vbox), map_new(&appdata), TRUE, TRUE, 0);
+
+  /* generate main map view */
+  GtkWidget *map = map_new(&appdata);
+  if(!map) {
+    cleanup(&appdata);
+    return -1;
+  }
+
+  gtk_box_pack_start(GTK_BOX(vbox), map, TRUE, TRUE, 0);
   gtk_box_pack_start(GTK_BOX(vbox), statusbar_new(&appdata), FALSE, FALSE, 0);
 
 #ifndef PORTRAIT

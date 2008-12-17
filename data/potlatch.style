@@ -3,12 +3,12 @@
         <elemstyles filename="elemstyles-potlatch.xml"/>
         <node radius="4" border-radius="2" fill-color="#008800" color="black"/>
         <way width="2" color="#606060"/>
-        <area border-width="2" border-color="#606060" opaque="40%"/>
+        <area border-width="2" border-color="#606060" color="#00000066"/>
         <background color="white"/>
-        <track width="6" color="#0000ff" opaque="25%" gps-color="#000080"/>
-        <highlight color="#ffff00" node-color="#ff0000" arrow-color="#0000ff" touch-color="#0000ff" opaque="50%" width="3" arrow-limit="4"/>
-	<frisket mult="3" opaque="100%">
-  		<border width="6" color="#000000" opaque="75%"/>
+        <track width="6" color="#0000ff40" gps-color="#00008040"/>
+        <highlight color="#ffff0080" node-color="#ff000080" arrow-color="#0000ff80" touch-color="#0000ff80" width="3" arrow-limit="4"/>
+	<frisket mult="3" color="white">
+  		<border width="6" color="#000000c0"/>
 	</frisket>
 	<icon enable="false"/>
 </style>

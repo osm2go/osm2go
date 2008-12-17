@@ -434,7 +434,7 @@ static canvas_item_t *map_way_new(map_t *map, canvas_group_t group,
   map_item->way = way;
 
   if(way->draw.flags & OSM_DRAW_FLAG_AREA) {
-    if(map->style->area.opaque)
+    if(map->style->area.color & 0xff)
       map_item->item = canvas_polygon_new(map, group, points, 
 					  width, color, fill_color);
     else
@@ -466,7 +466,7 @@ static canvas_item_t *map_way_new(map_t *map, canvas_group_t group,
 
 void map_show_node(map_t *map, node_t *node) {
   map_node_new(map, node, map->style->node.radius, 0,
-	       RGB2CANVAS(map->style->node.color), 0);
+	       map->style->node.color, 0);
 }
 
 void map_way_draw(map_t *map, way_t *way) {
@@ -481,7 +481,7 @@ void map_way_draw(map_t *map, way_t *way) {
   if(nodes == 1) {
     /* draw a single dot where this single node is */
     map_way_single_new(map, way, map->style->node.radius, 0, 
-		       RGB2CANVAS(map->style->node.color), 0);
+		       map->style->node.color, 0);
   } else {
     canvas_points_t *points = canvas_points_new(nodes);
     
@@ -517,14 +517,13 @@ void map_node_draw(map_t *map, node_t *node) {
     map_node_new(map, node, 
 		 map->style->node.radius,
 		 map->style->node.border_radius,
-		 RGBA2CANVAS(map->style->node.fill_color, 
-			     map->style->node.has_fill_color?0xff:0x00), 
-		 RGB2CANVAS(map->style->node.color));
+		 map->style->node.fill_color, 
+		 map->style->node.color);
   
   else if(map->style->node.show_untagged || osm_node_has_tag(node)) 
     map_node_new(map, node, 
 		 map->style->node.radius, 0,
-		 RGB2CANVAS(map->style->node.color), 0);
+		 map->style->node.color, 0);
 }
 
 static void map_item_draw(map_t *map, map_item_t *map_item) {
@@ -606,9 +605,8 @@ void map_frisket_draw(map_t *map, bounds_t *bounds) {
   canvas_points_t *points = canvas_points_new(5);
 
   /* don't draw frisket at all if it's completely transparent */
-  if(map->style->frisket.opaque) {
-    elemstyle_color_t color = 
-      (map->style->background.color<<8) | map->style->frisket.opaque;
+  if(map->style->frisket.color & 0xff) {
+    elemstyle_color_t color = map->style->frisket.color;
 
     float mult = map->style->frisket.mult;
 
@@ -1733,6 +1731,11 @@ GtkWidget *map_new(appdata_t *appdata) {
   map_t *map = appdata->map = g_new0(map_t, 1);
 
   map->style = style_load(appdata, appdata->settings->style);
+  if(!map->style) {
+    errorf(NULL, _("Unable to load valid style, terminating."));
+    g_free(map);
+    return NULL;
+  }
 
   if(appdata->project && appdata->project->map_state) {
     printf("Using projects map state\n");
@@ -2186,7 +2189,7 @@ void map_track_pos(appdata_t *appdata, lpos_t *lpos) {
   if(lpos)
     appdata->track.gps_item = canvas_circle_new(appdata->map, CANVAS_GROUP_GPS, 
 	lpos->x, lpos->y, appdata->map->style->track.width/2.0, 0, 
-			RGB2CANVAS(appdata->map->style->track.gps_color), NO_COLOR);
+			appdata->map->style->track.gps_color, NO_COLOR);
 }
 
 /* ------------------- map background ------------------ */

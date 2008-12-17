@@ -69,8 +69,6 @@ typedef struct appdata_s {
   HildonWindow *window;
   osso_context_t *osso_context;
 
-  /* and the ability to zoom */
-  GtkWidget *fullscreen_menu_item;
 #else
   GtkWidget *window;
 #endif
@@ -113,6 +111,7 @@ typedef struct appdata_s {
   } track;
 
   GtkWidget *menu_item_project_close;
+  GtkWidget *menu_item_view_fullscreen;
 
   GtkWidget *menu_view;
 
