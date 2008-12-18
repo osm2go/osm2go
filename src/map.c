@@ -1772,7 +1772,7 @@ GtkWidget *map_new(appdata_t *appdata) {
 
   g_object_set(G_OBJECT(map->canvas), "anchor", GTK_ANCHOR_CENTER, NULL);
   g_object_set(G_OBJECT(map->canvas), "background-color-rgb", 
-	       map->style->background.color, NULL);
+	       map->style->background.color >> 8, NULL);
 
   GooCanvasItem *root = goo_canvas_get_root_item(GOO_CANVAS(map->canvas));
 
