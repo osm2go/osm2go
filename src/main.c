@@ -238,6 +238,16 @@ cb_menu_map_no_icons(GtkWidget *widget, gpointer data) {
 }
 
 static void 
+cb_menu_map_no_antialias(GtkWidget *widget, gpointer data) {
+  appdata_t *appdata = (appdata_t*)data;
+
+  map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
+  appdata->settings->no_antialias = 
+    gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget));
+  map_paint(appdata);
+}
+
+static void 
 cb_menu_save_changes(GtkWidget *widget, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
 
@@ -494,15 +504,16 @@ void menu_create(appdata_t *appdata) {
 
   gtk_menu_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
 
-  item = gtk_menu_item_new_with_label( _("Redraw") );
-  gtk_menu_append(GTK_MENU_SHELL(submenu), item);
-  g_signal_connect(item, "activate", GTK_SIGNAL_FUNC(cb_menu_redraw), appdata);
-
-  gtk_menu_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
-
   item = gtk_menu_item_new_with_label( _("Style...") );
   gtk_menu_append(GTK_MENU_SHELL(submenu), item);
   g_signal_connect(item, "activate", GTK_SIGNAL_FUNC(cb_menu_style), appdata);
+
+  gtk_menu_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
+
+  /* switches mainly intended for testing/debugging */
+  item = gtk_menu_item_new_with_label( _("Redraw") );
+  gtk_menu_append(GTK_MENU_SHELL(submenu), item);
+  g_signal_connect(item, "activate", GTK_SIGNAL_FUNC(cb_menu_redraw), appdata);
 
   appdata->menu_item_map_no_icons = 
     item = gtk_check_menu_item_new_with_label( _("No Icons") );
@@ -510,6 +521,14 @@ void menu_create(appdata_t *appdata) {
 				 appdata->settings->no_icons);
   gtk_menu_append(GTK_MENU_SHELL(submenu), item);
   g_signal_connect(item, "activate", GTK_SIGNAL_FUNC(cb_menu_map_no_icons), 
+		   appdata);
+
+  appdata->menu_item_map_no_antialias = 
+    item = gtk_check_menu_item_new_with_label( _("No Antialias") );
+  gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item), 
+				 appdata->settings->no_antialias);
+  gtk_menu_append(GTK_MENU_SHELL(submenu), item);
+  g_signal_connect(item, "activate", GTK_SIGNAL_FUNC(cb_menu_map_no_antialias), 
 		   appdata);
 
   /* -------------------- track submenu -------------------- */

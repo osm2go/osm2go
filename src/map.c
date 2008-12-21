@@ -1582,7 +1582,7 @@ static gboolean map_motion_notify_event(GtkWidget *widget,
   /* reduce update frequency on hildon to keep screen update fluid */
   static guint32 last_time = 0;
 
-  if(event->time - last_time < 100) return FALSE;
+  if(event->time - last_time < 250) return FALSE;
   last_time = event->time;
 #endif
 
@@ -1775,6 +1775,9 @@ GtkWidget *map_new(appdata_t *appdata) {
 	       map->style->background.color >> 8, NULL);
 
   GooCanvasItem *root = goo_canvas_get_root_item(GOO_CANVAS(map->canvas));
+  g_object_set(G_OBJECT(root), "antialias", 
+	       appdata->settings->no_antialias?CAIRO_ANTIALIAS_NONE:
+	       CAIRO_ANTIALIAS_DEFAULT, NULL);
 
   /* create the groups */
   canvas_group_t group;
@@ -1883,6 +1886,12 @@ void map_clear(appdata_t *appdata, gint layer_mask) {
 
 void map_paint(appdata_t *appdata) {
   map_t *map = appdata->map;
+
+  /* user may have changes antialias settings */
+  GooCanvasItem *root = goo_canvas_get_root_item(GOO_CANVAS(map->canvas));
+  g_object_set(G_OBJECT(root), "antialias", 
+	       appdata->settings->no_antialias?CAIRO_ANTIALIAS_NONE:
+	       CAIRO_ANTIALIAS_DEFAULT, NULL);
 
   josm_elemstyles_colorize_world(map->style, appdata->osm);
   map_draw(map, appdata->osm);

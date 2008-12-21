@@ -36,23 +36,24 @@ typedef struct {
 
 static store_t store[] = {
   /* not user configurable */
-  { "base_path",        STORE_STRING, OFFSET(base_path) },
+  { "base_path",        STORE_STRING, OFFSET(base_path)    },
 
   /* from project.c */
-  { "project",          STORE_STRING, OFFSET(project)   },
+  { "project",          STORE_STRING, OFFSET(project)      },
 
   /* from osm_api.c */
-  { "server",           STORE_STRING, OFFSET(server)    },
-  { "username",         STORE_STRING, OFFSET(username)  },
-  { "password",         STORE_STRING, OFFSET(password)  },
+  { "server",           STORE_STRING, OFFSET(server)       },
+  { "username",         STORE_STRING, OFFSET(username)     },
+  { "password",         STORE_STRING, OFFSET(password)     },
 
   /* wms servers aren't yet saved as a major rewrite is required before */
 
   /* style */
-  { "style",            STORE_STRING, OFFSET(style)     },
+  { "style",            STORE_STRING, OFFSET(style)        },
 
   /* map */
-  { "no_icons",         STORE_BOOL,   OFFSET(no_icons)  },
+  { "no_icons",         STORE_BOOL,   OFFSET(no_icons)     },
+  { "no_antialias",     STORE_BOOL,   OFFSET(no_antialias) },
 
   { NULL, -1, -1 }
 };

@@ -128,6 +128,7 @@ typedef struct appdata_s {
   GtkWidget *menu_item_map_hide_sel;
   GtkWidget *menu_item_map_show_all;
   GtkWidget *menu_item_map_no_icons;
+  GtkWidget *menu_item_map_no_antialias;
 
 } appdata_t;
 
