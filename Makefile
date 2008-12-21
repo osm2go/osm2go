@@ -19,7 +19,9 @@
 
 all:
 	cd src && make
+	cd data && make
 
 clean:
 	rm -f *~ \#*\# *.bak *-stamp
 	cd src && make clean
+	cd data && make clean

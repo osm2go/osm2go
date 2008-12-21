@@ -803,6 +803,12 @@ Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
     <scale_min>1</scale_min>
     <scale_max>10000</scale_max>
   </rule>
+  <rule>
+    <condition k="barrier" v="gate"/>
+    <icon src="gate2.png"/>
+    <scale_min>1</scale_min>
+    <scale_max>10000</scale_max>
+  </rule>
 
   <rule>
     <condition k="highway" v="bus_stop"/>

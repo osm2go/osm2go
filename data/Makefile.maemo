@@ -20,7 +20,10 @@
 APP = osm2go
 PREFIX = /usr
 
-install:
+all:
+	make -f Makefile all
+
+install: all
 	install $(APP).desktop $(DESTDIR)$(PREFIX)/share/applications/hildon
 	install $(APP).26.png $(DESTDIR)$(PREFIX)/share/icons/hicolor/26x26/hildon/$(APP).png
 	install $(APP).40.png $(DESTDIR)$(PREFIX)/share/icons/hicolor/40x40/hildon/$(APP).png
@@ -35,3 +38,4 @@ install:
 
 clean:
 	rm -f *~ \#*\# *.bak
+	make -f Makefile clean

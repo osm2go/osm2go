@@ -1,14 +1,16 @@
 #!/usr/bin/perl
-# Calculate mapnik-looking colours for a given bg and opacity.
-#
-# The resultant set should visually resemble the target Mapnik colours on-screen
-# even though the colours in the generated stylesheet are darker.
+# Convert an elemstyles.xml template which assumes white background and 100%
+# opacity to an elemstyles.xml which fitted to a different background and
+# opacity. The colours are supposed to stay roughly the same, albeit with some
+# clamping distortion.
 
 use strict;
 use warnings FATAL => qw{all};
 
-our $OPACITY = 0.40;
-our $BG_COL = '#f2eee8';
+our $OPACITY = shift(@ARGV);
+our $BG_COL = shift(@ARGV);
+defined($OPACITY) && defined($BG_COL)
+  or die "usage: $0 OPACITY BGCOL [FILES...]\n";
 
 sub parse_col {
     my $rgbstr = shift;

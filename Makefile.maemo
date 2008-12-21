@@ -19,6 +19,7 @@
 
 all:
 	cd src && make -f Makefile.maemo
+	cd data && make -f Makefile.maemo
 
 install:
 	cd src && make -f Makefile.maemo install
