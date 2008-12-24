@@ -1,6 +1,9 @@
 osm2go (0.6-8) unstable; urgency=low
 
   * Unified internal color model <till@harbaum.org>
+  * Fixed crash when changing projects while using GPS <andrewc@piffle.org>
+  * Option to disable antialiasing <till@harbaum.org>
+  * Rendering of "bridges" <till@harbaum.org>
 	
  -- Till Harbaum <till@harbaum.org>  Wed, 17 Dec 2008 20:02:24 +0100
 

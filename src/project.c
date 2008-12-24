@@ -1099,7 +1099,7 @@ gboolean project_load(appdata_t *appdata, char *name) {
   char banner_txt[_PROJECT_LOAD_BUF_SIZ];
   memset(banner_txt, 0, _PROJECT_LOAD_BUF_SIZ);
 
-  snprintf(&banner_txt, _PROJECT_LOAD_BUF_SIZ, _("Loading %s"), proj_name);
+  snprintf(banner_txt, _PROJECT_LOAD_BUF_SIZ, _("Loading %s"), proj_name);
   banner_busy_start(appdata, TRUE, banner_txt);
 
   /* close current project */
@@ -1111,7 +1111,7 @@ gboolean project_load(appdata_t *appdata, char *name) {
   banner_busy_tick();
   if(!project_open(appdata, proj_name)) {
     printf("error opening requested project\n");
-    snprintf(&banner_txt, _PROJECT_LOAD_BUF_SIZ, _("Error opening %s"), proj_name);
+    snprintf(banner_txt, _PROJECT_LOAD_BUF_SIZ, _("Error opening %s"), proj_name);
     banner_busy_stop(appdata);
     banner_show_info(appdata, banner_txt);
     g_free(proj_name);
@@ -1123,7 +1123,7 @@ gboolean project_load(appdata_t *appdata, char *name) {
   if(!osm_sanity_check(GTK_WIDGET(appdata->window), appdata->osm)) {
     printf("project/osm sanity checks failed, unloading project\n");
     project_free(appdata->project);
-    snprintf(&banner_txt, _PROJECT_LOAD_BUF_SIZ, _("Error opening %s"), proj_name);
+    snprintf(banner_txt, _PROJECT_LOAD_BUF_SIZ, _("Error opening %s"), proj_name);
     banner_busy_stop(appdata);
     banner_show_info(appdata, banner_txt);
     g_free(proj_name);
@@ -1153,7 +1153,7 @@ gboolean project_load(appdata_t *appdata, char *name) {
     g_free(appdata->settings->project);
   appdata->settings->project = g_strdup(appdata->project->name);
 
-  snprintf(&banner_txt, _PROJECT_LOAD_BUF_SIZ, _("Loaded %s"), proj_name);
+  snprintf(banner_txt, _PROJECT_LOAD_BUF_SIZ, _("Loaded %s"), proj_name);
   banner_busy_stop(appdata);
   banner_show_info(appdata, banner_txt);
   statusbar_set(appdata, NULL, 0);
