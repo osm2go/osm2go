@@ -21,7 +21,7 @@
 
     <background color="#f2eee8"/>
 
-    <track width="5" color="#0000ff60" gps-color="#00008060"/>
+    <track width="6" color="#0000ff40" gps-color="#0000ff80"/>
     
     <highlight color="#ffff0080" node-color="#ff000080" arrow-color="#0000ff80" touch-color="#0000ff80" width="3" arrow-limit="4"/>
 	

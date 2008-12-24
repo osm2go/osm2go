@@ -26,6 +26,10 @@
 #error "Tree not enabled in libxml"
 #endif
 
+// predecs
+static void track_enable_gps(appdata_t *appdata);
+static void track_disable_gps(appdata_t *appdata);
+
 /* enable/disable menu with respect to mode */
 void track_set_mode(appdata_t *appdata, track_t *track, track_mode_t mode) {
   /* import and gps are always enabled */
@@ -542,6 +546,11 @@ static void track_append_position(appdata_t *appdata, pos_t *pos) {
 
 static gboolean update(gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
+  if (! appdata->gps_enabled) {
+    // Turn myself off gracefully.
+    track_disable_gps(appdata);
+    return FALSE;
+  }
 
   pos_t *pos = gps_get_pos(appdata);
   if(pos) {
@@ -615,3 +624,4 @@ void track_do(appdata_t *appdata, track_mode_t mode, char *name) {
     break;
   }
 }
+// vim:et:ts=8:sw=2:sts=2:ai
