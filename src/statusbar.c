@@ -30,19 +30,71 @@ void statusbar_highlight(appdata_t *appdata, gboolean highlight) {
     gtk_widget_modify_bg(appdata->statusbar->eventbox, GTK_STATE_NORMAL, NULL);
 }
 
+
+// Set the persistent message, replacing anything currently there.
+
 void statusbar_set(appdata_t *appdata, const char *msg, gboolean highlight) {
   statusbar_highlight(appdata, highlight);
 
-  printf("statusbar set: %s\n", msg);
+  printf("statusbar_set: %s\n", msg);
 
-  static guint mid = 0;
-  if(mid)
-    gtk_statusbar_pop(GTK_STATUSBAR(appdata->statusbar->widget),
-		      appdata->statusbar->cid);
+  if (appdata->statusbar->mid) {
+    gtk_statusbar_remove(GTK_STATUSBAR(appdata->statusbar->widget),
+                         appdata->statusbar->cid, appdata->statusbar->mid);
+    appdata->statusbar->mid = 0;
+  }
 
-  if(msg)
+  if (msg) {
+    guint mid = gtk_statusbar_push(GTK_STATUSBAR(appdata->statusbar->widget),
+                                   appdata->statusbar->cid, msg);
+    appdata->statusbar->mid = mid;
+  }
+}
+
+
+// Clear any brief message currently set, dropping back to the persistent one.
+
+static gboolean statusbar_brief_clear(gpointer data) {
+  appdata_t *appdata = (appdata_t *)data;
+  if (appdata->statusbar->brief_mid) {
+    gtk_statusbar_remove(GTK_STATUSBAR(appdata->statusbar->widget),
+                         appdata->statusbar->cid,
+                         appdata->statusbar->brief_mid);
+    appdata->statusbar->brief_mid = 0;
+  }
+  return FALSE;
+}
+
+// Flash up a brief, temporary message. Once it disappears, drop back to any
+// persistent message set with statusbar_set(). 
+//
+// If msg is NULL, clear the message and don't establish a handler.
+//
+// If timeout is negative, don't establish a handler. You'll have to clear it
+// yourself later. If it's zero, use the default.
+
+void statusbar_brief(appdata_t *appdata, const char *msg, gint timeout) {
+  printf("statusbar_brief: %s\n", msg);
+  if (appdata->statusbar->brief_handler_id) {
+    gtk_timeout_remove(appdata->statusbar->brief_handler_id);
+    appdata->statusbar->brief_handler_id = 0;
+  }
+  statusbar_brief_clear(appdata);
+  guint mid = 0;
+  if (msg) {
     mid = gtk_statusbar_push(GTK_STATUSBAR(appdata->statusbar->widget),
-			   appdata->statusbar->cid, msg);
+                                 appdata->statusbar->cid, msg);
+    if (mid) {
+      appdata->statusbar->brief_mid = mid;
+    }
+  }
+  if (mid && (timeout >= 0)) {
+    if (timeout == 0) {
+      timeout = STATUSBAR_DEFAULT_BRIEF_TIME;
+    }
+    appdata->statusbar->brief_handler_id 
+      = gtk_timeout_add(timeout, statusbar_brief_clear, appdata);
+  }
 }
 
 GtkWidget *statusbar_new(appdata_t *appdata) {
@@ -70,3 +122,5 @@ void statusbar_free(statusbar_t *statusbar) {
   if(statusbar)
     g_free(statusbar);
 }
+
+// vim:et:ts=8:sw=2:sts=2:ai

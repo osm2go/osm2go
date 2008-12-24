@@ -27,7 +27,7 @@ OBJS = main.o map.o osm.o osm_api.o wms.o \
 	statusbar.o project.o settings.o pos.o diff.o map_hl.o \
 	iconbar.o info.o icon.o track.o gps.o canvas_goocanvas.o \
 	area_edit.o dbus.o josm_presets.o relation_edit.o misc.o \
-	map_edit.o josm_elemstyles.o style.o net_io.o
+	map_edit.o josm_elemstyles.o style.o net_io.o banner.o
 
 DEFS = -DUSE_HILDON -DPACKAGE=\"$(APP)\" -DUSE_GOOCANVAS
 CFLAGS = -Wall -O2 $(DEFS) `pkg-config --cflags $(PKGS)`
@@ -104,10 +104,6 @@ josm_presets.o: osm_api.h project.h statusbar.h area_edit.h settings.h diff.h
 josm_presets.o: iconbar.h icon.h info.h track.h gps.h wms.h josm_presets.h
 josm_presets.o: relation_edit.h misc.h map_edit.h josm_elemstyles.h style.h
 josm_presets.o: net_io.h
-main.o: appdata.h version.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h
-main.o: project.h statusbar.h area_edit.h settings.h diff.h iconbar.h icon.h
-main.o: info.h track.h gps.h wms.h josm_presets.h relation_edit.h misc.h
-main.o: map_edit.h josm_elemstyles.h style.h net_io.h
 map.o: appdata.h version.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h
 map.o: project.h statusbar.h area_edit.h settings.h diff.h iconbar.h icon.h
 map.o: info.h track.h gps.h wms.h josm_presets.h relation_edit.h misc.h
@@ -170,3 +166,12 @@ wms.o: appdata.h version.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h
 wms.o: project.h statusbar.h area_edit.h settings.h diff.h iconbar.h icon.h
 wms.o: info.h track.h gps.h wms.h josm_presets.h relation_edit.h misc.h
 wms.o: map_edit.h josm_elemstyles.h style.h net_io.h
+banner.o: banner.h appdata.h version.h pos.h osm.h canvas.h map.h map_hl.h
+banner.o: osm_api.h project.h statusbar.h area_edit.h settings.h diff.h
+banner.o: iconbar.h icon.h info.h track.h gps.h wms.h josm_presets.h
+banner.o: relation_edit.h misc.h map_edit.h josm_elemstyles.h style.h
+banner.o: net_io.h
+main.o: appdata.h version.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h
+main.o: project.h statusbar.h area_edit.h settings.h diff.h iconbar.h icon.h
+main.o: info.h track.h gps.h wms.h josm_presets.h relation_edit.h misc.h
+main.o: map_edit.h josm_elemstyles.h style.h net_io.h banner.h

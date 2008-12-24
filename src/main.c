@@ -22,6 +22,7 @@
 #include <gdk/gdkkeysyms.h>
 
 #include "appdata.h"
+#include "banner.h"
 
 /* disable/enable main screen control dependant on presence of open project */
 static void main_ui_enable(appdata_t *appdata) {
@@ -106,7 +107,7 @@ cb_menu_about(GtkWidget *window, gpointer data) {
 
   const gchar *authors[] = {
     "Till Harbaum <till@harbaum.org>",
-    "Andrew Chadwick",
+    "Andrew Chadwick <andrewc-osm2go@piffle.org>",
     NULL };
 
   gtk_about_dialog_set_authors(about, authors);
@@ -203,6 +204,7 @@ cb_menu_redraw(GtkWidget *window, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
 
   /* redraw the entire map by destroying all map items and redrawing them */
+  banner_busy_start(appdata, 1, "Redrawing...");
   track_save(appdata->project, appdata->track.track);
   diff_save(appdata->project, appdata->osm);
   map_clear(appdata, MAP_LAYER_ALL);
@@ -217,6 +219,7 @@ cb_menu_redraw(GtkWidget *window, gpointer data) {
     map_track_draw(appdata->map, appdata->track.track);
 
   wms_load(appdata);
+  banner_busy_stop(appdata); //"Redrawing..."
 }
 #endif
 
@@ -231,20 +234,24 @@ static void
 cb_menu_map_no_icons(GtkWidget *widget, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
 
+  banner_busy_start(appdata, 1, "Redrawing...");
   map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
   appdata->settings->no_icons = 
     gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget));
   map_paint(appdata);
+  banner_busy_stop(appdata); //"Redrawing..."
 }
 
 static void 
 cb_menu_map_no_antialias(GtkWidget *widget, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
 
+  banner_busy_start(appdata, 1, "Redrawing...");
   map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
   appdata->settings->no_antialias = 
     gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget));
   map_paint(appdata);
+  banner_busy_stop(appdata); //"Redrawing..."
 }
 
 static void 
@@ -252,8 +259,7 @@ cb_menu_save_changes(GtkWidget *widget, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
 
   diff_save(appdata->project, appdata->osm);
-  statusbar_set(appdata, _("Saved all changes made "
-			   "to this project so far"), FALSE);
+  banner_show_info(appdata, _("Saved local changes"));
 }
 
 static void 
@@ -261,19 +267,19 @@ cb_menu_undo_changes(GtkWidget *widget, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
 
   if(!yes_no_f(GTK_WIDGET(appdata->window), NULL, 0, 0,
-	       _("Undo all changes?"), 
-	       _("Do you really want to undo all your changes "
-		 "not uploaded so far? This cannot be undone!")))
+	       _("Discard local changes?"), 
+	       _("Throw away all the changes you've not uploaded yet? This can't be undone.")))
     return;
-     
+
+  banner_busy_start(appdata, 1, _("Redrawing..."));
   map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
   osm_free(&appdata->icon, appdata->osm);
   diff_remove(appdata->project);
   appdata->osm = osm_parse(appdata->project->osm);
   map_paint(appdata);
+  banner_busy_stop(appdata);  //"Redrawing..."
 
-  statusbar_set(appdata, _("All changes made "
-			   "so far have been reset"), FALSE);
+  banner_show_info(appdata, _("Discarded local changes"));
 }
 
 static void 
@@ -444,13 +450,13 @@ void menu_create(appdata_t *appdata) {
   gtk_menu_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
 
   appdata->menu_item_osm_diff = item = 
-    gtk_menu_item_new_with_label( _("Save diff file") );
+    gtk_menu_item_new_with_label( _("Save local changes") );
   gtk_menu_append(GTK_MENU_SHELL(submenu), item);
   g_signal_connect(item, "activate", GTK_SIGNAL_FUNC(cb_menu_save_changes), 
 		   appdata);
 
   appdata->menu_item_osm_undo_changes = item = 
-    gtk_menu_item_new_with_label( _("Undo all changes...") );
+    gtk_menu_item_new_with_label( _("Discard local changes...") );
   gtk_menu_append(GTK_MENU_SHELL(submenu), item);
   g_signal_connect(item, "activate", GTK_SIGNAL_FUNC(cb_menu_undo_changes), 
 		   appdata);

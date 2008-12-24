@@ -31,6 +31,7 @@
 #include <libxml/tree.h>
 
 #include "appdata.h"
+#include "banner.h"
 
 #ifndef LIBXML_TREE_ENABLED
 #error "Tree not enabled in libxml"
@@ -1310,6 +1311,8 @@ static osm_t *process_osm(xmlTextReaderPtr reader) {
   g_assert(name);
 
   /* read next node */
+  int num_elems = 0;
+  const int tick_every = 50; // Balance responsive appearance with performance.
   int ret = xmlTextReaderRead(reader);
   while(ret == 1) {
 
@@ -1346,6 +1349,11 @@ static osm_t *process_osm(xmlTextReaderPtr reader) {
       break;
     }
     ret = xmlTextReaderRead(reader);
+
+    if (num_elems++ > tick_every) {
+      num_elems = 0;
+      banner_busy_tick();
+    }
   }
 
   g_assert(0);
@@ -2192,3 +2200,4 @@ tag_t *osm_tags_copy(tag_t *src_tag, gboolean update_creator) {
 
   return new_tags;
 }
+// vim:et:ts=8:sw=2:sts=2:ai

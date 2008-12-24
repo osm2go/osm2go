@@ -18,6 +18,7 @@
  */
 
 #include "appdata.h"
+#include "banner.h"
 
 #include <sys/stat.h>
 
@@ -1043,7 +1044,7 @@ gboolean project_open(appdata_t *appdata, char *name) {
   /* --------- project structure ok: load its OSM file --------- */
   appdata->project = project;
 
-  printf("project_load: loading osm\n");
+  printf("project_open: loading osm\n");
   appdata->osm = osm_parse(project->osm);
   if(!appdata->osm) return FALSE;
 
@@ -1078,6 +1079,8 @@ gboolean project_close(appdata_t *appdata) {
   return TRUE;
 }
 
+#define _PROJECT_LOAD_BUF_SIZ 64
+
 gboolean project_load(appdata_t *appdata, char *name) {
   char *proj_name = NULL;
 
@@ -1088,41 +1091,61 @@ gboolean project_load(appdata_t *appdata, char *name) {
       printf("no project selected\n");
       return FALSE;
     }
-  } else
+  }
+  else {
     proj_name = g_strdup(name);
+  }
+
+  char banner_txt[_PROJECT_LOAD_BUF_SIZ];
+  memset(banner_txt, 0, _PROJECT_LOAD_BUF_SIZ);
+
+  snprintf(&banner_txt, _PROJECT_LOAD_BUF_SIZ, _("Loading %s"), proj_name);
+  banner_busy_start(appdata, TRUE, banner_txt);
 
   /* close current project */
+  banner_busy_tick();
   if(appdata->project) 
     project_close(appdata);
 
   /* open project itself */
+  banner_busy_tick();
   if(!project_open(appdata, proj_name)) {
     printf("error opening requested project\n");
+    snprintf(&banner_txt, _PROJECT_LOAD_BUF_SIZ, _("Error opening %s"), proj_name);
+    banner_busy_stop(appdata);
+    banner_show_info(appdata, banner_txt);
     g_free(proj_name);
     return FALSE;
   }    
 
-  g_free(proj_name);
-
   /* check if OSM data is valid */
+  banner_busy_tick();
   if(!osm_sanity_check(GTK_WIDGET(appdata->window), appdata->osm)) {
     printf("project/osm sanity checks failed, unloading project\n");
     project_free(appdata->project);
+    snprintf(&banner_txt, _PROJECT_LOAD_BUF_SIZ, _("Error opening %s"), proj_name);
+    banner_busy_stop(appdata);
+    banner_show_info(appdata, banner_txt);
+    g_free(proj_name);
     return FALSE;
   }
 
   /* load diff possibly preset */
+  banner_busy_tick();
   diff_restore(appdata, appdata->project, appdata->osm);
   
   /* prepare colors etc, draw data and adjust scroll/zoom settings */
+  banner_busy_tick();
   map_init(appdata);
 
   /* restore a track */
+  banner_busy_tick();
   appdata->track.track = track_restore(appdata, appdata->project);
   if(appdata->track.track)
     map_track_draw(appdata->map, appdata->track.track);
 
   /* finally load a background if present */
+  banner_busy_tick();
   wms_load(appdata);
 
   /* save the name of the project for the perferences */
@@ -1130,6 +1153,12 @@ gboolean project_load(appdata_t *appdata, char *name) {
     g_free(appdata->settings->project);
   appdata->settings->project = g_strdup(appdata->project->name);
 
+  snprintf(&banner_txt, _PROJECT_LOAD_BUF_SIZ, _("Loaded %s"), proj_name);
+  banner_busy_stop(appdata);
+  banner_show_info(appdata, banner_txt);
+  statusbar_set(appdata, NULL, 0);
+
+  g_free(proj_name);
   return TRUE;
 }
-
+// vim:et:ts=8:sw=2:sts=2:ai

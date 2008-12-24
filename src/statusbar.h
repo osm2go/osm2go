@@ -20,12 +20,18 @@
 #ifndef STATUSBAR_H
 #define STATUSBAR_H
 
+#define STATUSBAR_DEFAULT_BRIEF_TIME 3000
+
 typedef struct statusbar_s {
   GtkWidget *widget, *eventbox;
-  int cid;
+  guint cid;
+  guint mid;
+  guint brief_mid;
+  guint brief_handler_id;
 } statusbar_t;
 
 void statusbar_set(appdata_t *appdata, const char *msg, gboolean highlight);
+void statusbar_brief(appdata_t *appdata, const char *msg, gint timeout);
 GtkWidget *statusbar_new(appdata_t *appdata);
 void statusbar_highlight(appdata_t *appdata, gboolean highlight);
 void statusbar_free(statusbar_t *statusbar);

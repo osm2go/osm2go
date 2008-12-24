@@ -27,7 +27,7 @@ OBJS = main.o map.o osm.o osm_api.o wms.o \
 	statusbar.o project.o settings.o pos.o diff.o map_hl.o \
 	iconbar.o info.o icon.o track.o gps.o canvas_goocanvas.o \
 	area_edit.o josm_presets.o relation_edit.o misc.o map_edit.o \
-	josm_elemstyles.o style.o net_io.o
+	josm_elemstyles.o style.o net_io.o banner.o
 
 DEFS = -DPACKAGE=\"$(APP)\" -DUSE_GOOCANVAS
 CFLAGS = -Wall -O2 $(DEFS) `pkg-config --cflags $(PKGS)`
@@ -57,6 +57,11 @@ area_edit.o: osm_api.h project.h statusbar.h area_edit.h settings.h diff.h
 area_edit.o: iconbar.h icon.h info.h track.h gps.h wms.h josm_presets.h
 area_edit.o: relation_edit.h misc.h map_edit.h josm_elemstyles.h style.h
 area_edit.o: net_io.h
+banner.o: banner.h appdata.h version.h pos.h osm.h canvas.h map.h map_hl.h
+banner.o: osm_api.h project.h statusbar.h area_edit.h settings.h diff.h
+banner.o: iconbar.h icon.h info.h track.h gps.h wms.h josm_presets.h
+banner.o: relation_edit.h misc.h map_edit.h josm_elemstyles.h style.h
+banner.o: net_io.h
 canvas_gnomecanvas.o: appdata.h version.h pos.h osm.h canvas.h map.h map_hl.h
 canvas_gnomecanvas.o: osm_api.h project.h statusbar.h area_edit.h settings.h
 canvas_gnomecanvas.o: diff.h iconbar.h icon.h info.h track.h gps.h wms.h
@@ -104,7 +109,7 @@ josm_presets.o: net_io.h
 main.o: appdata.h version.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h
 main.o: project.h statusbar.h area_edit.h settings.h diff.h iconbar.h icon.h
 main.o: info.h track.h gps.h wms.h josm_presets.h relation_edit.h misc.h
-main.o: map_edit.h josm_elemstyles.h style.h net_io.h
+main.o: map_edit.h josm_elemstyles.h style.h net_io.h banner.h
 map.o: appdata.h version.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h
 map.o: project.h statusbar.h area_edit.h settings.h diff.h iconbar.h icon.h
 map.o: info.h track.h gps.h wms.h josm_presets.h relation_edit.h misc.h
@@ -128,7 +133,7 @@ net_io.o: misc.h map_edit.h josm_elemstyles.h style.h net_io.h
 osm.o: appdata.h version.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h
 osm.o: project.h statusbar.h area_edit.h settings.h diff.h iconbar.h icon.h
 osm.o: info.h track.h gps.h wms.h josm_presets.h relation_edit.h misc.h
-osm.o: map_edit.h josm_elemstyles.h style.h net_io.h
+osm.o: map_edit.h josm_elemstyles.h style.h net_io.h banner.h
 osm_api.o: appdata.h version.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h
 osm_api.o: project.h statusbar.h area_edit.h settings.h diff.h iconbar.h
 osm_api.o: icon.h info.h track.h gps.h wms.h josm_presets.h relation_edit.h
@@ -140,7 +145,7 @@ pos.o: map_edit.h josm_elemstyles.h style.h net_io.h
 project.o: appdata.h version.h pos.h osm.h canvas.h map.h map_hl.h osm_api.h
 project.o: project.h statusbar.h area_edit.h settings.h diff.h iconbar.h
 project.o: icon.h info.h track.h gps.h wms.h josm_presets.h relation_edit.h
-project.o: misc.h map_edit.h josm_elemstyles.h style.h net_io.h
+project.o: misc.h map_edit.h josm_elemstyles.h style.h net_io.h banner.h
 relation_edit.o: appdata.h version.h pos.h osm.h canvas.h map.h map_hl.h
 relation_edit.o: osm_api.h project.h statusbar.h area_edit.h settings.h
 relation_edit.o: diff.h iconbar.h icon.h info.h track.h gps.h wms.h
