@@ -20,10 +20,16 @@ Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
 
 -->
 
+  <!-- Bridge/Tunnel -->
   <rule>
     <condition k="bridge" v="yes"/>
-    <linemod width_bg="+4"/>
+    <linemod width_bg="+4" width="+1"/>
   </rule>
+  <rule>
+    <condition k="tunnel" v="yes"/>
+    <linemod width_bg="+2" width="-1"/>
+  </rule>
+
 
   <rule>
     <!--
@@ -153,6 +159,14 @@ Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
     <line width="4" colour="#ffffff" width_bg="6" colour_bg="#b8b8b8"/>
     <scale_min>1</scale_min>
     <scale_max>15000</scale_max>
+  </rule>
+  <rule>
+    <condition k="service" v="parking_aisle"/>
+    <linemod width_bg="-3" width="-2"/>
+  </rule>
+  <rule>
+    <condition k="service" v="driveway"/>
+    <linemod width_bg="-2" width="-1"/>
   </rule>
 
   <!--

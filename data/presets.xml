@@ -215,7 +215,8 @@
 			<label text="Edit a Serviceway" />
 			<label text=" " />
 			<key key="highway" value="service" />
-			<label text=" " />
+			<combo key="service" text="Serviceway type" values="alley,driveway,parking_aisle" default="" delete_if_empty="true" />
+            <label text=" " />
 			<label text="Optional Attributes:" />
 			<label text=" " />
 			<text key="name" text="Name" default="" delete_if_empty="true" />
@@ -228,18 +229,6 @@
 			<combo key="surface" text="Surface" values="paved,unpaved,cobblestone" default="" delete_if_empty="true" />
 			<text key="maxspeed" text="Max. speed (km/h)" default="" delete_if_empty="true" />
 			<text key="width" text="Width (metres)" default="" delete_if_empty="true" />
-		</item>
-
-		<item name="Parking Aisle" icon="presets/way_unclassified.png">
-			<label text="Edit a Parking Aisle" />
-			<label text=" " />
-			<key key="highway" value="service" />
-			<key key="service" value="parking_aisle" />
-			<label text=" " />
-			<label text="Optional Attributes:" />
-			<label text=" " />
-			<check key="oneway" text="Oneway" default="off" delete_if_empty="true" />
-			<combo key="surface" text="Surface" values="paved,unpaved,cobblestone" default="" delete_if_empty="true" />
 		</item>
 
 		<separator/>
@@ -319,6 +308,19 @@
 			<combo key="layer" text="Layer" values="5,4,3,2,1,0,-1,-2,-3,-4,-5" default="1" delete_if_empty="true" />
 			<text key="maxspeed" text="Max. speed (km/h)" default="" delete_if_empty="true" />
 			<text key="maxweight" text="Max. weight (tonnes)" default="" delete_if_empty="true" />
+			<text key="width" text="Width (metres)" default="" delete_if_empty="true" />
+		</item>
+
+		<item name="Tunnel" icon="presets/tunnel.png">
+			<label text="Edit a Tunnel" />
+			<label text=" " />
+			<key key="tunnel" value="yes" />
+			<label text=" " />
+			<label text="Optional Attributes:" />
+			<label text=" " />
+			<text key="name" text="Name" default="" delete_if_empty="true" />
+			<combo key="layer" text="Layer" values="5,4,3,2,1,0,-1,-2,-3,-4,-5" default="-1" delete_if_empty="true" />
+			<text key="maxspeed" text="Max. speed (km/h)" default="" delete_if_empty="true" />
 			<text key="width" text="Width (metres)" default="" delete_if_empty="true" />
 		</item>
 	</group> <!-- Streets -->
@@ -702,7 +704,7 @@
 		<item name="Toll Booth" icon="presets/toll_station.png">
 			<label text="Edit Toll Booth" />
 			<label text=" " />
-			<key key="highway" value="toll_booth" />
+			<key key="barrier" value="toll_booth" />
 			<label text=" " />
 			<label text="Optional Attributes:" />
 			<label text=" " />
@@ -714,22 +716,36 @@
 
 		<item name="Traffic Signal" icon="presets/traffic-light.png">
 			<key key="highway" value="traffic_signals" />
+			<combo key="crossing" text="Crossing type" values="uncontrolled,traffic_signals,island,unmarked,no,unknown" default="" delete_if_empty="true" />
+			<check key="horse" text="Cross on horseback" default="off" delete_if_empty="true" />
+			<check key="bicycle" text="Cross by bicycle" default="off" delete_if_empty="true" />
+			<check key="supervised" text="Crossing attendant" default="off" delete_if_empty="true" />
 		</item>
 
 		<item name="Stop" icon="presets/Stop.png">
 			<key key="highway" value="stop" />
 		</item>
 
-		<item name="Zebra crossing" icon="presets/zebracrossing.png">
+		<item name="Highway crossing" icon="presets/zebracrossing.png">
 			<key key="highway" value="crossing" />
+			<combo key="crossing" text="Crossing type" values="uncontrolled,traffic_signals,island,unmarked,unknown" default="" delete_if_empty="true" />
+			<check key="horse" text="Cross on horseback" default="off" delete_if_empty="true" />
+			<check key="bicycle" text="Cross by bicycle" default="off" delete_if_empty="true" />
+			<check key="supervised" text="Crossing attendant" default="off" delete_if_empty="true" />
 		</item>
 
 		<item name="Bollard" icon="styles/standard/vehicle/restrictions/bollard.png">
 			<key key="barrier" value="bollard" />
 		</item>
 
-		<item name="Mini Roundabout" icon="presets/roundabout_left.png">
+		<item name="Mini-Roundabout" icon="presets/roundabout_left.png">
+			<label text="Edit a Mini-Roundabout" />
+			<label text=" " />
 			<key key="highway" value="mini_roundabout" />
+			<label text=" " />
+			<label text="Optional Attributes:" />
+			<label text=" " />
+			<combo key="direction" text="Clockwise direction?" values="clockwise" default="" delete_if_empty="true" />
 		</item>
 
 		<item name="Turning Circle" icon="presets/turning_circle.png">
@@ -762,15 +778,15 @@
 		</item>
 
 		<item name="Cattle Grid" icon="styles/standard/vehicle/cattle_grid.png">
-			<key key="highway" value="cattle_grid" />
+			<key key="barrier" value="cattle_grid" />
 		</item>
 
 		<item name="Gate" icon="styles/standard/vehicle/gate.png">
-			<key key="highway" value="gate" />
+			<key key="barrier" value="gate" />
 		</item>
 
 		<item name="Stile" icon="styles/standard/vehicle/stile.png">
-			<key key="highway" value="stile" />
+			<key key="barrier" value="stile" />
 		</item>
 
 		<item name="Mountain Pass" icon="presets/mountain_pass.png">
@@ -876,6 +892,10 @@
 
 		<item name="Crossing" icon="presets/crossing.png">
 			<key key="railway" value="crossing" />
+			<combo key="crossing" text="Crossing type" values="uncontrolled,traffic_signals,island,unmarked,unknown" default="" delete_if_empty="true" />
+			<check key="horse" text="Cross on horseback" default="off" delete_if_empty="true" />
+			<check key="bicycle" text="Cross by bicycle" default="off" delete_if_empty="true" />
+			<check key="supervised" text="Crossing attendant" default="off" delete_if_empty="true" />
 		</item>
 
 		<item name="Turntable" icon="presets/turntable.png">
@@ -1889,7 +1909,7 @@
 		<item name="Automated Teller Machine" icon="presets/cash.png">
 			<label text="Edit Automated Teller Machine" />
 			<key key="amenity" value="atm" />
-			<text key="name" text="Provider" default="" delete_if_empty="true" />
+			<text key="operator" text="Provider" default="" delete_if_empty="true" />
 		</item>
 	</group> <!-- Cash -->
 
