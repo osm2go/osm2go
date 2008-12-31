@@ -156,9 +156,11 @@ cb_menu_download(GtkWidget *window, gpointer data) {
 
   // download
   if(osm_download(GTK_WIDGET(appdata->window), appdata->project)) {
+    banner_busy_start(appdata, 1, "Redrawing...");
     appdata->osm = osm_parse(appdata->project->osm);
     diff_restore(appdata, appdata->project, appdata->osm);
     map_paint(appdata);
+    banner_busy_stop(appdata); //"Redrawing..."
   }
 
   main_ui_enable(appdata);
