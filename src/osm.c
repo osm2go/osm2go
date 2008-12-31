@@ -1282,7 +1282,7 @@ static relation_t *process_relation(xmlTextReaderPtr reader, osm_t *osm) {
 
     if(xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT) {
       char *subname = (char*)xmlTextReaderConstName(reader);
-      if(strcasecmp(subname, "nd") == 0) {
+      if(strcasecmp(subname, "member") == 0) {
 	*member = process_member(reader, osm);
 	if(*member) member = &(*member)->next;
       } else if(strcasecmp(subname, "tag") == 0) {
