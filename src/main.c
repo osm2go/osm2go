@@ -384,107 +384,124 @@ cb_menu_track_clear(GtkWidget *window, gpointer data) {
   track_do(appdata, TRACK_NONE, NULL);
 }
 
+#ifndef USE_HILDON
+#ifdef PORTRAIT
+#define MAIN_MENU_NEW gtk_menu_new
+#else
+#define MAIN_MENU_NEW gtk_menu_bar_new
+#define MAIN_MENU_IS_MENU_BAR
+#endif //PORTRAIT
+#else //USE_HILDON
+#define MAIN_MENU_NEW gtk_menu_new
+#endif
+
 void menu_create(appdata_t *appdata) { 
   GtkWidget *menu, *item, *submenu;
-  menu = gtk_menu_new();
-
+  GtkWidget *about_quit_items_menu;
+  menu = MAIN_MENU_NEW();
+  about_quit_items_menu = menu;
 
   /* -------------------- Project submenu -------------------- */
 
   item = gtk_menu_item_new_with_label( _("Project") );
-  gtk_menu_append(GTK_MENU_SHELL(menu), item);
+  gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
   submenu = gtk_menu_new();
   gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), submenu);
+#ifdef MAIN_MENU_IS_MENU_BAR
+  about_quit_items_menu = submenu;
+#endif
 
   item = gtk_menu_item_new_with_label( _("Open...") );
-  gtk_menu_append(GTK_MENU_SHELL(submenu), item);
+  gtk_menu_shell_append(GTK_MENU_SHELL(submenu), item);
   g_signal_connect(item, "activate", GTK_SIGNAL_FUNC(cb_menu_project_open), 
 		   appdata);
 
   appdata->menu_item_project_close = item = 
     gtk_menu_item_new_with_label( _("Close") );
-  gtk_menu_append(GTK_MENU_SHELL(submenu), item);
+  gtk_menu_shell_append(GTK_MENU_SHELL(submenu), item);
   g_signal_connect(item, "activate", GTK_SIGNAL_FUNC(cb_menu_project_close), 
 		   appdata);
 
   /* --------------- view menu ------------------- */
 
-  gtk_menu_append(GTK_MENU_SHELL(menu), gtk_separator_menu_item_new());
+#ifndef MAIN_MENU_IS_MENU_BAR
+  gtk_menu_shell_append(GTK_MENU_SHELL(menu), gtk_separator_menu_item_new());
+#endif
 
   appdata->menu_view = item = 
     gtk_menu_item_new_with_label( _("View") );
-  gtk_menu_append(GTK_MENU_SHELL(menu), item);
+  gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
   submenu = gtk_menu_new();
   gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), submenu);
   
   appdata->menu_item_view_fullscreen = 
     item = gtk_check_menu_item_new_with_label( _("Fullscreen") );
-  gtk_menu_append(GTK_MENU_SHELL(submenu), item);
+  gtk_menu_shell_append(GTK_MENU_SHELL(submenu), item);
   g_signal_connect(item, "activate", GTK_SIGNAL_FUNC(cb_menu_fullscreen), 
 		   appdata);
 
   item = gtk_menu_item_new_with_label( _("Zoom +" ));
-  gtk_menu_append(GTK_MENU_SHELL(submenu), item);
+  gtk_menu_shell_append(GTK_MENU_SHELL(submenu), item);
   g_signal_connect(item, "activate", GTK_SIGNAL_FUNC(cb_menu_zoomin), appdata);
 
   item = gtk_menu_item_new_with_label( _("Zoom -") );
-  gtk_menu_append(GTK_MENU_SHELL(submenu), item);
+  gtk_menu_shell_append(GTK_MENU_SHELL(submenu), item);
   g_signal_connect(item, "activate", 
 		   GTK_SIGNAL_FUNC(cb_menu_zoomout), appdata);
 
   /* -------------------- OSM submenu -------------------- */
 
   appdata->menu_osm = item = gtk_menu_item_new_with_label( _("OSM") );
-  gtk_menu_append(GTK_MENU_SHELL(menu), item);
+  gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
   submenu = gtk_menu_new();
   gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), submenu);
 
   appdata->menu_item_osm_upload = item = 
     gtk_menu_item_new_with_label( _("Upload...") );
-  gtk_menu_append(GTK_MENU_SHELL(submenu), item);
+  gtk_menu_shell_append(GTK_MENU_SHELL(submenu), item);
   g_signal_connect(item, "activate", GTK_SIGNAL_FUNC(cb_menu_upload), appdata);
 
   item = gtk_menu_item_new_with_label( _("Download...") );
-  gtk_menu_append(GTK_MENU_SHELL(submenu), item);
+  gtk_menu_shell_append(GTK_MENU_SHELL(submenu), item);
   g_signal_connect(item, "activate", 
 		   GTK_SIGNAL_FUNC(cb_menu_download), appdata);
 
-  gtk_menu_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
+  gtk_menu_shell_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
 
   appdata->menu_item_osm_diff = item = 
     gtk_menu_item_new_with_label( _("Save local changes") );
-  gtk_menu_append(GTK_MENU_SHELL(submenu), item);
+  gtk_menu_shell_append(GTK_MENU_SHELL(submenu), item);
   g_signal_connect(item, "activate", GTK_SIGNAL_FUNC(cb_menu_save_changes), 
 		   appdata);
 
   appdata->menu_item_osm_undo_changes = item = 
     gtk_menu_item_new_with_label( _("Discard local changes...") );
-  gtk_menu_append(GTK_MENU_SHELL(submenu), item);
+  gtk_menu_shell_append(GTK_MENU_SHELL(submenu), item);
   g_signal_connect(item, "activate", GTK_SIGNAL_FUNC(cb_menu_undo_changes), 
 		   appdata);
 
   /* -------------------- wms submenu -------------------- */
 
   appdata->menu_wms = item = gtk_menu_item_new_with_label( _("WMS") );
-  gtk_menu_append(GTK_MENU_SHELL(menu), item);
+  gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
   submenu = gtk_menu_new();
   gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), submenu);
   
   item = gtk_menu_item_new_with_label( _("Import...") );
-  gtk_menu_append(GTK_MENU_SHELL(submenu), item);
+  gtk_menu_shell_append(GTK_MENU_SHELL(submenu), item);
   g_signal_connect(item, "activate", GTK_SIGNAL_FUNC(cb_menu_wms_import), 
 		   appdata);
 
   appdata->menu_item_wms_clear = item = 
     gtk_menu_item_new_with_label( _("Clear") );
-  gtk_menu_append(GTK_MENU_SHELL(submenu), item);
+  gtk_menu_shell_append(GTK_MENU_SHELL(submenu), item);
   gtk_widget_set_sensitive(item, FALSE);
   g_signal_connect(item, "activate", GTK_SIGNAL_FUNC(cb_menu_wms_clear), 
 		   appdata);
 
   appdata->menu_item_wms_adjust = item = 
     gtk_menu_item_new_with_label( _("Adjust") );
-  gtk_menu_append(GTK_MENU_SHELL(submenu), item);
+  gtk_menu_shell_append(GTK_MENU_SHELL(submenu), item);
   gtk_widget_set_sensitive(item, FALSE);
   g_signal_connect(item, "activate", GTK_SIGNAL_FUNC(cb_menu_wms_adjust), 
 		   appdata);
@@ -492,42 +509,42 @@ void menu_create(appdata_t *appdata) {
   /* -------------------- map submenu -------------------- */
 
   appdata->menu_map = item = gtk_menu_item_new_with_label( _("Map") );
-  gtk_menu_append(GTK_MENU_SHELL(menu), item);
+  gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
   submenu = gtk_menu_new();
   gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), submenu);
   
   appdata->menu_item_map_hide_sel = item = 
     gtk_menu_item_new_with_label( _("Hide selected") );
-  gtk_menu_append(GTK_MENU_SHELL(submenu), item);
+  gtk_menu_shell_append(GTK_MENU_SHELL(submenu), item);
   gtk_widget_set_sensitive(item, FALSE);
   g_signal_connect(item, "activate", GTK_SIGNAL_FUNC(cb_menu_map_hide_sel), 
 		   appdata);
 
   appdata->menu_item_map_show_all = item = 
     gtk_menu_item_new_with_label( _("Show all") );
-  gtk_menu_append(GTK_MENU_SHELL(submenu), item);
+  gtk_menu_shell_append(GTK_MENU_SHELL(submenu), item);
   gtk_widget_set_sensitive(item, FALSE);
   g_signal_connect(item, "activate", GTK_SIGNAL_FUNC(cb_menu_map_show_all), 
 		   appdata);
 
-  gtk_menu_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
+  gtk_menu_shell_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
 
   item = gtk_menu_item_new_with_label( _("Style...") );
-  gtk_menu_append(GTK_MENU_SHELL(submenu), item);
+  gtk_menu_shell_append(GTK_MENU_SHELL(submenu), item);
   g_signal_connect(item, "activate", GTK_SIGNAL_FUNC(cb_menu_style), appdata);
 
-  gtk_menu_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
+  gtk_menu_shell_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
 
   /* switches mainly intended for testing/debugging */
   item = gtk_menu_item_new_with_label( _("Redraw") );
-  gtk_menu_append(GTK_MENU_SHELL(submenu), item);
+  gtk_menu_shell_append(GTK_MENU_SHELL(submenu), item);
   g_signal_connect(item, "activate", GTK_SIGNAL_FUNC(cb_menu_redraw), appdata);
 
   appdata->menu_item_map_no_icons = 
     item = gtk_check_menu_item_new_with_label( _("No Icons") );
   gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item), 
 				 appdata->settings->no_icons);
-  gtk_menu_append(GTK_MENU_SHELL(submenu), item);
+  gtk_menu_shell_append(GTK_MENU_SHELL(submenu), item);
   g_signal_connect(item, "activate", GTK_SIGNAL_FUNC(cb_menu_map_no_icons), 
 		   appdata);
 
@@ -535,60 +552,62 @@ void menu_create(appdata_t *appdata) {
     item = gtk_check_menu_item_new_with_label( _("No Antialias") );
   gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item), 
 				 appdata->settings->no_antialias);
-  gtk_menu_append(GTK_MENU_SHELL(submenu), item);
+  gtk_menu_shell_append(GTK_MENU_SHELL(submenu), item);
   g_signal_connect(item, "activate", GTK_SIGNAL_FUNC(cb_menu_map_no_antialias), 
 		   appdata);
 
   /* -------------------- track submenu -------------------- */
 
   appdata->track.menu_track = item = gtk_menu_item_new_with_label(_("Track"));
-  gtk_menu_append(GTK_MENU_SHELL(menu), item);
+  gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
   submenu = gtk_menu_new();
   gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), submenu);
   
   appdata->track.menu_item_import =
     item = gtk_menu_item_new_with_label( _("Import...") );
-  gtk_menu_append(GTK_MENU_SHELL(submenu), item);
+  gtk_menu_shell_append(GTK_MENU_SHELL(submenu), item);
   g_signal_connect(item, "activate", GTK_SIGNAL_FUNC(cb_menu_track_import), 
 		   appdata);
 
   appdata->track.menu_item_export =
     item = gtk_menu_item_new_with_label( _("Export...") );
-  gtk_menu_append(GTK_MENU_SHELL(submenu), item);
+  gtk_menu_shell_append(GTK_MENU_SHELL(submenu), item);
   g_signal_connect(item, "activate", GTK_SIGNAL_FUNC(cb_menu_track_export), 
 		   appdata);
 
   appdata->track.menu_item_clear =
     item = gtk_menu_item_new_with_label( _("Clear") );
-  gtk_menu_append(GTK_MENU_SHELL(submenu), item);
+  gtk_menu_shell_append(GTK_MENU_SHELL(submenu), item);
   g_signal_connect(item, "activate", GTK_SIGNAL_FUNC(cb_menu_track_clear), 
 		   appdata);
 
   appdata->track.menu_item_gps =
     item = gtk_check_menu_item_new_with_label( _("GPS") );
-  gtk_menu_append(GTK_MENU_SHELL(submenu), item);
+  gtk_menu_shell_append(GTK_MENU_SHELL(submenu), item);
   g_signal_connect(item, "activate", GTK_SIGNAL_FUNC(cb_menu_track_gps), 
 		   appdata);
   
   /* ------------------------------------------------------- */
 
-  gtk_menu_append(GTK_MENU_SHELL(menu), gtk_separator_menu_item_new());
-
+  gtk_menu_shell_append(GTK_MENU_SHELL(about_quit_items_menu),
+                        gtk_separator_menu_item_new());
 
   item = gtk_menu_item_new_with_label( _("About...") );
-  gtk_menu_append(GTK_MENU_SHELL(menu), item);
+  gtk_menu_shell_append(GTK_MENU_SHELL(about_quit_items_menu), item);
   g_signal_connect(item, "activate", GTK_SIGNAL_FUNC(cb_menu_about), appdata);
 
-
   item = gtk_menu_item_new_with_label( _("Quit") );
-  gtk_menu_append(GTK_MENU_SHELL(menu), item);
+  gtk_menu_shell_append(GTK_MENU_SHELL(about_quit_items_menu), item);
   g_signal_connect(item, "activate", GTK_SIGNAL_FUNC(cb_menu_quit), appdata);
 
 #ifdef USE_HILDON
   hildon_window_set_menu(appdata->window, GTK_MENU(menu));
 #else
-  /* attach ordinary gtk menu */
-  GtkWidget *menu_bar = gtk_menu_bar_new();
+  GtkWidget *menu_bar = menu;
+
+#ifndef MAIN_MENU_IS_MENU_BAR
+  // we need to make one first
+  menu_bar = gtk_menu_bar_new();
 
   GtkWidget *root_menu = gtk_menu_item_new_with_label (_("Menu"));
   gtk_widget_show(root_menu);
@@ -597,8 +616,11 @@ void menu_create(appdata_t *appdata) {
   gtk_menu_item_set_submenu(GTK_MENU_ITEM (root_menu), menu);
 
   gtk_widget_show(menu_bar);
+#endif //MAIN_MENU_IS_MENU_BAR
+
   gtk_box_pack_start(GTK_BOX(appdata->vbox), menu_bar, 0, 0, 0);
-#endif
+
+#endif //USE_HILDON
 }
 
 /********************* end of menu **********************/
