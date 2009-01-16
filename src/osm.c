@@ -17,7 +17,10 @@
  * along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define OSM_STREAM_PARSER
+/* xml parsing has a performance issue */
+// #define OSM_DOM_PARSER
+// #define OSM_STREAM_PARSER
+#define OSM_QND_XML_PARSER
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -55,7 +58,7 @@ static void osm_bounds_dump(bounds_t *bounds) {
 	 bounds->ll_min.lon, bounds->ll_max.lon);
 }
 
-#ifndef OSM_STREAM_PARSER
+#ifdef OSM_DOM_PARSER
 static bounds_t *osm_parse_osm_bounds(osm_t *osm, 
 		     xmlDocPtr doc, xmlNode *a_node) {
   char *prop;
@@ -150,6 +153,7 @@ void osm_users_dump(user_t *user) {
 }
 
 static user_t *osm_user(osm_t *osm, char *name) {
+  if(!name) return NULL;
 
   /* search through user list */
   user_t **user = &osm->user;
@@ -171,6 +175,8 @@ static user_t *osm_user(osm_t *osm, char *name) {
 
 static
 time_t convert_iso8601(const char *str) {
+  if(!str) return 0;
+
   tzset();
 
   struct tm ctime;
@@ -324,7 +330,7 @@ void osm_nodes_dump(node_t *node) {
   }
 }
 
-#ifndef OSM_STREAM_PARSER
+#ifdef OSM_DOM_PARSER
 static node_t *osm_parse_osm_node(osm_t *osm, 
 			  xmlDocPtr doc, xmlNode *a_node) {
   xmlNode *cur_node = NULL;
@@ -492,7 +498,7 @@ node_chain_t *osm_parse_osm_way_nd(osm_t *osm,
   return NULL;
 }
 
-#ifndef OSM_STREAM_PARSER
+#ifdef OSM_DOM_PARSER
 static way_t *osm_parse_osm_way(osm_t *osm, 
 			  xmlDocPtr doc, xmlNode *a_node) {
   xmlNode *cur_node = NULL;
@@ -697,7 +703,7 @@ member_t *osm_parse_osm_relation_member(osm_t *osm,
   return member;
 }
 
-#ifndef OSM_STREAM_PARSER
+#ifdef OSM_DOM_PARSER
 static relation_t *osm_parse_osm_relation(osm_t *osm, 
 			  xmlDocPtr doc, xmlNode *a_node) {
   xmlNode *cur_node = NULL;
@@ -1385,6 +1391,314 @@ static osm_t *process_file(const char *filename) {
 /* ----------------------- end of stream parser tests ------------------- */
 #endif
 
+#ifdef OSM_QND_XML_PARSER
+/* -------------------------- qnd-xml parser tests ------------------- */
+
+gboolean osm_bounds_cb(qnd_xml_stack_t *stack, 
+		       qnd_xml_attribute_t *attributes, gpointer data) {
+
+  /* get parent pointer */
+  osm_t *osm = (osm_t*)stack->prev->userdata[0];
+
+  if(osm->bounds) {
+    errorf(NULL, "Doubly defined bounds");
+    return FALSE;
+  }
+
+  bounds_t *bounds = osm->bounds = g_new0(bounds_t, 1);
+
+  bounds->ll_min.lat = bounds->ll_min.lon = NAN;
+  bounds->ll_max.lat = bounds->ll_max.lon = NAN;
+
+  qnd_xml_get_prop_double(attributes, "minlat", &bounds->ll_min.lat);
+  qnd_xml_get_prop_double(attributes, "minlon", &bounds->ll_min.lon);
+  qnd_xml_get_prop_double(attributes, "maxlat", &bounds->ll_max.lat);
+  qnd_xml_get_prop_double(attributes, "maxlon", &bounds->ll_max.lon);
+
+  if(isnan(bounds->ll_min.lat) || isnan(bounds->ll_min.lon) || 
+     isnan(bounds->ll_max.lat) || isnan(bounds->ll_max.lon)) {
+    errorf(NULL, "Invalid coordinate in bounds (%f/%f/%f/%f)",
+	   bounds->ll_min.lat, bounds->ll_min.lon, 
+	   bounds->ll_max.lat, bounds->ll_max.lon);
+
+    osm_bounds_free(bounds);
+    osm->bounds = NULL;
+    return FALSE;
+  }
+
+
+  /* calculate map zone which will be used as a reference for all */
+  /* drawing/projection later on */
+  pos_t center = { (bounds->ll_max.lat + bounds->ll_min.lat)/2, 
+		   (bounds->ll_max.lon + bounds->ll_min.lon)/2 };
+
+  pos2lpos_center(&center, &bounds->center);
+
+  /* the scale is needed to accomodate for "streching" */
+  /* by the mercartor projection */
+  bounds->scale = cos(DEG2RAD(center.lat));
+
+  pos2lpos_center(&bounds->ll_min, &bounds->min);
+  bounds->min.x -= bounds->center.x;
+  bounds->min.y -= bounds->center.y;
+  bounds->min.x *= bounds->scale;
+  bounds->min.y *= bounds->scale;
+
+  pos2lpos_center(&bounds->ll_max, &bounds->max);
+  bounds->max.x -= bounds->center.x;
+  bounds->max.y -= bounds->center.y;
+  bounds->max.x *= bounds->scale;
+  bounds->max.y *= bounds->scale;
+
+  return TRUE;
+}
+
+static gboolean osm_tag_cb(qnd_xml_stack_t *stack, 
+			 qnd_xml_attribute_t *attributes, gpointer data) {
+
+  tag_t *tag = *(tag_t**)stack->prev->userdata[1] = g_new0(tag_t, 1);
+
+  tag->key = qnd_xml_get_prop_str(attributes, "k");
+  tag->value = qnd_xml_get_prop_str(attributes, "v");
+
+  if(!tag->key || !tag->value) {
+    printf("incomplete tag key/value %s/%s\n", tag->key, tag->value);
+    osm_tags_free(tag);
+    tag = NULL;
+  } else
+    stack->prev->userdata[1] = &tag->next;
+
+  return TRUE;
+}
+
+static gboolean osm_node_cb(qnd_xml_stack_t *stack, 
+		     qnd_xml_attribute_t *attributes, gpointer data) {
+
+  osm_t *osm = (osm_t*)stack->prev->userdata[0];
+
+  /* allocate a new node structure. userdata[1] points to the current */
+  /* position a new node is to be stored */
+  node_t *node = *(node_t**)stack->prev->userdata[1] = 
+    stack->userdata[0] = g_new0(node_t, 1);
+  stack->prev->userdata[1] = &node->next;
+
+  qnd_xml_get_prop_gulong(attributes, "id", &node->id);
+  qnd_xml_get_prop_double(attributes, "lat", &node->pos.lat);
+  qnd_xml_get_prop_double(attributes, "lon", &node->pos.lon);
+  node->user = osm_user(osm, qnd_xml_get_prop(attributes, "user"));
+  node->visible = qnd_xml_get_prop_is(attributes, "visible", "true");
+  node->time = convert_iso8601(qnd_xml_get_prop(attributes, "timestamp"));
+
+  pos2lpos(osm->bounds, &node->pos, &node->lpos);
+
+  /* store current tag pointer in userdata for fast access to current tag */
+  stack->userdata[1] = &node->tag;
+
+  return TRUE;
+}
+
+static gboolean osm_way_nd_cb(qnd_xml_stack_t *stack, 
+			 qnd_xml_attribute_t *attributes, gpointer data) {
+
+  osm_t *osm = (osm_t*)stack->prev->prev->userdata[0];
+
+  item_id_t id;
+  if(qnd_xml_get_prop_gulong(attributes, "ref", &id)) {
+    /* allocate a new node_chain structure */
+    node_chain_t *node_chain = *(node_chain_t**)stack->prev->userdata[2] = 
+      g_new0(node_chain_t, 1);
+
+    /* search matching node */
+    node_chain->node = osm->node;
+    while(node_chain->node && node_chain->node->id != id)
+      node_chain->node = node_chain->node->next;
+
+    if(!node_chain->node) printf("Node id %lu not found\n", id);
+
+    if(node_chain->node) 
+      node_chain->node->ways++;
+
+    stack->prev->userdata[2] = &node_chain->next;
+  }
+
+  return TRUE;
+}
+
+gboolean osm_way_cb(qnd_xml_stack_t *stack, 
+		    qnd_xml_attribute_t *attributes, gpointer data) {
+
+  osm_t *osm = (osm_t*)stack->prev->userdata[0];
+
+  /* allocate a new way structure. userdata[2] points to the current */
+  /* position a new way is to be stored in the way list */
+  way_t *way = *(way_t**)stack->prev->userdata[2] = 
+    stack->userdata[0] = g_new0(way_t, 1);
+  stack->prev->userdata[2] = &way->next;
+
+  qnd_xml_get_prop_gulong(attributes, "id", &way->id);
+  way->user = osm_user(osm, qnd_xml_get_prop(attributes, "user"));
+  way->visible = qnd_xml_get_prop_is(attributes, "visible", "true");
+  way->time = convert_iso8601(qnd_xml_get_prop(attributes, "timestamp"));
+
+  /* store current tag and node_chain pointers in userdata for fast */
+  /* access to current tag/node_chain entry */
+  stack->userdata[1] = &way->tag;
+  stack->userdata[2] = &way->node_chain;
+
+  return TRUE;
+}
+
+static gboolean osm_rel_member_cb(qnd_xml_stack_t *stack, 
+			 qnd_xml_attribute_t *attributes, gpointer data) {
+
+  osm_t *osm = (osm_t*)stack->prev->prev->userdata[0];
+
+  member_t *member = *(member_t**)stack->prev->userdata[2] = 
+    g_new0(member_t, 1);
+  stack->prev->userdata[2] = &member->next;
+  member->type = ILLEGAL;
+
+  char *type = qnd_xml_get_prop(attributes, "type");
+  if(type) {
+    if(strcasecmp(type, "way") == 0)           member->type = WAY;
+    else if(strcasecmp(type, "node") == 0)     member->type = NODE;
+    else if(strcasecmp(type, "relation") == 0) member->type = RELATION;
+  }
+
+  item_id_t id;
+  if(qnd_xml_get_prop_gulong(attributes, "ref", &id)) {
+    switch(member->type) {
+    case ILLEGAL:
+      printf("Unable to store illegal type\n");
+      break;
+      
+    case WAY:
+      /* search matching way */
+      member->way = osm->way;
+      while(member->way && member->way->id != id)
+	member->way = member->way->next;
+
+      if(!member->way) {
+	member->type = WAY_ID;
+	member->id = id;
+      }
+      break;
+
+    case NODE:
+      /* search matching node */
+      member->node = osm->node;
+      while(member->node && member->node->id != id)
+	member->node = member->node->next;
+      
+      if(!member->node) {
+	member->type = NODE_ID;
+	member->id = id;
+      }
+      break;
+      
+    case RELATION:
+      /* search matching relation */
+      member->relation = osm->relation;
+      while(member->relation && member->relation->id != id)
+	member->relation = member->relation->next;
+      
+      if(!member->relation) {
+	member->type = NODE_ID;
+	member->id = id;
+      }
+      break;
+      
+    case WAY_ID:
+    case NODE_ID:
+    case RELATION_ID:
+      break;
+    }
+  }
+
+  return TRUE;
+}
+
+gboolean osm_rel_cb(qnd_xml_stack_t *stack, 
+		    qnd_xml_attribute_t *attributes, gpointer data) {
+
+  osm_t *osm = (osm_t*)stack->prev->userdata[0];
+
+  /* allocate a new relation structure. userdata[3] points to the current */
+  /* position a new relation is to be stored at in the relation list */
+  relation_t *relation = *(relation_t**)stack->prev->userdata[3] = 
+    stack->userdata[0] = g_new0(relation_t, 1);
+  stack->prev->userdata[3] = &relation->next;
+
+  qnd_xml_get_prop_gulong(attributes, "id", &relation->id);
+  relation->user = osm_user(osm, qnd_xml_get_prop(attributes, "user"));
+  relation->visible = qnd_xml_get_prop_is(attributes, "visible", "true");
+  relation->time = convert_iso8601(qnd_xml_get_prop(attributes, "timestamp"));
+
+  /* store current tag and member pointers in userdata for fast access */
+  /* to current tag and members in their chains */
+  stack->userdata[1] = &relation->tag;
+  stack->userdata[2] = &relation->member;
+
+  return TRUE;
+}
+
+gboolean osm_cb(qnd_xml_stack_t *stack, 
+		qnd_xml_attribute_t *attributes, gpointer data) {
+
+  g_assert(!stack->userdata[0]);
+
+  /* also set parents (roots) userdata as it's the parsers return value */
+  osm_t *osm = stack->prev->userdata[0] = 
+    stack->userdata[0] = g_new0(osm_t, 1);
+
+  /* store direct pointers for faster list access */
+  /* (otherwise we'd have to search the end of the lists for every item */
+  /* to be attached) */
+  stack->userdata[1] = &osm->node;
+  stack->userdata[2] = &osm->way;
+  stack->userdata[3] = &osm->relation;
+
+  return TRUE;
+}
+
+
+/* these structures describe the content qnd_xml expects while parsing */
+qnd_xml_entry_t osm_node_tag = { "tag", osm_tag_cb, QND_XML_LEAF };
+
+qnd_xml_entry_t osm_way_tag = { "tag", osm_tag_cb, QND_XML_LEAF };
+qnd_xml_entry_t osm_way_nd = { "nd", osm_way_nd_cb, QND_XML_LEAF };
+
+qnd_xml_entry_t osm_rel_tag = { "tag", osm_tag_cb, QND_XML_LEAF };
+qnd_xml_entry_t osm_rel_member = { "member", osm_rel_member_cb, QND_XML_LEAF };
+
+qnd_xml_entry_t osm_bounds = { "bounds", osm_bounds_cb, QND_XML_LEAF };
+
+qnd_xml_entry_t *node_children[] = { &osm_node_tag },
+  osm_node = { "node", osm_node_cb, QND_XML_CHILDREN(node_children) };
+
+qnd_xml_entry_t *way_children[] = { &osm_way_tag, &osm_way_nd },
+  osm_way = { "way", osm_way_cb, QND_XML_CHILDREN(way_children) };
+
+qnd_xml_entry_t *rel_children[] = { &osm_rel_tag, &osm_rel_member },
+  osm_rel = { "rel", osm_rel_cb, QND_XML_CHILDREN(rel_children) };
+
+/* the osm element */
+qnd_xml_entry_t *osm_children[] = { 
+  &osm_bounds, &osm_node, &osm_way, &osm_rel };
+qnd_xml_entry_t osm = { "osm", osm_cb, QND_XML_CHILDREN(osm_children) };
+
+/* the root element */
+qnd_xml_entry_t *root_children[] = { &osm };
+qnd_xml_entry_t root = { "<root>", NULL, QND_XML_CHILDREN(root_children) };
+
+// gcc `pkg-config --cflags --libs glib-2.0` -o qnd_xml qnd_xml.c
+
+
+
+/* ----------------------- end of qnd-xml parser tests ------------------- */
+#endif
+
+
 #include <sys/time.h>
 
 osm_t *osm_parse(char *filename) {
@@ -1392,14 +1706,18 @@ osm_t *osm_parse(char *filename) {
   struct timeval start;
   gettimeofday(&start, NULL);
 
-  LIBXML_TEST_VERSION;
 
 #ifdef OSM_STREAM_PARSER
+  LIBXML_TEST_VERSION;
+
   // use stream parser
   osm_t *osm = process_file(filename);
   xmlCleanupParser();
+#endif
 
-#else
+#ifdef OSM_DOM_PARSER
+  LIBXML_TEST_VERSION;
+
   // parse into a tree
   /* parse the file and get the DOM */
   xmlDoc *doc = NULL;
@@ -1410,6 +1728,14 @@ osm_t *osm_parse(char *filename) {
   }
   
   osm_t *osm = osm_parse_doc(doc); 
+#endif
+
+#ifdef OSM_QND_XML_PARSER
+  osm_t *osm = NULL;
+  if(!(osm = qnd_xml_parse(filename, &root, NULL))) {
+    errorf(NULL, "While parsing \"%s\"", filename);
+    return NULL;
+  }
 #endif
 
   struct timeval end;

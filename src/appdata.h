@@ -155,5 +155,6 @@ typedef struct appdata_s {
 #include "josm_elemstyles.h"
 #include "style.h"
 #include "net_io.h"
+#include "qnd_xml.h"
 
 #endif // APPDATA_H
