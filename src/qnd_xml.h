@@ -51,6 +51,7 @@ typedef struct qnd_xml_entry_s {
 gpointer qnd_xml_parse(char *name, qnd_xml_entry_t *root, gpointer userdata);
 char *qnd_xml_get_prop(qnd_xml_attribute_t *attr, char *name);
 gboolean qnd_xml_get_prop_double(qnd_xml_attribute_t *, char *, double *);
+gboolean qnd_xml_get_prop_float(qnd_xml_attribute_t *, char *, float *);
 gboolean qnd_xml_get_prop_gulong(qnd_xml_attribute_t *, char *, gulong *);
 gboolean qnd_xml_get_prop_is(qnd_xml_attribute_t *, char *, char *);
 char *qnd_xml_get_prop_str(qnd_xml_attribute_t *attr, char *name);

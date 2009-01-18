@@ -22,7 +22,12 @@
 
 #include <math.h>
 
+#ifdef USE_FLOAT
+/* use float instead of double on small machines */
+typedef float pos_float_t;
+#else
 typedef double pos_float_t;
+#endif
 
 #ifndef NAN
 #define NAN (0.0/0.0)

@@ -30,15 +30,12 @@
 #include <ctype.h>
 int isblank(int c);
 
-#define QND_XML_BUFFER_SIZE 1024
 typedef struct {
   gpointer userdata;
 
-  FILE *file;
   int total, bytes_read;
 
-  char buffer[QND_XML_BUFFER_SIZE], *cur;
-  int fill;
+  char *buffer, *cur;
 
   qnd_xml_stack_t *stack, *sp;
   int mod;   // modifier (?, !, /) in element
@@ -91,41 +88,6 @@ qnd_xml_entry_t *stack_pop(qnd_xml_context_t *context) {
   return cur;
 }
 
-gboolean update_buffer(qnd_xml_context_t *context) {
-
-  /* if buffer is empty just fill it */
-  if(!context->fill) {
-    context->cur = context->buffer;
-    context->fill = fread(context->buffer, 1l, 
-	  QND_XML_BUFFER_SIZE, context->file);
-
-    if(context->fill < 0) {
-      printf("read error\n");
-      context->fill = 0;
-      return FALSE;
-    }    
-    context->bytes_read += context->fill;
-    return TRUE;
-  }
-
-  /* shift remaining data down */
-  int offset = context->cur - context->buffer;
-  g_memmove(context->buffer, context->cur, QND_XML_BUFFER_SIZE - offset);
-  context->fill -= offset;
-  int bytes_read = fread(context->buffer + QND_XML_BUFFER_SIZE - 
-			 offset, 1l, offset, context->file);
-
-  context->cur = context->buffer;
-  if(bytes_read < 0) {
-    printf("read error\n");
-    return FALSE;
-  }
-
-  context->bytes_read += bytes_read;
-  context->fill += bytes_read;
-  return TRUE;
-}
-
 /* 
    utf8:
    0xxxxxxx
@@ -153,32 +115,22 @@ inline gboolean skip_char(qnd_xml_context_t *context) {
 }
 
 gboolean skip_to_char(qnd_xml_context_t *context, char *chrs) {
-  do {
-    while(context->cur < context->buffer + context->fill) {
-      if(strchr(chrs, current_char(context))) {
-	return skip_char(context);
-      }
-      if(!skip_char(context)) return FALSE;
+  while(context->cur < context->buffer + context->total) {
+    if(strchr(chrs, current_char(context))) {
+      return skip_char(context);
     }
-
-    /* try to get more data */
-    if(!update_buffer(context))
-      return FALSE;
-
-  } while(context->fill);
+    if(!skip_char(context)) return FALSE;
+  }
 
   /* if we get here the system was unable to fill the buffer */
   return FALSE;
 }
 
 gboolean buffer_overflow(qnd_xml_context_t *context) {
-  return(!(context->cur < context->buffer + context->fill));
+  return(!(context->cur < context->buffer + context->total));
 }
 
 gboolean get_element_name(qnd_xml_context_t *context) {
-
-  /* drop everything before element from buffer */
-  if(!update_buffer(context)) return FALSE;
 
   char *start = context->cur;
 
@@ -296,7 +248,6 @@ gboolean skip_white(qnd_xml_context_t *context) {
 gboolean get_attributes(qnd_xml_context_t *context) {
   /* drop everything before element from buffer */
 
-  if(!update_buffer(context)) return FALSE;
   if(!skip_white(context)) return FALSE;
 
   while(isalpha(current_char(context))) {
@@ -330,7 +281,7 @@ void attributes_free(qnd_xml_context_t *context) {
 void qnd_xml_cleanup(qnd_xml_context_t *context) {
   /* todo: clean stack */
 
-  if(context->file) fclose(context->file);
+  if(context->buffer) g_free(context->buffer);
   g_free(context);
 }
 
@@ -396,6 +347,7 @@ gboolean get_element(qnd_xml_context_t *context) {
 }
 
 gpointer qnd_xml_parse(char *name, qnd_xml_entry_t *root, gpointer userdata) {
+  FILE *file = NULL;
   qnd_xml_context_t *context = g_new0(qnd_xml_context_t, 1);
   context->cur = context->buffer;
   context->userdata = userdata;
@@ -412,8 +364,8 @@ gpointer qnd_xml_parse(char *name, qnd_xml_entry_t *root, gpointer userdata) {
   }
 
   /* open file */
-  context->file = g_fopen(name, "r");
-  if(!context->file) { 
+  file = g_fopen(name, "r");
+  if(!file) { 
     printf("unable to open file\n");
     qnd_xml_cleanup(context);
     return FALSE;
@@ -422,16 +374,26 @@ gpointer qnd_xml_parse(char *name, qnd_xml_entry_t *root, gpointer userdata) {
   printf("file is open\n");
 
   /* get file length */
-  fseek(context->file, 0l, SEEK_END);
-  context->total = ftell(context->file);
-  fseek(context->file, 0l, SEEK_SET);
+  fseek(file, 0l, SEEK_END);
+  context->total = ftell(file);
+  fseek(file, 0l, SEEK_SET);
   
   printf("file length is %d bytes\n", context->total);
 
+  /* load entire file into buffer */
+  context->buffer = g_malloc(context->total);
+  fread(context->buffer, 1l, context->total, file);
+  fclose(file);
+  context->cur = context->buffer;
+
+  setlocale(LC_NUMERIC, "C");
+
   gboolean error = FALSE;
-  do
+  do 
     error = !get_element(context);
   while(!error && !context->done);
+
+  setlocale(LC_NUMERIC, "");
 
   if(error) printf("parser ended with error\n");
   else      printf("parser ended successfully\n");
@@ -463,6 +425,17 @@ char *qnd_xml_get_prop_str(qnd_xml_attribute_t *attr, char *name) {
   char *value = qnd_xml_get_prop(attr, name);
   if(value) return g_strdup(value);
   return NULL;
+}
+ 
+/* strtof this is c99 */
+float strtof(const char *nptr, char **endptr);
+ 
+gboolean qnd_xml_get_prop_float(qnd_xml_attribute_t *attr, char *name,
+				 float *dest) {
+  char *value = qnd_xml_get_prop(attr, name);
+  if(!value) return FALSE;
+  *dest = strtof(value, NULL);
+  return TRUE;
 }
 
 gboolean qnd_xml_get_prop_double(qnd_xml_attribute_t *attr, char *name,

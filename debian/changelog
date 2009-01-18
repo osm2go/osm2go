@@ -1,3 +1,9 @@
+osm2go (0.6-9) unstable; urgency=low
+
+  * Beta version of quick'n dirty xml parser (qnd_xml)
+
+ -- Till Harbaum <harbaum@metis>  Fri, 16 Jan 2009 20:44:58 +0100
+
 osm2go (0.6-8) unstable; urgency=low
 
   * Unified internal color model <till@harbaum.org>

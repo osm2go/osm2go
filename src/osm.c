@@ -1394,6 +1394,12 @@ static osm_t *process_file(const char *filename) {
 #ifdef OSM_QND_XML_PARSER
 /* -------------------------- qnd-xml parser tests ------------------- */
 
+#ifdef USE_FLOAT
+#define GET_PROP_POS(a,b,c) qnd_xml_get_prop_float(a, b, c)
+#else
+#define GET_PROP_POS(a,b,c) qnd_xml_get_prop_double(a, b, c)
+#endif
+
 gboolean osm_bounds_cb(qnd_xml_stack_t *stack, 
 		       qnd_xml_attribute_t *attributes, gpointer data) {
 
@@ -1410,10 +1416,10 @@ gboolean osm_bounds_cb(qnd_xml_stack_t *stack,
   bounds->ll_min.lat = bounds->ll_min.lon = NAN;
   bounds->ll_max.lat = bounds->ll_max.lon = NAN;
 
-  qnd_xml_get_prop_double(attributes, "minlat", &bounds->ll_min.lat);
-  qnd_xml_get_prop_double(attributes, "minlon", &bounds->ll_min.lon);
-  qnd_xml_get_prop_double(attributes, "maxlat", &bounds->ll_max.lat);
-  qnd_xml_get_prop_double(attributes, "maxlon", &bounds->ll_max.lon);
+  GET_PROP_POS(attributes, "minlat", &bounds->ll_min.lat);
+  GET_PROP_POS(attributes, "minlon", &bounds->ll_min.lon);
+  GET_PROP_POS(attributes, "maxlat", &bounds->ll_max.lat);
+  GET_PROP_POS(attributes, "maxlon", &bounds->ll_max.lon);
 
   if(isnan(bounds->ll_min.lat) || isnan(bounds->ll_min.lon) || 
      isnan(bounds->ll_max.lat) || isnan(bounds->ll_max.lon)) {
@@ -1483,8 +1489,8 @@ static gboolean osm_node_cb(qnd_xml_stack_t *stack,
   stack->prev->userdata[1] = &node->next;
 
   qnd_xml_get_prop_gulong(attributes, "id", &node->id);
-  qnd_xml_get_prop_double(attributes, "lat", &node->pos.lat);
-  qnd_xml_get_prop_double(attributes, "lon", &node->pos.lon);
+  GET_PROP_POS(attributes, "lat", &node->pos.lat);
+  GET_PROP_POS(attributes, "lon", &node->pos.lon);
   node->user = osm_user(osm, qnd_xml_get_prop(attributes, "user"));
   node->visible = qnd_xml_get_prop_is(attributes, "visible", "true");
   node->time = convert_iso8601(qnd_xml_get_prop(attributes, "timestamp"));

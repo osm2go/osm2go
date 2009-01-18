@@ -160,8 +160,11 @@ void pos_lon_label_set(GtkWidget *label, pos_float_t lon) {
 
 void pos2lpos(bounds_t *bounds, pos_t *pos, lpos_t *lpos) {
   lpos->x = POS_EQ_RADIUS * DEG2RAD(pos->lon);
+#ifdef USE_FLOAT
+  lpos->y = POS_EQ_RADIUS * logf(tanf(M_PI/4 + DEG2RAD(pos->lat)/2)); 
+#else
   lpos->y = POS_EQ_RADIUS * log(tan(M_PI/4 + DEG2RAD(pos->lat)/2)); 
-
+#endif
   lpos->x = ( lpos->x - bounds->center.x) * bounds->scale;
   lpos->y = (-lpos->y + bounds->center.y) * bounds->scale;
 }
@@ -169,7 +172,11 @@ void pos2lpos(bounds_t *bounds, pos_t *pos, lpos_t *lpos) {
 /* the maps center is special as it isn't offset (by itself) */
 void pos2lpos_center(pos_t *pos, lpos_t *lpos) {
   lpos->x = POS_EQ_RADIUS * DEG2RAD(pos->lon);
+#ifdef USE_FLOAT
+  lpos->y = POS_EQ_RADIUS * logf(tanf(M_PI/4 + DEG2RAD(pos->lat)/2)); 
+#else
   lpos->y = POS_EQ_RADIUS * log(tan(M_PI/4 + DEG2RAD(pos->lat)/2)); 
+#endif
 }
 
 void lpos2pos(bounds_t *bounds, lpos_t *lpos, pos_t *pos) {
@@ -179,7 +186,11 @@ void lpos2pos(bounds_t *bounds, lpos_t *lpos, pos_t *pos) {
   tmp.y = (-tmp.y/bounds->scale) + bounds->center.y;
 
   pos->lon = RAD2DEG(tmp.x / POS_EQ_RADIUS);
+#ifdef USE_FLOAT
+  pos->lat = RAD2DEG(2 * atanf(expf(tmp.y/POS_EQ_RADIUS)) - M_PI/2);
+#else
   pos->lat = RAD2DEG(2 * atan(exp(tmp.y/POS_EQ_RADIUS)) - M_PI/2);
+#endif
 }
 
 void pos_dist_str(char *str, int len, pos_float_t dist, gboolean is_mil) {
