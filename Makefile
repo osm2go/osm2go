@@ -21,6 +21,10 @@ all:
 	cd src && make
 	cd data && make
 
+install:
+	cd src && make install
+	cd data && make install
+
 clean:
 	rm -f *~ \#*\# *.bak *-stamp
 	cd src && make clean

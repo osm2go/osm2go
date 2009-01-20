@@ -128,13 +128,13 @@ void errorf(GtkWidget *parent, const char *fmt, ...) {
 }
 
 static const char *data_paths[] = {
-  "~/." PACKAGE,            // in home directory
-  "/usr/share/" PACKAGE ,   // final installation path 
+  "~/." PACKAGE,             // in home directory
+  PREFIX "/share/" PACKAGE , // final installation path 
 #ifdef USE_HILDON
-  "/media/mmc1/" PACKAGE,   // path to external memory card
-  "/media/mmc2/" PACKAGE,   // path to internal memory card
+  "/media/mmc1/" PACKAGE,    // path to external memory card
+  "/media/mmc2/" PACKAGE,    // path to internal memory card
 #endif
-  "./data", "../data",      // local paths for testing
+  "./data", "../data",       // local paths for testing
   NULL
 };
 

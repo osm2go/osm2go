@@ -1,0 +1,11 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=OSM2Go
+Comment=OpenStreetMap Editor
+Exec=osm2go
+Icon=osm2go.png
+Terminal=false
+Type=Application
+StartupNotify=true
+Categories=Application;GTK;Utility;Viewer;
+MimeType=application/x-GPS-Exchange-Format
