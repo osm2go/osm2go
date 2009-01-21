@@ -137,6 +137,28 @@ typedef struct relation_chain_s {
   struct relation_chain_s *next;
 } relation_chain_t;
 
+/* two of these hash tables are used, one for nodes and one for ways */
+/* currently relations aren't used often enough to justify the use */
+/* of a hash table */
+
+/* the current hash table uses 16 bits. each table thus is */
+/* 256 kbytes (2^16 * sizeof(void*)) in size */
+#define ID2HASH(a) ((unsigned short)(a) ^ (unsigned short)((a)>>16))
+
+typedef struct hash_item_s {
+  union {
+    node_t *node;
+    way_t *way;
+    relation_t *relation;
+  } data;
+
+  struct hash_item_s *next;
+} hash_item_t;
+
+typedef struct {
+  hash_item_t *hash[65536];
+} hash_table_t;
+
 typedef enum {
   ILLEGAL=0, NODE, WAY, RELATION, NODE_ID, WAY_ID, RELATION_ID
 } type_t;
@@ -158,9 +180,16 @@ typedef struct member_s {
 typedef struct osm_s {
   bounds_t *bounds;   // original bounds as they appear in the file
   user_t *user;
+
   node_t *node;
+  hash_table_t *node_hash;
+
   way_t  *way;
+  hash_table_t *way_hash;
+
+  // hashing relations doesn't yet make much sense as relations are quite rare
   relation_t  *relation;
+
 } osm_t;
 
 #include <libxml/parser.h>

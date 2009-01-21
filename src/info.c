@@ -148,22 +148,28 @@ static gboolean tag_edit(tag_context_t *context) {
           GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
           NULL);
 
+#ifdef USE_HILDON
+  gtk_window_set_default_size(GTK_WINDOW(dialog), 500, 100);
+#else
+  gtk_window_set_default_size(GTK_WINDOW(dialog), 400, 100);
+#endif
+
   gtk_dialog_set_default_response(GTK_DIALOG(dialog), 
 				  GTK_RESPONSE_ACCEPT);
 
   GtkWidget *label, *key, *value;
   GtkWidget *table = gtk_table_new(2, 2, FALSE);
 
-  gtk_table_attach_defaults(GTK_TABLE(table),
-		    label = gtk_label_new(_("Key:")), 0, 1, 0, 1);
+  gtk_table_attach(GTK_TABLE(table), label = gtk_label_new(_("Key:")), 
+		   0, 1, 0, 1, 0, 0, 0, 0);
   gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
   gtk_table_attach_defaults(GTK_TABLE(table), 
-		    key = gtk_entry_new(), 1, 2, 0, 1);
+			    key = gtk_entry_new(), 1, 2, 0, 1);
   gtk_entry_set_activates_default(GTK_ENTRY(key), TRUE);
   HILDON_ENTRY_NO_AUTOCAP(key);
 
-  gtk_table_attach_defaults(GTK_TABLE(table),
-		    label = gtk_label_new(_("Value:")), 0, 1, 1, 2);
+  gtk_table_attach(GTK_TABLE(table),  label = gtk_label_new(_("Value:")),
+		   0, 1, 1, 2, 0, 0, 0, 0);
   gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
   gtk_table_attach_defaults(GTK_TABLE(table), 
 		    value = gtk_entry_new(), 1, 2, 1, 2);

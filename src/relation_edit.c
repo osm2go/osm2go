@@ -40,8 +40,11 @@ enum {
 
 static void relation_list_selected(relitem_context_t *context, 
 				   gboolean selected) {
-  gtk_widget_set_sensitive(context->but_remove, FALSE);
-  gtk_widget_set_sensitive(context->but_edit, selected);
+
+  if(context->but_remove)
+    gtk_widget_set_sensitive(context->but_remove, FALSE);
+  if(context->but_edit)
+    gtk_widget_set_sensitive(context->but_edit, selected);
 }
 
 static gboolean

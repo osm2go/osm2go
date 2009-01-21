@@ -1,3 +1,22 @@
+/*
+ * Copyright (C) 2008 Andrew Chadwick <andrewc-osm2go@piffle.org>.
+ *
+ * This file is part of OSM2Go.
+ *
+ * OSM2Go is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * OSM2Go is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "banner.h"
 #include <gtk/gtk.h>
 
@@ -5,8 +24,6 @@
 
 #ifdef USE_HILDON
 #include <hildon/hildon.h>
-
-
 
 // Clear any current animations.
 
@@ -17,8 +34,9 @@ void banner_clear(appdata_t *appdata) {
     gtk_grab_remove(YETI_PASSIVE_WIDGET);
     GtkWidget *win, *menu, *menu_att;
     win = GTK_WIDGET(appdata->window);
-    menu = GTK_WINDOW(hildon_window_get_menu(win));
-    menu_att = gtk_menu_get_attach_widget(hildon_window_get_menu(win));
+    menu = GTK_WIDGET(hildon_window_get_menu(HILDON_WINDOW(win)));
+    menu_att = gtk_menu_get_attach_widget(
+		  hildon_window_get_menu(HILDON_WINDOW(win)));
     gtk_widget_set_sensitive(win, TRUE);
     gtk_widget_set_sensitive(menu, TRUE);
     gtk_widget_set_sensitive(menu_att, TRUE);
@@ -64,8 +82,9 @@ void banner_busy_start(appdata_t *appdata, gboolean grab, char *text) {
   if (appdata->banner_is_grabby) {
     GtkWidget *win, *menu, *menu_att;
     win = GTK_WIDGET(appdata->window);
-    menu = GTK_WINDOW(hildon_window_get_menu(win));
-    menu_att = gtk_menu_get_attach_widget(hildon_window_get_menu(win));
+    menu = GTK_WIDGET(hildon_window_get_menu(HILDON_WINDOW(win)));
+    menu_att = gtk_menu_get_attach_widget(
+		  hildon_window_get_menu(HILDON_WINDOW(win)));
     gtk_widget_set_sensitive(win, FALSE);
     gtk_widget_set_sensitive(menu, FALSE);
     gtk_widget_set_sensitive(menu_att, FALSE);

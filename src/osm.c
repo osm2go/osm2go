@@ -17,10 +17,11 @@
  * along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* xml parsing has a performance issue */
+/* these defines select one of three possible xml parsers */
+/* this is in fact selected depending on the plattform in the Makefile */
 // #define OSM_DOM_PARSER
 // #define OSM_STREAM_PARSER
-#define OSM_QND_XML_PARSER
+// #define OSM_QND_XML_PARSER
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -370,6 +371,15 @@ static node_t *osm_parse_osm_node(osm_t *osm,
     xmlFree(prop);
   }
 
+  /* append node to end of hash table if present */
+  if(osm->node_hash) {
+    hash_item_t **item = &osm->node_hash->hash[ID2HASH(node->id)];
+    while(*item) item = &(*item)->next;
+    
+    *item = g_new0(hash_item_t, 1);
+    (*item)->data.node = node;
+  }
+
   /* scan for tags and attach a list of tags */
   tag_t **tag = &node->tag;
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
@@ -481,14 +491,9 @@ node_chain_t *osm_parse_osm_way_nd(osm_t *osm,
     node_chain_t *node_chain = g_new0(node_chain_t, 1);
 
     /* search matching node */
-    node_chain->node = osm->node;
-    while(node_chain->node && node_chain->node->id != id)
-      node_chain->node = node_chain->node->next;
-
+    node_chain->node = osm_get_node_by_id(osm, id);
     if(!node_chain->node) printf("Node id %lu not found\n", id);
-
-    if(node_chain->node) 
-      node_chain->node->ways++;
+    else                  node_chain->node->ways++;
 
     xmlFree(prop);
 
@@ -525,6 +530,15 @@ static way_t *osm_parse_osm_way(osm_t *osm,
   if((prop = (char*)xmlGetProp(a_node, (unsigned char*)"timestamp"))) {
     way->time = convert_iso8601(prop);
     xmlFree(prop);
+  }
+
+  /* append way to end of hash table if present */
+  if(osm->way_hash) {
+    hash_item_t **item = &osm->way_hash->hash[ID2HASH(way->id)];
+    while(*item) item = &(*item)->next;
+    
+    *item = g_new0(hash_item_t, 1);
+    (*item)->data.way = way;
   }
 
   /* scan for tags/nodes and attach their lists */
@@ -652,10 +666,7 @@ member_t *osm_parse_osm_relation_member(osm_t *osm,
 
     case WAY:
       /* search matching way */
-      member->way = osm->way;
-      while(member->way && member->way->id != id)
-	member->way = member->way->next;
-
+      member->way = osm_get_way_by_id(osm, id);
       if(!member->way) {
 	member->type = WAY_ID;
 	member->id = id;
@@ -664,10 +675,7 @@ member_t *osm_parse_osm_relation_member(osm_t *osm,
 
     case NODE:
       /* search matching node */
-      member->node = osm->node;
-      while(member->node && member->node->id != id)
-	member->node = member->node->next;
-
+      member->node = osm_get_node_by_id(osm, id);
       if(!member->node) {
 	member->type = NODE_ID;
 	member->id = id;
@@ -676,10 +684,7 @@ member_t *osm_parse_osm_relation_member(osm_t *osm,
 
     case RELATION:
       /* search matching relation */
-      member->relation = osm->relation;
-      while(member->relation && member->relation->id != id)
-	member->relation = member->relation->next;
-
+      member->relation = osm_get_relation_by_id(osm, id);
       if(!member->relation) {
 	member->type = NODE_ID;
 	member->id = id;
@@ -755,7 +760,7 @@ static relation_t *osm_parse_osm_relation(osm_t *osm,
 
 /* ----------------------- generic xml handling -------------------------- */
 
-/* parse loc entry */
+/* parse osm entry */
 static void osm_parse_osm(osm_t *osm, xmlDocPtr doc, xmlNode * a_node) {
   xmlNode *cur_node = NULL;
 
@@ -837,6 +842,8 @@ static osm_t *osm_parse_root(xmlDocPtr doc, xmlNode * a_node) {
 
   /* allocate memory to hold osm file description */
   osm = g_new0(osm_t, 1);
+  osm->node_hash = g_new0(hash_table_t, 1);
+  osm->way_hash = g_new0(hash_table_t, 1);
 
   for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
@@ -874,8 +881,33 @@ static osm_t *osm_parse_doc(xmlDocPtr doc) {
 
 /* ------------------ osm handling ----------------- */
 
+/* the two hash tables eat over 512kBytes memory and may thus be */
+/* freed at any time. osm2go can work without them (albeit slower) */
+static void hash_table_free(hash_table_t *table) {
+  if(!table) return;
+
+  int i;
+  for(i=0;i<65536;i++) {
+    hash_item_t *item = table->hash[i];
+    while(item) {
+      hash_item_t *next = item->next;
+      g_free(item);
+      item = next;
+    }
+  }
+}
+
+void osm_hash_tables_free(osm_t *osm) {
+  hash_table_free(osm->node_hash);
+  osm->node_hash = NULL;
+  hash_table_free(osm->way_hash);
+  osm->way_hash = NULL;
+}
+
 void osm_free(icon_t **icon, osm_t *osm) {
   if(!osm) return;
+
+  osm_hash_tables_free(osm);
 
   if(osm->bounds)   osm_bounds_free(osm->bounds);
   if(osm->user)     osm_users_free(osm->user);
@@ -1057,6 +1089,15 @@ static node_t *process_node(xmlTextReaderPtr reader, osm_t *osm) {
 
   pos2lpos(osm->bounds, &node->pos, &node->lpos);
 
+  /* append node to end of hash table if present */
+  if(osm->node_hash) {
+    hash_item_t **item = &osm->node_hash->hash[ID2HASH(node->id)];
+    while(*item) item = &(*item)->next;
+    
+    *item = g_new0(hash_item_t, 1);
+    (*item)->data.node = node;
+  }
+
   /* just an empty element? then return the node as it is */
   if(xmlTextReaderIsEmptyElement(reader))
     return node;
@@ -1094,14 +1135,9 @@ static node_chain_t *process_nd(xmlTextReaderPtr reader, osm_t *osm) {
     node_chain_t *node_chain = g_new0(node_chain_t, 1);
     
     /* search matching node */
-    node_chain->node = osm->node;
-    while(node_chain->node && node_chain->node->id != id)
-      node_chain->node = node_chain->node->next;
-    
+    node_chain->node = osm_get_node_by_id(osm, id);
     if(!node_chain->node) printf("Node id %lu not found\n", id);
-
-    if(node_chain->node) 
-      node_chain->node->ways++;
+    else                  node_chain->node->ways++;
 
     xmlFree(prop);
 
@@ -1136,6 +1172,15 @@ static way_t *process_way(xmlTextReaderPtr reader, osm_t *osm) {
   if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "timestamp"))) {
     way->time = convert_iso8601(prop);
     xmlFree(prop);
+  }
+
+  /* append way to end of hash table if present */
+  if(osm->way_hash) {
+    hash_item_t **item = &osm->way_hash->hash[ID2HASH(way->id)];
+    while(*item) item = &(*item)->next;
+    
+    *item = g_new0(hash_item_t, 1);
+    (*item)->data.way = way;
   }
 
   /* just an empty element? then return the way as it is */
@@ -1193,10 +1238,7 @@ static member_t *process_member(xmlTextReaderPtr reader, osm_t *osm) {
 
     case WAY:
       /* search matching way */
-      member->way = osm->way;
-      while(member->way && member->way->id != id)
-	member->way = member->way->next;
-
+      member->way = osm_get_way_by_id(osm, id);
       if(!member->way) {
 	member->type = WAY_ID;
 	member->id = id;
@@ -1205,10 +1247,7 @@ static member_t *process_member(xmlTextReaderPtr reader, osm_t *osm) {
 
     case NODE:
       /* search matching node */
-      member->node = osm->node;
-      while(member->node && member->node->id != id)
-	member->node = member->node->next;
-
+      member->node = osm_get_node_by_id(osm, id);
       if(!member->node) {
 	member->type = NODE_ID;
 	member->id = id;
@@ -1217,10 +1256,7 @@ static member_t *process_member(xmlTextReaderPtr reader, osm_t *osm) {
 
     case RELATION:
       /* search matching relation */
-      member->relation = osm->relation;
-      while(member->relation && member->relation->id != id)
-	member->relation = member->relation->next;
-
+      member->relation = osm_get_relation_by_id(osm, id);
       if(!member->relation) {
 	member->type = NODE_ID;
 	member->id = id;
@@ -1306,6 +1342,8 @@ static relation_t *process_relation(xmlTextReaderPtr reader, osm_t *osm) {
 static osm_t *process_osm(xmlTextReaderPtr reader) {
   /* alloc osm structure */
   osm_t *osm = g_new0(osm_t, 1);
+  osm->node_hash = g_new0(hash_table_t, 1);
+  osm->way_hash = g_new0(hash_table_t, 1);
 
   node_t **node = &osm->node;
   way_t **way = &osm->way;
@@ -1500,6 +1538,15 @@ static gboolean osm_node_cb(qnd_xml_stack_t *stack,
   /* store current tag pointer in userdata for fast access to current tag */
   stack->userdata[1] = &node->tag;
 
+  /* append node to end of hash table if present */
+  if(osm->node_hash) {
+    hash_item_t **item = &osm->node_hash->hash[ID2HASH(node->id)];
+    while(*item) item = &(*item)->next;
+    
+    *item = g_new0(hash_item_t, 1);
+    (*item)->data.node = node;
+  }
+
   return TRUE;
 }
 
@@ -1515,14 +1562,9 @@ static gboolean osm_way_nd_cb(qnd_xml_stack_t *stack,
       g_new0(node_chain_t, 1);
 
     /* search matching node */
-    node_chain->node = osm->node;
-    while(node_chain->node && node_chain->node->id != id)
-      node_chain->node = node_chain->node->next;
-
+    node_chain->node = osm_get_node_by_id(osm, id);
     if(!node_chain->node) printf("Node id %lu not found\n", id);
-
-    if(node_chain->node) 
-      node_chain->node->ways++;
+    else                  node_chain->node->ways++;
 
     stack->prev->userdata[2] = &node_chain->next;
   }
@@ -1550,6 +1592,15 @@ gboolean osm_way_cb(qnd_xml_stack_t *stack,
   /* access to current tag/node_chain entry */
   stack->userdata[1] = &way->tag;
   stack->userdata[2] = &way->node_chain;
+
+  /* append way to end of hash table if present */
+  if(osm->way_hash) {
+    hash_item_t **item = &osm->way_hash->hash[ID2HASH(way->id)];
+    while(*item) item = &(*item)->next;
+    
+    *item = g_new0(hash_item_t, 1);
+    (*item)->data.way = way;
+  }
 
   return TRUE;
 }
@@ -1580,10 +1631,7 @@ static gboolean osm_rel_member_cb(qnd_xml_stack_t *stack,
       
     case WAY:
       /* search matching way */
-      member->way = osm->way;
-      while(member->way && member->way->id != id)
-	member->way = member->way->next;
-
+      member->way = osm_get_way_by_id(osm, id);
       if(!member->way) {
 	member->type = WAY_ID;
 	member->id = id;
@@ -1592,10 +1640,7 @@ static gboolean osm_rel_member_cb(qnd_xml_stack_t *stack,
 
     case NODE:
       /* search matching node */
-      member->node = osm->node;
-      while(member->node && member->node->id != id)
-	member->node = member->node->next;
-      
+      member->node = osm_get_node_by_id(osm, id);
       if(!member->node) {
 	member->type = NODE_ID;
 	member->id = id;
@@ -1604,10 +1649,7 @@ static gboolean osm_rel_member_cb(qnd_xml_stack_t *stack,
       
     case RELATION:
       /* search matching relation */
-      member->relation = osm->relation;
-      while(member->relation && member->relation->id != id)
-	member->relation = member->relation->next;
-      
+      member->relation = osm_get_relation_by_id(osm, id);
       if(!member->relation) {
 	member->type = NODE_ID;
 	member->id = id;
@@ -1656,6 +1698,9 @@ gboolean osm_cb(qnd_xml_stack_t *stack,
   /* also set parents (roots) userdata as it's the parsers return value */
   osm_t *osm = stack->prev->userdata[0] = 
     stack->userdata[0] = g_new0(osm_t, 1);
+
+  osm->node_hash = g_new0(hash_table_t, 1);
+  osm->way_hash = g_new0(hash_table_t, 1);
 
   /* store direct pointers for faster list access */
   /* (otherwise we'd have to search the end of the lists for every item */
@@ -1711,7 +1756,6 @@ osm_t *osm_parse(char *filename) {
 
   struct timeval start;
   gettimeofday(&start, NULL);
-
 
 #ifdef OSM_STREAM_PARSER
   LIBXML_TEST_VERSION;
@@ -2002,29 +2046,58 @@ char *osm_generate_xml_relation(osm_t *osm, relation_t *relation) {
   return osm_generate_xml(osm, RELATION, relation);
 }
 
+/* the following three functions are eating much CPU power */
+/* as they search the objects lists. Hashing is supposed to help */
 node_t *osm_get_node_by_id(osm_t *osm, item_id_t id) {
+  if(id > 0 && osm->node_hash) {
+    // use hash table if present
+    hash_item_t *item = osm->node_hash->hash[ID2HASH(id)];
+    while(item) {
+      if(item->data.node->id == id)
+	return item->data.node;
+      
+      item = item->next;
+    }
+  }
+
+  /* use linear search if no hash tables are present or search in hash table failed */
   node_t *node = osm->node;
   while(node) {
     if(node->id == id)
       return node;
-
+    
     node = node->next;
   }
+
   return NULL;
 }
 
 way_t *osm_get_way_by_id(osm_t *osm, item_id_t id) {
+  if(id > 0 && osm->way_hash) {
+    // use hash table if present
+    hash_item_t *item = osm->way_hash->hash[ID2HASH(id)];
+    while(item) {
+      if(item->data.way->id == id)
+	return item->data.way;
+      
+      item = item->next;
+    }
+  }
+
+  /* use linear search if no hash tables are present or search on hash table failed */
   way_t *way = osm->way;
   while(way) {
     if(way->id == id)
       return way;
-
+    
     way = way->next;
   }
+
   return NULL;
 }
 
 relation_t *osm_get_relation_by_id(osm_t *osm, item_id_t id) {
+  // use linear search
   relation_t *relation = osm->relation;
   while(relation) {
     if(relation->id == id)

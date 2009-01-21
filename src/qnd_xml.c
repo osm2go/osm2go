@@ -103,18 +103,18 @@ qnd_xml_entry_t *stack_pop(qnd_xml_context_t *context) {
 */
 
 /* TODO: this needs to be updated to cope with utf8 */
-inline char current_char(qnd_xml_context_t *context) {
+static inline char current_char(qnd_xml_context_t *context) {
   return *context->cur;
 }
 
 /* TODO: this needs to be updated to cope with utf8 */
-inline gboolean skip_char(qnd_xml_context_t *context) {
+static inline gboolean skip_char(qnd_xml_context_t *context) {
   context->cur++;
   /* TODO: check buffer range */
   return TRUE;
 }
 
-gboolean skip_to_char(qnd_xml_context_t *context, char *chrs) {
+static inline gboolean skip_to_char(qnd_xml_context_t *context, char *chrs) {
   while(context->cur < context->buffer + context->total) {
     if(strchr(chrs, current_char(context))) {
       return skip_char(context);
@@ -126,11 +126,11 @@ gboolean skip_to_char(qnd_xml_context_t *context, char *chrs) {
   return FALSE;
 }
 
-gboolean buffer_overflow(qnd_xml_context_t *context) {
+static inline gboolean buffer_overflow(qnd_xml_context_t *context) {
   return(!(context->cur < context->buffer + context->total));
 }
 
-gboolean get_element_name(qnd_xml_context_t *context) {
+static gboolean get_element_name(qnd_xml_context_t *context) {
 
   char *start = context->cur;
 
@@ -178,7 +178,7 @@ gboolean get_element_name(qnd_xml_context_t *context) {
   return TRUE;
 }
 
-gboolean get_attribute_name(qnd_xml_context_t *context) {
+static gboolean get_attribute_name(qnd_xml_context_t *context) {
 
   char *start = context->cur;
 
