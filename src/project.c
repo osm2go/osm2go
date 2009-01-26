@@ -324,6 +324,7 @@ typedef struct {
 
 enum {
   PROJECT_COL_NAME = 0,
+  PROJECT_COL_STATUS,
   PROJECT_COL_DESCRIPTION,
   PROJECT_COL_DATA,
   PROJECT_NUM_COLS
@@ -544,6 +545,9 @@ project_t *project_new(select_context_t *context) {
   return project;
 }
 
+// predecs
+void project_get_status_icon_stock_id(project_t *project, gchar **stock_id);
+
 static void on_project_new(GtkButton *button, gpointer data) {
   select_context_t *context = (select_context_t*)data;
   project_t **project = &context->project;
@@ -554,9 +558,12 @@ static void on_project_new(GtkButton *button, gpointer data) {
       gtk_tree_view_get_model(GTK_TREE_VIEW(context->view));
 
     GtkTreeIter iter;
+    gchar *status_stock_id = NULL;
+    project_get_status_icon_stock_id(*project, &status_stock_id);
     gtk_list_store_append(GTK_LIST_STORE(model), &iter);
     gtk_list_store_set(GTK_LIST_STORE(model), &iter,
 		       PROJECT_COL_NAME,        (*project)->name,
+		       PROJECT_COL_STATUS,      status_stock_id,
 		       PROJECT_COL_DESCRIPTION, (*project)->desc,
 		       PROJECT_COL_DATA,        *project,
 		       -1);
@@ -607,14 +614,17 @@ static void on_project_edit(GtkButton *button, gpointer data) {
     GtkTreeModel     *model;
     GtkTreeIter       iter;
 
-    /* description may have changed, so update list */
+    /* description etc. may have changed, so update list */
     GtkTreeSelection *selection = 
       gtk_tree_view_get_selection(GTK_TREE_VIEW(context->view));
     g_assert(gtk_tree_selection_get_selected(selection, &model, &iter));
 
     //     gtk_tree_model_get(model, &iter, PROJECT_COL_DATA, &project, -1);
+    gchar *status_stock_id = NULL;
+    project_get_status_icon_stock_id(project, &status_stock_id);
     gtk_list_store_set(GTK_LIST_STORE(model), &iter, 
 		       PROJECT_COL_NAME, project->name, 
+                       PROJECT_COL_STATUS, status_stock_id,
 		       PROJECT_COL_DESCRIPTION, project->desc, 
 		       -1);
 
@@ -623,6 +633,21 @@ static void on_project_edit(GtkButton *button, gpointer data) {
 
   /* enable/disable edit/remove buttons */
   view_selected(context, project);
+}
+
+
+gboolean project_osm_present(project_t *project) {
+  char *osm_name = g_strdup_printf("%s/%s.osm", project->path, project->name);
+  gboolean is_present = g_file_test(osm_name, G_FILE_TEST_EXISTS);
+  g_free(osm_name);
+  return is_present;
+}
+
+void project_get_status_icon_stock_id(project_t *project, gchar **stock_id) {
+    *stock_id = (! project_osm_present(project)) ? GTK_STOCK_DIALOG_WARNING
+         : diff_present(project) ? GTK_STOCK_PROPERTIES
+         : GTK_STOCK_FILE;
+    // TODO: check for outdatedness too. Which icon to use?
 }
 
 static GtkWidget *project_list_widget(select_context_t *context) {
@@ -639,26 +664,41 @@ static GtkWidget *project_list_widget(select_context_t *context) {
   gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(context->view),
 	-1, _("Name"), renderer, "text", PROJECT_COL_NAME, NULL);
 
+  /* --- State flags column --- */
+  GtkCellRenderer *pixbuf_renderer = gtk_cell_renderer_pixbuf_new();
+  GtkTreeViewColumn *column = gtk_tree_view_column_new_with_attributes(_("State"),
+      pixbuf_renderer, "stock_id", PROJECT_COL_STATUS,
+      NULL);
+  //gtk_tree_view_column_pack_start(column, renderer2, FALSE);
+  //gtk_tree_view_column_add_attribute(column, renderer2, "stock_id", PROJECT_COL_FLAG_DIFF_PRESENT);
+  gtk_tree_view_column_set_expand(column, FALSE);
+  gtk_tree_view_insert_column(GTK_TREE_VIEW(context->view), column, -1);
+
   /* --- "Description" column --- */
   renderer = gtk_cell_renderer_text_new();
   g_object_set(renderer, "ellipsize", PANGO_ELLIPSIZE_END, NULL );
-  GtkTreeViewColumn *column = gtk_tree_view_column_new_with_attributes(
+  column = gtk_tree_view_column_new_with_attributes(
 	 _("Description"), renderer, "text", PROJECT_COL_DESCRIPTION, NULL);
   gtk_tree_view_column_set_expand(column, TRUE);
   gtk_tree_view_insert_column(GTK_TREE_VIEW(context->view), column, -1);
 
   /* build the store */
   GtkListStore *store = gtk_list_store_new(PROJECT_NUM_COLS, 
-      G_TYPE_STRING, G_TYPE_STRING, G_TYPE_POINTER);
+      G_TYPE_STRING,    // name
+      G_TYPE_STRING,    // status
+      G_TYPE_STRING,    // desc
+      G_TYPE_POINTER);  // data
 
   GtkTreeIter iter;
   project_t *project = context->project;
   while(project) {
-
+    gchar *status_stock_id = NULL;
+    project_get_status_icon_stock_id(project, &status_stock_id);
     /* Append a row and fill in some data */
     gtk_list_store_append(store, &iter);
     gtk_list_store_set(store, &iter,
 	       PROJECT_COL_NAME,        project->name,
+               PROJECT_COL_STATUS,      status_stock_id,
 	       PROJECT_COL_DESCRIPTION, project->desc,
 	       PROJECT_COL_DATA,        project,
 	       -1);
