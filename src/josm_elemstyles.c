@@ -162,6 +162,9 @@ static elemstyle_line_t *parse_line(xmlDocPtr doc, xmlNode *a_node) {
     parse_color(a_node, "colour_bg", &line->bg.color);
 
   parse_gboolean(a_node, "dashed", &line->dashed);
+  if (!parse_gint(a_node, "dash_length", &line->dash_length)) {
+    line->dash_length = DEFAULT_DASH_LENGTH;
+  }
 
   return line;
 }
@@ -513,6 +516,7 @@ void josm_elemstyles_colorize_way(style_t *style, way_t *way) {
 	    way->draw.zoom_max = style->way.zoom_max;
 	  }
 	  way->draw.dashed = elemstyle->line->dashed;
+	  way->draw.dash_length = elemstyle->line->dash_length;
 	  way_processed = TRUE;
 	}
 	break;

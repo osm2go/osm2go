@@ -85,7 +85,7 @@ canvas_item_t *canvas_get_item_at(canvas_t *canvas, gint x, gint y);
 
 void canvas_item_set_zoom_max(canvas_item_t *item, float zoom_max);
 
-void canvas_item_set_dashed(canvas_item_t *item);
+void canvas_item_set_dashed(canvas_item_t *item, gint line_width, gint dash_length);
 
 void canvas_item_to_bottom(canvas_item_t *item);
 

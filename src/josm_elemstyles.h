@@ -33,6 +33,8 @@ typedef enum {
   ES_TYPE_LINE_MOD
 } elemstyle_type_t;
 
+#define DEFAULT_DASH_LENGTH 0
+
 typedef gulong elemstyle_color_t;
 
 /* from elemstyles.xml:
@@ -46,6 +48,7 @@ typedef struct {
   gint width;
   elemstyle_color_t color;
   gboolean dashed;
+  gint dash_length;  // <= 0 means dash length is based on the width 
 
   struct {
     gboolean valid;

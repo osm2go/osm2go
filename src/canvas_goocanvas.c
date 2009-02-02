@@ -109,16 +109,24 @@ void canvas_item_set_zoom_max(canvas_item_t *item, float zoom_max) {
                NULL);
 }
 
-void canvas_item_set_dashed(canvas_item_t *item) {
-  static GooCanvasLineDash *dash;
-  if (!dash) {
-    dash = goo_canvas_line_dash_new(2, 3.0, 4.0, 0);
-    goo_canvas_line_dash_ref(dash);
+void canvas_item_set_dashed(canvas_item_t *item, gint line_width, gint dash_length) {
+  GooCanvasLineDash *dash;
+  if (dash_length <= 0) {
+    dash_length = line_width + 1;
   }
-  // TODO: make the pattern width-dependent, or extend the elemstyles language
-  // to allow line patterns to be specified.
+  gfloat off_len = dash_length;
+  gfloat on_len = dash_length;
+  guint cap = CAIRO_LINE_CAP_BUTT;
+  if (dash_length > line_width) {
+    off_len += ((gfloat)line_width)/2;
+    on_len -= ((gfloat)line_width)/2;
+    cap = CAIRO_LINE_CAP_ROUND;
+  }
+  dash = goo_canvas_line_dash_new(2, on_len, off_len, 0);
+  goo_canvas_line_dash_ref(dash);
   g_object_set(G_OBJECT(item),
                "line-dash", dash,
+               "line-cap", cap,
                NULL);
 }
 

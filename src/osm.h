@@ -96,6 +96,7 @@ typedef struct way_s {
     gint width;
     float zoom_max;
     gboolean dashed;
+    guint dash_length;
 
     union {
       struct {

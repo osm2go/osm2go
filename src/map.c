@@ -457,7 +457,7 @@ static canvas_item_t *map_way_new(map_t *map, canvas_group_t group,
 
   if (group != CANVAS_GROUP_WAYS_OL)
     if (way->draw.dashed)
-      canvas_item_set_dashed(map_item->item);
+      canvas_item_set_dashed(map_item->item, width, way->draw.dash_length);
 
   /* attach map_item to ways map_item_chain */
   map_item_chain_t **chain = &way->map_item_chain;
