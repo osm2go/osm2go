@@ -349,8 +349,8 @@ See also http://josm.openstreetmap.de/wiki/TaggingPresets.
         <item name="Tunnel" icon="presets/tunnel.png">
              <label text="Edit a Tunnel"/>
              <link href="http://wiki.openstreetmap.org/wiki/Key:tunnel"
-                  de:href="http://wiki.openstreetmap.org/wiki/DE:Key:bridge"
-                  fi:href="http://wiki.openstreetmap.org/wiki/Fi:Key:bridge" />
+                  de:href="http://wiki.openstreetmap.org/wiki/DE:Key:tunnel"
+                  fi:href="http://wiki.openstreetmap.org/wiki/Fi:Key:tunnel" />
              <space />
              <key key="tunnel" value="yes" />
              <optional>
