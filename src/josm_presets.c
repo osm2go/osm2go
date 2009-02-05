@@ -81,21 +81,10 @@ char *josm_icon_name_adjust(char *name) {
   return name;
 }
 
-static presets_item_t *parse_item(xmlDocPtr doc, xmlNode *a_node) {
+/* parse children of a given node for into *widget */
+static presets_widget_t **parse_widgets(xmlNode *a_node, presets_widget_t **widget) {
   xmlNode *cur_node = NULL;
 
-  presets_item_t *item = g_new0(presets_item_t, 1);
-  item->is_group = FALSE;
-
-  /* ------ parse items own properties ------ */
-  item->name = (char*)xmlGetProp(a_node, BAD_CAST "name");
-
-  if((item->icon = (char*)xmlGetProp(a_node, BAD_CAST "icon"))) 
-    item->icon = josm_icon_name_adjust(item->icon);
-
-  presets_widget_t **widget = &item->widget;
-
-  /* ---- parse children (widgets) ----- */
   for(cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if(cur_node->type == XML_ELEMENT_NODE) {
       if(strcasecmp((char*)cur_node->name, "label") == 0) {
@@ -105,7 +94,7 @@ static presets_item_t *parse_item(xmlDocPtr doc, xmlNode *a_node) {
 	(*widget)->type = WIDGET_TYPE_LABEL;
 	(*widget)->text = (char*)xmlGetProp(cur_node, BAD_CAST "text");
 
-	/* special handling of separators */
+	/* special handling of pre-<space/> separators */
 	if(!(*widget)->text || (strcmp((*widget)->text, " ") == 0)) {
 	  (*widget)->type = WIDGET_TYPE_SEPARATOR;
 	  if((*widget)->text) xmlFree((*widget)->text);
@@ -114,7 +103,15 @@ static presets_item_t *parse_item(xmlDocPtr doc, xmlNode *a_node) {
 
 	widget = &((*widget)->next);
 
-      } else if(strcasecmp((char*)cur_node->name, "text") == 0) {
+      }
+      else if(strcasecmp((char*)cur_node->name, "space") == 0) {
+        // new-style separators
+        *widget = g_new0(presets_widget_t, 1);
+        (*widget)->type = WIDGET_TYPE_SEPARATOR;
+	(*widget)->text = NULL;
+	widget = &((*widget)->next);
+      } 
+      else if(strcasecmp((char*)cur_node->name, "text") == 0) {
 
 	/* --------- text widget --------- */
 	*widget = g_new0(presets_widget_t, 1);
@@ -160,10 +157,35 @@ static presets_item_t *parse_item(xmlDocPtr doc, xmlNode *a_node) {
 	(*widget)->check_w.def = xmlGetPropIs(cur_node, "default", "on");
 	widget = &((*widget)->next);
 
-      } else 
+      }
+      else if (strcasecmp((char*)cur_node->name, "optional") == 0) {
+        // Could be done as a fold-out box width twisties.
+        // Or maybe as a separate dialog for small screens.
+        // For now, just recurse and build up our current list.
+        widget = parse_widgets(cur_node, widget);
+      }
+      else if (strcasecmp((char*)cur_node->name, "link") == 0) {
+        // silently ignore for now.
+      }
+      else 
 	printf("found unhandled annotations/item/%s\n", cur_node->name);
     }
   }
+  return widget;
+}
+
+static presets_item_t *parse_item(xmlDocPtr doc, xmlNode *a_node) {
+  presets_item_t *item = g_new0(presets_item_t, 1);
+  item->is_group = FALSE;
+
+  /* ------ parse items own properties ------ */
+  item->name = (char*)xmlGetProp(a_node, BAD_CAST "name");
+
+  if((item->icon = (char*)xmlGetProp(a_node, BAD_CAST "icon"))) 
+    item->icon = josm_icon_name_adjust(item->icon);
+
+  presets_widget_t **widget = &item->widget;
+  parse_widgets(a_node, widget);
   return item;
 }
 
@@ -742,3 +764,5 @@ static void free_items(presets_item_t *item) {
 void josm_presets_free(presets_item_t *presets) {
   free_items(presets);
 }
+
+// vim:et:ts=8:sw=2:sts=2:ai
