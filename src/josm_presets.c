@@ -26,6 +26,31 @@
 #error "Tree not enabled in libxml"
 #endif
 
+#ifndef USE_HILDON
+#include <libgnome/gnome-url.h>
+#else
+#include <tablet-browser-interface.h>
+#endif
+
+typedef struct {
+  appdata_t *appdata;
+  char *link;
+} www_context_t;
+
+/* ---------- simple interface to the systems web browser ---------- */
+static void on_info(GtkWidget *widget, www_context_t *context) {
+#ifndef USE_HILDON
+  /* taken from gnome-open, part of libgnome */
+  GError *err = NULL;
+  gnome_url_show(context->link, &err);
+#else
+  osso_rpc_run_with_defaults(context->appdata->osso_context, "osso_browser",
+			     OSSO_BROWSER_OPEN_NEW_WINDOW_REQ, NULL,
+			     DBUS_TYPE_STRING, context->link,
+			     DBUS_TYPE_BOOLEAN, FALSE, DBUS_TYPE_INVALID);
+#endif
+}
+
 /* --------------------- presets.xml parsing ----------------------- */
 
 static gboolean xmlGetPropIs(xmlNode *node, char *prop, char *is) {
@@ -82,12 +107,25 @@ char *josm_icon_name_adjust(char *name) {
 }
 
 /* parse children of a given node for into *widget */
-static presets_widget_t **parse_widgets(xmlNode *a_node, presets_widget_t **widget) {
+static presets_widget_t **parse_widgets(xmlNode *a_node, 
+					presets_item_t *item,
+					presets_widget_t **widget) {
   xmlNode *cur_node = NULL;
 
   for(cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if(cur_node->type == XML_ELEMENT_NODE) {
-      if(strcasecmp((char*)cur_node->name, "label") == 0) {
+
+      if(strcasecmp((char*)cur_node->name, "space") == 0) {
+
+	/* --------- space widget --------- */
+	/* we are low on screen space on the handhelds, */
+	/* so we just ignore extra spaces */
+#ifndef USE_HILDON
+	*widget = g_new0(presets_widget_t, 1);
+	(*widget)->type = WIDGET_TYPE_SPACE;
+#endif
+
+      } else if(strcasecmp((char*)cur_node->name, "label") == 0) {
 
 	/* --------- label widget --------- */
 	*widget = g_new0(presets_widget_t, 1);
@@ -162,12 +200,18 @@ static presets_widget_t **parse_widgets(xmlNode *a_node, presets_widget_t **widg
         // Could be done as a fold-out box width twisties.
         // Or maybe as a separate dialog for small screens.
         // For now, just recurse and build up our current list.
-        widget = parse_widgets(cur_node, widget);
+        widget = parse_widgets(cur_node, item, widget);
       }
+
       else if (strcasecmp((char*)cur_node->name, "link") == 0) {
-        // silently ignore for now.
-      }
-      else 
+
+	/* --------- link is not a widget, but a property of item --------- */
+	if(!item->link) {
+	  item->link = (char*)xmlGetProp(cur_node, BAD_CAST "href");
+	} else
+	  printf("ignoring surplus link\n");
+	
+      } else 
 	printf("found unhandled annotations/item/%s\n", cur_node->name);
     }
   }
@@ -185,7 +229,7 @@ static presets_item_t *parse_item(xmlDocPtr doc, xmlNode *a_node) {
     item->icon = josm_icon_name_adjust(item->icon);
 
   presets_widget_t **widget = &item->widget;
-  parse_widgets(a_node, widget);
+  parse_widgets(a_node, item, widget);
   return item;
 }
 
@@ -340,17 +384,14 @@ static gint table_expose_event(GtkWidget *widget, GdkEventExpose *event,
 }
 #endif
 
-static tag_t *presets_item_dialog(GtkWindow *parent, 
+static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent, 
 		     presets_item_t *item, tag_t *orig_tag) {
+  GtkWidget *dialog = NULL;
   gboolean ok = FALSE;
   tag_t *tag = NULL, **ctag = &tag;
+  www_context_t *www_context = NULL;
 
   printf("dialog for item %s\n", item->name);
-  GtkWidget *dialog = gtk_dialog_new_with_buttons(
-	  item->name, parent, GTK_DIALOG_MODAL,
-	  GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, 
-          GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-          NULL);
 
   /* build dialog from items widget list */
   presets_widget_t *widget = item->widget;
@@ -373,6 +414,25 @@ static tag_t *presets_item_dialog(GtkWindow *parent,
   GtkWidget **gtk_widgets = (GtkWidget**)g_new0(GtkWidget, widget_cnt);
 
   if(interactive_widget_cnt)  {
+    dialog = gtk_dialog_new_with_buttons(
+        item->name, parent, GTK_DIALOG_MODAL,
+	GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, 
+        GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+        NULL);
+
+    /* if a web link has been provided for this item install */
+    /* a button for this */
+    if(item->link) {
+      www_context = g_new0(www_context_t, 1);
+      www_context->link = item->link;
+      www_context->appdata = appdata;
+      
+      GtkWidget *button = gtk_dialog_add_button(GTK_DIALOG(dialog), _
+			("Info..."), GTK_RESPONSE_HELP);
+      gtk_signal_connect(GTK_OBJECT(button), "clicked",
+			 GTK_SIGNAL_FUNC(on_info), (gpointer)www_context);
+    }
+
     /* special handling for the first label/separators */
     guint widget_skip = 0;  // number of initial widgets to skip
     widget = item->widget;
@@ -385,6 +445,7 @@ static tag_t *presets_item_dialog(GtkWindow *parent,
       /* skip all following separators (and keys) */
       while(widget && 
 	    ((widget->type == WIDGET_TYPE_SEPARATOR) ||
+	     (widget->type == WIDGET_TYPE_SPACE) ||
 	     (widget->type == WIDGET_TYPE_KEY))) {
 	widget_skip++;   // this widget isn't part of the contents anymore
 	widget = widget->next;
@@ -402,6 +463,11 @@ static tag_t *presets_item_dialog(GtkWindow *parent,
       switch(widget->type) {
       case WIDGET_TYPE_SEPARATOR:
 	attach_both(table, gtk_hseparator_new(), widget_cnt-widget_skip);
+	break;
+
+      case WIDGET_TYPE_SPACE:
+	/* space is just an empty label until we find something better */
+	attach_both(table, gtk_label_new(" "), widget_cnt-widget_skip);
 	break;
 
       case WIDGET_TYPE_LABEL:
@@ -483,12 +549,22 @@ static tag_t *presets_item_dialog(GtkWindow *parent,
 #endif
     
     gtk_widget_show_all(dialog);
-  }
-    
-  if(!interactive_widget_cnt || 
-     (GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog)))) {
-    ok = TRUE;
 
+    /* run gtk_dialog_run, but continue if e.g. the help button was pressed */
+    int result = -1;
+    do 
+      result = gtk_dialog_run(GTK_DIALOG(dialog));
+    while((result != GTK_RESPONSE_DELETE_EVENT) &&
+	  (result != GTK_RESPONSE_ACCEPT) &&
+	  (result != GTK_RESPONSE_REJECT));
+
+    if(result == GTK_RESPONSE_ACCEPT)
+      ok = TRUE;
+
+  } else
+    ok = TRUE;
+  
+  if(ok) {
     /* handle all children of the table */
     widget = item->widget;
     widget_cnt = 0;
@@ -516,8 +592,8 @@ static tag_t *presets_item_dialog(GtkWindow *parent,
 
 	ctag = store_value(widget, ctag,
                  gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(
-			   gtk_widgets[widget_cnt]))?"true":
-		    (widget->del_if_empty?NULL:"false"));
+			   gtk_widgets[widget_cnt]))?"yes":
+		    (widget->del_if_empty?NULL:"no"));
 	break;
 
       case WIDGET_TYPE_KEY:
@@ -544,6 +620,9 @@ static tag_t *presets_item_dialog(GtkWindow *parent,
   if(interactive_widget_cnt)
     gtk_widget_destroy(dialog);
 
+  if(www_context)
+    g_free(www_context);
+
   return tag;
 }
 
@@ -563,7 +642,8 @@ cb_menu_item(GtkMenuItem *menu_item, gpointer data) {
   g_assert(item);
 
   tag_t *tag = 
-    presets_item_dialog(GTK_WINDOW(context->tag_context->dialog), item,
+    presets_item_dialog(context->appdata, 
+			GTK_WINDOW(context->tag_context->dialog), item,
 			*context->tag_context->tag);
 
   if(tag) {

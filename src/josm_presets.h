@@ -26,6 +26,7 @@
 typedef enum {
   WIDGET_TYPE_LABEL = 0,
   WIDGET_TYPE_SEPARATOR,
+  WIDGET_TYPE_SPACE,
   WIDGET_TYPE_COMBO,
   WIDGET_TYPE_CHECK,
   WIDGET_TYPE_TEXT,
@@ -72,7 +73,7 @@ typedef struct presets_widget_s {
 } presets_widget_t;
 
 typedef struct presets_item_s {
-  char *name, *icon;
+  char *name, *icon, *link;
   gboolean is_group;
   
   union {

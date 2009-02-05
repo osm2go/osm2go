@@ -1,3 +1,12 @@
+osm2go (0.6-11) unstable; urgency=low
+
+  * New presets.xml
+  * Handling of <optional> element <andrewc@piffle.org>
+  * Handling of new <link> element
+  * Handling of mew <space> element
+
+ -- Till Harbaum <till@harbaum.org>  Thu, 05 Feb 2009 20:48:09 +0100
+
 osm2go (0.6-10) unstable; urgency=low
 
   * Use hash tables to find nodes and ways faster via their ids
