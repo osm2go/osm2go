@@ -132,6 +132,8 @@ typedef struct appdata_s {
   GtkWidget *menu_item_map_no_icons;
   GtkWidget *menu_item_map_no_antialias;
 
+  struct undo_state_s *undo_state;
+
 } appdata_t;
 
 #include "map.h"
@@ -156,5 +158,6 @@ typedef struct appdata_s {
 #include "style.h"
 #include "net_io.h"
 #include "qnd_xml.h"
+#include "undo.h"
 
 #endif // APPDATA_H

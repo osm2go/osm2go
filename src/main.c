@@ -670,6 +670,8 @@ void cleanup(appdata_t *appdata) {
 
   project_free(appdata->project);
 
+  undo_free(appdata->undo_state);
+
   puts("everything is gone");
 }
 

@@ -645,6 +645,8 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 
   /* check if it was dropped onto another node */
   node_t *touchnode = map_hl_touchnode_get_node(map);
+  gboolean joined_with_touchnode = FALSE;
+
   if(touchnode) {
     map_hl_touchnode_clear(map);
 
@@ -658,6 +660,7 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 
       /* the touchnode vanishes and is replaced by the node the */
       /* user dropped onto it */
+      joined_with_touchnode = TRUE;
 
       /* use touchnodes position */
       node->lpos = touchnode->lpos;
@@ -857,7 +860,11 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 	}
       }
     }
-  } else {
+  }
+
+  /* the node either wasn't dropped into another one (touchnode) or */
+  /* the user didn't want to join the nodes */
+  if(!joined_with_touchnode) {
 
     /* finally update dragged nodes position */
     
@@ -872,8 +879,11 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
     node->lpos.x = x;
     node->lpos.y = y;
     
-    /* convert screen position back to ll */
+    /* convert screen position to lat/lon */
     lpos2pos(osm->bounds, &node->lpos, &node->pos);
+
+    /* convert pos back to lpos to see rounding errors */
+    pos2lpos(osm->bounds, &node->pos, &node->lpos);
 
     printf("  now at %d %d (%f %f)\n", 
 	   node->lpos.x, node->lpos.y, node->pos.lat, node->pos.lon);

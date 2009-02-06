@@ -271,6 +271,8 @@ void osm_way_rotate(way_t *way, gint offset);
 
 tag_t *osm_tags_copy(tag_t *tag, gboolean update_creator);
 
+char *osm_type_string(type_t type);
+
 #endif /* OSM_H */
 
 // vim:et:ts=8:sw=2:sts=2:ai

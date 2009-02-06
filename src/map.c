@@ -2033,6 +2033,8 @@ void map_delete_selected(appdata_t *appdata) {
   /* deleting the selected item de-selects it ... */
   map_item_deselect(appdata);
 
+  undo_remember_delete(appdata, item.type, item.ptr);
+
   switch(item.type) {
   case MAP_TYPE_NODE:
     printf("request to delete node #%ld\n", item.node->id);

@@ -2605,4 +2605,27 @@ tag_t *osm_tags_copy(tag_t *src_tag, gboolean update_creator) {
 
   return new_tags;
 }
+
+/* return plain text of type */
+char *osm_type_string(type_t type) {
+  const struct { type_t type; char *name; } types[] = {
+    { ILLEGAL,     "illegal" },
+    { NODE,        "node" },
+    { WAY,         "way" },
+    { RELATION,    "relation" },
+    { NODE_ID,     "node id" },
+    { WAY_ID,      "way id" },
+    { RELATION_ID, "relation id" },
+    { 0, NULL }
+  };
+
+  int i;
+  for(i=0;types[i].name;i++) 
+    if(type == types[i].type)
+      return types[i].name;
+
+  return NULL;
+}
+
+
 // vim:et:ts=8:sw=2:sts=2:ai
