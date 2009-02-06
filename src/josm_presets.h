@@ -33,11 +33,18 @@ typedef enum {
   WIDGET_TYPE_KEY
 } presets_widget_type_t;
 
+/* the presets type specifies which item type it is */
+/* appropriate for */
+#define PRESETS_TYPE_WAY       (1<<0)
+#define PRESETS_TYPE_NODE      (1<<1)
+#define PRESETS_TYPE_RELATION  (1<<2)
+#define PRESETS_TYPE_CLOSEDWAY (1<<3)
+#define PRESETS_TYPE_ALL       (0xffff)
+
 typedef struct presets_value_s {
   char *text;
   struct presets_value_s *next;
 } presets_value_t;
-
 
 typedef struct presets_widget_s {
   presets_widget_type_t type;
@@ -73,6 +80,7 @@ typedef struct presets_widget_s {
 } presets_widget_t;
 
 typedef struct presets_item_s {
+  int type;
   char *name, *icon, *link;
   gboolean is_group;
   

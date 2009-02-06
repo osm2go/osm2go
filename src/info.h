@@ -27,6 +27,7 @@ typedef struct {
   GtkWidget *but_add, *but_remove, *but_edit;
   type_t type;
   tag_t **tag;
+  int presets_type;
 } tag_context_t;
 
 

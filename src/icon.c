@@ -90,7 +90,7 @@ void icon_free(icon_t **icon, GdkPixbuf *buf) {
     if(buf == (*icon)->buf) {
       (*icon)->use--;
       if(!(*icon)->use) {
-	printf("freeing unused icon %s\n", (*icon)->name);
+	//	printf("freeing unused icon %s\n", (*icon)->name);
 
 	g_free((*icon)->name);
 	gdk_pixbuf_unref((*icon)->buf);
@@ -98,9 +98,10 @@ void icon_free(icon_t **icon, GdkPixbuf *buf) {
 	g_free(*icon);
 	*icon = next;
 
-      } else 
-	printf("keeping icon %s still in use by %d\n", 
-	       (*icon)->name, (*icon)->use);
+      } else {
+	//	printf("keeping icon %s still in use by %d\n", 
+	//	       (*icon)->name, (*icon)->use);
+      }
 
       return;
     }

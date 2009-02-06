@@ -419,6 +419,7 @@ void info_dialog(GtkWidget *parent, appdata_t *appdata, relation_t *relation) {
       work_copy = osm_tags_copy(appdata->map->selected.node->tag, FALSE);
       stime = appdata->map->selected.node->time;
       context->type = NODE;
+      context->presets_type = PRESETS_TYPE_NODE;
       break;
     case MAP_TYPE_WAY:
       str = g_strdup_printf(_("Way #%ld"), appdata->map->selected.way->id);
@@ -426,6 +427,12 @@ void info_dialog(GtkWidget *parent, appdata_t *appdata, relation_t *relation) {
       work_copy = osm_tags_copy(appdata->map->selected.way->tag, FALSE);
       stime = appdata->map->selected.way->time;
       context->type = WAY;
+      context->presets_type = PRESETS_TYPE_WAY;
+
+      if(osm_way_get_last_node(appdata->map->selected.way) == 
+	 osm_way_get_first_node(appdata->map->selected.way))
+	context->presets_type |= PRESETS_TYPE_CLOSEDWAY;
+
       break;
     default:
       g_assert((appdata->map->selected.type == MAP_TYPE_NODE) ||
@@ -438,6 +445,7 @@ void info_dialog(GtkWidget *parent, appdata_t *appdata, relation_t *relation) {
     work_copy = osm_tags_copy(relation->tag, FALSE);
     stime = relation->time;
     context->type = RELATION;
+    context->presets_type = PRESETS_TYPE_RELATION;
   }
 
   context->dialog = gtk_dialog_new_with_buttons(str,

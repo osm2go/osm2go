@@ -88,6 +88,8 @@ static presets_value_t *xmlGetPropValues(xmlNode *node, char *prop) {
 }
 
 char *josm_icon_name_adjust(char *name) {
+  if(!name) return NULL;
+
   /* the icon loader uses names without extension */
   if(!strcasecmp(name+strlen(name)-4, ".png"))
     name[strlen(name)-4] = 0;
@@ -104,6 +106,41 @@ char *josm_icon_name_adjust(char *name) {
   }
 #endif
   return name;
+}
+
+static int josm_type_bit(char *type) {
+  struct { int bit; char *str; } types[] = {
+    { PRESETS_TYPE_WAY,       "way"       },
+    { PRESETS_TYPE_NODE,      "node"      },
+    { PRESETS_TYPE_RELATION,  "relation"  },
+    { PRESETS_TYPE_CLOSEDWAY, "closedway" },
+    { 0,                      NULL        }};
+
+  int i;
+  for(i=0;types[i].bit;i++) {
+    if(strcasecmp(types[i].str, type) == 0)
+      return types[i].bit;
+  }
+
+  printf("WARNING: unexpected type %s\n", type);
+  return 0;
+}
+
+/* parse a comma seperated list of types and set their bits */
+static int josm_type_parse(char *type) {
+  int type_mask = 0;
+
+  if(!type) return PRESETS_TYPE_ALL;
+
+  while(strchr(type, ',')) {
+    *strchr(type, ',') = 0;
+
+    type_mask |= josm_type_bit(type);
+    type = type + strlen(type) + 1;
+  }
+
+  type_mask |= josm_type_bit(type);
+  return type_mask;
 }
 
 /* parse children of a given node for into *widget */
@@ -225,8 +262,11 @@ static presets_item_t *parse_item(xmlDocPtr doc, xmlNode *a_node) {
   /* ------ parse items own properties ------ */
   item->name = (char*)xmlGetProp(a_node, BAD_CAST "name");
 
-  if((item->icon = (char*)xmlGetProp(a_node, BAD_CAST "icon"))) 
-    item->icon = josm_icon_name_adjust(item->icon);
+  item->icon = 
+    josm_icon_name_adjust((char*)xmlGetProp(a_node, BAD_CAST "icon"));
+
+  item->type = 
+    josm_type_parse((char*)xmlGetProp(a_node, BAD_CAST "type"));
 
   presets_widget_t **widget = &item->widget;
   parse_widgets(a_node, item, widget);
@@ -242,8 +282,12 @@ static presets_item_t *parse_group(xmlDocPtr doc, xmlNode *a_node) {
   /* ------ parse groups own properties ------ */
   group->name = (char*)xmlGetProp(a_node, BAD_CAST "name");
 
-  if((group->icon = (char*)xmlGetProp(a_node, BAD_CAST "icon"))) 
-    group->icon = josm_icon_name_adjust(group->icon);
+  group->icon = 
+    josm_icon_name_adjust((char*)xmlGetProp(a_node, BAD_CAST "icon"));
+
+  /* TODO: sum up bits from all subentries so the main entry vanishes */
+  /*       if none of the subentries matches (empty subs are not displayed) */
+  group->type = PRESETS_TYPE_ALL;
 
   presets_item_t **preset = &group->group;
 
@@ -701,27 +745,32 @@ static GtkWidget *build_menu(presets_context_t *context,
   while(item) {
     GtkWidget *menu_item;
 
-    if(item->name) {
-      if(!item->icon)
-	menu_item = gtk_menu_item_new_with_label(item->name);
-      else {
-	menu_item = gtk_image_menu_item_new_with_label(item->name);
-	gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(menu_item), 
-		      icon_widget_load(&context->appdata->icon, item->icon));
-      }
+    /* check if this presets entry is appropriate for the current item */
+    if(item->type & context->tag_context->presets_type) {
 
-      if(item->is_group) 
-	gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item), 
-				  build_menu(context, item->group));
-      else {
-	g_object_set_data(G_OBJECT(menu_item), "item", item);
-	g_signal_connect(menu_item, "activate", 
-			 GTK_SIGNAL_FUNC(cb_menu_item), context);
-      }
-    } else
-      menu_item = gtk_separator_menu_item_new();
+      if(item->name) {
+	if(!item->icon)
+	  menu_item = gtk_menu_item_new_with_label(item->name);
+	else {
+	  menu_item = gtk_image_menu_item_new_with_label(item->name);
+	  gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(menu_item), 
+			icon_widget_load(&context->appdata->icon, item->icon));
+	}
+	
+	if(item->is_group) 
+	  gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item), 
+				    build_menu(context, item->group));
+	else {
+	  g_object_set_data(G_OBJECT(menu_item), "item", item);
+	  g_signal_connect(menu_item, "activate", 
+			   GTK_SIGNAL_FUNC(cb_menu_item), context);
+	}
+      } else
+	menu_item = gtk_separator_menu_item_new();
 
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);      
+      gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);      
+    }
+
     item = item->next;
   }
 
@@ -755,7 +804,8 @@ static gint on_button_destroy(GtkWidget *widget, gpointer data) {
   return FALSE;
 }
 
-GtkWidget *josm_presets_select(appdata_t *appdata, tag_context_t *tag_context) {
+GtkWidget *josm_presets_select(appdata_t *appdata, 
+			       tag_context_t *tag_context) {
   presets_context_t *context = g_new0(presets_context_t, 1);
   context->appdata = appdata;
   context->tag_context = tag_context;
