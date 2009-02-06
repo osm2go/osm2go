@@ -285,9 +285,7 @@ static presets_item_t *parse_group(xmlDocPtr doc, xmlNode *a_node) {
   group->icon = 
     josm_icon_name_adjust((char*)xmlGetProp(a_node, BAD_CAST "icon"));
 
-  /* TODO: sum up bits from all subentries so the main entry vanishes */
-  /*       if none of the subentries matches (empty subs are not displayed) */
-  group->type = PRESETS_TYPE_ALL;
+  group->type = 0;
 
   presets_item_t **preset = &group->group;
 
@@ -295,10 +293,16 @@ static presets_item_t *parse_group(xmlDocPtr doc, xmlNode *a_node) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcasecmp((char*)cur_node->name, "item") == 0) {
 	*preset = parse_item(doc, cur_node);
-	if(*preset) preset = &((*preset)->next);
+	if(*preset) {
+	  group->type |= (*preset)->type;
+	  preset = &((*preset)->next);
+	}
       } else if(strcasecmp((char*)cur_node->name, "group") == 0) {
 	*preset = parse_group(doc, cur_node);
-	if(*preset) preset = &((*preset)->next);
+	if(*preset) {
+	  group->type |= (*preset)->type;
+	  preset = &((*preset)->next);
+	}
       } else if(strcasecmp((char*)cur_node->name, "separator") == 0) {
 	*preset = g_new0(presets_item_t, 1);
 	preset = &((*preset)->next);
@@ -306,6 +310,9 @@ static presets_item_t *parse_group(xmlDocPtr doc, xmlNode *a_node) {
 	printf("found unhandled annotations/group/%s\n", cur_node->name);
     }
   }  
+
+  
+
   return group;
 }
 
