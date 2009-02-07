@@ -392,8 +392,10 @@ void style_select(GtkWidget *parent, appdata_t *appdata) {
   appdata->map->style = style_load(appdata, appdata->settings->style);
 
   /* canvas background may have changed */
-  g_object_set(G_OBJECT(appdata->map->canvas), "background-color-rgb", 
-	       appdata->map->style->background.color, NULL);
+  guint bg = appdata->map->style->background.color >> 8;
+  g_object_set(G_OBJECT(appdata->map->canvas), "background-color-rgb", bg, NULL);
 
   map_paint(appdata);
 }
+
+//vim:et:ts=8:sw=2:sts=2:ai
