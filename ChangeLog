@@ -1,0 +1,233 @@
+osm2go (0.6-11) unstable; urgency=low
+
+  * New presets.xml
+  * Handling of <optional> element <andrewc@piffle.org>
+  * Handling of new <link> element
+  * Handling of mew <space> element
+
+ -- Till Harbaum <till@harbaum.org>  Thu, 05 Feb 2009 20:48:09 +0100
+
+osm2go (0.6-10) unstable; urgency=low
+
+  * Use hash tables to find nodes and ways faster via their ids
+  * Some minor gtk handling/warning fixes
+	
+ -- Till Harbaum <till@harbaum.org>  Wed, 21 Jan 2009 19:24:22 +0100
+
+osm2go (0.6-9) unstable; urgency=low
+
+  * Beta version of quick'n dirty xml parser (qnd_xml)
+
+ -- Till Harbaum <harbaum@metis>  Fri, 16 Jan 2009 20:44:58 +0100
+
+osm2go (0.6-8) unstable; urgency=low
+
+  * Unified internal color model <till@harbaum.org>
+  * Fixed crash when changing projects while using GPS <andrewc@piffle.org>
+  * Option to disable antialiasing <till@harbaum.org>
+  * Rendering of "bridges" <till@harbaum.org>
+	
+ -- Till Harbaum <till@harbaum.org>  Wed, 17 Dec 2008 20:02:24 +0100
+
+osm2go (0.6-7) unstable; urgency=low
+
+  * Changed directory layout for SVN import
+  * Asynchronous network io
+  * Global and more flexible WMS server settings
+  * Global option to disable icons unless the n810 issue is solved
+  * Support for dashed lines and line mods
+	
+ -- Till Harbaum <harbaum@metis>  Tue, 09 Dec 2008 20:47:45 +0100
+
+osm2go (0.6-6) unstable; urgency=low
+
+  * Some small hildon related fixes
+  * Various error situations fixed when no project was active
+	
+ -- Till Harbaum <till@harbaum.org>  Tue, 09 Dec 2008 18:36:39 +0100
+
+osm2go (0.6-5) unstable; urgency=low
+
+  * Ability to run without active project
+  * Fixed some memory leaks found using valgrind
+  * Project management redone
+	
+ -- Till Harbaum <till@harbaum.org>  Fri, 05 Dec 2008 22:32:30 +0100
+
+osm2go (0.6-4+atc1) unstable; urgency=low
+
+  * Implement levels of zoom-visibility for objects
+  * Added a style resembling the OSM Mapnik rendering
+  * Configurable path-prefix for styles' icons
+  * Make "..." in menus be more consistent
+  * Fixed segfault when trying to load with a vanished style
+
+ -- Andrew Chadwick <andrewc@piffle.org>  Sun, 07 Dec 2008 05:36:33 +0000
+
+osm2go (0.6-4) unstable; urgency=low
+
+  * include missing icons
+
+ -- Till Harbaum <harbaum@metis>  Thu, 04 Dec 2008 21:53:23 +0100
+
+osm2go (0.6-3) unstable; urgency=low
+
+   * Use JOSMs elemstyles.xml
+   * Styling options (JOSM and Potlatch examples included)
+   * Import of JOSM icons for nodes
+   * Filesystem handling rewritten
+   * Fixed overflow in node distance calculation
+   * UI for highlighting and changing way direction
+
+ -- Till Harbaum <harbaum@metis>  Wed, 26 Nov 2008 20:31:57 +0100
+
+osm2go (0.6-2) unstable; urgency=low
+
+  * Fixed crash when a new way was mistakenly identified to join another one
+  * Fixed crash when a new way was closing a way
+  * Re-ordered all dialog buttons to match GTK defaults
+	
+ -- Till Harbaum <harbaum@metis>  Tue, 25 Nov 2008 20:29:38 +0100
+
+osm2go (0.6-1) unstable; urgency=low
+
+  * GUI relation handling
+  * Zoom/pan patch applied
+
+ -- Till Harbaum <harbaum@metis>  Mon, 24 Nov 2008 22:20:53 +0100
+
+osm2go (0.5-6) unstable; urgency=low
+
+  * new way can extend existing one
+  * new way can join existing one
+
+ -- Till Harbaum <harbaum@metis>  Fri, 21 Nov 2008 18:16:55 +0100
+
+osm2go (0.5-5) unstable; urgency=low
+
+  * way cut highlight redone
+  * way cut also possible at node
+	
+ -- Till Harbaum <harbaum@metis>  Tue, 18 Nov 2008 21:41:52 +0100
+
+osm2go (0.5-4) unstable; urgency=low
+
+  * info dialog highlights tag collisions
+  * ability to hide objects to increase graphics performance
+  * relation handling
+  * save zoom/scroll offset in project
+  * "last" tags (like potlatch) and cancel in info dialog
+	
+ -- Till Harbaum <harbaum@metis>  Fri, 14 Nov 2008 18:35:42 +0100
+
+osm2go (0.5-3) unstable; urgency=low
+
+  * hard key bindings
+  * way creation end by double click/tap
+  * way "rotation" for cut of circular ways
+
+ -- Till Harbaum <harbaum@metis>  Thu, 13 Nov 2008 17:32:41 +0100
+
+osm2go (0.5-2) unstable; urgency=low
+
+  * Added node joining (incl. way joining) by drag'n drop
+  * Merge selected presets instead of replacing everything
+  * Added ability to add nodes to existing ways
+  * Initial relation handling (join/delete now affects relations)
+  * More hildon autocap disabled
+	
+ -- Till Harbaum <harbaum@metis>  Sat, 08 Nov 2008 12:28:09 +0100
+
+osm2go (0.5-1) unstable; urgency=low
+
+  * First usable way creation/deletion
+  * Various bug fixes
+	
+ -- Till Harbaum <harbaum@metis>  Wed, 05 Nov 2008 22:05:06 +0100
+
+osm2go (0.4-3) unstable; urgency=low
+
+  * First test on way creation
+  * Fixed parsing of pre-filled check boxes (accept "true" and "yes")
+	
+ -- Till Harbaum <harbaum@metis>  Tue, 04 Nov 2008 21:28:45 +0100
+
+osm2go (0.4-2) unstable; urgency=low
+
+  * Prevent placement of nodes outside working area
+  * Save presets dialog space by using top label/sep as dialog title
+  * Fixed problems with custom gtktreeview select function
+  * Pre-fill the preset dialogs with previous data where applicable
+  * Disable hildon autocap on certain dialogs (e.g. password)
+	
+ -- Till Harbaum <harbaum@metis>  Sun, 02 Nov 2008 13:35:59 +0100
+
+osm2go (0.4-1) unstable; urgency=low
+
+  * Handle JOSM presets.xml
+  * Import all josm preset icons
+	
+ -- Till Harbaum <harbaum@metis>  Thu, 30 Oct 2008 21:13:03 +0100
+
+osm2go (0.3-5) unstable; urgency=low
+
+  * Project selection/creation/...
+  * Various catching of error situations e.g. during download
+	
+ -- Till Harbaum <harbaum@metis>  Mon, 27 Oct 2008 21:17:51 +0100
+
+osm2go (0.3-4) unstable; urgency=low
+
+  * Added ability to adjust background (wms) offset
+  * Gui cleanup using ok/cancel buttons
+  * Improved catching of download error conditions
+	
+ -- Till Harbaum <harbaum@metis>  Sat, 25 Oct 2008 14:44:52 +0200
+
+osm2go (0.3-3) unstable; urgency=low
+
+  * Node/relation check now includes ways
+  * First tests with WMS server import as background layer
+
+ -- Till Harbaum <harbaum@metis>  Fri, 17 Oct 2008 16:35:52 +0200
+
+osm2go (0.3-2) unstable; urgency=low
+
+  * Projection changed from utm to normal mercartor
+  * Limited motion event frequency for more fluid dragging on hildon
+
+ -- Till Harbaum <harbaum@metis>  Thu, 16 Oct 2008 13:22:39 +0200
+
+osm2go (0.3-1) unstable; urgency=low
+
+  * Track/GPS support
+  * Switch from gnomecanvas to goocanvas
+	
+ -- Till Harbaum <harbaum@metis>  Fri, 10 Oct 2008 10:02:21 +0200
+
+osm2go (0.2-1) unstable; urgency=low
+
+  * Fixed crash when selecting highlight of a way
+
+ -- Till Harbaum <harbaum@metis>  Tue, 30 Sep 2008 12:53:38 +0200
+
+osm2go (0.2) unstable; urgency=low
+
+  * Node adding
+  * Node deletion
+  * Various error handling and optimizations
+
+ -- Till Harbaum <harbaum@metis>  Mon, 29 Sep 2008 20:50:59 +0200
+
+osm2go (0.1-2) unstable; urgency=low
+
+  * First trials at node adding
+  * Rewritten touchscreen/mouse handling
+
+ -- Till Harbaum <Till@Harbaum.org>  Fri, 26 Sep 2008 13:54:54 +0200
+
+osm2go (0.1-1) unstable; urgency=low
+
+  * Initial release
+
+ -- Till Harbaum <Till@Harbaum.org>  Fri, 01 Aug 2008 12:19:28 +0200
