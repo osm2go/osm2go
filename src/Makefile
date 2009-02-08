@@ -18,7 +18,7 @@
 #
 
 APP = osm2go
-PREFIX = /usr/local
+PREFIX ?= /usr/local
 
 PKGS = gtk+-2.0 libxml-2.0 goocanvas libcurl gthread-2.0 \
 	gnome-vfs-module-2.0 libgnome-2.0
