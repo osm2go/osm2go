@@ -36,9 +36,6 @@ LDFLAGS = `pkg-config --libs $(PKGS)`
 
 all: $(APP)
 
-version.h: ../debian/changelog
-	awk '!/^$$/ { print "#define VERSION \"" $$2 "\"";exit }' $< | tr -d \(\) > $@
-
 %.o: %.c
 	gcc $(CFLAGS) -o $@ -c $<
 
@@ -50,6 +47,8 @@ install:
 
 clean:
 	rm -f osm2go *.o *~ */*~ \#*\# version.h *.bak
+
+-include ../version.mk
 
 dep: version.h
 	makedepend -Y -fMakefile.maemo *.c
