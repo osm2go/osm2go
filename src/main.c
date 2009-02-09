@@ -566,7 +566,7 @@ void menu_create(appdata_t *appdata) {
     appdata->menu_item_osm_undo = menu_append_new_item(
 	       appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_undo), _("_Undo"),
 	       GTK_STOCK_UNDO, "<OSM2Go-Main>/OSM/Undo",
-	       GDK_u, GDK_SHIFT_MASK|GDK_CONTROL_MASK, FALSE, FALSE
+	       GDK_z, GDK_CONTROL_MASK, FALSE, FALSE
 	       );
   } else
     printf("set environment variable OSM2GO_UNDO_TEST to enable undo framework tests\n");
