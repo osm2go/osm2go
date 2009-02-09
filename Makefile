@@ -29,3 +29,10 @@ clean:
 	rm -f *~ \#*\# *.bak *-stamp
 	cd src && make clean
 	cd data && make clean
+
+distclean: clean
+
+-include version.mk
+
+tarball: distclean
+	sh mktarball.sh "$(VERSION_PREFIX)$(TRUNK_VERSION)$(VERSION_SUFFIX)"
