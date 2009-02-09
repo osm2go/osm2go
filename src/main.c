@@ -56,7 +56,8 @@ static void main_ui_enable(appdata_t *appdata) {
   /* disable all menu entries related to map */
   gtk_widget_set_sensitive(appdata->menu_osm, project_valid);
   gtk_widget_set_sensitive(appdata->menu_item_osm_upload, osm_valid);
-  gtk_widget_set_sensitive(appdata->menu_item_osm_undo, osm_valid);
+  if(appdata->menu_item_osm_undo)
+    gtk_widget_set_sensitive(appdata->menu_item_osm_undo, osm_valid);
   gtk_widget_set_sensitive(appdata->menu_item_osm_save_changes, osm_valid);
   gtk_widget_set_sensitive(appdata->menu_item_osm_undo_changes, osm_valid);
   gtk_widget_set_sensitive(appdata->track.menu_track, osm_valid);
