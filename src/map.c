@@ -379,7 +379,7 @@ static canvas_item_t *map_node_new(map_t *map, node_t *node, gint radius,
   map_item->node = node;
 
   if(!node->icon_buf || !map->style->icon.enable || 
-     map->appdata->settings->no_icons)
+     map->appdata->settings->no_icons) 
     map_item->item = canvas_circle_new(map, CANVAS_GROUP_NODES, 
        node->lpos.x, node->lpos.y, radius, width, fill, border);
   else

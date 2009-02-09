@@ -119,7 +119,8 @@ typedef struct appdata_s {
 
   GtkWidget *menu_osm;
   GtkWidget *menu_item_osm_upload;
-  GtkWidget *menu_item_osm_diff;
+  GtkWidget *menu_item_osm_undo;
+  GtkWidget *menu_item_osm_save_changes;
   GtkWidget *menu_item_osm_undo_changes;
 
   GtkWidget *menu_wms;
@@ -159,5 +160,6 @@ typedef struct appdata_s {
 #include "net_io.h"
 #include "qnd_xml.h"
 #include "undo.h"
+#include "banner.h"
 
 #endif // APPDATA_H

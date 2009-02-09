@@ -248,6 +248,7 @@ way_chain_t *osm_node_to_way(osm_t *osm, node_t *node);
 /* ----------- edit functions ----------- */
 node_t *osm_node_new(osm_t *osm, gint x, gint y);
 void osm_node_attach(osm_t *osm, node_t *node);
+void osm_node_restore(osm_t *osm, node_t *node);
 way_chain_t *osm_node_delete(osm_t *osm, struct icon_s **icon, node_t *node, 
 			     gboolean permanently, gboolean affect_ways);
 void osm_way_delete(osm_t *osm, struct icon_s **icon, way_t *way, 
@@ -272,6 +273,7 @@ void osm_way_rotate(way_t *way, gint offset);
 tag_t *osm_tags_copy(tag_t *tag, gboolean update_creator);
 
 char *osm_type_string(type_t type);
+char *osm_object_string(type_t type, void *object);
 
 #endif /* OSM_H */
 

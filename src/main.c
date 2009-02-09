@@ -56,7 +56,8 @@ static void main_ui_enable(appdata_t *appdata) {
   /* disable all menu entries related to map */
   gtk_widget_set_sensitive(appdata->menu_osm, project_valid);
   gtk_widget_set_sensitive(appdata->menu_item_osm_upload, osm_valid);
-  gtk_widget_set_sensitive(appdata->menu_item_osm_diff, osm_valid);
+  gtk_widget_set_sensitive(appdata->menu_item_osm_undo, osm_valid);
+  gtk_widget_set_sensitive(appdata->menu_item_osm_save_changes, osm_valid);
   gtk_widget_set_sensitive(appdata->menu_item_osm_undo_changes, osm_valid);
   gtk_widget_set_sensitive(appdata->track.menu_track, osm_valid);
   gtk_widget_set_sensitive(appdata->menu_view, osm_valid);
@@ -69,19 +70,6 @@ static void main_ui_enable(appdata_t *appdata) {
 }
 
 /******************** begin of menu *********************/
-
-#if 0 // simplify menu
-static struct {
-  enum { MENU_END, MENU_ITEM, MENU_SUB, MENU_SUB_END, MENU_SEP }  type;
-
-  char *title;
-  GCallback c_handler;
-} menu[] = {
-  { MENU_SUB, "_OSM", NULL },
-  
-  { MENU_END,  NULL, NULL },
-};
-#endif
 
 static void 
 cb_menu_project_open(GtkWidget *window, gpointer data) {
@@ -254,6 +242,15 @@ cb_menu_map_no_antialias(GtkWidget *widget, gpointer data) {
     gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget));
   map_paint(appdata);
   banner_busy_stop(appdata); //"Redrawing..."
+}
+
+static void 
+cb_menu_undo(GtkWidget *widget, gpointer data) {
+  appdata_t *appdata = (appdata_t*)data;
+
+  undo(appdata);
+
+  // the banner will be displayed from within undo with more details
 }
 
 static void 
@@ -565,8 +562,16 @@ void menu_create(appdata_t *appdata) {
 
   gtk_menu_shell_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
 
+  if(getenv("OSM2GO_UNDO_TEST")) {
+    appdata->menu_item_osm_undo = menu_append_new_item(
+	       appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_undo), _("_Undo"),
+	       GTK_STOCK_UNDO, "<OSM2Go-Main>/OSM/Undo",
+	       GDK_u, GDK_SHIFT_MASK|GDK_CONTROL_MASK, FALSE, FALSE
+	       );
+  } else
+    printf("set environment variable OSM2GO_UNDO_TEST to enable undo framework tests\n");
 
-  appdata->menu_item_osm_diff = menu_append_new_item(
+  appdata->menu_item_osm_save_changes = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_save_changes), _("_Save local changes"),
     GTK_STOCK_SAVE, "<OSM2Go-Main>/OSM/SaveChanges",
     GDK_s, GDK_SHIFT_MASK|GDK_CONTROL_MASK, FALSE, FALSE

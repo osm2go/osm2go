@@ -2191,6 +2191,15 @@ void osm_node_attach(osm_t *osm, node_t *node) {
   *lnode = node;
 }
 
+void osm_node_restore(osm_t *osm, node_t *node) {
+  printf("Restoring node\n");
+
+  /* attach to end of node list */
+  node_t **lnode = &osm->node;
+  while(*lnode) lnode = &(*lnode)->next;  
+  *lnode = node;
+}
+
 way_t *osm_way_new(void) {
   printf("Creating new way\n");
 
@@ -2627,5 +2636,32 @@ char *osm_type_string(type_t type) {
   return NULL;
 }
 
+char *osm_object_string(type_t type, void *object) {
+  char *type_str = osm_type_string(type);
+
+  if(!object) 
+    return g_strdup_printf("%s #<invalid>", type_str);
+
+  switch(type) {
+  case ILLEGAL:
+    return g_strdup_printf("%s #<unspec>", type_str);
+    break;
+  case NODE:
+    return g_strdup_printf("%s #%ld", type_str, ((node_t*)object)->id);
+    break;
+  case WAY:
+    return g_strdup_printf("%s #%ld", type_str, ((way_t*)object)->id);
+    break;
+  case RELATION:
+    return g_strdup_printf("%s #%ld", type_str, ((relation_t*)object)->id);
+    break;
+  case NODE_ID:
+  case WAY_ID:
+  case RELATION_ID:
+    return g_strdup_printf("%s #%ld", type_str, *((item_id_t*)object));
+    break;
+  }
+  return NULL;
+}
 
 // vim:et:ts=8:sw=2:sts=2:ai
