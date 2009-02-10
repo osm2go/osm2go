@@ -58,6 +58,7 @@
 #include "osm.h"
 
 #include "canvas.h"
+#include "undo.h"
 
 #ifdef USE_HILDON
 #include "dbus.h"
@@ -133,7 +134,7 @@ typedef struct appdata_s {
   GtkWidget *menu_item_map_no_icons;
   GtkWidget *menu_item_map_no_antialias;
 
-  struct undo_state_s *undo_state;
+  undo_t undo;
 
 } appdata_t;
 
@@ -159,7 +160,6 @@ typedef struct appdata_s {
 #include "style.h"
 #include "net_io.h"
 #include "qnd_xml.h"
-#include "undo.h"
 #include "banner.h"
 
 #endif // APPDATA_H

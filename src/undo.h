@@ -63,9 +63,13 @@ typedef struct undo_state_s {
   struct undo_state_s *next;
 } undo_state_t;
 
-void undo_remember_delete(appdata_t *appdata, type_t type, void *object);
-void undo_free(undo_state_t *state);
+typedef struct {
+  undo_state_t *state;
+} undo_t;
 
-void undo(appdata_t *appdata);
+struct appdata_s;
+void undo_remember_delete(struct appdata_s *appdata, type_t type, void *obj);
+void undo_free(undo_state_t *state);
+void undo(struct appdata_s *appdata);
 
 #endif // UNDO_H

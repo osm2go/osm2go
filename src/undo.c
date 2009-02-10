@@ -95,7 +95,7 @@ static undo_state_t *undo_append_state(appdata_t *appdata) {
 
   /* create new undo state at end of undo chain */
   int undo_chain_length = 0;
-  undo_state_t **undo_stateP = &appdata->undo_state;
+  undo_state_t **undo_stateP = &appdata->undo.state;
   while(*undo_stateP) {
     undo_chain_length++;
     undo_stateP = &(*undo_stateP)->next;
@@ -106,9 +106,9 @@ static undo_state_t *undo_append_state(appdata_t *appdata) {
 
   /* delete first entry if the chain is too long */
   if(undo_chain_length >= UNDO_QUEUE_LEN) {
-    undo_state_t *second = appdata->undo_state->next;
-    undo_state_free(appdata->undo_state);
-    appdata->undo_state = second;
+    undo_state_t *second = appdata->undo.state->next;
+    undo_state_free(appdata->undo.state);
+    appdata->undo.state = second;
   }
 
   printf("UNDO: current chain length = %d\n", undo_chain_length);
@@ -185,12 +185,13 @@ static void undo_operation_object_delete(appdata_t *appdata,
     g_assert(orig);
     g_assert(orig->flags & OSM_FLAG_DELETED);
     way_chain_t *wchain = 
-      osm_node_delete(appdata->osm, NULL, orig, TRUE, TRUE);
+      osm_node_delete(appdata->osm, &appdata->icon, orig, TRUE, TRUE);
     g_assert(!wchain);
 
     /* then restore old node */
     osm_node_dump(node);
     osm_node_restore(appdata->osm, node);
+    josm_elemstyles_colorize_node(appdata->map->style, node);
     map_node_draw(appdata->map, node);
     obj->data.ptr = NULL;
   } break;
@@ -219,7 +220,7 @@ static void undo_operation(appdata_t *appdata, undo_op_t *op) {
 
 /* undo the last undo_state */
 void undo(appdata_t *appdata) {
-  undo_state_t *state = appdata->undo_state;
+  undo_state_t *state = appdata->undo.state;
   printf("user selected undo\n");
 
   /* search last (newest) entry */
@@ -244,7 +245,7 @@ void undo(appdata_t *appdata) {
   }
 
   /* remove this entry from chain */
-  undo_state_t **stateP = &appdata->undo_state;
+  undo_state_t **stateP = &appdata->undo.state;
   while(*stateP && (*stateP)->next) stateP = &(*stateP)->next;
 
   undo_state_free(*stateP);

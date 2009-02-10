@@ -809,7 +809,7 @@ void cleanup(appdata_t *appdata) {
 
   project_free(appdata->project);
 
-  undo_free(appdata->undo_state);
+  undo_free(appdata->undo.state);
 
   puts("everything is gone");
 }
