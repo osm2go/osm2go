@@ -268,7 +268,8 @@ cb_menu_undo_changes(GtkWidget *widget, gpointer data) {
 
   if(!yes_no_f(GTK_WIDGET(appdata->window), NULL, 0, 0,
 	       _("Discard local changes?"), 
-	       _("Throw away all the changes you've not uploaded yet? This can't be undone.")))
+	       _("Throw away all the changes you've not "
+		 "uploaded yet? This can't be undone.")))
     return;
 
   banner_busy_start(appdata, 1, _("Redrawing..."));
@@ -809,7 +810,8 @@ void cleanup(appdata_t *appdata) {
 
   project_free(appdata->project);
 
-  undo_free(appdata->undo.state);
+  if(appdata->menu_item_osm_undo)
+    undo_free(appdata->undo.state);
 
   puts("everything is gone");
 }

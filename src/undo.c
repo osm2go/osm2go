@@ -46,6 +46,10 @@ static void undo_object_free(undo_object_t *obj) {
     case NODE:
       osm_node_free(NULL, obj->data.node);
       break;
+
+    case WAY:
+      osm_way_free(obj->data.way);
+      break;
       
     default:
       printf("ERROR: unsupported object %s\n", 
@@ -118,11 +122,11 @@ static undo_state_t *undo_append_state(appdata_t *appdata) {
 
 /* create a local copy of the entire object */
 static undo_object_t *undo_object_copy(type_t type, void *object) {
-  undo_object_t *ob = g_new0(undo_object_t, 1);
-  ob->type = type;
-
   switch(type) {
   case NODE: {
+    undo_object_t *ob = g_new0(undo_object_t, 1);
+    ob->type = type;
+
     /* fields ignored in this copy operation: */
     /* ways, icon_buf, map_item_chain, next */
 
@@ -140,19 +144,47 @@ static undo_object_t *undo_object_copy(type_t type, void *object) {
     ob->data.node->tag = osm_tags_copy(node->tag, FALSE);
     ob->data.node->flags = node->flags; 
     ob->data.node->zoom_max = node->zoom_max; 
+
+    return ob;
+    } break;
+
+  case WAY: {
+    undo_object_t *ob = g_new0(undo_object_t, 1);
+    ob->type = type;
+
+    /* fields ignored in this copy operation: */
+
+    way_t *way = (way_t*)object;
+    ob->data.way = g_new0(way_t, 1);
+    /* copy all important parts */
+    ob->data.way->id = way->id;
+    /* user is a pointer, but since the users list */
+    /* is never touched it's ok */
+    ob->data.way->user = way->user;
+    ob->data.way->visible = way->visible;
+    ob->data.way->time = way->time;
+    ob->data.way->tag = osm_tags_copy(way->tag, FALSE);
+    ob->data.way->flags = way->flags; 
+
+    return ob;
     } break;
 
   default:
-    printf("ERROR: unsupported object %s\n", osm_type_string(type));
-    g_assert(0);
+    printf("UNDO WARNING: ignoring unsupported object %s\n", 
+	   osm_type_string(type));
     break;
   }
 
-  return ob;
+  return NULL;
 }
 
 void undo_remember_delete(appdata_t *appdata, type_t type, 
 			  void *object) {
+
+  /* don't do anything if undo isn't enabled */
+  if(!appdata->menu_item_osm_undo)
+    return;
+
   printf("UNDO: remembering delete operation for %s\n", 
 	 osm_type_string(type));
 
