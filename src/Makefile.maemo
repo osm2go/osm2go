@@ -28,7 +28,7 @@ OBJS = main.o map.o osm.o osm_api.o wms.o \
 	iconbar.o info.o icon.o track.o gps.o canvas_goocanvas.o \
 	area_edit.o dbus.o josm_presets.o relation_edit.o misc.o \
 	map_edit.o josm_elemstyles.o style.o net_io.o banner.o \
-	qnd_xml.o undo.o
+	undo.o
 
 DEFS = -DUSE_HILDON -DPACKAGE=\"$(APP)\" -DPREFIX=\"$(PREFIX)\" -DOSM_QND_XML_PARSER -DUSE_GOOCANVAS -DUSE_FLOAT
 CFLAGS = -Wall -O2 $(DEFS) `pkg-config --cflags $(PKGS)`

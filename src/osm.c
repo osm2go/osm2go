@@ -21,7 +21,6 @@
 /* this is in fact selected depending on the plattform in the Makefile */
 // #define OSM_DOM_PARSER
 // #define OSM_STREAM_PARSER
-// #define OSM_QND_XML_PARSER
 
 #include <stdio.h>
 #include <stdlib.h>
