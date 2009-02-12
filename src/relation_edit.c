@@ -55,6 +55,8 @@ relation_list_selection_func(GtkTreeSelection *selection, GtkTreeModel *model,
   GtkTreeIter iter;
     
   if(gtk_tree_model_get_iter(model, &iter, path)) {
+    printf("selected an entry on the list\n");
+
     g_assert(gtk_tree_path_get_depth(path) == 1);
     relation_list_selected(context, TRUE);
   }
