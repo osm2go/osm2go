@@ -398,7 +398,7 @@ static GtkWidget *tag_widget(tag_context_t *context) {
 
 /* edit tags of currently selected node or way or of the relation */
 /* given */
-void info_dialog(GtkWidget *parent, appdata_t *appdata, relation_t *relation) {
+gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, relation_t *relation) {
   if(!relation)
     g_assert(appdata->map->selected.type != MAP_TYPE_ILLEGAL);
 
@@ -559,7 +559,11 @@ void info_dialog(GtkWidget *parent, appdata_t *appdata, relation_t *relation) {
   /* ----------------------------------- */
 
   gtk_widget_show_all(context->dialog);
+  gboolean ok = FALSE;
+
   if(gtk_dialog_run(GTK_DIALOG(context->dialog)) == GTK_RESPONSE_ACCEPT) {
+    ok = TRUE;
+
     gtk_widget_destroy(context->dialog);
 
     if(!relation) {
@@ -595,4 +599,5 @@ void info_dialog(GtkWidget *parent, appdata_t *appdata, relation_t *relation) {
   }
 
   g_free(context);
+  return ok;
 }

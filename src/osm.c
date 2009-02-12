@@ -578,14 +578,17 @@ void osm_members_free(member_t *member) {
   }
 }
 
+void osm_relation_free(relation_t *relation) {
+  osm_tags_free(relation->tag);
+  osm_members_free(relation->member);
+
+  g_free(relation);
+}
+
 static void osm_relations_free(relation_t *relation) {
   while(relation) {
     relation_t *next = relation->next;
-
-    osm_tags_free(relation->tag);
-    osm_members_free(relation->member);
-
-    g_free(relation);
+    osm_relation_free(relation);
     relation = next;
   }
 }
@@ -2154,6 +2157,28 @@ item_id_t osm_new_node_id(osm_t *osm) {
   return 0;
 }
 
+item_id_t osm_new_relation_id(osm_t *osm) {
+  item_id_t id = -1;
+
+  while(TRUE) {
+    gboolean found = FALSE;
+    relation_t *relation = osm->relation;
+    while(relation) {
+      if(relation->id == id)
+	found = TRUE;
+
+      relation = relation->next;
+    }
+
+    /* no such id so far -> use it */
+    if(!found) return id;
+
+    id--;
+  }
+  g_assert(0);
+  return 0;
+}
+
 node_t *osm_node_new(osm_t *osm, gint x, gint y) {
   printf("Creating new node\n");
 
@@ -2474,6 +2499,35 @@ void osm_way_remove_from_relation(osm_t *osm, way_t *way) {
     relation = relation->next;
   }
 }
+
+relation_t *osm_relation_new(void) {
+  printf("Creating new relation\n");
+
+  relation_t *relation = g_new0(relation_t, 1);
+  relation->visible = TRUE;
+  relation->flags = OSM_FLAG_NEW;
+  relation->time = time(NULL);
+
+  /* add created_by tag */
+  relation->tag = g_new0(tag_t, 1);
+  relation->tag->key = g_strdup("created_by");
+  relation->tag->value = g_strdup(PACKAGE " v" VERSION);
+
+  return relation;
+}
+
+void osm_relation_attach(osm_t *osm, relation_t *relation) {
+  printf("Attaching relation\n");
+
+  relation->id = osm_new_relation_id(osm);
+  relation->flags = OSM_FLAG_NEW;
+
+  /* attach to end of relation list */
+  relation_t **lrelation = &osm->relation;
+  while(*lrelation) lrelation = &(*lrelation)->next;  
+  *lrelation = relation;
+}
+
 
 void osm_way_delete(osm_t *osm, icon_t **icon, 
 		    way_t *way, gboolean permanently) {

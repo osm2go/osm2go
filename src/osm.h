@@ -275,6 +275,10 @@ tag_t *osm_tags_copy(tag_t *tag, gboolean update_creator);
 char *osm_type_string(type_t type);
 char *osm_object_string(type_t type, void *object);
 
+relation_t *osm_relation_new(void);
+void osm_relation_free(relation_t *relation);
+void osm_relation_attach(osm_t *osm, relation_t *relation);
+
 #endif /* OSM_H */
 
 // vim:et:ts=8:sw=2:sts=2:ai
