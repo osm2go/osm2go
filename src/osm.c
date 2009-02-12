@@ -2592,6 +2592,43 @@ void osm_way_delete(osm_t *osm, icon_t **icon,
   }
 }
 
+void osm_relation_delete(osm_t *osm, relation_t *relation, 
+			 gboolean permanently) {
+
+  /* new relations aren't stored on the server and are just */
+  /* deleted permanently */
+  if(relation->flags & OSM_FLAG_NEW) {
+    printf("About to delete NEW relation #%ld -> force permanent delete\n", 
+	   relation->id);
+    permanently = TRUE;
+  }
+
+  /* the deletion of a relation doesn't affect the members as they */
+  /* don't have any reference to the relation they are part of */
+
+  if(!permanently) {
+    printf("mark relation #%ld as deleted\n", relation->id);
+    relation->flags |= OSM_FLAG_DELETED;
+  } else {
+    printf("permanently delete relation #%ld\n", relation->id);
+
+    /* remove it from the chain */
+    relation_t **crelation = &osm->relation;
+    int found = 0;
+
+    while(*crelation) {
+      if(*crelation == relation) {
+	found++;
+	*crelation = (*crelation)->next;
+
+	osm_relation_free(relation);
+      } else
+	crelation = &((*crelation)->next);
+    }
+    g_assert(found == 1);
+  }
+}
+
 void osm_way_revert(way_t *way) {
   node_chain_t *new = NULL;
 

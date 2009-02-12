@@ -278,6 +278,8 @@ char *osm_object_string(type_t type, void *object);
 relation_t *osm_relation_new(void);
 void osm_relation_free(relation_t *relation);
 void osm_relation_attach(osm_t *osm, relation_t *relation);
+void osm_relation_delete(osm_t *osm, relation_t *relation, 
+			 gboolean permanently);
 
 #endif /* OSM_H */
 

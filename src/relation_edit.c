@@ -196,7 +196,7 @@ static void relation_list_selected(relitem_context_t *context,
 				   gboolean selected) {
 
   if(context->but_remove)
-    gtk_widget_set_sensitive(context->but_remove, FALSE);
+    gtk_widget_set_sensitive(context->but_remove, selected);
   if(context->but_edit)
     gtk_widget_set_sensitive(context->but_edit, selected);
 }
@@ -275,11 +275,38 @@ static void on_relation_edit(GtkWidget *but, relitem_context_t *context) {
   info_dialog(context->dialog, context->appdata, sel);
 }
 
+/* remove the selected relation */
 static void on_relation_remove(GtkWidget *but, relitem_context_t *context) {
   relation_t *sel = get_selection(context);
   if(!sel) return;
 
   printf("remove relation #%ld\n", sel->id);
+
+  int members = 0;
+  member_t *member = sel->member;
+  while(member) {
+    members++;
+    member = member->next;
+  }
+
+  if(members) 
+    if(!yes_no_f(context->dialog, NULL, 0, 0,
+		 _("Delete non-empty relation?"), 
+		 _("This relation still has %d members. "
+		   "Delete it anyway?"), members))
+      return;
+  
+  /* first remove selected row from list */
+  GtkTreeIter       iter;
+  GtkTreeSelection *selection = 
+    gtk_tree_view_get_selection(GTK_TREE_VIEW(context->view));
+  if(gtk_tree_selection_get_selected(selection, NULL, &iter)) 
+    gtk_list_store_remove(context->store, &iter);
+
+  /* then really delete it */
+  osm_relation_delete(context->appdata->osm, sel, FALSE); 
+
+  relation_list_selected(context, FALSE);
 }
 
 static char *relitem_get_role_in_relation(relation_item_t *item, relation_t *relation) {
@@ -307,7 +334,7 @@ static char *relitem_get_role_in_relation(relation_item_t *item, relation_t *rel
 
 static void
 relitem_toggled(GtkCellRendererToggle *cell, const gchar *path_str,
-	      relitem_context_t *context) {
+		relitem_context_t *context) {
   GtkTreePath *path;
   GtkTreeIter iter;
 

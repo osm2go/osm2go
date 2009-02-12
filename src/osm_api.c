@@ -458,7 +458,8 @@ static void osm_upload_ways(osm_upload_context_t *context) {
 	printf("uploading way %s from address %p\n", url, xml_str);
 	
 	char *cred = g_strdup_printf("%s:%s", 
-				     context->appdata->settings->username, context->appdata->settings->password);
+				     context->appdata->settings->username, 
+				     context->appdata->settings->password);
 	if(osm_update_item(&context->log, xml_str, url, cred, 
 			   (way->flags & OSM_FLAG_NEW)?&(way->id):NULL)) {
 	  way->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_NEW);
@@ -469,6 +470,36 @@ static void osm_upload_ways(osm_upload_context_t *context) {
       g_free(url);
     }
     way = way->next;
+  }
+}
+
+static void osm_delete_relations(osm_upload_context_t *context) {
+  relation_t *relation = context->osm->relation;
+  project_t *project = context->project;
+
+  while(relation) {
+    /* make sure gui gets updated */
+    while(gtk_events_pending()) gtk_main_iteration();
+
+    if(relation->flags & OSM_FLAG_DELETED) {
+      printf("deleting relation on server\n");
+
+      appendf(&context->log, _("Delete relation #%ld "), relation->id);
+
+      char *url = g_strdup_printf("%s/relation/%lu", 
+				  project->server, relation->id);
+      char *cred = g_strdup_printf("%s:%s", 
+				   context->appdata->settings->username, 
+				   context->appdata->settings->password);
+
+      if(osm_delete_item(&context->log, url, cred)) {
+	relation->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
+	project->data_dirty = TRUE;
+      }
+      
+      g_free(cred);
+    }
+    relation = relation->next;
   }
 }
 
@@ -691,11 +722,12 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   osm_upload_ways(context);
   appendf(&context->log, _("Uploading relations:\n"));
   osm_upload_relations(context);
+  appendf(&context->log, _("Deleting relations:\n"));
+  osm_delete_relations(context);
   appendf(&context->log, _("Deleting ways:\n"));
   osm_delete_ways(context);
   appendf(&context->log, _("Deleting nodes:\n"));
   osm_delete_nodes(context);
-
 
   appendf(&context->log, _("Upload done.\n"));
 

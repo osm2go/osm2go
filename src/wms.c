@@ -1130,14 +1130,18 @@ void wms_import(appdata_t *appdata) {
   }
 
   /* ------------- copy values back into project ---------------- */
-  if(strcmp(appdata->project->wms_server, wms->server) != 0) {
-    g_free(appdata->project->wms_server);
+  if(!appdata->project->wms_server ||
+     strcmp(appdata->project->wms_server, wms->server) != 0) {
+    if(appdata->project->wms_server)
+      g_free(appdata->project->wms_server);
     appdata->project->wms_server = g_strdup(wms->server);
     appdata->project->dirty = TRUE;
   }
 
-  if(strcmp(appdata->project->wms_path, wms->path) != 0) {
-    g_free(appdata->project->wms_path);
+  if(!appdata->project->wms_path ||
+     strcmp(appdata->project->wms_path, wms->path) != 0) {
+    if(appdata->project->wms_path)
+      g_free(appdata->project->wms_path);
     appdata->project->wms_path = g_strdup(wms->path);
     appdata->project->dirty = TRUE;
   }
