@@ -30,7 +30,7 @@ OBJS = main.o map.o osm.o osm_api.o wms.o \
 	map_edit.o josm_elemstyles.o style.o net_io.o banner.o \
 	undo.o
 
-DEFS = -DUSE_HILDON -DPACKAGE=\"$(APP)\" -DPREFIX=\"$(PREFIX)\" -DOSM_QND_XML_PARSER -DUSE_GOOCANVAS -DUSE_FLOAT
+DEFS = -DUSE_HILDON -DPACKAGE=\"$(APP)\" -DPREFIX=\"$(PREFIX)\" -DOSM_STREAM_PARSER -DUSE_GOOCANVAS -DUSE_FLOAT
 CFLAGS = -Wall -O2 $(DEFS) `pkg-config --cflags $(PKGS)`
 LDFLAGS = `pkg-config --libs $(PKGS)`
 
