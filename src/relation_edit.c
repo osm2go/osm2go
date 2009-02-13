@@ -192,7 +192,7 @@ static void relation_remove_item(relation_t *relation, relation_item_t *item) {
   g_assert(0);
 }
 
-static void relation_list_selected(relitem_context_t *context, 
+static void relation_item_list_selected(relitem_context_t *context, 
 				   gboolean selected) {
 
   if(context->but_remove)
@@ -202,7 +202,7 @@ static void relation_list_selected(relitem_context_t *context,
 }
 
 static gboolean
-relation_list_selection_func(GtkTreeSelection *selection, GtkTreeModel *model,
+relation_item_list_selection_func(GtkTreeSelection *selection, GtkTreeModel *model,
 		     GtkTreePath *path, gboolean path_currently_selected,
 		     gpointer userdata) {
   relitem_context_t *context = (relitem_context_t*)userdata;
@@ -210,13 +210,13 @@ relation_list_selection_func(GtkTreeSelection *selection, GtkTreeModel *model,
     
   if(gtk_tree_model_get_iter(model, &iter, path)) {
     g_assert(gtk_tree_path_get_depth(path) == 1);
-    relation_list_selected(context, TRUE);
+    relation_item_list_selected(context, TRUE);
   }
   
   return TRUE; /* allow selection state to change */
 }
 
-static void on_relation_add(GtkWidget *but, relitem_context_t *context) {
+static void on_relation_item_add(GtkWidget *but, relitem_context_t *context) {
   /* create a new relation */
 
   relation_t *relation = osm_relation_new();
@@ -266,7 +266,7 @@ static relation_t *get_selection(relitem_context_t *context) {
   return NULL;
 }
 
-static void on_relation_edit(GtkWidget *but, relitem_context_t *context) {
+static void on_relation_item_edit(GtkWidget *but, relitem_context_t *context) {
   relation_t *sel = get_selection(context);
   if(!sel) return;
 
@@ -276,7 +276,7 @@ static void on_relation_edit(GtkWidget *but, relitem_context_t *context) {
 }
 
 /* remove the selected relation */
-static void on_relation_remove(GtkWidget *but, relitem_context_t *context) {
+static void on_relation_item_remove(GtkWidget *but, relitem_context_t *context) {
   relation_t *sel = get_selection(context);
   if(!sel) return;
 
@@ -306,7 +306,7 @@ static void on_relation_remove(GtkWidget *but, relitem_context_t *context) {
   /* then really delete it */
   osm_relation_delete(context->appdata->osm, sel, FALSE); 
 
-  relation_list_selected(context, FALSE);
+  relation_item_list_selected(context, FALSE);
 }
 
 static char *relitem_get_role_in_relation(relation_item_t *item, relation_t *relation) {
@@ -391,13 +391,13 @@ static gboolean relitem_is_in_relation(relation_item_t *item, relation_t *relati
   return FALSE;
 }
 
-static GtkWidget *relation_list(relitem_context_t *context) {
+static GtkWidget *relation_item_list_widget(relitem_context_t *context) {
   GtkWidget *vbox = gtk_vbox_new(FALSE,3);
   context->view = gtk_tree_view_new();
 
   gtk_tree_selection_set_select_function(
 	 gtk_tree_view_get_selection(GTK_TREE_VIEW(context->view)), 
-	 relation_list_selection_func, 
+	 relation_item_list_selection_func, 
 	 context, NULL);
 
 
@@ -477,19 +477,19 @@ static GtkWidget *relation_list(relitem_context_t *context) {
   //  gtk_widget_set_sensitive(context->but_add, FALSE);
   gtk_box_pack_start_defaults(GTK_BOX(hbox), context->but_add);
   gtk_signal_connect(GTK_OBJECT(context->but_add), "clicked",
-    		     GTK_SIGNAL_FUNC(on_relation_add), context);
+    		     GTK_SIGNAL_FUNC(on_relation_item_add), context);
 
   context->but_edit = gtk_button_new_with_label(_("Edit..."));
   gtk_box_pack_start_defaults(GTK_BOX(hbox), context->but_edit);
   gtk_signal_connect(GTK_OBJECT(context->but_edit), "clicked",
-    		     GTK_SIGNAL_FUNC(on_relation_edit), context);
+    		     GTK_SIGNAL_FUNC(on_relation_item_edit), context);
 
   context->but_remove = gtk_button_new_with_label(_("Remove"));
   gtk_box_pack_start_defaults(GTK_BOX(hbox), context->but_remove);
   gtk_signal_connect(GTK_OBJECT(context->but_remove), "clicked",
-  		     GTK_SIGNAL_FUNC(on_relation_remove), context);
+  		     GTK_SIGNAL_FUNC(on_relation_item_remove), context);
 
-  relation_list_selected(context, FALSE);
+  relation_item_list_selected(context, FALSE);
 
   gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
   return vbox;
@@ -523,7 +523,7 @@ void relation_add_dialog(appdata_t *appdata, relation_item_t *relitem) {
   g_free(str);
   
   gtk_dialog_set_default_response(GTK_DIALOG(context->dialog), 
-				  GTK_RESPONSE_ACCEPT);
+				  GTK_RESPONSE_CLOSE);
 
   /* making the dialog a little wider makes it less "crowded" */
 #ifdef USE_HILDON
@@ -532,7 +532,380 @@ void relation_add_dialog(appdata_t *appdata, relation_item_t *relitem) {
   gtk_window_set_default_size(GTK_WINDOW(context->dialog), 400, 200);
 #endif
   gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context->dialog)->vbox),
-  		     relation_list(context), TRUE, TRUE, 0);
+  		     relation_item_list_widget(context), TRUE, TRUE, 0);
+
+  /* ----------------------------------- */
+
+  gtk_widget_show_all(context->dialog);
+  gtk_dialog_run(GTK_DIALOG(context->dialog));
+  gtk_widget_destroy(context->dialog);
+
+  g_free(context);
+}
+
+/* -------------------- global relation list ----------------- */
+
+typedef struct {
+  appdata_t *appdata;
+  GtkWidget *dialog, *view;
+  GtkWidget *but_members, *but_add, *but_edit, *but_remove;
+  GtkListStore *store;
+} relation_context_t;
+
+enum {
+  RELATION_COL_ID = 0,
+  RELATION_COL_TYPE,
+  RELATION_COL_NAME,
+  RELATION_COL_MEMBERS,
+  RELATION_COL_DATA,
+  RELATION_NUM_COLS
+};
+
+static void relation_list_selected(relation_context_t *context, 
+				   gboolean selected) {
+
+  if(context->but_members)
+    gtk_widget_set_sensitive(context->but_members, selected);
+}
+
+static gboolean
+relation_list_selection_func(GtkTreeSelection *selection, GtkTreeModel *model,
+		     GtkTreePath *path, gboolean path_currently_selected,
+		     gpointer userdata) {
+  relation_context_t *context = (relation_context_t*)userdata;
+  GtkTreeIter iter;
+    
+  if(gtk_tree_model_get_iter(model, &iter, path)) {
+    g_assert(gtk_tree_path_get_depth(path) == 1);
+    relation_list_selected(context, TRUE);
+  }
+  
+  return TRUE; /* allow selection state to change */
+}
+
+static relation_t *get_selected_relation(relation_context_t *context) {
+  GtkTreeSelection *selection;
+  GtkTreeModel     *model;
+  GtkTreeIter       iter;
+
+  selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(context->view));
+  if(gtk_tree_selection_get_selected(selection, &model, &iter)) {
+    relation_t *relation;
+    gtk_tree_model_get(model, &iter, RELATION_COL_DATA, &relation, -1);
+    return(relation);
+  }
+  return NULL;
+}
+
+typedef struct {
+  relation_t *relation;
+  GtkWidget *dialog, *view;
+  GtkListStore *store;
+} member_context_t;
+
+enum {
+  MEMBER_COL_TYPE = 0,
+  MEMBER_COL_ID,
+  MEMBER_COL_NAME,
+  MEMBER_COL_ROLE,
+  MEMBER_COL_REF_ONLY,
+  MEMBER_COL_DATA,
+  MEMBER_NUM_COLS
+};
+
+static gboolean
+member_list_selection_func(GtkTreeSelection *selection, GtkTreeModel *model,
+		     GtkTreePath *path, gboolean path_currently_selected,
+		     gpointer userdata) {
+  GtkTreeIter iter;
+    
+  if(gtk_tree_model_get_iter(model, &iter, path)) {
+    g_assert(gtk_tree_path_get_depth(path) == 1);
+
+    member_t *member = NULL;
+    gtk_tree_model_get(model, &iter, MEMBER_COL_DATA, &member, -1);
+    if(member && member->type < NODE_ID)
+      return TRUE;
+  }
+  
+  return FALSE;
+}
+
+
+static GtkWidget *member_list_widget(member_context_t *context) {
+  GtkWidget *vbox = gtk_vbox_new(FALSE,3);
+  context->view = gtk_tree_view_new();
+
+  gtk_tree_selection_set_select_function(
+	 gtk_tree_view_get_selection(GTK_TREE_VIEW(context->view)), 
+	 member_list_selection_func, 
+	 context, NULL);
+
+  /* --- "type" column --- */
+  GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
+  g_object_set(renderer, "foreground", "grey", NULL);
+  gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(context->view),
+	-1, _("Type"), renderer, "text", MEMBER_COL_TYPE,
+        "foreground-set", MEMBER_COL_REF_ONLY,  NULL); 
+
+
+  /* --- "id" column --- */
+  renderer = gtk_cell_renderer_text_new();
+  g_object_set(renderer, "foreground", "grey", NULL);
+  gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(context->view),
+	-1, _("Id"), renderer, "text", MEMBER_COL_ID,
+        "foreground-set", MEMBER_COL_REF_ONLY, NULL); 
+
+  /* --- "Name" column --- */
+  renderer = gtk_cell_renderer_text_new();
+  g_object_set(renderer, "foreground", "grey", NULL);
+  g_object_set(renderer, "ellipsize", PANGO_ELLIPSIZE_END, NULL);
+  GtkTreeViewColumn *column = 
+    gtk_tree_view_column_new_with_attributes(_("Name"), renderer, 
+		     "text", MEMBER_COL_NAME,
+		     "foreground-set", MEMBER_COL_REF_ONLY,  NULL);
+  gtk_tree_view_column_set_expand(column, TRUE);
+  gtk_tree_view_insert_column(GTK_TREE_VIEW(context->view), column, -1);
+
+  /* --- "role" column --- */
+  renderer = gtk_cell_renderer_text_new();
+  g_object_set(renderer, "foreground", "grey", NULL);
+  gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(context->view),
+	-1, _("Role"), renderer, "text", MEMBER_COL_ROLE,
+        "foreground-set", MEMBER_COL_REF_ONLY, NULL); 
+
+  /* build and fill the store */
+  context->store = gtk_list_store_new(MEMBER_NUM_COLS, 
+ 	      G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, 
+	      G_TYPE_BOOLEAN, G_TYPE_POINTER);
+
+  gtk_tree_view_set_model(GTK_TREE_VIEW(context->view), 
+			  GTK_TREE_MODEL(context->store));
+
+  GtkTreeIter iter;
+  member_t *member = context->relation->member;
+  while(member) {
+    tag_t *tags = osm_object_get_tags(member->type, member->ptr);
+    char *id = osm_id_string(member->type, member->ptr);
+
+    /* try to find something descriptive */
+    char *name = NULL;
+    if(tags)
+      name = osm_tag_get_by_key(tags, "name");
+
+    /* Append a row and fill in some data */
+    gtk_list_store_append(context->store, &iter);
+    gtk_list_store_set(context->store, &iter,
+       MEMBER_COL_TYPE, osm_type_string(member->type),
+       MEMBER_COL_ID,   id,
+       MEMBER_COL_NAME, name, 
+       MEMBER_COL_ROLE, member->role,
+       MEMBER_COL_REF_ONLY, member->type >= NODE_ID,
+       MEMBER_COL_DATA, member,
+       -1);
+
+    g_free(id);
+    member = member->next;
+  }
+
+  g_object_unref(context->store);
+
+  /* put it into a scrolled window */
+  GtkWidget *scrolled_window = gtk_scrolled_window_new(NULL, NULL);
+  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window), 
+				 GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+  gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scrolled_window), 
+				      GTK_SHADOW_ETCHED_IN);
+  gtk_container_add(GTK_CONTAINER(scrolled_window), context->view);
+
+  gtk_box_pack_start_defaults(GTK_BOX(vbox), scrolled_window);
+
+  return vbox;
+}
+
+/* user clicked "members..." button in relation list */
+static void on_relation_members(GtkWidget *but, relation_context_t *context) {
+  member_context_t *mcontext = g_new0(member_context_t, 1);
+
+  /* display members list */
+  mcontext->relation = get_selected_relation(context);
+  if(!mcontext->relation) return;
+
+  char *str = osm_tag_get_by_key(mcontext->relation->tag, "name");
+  if(!str) str = osm_tag_get_by_key(mcontext->relation->tag, "ref");
+  if(!str)
+    str = g_strdup_printf(_("Members of relation #%ld"),
+			  mcontext->relation->id);
+  else
+    str = g_strdup_printf(_("Members of relation \"%s\""), str);
+
+  mcontext->dialog = 
+    gtk_dialog_new_with_buttons(str,
+	GTK_WINDOW(context->dialog), GTK_DIALOG_MODAL,
+	GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE, 
+	NULL);
+  g_free(str);
+  
+  gtk_dialog_set_default_response(GTK_DIALOG(mcontext->dialog), 
+				  GTK_RESPONSE_CLOSE);
+
+  /* making the dialog a little wider makes it less "crowded" */
+#ifdef USE_HILDON
+  gtk_window_set_default_size(GTK_WINDOW(mcontext->dialog), 500, 300);
+#else
+  gtk_window_set_default_size(GTK_WINDOW(mcontext->dialog), 400, 200);
+#endif
+
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(mcontext->dialog)->vbox),
+      		     member_list_widget(mcontext), TRUE, TRUE, 0);
+
+  /* ----------------------------------- */
+
+  gtk_widget_show_all(mcontext->dialog);
+  gtk_dialog_run(GTK_DIALOG(mcontext->dialog));
+  gtk_widget_destroy(mcontext->dialog);
+
+  g_free(mcontext);
+}
+
+static GtkWidget *relation_list_widget(relation_context_t *context) {
+  GtkWidget *vbox = gtk_vbox_new(FALSE,3);
+  context->view = gtk_tree_view_new();
+
+  gtk_tree_selection_set_select_function(
+	 gtk_tree_view_get_selection(GTK_TREE_VIEW(context->view)), 
+	 relation_list_selection_func, 
+	 context, NULL);
+
+  /* --- "id" column --- */
+  GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
+  gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(context->view),
+	-1, _("Id"), renderer, "text", RELATION_COL_ID, NULL);
+
+  /* --- "Type" column --- */
+  renderer = gtk_cell_renderer_text_new();
+  gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(context->view),
+	-1, _("Type"), renderer, "text", RELATION_COL_TYPE, NULL);
+
+  /* --- "Name" column --- */
+  renderer = gtk_cell_renderer_text_new();
+  g_object_set(renderer, "ellipsize", PANGO_ELLIPSIZE_END, NULL);
+  GtkTreeViewColumn *column = 
+    gtk_tree_view_column_new_with_attributes(_("Name"), renderer, 
+		 "text", RELATION_COL_NAME, NULL);
+  gtk_tree_view_column_set_expand(column, TRUE);
+  gtk_tree_view_insert_column(GTK_TREE_VIEW(context->view), column, -1);
+
+  /* --- "members" column --- */
+  renderer = gtk_cell_renderer_text_new();
+  gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(context->view),
+	-1, _("Members"), renderer, "text", RELATION_COL_MEMBERS, NULL);
+
+  /* build and fill the store */
+  context->store = gtk_list_store_new(RELATION_NUM_COLS, 
+		G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, 
+	        G_TYPE_POINTER);
+
+  gtk_tree_view_set_model(GTK_TREE_VIEW(context->view), 
+			  GTK_TREE_MODEL(context->store));
+
+  GtkTreeIter iter;
+  relation_t *relation = context->appdata->osm->relation;
+  while(relation) {
+    char *id = g_strdup_printf("#%ld", relation->id);
+
+    /* try to find something descriptive */
+    char *name = osm_tag_get_by_key(relation->tag, "name");
+    if(!name) name = osm_tag_get_by_key(relation->tag, "ref");
+
+    char *num = g_strdup_printf("%d", osm_relation_members_num(relation));
+
+    /* Append a row and fill in some data */
+    gtk_list_store_append(context->store, &iter);
+    gtk_list_store_set(context->store, &iter,
+		       RELATION_COL_ID, id,
+		       RELATION_COL_TYPE,
+		       osm_tag_get_by_key(relation->tag, "type"),
+		       RELATION_COL_NAME, name,
+		       RELATION_COL_MEMBERS, num,
+		       RELATION_COL_DATA, relation,
+		       -1);
+
+    g_free(id);
+    g_free(num);
+    relation = relation->next;
+  }
+  
+  g_object_unref(context->store);
+
+  /* put it into a scrolled window */
+  GtkWidget *scrolled_window = gtk_scrolled_window_new(NULL, NULL);
+  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window), 
+				 GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+  gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scrolled_window), 
+				      GTK_SHADOW_ETCHED_IN);
+  gtk_container_add(GTK_CONTAINER(scrolled_window), context->view);
+
+  gtk_box_pack_start_defaults(GTK_BOX(vbox), scrolled_window);
+
+  /* ------- button box ------------ */
+
+  GtkWidget *hbox = gtk_hbox_new(TRUE,3);
+
+  context->but_add = gtk_button_new_with_label(_("Add..."));
+  gtk_widget_set_sensitive(context->but_add, FALSE);
+  gtk_box_pack_start_defaults(GTK_BOX(hbox), context->but_add);
+  //  gtk_signal_connect(GTK_OBJECT(context->but_add), "clicked",
+  //    		     GTK_SIGNAL_FUNC(on_relation_add), context);
+
+  context->but_edit = gtk_button_new_with_label(_("Edit..."));
+  gtk_widget_set_sensitive(context->but_edit, FALSE);
+  gtk_box_pack_start_defaults(GTK_BOX(hbox), context->but_edit);
+  //  gtk_signal_connect(GTK_OBJECT(context->but_edit), "clicked",
+  //    		     GTK_SIGNAL_FUNC(on_relation_edit), context);
+
+  context->but_members = gtk_button_new_with_label(_("Members..."));
+  gtk_box_pack_start_defaults(GTK_BOX(hbox), context->but_members);
+  gtk_signal_connect(GTK_OBJECT(context->but_members), "clicked",
+  		     GTK_SIGNAL_FUNC(on_relation_members), context);
+
+  context->but_remove = gtk_button_new_with_label(_("Remove"));
+  gtk_widget_set_sensitive(context->but_remove, FALSE);
+  gtk_box_pack_start_defaults(GTK_BOX(hbox), context->but_remove);
+  //  gtk_signal_connect(GTK_OBJECT(context->but_remove), "clicked",
+  //  		     GTK_SIGNAL_FUNC(on_relation_remove), context);
+
+  gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
+
+  relation_list_selected(context, FALSE);
+
+  return vbox;
+}
+
+/* a global view on all relations */
+void relation_list(appdata_t *appdata) {
+  relation_context_t *context = g_new0(relation_context_t, 1);
+  context->appdata = appdata;
+
+  printf("relation list\n");
+  
+  context->dialog = 
+    gtk_dialog_new_with_buttons(_("All relations"),
+	GTK_WINDOW(appdata->window), GTK_DIALOG_MODAL,
+	GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE, 
+	NULL);
+  
+  gtk_dialog_set_default_response(GTK_DIALOG(context->dialog), 
+				  GTK_RESPONSE_CLOSE);
+
+  /* making the dialog a little wider makes it less "crowded" */
+#ifdef USE_HILDON
+  gtk_window_set_default_size(GTK_WINDOW(context->dialog), 500, 300);
+#else
+  gtk_window_set_default_size(GTK_WINDOW(context->dialog), 400, 200);
+#endif
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context->dialog)->vbox),
+  		     relation_list_widget(context), TRUE, TRUE, 0);
 
   /* ----------------------------------- */
 

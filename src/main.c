@@ -284,6 +284,11 @@ cb_menu_undo_changes(GtkWidget *widget, gpointer data) {
 }
 
 static void 
+cb_menu_osm_relations(GtkWidget *widget, gpointer data) {
+  relation_list((appdata_t*)data);
+}
+
+static void 
 cb_menu_fullscreen(GtkWidget *widget, gpointer data) {
   appdata_t *appdata = (appdata_t *)data;
 
@@ -583,6 +588,13 @@ void menu_create(appdata_t *appdata) {
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_undo_changes), _("Disca_rd local changes..."),
     GTK_STOCK_DELETE, "<OSM2Go-Main>/OSM/DiscardChanges",
     0, 0, FALSE, FALSE
+  );
+
+  gtk_menu_shell_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
+  appdata->menu_item_osm_relations = menu_append_new_item(
+    appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_osm_relations), _("_Relations..."),
+    NULL, "<OSM2Go-Main>/OSM/Relations",
+    GDK_r, GDK_SHIFT_MASK|GDK_CONTROL_MASK, FALSE, FALSE
   );
 
   /* -------------------- wms submenu -------------------- */

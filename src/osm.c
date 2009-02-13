@@ -2748,10 +2748,71 @@ char *osm_object_string(type_t type, void *object) {
   case NODE_ID:
   case WAY_ID:
   case RELATION_ID:
-    return g_strdup_printf("%s #%ld", type_str, *((item_id_t*)object));
+    return g_strdup_printf("%s #%ld", type_str, ((item_id_t)object));
     break;
   }
   return NULL;
+}
+
+char *osm_id_string(type_t type, void *object) {
+  if(!object) return NULL;
+
+  switch(type) {
+  case ILLEGAL:
+    return NULL;
+    break;
+  case NODE:
+    return g_strdup_printf("#%ld", ((node_t*)object)->id);
+    break;
+  case WAY:
+    return g_strdup_printf("#%ld", ((way_t*)object)->id);
+    break;
+  case RELATION:
+    return g_strdup_printf("#%ld", ((relation_t*)object)->id);
+    break;
+  case NODE_ID:
+  case WAY_ID:
+  case RELATION_ID:
+    return g_strdup_printf("#%ld", ((item_id_t)object));
+    break;
+  }
+  return NULL;
+}
+
+tag_t *osm_object_get_tags(type_t type, void *object) {
+  if(!object) return NULL;
+
+  switch(type) {
+  case ILLEGAL:
+    return NULL;
+    break;
+  case NODE:
+    return ((node_t*)object)->tag;
+    break;
+  case WAY:
+    return ((way_t*)object)->tag;
+    break;
+  case RELATION:
+    return ((relation_t*)object)->tag;
+    break;
+  case NODE_ID:
+  case WAY_ID:
+  case RELATION_ID:
+    return NULL;
+    break;
+  }
+  return NULL;
+}
+
+
+gint osm_relation_members_num(relation_t *relation) {
+  gint num = 0;
+  member_t *member = relation->member;
+  while(member) {
+    num++;
+    member = member->next;
+  }
+  return num;
 }
 
 // vim:et:ts=8:sw=2:sts=2:ai

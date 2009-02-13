@@ -31,5 +31,6 @@ typedef struct {
 } relation_item_t;
 
 void relation_add_dialog(appdata_t *appdata, relation_item_t *relitem);
+void relation_list(appdata_t *appdata);
 
 #endif // RELATION_EDIT_H
