@@ -282,12 +282,7 @@ static void on_relation_item_remove(GtkWidget *but, relitem_context_t *context) 
 
   printf("remove relation #%ld\n", sel->id);
 
-  int members = 0;
-  member_t *member = sel->member;
-  while(member) {
-    members++;
-    member = member->next;
-  }
+  gint members = osm_relation_members_num(sel);
 
   if(members) 
     if(!yes_no_f(context->dialog, NULL, 0, 0,
@@ -561,28 +556,6 @@ enum {
   RELATION_NUM_COLS
 };
 
-static void relation_list_selected(relation_context_t *context, 
-				   gboolean selected) {
-
-  if(context->but_members)
-    gtk_widget_set_sensitive(context->but_members, selected);
-}
-
-static gboolean
-relation_list_selection_func(GtkTreeSelection *selection, GtkTreeModel *model,
-		     GtkTreePath *path, gboolean path_currently_selected,
-		     gpointer userdata) {
-  relation_context_t *context = (relation_context_t*)userdata;
-  GtkTreeIter iter;
-    
-  if(gtk_tree_model_get_iter(model, &iter, path)) {
-    g_assert(gtk_tree_path_get_depth(path) == 1);
-    relation_list_selected(context, TRUE);
-  }
-  
-  return TRUE; /* allow selection state to change */
-}
-
 static relation_t *get_selected_relation(relation_context_t *context) {
   GtkTreeSelection *selection;
   GtkTreeModel     *model;
@@ -595,6 +568,37 @@ static relation_t *get_selected_relation(relation_context_t *context) {
     return(relation);
   }
   return NULL;
+}
+
+static void relation_list_selected(relation_context_t *context, 
+				   relation_t *selected) {
+
+  if(context->but_members)
+    gtk_widget_set_sensitive(context->but_members, 
+	     (selected != NULL) && (selected->member != NULL));
+
+  if(context->but_remove)
+    gtk_widget_set_sensitive(context->but_remove, selected != NULL);
+  if(context->but_edit)
+    gtk_widget_set_sensitive(context->but_edit, selected != NULL);
+}
+
+static gboolean
+relation_list_selection_func(GtkTreeSelection *selection, GtkTreeModel *model,
+		     GtkTreePath *path, gboolean path_currently_selected,
+		     gpointer userdata) {
+  relation_context_t *context = (relation_context_t*)userdata;
+  GtkTreeIter iter;
+    
+  if(gtk_tree_model_get_iter(model, &iter, path)) {
+    g_assert(gtk_tree_path_get_depth(path) == 1);
+    
+    relation_t *relation = NULL;
+    gtk_tree_model_get(model, &iter, RELATION_COL_DATA, &relation, -1);
+    relation_list_selected(context, relation);
+  }
+  
+  return TRUE; /* allow selection state to change */
 }
 
 typedef struct {
@@ -768,6 +772,90 @@ static void on_relation_members(GtkWidget *but, relation_context_t *context) {
   g_free(mcontext);
 }
 
+static void on_relation_add(GtkWidget *but, relation_context_t *context) {
+  /* create a new relation */
+
+  relation_t *relation = osm_relation_new();
+  if(!info_dialog(context->dialog, context->appdata, relation)) {
+    printf("tag edit cancelled\n");
+    osm_relation_free(relation);
+  } else {
+    osm_relation_attach(context->appdata->osm, relation);
+
+    /* append a row for the new data */
+    /* try to find something descriptive */
+
+    char *id = g_strdup_printf("#%ld", relation->id);
+
+    /* try to find something descriptive */
+    char *name = osm_tag_get_by_key(relation->tag, "name");
+    if(!name) name = osm_tag_get_by_key(relation->tag, "ref");
+
+    char *num = g_strdup_printf("%d", osm_relation_members_num(relation));
+
+    /* Append a row and fill in some data */
+    GtkTreeIter iter;
+    gtk_list_store_append(context->store, &iter);
+    gtk_list_store_set(context->store, &iter,
+		       RELATION_COL_ID, id,
+		       RELATION_COL_TYPE,
+		       osm_tag_get_by_key(relation->tag, "type"),
+		       RELATION_COL_NAME, name,
+		       RELATION_COL_MEMBERS, num,
+		       RELATION_COL_DATA, relation,
+		       -1);
+
+    g_free(id);
+    g_free(num);
+
+    gtk_tree_selection_select_iter(gtk_tree_view_get_selection(
+	       GTK_TREE_VIEW(context->view)), &iter);
+
+    /* scroll to end */
+    //    GtkAdjustment *adj = gtk_scrolled_window_get_vadjustment();
+    /* xyz */
+  }
+}
+
+/* user clicked "edit..." button in relation list */
+static void on_relation_edit(GtkWidget *but, relation_context_t *context) {
+  relation_t *sel = get_selected_relation(context);
+  if(!sel) return;
+
+  printf("edit relation #%ld\n", sel->id);
+
+  info_dialog(context->dialog, context->appdata, sel);
+}
+
+/* remove the selected relation */
+static void on_relation_remove(GtkWidget *but, relation_context_t *context) {
+  relation_t *sel = get_selected_relation(context);
+  if(!sel) return;
+
+  printf("remove relation #%ld\n", sel->id);
+
+  gint members = osm_relation_members_num(sel);
+
+  if(members) 
+    if(!yes_no_f(context->dialog, NULL, 0, 0,
+		 _("Delete non-empty relation?"), 
+		 _("This relation still has %d members. "
+		   "Delete it anyway?"), members))
+      return;
+  
+  /* first remove selected row from list */
+  GtkTreeIter       iter;
+  GtkTreeSelection *selection = 
+    gtk_tree_view_get_selection(GTK_TREE_VIEW(context->view));
+  if(gtk_tree_selection_get_selected(selection, NULL, &iter)) 
+    gtk_list_store_remove(context->store, &iter);
+
+  /* then really delete it */
+  osm_relation_delete(context->appdata->osm, sel, FALSE); 
+
+  relation_list_selected(context, NULL);
+}
+
 static GtkWidget *relation_list_widget(relation_context_t *context) {
   GtkWidget *vbox = gtk_vbox_new(FALSE,3);
   context->view = gtk_tree_view_new();
@@ -853,16 +941,15 @@ static GtkWidget *relation_list_widget(relation_context_t *context) {
   GtkWidget *hbox = gtk_hbox_new(TRUE,3);
 
   context->but_add = gtk_button_new_with_label(_("Add..."));
-  gtk_widget_set_sensitive(context->but_add, FALSE);
   gtk_box_pack_start_defaults(GTK_BOX(hbox), context->but_add);
-  //  gtk_signal_connect(GTK_OBJECT(context->but_add), "clicked",
-  //    		     GTK_SIGNAL_FUNC(on_relation_add), context);
+  gtk_signal_connect(GTK_OBJECT(context->but_add), "clicked",
+      		     GTK_SIGNAL_FUNC(on_relation_add), context);
 
   context->but_edit = gtk_button_new_with_label(_("Edit..."));
   gtk_widget_set_sensitive(context->but_edit, FALSE);
   gtk_box_pack_start_defaults(GTK_BOX(hbox), context->but_edit);
-  //  gtk_signal_connect(GTK_OBJECT(context->but_edit), "clicked",
-  //    		     GTK_SIGNAL_FUNC(on_relation_edit), context);
+  gtk_signal_connect(GTK_OBJECT(context->but_edit), "clicked",
+      		     GTK_SIGNAL_FUNC(on_relation_edit), context);
 
   context->but_members = gtk_button_new_with_label(_("Members..."));
   gtk_box_pack_start_defaults(GTK_BOX(hbox), context->but_members);
@@ -872,12 +959,12 @@ static GtkWidget *relation_list_widget(relation_context_t *context) {
   context->but_remove = gtk_button_new_with_label(_("Remove"));
   gtk_widget_set_sensitive(context->but_remove, FALSE);
   gtk_box_pack_start_defaults(GTK_BOX(hbox), context->but_remove);
-  //  gtk_signal_connect(GTK_OBJECT(context->but_remove), "clicked",
-  //  		     GTK_SIGNAL_FUNC(on_relation_remove), context);
+  gtk_signal_connect(GTK_OBJECT(context->but_remove), "clicked",
+    		     GTK_SIGNAL_FUNC(on_relation_remove), context);
 
   gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 
-  relation_list_selected(context, FALSE);
+  relation_list_selected(context, NULL);
 
   return vbox;
 }
