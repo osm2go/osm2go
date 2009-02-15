@@ -839,10 +839,6 @@ map_item_t *map_real_item_at(map_t *map, gint x, gint y) {
   return map_item;
 }
 
-
-
-#ifdef USE_GOOCANVAS
-
 /* Limitations on the amount by which we can scroll. Keeps part of the
  * map visible at all times */
 static void map_limit_scroll(map_t *map, gint *sx, gint *sy) {
@@ -913,78 +909,6 @@ static gboolean map_limit_zoom(map_t *map, gdouble *zoom) {
 }
 
 
-#if 0
-/* Scroll the map a little towards the centre from where it is right now.
- * This is used as a cute recentring trick when the map is at its outer
- * scroll limit. */
-static void map_scroll_towards_centre(map_t *map, gdouble amt) {
-    gint sx, sy, sx_orig, sy_orig;
-    canvas_get_scroll_offsets(map->canvas, &sx, &sy);
-    gdouble zoom = goo_canvas_get_scale(GOO_CANVAS(map->canvas));
-    sx_orig=sx;
-    sy_orig=sy;
-
-    // Work in canvas units
-    gdouble sx_cu = sx / zoom;
-    gdouble sy_cu = sy / zoom;
-
-    // Map bounds
-    gdouble bmin_x_cu, bmin_y_cu, bmax_x_cu, bmax_y_cu;
-    bmin_x_cu = map->appdata->osm->bounds->min.x;
-    bmin_y_cu = map->appdata->osm->bounds->min.y;
-    bmax_x_cu = map->appdata->osm->bounds->max.x;
-    bmax_y_cu = map->appdata->osm->bounds->max.y;
-
-    // Canvas viewport dimensions
-    GtkAllocation *a = &GTK_WIDGET(map->canvas)->allocation;
-    gdouble ah_cu = a->height / zoom;
-    gdouble aw_cu = a->width / zoom;
-
-    // Scroll offsets that would recentre the map
-    gdouble centre_sx_cu, centre_sy_cu;
-    centre_sx_cu = - (aw_cu/2);
-    centre_sy_cu = - (ah_cu/2);
-
-    // Move towards centre by a given fraction of the whole map
-    if (sx_cu > centre_sx_cu) {
-        sx_cu -= ((bmax_x_cu - bmin_x_cu) * amt);
-        if (sx_cu < centre_sx_cu) {
-            printf("force-centre-x\n");
-            sx_cu = centre_sx_cu;
-        }
-    }
-    if (sx_cu < centre_sx_cu) {
-        sx_cu += ((bmax_x_cu - bmin_x_cu) * amt);
-        if (sx_cu > centre_sx_cu) {
-            printf("force-centre-x\n");
-            sx_cu = centre_sx_cu;
-        }
-    }
-
-    if (sy_cu > centre_sy_cu) {
-        sy_cu -= ((bmax_y_cu - bmin_y_cu) * amt);
-        if (sy_cu < centre_sy_cu) {
-            printf("force-centre-y\n");
-            sy_cu = centre_sy_cu;
-        }
-    }
-    if (sy_cu < centre_sy_cu) {
-        sy_cu += ((bmax_y_cu - bmin_y_cu) * amt);
-        if (sy_cu > centre_sy_cu) {
-            printf("force-centre-y\n");
-            sy_cu = centre_sy_cu;
-        }
-    }
-
-    // Back to pixels for setting the scroll
-    sx = (gint)(sx_cu * zoom);
-    sy = (gint)(sy_cu * zoom);
-    canvas_scroll_to(map->canvas, sx, sy);
-    map->state->scroll_offset.x = sx;
-    map->state->scroll_offset.y = sy;
-}
-#endif // #if 0
-
 /*
  * Scroll the map to a point if that point is currently offscreen.
  */
@@ -1040,22 +964,15 @@ void map_scroll_to_if_offscreen(map_t *map, lpos_t *lpos) {
 
   if (horiz_recentre_needed || vert_recentre_needed) {
     gint new_sx, new_sy;
-#if 0
-    // Only recentre the drifting axis.
-    new_sx = horiz_recentre_needed ? zoom*(lpos->x - (aw/2)) : sx;
-    new_sy = vert_recentre_needed  ? zoom*(lpos->y - (ah/2)) : sy;
-    // Not sure about this. I don't think it really buys us anything.
-#else
+
     // Just centre both at once
     new_sx = zoom * (lpos->x - (aw/2));
     new_sy = zoom * (lpos->y - (ah/2));
-#endif
+
     map_limit_scroll(map, &new_sx, &new_sy);
     canvas_scroll_to(map->canvas, new_sx, new_sy);
   }
 }
-
-#endif // #ifdef USE_GOOCANVAS
 
 /* Deselects the current way or node if its zoom_max
  * means that it's not going to render at the current map zoom. */
@@ -1081,9 +998,8 @@ void map_deselect_if_zoom_below_zoom_max(map_t *map) {
 void map_set_zoom(map_t *map, double zoom, 
 		  gboolean update_scroll_offsets) {
   gboolean at_zoom_limit = 0;
-#ifdef USE_GOOCANVAS
   at_zoom_limit = map_limit_zoom(map, &zoom);
-#endif
+
   map->state->zoom = zoom;
   canvas_set_zoom(map->canvas, map->state->zoom);
 
@@ -1094,18 +1010,11 @@ void map_set_zoom(map_t *map, double zoom,
       /* zooming affects the scroll offsets */
       gint sx, sy;
       canvas_get_scroll_offsets(map->canvas, &sx, &sy);
-#ifdef USE_GOOCANVAS
       map_limit_scroll(map, &sx, &sy);
       canvas_scroll_to(map->canvas, sx, sy);  // keep the map visible
-#endif
       map->state->scroll_offset.x = sx;
       map->state->scroll_offset.y = sy;
     }
-#ifdef USE_GOOCANVAS
-    else {
-      //      map_scroll_towards_centre(map, 0.20); 
-    }
-#endif
   }
 }
 
@@ -1152,9 +1061,7 @@ static void map_do_scroll(map_t *map, gint x, gint y) {
   canvas_get_scroll_offsets(map->canvas, &sx, &sy);
   sx -= x-map->pen_down.at.x;
   sy -= y-map->pen_down.at.y;
-#ifdef USE_GOOCANVAS
   map_limit_scroll(map, &sx, &sy);
-#endif
   canvas_scroll_to(map->canvas, sx, sy);
   map->state->scroll_offset.x = sx;
   map->state->scroll_offset.y = sy;
@@ -1167,9 +1074,7 @@ static void map_do_scroll_step(map_t *map, gint x, gint y) {
   canvas_get_scroll_offsets(map->canvas, &sx, &sy);
   sx += x;
   sy += y;
-#ifdef USE_GOOCANVAS
   map_limit_scroll(map, &sx, &sy);
-#endif
   canvas_scroll_to(map->canvas, sx, sy);
   map->state->scroll_offset.x = sx;
   map->state->scroll_offset.y = sy;
@@ -1598,7 +1503,7 @@ static gboolean map_motion_notify_event(GtkWidget *widget,
   if(!map->pen_down.is) 
     return FALSE;
 
-#ifdef USE_GNOMECANVAS
+#ifndef USE_GOOCANVAS
   /* handle hints, hints are handled by goocanvas directly */
   if(event->is_hint)
     gdk_window_get_pointer(event->window, &x, &y, &state);
@@ -1896,7 +1801,7 @@ void map_clear(appdata_t *appdata, gint layer_mask) {
 void map_paint(appdata_t *appdata) {
   map_t *map = appdata->map;
 
-  /* user may have changes antialias settings */
+  /* user may have changed antialias settings */
   GooCanvasItem *root = goo_canvas_get_root_item(GOO_CANVAS(map->canvas));
   g_object_set(G_OBJECT(root), "antialias", 
 	       appdata->settings->no_antialias?CAIRO_ANTIALIAS_NONE:

@@ -29,7 +29,7 @@ OBJS = main.o map.o osm.o osm_api.o wms.o \
 	area_edit.o josm_presets.o relation_edit.o misc.o map_edit.o \
 	josm_elemstyles.o style.o net_io.o banner.o undo.o
 
-DEFS = -DPACKAGE=\"$(APP)\" -DPREFIX=\"$(PREFIX)\" -DOSM_STREAM_PARSER -DUSE_GOOCANVAS
+DEFS = -DPACKAGE=\"$(APP)\" -DPREFIX=\"$(PREFIX)\" -DUSE_GOOCANVAS
 CFLAGS = -Wall -O2 $(DEFS) `pkg-config --cflags $(PKGS)`
 LDFLAGS = `pkg-config --libs $(PKGS)`
 
