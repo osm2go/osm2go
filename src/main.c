@@ -428,17 +428,20 @@ menu_append_new_item(appdata_t *appdata,
                      GtkWidget *menu_shell,
                      GtkSignalFunc activate_cb,
                      char *label,
-                     const gchar *stock_id, // overridden by label, accels
+                     const gchar *icon_name, // stock id or name for icon_load 
+                                    // overridden by label, accels, icon_name
                      const gchar *accel_path,
                      guint accel_key,      // from gdk/gdkkeysyms.h
                      GdkModifierType accel_mods, // e.g. GDK_CONTROL_MASK
                      gboolean is_check, gboolean check_status)
 {
   GtkWidget *item = NULL;
-  GtkStockItem stock_item;
+  GtkWidget *image = NULL;
+
   gboolean stock_item_known = FALSE;
-  if (stock_id != NULL) {
-    stock_item_known = gtk_stock_lookup(stock_id, &stock_item);
+  GtkStockItem stock_item;
+  if (icon_name != NULL) {
+    stock_item_known = gtk_stock_lookup(icon_name, &stock_item);
   }
 
   // Icons
@@ -446,14 +449,26 @@ menu_append_new_item(appdata_t *appdata,
   item = is_check ? gtk_check_menu_item_new_with_mnemonic (label)
                   : gtk_menu_item_new_with_mnemonic       (label);
 #else
-  if (is_check || !stock_item_known) {
-    item = is_check ? gtk_check_menu_item_new_with_mnemonic (label)
-                    : gtk_menu_item_new_with_mnemonic       (label);
+  if (is_check) {
+    item = gtk_check_menu_item_new_with_mnemonic (label);
+  }
+  else if (!stock_item_known) {
+    GdkPixbuf *pbuf = icon_load(&appdata->icon, icon_name);
+    if (pbuf) {
+      image = gtk_image_new_from_pixbuf(pbuf);
+    }
+    if (image) {
+      item = gtk_image_menu_item_new_with_mnemonic(label);
+      gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item), image);
+    }
+    else {
+      item = gtk_menu_item_new_with_mnemonic(label);
+    }
   }
   else {
     item = gtk_image_menu_item_new_with_mnemonic(label);
-    GtkWidget *stock_image = gtk_image_new_from_stock(stock_id, GTK_ICON_SIZE_MENU);
-    gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item), stock_image);
+    image = gtk_image_new_from_stock(icon_name, GTK_ICON_SIZE_MENU);
+    gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item), image);
   }
 #endif
 
@@ -519,7 +534,7 @@ void menu_create(appdata_t *appdata) {
 
   /* --------------- view menu ------------------- */
 
-#ifndef UISPECIFIC_MENU_IS_MENU_BAR
+#ifndef UISPECIFIC_MAIN_MENU_IS_MENU_BAR
   gtk_menu_shell_append(GTK_MENU_SHELL(menu), gtk_separator_menu_item_new());
 #endif
 
@@ -557,13 +572,13 @@ void menu_create(appdata_t *appdata) {
 
   appdata->menu_item_osm_upload = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_upload), _("_Upload..."),
-    NULL, "<OSM2Go-Main>/OSM/Upload",
+    "upload.16", "<OSM2Go-Main>/OSM/Upload",
     GDK_u, GDK_SHIFT_MASK|GDK_CONTROL_MASK, FALSE, FALSE
   );
 
   menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_download), _("_Download..."),
-    NULL, "<OSM2Go-Main>/OSM/Download",
+    "download.16", "<OSM2Go-Main>/OSM/Download",
     GDK_d, GDK_SHIFT_MASK|GDK_CONTROL_MASK, FALSE, FALSE
   );
 
