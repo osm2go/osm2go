@@ -33,7 +33,7 @@ clean:
 distclean: clean
 
 ChangeLog: FORCE
-    svn2cl --group-by-day --include-rev --separate-daylogs --include-actions
+	svn2cl --group-by-day --include-rev --separate-daylogs --include-actions
 
 -include version.mk
 
