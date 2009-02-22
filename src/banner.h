@@ -20,9 +20,7 @@
 /*
  * Quick banners for short, non-critical messages.
  * For Hildon builds, show a HildonBanner.
- *
- * For other builds, not sure. Currently nothing. Maybe push the message
- * onto the satausbar briefly.
+ * For other builds, push the message onto the satausbar briefly.
  */
 
 #ifndef BANNER_H

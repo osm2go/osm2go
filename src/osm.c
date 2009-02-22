@@ -1903,7 +1903,7 @@ void osm_relation_delete(osm_t *osm, relation_t *relation,
   }
 }
 
-void osm_way_revert(way_t *way) {
+void osm_way_reverse(way_t *way) {
   node_chain_t *new = NULL;
 
   /* walk old chain first to last */
@@ -1919,6 +1919,135 @@ void osm_way_revert(way_t *way) {
   }
 
   way->node_chain = new;
+}
+
+static const char *DS_ONEWAY_FWD = "yes";
+static const char *DS_ONEWAY_REV = "-1";
+static const char *DS_LEFT_SUFFIX = ":left";
+static const char *DS_RIGHT_SUFFIX = ":right";
+
+/* Reverse direction-sensitive tags like "oneway". Marks the way as dirty if
+ * anything is changed, and returns the number of flipped tags. */
+
+guint
+osm_way_reverse_direction_sensitive_tags (way_t *way) {
+  tag_t *tag = way->tag;
+  guint n_tags_altered = 0;
+  while (tag != NULL) {
+    char *lc_key = g_ascii_strdown(tag->key, -1);
+    char *lc_value = g_ascii_strdown(tag->value, -1);
+    
+    if (strcmp(lc_key, "oneway") == 0) {
+      // oneway={yes/true/1/-1} is unusual.
+      // Favour "yes" and "-1".
+      if ((strcmp(lc_value, DS_ONEWAY_FWD) == 0) ||
+          (strcmp(lc_value, "true") == 0) ||
+          (strcmp(lc_value, "1") == 0)) {
+        g_free(tag->value);
+        tag->value = g_strdup(DS_ONEWAY_REV);
+        n_tags_altered++;
+      }
+      else if (strcmp(lc_value, DS_ONEWAY_REV) == 0) {
+        g_free(tag->value);
+        tag->value = g_strdup(DS_ONEWAY_FWD);
+        n_tags_altered++;
+      }
+      else {
+        printf("warning: unknown tag: %s=%s\n", tag->key, tag->value);
+      }
+    }
+
+    // :left and :right suffixes
+    else if (g_str_has_suffix(lc_key, DS_LEFT_SUFFIX)) {
+      char *key_old = tag->key;
+      char *lastcolon = rindex(key_old, ':');
+      g_assert(lastcolon != NULL);
+      *lastcolon = '\000';
+      tag->key = g_strconcat(key_old, DS_RIGHT_SUFFIX, NULL);
+      *lastcolon = ':';
+      g_free(key_old);
+      n_tags_altered++;
+    }
+    else if (g_str_has_suffix(lc_key, DS_RIGHT_SUFFIX)) {
+      char *key_old = tag->key;
+      char *lastcolon = rindex(key_old, ':');
+      g_assert(lastcolon != NULL);
+      *lastcolon = '\000';
+      tag->key = g_strconcat(key_old, DS_LEFT_SUFFIX, NULL);
+      *lastcolon = ':';
+      g_free(key_old);
+      n_tags_altered++;
+    }
+
+    g_free(lc_key);
+    g_free(lc_value);
+    tag = tag->next;
+  }
+  if (n_tags_altered > 0) {
+    way->flags |= OSM_FLAG_DIRTY;
+  }
+  return n_tags_altered;
+}
+
+/* Reverse a way's role within relations where the role is direction-sensitive.
+ * Returns the number of roles flipped, and marks any relations changed as
+ * dirty. */
+
+static const char *DS_ROUTE_FORWARD = "forward";
+static const char *DS_ROUTE_REVERSE = "reverse";
+
+guint
+osm_way_reverse_direction_sensitive_roles(osm_t *osm, way_t *way) {
+  relation_chain_t *rel_chain0, *rel_chain;
+  rel_chain0 = rel_chain = osm_way_to_relation(osm, way);
+  guint n_roles_flipped = 0;
+
+  for (; rel_chain != NULL; rel_chain = rel_chain->next) {
+    char *type = osm_tag_get_by_key(rel_chain->relation->tag, "type");
+    
+    // Route relations; http://wiki.openstreetmap.org/wiki/Relation:route
+    if (strcasecmp(type, "route") == 0) {
+      
+      // First find the member corresponding to our way:
+      member_t *member = rel_chain->relation->member;
+      for (; member != NULL; member = member->next) {
+        if (member->type == WAY) {
+          if (member->way == way)
+            break;
+        }
+        if (member->type == WAY_ID) {
+          if (member->id == way->id)
+            break;
+        }
+      }
+      g_assert(member);  // osm_way_to_relation() broken?
+      
+      // Then flip its role if it's one of the direction-sensitive ones
+      if (strcasecmp(member->role, DS_ROUTE_FORWARD) == 0) {
+        g_free(member->role);
+        member->role = g_strdup(DS_ROUTE_REVERSE);
+        rel_chain->relation->flags |= OSM_FLAG_DIRTY;
+        ++n_roles_flipped;
+      }
+      else if (strcasecmp(member->role, DS_ROUTE_REVERSE) == 0) {
+        g_free(member->role);
+        member->role = g_strdup(DS_ROUTE_FORWARD);
+        rel_chain->relation->flags |= OSM_FLAG_DIRTY;
+        ++n_roles_flipped;
+      }
+
+      // TODO: what about numbered stops? Guess we ignore them; there's no
+      // consensus about whether they should be placed on the way or to one side
+      // of it.
+
+    }//if-route
+
+
+  }
+  if (rel_chain0) {
+    g_free(rel_chain0);
+  }
+  return n_roles_flipped;
 }
 
 node_t *osm_way_get_first_node(way_t *way) {

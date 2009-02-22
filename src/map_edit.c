@@ -269,7 +269,7 @@ void map_edit_way_add_ok(map_t *map) {
   }
 
   /* attach to existing way if the user requested so */
-  gboolean revert = FALSE;
+  gboolean reverse = FALSE;
   if(map->action.extending) {
     node_t *nfirst = map->action.way->node_chain->node;
 
@@ -277,8 +277,8 @@ void map_edit_way_add_ok(map_t *map) {
 
     if(osm_way_get_first_node(map->action.extending) == nfirst) {
       printf("  need to prepend\n");
-      osm_way_revert(map->action.extending);
-      revert = TRUE;
+      osm_way_reverse(map->action.extending);
+      reverse = TRUE;
     } else if(osm_way_get_last_node(map->action.extending) == nfirst) 
       printf("  need to append\n");
     
@@ -302,8 +302,8 @@ void map_edit_way_add_ok(map_t *map) {
     map->action.way->flags |= OSM_FLAG_DIRTY;
 
     /* and undo reversion of required */
-    if(revert)
-      osm_way_revert(map->action.way);
+    if(reverse)
+      osm_way_reverse(map->action.way);
 
   } else {
     /* now move the way itself into the main data structure */
@@ -327,16 +327,16 @@ void map_edit_way_add_ok(map_t *map) {
   if(map->action.ends_on) {
     printf("  this new way ends on another way\n");
 
-    /* if revert is true the node in question is the first one */
-    /* of the newly created way. thus is it revertes again before */
-    /* attaching and the result is finally reverted once more */
+    /* If reverse is true the node in question is the first one */
+    /* of the newly created way. Thus it is reversed again before */
+    /* attaching and the result is finally reversed once more */
 
     /* this is slightly more complex as this time two full tagged */
     /* ways may be involved as the new way may be an extended existing */
     /* way being connected to another way. This happens if you connect */
     /* two existing ways using a new way between them */
     
-    if(revert) osm_way_revert(map->action.way);
+    if (reverse) osm_way_reverse(map->action.way);
 
     /* and open dialog to resolve tag collisions if necessary */
     if(combine_tags(&map->action.way->tag, map->action.ends_on->tag))
@@ -349,15 +349,15 @@ void map_edit_way_add_ok(map_t *map) {
     /* make way member of all relations ends_on already is */
     transfer_relations(map->appdata->osm, map->action.way, map->action.ends_on);
 
-    /* check if we have to revert (again?) to match the way order */
+    /* check if we have to reverse (again?) to match the way order */
     if(osm_way_get_last_node(map->action.ends_on) == 
        osm_way_get_last_node(map->action.way)) {
 
       printf("  need to prepend ends_on\n");
 
-      /* need to revert ends_on way */
-      osm_way_revert(map->action.ends_on);
-      revert = !revert;
+      /* need to reverse ends_on way */
+      osm_way_reverse(map->action.ends_on);
+      reverse = !reverse;
     }
 
     /* search end of node chain */
@@ -372,7 +372,7 @@ void map_edit_way_add_ok(map_t *map) {
     /* erase and free ends_on (now only containing the first node anymore) */
     map_way_delete(map->appdata, map->action.ends_on);
     
-    if(revert) osm_way_revert(map->action.way);
+    if(reverse) osm_way_reverse(map->action.way);
   }
 
   /* remove prior version of this way */
@@ -769,12 +769,12 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 
 	  /* take all nodes from way[1] and append them to way[0] */
 	  /* check if we have to append or prepend to way[0] */
-	  gboolean revert = FALSE;
+	  gboolean reverse = FALSE;
 	  if(ways2join[0]->node_chain->node == node) {
-	    /* make "prepend" to be "append" by reverting way[0] */
-	    printf("  target prepend -> revert\n");	    
-	    revert = TRUE;
-	    osm_way_revert(ways2join[0]);
+	    /* make "prepend" to be "append" by reversing way[0] */
+	    printf("  target prepend -> reverse\n");	    
+	    reverse = TRUE;
+	    osm_way_reverse(ways2join[0]);
 	  } 
 	  
 	  /* verify the common node is last in the target way */
@@ -785,8 +785,8 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 	  
 	  /* common node must be first in the chain to attach */
 	  if(ways2join[1]->node_chain->node != node) {
-	    printf("  source revert\n");	    
-	    osm_way_revert(ways2join[1]);
+	    printf("  source reverse\n");	    
+	    osm_way_reverse(ways2join[1]);
 	  }
 	  
 	  /* verify the common node is first in the source way */
@@ -930,9 +930,41 @@ void map_edit_way_reverse(appdata_t *appdata) {
 
   g_assert(item.type == MAP_TYPE_WAY);
 
-  osm_way_revert(item.way);
-  item.way->flags |= OSM_FLAG_DIRTY;
+  osm_way_reverse(item.way);
+  guint n_tags_flipped = osm_way_reverse_direction_sensitive_tags(item.way);
+  guint n_roles_flipped = osm_way_reverse_direction_sensitive_roles(appdata->osm, item.way);
 
+  item.way->flags |= OSM_FLAG_DIRTY;
   map_way_select(appdata, item.way);
+
+  // Flash a message about any side-effects
+  char *msg = NULL;
+  if (n_tags_flipped && !n_roles_flipped) {
+    msg = g_strdup_printf(ngettext("%d tag updated", "%d tags updated",
+                                   n_tags_flipped),
+                          n_tags_flipped);
+  }
+  else if (!n_tags_flipped && n_roles_flipped) {
+    msg = g_strdup_printf(ngettext("%d relation updated",
+                                   "%d relations updated",
+                                   n_roles_flipped),
+                          n_roles_flipped);
+  }
+  else if (n_tags_flipped && n_roles_flipped) {
+    char *msg1 = g_strdup_printf(ngettext("%d tag", "%d tags",
+                                          n_tags_flipped),
+                                 n_tags_flipped);
+    char *msg2 = g_strdup_printf(ngettext("%d relation", "%d relations",
+                                          n_roles_flipped),
+                                 n_roles_flipped);
+    msg = g_strdup_printf(_("%s & %s updated"), msg1, msg2);
+    g_free(msg1);
+    g_free(msg2);
+  }
+  if (msg) {
+    banner_show_info(appdata, msg);
+    g_free(msg);
+  }
 }
 
+// vim:et:ts=8:sw=2:sts=2:ai

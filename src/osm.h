@@ -262,7 +262,8 @@ gboolean osm_position_within_bounds(osm_t *osm, gint x, gint y);
 item_id_t osm_new_way_id(osm_t *osm);
 gboolean osm_way_ends_with_node(way_t *way, node_t *node);
 
-void osm_way_revert(way_t *way);
+void osm_way_reverse(way_t *way);
+guint osm_way_reverse_direction_sensitive_tags(way_t *way);
 
 void osm_node_remove_from_relation(osm_t *osm, node_t *node);
 void osm_way_remove_from_relation(osm_t *osm, way_t *way);
