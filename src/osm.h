@@ -28,6 +28,7 @@
 #define OSM_FLAG_HIDDEN   (1<<3)
 
 typedef gulong item_id_t;
+#define G_TYPE_ITEM_ID_T G_TYPE_ULONG
 
 #define ID_ILLEGAL  ((item_id_t)0)
 

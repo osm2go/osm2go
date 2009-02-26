@@ -462,7 +462,8 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, relation_t *relation
 #ifdef USE_HILDON
   gtk_window_set_default_size(GTK_WINDOW(context->dialog), 500, 300);
 #else
-  gtk_window_set_default_size(GTK_WINDOW(context->dialog), 400, 200);
+  // Conversely, desktop builds should display a little narrower
+  gtk_window_set_default_size(GTK_WINDOW(context->dialog), 400, 300);
 #endif
 
   GtkWidget *label;

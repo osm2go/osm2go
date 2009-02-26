@@ -19,6 +19,59 @@
 
 #include "appdata.h"
 
+/* UI sizes */
+
+#ifdef USE_HILDON
+// Making the dialog a little wider makes it less "crowded" 
+static const guint LIST_OF_RELATIONS_DIALOG_WIDTH   = 500;
+static const guint LIST_OF_RELATIONS_DIALOG_HEIGHT  = 300;
+static const guint LIST_OF_MEMBERS_DIALOG_WIDTH   = 500;
+static const guint LIST_OF_MEMBERS_DIALOG_HEIGHT  = 300;
+#else
+// Desktop mode dialogs should be narrower and taller
+static const guint LIST_OF_RELATIONS_DIALOG_WIDTH  = 475;
+static const guint LIST_OF_RELATIONS_DIALOG_HEIGHT = 350;
+static const guint LIST_OF_MEMBERS_DIALOG_WIDTH   = 450;
+static const guint LIST_OF_MEMBERS_DIALOG_HEIGHT  = 350;
+#endif
+
+
+/* ------------------------- some generic treeview helpers -----------------------*/
+
+
+static void
+list_pre_inplace_edit_tweak (GtkTreeModel *model)
+{
+  // Remove any current sort ordering, leaving items where they are.
+  gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(model),
+                                       GTK_TREE_SORTABLE_UNSORTED_SORT_COLUMN_ID,
+                                       GTK_SORT_ASCENDING);
+}
+
+
+/* Refocus a GtkTreeView an item specified by iter, unselecting the current
+   selection and optionally highlighting the new one. Typically called after
+   making an edit to an item with a covering sub-dialog. */
+
+static void
+list_focus_on (GtkTreeView *view, GtkTreeModel *model,
+               GtkTreeIter *iter, gboolean highlight)
+{
+  // Handle de/reselection
+  GtkTreeSelection *sel = gtk_tree_view_get_selection(view);
+  gtk_tree_selection_unselect_all(sel);
+
+  // Scroll to it, since it might now be out of view.
+  GtkTreePath *path = gtk_tree_model_get_path(model, iter);
+  gtk_tree_view_scroll_to_cell(view, path, NULL, FALSE, 0, 0);
+  gtk_tree_path_free(path);
+  
+  // reselect
+  if (highlight)
+    gtk_tree_selection_select_iter(sel, iter);
+}
+
+
 /* --------------- relation dialog for an item (node or way) ----------- */
 
 typedef struct {
@@ -216,6 +269,18 @@ relation_item_list_selection_func(GtkTreeSelection *selection, GtkTreeModel *mod
   return TRUE; /* allow selection state to change */
 }
 
+/* try to find something descriptive */
+static char *relation_get_descriptive_name(relation_t *relation) {
+  char *name = osm_tag_get_by_key(relation->tag, "ref");
+  if (!name)
+    name = osm_tag_get_by_key(relation->tag, "name");
+  if (!name)
+    name = osm_tag_get_by_key(relation->tag, "note");
+  if (!name)
+    name = osm_tag_get_by_key(relation->tag, "fix" "me");
+  return name;
+}
+
 static void on_relation_item_add(GtkWidget *but, relitem_context_t *context) {
   /* create a new relation */
 
@@ -229,9 +294,7 @@ static void on_relation_item_add(GtkWidget *but, relitem_context_t *context) {
     /* add to list */
 
     /* append a row for the new data */
-    /* try to find something descriptive */
-    char *name = osm_tag_get_by_key(relation->tag, "name");
-    if(!name) name = osm_tag_get_by_key(relation->tag, "ref");
+    char *name = relation_get_descriptive_name(relation);
 
     GtkTreeIter iter;
     gtk_list_store_append(context->store, &iter);
@@ -270,9 +333,36 @@ static void on_relation_item_edit(GtkWidget *but, relitem_context_t *context) {
   relation_t *sel = get_selection(context);
   if(!sel) return;
 
-  printf("edit relation #%ld\n", sel->id);
+  printf("edit relation item #%ld\n", sel->id);
 
-  info_dialog(context->dialog, context->appdata, sel);
+  if (!info_dialog(context->dialog, context->appdata, sel))
+    return;
+
+  // Locate the changed item
+  GtkTreeIter iter;
+  gboolean valid = gtk_tree_model_get_iter_first(
+    GTK_TREE_MODEL(context->store), &iter);
+  while (valid) {
+    relation_t *row_rel;
+    gtk_tree_model_get(GTK_TREE_MODEL(context->store), &iter,
+                       RELITEM_COL_DATA, &row_rel,
+                       -1);
+    if (row_rel == sel)
+      break;
+    valid = gtk_tree_model_iter_next(GTK_TREE_MODEL(context->store), &iter);
+  }
+  if (!valid)
+    return;
+
+  // Found it. Update all visible fields that belong to the relation iself.
+  gtk_list_store_set(context->store, &iter,
+    RELITEM_COL_TYPE,    osm_tag_get_by_key(sel->tag, "type"),
+    RELITEM_COL_NAME,    relation_get_descriptive_name(sel),
+    -1);
+
+  // Order will probably have changed, so refocus
+  list_focus_on(GTK_TREE_VIEW(context->view), GTK_TREE_MODEL(context->store),
+                &iter, TRUE);
 }
 
 /* remove the selected relation */
@@ -345,6 +435,8 @@ relitem_toggled(GtkCellRendererToggle *cell, const gchar *path_str,
 		     RELITEM_COL_DATA, &relation, 
 		     -1);
 
+  list_pre_inplace_edit_tweak(GTK_TREE_MODEL(context->store));
+
   if(!enabled) {
     printf("will now become be part of this relation\n");
     if(relation_add_item(context->dialog, relation, context->item))
@@ -361,6 +453,7 @@ relitem_toggled(GtkCellRendererToggle *cell, const gchar *path_str,
 		       RELITEM_COL_ROLE, NULL, 
 		       -1);
   }
+
 }
 
 static gboolean relitem_is_in_relation(relation_item_t *item, relation_t *relation) {
@@ -398,29 +491,33 @@ static GtkWidget *relation_item_list_widget(relitem_context_t *context) {
 
   /* --- "selected" column --- */
   GtkCellRenderer *renderer = gtk_cell_renderer_toggle_new();
+  GtkTreeViewColumn *column = gtk_tree_view_column_new_with_attributes(
+    _(""), renderer, "active", RELITEM_COL_SELECTED, NULL);
   g_signal_connect(renderer, "toggled", G_CALLBACK(relitem_toggled), context);
-  gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(context->view),
-	-1, _(""), renderer, 
-        "active", RELITEM_COL_SELECTED, 
-	NULL);
+  gtk_tree_view_column_set_sort_column_id(column, RELITEM_COL_SELECTED);
+  gtk_tree_view_insert_column(GTK_TREE_VIEW(context->view), column, -1);  
 
   /* --- "Type" column --- */
   renderer = gtk_cell_renderer_text_new();
-  gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(context->view),
-	-1, _("Type"), renderer, "text", RELITEM_COL_TYPE, NULL);
+  column = gtk_tree_view_column_new_with_attributes(_("Type"), renderer,
+    "text", RELITEM_COL_TYPE, NULL);
+  gtk_tree_view_column_set_sort_column_id(column, RELITEM_COL_TYPE);
+  gtk_tree_view_insert_column(GTK_TREE_VIEW(context->view), column, -1);  
 
   /* --- "Role" column --- */
   renderer = gtk_cell_renderer_text_new();
-  gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(context->view),
-	-1, _("Role"), renderer, "text", RELITEM_COL_ROLE, NULL);
+  column = gtk_tree_view_column_new_with_attributes(_("Role"), renderer,
+    "text", RELITEM_COL_ROLE, NULL);
+  gtk_tree_view_column_set_sort_column_id(column, RELITEM_COL_ROLE);
+  gtk_tree_view_insert_column(GTK_TREE_VIEW(context->view), column, -1);  
 
   /* --- "Name" column --- */
   renderer = gtk_cell_renderer_text_new();
   g_object_set(renderer, "ellipsize", PANGO_ELLIPSIZE_END, NULL);
-  GtkTreeViewColumn *column = 
-    gtk_tree_view_column_new_with_attributes(_("Name"), renderer, 
+  column = gtk_tree_view_column_new_with_attributes(_("Name"), renderer, 
 		 "text", RELITEM_COL_NAME, NULL);
   gtk_tree_view_column_set_expand(column, TRUE);
+  gtk_tree_view_column_set_sort_column_id(column, RELITEM_COL_NAME);
   gtk_tree_view_insert_column(GTK_TREE_VIEW(context->view), column, -1);
 
 
@@ -432,12 +529,16 @@ static GtkWidget *relation_item_list_widget(relitem_context_t *context) {
   gtk_tree_view_set_model(GTK_TREE_VIEW(context->view), 
 			  GTK_TREE_MODEL(context->store));
 
+  // Debatable whether to sort by the "selected" or the "Name" column by
+  // default. Both are be useful, in different ways.
+  gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(context->store),
+                                       RELITEM_COL_NAME, GTK_SORT_ASCENDING);
+
   GtkTreeIter iter;
   relation_t *relation = context->appdata->osm->relation;
   while(relation) {
     /* try to find something descriptive */
-    char *name = osm_tag_get_by_key(relation->tag, "name");
-    if(!name) name = osm_tag_get_by_key(relation->tag, "ref");
+    char *name = relation_get_descriptive_name(relation);
 
     /* Append a row and fill in some data */
     gtk_list_store_append(context->store, &iter);
@@ -520,12 +621,9 @@ void relation_add_dialog(appdata_t *appdata, relation_item_t *relitem) {
   gtk_dialog_set_default_response(GTK_DIALOG(context->dialog), 
 				  GTK_RESPONSE_CLOSE);
 
-  /* making the dialog a little wider makes it less "crowded" */
-#ifdef USE_HILDON
-  gtk_window_set_default_size(GTK_WINDOW(context->dialog), 500, 300);
-#else
-  gtk_window_set_default_size(GTK_WINDOW(context->dialog), 400, 200);
-#endif
+  gtk_window_set_default_size(GTK_WINDOW(context->dialog),
+                              LIST_OF_RELATIONS_DIALOG_WIDTH,
+                              LIST_OF_RELATIONS_DIALOG_HEIGHT);
   gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context->dialog)->vbox),
   		     relation_item_list_widget(context), TRUE, TRUE, 0);
 
@@ -753,12 +851,9 @@ static void on_relation_members(GtkWidget *but, relation_context_t *context) {
   gtk_dialog_set_default_response(GTK_DIALOG(mcontext->dialog), 
 				  GTK_RESPONSE_CLOSE);
 
-  /* making the dialog a little wider makes it less "crowded" */
-#ifdef USE_HILDON
-  gtk_window_set_default_size(GTK_WINDOW(mcontext->dialog), 500, 300);
-#else
-  gtk_window_set_default_size(GTK_WINDOW(mcontext->dialog), 400, 200);
-#endif
+  gtk_window_set_default_size(GTK_WINDOW(mcontext->dialog),
+                              LIST_OF_MEMBERS_DIALOG_WIDTH,
+                              LIST_OF_MEMBERS_DIALOG_HEIGHT);
 
   gtk_box_pack_start(GTK_BOX(GTK_DIALOG(mcontext->dialog)->vbox),
       		     member_list_widget(mcontext), TRUE, TRUE, 0);
@@ -783,30 +878,22 @@ static void on_relation_add(GtkWidget *but, relation_context_t *context) {
     osm_relation_attach(context->appdata->osm, relation);
 
     /* append a row for the new data */
-    /* try to find something descriptive */
 
-    char *id = g_strdup_printf("#%ld", relation->id);
+    char *name = relation_get_descriptive_name(relation);
 
-    /* try to find something descriptive */
-    char *name = osm_tag_get_by_key(relation->tag, "name");
-    if(!name) name = osm_tag_get_by_key(relation->tag, "ref");
-
-    char *num = g_strdup_printf("%d", osm_relation_members_num(relation));
+    guint num = osm_relation_members_num(relation);
 
     /* Append a row and fill in some data */
     GtkTreeIter iter;
     gtk_list_store_append(context->store, &iter);
     gtk_list_store_set(context->store, &iter,
-		       RELATION_COL_ID, id,
+		       RELATION_COL_ID, relation->id,
 		       RELATION_COL_TYPE,
 		       osm_tag_get_by_key(relation->tag, "type"),
 		       RELATION_COL_NAME, name,
 		       RELATION_COL_MEMBERS, num,
 		       RELATION_COL_DATA, relation,
 		       -1);
-
-    g_free(id);
-    g_free(num);
 
     gtk_tree_selection_select_iter(gtk_tree_view_get_selection(
 	       GTK_TREE_VIEW(context->view)), &iter);
@@ -824,8 +911,38 @@ static void on_relation_edit(GtkWidget *but, relation_context_t *context) {
 
   printf("edit relation #%ld\n", sel->id);
 
-  info_dialog(context->dialog, context->appdata, sel);
+  if (!info_dialog(context->dialog, context->appdata, sel))
+    return;
+
+  // Locate the changed item
+  GtkTreeIter iter;
+  gboolean valid = gtk_tree_model_get_iter_first(
+    GTK_TREE_MODEL(context->store), &iter);
+  while (valid) {
+    relation_t *row_rel;
+    gtk_tree_model_get(GTK_TREE_MODEL(context->store), &iter,
+                       RELATION_COL_DATA, &row_rel,
+                       -1);
+    if (row_rel == sel)
+      break;
+    valid = gtk_tree_model_iter_next(GTK_TREE_MODEL(context->store), &iter);
+  }
+  if (!valid)
+    return;
+
+  // Found it. Update all visible fields.
+  gtk_list_store_set(context->store, &iter,
+    RELATION_COL_ID,      sel->id,
+    RELATION_COL_TYPE,    osm_tag_get_by_key(sel->tag, "type"),
+    RELATION_COL_NAME,    relation_get_descriptive_name(sel),
+    RELATION_COL_MEMBERS, osm_relation_members_num(sel),
+    -1);
+
+  // Order will probably have changed, so refocus
+  list_focus_on(GTK_TREE_VIEW(context->view), GTK_TREE_MODEL(context->store),
+                &iter, TRUE);
 }
+
 
 /* remove the selected relation */
 static void on_relation_remove(GtkWidget *but, relation_context_t *context) {
@@ -867,60 +984,65 @@ static GtkWidget *relation_list_widget(relation_context_t *context) {
 
   /* --- "id" column --- */
   GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
-  gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(context->view),
-	-1, _("Id"), renderer, "text", RELATION_COL_ID, NULL);
+  GtkTreeViewColumn *column = gtk_tree_view_column_new_with_attributes(
+    _("Id"), renderer, "text", RELATION_COL_ID, NULL);
+  gtk_tree_view_column_set_sort_column_id(column, RELATION_COL_ID);
+  gtk_tree_view_insert_column(GTK_TREE_VIEW(context->view), column, -1);
 
   /* --- "Type" column --- */
   renderer = gtk_cell_renderer_text_new();
-  gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(context->view),
-	-1, _("Type"), renderer, "text", RELATION_COL_TYPE, NULL);
+  column = gtk_tree_view_column_new_with_attributes(_("Type"), renderer,
+    "text", RELATION_COL_TYPE, NULL);
+  gtk_tree_view_column_set_sort_column_id(column, RELATION_COL_TYPE);
+  gtk_tree_view_insert_column(GTK_TREE_VIEW(context->view), column, -1);
 
   /* --- "Name" column --- */
   renderer = gtk_cell_renderer_text_new();
   g_object_set(renderer, "ellipsize", PANGO_ELLIPSIZE_END, NULL);
-  GtkTreeViewColumn *column = 
-    gtk_tree_view_column_new_with_attributes(_("Name"), renderer, 
+  column = gtk_tree_view_column_new_with_attributes(_("Name"), renderer, 
 		 "text", RELATION_COL_NAME, NULL);
   gtk_tree_view_column_set_expand(column, TRUE);
+  gtk_tree_view_column_set_sort_column_id(column, RELATION_COL_NAME);
   gtk_tree_view_insert_column(GTK_TREE_VIEW(context->view), column, -1);
 
   /* --- "members" column --- */
   renderer = gtk_cell_renderer_text_new();
-  gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(context->view),
-	-1, _("Members"), renderer, "text", RELATION_COL_MEMBERS, NULL);
+  column = gtk_tree_view_column_new_with_attributes(_("Members"), renderer, 
+		 "text", RELATION_COL_MEMBERS, NULL);
+  gtk_tree_view_column_set_sort_column_id(column, RELATION_COL_MEMBERS);
+  gtk_tree_view_insert_column(GTK_TREE_VIEW(context->view), column, -1);
 
   /* build and fill the store */
   context->store = gtk_list_store_new(RELATION_NUM_COLS, 
-		G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, 
+		G_TYPE_ITEM_ID_T, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_UINT, 
 	        G_TYPE_POINTER);
 
   gtk_tree_view_set_model(GTK_TREE_VIEW(context->view), 
 			  GTK_TREE_MODEL(context->store));
 
+  // Sorting by ref/name by default is useful for places with lots of numbered
+  // bus routes. Especially for small screens.
+  gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(context->store),
+                                       RELATION_COL_NAME, GTK_SORT_ASCENDING);
+  
   GtkTreeIter iter;
   relation_t *relation = context->appdata->osm->relation;
   while(relation) {
-    char *id = g_strdup_printf("#%ld", relation->id);
+    char *name = relation_get_descriptive_name(relation);
 
-    /* try to find something descriptive */
-    char *name = osm_tag_get_by_key(relation->tag, "name");
-    if(!name) name = osm_tag_get_by_key(relation->tag, "ref");
-
-    char *num = g_strdup_printf("%d", osm_relation_members_num(relation));
+    guint num = osm_relation_members_num(relation);
 
     /* Append a row and fill in some data */
     gtk_list_store_append(context->store, &iter);
     gtk_list_store_set(context->store, &iter,
-		       RELATION_COL_ID, id,
+		       RELATION_COL_ID, relation->id,
 		       RELATION_COL_TYPE,
 		       osm_tag_get_by_key(relation->tag, "type"),
 		       RELATION_COL_NAME, name,
 		       RELATION_COL_MEMBERS, num,
 		       RELATION_COL_DATA, relation,
 		       -1);
-
-    g_free(id);
-    g_free(num);
+    
     relation = relation->next;
   }
   
@@ -985,12 +1107,10 @@ void relation_list(appdata_t *appdata) {
   gtk_dialog_set_default_response(GTK_DIALOG(context->dialog), 
 				  GTK_RESPONSE_CLOSE);
 
-  /* making the dialog a little wider makes it less "crowded" */
-#ifdef USE_HILDON
-  gtk_window_set_default_size(GTK_WINDOW(context->dialog), 500, 300);
-#else
-  gtk_window_set_default_size(GTK_WINDOW(context->dialog), 400, 200);
-#endif
+  gtk_window_set_default_size(GTK_WINDOW(context->dialog),
+                              LIST_OF_RELATIONS_DIALOG_WIDTH,
+                              LIST_OF_RELATIONS_DIALOG_HEIGHT);
+  
   gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context->dialog)->vbox),
   		     relation_list_widget(context), TRUE, TRUE, 0);
 
@@ -1002,3 +1122,6 @@ void relation_list(appdata_t *appdata) {
 
   g_free(context);
 }
+
+
+// vim:et:ts=8:sw=2:sts=2:ai
