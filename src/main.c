@@ -1,4 +1,6 @@
 /*
+ * Copyright (C) 2008 Till Harbaum <till@harbaum.org>.
+ *
  * This file is part of OSM2Go.
  *
  * OSM2Go is free software: you can redistribute it and/or modify
