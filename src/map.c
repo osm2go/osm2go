@@ -234,7 +234,7 @@ void map_way_select(appdata_t *appdata, way_t *way) {
 	points->coords[2*2+0] = center.x - diff.y - diff.x;
 	points->coords[2*2+1] = center.y + diff.x - diff.y;
 	
-	map_hl_polygon_new(map, CANVAS_GROUP_NODES_HL, new_map_item, 
+	map_hl_polygon_new(map, CANVAS_GROUP_WAYS_DIR, new_map_item, 
 			   points, map->style->highlight.arrow_color);
 	
 	canvas_points_free(points);
@@ -1552,13 +1552,13 @@ static gboolean map_motion_notify_event(GtkWidget *widget,
 
   case MAP_ACTION_WAY_NODE_ADD:
     map_hl_cursor_clear(map);
-    map_item_t *item = map_real_item_at(map, x, y);
+    map_item_t *item = map_item_at(map, x, y);
     if(item) map_edit_way_node_add_highlight(map, item, x, y);
     break;
 
   case MAP_ACTION_WAY_CUT:
     map_hl_cursor_clear(map);
-    item = map_real_item_at(map, x, y);
+    item = map_item_at(map, x, y);
     if(item) map_edit_way_cut_highlight(map, item, x, y);
     break;
 

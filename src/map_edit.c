@@ -403,7 +403,7 @@ void map_edit_way_node_add_highlight(map_t *map, map_item_t *item,
 
 void map_edit_way_node_add(map_t *map, gint x, gint y) {
   /* check if we are still hovering above the selected way */
-  map_item_t *item = map_real_item_at(map, x, y);
+  map_item_t *item = map_item_at(map, x, y);
   if(item && map_item_is_selected_way(map, item)) {
     /* convert mouse position to canvas (world) position */
     canvas_window2world(map->canvas, x, y, &x, &y);
@@ -486,7 +486,7 @@ void map_edit_way_cut_highlight(map_t *map, map_item_t *item, gint x, gint y) {
 void map_edit_way_cut(map_t *map, gint x, gint y) {
 
   /* check if we are still hovering above the selected way */
-  map_item_t *item = map_real_item_at(map, x, y);
+  map_item_t *item = map_item_at(map, x, y);
   if(item && (map_item_is_selected_way(map, item) || 
 	      map_item_is_selected_node(map, item))) {
     gboolean cut_at_node = map_item_is_selected_node(map, item);

@@ -68,16 +68,39 @@ void canvas_set_antialias(canvas_t *canvas, gboolean antialias) {
 	       antialias?CAIRO_ANTIALIAS_DEFAULT:CAIRO_ANTIALIAS_NONE, NULL);
 }
 
-void canvas_window2world(canvas_t *canvas, gint x, gint y, gint *wx, gint *wy) {
+void canvas_window2world(canvas_t *canvas, 
+			 gint x, gint y, gint *wx, gint *wy) {
   double sx = x, sy = y;
   goo_canvas_convert_from_pixels(GOO_CANVAS(canvas->widget), &sx, &sy);
   *wx = sx; *wy = sy;
 }
 
 canvas_item_t *canvas_get_item_at(canvas_t *canvas, gint x, gint y) {
-  /* todo: ignore certain layers like "track" */
+  GList *list = 
+    goo_canvas_get_items_at(GOO_CANVAS(canvas->widget), x, y, TRUE);
 
-  return goo_canvas_get_item_at(GOO_CANVAS(canvas->widget), x, y, TRUE);
+  GList *litem = g_list_first(list);
+  while(litem) {
+    canvas_item_t *item = (canvas_item_t*)litem->data;
+
+    /* only return objects that have a "user data" attached */
+    if(g_object_get_data(G_OBJECT(item), "user data")) {
+      /* check if this is in one of the "selectable" groups */
+      canvas_item_t *parent = goo_canvas_item_get_parent(item);
+      canvas_group_t group;
+      for(group=0;group<CANVAS_GROUPS;group++) {
+	if((CANVAS_SELECTABLE & (1<<group)) && 
+	   (canvas->group[group] == parent)) {
+	  g_list_free(list);
+	  return item;
+	}
+      }
+    }
+    litem = g_list_next(litem);
+  }
+
+  g_list_free(list);
+  return NULL;
 }
 
 void canvas_set_zoom(canvas_t *canvas, gdouble zoom) {
@@ -90,6 +113,7 @@ gdouble canvas_get_zoom(canvas_t *canvas) {
 
 gdouble canvas_get_viewport_width(canvas_t *canvas, canvas_unit_t unit) {
   // Canvas viewport dimensions
+
   GtkAllocation *a = &(canvas->widget)->allocation;
   if(unit == CANVAS_UNIT_PIXEL) return a->width;
 

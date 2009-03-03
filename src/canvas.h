@@ -28,12 +28,23 @@ typedef enum {
   CANVAS_GROUP_WAYS_HL,    // highlighting of ways
   CANVAS_GROUP_WAYS_OL,    // outlines for ways (e.g. for highways)
   CANVAS_GROUP_WAYS,       // ways
+  CANVAS_GROUP_WAYS_DIR,   // direction arrows for ways
   CANVAS_GROUP_NODES_HL,   // highlighting for nodes
   CANVAS_GROUP_NODES,      // nodes
   CANVAS_GROUP_FRISKET,    // the (white) frisket limiting the view
   CANVAS_GROUP_DRAW,       // "cursor" functionality
-  CANVAS_GROUPS 
+  CANVAS_GROUPS
 } canvas_group_t;
+
+#define CANVAS_HIGHLIGHTS   ((1<<CANVAS_GROUP_WAYS_HL) | (1<<CANVAS_GROUP_WAYS_OL) | (1<<CANVAS_GROUP_NODES_HL))
+
+/* only objects in the "selectable" groups are returned by item_at */
+#define CANVAS_SELECTABLE   ((1<<CANVAS_GROUP_POLYGONS) | (1<<CANVAS_GROUP_WAYS) | (1<<CANVAS_GROUP_NODES) | CANVAS_HIGHLIGHTS)
+
+
+#if CANVAS_GROUPS >= 16
+#error "More than 16 canvas groups needs adjustment e.g. in map.h"
+#endif
 
 #if defined(USE_GOOCANVAS)
 
