@@ -265,6 +265,7 @@ gboolean osm_way_ends_with_node(way_t *way, node_t *node);
 
 void osm_way_reverse(way_t *way);
 guint osm_way_reverse_direction_sensitive_tags(way_t *way);
+guint osm_way_reverse_direction_sensitive_roles(osm_t *osm, way_t *way);
 
 void osm_node_remove_from_relation(osm_t *osm, node_t *node);
 void osm_way_remove_from_relation(osm_t *osm, way_t *way);

@@ -20,31 +20,32 @@
 #ifndef CANVAS_H
 #define CANVAS_H
 
-typedef enum { CANVAS_GROUP_BG=0, CANVAS_GROUP_POLYGONS, 
-	       CANVAS_GROUP_TRACK, CANVAS_GROUP_GPS, 
-	       CANVAS_GROUP_WAYS_HL, CANVAS_GROUP_WAYS_OL, 
-	       CANVAS_GROUP_WAYS, CANVAS_GROUP_NODES_HL, CANVAS_GROUP_NODES, 
-	       CANVAS_GROUP_DRAW, CANVAS_GROUPS } canvas_group_t;
+typedef enum { 
+  CANVAS_GROUP_BG=0,       // background layer (wms overlay)
+  CANVAS_GROUP_POLYGONS,   // polygons (forrests, buildings, lakes) */
+  CANVAS_GROUP_TRACK,      // (GPS) track
+  CANVAS_GROUP_GPS,        // current GPS position
+  CANVAS_GROUP_WAYS_HL,    // highlighting of ways
+  CANVAS_GROUP_WAYS_OL,    // outlines for ways (e.g. for highways)
+  CANVAS_GROUP_WAYS,       // ways
+  CANVAS_GROUP_NODES_HL,   // highlighting for nodes
+  CANVAS_GROUP_NODES,      // nodes
+  CANVAS_GROUP_FRISKET,    // the (white) frisket limiting the view
+  CANVAS_GROUP_DRAW,       // "cursor" functionality
+  CANVAS_GROUPS 
+} canvas_group_t;
 
-#if defined(USE_GNOMECANVAS)
-
-#include <libgnomecanvas/libgnomecanvas.h>
-
-typedef GnomeCanvasItem canvas_item_t;
-typedef GnomeCanvasPoints canvas_points_t;
-typedef GtkWidget canvas_t;
-
-typedef gulong canvas_color_t;
-#define CANVAS_COLOR(r,g,b,a) GNOME_CANVAS_COLOR_A(r,g,b,a)
-
-
-#elif defined(USE_GOOCANVAS)
+#if defined(USE_GOOCANVAS)
 
 #include <goocanvas.h>
 
 typedef GooCanvasItem canvas_item_t;
 typedef GooCanvasPoints canvas_points_t;
-typedef GtkWidget canvas_t;
+
+typedef struct {
+  GtkWidget *widget;
+  GooCanvasItem *group[CANVAS_GROUPS];
+} canvas_t;
 
 typedef gulong canvas_color_t;
 
@@ -59,60 +60,56 @@ typedef gulong canvas_color_t;
 #error "No canvas type defined!"
 #endif
 
+typedef enum { CANVAS_UNIT_METER = 0, CANVAS_UNIT_PIXEL } canvas_unit_t;
 
+/***** creating/destroying the canvas ******/
+canvas_t *canvas_new(canvas_color_t color);
+GtkWidget *canvas_get_widget(canvas_t *canvas);
 
-struct map_s;
-canvas_item_t *canvas_circle_new(struct map_s *map, canvas_group_t group, 
-		 gint x, gint y, gint radius, gint border,
-		 canvas_color_t fill_col, canvas_color_t border_col);
-
-void canvas_item_set_pos(canvas_item_t *item, lpos_t *lpos, gint radius);
-
-canvas_points_t *canvas_points_new(gint points);
-void canvas_point_set_pos(canvas_points_t *points, gint index, lpos_t *lpos);
-void canvas_points_free(canvas_points_t *points);
-void canvas_item_set_points(canvas_item_t *item, canvas_points_t *points);
-
-canvas_item_t *canvas_polyline_new(struct map_s *map, canvas_group_t group, 
-		 canvas_points_t *points, gint width, canvas_color_t color);
-
-canvas_item_t *canvas_polygon_new(struct map_s *map, canvas_group_t group, 
-		  canvas_points_t *points, gint width, canvas_color_t color,
-		  canvas_color_t fill);
-
+/****** manipulating the canvas ******/
+void canvas_set_antialias(canvas_t *canvas, gboolean antialias);
+void canvas_erase(canvas_t *canvas, gint group_mask);
 void canvas_window2world(canvas_t *canvas, gint x, gint y, gint *wx, gint *wy);
 canvas_item_t *canvas_get_item_at(canvas_t *canvas, gint x, gint y);
-
-void canvas_item_set_zoom_max(canvas_item_t *item, float zoom_max);
-
-void canvas_item_set_dashed(canvas_item_t *item, gint line_width, gint dash_length);
-
-void canvas_item_to_bottom(canvas_item_t *item);
-
-void canvas_item_destroy(canvas_item_t *item);
-
-void canvas_item_set_user_data(canvas_item_t *item, void *data);
-void *canvas_item_get_user_data(canvas_item_t *item);
-
-void canvas_item_destroy_connect(canvas_item_t *item, 
-				 GCallback c_handler, gpointer data);
-
-void canvas_set_zoom(canvas_t *canvas, double zoom);
-
-void canvas_get_scroll_offsets(canvas_t *canvas, gint *sx, gint *sy);
-
-void canvas_scroll_to(canvas_t *canvas, gint sx, gint sy);
-
+void canvas_set_zoom(canvas_t *canvas, gdouble zoom);
+gdouble canvas_get_zoom(canvas_t *canvas);
+gdouble canvas_get_viewport_width(canvas_t *canvas, canvas_unit_t unit);
+gdouble canvas_get_viewport_height(canvas_t *canvas, canvas_unit_t unit);
+void canvas_scroll_to(canvas_t *canvas, canvas_unit_t unit, gint sx, gint sy);
+void canvas_scroll_get(canvas_t *canvas, canvas_unit_t unit, gint *sx, gint *sy);
 void canvas_set_bounds(canvas_t *canvas, gint minx, gint miny, 
 		       gint maxx, gint maxy);
 
-canvas_item_t *canvas_image_new(struct map_s *map, canvas_group_t group,
+
+/***** creating/destroying items ******/
+canvas_item_t *canvas_circle_new(canvas_t *canvas, canvas_group_t group, 
+		 gint x, gint y, gint radius, gint border,
+		 canvas_color_t fill_col, canvas_color_t border_col);
+canvas_item_t *canvas_polyline_new(canvas_t *canvas, canvas_group_t group, 
+		 canvas_points_t *points, gint width, canvas_color_t color);
+canvas_item_t *canvas_polygon_new(canvas_t *canvas, canvas_group_t group, 
+		  canvas_points_t *points, gint width, canvas_color_t color,
+		  canvas_color_t fill);
+canvas_item_t *canvas_image_new(canvas_t *canvas, canvas_group_t group,
 				GdkPixbuf *pix, gint x, gint y, 
 				float hscale, float vscale);
+canvas_points_t *canvas_points_new(gint points);
+void canvas_point_set_pos(canvas_points_t *points, gint index, lpos_t *lpos);
+void canvas_points_free(canvas_points_t *points);
+void canvas_item_destroy(canvas_item_t *item);
 
+/****** manipulating items ******/
+void canvas_item_set_pos(canvas_item_t *item, lpos_t *lpos, gint radius);
+void canvas_item_set_points(canvas_item_t *item, canvas_points_t *points);
+void canvas_item_set_zoom_max(canvas_item_t *item, float zoom_max);
+void canvas_item_set_dashed(canvas_item_t *item, gint line_width, gint dash_length);
+void canvas_item_to_bottom(canvas_item_t *item);
+void canvas_item_set_user_data(canvas_item_t *item, void *data);
+void *canvas_item_get_user_data(canvas_item_t *item);
+void canvas_item_destroy_connect(canvas_item_t *item, 
+				 GCallback c_handler, gpointer data);
 void canvas_image_move(canvas_item_t *item, gint x, gint y, 
 		       float hscale, float vscale);
-
 gint canvas_item_get_segment(canvas_item_t *item, gint x, gint y);
 void canvas_item_get_segment_pos(canvas_item_t *item, gint seg,
 				 gint *x0, gint *y0, gint *x1, gint *y1);

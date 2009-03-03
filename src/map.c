@@ -166,7 +166,7 @@ static void map_node_select(appdata_t *appdata, node_t *node) {
 
   map_hl_circle_new(map, CANVAS_GROUP_NODES_HL, new_map_item, 
 		    x, y, radius, map->style->highlight.color);
-
+  
   if(!map_item->item) {
     /* and draw a fake node */
     new_map_item = g_new0(map_item_t, 1);
@@ -380,10 +380,10 @@ static canvas_item_t *map_node_new(map_t *map, node_t *node, gint radius,
 
   if(!node->icon_buf || !map->style->icon.enable || 
      map->appdata->settings->no_icons) 
-    map_item->item = canvas_circle_new(map, CANVAS_GROUP_NODES, 
+    map_item->item = canvas_circle_new(map->canvas, CANVAS_GROUP_NODES, 
        node->lpos.x, node->lpos.y, radius, width, fill, border);
   else
-    map_item->item = canvas_image_new(map, CANVAS_GROUP_NODES, 
+    map_item->item = canvas_image_new(map->canvas, CANVAS_GROUP_NODES, 
       node->icon_buf, 
       node->lpos.x - map->style->icon.scale/2 * 
 		      gdk_pixbuf_get_width(node->icon_buf), 
@@ -415,7 +415,7 @@ static canvas_item_t *map_way_single_new(map_t *map, way_t *way, gint radius,
   map_item_t *map_item = g_new0(map_item_t, 1);
   map_item->type = MAP_TYPE_WAY;
   map_item->way = way;
-  map_item->item = canvas_circle_new(map, CANVAS_GROUP_WAYS, 
+  map_item->item = canvas_circle_new(map->canvas, CANVAS_GROUP_WAYS, 
 	  way->node_chain->node->lpos.x, way->node_chain->node->lpos.y, 
 				     radius, width, fill, border);
 
@@ -444,13 +444,13 @@ static canvas_item_t *map_way_new(map_t *map, canvas_group_t group,
 
   if(way->draw.flags & OSM_DRAW_FLAG_AREA) {
     if(map->style->area.color & 0xff)
-      map_item->item = canvas_polygon_new(map, group, points, 
+      map_item->item = canvas_polygon_new(map->canvas, group, points, 
 					  width, color, fill_color);
     else
-      map_item->item = canvas_polyline_new(map, group, points, 
+      map_item->item = canvas_polyline_new(map->canvas, group, points, 
 					   width, color);
   } else {
-    map_item->item = canvas_polyline_new(map, group, points, width, color);
+    map_item->item = canvas_polyline_new(map->canvas, group, points, width, color);
   }
 
   canvas_item_set_zoom_max(map_item->item, way->draw.zoom_max);
@@ -622,22 +622,26 @@ void map_frisket_draw(map_t *map, bounds_t *bounds) {
     /* top rectangle */
     map_frisket_rectangle(points, mult*bounds->min.x, mult*bounds->max.x,
 			  mult*bounds->min.y, bounds->min.y);    
-    canvas_polygon_new(map, CANVAS_GROUP_NODES, points, 1, NO_COLOR, color);
+    canvas_polygon_new(map->canvas, CANVAS_GROUP_FRISKET, points, 
+		       1, NO_COLOR, color);
     
     /* bottom rectangle */
     map_frisket_rectangle(points, mult*bounds->min.x, mult*bounds->max.x,
 			  bounds->max.y, mult*bounds->max.y);
-    canvas_polygon_new(map, CANVAS_GROUP_NODES, points, 1, NO_COLOR, color);
+    canvas_polygon_new(map->canvas, CANVAS_GROUP_FRISKET, points, 
+		       1, NO_COLOR, color);
 
     /* left rectangle */
     map_frisket_rectangle(points, mult*bounds->min.x, bounds->min.x,
 			  mult*bounds->min.y, mult*bounds->max.y);
-    canvas_polygon_new(map, CANVAS_GROUP_NODES, points, 1, NO_COLOR, color);
+    canvas_polygon_new(map->canvas, CANVAS_GROUP_FRISKET, points, 
+		       1, NO_COLOR, color);
 
     /* right rectangle */
     map_frisket_rectangle(points, bounds->max.x, mult*bounds->max.x,
 			  mult*bounds->min.y, mult*bounds->max.y);
-    canvas_polygon_new(map, CANVAS_GROUP_NODES, points, 1, NO_COLOR, color);
+    canvas_polygon_new(map->canvas, CANVAS_GROUP_FRISKET, points, 
+		       1, NO_COLOR, color);
 
   }
 
@@ -648,7 +652,7 @@ void map_frisket_draw(map_t *map, bounds_t *bounds) {
 			  bounds->min.x-ew2, bounds->max.x+ew2,
 			  bounds->min.y-ew2, bounds->max.y+ew2);
     
-    canvas_polyline_new(map, CANVAS_GROUP_NODES, points,
+    canvas_polyline_new(map->canvas, CANVAS_GROUP_FRISKET, points,
 			map->style->frisket.border.width, 
 			map->style->frisket.border.color);
 
@@ -841,33 +845,37 @@ map_item_t *map_real_item_at(map_t *map, gint x, gint y) {
 
 /* Limitations on the amount by which we can scroll. Keeps part of the
  * map visible at all times */
-static void map_limit_scroll(map_t *map, gint *sx, gint *sy) {
-    gdouble zoom = goo_canvas_get_scale(GOO_CANVAS(map->canvas));
+static void map_limit_scroll(map_t *map, canvas_unit_t unit, 
+			     gint *sx, gint *sy) {
 
-    gint sx_cu = *sx / zoom;
-    gint sy_cu = *sy / zoom;
+  /* get scale factor for pixel->meter conversion. set to 1 if */
+  /* given coordinates are already in meters */
+  gdouble scale = (unit == CANVAS_UNIT_METER)?1.0:canvas_get_zoom(map->canvas);
 
-    // Canvas viewport dimensions
-    GtkAllocation *a = &GTK_WIDGET(map->canvas)->allocation;
-    gint aw_cu = a->width / zoom;
-    gint ah_cu = a->height / zoom;
-
-    // Data rect minimum and maximum
-    gint min_x, min_y, max_x, max_y;
-    min_x = map->appdata->osm->bounds->min.x;
-    min_y = map->appdata->osm->bounds->min.y;
-    max_x = map->appdata->osm->bounds->max.x;
-    max_y = map->appdata->osm->bounds->max.y;
-
-    // limit stops - prevent scrolling beyond these
-    gint min_sy_cu = 0.95*(min_y - ah_cu);
-    gint min_sx_cu = 0.95*(min_x - aw_cu);
-    gint max_sy_cu = 0.95*(max_y);
-    gint max_sx_cu = 0.95*(max_x);
-    if (sy_cu < min_sy_cu) { *sy = min_sy_cu*zoom; }
-    if (sx_cu < min_sx_cu) { *sx = min_sx_cu*zoom; }
-    if (sy_cu > max_sy_cu) { *sy = max_sy_cu*zoom; }
-    if (sx_cu > max_sx_cu) { *sx = max_sx_cu*zoom; }
+  /* convert pixels to meters if necessary */
+  gdouble sx_cu = *sx / scale;
+  gdouble sy_cu = *sy / scale;
+  
+  /* get size of visible area in canvas units (meters) */
+  gint aw_cu = canvas_get_viewport_width(map->canvas, CANVAS_UNIT_METER);
+  gint ah_cu = canvas_get_viewport_height(map->canvas, CANVAS_UNIT_METER);
+  
+  // Data rect minimum and maximum
+  gint min_x, min_y, max_x, max_y;
+  min_x = map->appdata->osm->bounds->min.x;
+  min_y = map->appdata->osm->bounds->min.y;
+  max_x = map->appdata->osm->bounds->max.x;
+  max_y = map->appdata->osm->bounds->max.y;
+  
+  // limit stops - prevent scrolling beyond these
+  gint min_sy_cu = 0.95*(min_y - ah_cu);
+  gint min_sx_cu = 0.95*(min_x - aw_cu);
+  gint max_sy_cu = 0.95*(max_y);
+  gint max_sx_cu = 0.95*(max_x);
+  if (sy_cu < min_sy_cu) { *sy = min_sy_cu * scale; }
+  if (sx_cu < min_sx_cu) { *sx = min_sx_cu * scale; }
+  if (sy_cu > max_sy_cu) { *sy = max_sy_cu * scale; }
+  if (sx_cu > max_sx_cu) { *sx = max_sx_cu * scale; }
 }
 
 
@@ -881,10 +889,12 @@ static gboolean map_limit_zoom(map_t *map, gdouble *zoom) {
     max_x = map->appdata->osm->bounds->max.x;
     max_y = map->appdata->osm->bounds->max.y;
 
-    // Canvas viewport dimensions
-    GtkAllocation *a = &GTK_WIDGET(map->canvas)->allocation;
-    gint ah_cu = a->height / *zoom;
-    gint aw_cu = a->width / *zoom;
+    /* get size of visible area in pixels and convert to meters of intended */
+    /* zoom by deviding by zoom (which is basically pix/m) */
+    gint aw_cu = 
+      canvas_get_viewport_width(map->canvas, CANVAS_UNIT_PIXEL) / *zoom;
+    gint ah_cu = 
+      canvas_get_viewport_height(map->canvas, CANVAS_UNIT_PIXEL) / *zoom;
 
     gdouble oldzoom = *zoom;
     if (ah_cu < aw_cu) {
@@ -931,20 +941,21 @@ void map_scroll_to_if_offscreen(map_t *map, lpos_t *lpos) {
   }
 
   // Viewport dimensions in canvas space
-  gdouble zoom = goo_canvas_get_scale(GOO_CANVAS(map->canvas));
-  GtkAllocation *a = &GTK_WIDGET(map->canvas)->allocation;
-  gdouble aw = a->width / zoom;
-  gdouble ah = a->height / zoom;
+
+  /* get size of visible area in canvas units (meters) */
+  gdouble pix_per_meter = canvas_get_zoom(map->canvas);
+  gdouble aw = canvas_get_viewport_width(map->canvas, CANVAS_UNIT_METER);
+  gdouble ah = canvas_get_viewport_height(map->canvas, CANVAS_UNIT_METER);
 
   // Is the point still onscreen?
   gboolean vert_recentre_needed = FALSE;
   gboolean horiz_recentre_needed = FALSE;
   gint sx, sy;
-  canvas_get_scroll_offsets(map->canvas, &sx, &sy);
-  gint viewport_left   = (sx/zoom);
-  gint viewport_right  = (sx/zoom)+aw;
-  gint viewport_top    = (sy/zoom);
-  gint viewport_bottom = (sy/zoom)+ah;
+  canvas_scroll_get(map->canvas, CANVAS_UNIT_PIXEL, &sx, &sy);
+  gint viewport_left   = (sx/pix_per_meter);
+  gint viewport_right  = (sx/pix_per_meter)+aw;
+  gint viewport_top    = (sy/pix_per_meter);
+  gint viewport_bottom = (sy/pix_per_meter)+ah;
   if (lpos->x > viewport_right) {
     printf("** off right edge (%d > %d)\n", lpos->x, viewport_right);
     horiz_recentre_needed = TRUE;
@@ -966,11 +977,11 @@ void map_scroll_to_if_offscreen(map_t *map, lpos_t *lpos) {
     gint new_sx, new_sy;
 
     // Just centre both at once
-    new_sx = zoom * (lpos->x - (aw/2));
-    new_sy = zoom * (lpos->y - (ah/2));
+    new_sx = pix_per_meter * (lpos->x - (aw/2));
+    new_sy = pix_per_meter * (lpos->y - (ah/2));
 
-    map_limit_scroll(map, &new_sx, &new_sy);
-    canvas_scroll_to(map->canvas, new_sx, new_sy);
+    map_limit_scroll(map, CANVAS_UNIT_PIXEL, &new_sx, &new_sy);
+    canvas_scroll_to(map->canvas, CANVAS_UNIT_PIXEL, new_sx, new_sy);
   }
 }
 
@@ -1005,16 +1016,20 @@ void map_set_zoom(map_t *map, double zoom,
 
   map_deselect_if_zoom_below_zoom_max(map);
 
-  if (update_scroll_offsets) {
+  if(update_scroll_offsets) {
     if (!at_zoom_limit) {
       /* zooming affects the scroll offsets */
       gint sx, sy;
-      canvas_get_scroll_offsets(map->canvas, &sx, &sy);
-      map_limit_scroll(map, &sx, &sy);
-      canvas_scroll_to(map->canvas, sx, sy);  // keep the map visible
-      map->state->scroll_offset.x = sx;
-      map->state->scroll_offset.y = sy;
+      canvas_scroll_get(map->canvas, CANVAS_UNIT_PIXEL, &sx, &sy);
+      map_limit_scroll(map, CANVAS_UNIT_PIXEL, &sx, &sy);
+      
+      // keep the map visible
+      canvas_scroll_to(map->canvas, CANVAS_UNIT_PIXEL, sx, sy);
     }
+
+    canvas_scroll_get(map->canvas, CANVAS_UNIT_METER, 
+		      &map->state->scroll_offset.x,
+		      &map->state->scroll_offset.y);
   }
 }
 
@@ -1039,17 +1054,9 @@ static gboolean map_scroll_event(GtkWidget *widget, GdkEventScroll *event,
 static gboolean distance_above(map_t *map, gint x, gint y, gint limit) {
   gint sx, sy;
 
-#ifdef USE_GNOMECANVAS
-  gnome_canvas_get_scroll_offsets(GNOME_CANVAS(map->canvas), &sx, &sy);
-
-  /* add offsets generated by mouse within map and map scrolling */
-  sx = (x-map->pen_down.at.x) + (map->pen_down.so.x-sx);
-  sy = (y-map->pen_down.at.y) + (map->pen_down.so.y-sy);
-#else
   /* add offsets generated by mouse within map and map scrolling */
   sx = (x-map->pen_down.at.x);
   sy = (y-map->pen_down.at.y);
-#endif
 
   return(sx*sx + sy*sy > limit*limit);
 }
@@ -1058,28 +1065,31 @@ static gboolean distance_above(map_t *map, gint x, gint y, gint limit) {
 static void map_do_scroll(map_t *map, gint x, gint y) {
   gint sx, sy;
 
-  canvas_get_scroll_offsets(map->canvas, &sx, &sy);
+  canvas_scroll_get(map->canvas, CANVAS_UNIT_PIXEL, &sx, &sy);
   sx -= x-map->pen_down.at.x;
   sy -= y-map->pen_down.at.y;
-  map_limit_scroll(map, &sx, &sy);
-  canvas_scroll_to(map->canvas, sx, sy);
-  map->state->scroll_offset.x = sx;
-  map->state->scroll_offset.y = sy;
+  map_limit_scroll(map, CANVAS_UNIT_PIXEL, &sx, &sy);
+  canvas_scroll_to(map->canvas, CANVAS_UNIT_PIXEL, sx, sy);
+
+  canvas_scroll_get(map->canvas, CANVAS_UNIT_METER, 
+		    &map->state->scroll_offset.x,
+		    &map->state->scroll_offset.y);
 }
 
 
 /* scroll a certain step */
 static void map_do_scroll_step(map_t *map, gint x, gint y) {
   gint sx, sy;
-  canvas_get_scroll_offsets(map->canvas, &sx, &sy);
+  canvas_scroll_get(map->canvas, CANVAS_UNIT_PIXEL, &sx, &sy);
   sx += x;
   sy += y;
-  map_limit_scroll(map, &sx, &sy);
-  canvas_scroll_to(map->canvas, sx, sy);
-  map->state->scroll_offset.x = sx;
-  map->state->scroll_offset.y = sy;
-}
+  map_limit_scroll(map, CANVAS_UNIT_PIXEL, &sx, &sy);
+  canvas_scroll_to(map->canvas, CANVAS_UNIT_PIXEL, sx, sy);
 
+  canvas_scroll_get(map->canvas, CANVAS_UNIT_METER, 
+		    &map->state->scroll_offset.x,
+		    &map->state->scroll_offset.y);
+}
 
 gboolean map_item_is_selected_node(map_t *map, map_item_t *map_item) {
   printf("check if item is a selected node\n");
@@ -1297,12 +1307,6 @@ static void map_button_press(map_t *map, gint x, gint y) {
   map->pen_down.at.x = x;
   map->pen_down.at.y = y;
   map->pen_down.drag = FALSE;     // don't assume drag yet
-
-#ifdef USE_GNOMECANVAS  
-  /* save initial scroll offset */
-  gnome_canvas_get_scroll_offsets(GNOME_CANVAS(map->canvas), 
-		  &map->pen_down.so.x, &map->pen_down.so.y);
-#endif  
 
   /* determine wether this press was on an item */
   map->pen_down.on_item = map_real_item_at(map, x, y);
@@ -1667,59 +1671,31 @@ GtkWidget *map_new(appdata_t *appdata) {
   map->appdata = appdata;
   map->action.type = MAP_ACTION_IDLE;
 
-#ifdef USE_GNOMECANVAS
-  map->canvas = gnome_canvas_new_aa();  // _aa
+  map->canvas = canvas_new(map->style->background.color);
+  canvas_set_antialias(map->canvas, !appdata->settings->no_antialias);
 
-  /* create the groups */
-  canvas_group_t group;
-  for(group = 0; group < CANVAS_GROUPS; group++) 
-    map->group[group] = gnome_canvas_item_new(
-	       	gnome_canvas_root(GNOME_CANVAS(map->canvas)),
-	       	GNOME_TYPE_CANVAS_GROUP,
-	       	NULL);       
+  GtkWidget *canvas_widget = canvas_get_widget(map->canvas);
 
-  gtk_widget_modify_bg(map->canvas, GTK_STATE_NORMAL, 
-		       &map->canvas->style->white);
-
-#else
-  map->canvas = goo_canvas_new();
-
-  g_object_set(G_OBJECT(map->canvas), "anchor", GTK_ANCHOR_CENTER, NULL);
-  g_object_set(G_OBJECT(map->canvas), "background-color-rgb", 
-	       map->style->background.color >> 8, NULL);
-
-  GooCanvasItem *root = goo_canvas_get_root_item(GOO_CANVAS(map->canvas));
-  g_object_set(G_OBJECT(root), "antialias", 
-	       appdata->settings->no_antialias?CAIRO_ANTIALIAS_NONE:
-	       CAIRO_ANTIALIAS_DEFAULT, NULL);
-
-  /* create the groups */
-  canvas_group_t group;
-  for(group = 0; group < CANVAS_GROUPS; group++) 
-    map->group[group] = goo_canvas_group_new(root, NULL);       
-
-#endif
-
-  gtk_widget_set_events(map->canvas,
+  gtk_widget_set_events(canvas_widget,
                           GDK_BUTTON_PRESS_MASK
 			| GDK_BUTTON_RELEASE_MASK
 			| GDK_SCROLL_MASK
 			| GDK_POINTER_MOTION_MASK
     			| GDK_POINTER_MOTION_HINT_MASK);
 
-  gtk_signal_connect(GTK_OBJECT(map->canvas), 
+  gtk_signal_connect(GTK_OBJECT(canvas_widget), 
      "button_press_event", G_CALLBACK(map_button_event), appdata);
-  gtk_signal_connect(GTK_OBJECT(map->canvas), 
+  gtk_signal_connect(GTK_OBJECT(canvas_widget), 
      "button_release_event", G_CALLBACK(map_button_event), appdata);
-  gtk_signal_connect(GTK_OBJECT(map->canvas), 
+  gtk_signal_connect(GTK_OBJECT(canvas_widget), 
      "motion_notify_event", G_CALLBACK(map_motion_notify_event), appdata);
-  gtk_signal_connect(GTK_OBJECT(map->canvas), 
+  gtk_signal_connect(GTK_OBJECT(canvas_widget), 
      "scroll_event", G_CALLBACK(map_scroll_event), appdata);
 
-  gtk_signal_connect(GTK_OBJECT(map->canvas), 
+  gtk_signal_connect(GTK_OBJECT(canvas_widget), 
      "destroy", G_CALLBACK(map_destroy_event), appdata);
 
-  return map->canvas;
+  return canvas_widget;
 }
 
 void map_init(appdata_t *appdata) {
@@ -1738,11 +1714,13 @@ void map_init(appdata_t *appdata) {
 		    mult*appdata->osm->bounds->max.x,
 		    mult*appdata->osm->bounds->max.y);
 
-  printf("restore scroll offsets %d/%d\n",
+  printf("restore scroll position %d/%d\n",
 	 map->state->scroll_offset.x, map->state->scroll_offset.y);
 
-  canvas_scroll_to(map->canvas, 
-		   map->state->scroll_offset.x, map->state->scroll_offset.y);
+  map_limit_scroll(map, CANVAS_UNIT_METER, 
+	   &map->state->scroll_offset.x, &map->state->scroll_offset.y);
+  canvas_scroll_to(map->canvas, CANVAS_UNIT_METER, 
+	   map->state->scroll_offset.x, map->state->scroll_offset.y);
 }
 
 
@@ -1765,7 +1743,7 @@ void map_item_set_flags(map_item_t *map_item, int set, int clr) {
   }
 }
 
-void map_clear(appdata_t *appdata, gint layer_mask) {
+void map_clear(appdata_t *appdata, gint group_mask) {
   map_t *map = appdata->map;
 
   printf("freeing map contents\n");
@@ -1775,37 +1753,14 @@ void map_clear(appdata_t *appdata, gint layer_mask) {
   /* remove a possibly existing highlight */
   map_item_deselect(appdata);
   
-  canvas_group_t group;
-  for(group=0;group<CANVAS_GROUPS;group++) {
-
-#ifdef USE_GNOMECANVAS
-    /* destroy the entire group */
-    canvas_item_destroy(map->group[group]);
-
-    /* and create an empty new one */
-    map->group[group] = gnome_canvas_item_new(
-		      gnome_canvas_root(GNOME_CANVAS(map->canvas)),
-		      GNOME_TYPE_CANVAS_GROUP,
-		      NULL);       
-#else
-    if(layer_mask & (1<<group)) {
-      gint children = goo_canvas_item_get_n_children(map->group[group]);
-      printf("Removing %d children from layer %d\n", children, group);
-      while(children--) 
-	goo_canvas_item_remove_child(map->group[group], children);
-    }
-#endif
-  }
+  canvas_erase(map->canvas, group_mask);
 }
 
 void map_paint(appdata_t *appdata) {
   map_t *map = appdata->map;
 
   /* user may have changed antialias settings */
-  GooCanvasItem *root = goo_canvas_get_root_item(GOO_CANVAS(map->canvas));
-  g_object_set(G_OBJECT(root), "antialias", 
-	       appdata->settings->no_antialias?CAIRO_ANTIALIAS_NONE:
-	       CAIRO_ANTIALIAS_DEFAULT, NULL);
+  canvas_set_antialias(map->canvas, !appdata->settings->no_antialias);
 
   josm_elemstyles_colorize_world(map->style, appdata->osm);
   map_draw(map, appdata->osm);
@@ -2024,7 +1979,7 @@ void map_track_draw_seg(map_t *map, track_seg_t *seg) {
   if(pnum == 1) {
     g_assert(!seg->item);
 
-    seg->item = canvas_circle_new(map, CANVAS_GROUP_TRACK,
+    seg->item = canvas_circle_new(map->canvas, CANVAS_GROUP_TRACK,
 	  seg->track_point->lpos.x, seg->track_point->lpos.y, 
 	  map->style->track.width/2.0, 0, map->style->track.color, NO_COLOR);
   }
@@ -2046,7 +2001,7 @@ void map_track_draw_seg(map_t *map, track_seg_t *seg) {
     if(seg->item)
       canvas_item_destroy(seg->item);
 
-    seg->item = canvas_polyline_new(map, CANVAS_GROUP_TRACK,
+    seg->item = canvas_polyline_new(map->canvas, CANVAS_GROUP_TRACK,
 	  points, map->style->track.width, map->style->track.color);
 
     canvas_points_free(points);
@@ -2112,7 +2067,8 @@ void map_track_pos(appdata_t *appdata, lpos_t *lpos) {
   }
 
   if(lpos)
-    appdata->track.gps_item = canvas_circle_new(appdata->map, CANVAS_GROUP_GPS, 
+    appdata->track.gps_item = 
+      canvas_circle_new(appdata->map->canvas, CANVAS_GROUP_GPS, 
 	lpos->x, lpos->y, appdata->map->style->track.width/2.0, 0, 
 			appdata->map->style->track.gps_color, NO_COLOR);
 }
@@ -2155,7 +2111,7 @@ void map_set_bg_image(map_t *map, char *filename) {
   map->bg.scale.y = (float)(bounds->max.y - bounds->min.y)/
     (float)gdk_pixbuf_get_height(map->bg.pix);
 
-  map->bg.item = canvas_image_new(map, CANVAS_GROUP_BG, map->bg.pix, 
+  map->bg.item = canvas_image_new(map->canvas, CANVAS_GROUP_BG, map->bg.pix, 
 	  bounds->min.x, bounds->min.y, map->bg.scale.x, map->bg.scale.y);
 
   canvas_item_destroy_connect(map->bg.item, 

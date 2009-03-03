@@ -102,8 +102,6 @@ typedef struct map_s {
 
   map_highlight_t *highlight;      // list of elements used for highlighting
 
-  canvas_item_t *group[CANVAS_GROUPS];
-
   map_item_t selected;             // the currently selected item (node or way)
   
   canvas_item_t *cursor;           // the cursor visible on the draw layer
