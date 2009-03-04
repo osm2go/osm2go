@@ -23,14 +23,14 @@
 typedef enum { 
   CANVAS_GROUP_BG=0,       // background layer (wms overlay)
   CANVAS_GROUP_POLYGONS,   // polygons (forrests, buildings, lakes) */
-  CANVAS_GROUP_TRACK,      // (GPS) track
-  CANVAS_GROUP_GPS,        // current GPS position
   CANVAS_GROUP_WAYS_HL,    // highlighting of ways
   CANVAS_GROUP_WAYS_OL,    // outlines for ways (e.g. for highways)
   CANVAS_GROUP_WAYS,       // ways
   CANVAS_GROUP_WAYS_DIR,   // direction arrows for ways
   CANVAS_GROUP_NODES_HL,   // highlighting for nodes
   CANVAS_GROUP_NODES,      // nodes
+  CANVAS_GROUP_TRACK,      // (GPS) track
+  CANVAS_GROUP_GPS,        // current GPS position
   CANVAS_GROUP_FRISKET,    // the (white) frisket limiting the view
   CANVAS_GROUP_DRAW,       // "cursor" functionality
   CANVAS_GROUPS
