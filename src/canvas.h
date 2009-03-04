@@ -26,6 +26,7 @@ typedef enum {
   CANVAS_GROUP_WAYS_HL,    // highlighting of ways
   CANVAS_GROUP_WAYS_OL,    // outlines for ways (e.g. for highways)
   CANVAS_GROUP_WAYS,       // ways
+  CANVAS_GROUP_WAYS_INT,   // interior of ways with outlines
   CANVAS_GROUP_WAYS_DIR,   // direction arrows for ways
   CANVAS_GROUP_NODES_HL,   // highlighting for nodes
   CANVAS_GROUP_NODES,      // nodes
@@ -36,10 +37,10 @@ typedef enum {
   CANVAS_GROUPS
 } canvas_group_t;
 
-#define CANVAS_HIGHLIGHTS   ((1<<CANVAS_GROUP_WAYS_HL) | (1<<CANVAS_GROUP_WAYS_OL) | (1<<CANVAS_GROUP_NODES_HL))
+#define CANVAS_HIGHLIGHTS   ((1<<CANVAS_GROUP_WAYS_HL) | (1<<CANVAS_GROUP_NODES_HL))
 
 /* only objects in the "selectable" groups are returned by item_at */
-#define CANVAS_SELECTABLE   ((1<<CANVAS_GROUP_POLYGONS) | (1<<CANVAS_GROUP_WAYS) | (1<<CANVAS_GROUP_NODES) | CANVAS_HIGHLIGHTS)
+#define CANVAS_SELECTABLE   ((1<<CANVAS_GROUP_POLYGONS) | (1<<CANVAS_GROUP_WAYS) | (1<<CANVAS_GROUP_WAYS_OL) | (1<<CANVAS_GROUP_WAYS_INT) | (1<<CANVAS_GROUP_NODES) | CANVAS_HIGHLIGHTS)
 
 
 #if CANVAS_GROUPS >= 16

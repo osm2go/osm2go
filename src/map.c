@@ -455,6 +455,7 @@ static canvas_item_t *map_way_new(map_t *map, canvas_group_t group,
 
   canvas_item_set_zoom_max(map_item->item, way->draw.zoom_max);
 
+  /* a ways outline itself is never dashed */
   if (group != CANVAS_GROUP_WAYS_OL)
     if (way->draw.dashed)
       canvas_item_set_dashed(map_item->item, width, way->draw.dash_length);
@@ -506,12 +507,17 @@ void map_way_draw(map_t *map, way_t *way) {
       map_way_new(map, CANVAS_GROUP_POLYGONS, way, points, 
 		  way->draw.width, way->draw.color, way->draw.area.color);
     } else {
-      map_way_new(map, CANVAS_GROUP_WAYS, way, points, 
-		  way->draw.width, way->draw.color, NO_COLOR);
       
-      if(way->draw.flags & OSM_DRAW_FLAG_BG)
+      if(way->draw.flags & OSM_DRAW_FLAG_BG) {
+	map_way_new(map, CANVAS_GROUP_WAYS_INT, way, points, 
+		    way->draw.width, way->draw.color, NO_COLOR);
+
 	map_way_new(map, CANVAS_GROUP_WAYS_OL, way, points, 
 		    way->draw.bg.width, way->draw.bg.color, NO_COLOR);
+
+      } else
+	map_way_new(map, CANVAS_GROUP_WAYS, way, points, 
+		    way->draw.width, way->draw.color, NO_COLOR);
     }
     canvas_points_free(points);
   }
