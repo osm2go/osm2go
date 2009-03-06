@@ -1,5 +1,4 @@
-# vim:noet:ts=8:sw=8:sts=8:ai
-# 
+#
 # Copyright (C) 2008 Till Harbaum <till@harbaum.org>.
 #
 # This file is part of OSM2Go.
@@ -18,22 +17,19 @@
 # along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-APP = osm2go
-PREFIX = /usr
-
-PKGS = gtk+-2.0 hildon-1 libosso libxml-2.0 goocanvas \
-     libcurl gthread-2.0 hildon-fm-2 gnome-vfs-module-2.0 gpsbt
+APP = @PACKAGE@
+PREFIX ?= @prefix@
+EXTRA_OBJS = @EXTRA_OBJS@
 
 OBJS = main.o map.o osm.o osm_api.o wms.o \
 	statusbar.o project.o settings.o pos.o diff.o map_hl.o \
 	iconbar.o info.o icon.o track.o gps.o canvas_goocanvas.o \
-	area_edit.o dbus.o josm_presets.o relation_edit.o misc.o \
-	map_edit.o josm_elemstyles.o style.o net_io.o banner.o \
-	undo.o
+	area_edit.o josm_presets.o relation_edit.o misc.o map_edit.o \
+	josm_elemstyles.o style.o net_io.o banner.o undo.o $(EXTRA_OBJS)
 
-DEFS = -DUSE_HILDON -DPACKAGE=\"$(APP)\" -DPREFIX=\"$(PREFIX)\" -DUSE_GOOCANVAS -DUSE_FLOAT
-CFLAGS = -Wall -O2 $(DEFS) `pkg-config --cflags $(PKGS)`
-LDFLAGS = `pkg-config --libs $(PKGS)`
+DEFS = -DPACKAGE=\"$(APP)\" -DPREFIX=\"@prefix@\"
+CFLAGS = -Wall $(DEFS) @CFLAGS@
+LDFLAGS = @LIBS@
 
 all: $(APP)
 
@@ -43,16 +39,16 @@ all: $(APP)
 $(APP): $(OBJS)
 	gcc $(LDFLAGS) -o $@ $(OBJS)
 
-install:
-	install $(APP) $(DESTDIR)$(PREFIX)/bin
-
 clean:
 	rm -f osm2go *.o *~ */*~ \#*\# version.h *.bak
+
+install: $(APP)
+	install $(APP) $(DESTDIR)$(PREFIX)/bin
 
 -include ../version.mk
 
 dep: version.h
-	makedepend -Y -fMakefile.maemo *.c
+	makedepend -Y *.c
 
 # DO NOT DELETE
 

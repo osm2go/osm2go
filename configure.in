@@ -1,0 +1,128 @@
+#                                               -*- Autoconf -*-
+# Process this file with autoconf to produce a configure script.
+
+# OSM2Go autoconf script
+#
+# Copyright (C) 2008 Till Harbaum <till@harbaum.org>
+#
+# This file is part of OSM2Go.
+#
+# OSM2Go is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# OSM2Go is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
+
+AC_PREREQ(2.61)
+AC_INIT([OSM2Go],[0.8.13],[osm2go-users@garage.maemo.org])
+AC_CONFIG_SRCDIR([src/main.c])
+# AC_CONFIG_HEADER([src/config.h])
+
+PACKAGE="osm2go"
+AC_SUBST(PACKAGE)
+
+# Checks for programs.
+AC_PROG_CC
+AC_PROG_INSTALL
+AC_PROG_LN_S
+AC_PROG_MAKE_SET
+
+# Checks for libraries.
+
+# Checks for header files.
+#AC_HEADER_STDC
+#AC_CHECK_HEADERS([libintl.h locale.h stdlib.h string.h sys/time.h unistd.h])
+
+# Checks for typedefs, structures, and compiler characteristics.
+#AC_C_CONST
+#AC_C_INLINE
+#AC_TYPE_SIZE_T
+#AC_HEADER_TIME
+#AC_STRUCT_TM
+#AC_HEADER_STDBOOL
+
+# Checks for library functions.
+#AC_FUNC_MALLOC
+#AC_FUNC_MKTIME
+#AC_FUNC_STRFTIME
+#AC_FUNC_STRTOD
+#AC_CHECK_FUNCS([gettimeofday localtime_r memset pow setlocale sqrt strcasecmp strchr strcspn strdup strerror strrchr strstr strtoul tzset])
+
+# check for libcurl
+PKG_CHECK_MODULES([libcurl], [libcurl], [], [AC_MSG_ERROR([libcurl missing])])
+CFLAGS="$CFLAGS $libcurl_CFLAGS"
+LIBS="$LIBS $libcurl_LIBS"
+
+# check for goocanvas
+PKG_CHECK_MODULES([goocanvas], [goocanvas], [], [AC_MSG_ERROR([goocanvas missing])])
+CFLAGS="$CFLAGS -DUSE_GOOCANVAS $goocanvas_CFLAGS"
+LIBS="$LIBS $goocanvas_LIBS"
+
+# check for gnome-vfs-module-2.0
+PKG_CHECK_MODULES([gnome_vfs_module], [gnome-vfs-module-2.0], [], [AC_MSG_ERROR([gnome-vfs-module-2.0 missing])])
+CFLAGS="$CFLAGS $gnome_vfs_module_CFLAGS"
+LIBS="$LIBS $gnome_vfs_module_LIBS"
+
+# check for libxml-2.0
+PKG_CHECK_MODULES([libxml2], [libxml-2.0], [], [AC_MSG_ERROR([libxml-2.0 missing])])
+CFLAGS="$CFLAGS $libxml2_CFLAGS"
+LIBS="$LIBS $libxml2_LIBS"
+
+# check for maemo
+AC_MSG_CHECKING([for Maemo])
+PKG_CHECK_EXISTS(maemo-version, [
+  MAEMO="yes"
+  AC_MSG_RESULT(yes)
+
+  # gthread-2.0 gpsbt
+  PKG_CHECK_MODULES([hildon], [hildon-1], [], [AC_MSG_ERROR([hildon-1 missing])])
+  CFLAGS="$CFLAGS  -DUSE_hildon $hildon_CFLAGS"
+  LIBS="$LIBS $hildon_LIBS"
+
+  PKG_CHECK_MODULES([osso], [libosso], [], [AC_MSG_ERROR([libosso missing])])
+  CFLAGS="$CFLAGS $osso_CFLAGS"
+  LIBS="$LIBS $osso_LIBS"
+
+  PKG_CHECK_MODULES([hildon_fm_2], [hildon-fm-2], [], [AC_MSG_ERROR([hildon-fm-2 missing])])
+  CFLAGS="$CFLAGS $hildon_fm_2_CFLAGS"
+  LIBS="$LIBS $hildon_fm_2_LIBS"
+
+  PKG_CHECK_MODULES([gpsbt], [gpsbt], [], [AC_MSG_ERROR([gpsbt missing])])
+  CFLAGS="$CFLAGS $gpsbt_CFLAGS"
+  LIBS="$LIBS $gpsbt_LIBS"
+
+  # maemo uses dbus for ipc with maemo mapper
+  EXTRA_OBJS="dbus.o"
+  AC_SUBST(EXTRA_OBJS)
+
+  INSTALL_PLATTFORM="install-maemo"
+  AC_SUBST(INSTALL_PLATTFORM)
+  
+], [
+  AC_MSG_RESULT(no)
+
+  # check for gtk+-2.0
+  PKG_CHECK_MODULES([gtk], [gtk+-2.0], [], [AC_MSG_ERROR([gtk+-2.0 missing!])])
+  CFLAGS="$CFLAGS $gtk_CFLAGS"
+  LIBS="$LIBS $gtk_LIBS"	   
+
+  # non-maemo device use gnome to call the web browser
+  PKG_CHECK_MODULES([gnome2], [libgnome-2.0], [], [AC_MSG_ERROR([libgnome-2.0 missing])])
+  CFLAGS="$CFLAGS $gnome2_CFLAGS"
+  LIBS="$LIBS $gnome2_LIBS"
+
+  INSTALL_PLATTFORM="install-debian"
+  AC_SUBST(INSTALL_PLATTFORM)
+])
+
+
+AC_CONFIG_FILES([Makefile src/Makefile data/Makefile])
+
+AC_OUTPUT
