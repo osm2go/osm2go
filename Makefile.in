@@ -31,16 +31,22 @@ clean:
 	cd data && make clean
 
 distclean: clean
+	rm -f Makefile src/Makefile data/Makefile config.log config.status
+
+mostlyclean: clean
+
+maintainer-clean: distclean
+	@echo 'This command is intended for maintainers to use; it'
+	@echo 'deletes files that may need special tools to rebuild.'
+	# (nothing yet)
 
 ChangeLog: FORCE
 	svn2cl --group-by-day --include-rev --separate-daylogs --include-actions
-
 
 -include version.mk
 
 tarball: distclean
 	sh mktarball.sh "$(VERSION_PREFIX)$(TRUNK_VERSION)$(VERSION_SUFFIX)"
-
 
 FORCE:
 
