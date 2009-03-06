@@ -81,9 +81,8 @@ PKG_CHECK_EXISTS(maemo-version, [
   MAEMO="yes"
   AC_MSG_RESULT(yes)
 
-  # gthread-2.0 gpsbt
   PKG_CHECK_MODULES([hildon], [hildon-1], [], [AC_MSG_ERROR([hildon-1 missing])])
-  CFLAGS="$CFLAGS  -DUSE_hildon $hildon_CFLAGS"
+  CFLAGS="$CFLAGS  -DUSE_HILDON $hildon_CFLAGS"
   LIBS="$LIBS $hildon_LIBS"
 
   PKG_CHECK_MODULES([osso], [libosso], [], [AC_MSG_ERROR([libosso missing])])
@@ -94,9 +93,15 @@ PKG_CHECK_EXISTS(maemo-version, [
   CFLAGS="$CFLAGS $hildon_fm_2_CFLAGS"
   LIBS="$LIBS $hildon_fm_2_LIBS"
 
-  PKG_CHECK_MODULES([gpsbt], [gpsbt], [], [AC_MSG_ERROR([gpsbt missing])])
-  CFLAGS="$CFLAGS $gpsbt_CFLAGS"
-  LIBS="$LIBS $gpsbt_LIBS"
+  PKG_CHECK_EXISTS(gps-bt, [
+    PKG_CHECK_MODULES([gpsbt], [gpsbt], [], [])
+    CFLAGS="$CFLAGS -DENABLE_GPSBT $gpsbt_CFLAGS"
+    LIBS="$LIBS $gpsbt_LIBS"
+  ], [AC_MSG_NOTICE([WARNING: No gpsbt found, disabling gps auto start!])])
+
+  PKG_CHECK_EXISTS(tablet_browser_interface, [
+    CFLAGS="$CFLAGS -DENABLE_BROWSER_INTERFACE"
+  ], [AC_MSG_NOTICE([WARNING: No table-browser-interface found, disabling microb interface!])])
 
   # maemo uses dbus for ipc with maemo mapper
   EXTRA_OBJS="dbus.o"
@@ -116,7 +121,7 @@ PKG_CHECK_EXISTS(maemo-version, [
   # non-maemo device use gnome to call the web browser
   PKG_CHECK_MODULES([gnome2], [libgnome-2.0], [], [AC_MSG_ERROR([libgnome-2.0 missing])])
   CFLAGS="$CFLAGS $gnome2_CFLAGS"
-  LIBS="$LIBS $gnome2_LIBS"
+  LIBS="$LIBS $gnome2_LIBS -DENABLE_BROWSER_INTERFACE"
 
   INSTALL_PLATTFORM="install-debian"
   AC_SUBST(INSTALL_PLATTFORM)

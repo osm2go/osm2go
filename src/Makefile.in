@@ -43,6 +43,7 @@ clean:
 	rm -f osm2go *.o *~ */*~ \#*\# version.h *.bak
 
 install: $(APP)
+	install -d $(DESTDIR)$(PREFIX)/bin
 	install $(APP) $(DESTDIR)$(PREFIX)/bin
 
 -include ../version.mk

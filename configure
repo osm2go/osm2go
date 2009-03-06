@@ -3275,7 +3275,6 @@ if test -n "$PKG_CONFIG" && \
   { echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6; }
 
-  # gthread-2.0 gpsbt
 
 pkg_failed=no
 { echo "$as_me:$LINENO: checking for hildon" >&5
@@ -3351,7 +3350,7 @@ else
 echo "${ECHO_T}yes" >&6; }
 	:
 fi
-  CFLAGS="$CFLAGS  -DUSE_hildon $hildon_CFLAGS"
+  CFLAGS="$CFLAGS  -DUSE_HILDON $hildon_CFLAGS"
   LIBS="$LIBS $hildon_LIBS"
 
 
@@ -3510,6 +3509,13 @@ fi
   CFLAGS="$CFLAGS $hildon_fm_2_CFLAGS"
   LIBS="$LIBS $hildon_fm_2_LIBS"
 
+  if test -n "$PKG_CONFIG" && \
+    { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"gps-bt\"") >&5
+  ($PKG_CONFIG --exists --print-errors "gps-bt") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+
 
 pkg_failed=no
 { echo "$as_me:$LINENO: checking for gpsbt" >&5
@@ -3569,14 +3575,50 @@ fi
 	# Put the nasty error message in config.log where it belongs
 	echo "$gpsbt_PKG_ERRORS" >&5
 
-	{ echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6; }
-                { { echo "$as_me:$LINENO: error: gpsbt missing" >&5
-echo "$as_me: error: gpsbt missing" >&2;}
+	{ { echo "$as_me:$LINENO: error: Package requirements (gpsbt) were not met:
+
+$gpsbt_PKG_ERRORS
+
+Consider adjusting the PKG_CONFIG_PATH environment variable if you
+installed software in a non-standard prefix.
+
+Alternatively, you may set the environment variables gpsbt_CFLAGS
+and gpsbt_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&5
+echo "$as_me: error: Package requirements (gpsbt) were not met:
+
+$gpsbt_PKG_ERRORS
+
+Consider adjusting the PKG_CONFIG_PATH environment variable if you
+installed software in a non-standard prefix.
+
+Alternatively, you may set the environment variables gpsbt_CFLAGS
+and gpsbt_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
-	{ { echo "$as_me:$LINENO: error: gpsbt missing" >&5
-echo "$as_me: error: gpsbt missing" >&2;}
+	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
+is in your PATH or set the PKG_CONFIG environment variable to the full
+path to pkg-config.
+
+Alternatively, you may set the environment variables gpsbt_CFLAGS
+and gpsbt_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+
+To get pkg-config, see <http://pkg-config.freedesktop.org/>.
+See \`config.log' for more details." >&5
+echo "$as_me: error: The pkg-config script could not be found or is too old.  Make sure it
+is in your PATH or set the PKG_CONFIG environment variable to the full
+path to pkg-config.
+
+Alternatively, you may set the environment variables gpsbt_CFLAGS
+and gpsbt_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+
+To get pkg-config, see <http://pkg-config.freedesktop.org/>.
+See \`config.log' for more details." >&2;}
    { (exit 1); exit 1; }; }
 else
 	gpsbt_CFLAGS=$pkg_cv_gpsbt_CFLAGS
@@ -3585,8 +3627,27 @@ else
 echo "${ECHO_T}yes" >&6; }
 	:
 fi
-  CFLAGS="$CFLAGS $gpsbt_CFLAGS"
-  LIBS="$LIBS $gpsbt_LIBS"
+    CFLAGS="$CFLAGS -DENABLE_GPSBT $gpsbt_CFLAGS"
+    LIBS="$LIBS $gpsbt_LIBS"
+
+else
+  { echo "$as_me:$LINENO: WARNING: No gpsbt found, disabling gps auto start!" >&5
+echo "$as_me: WARNING: No gpsbt found, disabling gps auto start!" >&6;}
+fi
+
+  if test -n "$PKG_CONFIG" && \
+    { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"tablet_browser_interface\"") >&5
+  ($PKG_CONFIG --exists --print-errors "tablet_browser_interface") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+
+    CFLAGS="$CFLAGS -DENABLE_BROWSER_INTERFACE"
+
+else
+  { echo "$as_me:$LINENO: WARNING: No table-browser-interface found, disabling microb interface!" >&5
+echo "$as_me: WARNING: No table-browser-interface found, disabling microb interface!" >&6;}
+fi
 
   # maemo uses dbus for ipc with maemo mapper
   EXTRA_OBJS="dbus.o"
@@ -3757,7 +3818,7 @@ echo "${ECHO_T}yes" >&6; }
 	:
 fi
   CFLAGS="$CFLAGS $gnome2_CFLAGS"
-  LIBS="$LIBS $gnome2_LIBS"
+  LIBS="$LIBS $gnome2_LIBS -DENABLE_BROWSER_INTERFACE"
 
   INSTALL_PLATTFORM="install-debian"
 

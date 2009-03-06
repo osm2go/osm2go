@@ -11,11 +11,25 @@ elemstyles-mapnik.xml: elemstyles-mapnik.xml.in
 clean:
 	rm -f $(TEMPLATE_ELEMSTYLES)
 
-install-debian: $(TEMPLATE_ELEMSTYLES)
+install-debian:
 	install -d $(DESTDIR)$(PREFIX)/share/applications
 	install $(APP)-ubuntu.desktop $(DESTDIR)$(PREFIX)/share/applications/$(APP).desktop
 	install -d $(DESTDIR)$(PREFIX)/share/pixmaps
 	install $(APP).64.png $(DESTDIR)$(PREFIX)/share/pixmaps/$(APP).png
+
+
+install-maemo:
+	install -d $(DESTDIR)$(PREFIX)/share/applications/hildon
+	install $(APP).desktop $(DESTDIR)$(PREFIX)/share/applications/hildon
+	install -d $(DESTDIR)$(PREFIX)/share/icons/hicolor/26x26/hildon
+	install $(APP).26.png $(DESTDIR)$(PREFIX)/share/icons/hicolor/26x26/hildon/$(APP).png
+	install -d $(DESTDIR)$(PREFIX)/share/icons/hicolor/40x40/hildon
+	install $(APP).40.png $(DESTDIR)$(PREFIX)/share/icons/hicolor/40x40/hildon/$(APP).png
+	install -d $(DESTDIR)$(PREFIX)/share/icons/hicolor/scalable/hildon
+	install $(APP).64.png $(DESTDIR)$(PREFIX)/share/icons/hicolor/scalable/hildon/$(APP).png
+
+
+install: @INSTALL_PLATTFORM@ $(TEMPLATE_ELEMSTYLES)
 	install -d $(DESTDIR)$(PREFIX)/share/$(APP)	
 	install -m 644 *.txt $(DESTDIR)$(PREFIX)/share/$(APP)
 	install -m 644 *.xml $(DESTDIR)$(PREFIX)/share/$(APP)
@@ -24,20 +38,5 @@ install-debian: $(TEMPLATE_ELEMSTYLES)
 	   install -d $(DESTDIR)$(PREFIX)/share/$(APP)/`dirname $$f` ;\
 	   install -m 644 $$f $(DESTDIR)$(PREFIX)/share/$(APP)/$$f ;\
 	done;
-
-install-maemo:
-	install $(APP).desktop $(DESTDIR)$(PREFIX)/share/applications/hildon
-	install $(APP).26.png $(DESTDIR)$(PREFIX)/share/icons/hicolor/26x26/hildon/$(APP).png
-	install $(APP).40.png $(DESTDIR)$(PREFIX)/share/icons/hicolor/40x40/hildon/$(APP).png
-	install $(APP).64.png $(DESTDIR)$(PREFIX)/share/icons/hicolor/scalable/hildon/$(APP).png
-	install -d $(DESTDIR)$(PREFIX)/share/$(APP)
-	install -m 644 *.txt $(DESTDIR)$(PREFIX)/share/$(APP)
-	install -m 644 *.xml $(DESTDIR)$(PREFIX)/share/$(APP)
-	install -m 644 *.style $(DESTDIR)$(PREFIX)/share/$(APP)
-	for f in `find icons -name "*.png"`; do \
-	   install -D -m 644 $$f $(DESTDIR)$(PREFIX)/share/$(APP)/$$f ; \
-	done;
-
-install: @INSTALL_PLATTFORM@
 
 distclean: clean

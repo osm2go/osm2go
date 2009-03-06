@@ -23,7 +23,7 @@
 
 #include "appdata.h"
 
-#ifdef USE_HILDON
+#ifdef ENABLE_GPSBT
 #include <gpsbt.h>
 #include <gpsmgr.h>
 #include <errno.h>
@@ -54,7 +54,7 @@ pos_t *gps_get_pos(appdata_t *appdata) {
 
 static int gps_connect(gps_state_t *gps_state) {
   GnomeVFSResult vfs_result;
-#ifdef USE_HILDON
+#ifdef ENABLE_GPSBT
   char errstr[256] = "";
 
   /* We need to start gpsd (via gpsbt) first. */
@@ -229,7 +229,7 @@ gpointer gps_thread(gpointer data) {
 	printf("stopping GPS connection due to user request\n");
 	gnome_vfs_inet_connection_destroy(appdata->gps_state->iconn, NULL);
 
-#ifdef USE_HILDON
+#ifdef ENABLE_GPSBT
 	gpsbt_stop(&appdata->gps_state->context);
 #endif
 	connected = FALSE;
@@ -252,7 +252,7 @@ void gps_init(appdata_t *appdata) {
 }
 
 void gps_release(appdata_t *appdata) { 
-#ifdef USE_HILDON
+#ifdef ENABLE_GPSBT
   gpsbt_stop(&appdata->gps_state->context);
 #endif
   g_free(appdata->gps_state);

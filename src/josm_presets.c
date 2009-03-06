@@ -26,6 +26,7 @@
 #error "Tree not enabled in libxml"
 #endif
 
+#ifdef ENABLE_BROWSER_INTERFACE
 #ifndef USE_HILDON
 #include <libgnome/gnome-url.h>
 #else
@@ -50,6 +51,7 @@ static void on_info(GtkWidget *widget, www_context_t *context) {
 			     DBUS_TYPE_BOOLEAN, FALSE, DBUS_TYPE_INVALID);
 #endif
 }
+#endif
 
 /* --------------------- presets.xml parsing ----------------------- */
 
@@ -440,7 +442,9 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
   GtkWidget *dialog = NULL;
   gboolean ok = FALSE;
   tag_t *tag = NULL, **ctag = &tag;
+#ifdef ENABLE_BROWSER_INTERFACE
   www_context_t *www_context = NULL;
+#endif
 
   printf("dialog for item %s\n", item->name);
 
@@ -471,6 +475,7 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
         GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
         NULL);
 
+#ifdef ENABLE_BROWSER_INTERFACE
     /* if a web link has been provided for this item install */
     /* a button for this */
     if(item->link) {
@@ -483,6 +488,7 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
       gtk_signal_connect(GTK_OBJECT(button), "clicked",
 			 GTK_SIGNAL_FUNC(on_info), (gpointer)www_context);
     }
+#endif
 
     /* special handling for the first label/separators */
     guint widget_skip = 0;  // number of initial widgets to skip
@@ -671,8 +677,10 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
   if(interactive_widget_cnt)
     gtk_widget_destroy(dialog);
 
+#ifdef ENABLE_BROWSER_INTERFACE
   if(www_context)
     g_free(www_context);
+#endif
 
   return tag;
 }

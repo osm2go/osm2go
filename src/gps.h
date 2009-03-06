@@ -59,14 +59,14 @@ struct gps_data_t {
 
 };
 
-#ifdef USE_HILDON
+#ifdef ENABLE_GPSBT
 #include <gpsbt.h>
 #include <gpsmgr.h>
 #include <errno.h>
 #endif
 
 typedef struct gps_state_s {
-#ifdef USE_HILDON
+#ifdef ENABLE_GPSBT
   gpsbt_t context;
 #endif
 
