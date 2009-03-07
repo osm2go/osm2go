@@ -749,6 +749,13 @@ Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
     <scale_max>10000</scale_max>
   </rule>
 
+  <rule>
+    <condition k="amenity" v="toilets"/>
+    <icon src="toilets.p.20.png"/>
+    <scale_min>1</scale_min>
+    <scale_max>10000</scale_max>
+  </rule>
+
   <!-- Tourism -->
 
   <rule>
@@ -926,7 +933,22 @@ Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
     <scale_max>10000</scale_max>
   </rule>
 
+  <!-- Other civic amenities -->
 
+  <rule>
+    <condition k="amenity" v="library"/>
+    <icon src="library.p.20.png"/>
+    <scale_min>1</scale_min>
+    <scale_max>10000</scale_max>
+  </rule>
+
+  <rule>
+    <condition k="amenity" v="cinema"/>
+    <icon src="cinema.p.24.png"/>
+    <scale_min>1</scale_min>
+    <scale_max>10000</scale_max>
+  </rule>
+  
   <!-- Natural features -->
 
   <rule>
@@ -949,6 +971,30 @@ Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
     <line width="1" colour="#333333"/>
     <scale_min>1</scale_min>
     <scale_max>10000</scale_max>
+  </rule>
+
+  <!--
+    Karlsruhe schema address interpolation:
+    http://wiki.openstreetmap.org/wiki/Proposed_features/House_numbers/Karlsruhe_Schema
+  -->
+  
+  <rule>
+    <condition k="addr:housename"/>
+    <icon src="housename.png"/>
+    <scale_min>1</scale_min>
+    <scale_max>6000</scale_max>
+  </rule>
+  <rule>
+    <condition k="addr:housenumber"/>
+    <icon src="housenumber.png"/>
+    <scale_min>1</scale_min>
+    <scale_max>6000</scale_max>
+  </rule>
+  <rule>
+    <condition k="addr:interpolation" />
+    <line width="1" width_bg="2" colour="#99ccff" colour_bg="#bbddff" dash_length="5" dashed="true" />
+    <scale_min>1</scale_min>
+    <scale_max>6000</scale_max>
   </rule>
 
 </rules>
