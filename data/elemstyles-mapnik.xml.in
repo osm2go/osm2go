@@ -7,29 +7,47 @@ Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
 -->
 <rules>
 
-<!--
-
-    Classes of (typically) paved road: those designed for motor vehicles first.
-
-    Carriageway widths are based fairly loosely on the z17 Mapnik rendering.
-    The "standard carriageway width" - residential, tertiary, unclassified
-    etc. - is 8 units inner, 10 units outer. This is quite fat compared to other
-    OSM2Go themes, but it gives a good approximation of what shadows what in
-    the finest-detail Mapnik rendering; for my mapping style, that matters: I
-    don't abut areas to ways most of the time.
-
--->
-
   <!-- Bridge/Tunnel -->
   <rule>
     <condition k="bridge" v="yes"/>
     <linemod width_bg="+4" width="+1"/>
   </rule>
+
   <rule>
     <condition k="tunnel" v="yes"/>
     <linemod width_bg="+2" width="-1"/>
   </rule>
+  
+  <!-- Boundaries -->
+  <rule>
+    <condition k="boundary"/>
+    <line colour="#d1aacb" colour_bg="path-outline#ffffff" width_bg="2" width="2" dashed="true" dash_length="6" />
+    <scale_max>60000</scale_max>
+  </rule>
 
+  <!--
+    Karlsruhe schema address interpolation:
+    http://wiki.openstreetmap.org/wiki/Proposed_features/House_numbers/Karlsruhe_Schema
+  -->
+  
+  <rule>
+    <condition k="addr:housename"/>
+    <icon src="housename.png"/>
+    <scale_min>1</scale_min>
+    <scale_max>6000</scale_max>
+  </rule>
+  <rule>
+    <condition k="addr:housenumber"/>
+    <icon src="housenumber.png"/>
+    <scale_min>1</scale_min>
+    <scale_max>6000</scale_max>
+  </rule>
+  <rule>
+    <condition k="addr:interpolation" />
+    <line width="2" width_bg="2" colour="#707070" colour_bg="__BG_COL__" dash_length="2" dashed="true" />
+    <scale_min>1</scale_min>
+    <scale_max>6000</scale_max>
+  </rule>
 
   <rule>
     <!--
@@ -40,188 +58,6 @@ Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
     <line width="3" colour="#cc0000" width_bg="9" colour_bg="#ff8800"/>
     <scale_min>1</scale_min>
     <scale_max>800000</scale_max>
-  </rule>
-
-  <rule>
-    <condition k="highway" v="motorway"/>
-    <line width="10" colour="#809bc0" width_bg="12" colour_bg="#5e6e89"/>
-    <scale_min>1</scale_min>
-    <scale_max>2000000</scale_max>
-  </rule>
-
-  <rule>
-    <condition k="highway" v="motorway_link"/>
-    <line width="8" colour="#809bc0" width_bg="10" colour_bg="#5e6e89"/>
-    <scale_min>1</scale_min>
-    <scale_max>2000000</scale_max>
-  </rule>
-
-  <rule>
-    <condition k="highway" v="trunk"/>
-    <line width="9" colour="#a7dca8" width_bg="11" colour_bg="#8db48c"/>
-    <scale_min>1</scale_min>
-    <scale_max>200000</scale_max>
-  </rule>
-
-  <rule>
-    <condition k="highway" v="trunk_link"/>
-    <line width="8" colour="#a7dca8" width_bg="10" colour_bg="#8db48c"/>
-    <scale_min>1</scale_min>
-    <scale_max>200000</scale_max>
-  </rule>
-
-  <rule>
-    <condition k="highway" v="primary"/>
-    <line width="9" colour="#eb9898" width_bg="11" colour_bg="#c48080"/>
-    <scale_min>1</scale_min>
-    <scale_max>125000</scale_max>
-  </rule>
-
-  <rule>
-    <condition k="highway" v="primary_link"/>
-    <line width="7" colour="#eb9898" width_bg="9" colour_bg="#c48080"/>
-    <scale_min>1</scale_min>
-    <scale_max>125000</scale_max>
-  </rule>
-
-  <rule>
-    <condition k="highway" v="secondary"/>
-    <line width="8" colour="#fdd6a4" width_bg="10" colour_bg="#d9b689"/>
-    <scale_min>1</scale_min>
-    <scale_max>100000</scale_max>
-  </rule>
-
-  <rule>
-    <condition k="highway" v="tertiary"/>
-    <line width="8" colour="#f8f8b0" width_bg="10" colour_bg="#ccccbb"/>
-    <scale_min>1</scale_min>
-    <scale_max>75000</scale_max>
-  </rule>
-
-  <!--
-
-    Smaller roads: white or grey main area.
-
-    The normal Mapnik grey casing is #c8c8c8 for white and #a8a8a8 for grey;
-    I've darkened them a notch and a half-notch respecively here to improve
-    contrast for n810 screens.
-
-  -->
-
-  <!-- Needs multiple conditions
-  <rule>
-    <condition k="highway" v="unclassified"/>
-    <condition k="area" v="yes"/>
-    <area colour="#ffffff"/>
-    <scale_min>1</scale_min>
-    <scale_max>40000</scale_max>
-  </rule>
-  -->
-  <rule>
-    <condition k="highway" v="unclassified"/>
-    <line width="8" colour="#ffffff" width_bg="10" colour_bg="#b8b8b8"/>
-    <scale_min>1</scale_min>
-    <scale_max>40000</scale_max>
-  </rule>
-
-  <!-- Need multiple conditions
-  <rule>
-    <condition k="highway" v="pedestrian"/>
-    <condition k="area" v="yes"/>
-    <area colour="#e8e8e8"/>
-    <scale_min>1</scale_min>
-    <scale_max>30000</scale_max>
-  </rule>
-  -->
-  <rule>
-    <condition k="highway" v="pedestrian"/>
-    <line width="4" colour="#e8e8e8" width_bg="6" colour_bg="#a0a0a0"/>
-    <scale_min>1</scale_min>
-    <scale_max>30000</scale_max>
-  </rule>
-
-  <rule>
-    <condition k="highway" v="residential"/>
-    <line width="8" colour="#ffffff" width_bg="10" colour_bg="#b8b8b8"/>
-    <scale_min>1</scale_min>
-    <scale_max>30000</scale_max>
-  </rule>
-
-  <rule>
-    <condition k="highway" v="living_street"/>
-    <line width="8" colour="#ffffff" width_bg="10" colour_bg="#b8b8b8"/>
-    <scale_min>1</scale_min>
-    <scale_max>25000</scale_max>
-  </rule>
-
-  <rule>
-    <condition k="highway" v="service"/>
-    <line width="4" colour="#ffffff" width_bg="6" colour_bg="#b8b8b8"/>
-    <scale_min>1</scale_min>
-    <scale_max>15000</scale_max>
-  </rule>
-  <rule>
-    <condition k="service" v="parking_aisle"/>
-    <linemod width_bg="-3" width="-2"/>
-  </rule>
-  <rule>
-    <condition k="service" v="driveway"/>
-    <linemod width_bg="-2" width="-1"/>
-  </rule>
-
-  <!--
-    Footways, tracks, cycleways etc. Visible and editable at higher zooms.
-    Typically either not for motor vehicles, or not sufaced to the same
-    standard as the highways above.
-  --> 
-
-  <rule>
-    <condition k="highway" v="footway"/>
-    <line colour="#f98072" colour_bg="#ffffff" dashed="true" dash_length="4" width="2" width_bg="3"/>
-    <scale_min>1</scale_min>
-    <scale_max>10000</scale_max>
-  </rule>
-
-  <rule>
-    <condition k="highway" v="steps"/>
-    <line colour="#f98072" colour_bg="#ffffff" dashed="true" dash_length="2" width="4" width_bg="5"/>
-    <scale_min>1</scale_min>
-    <scale_max>10000</scale_max>
-  </rule>
-
-  <rule>
-    <condition k="highway" v="cycleway"/>
-    <line colour="#5050fe" colour_bg="#ffffff" dashed="true" width="2" dash_length="4" width_bg="3"/>
-    <scale_min>1</scale_min>
-    <scale_max>12500</scale_max>
-  </rule>
-
-  <rule>
-    <condition k="highway" v="bridleway"/>
-    <line colour="#008000" colour_bg="#ffffff" dashed="true" width="2" dash_length="4" width_bg="3"/>
-    <scale_min>1</scale_min>
-    <scale_max>12500</scale_max>
-  </rule>
-
-  <rule>
-    <condition k="highway" v="byway"/>
-    <line colour="#f8eecc" colour_bg="#ffffff" dashed="true" width="2" dash_length="4" width_bg="3"/>
-    <scale_min>1</scale_min>
-    <scale_max>12500</scale_max>
-  </rule>
-
-  <rule>
-    <condition k="highway" v="track"/>
-    <line colour="#996600" colour_bg="#ffffff" dashed="true" width="2" dash_length="4" width_bg="3"/>
-    <scale_min>1</scale_min>
-    <scale_max>12500</scale_max>
-  </rule>
-
-  <rule>
-    <condition k="highway" v="path"/>
-    <line colour="#cc7733" colour_bg="#ffffff" dashed="true" width="2" dash_length="4" width_bg="3"/>
-    <scale_min>1</scale_min>
-    <scale_max>12500</scale_max>
   </rule>
 
   <!--
@@ -246,7 +82,7 @@ Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
     <condition k="railway"/><!-- catchall linear -->
     <line width="4" width_bg="6" dashed="true" dash_length="4" colour="#eeeeee" colour_bg="#999999"/>
     <scale_min>1</scale_min>
-    <scale_max>160000</scale_max>
+    <scale_max>150000</scale_max>
   </rule>
 
 
@@ -292,7 +128,6 @@ Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
 <!-- Other linear features -->
 
   <!-- City walls -->
-  <!-- same colours as a building area, and visible slightly further out -->
   <rule>
     <condition k="historic" v="citywalls"/><!-- old -->
     <line width="4" colour="#cc9999" colour_bg="#cccccc" width_bg="6" />
@@ -319,15 +154,18 @@ Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
   -->
 
   <!--
+  
     Buildings.
-    This is first for stylistic reasons. If it's a building area, then no matter
-    what it's also tagged as, it'll be drawn in salmon pink.
+  
+    This is first for stylistic reasons. If it's a building area, then no
+    matter what it's also tagged as, it'll be drawn in salmon pink.
+  
   -->
   <rule>
     <condition k="building"/>
     <area colour="#cc9999"/>
     <scale_min>1</scale_min>
-    <scale_max>17777</scale_max>
+    <scale_max>30000</scale_max>
   </rule>
 
   <!--
@@ -339,92 +177,103 @@ Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
     <condition k="landuse" v="basin"/>
     <area colour="#b5d0d0"/>
     <scale_min>1</scale_min>
-    <scale_max>40000</scale_max>
+    <scale_max>50000</scale_max>
+  </rule>
+
+  <rule>
+    <condition k="landuse" v="plaza"/>
+    <area colour="#eeeeee"/>
+    <scale_min>1</scale_min>
+    <scale_max>50000</scale_max>
   </rule>
 
   <rule>
     <condition k="landuse" v="grass"/>
     <area colour="#ceeba7"/>
     <scale_min>1</scale_min>
-    <scale_max>13333</scale_max>
+    <scale_max>50000</scale_max>
   </rule>
-
   <rule>
     <condition k="landuse" v="village_green"/>
     <area colour="#ceeba7"/>
     <scale_min>1</scale_min>
-    <scale_max>16000</scale_max>
+    <scale_max>50000</scale_max>
   </rule>
 
   <rule>
     <condition k="landuse" v="allotments"/>
     <area colour="#c8b084"/>
     <scale_min>1</scale_min>
-    <scale_max>16000</scale_max>
+    <scale_max>50000</scale_max>
   </rule>
 
   <rule>
     <condition k="landuse" v="brownfield"/>
     <area colour="#C8A064"/>
     <scale_min>1</scale_min>
-    <scale_max>16000</scale_max>
+    <scale_max>50000</scale_max>
   </rule>
 
   <rule>
     <condition k="landuse" v="greenfield"/>
     <area colour="#CEDB87"/>
     <scale_min>1</scale_min>
-    <scale_max>16000</scale_max>
+    <scale_max>50000</scale_max>
   </rule>
 
   <rule>
     <condition k="landuse" v="construction"/>
-    <area colour="#C8A064"/>
+    <area colour="#9d9d6c"/>
     <scale_min>1</scale_min>
-    <scale_max>16000</scale_max>
+    <scale_max>50000</scale_max>
   </rule>
 
   <rule>
     <condition k="amenity" v="grave_yard"/>
     <area colour="#a9caae"/>
     <scale_min>1</scale_min>
-    <scale_max>16000</scale_max>
+    <scale_max>50000</scale_max>
   </rule>
 
   <rule>
     <condition k="landuse" v="cemetery"/>
     <area colour="#a9caae"/>
     <scale_min>1</scale_min>
-    <scale_max>20000</scale_max>
+    <scale_max>50000</scale_max>
   </rule>
 
   <rule>
     <condition k="landuse" v="retail"/>
     <area colour="#f2d9d9"/>
     <scale_min>1</scale_min>
-    <scale_max>20000</scale_max>
+    <scale_max>50000</scale_max>
   </rule>
 
   <rule>
     <condition k="landuse" v="military"/>
-    <area colour="__BG_COL__"/>
-      <!-- Not shown by the real Mapnik layer, but force an area for it -->
+    <area colour="#f6d1cf"/>
     <scale_min>1</scale_min>
-    <scale_max>20000</scale_max>
+    <scale_max>50000</scale_max>
+  </rule>
+  <rule>
+    <condition k="military"/>
+    <area colour="#fe8f8f"/>
+    <scale_min>1</scale_min>
+    <scale_max>50000</scale_max>
   </rule>
 
   <rule>
     <condition k="landuse" v="commercial"/>
     <area colour="#eec7c7"/>
     <scale_min>1</scale_min>
-    <scale_max>20000</scale_max>
+    <scale_max>50000</scale_max>
   </rule>
 
   <rule>
     <condition k="landuse" v="recreation_ground"/>
     <area colour="#cfeca8"/>
     <scale_min>1</scale_min>
-    <scale_max>20000</scale_max>
+    <scale_max>50000</scale_max>
   </rule>
 
   <rule>
@@ -432,42 +281,42 @@ Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
     <area colour="__BG_COL__"/>
       <!-- Not shown by the real Mapnik layer, but force an area for it -->
     <scale_min>1</scale_min>
-    <scale_max>20000</scale_max>
+    <scale_max>50000</scale_max>
   </rule>
 
   <rule>
     <condition k="landuse" v="industrial"/>
     <area colour="#ded0d5"/>
     <scale_min>1</scale_min>
-    <scale_max>26666</scale_max>
+    <scale_max>50000</scale_max>
   </rule>
 
   <rule>
     <condition k="landuse" v="residential"/>
     <area colour="#dddddd"/>
     <scale_min>1</scale_min>
-    <scale_max>40000</scale_max>
+    <scale_max>50000</scale_max>
   </rule>
 
   <rule>
     <condition k="landuse" v="meadow"/>
     <area colour="#cfeba8"/>
     <scale_min>1</scale_min>
-    <scale_max>80000</scale_max>
+    <scale_max>50000</scale_max>
   </rule>
 
   <rule>
     <condition k="landuse" v="forest"/>
     <area colour="#8dc56c"/>
     <scale_min>1</scale_min>
-    <scale_max>160000</scale_max>
+    <scale_max>50000</scale_max>
   </rule>
 
   <rule> <!-- catchall -->
     <condition k="landuse"/>
     <area colour="#f2eee8"/>
     <scale_min>1</scale_min>
-    <scale_max>13333</scale_max>
+    <scale_max>30000</scale_max>
   </rule>
 
   <!-- Amenities -->
@@ -476,49 +325,49 @@ Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
     <condition k="amenity" v="parking"/>
     <area colour="#f6eeb6"/>
     <scale_min>1</scale_min>
-    <scale_max>13333</scale_max>
+    <scale_max>50000</scale_max>
   </rule>
 
   <rule>
     <condition k="amenity" v="bus_station"/>
     <area colour="#f6eeb6"/>
     <scale_min>1</scale_min>
-    <scale_max>26666</scale_max>
+    <scale_max>50000</scale_max>
   </rule>
 
   <rule>
     <condition k="amenity" v="school"/>
     <area colour="#f0f0d8"/>
     <scale_min>1</scale_min>
-    <scale_max>20000</scale_max>
+    <scale_max>50000</scale_max>
   </rule>
 
   <rule>
     <condition k="amenity" v="college"/>
     <area colour="#f0f0d8"/>
     <scale_min>1</scale_min>
-    <scale_max>26666</scale_max>
+    <scale_max>50000</scale_max>
   </rule>
 
   <rule>
     <condition k="amenity" v="university"/>
     <area colour="#f0f0d8"/>
     <scale_min>1</scale_min>
-    <scale_max>40000</scale_max>
+    <scale_max>50000</scale_max>
   </rule>
 
   <rule>
     <condition k="amenity" v="hospital"/>
     <area colour="#f0f0d8"/>
     <scale_min>1</scale_min>
-    <scale_max>40000</scale_max>
+    <scale_max>50000</scale_max>
   </rule>
 
   <rule>
     <condition k="amenity"/>
     <area colour="#f0f0d8"/>
     <scale_min>1</scale_min>
-    <scale_max>40000</scale_max>
+    <scale_max>50000</scale_max>
   </rule>
 
   <!-- Recreation and leasure -->
@@ -527,78 +376,63 @@ Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
     <condition k="leisure" v="garden"/>
     <area colour="#ceeba8"/>
     <scale_min>1</scale_min>
-    <scale_max>16000</scale_max>
+    <scale_max>50000</scale_max>
   </rule>
 
   <rule>
     <condition k="leisure" v="pitch"/>
     <area colour="#8ad3af"/>
     <scale_min>1</scale_min>
-    <scale_max>16000</scale_max>
+    <scale_max>50000</scale_max>
   </rule>
 
   <rule>
     <condition k="leisure" v="playground"/>
     <area colour="#ccffff"/>
     <scale_min>1</scale_min>
-    <scale_max>13000</scale_max><!-- slightly higher than footway -->
+    <scale_max>50000</scale_max>
   </rule>
 
   <rule>
     <condition k="leisure" v="park"/>
     <area colour="#b5fcb5"/>
     <scale_min>1</scale_min>
-    <scale_max>20000</scale_max>
+    <scale_max>50000</scale_max>
   </rule>
 
   <rule>
     <condition k="leisure" v="nature_reserve"/>
     <area colour="#abde96"/>
     <scale_min>1</scale_min>
-    <scale_max>26666</scale_max>
+    <scale_max>50000</scale_max>
   </rule>
 
   <rule>
     <condition k="leisure" v="golf_course"/>
     <area colour="#b5e2b5"/>
     <scale_min>1</scale_min>
-    <scale_max>40000</scale_max>
+    <scale_max>50000</scale_max>
   </rule>
 
   <rule>
     <condition k="leisure"/>
     <area colour="#33cc99"/>
     <scale_min>1</scale_min>
-    <scale_max>26666</scale_max>
+    <scale_max>50000</scale_max>
   </rule>
-
-  <!--
-    Just sport on its own isn't rendered by Mapnik. Also, it's a helper tag
-    that should be combined with some other physical feature. To encourage
-    proper mapping, we don't render it here. See
-    http://wiki.openstreetmap.org/wiki/Key:sport#Rendering for the rationale
-    here.
-
-  <rule>
-    <condition k="sport"/>
-    <area colour="#33cc99"/>
-    <scale_min>1</scale_min>
-    <scale_max>13333</scale_max>
-  </rule>
-  -->
 
   <rule>
     <condition k="historic"/>
     <area colour="#f1cae9"/>
     <scale_min>1</scale_min>
-    <scale_max>26666</scale_max>
+    <scale_max>50000</scale_max>
   </rule>
 
   <rule>
     <condition k="tourism"/>
     <area colour="#f1cae9"/>
     <scale_min>1</scale_min>
-    <scale_max>26666</scale_max>
+    <scale_max>50000</scale_max>
   </rule>
 
 
@@ -609,7 +443,7 @@ Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
     <area colour="__BG_COL__"/>
       <!-- Not shown by the real Mapnik layer, but force an area for it -->
     <scale_min>1</scale_min>
-    <scale_max>15000</scale_max>
+    <scale_max>20000</scale_max>
   </rule>
 
 
@@ -619,51 +453,50 @@ Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
     <condition k="natural" v="cave_entrance"/>
     <area colour="#666666"/>
     <scale_min>1</scale_min>
-    <scale_max>13333</scale_max>
+    <scale_max>10000</scale_max>
   </rule>
 
   <rule>
     <condition k="natural" v="marsh"/>
     <area colour="#ebf1f4"/>
     <scale_min>1</scale_min>
-    <scale_max>26666</scale_max>
+    <scale_max>50000</scale_max>
   </rule>
 
   <rule>
     <condition k="natural" v="wetland"/>
     <area colour="#ebf1f4"/>
     <scale_min>1</scale_min>
-    <scale_max>26666</scale_max>
+    <scale_max>50000</scale_max>
   </rule>
 
   <rule>
     <condition k="natural" v="water"/>
     <area colour="#b5d0d0"/>
     <scale_min>1</scale_min>
-    <scale_max>26666</scale_max>
+    <scale_max>50000</scale_max>
   </rule>
 
   <rule>
     <condition k="natural" v="heath"/>
     <area colour="#fefec0"/>
     <scale_min>1</scale_min>
-    <scale_max>20000</scale_max>
+    <scale_max>50000</scale_max>
   </rule>
 
   <rule>
     <condition k="natural" v="scrub"/>
-    <!-- <area colour="#AEC1B0"/> -->
-    <area colour="__BG_COL__"/>
-      <!-- Not shown by the real Mapnik layer, but force an area for it -->
+    <!-- <area colour="#b5e2b5"/> -->
+    <area colour="#b0e0b0"/><!-- darken a bit because the real one has flecks -->
     <scale_min>1</scale_min>
-    <scale_max>20000</scale_max>
+    <scale_max>50000</scale_max>
   </rule>
 
   <rule>
     <condition k="natural" v="wood"/>
     <area colour="#aed1a0"/>
     <scale_min>1</scale_min>
-    <scale_max>40000</scale_max>
+    <scale_max>50000</scale_max>
   </rule>
 
   <rule>
@@ -677,7 +510,7 @@ Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
     <condition k="natural"/>
     <area colour="#66CCCC"/>
     <scale_min>1</scale_min>
-    <scale_max>26666</scale_max>
+    <scale_max>50000</scale_max>
   </rule>
 
 <!-- Nodes -->
@@ -974,28 +807,208 @@ Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
   </rule>
 
   <!--
-    Karlsruhe schema address interpolation:
-    http://wiki.openstreetmap.org/wiki/Proposed_features/House_numbers/Karlsruhe_Schema
+
+    Classes of (typically) paved road: those designed for motor vehicles first.
+
+    Carriageway widths are based fairly loosely on the z17 Mapnik rendering.
+    The "standard carriageway width" - residential, tertiary, unclassified
+    etc. - is 8 units inner, 10 units outer. This is quite fat compared to other
+    OSM2Go themes, but it gives a good approximation of what shadows what in
+    the finest-detail Mapnik rendering; for my mapping style, that matters: I
+    don't abut areas to ways most of the time.
+
+ -->
+
+  <rule>
+    <condition k="area" v="yes"/><!--tentative, highways only (by position)-->
+    <area colour="#eeeeee"/>
+    <scale_max>40000</scale_max>
+  </rule>
+
+  <rule>
+    <condition k="highway" v="motorway"/>
+    <line width="10" colour="#809bc0" width_bg="12" colour_bg="#5e6e89"/>
+    <scale_min>1</scale_min>
+    <scale_max>2000000</scale_max>
+  </rule>
+
+  <rule>
+    <condition k="highway" v="motorway_link"/>
+    <line width="8" colour="#809bc0" width_bg="10" colour_bg="#5e6e89"/>
+    <scale_min>1</scale_min>
+    <scale_max>2000000</scale_max>
+  </rule>
+
+  <rule>
+    <condition k="highway" v="trunk"/>
+    <line width="9" colour="#a7dca8" width_bg="11" colour_bg="#8db48c"/>
+    <scale_min>1</scale_min>
+    <scale_max>200000</scale_max>
+  </rule>
+
+  <rule>
+    <condition k="highway" v="trunk_link"/>
+    <line width="8" colour="#a7dca8" width_bg="10" colour_bg="#8db48c"/>
+    <scale_min>1</scale_min>
+    <scale_max>200000</scale_max>
+  </rule>
+
+  <rule>
+    <condition k="highway" v="primary"/>
+    <line width="9" colour="#eb9898" width_bg="11" colour_bg="#c48080"/>
+    <scale_min>1</scale_min>
+    <scale_max>125000</scale_max>
+  </rule>
+
+  <rule>
+    <condition k="highway" v="primary_link"/>
+    <line width="7" colour="#eb9898" width_bg="9" colour_bg="#c48080"/>
+    <scale_min>1</scale_min>
+    <scale_max>125000</scale_max>
+  </rule>
+
+  <rule>
+    <condition k="highway" v="secondary"/>
+    <line width="8" colour="#fdd6a4" width_bg="10" colour_bg="#d9b689"/>
+    <scale_min>1</scale_min>
+    <scale_max>100000</scale_max>
+  </rule>
+
+  <rule>
+    <condition k="highway" v="tertiary"/>
+    <line width="8" colour="#f8f8b0" width_bg="10" colour_bg="#ccccbb"/>
+    <scale_min>1</scale_min>
+    <scale_max>75000</scale_max>
+  </rule>
+
+  <!--
+
+    Smaller roads: white or grey main area.
+
+    The normal Mapnik grey casing is #c8c8c8 for white and #a8a8a8 for grey;
+    I've darkened them a notch and a half-notch respecively here to improve
+    contrast for n810 screens.
+
   -->
-  
+
+
+
+  <!-- Needs multiple conditions
   <rule>
-    <condition k="addr:housename"/>
-    <icon src="housename.png"/>
+    <condition k="highway" v="unclassified"/>
+    <condition k="area" v="yes"/>
+    <area colour="#ffffff"/>
     <scale_min>1</scale_min>
-    <scale_max>6000</scale_max>
+    <scale_max>40000</scale_max>
+  </rule>
+  -->
+  <rule>
+    <condition k="highway" v="unclassified"/>
+    <line width="8" colour="#ffffff" width_bg="10" colour_bg="#b8b8b8"/>
+    <scale_min>1</scale_min>
+    <scale_max>40000</scale_max>
+  </rule>
+
+  <!-- Need multiple conditions
+  <rule>
+    <condition k="highway" v="pedestrian"/>
+    <condition k="area" v="yes"/>
+    <area colour="#e8e8e8"/>
+    <scale_min>1</scale_min>
+    <scale_max>30000</scale_max>
+  </rule>
+  -->
+  <rule>
+    <condition k="highway" v="pedestrian"/>
+    <line width="4" colour="#e8e8e8" width_bg="6" colour_bg="#a0a0a0"/>
+    <scale_min>1</scale_min>
+    <scale_max>30000</scale_max>
+  </rule>
+
+  <rule>
+    <condition k="highway" v="residential"/>
+    <line width="8" colour="#ffffff" width_bg="10" colour_bg="#b8b8b8"/>
+    <scale_min>1</scale_min>
+    <scale_max>30000</scale_max>
+  </rule>
+
+  <rule>
+    <condition k="highway" v="living_street"/>
+    <line width="8" colour="#ffffff" width_bg="10" colour_bg="#b8b8b8"/>
+    <scale_min>1</scale_min>
+    <scale_max>25000</scale_max>
+  </rule>
+
+  <rule>
+    <condition k="highway" v="service"/>
+    <line width="4" colour="#ffffff" width_bg="6" colour_bg="#b8b8b8"/>
+    <scale_min>1</scale_min>
+    <scale_max>15000</scale_max>
   </rule>
   <rule>
-    <condition k="addr:housenumber"/>
-    <icon src="housenumber.png"/>
-    <scale_min>1</scale_min>
-    <scale_max>6000</scale_max>
+    <condition k="service" v="parking_aisle"/>
+    <linemod width_bg="-3" width="-2"/>
   </rule>
   <rule>
-    <condition k="addr:interpolation" />
-    <line width="1" width_bg="2" colour="#99ccff" colour_bg="#bbddff" dash_length="5" dashed="true" />
-    <scale_min>1</scale_min>
-    <scale_max>6000</scale_max>
+    <condition k="service" v="driveway"/>
+    <linemod width_bg="-2" width="-1"/>
   </rule>
+
+  <!--
+    Footways, tracks, cycleways etc. Visible and editable at higher zooms.
+    Typically either not for motor vehicles, or not sufaced to the same
+    standard as the highways above.
+  --> 
+
+  <rule>
+    <condition k="highway" v="footway"/>
+    <line colour="#f98072" colour_bg="path-outline#ffffff" dashed="true" dash_length="4" width="2" width_bg="3"/>
+    <scale_min>1</scale_min>
+    <scale_max>10000</scale_max>
+  </rule>
+
+  <rule>
+    <condition k="highway" v="steps"/>
+    <line colour="#f98072" colour_bg="path-outline#ffffff" dashed="true" dash_length="2" width="4" width_bg="5"/>
+    <scale_min>1</scale_min>
+    <scale_max>10000</scale_max>
+  </rule>
+
+  <rule>
+    <condition k="highway" v="cycleway"/>
+    <line colour="#5050fe" colour_bg="path-outline#ffffff" dashed="true" width="2" dash_length="4" width_bg="3"/>
+    <scale_min>1</scale_min>
+    <scale_max>12500</scale_max>
+  </rule>
+
+  <rule>
+    <condition k="highway" v="bridleway"/>
+    <line colour="#008000" colour_bg="path-outline#ffffff" dashed="true" width="2" dash_length="4" width_bg="3"/>
+    <scale_min>1</scale_min>
+    <scale_max>12500</scale_max>
+  </rule>
+
+  <rule>
+    <condition k="highway" v="byway"/>
+    <line colour="#f8eecc" colour_bg="path-outline#ffffff" dashed="true" width="2" dash_length="4" width_bg="3"/>
+    <scale_min>1</scale_min>
+    <scale_max>12500</scale_max>
+  </rule>
+
+  <rule>
+    <condition k="highway" v="track"/>
+    <line colour="#996600" colour_bg="path-outline#ffffff" dashed="true" width="2" dash_length="4" width_bg="3"/>
+    <scale_min>1</scale_min>
+    <scale_max>12500</scale_max>
+  </rule>
+
+  <rule>
+    <condition k="highway" v="path"/>
+    <line colour="#cc7733" colour_bg="path-outline#ffffff" dashed="true" width="2" dash_length="4" width_bg="3"/>
+    <scale_min>1</scale_min>
+    <scale_max>12500</scale_max>
+  </rule>
+
 
 </rules>
 
