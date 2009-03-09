@@ -278,7 +278,7 @@ void track_seg_free(track_seg_t *seg) {
 
 /* --------------------------------------------------------------- */
 
-static void track_clear(appdata_t *appdata, track_t *track) {
+void track_clear(appdata_t *appdata, track_t *track) {
   printf("clearing track\n");
 
   if(appdata->map)
@@ -546,6 +546,16 @@ static void track_append_position(appdata_t *appdata, pos_t *pos) {
 
 static gboolean update(gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
+
+  if(! appdata->map) {
+    printf("map has gone while tracking was active, stopping tracker\n");
+    
+    if(appdata->track.handler_id) {
+      gtk_timeout_remove(appdata->track.handler_id);
+      appdata->track.handler_id = 0;
+    }
+  }
+
   if (! appdata->gps_enabled) {
     // Turn myself off gracefully.
     track_disable_gps(appdata);

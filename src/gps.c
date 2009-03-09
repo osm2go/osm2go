@@ -23,6 +23,76 @@
 
 #include "appdata.h"
 
+#ifdef ENABLE_LIBLOCATION
+
+#include <location/location-gps-device.h>
+
+pos_t *gps_get_pos(appdata_t *appdata) {
+  gps_state_t *gps_state = appdata->gps_state;
+  static pos_t retval;
+
+  if(!gps_state->fix)
+    return NULL;
+
+  retval.lat = gps_state->latitude;
+  retval.lon = gps_state->longitude;
+
+  return &retval;
+}
+
+static void
+location_changed(LocationGPSDevice *device, gps_state_t *gps_state) {
+
+  gps_state->fix = 
+    (device->fix->fields & LOCATION_GPS_DEVICE_LATLONG_SET);
+  
+  if(gps_state->fix) {
+    gps_state->latitude = device->fix->latitude;
+    gps_state->longitude = device->fix->longitude;
+  }
+}
+
+void gps_init(appdata_t *appdata) {
+  gps_state_t *gps_state = appdata->gps_state = g_new0(gps_state_t, 1);
+
+  printf("GPS init: Using liblocation\n");
+
+  gps_state->device = g_object_new(LOCATION_TYPE_GPS_DEVICE, NULL);  
+  if(!gps_state->device) {
+    printf("Unable to connect to liblocation\n");
+    return;
+  }
+
+  gps_state->idd_changed = 
+    g_signal_connect(gps_state->device, "changed", 
+		     G_CALLBACK(location_changed), gps_state);
+
+  gps_state->control = location_gpsd_control_get_default();
+  if(gps_state->control->can_control) {
+    printf("Having control over GPSD, starting it\n");
+    location_gpsd_control_start(gps_state->control);
+  }
+}
+
+void gps_release(appdata_t *appdata) { 
+  gps_state_t *gps_state = appdata->gps_state;
+
+  if(!gps_state->device) return;
+
+  /* Disconnect signal */
+  if(gps_state->control->can_control) {
+    printf("Having control over GPSD, stopping it\n");
+    location_gpsd_control_stop(gps_state->control);
+  }
+
+  g_signal_handler_disconnect(gps_state->device, gps_state->idd_changed);
+
+  g_free(appdata->gps_state);
+  appdata->gps_state = NULL;
+}
+
+#else  // ENABLE_LIBLOCATION
+
 #ifdef ENABLE_GPSBT
 #include <gpsbt.h>
 #include <gpsmgr.h>
@@ -245,6 +315,8 @@ gpointer gps_thread(gpointer data) {
 void gps_init(appdata_t *appdata) {
   appdata->gps_state = g_new0(gps_state_t, 1);
 
+  printf("GPS init: Using gpsd\n");
+
   /* start a new thread to listen to gpsd */
   appdata->gps_state->mutex = g_mutex_new();
   appdata->gps_state->thread_p = 
@@ -256,4 +328,7 @@ void gps_release(appdata_t *appdata) {
   gpsbt_stop(&appdata->gps_state->context);
 #endif
   g_free(appdata->gps_state);
+  appdata->gps_state = NULL;
 }
+
+#endif // ENABLE_LIBLOCATION

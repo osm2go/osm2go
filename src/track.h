@@ -47,5 +47,6 @@ gint track_seg_points(track_seg_t *seg);
 
 void track_save(project_t *project, track_t *track);
 track_t *track_restore(appdata_t *appdata, project_t *project);
+void track_clear(appdata_t *appdata, track_t *track);
 
 #endif // TRACK_H

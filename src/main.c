@@ -906,9 +906,9 @@ int main(int argc, char *argv[]) {
 
   g_thread_init(NULL);
   
-  gps_init(&appdata);
-
   gtk_init (&argc, &argv);
+
+  gps_init(&appdata);
 
 #ifdef USE_HILDON
   printf("Installing osso context for \"org.harbaum." PACKAGE "\"\n");
@@ -1007,6 +1007,7 @@ int main(int argc, char *argv[]) {
   puts("gtk_main() left");
 
   track_save(appdata.project, appdata.track.track);
+  track_clear(&appdata, appdata.track.track);
 
   /* save a diff if there are dirty entries */
   diff_save(appdata.project, appdata.osm);

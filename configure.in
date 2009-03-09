@@ -93,15 +93,24 @@ PKG_CHECK_EXISTS(maemo-version, [
   CFLAGS="$CFLAGS $hildon_fm_2_CFLAGS"
   LIBS="$LIBS $hildon_fm_2_LIBS"
 
-  PKG_CHECK_EXISTS(gps-bt, [
-    PKG_CHECK_MODULES([gpsbt], [gpsbt], [], [])
-    CFLAGS="$CFLAGS -DENABLE_GPSBT $gpsbt_CFLAGS"
-    LIBS="$LIBS $gpsbt_LIBS"
-  ], [AC_MSG_NOTICE([WARNING: No gpsbt found, disabling gps auto start!])])
+  # prefer liblocation over gpsbt to control gps
+  PKG_CHECK_EXISTS(liblocation, [ 
+    PKG_CHECK_MODULES([liblocation], [liblocation], [], [])
+    CFLAGS="$CFLAGS -DENABLE_LIBLOCATION $liblocation_CFLAGS"
+    LIBS="$LIBS $liblocation_LIBS"
+  ], [
+    AC_MSG_NOTICE([WARNING: liblocation not found, trying deprecated gpsbt])
 
-  PKG_CHECK_EXISTS(tablet_browser_interface, [
+    PKG_CHECK_EXISTS(gpsbt, [
+      PKG_CHECK_MODULES([gpsbt], [gpsbt], [], [])
+      CFLAGS="$CFLAGS -DENABLE_GPSBT $gpsbt_CFLAGS"
+      LIBS="$LIBS $gpsbt_LIBS"
+    ], [AC_MSG_NOTICE([WARNING: No liblocation nor gpsbt found, disabling gps auto start!])])
+  ])
+
+  PKG_CHECK_EXISTS(tablet-browser-interface, [
     CFLAGS="$CFLAGS -DENABLE_BROWSER_INTERFACE"
-  ], [AC_MSG_NOTICE([WARNING: No table-browser-interface found, disabling microb interface!])])
+  ], [AC_MSG_NOTICE([WARNING: No tablet-browser-interface found, disabling microb interface!])])
 
   # maemo uses dbus for ipc with maemo mapper
   EXTRA_OBJS="dbus.o"

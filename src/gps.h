@@ -59,13 +59,28 @@ struct gps_data_t {
 
 };
 
+#ifdef ENABLE_LIBLOCATION
+#include <location/location-gps-device.h>
+#include <location/location-gpsd-control.h>
+#endif
+
 #ifdef ENABLE_GPSBT
 #include <gpsbt.h>
 #include <gpsmgr.h>
-#include <errno.h>
 #endif
 
 typedef struct gps_state_s {
+#ifdef ENABLE_LIBLOCATION
+  LocationGPSDevice *device;
+  LocationGPSDControl *control;
+  guint idd_changed;
+
+  gboolean fix;
+  double latitude, longitude;
+
+#else
+  /* setup for direct gpsd based communication */
+
 #ifdef ENABLE_GPSBT
   gpsbt_t context;
 #endif
@@ -76,6 +91,7 @@ typedef struct gps_state_s {
   GnomeVFSSocket *socket;
 
   struct gps_data_t gpsdata;
+#endif
 } gps_state_t;
 
 void gps_init(appdata_t *appdata);
