@@ -554,6 +554,8 @@ static gboolean update(gpointer data) {
       gtk_timeout_remove(appdata->track.handler_id);
       appdata->track.handler_id = 0;
     }
+
+    return FALSE;
   }
 
   if (! appdata->gps_enabled) {
