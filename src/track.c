@@ -279,6 +279,8 @@ void track_seg_free(track_seg_t *seg) {
 /* --------------------------------------------------------------- */
 
 void track_clear(appdata_t *appdata, track_t *track) {
+  if (! track)
+    return;
   printf("clearing track\n");
 
   if(appdata->map)
