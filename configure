@@ -3802,8 +3802,9 @@ echo "$as_me: Configuring for Maemo $VERSION" >&6;}
 
 else
 
-    { echo "$as_me:$LINENO: WARNING: maemo-version not found" >&5
-echo "$as_me: WARNING: maemo-version not found" >&6;}
+    { { echo "$as_me:$LINENO: error: maemo-version not found" >&5
+echo "$as_me: error: maemo-version not found" >&2;}
+   { (exit 1); exit 1; }; }
 
 fi
 
