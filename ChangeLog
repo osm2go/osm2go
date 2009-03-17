@@ -1,3 +1,102 @@
+2009-03-17  achadwick
+
+	* [r121] src/track.c: Fix segfault when closing app when GPS
+	  tracking is off
+
+2009-03-09  harbaum
+
+	* [r119] src/track.c: GPS cleanup bug fix
+
+	* [r118] configure, configure.in, src/gps.c, src/gps.h, src/main.c,
+	  src/track.c, src/track.h: Use liblocation if available to access
+	  gps
+
+2009-03-08  achadwick
+
+	* [r117] data/elemstyles-mapnik.xml.in,
+	  data/icons/styles/mapnik/gate2.png,
+	  data/icons/styles/mapnik/housename.png,
+	  data/icons/styles/mapnik/housenumber.png: More style updates:
+	  area=yes support, more Mapnik-like interpolation
+
+2009-03-07  achadwick
+
+	* [r116] data/elemstyles-mapnik.xml.in,
+	  data/icons/styles/mapnik/cinema.p.24.png,
+	  data/icons/styles/mapnik/gate2.png,
+	  data/icons/styles/mapnik/housename.png,
+	  data/icons/styles/mapnik/housenumber.png,
+	  data/icons/styles/mapnik/library.p.20.png,
+	  data/icons/styles/mapnik/toilets.p.20.png: Mapnik style updates
+
+2009-03-06  achadwick
+
+	* [r113] Makefile.in: distclean should clean configuration output
+	  too. Some other GNUish targets
+
+2009-03-06  harbaum
+
+	* [r112] configure, configure.in, data/Makefile.in,
+	  src/Makefile.in, src/appdata.h, src/gps.c, src/gps.h,
+	  src/josm_presets.c: Maemo 5.0alpha compile fixes
+
+	* [r111] install-sh: Added install-sh for autoconf
+
+	* [r110] Makefile[DEL], Makefile.in, Makefile.maemo[DEL],
+	  aclocal.m4, configure, configure.in, data/Makefile[DEL],
+	  data/Makefile.in, data/Makefile.maemo[DEL], src/Makefile[DEL],
+	  src/Makefile.in, src/Makefile.maemo[DEL]: Initial autoconf
+	  integration
+
+2009-03-04  harbaum
+
+	* [r108] src/canvas.h, src/map.c, src/map.h: Tried to layer ways
+	  more nicely
+
+	* [r107] src/canvas.h: Track layer on top of map
+
+2009-03-03  harbaum
+
+	* [r105] src/canvas.h, src/canvas_goocanvas.c, src/map.c,
+	  src/map.h, src/map_edit.c: Canvas group handling
+
+	* [r103] src/canvas.h, src/canvas_goocanvas.c, src/map.c,
+	  src/map.h, src/map_hl.c, src/osm.h: Canvas code cleanups
+
+2009-02-28  achadwick
+
+	* [r101] src/main.c, src/misc.c: Attach copyright statement to keep
+	  licenseckeck happy
+
+2009-02-26  achadwick
+
+	* [r99] src/info.c, src/osm.h, src/relation_edit.c: Relation editor
+	  lists are now sorted by name.
+
+2009-02-22  achadwick
+
+	* [r98] src/banner.h, src/map_edit.c, src/osm.c, src/osm.h: Flip
+	  Way-Direction-Dependent tags and roles when ways are manually
+	  reversed
+
+2009-02-18  achadwick
+
+	* [r96] data/Makefile: Remove some install GNUisms for OS X,
+	  courtesy of Robert Vollmert
+
+2009-02-17  achadwick
+
+	* [r88] Makefile.maemo, src/Makefile.maemo: Insure against future
+	  tab-damage
+
+2009-02-17  harbaum
+
+	* [r86] Makefile.maemo: Minor maemo build fixes
+
+2009-02-16  achadwick
+
+	* [r82] ChangeLog, version.mk: Preparation for 0.6.13 release
+
 2009-02-15  achadwick
 
 	* [r79] Makefile, Makefile.maemo, data/icons/download.16.png,
