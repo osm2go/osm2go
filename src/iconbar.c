@@ -239,7 +239,7 @@ GtkWidget *iconbar_new(appdata_t *appdata) {
 		     gtk_separator_tool_item_new(),-1);
 
   iconbar->relation_add = tool_add(iconbar->toolbar, appdata, 
-      "relation_add", _("Edit items relations"), on_relation_add_clicked);
+      "relation_add", _("Edit item's relations"), on_relation_add_clicked);
 
   gtk_box_pack_start(GTK_BOX(box), iconbar->toolbar, TRUE, TRUE, 0);
 

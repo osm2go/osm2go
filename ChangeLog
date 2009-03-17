@@ -1,4 +1,18 @@
+2009-03-17  harbaum
+
+	* [r124] configure, configure.in, src/gps.c, src/gps.h: Maemo
+	  version detection
+
+	* [r123] data/icons/info.png, data/icons/node_add.png,
+	  data/icons/relation_add.png, data/icons/trash.png,
+	  data/icons/way_add.png, data/icons/way_cut.png,
+	  data/icons/way_node_add.png, data/icons/way_reverse.png: New main
+	  UI icons
+
 2009-03-17  achadwick
+
+	* [r122] ChangeLog, version.mk: Bump version and changelog for
+	  0.6.14
 
 	* [r121] src/track.c: Fix segfault when closing app when GPS
 	  tracking is off
