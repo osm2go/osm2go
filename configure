@@ -3786,6 +3786,27 @@ else
 echo "$as_me: WARNING: No tablet-browser-interface found, disabling microb interface!" >&6;}
 fi
 
+  if test -n "$PKG_CONFIG" && \
+    { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"maemo-version\"") >&5
+  ($PKG_CONFIG --exists --print-errors "maemo-version") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+
+    VERSION=`pkg-config --modversion maemo-version`
+    { echo "$as_me:$LINENO: Configuring for Maemo $VERSION" >&5
+echo "$as_me: Configuring for Maemo $VERSION" >&6;}
+    CFLAGS="$CFLAGS -DMAEMO_VERSION=\\\"$VERSION\\\""
+    MAJOR=`echo $VERSION | cut -b1 -`
+    CFLAGS="$CFLAGS -DMAEMO_VERSION_MAJOR=$MAJOR"
+
+else
+
+    { echo "$as_me:$LINENO: WARNING: maemo-version not found" >&5
+echo "$as_me: WARNING: maemo-version not found" >&6;}
+
+fi
+
   # maemo uses dbus for ipc with maemo mapper
   EXTRA_OBJS="dbus.o"
 

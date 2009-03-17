@@ -67,11 +67,13 @@ void gps_init(appdata_t *appdata) {
     g_signal_connect(gps_state->device, "changed", 
 		     G_CALLBACK(location_changed), gps_state);
 
+#if MAEMO_VERSION_MAJOR < 5
   gps_state->control = location_gpsd_control_get_default();
   if(gps_state->control->can_control) {
     printf("Having control over GPSD, starting it\n");
     location_gpsd_control_start(gps_state->control);
   }
+#endif
 }
 
 void gps_release(appdata_t *appdata) { 
@@ -79,11 +81,13 @@ void gps_release(appdata_t *appdata) {
 
   if(!gps_state->device) return;
 
+#if MAEMO_VERSION_MAJOR < 5
   /* Disconnect signal */
   if(gps_state->control->can_control) {
     printf("Having control over GPSD, stopping it\n");
     location_gpsd_control_stop(gps_state->control);
   }
+#endif
 
   g_signal_handler_disconnect(gps_state->device, gps_state->idd_changed);
 

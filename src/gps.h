@@ -72,7 +72,9 @@ struct gps_data_t {
 typedef struct gps_state_s {
 #ifdef ENABLE_LIBLOCATION
   LocationGPSDevice *device;
+#if MAEMO_VERSION_MAJOR < 5
   LocationGPSDControl *control;
+#endif
   guint idd_changed;
 
   gboolean fix;
