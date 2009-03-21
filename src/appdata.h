@@ -27,8 +27,6 @@
 #include <locale.h>
 #include <libintl.h>
 
-#include "version.h"
-
 #define LOCALEDIR "/usr/share/locale"
 
 #define _(String) gettext(String)

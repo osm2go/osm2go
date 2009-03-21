@@ -1,11 +1,10 @@
 [Desktop Entry]
-Encoding=UTF-8
-Name=OSM2Go
-Comment=OpenStreetMap Editor
-Exec=osm2go
-Icon=osm2go.png
-Terminal=false
+Version=1.0
+Name=OSM2Go Map Editor
+GenericName=Map Editor
+Comment=Edit openstreetmap.org map data on the road
+Exec=/usr/bin/osm2go
 Type=Application
-StartupNotify=true
-Categories=Application;GTK;Utility;Viewer;
-MimeType=application/x-GPS-Exchange-Format
+Icon=osm2go
+Terminal=false
+Categories=Education;Science;Geography;Network;Graphics;GTK

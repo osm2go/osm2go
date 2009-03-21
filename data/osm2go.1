@@ -1,0 +1,59 @@
+\" Manpage written by Andrew Chadwick <andrewc-osm2go@piffle.org> for the
+\" OSM2Go project. Author hereby waives all proprietary rights over this
+\" groff file, and dedicates it into the public domain.
+.TH OSM2GO 1 "16 February 2009" "OpenStreetMap" "Map editors"
+.SH NAME
+OSM2Go \- simple graphical map-editoring software for OpenStreetMap
+.SH SYNOPSIS
+.B osm2go
+.SH DESCRIPTION
+\fBOSM2Go\fP program is a simple editor for OpenStreetMap, a free, editable,
+map of the world. It is particularly useful for small\-screened devices such
+as handhelds or netbooks which do not have a permanent network connection.
+.SH USAGE
+The main window consists of a main map editing area, with a menu strip above,
+a toolbar on the left-hand side, and a status bar along the bottom. The 
+toolbar buttons are as follows:
+
+.RS 2
+.IP \(bu 2
+\fBDelete item\fP: deletes the currently hightlighted object.
+.IP \(bu 2
+\fBProperties\fP: edit the tags of the currently selected object.
+.IP \(bu 2
+\fBAdd node\fP: insert a new standalone node. Click the map area to place
+the node.
+.IP \(bu 2
+\fBAdd way\fP: insert a new way. Click the map area to place each point
+of the way in turn, and press the accept or cancel buttons in the lower
+left corner when you're finished.
+.IP \(bu 2
+\fBAdd node to way\fP: insert a new control point into the currently selected
+way, between two existing points.
+.IP \(bu 2
+\fBSplit way\fP: cut the currently selected way in two by deleting either a
+line segment or a point along the way.
+.IP \(bu 2
+\fBReverse way\fP: reverse the direction of the currently selected way.
+.RE 
+
+You need to create a project and download some data before starting mapping. To
+do so, choose \fIProject > Open\fP from the main menu. Latitudes and longitudes
+may be entered from any source of WGS84 (GPS) coordinates such as the
+\fIPermalink\fP button on the \fIopenstreetmap.org\fP website.
+
+Changes you make to the map are not uploaded immediately; you must tell
+\fBOSM2Go\fP to do so via the \fIOSM\fP menu. Changes are automatically saved
+between invocations of \fBOSM2Go\fP, and these locally saved changes can be
+cleared if you make a mistake. Currently there is no conventional undo
+function.
+
+.SH AUTHORS
+Till Harbaum <Till@harbaum.org>.
+.br
+This manpage was written by Andrew Chadwick <andrewc-osm2go@piffle.org>.
+.SH REPORTING BUGS
+Please report bugs at \fIhttps://garage.maemo.org/projects/osm2go/\fP.
+.SH SEE ALSO
+.BR gpsd (8),
+.BR \fIhttp://openstreetmap.org\fP.

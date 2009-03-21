@@ -15,7 +15,9 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
-#
+
+APP = @PACKAGE@
+VERSION = $${VERSION_PREFIX}@PACKAGE_VERSION@$${VERSION_SUFFIX}
 
 all:
 	cd src && make
@@ -32,6 +34,7 @@ clean:
 
 distclean: clean
 	rm -f Makefile src/Makefile data/Makefile config.log config.status
+	rm -fr autom4te.cache
 
 mostlyclean: clean
 
@@ -43,10 +46,8 @@ maintainer-clean: distclean
 ChangeLog: FORCE
 	svn2cl --group-by-day --include-rev --separate-daylogs --include-actions
 
--include version.mk
-
 tarball: distclean
-	sh mktarball.sh "$(VERSION_PREFIX)$(TRUNK_VERSION)$(VERSION_SUFFIX)"
+	sh mktarball.sh "$(VERSION)"
 
 FORCE:
 
