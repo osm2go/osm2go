@@ -17,10 +17,10 @@ install-debian:
 	install $(APP)-ubuntu.desktop $(DESTDIR)$(PREFIX)$(datadir)/applications/$(APP).desktop
 	for s in 64 32 22 16; do \
 	  install -d $(DESTDIR)$(PREFIX)$(datadir)/icons/hicolor/$${s}x$${s}/apps ;\
-	  install $(APP).$$s.png $(DESTDIR)$(PREFIX)$(datadir)/icons/hicolor/$${s}x$${s}/apps/$(APP).svg ;\
+	  install -m 644 $(APP).$$s.png $(DESTDIR)$(PREFIX)$(datadir)/icons/hicolor/$${s}x$${s}/apps/$(APP).png ;\
 	done
 	install -d $(DESTDIR)$(PREFIX)$(datadir)/icons/hicolor/scalable/apps
-	install $(APP).svg $(DESTDIR)$(PREFIX)$(datadir)/icons/hicolor/scalable/apps/$(APP).png
+	install -m 644 $(APP).svg $(DESTDIR)$(PREFIX)$(datadir)/icons/hicolor/scalable/apps/$(APP).svg
 
 
 install-maemo:
@@ -28,11 +28,11 @@ install-maemo:
 	install $(APP).desktop $(DESTDIR)$(PREFIX)$(datadir)/applications/hildon
 	for s in 40 26; do \
 	  install -d $(DESTDIR)$(PREFIX)$(datadir)/icons/hicolor/$${s}x$${s}/hildon ;\
-	  install $(APP).$$s.png $(DESTDIR)$(PREFIX)$(datadir)/icons/hicolor/$${s}x$${s}/hildon/$(APP).png ;\
+	  install -m 644 $(APP).$$s.png $(DESTDIR)$(PREFIX)$(datadir)/icons/hicolor/$${s}x$${s}/hildon/$(APP).png ;\
 	done
 	# .png file in scalable? Maemo is strange...
 	install -d $(DESTDIR)$(PREFIX)$(datadir)/icons/hicolor/scalable/hildon
-	install $(APP).64.png $(DESTDIR)$(PREFIX)$(datadir)/icons/hicolor/scalable/hildon/$(APP).png
+	install -m 644 $(APP).64.png $(DESTDIR)$(PREFIX)$(datadir)/icons/hicolor/scalable/hildon/$(APP).png
 
 
 install: @INSTALL_PLATTFORM@ $(TEMPLATE_ELEMSTYLES)
