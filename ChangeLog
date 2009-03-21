@@ -1,3 +1,22 @@
+2009-03-21  achadwick
+
+	* [r129] Makefile.in, configure, configure.in, data/Makefile.in,
+	  data/osm2go-ubuntu.desktop, data/osm2go.1[CPY],
+	  data/osm2go.16.png, data/osm2go.22.png, data/osm2go.26.png,
+	  data/osm2go.32.png, data/osm2go.40.png, data/osm2go.64.png,
+	  data/osm2go.svg[CPY], src/Makefile.in, src/appdata.h,
+	  version.mk[DEL]: Versioning fixes, more install flexibility, new
+	  desktop icon resolutions.
+
+2009-03-17  harbaum
+
+	* [r126] configure, configure.in: More fremantle autobuild tests
+
+2009-03-17  achadwick
+
+	* [r125] ChangeLog, src/iconbar.c: Correct typo; keep tracking
+	  ChangeLog
+
 2009-03-17  harbaum
 
 	* [r124] configure, configure.in, src/gps.c, src/gps.h: Maemo
