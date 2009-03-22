@@ -75,55 +75,53 @@ static void main_ui_enable(appdata_t *appdata) {
 /******************** begin of menu *********************/
 
 static void 
-cb_menu_project_open(GtkWidget *window, gpointer data) {
+cb_menu_project_open(GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
   project_load(appdata, NULL);
   main_ui_enable(appdata);
 }
 
 static void 
-cb_menu_project_close(GtkWidget *window, gpointer data) {
+cb_menu_project_close(GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
   project_close(appdata);
   main_ui_enable(appdata);
 }
 
 static void 
-cb_menu_about(GtkWidget *window, gpointer data) {
-  GtkAboutDialog *about = GTK_ABOUT_DIALOG(gtk_about_dialog_new());
-
-  gtk_about_dialog_set_name(about, "OSM2Go");
-  gtk_about_dialog_set_version(about, VERSION);
-  gtk_about_dialog_set_copyright(about, _("Copyright 2008"));
+cb_menu_about(GtkMenuItem *item, gpointer data) {
+  appdata_t *appdata = (appdata_t*)data;
 
   const gchar *authors[] = {
     "Till Harbaum <till@harbaum.org>",
     "Andrew Chadwick <andrewc-osm2go@piffle.org>",
     NULL };
 
-  gtk_about_dialog_set_authors(about, authors);
+  const gchar *artists[] = {
+    "Андрей Жилин <drew.zhilin@gmail.com>",
+    NULL };
 
-  gtk_about_dialog_set_website(about,
-       _("http://www.harbaum.org/till/maemo"));
-  
-  gtk_about_dialog_set_comments(about, 
-       _("Mobile OSM Editor"));
-
-  gtk_widget_show_all(GTK_WIDGET(about));
-  gtk_dialog_run(GTK_DIALOG(about));
-  gtk_widget_destroy(GTK_WIDGET(about));
+  gtk_show_about_dialog(GTK_WINDOW(appdata->window),
+			"program-name", "OSM2Go",
+			"version", VERSION,
+			"copyright", _("Copyright 2008-2009"),
+			"authors", authors,		
+			"artists", artists,		
+			"website", _("http://www.harbaum.org/till/maemo"),
+			"comments", _("Mobile OSM Editor"),
+			NULL);
 }
 
 void on_window_destroy (GtkWidget *widget, gpointer data);
 
 static void 
-cb_menu_quit(GtkWidget *window, gpointer data) {
+cb_menu_quit(GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
   gtk_widget_destroy(GTK_WIDGET(appdata->window));
 }
 
 static void 
-cb_menu_upload(GtkWidget *window, gpointer data) {
+cb_menu_upload(GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
   if(!appdata->osm || !appdata->project) return;
 
@@ -131,7 +129,7 @@ cb_menu_upload(GtkWidget *window, gpointer data) {
 }
 
 static void 
-cb_menu_download(GtkWidget *window, gpointer data) {
+cb_menu_download(GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
   if(!appdata->project) return;
 
@@ -158,19 +156,19 @@ cb_menu_download(GtkWidget *window, gpointer data) {
 }
 
 static void 
-cb_menu_wms_import(GtkWidget *window, gpointer data) {
+cb_menu_wms_import(GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
   wms_import(appdata);
 }
 
 static void 
-cb_menu_wms_clear(GtkWidget *window, gpointer data) {
+cb_menu_wms_clear(GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
   wms_remove(appdata);
 }
 
 static void 
-cb_menu_wms_adjust(GtkWidget *window, gpointer data) {
+cb_menu_wms_adjust(GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
   map_action_set(appdata, MAP_ACTION_BG_ADJUST);
 }
@@ -178,13 +176,13 @@ cb_menu_wms_adjust(GtkWidget *window, gpointer data) {
 /* ----------- hide objects for performance reasons ----------- */
 
 static void 
-cb_menu_map_hide_sel(GtkWidget *window, gpointer data) {
+cb_menu_map_hide_sel(GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
   map_hide_selected(appdata);
 }
 
 static void 
-cb_menu_map_show_all(GtkWidget *window, gpointer data) {
+cb_menu_map_show_all(GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
   map_show_all(appdata);
 }
@@ -193,7 +191,7 @@ cb_menu_map_show_all(GtkWidget *window, gpointer data) {
 
 #if 1  // mainly for testing
 static void 
-cb_menu_redraw(GtkWidget *window, gpointer data) {
+cb_menu_redraw(GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
 
   /* redraw the entire map by destroying all map items and redrawing them */
@@ -217,38 +215,36 @@ cb_menu_redraw(GtkWidget *window, gpointer data) {
 #endif
 
 static void 
-cb_menu_style(GtkWidget *widget, gpointer data) {
+cb_menu_style(GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
 
   style_select(GTK_WIDGET(appdata->window), appdata);
 }
 
 static void 
-cb_menu_map_no_icons(GtkWidget *widget, gpointer data) {
+cb_menu_map_no_icons(GtkCheckMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
 
   banner_busy_start(appdata, 1, "Redrawing...");
   map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
-  appdata->settings->no_icons = 
-    gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget));
+  appdata->settings->no_icons = gtk_check_menu_item_get_active(item);
   map_paint(appdata);
   banner_busy_stop(appdata); //"Redrawing..."
 }
 
 static void 
-cb_menu_map_no_antialias(GtkWidget *widget, gpointer data) {
+cb_menu_map_no_antialias(GtkCheckMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
 
   banner_busy_start(appdata, 1, "Redrawing...");
   map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
-  appdata->settings->no_antialias = 
-    gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget));
+  appdata->settings->no_antialias = gtk_check_menu_item_get_active(item);
   map_paint(appdata);
   banner_busy_stop(appdata); //"Redrawing..."
 }
 
 static void 
-cb_menu_undo(GtkWidget *widget, gpointer data) {
+cb_menu_undo(GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
 
   undo(appdata);
@@ -257,7 +253,7 @@ cb_menu_undo(GtkWidget *widget, gpointer data) {
 }
 
 static void 
-cb_menu_save_changes(GtkWidget *widget, gpointer data) {
+cb_menu_save_changes(GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
 
   diff_save(appdata->project, appdata->osm);
@@ -265,7 +261,7 @@ cb_menu_save_changes(GtkWidget *widget, gpointer data) {
 }
 
 static void 
-cb_menu_undo_changes(GtkWidget *widget, gpointer data) {
+cb_menu_undo_changes(GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
 
   if(!yes_no_f(GTK_WIDGET(appdata->window), NULL, 0, 0,
@@ -286,22 +282,22 @@ cb_menu_undo_changes(GtkWidget *widget, gpointer data) {
 }
 
 static void 
-cb_menu_osm_relations(GtkWidget *widget, gpointer data) {
+cb_menu_osm_relations(GtkMenuItem *item, gpointer data) {
   relation_list((appdata_t*)data);
 }
 
 static void 
-cb_menu_fullscreen(GtkWidget *widget, gpointer data) {
+cb_menu_fullscreen(GtkCheckMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t *)data;
 
-  if(gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget)))
+  if(gtk_check_menu_item_get_active(item))
     gtk_window_fullscreen(GTK_WINDOW(appdata->window));
   else
     gtk_window_unfullscreen(GTK_WINDOW(appdata->window));
 }
 
 static void 
-cb_menu_zoomin(GtkWidget *widget, appdata_t *appdata) {
+cb_menu_zoomin(GtkMenuItem *item, appdata_t *appdata) {
   if(!appdata || !appdata->map) return;
 
   map_set_zoom(appdata->map, appdata->map->state->zoom*ZOOM_FACTOR_MENU, TRUE);
@@ -309,7 +305,7 @@ cb_menu_zoomin(GtkWidget *widget, appdata_t *appdata) {
 }
 
 static void 
-cb_menu_zoomout(GtkWidget *widget, appdata_t *appdata) {
+cb_menu_zoomout(GtkMenuItem *item, appdata_t *appdata) {
   if(!appdata || !appdata->map) return;
 
   map_set_zoom(appdata->map, appdata->map->state->zoom/ZOOM_FACTOR_MENU, TRUE);
@@ -317,7 +313,7 @@ cb_menu_zoomout(GtkWidget *widget, appdata_t *appdata) {
 }
 
 static void 
-cb_menu_track_import(GtkWidget *window, appdata_t *appdata) {
+cb_menu_track_import(GtkMenuItem *item, appdata_t *appdata) {
 
   /* open a file selector */
   GtkWidget *dialog;
@@ -366,7 +362,7 @@ cb_menu_track_import(GtkWidget *window, appdata_t *appdata) {
 }
 
 static void 
-cb_menu_track_gps(GtkWidget *window, gpointer data) {
+cb_menu_track_gps(GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
 
   if(gtk_check_menu_item_get_active(
@@ -378,14 +374,14 @@ cb_menu_track_gps(GtkWidget *window, gpointer data) {
 }
 
 static void 
-cb_menu_track_export(GtkWidget *window, gpointer data) {
+cb_menu_track_export(GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
   messagef(GTK_WIDGET(appdata->window), _("NIY"),
 	   _("Track export is not yet supported."));
 }
 
 static void 
-cb_menu_track_clear(GtkWidget *window, gpointer data) {
+cb_menu_track_clear(GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
   track_do(appdata, TRACK_NONE, NULL);
 }
