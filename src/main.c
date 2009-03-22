@@ -98,11 +98,16 @@ cb_menu_about(GtkMenuItem *item, gpointer data) {
     NULL };
 
   const gchar *artists[] = {
+#ifdef USE_HILDON
+    /* cyrillic doesn't seem to work on hildon */
+    "Andrew Zhilin <drew.zhilin@gmail.com>",
+#else
     "Андрей Жилин <drew.zhilin@gmail.com>",
+#endif
     NULL };
 
   gtk_show_about_dialog(GTK_WINDOW(appdata->window),
-			"program-name", "OSM2Go",
+			"name", "OSM2Go",
 			"version", VERSION,
 			"copyright", _("Copyright 2008-2009"),
 			"authors", authors,		
