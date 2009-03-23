@@ -2023,7 +2023,10 @@ osm_way_reverse_direction_sensitive_roles(osm_t *osm, way_t *way) {
       g_assert(member);  // osm_way_to_relation() broken?
       
       // Then flip its role if it's one of the direction-sensitive ones
-      if (strcasecmp(member->role, DS_ROUTE_FORWARD) == 0) {
+      if (member->role == NULL) {
+        printf("null role in route relation -> ignore\n")
+      }
+      else if (strcasecmp(member->role, DS_ROUTE_FORWARD) == 0) {
         g_free(member->role);
         member->role = g_strdup(DS_ROUTE_REVERSE);
         rel_chain->relation->flags |= OSM_FLAG_DIRTY;
