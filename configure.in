@@ -139,8 +139,8 @@ PKG_CHECK_EXISTS(maemo-version, [
 
   # non-maemo device use gnome to call the web browser
   PKG_CHECK_MODULES([gnome2], [libgnome-2.0], [], [AC_MSG_ERROR([libgnome-2.0 missing])])
-  CFLAGS="$CFLAGS $gnome2_CFLAGS"
-  LIBS="$LIBS $gnome2_LIBS -DENABLE_BROWSER_INTERFACE"
+  CFLAGS="$CFLAGS $gnome2_CFLAGS -DENABLE_BROWSER_INTERFACE"
+  LIBS="$LIBS $gnome2_LIBS"
 
   INSTALL_PLATTFORM="install-debian"
   AC_SUBST(INSTALL_PLATTFORM)

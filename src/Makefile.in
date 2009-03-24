@@ -29,7 +29,8 @@ OBJS = main.o map.o osm.o osm_api.o wms.o \
 	statusbar.o project.o settings.o pos.o diff.o map_hl.o \
 	iconbar.o info.o icon.o track.o gps.o canvas_goocanvas.o \
 	area_edit.o josm_presets.o relation_edit.o misc.o map_edit.o \
-	josm_elemstyles.o style.o net_io.o banner.o undo.o $(EXTRA_OBJS)
+	josm_elemstyles.o style.o net_io.o banner.o undo.o canvas.o \
+	$(EXTRA_OBJS)
 
 DEFS = -DPACKAGE=\"$(APP)\" -DPREFIX=\"@prefix@\" -DVERSION=\"$(VERSION)\"
 CFLAGS = -Wall $(DEFS) @CFLAGS@

@@ -3976,8 +3976,8 @@ else
 echo "${ECHO_T}yes" >&6; }
 	:
 fi
-  CFLAGS="$CFLAGS $gnome2_CFLAGS"
-  LIBS="$LIBS $gnome2_LIBS -DENABLE_BROWSER_INTERFACE"
+  CFLAGS="$CFLAGS $gnome2_CFLAGS -DENABLE_BROWSER_INTERFACE"
+  LIBS="$LIBS $gnome2_LIBS"
 
   INSTALL_PLATTFORM="install-debian"
 
