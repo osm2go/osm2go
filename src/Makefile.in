@@ -33,7 +33,7 @@ OBJS = main.o map.o osm.o osm_api.o wms.o \
 	$(EXTRA_OBJS)
 
 DEFS = -DPACKAGE=\"$(APP)\" -DPREFIX=\"@prefix@\" -DVERSION=\"$(VERSION)\"
-CFLAGS = -Wall $(DEFS) @CFLAGS@
+CFLAGS = -Wall $(DEFS) @CFLAGS@ -DCANVAS_CUSTOM_ITEM_AT
 LDFLAGS = @LIBS@
 
 all: $(APP)
