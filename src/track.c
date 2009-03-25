@@ -581,7 +581,7 @@ static gboolean update(gpointer data) {
 }
 
 static void track_enable_gps(appdata_t *appdata) {
-  appdata->gps_enabled = TRUE;
+  gps_enable(appdata, TRUE);
 
   if(!appdata->track.handler_id) {
     appdata->track.handler_id = gtk_timeout_add(1000, update, appdata);
@@ -595,7 +595,7 @@ static void track_enable_gps(appdata_t *appdata) {
 }
 
 static void track_disable_gps(appdata_t *appdata) {
-  appdata->gps_enabled = FALSE;
+  gps_enable(appdata, FALSE);
 
   if(appdata->track.handler_id) {
     gtk_timeout_remove(appdata->track.handler_id);

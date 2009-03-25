@@ -79,8 +79,8 @@ void canvas_window2world(canvas_t *canvas,
 
 canvas_item_t *canvas_get_item_at(canvas_t *canvas, gint x, gint y) {
 #ifdef CANVAS_CUSTOM_ITEM_AT
-  canvas_item_info_get_at(canvas, x, y);
-#endif
+  return canvas_item_info_get_at(canvas, x, y);
+#else
   GList *list = 
     goo_canvas_get_items_at(GOO_CANVAS(canvas->widget), x, y, TRUE);
 
@@ -106,6 +106,7 @@ canvas_item_t *canvas_get_item_at(canvas_t *canvas, gint x, gint y) {
 
   g_list_free(list);
   return NULL;
+#endif
 }
 
 void canvas_set_zoom(canvas_t *canvas, gdouble zoom) {
@@ -205,7 +206,7 @@ canvas_item_t *canvas_circle_new(canvas_t *canvas, canvas_group_t group,
 
 #ifdef CANVAS_CUSTOM_ITEM_AT
   if(CANVAS_SELECTABLE & (1<<group))
-    canvas_item_info_attach_circle(canvas, item, x, y, radius + border);
+    canvas_item_info_attach_circle(canvas, group, item, x, y, radius + border);
 #endif
 
   return item;
@@ -246,7 +247,7 @@ canvas_item_t *canvas_polyline_new(canvas_t *canvas, canvas_group_t group,
 
 #ifdef CANVAS_CUSTOM_ITEM_AT
   if(CANVAS_SELECTABLE & (1<<group))
-    canvas_item_info_attach_poly(canvas, item, FALSE, points, width);
+    canvas_item_info_attach_poly(canvas, group, item, FALSE, points, width);
 #endif
 
   return item;
@@ -267,7 +268,7 @@ canvas_item_t *canvas_polygon_new(canvas_t *canvas, canvas_group_t group,
 
 #ifdef CANVAS_CUSTOM_ITEM_AT
   if(CANVAS_SELECTABLE & (1<<group))
-    canvas_item_info_attach_poly(canvas, item, TRUE, points, width);
+    canvas_item_info_attach_poly(canvas, group, item, TRUE, points, width);
 #endif
 
   return item;
@@ -283,7 +284,7 @@ canvas_item_t *canvas_image_new(canvas_t *canvas, canvas_group_t group,
 #ifdef CANVAS_CUSTOM_ITEM_AT
   if(CANVAS_SELECTABLE & (1<<group)) {
     gint radius = MAX(gdk_pixbuf_get_width(pix), gdk_pixbuf_get_height(pix));
-    canvas_item_info_attach_circle(canvas, item, x, y, radius);
+    canvas_item_info_attach_circle(canvas, group, item, x, y, radius);
   }
 #endif
 

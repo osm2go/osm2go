@@ -99,5 +99,6 @@ typedef struct gps_state_s {
 void gps_init(appdata_t *appdata);
 void gps_release(appdata_t *appdata);
 pos_t *gps_get_pos(appdata_t *appdata);
+void gps_enable(appdata_t *appdata, gboolean enable);
 
 #endif // GPS_H

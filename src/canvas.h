@@ -62,7 +62,9 @@ typedef struct {
   GooCanvasItem *group[CANVAS_GROUPS];
 
 #ifdef CANVAS_CUSTOM_ITEM_AT
-  struct canvas_item_info_s *item_info, *last_item_info;
+  struct { 
+    struct canvas_item_info_s *first, *last; 
+  } item_info[CANVAS_GROUPS];
 #endif
 
 } canvas_t;
@@ -110,6 +112,7 @@ typedef struct canvas_item_info_s {
 
   } data;
 
+  canvas_group_t group;
   canvas_item_t *item;
   struct canvas_item_info_s *prev, *next;
 } canvas_item_info_t;
@@ -175,11 +178,12 @@ void canvas_item_get_segment_pos(canvas_item_t *item, gint seg,
 				 gint *x0, gint *y0, gint *x1, gint *y1);
 
 #ifdef CANVAS_CUSTOM_ITEM_AT
-void canvas_item_info_attach_circle(canvas_t *canvas, canvas_item_t *item, 
-				    gint x, gint y, gint r);
-void canvas_item_info_attach_poly(canvas_t *canvas, canvas_item_t *item, 
+void canvas_item_info_attach_circle(canvas_t *canvas, canvas_group_t group,
+			    canvas_item_t *item, gint x, gint y, gint r);
+void canvas_item_info_attach_poly(canvas_t *canvas, canvas_group_t group, 
+		  canvas_item_t *item, 
 		  gboolean is_polygon, canvas_points_t *points, gint width);
-void canvas_item_info_get_at(canvas_t *canvas, gint x, gint y);
+canvas_item_t *canvas_item_info_get_at(canvas_t *canvas, gint x, gint y);
 void canvas_item_info_push(canvas_t *canvas, canvas_item_t *item);
 #endif
 

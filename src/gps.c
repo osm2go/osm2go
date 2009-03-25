@@ -28,6 +28,9 @@
 #include <location/location-gps-device.h>
 
 pos_t *gps_get_pos(appdata_t *appdata) {
+  if(!appdata->gps_enabled)
+    return NULL;
+
   gps_state_t *gps_state = appdata->gps_state;
   static pos_t retval;
 
@@ -69,8 +72,10 @@ void gps_init(appdata_t *appdata) {
 
 #if MAEMO_VERSION_MAJOR < 5
   gps_state->control = location_gpsd_control_get_default();
-  if(gps_state->control->can_control) {
-    printf("Having control over GPSD, starting it\n");
+
+  if(appdata->gps_enabled && gps_state->control && 
+     gps_state->control->can_control) {
+    printf("Having control over GPSD and GPS is to be enabled, starting it\n");
     location_gpsd_control_start(gps_state->control);
   }
 #endif
@@ -82,17 +87,34 @@ void gps_release(appdata_t *appdata) {
   if(!gps_state->device) return;
 
 #if MAEMO_VERSION_MAJOR < 5
-  /* Disconnect signal */
-  if(gps_state->control->can_control) {
+  if(gps_state->control && gps_state->control->can_control) {
     printf("Having control over GPSD, stopping it\n");
     location_gpsd_control_stop(gps_state->control);
   }
 #endif
 
+  /* Disconnect signal */
   g_signal_handler_disconnect(gps_state->device, gps_state->idd_changed);
 
   g_free(appdata->gps_state);
   appdata->gps_state = NULL;
+}
+
+void gps_enable(appdata_t *appdata, gboolean enable) {
+  appdata->gps_enabled = enable;
+
+#if MAEMO_VERSION_MAJOR < 5
+  gps_state_t *gps_state = appdata->gps_state;
+  if(gps_state->control && gps_state->control->can_control) {
+    printf("Having control over GPSD, %sing it\n",
+	   enable?"start":"stop");
+
+    if(enable)
+      location_gpsd_control_start(gps_state->control);
+    else
+      location_gpsd_control_stop(gps_state->control);
+  }
+#endif
 }
 
 #else  // ENABLE_LIBLOCATION
@@ -247,6 +269,10 @@ static void gps_unpack(char *buf, struct gps_data_t *gpsdata) {
       }
     }
   }
+}
+
+void gps_enable(appdata_t *appdata, gboolean enable) {
+  appdata->gps_enabled = enable;
 }
 
 gpointer gps_thread(gpointer data) {
