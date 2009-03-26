@@ -22,9 +22,8 @@
 
 typedef struct {
   appdata_t *appdata;
-  GtkWidget *dialog, *view;
+  GtkWidget *dialog, *list;
   GtkListStore *store;
-  GtkWidget *but_add, *but_remove, *but_edit;
   type_t type;
   tag_t **tag;
   int presets_type;

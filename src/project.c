@@ -313,8 +313,7 @@ static project_t *project_scan(appdata_t *appdata) {
 
 typedef struct {
   project_t *project;
-  GtkWidget *dialog, *view;
-  GtkWidget *but_new, *but_edit, *but_remove;
+  GtkWidget *dialog, *list;
   settings_t *settings;
 #ifdef USE_HILDON
   dbus_mm_pos_t *mmpos;
@@ -331,8 +330,8 @@ enum {
 };
 
 static void view_selected(select_context_t *context, project_t *project) {
-  gtk_widget_set_sensitive(context->but_remove, project != NULL);
-  gtk_widget_set_sensitive(context->but_edit, project != NULL);
+  list_button_enable(context->list, LIST_BUTTON_REMOVE, project != NULL);
+  list_button_enable(context->list, LIST_BUTTON_EDIT, project != NULL);
 
   /* check if the selected project also has a valid osm file */
   gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), 
@@ -359,13 +358,12 @@ view_selection_func(GtkTreeSelection *selection, GtkTreeModel *model,
 }
 
 /* get the currently selected project in the list, NULL if none */
-static project_t *project_get_selected(GtkWidget *view) {
+static project_t *project_get_selected(GtkWidget *list) {
   project_t *project = NULL;
   GtkTreeModel     *model;
   GtkTreeIter       iter;
 
-  GtkTreeSelection *selection = 
-    gtk_tree_view_get_selection(GTK_TREE_VIEW(view));
+  GtkTreeSelection *selection = list_get_selection(list);
   g_assert(gtk_tree_selection_get_selected(selection, &model, &iter));
   gtk_tree_model_get(model, &iter, PROJECT_COL_DATA, &project, -1);
 
@@ -435,7 +433,7 @@ gboolean project_delete(select_context_t *context, project_t *project) {
 
   /* remove from view */
   GtkTreeIter iter;
-  GtkTreeModel *model = gtk_tree_view_get_model(GTK_TREE_VIEW(context->view));
+  GtkTreeModel *model = list_get_model(context->list);
   gboolean deleted = FALSE;
   if(gtk_tree_model_get_iter_first(model, &iter)) {
     do {
@@ -554,8 +552,7 @@ static void on_project_new(GtkButton *button, gpointer data) {
   *project = project_new(context);
   if(*project) {
 
-    GtkTreeModel *model = 
-      gtk_tree_view_get_model(GTK_TREE_VIEW(context->view));
+    GtkTreeModel *model = list_get_model(context->list);
 
     GtkTreeIter iter;
     gchar *status_stock_id = NULL;
@@ -568,15 +565,14 @@ static void on_project_new(GtkButton *button, gpointer data) {
 		       PROJECT_COL_DATA,        *project,
 		       -1);
 
-    GtkTreeSelection *selection = 
-      gtk_tree_view_get_selection(GTK_TREE_VIEW(context->view));
+    GtkTreeSelection *selection = list_get_selection(context->list);
     gtk_tree_selection_select_iter(selection, &iter);
   }
 }
 
 static void on_project_delete(GtkButton *button, gpointer data) {
   select_context_t *context = (select_context_t*)data;
-  project_t *project = project_get_selected(context->view);
+  project_t *project = project_get_selected(context->list);
 
   char *str = g_strdup_printf(_("Do you really want to delete the "
 				"project \"%s\"?"), project->name);
@@ -602,7 +598,7 @@ static void on_project_delete(GtkButton *button, gpointer data) {
 
 static void on_project_edit(GtkButton *button, gpointer data) {
   select_context_t *context = (select_context_t*)data;
-  project_t *project = project_get_selected(context->view);
+  project_t *project = project_get_selected(context->list);
   g_assert(project);
 #ifdef USE_HILDON
   if(project_edit(context->dialog, project, 
@@ -615,8 +611,7 @@ static void on_project_edit(GtkButton *button, gpointer data) {
     GtkTreeIter       iter;
 
     /* description etc. may have changed, so update list */
-    GtkTreeSelection *selection = 
-      gtk_tree_view_get_selection(GTK_TREE_VIEW(context->view));
+    GtkTreeSelection *selection = list_get_selection(context->list);
     g_assert(gtk_tree_selection_get_selected(selection, &model, &iter));
 
     //     gtk_tree_model_get(model, &iter, PROJECT_COL_DATA, &project, -1);
@@ -651,36 +646,16 @@ void project_get_status_icon_stock_id(project_t *project, gchar **stock_id) {
 }
 
 static GtkWidget *project_list_widget(select_context_t *context) {
-  GtkWidget *vbox = gtk_vbox_new(FALSE,3);
-  context->view = gtk_tree_view_new();
+  context->list = list_new();
 
-  gtk_tree_selection_set_select_function(
-	 gtk_tree_view_get_selection(GTK_TREE_VIEW(context->view)), 
-	 view_selection_func, 
-	 context, NULL);
+  list_set_selection_function(context->list, view_selection_func, context);
 
-  /* --- "Name" column --- */
-  GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
-  gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(context->view),
-	-1, _("Name"), renderer, "text", PROJECT_COL_NAME, NULL);
-
-  /* --- State flags column --- */
-  GtkCellRenderer *pixbuf_renderer = gtk_cell_renderer_pixbuf_new();
-  GtkTreeViewColumn *column = gtk_tree_view_column_new_with_attributes(_("State"),
-      pixbuf_renderer, "stock_id", PROJECT_COL_STATUS,
-      NULL);
-  //gtk_tree_view_column_pack_start(column, renderer2, FALSE);
-  //gtk_tree_view_column_add_attribute(column, renderer2, "stock_id", PROJECT_COL_FLAG_DIFF_PRESENT);
-  gtk_tree_view_column_set_expand(column, FALSE);
-  gtk_tree_view_insert_column(GTK_TREE_VIEW(context->view), column, -1);
-
-  /* --- "Description" column --- */
-  renderer = gtk_cell_renderer_text_new();
-  g_object_set(renderer, "ellipsize", PANGO_ELLIPSIZE_END, NULL );
-  column = gtk_tree_view_column_new_with_attributes(
-	 _("Description"), renderer, "text", PROJECT_COL_DESCRIPTION, NULL);
-  gtk_tree_view_column_set_expand(column, TRUE);
-  gtk_tree_view_insert_column(GTK_TREE_VIEW(context->view), column, -1);
+  list_set_columns(context->list,
+		   _("Name"), PROJECT_COL_NAME, 0,
+		   _("State"), PROJECT_COL_STATUS, LIST_FLAG_STOCK_ICON,
+		   _("Description"), PROJECT_COL_DESCRIPTION, LIST_FLAG_EXPAND,
+		   NULL);
+		   
 
   /* build the store */
   GtkListStore *store = gtk_list_store_new(PROJECT_NUM_COLS, 
@@ -705,41 +680,13 @@ static GtkWidget *project_list_widget(select_context_t *context) {
     project = project->next;
   }
   
-  gtk_tree_view_set_model(GTK_TREE_VIEW(context->view), GTK_TREE_MODEL(store));
+  list_set_store(context->list, store);
   g_object_unref(store);
 
-  /* put it into a scrolled window */
-  GtkWidget *scrolled_window = gtk_scrolled_window_new(NULL, NULL);
-  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window), 
-				 GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-  gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scrolled_window), 
-				      GTK_SHADOW_ETCHED_IN);
-  gtk_container_add(GTK_CONTAINER(scrolled_window), context->view);
-  gtk_box_pack_start_defaults(GTK_BOX(vbox), scrolled_window);
+  list_set_static_buttons(context->list, G_CALLBACK(on_project_new),
+	  G_CALLBACK(on_project_edit), G_CALLBACK(on_project_delete), context);
 
-  /* ------- button box ------------ */
-
-  GtkWidget *hbox = gtk_hbox_new(TRUE,3);
-  context->but_new = gtk_button_new_with_label(_("New..."));
-  gtk_box_pack_start_defaults(GTK_BOX(hbox), context->but_new);
-  gtk_signal_connect(GTK_OBJECT(context->but_new), "clicked",
-  		     GTK_SIGNAL_FUNC(on_project_new), context);
-
-  context->but_edit = gtk_button_new_with_label(_("Edit..."));
-  gtk_widget_set_sensitive(context->but_edit, FALSE);
-  gtk_box_pack_start_defaults(GTK_BOX(hbox), context->but_edit);
-  gtk_signal_connect(GTK_OBJECT(context->but_edit), "clicked",
-    	     GTK_SIGNAL_FUNC(on_project_edit), context);
-
-  context->but_remove = gtk_button_new_with_label(_("Remove"));
-  gtk_widget_set_sensitive(context->but_remove, FALSE);
-  gtk_box_pack_start_defaults(GTK_BOX(hbox), context->but_remove);
-  gtk_signal_connect(GTK_OBJECT(context->but_remove), "clicked",
-  		     GTK_SIGNAL_FUNC(on_project_delete), context);
-
-  gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
-
-  return vbox;
+  return context->list;
 }
 
 char *project_select(appdata_t *appdata) {
@@ -775,7 +722,7 @@ char *project_select(appdata_t *appdata) {
 
   gtk_widget_show_all(context->dialog);
   if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(context->dialog))) 
-    name = g_strdup(project_get_selected(context->view)->name);
+    name = g_strdup(project_get_selected(context->list)->name);
 
   gtk_widget_destroy(context->dialog);
 

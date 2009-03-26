@@ -474,9 +474,8 @@ enum {
 typedef struct {
   appdata_t *appdata;
   wms_t *wms;
-  GtkWidget *dialog, *view;
+  GtkWidget *dialog, *list;
   GtkListStore *store;
-  GtkWidget *but_add, *but_edit, *but_remove;
   GtkWidget *server_label, *path_label;
 } wms_server_context_t;
 
@@ -485,7 +484,7 @@ static wms_server_t *get_selection(wms_server_context_t *context) {
   GtkTreeModel     *model;
   GtkTreeIter       iter;
 
-  selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(context->view));
+  selection = list_get_selection(context->list);
   if(gtk_tree_selection_get_selected(selection, &model, &iter)) {
     wms_server_t *wms_server;
     gtk_tree_model_get(model, &iter, WMS_SERVER_COL_DATA, &wms_server, -1);
@@ -501,8 +500,7 @@ static void wms_server_selected(wms_server_context_t *context,
   if(!selected && context->wms->server && context->wms->path) {
     /* if the projects settings match a list entry, then select this */
 
-    GtkTreeSelection *selection = 
-      gtk_tree_view_get_selection(GTK_TREE_VIEW(context->view));
+    GtkTreeSelection *selection = list_get_selection(context->list);
 
     /* walk the entire store to get all values */
     wms_server_t *server = NULL;
@@ -526,8 +524,8 @@ static void wms_server_selected(wms_server_context_t *context,
     }
   }
 
-  gtk_widget_set_sensitive(context->but_remove, selected != NULL);
-  gtk_widget_set_sensitive(context->but_edit, selected != NULL);
+  list_button_enable(context->list, LIST_BUTTON_REMOVE, selected != NULL);
+  list_button_enable(context->list, LIST_BUTTON_EDIT, selected != NULL);
 
   /* user can click ok if a entry is selected or if both fields are */
   /* otherwise valid */
@@ -573,7 +571,7 @@ static void on_server_remove(GtkWidget *but, wms_server_context_t *context) {
   GtkTreeModel     *model;
   GtkTreeIter       iter;
 
-  selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(context->view));
+  selection = list_get_selection(context->list);
   if(gtk_tree_selection_get_selected(selection, &model, &iter)) {
     wms_server_t *server = NULL;
     gtk_tree_model_get(model, &iter, WMS_SERVER_COL_DATA, &server, -1);
@@ -683,7 +681,7 @@ gboolean wms_server_edit(wms_server_context_t *context, gboolean edit_name,
       GtkTreeSelection *selection;
       GtkTreeModel     *model;
       GtkTreeIter       iter;
-      selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(context->view));
+      selection = list_get_selection(context->list);
       gtk_tree_selection_get_selected(selection, &model, &iter);
       gtk_list_store_set(context->store, &iter,
 			 WMS_SERVER_COL_NAME, wms_server->name,
@@ -718,7 +716,7 @@ static void on_server_edit(GtkWidget *but, wms_server_context_t *context) {
   GtkTreeModel     *model;
   GtkTreeIter       iter;
 
-  selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(context->view));
+  selection = list_get_selection(context->list);
   if(gtk_tree_selection_get_selected(selection, &model, &iter)) {
     wms_server_t *server = NULL;
     gtk_tree_model_get(model, &iter, WMS_SERVER_COL_DATA, &server, -1);
@@ -740,8 +738,7 @@ static void on_server_add(GtkWidget *but, wms_server_context_t *context) {
   (*prev)->server = g_strdup("<server url>");
   (*prev)->path   = g_strdup("<path in server>");
   
-  GtkTreeModel *model = 
-    gtk_tree_view_get_model(GTK_TREE_VIEW(context->view));
+  GtkTreeModel *model = list_get_model(context->list);
 
   GtkTreeIter iter;
   gtk_list_store_append(GTK_LIST_STORE(model), &iter);
@@ -750,8 +747,7 @@ static void on_server_add(GtkWidget *but, wms_server_context_t *context) {
 		     WMS_SERVER_COL_DATA, *prev,
 		     -1);
   
-  GtkTreeSelection *selection = 
-    gtk_tree_view_get_selection(GTK_TREE_VIEW(context->view));
+  GtkTreeSelection *selection = list_get_selection(context->list);
   gtk_tree_selection_select_iter(selection, &iter);
 
   if(!wms_server_edit(context, TRUE, *prev)) {
@@ -774,26 +770,20 @@ static void on_server_add(GtkWidget *but, wms_server_context_t *context) {
 /* widget to select a wms server from a list */
 static GtkWidget *wms_server_widget(wms_server_context_t *context) {
 
-  GtkWidget *vbox = gtk_vbox_new(FALSE,3);
-  context->view = gtk_tree_view_new();
+  context->list = list_new();
 
-  gtk_tree_selection_set_select_function(
-	 gtk_tree_view_get_selection(GTK_TREE_VIEW(context->view)), 
-	 wms_server_selection_func, 
-	 context, NULL);
+  list_set_selection_function(context->list, wms_server_selection_func, 
+			      context);
 
-  /* --- "Name" column --- */
-  GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
-  gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(context->view),
-	-1, _("Name"), renderer, "text", WMS_SERVER_COL_NAME, NULL);
-
+  list_set_columns(context->list, 
+		   _("Name"), WMS_SERVER_COL_NAME, LIST_FLAG_EXPAND, 
+		   NULL);
 
   /* build and fill the store */
   context->store = gtk_list_store_new(WMS_SERVER_NUM_COLS, 
 	        G_TYPE_STRING, G_TYPE_POINTER);
 
-  gtk_tree_view_set_model(GTK_TREE_VIEW(context->view), 
-			  GTK_TREE_MODEL(context->store));
+  list_set_store(context->list, context->store);
 
   GtkTreeIter iter;
   wms_server_t *wms_server = context->appdata->settings->wms_server;
@@ -810,37 +800,10 @@ static GtkWidget *wms_server_widget(wms_server_context_t *context) {
   
   g_object_unref(context->store);
 
-  /* put it into a scrolled window */
-  GtkWidget *scrolled_window = gtk_scrolled_window_new(NULL, NULL);
-  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window), 
-				 GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-  gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scrolled_window), 
-				      GTK_SHADOW_ETCHED_IN);
-  gtk_container_add(GTK_CONTAINER(scrolled_window), context->view);
+  list_set_static_buttons(context->list, G_CALLBACK(on_server_add), 
+	  G_CALLBACK(on_server_edit), G_CALLBACK(on_server_remove), context);
 
-  gtk_box_pack_start_defaults(GTK_BOX(vbox), scrolled_window);
-
-  /* ------- button box ------------ */
-
-  GtkWidget *hbox = gtk_hbox_new(TRUE,3);
-
-  context->but_add = gtk_button_new_with_label(_("Add..."));
-  gtk_box_pack_start_defaults(GTK_BOX(hbox), context->but_add);
-  gtk_signal_connect(GTK_OBJECT(context->but_add), "clicked",
-      		     GTK_SIGNAL_FUNC(on_server_add), context);
-
-  context->but_edit = gtk_button_new_with_label(_("Edit..."));
-  gtk_box_pack_start_defaults(GTK_BOX(hbox), context->but_edit);
-  gtk_signal_connect(GTK_OBJECT(context->but_edit), "clicked",
-      		     GTK_SIGNAL_FUNC(on_server_edit), context);
-
-  context->but_remove = gtk_button_new_with_label(_("Remove"));
-  gtk_box_pack_start_defaults(GTK_BOX(hbox), context->but_remove);
-  gtk_signal_connect(GTK_OBJECT(context->but_remove), "clicked",
-    		     GTK_SIGNAL_FUNC(on_server_remove), context);
-
-  gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
-  return vbox;
+  return context->list;
 }
 
 static gboolean wms_server_dialog(appdata_t *appdata, wms_t *wms) {

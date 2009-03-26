@@ -172,5 +172,6 @@ typedef struct appdata_s {
 #include "style.h"
 #include "net_io.h"
 #include "banner.h"
+#include "list.h"
 
 #endif // APPDATA_H

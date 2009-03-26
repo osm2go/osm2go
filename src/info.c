@@ -43,25 +43,20 @@ view_selection_func(GtkTreeSelection *selection, GtkTreeModel *model,
 		     gpointer userdata) {
   tag_context_t *context = (tag_context_t*)userdata;
   GtkTreeIter iter;
-    
+
   if(gtk_tree_model_get_iter(model, &iter, path)) {
     g_assert(gtk_tree_path_get_depth(path) == 1);
 
     tag_t *tag;
     gtk_tree_model_get(model, &iter, TAG_COL_DATA, &tag, -1);
 
-    if(context->but_remove && context->but_edit) {
-      
       /* you just cannot delete or edit the "created_by" tag */
-      if(context->but_remove && context->but_edit) {
-	if(strcasecmp(tag->key, "created_by") == 0) {
-	  gtk_widget_set_sensitive(context->but_remove, FALSE);
-	  gtk_widget_set_sensitive(context->but_edit, FALSE);
-	} else {
-	  gtk_widget_set_sensitive(context->but_remove, TRUE);
-	  gtk_widget_set_sensitive(context->but_edit, TRUE);
-	}
-      }
+    if(strcasecmp(tag->key, "created_by") == 0) {
+      list_button_enable(context->list, LIST_BUTTON_REMOVE, FALSE);
+      list_button_enable(context->list, LIST_BUTTON_EDIT, FALSE);
+    } else {
+      list_button_enable(context->list, LIST_BUTTON_REMOVE, TRUE);
+      list_button_enable(context->list, LIST_BUTTON_EDIT, TRUE);
     }
   }
   
@@ -90,11 +85,10 @@ static void update_collisions(GtkListStore *store, tag_t *tags) {
 }
 
 static void on_tag_remove(GtkWidget *but, tag_context_t *context) {
-  GtkTreeSelection *selection;
   GtkTreeModel     *model;
   GtkTreeIter       iter;
 
-  selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(context->view));
+  GtkTreeSelection *selection = list_get_selection(context->list);
   if(gtk_tree_selection_get_selected(selection, &model, &iter)) {
     tag_t *tag;
     gtk_tree_model_get(model, &iter, TAG_COL_DATA, &tag, -1);
@@ -117,8 +111,8 @@ static void on_tag_remove(GtkWidget *but, tag_context_t *context) {
   }
   
   /* disable remove and edit buttons */
-  gtk_widget_set_sensitive(context->but_remove,  FALSE);
-  gtk_widget_set_sensitive(context->but_edit,  FALSE);
+  list_button_enable(context->list, LIST_BUTTON_REMOVE, FALSE);
+  list_button_enable(context->list, LIST_BUTTON_EDIT, FALSE);
 }
 
 static gboolean tag_edit(tag_context_t *context) {
@@ -127,8 +121,7 @@ static gboolean tag_edit(tag_context_t *context) {
   GtkTreeIter iter;
   tag_t *tag;
 
-  GtkTreeSelection *sel = gtk_tree_view_get_selection(
-		      GTK_TREE_VIEW(context->view));
+  GtkTreeSelection *sel = list_get_selection(context->list);
   if(!sel) {
     printf("got no selection object\n");
     return FALSE;
@@ -258,8 +251,8 @@ static void on_tag_add(GtkWidget *button, tag_context_t *context) {
 		     TAG_COL_DATA, *tag,
 		     -1);
 
-  gtk_tree_selection_select_iter(gtk_tree_view_get_selection(
-		     GTK_TREE_VIEW(context->view)), &iter);
+  gtk_tree_selection_select_iter(
+	 list_get_selection(context->list), &iter);
 
   if(!tag_edit(context)) {
     printf("cancelled\n");
@@ -285,46 +278,43 @@ void info_tags_replace(tag_context_t *context) {
 }
 
 static GtkWidget *tag_widget(tag_context_t *context) {
-  GtkWidget *vbox = gtk_vbox_new(FALSE,3);
-  context->view = gtk_tree_view_new();
+  context->list = list_new();
 
-  gtk_tree_selection_set_select_function(
-	 gtk_tree_view_get_selection(GTK_TREE_VIEW(context->view)), 
-	 view_selection_func, 
-	 context, NULL);
+  list_set_static_buttons(context->list, G_CALLBACK(on_tag_add), 
+	  G_CALLBACK(on_tag_edit), G_CALLBACK(on_tag_remove), context);
 
-  /* --- "Key" column --- */
-  GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
-  g_object_set(renderer, 
-	       "ellipsize", PANGO_ELLIPSIZE_END, 
-	       "background", "red", 
-	       NULL );
-  GtkTreeViewColumn *column = gtk_tree_view_column_new_with_attributes(
-		 _("Key"), renderer, 
-		 "text", TAG_COL_KEY, 
-		 "background-set", TAG_COL_COLLISION,
-		 NULL);
-  gtk_tree_view_column_set_expand(column, TRUE);
-  gtk_tree_view_insert_column(GTK_TREE_VIEW(context->view), column, -1);
+  list_set_selection_function(context->list, view_selection_func, context);
 
-  /* --- "Value" column --- */
-  renderer = gtk_cell_renderer_text_new();
-  g_object_set(renderer, 
-	       "ellipsize", PANGO_ELLIPSIZE_END, 
-	       NULL );
-  column = gtk_tree_view_column_new_with_attributes(
-		 _("Value"), renderer, 
-		 "text", TAG_COL_VALUE, 
-		 NULL);
-  gtk_tree_view_column_set_expand(column, TRUE);
-  gtk_tree_view_insert_column(GTK_TREE_VIEW(context->view), column, -1);
+  list_set_user_buttons(context->list, 
+			LIST_BUTTON_USER0, _("Last..."), on_tag_last,
+			0);
 
-  /* build and fill the store */
+  /* setup both columns */
+  list_set_columns(context->list, 
+      _("Key"),   TAG_COL_KEY,   
+	   LIST_FLAG_EXPAND|LIST_FLAG_CAN_HIGHLIGHT, TAG_COL_COLLISION,
+      _("Value"), TAG_COL_VALUE,
+	   LIST_FLAG_EXPAND,
+      NULL);
+
+  GtkWidget *presets = josm_presets_select(context->appdata, context);
+  if(presets)
+    list_set_custom_user_button(context->list, LIST_BUTTON_USER1, presets);
+
+  /* disable if no appropriate "last" tags have been stored or if the */
+  /* selected item isn't a node or way */
+  if(((context->type == NODE) && 
+      (!context->appdata->map->last_node_tags)) ||
+     ((context->type == WAY) && 
+      (!context->appdata->map->last_way_tags)) ||
+     ((context->type != NODE) && (context->type != WAY)))
+	list_button_enable(context->list, LIST_BUTTON_USER0, FALSE);
+
+  /* --------- build and fill the store ------------ */
   context->store = gtk_list_store_new(TAG_NUM_COLS, 
 		G_TYPE_STRING, G_TYPE_STRING, G_TYPE_BOOLEAN, G_TYPE_POINTER);
 
-  gtk_tree_view_set_model(GTK_TREE_VIEW(context->view), 
-			  GTK_TREE_MODEL(context->store));
+  list_set_store(context->list, context->store);
 
   GtkTreeIter iter;
   tag_t *tag = *context->tag;
@@ -342,58 +332,7 @@ static GtkWidget *tag_widget(tag_context_t *context) {
   
   g_object_unref(context->store);
 
-  /* put it into a scrolled window */
-  GtkWidget *scrolled_window = gtk_scrolled_window_new(NULL, NULL);
-  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window), 
-				 GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-  gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scrolled_window), 
-				      GTK_SHADOW_ETCHED_IN);
-  //  gtk_container_set_border_width(GTK_CONTAINER(scrolled_window), 3);
-  gtk_container_add(GTK_CONTAINER(scrolled_window), context->view);
-  gtk_box_pack_start_defaults(GTK_BOX(vbox), scrolled_window);
-
-  /* ------- button box ------------ */
-
-  GtkWidget *hbox = gtk_hbox_new(TRUE,3);
-
-  GtkWidget *but_last = gtk_button_new_with_label(_("Last..."));
-  gtk_box_pack_start_defaults(GTK_BOX(hbox), but_last);
-
-  /* disable if no appropriate "last" tags have been stored or if the */
-  /* selected item isn't a node or way */
-  if(((context->type == NODE) && 
-      (!context->appdata->map->last_node_tags)) ||
-     ((context->type == WAY) && 
-      (!context->appdata->map->last_way_tags)) ||
-     ((context->type != NODE) && (context->type != WAY)))
-    gtk_widget_set_sensitive(but_last, FALSE);
-
-  gtk_signal_connect(GTK_OBJECT(but_last), "clicked",
-  		     GTK_SIGNAL_FUNC(on_tag_last), context);
-
-  GtkWidget *presets = josm_presets_select(context->appdata, context);
-  if(presets) gtk_box_pack_start_defaults(GTK_BOX(hbox), presets);
-
-  context->but_add = gtk_button_new_with_label(_("Add..."));
-  gtk_box_pack_start_defaults(GTK_BOX(hbox), context->but_add);
-  gtk_signal_connect(GTK_OBJECT(context->but_add), "clicked",
-  		     GTK_SIGNAL_FUNC(on_tag_add), context);
-
-  context->but_edit = gtk_button_new_with_label(_("Edit..."));
-  gtk_widget_set_sensitive(context->but_edit, FALSE);
-  gtk_box_pack_start_defaults(GTK_BOX(hbox), context->but_edit);
-  gtk_signal_connect(GTK_OBJECT(context->but_edit), "clicked",
-  		     GTK_SIGNAL_FUNC(on_tag_edit), context);
-
-  context->but_remove = gtk_button_new_with_label(_("Remove"));
-  gtk_widget_set_sensitive(context->but_remove, FALSE);
-  gtk_box_pack_start_defaults(GTK_BOX(hbox), context->but_remove);
-  gtk_signal_connect(GTK_OBJECT(context->but_remove), "clicked",
-		     GTK_SIGNAL_FUNC(on_tag_remove), context);
-
-
-  gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
-  return vbox;
+  return context->list;
 }
 
 /* edit tags of currently selected node or way or of the relation */
