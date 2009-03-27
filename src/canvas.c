@@ -37,9 +37,12 @@
 
 #ifdef CANVAS_CUSTOM_ITEM_AT
 
-/* extra fuzz is an extra "width" added to all objects during object */
-/* checking when the user clicks one on screen */
-#define EXTRA_FUZZ 0
+/* The fuzziness allows to specify how far besides an object a user may */
+/* click so it's still considered a click onto that object. This can */
+/* be given in meters _and_ in pixels. Both values will be added to */
+/* the total fuzziness. */ 
+#define EXTRA_FUZZINESS_METER  0
+#define EXTRA_FUZZINESS_PIXEL  5  
 
 static void canvas_item_info_free(canvas_item_info_t *info) {
   if(info->type == CANVAS_ITEM_POLY)
@@ -181,7 +184,7 @@ void canvas_item_info_attach_circle(canvas_t *canvas, canvas_group_t group,
   item->type = CANVAS_ITEM_CIRCLE;
   item->data.circle.center.x = x;
   item->data.circle.center.y = y;
-  item->data.circle.r = r + EXTRA_FUZZ;
+  item->data.circle.r = r;
 }
 
 void canvas_item_info_attach_poly(canvas_t *canvas, canvas_group_t group,
@@ -194,7 +197,7 @@ void canvas_item_info_attach_poly(canvas_t *canvas, canvas_group_t group,
 
   item->type = CANVAS_ITEM_POLY;
   item->data.poly.is_polygon = is_polygon;
-  item->data.poly.width = width + 2*EXTRA_FUZZ;
+  item->data.poly.width = width;
 
   /* allocate space for point list */
   item->data.poly.num_points = canvas_points_num(points);
@@ -221,10 +224,10 @@ void canvas_item_info_attach_poly(canvas_t *canvas, canvas_group_t group,
   }
 
   /* take width of lines into account when calculating bounding box */
-  item->data.poly.bbox.top_left.x -= width/2 + EXTRA_FUZZ;
-  item->data.poly.bbox.top_left.y -= width/2 + EXTRA_FUZZ;
-  item->data.poly.bbox.bottom_right.x += width/2 + EXTRA_FUZZ;
-  item->data.poly.bbox.bottom_right.y += width/2 + EXTRA_FUZZ;
+  item->data.poly.bbox.top_left.x -= width/2;
+  item->data.poly.bbox.top_left.y -= width/2;
+  item->data.poly.bbox.bottom_right.x += width/2;
+  item->data.poly.bbox.bottom_right.y += width/2;
 }
 
 /* check whether a given point is inside a polygon */
@@ -271,7 +274,7 @@ static gboolean inpoly(lpos_t *poly, gint npoints, gint x, gint y) {
 
 /* get the polygon/polyway segment a certain coordinate is over */
 static gint canvas_item_info_get_segment(canvas_item_info_t *item, 
-					 gint x, gint y) {
+					 gint x, gint y, gint fuzziness) {
 
   g_assert(item->type == CANVAS_ITEM_POLY);
 
@@ -302,7 +305,7 @@ static gint canvas_item_info_get_segment(canvas_item_info_t *item,
 
       /* check if this is actually on the line and closer than anything */
       /* we found so far */
-      if((n <= item->data.poly.width/2) && (n < mindist)) {
+      if((n <= (item->data.poly.width/2+fuzziness)) && (n < mindist)) {
 	retval = i;
 	mindist = n;
       }
@@ -326,6 +329,10 @@ canvas_item_t *canvas_item_info_get_at(canvas_t *canvas, gint x, gint y) {
   /* search through all groups */
   canvas_group_t group;
 
+  /* convert all "fuzziness" into meters */
+  gint fuzziness = EXTRA_FUZZINESS_METER + 
+    EXTRA_FUZZINESS_PIXEL / canvas_get_zoom(canvas);
+
   /* search from top to bottom */
   for(group = CANVAS_GROUPS; group;) {
     group--;
@@ -340,22 +347,22 @@ canvas_item_t *canvas_item_info_get_at(canvas_t *canvas, gint x, gint y) {
 	gint ydist = item->data.circle.center.y - y;
 	
 	if(xdist*xdist + ydist*ydist < 
-	   item->data.circle.r*item->data.circle.r) {
+	   (item->data.circle.r+fuzziness)*(item->data.circle.r+fuzziness)) {
 	  printf("circle item %p at %d/%d(%d)\n", item,
 		 item->data.circle.center.x, 
 		 item->data.circle.center.y,
-	       item->data.circle.r);
+		 item->data.circle.r);
 	  return item->item;
 	}
       } break;
       
       case CANVAS_ITEM_POLY: {
-	if((x >= item->data.poly.bbox.top_left.x) &&
-	   (y >= item->data.poly.bbox.top_left.y) &&
-	   (x <= item->data.poly.bbox.bottom_right.x) &&
-	   (y <= item->data.poly.bbox.bottom_right.y)) {
+	if((x >= item->data.poly.bbox.top_left.x - fuzziness) &&
+	   (y >= item->data.poly.bbox.top_left.y - fuzziness) &&
+	   (x <= item->data.poly.bbox.bottom_right.x + fuzziness) &&
+	   (y <= item->data.poly.bbox.bottom_right.y + fuzziness)) {
 	  
-	  int on_segment = canvas_item_info_get_segment(item, x, y);
+	  int on_segment = canvas_item_info_get_segment(item, x, y, fuzziness);
 	  gboolean in_poly = FALSE;
 	  if(item->data.poly.is_polygon) 
 	    in_poly = inpoly(item->data.poly.points, 

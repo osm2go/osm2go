@@ -36,50 +36,13 @@ static const guint LIST_OF_MEMBERS_DIALOG_HEIGHT  = 350;
 #endif
 
 
-/* ------------------------- some generic treeview helpers -----------------------*/
-
-
-static void
-list_pre_inplace_edit_tweak (GtkTreeModel *model)
-{
-  // Remove any current sort ordering, leaving items where they are.
-  gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(model),
-                                       GTK_TREE_SORTABLE_UNSORTED_SORT_COLUMN_ID,
-                                       GTK_SORT_ASCENDING);
-}
-
-
-/* Refocus a GtkTreeView an item specified by iter, unselecting the current
-   selection and optionally highlighting the new one. Typically called after
-   making an edit to an item with a covering sub-dialog. */
-
-static void
-list_focus_on (GtkTreeView *view, GtkTreeModel *model,
-               GtkTreeIter *iter, gboolean highlight)
-{
-  // Handle de/reselection
-  GtkTreeSelection *sel = gtk_tree_view_get_selection(view);
-  gtk_tree_selection_unselect_all(sel);
-
-  // Scroll to it, since it might now be out of view.
-  GtkTreePath *path = gtk_tree_model_get_path(model, iter);
-  gtk_tree_view_scroll_to_cell(view, path, NULL, FALSE, 0, 0);
-  gtk_tree_path_free(path);
-  
-  // reselect
-  if (highlight)
-    gtk_tree_selection_select_iter(sel, iter);
-}
-
-
 /* --------------- relation dialog for an item (node or way) ----------- */
 
 typedef struct {
   relation_item_t *item;
   appdata_t *appdata;
-  GtkWidget *dialog, *view;
+  GtkWidget *dialog, *list;
   GtkListStore *store;
-  GtkWidget *but_add, *but_edit, *but_remove;
 } relitem_context_t;
 
 enum {
@@ -248,25 +211,8 @@ static void relation_remove_item(relation_t *relation, relation_item_t *item) {
 static void relation_item_list_selected(relitem_context_t *context, 
 				   gboolean selected) {
 
-  if(context->but_remove)
-    gtk_widget_set_sensitive(context->but_remove, selected);
-  if(context->but_edit)
-    gtk_widget_set_sensitive(context->but_edit, selected);
-}
-
-static gboolean
-relation_item_list_selection_func(GtkTreeSelection *selection, GtkTreeModel *model,
-		     GtkTreePath *path, gboolean path_currently_selected,
-		     gpointer userdata) {
-  relitem_context_t *context = (relitem_context_t*)userdata;
-  GtkTreeIter iter;
-    
-  if(gtk_tree_model_get_iter(model, &iter, path)) {
-    g_assert(gtk_tree_path_get_depth(path) == 1);
-    relation_item_list_selected(context, TRUE);
-  }
-  
-  return TRUE; /* allow selection state to change */
+  list_button_enable(context->list, LIST_BUTTON_REMOVE, selected);
+  list_button_enable(context->list, LIST_BUTTON_EDIT, selected);
 }
 
 /* try to find something descriptive */
@@ -306,8 +252,7 @@ static void on_relation_item_add(GtkWidget *but, relitem_context_t *context) {
 		       RELITEM_COL_DATA, relation,
 		       -1);
 
-    gtk_tree_selection_select_iter(gtk_tree_view_get_selection(
-	       GTK_TREE_VIEW(context->view)), &iter);
+    gtk_tree_selection_select_iter(list_get_selection(context->list), &iter);
 
     /* scroll to end */
     //    GtkAdjustment *adj = gtk_scrolled_window_get_vadjustment();
@@ -320,7 +265,7 @@ static relation_t *get_selection(relitem_context_t *context) {
   GtkTreeModel     *model;
   GtkTreeIter       iter;
 
-  selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(context->view));
+  selection = list_get_selection(context->list);
   if(gtk_tree_selection_get_selected(selection, &model, &iter)) {
     relation_t *relation;
     gtk_tree_model_get(model, &iter, RELITEM_COL_DATA, &relation, -1);
@@ -361,8 +306,7 @@ static void on_relation_item_edit(GtkWidget *but, relitem_context_t *context) {
     -1);
 
   // Order will probably have changed, so refocus
-  list_focus_on(GTK_TREE_VIEW(context->view), GTK_TREE_MODEL(context->store),
-                &iter, TRUE);
+  list_focus_on(context->list, &iter, TRUE);
 }
 
 /* remove the selected relation */
@@ -383,8 +327,7 @@ static void on_relation_item_remove(GtkWidget *but, relitem_context_t *context) 
   
   /* first remove selected row from list */
   GtkTreeIter       iter;
-  GtkTreeSelection *selection = 
-    gtk_tree_view_get_selection(GTK_TREE_VIEW(context->view));
+  GtkTreeSelection *selection = list_get_selection(context->list);
   if(gtk_tree_selection_get_selected(selection, NULL, &iter)) 
     gtk_list_store_remove(context->store, &iter);
 
@@ -480,54 +423,22 @@ static gboolean relitem_is_in_relation(relation_item_t *item, relation_t *relati
 }
 
 static GtkWidget *relation_item_list_widget(relitem_context_t *context) {
-  GtkWidget *vbox = gtk_vbox_new(FALSE,3);
-  context->view = gtk_tree_view_new();
+  context->list = list_new(LIST_HILDON_WITH_HEADERS);
 
-  gtk_tree_selection_set_select_function(
-	 gtk_tree_view_get_selection(GTK_TREE_VIEW(context->view)), 
-	 relation_item_list_selection_func, 
-	 context, NULL);
-
-
-  /* --- "selected" column --- */
-  GtkCellRenderer *renderer = gtk_cell_renderer_toggle_new();
-  GtkTreeViewColumn *column = gtk_tree_view_column_new_with_attributes(
-    _(""), renderer, "active", RELITEM_COL_SELECTED, NULL);
-  g_signal_connect(renderer, "toggled", G_CALLBACK(relitem_toggled), context);
-  gtk_tree_view_column_set_sort_column_id(column, RELITEM_COL_SELECTED);
-  gtk_tree_view_insert_column(GTK_TREE_VIEW(context->view), column, -1);  
-
-  /* --- "Type" column --- */
-  renderer = gtk_cell_renderer_text_new();
-  column = gtk_tree_view_column_new_with_attributes(_("Type"), renderer,
-    "text", RELITEM_COL_TYPE, NULL);
-  gtk_tree_view_column_set_sort_column_id(column, RELITEM_COL_TYPE);
-  gtk_tree_view_insert_column(GTK_TREE_VIEW(context->view), column, -1);  
-
-  /* --- "Role" column --- */
-  renderer = gtk_cell_renderer_text_new();
-  column = gtk_tree_view_column_new_with_attributes(_("Role"), renderer,
-    "text", RELITEM_COL_ROLE, NULL);
-  gtk_tree_view_column_set_sort_column_id(column, RELITEM_COL_ROLE);
-  gtk_tree_view_insert_column(GTK_TREE_VIEW(context->view), column, -1);  
-
-  /* --- "Name" column --- */
-  renderer = gtk_cell_renderer_text_new();
-  g_object_set(renderer, "ellipsize", PANGO_ELLIPSIZE_END, NULL);
-  column = gtk_tree_view_column_new_with_attributes(_("Name"), renderer, 
-		 "text", RELITEM_COL_NAME, NULL);
-  gtk_tree_view_column_set_expand(column, TRUE);
-  gtk_tree_view_column_set_sort_column_id(column, RELITEM_COL_NAME);
-  gtk_tree_view_insert_column(GTK_TREE_VIEW(context->view), column, -1);
-
+  list_set_columns(context->list, 
+		   _(""), RELITEM_COL_SELECTED, LIST_FLAG_TOGGLE, 
+		            G_CALLBACK(relitem_toggled), context,
+		   _("Type"), RELITEM_COL_TYPE, 0,
+		   _("Role"), RELITEM_COL_ROLE, 0,
+		   _("Name"), RELITEM_COL_NAME, LIST_FLAG_ELLIPSIZE,
+		   NULL);
 
   /* build and fill the store */
   context->store = gtk_list_store_new(RELITEM_NUM_COLS, 
 		G_TYPE_BOOLEAN, G_TYPE_STRING, G_TYPE_STRING, 
 	        G_TYPE_STRING, G_TYPE_POINTER);
 
-  gtk_tree_view_set_model(GTK_TREE_VIEW(context->view), 
-			  GTK_TREE_MODEL(context->store));
+  list_set_store(context->list, context->store);
 
   // Debatable whether to sort by the "selected" or the "Name" column by
   // default. Both are be useful, in different ways.
@@ -555,40 +466,12 @@ static GtkWidget *relation_item_list_widget(relitem_context_t *context) {
   
   g_object_unref(context->store);
 
-  /* put it into a scrolled window */
-  GtkWidget *scrolled_window = gtk_scrolled_window_new(NULL, NULL);
-  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window), 
-				 GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-  gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scrolled_window), 
-				      GTK_SHADOW_ETCHED_IN);
-  gtk_container_add(GTK_CONTAINER(scrolled_window), context->view);
-
-  gtk_box_pack_start_defaults(GTK_BOX(vbox), scrolled_window);
-
-  /* ------- button box ------------ */
-
-  GtkWidget *hbox = gtk_hbox_new(TRUE,3);
-
-  context->but_add = gtk_button_new_with_label(_("Add..."));
-  //  gtk_widget_set_sensitive(context->but_add, FALSE);
-  gtk_box_pack_start_defaults(GTK_BOX(hbox), context->but_add);
-  gtk_signal_connect(GTK_OBJECT(context->but_add), "clicked",
-    		     GTK_SIGNAL_FUNC(on_relation_item_add), context);
-
-  context->but_edit = gtk_button_new_with_label(_("Edit..."));
-  gtk_box_pack_start_defaults(GTK_BOX(hbox), context->but_edit);
-  gtk_signal_connect(GTK_OBJECT(context->but_edit), "clicked",
-    		     GTK_SIGNAL_FUNC(on_relation_item_edit), context);
-
-  context->but_remove = gtk_button_new_with_label(_("Remove"));
-  gtk_box_pack_start_defaults(GTK_BOX(hbox), context->but_remove);
-  gtk_signal_connect(GTK_OBJECT(context->but_remove), "clicked",
-  		     GTK_SIGNAL_FUNC(on_relation_item_remove), context);
+  list_set_static_buttons(context->list, G_CALLBACK(on_relation_item_add),
+	  G_CALLBACK(on_relation_item_edit),G_CALLBACK(on_relation_item_remove), context);
 
   relation_item_list_selected(context, FALSE);
 
-  gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
-  return vbox;
+  return context->list;
 }
 
 void relation_add_dialog(appdata_t *appdata, relation_item_t *relitem) {
@@ -640,8 +523,7 @@ void relation_add_dialog(appdata_t *appdata, relation_item_t *relitem) {
 
 typedef struct {
   appdata_t *appdata;
-  GtkWidget *dialog, *view;
-  GtkWidget *but_members, *but_add, *but_edit, *but_remove;
+  GtkWidget *dialog, *list;
   GtkListStore *store;
 } relation_context_t;
 
@@ -659,7 +541,7 @@ static relation_t *get_selected_relation(relation_context_t *context) {
   GtkTreeModel     *model;
   GtkTreeIter       iter;
 
-  selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(context->view));
+  selection = list_get_selection(context->list);
   if(gtk_tree_selection_get_selected(selection, &model, &iter)) {
     relation_t *relation;
     gtk_tree_model_get(model, &iter, RELATION_COL_DATA, &relation, -1);
@@ -671,14 +553,11 @@ static relation_t *get_selected_relation(relation_context_t *context) {
 static void relation_list_selected(relation_context_t *context, 
 				   relation_t *selected) {
 
-  if(context->but_members)
-    gtk_widget_set_sensitive(context->but_members, 
-	     (selected != NULL) && (selected->member != NULL));
+  list_button_enable(context->list, LIST_BUTTON_USER0, 
+		     (selected != NULL) && (selected->member != NULL));
 
-  if(context->but_remove)
-    gtk_widget_set_sensitive(context->but_remove, selected != NULL);
-  if(context->but_edit)
-    gtk_widget_set_sensitive(context->but_edit, selected != NULL);
+  list_button_enable(context->list, LIST_BUTTON_REMOVE, selected != NULL);
+  list_button_enable(context->list, LIST_BUTTON_EDIT, selected != NULL);
 }
 
 static gboolean
@@ -895,8 +774,7 @@ static void on_relation_add(GtkWidget *but, relation_context_t *context) {
 		       RELATION_COL_DATA, relation,
 		       -1);
 
-    gtk_tree_selection_select_iter(gtk_tree_view_get_selection(
-	       GTK_TREE_VIEW(context->view)), &iter);
+    gtk_tree_selection_select_iter(list_get_selection(context->list), &iter);
 
     /* scroll to end */
     //    GtkAdjustment *adj = gtk_scrolled_window_get_vadjustment();
@@ -939,8 +817,7 @@ static void on_relation_edit(GtkWidget *but, relation_context_t *context) {
     -1);
 
   // Order will probably have changed, so refocus
-  list_focus_on(GTK_TREE_VIEW(context->view), GTK_TREE_MODEL(context->store),
-                &iter, TRUE);
+  list_focus_on(context->list, &iter, TRUE);
 }
 
 
@@ -962,8 +839,7 @@ static void on_relation_remove(GtkWidget *but, relation_context_t *context) {
   
   /* first remove selected row from list */
   GtkTreeIter       iter;
-  GtkTreeSelection *selection = 
-    gtk_tree_view_get_selection(GTK_TREE_VIEW(context->view));
+  GtkTreeSelection *selection = list_get_selection(context->list);
   if(gtk_tree_selection_get_selected(selection, NULL, &iter)) 
     gtk_list_store_remove(context->store, &iter);
 
@@ -974,51 +850,23 @@ static void on_relation_remove(GtkWidget *but, relation_context_t *context) {
 }
 
 static GtkWidget *relation_list_widget(relation_context_t *context) {
-  GtkWidget *vbox = gtk_vbox_new(FALSE,3);
-  context->view = gtk_tree_view_new();
+  context->list = list_new(LIST_HILDON_WITH_HEADERS);
 
-  gtk_tree_selection_set_select_function(
-	 gtk_tree_view_get_selection(GTK_TREE_VIEW(context->view)), 
-	 relation_list_selection_func, 
-	 context, NULL);
+  list_set_selection_function(context->list, relation_list_selection_func, context);
 
-  /* --- "id" column --- */
-  GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
-  GtkTreeViewColumn *column = gtk_tree_view_column_new_with_attributes(
-    _("Id"), renderer, "text", RELATION_COL_ID, NULL);
-  gtk_tree_view_column_set_sort_column_id(column, RELATION_COL_ID);
-  gtk_tree_view_insert_column(GTK_TREE_VIEW(context->view), column, -1);
-
-  /* --- "Type" column --- */
-  renderer = gtk_cell_renderer_text_new();
-  column = gtk_tree_view_column_new_with_attributes(_("Type"), renderer,
-    "text", RELATION_COL_TYPE, NULL);
-  gtk_tree_view_column_set_sort_column_id(column, RELATION_COL_TYPE);
-  gtk_tree_view_insert_column(GTK_TREE_VIEW(context->view), column, -1);
-
-  /* --- "Name" column --- */
-  renderer = gtk_cell_renderer_text_new();
-  g_object_set(renderer, "ellipsize", PANGO_ELLIPSIZE_END, NULL);
-  column = gtk_tree_view_column_new_with_attributes(_("Name"), renderer, 
-		 "text", RELATION_COL_NAME, NULL);
-  gtk_tree_view_column_set_expand(column, TRUE);
-  gtk_tree_view_column_set_sort_column_id(column, RELATION_COL_NAME);
-  gtk_tree_view_insert_column(GTK_TREE_VIEW(context->view), column, -1);
-
-  /* --- "members" column --- */
-  renderer = gtk_cell_renderer_text_new();
-  column = gtk_tree_view_column_new_with_attributes(_("Members"), renderer, 
-		 "text", RELATION_COL_MEMBERS, NULL);
-  gtk_tree_view_column_set_sort_column_id(column, RELATION_COL_MEMBERS);
-  gtk_tree_view_insert_column(GTK_TREE_VIEW(context->view), column, -1);
+  list_set_columns(context->list,
+		   _("Id"),      RELATION_COL_ID, 0,
+		   _("Type"),    RELATION_COL_TYPE, 0,
+		   _("Name"),    RELATION_COL_NAME, LIST_FLAG_ELLIPSIZE,
+		   _("Members"), RELATION_COL_MEMBERS, 0,
+		   NULL);
 
   /* build and fill the store */
   context->store = gtk_list_store_new(RELATION_NUM_COLS, 
 		G_TYPE_ITEM_ID_T, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_UINT, 
 	        G_TYPE_POINTER);
 
-  gtk_tree_view_set_model(GTK_TREE_VIEW(context->view), 
-			  GTK_TREE_MODEL(context->store));
+  list_set_store(context->list, context->store);
 
   // Sorting by ref/name by default is useful for places with lots of numbered
   // bus routes. Especially for small screens.
@@ -1048,47 +896,16 @@ static GtkWidget *relation_list_widget(relation_context_t *context) {
   
   g_object_unref(context->store);
 
-  /* put it into a scrolled window */
-  GtkWidget *scrolled_window = gtk_scrolled_window_new(NULL, NULL);
-  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window), 
-				 GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-  gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scrolled_window), 
-				      GTK_SHADOW_ETCHED_IN);
-  gtk_container_add(GTK_CONTAINER(scrolled_window), context->view);
+  list_set_static_buttons(context->list, G_CALLBACK(on_relation_add),
+     G_CALLBACK(on_relation_edit), G_CALLBACK(on_relation_remove), context);
 
-  gtk_box_pack_start_defaults(GTK_BOX(vbox), scrolled_window);
-
-  /* ------- button box ------------ */
-
-  GtkWidget *hbox = gtk_hbox_new(TRUE,3);
-
-  context->but_add = gtk_button_new_with_label(_("Add..."));
-  gtk_box_pack_start_defaults(GTK_BOX(hbox), context->but_add);
-  gtk_signal_connect(GTK_OBJECT(context->but_add), "clicked",
-      		     GTK_SIGNAL_FUNC(on_relation_add), context);
-
-  context->but_edit = gtk_button_new_with_label(_("Edit..."));
-  gtk_widget_set_sensitive(context->but_edit, FALSE);
-  gtk_box_pack_start_defaults(GTK_BOX(hbox), context->but_edit);
-  gtk_signal_connect(GTK_OBJECT(context->but_edit), "clicked",
-      		     GTK_SIGNAL_FUNC(on_relation_edit), context);
-
-  context->but_members = gtk_button_new_with_label(_("Members..."));
-  gtk_box_pack_start_defaults(GTK_BOX(hbox), context->but_members);
-  gtk_signal_connect(GTK_OBJECT(context->but_members), "clicked",
-  		     GTK_SIGNAL_FUNC(on_relation_members), context);
-
-  context->but_remove = gtk_button_new_with_label(_("Remove"));
-  gtk_widget_set_sensitive(context->but_remove, FALSE);
-  gtk_box_pack_start_defaults(GTK_BOX(hbox), context->but_remove);
-  gtk_signal_connect(GTK_OBJECT(context->but_remove), "clicked",
-    		     GTK_SIGNAL_FUNC(on_relation_remove), context);
-
-  gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
+  list_set_user_buttons(context->list, 
+	LIST_BUTTON_USER0, _("Members..."), G_CALLBACK(on_relation_members),
+	0);
 
   relation_list_selected(context, NULL);
 
-  return vbox;
+  return context->list;
 }
 
 /* a global view on all relations */

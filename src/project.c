@@ -646,14 +646,14 @@ void project_get_status_icon_stock_id(project_t *project, gchar **stock_id) {
 }
 
 static GtkWidget *project_list_widget(select_context_t *context) {
-  context->list = list_new();
+  context->list = list_new(LIST_HILDON_WITHOUT_HEADERS);
 
   list_set_selection_function(context->list, view_selection_func, context);
 
   list_set_columns(context->list,
 		   _("Name"), PROJECT_COL_NAME, 0,
 		   _("State"), PROJECT_COL_STATUS, LIST_FLAG_STOCK_ICON,
-		   _("Description"), PROJECT_COL_DESCRIPTION, LIST_FLAG_EXPAND,
+		   _("Description"), PROJECT_COL_DESCRIPTION, LIST_FLAG_ELLIPSIZE,
 		   NULL);
 		   
 

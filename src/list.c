@@ -89,24 +89,39 @@ void list_set_columns(GtkWidget *list, ...) {
       hlkey = va_arg(ap, int);
 
     GtkTreeViewColumn *column = NULL;
-    if(!(flags & LIST_FLAG_STOCK_ICON)) {
-      GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
-      g_object_set(renderer, 
-		   "ellipsize", PANGO_ELLIPSIZE_END, 
-		   (flags & LIST_FLAG_CAN_HIGHLIGHT)?"background":NULL, "red", 
-		   NULL );
-      column = gtk_tree_view_column_new_with_attributes(name, renderer, 
-	 "text", key, 
-	 (flags & LIST_FLAG_CAN_HIGHLIGHT)?"background-set":NULL, hlkey,
-	NULL);
-      gtk_tree_view_column_set_expand(column, flags & LIST_FLAG_EXPAND);
-    } else {
+
+    if(flags & LIST_FLAG_TOGGLE) {
+      GCallback cb = va_arg(ap, GCallback);
+      gpointer data = va_arg(ap, gpointer);
+
+      GtkCellRenderer *renderer = gtk_cell_renderer_toggle_new();
+      column = gtk_tree_view_column_new_with_attributes(
+			   name, renderer, "active", key, NULL);
+      g_signal_connect(renderer, "toggled", cb, data);
+    
+    } else if(flags & LIST_FLAG_STOCK_ICON) {
       GtkCellRenderer *pixbuf_renderer = gtk_cell_renderer_pixbuf_new();
       column = gtk_tree_view_column_new_with_attributes(name,
 	          pixbuf_renderer, "stock_id", key, NULL);
+    } else {
+      GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
+
+      if(flags & LIST_FLAG_CAN_HIGHLIGHT)
+	g_object_set(renderer, "background", "red", NULL );
+
+      if(flags & LIST_FLAG_ELLIPSIZE)
+	g_object_set(renderer, "ellipsize", PANGO_ELLIPSIZE_END, NULL);
+
+      column = gtk_tree_view_column_new_with_attributes(name, renderer, 
+	"text", key, 
+	 (flags & LIST_FLAG_CAN_HIGHLIGHT)?"background-set":NULL, hlkey,
+	NULL);
+
+      gtk_tree_view_column_set_expand(column, flags & (LIST_FLAG_EXPAND | LIST_FLAG_ELLIPSIZE));
     }
 
-    gtk_tree_view_insert_column(GTK_TREE_VIEW(view), column, -1);
+   gtk_tree_view_column_set_sort_column_id(column, key);
+   gtk_tree_view_insert_column(GTK_TREE_VIEW(view), column, -1);
 
     name = va_arg(ap, char*);
   }
@@ -145,7 +160,7 @@ GtkTreeSelection *list_get_selection(GtkWidget *list) {
 
 void list_button_enable(GtkWidget *list, list_button_t id, gboolean enable) {
   GtkWidget *but = list_button_get(list, id);
-  gtk_widget_set_sensitive(but, enable);
+  if(but) gtk_widget_set_sensitive(but, enable);
 }
 
 void list_set_store(GtkWidget *list, GtkListStore *store) {
@@ -220,14 +235,57 @@ GtkTreeModel *list_get_model(GtkWidget *list) {
        g_object_get_data(G_OBJECT(list), "view")));
 }
 
+void list_pre_inplace_edit_tweak (GtkTreeModel *model) {
+  // Remove any current sort ordering, leaving items where they are.
+  gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(model),
+                                       GTK_TREE_SORTABLE_UNSORTED_SORT_COLUMN_ID,
+                                       GTK_SORT_ASCENDING);
+}
+
+
+/* Refocus a GtkTreeView an item specified by iter, unselecting the current
+   selection and optionally highlighting the new one. Typically called after
+   making an edit to an item with a covering sub-dialog. */
+
+void list_focus_on(GtkWidget *list, GtkTreeIter *iter, gboolean highlight) {
+  GtkTreeView *view = g_object_get_data(G_OBJECT(list), "view");
+  GtkTreeModel *model = gtk_tree_view_get_model(view);
+
+  // Handle de/reselection
+  GtkTreeSelection *sel = gtk_tree_view_get_selection(view);
+  gtk_tree_selection_unselect_all(sel);
+
+  // Scroll to it, since it might now be out of view.
+  GtkTreePath *path = gtk_tree_model_get_path(model, iter);
+  gtk_tree_view_scroll_to_cell(view, path, NULL, FALSE, 0, 0);
+  gtk_tree_path_free(path);
+  
+  // reselect
+  if (highlight)
+    gtk_tree_selection_select_iter(sel, iter);
+}
+
+
+
 /* a generic list widget with "add", "edit" and "remove" buttons as used */
 /* for all kinds of lists in osm2go */
-GtkWidget *list_new(void) {
-
+#ifdef USE_HILDON
+GtkWidget *list_new(gboolean show_headers)
+#else
+GtkWidget *list_new(void)
+#endif
+{	    
   GtkWidget *vbox = gtk_vbox_new(FALSE,3);
   GtkWidget *view = gtk_tree_view_new();
   g_object_set_data(G_OBJECT(vbox), "view", view);
-  
+
+#ifdef USE_HILDON
+  if(show_headers) {
+    /* hildon hides these by default */
+    gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(view), TRUE); 
+  }
+#endif
+ 
   gtk_tree_selection_set_select_function(
 	 gtk_tree_view_get_selection(GTK_TREE_VIEW(view)), 
 	 list_selection_function, vbox, NULL);

@@ -30,9 +30,34 @@ typedef enum {
 } list_button_t;
 
 /* list item flags */
-#define LIST_FLAG_EXPAND         (1<<0)   /* column exapnds with dialog size */
-#define LIST_FLAG_CAN_HIGHLIGHT  (1<<1)   /* column can be highlighted */
-#define LIST_FLAG_STOCK_ICON     (1<<2)   /* column contains stock icons */
+#define LIST_FLAG_EXPAND         (1<<0)   /* column expands with dialog size */
+#define LIST_FLAG_ELLIPSIZE      (1<<1)   /* column expands and text is ellipsized */
+#define LIST_FLAG_CAN_HIGHLIGHT  (1<<2)   /* column can be highlighted */
+#define LIST_FLAG_STOCK_ICON     (1<<3)   /* column contains stock icons */
+#define LIST_FLAG_TOGGLE         (1<<4)   /* column contains a toggle item */
+
+#ifdef USE_HILDON
+
+/* on hildon a list may be system default (LIST_HILDON_WITHOUT_HEADERS), */
+/* forced to have headers (LIST_HILDON_WITH_HEADERS) or only be forced */
+/* on MAEMO5 (LIST_HILDON_WITH_HEADERS_ON_MAEMO5) */
+
+#define LIST_HILDON_WITH_HEADERS     TRUE
+#define LIST_HILDON_WITHOUT_HEADERS  FALSE
+
+#if MAEMO_VERSION_MAJOR <= 4
+#define LIST_HILDON_WITH_HEADERS_ON_MAEMO5  FALSE
+#else
+#define LIST_HILDON_WITH_HEADERS_ON_MAEMO5  TRUE
+#endif
+
+GtkWidget *list_new(gboolean show_headers);
+#else
+#define LIST_HILDON_WITH_HEADERS
+#define LIST_HILDON_WITHOUT_HEADERS
+#define LIST_HILDON_WITH_HEADERS_ON_MAEMO5
+GtkWidget *list_new(void);
+#endif
 
 GtkWidget *list_get_view(GtkWidget *list);
 void list_set_user_buttons(GtkWidget *list, ...);
@@ -46,10 +71,11 @@ void list_button_enable(GtkWidget *list, list_button_t id, gboolean enable);
 void list_set_store(GtkWidget *list, GtkListStore *store);
 void list_set_selection_function(GtkWidget *list, GtkTreeSelectionFunc func,
 				 gpointer data);
-GtkWidget *list_new(void);
 void list_set_static_buttons(GtkWidget *list, 
 	     GCallback cb_new, GCallback cb_edit, GCallback cb_remove, 
 	     gpointer data);
 GtkTreeModel *list_get_model(GtkWidget *list);
+void list_pre_inplace_edit_tweak (GtkTreeModel *model);
+void list_focus_on(GtkWidget *list, GtkTreeIter *iter, gboolean highlight);
 
 #endif // LIST_H

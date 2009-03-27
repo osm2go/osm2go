@@ -770,13 +770,13 @@ static void on_server_add(GtkWidget *but, wms_server_context_t *context) {
 /* widget to select a wms server from a list */
 static GtkWidget *wms_server_widget(wms_server_context_t *context) {
 
-  context->list = list_new();
+  context->list = list_new(LIST_HILDON_WITHOUT_HEADERS);
 
   list_set_selection_function(context->list, wms_server_selection_func, 
 			      context);
 
   list_set_columns(context->list, 
-		   _("Name"), WMS_SERVER_COL_NAME, LIST_FLAG_EXPAND, 
+		   _("Name"), WMS_SERVER_COL_NAME, LIST_FLAG_ELLIPSIZE, 
 		   NULL);
 
   /* build and fill the store */

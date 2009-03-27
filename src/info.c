@@ -278,7 +278,7 @@ void info_tags_replace(tag_context_t *context) {
 }
 
 static GtkWidget *tag_widget(tag_context_t *context) {
-  context->list = list_new();
+  context->list = list_new(LIST_HILDON_WITH_HEADERS_ON_MAEMO5);
 
   list_set_static_buttons(context->list, G_CALLBACK(on_tag_add), 
 	  G_CALLBACK(on_tag_edit), G_CALLBACK(on_tag_remove), context);
@@ -292,9 +292,9 @@ static GtkWidget *tag_widget(tag_context_t *context) {
   /* setup both columns */
   list_set_columns(context->list, 
       _("Key"),   TAG_COL_KEY,   
-	   LIST_FLAG_EXPAND|LIST_FLAG_CAN_HIGHLIGHT, TAG_COL_COLLISION,
+	   LIST_FLAG_ELLIPSIZE|LIST_FLAG_CAN_HIGHLIGHT, TAG_COL_COLLISION,
       _("Value"), TAG_COL_VALUE,
-	   LIST_FLAG_EXPAND,
+	   LIST_FLAG_ELLIPSIZE,
       NULL);
 
   GtkWidget *presets = josm_presets_select(context->appdata, context);
@@ -399,7 +399,7 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, relation_t *relation
 
   /* making the dialog a little wider makes it less "crowded" */
 #ifdef USE_HILDON
-  gtk_window_set_default_size(GTK_WINDOW(context->dialog), 500, 300);
+  gtk_window_set_default_size(GTK_WINDOW(context->dialog), 500, 400);
 #else
   // Conversely, desktop builds should display a little narrower
   gtk_window_set_default_size(GTK_WINDOW(context->dialog), 400, 300);
