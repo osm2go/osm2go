@@ -42,7 +42,7 @@
 /* be given in meters _and_ in pixels. Both values will be added to */
 /* the total fuzziness. */ 
 #define EXTRA_FUZZINESS_METER  0
-#define EXTRA_FUZZINESS_PIXEL  5  
+#define EXTRA_FUZZINESS_PIXEL  8
 
 static void canvas_item_info_free(canvas_item_info_t *info) {
   if(info->type == CANVAS_ITEM_POLY)

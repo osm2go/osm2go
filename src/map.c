@@ -172,7 +172,7 @@ static void map_node_select(appdata_t *appdata, node_t *node) {
     new_map_item = g_new0(map_item_t, 1);
     memcpy(new_map_item, map_item, sizeof(map_item_t));
     new_map_item->highlight = TRUE;
-    map_hl_circle_new(map, CANVAS_GROUP_NODES_HL, new_map_item, 
+    map_hl_circle_new(map, CANVAS_GROUP_NODES_IHL, new_map_item, 
 		      x, y, map->style->node.radius, 
 		      map->style->highlight.node_color);
   }
@@ -252,7 +252,7 @@ void map_way_select(appdata_t *appdata, way_t *way) {
       gint x = node_chain->node->lpos.x;
       gint y = node_chain->node->lpos.y;
 
-      map_hl_circle_new(map, CANVAS_GROUP_NODES_HL, new_map_item, 
+      map_hl_circle_new(map, CANVAS_GROUP_NODES_IHL, new_map_item, 
 			x, y, map->style->node.radius, 
 			map->style->highlight.node_color);
     }
