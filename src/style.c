@@ -73,10 +73,11 @@ static style_t *parse_style(xmlDocPtr doc, xmlNode *a_node) {
   style->way.zoom_max           = 0.2222;     // zoom above which it's visible & selectable
 
   style->highlight.width        = 3.0;
-  style->highlight.color        = 0xffff0080;
-  style->highlight.node_color   = 0xff000080;
-  style->highlight.touch_color  = 0x0000ff80;
-  style->highlight.arrow_color  = 0x0000ff80;
+  style->highlight.color        = 0xffff0080;  // normal highlights are yellow
+  style->highlight.node_color   = 0xff000080;  // node highlights are red
+  style->highlight.touch_color  = 0x0000ff80;  // touchnode and
+  style->highlight.arrow_color  = 0x0000ff80;  // arrows are blue
+  style->highlight.reltn_color  = 0x00ff0080;  // relation highlight is green
   style->highlight.arrow_limit  = 4.0;
 
   style->frisket.mult           = 3.0;
@@ -115,8 +116,11 @@ static style_t *parse_style(xmlDocPtr doc, xmlNode *a_node) {
 	/* ---------- icon ------------------------------------- */
       } else if(strcasecmp((char*)cur_node->name, "icon") == 0) {
 	xml_get_prop_float(cur_node, "scale", &style->icon.scale);
-        style->icon.path_prefix = 
-	  (char*)xmlGetProp(cur_node, BAD_CAST "path-prefix");
+	char *prefix = (char*)xmlGetProp(cur_node, BAD_CAST "path-prefix");
+	if(prefix) {
+	  if(style->icon.path_prefix) g_free(style->icon.path_prefix);
+	  style->icon.path_prefix = prefix;
+	}	  
 	style->icon.enable = xml_prop_is(cur_node, "enable", "true");
 
 	/* ---------- way ------------------------------------- */
@@ -154,6 +158,7 @@ static style_t *parse_style(xmlDocPtr doc, xmlNode *a_node) {
 	parse_color(cur_node, "node-color", &style->highlight.node_color);
 	parse_color(cur_node, "touch-color", &style->highlight.touch_color);
 	parse_color(cur_node, "arrow-color", &style->highlight.arrow_color);
+	parse_color(cur_node, "relation-color", &style->highlight.reltn_color);
 	xml_get_prop_float(cur_node, "width", &style->highlight.width);
 	xml_get_prop_float(cur_node, "arrow-limit", 
 			   &style->highlight.arrow_limit);

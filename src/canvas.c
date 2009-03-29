@@ -281,7 +281,7 @@ static gint canvas_item_info_get_segment(canvas_item_info_t *item,
   if(item->data.poly.num_points < 2) return -1;
 
   gint retval = -1, i;
-  double mindist = 100;
+  float mindist = 1000000.0;
   for(i=0;i<item->data.poly.num_points-1;i++) {
     
 #define AX (item->data.poly.points[i].x)
@@ -291,13 +291,13 @@ static gint canvas_item_info_get_segment(canvas_item_info_t *item,
 #define CX ((double)x)
 #define CY ((double)y)
 
-    double len2 = pow(BY-AY,2)+pow(BX-AX,2);
-    double m = ((CX-AX)*(BX-AX)+(CY-AY)*(BY-AY)) / len2;
+    float len2 = pow(BY-AY,2)+pow(BX-AX,2);
+    float m = ((CX-AX)*(BX-AX)+(CY-AY)*(BY-AY)) / len2;
     
     /* this is a possible candidate */
     if((m >= 0.0) && (m <= 1.0)) {
 
-      double n;
+      float n;
       if(fabs(BX-AX) > fabs(BY-AY))
 	n = fabs(sqrt(len2) * (AY+m*(BY-AY)-CY)/(BX-AX)); 
       else

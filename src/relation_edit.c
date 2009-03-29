@@ -20,6 +20,7 @@
 #include "appdata.h"
 
 /* UI sizes */
+/* TH: All this dialog size stuff should imho go into one central place */
 
 #ifdef USE_HILDON
 // Making the dialog a little wider makes it less "crowded" 
@@ -253,10 +254,6 @@ static void on_relation_item_add(GtkWidget *but, relitem_context_t *context) {
 		       -1);
 
     gtk_tree_selection_select_iter(list_get_selection(context->list), &iter);
-
-    /* scroll to end */
-    //    GtkAdjustment *adj = gtk_scrolled_window_get_vadjustment();
-    /* xyz */
   }
 }
 
