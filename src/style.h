@@ -70,7 +70,6 @@ typedef struct style_s {
 
   struct {
     elemstyle_color_t color, node_color, touch_color, arrow_color;
-    elemstyle_color_t reltn_color;
     float width, arrow_limit;
   } highlight;
 

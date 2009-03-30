@@ -23,7 +23,7 @@
 #include "osm.h"
 
 #define MAP_LAYER_ALL (0xffff)
-#define MAP_LAYER_OBJECTS_ONLY ((1<<CANVAS_GROUP_POLYGONS) | (1<<CANVAS_GROUP_WAYS_HL) | (1<<CANVAS_GROUP_WAYS_OL) | (1<<CANVAS_GROUP_WAYS) | (1<<CANVAS_GROUP_WAYS_INT) | (1<<CANVAS_GROUP_NODES_HL) | (1<<CANVAS_GROUP_NODES_IHL) | (1<<CANVAS_GROUP_NODES) | (1<<CANVAS_GROUP_WAYS_DIR) | (1<<CANVAS_GROUP_RELTN_HL))
+#define MAP_LAYER_OBJECTS_ONLY ((1<<CANVAS_GROUP_POLYGONS) | (1<<CANVAS_GROUP_WAYS_HL) | (1<<CANVAS_GROUP_WAYS_OL) | (1<<CANVAS_GROUP_WAYS) | (1<<CANVAS_GROUP_WAYS_INT) | (1<<CANVAS_GROUP_NODES_HL) | (1<<CANVAS_GROUP_NODES_IHL) | (1<<CANVAS_GROUP_NODES) | (1<<CANVAS_GROUP_WAYS_DIR))
 
 /* -------- all sizes are in meters ---------- */
 #define MAP_COLOR_NONE   0x0
@@ -48,7 +48,8 @@
 typedef enum { 
   MAP_TYPE_ILLEGAL=0, 
   MAP_TYPE_NODE, 
-  MAP_TYPE_WAY 
+  MAP_TYPE_WAY,
+  MAP_TYPE_RELATION
 } map_type_t;
 
 /* don't reorder these as some things in map.c */
@@ -74,6 +75,7 @@ typedef struct map_item_s {
   union {
     node_t *node;
     way_t *way;
+    relation_t *relation;
     void *ptr;
   };
   canvas_item_t *item;
@@ -195,5 +197,6 @@ void map_way_draw(map_t *map, way_t *way);
 void map_way_select(appdata_t *appdata, way_t *way);
 void map_outside_error(appdata_t *appdata);
 void map_node_draw(map_t *map, node_t *node);
+void map_relation_select(appdata_t *appdata, relation_t *relation);
 
 #endif // MAP_H

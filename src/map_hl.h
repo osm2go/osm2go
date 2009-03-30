@@ -42,5 +42,4 @@ canvas_item_t *map_hl_polygon_new(map_t *map, canvas_group_t group, map_item_t *
 void map_hl_segment_draw(map_t *map, gint width, gint x0, gint y0, gint x1, gint y1);
 
 
-
 #endif // MAP_HL_H

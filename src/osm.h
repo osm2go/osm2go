@@ -27,8 +27,10 @@
 #define OSM_FLAG_NEW      (1<<2)
 #define OSM_FLAG_HIDDEN   (1<<3)
 
-typedef gulong item_id_t;
-#define G_TYPE_ITEM_ID_T G_TYPE_ULONG
+/* item_id_t needs to be signed as osm2go uses negative ids for items */
+/* not yet registered with the main osm database */
+typedef glong item_id_t;
+#define G_TYPE_ITEM_ID_T G_TYPE_LONG
 
 #define ID_ILLEGAL  ((item_id_t)0)
 
@@ -165,6 +167,15 @@ typedef enum {
   ILLEGAL=0, NODE, WAY, RELATION, NODE_ID, WAY_ID, RELATION_ID
 } type_t;
 
+typedef struct {
+  type_t type;
+  union {
+    node_t *node;
+    way_t *way;
+    relation_t *relation;
+  };
+} object_t;
+
 typedef struct member_s {
   type_t type; 
   char   *role;
@@ -287,6 +298,8 @@ void osm_relation_attach(osm_t *osm, relation_t *relation);
 void osm_relation_delete(osm_t *osm, relation_t *relation, 
 			 gboolean permanently);
 gint osm_relation_members_num(relation_t *relation);
+
+void osm_object_set_flags(object_t *map_item, int set, int clr);
 
 #endif /* OSM_H */
 

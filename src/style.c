@@ -77,7 +77,6 @@ static style_t *parse_style(xmlDocPtr doc, xmlNode *a_node) {
   style->highlight.node_color   = 0xff000080;  // node highlights are red
   style->highlight.touch_color  = 0x0000ff80;  // touchnode and
   style->highlight.arrow_color  = 0x0000ff80;  // arrows are blue
-  style->highlight.reltn_color  = 0x00ff0080;  // relation highlight is green
   style->highlight.arrow_limit  = 4.0;
 
   style->frisket.mult           = 3.0;
@@ -158,7 +157,6 @@ static style_t *parse_style(xmlDocPtr doc, xmlNode *a_node) {
 	parse_color(cur_node, "node-color", &style->highlight.node_color);
 	parse_color(cur_node, "touch-color", &style->highlight.touch_color);
 	parse_color(cur_node, "arrow-color", &style->highlight.arrow_color);
-	parse_color(cur_node, "relation-color", &style->highlight.reltn_color);
 	xml_get_prop_float(cur_node, "width", &style->highlight.width);
 	xml_get_prop_float(cur_node, "arrow-limit", 
 			   &style->highlight.arrow_limit);

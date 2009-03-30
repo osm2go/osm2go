@@ -93,10 +93,16 @@ void icon_bar_map_item_selected(appdata_t *appdata,
 		map_item_t *map_item, gboolean selected) {
   iconbar_t *iconbar = appdata->iconbar;
 
-  gtk_widget_set_sensitive(iconbar->info, selected);
-  gtk_widget_set_sensitive(iconbar->trash, selected);
+  /* one can't remove relations by clicking this while they are */
+  /* selected. May change in the future */
+  if(selected && (!map_item || map_item->type != MAP_TYPE_RELATION)) 
+    gtk_widget_set_sensitive(iconbar->trash, TRUE);
+  else 
+    gtk_widget_set_sensitive(iconbar->trash, FALSE);
 
-  gtk_widget_set_sensitive(iconbar->relation_add, selected);
+  gtk_widget_set_sensitive(iconbar->info, map_item && selected);
+
+  gtk_widget_set_sensitive(iconbar->relation_add, map_item && selected);
 
   if(selected && map_item && map_item->type == MAP_TYPE_WAY) {
     gtk_widget_set_sensitive(iconbar->way_node_add, TRUE);

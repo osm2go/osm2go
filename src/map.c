@@ -43,6 +43,12 @@ static void map_statusbar(map_t *map, map_item_t *map_item) {
     tag = map_item->way->tag;
     break;
 
+  case MAP_TYPE_RELATION:
+    item_str = "Relation";
+    id = map_item->relation->id;
+    tag = map_item->relation->tag;
+    break;
+
   default:
     break;
   }
@@ -287,6 +293,84 @@ void map_way_select(appdata_t *appdata, way_t *way) {
 		map->style->highlight.color);
 
     canvas_points_free(points);
+  }
+}
+
+void map_relation_select(appdata_t *appdata, relation_t *relation) {
+  map_t *map = appdata->map;
+
+  printf("highlighting relation %ld\n", relation->id);
+
+  g_assert(!map->highlight);
+  map_highlight_t **hl = &map->highlight;
+
+  map_item_t *map_item = &map->selected;
+  map_item->type      = MAP_TYPE_RELATION;
+  map_item->relation  = relation;
+  map_item->highlight = FALSE;
+  map_item->item      = NULL;
+
+  map_statusbar(map, map_item);
+  icon_bar_map_item_selected(appdata, map_item, TRUE);
+
+  /* process all members */
+  member_t *member = relation->member;
+  while(member) {
+    canvas_item_t *item = NULL;
+
+    switch(member->type) {
+
+    case NODE: {
+      node_t *node = member->node;
+      printf("  -> node %ld\n", node->id);
+
+      item = canvas_circle_new(map->canvas, CANVAS_GROUP_NODES_HL, 
+			node->lpos.x, node->lpos.y, 
+			map->style->highlight.width + map->style->node.radius, 
+			0, map->style->highlight.color, NO_COLOR);
+      } break;
+
+    case WAY: {
+      way_t *way = member->way;
+      /* a way needs at least 2 points to be drawn */
+      guint nodes = osm_way_number_of_nodes(way);
+      if(nodes > 1) {
+	
+	/* allocate space for nodes */
+	canvas_points_t *points = canvas_points_new(nodes);
+	
+	int node = 0;
+	node_chain_t *node_chain = way->node_chain;
+	while(node_chain) {
+	  canvas_point_set_pos(points, node++, &node_chain->node->lpos);
+	  node_chain = node_chain->next;
+	}
+
+	if(way->draw.flags & OSM_DRAW_FLAG_AREA) 
+	  item = canvas_polygon_new(map->canvas, CANVAS_GROUP_WAYS_HL, points, 0, 0,
+				    map->style->highlight.color);
+	else
+	  item = canvas_polyline_new(map->canvas, CANVAS_GROUP_WAYS_HL, points,
+			      (way->draw.flags & OSM_DRAW_FLAG_BG)?
+			      2*map->style->highlight.width + way->draw.bg.width:
+			      2*map->style->highlight.width + way->draw.width, 
+			      map->style->highlight.color);
+
+	canvas_points_free(points);
+      } } break;
+      
+    default:
+      break;
+    }
+
+    /* attach item to item chain */
+    if(item) {
+      *hl = g_new0(map_highlight_t, 1);
+      (*hl)->item = item;
+      hl = &(*hl)->next;
+    }
+
+    member = member->next;
   }
 }
 
@@ -1743,6 +1827,11 @@ void map_item_set_flags(map_item_t *map_item, int set, int clr) {
     map_item->way->flags &= ~clr;
     break;
 
+  case MAP_TYPE_RELATION:
+    map_item->relation->flags |=  set;
+    map_item->relation->flags &= ~clr;
+    break;
+
   default:
     g_assert(0);
     break;
@@ -2162,4 +2251,5 @@ void map_show_all(appdata_t *appdata) {
 
   gtk_widget_set_sensitive(appdata->menu_item_map_show_all, FALSE);
 }
+
 // vim:et:ts=8:sw=2:sts=2:ai

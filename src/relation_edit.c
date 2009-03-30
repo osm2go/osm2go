@@ -228,11 +228,19 @@ static char *relation_get_descriptive_name(relation_t *relation) {
   return name;
 }
 
+static gboolean relation_info_dialog(GtkWidget *parent, appdata_t *appdata, 
+				     relation_t *relation) {
+
+  object_t object = { .type = RELATION };
+  object.relation = relation;
+  return info_dialog(parent, appdata, &object);
+} 
+
 static void on_relation_item_add(GtkWidget *but, relitem_context_t *context) {
   /* create a new relation */
 
   relation_t *relation = osm_relation_new();
-  if(!info_dialog(context->dialog, context->appdata, relation)) {
+  if(!relation_info_dialog(context->dialog, context->appdata, relation)) {
     printf("tag edit cancelled\n");
     osm_relation_free(relation);
   } else {
@@ -277,7 +285,7 @@ static void on_relation_item_edit(GtkWidget *but, relitem_context_t *context) {
 
   printf("edit relation item #%ld\n", sel->id);
 
-  if (!info_dialog(context->dialog, context->appdata, sel))
+  if (!relation_info_dialog(context->dialog, context->appdata, sel))
     return;
 
   // Locate the changed item
@@ -464,7 +472,8 @@ static GtkWidget *relation_item_list_widget(relitem_context_t *context) {
   g_object_unref(context->store);
 
   list_set_static_buttons(context->list, G_CALLBACK(on_relation_item_add),
-	  G_CALLBACK(on_relation_item_edit),G_CALLBACK(on_relation_item_remove), context);
+	G_CALLBACK(on_relation_item_edit),G_CALLBACK(on_relation_item_remove), 
+        context);
 
   relation_item_list_selected(context, FALSE);
 
@@ -520,7 +529,7 @@ void relation_add_dialog(appdata_t *appdata, relation_item_t *relitem) {
 
 typedef struct {
   appdata_t *appdata;
-  GtkWidget *dialog, *list;
+  GtkWidget *dialog, *list, *show_btn;
   GtkListStore *store;
 } relation_context_t;
 
@@ -551,6 +560,8 @@ static void relation_list_selected(relation_context_t *context,
 				   relation_t *selected) {
 
   list_button_enable(context->list, LIST_BUTTON_USER0, 
+		     (selected != NULL) && (selected->member != NULL));
+  gtk_widget_set_sensitive(context->show_btn,
 		     (selected != NULL) && (selected->member != NULL));
 
   list_button_enable(context->list, LIST_BUTTON_REMOVE, selected != NULL);
@@ -747,7 +758,7 @@ static void on_relation_add(GtkWidget *but, relation_context_t *context) {
   /* create a new relation */
 
   relation_t *relation = osm_relation_new();
-  if(!info_dialog(context->dialog, context->appdata, relation)) {
+  if(!relation_info_dialog(context->dialog, context->appdata, relation)) {
     printf("tag edit cancelled\n");
     osm_relation_free(relation);
   } else {
@@ -786,7 +797,7 @@ static void on_relation_edit(GtkWidget *but, relation_context_t *context) {
 
   printf("edit relation #%ld\n", sel->id);
 
-  if (!info_dialog(context->dialog, context->appdata, sel))
+  if (!relation_info_dialog(context->dialog, context->appdata, sel))
     return;
 
   // Locate the changed item
@@ -849,7 +860,8 @@ static void on_relation_remove(GtkWidget *but, relation_context_t *context) {
 static GtkWidget *relation_list_widget(relation_context_t *context) {
   context->list = list_new(LIST_HILDON_WITH_HEADERS);
 
-  list_set_selection_function(context->list, relation_list_selection_func, context);
+  list_set_selection_function(context->list, relation_list_selection_func, 
+			      context);
 
   list_set_columns(context->list,
 		   _("Id"),      RELATION_COL_ID, 0,
@@ -925,15 +937,24 @@ void relation_list(appdata_t *appdata) {
                               LIST_OF_RELATIONS_DIALOG_WIDTH,
                               LIST_OF_RELATIONS_DIALOG_HEIGHT);
   
+  context->show_btn = gtk_dialog_add_button(GTK_DIALOG(context->dialog), 
+					    _("Select"), GTK_RESPONSE_HELP);
+
   gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context->dialog)->vbox),
   		     relation_list_widget(context), TRUE, TRUE, 0);
 
   /* ----------------------------------- */
 
-  gtk_widget_show_all(context->dialog);
-  gtk_dialog_run(GTK_DIALOG(context->dialog));
-  gtk_widget_destroy(context->dialog);
 
+  gtk_widget_show_all(context->dialog);
+  if(gtk_dialog_run(GTK_DIALOG(context->dialog)) == GTK_RESPONSE_HELP) {
+    map_item_deselect(appdata);
+
+    relation_t *sel = get_selected_relation(context);
+    if(sel) map_relation_select(appdata, sel);
+  }
+
+  gtk_widget_destroy(context->dialog);
   g_free(context);
 }
 

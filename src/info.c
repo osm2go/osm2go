@@ -211,11 +211,11 @@ static void on_tag_last(GtkWidget *button, tag_context_t *context) {
 	      _("This will overwrite all tags of this %s with the "
 		"ones from the %s selected last.\n\n"
 		"Do you really want this?"),
-	      type_name[context->type], type_name[context->type])) {
+	      type_name[context->object.type], type_name[context->object.type])) {
 
     osm_tags_free(*context->tag);
 
-    if(context->type == NODE)
+    if(context->object.type == NODE)
       *context->tag = osm_tags_copy(context->appdata->map->last_node_tags, TRUE);
     else
       *context->tag = osm_tags_copy(context->appdata->map->last_way_tags, TRUE);
@@ -303,11 +303,11 @@ static GtkWidget *tag_widget(tag_context_t *context) {
 
   /* disable if no appropriate "last" tags have been stored or if the */
   /* selected item isn't a node or way */
-  if(((context->type == NODE) && 
+  if(((context->object.type == NODE) && 
       (!context->appdata->map->last_node_tags)) ||
-     ((context->type == WAY) && 
+     ((context->object.type == WAY) && 
       (!context->appdata->map->last_way_tags)) ||
-     ((context->type != NODE) && (context->type != WAY)))
+     ((context->object.type != NODE) && (context->object.type != WAY)))
 	list_button_enable(context->list, LIST_BUTTON_USER0, FALSE);
 
   /* --------- build and fill the store ------------ */
@@ -337,9 +337,7 @@ static GtkWidget *tag_widget(tag_context_t *context) {
 
 /* edit tags of currently selected node or way or of the relation */
 /* given */
-gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, relation_t *relation) {
-  if(!relation)
-    g_assert(appdata->map->selected.type != MAP_TYPE_ILLEGAL);
+gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
 
   tag_context_t *context = g_new0(tag_context_t, 1);
   user_t *user = NULL;
@@ -350,41 +348,65 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, relation_t *relation
   context->appdata = appdata;
   context->tag = &work_copy;
 
-  if(!relation) {
+  /* use implicit selection if not explicitely given */
+  if(!object) {
+    g_assert(appdata->map->selected.type != MAP_TYPE_ILLEGAL);
     switch(appdata->map->selected.type) {
     case MAP_TYPE_NODE:
-      str = g_strdup_printf(_("Node #%ld"), appdata->map->selected.node->id);
-      user = appdata->map->selected.node->user;
-      work_copy = osm_tags_copy(appdata->map->selected.node->tag, FALSE);
-      stime = appdata->map->selected.node->time;
-      context->type = NODE;
-      context->presets_type = PRESETS_TYPE_NODE;
+      context->object.type = NODE;
+      context->object.node = appdata->map->selected.node;
       break;
     case MAP_TYPE_WAY:
-      str = g_strdup_printf(_("Way #%ld"), appdata->map->selected.way->id);
-      user = appdata->map->selected.way->user;
-      work_copy = osm_tags_copy(appdata->map->selected.way->tag, FALSE);
-      stime = appdata->map->selected.way->time;
-      context->type = WAY;
-      context->presets_type = PRESETS_TYPE_WAY;
-
-      if(osm_way_get_last_node(appdata->map->selected.way) == 
-	 osm_way_get_first_node(appdata->map->selected.way))
-	context->presets_type |= PRESETS_TYPE_CLOSEDWAY;
-
+      context->object.type = WAY;
+      context->object.way = appdata->map->selected.way;
+      break;
+    case MAP_TYPE_RELATION:
+      context->object.type = RELATION;
+      context->object.relation = appdata->map->selected.relation;
       break;
     default:
-      g_assert((appdata->map->selected.type == MAP_TYPE_NODE) ||
-	       (appdata->map->selected.type == MAP_TYPE_WAY));
+      printf("ERROR: info_dialog not on NODE, WAY or RELATION\n");
+      g_assert(0);
       break;
     }
-  } else {
-    str = g_strdup_printf(_("Relation #%ld"), relation->id);
-    user = relation->user;
-    work_copy = osm_tags_copy(relation->tag, FALSE);
-    stime = relation->time;
-    context->type = RELATION;
+  } else 
+    context->object = *object;
+
+  switch(context->object.type) {
+  case NODE:
+    str = g_strdup_printf(_("Node #%ld"), context->object.node->id);
+    user = context->object.node->user;
+    work_copy = osm_tags_copy(context->object.node->tag, FALSE);
+    stime = context->object.node->time;
+    context->presets_type = PRESETS_TYPE_NODE;
+    break;
+
+  case WAY:
+    str = g_strdup_printf(_("Way #%ld"), context->object.way->id);
+    user = context->object.way->user;
+    work_copy = osm_tags_copy(context->object.way->tag, FALSE);
+    stime = context->object.way->time;
+    context->presets_type = PRESETS_TYPE_WAY;
+    
+    if(osm_way_get_last_node(context->object.way) == 
+       osm_way_get_first_node(context->object.way))
+      context->presets_type |= PRESETS_TYPE_CLOSEDWAY;
+    
+    break;
+    
+  case MAP_TYPE_RELATION:
+    str = g_strdup_printf(_("Relation #%ld"), context->object.relation->id);
+    user = context->object.relation->user;
+    work_copy = osm_tags_copy(context->object.relation->tag, FALSE);
+    stime = context->object.relation->time;
     context->presets_type = PRESETS_TYPE_RELATION;
+    break;
+
+  default:
+    g_assert((context->object.type == MAP_TYPE_NODE) ||
+	     (context->object.type == MAP_TYPE_WAY) ||
+	     (context->object.type == MAP_TYPE_RELATION));
+    break;
   }
 
   context->dialog = gtk_dialog_new_with_buttons(str,
@@ -427,37 +449,39 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, relation_t *relation
   gtk_table_attach_defaults(GTK_TABLE(table),  label, 1, 2, 0, 1);
 
   /* ------------ coordinate (only for nodes) ----------------- */
-  if(!relation) {
-    if(appdata->map->selected.type == MAP_TYPE_NODE) {
-      char pos_str[32];
-      pos_lat_str(pos_str, sizeof(pos_str),appdata->map->selected.node->pos.lat);
-      label = gtk_label_new(pos_str);
-      gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 1, 2);
-      pos_lat_str(pos_str, sizeof(pos_str),appdata->map->selected.node->pos.lon);
-      label = gtk_label_new(pos_str);
-      gtk_table_attach_defaults(GTK_TABLE(table),  label, 1, 2, 1, 2);
-    } else {
-      char *nodes_str = g_strdup_printf(_("Length: %u nodes"), 
-		osm_way_number_of_nodes(appdata->map->selected.way));
-      label = gtk_label_new(nodes_str);
-      gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 1, 2);
-      g_free(nodes_str);
-
-      char *type_str = g_strdup_printf("%s (%s)",
-	 (osm_way_get_last_node(appdata->map->selected.way) == 
-	  osm_way_get_first_node(appdata->map->selected.way))?
-				       "closed way":"open way",
-	 (appdata->map->selected.way->draw.flags & OSM_DRAW_FLAG_AREA)?
-				       "area":"line");
+  switch(context->object.type) {
+  case NODE: {
+    char pos_str[32];
+    pos_lat_str(pos_str, sizeof(pos_str),appdata->map->selected.node->pos.lat);
+    label = gtk_label_new(pos_str);
+    gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 1, 2);
+    pos_lat_str(pos_str, sizeof(pos_str),appdata->map->selected.node->pos.lon);
+    label = gtk_label_new(pos_str);
+    gtk_table_attach_defaults(GTK_TABLE(table),  label, 1, 2, 1, 2);
+  } break;
+  case WAY: {
+    char *nodes_str = g_strdup_printf(_("Length: %u nodes"), 
+				      osm_way_number_of_nodes(appdata->map->selected.way));
+    label = gtk_label_new(nodes_str);
+    gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 1, 2);
+    g_free(nodes_str);
+    
+    char *type_str = g_strdup_printf("%s (%s)",
+			     (osm_way_get_last_node(appdata->map->selected.way) == 
+			      osm_way_get_first_node(appdata->map->selected.way))?
+			     "closed way":"open way",
+	     (appdata->map->selected.way->draw.flags & OSM_DRAW_FLAG_AREA)?
+			       "area":"line");
  
-      label = gtk_label_new(type_str);      
-      gtk_table_attach_defaults(GTK_TABLE(table),  label, 1, 2, 1, 2);
-      g_free(type_str);
-    }
-  } else {
+    label = gtk_label_new(type_str);      
+    gtk_table_attach_defaults(GTK_TABLE(table),  label, 1, 2, 1, 2);
+    g_free(type_str);
+  } break;
+
+  case RELATION: {
     /* relations tell something about their members */
     gint nodes = 0, ways = 0, relations = 0;
-    member_t *member = relation->member;
+    member_t *member = context->object.relation->member;
     while(member) {
       switch(member->type) {
       case NODE:
@@ -472,7 +496,7 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, relation_t *relation
       case RELATION_ID:
 	relations++;
 	break;
-
+	
       default:
 	break;
       }
@@ -485,7 +509,13 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, relation_t *relation
 
     gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_new(str), 0, 2, 1, 2);
     g_free(str);
-  }
+    break;
+
+  default:
+    printf("ERROR: No node, way or relation\n");
+    g_assert(0);
+    break;
+  } }
 
   gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context->dialog)->vbox), table, 
 		     FALSE, FALSE, 0);
@@ -506,38 +536,39 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, relation_t *relation
 
     gtk_widget_destroy(context->dialog);
 
-    if(!relation) {
-      /* replace original tags with work copy */
-      switch(appdata->map->selected.type) {
+    /* replace original tags with work copy */
+    switch(context->object.type) {
 
-      case MAP_TYPE_NODE:
-	osm_tags_free(appdata->map->selected.node->tag);
-	appdata->map->selected.node->tag = osm_tags_copy(work_copy, TRUE);
-	break;
+    case NODE:
+      osm_tags_free(context->object.node->tag);
+      context->object.node->tag = osm_tags_copy(work_copy, TRUE);
+      break;
 	
-      case MAP_TYPE_WAY:
-	osm_tags_free(appdata->map->selected.way->tag);
-	appdata->map->selected.way->tag = osm_tags_copy(work_copy, TRUE);
-	break;
+    case WAY:
+      osm_tags_free(context->object.way->tag);
+      context->object.way->tag = osm_tags_copy(work_copy, TRUE);
+      break;
 	
-      default:
-	break;
-      }
-
-      /* since nodes being parts of ways but with no tags are invisible, */
-      /* the result of editing them may have changed their visibility */
-      map_item_redraw(appdata, &appdata->map->selected);
-      map_item_set_flags(&context->appdata->map->selected, OSM_FLAG_DIRTY, 0);
-    } else {
-      osm_tags_free(relation->tag);
-      relation->tag = osm_tags_copy(work_copy, TRUE);
-      relation->flags |= OSM_FLAG_DIRTY;
+    case RELATION:
+      osm_tags_free(context->object.relation->tag);
+      context->object.relation->tag = osm_tags_copy(work_copy, TRUE);
+      break;
+      
+    default:
+      break;
     }
+    
+    /* since nodes being parts of ways but with no tags are invisible, */
+    /* the result of editing them may have changed their visibility */
+    if(!object && context->object.type != RELATION) 
+      map_item_redraw(appdata, &appdata->map->selected);
+
+    osm_object_set_flags(&context->object, OSM_FLAG_DIRTY, 0);
   } else {
     gtk_widget_destroy(context->dialog);
     osm_tags_free(work_copy);
   }
-
+  
   g_free(context);
   return ok;
 }

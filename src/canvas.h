@@ -33,12 +33,11 @@ typedef enum {
   CANVAS_GROUP_NODES_HL,   // 7: highlighting for nodes
   CANVAS_GROUP_NODES,      // 8: nodes
   CANVAS_GROUP_NODES_IHL,  // 9: highlighting for otherwise invisible way nodes
-  CANVAS_GROUP_RELTN_HL,   // 10: highlighting of relations
-  CANVAS_GROUP_TRACK,      // 11: (GPS) track
-  CANVAS_GROUP_GPS,        // 12: current GPS position
-  CANVAS_GROUP_FRISKET,    // 13: the (white) frisket limiting the view
-  CANVAS_GROUP_DRAW,       // 14: "cursor" functionality
-  CANVAS_GROUPS            // 15: total number of groups
+  CANVAS_GROUP_TRACK,      // 10: (GPS) track
+  CANVAS_GROUP_GPS,        // 11: current GPS position
+  CANVAS_GROUP_FRISKET,    // 12: the (white) frisket limiting the view
+  CANVAS_GROUP_DRAW,       // 13: "cursor" functionality
+  CANVAS_GROUPS            // 14: total number of groups
 } canvas_group_t;
 
 /* only objects in the "selectable" groups are returned by item_at */

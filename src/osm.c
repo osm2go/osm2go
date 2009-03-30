@@ -2221,4 +2221,28 @@ gint osm_relation_members_num(relation_t *relation) {
   return num;
 }
 
+void osm_object_set_flags(object_t *object, int set, int clr) {
+
+  switch(object->type) {
+  case NODE:
+    object->node->flags |=  set;
+    object->node->flags &= ~clr;
+    break;
+
+  case WAY:
+    object->way->flags |=  set;
+    object->way->flags &= ~clr;
+    break;
+
+  case RELATION:
+    object->relation->flags |=  set;
+    object->relation->flags &= ~clr;
+    break;
+
+  default:
+    g_assert(0);
+    break;
+  }
+}
+
 // vim:et:ts=8:sw=2:sts=2:ai
