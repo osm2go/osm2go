@@ -47,24 +47,11 @@ static void on_way_cut_clicked(GtkButton *button, gpointer data) {
 
 static void on_relation_add_clicked(GtkButton *button, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
-  relation_item_t relitem;
 
-  switch(appdata->map->selected.type) {
-  case MAP_TYPE_NODE:
-    relitem.type = NODE;
-    relitem.node = appdata->map->selected.node;
-    break;
+  g_assert((appdata->map->selected.object.type == NODE) ||
+	   (appdata->map->selected.object.type == WAY));
 
-  case MAP_TYPE_WAY:
-    relitem.type = WAY;
-    relitem.way = appdata->map->selected.way;
-    break;
-    
-  default:
-    break;
-  }
-
-  relation_add_dialog(appdata, &relitem);
+  relation_add_dialog(appdata, &appdata->map->selected.object);
 }
 
 static void on_trash_clicked(GtkButton *button, gpointer data) {
@@ -95,7 +82,7 @@ void icon_bar_map_item_selected(appdata_t *appdata,
 
   /* one can't remove relations by clicking this while they are */
   /* selected. May change in the future */
-  if(selected && (!map_item || map_item->type != MAP_TYPE_RELATION)) 
+  if(selected && (!map_item || map_item->object.type != RELATION)) 
     gtk_widget_set_sensitive(iconbar->trash, TRUE);
   else 
     gtk_widget_set_sensitive(iconbar->trash, FALSE);
@@ -104,7 +91,7 @@ void icon_bar_map_item_selected(appdata_t *appdata,
 
   gtk_widget_set_sensitive(iconbar->relation_add, map_item && selected);
 
-  if(selected && map_item && map_item->type == MAP_TYPE_WAY) {
+  if(selected && map_item && map_item->object.type == WAY) {
     gtk_widget_set_sensitive(iconbar->way_node_add, TRUE);
     gtk_widget_set_sensitive(iconbar->way_cut, TRUE);
     gtk_widget_set_sensitive(iconbar->way_reverse, TRUE);
@@ -147,7 +134,7 @@ void icon_bar_map_action_idle(appdata_t *appdata, gboolean idle) {
     gtk_widget_set_sensitive(appdata->iconbar->way_cut, FALSE);
     gtk_widget_set_sensitive(appdata->iconbar->way_reverse, FALSE);
   } else {
-    if(appdata->map->selected.type == MAP_TYPE_WAY) {
+    if(appdata->map->selected.object.type == WAY) {
       gtk_widget_set_sensitive(appdata->iconbar->way_node_add, TRUE);
       gtk_widget_set_sensitive(appdata->iconbar->way_cut, TRUE);
       gtk_widget_set_sensitive(appdata->iconbar->way_reverse, TRUE);

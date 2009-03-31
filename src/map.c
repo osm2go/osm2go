@@ -30,23 +30,23 @@ static void map_statusbar(map_t *map, map_item_t *map_item) {
   tag_t *tag = NULL;
   char *str = NULL;
   
-  switch(map_item->type) {
-  case MAP_TYPE_NODE:
+  switch(map_item->object.type) {
+  case NODE:
     item_str = "Node";
-    id = map_item->node->id;
-    tag = map_item->node->tag;
+    id = map_item->object.node->id;
+    tag = map_item->object.node->tag;
     break;
 
-  case MAP_TYPE_WAY:
+  case WAY:
     item_str = "Way";
-    id = map_item->way->id;
-    tag = map_item->way->tag;
+    id = map_item->object.way->id;
+    tag = map_item->object.way->tag;
     break;
 
-  case MAP_TYPE_RELATION:
+  case RELATION:
     item_str = "Relation";
-    id = map_item->relation->id;
-    tag = map_item->relation->tag;
+    id = map_item->object.relation->id;
+    tag = map_item->object.relation->tag;
     break;
 
   default:
@@ -138,8 +138,8 @@ static void map_node_select(appdata_t *appdata, node_t *node) {
   
   g_assert(!map->highlight);
 
-  map_item->type      = MAP_TYPE_NODE;
-  map_item->node      = node;
+  map_item->object.type      = NODE;
+  map_item->object.node      = node;
   map_item->highlight = FALSE;
 
   /* node may not have any visible representation at all */
@@ -152,7 +152,7 @@ static void map_node_select(appdata_t *appdata, node_t *node) {
   icon_bar_map_item_selected(appdata, map_item, TRUE);
 
   /* highlight node */
-  gint x = map_item->node->lpos.x, y = map_item->node->lpos.y;
+  gint x = map_item->object.node->lpos.x, y = map_item->object.node->lpos.y;
 
   /* create a copy of this map item and mark it as being a highlight */
   map_item_t *new_map_item = g_new0(map_item_t, 1);
@@ -163,8 +163,8 @@ static void map_node_select(appdata_t *appdata, node_t *node) {
   if(!node->ways) radius += map->style->node.border_radius;
   if(node->icon_buf && map->style->icon.enable && 
      !appdata->settings->no_icons) {
-    gint w = gdk_pixbuf_get_width(map_item->node->icon_buf);
-    gint h = gdk_pixbuf_get_height(map_item->node->icon_buf);
+    gint w = gdk_pixbuf_get_width(map_item->object.node->icon_buf);
+    gint h = gdk_pixbuf_get_height(map_item->object.node->icon_buf);
     /* icons are technically square, so a radius slightly bigger */
     /* than sqrt(2)*MAX(w,h) should fit nicely */
     radius =  0.75 * map->style->icon.scale * ((w>h)?w:h);
@@ -190,8 +190,8 @@ void map_way_select(appdata_t *appdata, way_t *way) {
   
   g_assert(!map->highlight);
 
-  map_item->type      = MAP_TYPE_WAY;
-  map_item->way       = way;
+  map_item->object.type      = WAY;
+  map_item->object.way       = way;
   map_item->highlight = FALSE;
   map_item->item      = way->map_item_chain->map_item->item;
 
@@ -199,23 +199,23 @@ void map_way_select(appdata_t *appdata, way_t *way) {
   icon_bar_map_item_selected(appdata, map_item, TRUE);
   gtk_widget_set_sensitive(appdata->menu_item_map_hide_sel, TRUE);
 
-  gint arrow_width = (map_item->way->draw.flags & OSM_DRAW_FLAG_BG)?
-    map->style->highlight.width + map_item->way->draw.bg.width/2:
-    map->style->highlight.width + map_item->way->draw.width/2;
+  gint arrow_width = (map_item->object.way->draw.flags & OSM_DRAW_FLAG_BG)?
+    map->style->highlight.width + map_item->object.way->draw.bg.width/2:
+    map->style->highlight.width + map_item->object.way->draw.width/2;
   
-  node_chain_t *node_chain = map_item->way->node_chain;
+  node_chain_t *node_chain = map_item->object.way->node_chain;
   node_t *last = NULL;
   while(node_chain) {
     map_item_t item;
-    item.type = MAP_TYPE_NODE;
-    item.node = node_chain->node;
+    item.object.type = NODE;
+    item.object.node = node_chain->node;
 
     /* draw an arrow between every two nodes */
     if(last) {
       /* create a new map item for every arrow */
       map_item_t *new_map_item = g_new0(map_item_t, 1);
-      new_map_item->type = MAP_TYPE_WAY;
-      new_map_item->way = way;
+      new_map_item->object.type = WAY;
+      new_map_item->object.way = way;
       new_map_item->highlight = TRUE;
 
       struct { float x, y;} center, diff;
@@ -251,8 +251,8 @@ void map_way_select(appdata_t *appdata, way_t *way) {
 
       /* create a new map item for every node */
       map_item_t *new_map_item = g_new0(map_item_t, 1);
-      new_map_item->type = MAP_TYPE_NODE;
-      new_map_item->node = node_chain->node;
+      new_map_item->object.type = NODE;
+      new_map_item->object.node = node_chain->node;
       new_map_item->highlight = TRUE;
     
       gint x = node_chain->node->lpos.x;
@@ -275,7 +275,7 @@ void map_way_select(appdata_t *appdata, way_t *way) {
     canvas_points_t *points = canvas_points_new(nodes);
 
     int node = 0;
-    node_chain = map_item->way->node_chain;
+    node_chain = map_item->object.way->node_chain;
     while(node_chain) {
       canvas_point_set_pos(points, node++, &node_chain->node->lpos);
       node_chain = node_chain->next;
@@ -287,9 +287,9 @@ void map_way_select(appdata_t *appdata, way_t *way) {
     new_map_item->highlight = TRUE;
     
     map_hl_polyline_new(map, CANVAS_GROUP_WAYS_HL, new_map_item, points, 
-		(map_item->way->draw.flags & OSM_DRAW_FLAG_BG)?
-		2*map->style->highlight.width + map_item->way->draw.bg.width:
-		2*map->style->highlight.width + map_item->way->draw.width, 
+		(map_item->object.way->draw.flags & OSM_DRAW_FLAG_BG)?
+		2*map->style->highlight.width + map_item->object.way->draw.bg.width:
+		2*map->style->highlight.width + map_item->object.way->draw.width, 
 		map->style->highlight.color);
 
     canvas_points_free(points);
@@ -305,8 +305,8 @@ void map_relation_select(appdata_t *appdata, relation_t *relation) {
   map_highlight_t **hl = &map->highlight;
 
   map_item_t *map_item = &map->selected;
-  map_item->type      = MAP_TYPE_RELATION;
-  map_item->relation  = relation;
+  map_item->object.type      = RELATION;
+  map_item->object.relation  = relation;
   map_item->highlight = FALSE;
   map_item->item      = NULL;
 
@@ -374,17 +374,20 @@ void map_relation_select(appdata_t *appdata, relation_t *relation) {
   }
 }
 
-static void map_item_select(appdata_t *appdata, map_item_t *map_item) {
-  switch(map_item->type) {
-  case MAP_TYPE_NODE:
-    map_node_select(appdata, map_item->node);
+static void map_object_select(appdata_t *appdata, object_t *object) {
+  switch(object->type) {
+  case NODE:
+    map_node_select(appdata, object->node);
     break;
-  case MAP_TYPE_WAY:
-    map_way_select(appdata, map_item->way);
+  case WAY:
+    map_way_select(appdata, object->way);
+    break;
+  case RELATION:
+    map_relation_select(appdata, object->relation);
     break;
   default:
-    g_assert((map_item->type == MAP_TYPE_NODE)||
-	     (map_item->type == MAP_TYPE_WAY));
+    g_assert((object->type == NODE)||(object->type == RELATION)||
+	     (object->type == WAY));
     break;
   }
 }
@@ -392,18 +395,18 @@ static void map_item_select(appdata_t *appdata, map_item_t *map_item) {
 void map_item_deselect(appdata_t *appdata) {
 
   /* save tags for "last" function in info dialog */
-  if(appdata->map->selected.type == MAP_TYPE_NODE) {
+  if(appdata->map->selected.object.type == NODE) {
     if(appdata->map->last_node_tags) 
       osm_tags_free(appdata->map->last_node_tags);
 
     appdata->map->last_node_tags = 
-      osm_tags_copy(appdata->map->selected.node->tag, FALSE);
-  } else if(appdata->map->selected.type == MAP_TYPE_WAY) {
+      osm_tags_copy(appdata->map->selected.object.node->tag, FALSE);
+  } else if(appdata->map->selected.object.type == WAY) {
     if(appdata->map->last_way_tags) 
       osm_tags_free(appdata->map->last_way_tags);
 
     appdata->map->last_way_tags = 
-      osm_tags_copy(appdata->map->selected.way->tag, FALSE);
+      osm_tags_copy(appdata->map->selected.object.way->tag, FALSE);
   }
 
   /* remove statusbar message */
@@ -417,7 +420,7 @@ void map_item_deselect(appdata_t *appdata) {
   map_hl_remove(appdata);
 
   /* forget about selection */
-  appdata->map->selected.type = MAP_TYPE_ILLEGAL;
+  appdata->map->selected.object.type = ILLEGAL;
 }
 
 /* called whenever a map item is to be destroyed */
@@ -429,10 +432,10 @@ static gint map_item_destroy_event(GtkWidget *widget, gpointer data) {
 #ifdef DESTROY_WAIT_FOR_GTK
   /* remove item from nodes/ways map_item_chain */
   map_item_chain_t **chain = NULL;
-  if(map_item->type == MAP_TYPE_NODE)
-    chain = &map_item->node->map_item_chain;
-  else if(map_item->type == MAP_TYPE_WAY)
-    chain = &map_item->way->map_item_chain;
+  if(map_item->object.type == NODE)
+    chain = &map_item->object.node->map_item_chain;
+  else if(map_item->object.type == WAY)
+    chain = &map_item->object.way->map_item_chain;
 
   /* there must be a chain with content, otherwise things are broken */
   g_assert(chain);
@@ -459,8 +462,8 @@ static canvas_item_t *map_node_new(map_t *map, node_t *node, gint radius,
 		   gint width, canvas_color_t fill, canvas_color_t border) {
 
   map_item_t *map_item = g_new0(map_item_t, 1);
-  map_item->type = MAP_TYPE_NODE;
-  map_item->node = node;
+  map_item->object.type = NODE;
+  map_item->object.node = node;
 
   if(!node->icon_buf || !map->style->icon.enable || 
      map->appdata->settings->no_icons) 
@@ -497,8 +500,8 @@ static canvas_item_t *map_way_single_new(map_t *map, way_t *way, gint radius,
 		   gint width, canvas_color_t fill, canvas_color_t border) {
 
   map_item_t *map_item = g_new0(map_item_t, 1);
-  map_item->type = MAP_TYPE_WAY;
-  map_item->way = way;
+  map_item->object.type = WAY;
+  map_item->object.way = way;
   map_item->item = canvas_circle_new(map->canvas, CANVAS_GROUP_WAYS, 
 	  way->node_chain->node->lpos.x, way->node_chain->node->lpos.y, 
 				     radius, width, fill, border);
@@ -523,8 +526,8 @@ static canvas_item_t *map_way_new(map_t *map, canvas_group_t group,
 	  way_t *way, canvas_points_t *points, gint width, 
 	  canvas_color_t color, canvas_color_t fill_color) {
   map_item_t *map_item = g_new0(map_item_t, 1);
-  map_item->type = MAP_TYPE_WAY;
-  map_item->way = way;
+  map_item->object.type = WAY;
+  map_item->object.way = way;
 
   if(way->draw.flags & OSM_DRAW_FLAG_AREA) {
     if(map->style->area.color & 0xff)
@@ -626,48 +629,48 @@ void map_node_draw(map_t *map, node_t *node) {
 }
 
 static void map_item_draw(map_t *map, map_item_t *map_item) {
-  switch(map_item->type) {
-  case MAP_TYPE_NODE:
-    map_node_draw(map, map_item->node);
+  switch(map_item->object.type) {
+  case NODE:
+    map_node_draw(map, map_item->object.node);
     break;
-  case MAP_TYPE_WAY:
-    map_way_draw(map, map_item->way);
+  case WAY:
+    map_way_draw(map, map_item->object.way);
     break;
   default:
-    g_assert((map_item->type == MAP_TYPE_NODE) ||
-	     (map_item->type == MAP_TYPE_WAY));
+    g_assert((map_item->object.type == NODE) ||
+	     (map_item->object.type == WAY));
   }
 }
 
 static void map_item_remove(map_t *map, map_item_t *map_item) {
   map_item_chain_t **chainP = NULL;
 
-  switch(map_item->type) {
-  case MAP_TYPE_NODE:
-    chainP = &map_item->node->map_item_chain;
+  switch(map_item->object.type) {
+  case NODE:
+    chainP = &map_item->object.node->map_item_chain;
     break;
-  case MAP_TYPE_WAY:
-    chainP = &map_item->way->map_item_chain;
+  case WAY:
+    chainP = &map_item->object.way->map_item_chain;
     break;
   default:
-    g_assert((map_item->type == MAP_TYPE_NODE) ||
-	     (map_item->type == MAP_TYPE_WAY));
+    g_assert((map_item->object.type == NODE) ||
+	     (map_item->object.type == WAY));
   }
 
   map_item_chain_destroy(chainP);
 }
 
 static void map_item_init(style_t *style, map_item_t *map_item) {
-  switch (map_item->type){
-    case MAP_TYPE_WAY:
-      josm_elemstyles_colorize_way(style, map_item->way);
+  switch (map_item->object.type){
+    case WAY:
+      josm_elemstyles_colorize_way(style, map_item->object.way);
       break;
-    case MAP_TYPE_NODE:
-      josm_elemstyles_colorize_node(style, map_item->node);
+    case NODE:
+      josm_elemstyles_colorize_node(style, map_item->object.node);
       break;
     default:
-      g_assert((map_item->type == MAP_TYPE_NODE) ||
-	           (map_item->type == MAP_TYPE_WAY));
+      g_assert((map_item->object.type == NODE) ||
+	           (map_item->object.type == WAY));
   }
 }
 
@@ -676,7 +679,7 @@ void map_item_redraw(appdata_t *appdata, map_item_t *map_item) {
 
   /* check if the item to be redrawn is the selected one */
   gboolean is_selected = FALSE;
-  if(map_item->ptr == appdata->map->selected.ptr) {
+  if(map_item->object.ptr == appdata->map->selected.object.ptr) {
     map_item_deselect(appdata);
     is_selected = TRUE;
   }
@@ -687,7 +690,7 @@ void map_item_redraw(appdata_t *appdata, map_item_t *map_item) {
 
   /* restore selection if there was one */
   if(is_selected) 
-    map_item_select(appdata, &item);
+    map_object_select(appdata, &item.object);
 }
 
 static void map_frisket_rectangle(canvas_points_t *points, 
@@ -877,12 +880,12 @@ map_item_t *map_item_at(map_t *map, gint x, gint y) {
   if(map_item->highlight) 
     printf("  item is highlight\n");    
 
-  switch(map_item->type) {
-  case MAP_TYPE_NODE:
-    printf("  item is node #%ld\n", map_item->node->id);
+  switch(map_item->object.type) {
+  case NODE:
+    printf("  item is node #%ld\n", map_item->object.node->id);
     break;
-  case MAP_TYPE_WAY:
-    printf("  item is way #%ld\n", map_item->way->id);
+  case WAY:
+    printf("  item is way #%ld\n", map_item->object.way->id);
     break;
   default:
     printf("  unknown item\n");
@@ -901,27 +904,27 @@ map_item_t *map_real_item_at(map_t *map, gint x, gint y) {
 
   /* get the item (parent) this item is the highlight of */
   map_item_t *parent = NULL;
-  switch(map_item->type) {
+  switch(map_item->object.type) {
 
-  case MAP_TYPE_NODE:
-    if(map_item->node->map_item_chain)
-      parent = map_item->node->map_item_chain->map_item;
+  case NODE:
+    if(map_item->object.node->map_item_chain)
+      parent = map_item->object.node->map_item_chain->map_item;
 
     if(parent)
-      printf("  using parent item node #%ld\n", parent->node->id);      
+      printf("  using parent item node #%ld\n", parent->object.node->id);      
     break;
 
-  case MAP_TYPE_WAY:
-    if(map_item->way->map_item_chain)
-      parent = map_item->way->map_item_chain->map_item;
+  case WAY:
+    if(map_item->object.way->map_item_chain)
+      parent = map_item->object.way->map_item_chain->map_item;
 
     if(parent)
-      printf("  using parent item way #%ld\n", parent->way->id);      
+      printf("  using parent item way #%ld\n", parent->object.way->id);      
     break;
 
   default:
-    g_assert((map_item->type == MAP_TYPE_NODE) ||
-	     (map_item->type == MAP_TYPE_WAY)); 
+    g_assert((map_item->object.type == NODE) ||
+	     (map_item->object.type == WAY)); 
     break;
   }
   
@@ -1078,18 +1081,18 @@ void map_scroll_to_if_offscreen(map_t *map, lpos_t *lpos) {
 /* Deselects the current way or node if its zoom_max
  * means that it's not going to render at the current map zoom. */
 void map_deselect_if_zoom_below_zoom_max(map_t *map) {
-    if (map->selected.type == MAP_TYPE_WAY) {
+    if (map->selected.object.type == WAY) {
         printf("will deselect way if zoomed below %f\n",
-               map->selected.way->draw.zoom_max);
-        if (map->state->zoom < map->selected.way->draw.zoom_max) {
+               map->selected.object.way->draw.zoom_max);
+        if (map->state->zoom < map->selected.object.way->draw.zoom_max) {
             printf("  deselecting way!\n");
             map_item_deselect(map->appdata);
         }
     }
-    else if (map->selected.type == MAP_TYPE_NODE) {
+    else if (map->selected.object.type == NODE) {
         printf("will deselect node if zoomed below %f\n",
-               map->selected.node->zoom_max);
-        if (map->state->zoom < map->selected.node->zoom_max) {
+               map->selected.object.node->zoom_max);
+        if (map->state->zoom < map->selected.object.node->zoom_max) {
             printf("  deselecting node!\n");
             map_item_deselect(map->appdata);
         }
@@ -1189,33 +1192,33 @@ gboolean map_item_is_selected_node(map_t *map, map_item_t *map_item) {
     return FALSE;
   }
 
-  if(map->selected.type == MAP_TYPE_ILLEGAL) {
+  if(map->selected.object.type == ILLEGAL) {
     printf("  nothing is selected\n");
     return FALSE;
   }
 
   /* clicked the highlight directly */
-  if(map_item->type != MAP_TYPE_NODE) {
+  if(map_item->object.type != NODE) {
     printf("  didn't click node\n");
     return FALSE;
   }
 
-  if(map->selected.type == MAP_TYPE_NODE) {
+  if(map->selected.object.type == NODE) {
     printf("  selected item is a node\n");
 
-    if(map_item->node == map->selected.node) {
+    if(map_item->object.node == map->selected.object.node) {
       printf("  requested item is a selected node\n");
       return TRUE;
     }
     printf("  but it's not the requested one\n");
     return FALSE;
 
-  } else if(map->selected.type == MAP_TYPE_WAY) {
+  } else if(map->selected.object.type == WAY) {
     printf("  selected item is a way\n");
 
-    node_chain_t *node_chain = map->selected.way->node_chain;
+    node_chain_t *node_chain = map->selected.object.way->node_chain;
     while(node_chain) {
-      if(node_chain->node == map_item->node) {
+      if(node_chain->node == map_item->object.node) {
 	printf("  requested item is part of selected way\n");
 	return TRUE;
       } 
@@ -1243,21 +1246,21 @@ gboolean map_item_is_selected_way(map_t *map, map_item_t *map_item) {
     return FALSE;
   }
 
-  if(map->selected.type == MAP_TYPE_ILLEGAL) {
+  if(map->selected.object.type == ILLEGAL) {
     printf("  nothing is selected\n");
     return FALSE;
   }
 
   /* clicked the highlight directly */
-  if(map_item->type != MAP_TYPE_WAY) {
+  if(map_item->object.type != WAY) {
     printf("  didn't click way\n");
     return FALSE;
   }
 
-  if(map->selected.type == MAP_TYPE_WAY) {
+  if(map->selected.object.type == WAY) {
     printf("  selected item is a way\n");
 
-    if(map_item->way == map->selected.way) {
+    if(map_item->object.way == map->selected.object.way) {
       printf("  requested item is a selected way\n");
       return TRUE;
     }
@@ -1272,14 +1275,14 @@ gboolean map_item_is_selected_way(map_t *map, map_item_t *map_item) {
 
 void map_highlight_refresh(appdata_t *appdata) {
   map_t *map = appdata->map;
-  map_item_t old = map->selected;
+  object_t old = map->selected.object;
 
   printf("type to refresh is %d\n", old.type);
-  if(old.type == MAP_TYPE_ILLEGAL) 
+  if(old.type == ILLEGAL) 
     return;
 
   map_item_deselect(appdata);
-  map_item_select(appdata, &old);
+  map_object_select(appdata, &old);
 }
 
 void map_way_delete(appdata_t *appdata, way_t *way) {
@@ -1307,25 +1310,25 @@ static void map_handle_click(appdata_t *appdata, map_t *map) {
   /* problem: on_item may be the highlight itself! So store it! */
   map_item_t map_item;
   if(map->pen_down.on_item) map_item = *map->pen_down.on_item;
-  else                      map_item.type = MAP_TYPE_ILLEGAL;
+  else                      map_item.object.type = ILLEGAL;
 
   /* if we aready have something selected, then de-select it */
   map_item_deselect(appdata);
 
   /* select the clicked item (if there was one) */
-  if(map_item.type != MAP_TYPE_ILLEGAL) {
-    switch(map_item.type) {
-    case MAP_TYPE_NODE:
-      map_node_select(appdata, map_item.node);
+  if(map_item.object.type != ILLEGAL) {
+    switch(map_item.object.type) {
+    case NODE:
+      map_node_select(appdata, map_item.object.node);
       break;
 
-    case MAP_TYPE_WAY:
-      map_way_select(appdata, map_item.way);
+    case WAY:
+      map_way_select(appdata, map_item.object.way);
       break;
 
     default:
-      g_assert((map_item.type == MAP_TYPE_NODE) ||
-	       (map_item.type == MAP_TYPE_WAY));
+      g_assert((map_item.object.type == NODE) ||
+	       (map_item.object.type == WAY));
       break;
     }
   }
@@ -1345,8 +1348,8 @@ static void map_touchnode_update(appdata_t *appdata, gint x, gint y) {
     /* in idle mode the dragged node is not highlighted */
   case MAP_ACTION_IDLE:
     g_assert(map->pen_down.on_item);
-    g_assert(map->pen_down.on_item->type == MAP_TYPE_NODE);
-    cur_node = map->pen_down.on_item->node;
+    g_assert(map->pen_down.on_item->object.type == NODE);
+    cur_node = map->pen_down.on_item->object.node;
     break;
 
   default:
@@ -1469,11 +1472,11 @@ static void map_button_release(map_t *map, gint x, gint y) {
       map_item_t old_sel = map->selected;
       map_handle_click(map->appdata, map);
       
-      if((old_sel.type != MAP_TYPE_ILLEGAL) && 
-	 (old_sel.type == map->selected.type) &&
-	 (old_sel.ptr == map->selected.ptr)) {
+      if((old_sel.object.type != ILLEGAL) && 
+	 (old_sel.object.type == map->selected.object.type) &&
+	 (old_sel.object.ptr == map->selected.object.ptr)) {
 	printf("re-selected same item of type %d, "
-	       "pushing it to the bottom\n", old_sel.type);
+	       "pushing it to the bottom\n", old_sel.object.type);
 	
 	if(!map->selected.item) {
 	  printf("  item has no visible representation to push\n");
@@ -1814,30 +1817,6 @@ void map_init(appdata_t *appdata) {
 }
 
 
-void map_item_set_flags(map_item_t *map_item, int set, int clr) {
-
-  switch(map_item->type) {
-  case MAP_TYPE_NODE:
-    map_item->node->flags |=  set;
-    map_item->node->flags &= ~clr;
-    break;
-
-  case MAP_TYPE_WAY:
-    map_item->way->flags |=  set;
-    map_item->way->flags &= ~clr;
-    break;
-
-  case MAP_TYPE_RELATION:
-    map_item->relation->flags |=  set;
-    map_item->relation->flags &= ~clr;
-    break;
-
-  default:
-    g_assert(0);
-    break;
-  }
-}
-
 void map_clear(appdata_t *appdata, gint group_mask) {
   map_t *map = appdata->map;
 
@@ -1888,8 +1867,8 @@ void map_action_set(appdata_t *appdata, map_action_t action) {
 
     /* remember if there was a way selected */
     way_t *way_sel = NULL;
-    if(appdata->map->selected.type == MAP_TYPE_WAY)
-      way_sel = appdata->map->selected.way;
+    if(appdata->map->selected.object.type == WAY)
+      way_sel = appdata->map->selected.object.way;
 
     map_item_deselect(appdata);
     map_edit_way_add_begin(appdata->map, way_sel);
@@ -1988,15 +1967,15 @@ void map_delete_selected(appdata_t *appdata) {
   /* deleting the selected item de-selects it ... */
   map_item_deselect(appdata);
 
-  undo_remember_delete(appdata, item.type, item.ptr);
+  undo_remember_delete(appdata, item.object.type, item.object.ptr);
 
-  switch(item.type) {
-  case MAP_TYPE_NODE:
-    printf("request to delete node #%ld\n", item.node->id);
+  switch(item.object.type) {
+  case NODE:
+    printf("request to delete node #%ld\n", item.object.node->id);
 
     /* check if this node is part of a way with two nodes only. */
     /* we cannot delete this as this would also delete the way */
-    way_chain_t *way_chain = osm_node_to_way(appdata->osm, item.node);
+    way_chain_t *way_chain = osm_node_to_way(appdata->osm, item.object.node);
     if(way_chain) {
       gboolean short_way = FALSE;
       
@@ -2022,12 +2001,12 @@ void map_delete_selected(appdata_t *appdata) {
     }
 
     /* remove it visually from the screen */
-    map_item_chain_destroy(&item.node->map_item_chain);
+    map_item_chain_destroy(&item.object.node->map_item_chain);
 
     /* and mark it "deleted" in the database */
-    osm_node_remove_from_relation(appdata->osm, item.node);
+    osm_node_remove_from_relation(appdata->osm, item.object.node);
     way_chain_t *chain = osm_node_delete(appdata->osm, 
-			 &appdata->icon, item.node, FALSE, TRUE);
+			 &appdata->icon, item.object.node, FALSE, TRUE);
 
     /* redraw all affected ways */
     while(chain) {
@@ -2040,8 +2019,8 @@ void map_delete_selected(appdata_t *appdata) {
 	map_way_delete(appdata, chain->way);
       } else {
 	map_item_t item;
-	item.type = MAP_TYPE_WAY;
-	item.way = chain->way;
+	item.object.type = WAY;
+	item.object.way = chain->way;
 	map_item_redraw(appdata, &item);
       }
 
@@ -2052,14 +2031,14 @@ void map_delete_selected(appdata_t *appdata) {
 
     break;
 
-  case MAP_TYPE_WAY:
-    printf("request to delete way #%ld\n", item.way->id);
-    map_way_delete(appdata, item.way);
+  case WAY:
+    printf("request to delete way #%ld\n", item.object.way->id);
+    map_way_delete(appdata, item.object.way);
     break;
 
   default:
-    g_assert((item.type == MAP_TYPE_NODE) ||
-	     (item.type == MAP_TYPE_WAY));
+    g_assert((item.object.type == NODE) ||
+	     (item.object.type == WAY));
     break;
   }
 }
@@ -2220,12 +2199,12 @@ void map_hide_selected(appdata_t *appdata) {
   map_t *map = appdata->map;
   if(!map) return;
 
-  if(map->selected.type != MAP_TYPE_WAY) {
+  if(map->selected.object.type != WAY) {
     printf("selected item is not a way\n");
     return;
   }
 
-  way_t *way = map->selected.way;
+  way_t *way = map->selected.object.way;
   printf("hiding way #%ld\n", way->id);
 
   map_item_deselect(appdata);

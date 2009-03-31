@@ -414,7 +414,7 @@ void map_edit_way_node_add(map_t *map, gint x, gint y) {
       osm_node_attach(map->appdata->osm, node);
       
       /* insert it into ways chain of nodes */
-      way_t *way = item->way;
+      way_t *way = item->object.way;
       
       /* search correct position */
       node_chain_t **chain = &way->node_chain;
@@ -465,19 +465,19 @@ void map_edit_way_cut_highlight(map_t *map, map_item_t *item, gint x, gint y) {
       gint x0, y0, x1, y1;
       canvas_item_get_segment_pos(item->item, seg, &x0, &y0, &x1, &y1);
       
-      gint width = (item->way->draw.flags & 
+      gint width = (item->object.way->draw.flags & 
 		    OSM_DRAW_FLAG_BG)?
-	2*item->way->draw.bg.width:
-	3*item->way->draw.width;
+	2*item->object.way->draw.bg.width:
+	3*item->object.way->draw.width;
       map_hl_segment_draw(map, width, x0, y0, x1, y1);
     }
   } else if(map_item_is_selected_node(map, item)) {
-    node_t *nfirst = osm_way_get_first_node(map->selected.way);
-    node_t *nlast = osm_way_get_last_node(map->selected.way);
+    node_t *nfirst = osm_way_get_first_node(map->selected.object.way);
+    node_t *nlast = osm_way_get_last_node(map->selected.object.way);
 
     /* cutting a way at its first or last node doesn't make much sense ... */
-    if((nfirst != item->node) && (nlast != item->node)) 
-      map_hl_cursor_draw(map, item->node->lpos.x, item->node->lpos.y, 
+    if((nfirst != item->object.node) && (nlast != item->object.node)) 
+      map_hl_cursor_draw(map, item->object.node->lpos.x, item->object.node->lpos.y, 
 			 TRUE, 2*map->style->node.radius);
   }
 }
@@ -500,15 +500,17 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
       printf("  cut at node\n");
       
       /* node must not be first or last node of way */
-      g_assert(map->selected.type == MAP_TYPE_WAY);
+      g_assert(map->selected.object.type == WAY);
       
-      if((osm_way_get_first_node(map->selected.way) != item->node) &&
-	 (osm_way_get_last_node(map->selected.way) != item->node)) {
-	way = map->selected.way;
+      if((osm_way_get_first_node(map->selected.object.way) != 
+	  item->object.node) &&
+	 (osm_way_get_last_node(map->selected.object.way) != 
+	  item->object.node)) {
+	way = map->selected.object.way;
 
 	cut_at = 0;
 	node_chain_t *chain = way->node_chain;
-	while(chain && chain->node != item->node) {
+	while(chain && chain->node != item->object.node) {
 	  chain = chain->next;
 	  cut_at++;
 	}
@@ -519,7 +521,7 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
     } else {
       printf("  cut at segment\n");
       cut_at = canvas_item_get_segment(item->item, x, y);
-      if(cut_at >= 0) way = item->way;
+      if(cut_at >= 0) way = item->object.way;
     }
     
     if(way) {
@@ -634,8 +636,8 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
   map_t *map = appdata->map;
   osm_t *osm = appdata->osm;
 
-  g_assert(map_item->type == MAP_TYPE_NODE);
-  node_t *node = map_item->node;
+  g_assert(map_item->object.type == NODE);
+  node_t *node = map_item->object.node;
 
   printf("released dragged node #%ld\n", node->id);
   printf("  was at %d %d (%f %f)\n", 
@@ -759,8 +761,8 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 	  /* way[1] gets destroyed and attached to way[0] */
 	  /* so check if way[1] is selected and exchainge ways then */
 	  /* so that way may stay selected */
-	  if((map->selected.type == MAP_TYPE_WAY) && 
-	     (map->selected.way == ways2join[1])) {
+	  if((map->selected.object.type == WAY) && 
+	     (map->selected.object.way == ways2join[1])) {
 	    printf("  swapping ways to keep selected one alive\n");
 	    way_t *tmp = ways2join[1];
 	    ways2join[1] = ways2join[0];
@@ -928,14 +930,16 @@ void map_edit_way_reverse(appdata_t *appdata) {
   /* deleting the selected item de-selects it ... */
   map_item_deselect(appdata);
 
-  g_assert(item.type == MAP_TYPE_WAY);
+  g_assert(item.object.type == WAY);
 
-  osm_way_reverse(item.way);
-  guint n_tags_flipped = osm_way_reverse_direction_sensitive_tags(item.way);
-  guint n_roles_flipped = osm_way_reverse_direction_sensitive_roles(appdata->osm, item.way);
+  osm_way_reverse(item.object.way);
+  guint n_tags_flipped = 
+    osm_way_reverse_direction_sensitive_tags(item.object.way);
+  guint n_roles_flipped = 
+    osm_way_reverse_direction_sensitive_roles(appdata->osm, item.object.way);
 
-  item.way->flags |= OSM_FLAG_DIRTY;
-  map_way_select(appdata, item.way);
+  item.object.way->flags |= OSM_FLAG_DIRTY;
+  map_way_select(appdata, item.object.way);
 
   // Flash a message about any side-effects
   char *msg = NULL;

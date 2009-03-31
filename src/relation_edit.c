@@ -40,7 +40,7 @@ static const guint LIST_OF_MEMBERS_DIALOG_HEIGHT  = 350;
 /* --------------- relation dialog for an item (node or way) ----------- */
 
 typedef struct {
-  relation_item_t *item;
+  object_t *item;
   appdata_t *appdata;
   GtkWidget *dialog, *list;
   GtkListStore *store;
@@ -61,7 +61,7 @@ typedef struct role_chain_s {
 } role_chain_t;
 
 static gboolean relation_add_item(GtkWidget *parent,
-			      relation_t *relation, relation_item_t *item) {
+			      relation_t *relation, object_t *item) {
   role_chain_t *chain = NULL, **chainP = &chain;
 
   printf("add item of type %d to relation #%ld\n", 
@@ -184,7 +184,7 @@ static gboolean relation_add_item(GtkWidget *parent,
   return TRUE;
 }
 
-static void relation_remove_item(relation_t *relation, relation_item_t *item) {
+static void relation_remove_item(relation_t *relation, object_t *item) {
 
   printf("remove item of type %d from relation #%ld\n", 
 	 item->type, relation->id);
@@ -342,7 +342,7 @@ static void on_relation_item_remove(GtkWidget *but, relitem_context_t *context) 
   relation_item_list_selected(context, FALSE);
 }
 
-static char *relitem_get_role_in_relation(relation_item_t *item, relation_t *relation) {
+static char *relitem_get_role_in_relation(object_t *item, relation_t *relation) {
   member_t *member = relation->member;
   while(member) {
     switch(member->type) {
@@ -404,7 +404,7 @@ relitem_toggled(GtkCellRendererToggle *cell, const gchar *path_str,
 
 }
 
-static gboolean relitem_is_in_relation(relation_item_t *item, relation_t *relation) {
+static gboolean relitem_is_in_relation(object_t *item, relation_t *relation) {
   member_t *member = relation->member;
   while(member) {
     switch(member->type) {
@@ -480,24 +480,24 @@ static GtkWidget *relation_item_list_widget(relitem_context_t *context) {
   return context->list;
 }
 
-void relation_add_dialog(appdata_t *appdata, relation_item_t *relitem) {
+void relation_add_dialog(appdata_t *appdata, object_t *object) {
   relitem_context_t *context = g_new0(relitem_context_t, 1);
   map_t *map = appdata->map;
   g_assert(map);
 
   context->appdata = appdata;
-  context->item = relitem;
+  context->item = object;
 
   char *str = NULL;
-  switch(relitem->type) {
+  switch(object->type) {
   case NODE:
-    str = g_strdup_printf(_("Relations for node #%ld"), relitem->node->id);
+    str = g_strdup_printf(_("Relations for node #%ld"), object->node->id);
     break;
   case WAY:
-    str = g_strdup_printf(_("Relations for way #%ld"), relitem->way->id);
+    str = g_strdup_printf(_("Relations for way #%ld"), object->way->id);
     break;
   default:
-    g_assert((relitem->type == NODE) || (relitem->type == WAY));
+    g_assert((object->type == NODE) || (object->type == WAY));
     break;
   }
   

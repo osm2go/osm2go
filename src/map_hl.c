@@ -113,8 +113,8 @@ gboolean map_hl_item_is_highlighted(map_t *map, map_item_t *item) {
     map_item_t *hl_item = canvas_item_get_user_data(hl->item);
 
     if(hl_item) {
-      if((hl_item->type == item->type) && 
-	 (hl_item->ptr == item->ptr))
+      if((hl_item->object.type == item->object.type) && 
+	 (hl_item->object.ptr == item->object.ptr))
 	return TRUE;
     }
 

@@ -45,13 +45,6 @@
 #define MAP_DRAG_LIMIT   16
 #endif
 
-typedef enum { 
-  MAP_TYPE_ILLEGAL=0, 
-  MAP_TYPE_NODE, 
-  MAP_TYPE_WAY,
-  MAP_TYPE_RELATION
-} map_type_t;
-
 /* don't reorder these as some things in map.c */
 /* rely on a certain order */
 typedef enum { 
@@ -70,14 +63,8 @@ typedef struct map_highlight_s {
 } map_highlight_t;
 
 typedef struct map_item_s {
-  map_type_t type;
+  object_t object;
   gboolean highlight;
-  union {
-    node_t *node;
-    way_t *way;
-    relation_t *relation;
-    void *ptr;
-  };
   canvas_item_t *item;
 } map_item_t;
 

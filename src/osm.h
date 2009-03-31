@@ -173,6 +173,7 @@ typedef struct {
     node_t *node;
     way_t *way;
     relation_t *relation;
+    void *ptr;
   };
 } object_t;
 

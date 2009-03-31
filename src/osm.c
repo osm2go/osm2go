@@ -35,12 +35,6 @@
 #error "Tree not enabled in libxml"
 #endif
 
-/* determine where a node/way/relation read from the osm file */
-/* is inserted into the internal database */
-// #define OSM_SORT_ID
-#define OSM_SORT_LAST
-// #define OSM_SORT_FIRST
-
 /* ------------------------- bounds handling --------------------- */
 
 static void osm_bounds_free(bounds_t *bounds) {

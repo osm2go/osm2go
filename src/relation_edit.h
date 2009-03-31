@@ -20,17 +20,7 @@
 #ifndef RELATION_EDIT_H
 #define RELATION_EDIT_H
 
-typedef struct {
-  type_t type;
-
-  union {
-    way_t *way;
-    node_t *node;
-    relation_t *relation;
-  };
-} relation_item_t;
-
-void relation_add_dialog(appdata_t *appdata, relation_item_t *relitem);
+void relation_add_dialog(appdata_t *appdata, object_t *object);
 void relation_list(appdata_t *appdata);
 
 #endif // RELATION_EDIT_H

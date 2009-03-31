@@ -350,25 +350,11 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
 
   /* use implicit selection if not explicitely given */
   if(!object) {
-    g_assert(appdata->map->selected.type != MAP_TYPE_ILLEGAL);
-    switch(appdata->map->selected.type) {
-    case MAP_TYPE_NODE:
-      context->object.type = NODE;
-      context->object.node = appdata->map->selected.node;
-      break;
-    case MAP_TYPE_WAY:
-      context->object.type = WAY;
-      context->object.way = appdata->map->selected.way;
-      break;
-    case MAP_TYPE_RELATION:
-      context->object.type = RELATION;
-      context->object.relation = appdata->map->selected.relation;
-      break;
-    default:
-      printf("ERROR: info_dialog not on NODE, WAY or RELATION\n");
-      g_assert(0);
-      break;
-    }
+    g_assert((appdata->map->selected.object.type == NODE) ||
+	     (appdata->map->selected.object.type == WAY) ||
+	     (appdata->map->selected.object.type == RELATION));
+
+    context->object = appdata->map->selected.object;
   } else 
     context->object = *object;
 
@@ -394,7 +380,7 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
     
     break;
     
-  case MAP_TYPE_RELATION:
+  case RELATION:
     str = g_strdup_printf(_("Relation #%ld"), context->object.relation->id);
     user = context->object.relation->user;
     work_copy = osm_tags_copy(context->object.relation->tag, FALSE);
@@ -403,9 +389,9 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
     break;
 
   default:
-    g_assert((context->object.type == MAP_TYPE_NODE) ||
-	     (context->object.type == MAP_TYPE_WAY) ||
-	     (context->object.type == MAP_TYPE_RELATION));
+    g_assert((context->object.type == NODE) ||
+	     (context->object.type == WAY) ||
+	     (context->object.type == RELATION));
     break;
   }
 
@@ -452,25 +438,26 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
   switch(context->object.type) {
   case NODE: {
     char pos_str[32];
-    pos_lat_str(pos_str, sizeof(pos_str),appdata->map->selected.node->pos.lat);
+    pos_lat_str(pos_str, sizeof(pos_str), context->object.node->pos.lat);
     label = gtk_label_new(pos_str);
     gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 1, 2);
-    pos_lat_str(pos_str, sizeof(pos_str),appdata->map->selected.node->pos.lon);
+    pos_lat_str(pos_str, sizeof(pos_str), context->object.node->pos.lon);
     label = gtk_label_new(pos_str);
     gtk_table_attach_defaults(GTK_TABLE(table),  label, 1, 2, 1, 2);
   } break;
+
   case WAY: {
     char *nodes_str = g_strdup_printf(_("Length: %u nodes"), 
-				      osm_way_number_of_nodes(appdata->map->selected.way));
+	      osm_way_number_of_nodes(context->object.way));
     label = gtk_label_new(nodes_str);
     gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 1, 2);
     g_free(nodes_str);
     
     char *type_str = g_strdup_printf("%s (%s)",
-			     (osm_way_get_last_node(appdata->map->selected.way) == 
-			      osm_way_get_first_node(appdata->map->selected.way))?
+     (osm_way_get_last_node(context->object.way) == 
+      osm_way_get_first_node(context->object.way))?
 			     "closed way":"open way",
-	     (appdata->map->selected.way->draw.flags & OSM_DRAW_FLAG_AREA)?
+	     (context->object.way->draw.flags & OSM_DRAW_FLAG_AREA)?
 			       "area":"line");
  
     label = gtk_label_new(type_str);      
