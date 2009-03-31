@@ -335,6 +335,11 @@ static GtkWidget *tag_widget(tag_context_t *context) {
   return context->list;
 }
 
+static void on_relation_members(GtkWidget *but, tag_context_t *context) {
+  g_assert(context->object.type == RELATION);
+  relation_show_members(context->dialog, context->object.relation);
+}
+
 /* edit tags of currently selected node or way or of the relation */
 /* given */
 gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
@@ -470,7 +475,7 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
     gint nodes = 0, ways = 0, relations = 0;
     member_t *member = context->object.relation->member;
     while(member) {
-      switch(member->type) {
+      switch(member->object.type) {
       case NODE:
       case NODE_ID:
 	nodes++;
@@ -491,10 +496,15 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
       member = member->next;
     }
 
-    char *str = g_strdup_printf(_("Members: %d nodes, %d ways, %d relations"),
-				nodes, ways, relations);
+    char *str = 
+      g_strdup_printf(_("Members: %d nodes, %d ways, %d relations"),
+		      nodes, ways, relations);
 
-    gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_new(str), 0, 2, 1, 2);
+    GtkWidget *member_btn = gtk_button_new_with_label(str);
+    gtk_signal_connect(GTK_OBJECT(member_btn), "clicked", 
+		       GTK_SIGNAL_FUNC(on_relation_members), context);
+    gtk_table_attach_defaults(GTK_TABLE(table), member_btn, 0, 2, 1, 2);
+
     g_free(str);
     break;
 

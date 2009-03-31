@@ -393,7 +393,7 @@ void osm_relations_dump(relation_t *relation) {
 
     member_t *member = relation->member;
     while(member) {
-      switch(member->type) {
+      switch(member->object.type) {
       case ILLEGAL:
       case NODE_ID:
       case WAY_ID:
@@ -401,21 +401,21 @@ void osm_relations_dump(relation_t *relation) {
 	break;
 
       case NODE:
-	if(member->node)
+	if(member->object.node)
 	  printf(" Member: Node, id = %lu, role = %s\n", 
-		 member->node->id, member->role);
+		 member->object.node->id, member->role);
 	break;
 
       case WAY:
-	if(member->way)
+	if(member->object.way)
 	printf(" Member: Way, id = %lu, role = %s\n", 
-	       member->way->id, member->role);
+	       member->object.way->id, member->role);
 	break;
 
       case RELATION:
-	if(member->relation)
+	if(member->object.relation)
 	printf(" Member: Relation, id = %lu, role = %s\n", 
-	       member->relation->id, member->role);
+	       member->object.relation->id, member->role);
 	break;
       }
 
@@ -436,47 +436,47 @@ member_t *osm_parse_osm_relation_member(osm_t *osm,
 			  xmlDocPtr doc, xmlNode *a_node) {
   char *prop;
   member_t *member = g_new0(member_t, 1);
-  member->type = ILLEGAL;
+  member->object.type = ILLEGAL;
 
   if((prop = (char*)xmlGetProp(a_node, (unsigned char*)"type"))) {
-    if(strcasecmp(prop, "way") == 0)           member->type = WAY;
-    else if(strcasecmp(prop, "node") == 0)     member->type = NODE;
-    else if(strcasecmp(prop, "relation") == 0) member->type = RELATION;
+    if(strcasecmp(prop, "way") == 0)           member->object.type = WAY;
+    else if(strcasecmp(prop, "node") == 0)     member->object.type = NODE;
+    else if(strcasecmp(prop, "relation") == 0) member->object.type = RELATION;
     xmlFree(prop);
   }
 
   if((prop = (char*)xmlGetProp(a_node, (unsigned char*)"ref"))) {
     item_id_t id = strtoul(prop, NULL, 10);
 
-    switch(member->type) {
+    switch(member->object.type) {
     case ILLEGAL:
       printf("Unable to store illegal type\n");
       break;
 
     case WAY:
       /* search matching way */
-      member->way = osm_get_way_by_id(osm, id);
-      if(!member->way) {
-	member->type = WAY_ID;
-	member->id = id;
+      member->object.way = osm_get_way_by_id(osm, id);
+      if(!member->object.way) {
+	member->object.type = WAY_ID;
+	member->object.id = id;
       }
       break;
 
     case NODE:
       /* search matching node */
-      member->node = osm_get_node_by_id(osm, id);
-      if(!member->node) {
-	member->type = NODE_ID;
-	member->id = id;
+      member->object.node = osm_get_node_by_id(osm, id);
+      if(!member->object.node) {
+	member->object.type = NODE_ID;
+	member->object.id = id;
       }
       break;
 
     case RELATION:
       /* search matching relation */
-      member->relation = osm_get_relation_by_id(osm, id);
-      if(!member->relation) {
-	member->type = NODE_ID;
-	member->id = id;
+      member->object.relation = osm_get_relation_by_id(osm, id);
+      if(!member->object.relation) {
+	member->object.type = NODE_ID;
+	member->object.id = id;
       }
       break;
 
@@ -836,47 +836,47 @@ static way_t *process_way(xmlTextReaderPtr reader, osm_t *osm) {
 static member_t *process_member(xmlTextReaderPtr reader, osm_t *osm) {
   char *prop;
   member_t *member = g_new0(member_t, 1);
-  member->type = ILLEGAL;
+  member->object.type = ILLEGAL;
 
   if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "type"))) {
-    if(strcasecmp(prop, "way") == 0)           member->type = WAY;
-    else if(strcasecmp(prop, "node") == 0)     member->type = NODE;
-    else if(strcasecmp(prop, "relation") == 0) member->type = RELATION;
+    if(strcasecmp(prop, "way") == 0)           member->object.type = WAY;
+    else if(strcasecmp(prop, "node") == 0)     member->object.type = NODE;
+    else if(strcasecmp(prop, "relation") == 0) member->object.type = RELATION;
     xmlFree(prop);
   }
 
   if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "ref"))) {
     item_id_t id = strtoul(prop, NULL, 10);
 
-    switch(member->type) {
+    switch(member->object.type) {
     case ILLEGAL:
       printf("Unable to store illegal type\n");
       break;
 
     case WAY:
       /* search matching way */
-      member->way = osm_get_way_by_id(osm, id);
-      if(!member->way) {
-	member->type = WAY_ID;
-	member->id = id;
+      member->object.way = osm_get_way_by_id(osm, id);
+      if(!member->object.way) {
+	member->object.type = WAY_ID;
+	member->object.id = id;
       }
       break;
 
     case NODE:
       /* search matching node */
-      member->node = osm_get_node_by_id(osm, id);
-      if(!member->node) {
-	member->type = NODE_ID;
-	member->id = id;
+      member->object.node = osm_get_node_by_id(osm, id);
+      if(!member->object.node) {
+	member->object.type = NODE_ID;
+	member->object.id = id;
       }
       break;
 
     case RELATION:
       /* search matching relation */
-      member->relation = osm_get_relation_by_id(osm, id);
-      if(!member->relation) {
-	member->type = NODE_ID;
-	member->id = id;
+      member->object.relation = osm_get_relation_by_id(osm, id);
+      if(!member->object.relation) {
+	member->object.type = NODE_ID;
+	member->object.id = id;
       }
       break;
 
@@ -1249,20 +1249,20 @@ char *osm_generate_xml(osm_t *osm, type_t type, void *item) {
 	xmlNodePtr m_node = xmlNewChild(rel_node,NULL,BAD_CAST "member", NULL);
 	char *str = NULL;
 
-	switch(member->type) {
+	switch(member->object.type) {
 	case NODE:
 	  xmlNewProp(m_node, BAD_CAST "type", BAD_CAST "node");
-	  str = g_strdup_printf("%ld", member->node->id);
+	  str = g_strdup_printf("%ld", member->object.node->id);
 	  break;
 
 	case WAY:
 	  xmlNewProp(m_node, BAD_CAST "type", BAD_CAST "way");
-	  str = g_strdup_printf("%ld", member->way->id);
+	  str = g_strdup_printf("%ld", member->object.way->id);
 	  break;
 
 	case RELATION:
 	  xmlNewProp(m_node, BAD_CAST "type", BAD_CAST "relation");
-	  str = g_strdup_printf("%ld", member->relation->id);
+	  str = g_strdup_printf("%ld", member->object.relation->id);
 	  break;
 
 	default:
@@ -1609,16 +1609,16 @@ relation_chain_t *osm_node_to_relation(osm_t *osm, node_t *node) {
 
     member_t *member = relation->member;
     while(member) {
-      switch(member->type) {
+      switch(member->object.type) {
       case NODE:
 	/* nodes are checked directly */
-	if(member->node == node)
+	if(member->object.node == node)
 	  is_member = TRUE;
 	break;
 
       case WAY: {
 	/* ways have to be checked for the nodes they consist of */
-	node_chain_t *chain = member->way->node_chain;
+	node_chain_t *chain = member->object.way->node_chain;
 	while(chain && !is_member) {
 	  if(chain->node == node)
 	    is_member = TRUE;
@@ -1656,10 +1656,10 @@ relation_chain_t *osm_way_to_relation(osm_t *osm, way_t *way) {
 
     member_t *member = relation->member;
     while(member) {
-      switch(member->type) {
+      switch(member->object.type) {
       case WAY: {
 	/* ways can be check directly */
-	if(member->way == way)
+	if(member->object.way == way)
 	  is_member = TRUE;
       } break;
       
@@ -1726,8 +1726,8 @@ void osm_node_remove_from_relation(osm_t *osm, node_t *node) {
   while(relation) {
     member_t **member = &relation->member;
     while(*member) {
-      if(((*member)->type == NODE) &&
-	 ((*member)->node == node)) {
+      if(((*member)->object.type == NODE) &&
+	 ((*member)->object.node == node)) {
 
 	printf("  from relation #%ld\n", relation->id);
 	
@@ -1751,8 +1751,8 @@ void osm_way_remove_from_relation(osm_t *osm, way_t *way) {
   while(relation) {
     member_t **member = &relation->member;
     while(*member) {
-      if(((*member)->type == WAY) &&
-	 ((*member)->way == way)) {
+      if(((*member)->object.type == WAY) &&
+	 ((*member)->object.way == way)) {
 
 	printf("  from relation #%ld\n", relation->id);
 	
@@ -2005,12 +2005,12 @@ osm_way_reverse_direction_sensitive_roles(osm_t *osm, way_t *way) {
       // First find the member corresponding to our way:
       member_t *member = rel_chain->relation->member;
       for (; member != NULL; member = member->next) {
-        if (member->type == WAY) {
-          if (member->way == way)
+        if (member->object.type == WAY) {
+          if (member->object.way == way)
             break;
         }
-        if (member->type == WAY_ID) {
-          if (member->id == way->id)
+        if (member->object.type == WAY_ID) {
+          if (member->object.id == way->id)
             break;
         }
       }
@@ -2106,7 +2106,7 @@ tag_t *osm_tags_copy(tag_t *src_tag, gboolean update_creator) {
 }
 
 /* return plain text of type */
-char *osm_type_string(type_t type) {
+char *osm_object_type_string(object_t *object) {
   const struct { type_t type; char *name; } types[] = {
     { ILLEGAL,     "illegal" },
     { NODE,        "node" },
@@ -2120,80 +2120,80 @@ char *osm_type_string(type_t type) {
 
   int i;
   for(i=0;types[i].name;i++) 
-    if(type == types[i].type)
+    if(object->type == types[i].type)
       return types[i].name;
 
   return NULL;
 }
 
-char *osm_object_string(type_t type, void *object) {
-  char *type_str = osm_type_string(type);
+char *osm_object_string(object_t *object) {
+  char *type_str = osm_object_type_string(object);
 
   if(!object) 
     return g_strdup_printf("%s #<invalid>", type_str);
 
-  switch(type) {
+  switch(object->type) {
   case ILLEGAL:
     return g_strdup_printf("%s #<unspec>", type_str);
     break;
   case NODE:
-    return g_strdup_printf("%s #%ld", type_str, ((node_t*)object)->id);
+    return g_strdup_printf("%s #%ld", type_str, object->node->id);
     break;
   case WAY:
-    return g_strdup_printf("%s #%ld", type_str, ((way_t*)object)->id);
+    return g_strdup_printf("%s #%ld", type_str, object->way->id);
     break;
   case RELATION:
-    return g_strdup_printf("%s #%ld", type_str, ((relation_t*)object)->id);
+    return g_strdup_printf("%s #%ld", type_str, object->relation->id);
     break;
   case NODE_ID:
   case WAY_ID:
   case RELATION_ID:
-    return g_strdup_printf("%s #%ld", type_str, ((item_id_t)object));
+    return g_strdup_printf("%s #%ld", type_str, object->id);
     break;
   }
   return NULL;
 }
 
-char *osm_id_string(type_t type, void *object) {
+char *osm_object_id_string(object_t *object) {
   if(!object) return NULL;
 
-  switch(type) {
+  switch(object->type) {
   case ILLEGAL:
     return NULL;
     break;
   case NODE:
-    return g_strdup_printf("#%ld", ((node_t*)object)->id);
+    return g_strdup_printf("#%ld", object->node->id);
     break;
   case WAY:
-    return g_strdup_printf("#%ld", ((way_t*)object)->id);
+    return g_strdup_printf("#%ld", object->way->id);
     break;
   case RELATION:
-    return g_strdup_printf("#%ld", ((relation_t*)object)->id);
+    return g_strdup_printf("#%ld", object->relation->id);
     break;
   case NODE_ID:
   case WAY_ID:
   case RELATION_ID:
-    return g_strdup_printf("#%ld", ((item_id_t)object));
+    return g_strdup_printf("#%ld", object->id);
     break;
   }
   return NULL;
 }
 
-tag_t *osm_object_get_tags(type_t type, void *object) {
+tag_t *osm_object_get_tags(object_t *object) {
   if(!object) return NULL;
 
-  switch(type) {
+  switch(object->type) {
   case ILLEGAL:
     return NULL;
     break;
   case NODE:
-    return ((node_t*)object)->tag;
+    return object->node->tag;
     break;
   case WAY:
-    return ((way_t*)object)->tag;
+    return object->way->tag;
     break;
   case RELATION:
-    return ((relation_t*)object)->tag;
+    return object->relation->tag;
     break;
   case NODE_ID:
   case WAY_ID:

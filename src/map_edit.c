@@ -38,15 +38,15 @@ static void transfer_relations(osm_t *osm, way_t *dst, way_t *src) {
     char *role = NULL;
     while(*member) { 
       /* save role of way */
-      if(((*member)->type == WAY) && ((*member)->way == src))
+      if(((*member)->object.type == WAY) && ((*member)->object.way == src))
 	role = (*member)->role;
       member = &(*member)->next;
     }
     
     printf("  adding way #%ld to relation\n", dst->id);
     *member = g_new0(member_t, 1);
-    (*member)->type = WAY;
-    (*member)->way = dst;
+    (*member)->object.type = WAY;
+    (*member)->object.way = dst;
     if(role) (*member)->role = g_strdup(role);
     member = &(*member)->next;
     
@@ -694,11 +694,11 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
       while(relation) {
 	member_t *member = relation->member;
 	while(member) {
-	  if(member->type == NODE && member->node == touchnode) {
+	  if(member->object.type == NODE && member->object.node == touchnode) {
 	    printf("  found node in relation #%ld\n", relation->id);
 	    
 	    /* replace by node */
-	    member->node = node;
+	    member->object.node = node;
 
 	    relation->flags |= OSM_FLAG_DIRTY;
 	  }
@@ -823,11 +823,12 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 	    member_t **member = &rchain->relation->member;
 	    char *role = NULL;
 	    while(*member && 
-		  !(((*member)->type == WAY) && 
-		    ((*member)->way == ways2join[0]))) {
+		  !(((*member)->object.type == WAY) && 
+		    ((*member)->object.way == ways2join[0]))) {
 
 	      /* save role of way[1] */
-	      if(((*member)->type == WAY) && ((*member)->way == ways2join[0]))
+	      if(((*member)->object.type == WAY) && 
+		 ((*member)->object.way == ways2join[0]))
 		role = (*member)->role;
 
 	      member = &(*member)->next;
@@ -838,8 +839,8 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 	    else {
 	      printf("  adding way[0] to relation\n");
 	      *member = g_new0(member_t, 1);
-	      (*member)->type = WAY;
-	      (*member)->way = ways2join[0];
+	      (*member)->object.type = WAY;
+	      (*member)->object.way = ways2join[0];
 	      if(role) (*member)->role = g_strdup(role);
 	      member = &(*member)->next;
 

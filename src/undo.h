@@ -40,19 +40,9 @@ typedef enum {
 /* of all the ways the node was contained in. This would then be MODIFY */
 /* operatins being part of the DELETE state */
 
-typedef struct {
-  type_t type;
-  union {
-    node_t *node;
-    way_t *way;
-    relation_t *relation;
-    void *ptr;
-  } data;
-} undo_object_t;
-
 typedef struct undo_op_s {
   undo_type_t type;   /* the type of this particular database/map operation */
-  undo_object_t *object;
+  object_t *object;
   struct undo_op_s *next;
 } undo_op_t;
 
@@ -68,7 +58,7 @@ typedef struct {
 } undo_t;
 
 struct appdata_s;
-void undo_remember_delete(struct appdata_s *appdata, type_t type, void *obj);
+void undo_remember_delete(struct appdata_s *appdata, object_t *obj);
 void undo_free(undo_state_t *state);
 void undo(struct appdata_s *appdata);
 

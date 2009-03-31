@@ -173,22 +173,14 @@ typedef struct {
     node_t *node;
     way_t *way;
     relation_t *relation;
+    item_id_t id;
     void *ptr;
   };
 } object_t;
 
 typedef struct member_s {
-  type_t type; 
+  object_t object;
   char   *role;
-
-  union {
-    node_t *node;
-    way_t *way;
-    relation_t *relation;
-    void *ptr;
-    item_id_t id;
-  };
-
   struct member_s *next;
 } member_t;
 
@@ -288,11 +280,6 @@ void osm_way_rotate(way_t *way, gint offset);
 
 tag_t *osm_tags_copy(tag_t *tag, gboolean update_creator);
 
-char *osm_type_string(type_t type);
-char *osm_id_string(type_t type, void *object);
-char *osm_object_string(type_t type, void *object);
-tag_t *osm_object_get_tags(type_t type, void *object);
-
 relation_t *osm_relation_new(void);
 void osm_relation_free(relation_t *relation);
 void osm_relation_attach(osm_t *osm, relation_t *relation);
@@ -300,6 +287,10 @@ void osm_relation_delete(osm_t *osm, relation_t *relation,
 			 gboolean permanently);
 gint osm_relation_members_num(relation_t *relation);
 
+char *osm_object_type_string(object_t *object);
+char *osm_object_id_string(object_t *object);
+char *osm_object_string(object_t *object);
+tag_t *osm_object_get_tags(object_t *object);
 void osm_object_set_flags(object_t *map_item, int set, int clr);
 
 #endif /* OSM_H */

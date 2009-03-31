@@ -117,7 +117,8 @@ void list_set_columns(GtkWidget *list, ...) {
 	 (flags & LIST_FLAG_CAN_HIGHLIGHT)?"background-set":NULL, hlkey,
 	NULL);
 
-      gtk_tree_view_column_set_expand(column, flags & (LIST_FLAG_EXPAND | LIST_FLAG_ELLIPSIZE));
+      gtk_tree_view_column_set_expand(column, 
+		      flags & (LIST_FLAG_EXPAND | LIST_FLAG_ELLIPSIZE));
     }
 
    gtk_tree_view_column_set_sort_column_id(column, key);

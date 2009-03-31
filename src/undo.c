@@ -36,24 +36,24 @@ char *undo_type_string(type_t type) {
   return NULL;
 }
 
-static void undo_object_free(undo_object_t *obj) {
-  char *msg = osm_object_string(obj->type, obj->data.ptr);
+static void undo_object_free(object_t *obj) {
+  char *msg = osm_object_string(obj);
   printf("   object %s\n", msg);
   g_free(msg);
 
-  if(obj->data.ptr) {
+  if(obj->ptr) {
     switch(obj->type) {
     case NODE:
-      osm_node_free(NULL, obj->data.node);
+      osm_node_free(NULL, obj->node);
       break;
 
     case WAY:
-      osm_way_free(obj->data.way);
+      osm_way_free(obj->way);
       break;
       
     default:
       printf("ERROR: unsupported object %s\n", 
-	     osm_type_string(obj->type));
+	     osm_object_type_string(obj));
       g_assert(0);
       break;
     }
@@ -121,72 +121,69 @@ static undo_state_t *undo_append_state(appdata_t *appdata) {
 }
 
 /* create a local copy of the entire object */
-static undo_object_t *undo_object_copy(type_t type, void *object) {
-  switch(type) {
+static object_t *undo_object_copy(object_t *object) {
+  switch(object->type) {
   case NODE: {
-    undo_object_t *ob = g_new0(undo_object_t, 1);
-    ob->type = type;
+    object_t *ob = g_new0(object_t, 1);
+    ob->type = object->type;
 
     /* fields ignored in this copy operation: */
     /* ways, icon_buf, map_item_chain, next */
 
-    node_t *node = (node_t*)object;
-    ob->data.node = g_new0(node_t, 1);
+    ob->node = g_new0(node_t, 1);
     /* copy all important parts, omitting icon pointers etc. */
-    ob->data.node->id = node->id;
-    ob->data.node->lpos = node->lpos;
-    ob->data.node->pos = node->pos;
+    ob->node->id = object->node->id;
+    ob->node->lpos = object->node->lpos;
+    ob->node->pos = object->node->pos;
     /* user is a pointer, but since the users list */
     /* is never touched it's ok */
-    ob->data.node->user = node->user;
-    ob->data.node->visible = node->visible;
-    ob->data.node->time = node->time;
-    ob->data.node->tag = osm_tags_copy(node->tag, FALSE);
-    ob->data.node->flags = node->flags; 
-    ob->data.node->zoom_max = node->zoom_max; 
+    ob->node->user = object->node->user;
+    ob->node->visible = object->node->visible;
+    ob->node->time = object->node->time;
+    ob->node->tag = osm_tags_copy(object->node->tag, FALSE);
+    ob->node->flags = object->node->flags; 
+    ob->node->zoom_max = object->node->zoom_max; 
 
     return ob;
     } break;
 
   case WAY: {
-    undo_object_t *ob = g_new0(undo_object_t, 1);
-    ob->type = type;
+    object_t *ob = g_new0(object_t, 1);
+    ob->type = object->type;
 
     /* fields ignored in this copy operation: */
 
-    way_t *way = (way_t*)object;
-    ob->data.way = g_new0(way_t, 1);
+    ob->way = g_new0(way_t, 1);
     /* copy all important parts */
-    ob->data.way->id = way->id;
+    ob->way->id = object->way->id;
     /* user is a pointer, but since the users list */
     /* is never touched it's ok */
-    ob->data.way->user = way->user;
-    ob->data.way->visible = way->visible;
-    ob->data.way->time = way->time;
-    ob->data.way->tag = osm_tags_copy(way->tag, FALSE);
-    ob->data.way->flags = way->flags; 
+    ob->way->user = object->way->user;
+    ob->way->visible = object->way->visible;
+    ob->way->time = object->way->time;
+    ob->way->tag = osm_tags_copy(object->way->tag, FALSE);
+    ob->way->flags = object->way->flags; 
 
     return ob;
     } break;
 
   default:
     printf("UNDO WARNING: ignoring unsupported object %s\n", 
-	   osm_type_string(type));
+	   osm_object_type_string(object));
     break;
   }
 
   return NULL;
 }
 
-void undo_remember_delete(appdata_t *appdata, type_t type, 
-			  void *object) {
+void undo_remember_delete(appdata_t *appdata, object_t *object) {
 
   /* don't do anything if undo isn't enabled */
   if(!appdata->menu_item_osm_undo)
     return;
 
   printf("UNDO: remembering delete operation for %s\n", 
-	 osm_type_string(type));
+	 osm_object_type_string(object));
 
   /* create a new undo state */
   undo_state_t *state = undo_append_state(appdata);
@@ -196,24 +193,21 @@ void undo_remember_delete(appdata_t *appdata, type_t type,
   /* operation on the database/map so only one undo_op is saved */
   undo_op_t *op = state->op = g_new0(undo_op_t, 1);
   op->type = UNDO_DELETE;
-  op->object = undo_object_copy(type, object);
+  op->object = undo_object_copy(object);
 }
 
 /* undo the deletion of an object */
-static void undo_operation_object_delete(appdata_t *appdata, 
-					 undo_object_t *obj) {
+static void undo_operation_object_delete(appdata_t *appdata, object_t *obj) {
 
-  char *msg = osm_object_string(obj->type, obj->data.ptr);
+  char *msg = osm_object_string(obj);
   printf("UNDO deletion of object %s\n", msg);
   g_free(msg);
   
   switch(obj->type) {
   case NODE: {
-    node_t *node = obj->data.node;
-
     /* there must be an "deleted" entry which needs to be */
     /* removed */
-    node_t *orig = osm_get_node_by_id(appdata->osm, node->id);
+    node_t *orig = osm_get_node_by_id(appdata->osm, obj->node->id);
     g_assert(orig);
     g_assert(orig->flags & OSM_FLAG_DELETED);
     way_chain_t *wchain = 
@@ -221,11 +215,11 @@ static void undo_operation_object_delete(appdata_t *appdata,
     g_assert(!wchain);
 
     /* then restore old node */
-    osm_node_dump(node);
-    osm_node_restore(appdata->osm, node);
-    josm_elemstyles_colorize_node(appdata->map->style, node);
-    map_node_draw(appdata->map, node);
-    obj->data.ptr = NULL;
+    osm_node_dump(obj->node);
+    osm_node_restore(appdata->osm, obj->node);
+    josm_elemstyles_colorize_node(appdata->map->style, obj->node);
+    map_node_draw(appdata->map, obj->node);
+    obj->ptr = NULL;
   } break;
 
   default:

@@ -318,10 +318,10 @@ void map_relation_select(appdata_t *appdata, relation_t *relation) {
   while(member) {
     canvas_item_t *item = NULL;
 
-    switch(member->type) {
+    switch(member->object.type) {
 
     case NODE: {
-      node_t *node = member->node;
+      node_t *node = member->object.node;
       printf("  -> node %ld\n", node->id);
 
       item = canvas_circle_new(map->canvas, CANVAS_GROUP_NODES_HL, 
@@ -331,7 +331,7 @@ void map_relation_select(appdata_t *appdata, relation_t *relation) {
       } break;
 
     case WAY: {
-      way_t *way = member->way;
+      way_t *way = member->object.way;
       /* a way needs at least 2 points to be drawn */
       guint nodes = osm_way_number_of_nodes(way);
       if(nodes > 1) {
@@ -1967,7 +1967,7 @@ void map_delete_selected(appdata_t *appdata) {
   /* deleting the selected item de-selects it ... */
   map_item_deselect(appdata);
 
-  undo_remember_delete(appdata, item.object.type, item.object.ptr);
+  undo_remember_delete(appdata, &item.object);
 
   switch(item.object.type) {
   case NODE:

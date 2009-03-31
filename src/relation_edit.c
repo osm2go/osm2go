@@ -61,13 +61,13 @@ typedef struct role_chain_s {
 } role_chain_t;
 
 static gboolean relation_add_item(GtkWidget *parent,
-			      relation_t *relation, object_t *item) {
+			      relation_t *relation, object_t *object) {
   role_chain_t *chain = NULL, **chainP = &chain;
 
-  printf("add item of type %d to relation #%ld\n", 
-	 item->type, relation->id);
+  printf("add object of type %d to relation #%ld\n", 
+	 object->type, relation->id);
 
-  /* ask the user for the role of the new item in this relation */
+  /* ask the user for the role of the new object in this relation */
   
   /* collect roles first */
   member_t *member = relation->member;
@@ -160,41 +160,32 @@ static gboolean relation_add_item(GtkWidget *parent,
   member_t **memberP = &relation->member;
   while(*memberP) memberP = &(*memberP)->next;
 
+  g_assert((object->type == NODE)||(object->type == WAY)||
+	   (object->type == RELATION));
+
   /* create new member */
   *memberP = g_new0(member_t, 1);
-  (*memberP)->type = item->type;
+  (*memberP)->object = *object;
   (*memberP)->role = role;
-  switch(item->type) {
-  case NODE:
-    (*memberP)->node = item->node;
-    break;
-  case WAY:
-    (*memberP)->way = item->way;
-    break;
-  case RELATION:
-    (*memberP)->relation = item->relation;
-    break;
-  default:
-    g_assert((item->type == NODE)||(item->type == WAY)||
-	     (item->type == RELATION));
-    break;
-  }
 
   relation->flags |= OSM_FLAG_DIRTY;
   return TRUE;
 }
 
-static void relation_remove_item(relation_t *relation, object_t *item) {
+static void relation_remove_item(relation_t *relation, object_t *object) {
 
-  printf("remove item of type %d from relation #%ld\n", 
-	 item->type, relation->id);
+  printf("remove object of type %d from relation #%ld\n", 
+	 object->type, relation->id);
 
   member_t **member = &relation->member;
   while(*member) {
-    if(((*member)->type == item->type) &&
-       (((item->type == NODE) && (item->node == (*member)->node)) ||
-	((item->type == WAY) && (item->way == (*member)->way)) ||
-      ((item->type == RELATION) && (item->relation == (*member)->relation)))) {
+    if(((*member)->object.type == object->type) &&
+       (((object->type == NODE) && 
+	 (object->node == (*member)->object.node)) ||
+	((object->type == WAY) && 
+	 (object->way == (*member)->object.way)) ||
+	((object->type == RELATION) && 
+	 (object->relation == (*member)->object.relation)))) {
       
       member_t *next = (*member)->next;
       osm_member_free(*member);
@@ -345,15 +336,15 @@ static void on_relation_item_remove(GtkWidget *but, relitem_context_t *context) 
 static char *relitem_get_role_in_relation(object_t *item, relation_t *relation) {
   member_t *member = relation->member;
   while(member) {
-    switch(member->type) {
+    switch(member->object.type) {
 
     case NODE:
-      if((item->type == NODE) && (item->node == member->node))
+      if((item->type == NODE) && (item->node == member->object.node))
 	return member->role;
       break;
 
     case WAY:
-      if((item->type == WAY) && (item->way == member->way))
+      if((item->type == WAY) && (item->way == member->object.way))
 	return member->role;
       break;
 
@@ -407,15 +398,15 @@ relitem_toggled(GtkCellRendererToggle *cell, const gchar *path_str,
 static gboolean relitem_is_in_relation(object_t *item, relation_t *relation) {
   member_t *member = relation->member;
   while(member) {
-    switch(member->type) {
+    switch(member->object.type) {
 
     case NODE:
-      if((item->type == NODE) && (item->node == member->node))
+      if((item->type == NODE) && (item->node == member->object.node))
 	return TRUE;
       break;
 
     case WAY:
-      if((item->type == WAY) && (item->way == member->way))
+      if((item->type == WAY) && (item->way == member->object.way))
 	return TRUE;
       break;
 
@@ -613,7 +604,7 @@ member_list_selection_func(GtkTreeSelection *selection, GtkTreeModel *model,
 
     member_t *member = NULL;
     gtk_tree_model_get(model, &iter, MEMBER_COL_DATA, &member, -1);
-    if(member && member->type < NODE_ID)
+    if(member && member->object.type < NODE_ID)
       return TRUE;
   }
   
@@ -633,35 +624,43 @@ static GtkWidget *member_list_widget(member_context_t *context) {
   /* --- "type" column --- */
   GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
   g_object_set(renderer, "foreground", "grey", NULL);
-  gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(context->view),
-	-1, _("Type"), renderer, "text", MEMBER_COL_TYPE,
-        "foreground-set", MEMBER_COL_REF_ONLY,  NULL); 
-
+  GtkTreeViewColumn *column = 
+    gtk_tree_view_column_new_with_attributes(_("Type"), renderer, 
+		     "text", MEMBER_COL_TYPE,
+		     "foreground-set", MEMBER_COL_REF_ONLY,  NULL);
+  gtk_tree_view_column_set_sort_column_id(column, MEMBER_COL_TYPE); 
+  gtk_tree_view_insert_column(GTK_TREE_VIEW(context->view), column, -1);
 
   /* --- "id" column --- */
   renderer = gtk_cell_renderer_text_new();
   g_object_set(renderer, "foreground", "grey", NULL);
-  gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(context->view),
-	-1, _("Id"), renderer, "text", MEMBER_COL_ID,
-        "foreground-set", MEMBER_COL_REF_ONLY, NULL); 
+  column = gtk_tree_view_column_new_with_attributes(_("Id"), renderer, 
+		     "text", MEMBER_COL_ID,
+		     "foreground-set", MEMBER_COL_REF_ONLY,  NULL);
+  gtk_tree_view_column_set_sort_column_id(column, MEMBER_COL_ID); 
+  gtk_tree_view_insert_column(GTK_TREE_VIEW(context->view), column, -1);
+
 
   /* --- "Name" column --- */
   renderer = gtk_cell_renderer_text_new();
   g_object_set(renderer, "foreground", "grey", NULL);
   g_object_set(renderer, "ellipsize", PANGO_ELLIPSIZE_END, NULL);
-  GtkTreeViewColumn *column = 
-    gtk_tree_view_column_new_with_attributes(_("Name"), renderer, 
+  column = gtk_tree_view_column_new_with_attributes(_("Name"), renderer, 
 		     "text", MEMBER_COL_NAME,
 		     "foreground-set", MEMBER_COL_REF_ONLY,  NULL);
   gtk_tree_view_column_set_expand(column, TRUE);
+  gtk_tree_view_column_set_sort_column_id(column, MEMBER_COL_NAME); 
   gtk_tree_view_insert_column(GTK_TREE_VIEW(context->view), column, -1);
 
   /* --- "role" column --- */
   renderer = gtk_cell_renderer_text_new();
   g_object_set(renderer, "foreground", "grey", NULL);
-  gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(context->view),
-	-1, _("Role"), renderer, "text", MEMBER_COL_ROLE,
-        "foreground-set", MEMBER_COL_REF_ONLY, NULL); 
+  column = gtk_tree_view_column_new_with_attributes(_("Role"), renderer, 
+		     "text", MEMBER_COL_ROLE,
+		     "foreground-set", MEMBER_COL_REF_ONLY,  NULL);
+  gtk_tree_view_column_set_sort_column_id(column, MEMBER_COL_ROLE); 
+  gtk_tree_view_insert_column(GTK_TREE_VIEW(context->view), column, -1);
+
 
   /* build and fill the store */
   context->store = gtk_list_store_new(MEMBER_NUM_COLS, 
@@ -674,8 +673,8 @@ static GtkWidget *member_list_widget(member_context_t *context) {
   GtkTreeIter iter;
   member_t *member = context->relation->member;
   while(member) {
-    tag_t *tags = osm_object_get_tags(member->type, member->ptr);
-    char *id = osm_id_string(member->type, member->ptr);
+    tag_t *tags = osm_object_get_tags(&member->object);
+    char *id = osm_object_id_string(&member->object);
 
     /* try to find something descriptive */
     char *name = NULL;
@@ -685,11 +684,11 @@ static GtkWidget *member_list_widget(member_context_t *context) {
     /* Append a row and fill in some data */
     gtk_list_store_append(context->store, &iter);
     gtk_list_store_set(context->store, &iter,
-       MEMBER_COL_TYPE, osm_type_string(member->type),
+       MEMBER_COL_TYPE, osm_object_type_string(&member->object),
        MEMBER_COL_ID,   id,
        MEMBER_COL_NAME, name, 
        MEMBER_COL_ROLE, member->role,
-       MEMBER_COL_REF_ONLY, member->type >= NODE_ID,
+       MEMBER_COL_REF_ONLY, member->object.type >= NODE_ID,
        MEMBER_COL_DATA, member,
        -1);
 
@@ -712,13 +711,9 @@ static GtkWidget *member_list_widget(member_context_t *context) {
   return vbox;
 }
 
-/* user clicked "members..." button in relation list */
-static void on_relation_members(GtkWidget *but, relation_context_t *context) {
+void relation_show_members(GtkWidget *parent, relation_t *relation) {
   member_context_t *mcontext = g_new0(member_context_t, 1);
-
-  /* display members list */
-  mcontext->relation = get_selected_relation(context);
-  if(!mcontext->relation) return;
+  mcontext->relation = relation;
 
   char *str = osm_tag_get_by_key(mcontext->relation->tag, "name");
   if(!str) str = osm_tag_get_by_key(mcontext->relation->tag, "ref");
@@ -730,7 +725,7 @@ static void on_relation_members(GtkWidget *but, relation_context_t *context) {
 
   mcontext->dialog = 
     gtk_dialog_new_with_buttons(str,
-	GTK_WINDOW(context->dialog), GTK_DIALOG_MODAL,
+	GTK_WINDOW(parent), GTK_DIALOG_MODAL,
 	GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE, 
 	NULL);
   g_free(str);
@@ -753,6 +748,15 @@ static void on_relation_members(GtkWidget *but, relation_context_t *context) {
 
   g_free(mcontext);
 }
+
+/* user clicked "members..." button in relation list */
+static void on_relation_members(GtkWidget *but, relation_context_t *context) {
+  relation_t *sel = get_selected_relation(context);
+  
+  if(sel)
+    relation_show_members(context->dialog, sel);
+}
+
 
 static void on_relation_add(GtkWidget *but, relation_context_t *context) {
   /* create a new relation */

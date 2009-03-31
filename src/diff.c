@@ -132,37 +132,37 @@ static void diff_save_relations(relation_t *relation, xmlNodePtr root_node) {
 					     BAD_CAST "member", NULL);
 
 	  char *ref = NULL;
-	  switch(member->type) {
+	  switch(member->object.type) {
 	  case NODE:
 	    xmlNewProp(node_member, BAD_CAST "type", BAD_CAST "node");
-	    ref = g_strdup_printf("%ld", member->node->id);
+	    ref = g_strdup_printf("%ld", member->object.node->id);
 	    break;
 	  case WAY:
 	    xmlNewProp(node_member, BAD_CAST "type", BAD_CAST "way");
-	    ref = g_strdup_printf("%ld", member->way->id);
+	    ref = g_strdup_printf("%ld", member->object.way->id);
 	    break;
 	  case RELATION:
 	    xmlNewProp(node_member, BAD_CAST "type", BAD_CAST "relation");
-	    ref = g_strdup_printf("%ld", member->relation->id);
+	    ref = g_strdup_printf("%ld", member->object.relation->id);
 	    break;
 
 	    /* XXX_ID's are used if this is a reference to an item not */
 	    /* stored in this xml data set */
 	  case NODE_ID:
 	    xmlNewProp(node_member, BAD_CAST "type", BAD_CAST "node");
-	    ref = g_strdup_printf("%ld", member->id);
+	    ref = g_strdup_printf("%ld", member->object.id);
 	    break;
 	  case WAY_ID:
 	    xmlNewProp(node_member, BAD_CAST "type", BAD_CAST "way");
-	    ref = g_strdup_printf("%ld", member->id);
+	    ref = g_strdup_printf("%ld", member->object.id);
 	    break;
 	  case RELATION_ID:
 	    xmlNewProp(node_member, BAD_CAST "type", BAD_CAST "relation");
-	    ref = g_strdup_printf("%ld", member->id);
+	    ref = g_strdup_printf("%ld", member->object.id);
 	    break;
 
 	  default:
-	    printf("unexpected member type %d\n", member->type);
+	    printf("unexpected member type %d\n", member->object.type);
 	    break;
 	  }
 
