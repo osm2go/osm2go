@@ -21,11 +21,11 @@
 
     <background color="#f2eee8"/>
 
-    <track width="6" color="#0000ff40" gps-color="#0000ff80"/>
+    <track width="6" color="#0000ff40" gps-color="#ff00ff80"/>
     
     <highlight color="#ffff0080" node-color="#ff000080" arrow-color="#0000ff80" touch-color="#0000ff80" width="3" arrow-limit="4"/>
 	
-    <frisket mult="3" color="#f2eee8">
+    <frisket mult="3" color="#f2eee880">
   		<border width="6" color="#000000"/>
 	</frisket>
 	

@@ -1237,10 +1237,14 @@ void wms_import(appdata_t *appdata) {
   char maxlon[G_ASCII_DTOSTR_BUF_SIZE], maxlat[G_ASCII_DTOSTR_BUF_SIZE];
 
   /* build strings of min and max lat and lon to be used in url */
-  g_ascii_dtostr(minlon, sizeof(minlon), appdata->project->min.lon);
-  g_ascii_dtostr(minlat, sizeof(minlat), appdata->project->min.lat);
-  g_ascii_dtostr(maxlon, sizeof(maxlon), appdata->project->max.lon);
-  g_ascii_dtostr(maxlat, sizeof(maxlat), appdata->project->max.lat);
+  g_ascii_formatd(minlon, sizeof(minlon), LL_FORMAT, 
+		  appdata->project->min.lon);
+  g_ascii_formatd(minlat, sizeof(minlat), LL_FORMAT, 
+		  appdata->project->min.lat);
+  g_ascii_formatd(maxlon, sizeof(maxlon), LL_FORMAT, 
+		  appdata->project->max.lon);
+  g_ascii_formatd(maxlat, sizeof(maxlat), LL_FORMAT, 
+		  appdata->project->max.lat);
 
   /* find preferred supported video format */
   gint format = 0;

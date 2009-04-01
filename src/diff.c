@@ -65,9 +65,9 @@ static void diff_save_nodes(node_t *node, xmlNodePtr root_node) {
 	char str[32];
 
 	/* additional info is only required if the node hasn't been deleted */
-	g_ascii_dtostr(str, sizeof(str), node->pos.lat);
+	g_ascii_formatd(str, sizeof(str), LL_FORMAT, node->pos.lat);
 	xmlNewProp(node_node, BAD_CAST "lat", BAD_CAST str);
-	g_ascii_dtostr(str, sizeof(str), node->pos.lon);
+	g_ascii_formatd(str, sizeof(str), LL_FORMAT, node->pos.lon);
 	xmlNewProp(node_node, BAD_CAST "lon", BAD_CAST str);
 	snprintf(str, sizeof(str), "%ld", node->time);
 	xmlNewProp(node_node, BAD_CAST "time", BAD_CAST str);

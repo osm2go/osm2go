@@ -192,20 +192,20 @@ gboolean project_save(GtkWidget *parent, project_t *project) {
   xmlNewChild(root_node, NULL, BAD_CAST "osm", BAD_CAST project->osm);
 
   node = xmlNewChild(root_node, NULL, BAD_CAST "min", NULL);
-  g_ascii_dtostr(str, sizeof(str), project->min.lat);
+  g_ascii_formatd(str, sizeof(str), LL_FORMAT, project->min.lat);
   xmlNewProp(node, BAD_CAST "lat", BAD_CAST str);
-  g_ascii_dtostr(str, sizeof(str), project->min.lon);
+  g_ascii_formatd(str, sizeof(str), LL_FORMAT, project->min.lon);
   xmlNewProp(node, BAD_CAST "lon", BAD_CAST str);
 
   node = xmlNewChild(root_node, NULL, BAD_CAST "max", NULL);
-  g_ascii_dtostr(str, sizeof(str), project->max.lat);
+  g_ascii_formatd(str, sizeof(str), LL_FORMAT, project->max.lat);
   xmlNewProp(node, BAD_CAST "lat", BAD_CAST str);
-  g_ascii_dtostr(str, sizeof(str), project->max.lon);
+  g_ascii_formatd(str, sizeof(str), LL_FORMAT, project->max.lon);
   xmlNewProp(node, BAD_CAST "lon", BAD_CAST str);
 
   if(project->map_state) {
     node = xmlNewChild(root_node, NULL, BAD_CAST "map", BAD_CAST NULL);
-    g_ascii_dtostr(str, sizeof(str), project->map_state->zoom);
+    g_ascii_formatd(str, sizeof(str), LL_FORMAT, project->map_state->zoom);
     xmlNewProp(node, BAD_CAST "zoom", BAD_CAST str);
     snprintf(str, sizeof(str), "%d", project->map_state->scroll_offset.x);
     xmlNewProp(node, BAD_CAST "scroll-offset-x", BAD_CAST str);
@@ -1051,7 +1051,8 @@ gboolean project_close(appdata_t *appdata) {
 
   /* Save track and turn off the handler callback */
   track_save(appdata->project, appdata->track.track);
-  track_do(appdata, TRACK_NONE, NULL);
+  track_clear(appdata, appdata->track.track);
+  appdata->track.track = NULL;
 
   map_clear(appdata, MAP_LAYER_ALL);
 

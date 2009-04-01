@@ -1208,9 +1208,9 @@ char *osm_generate_xml(osm_t *osm, type_t type, void *item) {
 	snprintf(str, sizeof(str), "%u", (unsigned)node->id);
 	xmlNewProp(node_node, BAD_CAST "id", BAD_CAST str);
       }
-      g_ascii_dtostr(str, sizeof(str), node->pos.lat);
+      g_ascii_formatd(str, sizeof(str), LL_FORMAT, node->pos.lat);
       xmlNewProp(node_node, BAD_CAST "lat", BAD_CAST str);
-      g_ascii_dtostr(str, sizeof(str), node->pos.lon);
+      g_ascii_formatd(str, sizeof(str), LL_FORMAT, node->pos.lon);
       xmlNewProp(node_node, BAD_CAST "lon", BAD_CAST str);    
       osm_generate_tags(node->tag, node_node);
     }

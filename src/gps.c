@@ -27,20 +27,24 @@
 
 #include <location/location-gps-device.h>
 
-pos_t *gps_get_pos(appdata_t *appdata) {
+gboolean gps_get_pos(appdata_t *appdata, pos_t *pos, float *alt) {
   if(!appdata->gps_enabled)
-    return NULL;
+    return FALSE;
 
   gps_state_t *gps_state = appdata->gps_state;
-  static pos_t retval;
 
   if(!gps_state->fix)
-    return NULL;
+    return FALSE;
 
-  retval.lat = gps_state->latitude;
-  retval.lon = gps_state->longitude;
+  if(pos) {
+    pos->lat = gps_state->latitude;
+    pos->lon = gps_state->longitude;
+  }
 
-  return &retval;
+  if(alt) 
+    *alt = gps_state->altitude;
+
+  return TRUE;
 }
 
 static void
@@ -53,6 +57,11 @@ location_changed(LocationGPSDevice *device, gps_state_t *gps_state) {
     gps_state->latitude = device->fix->latitude;
     gps_state->longitude = device->fix->longitude;
   }
+
+  if(device->fix->fields & LOCATION_GPS_DEVICE_ALTITUDE_SET)
+    gps_state->altitude = device->fix->altitude;
+  else
+    gps_state->altitude = NAN;
 }
 
 void gps_init(appdata_t *appdata) {
@@ -129,23 +138,22 @@ void gps_enable(appdata_t *appdata, gboolean enable) {
 #define GPSD_HOST "127.0.0.1"
 #define GPSD_PORT 2947
 
-pos_t *gps_get_pos(appdata_t *appdata) {
-  static pos_t retval;
-
-  retval.lat = NAN;
+gboolean gps_get_pos(appdata_t *appdata, pos_t *pos, float *alt) {
+  if(pos) pos->lat = NAN;
 
   g_mutex_lock(appdata->gps_state->mutex);
-  if(appdata->gps_state->gpsdata.set & STATUS_SET)
-    if(appdata->gps_state->gpsdata.status != STATUS_NO_FIX)
+  if(appdata->gps_state->gpsdata.set & STATUS_SET) {
+    if(appdata->gps_state->gpsdata.status != STATUS_NO_FIX) {
       if(appdata->gps_state->gpsdata.set & LATLON_SET) 
-	retval = appdata->gps_state->gpsdata.fix.pos;
-
+	*pos = appdata->gps_state->gpsdata.fix.pos;
+      if(appdata->gps_state->gpsdata.set & ALTITUDE_SET) 
+	*alt = appdata->gps_state->gpsdata.fix.alt;
+    }
+  }
+  
   g_mutex_unlock(appdata->gps_state->mutex);
-
-  if(isnan(retval.lat))
-    return NULL;
-
-  return &retval;
+  
+  return(!isnan(pos->lat));
 }
 
 static int gps_connect(gps_state_t *gps_state) {
@@ -168,6 +176,8 @@ static int gps_connect(gps_state_t *gps_state) {
 
   /* try to connect to gpsd */
   /* Create a socket to interact with GPSD. */
+
+  printf("GPSD: trying to connect to %s %d\n", GPSD_HOST, GPSD_PORT);
 
   int retries = 5;
   while(retries && 
@@ -215,6 +225,7 @@ static int gps_connect(gps_state_t *gps_state) {
 void gps_clear_fix(struct gps_fix_t *fixp) {
   fixp->mode = MODE_NOT_SEEN;
   fixp->pos.lat = fixp->pos.lon = NAN;
+  fixp->alt = NAN;
   fixp->eph = NAN;
 }
 
@@ -253,6 +264,7 @@ static void gps_unpack(char *buf, struct gps_data_t *gpsdata) {
 	      nf.pos.lat = DEFAULT(lat);
 	      nf.pos.lon = DEFAULT(lon);
 	      nf.eph = DEFAULT(eph);
+	      nf.alt = DEFAULT(alt);
 #undef DEFAULT
 	      if (st >= 6)
 		nf.mode = (mode[0] == '?') ? MODE_NOT_SEEN : atoi(mode);
@@ -262,6 +274,9 @@ static void gps_unpack(char *buf, struct gps_data_t *gpsdata) {
 	      gpsdata->set |= LATLON_SET|MODE_SET;
 	      gpsdata->status = STATUS_FIX;
 	      gpsdata->set |= STATUS_SET;
+
+	      if(alt[0] != '?')
+		gpsdata->set |= ALTITUDE_SET;
 	    }
 	  }
 	  break;

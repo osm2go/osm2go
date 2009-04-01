@@ -113,12 +113,12 @@ typedef struct appdata_s {
   } dialog_again;
 
   struct {
-    char *import_path;
     GtkWidget *menu_track;
     GtkWidget *menu_item_import;
     GtkWidget *menu_item_export;
     GtkWidget *menu_item_clear;
-    GtkWidget *menu_item_gps;
+    GtkWidget *menu_item_enable_gps;
+    GtkWidget *menu_item_follow_gps;
     struct track_s *track;
     guint handler_id;
     canvas_item_t *gps_item;      // the purple curcle

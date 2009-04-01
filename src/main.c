@@ -314,6 +314,7 @@ cb_menu_zoomout(GtkMenuItem *item, appdata_t *appdata) {
 
 static void 
 cb_menu_track_import(GtkMenuItem *item, appdata_t *appdata) {
+  g_assert(appdata->settings);
 
   /* open a file selector */
   GtkWidget *dialog;
@@ -330,30 +331,35 @@ cb_menu_track_import(GtkMenuItem *item, appdata_t *appdata) {
 			NULL);
 #endif
   
-  /* use path if one is present */
-  if(appdata->track.import_path) 
-    gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), 
-					appdata->track.import_path);
-
+  if(appdata->settings->track_path) {
+    if(!g_file_test(appdata->settings->track_path, G_FILE_TEST_EXISTS)) {
+      char *last_sep = strrchr(appdata->settings->track_path, '/');
+      if(last_sep) {
+	*last_sep = 0;  // seperate path from file 
+	
+	/* the user just created a new document */
+	gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), 
+				    appdata->settings->track_path);
+	gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(dialog), 
+					  last_sep+1);
+	
+	/* restore full filename */
+	*last_sep = '/';
+      }
+    } else 
+      gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(dialog), 
+				    appdata->settings->track_path);
+  }
+  
   gtk_widget_show_all (GTK_WIDGET(dialog));
   if (gtk_dialog_run (GTK_DIALOG(dialog)) == GTK_FM_OK) {
     char *filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
 
     /* load a track */
-    track_do(appdata, TRACK_IMPORT, filename);
+    appdata->track.track = track_import(appdata, filename);
     if(appdata->track.track) {
-
-      /* save path if gpx was successfully loaded */
-      char *r = strrchr(filename, '/');
-
-      /* there is a delimiter, use everything left of it as path */
-      if(r) {
-	*r = 0;
-	if(appdata->track.import_path) g_free(appdata->track.import_path);
-	appdata->track.import_path = g_strdup(filename);
-	/* restore path ... just in case ... */
-	*r = '/';
-      }
+      if(appdata->settings->track_path) g_free(appdata->settings->track_path);
+      appdata->settings->track_path = g_strdup(filename);
     }
     g_free (filename);
   }
@@ -362,28 +368,99 @@ cb_menu_track_import(GtkMenuItem *item, appdata_t *appdata) {
 }
 
 static void 
-cb_menu_track_gps(GtkMenuItem *item, gpointer data) {
+cb_menu_track_enable_gps(GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
 
   if(gtk_check_menu_item_get_active(
-    GTK_CHECK_MENU_ITEM(appdata->track.menu_item_gps))) {
-    track_do(appdata, TRACK_GPS, NULL);
-  } else {
-    track_do(appdata, TRACK_NONE, NULL);
-  }
+    GTK_CHECK_MENU_ITEM(appdata->track.menu_item_enable_gps))) {
+    track_enable_gps(appdata, TRUE);
+  } else 
+    track_enable_gps(appdata, FALSE);
 }
 
+
 static void 
-cb_menu_track_export(GtkMenuItem *item, gpointer data) {
+cb_menu_track_follow_gps(GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
-  messagef(GTK_WIDGET(appdata->window), _("NIY"),
-	   _("Track export is not yet supported."));
+
+  if(gtk_check_menu_item_get_active(
+    GTK_CHECK_MENU_ITEM(appdata->track.menu_item_follow_gps))) {
+    appdata->settings->follow_gps = TRUE;
+  } else 
+    appdata->settings->follow_gps = FALSE;
 }
+
+
+static void 
+cb_menu_track_export(GtkMenuItem *item, appdata_t *appdata) {
+  g_assert(appdata->settings);
+
+  /* open a file selector */
+  GtkWidget *dialog;
+
+#ifdef USE_HILDON
+  dialog = hildon_file_chooser_dialog_new(GTK_WINDOW(appdata->window), 
+					  GTK_FILE_CHOOSER_ACTION_SAVE);
+#else
+  dialog = gtk_file_chooser_dialog_new(_("Export track file"),
+				       GTK_WINDOW(appdata->window),
+				       GTK_FILE_CHOOSER_ACTION_SAVE,
+				       GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+				       GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT,
+				       NULL);
+#endif
+
+  printf("set filename <%s>\n", appdata->settings->track_path);
+
+  if(appdata->settings->track_path) {
+    if(!g_file_test(appdata->settings->track_path, G_FILE_TEST_EXISTS)) {
+      char *last_sep = strrchr(appdata->settings->track_path, '/');
+      if(last_sep) {
+	*last_sep = 0;  // seperate path from file 
+	
+	/* the user just created a new document */
+	gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), 
+					    appdata->settings->track_path);
+	gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(dialog), 
+					  last_sep+1);
+	
+	/* restore full filename */
+	*last_sep = '/';
+      }
+    } else 
+      gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(dialog), 
+				    appdata->settings->track_path);
+  }
+
+  if(gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_FM_OK) {
+    gchar *filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+    if(filename) {
+      printf("export to %s\n", filename);
+
+      if(!g_file_test(filename, G_FILE_TEST_EXISTS) ||
+	 yes_no_f(dialog, appdata, MISC_AGAIN_ID_EXPORT_OVERWRITE, 
+		  MISC_AGAIN_FLAG_DONT_SAVE_NO,
+		  "Overwrite existing file", 
+		  "The file already exists. "
+		  "Do you really want to replace it?")) {
+	if(appdata->settings->track_path) 
+	  g_free(appdata->settings->track_path);
+	appdata->settings->track_path = g_strdup(filename);
+	
+	track_export(appdata, filename);
+      }
+    }
+  }
+  
+  gtk_widget_destroy (dialog);
+}
+
 
 static void 
 cb_menu_track_clear(GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
-  track_do(appdata, TRACK_NONE, NULL);
+  track_clear(appdata, appdata->track.track);
+  appdata->track.track = NULL;
 }
 
 
@@ -431,6 +508,7 @@ menu_append_new_item(appdata_t *appdata,
                      const gchar *accel_path,
                      guint accel_key,      // from gdk/gdkkeysyms.h
                      GdkModifierType accel_mods, // e.g. GDK_CONTROL_MASK
+		     gboolean enabled,
                      gboolean is_check, gboolean check_status)
 {
   GtkWidget *item = NULL;
@@ -486,9 +564,10 @@ menu_append_new_item(appdata_t *appdata,
 #endif
  
   gtk_menu_shell_append(GTK_MENU_SHELL(menu_shell), GTK_WIDGET(item));
-  if (is_check) {
+  gtk_widget_set_sensitive(GTK_WIDGET(item), enabled);
+  if (is_check) 
     gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item), check_status);
-  }
+
   g_signal_connect(item, "activate", GTK_SIGNAL_FUNC(activate_cb), 
 		   appdata);
   return item;
@@ -521,13 +600,13 @@ void menu_create(appdata_t *appdata) {
   menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_project_open), _("_Open..."),
     GTK_STOCK_OPEN, "<OSM2Go-Main>/Project/Open",
-    0, 0, FALSE, FALSE
+    0, 0, TRUE, FALSE, FALSE
   );
 
   appdata->menu_item_project_close = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_project_close), _("_Close"),
     GTK_STOCK_CLOSE, "<OSM2Go-Main>/Project/Close",
-    0, 0, FALSE, FALSE
+    0, 0, TRUE, FALSE, FALSE
   );
 
   /* --------------- view menu ------------------- */
@@ -545,19 +624,19 @@ void menu_create(appdata_t *appdata) {
   appdata->menu_item_view_fullscreen = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_fullscreen), _("_Fullscreen"),
     GTK_STOCK_FULLSCREEN, "<OSM2Go-Main>/View/Fullscreen",
-    0, 0, TRUE, FALSE
+    0, 0, TRUE, TRUE, FALSE
   );
 
   menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_zoomin), _("Zoom _in"),
     GTK_STOCK_ZOOM_IN, "<OSM2Go-Main>/View/ZoomIn",
-    GDK_comma, GDK_CONTROL_MASK, FALSE, FALSE
+    GDK_comma, GDK_CONTROL_MASK, TRUE, FALSE, FALSE
   );
 
   menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_zoomout), _("Zoom _out"),
     GTK_STOCK_ZOOM_OUT, "<OSM2Go-Main>/View/ZoomOut",
-    GDK_period, GDK_CONTROL_MASK, FALSE, FALSE
+    GDK_period, GDK_CONTROL_MASK, TRUE, FALSE, FALSE
   );
 
   /* -------------------- OSM submenu -------------------- */
@@ -571,13 +650,13 @@ void menu_create(appdata_t *appdata) {
   appdata->menu_item_osm_upload = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_upload), _("_Upload..."),
     "upload.16", "<OSM2Go-Main>/OSM/Upload",
-    GDK_u, GDK_SHIFT_MASK|GDK_CONTROL_MASK, FALSE, FALSE
+    GDK_u, GDK_SHIFT_MASK|GDK_CONTROL_MASK, TRUE, FALSE, FALSE
   );
 
   menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_download), _("_Download..."),
     "download.16", "<OSM2Go-Main>/OSM/Download",
-    GDK_d, GDK_SHIFT_MASK|GDK_CONTROL_MASK, FALSE, FALSE
+    GDK_d, GDK_SHIFT_MASK|GDK_CONTROL_MASK, TRUE, FALSE, FALSE
   );
 
   gtk_menu_shell_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
@@ -586,7 +665,7 @@ void menu_create(appdata_t *appdata) {
     appdata->menu_item_osm_undo = menu_append_new_item(
 	       appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_undo), _("_Undo"),
 	       GTK_STOCK_UNDO, "<OSM2Go-Main>/OSM/Undo",
-	       GDK_z, GDK_CONTROL_MASK, FALSE, FALSE
+	       GDK_z, GDK_CONTROL_MASK, TRUE, FALSE, FALSE
 	       );
   } else
     printf("set environment variable OSM2GO_UNDO_TEST to enable undo framework tests\n");
@@ -594,20 +673,20 @@ void menu_create(appdata_t *appdata) {
   appdata->menu_item_osm_save_changes = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_save_changes), _("_Save local changes"),
     GTK_STOCK_SAVE, "<OSM2Go-Main>/OSM/SaveChanges",
-    GDK_s, GDK_SHIFT_MASK|GDK_CONTROL_MASK, FALSE, FALSE
+    GDK_s, GDK_SHIFT_MASK|GDK_CONTROL_MASK, TRUE, FALSE, FALSE
   );
 
   appdata->menu_item_osm_undo_changes = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_undo_changes), _("Disca_rd local changes..."),
     GTK_STOCK_DELETE, "<OSM2Go-Main>/OSM/DiscardChanges",
-    0, 0, FALSE, FALSE
+    0, 0, TRUE, FALSE, FALSE
   );
 
   gtk_menu_shell_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
   appdata->menu_item_osm_relations = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_osm_relations), _("_Relations..."),
     NULL, "<OSM2Go-Main>/OSM/Relations",
-    GDK_r, GDK_SHIFT_MASK|GDK_CONTROL_MASK, FALSE, FALSE
+    GDK_r, GDK_SHIFT_MASK|GDK_CONTROL_MASK, TRUE, FALSE, FALSE
   );
 
   /* -------------------- wms submenu -------------------- */
@@ -621,20 +700,20 @@ void menu_create(appdata_t *appdata) {
   menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_wms_import), _("_Import..."),
     GTK_STOCK_INDEX, "<OSM2Go-Main>/WMS/Import",
-    0, 0, FALSE, FALSE
+    0, 0, TRUE, FALSE, FALSE
   );
 
   appdata->menu_item_wms_clear = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_wms_clear), _("_Clear"),
     GTK_STOCK_CLEAR, "<OSM2Go-Main>/WMS/Clear",
-    0, 0, FALSE, FALSE
+    0, 0, TRUE, FALSE, FALSE
   );
   gtk_widget_set_sensitive(appdata->menu_item_wms_clear, FALSE);
 
   appdata->menu_item_wms_adjust = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_wms_adjust), _("_Adjust"),
     NULL, "<OSM2Go-Main>/WMS/Adjust",
-    0, 0, FALSE, FALSE
+    0, 0, TRUE, FALSE, FALSE
   );
   gtk_widget_set_sensitive(appdata->menu_item_wms_adjust, FALSE);
 
@@ -649,14 +728,14 @@ void menu_create(appdata_t *appdata) {
   appdata->menu_item_map_hide_sel = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_map_hide_sel), _("_Hide selected"),
     GTK_STOCK_REMOVE, "<OSM2Go-Main>/Map/HideSelected",
-    0, 0, FALSE, FALSE
+    0, 0, TRUE, FALSE, FALSE
   );
   gtk_widget_set_sensitive(appdata->menu_item_map_hide_sel, FALSE);
 
   appdata->menu_item_map_show_all = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_map_show_all), _("_Show all"),
     GTK_STOCK_ADD, "<OSM2Go-Main>/Map/ShowAll",
-    0, 0, FALSE, FALSE
+    0, 0, TRUE, FALSE, FALSE
   );
   gtk_widget_set_sensitive(appdata->menu_item_map_show_all, FALSE);
 
@@ -665,7 +744,7 @@ void menu_create(appdata_t *appdata) {
   menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_style), _("St_yle..."),
     GTK_STOCK_SELECT_COLOR, "<OSM2Go-Main>/Map/Style",
-    0, 0, FALSE, FALSE
+    0, 0, TRUE, FALSE, FALSE
   );
 
   gtk_menu_shell_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
@@ -674,20 +753,20 @@ void menu_create(appdata_t *appdata) {
   menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_redraw), _("_Redraw"),
     NULL, "<OSM2Go-Main>/Map/Redraw",
-    GDK_r, GDK_CONTROL_MASK, FALSE, FALSE
+    GDK_r, GDK_CONTROL_MASK, TRUE, FALSE, FALSE
   );
 
   appdata->menu_item_map_no_icons = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_map_no_icons), _("No _icons"),
     NULL, "<OSM2Go-Main>/Map/NoIcons",
-    0, 0, TRUE, appdata->settings->no_icons
+    0, 0, TRUE, TRUE, appdata->settings->no_icons
   );
 
   appdata->menu_item_map_no_antialias = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_map_no_antialias),
     _("No _antialias"),
     NULL, "<OSM2Go-Main>/Map/NoAntialias",
-    0, 0, TRUE, appdata->settings->no_antialias
+    0, 0, TRUE, TRUE, appdata->settings->no_antialias
   );
 
   /* -------------------- track submenu -------------------- */
@@ -701,26 +780,34 @@ void menu_create(appdata_t *appdata) {
   appdata->track.menu_item_import = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_track_import), _("_Import..."),
     NULL, "<OSM2Go-Main>/Track/Import",
-    0, 0, FALSE, FALSE
+    0, 0, TRUE, FALSE, FALSE
   );
 
   appdata->track.menu_item_export = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_track_export), _("_Export..."),
     NULL, "<OSM2Go-Main>/Track/Export",
-    0, 0, FALSE, FALSE
+    0, 0, FALSE, FALSE, FALSE
   );
 
   appdata->track.menu_item_clear = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_track_clear), _("_Clear"),
     GTK_STOCK_CLEAR, "<OSM2Go-Main>/Track/Clear",
-    0, 0, FALSE, FALSE
+    0, 0, FALSE, FALSE, FALSE
   );
 
 
-  appdata->track.menu_item_gps = menu_append_new_item(
-    appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_track_gps), _("_GPS"),
+  appdata->track.menu_item_enable_gps = menu_append_new_item(
+    appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_track_enable_gps),_("_GPS enable"),
     NULL, "<OSM2Go-Main>/Track/GPS",
-    GDK_g, GDK_CONTROL_MASK|GDK_SHIFT_MASK, TRUE, FALSE
+    GDK_g, GDK_CONTROL_MASK|GDK_SHIFT_MASK, TRUE, TRUE, 
+    appdata->settings->enable_gps
+  );
+
+  appdata->track.menu_item_follow_gps = menu_append_new_item(
+    appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_track_follow_gps), _("GPS follow"),
+    NULL, "<OSM2Go-Main>/Track/Follow",
+    0, 0, appdata->settings->enable_gps, TRUE,
+    appdata->settings->follow_gps
   );
   
   /* ------------------------------------------------------- */
@@ -731,13 +818,13 @@ void menu_create(appdata_t *appdata) {
   menu_append_new_item(
     appdata, about_quit_items_menu, GTK_SIGNAL_FUNC(cb_menu_about), _("_About..."),
     GTK_STOCK_ABOUT, "<OSM2Go-Main>/About",
-    0, 0, FALSE, FALSE
+    0, 0, TRUE, FALSE, FALSE
   );
 
   menu_append_new_item(
     appdata, about_quit_items_menu, GTK_SIGNAL_FUNC(cb_menu_quit), _("_Quit"),
     GTK_STOCK_QUIT, "<OSM2Go-Main>/Quit",
-    0, 0, FALSE, FALSE
+    0, 0, TRUE, FALSE, FALSE
   );
 
   gtk_window_add_accel_group(GTK_WINDOW(appdata->window), accel_grp);
@@ -996,6 +1083,10 @@ int main(int argc, char *argv[]) {
 
   main_ui_enable(&appdata);
 
+  /* start GPS if enabled by config */
+  if(appdata.settings && appdata.settings->enable_gps) 
+    track_enable_gps(&appdata, TRUE);
+
   /* ------------ jump into main loop ---------------- */
 
   gtk_main();
@@ -1004,6 +1095,7 @@ int main(int argc, char *argv[]) {
 
   track_save(appdata.project, appdata.track.track);
   track_clear(&appdata, appdata.track.track);
+  appdata.track.track = NULL;
 
   /* save a diff if there are dirty entries */
   diff_save(appdata.project, appdata.osm);

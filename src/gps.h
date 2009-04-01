@@ -37,6 +37,7 @@ struct gps_fix_t {
 #define MODE_2D  	2	/* good for latitude/longitude */
 #define MODE_3D  	3	/* good for altitude/climb too */
     pos_t pos;          /* Latitude/Longitude in degrees (valid if mode >= 2) */
+    double alt;
     double eph;  	/* Horizontal position uncertainty, meters */
 };
 
@@ -45,6 +46,7 @@ typedef unsigned int gps_mask_t;
 struct gps_data_t {
     gps_mask_t set;	/* has field been set since this was last cleared? */
 #define LATLON_SET	0x00000008u
+#define ALTITUDE_SET	0x00000010u
 #define STATUS_SET	0x00000100u
 #define MODE_SET	0x00000200u
 #define SATELLITE_SET	0x00040000u
@@ -77,8 +79,8 @@ typedef struct gps_state_s {
 #endif
   guint idd_changed;
 
-  gboolean fix;
-  double latitude, longitude;
+  gboolean fix, fix3d;
+  double latitude, longitude, altitude;
 
 #else
   /* setup for direct gpsd based communication */
@@ -98,7 +100,7 @@ typedef struct gps_state_s {
 
 void gps_init(appdata_t *appdata);
 void gps_release(appdata_t *appdata);
-pos_t *gps_get_pos(appdata_t *appdata);
+gboolean gps_get_pos(appdata_t *appdata, pos_t *pos, float *alt);
 void gps_enable(appdata_t *appdata, gboolean enable);
 
 #endif // GPS_H

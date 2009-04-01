@@ -2045,64 +2045,195 @@ void map_delete_selected(appdata_t *appdata) {
 
 /* ----------------------- track related stuff ----------------------- */
 
+static gboolean track_pos2lpos(bounds_t *bounds, pos_t *pos, lpos_t *lpos) {
+  pos2lpos(bounds, pos, lpos);
+
+  /* check if point is within bounds */
+  return ((lpos->x >= bounds->min.x) && (lpos->x <= bounds->max.x) &&
+	  (lpos->y >= bounds->min.y) && (lpos->y <= bounds->max.y));
+}
+
 void map_track_draw_seg(map_t *map, track_seg_t *seg) {
+  bounds_t *bounds = map->appdata->osm->bounds;
+
   /* a track_seg needs at least 2 points to be drawn */
   guint pnum = track_seg_points(seg);
   printf("seg of length %d\n", pnum);
 
-  if(pnum == 1) {
-    g_assert(!seg->item);
+  if(!pnum)
+    return;
 
-    seg->item = canvas_circle_new(map->canvas, CANVAS_GROUP_TRACK,
-	  seg->track_point->lpos.x, seg->track_point->lpos.y, 
-	  map->style->track.width/2.0, 0, map->style->track.color, NO_COLOR);
-  }
+  /* nothing should have been drawn by now ... */
+  g_assert(!seg->item_chain);
+  
+  track_item_chain_t **itemP = &seg->item_chain;
+  track_point_t *track_point = seg->track_point;
+  while(track_point) {
+    lpos_t lpos;
 
-  if(pnum > 1) {
-    
-    /* allocate space for nodes */
-    canvas_points_t *points = canvas_points_new(pnum);
-    
-    int point = 0;
-    track_point_t *track_point = seg->track_point;
-    while(track_point) {
-      points->coords[point++] = track_point->lpos.x;
-      points->coords[point++] = track_point->lpos.y;
+    /* skip all points not on screen */
+    track_point_t *last = NULL;
+    while(track_point && !track_pos2lpos(bounds, &track_point->pos, &lpos)) {
+      last = track_point;
       track_point = track_point->next;
     }
-    
-    /* there may be a circle (one point line) */
-    if(seg->item)
-      canvas_item_destroy(seg->item);
 
-    seg->item = canvas_polyline_new(map->canvas, CANVAS_GROUP_TRACK,
-	  points, map->style->track.width, map->style->track.color);
+    int visible = 0;
+
+    /* count nodes that _are_ on screen */
+    track_point_t *tmp = track_point;
+    while(tmp && track_pos2lpos(bounds, &tmp->pos, &lpos)) {
+      tmp = tmp->next;
+      visible++;
+    }
+
+    /* actually start drawing with the last position that was offscreen */
+    /* so the track nicely enters the viewing area */
+    if(last) {
+      track_point = last;
+      visible++;
+    }
+
+    /* also use last one that's offscreen to nicely leave the visible area */
+    if(tmp && tmp->next) 
+      visible++;
+
+    /* allocate space for nodes */
+    canvas_points_t *points = canvas_points_new(visible);
+    
+    printf("visible are %d\n", visible);
+    int point;
+    for(point=0;point<visible;point++) {
+      track_pos2lpos(bounds, &track_point->pos, &lpos);
+
+      points->coords[2*point+0] = lpos.x;
+      points->coords[2*point+1] = lpos.y;
+      track_point = track_point->next;
+    }
+
+    *itemP = g_new0(track_item_chain_t, 1);
+    (*itemP)->item = canvas_polyline_new(map->canvas, CANVAS_GROUP_TRACK,
+		 points, map->style->track.width, map->style->track.color);
+    itemP = &(*itemP)->next;
 
     canvas_points_free(points);
   }
 }
 
+/* update the last visible fragment of this segment since a */
+/* gps position may have been added */
 void map_track_update_seg(map_t *map, track_seg_t *seg) {
+  bounds_t *bounds = map->appdata->osm->bounds;
+
+  printf("-- APPENDING TO TRACK --\n");
+
   /* a track_seg needs at least 2 points to be drawn */
   guint pnum = track_seg_points(seg);
   printf("seg of length %d\n", pnum);
 
-  if(pnum > 1) {
+  /* there are two cases: either the second last point was on screen */
+  /* or it wasn't. We'll have to start a new screen item if the latter */
+  /* is the case */
+
+  /* search last point */
+  track_point_t *begin = seg->track_point, *second_last = seg->track_point;
+  lpos_t lpos;
+  while(second_last && second_last->next && second_last->next->next) {
+    if(!track_pos2lpos(bounds, &second_last->pos, &lpos))
+      begin = second_last;
+
+    second_last = second_last->next;
+  }
+  track_point_t *last = second_last->next;
+  
+  /* since we are updating an existing track, it sure has at least two */
+  /* points, second_last must be valid and its "next" (last) also */
+  g_assert(second_last);
+  g_assert(last);
+
+  /* check if the last and second_last points are visible */
+  gboolean last_is_visible = 
+    track_pos2lpos(bounds, &last->pos, &lpos);
+  gboolean second_last_is_visible = 
+    track_pos2lpos(bounds, &second_last->pos, &lpos);
+
+  /* if both are invisible, then nothing has changed on screen */
+  if(!last_is_visible && !second_last_is_visible) {
+    printf("second_last and last entry are invisible -> doing nothing\n");
+    return;
+  }
+
+  /* search last element in item chain */
+  track_item_chain_t *item = seg->item_chain;
+  while(item && item->next)
+    item = item->next;
+
+  if(second_last_is_visible) {
+    /* there must be something already on the screen and there must */
+    /* be visible nodes in the chain */
+    g_assert(item);
+    g_assert(begin);
+
+    printf("second_last is visible -> append\n");
     
-    /* allocate space for nodes */
-    canvas_points_t *points = canvas_points_new(pnum);
-    
-    int point = 0;
-    track_point_t *track_point = seg->track_point;
-    while(track_point) {
-      canvas_point_set_pos(points, point++, &track_point->lpos);
-      track_point = track_point->next;
+    /* count points to be placed */
+    int npoints = 0;
+    track_point_t *tmp = begin;
+    while(tmp) {
+      tmp = tmp->next;
+      npoints++;
+    }
+
+    printf("updating last segment to %d points\n", npoints);
+
+    canvas_points_t *points = canvas_points_new(npoints);
+
+    gint point = 0;
+    while(begin) {
+      track_pos2lpos(bounds, &begin->pos, &lpos);
+      canvas_point_set_pos(points, point++, &lpos);
+      begin = begin->next;
     }
     
-    g_assert(seg->item);
-    canvas_item_set_points(seg->item, points);
+    canvas_item_set_points(item->item, points);
+    canvas_points_free(points);
+    
+  } else {
+    printf("second last is invisible -> start new screen segment\n");
+
+    /* the search for the "begin" ends with the second_last item */
+    /* verify the last one also */
+    if(begin->next && !track_pos2lpos(bounds, &begin->next->pos, &lpos))
+      begin = begin->next;
+
+    item->next = g_new0(track_item_chain_t, 1);
+    item = item->next;
+
+    /* count points to be placed */
+    int npoints = 0;
+    track_point_t *tmp = begin;
+    while(tmp) {
+      tmp = tmp->next;
+      npoints++;
+    }
+
+    printf("attaching new segment with %d points\n", npoints);
+
+    canvas_points_t *points = canvas_points_new(npoints);
+
+    gint point = 0;
+    while(begin) {
+      track_pos2lpos(bounds, &begin->pos, &lpos);
+      canvas_point_set_pos(points, point++, &lpos);
+      begin = begin->next;
+    }
+    
+    item->item = canvas_polyline_new(map->canvas, CANVAS_GROUP_TRACK,
+		 points, map->style->track.width, map->style->track.color);
+    
     canvas_points_free(points);
   }
+
 }
 
 void map_track_draw(map_t *map, track_t *track) {
@@ -2125,26 +2256,33 @@ void map_track_remove(appdata_t *appdata) {
   /* remove all segments */
   track_seg_t *seg = track->track_seg;
   while(seg) {
-    if(seg->item) {
-      canvas_item_destroy(seg->item);
-      seg->item = NULL;
+    track_item_chain_t *item = seg->item_chain;
+    while(item) {
+      track_item_chain_t *next = item->next;
+      canvas_item_destroy(item->item);
+      item = next;
     }
-
+    
+    seg->item_chain = NULL;
     seg = seg->next;
   }
 }
 
-void map_track_pos(appdata_t *appdata, lpos_t *lpos) {
+void map_track_pos(appdata_t *appdata, pos_t *pos) {
   if(appdata->track.gps_item) {
     canvas_item_destroy(appdata->track.gps_item);
     appdata->track.gps_item = NULL;
   }
 
-  if(lpos)
+  if(pos) {
+    lpos_t lpos;
+    pos2lpos(appdata->osm->bounds, pos, &lpos);
+
     appdata->track.gps_item = 
       canvas_circle_new(appdata->map->canvas, CANVAS_GROUP_GPS, 
-	lpos->x, lpos->y, appdata->map->style->track.width/2.0, 0, 
+	lpos.x, lpos.y, appdata->map->style->track.width/2.0, 0, 
 			appdata->map->style->track.gps_color, NO_COLOR);
+  }
 }
 
 /* ------------------- map background ------------------ */

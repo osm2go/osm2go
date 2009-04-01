@@ -136,7 +136,7 @@ static style_t *parse_style(xmlDocPtr doc, xmlNode *a_node) {
 	/* ---------- frisket --------------------------------- */
       } else if(strcasecmp((char*)cur_node->name, "frisket") == 0) {
 	xml_get_prop_float(cur_node, "mult", &style->frisket.mult);
-	parse_color(cur_node, "arrow-color", &style->frisket.color);
+	parse_color(cur_node, "color", &style->frisket.color);
 	style->frisket.border.present = FALSE;
 
 	for(sub_node = cur_node->children; sub_node; sub_node=sub_node->next) {

@@ -22,6 +22,11 @@
 
 #include <math.h>
 
+/* format string used to write lat/lon coordinates, altitude and time */
+#define LL_FORMAT   "%.06f"
+#define ALT_FORMAT  "%.02f"
+#define DATE_FORMAT "%FT%T"
+
 #ifdef USE_FLOAT
 /* use float instead of double on small machines */
 typedef float pos_float_t;

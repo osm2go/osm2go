@@ -20,12 +20,13 @@
 #ifndef MISC_H
 #define MISC_H
 
-#define MISC_AGAIN_ID_DELETE          (1<<0)
-#define MISC_AGAIN_ID_JOIN_NODES      (1<<1)
-#define MISC_AGAIN_ID_JOIN_WAYS       (1<<2)
-#define MISC_AGAIN_ID_OVERWRITE_TAGS  (1<<3)
-#define MISC_AGAIN_ID_EXTEND_WAY      (1<<4)
-#define MISC_AGAIN_ID_EXTEND_WAY_END  (1<<5)
+#define MISC_AGAIN_ID_DELETE           (1<<0)
+#define MISC_AGAIN_ID_JOIN_NODES       (1<<1)
+#define MISC_AGAIN_ID_JOIN_WAYS        (1<<2)
+#define MISC_AGAIN_ID_OVERWRITE_TAGS   (1<<3)
+#define MISC_AGAIN_ID_EXTEND_WAY       (1<<4)
+#define MISC_AGAIN_ID_EXTEND_WAY_END   (1<<5)
+#define MISC_AGAIN_ID_EXPORT_OVERWRITE (1<<6)
 
 typedef struct file_chain_s {
   char *name;

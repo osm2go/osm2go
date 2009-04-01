@@ -72,10 +72,10 @@ gboolean osm_download(GtkWidget *parent, project_t *project) {
   char minlon[G_ASCII_DTOSTR_BUF_SIZE], minlat[G_ASCII_DTOSTR_BUF_SIZE];
   char maxlon[G_ASCII_DTOSTR_BUF_SIZE], maxlat[G_ASCII_DTOSTR_BUF_SIZE];
 
-  g_ascii_dtostr(minlon, sizeof(minlon), project->min.lon);
-  g_ascii_dtostr(minlat, sizeof(minlat), project->min.lat);
-  g_ascii_dtostr(maxlon, sizeof(maxlon), project->max.lon);
-  g_ascii_dtostr(maxlat, sizeof(maxlat), project->max.lat);
+  g_ascii_formatd(minlon, sizeof(minlon), LL_FORMAT, project->min.lon);
+  g_ascii_formatd(minlat, sizeof(minlat), LL_FORMAT, project->min.lat);
+  g_ascii_formatd(maxlon, sizeof(maxlon), LL_FORMAT, project->max.lon);
+  g_ascii_formatd(maxlat, sizeof(maxlat), LL_FORMAT, project->max.lat);
 
   char *url = g_strdup_printf("%s/map?bbox=%s,%s,%s,%s",
 		project->server, minlon, minlat, maxlon, maxlat);
