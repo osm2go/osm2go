@@ -24,6 +24,9 @@
 #include <curl/easy.h> /* new for v7 */
 #include <unistd.h>
 
+#define COLOR_ERR  "red"
+#define COLOR_OK   "darkgreen"
+
 static struct http_message_s {
   int id;
   char *msg;
@@ -148,7 +151,8 @@ static size_t write_callback(void *ptr, size_t size, size_t nmemb, void *stream)
   return nmemb;
 }
 
-static void appendf(struct log_s *log, const char *fmt, ...) {
+static void appendf(struct log_s *log, char *colname, 
+		    const char *fmt, ...) {
   va_list args;
   va_start( args, fmt );
   char *buf = g_strdup_vprintf(fmt, args);
@@ -156,9 +160,18 @@ static void appendf(struct log_s *log, const char *fmt, ...) {
 
   printf(buf);
 
+  GtkTextTag *tag = NULL;
+  if(colname)
+    tag = gtk_text_buffer_create_tag(log->buffer, NULL,
+				     "foreground", colname,
+				     NULL);
+  
   GtkTextIter end;
   gtk_text_buffer_get_end_iter(log->buffer, &end);
-  gtk_text_buffer_insert(log->buffer, &end, buf, -1);
+  if(tag) 
+    gtk_text_buffer_insert_with_tags(log->buffer, &end, buf, -1, tag, NULL);
+  else    
+    gtk_text_buffer_insert(log->buffer, &end, buf, -1);
 
   g_free(buf);
 
@@ -185,12 +198,12 @@ static gboolean osm_update_item(struct log_s *log, char *xml_str,
   while(retry >= 0) {
 
     if(retry != MAX_TRY)
-      appendf(log, _("Retry %d/%d "), MAX_TRY-retry, MAX_TRY-1);
+      appendf(log, NULL, _("Retry %d/%d "), MAX_TRY-retry, MAX_TRY-1);
 
     /* get a curl handle */
     curl = curl_easy_init();
     if(!curl) {
-      appendf(log, _("CURL init error\n"));
+      appendf(log, NULL, _("CURL init error\n"));
       return FALSE;
     }
 
@@ -256,18 +269,28 @@ static gboolean osm_update_item(struct log_s *log, char *xml_str,
       *id = strtoul(write_data.ptr, NULL, 10);
     }
     
-    g_free(write_data.ptr);
-    
     if(res != 0) 
-      appendf(log, _("failed: %s\n"), buffer);
+      appendf(log, COLOR_ERR, _("failed: %s\n"), buffer);
     else if(response != 200)
-      appendf(log, _("failed, code: %ld %s\n"), 
+      appendf(log, COLOR_ERR, _("failed, code: %ld %s\n"), 
 	      response, osm_http_message(response));
     else {
-      if(!id) appendf(log, _("ok\n"));
-      else    appendf(log, _("ok: #%ld\n"), *id);
+      if(!id) appendf(log, COLOR_OK, _("ok\n"));
+      else    appendf(log, COLOR_OK, _("ok: #%ld\n"), *id);
     }
     
+#ifdef API06
+    /* if it's neither "ok" (200), nor "internal server error" (500) */
+    /* then write the message to the log */
+    if((response != 200) && (response != 500) && write_data.ptr) {
+      appendf(log, NULL, _("Server reply: "));
+      appendf(log, COLOR_ERR, _("%s\n"), write_data.ptr);
+    }
+#endif
+
+    if(write_data.ptr)
+      g_free(write_data.ptr);
+
     /* don't retry unless we had an "internal server error" */
     if(response != 500) 
       return((res == 0)&&(response == 200));
@@ -289,30 +312,38 @@ static gboolean osm_delete_item(struct log_s *log, char *xml_str,
 #ifdef API06
   /* delete has a payload since api 0.6 */
   curl_data_t read_data;
+  curl_data_t write_data;
 #endif
 
   while(retry >= 0) {
 
     if(retry != MAX_TRY)
-      appendf(log, _("Retry %d/%d "), MAX_TRY-retry, MAX_TRY-1);
+      appendf(log, NULL, _("Retry %d/%d "), MAX_TRY-retry, MAX_TRY-1);
 
     /* get a curl handle */
     curl = curl_easy_init();
     if(!curl) {
-      appendf(log, _("CURL init error\n"));
+      appendf(log, NULL, _("CURL init error\n"));
       return FALSE;
     }
 
 #ifdef API06
     read_data.ptr = xml_str;
     read_data.len = xml_str?strlen(xml_str):0;
+    write_data.ptr = NULL;
+    write_data.len = 0;	    
 
     /* we want to use our own read/write functions */
     curl_easy_setopt(curl, CURLOPT_READFUNCTION, read_callback);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
+
     curl_easy_setopt(curl, CURLOPT_INFILESIZE, (curl_off_t)read_data.len);
 
     /* now specify which file to upload */
     curl_easy_setopt(curl, CURLOPT_READDATA, &read_data);
+
+    /* we pass our 'chunk' struct to the callback function */
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &write_data);
 
     /* enable uploading */
     curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
@@ -344,13 +375,25 @@ static gboolean osm_delete_item(struct log_s *log, char *xml_str,
     curl_easy_cleanup(curl);
     
     if(res != 0) 
-    appendf(log, _("failed: %s\n"), buffer);
-    else if(response != 200)
-      appendf(log, _("failed, code: %ld %s\n"), 
+      appendf(log, COLOR_ERR, _("failed: %s\n"), buffer);
+    else if(response != 200) 
+      appendf(log, COLOR_ERR, _("failed, code: %ld %s\n"), 
 	      response, osm_http_message(response));
     else
-      appendf(log, _("ok\n"));
+      appendf(log, COLOR_OK, _("ok\n"));
     
+#ifdef API06
+    /* if it's neither "ok" (200), nor "internal server error" (500) */
+    /* then write the message to the log */
+    if((response != 200) && (response != 500) && write_data.ptr) {
+      appendf(log, NULL, _("Server reply: "));
+      appendf(log, COLOR_ERR, _("%s\n"), write_data.ptr);
+    }
+
+    if(write_data.ptr)
+      g_free(write_data.ptr);
+#endif
+
     /* don't retry unless we had an "internal server error" */
     if(response != 500) 
       return((res == 0)&&(response == 200));
@@ -400,7 +443,7 @@ static void osm_delete_nodes(osm_upload_context_t *context) {
     if(node->flags & OSM_FLAG_DELETED) {
       printf("deleting node on server\n");
 
-      appendf(&context->log, _("Delete node #%ld "), node->id);
+      appendf(&context->log, NULL, _("Delete node #%ld "), node->id);
 
       char *url = g_strdup_printf("%s/node/%lu", project->server, node->id);
       char *cred = g_strdup_printf("%s:%s", 
@@ -440,10 +483,10 @@ static void osm_upload_nodes(osm_upload_context_t *context) {
 
       if(node->flags & OSM_FLAG_NEW) {
 	url = g_strdup_printf("%s/node/create", project->server);
-	appendf(&context->log, _("New node "));
+	appendf(&context->log, NULL, _("New node "));
       } else {
 	url = g_strdup_printf("%s/node/%lu", project->server, node->id);
-	appendf(&context->log, _("Modified node #%ld "), node->id);
+	appendf(&context->log, NULL, _("Modified node #%ld "), node->id);
       }
 
       /* upload this node */
@@ -483,7 +526,7 @@ static void osm_delete_ways(osm_upload_context_t *context) {
     if(way->flags & OSM_FLAG_DELETED) {
       printf("deleting way on server\n");
 
-      appendf(&context->log, _("Delete way #%ld "), way->id);
+      appendf(&context->log, NULL, _("Delete way #%ld "), way->id);
 
       char *url = g_strdup_printf("%s/way/%lu", project->server, way->id);
       char *cred = g_strdup_printf("%s:%s", 
@@ -523,10 +566,10 @@ static void osm_upload_ways(osm_upload_context_t *context) {
       
       if(way->flags & OSM_FLAG_NEW) {
 	url = g_strdup_printf("%s/way/create", project->server);
-	appendf(&context->log, _("New way "));
+	appendf(&context->log, NULL, _("New way "));
       } else {
 	url = g_strdup_printf("%s/way/%lu", project->server, way->id);
-	appendf(&context->log, _("Modified way #%ld "), way->id);
+	appendf(&context->log, NULL, _("Modified way #%ld "), way->id);
       }
       
       /* upload this node */
@@ -566,7 +609,7 @@ static void osm_delete_relations(osm_upload_context_t *context) {
     if(relation->flags & OSM_FLAG_DELETED) {
       printf("deleting relation on server\n");
 
-      appendf(&context->log, _("Delete relation #%ld "), relation->id);
+      appendf(&context->log, NULL, _("Delete relation #%ld "), relation->id);
 
       char *url = g_strdup_printf("%s/relation/%lu", 
 				  project->server, relation->id);
@@ -607,10 +650,11 @@ static void osm_upload_relations(osm_upload_context_t *context) {
       
       if(relation->flags & OSM_FLAG_NEW) {
 	url = g_strdup_printf("%s/relation/create", project->server);
-	appendf(&context->log, _("New relation "));
+	appendf(&context->log, NULL, _("New relation "));
       } else {
 	url = g_strdup_printf("%s/relation/%lu", project->server,relation->id);
-	appendf(&context->log, _("Modified relation #%ld "), relation->id);
+	appendf(&context->log, NULL, _("Modified relation #%ld "), 
+		relation->id);
       }
       
       /* upload this relation */
@@ -649,7 +693,7 @@ static gboolean osm_create_changeset(osm_upload_context_t *context) {
   while(gtk_events_pending()) gtk_main_iteration();
 
   char *url = g_strdup_printf("%s/changeset/create", project->server);
-  appendf(&context->log, _("Create changeset "));
+  appendf(&context->log, NULL, _("Create changeset "));
 
   /* create changeset request */
   char *xml_str = osm_generate_xml_changeset(context->osm, context->comment);
@@ -684,7 +728,7 @@ static gboolean osm_close_changeset(osm_upload_context_t *context) {
 
   char *url = g_strdup_printf("%s/changeset/%lu/close",
 			      project->server, context->changeset);
-  appendf(&context->log, _("Close changeset "));
+  appendf(&context->log, NULL, _("Close changeset "));
 
   char *cred = g_strdup_printf("%s:%s", 
 			       context->appdata->settings->username, 
@@ -924,12 +968,12 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   }
 
 #ifndef API06
-  appendf(&context->log, _("Log generated by %s v%s using API 0.5\n"), 
+  appendf(&context->log, NULL, _("Log generated by %s v%s using API 0.5\n"), 
 	  PACKAGE, VERSION);
 #else
-  appendf(&context->log, _("Log generated by %s v%s using API 0.6\n"), 
+  appendf(&context->log, NULL, _("Log generated by %s v%s using API 0.6\n"), 
 	  PACKAGE, VERSION);
-  appendf(&context->log, _("User comment: %s\n"), context->comment);
+  appendf(&context->log, NULL, _("User comment: %s\n"), context->comment);
 
   g_assert(project->server);
 
@@ -937,12 +981,12 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   if(strstr(project->server, "0.5") != NULL) {
     strstr(project->server, "0.5")[2] = '6';
 
-    appendf(&context->log, _("Adjusting server name to v0.6\n"));
+    appendf(&context->log, NULL, _("Adjusting server name to v0.6\n"));
     project->dirty = TRUE; // project needs to be changed 
   }
 #endif
 
-  appendf(&context->log, _("Uploading to %s\n"), project->server);
+  appendf(&context->log, NULL, _("Uploading to %s\n"), project->server);
 
 #ifdef API06
   /* create a new changeset */
@@ -950,17 +994,17 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
 #endif
 
   /* check for dirty entries */
-  appendf(&context->log, _("Uploading nodes:\n"));
+  appendf(&context->log, NULL, _("Uploading nodes:\n"));
   osm_upload_nodes(context);
-  appendf(&context->log, _("Uploading ways:\n"));
+  appendf(&context->log, NULL, _("Uploading ways:\n"));
   osm_upload_ways(context);
-  appendf(&context->log, _("Uploading relations:\n"));
+  appendf(&context->log, NULL, _("Uploading relations:\n"));
   osm_upload_relations(context);
-  appendf(&context->log, _("Deleting relations:\n"));
+  appendf(&context->log, NULL, _("Deleting relations:\n"));
   osm_delete_relations(context);
-  appendf(&context->log, _("Deleting ways:\n"));
+  appendf(&context->log, NULL, _("Deleting ways:\n"));
   osm_delete_ways(context);
-  appendf(&context->log, _("Deleting nodes:\n"));
+  appendf(&context->log, NULL, _("Deleting nodes:\n"));
   osm_delete_nodes(context);
 
 #ifdef API06
@@ -969,20 +1013,20 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   }
 #endif
 
-  appendf(&context->log, _("Upload done.\n"));
+  appendf(&context->log, NULL, _("Upload done.\n"));
 
   gboolean reload_map = FALSE;
   if(project->data_dirty) {
-    appendf(&context->log, _("Server data has been modified.\n"));
-    appendf(&context->log, _("Downloading updated osm data ...\n"));
+    appendf(&context->log, NULL, _("Server data has been modified.\n"));
+    appendf(&context->log, NULL, _("Downloading updated osm data ...\n"));
 
     if(osm_download(context->dialog, project)) {
-      appendf(&context->log, _("Download successful!\n"));
-      appendf(&context->log, _("The map will be reloaded.\n"));
+      appendf(&context->log, NULL, _("Download successful!\n"));
+      appendf(&context->log, NULL, _("The map will be reloaded.\n"));
       project->data_dirty = FALSE;
       reload_map = TRUE;
     } else
-      appendf(&context->log, _("Download failed!\n"));
+      appendf(&context->log, NULL, _("Download failed!\n"));
 
     project_save(context->dialog, project);
 
@@ -992,32 +1036,32 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
       /* we basically restart the entire map with fresh data from the server */
       /* and the diff will hopefully be empty (if the upload was successful) */
 
-      appendf(&context->log, _("Reloading map ...\n"));
+      appendf(&context->log, NULL, _("Reloading map ...\n"));
       
       if(!diff_is_clean(appdata->osm, FALSE)) {
-	appendf(&context->log, _(">>>>>>>> DIFF IS NOT CLEAN <<<<<<<<\n"));
-	appendf(&context->log, _("Something went wrong during upload,\n"));
-	appendf(&context->log, _("proceed with care!\n"));
+	appendf(&context->log, COLOR_ERR, _("*** DIFF IS NOT CLEAN ***\n"));
+	appendf(&context->log, COLOR_ERR, _("Something went wrong during upload,\n"));
+	appendf(&context->log, COLOR_ERR, _("proceed with care!\n"));
       }
 
       /* redraw the entire map by destroying all map items and redrawing them */
-      appendf(&context->log, _("Cleaning up ...\n"));
+      appendf(&context->log, NULL, _("Cleaning up ...\n"));
       diff_save(appdata->project, appdata->osm);
       map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
       osm_free(&appdata->icon, appdata->osm);
       
-      appendf(&context->log, _("Loading OSM ...\n"));
+      appendf(&context->log, NULL, _("Loading OSM ...\n"));
       appdata->osm = osm_parse(appdata->project->osm);
-      appendf(&context->log, _("Applying diff ...\n"));
+      appendf(&context->log, NULL, _("Applying diff ...\n"));
       diff_restore(appdata, appdata->project, appdata->osm);
-      appendf(&context->log, _("Painting ...\n"));
+      appendf(&context->log, NULL, _("Painting ...\n"));
       map_paint(appdata);
-      appendf(&context->log, _("Done!\n"));
+      appendf(&context->log, NULL, _("Done!\n"));
     }
   }
 
   /* tell the user that he can stop waiting ... */
-  appendf(&context->log, _("Process finished.\n"));
+  appendf(&context->log, NULL, _("Process finished.\n"));
 
   gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), 
 				    GTK_RESPONSE_CLOSE, TRUE);

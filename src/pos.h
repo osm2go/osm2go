@@ -23,7 +23,7 @@
 #include <math.h>
 
 /* format string used to write lat/lon coordinates, altitude and time */
-#define LL_FORMAT   "%.06f"
+#define LL_FORMAT   "%.07f"
 #define ALT_FORMAT  "%.02f"
 #define DATE_FORMAT "%FT%T"
 
