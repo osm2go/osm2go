@@ -1099,9 +1099,22 @@ gboolean project_load(appdata_t *appdata, char *name) {
   banner_busy_tick();
   if(!project_open(appdata, proj_name)) {
     printf("error opening requested project\n");
-    snprintf(banner_txt, _PROJECT_LOAD_BUF_SIZ, _("Error opening %s"), proj_name);
+
+    if(appdata->project) {
+      project_free(appdata->project);
+      appdata->project = NULL;
+    }
+
+    if(appdata->osm) {
+      osm_free(&appdata->icon, appdata->osm);
+      appdata->osm = NULL;
+    }
+
+    snprintf(banner_txt, _PROJECT_LOAD_BUF_SIZ, 
+	     _("Error opening %s"), proj_name);
     banner_busy_stop(appdata);
     banner_show_info(appdata, banner_txt);
+
     g_free(proj_name);
     return FALSE;
   }    
@@ -1110,10 +1123,22 @@ gboolean project_load(appdata_t *appdata, char *name) {
   banner_busy_tick();
   if(!osm_sanity_check(GTK_WIDGET(appdata->window), appdata->osm)) {
     printf("project/osm sanity checks failed, unloading project\n");
-    project_free(appdata->project);
-    snprintf(banner_txt, _PROJECT_LOAD_BUF_SIZ, _("Error opening %s"), proj_name);
+
+    if(appdata->project) {
+      project_free(appdata->project);
+      appdata->project = NULL;
+    }
+
+    if(appdata->osm) {
+      osm_free(&appdata->icon, appdata->osm);
+      appdata->osm = NULL;
+    }
+
+    snprintf(banner_txt, _PROJECT_LOAD_BUF_SIZ, 
+	     _("Error opening %s"), proj_name);
     banner_busy_stop(appdata);
     banner_show_info(appdata, banner_txt);
+
     g_free(proj_name);
     return FALSE;
   }
