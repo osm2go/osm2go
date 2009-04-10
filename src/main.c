@@ -62,6 +62,7 @@ static void main_ui_enable(appdata_t *appdata) {
     gtk_widget_set_sensitive(appdata->menu_item_osm_undo, osm_valid);
   gtk_widget_set_sensitive(appdata->menu_item_osm_save_changes, osm_valid);
   gtk_widget_set_sensitive(appdata->menu_item_osm_undo_changes, osm_valid);
+  gtk_widget_set_sensitive(appdata->menu_item_osm_relations, osm_valid);
   gtk_widget_set_sensitive(appdata->track.menu_track, osm_valid);
   gtk_widget_set_sensitive(appdata->menu_view, osm_valid);
   gtk_widget_set_sensitive(appdata->menu_wms, osm_valid);

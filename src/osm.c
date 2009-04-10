@@ -679,6 +679,12 @@ static node_t *process_node(xmlTextReaderPtr reader, osm_t *osm) {
     xmlFree(prop);
   }
 
+  /* new in api 0.6: */
+  if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "version"))) {
+    node->version = strtoul(prop, NULL, 10);
+    xmlFree(prop);
+  }
+
   if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "lat"))) {
     node->pos.lat = g_ascii_strtod(prop, NULL);
     xmlFree(prop);
@@ -773,6 +779,12 @@ static way_t *process_way(xmlTextReaderPtr reader, osm_t *osm) {
   char *prop;
   if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "id"))) {
     way->id = strtoul(prop, NULL, 10);
+    xmlFree(prop);
+  }
+
+  /* new in api 0.6: */
+  if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "version"))) {
+    way->version = strtoul(prop, NULL, 10);
     xmlFree(prop);
   }
 
@@ -904,6 +916,12 @@ static relation_t *process_relation(xmlTextReaderPtr reader, osm_t *osm) {
   char *prop;
   if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "id"))) {
     relation->id = strtoul(prop, NULL, 10);
+    xmlFree(prop);
+  }
+
+  /* new in api 0.6: */
+  if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "version"))) {
+    relation->version = strtoul(prop, NULL, 10);
     xmlFree(prop);
   }
 
@@ -1150,6 +1168,7 @@ gboolean osm_node_has_value(node_t *node, char *str) {
 gboolean osm_node_has_tag(node_t *node) {
   tag_t *tag = node->tag;
 
+  /* created_by tags don't count as real tags */
   if(tag && strcasecmp(tag->key, "created_by") == 0)
     tag = tag->next;
 
@@ -1172,8 +1191,10 @@ static void osm_generate_tags(tag_t *tag, xmlNodePtr node) {
   while(tag) {
     /* make sure "created_by" tag contains our id */
     if(strcasecmp(tag->key, "created_by") == 0) {
-      g_free(tag->value);
-      tag->value = g_strdup(PACKAGE " v" VERSION);
+      if(strcasecmp(tag->value, PACKAGE " v" VERSION) != 0) {      
+	g_free(tag->value);
+	tag->value = g_strdup(PACKAGE " v" VERSION);
+      }
     }
 
     xmlNodePtr tag_node = xmlNewChild(node, NULL, BAD_CAST "tag", NULL);
@@ -1184,7 +1205,8 @@ static void osm_generate_tags(tag_t *tag, xmlNodePtr node) {
 }
 
 /* build xml representation for a way */
-char *osm_generate_xml(osm_t *osm, type_t type, void *item) {
+static char *osm_generate_xml(osm_t *osm, item_id_t changeset, 
+		       type_t type, void *item) {
   char str[32];
   xmlChar *result = NULL;
   int len = 0;
@@ -1193,8 +1215,10 @@ char *osm_generate_xml(osm_t *osm, type_t type, void *item) {
 
   xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
   xmlNodePtr root_node = xmlNewNode(NULL, BAD_CAST "osm");
+#ifndef API06
   xmlNewProp(root_node, BAD_CAST "version", BAD_CAST "0.5");
-  xmlNewProp(root_node, BAD_CAST "generator", BAD_CAST PACKAGE " V" VERSION);
+  xmlNewProp(root_node, BAD_CAST "generator", BAD_CAST PACKAGE " v" VERSION);
+#endif
   xmlDocSetRootElement(doc, root_node);
 
   switch(type) {
@@ -1208,6 +1232,12 @@ char *osm_generate_xml(osm_t *osm, type_t type, void *item) {
 	snprintf(str, sizeof(str), "%u", (unsigned)node->id);
 	xmlNewProp(node_node, BAD_CAST "id", BAD_CAST str);
       }
+#ifdef API06
+      snprintf(str, sizeof(str), "%u", (unsigned)node->version);
+      xmlNewProp(node_node, BAD_CAST "version", BAD_CAST str);
+      snprintf(str, sizeof(str), "%u", (unsigned)changeset);
+      xmlNewProp(node_node, BAD_CAST "changeset", BAD_CAST str);
+#endif
       g_ascii_formatd(str, sizeof(str), LL_FORMAT, node->pos.lat);
       xmlNewProp(node_node, BAD_CAST "lat", BAD_CAST str);
       g_ascii_formatd(str, sizeof(str), LL_FORMAT, node->pos.lon);
@@ -1222,6 +1252,12 @@ char *osm_generate_xml(osm_t *osm, type_t type, void *item) {
       xmlNodePtr way_node = xmlNewChild(root_node, NULL, BAD_CAST "way", NULL);
       snprintf(str, sizeof(str), "%u", (unsigned)way->id);
       xmlNewProp(way_node, BAD_CAST "id", BAD_CAST str);
+#ifdef API06
+      snprintf(str, sizeof(str), "%u", (unsigned)way->version);
+      xmlNewProp(way_node, BAD_CAST "version", BAD_CAST str);
+      snprintf(str, sizeof(str), "%u", (unsigned)changeset);
+      xmlNewProp(way_node, BAD_CAST "changeset", BAD_CAST str);
+#endif
       
       node_chain_t *node_chain = way->node_chain;
       while(node_chain) {
@@ -1243,6 +1279,12 @@ char *osm_generate_xml(osm_t *osm, type_t type, void *item) {
 					BAD_CAST "relation", NULL);
       snprintf(str, sizeof(str), "%u", (unsigned)relation->id);
       xmlNewProp(rel_node, BAD_CAST "id", BAD_CAST str);
+#ifdef API06
+      snprintf(str, sizeof(str), "%u", (unsigned)relation->version);
+      xmlNewProp(rel_node, BAD_CAST "version", BAD_CAST str);
+      snprintf(str, sizeof(str), "%u", (unsigned)changeset);
+      xmlNewProp(rel_node, BAD_CAST "changeset", BAD_CAST str);
+#endif
       
       member_t *member = relation->member;
       while(member) {
@@ -1302,19 +1344,51 @@ char *osm_generate_xml(osm_t *osm, type_t type, void *item) {
 }
 
 /* build xml representation for a node */
-char *osm_generate_xml_node(osm_t *osm, node_t *node) {
-  return osm_generate_xml(osm, NODE, node);
+char *osm_generate_xml_node(osm_t *osm, item_id_t changeset, node_t *node) {
+  return osm_generate_xml(osm, changeset, NODE, node);
 }
 
 /* build xml representation for a way */
-char *osm_generate_xml_way(osm_t *osm, way_t *way) {
-  return osm_generate_xml(osm, WAY, way);
+char *osm_generate_xml_way(osm_t *osm, item_id_t changeset, way_t *way) {
+  return osm_generate_xml(osm, changeset, WAY, way);
 }
 
 /* build xml representation for a relation */
-char *osm_generate_xml_relation(osm_t *osm, relation_t *relation) {
-  return osm_generate_xml(osm, RELATION, relation);
+char *osm_generate_xml_relation(osm_t *osm, item_id_t changeset, 
+				relation_t *relation) {
+  return osm_generate_xml(osm, changeset, RELATION, relation);
 }
+
+/* build xml representation for a changeset */
+char *osm_generate_xml_changeset(osm_t *osm, char *comment) {
+  xmlChar *result = NULL;
+  int len = 0;
+
+  /* tags for this changeset */
+  tag_t tag_comment = { 
+    .key = "comment", .value = comment, .next = NULL };
+  tag_t tag_creator = { 
+    .key = "created_by", .value = PACKAGE " v" VERSION, .next = &tag_comment };
+
+  LIBXML_TEST_VERSION;
+
+  xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
+  xmlNodePtr root_node = xmlNewNode(NULL, BAD_CAST "osm");
+  xmlDocSetRootElement(doc, root_node);
+
+  xmlNodePtr cs_node = xmlNewChild(root_node, NULL, BAD_CAST "changeset", NULL);
+  osm_generate_tags(&tag_creator, cs_node);
+
+  xmlDocDumpFormatMemoryEnc(doc, &result, &len, "UTF-8", 1);
+  xmlFreeDoc(doc);
+  xmlCleanupParser();
+
+  //  puts("xml encoding result:");
+  //  puts((char*)result);
+
+  return (char*)result;
+}
+
 
 /* the following three functions are eating much CPU power */
 /* as they search the objects lists. Hashing is supposed to help */
@@ -1451,15 +1525,18 @@ node_t *osm_node_new(osm_t *osm, gint x, gint y) {
   printf("Creating new node\n");
 
   node_t *node = g_new0(node_t, 1);
+  node->version = 1;
   node->lpos.x = x; 
   node->lpos.y = y;
   node->visible = TRUE;
   node->time = time(NULL);
 
+#ifndef API06
   /* add created_by tag */
   node->tag = g_new0(tag_t, 1);
   node->tag->key = g_strdup("created_by");
   node->tag->value = g_strdup(PACKAGE " v" VERSION);
+#endif
 
   /* convert screen position back to ll */
   lpos2pos(osm->bounds, &node->lpos, &node->pos);
@@ -1496,14 +1573,17 @@ way_t *osm_way_new(void) {
   printf("Creating new way\n");
 
   way_t *way = g_new0(way_t, 1);
+  way->version = 1;
   way->visible = TRUE;
   way->flags = OSM_FLAG_NEW;
   way->time = time(NULL);
 
+#ifndef API06
   /* add created_by tag */
   way->tag = g_new0(tag_t, 1);
   way->tag->key = g_strdup("created_by");
   way->tag->value = g_strdup(PACKAGE " v" VERSION);
+#endif
 
   return way;
 }
@@ -1772,14 +1852,17 @@ relation_t *osm_relation_new(void) {
   printf("Creating new relation\n");
 
   relation_t *relation = g_new0(relation_t, 1);
+  relation->version = 1;
   relation->visible = TRUE;
   relation->flags = OSM_FLAG_NEW;
   relation->time = time(NULL);
 
+#ifndef API06
   /* add created_by tag */
   relation->tag = g_new0(tag_t, 1);
   relation->tag->key = g_strdup("created_by");
   relation->tag->value = g_strdup(PACKAGE " v" VERSION);
+#endif
 
   return relation;
 }

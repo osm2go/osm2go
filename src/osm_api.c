@@ -34,6 +34,7 @@ static struct http_message_s {
   { 403, "Forbidden" },
   { 404, "Not Found" },
   { 405, "Method Not Allowed" },
+  { 409, "Conflict" },
   { 410, "Gone" },
   { 412, "Precondition Failed" },
   { 417, "(Expect rejected)" },
@@ -64,10 +65,31 @@ typedef struct {
     GtkWidget *view;
   } log;
 
+#ifdef API06
+  item_id_t changeset;
+  char *comment;
+#endif
 } osm_upload_context_t;
 
 gboolean osm_download(GtkWidget *parent, project_t *project) {
   printf("download osm ...\n");
+
+#ifdef API06
+  g_assert(project->server);
+
+
+  /* check if server name contains string "0.5" and adjust it */
+  if(strstr(project->server, "0.5") != NULL) {
+    strstr(project->server, "0.5")[2] = '6';
+
+    messagef(parent, _("Server changed"), 
+	     _("It seems your current project uses a server/protocol no "
+	       "longer in use by OSM. It has thus been changed to:\n\n%s"),
+	     project->server);
+    project->dirty = TRUE; // project needs to be changed 
+  } else
+    printf("url ok\n");
+#endif
 
   char minlon[G_ASCII_DTOSTR_BUF_SIZE], minlat[G_ASCII_DTOSTR_BUF_SIZE];
   char maxlon[G_ASCII_DTOSTR_BUF_SIZE], maxlat[G_ASCII_DTOSTR_BUF_SIZE];
@@ -76,6 +98,13 @@ gboolean osm_download(GtkWidget *parent, project_t *project) {
   g_ascii_formatd(minlat, sizeof(minlat), LL_FORMAT, project->min.lat);
   g_ascii_formatd(maxlon, sizeof(maxlon), LL_FORMAT, project->max.lon);
   g_ascii_formatd(maxlat, sizeof(maxlat), LL_FORMAT, project->max.lat);
+
+  /* server url should not end with a slash */
+  if(project->server[strlen(project->server)-1] == '/') {
+    printf("removing trailing slash\n");
+    project->server[strlen(project->server)-1] = 0;
+    project->dirty = TRUE;
+  }
 
   char *url = g_strdup_printf("%s/map?bbox=%s,%s,%s,%s",
 		project->server, minlon, minlat, maxlon, maxlat);
@@ -125,6 +154,8 @@ static void appendf(struct log_s *log, const char *fmt, ...) {
   char *buf = g_strdup_vprintf(fmt, args);
   va_end( args );
 
+  printf(buf);
+
   GtkTextIter end;
   gtk_text_buffer_get_end_iter(log->buffer, &end);
   gtk_text_buffer_insert(log->buffer, &end, buf, -1);
@@ -141,7 +172,7 @@ static void appendf(struct log_s *log, const char *fmt, ...) {
 #define MAX_TRY 5
 
 static gboolean osm_update_item(struct log_s *log, char *xml_str, 
-			    char *url, char *user, item_id_t *id) {
+				char *url, char *user, item_id_t *id) {
   int retry = MAX_TRY;
   char buffer[CURL_ERROR_SIZE];
 
@@ -164,7 +195,7 @@ static gboolean osm_update_item(struct log_s *log, char *xml_str,
     }
 
     read_data.ptr = xml_str;
-    read_data.len = strlen(xml_str);
+    read_data.len = xml_str?strlen(xml_str):0;
     write_data.ptr = NULL;
     write_data.len = 0;	    
 
@@ -184,7 +215,7 @@ static gboolean osm_update_item(struct log_s *log, char *xml_str,
     
     /* provide the size of the upload, we specicially typecast the value
        to curl_off_t since we must be sure to use the correct data size */
-    curl_easy_setopt(curl, CURLOPT_INFILESIZE, (long)strlen(xml_str));
+    curl_easy_setopt(curl, CURLOPT_INFILESIZE, (curl_off_t)read_data.len);
     
     /* we pass our 'chunk' struct to the callback function */
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &write_data);
@@ -194,9 +225,11 @@ static gboolean osm_update_item(struct log_s *log, char *xml_str,
     curl_easy_setopt(curl, CURLOPT_USERAGENT, 
 		     PACKAGE "-libcurl/" VERSION); 
     
+#ifndef API06
     struct curl_slist *slist=NULL;
     slist = curl_slist_append(slist, "Expect:");
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, slist);
+#endif
     
     curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, buffer);
     
@@ -210,7 +243,9 @@ static gboolean osm_update_item(struct log_s *log, char *xml_str,
     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response);
     
     /* always cleanup */
+#ifndef API06
     curl_slist_free_all(slist);
+#endif
     curl_easy_cleanup(curl);
     
     printf("reply is \"%s\"\n", write_data.ptr);
@@ -243,12 +278,18 @@ static gboolean osm_update_item(struct log_s *log, char *xml_str,
   return FALSE;
 }
 
-static gboolean osm_delete_item(struct log_s *log, char *url, char *user) {
+static gboolean osm_delete_item(struct log_s *log, char *xml_str, 
+				char *url, char *user) {
   int retry = MAX_TRY;
   char buffer[CURL_ERROR_SIZE];
 
   CURL *curl;
   CURLcode res;
+
+#ifdef API06
+  /* delete has a payload since api 0.6 */
+  curl_data_t read_data;
+#endif
 
   while(retry >= 0) {
 
@@ -261,6 +302,21 @@ static gboolean osm_delete_item(struct log_s *log, char *url, char *user) {
       appendf(log, _("CURL init error\n"));
       return FALSE;
     }
+
+#ifdef API06
+    read_data.ptr = xml_str;
+    read_data.len = xml_str?strlen(xml_str):0;
+
+    /* we want to use our own read/write functions */
+    curl_easy_setopt(curl, CURLOPT_READFUNCTION, read_callback);
+    curl_easy_setopt(curl, CURLOPT_INFILESIZE, (curl_off_t)read_data.len);
+
+    /* now specify which file to upload */
+    curl_easy_setopt(curl, CURLOPT_READDATA, &read_data);
+
+    /* enable uploading */
+    curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
+#endif
 
     /* no read/write functions required */
     curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "DELETE"); 
@@ -326,7 +382,7 @@ static GtkWidget *table_attach_label_l(GtkWidget *table, char *str,
 }
 
 static GtkWidget *table_attach_int(GtkWidget *table, int num, 
-				       int x1, int x2, int y1, int y2) {
+				   int x1, int x2, int y1, int y2) {
   char *str = g_strdup_printf("%d", num);
   GtkWidget *label = table_attach_label_c(table, str, x1, x2, y1, y2); 
   g_free(str);
@@ -351,7 +407,15 @@ static void osm_delete_nodes(osm_upload_context_t *context) {
 				   context->appdata->settings->username, 
 				   context->appdata->settings->password);
 
-      if(osm_delete_item(&context->log, url, cred)) {
+#ifdef API06
+      char *xml_str =
+	osm_generate_xml_node(context->osm, context->changeset, node);
+
+      if(osm_delete_item(&context->log, xml_str, url, cred)) {
+#else
+      if(osm_delete_item(&context->log, NULL, url, cred)) {
+#endif
+
 	node->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
 	project->data_dirty = TRUE;
       }
@@ -383,15 +447,20 @@ static void osm_upload_nodes(osm_upload_context_t *context) {
       }
 
       /* upload this node */
-      char *xml_str = osm_generate_xml_node(context->osm, node);
+      char *xml_str = 
+#ifndef API06
+	osm_generate_xml_node(context->osm, ILLEGAL, node);
+#else
+	osm_generate_xml_node(context->osm, context->changeset, node);
+#endif
       if(xml_str) {
 	printf("uploading node %s from address %p\n", url, xml_str);
 
 	char *cred = g_strdup_printf("%s:%s", 
-				     context->appdata->settings->username, context->appdata->settings->password);
+				     context->appdata->settings->username, 
+				     context->appdata->settings->password);
 	if(osm_update_item(&context->log, xml_str, url, cred, 
-			   (node->flags & OSM_FLAG_NEW)?&(node->id):NULL)) {
-
+		   (node->flags & OSM_FLAG_NEW)?&(node->id):&(node->version))) {
 	  node->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_NEW);
 	  project->data_dirty = TRUE;
 	}
@@ -418,9 +487,17 @@ static void osm_delete_ways(osm_upload_context_t *context) {
 
       char *url = g_strdup_printf("%s/way/%lu", project->server, way->id);
       char *cred = g_strdup_printf("%s:%s", 
-				   context->appdata->settings->username, context->appdata->settings->password);
+				   context->appdata->settings->username, 
+				   context->appdata->settings->password);
 
-      if(osm_delete_item(&context->log, url, cred)) {
+#ifdef API06
+      char *xml_str =
+	osm_generate_xml_way(context->osm, context->changeset, way);
+
+      if(osm_delete_item(&context->log, xml_str, url, cred)) {
+#else
+      if(osm_delete_item(&context->log, NULL, url, cred)) {
+#endif
 	way->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
 	project->data_dirty = TRUE;
       }
@@ -453,7 +530,12 @@ static void osm_upload_ways(osm_upload_context_t *context) {
       }
       
       /* upload this node */
-      char *xml_str = osm_generate_xml_way(context->osm, way);
+      char *xml_str = 
+#ifndef API06
+	osm_generate_xml_way(context->osm, ILLEGAL, way);
+#else
+	osm_generate_xml_way(context->osm, context->changeset, way);
+#endif
       if(xml_str) {
 	printf("uploading way %s from address %p\n", url, xml_str);
 	
@@ -461,7 +543,7 @@ static void osm_upload_ways(osm_upload_context_t *context) {
 				     context->appdata->settings->username, 
 				     context->appdata->settings->password);
 	if(osm_update_item(&context->log, xml_str, url, cred, 
-			   (way->flags & OSM_FLAG_NEW)?&(way->id):NULL)) {
+		   (way->flags & OSM_FLAG_NEW)?&(way->id):&(way->version))) {
 	  way->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_NEW);
 	  project->data_dirty = TRUE;
 	}
@@ -492,7 +574,14 @@ static void osm_delete_relations(osm_upload_context_t *context) {
 				   context->appdata->settings->username, 
 				   context->appdata->settings->password);
 
-      if(osm_delete_item(&context->log, url, cred)) {
+#ifdef API06
+      char *xml_str =
+	osm_generate_xml_relation(context->osm, context->changeset, relation);
+
+      if(osm_delete_item(&context->log, xml_str, url, cred)) {
+#else
+      if(osm_delete_item(&context->log, NULL, url, cred)) {
+#endif
 	relation->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
 	project->data_dirty = TRUE;
       }
@@ -525,14 +614,20 @@ static void osm_upload_relations(osm_upload_context_t *context) {
       }
       
       /* upload this relation */
-      char *xml_str = osm_generate_xml_relation(context->osm, relation);
+      char *xml_str =
+#ifndef API06
+	osm_generate_xml_relation(context->osm, ILLEGAL, relation);
+#else
+	osm_generate_xml_relation(context->osm, context->changeset, relation);
+#endif
       if(xml_str) {
 	printf("uploading relation %s from address %p\n", url, xml_str);
 	
 	char *cred = g_strdup_printf("%s:%s", 
-				     context->appdata->settings->username, context->appdata->settings->password);
+				     context->appdata->settings->username, 
+				     context->appdata->settings->password);
 	if(osm_update_item(&context->log, xml_str, url, cred, 
-		   (relation->flags & OSM_FLAG_NEW)?&(relation->id):NULL)) {
+	   (relation->flags & OSM_FLAG_NEW)?&(relation->id):&(relation->version))) {
 	  relation->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_NEW);
 	  project->data_dirty = TRUE;
 	}
@@ -543,7 +638,79 @@ static void osm_upload_relations(osm_upload_context_t *context) {
     relation = relation->next;
   }
 }
+ 
+#ifdef API06
+static gboolean osm_create_changeset(osm_upload_context_t *context) {
+  gboolean result = FALSE;
+  context->changeset = ILLEGAL;
+  project_t *project = context->project;
 
+  /* make sure gui gets updated */
+  while(gtk_events_pending()) gtk_main_iteration();
+
+  char *url = g_strdup_printf("%s/changeset/create", project->server);
+  appendf(&context->log, _("Create changeset "));
+
+  /* create changeset request */
+  char *xml_str = osm_generate_xml_changeset(context->osm, context->comment);
+  if(xml_str) {
+    printf("creating changeset %s from address %p\n", url, xml_str);
+
+    char *cred = g_strdup_printf("%s:%s", 
+				 context->appdata->settings->username, 
+				 context->appdata->settings->password);
+
+    if(osm_update_item(&context->log, xml_str, url, cred, 
+		       &context->changeset)) {
+      printf("got changeset id %ld\n", context->changeset);
+      result = TRUE;
+    }
+    
+    g_free(cred);
+  }
+  g_free(url);
+
+  return result;
+}
+
+static gboolean osm_close_changeset(osm_upload_context_t *context) {
+  gboolean result = FALSE;
+  project_t *project = context->project;
+
+  g_assert(context->changeset != ILLEGAL);
+
+  /* make sure gui gets updated */
+  while(gtk_events_pending()) gtk_main_iteration();
+
+  char *url = g_strdup_printf("%s/changeset/%lu/close",
+			      project->server, context->changeset);
+  appendf(&context->log, _("Close changeset "));
+
+  char *cred = g_strdup_printf("%s:%s", 
+			       context->appdata->settings->username, 
+			       context->appdata->settings->password);
+  
+  if(osm_update_item(&context->log, NULL, url, cred, NULL)) 
+    result = TRUE;
+  
+  g_free(cred);
+  g_free(url);
+
+  return result;
+}
+#endif
+
+#ifdef API06
+/* comment buffer has been edited, allow upload if the buffer is not empty */
+static void callback_buffer_modified(GtkTextBuffer *buffer, GtkDialog *dialog) {
+  GtkTextIter start, end;
+  gtk_text_buffer_get_start_iter(buffer, &start);
+  gtk_text_buffer_get_end_iter(buffer, &end);
+  char *text = gtk_text_buffer_get_text(buffer, &start, &end, FALSE);
+  gtk_dialog_set_response_sensitive(dialog, GTK_RESPONSE_ACCEPT, 
+				    text && strlen(text));
+}
+#endif
 
 void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
 
@@ -648,6 +815,35 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   gtk_table_attach_defaults(GTK_TABLE(table),  pentry, 1, 2, 1, 2);
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), table);
 
+#ifdef API06
+  GtkWidget *scrolled_win = gtk_scrolled_window_new(NULL, NULL);
+  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_win), 
+  				 GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+  gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scrolled_win),
+				      GTK_SHADOW_IN);
+
+  GtkTextBuffer *buffer = gtk_text_buffer_new(NULL);
+  gtk_text_buffer_set_text(buffer, _("Please add a comment"), -1);
+
+  /* disable ok button until user edited the comment */
+  gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog), 
+				    GTK_RESPONSE_ACCEPT, FALSE);
+
+  g_signal_connect(G_OBJECT(buffer), "changed",
+		   G_CALLBACK(callback_buffer_modified), dialog);
+
+  GtkWidget *view = gtk_text_view_new_with_buffer(buffer);
+  gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(view), GTK_WRAP_WORD);
+  gtk_text_view_set_editable(GTK_TEXT_VIEW(view), TRUE);
+  gtk_text_view_set_left_margin(GTK_TEXT_VIEW(view), 2 );
+  gtk_text_view_set_right_margin(GTK_TEXT_VIEW(view), 2 );
+
+  gtk_container_add(GTK_CONTAINER(scrolled_win), view);
+
+  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), 
+  			      scrolled_win);
+#endif
+
   gtk_widget_show_all(dialog);
 
   if(GTK_RESPONSE_ACCEPT != gtk_dialog_run(GTK_DIALOG(dialog))) {
@@ -669,14 +865,23 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   appdata->settings->password = 
     g_strdup(gtk_entry_get_text(GTK_ENTRY(pentry)));
 
-  gtk_widget_destroy(dialog);
-  project_save(GTK_WIDGET(appdata->window), project);
-
   /* osm upload itself also has a gui */
   osm_upload_context_t *context = g_new0(osm_upload_context_t, 1);
   context->appdata = appdata;
   context->osm = osm;
   context->project = project;
+
+#ifdef API06
+  /* fetch comment from dialog */
+  GtkTextIter start, end;
+  gtk_text_buffer_get_start_iter(buffer, &start);
+  gtk_text_buffer_get_end_iter(buffer, &end);
+  char *text = gtk_text_buffer_get_text(buffer, &start, &end, FALSE);
+  if(text) context->comment = g_strdup(text);
+#endif
+
+  gtk_widget_destroy(dialog);
+  project_save(GTK_WIDGET(appdata->window), project);
 
   context->dialog = gtk_dialog_new_with_buttons(_("Upload to OSM"),
 	  GTK_WINDOW(appdata->window), GTK_DIALOG_MODAL,
@@ -711,9 +916,38 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
 			       scrolled_window);
   gtk_widget_show_all(context->dialog);
 
+  /* server url should not end with a slash */
+  if(project->server[strlen(project->server)-1] == '/') {
+    printf("removing trailing slash\n");
+    project->server[strlen(project->server)-1] = 0;
+    project->dirty = TRUE;  /* project needs to be saved */
+  }
+
+#ifndef API06
   appendf(&context->log, _("Log generated by %s v%s using API 0.5\n"), 
 	  PACKAGE, VERSION);
+#else
+  appendf(&context->log, _("Log generated by %s v%s using API 0.6\n"), 
+	  PACKAGE, VERSION);
+  appendf(&context->log, _("User comment: %s\n"), context->comment);
+
+  g_assert(project->server);
+
+   /* check if server name contains string "0.5" and adjust it */
+  if(strstr(project->server, "0.5") != NULL) {
+    strstr(project->server, "0.5")[2] = '6';
+
+    appendf(&context->log, _("Adjusting server name to v0.6\n"));
+    project->dirty = TRUE; // project needs to be changed 
+  }
+#endif
+
   appendf(&context->log, _("Uploading to %s\n"), project->server);
+
+#ifdef API06
+  /* create a new changeset */
+  if(osm_create_changeset(context)) {
+#endif
 
   /* check for dirty entries */
   appendf(&context->log, _("Uploading nodes:\n"));
@@ -728,6 +962,12 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   osm_delete_ways(context);
   appendf(&context->log, _("Deleting nodes:\n"));
   osm_delete_nodes(context);
+
+#ifdef API06
+  /* close changeset */
+  osm_close_changeset(context);
+  }
+#endif
 
   appendf(&context->log, _("Upload done.\n"));
 
@@ -785,5 +1025,9 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   gtk_dialog_run(GTK_DIALOG(context->dialog));
   gtk_widget_destroy(context->dialog);
 
+#ifdef API06
+  if(context->comment) g_free(context->comment);
+#endif
+  g_free(context);
 }
 

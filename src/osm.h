@@ -56,6 +56,7 @@ typedef struct tag_s {
 
 typedef struct node_s {
   item_id_t id;
+  item_id_t version;
   pos_t pos;
   lpos_t lpos;
   user_t *user;
@@ -85,6 +86,8 @@ typedef struct node_chain {
 
 typedef struct way_s {
   item_id_t id;
+  item_id_t version;
+  item_id_t changeset;
   user_t *user;
   gboolean visible;
   time_t time;
@@ -126,6 +129,8 @@ typedef struct way_chain {
 
 typedef struct relation_s {
   item_id_t id;
+  item_id_t version;
+  item_id_t changeset;
   user_t *user;
   gboolean visible;
   time_t time;
@@ -148,7 +153,6 @@ typedef struct relation_chain_s {
 /* the current hash table uses 16 bits. each table thus is */
 /* 256 kbytes (2^16 * sizeof(void*)) in size */
 #define ID2HASH(a) ((unsigned short)(a) ^ (unsigned short)((a)>>16))
-
 typedef struct hash_item_s {
   union {
     node_t *node;
@@ -238,9 +242,11 @@ gboolean osm_is_creator_tag(tag_t *tag);
 gboolean osm_tag_key_and_value_present(tag_t *haystack, tag_t *tag);
 gboolean osm_tag_key_other_value_present(tag_t *haystack, tag_t *tag);
 
-char *osm_generate_xml_node(osm_t *osm, node_t *node);
-char *osm_generate_xml_way(osm_t *osm, way_t *way);
-char *osm_generate_xml_relation(osm_t *osm, relation_t *relation);
+char *osm_generate_xml_changeset(osm_t *osm, char *comment);
+char *osm_generate_xml_node(osm_t *osm, item_id_t changeset, node_t *node);
+char *osm_generate_xml_way(osm_t *osm, item_id_t changeset, way_t *way);
+char *osm_generate_xml_relation(osm_t *osm, item_id_t changeset, 
+				relation_t *relation);
 
 node_t *osm_get_node_by_id(osm_t *osm, item_id_t id);
 way_t *osm_get_way_by_id(osm_t *osm, item_id_t id);
