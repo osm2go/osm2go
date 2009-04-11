@@ -365,7 +365,7 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
 
   switch(context->object.type) {
   case NODE:
-    str = g_strdup_printf(_("Node #%ld"), context->object.node->id);
+    str = g_strdup_printf(_("Node #" ITEM_ID_FORMAT), context->object.node->id);
     user = context->object.node->user;
     work_copy = osm_tags_copy(context->object.node->tag, FALSE);
     stime = context->object.node->time;
@@ -373,7 +373,7 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
     break;
 
   case WAY:
-    str = g_strdup_printf(_("Way #%ld"), context->object.way->id);
+    str = g_strdup_printf(_("Way #" ITEM_ID_FORMAT), context->object.way->id);
     user = context->object.way->user;
     work_copy = osm_tags_copy(context->object.way->tag, FALSE);
     stime = context->object.way->time;
@@ -386,7 +386,8 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
     break;
     
   case RELATION:
-    str = g_strdup_printf(_("Relation #%ld"), context->object.relation->id);
+    str = g_strdup_printf(_("Relation #" ITEM_ID_FORMAT), 
+			  context->object.relation->id);
     user = context->object.relation->user;
     work_copy = osm_tags_copy(context->object.relation->tag, FALSE);
     stime = context->object.relation->time;

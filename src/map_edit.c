@@ -28,8 +28,8 @@ static void transfer_relations(osm_t *osm, way_t *dst, way_t *src) {
     
   while(rchain) {
     relation_chain_t *next = rchain->next;
-    printf("way #%ld is part of relation #%ld\n", src->id, 
-	   rchain->relation->id);
+    printf("way #"ITEM_ID_FORMAT" is part of relation #"ITEM_ID_FORMAT"\n", 
+	   src->id, rchain->relation->id);
       
     /* make new member of the same relation */
     
@@ -43,7 +43,7 @@ static void transfer_relations(osm_t *osm, way_t *dst, way_t *src) {
       member = &(*member)->next;
     }
     
-    printf("  adding way #%ld to relation\n", dst->id);
+    printf("  adding way #"ITEM_ID_FORMAT" to relation\n", dst->id);
     *member = g_new0(member_t, 1);
     (*member)->object.type = WAY;
     (*member)->object.way = dst;
@@ -93,7 +93,8 @@ static gboolean combine_tags(tag_t **dst, tag_t *src) {
 /* -------------------------- way_add ----------------------- */
 
 void map_edit_way_add_begin(map_t *map, way_t *way_sel) {
-  if(way_sel) printf("previously selected way is #%ld\n", way_sel->id);
+  if(way_sel) printf("previously selected way is #"ITEM_ID_FORMAT"\n", 
+		     way_sel->id);
 
   g_assert(!map->action.way);
   map->action.way = osm_way_new();
@@ -123,7 +124,7 @@ void map_edit_way_add_segment(map_t *map, gint x, gint y) {
     /* use the existing node if one was touched */    
     node_t *node = map_hl_touchnode_get_node(map);
     if(node) {
-      printf("  re-using node #%ld\n", node->id);
+      printf("  re-using node #"ITEM_ID_FORMAT"\n", node->id);
       map_hl_touchnode_clear(map);
 
       g_assert(map->action.way);
@@ -135,12 +136,14 @@ void map_edit_way_add_segment(map_t *map, gint x, gint y) {
 	way_chain_t *next = way_chain->next;
 	
 	if(node == osm_way_get_last_node(way_chain->way)) {
-	  printf("  way #%ld ends with this node\n", way_chain->way->id);
+	  printf("  way #"ITEM_ID_FORMAT" ends with this node\n", 
+		 way_chain->way->id);
 	  if(!touch_way) touch_way = way_chain->way;
 	}
 	
 	if(node == osm_way_get_first_node(way_chain->way)) {
-	  printf("  way #%ld starts with this node\n", way_chain->way->id);
+	  printf("  way #"ITEM_ID_FORMAT" starts with this node\n", 
+		 way_chain->way->id);
 	  if(!touch_way) touch_way = way_chain->way;
 	}
 	
@@ -219,7 +222,7 @@ void map_edit_way_add_cancel(map_t *map) {
   while(chain) {
     node_chain_t *next = chain->next;
     
-    printf("    node #%ld (used by %d)\n", 
+    printf("    node #"ITEM_ID_FORMAT" (used by %d)\n", 
 	   chain->node->id, chain->node->ways);
     
     chain->node->ways--;
@@ -248,7 +251,7 @@ void map_edit_way_add_ok(map_t *map) {
   /* (their way count will be 0 after removing the way) */
   node_chain_t *chain = map->action.way->node_chain;
   while(chain) {
-    printf("    node #%ld (used by %d)\n", 
+    printf("    node #"ITEM_ID_FORMAT" (used by %d)\n", 
 	   chain->node->id, chain->node->ways);
     
     /* a node may have been a stand-alone node before, so remove its */
@@ -273,7 +276,8 @@ void map_edit_way_add_ok(map_t *map) {
   if(map->action.extending) {
     node_t *nfirst = map->action.way->node_chain->node;
 
-    printf("  request to extend way #%ld\n", map->action.extending->id);
+    printf("  request to extend way #"ITEM_ID_FORMAT"\n", 
+	   map->action.extending->id);
 
     if(osm_way_get_first_node(map->action.extending) == nfirst) {
       printf("  need to prepend\n");
@@ -577,7 +581,7 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
       map_item_deselect(map->appdata);
       
       /* remove prior version of this way */
-      printf("remove visible version of way #%ld\n", way->id);
+      printf("remove visible version of way #"ITEM_ID_FORMAT"\n", way->id);
       map_item_chain_destroy(&way->map_item_chain);
       
       /* swap chains of the old way is to be destroyed due to a lack */
@@ -639,7 +643,7 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
   g_assert(map_item->object.type == NODE);
   node_t *node = map_item->object.node;
 
-  printf("released dragged node #%ld\n", node->id);
+  printf("released dragged node #"ITEM_ID_FORMAT"\n", node->id);
   printf("  was at %d %d (%f %f)\n", 
 	 node->lpos.x, node->lpos.y,
 	 node->pos.lat, node->pos.lon);
@@ -652,7 +656,7 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
   if(touchnode) {
     map_hl_touchnode_clear(map);
 
-    printf("  dropped onto node #%ld\n", touchnode->id);
+    printf("  dropped onto node #"ITEM_ID_FORMAT"\n", touchnode->id);
 
     if(yes_no_f(GTK_WIDGET(appdata->window), 
 		appdata, MISC_AGAIN_ID_JOIN_NODES, 0,
@@ -673,7 +677,7 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 	node_chain_t *chain = way->node_chain;
 	while(chain) {
 	  if(chain->node == touchnode) {
-	    printf("  found node in way #%ld\n", way->id);
+	    printf("  found node in way #"ITEM_ID_FORMAT"\n", way->id);
 	    
 	    /* replace by node */
 	    chain->node = node;
@@ -695,7 +699,8 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 	member_t *member = relation->member;
 	while(member) {
 	  if(member->object.type == NODE && member->object.node == touchnode) {
-	    printf("  found node in relation #%ld\n", relation->id);
+	    printf("  found node in relation #"ITEM_ID_FORMAT"\n", 
+		   relation->id);
 	    
 	    /* replace by node */
 	    member->object.node = node;
@@ -737,7 +742,7 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 	  if(ways2join_cnt < 2) 
 	    ways2join[ways2join_cnt] = way;
 
-	  printf("  way #%ld ends with this node\n", way->id);
+	  printf("  way #"ITEM_ID_FORMAT" ends with this node\n", way->id);
 	  ways2join_cnt++;
 	}
 	way = way->next;
@@ -755,8 +760,8 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 		    _("Do you want to join the dragged way with the one "
 		      "you dropped it on?"))) {
 
-	  printf("  about to join ways #%ld and #%ld\n",
-		 ways2join[0]->id, ways2join[1]->id);
+	  printf("  about to join ways #" ITEM_ID_FORMAT " and #"
+		 ITEM_ID_FORMAT "\n", ways2join[0]->id, ways2join[1]->id);
 
 	  /* way[1] gets destroyed and attached to way[0] */
 	  /* so check if way[1] is selected and exchainge ways then */
@@ -813,7 +818,8 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 
 	  while(rchain) {
 	    relation_chain_t *next = rchain->next;
-	    printf("way[1] is part of relation #%ld\n", rchain->relation->id);
+	    printf("way[1] is part of relation #"ITEM_ID_FORMAT"\n", 
+		   rchain->relation->id);
 
 	    /* make way[0] member of the same relation */
 
@@ -901,7 +907,7 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
   way_t *way = osm->way;
   while(way) {
     if(osm_node_in_way(way, node)) {
-      printf("  node is part of way #%ld, redraw!\n", way->id);
+      printf("  node is part of way #"ITEM_ID_FORMAT", redraw!\n", way->id);
       
       /* remove prior version of this way */
       map_item_chain_destroy(&way->map_item_chain);

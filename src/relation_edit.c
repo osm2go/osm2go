@@ -64,7 +64,7 @@ static gboolean relation_add_item(GtkWidget *parent,
 			      relation_t *relation, object_t *object) {
   role_chain_t *chain = NULL, **chainP = &chain;
 
-  printf("add object of type %d to relation #%ld\n", 
+  printf("add object of type %d to relation #" ITEM_ID_FORMAT "\n", 
 	 object->type, relation->id);
 
   /* ask the user for the role of the new object in this relation */
@@ -104,7 +104,8 @@ static gboolean relation_add_item(GtkWidget *parent,
 
   char *info_str = NULL;
   if(type) info_str = g_strdup_printf(_("In relation of type: %s"), type);
-  else     info_str = g_strdup_printf(_("In relation #%ld"), relation->id);
+  else     info_str = g_strdup_printf(_("In relation #" ITEM_ID_FORMAT), 
+				      relation->id);
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), 
 			      gtk_label_new(info_str));
   g_free(info_str);
@@ -174,7 +175,7 @@ static gboolean relation_add_item(GtkWidget *parent,
 
 static void relation_remove_item(relation_t *relation, object_t *object) {
 
-  printf("remove object of type %d from relation #%ld\n", 
+  printf("remove object of type %d from relation #" ITEM_ID_FORMAT "\n", 
 	 object->type, relation->id);
 
   member_t **member = &relation->member;
@@ -274,7 +275,7 @@ static void on_relation_item_edit(GtkWidget *but, relitem_context_t *context) {
   relation_t *sel = get_selection(context);
   if(!sel) return;
 
-  printf("edit relation item #%ld\n", sel->id);
+  printf("edit relation item #" ITEM_ID_FORMAT "\n", sel->id);
 
   if (!relation_info_dialog(context->dialog, context->appdata, sel))
     return;
@@ -310,7 +311,7 @@ static void on_relation_item_remove(GtkWidget *but, relitem_context_t *context) 
   relation_t *sel = get_selection(context);
   if(!sel) return;
 
-  printf("remove relation #%ld\n", sel->id);
+  printf("remove relation #" ITEM_ID_FORMAT "\n", sel->id);
 
   gint members = osm_relation_members_num(sel);
 
@@ -482,10 +483,12 @@ void relation_add_dialog(appdata_t *appdata, object_t *object) {
   char *str = NULL;
   switch(object->type) {
   case NODE:
-    str = g_strdup_printf(_("Relations for node #%ld"), object->node->id);
+    str = g_strdup_printf(_("Relations for node #" ITEM_ID_FORMAT), 
+			  object->node->id);
     break;
   case WAY:
-    str = g_strdup_printf(_("Relations for way #%ld"), object->way->id);
+    str = g_strdup_printf(_("Relations for way #" ITEM_ID_FORMAT), 
+			  object->way->id);
     break;
   default:
     g_assert((object->type == NODE) || (object->type == WAY));
@@ -718,7 +721,7 @@ void relation_show_members(GtkWidget *parent, relation_t *relation) {
   char *str = osm_tag_get_by_key(mcontext->relation->tag, "name");
   if(!str) str = osm_tag_get_by_key(mcontext->relation->tag, "ref");
   if(!str)
-    str = g_strdup_printf(_("Members of relation #%ld"),
+    str = g_strdup_printf(_("Members of relation #" ITEM_ID_FORMAT),
 			  mcontext->relation->id);
   else
     str = g_strdup_printf(_("Members of relation \"%s\""), str);
@@ -799,7 +802,7 @@ static void on_relation_edit(GtkWidget *but, relation_context_t *context) {
   relation_t *sel = get_selected_relation(context);
   if(!sel) return;
 
-  printf("edit relation #%ld\n", sel->id);
+  printf("edit relation #" ITEM_ID_FORMAT "\n", sel->id);
 
   if (!relation_info_dialog(context->dialog, context->appdata, sel))
     return;
@@ -838,7 +841,7 @@ static void on_relation_remove(GtkWidget *but, relation_context_t *context) {
   relation_t *sel = get_selected_relation(context);
   if(!sel) return;
 
-  printf("remove relation #%ld\n", sel->id);
+  printf("remove relation #" ITEM_ID_FORMAT "\n", sel->id);
 
   gint members = osm_relation_members_num(sel);
 

@@ -227,7 +227,7 @@ void osm_node_dump(node_t *node) {
   char buf[64];
   struct tm tm;
     
-  printf("Id:      %lu\n", node->id);
+  printf("Id:      "ITEM_ID_FORMAT"\n", node->id);
   printf("User:    %s\n", node->user?node->user->name:"<unspecified>");
   printf("Visible: %s\n", node->visible?"yes":"no");
   
@@ -260,7 +260,7 @@ void osm_node_chain_free(node_chain_t *node_chain) {
 }
 
 void osm_way_free(way_t *way) {
-  //  printf("freeing way #%ld\n", way->id);
+  //  printf("freeing way #" ITEM_ID_FORMAT "\n", way->id);
 
   osm_node_chain_free(way->node_chain);
   osm_tags_free(way->tag);
@@ -305,12 +305,12 @@ void osm_way_dump(way_t *way) {
   char buf[64];
   struct tm tm;
 
-  printf("Id:      %lu\n", way->id);
+  printf("Id:      "ITEM_ID_FORMAT"\n", way->id);
   printf("User:    %s\n", way->user?way->user->name:"<unspecified>");
   printf("Visible: %s\n", way->visible?"yes":"no");
   node_chain_t *node_chain = way->node_chain;
   while(node_chain) {
-    printf("  Node:  %lu\n", node_chain->node->id);
+    printf("  Node:  "ITEM_ID_FORMAT"\n", node_chain->node->id);
     node_chain = node_chain->next;
   }
   
@@ -339,7 +339,7 @@ node_chain_t *osm_parse_osm_way_nd(osm_t *osm,
 
     /* search matching node */
     node_chain->node = osm_get_node_by_id(osm, id);
-    if(!node_chain->node) printf("Node id %lu not found\n", id);
+    if(!node_chain->node) printf("Node id " ITEM_ID_FORMAT " not found\n", id);
     else                  node_chain->node->ways++;
 
     xmlFree(prop);
@@ -386,7 +386,7 @@ void osm_relations_dump(relation_t *relation) {
     char buf[64];
     struct tm tm;
 
-    printf("Id:      %lu\n", relation->id);
+    printf("Id:      "ITEM_ID_FORMAT"\n", relation->id);
     printf("User:    %s\n", 
 	   relation->user?relation->user->name:"<unspecified>");
     printf("Visible: %s\n", relation->visible?"yes":"no");
@@ -402,20 +402,20 @@ void osm_relations_dump(relation_t *relation) {
 
       case NODE:
 	if(member->object.node)
-	  printf(" Member: Node, id = %lu, role = %s\n", 
+	  printf(" Member: Node, id = " ITEM_ID_FORMAT ", role = %s\n", 
 		 member->object.node->id, member->role);
 	break;
 
       case WAY:
 	if(member->object.way)
-	printf(" Member: Way, id = %lu, role = %s\n", 
-	       member->object.way->id, member->role);
+	  printf(" Member: Way, id = " ITEM_ID_FORMAT ", role = %s\n", 
+		 member->object.way->id, member->role);
 	break;
-
+	
       case RELATION:
 	if(member->object.relation)
-	printf(" Member: Relation, id = %lu, role = %s\n", 
-	       member->object.relation->id, member->role);
+	  printf(" Member: Relation, id = " ITEM_ID_FORMAT ", role = %s\n", 
+		 member->object.relation->id, member->role);
 	break;
       }
 
@@ -759,7 +759,7 @@ static node_chain_t *process_nd(xmlTextReaderPtr reader, osm_t *osm) {
     
     /* search matching node */
     node_chain->node = osm_get_node_by_id(osm, id);
-    if(!node_chain->node) printf("Node id %lu not found\n", id);
+    if(!node_chain->node) printf("Node id " ITEM_ID_FORMAT " not found\n", id);
     else                  node_chain->node->ways++;
 
     xmlFree(prop);
@@ -1262,7 +1262,7 @@ static char *osm_generate_xml(osm_t *osm, item_id_t changeset,
       node_chain_t *node_chain = way->node_chain;
       while(node_chain) {
 	xmlNodePtr nd_node = xmlNewChild(way_node, NULL, BAD_CAST "nd", NULL);
-	char *str = g_strdup_printf("%ld", node_chain->node->id);
+	char *str = g_strdup_printf(ITEM_ID_FORMAT, node_chain->node->id);
 	xmlNewProp(nd_node, BAD_CAST "ref", BAD_CAST str);
 	g_free(str);
 	node_chain = node_chain->next;
@@ -1294,17 +1294,17 @@ static char *osm_generate_xml(osm_t *osm, item_id_t changeset,
 	switch(member->object.type) {
 	case NODE:
 	  xmlNewProp(m_node, BAD_CAST "type", BAD_CAST "node");
-	  str = g_strdup_printf("%ld", member->object.node->id);
+	  str = g_strdup_printf(ITEM_ID_FORMAT, member->object.node->id);
 	  break;
 
 	case WAY:
 	  xmlNewProp(m_node, BAD_CAST "type", BAD_CAST "way");
-	  str = g_strdup_printf("%ld", member->object.way->id);
+	  str = g_strdup_printf(ITEM_ID_FORMAT, member->object.way->id);
 	  break;
 
 	case RELATION:
 	  xmlNewProp(m_node, BAD_CAST "type", BAD_CAST "relation");
-	  str = g_strdup_printf("%ld", member->object.relation->id);
+	  str = g_strdup_printf(ITEM_ID_FORMAT, member->object.relation->id);
 	  break;
 
 	default:
@@ -1608,8 +1608,8 @@ way_chain_t *osm_node_delete(osm_t *osm, icon_t **icon,
 
   /* new nodes aren't stored on the server and are just deleted permanently */
   if(node->flags & OSM_FLAG_NEW) {
-    printf("About to delete NEW node #%ld -> force permanent delete\n",
-	   node->id);
+    printf("About to delete NEW node #" ITEM_ID_FORMAT 
+	   " -> force permanent delete\n", node->id);
     permanently = TRUE;
   }
 
@@ -1645,10 +1645,10 @@ way_chain_t *osm_node_delete(osm_t *osm, icon_t **icon,
   }
 
   if(!permanently) {
-    printf("mark node #%ld as deleted\n", node->id);
+    printf("mark node #" ITEM_ID_FORMAT " as deleted\n", node->id);
     node->flags |= OSM_FLAG_DELETED;
   } else {
-    printf("permanently delete node #%ld\n", node->id);
+    printf("permanently delete node #" ITEM_ID_FORMAT "\n", node->id);
 
     /* remove it from the chain */
     node_t **cnode = &osm->node;
@@ -1801,7 +1801,7 @@ gboolean osm_position_within_bounds(osm_t *osm, gint x, gint y) {
 /* be deleted */
 void osm_node_remove_from_relation(osm_t *osm, node_t *node) {
   relation_t *relation = osm->relation;
-  printf("removing node #%ld from all relations:\n", node->id);
+  printf("removing node #" ITEM_ID_FORMAT " from all relations:\n", node->id);
 
   while(relation) {
     member_t **member = &relation->member;
@@ -1809,7 +1809,7 @@ void osm_node_remove_from_relation(osm_t *osm, node_t *node) {
       if(((*member)->object.type == NODE) &&
 	 ((*member)->object.node == node)) {
 
-	printf("  from relation #%ld\n", relation->id);
+	printf("  from relation #" ITEM_ID_FORMAT "\n", relation->id);
 	
 	member_t *cur = *member;
 	*member = (*member)->next;
@@ -1826,7 +1826,7 @@ void osm_node_remove_from_relation(osm_t *osm, node_t *node) {
 /* remove the given way from all relations */
 void osm_way_remove_from_relation(osm_t *osm, way_t *way) {
   relation_t *relation = osm->relation;
-  printf("removing way #%ld from all relations:\n", way->id);
+  printf("removing way #" ITEM_ID_FORMAT " from all relations:\n", way->id);
 
   while(relation) {
     member_t **member = &relation->member;
@@ -1834,7 +1834,7 @@ void osm_way_remove_from_relation(osm_t *osm, way_t *way) {
       if(((*member)->object.type == WAY) &&
 	 ((*member)->object.way == way)) {
 
-	printf("  from relation #%ld\n", relation->id);
+	printf("  from relation #" ITEM_ID_FORMAT "\n", relation->id);
 	
 	member_t *cur = *member;
 	*member = (*member)->next;
@@ -1885,8 +1885,8 @@ void osm_way_delete(osm_t *osm, icon_t **icon,
 
   /* new ways aren't stored on the server and are just deleted permanently */
   if(way->flags & OSM_FLAG_NEW) {
-    printf("About to delete NEW way #%ld -> force permanent delete\n", 
-	   way->id);
+    printf("About to delete NEW way #" ITEM_ID_FORMAT 
+	   " -> force permanent delete\n", way->id);
     permanently = TRUE;
   }
 
@@ -1895,7 +1895,7 @@ void osm_way_delete(osm_t *osm, icon_t **icon,
   while(*chain) {
 
     (*chain)->node->ways--;
-    printf("checking node #%ld (still used by %d)\n", 
+    printf("checking node #" ITEM_ID_FORMAT " (still used by %d)\n", 
 	   (*chain)->node->id, (*chain)->node->ways);
 
     /* this node must only be part of this way */
@@ -1921,10 +1921,10 @@ void osm_way_delete(osm_t *osm, icon_t **icon,
   way->node_chain = NULL;
 
   if(!permanently) {
-    printf("mark way #%ld as deleted\n", way->id);
+    printf("mark way #" ITEM_ID_FORMAT " as deleted\n", way->id);
     way->flags |= OSM_FLAG_DELETED;
   } else {
-    printf("permanently delete way #%ld\n", way->id);
+    printf("permanently delete way #" ITEM_ID_FORMAT "\n", way->id);
 
     /* remove it from the chain */
     way_t **cway = &osm->way;
@@ -1949,8 +1949,8 @@ void osm_relation_delete(osm_t *osm, relation_t *relation,
   /* new relations aren't stored on the server and are just */
   /* deleted permanently */
   if(relation->flags & OSM_FLAG_NEW) {
-    printf("About to delete NEW relation #%ld -> force permanent delete\n", 
-	   relation->id);
+    printf("About to delete NEW relation #" ITEM_ID_FORMAT 
+	   " -> force permanent delete\n", relation->id);
     permanently = TRUE;
   }
 
@@ -1958,10 +1958,10 @@ void osm_relation_delete(osm_t *osm, relation_t *relation,
   /* don't have any reference to the relation they are part of */
 
   if(!permanently) {
-    printf("mark relation #%ld as deleted\n", relation->id);
+    printf("mark relation #" ITEM_ID_FORMAT " as deleted\n", relation->id);
     relation->flags |= OSM_FLAG_DELETED;
   } else {
-    printf("permanently delete relation #%ld\n", relation->id);
+    printf("permanently delete relation #" ITEM_ID_FORMAT "\n", relation->id);
 
     /* remove it from the chain */
     relation_t **crelation = &osm->relation;
@@ -2220,18 +2220,19 @@ char *osm_object_string(object_t *object) {
     return g_strdup_printf("%s #<unspec>", type_str);
     break;
   case NODE:
-    return g_strdup_printf("%s #%ld", type_str, object->node->id);
+    return g_strdup_printf("%s #" ITEM_ID_FORMAT, type_str, object->node->id);
     break;
   case WAY:
-    return g_strdup_printf("%s #%ld", type_str, object->way->id);
+    return g_strdup_printf("%s #" ITEM_ID_FORMAT, type_str, object->way->id);
     break;
   case RELATION:
-    return g_strdup_printf("%s #%ld", type_str, object->relation->id);
+    return g_strdup_printf("%s #" ITEM_ID_FORMAT, type_str, 
+			   object->relation->id);
     break;
   case NODE_ID:
   case WAY_ID:
   case RELATION_ID:
-    return g_strdup_printf("%s #%ld", type_str, object->id);
+    return g_strdup_printf("%s #" ITEM_ID_FORMAT, type_str, object->id);
     break;
   }
   return NULL;
@@ -2245,18 +2246,18 @@ char *osm_object_id_string(object_t *object) {
     return NULL;
     break;
   case NODE:
-    return g_strdup_printf("#%ld", object->node->id);
+    return g_strdup_printf("#"ITEM_ID_FORMAT, object->node->id);
     break;
   case WAY:
-    return g_strdup_printf("#%ld", object->way->id);
+    return g_strdup_printf("#"ITEM_ID_FORMAT, object->way->id);
     break;
   case RELATION:
-    return g_strdup_printf("#%ld", object->relation->id);
+    return g_strdup_printf("#"ITEM_ID_FORMAT, object->relation->id);
     break;
   case NODE_ID:
   case WAY_ID:
   case RELATION_ID:
-    return g_strdup_printf("#%ld", object->id);
+    return g_strdup_printf("#"ITEM_ID_FORMAT, object->id);
     break;
   }
   return NULL;

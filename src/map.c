@@ -59,7 +59,7 @@ static void map_statusbar(map_t *map, map_item_t *map_item) {
   if(id == ID_ILLEGAL) 
     str = g_strdup_printf(_("Unknown item"));
   else {
-    str = g_strdup_printf("%s #%ld", item_str, id);
+    str = g_strdup_printf("%s #" ITEM_ID_FORMAT, item_str, id);
 
     /* add some tags ... */
     /*
@@ -299,7 +299,7 @@ void map_way_select(appdata_t *appdata, way_t *way) {
 void map_relation_select(appdata_t *appdata, relation_t *relation) {
   map_t *map = appdata->map;
 
-  printf("highlighting relation %ld\n", relation->id);
+  printf("highlighting relation "ITEM_ID_FORMAT"\n", relation->id);
 
   g_assert(!map->highlight);
   map_highlight_t **hl = &map->highlight;
@@ -322,7 +322,7 @@ void map_relation_select(appdata_t *appdata, relation_t *relation) {
 
     case NODE: {
       node_t *node = member->object.node;
-      printf("  -> node %ld\n", node->id);
+      printf("  -> node "ITEM_ID_FORMAT"\n", node->id);
 
       item = canvas_circle_new(map->canvas, CANVAS_GROUP_NODES_HL, 
 			node->lpos.x, node->lpos.y, 
@@ -882,10 +882,10 @@ map_item_t *map_item_at(map_t *map, gint x, gint y) {
 
   switch(map_item->object.type) {
   case NODE:
-    printf("  item is node #%ld\n", map_item->object.node->id);
+    printf("  item is node #"ITEM_ID_FORMAT"\n", map_item->object.node->id);
     break;
   case WAY:
-    printf("  item is way #%ld\n", map_item->object.way->id);
+    printf("  item is way #"ITEM_ID_FORMAT"\n", map_item->object.way->id);
     break;
   default:
     printf("  unknown item\n");
@@ -911,7 +911,8 @@ map_item_t *map_real_item_at(map_t *map, gint x, gint y) {
       parent = map_item->object.node->map_item_chain->map_item;
 
     if(parent)
-      printf("  using parent item node #%ld\n", parent->object.node->id);      
+      printf("  using parent item node #" ITEM_ID_FORMAT "\n", 
+	     parent->object.node->id);      
     break;
 
   case WAY:
@@ -919,7 +920,8 @@ map_item_t *map_real_item_at(map_t *map, gint x, gint y) {
       parent = map_item->object.way->map_item_chain->map_item;
 
     if(parent)
-      printf("  using parent item way #%ld\n", parent->object.way->id);      
+      printf("  using parent item way #" ITEM_ID_FORMAT "\n", 
+	     parent->object.way->id);      
     break;
 
   default:
@@ -1286,7 +1288,7 @@ void map_highlight_refresh(appdata_t *appdata) {
 }
 
 void map_way_delete(appdata_t *appdata, way_t *way) {
-  printf("deleting way #%ld from map and osm\n", way->id);
+  printf("deleting way #" ITEM_ID_FORMAT " from map and osm\n", way->id);
 
   /* remove it visually from the screen */
   map_item_chain_destroy(&way->map_item_chain);
@@ -1971,7 +1973,8 @@ void map_delete_selected(appdata_t *appdata) {
 
   switch(item.object.type) {
   case NODE:
-    printf("request to delete node #%ld\n", item.object.node->id);
+    printf("request to delete node #" ITEM_ID_FORMAT "\n", 
+	   item.object.node->id);
 
     /* check if this node is part of a way with two nodes only. */
     /* we cannot delete this as this would also delete the way */
@@ -2032,7 +2035,7 @@ void map_delete_selected(appdata_t *appdata) {
     break;
 
   case WAY:
-    printf("request to delete way #%ld\n", item.object.way->id);
+    printf("request to delete way #" ITEM_ID_FORMAT "\n", item.object.way->id);
     map_way_delete(appdata, item.object.way);
     break;
 
@@ -2343,7 +2346,7 @@ void map_hide_selected(appdata_t *appdata) {
   }
 
   way_t *way = map->selected.object.way;
-  printf("hiding way #%ld\n", way->id);
+  printf("hiding way #" ITEM_ID_FORMAT "\n", way->id);
 
   map_item_deselect(appdata);
   way->flags |= OSM_FLAG_HIDDEN;

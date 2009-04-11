@@ -261,8 +261,6 @@ static gboolean osm_update_item(struct log_s *log, char *xml_str,
 #endif
     curl_easy_cleanup(curl);
     
-    printf("reply is \"%s\"\n", write_data.ptr);
-    
     /* this will return the id on a successful create */
     if(id && (res == 0) && (response == 200)) {
       printf("request to parse successful reply as an id\n");
@@ -445,7 +443,8 @@ static void osm_delete_nodes(osm_upload_context_t *context) {
 
       appendf(&context->log, NULL, _("Delete node #%ld "), node->id);
 
-      char *url = g_strdup_printf("%s/node/%lu", project->server, node->id);
+      char *url = g_strdup_printf("%s/node/" ITEM_ID_FORMAT, 
+				  project->server, node->id);
       char *cred = g_strdup_printf("%s:%s", 
 				   context->appdata->settings->username, 
 				   context->appdata->settings->password);
@@ -485,7 +484,8 @@ static void osm_upload_nodes(osm_upload_context_t *context) {
 	url = g_strdup_printf("%s/node/create", project->server);
 	appendf(&context->log, NULL, _("New node "));
       } else {
-	url = g_strdup_printf("%s/node/%lu", project->server, node->id);
+	url = g_strdup_printf("%s/node/" ITEM_ID_FORMAT, 
+			      project->server, node->id);
 	appendf(&context->log, NULL, _("Modified node #%ld "), node->id);
       }
 
@@ -528,7 +528,8 @@ static void osm_delete_ways(osm_upload_context_t *context) {
 
       appendf(&context->log, NULL, _("Delete way #%ld "), way->id);
 
-      char *url = g_strdup_printf("%s/way/%lu", project->server, way->id);
+      char *url = g_strdup_printf("%s/way/" ITEM_ID_FORMAT, 
+				  project->server, way->id);
       char *cred = g_strdup_printf("%s:%s", 
 				   context->appdata->settings->username, 
 				   context->appdata->settings->password);
@@ -568,7 +569,8 @@ static void osm_upload_ways(osm_upload_context_t *context) {
 	url = g_strdup_printf("%s/way/create", project->server);
 	appendf(&context->log, NULL, _("New way "));
       } else {
-	url = g_strdup_printf("%s/way/%lu", project->server, way->id);
+	url = g_strdup_printf("%s/way/" ITEM_ID_FORMAT, 
+			      project->server, way->id);
 	appendf(&context->log, NULL, _("Modified way #%ld "), way->id);
       }
       
@@ -611,7 +613,7 @@ static void osm_delete_relations(osm_upload_context_t *context) {
 
       appendf(&context->log, NULL, _("Delete relation #%ld "), relation->id);
 
-      char *url = g_strdup_printf("%s/relation/%lu", 
+      char *url = g_strdup_printf("%s/relation/" ITEM_ID_FORMAT, 
 				  project->server, relation->id);
       char *cred = g_strdup_printf("%s:%s", 
 				   context->appdata->settings->username, 
@@ -652,7 +654,8 @@ static void osm_upload_relations(osm_upload_context_t *context) {
 	url = g_strdup_printf("%s/relation/create", project->server);
 	appendf(&context->log, NULL, _("New relation "));
       } else {
-	url = g_strdup_printf("%s/relation/%lu", project->server,relation->id);
+	url = g_strdup_printf("%s/relation/" ITEM_ID_FORMAT, 
+			      project->server,relation->id);
 	appendf(&context->log, NULL, _("Modified relation #%ld "), 
 		relation->id);
       }
@@ -706,7 +709,7 @@ static gboolean osm_create_changeset(osm_upload_context_t *context) {
 
     if(osm_update_item(&context->log, xml_str, url, cred, 
 		       &context->changeset)) {
-      printf("got changeset id %ld\n", context->changeset);
+      printf("got changeset id " ITEM_ID_FORMAT "\n", context->changeset);
       result = TRUE;
     }
     
@@ -726,7 +729,7 @@ static gboolean osm_close_changeset(osm_upload_context_t *context) {
   /* make sure gui gets updated */
   while(gtk_events_pending()) gtk_main_iteration();
 
-  char *url = g_strdup_printf("%s/changeset/%lu/close",
+  char *url = g_strdup_printf("%s/changeset/" ITEM_ID_FORMAT "/close",
 			      project->server, context->changeset);
   appendf(&context->log, NULL, _("Close changeset "));
 
@@ -862,7 +865,7 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
 #ifdef API06
   GtkWidget *scrolled_win = gtk_scrolled_window_new(NULL, NULL);
   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_win), 
-  				 GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+  				 GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
   gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scrolled_win),
 				      GTK_SHADOW_IN);
 
@@ -951,6 +954,7 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   context->log.view = gtk_text_view_new_with_buffer(context->log.buffer);
   gtk_text_view_set_editable(GTK_TEXT_VIEW(context->log.view), FALSE);
   gtk_text_view_set_cursor_visible(GTK_TEXT_VIEW(context->log.view), FALSE);
+  gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(context->log.view), GTK_WRAP_WORD);
 
   gtk_container_add(GTK_CONTAINER(scrolled_window), context->log.view);
   gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scrolled_window),
