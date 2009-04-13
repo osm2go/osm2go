@@ -216,13 +216,6 @@ cb_menu_redraw(GtkMenuItem *item, gpointer data) {
 #endif
 
 static void 
-cb_menu_style(GtkMenuItem *item, gpointer data) {
-  appdata_t *appdata = (appdata_t*)data;
-
-  style_select(GTK_WIDGET(appdata->window), appdata);
-}
-
-static void 
 cb_menu_map_no_icons(GtkCheckMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
 
@@ -242,6 +235,13 @@ cb_menu_map_no_antialias(GtkCheckMenuItem *item, gpointer data) {
   appdata->settings->no_antialias = gtk_check_menu_item_get_active(item);
   map_paint(appdata);
   banner_busy_stop(appdata); //"Redrawing..."
+}
+
+static void 
+cb_menu_style(GtkMenuItem *item, gpointer data) {
+  appdata_t *appdata = (appdata_t*)data;
+
+  style_select(GTK_WIDGET(appdata->window), appdata);
 }
 
 static void 
@@ -311,6 +311,30 @@ cb_menu_zoomout(GtkMenuItem *item, appdata_t *appdata) {
 
   map_set_zoom(appdata->map, appdata->map->state->zoom/ZOOM_FACTOR_MENU, TRUE);
   printf("zoom is now %f\n", appdata->map->state->zoom);
+}
+
+static void 
+cb_menu_view_detail_inc(GtkMenuItem *item, gpointer data) {
+  appdata_t *appdata = (appdata_t*)data;
+
+  printf("detail level increase\n");
+  map_detail_increase(appdata->map);
+}
+
+static void 
+cb_menu_view_detail_normal(GtkMenuItem *item, gpointer data) {
+  appdata_t *appdata = (appdata_t*)data;
+
+  printf("detail level normal\n");
+  map_detail_normal(appdata->map);
+}
+
+static void 
+cb_menu_view_detail_dec(GtkMenuItem *item, gpointer data) {
+  appdata_t *appdata = (appdata_t*)data;
+
+  printf("detail level decrease\n");
+  map_detail_decrease(appdata->map);
 }
 
 static void 
@@ -638,6 +662,26 @@ void menu_create(appdata_t *appdata) {
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_zoomout), _("Zoom _out"),
     GTK_STOCK_ZOOM_OUT, "<OSM2Go-Main>/View/ZoomOut",
     GDK_period, GDK_CONTROL_MASK, TRUE, FALSE, FALSE
+  );
+
+  gtk_menu_shell_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
+
+  menu_append_new_item(
+    appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_view_detail_inc), _("More details"),
+    NULL, "<OSM2Go-Main>/View/DetailInc",
+    GDK_period, GDK_MOD1_MASK, TRUE, FALSE, FALSE
+  );
+
+  menu_append_new_item(
+    appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_view_detail_normal), _("Normal details"),
+    NULL, "<OSM2Go-Main>/View/DetailNormal",
+    0, 0, TRUE, FALSE, FALSE
+  );
+
+  menu_append_new_item(
+    appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_view_detail_dec), _("Less details"),
+    NULL, "<OSM2Go-Main>/View/DetailDec",
+    GDK_comma, GDK_MOD1_MASK, TRUE, FALSE, FALSE
   );
 
   /* -------------------- OSM submenu -------------------- */

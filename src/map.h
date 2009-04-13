@@ -79,6 +79,7 @@ typedef struct map_item_chain_s {
 typedef struct {
   gint refcount;
   float zoom;                          // zoom level (1.0 = 1m/pixel
+  float detail;                        // deatil level (1.0 = normal)
   struct { gint x,y; } scroll_offset;  // initial scroll offset 
 } map_state_t;
 
@@ -185,5 +186,9 @@ void map_way_select(appdata_t *appdata, way_t *way);
 void map_outside_error(appdata_t *appdata);
 void map_node_draw(map_t *map, node_t *node);
 void map_relation_select(appdata_t *appdata, relation_t *relation);
+
+void map_detail_increase(map_t *map);
+void map_detail_decrease(map_t *map);
+void map_detail_normal(map_t *map);
 
 #endif // MAP_H

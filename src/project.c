@@ -92,6 +92,10 @@ static gboolean project_read(appdata_t *appdata,
 		project->map_state->zoom = g_ascii_strtod(str, NULL);
 		xmlFree(str);
 	      } 
+	      if((str = (char*)xmlGetProp(node, BAD_CAST "detail"))) {
+		project->map_state->detail = g_ascii_strtod(str, NULL);
+		xmlFree(str);
+	      } 
 	      if((str = (char*)xmlGetProp(node, BAD_CAST "scroll-offset-x"))) {
 		project->map_state->scroll_offset.x = strtoul(str, NULL, 10);
 		xmlFree(str);
@@ -205,8 +209,10 @@ gboolean project_save(GtkWidget *parent, project_t *project) {
 
   if(project->map_state) {
     node = xmlNewChild(root_node, NULL, BAD_CAST "map", BAD_CAST NULL);
-    g_ascii_formatd(str, sizeof(str), LL_FORMAT, project->map_state->zoom);
+    g_ascii_formatd(str, sizeof(str), "%.04f", project->map_state->zoom);
     xmlNewProp(node, BAD_CAST "zoom", BAD_CAST str);
+    g_ascii_formatd(str, sizeof(str), "%.04f", project->map_state->detail);
+    xmlNewProp(node, BAD_CAST "detail", BAD_CAST str);
     snprintf(str, sizeof(str), "%d", project->map_state->scroll_offset.x);
     xmlNewProp(node, BAD_CAST "scroll-offset-x", BAD_CAST str);
     snprintf(str, sizeof(str), "%d", project->map_state->scroll_offset.y);

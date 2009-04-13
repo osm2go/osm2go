@@ -167,7 +167,7 @@ static void map_node_select(appdata_t *appdata, node_t *node) {
     gint h = gdk_pixbuf_get_height(map_item->object.node->icon_buf);
     /* icons are technically square, so a radius slightly bigger */
     /* than sqrt(2)*MAX(w,h) should fit nicely */
-    radius =  0.75 * map->style->icon.scale * ((w>h)?w:h);
+    radius = map->state->detail * 0.75 * map->style->icon.scale * ((w>h)?w:h);
   }
 
   map_hl_circle_new(map, CANVAS_GROUP_NODES_HL, new_map_item, 
@@ -198,10 +198,11 @@ void map_way_select(appdata_t *appdata, way_t *way) {
   map_statusbar(map, map_item);
   icon_bar_map_item_selected(appdata, map_item, TRUE);
   gtk_widget_set_sensitive(appdata->menu_item_map_hide_sel, TRUE);
-
-  gint arrow_width = (map_item->object.way->draw.flags & OSM_DRAW_FLAG_BG)?
-    map->style->highlight.width + map_item->object.way->draw.bg.width/2:
-    map->style->highlight.width + map_item->object.way->draw.width/2;
+  
+  gint arrow_width = ((map_item->object.way->draw.flags & OSM_DRAW_FLAG_BG)?
+		      map->style->highlight.width + map_item->object.way->draw.bg.width/2:
+		      map->style->highlight.width + map_item->object.way->draw.width/2)
+    * map->state->detail;
   
   node_chain_t *node_chain = map_item->object.way->node_chain;
   node_t *last = NULL;
@@ -259,7 +260,7 @@ void map_way_select(appdata_t *appdata, way_t *way) {
       gint y = node_chain->node->lpos.y;
 
       map_hl_circle_new(map, CANVAS_GROUP_NODES_IHL, new_map_item, 
-			x, y, map->style->node.radius, 
+			x, y, map->style->node.radius * map->state->detail,
 			map->style->highlight.node_color);
     }
 
@@ -287,11 +288,11 @@ void map_way_select(appdata_t *appdata, way_t *way) {
     new_map_item->highlight = TRUE;
     
     map_hl_polyline_new(map, CANVAS_GROUP_WAYS_HL, new_map_item, points, 
-		(map_item->object.way->draw.flags & OSM_DRAW_FLAG_BG)?
-		2*map->style->highlight.width + map_item->object.way->draw.bg.width:
-		2*map->style->highlight.width + map_item->object.way->draw.width, 
-		map->style->highlight.color);
-
+		 ((map_item->object.way->draw.flags & OSM_DRAW_FLAG_BG)?
+		 2*map->style->highlight.width + map_item->object.way->draw.bg.width:
+		 2*map->style->highlight.width + map_item->object.way->draw.width)
+		* map->state->detail, map->style->highlight.color);
+    
     canvas_points_free(points);
   }
 }
@@ -472,13 +473,15 @@ static canvas_item_t *map_node_new(map_t *map, node_t *node, gint radius,
   else
     map_item->item = canvas_image_new(map->canvas, CANVAS_GROUP_NODES, 
       node->icon_buf, 
-      node->lpos.x - map->style->icon.scale/2 * 
+      node->lpos.x - map->style->icon.scale/2 * map->state->detail *
 		      gdk_pixbuf_get_width(node->icon_buf), 
-      node->lpos.y - map->style->icon.scale/2 * 
+      node->lpos.y - map->style->icon.scale/2 * map->state->detail *
 		      gdk_pixbuf_get_height(node->icon_buf), 
-	      map->style->icon.scale,map->style->icon.scale);
+		      map->state->detail * map->style->icon.scale, 
+		      map->state->detail * map->style->icon.scale);
  
-  canvas_item_set_zoom_max(map_item->item, node->zoom_max);
+  canvas_item_set_zoom_max(map_item->item, 
+			   node->zoom_max / (2 * map->state->detail));
 
   /* attach map_item to nodes map_item_chain */
   map_item_chain_t **chain = &node->map_item_chain;
@@ -540,7 +543,8 @@ static canvas_item_t *map_way_new(map_t *map, canvas_group_t group,
     map_item->item = canvas_polyline_new(map->canvas, group, points, width, color);
   }
 
-  canvas_item_set_zoom_max(map_item->item, way->draw.zoom_max);
+  canvas_item_set_zoom_max(map_item->item, 
+			   way->draw.zoom_max / (2 * map->state->detail));
 
   /* a ways outline itself is never dashed */
   if (group != CANVAS_GROUP_WAYS_OL)
@@ -590,21 +594,24 @@ void map_way_draw(map_t *map, way_t *way) {
     }
     
     /* draw way */
+    float width = way->draw.width * map->state->detail;
+
     if(way->draw.flags & OSM_DRAW_FLAG_AREA) {
       map_way_new(map, CANVAS_GROUP_POLYGONS, way, points, 
-		  way->draw.width, way->draw.color, way->draw.area.color);
+		  width, way->draw.color, way->draw.area.color);
     } else {
-      
+  
       if(way->draw.flags & OSM_DRAW_FLAG_BG) {
 	map_way_new(map, CANVAS_GROUP_WAYS_INT, way, points, 
-		    way->draw.width, way->draw.color, NO_COLOR);
+		    width, way->draw.color, NO_COLOR);
 
 	map_way_new(map, CANVAS_GROUP_WAYS_OL, way, points, 
-		    way->draw.bg.width, way->draw.bg.color, NO_COLOR);
+		    way->draw.bg.width * map->state->detail, 
+		    way->draw.bg.color, NO_COLOR);
 
       } else
 	map_way_new(map, CANVAS_GROUP_WAYS, way, points, 
-		    way->draw.width, way->draw.color, NO_COLOR);
+		    width, way->draw.color, NO_COLOR);
     }
     canvas_points_free(points);
   }
@@ -617,14 +624,14 @@ void map_node_draw(map_t *map, node_t *node) {
 
   if(!node->ways) 
     map_node_new(map, node, 
-		 map->style->node.radius,
-		 map->style->node.border_radius,
+		 map->style->node.radius * map->state->detail,
+		 map->style->node.border_radius * map->state->detail,
 		 map->style->node.fill_color, 
 		 map->style->node.color);
   
   else if(map->style->node.show_untagged || osm_node_has_tag(node)) 
     map_node_new(map, node, 
-		 map->style->node.radius, 0,
+		 map->style->node.radius * map->state->detail, 0,
 		 map->style->node.color, 0);
 }
 
@@ -1757,6 +1764,7 @@ GtkWidget *map_new(appdata_t *appdata) {
     printf("Creating new map state\n");
     map->state = g_new0(map_state_t, 1);
     map->state->zoom = 0.25;
+    map->state->detail = 1.0;
   }
   
   map->state->refcount++;
@@ -2370,6 +2378,39 @@ void map_show_all(appdata_t *appdata) {
   }
 
   gtk_widget_set_sensitive(appdata->menu_item_map_show_all, FALSE);
+}
+
+static void map_detail_change(map_t *map, float detail) {
+  appdata_t *appdata = map->appdata;
+
+  /* deselecting anything allows us not to care about automatic deselection */
+  /* as well as items becoming invisible by the detail change */
+  map_item_deselect(appdata);
+
+  map->state->detail = detail;
+  printf("changing detail factor to %f\n", map->state->detail);
+
+  banner_busy_start(appdata, 1, "Redrawing...");
+  map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
+  map_paint(appdata);
+  banner_busy_stop(appdata);
+}
+
+#define DETAIL_STEP 1.5
+
+void map_detail_increase(map_t *map) {
+  if(!map) return;
+  map_detail_change(map, map->state->detail * DETAIL_STEP);
+}
+
+void map_detail_decrease(map_t *map) {
+  if(!map) return;
+  map_detail_change(map, map->state->detail / DETAIL_STEP);
+}
+
+void map_detail_normal(map_t *map) {
+  if(!map) return;
+  map_detail_change(map, 1.0);
 }
 
 // vim:et:ts=8:sw=2:sts=2:ai
