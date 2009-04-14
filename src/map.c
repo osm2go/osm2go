@@ -167,9 +167,10 @@ static void map_node_select(appdata_t *appdata, node_t *node) {
     gint h = gdk_pixbuf_get_height(map_item->object.node->icon_buf);
     /* icons are technically square, so a radius slightly bigger */
     /* than sqrt(2)*MAX(w,h) should fit nicely */
-    radius = map->state->detail * 0.75 * map->style->icon.scale * ((w>h)?w:h);
+    radius = 0.75 * map->style->icon.scale * ((w>h)?w:h);
   }
 
+  radius *= map->state->detail;
   map_hl_circle_new(map, CANVAS_GROUP_NODES_HL, new_map_item, 
 		    x, y, radius, map->style->highlight.color);
   

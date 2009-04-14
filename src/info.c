@@ -413,7 +413,7 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
 
   /* making the dialog a little wider makes it less "crowded" */
 #ifdef USE_HILDON
-  gtk_window_set_default_size(GTK_WINDOW(context->dialog), 500, 400);
+  gtk_window_set_default_size(GTK_WINDOW(context->dialog), 440, 400);
 #else
   // Conversely, desktop builds should display a little narrower
   gtk_window_set_default_size(GTK_WINDOW(context->dialog), 400, 300);
@@ -423,21 +423,18 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
   GtkWidget *table = gtk_table_new(2, 2, FALSE);  // x, y
 
   /* ------------ user ----------------- */
-  char *u_str = NULL;
-  if(user) u_str = g_strdup_printf(_("User: %s"), user->name);
-  else     u_str = g_strdup_printf(_("User: ---"));
-  label = gtk_label_new(u_str);
-  gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 0, 1);
-  g_free(u_str);
+  if(user) {
+    label = gtk_label_new(user->name);
+    gtk_label_set_ellipsize(GTK_LABEL(label), PANGO_ELLIPSIZE_END);
+    gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 0, 1);
+  }
 
   /* ------------ time ----------------- */
 
   struct tm *loctime = localtime(&stime);
   char time_str[32];
   strftime(time_str, sizeof(time_str), "%x %X", loctime);
-  char *t_str = g_strdup_printf(_("Time: %s"), time_str);
-  label = gtk_label_new(t_str);
-  g_free(t_str);
+  label = gtk_label_new(time_str);
   gtk_table_attach_defaults(GTK_TABLE(table),  label, 1, 2, 0, 1);
 
   /* ------------ coordinate (only for nodes) ----------------- */
