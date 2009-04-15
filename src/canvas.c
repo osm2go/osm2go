@@ -343,16 +343,22 @@ canvas_item_t *canvas_item_info_get_at(canvas_t *canvas, gint x, gint y) {
     while(item) {
       switch(item->type) {
       case CANVAS_ITEM_CIRCLE: {
-	gint xdist = item->data.circle.center.x - x;
-	gint ydist = item->data.circle.center.y - y;
+	if((x >= item->data.circle.center.x - item->data.circle.r - fuzziness) &&
+	   (y >= item->data.circle.center.y - item->data.circle.r - fuzziness) &&
+	   (x <= item->data.circle.center.x + item->data.circle.r + fuzziness) &&
+	   (y <= item->data.circle.center.y + item->data.circle.r + fuzziness)) {
+
+	  gint xdist = item->data.circle.center.x - x;
+	  gint ydist = item->data.circle.center.y - y;
 	
-	if(xdist*xdist + ydist*ydist < 
-	   (item->data.circle.r+fuzziness)*(item->data.circle.r+fuzziness)) {
-	  printf("circle item %p at %d/%d(%d)\n", item,
-		 item->data.circle.center.x, 
-		 item->data.circle.center.y,
-		 item->data.circle.r);
-	  return item->item;
+	  if(xdist*xdist + ydist*ydist < 
+	     (item->data.circle.r+fuzziness)*(item->data.circle.r+fuzziness)) {
+	    printf("circle item %p at %d/%d(%d)\n", item,
+		   item->data.circle.center.x, 
+		   item->data.circle.center.y,
+		   item->data.circle.r);
+	    return item->item;
+	  }
 	}
       } break;
       

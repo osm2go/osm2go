@@ -178,6 +178,12 @@ static GtkWidget *tool_add(GtkWidget *toolbar, appdata_t *appdata,
 
   gtk_toolbar_insert(GTK_TOOLBAR(toolbar), GTK_TOOL_ITEM(item), -1);
 
+#ifdef USE_HILDON
+#if MAEMO_VERSION_MAJOR == 5
+  gtk_widget_set_size_request(GTK_WIDGET(item), 40, 40);
+#endif
+#endif
+
   return item;
 }
 
@@ -239,8 +245,27 @@ GtkWidget *iconbar_new(appdata_t *appdata) {
   /* -------------------------------------------------------- */
 
   GtkWidget *hbox = gtk_hbox_new(FALSE, 0);
+
+#ifdef USE_HILDON
+  gtk_widget_set_size_request(GTK_WIDGET(hbox), -1, 32);
+#endif
+
   iconbar->ok = icon_add(hbox, appdata, "ok", on_ok_clicked);
+  gtk_button_set_relief(GTK_BUTTON(iconbar->ok), GTK_RELIEF_NONE);
+#ifdef USE_HILDON
+#if MAEMO_VERSION_MAJOR == 5
+  gtk_widget_set_size_request(GTK_WIDGET(iconbar->ok), 24, -1);
+#endif
+#endif
+
   iconbar->cancel = icon_add(hbox, appdata, "cancel", on_cancel_clicked);
+  gtk_button_set_relief(GTK_BUTTON(iconbar->cancel), GTK_RELIEF_NONE);
+#ifdef USE_HILDON
+#if MAEMO_VERSION_MAJOR == 5
+  gtk_widget_set_size_request(GTK_WIDGET(iconbar->cancel), 24, -1);
+#endif
+#endif
+
   gtk_box_pack_end(GTK_BOX(box), hbox, FALSE, FALSE, 0);
   
   /* --------------------------------------------------------- */  
