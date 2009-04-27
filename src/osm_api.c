@@ -27,11 +27,16 @@
 #define COLOR_ERR  "red"
 #define COLOR_OK   "darkgreen"
 
+#define NO_EXPECT
+
 static struct http_message_s {
   int id;
   char *msg;
 } http_messages [] = {
   { 200, "Ok" },
+  { 203, "No Content" },
+  { 301, "Moved Permenently" },
+  { 302, "Moved Temporarily" },
   { 400, "Bad Request" },
   { 401, "Unauthorized" },
   { 403, "Forbidden" },
@@ -235,11 +240,10 @@ static gboolean osm_update_item(struct log_s *log, char *xml_str,
     
     /* some servers don't like requests that are made without a user-agent
        field, so we provide one */
-    curl_easy_setopt(curl, CURLOPT_USERAGENT, 
-		     PACKAGE "-libcurl/" VERSION); 
+    curl_easy_setopt(curl, CURLOPT_USERAGENT, PACKAGE "-libcurl/" VERSION); 
     
-#ifndef API06
-    struct curl_slist *slist=NULL;
+#ifdef NO_EXPECT
+    struct curl_slist *slist = NULL;
     slist = curl_slist_append(slist, "Expect:");
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, slist);
 #endif
@@ -256,7 +260,7 @@ static gboolean osm_update_item(struct log_s *log, char *xml_str,
     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response);
     
     /* always cleanup */
-#ifndef API06
+#ifdef NO_EXPECT
     curl_slist_free_all(slist);
 #endif
     curl_easy_cleanup(curl);
@@ -358,6 +362,12 @@ static gboolean osm_delete_item(struct log_s *log, char *xml_str,
        field, so we provide one */
     curl_easy_setopt(curl, CURLOPT_USERAGENT, PACKAGE "-libcurl/" VERSION); 
     
+#ifdef NO_EXPECT
+    struct curl_slist *slist = NULL;
+    slist = curl_slist_append(slist, "Expect:");
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, slist);
+#endif
+
     curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, buffer);
     
     /* set user name and password for the authentication */
@@ -370,6 +380,9 @@ static gboolean osm_delete_item(struct log_s *log, char *xml_str,
     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response);
     
     /* always cleanup */
+#ifdef NO_EXPECT
+    curl_slist_free_all(slist);
+#endif
     curl_easy_cleanup(curl);
     
     if(res != 0) 
@@ -808,11 +821,12 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
 	 dirty.relations.new, dirty.relations.dirty, dirty.relations.deleted);
 
 
-  GtkWidget *dialog = gtk_dialog_new_with_buttons(_("Upload to OSM"),
-	  GTK_WINDOW(appdata->window), GTK_DIALOG_MODAL,
-	  GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, 
-          GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-	  NULL);
+  GtkWidget *dialog = 
+    misc_dialog_new(MISC_DIALOG_NOSIZE, _("Upload to OSM"),
+		    GTK_WINDOW(appdata->window),
+		    GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, 
+		    GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+		    NULL);
 
   GtkWidget *table = gtk_table_new(4, 5, TRUE); 
 
@@ -930,18 +944,13 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   gtk_widget_destroy(dialog);
   project_save(GTK_WIDGET(appdata->window), project);
 
-  context->dialog = gtk_dialog_new_with_buttons(_("Upload to OSM"),
-	  GTK_WINDOW(appdata->window), GTK_DIALOG_MODAL,
+  context->dialog = 
+    misc_dialog_new(MISC_DIALOG_LARGE,_("Uploading..."),
+	  GTK_WINDOW(appdata->window),
 	  GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE, NULL);
+
   gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), 
 				    GTK_RESPONSE_CLOSE, FALSE);
-
-  /* making the dialog a little wider makes it less "crowded" */
-#ifndef USE_HILDON
-  gtk_window_set_default_size(GTK_WINDOW(context->dialog), 480, 256);
-#else
-  gtk_window_set_default_size(GTK_WINDOW(context->dialog), 800, 480);
-#endif
 
   /* ------- main ui elelent is this text view --------------- */
 

@@ -135,17 +135,11 @@ static gboolean tag_edit(tag_context_t *context) {
   gtk_tree_model_get(model, &iter, TAG_COL_DATA, &tag, -1);
   printf("got %s/%s\n", tag->key, tag->value);
 
-  GtkWidget *dialog = gtk_dialog_new_with_buttons(_("Edit Tag"),
-	  GTK_WINDOW(context->dialog), GTK_DIALOG_MODAL,
-	  GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, 
-          GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-          NULL);
-
-#ifdef USE_HILDON
-  gtk_window_set_default_size(GTK_WINDOW(dialog), 500, 100);
-#else
-  gtk_window_set_default_size(GTK_WINDOW(dialog), 400, 100);
-#endif
+  GtkWidget *dialog = misc_dialog_new(MISC_DIALOG_SMALL, _("Edit Tag"),
+			  GTK_WINDOW(context->dialog),
+			  GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, 
+			  GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+			  NULL);
 
   gtk_dialog_set_default_response(GTK_DIALOG(dialog), 
 				  GTK_RESPONSE_ACCEPT);
@@ -401,8 +395,8 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
     break;
   }
 
-  context->dialog = gtk_dialog_new_with_buttons(str,
-	  GTK_WINDOW(parent), GTK_DIALOG_MODAL,
+  context->dialog = misc_dialog_new(MISC_DIALOG_MEDIUM, str,
+	  GTK_WINDOW(parent), 
 	  GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL, 
 	  GTK_STOCK_OK, GTK_RESPONSE_ACCEPT, 
 	  NULL);
@@ -410,14 +404,6 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
 
   gtk_dialog_set_default_response(GTK_DIALOG(context->dialog), 
 				  GTK_RESPONSE_ACCEPT);
-
-  /* making the dialog a little wider makes it less "crowded" */
-#ifdef USE_HILDON
-  gtk_window_set_default_size(GTK_WINDOW(context->dialog), 440, 400);
-#else
-  // Conversely, desktop builds should display a little narrower
-  gtk_window_set_default_size(GTK_WINDOW(context->dialog), 400, 300);
-#endif
 
   GtkWidget *label;
   GtkWidget *table = gtk_table_new(2, 2, FALSE);  // x, y

@@ -469,11 +469,12 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
   GtkWidget **gtk_widgets = (GtkWidget**)g_new0(GtkWidget, widget_cnt);
 
   if(interactive_widget_cnt)  {
-    dialog = gtk_dialog_new_with_buttons(
-        item->name, parent, GTK_DIALOG_MODAL,
-	GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, 
-        GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-        NULL);
+    dialog = 
+      misc_dialog_new(MISC_DIALOG_NOSIZE,
+		      item->name, parent,
+		      GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, 
+		      GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+		      NULL);
 
 #ifdef ENABLE_BROWSER_INTERFACE
     /* if a web link has been provided for this item install */

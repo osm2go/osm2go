@@ -83,7 +83,7 @@ settings_t *settings_load(void) {
 #endif
 
   /* ------------- setup download defaults -------------------- */
-  settings->server = strdup("http://api.openstreetmap.org/api/0.5");
+  settings->server = strdup("http://api.openstreetmap.org/api/0.6");
   if((p = getenv("OSM_USER")))
     settings->username = g_strdup(p);
   else

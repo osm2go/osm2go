@@ -476,11 +476,12 @@ project_t *project_new(select_context_t *context) {
   printf("creating project with default values\n");
 
   /* --------------  first choose a name for the project --------------- */
-  GtkWidget *dialog = gtk_dialog_new_with_buttons(_("Project name"),
-	  GTK_WINDOW(context->dialog), GTK_DIALOG_MODAL,
-	  GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, 
-          GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-	  NULL);
+  GtkWidget *dialog = 
+    misc_dialog_new(MISC_DIALOG_NOSIZE,  _("Project name"),
+		    GTK_WINDOW(context->dialog),
+		    GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, 
+		    GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+		    NULL);
 
   GtkWidget *hbox = gtk_hbox_new(FALSE, 8);
   gtk_box_pack_start_defaults(GTK_BOX(hbox), gtk_label_new(_("Name:")));
@@ -516,9 +517,15 @@ project_t *project_new(select_context_t *context) {
   /* no data downloaded yet */
   project->data_dirty = TRUE;
 
+  /* adjust default server stored in settings if required */
+  if(strstr(context->settings->server, "0.5") != NULL) {
+    strstr(context->settings->server, "0.5")[2] = '6';
+    printf("adjusting server path in settings to 0.6\n");
+  }
+
   /* use global server/access settings */
   project->server   = g_strdup(context->settings->server);
-  
+
   /* build project osm file name */
   project->osm = g_strdup_printf("%s%s.osm", project->path, project->name);
 
@@ -707,17 +714,12 @@ char *project_select(appdata_t *appdata) {
   context->project = project_scan(appdata);
 
   /* create project selection dialog */
-  context->dialog = gtk_dialog_new_with_buttons(_("Project selection"),
-	  GTK_WINDOW(appdata->window), GTK_DIALOG_MODAL,
+  context->dialog = 
+    misc_dialog_new(MISC_DIALOG_MEDIUM,_("Project selection"),
+	  GTK_WINDOW(appdata->window),
 	  GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, 
           GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
           NULL);
-
-#ifdef USE_HILDON
-  gtk_window_set_default_size(GTK_WINDOW(context->dialog), 500, 300);
-#else
-  gtk_window_set_default_size(GTK_WINDOW(context->dialog), 400, 200);
-#endif
 
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(context->dialog)->vbox), 
 			      project_list_widget(context));
@@ -882,19 +884,12 @@ gboolean project_edit(GtkWidget *parent, project_t *project POS_PARM) {
 
   char *str = g_strdup_printf(_("Project - %s"), project->name);
   context->area_edit.parent = 
-    context->dialog = gtk_dialog_new_with_buttons(str,
-	  GTK_WINDOW(parent), GTK_DIALOG_MODAL,
+    context->dialog = misc_dialog_new(MISC_DIALOG_WIDE, str,
+	  GTK_WINDOW(parent),
 	  GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, 
           GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
           NULL);
   g_free(str);
-
-#ifdef USE_HILDON
-  /* making the dialog a little wider makes it less "crowded" */
-  gtk_window_set_default_size(GTK_WINDOW(context->dialog), 640, 100);
-#else
-  gtk_window_set_default_size(GTK_WINDOW(context->dialog), 400, 100);
-#endif
 
   GtkWidget *download, *label;
   GtkWidget *table = gtk_table_new(4, 6, FALSE);  // x, y

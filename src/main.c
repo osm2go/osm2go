@@ -287,6 +287,7 @@ cb_menu_osm_relations(GtkMenuItem *item, gpointer data) {
   relation_list((appdata_t*)data);
 }
 
+#if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
 static void 
 cb_menu_fullscreen(GtkCheckMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t *)data;
@@ -296,6 +297,7 @@ cb_menu_fullscreen(GtkCheckMenuItem *item, gpointer data) {
   else
     gtk_window_unfullscreen(GTK_WINDOW(appdata->window));
 }
+#endif
 
 static void 
 cb_menu_zoomin(GtkMenuItem *item, appdata_t *appdata) {
@@ -646,11 +648,13 @@ void menu_create(appdata_t *appdata) {
   gtk_menu_set_accel_group(GTK_MENU(submenu), accel_grp);
   gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), submenu);
   
+#if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
   appdata->menu_item_view_fullscreen = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_fullscreen), _("_Fullscreen"),
     GTK_STOCK_FULLSCREEN, "<OSM2Go-Main>/View/Fullscreen",
     0, 0, TRUE, TRUE, FALSE
   );
+#endif
 
   menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_zoomin), _("Zoom _in"),

@@ -620,17 +620,12 @@ static void callback_modified_name(GtkWidget *widget, gpointer data) {
 /* edit url and path of a given wms server entry */
 gboolean wms_server_edit(wms_server_context_t *context, gboolean edit_name,
 			 wms_server_t *wms_server) {
-  GtkWidget *dialog = gtk_dialog_new_with_buttons(_("Edit WMS Server"),
-	  GTK_WINDOW(context->dialog), GTK_DIALOG_MODAL,
-	  GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, 
-          GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-          NULL);
-
-#ifdef USE_HILDON
-  gtk_window_set_default_size(GTK_WINDOW(dialog), 500, 50);
-#else
-  gtk_window_set_default_size(GTK_WINDOW(dialog), 400, 50);
-#endif
+  GtkWidget *dialog = 
+    misc_dialog_new(MISC_DIALOG_WIDE, _("Edit WMS Server"),
+		    GTK_WINDOW(context->dialog),
+		    GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, 
+		    GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+		    NULL);
 
   gtk_dialog_set_default_response(GTK_DIALOG(dialog), 
 				  GTK_RESPONSE_ACCEPT);
@@ -813,17 +808,12 @@ static gboolean wms_server_dialog(appdata_t *appdata, wms_t *wms) {
   context->appdata = appdata;
   context->wms = wms;
 
-  context->dialog = gtk_dialog_new_with_buttons(_("WMS Server Selection"),
-	  GTK_WINDOW(appdata->window), GTK_DIALOG_MODAL,
-	  GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, 
-          GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-          NULL);
-
-#ifdef USE_HILDON
-  gtk_window_set_default_size(GTK_WINDOW(context->dialog), 500, 300);
-#else
-  gtk_window_set_default_size(GTK_WINDOW(context->dialog), 400, 200);
-#endif
+  context->dialog = 
+    misc_dialog_new(MISC_DIALOG_MEDIUM, _("WMS Server Selection"),
+		    GTK_WINDOW(appdata->window),
+		    GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, 
+		    GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+		    NULL);
 
   /* server selection box */
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(context->dialog)->vbox), 
@@ -1000,21 +990,15 @@ static GtkWidget *wms_layer_widget(appdata_t *appdata, wms_layer_t *layer,
 static gboolean wms_layer_dialog(appdata_t *appdata, wms_layer_t *layer) {
   gboolean ok = FALSE;
 
-  GtkWidget *dialog = gtk_dialog_new_with_buttons(_("WMS layer selection"),
-	  GTK_WINDOW(appdata->window), GTK_DIALOG_MODAL,
-	  GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, 
-          GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-          NULL);
+  GtkWidget *dialog = 
+    misc_dialog_new(MISC_DIALOG_LARGE, _("WMS layer selection"),
+		    GTK_WINDOW(appdata->window),
+		    GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, 
+		    GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+		    NULL);
 
   gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog), 
 				    GTK_RESPONSE_ACCEPT, FALSE);
-
-#ifdef USE_HILDON
-  /* making the dialog a little wider makes it less "crowded" */
-  gtk_window_set_default_size(GTK_WINDOW(dialog), 640, 300);
-#else
-  gtk_window_set_default_size(GTK_WINDOW(dialog), 400, 200);
-#endif
 
   /* layer list */
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), 

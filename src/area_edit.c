@@ -216,18 +216,12 @@ gboolean area_edit(area_edit_t *area) {
   context.max.lat = area->max->lat;
   context.max.lon = area->max->lon;
 
-  context.dialog = gtk_dialog_new_with_buttons(
-	  _("Area editor"),
-	  GTK_WINDOW(area->parent), GTK_DIALOG_MODAL,
+  context.dialog = 
+    misc_dialog_new(MISC_DIALOG_NOSIZE, _("Area editor"),
+	  GTK_WINDOW(area->parent),
 	  GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, 
           GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
           NULL);
-
-#ifdef USE_HILDON
-  //  gtk_window_set_default_size(GTK_WINDOW(context.dialog), 640, 100);
-#else
-  //  gtk_window_set_default_size(GTK_WINDOW(context.dialog), 400, 100);
-#endif
 
   GtkWidget *table = gtk_table_new(3, 3, FALSE);  // x, y
 

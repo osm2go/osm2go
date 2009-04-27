@@ -19,24 +19,6 @@
 
 #include "appdata.h"
 
-/* UI sizes */
-/* TH: All this dialog size stuff should imho go into one central place */
-
-#ifdef USE_HILDON
-// Making the dialog a little wider makes it less "crowded" 
-static const guint LIST_OF_RELATIONS_DIALOG_WIDTH   = 500;
-static const guint LIST_OF_RELATIONS_DIALOG_HEIGHT  = 300;
-static const guint LIST_OF_MEMBERS_DIALOG_WIDTH   = 500;
-static const guint LIST_OF_MEMBERS_DIALOG_HEIGHT  = 300;
-#else
-// Desktop mode dialogs should be narrower and taller
-static const guint LIST_OF_RELATIONS_DIALOG_WIDTH  = 475;
-static const guint LIST_OF_RELATIONS_DIALOG_HEIGHT = 350;
-static const guint LIST_OF_MEMBERS_DIALOG_WIDTH   = 450;
-static const guint LIST_OF_MEMBERS_DIALOG_HEIGHT  = 350;
-#endif
-
-
 /* --------------- relation dialog for an item (node or way) ----------- */
 
 typedef struct {
@@ -92,11 +74,12 @@ static gboolean relation_add_item(GtkWidget *parent,
   }
 
   /* ------------------ role dialog ---------------- */
-  GtkWidget *dialog = gtk_dialog_new_with_buttons(_("Select role"),
-	  GTK_WINDOW(parent), GTK_DIALOG_MODAL,
-	  GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, 
-          GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-	  NULL);
+  GtkWidget *dialog = 
+    misc_dialog_new(MISC_DIALOG_NOSIZE,_("Select role"),
+		    GTK_WINDOW(parent),
+		    GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, 
+		    GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+		    NULL);
 
   gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_ACCEPT);
 
@@ -495,18 +478,16 @@ void relation_add_dialog(appdata_t *appdata, object_t *object) {
     break;
   }
   
-  context->dialog = gtk_dialog_new_with_buttons(str,
-	GTK_WINDOW(appdata->window), GTK_DIALOG_MODAL,
-	GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE, 
-	NULL);
+  context->dialog = 
+    misc_dialog_new(MISC_DIALOG_LARGE, str,
+		    GTK_WINDOW(appdata->window),
+		    GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE, 
+		    NULL);
   g_free(str);
   
   gtk_dialog_set_default_response(GTK_DIALOG(context->dialog), 
 				  GTK_RESPONSE_CLOSE);
 
-  gtk_window_set_default_size(GTK_WINDOW(context->dialog),
-                              LIST_OF_RELATIONS_DIALOG_WIDTH,
-                              LIST_OF_RELATIONS_DIALOG_HEIGHT);
   gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context->dialog)->vbox),
   		     relation_item_list_widget(context), TRUE, TRUE, 0);
 
@@ -727,18 +708,14 @@ void relation_show_members(GtkWidget *parent, relation_t *relation) {
     str = g_strdup_printf(_("Members of relation \"%s\""), str);
 
   mcontext->dialog = 
-    gtk_dialog_new_with_buttons(str,
-	GTK_WINDOW(parent), GTK_DIALOG_MODAL,
-	GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE, 
-	NULL);
+    misc_dialog_new(MISC_DIALOG_MEDIUM, str,
+		    GTK_WINDOW(parent),
+		    GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE, 
+		    NULL);
   g_free(str);
   
   gtk_dialog_set_default_response(GTK_DIALOG(mcontext->dialog), 
 				  GTK_RESPONSE_CLOSE);
-
-  gtk_window_set_default_size(GTK_WINDOW(mcontext->dialog),
-                              LIST_OF_MEMBERS_DIALOG_WIDTH,
-                              LIST_OF_MEMBERS_DIALOG_HEIGHT);
 
   gtk_box_pack_start(GTK_BOX(GTK_DIALOG(mcontext->dialog)->vbox),
       		     member_list_widget(mcontext), TRUE, TRUE, 0);
@@ -932,18 +909,14 @@ void relation_list(appdata_t *appdata) {
   printf("relation list\n");
   
   context->dialog = 
-    gtk_dialog_new_with_buttons(_("All relations"),
-	GTK_WINDOW(appdata->window), GTK_DIALOG_MODAL,
-	GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE, 
-	NULL);
+    misc_dialog_new(MISC_DIALOG_LARGE, _("All relations"),
+		    GTK_WINDOW(appdata->window),
+		    GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE, 
+		    NULL);
   
   gtk_dialog_set_default_response(GTK_DIALOG(context->dialog), 
 				  GTK_RESPONSE_CLOSE);
 
-  gtk_window_set_default_size(GTK_WINDOW(context->dialog),
-                              LIST_OF_RELATIONS_DIALOG_WIDTH,
-                              LIST_OF_RELATIONS_DIALOG_HEIGHT);
-  
   context->show_btn = gtk_dialog_add_button(GTK_DIALOG(context->dialog), 
 					    _("Select"), GTK_RESPONSE_HELP);
 

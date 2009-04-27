@@ -51,4 +51,14 @@ gboolean yes_no_f(GtkWidget *parent,
 char *find_file(char *name);
 file_chain_t *file_scan(char *pattern);
 
+/* dialog size are specified rather fuzzy */
+#define MISC_DIALOG_NOSIZE  -1
+#define MISC_DIALOG_SMALL    0
+#define MISC_DIALOG_MEDIUM   1
+#define MISC_DIALOG_LARGE    2
+#define MISC_DIALOG_WIDE     3
+#define MISC_DIALOG_HIGH     4
+
+GtkWidget *misc_dialog_new(guint hint, const char *title, GtkWindow *parent, ...);
+
 #endif // MISC_H

@@ -310,11 +310,12 @@ void style_select(GtkWidget *parent, appdata_t *appdata) {
   g_assert(chain);
 
   /* ------------------ style dialog ---------------- */
-  GtkWidget *dialog = gtk_dialog_new_with_buttons(_("Select style"),
-	  GTK_WINDOW(parent), GTK_DIALOG_MODAL,
-	  GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, 
-          GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-	  NULL);
+  GtkWidget *dialog = 
+    misc_dialog_new(MISC_DIALOG_NOSIZE,_("Select style"),
+		    GTK_WINDOW(parent),
+		    GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, 
+		    GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+		    NULL);
 
   gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_ACCEPT);
 

@@ -38,10 +38,10 @@ LDFLAGS = @LIBS@
 
 all: $(APP)
 
-%.o: %.c
+%.o: %.c Makefile
 	gcc $(CFLAGS) -o $@ -c $<
 
-$(APP): $(OBJS)
+$(APP): $(OBJS) Makefile
 	gcc $(LDFLAGS) -o $@ $(OBJS)
 
 clean:

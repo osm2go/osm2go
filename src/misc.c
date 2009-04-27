@@ -209,3 +209,50 @@ file_chain_t *file_scan(char *pattern) {
 
   return chain;
 }
+
+
+#ifdef USE_HILDON
+static const gint dialog_sizes[][2] = {
+  { 400, 100 },  // SMALL
+  { 450, 300 },  // MEDIUM
+  { 800, 480 },  // LARGE
+  { 640, 100 },  // WIDE
+  {   0,   0 },  // HIGH
+};
+#else
+static const gint dialog_sizes[][2] = {
+  { 300, 100 },  // SMALL
+  { 400, 300 },  // MEDIUM
+  { 500, 350 },  // LARGE
+  { 450, 100 },  // WIDE
+  {   0,   0 },  // HIGH
+};
+#endif
+
+/* create a modal dialog using one of the predefined size hints */
+GtkWidget *misc_dialog_new(guint hint, const char *title, 
+			   GtkWindow *parent, ...) {
+  va_list args;
+  va_start( args, parent );
+
+  /* create dialog itself */
+  GtkWidget *dialog = gtk_dialog_new();
+  
+  gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);
+  if(title) gtk_window_set_title(GTK_WINDOW(dialog), title);
+  if(parent) gtk_window_set_transient_for(GTK_WINDOW(dialog), parent);
+
+  const gchar *button_text = va_arg(args, const gchar *);
+  while(button_text) {
+    gtk_dialog_add_button(GTK_DIALOG(dialog), button_text, va_arg(args, gint));
+    button_text = va_arg(args, const gchar *);
+  }
+  
+  va_end( args );
+
+  if(hint != MISC_DIALOG_NOSIZE)
+    gtk_window_set_default_size(GTK_WINDOW(dialog), 
+			dialog_sizes[hint][0], dialog_sizes[hint][1]);
+
+  return dialog;
+}
