@@ -77,9 +77,12 @@ typedef struct {
   item_id_t changeset;
   char *comment;
 #endif
+
+  proxy_t *proxy;
 } osm_upload_context_t;
 
-gboolean osm_download(GtkWidget *parent, project_t *project) {
+gboolean osm_download(GtkWidget *parent, settings_t *settings,
+		      project_t *project) {
   printf("download osm ...\n");
 
 #ifdef API06
@@ -117,7 +120,8 @@ gboolean osm_download(GtkWidget *parent, project_t *project) {
   char *url = g_strdup_printf("%s/map?bbox=%s,%s,%s,%s",
 		project->server, minlon, minlat, maxlon, maxlat);
 
-  gboolean result = net_io_download_file(parent, url, project->osm);
+  gboolean result = net_io_download_file(parent, settings, 
+					 url, project->osm);
 
   g_free(url);
   return result;
@@ -190,7 +194,8 @@ static void appendf(struct log_s *log, char *colname,
 #define MAX_TRY 5
 
 static gboolean osm_update_item(struct log_s *log, char *xml_str, 
-				char *url, char *user, item_id_t *id) {
+				char *url, char *user, item_id_t *id,
+				proxy_t *proxy) {
   int retry = MAX_TRY;
   char buffer[CURL_ERROR_SIZE];
 
@@ -253,6 +258,8 @@ static gboolean osm_update_item(struct log_s *log, char *xml_str,
     /* set user name and password for the authentication */
     curl_easy_setopt(curl, CURLOPT_USERPWD, user);
     
+    net_io_set_proxy(curl, proxy);
+
     /* Now run off and do what you've been told! */
     res = curl_easy_perform(curl);
     
@@ -304,7 +311,7 @@ static gboolean osm_update_item(struct log_s *log, char *xml_str,
 }
 
 static gboolean osm_delete_item(struct log_s *log, char *xml_str, 
-				char *url, char *user) {
+				char *url, char *user, proxy_t *proxy) {
   int retry = MAX_TRY;
   char buffer[CURL_ERROR_SIZE];
 
@@ -373,6 +380,8 @@ static gboolean osm_delete_item(struct log_s *log, char *xml_str,
     /* set user name and password for the authentication */
     curl_easy_setopt(curl, CURLOPT_USERPWD, user);
     
+    net_io_set_proxy(curl, proxy);
+
     /* Now run off and do what you've been told! */
     res = curl_easy_perform(curl);
     
@@ -466,9 +475,9 @@ static void osm_delete_nodes(osm_upload_context_t *context) {
       char *xml_str =
 	osm_generate_xml_node(context->osm, context->changeset, node);
 
-      if(osm_delete_item(&context->log, xml_str, url, cred)) {
+      if(osm_delete_item(&context->log, xml_str, url, cred, context->proxy)) {
 #else
-      if(osm_delete_item(&context->log, NULL, url, cred)) {
+      if(osm_delete_item(&context->log, NULL, url, cred, context->proxy)) {
 #endif
 
 	node->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
@@ -516,7 +525,8 @@ static void osm_upload_nodes(osm_upload_context_t *context) {
 				     context->appdata->settings->username, 
 				     context->appdata->settings->password);
 	if(osm_update_item(&context->log, xml_str, url, cred, 
-		   (node->flags & OSM_FLAG_NEW)?&(node->id):&(node->version))) {
+		   (node->flags & OSM_FLAG_NEW)?&(node->id):&(node->version),
+			   context->proxy)) {
 	  node->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_NEW);
 	  project->data_dirty = TRUE;
 	}
@@ -551,9 +561,9 @@ static void osm_delete_ways(osm_upload_context_t *context) {
       char *xml_str =
 	osm_generate_xml_way(context->osm, context->changeset, way);
 
-      if(osm_delete_item(&context->log, xml_str, url, cred)) {
+      if(osm_delete_item(&context->log, xml_str, url, cred, context->proxy)) {
 #else
-      if(osm_delete_item(&context->log, NULL, url, cred)) {
+      if(osm_delete_item(&context->log, NULL, url, cred, context->proxy)) {
 #endif
 	way->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
 	project->data_dirty = TRUE;
@@ -601,7 +611,8 @@ static void osm_upload_ways(osm_upload_context_t *context) {
 				     context->appdata->settings->username, 
 				     context->appdata->settings->password);
 	if(osm_update_item(&context->log, xml_str, url, cred, 
-		   (way->flags & OSM_FLAG_NEW)?&(way->id):&(way->version))) {
+		   (way->flags & OSM_FLAG_NEW)?&(way->id):&(way->version),
+			   context->proxy)) {
 	  way->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_NEW);
 	  project->data_dirty = TRUE;
 	}
@@ -636,9 +647,9 @@ static void osm_delete_relations(osm_upload_context_t *context) {
       char *xml_str =
 	osm_generate_xml_relation(context->osm, context->changeset, relation);
 
-      if(osm_delete_item(&context->log, xml_str, url, cred)) {
+      if(osm_delete_item(&context->log, xml_str, url, cred, context->proxy)) {
 #else
-      if(osm_delete_item(&context->log, NULL, url, cred)) {
+      if(osm_delete_item(&context->log, NULL, url, cred, context->proxy)) {
 #endif
 	relation->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
 	project->data_dirty = TRUE;
@@ -687,7 +698,8 @@ static void osm_upload_relations(osm_upload_context_t *context) {
 				     context->appdata->settings->username, 
 				     context->appdata->settings->password);
 	if(osm_update_item(&context->log, xml_str, url, cred, 
-	   (relation->flags & OSM_FLAG_NEW)?&(relation->id):&(relation->version))) {
+	   (relation->flags & OSM_FLAG_NEW)?&(relation->id):&(relation->version),
+			   context->proxy)) {
 	  relation->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_NEW);
 	  project->data_dirty = TRUE;
 	}
@@ -721,7 +733,7 @@ static gboolean osm_create_changeset(osm_upload_context_t *context) {
 				 context->appdata->settings->password);
 
     if(osm_update_item(&context->log, xml_str, url, cred, 
-		       &context->changeset)) {
+		       &context->changeset, context->proxy)) {
       printf("got changeset id " ITEM_ID_FORMAT "\n", context->changeset);
       result = TRUE;
     }
@@ -750,7 +762,7 @@ static gboolean osm_close_changeset(osm_upload_context_t *context) {
 			       context->appdata->settings->username, 
 			       context->appdata->settings->password);
   
-  if(osm_update_item(&context->log, NULL, url, cred, NULL)) 
+  if(osm_update_item(&context->log, NULL, url, cred, NULL, context->proxy)) 
     result = TRUE;
   
   g_free(cred);
@@ -1005,6 +1017,10 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   /* create a new changeset */
   if(osm_create_changeset(context)) {
 #endif
+    
+  /* add proxy settings if required */
+  if(appdata->settings)
+    context->proxy = appdata->settings->proxy;
 
   /* check for dirty entries */
   appendf(&context->log, NULL, _("Uploading nodes:\n"));
@@ -1033,7 +1049,7 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
     appendf(&context->log, NULL, _("Server data has been modified.\n"));
     appendf(&context->log, NULL, _("Downloading updated osm data ...\n"));
 
-    if(osm_download(context->dialog, project)) {
+    if(osm_download(context->dialog, appdata->settings, project)) {
       appendf(&context->log, NULL, _("Download successful!\n"));
       appendf(&context->log, NULL, _("The map will be reloaded.\n"));
       project->data_dirty = FALSE;

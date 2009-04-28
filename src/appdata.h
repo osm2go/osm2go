@@ -153,13 +153,13 @@ typedef struct appdata_s {
 
 } appdata_t;
 
+#include "settings.h"
 #include "map.h"
 #include "map_hl.h"
 #include "osm_api.h"
 #include "statusbar.h"
 #include "area_edit.h"
 #include "project.h"
-#include "settings.h"
 #include "diff.h"
 #include "iconbar.h"
 #include "icon.h"

@@ -69,6 +69,9 @@ typedef struct {
     curl_mem_t mem;   /* used for NET_IO_DL_MEM */
   };
 
+  /* system proxy settings if present */
+  proxy_t *proxy;
+
 } net_io_request_t;
 
 static char *http_message(int id) {
@@ -163,6 +166,29 @@ static size_t mem_write(void *ptr, size_t size, size_t nmemb,
   return nmemb;
 }
 
+void net_io_set_proxy(CURL *curl, proxy_t *proxy) {
+  if(proxy) {
+    if(proxy->ignore_hosts) 
+      printf("WARNING: Pproxy \"ignore_hosts\" unsupported!\n");
+
+    printf("net_io: using proxy %s:%d\n", proxy->host, proxy->port);
+
+    curl_easy_setopt(curl, CURLOPT_PROXY, proxy->host);
+    curl_easy_setopt(curl, CURLOPT_PROXYPORT, proxy->port);
+
+    if(proxy->use_authentication) {
+      printf("net_io:   use auth for user %s\n", proxy->authentication_user);
+      
+      char *cred = g_strdup_printf("%s:%s", 
+				   proxy->authentication_user,
+				   proxy->authentication_password);
+
+      curl_easy_setopt(curl, CURLOPT_PROXYUSERPWD, cred);
+      g_free(cred);
+    }
+  }
+}
+
 static void *worker_thread(void *ptr) {
   net_io_request_t *request = (net_io_request_t*)ptr;
   
@@ -209,6 +235,8 @@ static void *worker_thread(void *ptr) {
 	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "DELETE"); 
 	break;
       }
+
+      net_io_set_proxy(curl, request->proxy);
 
       /* set user name and password for the authentication */
       if(request->user)
@@ -310,13 +338,16 @@ static gboolean net_io_do(GtkWidget *parent, net_io_request_t *request) {
   return TRUE;
 }
 
-gboolean net_io_download_file(GtkWidget *parent, char *url, char *filename) {
+gboolean net_io_download_file(GtkWidget *parent, settings_t *settings, 
+			      char *url, char *filename) {
   net_io_request_t *request = g_new0(net_io_request_t, 1);
 
   printf("net_io: download %s to file %s\n", url, filename);
   request->type = NET_IO_DL_FILE;
   request->url = g_strdup(url);
   request->filename = g_strdup(filename);
+  if(settings && settings->proxy)
+    request->proxy = settings->proxy;
 
   gboolean result = net_io_do(parent, request);
   if(!result) {
@@ -337,12 +368,15 @@ gboolean net_io_download_file(GtkWidget *parent, char *url, char *filename) {
 }
 
 
-gboolean net_io_download_mem(GtkWidget *parent, char *url, char **mem) {
+gboolean net_io_download_mem(GtkWidget *parent, settings_t *settings, 
+			     char *url, char **mem) {
   net_io_request_t *request = g_new0(net_io_request_t, 1);
 
   printf("net_io: download %s to memory\n", url);
   request->type = NET_IO_DL_MEM;
   request->url = g_strdup(url);
+  if(settings && settings->proxy)
+    request->proxy = settings->proxy;
 
   gboolean result = net_io_do(parent, request);
   if(result) {

@@ -20,7 +20,12 @@
 #ifndef NET_IO_H
 #define NET_IO_H
 
-gboolean net_io_download_file(GtkWidget *parent, char *url, char *filename);
-gboolean net_io_download_mem(GtkWidget *parent, char *url, char **mem);
+gboolean net_io_download_file(GtkWidget *parent, settings_t *settings, 
+			      char *url, char *filename);
+gboolean net_io_download_mem(GtkWidget *parent, settings_t *settings, 
+			     char *url, char **mem);
+
+#include <curl/curl.h>
+void net_io_set_proxy(CURL *curl, proxy_t *proxy);
 
 #endif // NET_IO_H

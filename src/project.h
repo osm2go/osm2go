@@ -54,7 +54,8 @@ gboolean project_close(appdata_t *appdata);
 #define POS_PARM
 #endif
 
-gboolean project_edit(GtkWidget *parent, project_t *project POS_PARM);
+gboolean project_edit(GtkWidget *parent, settings_t *settings,
+		      project_t *project POS_PARM);
 
 void project_free(project_t *project);
 

@@ -30,8 +30,8 @@
 #endif
 
 typedef struct {
-  //  appdata_t *appdata;
   project_t *project;
+  settings_t *settings;
   GtkWidget *dialog, *fsize, *diff_stat, *diff_remove;
   GtkWidget *desc, *server;
   GtkWidget *minlat, *minlon, *maxlat, *maxlon;
@@ -537,10 +537,10 @@ project_t *project_new(select_context_t *context) {
   project_save(context->dialog, project);
 
 #ifdef USE_HILDON
-  if(!project_edit(context->dialog, project, context->mmpos, 
-		   context->osso_context))
+  if(!project_edit(context->dialog, context->settings, 
+		   project, context->mmpos, context->osso_context))
 #else
-  if(!project_edit(context->dialog, project))
+  if(!project_edit(context->dialog,  context->settings, project))
 #endif
   {
     printf("edit cancelled!!\n");
@@ -614,10 +614,10 @@ static void on_project_edit(GtkButton *button, gpointer data) {
   project_t *project = project_get_selected(context->list);
   g_assert(project);
 #ifdef USE_HILDON
-  if(project_edit(context->dialog, project, 
+  if(project_edit(context->dialog, context->settings, project, 
 		  context->mmpos, context->osso_context))
 #else
-  if(project_edit(context->dialog, project))
+  if(project_edit(context->dialog, context->settings, project))
 #endif
   {
     GtkTreeModel     *model;
@@ -835,7 +835,7 @@ static void on_download_clicked(GtkButton *button, gpointer data) {
 
   printf("download %s\n", context->project->osm);
 
-  if(osm_download(context->dialog, context->project)) {
+  if(osm_download(context->dialog, context->settings, context->project)) {
     context->project->data_dirty = FALSE;
     project_filesize(context);
   } else
@@ -867,13 +867,15 @@ static void on_diff_remove_clicked(GtkButton *button, gpointer data) {
   gtk_widget_destroy(dialog);
 }
 
-gboolean project_edit(GtkWidget *parent, project_t *project POS_PARM) {
+gboolean project_edit(GtkWidget *parent, settings_t *settings, 
+		      project_t *project POS_PARM) {
   gboolean ok = FALSE;
 
   /* ------------ project edit dialog ------------- */
   
   project_context_t *context = g_new0(project_context_t, 1);
   context->project = project;
+  context->settings = settings;
   
   context->area_edit.min = &project->min;
   context->area_edit.max = &project->max;

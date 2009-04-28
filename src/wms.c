@@ -1111,7 +1111,8 @@ void wms_import(appdata_t *appdata) {
 			      wms->server, wms->path, append_char);
 
   char *cap = NULL;
-  net_io_download_mem(GTK_WIDGET(appdata->window), url, &cap);
+  net_io_download_mem(GTK_WIDGET(appdata->window), appdata->settings, 
+		      url, &cap);
   g_free(url);
 
   /* ----------- parse capabilities -------------- */
@@ -1255,7 +1256,8 @@ void wms_import(appdata_t *appdata) {
   /* remove any existing image before */
   wms_remove(appdata);
 
-  if(!net_io_download_file(GTK_WIDGET(appdata->window), url, filename)) {
+  if(!net_io_download_file(GTK_WIDGET(appdata->window), appdata->settings, 
+			   url, filename)) {
     g_free(filename);
     g_free(url);
     wms_free(wms);
