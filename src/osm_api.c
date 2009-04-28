@@ -782,6 +782,23 @@ static void callback_buffer_modified(GtkTextBuffer *buffer, GtkDialog *dialog) {
   gtk_dialog_set_response_sensitive(dialog, GTK_RESPONSE_ACCEPT, 
 				    text && strlen(text));
 }
+
+static gboolean cb_focus_in(GtkTextView *view, GdkEventFocus *event,
+			     GtkTextBuffer *buffer) {
+
+  gboolean first_click = g_object_get_data(G_OBJECT(view), "first_click");
+  g_object_set_data(G_OBJECT(view), "first_click", FALSE);
+
+  if(first_click) {
+    GtkTextIter start, end;
+    gtk_text_buffer_get_start_iter(buffer, &start);
+    gtk_text_buffer_get_end_iter(buffer, &end);
+    gtk_text_buffer_delete(buffer, &start, &end);
+  }
+
+  return FALSE;
+}
+
 #endif
 
 void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
@@ -911,6 +928,11 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   gtk_text_view_set_left_margin(GTK_TEXT_VIEW(view), 2 );
   gtk_text_view_set_right_margin(GTK_TEXT_VIEW(view), 2 );
 
+  g_object_set_data(G_OBJECT(view), "first_click", TRUE);
+  g_signal_connect(G_OBJECT(view), "focus-in-event",
+		   G_CALLBACK(cb_focus_in), buffer);
+ 
+
   gtk_container_add(GTK_CONTAINER(scrolled_win), view);
 
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), 
@@ -943,6 +965,10 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   context->appdata = appdata;
   context->osm = osm;
   context->project = project;
+
+  /* add proxy settings if required */
+  if(appdata->settings)
+    context->proxy = appdata->settings->proxy;
 
 #ifdef API06
   /* fetch comment from dialog */
@@ -1018,10 +1044,6 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   if(osm_create_changeset(context)) {
 #endif
     
-  /* add proxy settings if required */
-  if(appdata->settings)
-    context->proxy = appdata->settings->proxy;
-
   /* check for dirty entries */
   appendf(&context->log, NULL, _("Uploading nodes:\n"));
   osm_upload_nodes(context);
