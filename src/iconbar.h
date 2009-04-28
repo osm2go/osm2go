@@ -20,8 +20,16 @@
 #ifndef ICONBAR_H
 #define ICONBAR_H
 
+#if defined(USE_HILDON) && (MAEMO_VERSION_MAJOR == 5)
+#define FINGER_UI
+#endif
+
 typedef struct iconbar_s {
   GtkWidget *toolbar;
+
+#ifdef FINGER_UI
+  GtkWidget *menu;
+#endif
 
   GtkWidget *info;
   GtkWidget *trash;

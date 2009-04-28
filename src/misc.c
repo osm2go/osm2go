@@ -215,7 +215,11 @@ file_chain_t *file_scan(char *pattern) {
 static const gint dialog_sizes[][2] = {
   { 400, 100 },  // SMALL
   { 450, 300 },  // MEDIUM
+#if MAEMO_VERSION_MAJOR < 5
   { 800, 480 },  // LARGE
+#else
+  { 800, 380 },  // LARGE
+#endif
   { 640, 100 },  // WIDE
   {   0,   0 },  // HIGH
 };

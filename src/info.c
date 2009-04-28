@@ -395,7 +395,7 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
     break;
   }
 
-  context->dialog = misc_dialog_new(MISC_DIALOG_MEDIUM, str,
+  context->dialog = misc_dialog_new(MISC_DIALOG_LARGE, str,
 	  GTK_WINDOW(parent), 
 	  GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL, 
 	  GTK_STOCK_OK, GTK_RESPONSE_ACCEPT, 

@@ -19,6 +19,14 @@
 
 #include "appdata.h"
 
+#ifdef FINGER_UI
+#define TOOL_ICON(a)  a "_thumb"
+#define MENU_ICON(a)  a "_thumb"
+#else
+#define TOOL_ICON(a)  a
+#define MENU_ICON(a)  a
+#endif
+
 static void on_info_clicked(GtkButton *button, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
 
@@ -44,6 +52,63 @@ static void on_way_reverse_clicked(GtkButton *button, gpointer data) {
 static void on_way_cut_clicked(GtkButton *button, gpointer data) {
   map_action_set((appdata_t*)data, MAP_ACTION_WAY_CUT);
 }
+
+#ifdef FINGER_UI
+static GtkWidget *menu_add(GtkWidget *menu, appdata_t *appdata, 
+			   char *icon_str, char *menu_str,
+			   void(*func)(GtkButton*, gpointer)) {
+
+  GtkWidget *item = gtk_image_menu_item_new_with_label(menu_str);
+
+  gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item), 
+		icon_widget_load(&appdata->icon, icon_str));
+
+  if(func)
+    gtk_signal_connect(GTK_OBJECT(item), "activate",
+		       (GtkSignalFunc)func, appdata);
+
+  gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);      
+
+  return item;
+}
+
+static gint on_way_button_press(GtkWidget *button, GdkEventButton *event, 
+				gpointer data) {
+  appdata_t *appdata = (appdata_t*)data;
+
+  if(event->type == GDK_BUTTON_PRESS) {
+    //  map_action_set((appdata_t*)data, MAP_ACTION_WAY_ADD);
+    printf("way clicked\n");
+
+    /* draw a popup menu */
+    gtk_menu_popup(GTK_MENU(appdata->iconbar->menu), NULL, NULL, NULL, NULL,
+		   event->button, event->time);
+    return TRUE;
+  }
+  return FALSE;
+}
+
+static GtkWidget *popup_menu_create(appdata_t *appdata) {
+  GtkWidget *menu = gtk_menu_new();
+
+  appdata->iconbar->way_add = 
+    menu_add(menu, appdata, MENU_ICON("way_add"), 
+	     _("Add new way"), on_way_add_clicked);
+  appdata->iconbar->way_node_add = 
+    menu_add(menu, appdata, MENU_ICON("way_node_add"), 
+	     _("Add new node to way"), on_way_node_add_clicked);
+  appdata->iconbar->way_cut = 
+    menu_add(menu, appdata, MENU_ICON("way_cut"), 
+	     _("Split way"), on_way_cut_clicked);
+  appdata->iconbar->way_reverse = 
+    menu_add(menu, appdata, MENU_ICON("way_reverse"), 
+	     _("Reverse way"), on_way_reverse_clicked);
+  
+  gtk_widget_show_all(menu);
+
+  return menu;
+}
+#endif
 
 static void on_relation_add_clicked(GtkButton *button, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
@@ -178,12 +243,6 @@ static GtkWidget *tool_add(GtkWidget *toolbar, appdata_t *appdata,
 
   gtk_toolbar_insert(GTK_TOOLBAR(toolbar), GTK_TOOL_ITEM(item), -1);
 
-#ifdef USE_HILDON
-#if MAEMO_VERSION_MAJOR == 5
-  gtk_widget_set_size_request(GTK_WIDGET(item), -1, 40);
-#endif
-#endif
-
   return item;
 }
 
@@ -205,40 +264,74 @@ GtkWidget *iconbar_new(appdata_t *appdata) {
 
   /* -------------------------------------------------------- */
   iconbar->trash = tool_add(iconbar->toolbar, appdata,
-		    "trash", _("Delete item"), on_trash_clicked);
+      TOOL_ICON("trash"), _("Delete item"), on_trash_clicked);
 
+#ifndef FINGER_UI
   /* -------------------------------------------------------- */
   gtk_toolbar_insert(GTK_TOOLBAR(iconbar->toolbar), 
 		     gtk_separator_tool_item_new(),-1);
+#endif
+
   iconbar->info = tool_add(iconbar->toolbar, appdata, 
-                     "info", _("Properties"), on_info_clicked);
+      TOOL_ICON("info"), _("Properties"), on_info_clicked);
 
+#ifndef FINGER_UI
   /* -------------------------------------------------------- */
   gtk_toolbar_insert(GTK_TOOLBAR(iconbar->toolbar), 
 		     gtk_separator_tool_item_new(),-1);
+#endif
 
-  iconbar->node_add = tool_add(iconbar->toolbar, appdata, "node_add", 
-		       _("Add node"), on_node_add_clicked);
+  iconbar->node_add = tool_add(iconbar->toolbar, appdata, 
+       TOOL_ICON("node_add"), _("Add node"), on_node_add_clicked);
 
+#ifndef FINGER_UI
   /* -------------------------------------------------------- */
   gtk_toolbar_insert(GTK_TOOLBAR(iconbar->toolbar), 
 		     gtk_separator_tool_item_new(),-1);
+#endif
 
-  iconbar->way_add = tool_add(iconbar->toolbar, appdata, "way_add", 
-			      _("Add way"), on_way_add_clicked);
+#ifdef FINGER_UI
+  iconbar->menu = popup_menu_create(appdata);
+
+  /* the way button is special as it pops up a menu for */
+  /* further too selection */
+  GtkWidget *way = 
+    GTK_WIDGET(gtk_tool_button_new(
+	   icon_widget_load(&appdata->icon, TOOL_ICON("way")), NULL));
+
+  gtk_widget_set_tooltip_text(way, "Way");
+
+  gtk_toolbar_insert(GTK_TOOLBAR(iconbar->toolbar), GTK_TOOL_ITEM(way), -1);
+
+  gtk_widget_set_size_request(GTK_WIDGET(way), -1, 40);
+
+  gtk_widget_set_events(way, GDK_EXPOSURE_MASK);
+  gtk_widget_add_events(way, GDK_BUTTON_PRESS_MASK);
+  gtk_signal_connect(GTK_OBJECT(gtk_bin_get_child(GTK_BIN(way))), 
+		     "button-press-event",
+		     (GtkSignalFunc)on_way_button_press, appdata);
+
+#else
+  iconbar->way_add = tool_add(iconbar->toolbar, appdata, 
+        TOOL_ICON("way_add"), _("Add way"), on_way_add_clicked);
   iconbar->way_node_add = tool_add(iconbar->toolbar, appdata, 
-	"way_node_add", _("Add a node to a way"), on_way_node_add_clicked);
+	TOOL_ICON("way_node_add"), _("Add a node to a way"), 
+				   on_way_node_add_clicked);
   iconbar->way_cut = tool_add(iconbar->toolbar, appdata, 
-        "way_cut", _("Split a way"), on_way_cut_clicked);
+        TOOL_ICON("way_cut"), _("Split a way"), on_way_cut_clicked);
   iconbar->way_reverse = tool_add(iconbar->toolbar, appdata, 
-        "way_reverse", _("Reverse way"), on_way_reverse_clicked);
+        TOOL_ICON("way_reverse"), _("Reverse way"), on_way_reverse_clicked);
+#endif
 
+#ifndef FINGER_UI
   /* -------------------------------------------------------- */
   gtk_toolbar_insert(GTK_TOOLBAR(iconbar->toolbar), 
 		     gtk_separator_tool_item_new(),-1);
+#endif
 
   iconbar->relation_add = tool_add(iconbar->toolbar, appdata, 
-      "relation_add", _("Edit item's relations"), on_relation_add_clicked);
+      TOOL_ICON("relation_add"), _("Edit item's relations"), 
+      on_relation_add_clicked);
 
   gtk_box_pack_start(GTK_BOX(box), iconbar->toolbar, TRUE, TRUE, 0);
 
@@ -246,12 +339,13 @@ GtkWidget *iconbar_new(appdata_t *appdata) {
 
   GtkWidget *hbox = gtk_hbox_new(FALSE, 0);
 
-#ifdef USE_HILDON
+#if defined(USE_HILDON) && !defined(FINGER_UI)
+  /* make buttons smaller for non-finger maemo */
   gtk_widget_set_size_request(GTK_WIDGET(hbox), -1, 32);
 #endif
 
-  iconbar->ok = icon_add(hbox, appdata, "ok", on_ok_clicked);
-  iconbar->cancel = icon_add(hbox, appdata, "cancel", on_cancel_clicked);
+  iconbar->ok = icon_add(hbox, appdata, TOOL_ICON("ok"), on_ok_clicked);
+  iconbar->cancel = icon_add(hbox, appdata, TOOL_ICON("cancel"), on_cancel_clicked);
   gtk_box_pack_end(GTK_BOX(box), hbox, FALSE, FALSE, 0);
   
   /* --------------------------------------------------------- */  
