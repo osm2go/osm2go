@@ -73,10 +73,8 @@ typedef struct {
     GtkWidget *view;
   } log;
 
-#ifdef API06
   item_id_t changeset;
   char *comment;
-#endif
 
   proxy_t *proxy;
 } osm_upload_context_t;
@@ -85,9 +83,7 @@ gboolean osm_download(GtkWidget *parent, settings_t *settings,
 		      project_t *project) {
   printf("download osm ...\n");
 
-#ifdef API06
   g_assert(project->server);
-
 
   /* check if server name contains string "0.5" and adjust it */
   if(strstr(project->server, "0.5") != NULL) {
@@ -100,7 +96,6 @@ gboolean osm_download(GtkWidget *parent, settings_t *settings,
     project->dirty = TRUE; // project needs to be changed 
   } else
     printf("url ok\n");
-#endif
 
   char minlon[G_ASCII_DTOSTR_BUF_SIZE], minlat[G_ASCII_DTOSTR_BUF_SIZE];
   char maxlon[G_ASCII_DTOSTR_BUF_SIZE], maxlat[G_ASCII_DTOSTR_BUF_SIZE];
@@ -288,14 +283,12 @@ static gboolean osm_update_item(struct log_s *log, char *xml_str,
       else    appendf(log, COLOR_OK, _("ok: #%ld\n"), *id);
     }
     
-#ifdef API06
     /* if it's neither "ok" (200), nor "internal server error" (500) */
     /* then write the message to the log */
     if((response != 200) && (response != 500) && write_data.ptr) {
       appendf(log, NULL, _("Server reply: "));
       appendf(log, COLOR_ERR, _("%s\n"), write_data.ptr);
     }
-#endif
 
     if(write_data.ptr)
       g_free(write_data.ptr);
@@ -318,11 +311,9 @@ static gboolean osm_delete_item(struct log_s *log, char *xml_str,
   CURL *curl;
   CURLcode res;
 
-#ifdef API06
   /* delete has a payload since api 0.6 */
   curl_data_t read_data;
   curl_data_t write_data;
-#endif
 
   while(retry >= 0) {
 
@@ -336,7 +327,6 @@ static gboolean osm_delete_item(struct log_s *log, char *xml_str,
       return FALSE;
     }
 
-#ifdef API06
     read_data.ptr = xml_str;
     read_data.len = xml_str?strlen(xml_str):0;
     write_data.ptr = NULL;
@@ -356,7 +346,6 @@ static gboolean osm_delete_item(struct log_s *log, char *xml_str,
 
     /* enable uploading */
     curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
-#endif
 
     /* no read/write functions required */
     curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "DELETE"); 
@@ -402,7 +391,6 @@ static gboolean osm_delete_item(struct log_s *log, char *xml_str,
     else
       appendf(log, COLOR_OK, _("ok\n"));
     
-#ifdef API06
     /* if it's neither "ok" (200), nor "internal server error" (500) */
     /* then write the message to the log */
     if((response != 200) && (response != 500) && write_data.ptr) {
@@ -412,7 +400,6 @@ static gboolean osm_delete_item(struct log_s *log, char *xml_str,
 
     if(write_data.ptr)
       g_free(write_data.ptr);
-#endif
 
     /* don't retry unless we had an "internal server error" */
     if(response != 500) 
@@ -471,15 +458,10 @@ static void osm_delete_nodes(osm_upload_context_t *context) {
 				   context->appdata->settings->username, 
 				   context->appdata->settings->password);
 
-#ifdef API06
       char *xml_str =
 	osm_generate_xml_node(context->osm, context->changeset, node);
 
       if(osm_delete_item(&context->log, xml_str, url, cred, context->proxy)) {
-#else
-      if(osm_delete_item(&context->log, NULL, url, cred, context->proxy)) {
-#endif
-
 	node->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
 	project->data_dirty = TRUE;
       }
@@ -513,11 +495,7 @@ static void osm_upload_nodes(osm_upload_context_t *context) {
 
       /* upload this node */
       char *xml_str = 
-#ifndef API06
-	osm_generate_xml_node(context->osm, ILLEGAL, node);
-#else
 	osm_generate_xml_node(context->osm, context->changeset, node);
-#endif
       if(xml_str) {
 	printf("uploading node %s from address %p\n", url, xml_str);
 
@@ -557,14 +535,10 @@ static void osm_delete_ways(osm_upload_context_t *context) {
 				   context->appdata->settings->username, 
 				   context->appdata->settings->password);
 
-#ifdef API06
       char *xml_str =
 	osm_generate_xml_way(context->osm, context->changeset, way);
 
       if(osm_delete_item(&context->log, xml_str, url, cred, context->proxy)) {
-#else
-      if(osm_delete_item(&context->log, NULL, url, cred, context->proxy)) {
-#endif
 	way->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
 	project->data_dirty = TRUE;
       }
@@ -599,11 +573,7 @@ static void osm_upload_ways(osm_upload_context_t *context) {
       
       /* upload this node */
       char *xml_str = 
-#ifndef API06
-	osm_generate_xml_way(context->osm, ILLEGAL, way);
-#else
 	osm_generate_xml_way(context->osm, context->changeset, way);
-#endif
       if(xml_str) {
 	printf("uploading way %s from address %p\n", url, xml_str);
 	
@@ -643,14 +613,10 @@ static void osm_delete_relations(osm_upload_context_t *context) {
 				   context->appdata->settings->username, 
 				   context->appdata->settings->password);
 
-#ifdef API06
       char *xml_str =
 	osm_generate_xml_relation(context->osm, context->changeset, relation);
 
       if(osm_delete_item(&context->log, xml_str, url, cred, context->proxy)) {
-#else
-      if(osm_delete_item(&context->log, NULL, url, cred, context->proxy)) {
-#endif
 	relation->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
 	project->data_dirty = TRUE;
       }
@@ -686,11 +652,7 @@ static void osm_upload_relations(osm_upload_context_t *context) {
       
       /* upload this relation */
       char *xml_str =
-#ifndef API06
-	osm_generate_xml_relation(context->osm, ILLEGAL, relation);
-#else
 	osm_generate_xml_relation(context->osm, context->changeset, relation);
-#endif
       if(xml_str) {
 	printf("uploading relation %s from address %p\n", url, xml_str);
 	
@@ -711,7 +673,6 @@ static void osm_upload_relations(osm_upload_context_t *context) {
   }
 }
  
-#ifdef API06
 static gboolean osm_create_changeset(osm_upload_context_t *context) {
   gboolean result = FALSE;
   context->changeset = ILLEGAL;
@@ -770,9 +731,7 @@ static gboolean osm_close_changeset(osm_upload_context_t *context) {
 
   return result;
 }
-#endif
 
-#ifdef API06
 /* comment buffer has been edited, allow upload if the buffer is not empty */
 static void callback_buffer_modified(GtkTextBuffer *buffer, GtkDialog *dialog) {
   GtkTextIter start, end;
@@ -786,8 +745,10 @@ static void callback_buffer_modified(GtkTextBuffer *buffer, GtkDialog *dialog) {
 static gboolean cb_focus_in(GtkTextView *view, GdkEventFocus *event,
 			     GtkTextBuffer *buffer) {
 
-  gboolean first_click = g_object_get_data(G_OBJECT(view), "first_click");
-  g_object_set_data(G_OBJECT(view), "first_click", FALSE);
+  gboolean first_click = 
+    GPOINTER_TO_INT(g_object_get_data(G_OBJECT(view), "first_click"));
+
+  g_object_set_data(G_OBJECT(view), "first_click", GINT_TO_POINTER(FALSE));
 
   if(first_click) {
     GtkTextIter start, end;
@@ -798,8 +759,6 @@ static gboolean cb_focus_in(GtkTextView *view, GdkEventFocus *event,
 
   return FALSE;
 }
-
-#endif
 
 void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
 
@@ -905,7 +864,6 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   gtk_table_attach_defaults(GTK_TABLE(table),  pentry, 1, 2, 1, 2);
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), table);
 
-#ifdef API06
   GtkWidget *scrolled_win = gtk_scrolled_window_new(NULL, NULL);
   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_win), 
   				 GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
@@ -928,7 +886,7 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   gtk_text_view_set_left_margin(GTK_TEXT_VIEW(view), 2 );
   gtk_text_view_set_right_margin(GTK_TEXT_VIEW(view), 2 );
 
-  g_object_set_data(G_OBJECT(view), "first_click", TRUE);
+  g_object_set_data(G_OBJECT(view), "first_click", GINT_TO_POINTER(TRUE));
   g_signal_connect(G_OBJECT(view), "focus-in-event",
 		   G_CALLBACK(cb_focus_in), buffer);
  
@@ -937,8 +895,6 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
 
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), 
   			      scrolled_win);
-#endif
-
   gtk_widget_show_all(dialog);
 
   if(GTK_RESPONSE_ACCEPT != gtk_dialog_run(GTK_DIALOG(dialog))) {
@@ -970,14 +926,12 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   if(appdata->settings)
     context->proxy = appdata->settings->proxy;
 
-#ifdef API06
   /* fetch comment from dialog */
   GtkTextIter start, end;
   gtk_text_buffer_get_start_iter(buffer, &start);
   gtk_text_buffer_get_end_iter(buffer, &end);
   char *text = gtk_text_buffer_get_text(buffer, &start, &end, FALSE);
   if(text) context->comment = g_strdup(text);
-#endif
 
   gtk_widget_destroy(dialog);
   project_save(GTK_WIDGET(appdata->window), project);
@@ -1018,10 +972,6 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
     project->dirty = TRUE;  /* project needs to be saved */
   }
 
-#ifndef API06
-  appendf(&context->log, NULL, _("Log generated by %s v%s using API 0.5\n"), 
-	  PACKAGE, VERSION);
-#else
   appendf(&context->log, NULL, _("Log generated by %s v%s using API 0.6\n"), 
 	  PACKAGE, VERSION);
   appendf(&context->log, NULL, _("User comment: %s\n"), context->comment);
@@ -1035,34 +985,28 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
     appendf(&context->log, NULL, _("Adjusting server name to v0.6\n"));
     project->dirty = TRUE; // project needs to be changed 
   }
-#endif
 
   appendf(&context->log, NULL, _("Uploading to %s\n"), project->server);
 
-#ifdef API06
   /* create a new changeset */
   if(osm_create_changeset(context)) {
-#endif
+    /* check for dirty entries */
+    appendf(&context->log, NULL, _("Uploading nodes:\n"));
+    osm_upload_nodes(context);
+    appendf(&context->log, NULL, _("Uploading ways:\n"));
+    osm_upload_ways(context);
+    appendf(&context->log, NULL, _("Uploading relations:\n"));
+    osm_upload_relations(context);
+    appendf(&context->log, NULL, _("Deleting relations:\n"));
+    osm_delete_relations(context);
+    appendf(&context->log, NULL, _("Deleting ways:\n"));
+    osm_delete_ways(context);
+    appendf(&context->log, NULL, _("Deleting nodes:\n"));
+    osm_delete_nodes(context);
     
-  /* check for dirty entries */
-  appendf(&context->log, NULL, _("Uploading nodes:\n"));
-  osm_upload_nodes(context);
-  appendf(&context->log, NULL, _("Uploading ways:\n"));
-  osm_upload_ways(context);
-  appendf(&context->log, NULL, _("Uploading relations:\n"));
-  osm_upload_relations(context);
-  appendf(&context->log, NULL, _("Deleting relations:\n"));
-  osm_delete_relations(context);
-  appendf(&context->log, NULL, _("Deleting ways:\n"));
-  osm_delete_ways(context);
-  appendf(&context->log, NULL, _("Deleting nodes:\n"));
-  osm_delete_nodes(context);
-
-#ifdef API06
-  /* close changeset */
-  osm_close_changeset(context);
+    /* close changeset */
+    osm_close_changeset(context);
   }
-#endif
 
   appendf(&context->log, NULL, _("Upload done.\n"));
 
@@ -1120,9 +1064,7 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   gtk_dialog_run(GTK_DIALOG(context->dialog));
   gtk_widget_destroy(context->dialog);
 
-#ifdef API06
   if(context->comment) g_free(context->comment);
-#endif
   g_free(context);
 }
 

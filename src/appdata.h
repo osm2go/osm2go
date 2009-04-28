@@ -20,9 +20,6 @@
 #ifndef APPDATA_H
 #define APPDATA_H
 
-/* this define will enable preliminary API 0.6 support */
-#define API06
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

@@ -1215,10 +1215,6 @@ static char *osm_generate_xml(osm_t *osm, item_id_t changeset,
 
   xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
   xmlNodePtr root_node = xmlNewNode(NULL, BAD_CAST "osm");
-#ifndef API06
-  xmlNewProp(root_node, BAD_CAST "version", BAD_CAST "0.5");
-  xmlNewProp(root_node, BAD_CAST "generator", BAD_CAST PACKAGE " v" VERSION);
-#endif
   xmlDocSetRootElement(doc, root_node);
 
   switch(type) {
@@ -1232,12 +1228,10 @@ static char *osm_generate_xml(osm_t *osm, item_id_t changeset,
 	snprintf(str, sizeof(str), "%u", (unsigned)node->id);
 	xmlNewProp(node_node, BAD_CAST "id", BAD_CAST str);
       }
-#ifdef API06
       snprintf(str, sizeof(str), "%u", (unsigned)node->version);
       xmlNewProp(node_node, BAD_CAST "version", BAD_CAST str);
       snprintf(str, sizeof(str), "%u", (unsigned)changeset);
       xmlNewProp(node_node, BAD_CAST "changeset", BAD_CAST str);
-#endif
       g_ascii_formatd(str, sizeof(str), LL_FORMAT, node->pos.lat);
       xmlNewProp(node_node, BAD_CAST "lat", BAD_CAST str);
       g_ascii_formatd(str, sizeof(str), LL_FORMAT, node->pos.lon);
@@ -1252,12 +1246,10 @@ static char *osm_generate_xml(osm_t *osm, item_id_t changeset,
       xmlNodePtr way_node = xmlNewChild(root_node, NULL, BAD_CAST "way", NULL);
       snprintf(str, sizeof(str), "%u", (unsigned)way->id);
       xmlNewProp(way_node, BAD_CAST "id", BAD_CAST str);
-#ifdef API06
       snprintf(str, sizeof(str), "%u", (unsigned)way->version);
       xmlNewProp(way_node, BAD_CAST "version", BAD_CAST str);
       snprintf(str, sizeof(str), "%u", (unsigned)changeset);
       xmlNewProp(way_node, BAD_CAST "changeset", BAD_CAST str);
-#endif
       
       node_chain_t *node_chain = way->node_chain;
       while(node_chain) {
@@ -1279,12 +1271,10 @@ static char *osm_generate_xml(osm_t *osm, item_id_t changeset,
 					BAD_CAST "relation", NULL);
       snprintf(str, sizeof(str), "%u", (unsigned)relation->id);
       xmlNewProp(rel_node, BAD_CAST "id", BAD_CAST str);
-#ifdef API06
       snprintf(str, sizeof(str), "%u", (unsigned)relation->version);
       xmlNewProp(rel_node, BAD_CAST "version", BAD_CAST str);
       snprintf(str, sizeof(str), "%u", (unsigned)changeset);
       xmlNewProp(rel_node, BAD_CAST "changeset", BAD_CAST str);
-#endif
       
       member_t *member = relation->member;
       while(member) {
@@ -1531,13 +1521,6 @@ node_t *osm_node_new(osm_t *osm, gint x, gint y) {
   node->visible = TRUE;
   node->time = time(NULL);
 
-#ifndef API06
-  /* add created_by tag */
-  node->tag = g_new0(tag_t, 1);
-  node->tag->key = g_strdup("created_by");
-  node->tag->value = g_strdup(PACKAGE " v" VERSION);
-#endif
-
   /* convert screen position back to ll */
   lpos2pos(osm->bounds, &node->lpos, &node->pos);
 
@@ -1577,13 +1560,6 @@ way_t *osm_way_new(void) {
   way->visible = TRUE;
   way->flags = OSM_FLAG_NEW;
   way->time = time(NULL);
-
-#ifndef API06
-  /* add created_by tag */
-  way->tag = g_new0(tag_t, 1);
-  way->tag->key = g_strdup("created_by");
-  way->tag->value = g_strdup(PACKAGE " v" VERSION);
-#endif
 
   return way;
 }
@@ -1856,13 +1832,6 @@ relation_t *osm_relation_new(void) {
   relation->visible = TRUE;
   relation->flags = OSM_FLAG_NEW;
   relation->time = time(NULL);
-
-#ifndef API06
-  /* add created_by tag */
-  relation->tag = g_new0(tag_t, 1);
-  relation->tag->key = g_strdup("created_by");
-  relation->tag->value = g_strdup(PACKAGE " v" VERSION);
-#endif
 
   return relation;
 }

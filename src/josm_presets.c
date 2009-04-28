@@ -667,12 +667,6 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
       widget_cnt++;
       widget = widget->next;
     }
-
-#ifndef API06
-    *ctag = g_new0(tag_t, 1);
-    (*ctag)->key = g_strdup("created_by");
-    (*ctag)->value = g_strdup(PACKAGE " v" VERSION);
-#endif
   }
 
   g_free(gtk_widgets);
