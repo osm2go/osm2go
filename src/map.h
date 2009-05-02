@@ -133,7 +133,9 @@ typedef struct map_s {
 } map_t;
 
 GtkWidget *map_new(appdata_t *appdata);
+map_state_t *map_state_new(void);
 void map_state_free(map_state_t *state);
+void map_state_reset(map_state_t *state);
 void map_init(appdata_t *appdata);
 gboolean map_key_press_event(appdata_t *appdata, GdkEventKey *event);
 void map_item_set_flags(map_item_t *map_item, int set, int clr);

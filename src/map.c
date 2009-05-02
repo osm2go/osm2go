@@ -1748,6 +1748,23 @@ gboolean map_key_press_event(appdata_t *appdata, GdkEventKey *event) {
   return FALSE;
 }
 
+void map_state_reset(map_state_t *state) {
+  if(!state) return;
+
+  state->zoom = 0.25;
+  state->detail = 1.0;
+
+  /* todo: try to scroll to center of screen */
+  state->scroll_offset.x = 0;
+  state->scroll_offset.y = 0;
+}
+
+map_state_t *map_state_new(void) {
+  map_state_t *state = g_new0(map_state_t, 1);
+  map_state_reset(state);
+  return state;
+}
+
 GtkWidget *map_new(appdata_t *appdata) {
   map_t *map = appdata->map = g_new0(map_t, 1);
 
@@ -1763,9 +1780,7 @@ GtkWidget *map_new(appdata_t *appdata) {
     map->state = appdata->project->map_state;
   } else {
     printf("Creating new map state\n");
-    map->state = g_new0(map_state_t, 1);
-    map->state->zoom = 0.25;
-    map->state->detail = 1.0;
+    map->state = map_state_new();
   }
   
   map->state->refcount++;

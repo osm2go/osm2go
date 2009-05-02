@@ -420,6 +420,8 @@ track_t *track_restore(appdata_t *appdata, project_t *project) {
 }
 
 static void track_end_segment(track_t *track) {
+  if(!track) return;
+    
   if(track->cur_seg) {
     printf("ending a segment\n");
    
@@ -500,7 +502,7 @@ static void track_append_position(appdata_t *appdata, pos_t *pos, float alt) {
 static gboolean update(gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
 
-  if(! appdata->map) {
+  if(!appdata->map) {
     printf("map has gone while tracking was active, stopping tracker\n");
     
     if(appdata->track.handler_id) {
@@ -511,13 +513,12 @@ static gboolean update(gpointer data) {
     return FALSE;
   }
 
-  if (! appdata->gps_enabled) {
+  if(!appdata->gps_enabled) {
     // Turn myself off gracefully.
     track_do_disable_gps(appdata);
     return FALSE;
   }
 
-  
   pos_t pos;
   float alt;
   if(gps_get_pos(appdata, &pos, &alt)) {

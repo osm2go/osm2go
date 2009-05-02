@@ -1003,8 +1003,10 @@ gboolean project_open(appdata_t *appdata, char *name) {
     project->map_state = appdata->map->state;
   } else {
     printf("Project: Creating new map_state\n");
-    project->map_state = g_new0(map_state_t,1);	      
+    project->map_state = map_state_new();	      
   }
+
+  map_state_reset(project->map_state);
   project->map_state->refcount++;	
 
   /* build project path */
@@ -1034,9 +1036,12 @@ gboolean project_open(appdata_t *appdata, char *name) {
   /* --------- project structure ok: load its OSM file --------- */
   appdata->project = project;
 
-  printf("project_open: loading osm\n");
+  printf("project_open: loading osm %s\n", project->osm);
   appdata->osm = osm_parse(project->osm);
-  if(!appdata->osm) return FALSE;
+  if(!appdata->osm) {
+    printf("OSM parsing failed\n");
+    return FALSE;
+  }
 
   printf("parsing ok\n");
 
