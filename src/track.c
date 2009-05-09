@@ -501,7 +501,13 @@ static void track_append_position(appdata_t *appdata, pos_t *pos, float alt) {
 
 static gboolean update(gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
+  
+  /* ignore updates while no valid osm file is loaded, e.g. when switching */
+  /* projects */
+  if(!appdata->osm)
+    return TRUE;
 
+  /* the map is only gone of the main screen is being closed */
   if(!appdata->map) {
     printf("map has gone while tracking was active, stopping tracker\n");
     

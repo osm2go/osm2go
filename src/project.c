@@ -1069,6 +1069,9 @@ gboolean project_close(appdata_t *appdata) {
     appdata->osm = NULL;
   }
 
+  /* update project file on disk */
+  project_save(GTK_WIDGET(appdata->window), appdata->project);
+
   project_free(appdata->project);
   appdata->project = NULL;
 

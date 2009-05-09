@@ -1109,7 +1109,7 @@ int main(int argc, char *argv[]) {
 #ifndef PORTRAIT
   gtk_box_pack_start(GTK_BOX(hbox), iconbar_new(&appdata), FALSE, FALSE, 0);
 #endif
-  gtk_box_pack_start(GTK_BOX(hbox), gtk_vseparator_new(), FALSE, FALSE, 0);
+  //  gtk_box_pack_start(GTK_BOX(hbox), gtk_vseparator_new(), FALSE, FALSE, 0);
   gtk_box_pack_start(GTK_BOX(hbox), vbox, TRUE, TRUE, 0);
 
   gtk_box_pack_start(GTK_BOX(appdata.vbox), hbox, TRUE, TRUE, 0);
