@@ -36,7 +36,12 @@ static void main_ui_enable(appdata_t *appdata) {
     map_action_cancel(appdata);
 
   /* ---- set project name as window title ----- */
-#ifndef USE_HILDON
+#if defined(USE_HILDON) && MAEMO_VERSION_MAJOR < 5
+  if(project_valid) 
+    gtk_window_set_title(GTK_WINDOW(appdata->window), appdata->project->name);
+  else
+    gtk_window_set_title(GTK_WINDOW(appdata->window), "");
+#else
   char *str = NULL;
   if(project_valid) 
     str = g_strdup_printf("OSM2Go - %s", appdata->project->name);
@@ -45,11 +50,6 @@ static void main_ui_enable(appdata_t *appdata) {
     
   gtk_window_set_title(GTK_WINDOW(appdata->window), str);
   g_free(str);
-#else
-  if(project_valid) 
-    gtk_window_set_title(GTK_WINDOW(appdata->window), appdata->project->name);
-  else
-    gtk_window_set_title(GTK_WINDOW(appdata->window), "");
 #endif
 
   if(appdata->iconbar && appdata->iconbar->toolbar)
