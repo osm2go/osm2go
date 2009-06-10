@@ -485,7 +485,7 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
       www_context->appdata = appdata;
       
       GtkWidget *button = gtk_dialog_add_button(GTK_DIALOG(dialog), _
-			("Info..."), GTK_RESPONSE_HELP);
+			("Info"), GTK_RESPONSE_HELP);
       gtk_signal_connect(GTK_OBJECT(button), "clicked",
 			 GTK_SIGNAL_FUNC(on_info), (gpointer)www_context);
     }
@@ -825,7 +825,7 @@ GtkWidget *josm_presets_select(appdata_t *appdata,
   context->menu = build_menu(context, appdata->presets);
   gtk_widget_show_all( GTK_WIDGET(context->menu) );
 
-  GtkWidget *but = gtk_button_new_with_label(_("Presets..."));
+  GtkWidget *but = gtk_button_new_with_label(_("Presets"));
   gtk_widget_set_events(but, GDK_EXPOSURE_MASK);
   gtk_widget_add_events(but, GDK_BUTTON_PRESS_MASK);
   gtk_signal_connect(GTK_OBJECT(but), "button-press-event",

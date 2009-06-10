@@ -280,7 +280,7 @@ static GtkWidget *tag_widget(tag_context_t *context) {
   list_set_selection_function(context->list, view_selection_func, context);
 
   list_set_user_buttons(context->list, 
-			LIST_BUTTON_USER0, _("Last..."), on_tag_last,
+			LIST_BUTTON_USER0, _("Last"), on_tag_last,
 			0);
 
   /* setup both columns */

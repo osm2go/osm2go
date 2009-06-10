@@ -102,7 +102,7 @@ static GtkWidget *busy_dialog(GtkWidget *parent, GtkWidget **pbar,
   GtkWidget *dialog = gtk_dialog_new();
 
   gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
-  gtk_window_set_title(GTK_WINDOW(dialog), _("Downloading..."));
+  gtk_window_set_title(GTK_WINDOW(dialog), _("Downloading"));
   gtk_window_set_default_size(GTK_WINDOW(dialog), 300, 10);
 
   gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);

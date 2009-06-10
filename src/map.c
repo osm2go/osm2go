@@ -1969,7 +1969,6 @@ void map_action_ok(appdata_t *appdata) {
     /* save changes to bg_offset in project */
     appdata->project->wms_offset.x = map->bg.offset.x;
     appdata->project->wms_offset.y = map->bg.offset.y;
-    appdata->project->dirty = TRUE;
     break;
 
   default:
@@ -2406,7 +2405,7 @@ static void map_detail_change(map_t *map, float detail) {
   map->state->detail = detail;
   printf("changing detail factor to %f\n", map->state->detail);
 
-  banner_busy_start(appdata, 1, "Redrawing...");
+  banner_busy_start(appdata, 1, _("Redrawing"));
   map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
   map_paint(appdata);
   banner_busy_stop(appdata);

@@ -204,7 +204,7 @@ void list_set_static_buttons(GtkWidget *list, GCallback cb_new,
   /* add the three default buttons, but keep the disabled for now */
   GtkWidget *button = NULL;
   if(cb_new) {
-    button = gtk_button_new_with_label(_("Add..."));
+    button = gtk_button_new_with_label(_("Add"));
     gtk_table_attach_defaults(GTK_TABLE(table), button, 0, 1, 0, 1);
     gtk_widget_set_sensitive(button, TRUE);
     g_object_set_data(G_OBJECT(list), "btn_new", button);
@@ -213,7 +213,7 @@ void list_set_static_buttons(GtkWidget *list, GCallback cb_new,
   }
 
   if(cb_edit) {
-    button = gtk_button_new_with_label(_("Edit..."));
+    button = gtk_button_new_with_label(_("Edit"));
     gtk_table_attach_defaults(GTK_TABLE(table), button, 1, 2, 0, 1);
     gtk_widget_set_sensitive(button, FALSE);
     g_object_set_data(G_OBJECT(list), "btn_edit", button);

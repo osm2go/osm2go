@@ -136,7 +136,6 @@ static gboolean project_read(appdata_t *appdata,
 		 !strncmp(str, project->path, strlen(project->path))) {
 
 		project->osm = g_strdup(str + strlen(project->path));
-		project->dirty = TRUE;
 		printf("osm name converted to relative %s\n", project->osm);
 	      } else
 		project->osm = g_strdup(str);
@@ -961,7 +960,7 @@ gboolean project_edit(GtkWidget *parent, settings_t *settings,
   context->maxlon = pos_lon_label_new(project->max.lon);
   gtk_table_attach_defaults(GTK_TABLE(table), context->maxlon, 2, 3, 3, 4);
 
-  GtkWidget *edit = gtk_button_new_with_label(_("Edit..."));
+  GtkWidget *edit = gtk_button_new_with_label(_("Edit"));
   gtk_signal_connect(GTK_OBJECT(edit), "clicked",
   		     (GtkSignalFunc)on_edit_clicked, context);
   gtk_table_attach(GTK_TABLE(table), edit, 3, 4, 2, 4, 
@@ -986,7 +985,7 @@ gboolean project_edit(GtkWidget *parent, settings_t *settings,
   gtk_misc_set_alignment(GTK_MISC(context->fsize), 0.f, 0.5f);
   project_filesize(context);
   gtk_box_pack_start_defaults(GTK_BOX(hbox), context->fsize);
-  download = gtk_button_new_with_label(_("Download..."));
+  download = gtk_button_new_with_label(_("Download"));
   gtk_signal_connect(GTK_OBJECT(download), "clicked",
 		     (GtkSignalFunc)on_download_clicked, context);
   gtk_box_pack_start(GTK_BOX(hbox), download, FALSE, FALSE, 0);
@@ -1000,7 +999,7 @@ gboolean project_edit(GtkWidget *parent, settings_t *settings,
   gtk_misc_set_alignment(GTK_MISC(context->diff_stat), 0.f, 0.5f);
   project_diffstat(context);
   gtk_box_pack_start_defaults(GTK_BOX(hbox), context->diff_stat);
-  context->diff_remove = gtk_button_new_with_label(_("Remove..."));
+  context->diff_remove = gtk_button_new_with_label(_("Remove"));
   if(!diff_present(project)) 
     gtk_widget_set_sensitive(context->diff_remove,  FALSE);
   gtk_signal_connect(GTK_OBJECT(context->diff_remove), "clicked",

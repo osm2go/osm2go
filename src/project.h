@@ -37,7 +37,6 @@ typedef struct project_s {
   pos_t min, max;
 
   gboolean data_dirty;     /* needs to download new data */
-  gboolean dirty;          /* project file needs to be written */
 
   struct project_s *next;  /* for chaining projects (e.g. during scan) */
 } project_t;

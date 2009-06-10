@@ -147,11 +147,11 @@ cb_menu_download(GtkMenuItem *item, gpointer data) {
   // download
   if(osm_download(GTK_WIDGET(appdata->window), appdata->settings, 
 		  appdata->project)) {
-    banner_busy_start(appdata, 1, "Redrawing...");
+    banner_busy_start(appdata, 1, "Redrawing");
     appdata->osm = osm_parse(appdata->project->path, appdata->project->osm);
     diff_restore(appdata, appdata->project, appdata->osm);
     map_paint(appdata);
-    banner_busy_stop(appdata); //"Redrawing..."
+    banner_busy_stop(appdata); //"Redrawing"
   }
 
   main_ui_enable(appdata);
@@ -197,7 +197,7 @@ cb_menu_redraw(GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
 
   /* redraw the entire map by destroying all map items and redrawing them */
-  banner_busy_start(appdata, 1, "Redrawing...");
+  banner_busy_start(appdata, 1, "Redrawing");
   track_save(appdata->project, appdata->track.track);
   diff_save(appdata->project, appdata->osm);
   map_clear(appdata, MAP_LAYER_ALL);
@@ -212,7 +212,7 @@ cb_menu_redraw(GtkMenuItem *item, gpointer data) {
     map_track_draw(appdata->map, appdata->track.track);
 
   wms_load(appdata);
-  banner_busy_stop(appdata); //"Redrawing..."
+  banner_busy_stop(appdata); //"Redrawing"
 }
 #endif
 
@@ -220,22 +220,22 @@ static void
 cb_menu_map_no_icons(GtkCheckMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
 
-  banner_busy_start(appdata, 1, "Redrawing...");
+  banner_busy_start(appdata, 1, "Redrawing");
   map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
   appdata->settings->no_icons = gtk_check_menu_item_get_active(item);
   map_paint(appdata);
-  banner_busy_stop(appdata); //"Redrawing..."
+  banner_busy_stop(appdata); //"Redrawing"
 }
 
 static void 
 cb_menu_map_no_antialias(GtkCheckMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
 
-  banner_busy_start(appdata, 1, "Redrawing...");
+  banner_busy_start(appdata, 1, "Redrawing");
   map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
   appdata->settings->no_antialias = gtk_check_menu_item_get_active(item);
   map_paint(appdata);
-  banner_busy_stop(appdata); //"Redrawing..."
+  banner_busy_stop(appdata); //"Redrawing"
 }
 
 static void 
@@ -272,13 +272,13 @@ cb_menu_undo_changes(GtkMenuItem *item, gpointer data) {
 		 "uploaded yet? This can't be undone.")))
     return;
 
-  banner_busy_start(appdata, 1, _("Redrawing..."));
+  banner_busy_start(appdata, 1, _("Redrawing"));
   map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
   osm_free(&appdata->icon, appdata->osm);
   diff_remove(appdata->project);
   appdata->osm = osm_parse(appdata->project->path, appdata->project->osm);
   map_paint(appdata);
-  banner_busy_stop(appdata);  //"Redrawing..."
+  banner_busy_stop(appdata);  //"Redrawing"
 
   banner_show_info(appdata, _("Discarded local changes"));
 }
@@ -626,7 +626,7 @@ void menu_create(appdata_t *appdata) {
 #endif
 
   menu_append_new_item(
-    appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_project_open), _("_Open..."),
+    appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_project_open), _("_Open"),
     GTK_STOCK_OPEN, "<OSM2Go-Main>/Project/Open",
     0, 0, TRUE, FALSE, FALSE
   );
@@ -698,13 +698,13 @@ void menu_create(appdata_t *appdata) {
   gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), submenu);
 
   appdata->menu_item_osm_upload = menu_append_new_item(
-    appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_upload), _("_Upload..."),
+    appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_upload), _("_Upload"),
     "upload.16", "<OSM2Go-Main>/OSM/Upload",
     GDK_u, GDK_SHIFT_MASK|GDK_CONTROL_MASK, TRUE, FALSE, FALSE
   );
 
   menu_append_new_item(
-    appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_download), _("_Download..."),
+    appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_download), _("_Download"),
     "download.16", "<OSM2Go-Main>/OSM/Download",
     GDK_d, GDK_SHIFT_MASK|GDK_CONTROL_MASK, TRUE, FALSE, FALSE
   );
@@ -727,14 +727,14 @@ void menu_create(appdata_t *appdata) {
   );
 
   appdata->menu_item_osm_undo_changes = menu_append_new_item(
-    appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_undo_changes), _("Disca_rd local changes..."),
+    appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_undo_changes), _("Disca_rd local changes"),
     GTK_STOCK_DELETE, "<OSM2Go-Main>/OSM/DiscardChanges",
     0, 0, TRUE, FALSE, FALSE
   );
 
   gtk_menu_shell_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
   appdata->menu_item_osm_relations = menu_append_new_item(
-    appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_osm_relations), _("_Relations..."),
+    appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_osm_relations), _("_Relations"),
     NULL, "<OSM2Go-Main>/OSM/Relations",
     GDK_r, GDK_SHIFT_MASK|GDK_CONTROL_MASK, TRUE, FALSE, FALSE
   );
@@ -748,7 +748,7 @@ void menu_create(appdata_t *appdata) {
   gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), submenu);
   
   menu_append_new_item(
-    appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_wms_import), _("_Import..."),
+    appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_wms_import), _("_Import"),
     GTK_STOCK_INDEX, "<OSM2Go-Main>/WMS/Import",
     0, 0, TRUE, FALSE, FALSE
   );
@@ -792,7 +792,7 @@ void menu_create(appdata_t *appdata) {
   gtk_menu_shell_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
 
   menu_append_new_item(
-    appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_style), _("St_yle..."),
+    appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_style), _("St_yle"),
     GTK_STOCK_SELECT_COLOR, "<OSM2Go-Main>/Map/Style",
     0, 0, TRUE, FALSE, FALSE
   );
@@ -828,13 +828,13 @@ void menu_create(appdata_t *appdata) {
   gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), submenu);
   
   appdata->track.menu_item_import = menu_append_new_item(
-    appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_track_import), _("_Import..."),
+    appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_track_import), _("_Import"),
     NULL, "<OSM2Go-Main>/Track/Import",
     0, 0, TRUE, FALSE, FALSE
   );
 
   appdata->track.menu_item_export = menu_append_new_item(
-    appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_track_export), _("_Export..."),
+    appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_track_export), _("_Export"),
     NULL, "<OSM2Go-Main>/Track/Export",
     0, 0, FALSE, FALSE, FALSE
   );
@@ -866,7 +866,7 @@ void menu_create(appdata_t *appdata) {
                         gtk_separator_menu_item_new());
 
   menu_append_new_item(
-    appdata, about_quit_items_menu, GTK_SIGNAL_FUNC(cb_menu_about), _("_About..."),
+    appdata, about_quit_items_menu, GTK_SIGNAL_FUNC(cb_menu_about), _("_About"),
     GTK_STOCK_ABOUT, "<OSM2Go-Main>/About",
     0, 0, TRUE, FALSE, FALSE
   );

@@ -1063,7 +1063,6 @@ void wms_import(appdata_t *appdata) {
 
     appdata->project->wms_offset.x = 0;
     appdata->project->wms_offset.y = 0;
-    appdata->project->dirty = TRUE;
   }
 
   /* ... as well as in the map */
@@ -1082,7 +1081,6 @@ void wms_import(appdata_t *appdata) {
     if(appdata->project->wms_server)
       g_free(appdata->project->wms_server);
     appdata->project->wms_server = g_strdup(wms->server);
-    appdata->project->dirty = TRUE;
   }
 
   if(!appdata->project->wms_path ||
@@ -1090,7 +1088,6 @@ void wms_import(appdata_t *appdata) {
     if(appdata->project->wms_path)
       g_free(appdata->project->wms_path);
     appdata->project->wms_path = g_strdup(wms->path);
-    appdata->project->dirty = TRUE;
   }
 
   /* ----------- request capabilities -------------- */
