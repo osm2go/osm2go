@@ -1065,7 +1065,7 @@ static osm_t *process_file(const char *filename) {
 
 #include <sys/time.h>
 
-osm_t *osm_parse(char *filename) {
+osm_t *osm_parse(char *path, char *filename) {
 
   struct timeval start;
   gettimeofday(&start, NULL);
@@ -1073,7 +1073,15 @@ osm_t *osm_parse(char *filename) {
   LIBXML_TEST_VERSION;
 
   // use stream parser
-  osm_t *osm = process_file(filename);
+  osm_t *osm = NULL;
+  if(filename[0] == '/')
+    osm = process_file(filename);
+  else {
+    char *full = g_strjoin(NULL, path, filename, NULL);
+    osm = process_file(full);
+    g_free(full);
+  }
+
   xmlCleanupParser();
 
   struct timeval end;

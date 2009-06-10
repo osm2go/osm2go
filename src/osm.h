@@ -216,7 +216,7 @@ typedef struct osm_s {
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 
-osm_t *osm_parse(char *filename);
+osm_t *osm_parse(char *path, char *filename);
 gboolean osm_sanity_check(GtkWidget *parent, osm_t *osm);
 tag_t *osm_parse_osm_tag(osm_t *osm, xmlDocPtr doc, xmlNode *a_node);
 node_chain_t *osm_parse_osm_way_nd(osm_t *osm, xmlDocPtr doc, xmlNode *a_node);

@@ -126,9 +126,23 @@ static gboolean project_read(appdata_t *appdata,
 	      
 	    } else if(strcasecmp((char*)node->name, "osm") == 0) {
 	      str = (char*)xmlNodeListGetString(doc, node->children, 1);
-	      project->osm = g_strdup(str);
-	      printf("osm = %s\n", project->osm);
+	      printf("osm = %s\n", str);
+
+	      /* make this a relative path if possible */
+	      /* if the project path actually is a prefix of this, */
+	      /* then just remove this prefix */
+	      if((str[0] == '/') &&
+		 (strlen(str) > strlen(project->path)) &&
+		 !strncmp(str, project->path, strlen(project->path))) {
+
+		project->osm = g_strdup(str + strlen(project->path));
+		project->dirty = TRUE;
+		printf("osm name converted to relative %s\n", project->osm);
+	      } else
+		project->osm = g_strdup(str);
+
 	      xmlFree(str);
+
 	    } else if(strcasecmp((char*)node->name, "min") == 0) {
 	      if((str = (char*)xmlGetProp(node, BAD_CAST "lat"))) {
 		project->min.lat = g_ascii_strtod(str, NULL);
@@ -335,6 +349,19 @@ enum {
   PROJECT_NUM_COLS
 };
 
+static gboolean osm_file_exists(char *path, char *name) {
+  gboolean exists = FALSE;
+
+  if(name[0] == '/')
+    exists = g_file_test(name, G_FILE_TEST_IS_REGULAR);
+  else {
+    char *full = g_strjoin(NULL, path, name, NULL);
+    exists = g_file_test(full, G_FILE_TEST_IS_REGULAR);
+    g_free(full);
+  }
+  return exists;
+}
+
 static void view_selected(select_context_t *context, project_t *project) {
   list_button_enable(context->list, LIST_BUTTON_REMOVE, project != NULL);
   list_button_enable(context->list, LIST_BUTTON_EDIT, project != NULL);
@@ -342,7 +369,7 @@ static void view_selected(select_context_t *context, project_t *project) {
   /* check if the selected project also has a valid osm file */
   gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), 
       GTK_RESPONSE_ACCEPT, 
-      project && g_file_test(project->osm, G_FILE_TEST_IS_REGULAR));
+      project && osm_file_exists(project->path, project->osm));
 }
 
 static gboolean
@@ -527,7 +554,7 @@ project_t *project_new(select_context_t *context) {
   project->server   = g_strdup(context->settings->server);
 
   /* build project osm file name */
-  project->osm = g_strdup_printf("%s%s.osm", project->path, project->name);
+  project->osm = g_strdup_printf("%s.osm", project->name);
 
   /* around the castle in karlsruhe, germany ... */
   project->min.lat = 49.005;  project->min.lon = 8.3911;
@@ -750,8 +777,15 @@ char *project_select(appdata_t *appdata) {
 /* ---------------------------------------------------- */
 
 /* return file length or -1 on error */
-static gsize file_length(char *name) {
-  GMappedFile *gmap = g_mapped_file_new(name, FALSE, NULL);
+static gsize file_length(char *path, char *name) {
+  char *str = NULL;
+
+  if(name[0] == '/') str = g_strdup(name);
+  else               str = g_strjoin(NULL, path, name, NULL);
+
+  GMappedFile *gmap = g_mapped_file_new(str, FALSE, NULL);
+  g_free(str);
+
   if(!gmap) return -1;
   gsize size = g_mapped_file_get_length(gmap); 
   g_mapped_file_free(gmap);
@@ -763,7 +797,7 @@ void project_filesize(project_context_t *context) {
 
   printf("Checking size of %s\n", context->project->osm);
 
-  if(!g_file_test(context->project->osm, G_FILE_TEST_IS_REGULAR)) {
+  if(!osm_file_exists(context->project->path, context->project->osm)) {
     GdkColor color;
     gdk_color_parse("red", &color);
     gtk_widget_modify_fg(context->fsize, GTK_STATE_NORMAL, &color);
@@ -776,7 +810,8 @@ void project_filesize(project_context_t *context) {
 
     if(!context->project->data_dirty)
       str = g_strdup_printf(_("%d bytes present"), 
-			    file_length(context->project->osm));
+			    file_length(context->project->path,
+					context->project->osm));
     else
       str = g_strdup_printf(_("Outdated, please download!"));
 
@@ -1037,7 +1072,7 @@ gboolean project_open(appdata_t *appdata, char *name) {
   appdata->project = project;
 
   printf("project_open: loading osm %s\n", project->osm);
-  appdata->osm = osm_parse(project->osm);
+  appdata->osm = osm_parse(project->path, project->osm);
   if(!appdata->osm) {
     printf("OSM parsing failed\n");
     return FALSE;

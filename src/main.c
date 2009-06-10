@@ -148,7 +148,7 @@ cb_menu_download(GtkMenuItem *item, gpointer data) {
   if(osm_download(GTK_WIDGET(appdata->window), appdata->settings, 
 		  appdata->project)) {
     banner_busy_start(appdata, 1, "Redrawing...");
-    appdata->osm = osm_parse(appdata->project->osm);
+    appdata->osm = osm_parse(appdata->project->path, appdata->project->osm);
     diff_restore(appdata, appdata->project, appdata->osm);
     map_paint(appdata);
     banner_busy_stop(appdata); //"Redrawing..."
@@ -203,7 +203,7 @@ cb_menu_redraw(GtkMenuItem *item, gpointer data) {
   map_clear(appdata, MAP_LAYER_ALL);
   osm_free(&appdata->icon, appdata->osm);
 
-  appdata->osm = osm_parse(appdata->project->osm);
+  appdata->osm = osm_parse(appdata->project->path, appdata->project->osm);
   diff_restore(appdata, appdata->project, appdata->osm);
   map_paint(appdata);
 
@@ -276,7 +276,7 @@ cb_menu_undo_changes(GtkMenuItem *item, gpointer data) {
   map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
   osm_free(&appdata->icon, appdata->osm);
   diff_remove(appdata->project);
-  appdata->osm = osm_parse(appdata->project->osm);
+  appdata->osm = osm_parse(appdata->project->path, appdata->project->osm);
   map_paint(appdata);
   banner_busy_stop(appdata);  //"Redrawing..."
 

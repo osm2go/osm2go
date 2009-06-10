@@ -115,8 +115,11 @@ gboolean osm_download(GtkWidget *parent, settings_t *settings,
   char *url = g_strdup_printf("%s/map?bbox=%s,%s,%s,%s",
 		project->server, minlon, minlat, maxlon, maxlat);
 
-  gboolean result = net_io_download_file(parent, settings, 
-					 url, project->osm);
+  char *str = NULL;
+  if(project->osm[0] == '/') str = g_strdup(project->osm);
+  else str = g_strjoin(NULL, project->path, project->osm, NULL);
+  gboolean result = net_io_download_file(parent, settings, url, str);
+  g_free(str);
 
   g_free(url);
   return result;
@@ -1046,7 +1049,7 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
       osm_free(&appdata->icon, appdata->osm);
       
       appendf(&context->log, NULL, _("Loading OSM ...\n"));
-      appdata->osm = osm_parse(appdata->project->osm);
+      appdata->osm = osm_parse(appdata->project->path, appdata->project->osm);
       appendf(&context->log, NULL, _("Applying diff ...\n"));
       diff_restore(appdata, appdata->project, appdata->osm);
       appendf(&context->log, NULL, _("Painting ...\n"));
