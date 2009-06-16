@@ -163,72 +163,90 @@ settings_t *settings_load(void) {
       g_free(key);
       st++;
     }
-  }
 
-  /* restore wms server list */
-  char *key = g_strdup_printf("/apps/" PACKAGE "/wms/count");
-  GConfValue *value = gconf_client_get(client, key, NULL);
-  if(value) {
-    gconf_value_free(value); 
-
-    int i, count = gconf_client_get_int(client, key, NULL);
-    g_free(key);
-
-    wms_server_t **cur = &settings->wms_server;
-    for(i=0;i<count;i++) {
-      key = g_strdup_printf("/apps/" PACKAGE "/wms/name%d", i);
-      char *name = gconf_client_get_string(client, key, NULL);
-      g_free(key);
-      key = g_strdup_printf("/apps/" PACKAGE "/wms/server%d", i);
-      char *server = gconf_client_get_string(client, key, NULL);
-      g_free(key);
-      key = g_strdup_printf("/apps/" PACKAGE "/wms/path%d", i);
-      char *path = gconf_client_get_string(client, key, NULL);
+    /* restore wms server list */
+    char *key = g_strdup_printf("/apps/" PACKAGE "/wms/count");
+    GConfValue *value = gconf_client_get(client, key, NULL);
+    if(value) {
+      gconf_value_free(value); 
+      
+      int i, count = gconf_client_get_int(client, key, NULL);
       g_free(key);
       
-      /* apply valid entry to list */
-      if(name && server && path) {
-	*cur = g_new0(wms_server_t, 1);
-	(*cur)->name = name;
-	(*cur)->server = server;
-	(*cur)->path = path;
-	cur = &(*cur)->next;
-      } else {
-	if(name) g_free(name);
-	if(server) g_free(server);
-	if(path) g_free(path);
+      wms_server_t **cur = &settings->wms_server;
+      for(i=0;i<count;i++) {
+	key = g_strdup_printf("/apps/" PACKAGE "/wms/name%d", i);
+	char *name = gconf_client_get_string(client, key, NULL);
+	g_free(key);
+	key = g_strdup_printf("/apps/" PACKAGE "/wms/server%d", i);
+	char *server = gconf_client_get_string(client, key, NULL);
+	g_free(key);
+	key = g_strdup_printf("/apps/" PACKAGE "/wms/path%d", i);
+	char *path = gconf_client_get_string(client, key, NULL);
+	g_free(key);
+	
+	/* apply valid entry to list */
+	if(name && server && path) {
+	  *cur = g_new0(wms_server_t, 1);
+	  (*cur)->name = name;
+	  (*cur)->server = server;
+	  (*cur)->path = path;
+	  cur = &(*cur)->next;
+	} else {
+	  if(name) g_free(name);
+	  if(server) g_free(server);
+	  if(path) g_free(path);
+	}
+      }
+    } else {
+      g_free(key);
+      
+      /* add default server(s) */
+      printf("No WMS servers configured, adding default\n");
+      settings->wms_server = wms_server_get_default();
+    }
+    
+    /* ------------- get proxy settings -------------------- */
+    if(gconf_client_get_bool(client, PROXY_KEY "use_http_proxy", NULL)) {
+      proxy_t *proxy = settings->proxy = g_new0(proxy_t, 1);
+      
+      /* get basic settings */
+      proxy->host = gconf_client_get_string(client, PROXY_KEY "host", NULL);
+      proxy->port = gconf_client_get_int(client, PROXY_KEY "port", NULL);
+      proxy->ignore_hosts = 
+	gconf_client_get_string(client, PROXY_KEY "ignore_hosts", NULL);
+      
+      /* check for authentication */
+      proxy->use_authentication = 
+	gconf_client_get_bool(client, PROXY_KEY "use_authentication", NULL);
+      
+      if(proxy->use_authentication) {
+	proxy->authentication_user = 
+	  gconf_client_get_string(client, PROXY_KEY "authentication_user", NULL);
+	proxy->authentication_password = 
+	  gconf_client_get_string(client, PROXY_KEY "authentication_password", 
+				  NULL);
       }
     }
-  } else {
-    g_free(key);
-
-    /* add default server(s) */
-    printf("No WMS servers configured, adding default\n");
-    settings->wms_server = wms_server_get_default();
-  }
-
-  /* ------------- get proxy settings -------------------- */
-  if(gconf_client_get_bool(client, PROXY_KEY "use_http_proxy", NULL)) {
-    proxy_t *proxy = settings->proxy = g_new0(proxy_t, 1);
-
-    /* get basic settings */
-    proxy->host = gconf_client_get_string(client, PROXY_KEY "host", NULL);
-    proxy->port = gconf_client_get_int(client, PROXY_KEY "port", NULL);
-    proxy->ignore_hosts = 
-      gconf_client_get_string(client, PROXY_KEY "ignore_hosts", NULL);
-
-    /* check for authentication */
-    proxy->use_authentication = 
-      gconf_client_get_bool(client, PROXY_KEY "use_authentication", NULL);
     
-    if(proxy->use_authentication) {
-      proxy->authentication_user = 
-	gconf_client_get_string(client, PROXY_KEY "authentication_user", NULL);
-      proxy->authentication_password = 
-	gconf_client_get_string(client, PROXY_KEY "authentication_password", 
-				NULL);
+#if 1 // def USE_HILDON
+    /* demo setup for maemo/hildon */
+    {
+      char *key = g_strdup_printf("/apps/" PACKAGE "/base_path");
+      GConfValue *value = gconf_client_get(client, key, NULL);
+      if(value) 
+	gconf_value_free(value); 
+      else {
+	printf("base_path not set, assuming first time boot\n");
+	
+	/* check for presence of demo project */
+
+      }
     }
+#endif
+
   }
+
 
   return settings;
 }

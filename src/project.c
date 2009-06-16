@@ -202,8 +202,9 @@ gboolean project_save(GtkWidget *parent, project_t *project) {
 
   xmlDocSetRootElement(doc, root_node);
 
-  node = xmlNewChild(root_node, NULL, BAD_CAST "server", 
-		     BAD_CAST project->server);
+  if(project->server)
+    node = xmlNewChild(root_node, NULL, BAD_CAST "server", 
+		       BAD_CAST project->server);
 
   xmlNewChild(root_node, NULL, BAD_CAST "desc", BAD_CAST project->desc);
   xmlNewChild(root_node, NULL, BAD_CAST "osm", BAD_CAST project->osm);
@@ -901,9 +902,24 @@ static void on_diff_remove_clicked(GtkButton *button, gpointer data) {
   gtk_widget_destroy(dialog);
 }
 
+gboolean project_check_demo(GtkWidget *parent, project_t *project) {
+  if(!project->server) 
+    messagef(parent, "Demo project", 
+	     "This is a preinstalled demo project. This means that the "
+	     "basic project parameters cannot be changed and no data can "
+	     "be up- or downloaded via the OSM servers.\n\n" 
+	     "Please setup a new project to do these things.");
+    
+  return !project->server;
+}
+
+
 gboolean project_edit(GtkWidget *parent, settings_t *settings, 
 		      project_t *project POS_PARM) {
   gboolean ok = FALSE;
+
+  if(project_check_demo(parent, project))
+    return ok;
 
   /* ------------ project edit dialog ------------- */
   
@@ -1211,7 +1227,10 @@ gboolean project_load(appdata_t *appdata, char *name) {
     g_free(appdata->settings->project);
   appdata->settings->project = g_strdup(appdata->project->name);
 
-  snprintf(banner_txt, _PROJECT_LOAD_BUF_SIZ, _("Loaded %s"), proj_name);
+  snprintf(banner_txt, _PROJECT_LOAD_BUF_SIZ, _("Loaded %s%s"), 
+	   (appdata->project && appdata->project->server)?"":"demo project ", 
+	   proj_name);
+
   banner_busy_stop(appdata);
   banner_show_info(appdata, banner_txt);
   statusbar_set(appdata, NULL, 0);

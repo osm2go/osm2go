@@ -126,6 +126,9 @@ cb_menu_upload(GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
   if(!appdata->osm || !appdata->project) return;
 
+  if(project_check_demo(appdata->window, appdata->project))
+    return;
+
   osm_upload(appdata, appdata->osm, appdata->project);
 }
 
@@ -133,6 +136,9 @@ static void
 cb_menu_download(GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
   if(!appdata->project) return;
+
+  if(project_check_demo(appdata->window, appdata->project))
+    return;
 
   /* if we have valid osm data loaded: save state first */
   if(appdata->osm) {

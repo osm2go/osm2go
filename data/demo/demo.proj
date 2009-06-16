@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<proj name="demo">
+  <desc>Demo project</desc>
+  <osm>demo.osm</osm>
+  <min lat="49.0050011" lon="8.3910999"/>
+  <max lat="49.0229988" lon="8.4184999"/>
+  <map zoom="1.2696" detail="1.0000" scroll-offset-x="-226" scroll-offset-y="-48"/>
+</proj>

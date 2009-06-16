@@ -44,5 +44,7 @@ install: @INSTALL_PLATTFORM@ $(TEMPLATE_ELEMSTYLES)
 	   install -d $(DESTDIR)$(PREFIX)$(datadir)/$(APP)/`dirname $$f` ;\
 	   install -m 644 $$f $(DESTDIR)$(PREFIX)$(datadir)/$(APP)/$$f ;\
 	done;
+	install -d $(DESTDIR)$(PREFIX)$(datadir)/$(APP)/demo
+	install -m 644 demo/* $(DESTDIR)$(PREFIX)$(datadir)/$(APP)/demo
 
 distclean: clean

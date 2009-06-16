@@ -46,6 +46,7 @@ gboolean project_open(appdata_t *appdata, char *name);
 gboolean project_save(GtkWidget *parent, project_t *project);
 gboolean project_load(appdata_t *appdata, char *name);
 gboolean project_close(appdata_t *appdata);
+gboolean project_check_demo(GtkWidget *parent, project_t *project);
 
 #ifdef USE_HILDON
 #define POS_PARM  ,dbus_mm_pos_t *mmpos, osso_context_t *osso_context
