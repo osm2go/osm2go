@@ -48,7 +48,7 @@ static store_t store[] = {
   { "username",         STORE_STRING, OFFSET(username)     },
   { "password",         STORE_STRING, OFFSET(password)     },
 
-  /* wms servers aren't yet saved as a major rewrite is required before */
+  /* wms servers are saved seperately */
 
   /* style */
   { "style",            STORE_STRING, OFFSET(style)        },

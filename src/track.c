@@ -563,10 +563,12 @@ static void track_do_disable_gps(appdata_t *appdata) {
     appdata->track.handler_id = 0;
   }
 
-  /* stopping the GPS removes the marker and terminates the */
-  /* current segment */
+  /* stopping the GPS removes the marker ... */
   map_track_pos(appdata, NULL);
-  appdata->track.track->cur_seg = NULL;
+
+  /* ... and terminates the current segment if present */
+  if(appdata->track.track)
+    appdata->track.track->cur_seg = NULL;
 }
 
 void track_enable_gps(appdata_t *appdata, gboolean enable) {

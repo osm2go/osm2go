@@ -1374,8 +1374,8 @@ static void map_touchnode_update(appdata_t *appdata, gint x, gint y) {
     /* don't highlight the dragged node itself and don't highlight */
     /* deleted ones */
     if((node != cur_node) && (!(node->flags & OSM_FLAG_DELETED))) {
-      gint nx = x - node->lpos.x;
-      gint ny = y - node->lpos.y;
+      gint nx = abs(x - node->lpos.x);
+      gint ny = abs(y - node->lpos.y);
 
       if((nx < map->style->node.radius) && (ny < map->style->node.radius) &&
 	 (nx*nx + ny*ny < map->style->node.radius * map->style->node.radius))
@@ -1389,8 +1389,8 @@ static void map_touchnode_update(appdata_t *appdata, gint x, gint y) {
   if(!map->touchnode && map->action.way) {
     node_chain_t *chain = map->action.way->node_chain;
     while(!map->touchnode && chain && chain->next) {
-      gint nx = x - chain->node->lpos.x;
-      gint ny = y - chain->node->lpos.y;
+      gint nx = abs(x - chain->node->lpos.x);
+      gint ny = abs(y - chain->node->lpos.y);
 	  
       if((nx < map->style->node.radius) && (ny < map->style->node.radius) &&
 	 (nx*nx + ny*ny < map->style->node.radius * map->style->node.radius))

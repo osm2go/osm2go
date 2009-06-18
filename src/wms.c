@@ -942,6 +942,7 @@ static GtkWidget *wms_layer_widget(appdata_t *appdata, wms_layer_t *layer,
   gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(view),
 	-1, _(""), renderer, 
         "active", LAYER_COL_SELECTED, 
+	"sensitive", LAYER_COL_FITS, 
         "activatable", LAYER_COL_FITS, 
 	NULL);
 
@@ -951,6 +952,7 @@ static GtkWidget *wms_layer_widget(appdata_t *appdata, wms_layer_t *layer,
   GtkTreeViewColumn *column = gtk_tree_view_column_new_with_attributes(
 		 _("Title"), renderer, 
 		 "text", LAYER_COL_TITLE, 
+		 "sensitive", LAYER_COL_FITS, 
 		 NULL);
 
   gtk_tree_view_column_set_expand(column, TRUE);

@@ -21,7 +21,7 @@
 # along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
 
 AC_PREREQ(2.61)
-AC_INIT([OSM2Go],[0.7.1],[osm2go-users@garage.maemo.org])
+AC_INIT([OSM2Go],[0.7.4],[osm2go-users@garage.maemo.org])
 AC_CONFIG_SRCDIR([src/main.c])
 # AC_CONFIG_HEADER([src/config.h])
 
