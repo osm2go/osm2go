@@ -112,6 +112,7 @@ settings_t *settings_load(void) {
       if(value) 
 	gconf_value_free(value); 
       else {
+#if 0  // don't explain this now ...
 	messagef(NULL, _("Icon drawing is disabled"),
 		 _("You are running this version of osm2go on a Internet "
 		   "Tablet for the first time. Since these currently have "
@@ -120,6 +121,7 @@ settings_t *settings_load(void) {
 		   "Map/No Icons at any time."));
 
 	settings->no_icons = TRUE;
+#endif
       }
     }
 #endif
@@ -229,9 +231,8 @@ settings_t *settings_load(void) {
       }
     }
     
-#if 1 // def USE_HILDON
-    /* demo setup for maemo/hildon */
-    {
+    /* use demo setup if present */
+    if(!settings->project) {
       char *key = g_strdup_printf("/apps/" PACKAGE "/base_path");
       GConfValue *value = gconf_client_get(client, key, NULL);
       if(value) 
@@ -240,11 +241,13 @@ settings_t *settings_load(void) {
 	printf("base_path not set, assuming first time boot\n");
 	
 	/* check for presence of demo project */
-
+	if(project_exists(settings, "demo")) {
+	  printf("demo project exists, use it as default\n");
+	  settings->project = g_strdup("demo");
+	  settings->first_run_demo = TRUE;
+	}
       }
     }
-#endif
-
   }
 
 

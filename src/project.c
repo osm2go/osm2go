@@ -278,7 +278,7 @@ static char *project_fullname(settings_t *settings, const char *name) {
   return g_strdup_printf("%s%s/%s.proj", settings->base_path, name, name);
 }
 
-static gboolean project_exists(settings_t *settings, const char *name) {
+gboolean project_exists(settings_t *settings, const char *name) {
   gboolean ok = FALSE;
   char *fulldir = g_strdup_printf("%s%s", settings->base_path, name);
 
@@ -1227,9 +1227,7 @@ gboolean project_load(appdata_t *appdata, char *name) {
     g_free(appdata->settings->project);
   appdata->settings->project = g_strdup(appdata->project->name);
 
-  snprintf(banner_txt, _PROJECT_LOAD_BUF_SIZ, _("Loaded %s%s"), 
-	   (appdata->project && appdata->project->server)?"":"demo project ", 
-	   proj_name);
+  snprintf(banner_txt, _PROJECT_LOAD_BUF_SIZ, _("Loaded %s"), proj_name);
 
   banner_busy_stop(appdata);
   banner_show_info(appdata, banner_txt);

@@ -126,7 +126,7 @@ cb_menu_upload(GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
   if(!appdata->osm || !appdata->project) return;
 
-  if(project_check_demo(appdata->window, appdata->project))
+  if(project_check_demo(GTK_WIDGET(appdata->window), appdata->project))
     return;
 
   osm_upload(appdata, appdata->osm, appdata->project);
@@ -137,7 +137,7 @@ cb_menu_download(GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
   if(!appdata->project) return;
 
-  if(project_check_demo(appdata->window, appdata->project))
+  if(project_check_demo(GTK_WIDGET(appdata->window), appdata->project))
     return;
 
   /* if we have valid osm data loaded: save state first */
@@ -1128,10 +1128,8 @@ int main(int argc, char *argv[]) {
 
   /* let gtk do its thing before loading the data, */
   /* so the user sees something */
-  while(gtk_events_pending()) {
-    putchar('.');
+  while(gtk_events_pending()) 
     gtk_main_iteration();
-  }
 
   /* load project if one is specified in the settings */
   if(appdata.settings->project)
@@ -1143,8 +1141,27 @@ int main(int argc, char *argv[]) {
   if(appdata.settings && appdata.settings->enable_gps) 
     track_enable_gps(&appdata, TRUE);
 
-  /* ------------ jump into main loop ---------------- */
+  /* again let the ui do its thing */
+  while(gtk_events_pending()) 
+    gtk_main_iteration();
 
+  /* start to interact with the user now that the gui is running */
+  if(appdata.settings->first_run_demo) {
+    messagef(GTK_WIDGET(appdata.window), _("Welcome to OSM2Go"),
+	     _("This is the first time you run OSM2Go. "
+	       "A demo project has been loaded to get you "
+	       "started. You can play around with this demo as much "
+	       "as you like. However, you cannot upload or download "
+	       "the demo project.\n\n"
+	       "In order to start working on real data you'll have "
+	       "to setup a new project and enter your OSM user name "
+	       "and password. You'll then be able to download the "
+	       "latest data from OSM and upload your changes into "
+	       "the OSM main database."
+	       ));
+  }
+
+  /* ------------ jump into main loop ---------------- */
   gtk_main();
 
   puts("gtk_main() left");

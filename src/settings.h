@@ -85,6 +85,10 @@ typedef struct settings_s {
   /* never changed */
   proxy_t *proxy;
 
+  /* set to true if no gconf settings were found */
+  /* and the demo was loaded */
+  gboolean first_run_demo; 
+
 } settings_t;
 
 settings_t *settings_load(void);
