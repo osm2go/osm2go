@@ -68,21 +68,24 @@ settings_t *settings_load(void) {
 
   /* ------ set useful defaults ------- */
 
+  char *p = NULL;
 #ifdef USE_HILDON
-  char *p;
-  settings->base_path = strdup(BASE_DIR);
-#else
-  char *p = getenv("HOME");
-  g_assert(p);
-
-  /* build image path in home directory */
-  settings->base_path =
-    malloc(strlen(p)+strlen(BASE_DIR)+2);
-  strcpy(settings->base_path, p);
-  if(settings->base_path[strlen(settings->base_path)-1] != '/')
-    strcat(settings->base_path, "/");
-  strcat(settings->base_path, BASE_DIR);
+  /* try to use internal memory card on hildon/maemo */
+  p = getenv("INTERNAL_MMC_MOUNTPOINT");
+  if(!p) 
 #endif
+    p = getenv("HOME");
+  
+  /* if everthing fails use tmp dir */
+  if(!p) p = "/tmp";
+  
+  /* build image path in home directory */
+  if(strncmp(p, "/home", 5) == 0) 
+    settings->base_path = g_strdup_printf("%s/.osm2go/", p);
+  else
+    settings->base_path = g_strdup_printf("%s/osm2go/", p);
+
+  fprintf(stderr, "base_path = %s\n", settings->base_path);
 
   /* ------------- setup download defaults -------------------- */
   settings->server = strdup("http://api.openstreetmap.org/api/0.6");

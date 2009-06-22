@@ -33,20 +33,6 @@
 #define DEFAULT_HEIGHT 620
 #endif
 
-/* default working directory */
-#ifndef USE_HILDON
-#define BASE_DIR ".osm2go/"
-#else
-#if MAEMO_VERSION_MAJOR < 5
-/* this is the location of the internal memory card on */
-/* the old devices */
-#define BASE_DIR "/media/mmc2/osm2go/"
-#else
-/* this is it under fremantle */
-#define BASE_DIR "/home/user/MyDocs/.osm2go/"
-#endif
-#endif
-
 #define DEFAULT_STYLE "mapnik"
 
 typedef struct {

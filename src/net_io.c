@@ -28,6 +28,7 @@ static struct http_message_s {
   int id;
   char *msg;
 } http_messages [] = {
+  {   0, "Curl internal failure" },
   { 200, "Ok" },
   { 400, "Bad Request" },
   { 401, "Unauthorized" },
@@ -213,6 +214,8 @@ static void *worker_thread(void *ptr) {
       break;
 
     default:
+      printf("thread: unsupported request\n");
+      /* ugh?? */
       ok = TRUE;
       break;
     }
@@ -263,7 +266,8 @@ static void *worker_thread(void *ptr) {
 
     /* always cleanup */
     curl_easy_cleanup(curl);
-  }
+  } else
+    printf("thread: unable to init curl\n");
   
   printf("thread: io done\n");
   request_free(request);
