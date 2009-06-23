@@ -122,9 +122,8 @@ settings_t *settings_load(void) {
 		   "problems displaying icons on the map, icons have been "
 		   "disabled. You might enable them in the menu under "
 		   "Map/No Icons at any time."));
-
-	settings->no_icons = TRUE;
 #endif
+	settings->no_icons = TRUE;
       }
     }
 #endif
