@@ -1236,4 +1236,75 @@ gboolean project_load(appdata_t *appdata, char *name) {
   g_free(proj_name);
   return TRUE;
 }
+
+/* ------------------- project setup wizard ----------------- */
+
+typedef struct {
+  GtkWidget *widget;
+  gint index;
+  const gchar *title;
+  GtkAssistantPageType type;
+  gboolean complete;
+} wizard_page_t;
+
+static gint on_assistant_destroy(GtkWidget *widget, gpointer data) {
+  return FALSE;
+}
+
+void project_wizard(appdata_t *appdata) {
+  wizard_page_t page[5] = {
+    { NULL, -1, "Introduction",           GTK_ASSISTANT_PAGE_INTRO,    TRUE},
+    { NULL, -1, NULL,                     GTK_ASSISTANT_PAGE_CONTENT,  FALSE},
+    { NULL, -1, "Click the Check Button", GTK_ASSISTANT_PAGE_CONTENT,  FALSE},
+    { NULL, -1, "Click the Button",       GTK_ASSISTANT_PAGE_PROGRESS, FALSE},
+    { NULL, -1, "Confirmation",           GTK_ASSISTANT_PAGE_CONFIRM,  TRUE},
+  };
+  
+  GtkWidget *assistant = gtk_assistant_new();
+  gtk_widget_set_size_request (assistant, 450, 300);
+
+  /* Add five pages to the GtkAssistant dialog. */
+  int i;
+  for (i = 0; i < 5; i++) {
+    char *str = g_strdup_printf("Page %d", i);
+    page[i].widget = gtk_label_new(str);
+    g_free(str);
+
+    page[i].index = gtk_assistant_append_page(GTK_ASSISTANT (assistant),
+					      page[i].widget);
+
+    gtk_assistant_set_page_title (GTK_ASSISTANT (assistant),
+                                  page[i].widget, page[i].title);
+    gtk_assistant_set_page_type (GTK_ASSISTANT (assistant),
+                                  page[i].widget, page[i].type);
+
+    /* Set the introduction and conclusion pages as complete so they can be
+     * incremented or closed. */
+    gtk_assistant_set_page_complete (GTK_ASSISTANT (assistant),
+                                     page[i].widget, page[i].complete);
+  }
+
+  /* make it a modal subdialog of the main window */
+  gtk_window_set_modal(GTK_WINDOW(assistant), TRUE);
+  gtk_window_set_transient_for(GTK_WINDOW(assistant), 
+			       GTK_WINDOW(appdata->window));
+
+  gtk_widget_show_all(assistant);
+
+  g_signal_connect(G_OBJECT(assistant), "destroy",
+		   G_CALLBACK(on_assistant_destroy), NULL);
+
+  do {
+    if(gtk_events_pending()) 
+      gtk_main_iteration();
+    else 
+      usleep(100000);
+
+    putchar('.'); fflush(stdout);
+  } while(1);
+
+  gtk_widget_destroy(assistant);
+}
+
+
 // vim:et:ts=8:sw=2:sts=2:ai

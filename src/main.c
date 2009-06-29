@@ -67,7 +67,6 @@ static void main_ui_enable(appdata_t *appdata) {
   gtk_widget_set_sensitive(appdata->menu_view, osm_valid);
   gtk_widget_set_sensitive(appdata->menu_wms, osm_valid);
   gtk_widget_set_sensitive(appdata->menu_map, osm_valid);
-  gtk_widget_set_sensitive(appdata->menu_item_project_close, project_valid);
 
   if(!project_valid)
     statusbar_set(appdata, _("Please load or create a project"), FALSE);
@@ -83,10 +82,9 @@ cb_menu_project_open(GtkMenuItem *item, gpointer data) {
 }
 
 static void 
-cb_menu_project_close(GtkMenuItem *item, gpointer data) {
+cb_menu_project_wizard(GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
-  project_close(appdata);
-  main_ui_enable(appdata);
+  project_wizard(appdata);
 }
 
 static void 
@@ -637,9 +635,9 @@ void menu_create(appdata_t *appdata) {
     0, 0, TRUE, FALSE, FALSE
   );
 
-  appdata->menu_item_project_close = menu_append_new_item(
-    appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_project_close), _("_Close"),
-    GTK_STOCK_CLOSE, "<OSM2Go-Main>/Project/Close",
+  menu_append_new_item(
+    appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_project_wizard), _("_Wizard"),
+    GTK_STOCK_NEW, "<OSM2Go-Main>/Project/Wizard",
     0, 0, TRUE, FALSE, FALSE
   );
 

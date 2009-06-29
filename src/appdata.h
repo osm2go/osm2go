@@ -124,7 +124,6 @@ typedef struct appdata_s {
     canvas_item_t *gps_item;      // the purple curcle
   } track;
 
-  GtkWidget *menu_item_project_close;
   GtkWidget *menu_item_view_fullscreen;
 
   GtkWidget *menu_view;
