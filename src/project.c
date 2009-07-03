@@ -1239,49 +1239,146 @@ gboolean project_load(appdata_t *appdata, char *name) {
 
 /* ------------------- project setup wizard ----------------- */
 
-typedef struct {
-  GtkWidget *widget;
-  gint index;
+typedef struct wizard_page_s {
   const gchar *title;
+  GtkWidget* (*setup)(struct wizard_page_s *page);
   GtkAssistantPageType type;
   gboolean complete;
+  GtkWidget *widget;
+  gint index;
 } wizard_page_t;
 
-static gint on_assistant_destroy(GtkWidget *widget, gpointer data) {
+typedef struct {
+  gboolean running;
+
+  int page_num;
+  wizard_page_t *page;
+} wizard_t;
+
+
+static gint on_assistant_destroy(GtkWidget *widget, wizard_t *wizard) {
+  printf("destroy callback\n");
+  wizard->running = FALSE;
   return FALSE;
 }
 
+static void on_assistant_cancel(GtkWidget *widget, wizard_t *wizard) {
+  printf("cancel callback\n");
+  wizard->running = FALSE;
+}
+
+static void on_assistant_close(GtkWidget *widget, wizard_t *wizard) {
+  printf("close callback\n");
+  wizard->running = FALSE;
+}
+
+static GtkWidget *wizard_text(const char *text) {
+  GtkTextBuffer *buffer = gtk_text_buffer_new(NULL);
+  gtk_text_buffer_set_text(buffer, text, -1);
+
+#ifndef USE_HILDON_TEXT_VIEW
+  GtkWidget *view = gtk_text_view_new_with_buffer(buffer);
+#else
+  GtkWidget *view = hildon_text_view_new();
+  hildon_text_view_set_buffer(HILDON_TEXT_VIEW(view), buffer);
+#endif
+
+  gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(view), GTK_WRAP_WORD);
+  gtk_text_view_set_editable(GTK_TEXT_VIEW(view), FALSE);
+  gtk_text_view_set_left_margin(GTK_TEXT_VIEW(view), 2 );
+  gtk_text_view_set_right_margin(GTK_TEXT_VIEW(view), 2 );
+  gtk_text_view_set_cursor_visible(GTK_TEXT_VIEW(view), FALSE );
+
+  return view;
+}
+
+static GtkWidget *wizard_create_intro_page(wizard_page_t *page) {
+  static const char *text = 
+    "This wizard will guide you through the setup of a new project.\n\n"
+    "An osm2go project covers a certain area of the world as seen "
+    "by openstreetmap.org. The wizard will help you downloading "
+    "the data describing that area and will enable you to make changes "
+    "to it using osm2go.";
+
+  return wizard_text(text);
+}
+
+static GtkWidget *wizard_create_source_selection_page(wizard_page_t *page) {
+  GtkWidget *vbox = gtk_vbox_new(FALSE, 0);
+
+  gtk_box_pack_start_defaults(GTK_BOX(vbox), 
+	      wizard_text("Please choose how to determine the area you "
+			  "are planning to work on."));
+
+  /* add selection buttons */
+  GtkWidget *choice1 = 
+    gtk_radio_button_new_with_label(NULL, 
+				    _("Use current GPS position"));
+  gtk_box_pack_start(GTK_BOX(vbox), choice1, TRUE, TRUE, 2);
+
+  GtkWidget *choice2 = 
+    gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON(choice1),
+				    _("Get from Maemo Mapper"));
+  gtk_box_pack_start(GTK_BOX(vbox), choice2, TRUE, TRUE, 2);
+
+  GtkWidget *choice3 = 
+    gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON(choice1),
+				    _("Specify area manually"));
+  gtk_box_pack_start(GTK_BOX(vbox), choice3, TRUE, TRUE, 2);
+
+ 
+  
+  return vbox;
+}
+
 void project_wizard(appdata_t *appdata) {
-  wizard_page_t page[5] = {
-    { NULL, -1, "Introduction",           GTK_ASSISTANT_PAGE_INTRO,    TRUE},
-    { NULL, -1, NULL,                     GTK_ASSISTANT_PAGE_CONTENT,  FALSE},
-    { NULL, -1, "Click the Check Button", GTK_ASSISTANT_PAGE_CONTENT,  FALSE},
-    { NULL, -1, "Click the Button",       GTK_ASSISTANT_PAGE_PROGRESS, FALSE},
-    { NULL, -1, "Confirmation",           GTK_ASSISTANT_PAGE_CONFIRM,  TRUE},
+  wizard_page_t page[] = {
+    { "Introduction",           wizard_create_intro_page,
+      GTK_ASSISTANT_PAGE_INTRO,    TRUE},
+    { "Area source selection",  wizard_create_source_selection_page,
+      GTK_ASSISTANT_PAGE_CONTENT,  FALSE},
+    { "Click the Check Button", NULL, 
+      GTK_ASSISTANT_PAGE_CONTENT,  FALSE},
+    { "Click the Button",       NULL,
+      GTK_ASSISTANT_PAGE_PROGRESS, FALSE},
+    { "Confirmation",           NULL,
+      GTK_ASSISTANT_PAGE_CONFIRM,  TRUE},
   };
   
+  wizard_t wizard = {
+    TRUE,
+
+    /* the pages themselves */
+    sizeof(page) / sizeof(wizard_page_t), page
+  };
+
   GtkWidget *assistant = gtk_assistant_new();
   gtk_widget_set_size_request (assistant, 450, 300);
 
   /* Add five pages to the GtkAssistant dialog. */
   int i;
-  for (i = 0; i < 5; i++) {
-    char *str = g_strdup_printf("Page %d", i);
-    page[i].widget = gtk_label_new(str);
-    g_free(str);
+  for (i = 0; i < wizard.page_num; i++) {
+    if(wizard.page[i].setup)
+      wizard.page[i].widget = 
+	wizard.page[i].setup(&wizard.page[i]);
+    else {
+      char *str = g_strdup_printf("Page %d", i);
+      wizard.page[i].widget = gtk_label_new(str);
+      g_free(str);
+    }
 
     page[i].index = gtk_assistant_append_page(GTK_ASSISTANT (assistant),
-					      page[i].widget);
+					      wizard.page[i].widget);
 
     gtk_assistant_set_page_title (GTK_ASSISTANT (assistant),
-                                  page[i].widget, page[i].title);
+                                  wizard.page[i].widget, wizard.page[i].title);
     gtk_assistant_set_page_type (GTK_ASSISTANT (assistant),
-                                  page[i].widget, page[i].type);
+                                  wizard.page[i].widget, wizard.page[i].type);
 
     /* Set the introduction and conclusion pages as complete so they can be
      * incremented or closed. */
     gtk_assistant_set_page_complete (GTK_ASSISTANT (assistant),
-                                     page[i].widget, page[i].complete);
+                                     wizard.page[i].widget, wizard.page[i].complete);
   }
 
   /* make it a modal subdialog of the main window */
@@ -1292,7 +1389,13 @@ void project_wizard(appdata_t *appdata) {
   gtk_widget_show_all(assistant);
 
   g_signal_connect(G_OBJECT(assistant), "destroy",
-		   G_CALLBACK(on_assistant_destroy), NULL);
+		   G_CALLBACK(on_assistant_destroy), &wizard);
+
+  g_signal_connect(G_OBJECT(assistant), "cancel",
+		   G_CALLBACK(on_assistant_cancel), &wizard);
+
+  g_signal_connect(G_OBJECT(assistant), "close",
+		   G_CALLBACK(on_assistant_close), &wizard);
 
   do {
     if(gtk_events_pending()) 
@@ -1300,8 +1403,7 @@ void project_wizard(appdata_t *appdata) {
     else 
       usleep(100000);
 
-    putchar('.'); fflush(stdout);
-  } while(1);
+  } while(wizard.running);
 
   gtk_widget_destroy(assistant);
 }

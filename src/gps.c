@@ -82,8 +82,7 @@ void gps_init(appdata_t *appdata) {
 #if MAEMO_VERSION_MAJOR < 5
   gps_state->control = location_gpsd_control_get_default();
 
-  if(appdata->gps_enabled && gps_state->control && 
-     gps_state->control->can_control) {
+  if(gps_state->control && gps_state->control->can_control) {
     printf("Having control over GPSD and GPS is to be enabled, starting it\n");
     location_gpsd_control_start(gps_state->control);
   }
@@ -111,19 +110,6 @@ void gps_release(appdata_t *appdata) {
 
 void gps_enable(appdata_t *appdata, gboolean enable) {
   appdata->gps_enabled = enable;
-
-#if MAEMO_VERSION_MAJOR < 5
-  gps_state_t *gps_state = appdata->gps_state;
-  if(gps_state->control && gps_state->control->can_control) {
-    printf("Having control over GPSD, %sing it\n",
-	   enable?"start":"stop");
-
-    if(enable)
-      location_gpsd_control_start(gps_state->control);
-    else
-      location_gpsd_control_stop(gps_state->control);
-  }
-#endif
 }
 
 #else  // ENABLE_LIBLOCATION
