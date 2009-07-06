@@ -36,22 +36,11 @@
 #include <hildon/hildon-program.h>
 #include <hildon/hildon-file-chooser-dialog.h>
 #include <hildon/hildon-file-system-model.h>
+#include <hildon/hildon-defines.h>
 #include <libosso.h>      /* required for screen saver timeout */
 #define GTK_FM_OK  GTK_RESPONSE_OK
 #define HILDON_ENTRY_NO_AUTOCAP(a) \
   hildon_gtk_entry_set_input_mode(GTK_ENTRY(a),HILDON_GTK_INPUT_MODE_FULL)
-
-#ifndef HILDON_HARDKEY_FULLSCREEN
-#define HILDON_HARDKEY_FULLSCREEN GDK_F6
-#endif
-
-#ifndef HILDON_HARDKEY_INCREASE
-#define HILDON_HARDKEY_INCREASE GDK_F7
-#endif
-
-#ifndef HILDON_HARDKEY_DECREASE
-#define HILDON_HARDKEY_DECREASE GDK_F8
-#endif
 
 #else
 #define GTK_FM_OK  GTK_RESPONSE_ACCEPT
@@ -147,7 +136,7 @@ typedef struct appdata_s {
 
 #if defined(USE_HILDON) && (MAEMO_VERSION_MAJOR == 5)
   /* submenues are seperate menues under fremantle */
-  GtkWidget *submenu_project;
+  GtkWidget *app_menu_view, *app_menu_wms, *app_menu_track;
 #endif
 
   undo_t undo;

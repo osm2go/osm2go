@@ -27,6 +27,8 @@
 #include <hildon/hildon-button.h>
 #include <hildon/hildon-check-button.h>
 #include <hildon/hildon-window-stack.h>
+#include <gdk/gdkx.h>
+#include <X11/Xatom.h>
 #endif
 
 #include "appdata.h"
@@ -878,8 +880,20 @@ static gboolean no_icon_get_toggle(appdata_t *appdata) {
   return appdata->settings->no_icons;
 }
 
+static gboolean enable_gps_get_toggle(appdata_t *appdata) {
+  if(!appdata)           return FALSE;
+  return appdata->gps_enabled;
+}
+
+static gboolean follow_gps_get_toggle(appdata_t *appdata) {
+  if(!appdata)           return FALSE;
+  if(!appdata->settings) return FALSE;
+  return appdata->settings->follow_gps;
+}
+
 /* create a HildonAppMenu */
-static GtkWidget *app_menu_create(appdata_t *appdata, const menu_entry_t *menu_entries) {
+static GtkWidget *app_menu_create(appdata_t *appdata, 
+				  const menu_entry_t *menu_entries) {
   HildonAppMenu *menu = HILDON_APP_MENU(hildon_app_menu_new());
 
   while(menu_entries->label) {
@@ -889,14 +903,16 @@ static GtkWidget *app_menu_create(appdata_t *appdata, const menu_entry_t *menu_e
       button = hildon_button_new_with_text(
 	    HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH,
 	    HILDON_BUTTON_ARRANGEMENT_VERTICAL,
-	    _(menu_entries->label), menu_entries->value);
-      g_signal_connect_after(button, "clicked", menu_entries->activate_cb, appdata); 
+	    _(menu_entries->label), _(menu_entries->value));
+      g_signal_connect_after(button, "clicked", 
+			     menu_entries->activate_cb, appdata); 
     } else {
       button = hildon_check_button_new(HILDON_SIZE_AUTO);
       gtk_button_set_label(GTK_BUTTON(button), _(menu_entries->label));
       hildon_check_button_set_active(HILDON_CHECK_BUTTON(button), 
 				     menu_entries->toggle(appdata));
-      g_signal_connect_after(button, "toggled", menu_entries->activate_cb, appdata); 
+      g_signal_connect_after(button, "toggled", 
+			     menu_entries->activate_cb, appdata); 
     }
 
     /* offset to GtkWidget pointer was given -> store pointer */
@@ -915,21 +931,28 @@ static GtkWidget *app_menu_create(appdata_t *appdata, const menu_entry_t *menu_e
 
 /* the view submenu */
 void on_submenu_view_clicked(GtkButton *button, appdata_t *appdata) {
-  /* draw a popup menu. */
-  hildon_app_menu_popup(HILDON_APP_MENU(appdata->submenu_view), 
+  hildon_app_menu_popup(HILDON_APP_MENU(appdata->app_menu_view), 
 			GTK_WINDOW(appdata->window));
 }
 
 void on_submenu_wms_clicked(GtkButton *button, appdata_t *appdata) {
-  /* draw a popup menu. */
-  hildon_app_menu_popup(HILDON_APP_MENU(appdata->submenu_wms), 
+  hildon_app_menu_popup(HILDON_APP_MENU(appdata->app_menu_wms), 
+			GTK_WINDOW(appdata->window));
+}
+
+void on_submenu_track_clicked(GtkButton *button, appdata_t *appdata) {
+  hildon_app_menu_popup(HILDON_APP_MENU(appdata->app_menu_track), 
 			GTK_WINDOW(appdata->window));
 }
 
 /* -- the view submenu -- */
 #define APP_OFFSET(a)  offsetof(appdata_t, a)
 #define SIMPLE_ENTRY(a,b)     { a, NULL, TRUE,   NULL, 0, G_CALLBACK(b) }
+#define ENABLED_ENTRY(a,b,c) { a, NULL, TRUE,  NULL, APP_OFFSET(c), G_CALLBACK(b) }
 #define DISABLED_ENTRY(a,b,c) { a, NULL, FALSE,  NULL, APP_OFFSET(c), G_CALLBACK(b) }
+#define TOGGLE_ENTRY(a,b,c)  { a, NULL, TRUE, c, 0, G_CALLBACK(b) }
+#define DISABLED_TOGGLE_ENTRY(a,b,c,d)  { a, NULL, FALSE, c, APP_OFFSET(d), G_CALLBACK(b) }
+#define ENABLED_TOGGLE_ENTRY(a,b,c,d)  { a, NULL, TRUE, c, APP_OFFSET(d), G_CALLBACK(b) }
 #define LAST_ENTRY            { NULL, NULL, FALSE, NULL, 0, NULL }
 
 static const menu_entry_t submenu_view[] = {
@@ -945,7 +968,7 @@ static const menu_entry_t submenu_view[] = {
   DISABLED_ENTRY("Hide selected", cb_menu_map_hide_sel, menu_item_map_hide_sel),
   DISABLED_ENTRY("Show all",      cb_menu_map_show_all, menu_item_map_show_all),
   /* --- */
-  { "No icons",       NULL, TRUE,  no_icon_get_toggle, 0, G_CALLBACK(cb_menu_map_no_icons) },
+  TOGGLE_ENTRY("No icons",        cb_menu_map_no_icons, no_icon_get_toggle),
 
   LAST_ENTRY
 };
@@ -959,34 +982,40 @@ static const menu_entry_t submenu_wms[] = {
   LAST_ENTRY
 };
 
+/* -- the track submenu -- */
+static const menu_entry_t submenu_track[] = {
+  ENABLED_ENTRY("Import",  cb_menu_track_import, track.menu_item_track_import),
+  DISABLED_ENTRY("Export", cb_menu_track_export, track.menu_item_track_export),
+  DISABLED_ENTRY("Clear",  cb_menu_track_clear, track.menu_item_track_clear),
+  ENABLED_TOGGLE_ENTRY("GPS enable", cb_menu_track_enable_gps, 
+		enable_gps_get_toggle, track.menu_item_track_enable_gps),
+  DISABLED_TOGGLE_ENTRY("GPS follow", cb_menu_track_follow_gps, 
+		follow_gps_get_toggle, track.menu_item_track_follow_gps),
+
+  LAST_ENTRY
+};
+
+
+/* -- the applications main menu -- */
+static const menu_entry_t main_menu[] = {
+  SIMPLE_ENTRY("About",  cb_menu_about),
+  ENABLED_ENTRY("View",  on_submenu_view_clicked,  submenu_view),
+  ENABLED_ENTRY("WMS",   on_submenu_wms_clicked,   submenu_wms),
+  ENABLED_ENTRY("Track", on_submenu_track_clicked, track.submenu_track),
+
+  LAST_ENTRY
+};
+
 void menu_create(appdata_t *appdata) { 
-  GtkWidget *button;
   HildonAppMenu *menu = HILDON_APP_MENU(hildon_app_menu_new());
 
-  /* build submenus */
-  appdata->submenu_wms = app_menu_create(appdata, submenu_wms);
-  appdata->submenu_view = app_menu_create(appdata, submenu_view);
+  /* build menu/submenus */
+  menu = HILDON_APP_MENU(app_menu_create(appdata, main_menu));
+  appdata->app_menu_wms = app_menu_create(appdata, submenu_wms);
+  appdata->app_menu_view = app_menu_create(appdata, submenu_view);
+  appdata->app_menu_track = app_menu_create(appdata, submenu_track);
 
-  /* ------- */
-  button = gtk_button_new_with_label(_("About"));
-  g_signal_connect_after(button, "clicked", 
-			 G_CALLBACK(cb_menu_about), appdata);
-  hildon_app_menu_append(menu, GTK_BUTTON(button));
-
-  button = gtk_button_new_with_label(_("View"));
-  g_signal_connect_after(button, "clicked", 
-			 G_CALLBACK(on_submenu_view_clicked), appdata);
-  hildon_app_menu_append(menu, GTK_BUTTON(button));
-
-  button = gtk_button_new_with_label(_("WMS"));
-  g_signal_connect_after(button, "clicked", 
-			 G_CALLBACK(on_submenu_wms_clicked), appdata);
-  hildon_app_menu_append(menu, GTK_BUTTON(button));
-
-
-
-  gtk_widget_show_all(GTK_WIDGET(menu));
-  hildon_window_set_app_menu(HILDON_WINDOW(appdata->window), menu);		     
+  hildon_window_set_app_menu(HILDON_WINDOW(appdata->window), menu);
 }
 #endif
 
@@ -1078,6 +1107,8 @@ gboolean on_window_key_press(GtkWidget *widget,
   appdata_t *appdata = (appdata_t*)data;
   int handled = FALSE;
 
+  //  printf("key event with keyval %x\n", event->keyval);
+
   // the map handles some keys on its own ...
   switch(event->keyval) {
 
@@ -1151,6 +1182,17 @@ int main(int argc, char *argv[]) {
   /* Create HildonWindow and set it to HildonProgram */
   appdata.window = HILDON_WINDOW(hildon_window_new());
   hildon_program_add_window(appdata.program, appdata.window);
+
+#if MAEMO_VERSION_MAJOR == 5
+  unsigned long val;
+  XChangeProperty(GDK_DISPLAY(),
+		  GDK_WINDOW_XID(GTK_WIDGET(appdata.window)->window),
+		  XInternAtom(GDK_DISPLAY(),
+			      "_HILDON_ZOOM_KEY_ATOM",
+			      False), XA_INTEGER, 32,
+		  PropModeReplace, (unsigned char *) &val, 1);
+#endif
+
 #else
   /* Create a Window. */
   appdata.window = gtk_window_new(GTK_WINDOW_TOPLEVEL);

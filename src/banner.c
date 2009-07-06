@@ -32,14 +32,17 @@ void banner_clear(appdata_t *appdata) {
     return;
   if (appdata->banner_is_grabby) {
     gtk_grab_remove(YETI_PASSIVE_WIDGET);
-    GtkWidget *win, *menu, *menu_att;
-    win = GTK_WIDGET(appdata->window);
-    menu = GTK_WIDGET(hildon_window_get_menu(HILDON_WINDOW(win)));
-    menu_att = gtk_menu_get_attach_widget(
+    GtkWidget *win = GTK_WIDGET(appdata->window);
+    GtkWidget *menu = GTK_WIDGET(hildon_window_get_menu(HILDON_WINDOW(win)));
+#if MAEMO_VERSION_MAJOR < 5
+    GtkWidget *menu_att = gtk_menu_get_attach_widget(
 		  hildon_window_get_menu(HILDON_WINDOW(win)));
+#endif
     gtk_widget_set_sensitive(win, TRUE);
     gtk_widget_set_sensitive(menu, TRUE);
+#if MAEMO_VERSION_MAJOR < 5
     gtk_widget_set_sensitive(menu_att, TRUE);
+#endif
   }
   gtk_widget_destroy(appdata->banner);
   g_object_unref(appdata->banner);
