@@ -55,7 +55,6 @@ static store_t store[] = {
 
   /* main */
   { "no_icons",         STORE_BOOL,   OFFSET(no_icons)     },
-  { "no_antialias",     STORE_BOOL,   OFFSET(no_antialias) },
   { "track_path",       STORE_STRING, OFFSET(track_path)   },
   { "enable_gps",       STORE_BOOL,   OFFSET(enable_gps)   },
   { "follow_gps",       STORE_BOOL,   OFFSET(follow_gps)   },

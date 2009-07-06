@@ -179,7 +179,7 @@ static object_t *undo_object_copy(object_t *object) {
 void undo_remember_delete(appdata_t *appdata, object_t *object) {
 
   /* don't do anything if undo isn't enabled */
-  if(!appdata->menu_item_osm_undo)
+  if(!appdata->menu_item_map_undo)
     return;
 
   printf("UNDO: remembering delete operation for %s\n", 

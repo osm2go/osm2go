@@ -62,7 +62,6 @@ typedef struct settings_s {
 
   /* changed in main.c */
   gboolean no_icons;
-  gboolean no_antialias;
   char *track_path;
   gboolean enable_gps;
   gboolean follow_gps;

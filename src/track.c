@@ -38,8 +38,8 @@ static void track_menu_set(appdata_t *appdata, gboolean present) {
   if(!appdata->window) return;
 
   /* if a track is present, then it can be cleared or exported */
-  gtk_widget_set_sensitive(appdata->track.menu_item_clear, present);
-  gtk_widget_set_sensitive(appdata->track.menu_item_export, present);
+  gtk_widget_set_sensitive(appdata->track.menu_item_track_clear, present);
+  gtk_widget_set_sensitive(appdata->track.menu_item_track_export, present);
 }
 
 gint track_seg_points(track_seg_t *seg) {
@@ -577,7 +577,7 @@ void track_enable_gps(appdata_t *appdata, gboolean enable) {
   if(appdata->settings)
     appdata->settings->enable_gps = enable;
 
-  gtk_widget_set_sensitive(appdata->track.menu_item_follow_gps, enable);
+  gtk_widget_set_sensitive(appdata->track.menu_item_track_follow_gps, enable);
 
   if(enable) track_do_enable_gps(appdata);
   else       track_do_disable_gps(appdata);

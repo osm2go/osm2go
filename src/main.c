@@ -23,6 +23,12 @@
 #include <curl/curl.h>
 #include <gdk/gdkkeysyms.h>
 
+#if defined(USE_HILDON) && (MAEMO_VERSION_MAJOR == 5)
+#include <hildon/hildon-button.h>
+#include <hildon/hildon-check-button.h>
+#include <hildon/hildon-window-stack.h>
+#endif
+
 #include "appdata.h"
 #include "banner.h"
 
@@ -56,17 +62,16 @@ static void main_ui_enable(appdata_t *appdata) {
     gtk_widget_set_sensitive(appdata->iconbar->toolbar, osm_valid);
 
   /* disable all menu entries related to map */
-  gtk_widget_set_sensitive(appdata->menu_osm, project_valid);
-  gtk_widget_set_sensitive(appdata->menu_item_osm_upload, osm_valid);
-  if(appdata->menu_item_osm_undo)
-    gtk_widget_set_sensitive(appdata->menu_item_osm_undo, osm_valid);
-  gtk_widget_set_sensitive(appdata->menu_item_osm_save_changes, osm_valid);
-  gtk_widget_set_sensitive(appdata->menu_item_osm_undo_changes, osm_valid);
-  gtk_widget_set_sensitive(appdata->menu_item_osm_relations, osm_valid);
-  gtk_widget_set_sensitive(appdata->track.menu_track, osm_valid);
-  gtk_widget_set_sensitive(appdata->menu_view, osm_valid);
-  gtk_widget_set_sensitive(appdata->menu_wms, osm_valid);
-  gtk_widget_set_sensitive(appdata->menu_map, osm_valid);
+  gtk_widget_set_sensitive(appdata->submenu_map, project_valid);
+  gtk_widget_set_sensitive(appdata->menu_item_map_upload, osm_valid);
+  if(appdata->menu_item_map_undo)
+    gtk_widget_set_sensitive(appdata->menu_item_map_undo, osm_valid);
+  gtk_widget_set_sensitive(appdata->menu_item_map_save_changes, osm_valid);
+  gtk_widget_set_sensitive(appdata->menu_item_map_undo_changes, osm_valid);
+  gtk_widget_set_sensitive(appdata->menu_item_map_relations, osm_valid);
+  gtk_widget_set_sensitive(appdata->track.submenu_track, osm_valid);
+  gtk_widget_set_sensitive(appdata->submenu_view, osm_valid);
+  gtk_widget_set_sensitive(appdata->submenu_wms, osm_valid);
 
   if(!project_valid)
     statusbar_set(appdata, _("Please load or create a project"), FALSE);
@@ -113,11 +118,13 @@ cb_menu_about(GtkMenuItem *item, gpointer data) {
 
 void on_window_destroy (GtkWidget *widget, gpointer data);
 
+#ifndef USE_HILDON
 static void 
 cb_menu_quit(GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
   gtk_widget_destroy(GTK_WIDGET(appdata->window));
 }
+#endif
 
 static void 
 cb_menu_upload(GtkMenuItem *item, gpointer data) {
@@ -195,49 +202,22 @@ cb_menu_map_show_all(GtkMenuItem *item, gpointer data) {
 
 /* ---------------------------------------------------------- */
 
-#if 1  // mainly for testing
-static void 
-cb_menu_redraw(GtkMenuItem *item, gpointer data) {
-  appdata_t *appdata = (appdata_t*)data;
-
-  /* redraw the entire map by destroying all map items and redrawing them */
-  banner_busy_start(appdata, 1, "Redrawing");
-  track_save(appdata->project, appdata->track.track);
-  diff_save(appdata->project, appdata->osm);
-  map_clear(appdata, MAP_LAYER_ALL);
-  osm_free(&appdata->icon, appdata->osm);
-
-  appdata->osm = osm_parse(appdata->project->path, appdata->project->osm);
-  diff_restore(appdata, appdata->project, appdata->osm);
-  map_paint(appdata);
-
-  appdata->track.track = track_restore(appdata, appdata->project);
-  if(appdata->track.track)
-    map_track_draw(appdata->map, appdata->track.track);
-
-  wms_load(appdata);
-  banner_busy_stop(appdata); //"Redrawing"
-}
+#if defined(USE_HILDON) && (MAEMO_VERSION_MAJOR == 5)
+#define MENU_CHECK_ITEM HildonCheckButton
+#define MENU_CHECK_ITEM_ACTIVE(a) hildon_check_button_get_active(a) 
+#else
+#define MENU_CHECK_ITEM GtkCheckMenuItem
+#define MENU_CHECK_ITEM_ACTIVE(a) gtk_check_menu_item_get_active(a)
 #endif
 
 static void 
-cb_menu_map_no_icons(GtkCheckMenuItem *item, gpointer data) {
-  appdata_t *appdata = (appdata_t*)data;
+cb_menu_map_no_icons(MENU_CHECK_ITEM *item, appdata_t *appdata) {
 
   banner_busy_start(appdata, 1, "Redrawing");
   map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
-  appdata->settings->no_icons = gtk_check_menu_item_get_active(item);
-  map_paint(appdata);
-  banner_busy_stop(appdata); //"Redrawing"
-}
 
-static void 
-cb_menu_map_no_antialias(GtkCheckMenuItem *item, gpointer data) {
-  appdata_t *appdata = (appdata_t*)data;
+  appdata->settings->no_icons = MENU_CHECK_ITEM_ACTIVE(item);
 
-  banner_busy_start(appdata, 1, "Redrawing");
-  map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
-  appdata->settings->no_antialias = gtk_check_menu_item_get_active(item);
   map_paint(appdata);
   banner_busy_stop(appdata); //"Redrawing"
 }
@@ -294,10 +274,10 @@ cb_menu_osm_relations(GtkMenuItem *item, gpointer data) {
 
 #if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
 static void 
-cb_menu_fullscreen(GtkCheckMenuItem *item, gpointer data) {
+cb_menu_fullscreen(MENU_CHECK_ITEM *item, gpointer data) {
   appdata_t *appdata = (appdata_t *)data;
 
-  if(gtk_check_menu_item_get_active(item))
+  if(MENU_CHECK_ITEM_ACTIVE(item))
     gtk_window_fullscreen(GTK_WINDOW(appdata->window));
   else
     gtk_window_unfullscreen(GTK_WINDOW(appdata->window));
@@ -400,26 +380,14 @@ cb_menu_track_import(GtkMenuItem *item, appdata_t *appdata) {
 }
 
 static void 
-cb_menu_track_enable_gps(GtkMenuItem *item, gpointer data) {
-  appdata_t *appdata = (appdata_t*)data;
-
-  if(gtk_check_menu_item_get_active(
-    GTK_CHECK_MENU_ITEM(appdata->track.menu_item_enable_gps))) {
-    track_enable_gps(appdata, TRUE);
-  } else 
-    track_enable_gps(appdata, FALSE);
+cb_menu_track_enable_gps(MENU_CHECK_ITEM *item, appdata_t *appdata) {
+  track_enable_gps(appdata, MENU_CHECK_ITEM_ACTIVE(item));
 }
 
 
 static void 
-cb_menu_track_follow_gps(GtkMenuItem *item, gpointer data) {
-  appdata_t *appdata = (appdata_t*)data;
-
-  if(gtk_check_menu_item_get_active(
-    GTK_CHECK_MENU_ITEM(appdata->track.menu_item_follow_gps))) {
-    appdata->settings->follow_gps = TRUE;
-  } else 
-    appdata->settings->follow_gps = FALSE;
+cb_menu_track_follow_gps(MENU_CHECK_ITEM *item, appdata_t *appdata) {
+  appdata->settings->follow_gps = MENU_CHECK_ITEM_ACTIVE(item);
 }
 
 
@@ -526,7 +494,7 @@ cb_menu_track_clear(GtkMenuItem *item, gpointer data) {
 #endif
 
 
-
+#if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
 // Half-arsed slapdash common menu item constructor. Let's use GtkBuilder
 // instead so we have some flexibility.
 
@@ -604,7 +572,6 @@ menu_append_new_item(appdata_t *appdata,
 		   appdata);
   return item;
 }
-
 
 void menu_create(appdata_t *appdata) { 
   GtkWidget *menu, *item, *submenu;
@@ -693,14 +660,47 @@ void menu_create(appdata_t *appdata) {
     GDK_comma, GDK_MOD1_MASK, TRUE, FALSE, FALSE
   );
 
-  /* -------------------- OSM submenu -------------------- */
+  gtk_menu_shell_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
 
-  appdata->menu_osm = item = gtk_menu_item_new_with_mnemonic( _("_OSM") );
+  appdata->menu_item_map_hide_sel = menu_append_new_item(
+    appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_map_hide_sel), _("_Hide selected"),
+    GTK_STOCK_REMOVE, "<OSM2Go-Main>/Map/HideSelected",
+    0, 0, TRUE, FALSE, FALSE
+  );
+  gtk_widget_set_sensitive(appdata->menu_item_map_hide_sel, FALSE);
+
+  appdata->menu_item_map_show_all = menu_append_new_item(
+    appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_map_show_all), _("_Show all"),
+    GTK_STOCK_ADD, "<OSM2Go-Main>/Map/ShowAll",
+    0, 0, TRUE, FALSE, FALSE
+  );
+  gtk_widget_set_sensitive(appdata->menu_item_map_show_all, FALSE);
+
+  gtk_menu_shell_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
+
+  menu_append_new_item(
+    appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_style), _("St_yle"),
+    GTK_STOCK_SELECT_COLOR, "<OSM2Go-Main>/Map/Style",
+    0, 0, TRUE, FALSE, FALSE
+  );
+
+  gtk_menu_shell_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
+
+  appdata->menu_item_map_no_icons = menu_append_new_item(
+    appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_map_no_icons), _("No _icons"),
+    NULL, "<OSM2Go-Main>/Map/NoIcons",
+    0, 0, TRUE, TRUE, appdata->settings->no_icons
+  );
+
+
+  /* -------------------- map submenu -------------------- */
+
+  appdata->menu_map = item = gtk_menu_item_new_with_mnemonic( _("_Map") );
   gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
   submenu = gtk_menu_new();
   gtk_menu_set_accel_group(GTK_MENU(submenu), accel_grp);
   gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), submenu);
-
+  
   appdata->menu_item_osm_upload = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_upload), _("_Upload"),
     "upload.16", "<OSM2Go-Main>/OSM/Upload",
@@ -771,58 +771,6 @@ void menu_create(appdata_t *appdata) {
   );
   gtk_widget_set_sensitive(appdata->menu_item_wms_adjust, FALSE);
 
-  /* -------------------- map submenu -------------------- */
-
-  appdata->menu_map = item = gtk_menu_item_new_with_mnemonic( _("_Map") );
-  gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
-  submenu = gtk_menu_new();
-  gtk_menu_set_accel_group(GTK_MENU(submenu), accel_grp);
-  gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), submenu);
-  
-  appdata->menu_item_map_hide_sel = menu_append_new_item(
-    appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_map_hide_sel), _("_Hide selected"),
-    GTK_STOCK_REMOVE, "<OSM2Go-Main>/Map/HideSelected",
-    0, 0, TRUE, FALSE, FALSE
-  );
-  gtk_widget_set_sensitive(appdata->menu_item_map_hide_sel, FALSE);
-
-  appdata->menu_item_map_show_all = menu_append_new_item(
-    appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_map_show_all), _("_Show all"),
-    GTK_STOCK_ADD, "<OSM2Go-Main>/Map/ShowAll",
-    0, 0, TRUE, FALSE, FALSE
-  );
-  gtk_widget_set_sensitive(appdata->menu_item_map_show_all, FALSE);
-
-  gtk_menu_shell_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
-
-  menu_append_new_item(
-    appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_style), _("St_yle"),
-    GTK_STOCK_SELECT_COLOR, "<OSM2Go-Main>/Map/Style",
-    0, 0, TRUE, FALSE, FALSE
-  );
-
-  gtk_menu_shell_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
-
-  /* switches mainly intended for testing/debugging */
-  menu_append_new_item(
-    appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_redraw), _("_Redraw"),
-    NULL, "<OSM2Go-Main>/Map/Redraw",
-    GDK_r, GDK_CONTROL_MASK, TRUE, FALSE, FALSE
-  );
-
-  appdata->menu_item_map_no_icons = menu_append_new_item(
-    appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_map_no_icons), _("No _icons"),
-    NULL, "<OSM2Go-Main>/Map/NoIcons",
-    0, 0, TRUE, TRUE, appdata->settings->no_icons
-  );
-
-  appdata->menu_item_map_no_antialias = menu_append_new_item(
-    appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_map_no_antialias),
-    _("No _antialias"),
-    NULL, "<OSM2Go-Main>/Map/NoAntialias",
-    0, 0, TRUE, TRUE, appdata->settings->no_antialias
-  );
-
   /* -------------------- track submenu -------------------- */
 
   appdata->track.menu_track = item = gtk_menu_item_new_with_mnemonic(_("_Track"));
@@ -875,11 +823,13 @@ void menu_create(appdata_t *appdata) {
     0, 0, TRUE, FALSE, FALSE
   );
 
+#ifndef USE_HILDON
   menu_append_new_item(
     appdata, about_quit_items_menu, GTK_SIGNAL_FUNC(cb_menu_quit), _("_Quit"),
     GTK_STOCK_QUIT, "<OSM2Go-Main>/Quit",
     0, 0, TRUE, FALSE, FALSE
   );
+#endif
 
   gtk_window_add_accel_group(GTK_WINDOW(appdata->window), accel_grp);
 
@@ -905,6 +855,139 @@ void menu_create(appdata_t *appdata) {
 
 #endif //USE_HILDON
 }
+#else // !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
+
+void submenu_entry(appdata_t *appdata, HildonAppMenu *menu,
+		   const char *label, const char *value,
+		   GtkSignalFunc activate_cb) {
+
+}
+
+typedef struct {
+  const char *label, *value;
+  gboolean enabled;
+  gboolean (*toggle)(appdata_t *appdata);
+  gulong offset;
+  GtkSignalFunc activate_cb;
+} menu_entry_t;
+
+static gboolean no_icon_get_toggle(appdata_t *appdata) {
+  if(!appdata)           return FALSE;
+  if(!appdata->settings) return FALSE;
+  return appdata->settings->no_icons;
+}
+
+/* create a HildonAppMenu */
+static GtkWidget *app_menu_create(appdata_t *appdata, const menu_entry_t *menu_entries) {
+  HildonAppMenu *menu = HILDON_APP_MENU(hildon_app_menu_new());
+
+  while(menu_entries->label) {
+    GtkWidget *button = NULL;
+
+    if(!menu_entries->toggle) {
+      button = hildon_button_new_with_text(
+	    HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH,
+	    HILDON_BUTTON_ARRANGEMENT_VERTICAL,
+	    _(menu_entries->label), menu_entries->value);
+      g_signal_connect_after(button, "clicked", menu_entries->activate_cb, appdata); 
+    } else {
+      button = hildon_check_button_new(HILDON_SIZE_AUTO);
+      gtk_button_set_label(GTK_BUTTON(button), _(menu_entries->label));
+      hildon_check_button_set_active(HILDON_CHECK_BUTTON(button), 
+				     menu_entries->toggle(appdata));
+      g_signal_connect_after(button, "toggled", menu_entries->activate_cb, appdata); 
+    }
+
+    /* offset to GtkWidget pointer was given -> store pointer */
+    if(menu_entries->offset) 
+      *(GtkWidget**)(((void*)appdata)+menu_entries->offset) = button;
+
+    gtk_widget_set_sensitive(button, menu_entries->enabled);
+
+    hildon_app_menu_append(menu, GTK_BUTTON(button));
+    menu_entries++;
+  }
+
+  gtk_widget_show_all(GTK_WIDGET(menu));
+  return GTK_WIDGET(menu);
+}
+
+/* the view submenu */
+void on_submenu_view_clicked(GtkButton *button, appdata_t *appdata) {
+  /* draw a popup menu. */
+  hildon_app_menu_popup(HILDON_APP_MENU(appdata->submenu_view), 
+			GTK_WINDOW(appdata->window));
+}
+
+void on_submenu_wms_clicked(GtkButton *button, appdata_t *appdata) {
+  /* draw a popup menu. */
+  hildon_app_menu_popup(HILDON_APP_MENU(appdata->submenu_wms), 
+			GTK_WINDOW(appdata->window));
+}
+
+/* -- the view submenu -- */
+#define APP_OFFSET(a)  offsetof(appdata_t, a)
+#define SIMPLE_ENTRY(a,b)     { a, NULL, TRUE,   NULL, 0, G_CALLBACK(b) }
+#define DISABLED_ENTRY(a,b,c) { a, NULL, FALSE,  NULL, APP_OFFSET(c), G_CALLBACK(b) }
+#define LAST_ENTRY            { NULL, NULL, FALSE, NULL, 0, NULL }
+
+static const menu_entry_t submenu_view[] = {
+  SIMPLE_ENTRY("Zoom in",         cb_menu_zoomin),
+  SIMPLE_ENTRY("Zoom out",        cb_menu_zoomout),
+  /* --- */
+  SIMPLE_ENTRY("Style",           cb_menu_style),
+  /* --- */
+  SIMPLE_ENTRY("Normal details",  cb_menu_view_detail_normal),
+  SIMPLE_ENTRY("More details",    cb_menu_view_detail_inc),
+  SIMPLE_ENTRY("Less details",    cb_menu_view_detail_dec),
+  /* --- */
+  DISABLED_ENTRY("Hide selected", cb_menu_map_hide_sel, menu_item_map_hide_sel),
+  DISABLED_ENTRY("Show all",      cb_menu_map_show_all, menu_item_map_show_all),
+  /* --- */
+  { "No icons",       NULL, TRUE,  no_icon_get_toggle, 0, G_CALLBACK(cb_menu_map_no_icons) },
+
+  LAST_ENTRY
+};
+
+/* -- the wms submenu -- */
+static const menu_entry_t submenu_wms[] = {
+  SIMPLE_ENTRY("Import",   cb_menu_wms_import),
+  DISABLED_ENTRY("Clear",  cb_menu_wms_clear, menu_item_wms_clear),
+  DISABLED_ENTRY("Adjust", cb_menu_wms_adjust, menu_item_wms_adjust),
+
+  LAST_ENTRY
+};
+
+void menu_create(appdata_t *appdata) { 
+  GtkWidget *button;
+  HildonAppMenu *menu = HILDON_APP_MENU(hildon_app_menu_new());
+
+  /* build submenus */
+  appdata->submenu_wms = app_menu_create(appdata, submenu_wms);
+  appdata->submenu_view = app_menu_create(appdata, submenu_view);
+
+  /* ------- */
+  button = gtk_button_new_with_label(_("About"));
+  g_signal_connect_after(button, "clicked", 
+			 G_CALLBACK(cb_menu_about), appdata);
+  hildon_app_menu_append(menu, GTK_BUTTON(button));
+
+  button = gtk_button_new_with_label(_("View"));
+  g_signal_connect_after(button, "clicked", 
+			 G_CALLBACK(on_submenu_view_clicked), appdata);
+  hildon_app_menu_append(menu, GTK_BUTTON(button));
+
+  button = gtk_button_new_with_label(_("WMS"));
+  g_signal_connect_after(button, "clicked", 
+			 G_CALLBACK(on_submenu_wms_clicked), appdata);
+  hildon_app_menu_append(menu, GTK_BUTTON(button));
+
+
+
+  gtk_widget_show_all(GTK_WIDGET(menu));
+  hildon_window_set_app_menu(HILDON_WINDOW(appdata->window), menu);		     
+}
+#endif
 
 /********************* end of menu **********************/
 
@@ -976,7 +1059,7 @@ void cleanup(appdata_t *appdata) {
 
   project_free(appdata->project);
 
-  if(appdata->menu_item_osm_undo)
+  if(appdata->menu_item_map_undo)
     undo_free(appdata->undo.state);
 
   puts("everything is gone");
@@ -997,6 +1080,7 @@ gboolean on_window_key_press(GtkWidget *widget,
   // the map handles some keys on its own ...
   switch(event->keyval) {
 
+#if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
 #ifdef USE_HILDON
     /* this is in fact a mapping to GDK_F6 */
   case HILDON_HARDKEY_FULLSCREEN:
@@ -1016,6 +1100,7 @@ gboolean on_window_key_press(GtkWidget *widget,
     
     handled = TRUE;
     break;
+#endif
   }
 
   /* forward unprocessed key presses to map */
@@ -1107,13 +1192,24 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
+#if 0  // another test overlay
+  {
+    GtkWidget *fixed = gtk_fixed_new();
+
+    gtk_fixed_put(GTK_FIXED(fixed), gtk_label_new("Nase"), 0,0);
+    gtk_fixed_put(GTK_FIXED(fixed), map, 0,0);
+
+    gtk_box_pack_start(GTK_BOX(vbox), fixed, TRUE, TRUE, 0);
+  }
+#else
   gtk_box_pack_start(GTK_BOX(vbox), map, TRUE, TRUE, 0);
+#endif
+
   gtk_box_pack_start(GTK_BOX(vbox), statusbar_new(&appdata), FALSE, FALSE, 0);
 
 #ifndef PORTRAIT
   gtk_box_pack_start(GTK_BOX(hbox), iconbar_new(&appdata), FALSE, FALSE, 0);
 #endif
-  //  gtk_box_pack_start(GTK_BOX(hbox), gtk_vseparator_new(), FALSE, FALSE, 0);
   gtk_box_pack_start(GTK_BOX(hbox), vbox, TRUE, TRUE, 0);
 
   gtk_box_pack_start(GTK_BOX(appdata.vbox), hbox, TRUE, TRUE, 0);
@@ -1142,6 +1238,26 @@ int main(int argc, char *argv[]) {
   /* again let the ui do its thing */
   while(gtk_events_pending()) 
     gtk_main_iteration();
+
+#if 0  // test overlay
+  {
+    GtkWidget *overlay = gtk_window_new(GTK_WINDOW_POPUP);
+    gtk_window_set_default_size(GTK_WINDOW(overlay), 40, 20);
+    gtk_window_set_transient_for(GTK_WINDOW(overlay), GTK_WINDOW(appdata.window));
+    gtk_window_set_keep_above(GTK_WINDOW(overlay), TRUE);    
+    gtk_window_set_destroy_with_parent(GTK_WINDOW(overlay), TRUE);
+    gtk_window_set_position(GTK_WINDOW(overlay), GTK_WIN_POS_CENTER_ON_PARENT);
+    gtk_window_set_decorated(GTK_WINDOW(overlay), TRUE);
+
+    /* add some zoom buttons for testing */
+    GtkWidget *hbox = gtk_hbox_new(TRUE, 0);
+    gtk_box_pack_start_defaults(GTK_BOX(hbox), gtk_button_new_with_label("+"));
+    gtk_box_pack_start_defaults(GTK_BOX(hbox), gtk_button_new_with_label("-"));
+    gtk_container_add(GTK_CONTAINER(overlay), hbox);
+
+    gtk_widget_show_all(overlay);
+  }
+#endif
 
   /* start to interact with the user now that the gui is running */
   if(appdata.settings->first_run_demo) {

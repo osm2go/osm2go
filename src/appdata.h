@@ -113,37 +113,42 @@ typedef struct appdata_s {
   } dialog_again;
 
   struct {
-    GtkWidget *menu_track;
-    GtkWidget *menu_item_import;
-    GtkWidget *menu_item_export;
-    GtkWidget *menu_item_clear;
-    GtkWidget *menu_item_enable_gps;
-    GtkWidget *menu_item_follow_gps;
+    GtkWidget *submenu_track;
+    GtkWidget *menu_item_track_import;
+    GtkWidget *menu_item_track_export;
+    GtkWidget *menu_item_track_clear;
+    GtkWidget *menu_item_track_enable_gps;
+    GtkWidget *menu_item_track_follow_gps;
     struct track_s *track;
     guint handler_id;
     canvas_item_t *gps_item;      // the purple curcle
   } track;
 
+#if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
   GtkWidget *menu_item_view_fullscreen;
+#endif
 
-  GtkWidget *menu_view;
+  GtkWidget *submenu_view;
 
-  GtkWidget *menu_osm;
-  GtkWidget *menu_item_osm_upload;
-  GtkWidget *menu_item_osm_undo;
-  GtkWidget *menu_item_osm_save_changes;
-  GtkWidget *menu_item_osm_undo_changes;
-  GtkWidget *menu_item_osm_relations;
+  GtkWidget *submenu_map;
+  GtkWidget *menu_item_map_upload;
+  GtkWidget *menu_item_map_undo;
+  GtkWidget *menu_item_map_save_changes;
+  GtkWidget *menu_item_map_undo_changes;
+  GtkWidget *menu_item_map_relations;
 
-  GtkWidget *menu_wms;
+  GtkWidget *submenu_wms;
   GtkWidget *menu_item_wms_clear;
   GtkWidget *menu_item_wms_adjust;
 
-  GtkWidget *menu_map;
   GtkWidget *menu_item_map_hide_sel;
   GtkWidget *menu_item_map_show_all;
   GtkWidget *menu_item_map_no_icons;
-  GtkWidget *menu_item_map_no_antialias;
+
+#if defined(USE_HILDON) && (MAEMO_VERSION_MAJOR == 5)
+  /* submenues are seperate menues under fremantle */
+  GtkWidget *submenu_project;
+#endif
 
   undo_t undo;
 

@@ -1791,7 +1791,6 @@ GtkWidget *map_new(appdata_t *appdata) {
   map->action.type = MAP_ACTION_IDLE;
 
   map->canvas = canvas_new(map->style->background.color);
-  canvas_set_antialias(map->canvas, !appdata->settings->no_antialias);
 
   GtkWidget *canvas_widget = canvas_get_widget(map->canvas);
 
@@ -1858,9 +1857,6 @@ void map_clear(appdata_t *appdata, gint group_mask) {
 
 void map_paint(appdata_t *appdata) {
   map_t *map = appdata->map;
-
-  /* user may have changed antialias settings */
-  canvas_set_antialias(map->canvas, !appdata->settings->no_antialias);
 
   josm_elemstyles_colorize_world(map->style, appdata->osm);
   map_draw(map, appdata->osm);
