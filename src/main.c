@@ -62,7 +62,6 @@ static void main_ui_enable(appdata_t *appdata) {
 
   if(appdata->iconbar && appdata->iconbar->toolbar)
     gtk_widget_set_sensitive(appdata->iconbar->toolbar, osm_valid);
-
   /* disable all menu entries related to map */
   gtk_widget_set_sensitive(appdata->submenu_map, project_valid);
   gtk_widget_set_sensitive(appdata->menu_item_map_upload, osm_valid);
@@ -883,7 +882,8 @@ static gboolean no_icon_get_toggle(appdata_t *appdata) {
 
 static gboolean enable_gps_get_toggle(appdata_t *appdata) {
   if(!appdata)           return FALSE;
-  return appdata->gps_enabled;
+  if(!appdata->settings) return FALSE;
+  return appdata->settings->enable_gps;
 }
 
 static gboolean follow_gps_get_toggle(appdata_t *appdata) {
@@ -910,6 +910,8 @@ static GtkWidget *app_menu_create(appdata_t *appdata,
     } else {
       button = hildon_check_button_new(HILDON_SIZE_AUTO);
       gtk_button_set_label(GTK_BUTTON(button), _(menu_entries->label));
+      printf("requesting check for %s: %p\n", menu_entries->label,
+	     menu_entries->toggle);
       hildon_check_button_set_active(HILDON_CHECK_BUTTON(button), 
 				     menu_entries->toggle(appdata));
       g_signal_connect_after(button, "toggled", 
@@ -983,11 +985,14 @@ static const menu_entry_t submenu_view[] = {
 
 /* -- the map submenu -- */
 static const menu_entry_t submenu_map[] = {
-  SIMPLE_ENTRY("Upload",                cb_menu_upload),
-  SIMPLE_ENTRY("Download",              cb_menu_download),
-  SIMPLE_ENTRY("Save local changes",    cb_menu_save_changes),
-  SIMPLE_ENTRY("Discard local changes", cb_menu_undo_changes),
-  SIMPLE_ENTRY("Relations",             cb_menu_osm_relations),
+  ENABLED_ENTRY("Upload",                cb_menu_upload, menu_item_map_upload),
+  SIMPLE_ENTRY("Download",               cb_menu_download),
+  ENABLED_ENTRY("Save local changes",    cb_menu_save_changes, 
+		                           menu_item_map_save_changes),
+  ENABLED_ENTRY("Discard local changes", cb_menu_undo_changes, 
+		                           menu_item_map_undo_changes),
+  ENABLED_ENTRY("Relations",             cb_menu_osm_relations, 
+		                           menu_item_map_relations),
 
   LAST_ENTRY
 };
@@ -1038,15 +1043,9 @@ void menu_create(appdata_t *appdata) {
   appdata->app_menu_track = app_menu_create(appdata, submenu_track);
 
   /* enable/disable some entries according to settings */
-  hildon_check_button_set_active(HILDON_CHECK_BUTTON(
-         appdata->track.menu_item_track_enable_gps), appdata->gps_enabled);
-  gtk_widget_set_sensitive(appdata->track.menu_item_track_follow_gps,
-			   appdata->gps_enabled);
-  if(appdata->settings)
-    hildon_check_button_set_active(HILDON_CHECK_BUTTON(
-       appdata->track.menu_item_track_follow_gps), 
-				 appdata->settings->follow_gps);
-
+  if(appdata && appdata->settings)
+    gtk_widget_set_sensitive(appdata->track.menu_item_track_follow_gps,
+			     appdata->settings->enable_gps);
 
   hildon_window_set_app_menu(HILDON_WINDOW(appdata->window), menu);
 }

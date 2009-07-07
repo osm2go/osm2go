@@ -1207,7 +1207,7 @@ gboolean project_load(appdata_t *appdata, char *name) {
   /* load diff possibly preset */
   banner_busy_tick();
   diff_restore(appdata, appdata->project, appdata->osm);
-  
+
   /* prepare colors etc, draw data and adjust scroll/zoom settings */
   banner_busy_tick();
   map_init(appdata);
@@ -1227,10 +1227,13 @@ gboolean project_load(appdata_t *appdata, char *name) {
     g_free(appdata->settings->project);
   appdata->settings->project = g_strdup(appdata->project->name);
 
-  snprintf(banner_txt, _PROJECT_LOAD_BUF_SIZ, _("Loaded %s"), proj_name);
-
   banner_busy_stop(appdata);
+
+#if 0
+  snprintf(banner_txt, _PROJECT_LOAD_BUF_SIZ, _("Loaded %s"), proj_name);
   banner_show_info(appdata, banner_txt);
+#endif
+
   statusbar_set(appdata, NULL, 0);
 
   g_free(proj_name);

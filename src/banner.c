@@ -33,14 +33,14 @@ void banner_clear(appdata_t *appdata) {
   if (appdata->banner_is_grabby) {
     gtk_grab_remove(YETI_PASSIVE_WIDGET);
     GtkWidget *win = GTK_WIDGET(appdata->window);
-    GtkWidget *menu = GTK_WIDGET(hildon_window_get_menu(HILDON_WINDOW(win)));
 #if MAEMO_VERSION_MAJOR < 5
+    GtkWidget *menu = GTK_WIDGET(hildon_window_get_menu(HILDON_WINDOW(win)));
     GtkWidget *menu_att = gtk_menu_get_attach_widget(
 		  hildon_window_get_menu(HILDON_WINDOW(win)));
 #endif
     gtk_widget_set_sensitive(win, TRUE);
-    gtk_widget_set_sensitive(menu, TRUE);
 #if MAEMO_VERSION_MAJOR < 5
+    gtk_widget_set_sensitive(menu, TRUE);
     gtk_widget_set_sensitive(menu_att, TRUE);
 #endif
   }
@@ -83,14 +83,17 @@ void banner_busy_start(appdata_t *appdata, gboolean grab, char *text) {
   gtk_widget_show(appdata->banner);
   appdata->banner_is_grabby = grab;
   if (appdata->banner_is_grabby) {
-    GtkWidget *win, *menu, *menu_att;
-    win = GTK_WIDGET(appdata->window);
-    menu = GTK_WIDGET(hildon_window_get_menu(HILDON_WINDOW(win)));
-    menu_att = gtk_menu_get_attach_widget(
+    GtkWidget *win = GTK_WIDGET(appdata->window);
+#if MAEMO_VERSION_MAJOR < 5
+    GtkWidget *menu = GTK_WIDGET(hildon_window_get_menu(HILDON_WINDOW(win)));
+    GtkWidet *menu_att = gtk_menu_get_attach_widget(
 		  hildon_window_get_menu(HILDON_WINDOW(win)));
+#endif
     gtk_widget_set_sensitive(win, FALSE);
+#if MAEMO_VERSION_MAJOR < 5
     gtk_widget_set_sensitive(menu, FALSE);
     gtk_widget_set_sensitive(menu_att, FALSE);
+#endif
     gtk_grab_add(YETI_PASSIVE_WIDGET);
   }
   banner_busy_tick();

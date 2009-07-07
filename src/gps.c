@@ -28,7 +28,7 @@
 #include <location/location-gps-device.h>
 
 gboolean gps_get_pos(appdata_t *appdata, pos_t *pos, float *alt) {
-  if(!appdata->gps_enabled)
+  if(!appdata->settings || !appdata->settings->enable_gps)
     return FALSE;
 
   gps_state_t *gps_state = appdata->gps_state;
@@ -109,7 +109,8 @@ void gps_release(appdata_t *appdata) {
 }
 
 void gps_enable(appdata_t *appdata, gboolean enable) {
-  appdata->gps_enabled = enable;
+  if(appdata->settings)
+    appdata->settings->enable_gps = enable;
 }
 
 #else  // ENABLE_LIBLOCATION
@@ -273,7 +274,8 @@ static void gps_unpack(char *buf, struct gps_data_t *gpsdata) {
 }
 
 void gps_enable(appdata_t *appdata, gboolean enable) {
-  appdata->gps_enabled = enable;
+  if(appdata->settings)
+    appdata->settings->enable_gps = enable;
 }
 
 gpointer gps_thread(gpointer data) {
@@ -289,7 +291,7 @@ gpointer gps_thread(gpointer data) {
   gboolean connected = FALSE;
 
   while(1) {
-    if(appdata->gps_enabled) {
+    if(appdata->settings->enable_gps) {
       if(!connected) {
 	printf("trying to connect\n");
 

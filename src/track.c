@@ -519,7 +519,7 @@ static gboolean update(gpointer data) {
     return FALSE;
   }
 
-  if(!appdata->gps_enabled) {
+  if(!appdata->settings || !appdata->settings->enable_gps) {
     // Turn myself off gracefully.
     track_do_disable_gps(appdata);
     return FALSE;

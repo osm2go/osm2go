@@ -86,7 +86,6 @@ typedef struct appdata_s {
   struct presets_item_s *presets;
 
   /* menu items to be enabled and disabled every now and then */
-  gboolean gps_enabled;
   struct gps_state_s *gps_state;
 
 #ifdef USE_HILDON
