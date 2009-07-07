@@ -2254,11 +2254,22 @@ char *osm_object_type_string(object_t *object) {
   return NULL;
 }
 
+char *osm_object_get_name(object_t *object) {
+  tag_t *tags = osm_object_get_tags(object);
+
+  if(!tags) return NULL;
+  return osm_tag_get_by_key(tags, "name");
+}
+
 char *osm_object_string(object_t *object) {
   char *type_str = osm_object_type_string(object);
 
   if(!object) 
     return g_strdup_printf("%s #<invalid>", type_str);
+
+  char *name = osm_object_get_name(object);
+  if(name)
+    return g_strdup_printf("%s \"%s\"", type_str, name);
 
   switch(object->type) {
   case ILLEGAL:

@@ -423,8 +423,10 @@ void josm_elemstyles_colorize_node(style_t *style, node_t *node) {
 				   elemstyle->icon->filename);
 
       /* free old icon if there's one present */
-      if(node->icon_buf)
+      if(node->icon_buf) {
 	icon_free(style->iconP, node->icon_buf);
+	node->icon_buf = NULL;
+      }
 
       node->icon_buf = icon_load(style->iconP, name);
       g_free(name);
@@ -591,6 +593,13 @@ void josm_elemstyles_colorize_world(style_t *styles, osm_t *osm) {
   /* icons */
   node_t *node = osm->node;
   while(node) {
+    /* remove all icon references that may still be there from */
+    /* an old style */
+    if(node->icon_buf) {
+      icon_free(styles->iconP, node->icon_buf);
+      node->icon_buf = NULL;
+    }
+
     josm_elemstyles_colorize_node(styles, node);
     node = node->next;
   }

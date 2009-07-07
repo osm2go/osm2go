@@ -311,6 +311,7 @@ char *osm_object_id_string(object_t *object);
 char *osm_object_string(object_t *object);
 tag_t *osm_object_get_tags(object_t *object);
 void osm_object_set_flags(object_t *map_item, int set, int clr);
+char *osm_object_get_name(object_t *object);
 
 #endif /* OSM_H */
 

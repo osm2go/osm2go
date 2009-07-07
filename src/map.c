@@ -54,22 +54,24 @@ static void map_statusbar(map_t *map, map_item_t *map_item) {
   }
 
   gboolean collision = FALSE;
+
+#if 0
   tag_t *tags = tag;
 
   if(id == ID_ILLEGAL) 
     str = g_strdup_printf(_("Unknown item"));
   else {
-    str = g_strdup_printf("%s #" ITEM_ID_FORMAT, item_str, id);
+    str = g_strdup_printf("%s", item_str);
 
     /* add some tags ... */
     /*
-     *  XXX Should we just try to present only the name or the ref (or the
+     *  Should we just try to present only the name or the ref (or the
      *  alt_name, old_name, whatever) here?  Hurling a load of tags in the
      *  user's face in some unpredictable, uninformative order isn't very
      *  friendly.
      *
      *  Actually, a tag_short_desc() function would be useful in dialogs
-     *  nd user messages too.
+     *  and user messages too.
      */
     while(tag) {
       if(!collision && info_tag_key_collision(tags, tag))
@@ -84,6 +86,10 @@ static void map_statusbar(map_t *map, map_item_t *map_item) {
       tag = tag->next;
     }
   }
+#else
+  str = osm_object_string(&map_item->object);
+  str[0] = g_ascii_toupper(str[0]);
+#endif
   
   statusbar_set(map->appdata, str, collision);
   g_free(str);

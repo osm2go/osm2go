@@ -370,6 +370,9 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
   } else 
     context->object = *object;
 
+  //  str = osm_object_string(&context->object);
+  //  str[0] =  g_ascii_toupper   (str[0]);
+
   switch(context->object.type) {
   case NODE:
     str = g_strdup_printf(_("Node #" ITEM_ID_FORMAT), context->object.node->id);
