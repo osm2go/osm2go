@@ -1795,7 +1795,7 @@ GtkWidget *map_new(appdata_t *appdata) {
   map->appdata = appdata;
   map->action.type = MAP_ACTION_IDLE;
 
-  map->canvas = canvas_new(map->style->background.color);
+  map->canvas = canvas_new();
 
   GtkWidget *canvas_widget = canvas_get_widget(map->canvas);
 
@@ -1823,6 +1823,9 @@ GtkWidget *map_new(appdata_t *appdata) {
 
 void map_init(appdata_t *appdata) {
   map_t *map = appdata->map;
+
+  /* update canvas background color */
+  canvas_set_background(map->canvas, map->style->background.color);
 
   /* set initial zoom */
   map_set_zoom(map, map->state->zoom, FALSE);

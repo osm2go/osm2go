@@ -32,7 +32,7 @@ static gint canvas_destroy_event(GtkWidget *widget, gpointer data) {
 }
 
 /* create a new canvas */
-canvas_t *canvas_new(canvas_color_t bg_color) {
+canvas_t *canvas_new(void) {
   canvas_t *canvas = g_new0(canvas_t, 1);
 
   canvas->widget = goo_canvas_new();
@@ -40,8 +40,7 @@ canvas_t *canvas_new(canvas_color_t bg_color) {
   g_object_set_data(G_OBJECT(canvas->widget), "canvas-pointer", canvas);
 
   g_object_set(G_OBJECT(canvas->widget), 
-	       "anchor",               GTK_ANCHOR_CENTER,
-	       "background-color-rgb", bg_color >> 8, 
+	       "anchor", GTK_ANCHOR_CENTER,
 	       NULL);
 
   GooCanvasItem *root = goo_canvas_get_root_item(GOO_CANVAS(canvas->widget));
@@ -63,6 +62,12 @@ GtkWidget *canvas_get_widget(canvas_t *canvas) {
 }
 
 /* ------------------------ accessing the canvas ---------------------- */
+
+void canvas_set_background(canvas_t *canvas, canvas_color_t bg_color) {
+  g_object_set(G_OBJECT(canvas->widget), 
+	       "background-color-rgb", bg_color >> 8, 
+	       NULL);
+}
 
 void canvas_set_antialias(canvas_t *canvas, gboolean antialias) {
   GooCanvasItem *root = goo_canvas_get_root_item(GOO_CANVAS(canvas->widget));

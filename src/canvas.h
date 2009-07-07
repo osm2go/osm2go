@@ -129,10 +129,11 @@ typedef struct canvas_item_info_s {
 typedef enum { CANVAS_UNIT_METER = 0, CANVAS_UNIT_PIXEL } canvas_unit_t;
 
 /***** creating/destroying the canvas ******/
-canvas_t *canvas_new(canvas_color_t color);
+canvas_t *canvas_new(void);
 GtkWidget *canvas_get_widget(canvas_t *canvas);
 
 /****** manipulating the canvas ******/
+void canvas_set_background(canvas_t *canvas, canvas_color_t bg_color);
 void canvas_set_antialias(canvas_t *canvas, gboolean antialias);
 void canvas_erase(canvas_t *canvas, gint group_mask);
 void canvas_window2world(canvas_t *canvas, gint x, gint y, gint *wx, gint *wy);

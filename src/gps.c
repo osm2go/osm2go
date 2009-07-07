@@ -291,7 +291,7 @@ gpointer gps_thread(gpointer data) {
   gboolean connected = FALSE;
 
   while(1) {
-    if(appdata->settings->enable_gps) {
+    if(appdata->settings && appdata->settings->enable_gps) {
       if(!connected) {
 	printf("trying to connect\n");
 

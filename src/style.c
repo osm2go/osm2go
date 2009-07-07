@@ -396,8 +396,8 @@ void style_select(GtkWidget *parent, appdata_t *appdata) {
   appdata->map->style = style_load(appdata, appdata->settings->style);
 
   /* canvas background may have changed */
-  guint bg = appdata->map->style->background.color >> 8;
-  g_object_set(G_OBJECT(appdata->map->canvas), "background-color-rgb", bg, NULL);
+  canvas_set_background(appdata->map->canvas, 
+			appdata->map->style->background.color);
 
   map_paint(appdata);
 }
