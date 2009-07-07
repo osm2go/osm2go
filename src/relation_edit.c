@@ -506,6 +506,7 @@ typedef struct {
   appdata_t *appdata;
   GtkWidget *dialog, *list, *show_btn;
   GtkListStore *store;
+  object_t *object;     /* object this list relates to, NULL if global */
 } relation_context_t;
 
 enum {
@@ -867,25 +868,37 @@ static GtkWidget *relation_list_widget(relation_context_t *context) {
                                        RELATION_COL_NAME, GTK_SORT_ASCENDING);
   
   GtkTreeIter iter;
-  relation_t *relation = context->appdata->osm->relation;
-  while(relation) {
-    char *name = relation_get_descriptive_name(relation);
+  relation_t *relation = NULL;
+  relation_chain_t *rchain = NULL;
 
-    guint num = osm_relation_members_num(relation);
+  if(context->object) 
+    rchain = osm_object_to_relation(context->appdata->osm, context->object);
+  else
+    relation = context->appdata->osm->relation;
+
+  while(relation || rchain) {
+    relation_t *rel = relation?relation:rchain->relation;
+
+    char *name = relation_get_descriptive_name(rel);
+    guint num = osm_relation_members_num(rel);
 
     /* Append a row and fill in some data */
     gtk_list_store_append(context->store, &iter);
     gtk_list_store_set(context->store, &iter,
-		       RELATION_COL_ID, relation->id,
+		       RELATION_COL_ID, rel->id,
 		       RELATION_COL_TYPE,
-		       osm_tag_get_by_key(relation->tag, "type"),
+		       osm_tag_get_by_key(rel->tag, "type"),
 		       RELATION_COL_NAME, name,
 		       RELATION_COL_MEMBERS, num,
-		       RELATION_COL_DATA, relation,
+		       RELATION_COL_DATA, rel,
 		       -1);
-    
-    relation = relation->next;
+
+    if(relation) relation = relation->next;
+    if(rchain)   rchain = rchain->next;
   }
+
+  if(rchain)
+    osm_relation_chain_free(rchain);
   
   g_object_unref(context->store);
 
@@ -902,17 +915,25 @@ static GtkWidget *relation_list_widget(relation_context_t *context) {
 }
 
 /* a global view on all relations */
-void relation_list(appdata_t *appdata) {
+void relation_list(GtkWidget *parent, appdata_t *appdata, object_t *object) {
   relation_context_t *context = g_new0(relation_context_t, 1);
   context->appdata = appdata;
 
-  printf("relation list\n");
-  
+  char *str = NULL;
+  if(!object) 
+    str = g_strdup(_("All relations"));
+  else {
+    str = g_strdup_printf(_("Relations of %s"), osm_object_string(object));
+    context->object = object;
+  }
+
   context->dialog = 
-    misc_dialog_new(MISC_DIALOG_LARGE, _("All relations"),
-		    GTK_WINDOW(appdata->window),
+    misc_dialog_new(MISC_DIALOG_LARGE, str,
+		    GTK_WINDOW(parent),
 		    GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE, 
 		    NULL);
+
+  g_free(str);
   
   gtk_dialog_set_default_response(GTK_DIALOG(context->dialog), 
 				  GTK_RESPONSE_CLOSE);
@@ -937,6 +958,5 @@ void relation_list(appdata_t *appdata) {
   gtk_widget_destroy(context->dialog);
   g_free(context);
 }
-
 
 // vim:et:ts=8:sw=2:sts=2:ai

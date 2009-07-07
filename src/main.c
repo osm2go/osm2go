@@ -270,8 +270,9 @@ cb_menu_undo_changes(GtkMenuItem *item, gpointer data) {
 }
 
 static void 
-cb_menu_osm_relations(GtkMenuItem *item, gpointer data) {
-  relation_list((appdata_t*)data);
+cb_menu_osm_relations(GtkMenuItem *item, appdata_t *appdata) {
+  /* list relations of all objects */
+  relation_list(GTK_WIDGET(appdata->window), appdata, NULL);
 }
 
 #if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
@@ -935,6 +936,11 @@ void on_submenu_view_clicked(GtkButton *button, appdata_t *appdata) {
 			GTK_WINDOW(appdata->window));
 }
 
+void on_submenu_map_clicked(GtkButton *button, appdata_t *appdata) {
+  hildon_app_menu_popup(HILDON_APP_MENU(appdata->app_menu_map), 
+			GTK_WINDOW(appdata->window));
+}
+
 void on_submenu_wms_clicked(GtkButton *button, appdata_t *appdata) {
   hildon_app_menu_popup(HILDON_APP_MENU(appdata->app_menu_wms), 
 			GTK_WINDOW(appdata->window));
@@ -945,16 +951,18 @@ void on_submenu_track_clicked(GtkButton *button, appdata_t *appdata) {
 			GTK_WINDOW(appdata->window));
 }
 
-/* -- the view submenu -- */
 #define APP_OFFSET(a)  offsetof(appdata_t, a)
 #define SIMPLE_ENTRY(a,b)     { a, NULL, TRUE,   NULL, 0, G_CALLBACK(b) }
-#define ENABLED_ENTRY(a,b,c) { a, NULL, TRUE,  NULL, APP_OFFSET(c), G_CALLBACK(b) }
+#define ENABLED_ENTRY(a,b,c)  { a, NULL, TRUE,  NULL, APP_OFFSET(c), G_CALLBACK(b) }
 #define DISABLED_ENTRY(a,b,c) { a, NULL, FALSE,  NULL, APP_OFFSET(c), G_CALLBACK(b) }
-#define TOGGLE_ENTRY(a,b,c)  { a, NULL, TRUE, c, 0, G_CALLBACK(b) }
-#define DISABLED_TOGGLE_ENTRY(a,b,c,d)  { a, NULL, FALSE, c, APP_OFFSET(d), G_CALLBACK(b) }
-#define ENABLED_TOGGLE_ENTRY(a,b,c,d)  { a, NULL, TRUE, c, APP_OFFSET(d), G_CALLBACK(b) }
+#define TOGGLE_ENTRY(a,b,c)   { a, NULL, TRUE, c, 0, G_CALLBACK(b) }
+#define DISABLED_TOGGLE_ENTRY(a,b,c,d)  \
+                              { a, NULL, FALSE, c, APP_OFFSET(d), G_CALLBACK(b) }
+#define ENABLED_TOGGLE_ENTRY(a,b,c,d) \
+                              { a, NULL, TRUE, c, APP_OFFSET(d), G_CALLBACK(b) }
 #define LAST_ENTRY            { NULL, NULL, FALSE, NULL, 0, NULL }
 
+/* -- the view submenu -- */
 static const menu_entry_t submenu_view[] = {
   SIMPLE_ENTRY("Zoom in",         cb_menu_zoomin),
   SIMPLE_ENTRY("Zoom out",        cb_menu_zoomout),
@@ -969,6 +977,17 @@ static const menu_entry_t submenu_view[] = {
   DISABLED_ENTRY("Show all",      cb_menu_map_show_all, menu_item_map_show_all),
   /* --- */
   TOGGLE_ENTRY("No icons",        cb_menu_map_no_icons, no_icon_get_toggle),
+
+  LAST_ENTRY
+};
+
+/* -- the map submenu -- */
+static const menu_entry_t submenu_map[] = {
+  SIMPLE_ENTRY("Upload",                cb_menu_upload),
+  SIMPLE_ENTRY("Download",              cb_menu_download),
+  SIMPLE_ENTRY("Save local changes",    cb_menu_save_changes),
+  SIMPLE_ENTRY("Discard local changes", cb_menu_undo_changes),
+  SIMPLE_ENTRY("Relations",             cb_menu_osm_relations),
 
   LAST_ENTRY
 };
@@ -998,22 +1017,36 @@ static const menu_entry_t submenu_track[] = {
 
 /* -- the applications main menu -- */
 static const menu_entry_t main_menu[] = {
-  SIMPLE_ENTRY("About",  cb_menu_about),
-  ENABLED_ENTRY("View",  on_submenu_view_clicked,  submenu_view),
-  ENABLED_ENTRY("WMS",   on_submenu_wms_clicked,   submenu_wms),
-  ENABLED_ENTRY("Track", on_submenu_track_clicked, track.submenu_track),
+  SIMPLE_ENTRY("About",   cb_menu_about),
+  SIMPLE_ENTRY("Project", cb_menu_project_open),
+  ENABLED_ENTRY("View",   on_submenu_view_clicked,  submenu_view),
+  ENABLED_ENTRY("Map",    on_submenu_map_clicked,   submenu_map),
+  ENABLED_ENTRY("WMS",    on_submenu_wms_clicked,   submenu_wms),
+  ENABLED_ENTRY("Track",  on_submenu_track_clicked, track.submenu_track),
 
   LAST_ENTRY
 };
 
 void menu_create(appdata_t *appdata) { 
   HildonAppMenu *menu = HILDON_APP_MENU(hildon_app_menu_new());
-
+ 
   /* build menu/submenus */
   menu = HILDON_APP_MENU(app_menu_create(appdata, main_menu));
-  appdata->app_menu_wms = app_menu_create(appdata, submenu_wms);
-  appdata->app_menu_view = app_menu_create(appdata, submenu_view);
+  appdata->app_menu_wms   = app_menu_create(appdata, submenu_wms);
+  appdata->app_menu_map   = app_menu_create(appdata, submenu_map);
+  appdata->app_menu_view  = app_menu_create(appdata, submenu_view);
   appdata->app_menu_track = app_menu_create(appdata, submenu_track);
+
+  /* enable/disable some entries according to settings */
+  hildon_check_button_set_active(HILDON_CHECK_BUTTON(
+         appdata->track.menu_item_track_enable_gps), appdata->gps_enabled);
+  gtk_widget_set_sensitive(appdata->track.menu_item_track_follow_gps,
+			   appdata->gps_enabled);
+  if(appdata->settings)
+    hildon_check_button_set_active(HILDON_CHECK_BUTTON(
+       appdata->track.menu_item_track_follow_gps), 
+				 appdata->settings->follow_gps);
+
 
   hildon_window_set_app_menu(HILDON_WINDOW(appdata->window), menu);
 }

@@ -137,6 +137,7 @@ typedef struct appdata_s {
 #if defined(USE_HILDON) && (MAEMO_VERSION_MAJOR == 5)
   /* submenues are seperate menues under fremantle */
   GtkWidget *app_menu_view, *app_menu_wms, *app_menu_track;
+  GtkWidget *app_menu_map;
 #endif
 
   undo_t undo;

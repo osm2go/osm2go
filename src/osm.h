@@ -265,6 +265,9 @@ relation_t *osm_get_relation_by_id(osm_t *osm, item_id_t id);
 guint osm_way_number_of_nodes(way_t *way);
 relation_chain_t *osm_node_to_relation(osm_t *osm, node_t *node);
 relation_chain_t *osm_way_to_relation(osm_t *osm, way_t *way);
+relation_chain_t *osm_relation_to_relation(osm_t *osm, relation_t *relation);
+relation_chain_t *osm_object_to_relation(osm_t *osm, object_t *object);
+void osm_relation_chain_free(relation_chain_t *relation_chain);
 way_chain_t *osm_node_to_way(osm_t *osm, node_t *node);
 
 /* ----------- edit functions ----------- */

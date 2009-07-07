@@ -685,6 +685,11 @@ static void map_item_init(style_t *style, map_item_t *map_item) {
 void map_item_redraw(appdata_t *appdata, map_item_t *map_item) {
   map_item_t item = *map_item;
 
+  /* a relation cannot be redraws as it doesn't have a visual */
+  /* representation */
+  if(map_item->object.type == RELATION)
+    return;
+
   /* check if the item to be redrawn is the selected one */
   gboolean is_selected = FALSE;
   if(map_item->object.ptr == appdata->map->selected.object.ptr) {

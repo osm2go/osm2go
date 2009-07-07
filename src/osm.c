@@ -1746,6 +1746,74 @@ relation_chain_t *osm_way_to_relation(osm_t *osm, way_t *way) {
   return rel_chain;
 }
 
+/* return all relations a relation is in */
+relation_chain_t *osm_relation_to_relation(osm_t *osm, relation_t *rel) {
+  relation_chain_t *rel_chain = NULL, **cur_rel_chain = &rel_chain;
+
+  relation_t *relation = osm->relation;
+  while(relation) {
+    gboolean is_member = FALSE;
+
+    member_t *member = relation->member;
+    while(member) {
+      switch(member->object.type) {
+      case RELATION: {
+	/* relations can be check directly */
+	if(member->object.relation == rel)
+	  is_member = TRUE;
+      } break;
+      
+      default:
+	break;
+      }
+      member = member->next;
+    }
+
+    /* way is a member of this relation, so move it to the member chain */
+    if(is_member) {
+      *cur_rel_chain = g_new0(relation_chain_t, 1);
+      (*cur_rel_chain)->relation = relation;
+      cur_rel_chain = &((*cur_rel_chain)->next);
+    }
+
+    relation = relation->next;
+  }
+
+  return rel_chain;
+}
+
+/* return all relations an object is in */
+relation_chain_t *osm_object_to_relation(osm_t *osm, object_t *object) {
+  relation_chain_t *rel_chain = NULL;
+
+  switch(object->type) {
+  case NODE:
+    rel_chain = osm_node_to_relation(osm, object->node);
+    break;
+
+  case WAY:
+    rel_chain = osm_way_to_relation(osm, object->way);
+    break;
+
+  case RELATION:
+    rel_chain = osm_relation_to_relation(osm, object->relation);
+    break;
+
+  default:
+    break;
+  }
+
+  return rel_chain;
+}
+
+void osm_relation_chain_free(relation_chain_t *rchain) {
+  while(rchain) {
+    relation_chain_t *next = rchain->next;
+    g_free(rchain);
+    rchain = next;
+  }
+}
+
 /* return all ways a node is in */
 way_chain_t *osm_node_to_way(osm_t *osm, node_t *node) {
   way_chain_t *chain = NULL, **cur_chain = &chain;
