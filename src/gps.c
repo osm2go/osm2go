@@ -126,14 +126,16 @@ void gps_enable(appdata_t *appdata, gboolean enable) {
 #define GPSD_PORT 2947
 
 gboolean gps_get_pos(appdata_t *appdata, pos_t *pos, float *alt) {
-  if(pos) pos->lat = NAN;
+  pos_t tmp;
+  if(!pos) pos = &tmp;
+  pos->lat = NAN;
 
   g_mutex_lock(appdata->gps_state->mutex);
   if(appdata->gps_state->gpsdata.set & STATUS_SET) {
     if(appdata->gps_state->gpsdata.status != STATUS_NO_FIX) {
       if(appdata->gps_state->gpsdata.set & LATLON_SET) 
 	*pos = appdata->gps_state->gpsdata.fix.pos;
-      if(appdata->gps_state->gpsdata.set & ALTITUDE_SET) 
+      if(alt && appdata->gps_state->gpsdata.set & ALTITUDE_SET) 
 	*alt = appdata->gps_state->gpsdata.fix.alt;
     }
   }
