@@ -74,6 +74,11 @@ static void main_ui_enable(appdata_t *appdata) {
   gtk_widget_set_sensitive(appdata->submenu_view, osm_valid);
   gtk_widget_set_sensitive(appdata->submenu_wms, osm_valid);
 
+#ifdef ZOOM_BUTTONS  
+  gtk_widget_set_sensitive(appdata->btn_zoom_in, osm_valid);
+  gtk_widget_set_sensitive(appdata->btn_zoom_out, osm_valid);
+#endif
+
   if(!project_valid)
     statusbar_set(appdata, _("Please load or create a project"), FALSE);
 }
@@ -1280,7 +1285,30 @@ int main(int argc, char *argv[]) {
   gtk_box_pack_start(GTK_BOX(vbox), map, TRUE, TRUE, 0);
 #endif
 
+#ifdef ZOOM_BUTTONS  
+  GtkWidget *zhbox = gtk_hbox_new(FALSE, 0);
+
+  gtk_box_pack_start_defaults(GTK_BOX(zhbox), statusbar_new(&appdata));
+
+  /* ---- add zoom in button right of statusbar ---- */
+  appdata.btn_zoom_in = gtk_button_new();
+  gtk_button_set_image(GTK_BUTTON(appdata.btn_zoom_in), 
+		       gtk_image_new_from_stock(GTK_STOCK_ZOOM_IN, GTK_ICON_SIZE_MENU));
+  g_signal_connect(appdata.btn_zoom_in, "clicked", G_CALLBACK(cb_menu_zoomin), &appdata);
+  gtk_box_pack_start(GTK_BOX(zhbox), appdata.btn_zoom_in, FALSE, FALSE, 0);
+
+  /* ---- add zoom out button right of statusbar ---- */
+  appdata.btn_zoom_out = gtk_button_new();
+  gtk_button_set_image(GTK_BUTTON(appdata.btn_zoom_out), 
+		       gtk_image_new_from_stock(GTK_STOCK_ZOOM_OUT, GTK_ICON_SIZE_MENU));
+  g_signal_connect(appdata.btn_zoom_out, "clicked", G_CALLBACK(cb_menu_zoomout), &appdata);
+  gtk_box_pack_start(GTK_BOX(zhbox), appdata.btn_zoom_out, FALSE, FALSE, 0);
+
+
+  gtk_box_pack_start(GTK_BOX(vbox), zhbox, FALSE, FALSE, 0);
+#else
   gtk_box_pack_start(GTK_BOX(vbox), statusbar_new(&appdata), FALSE, FALSE, 0);
+#endif
 
 #ifndef PORTRAIT
   gtk_box_pack_start(GTK_BOX(hbox), iconbar_new(&appdata), FALSE, FALSE, 0);

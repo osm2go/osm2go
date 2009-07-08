@@ -603,7 +603,6 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
 		       G_CALLBACK(table_expose_event), &first);
 
     gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), scroll_win);
-    //    gtk_window_set_default_size(GTK_WINDOW(dialog), 50, 400);
 #endif
     
     gtk_widget_show_all(dialog);

@@ -60,5 +60,6 @@ file_chain_t *file_scan(char *pattern);
 #define MISC_DIALOG_HIGH     4
 
 GtkWidget *misc_dialog_new(guint hint, const char *title, GtkWindow *parent, ...);
-
+GtkWidget *misc_scrolled_window_new(gboolean etched_in);
+void misc_scrolled_window_add_with_viewport(GtkWidget *win, GtkWidget *child);
 #endif // MISC_H

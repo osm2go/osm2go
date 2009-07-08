@@ -2238,10 +2238,10 @@ char *osm_object_type_string(object_t *object) {
   const struct { type_t type; char *name; } types[] = {
     { ILLEGAL,     "illegal" },
     { NODE,        "node" },
-    { WAY,         "way" },
+    { WAY,         "way/area" },
     { RELATION,    "relation" },
     { NODE_ID,     "node id" },
-    { WAY_ID,      "way id" },
+    { WAY_ID,      "way/area id" },
     { RELATION_ID, "relation id" },
     { 0, NULL }
   };
@@ -2261,15 +2261,93 @@ char *osm_object_get_name(object_t *object) {
   return osm_tag_get_by_key(tags, "name");
 }
 
+/* try to get an as "speaking" description of the object as possible */
+char *osm_object_get_speaking_name(object_t *object) {
+  char *ret = NULL;
+  tag_t *tags = osm_object_get_tags(object);
+
+  /* worst case: we have no tags at all. return techincal info then */
+  if(!tags) 
+    return g_strdup_printf("unspecified %s", osm_object_type_string(object));
+
+  /* try to figure out _what_ this is */
+
+  char *name = osm_tag_get_by_key(tags, "name");
+  if(!name) name = osm_tag_get_by_key(tags, "ref");
+  if(!name) name = osm_tag_get_by_key(tags, "note");
+  if(!name) name = osm_tag_get_by_key(tags, "fix" "me");
+  if(!name) name = osm_tag_get_by_key(tags, "sport");
+
+  /* search for some kind of "type" */
+  gboolean free_type = FALSE;
+  char *type = osm_tag_get_by_key(tags, "amenity");
+  if(!type) type = osm_tag_get_by_key(tags, "place");
+  if(!type) type = osm_tag_get_by_key(tags, "historic");
+  if(!type) type = osm_tag_get_by_key(tags, "leisure");
+  if(!type) type = osm_tag_get_by_key(tags, "tourism");
+  if(!type) type = osm_tag_get_by_key(tags, "landuse");
+  if(!type) type = osm_tag_get_by_key(tags, "waterway");
+  if(!type) type = osm_tag_get_by_key(tags, "railway");
+  if(!type) type = osm_tag_get_by_key(tags, "natural");
+  if(!type && osm_tag_get_by_key(tags, "building")) type = "building";
+
+  /* highways are a little bit difficult */
+  char *highway = osm_tag_get_by_key(tags, "highway");
+  if(highway) {
+    if((!strcmp(highway, "primary")) ||
+       (!strcmp(highway, "secondary")) ||
+       (!strcmp(highway, "tertiary")) ||
+       (!strcmp(highway, "unclassified")) ||
+       (!strcmp(highway, "residential")) ||
+       (!strcmp(highway, "service"))) {
+      type = g_strdup_printf("%s road", highway);
+      free_type = TRUE;
+    }
+
+    else if(!strcmp(highway, "pedestrian")) {
+      type = g_strdup_printf("%s way/area", highway);
+      free_type = TRUE;
+    }
+
+    else if(!strcmp(highway, "construction")) {
+      type = g_strdup_printf("road/street under %s", highway);
+      free_type = TRUE;
+    }
+
+    else
+      type = highway;
+  }
+
+  if(type && name)
+    ret = g_strdup_printf("%s: \"%s\"", type, name);
+  else if(type && !name)
+    ret = g_strdup(type);
+  else if(name && !type)
+    ret = g_strdup_printf("%s: \"%s\"", 
+	  osm_object_type_string(object), name);
+  else
+    ret = g_strdup_printf("unspecified %s", osm_object_type_string(object));
+
+  if(free_type)
+    g_free(type);
+
+  /* remove underscores from string and replace them by spaces as this is */
+  /* usually nicer */
+  char *p = ret;
+  while(*p) { 
+    if(*p == '_') 
+      *p = ' ';  
+    p++;
+  }
+
+  return ret;
+}
+
 char *osm_object_string(object_t *object) {
   char *type_str = osm_object_type_string(object);
 
   if(!object) 
     return g_strdup_printf("%s #<invalid>", type_str);
-
-  char *name = osm_object_get_name(object);
-  if(name)
-    return g_strdup_printf("%s \"%s\"", type_str, name);
 
   switch(object->type) {
   case ILLEGAL:

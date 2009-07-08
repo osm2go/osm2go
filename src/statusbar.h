@@ -23,17 +23,25 @@
 #define STATUSBAR_DEFAULT_BRIEF_TIME 3000
 
 typedef struct statusbar_s {
-  GtkWidget *widget, *eventbox;
+  GtkWidget *widget;
+#if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
+  GtkWidget *eventbox;
   guint cid;
   guint mid;
-  guint brief_mid;
+#endif
+#ifndef USE_HILDON
   guint brief_handler_id;
+  guint brief_mid;
+#endif
 } statusbar_t;
 
 void statusbar_set(appdata_t *appdata, const char *msg, gboolean highlight);
-void statusbar_brief(appdata_t *appdata, const char *msg, gint timeout);
 GtkWidget *statusbar_new(appdata_t *appdata);
 void statusbar_highlight(appdata_t *appdata, gboolean highlight);
 void statusbar_free(statusbar_t *statusbar);
+
+#ifndef USE_HILDON
+void statusbar_brief(appdata_t *appdata, const char *msg, gint timeout);
+#endif
 
 #endif // STATUSBAR_H

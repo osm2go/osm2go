@@ -41,12 +41,12 @@
 #define GTK_FM_OK  GTK_RESPONSE_OK
 #define HILDON_ENTRY_NO_AUTOCAP(a) \
   hildon_gtk_entry_set_input_mode(GTK_ENTRY(a),HILDON_GTK_INPUT_MODE_FULL)
-
 #else
 #define GTK_FM_OK  GTK_RESPONSE_ACCEPT
 #define HILDON_ENTRY_NO_AUTOCAP(a)
 #endif
 
+#define ZOOM_BUTTONS  
 
 #include <gtk/gtk.h>
 #include <glib/gstdio.h>
@@ -77,6 +77,10 @@ typedef struct appdata_s {
   GtkWidget *vbox;
   struct map_s *map;
   osm_t *osm;
+
+#ifdef ZOOM_BUTTONS
+  GtkWidget *btn_zoom_in, *btn_zoom_out;
+#endif
 
   struct statusbar_s *statusbar;
   struct settings_s *settings;

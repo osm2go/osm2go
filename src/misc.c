@@ -260,3 +260,35 @@ GtkWidget *misc_dialog_new(guint hint, const char *title,
 
   return dialog;
 }
+
+#if defined(USE_HILDON) && (MAEMO_VERSION_MAJOR == 5)
+#include <hildon/hildon-pannable-area.h>
+/* create a pannable area */
+GtkWidget *misc_scrolled_window_new(gboolean etched_in) {
+  return hildon_pannable_area_new();
+}
+
+void misc_scrolled_window_add_with_viewport(GtkWidget *win, GtkWidget *child) {
+  hildon_pannable_area_add_with_viewport(HILDON_PANNABLE_AREA(win), child);
+}
+
+#else
+/* create a scrolled window */
+GtkWidget *misc_scrolled_window_new(gboolean etched_in) {
+  GtkWidget *scrolled_window = gtk_scrolled_window_new(NULL, NULL);
+  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window), 
+  				 GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+  if(etched_in)
+    gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scrolled_window), 
+					GTK_SHADOW_ETCHED_IN);
+  return scrolled_window;
+} 
+
+void misc_scrolled_window_add_with_viewport(GtkWidget *win, GtkWidget *child) {
+  gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(win), child);
+}
+
+
+#endif
+
+

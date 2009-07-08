@@ -19,6 +19,7 @@
 
 #include "appdata.h"
 
+#if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
 void statusbar_highlight(appdata_t *appdata, gboolean highlight) {
   if(highlight) {
     GdkColor color;
@@ -32,7 +33,6 @@ void statusbar_highlight(appdata_t *appdata, gboolean highlight) {
 
 
 // Set the persistent message, replacing anything currently there.
-
 void statusbar_set(appdata_t *appdata, const char *msg, gboolean highlight) {
   statusbar_highlight(appdata, highlight);
 
@@ -118,9 +118,44 @@ GtkWidget *statusbar_new(appdata_t *appdata) {
   return appdata->statusbar->eventbox;
 }
 
+#else
+void statusbar_highlight(appdata_t *appdata, gboolean highlight) {
+  if(highlight) {
+    GdkColor color;
+    gdk_color_parse("red", &color); 
+    gtk_widget_modify_bg(appdata->statusbar->widget, GTK_STATE_NORMAL, &color);
+    gtk_widget_modify_base(appdata->statusbar->widget, GTK_STATE_NORMAL, &color);
+    gtk_widget_modify_fg(appdata->statusbar->widget, GTK_STATE_NORMAL, &color);
+  } else
+    gtk_widget_modify_bg(appdata->statusbar->widget, GTK_STATE_NORMAL, NULL);
+}
+
+
+// Set the persistent message, replacing anything currently there.
+void statusbar_set(appdata_t *appdata, const char *msg, gboolean highlight) {
+  statusbar_highlight(appdata, highlight);
+
+  printf("statusbar_set: %s\n", msg);
+
+  if(!msg)
+    gtk_label_set_text(GTK_LABEL(appdata->statusbar->widget), msg);
+  else
+    gtk_label_set_text(GTK_LABEL(appdata->statusbar->widget), msg);
+}
+
+GtkWidget *statusbar_new(appdata_t *appdata) {
+  appdata->statusbar = (statusbar_t*)g_new0(statusbar_t, 1);
+
+  appdata->statusbar->widget = gtk_label_new("");
+  return appdata->statusbar->widget;
+}
+
+#endif
+
 void statusbar_free(statusbar_t *statusbar) {
   if(statusbar)
     g_free(statusbar);
 }
+
 
 // vim:et:ts=8:sw=2:sts=2:ai
