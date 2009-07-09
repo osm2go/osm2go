@@ -64,6 +64,51 @@ static void parse_and_set_lon(GtkWidget *src, GtkWidget *dst, pos_float_t *store
   }
 }
 
+#define log2(x) (log(x) / log(2))
+
+void get_zoom(context_t *context) {
+  pos_float_t center_lat = (context->max.lat + context->min.lat)/2;
+
+  /* we know pixel size, we know the real size, we want the zoom! */
+
+  printf("map_update: %d x %d\n", 
+	 context->map.widget->allocation.width,
+	 context->map.widget->allocation.height);
+
+  double vscale = DEG2RAD(POS_EQ_RADIUS);
+  double hscale = DEG2RAD(cos(DEG2RAD(center_lat)) * POS_EQ_RADIUS);
+
+  printf("scale: %f m/pix %f m/pix\n", hscale*256, vscale*256);
+
+  //  double height = 8 * (1<<zoom) / vscale;   // 2^zoom  ln2(zoom)
+  //  double hzoom = log2(context->map.widget->allocation.height * vscale / 8);
+  //  double width  = 16 * (1<<zoom) / hscale;
+  //  double vzoom = log2(context->map.widget->allocation.width * hscale / 8);
+
+  //  printf("zoom: %f %f\n", hzoom, vzoom);
+}
+
+/* the contents of the map tab have been changed */
+static void map_update(context_t *context) {
+  pos_float_t center_lat = (context->max.lat + context->min.lat)/2;
+  pos_float_t center_lon = (context->max.lon + context->min.lon)/2;
+
+  get_zoom(context);
+
+  osm_gps_map_set_center(OSM_GPS_MAP(context->map.widget),
+			 center_lat, center_lon);	    
+
+  osm_gps_map_set_zoom(OSM_GPS_MAP(context->map.widget), 14);
+}
+
+static gboolean on_map_configure(GtkWidget *widget,
+				 GdkEventConfigure *event,
+				 context_t *context) {
+
+  map_update(context);
+  return FALSE;
+}
+
 /* the contents of the direct tab have been changed */
 static void direct_update(context_t *context) {
   pos_lat_entry_set(context->direct.minlat, context->min.lat);
@@ -140,6 +185,7 @@ static void callback_modified_extent(GtkWidget *widget, gpointer data) {
   
   /* also update other tabs */
   direct_update(context);
+  map_update(context);
 }
 
 static void callback_modified_unit(GtkWidget *widget, gpointer data) {
@@ -210,6 +256,7 @@ static void callback_fetch_mm_clicked(GtkButton *button, gpointer data) {
   /* also update other tabs */
   direct_update(context);
   extent_update(context);
+  map_update(context);
 }
 #endif
 
@@ -218,6 +265,8 @@ static void map_zoom(context_t *context, int step) {
   OsmGpsMap *map = OSM_GPS_MAP(context->map.widget);
   g_object_get(map, "zoom", &zoom, NULL);
   zoom = osm_gps_map_set_zoom(map, zoom+step);
+
+  get_zoom(context);
 
   /* enable/disable zoom buttons as required */
   gtk_widget_set_sensitive(context->map.zoomin, zoom<17);
@@ -254,54 +303,85 @@ gboolean area_edit(area_edit_t *area) {
           GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
           NULL);
 
-  GtkWidget *table = gtk_table_new(3, 3, FALSE);  // x, y
+  GtkWidget *table = gtk_table_new(4, 2, FALSE);  // x, y
 
-  GtkWidget *label = gtk_label_new(_("Latitude"));
-  gtk_table_attach_defaults(GTK_TABLE(table),  label, 1, 2, 0, 1);
-  label = gtk_label_new(_("Longitude"));
-  gtk_table_attach_defaults(GTK_TABLE(table),  label, 2, 3, 0, 1);
-
-  label = gtk_label_new(_("Min:"));
-  gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-  gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 1, 2);
+  GtkWidget *label = gtk_label_new(_("Latitude:"));
+  misc_table_attach(table, label, 0, 0);
   context.minlat = pos_lat_label_new(area->min->lat);
-  gtk_table_attach_defaults(GTK_TABLE(table), context.minlat, 1, 2, 1, 2);
-  context.minlon = pos_lon_label_new(area->min->lon);
-  gtk_table_attach_defaults(GTK_TABLE(table), context.minlon, 2, 3, 1, 2);
-
-  label = gtk_label_new(_("Max:"));
-  gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-  gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 2, 3);
+  misc_table_attach(table, context.minlat, 1, 0);
+  label = gtk_label_new(_("to"));
+  misc_table_attach(table, label, 2, 0);
   context.maxlat = pos_lat_label_new(area->max->lat);
-  gtk_table_attach_defaults(GTK_TABLE(table), context.maxlat, 1, 2, 2, 3);
+  misc_table_attach(table, context.maxlat, 3, 0);
+
+  label = gtk_label_new(_("Longitude:"));
+  misc_table_attach(table, label, 0, 1);
+  context.minlon = pos_lon_label_new(area->min->lon);
+  misc_table_attach(table, context.minlon, 1, 1);
+  label = gtk_label_new(_("to"));
+  misc_table_attach(table, label, 2, 1);
   context.maxlon = pos_lon_label_new(area->max->lon);
-  gtk_table_attach_defaults(GTK_TABLE(table), context.maxlon, 2, 3, 2, 3);
+  misc_table_attach(table, context.maxlon, 3, 1);
 
   gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context.dialog)->vbox),
 			      table, FALSE, FALSE, 0);
 
   context.notebook = gtk_notebook_new();
 
+  /* ------------- fetch from map ------------------------ */
+
+  GtkWidget *hbox = gtk_hbox_new(FALSE, 0);
+
+  context.map.widget = g_object_new(OSM_TYPE_GPS_MAP,
+		"repo-uri", MAP_SOURCE_OPENSTREETMAP,
+		"proxy-uri", misc_get_proxy_uri(area->settings),
+		 NULL);
+
+  g_signal_connect(G_OBJECT(context.map.widget), "configure-event",
+		   G_CALLBACK(on_map_configure), &context);
+
+  gtk_box_pack_start_defaults(GTK_BOX(hbox), context.map.widget);
+
+  /* zoom button box */
+  GtkWidget *vbox = gtk_vbox_new(FALSE,0);
+
+  context.map.zoomin = gtk_button_new();
+  gtk_button_set_image(GTK_BUTTON(context.map.zoomin), 
+       gtk_image_new_from_stock(GTK_STOCK_ZOOM_IN, GTK_ICON_SIZE_MENU));
+  g_signal_connect(context.map.zoomin, "clicked", 
+		   G_CALLBACK(cb_map_zoomin), &context);
+  gtk_box_pack_start(GTK_BOX(vbox), context.map.zoomin, FALSE, FALSE, 0);
+
+  context.map.zoomout = gtk_button_new();
+  gtk_button_set_image(GTK_BUTTON(context.map.zoomout), 
+       gtk_image_new_from_stock(GTK_STOCK_ZOOM_OUT, GTK_ICON_SIZE_MENU));
+  g_signal_connect(context.map.zoomout, "clicked", 
+		   G_CALLBACK(cb_map_zoomout), &context);
+  gtk_box_pack_start(GTK_BOX(vbox), context.map.zoomout, FALSE, FALSE, 0);
+
+  gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
+
+  gtk_notebook_append_page(GTK_NOTEBOOK(context.notebook),
+		   hbox, gtk_label_new(_("Map")));
+
   /* ------------ direct min/max edit --------------- */
 
-  GtkWidget *vbox = gtk_vbox_new(FALSE, 10);
+  vbox = gtk_vbox_new(FALSE, 10);
   table = gtk_table_new(3, 3, FALSE);  // x, y
 
-  label = gtk_label_new(_("Min:"));
-  gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-  gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 0, 1);
-  context.direct.minlat = pos_lat_entry_new(0.);
-  gtk_table_attach_defaults(GTK_TABLE(table), context.direct.minlat, 1, 2, 0, 1);
-  context.direct.minlon = pos_lon_entry_new(area->min->lon);
-  gtk_table_attach_defaults(GTK_TABLE(table), context.direct.minlon, 2, 3, 0, 1);
-
-  label = gtk_label_new(_("Max:"));
-  gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-  gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 1, 2);
+  context.direct.minlat = pos_lat_entry_new(0.0);
+  misc_table_attach(table, context.direct.minlat, 0, 0);
+  label = gtk_label_new(_("to"));
+  misc_table_attach(table,  label, 1, 0);
   context.direct.maxlat = pos_lat_entry_new(0.0);
-  gtk_table_attach_defaults(GTK_TABLE(table), context.direct.maxlat, 1, 2, 1, 2);
+  misc_table_attach(table, context.direct.maxlat, 2, 0);
+
+  context.direct.minlon = pos_lon_entry_new(area->min->lon);
+  misc_table_attach(table, context.direct.minlon, 0, 1);
+  label = gtk_label_new(_("to"));
+  misc_table_attach(table,  label, 1, 1);
   context.direct.maxlon = pos_lon_entry_new(0.0);
-  gtk_table_attach_defaults(GTK_TABLE(table), context.direct.maxlon, 2, 3, 1, 2);
+  misc_table_attach(table, context.direct.maxlon, 2, 1);
 
   /* setup this page */
   direct_update(&context);
@@ -401,39 +481,6 @@ gboolean area_edit(area_edit_t *area) {
   gtk_notebook_append_page(GTK_NOTEBOOK(context.notebook),
 		   vbox, gtk_label_new(_("Maemo Mapper")));
 #endif
-
-  /* ------------- fetch from map ------------------------ */
-
-  GtkWidget *hbox = gtk_hbox_new(FALSE, 0);
-
-  context.map.widget = g_object_new(OSM_TYPE_GPS_MAP,
-		"repo-uri", MAP_SOURCE_OPENSTREETMAP,
-		"proxy-uri", misc_get_proxy_uri(area->settings),
-		 NULL);
-
-  gtk_box_pack_start_defaults(GTK_BOX(hbox), context.map.widget);
-
-  /* zoom button box */
-  vbox = gtk_vbox_new(FALSE,0);
-
-  context.map.zoomin = gtk_button_new();
-  gtk_button_set_image(GTK_BUTTON(context.map.zoomin), 
-       gtk_image_new_from_stock(GTK_STOCK_ZOOM_IN, GTK_ICON_SIZE_MENU));
-  g_signal_connect(context.map.zoomin, "clicked", 
-		   G_CALLBACK(cb_map_zoomin), &context);
-  gtk_box_pack_start(GTK_BOX(vbox), context.map.zoomin, FALSE, FALSE, 0);
-
-  context.map.zoomout = gtk_button_new();
-  gtk_button_set_image(GTK_BUTTON(context.map.zoomout), 
-       gtk_image_new_from_stock(GTK_STOCK_ZOOM_OUT, GTK_ICON_SIZE_MENU));
-  g_signal_connect(context.map.zoomout, "clicked", 
-		   G_CALLBACK(cb_map_zoomout), &context);
-  gtk_box_pack_start(GTK_BOX(vbox), context.map.zoomout, FALSE, FALSE, 0);
-
-  gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
-
-  gtk_notebook_append_page(GTK_NOTEBOOK(context.notebook),
-		   hbox, gtk_label_new(_("Map")));
 
   /* ------------------------------------------------------ */
 

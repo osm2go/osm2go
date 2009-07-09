@@ -63,4 +63,5 @@ GtkWidget *misc_dialog_new(guint hint, const char *title, GtkWindow *parent, ...
 GtkWidget *misc_scrolled_window_new(gboolean etched_in);
 void misc_scrolled_window_add_with_viewport(GtkWidget *win, GtkWidget *child);
 const char *misc_get_proxy_uri(settings_t *settings);
+void misc_table_attach(GtkWidget *table, GtkWidget *widget, int x, int y);
 #endif // MISC_H

@@ -308,3 +308,7 @@ const char *misc_get_proxy_uri(settings_t *settings) {
   proxy_buffer[sizeof(proxy_buffer)-1] = 0;
   return proxy_buffer;
 }
+
+void misc_table_attach(GtkWidget *table, GtkWidget *widget, int x, int y) {
+  gtk_table_attach_defaults(GTK_TABLE(table), widget, x, x+1, y, y+1);
+}
