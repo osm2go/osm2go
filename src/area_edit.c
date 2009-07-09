@@ -18,6 +18,7 @@
  */
 
 #include "appdata.h"
+#include "osm-gps-map.h"
 
 typedef struct {
   GtkWidget *dialog, *notebook;
@@ -34,9 +35,16 @@ typedef struct {
     gboolean is_mil;
   } extent;
 
+#ifdef USE_HILDON 
   struct {
     GtkWidget *fetch;
   } mmapper;
+#endif
+
+  struct {
+    GtkWidget *widget;
+    GtkWidget *zoomin, *zoomout;
+  } map;
 
 } context_t;
 
@@ -205,6 +213,29 @@ static void callback_fetch_mm_clicked(GtkButton *button, gpointer data) {
 }
 #endif
 
+static void map_zoom(context_t *context, int step) {
+  int zoom;
+  OsmGpsMap *map = OSM_GPS_MAP(context->map.widget);
+  g_object_get(map, "zoom", &zoom, NULL);
+  zoom = osm_gps_map_set_zoom(map, zoom+step);
+
+  /* enable/disable zoom buttons as required */
+  gtk_widget_set_sensitive(context->map.zoomin, zoom<17);
+  gtk_widget_set_sensitive(context->map.zoomout, zoom>1);
+}
+
+static gboolean
+cb_map_zoomin(GtkButton *button, context_t *context) {
+  map_zoom(context, +1);
+  return FALSE;
+}
+
+static gboolean
+cb_map_zoomout(GtkButton *button, context_t *context) {
+  map_zoom(context, -1);
+  return FALSE;
+}
+
 gboolean area_edit(area_edit_t *area) {
   gboolean ok = FALSE;
 
@@ -217,7 +248,7 @@ gboolean area_edit(area_edit_t *area) {
   context.max.lon = area->max->lon;
 
   context.dialog = 
-    misc_dialog_new(MISC_DIALOG_NOSIZE, _("Area editor"),
+    misc_dialog_new(MISC_DIALOG_HIGH, _("Area editor"),
 	  GTK_WINDOW(area->parent),
 	  GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, 
           GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
@@ -246,13 +277,14 @@ gboolean area_edit(area_edit_t *area) {
   context.maxlon = pos_lon_label_new(area->max->lon);
   gtk_table_attach_defaults(GTK_TABLE(table), context.maxlon, 2, 3, 2, 3);
 
-  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(context.dialog)->vbox), 
-			      table);
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context.dialog)->vbox),
+			      table, FALSE, FALSE, 0);
 
   context.notebook = gtk_notebook_new();
 
   /* ------------ direct min/max edit --------------- */
 
+  GtkWidget *vbox = gtk_vbox_new(FALSE, 10);
   table = gtk_table_new(3, 3, FALSE);  // x, y
 
   label = gtk_label_new(_("Min:"));
@@ -288,11 +320,13 @@ gboolean area_edit(area_edit_t *area) {
   label = gtk_label_new(_("(recommended min/max diff <0.03 degrees)"));
   gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 3, 2, 3);
 
+  gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
   gtk_notebook_append_page(GTK_NOTEBOOK(context.notebook),
-		 table, gtk_label_new(_("Direct")));
+		 vbox, gtk_label_new(_("Direct")));
 
   /* ------------- center/extent edit ------------------------ */
 
+  vbox = gtk_vbox_new(FALSE, 10);
   table = gtk_table_new(3, 4, FALSE);  // x, y
 
   label = gtk_label_new(_("Center:"));
@@ -344,30 +378,64 @@ gboolean area_edit(area_edit_t *area) {
   label = gtk_label_new(_("(recommended width/height < 2km/1.25mi)"));
   gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 3, 3, 4);
 
-
+  gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
   gtk_notebook_append_page(GTK_NOTEBOOK(context.notebook),
-		   table, gtk_label_new(_("Extent")));
+		   vbox, gtk_label_new(_("Extent")));
 
 #ifdef USE_HILDON 
   /* ------------- fetch from maemo mapper ------------------------ */
 
-  GtkWidget *vbox = gtk_vbox_new(FALSE, 8);
+  vbox = gtk_vbox_new(FALSE, 8);
   context.mmapper.fetch = 
     gtk_button_new_with_label(_("Get from Maemo Mapper"));
-  gtk_box_pack_start_defaults(GTK_BOX(vbox), context.mmapper.fetch);
+  gtk_box_pack_start(GTK_BOX(vbox), context.mmapper.fetch, FALSE, FALSE, 0);
 
   g_signal_connect(G_OBJECT(context.mmapper.fetch), "clicked",
 		   G_CALLBACK(callback_fetch_mm_clicked), &context);
-  //  gtk_widget_set_sensitive(context.mmapper.fetch, context.area->mmpos->valid);
 
   /* --- hint --- */
   label = gtk_label_new(_("(recommended MM zoom level < 7)"));
-  gtk_box_pack_start_defaults(GTK_BOX(vbox), label);
+  gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
 
 
   gtk_notebook_append_page(GTK_NOTEBOOK(context.notebook),
 		   vbox, gtk_label_new(_("Maemo Mapper")));
 #endif
+
+  /* ------------- fetch from map ------------------------ */
+
+  GtkWidget *hbox = gtk_hbox_new(FALSE, 0);
+
+  context.map.widget = g_object_new(OSM_TYPE_GPS_MAP,
+		"repo-uri", MAP_SOURCE_OPENSTREETMAP,
+		"proxy-uri", misc_get_proxy_uri(area->settings),
+		 NULL);
+
+  gtk_box_pack_start_defaults(GTK_BOX(hbox), context.map.widget);
+
+  /* zoom button box */
+  vbox = gtk_vbox_new(FALSE,0);
+
+  context.map.zoomin = gtk_button_new();
+  gtk_button_set_image(GTK_BUTTON(context.map.zoomin), 
+       gtk_image_new_from_stock(GTK_STOCK_ZOOM_IN, GTK_ICON_SIZE_MENU));
+  g_signal_connect(context.map.zoomin, "clicked", 
+		   G_CALLBACK(cb_map_zoomin), &context);
+  gtk_box_pack_start(GTK_BOX(vbox), context.map.zoomin, FALSE, FALSE, 0);
+
+  context.map.zoomout = gtk_button_new();
+  gtk_button_set_image(GTK_BUTTON(context.map.zoomout), 
+       gtk_image_new_from_stock(GTK_STOCK_ZOOM_OUT, GTK_ICON_SIZE_MENU));
+  g_signal_connect(context.map.zoomout, "clicked", 
+		   G_CALLBACK(cb_map_zoomout), &context);
+  gtk_box_pack_start(GTK_BOX(vbox), context.map.zoomout, FALSE, FALSE, 0);
+
+  gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
+
+  gtk_notebook_append_page(GTK_NOTEBOOK(context.notebook),
+		   hbox, gtk_label_new(_("Map")));
+
+  /* ------------------------------------------------------ */
 
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(context.dialog)->vbox), 
 			      context.notebook);

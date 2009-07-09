@@ -60,6 +60,11 @@ PKG_CHECK_MODULES([libcurl], [libcurl], [], [AC_MSG_ERROR([libcurl missing])])
 CFLAGS="$CFLAGS $libcurl_CFLAGS"
 LIBS="$LIBS $libcurl_LIBS"
 
+# check for libsoup
+PKG_CHECK_MODULES([libsoup], [libsoup-2.4], [], [AC_MSG_ERROR([libsoup-2.4 missing])])
+CFLAGS="$CFLAGS $libsoup_CFLAGS"
+LIBS="$LIBS $libsoup_LIBS"
+
 # check for goocanvas
 PKG_CHECK_MODULES([goocanvas], [goocanvas], [], [AC_MSG_ERROR([goocanvas missing])])
 CFLAGS="$CFLAGS -DUSE_GOOCANVAS $goocanvas_CFLAGS"

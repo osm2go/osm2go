@@ -62,4 +62,5 @@ file_chain_t *file_scan(char *pattern);
 GtkWidget *misc_dialog_new(guint hint, const char *title, GtkWindow *parent, ...);
 GtkWidget *misc_scrolled_window_new(gboolean etched_in);
 void misc_scrolled_window_add_with_viewport(GtkWidget *win, GtkWidget *child);
+const char *misc_get_proxy_uri(settings_t *settings);
 #endif // MISC_H

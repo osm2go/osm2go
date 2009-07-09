@@ -925,7 +925,7 @@ gboolean project_edit(GtkWidget *parent, settings_t *settings,
   
   project_context_t *context = g_new0(project_context_t, 1);
   context->project = project;
-  context->settings = settings;
+  context->area_edit.settings = context->settings = settings;
   
   context->area_edit.min = &project->min;
   context->area_edit.max = &project->max;

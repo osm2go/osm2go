@@ -632,6 +632,8 @@ SET_MAKE
 PKG_CONFIG
 libcurl_CFLAGS
 libcurl_LIBS
+libsoup_CFLAGS
+libsoup_LIBS
 goocanvas_CFLAGS
 goocanvas_LIBS
 gnome_vfs_module_CFLAGS
@@ -668,6 +670,8 @@ CPPFLAGS
 PKG_CONFIG
 libcurl_CFLAGS
 libcurl_LIBS
+libsoup_CFLAGS
+libsoup_LIBS
 goocanvas_CFLAGS
 goocanvas_LIBS
 gnome_vfs_module_CFLAGS
@@ -1268,6 +1272,10 @@ Some influential environment variables:
               C compiler flags for libcurl, overriding pkg-config
   libcurl_LIBS
               linker flags for libcurl, overriding pkg-config
+  libsoup_CFLAGS
+              C compiler flags for libsoup, overriding pkg-config
+  libsoup_LIBS
+              linker flags for libsoup, overriding pkg-config
   goocanvas_CFLAGS
               C compiler flags for goocanvas, overriding pkg-config
   goocanvas_LIBS
@@ -3032,6 +3040,85 @@ fi
 CFLAGS="$CFLAGS $libcurl_CFLAGS"
 LIBS="$LIBS $libcurl_LIBS"
 
+# check for libsoup
+
+pkg_failed=no
+{ echo "$as_me:$LINENO: checking for libsoup" >&5
+echo $ECHO_N "checking for libsoup... $ECHO_C" >&6; }
+
+if test -n "$PKG_CONFIG"; then
+    if test -n "$libsoup_CFLAGS"; then
+        pkg_cv_libsoup_CFLAGS="$libsoup_CFLAGS"
+    else
+        if test -n "$PKG_CONFIG" && \
+    { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"libsoup-2.4\"") >&5
+  ($PKG_CONFIG --exists --print-errors "libsoup-2.4") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  pkg_cv_libsoup_CFLAGS=`$PKG_CONFIG --cflags "libsoup-2.4" 2>/dev/null`
+else
+  pkg_failed=yes
+fi
+    fi
+else
+	pkg_failed=untried
+fi
+if test -n "$PKG_CONFIG"; then
+    if test -n "$libsoup_LIBS"; then
+        pkg_cv_libsoup_LIBS="$libsoup_LIBS"
+    else
+        if test -n "$PKG_CONFIG" && \
+    { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"libsoup-2.4\"") >&5
+  ($PKG_CONFIG --exists --print-errors "libsoup-2.4") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  pkg_cv_libsoup_LIBS=`$PKG_CONFIG --libs "libsoup-2.4" 2>/dev/null`
+else
+  pkg_failed=yes
+fi
+    fi
+else
+	pkg_failed=untried
+fi
+
+
+
+if test $pkg_failed = yes; then
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        libsoup_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "libsoup-2.4"`
+        else
+	        libsoup_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "libsoup-2.4"`
+        fi
+	# Put the nasty error message in config.log where it belongs
+	echo "$libsoup_PKG_ERRORS" >&5
+
+	{ echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6; }
+                { { echo "$as_me:$LINENO: error: libsoup-2.4 missing" >&5
+echo "$as_me: error: libsoup-2.4 missing" >&2;}
+   { (exit 1); exit 1; }; }
+elif test $pkg_failed = untried; then
+	{ { echo "$as_me:$LINENO: error: libsoup-2.4 missing" >&5
+echo "$as_me: error: libsoup-2.4 missing" >&2;}
+   { (exit 1); exit 1; }; }
+else
+	libsoup_CFLAGS=$pkg_cv_libsoup_CFLAGS
+	libsoup_LIBS=$pkg_cv_libsoup_LIBS
+        { echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6; }
+	:
+fi
+CFLAGS="$CFLAGS $libsoup_CFLAGS"
+LIBS="$LIBS $libsoup_LIBS"
+
 # check for goocanvas
 
 pkg_failed=no
@@ -4675,6 +4762,8 @@ SET_MAKE!$SET_MAKE$ac_delim
 PKG_CONFIG!$PKG_CONFIG$ac_delim
 libcurl_CFLAGS!$libcurl_CFLAGS$ac_delim
 libcurl_LIBS!$libcurl_LIBS$ac_delim
+libsoup_CFLAGS!$libsoup_CFLAGS$ac_delim
+libsoup_LIBS!$libsoup_LIBS$ac_delim
 goocanvas_CFLAGS!$goocanvas_CFLAGS$ac_delim
 goocanvas_LIBS!$goocanvas_LIBS$ac_delim
 gnome_vfs_module_CFLAGS!$gnome_vfs_module_CFLAGS$ac_delim
@@ -4701,7 +4790,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 77; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 79; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

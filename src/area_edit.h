@@ -26,6 +26,7 @@ typedef struct {
   osso_context_t *osso_context;
 #endif
   GtkWidget *parent;   /* parent widget to be placed upon */
+  settings_t *settings;
   pos_t *min, *max;    /* positions to work on */
 } area_edit_t;
 

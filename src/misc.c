@@ -221,7 +221,7 @@ static const gint dialog_sizes[][2] = {
   { 800, 380 },  // LARGE
 #endif
   { 640, 100 },  // WIDE
-  {   0,   0 },  // HIGH
+  { 450, 480 },  // HIGH
 };
 #else
 static const gint dialog_sizes[][2] = {
@@ -229,7 +229,7 @@ static const gint dialog_sizes[][2] = {
   { 400, 300 },  // MEDIUM
   { 500, 350 },  // LARGE
   { 450, 100 },  // WIDE
-  {   0,   0 },  // HIGH
+  { 200, 350 },  // HIGH
 };
 #endif
 
@@ -291,4 +291,20 @@ void misc_scrolled_window_add_with_viewport(GtkWidget *win, GtkWidget *child) {
 
 #endif
 
+const char *misc_get_proxy_uri(settings_t *settings) {
+  static char proxy_buffer[64];
 
+  /* use environment settings if preset */
+  const char *proxy = g_getenv("http_proxy");
+  if(proxy) return proxy;
+
+  /* otherwise try settings */
+  if(!settings || !settings->proxy || 
+     !settings->proxy->host) return NULL;
+
+  snprintf(proxy_buffer, sizeof(proxy_buffer),
+	   "http://%s:%u", settings->proxy->host,
+	   settings->proxy->port);
+  proxy_buffer[sizeof(proxy_buffer)-1] = 0;
+  return proxy_buffer;
+}
