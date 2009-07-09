@@ -330,13 +330,13 @@ GtkWidget *iconbar_new(appdata_t *appdata) {
         TOOL_ICON("way_reverse"), _("Reverse way"), on_way_reverse_clicked);
 #endif
 
+#ifdef MAIN_GUI_RELATION
 #ifndef FINGER_UI
   /* -------------------------------------------------------- */
   gtk_toolbar_insert(GTK_TOOLBAR(iconbar->toolbar), 
 		     gtk_separator_tool_item_new(),-1);
 #endif
 
-#ifdef MAIN_GUI_RELATION
   iconbar->relation_add = tool_add(iconbar->toolbar, appdata, 
       TOOL_ICON("relation_add"), _("Edit item's relations"), 
       on_relation_add_clicked);
