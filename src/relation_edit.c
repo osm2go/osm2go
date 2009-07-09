@@ -455,7 +455,8 @@ static GtkWidget *relation_item_list_widget(relitem_context_t *context) {
   return context->list;
 }
 
-void relation_add_dialog(appdata_t *appdata, object_t *object) {
+void relation_add_dialog(GtkWidget *parent, 
+			 appdata_t *appdata, object_t *object) {
   relitem_context_t *context = g_new0(relitem_context_t, 1);
   map_t *map = appdata->map;
   g_assert(map);
@@ -480,7 +481,7 @@ void relation_add_dialog(appdata_t *appdata, object_t *object) {
   
   context->dialog = 
     misc_dialog_new(MISC_DIALOG_LARGE, str,
-		    GTK_WINDOW(appdata->window),
+		    GTK_WINDOW(parent),
 		    GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE, 
 		    NULL);
   g_free(str);

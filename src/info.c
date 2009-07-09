@@ -272,7 +272,7 @@ void info_tags_replace(tag_context_t *context) {
 }
 
 static void on_relations(GtkWidget *button, tag_context_t *context) {
-  relation_list(context->dialog, context->appdata, &context->object);
+  relation_add_dialog(context->dialog, context->appdata, &context->object);
 }
 
 static GtkWidget *tag_widget(tag_context_t *context) {
@@ -287,14 +287,6 @@ static GtkWidget *tag_widget(tag_context_t *context) {
 			LIST_BUTTON_USER0, _("Last"),      on_tag_last,
 			LIST_BUTTON_USER2, _("Relations"), on_relations,
 			0);
-
-  /* check whether this object is part of any relations and enable relations */
-  /* button accordingly */
-  relation_chain_t *rchain = osm_object_to_relation(context->appdata->osm, 
-						    &context->object);
-  list_button_enable(context->list, LIST_BUTTON_USER2, rchain != NULL);
-  osm_relation_chain_free(rchain);
-
 
   /* setup both columns */
   list_set_columns(context->list, 

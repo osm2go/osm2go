@@ -110,14 +110,17 @@ static GtkWidget *popup_menu_create(appdata_t *appdata) {
 }
 #endif
 
+#ifdef MAIN_GUI_RELATION
 static void on_relation_add_clicked(GtkButton *button, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
 
   g_assert((appdata->map->selected.object.type == NODE) ||
 	   (appdata->map->selected.object.type == WAY));
 
-  relation_add_dialog(appdata, &appdata->map->selected.object);
+  relation_add_dialog(GTK_WIDGET(appdata->window), appdata, 
+		      &appdata->map->selected.object);
 }
+#endif
 
 static void on_trash_clicked(GtkButton *button, gpointer data) {
   map_delete_selected((appdata_t*)data);
@@ -154,7 +157,9 @@ void icon_bar_map_item_selected(appdata_t *appdata,
 
   gtk_widget_set_sensitive(iconbar->info, map_item && selected);
 
+#ifdef MAIN_GUI_RELATION
   gtk_widget_set_sensitive(iconbar->relation_add, map_item && selected);
+#endif
 
   if(selected && map_item && map_item->object.type == WAY) {
     gtk_widget_set_sensitive(iconbar->way_node_add, TRUE);
@@ -183,7 +188,9 @@ void icon_bar_map_action_idle(appdata_t *appdata, gboolean idle) {
   GtkWidget *action_disable_widgets[] = {
     appdata->iconbar->trash,
     appdata->iconbar->info,
+#ifdef MAIN_GUI_RELATION
     appdata->iconbar->relation_add,
+#endif
     NULL
   };
 
@@ -329,9 +336,11 @@ GtkWidget *iconbar_new(appdata_t *appdata) {
 		     gtk_separator_tool_item_new(),-1);
 #endif
 
+#ifdef MAIN_GUI_RELATION
   iconbar->relation_add = tool_add(iconbar->toolbar, appdata, 
       TOOL_ICON("relation_add"), _("Edit item's relations"), 
       on_relation_add_clicked);
+#endif
 
   gtk_box_pack_start(GTK_BOX(box), iconbar->toolbar, TRUE, TRUE, 0);
 
