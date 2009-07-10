@@ -44,6 +44,7 @@ typedef struct {
   struct {
     GtkWidget *widget;
     GtkWidget *zoomin, *zoomout;
+    gboolean needs_redraw;
   } map;
 
 } context_t;
@@ -64,48 +65,39 @@ static void parse_and_set_lon(GtkWidget *src, GtkWidget *dst, pos_float_t *store
   }
 }
 
-#define log2(x) (log(x) / log(2))
-
-void get_zoom(context_t *context) {
-  pos_float_t center_lat = (context->max.lat + context->min.lat)/2;
-
-  /* we know pixel size, we know the real size, we want the zoom! */
-
-  printf("map_update: %d x %d\n", 
-	 context->map.widget->allocation.width,
-	 context->map.widget->allocation.height);
-
-  double vscale = DEG2RAD(POS_EQ_RADIUS);
-  double hscale = DEG2RAD(cos(DEG2RAD(center_lat)) * POS_EQ_RADIUS);
-
-  printf("scale: %f m/pix %f m/pix\n", hscale*256, vscale*256);
-
-  //  double height = 8 * (1<<zoom) / vscale;   // 2^zoom  ln2(zoom)
-  //  double hzoom = log2(context->map.widget->allocation.height * vscale / 8);
-  //  double width  = 16 * (1<<zoom) / hscale;
-  //  double vzoom = log2(context->map.widget->allocation.width * hscale / 8);
-
-  //  printf("zoom: %f %f\n", hzoom, vzoom);
-}
+#define LOG2(x) (log(x) / log(2))
 
 /* the contents of the map tab have been changed */
-static void map_update(context_t *context) {
+static void map_update(context_t *context, gboolean forced) {
+
+  /* map is first tab (page 0) */
+  if(!forced && gtk_notebook_get_current_page(GTK_NOTEBOOK(context->notebook)) != 0) {
+    context->map.needs_redraw = TRUE;
+    return;
+  }
+
   pos_float_t center_lat = (context->max.lat + context->min.lat)/2;
   pos_float_t center_lon = (context->max.lon + context->min.lon)/2;
 
-  get_zoom(context);
+  /* we know the widgets pixel size, we know the required real size, we want the zoom! */
+  double vzoom = LOG2((45.0 * context->map.widget->allocation.height)/
+		      ((context->max.lat - context->min.lat)*32.0));
+
+  double hzoom = LOG2((45.0 * context->map.widget->allocation.width)/
+		      ((context->max.lon - context->min.lon)*32.0));
 
   osm_gps_map_set_center(OSM_GPS_MAP(context->map.widget),
 			 center_lat, center_lon);	    
 
-  osm_gps_map_set_zoom(OSM_GPS_MAP(context->map.widget), 14);
+  osm_gps_map_set_zoom(OSM_GPS_MAP(context->map.widget), (hzoom+vzoom+0.5)/2);
+
+  context->map.needs_redraw = FALSE;
 }
 
 static gboolean on_map_configure(GtkWidget *widget,
 				 GdkEventConfigure *event,
 				 context_t *context) {
-
-  map_update(context);
+  map_update(context, FALSE);
   return FALSE;
 }
 
@@ -138,8 +130,8 @@ static void extent_update(context_t *context) {
 static void callback_modified_direct(GtkWidget *widget, gpointer data) {
   context_t *context = (context_t*)data;
 
-  /* direct is first tab (page 0) */
-  if(gtk_notebook_get_current_page(GTK_NOTEBOOK(context->notebook)) != 0)
+  /* direct is second tab (page 1) */
+  if(gtk_notebook_get_current_page(GTK_NOTEBOOK(context->notebook)) != 1)
     return;
 
   /* parse the fields from the direct entry pad */
@@ -155,8 +147,8 @@ static void callback_modified_direct(GtkWidget *widget, gpointer data) {
 static void callback_modified_extent(GtkWidget *widget, gpointer data) {
   context_t *context = (context_t*)data;
 
-  /* extent is second tab (page 1) */
-  if(gtk_notebook_get_current_page(GTK_NOTEBOOK(context->notebook)) != 1)
+  /* extent is third tab (page 2) */
+  if(gtk_notebook_get_current_page(GTK_NOTEBOOK(context->notebook)) != 2)
     return;
 
   pos_float_t center_lat = pos_lat_get(context->extent.lat);
@@ -185,7 +177,7 @@ static void callback_modified_extent(GtkWidget *widget, gpointer data) {
   
   /* also update other tabs */
   direct_update(context);
-  map_update(context);
+  map_update(context, FALSE);
 }
 
 static void callback_modified_unit(GtkWidget *widget, gpointer data) {
@@ -227,8 +219,8 @@ static void callback_fetch_mm_clicked(GtkButton *button, gpointer data) {
     return;
   }
 
-  /* maemo mapper is third tab (page 2) */
-  if(gtk_notebook_get_current_page(GTK_NOTEBOOK(context->notebook)) != 2)
+  /* maemo mapper is fourth tab (page 3) */
+  if(gtk_notebook_get_current_page(GTK_NOTEBOOK(context->notebook)) != 3)
     return;
 
   /* maemo mapper pos data ... */
@@ -256,9 +248,37 @@ static void callback_fetch_mm_clicked(GtkButton *button, gpointer data) {
   /* also update other tabs */
   direct_update(context);
   extent_update(context);
-  map_update(context);
+  map_update(context, FALSE);
 }
 #endif
+
+/* the user has changed the map view, update other views accordingly */
+static void map_has_changed(context_t *context) {
+  coord_t pt1, pt2;
+
+  /* get maps bounding box */
+  osm_gps_map_get_bbox(OSM_GPS_MAP(context->map.widget), &pt1, &pt2);
+
+  context->min.lat = RAD2DEG(pt2.rlat);
+  pos_lat_label_set(context->minlat, context->min.lat);
+  context->max.lat = RAD2DEG(pt1.rlat);
+  pos_lat_label_set(context->maxlat, context->max.lat);
+
+  context->min.lon = RAD2DEG(pt1.rlon);
+  pos_lon_label_set(context->minlon, context->min.lon);
+  context->max.lon = RAD2DEG(pt2.rlon);
+  pos_lon_label_set(context->maxlon, context->max.lon);
+
+  direct_update(context);
+  extent_update(context);
+}
+
+static gboolean
+on_map_button_release_event(GtkWidget *widget, 
+			    GdkEventButton *event, context_t *context) {
+  map_has_changed(context);
+  return FALSE;
+}
 
 static void map_zoom(context_t *context, int step) {
   int zoom;
@@ -266,11 +286,11 @@ static void map_zoom(context_t *context, int step) {
   g_object_get(map, "zoom", &zoom, NULL);
   zoom = osm_gps_map_set_zoom(map, zoom+step);
 
-  get_zoom(context);
-
   /* enable/disable zoom buttons as required */
   gtk_widget_set_sensitive(context->map.zoomin, zoom<17);
   gtk_widget_set_sensitive(context->map.zoomout, zoom>1);
+
+  map_has_changed(context);
 }
 
 static gboolean
@@ -283,6 +303,16 @@ static gboolean
 cb_map_zoomout(GtkButton *button, context_t *context) {
   map_zoom(context, -1);
   return FALSE;
+}
+
+static void on_page_switch(GtkNotebook *notebook, GtkNotebookPage *page,
+			   guint page_num, context_t *context) {
+
+  /* updating the map while the user manually changes some coordinates */
+  /* may confuse the map. so we delay those updates until the map tab */
+  /* is becoming visible */
+  if((page_num == 0) && context->map.needs_redraw)
+    map_update(context, TRUE);
 }
 
 gboolean area_edit(area_edit_t *area) {
@@ -332,13 +362,16 @@ gboolean area_edit(area_edit_t *area) {
 
   GtkWidget *hbox = gtk_hbox_new(FALSE, 0);
 
+  context.map.needs_redraw = FALSE;
   context.map.widget = g_object_new(OSM_TYPE_GPS_MAP,
-		"repo-uri", MAP_SOURCE_OPENSTREETMAP,
+	        "repo-uri", MAP_SOURCE_OPENSTREETMAP,
 		"proxy-uri", misc_get_proxy_uri(area->settings),
 		 NULL);
 
   g_signal_connect(G_OBJECT(context.map.widget), "configure-event",
 		   G_CALLBACK(on_map_configure), &context);
+  g_signal_connect(G_OBJECT(context.map.widget), "button-release-event",
+		   G_CALLBACK(on_map_button_release_event), &context);
 
   gtk_box_pack_start_defaults(GTK_BOX(hbox), context.map.widget);
 
@@ -368,6 +401,8 @@ gboolean area_edit(area_edit_t *area) {
 
   vbox = gtk_vbox_new(FALSE, 10);
   table = gtk_table_new(3, 3, FALSE);  // x, y
+  gtk_table_set_col_spacings(GTK_TABLE(table), 10);
+  gtk_table_set_row_spacings(GTK_TABLE(table), 5);
 
   context.direct.minlat = pos_lat_entry_new(0.0);
   misc_table_attach(table, context.direct.minlat, 0, 0);
@@ -408,6 +443,8 @@ gboolean area_edit(area_edit_t *area) {
 
   vbox = gtk_vbox_new(FALSE, 10);
   table = gtk_table_new(3, 4, FALSE);  // x, y
+  gtk_table_set_col_spacings(GTK_TABLE(table), 10);
+  gtk_table_set_row_spacings(GTK_TABLE(table), 5);
 
   label = gtk_label_new(_("Center:"));
   gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
@@ -417,7 +454,7 @@ gboolean area_edit(area_edit_t *area) {
   context.extent.lon = pos_lon_entry_new(0.0);
   gtk_table_attach_defaults(GTK_TABLE(table), context.extent.lon, 2, 3, 0, 1);
 
-  gtk_table_set_row_spacing(GTK_TABLE(table), 0, 8);
+  gtk_table_set_row_spacing(GTK_TABLE(table), 0, 10);
 
   label = gtk_label_new(_("Width:"));
   gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
@@ -487,6 +524,8 @@ gboolean area_edit(area_edit_t *area) {
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(context.dialog)->vbox), 
 			      context.notebook);
 
+  g_signal_connect(G_OBJECT(context.notebook), "switch-page",
+		   G_CALLBACK(on_page_switch), &context);
 
   gtk_widget_show_all(context.dialog);
 
