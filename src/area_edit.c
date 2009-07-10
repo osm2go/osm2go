@@ -20,11 +20,15 @@
 #include "appdata.h"
 #include "osm-gps-map.h"
 
+/* limit of square kilometers above the warning is enabled */
+#define WARN_OVER  5.0
+
 typedef struct {
   GtkWidget *dialog, *notebook;
   area_edit_t *area;
   pos_t min, max;      /* local copy to work on */
   GtkWidget *minlat, *maxlat, *minlon, *maxlon;
+  GtkWidget *warning;
 
   struct {
     GtkWidget *minlat, *maxlat, *minlon, *maxlon;
@@ -49,29 +53,68 @@ typedef struct {
 
 } context_t;
 
-static void parse_and_set_lat(GtkWidget *src, GtkWidget *dst, pos_float_t *store) {
+static void parse_and_set_lat(GtkWidget *src, pos_float_t *store) {
   pos_float_t i = pos_parse_lat((char*)gtk_entry_get_text(GTK_ENTRY(src)));
-  if(pos_lat_valid(i)) {
+  if(pos_lat_valid(i)) 
     *store = i;
-    pos_lat_label_set(dst, i);
-  }
 }
 
-static void parse_and_set_lon(GtkWidget *src, GtkWidget *dst, pos_float_t *store) {
+static void parse_and_set_lon(GtkWidget *src, pos_float_t *store) {
   pos_float_t i = pos_parse_lon((char*)gtk_entry_get_text(GTK_ENTRY(src)));
-  if(pos_lon_valid(i)) {
+  if(pos_lon_valid(i)) 
     *store = i;
-    pos_lon_label_set(dst, i);
-  }
 }
 
 #define LOG2(x) (log(x) / log(2))
+
+static void on_area_warning_clicked(GtkButton *button, gpointer data) {
+  context_t *context = (context_t*)data;
+
+  /* compute area size */
+  pos_float_t center_lat = (context->max.lat + context->min.lat)/2;
+  double vscale = DEG2RAD(POS_EQ_RADIUS / 1000.0);
+  double hscale = DEG2RAD(cos(DEG2RAD(center_lat)) * POS_EQ_RADIUS / 1000.0);
+
+  double area = vscale * (context->max.lat - context->min.lat) *
+    hscale * (context->max.lon - context->min.lon);
+
+  messagef(context->dialog, _("Area size warning"), 
+   _("The currently selected area is %.02f km² (%.02f mil²) in size. "
+     "This is more than the recommended %.02f km² (%.02f mil²). "
+     "This may result in a big download and slow mapping performance "
+     "in a densly mapped area (e.g. cities)!"), 
+	   area, area/(KMPMIL*KMPMIL),
+	   WARN_OVER, WARN_OVER/(KMPMIL*KMPMIL)
+	   );
+
+}
+
+static void area_main_update(context_t *context) {
+  pos_lat_label_set(context->minlat, context->min.lat);
+  pos_lat_label_set(context->maxlat, context->max.lat);
+  pos_lon_label_set(context->minlon, context->min.lon);
+  pos_lon_label_set(context->maxlon, context->max.lon);
+
+  /* check if area size exceeds recommended values */
+  pos_float_t center_lat = (context->max.lat + context->min.lat)/2;
+  double vscale = DEG2RAD(POS_EQ_RADIUS / 1000.0);
+  double hscale = DEG2RAD(cos(DEG2RAD(center_lat)) * POS_EQ_RADIUS / 1000.0);
+
+  double area = vscale * (context->max.lat - context->min.lat) *
+    hscale * (context->max.lon - context->min.lon);
+
+  if(area > WARN_OVER)
+    gtk_widget_show(context->warning);
+  else
+    gtk_widget_hide(context->warning);
+}
 
 /* the contents of the map tab have been changed */
 static void map_update(context_t *context, gboolean forced) {
 
   /* map is first tab (page 0) */
-  if(!forced && gtk_notebook_get_current_page(GTK_NOTEBOOK(context->notebook)) != 0) {
+  if(!forced && 
+     gtk_notebook_get_current_page(GTK_NOTEBOOK(context->notebook)) != 0) {
     context->map.needs_redraw = TRUE;
     return;
   }
@@ -79,7 +122,8 @@ static void map_update(context_t *context, gboolean forced) {
   pos_float_t center_lat = (context->max.lat + context->min.lat)/2;
   pos_float_t center_lon = (context->max.lon + context->min.lon)/2;
 
-  /* we know the widgets pixel size, we know the required real size, we want the zoom! */
+  /* we know the widgets pixel size, we know the required real size, */
+  /* we want the zoom! */
   double vzoom = LOG2((45.0 * context->map.widget->allocation.height)/
 		      ((context->max.lat - context->min.lat)*32.0));
 
@@ -135,10 +179,12 @@ static void callback_modified_direct(GtkWidget *widget, gpointer data) {
     return;
 
   /* parse the fields from the direct entry pad */
-  parse_and_set_lat(context->direct.minlat, context->minlat, &context->min.lat);
-  parse_and_set_lon(context->direct.minlon, context->minlon, &context->min.lon);
-  parse_and_set_lat(context->direct.maxlat, context->maxlat, &context->max.lat);
-  parse_and_set_lon(context->direct.maxlon, context->maxlon, &context->max.lon);
+  parse_and_set_lat(context->direct.minlat, &context->min.lat);
+  parse_and_set_lon(context->direct.minlon, &context->min.lon);
+  parse_and_set_lat(context->direct.maxlat, &context->max.lat);
+  parse_and_set_lon(context->direct.maxlon, &context->max.lon);
+
+  area_main_update(context);
 
   /* also adjust other views */
   extent_update(context);
@@ -165,15 +211,13 @@ static void callback_modified_extent(GtkWidget *widget, gpointer data) {
 
   height /= 2 * vscale;
   context->min.lat = center_lat - height;
-  pos_lat_label_set(context->minlat, context->min.lat);
   context->max.lat = center_lat + height;
-  pos_lat_label_set(context->maxlat, context->max.lat);
-  
+
   width /= 2 * hscale;
   context->min.lon = center_lon - width;
-  pos_lon_label_set(context->minlon, context->min.lon);
   context->max.lon = center_lon + width;
-  pos_lon_label_set(context->maxlon, context->max.lon);
+
+  area_main_update(context);
   
   /* also update other tabs */
   direct_update(context);
@@ -234,16 +278,14 @@ static void callback_fetch_mm_clicked(GtkButton *button, gpointer data) {
   double vscale = DEG2RAD(POS_EQ_RADIUS);
   double height = 8 * (1<<zoom) / vscale;
   context->min.lat = center_lat - height;
-  pos_lat_label_set(context->minlat, context->min.lat);
   context->max.lat = center_lat + height;
-  pos_lat_label_set(context->maxlat, context->max.lat);
   
   double hscale = DEG2RAD(cos(DEG2RAD(center_lat)) * POS_EQ_RADIUS);
   double width  = 16 * (1<<zoom) / hscale;
   context->min.lon = center_lon - width;
-  pos_lon_label_set(context->minlon, context->min.lon);
   context->max.lon = center_lon + width;
-  pos_lon_label_set(context->maxlon, context->max.lon);
+
+  area_main_update(context);
 
   /* also update other tabs */
   direct_update(context);
@@ -260,15 +302,12 @@ static void map_has_changed(context_t *context) {
   osm_gps_map_get_bbox(OSM_GPS_MAP(context->map.widget), &pt1, &pt2);
 
   context->min.lat = RAD2DEG(pt2.rlat);
-  pos_lat_label_set(context->minlat, context->min.lat);
   context->max.lat = RAD2DEG(pt1.rlat);
-  pos_lat_label_set(context->maxlat, context->max.lat);
 
   context->min.lon = RAD2DEG(pt1.rlon);
-  pos_lon_label_set(context->minlon, context->min.lon);
   context->max.lon = RAD2DEG(pt2.rlon);
-  pos_lon_label_set(context->maxlon, context->max.lon);
 
+  area_main_update(context);
   direct_update(context);
   extent_update(context);
 }
@@ -333,7 +372,7 @@ gboolean area_edit(area_edit_t *area) {
           GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
           NULL);
 
-  GtkWidget *table = gtk_table_new(4, 2, FALSE);  // x, y
+  GtkWidget *table = gtk_table_new(5, 2, FALSE);  // x, y
 
   GtkWidget *label = gtk_label_new(_("Latitude:"));
   misc_table_attach(table, label, 0, 0);
@@ -352,6 +391,13 @@ gboolean area_edit(area_edit_t *area) {
   misc_table_attach(table, label, 2, 1);
   context.maxlon = pos_lon_label_new(area->max->lon);
   misc_table_attach(table, context.maxlon, 3, 1);
+
+  context.warning = gtk_button_new();
+  gtk_button_set_image(GTK_BUTTON(context.warning), 
+       gtk_image_new_from_stock(GTK_STOCK_DIALOG_WARNING, GTK_ICON_SIZE_MENU));
+  g_signal_connect(context.warning, "clicked", 
+  		   G_CALLBACK(on_area_warning_clicked), &context);
+  gtk_table_attach_defaults(GTK_TABLE(table), context.warning, 4, 5, 0, 2);
 
   gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context.dialog)->vbox),
 			      table, FALSE, FALSE, 0);
@@ -528,6 +574,8 @@ gboolean area_edit(area_edit_t *area) {
 		   G_CALLBACK(on_page_switch), &context);
 
   gtk_widget_show_all(context.dialog);
+
+  area_main_update(&context);
 
   if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(context.dialog))) {
     /* copy modified values back to given storage */
