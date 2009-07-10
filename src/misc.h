@@ -43,6 +43,7 @@ typedef struct file_chain_s {
 #define MISC_AGAIN_FLAG_DONT_SAVE_YES (1<<1)
 
 void errorf(GtkWidget *parent, const char *fmt, ...);
+void warningf(GtkWidget *parent, const char *fmt, ...);
 void messagef(GtkWidget *parent, char *title, const char *fmt, ...);
 gboolean yes_no_f(GtkWidget *parent, 
 		  appdata_t *appdata, gulong again_bit, gint flags,

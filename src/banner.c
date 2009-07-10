@@ -86,7 +86,7 @@ void banner_busy_start(appdata_t *appdata, gboolean grab, char *text) {
     GtkWidget *win = GTK_WIDGET(appdata->window);
 #if MAEMO_VERSION_MAJOR < 5
     GtkWidget *menu = GTK_WIDGET(hildon_window_get_menu(HILDON_WINDOW(win)));
-    GtkWidet *menu_att = gtk_menu_get_attach_widget(
+    GtkWidget *menu_att = gtk_menu_get_attach_widget(
 		  hildon_window_get_menu(HILDON_WINDOW(win)));
 #endif
     gtk_widget_set_sensitive(win, FALSE);

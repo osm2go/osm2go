@@ -21,7 +21,7 @@
 # along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
 
 AC_PREREQ(2.61)
-AC_INIT([OSM2Go],[0.7.8],[osm2go-users@garage.maemo.org])
+AC_INIT([OSM2Go],[0.7.9],[osm2go-users@garage.maemo.org])
 AC_CONFIG_SRCDIR([src/main.c])
 # AC_CONFIG_HEADER([src/config.h])
 
@@ -61,9 +61,11 @@ CFLAGS="$CFLAGS $libcurl_CFLAGS"
 LIBS="$LIBS $libcurl_LIBS"
 
 # check for libsoup
-PKG_CHECK_MODULES([libsoup], [libsoup-2.4], [], [AC_MSG_ERROR([libsoup-2.4 missing])])
-CFLAGS="$CFLAGS $libsoup_CFLAGS"
-LIBS="$LIBS $libsoup_LIBS"
+PKG_CHECK_MODULES([libsoup], [libsoup-2.4], [
+  EXTRA_OBJS="$EXTRA_OBJS  converter.o osm-gps-map.o"
+  CFLAGS="$CFLAGS $libsoup_CFLAGS -DENABLE_OSM_GPS_MAP"
+  LIBS="$LIBS $libsoup_LIBS"
+], [AC_MSG_NOTICE([WARNING: libsoup-2.4 missing, disabling internal map])])
 
 # check for goocanvas
 PKG_CHECK_MODULES([goocanvas], [goocanvas], [], [AC_MSG_ERROR([goocanvas missing])])
@@ -131,7 +133,7 @@ PKG_CHECK_EXISTS(maemo-version, [
   ])
 
   # maemo uses dbus for ipc with maemo mapper
-  EXTRA_OBJS="dbus.o"
+  EXTRA_OBJS="$EXTRA_OBJS dbus.o"
   AC_SUBST(EXTRA_OBJS)
 
   INSTALL_PLATTFORM="install-maemo"

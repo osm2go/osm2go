@@ -19,19 +19,16 @@
 
 #include "appdata.h"
 
-void messagef(GtkWidget *parent, char *title, const char *fmt, ...) {
-  va_list args;
-  va_start( args, fmt );
-  char *buf = g_strdup_vprintf(fmt, args);
-  va_end( args );
+static void vmessagef(GtkWidget *parent, int type, int buttons,
+		      char *title, const char *fmt, 
+		      va_list args) {
 
-  printf("%s: \"%s\"\n", title, buf); 
-  
+  char *buf = g_strdup_vprintf(fmt, args);
+
   GtkWidget *dialog = gtk_message_dialog_new(
 		     GTK_WINDOW(parent),
                      GTK_DIALOG_DESTROY_WITH_PARENT,
-                     GTK_MESSAGE_INFO, GTK_BUTTONS_OK,
-                     buf);
+                     type, buttons, buf);
 
   gtk_window_set_title(GTK_WINDOW(dialog), title);
 
@@ -39,6 +36,30 @@ void messagef(GtkWidget *parent, char *title, const char *fmt, ...) {
   gtk_widget_destroy(dialog);
 
   g_free(buf);
+}
+
+
+void messagef(GtkWidget *parent, char *title, const char *fmt, ...) {
+  va_list args;
+  va_start( args, fmt );
+  vmessagef(parent, GTK_MESSAGE_INFO, GTK_BUTTONS_OK, title, fmt, args);
+  va_end( args );
+}
+
+void errorf(GtkWidget *parent, const char *fmt, ...) {
+  va_list args;
+  va_start( args, fmt );
+  vmessagef(parent, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, 
+	    _("Error"), fmt, args);
+  va_end( args );
+}
+
+void warningf(GtkWidget *parent, const char *fmt, ...) {
+  va_list args;
+  va_start( args, fmt );
+  vmessagef(parent, GTK_MESSAGE_WARNING, GTK_BUTTONS_CLOSE, 
+	    _("Warning"), fmt, args);
+  va_end( args );
 }
 
 static void on_toggled(GtkWidget *button, gpointer data) {
@@ -105,28 +126,6 @@ gboolean yes_no_f(GtkWidget *parent, appdata_t *appdata, gulong again_bit,
 
   g_free(buf);
   return yes;
-}
-
-void errorf(GtkWidget *parent, const char *fmt, ...) {
-  va_list args;
-  va_start( args, fmt );
-  char *buf = g_strdup_vprintf(fmt, args);
-  va_end( args );
-
-  printf("errorf(\"%s\")\n", buf); 
-  
-  GtkWidget *dialog = gtk_message_dialog_new(
-		     GTK_WINDOW(parent),
-                     GTK_DIALOG_DESTROY_WITH_PARENT,
-                     GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE,
-                     buf);
-
-  gtk_window_set_title(GTK_WINDOW(dialog), _("ERROR"));
-
-  gtk_dialog_run(GTK_DIALOG(dialog));
-  gtk_widget_destroy(dialog);
-
-  g_free(buf);
 }
 
 static const char *data_paths[] = {

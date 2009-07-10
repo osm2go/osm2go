@@ -18,7 +18,15 @@
  */
 
 #include "appdata.h"
+
+#ifdef ENABLE_OSM_GPS_MAP
 #include "osm-gps-map.h"
+#endif
+
+#define TAB_LABEL_MAP    "Map"
+#define TAB_LABEL_DIRECT "Direct"
+#define TAB_LABEL_EXTENT "Extent"
+#define TAB_LABEL_MM     "Maemo Mapper"
 
 /* limit of square kilometers above the warning is enabled */
 #define WARN_OVER  5.0
@@ -67,6 +75,21 @@ static void parse_and_set_lon(GtkWidget *src, pos_float_t *store) {
 
 #define LOG2(x) (log(x) / log(2))
 
+static gboolean current_tab_is(context_t *context, gint page_num, char *str) {
+  if(page_num < 0)
+    page_num = 
+      gtk_notebook_get_current_page(GTK_NOTEBOOK(context->notebook));
+
+  if(page_num < 0) return FALSE;
+
+  GtkWidget *w = 
+    gtk_notebook_get_nth_page(GTK_NOTEBOOK(context->notebook), page_num);
+  const char *name = 
+    gtk_notebook_get_tab_label_text(GTK_NOTEBOOK(context->notebook), w);
+  
+  return(strcasecmp(name, _(str)) == 0);
+}
+
 static void on_area_warning_clicked(GtkButton *button, gpointer data) {
   context_t *context = (context_t*)data;
 
@@ -78,10 +101,10 @@ static void on_area_warning_clicked(GtkButton *button, gpointer data) {
   double area = vscale * (context->max.lat - context->min.lat) *
     hscale * (context->max.lon - context->min.lon);
 
-  messagef(context->dialog, _("Area size warning"), 
+  warningf(context->dialog,
    _("The currently selected area is %.02f km² (%.02f mil²) in size. "
-     "This is more than the recommended %.02f km² (%.02f mil²). "
-     "This may result in a big download and slow mapping performance "
+     "This is more than the recommended %.02f km² (%.02f mil²).\n\n"
+     "Continuing may result in a big download and low mapping performance "
      "in a densly mapped area (e.g. cities)!"), 
 	   area, area/(KMPMIL*KMPMIL),
 	   WARN_OVER, WARN_OVER/(KMPMIL*KMPMIL)
@@ -109,12 +132,12 @@ static void area_main_update(context_t *context) {
     gtk_widget_hide(context->warning);
 }
 
+#ifdef ENABLE_OSM_GPS_MAP
 /* the contents of the map tab have been changed */
 static void map_update(context_t *context, gboolean forced) {
 
   /* map is first tab (page 0) */
-  if(!forced && 
-     gtk_notebook_get_current_page(GTK_NOTEBOOK(context->notebook)) != 0) {
+  if(!forced && !current_tab_is(context, -1, TAB_LABEL_MAP)) {
     context->map.needs_redraw = TRUE;
     return;
   }
@@ -144,6 +167,7 @@ static gboolean on_map_configure(GtkWidget *widget,
   map_update(context, FALSE);
   return FALSE;
 }
+#endif
 
 /* the contents of the direct tab have been changed */
 static void direct_update(context_t *context) {
@@ -175,7 +199,7 @@ static void callback_modified_direct(GtkWidget *widget, gpointer data) {
   context_t *context = (context_t*)data;
 
   /* direct is second tab (page 1) */
-  if(gtk_notebook_get_current_page(GTK_NOTEBOOK(context->notebook)) != 1)
+  if(!current_tab_is(context, -1, TAB_LABEL_DIRECT)) 
     return;
 
   /* parse the fields from the direct entry pad */
@@ -188,13 +212,16 @@ static void callback_modified_direct(GtkWidget *widget, gpointer data) {
 
   /* also adjust other views */
   extent_update(context);
+#ifdef ENABLE_OSM_GPS_MAP
+  map_update(context, FALSE);
+#endif
 }
 
 static void callback_modified_extent(GtkWidget *widget, gpointer data) {
   context_t *context = (context_t*)data;
 
   /* extent is third tab (page 2) */
-  if(gtk_notebook_get_current_page(GTK_NOTEBOOK(context->notebook)) != 2)
+  if(!current_tab_is(context, -1, TAB_LABEL_EXTENT)) 
     return;
 
   pos_float_t center_lat = pos_lat_get(context->extent.lat);
@@ -221,7 +248,9 @@ static void callback_modified_extent(GtkWidget *widget, gpointer data) {
   
   /* also update other tabs */
   direct_update(context);
+#ifdef ENABLE_OSM_GPS_MAP
   map_update(context, FALSE);
+#endif
 }
 
 static void callback_modified_unit(GtkWidget *widget, gpointer data) {
@@ -244,8 +273,6 @@ static void callback_modified_unit(GtkWidget *widget, gpointer data) {
 static void callback_fetch_mm_clicked(GtkButton *button, gpointer data) {
   context_t *context = (context_t*)data;
 
-  printf("clicked fetch mm!\n");
-
   if(!dbus_mm_set_position(context->area->osso_context, NULL)) {
     errorf(context->dialog, 
 	   _("Unable to communicate with Maemo Mapper. "
@@ -264,7 +291,7 @@ static void callback_fetch_mm_clicked(GtkButton *button, gpointer data) {
   }
 
   /* maemo mapper is fourth tab (page 3) */
-  if(gtk_notebook_get_current_page(GTK_NOTEBOOK(context->notebook)) != 3)
+  if(!current_tab_is(context, -1, TAB_LABEL_MM)) 
     return;
 
   /* maemo mapper pos data ... */
@@ -290,10 +317,13 @@ static void callback_fetch_mm_clicked(GtkButton *button, gpointer data) {
   /* also update other tabs */
   direct_update(context);
   extent_update(context);
+#ifdef ENABLE_OSM_GPS_MAP
   map_update(context, FALSE);
+#endif
 }
 #endif
 
+#ifdef ENABLE_OSM_GPS_MAP
 /* the user has changed the map view, update other views accordingly */
 static void map_has_changed(context_t *context) {
   coord_t pt1, pt2;
@@ -350,11 +380,14 @@ static void on_page_switch(GtkNotebook *notebook, GtkNotebookPage *page,
   /* updating the map while the user manually changes some coordinates */
   /* may confuse the map. so we delay those updates until the map tab */
   /* is becoming visible */
-  if((page_num == 0) && context->map.needs_redraw)
+  if(current_tab_is(context, page_num, TAB_LABEL_MAP) && 
+     context->map.needs_redraw) 
     map_update(context, TRUE);
 }
+#endif
 
 gboolean area_edit(area_edit_t *area) {
+  GtkWidget *vbox;
   gboolean ok = FALSE;
 
   context_t context;
@@ -405,6 +438,7 @@ gboolean area_edit(area_edit_t *area) {
 
   context.notebook = gtk_notebook_new();
 
+#ifdef ENABLE_OSM_GPS_MAP
   /* ------------- fetch from map ------------------------ */
 
   GtkWidget *hbox = gtk_hbox_new(FALSE, 0);
@@ -423,7 +457,7 @@ gboolean area_edit(area_edit_t *area) {
   gtk_box_pack_start_defaults(GTK_BOX(hbox), context.map.widget);
 
   /* zoom button box */
-  GtkWidget *vbox = gtk_vbox_new(FALSE,0);
+  vbox = gtk_vbox_new(FALSE,0);
 
   context.map.zoomin = gtk_button_new();
   gtk_button_set_image(GTK_BUTTON(context.map.zoomin), 
@@ -442,7 +476,8 @@ gboolean area_edit(area_edit_t *area) {
   gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
 
   gtk_notebook_append_page(GTK_NOTEBOOK(context.notebook),
-		   hbox, gtk_label_new(_("Map")));
+		   hbox, gtk_label_new(_(TAB_LABEL_MAP)));
+#endif
 
   /* ------------ direct min/max edit --------------- */
 
@@ -484,7 +519,7 @@ gboolean area_edit(area_edit_t *area) {
 
   gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
   gtk_notebook_append_page(GTK_NOTEBOOK(context.notebook),
-		 vbox, gtk_label_new(_("Direct")));
+	   vbox, gtk_label_new(_(TAB_LABEL_DIRECT)));
 
   /* ------------- center/extent edit ------------------------ */
 
@@ -544,7 +579,7 @@ gboolean area_edit(area_edit_t *area) {
 
   gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
   gtk_notebook_append_page(GTK_NOTEBOOK(context.notebook),
-		   vbox, gtk_label_new(_("Extent")));
+		   vbox, gtk_label_new(_(TAB_LABEL_EXTENT)));
 
 #ifdef USE_HILDON 
   /* ------------- fetch from maemo mapper ------------------------ */
@@ -563,7 +598,7 @@ gboolean area_edit(area_edit_t *area) {
 
 
   gtk_notebook_append_page(GTK_NOTEBOOK(context.notebook),
-		   vbox, gtk_label_new(_("Maemo Mapper")));
+		   vbox, gtk_label_new(_(TAB_LABEL_MM)));
 #endif
 
   /* ------------------------------------------------------ */
@@ -571,8 +606,10 @@ gboolean area_edit(area_edit_t *area) {
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(context.dialog)->vbox), 
 			      context.notebook);
 
+#ifdef ENABLE_OSM_GPS_MAP
   g_signal_connect(G_OBJECT(context.notebook), "switch-page",
 		   G_CALLBACK(on_page_switch), &context);
+#endif
 
   gtk_widget_show_all(context.dialog);
 

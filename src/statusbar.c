@@ -51,7 +51,7 @@ void statusbar_set(appdata_t *appdata, const char *msg, gboolean highlight) {
   }
 }
 
-
+#ifndef USE_HILDON
 // Clear any brief message currently set, dropping back to the persistent one.
 
 static gboolean statusbar_brief_clear(gpointer data) {
@@ -96,6 +96,7 @@ void statusbar_brief(appdata_t *appdata, const char *msg, gint timeout) {
       = gtk_timeout_add(timeout, statusbar_brief_clear, appdata);
   }
 }
+#endif
 
 GtkWidget *statusbar_new(appdata_t *appdata) {
   appdata->statusbar = (statusbar_t*)g_new0(statusbar_t, 1);
