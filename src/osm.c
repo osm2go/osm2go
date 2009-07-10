@@ -1177,7 +1177,7 @@ gboolean osm_node_has_tag(node_t *node) {
   tag_t *tag = node->tag;
 
   /* created_by tags don't count as real tags */
-  if(tag && strcasecmp(tag->key, "created_by") == 0)
+  if(tag && osm_is_creator_tag(tag))
     tag = tag->next;
 
   return tag != NULL;

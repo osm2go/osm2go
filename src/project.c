@@ -332,13 +332,10 @@ static project_t *project_scan(appdata_t *appdata) {
 }
 
 typedef struct {
+  appdata_t *appdata;
   project_t *project;
   GtkWidget *dialog, *list;
   settings_t *settings;
-#ifdef USE_HILDON
-  dbus_mm_pos_t *mmpos;
-  osso_context_t *osso_context;  
-#endif
 } select_context_t;
 
 enum {
@@ -565,7 +562,8 @@ project_t *project_new(select_context_t *context) {
 
 #ifdef USE_HILDON
   if(!project_edit(context->dialog, context->settings, 
-		   project, context->mmpos, context->osso_context))
+		   project, &context->appdata->mmpos, 
+		   context->appdata->osso_context))
 #else
   if(!project_edit(context->dialog,  context->settings, project))
 #endif
@@ -640,9 +638,10 @@ static void on_project_edit(GtkButton *button, gpointer data) {
   select_context_t *context = (select_context_t*)data;
   project_t *project = project_get_selected(context->list);
   g_assert(project);
+
 #ifdef USE_HILDON
   if(project_edit(context->dialog, context->settings, project, 
-		  context->mmpos, context->osso_context))
+		  &context->appdata->mmpos, context->appdata->osso_context))
 #else
   if(project_edit(context->dialog, context->settings, project))
 #endif
@@ -664,6 +663,41 @@ static void on_project_edit(GtkButton *button, gpointer data) {
 		       -1);
 
     
+    /* check if we have actually editing the currently open project */
+    if(context->appdata->project && 
+       !strcmp(context->appdata->project->name, project->name)) {
+      project_t *cur = context->appdata->project;
+
+      printf("edited project was actually the active one!\n");
+
+      /* update the currently active project also */
+
+      /* update description */
+      if(cur->desc) { free(cur->desc); cur->desc = NULL; }
+      if(project->desc) cur->desc = g_strdup(project->desc);
+
+      /* update server */
+      if(cur->server) { free(cur->server); cur->server = NULL; }
+      if(project->server) cur->server = g_strdup(project->server);
+
+      /* update coordinates */
+      if((cur->min.lat != project->min.lat) ||
+	 (cur->max.lat != project->max.lat) ||
+	 (cur->min.lon != project->min.lon) ||
+	 (cur->max.lon != project->max.lon)) {
+
+	messagef(context->dialog, 
+		 _("Current project coordinates changed"),
+		 _("You have changed the coordinates of the project "
+		   "you are currently working on. Please reaload the "
+		   "project to work on the updated coordinates!"));
+	
+	cur->min.lat = project->min.lat;
+	cur->max.lat = project->max.lat;
+	cur->min.lon = project->min.lon;
+	cur->max.lon = project->max.lon;
+      }
+    }
   }
 
   /* enable/disable edit/remove buttons */
@@ -691,10 +725,10 @@ static GtkWidget *project_list_widget(select_context_t *context) {
   list_set_selection_function(context->list, view_selection_func, context);
 
   list_set_columns(context->list,
-		   _("Name"), PROJECT_COL_NAME, 0,
-		   _("State"), PROJECT_COL_STATUS, LIST_FLAG_STOCK_ICON,
-		   _("Description"), PROJECT_COL_DESCRIPTION, LIST_FLAG_ELLIPSIZE,
-		   NULL);
+	   _("Name"), PROJECT_COL_NAME, 0,
+	   _("State"), PROJECT_COL_STATUS, LIST_FLAG_STOCK_ICON,
+	   _("Description"), PROJECT_COL_DESCRIPTION, LIST_FLAG_ELLIPSIZE,
+	   NULL);
 		   
 
   /* build the store */
@@ -729,14 +763,11 @@ static GtkWidget *project_list_widget(select_context_t *context) {
   return context->list;
 }
 
-char *project_select(appdata_t *appdata) {
+static char *project_select(appdata_t *appdata) {
   char *name = NULL;
 
   select_context_t *context = g_new0(select_context_t, 1);
-#ifdef USE_HILDON
-  context->mmpos = &appdata->mmpos;
-  context->osso_context = appdata->osso_context;
-#endif
+  context->appdata = appdata;
   context->settings = appdata->settings;
   context->project = project_scan(appdata);
 

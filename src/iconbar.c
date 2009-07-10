@@ -282,20 +282,16 @@ GtkWidget *iconbar_new(appdata_t *appdata) {
   iconbar->info = tool_add(iconbar->toolbar, appdata, 
       TOOL_ICON("info"), _("Properties"), on_info_clicked);
 
-#ifndef FINGER_UI
   /* -------------------------------------------------------- */
   gtk_toolbar_insert(GTK_TOOLBAR(iconbar->toolbar), 
 		     gtk_separator_tool_item_new(),-1);
-#endif
 
   iconbar->node_add = tool_add(iconbar->toolbar, appdata, 
        TOOL_ICON("node_add"), _("Add node"), on_node_add_clicked);
 
-#ifndef FINGER_UI
   /* -------------------------------------------------------- */
   gtk_toolbar_insert(GTK_TOOLBAR(iconbar->toolbar), 
 		     gtk_separator_tool_item_new(),-1);
-#endif
 
 #ifdef FINGER_UI
   iconbar->menu = popup_menu_create(appdata);

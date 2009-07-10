@@ -41,7 +41,6 @@ typedef struct project_s {
   struct project_s *next;  /* for chaining projects (e.g. during scan) */
 } project_t;
 
-char *project_select(appdata_t *appdata);
 gboolean project_exists(settings_t *settings, const char *name);
 gboolean project_open(appdata_t *appdata, char *name);
 gboolean project_save(GtkWidget *parent, project_t *project);

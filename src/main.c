@@ -611,11 +611,13 @@ void menu_create(appdata_t *appdata) {
     0, 0, TRUE, FALSE, FALSE
   );
 
+#ifndef USE_HILDON
   menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_project_wizard), _("_Wizard"),
     GTK_STOCK_NEW, "<OSM2Go-Main>/Project/Wizard",
     0, 0, TRUE, FALSE, FALSE
   );
+#endif
 
   /* --------------- view menu ------------------- */
 
