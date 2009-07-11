@@ -35,6 +35,7 @@
 #include <glib.h>
 #include <glib/gprintf.h>
 #include <libsoup/soup.h>
+#include <glib/ghash.h>
 
 #include "converter.h"
 #include "osm-gps-map-types.h"
@@ -171,7 +172,6 @@ static gchar    *replace_map_uri(OsmGpsMap *map, const gchar *uri, int zoom, int
 static void     osm_gps_map_print_images (OsmGpsMap *map);
 static void     osm_gps_map_draw_gps_point (OsmGpsMap *map);
 static void     osm_gps_map_blit_tile(OsmGpsMap *map, GdkPixbuf *pixbuf, int offset_x, int offset_y);
-static void     osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpointer user_data);
 static void     osm_gps_map_download_tile (OsmGpsMap *map, int zoom, int x, int y, gboolean redraw);
 static void     osm_gps_map_load_tile (OsmGpsMap *map, int zoom, int x, int y, int offset_x, int offset_y);
 static void     osm_gps_map_fill_tiles_pixel (OsmGpsMap *map);
@@ -622,7 +622,8 @@ osm_gps_map_blit_tile(OsmGpsMap *map, GdkPixbuf *pixbuf, int offset_x, int offse
 {
     OsmGpsMapPrivate *priv = map->priv;
 
-    g_debug("Queing redraw @ %d,%d (w:%d h:%d)", offset_x,offset_y, TILESIZE,TILESIZE);
+    g_debug("Queing redraw @ %d,%d (w:%d h:%d)", offset_x,offset_y, 
+            TILESIZE,TILESIZE);
 
     /* draw pixbuf onto pixmap */
     gdk_draw_pixbuf (priv->pixmap,
@@ -634,8 +635,23 @@ osm_gps_map_blit_tile(OsmGpsMap *map, GdkPixbuf *pixbuf, int offset_x, int offse
                      GDK_RGB_DITHER_NONE, 0, 0);
 }
 
+/* soup 2.2 and soup 2.4 use different ways to store the body data */
+#ifdef SOUP22
+#define  soup_message_headers_append(a,b,c) soup_message_add_header(a,b,c)
+#define MSG_RESPONSE_BODY(a)  ((a)->response.body)
+#define MSG_RESPONSE_LEN(a)  ((a)->response.length)
+#else
+#define MSG_RESPONSE_BODY(a)  ((a)->response_body->data)
+#define MSG_RESPONSE_LEN(a)  ((a)->response_body->length)
+#endif
+
+#ifdef SOUP22
+static void
+osm_gps_map_tile_download_complete (SoupMessage *msg, gpointer user_data)
+#else
 static void
 osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpointer user_data)
+#endif
 {
 #ifndef NO_DISK_CACHE
     int fd;
@@ -652,8 +668,9 @@ osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpoi
             fd = open(dl->filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
             if (fd != -1)
             {
-                write (fd, msg->response_body->data, msg->response_body->length);
-                g_debug("Wrote %lld bytes to %s", msg->response_body->length, dl->filename);
+                write (fd, MSG_RESPONSE_BODY(msg), MSG_RESPONSE_LEN(msg));
+
+                g_debug("Wrote %lld bytes to %s", MSG_RESPONSE_LEN(msg), dl->filename);
                 close (fd);
 #endif
                 if (dl->redraw)
@@ -662,8 +679,8 @@ osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpoi
                     GdkPixbuf *pixbuf = gdk_pixbuf_new_from_file (dl->filename, NULL);
 #else
                     GdkPixbufLoader *loader = gdk_pixbuf_loader_new_with_type("png", NULL);
-                    if(!gdk_pixbuf_loader_write(loader, (unsigned char*)msg->response_body->data, 
-                                                msg->response_body->length, NULL))
+                    if(!gdk_pixbuf_loader_write(loader, (unsigned char*)MSG_RESPONSE_BODY(msg), 
+                                                MSG_RESPONSE_LEN(msg), NULL))
                         g_warning("Error: Decoding of image failed");
                        
                     gdk_pixbuf_loader_close(loader, NULL);
@@ -720,7 +737,11 @@ osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpoi
         }
         else
         {
+#ifdef SOUP22
+            soup_session_requeue_message(dl->session, msg);
+#else
             soup_session_requeue_message(session, msg);
+#endif
             return;
         }
     }
@@ -737,6 +758,10 @@ osm_gps_map_download_tile (OsmGpsMap *map, int zoom, int x, int y, gboolean redr
 
     //calculate the uri to download
     dl->uri = replace_map_uri(map, priv->repo_uri, zoom, x, y);
+
+#ifdef SOUP22
+    dl->session = priv->soup_session;
+#endif
 
     //check the tile has not already been queued for download,
     //or has been attempted, and its missing
@@ -766,6 +791,7 @@ osm_gps_map_download_tile (OsmGpsMap *map, int zoom, int x, int y, gboolean redr
                     if (cookie) {
                         g_debug("Adding Google Cookie");
                         soup_message_headers_append(msg->request_headers, "Cookie", cookie);
+
                     }
                 }
             }
@@ -1095,6 +1121,7 @@ osm_gps_map_print_tracks (OsmGpsMap *map)
 static void
 osm_gps_map_purge_cache (OsmGpsMap *map)
 {
+#if 0 //XXX
     OsmGpsMapPrivate *priv = map->priv;
     GHashTableIter iter;
     OsmCachedTile *tile;
@@ -1110,6 +1137,7 @@ osm_gps_map_purge_cache (OsmGpsMap *map)
         if (tile->redraw_cycle != priv->redraw_cycle)
             g_hash_table_iter_remove (&iter);
     }
+#endif
 }
 
 static gboolean
@@ -1185,11 +1213,13 @@ osm_gps_map_init (OsmGpsMap *object)
     priv->uri_format = 0;
     priv->the_google = FALSE;
 
+#ifndef SOUP22
     //Change naumber of concurrent connections option?
     priv->soup_session = soup_session_async_new_with_options(
                                                              SOUP_SESSION_USER_AGENT,
                                                              "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.11) Gecko/20071127 Firefox/2.0.0.11",
                                                              NULL);
+#endif
 
     //Hash table which maps tile d/l URIs to SoupMessage requests
     priv->tile_queue = g_hash_table_new (g_str_hash, g_str_equal);
@@ -1223,7 +1253,11 @@ osm_gps_map_constructor (GType gtype, guint n_properties, GObjectConstructParam 
     priv = OSM_GPS_MAP_PRIVATE(object);
 
     if (!priv->cache_dir_is_full_path) {
+#ifdef G_CHECKSUM_MD5
         char *md5 = g_compute_checksum_for_string (G_CHECKSUM_MD5, priv->repo_uri, -1);
+#else
+        char *md5 = g_strdup("dummy");  // XXX
+#endif
 
         if (priv->cache_dir) {
             char *old = priv->cache_dir;
@@ -1316,16 +1350,20 @@ osm_gps_map_set_property (GObject *object, guint prop_id, const GValue *value, G
             break;
         case PROP_PROXY_URI:
             if ( g_value_get_string(value) ) {
+#ifndef SOUP22
                 GValue val = {0};
 
                 priv->proxy_uri = g_value_dup_string (value);
                 g_debug("Setting proxy server: %s", priv->proxy_uri);
-
                 SoupURI* uri = soup_uri_new(priv->proxy_uri);
                 g_value_init(&val, SOUP_TYPE_URI);
                 g_value_take_boxed(&val, uri);
 
                 g_object_set_property(G_OBJECT(priv->soup_session),SOUP_SESSION_PROXY_URI,&val);
+#else
+#warning "Proxy setting doesn't work in Soup 2.2 yet"
+                printf("setting proxy doesn't work yet with soup22\n");
+#endif
             } else
                 priv->proxy_uri = NULL;
 

@@ -65,7 +65,15 @@ PKG_CHECK_MODULES([libsoup], [libsoup-2.4], [
   EXTRA_OBJS="$EXTRA_OBJS  converter.o osm-gps-map.o"
   CFLAGS="$CFLAGS $libsoup_CFLAGS -DENABLE_OSM_GPS_MAP"
   LIBS="$LIBS $libsoup_LIBS"
-], [AC_MSG_NOTICE([WARNING: libsoup-2.4 missing, disabling internal map])])
+], [
+  PKG_CHECK_MODULES([libsoup], [libsoup-2.2], [
+    EXTRA_OBJS="$EXTRA_OBJS  converter.o osm-gps-map.o"
+    CFLAGS="$CFLAGS $libsoup_CFLAGS -DSOUP22 -DENABLE_OSM_GPS_MAP"
+    LIBS="$LIBS $libsoup_LIBS"
+  ], [
+    AC_MSG_NOTICE([WARNING: libsoup-2.4/2.2 missing, disabling internal map])
+  ])
+])
 
 # check for goocanvas
 PKG_CHECK_MODULES([goocanvas], [goocanvas], [], [AC_MSG_ERROR([goocanvas missing])])

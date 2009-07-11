@@ -3102,11 +3102,173 @@ fi
 
 	{ echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6; }
-                { echo "$as_me:$LINENO: WARNING: libsoup-2.4 missing, disabling internal map" >&5
-echo "$as_me: WARNING: libsoup-2.4 missing, disabling internal map" >&6;}
+
+
+pkg_failed=no
+{ echo "$as_me:$LINENO: checking for libsoup" >&5
+echo $ECHO_N "checking for libsoup... $ECHO_C" >&6; }
+
+if test -n "$PKG_CONFIG"; then
+    if test -n "$libsoup_CFLAGS"; then
+        pkg_cv_libsoup_CFLAGS="$libsoup_CFLAGS"
+    else
+        if test -n "$PKG_CONFIG" && \
+    { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"libsoup-2.2\"") >&5
+  ($PKG_CONFIG --exists --print-errors "libsoup-2.2") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  pkg_cv_libsoup_CFLAGS=`$PKG_CONFIG --cflags "libsoup-2.2" 2>/dev/null`
+else
+  pkg_failed=yes
+fi
+    fi
+else
+	pkg_failed=untried
+fi
+if test -n "$PKG_CONFIG"; then
+    if test -n "$libsoup_LIBS"; then
+        pkg_cv_libsoup_LIBS="$libsoup_LIBS"
+    else
+        if test -n "$PKG_CONFIG" && \
+    { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"libsoup-2.2\"") >&5
+  ($PKG_CONFIG --exists --print-errors "libsoup-2.2") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  pkg_cv_libsoup_LIBS=`$PKG_CONFIG --libs "libsoup-2.2" 2>/dev/null`
+else
+  pkg_failed=yes
+fi
+    fi
+else
+	pkg_failed=untried
+fi
+
+
+
+if test $pkg_failed = yes; then
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        libsoup_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "libsoup-2.2"`
+        else
+	        libsoup_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "libsoup-2.2"`
+        fi
+	# Put the nasty error message in config.log where it belongs
+	echo "$libsoup_PKG_ERRORS" >&5
+
+	{ echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6; }
+
+    { echo "$as_me:$LINENO: WARNING: libsoup-2.4/2.2 missing, disabling internal map" >&5
+echo "$as_me: WARNING: libsoup-2.4/2.2 missing, disabling internal map" >&6;}
+
 elif test $pkg_failed = untried; then
-	{ echo "$as_me:$LINENO: WARNING: libsoup-2.4 missing, disabling internal map" >&5
-echo "$as_me: WARNING: libsoup-2.4 missing, disabling internal map" >&6;}
+
+    { echo "$as_me:$LINENO: WARNING: libsoup-2.4/2.2 missing, disabling internal map" >&5
+echo "$as_me: WARNING: libsoup-2.4/2.2 missing, disabling internal map" >&6;}
+
+else
+	libsoup_CFLAGS=$pkg_cv_libsoup_CFLAGS
+	libsoup_LIBS=$pkg_cv_libsoup_LIBS
+        { echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6; }
+
+    EXTRA_OBJS="$EXTRA_OBJS  converter.o osm-gps-map.o"
+    CFLAGS="$CFLAGS $libsoup_CFLAGS -DSOUP22 -DENABLE_OSM_GPS_MAP"
+    LIBS="$LIBS $libsoup_LIBS"
+
+fi
+
+elif test $pkg_failed = untried; then
+
+
+pkg_failed=no
+{ echo "$as_me:$LINENO: checking for libsoup" >&5
+echo $ECHO_N "checking for libsoup... $ECHO_C" >&6; }
+
+if test -n "$PKG_CONFIG"; then
+    if test -n "$libsoup_CFLAGS"; then
+        pkg_cv_libsoup_CFLAGS="$libsoup_CFLAGS"
+    else
+        if test -n "$PKG_CONFIG" && \
+    { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"libsoup-2.2\"") >&5
+  ($PKG_CONFIG --exists --print-errors "libsoup-2.2") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  pkg_cv_libsoup_CFLAGS=`$PKG_CONFIG --cflags "libsoup-2.2" 2>/dev/null`
+else
+  pkg_failed=yes
+fi
+    fi
+else
+	pkg_failed=untried
+fi
+if test -n "$PKG_CONFIG"; then
+    if test -n "$libsoup_LIBS"; then
+        pkg_cv_libsoup_LIBS="$libsoup_LIBS"
+    else
+        if test -n "$PKG_CONFIG" && \
+    { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"libsoup-2.2\"") >&5
+  ($PKG_CONFIG --exists --print-errors "libsoup-2.2") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  pkg_cv_libsoup_LIBS=`$PKG_CONFIG --libs "libsoup-2.2" 2>/dev/null`
+else
+  pkg_failed=yes
+fi
+    fi
+else
+	pkg_failed=untried
+fi
+
+
+
+if test $pkg_failed = yes; then
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        libsoup_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "libsoup-2.2"`
+        else
+	        libsoup_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "libsoup-2.2"`
+        fi
+	# Put the nasty error message in config.log where it belongs
+	echo "$libsoup_PKG_ERRORS" >&5
+
+	{ echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6; }
+
+    { echo "$as_me:$LINENO: WARNING: libsoup-2.4/2.2 missing, disabling internal map" >&5
+echo "$as_me: WARNING: libsoup-2.4/2.2 missing, disabling internal map" >&6;}
+
+elif test $pkg_failed = untried; then
+
+    { echo "$as_me:$LINENO: WARNING: libsoup-2.4/2.2 missing, disabling internal map" >&5
+echo "$as_me: WARNING: libsoup-2.4/2.2 missing, disabling internal map" >&6;}
+
+else
+	libsoup_CFLAGS=$pkg_cv_libsoup_CFLAGS
+	libsoup_LIBS=$pkg_cv_libsoup_LIBS
+        { echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6; }
+
+    EXTRA_OBJS="$EXTRA_OBJS  converter.o osm-gps-map.o"
+    CFLAGS="$CFLAGS $libsoup_CFLAGS -DSOUP22 -DENABLE_OSM_GPS_MAP"
+    LIBS="$LIBS $libsoup_LIBS"
+
+fi
+
 else
 	libsoup_CFLAGS=$pkg_cv_libsoup_CFLAGS
 	libsoup_LIBS=$pkg_cv_libsoup_LIBS
