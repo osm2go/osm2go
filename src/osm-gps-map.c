@@ -35,7 +35,6 @@
 #include <glib.h>
 #include <glib/gprintf.h>
 #include <libsoup/soup.h>
-#include <glib/ghash.h>
 
 #include "converter.h"
 #include "osm-gps-map-types.h"
@@ -1118,26 +1117,23 @@ osm_gps_map_print_tracks (OsmGpsMap *map)
     }
 }
 
+static gboolean 
+osm_gps_map_purge_cache_check(gpointer key, gpointer value, gpointer user) 
+{
+    return(((OsmCachedTile*)value)->redraw_cycle != ((OsmGpsMapPrivate*)user)->redraw_cycle);
+}
+
 static void
 osm_gps_map_purge_cache (OsmGpsMap *map)
 {
-#if 0 //XXX
     OsmGpsMapPrivate *priv = map->priv;
-    GHashTableIter iter;
-    OsmCachedTile *tile;
 
     if (g_hash_table_size (priv->tile_cache) < priv->max_tile_cache_size)
         return;
 
     /* run through the cache, and remove the tiles which have not been used
      * during the last redraw operation */
-    g_hash_table_iter_init (&iter, priv->tile_cache);
-    while (g_hash_table_iter_next (&iter, NULL, (gpointer)&tile))
-    {
-        if (tile->redraw_cycle != priv->redraw_cycle)
-            g_hash_table_iter_remove (&iter);
-    }
-#endif
+    g_hash_table_foreach_remove(priv->tile_cache, osm_gps_map_purge_cache_check, priv);
 }
 
 static gboolean
@@ -1242,6 +1238,22 @@ osm_gps_map_init (OsmGpsMap *object)
     g_log_set_handler (G_LOG_DOMAIN, G_LOG_LEVEL_MASK, my_log_handler, NULL);
 }
 
+#ifndef G_CHECKSUM_MD5
+/* simple hash algorithm hack if md5 is not present */
+static char *simple_hash(char *str) {
+    union {
+        char str[4];
+        gulong val;
+    } hash = { .val = 0x55555555 };
+
+    while(*str) {
+        hash.str[(int)str & 3] ^= *str;
+        str++;
+    }
+    return g_strdup_printf("%08lX", hash.val);
+}
+#endif
+
 static GObject *
 osm_gps_map_constructor (GType gtype, guint n_properties, GObjectConstructParam *properties)
 {
@@ -1256,7 +1268,7 @@ osm_gps_map_constructor (GType gtype, guint n_properties, GObjectConstructParam 
 #ifdef G_CHECKSUM_MD5
         char *md5 = g_compute_checksum_for_string (G_CHECKSUM_MD5, priv->repo_uri, -1);
 #else
-        char *md5 = g_strdup("dummy");  // XXX
+        char *md5 = simple_hash(priv->repo_uri);
 #endif
 
         if (priv->cache_dir) {
