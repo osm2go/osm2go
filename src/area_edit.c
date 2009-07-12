@@ -133,6 +133,14 @@ static void area_main_update(context_t *context) {
 }
 
 #ifdef ENABLE_OSM_GPS_MAP
+static GSList *pos_append(GSList *list, pos_float_t lat, pos_float_t lon) {
+  coord_t *coo = g_new0(coord_t, 1);
+  coo->rlat = DEG2RAD(lat); 
+  coo->rlon = DEG2RAD(lon);
+  list = g_slist_append(list, coo);
+  return list;
+}
+
 /* the contents of the map tab have been changed */
 static void map_update(context_t *context, gboolean forced) {
 
@@ -156,7 +164,20 @@ static void map_update(context_t *context, gboolean forced) {
   osm_gps_map_set_center(OSM_GPS_MAP(context->map.widget),
 			 center_lat, center_lon);	    
 
-  osm_gps_map_set_zoom(OSM_GPS_MAP(context->map.widget), (hzoom+vzoom+0.5)/2);
+  /* use smallest zoom, so everything fits on screen */
+  osm_gps_map_set_zoom(OSM_GPS_MAP(context->map.widget), 
+		       (vzoom < hzoom)?vzoom:hzoom);
+
+  /* ---------- draw border (as a gps track) -------------- */  
+  osm_gps_map_clear_tracks(OSM_GPS_MAP(context->map.widget));
+
+  GSList *box = pos_append(NULL, context->min.lat, context->min.lon);
+  box = pos_append(box, context->max.lat, context->min.lon);
+  box = pos_append(box, context->max.lat, context->max.lon);
+  box = pos_append(box, context->min.lat, context->max.lon);
+  box = pos_append(box, context->min.lat, context->min.lon);
+
+  osm_gps_map_add_track(OSM_GPS_MAP(context->map.widget), box);
 
   context->map.needs_redraw = FALSE;
 }

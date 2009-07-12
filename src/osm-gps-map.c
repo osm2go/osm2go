@@ -1051,6 +1051,7 @@ osm_gps_map_print_track (OsmGpsMap *map, GSList *trackpoint_list)
 
     map_x0 = priv->map_x - EXTRA_BORDER;
     map_y0 = priv->map_y - EXTRA_BORDER;
+
     for(list = trackpoint_list; list != NULL; list = list->next)
     {
         coord_t *tp = list->data;
