@@ -68,7 +68,7 @@ typedef struct {
     OsmGpsMap *map;
     /* whether to redraw the map when the tile arrives */
     gboolean redraw;
-#ifdef SOUP22
+#ifdef LIBSOUP22
     SoupSession *session;
 #endif
 } tile_download_t;

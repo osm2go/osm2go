@@ -61,15 +61,15 @@ CFLAGS="$CFLAGS $libcurl_CFLAGS"
 LIBS="$LIBS $libcurl_LIBS"
 
 # check for libsoup
-PKG_CHECK_MODULES([libsoup], [libsoup-2.4], [
-  EXTRA_OBJS="$EXTRA_OBJS  converter.o osm-gps-map.o"
-  CFLAGS="$CFLAGS $libsoup_CFLAGS -DENABLE_OSM_GPS_MAP"
-  LIBS="$LIBS $libsoup_LIBS"
+PKG_CHECK_MODULES([libsoup24], [libsoup-2.4], [
+  EXTRA_OBJS="$EXTRA_OBJS converter.o osm-gps-map.o"
+  CFLAGS="$CFLAGS $libsoup24_CFLAGS -DENABLE_OSM_GPS_MAP"
+  LIBS="$LIBS $libsoup24_LIBS"
 ], [
-  PKG_CHECK_MODULES([libsoup], [libsoup-2.2], [
-    EXTRA_OBJS="$EXTRA_OBJS  converter.o osm-gps-map.o"
-    CFLAGS="$CFLAGS $libsoup_CFLAGS -DSOUP22 -DENABLE_OSM_GPS_MAP"
-    LIBS="$LIBS $libsoup_LIBS"
+  PKG_CHECK_MODULES([libsoup22], [libsoup-2.2], [
+    EXTRA_OBJS="$EXTRA_OBJS converter.o osm-gps-map.o"
+    CFLAGS="$CFLAGS $libsoup22_CFLAGS -DLIBSOUP22 -DENABLE_OSM_GPS_MAP"
+    LIBS="$LIBS $libsoup22_LIBS"
   ], [
     AC_MSG_NOTICE([WARNING: libsoup-2.4/2.2 missing, disabling internal map])
   ])

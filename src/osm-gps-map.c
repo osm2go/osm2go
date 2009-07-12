@@ -634,8 +634,8 @@ osm_gps_map_blit_tile(OsmGpsMap *map, GdkPixbuf *pixbuf, int offset_x, int offse
                      GDK_RGB_DITHER_NONE, 0, 0);
 }
 
-/* soup 2.2 and soup 2.4 use different ways to store the body data */
-#ifdef SOUP22
+/* libsoup-2.2 and libsoup-2.4 use different ways to store the body data */
+#ifdef LIBSOUP22
 #define  soup_message_headers_append(a,b,c) soup_message_add_header(a,b,c)
 #define MSG_RESPONSE_BODY(a)  ((a)->response.body)
 #define MSG_RESPONSE_LEN(a)  ((a)->response.length)
@@ -644,7 +644,7 @@ osm_gps_map_blit_tile(OsmGpsMap *map, GdkPixbuf *pixbuf, int offset_x, int offse
 #define MSG_RESPONSE_LEN(a)  ((a)->response_body->length)
 #endif
 
-#ifdef SOUP22
+#ifdef LIBSOUP22
 static void
 osm_gps_map_tile_download_complete (SoupMessage *msg, gpointer user_data)
 #else
@@ -736,7 +736,7 @@ osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpoi
         }
         else
         {
-#ifdef SOUP22
+#ifdef LIBSOUP22
             soup_session_requeue_message(dl->session, msg);
 #else
             soup_session_requeue_message(session, msg);
@@ -758,7 +758,7 @@ osm_gps_map_download_tile (OsmGpsMap *map, int zoom, int x, int y, gboolean redr
     //calculate the uri to download
     dl->uri = replace_map_uri(map, priv->repo_uri, zoom, x, y);
 
-#ifdef SOUP22
+#ifdef LIBSOUP22
     dl->session = priv->soup_session;
 #endif
 
@@ -1209,12 +1209,15 @@ osm_gps_map_init (OsmGpsMap *object)
     priv->uri_format = 0;
     priv->the_google = FALSE;
 
-#ifndef SOUP22
+#ifndef LIBSOUP22
     //Change naumber of concurrent connections option?
     priv->soup_session = soup_session_async_new_with_options(
                                                              SOUP_SESSION_USER_AGENT,
                                                              "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.11) Gecko/20071127 Firefox/2.0.0.11",
                                                              NULL);
+#else
+    /* libsoup-2.2 seems not to be able to set the user agent */
+    priv->soup_session = soup_session_async_new();
 #endif
 
     //Hash table which maps tile d/l URIs to SoupMessage requests
@@ -1362,20 +1365,21 @@ osm_gps_map_set_property (GObject *object, guint prop_id, const GValue *value, G
             break;
         case PROP_PROXY_URI:
             if ( g_value_get_string(value) ) {
-#ifndef SOUP22
-                GValue val = {0};
 
                 priv->proxy_uri = g_value_dup_string (value);
                 g_debug("Setting proxy server: %s", priv->proxy_uri);
+#ifndef LIBSOUP22
+                GValue val = {0};
                 SoupURI* uri = soup_uri_new(priv->proxy_uri);
                 g_value_init(&val, SOUP_TYPE_URI);
                 g_value_take_boxed(&val, uri);
 
                 g_object_set_property(G_OBJECT(priv->soup_session),SOUP_SESSION_PROXY_URI,&val);
 #else
-#warning "Proxy setting doesn't work in Soup 2.2 yet"
-                printf("setting proxy doesn't work yet with soup22\n");
+                SoupUri* uri = soup_uri_new(priv->proxy_uri);
+                g_object_set(G_OBJECT(priv->soup_session), SOUP_SESSION_PROXY_URI, uri, NULL);
 #endif
+                soup_uri_free(uri);
             } else
                 priv->proxy_uri = NULL;
 
