@@ -278,7 +278,7 @@ static void on_relations(GtkWidget *button, tag_context_t *context) {
 static GtkWidget *tag_widget(tag_context_t *context) {
   context->list = list_new(LIST_HILDON_WITH_HEADERS_ON_MAEMO5);
 
-  list_set_static_buttons(context->list, G_CALLBACK(on_tag_add), 
+  list_set_static_buttons(context->list, FALSE, G_CALLBACK(on_tag_add), 
 	  G_CALLBACK(on_tag_edit), G_CALLBACK(on_tag_remove), context);
 
   list_set_selection_function(context->list, view_selection_func, context);

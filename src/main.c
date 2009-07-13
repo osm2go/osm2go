@@ -35,7 +35,7 @@
 #include "banner.h"
 
 /* disable/enable main screen control dependant on presence of open project */
-static void main_ui_enable(appdata_t *appdata) {
+void main_ui_enable(appdata_t *appdata) {
   gboolean project_valid = (appdata->project != NULL);
   gboolean osm_valid = (appdata->osm != NULL);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008 Till Harbaum <till@harbaum.org>.
+ * Copyright (C) 2008-2009 Till Harbaum <till@harbaum.org>.
  *
  * This file is part of OSM2Go.
  *
@@ -17,6 +17,11 @@
  * along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*
+ * TODO:
+ * - don't allow user to delete active project. force/request close before
+ */
+
 #include "appdata.h"
 #include "banner.h"
 
@@ -29,14 +34,26 @@
 #error "libxml doesn't support required tree or output"
 #endif
 
+/* there shouldn't be a reason to changes the servers url */
+#undef SERVER_EDITABLE
+
 typedef struct {
+  appdata_t *appdata;
   project_t *project;
   settings_t *settings;
   GtkWidget *dialog, *fsize, *diff_stat, *diff_remove;
-  GtkWidget *desc, *server;
+  GtkWidget *desc;
   GtkWidget *minlat, *minlon, *maxlat, *maxlon;
+#ifdef SERVER_EDITABLE
+  GtkWidget *server;
+#endif
   area_edit_t area_edit;
 } project_context_t;
+
+static gboolean project_edit(appdata_t *appdata, GtkWidget *parent, 
+		      settings_t *settings, project_t *project,
+		      gboolean enable_cancel);
+
 
 /* ------------ project file io ------------- */
 
@@ -560,15 +577,9 @@ project_t *project_new(select_context_t *context) {
   /* create project file on disk */
   project_save(context->dialog, project);
 
-#ifdef USE_HILDON
-  if(!project_edit(context->dialog, context->settings, 
-		   project, &context->appdata->mmpos, 
-		   context->appdata->osso_context))
-#else
-  if(!project_edit(context->dialog,  context->settings, project))
-#endif
-  {
-    printf("edit cancelled!!\n");
+  if(!project_edit(context->appdata, context->dialog,  
+		   context->settings, project, TRUE)) {
+    printf("new/edit cancelled!!\n");
 
     project_delete(context, project);
 
@@ -639,13 +650,8 @@ static void on_project_edit(GtkButton *button, gpointer data) {
   project_t *project = project_get_selected(context->list);
   g_assert(project);
 
-#ifdef USE_HILDON
-  if(project_edit(context->dialog, context->settings, project, 
-		  &context->appdata->mmpos, context->appdata->osso_context))
-#else
-  if(project_edit(context->dialog, context->settings, project))
-#endif
-  {
+  if(project_edit(context->appdata, context->dialog, 
+		  context->settings, project, FALSE)) {
     GtkTreeModel     *model;
     GtkTreeIter       iter;
 
@@ -685,17 +691,33 @@ static void on_project_edit(GtkButton *button, gpointer data) {
 	 (cur->max.lat != project->max.lat) ||
 	 (cur->min.lon != project->min.lon) ||
 	 (cur->max.lon != project->max.lon)) {
+	appdata_t *appdata = context->appdata;
 
-	messagef(context->dialog, 
-		 _("Current project coordinates changed"),
-		 _("You have changed the coordinates of the project "
-		   "you are currently working on. Please reaload the "
-		   "project to work on the updated coordinates!"));
-	
+	/* save modified coordinates */
 	cur->min.lat = project->min.lat;
 	cur->max.lat = project->max.lat;
 	cur->min.lon = project->min.lon;
 	cur->max.lon = project->max.lon;
+
+	/* try to do this automatically */
+
+	/* if we have valid osm data loaded: save state first */
+	if(appdata->osm) {
+	  /* redraw the entire map by destroying all map items  */
+	  diff_save(appdata->project, appdata->osm);
+	  map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
+	  osm_free(&appdata->icon, appdata->osm);
+
+	  appdata->osm = NULL;
+	}
+
+	/* and load the (hopefully) new file */
+	appdata->osm = osm_parse(appdata->project->path, 
+				 appdata->project->osm);
+	diff_restore(appdata, appdata->project, appdata->osm);
+	map_paint(appdata);
+	
+	main_ui_enable(appdata);
       }
     }
   }
@@ -757,7 +779,7 @@ static GtkWidget *project_list_widget(select_context_t *context) {
   list_set_store(context->list, store);
   g_object_unref(store);
 
-  list_set_static_buttons(context->list, G_CALLBACK(on_project_new),
+  list_set_static_buttons(context->list, TRUE, G_CALLBACK(on_project_new),
 	  G_CALLBACK(on_project_edit), G_CALLBACK(on_project_delete), context);
 
   return context->list;
@@ -834,8 +856,6 @@ void project_filesize(project_context_t *context) {
     gtk_widget_modify_fg(context->fsize, GTK_STATE_NORMAL, &color);
 
     str = g_strdup(_("Not downloaded!"));
-    gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), 
-				      GTK_RESPONSE_ACCEPT, 0);
   } else {
     gtk_widget_modify_fg(context->fsize, GTK_STATE_NORMAL, NULL);
 
@@ -845,10 +865,6 @@ void project_filesize(project_context_t *context) {
 					context->project->osm));
     else
       str = g_strdup_printf(_("Outdated, please download!"));
-
-    /* project also must not be dirty to proceed */
-    gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), 
-			GTK_RESPONSE_ACCEPT, !context->project->data_dirty);
   }
 
   if(str) {
@@ -860,29 +876,31 @@ void project_filesize(project_context_t *context) {
 void project_diffstat(project_context_t *context) {
   char *str = NULL;
 
-  if(diff_present(context->project))
-    str = g_strdup(_("present"));
-  else
-    str = g_strdup(_("not present"));
+  if(diff_present(context->project)) {
+    /* this should prevent the user from changing the area */
+    str = g_strdup(_("unsaved changes pending"));
+  } else
+    str = g_strdup(_("no pending changes"));
 
   gtk_label_set_text(GTK_LABEL(context->diff_stat), str); 
   g_free(str);
 }
 
-static void project_update(project_context_t *context) {
-
-  /* fetch values from dialog */
-  if(context->project->desc) g_free(context->project->desc);
-  context->project->desc = g_strdup(gtk_entry_get_text(
-                                       GTK_ENTRY(context->desc)));
-  
-  if(context->project->server) g_free(context->project->server);
-  context->project->server = g_strdup(gtk_entry_get_text(
-				       GTK_ENTRY(context->server)));
-}
-
 static void on_edit_clicked(GtkButton *button, gpointer data) {
   project_context_t *context = (project_context_t*)data;
+
+  if(diff_present(context->project)) {
+    if(!yes_no_f(context->dialog, NULL, 0, 0,
+		 _("Discard pending changes?"),
+		 _("You have pending changes in this project. Changing "
+		   "the area will discard these changes.\n\nDo you want to "
+		   "discard all your changes?")))
+      return;
+
+    diff_remove(context->project);
+    project_diffstat(context);
+    gtk_widget_set_sensitive(context->diff_remove,  FALSE);
+  }
 
   if(area_edit(&context->area_edit)) {
     printf("coordinates changed!!\n");
@@ -891,13 +909,18 @@ static void on_edit_clicked(GtkButton *button, gpointer data) {
     pos_lon_label_set(context->minlon, context->project->min.lon);
     pos_lon_label_set(context->maxlat, context->project->max.lat);
     pos_lon_label_set(context->maxlon, context->project->max.lon);
+
+    /* (re-) download area */
+    if(osm_download(GTK_WIDGET(context->dialog), 
+		    context->appdata->settings, context->project))
+       context->project->data_dirty = FALSE;
+    
+    project_filesize(context);
   }
 }
 
 static void on_download_clicked(GtkButton *button, gpointer data) {
   project_context_t *context = (project_context_t*)data;
-
-  project_update(context);
 
   printf("download %s\n", context->project->osm);
 
@@ -917,11 +940,11 @@ static void on_diff_remove_clicked(GtkButton *button, gpointer data) {
 	     GTK_WINDOW(context->dialog),
 	     GTK_DIALOG_DESTROY_WITH_PARENT,
 	     GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO,
-	       _("Do you really want to remove the diff file? This "
-		 "will delete all changes you've made so far and which "
+	       _("Do you really want to discard your changes? This "
+		 "permanently undo all changes you've made so far and which "
 		 "you didn't upload yet."));
       
-  gtk_window_set_title(GTK_WINDOW(dialog), _("Remove diff?"));
+  gtk_window_set_title(GTK_WINDOW(dialog), _("Discard changes?"));
   
   /* set the active flag again if the user answered "no" */
   if(GTK_RESPONSE_YES == gtk_dialog_run(GTK_DIALOG(dialog))) {
@@ -944,9 +967,16 @@ gboolean project_check_demo(GtkWidget *parent, project_t *project) {
   return !project->server;
 }
 
+/* create a left aligned label (normal ones are centered) */
+static GtkWidget *gtk_label_left_new(char *str) {
+  GtkWidget *label = gtk_label_new(str);
+  gtk_misc_set_alignment(GTK_MISC(label), 0.f, .5f);
+  return label;
+}
 
-gboolean project_edit(GtkWidget *parent, settings_t *settings, 
-		      project_t *project POS_PARM) {
+static gboolean 
+project_edit(appdata_t *appdata, GtkWidget *parent, settings_t *settings, 
+	     project_t *project, gboolean enable_cancel) {
   gboolean ok = FALSE;
 
   if(project_check_demo(parent, project))
@@ -955,119 +985,135 @@ gboolean project_edit(GtkWidget *parent, settings_t *settings,
   /* ------------ project edit dialog ------------- */
   
   project_context_t *context = g_new0(project_context_t, 1);
+  context->appdata = appdata;
   context->project = project;
   context->area_edit.settings = context->settings = settings;
   
   context->area_edit.min = &project->min;
   context->area_edit.max = &project->max;
 #ifdef USE_HILDON
-  context->area_edit.mmpos = mmpos;
-  context->area_edit.osso_context = osso_context;
+  context->area_edit.mmpos = &appdata->mmpos;
+  context->area_edit.osso_context = appdata->osso_context;
 #endif
 
-  char *str = g_strdup_printf(_("Project - %s"), project->name);
-  context->area_edit.parent = 
-    context->dialog = misc_dialog_new(MISC_DIALOG_WIDE, str,
-	  GTK_WINDOW(parent),
-	  GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, 
-          GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-          NULL);
-  g_free(str);
+  /* cancel is enabled for "new" projects only */
+  if(enable_cancel) {
+    char *str = g_strdup_printf(_("New project - %s"), project->name);
+
+    context->area_edit.parent = 
+      context->dialog = misc_dialog_new(MISC_DIALOG_WIDE, str,
+				GTK_WINDOW(parent),
+				GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, 
+				GTK_STOCK_OK, GTK_RESPONSE_ACCEPT, NULL);
+    g_free(str);
+  } else {
+    char *str = g_strdup_printf(_("Edit project - %s"), project->name);
+
+    context->area_edit.parent = 
+      context->dialog = misc_dialog_new(MISC_DIALOG_WIDE, str,
+				GTK_WINDOW(parent),
+				GTK_STOCK_CLOSE, GTK_RESPONSE_ACCEPT, NULL);
+    g_free(str);
+  }
 
   GtkWidget *download, *label;
-  GtkWidget *table = gtk_table_new(4, 6, FALSE);  // x, y
+  GtkWidget *table = gtk_table_new(5, 5, FALSE);  // x, y
+  gtk_table_set_col_spacing(GTK_TABLE(table), 0, 8);
+  gtk_table_set_col_spacing(GTK_TABLE(table), 3, 8);
 
-  label = gtk_label_new(_("Description:"));
-  gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+  label = gtk_label_left_new(_("Description:"));
   gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 0, 1);
   context->desc = gtk_entry_new();
   gtk_entry_set_text(GTK_ENTRY(context->desc), project->desc);
   gtk_table_attach_defaults(GTK_TABLE(table),  context->desc, 1, 4, 0, 1);
-
   gtk_table_set_row_spacing(GTK_TABLE(table), 0, 4);
 
-  label = gtk_label_new(_("Latitude"));
-  gtk_table_attach_defaults(GTK_TABLE(table),  label, 1, 2, 1, 2);
-  label = gtk_label_new(_("Longitude"));
-  gtk_table_attach_defaults(GTK_TABLE(table),  label, 2, 3, 1, 2);
-
-  label = gtk_label_new(_("Min:"));
-  gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-  gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 2, 3);
+  label = gtk_label_left_new(_("Latitude:"));
+  gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 1, 2);
   context->minlat = pos_lat_label_new(project->min.lat);
-  gtk_table_attach_defaults(GTK_TABLE(table), context->minlat, 1, 2, 2, 3);
-  context->minlon = pos_lon_label_new(project->min.lon);
-  gtk_table_attach_defaults(GTK_TABLE(table), context->minlon, 2, 3, 2, 3);
+  gtk_table_attach_defaults(GTK_TABLE(table), context->minlat, 1, 2, 1, 2);
+  label = gtk_label_new(_("to"));
+  gtk_table_attach_defaults(GTK_TABLE(table),  label, 2, 3, 1, 2);
+  context->maxlat = pos_lon_label_new(project->max.lat);
+  gtk_table_attach_defaults(GTK_TABLE(table), context->maxlat, 3, 4, 1, 2);
 
-  label = gtk_label_new(_("Max:"));
-  gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-  gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 3, 4);
-  context->maxlat = pos_lat_label_new(project->max.lat);
-  gtk_table_attach_defaults(GTK_TABLE(table), context->maxlat, 1, 2, 3, 4);
+  label = gtk_label_left_new(_("Longitude:"));
+  gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 2, 3);
+  context->minlon = pos_lat_label_new(project->min.lon);
+  gtk_table_attach_defaults(GTK_TABLE(table), context->minlon, 1, 2, 2, 3);
+  label = gtk_label_new(_("to"));
+  gtk_table_attach_defaults(GTK_TABLE(table),  label, 2, 3, 2, 3);
   context->maxlon = pos_lon_label_new(project->max.lon);
-  gtk_table_attach_defaults(GTK_TABLE(table), context->maxlon, 2, 3, 3, 4);
+  gtk_table_attach_defaults(GTK_TABLE(table), context->maxlon, 3, 4, 2, 3);
 
   GtkWidget *edit = gtk_button_new_with_label(_("Edit"));
   gtk_signal_connect(GTK_OBJECT(edit), "clicked",
   		     (GtkSignalFunc)on_edit_clicked, context);
-  gtk_table_attach(GTK_TABLE(table), edit, 3, 4, 2, 4, 
-		   GTK_EXPAND | GTK_FILL,0,0,0);
+  gtk_table_attach(GTK_TABLE(table), edit, 4, 5, 1, 3, 
+		   GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL,0,0);
 
-  gtk_table_set_col_spacing(GTK_TABLE(table), 0, 4);
-  gtk_table_set_row_spacing(GTK_TABLE(table), 3, 4);
+  gtk_table_set_row_spacing(GTK_TABLE(table), 2, 4);
 
-  label = gtk_label_new(_("Server:"));
-  gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-  gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 4, 5);
+#ifdef SERVER_EDITABLE
+  label = gtk_label_left_new(_("Server:"));
+  gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 3, 4);
   context->server = gtk_entry_new();
   HILDON_ENTRY_NO_AUTOCAP(context->server);
   gtk_entry_set_text(GTK_ENTRY(context->server), project->server);
-  gtk_table_attach_defaults(GTK_TABLE(table),  context->server, 1, 4, 4, 5);
+  gtk_table_attach_defaults(GTK_TABLE(table),  context->server, 1, 4, 3, 4);
 
-  label = gtk_label_new(_("OSM file:"));
-  gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-  gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 5, 6);
-  GtkWidget *hbox = gtk_hbox_new(FALSE, 0);
-  context->fsize = gtk_label_new(_(""));
-  gtk_misc_set_alignment(GTK_MISC(context->fsize), 0.f, 0.5f);
+  gtk_table_set_row_spacing(GTK_TABLE(table), 3, 4);
+#endif
+
+  label = gtk_label_left_new(_("Map data:"));
+  gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 4, 5);
+  context->fsize = gtk_label_left_new(_(""));
   project_filesize(context);
-  gtk_box_pack_start_defaults(GTK_BOX(hbox), context->fsize);
+  gtk_table_attach_defaults(GTK_TABLE(table), context->fsize, 1, 4, 4, 5);
   download = gtk_button_new_with_label(_("Download"));
   gtk_signal_connect(GTK_OBJECT(download), "clicked",
 		     (GtkSignalFunc)on_download_clicked, context);
-  gtk_box_pack_start(GTK_BOX(hbox), download, FALSE, FALSE, 0);
-  gtk_table_attach_defaults(GTK_TABLE(table), hbox, 1, 4, 5, 6);
+  gtk_table_attach_defaults(GTK_TABLE(table), download, 4, 5, 4, 5);
 
-  label = gtk_label_new(_("Diff file:"));
-  gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-  gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 6, 7);
-  hbox = gtk_hbox_new(FALSE, 0);
-  context->diff_stat = gtk_label_new(_(""));
-  gtk_misc_set_alignment(GTK_MISC(context->diff_stat), 0.f, 0.5f);
+  gtk_table_set_row_spacing(GTK_TABLE(table), 4, 4);
+
+  label = gtk_label_left_new(_("Changes:"));
+  gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 5, 6);
+  context->diff_stat = gtk_label_left_new(_(""));
   project_diffstat(context);
-  gtk_box_pack_start_defaults(GTK_BOX(hbox), context->diff_stat);
-  context->diff_remove = gtk_button_new_with_label(_("Remove"));
+  gtk_table_attach_defaults(GTK_TABLE(table), context->diff_stat, 1, 4, 5, 6);
+  context->diff_remove = gtk_button_new_with_label(_("Undo all"));
   if(!diff_present(project)) 
     gtk_widget_set_sensitive(context->diff_remove,  FALSE);
   gtk_signal_connect(GTK_OBJECT(context->diff_remove), "clicked",
 		     (GtkSignalFunc)on_diff_remove_clicked, context);
-  gtk_box_pack_start(GTK_BOX(hbox), context->diff_remove, FALSE, FALSE, 0);
-  gtk_table_attach_defaults(GTK_TABLE(table), hbox, 1, 4, 6, 7);
+  gtk_table_attach_defaults(GTK_TABLE(table), context->diff_remove, 4, 5, 5, 6);
   
+  /* ---------------------------------------------------------------- */
 
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(context->dialog)->vbox), 
 			      table);
   gtk_widget_show_all(context->dialog);
 
-  if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(context->dialog))) {
-    ok = TRUE;
+  /* the return value may actually be != ACCEPT, but only if the editor */
+  /* is run for a new project which is completely removed afterwards if */
+  /* cancel has been selected */
+  ok = (GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(context->dialog)));
 
-    /* transfer values from edit dialog into project structure */
-    project_update(context);
+  /* transfer values from edit dialog into project structure */
+  
+  /* fetch values from dialog */
+  if(context->project->desc) g_free(context->project->desc);
+  context->project->desc = g_strdup(gtk_entry_get_text(
+			      GTK_ENTRY(context->desc)));
+#ifdef SERVER_EDITABLE
+  if(context->project->server) g_free(context->project->server);
+  context->project->server = g_strdup(gtk_entry_get_text(
+				       GTK_ENTRY(context->server)));
+#endif
 
-    /* save project */
-    project_save(context->dialog, project);
-  }
+  /* save project */
+  project_save(context->dialog, project);
 
   gtk_widget_destroy(context->dialog);
   g_free(context);

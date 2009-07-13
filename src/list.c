@@ -196,15 +196,16 @@ list_selection_function(GtkTreeSelection *selection, GtkTreeModel *model,
   return TRUE; /* allow selection state to change */
 }
 
-void list_set_static_buttons(GtkWidget *list, GCallback cb_new, 
-	     GCallback cb_edit, GCallback cb_remove, gpointer data) {
+void list_set_static_buttons(GtkWidget *list, gboolean first_new,
+			     GCallback cb_new, GCallback cb_edit, 
+			     GCallback cb_remove, gpointer data) {
   GtkWidget *table = g_object_get_data(G_OBJECT(list), "table");
   g_object_set_data(G_OBJECT(list), "userdata", data);
 
   /* add the three default buttons, but keep the disabled for now */
   GtkWidget *button = NULL;
   if(cb_new) {
-    button = gtk_button_new_with_label(_("Add"));
+    button = gtk_button_new_with_label(_(first_new?"New":"Add"));
     gtk_table_attach_defaults(GTK_TABLE(table), button, 0, 1, 0, 1);
     gtk_widget_set_sensitive(button, TRUE);
     g_object_set_data(G_OBJECT(list), "btn_new", button);

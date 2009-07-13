@@ -103,8 +103,8 @@ static void on_area_warning_clicked(GtkButton *button, gpointer data) {
     hscale * (context->max.lon - context->min.lon);
 
   warningf(context->dialog,
-   _("The currently selected area is %.02f km² (%.02f mil²) in size. "
-     "This is more than the recommended %.02f km² (%.02f mil²).\n\n"
+   _("The currently selected area is %.02f km² (%.02f mi²) in size. "
+     "This is more than the recommended %.02f km² (%.02f mi²).\n\n"
      "Continuing may result in a big download and low mapping performance "
      "in a densly mapped area (e.g. cities)!"), 
 	   area, area/(KMPMIL*KMPMIL),
@@ -681,7 +681,8 @@ gboolean area_edit(area_edit_t *area) {
   gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
   gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 2, 3);
   context.extent.height = gtk_entry_new();
-  gtk_table_attach_defaults(GTK_TABLE(table), context.extent.height, 1, 2, 2, 3);
+  gtk_table_attach_defaults(GTK_TABLE(table), 
+			    context.extent.height, 1, 2, 2, 3);
 
   context.extent.mil_km = gtk_combo_box_new_text();
   gtk_combo_box_append_text(GTK_COMBO_BOX(context.extent.mil_km), _("mi"));

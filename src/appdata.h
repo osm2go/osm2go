@@ -171,4 +171,6 @@ typedef struct appdata_s {
 #include "banner.h"
 #include "list.h"
 
+void main_ui_enable(appdata_t *appdata);
+
 #endif // APPDATA_H
