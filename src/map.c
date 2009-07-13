@@ -997,7 +997,7 @@ static gboolean map_limit_zoom(map_t *map, gdouble *zoom) {
         }
     }
     if (*zoom != oldzoom) {
-        printf("Can't zoom further out\n");
+        printf("Can't zoom further out (%f)\n", *zoom);
         return 1;
     }
     return 0;
