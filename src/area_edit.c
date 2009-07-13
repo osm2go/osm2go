@@ -55,8 +55,9 @@ typedef struct {
 
   struct {
     GtkWidget *widget;
-    GtkWidget *zoomin, *zoomout;
-    gboolean needs_redraw;
+    GtkWidget *zoomin, *zoomout, *center, *modesel;
+    gboolean needs_redraw, drag_mode;
+    coord_t start;
   } map;
 
 } context_t;
@@ -133,12 +134,16 @@ static void area_main_update(context_t *context) {
 }
 
 #ifdef ENABLE_OSM_GPS_MAP
-static GSList *pos_append(GSList *list, pos_float_t lat, pos_float_t lon) {
+static GSList *pos_append_rad(GSList *list, pos_float_t lat, pos_float_t lon) {
   coord_t *coo = g_new0(coord_t, 1);
-  coo->rlat = DEG2RAD(lat); 
-  coo->rlon = DEG2RAD(lon);
+  coo->rlat = lat; 
+  coo->rlon = lon;
   list = g_slist_append(list, coo);
   return list;
+}
+
+static GSList *pos_append(GSList *list, pos_float_t lat, pos_float_t lon) {
+  return pos_append_rad(list, DEG2RAD(lat), DEG2RAD(lon));
 }
 
 /* the contents of the map tab have been changed */
@@ -345,28 +350,98 @@ static void callback_fetch_mm_clicked(GtkButton *button, gpointer data) {
 #endif
 
 #ifdef ENABLE_OSM_GPS_MAP
-/* the user has changed the map view, update other views accordingly */
-static void map_has_changed(context_t *context) {
-  coord_t pt1, pt2;
 
-  /* get maps bounding box */
-  osm_gps_map_get_bbox(OSM_GPS_MAP(context->map.widget), &pt1, &pt2);
+static gboolean
+on_map_button_press_event(GtkWidget *widget, 
+			  GdkEventButton *event, context_t *context) {
+  if(!context->map.drag_mode) {
+    OsmGpsMap *map = OSM_GPS_MAP(context->map.widget);
 
-  context->min.lat = RAD2DEG(pt2.rlat);
-  context->max.lat = RAD2DEG(pt1.rlat);
+    /* remove existing marker */
+    osm_gps_map_clear_tracks(map);
 
-  context->min.lon = RAD2DEG(pt1.rlon);
-  context->max.lon = RAD2DEG(pt2.rlon);
+    /* and remember this location as the start */
+    context->map.start = 
+      osm_gps_map_get_co_ordinates(map, (int)event->x, (int)event->y);
 
-  area_main_update(context);
-  direct_update(context);
-  extent_update(context);
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+static gboolean
+on_map_motion_notify_event(GtkWidget *widget, 
+			   GdkEventMotion  *event, context_t *context) {
+  if(!context->map.drag_mode && 
+     !isnan(context->map.start.rlon) && 
+     !isnan(context->map.start.rlat)) {
+    OsmGpsMap *map = OSM_GPS_MAP(context->map.widget);
+
+    /* remove existing marker */
+    osm_gps_map_clear_tracks(map);
+
+    coord_t start = context->map.start, end = 
+      osm_gps_map_get_co_ordinates(map, (int)event->x, (int)event->y);
+    
+    GSList *box = pos_append_rad(NULL, start.rlat, start.rlon);
+    box = pos_append_rad(box, end.rlat,   start.rlon);
+    box = pos_append_rad(box, end.rlat,   end.rlon);
+    box = pos_append_rad(box, start.rlat, end.rlon);
+    box = pos_append_rad(box, start.rlat, start.rlon);
+
+    osm_gps_map_add_track(map, box);
+
+    return TRUE;
+  }
+
+  return FALSE;
 }
 
 static gboolean
 on_map_button_release_event(GtkWidget *widget, 
 			    GdkEventButton *event, context_t *context) {
-  map_has_changed(context);
+  if(!context->map.drag_mode && 
+     !isnan(context->map.start.rlon) && 
+     !isnan(context->map.start.rlat)) {
+    OsmGpsMap *map = OSM_GPS_MAP(context->map.widget);
+
+    coord_t start = context->map.start, end = 
+      osm_gps_map_get_co_ordinates(map, (int)event->x, (int)event->y);
+    
+    GSList *box = pos_append_rad(NULL, start.rlat, start.rlon);
+    box = pos_append_rad(box, end.rlat,   start.rlon);
+    box = pos_append_rad(box, end.rlat,   end.rlon);
+    box = pos_append_rad(box, start.rlat, end.rlon);
+    box = pos_append_rad(box, start.rlat, start.rlon);
+
+    osm_gps_map_add_track(map, box);
+
+    if(start.rlat < end.rlat) {
+      context->min.lat = RAD2DEG(start.rlat);
+      context->max.lat = RAD2DEG(end.rlat);
+    } else {
+      context->min.lat = RAD2DEG(end.rlat);
+      context->max.lat = RAD2DEG(start.rlat);
+    }
+
+    if(start.rlon < end.rlon) {
+      context->min.lon = RAD2DEG(start.rlon);
+      context->max.lon = RAD2DEG(end.rlon);
+    } else {
+      context->min.lon = RAD2DEG(end.rlon);
+      context->max.lon = RAD2DEG(start.rlon);
+    }
+
+    area_main_update(context);
+    direct_update(context);
+    extent_update(context);
+
+    context->map.start.rlon = context->map.start.rlat = NAN;
+
+    return TRUE;
+  }
+
   return FALSE;
 }
 
@@ -379,8 +454,6 @@ static void map_zoom(context_t *context, int step) {
   /* enable/disable zoom buttons as required */
   gtk_widget_set_sensitive(context->map.zoomin, zoom<17);
   gtk_widget_set_sensitive(context->map.zoomout, zoom>1);
-
-  map_has_changed(context);
 }
 
 static gboolean
@@ -392,6 +465,23 @@ cb_map_zoomin(GtkButton *button, context_t *context) {
 static gboolean
 cb_map_zoomout(GtkButton *button, context_t *context) {
   map_zoom(context, -1);
+  return FALSE;
+}
+
+static gboolean
+cb_map_center(GtkButton *button, context_t *context) {
+  map_update(context, TRUE);
+  return FALSE;
+}
+
+static gboolean
+cb_map_modesel(GtkButton *button, context_t *context) {
+  /* toggle between "find" icon and "cut" icon */  
+  context->map.drag_mode = !context->map.drag_mode;
+  gtk_button_set_image(GTK_BUTTON(context->map.modesel), 
+	       gtk_image_new_from_stock(context->map.drag_mode?
+	GTK_STOCK_FIND:GTK_STOCK_CUT, GTK_ICON_SIZE_MENU));
+
   return FALSE;
 }
 
@@ -472,6 +562,10 @@ gboolean area_edit(area_edit_t *area) {
 
   g_signal_connect(G_OBJECT(context.map.widget), "configure-event",
 		   G_CALLBACK(on_map_configure), &context);
+  g_signal_connect(G_OBJECT(context.map.widget), "button-press-event",
+		   G_CALLBACK(on_map_button_press_event), &context);
+  g_signal_connect(G_OBJECT(context.map.widget), "motion-notify-event",
+		   G_CALLBACK(on_map_motion_notify_event), &context);
   g_signal_connect(G_OBJECT(context.map.widget), "button-release-event",
 		   G_CALLBACK(on_map_button_release_event), &context);
 
@@ -493,6 +587,24 @@ gboolean area_edit(area_edit_t *area) {
   g_signal_connect(context.map.zoomout, "clicked", 
 		   G_CALLBACK(cb_map_zoomout), &context);
   gtk_box_pack_start(GTK_BOX(vbox), context.map.zoomout, FALSE, FALSE, 0);
+
+  context.map.center = gtk_button_new();
+  gtk_button_set_image(GTK_BUTTON(context.map.center), 
+       gtk_image_new_from_stock(GTK_STOCK_HOME, GTK_ICON_SIZE_MENU));
+  g_signal_connect(context.map.center, "clicked", 
+		   G_CALLBACK(cb_map_center), &context);
+  gtk_box_pack_start(GTK_BOX(vbox), context.map.center, FALSE, FALSE, 0);
+
+  context.map.drag_mode = TRUE;
+  context.map.start.rlon = context.map.start.rlat = NAN;
+  context.map.modesel = gtk_button_new();
+  gtk_button_set_image(GTK_BUTTON(context.map.modesel), 
+       gtk_image_new_from_stock(context.map.drag_mode?
+          GTK_STOCK_FIND:GTK_STOCK_CUT, GTK_ICON_SIZE_MENU));
+  g_signal_connect(context.map.modesel, "clicked", 
+		   G_CALLBACK(cb_map_modesel), &context);
+  gtk_box_pack_start(GTK_BOX(vbox), context.map.modesel, FALSE, FALSE, 0);
+
 
   gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
 
