@@ -19,7 +19,6 @@
 
 /*
  * TODO:
- * - don't allow user to delete active project. force/request close before
  */
 
 #include "appdata.h"
@@ -464,6 +463,20 @@ static void callback_modified_name(GtkWidget *widget, gpointer data) {
 
 gboolean project_delete(select_context_t *context, project_t *project) {
 
+  /* check if we are to delete the currently open project */
+  if(context->appdata->project && 
+     !strcmp(context->appdata->project->name, project->name)) {
+
+    if(!yes_no_f(context->dialog, NULL, 0, 0,
+		 _("Delete current project?"),
+		 _("The project you are about to delete is the one "
+		   "you are currently working on!\n\n"
+		   "Do you want to delete it anyway?")))
+      return FALSE;
+
+    project_close(context->appdata);
+  }
+
   /* remove entire directory from disk */
   GDir *dir = g_dir_open(project->path, 0, NULL);
   const char *name = NULL;
@@ -571,8 +584,8 @@ project_t *project_new(select_context_t *context) {
   project->osm = g_strdup_printf("%s.osm", project->name);
 
   /* around the castle in karlsruhe, germany ... */
-  project->min.lat = 49.005;  project->min.lon = 8.3911;
-  project->max.lat = 49.023;  project->max.lon = 8.4185;
+  project->min.lat = NAN;  project->min.lon = NAN;
+  project->max.lat = NAN;  project->max.lon = NAN;
 
   /* create project file on disk */
   project_save(context->dialog, project);
@@ -705,7 +718,7 @@ static void on_project_edit(GtkButton *button, gpointer data) {
 	if(appdata->osm) {
 	  /* redraw the entire map by destroying all map items  */
 	  diff_save(appdata->project, appdata->osm);
-	  map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
+	  map_clear(appdata, MAP_LAYER_ALL);
 	  osm_free(&appdata->icon, appdata->osm);
 
 	  appdata->osm = NULL;
