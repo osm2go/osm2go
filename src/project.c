@@ -41,8 +41,9 @@ typedef struct {
   project_t *project;
   settings_t *settings;
   GtkWidget *dialog, *fsize, *diff_stat, *diff_remove;
-  GtkWidget *desc;
+  GtkWidget *desc, *download;
   GtkWidget *minlat, *minlon, *maxlat, *maxlon;
+  gboolean is_new;
 #ifdef SERVER_EDITABLE
   GtkWidget *server;
 #endif
@@ -51,7 +52,7 @@ typedef struct {
 
 static gboolean project_edit(appdata_t *appdata, GtkWidget *parent, 
 		      settings_t *settings, project_t *project,
-		      gboolean enable_cancel);
+		      gboolean is_new);
 
 
 /* ------------ project file io ------------- */
@@ -463,6 +464,8 @@ static void callback_modified_name(GtkWidget *widget, gpointer data) {
 
 gboolean project_delete(select_context_t *context, project_t *project) {
 
+  printf("deleting project \"%s\"\n", project->name);
+
   /* check if we are to delete the currently open project */
   if(context->appdata->project && 
      !strcmp(context->appdata->project->name, project->name)) {
@@ -869,6 +872,10 @@ void project_filesize(project_context_t *context) {
     gtk_widget_modify_fg(context->fsize, GTK_STATE_NORMAL, &color);
 
     str = g_strdup(_("Not downloaded!"));
+
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), 
+				      GTK_RESPONSE_ACCEPT, FALSE);
+
   } else {
     gtk_widget_modify_fg(context->fsize, GTK_STATE_NORMAL, NULL);
 
@@ -878,6 +885,9 @@ void project_filesize(project_context_t *context) {
 					context->project->osm));
     else
       str = g_strdup_printf(_("Outdated, please download!"));
+
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), 
+		      GTK_RESPONSE_ACCEPT, !context->project->data_dirty);
   }
 
   if(str) {
@@ -897,6 +907,14 @@ void project_diffstat(project_context_t *context) {
 
   gtk_label_set_text(GTK_LABEL(context->diff_stat), str); 
   g_free(str);
+}
+
+static gboolean 
+project_pos_is_valid(project_t *project) {
+  return(!isnan(project->min.lat) &&
+	 !isnan(project->min.lon) &&
+	 !isnan(project->max.lat) &&
+	 !isnan(project->max.lon));
 }
 
 static void on_edit_clicked(GtkButton *button, gpointer data) {
@@ -922,6 +940,9 @@ static void on_edit_clicked(GtkButton *button, gpointer data) {
     pos_lon_label_set(context->minlon, context->project->min.lon);
     pos_lon_label_set(context->maxlat, context->project->max.lat);
     pos_lon_label_set(context->maxlon, context->project->max.lon);
+
+    gtk_widget_set_sensitive(context->download, 
+			     project_pos_is_valid(context->project));
 
     /* (re-) download area */
     if(osm_download(GTK_WIDGET(context->dialog), 
@@ -989,7 +1010,7 @@ static GtkWidget *gtk_label_left_new(char *str) {
 
 static gboolean 
 project_edit(appdata_t *appdata, GtkWidget *parent, settings_t *settings, 
-	     project_t *project, gboolean enable_cancel) {
+	     project_t *project, gboolean is_new) {
   gboolean ok = FALSE;
 
   if(project_check_demo(parent, project))
@@ -1001,6 +1022,7 @@ project_edit(appdata_t *appdata, GtkWidget *parent, settings_t *settings,
   context->appdata = appdata;
   context->project = project;
   context->area_edit.settings = context->settings = settings;
+  context->is_new = is_new;
   
   context->area_edit.min = &project->min;
   context->area_edit.max = &project->max;
@@ -1010,7 +1032,7 @@ project_edit(appdata_t *appdata, GtkWidget *parent, settings_t *settings,
 #endif
 
   /* cancel is enabled for "new" projects only */
-  if(enable_cancel) {
+  if(is_new) {
     char *str = g_strdup_printf(_("New project - %s"), project->name);
 
     context->area_edit.parent = 
@@ -1029,7 +1051,7 @@ project_edit(appdata_t *appdata, GtkWidget *parent, settings_t *settings,
     g_free(str);
   }
 
-  GtkWidget *download, *label;
+  GtkWidget *label;
   GtkWidget *table = gtk_table_new(5, 5, FALSE);  // x, y
   gtk_table_set_col_spacing(GTK_TABLE(table), 0, 8);
   gtk_table_set_col_spacing(GTK_TABLE(table), 3, 8);
@@ -1083,10 +1105,12 @@ project_edit(appdata_t *appdata, GtkWidget *parent, settings_t *settings,
   context->fsize = gtk_label_left_new(_(""));
   project_filesize(context);
   gtk_table_attach_defaults(GTK_TABLE(table), context->fsize, 1, 4, 4, 5);
-  download = gtk_button_new_with_label(_("Download"));
-  gtk_signal_connect(GTK_OBJECT(download), "clicked",
+  context->download = gtk_button_new_with_label(_("Download"));
+  gtk_signal_connect(GTK_OBJECT(context->download), "clicked",
 		     (GtkSignalFunc)on_download_clicked, context);
-  gtk_table_attach_defaults(GTK_TABLE(table), download, 4, 5, 4, 5);
+  gtk_widget_set_sensitive(context->download, project_pos_is_valid(project));
+
+  gtk_table_attach_defaults(GTK_TABLE(table), context->download, 4, 5, 4, 5);
 
   gtk_table_set_row_spacing(GTK_TABLE(table), 4, 4);
 
@@ -1106,6 +1130,13 @@ project_edit(appdata_t *appdata, GtkWidget *parent, settings_t *settings,
 
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(context->dialog)->vbox), 
 			      table);
+
+  /* disable "ok" if there's no valid file downloaded */
+  if(is_new)
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), 
+		    GTK_RESPONSE_ACCEPT, 
+		    osm_file_exists(project->path, project->name));
+
   gtk_widget_show_all(context->dialog);
 
   /* the return value may actually be != ACCEPT, but only if the editor */

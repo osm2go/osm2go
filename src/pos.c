@@ -24,25 +24,35 @@
 #define TAG_STATE  GTK_STATE_PRELIGHT
 
 void pos_lat_str(char *str, int len, pos_float_t latitude) {
-  snprintf(str, len-1, "%.5f", latitude);
-  /* eliminate trailing zeros */
-  if((strchr(str, '.') != NULL) || (strchr(str, ',') != NULL)) {
-    char *p = str+strlen(str)-1;
-    while(*p == '0') *p-- = 0;
-    if((*p == '.')||(*p == ','))
-      *p = 0;
+  if(isnan(latitude))
+    strcpy(str, "---");
+  else {
+    snprintf(str, len-1, "%.5f", latitude);
+
+    /* eliminate trailing zeros */
+    if((strchr(str, '.') != NULL) || (strchr(str, ',') != NULL)) {
+      char *p = str+strlen(str)-1;
+      while(*p == '0') *p-- = 0;
+      if((*p == '.')||(*p == ','))
+	*p = 0;
+    }
   }
   strcat(str, "°");
 }
 
 void pos_lon_str(char *str, int len, pos_float_t longitude) {
-  snprintf(str, len-1, "%.5f", longitude);
-  /* eliminate trailing zeros */
-  if((strchr(str, '.') != NULL) || (strchr(str, ',') != NULL)) {
-    char *p = str+strlen(str)-1;
-    while(*p == '0') *p-- = 0;
-    if((*p == '.')||(*p == ','))
-      *p = 0;
+  if(isnan(longitude))
+    strcpy(str, "---");
+  else {
+    snprintf(str, len-1, "%.5f", longitude);
+
+    /* eliminate trailing zeros */
+    if((strchr(str, '.') != NULL) || (strchr(str, ',') != NULL)) {
+      char *p = str+strlen(str)-1;
+      while(*p == '0') *p-- = 0;
+      if((*p == '.')||(*p == ','))
+	*p = 0;
+    }
   }
   strcat(str, "°");
 }
@@ -194,16 +204,20 @@ void lpos2pos(bounds_t *bounds, lpos_t *lpos, pos_t *pos) {
 }
 
 void pos_dist_str(char *str, int len, pos_float_t dist, gboolean is_mil) {
-  /* is this to be displayed as miles? */
-  if(is_mil) dist /= KMPMIL;  // kilometer per mile
+  if(isnan(dist))
+    strcpy(str, "---");
+  else {
+    /* is this to be displayed as miles? */
+    if(is_mil) dist /= KMPMIL;  // kilometer per mile
 
-  snprintf(str, len, "%.4f", dist);
-  /* eliminate trailing zeros */
-  if((strchr(str, '.') != NULL) || (strchr(str, ',') != NULL)) {
-    char *p = str+strlen(str)-1;
-    while(*p == '0') *p-- = 0;
-    if((*p == '.')||(*p == ','))
-      *p = 0;
+    snprintf(str, len, "%.4f", dist);
+    /* eliminate trailing zeros */
+    if((strchr(str, '.') != NULL) || (strchr(str, ',') != NULL)) {
+      char *p = str+strlen(str)-1;
+      while(*p == '0') *p-- = 0;
+      if((*p == '.')||(*p == ','))
+	*p = 0;
+    }
   }
 }
 

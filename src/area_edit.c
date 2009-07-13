@@ -155,35 +155,47 @@ static void map_update(context_t *context, gboolean forced) {
     return;
   }
 
-  pos_float_t center_lat = (context->max.lat + context->min.lat)/2;
-  pos_float_t center_lon = (context->max.lon + context->min.lon)/2;
+  /* check if the position is invalid */
+  if(isnan(context->min.lat) || isnan(context->min.lon) ||
+     isnan(context->min.lat) || isnan(context->min.lon)) {
 
-  /* we know the widgets pixel size, we know the required real size, */
-  /* we want the zoom! */
-  double vzoom = LOG2((45.0 * context->map.widget->allocation.height)/
-		      ((context->max.lat - context->min.lat)*32.0));
+    /* no coordinates given: display the entire world */
+    osm_gps_map_set_mapcenter(OSM_GPS_MAP(context->map.widget), 
+			      0.0, 0.0, 1);
 
-  double hzoom = LOG2((45.0 * context->map.widget->allocation.width)/
-		      ((context->max.lon - context->min.lon)*32.0));
+    osm_gps_map_clear_tracks(OSM_GPS_MAP(context->map.widget));
+  } else {
 
-  osm_gps_map_set_center(OSM_GPS_MAP(context->map.widget),
-			 center_lat, center_lon);	    
+    pos_float_t center_lat = (context->max.lat + context->min.lat)/2;
+    pos_float_t center_lon = (context->max.lon + context->min.lon)/2;
 
-  /* use smallest zoom, so everything fits on screen */
-  osm_gps_map_set_zoom(OSM_GPS_MAP(context->map.widget), 
-		       (vzoom < hzoom)?vzoom:hzoom);
-
-  /* ---------- draw border (as a gps track) -------------- */  
-  osm_gps_map_clear_tracks(OSM_GPS_MAP(context->map.widget));
-
-  GSList *box = pos_append(NULL, context->min.lat, context->min.lon);
-  box = pos_append(box, context->max.lat, context->min.lon);
-  box = pos_append(box, context->max.lat, context->max.lon);
-  box = pos_append(box, context->min.lat, context->max.lon);
-  box = pos_append(box, context->min.lat, context->min.lon);
-
-  osm_gps_map_add_track(OSM_GPS_MAP(context->map.widget), box);
-
+    /* we know the widgets pixel size, we know the required real size, */
+    /* we want the zoom! */
+    double vzoom = LOG2((45.0 * context->map.widget->allocation.height)/
+			((context->max.lat - context->min.lat)*32.0));
+    
+    double hzoom = LOG2((45.0 * context->map.widget->allocation.width)/
+			((context->max.lon - context->min.lon)*32.0));
+    
+    osm_gps_map_set_center(OSM_GPS_MAP(context->map.widget),
+			   center_lat, center_lon);	    
+    
+    /* use smallest zoom, so everything fits on screen */
+    osm_gps_map_set_zoom(OSM_GPS_MAP(context->map.widget), 
+			 (vzoom < hzoom)?vzoom:hzoom);
+    
+    /* ---------- draw border (as a gps track) -------------- */  
+    osm_gps_map_clear_tracks(OSM_GPS_MAP(context->map.widget));
+    
+    GSList *box = pos_append(NULL, context->min.lat, context->min.lon);
+    box = pos_append(box, context->max.lat, context->min.lon);
+    box = pos_append(box, context->max.lat, context->max.lon);
+    box = pos_append(box, context->min.lat, context->max.lon);
+    box = pos_append(box, context->min.lat, context->min.lon);
+    
+    osm_gps_map_add_track(OSM_GPS_MAP(context->map.widget), box);
+  }
+    
   context->map.needs_redraw = FALSE;
 }
 
