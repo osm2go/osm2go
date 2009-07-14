@@ -27,6 +27,8 @@
 #define MENU_ICON(a)  a
 #endif
 
+#define MARKUP "<span size='x-small'>%s</span>"
+
 static void on_info_clicked(GtkButton *button, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
 
@@ -233,12 +235,17 @@ GtkWidget *icon_add(GtkWidget *vbox, appdata_t *appdata,
 }
 
 static GtkWidget *tool_add(GtkWidget *toolbar, appdata_t *appdata, 
-		    char *icon_str,
-		    char *tooltip_str,
-		    void(*func)(GtkButton*, gpointer)) {
+			   char *icon_str, char *tooltip_str,
+			   void(*func)(GtkButton*, gpointer)) {
   GtkWidget *item = 
     GTK_WIDGET(gtk_tool_button_new(
 	   icon_widget_load(&appdata->icon, icon_str), NULL));
+
+  GtkWidget *label = gtk_label_new("");
+  char *markup = g_markup_printf_escaped(MARKUP, tooltip_str);
+  gtk_label_set_markup(GTK_LABEL(label), markup);
+  g_free(markup);
+  gtk_tool_button_set_label_widget(GTK_TOOL_BUTTON(item), label);
 
 #ifndef USE_HILDON
   gtk_widget_set_tooltip_text(item, tooltip_str);
@@ -267,17 +274,19 @@ GtkWidget *iconbar_new(appdata_t *appdata) {
   GtkWidget *box = gtk_hbox_new(FALSE, 0);
 #endif
 
+#if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
   gtk_toolbar_set_style(GTK_TOOLBAR(iconbar->toolbar), GTK_TOOLBAR_ICONS);
+#else
+  gtk_toolbar_set_style(GTK_TOOLBAR(iconbar->toolbar), GTK_TOOLBAR_BOTH);
+#endif
 
   /* -------------------------------------------------------- */
   iconbar->trash = tool_add(iconbar->toolbar, appdata,
-      TOOL_ICON("trash"), _("Delete item"), on_trash_clicked);
+      TOOL_ICON("trash"), _("Delete"), on_trash_clicked);
 
-#ifndef FINGER_UI
   /* -------------------------------------------------------- */
   gtk_toolbar_insert(GTK_TOOLBAR(iconbar->toolbar), 
 		     gtk_separator_tool_item_new(),-1);
-#endif
 
   iconbar->info = tool_add(iconbar->toolbar, appdata, 
       TOOL_ICON("info"), _("Properties"), on_info_clicked);
@@ -287,7 +296,7 @@ GtkWidget *iconbar_new(appdata_t *appdata) {
 		     gtk_separator_tool_item_new(),-1);
 
   iconbar->node_add = tool_add(iconbar->toolbar, appdata, 
-       TOOL_ICON("node_add"), _("Add node"), on_node_add_clicked);
+       TOOL_ICON("node_add"), _("New node"), on_node_add_clicked);
 
   /* -------------------------------------------------------- */
   gtk_toolbar_insert(GTK_TOOLBAR(iconbar->toolbar), 
@@ -301,6 +310,12 @@ GtkWidget *iconbar_new(appdata_t *appdata) {
   GtkWidget *way = 
     GTK_WIDGET(gtk_tool_button_new(
 	   icon_widget_load(&appdata->icon, TOOL_ICON("way")), NULL));
+
+  GtkWidget *label = gtk_label_new("");
+  char *markup = g_markup_printf_escaped(MARKUP, _("Way"));
+  gtk_label_set_markup(GTK_LABEL(label), markup);
+  g_free(markup);
+  gtk_tool_button_set_label_widget(GTK_TOOL_BUTTON(way), label);
 
   gtk_widget_set_tooltip_text(way, "Way");
 
@@ -318,10 +333,10 @@ GtkWidget *iconbar_new(appdata_t *appdata) {
   iconbar->way_add = tool_add(iconbar->toolbar, appdata, 
         TOOL_ICON("way_add"), _("Add way"), on_way_add_clicked);
   iconbar->way_node_add = tool_add(iconbar->toolbar, appdata, 
-	TOOL_ICON("way_node_add"), _("Add a node to a way"), 
+	TOOL_ICON("way_node_add"), _("Add node"), 
 				   on_way_node_add_clicked);
   iconbar->way_cut = tool_add(iconbar->toolbar, appdata, 
-        TOOL_ICON("way_cut"), _("Split a way"), on_way_cut_clicked);
+        TOOL_ICON("way_cut"), _("Split way"), on_way_cut_clicked);
   iconbar->way_reverse = tool_add(iconbar->toolbar, appdata, 
         TOOL_ICON("way_reverse"), _("Reverse way"), on_way_reverse_clicked);
 #endif

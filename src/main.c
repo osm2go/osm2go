@@ -1224,7 +1224,7 @@ int main(int argc, char *argv[]) {
   appdata.window = HILDON_WINDOW(hildon_window_new());
   hildon_program_add_window(appdata.program, appdata.window);
 
-#if MAEMO_VERSION_MAJOR == 5
+#if MAEMO_VERSION_MAJOR == 6
   unsigned long val;
   XChangeProperty(GDK_DISPLAY(),
 		  GDK_WINDOW_XID(GTK_WIDGET(appdata.window)->window),
@@ -1294,19 +1294,21 @@ int main(int argc, char *argv[]) {
 
   gtk_box_pack_start_defaults(GTK_BOX(zhbox), statusbar_new(&appdata));
 
-  /* ---- add zoom in button right of statusbar ---- */
-  appdata.btn_zoom_in = gtk_button_new();
-  gtk_button_set_image(GTK_BUTTON(appdata.btn_zoom_in), 
-		       gtk_image_new_from_stock(GTK_STOCK_ZOOM_IN, GTK_ICON_SIZE_MENU));
-  g_signal_connect(appdata.btn_zoom_in, "clicked", G_CALLBACK(cb_menu_zoomin), &appdata);
-  gtk_box_pack_start(GTK_BOX(zhbox), appdata.btn_zoom_in, FALSE, FALSE, 0);
-
   /* ---- add zoom out button right of statusbar ---- */
   appdata.btn_zoom_out = gtk_button_new();
   gtk_button_set_image(GTK_BUTTON(appdata.btn_zoom_out), 
-		       gtk_image_new_from_stock(GTK_STOCK_ZOOM_OUT, GTK_ICON_SIZE_MENU));
-  g_signal_connect(appdata.btn_zoom_out, "clicked", G_CALLBACK(cb_menu_zoomout), &appdata);
+	gtk_image_new_from_stock(GTK_STOCK_ZOOM_OUT, GTK_ICON_SIZE_MENU));
+  g_signal_connect(appdata.btn_zoom_out, "clicked", 
+		   G_CALLBACK(cb_menu_zoomout), &appdata);
   gtk_box_pack_start(GTK_BOX(zhbox), appdata.btn_zoom_out, FALSE, FALSE, 0);
+
+  /* ---- add zoom in button right of statusbar ---- */
+  appdata.btn_zoom_in = gtk_button_new();
+  gtk_button_set_image(GTK_BUTTON(appdata.btn_zoom_in), 
+	gtk_image_new_from_stock(GTK_STOCK_ZOOM_IN, GTK_ICON_SIZE_MENU));
+  g_signal_connect(appdata.btn_zoom_in, "clicked", 
+		   G_CALLBACK(cb_menu_zoomin), &appdata);
+  gtk_box_pack_start(GTK_BOX(zhbox), appdata.btn_zoom_in, FALSE, FALSE, 0);
 
 
   gtk_box_pack_start(GTK_BOX(vbox), zhbox, FALSE, FALSE, 0);

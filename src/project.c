@@ -37,7 +37,6 @@
 #undef SERVER_EDITABLE
 
 typedef struct {
-  appdata_t *appdata;
   project_t *project;
   settings_t *settings;
   GtkWidget *dialog, *fsize, *diff_stat, *diff_remove;
@@ -57,73 +56,8 @@ static gboolean project_edit(appdata_t *appdata, GtkWidget *parent,
 
 /* ------------ project file io ------------- */
 
-/* Limit a proposed zoom factor to sane ranges.
- * Specifically the map is allowed to be no smaller than the viewport. 
- * This function has a counterpart in map_limit_zoom()
-*/
-
-static gdouble project_limit_zoom(project_t *project, map_t *map) {
-  bounds_t bounds;
-
-  gdouble zoom = 0.25;
-
-  /* calculate map zone which will be used as a reference for all */
-  /* drawing/projection later on */
-  pos_t center = { (project->max.lat + project->min.lat)/2, 
-		   (project->max.lon + project->min.lon)/2 };
-
-  pos2lpos_center(&center, &bounds.center);
-
-  /* the scale is needed to accomodate for "streching" */
-  /* by the mercartor projection */
-  bounds.scale = cos(DEG2RAD(center.lat));
-
-  pos2lpos_center(&project->min, &bounds.min);
-  bounds.min.x -= bounds.center.x;
-  bounds.min.y -= bounds.center.y;
-  bounds.min.x *= bounds.scale;
-  bounds.min.y *= bounds.scale;
-  
-  pos2lpos_center(&project->max, &bounds.max);
-  bounds.max.x -= bounds.center.x;
-  bounds.max.y -= bounds.center.y;
-  bounds.max.x *= bounds.scale;
-  bounds.max.y *= bounds.scale;
-
-  // Data rect minimum and maximum
-  gint min_x, min_y, max_x, max_y;
-  min_y = bounds.min.y;
-  max_y = bounds.max.y;
-
-  printf("min %d %d max %d %d\n", min_x, min_y, max_x, max_y);
-
-  /* get size of visible area in pixels and convert to meters of intended */
-  /* zoom by deviding by zoom (which is basically pix/m) */
-  gint aw_cu = 
-    canvas_get_viewport_width(map->canvas, CANVAS_UNIT_PIXEL) / zoom;
-  gint ah_cu = 
-    canvas_get_viewport_height(map->canvas, CANVAS_UNIT_PIXEL) / zoom;
-
-  if (ah_cu < aw_cu) {
-    gint lim_h = ah_cu*0.95;
-    if (max_y-min_y < lim_h) {
-      gdouble corr = ((gdouble)max_y-min_y) / (gdouble)lim_h;
-      zoom /= corr;
-    }
-  }
-  else {
-    gint lim_w = aw_cu*0.95;
-    if (bounds.max.x-bounds.min.x < lim_w) {
-      gdouble corr = ((gdouble)bounds.max.x-bounds.min.x) / (gdouble)lim_w;
-      zoom /= corr;
-    }
-  }
-  return zoom;
-}
-
 static gboolean project_read(appdata_t *appdata, 
 	     char *project_file, project_t *project) {
-  gboolean found_map_entry = FALSE;
 
   LIBXML_TEST_VERSION;
 
@@ -170,7 +104,6 @@ static gboolean project_read(appdata_t *appdata,
 	      
 	    } else if(project->map_state && 
 		      strcasecmp((char*)node->name, "map") == 0) {
-	      found_map_entry = TRUE;
 
 	      if((str = (char*)xmlGetProp(node, BAD_CAST "zoom"))) {
 		project->map_state->zoom = g_ascii_strtod(str, NULL);
@@ -251,26 +184,6 @@ static gboolean project_read(appdata_t *appdata,
 	}
       }
     }
-  }
-
-  if(!found_map_entry && project->map_state) {
-    printf("loaded project w/o map entry\n");
-
-    printf("map size = %d x %d\n",
-	   appdata->map->canvas->widget->allocation.width/2,
-	   appdata->map->canvas->widget->allocation.height/2);
-
-    gdouble pix_per_meter = project_limit_zoom(project, appdata->map);
-    printf("pix per meter = %f\n", pix_per_meter);
-
-    //    printf("scroll = %f x %f\n",
-    //	   appdata->map->canvas->widget->allocation.width/2/pix_per_meter,
-    //	   appdata->map->canvas->widget->allocation.height/2/pix_per_meter);
-
-    // scroll-offset-x="-1089" scroll-offset-y="-802"/>
-
-    project->map_state->scroll_offset.x = 1000;
-    project->map_state->scroll_offset.y = 1000;
   }
 
   xmlFreeDoc(doc);
@@ -961,7 +874,7 @@ void project_filesize(project_context_t *context) {
     str = g_strdup(_("Not downloaded!"));
 
     gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), 
-				      GTK_RESPONSE_ACCEPT, FALSE);
+				      GTK_RESPONSE_ACCEPT, !context->is_new);
 
   } else {
     gtk_widget_modify_fg(context->fsize, GTK_STATE_NORMAL, NULL);
@@ -974,7 +887,8 @@ void project_filesize(project_context_t *context) {
       str = g_strdup_printf(_("Outdated, please download!"));
 
     gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), 
-		      GTK_RESPONSE_ACCEPT, !context->project->data_dirty);
+		      GTK_RESPONSE_ACCEPT, !context->is_new ||
+				      !context->project->data_dirty);
   }
 
   if(str) {
@@ -1033,7 +947,7 @@ static void on_edit_clicked(GtkButton *button, gpointer data) {
 
     /* (re-) download area */
     if(osm_download(GTK_WIDGET(context->dialog), 
-		    context->appdata->settings, context->project))
+	    context->area_edit.appdata->settings, context->project))
        context->project->data_dirty = FALSE;
     
     project_filesize(context);
@@ -1104,19 +1018,15 @@ project_edit(appdata_t *appdata, GtkWidget *parent, settings_t *settings,
     return ok;
 
   /* ------------ project edit dialog ------------- */
-  
+
   project_context_t *context = g_new0(project_context_t, 1);
-  context->appdata = appdata;
   context->project = project;
   context->area_edit.settings = context->settings = settings;
+  context->area_edit.appdata = appdata;
   context->is_new = is_new;
   
   context->area_edit.min = &project->min;
   context->area_edit.max = &project->max;
-#ifdef USE_HILDON
-  context->area_edit.mmpos = &appdata->mmpos;
-  context->area_edit.osso_context = appdata->osso_context;
-#endif
 
   /* cancel is enabled for "new" projects only */
   if(is_new) {

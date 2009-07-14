@@ -53,13 +53,15 @@ typedef struct {
   } mmapper;
 #endif
 
+#ifdef ENABLE_OSM_GPS_MAP
   struct {
     GtkWidget *widget;
-    GtkWidget *zoomin, *zoomout, *center, *modesel;
+    GtkWidget *zoomin, *zoomout, *center, *modesel, *gps;
     gboolean needs_redraw, drag_mode;
+    gint handler_id;
     coord_t start;
   } map;
-
+#endif
 } context_t;
 
 static void parse_and_set_lat(GtkWidget *src, pos_float_t *store) {
@@ -73,8 +75,6 @@ static void parse_and_set_lon(GtkWidget *src, pos_float_t *store) {
   if(pos_lon_valid(i)) 
     *store = i;
 }
-
-#define LOG2(x) (log(x) / log(2))
 
 static gboolean current_tab_is(context_t *context, gint page_num, char *str) {
   if(page_num < 0)
@@ -134,6 +134,8 @@ static void area_main_update(context_t *context) {
 }
 
 #ifdef ENABLE_OSM_GPS_MAP
+#define LOG2(x) (log(x) / log(2))
+
 static GSList *pos_append_rad(GSList *list, pos_float_t lat, pos_float_t lon) {
   coord_t *coo = g_new0(coord_t, 1);
   coo->rlat = lat; 
@@ -311,7 +313,7 @@ static void callback_modified_unit(GtkWidget *widget, gpointer data) {
 static void callback_fetch_mm_clicked(GtkButton *button, gpointer data) {
   context_t *context = (context_t*)data;
 
-  if(!dbus_mm_set_position(context->area->osso_context, NULL)) {
+  if(!dbus_mm_set_position(context->area->appdata->osso_context, NULL)) {
     errorf(context->dialog, 
 	   _("Unable to communicate with Maemo Mapper. "
 	     "You need to have Maemo Mapper installed "
@@ -319,7 +321,7 @@ static void callback_fetch_mm_clicked(GtkButton *button, gpointer data) {
     return;
   }
 
-  if(!context->area->mmpos->valid) {
+  if(!context->area->appdata->mmpos.valid) {
     errorf(context->dialog, 
 	   _("No valid position received yet. You need "
 	     "to scroll or zoom the Maemo Mapper view "
@@ -333,9 +335,9 @@ static void callback_fetch_mm_clicked(GtkButton *button, gpointer data) {
     return;
 
   /* maemo mapper pos data ... */
-  pos_float_t center_lat = context->area->mmpos->pos.lat;
-  pos_float_t center_lon = context->area->mmpos->pos.lon;
-  int zoom = context->area->mmpos->zoom;
+  pos_float_t center_lat = context->area->appdata->mmpos.pos.lat;
+  pos_float_t center_lon = context->area->appdata->mmpos.pos.lon;
+  int zoom = context->area->appdata->mmpos.zoom;
 
   if(!pos_lat_valid(center_lat) || !pos_lon_valid(center_lon))
     return;
@@ -497,6 +499,23 @@ cb_map_modesel(GtkButton *button, context_t *context) {
   return FALSE;
 }
 
+static gboolean
+cb_map_gps(GtkButton *button, context_t *context) {
+  pos_t pos;
+
+  /* user clicked "gps" button -> jump to position */
+  gboolean gps_on = 
+    context->area->appdata->settings && 
+    context->area->appdata->settings->enable_gps;
+
+  if(gps_on && gps_get_pos(context->area->appdata, &pos, NULL)) {
+    osm_gps_map_set_center(OSM_GPS_MAP(context->map.widget),
+			   DEG2RAD(pos.lat), DEG2RAD(pos.lon));	    
+  }
+
+  return FALSE;
+}
+
 static void on_page_switch(GtkNotebook *notebook, GtkNotebookPage *page,
 			   guint page_num, context_t *context) {
 
@@ -507,6 +526,35 @@ static void on_page_switch(GtkNotebook *notebook, GtkNotebookPage *page,
      context->map.needs_redraw) 
     map_update(context, TRUE);
 }
+
+static GtkWidget 
+*map_add_button(const gchar *icon, GCallback cb, gpointer data, 
+		char *tooltip) {
+  GtkWidget *button = gtk_button_new();
+  gtk_button_set_image(GTK_BUTTON(button), 
+       gtk_image_new_from_stock(icon, GTK_ICON_SIZE_MENU));
+  g_signal_connect(button, "clicked", cb, data);
+#ifndef USE_HILDON
+  gtk_widget_set_tooltip_text(button, tooltip);
+#endif
+  return button;
+}
+
+static gboolean map_gps_update(gpointer data) {
+  context_t *context = (context_t*)data;
+
+  gboolean gps_on = 
+    context->area->appdata->settings && 
+    context->area->appdata->settings->enable_gps;
+
+  gboolean gps_fix = gps_on && 
+    gps_get_pos(context->area->appdata, NULL, NULL);
+
+  gtk_widget_set_sensitive(context->map.gps, gps_fix);
+
+  return TRUE;
+}
+
 #endif
 
 gboolean area_edit(area_edit_t *area) {
@@ -586,37 +634,35 @@ gboolean area_edit(area_edit_t *area) {
   /* zoom button box */
   vbox = gtk_vbox_new(FALSE,0);
 
-  context.map.zoomin = gtk_button_new();
-  gtk_button_set_image(GTK_BUTTON(context.map.zoomin), 
-       gtk_image_new_from_stock(GTK_STOCK_ZOOM_IN, GTK_ICON_SIZE_MENU));
-  g_signal_connect(context.map.zoomin, "clicked", 
-		   G_CALLBACK(cb_map_zoomin), &context);
+  context.map.zoomin = 
+    map_add_button(GTK_STOCK_ZOOM_IN, G_CALLBACK(cb_map_zoomin),
+		   &context, _("Zoom in"));
   gtk_box_pack_start(GTK_BOX(vbox), context.map.zoomin, FALSE, FALSE, 0);
 
-  context.map.zoomout = gtk_button_new();
-  gtk_button_set_image(GTK_BUTTON(context.map.zoomout), 
-       gtk_image_new_from_stock(GTK_STOCK_ZOOM_OUT, GTK_ICON_SIZE_MENU));
-  g_signal_connect(context.map.zoomout, "clicked", 
-		   G_CALLBACK(cb_map_zoomout), &context);
+  context.map.zoomout = 
+    map_add_button(GTK_STOCK_ZOOM_OUT, G_CALLBACK(cb_map_zoomout),
+		   &context, _("Zoom out"));
   gtk_box_pack_start(GTK_BOX(vbox), context.map.zoomout, FALSE, FALSE, 0);
 
-  context.map.center = gtk_button_new();
-  gtk_button_set_image(GTK_BUTTON(context.map.center), 
-       gtk_image_new_from_stock(GTK_STOCK_HOME, GTK_ICON_SIZE_MENU));
-  g_signal_connect(context.map.center, "clicked", 
-		   G_CALLBACK(cb_map_center), &context);
+  context.map.center = 
+    map_add_button(GTK_STOCK_HOME, G_CALLBACK(cb_map_center),
+		   &context, _("Center selected area"));
   gtk_box_pack_start(GTK_BOX(vbox), context.map.center, FALSE, FALSE, 0);
 
+  context.map.gps = 
+    map_add_button(GTK_STOCK_ABOUT, G_CALLBACK(cb_map_gps),
+		   &context, _("Jump to GPS position"));
+  gtk_widget_set_sensitive(context.map.gps, FALSE);
+  /* install handler for timed updates of the gps button */
+  context.map.handler_id = gtk_timeout_add(1000, map_gps_update, &context);
+  gtk_box_pack_start(GTK_BOX(vbox), context.map.gps, FALSE, FALSE, 0);
+  
   context.map.drag_mode = TRUE;
   context.map.start.rlon = context.map.start.rlat = NAN;
-  context.map.modesel = gtk_button_new();
-  gtk_button_set_image(GTK_BUTTON(context.map.modesel), 
-       gtk_image_new_from_stock(context.map.drag_mode?
-          GTK_STOCK_FIND:GTK_STOCK_CUT, GTK_ICON_SIZE_MENU));
-  g_signal_connect(context.map.modesel, "clicked", 
-		   G_CALLBACK(cb_map_modesel), &context);
+  context.map.modesel = 
+    map_add_button(GTK_STOCK_CUT, G_CALLBACK(cb_map_modesel),
+		   &context, _("Toggle scroll/select"));
   gtk_box_pack_start(GTK_BOX(vbox), context.map.modesel, FALSE, FALSE, 0);
-
 
   gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
 
@@ -769,6 +815,10 @@ gboolean area_edit(area_edit_t *area) {
     area->max->lon = context.max.lon;
     ok = TRUE;
   }
+
+#ifdef ENABLE_OSM_GPS_MAP
+  gtk_timeout_remove(context.map.handler_id);
+#endif
 
   gtk_widget_destroy(context.dialog);
 

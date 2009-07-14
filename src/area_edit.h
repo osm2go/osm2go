@@ -21,10 +21,7 @@
 #define AREA_EDIT_H
 
 typedef struct {
-#ifdef USE_HILDON
-  dbus_mm_pos_t *mmpos;
-  osso_context_t *osso_context;
-#endif
+  appdata_t *appdata;
   GtkWidget *parent;   /* parent widget to be placed upon */
   settings_t *settings;
   pos_t *min, *max;    /* positions to work on */

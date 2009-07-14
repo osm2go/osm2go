@@ -146,6 +146,8 @@ gdouble canvas_get_viewport_height(canvas_t *canvas, canvas_unit_t unit) {
 /* get scroll position in meters/pixels */
 void canvas_scroll_get(canvas_t *canvas, canvas_unit_t unit, 
 		       gint *sx, gint *sy) {
+  gdouble zoom = goo_canvas_get_scale(GOO_CANVAS(canvas->widget));
+
   GtkAdjustment *hadj = ((struct _GooCanvas*)(canvas->widget))->hadjustment;
   GtkAdjustment *vadj = ((struct _GooCanvas*)(canvas->widget))->vadjustment;
 
@@ -153,9 +155,11 @@ void canvas_scroll_get(canvas_t *canvas, canvas_unit_t unit,
   gdouble vs = gtk_adjustment_get_value(vadj);
   goo_canvas_convert_from_pixels(GOO_CANVAS(canvas->widget), &hs, &vs);
 
-  if(unit == CANVAS_UNIT_PIXEL) {
-    gdouble zoom = goo_canvas_get_scale(GOO_CANVAS(canvas->widget));
+  /* convert to position relative to screen center */
+  hs += canvas->widget->allocation.width/(2*zoom);
+  vs += canvas->widget->allocation.height/(2*zoom);
 
+  if(unit == CANVAS_UNIT_PIXEL) {
     /* make values zoom independant */
     *sx = hs * zoom;
     *sy = vs * zoom;
@@ -167,12 +171,17 @@ void canvas_scroll_get(canvas_t *canvas, canvas_unit_t unit,
 
 /* set scroll position in meters/pixels */
 void canvas_scroll_to(canvas_t *canvas, canvas_unit_t unit, gint sx, gint sy) {
-  if(unit == CANVAS_UNIT_METER)
-    goo_canvas_scroll_to(GOO_CANVAS(canvas->widget), sx, sy);
-  else {
-    gdouble zoom = goo_canvas_get_scale(GOO_CANVAS(canvas->widget));
-    goo_canvas_scroll_to(GOO_CANVAS(canvas->widget), sx/zoom, sy/zoom);
+  gdouble zoom = goo_canvas_get_scale(GOO_CANVAS(canvas->widget));
+
+  if(unit != CANVAS_UNIT_METER) {
+    sx /= zoom; sy /= zoom;
   }
+
+  /* adjust to screen center */
+  sx -= canvas->widget->allocation.width/(2*zoom);
+  sy -= canvas->widget->allocation.height/(2*zoom);
+
+  goo_canvas_scroll_to(GOO_CANVAS(canvas->widget), sx, sy);
 }
 
 void canvas_set_bounds(canvas_t *canvas, gint minx, gint miny, 
