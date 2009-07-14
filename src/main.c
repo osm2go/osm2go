@@ -51,6 +51,7 @@ void main_ui_enable(appdata_t *appdata) {
     gtk_window_set_title(GTK_WINDOW(appdata->window), "");
 #else
   char *str = NULL;
+#ifdef USE_HILDON
   if(project_valid) 
     str = g_markup_printf_escaped("OSM2Go - <b>%s</b>", 
 				  appdata->project->name);
@@ -58,6 +59,14 @@ void main_ui_enable(appdata_t *appdata) {
     str = g_markup_printf_escaped("OSM2Go");
 
   hildon_window_set_markup(HILDON_WINDOW(appdata->window), str);
+#else
+  if(project_valid) 
+    str = g_strdup_printf("OSM2Go - <b>%s</b>", appdata->project->name);
+  else 
+    str = g_strdup_printf("OSM2Go");
+
+  gtk_window_set_title(GTK_WINDOW(appdata->window), str);
+#endif
   g_free(str);
 #endif
 

@@ -660,7 +660,7 @@ gboolean area_edit(area_edit_t *area) {
   context.map.drag_mode = TRUE;
   context.map.start.rlon = context.map.start.rlat = NAN;
   context.map.modesel = 
-    map_add_button(GTK_STOCK_CUT, G_CALLBACK(cb_map_modesel),
+    map_add_button(GTK_STOCK_FIND, G_CALLBACK(cb_map_modesel),
 		   &context, _("Toggle scroll/select"));
   gtk_box_pack_start(GTK_BOX(vbox), context.map.modesel, FALSE, FALSE, 0);
 
