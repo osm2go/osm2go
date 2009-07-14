@@ -52,11 +52,12 @@ void main_ui_enable(appdata_t *appdata) {
 #else
   char *str = NULL;
   if(project_valid) 
-    str = g_strdup_printf("OSM2Go - %s", appdata->project->name);
+    str = g_markup_printf_escaped("OSM2Go - <b>%s</b>", 
+				  appdata->project->name);
   else 
-    str = g_strdup_printf("OSM2Go");
-    
-  gtk_window_set_title(GTK_WINDOW(appdata->window), str);
+    str = g_markup_printf_escaped("OSM2Go");
+
+  hildon_window_set_markup(HILDON_WINDOW(appdata->window), str);
   g_free(str);
 #endif
 
@@ -1221,7 +1222,11 @@ int main(int argc, char *argv[]) {
   g_set_application_name("OSM2Go");
   
   /* Create HildonWindow and set it to HildonProgram */
+#if MAEMO_VERSION_MAJOR < 5
   appdata.window = HILDON_WINDOW(hildon_window_new());
+#else
+  appdata.window = HILDON_WINDOW(hildon_stackable_window_new());
+#endif
   hildon_program_add_window(appdata.program, appdata.window);
 
 #if MAEMO_VERSION_MAJOR == 6
@@ -1276,18 +1281,7 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
-#if 0  // another test overlay
-  {
-    GtkWidget *fixed = gtk_fixed_new();
-
-    gtk_fixed_put(GTK_FIXED(fixed), gtk_label_new("Nase"), 0,0);
-    gtk_fixed_put(GTK_FIXED(fixed), map, 0,0);
-
-    gtk_box_pack_start(GTK_BOX(vbox), fixed, TRUE, TRUE, 0);
-  }
-#else
   gtk_box_pack_start(GTK_BOX(vbox), map, TRUE, TRUE, 0);
-#endif
 
 #ifdef ZOOM_BUTTONS  
   GtkWidget *zhbox = gtk_hbox_new(FALSE, 0);
@@ -1356,6 +1350,13 @@ int main(int argc, char *argv[]) {
     gtk_window_set_keep_above(GTK_WINDOW(overlay), TRUE);    
     gtk_window_set_destroy_with_parent(GTK_WINDOW(overlay), TRUE);
     gtk_window_set_position(GTK_WINDOW(overlay), GTK_WIN_POS_CENTER_ON_PARENT);
+
+    gtk_window_set_gravity(GTK_WINDOW(overlay), GDK_GRAVITY_NORTH_EAST);
+
+    printf("x = %d\n", gdk_screen_width() - overlay->allocation.width);
+    gtk_window_move(GTK_WINDOW(overlay), 
+		    gdk_screen_width() - overlay->allocation.width, 60);
+
     gtk_window_set_decorated(GTK_WINDOW(overlay), TRUE);
 
     /* add some zoom buttons for testing */
