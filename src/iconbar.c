@@ -27,7 +27,7 @@
 #define MENU_ICON(a)  a
 #endif
 
-#define MARKUP "<span size='x-small'>%s</span>"
+#define MARKUP "<span size='xx-small'>%s</span>"
 
 static void on_info_clicked(GtkButton *button, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;

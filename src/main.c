@@ -911,6 +911,12 @@ static gboolean follow_gps_get_toggle(appdata_t *appdata) {
   return appdata->settings->follow_gps;
 }
 
+static gboolean  on_delete_event(GtkWidget *widget, GdkEvent  *event,
+				 gpointer   user_data) {
+  printf("delete-event\n");
+  return FALSE;
+}
+
 /* create a HildonAppMenu */
 static GtkWidget *app_menu_create(appdata_t *appdata, 
 				  const menu_entry_t *menu_entries) {
@@ -947,29 +953,58 @@ static GtkWidget *app_menu_create(appdata_t *appdata,
     menu_entries++;
   }
 
+  //  g_signal_connect(menu, "delete-event",
+  //		   G_CALLBACK(gtk_widget_hide_on_delete), NULL);
+
+  g_signal_connect(menu, "delete-event",
+  		   G_CALLBACK(on_delete_event), NULL);
+
   gtk_widget_show_all(GTK_WIDGET(menu));
   return GTK_WIDGET(menu);
 }
 
+static void submenu_popup(GtkWidget *menu) {
+  GtkWidget *top = hildon_window_stack_peek(hildon_window_stack_get_default());
+
+#if 0
+  int start, end;
+  GTimeVal tv;
+  g_get_current_time(&tv);
+  start = tv.tv_sec * 1000 + tv.tv_usec / 1000; 
+  do {
+    if(gtk_events_pending()) 
+      while(gtk_events_pending()) {
+	putchar('.'); fflush(stdout);
+	gtk_main_iteration();
+      }
+    else
+      usleep(100);
+
+    g_get_current_time(&tv);
+    end = tv.tv_sec * 1000 + tv.tv_usec / 1000; 
+  } while(end-start < 500);
+#endif
+
+  
+
+  hildon_app_menu_popup(HILDON_APP_MENU(menu), GTK_WINDOW(top));
+}
+
 /* the view submenu */
 void on_submenu_view_clicked(GtkButton *button, appdata_t *appdata) {
-  hildon_app_menu_popup(HILDON_APP_MENU(appdata->app_menu_view), 
-			GTK_WINDOW(appdata->window));
+  submenu_popup(appdata->app_menu_view);
 }
 
 void on_submenu_map_clicked(GtkButton *button, appdata_t *appdata) {
-  hildon_app_menu_popup(HILDON_APP_MENU(appdata->app_menu_map), 
-			GTK_WINDOW(appdata->window));
+  submenu_popup(appdata->app_menu_map);
 }
 
 void on_submenu_wms_clicked(GtkButton *button, appdata_t *appdata) {
-  hildon_app_menu_popup(HILDON_APP_MENU(appdata->app_menu_wms), 
-			GTK_WINDOW(appdata->window));
+  submenu_popup(appdata->app_menu_wms);
 }
 
 void on_submenu_track_clicked(GtkButton *button, appdata_t *appdata) {
-  hildon_app_menu_popup(HILDON_APP_MENU(appdata->app_menu_track), 
-			GTK_WINDOW(appdata->window));
+  submenu_popup(appdata->app_menu_track);
 }
 
 #define APP_OFFSET(a)  offsetof(appdata_t, a)
@@ -1057,9 +1092,13 @@ void menu_create(appdata_t *appdata) {
   /* build menu/submenus */
   menu = HILDON_APP_MENU(app_menu_create(appdata, main_menu));
   appdata->app_menu_wms   = app_menu_create(appdata, submenu_wms);
+  g_object_ref(appdata->app_menu_wms);
   appdata->app_menu_map   = app_menu_create(appdata, submenu_map);
+  g_object_ref(appdata->app_menu_map);
   appdata->app_menu_view  = app_menu_create(appdata, submenu_view);
+  g_object_ref(appdata->app_menu_view);
   appdata->app_menu_track = app_menu_create(appdata, submenu_track);
+  g_object_ref(appdata->app_menu_track);
 
   /* enable/disable some entries according to settings */
   if(appdata && appdata->settings)
