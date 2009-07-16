@@ -2,7 +2,6 @@
 <proj name="demo">
   <desc>Demo project</desc>
   <osm>demo.osm</osm>
-  <min lat="49.0050011" lon="8.3910999"/>
-  <max lat="49.0229988" lon="8.4184999"/>
-  <map zoom="1.2696" detail="1.0000" scroll-offset-x="-226" scroll-offset-y="-48"/>
+  <min lat="49.005" lon="8.3911"/>
+  <max lat="49.023" lon="8.4185"/>
 </proj>

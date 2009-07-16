@@ -649,6 +649,7 @@ void menu_create(appdata_t *appdata) {
   );
 #endif
 
+#if !defined(ZOOM_BUTTONS) || !defined(USE_HILDON)
   menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_zoomin), _("Zoom _in"),
     GTK_STOCK_ZOOM_IN, "<OSM2Go-Main>/View/ZoomIn",
@@ -660,6 +661,7 @@ void menu_create(appdata_t *appdata) {
     GTK_STOCK_ZOOM_OUT, "<OSM2Go-Main>/View/ZoomOut",
     GDK_period, GDK_CONTROL_MASK, TRUE, FALSE, FALSE
   );
+#endif
 
   gtk_menu_shell_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
 
@@ -911,12 +913,6 @@ static gboolean follow_gps_get_toggle(appdata_t *appdata) {
   return appdata->settings->follow_gps;
 }
 
-static gboolean  on_delete_event(GtkWidget *widget, GdkEvent  *event,
-				 gpointer   user_data) {
-  printf("delete-event\n");
-  return FALSE;
-}
-
 /* create a HildonAppMenu */
 static GtkWidget *app_menu_create(appdata_t *appdata, 
 				  const menu_entry_t *menu_entries) {
@@ -953,12 +949,6 @@ static GtkWidget *app_menu_create(appdata_t *appdata,
     menu_entries++;
   }
 
-  //  g_signal_connect(menu, "delete-event",
-  //		   G_CALLBACK(gtk_widget_hide_on_delete), NULL);
-
-  g_signal_connect(menu, "delete-event",
-  		   G_CALLBACK(on_delete_event), NULL);
-
   gtk_widget_show_all(GTK_WIDGET(menu));
   return GTK_WIDGET(menu);
 }
@@ -966,7 +956,7 @@ static GtkWidget *app_menu_create(appdata_t *appdata,
 static void submenu_popup(GtkWidget *menu) {
   GtkWidget *top = hildon_window_stack_peek(hildon_window_stack_get_default());
 
-#if 0
+#if 1
   int start, end;
   GTimeVal tv;
   g_get_current_time(&tv);
@@ -1020,8 +1010,10 @@ void on_submenu_track_clicked(GtkButton *button, appdata_t *appdata) {
 
 /* -- the view submenu -- */
 static const menu_entry_t submenu_view[] = {
+#ifndef ZOOM_BUTTONS
   SIMPLE_ENTRY("Zoom in",         cb_menu_zoomin),
   SIMPLE_ENTRY("Zoom out",        cb_menu_zoomout),
+#endif
   /* --- */
   SIMPLE_ENTRY("Style",           cb_menu_style),
   /* --- */
@@ -1277,7 +1269,7 @@ int main(int argc, char *argv[]) {
 #endif
   hildon_program_add_window(appdata.program, appdata.window);
 
-#if MAEMO_VERSION_MAJOR == 6
+#if MAEMO_VERSION_MAJOR == 5
   unsigned long val;
   XChangeProperty(GDK_DISPLAY(),
 		  GDK_WINDOW_XID(GTK_WIDGET(appdata.window)->window),
