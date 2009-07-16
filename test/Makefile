@@ -1,21 +1,13 @@
 #
 #
 
-APP = statusbar_bg
+all: statusbar_bg fremantle_submenu
 
-PKGS = gtk+-2.0
-OBJS = $(APP).o
+statusbar_bg: statusbar_bg.c
+	gcc `pkg-config --libs --cflags gtk+-2.0` -o $@ $<
 
-CFLAGS = -O2 `pkg-config --cflags $(PKGS)`
-LDFLAGS = `pkg-config --libs $(PKGS)`
-
-all: $(APP)
-
-%.o: %.c
-	gcc $(CFLAGS) -o $@ -c $<
-
-$(APP): $(OBJS)
-	gcc $(LDFLAGS) -o $@ $(OBJS)
+fremantle_submenu: fremantle_submenu.c
+	gcc `pkg-config --libs --cflags hildon-1` -o $@ $<
 
 clean:
-	rm -f $(APP) *.o
+	rm -f statusbar_bg fremantle_submenu *.o

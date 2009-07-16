@@ -220,10 +220,12 @@ gboolean project_save(GtkWidget *parent, project_t *project) {
   xmlDocSetRootElement(doc, root_node);
 
   if(project->server)
-    node = xmlNewChild(root_node, NULL, BAD_CAST "server", 
-		       BAD_CAST project->server);
+    xmlNewChild(root_node, NULL, BAD_CAST "server", 
+		BAD_CAST project->server);
 
-  xmlNewChild(root_node, NULL, BAD_CAST "desc", BAD_CAST project->desc);
+  if(project->desc)
+    xmlNewChild(root_node, NULL, BAD_CAST "desc", BAD_CAST project->desc);
+
   xmlNewChild(root_node, NULL, BAD_CAST "osm", BAD_CAST project->osm);
 
   node = xmlNewChild(root_node, NULL, BAD_CAST "min", NULL);
@@ -545,7 +547,6 @@ project_t *project_new(select_context_t *context) {
 
   name_callback_context_t name_context = { dialog, context->settings };
   GtkWidget *entry = gtk_entry_new();
-  //  gtk_entry_set_text(GTK_ENTRY(entry), "<enter name>");
   gtk_box_pack_start_defaults(GTK_BOX(hbox), entry);
   g_signal_connect(G_OBJECT(entry), "changed",
 		   G_CALLBACK(callback_modified_name), &name_context);
@@ -569,7 +570,7 @@ project_t *project_new(select_context_t *context) {
 
   project->path = g_strdup_printf("%s%s/", 
              context->settings->base_path, project->name);
-  project->desc = g_strdup(_("<project description>"));
+  project->desc = NULL;
 
   /* no data downloaded yet */
   project->data_dirty = TRUE;
@@ -817,6 +818,9 @@ static char *project_select(appdata_t *appdata) {
           GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
           NULL);
 
+  gtk_dialog_set_default_response(GTK_DIALOG(context->dialog), 
+				  GTK_RESPONSE_ACCEPT);
+
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(context->dialog)->vbox), 
 			      project_list_widget(context));
 
@@ -959,11 +963,12 @@ static void on_download_clicked(GtkButton *button, gpointer data) {
 
   printf("download %s\n", context->project->osm);
 
-  if(osm_download(context->dialog, context->settings, context->project)) {
+  if(osm_download(context->dialog, context->settings, context->project)) 
     context->project->data_dirty = FALSE;
-    project_filesize(context);
-  } else
+  else
     printf("download failed\n"); 
+
+  project_filesize(context);
 }
 
 static void on_diff_remove_clicked(GtkButton *button, gpointer data) {
@@ -1048,6 +1053,9 @@ project_edit(appdata_t *appdata, GtkWidget *parent, settings_t *settings,
     g_free(str);
   }
 
+  gtk_dialog_set_default_response(GTK_DIALOG(context->dialog), 
+				  GTK_RESPONSE_ACCEPT);
+
   GtkWidget *label;
   GtkWidget *table = gtk_table_new(5, 5, FALSE);  // x, y
   gtk_table_set_col_spacing(GTK_TABLE(table), 0, 8);
@@ -1056,7 +1064,9 @@ project_edit(appdata_t *appdata, GtkWidget *parent, settings_t *settings,
   label = gtk_label_left_new(_("Description:"));
   gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 0, 1);
   context->desc = gtk_entry_new();
-  gtk_entry_set_text(GTK_ENTRY(context->desc), project->desc);
+  gtk_entry_set_activates_default(GTK_ENTRY(context->desc), TRUE);
+  if(project->desc) 
+    gtk_entry_set_text(GTK_ENTRY(context->desc), project->desc);
   gtk_table_attach_defaults(GTK_TABLE(table),  context->desc, 1, 4, 0, 1);
   gtk_table_set_row_spacing(GTK_TABLE(table), 0, 4);
 
@@ -1090,6 +1100,7 @@ project_edit(appdata_t *appdata, GtkWidget *parent, settings_t *settings,
   label = gtk_label_left_new(_("Server:"));
   gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 3, 4);
   context->server = gtk_entry_new();
+  gtk_entry_set_activates_default(GTK_ENTRY(context->server), TRUE);
   HILDON_ENTRY_NO_AUTOCAP(context->server);
   gtk_entry_set_text(GTK_ENTRY(context->server), project->server);
   gtk_table_attach_defaults(GTK_TABLE(table),  context->server, 1, 4, 3, 4);
@@ -1147,10 +1158,19 @@ project_edit(appdata_t *appdata, GtkWidget *parent, settings_t *settings,
   if(context->project->desc) g_free(context->project->desc);
   context->project->desc = g_strdup(gtk_entry_get_text(
 			      GTK_ENTRY(context->desc)));
+  if(strlen(context->project->desc) == 0) {
+    g_free(context->project->desc);
+    context->project->desc = NULL;
+  }
+
 #ifdef SERVER_EDITABLE
   if(context->project->server) g_free(context->project->server);
   context->project->server = g_strdup(gtk_entry_get_text(
 				       GTK_ENTRY(context->server)));
+  if(strlen(context->project->server) == 0) {
+    g_free(context->project->server);
+    context->project->server = NULL;
+  }
 #endif
 
   /* save project */
