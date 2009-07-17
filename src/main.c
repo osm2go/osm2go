@@ -606,6 +606,8 @@ void menu_create(appdata_t *appdata) {
   /* -------------------- Project submenu -------------------- */
 
   GtkAccelGroup *accel_grp = gtk_accel_group_new();
+
+#ifndef USE_HILDON
   item = gtk_menu_item_new_with_mnemonic( _("_Project") );
   gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
   submenu = gtk_menu_new();
@@ -621,10 +623,15 @@ void menu_create(appdata_t *appdata) {
     0, 0, TRUE, FALSE, FALSE
   );
 
-#ifndef USE_HILDON
   menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_project_wizard), _("_Wizard"),
     GTK_STOCK_NEW, "<OSM2Go-Main>/Project/Wizard",
+    0, 0, TRUE, FALSE, FALSE
+  );
+#else
+  menu_append_new_item(
+    appdata, menu, GTK_SIGNAL_FUNC(cb_menu_project_open), _("_Project"),
+    GTK_STOCK_OPEN, "<OSM2Go-Main>/Project",
     0, 0, TRUE, FALSE, FALSE
   );
 #endif

@@ -295,16 +295,21 @@ const char *misc_get_proxy_uri(settings_t *settings) {
 
   /* use environment settings if preset */
   const char *proxy = g_getenv("http_proxy");
-  if(proxy) return proxy;
+  if(proxy) {
+    printf("http_proxy: %s\n", proxy);
+    return proxy;
+  }
 
   /* otherwise try settings */
   if(!settings || !settings->proxy || 
      !settings->proxy->host) return NULL;
 
-  snprintf(proxy_buffer, sizeof(proxy_buffer),
-	   "http://%s:%u", settings->proxy->host,
-	   settings->proxy->port);
+  snprintf(proxy_buffer, sizeof(proxy_buffer), "%s%s:%u", 
+	   strncmp(settings->proxy->host, "http://", 7)?"http://":"", 
+	   settings->proxy->host, settings->proxy->port);
+
   proxy_buffer[sizeof(proxy_buffer)-1] = 0;
+  printf("gconf_proxy: %s\n", proxy_buffer);
   return proxy_buffer;
 }
 
