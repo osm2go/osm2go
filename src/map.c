@@ -379,13 +379,13 @@ void map_item_deselect(appdata_t *appdata) {
       osm_tags_free(appdata->map->last_node_tags);
 
     appdata->map->last_node_tags = 
-      osm_tags_copy(appdata->map->selected.object.node->tag, FALSE);
+      osm_tags_copy(appdata->map->selected.object.node->tag);
   } else if(appdata->map->selected.object.type == WAY) {
     if(appdata->map->last_way_tags) 
       osm_tags_free(appdata->map->last_way_tags);
 
     appdata->map->last_way_tags = 
-      osm_tags_copy(appdata->map->selected.object.way->tag, FALSE);
+      osm_tags_copy(appdata->map->selected.object.way->tag);
   }
 
   /* remove statusbar message */

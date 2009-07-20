@@ -140,7 +140,7 @@ static object_t *undo_object_copy(object_t *object) {
     ob->node->user = object->node->user;
     ob->node->visible = object->node->visible;
     ob->node->time = object->node->time;
-    ob->node->tag = osm_tags_copy(object->node->tag, FALSE);
+    ob->node->tag = osm_tags_copy(object->node->tag);
     ob->node->flags = object->node->flags; 
     ob->node->zoom_max = object->node->zoom_max; 
 
@@ -161,7 +161,7 @@ static object_t *undo_object_copy(object_t *object) {
     ob->way->user = object->way->user;
     ob->way->visible = object->way->visible;
     ob->way->time = object->way->time;
-    ob->way->tag = osm_tags_copy(object->way->tag, FALSE);
+    ob->way->tag = osm_tags_copy(object->way->tag);
     ob->way->flags = object->way->flags; 
 
     return ob;

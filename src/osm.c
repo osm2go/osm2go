@@ -2214,22 +2214,20 @@ void osm_way_rotate(way_t *way, gint offset) {
   }
 }
 
-tag_t *osm_tags_copy(tag_t *src_tag, gboolean update_creator) {
+tag_t *osm_tags_copy(tag_t *src_tag) {
   tag_t *new_tags = NULL;
   tag_t **dst_tag = &new_tags;
 
   while(src_tag) {
-    *dst_tag = g_new0(tag_t, 1);
-    (*dst_tag)->key = g_strdup(src_tag->key);
-    if(update_creator && (strcasecmp(src_tag->key, "created_by") == 0))
-      (*dst_tag)->value = g_strdup(PACKAGE " v" VERSION);
-    else
+    if(!osm_is_creator_tag(src_tag)) {
+      *dst_tag = g_new0(tag_t, 1);
+      (*dst_tag)->key = g_strdup(src_tag->key);
       (*dst_tag)->value = g_strdup(src_tag->value);
-
-    dst_tag = &(*dst_tag)->next;
+      dst_tag = &(*dst_tag)->next;
+    }
     src_tag = src_tag->next;
   }
-
+  
   return new_tags;
 }
 

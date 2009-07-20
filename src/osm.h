@@ -297,7 +297,7 @@ node_t *osm_way_get_last_node(way_t *way);
 node_t *osm_way_get_first_node(way_t *way);
 void osm_way_rotate(way_t *way, gint offset);
 
-tag_t *osm_tags_copy(tag_t *tag, gboolean update_creator);
+tag_t *osm_tags_copy(tag_t *tag);
 
 relation_t *osm_relation_new(void);
 void osm_relation_free(relation_t *relation);

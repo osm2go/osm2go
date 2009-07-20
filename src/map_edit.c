@@ -543,7 +543,7 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
       }
       
       /* ------------  copy all tags ------------- */
-      new->tag = osm_tags_copy(way->tag, TRUE);
+      new->tag = osm_tags_copy(way->tag);
       
       /* ---- transfer relation membership from way to new ----- */
       transfer_relations(map->appdata->osm, new, way);

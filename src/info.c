@@ -210,9 +210,9 @@ static void on_tag_last(GtkWidget *button, tag_context_t *context) {
     osm_tags_free(*context->tag);
 
     if(context->object.type == NODE)
-      *context->tag = osm_tags_copy(context->appdata->map->last_node_tags, TRUE);
+      *context->tag = osm_tags_copy(context->appdata->map->last_node_tags);
     else
-      *context->tag = osm_tags_copy(context->appdata->map->last_way_tags, TRUE);
+      *context->tag = osm_tags_copy(context->appdata->map->last_way_tags);
 
     info_tags_replace(context);
   }
@@ -369,7 +369,7 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
   case NODE:
     str = g_strdup_printf(_("Node #" ITEM_ID_FORMAT), context->object.node->id);
     user = context->object.node->user;
-    work_copy = osm_tags_copy(context->object.node->tag, FALSE);
+    work_copy = osm_tags_copy(context->object.node->tag);
     stime = context->object.node->time;
     context->presets_type = PRESETS_TYPE_NODE;
     break;
@@ -377,7 +377,7 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
   case WAY:
     str = g_strdup_printf(_("Way #" ITEM_ID_FORMAT), context->object.way->id);
     user = context->object.way->user;
-    work_copy = osm_tags_copy(context->object.way->tag, FALSE);
+    work_copy = osm_tags_copy(context->object.way->tag);
     stime = context->object.way->time;
     context->presets_type = PRESETS_TYPE_WAY;
     
@@ -391,7 +391,7 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
     str = g_strdup_printf(_("Relation #" ITEM_ID_FORMAT), 
 			  context->object.relation->id);
     user = context->object.relation->user;
-    work_copy = osm_tags_copy(context->object.relation->tag, FALSE);
+    work_copy = osm_tags_copy(context->object.relation->tag);
     stime = context->object.relation->time;
     context->presets_type = PRESETS_TYPE_RELATION;
     break;
@@ -530,17 +530,17 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
 
     case NODE:
       osm_tags_free(context->object.node->tag);
-      context->object.node->tag = osm_tags_copy(work_copy, TRUE);
+      context->object.node->tag = osm_tags_copy(work_copy);
       break;
 	
     case WAY:
       osm_tags_free(context->object.way->tag);
-      context->object.way->tag = osm_tags_copy(work_copy, TRUE);
+      context->object.way->tag = osm_tags_copy(work_copy);
       break;
 	
     case RELATION:
       osm_tags_free(context->object.relation->tag);
-      context->object.relation->tag = osm_tags_copy(work_copy, TRUE);
+      context->object.relation->tag = osm_tags_copy(work_copy);
       break;
       
     default:
