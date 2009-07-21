@@ -37,11 +37,15 @@ char *undo_type_string(type_t type) {
 }
 
 static void undo_object_free(object_t *obj) {
-  char *msg = osm_object_string(obj);
-  printf("   object %s\n", msg);
-  g_free(msg);
-
   if(obj->ptr) {
+    char *msg = osm_object_string(obj);
+    printf("   object %s\n", msg);
+    g_free(msg);
+  } else
+    printf("   object %s\n", osm_object_type_string(obj));
+	   
+  if(obj->ptr) {
+
     switch(obj->type) {
     case NODE:
       osm_node_free(NULL, obj->node);
@@ -70,6 +74,9 @@ static void undo_op_free(undo_op_t *op) {
 
 static void undo_state_free(undo_state_t *state) {
   printf(" state: %s\n", undo_type_string(state->type));
+
+  if(state->object)
+    undo_object_free(state->object);
 
   undo_op_t *op = state->op;
   while(op) {
@@ -176,25 +183,67 @@ static object_t *undo_object_copy(object_t *object) {
   return NULL;
 }
 
-void undo_remember_delete(appdata_t *appdata, object_t *object) {
+void undo_append_object(appdata_t *appdata, undo_type_t type, 
+			object_t *object) {
 
   /* don't do anything if undo isn't enabled */
   if(!appdata->menu_item_map_undo)
     return;
 
-  printf("UNDO: remembering delete operation for %s\n", 
-	 osm_object_type_string(object));
+  g_assert(appdata->undo.open);
 
-  /* create a new undo state */
-  undo_state_t *state = undo_append_state(appdata);
-  state->type = UNDO_DELETE;
+  printf("UNDO: saving %s operation for %s\n", 
+	 undo_type_string(type),
+	 osm_object_type_string(object));
 
   /* a simple stand-alone node deletion is just a single */
   /* operation on the database/map so only one undo_op is saved */
-  undo_op_t *op = state->op = g_new0(undo_op_t, 1);
-  op->type = UNDO_DELETE;
-  op->object = undo_object_copy(object);
+
+  /* append new undo operation */
+  undo_op_t **op = &(appdata->undo.open->op);
+  while(*op) op = &(*op)->next;
+
+  *op = g_new0(undo_op_t, 1);
+  (*op)->type = type;
+  (*op)->object = undo_object_copy(object);
 }
+
+void undo_append_way(appdata_t *appdata, undo_type_t type, way_t *way) {
+  object_t obj;
+  obj.type = WAY;
+  obj.way = way;
+
+  undo_append_object(appdata, type, &obj);
+}
+
+void undo_open_new_state(struct appdata_s *appdata, undo_type_t type, 
+			 object_t *object) {
+  g_assert(!appdata->undo.open);
+
+  printf("UNDO: open new state for %s\n",
+	 osm_object_string(object));
+
+  /* don't do anything if undo isn't enabled */
+  if(!appdata->menu_item_map_undo)
+    return;
+
+  /* create a new undo state */
+  appdata->undo.open = undo_append_state(appdata);
+  appdata->undo.open->type = type;
+
+  appdata->undo.open->object = undo_object_copy(object);
+}
+
+void undo_close_state(appdata_t *appdata) {
+  g_assert(appdata->undo.open);
+
+  printf("UNDO: closing state\n");
+
+  appdata->undo.open = NULL;
+}
+
+
+/* --------------------- restoring ---------------------- */
 
 /* undo the deletion of an object */
 static void undo_operation_object_delete(appdata_t *appdata, object_t *obj) {
@@ -222,8 +271,15 @@ static void undo_operation_object_delete(appdata_t *appdata, object_t *obj) {
     obj->ptr = NULL;
   } break;
 
+  case WAY: {
+    way_t *orig = osm_get_way_by_id(appdata->osm, obj->way->id);
+    g_assert(orig);
+    g_assert(orig->flags & OSM_FLAG_DELETED);
+  } break;
+
   default:
     printf("Unsupported object type\n");
+    g_assert(0);
     break;
   }
 }
@@ -263,7 +319,6 @@ void undo(appdata_t *appdata) {
   /* since the operations list was built by prepending new */
   /* entries, just going through the list will run the operations */
   /* in reverse order. That's exactly what we want! */
-
   undo_op_t *op = state->op;
   while(op) {
     undo_operation(appdata, op);

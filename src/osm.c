@@ -2352,12 +2352,15 @@ char *osm_object_string(object_t *object) {
     return g_strdup_printf("%s #<unspec>", type_str);
     break;
   case NODE:
+    g_assert(object->node);
     return g_strdup_printf("%s #" ITEM_ID_FORMAT, type_str, object->node->id);
     break;
   case WAY:
+    g_assert(object->way);
     return g_strdup_printf("%s #" ITEM_ID_FORMAT, type_str, object->way->id);
     break;
   case RELATION:
+    g_assert(object->relation);
     return g_strdup_printf("%s #" ITEM_ID_FORMAT, type_str, 
 			   object->relation->id);
     break;

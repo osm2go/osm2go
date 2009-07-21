@@ -48,18 +48,25 @@ typedef struct undo_op_s {
 
 typedef struct undo_state_s {
   undo_type_t type;   /* what the overall operation was */
+  object_t *object;   /* the "parent" object that this undo state is for */
   undo_op_t *op;
 
   struct undo_state_s *next;
 } undo_state_t;
 
 typedef struct {
-  undo_state_t *state;
+  undo_state_t *state;   /* pointer to first state in chain */
+  undo_state_t *open;    /* pointer to open state (NULL if none) */
 } undo_t;
 
 struct appdata_s;
-void undo_remember_delete(struct appdata_s *appdata, object_t *obj);
+void undo_open_new_state(struct appdata_s *ad, undo_type_t typ, object_t *obj);
+void undo_append_object(struct appdata_s *ad, undo_type_t type, object_t *obj);
+void undo_append_way(struct appdata_s *ad, undo_type_t type, way_t *way);
+void undo_close_state(struct appdata_s *appdata);
+
 void undo_free(undo_state_t *state);
 void undo(struct appdata_s *appdata);
+
 
 #endif // UNDO_H

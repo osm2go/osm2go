@@ -1294,7 +1294,10 @@ void map_way_delete(appdata_t *appdata, way_t *way) {
 
   /* and mark it "deleted" in the database */
   osm_way_remove_from_relation(appdata->osm, way);
+  
+  puts("1");
   osm_way_delete(appdata->osm, &appdata->icon, way, FALSE);
+  puts("2");
 }
 
 static void map_handle_click(appdata_t *appdata, map_t *map) {
@@ -1973,12 +1976,14 @@ void map_delete_selected(appdata_t *appdata) {
   /* deleting the selected item de-selects it ... */
   map_item_deselect(appdata);
 
-  undo_remember_delete(appdata, &item.object);
+  undo_open_new_state(appdata, UNDO_DELETE, &item.object);
 
   switch(item.object.type) {
   case NODE:
     printf("request to delete node #" ITEM_ID_FORMAT "\n", 
 	   item.object.node->id);
+
+    undo_append_object(appdata, UNDO_DELETE, &item.object);
 
     /* check if this node is part of a way with two nodes only. */
     /* we cannot delete this as this would also delete the way */
@@ -2023,11 +2028,13 @@ void map_delete_selected(appdata_t *appdata) {
 	/* this way now only contains one node and thus isn't a valid */
 	/* way anymore. So it'll also get deleted (which in turn may */
 	/* cause other nodes to be deleted as well) */
+	undo_append_way(appdata, UNDO_DELETE, chain->way);
 	map_way_delete(appdata, chain->way);
       } else {
 	map_item_t item;
 	item.object.type = WAY;
 	item.object.way = chain->way;
+	undo_append_object(appdata, UNDO_MODIFY, &(item.object));
 	map_item_redraw(appdata, &item);
       }
 
@@ -2048,6 +2055,7 @@ void map_delete_selected(appdata_t *appdata) {
 	     (item.object.type == WAY));
     break;
   }
+  undo_close_state(appdata);
 }
 
 /* ----------------------- track related stuff ----------------------- */
