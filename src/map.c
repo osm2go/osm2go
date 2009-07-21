@@ -1280,6 +1280,8 @@ void map_highlight_refresh(appdata_t *appdata) {
 void map_way_delete(appdata_t *appdata, way_t *way) {
   printf("deleting way #" ITEM_ID_FORMAT " from map and osm\n", way->id);
 
+  undo_append_way(appdata, UNDO_DELETE, way);
+
   /* remove it visually from the screen */
   map_item_chain_destroy(&way->map_item_chain);
 
@@ -1294,10 +1296,8 @@ void map_way_delete(appdata_t *appdata, way_t *way) {
 
   /* and mark it "deleted" in the database */
   osm_way_remove_from_relation(appdata->osm, way);
-  
-  puts("1");
+
   osm_way_delete(appdata->osm, &appdata->icon, way, FALSE);
-  puts("2");
 }
 
 static void map_handle_click(appdata_t *appdata, map_t *map) {
@@ -2028,7 +2028,6 @@ void map_delete_selected(appdata_t *appdata) {
 	/* this way now only contains one node and thus isn't a valid */
 	/* way anymore. So it'll also get deleted (which in turn may */
 	/* cause other nodes to be deleted as well) */
-	undo_append_way(appdata, UNDO_DELETE, chain->way);
 	map_way_delete(appdata, chain->way);
       } else {
 	map_item_t item;

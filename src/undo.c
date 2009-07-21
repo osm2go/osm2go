@@ -19,6 +19,8 @@
 
 #include "appdata.h"
 
+#define UNDO_ENABLE_CHECK   if(!appdata->menu_item_map_undo) return;
+
 /* return plain text of type */
 char *undo_type_string(type_t type) {
   const struct { undo_type_t type; char *name; } types[] = {
@@ -186,46 +188,71 @@ static object_t *undo_object_copy(object_t *object) {
 void undo_append_object(appdata_t *appdata, undo_type_t type, 
 			object_t *object) {
 
-  /* don't do anything if undo isn't enabled */
-  if(!appdata->menu_item_map_undo)
-    return;
+  UNDO_ENABLE_CHECK;
 
   g_assert(appdata->undo.open);
-
-  printf("UNDO: saving %s operation for %s\n", 
-	 undo_type_string(type),
-	 osm_object_type_string(object));
 
   /* a simple stand-alone node deletion is just a single */
   /* operation on the database/map so only one undo_op is saved */
 
   /* append new undo operation */
+
+  /* search end of chain and check if object already is in chain */
   undo_op_t **op = &(appdata->undo.open->op);
-  while(*op) op = &(*op)->next;
+  while(*op) {
+    if(osm_object_is_same((*op)->object, object)) {
+      printf("UNDO: object %s already in undo_state: ignoring\n",
+	     osm_object_string(object));
+      return;
+    }
+
+    op = &(*op)->next;
+  }
+
+  printf("UNDO: saving %s operation for object %s\n", 
+	 undo_type_string(type), osm_object_string(object));
 
   *op = g_new0(undo_op_t, 1);
   (*op)->type = type;
   (*op)->object = undo_object_copy(object);
+
+  /* if the deleted object is a way, then check if this affects */
+  /* a node */
+  if((type == UNDO_DELETE) && (object->type == WAY)) {
+    node_chain_t *chain = object->way->node_chain;
+    while(chain) {
+      /* this node must only be part of this way */
+      if(!osm_node_in_other_way(appdata->osm, object->way, chain->node))
+	undo_append_node(appdata, UNDO_DELETE, chain->node);
+
+      chain = chain->next;
+    }
+  }
 }
 
 void undo_append_way(appdata_t *appdata, undo_type_t type, way_t *way) {
-  object_t obj;
-  obj.type = WAY;
+  object_t obj = { .type = WAY };
   obj.way = way;
+
+  undo_append_object(appdata, type, &obj);
+}
+
+void undo_append_node(appdata_t *appdata, undo_type_t type, node_t *node) {
+  object_t obj = { .type = NODE };
+  obj.node = node;
 
   undo_append_object(appdata, type, &obj);
 }
 
 void undo_open_new_state(struct appdata_s *appdata, undo_type_t type, 
 			 object_t *object) {
+
+  UNDO_ENABLE_CHECK;
+
   g_assert(!appdata->undo.open);
 
   printf("UNDO: open new state for %s\n",
 	 osm_object_string(object));
-
-  /* don't do anything if undo isn't enabled */
-  if(!appdata->menu_item_map_undo)
-    return;
 
   /* create a new undo state */
   appdata->undo.open = undo_append_state(appdata);
@@ -235,6 +262,8 @@ void undo_open_new_state(struct appdata_s *appdata, undo_type_t type,
 }
 
 void undo_close_state(appdata_t *appdata) {
+  UNDO_ENABLE_CHECK;
+
   g_assert(appdata->undo.open);
 
   printf("UNDO: closing state\n");
@@ -264,7 +293,7 @@ static void undo_operation_object_delete(appdata_t *appdata, object_t *obj) {
     g_assert(!wchain);
 
     /* then restore old node */
-    osm_node_dump(obj->node);
+    //    osm_node_dump(obj->node);
     osm_node_restore(appdata->osm, obj->node);
     josm_elemstyles_colorize_node(appdata->map->style, obj->node);
     map_node_draw(appdata->map, obj->node);

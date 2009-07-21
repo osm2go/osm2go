@@ -237,6 +237,7 @@ gboolean osm_way_has_value(way_t *way, char *str);
 void osm_way_append_node(way_t *way, node_t *node);
 
 gboolean osm_node_in_way(way_t *way, node_t *node);
+gboolean osm_node_in_other_way(osm_t *osm, way_t *way, node_t *node);
 
 void osm_node_chain_free(node_chain_t *node_chain);
 int osm_node_chain_length(node_chain_t *node_chain);
@@ -310,9 +311,11 @@ char *osm_object_type_string(object_t *object);
 char *osm_object_id_string(object_t *object);
 char *osm_object_string(object_t *object);
 tag_t *osm_object_get_tags(object_t *object);
+item_id_t osm_object_get_id(object_t *object);
 void osm_object_set_flags(object_t *map_item, int set, int clr);
 char *osm_object_get_name(object_t *object);
 char *osm_object_get_speaking_name(object_t *object);
+gboolean osm_object_is_same(object_t *obj1, object_t *obj2);
 
 #endif /* OSM_H */
 

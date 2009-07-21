@@ -1195,6 +1195,24 @@ gboolean osm_node_in_way(way_t *way, node_t *node) {
   return FALSE;
 }
 
+/* return true if node is part of other way than this one */
+gboolean osm_node_in_other_way(osm_t *osm, way_t *way, node_t *node) {
+  gboolean is_other = FALSE;
+  way_chain_t *chain = osm_node_to_way(osm, node);
+
+  while(chain) {
+    way_chain_t *next = chain->next;
+
+    if(chain->way != way)
+      is_other = TRUE;
+
+    g_free(chain);
+    chain = next;
+  }
+
+  return is_other;
+}
+
 static void osm_generate_tags(tag_t *tag, xmlNodePtr node) {
   while(tag) {
     /* make sure "created_by" tag contains our id */
@@ -2424,6 +2442,32 @@ tag_t *osm_object_get_tags(object_t *object) {
 }
 
 
+item_id_t osm_object_get_id(object_t *object) {
+  if(!object) return ID_ILLEGAL;
+
+  switch(object->type) {
+  case ILLEGAL:
+    return ID_ILLEGAL;
+    break;
+  case NODE:
+    return object->node->id;
+    break;
+  case WAY:
+    return object->way->id;
+    break;
+  case RELATION:
+    return object->relation->id;
+    break;
+  case NODE_ID:
+  case WAY_ID:
+  case RELATION_ID:
+    return object->id;
+    break;
+  }
+  return ID_ILLEGAL;
+}
+
+
 gint osm_relation_members_num(relation_t *relation) {
   gint num = 0;
   member_t *member = relation->member;
@@ -2457,5 +2501,17 @@ void osm_object_set_flags(object_t *object, int set, int clr) {
     break;
   }
 }
+
+gboolean osm_object_is_same(object_t *obj1, object_t *obj2) {
+  item_id_t id1 = osm_object_get_id(obj1);
+  item_id_t id2 = osm_object_get_id(obj2);
+
+  if(id1 == ID_ILLEGAL) return FALSE;
+  if(id2 == ID_ILLEGAL) return FALSE;
+  if(obj1->type != obj2->type) return FALSE;
+
+  return(id1 == id2);
+}
+
 
 // vim:et:ts=8:sw=2:sts=2:ai

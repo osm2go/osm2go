@@ -61,7 +61,7 @@ void main_ui_enable(appdata_t *appdata) {
   hildon_window_set_markup(HILDON_WINDOW(appdata->window), str);
 #else
   if(project_valid) 
-    str = g_strdup_printf("OSM2Go - <b>%s</b>", appdata->project->name);
+    str = g_strdup_printf("OSM2Go - %s", appdata->project->name);
   else 
     str = g_strdup_printf("OSM2Go");
 
