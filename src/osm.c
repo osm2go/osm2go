@@ -204,7 +204,9 @@ gboolean osm_way_ends_with_node(way_t *way, node_t *node) {
 
 /* ------------------- node handling ------------------- */
 
-void osm_node_free(icon_t **icon, node_t *node) {
+void osm_node_free(osm_t *osm, icon_t **icon, node_t *node) {
+  item_id_t id = node->id;
+
   if(node->icon_buf) 
     icon_free(icon, node->icon_buf);
 
@@ -212,13 +214,30 @@ void osm_node_free(icon_t **icon, node_t *node) {
   g_assert(!node->map_item_chain);
 
   osm_tags_free(node->tag);
+
   g_free(node);
+
+  /* also remove node from hash table */
+  if(osm && id > 0 && osm->node_hash) {
+    // use hash table if present
+    hash_item_t **item = &(osm->node_hash->hash[ID2HASH(id)]);
+    while(*item) {
+      if((*item)->data.node->id == id) {
+	hash_item_t *cur = *item;
+	*item = (*item)->next;
+	g_free(cur);
+	return;
+      }
+      
+      item = &(*item)->next;
+    }
+  }
 }
 
-static void osm_nodes_free(icon_t **icon, node_t *node) {
+static void osm_nodes_free(osm_t *osm, icon_t **icon, node_t *node) {
   while(node) {
     node_t *next = node->next;
-    osm_node_free(icon, node);
+    osm_node_free(osm, icon, node);
     node = next;
   }
 }
@@ -530,7 +549,7 @@ void osm_free(icon_t **icon, osm_t *osm) {
   if(osm->bounds)   osm_bounds_free(osm->bounds);
   if(osm->user)     osm_users_free(osm->user);
   if(osm->way)      osm_ways_free(osm->way);
-  if(osm->node)     osm_nodes_free(icon, osm->node);
+  if(osm->node)     osm_nodes_free(osm, icon, osm->node);
   if(osm->relation) osm_relations_free(osm->relation);
   g_free(osm);
 }
@@ -1615,6 +1634,8 @@ void osm_way_restore(osm_t *osm, way_t *way) {
   while(chain) {
     printf("Node "ITEM_ID_FORMAT" is member\n", chain->id);
     chain->node = osm_get_node_by_id(osm, chain->id);
+    chain->node->ways++;
+
     printf("   -> %p\n", chain->node);
 
     chain = chain->next;
@@ -1682,7 +1703,7 @@ way_chain_t *osm_node_delete(osm_t *osm, icon_t **icon,
 	found++;
 	*cnode = (*cnode)->next;
 
-	osm_node_free(icon, node);
+	osm_node_free(osm, icon, node);
       } else
 	cnode = &((*cnode)->next);
     }

@@ -228,7 +228,7 @@ void map_edit_way_add_cancel(map_t *map) {
     chain->node->ways--;
     if(!chain->node->ways && (chain->node->id == ID_ILLEGAL)) {
       printf("      -> freeing temp node\n");
-      osm_node_free(&map->appdata->icon, chain->node);
+      osm_node_free(map->appdata->osm, &map->appdata->icon, chain->node);
     }
     g_free(chain);
     chain = next;

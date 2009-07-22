@@ -20,7 +20,7 @@
 /*
  * TODO:
  *
- * - restore node memberships when restoring a way
+ * + restore node memberships when restoring a way
  * - save restore relation membership
  * - handle permamently deleted objects (newly created, then deleted)
  */
@@ -30,11 +30,11 @@
 #define UNDO_ENABLE_CHECK   if(!appdata->menu_item_map_undo) return;
 
 /* return plain text of type */
-char *undo_type_string(type_t type) {
+static char *undo_type_string(type_t type) {
   const struct { undo_type_t type; char *name; } types[] = {
-    { UNDO_DELETE, "DELETE" },
-    { UNDO_CREATE, "CREATE" },
-    { UNDO_MODIFY, "MODIFY" },
+    { UNDO_DELETE, "deletion" },
+    { UNDO_CREATE, "creation" },
+    { UNDO_MODIFY, "modification" },
     { 0, NULL }
   };
 
@@ -46,7 +46,7 @@ char *undo_type_string(type_t type) {
   return NULL;
 }
 
-static void undo_object_free(object_t *obj) {
+static void undo_object_free(osm_t *osm, object_t *obj) {
   printf("free obj %p\n", obj);
 
   if(obj->ptr) {
@@ -60,7 +60,7 @@ static void undo_object_free(object_t *obj) {
 
     switch(obj->type) {
     case NODE:
-      osm_node_free(NULL, obj->node);
+      osm_node_free(osm, NULL, obj->node);
       break;
 
     case WAY:
@@ -78,13 +78,13 @@ static void undo_object_free(object_t *obj) {
   g_free(obj);
 }
 
-static void undo_op_free(undo_op_t *op) {
+static void undo_op_free(osm_t *osm, undo_op_t *op) {
   printf("  free op: %s\n", undo_type_string(op->type));
-  if(op->object) undo_object_free(op->object);
+  if(op->object) undo_object_free(osm, op->object);
   g_free(op);
 }
 
-static void undo_state_free(undo_state_t *state) {
+static void undo_state_free(osm_t *osm, undo_state_t *state) {
   printf(" free state: %s\n", undo_type_string(state->type));
 
   if(state->name)
@@ -93,7 +93,7 @@ static void undo_state_free(undo_state_t *state) {
   undo_op_t *op = state->op;
   while(op) {
     undo_op_t *next = op->next;
-    undo_op_free(op);
+    undo_op_free(osm, op);
     op = next;
   }
 
@@ -102,12 +102,12 @@ static void undo_state_free(undo_state_t *state) {
 
 /* free all undo states, thus forgetting the entire history */
 /* called at program exit or e.g. at project change */
-void undo_free(undo_state_t *state) {
+void undo_free(osm_t *osm, undo_state_t *state) {
   printf("Freeing all UNDO states:\n");
 
   while(state) {
     undo_state_t *next = state->next;
-    undo_state_free(state);
+    undo_state_free(osm, state);
     state = next;
   }
 }
@@ -130,7 +130,7 @@ static undo_state_t *undo_append_state(appdata_t *appdata) {
   /* delete first entry if the chain is too long */
   if(undo_chain_length >= UNDO_QUEUE_LEN) {
     undo_state_t *second = appdata->undo.state->next;
-    undo_state_free(appdata->undo.state);
+    undo_state_free(appdata->osm, appdata->undo.state);
     appdata->undo.state = second;
   }
 
@@ -325,10 +325,8 @@ static void undo_operation_object_delete(appdata_t *appdata, object_t *obj) {
     g_assert(!wchain);
 
     /* then restore old node */
-    //    osm_node_dump(obj->node);
     osm_node_restore(appdata->osm, obj->node);
-    josm_elemstyles_colorize_node(appdata->map->style, obj->node);
-    map_node_draw(appdata->map, obj->node);
+
     obj->ptr = NULL;
   } break;
 
@@ -341,10 +339,7 @@ static void undo_operation_object_delete(appdata_t *appdata, object_t *obj) {
     osm_way_delete(appdata->osm, &appdata->icon, orig, TRUE);
 
     osm_way_restore(appdata->osm, obj->way);
-    josm_elemstyles_colorize_way(appdata->map->style, obj->way);
-    map_way_draw(appdata->map, obj->way);
 
-    printf("ptr of obj %p cleared\n", obj);
     obj->ptr = NULL;
   } break;
 
@@ -387,6 +382,12 @@ void undo(appdata_t *appdata) {
   
   printf("UNDO state: %s\n", undo_type_string(state->type));
 
+  char *msg = g_strdup_printf(_("Undoing %s of %s"),
+			      undo_type_string(state->type),
+			      state->name);
+  banner_show_info(appdata, msg);
+  g_free(msg);
+
   /* since the operations list was built by prepending new */
   /* entries, just going through the list will run the operations */
   /* in reverse order. That's exactly what we want! */
@@ -400,6 +401,10 @@ void undo(appdata_t *appdata) {
   undo_state_t **stateP = &appdata->undo.state;
   while(*stateP && (*stateP)->next) stateP = &(*stateP)->next;
 
-  undo_state_free(*stateP);
+  undo_state_free(appdata->osm, *stateP);
   *stateP = NULL;
+
+  /* redraw entire map */
+  map_clear(appdata, MAP_LAYER_ALL);
+  map_paint(appdata);
 }
