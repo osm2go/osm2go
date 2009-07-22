@@ -87,7 +87,10 @@ typedef struct node_s {
 } node_t;
 
 typedef struct node_chain {
-  node_t *node;
+  union {
+    node_t *node;
+    item_id_t id;
+  };
   struct node_chain *next;
 } node_chain_t;
 
@@ -278,7 +281,8 @@ void osm_node_restore(osm_t *osm, node_t *node);
 way_chain_t *osm_node_delete(osm_t *osm, struct icon_s **icon, node_t *node, 
 			     gboolean permanently, gboolean affect_ways);
 void osm_way_delete(osm_t *osm, struct icon_s **icon, way_t *way, 
-		    gboolean permanently);
+		    gboolean perm);
+void osm_way_restore(osm_t *osm, way_t *way);
 
 way_t *osm_way_new(void);
 void osm_way_attach(osm_t *osm, way_t *way);
@@ -314,7 +318,6 @@ tag_t *osm_object_get_tags(object_t *object);
 item_id_t osm_object_get_id(object_t *object);
 void osm_object_set_flags(object_t *map_item, int set, int clr);
 char *osm_object_get_name(object_t *object);
-char *osm_object_get_speaking_name(object_t *object);
 gboolean osm_object_is_same(object_t *obj1, object_t *obj2);
 
 #endif /* OSM_H */

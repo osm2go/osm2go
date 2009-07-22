@@ -17,6 +17,14 @@
  * along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*
+ * TODO:
+ *
+ * - restore node memberships when restoring a way
+ * - save restore relation membership
+ * - handle permamently deleted objects (newly created, then deleted)
+ */
+
 #include "appdata.h"
 
 #define UNDO_ENABLE_CHECK   if(!appdata->menu_item_map_undo) return;
@@ -39,12 +47,14 @@ char *undo_type_string(type_t type) {
 }
 
 static void undo_object_free(object_t *obj) {
+  printf("free obj %p\n", obj);
+
   if(obj->ptr) {
     char *msg = osm_object_string(obj);
-    printf("   object %s\n", msg);
+    printf("   free object %s\n", msg);
     g_free(msg);
   } else
-    printf("   object %s\n", osm_object_type_string(obj));
+    printf("   free object %s\n", osm_object_type_string(obj));
 	   
   if(obj->ptr) {
 
@@ -69,16 +79,16 @@ static void undo_object_free(object_t *obj) {
 }
 
 static void undo_op_free(undo_op_t *op) {
-  printf("  op: %s\n", undo_type_string(op->type));
+  printf("  free op: %s\n", undo_type_string(op->type));
   if(op->object) undo_object_free(op->object);
   g_free(op);
 }
 
 static void undo_state_free(undo_state_t *state) {
-  printf(" state: %s\n", undo_type_string(state->type));
+  printf(" free state: %s\n", undo_type_string(state->type));
 
-  if(state->object)
-    undo_object_free(state->object);
+  if(state->name)
+    g_free(state->name);
 
   undo_op_t *op = state->op;
   while(op) {
@@ -130,7 +140,7 @@ static undo_state_t *undo_append_state(appdata_t *appdata) {
 }
 
 /* create a local copy of the entire object */
-static object_t *undo_object_copy(object_t *object) {
+static object_t *undo_object_save(object_t *object) {
   switch(object->type) {
   case NODE: {
     object_t *ob = g_new0(object_t, 1);
@@ -173,6 +183,18 @@ static object_t *undo_object_copy(object_t *object) {
     ob->way->tag = osm_tags_copy(object->way->tag);
     ob->way->flags = object->way->flags; 
 
+    /* the nodes are saved by reference, since they may also be */
+    /* deleted and restored and thus their address may change */
+    node_chain_t *chain = object->way->node_chain;
+    node_chain_t **new_chain = &ob->way->node_chain;
+    while(chain) {
+      *new_chain = g_new0(node_chain_t, 1);
+      (*new_chain)->id = chain->node->id;
+
+      new_chain = &(*new_chain)->next;
+      chain = chain->next;
+    }
+
     return ob;
     } break;
 
@@ -195,26 +217,31 @@ void undo_append_object(appdata_t *appdata, undo_type_t type,
   /* a simple stand-alone node deletion is just a single */
   /* operation on the database/map so only one undo_op is saved */
 
-  /* append new undo operation */
+  /* check if this object already is in operaton chain */
+  undo_op_t *op = appdata->undo.open->op;
+  while(op) {
+    if(osm_object_is_same(op->object, object)) {
+      /* this must be the same operation!! */
+      g_assert(op->type == type);
 
-  /* search end of chain and check if object already is in chain */
-  undo_op_t **op = &(appdata->undo.open->op);
-  while(*op) {
-    if(osm_object_is_same((*op)->object, object)) {
       printf("UNDO: object %s already in undo_state: ignoring\n",
 	     osm_object_string(object));
       return;
     }
-
-    op = &(*op)->next;
+    op = op->next;
   }
 
   printf("UNDO: saving %s operation for object %s\n", 
 	 undo_type_string(type), osm_object_string(object));
 
-  *op = g_new0(undo_op_t, 1);
-  (*op)->type = type;
-  (*op)->object = undo_object_copy(object);
+  /* create new operation */
+  op = g_new0(undo_op_t, 1);
+  op->type = type;
+  op->object = undo_object_save(object);
+
+  /* prepend operation to chain, so that the undo works in reverse order */
+  op->next = appdata->undo.open->op;
+  appdata->undo.open->op = op;
 
   /* if the deleted object is a way, then check if this affects */
   /* a node */
@@ -258,7 +285,8 @@ void undo_open_new_state(struct appdata_s *appdata, undo_type_t type,
   appdata->undo.open = undo_append_state(appdata);
   appdata->undo.open->type = type;
 
-  appdata->undo.open->object = undo_object_copy(object);
+  appdata->undo.open->name = osm_object_get_name(object);
+  printf("   name: %s\n", appdata->undo.open->name);
 }
 
 void undo_close_state(appdata_t *appdata) {
@@ -288,8 +316,12 @@ static void undo_operation_object_delete(appdata_t *appdata, object_t *obj) {
     node_t *orig = osm_get_node_by_id(appdata->osm, obj->node->id);
     g_assert(orig);
     g_assert(orig->flags & OSM_FLAG_DELETED);
+
+    /* permanently remove the node marked as "deleted" */
     way_chain_t *wchain = 
       osm_node_delete(appdata->osm, &appdata->icon, orig, TRUE, TRUE);
+
+    /* the deleted node must not have been part of any way */
     g_assert(!wchain);
 
     /* then restore old node */
@@ -304,6 +336,16 @@ static void undo_operation_object_delete(appdata_t *appdata, object_t *obj) {
     way_t *orig = osm_get_way_by_id(appdata->osm, obj->way->id);
     g_assert(orig);
     g_assert(orig->flags & OSM_FLAG_DELETED);
+
+    /* permanently remove the way marked as "deleted" */
+    osm_way_delete(appdata->osm, &appdata->icon, orig, TRUE);
+
+    osm_way_restore(appdata->osm, obj->way);
+    josm_elemstyles_colorize_way(appdata->map->style, obj->way);
+    map_way_draw(appdata->map, obj->way);
+
+    printf("ptr of obj %p cleared\n", obj);
+    obj->ptr = NULL;
   } break;
 
   default:

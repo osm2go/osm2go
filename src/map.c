@@ -61,7 +61,7 @@ static void map_statusbar(map_t *map, map_item_t *map_item) {
     tag = tag->next;
   }
 
-  str = osm_object_get_speaking_name(&map_item->object);
+  str = osm_object_get_name(&map_item->object);
   statusbar_set(map->appdata, str, collision);
   g_free(str);
 }

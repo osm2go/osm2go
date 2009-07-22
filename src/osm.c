@@ -1602,6 +1602,27 @@ void osm_way_attach(osm_t *osm, way_t *way) {
   *lway = way;
 }
 
+void osm_way_restore(osm_t *osm, way_t *way) {
+  printf("Restoring way\n");
+
+  /* attach to end of node list */
+  way_t **lway = &osm->way;
+  while(*lway) lway = &(*lway)->next;  
+  *lway = way;
+
+  /* restore node memberships by converting ids into real pointers */
+  node_chain_t *chain = way->node_chain;
+  while(chain) {
+    printf("Node "ITEM_ID_FORMAT" is member\n", chain->id);
+    chain->node = osm_get_node_by_id(osm, chain->id);
+    printf("   -> %p\n", chain->node);
+
+    chain = chain->next;
+  }
+
+  printf("done\n");
+}
+
 /* returns pointer to chain of ways affected by this deletion */
 way_chain_t *osm_node_delete(osm_t *osm, icon_t **icon, 
 			     node_t *node, gboolean permanently,
@@ -2270,15 +2291,8 @@ char *osm_object_type_string(object_t *object) {
   return NULL;
 }
 
-char *osm_object_get_name(object_t *object) {
-  tag_t *tags = osm_object_get_tags(object);
-
-  if(!tags) return NULL;
-  return osm_tag_get_by_key(tags, "name");
-}
-
 /* try to get an as "speaking" description of the object as possible */
-char *osm_object_get_speaking_name(object_t *object) {
+char *osm_object_get_name(object_t *object) {
   char *ret = NULL;
   tag_t *tags = osm_object_get_tags(object);
 

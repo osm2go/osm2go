@@ -48,7 +48,7 @@ typedef struct undo_op_s {
 
 typedef struct undo_state_s {
   undo_type_t type;   /* what the overall operation was */
-  object_t *object;   /* the "parent" object that this undo state is for */
+  char *name;         /* the name of the "parent" object */
   undo_op_t *op;
 
   struct undo_state_s *next;
