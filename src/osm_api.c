@@ -451,10 +451,10 @@ static void osm_delete_nodes(osm_upload_context_t *context) {
     if(node->flags & OSM_FLAG_DELETED) {
       printf("deleting node on server\n");
 
-      appendf(&context->log, NULL, _("Delete node #%ld "), node->id);
+      appendf(&context->log, NULL, _("Delete node #%ld "), OSM_ID(node));
 
       char *url = g_strdup_printf("%s/node/" ITEM_ID_FORMAT, 
-				  project->server, node->id);
+				  project->server, OSM_ID(node));
       char *cred = g_strdup_printf("%s:%s", 
 				   context->appdata->settings->username, 
 				   context->appdata->settings->password);
@@ -490,8 +490,8 @@ static void osm_upload_nodes(osm_upload_context_t *context) {
 	appendf(&context->log, NULL, _("New node "));
       } else {
 	url = g_strdup_printf("%s/node/" ITEM_ID_FORMAT, 
-			      project->server, node->id);
-	appendf(&context->log, NULL, _("Modified node #%ld "), node->id);
+			      project->server, OSM_ID(node));
+	appendf(&context->log, NULL, _("Modified node #%ld "), OSM_ID(node));
       }
 
       /* upload this node */
@@ -504,7 +504,7 @@ static void osm_upload_nodes(osm_upload_context_t *context) {
 				     context->appdata->settings->username, 
 				     context->appdata->settings->password);
 	if(osm_update_item(&context->log, xml_str, url, cred, 
-		   (node->flags & OSM_FLAG_NEW)?&(node->id):&(node->version),
+	   (node->flags & OSM_FLAG_NEW)?&(OSM_ID(node)):&OSM_VERSION(node),
 			   context->proxy)) {
 	  node->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_NEW);
 	  project->data_dirty = TRUE;
@@ -528,10 +528,10 @@ static void osm_delete_ways(osm_upload_context_t *context) {
     if(way->flags & OSM_FLAG_DELETED) {
       printf("deleting way on server\n");
 
-      appendf(&context->log, NULL, _("Delete way #%ld "), way->id);
+      appendf(&context->log, NULL, _("Delete way #%ld "), OSM_ID(way));
 
       char *url = g_strdup_printf("%s/way/" ITEM_ID_FORMAT, 
-				  project->server, way->id);
+				  project->server, OSM_ID(way));
       char *cred = g_strdup_printf("%s:%s", 
 				   context->appdata->settings->username, 
 				   context->appdata->settings->password);
@@ -568,8 +568,8 @@ static void osm_upload_ways(osm_upload_context_t *context) {
 	appendf(&context->log, NULL, _("New way "));
       } else {
 	url = g_strdup_printf("%s/way/" ITEM_ID_FORMAT, 
-			      project->server, way->id);
-	appendf(&context->log, NULL, _("Modified way #%ld "), way->id);
+			      project->server, OSM_ID(way));
+	appendf(&context->log, NULL, _("Modified way #%ld "), OSM_ID(way));
       }
       
       /* upload this node */
@@ -582,7 +582,7 @@ static void osm_upload_ways(osm_upload_context_t *context) {
 				     context->appdata->settings->username, 
 				     context->appdata->settings->password);
 	if(osm_update_item(&context->log, xml_str, url, cred, 
-		   (way->flags & OSM_FLAG_NEW)?&(way->id):&(way->version),
+	   (way->flags & OSM_FLAG_NEW)?&(OSM_ID(way)):&OSM_VERSION(way),
 			   context->proxy)) {
 	  way->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_NEW);
 	  project->data_dirty = TRUE;
@@ -606,10 +606,11 @@ static void osm_delete_relations(osm_upload_context_t *context) {
     if(relation->flags & OSM_FLAG_DELETED) {
       printf("deleting relation on server\n");
 
-      appendf(&context->log, NULL, _("Delete relation #%ld "), relation->id);
+      appendf(&context->log, NULL, 
+	      _("Delete relation #%ld "), OSM_ID(relation));
 
       char *url = g_strdup_printf("%s/relation/" ITEM_ID_FORMAT, 
-				  project->server, relation->id);
+				  project->server, OSM_ID(relation));
       char *cred = g_strdup_printf("%s:%s", 
 				   context->appdata->settings->username, 
 				   context->appdata->settings->password);
@@ -646,9 +647,9 @@ static void osm_upload_relations(osm_upload_context_t *context) {
 	appendf(&context->log, NULL, _("New relation "));
       } else {
 	url = g_strdup_printf("%s/relation/" ITEM_ID_FORMAT, 
-			      project->server,relation->id);
+			      project->server,OSM_ID(relation));
 	appendf(&context->log, NULL, _("Modified relation #%ld "), 
-		relation->id);
+		OSM_ID(relation));
       }
       
       /* upload this relation */
@@ -661,8 +662,8 @@ static void osm_upload_relations(osm_upload_context_t *context) {
 				     context->appdata->settings->username, 
 				     context->appdata->settings->password);
 	if(osm_update_item(&context->log, xml_str, url, cred, 
-	   (relation->flags & OSM_FLAG_NEW)?&(relation->id):&(relation->version),
-			   context->proxy)) {
+	   (relation->flags & OSM_FLAG_NEW)?&(OSM_ID(relation)):&
+			   OSM_VERSION(relation), context->proxy)) {
 	  relation->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_NEW);
 	  project->data_dirty = TRUE;
 	}

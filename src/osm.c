@@ -204,8 +204,8 @@ gboolean osm_way_ends_with_node(way_t *way, node_t *node) {
 
 /* ------------------- node handling ------------------- */
 
-void osm_node_free(osm_t *osm, icon_t **icon, node_t *node) {
-  item_id_t id = node->id;
+void osm_node_free(hash_table_t *hash_table, icon_t **icon, node_t *node) {
+  item_id_t id = OSM_ID(node);
 
   if(node->icon_buf) 
     icon_free(icon, node->icon_buf);
@@ -218,11 +218,11 @@ void osm_node_free(osm_t *osm, icon_t **icon, node_t *node) {
   g_free(node);
 
   /* also remove node from hash table */
-  if(osm && id > 0 && osm->node_hash) {
+  if(id > 0 && hash_table) {
     // use hash table if present
-    hash_item_t **item = &(osm->node_hash->hash[ID2HASH(id)]);
+    hash_item_t **item = &(hash_table->hash[ID2HASH(id)]);
     while(*item) {
-      if((*item)->data.node->id == id) {
+      if(OSM_ID((*item)->data.node) == id) {
 	hash_item_t *cur = *item;
 	*item = (*item)->next;
 	g_free(cur);
@@ -234,10 +234,10 @@ void osm_node_free(osm_t *osm, icon_t **icon, node_t *node) {
   }
 }
 
-static void osm_nodes_free(osm_t *osm, icon_t **icon, node_t *node) {
+static void osm_nodes_free(hash_table_t *table, icon_t **icon, node_t *node) {
   while(node) {
     node_t *next = node->next;
-    osm_node_free(osm, icon, node);
+    osm_node_free(table, icon, node);
     node = next;
   }
 }
@@ -246,11 +246,11 @@ void osm_node_dump(node_t *node) {
   char buf[64];
   struct tm tm;
     
-  printf("Id:      "ITEM_ID_FORMAT"\n", node->id);
-  printf("User:    %s\n", node->user?node->user->name:"<unspecified>");
+  printf("Id:      "ITEM_ID_FORMAT"\n", OSM_ID(node));
+  printf("User:    %s\n", OSM_USER(node)?OSM_USER(node)->name:"<unspecified>");
   printf("Visible: %s\n", node->visible?"yes":"no");
   
-  localtime_r(&node->time, &tm);
+  localtime_r(&OSM_TIME(node), &tm);
   strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S %Z", &tm);
   printf("Time:    %s\n", buf);
   osm_tags_dump(node->tag);
@@ -278,8 +278,10 @@ void osm_node_chain_free(node_chain_t *node_chain) {
   }
 }
 
-void osm_way_free(way_t *way) {
-  //  printf("freeing way #" ITEM_ID_FORMAT "\n", way->id);
+void osm_way_free(hash_table_t *hash_table, way_t *way) {
+  item_id_t id = OSM_ID(way);
+
+  //  printf("freeing way #" ITEM_ID_FORMAT "\n", OSM_ID(way));
 
   osm_node_chain_free(way->node_chain);
   osm_tags_free(way->tag);
@@ -288,12 +290,28 @@ void osm_way_free(way_t *way) {
   g_assert(!way->map_item_chain);
 
   g_free(way);
+
+  /* also remove way from hash table */
+  if(id > 0 && hash_table) {
+    // use hash table if present
+    hash_item_t **item = &(hash_table->hash[ID2HASH(id)]);
+    while(*item) {
+      if(OSM_ID((*item)->data.way) == id) {
+	hash_item_t *cur = *item;
+	*item = (*item)->next;
+	g_free(cur);
+	return;
+      }
+      
+      item = &(*item)->next;
+    }
+  }
 }
 
-static void osm_ways_free(way_t *way) {
+static void osm_ways_free(hash_table_t *hash_table, way_t *way) {
   while(way) {
     way_t *next = way->next;
-    osm_way_free(way);
+    osm_way_free(hash_table, way);
     way = next;
   }
 }
@@ -324,16 +342,16 @@ void osm_way_dump(way_t *way) {
   char buf[64];
   struct tm tm;
 
-  printf("Id:      "ITEM_ID_FORMAT"\n", way->id);
-  printf("User:    %s\n", way->user?way->user->name:"<unspecified>");
+  printf("Id:      "ITEM_ID_FORMAT"\n", OSM_ID(way));
+  printf("User:    %s\n", OSM_USER(way)?OSM_USER(way)->name:"<unspecified>");
   printf("Visible: %s\n", way->visible?"yes":"no");
   node_chain_t *node_chain = way->node_chain;
   while(node_chain) {
-    printf("  Node:  "ITEM_ID_FORMAT"\n", node_chain->node->id);
+    printf("  Node:  "ITEM_ID_FORMAT"\n", OSM_ID(node_chain->node));
     node_chain = node_chain->next;
   }
   
-  localtime_r(&way->time, &tm);
+  localtime_r(&OSM_TIME(way), &tm);
   strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S %Z", &tm);
   printf("Time:    %s\n", buf);
   osm_tags_dump(way->tag);
@@ -405,9 +423,9 @@ void osm_relations_dump(relation_t *relation) {
     char buf[64];
     struct tm tm;
 
-    printf("Id:      "ITEM_ID_FORMAT"\n", relation->id);
+    printf("Id:      "ITEM_ID_FORMAT"\n", OSM_ID(relation));
     printf("User:    %s\n", 
-	   relation->user?relation->user->name:"<unspecified>");
+	   OSM_USER(relation)?OSM_USER(relation)->name:"<unspecified>");
     printf("Visible: %s\n", relation->visible?"yes":"no");
 
     member_t *member = relation->member;
@@ -422,26 +440,26 @@ void osm_relations_dump(relation_t *relation) {
       case NODE:
 	if(member->object.node)
 	  printf(" Member: Node, id = " ITEM_ID_FORMAT ", role = %s\n", 
-		 member->object.node->id, member->role);
+		 OBJECT_ID(member->object), member->role);
 	break;
 
       case WAY:
 	if(member->object.way)
 	  printf(" Member: Way, id = " ITEM_ID_FORMAT ", role = %s\n", 
-		 member->object.way->id, member->role);
+		 OBJECT_ID(member->object), member->role);
 	break;
 	
       case RELATION:
 	if(member->object.relation)
 	  printf(" Member: Relation, id = " ITEM_ID_FORMAT ", role = %s\n", 
-		 member->object.relation->id, member->role);
+		 OBJECT_ID(member->object), member->role);
 	break;
       }
 
       member = member->next;
     }
     
-    localtime_r(&relation->time, &tm);
+    localtime_r(&OSM_TIME(relation), &tm);
     strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S %Z", &tm);
     printf("Time:    %s\n", buf);
     osm_tags_dump(relation->tag);
@@ -548,8 +566,8 @@ void osm_free(icon_t **icon, osm_t *osm) {
 
   if(osm->bounds)   osm_bounds_free(osm->bounds);
   if(osm->user)     osm_users_free(osm->user);
-  if(osm->way)      osm_ways_free(osm->way);
-  if(osm->node)     osm_nodes_free(osm, icon, osm->node);
+  if(osm->way)      osm_ways_free(osm->way_hash, osm->way);
+  if(osm->node)     osm_nodes_free(osm->node_hash, icon, osm->node);
   if(osm->relation) osm_relations_free(osm->relation);
   g_free(osm);
 }
@@ -694,13 +712,13 @@ static node_t *process_node(xmlTextReaderPtr reader, osm_t *osm) {
 
   char *prop;
   if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "id"))) {
-    node->id = strtoul(prop, NULL, 10);
+    OSM_ID(node) = strtoul(prop, NULL, 10);
     xmlFree(prop);
   }
 
   /* new in api 0.6: */
   if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "version"))) {
-    node->version = strtoul(prop, NULL, 10);
+    OSM_VERSION(node) = strtoul(prop, NULL, 10);
     xmlFree(prop);
   }
 
@@ -715,7 +733,7 @@ static node_t *process_node(xmlTextReaderPtr reader, osm_t *osm) {
   }
 
   if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "user"))) {
-    node->user = osm_user(osm, prop);
+    OSM_USER(node) = osm_user(osm, prop);
     xmlFree(prop);
   }
 
@@ -725,7 +743,7 @@ static node_t *process_node(xmlTextReaderPtr reader, osm_t *osm) {
   }
 
   if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "timestamp"))) {
-    node->time = convert_iso8601(prop);
+    OSM_TIME(node) = convert_iso8601(prop);
     xmlFree(prop);
   }
 
@@ -733,7 +751,7 @@ static node_t *process_node(xmlTextReaderPtr reader, osm_t *osm) {
 
   /* append node to end of hash table if present */
   if(osm->node_hash) {
-    hash_item_t **item = &osm->node_hash->hash[ID2HASH(node->id)];
+    hash_item_t **item = &osm->node_hash->hash[ID2HASH(OSM_ID(node))];
     while(*item) item = &(*item)->next;
     
     *item = g_new0(hash_item_t, 1);
@@ -797,18 +815,18 @@ static way_t *process_way(xmlTextReaderPtr reader, osm_t *osm) {
 
   char *prop;
   if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "id"))) {
-    way->id = strtoul(prop, NULL, 10);
+    OSM_ID(way) = strtoul(prop, NULL, 10);
     xmlFree(prop);
   }
 
   /* new in api 0.6: */
   if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "version"))) {
-    way->version = strtoul(prop, NULL, 10);
+    OSM_VERSION(way) = strtoul(prop, NULL, 10);
     xmlFree(prop);
   }
 
   if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "user"))) {
-    way->user = osm_user(osm, prop);
+    OSM_USER(way) = osm_user(osm, prop);
     xmlFree(prop);
   }
 
@@ -818,13 +836,13 @@ static way_t *process_way(xmlTextReaderPtr reader, osm_t *osm) {
   }
 
   if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "timestamp"))) {
-    way->time = convert_iso8601(prop);
+    OSM_TIME(way) = convert_iso8601(prop);
     xmlFree(prop);
   }
 
   /* append way to end of hash table if present */
   if(osm->way_hash) {
-    hash_item_t **item = &osm->way_hash->hash[ID2HASH(way->id)];
+    hash_item_t **item = &osm->way_hash->hash[ID2HASH(OSM_ID(way))];
     while(*item) item = &(*item)->next;
     
     *item = g_new0(hash_item_t, 1);
@@ -934,18 +952,18 @@ static relation_t *process_relation(xmlTextReaderPtr reader, osm_t *osm) {
 
   char *prop;
   if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "id"))) {
-    relation->id = strtoul(prop, NULL, 10);
+    OSM_ID(relation) = strtoul(prop, NULL, 10);
     xmlFree(prop);
   }
 
   /* new in api 0.6: */
   if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "version"))) {
-    relation->version = strtoul(prop, NULL, 10);
+    OSM_VERSION(relation) = strtoul(prop, NULL, 10);
     xmlFree(prop);
   }
 
   if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "user"))) {
-    relation->user = osm_user(osm, prop);
+    OSM_USER(relation) = osm_user(osm, prop);
     xmlFree(prop);
   }
 
@@ -955,7 +973,7 @@ static relation_t *process_relation(xmlTextReaderPtr reader, osm_t *osm) {
   }
 
   if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "timestamp"))) {
-    relation->time = convert_iso8601(prop);
+    OSM_TIME(relation) = convert_iso8601(prop);
     xmlFree(prop);
   }
 
@@ -1270,10 +1288,10 @@ static char *osm_generate_xml(osm_t *osm, item_id_t changeset,
 					 BAD_CAST "node", NULL);
       /* new nodes don't have an id, but get one after the upload */
       if(!(node->flags & OSM_FLAG_NEW)) {
-	snprintf(str, sizeof(str), "%u", (unsigned)node->id);
+	snprintf(str, sizeof(str), ITEM_ID_FORMAT, OSM_ID(node));
 	xmlNewProp(node_node, BAD_CAST "id", BAD_CAST str);
       }
-      snprintf(str, sizeof(str), "%u", (unsigned)node->version);
+      snprintf(str, sizeof(str), "%u", OSM_VERSION(node));
       xmlNewProp(node_node, BAD_CAST "version", BAD_CAST str);
       snprintf(str, sizeof(str), "%u", (unsigned)changeset);
       xmlNewProp(node_node, BAD_CAST "changeset", BAD_CAST str);
@@ -1289,9 +1307,9 @@ static char *osm_generate_xml(osm_t *osm, item_id_t changeset,
     {
       way_t *way = (way_t*)item;
       xmlNodePtr way_node = xmlNewChild(root_node, NULL, BAD_CAST "way", NULL);
-      snprintf(str, sizeof(str), "%u", (unsigned)way->id);
+      snprintf(str, sizeof(str), ITEM_ID_FORMAT, OSM_ID(way));
       xmlNewProp(way_node, BAD_CAST "id", BAD_CAST str);
-      snprintf(str, sizeof(str), "%u", (unsigned)way->version);
+      snprintf(str, sizeof(str), "%u", OSM_VERSION(way));
       xmlNewProp(way_node, BAD_CAST "version", BAD_CAST str);
       snprintf(str, sizeof(str), "%u", (unsigned)changeset);
       xmlNewProp(way_node, BAD_CAST "changeset", BAD_CAST str);
@@ -1299,7 +1317,7 @@ static char *osm_generate_xml(osm_t *osm, item_id_t changeset,
       node_chain_t *node_chain = way->node_chain;
       while(node_chain) {
 	xmlNodePtr nd_node = xmlNewChild(way_node, NULL, BAD_CAST "nd", NULL);
-	char *str = g_strdup_printf(ITEM_ID_FORMAT, node_chain->node->id);
+	char *str = g_strdup_printf(ITEM_ID_FORMAT, OSM_ID(node_chain->node));
 	xmlNewProp(nd_node, BAD_CAST "ref", BAD_CAST str);
 	g_free(str);
 	node_chain = node_chain->next;
@@ -1314,9 +1332,9 @@ static char *osm_generate_xml(osm_t *osm, item_id_t changeset,
       relation_t *relation = (relation_t*)item;
       xmlNodePtr rel_node = xmlNewChild(root_node, NULL, 
 					BAD_CAST "relation", NULL);
-      snprintf(str, sizeof(str), "%u", (unsigned)relation->id);
+      snprintf(str, sizeof(str), ITEM_ID_FORMAT, OSM_ID(relation));
       xmlNewProp(rel_node, BAD_CAST "id", BAD_CAST str);
-      snprintf(str, sizeof(str), "%u", (unsigned)relation->version);
+      snprintf(str, sizeof(str), "%u", OSM_VERSION(relation));
       xmlNewProp(rel_node, BAD_CAST "version", BAD_CAST str);
       snprintf(str, sizeof(str), "%u", (unsigned)changeset);
       xmlNewProp(rel_node, BAD_CAST "changeset", BAD_CAST str);
@@ -1324,22 +1342,19 @@ static char *osm_generate_xml(osm_t *osm, item_id_t changeset,
       member_t *member = relation->member;
       while(member) {
 	xmlNodePtr m_node = xmlNewChild(rel_node,NULL,BAD_CAST "member", NULL);
-	char *str = NULL;
+	char *str = g_strdup_printf(ITEM_ID_FORMAT, OBJECT_ID(member->object));
 
 	switch(member->object.type) {
 	case NODE:
 	  xmlNewProp(m_node, BAD_CAST "type", BAD_CAST "node");
-	  str = g_strdup_printf(ITEM_ID_FORMAT, member->object.node->id);
 	  break;
 
 	case WAY:
 	  xmlNewProp(m_node, BAD_CAST "type", BAD_CAST "way");
-	  str = g_strdup_printf(ITEM_ID_FORMAT, member->object.way->id);
 	  break;
 
 	case RELATION:
 	  xmlNewProp(m_node, BAD_CAST "type", BAD_CAST "relation");
-	  str = g_strdup_printf(ITEM_ID_FORMAT, member->object.relation->id);
 	  break;
 
 	default:
@@ -1432,7 +1447,7 @@ node_t *osm_get_node_by_id(osm_t *osm, item_id_t id) {
     // use hash table if present
     hash_item_t *item = osm->node_hash->hash[ID2HASH(id)];
     while(item) {
-      if(item->data.node->id == id)
+      if(OSM_ID(item->data.node) == id)
 	return item->data.node;
       
       item = item->next;
@@ -1442,7 +1457,7 @@ node_t *osm_get_node_by_id(osm_t *osm, item_id_t id) {
   /* use linear search if no hash tables are present or search in hash table failed */
   node_t *node = osm->node;
   while(node) {
-    if(node->id == id)
+    if(OSM_ID(node) == id)
       return node;
     
     node = node->next;
@@ -1456,7 +1471,7 @@ way_t *osm_get_way_by_id(osm_t *osm, item_id_t id) {
     // use hash table if present
     hash_item_t *item = osm->way_hash->hash[ID2HASH(id)];
     while(item) {
-      if(item->data.way->id == id)
+      if(OSM_ID(item->data.way) == id)
 	return item->data.way;
       
       item = item->next;
@@ -1466,7 +1481,7 @@ way_t *osm_get_way_by_id(osm_t *osm, item_id_t id) {
   /* use linear search if no hash tables are present or search on hash table failed */
   way_t *way = osm->way;
   while(way) {
-    if(way->id == id)
+    if(OSM_ID(way) == id)
       return way;
     
     way = way->next;
@@ -1479,7 +1494,7 @@ relation_t *osm_get_relation_by_id(osm_t *osm, item_id_t id) {
   // use linear search
   relation_t *relation = osm->relation;
   while(relation) {
-    if(relation->id == id)
+    if(OSM_ID(relation) == id)
       return relation;
 
     relation = relation->next;
@@ -1497,7 +1512,7 @@ item_id_t osm_new_way_id(osm_t *osm) {
     gboolean found = FALSE;
     way_t *way = osm->way;
     while(way) {
-      if(way->id == id)
+      if(OSM_ID(way) == id)
 	found = TRUE;
 
       way = way->next;
@@ -1519,7 +1534,7 @@ item_id_t osm_new_node_id(osm_t *osm) {
     gboolean found = FALSE;
     node_t *node = osm->node;
     while(node) {
-      if(node->id == id)
+      if(OSM_ID(node) == id)
 	found = TRUE;
 
       node = node->next;
@@ -1541,7 +1556,7 @@ item_id_t osm_new_relation_id(osm_t *osm) {
     gboolean found = FALSE;
     relation_t *relation = osm->relation;
     while(relation) {
-      if(relation->id == id)
+      if(OSM_ID(relation) == id)
 	found = TRUE;
 
       relation = relation->next;
@@ -1560,11 +1575,11 @@ node_t *osm_node_new(osm_t *osm, gint x, gint y) {
   printf("Creating new node\n");
 
   node_t *node = g_new0(node_t, 1);
-  node->version = 1;
+  OSM_VERSION(node) = 1;
   node->lpos.x = x; 
   node->lpos.y = y;
   node->visible = TRUE;
-  node->time = time(NULL);
+  OSM_TIME(node) = time(NULL);
 
   /* convert screen position back to ll */
   lpos2pos(osm->bounds, &node->lpos, &node->pos);
@@ -1579,7 +1594,7 @@ node_t *osm_node_new(osm_t *osm, gint x, gint y) {
 void osm_node_attach(osm_t *osm, node_t *node) {
   printf("Attaching node\n");
 
-  node->id = osm_new_node_id(osm);
+  OSM_ID(node) = osm_new_node_id(osm);
   node->flags = OSM_FLAG_NEW;
 
   /* attach to end of node list */
@@ -1601,10 +1616,10 @@ way_t *osm_way_new(void) {
   printf("Creating new way\n");
 
   way_t *way = g_new0(way_t, 1);
-  way->version = 1;
+  OSM_VERSION(way) = 1;
   way->visible = TRUE;
   way->flags = OSM_FLAG_NEW;
-  way->time = time(NULL);
+  OSM_TIME(way) = time(NULL);
 
   return way;
 }
@@ -1612,7 +1627,7 @@ way_t *osm_way_new(void) {
 void osm_way_attach(osm_t *osm, way_t *way) {
   printf("Attaching way\n");
 
-  way->id = osm_new_way_id(osm);
+  OSM_ID(way) = osm_new_way_id(osm);
   way->flags = OSM_FLAG_NEW;
 
   /* attach to end of way list */
@@ -1621,7 +1636,7 @@ void osm_way_attach(osm_t *osm, way_t *way) {
   *lway = way;
 }
 
-void osm_way_restore(osm_t *osm, way_t *way) {
+void osm_way_restore(osm_t *osm, way_t *way, item_id_chain_t *id_chain) {
   printf("Restoring way\n");
 
   /* attach to end of node list */
@@ -1630,15 +1645,21 @@ void osm_way_restore(osm_t *osm, way_t *way) {
   *lway = way;
 
   /* restore node memberships by converting ids into real pointers */
-  node_chain_t *chain = way->node_chain;
-  while(chain) {
-    printf("Node "ITEM_ID_FORMAT" is member\n", chain->id);
-    chain->node = osm_get_node_by_id(osm, chain->id);
-    chain->node->ways++;
+  g_assert(!way->node_chain);
+  node_chain_t **node_chain = &(way->node_chain);
+  while(id_chain) {
+    item_id_chain_t *id_next = id_chain->next;
+    printf("Node "ITEM_ID_FORMAT" is member\n", id_chain->id);
 
-    printf("   -> %p\n", chain->node);
+    *node_chain = g_new0(node_chain_t, 1);
+    (*node_chain)->node = osm_get_node_by_id(osm, id_chain->id);
+    (*node_chain)->node->ways++;
 
-    chain = chain->next;
+    printf("   -> %p\n", (*node_chain)->node);
+
+    g_free(id_chain);
+    id_chain = id_next;
+    node_chain = &(*node_chain)->next;
   }
 
   printf("done\n");
@@ -1653,7 +1674,7 @@ way_chain_t *osm_node_delete(osm_t *osm, icon_t **icon,
   /* new nodes aren't stored on the server and are just deleted permanently */
   if(node->flags & OSM_FLAG_NEW) {
     printf("About to delete NEW node #" ITEM_ID_FORMAT 
-	   " -> force permanent delete\n", node->id);
+	   " -> force permanent delete\n", OSM_ID(node));
     permanently = TRUE;
   }
 
@@ -1689,10 +1710,10 @@ way_chain_t *osm_node_delete(osm_t *osm, icon_t **icon,
   }
 
   if(!permanently) {
-    printf("mark node #" ITEM_ID_FORMAT " as deleted\n", node->id);
+    printf("mark node #" ITEM_ID_FORMAT " as deleted\n", OSM_ID(node));
     node->flags |= OSM_FLAG_DELETED;
   } else {
-    printf("permanently delete node #" ITEM_ID_FORMAT "\n", node->id);
+    printf("permanently delete node #" ITEM_ID_FORMAT "\n", OSM_ID(node));
 
     /* remove it from the chain */
     node_t **cnode = &osm->node;
@@ -1703,7 +1724,8 @@ way_chain_t *osm_node_delete(osm_t *osm, icon_t **icon,
 	found++;
 	*cnode = (*cnode)->next;
 
-	osm_node_free(osm, icon, node);
+	g_assert(osm);
+	osm_node_free(osm->node_hash, icon, node);
       } else
 	cnode = &((*cnode)->next);
     }
@@ -1724,7 +1746,8 @@ guint osm_way_number_of_nodes(way_t *way) {
 }
 
 /* return all relations a node is in */
-relation_chain_t *osm_node_to_relation(osm_t *osm, node_t *node) {
+relation_chain_t *osm_node_to_relation(osm_t *osm, node_t *node, 
+				       gboolean via_way) {
   relation_chain_t *rel_chain = NULL, **cur_rel_chain = &rel_chain;
 
   relation_t *relation = osm->relation;
@@ -1740,16 +1763,18 @@ relation_chain_t *osm_node_to_relation(osm_t *osm, node_t *node) {
 	  is_member = TRUE;
 	break;
 
-      case WAY: {
-	/* ways have to be checked for the nodes they consist of */
-	node_chain_t *chain = member->object.way->node_chain;
-	while(chain && !is_member) {
-	  if(chain->node == node)
-	    is_member = TRUE;
-
-	  chain = chain->next;
+      case WAY: 
+	if(via_way) {
+	  /* ways have to be checked for the nodes they consist of */
+	  node_chain_t *chain = member->object.way->node_chain;
+	  while(chain && !is_member) {
+	    if(chain->node == node)
+	      is_member = TRUE;
+	    
+	    chain = chain->next;
+	  }
 	}
-      } break;
+	break;
 
       default:
 	break;
@@ -1848,7 +1873,7 @@ relation_chain_t *osm_object_to_relation(osm_t *osm, object_t *object) {
 
   switch(object->type) {
   case NODE:
-    rel_chain = osm_node_to_relation(osm, object->node);
+    rel_chain = osm_node_to_relation(osm, object->node, FALSE);
     break;
 
   case WAY:
@@ -1913,7 +1938,7 @@ gboolean osm_position_within_bounds(osm_t *osm, gint x, gint y) {
 /* be deleted */
 void osm_node_remove_from_relation(osm_t *osm, node_t *node) {
   relation_t *relation = osm->relation;
-  printf("removing node #" ITEM_ID_FORMAT " from all relations:\n", node->id);
+  printf("removing node #" ITEM_ID_FORMAT " from all relations:\n", OSM_ID(node));
 
   while(relation) {
     member_t **member = &relation->member;
@@ -1921,7 +1946,7 @@ void osm_node_remove_from_relation(osm_t *osm, node_t *node) {
       if(((*member)->object.type == NODE) &&
 	 ((*member)->object.node == node)) {
 
-	printf("  from relation #" ITEM_ID_FORMAT "\n", relation->id);
+	printf("  from relation #" ITEM_ID_FORMAT "\n", OSM_ID(relation));
 	
 	member_t *cur = *member;
 	*member = (*member)->next;
@@ -1938,7 +1963,7 @@ void osm_node_remove_from_relation(osm_t *osm, node_t *node) {
 /* remove the given way from all relations */
 void osm_way_remove_from_relation(osm_t *osm, way_t *way) {
   relation_t *relation = osm->relation;
-  printf("removing way #" ITEM_ID_FORMAT " from all relations:\n", way->id);
+  printf("removing way #" ITEM_ID_FORMAT " from all relations:\n", OSM_ID(way));
 
   while(relation) {
     member_t **member = &relation->member;
@@ -1946,7 +1971,7 @@ void osm_way_remove_from_relation(osm_t *osm, way_t *way) {
       if(((*member)->object.type == WAY) &&
 	 ((*member)->object.way == way)) {
 
-	printf("  from relation #" ITEM_ID_FORMAT "\n", relation->id);
+	printf("  from relation #" ITEM_ID_FORMAT "\n", OSM_ID(relation));
 	
 	member_t *cur = *member;
 	*member = (*member)->next;
@@ -1964,10 +1989,10 @@ relation_t *osm_relation_new(void) {
   printf("Creating new relation\n");
 
   relation_t *relation = g_new0(relation_t, 1);
-  relation->version = 1;
+  OSM_VERSION(relation) = 1;
   relation->visible = TRUE;
   relation->flags = OSM_FLAG_NEW;
-  relation->time = time(NULL);
+  OSM_TIME(relation) = time(NULL);
 
   return relation;
 }
@@ -1975,7 +2000,7 @@ relation_t *osm_relation_new(void) {
 void osm_relation_attach(osm_t *osm, relation_t *relation) {
   printf("Attaching relation\n");
 
-  relation->id = osm_new_relation_id(osm);
+  OSM_ID(relation) = osm_new_relation_id(osm);
   relation->flags = OSM_FLAG_NEW;
 
   /* attach to end of relation list */
@@ -1991,7 +2016,7 @@ void osm_way_delete(osm_t *osm, icon_t **icon,
   /* new ways aren't stored on the server and are just deleted permanently */
   if(way->flags & OSM_FLAG_NEW) {
     printf("About to delete NEW way #" ITEM_ID_FORMAT 
-	   " -> force permanent delete\n", way->id);
+	   " -> force permanent delete\n", OSM_ID(way));
     permanently = TRUE;
   }
 
@@ -2001,7 +2026,7 @@ void osm_way_delete(osm_t *osm, icon_t **icon,
 
     (*chain)->node->ways--;
     printf("checking node #" ITEM_ID_FORMAT " (still used by %d)\n", 
-	   (*chain)->node->id, (*chain)->node->ways);
+	   OSM_ID((*chain)->node), (*chain)->node->ways);
 
     /* this node must only be part of this way */
     if(!(*chain)->node->ways) {
@@ -2026,10 +2051,10 @@ void osm_way_delete(osm_t *osm, icon_t **icon,
   way->node_chain = NULL;
 
   if(!permanently) {
-    printf("mark way #" ITEM_ID_FORMAT " as deleted\n", way->id);
+    printf("mark way #" ITEM_ID_FORMAT " as deleted\n", OSM_ID(way));
     way->flags |= OSM_FLAG_DELETED;
   } else {
-    printf("permanently delete way #" ITEM_ID_FORMAT "\n", way->id);
+    printf("permanently delete way #" ITEM_ID_FORMAT "\n", OSM_ID(way));
 
     /* remove it from the chain */
     way_t **cway = &osm->way;
@@ -2040,7 +2065,8 @@ void osm_way_delete(osm_t *osm, icon_t **icon,
 	found++;
 	*cway = (*cway)->next;
 
-	osm_way_free(way);
+	g_assert(osm);
+	osm_way_free(osm->way_hash, way);
       } else
 	cway = &((*cway)->next);
     }
@@ -2055,7 +2081,7 @@ void osm_relation_delete(osm_t *osm, relation_t *relation,
   /* deleted permanently */
   if(relation->flags & OSM_FLAG_NEW) {
     printf("About to delete NEW relation #" ITEM_ID_FORMAT 
-	   " -> force permanent delete\n", relation->id);
+	   " -> force permanent delete\n", OSM_ID(relation));
     permanently = TRUE;
   }
 
@@ -2063,10 +2089,11 @@ void osm_relation_delete(osm_t *osm, relation_t *relation,
   /* don't have any reference to the relation they are part of */
 
   if(!permanently) {
-    printf("mark relation #" ITEM_ID_FORMAT " as deleted\n", relation->id);
+    printf("mark relation #" ITEM_ID_FORMAT " as deleted\n", OSM_ID(relation));
     relation->flags |= OSM_FLAG_DELETED;
   } else {
-    printf("permanently delete relation #" ITEM_ID_FORMAT "\n", relation->id);
+    printf("permanently delete relation #" ITEM_ID_FORMAT "\n", 
+	   OSM_ID(relation));
 
     /* remove it from the chain */
     relation_t **crelation = &osm->relation;
@@ -2198,7 +2225,7 @@ osm_way_reverse_direction_sensitive_roles(osm_t *osm, way_t *way) {
             break;
         }
         if (member->object.type == WAY_ID) {
-          if (member->object.id == way->id)
+          if (member->object.id == OSM_ID(way))
             break;
         }
       }
@@ -2405,17 +2432,12 @@ char *osm_object_string(object_t *object) {
     return g_strdup_printf("%s #<unspec>", type_str);
     break;
   case NODE:
-    g_assert(object->node);
-    return g_strdup_printf("%s #" ITEM_ID_FORMAT, type_str, object->node->id);
-    break;
   case WAY:
-    g_assert(object->way);
-    return g_strdup_printf("%s #" ITEM_ID_FORMAT, type_str, object->way->id);
-    break;
   case RELATION:
-    g_assert(object->relation);
+    g_assert(object->ptr);
     return g_strdup_printf("%s #" ITEM_ID_FORMAT, type_str, 
-			   object->relation->id);
+			   OBJECT_ID(*object));
+    break;
     break;
   case NODE_ID:
   case WAY_ID:
@@ -2434,13 +2456,9 @@ char *osm_object_id_string(object_t *object) {
     return NULL;
     break;
   case NODE:
-    return g_strdup_printf("#"ITEM_ID_FORMAT, object->node->id);
-    break;
   case WAY:
-    return g_strdup_printf("#"ITEM_ID_FORMAT, object->way->id);
-    break;
   case RELATION:
-    return g_strdup_printf("#"ITEM_ID_FORMAT, object->relation->id);
+    return g_strdup_printf("#"ITEM_ID_FORMAT, OBJECT_ID(*object));
     break;
   case NODE_ID:
   case WAY_ID:
@@ -2485,13 +2503,9 @@ item_id_t osm_object_get_id(object_t *object) {
     return ID_ILLEGAL;
     break;
   case NODE:
-    return object->node->id;
-    break;
   case WAY:
-    return object->way->id;
-    break;
   case RELATION:
-    return object->relation->id;
+    return OBJECT_ID(*object);
     break;
   case NODE_ID:
   case WAY_ID:

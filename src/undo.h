@@ -43,6 +43,7 @@ typedef enum {
 typedef struct undo_op_s {
   undo_type_t type;   /* the type of this particular database/map operation */
   object_t *object;
+  item_id_chain_t *id_chain;       /* ref id list, e.g. for nodes of way */
   struct undo_op_s *next;
 } undo_op_t;
 

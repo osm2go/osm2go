@@ -64,14 +64,20 @@ typedef struct tag_s {
   struct tag_s *next;
 } tag_t;
 
-typedef struct node_s {
+typedef struct {
   item_id_t id;
   item_id_t version;
+  user_t *user;
+  time_t time;
+  
+} base_object_t;
+
+typedef struct node_s {
+  base_object_t base;
+
   pos_t pos;
   lpos_t lpos;
-  user_t *user;
   gboolean visible;
-  time_t time;
   tag_t *tag;
   int ways;
   int flags;
@@ -86,11 +92,18 @@ typedef struct node_s {
   struct node_s *next;
 } node_t;
 
+typedef enum {
+  ILLEGAL=0, NODE, WAY, RELATION, NODE_ID, WAY_ID, RELATION_ID
+} type_t;
+
+typedef struct item_id_chain_s {
+  type_t type;
+  item_id_t id;
+  struct item_id_chain_s *next;
+} item_id_chain_t;
+
 typedef struct node_chain {
-  union {
-    node_t *node;
-    item_id_t id;
-  };
+  node_t *node;
   struct node_chain *next;
 } node_chain_t;
 
@@ -98,12 +111,9 @@ typedef struct node_chain {
 #define OSM_DRAW_FLAG_BG    (1<<1)
 
 typedef struct way_s {
-  item_id_t id;
-  item_id_t version;
-  item_id_t changeset;
-  user_t *user;
+  base_object_t base;
+
   gboolean visible;
-  time_t time;
   tag_t *tag;
   node_chain_t *node_chain;
   int flags;
@@ -140,13 +150,24 @@ typedef struct way_chain {
   struct way_chain *next;
 } way_chain_t;
 
+/* return a pointer to the "base" object of an object */
+#define OBJECT_BASE(a)     ((base_object_t*)((a).ptr))
+#define OBJECT_ID(a)       (OBJECT_BASE(a)->id)
+#define OBJECT_VERSION(a)  (OBJECT_BASE(a)->version)
+#define OBJECT_USER(a)     (OBJECT_BASE(a)->user)
+#define OBJECT_TIME(a)     (OBJECT_BASE(a)->time)
+
+/* osm base type access macros */
+#define OSM_BASE(a)        ((base_object_t*)(a))
+#define OSM_ID(a)          (OSM_BASE(a)->id)
+#define OSM_VERSION(a)     (OSM_BASE(a)->version)
+#define OSM_USER(a)        (OSM_BASE(a)->user)
+#define OSM_TIME(a)        (OSM_BASE(a)->time)
+
 typedef struct relation_s {
-  item_id_t id;
-  item_id_t version;
-  item_id_t changeset;
-  user_t *user;
+  base_object_t base;
+
   gboolean visible;
-  time_t time;
   tag_t *tag;
   struct member_s *member;
   int flags;
@@ -179,10 +200,6 @@ typedef struct hash_item_s {
 typedef struct {
   hash_item_t *hash[65536];
 } hash_table_t;
-
-typedef enum {
-  ILLEGAL=0, NODE, WAY, RELATION, NODE_ID, WAY_ID, RELATION_ID
-} type_t;
 
 typedef struct {
   type_t type;
@@ -232,7 +249,7 @@ gboolean osm_node_has_tag(node_t *node);
 
 void osm_node_dump(node_t *node);
 
-void osm_way_free(way_t *way);
+void osm_way_free(hash_table_t *hash_table, way_t *way);
 void osm_way_dump(way_t *way);
 char *osm_way_get_value(way_t *way, char *key);
 gboolean osm_node_has_value(node_t *node, char *str);
@@ -244,7 +261,7 @@ gboolean osm_node_in_other_way(osm_t *osm, way_t *way, node_t *node);
 
 void osm_node_chain_free(node_chain_t *node_chain);
 int osm_node_chain_length(node_chain_t *node_chain);
-void osm_node_free(osm_t *osm, struct icon_s **icon, node_t *node);
+void osm_node_free(hash_table_t *hash, struct icon_s **icon, node_t *node);
 
 void osm_members_free(member_t *member);
 void osm_member_free(member_t *member);
@@ -267,8 +284,9 @@ way_t *osm_get_way_by_id(osm_t *osm, item_id_t id);
 relation_t *osm_get_relation_by_id(osm_t *osm, item_id_t id);
 
 guint osm_way_number_of_nodes(way_t *way);
-relation_chain_t *osm_node_to_relation(osm_t *osm, node_t *node);
-relation_chain_t *osm_way_to_relation(osm_t *osm, way_t *way);
+relation_chain_t *osm_node_to_relation(osm_t *osm, node_t *node, 
+				       gboolean via_way);
+relation_chain_t *osm_way_to_relation(osm_t *osm, way_t *way); 
 relation_chain_t *osm_relation_to_relation(osm_t *osm, relation_t *relation);
 relation_chain_t *osm_object_to_relation(osm_t *osm, object_t *object);
 void osm_relation_chain_free(relation_chain_t *relation_chain);
@@ -282,7 +300,7 @@ way_chain_t *osm_node_delete(osm_t *osm, struct icon_s **icon, node_t *node,
 			     gboolean permanently, gboolean affect_ways);
 void osm_way_delete(osm_t *osm, struct icon_s **icon, way_t *way, 
 		    gboolean perm);
-void osm_way_restore(osm_t *osm, way_t *way);
+void osm_way_restore(osm_t *osm, way_t *way, item_id_chain_t *id_chain);
 
 way_t *osm_way_new(void);
 void osm_way_attach(osm_t *osm, way_t *way);

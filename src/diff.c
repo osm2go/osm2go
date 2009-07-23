@@ -59,7 +59,7 @@ static void diff_save_nodes(node_t *node, xmlNodePtr root_node) {
       xmlNodePtr node_node = xmlNewChild(root_node, NULL, 
 					 BAD_CAST "node", NULL);
 
-      diff_save_state_n_id(node->flags, node_node, node->id);
+      diff_save_state_n_id(node->flags, node_node, OSM_ID(node));
 
       if(!(node->flags & OSM_FLAG_DELETED)) {
 	char str[32];
@@ -69,7 +69,7 @@ static void diff_save_nodes(node_t *node, xmlNodePtr root_node) {
 	xmlNewProp(node_node, BAD_CAST "lat", BAD_CAST str);
 	g_ascii_formatd(str, sizeof(str), LL_FORMAT, node->pos.lon);
 	xmlNewProp(node_node, BAD_CAST "lon", BAD_CAST str);
-	snprintf(str, sizeof(str), "%lu", node->time);
+	snprintf(str, sizeof(str), "%lu", OSM_TIME(node));
 	xmlNewProp(node_node, BAD_CAST "time", BAD_CAST str);
 
 	diff_save_tags(node->tag, node_node);
@@ -87,7 +87,7 @@ static void diff_save_ways(way_t *way, xmlNodePtr root_node) {
       xmlNodePtr node_way = xmlNewChild(root_node, NULL, 
 					 BAD_CAST "way", NULL);
 
-      diff_save_state_n_id(way->flags, node_way, way->id);
+      diff_save_state_n_id(way->flags, node_way, OSM_ID(way));
       
       if(way->flags & OSM_FLAG_HIDDEN) 
 	xmlNewProp(node_way, BAD_CAST "hidden", BAD_CAST "true");
@@ -101,7 +101,7 @@ static void diff_save_ways(way_t *way, xmlNodePtr root_node) {
 	while(node_chain) {
 	  xmlNodePtr node_node = xmlNewChild(node_way, NULL, 
 					     BAD_CAST "nd", NULL);
-	  char *id = g_strdup_printf(ITEM_ID_FORMAT, node_chain->node->id);
+	  char *id = g_strdup_printf(ITEM_ID_FORMAT, OSM_ID(node_chain->node));
 	  xmlNewProp(node_node, BAD_CAST "ref", BAD_CAST id);
 	  g_free(id);
 	  node_chain = node_chain->next;
@@ -121,7 +121,7 @@ static void diff_save_relations(relation_t *relation, xmlNodePtr root_node) {
       xmlNodePtr node_rel = xmlNewChild(root_node, NULL, 
 					 BAD_CAST "relation", NULL);
 
-      diff_save_state_n_id(relation->flags, node_rel, relation->id);
+      diff_save_state_n_id(relation->flags, node_rel, OSM_ID(relation));
       
       if(!(relation->flags & OSM_FLAG_DELETED)) {
 	/* additional info is only required if the relation */
@@ -135,15 +135,15 @@ static void diff_save_relations(relation_t *relation, xmlNodePtr root_node) {
 	  switch(member->object.type) {
 	  case NODE:
 	    xmlNewProp(node_member, BAD_CAST "type", BAD_CAST "node");
-	    ref = g_strdup_printf(ITEM_ID_FORMAT, member->object.node->id);
+	    ref = g_strdup_printf(ITEM_ID_FORMAT, OBJECT_ID(member->object));
 	    break;
 	  case WAY:
 	    xmlNewProp(node_member, BAD_CAST "type", BAD_CAST "way");
-	    ref = g_strdup_printf(ITEM_ID_FORMAT, member->object.way->id);
+	    ref = g_strdup_printf(ITEM_ID_FORMAT, OBJECT_ID(member->object));
 	    break;
 	  case RELATION:
 	    xmlNewProp(node_member, BAD_CAST "type", BAD_CAST "relation");
-	    ref = g_strdup_printf(ITEM_ID_FORMAT, member->object.relation->id);
+	    ref = g_strdup_printf(ITEM_ID_FORMAT, OBJECT_ID(member->object));
 	    break;
 
 	    /* XXX_ID's are used if this is a reference to an item not */
@@ -345,8 +345,8 @@ void diff_restore_node(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
     node = g_new0(node_t, 1);
     node->visible = TRUE;
     node->flags = OSM_FLAG_NEW;
-    node->time = xml_get_prop_int(node_node, "time", 0);
-    if(!node->time) node->time = time(NULL);
+    OSM_TIME(node) = xml_get_prop_int(node_node, "time", 0);
+    if(!OSM_TIME(node)) OSM_TIME(node) = time(NULL);
 
     /* attach to end of node list */
     node_t **lnode = &osm->node;
@@ -384,7 +384,7 @@ void diff_restore_node(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
   }
 
   /* update id and position from diff */
-  node->id = id;
+  OSM_ID(node) = id;
   if(pos) {
     node->pos.lat = pos->lat;
     node->pos.lon = pos->lon;
@@ -436,8 +436,8 @@ void diff_restore_way(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
     way = g_new0(way_t, 1);
     way->visible = TRUE;
     way->flags = OSM_FLAG_NEW;
-    way->time = xml_get_prop_int(node_node, "time", 0);
-    if(!way->time) way->time = time(NULL);
+    OSM_TIME(way) = xml_get_prop_int(node_node, "time", 0);
+    if(!OSM_TIME(way)) OSM_TIME(way) = time(NULL);
 
     /* attach to end of way list */
     way_t **lway = &osm->way;
@@ -474,7 +474,7 @@ void diff_restore_way(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
   }
   
   /* update id from diff */
-  way->id = id;
+  OSM_ID(way) = id;
     
   /* update node_chain */
   if(hidden)
@@ -551,8 +551,8 @@ void diff_restore_relation(xmlDoc *doc, xmlNodePtr node_rel, osm_t *osm) {
     relation = g_new0(relation_t, 1);
     relation->visible = TRUE;
     relation->flags = OSM_FLAG_NEW;
-    relation->time = xml_get_prop_int(node_rel, "time", 0);
-    if(!relation->time) relation->time = time(NULL);
+    OSM_TIME(relation) = xml_get_prop_int(node_rel, "time", 0);
+    if(!OSM_TIME(relation)) OSM_TIME(relation) = time(NULL);
 
     /* attach to end of relation list */
     relation_t **lrelation = &osm->relation;
@@ -589,7 +589,7 @@ void diff_restore_relation(xmlDoc *doc, xmlNodePtr node_rel, osm_t *osm) {
   }
   
   /* update id from diff */
-  relation->id = id;
+  OSM_ID(relation) = id;
     
   /* update members */
     

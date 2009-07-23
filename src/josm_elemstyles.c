@@ -560,7 +560,7 @@ void josm_elemstyles_colorize_way(style_t *style, way_t *way) {
   /* apply the last line mod entry that has been found during search */
   if(line_mod) {
     printf("applying last matching line mod to way #"ITEM_ID_FORMAT"\n", 
-	   way->id);
+	   OSM_ID(way));
     line_mod_apply(&way->draw.width, &line_mod->line);
 
     /* special case: the way does not have a background, but it is to */

@@ -365,20 +365,21 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
   //  str = osm_object_string(&context->object);
   //  str[0] =  g_ascii_toupper   (str[0]);
 
+  user = OBJECT_USER(context->object);
+  stime = OBJECT_TIME(context->object);
+
   switch(context->object.type) {
   case NODE:
-    str = g_strdup_printf(_("Node #" ITEM_ID_FORMAT), context->object.node->id);
-    user = context->object.node->user;
+    str = g_strdup_printf(_("Node #" ITEM_ID_FORMAT), 
+			  OBJECT_ID(context->object));
     work_copy = osm_tags_copy(context->object.node->tag);
-    stime = context->object.node->time;
     context->presets_type = PRESETS_TYPE_NODE;
     break;
 
   case WAY:
-    str = g_strdup_printf(_("Way #" ITEM_ID_FORMAT), context->object.way->id);
-    user = context->object.way->user;
+    str = g_strdup_printf(_("Way #" ITEM_ID_FORMAT),
+			  OBJECT_ID(context->object));
     work_copy = osm_tags_copy(context->object.way->tag);
-    stime = context->object.way->time;
     context->presets_type = PRESETS_TYPE_WAY;
     
     if(osm_way_get_last_node(context->object.way) == 
@@ -389,10 +390,8 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
     
   case RELATION:
     str = g_strdup_printf(_("Relation #" ITEM_ID_FORMAT), 
-			  context->object.relation->id);
-    user = context->object.relation->user;
+			  OBJECT_ID(context->object));
     work_copy = osm_tags_copy(context->object.relation->tag);
-    stime = context->object.relation->time;
     context->presets_type = PRESETS_TYPE_RELATION;
     break;
 

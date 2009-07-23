@@ -25,27 +25,22 @@
 #undef DESTROY_WAIT_FOR_GTK
 
 static void map_statusbar(map_t *map, map_item_t *map_item) {
-  char *item_str = NULL;
   item_id_t id = ID_ILLEGAL;
   tag_t *tag = NULL;
   char *str = NULL;
   
+  id = OBJECT_ID(map_item->object);
+
   switch(map_item->object.type) {
   case NODE:
-    item_str = "Node";
-    id = map_item->object.node->id;
     tag = map_item->object.node->tag;
     break;
 
   case WAY:
-    item_str = "Way";
-    id = map_item->object.way->id;
     tag = map_item->object.way->tag;
     break;
 
   case RELATION:
-    item_str = "Relation";
-    id = map_item->object.relation->id;
     tag = map_item->object.relation->tag;
     break;
 
@@ -278,7 +273,7 @@ void map_way_select(appdata_t *appdata, way_t *way) {
 void map_relation_select(appdata_t *appdata, relation_t *relation) {
   map_t *map = appdata->map;
 
-  printf("highlighting relation "ITEM_ID_FORMAT"\n", relation->id);
+  printf("highlighting relation "ITEM_ID_FORMAT"\n", OSM_ID(relation));
 
   g_assert(!map->highlight);
   map_highlight_t **hl = &map->highlight;
@@ -301,7 +296,7 @@ void map_relation_select(appdata_t *appdata, relation_t *relation) {
 
     case NODE: {
       node_t *node = member->object.node;
-      printf("  -> node "ITEM_ID_FORMAT"\n", node->id);
+      printf("  -> node "ITEM_ID_FORMAT"\n", OSM_ID(node));
 
       item = canvas_circle_new(map->canvas, CANVAS_GROUP_NODES_HL, 
 			node->lpos.x, node->lpos.y, 
@@ -870,17 +865,9 @@ map_item_t *map_item_at(map_t *map, gint x, gint y) {
   if(map_item->highlight) 
     printf("  item is highlight\n");    
 
-  switch(map_item->object.type) {
-  case NODE:
-    printf("  item is node #"ITEM_ID_FORMAT"\n", map_item->object.node->id);
-    break;
-  case WAY:
-    printf("  item is way #"ITEM_ID_FORMAT"\n", map_item->object.way->id);
-    break;
-  default:
-    printf("  unknown item\n");
-    break;
-  }
+  printf("  item is %s #"ITEM_ID_FORMAT"\n", 
+	 osm_object_type_string(&map_item->object),
+	 OBJECT_ID(map_item->object));
 
   return map_item;
 }    
@@ -902,7 +889,7 @@ map_item_t *map_real_item_at(map_t *map, gint x, gint y) {
 
     if(parent)
       printf("  using parent item node #" ITEM_ID_FORMAT "\n", 
-	     parent->object.node->id);      
+	     OBJECT_ID(parent->object));      
     break;
 
   case WAY:
@@ -911,7 +898,7 @@ map_item_t *map_real_item_at(map_t *map, gint x, gint y) {
 
     if(parent)
       printf("  using parent item way #" ITEM_ID_FORMAT "\n", 
-	     parent->object.way->id);      
+	     OBJECT_ID(parent->object));      
     break;
 
   default:
@@ -1278,7 +1265,7 @@ void map_highlight_refresh(appdata_t *appdata) {
 }
 
 void map_way_delete(appdata_t *appdata, way_t *way) {
-  printf("deleting way #" ITEM_ID_FORMAT " from map and osm\n", way->id);
+  printf("deleting way #" ITEM_ID_FORMAT " from map and osm\n", OSM_ID(way));
 
   undo_append_way(appdata, UNDO_DELETE, way);
 
@@ -1981,7 +1968,7 @@ void map_delete_selected(appdata_t *appdata) {
   switch(item.object.type) {
   case NODE:
     printf("request to delete node #" ITEM_ID_FORMAT "\n", 
-	   item.object.node->id);
+	   OBJECT_ID(item.object));
 
     undo_append_object(appdata, UNDO_DELETE, &item.object);
 
@@ -2045,7 +2032,8 @@ void map_delete_selected(appdata_t *appdata) {
     break;
 
   case WAY:
-    printf("request to delete way #" ITEM_ID_FORMAT "\n", item.object.way->id);
+    printf("request to delete way #" ITEM_ID_FORMAT "\n", 
+	   OBJECT_ID(item.object));
     map_way_delete(appdata, item.object.way);
     break;
 
@@ -2357,7 +2345,7 @@ void map_hide_selected(appdata_t *appdata) {
   }
 
   way_t *way = map->selected.object.way;
-  printf("hiding way #" ITEM_ID_FORMAT "\n", way->id);
+  printf("hiding way #" ITEM_ID_FORMAT "\n", OSM_ID(way));
 
   map_item_deselect(appdata);
   way->flags |= OSM_FLAG_HIDDEN;
