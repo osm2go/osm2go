@@ -1277,7 +1277,7 @@ int main(int argc, char *argv[]) {
   hildon_program_add_window(appdata.program, appdata.window);
 
 #if MAEMO_VERSION_MAJOR == 5
-  unsigned long val;
+  unsigned long val = False;
   XChangeProperty(GDK_DISPLAY(),
 		  GDK_WINDOW_XID(GTK_WIDGET(appdata.window)->window),
 		  XInternAtom(GDK_DISPLAY(),
