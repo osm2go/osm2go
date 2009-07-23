@@ -69,6 +69,9 @@ typedef struct {
   item_id_t version;
   user_t *user;
   time_t time;
+  gboolean visible;
+  int flags;
+  tag_t *tag;
   
 } base_object_t;
 
@@ -77,10 +80,7 @@ typedef struct node_s {
 
   pos_t pos;
   lpos_t lpos;
-  gboolean visible;
-  tag_t *tag;
   int ways;
-  int flags;
   float zoom_max;
 
   /* icon */
@@ -113,10 +113,7 @@ typedef struct node_chain {
 typedef struct way_s {
   base_object_t base;
 
-  gboolean visible;
-  tag_t *tag;
   node_chain_t *node_chain;
-  int flags;
 
   /* visual representation from elemstyle */
   struct {
@@ -156,6 +153,9 @@ typedef struct way_chain {
 #define OBJECT_VERSION(a)  (OBJECT_BASE(a)->version)
 #define OBJECT_USER(a)     (OBJECT_BASE(a)->user)
 #define OBJECT_TIME(a)     (OBJECT_BASE(a)->time)
+#define OBJECT_TAG(a)      (OBJECT_BASE(a)->tag)
+#define OBJECT_VISIBLE(a)  (OBJECT_BASE(a)->visible)
+#define OBJECT_FLAGS(a)    (OBJECT_BASE(a)->flags)
 
 /* osm base type access macros */
 #define OSM_BASE(a)        ((base_object_t*)(a))
@@ -163,15 +163,14 @@ typedef struct way_chain {
 #define OSM_VERSION(a)     (OSM_BASE(a)->version)
 #define OSM_USER(a)        (OSM_BASE(a)->user)
 #define OSM_TIME(a)        (OSM_BASE(a)->time)
+#define OSM_TAG(a)         (OSM_BASE(a)->tag)
+#define OSM_VISIBLE(a)     (OSM_BASE(a)->visible)
+#define OSM_FLAGS(a)       (OSM_BASE(a)->flags)
 
 typedef struct relation_s {
   base_object_t base;
 
-  gboolean visible;
-  tag_t *tag;
   struct member_s *member;
-  int flags;
-
   struct relation_s *next;
 } relation_t;
 
@@ -329,6 +328,7 @@ void osm_relation_delete(osm_t *osm, relation_t *relation,
 			 gboolean permanently);
 gint osm_relation_members_num(relation_t *relation);
 
+gboolean osm_object_is_real(object_t *object);
 char *osm_object_type_string(object_t *object);
 char *osm_object_id_string(object_t *object);
 char *osm_object_string(object_t *object);

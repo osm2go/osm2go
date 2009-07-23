@@ -83,7 +83,7 @@ static gboolean relation_add_item(GtkWidget *parent,
 
   gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_ACCEPT);
 
-  char *type = osm_tag_get_by_key(relation->tag, "type");
+  char *type = osm_tag_get_by_key(OSM_TAG(relation), "type");
 
   char *info_str = NULL;
   if(type) info_str = g_strdup_printf(_("In relation of type: %s"), type);
@@ -93,7 +93,7 @@ static gboolean relation_add_item(GtkWidget *parent,
 			      gtk_label_new(info_str));
   g_free(info_str);
 
-  char *name = osm_tag_get_by_key(relation->tag, "name");
+  char *name = osm_tag_get_by_key(OSM_TAG(relation), "name");
   if(name) 
     gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), 
 				gtk_label_new(name));
@@ -152,7 +152,7 @@ static gboolean relation_add_item(GtkWidget *parent,
   (*memberP)->object = *object;
   (*memberP)->role = role;
 
-  relation->flags |= OSM_FLAG_DIRTY;
+  OSM_FLAGS(relation) |= OSM_FLAG_DIRTY;
   return TRUE;
 }
 
@@ -175,7 +175,7 @@ static void relation_remove_item(relation_t *relation, object_t *object) {
       osm_member_free(*member);
       *member = next;
 
-      relation->flags |= OSM_FLAG_DIRTY;
+      OSM_FLAGS(relation) |= OSM_FLAG_DIRTY;
 
       return;
     } else
@@ -193,13 +193,13 @@ static void relation_item_list_selected(relitem_context_t *context,
 
 /* try to find something descriptive */
 static char *relation_get_descriptive_name(relation_t *relation) {
-  char *name = osm_tag_get_by_key(relation->tag, "ref");
+  char *name = osm_tag_get_by_key(OSM_TAG(relation), "ref");
   if (!name)
-    name = osm_tag_get_by_key(relation->tag, "name");
+    name = osm_tag_get_by_key(OSM_TAG(relation), "name");
   if (!name)
-    name = osm_tag_get_by_key(relation->tag, "note");
+    name = osm_tag_get_by_key(OSM_TAG(relation), "note");
   if (!name)
-    name = osm_tag_get_by_key(relation->tag, "fix" "me");
+    name = osm_tag_get_by_key(OSM_TAG(relation), "fix" "me");
   return name;
 }
 
@@ -231,7 +231,7 @@ static void on_relation_item_add(GtkWidget *but, relitem_context_t *context) {
     gtk_list_store_set(context->store, &iter,
 		       RELITEM_COL_SELECTED, FALSE,
 		       RELITEM_COL_TYPE, 
-		       osm_tag_get_by_key(relation->tag, "type"),
+		       osm_tag_get_by_key(OSM_TAG(relation), "type"),
 		       RELITEM_COL_NAME, name,
 		       RELITEM_COL_DATA, relation,
 		       -1);
@@ -281,8 +281,8 @@ static void on_relation_item_edit(GtkWidget *but, relitem_context_t *context) {
 
   // Found it. Update all visible fields that belong to the relation iself.
   gtk_list_store_set(context->store, &iter,
-    RELITEM_COL_TYPE,    osm_tag_get_by_key(sel->tag, "type"),
-    RELITEM_COL_NAME,    relation_get_descriptive_name(sel),
+     RELITEM_COL_TYPE,    osm_tag_get_by_key(OSM_TAG(sel), "type"),
+     RELITEM_COL_NAME,    relation_get_descriptive_name(sel),
     -1);
 
   // Order will probably have changed, so refocus
@@ -435,7 +435,7 @@ static GtkWidget *relation_item_list_widget(relitem_context_t *context) {
     gtk_list_store_append(context->store, &iter);
     gtk_list_store_set(context->store, &iter,
        RELITEM_COL_SELECTED, relitem_is_in_relation(context->item, relation),
-       RELITEM_COL_TYPE, osm_tag_get_by_key(relation->tag, "type"),
+       RELITEM_COL_TYPE, osm_tag_get_by_key(OSM_TAG(relation), "type"),
        RELITEM_COL_ROLE, relitem_get_role_in_relation(context->item, relation),
        RELITEM_COL_NAME, name,
        RELITEM_COL_DATA, relation,
@@ -702,8 +702,8 @@ void relation_show_members(GtkWidget *parent, relation_t *relation) {
   member_context_t *mcontext = g_new0(member_context_t, 1);
   mcontext->relation = relation;
 
-  char *str = osm_tag_get_by_key(mcontext->relation->tag, "name");
-  if(!str) str = osm_tag_get_by_key(mcontext->relation->tag, "ref");
+  char *str = osm_tag_get_by_key(OSM_TAG(mcontext->relation), "name");
+  if(!str) str = osm_tag_get_by_key(OSM_TAG(mcontext->relation), "ref");
   if(!str)
     str = g_strdup_printf(_("Members of relation #" ITEM_ID_FORMAT),
 			  OSM_ID(mcontext->relation));
@@ -763,7 +763,7 @@ static void on_relation_add(GtkWidget *but, relation_context_t *context) {
     gtk_list_store_set(context->store, &iter,
 		       RELATION_COL_ID, OSM_ID(relation),
 		       RELATION_COL_TYPE,
-		       osm_tag_get_by_key(relation->tag, "type"),
+		       osm_tag_get_by_key(OSM_TAG(relation), "type"),
 		       RELATION_COL_NAME, name,
 		       RELATION_COL_MEMBERS, num,
 		       RELATION_COL_DATA, relation,
@@ -806,7 +806,7 @@ static void on_relation_edit(GtkWidget *but, relation_context_t *context) {
   // Found it. Update all visible fields.
   gtk_list_store_set(context->store, &iter,
     RELATION_COL_ID,      OSM_ID(sel),
-    RELATION_COL_TYPE,    osm_tag_get_by_key(sel->tag, "type"),
+    RELATION_COL_TYPE,    osm_tag_get_by_key(OSM_TAG(sel), "type"),
     RELATION_COL_NAME,    relation_get_descriptive_name(sel),
     RELATION_COL_MEMBERS, osm_relation_members_num(sel),
     -1);
@@ -889,7 +889,7 @@ static GtkWidget *relation_list_widget(relation_context_t *context) {
     gtk_list_store_set(context->store, &iter,
 		       RELATION_COL_ID, OSM_ID(rel),
 		       RELATION_COL_TYPE,
-		       osm_tag_get_by_key(rel->tag, "type"),
+		       osm_tag_get_by_key(OSM_TAG(rel), "type"),
 		       RELATION_COL_NAME, name,
 		       RELATION_COL_MEMBERS, num,
 		       RELATION_COL_DATA, rel,

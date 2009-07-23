@@ -50,7 +50,7 @@ static void transfer_relations(osm_t *osm, way_t *dst, way_t *src) {
     if(role) (*member)->role = g_strdup(role);
     member = &(*member)->next;
     
-    rchain->relation->flags |= OSM_FLAG_DIRTY;
+    OSM_FLAGS(rchain->relation) |= OSM_FLAG_DIRTY;
     
     g_free(rchain);
     rchain = next;
@@ -309,7 +309,7 @@ void map_edit_way_add_ok(map_t *map) {
     osm_way_free(osm->way_hash, map->action.way);
 
     map->action.way = map->action.extending;
-    map->action.way->flags |= OSM_FLAG_DIRTY;
+    OSM_FLAGS(map->action.way) |= OSM_FLAG_DIRTY;
 
     /* and undo reversion of required */
     if(reverse)
@@ -349,12 +349,12 @@ void map_edit_way_add_ok(map_t *map) {
     if (reverse) osm_way_reverse(map->action.way);
 
     /* and open dialog to resolve tag collisions if necessary */
-    if(combine_tags(&map->action.way->tag, map->action.ends_on->tag))
+    if(combine_tags(&OSM_TAG(map->action.way), OSM_TAG(map->action.ends_on)))
       messagef(GTK_WIDGET(map->appdata->window), _("Way tag conflict"), 
 	       _("The resulting way contains some conflicting tags. "
 		 "Please solve these."));
     
-    map->action.ends_on->tag = NULL;
+    OSM_TAG(map->action.ends_on) = NULL;
     
     /* make way member of all relations ends_on already is */
     transfer_relations(map->appdata->osm, map->action.way, map->action.ends_on);
@@ -452,7 +452,7 @@ void map_edit_way_node_add(map_t *map, gint x, gint y) {
       node->ways=1;
       
       /* and that the way needs to be uploaded */
-      way->flags |= OSM_FLAG_DIRTY;
+      OSM_FLAGS(way) |= OSM_FLAG_DIRTY;
       
       /* put gui into idle state */
       map_action_set(map->appdata, MAP_ACTION_IDLE);
@@ -549,7 +549,7 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
       }
       
       /* ------------  copy all tags ------------- */
-      new->tag = osm_tags_copy(way->tag);
+      OSM_TAG(new) = osm_tags_copy(OSM_TAG(way));
       
       /* ---- transfer relation membership from way to new ----- */
       transfer_relations(map->appdata->osm, new, way);
@@ -614,7 +614,7 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
 	map_way_draw(map, way);
 	
 	/* remember that the way needs to be uploaded */
-	way->flags |= OSM_FLAG_DIRTY;
+	OSM_FLAGS(way) |= OSM_FLAG_DIRTY;
       }
       
       if(osm_way_number_of_nodes(new) < 2) {
@@ -692,7 +692,7 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 	    node->ways++;
 	    touchnode->ways--;
 	    
-	    way->flags |= OSM_FLAG_DIRTY;
+	    OSM_FLAGS(way) |= OSM_FLAG_DIRTY;
 	  }
 	  chain = chain->next;
 	}
@@ -711,15 +711,15 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 	    /* replace by node */
 	    member->object.node = node;
 
-	    relation->flags |= OSM_FLAG_DIRTY;
+	    OSM_FLAGS(relation) |= OSM_FLAG_DIRTY;
 	  }
 	  member = member->next;
 	}
 	relation = relation->next;
       }
 
-      gboolean conflict = combine_tags(&node->tag, touchnode->tag);
-      touchnode->tag = NULL;
+      gboolean conflict = combine_tags(&OSM_TAG(node), OSM_TAG(touchnode));
+      OSM_TAG(touchnode) = NULL;
 
       /* touchnode must not have any references to ways anymore */
       g_assert(!touchnode->ways);
@@ -815,8 +815,8 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 
 	  /* ---------- transfer tags from way[1] to way[0] ----------- */
 	  gboolean conflict = 
-	    combine_tags(&ways2join[0]->tag, ways2join[1]->tag);
-	  ways2join[1]->tag = NULL;
+	    combine_tags(&OSM_TAG(ways2join[0]), OSM_TAG(ways2join[1]));
+	  OSM_TAG(ways2join[1]) = NULL;
 
 	  /* ---- transfer relation membership from way[1] to way[0] ----- */
 	  relation_chain_t *rchain = 
@@ -856,7 +856,7 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 	      if(role) (*member)->role = g_strdup(role);
 	      member = &(*member)->next;
 
-	      rchain->relation->flags |= OSM_FLAG_DIRTY;
+	      OSM_FLAGS(rchain->relation) |= OSM_FLAG_DIRTY;
 	    }
 
 	    g_free(rchain);
@@ -870,7 +870,7 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 		     _("The resulting way contains some conflicting tags. "
 		       "Please solve these."));
 	  
-	  ways2join[0]->flags |= OSM_FLAG_DIRTY;
+	  OSM_FLAGS(ways2join[0]) |= OSM_FLAG_DIRTY;
 	  map_way_delete(appdata, ways2join[1]);
 	}
       }
@@ -928,7 +928,7 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
   }
   
   /* and mark the node as dirty */
-  node->flags |= OSM_FLAG_DIRTY;
+  OSM_FLAGS(node) |= OSM_FLAG_DIRTY;
 
   /* update highlight */
   map_highlight_refresh(appdata);
@@ -952,7 +952,7 @@ void map_edit_way_reverse(appdata_t *appdata) {
   guint n_roles_flipped = 
     osm_way_reverse_direction_sensitive_roles(appdata->osm, item.object.way);
 
-  item.object.way->flags |= OSM_FLAG_DIRTY;
+  OBJECT_FLAGS(item.object) |= OSM_FLAG_DIRTY;
   map_way_select(appdata, item.object.way);
 
   // Flash a message about any side-effects

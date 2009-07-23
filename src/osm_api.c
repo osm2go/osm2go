@@ -448,7 +448,7 @@ static void osm_delete_nodes(osm_upload_context_t *context) {
     /* make sure gui gets updated */
     while(gtk_events_pending()) gtk_main_iteration();
 
-    if(node->flags & OSM_FLAG_DELETED) {
+    if(OSM_FLAGS(node) & OSM_FLAG_DELETED) {
       printf("deleting node on server\n");
 
       appendf(&context->log, NULL, _("Delete node #%ld "), OSM_ID(node));
@@ -463,7 +463,7 @@ static void osm_delete_nodes(osm_upload_context_t *context) {
 	osm_generate_xml_node(context->osm, context->changeset, node);
 
       if(osm_delete_item(&context->log, xml_str, url, cred, context->proxy)) {
-	node->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
+	OSM_FLAGS(node) &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
 	project->data_dirty = TRUE;
       }
       
@@ -481,11 +481,11 @@ static void osm_upload_nodes(osm_upload_context_t *context) {
     /* make sure gui gets updated */
     while(gtk_events_pending()) gtk_main_iteration();
 
-    if((node->flags & (OSM_FLAG_DIRTY | OSM_FLAG_NEW)) &&
-       (!(node->flags & OSM_FLAG_DELETED))) {
+    if((OSM_FLAGS(node) & (OSM_FLAG_DIRTY | OSM_FLAG_NEW)) &&
+       (!(OSM_FLAGS(node) & OSM_FLAG_DELETED))) {
       char *url = NULL;
 
-      if(node->flags & OSM_FLAG_NEW) {
+      if(OSM_FLAGS(node) & OSM_FLAG_NEW) {
 	url = g_strdup_printf("%s/node/create", project->server);
 	appendf(&context->log, NULL, _("New node "));
       } else {
@@ -504,9 +504,9 @@ static void osm_upload_nodes(osm_upload_context_t *context) {
 				     context->appdata->settings->username, 
 				     context->appdata->settings->password);
 	if(osm_update_item(&context->log, xml_str, url, cred, 
-	   (node->flags & OSM_FLAG_NEW)?&(OSM_ID(node)):&OSM_VERSION(node),
+	   (OSM_FLAGS(node) & OSM_FLAG_NEW)?&(OSM_ID(node)):&OSM_VERSION(node),
 			   context->proxy)) {
-	  node->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_NEW);
+	  OSM_FLAGS(node) &= ~(OSM_FLAG_DIRTY | OSM_FLAG_NEW);
 	  project->data_dirty = TRUE;
 	}
 	g_free(cred);
@@ -525,7 +525,7 @@ static void osm_delete_ways(osm_upload_context_t *context) {
     /* make sure gui gets updated */
     while(gtk_events_pending()) gtk_main_iteration();
 
-    if(way->flags & OSM_FLAG_DELETED) {
+    if(OSM_FLAGS(way) & OSM_FLAG_DELETED) {
       printf("deleting way on server\n");
 
       appendf(&context->log, NULL, _("Delete way #%ld "), OSM_ID(way));
@@ -540,7 +540,7 @@ static void osm_delete_ways(osm_upload_context_t *context) {
 	osm_generate_xml_way(context->osm, context->changeset, way);
 
       if(osm_delete_item(&context->log, xml_str, url, cred, context->proxy)) {
-	way->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
+	OSM_FLAGS(way) &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
 	project->data_dirty = TRUE;
       }
       
@@ -559,11 +559,11 @@ static void osm_upload_ways(osm_upload_context_t *context) {
     /* make sure gui gets updated */
     while(gtk_events_pending()) gtk_main_iteration();
 
-    if((way->flags & (OSM_FLAG_DIRTY | OSM_FLAG_NEW)) &&
-       (!(way->flags & OSM_FLAG_DELETED))) {
+    if((OSM_FLAGS(way) & (OSM_FLAG_DIRTY | OSM_FLAG_NEW)) &&
+       (!(OSM_FLAGS(way) & OSM_FLAG_DELETED))) {
       char *url = NULL;
       
-      if(way->flags & OSM_FLAG_NEW) {
+      if(OSM_FLAGS(way) & OSM_FLAG_NEW) {
 	url = g_strdup_printf("%s/way/create", project->server);
 	appendf(&context->log, NULL, _("New way "));
       } else {
@@ -582,9 +582,9 @@ static void osm_upload_ways(osm_upload_context_t *context) {
 				     context->appdata->settings->username, 
 				     context->appdata->settings->password);
 	if(osm_update_item(&context->log, xml_str, url, cred, 
-	   (way->flags & OSM_FLAG_NEW)?&(OSM_ID(way)):&OSM_VERSION(way),
+	   (OSM_FLAGS(way) & OSM_FLAG_NEW)?&(OSM_ID(way)):&OSM_VERSION(way),
 			   context->proxy)) {
-	  way->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_NEW);
+	  OSM_FLAGS(way) &= ~(OSM_FLAG_DIRTY | OSM_FLAG_NEW);
 	  project->data_dirty = TRUE;
 	}
 	g_free(cred);
@@ -603,7 +603,7 @@ static void osm_delete_relations(osm_upload_context_t *context) {
     /* make sure gui gets updated */
     while(gtk_events_pending()) gtk_main_iteration();
 
-    if(relation->flags & OSM_FLAG_DELETED) {
+    if(OSM_FLAGS(relation) & OSM_FLAG_DELETED) {
       printf("deleting relation on server\n");
 
       appendf(&context->log, NULL, 
@@ -619,7 +619,7 @@ static void osm_delete_relations(osm_upload_context_t *context) {
 	osm_generate_xml_relation(context->osm, context->changeset, relation);
 
       if(osm_delete_item(&context->log, xml_str, url, cred, context->proxy)) {
-	relation->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
+	OSM_FLAGS(relation) &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
 	project->data_dirty = TRUE;
       }
       
@@ -638,11 +638,11 @@ static void osm_upload_relations(osm_upload_context_t *context) {
     /* make sure gui gets updated */
     while(gtk_events_pending()) gtk_main_iteration();
 
-    if((relation->flags & (OSM_FLAG_DIRTY | OSM_FLAG_NEW)) &&
-       (!(relation->flags & OSM_FLAG_DELETED))) {
+    if((OSM_FLAGS(relation) & (OSM_FLAG_DIRTY | OSM_FLAG_NEW)) &&
+       (!(OSM_FLAGS(relation) & OSM_FLAG_DELETED))) {
       char *url = NULL;
       
-      if(relation->flags & OSM_FLAG_NEW) {
+      if(OSM_FLAGS(relation) & OSM_FLAG_NEW) {
 	url = g_strdup_printf("%s/relation/create", project->server);
 	appendf(&context->log, NULL, _("New relation "));
       } else {
@@ -662,9 +662,9 @@ static void osm_upload_relations(osm_upload_context_t *context) {
 				     context->appdata->settings->username, 
 				     context->appdata->settings->password);
 	if(osm_update_item(&context->log, xml_str, url, cred, 
-	   (relation->flags & OSM_FLAG_NEW)?&(OSM_ID(relation)):&
+	   (OSM_FLAGS(relation) & OSM_FLAG_NEW)?&(OSM_ID(relation)):&
 			   OSM_VERSION(relation), context->proxy)) {
-	  relation->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_NEW);
+	  OSM_FLAGS(relation) &= ~(OSM_FLAG_DIRTY | OSM_FLAG_NEW);
 	  project->data_dirty = TRUE;
 	}
 	g_free(cred);
@@ -775,9 +775,9 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   node_t *node = osm->node;
   while(node) {
     dirty.nodes.total++;
-    if(node->flags & OSM_FLAG_DELETED)     dirty.nodes.deleted++;
-    else if(node->flags & OSM_FLAG_NEW)    dirty.nodes.new++;
-    else if(node->flags & OSM_FLAG_DIRTY)  dirty.nodes.dirty++;
+    if(OSM_FLAGS(node) & OSM_FLAG_DELETED)     dirty.nodes.deleted++;
+    else if(OSM_FLAGS(node) & OSM_FLAG_NEW)    dirty.nodes.new++;
+    else if(OSM_FLAGS(node) & OSM_FLAG_DIRTY)  dirty.nodes.dirty++;
 
     node = node->next;
   }
@@ -788,9 +788,9 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   way_t *way = osm->way;
   while(way) {
     dirty.ways.total++;
-    if(way->flags & OSM_FLAG_DELETED)      dirty.ways.deleted++;
-    else if(way->flags & OSM_FLAG_NEW)     dirty.ways.new++;
-    else if(way->flags & OSM_FLAG_DIRTY)   dirty.ways.dirty++;
+    if(OSM_FLAGS(way) & OSM_FLAG_DELETED)      dirty.ways.deleted++;
+    else if(OSM_FLAGS(way) & OSM_FLAG_NEW)     dirty.ways.new++;
+    else if(OSM_FLAGS(way) & OSM_FLAG_DIRTY)   dirty.ways.dirty++;
 
     way = way->next;
   }
@@ -801,9 +801,9 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   relation_t *relation = osm->relation;
   while(relation) {
     dirty.relations.total++;
-    if(relation->flags & OSM_FLAG_DELETED)      dirty.relations.deleted++;
-    else if(relation->flags & OSM_FLAG_NEW)     dirty.relations.new++;
-    else if(relation->flags & OSM_FLAG_DIRTY)   dirty.relations.dirty++;
+    if(OSM_FLAGS(relation) & OSM_FLAG_DELETED)      dirty.relations.deleted++;
+    else if(OSM_FLAGS(relation) & OSM_FLAG_NEW)     dirty.relations.new++;
+    else if(OSM_FLAGS(relation) & OSM_FLAG_DIRTY)   dirty.relations.dirty++;
 
     relation = relation->next;
   }

@@ -46,6 +46,14 @@ static char *undo_type_string(type_t type) {
   return NULL;
 }
 
+static void undo_id_chain_free(item_id_chain_t *chain) {
+  while(chain) {
+    item_id_chain_t *next = chain->next;
+    g_free(chain);
+    chain = next;
+  }
+}
+
 static void undo_object_free(osm_t *osm, object_t *obj) {
   printf("free obj %p\n", obj);
 
@@ -80,7 +88,8 @@ static void undo_object_free(osm_t *osm, object_t *obj) {
 
 static void undo_op_free(osm_t *osm, undo_op_t *op) {
   printf("  free op: %s\n", undo_type_string(op->type));
-  if(op->object) undo_object_free(osm, op->object);
+  if(op->object)   undo_object_free(osm, op->object);
+  if(op->id_chain) undo_id_chain_free(op->id_chain);
   g_free(op);
 }
 
@@ -139,11 +148,15 @@ static undo_state_t *undo_append_state(appdata_t *appdata) {
   return new_state;
 }
 
+/* copy the base object parts to another object */
 static void undo_object_copy_base(object_t *dst, object_t *src) {
   OBJECT_ID(*dst)      = OBJECT_ID(*src);
   OBJECT_VERSION(*dst) = OBJECT_VERSION(*src);
   OBJECT_TIME(*dst)    = OBJECT_TIME(*src);
   OBJECT_USER(*dst)    = OBJECT_USER(*src);
+  OBJECT_TAG(*dst)     = OBJECT_TAG(*src);
+  OBJECT_FLAGS(*dst)   = OBJECT_FLAGS(*src);
+  OBJECT_VISIBLE(*dst) = OBJECT_VISIBLE(*src);
 }
 
 /* create a local copy of the entire object */
@@ -164,11 +177,6 @@ static object_t *undo_object_save(osm_t *osm, object_t *object,
     /* copy all important parts, omitting icon pointers etc. */
     ob->node->lpos = object->node->lpos;
     ob->node->pos = object->node->pos;
-    /* user is a pointer, but since the users list */
-    /* is never touched it's ok */
-    ob->node->visible = object->node->visible;
-    ob->node->tag = osm_tags_copy(object->node->tag);
-    ob->node->flags = object->node->flags; 
     ob->node->zoom_max = object->node->zoom_max; 
 
     return ob;
@@ -184,19 +192,13 @@ static object_t *undo_object_save(osm_t *osm, object_t *object,
     ob->way = g_new0(way_t, 1);
     undo_object_copy_base(ob, object);
 
-    /* copy all important parts */
-    /* user is a pointer, but since the users list */
-    /* is never touched it's ok */
-    ob->way->visible = object->way->visible;
-    ob->way->tag = osm_tags_copy(object->way->tag);
-    ob->way->flags = object->way->flags; 
-
     /* the nodes are saved by reference, since they may also be */
     /* deleted and restored and thus their address may change */
     node_chain_t *node_chain = object->way->node_chain;
     g_assert(id_chain);
     while(node_chain) {
       *id_chain = g_new0(item_id_chain_t, 1);
+      (*id_chain)->type = NODE;
       (*id_chain)->id = OSM_ID(node_chain->node);
 
       id_chain = &(*id_chain)->next;
@@ -216,15 +218,16 @@ static object_t *undo_object_save(osm_t *osm, object_t *object,
     ob->relation = g_new0(relation_t, 1);
     undo_object_copy_base(ob, object);
 
-    /* copy all important parts */
-    /* user is a pointer, but since the users list */
-    /* is never touched it's ok */
-    ob->relation->visible = object->relation->visible;
-    ob->relation->tag = osm_tags_copy(object->relation->tag);
-    ob->relation->flags = object->relation->flags; 
+    /* save members reference */
+    member_t *member = object->relation->member;
+    while(member) {
+      *id_chain = g_new0(item_id_chain_t, 1);
+      (*id_chain)->type = member->object.type;
+      (*id_chain)->id = OBJECT_ID(member->object);
 
-    /* save members */
-    
+      id_chain = &(*id_chain)->next;
+      member = member->next;
+    }
 
     return ob;
     } break;
@@ -359,7 +362,7 @@ void undo_close_state(appdata_t *appdata) {
 
 /* restore state of an object (or even restore it after deletion) */
 static void undo_operation_object_restore(appdata_t *appdata, object_t *obj,
-					  item_id_chain_t *id_chain) {
+					  item_id_chain_t **id_chain) {
 
   char *msg = osm_object_string(obj);
   printf("UNDO deletion of object %s\n", msg);
@@ -371,7 +374,7 @@ static void undo_operation_object_restore(appdata_t *appdata, object_t *obj,
     /* removed or no entry at all (since a new one has been deleted) */
     node_t *orig = osm_get_node_by_id(appdata->osm, OBJECT_ID(*obj));
     if(orig) {
-      g_assert(orig->flags & OSM_FLAG_DELETED);
+      g_assert(OSM_FLAGS(orig) & OSM_FLAG_DELETED);
 
       /* permanently remove the node marked as "deleted" */
       way_chain_t *wchain = 
@@ -392,13 +395,14 @@ static void undo_operation_object_restore(appdata_t *appdata, object_t *obj,
     /* removed or no entry at all (since a new one has been deleted) */
     way_t *orig = osm_get_way_by_id(appdata->osm, OBJECT_ID(*obj));
     if(orig) {
-      g_assert(orig->flags & OSM_FLAG_DELETED);
+      g_assert(OSM_FLAGS(orig) & OSM_FLAG_DELETED);
 
       /* permanently remove the way marked as "deleted" */
       osm_way_delete(appdata->osm, &appdata->icon, orig, TRUE);
     }
 
-    osm_way_restore(appdata->osm, obj->way, id_chain);
+    osm_way_restore(appdata->osm, obj->way, *id_chain);
+    *id_chain = NULL;
 
     obj->ptr = NULL;
   } break;
@@ -416,7 +420,7 @@ static void undo_operation(appdata_t *appdata, undo_op_t *op) {
 
   switch(op->type) {
   case UNDO_DELETE:
-    undo_operation_object_restore(appdata, op->object, op->id_chain);
+    undo_operation_object_restore(appdata, op->object, &(op->id_chain));
     break;
 
   default:

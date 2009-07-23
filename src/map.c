@@ -25,28 +25,8 @@
 #undef DESTROY_WAIT_FOR_GTK
 
 static void map_statusbar(map_t *map, map_item_t *map_item) {
-  item_id_t id = ID_ILLEGAL;
-  tag_t *tag = NULL;
+  tag_t *tag = OBJECT_TAG(map_item->object);
   char *str = NULL;
-  
-  id = OBJECT_ID(map_item->object);
-
-  switch(map_item->object.type) {
-  case NODE:
-    tag = map_item->object.node->tag;
-    break;
-
-  case WAY:
-    tag = map_item->object.way->tag;
-    break;
-
-  case RELATION:
-    tag = map_item->object.relation->tag;
-    break;
-
-  default:
-    break;
-  }
 
   gboolean collision = FALSE;
   tag_t *tags = tag;
@@ -374,13 +354,13 @@ void map_item_deselect(appdata_t *appdata) {
       osm_tags_free(appdata->map->last_node_tags);
 
     appdata->map->last_node_tags = 
-      osm_tags_copy(appdata->map->selected.object.node->tag);
+      osm_tags_copy(OBJECT_TAG(appdata->map->selected.object));
   } else if(appdata->map->selected.object.type == WAY) {
     if(appdata->map->last_way_tags) 
       osm_tags_free(appdata->map->last_way_tags);
 
     appdata->map->last_way_tags = 
-      osm_tags_copy(appdata->map->selected.object.way->tag);
+      osm_tags_copy(OBJECT_TAG(appdata->map->selected.object));
   }
 
   /* remove statusbar message */
@@ -546,7 +526,7 @@ void map_show_node(map_t *map, node_t *node) {
 void map_way_draw(map_t *map, way_t *way) {
 
   /* don't draw a way that's not there anymore */
-  if(way->flags & (OSM_FLAG_DELETED | OSM_FLAG_HIDDEN))
+  if(OSM_FLAGS(way) & (OSM_FLAG_DELETED | OSM_FLAG_HIDDEN))
     return;
 
   /* allocate space for nodes */
@@ -592,7 +572,7 @@ void map_way_draw(map_t *map, way_t *way) {
 
 void map_node_draw(map_t *map, node_t *node) {
   /* don't draw a node that's not there anymore */
-  if(node->flags & OSM_FLAG_DELETED)
+  if(OSM_FLAGS(node) & OSM_FLAG_DELETED)
     return;
 
   if(!node->ways) 
@@ -1345,7 +1325,7 @@ static void map_touchnode_update(appdata_t *appdata, gint x, gint y) {
   while(!map->touchnode && node) {
     /* don't highlight the dragged node itself and don't highlight */
     /* deleted ones */
-    if((node != cur_node) && (!(node->flags & OSM_FLAG_DELETED))) {
+    if((node != cur_node) && (!(OSM_FLAGS(node) & OSM_FLAG_DELETED))) {
       gint nx = abs(x - node->lpos.x);
       gint ny = abs(y - node->lpos.y);
 
@@ -2348,7 +2328,7 @@ void map_hide_selected(appdata_t *appdata) {
   printf("hiding way #" ITEM_ID_FORMAT "\n", OSM_ID(way));
 
   map_item_deselect(appdata);
-  way->flags |= OSM_FLAG_HIDDEN;
+  OSM_FLAGS(way) |= OSM_FLAG_HIDDEN;
   map_item_chain_destroy(&way->map_item_chain);
 
   gtk_widget_set_sensitive(appdata->menu_item_map_show_all, TRUE);
@@ -2360,8 +2340,8 @@ void map_show_all(appdata_t *appdata) {
 
   way_t *way = appdata->osm->way;
   while(way) {
-    if(way->flags & OSM_FLAG_HIDDEN) {
-      way->flags &= ~OSM_FLAG_HIDDEN;
+    if(OSM_FLAGS(way) & OSM_FLAG_HIDDEN) {
+      OSM_FLAGS(way) &= ~OSM_FLAG_HIDDEN;
       map_way_draw(map, way);
     }
 
