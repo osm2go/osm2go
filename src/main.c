@@ -77,7 +77,8 @@ void main_ui_enable(appdata_t *appdata) {
   gtk_widget_set_sensitive(appdata->menu_item_map_upload, osm_valid);
   if(appdata->menu_item_map_undo)
     gtk_widget_set_sensitive(appdata->menu_item_map_undo, osm_valid);
-  gtk_widget_set_sensitive(appdata->menu_item_map_save_changes, osm_valid);
+  if(appdata->menu_item_map_save_changes)
+    gtk_widget_set_sensitive(appdata->menu_item_map_save_changes, osm_valid);
   gtk_widget_set_sensitive(appdata->menu_item_map_undo_changes, osm_valid);
   gtk_widget_set_sensitive(appdata->menu_item_map_relations, osm_valid);
   gtk_widget_set_sensitive(appdata->track.submenu_track, osm_valid);
@@ -754,11 +755,13 @@ void menu_create(appdata_t *appdata) {
   } else
     printf("set environment variable OSM2GO_UNDO_TEST to enable undo framework tests\n");
 
+#ifndef USE_HILDON
   appdata->menu_item_map_save_changes = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_save_changes), _("_Save local changes"),
     GTK_STOCK_SAVE, "<OSM2Go-Main>/Map/SaveChanges",
     GDK_s, GDK_SHIFT_MASK|GDK_CONTROL_MASK, TRUE, FALSE, FALSE
   );
+#endif
 
   appdata->menu_item_map_undo_changes = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_undo_changes), _("Undo _all"),
@@ -1139,15 +1142,16 @@ static const menu_entry_t submenu_view_entries[] = {
 };
 
 static const submenu_t submenu_view = {
-  "View", submenu_view_entries, sizeof(submenu_view_entries)/sizeof(menu_entry_t)
+  "View", submenu_view_entries, 
+  sizeof(submenu_view_entries)/sizeof(menu_entry_t)-1
 };
 
 /* -- the map submenu -- */
 static const menu_entry_t submenu_map_entries[] = {
   ENABLED_ENTRY("Upload",                cb_menu_upload, menu_item_map_upload),
   SIMPLE_ENTRY("Download",               cb_menu_download),
-  ENABLED_ENTRY("Save changes",          cb_menu_save_changes, 
-		menu_item_map_save_changes),
+  //  ENABLED_ENTRY("Save changes",          cb_menu_save_changes, 
+  //		menu_item_map_save_changes),
   ENABLED_ENTRY("Undo all",              cb_menu_undo_changes, 
 		menu_item_map_undo_changes),
   ENABLED_ENTRY("Relations",             cb_menu_osm_relations, 
@@ -1157,7 +1161,8 @@ static const menu_entry_t submenu_map_entries[] = {
 };
 
 static const submenu_t submenu_map = {
-  "Map", submenu_map_entries, sizeof(submenu_map_entries)/sizeof(menu_entry_t)
+  "Map", submenu_map_entries, 
+  sizeof(submenu_map_entries)/sizeof(menu_entry_t)-1
 };
 
 /* -- the wms submenu -- */
@@ -1170,7 +1175,8 @@ static const menu_entry_t submenu_wms_entries[] = {
 };
 
 static const submenu_t submenu_wms = {
-  "WMS", submenu_wms_entries, sizeof(submenu_wms_entries)/sizeof(menu_entry_t)
+  "WMS", submenu_wms_entries, 
+  sizeof(submenu_wms_entries)/sizeof(menu_entry_t)-1
 };
 
 /* -- the track submenu -- */
@@ -1187,7 +1193,8 @@ static const menu_entry_t submenu_track_entries[] = {
 };
 
 static const submenu_t submenu_track = {
-  "Track", submenu_track_entries, sizeof(submenu_track_entries)/sizeof(menu_entry_t)
+  "Track", submenu_track_entries, 
+  sizeof(submenu_track_entries)/sizeof(menu_entry_t)-1
 };
 
 
@@ -1403,8 +1410,8 @@ int main(int argc, char *argv[]) {
 #endif
   hildon_program_add_window(appdata.program, appdata.window);
 
-#if MAEMO_VERSION_MAJOR == 6
-  unsigned long val = False;
+#if MAEMO_VERSION_MAJOR == 5
+  unsigned long val = True;
   XChangeProperty(GDK_DISPLAY(),
 		  GDK_WINDOW_XID(GTK_WIDGET(appdata.window)->window),
 		  XInternAtom(GDK_DISPLAY(),
