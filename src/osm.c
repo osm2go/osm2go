@@ -1252,17 +1252,13 @@ gboolean osm_node_in_other_way(osm_t *osm, way_t *way, node_t *node) {
 
 static void osm_generate_tags(tag_t *tag, xmlNodePtr node) {
   while(tag) {
+    /* skip "created_by" tags as they aren't needed anymore with api 0.6 */
     /* make sure "created_by" tag contains our id */
-    if(strcasecmp(tag->key, "created_by") == 0) {
-      if(strcasecmp(tag->value, PACKAGE " v" VERSION) != 0) {      
-	g_free(tag->value);
-	tag->value = g_strdup(PACKAGE " v" VERSION);
-      }
+    if(strcasecmp(tag->key, "created_by") != 0) {
+      xmlNodePtr tag_node = xmlNewChild(node, NULL, BAD_CAST "tag", NULL);
+      xmlNewProp(tag_node, BAD_CAST "k", BAD_CAST tag->key);
+      xmlNewProp(tag_node, BAD_CAST "v", BAD_CAST tag->value);
     }
-
-    xmlNodePtr tag_node = xmlNewChild(node, NULL, BAD_CAST "tag", NULL);
-    xmlNewProp(tag_node, BAD_CAST "k", BAD_CAST tag->key);
-    xmlNewProp(tag_node, BAD_CAST "v", BAD_CAST tag->value);
     tag = tag->next;
   }
 }
@@ -1432,9 +1428,6 @@ char *osm_generate_xml_changeset(osm_t *osm, char *comment) {
   xmlDocDumpFormatMemoryEnc(doc, &result, &len, "UTF-8", 1);
   xmlFreeDoc(doc);
   xmlCleanupParser();
-
-  //  puts("xml encoding result:");
-  //  puts((char*)result);
 
   return (char*)result;
 }
