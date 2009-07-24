@@ -269,7 +269,7 @@ cb_menu_undo_changes(GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
 
   if(!yes_no_f(GTK_WIDGET(appdata->window), NULL, 0, 0,
-	       _("Discard local changes?"), 
+	       _("Undo all changes?"), 
 	       _("Throw away all the changes you've not "
 		 "uploaded yet? This can't be undone.")))
     return;
@@ -282,7 +282,7 @@ cb_menu_undo_changes(GtkMenuItem *item, gpointer data) {
   map_paint(appdata);
   banner_busy_stop(appdata);  //"Redrawing"
 
-  banner_show_info(appdata, _("Discarded local changes"));
+  banner_show_info(appdata, _("Undo all changes"));
 }
 
 static void 
@@ -761,8 +761,8 @@ void menu_create(appdata_t *appdata) {
   );
 
   appdata->menu_item_map_undo_changes = menu_append_new_item(
-    appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_undo_changes), _("Disca_rd local changes"),
-    GTK_STOCK_DELETE, "<OSM2Go-Main>/Map/DiscardChanges",
+    appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_undo_changes), _("Undo _all"),
+    GTK_STOCK_DELETE, "<OSM2Go-Main>/Map/UndoAll",
     0, 0, TRUE, FALSE, FALSE
   );
 
@@ -902,6 +902,12 @@ typedef struct {
   GtkSignalFunc activate_cb;
 } menu_entry_t;
 
+typedef struct {
+  const char *title;
+  const menu_entry_t *menu;
+  int len;
+} submenu_t;
+
 static gboolean no_icon_get_toggle(appdata_t *appdata) {
   if(!appdata)           return FALSE;
   if(!appdata->settings) return FALSE;
@@ -960,10 +966,16 @@ static GtkWidget *app_menu_create(appdata_t *appdata,
   return GTK_WIDGET(menu);
 }
 
+#ifdef MAEMO5_SUBMENU_POPUP
+static GtkWidget *app_submenu_create(appdata_t *appdata, 
+				     const submenu_t *submenu) {
+  return app_menu_create(appdata, submenu->menu);
+}
+
 static void submenu_popup(GtkWidget *menu) {
   GtkWidget *top = hildon_window_stack_peek(hildon_window_stack_get_default());
 
-#if 1
+#if 0 // nasty workaround for race condition in hildonappmenu
   int start, end;
   GTimeVal tv;
   g_get_current_time(&tv);
@@ -982,10 +994,100 @@ static void submenu_popup(GtkWidget *menu) {
   } while(end-start < 500);
 #endif
 
-  
-
   hildon_app_menu_popup(HILDON_APP_MENU(menu), GTK_WINDOW(top));
 }
+
+static void submenu_cleanup(GtkWidget *menu) {
+  g_object_unref(menu);
+}
+#else
+#define COLUMNS  2
+
+void on_submenu_entry_clicked(GtkButton *button, GtkWidget *menu) {
+
+  /* force closing of submenu dialog */
+  gtk_dialog_response(GTK_DIALOG(menu), GTK_RESPONSE_NONE);
+  gtk_widget_hide(menu);
+  
+  /* let gtk clean up */
+  while(gtk_events_pending()) 
+    gtk_main_iteration();
+}
+
+/* use standard dialog boxes for fremantle submenues */
+static GtkWidget *app_submenu_create(appdata_t *appdata, 
+				     const submenu_t *submenu) {
+
+  /* create a oridinary dialog box */
+  GtkWidget *dialog = misc_dialog_new(MISC_DIALOG_SMALL, _(submenu->title),
+				      GTK_WINDOW(appdata->window), NULL);
+
+  gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
+
+  GtkWidget *table = gtk_table_new(submenu->len/COLUMNS, COLUMNS, TRUE);
+  int x = 0, y = 0;
+
+  const menu_entry_t *menu_entries = submenu->menu;
+  while(menu_entries->label) {
+    GtkWidget *button = NULL;
+
+    if(!menu_entries->toggle) {
+      button = hildon_button_new_with_text(
+	    HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH,
+	    HILDON_BUTTON_ARRANGEMENT_VERTICAL,
+	    _(menu_entries->label), _(menu_entries->value));
+
+      g_signal_connect(button, "clicked", 
+		       G_CALLBACK(on_submenu_entry_clicked), dialog); 
+
+      g_signal_connect(button, "clicked", 
+		       menu_entries->activate_cb, appdata); 
+    } else {
+      button = hildon_check_button_new(HILDON_SIZE_AUTO);
+      gtk_button_set_label(GTK_BUTTON(button), _(menu_entries->label));
+      printf("requesting check for %s: %p\n", menu_entries->label,
+	     menu_entries->toggle);
+      hildon_check_button_set_active(HILDON_CHECK_BUTTON(button), 
+				     menu_entries->toggle(appdata));
+
+      g_signal_connect(button, "clicked", 
+		       G_CALLBACK(on_submenu_entry_clicked), dialog); 
+
+      g_signal_connect(button, "toggled", 
+		       menu_entries->activate_cb, appdata); 
+    }
+
+    /* offset to GtkWidget pointer was given -> store pointer */
+    if(menu_entries->offset) 
+      *(GtkWidget**)(((void*)appdata)+menu_entries->offset) = button;
+
+    gtk_widget_set_sensitive(button, menu_entries->enabled);
+
+    gtk_table_attach_defaults(GTK_TABLE(table),  button, x, x+1, y, y+1);
+    
+    x++;
+    if(x == COLUMNS) { x = 0; y++; }
+
+    menu_entries++;
+  }
+
+
+  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), table);
+
+  return dialog;
+}
+
+/* popup the dialog shaped submenu */
+static void submenu_popup(GtkWidget *menu) {
+  gtk_widget_show_all(menu);
+  gtk_dialog_run(GTK_DIALOG(menu));
+  gtk_widget_hide(menu);
+}
+
+static void submenu_cleanup(GtkWidget *menu) {
+  gtk_widget_destroy(menu);
+}
+#endif
 
 /* the view submenu */
 void on_submenu_view_clicked(GtkButton *button, appdata_t *appdata) {
@@ -1016,7 +1118,7 @@ void on_submenu_track_clicked(GtkButton *button, appdata_t *appdata) {
 #define LAST_ENTRY            { NULL, NULL, FALSE, NULL, 0, NULL }
 
 /* -- the view submenu -- */
-static const menu_entry_t submenu_view[] = {
+static const menu_entry_t submenu_view_entries[] = {
 #ifndef ZOOM_BUTTONS
   SIMPLE_ENTRY("Zoom in",         cb_menu_zoomin),
   SIMPLE_ENTRY("Zoom out",        cb_menu_zoomout),
@@ -1036,22 +1138,30 @@ static const menu_entry_t submenu_view[] = {
   LAST_ENTRY
 };
 
+static const submenu_t submenu_view = {
+  "View", submenu_view_entries, sizeof(submenu_view_entries)/sizeof(menu_entry_t)
+};
+
 /* -- the map submenu -- */
-static const menu_entry_t submenu_map[] = {
+static const menu_entry_t submenu_map_entries[] = {
   ENABLED_ENTRY("Upload",                cb_menu_upload, menu_item_map_upload),
   SIMPLE_ENTRY("Download",               cb_menu_download),
-  ENABLED_ENTRY("Save local changes",    cb_menu_save_changes, 
-		                           menu_item_map_save_changes),
-  ENABLED_ENTRY("Discard local changes", cb_menu_undo_changes, 
-		                           menu_item_map_undo_changes),
+  ENABLED_ENTRY("Save changes",          cb_menu_save_changes, 
+		menu_item_map_save_changes),
+  ENABLED_ENTRY("Undo all",              cb_menu_undo_changes, 
+		menu_item_map_undo_changes),
   ENABLED_ENTRY("Relations",             cb_menu_osm_relations, 
-		                           menu_item_map_relations),
+		menu_item_map_relations),
 
   LAST_ENTRY
 };
 
+static const submenu_t submenu_map = {
+  "Map", submenu_map_entries, sizeof(submenu_map_entries)/sizeof(menu_entry_t)
+};
+
 /* -- the wms submenu -- */
-static const menu_entry_t submenu_wms[] = {
+static const menu_entry_t submenu_wms_entries[] = {
   SIMPLE_ENTRY("Import",   cb_menu_wms_import),
   DISABLED_ENTRY("Clear",  cb_menu_wms_clear, menu_item_wms_clear),
   DISABLED_ENTRY("Adjust", cb_menu_wms_adjust, menu_item_wms_adjust),
@@ -1059,8 +1169,12 @@ static const menu_entry_t submenu_wms[] = {
   LAST_ENTRY
 };
 
+static const submenu_t submenu_wms = {
+  "WMS", submenu_wms_entries, sizeof(submenu_wms_entries)/sizeof(menu_entry_t)
+};
+
 /* -- the track submenu -- */
-static const menu_entry_t submenu_track[] = {
+static const menu_entry_t submenu_track_entries[] = {
   ENABLED_ENTRY("Import",  cb_menu_track_import, track.menu_item_track_import),
   DISABLED_ENTRY("Export", cb_menu_track_export, track.menu_item_track_export),
   DISABLED_ENTRY("Clear",  cb_menu_track_clear, track.menu_item_track_clear),
@@ -1070,6 +1184,10 @@ static const menu_entry_t submenu_track[] = {
 		follow_gps_get_toggle, track.menu_item_track_follow_gps),
 
   LAST_ENTRY
+};
+
+static const submenu_t submenu_track = {
+  "Track", submenu_track_entries, sizeof(submenu_track_entries)/sizeof(menu_entry_t)
 };
 
 
@@ -1090,13 +1208,13 @@ void menu_create(appdata_t *appdata) {
  
   /* build menu/submenus */
   menu = HILDON_APP_MENU(app_menu_create(appdata, main_menu));
-  appdata->app_menu_wms   = app_menu_create(appdata, submenu_wms);
+  appdata->app_menu_wms   = app_submenu_create(appdata, &submenu_wms);
   g_object_ref(appdata->app_menu_wms);
-  appdata->app_menu_map   = app_menu_create(appdata, submenu_map);
+  appdata->app_menu_map   = app_submenu_create(appdata, &submenu_map);
   g_object_ref(appdata->app_menu_map);
-  appdata->app_menu_view  = app_menu_create(appdata, submenu_view);
+  appdata->app_menu_view  = app_submenu_create(appdata, &submenu_view);
   g_object_ref(appdata->app_menu_view);
-  appdata->app_menu_track = app_menu_create(appdata, submenu_track);
+  appdata->app_menu_track = app_submenu_create(appdata, &submenu_track);
   g_object_ref(appdata->app_menu_track);
 
   /* enable/disable some entries according to settings */
@@ -1105,6 +1223,13 @@ void menu_create(appdata_t *appdata) {
 			     appdata->settings->enable_gps);
 
   hildon_window_set_app_menu(HILDON_WINDOW(appdata->window), menu);
+}
+
+void menu_cleanup(appdata_t *appdata) { 
+  submenu_cleanup(appdata->app_menu_view);
+  submenu_cleanup(appdata->app_menu_map);
+  submenu_cleanup(appdata->app_menu_wms);
+  submenu_cleanup(appdata->app_menu_track);
 }
 #endif
 
@@ -1180,6 +1305,8 @@ void cleanup(appdata_t *appdata) {
 
   if(appdata->menu_item_map_undo)
     undo_free(appdata->osm, appdata->undo.state);
+
+  menu_cleanup(appdata);
 
   puts("everything is gone");
 }
@@ -1276,7 +1403,7 @@ int main(int argc, char *argv[]) {
 #endif
   hildon_program_add_window(appdata.program, appdata.window);
 
-#if MAEMO_VERSION_MAJOR == 5
+#if MAEMO_VERSION_MAJOR == 6
   unsigned long val = False;
   XChangeProperty(GDK_DISPLAY(),
 		  GDK_WINDOW_XID(GTK_WIDGET(appdata.window)->window),

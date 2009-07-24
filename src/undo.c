@@ -154,9 +154,9 @@ static void undo_object_copy_base(object_t *dst, object_t *src) {
   OBJECT_VERSION(*dst) = OBJECT_VERSION(*src);
   OBJECT_TIME(*dst)    = OBJECT_TIME(*src);
   OBJECT_USER(*dst)    = OBJECT_USER(*src);
-  OBJECT_TAG(*dst)     = OBJECT_TAG(*src);
   OBJECT_FLAGS(*dst)   = OBJECT_FLAGS(*src);
   OBJECT_VISIBLE(*dst) = OBJECT_VISIBLE(*src);
+  OBJECT_TAG(*dst)     = osm_tags_copy(OBJECT_TAG(*src));
 }
 
 /* create a local copy of the entire object */
@@ -223,7 +223,7 @@ static object_t *undo_object_save(osm_t *osm, object_t *object,
     while(member) {
       *id_chain = g_new0(item_id_chain_t, 1);
       (*id_chain)->type = member->object.type;
-      (*id_chain)->id = OBJECT_ID(member->object);
+      (*id_chain)->id = osm_object_get_id(&member->object);
 
       id_chain = &(*id_chain)->next;
       member = member->next;
@@ -249,7 +249,6 @@ void undo_append_object(appdata_t *appdata, undo_type_t type,
 
   g_assert(appdata->undo.open);
 
-
   /* deleting an object will affect all relations it's part of */
   /* therefore handle them first and save their state to undo  */
   /* the modifications */
@@ -270,7 +269,6 @@ void undo_append_object(appdata_t *appdata, undo_type_t type,
       rchain = next;
     }
   }
-
 
   /* a simple stand-alone node deletion is just a single */
   /* operation on the database/map so only one undo_op is saved */
