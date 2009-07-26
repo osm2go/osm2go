@@ -53,7 +53,7 @@ void main_ui_enable(appdata_t *appdata) {
   char *str = NULL;
 #ifdef USE_HILDON
   if(project_valid) 
-    str = g_markup_printf_escaped("OSM2Go - <b>%s</b>", 
+    str = g_markup_printf_escaped("<b>%s</b> - OSM2Go", 
 				  appdata->project->name);
   else 
     str = g_markup_printf_escaped("OSM2Go");
@@ -61,7 +61,7 @@ void main_ui_enable(appdata_t *appdata) {
   hildon_window_set_markup(HILDON_WINDOW(appdata->window), str);
 #else
   if(project_valid) 
-    str = g_strdup_printf("OSM2Go - %s", appdata->project->name);
+    str = g_strdup_printf("%s - OSM2Go", appdata->project->name);
   else 
     str = g_strdup_printf("OSM2Go");
 
@@ -889,6 +889,9 @@ void menu_create(appdata_t *appdata) {
 
 #endif //USE_HILDON
 }
+
+void menu_cleanup(appdata_t *appdata) { }
+
 #else // !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
 
 void submenu_entry(appdata_t *appdata, HildonAppMenu *menu,
@@ -954,6 +957,9 @@ static GtkWidget *app_menu_create(appdata_t *appdata,
       g_signal_connect_after(button, "toggled", 
 			     menu_entries->activate_cb, appdata); 
     }
+
+    hildon_button_set_title_alignment(HILDON_BUTTON(button), 0.5, 0.5);
+    hildon_button_set_value_alignment(HILDON_BUTTON(button), 0.5, 0.5);
 
     /* offset to GtkWidget pointer was given -> store pointer */
     if(menu_entries->offset) 
@@ -1045,6 +1051,9 @@ static GtkWidget *app_submenu_create(appdata_t *appdata,
 
       g_signal_connect(button, "clicked", 
 		       menu_entries->activate_cb, appdata); 
+      
+      hildon_button_set_title_alignment(HILDON_BUTTON(button), 0.5, 0.5);
+      hildon_button_set_value_alignment(HILDON_BUTTON(button), 0.5, 0.5);
     } else {
       button = hildon_check_button_new(HILDON_SIZE_AUTO);
       gtk_button_set_label(GTK_BUTTON(button), _(menu_entries->label));
@@ -1058,6 +1067,8 @@ static GtkWidget *app_submenu_create(appdata_t *appdata,
 
       g_signal_connect(button, "toggled", 
 		       menu_entries->activate_cb, appdata); 
+
+      gtk_button_set_alignment(GTK_BUTTON(button), 0.5, 0.5);
     }
 
     /* offset to GtkWidget pointer was given -> store pointer */

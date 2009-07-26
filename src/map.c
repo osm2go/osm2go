@@ -909,8 +909,8 @@ static void map_limit_scroll(map_t *map, canvas_unit_t unit,
   gdouble sy_cu = *sy / scale;
   
   /* get size of visible area in canvas units (meters) */
-  gint aw_cu = canvas_get_viewport_width(map->canvas, CANVAS_UNIT_METER);
-  gint ah_cu = canvas_get_viewport_height(map->canvas, CANVAS_UNIT_METER);
+  gint aw_cu = canvas_get_viewport_width(map->canvas, CANVAS_UNIT_METER)/2;
+  gint ah_cu = canvas_get_viewport_height(map->canvas, CANVAS_UNIT_METER)/2;
   
   // Data rect minimum and maximum
   gint min_x, min_y, max_x, max_y;
@@ -922,8 +922,8 @@ static void map_limit_scroll(map_t *map, canvas_unit_t unit,
   // limit stops - prevent scrolling beyond these
   gint min_sy_cu = 0.95*(min_y - ah_cu);
   gint min_sx_cu = 0.95*(min_x - aw_cu);
-  gint max_sy_cu = 0.95*(max_y);
-  gint max_sx_cu = 0.95*(max_x);
+  gint max_sy_cu = 0.95*(max_y + ah_cu);
+  gint max_sx_cu = 0.95*(max_x + aw_cu);
   if (sy_cu < min_sy_cu) { *sy = min_sy_cu * scale; }
   if (sx_cu < min_sx_cu) { *sx = min_sx_cu * scale; }
   if (sy_cu > max_sy_cu) { *sy = max_sy_cu * scale; }
@@ -1029,8 +1029,8 @@ void map_scroll_to_if_offscreen(map_t *map, lpos_t *lpos) {
     gint new_sx, new_sy;
 
     // Just centre both at once
-    new_sx = pix_per_meter * (lpos->x - (aw/2));
-    new_sy = pix_per_meter * (lpos->y - (ah/2));
+    new_sx = pix_per_meter * lpos->x; // XXX (lpos->x - (aw/2));
+    new_sy = pix_per_meter * lpos->y; // XXX (lpos->y - (ah/2));
 
     map_limit_scroll(map, CANVAS_UNIT_PIXEL, &new_sx, &new_sy);
     canvas_scroll_to(map->canvas, CANVAS_UNIT_PIXEL, new_sx, new_sy);

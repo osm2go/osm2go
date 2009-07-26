@@ -1396,8 +1396,8 @@ typedef struct wizard_page_s {
 
   union {
     struct {
-      GtkWidget *check[3];
-      GtkWidget *label[3];
+      GtkWidget *check[4];
+      GtkWidget *label[4];
     } source_selection;
 
   } state;
@@ -1500,7 +1500,7 @@ static void wizard_update_source_selection_page(wizard_page_t *page) {
   /* only allow him to continue then */
   gboolean sel_ok = FALSE;
   int i;
-  for(i=0;i<3;i++) {
+  for(i=0;i<4;i++) {
     if(gtk_toggle_button_get_active(
 	    GTK_TOGGLE_BUTTON(page->state.source_selection.check[i])))
       sel_ok = gtk_widget_get_sensitive(page->state.source_selection.check[i]);
@@ -1530,8 +1530,9 @@ static GtkWidget *wizard_create_source_selection_page(wizard_page_t *page) {
 
   /* add selection buttons */
   int i;
-  for(i=0;i<3;i++) {
+  for(i=0;i<4;i++) {
     static const char *labels[] = {
+      "Select from map",
       "Use current GPS position",
       "Get from Maemo Mapper",
       "Specify area manually"
