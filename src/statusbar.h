@@ -25,7 +25,6 @@
 typedef struct statusbar_s {
   GtkWidget *widget;
 #if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
-  GtkWidget *eventbox;
   guint cid;
   guint mid;
 #endif

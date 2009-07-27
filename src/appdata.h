@@ -47,6 +47,7 @@
 #endif
 
 #define ZOOM_BUTTONS  
+#define DETAIL_POPUP
 
 #include <gtk/gtk.h>
 #include <glib/gstdio.h>
@@ -79,7 +80,7 @@ typedef struct appdata_s {
   osm_t *osm;
 
 #ifdef ZOOM_BUTTONS
-  GtkWidget *btn_zoom_in, *btn_zoom_out;
+  GtkWidget *btn_zoom_in, *btn_zoom_out, *btn_detail_popup;
 #endif
 
   struct statusbar_s *statusbar;
@@ -113,7 +114,8 @@ typedef struct appdata_s {
     GtkWidget *menu_item_track_follow_gps;
     struct track_s *track;
     guint handler_id;
-    canvas_item_t *gps_item;      // the purple curcle
+    canvas_item_t *gps_item; // the purple circle
+    int warn_cnt;;
   } track;
 
 #if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)

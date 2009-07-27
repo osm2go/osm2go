@@ -973,12 +973,14 @@ static gboolean map_limit_zoom(map_t *map, gdouble *zoom) {
 
 /*
  * Scroll the map to a point if that point is currently offscreen.
+ * Return true if this was possible, false if position is outside
+ * working area
  */
-void map_scroll_to_if_offscreen(map_t *map, lpos_t *lpos) {
+gboolean map_scroll_to_if_offscreen(map_t *map, lpos_t *lpos) {
 
   // Ignore anything outside the working area
   if (!(map && map->appdata && map->appdata->osm)) {
-    return;
+    return FALSE;
   }
   gint min_x, min_y, max_x, max_y;
   min_x = map->appdata->osm->bounds->min.x;
@@ -989,7 +991,7 @@ void map_scroll_to_if_offscreen(map_t *map, lpos_t *lpos) {
       || (lpos->y > max_y) || (lpos->y < min_y)) {
     printf("cannot scroll to (%d, %d): outside the working area\n",
 	   lpos->x, lpos->y);
-    return;
+    return FALSE;
   }
 
   // Viewport dimensions in canvas space
@@ -1035,6 +1037,7 @@ void map_scroll_to_if_offscreen(map_t *map, lpos_t *lpos) {
     map_limit_scroll(map, CANVAS_UNIT_PIXEL, &new_sx, &new_sy);
     canvas_scroll_to(map->canvas, CANVAS_UNIT_PIXEL, new_sx, new_sy);
   }
+  return TRUE;
 }
 
 /* Deselects the current way or node if its zoom_max

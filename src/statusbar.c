@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008 Till Harbaum <till@harbaum.org>.
+ * Copyright (C) 2008-2009 Till Harbaum <till@harbaum.org>.
  *
  * This file is part of OSM2Go.
  *
@@ -21,16 +21,18 @@
 
 #if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
 void statusbar_highlight(appdata_t *appdata, gboolean highlight) {
+  GtkStatusbar *bar = (GtkStatusbar*)appdata->statusbar->widget;
+  
   if(highlight) {
     GdkColor color;
     gdk_color_parse("red", &color); 
-    gtk_widget_modify_bg(appdata->statusbar->eventbox, GTK_STATE_NORMAL, &color);
-    gtk_widget_modify_base(appdata->statusbar->eventbox, GTK_STATE_NORMAL, &color);
-    gtk_widget_modify_fg(appdata->statusbar->eventbox, GTK_STATE_NORMAL, &color);
-  } else
-    gtk_widget_modify_bg(appdata->statusbar->eventbox, GTK_STATE_NORMAL, NULL);
+    gtk_widget_modify_fg(bar->label, GTK_STATE_NORMAL, &color);
+    gtk_widget_modify_text(bar->label, GTK_STATE_NORMAL, &color);
+  } else {
+    gtk_widget_modify_fg(bar->label, GTK_STATE_NORMAL, NULL);
+    gtk_widget_modify_text(bar->label, GTK_STATE_NORMAL, NULL);
+  }
 }
-
 
 // Set the persistent message, replacing anything currently there.
 void statusbar_set(appdata_t *appdata, const char *msg, gboolean highlight) {
@@ -61,6 +63,7 @@ static gboolean statusbar_brief_clear(gpointer data) {
                          appdata->statusbar->cid,
                          appdata->statusbar->brief_mid);
     appdata->statusbar->brief_mid = 0;
+    statusbar_highlight(appdata, FALSE);
   }
   return FALSE;
 }
@@ -82,6 +85,7 @@ void statusbar_brief(appdata_t *appdata, const char *msg, gint timeout) {
   statusbar_brief_clear(appdata);
   guint mid = 0;
   if (msg) {
+    statusbar_highlight(appdata, TRUE);
     mid = gtk_statusbar_push(GTK_STATUSBAR(appdata->statusbar->widget),
                                  appdata->statusbar->cid, msg);
     if (mid) {
@@ -101,7 +105,6 @@ void statusbar_brief(appdata_t *appdata, const char *msg, gint timeout) {
 GtkWidget *statusbar_new(appdata_t *appdata) {
   appdata->statusbar = (statusbar_t*)g_new0(statusbar_t, 1);
 
-  appdata->statusbar->eventbox = gtk_event_box_new();
   appdata->statusbar->widget = gtk_statusbar_new();
 
 #ifdef USE_HILDON
@@ -110,13 +113,11 @@ GtkWidget *statusbar_new(appdata_t *appdata) {
 	       "has-resize-grip", FALSE, 
 	       NULL );
 #endif
-  gtk_container_add(GTK_CONTAINER(appdata->statusbar->eventbox), 
-		    appdata->statusbar->widget);
 
   appdata->statusbar->cid = gtk_statusbar_get_context_id(
 		GTK_STATUSBAR(appdata->statusbar->widget), "Msg");
 
-  return appdata->statusbar->eventbox;
+  return appdata->statusbar->widget;
 }
 
 #else
@@ -124,11 +125,12 @@ void statusbar_highlight(appdata_t *appdata, gboolean highlight) {
   if(highlight) {
     GdkColor color;
     gdk_color_parse("red", &color); 
-    gtk_widget_modify_bg(appdata->statusbar->widget, GTK_STATE_NORMAL, &color);
-    gtk_widget_modify_base(appdata->statusbar->widget, GTK_STATE_NORMAL, &color);
     gtk_widget_modify_fg(appdata->statusbar->widget, GTK_STATE_NORMAL, &color);
-  } else
-    gtk_widget_modify_bg(appdata->statusbar->widget, GTK_STATE_NORMAL, NULL);
+    gtk_widget_modify_text(appdata->statusbar->widget, GTK_STATE_NORMAL, &color);
+  } else {
+    gtk_widget_modify_fg(appdata->statusbar->widget, GTK_STATE_NORMAL, NULL);
+    gtk_widget_modify_text(appdata->statusbar->widget, GTK_STATE_NORMAL, NULL);
+  }
 }
 
 

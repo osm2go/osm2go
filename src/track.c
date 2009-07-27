@@ -490,13 +490,18 @@ static void track_append_position(appdata_t *appdata, pos_t *pos, float alt) {
     }
   }
   
-#ifdef USE_GOOCANVAS
   if(appdata->settings && appdata->settings->follow_gps) {
     lpos_t lpos;
     pos2lpos(appdata->osm->bounds, pos, &lpos);
-    map_scroll_to_if_offscreen(appdata->map, &lpos);
+    if(!map_scroll_to_if_offscreen(appdata->map, &lpos)) {
+      if(!--appdata->track.warn_cnt) {
+	/* warn user once a minute that the current gps */
+	/* position is outside the working area */
+	banner_show_info(appdata, _("GPS position outside working area!"));
+	appdata->track.warn_cnt = 60;  // warn again after one minute
+      }
+    }
   }
-#endif
 }
 
 static gboolean update(gpointer data) {
@@ -542,6 +547,7 @@ static gboolean update(gpointer data) {
 
 static void track_do_enable_gps(appdata_t *appdata) {
   gps_enable(appdata, TRUE);
+  appdata->track.warn_cnt = 1;
 
   if(!appdata->track.handler_id) {
     appdata->track.handler_id = gtk_timeout_add(1000, update, appdata);
