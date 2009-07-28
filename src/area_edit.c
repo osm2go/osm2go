@@ -618,6 +618,7 @@ gboolean area_edit(area_edit_t *area) {
   context.map.widget = g_object_new(OSM_TYPE_GPS_MAP,
 	        "repo-uri", MAP_SOURCE_OPENSTREETMAP,
 		"proxy-uri", misc_get_proxy_uri(area->settings),
+	        "tile-cache", NULL,
 		 NULL);
 
   g_signal_connect(G_OBJECT(context.map.widget), "configure-event",

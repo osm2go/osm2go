@@ -637,11 +637,13 @@ osm_gps_map_blit_tile(OsmGpsMap *map, GdkPixbuf *pixbuf, int offset_x, int offse
 /* libsoup-2.2 and libsoup-2.4 use different ways to store the body data */
 #ifdef LIBSOUP22
 #define  soup_message_headers_append(a,b,c) soup_message_add_header(a,b,c)
-#define MSG_RESPONSE_BODY(a)  ((a)->response.body)
-#define MSG_RESPONSE_LEN(a)  ((a)->response.length)
+#define MSG_RESPONSE_BODY(a)    ((a)->response.body)
+#define MSG_RESPONSE_LEN(a)     ((a)->response.length)
+#define MSG_RESPONSE_LEN_FORMAT "%u"
 #else
-#define MSG_RESPONSE_BODY(a)  ((a)->response_body->data)
-#define MSG_RESPONSE_LEN(a)  ((a)->response_body->length)
+#define MSG_RESPONSE_BODY(a)    ((a)->response_body->data)
+#define MSG_RESPONSE_LEN(a)     ((a)->response_body->length)
+#define MSG_RESPONSE_LEN_FORMAT "%lld"
 #endif
 
 #ifdef LIBSOUP22
@@ -652,69 +654,90 @@ static void
 osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpointer user_data)
 #endif
 {
-#ifndef NO_DISK_CACHE
     int fd;
-#endif
     tile_download_t *dl = (tile_download_t *)user_data;
     OsmGpsMap *map = OSM_GPS_MAP(dl->map);
     OsmGpsMapPrivate *priv = map->priv;
+    gboolean file_saved = FALSE;
 
     if (SOUP_STATUS_IS_SUCCESSFUL (msg->status_code))
     {
-#ifndef NO_DISK_CACHE
-        if (g_mkdir_with_parents(dl->folder,0700) == 0)
+        /* save tile into cachedir if one has been specified */
+        if (priv->cache_dir)
         {
-            fd = open(dl->filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-            if (fd != -1)
+            if (g_mkdir_with_parents(dl->folder,0700) == 0)
             {
-                write (fd, MSG_RESPONSE_BODY(msg), MSG_RESPONSE_LEN(msg));
-
-                g_debug("Wrote %lld bytes to %s", MSG_RESPONSE_LEN(msg), dl->filename);
-                close (fd);
-#endif
-                if (dl->redraw)
+                fd = open(dl->filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+                if (fd != -1)
                 {
-#ifndef NO_DISK_CACHE
-                    GdkPixbuf *pixbuf = gdk_pixbuf_new_from_file (dl->filename, NULL);
-#else
-                    GdkPixbufLoader *loader = gdk_pixbuf_loader_new_with_type("png", NULL);
-                    if(!gdk_pixbuf_loader_write(loader, (unsigned char*)MSG_RESPONSE_BODY(msg), 
-                                                MSG_RESPONSE_LEN(msg), NULL))
+                    write (fd, MSG_RESPONSE_BODY(msg), MSG_RESPONSE_LEN(msg));
+                    file_saved = TRUE;
+
+                    g_debug("Wrote " MSG_RESPONSE_LEN_FORMAT " bytes to %s", MSG_RESPONSE_LEN(msg), dl->filename);
+                    close (fd);
+                }
+            }
+            else
+            {
+                g_warning("Error creating tile download directory: %s", dl->folder);
+            }
+        }
+
+        if (dl->redraw)
+        {
+            GdkPixbuf *pixbuf = NULL;
+
+            if (priv->cache_dir)
+            {
+                if (file_saved)
+                {
+                    pixbuf = gdk_pixbuf_new_from_file (dl->filename, NULL);
+                }
+            }
+            else
+            {
+                GdkPixbufLoader *loader;
+                char *extension = strrchr (dl->filename, '.');
+
+                /* parse file directly from memory */
+                if (extension)
+                {
+                    loader = gdk_pixbuf_loader_new_with_type (extension+1, NULL);
+                    if (!gdk_pixbuf_loader_write (loader, (unsigned char*)MSG_RESPONSE_BODY(msg), MSG_RESPONSE_LEN(msg), NULL))
+                    {
                         g_warning("Error: Decoding of image failed");
-                       
+                    }
                     gdk_pixbuf_loader_close(loader, NULL);
 
-                    GdkPixbuf *pixbuf = gdk_pixbuf_loader_get_pixbuf(loader);
+                    pixbuf = gdk_pixbuf_loader_get_pixbuf(loader);
 
                     /* give up loader but keep the pixbuf */
                     g_object_ref(pixbuf);
                     g_object_unref(loader);
-#endif
-                    /* Store the tile into the cache */
-                    if (G_LIKELY (pixbuf))
-                    {
-                        OsmCachedTile *tile = g_slice_new (OsmCachedTile);
-                        tile->pixbuf = pixbuf;
-                        tile->redraw_cycle = priv->redraw_cycle;
-                        /* if the tile is already in the cache (it could be one
-                         * rendered from another zoom level), it will be
-                         * overwritten */
-                        g_hash_table_insert (priv->tile_cache, dl->filename, tile);
-                        /* NULL-ify dl->filename so that it won't be freed, as
-                         * we are using it as a key in the hash table */
-                        dl->filename = NULL;
-                    }
-
-                    osm_gps_map_map_redraw_idle (map);
                 }
-#ifndef NO_DISK_CACHE
+                else
+                {
+                    g_warning("Error: Unable to determine image file format");
+                }
             }
+
+            /* Store the tile into the cache */
+            if (G_LIKELY (pixbuf))
+            {
+                OsmCachedTile *tile = g_slice_new (OsmCachedTile);
+                tile->pixbuf = pixbuf;
+                tile->redraw_cycle = priv->redraw_cycle;
+                /* if the tile is already in the cache (it could be one
+                 * rendered from another zoom level), it will be
+                 * overwritten */
+                g_hash_table_insert (priv->tile_cache, dl->filename, tile);
+                /* NULL-ify dl->filename so that it won't be freed, as
+                 * we are using it as a key in the hash table */
+                dl->filename = NULL;
+            }
+            
+            osm_gps_map_map_redraw_idle (map);
         }
-        else
-        {
-            g_warning("Error creating tile download directory: %s", dl->folder);
-        }
-#endif
         g_hash_table_remove(priv->tile_queue, dl->uri);
 
         g_free(dl->uri);
@@ -824,8 +847,7 @@ osm_gps_map_load_cached_tile (OsmGpsMap *map, int zoom, int x, int y)
     {
         g_free (filename);
     }
-#ifdef NO_DISK_CACHE
-    else
+    else if (priv->cache_dir)
     {
         pixbuf = gdk_pixbuf_new_from_file (filename, NULL);
         if (pixbuf)
@@ -835,7 +857,6 @@ osm_gps_map_load_cached_tile (OsmGpsMap *map, int zoom, int x, int y)
             g_hash_table_insert (priv->tile_cache, filename, tile);
         }
     }
-#endif
 
     /* set/update the redraw_cycle timestamp on the tile */
     if (tile)
@@ -907,26 +928,32 @@ static void
 osm_gps_map_load_tile (OsmGpsMap *map, int zoom, int x, int y, int offset_x, int offset_y)
 {
     OsmGpsMapPrivate *priv = map->priv;
-    gchar *filename;
     GdkPixbuf *pixbuf;
 
     g_debug("Load tile %d,%d (%d,%d) z:%d", x, y, offset_x, offset_y, zoom);
 
-    filename = g_strdup_printf("%s/%u/%u/%u.png",
-                               priv->cache_dir,
-                               zoom, x, y);
-
     /* try to get file from internal cache */
     pixbuf = osm_gps_map_load_cached_tile(map, zoom, x, y);
 
-#ifdef NO_DISK_CACHE
-    if(!pixbuf)
-        pixbuf = gdk_pixbuf_new_from_file (filename, NULL);
-#endif
-
-    if(pixbuf)
+    /* if a disk cache is being used, try to read the file from there */
+    if (priv->cache_dir && !pixbuf)
     {
-        g_debug("Found tile %s", filename);
+        gchar *filename;
+        filename = g_strdup_printf("%s/%u/%u/%u.png",
+                                   priv->cache_dir,
+                                   zoom, x, y);
+        
+        pixbuf = gdk_pixbuf_new_from_file (filename, NULL);
+        if (pixbuf) 
+        {
+            g_debug("Found tile %s", filename);
+        }
+
+        g_free(filename);
+    }
+
+    if (G_LIKELY(pixbuf))
+    {
         osm_gps_map_blit_tile(map, pixbuf, offset_x,offset_y);
         g_object_unref (pixbuf);
     }
@@ -957,7 +984,6 @@ osm_gps_map_load_tile (OsmGpsMap *map, int zoom, int x, int y, int offset_x, int
                                 TRUE, offset_x, offset_y, TILESIZE, TILESIZE);
         }
     }
-    g_free(filename);
 }
 
 static void
@@ -1281,9 +1307,6 @@ osm_gps_map_constructor (GType gtype, guint n_properties, GObjectConstructParam 
             priv->cache_dir = g_strdup_printf("%s/%s", old, md5);
             g_debug("Adjusting cache dir %s -> %s", old, priv->cache_dir);
             g_free(old);
-        } else {
-            //the new cachedir is the current dir + the md5 of the repo_uri
-            priv->cache_dir = g_strdup(md5);
         }
 
         g_free(md5);
@@ -1916,9 +1939,7 @@ osm_gps_map_download_maps (OsmGpsMap *map, coord_t *pt1, coord_t *pt2, int zoom_
                 {
                     // x = i, y = j
                     filename = g_strdup_printf("%s/%u/%u/%u.png", priv->cache_dir, zoom, i, j);
-#ifndef NO_DISK_CACHE
-                    if (!g_file_test(filename, G_FILE_TEST_EXISTS))
-#endif
+                    if (!priv->cache_dir || !g_file_test(filename, G_FILE_TEST_EXISTS))
                     {
                         osm_gps_map_download_tile(map, zoom, i, j, FALSE);
                         num_tiles++;

@@ -1528,7 +1528,6 @@ int main(int argc, char *argv[]) {
 
 #if defined(ZOOM_BUTTONS) || defined(DETAIL_POPUP)
   GtkWidget *zhbox = gtk_hbox_new(FALSE, 0);
-
   gtk_box_pack_start_defaults(GTK_BOX(zhbox), statusbar_new(&appdata));
 #endif
 
@@ -1540,7 +1539,6 @@ int main(int argc, char *argv[]) {
   g_signal_connect(appdata.btn_detail_popup, "clicked", 
 		   G_CALLBACK(detail_level_popup), &appdata);
   gtk_box_pack_start(GTK_BOX(zhbox), appdata.btn_detail_popup, FALSE, FALSE, 0);
-  gtk_box_pack_start(GTK_BOX(vbox), zhbox, FALSE, FALSE, 0);
 #endif
 
 #ifdef ZOOM_BUTTONS
