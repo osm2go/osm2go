@@ -172,6 +172,7 @@ typedef struct appdata_s {
 #include "net_io.h"
 #include "banner.h"
 #include "list.h"
+#include "scale_popup.h"
 
 void main_ui_enable(appdata_t *appdata);
 

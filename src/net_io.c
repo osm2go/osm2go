@@ -30,14 +30,14 @@ static struct http_message_s {
 } http_messages [] = {
   {   0, "Curl internal failure" },
   { 200, "Ok" },
-  { 400, "Bad Request" },
-  { 401, "Unauthorized" },
+  { 400, "Bad Request (area too big?)" },
+  { 401, "Unauthorized (wrong user/password?)" },
   { 403, "Forbidden" },
   { 404, "Not Found" },
   { 405, "Method Not Allowed" },
   { 410, "Gone" },
   { 412, "Precondition Failed" },
-  { 417, "(Expect rejected)" },
+  { 417, "Expectation failed (expect rejected)" },
   { 500, "Internal Server Error" },
   { 503, "Service Unavailable" },
   { 0,   NULL }
@@ -78,7 +78,7 @@ typedef struct {
 static char *http_message(int id) {
   struct http_message_s *msg = http_messages;
 
-  while(msg->id) {
+  while(msg->msg) {
     if(msg->id == id) return _(msg->msg);
     msg++;
   }
@@ -260,6 +260,13 @@ static void *worker_thread(void *ptr) {
     
       curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &request->response);
 
+#if 0
+      /* try to read "Error" */
+      struct curl_slist *slist = NULL;
+      slist = curl_slist_append(slist, "Error:");
+      curl_easy_setopt(curl, CURLOPT_HTTPHEADER, slist);
+#endif
+
       if(request->type == NET_IO_DL_FILE) 
 	fclose(outfile);
     }
@@ -364,8 +371,10 @@ gboolean net_io_download_file(GtkWidget *parent, settings_t *settings,
     /* user has restarted the download by then, the worker will erase that */
     /* newly written file */
 
+    printf("request failed, deleting %s\n", filename);
     g_remove(filename);
-  }
+  } else
+    printf("request ok\n");
 
   request_free(request);
   return result;

@@ -27,6 +27,7 @@
 #define MISC_AGAIN_ID_EXTEND_WAY       (1<<4)
 #define MISC_AGAIN_ID_EXTEND_WAY_END   (1<<5)
 #define MISC_AGAIN_ID_EXPORT_OVERWRITE (1<<6)
+#define MISC_AGAIN_ID_AREA_TOO_BIG     (1<<7)
 
 typedef struct file_chain_s {
   char *name;

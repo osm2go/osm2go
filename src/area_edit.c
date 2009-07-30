@@ -91,10 +91,37 @@ static gboolean current_tab_is(context_t *context, gint page_num, char *str) {
   return(strcasecmp(name, _(str)) == 0);
 }
 
+static char *warn_text(context_t *context) {
+  /* compute area size */
+  pos_float_t center_lat = (context->max.lat + context->min.lat)/2;
+  double vscale = DEG2RAD(POS_EQ_RADIUS / 1000.0);
+  double hscale = DEG2RAD(cos(DEG2RAD(center_lat)) * POS_EQ_RADIUS / 1000.0);
+  
+  double area = vscale * (context->max.lat - context->min.lat) *
+    hscale * (context->max.lon - context->min.lon);
+  
+  return g_strdup_printf(
+     _("The currently selected area is %.02f km² (%.02f mi²) in size. "
+       "This is more than the recommended %.02f km² (%.02f mi²).\n\n"
+       "Continuing may result in a big or failing download and low "
+       "mapping performance in a densly mapped area (e.g. cities)!"), 
+     area, area/(KMPMIL*KMPMIL),
+     WARN_OVER, WARN_OVER/(KMPMIL*KMPMIL)
+     );
+}
+
 static void on_area_warning_clicked(GtkButton *button, gpointer data) {
   context_t *context = (context_t*)data;
 
-  /* compute area size */
+  char *wtext = warn_text(context);
+  warningf(context->dialog, wtext);
+  g_free(wtext);
+}
+
+static gboolean area_warning(context_t *context) {
+  gboolean ret = TRUE;
+
+  /* check if area size exceeds recommended values */
   pos_float_t center_lat = (context->max.lat + context->min.lat)/2;
   double vscale = DEG2RAD(POS_EQ_RADIUS / 1000.0);
   double hscale = DEG2RAD(cos(DEG2RAD(center_lat)) * POS_EQ_RADIUS / 1000.0);
@@ -102,15 +129,18 @@ static void on_area_warning_clicked(GtkButton *button, gpointer data) {
   double area = vscale * (context->max.lat - context->min.lat) *
     hscale * (context->max.lon - context->min.lon);
 
-  warningf(context->dialog,
-   _("The currently selected area is %.02f km² (%.02f mi²) in size. "
-     "This is more than the recommended %.02f km² (%.02f mi²).\n\n"
-     "Continuing may result in a big download and low mapping performance "
-     "in a densly mapped area (e.g. cities)!"), 
-	   area, area/(KMPMIL*KMPMIL),
-	   WARN_OVER, WARN_OVER/(KMPMIL*KMPMIL)
-	   );
+  if(area > WARN_OVER) {
+    char *wtext = warn_text(context);
 
+    ret = yes_no_f(context->dialog, context->area->appdata, 
+		   MISC_AGAIN_ID_AREA_TOO_BIG, MISC_AGAIN_FLAG_DONT_SAVE_NO,
+		   _("Area size warning!"),
+		   _("%s Do you really want to continue?"), wtext);
+
+    g_free(wtext);
+  }
+
+  return ret;
 }
 
 static void area_main_update(context_t *context) {
@@ -559,7 +589,6 @@ static gboolean map_gps_update(gpointer data) {
 
 gboolean area_edit(area_edit_t *area) {
   GtkWidget *vbox;
-  gboolean ok = FALSE;
 
   context_t context;
   memset(&context, 0, sizeof(context_t));
@@ -808,13 +837,23 @@ gboolean area_edit(area_edit_t *area) {
 
   area_main_update(&context);
 
-  if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(context.dialog))) {
+  gboolean leave = FALSE, ok = FALSE;
+  do {
+    if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(context.dialog))) {
+      if(area_warning(&context)) {
+	leave = TRUE;
+	ok = TRUE;
+      }
+    } else 
+      leave = TRUE;
+  } while(!leave);
+
+  if(ok) {
     /* copy modified values back to given storage */
     area->min->lat = context.min.lat;
     area->min->lon = context.min.lon;
     area->max->lat = context.max.lat;
     area->max->lon = context.max.lon;
-    ok = TRUE;
   }
 
 #ifdef ENABLE_OSM_GPS_MAP

@@ -103,7 +103,7 @@ gboolean yes_no_f(GtkWidget *parent, appdata_t *appdata, gulong again_bit,
     GtkWidget *alignment = gtk_alignment_new(0.5, 0, 0, 0);
 
     cbut = gtk_check_button_new_with_label(
-            _("Don't ask this question again this session"));
+            _("Don't ask this question again"));
     g_signal_connect(cbut, "toggled", G_CALLBACK(on_toggled), &flags);
 
     gtk_container_add(GTK_CONTAINER(alignment), cbut);

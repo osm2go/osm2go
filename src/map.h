@@ -35,6 +35,8 @@
 #define ZOOM_FACTOR_WHEEL  (1.1)
 #define ZOOM_FACTOR_BUTTON (1.5)
 
+#define MAP_DETAIL_STEP 1.5
+
 /* the "drag limit" is the number of pixels the mouse/pen has to */
 /* be moved so the action is actually considered dragging. This is */
 /* to prevent accidential dragging when the user only intended to click */
@@ -186,6 +188,7 @@ void map_outside_error(appdata_t *appdata);
 void map_node_draw(map_t *map, node_t *node);
 void map_relation_select(appdata_t *appdata, relation_t *relation);
 
+void map_detail_change(map_t *map, float detail);
 void map_detail_increase(map_t *map);
 void map_detail_decrease(map_t *map);
 void map_detail_normal(map_t *map);

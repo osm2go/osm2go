@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008 Till Harbaum <till@harbaum.org>.
+ * Copyright (C) 2008-2009 Till Harbaum <till@harbaum.org>.
  *
  * This file is part of OSM2Go.
  *
@@ -320,6 +320,7 @@ cb_menu_zoomout(GtkMenuItem *item, appdata_t *appdata) {
   printf("zoom is now %f\n", appdata->map->state->zoom);
 }
 
+#if (MAEMO_VERSION_MAJOR != 5) || !defined(DETAIL_POPUP)
 static void 
 cb_menu_view_detail_inc(GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
@@ -343,6 +344,7 @@ cb_menu_view_detail_dec(GtkMenuItem *item, gpointer data) {
   printf("detail level decrease\n");
   map_detail_decrease(appdata->map);
 }
+#endif
 
 static void 
 cb_menu_track_import(GtkMenuItem *item, appdata_t *appdata) {
@@ -1140,9 +1142,11 @@ static const menu_entry_t submenu_view_entries[] = {
   /* --- */
   SIMPLE_ENTRY("Style",           cb_menu_style),
   /* --- */
+#ifndef DETAIL_POPUP
   SIMPLE_ENTRY("Normal details",  cb_menu_view_detail_normal),
   SIMPLE_ENTRY("More details",    cb_menu_view_detail_inc),
   SIMPLE_ENTRY("Less details",    cb_menu_view_detail_dec),
+#endif
   /* --- */
   DISABLED_ENTRY("Hide selected", cb_menu_map_hide_sel, menu_item_map_hide_sel),
   DISABLED_ENTRY("Show all",      cb_menu_map_show_all, menu_item_map_show_all),
@@ -1376,57 +1380,6 @@ gboolean on_window_key_press(GtkWidget *widget,
   return handled;
 }
 
-#ifdef DETAIL_POPUP
-#define HEIGHT 100
-
-static void detail_level_popup(GtkWidget *button, appdata_t *appdata) {
-  GtkWidget *overlay = gtk_window_new(GTK_WINDOW_POPUP);
-  gtk_window_set_default_size(GTK_WINDOW(overlay), button->allocation.width, HEIGHT); 
-  gtk_widget_realize(overlay);
-
-  //  gtk_window_set_resizable(GTK_WINDOW(overlay), FALSE);
-
-  gtk_window_set_transient_for(GTK_WINDOW(overlay), GTK_WINDOW(appdata->window));
-  gtk_window_set_keep_above(GTK_WINDOW(overlay), TRUE);    
-  gtk_window_set_destroy_with_parent(GTK_WINDOW(overlay), TRUE);
-  gtk_window_set_gravity(GTK_WINDOW(overlay), GDK_GRAVITY_STATIC);
-  gtk_window_set_modal(GTK_WINDOW(overlay), TRUE);
-
-  gdk_pointer_grab(overlay->window, TRUE,
-		   GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_BUTTON_MOTION_MASK,
-		   NULL, NULL, GDK_CURRENT_TIME);
-  gtk_grab_add(overlay->window);
-
-#if 0
-  gtk_window_set_position(GTK_WINDOW(overlay), GTK_WIN_POS_MOUSE);
-#else
-  gint x, y;
-  GdkWindow *wpar = gtk_widget_get_parent_window(button);
-  gdk_window_get_root_origin(wpar, &x, &y);
-  gtk_window_move(GTK_WINDOW(overlay), 
-		  x + button->allocation.x, 
-		  y + button->allocation.y - HEIGHT);
-#endif
-
-  /* a frame with a vscale inside */
-  GtkWidget *frame = gtk_frame_new(NULL);
-  gtk_widget_show (frame);
-  gtk_frame_set_shadow_type(GTK_FRAME(frame), GTK_SHADOW_OUT);
-  GtkObject *adjustment = gtk_adjustment_new(1.0, 0.1, 10.0, +1, -1, 1);
-  GtkWidget *scale = gtk_vscale_new(GTK_ADJUSTMENT(adjustment));
-  gtk_container_add(GTK_CONTAINER(frame), scale);
-  gtk_container_add(GTK_CONTAINER(overlay), frame);
-  
-  gtk_widget_show_all(overlay);
-
-  /* handle this popup until it's gone */
-  
-
-
-
-}
-#endif
-
 int main(int argc, char *argv[]) {
   appdata_t appdata;
 
@@ -1472,7 +1425,9 @@ int main(int argc, char *argv[]) {
 #endif
   hildon_program_add_window(appdata.program, appdata.window);
 
-#if MAEMO_VERSION_MAJOR == 5
+  /* try to enable the zoom buttons. don't do this on x86 as it breaks */
+  /* at runtime with cygwin x */
+#if (MAEMO_VERSION_MAJOR == 5) && !defined(__i386__)
   unsigned long val = True;
   XChangeProperty(GDK_DISPLAY(),
 		  GDK_WINDOW_XID(GTK_WIDGET(appdata.window)->window),
@@ -1537,7 +1492,7 @@ int main(int argc, char *argv[]) {
   gtk_button_set_image(GTK_BUTTON(appdata.btn_detail_popup), 
 	gtk_image_new_from_stock(GTK_STOCK_ABOUT, GTK_ICON_SIZE_MENU));
   g_signal_connect(appdata.btn_detail_popup, "clicked", 
-		   G_CALLBACK(detail_level_popup), &appdata);
+		   G_CALLBACK(scale_popup), &appdata);
   gtk_box_pack_start(GTK_BOX(zhbox), appdata.btn_detail_popup, FALSE, FALSE, 0);
 #endif
 

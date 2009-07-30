@@ -2354,7 +2354,7 @@ void map_show_all(appdata_t *appdata) {
   gtk_widget_set_sensitive(appdata->menu_item_map_show_all, FALSE);
 }
 
-static void map_detail_change(map_t *map, float detail) {
+void map_detail_change(map_t *map, float detail) {
   appdata_t *appdata = map->appdata;
 
   /* deselecting anything allows us not to care about automatic deselection */
@@ -2370,16 +2370,14 @@ static void map_detail_change(map_t *map, float detail) {
   banner_busy_stop(appdata);
 }
 
-#define DETAIL_STEP 1.5
-
 void map_detail_increase(map_t *map) {
   if(!map) return;
-  map_detail_change(map, map->state->detail * DETAIL_STEP);
+  map_detail_change(map, map->state->detail * MAP_DETAIL_STEP);
 }
 
 void map_detail_decrease(map_t *map) {
   if(!map) return;
-  map_detail_change(map, map->state->detail / DETAIL_STEP);
+  map_detail_change(map, map->state->detail / MAP_DETAIL_STEP);
 }
 
 void map_detail_normal(map_t *map) {
