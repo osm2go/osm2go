@@ -71,10 +71,13 @@ struct gps_data_t {
 #include <gpsmgr.h>
 #endif
 
+/* force usage of gpsd start/stop */
+#define LL_CONTROL_GPSD
+
 typedef struct gps_state_s {
 #ifdef ENABLE_LIBLOCATION
   LocationGPSDevice *device;
-#if MAEMO_VERSION_MAJOR < 5
+#ifdef LL_CONTROL_GPSD
   LocationGPSDControl *control;
 #endif
   guint idd_changed;
