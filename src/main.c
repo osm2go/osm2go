@@ -1380,6 +1380,25 @@ gboolean on_window_key_press(GtkWidget *widget,
   return handled;
 }
 
+#if (MAEMO_VERSION_MAJOR == 5) && !defined(__i386__)
+/* get access to zoom buttons */
+static void
+on_window_realize(GtkWidget *widget, appdata_t *appdata) {
+  if (widget->window) {
+    unsigned char value = 1;
+    Atom hildon_zoom_key_atom = 
+      gdk_x11_get_xatom_by_name("_HILDON_ZOOM_KEY_ATOM"),
+      integer_atom = gdk_x11_get_xatom_by_name("INTEGER");
+    Display *dpy = 
+      GDK_DISPLAY_XDISPLAY(gdk_drawable_get_display(widget->window));
+    Window w = GDK_WINDOW_XID(widget->window);
+
+    XChangeProperty(dpy, w, hildon_zoom_key_atom, 
+		    integer_atom, 8, PropModeReplace, &value, 1);
+  }
+}
+#endif
+
 int main(int argc, char *argv[]) {
   appdata_t appdata;
 
@@ -1428,14 +1447,9 @@ int main(int argc, char *argv[]) {
   /* try to enable the zoom buttons. don't do this on x86 as it breaks */
   /* at runtime with cygwin x */
 #if (MAEMO_VERSION_MAJOR == 5) && !defined(__i386__)
-  unsigned long val = True;
-  XChangeProperty(GDK_DISPLAY(),
-		  GDK_WINDOW_XID(GTK_WIDGET(appdata.window)->window),
-		  XInternAtom(GDK_DISPLAY(),
-			      "_HILDON_ZOOM_KEY_ATOM",
-			      False), XA_INTEGER, 32,
-		  PropModeReplace, (unsigned char *) &val, 1);
-#endif
+  g_signal_connect(G_OBJECT(appdata.window), "realize", 
+		   G_CALLBACK(on_window_realize), &appdata);
+#endif // MAEMO_VERSION
 
 #else
   /* Create a Window. */
