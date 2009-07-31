@@ -540,7 +540,7 @@ cb_map_gps(GtkButton *button, context_t *context) {
 
   if(gps_on && gps_get_pos(context->area->appdata, &pos, NULL)) {
     osm_gps_map_set_center(OSM_GPS_MAP(context->map.widget),
-			   DEG2RAD(pos.lat), DEG2RAD(pos.lon));	    
+			   pos.lat, pos.lon);	    
   }
 
   return FALSE;
