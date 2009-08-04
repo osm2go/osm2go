@@ -315,9 +315,18 @@ void canvas_item_set_points(canvas_item_t *item, canvas_points_t *points) {
   g_object_set(G_OBJECT(item), "points", points, NULL);
 }
 
-void canvas_item_set_pos(canvas_item_t *item, lpos_t *lpos, gint radius) {
-  g_object_set(G_OBJECT(item), "center-x", (gdouble)lpos->x, 
-	       "center-y", (gdouble)lpos->y, NULL);  
+void canvas_item_set_pos(canvas_item_t *item, lpos_t *lpos) {
+  g_object_set(G_OBJECT(item), 
+	       "center-x", (gdouble)lpos->x, 
+	       "center-y", (gdouble)lpos->y, 
+	       NULL);  
+}
+
+void canvas_item_set_radius(canvas_item_t *item, gint radius) {
+  g_object_set(G_OBJECT(item), 
+	       "radius-x", (gdouble)radius, 
+	       "radius-y", (gdouble)radius, 
+	       NULL);  
 }
 
 void canvas_item_to_bottom(canvas_item_t *item) {

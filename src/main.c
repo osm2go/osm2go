@@ -1504,7 +1504,7 @@ int main(int argc, char *argv[]) {
   /* ---- detail popup ---- */
   appdata.btn_detail_popup = gtk_button_new();
   gtk_button_set_image(GTK_BUTTON(appdata.btn_detail_popup), 
-	gtk_image_new_from_stock(GTK_STOCK_ABOUT, GTK_ICON_SIZE_MENU));
+	gtk_image_new_from_stock(GTK_STOCK_EDIT, GTK_ICON_SIZE_MENU));
   g_signal_connect(appdata.btn_detail_popup, "clicked", 
 		   G_CALLBACK(scale_popup), &appdata);
   gtk_box_pack_start(GTK_BOX(zhbox), appdata.btn_detail_popup, FALSE, FALSE, 0);

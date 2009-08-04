@@ -169,7 +169,8 @@ void canvas_point_get_lpos(canvas_points_t *points, gint index, lpos_t *lpos);
 void canvas_item_destroy(canvas_item_t *item);
 
 /****** manipulating items ******/
-void canvas_item_set_pos(canvas_item_t *item, lpos_t *lpos, gint radius);
+void canvas_item_set_pos(canvas_item_t *item, lpos_t *lpos);
+void canvas_item_set_radius(canvas_item_t *item, gint radius);
 void canvas_item_set_points(canvas_item_t *item, canvas_points_t *points);
 void canvas_item_set_zoom_max(canvas_item_t *item, float zoom_max);
 void canvas_item_set_dashed(canvas_item_t *item, gint line_width, gint dash_length);
