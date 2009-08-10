@@ -77,5 +77,7 @@ GCallback cb_new, GCallback cb_edit, GCallback cb_remove,
 GtkTreeModel *list_get_model(GtkWidget *list);
 void list_pre_inplace_edit_tweak (GtkTreeModel *model);
 void list_focus_on(GtkWidget *list, GtkTreeIter *iter, gboolean highlight);
+gboolean list_get_selected(GtkWidget *list, GtkTreeModel **model,
+			   GtkTreeIter *iter);
 
 #endif // LIST_H
