@@ -52,6 +52,8 @@ init_list(GtkWidget *list) {
   GtkCellRenderer *renderer;
   GtkTreeViewColumn *column;
   GtkListStore *store;
+
+  hildon_gtk_tree_view_set_ui_mode(GTK_TREE_VIEW(list), HILDON_UI_MODE_EDIT);
   
   /* Create some simple popup menu */
   GtkMenu *menu = GTK_MENU(gtk_menu_new());

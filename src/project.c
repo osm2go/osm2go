@@ -811,17 +811,13 @@ static char *project_select(appdata_t *appdata) {
     misc_dialog_new(MISC_DIALOG_MEDIUM,_("Project selection"),
 	  GTK_WINDOW(appdata->window),
 	  GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, 
-#if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
           GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
-#endif
           NULL);
 
   /* under fremantle the dialog does not have an "Open" button */
   /* as it's closed when a project is being selected */
-#if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
   gtk_dialog_set_default_response(GTK_DIALOG(context->dialog), 
 				  GTK_RESPONSE_ACCEPT);
-#endif
 
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(context->dialog)->vbox), 
 			      project_list_widget(context));

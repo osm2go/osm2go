@@ -539,7 +539,7 @@ static void relation_list_selected(relation_context_t *context,
 
   list_button_enable(context->list, LIST_BUTTON_USER0, 
 		     (selected != NULL) && (selected->member != NULL));
-  gtk_widget_set_sensitive(context->show_btn,
+  list_button_enable(context->list, LIST_BUTTON_USER1, 
 		     (selected != NULL) && (selected->member != NULL));
 
   list_button_enable(context->list, LIST_BUTTON_REMOVE, selected != NULL);
@@ -732,12 +732,29 @@ void relation_show_members(GtkWidget *parent, relation_t *relation) {
   g_free(mcontext);
 }
 
-/* user clicked "members..." button in relation list */
+/* user clicked "members" button in relation list */
 static void on_relation_members(GtkWidget *but, relation_context_t *context) {
   relation_t *sel = get_selected_relation(context);
   
-  if(sel)
-    relation_show_members(context->dialog, sel);
+  if(sel) relation_show_members(context->dialog, sel);
+}
+
+/* user clicked "select" button in relation list */
+static void on_relation_select(GtkWidget *but, relation_context_t *context) {
+  relation_t *sel = get_selected_relation(context);
+  map_item_deselect(context->appdata);
+
+  if(sel) {
+    map_relation_select(context->appdata, sel);
+
+    /* tell dialog to close as we want to see the selected relation */
+
+    GtkWidget *toplevel = gtk_widget_get_toplevel(GTK_WIDGET(but));
+    g_assert(GTK_IS_DIALOG(toplevel));
+
+    /* emit a "response" signal so we might close the dialog */
+    gtk_dialog_response(GTK_DIALOG(toplevel), GTK_RESPONSE_CLOSE);
+  }
 }
 
 
@@ -909,6 +926,7 @@ static GtkWidget *relation_list_widget(relation_context_t *context) {
 
   list_set_user_buttons(context->list, 
 	LIST_BUTTON_USER0, _("Members"), G_CALLBACK(on_relation_members),
+	LIST_BUTTON_USER1, _("Select"),  G_CALLBACK(on_relation_select),
 	0);
 
   relation_list_selected(context, NULL);
@@ -940,9 +958,6 @@ void relation_list(GtkWidget *parent, appdata_t *appdata, object_t *object) {
   gtk_dialog_set_default_response(GTK_DIALOG(context->dialog), 
 				  GTK_RESPONSE_CLOSE);
 
-  context->show_btn = gtk_dialog_add_button(GTK_DIALOG(context->dialog), 
-					    _("Select"), GTK_RESPONSE_HELP);
-
   gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context->dialog)->vbox),
   		     relation_list_widget(context), TRUE, TRUE, 0);
 
@@ -950,12 +965,7 @@ void relation_list(GtkWidget *parent, appdata_t *appdata, object_t *object) {
 
 
   gtk_widget_show_all(context->dialog);
-  if(gtk_dialog_run(GTK_DIALOG(context->dialog)) == GTK_RESPONSE_HELP) {
-    map_item_deselect(appdata);
-
-    relation_t *sel = get_selected_relation(context);
-    if(sel) map_relation_select(appdata, sel);
-  }
+  gtk_dialog_run(GTK_DIALOG(context->dialog));
 
   gtk_widget_destroy(context->dialog);
   g_free(context);

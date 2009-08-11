@@ -59,10 +59,12 @@ typedef struct {
 
 #if defined(USE_HILDON) && (MAEMO_VERSION_MAJOR == 5)
 #define FREMANTLE
+#include <hildon/hildon-gtk.h>
 #include <hildon/hildon-pannable-area.h>
+// #define FREMANTLE_USE_POPUP
 #endif
 
-#ifdef FREMANTLE
+#ifdef FREMANTLE_USE_POPUP
 
 static void cmenu_init(GtkWidget *list) {
   list_priv_t *priv = g_object_get_data(G_OBJECT(list), "priv");
@@ -88,7 +90,7 @@ static GtkWidget *cmenu_append(GtkWidget *list, char *label,
   hildon_gtk_widget_set_theme_size(menu_item, 
 	   (HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH));
 
-  gtk_signal_connect(GTK_OBJECT(menu_item), "clicked", 
+  gtk_signal_connect(GTK_OBJECT(menu_item), "activate", 
 		     GTK_SIGNAL_FUNC(cb), data);
 
   gtk_widget_show_all(GTK_WIDGET(priv->menu));
@@ -338,7 +340,7 @@ void list_set_static_buttons(GtkWidget *list, gboolean first_new,
   }
 
   if(cb_edit) {
-#ifdef FREMANTLE
+#ifdef FREMANTLE_USE_POPUP
     priv->button.widget[1] = cmenu_append(list, _("Edit"), 
 			  GTK_SIGNAL_FUNC(cb_edit), data);
 #else
@@ -352,7 +354,7 @@ void list_set_static_buttons(GtkWidget *list, gboolean first_new,
   }
 
   if(cb_remove) {
-#ifdef FREMANTLE
+#ifdef FREMANTLE_USE_POPUP
     priv->button.widget[2] = cmenu_append(list, _("Remove"), 
 			  GTK_SIGNAL_FUNC(cb_remove), data);
 #else
@@ -412,7 +414,6 @@ static gint on_list_destroy(GtkWidget *list, gpointer data) {
 
   printf("destroy list\n");
 
-  if(priv->path) g_free(priv->path);
   g_free(priv);
   
   return FALSE;
@@ -434,6 +435,10 @@ GtkWidget *list_new(void)
 		   G_CALLBACK(on_list_destroy), priv);
 
   priv->view = gtk_tree_view_new();
+#ifdef FREMANTLE
+  hildon_gtk_tree_view_set_ui_mode(GTK_TREE_VIEW(priv->view), 
+				   HILDON_UI_MODE_EDIT);
+#endif
 
 #ifdef USE_HILDON
   if(show_headers) {
@@ -461,7 +466,9 @@ GtkWidget *list_new(void)
   gtk_container_add(GTK_CONTAINER(pannable_area), priv->view);
   gtk_box_pack_start_defaults(GTK_BOX(vbox), pannable_area);
 
+#ifdef FREMANTLE_USE_POPUP
   cmenu_init(vbox);
+#endif
 #endif
 
   /* make list react on clicks (double clicks on pre-fremantle) */
