@@ -109,9 +109,43 @@ cb_menu_project_wizard(GtkMenuItem *item, gpointer data) {
   project_wizard(appdata);
 }
 
+typedef struct {
+  appdata_t *appdata;
+  GtkWidget *dialog;
+} about_context_t;
+
+#ifdef ENABLE_BROWSER_INTERFACE
+#ifndef USE_HILDON
+#include <libgnome/gnome-url.h>
+#else
+#include <tablet-browser-interface.h>
+#endif
+
+void on_paypal_button_clicked(GtkButton *button, about_context_t *context) {
+  const char *url = 
+    "https://www.paypal.com/cgi-bin/webscr"
+    "?cmd=_s-xclick&hosted_button_id=7439286";
+  
+#ifndef USE_HILDON
+  /* taken from gnome-open, part of libgnome */
+  GError *err = NULL;
+  gnome_url_show(url, &err);
+#else
+  /* close the dialog on hildon as it doesn't like open dialogs */
+  gtk_dialog_response(GTK_DIALOG(context->dialog), GTK_RESPONSE_ACCEPT); 
+
+  osso_rpc_run_with_defaults(context->appdata->osso_context, "osso_browser",
+			     OSSO_BROWSER_OPEN_NEW_WINDOW_REQ, NULL,
+			     DBUS_TYPE_STRING, url,
+			     DBUS_TYPE_BOOLEAN, FALSE, DBUS_TYPE_INVALID);
+#endif
+}
+#endif
+
 static void 
 cb_menu_about(GtkMenuItem *item, gpointer data) {
-  appdata_t *appdata = (appdata_t*)data;
+  about_context_t context;
+  context.appdata = (appdata_t *)data;
 
   const gchar *authors[] = {
     "Till Harbaum <till@harbaum.org>",
@@ -124,7 +158,7 @@ cb_menu_about(GtkMenuItem *item, gpointer data) {
     "Andrew Zhilin <drew.zhilin@gmail.com>",
     NULL };
 
-  gtk_show_about_dialog(GTK_WINDOW(appdata->window),
+  context.dialog = g_object_new(GTK_TYPE_ABOUT_DIALOG,
 			"name", "OSM2Go",
 			"version", VERSION,
 			"copyright", _("Copyright 2008-2009"),
@@ -133,6 +167,33 @@ cb_menu_about(GtkMenuItem *item, gpointer data) {
 			"website", _("http://www.harbaum.org/till/maemo"),
 			"comments", _("Mobile OSM Editor"),
 			NULL);
+
+#ifdef ENABLE_BROWSER_INTERFACE
+  /* add a way to donate to the project */
+  GtkWidget *alignment = gtk_alignment_new(0.5, 0, 0, 0);
+  
+  GtkWidget *hbox = gtk_hbox_new(FALSE, 8);
+  gtk_box_pack_start(GTK_BOX(hbox),
+		     gtk_label_new(_("Do you ĺike OSM2Go?")), 
+		     FALSE, FALSE, 0);
+
+  GtkWidget *button = gtk_button_new();
+  gtk_button_set_image(GTK_BUTTON(button), 
+		       icon_widget_load(&context.appdata->icon, "paypal"));
+  gtk_button_set_relief(GTK_BUTTON(button), GTK_RELIEF_NONE);
+  g_signal_connect(button, "clicked", 
+		   G_CALLBACK(on_paypal_button_clicked), &context); 
+  gtk_box_pack_start(GTK_BOX(hbox), button, FALSE, FALSE, 0);
+
+  gtk_container_add(GTK_CONTAINER(alignment), hbox);
+  gtk_box_pack_start_defaults(GTK_BOX((GTK_DIALOG(context.dialog))->vbox),
+			      alignment);
+
+  gtk_widget_show_all(alignment);
+#endif
+
+  gtk_dialog_run(GTK_DIALOG(context.dialog));
+  gtk_widget_destroy(context.dialog);
 }
 
 void on_window_destroy (GtkWidget *widget, gpointer data);

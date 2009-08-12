@@ -213,10 +213,12 @@ file_chain_t *file_scan(char *pattern) {
 #ifdef USE_HILDON
 static const gint dialog_sizes[][2] = {
   { 400, 100 },  // SMALL
-  { 450, 300 },  // MEDIUM
 #if MAEMO_VERSION_MAJOR < 5
+  { 450, 300 },  // MEDIUM
   { 800, 480 },  // LARGE
 #else
+  /* in maemo5 most dialogs are full screen */
+  { 800, 480 },  // MEDIUM
   { 800, 380 },  // LARGE
 #endif
   { 640, 100 },  // WIDE

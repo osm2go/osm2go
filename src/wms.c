@@ -795,8 +795,9 @@ static GtkWidget *wms_server_widget(wms_server_context_t *context) {
   
   g_object_unref(context->store);
 
-  list_set_static_buttons(context->list, FALSE, G_CALLBACK(on_server_add), 
-	  G_CALLBACK(on_server_edit), G_CALLBACK(on_server_remove), context);
+  list_set_static_buttons(context->list, LIST_BTN_BIG, 
+	  G_CALLBACK(on_server_add), G_CALLBACK(on_server_edit), 
+	  G_CALLBACK(on_server_remove), context);
 
   return context->list;
 }

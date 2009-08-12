@@ -33,6 +33,10 @@
 #define N_(String) (String)
 
 #ifdef USE_HILDON
+#if (MAEMO_VERSION_MAJOR == 5)
+#define FREMANTLE
+#endif
+
 #include <hildon/hildon-program.h>
 #include <hildon/hildon-file-chooser-dialog.h>
 #include <hildon/hildon-file-system-model.h>

@@ -29,6 +29,9 @@ typedef enum {
   LIST_BUTTON_USER2
 } list_button_t;
 
+#define LIST_BTN_NEW  (1<<0)   // use "new" instead of "add" button
+#define LIST_BTN_BIG  (1<<1)   // all buttons finger sized
+
 /* list item flags */
 #define LIST_FLAG_EXPAND         (1<<0)   /* column expands with dialog size */
 #define LIST_FLAG_ELLIPSIZE      (1<<1)   /* column expands and text is ellipsized */
@@ -71,7 +74,7 @@ void list_button_enable(GtkWidget *list, list_button_t id, gboolean enable);
 void list_set_store(GtkWidget *list, GtkListStore *store);
 void list_set_selection_function(GtkWidget *list, GtkTreeSelectionFunc func,
 				 gpointer data);
-void list_set_static_buttons(GtkWidget *list, gboolean first_new, 
+void list_set_static_buttons(GtkWidget *list, int flags, 
 GCallback cb_new, GCallback cb_edit, GCallback cb_remove, 
 	     gpointer data);
 GtkTreeModel *list_get_model(GtkWidget *list);

@@ -53,8 +53,6 @@ typedef struct {
     GtkWidget *widget[6];
   } button;
 
-  GtkTreeIter *iter;
-
 } list_priv_t;
 
 #if defined(USE_HILDON) && (MAEMO_VERSION_MAJOR == 5)
@@ -181,10 +179,10 @@ void list_set_columns(GtkWidget *list, ...) {
       gtk_tree_view_column_set_expand(column, 
 		      flags & (LIST_FLAG_EXPAND | LIST_FLAG_ELLIPSIZE));
     }
-
-   gtk_tree_view_column_set_sort_column_id(column, key);
-   gtk_tree_view_insert_column(GTK_TREE_VIEW(priv->view), column, -1);
-
+    
+    gtk_tree_view_column_set_sort_column_id(column, key);
+    gtk_tree_view_insert_column(GTK_TREE_VIEW(priv->view), column, -1);
+    
     name = va_arg(ap, char*);
   }
 
@@ -272,8 +270,6 @@ list_selection_function(GtkTreeSelection *selection, GtkTreeModel *model,
 
   GtkTreeIter iter;
 
-  printf("something has been selected\n");
-
   if(gtk_tree_model_get_iter(model, &iter, path)) {
     g_assert(gtk_tree_path_get_depth(path) == 1);
 
@@ -295,6 +291,8 @@ static void on_row_activated(GtkTreeView *treeview,
   GtkTreeIter   iter;
   GtkTreeModel *model = gtk_tree_view_get_model(treeview);
 
+  printf("row activated\n");
+
   if(gtk_tree_model_get_iter(model, &iter, path)) {
     list_priv_t *priv = g_object_get_data(G_OBJECT(userdata), "priv");
     g_assert(priv);
@@ -302,15 +300,13 @@ static void on_row_activated(GtkTreeView *treeview,
     GtkWidget *toplevel = gtk_widget_get_toplevel(GTK_WIDGET(treeview));
     g_assert(GTK_IS_DIALOG(toplevel));
 
-    /* XXX: save this selection to e.g. be accessible later on */
-
     /* emit a "response accept" signal so we might close the */
     /* dialog */
     gtk_dialog_response(GTK_DIALOG(toplevel), GTK_RESPONSE_ACCEPT);
   }
 }
 
-void list_set_static_buttons(GtkWidget *list, gboolean first_new,
+void list_set_static_buttons(GtkWidget *list, int flags,
 			     GCallback cb_new, GCallback cb_edit, 
 			     GCallback cb_remove, gpointer data) {
   list_priv_t *priv = g_object_get_data(G_OBJECT(list), "priv");
@@ -320,22 +316,17 @@ void list_set_static_buttons(GtkWidget *list, gboolean first_new,
 
   /* add the three default buttons, but keep the disabled for now */
   if(cb_new) {
-#if 0
-    /* this doesn't make sense in the context menu */
-    priv->button.widget[0] = cmenu_append(list, _(first_new?"New":"Add"), 
-			  GTK_SIGNAL_FUNC(cb_new), data);
-#else
     priv->button.widget[0] = 
-      gtk_button_new_with_label(_(first_new?"New":"Add"));
-#ifdef USE_HILDON
-    hildon_gtk_widget_set_theme_size(priv->button.widget[0], 
-	     (HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH));
+      gtk_button_new_with_label(_((flags&LIST_BTN_NEW)?"New":"Add"));
+#ifdef FREMANTLE
+    if(flags & LIST_BTN_BIG)
+      hildon_gtk_widget_set_theme_size(priv->button.widget[0], 
+	       (HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH));
 #endif
     gtk_table_attach_defaults(GTK_TABLE(priv->table), 
 			      priv->button.widget[0], 0, 1, 0, 1);
     gtk_signal_connect(GTK_OBJECT(priv->button.widget[0]), "clicked", 
 		       GTK_SIGNAL_FUNC(cb_new), data);
-#endif
     gtk_widget_set_sensitive(priv->button.widget[0], TRUE);
   }
 
