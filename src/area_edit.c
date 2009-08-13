@@ -645,7 +645,7 @@ gboolean area_edit(area_edit_t *area) {
 
   context.map.needs_redraw = FALSE;
   context.map.widget = g_object_new(OSM_TYPE_GPS_MAP,
-	        "repo-uri", MAP_SOURCE_OPENSTREETMAP,
+ 	        "map-source", OSM_GPS_MAP_SOURCE_OPENSTREETMAP,
 		"proxy-uri", misc_get_proxy_uri(area->settings),
 	        "tile-cache", NULL,
 		 NULL);
