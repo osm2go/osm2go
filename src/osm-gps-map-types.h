@@ -26,12 +26,19 @@
 #define _OSM_GPS_MAP_TYPES_H_
 
 #include <gdk/gdk.h>
+#ifdef LIBSOUP22
 #include <libsoup/soup.h>
+#endif
 #include "osm-gps-map.h"
 
 #define TILESIZE 256
 #define MAX_ZOOM 20
 #define MIN_ZOOM 0
+
+#define OSM_REPO_URI        "http://tile.openstreetmap.org/#Z/#X/#Y.png"
+#define OSM_MIN_ZOOM        1
+#define OSM_MAX_ZOOM        18
+#define OSM_IMAGE_FORMAT    "png"
 
 #define URI_MARKER_X    "#X"
 #define URI_MARKER_Y    "#Y"
@@ -52,6 +59,11 @@
 #define URI_HAS_R   (1 << 7)
 //....
 #define URI_FLAG_END (1 << 8)
+
+#define OSM_NAN  (0.0/0.0)
+
+/* equatorial radius in meters */
+#define OSM_EQ_RADIUS   (6378137.0)
 
 typedef struct {
     int x1;

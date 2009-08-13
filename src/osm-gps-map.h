@@ -59,23 +59,31 @@ typedef struct {
     float rlon;
 } coord_t;
 
-//http://www.internettablettalk.com/forums/showthread.php?t=5209
-//https://garage.maemo.org/plugins/scmsvn/viewcvs.php/trunk/src/maps.c
-//http://www.ponies.me.uk/maps/GoogleTileUtils.java
-//http://www.mgmaps.com/cache/MapTileCacher.perl
-#define MAP_SOURCE_OPENSTREETMAP            "http://tile.openstreetmap.org/#Z/#X/#Y.png"
-#define MAP_SOURCE_OPENSTREETMAP_RENDERER   "http://tah.openstreetmap.org/Tiles/tile/#Z/#X/#Y.png"
-#define MAP_SOURCE_OPENAERIALMAP            "http://tile.openaerialmap.org/tiles/1.0.0/openaerialmap-900913/#Z/#X/#Y.jpg"
-#define MAP_SOURCE_GOOGLE_MAPS              "http://mt#R.google.com/mt?x=#X&y=#Y&zoom=#S"
-//No longer working
-//#define MAP_SOURCE_GOOGLE_HYBRID          "http://mt#R.google.com/mt?n=404&v=w2t.99&x=#X&y=#Y&zoom=#S"
-#define MAP_SOURCE_GOOGLE_HYBRID            "http://mt#R.google.com/mt?x=#X&y=#Y&zoom=#S"
-#define MAP_SOURCE_GOOGLE_SATTELITE         "http://khm#R.google.com/kh?n=404&v=32&x=#X&y=#Y&z=#Z"
-#define MAP_SOURCE_GOOGLE_SATTELITE_QUAD    "http://khm#R.google.com/kh?n=404&v=3&t=#Q"
-#define MAP_SOURCE_MAPS_FOR_FREE            "http://maps-for-free.com/layer/relief/z#Z/row#Y/#Z_#X-#Y.jpg"
-#define MAP_SOURCE_VIRTUAL_EARTH_SATTELITE  "http://a#R.ortho.tiles.virtualearth.net/tiles/a#W.jpeg?g=50"
+typedef enum {
+    OSM_GPS_MAP_SOURCE_NULL,
+    OSM_GPS_MAP_SOURCE_OPENSTREETMAP,
+    OSM_GPS_MAP_SOURCE_OPENSTREETMAP_RENDERER,
+    OSM_GPS_MAP_SOURCE_OPENAERIALMAP,
+    OSM_GPS_MAP_SOURCE_MAPS_FOR_FREE,
+    OSM_GPS_MAP_SOURCE_GOOGLE_STREET,
+    OSM_GPS_MAP_SOURCE_GOOGLE_SATELLITE,
+    OSM_GPS_MAP_SOURCE_GOOGLE_HYBRID,
+    OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_STREET,
+    OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_SATELLITE,
+    OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_HYBRID,
+    OSM_GPS_MAP_SOURCE_YAHOO_STREET,
+    OSM_GPS_MAP_SOURCE_YAHOO_SATELLITE,
+    OSM_GPS_MAP_SOURCE_YAHOO_HYBRID
+} OsmGpsMapSource_t;
 
 GType osm_gps_map_get_type (void) G_GNUC_CONST;
+
+const char* osm_gps_map_source_get_friendly_name(OsmGpsMapSource_t source);
+const char* osm_gps_map_source_get_repo_uri(OsmGpsMapSource_t source);
+const char *osm_gps_map_source_get_image_format(OsmGpsMapSource_t source);
+int osm_gps_map_source_get_min_zoom(OsmGpsMapSource_t source);
+int osm_gps_map_source_get_max_zoom(OsmGpsMapSource_t source);
+
 void osm_gps_map_download_maps (OsmGpsMap *map, coord_t *pt1, coord_t *pt2, int zoom_start, int zoom_end);
 void osm_gps_map_get_bbox (OsmGpsMap *map, coord_t *pt1, coord_t *pt2);
 void osm_gps_map_set_mapcenter (OsmGpsMap *map, float latitude, float longitude, int zoom);
@@ -84,6 +92,7 @@ int osm_gps_map_set_zoom (OsmGpsMap *map, int zoom);
 void osm_gps_map_add_track (OsmGpsMap *map, GSList *track);
 void osm_gps_map_clear_tracks (OsmGpsMap *map);
 void osm_gps_map_add_image (OsmGpsMap *map, float latitude, float longitude, GdkPixbuf *image);
+gboolean osm_gps_map_remove_image (OsmGpsMap *map, GdkPixbuf *image);
 void osm_gps_map_clear_images (OsmGpsMap *map);
 void osm_gps_map_osd_speed (OsmGpsMap *map, float speed);
 void osm_gps_map_draw_gps (OsmGpsMap *map, float latitude, float longitude, float heading);
@@ -97,6 +106,7 @@ void osm_gps_map_geographic_to_screen (OsmGpsMap *map,
                                        gfloat latitude, gfloat longitude,
                                        gint *pixel_x, gint *pixel_y);
 void osm_gps_map_scroll (OsmGpsMap *map, gint dx, gint dy);
+float osm_gps_map_get_scale(OsmGpsMap *map);
 
 G_END_DECLS
 
