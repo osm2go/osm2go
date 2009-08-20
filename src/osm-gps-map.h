@@ -25,6 +25,8 @@
 #ifndef _OSM_GPS_MAP_H_
 #define _OSM_GPS_MAP_H_
 
+#include "config.h"
+
 #include <glib.h>
 #include <glib-object.h>
 #include <gtk/gtk.h>
@@ -76,6 +78,29 @@ typedef enum {
     OSM_GPS_MAP_SOURCE_YAHOO_HYBRID
 } OsmGpsMapSource_t;
 
+typedef struct {
+    gint x, y, w, h;
+} OsmGpsMapRect_t;
+
+typedef enum {
+    OSD_NONE = 0,
+    OSD_BG,
+    OSD_UP,
+    OSD_DOWN,
+    OSD_LEFT,
+    OSD_RIGHT,
+    OSD_IN,
+    OSD_OUT,
+    OSD_GPS
+} osd_button_t;
+
+typedef void (*OsmGpsMapBalloonCallback)(cairo_t *, OsmGpsMapRect_t *rect, 
+                                         gpointer data);
+#define	OSM_GPS_MAP_BALLOON_CALLBACK(f) ((OsmGpsMapBalloonCallback) (f))
+
+typedef void (*OsmGpsMapOsdGpsCallback)(gpointer data);
+#define	OSM_GPS_MAP_OSD_GPS_CALLBACK(f) ((OsmGpsMapOsdGpsCallback) (f))
+
 GType osm_gps_map_get_type (void) G_GNUC_CONST;
 
 const char* osm_gps_map_source_get_friendly_name(OsmGpsMapSource_t source);
@@ -107,6 +132,15 @@ void osm_gps_map_geographic_to_screen (OsmGpsMap *map,
                                        gint *pixel_x, gint *pixel_y);
 void osm_gps_map_scroll (OsmGpsMap *map, gint dx, gint dy);
 float osm_gps_map_get_scale(OsmGpsMap *map);
+#ifdef ENABLE_BALLOON
+void osm_gps_map_draw_balloon (OsmGpsMap *map, float latitude, float longitude, OsmGpsMapBalloonCallback cb, gpointer data);
+void osm_gps_map_clear_balloon (OsmGpsMap *map);
+#endif
+#ifdef ENABLE_OSD
+void osm_gps_map_osd_enable_gps (OsmGpsMap *map, OsmGpsMapOsdGpsCallback cb, gpointer data);
+osd_button_t osm_gps_map_osd_check(gint x, gint y);
+#endif
+
 
 G_END_DECLS
 

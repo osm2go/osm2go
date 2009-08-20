@@ -98,6 +98,28 @@ struct _OsmGpsMapPrivate
     coord_t *gps;
     gboolean gps_valid;
 
+#ifdef ENABLE_BALLOON
+    //a balloon with additional info
+    struct {
+        coord_t *coo;
+        gboolean valid;
+        OsmGpsMapRect_t rect;
+        OsmGpsMapBalloonCallback cb;
+        gpointer data;
+    } balloon;
+#endif
+
+#ifdef ENABLE_OSD
+    //the osd controls
+    struct {
+        GdkPixmap *backup;
+        cairo_surface_t *overlay;
+        gint backup_x, backup_y;
+        OsmGpsMapOsdGpsCallback cb;
+        gpointer data;
+    } osd;
+#endif
+
     //additional images or tracks added to the map
     GSList *tracks;
     GSList *images;
@@ -631,7 +653,219 @@ osm_gps_map_draw_gps_point (OsmGpsMap *map)
                                     (mr*2)+lw+lw);
 #endif
     }
+} 
+
+#ifdef ENABLE_BALLOON
+/* most visual effects are hardcoded by now, but may be made */
+/* available via properties later */
+#ifndef BALLOON_AREA_WIDTH
+#define BALLOON_AREA_WIDTH           290
+#endif
+#ifndef BALLOON_AREA_HEIGHT
+#define BALLOON_AREA_HEIGHT           75
+#endif
+#ifndef BALLOON_CORNER_RADIUS
+#define BALLOON_CORNER_RADIUS         10
+#endif
+
+#define BALLOON_BORDER               (BALLOON_CORNER_RADIUS/2)
+#define BALLOON_WIDTH                (BALLOON_AREA_WIDTH + 2 * BALLOON_BORDER)
+#define BALLOON_HEIGHT               (BALLOON_AREA_HEIGHT + 2 * BALLOON_BORDER)
+#define BALLOON_TRANSPARENCY         0.8
+#define POINTER_HEIGHT                20
+#define POINTER_FOOT_WIDTH            20
+#define POINTER_OFFSET               (BALLOON_CORNER_RADIUS*3/4)
+#define BALLOON_SHADOW               (BALLOON_CORNER_RADIUS/2)
+#define BALLOON_SHADOW_TRANSPARENCY  0.2
+
+#define CLOSE_BUTTON_RADIUS   (BALLOON_CORNER_RADIUS)
+
+
+/* draw the bubble shape. this is used twice, once for the shape and once */
+/* for the shadow */
+static void 
+osm_gps_map_draw_balloon_shape (cairo_t *cr, int x0, int y0, int x1, int y1, 
+       gboolean bottom, int px, int py, int px0, int px1) {
+
+    cairo_move_to (cr, x0, y0 + BALLOON_CORNER_RADIUS);
+    cairo_arc (cr, x0 + BALLOON_CORNER_RADIUS, y0 + BALLOON_CORNER_RADIUS,
+               BALLOON_CORNER_RADIUS, -M_PI, -M_PI/2);
+    if(!bottom) {
+        /* insert top pointer */
+        cairo_line_to (cr, px1, y0);
+        cairo_line_to (cr, px, py);
+        cairo_line_to (cr, px0, y0);
+    }
+        
+    cairo_line_to (cr, x1 - BALLOON_CORNER_RADIUS, y0);
+    cairo_arc (cr, x1 - BALLOON_CORNER_RADIUS, y0 + BALLOON_CORNER_RADIUS,
+               BALLOON_CORNER_RADIUS, -M_PI/2, 0);
+    cairo_line_to (cr, x1 , y1 - BALLOON_CORNER_RADIUS);
+    cairo_arc (cr, x1 - BALLOON_CORNER_RADIUS, y1 - BALLOON_CORNER_RADIUS,
+               BALLOON_CORNER_RADIUS, 0, M_PI/2);
+    if(bottom) {
+        /* insert bottom pointer */
+        cairo_line_to (cr, px0, y1);
+        cairo_line_to (cr, px, py);
+        cairo_line_to (cr, px1, y1);
+    }
+        
+    cairo_line_to (cr, x0 + BALLOON_CORNER_RADIUS, y1);
+    cairo_arc (cr, x0 + BALLOON_CORNER_RADIUS, y1 - BALLOON_CORNER_RADIUS,
+               BALLOON_CORNER_RADIUS, M_PI/2, M_PI);
+
+    cairo_close_path (cr);
 }
+
+static void
+osm_gps_map_draw_balloon_int (OsmGpsMap *map)
+{
+    OsmGpsMapPrivate *priv = map->priv;
+
+    if (priv->balloon.valid) {
+
+        /* ------- convert given coordinate into screen position --------- */
+        int x0 = lon2pixel(priv->map_zoom, priv->balloon.coo->rlon) - 
+            priv->map_x + EXTRA_BORDER;
+        int y0 = lat2pixel(priv->map_zoom, priv->balloon.coo->rlat) - 
+            priv->map_y + EXTRA_BORDER;
+
+        /* check position of this relative to screen center to determine */
+        /* pointer direction ... */
+        int pointer_x = x0, pointer_x0, pointer_x1;
+        int pointer_y = y0;
+
+        /* ... and calculate position */
+        if((x0 - EXTRA_BORDER) > GTK_WIDGET(map)->allocation.width/2) {
+            x0 -= BALLOON_WIDTH - POINTER_OFFSET;
+            pointer_x0 = pointer_x - (BALLOON_CORNER_RADIUS - POINTER_OFFSET);
+            pointer_x1 = pointer_x0 - POINTER_FOOT_WIDTH;
+        } else {
+            x0 -= POINTER_OFFSET; 
+            pointer_x1 = pointer_x + (BALLOON_CORNER_RADIUS - POINTER_OFFSET);
+            pointer_x0 = pointer_x1 + POINTER_FOOT_WIDTH;
+        }
+        
+        gboolean bottom = FALSE;
+        if((y0 - EXTRA_BORDER) > GTK_WIDGET(map)->allocation.height/2) {
+            bottom = TRUE;
+            y0 -= BALLOON_HEIGHT + POINTER_HEIGHT;
+        } else
+            y0 += POINTER_HEIGHT;
+        
+        /* calculate bottom/right of box */
+        int x1 = x0 + BALLOON_WIDTH, y1 = y0 + BALLOON_HEIGHT;
+
+        /* save balloon screen coordinates for later use */
+        priv->balloon.rect.x = x0 + BALLOON_BORDER;
+        priv->balloon.rect.y = y0 + BALLOON_BORDER;
+        priv->balloon.rect.w = x1 - x0 - 2*BALLOON_BORDER;
+        priv->balloon.rect.h = y1 - y0 - 2*BALLOON_BORDER;
+
+#ifdef USE_CAIRO
+        cairo_t *cr = gdk_cairo_create(priv->pixmap);
+
+        /* --------- draw shadow --------------- */
+        osm_gps_map_draw_balloon_shape (cr, 
+                    x0 + BALLOON_SHADOW, y0 + BALLOON_SHADOW, 
+                    x1 + BALLOON_SHADOW, y1 + BALLOON_SHADOW,
+                    bottom, pointer_x, pointer_y, 
+                    pointer_x0 + BALLOON_SHADOW, pointer_x1 + BALLOON_SHADOW);
+
+        cairo_set_source_rgba (cr, 0, 0, 0, BALLOON_SHADOW_TRANSPARENCY);
+        cairo_fill_preserve (cr);
+        cairo_set_source_rgba (cr, 1, 0, 0, 1.0);
+        cairo_set_line_width (cr, 0);
+        cairo_stroke (cr);
+
+        /* --------- draw main shape ----------- */
+        osm_gps_map_draw_balloon_shape (cr, x0, y0, x1, y1,
+                    bottom, pointer_x, pointer_y, pointer_x0, pointer_x1);
+        
+        cairo_set_source_rgba (cr, 1, 1, 1, BALLOON_TRANSPARENCY);
+        cairo_fill_preserve (cr);
+        cairo_set_source_rgba (cr, 0, 0, 0, BALLOON_TRANSPARENCY);
+        cairo_set_line_width (cr, 1);
+        cairo_stroke (cr);
+
+
+        /* ---------- draw close button --------- */
+
+        int cx = x1 - BALLOON_BORDER - CLOSE_BUTTON_RADIUS;
+        int cy = y0 + BALLOON_BORDER + CLOSE_BUTTON_RADIUS;
+        int crad = CLOSE_BUTTON_RADIUS;
+
+        cairo_arc (cr, cx, cy, crad, 0, 2 * M_PI);
+        cairo_set_source_rgba (cr, 0.8, 0, 0, 1.0);
+        cairo_fill_preserve (cr);
+        cairo_set_source_rgba (cr, 0.3, 0, 0, 1.0);
+        cairo_set_line_width (cr, 2);
+        cairo_stroke(cr);
+        
+        cairo_set_source_rgba (cr, 1, 1, 1, 1.0);
+        cairo_set_line_width (cr, BALLOON_CORNER_RADIUS/3.3);
+        cairo_set_line_cap (cr, CAIRO_LINE_CAP_ROUND);
+        cairo_move_to (cr, cx - crad/2, cy - crad/2);
+        cairo_line_to (cr, cx + crad/2, cy + crad/2);
+        cairo_stroke (cr);
+        cairo_move_to (cr, cx + crad/2, cy - crad/2);
+        cairo_line_to (cr, cx - crad/2, cy + crad/2);
+        cairo_stroke (cr);
+
+        if (priv->balloon.cb) {
+            /* clip in case application tries to draw in */
+            /* exceed of the balloon */
+            cairo_rectangle (cr, priv->balloon.rect.x, priv->balloon.rect.y, 
+                             priv->balloon.rect.w, priv->balloon.rect.h);
+            cairo_clip (cr);
+            cairo_new_path (cr);  /* current path is not
+                                     consumed by cairo_clip() */
+
+            priv->balloon.cb(cr, &priv->balloon.rect, priv->balloon.data);
+        }
+   
+        cairo_destroy(cr);
+
+        gtk_widget_queue_draw_area (GTK_WIDGET(map),
+                                    x0, y0, BALLOON_WIDTH,
+                                    BALLOON_HEIGHT + POINTER_HEIGHT);
+#else
+#warning "Balloon display lacks a non-cairo implementation!"
+#endif
+    }
+}
+
+/* the user clicked into the balloons main area. handle this */
+static void 
+osm_gps_map_handle_balloon_click(OsmGpsMap *map, gint x, gint y) 
+{
+    OsmGpsMapPrivate *priv = map->priv;
+
+    if (!priv->balloon.valid)
+        return;
+
+    /* check if the close button was clicked */
+    if ((x > priv->balloon.rect.w - 2*CLOSE_BUTTON_RADIUS) &&
+        (x < priv->balloon.rect.w) &&
+        (y > 0) && (y < 2*CLOSE_BUTTON_RADIUS)) {
+
+        priv->balloon.valid = FALSE;
+        osm_gps_map_map_redraw_idle(map);
+    }
+}
+
+/* return true if balloon is being displayed and if */
+/* the given coordinate is within this balloon */
+static gboolean 
+osm_gps_map_in_balloon(OsmGpsMapPrivate *priv, gint x, gint y) 
+{
+    return (priv->balloon.valid && 
+            (x > priv->balloon.rect.x) && 
+            (x < priv->balloon.rect.x + priv->balloon.rect.w) &&
+            (y > priv->balloon.rect.y) && 
+            (y < priv->balloon.rect.y + priv->balloon.rect.h));
+}
+#endif // ENABLE_BALLOON
 
 static void
 osm_gps_map_blit_tile(OsmGpsMap *map, GdkPixbuf *pixbuf, int offset_x, int offset_y)
@@ -695,7 +929,9 @@ osm_gps_map_tile_download_complete (SoupSession *session, SoupMessage *msg, gpoi
             }
             else
             {
-                g_warning("Error creating tile download directory: %s", dl->folder);
+                g_warning("Error creating tile download directory: %s", 
+                          dl->folder);
+                perror("perror:");
             }
         }
 
@@ -1187,6 +1423,337 @@ osm_gps_map_purge_cache (OsmGpsMap *map)
    g_hash_table_foreach_remove(priv->tile_cache, osm_gps_map_purge_cache_check, priv);
 }
 
+#ifdef ENABLE_OSD
+/* position and extent of bounding box */
+#define OSD_X      (10)
+#define OSD_Y      (10)
+
+#define OSD_COLOR            0.5, 0.5, 1
+#define OSD_COLOR_DISABLED   0.8, 0.8, 0.8
+
+/* parameters of the direction shape */
+#ifndef OSM_GPS_MAP_OSD_DIAMETER
+#define D_RAD  (30)         // diameter of dpad
+#else
+#define D_RAD  (OSM_GPS_MAP_OSD_DIAMETER)
+#endif
+#define D_TIP  (4*D_RAD/5)  // distance of arrow tip from dpad center
+#define D_LEN  (D_RAD/4)    // length of arrow
+#define D_WID  (D_LEN)      // width of arrow
+
+/* parameters of the "zoom" pad */
+#define Z_STEP   (D_RAD/4)  // distance between dpad and zoom
+#define Z_RAD    (D_RAD/2)  // radius of "caps" of zoom bar
+
+/* shadow also depends on control size */
+#define OSD_SHADOW (D_RAD/6)
+
+/* total width and height of controls incl. shadow */
+#define OSD_W    (2*D_RAD + OSD_SHADOW)
+#define OSD_H    (2*D_RAD + Z_STEP + 2*Z_RAD + OSD_SHADOW)
+
+#define OSD_LBL_SHADOW (OSD_SHADOW/2)
+
+#define Z_TOP    (2 * D_RAD + Z_STEP)
+#define Z_MID    (Z_TOP + Z_RAD)
+#define Z_BOT    (Z_MID + Z_RAD)
+#define Z_LEFT   (Z_RAD)
+#define Z_RIGHT  (2 * D_RAD - Z_RAD)
+
+/* create the cairo shape used for the zoom buttons */
+static void 
+osm_gps_map_osd_zoom_shape(cairo_t *cr, gint x, gint y) {
+    cairo_move_to (cr, x+Z_LEFT,    y+Z_TOP);
+    cairo_line_to (cr, x+Z_RIGHT,   y+Z_TOP);
+    cairo_arc     (cr, x+Z_RIGHT,   y+Z_MID, Z_RAD, -M_PI/2,  M_PI/2);
+    cairo_line_to (cr, x+Z_LEFT,    y+Z_BOT);
+    cairo_arc     (cr, x+Z_LEFT,    y+Z_MID, Z_RAD,  M_PI/2, -M_PI/2);
+}
+
+/* create the cairo shape used for the dpad */
+static void 
+osm_gps_map_osd_dpad_shape(cairo_t *cr, gint x, gint y) {
+    cairo_arc (cr, x+D_RAD, y+D_RAD, D_RAD, 0, 2 * M_PI);
+}
+
+static gboolean
+osm_gps_map_in_circle(gint x, gint y, gint cx, gint cy, gint rad) 
+{
+    return( pow(cx - x, 2) + pow(cy - y, 2) < rad * rad);
+}
+
+/* check whether x/y is within the dpad */
+static osd_button_t
+osm_gps_map_osd_check_dpad(gint x, gint y) 
+{
+    /* within entire dpad circle */
+    if( osm_gps_map_in_circle(x, y, OSD_X + D_RAD, OSD_Y + D_RAD, D_RAD)) 
+    {
+        /* convert into position relative to dpads centre */
+        x -= (OSD_X + D_RAD);
+        y -= (OSD_Y + D_RAD);
+
+        /* check for dpad center goes here! */
+        if( osm_gps_map_in_circle(x, y, 0, 0, D_RAD/3)) 
+            return OSD_GPS;
+
+        if( y < 0 && abs(x) < abs(y))
+            return OSD_UP;
+
+        if( y > 0 && abs(x) < abs(y))
+            return OSD_DOWN;
+
+        if( x < 0 && abs(y) < abs(x))
+            return OSD_LEFT;
+
+        if( x > 0 && abs(y) < abs(x))
+            return OSD_RIGHT;
+
+        return OSD_BG;
+    }
+    return OSD_NONE;
+}
+
+/* check whether x/y is within the zoom pads */
+static osd_button_t
+osm_gps_map_osd_check_zoom(gint x, gint y) {
+    if( x > OSD_X && x < (OSD_X + OSD_W) && y > Z_TOP && y < (OSD_Y+Z_BOT)) {
+
+        /* within circle around (-) label */
+        if( osm_gps_map_in_circle(x, y, OSD_X + Z_LEFT, OSD_Y + Z_MID, Z_RAD)) 
+            return OSD_OUT;
+
+        /* between center of (-) button and center of entire zoom control area */
+        if(x > OSD_LEFT && x < OSD_X + D_RAD) 
+            return OSD_OUT;
+
+        /* within circle around (+) label */
+        if( osm_gps_map_in_circle(x, y, OSD_X + Z_RIGHT, OSD_Y + Z_MID, Z_RAD)) 
+            return OSD_IN;
+
+        /* between center of (+) button and center of entire zoom control area */
+        if(x < OSD_RIGHT && x > OSD_X + D_RAD) 
+            return OSD_IN;
+    }
+ 
+    return OSD_NONE;
+}
+
+osd_button_t
+osm_gps_map_osd_check(gint x, gint y) {
+    osd_button_t but = OSD_NONE;
+
+    /* first do a rough test for the OSD area. */
+    /* this is just to avoid an unnecessary detailed test */
+    if(x > OSD_X && x < OSD_X + OSD_W && 
+       y > OSD_Y && y < OSD_Y + OSD_H) {
+        but = osm_gps_map_osd_check_dpad(x, y);
+
+        if(but == OSD_NONE) 
+            but = osm_gps_map_osd_check_zoom(x, y);
+    }
+
+    return but;
+}
+
+static void 
+osm_gps_map_osd_shape_shadow(cairo_t *cr) {
+    cairo_set_source_rgba (cr, 0, 0, 0, 0.2);
+    cairo_fill (cr);
+    cairo_stroke (cr);
+}
+
+static void 
+osm_gps_map_osd_shape(cairo_t *cr) {
+    cairo_set_source_rgb (cr, 1, 1, 1);
+    cairo_fill_preserve (cr);
+    cairo_set_source_rgb (cr, OSD_COLOR);
+    cairo_set_line_width (cr, 1);
+    cairo_stroke (cr);
+}
+
+static void
+osm_gps_map_osd_dpad_labels(cairo_t *cr, gint x, gint y) {
+    /* move reference to dpad center */
+    x += D_RAD;
+    y += D_RAD;
+
+    const static gint offset[][3][2] = {
+        /* left arrow/triangle */
+        { { -D_TIP+D_LEN, -D_WID }, { -D_LEN, D_WID }, { +D_LEN, D_WID } },
+        /* right arrow/triangle */
+        { { +D_TIP-D_LEN, -D_WID }, { +D_LEN, D_WID }, { -D_LEN, D_WID } },
+        /* top arrow/triangle */
+        { { -D_WID, -D_TIP+D_LEN }, { D_WID, -D_LEN }, { D_WID, +D_LEN } },
+        /* bottom arrow/triangle */
+        { { -D_WID, +D_TIP-D_LEN }, { D_WID, +D_LEN }, { D_WID, -D_LEN } }
+    };
+
+    int i;
+    for(i=0;i<4;i++) {
+        cairo_move_to (cr, x + offset[i][0][0], y + offset[i][0][1]);
+        cairo_rel_line_to (cr, offset[i][1][0], offset[i][1][1]);
+        cairo_rel_line_to (cr, offset[i][2][0], offset[i][2][1]);
+    }
+}
+
+/* draw the sattelite dish icon in the center of the dpad */
+#define GPS_V0  (D_RAD/8)
+#define GPS_V1  (D_RAD/10)
+#define GPS_V2  (D_RAD/5)
+
+/* draw a satellite receiver dish */
+static void
+osm_gps_map_osd_dpad_gps(cairo_t *cr, gint x, gint y) {
+    /* move reference to dpad center */
+    x += D_RAD;
+    y += D_RAD + GPS_V0;
+
+    cairo_move_to (cr, x-GPS_V0, y+GPS_V0);
+    cairo_rel_line_to (cr, +GPS_V0, -GPS_V0);
+    cairo_rel_line_to (cr, +GPS_V0, +GPS_V0);
+    cairo_close_path (cr);
+
+    cairo_move_to (cr, x+GPS_V1-GPS_V2, y-2*GPS_V2);
+    cairo_curve_to (cr, x-GPS_V2, y, x+GPS_V1, y+GPS_V1, x+GPS_V1+GPS_V2, y);
+    cairo_close_path (cr);
+
+    x += GPS_V1;
+    cairo_move_to (cr, x, y-GPS_V2);
+    cairo_rel_line_to (cr, +GPS_V1, -GPS_V1);
+}
+
+#define Z_LEN  (2*Z_RAD/3)
+
+static void
+osm_gps_map_osd_zoom_labels(cairo_t *cr, gint x, gint y) {
+    cairo_move_to (cr, x + Z_LEFT  - Z_LEN, y + Z_MID);
+    cairo_line_to (cr, x + Z_LEFT  + Z_LEN, y + Z_MID);
+
+    cairo_move_to (cr, x + Z_RIGHT,         y + Z_MID - Z_LEN);
+    cairo_line_to (cr, x + Z_RIGHT,         y + Z_MID + Z_LEN);
+    cairo_move_to (cr, x + Z_RIGHT - Z_LEN, y + Z_MID);
+    cairo_line_to (cr, x + Z_RIGHT + Z_LEN, y + Z_MID);
+}
+
+static void
+osm_gps_map_osd_labels(cairo_t *cr, gint width, gboolean enabled) {
+    if(enabled)  cairo_set_source_rgb (cr, OSD_COLOR);
+    else         cairo_set_source_rgb (cr, OSD_COLOR_DISABLED);
+    cairo_set_line_width (cr, width);
+    cairo_stroke (cr);
+}
+
+static void 
+osm_gps_map_osd_labels_shadow(cairo_t *cr, gint width, gboolean enabled) {
+    cairo_set_source_rgba (cr, 0, 0, 0, enabled?0.3:0.15);
+    cairo_set_line_width (cr, width);
+    cairo_stroke (cr);
+}
+
+static void
+osm_gps_map_osd_render(OsmGpsMapPrivate *priv) {
+
+    /* first fill with transparency */
+    cairo_t *cr = cairo_create(priv->osd.overlay);
+    cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+    cairo_set_source_rgba(cr, 1.0, 0.0, 0.0, 0.0);
+    cairo_paint(cr);
+
+    cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
+
+    /* --------- draw zoom and dpad shape shadow ----------- */
+    gint x = 0, y = 0;
+
+    osm_gps_map_osd_zoom_shape(cr, x + OSD_SHADOW, y + OSD_SHADOW);
+    osm_gps_map_osd_shape_shadow(cr);
+    osm_gps_map_osd_dpad_shape(cr, x + OSD_SHADOW, y + OSD_SHADOW);
+    osm_gps_map_osd_shape_shadow(cr);
+
+    /* --------- draw zoom and dpad shape ----------- */
+
+    osm_gps_map_osd_zoom_shape(cr, x, y);
+    osm_gps_map_osd_shape(cr);
+    osm_gps_map_osd_dpad_shape(cr, x, y);
+    osm_gps_map_osd_shape(cr);
+
+    /* --------- draw zoom and dpad labels --------- */
+
+    osm_gps_map_osd_zoom_labels(cr, x + OSD_LBL_SHADOW, y + OSD_LBL_SHADOW);
+    osm_gps_map_osd_dpad_labels(cr, x + OSD_LBL_SHADOW, y + OSD_LBL_SHADOW);
+    osm_gps_map_osd_labels_shadow(cr, Z_RAD/3, TRUE);
+    osm_gps_map_osd_dpad_gps(cr, x + OSD_LBL_SHADOW, y + OSD_LBL_SHADOW); 
+    osm_gps_map_osd_labels_shadow(cr, Z_RAD/6, priv->osd.cb != NULL);
+
+    osm_gps_map_osd_zoom_labels(cr, x, y);
+    osm_gps_map_osd_dpad_labels(cr, x, y);
+    osm_gps_map_osd_labels(cr, Z_RAD/3, TRUE);
+    osm_gps_map_osd_dpad_gps(cr, x, y);
+    osm_gps_map_osd_labels(cr, Z_RAD/6, priv->osd.cb != NULL);
+    
+    cairo_destroy(cr);
+}
+
+static void
+osm_gps_map_osd_draw_controls (OsmGpsMap *map, gint xoffset, gint yoffset)
+{
+    OsmGpsMapPrivate *priv = map->priv;
+
+    /* backup previous contents */
+    if(!priv->osd.backup)
+        priv->osd.backup = gdk_pixmap_new(priv->pixmap, OSD_W+2, OSD_H+2, -1);
+
+    gint x = OSD_X + EXTRA_BORDER + xoffset;
+    gint y = OSD_Y + EXTRA_BORDER + yoffset;
+
+    /* create backup of background */
+    gdk_draw_drawable(priv->osd.backup, 
+        GTK_WIDGET(map)->style->fg_gc[GTK_WIDGET_STATE(GTK_WIDGET(map))],
+                      priv->pixmap, x-1, y-1, 0, 0, OSD_W+2, OSD_H+2);
+
+    priv->osd.backup_x = x-1;
+    priv->osd.backup_y = y-1;
+
+
+#ifdef USE_CAIRO
+    /* OSD itself uses some off-screen rendering, so check if the */
+    /* offscreen buffer is present and create it if not */
+    if(!priv->osd.overlay) {
+        /* create overlay ... */
+        priv->osd.overlay = 
+            cairo_image_surface_create(CAIRO_FORMAT_ARGB32, OSD_W, OSD_H);
+        /* ... and render it */
+        osm_gps_map_osd_render(priv);
+    }
+
+    // now draw this onto the original context 
+    cairo_t *cr = gdk_cairo_create(priv->pixmap);
+    cairo_set_source_surface(cr, priv->osd.overlay, x, y);
+    cairo_paint(cr);
+    cairo_destroy(cr);
+
+#else
+#warning "OSD control display lacks a non-cairo implementation!"
+#endif
+}
+
+static void
+osm_gps_map_osd_restore (OsmGpsMap *map) 
+{
+    OsmGpsMapPrivate *priv = map->priv;
+
+    /* restore backup of previous contents */
+    if(priv->osd.backup) {
+        /* create backup of background */
+        gdk_draw_drawable(priv->pixmap,
+            GTK_WIDGET(map)->style->fg_gc[GTK_WIDGET_STATE(GTK_WIDGET(map))],
+                      priv->osd.backup, 0, 0, 
+                      priv->osd.backup_x, priv->osd.backup_y, OSD_W+2, OSD_H+2);
+    }
+}
+
+#endif
+
 static gboolean
 osm_gps_map_map_redraw (OsmGpsMap *map)
 {
@@ -1217,6 +1784,12 @@ osm_gps_map_map_redraw (OsmGpsMap *map)
     osm_gps_map_print_tracks(map);
     osm_gps_map_draw_gps_point(map);
     osm_gps_map_print_images(map);
+#ifdef ENABLE_BALLOON
+    osm_gps_map_draw_balloon_int(map);
+#endif
+#ifdef ENABLE_OSD
+    osm_gps_map_osd_draw_controls(map, 0, 0);
+#endif
 
     //osm_gps_map_osd_speed(map, 1.5);
     osm_gps_map_purge_cache(map);
@@ -1247,6 +1820,18 @@ osm_gps_map_init (OsmGpsMap *object)
     priv->trip_history = NULL;
     priv->gps = g_new0(coord_t, 1);
     priv->gps_valid = FALSE;
+
+#ifdef ENABLE_BALLOON
+    priv->balloon.coo = g_new0(coord_t, 1);
+    priv->balloon.valid = FALSE;
+    priv->balloon.cb = NULL;
+#endif
+
+#ifdef ENABLE_OSD
+    priv->osd.backup = NULL;
+    priv->osd.overlay = NULL;
+    priv->osd.cb = NULL;
+#endif
 
     priv->tracks = NULL;
     priv->images = NULL;
@@ -1404,6 +1989,20 @@ osm_gps_map_dispose (GObject *object)
 
     if (priv->idle_map_redraw != 0)
         g_source_remove (priv->idle_map_redraw);
+
+    g_free(priv->gps);
+
+#ifdef ENABLE_BALLOON
+    g_free(priv->balloon.coo);
+#endif
+
+#ifdef ENABLE_OSD
+    if (priv->osd.backup)
+        g_object_unref(priv->osd.backup);
+
+    if (priv->osd.overlay)
+         cairo_surface_destroy(priv->osd.overlay);
+#endif
 
     G_OBJECT_CLASS (osm_gps_map_parent_class)->dispose (object);
 }
@@ -1620,6 +2219,69 @@ osm_gps_map_button_press (GtkWidget *widget, GdkEventButton *event)
 {
     OsmGpsMapPrivate *priv = OSM_GPS_MAP_PRIVATE(widget);
 
+#ifdef ENABLE_BALLOON
+    /* don't drag if the user clicked within the balloon */
+    if (osm_gps_map_in_balloon(priv, 
+                   event->x + EXTRA_BORDER, 
+                   event->y + EXTRA_BORDER))
+    {
+        priv->drag_counter = -1;
+        return FALSE;
+    }
+#endif
+
+#ifdef ENABLE_OSD
+    #define SCROLL_STEP 10
+
+    /* pressed inside OSD control? */
+    osd_button_t but = osm_gps_map_osd_check(event->x, event->y);
+    if(but != OSD_NONE)
+    {
+        priv->drag_counter = -1;
+
+        switch(but) {
+        case OSD_GPS:
+            priv->osd.cb(priv->osd.data);
+            break;
+
+        case OSD_UP:
+            priv->map_y -= GTK_WIDGET(widget)->allocation.height/SCROLL_STEP;
+            priv->center_coord_set = FALSE;
+            break;
+
+        case OSD_DOWN:
+            priv->map_y += GTK_WIDGET(widget)->allocation.height/SCROLL_STEP;
+            priv->center_coord_set = FALSE;
+            break;
+
+        case OSD_LEFT:
+            priv->map_x -= GTK_WIDGET(widget)->allocation.width/SCROLL_STEP;
+            priv->center_coord_set = FALSE;
+            break;
+
+        case OSD_RIGHT:
+            priv->map_x += GTK_WIDGET(widget)->allocation.width/SCROLL_STEP;
+            priv->center_coord_set = FALSE;
+            break;
+
+        case OSD_IN:
+            osm_gps_map_set_zoom(OSM_GPS_MAP(widget), priv->map_zoom+1);
+            break;
+
+        case OSD_OUT:
+            osm_gps_map_set_zoom(OSM_GPS_MAP(widget), priv->map_zoom-1);
+            break;
+
+        default:
+            break;
+        }
+
+        osm_gps_map_map_redraw_idle(OSM_GPS_MAP(widget));
+        
+        return FALSE;
+    }
+#endif
+
     priv->drag_counter = 0;
     priv->drag_start_mouse_x = (int) event->x;
     priv->drag_start_mouse_y = (int) event->y;
@@ -1633,6 +2295,18 @@ static gboolean
 osm_gps_map_button_release (GtkWidget *widget, GdkEventButton *event)
 {
     OsmGpsMapPrivate *priv = OSM_GPS_MAP_PRIVATE(widget);
+
+#ifdef ENABLE_BALLOON
+    /* released inside the balloon? */
+    if (osm_gps_map_in_balloon(priv, 
+                   event->x + EXTRA_BORDER, 
+                   event->y + EXTRA_BORDER))
+    {
+        osm_gps_map_handle_balloon_click(OSM_GPS_MAP(widget), 
+             event->x - priv->balloon.rect.x + EXTRA_BORDER, 
+             event->y - priv->balloon.rect.y + EXTRA_BORDER);
+    }
+#endif
 
     if (priv->dragging)
     {
@@ -1651,10 +2325,13 @@ osm_gps_map_button_release (GtkWidget *widget, GdkEventButton *event)
 
     priv->drag_mouse_dx = 0;
     priv->drag_mouse_dy = 0;
-    priv->drag_counter = 0;
+    priv->drag_counter = -1;
 
     return FALSE;
 }
+
+static gboolean
+osm_gps_map_expose (GtkWidget *widget, GdkEventExpose  *event);
 
 static gboolean
 osm_gps_map_motion_notify (GtkWidget *widget, GdkEventMotion  *event)
@@ -1676,11 +2353,22 @@ osm_gps_map_motion_notify (GtkWidget *widget, GdkEventMotion  *event)
     if (!(state & GDK_BUTTON1_MASK))
         return FALSE;
 
+    if (priv->drag_counter < 0) 
+        return FALSE;
+
     priv->drag_counter++;
 
     // we havent dragged more than 6 pixels
     if (priv->drag_counter < 6)
         return FALSE;
+
+#ifdef USE_MAEMO
+    /* reduce update frequency on maemo to keep screen update fluid */
+    static guint32 last_time = 0;
+
+    if(event->time - last_time < 100) return FALSE;
+    last_time = event->time;
+#endif
 
     priv->dragging = TRUE;
 
@@ -1690,12 +2378,60 @@ osm_gps_map_motion_notify (GtkWidget *widget, GdkEventMotion  *event)
     priv->drag_mouse_dx = x - priv->drag_start_mouse_x;
     priv->drag_mouse_dy = y - priv->drag_start_mouse_y;
 
+#ifdef ENABLE_OSD
+    /* undo OSD */
+    osm_gps_map_osd_restore (OSM_GPS_MAP(widget));
+
+    /* draw new OSD */
+    osm_gps_map_osd_draw_controls (OSM_GPS_MAP(widget),
+                                   -priv->drag_mouse_dx,
+                                   -priv->drag_mouse_dy);
+#endif
+
+    osm_gps_map_expose (widget, NULL);
+
+
+    return FALSE;
+}
+
+static gboolean
+osm_gps_map_configure (GtkWidget *widget, GdkEventConfigure *event)
+{
+    OsmGpsMapPrivate *priv = OSM_GPS_MAP_PRIVATE(widget);
+
+    /* create pixmap */
+    if (priv->pixmap)
+        g_object_unref (priv->pixmap);
+
+    priv->pixmap = gdk_pixmap_new (
+                                   widget->window,
+                                   widget->allocation.width + EXTRA_BORDER * 2,
+                                   widget->allocation.height + EXTRA_BORDER * 2,
+                                   -1);
+
+    /* and gc, used for clipping (I think......) */
+    if(priv->gc_map)
+        g_object_unref(priv->gc_map);
+
+    priv->gc_map = gdk_gc_new(priv->pixmap);
+
+    osm_gps_map_map_redraw(OSM_GPS_MAP(widget));
+
+    return FALSE;
+}
+
+static gboolean
+osm_gps_map_expose (GtkWidget *widget, GdkEventExpose  *event)
+{
+    OsmGpsMapPrivate *priv = OSM_GPS_MAP_PRIVATE(widget);
+
     gdk_draw_drawable (
                        widget->window,
                        widget->style->fg_gc[GTK_WIDGET_STATE (widget)],
                        priv->pixmap,
                        0,0,
-                       priv->drag_mouse_dx - EXTRA_BORDER, priv->drag_mouse_dy - EXTRA_BORDER,
+                       priv->drag_mouse_dx - EXTRA_BORDER, 
+                       priv->drag_mouse_dy - EXTRA_BORDER,
                        -1,-1);
 
     //Paint white outside of the map if dragging. Its less
@@ -1739,49 +2475,17 @@ osm_gps_map_motion_notify (GtkWidget *widget, GdkEventMotion  *event)
                             widget->allocation.width,
                             -priv->drag_mouse_dy - EXTRA_BORDER);
     }
-
-    return FALSE;
-}
-
-static gboolean
-osm_gps_map_configure (GtkWidget *widget, GdkEventConfigure *event)
-{
-    OsmGpsMapPrivate *priv = OSM_GPS_MAP_PRIVATE(widget);
-
-    /* create pixmap */
-    if (priv->pixmap)
-        g_object_unref (priv->pixmap);
-
-    priv->pixmap = gdk_pixmap_new (
-                                   widget->window,
-                                   widget->allocation.width + EXTRA_BORDER * 2,
-                                   widget->allocation.height + EXTRA_BORDER * 2,
-                                   -1);
-
-    /* and gc, used for clipping (I think......) */
-    if(priv->gc_map)
-        g_object_unref(priv->gc_map);
-
-    priv->gc_map = gdk_gc_new(priv->pixmap);
-
-    osm_gps_map_map_redraw(OSM_GPS_MAP(widget));
-
-    return FALSE;
-}
-
-static gboolean
-osm_gps_map_expose (GtkWidget *widget, GdkEventExpose  *event)
-{
-    OsmGpsMapPrivate *priv = OSM_GPS_MAP_PRIVATE(widget);
-
-    gdk_draw_drawable (
+#if 0
+    if(!priv->dragging)
+        gdk_draw_drawable (
                        widget->window,
                        widget->style->fg_gc[GTK_WIDGET_STATE (widget)],
                        priv->pixmap,
-                       event->area.x + EXTRA_BORDER, event->area.y + EXTRA_BORDER,
+                       event->area.x + EXTRA_BORDER, 
+                       event->area.y + EXTRA_BORDER,
                        event->area.x, event->area.y,
                        event->area.width, event->area.height);
-
+#endif
     return FALSE;
 }
 
@@ -1967,7 +2671,7 @@ osm_gps_map_class_init (OsmGpsMapClass *klass)
                                                        "radius of the gps point inner circle",
                                                        0,           /* minimum property value */
                                                        G_MAXINT,    /* maximum property value */
-                                                       5,
+                                                       10,
                                                        G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT));
 
     g_object_class_install_property (object_class,
@@ -2553,3 +3257,58 @@ osm_gps_map_get_scale(OsmGpsMap *map)
     return osm_gps_map_get_scale_at_point(priv->map_zoom, priv->center_rlat, priv->center_rlon);
 }
 
+#ifdef ENABLE_BALLOON
+void 
+osm_gps_map_draw_balloon (OsmGpsMap *map, float latitude, float longitude, 
+                          OsmGpsMapBalloonCallback cb, gpointer data)
+{
+    OsmGpsMapPrivate *priv;
+
+    /* remove and previously installed balloon */
+    osm_gps_map_clear_balloon (map);
+
+    g_return_if_fail (OSM_IS_GPS_MAP (map));
+    priv = map->priv;
+
+    priv->balloon.coo->rlat = deg2rad(latitude);
+    priv->balloon.coo->rlon = deg2rad(longitude);
+    priv->balloon.valid = TRUE;
+
+    priv->balloon.cb = cb;
+    priv->balloon.data = data;
+
+    // this redraws the map
+    osm_gps_map_map_redraw_idle(map);
+}
+
+void 
+osm_gps_map_clear_balloon (OsmGpsMap *map) 
+{
+    OsmGpsMapPrivate *priv;
+
+    g_return_if_fail (OSM_IS_GPS_MAP (map));
+    priv = map->priv;
+
+    priv->balloon.valid = FALSE;
+    
+    osm_gps_map_map_redraw_idle(map);
+}
+#endif
+
+#ifdef ENABLE_OSD
+void osm_gps_map_osd_enable_gps (OsmGpsMap *map, OsmGpsMapOsdGpsCallback cb, gpointer data) {
+    OsmGpsMapPrivate *priv;
+
+    g_return_if_fail (OSM_IS_GPS_MAP (map));
+    priv = map->priv;
+
+    priv->osd.cb = cb;
+    priv->osd.data = data;
+
+    /* this may have changed the state of the gps button */
+    /* we thus re-render the overlay */
+    osm_gps_map_osd_render(priv);
+
+    osm_gps_map_map_redraw_idle(map);
+}
+#endif

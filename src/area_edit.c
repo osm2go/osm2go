@@ -56,8 +56,7 @@ typedef struct {
 #ifdef ENABLE_OSM_GPS_MAP
   struct {
     GtkWidget *widget;
-    GtkWidget *zoomin, *zoomout, *center, *modesel, *gps;
-    gboolean needs_redraw, drag_mode;
+    gboolean needs_redraw;
     gint handler_id;
     coord_t start;
   } map;
@@ -204,10 +203,10 @@ static void map_update(context_t *context, gboolean forced) {
     /* we know the widgets pixel size, we know the required real size, */
     /* we want the zoom! */
     double vzoom = LOG2((45.0 * context->map.widget->allocation.height)/
-			((context->max.lat - context->min.lat)*32.0));
+			((context->max.lat - context->min.lat)*32.0)) -1;
     
     double hzoom = LOG2((45.0 * context->map.widget->allocation.width)/
-			((context->max.lon - context->min.lon)*32.0));
+			((context->max.lon - context->min.lon)*32.0)) -1;
     
     osm_gps_map_set_center(OSM_GPS_MAP(context->map.widget),
 			   center_lat, center_lon);	    
@@ -398,27 +397,26 @@ static void callback_fetch_mm_clicked(GtkButton *button, gpointer data) {
 static gboolean
 on_map_button_press_event(GtkWidget *widget, 
 			  GdkEventButton *event, context_t *context) {
-  if(!context->map.drag_mode) {
-    OsmGpsMap *map = OSM_GPS_MAP(context->map.widget);
+  OsmGpsMap *map = OSM_GPS_MAP(context->map.widget);
 
-    /* remove existing marker */
-    osm_gps_map_clear_tracks(map);
+  /* osm-gps-map needs this event to handle the OSD */
+  if(osm_gps_map_osd_check((int)event->x, (int)event->y))
+    return FALSE;
 
-    /* and remember this location as the start */
-    context->map.start = 
-      osm_gps_map_get_co_ordinates(map, (int)event->x, (int)event->y);
+  /* remove existing marker */
+  osm_gps_map_clear_tracks(map);
 
-    return TRUE;
-  }
+  /* and remember this location as the start */
+  context->map.start = 
+    osm_gps_map_get_co_ordinates(map, (int)event->x, (int)event->y);
 
-  return FALSE;
+  return TRUE;
 }
 
 static gboolean
 on_map_motion_notify_event(GtkWidget *widget, 
 			   GdkEventMotion  *event, context_t *context) {
-  if(!context->map.drag_mode && 
-     !isnan(context->map.start.rlon) && 
+  if(!isnan(context->map.start.rlon) && 
      !isnan(context->map.start.rlat)) {
     OsmGpsMap *map = OSM_GPS_MAP(context->map.widget);
 
@@ -435,18 +433,17 @@ on_map_motion_notify_event(GtkWidget *widget,
     box = pos_append_rad(box, start.rlat, start.rlon);
 
     osm_gps_map_add_track(map, box);
-
-    return TRUE;
   }
 
-  return FALSE;
+  /* always returning true here disables dragging in osm-gps-map */
+  return TRUE;
 }
 
 static gboolean
 on_map_button_release_event(GtkWidget *widget, 
 			    GdkEventButton *event, context_t *context) {
-  if(!context->map.drag_mode && 
-     !isnan(context->map.start.rlon) && 
+
+  if(!isnan(context->map.start.rlon) && 
      !isnan(context->map.start.rlat)) {
     OsmGpsMap *map = OSM_GPS_MAP(context->map.widget);
 
@@ -482,55 +479,26 @@ on_map_button_release_event(GtkWidget *widget,
     extent_update(context);
 
     context->map.start.rlon = context->map.start.rlat = NAN;
-
-    return TRUE;
   }
 
-  return FALSE;
+  /* osm-gps-map needs this event to handle the OSD */
+  if(osm_gps_map_osd_check((int)event->x, (int)event->y))
+    return FALSE;
+
+  return TRUE;
 }
 
+#if 0
 static void map_zoom(context_t *context, int step) {
   int zoom;
   OsmGpsMap *map = OSM_GPS_MAP(context->map.widget);
   g_object_get(map, "zoom", &zoom, NULL);
   zoom = osm_gps_map_set_zoom(map, zoom+step);
-
-  /* enable/disable zoom buttons as required */
-  gtk_widget_set_sensitive(context->map.zoomin, zoom<17);
-  gtk_widget_set_sensitive(context->map.zoomout, zoom>1);
 }
+#endif
 
-static gboolean
-cb_map_zoomin(GtkButton *button, context_t *context) {
-  map_zoom(context, +1);
-  return FALSE;
-}
-
-static gboolean
-cb_map_zoomout(GtkButton *button, context_t *context) {
-  map_zoom(context, -1);
-  return FALSE;
-}
-
-static gboolean
-cb_map_center(GtkButton *button, context_t *context) {
-  map_update(context, TRUE);
-  return FALSE;
-}
-
-static gboolean
-cb_map_modesel(GtkButton *button, context_t *context) {
-  /* toggle between "find" icon and "cut" icon */  
-  context->map.drag_mode = !context->map.drag_mode;
-  gtk_button_set_image(GTK_BUTTON(context->map.modesel), 
-	       gtk_image_new_from_stock(context->map.drag_mode?
-	GTK_STOCK_FIND:GTK_STOCK_CUT, GTK_ICON_SIZE_MENU));
-
-  return FALSE;
-}
-
-static gboolean
-cb_map_gps(GtkButton *button, context_t *context) {
+static void
+cb_map_gps(context_t *context) {
   pos_t pos;
 
   /* user clicked "gps" button -> jump to position */
@@ -542,8 +510,6 @@ cb_map_gps(GtkButton *button, context_t *context) {
     osm_gps_map_set_center(OSM_GPS_MAP(context->map.widget),
 			   pos.lat, pos.lon);	    
   }
-
-  return FALSE;
 }
 
 static void on_page_switch(GtkNotebook *notebook, GtkNotebookPage *page,
@@ -557,19 +523,6 @@ static void on_page_switch(GtkNotebook *notebook, GtkNotebookPage *page,
     map_update(context, TRUE);
 }
 
-static GtkWidget 
-*map_add_button(const gchar *icon, GCallback cb, gpointer data, 
-		char *tooltip) {
-  GtkWidget *button = gtk_button_new();
-  gtk_button_set_image(GTK_BUTTON(button), 
-       gtk_image_new_from_stock(icon, GTK_ICON_SIZE_MENU));
-  g_signal_connect(button, "clicked", cb, data);
-#ifndef USE_HILDON
-  gtk_widget_set_tooltip_text(button, tooltip);
-#endif
-  return button;
-}
-
 static gboolean map_gps_update(gpointer data) {
   context_t *context = (context_t*)data;
 
@@ -580,7 +533,10 @@ static gboolean map_gps_update(gpointer data) {
   gboolean gps_fix = gps_on && 
     gps_get_pos(context->area->appdata, NULL, NULL);
 
-  gtk_widget_set_sensitive(context->map.gps, gps_fix);
+  /* ... and enable "goto" button if it's valid */
+  osm_gps_map_osd_enable_gps(OSM_GPS_MAP(context->map.widget), 
+     OSM_GPS_MAP_OSD_GPS_CALLBACK(gps_fix?cb_map_gps:NULL), context);
+
 
   return TRUE;
 }
@@ -641,8 +597,6 @@ gboolean area_edit(area_edit_t *area) {
 #ifdef ENABLE_OSM_GPS_MAP
   /* ------------- fetch from map ------------------------ */
 
-  GtkWidget *hbox = gtk_hbox_new(FALSE, 0);
-
   context.map.needs_redraw = FALSE;
   context.map.widget = g_object_new(OSM_TYPE_GPS_MAP,
  	        "map-source", OSM_GPS_MAP_SOURCE_OPENSTREETMAP,
@@ -659,45 +613,12 @@ gboolean area_edit(area_edit_t *area) {
   g_signal_connect(G_OBJECT(context.map.widget), "button-release-event",
 		   G_CALLBACK(on_map_button_release_event), &context);
 
-  gtk_box_pack_start_defaults(GTK_BOX(hbox), context.map.widget);
-
-  /* zoom button box */
-  vbox = gtk_vbox_new(FALSE,0);
-
-  context.map.zoomin = 
-    map_add_button(GTK_STOCK_ZOOM_IN, G_CALLBACK(cb_map_zoomin),
-		   &context, _("Zoom in"));
-  gtk_box_pack_start(GTK_BOX(vbox), context.map.zoomin, FALSE, FALSE, 0);
-
-  context.map.zoomout = 
-    map_add_button(GTK_STOCK_ZOOM_OUT, G_CALLBACK(cb_map_zoomout),
-		   &context, _("Zoom out"));
-  gtk_box_pack_start(GTK_BOX(vbox), context.map.zoomout, FALSE, FALSE, 0);
-
-  context.map.center = 
-    map_add_button(GTK_STOCK_HOME, G_CALLBACK(cb_map_center),
-		   &context, _("Center selected area"));
-  gtk_box_pack_start(GTK_BOX(vbox), context.map.center, FALSE, FALSE, 0);
-
-  context.map.gps = 
-    map_add_button(GTK_STOCK_ABOUT, G_CALLBACK(cb_map_gps),
-		   &context, _("Jump to GPS position"));
-  gtk_widget_set_sensitive(context.map.gps, FALSE);
   /* install handler for timed updates of the gps button */
   context.map.handler_id = gtk_timeout_add(1000, map_gps_update, &context);
-  gtk_box_pack_start(GTK_BOX(vbox), context.map.gps, FALSE, FALSE, 0);
-  
-  context.map.drag_mode = TRUE;
   context.map.start.rlon = context.map.start.rlat = NAN;
-  context.map.modesel = 
-    map_add_button(GTK_STOCK_FIND, G_CALLBACK(cb_map_modesel),
-		   &context, _("Toggle scroll/select"));
-  gtk_box_pack_start(GTK_BOX(vbox), context.map.modesel, FALSE, FALSE, 0);
-
-  gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
 
   gtk_notebook_append_page(GTK_NOTEBOOK(context.notebook),
-		   hbox, gtk_label_new(_(TAB_LABEL_MAP)));
+		   context.map.widget, gtk_label_new(_(TAB_LABEL_MAP)));
 #endif
 
   /* ------------ direct min/max edit --------------- */
