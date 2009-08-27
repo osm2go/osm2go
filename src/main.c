@@ -230,8 +230,8 @@ cb_menu_download(GtkMenuItem *item, gpointer data) {
     /* redraw the entire map by destroying all map items and redrawing them */
     diff_save(appdata->project, appdata->osm);
     map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
-    osm_free(&appdata->icon, appdata->osm);
 
+    osm_free(&appdata->icon, appdata->osm);
     appdata->osm = NULL;
   }
 
@@ -338,7 +338,10 @@ cb_menu_undo_changes(GtkMenuItem *item, gpointer data) {
 
   banner_busy_start(appdata, 1, _("Redrawing"));
   map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
+
   osm_free(&appdata->icon, appdata->osm);
+  appdata->osm = NULL;
+
   diff_remove(appdata->project);
   appdata->osm = osm_parse(appdata->project->path, appdata->project->osm);
   map_paint(appdata);
@@ -1369,6 +1372,7 @@ void cleanup(appdata_t *appdata) {
   map_remove_bg_image(appdata->map);
 
   osm_free(&appdata->icon, appdata->osm);
+  appdata->osm = NULL;
 
   curl_global_cleanup();
 

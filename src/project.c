@@ -719,8 +719,8 @@ static void on_project_edit(GtkButton *button, gpointer data) {
 	  /* redraw the entire map by destroying all map items  */
 	  diff_save(appdata->project, appdata->osm);
 	  map_clear(appdata, MAP_LAYER_ALL);
-	  osm_free(&appdata->icon, appdata->osm);
 
+	  osm_free(&appdata->icon, appdata->osm);
 	  appdata->osm = NULL;
 	}
 
