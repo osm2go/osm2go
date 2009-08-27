@@ -92,6 +92,8 @@ typedef struct map_s {
 
   map_state_t *state;
 
+  gint autosave_handler_id;
+
   map_highlight_t *highlight;      // list of elements used for highlighting
 
   map_item_t selected;             // the currently selected item (node or way)

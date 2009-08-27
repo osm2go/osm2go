@@ -141,7 +141,6 @@ typedef struct appdata_s {
 
   GtkWidget *menu_item_map_hide_sel;
   GtkWidget *menu_item_map_show_all;
-  GtkWidget *menu_item_map_no_icons;
 
 #if defined(USE_HILDON) && (MAEMO_VERSION_MAJOR == 5)
   /* submenues are seperate menues under fremantle */

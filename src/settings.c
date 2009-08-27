@@ -54,7 +54,6 @@ static store_t store[] = {
   { "style",            STORE_STRING, OFFSET(style)        },
 
   /* main */
-  { "no_icons",         STORE_BOOL,   OFFSET(no_icons)     },
   { "track_path",       STORE_STRING, OFFSET(track_path)   },
   { "enable_gps",       STORE_BOOL,   OFFSET(enable_gps)   },
   { "follow_gps",       STORE_BOOL,   OFFSET(follow_gps)   },
@@ -105,28 +104,6 @@ settings_t *settings_load(void) {
   GConfClient *client = gconf_client_get_default();
   if(client) {
 
-#ifdef USE_HILDON
-    /* special explanation for the no_icons setting on hildon/maemo */
-    {
-      char *key = g_strdup_printf("/apps/" PACKAGE "/no_icons");
-      GConfValue *value = gconf_client_get(client, key, NULL);
-      g_free(key);
-      if(value) 
-	gconf_value_free(value); 
-      else {
-#if 0  // don't explain this now ...
-	messagef(NULL, _("Icon drawing is disabled"),
-		 _("You are running this version of osm2go on a Internet "
-		   "Tablet for the first time. Since these currently have "
-		   "problems displaying icons on the map, icons have been "
-		   "disabled. You might enable them in the menu under "
-		   "Map/No Icons at any time."));
-#endif
-	settings->no_icons = TRUE;
-      }
-    }
-#endif
-    
     /* restore everything listed in the store table */
     store_t *st = store;
     while(st->key) {

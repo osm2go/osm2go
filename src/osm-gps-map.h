@@ -91,15 +91,31 @@ typedef enum {
     OSD_RIGHT,
     OSD_IN,
     OSD_OUT,
-    OSD_GPS
+    OSD_CUSTOM   // first custom buttom
 } osd_button_t;
+
+typedef void (*OsmGpsMapOsdCallback)(osd_button_t but, gpointer data);
+#define	OSM_GPS_MAP_OSD_CALLBACK(f) ((OsmGpsMapOsdCallback) (f))
+
+/* the osd structure mainly contains various callbacks */
+/* required to draw and update the OSD */
+typedef struct osm_gps_map_osd_s {
+    GtkWidget *widget;   // the main map widget (to get its stlye info)
+
+    void(*render)(struct osm_gps_map_osd_s *);
+    void(*draw)(struct osm_gps_map_osd_s *, GdkDrawable *);
+    osd_button_t(*check)(struct osm_gps_map_osd_s *,gint, gint);       /* check if x/y lies within OSD */
+    void(*free)(struct osm_gps_map_osd_s *);
+
+    OsmGpsMapOsdCallback cb;
+    gpointer data;
+
+    gpointer priv;
+} osm_gps_map_osd_t;
 
 typedef void (*OsmGpsMapBalloonCallback)(cairo_t *, OsmGpsMapRect_t *rect, 
                                          gpointer data);
 #define	OSM_GPS_MAP_BALLOON_CALLBACK(f) ((OsmGpsMapBalloonCallback) (f))
-
-typedef void (*OsmGpsMapOsdGpsCallback)(gpointer data);
-#define	OSM_GPS_MAP_OSD_GPS_CALLBACK(f) ((OsmGpsMapOsdGpsCallback) (f))
 
 GType osm_gps_map_get_type (void) G_GNUC_CONST;
 
@@ -119,7 +135,6 @@ void osm_gps_map_clear_tracks (OsmGpsMap *map);
 void osm_gps_map_add_image (OsmGpsMap *map, float latitude, float longitude, GdkPixbuf *image);
 gboolean osm_gps_map_remove_image (OsmGpsMap *map, GdkPixbuf *image);
 void osm_gps_map_clear_images (OsmGpsMap *map);
-void osm_gps_map_osd_speed (OsmGpsMap *map, float speed);
 void osm_gps_map_draw_gps (OsmGpsMap *map, float latitude, float longitude, float heading);
 void osm_gps_map_clear_gps (OsmGpsMap *map);
 coord_t osm_gps_map_get_co_ordinates (OsmGpsMap *map, int pixel_x, int pixel_y);
@@ -137,8 +152,9 @@ void osm_gps_map_draw_balloon (OsmGpsMap *map, float latitude, float longitude, 
 void osm_gps_map_clear_balloon (OsmGpsMap *map);
 #endif
 #ifdef ENABLE_OSD
-void osm_gps_map_osd_enable_gps (OsmGpsMap *map, OsmGpsMapOsdGpsCallback cb, gpointer data);
-osd_button_t osm_gps_map_osd_check(gint x, gint y);
+void osm_gps_map_register_osd(OsmGpsMap *map, osm_gps_map_osd_t *osd);
+void osm_gps_map_redraw (OsmGpsMap *map);
+osm_gps_map_osd_t *osm_gps_map_osd_get(OsmGpsMap *map);
 #endif
 
 

@@ -291,18 +291,6 @@ cb_menu_map_show_all(GtkMenuItem *item, gpointer data) {
 #endif
 
 static void 
-cb_menu_map_no_icons(MENU_CHECK_ITEM *item, appdata_t *appdata) {
-
-  banner_busy_start(appdata, 1, "Redrawing");
-  map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
-
-  appdata->settings->no_icons = MENU_CHECK_ITEM_ACTIVE(item);
-
-  map_paint(appdata);
-  banner_busy_stop(appdata); //"Redrawing"
-}
-
-static void 
 cb_menu_style(GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
 
@@ -783,13 +771,6 @@ void menu_create(appdata_t *appdata) {
 
   gtk_menu_shell_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
 
-  appdata->menu_item_map_no_icons = menu_append_new_item(
-    appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_map_no_icons), _("No _icons"),
-    NULL, "<OSM2Go-Main>/View/NoIcons",
-    0, 0, TRUE, TRUE, appdata->settings->no_icons
-  );
-
-
   /* -------------------- map submenu -------------------- */
 
   appdata->submenu_map = item = gtk_menu_item_new_with_mnemonic( _("_Map") );
@@ -979,12 +960,6 @@ typedef struct {
   const menu_entry_t *menu;
   int len;
 } submenu_t;
-
-static gboolean no_icon_get_toggle(appdata_t *appdata) {
-  if(!appdata)           return FALSE;
-  if(!appdata->settings) return FALSE;
-  return appdata->settings->no_icons;
-}
 
 static gboolean enable_gps_get_toggle(appdata_t *appdata) {
   if(!appdata)           return FALSE;
@@ -1214,8 +1189,6 @@ static const menu_entry_t submenu_view_entries[] = {
   /* --- */
   DISABLED_ENTRY("Hide selected", cb_menu_map_hide_sel, menu_item_map_hide_sel),
   DISABLED_ENTRY("Show all",      cb_menu_map_show_all, menu_item_map_show_all),
-  /* --- */
-  TOGGLE_ENTRY("No icons",        cb_menu_map_no_icons, no_icon_get_toggle),
 
   LAST_ENTRY
 };

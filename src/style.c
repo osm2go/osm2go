@@ -29,7 +29,7 @@
 static void xml_get_prop_float(xmlNode *node, char *prop, float *value) {
   char *str = (char*)xmlGetProp(node, BAD_CAST prop);
   if(str) {
-    *value = strtod(str, NULL);
+    *value = g_ascii_strtod(str, NULL);
     xmlFree(str);
   }
 }

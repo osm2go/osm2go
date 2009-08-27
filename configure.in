@@ -21,7 +21,7 @@
 # along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
 
 AC_PREREQ(2.61)
-AC_INIT([OSM2Go],[0.7.17],[osm2go-users@garage.maemo.org])
+AC_INIT([OSM2Go],[0.7.18],[osm2go-users@garage.maemo.org])
 AC_CONFIG_SRCDIR([src/main.c])
 # AC_CONFIG_HEADER([src/config.h])
 
@@ -62,12 +62,12 @@ LIBS="$LIBS $libcurl_LIBS"
 
 # check for libsoup
 PKG_CHECK_MODULES([libsoup24], [libsoup-2.4], [
-  EXTRA_OBJS="$EXTRA_OBJS converter.o osm-gps-map.o"
+  EXTRA_OBJS="$EXTRA_OBJS converter.o osm-gps-map.o osm-gps-map-osd-classic.o"
   CFLAGS="$CFLAGS $libsoup24_CFLAGS -DENABLE_OSM_GPS_MAP"
   LIBS="$LIBS $libsoup24_LIBS"
 ], [
   PKG_CHECK_MODULES([libsoup22], [libsoup-2.2], [
-    EXTRA_OBJS="$EXTRA_OBJS converter.o osm-gps-map.o"
+    EXTRA_OBJS="$EXTRA_OBJS converter.o osm-gps-map.o osm-gps-map-osd-classic.o"
     CFLAGS="$CFLAGS $libsoup22_CFLAGS -DLIBSOUP22 -DENABLE_OSM_GPS_MAP"
     LIBS="$LIBS $libsoup22_LIBS"
   ], [

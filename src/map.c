@@ -113,16 +113,17 @@ static void map_node_select(appdata_t *appdata, node_t *node) {
 
   float radius = map->style->highlight.width + map->style->node.radius;
   if(!node->ways) radius += map->style->node.border_radius;
-  if(node->icon_buf && map->style->icon.enable && 
-     !appdata->settings->no_icons) {
+  if(node->icon_buf && map->style->icon.enable) {
     gint w = gdk_pixbuf_get_width(map_item->object.node->icon_buf);
     gint h = gdk_pixbuf_get_height(map_item->object.node->icon_buf);
+    
     /* icons are technically square, so a radius slightly bigger */
     /* than sqrt(2)*MAX(w,h) should fit nicely */
     radius = 0.75 * map->style->icon.scale * ((w>h)?w:h);
   }
 
   radius *= map->state->detail;
+
   map_hl_circle_new(map, CANVAS_GROUP_NODES_HL, new_map_item, 
 		    x, y, radius, map->style->highlight.color);
   
@@ -419,8 +420,7 @@ static canvas_item_t *map_node_new(map_t *map, node_t *node, gint radius,
   map_item->object.type = NODE;
   map_item->object.node = node;
 
-  if(!node->icon_buf || !map->style->icon.enable || 
-     map->appdata->settings->no_icons) 
+  if(!node->icon_buf || !map->style->icon.enable) 
     map_item->item = canvas_circle_new(map->canvas, CANVAS_GROUP_NODES, 
        node->lpos.x, node->lpos.y, radius, width, fill, border);
   else
@@ -785,6 +785,8 @@ void map_free_map_item_chains(appdata_t *appdata) {
 static gint map_destroy_event(GtkWidget *widget, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
   map_t *map = appdata->map;
+
+  gtk_timeout_remove(map->autosave_handler_id);
 
   printf("destroying entire map\n");
   
@@ -1577,13 +1579,10 @@ static gboolean map_motion_notify_event(GtkWidget *widget,
   if(!map->pen_down.is) 
     return FALSE;
 
-#ifndef USE_GOOCANVAS
-  /* handle hints, hints are handled by goocanvas directly */
+  /* handle hints */
   if(event->is_hint)
     gdk_window_get_pointer(event->window, &x, &y, &state);
-  else 
-#endif
-  {
+  else {
     x = event->x;
     y = event->y;
     state = event->state;
@@ -1721,7 +1720,6 @@ void map_state_reset(map_state_t *state) {
   state->zoom = 0.25;
   state->detail = 1.0;
 
-  /* todo: try to scroll to center of screen */
   state->scroll_offset.x = 0;
   state->scroll_offset.y = 0;
 }
@@ -1730,6 +1728,19 @@ map_state_t *map_state_new(void) {
   map_state_t *state = g_new0(map_state_t, 1);
   map_state_reset(state);
   return state;
+}
+
+static gboolean map_autosave(gpointer data) {
+  map_t *map = (map_t*)data;
+
+  printf("autosave ...\n");
+
+  if(map->appdata->project && map->appdata->osm) {
+    diff_save(map->appdata->project, map->appdata->osm);
+    banner_show_info(map->appdata, _("Autosave"));
+  }
+
+  return TRUE;
 }
 
 GtkWidget *map_new(appdata_t *appdata) {
@@ -1767,6 +1778,9 @@ GtkWidget *map_new(appdata_t *appdata) {
 			| GDK_SCROLL_MASK
 			| GDK_POINTER_MOTION_MASK
     			| GDK_POINTER_MOTION_HINT_MASK);
+
+  /* autosave happens every two minutes */
+  map->autosave_handler_id = gtk_timeout_add(120*1000, map_autosave, map);
 
   gtk_signal_connect(GTK_OBJECT(canvas_widget), 
      "button_press_event", G_CALLBACK(map_button_event), appdata);

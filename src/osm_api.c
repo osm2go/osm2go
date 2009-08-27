@@ -113,11 +113,35 @@ gboolean osm_download(GtkWidget *parent, settings_t *settings,
   char *url = g_strdup_printf("%s/map?bbox=%s,%s,%s,%s",
 		project->server, minlon, minlat, maxlon, maxlat);
 
-  char *str = NULL;
-  if(project->osm[0] == '/') str = g_strdup(project->osm);
-  else str = g_strjoin(NULL, project->path, project->osm, NULL);
-  gboolean result = net_io_download_file(parent, settings, url, str);
-  g_free(str);
+  char *fname = NULL;
+  if(project->osm[0] == '/') fname = g_strdup(project->osm);
+  else fname = g_strjoin(NULL, project->path, project->osm, NULL);
+
+  /* check if there already is such a file and make it a backup */
+  /* in case the download fails */
+  char *backup = g_strjoin(NULL, project->path, "backup.osm", NULL);
+  if(g_file_test(fname, G_FILE_TEST_IS_REGULAR)) {
+    printf("backing up existing file \"%s\" to \"%s\"\n", fname, backup);
+    g_rename(fname, backup);
+  }
+
+  gboolean result = net_io_download_file(parent, settings, url, fname);
+
+  /* if there's no new file use the backup */
+  if(!g_file_test(fname, G_FILE_TEST_IS_REGULAR)) {
+    if(g_file_test(backup, G_FILE_TEST_IS_REGULAR)) {
+      printf("no file downloaded, using backup \"%s\"\n", backup);
+      g_rename(backup, fname);
+      result = TRUE;
+    } else
+      printf("no file downloaded, but also no backup present\n");
+  } else {
+    printf("download ok, deleting backup\n");
+    g_remove(backup);
+  }
+
+  g_free(fname);
+  g_free(backup);
 
   g_free(url);
   return result;

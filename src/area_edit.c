@@ -21,6 +21,7 @@
 
 #ifdef ENABLE_OSM_GPS_MAP
 #include "osm-gps-map.h"
+#include "osm-gps-map-osd-classic.h"
 #endif
 
 #define TAB_LABEL_MAP    "Map"
@@ -398,9 +399,10 @@ static gboolean
 on_map_button_press_event(GtkWidget *widget, 
 			  GdkEventButton *event, context_t *context) {
   OsmGpsMap *map = OSM_GPS_MAP(context->map.widget);
+  osm_gps_map_osd_t *osd = osm_gps_map_osd_get(map);
 
   /* osm-gps-map needs this event to handle the OSD */
-  if(osm_gps_map_osd_check((int)event->x, (int)event->y))
+  if(osd->check(osd, (int)event->x, (int)event->y))
     return FALSE;
 
   /* remove existing marker */
@@ -443,9 +445,11 @@ static gboolean
 on_map_button_release_event(GtkWidget *widget, 
 			    GdkEventButton *event, context_t *context) {
 
+  OsmGpsMap *map = OSM_GPS_MAP(context->map.widget);
+  osm_gps_map_osd_t *osd = osm_gps_map_osd_get(map);
+
   if(!isnan(context->map.start.rlon) && 
      !isnan(context->map.start.rlat)) {
-    OsmGpsMap *map = OSM_GPS_MAP(context->map.widget);
 
     coord_t start = context->map.start, end = 
       osm_gps_map_get_co_ordinates(map, (int)event->x, (int)event->y);
@@ -482,7 +486,7 @@ on_map_button_release_event(GtkWidget *widget,
   }
 
   /* osm-gps-map needs this event to handle the OSD */
-  if(osm_gps_map_osd_check((int)event->x, (int)event->y))
+  if(osd->check(osd, (int)event->x, (int)event->y))
     return FALSE;
 
   return TRUE;
@@ -498,17 +502,19 @@ static void map_zoom(context_t *context, int step) {
 #endif
 
 static void
-cb_map_gps(context_t *context) {
-  pos_t pos;
-
-  /* user clicked "gps" button -> jump to position */
-  gboolean gps_on = 
-    context->area->appdata->settings && 
-    context->area->appdata->settings->enable_gps;
-
-  if(gps_on && gps_get_pos(context->area->appdata, &pos, NULL)) {
-    osm_gps_map_set_center(OSM_GPS_MAP(context->map.widget),
-			   pos.lat, pos.lon);	    
+cb_map_gps(osd_button_t but, context_t *context) {
+  if(but == OSD_GPS) {
+    pos_t pos;
+  
+    /* user clicked "gps" button -> jump to position */
+    gboolean gps_on = 
+      context->area->appdata->settings && 
+      context->area->appdata->settings->enable_gps;
+    
+    if(gps_on && gps_get_pos(context->area->appdata, &pos, NULL)) {
+      osm_gps_map_set_center(OSM_GPS_MAP(context->map.widget),
+			     pos.lat, pos.lon);	    
+    }
   }
 }
 
@@ -535,7 +541,7 @@ static gboolean map_gps_update(gpointer data) {
 
   /* ... and enable "goto" button if it's valid */
   osm_gps_map_osd_enable_gps(OSM_GPS_MAP(context->map.widget), 
-     OSM_GPS_MAP_OSD_GPS_CALLBACK(gps_fix?cb_map_gps:NULL), context);
+     OSM_GPS_MAP_OSD_CALLBACK(gps_fix?cb_map_gps:NULL), context);
 
 
   return TRUE;
@@ -603,6 +609,8 @@ gboolean area_edit(area_edit_t *area) {
 		"proxy-uri", misc_get_proxy_uri(area->settings),
 	        "tile-cache", NULL,
 		 NULL);
+
+  osm_gps_map_osd_classic_init(OSM_GPS_MAP(context.map.widget)); 
 
   g_signal_connect(G_OBJECT(context.map.widget), "configure-event",
 		   G_CALLBACK(on_map_configure), &context);
