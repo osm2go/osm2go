@@ -769,8 +769,6 @@ void menu_create(appdata_t *appdata) {
     0, 0, TRUE, FALSE, FALSE
   );
 
-  gtk_menu_shell_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
-
   /* -------------------- map submenu -------------------- */
 
   appdata->submenu_map = item = gtk_menu_item_new_with_mnemonic( _("_Map") );
