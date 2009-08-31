@@ -41,11 +41,13 @@ typedef struct {
 
   struct {
     GtkWidget *minlat, *maxlat, *minlon, *maxlon;
+    GtkWidget *error;
   } direct;
 
   struct {
     GtkWidget *lat, *lon, *height, *width, *mil_km;
     gboolean is_mil;
+    GtkWidget *error;
   } extent;
 
 #ifdef USE_HILDON 
@@ -149,6 +151,26 @@ static void area_main_update(context_t *context) {
   pos_lon_label_set(context->minlon, context->min.lon);
   pos_lon_label_set(context->maxlon, context->max.lon);
 
+  /* also setup the local error messages here, so they are */
+  /* updated for all entries at once */
+  if(context->min.lat >= context->max.lat ||
+     context->min.lon >= context->max.lon) {
+    gtk_label_set(GTK_LABEL(context->direct.error), 
+		  _("\"From\" must be smaller than \"to\" value!")); 
+    gtk_label_set(GTK_LABEL(context->extent.error), 
+		  _("Extents must be positive!")); 
+
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), 
+				      GTK_RESPONSE_ACCEPT, FALSE);
+
+  } else {
+    gtk_label_set(GTK_LABEL(context->direct.error), "");
+    gtk_label_set(GTK_LABEL(context->extent.error), "");
+
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), 
+				      GTK_RESPONSE_ACCEPT, TRUE);
+  }
+
   /* check if area size exceeds recommended values */
   pos_float_t center_lat = (context->max.lat + context->min.lat)/2;
   double vscale = DEG2RAD(POS_EQ_RADIUS / 1000.0);
@@ -218,14 +240,17 @@ static void map_update(context_t *context, gboolean forced) {
     
     /* ---------- draw border (as a gps track) -------------- */  
     osm_gps_map_clear_tracks(OSM_GPS_MAP(context->map.widget));
-    
-    GSList *box = pos_append(NULL, context->min.lat, context->min.lon);
-    box = pos_append(box, context->max.lat, context->min.lon);
-    box = pos_append(box, context->max.lat, context->max.lon);
-    box = pos_append(box, context->min.lat, context->max.lon);
-    box = pos_append(box, context->min.lat, context->min.lon);
-    
-    osm_gps_map_add_track(OSM_GPS_MAP(context->map.widget), box);
+
+    if(context->max.lat > context->min.lat &&
+       context->max.lon > context->min.lon) {
+      GSList *box = pos_append(NULL, context->min.lat, context->min.lon);
+      box = pos_append(box, context->max.lat, context->min.lon);
+      box = pos_append(box, context->max.lat, context->max.lon);
+      box = pos_append(box, context->min.lat, context->max.lon);
+      box = pos_append(box, context->min.lat, context->min.lon);
+      
+      osm_gps_map_add_track(OSM_GPS_MAP(context->map.widget), box);
+    }
   }
     
   context->map.needs_redraw = FALSE;
@@ -551,6 +576,8 @@ static gboolean map_gps_update(gpointer data) {
 
 gboolean area_edit(area_edit_t *area) {
   GtkWidget *vbox;
+  GdkColor color;
+  gdk_color_parse("red", &color);
 
   context_t context;
   memset(&context, 0, sizeof(context_t));
@@ -632,7 +659,7 @@ gboolean area_edit(area_edit_t *area) {
   /* ------------ direct min/max edit --------------- */
 
   vbox = gtk_vbox_new(FALSE, 10);
-  table = gtk_table_new(3, 3, FALSE);  // x, y
+  table = gtk_table_new(3, 4, FALSE);  // x, y
   gtk_table_set_col_spacings(GTK_TABLE(table), 10);
   gtk_table_set_row_spacings(GTK_TABLE(table), 5);
 
@@ -667,6 +694,11 @@ gboolean area_edit(area_edit_t *area) {
   label = gtk_label_new(_("(recommended min/max diff <0.03 degrees)"));
   gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 3, 2, 3);
 
+  /* error label */
+  context.direct.error = gtk_label_new("");
+  gtk_widget_modify_fg(context.direct.error, GTK_STATE_NORMAL, &color);
+  gtk_table_attach_defaults(GTK_TABLE(table), context.direct.error, 0, 3, 3, 4);
+
   gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
   gtk_notebook_append_page(GTK_NOTEBOOK(context.notebook),
 	   vbox, gtk_label_new(_(TAB_LABEL_DIRECT)));
@@ -674,7 +706,7 @@ gboolean area_edit(area_edit_t *area) {
   /* ------------- center/extent edit ------------------------ */
 
   vbox = gtk_vbox_new(FALSE, 10);
-  table = gtk_table_new(3, 4, FALSE);  // x, y
+  table = gtk_table_new(3, 5, FALSE);  // x, y
   gtk_table_set_col_spacings(GTK_TABLE(table), 10);
   gtk_table_set_row_spacings(GTK_TABLE(table), 5);
 
@@ -728,6 +760,11 @@ gboolean area_edit(area_edit_t *area) {
   label = gtk_label_new(_("(recommended width/height < 2km/1.25mi)"));
   gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 3, 3, 4);
 
+  /* error label */
+  context.extent.error = gtk_label_new("");
+  gtk_widget_modify_fg(context.extent.error, GTK_STATE_NORMAL, &color);
+  gtk_table_attach_defaults(GTK_TABLE(table), context.extent.error, 0, 3, 4, 5);
+  
   gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
   gtk_notebook_append_page(GTK_NOTEBOOK(context.notebook),
 		   vbox, gtk_label_new(_(TAB_LABEL_EXTENT)));
