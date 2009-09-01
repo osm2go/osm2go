@@ -66,6 +66,8 @@
 #include <gdk/gdkkeysyms.h>
 #endif
 
+#define USER_AGENT "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.11) Gecko/20071127 Firefox/2.0.0.11"
+
 struct _OsmGpsMapPrivate
 {
     GHashTable *tile_queue;
@@ -95,6 +97,7 @@ struct _OsmGpsMapPrivate
     char *proxy_uri;
 
     //where downloaded tiles are cached
+    char *tile_dir;
     char *cache_dir;
 
     //contains flags indicating the various special characters
@@ -348,6 +351,8 @@ static void
 inspect_map_uri(OsmGpsMap *map)
 {
     OsmGpsMapPrivate *priv = map->priv;
+    priv->uri_format = 0;
+    priv->the_google = FALSE;
 
     if (g_strrstr(priv->repo_uri, URI_MARKER_X))
         priv->uri_format |= URI_HAS_X;
@@ -1094,6 +1099,11 @@ osm_gps_map_download_tile (OsmGpsMap *map, int zoom, int x, int y, gboolean redr
                 }
             }
 
+#ifdef LIBSOUP22
+            soup_message_headers_append(msg->request_headers, 
+                                        "User-Agent", USER_AGENT);
+#endif
+
             g_hash_table_insert (priv->tile_queue, dl->uri, msg);
             soup_session_queue_message (priv->soup_session, msg, osm_gps_map_tile_download_complete, dl);
         } else {
@@ -1446,6 +1456,12 @@ osm_gps_map_map_redraw (OsmGpsMap *map)
 
     priv->idle_map_redraw = 0;
 
+    /* don't redraw the entire map while the OSD is doing */
+    /* some animation or the like. This is to keep the animation */
+    /* fluid */
+    if (priv->osd->busy(priv->osd))
+        return FALSE;
+
     /* the motion_notify handler uses priv->pixmap to redraw the area; if we
      * change it while we are dragging, we will end up showing it in the wrong
      * place. This could be fixed by carefully recompute the coordinates, but
@@ -1495,8 +1511,6 @@ on_window_key_press(GtkWidget *widget,
 			 GdkEventKey *event, OsmGpsMapPrivate *priv) {
   gboolean handled = FALSE;
   int step = GTK_WIDGET(widget)->allocation.width/OSM_GPS_MAP_SCROLL_STEP;
-
-  printf("key event with keyval %x\n", event->keyval);
 
   // the map handles some keys on its own ...
   switch(event->keyval) {
@@ -1564,7 +1578,6 @@ on_window_key_press(GtkWidget *widget,
 #endif
 
   default:
-      printf("unhandled key event with keyval %x\n", event->keyval);
       break;
   }
 
@@ -1616,12 +1629,12 @@ osm_gps_map_init (OsmGpsMap *object)
 
 #ifndef LIBSOUP22
     //Change naumber of concurrent connections option?
-    priv->soup_session = soup_session_async_new_with_options(
-                                                             SOUP_SESSION_USER_AGENT,
-                                                             "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.11) Gecko/20071127 Firefox/2.0.0.11",
-                                                             NULL);
+    priv->soup_session = 
+        soup_session_async_new_with_options(SOUP_SESSION_USER_AGENT,
+                                            USER_AGENT, NULL);
 #else
-    /* libsoup-2.2 seems not to be able to set the user agent */
+    /* libsoup-2.2 has no special way to set the user agent, so we */
+    /* set it seperately as an extra header field for each reuest */
     priv->soup_session = soup_session_async_new();
 #endif
 
@@ -1646,7 +1659,6 @@ osm_gps_map_init (OsmGpsMap *object)
     g_log_set_handler (G_LOG_DOMAIN, G_LOG_LEVEL_MASK, my_log_handler, NULL);
 
 #ifdef OSM_GPS_MAP_KEYS
-    //    GtkWidget *toplevel = gtk_widget_get_toplevel(GTK_WIDGET(object));
     g_signal_connect(G_OBJECT(object), "key_press_event",
                      G_CALLBACK(on_window_key_press), priv);
 #endif
@@ -1692,12 +1704,10 @@ osm_gps_map_constructor (GType gtype, guint n_properties, GObjectConstructParam 
     const char *fname = osm_gps_map_source_get_friendly_name(priv->map_source);
     if(!fname) fname = "_unknown_";
 
-    if (priv->cache_dir) {
-        char *old = priv->cache_dir;
-        //the new cachedir is the given cache dir + the md5 of the repo_uri
-        priv->cache_dir = g_strdup_printf("%s%c%s", old, G_DIR_SEPARATOR, fname);
-        g_debug("Adjusting cache dir %s -> %s", old, priv->cache_dir);
-        g_free(old);
+    if (priv->tile_dir) {
+        //the new cachedir is the given cache dir + the friendly name of the repo_uri
+        priv->cache_dir = g_strdup_printf("%s%c%s", priv->tile_dir, G_DIR_SEPARATOR, fname);
+        g_debug("Adjusting cache dir %s -> %s", priv->tile_dir, priv->cache_dir);
     }
 
     inspect_map_uri(map);
@@ -1762,7 +1772,12 @@ osm_gps_map_finalize (GObject *object)
     OsmGpsMap *map = OSM_GPS_MAP(object);
     OsmGpsMapPrivate *priv = map->priv;
 
-    g_free(priv->cache_dir);
+    if(priv->tile_dir)
+        g_free(priv->tile_dir);
+
+    if(priv->cache_dir)
+        g_free(priv->cache_dir);
+
     g_free(priv->repo_uri);
     g_free(priv->image_format);
 
@@ -1819,7 +1834,7 @@ osm_gps_map_set_property (GObject *object, guint prop_id, const GValue *value, G
             break;
         case PROP_TILE_CACHE_DIR:
             if ( g_value_get_string(value) )
-                priv->cache_dir = g_value_dup_string (value);
+                priv->tile_dir = g_value_dup_string (value);
             break;
         case PROP_ZOOM:
             priv->map_zoom = g_value_get_int (value);
@@ -1847,9 +1862,53 @@ osm_gps_map_set_property (GObject *object, guint prop_id, const GValue *value, G
         case PROP_GPS_POINT_R2:
             priv->ui_gps_point_outer_radius = g_value_get_int (value);
             break;
-        case PROP_MAP_SOURCE:
+        case PROP_MAP_SOURCE: {
+            gint old = priv->map_source;
             priv->map_source = g_value_get_int (value);
-            break;
+            if(old >= OSM_GPS_MAP_SOURCE_NULL && 
+               priv->map_source != old &&
+               priv->map_source >= OSM_GPS_MAP_SOURCE_NULL &&
+               priv->map_source <= OSM_GPS_MAP_SOURCE_LAST) {
+
+                /* we now have to switch the entire map */
+
+                /* flush the ram cache */
+                g_hash_table_remove_all(priv->tile_cache);
+
+                //check if the source given is valid
+                const char *uri = osm_gps_map_source_get_repo_uri(priv->map_source);
+                if (uri) {
+                    g_debug("Setting map source from ID");
+                    g_free(priv->repo_uri);
+
+                    priv->repo_uri = g_strdup(uri);
+                    priv->image_format = g_strdup(
+                           osm_gps_map_source_get_image_format(priv->map_source));
+                    priv->max_zoom = osm_gps_map_source_get_max_zoom(priv->map_source);
+                    priv->min_zoom = osm_gps_map_source_get_min_zoom(priv->map_source);
+                }
+                
+                /* create a new disk cache path */
+                const char *fname = osm_gps_map_source_get_friendly_name(priv->map_source);
+                if(!fname) fname = "_unknown_";
+
+                if (priv->tile_dir) {
+                    //the new cachedir is the given cache dir + the friendly name of the repo_uri
+                    priv->cache_dir = 
+                        g_strdup_printf("%s%c%s", priv->tile_dir, G_DIR_SEPARATOR, fname);
+                    g_debug("Adjusting cache dir %s -> %s", priv->tile_dir, priv->cache_dir);
+                }
+
+                /* adjust zoom if necessary */
+                if(priv->map_zoom > priv->max_zoom) 
+                    osm_gps_map_set_zoom(map, priv->max_zoom);
+
+                if(priv->map_zoom < priv->min_zoom)
+                    osm_gps_map_set_zoom(map, priv->min_zoom);
+
+                inspect_map_uri(map);
+
+            } } break;
         case PROP_IMAGE_FORMAT:
             priv->image_format = g_value_dup_string (value);
             break;
@@ -2183,50 +2242,62 @@ osm_gps_map_expose (GtkWidget *widget, GdkEventExpose  *event)
     GdkDrawable *drawable = widget->window;
 #endif
 
-    gdk_draw_drawable (drawable,
-                       widget->style->fg_gc[GTK_WIDGET_STATE (widget)],
-                       priv->pixmap,
-                       0,0,
-                       priv->drag_mouse_dx - EXTRA_BORDER, 
-                       priv->drag_mouse_dy - EXTRA_BORDER,
-                       -1,-1);
-
-    //Paint white outside of the map if dragging. Its less
-    //ugly than painting the corrupted map
-    if(priv->drag_mouse_dx>EXTRA_BORDER) {
-        gdk_draw_rectangle (drawable,
-                            widget->style->white_gc,
-                            TRUE,
-                            0, 0,
-                            priv->drag_mouse_dx - EXTRA_BORDER,
-                            widget->allocation.height);
-    }
-    else if (-priv->drag_mouse_dx > EXTRA_BORDER)
+    if (!priv->dragging && event)
     {
-        gdk_draw_rectangle (drawable,
-                            widget->style->white_gc,
-                            TRUE,
-                            priv->drag_mouse_dx + widget->allocation.width + EXTRA_BORDER, 0,
-                            -priv->drag_mouse_dx - EXTRA_BORDER,
-                            widget->allocation.height);
+        gdk_draw_drawable (drawable,
+                           widget->style->fg_gc[GTK_WIDGET_STATE (widget)],
+                           priv->pixmap,
+                           event->area.x + EXTRA_BORDER, event->area.y + EXTRA_BORDER,
+                           event->area.x, event->area.y,
+                           event->area.width, event->area.height);
     }
-
-    if (priv->drag_mouse_dy>EXTRA_BORDER) {
-        gdk_draw_rectangle (drawable,
-                            widget->style->white_gc,
-                            TRUE,
-                            0, 0,
-                            widget->allocation.width,
-                            priv->drag_mouse_dy - EXTRA_BORDER);
-    }
-    else if (-priv->drag_mouse_dy > EXTRA_BORDER)
+    else
     {
-        gdk_draw_rectangle (drawable,
-                            widget->style->white_gc,
-                            TRUE,
-                            0, priv->drag_mouse_dy + widget->allocation.height + EXTRA_BORDER,
-                            widget->allocation.width,
-                            -priv->drag_mouse_dy - EXTRA_BORDER);
+        gdk_draw_drawable (drawable,
+                           widget->style->fg_gc[GTK_WIDGET_STATE (widget)],
+                           priv->pixmap,
+                           0,0,
+                           priv->drag_mouse_dx - EXTRA_BORDER, 
+                           priv->drag_mouse_dy - EXTRA_BORDER,
+                           -1,-1);
+        
+        //Paint white outside of the map if dragging. Its less
+        //ugly than painting the corrupted map
+        if(priv->drag_mouse_dx>EXTRA_BORDER) {
+            gdk_draw_rectangle (drawable,
+                                widget->style->white_gc,
+                                TRUE,
+                                0, 0,
+                                priv->drag_mouse_dx - EXTRA_BORDER,
+                                widget->allocation.height);
+        }
+        else if (-priv->drag_mouse_dx > EXTRA_BORDER)
+        {
+            gdk_draw_rectangle (drawable,
+                                widget->style->white_gc,
+                                TRUE,
+                                priv->drag_mouse_dx + widget->allocation.width + EXTRA_BORDER, 0,
+                                -priv->drag_mouse_dx - EXTRA_BORDER,
+                                widget->allocation.height);
+        }
+        
+        if (priv->drag_mouse_dy>EXTRA_BORDER) {
+            gdk_draw_rectangle (drawable,
+                                widget->style->white_gc,
+                                TRUE,
+                                0, 0,
+                                widget->allocation.width,
+                                priv->drag_mouse_dy - EXTRA_BORDER);
+        }
+        else if (-priv->drag_mouse_dy > EXTRA_BORDER)
+        {
+            gdk_draw_rectangle (drawable,
+                                widget->style->white_gc,
+                                TRUE,
+                                0, priv->drag_mouse_dy + widget->allocation.height + EXTRA_BORDER,
+                                widget->allocation.width,
+                                -priv->drag_mouse_dy - EXTRA_BORDER);
+        }
     }
 
 #ifdef ENABLE_OSD
@@ -2441,7 +2512,7 @@ osm_gps_map_class_init (OsmGpsMapClass *klass)
                                                        -1,           /* minimum property value */
                                                        G_MAXINT,    /* maximum property value */
                                                        -1,
-                                                       G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
+                                                       G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT));
 
     g_object_class_install_property (object_class,
                                      PROP_IMAGE_FORMAT,
@@ -2462,9 +2533,9 @@ osm_gps_map_source_get_friendly_name(OsmGpsMapSource_t source)
         case OSM_GPS_MAP_SOURCE_OPENSTREETMAP:
             return "OpenStreetMap";
         case OSM_GPS_MAP_SOURCE_OPENSTREETMAP_RENDERER:
-            return "OpenStreetMap Renderer";
-        case OSM_GPS_MAP_SOURCE_OPENAERIALMAP:
-            return "OpenAerialMap";
+            return "OpenStreetMap Tiles@Home";
+        case OSM_GPS_MAP_SOURCE_OPENCYCLEMAP:
+            return "OpenCycleMap";
         case OSM_GPS_MAP_SOURCE_MAPS_FOR_FREE:
             return "Maps-For-Free";
         case OSM_GPS_MAP_SOURCE_GOOGLE_STREET:
@@ -2506,8 +2577,8 @@ osm_gps_map_source_get_repo_uri(OsmGpsMapSource_t source)
             return OSM_REPO_URI;
         case OSM_GPS_MAP_SOURCE_OPENSTREETMAP_RENDERER:
             return "http://tah.openstreetmap.org/Tiles/tile/#Z/#X/#Y.png";
-        case OSM_GPS_MAP_SOURCE_OPENAERIALMAP:
-            return "http://tile.openaerialmap.org/tiles/1.0.0/openaerialmap-900913/#Z/#X/#Y.jpg";
+        case OSM_GPS_MAP_SOURCE_OPENCYCLEMAP:
+            return "http://c.andy.sandbox.cloudmade.com/tiles/cycle/#Z/#X/#Y.png";
         case OSM_GPS_MAP_SOURCE_MAPS_FOR_FREE:
             return "http://maps-for-free.com/layer/relief/z#Z/row#Y/#Z_#X-#Y.jpg";
         case OSM_GPS_MAP_SOURCE_GOOGLE_STREET:
@@ -2545,9 +2616,11 @@ osm_gps_map_source_get_image_format(OsmGpsMapSource_t source)
         case OSM_GPS_MAP_SOURCE_NULL:
         case OSM_GPS_MAP_SOURCE_OPENSTREETMAP:
         case OSM_GPS_MAP_SOURCE_OPENSTREETMAP_RENDERER:
+        case OSM_GPS_MAP_SOURCE_OPENCYCLEMAP:
             return "png";
-        case OSM_GPS_MAP_SOURCE_OPENAERIALMAP:
+        case OSM_GPS_MAP_SOURCE_MAPS_FOR_FREE:
         case OSM_GPS_MAP_SOURCE_GOOGLE_STREET:
+        case OSM_GPS_MAP_SOURCE_GOOGLE_SATELLITE:
         case OSM_GPS_MAP_SOURCE_GOOGLE_HYBRID:
         case OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_STREET:
         case OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_SATELLITE:
@@ -2555,8 +2628,6 @@ osm_gps_map_source_get_image_format(OsmGpsMapSource_t source)
         case OSM_GPS_MAP_SOURCE_YAHOO_STREET:
         case OSM_GPS_MAP_SOURCE_YAHOO_SATELLITE:
         case OSM_GPS_MAP_SOURCE_YAHOO_HYBRID:
-        case OSM_GPS_MAP_SOURCE_MAPS_FOR_FREE:
-        case OSM_GPS_MAP_SOURCE_GOOGLE_SATELLITE:
             return "jpg";
         default:
             return "bin";
@@ -2580,7 +2651,7 @@ osm_gps_map_source_get_max_zoom(OsmGpsMapSource_t source)
         case OSM_GPS_MAP_SOURCE_OPENSTREETMAP:
             return OSM_MAX_ZOOM;
         case OSM_GPS_MAP_SOURCE_OPENSTREETMAP_RENDERER:
-        case OSM_GPS_MAP_SOURCE_OPENAERIALMAP:
+        case OSM_GPS_MAP_SOURCE_OPENCYCLEMAP:
         case OSM_GPS_MAP_SOURCE_GOOGLE_STREET:
         case OSM_GPS_MAP_SOURCE_GOOGLE_HYBRID:
         case OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_STREET:
@@ -3005,6 +3076,11 @@ void osm_gps_map_register_osd(OsmGpsMap *map, osm_gps_map_osd_t *osd) {
     g_return_if_fail (!priv->osd);
 
     priv->osd = osd;
+}
+
+void
+osm_gps_map_repaint (OsmGpsMap *map) {
+    osm_gps_map_expose (GTK_WIDGET(map), NULL);    
 }
 
 #endif

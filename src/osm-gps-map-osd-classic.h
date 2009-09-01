@@ -30,6 +30,7 @@
 #include "osm-gps-map.h"
 
 void osm_gps_map_osd_classic_init(OsmGpsMap *map);
+osd_button_t osm_gps_map_osd_check(OsmGpsMap *map, gint x, gint y);
 #ifdef OSD_GPS_BUTTON
 void osm_gps_map_osd_enable_gps (OsmGpsMap *map, OsmGpsMapOsdCallback cb, gpointer data);
 #endif

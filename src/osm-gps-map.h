@@ -65,18 +65,22 @@ typedef enum {
     OSM_GPS_MAP_SOURCE_NULL,
     OSM_GPS_MAP_SOURCE_OPENSTREETMAP,
     OSM_GPS_MAP_SOURCE_OPENSTREETMAP_RENDERER,
-    OSM_GPS_MAP_SOURCE_OPENAERIALMAP,
-    OSM_GPS_MAP_SOURCE_MAPS_FOR_FREE,
+    OSM_GPS_MAP_SOURCE_OPENCYCLEMAP,
     OSM_GPS_MAP_SOURCE_GOOGLE_STREET,
     OSM_GPS_MAP_SOURCE_GOOGLE_SATELLITE,
-    OSM_GPS_MAP_SOURCE_GOOGLE_HYBRID,
     OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_STREET,
     OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_SATELLITE,
     OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_HYBRID,
-    OSM_GPS_MAP_SOURCE_YAHOO_STREET,
-    OSM_GPS_MAP_SOURCE_YAHOO_SATELLITE,
-    OSM_GPS_MAP_SOURCE_YAHOO_HYBRID
+
+    /* entries below are currently unusable */
+    OSM_GPS_MAP_SOURCE_MAPS_FOR_FREE,    /* not enough details */
+    OSM_GPS_MAP_SOURCE_GOOGLE_HYBRID,    /* disabled by google */
+    OSM_GPS_MAP_SOURCE_YAHOO_STREET,     /* no implemented yet */
+    OSM_GPS_MAP_SOURCE_YAHOO_SATELLITE,  /* no implemented yet */
+    OSM_GPS_MAP_SOURCE_YAHOO_HYBRID      /* no implemented yet */
 } OsmGpsMapSource_t;
+
+#define OSM_GPS_MAP_SOURCE_LAST  (OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_HYBRID)
 
 typedef struct {
     gint x, y, w, h;
@@ -105,6 +109,7 @@ typedef struct osm_gps_map_osd_s {
     void(*render)(struct osm_gps_map_osd_s *);
     void(*draw)(struct osm_gps_map_osd_s *, GdkDrawable *);
     osd_button_t(*check)(struct osm_gps_map_osd_s *,gint, gint);       /* check if x/y lies within OSD */
+    gboolean(*busy)(struct osm_gps_map_osd_s *);
     void(*free)(struct osm_gps_map_osd_s *);
 
     OsmGpsMapOsdCallback cb;
@@ -155,6 +160,7 @@ void osm_gps_map_clear_balloon (OsmGpsMap *map);
 void osm_gps_map_register_osd(OsmGpsMap *map, osm_gps_map_osd_t *osd);
 void osm_gps_map_redraw (OsmGpsMap *map);
 osm_gps_map_osd_t *osm_gps_map_osd_get(OsmGpsMap *map);
+void osm_gps_map_repaint (OsmGpsMap *map);
 #endif
 
 
