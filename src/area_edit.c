@@ -561,14 +561,21 @@ static gboolean map_gps_update(gpointer data) {
     context->area->appdata->settings && 
     context->area->appdata->settings->enable_gps;
 
+  pos_t pos = { NAN, NAN }; 
   gboolean gps_fix = gps_on && 
-    gps_get_pos(context->area->appdata, NULL, NULL);
+    gps_get_pos(context->area->appdata, &pos, NULL);
 
   /* ... and enable "goto" button if it's valid */
   osm_gps_map_osd_enable_gps(OSM_GPS_MAP(context->map.widget), 
      OSM_GPS_MAP_OSD_CALLBACK(gps_fix?cb_map_gps:NULL), context);
 
-
+  if(gps_fix) {
+    g_object_set(context->map.widget, "gps-track-highlight-radius", 0, NULL);
+    osm_gps_map_draw_gps(OSM_GPS_MAP(context->map.widget), 
+			 pos.lat, pos.lon, NAN);
+  } else
+    osm_gps_map_clear_gps(OSM_GPS_MAP(context->map.widget));
+ 
   return TRUE;
 }
 

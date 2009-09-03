@@ -117,7 +117,11 @@ typedef struct appdata_s {
     GtkWidget *menu_item_track_enable_gps;
     GtkWidget *menu_item_track_follow_gps;
     struct track_s *track;
+#ifndef ENABLE_LIBLOCATION
+    /* when using liblocation, events are generated on position change */
+    /* and no seperate timer is required */
     guint handler_id;
+#endif
     canvas_item_t *gps_item; // the purple circle
     int warn_cnt;;
   } track;

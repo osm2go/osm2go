@@ -37,6 +37,19 @@ canvas_t *canvas_new(void) {
 
   canvas->widget = goo_canvas_new();
 
+#if 0 // overlay test
+  /* create a static root item */
+  GooCanvasItem *item = goo_canvas_ellipse_new(NULL,
+					       20.0, 20.0,
+					       10.0, 10.0,
+					       "line-width", 2.0,
+					       "stroke-color", "blue",
+					       "fill-color", "yellow",
+					       NULL);
+
+  goo_canvas_set_static_root_item(GOO_CANVAS(canvas->widget), item);
+#endif
+
   g_object_set_data(G_OBJECT(canvas->widget), "canvas-pointer", canvas);
 
   g_object_set(G_OBJECT(canvas->widget), 

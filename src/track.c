@@ -516,10 +516,15 @@ static gboolean update(gpointer data) {
   if(!appdata->map) {
     printf("map has gone while tracking was active, stopping tracker\n");
     
+#ifndef ENABLE_LIBLOCATION
     if(appdata->track.handler_id) {
       gtk_timeout_remove(appdata->track.handler_id);
       appdata->track.handler_id = 0;
     }
+#else
+    if(appdata->gps_state->cb) 
+      appdata->gps_state->cb = NULL;
+#endif
 
     return FALSE;
   }
@@ -549,8 +554,15 @@ static void track_do_enable_gps(appdata_t *appdata) {
   gps_enable(appdata, TRUE);
   appdata->track.warn_cnt = 1;
 
+#ifndef ENABLE_LIBLOCATION
   if(!appdata->track.handler_id) {
     appdata->track.handler_id = gtk_timeout_add(1000, update, appdata);
+#else
+  g_assert(appdata->gps_state);
+  if(!appdata->gps_state->cb) {
+    appdata->gps_state->cb = update;
+    appdata->gps_state->data = appdata;
+#endif
 
     if(!appdata->track.track) {
       printf("GPS: no track yet, starting new one\n");
@@ -564,10 +576,15 @@ static void track_do_enable_gps(appdata_t *appdata) {
 static void track_do_disable_gps(appdata_t *appdata) {
   gps_enable(appdata, FALSE);
 
+#ifndef ENABLE_LIBLOCATION
   if(appdata->track.handler_id) {
     gtk_timeout_remove(appdata->track.handler_id);
     appdata->track.handler_id = 0;
   }
+#else
+  if(appdata->gps_state->cb) 
+    appdata->gps_state->cb = NULL;
+#endif
 
   /* stopping the GPS removes the marker ... */
   map_track_pos(appdata, NULL);

@@ -85,6 +85,10 @@ typedef struct gps_state_s {
   gboolean fix, fix3d;
   double latitude, longitude, altitude;
 
+  /* callback called on gps change event */
+  GtkFunction cb;
+  gpointer data;
+
 #else
   /* setup for direct gpsd based communication */
 
