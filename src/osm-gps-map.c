@@ -1664,18 +1664,9 @@ osm_gps_map_init (OsmGpsMap *object)
 #endif
 }
 
-static GObject *
-osm_gps_map_constructor (GType gtype, guint n_properties, GObjectConstructParam *properties)
-{
-    GObject *object;
-    OsmGpsMapPrivate *priv;
-    OsmGpsMap *map;
+static void
+osm_gps_map_setup(OsmGpsMapPrivate *priv) {
     const char *uri;
-
-    //Always chain up to the parent constructor
-    object = G_OBJECT_CLASS(osm_gps_map_parent_class)->constructor(gtype, n_properties, properties);
-    map = OSM_GPS_MAP(object);
-    priv = OSM_GPS_MAP_PRIVATE(object);
 
     //user can specify a map source ID, or a repo URI as the map source
     uri = osm_gps_map_source_get_repo_uri(OSM_GPS_MAP_SOURCE_NULL);
@@ -1709,8 +1700,18 @@ osm_gps_map_constructor (GType gtype, guint n_properties, GObjectConstructParam 
         priv->cache_dir = g_strdup_printf("%s%c%s", priv->tile_dir, G_DIR_SEPARATOR, fname);
         g_debug("Adjusting cache dir %s -> %s", priv->tile_dir, priv->cache_dir);
     }
+}
 
-    inspect_map_uri(map);
+static GObject *
+osm_gps_map_constructor (GType gtype, guint n_properties, GObjectConstructParam *properties)
+{
+    //Always chain up to the parent constructor
+    GObject *object = 
+        G_OBJECT_CLASS(osm_gps_map_parent_class)->constructor(gtype, n_properties, properties);
+
+    osm_gps_map_setup(OSM_GPS_MAP_PRIVATE(object));
+
+    inspect_map_uri(OSM_GPS_MAP(object));
 
     return object;
 }
@@ -1875,29 +1876,9 @@ osm_gps_map_set_property (GObject *object, guint prop_id, const GValue *value, G
                 /* flush the ram cache */
                 g_hash_table_remove_all(priv->tile_cache);
 
-                //check if the source given is valid
-                const char *uri = osm_gps_map_source_get_repo_uri(priv->map_source);
-                if (uri) {
-                    g_debug("Setting map source from ID");
-                    g_free(priv->repo_uri);
+                osm_gps_map_setup(priv);
 
-                    priv->repo_uri = g_strdup(uri);
-                    priv->image_format = g_strdup(
-                           osm_gps_map_source_get_image_format(priv->map_source));
-                    priv->max_zoom = osm_gps_map_source_get_max_zoom(priv->map_source);
-                    priv->min_zoom = osm_gps_map_source_get_min_zoom(priv->map_source);
-                }
-                
-                /* create a new disk cache path */
-                const char *fname = osm_gps_map_source_get_friendly_name(priv->map_source);
-                if(!fname) fname = "_unknown_";
-
-                if (priv->tile_dir) {
-                    //the new cachedir is the given cache dir + the friendly name of the repo_uri
-                    priv->cache_dir = 
-                        g_strdup_printf("%s%c%s", priv->tile_dir, G_DIR_SEPARATOR, fname);
-                    g_debug("Adjusting cache dir %s -> %s", priv->tile_dir, priv->cache_dir);
-                }
+                inspect_map_uri(map);
 
                 /* adjust zoom if necessary */
                 if(priv->map_zoom > priv->max_zoom) 
@@ -1905,8 +1886,6 @@ osm_gps_map_set_property (GObject *object, guint prop_id, const GValue *value, G
 
                 if(priv->map_zoom < priv->min_zoom)
                     osm_gps_map_set_zoom(map, priv->min_zoom);
-
-                inspect_map_uri(map);
 
             } } break;
         case PROP_IMAGE_FORMAT:
@@ -2045,24 +2024,28 @@ osm_gps_map_button_press (GtkWidget *widget, GdkEventButton *event)
             case OSD_UP:
                 priv->map_y -= step;
                 priv->center_coord_set = FALSE;
+                g_object_set(G_OBJECT(widget), "auto-center", FALSE, NULL);
                 osm_gps_map_map_redraw_idle(OSM_GPS_MAP(widget));
                 break;
 
             case OSD_DOWN:
                 priv->map_y += step;
                 priv->center_coord_set = FALSE;
+                g_object_set(G_OBJECT(widget), "auto-center", FALSE, NULL);
                 osm_gps_map_map_redraw_idle(OSM_GPS_MAP(widget));
                 break;
 
             case OSD_LEFT:
                 priv->map_x -= step;
                 priv->center_coord_set = FALSE;
+                g_object_set(G_OBJECT(widget), "auto-center", FALSE, NULL);
                 osm_gps_map_map_redraw_idle(OSM_GPS_MAP(widget));
                 break;
                 
             case OSD_RIGHT:
                 priv->map_x += step;
                 priv->center_coord_set = FALSE;
+                g_object_set(G_OBJECT(widget), "auto-center", FALSE, NULL);
                 osm_gps_map_map_redraw_idle(OSM_GPS_MAP(widget));
                 break;
                 
@@ -2531,11 +2514,13 @@ osm_gps_map_source_get_friendly_name(OsmGpsMapSource_t source)
         case OSM_GPS_MAP_SOURCE_NULL:
             return "None";
         case OSM_GPS_MAP_SOURCE_OPENSTREETMAP:
-            return "OpenStreetMap";
+            return "OpenStreetMap I";
         case OSM_GPS_MAP_SOURCE_OPENSTREETMAP_RENDERER:
-            return "OpenStreetMap Tiles@Home";
+            return "OpenStreetMap II";
         case OSM_GPS_MAP_SOURCE_OPENCYCLEMAP:
             return "OpenCycleMap";
+        case OSM_GPS_MAP_SOURCE_OSMC_TRAILS:
+            return "OSMC Trails";
         case OSM_GPS_MAP_SOURCE_MAPS_FOR_FREE:
             return "Maps-For-Free";
         case OSM_GPS_MAP_SOURCE_GOOGLE_STREET:
@@ -2579,6 +2564,8 @@ osm_gps_map_source_get_repo_uri(OsmGpsMapSource_t source)
             return "http://tah.openstreetmap.org/Tiles/tile/#Z/#X/#Y.png";
         case OSM_GPS_MAP_SOURCE_OPENCYCLEMAP:
             return "http://c.andy.sandbox.cloudmade.com/tiles/cycle/#Z/#X/#Y.png";
+        case OSM_GPS_MAP_SOURCE_OSMC_TRAILS:
+            return "http://topo.geofabrik.de/trails/#Z/#X/#Y.png";
         case OSM_GPS_MAP_SOURCE_MAPS_FOR_FREE:
             return "http://maps-for-free.com/layer/relief/z#Z/row#Y/#Z_#X-#Y.jpg";
         case OSM_GPS_MAP_SOURCE_GOOGLE_STREET:
@@ -2617,6 +2604,7 @@ osm_gps_map_source_get_image_format(OsmGpsMapSource_t source)
         case OSM_GPS_MAP_SOURCE_OPENSTREETMAP:
         case OSM_GPS_MAP_SOURCE_OPENSTREETMAP_RENDERER:
         case OSM_GPS_MAP_SOURCE_OPENCYCLEMAP:
+        case OSM_GPS_MAP_SOURCE_OSMC_TRAILS:
             return "png";
         case OSM_GPS_MAP_SOURCE_MAPS_FOR_FREE:
         case OSM_GPS_MAP_SOURCE_GOOGLE_STREET:
@@ -2661,6 +2649,8 @@ osm_gps_map_source_get_max_zoom(OsmGpsMapSource_t source)
         case OSM_GPS_MAP_SOURCE_YAHOO_SATELLITE:
         case OSM_GPS_MAP_SOURCE_YAHOO_HYBRID:
             return 17;
+        case OSM_GPS_MAP_SOURCE_OSMC_TRAILS:
+            return 15;
         case OSM_GPS_MAP_SOURCE_MAPS_FOR_FREE:
             return 11;
         case OSM_GPS_MAP_SOURCE_GOOGLE_SATELLITE:

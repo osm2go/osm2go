@@ -539,6 +539,9 @@ cb_map_gps(osd_button_t but, context_t *context) {
     if(gps_on && gps_get_pos(context->area->appdata, &pos, NULL)) {
       osm_gps_map_set_center(OSM_GPS_MAP(context->map.widget),
 			     pos.lat, pos.lon);	    
+
+      /* re-enable centering */
+      g_object_set(context->map.widget, "auto-center", TRUE, NULL);
     }
   }
 }
@@ -641,6 +644,7 @@ gboolean area_edit(area_edit_t *area) {
   context.map.widget = g_object_new(OSM_TYPE_GPS_MAP,
  	        "map-source", OSM_GPS_MAP_SOURCE_OPENSTREETMAP,
 		"proxy-uri", misc_get_proxy_uri(area->settings),
+		"auto-center", FALSE,
 	        "tile-cache", NULL,
 		 NULL);
 

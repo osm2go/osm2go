@@ -578,11 +578,15 @@ osd_source_check(osm_gps_map_osd_t *osd, gint x, gint y) {
 
     /* check for clicks into data area */
     if(priv->expanded && !priv->handler_id) {
+        /* re-adjust from puller top to content top */
+        if(OSD_S_Y < 0)
+            y += OSD_S_EXP_H - OSD_S_PH;
+
         if(x > OSD_S_PW && 
            x < OSD_S_PW + OSD_S_EXP_W &&
            y > 0 &&
            y < OSD_S_EXP_H) {
-
+            
             int step = (priv->height - 2*OSD_TEXT_BORDER) 
                 / OSM_GPS_MAP_SOURCE_LAST;
 
