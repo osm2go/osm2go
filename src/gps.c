@@ -64,7 +64,7 @@ location_changed(LocationGPSDevice *device, gps_state_t *gps_state) {
     gps_state->altitude = NAN;
 
   if(gps_state->cb) 
-    if(gps_state->cb(gps_state->data))
+    if(!gps_state->cb(gps_state->data))
       gps_state->cb = NULL;
 }
 
