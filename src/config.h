@@ -1,8 +1,3 @@
-
-
-// config.h, only used by osm-gps-map
-
-#define USE_CAIRO
 /*
  * Copyright (C) 2009 Till Harbaum <till@harbaum.org>.
  *
@@ -27,13 +22,16 @@
 
 #define ENABLE_OSD
 
+#define USE_CAIRO
+
 /* only maemo devices up to version 4 have a fullscreen button */
 #ifdef USE_HILDON
-#define OSD_DIAMETER  40
 #include <hildon/hildon-defines.h>
 #if (MAEMO_VERSION_MAJOR < 5)
+#define OSD_DIAMETER  40
 #define OSM_GPS_MAP_KEY_FULLSCREEN  HILDON_HARDKEY_FULLSCREEN
 #else
+#define OSD_DIAMETER  60
 #define OSM_GPS_MAP_KEY_FULLSCREEN  'f'
 #endif
 #define OSM_GPS_MAP_KEY_ZOOMIN      HILDON_HARDKEY_INCREASE
