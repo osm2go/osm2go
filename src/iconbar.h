@@ -51,4 +51,8 @@ void icon_bar_map_cancel_ok(appdata_t *appdata, gboolean cancel, gboolean ok);
 void icon_bar_map_action_idle(appdata_t *appdata, gboolean idle);
 void iconbar_free(iconbar_t *iconbar);
 
+#ifdef FINGER_UI
+void iconbar_register_buttons(appdata_t *appdata, GtkWidget *ok, GtkWidget *cancel);
+#endif
+
 #endif // ICONBAR_H

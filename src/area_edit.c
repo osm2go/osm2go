@@ -27,7 +27,12 @@
 #define TAB_LABEL_MAP    "Map"
 #define TAB_LABEL_DIRECT "Direct"
 #define TAB_LABEL_EXTENT "Extent"
+
+/* maemo5 currently has no maemo mapper */
+#if defined(USE_HILDON) && (MAEMO_VERSION_MAJOR < 5)
+#define HAS_MAEMO_MAPPER
 #define TAB_LABEL_MM     "Maemo Mapper"
+#endif
 
 /* limit of square kilometers above the warning is enabled */
 #define WARN_OVER  5.0
@@ -50,7 +55,7 @@ typedef struct {
     GtkWidget *error;
   } extent;
 
-#ifdef USE_HILDON 
+#ifdef HAS_MAEMO_MAPPER
   struct {
     GtkWidget *fetch;
   } mmapper;
@@ -364,7 +369,7 @@ static void callback_modified_unit(GtkWidget *widget, gpointer data) {
   pos_dist_entry_set(context->extent.height, height, context->extent.is_mil);  
 }
 
-#ifdef USE_HILDON
+#ifdef HAS_MAEMO_MAPPER
 static void callback_fetch_mm_clicked(GtkButton *button, gpointer data) {
   context_t *context = (context_t*)data;
 
@@ -780,7 +785,7 @@ gboolean area_edit(area_edit_t *area) {
   gtk_notebook_append_page(GTK_NOTEBOOK(context.notebook),
 		   vbox, gtk_label_new(_(TAB_LABEL_EXTENT)));
 
-#ifdef USE_HILDON 
+#ifdef HAS_MAEMO_MAPPER
   /* ------------- fetch from maemo mapper ------------------------ */
 
   vbox = gtk_vbox_new(FALSE, 8);

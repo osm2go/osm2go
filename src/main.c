@@ -24,6 +24,7 @@
 #include <gdk/gdkkeysyms.h>
 
 #if defined(USE_HILDON) && (MAEMO_VERSION_MAJOR == 5)
+#define FREMANTLE
 #include <hildon/hildon-button.h>
 #include <hildon/hildon-check-button.h>
 #include <hildon/hildon-window-stack.h>
@@ -372,7 +373,7 @@ cb_menu_zoomout(GtkMenuItem *item, appdata_t *appdata) {
   printf("zoom is now %f\n", appdata->map->state->zoom);
 }
 
-#if (MAEMO_VERSION_MAJOR != 5) || !defined(DETAIL_POPUP)
+#if defined(FREMANTLE) || (MAEMO_VERSION_MAJOR != 5) || !defined(DETAIL_POPUP)
 static void 
 cb_menu_view_detail_inc(GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
@@ -1200,8 +1201,6 @@ static const submenu_t submenu_view = {
 static const menu_entry_t submenu_map_entries[] = {
   ENABLED_ENTRY("Upload",                cb_menu_upload, menu_item_map_upload),
   SIMPLE_ENTRY("Download",               cb_menu_download),
-  //  ENABLED_ENTRY("Save changes",          cb_menu_save_changes, 
-  //		menu_item_map_save_changes),
   ENABLED_ENTRY("Undo all",              cb_menu_undo_changes, 
 		menu_item_map_undo_changes),
   ENABLED_ENTRY("Relations",             cb_menu_osm_relations, 
@@ -1435,6 +1434,24 @@ on_window_realize(GtkWidget *widget, appdata_t *appdata) {
 }
 #endif
 
+#ifdef FREMANTLE  
+static GtkWidget *icon_button(appdata_t *appdata, char *icon, GCallback cb,
+			      GtkWidget *box) {
+  /* add zoom-in button */
+  GtkWidget *but = gtk_button_new();
+  gtk_button_set_image(GTK_BUTTON(but), 
+		       icon_widget_load(&appdata->icon, icon));
+  hildon_gtk_widget_set_theme_size(but, 
+		   (HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH));
+
+  if(cb)
+    g_signal_connect(but, "clicked", G_CALLBACK(cb), appdata);
+
+  gtk_box_pack_start(GTK_BOX(box), but, FALSE, FALSE, 0);
+  return but;
+}
+#endif
+
 int main(int argc, char *argv[]) {
   appdata_t appdata;
 
@@ -1531,12 +1548,13 @@ int main(int argc, char *argv[]) {
 
   gtk_box_pack_start(GTK_BOX(vbox), map, TRUE, TRUE, 0);
 
-#if defined(ZOOM_BUTTONS) || defined(DETAIL_POPUP)
+  /* fremantle has seperate zoom/details buttons on the right screen side */
+#if !defined(FREMANTLE) && (defined(ZOOM_BUTTONS) || defined(DETAIL_POPUP))
   GtkWidget *zhbox = gtk_hbox_new(FALSE, 0);
   gtk_box_pack_start_defaults(GTK_BOX(zhbox), statusbar_new(&appdata));
 #endif
 
-#ifdef DETAIL_POPUP
+#if !defined(FREMANTLE) && defined(DETAIL_POPUP)
   /* ---- detail popup ---- */
   appdata.btn_detail_popup = gtk_button_new();
   gtk_button_set_image(GTK_BUTTON(appdata.btn_detail_popup), 
@@ -1546,7 +1564,7 @@ int main(int argc, char *argv[]) {
   gtk_box_pack_start(GTK_BOX(zhbox), appdata.btn_detail_popup, FALSE, FALSE, 0);
 #endif
 
-#ifdef ZOOM_BUTTONS
+#if !defined(FREMANTLE) && defined(ZOOM_BUTTONS)
   /* ---- add zoom out button right of statusbar ---- */
   appdata.btn_zoom_out = gtk_button_new();
   gtk_button_set_image(GTK_BUTTON(appdata.btn_zoom_out), 
@@ -1564,7 +1582,7 @@ int main(int argc, char *argv[]) {
   gtk_box_pack_start(GTK_BOX(zhbox), appdata.btn_zoom_in, FALSE, FALSE, 0);
 #endif
 
-#if defined(ZOOM_BUTTONS) || defined(DETAIL_POPUP)
+#if !defined(FREMANTLE) && (defined(ZOOM_BUTTONS) || defined(DETAIL_POPUP))
   gtk_box_pack_start(GTK_BOX(vbox), zhbox, FALSE, FALSE, 0);
 #else
   gtk_box_pack_start(GTK_BOX(vbox), statusbar_new(&appdata), FALSE, FALSE, 0);
@@ -1574,6 +1592,31 @@ int main(int argc, char *argv[]) {
   gtk_box_pack_start(GTK_BOX(hbox), iconbar_new(&appdata), FALSE, FALSE, 0);
 #endif
   gtk_box_pack_start(GTK_BOX(hbox), vbox, TRUE, TRUE, 0);
+
+#ifdef FREMANTLE
+  /* fremantle has a set of buttons on the right screen side as well */
+  vbox = gtk_vbox_new(FALSE, 0);
+
+  GtkWidget *ivbox = gtk_vbox_new(FALSE, 0);
+  appdata.btn_zoom_in = 
+    icon_button(&appdata, "zoomin_thumb",   G_CALLBACK(cb_menu_zoomin), ivbox);
+  appdata.btn_zoom_out = 
+    icon_button(&appdata, "zoomout_thumb",  G_CALLBACK(cb_menu_zoomout), ivbox);
+  gtk_box_pack_start(GTK_BOX(vbox), ivbox, FALSE, FALSE, 0);
+
+  ivbox = gtk_vbox_new(FALSE, 0);
+  icon_button(&appdata, "detailup_thumb",   G_CALLBACK(cb_menu_view_detail_inc), ivbox);
+  icon_button(&appdata, "detaildown_thumb", G_CALLBACK(cb_menu_view_detail_dec), ivbox);
+  gtk_box_pack_start(GTK_BOX(vbox), ivbox, TRUE, FALSE, 0);
+
+  ivbox = gtk_vbox_new(FALSE, 0);
+  GtkWidget *ok = icon_button(&appdata, "ok_thumb", NULL, ivbox);
+  GtkWidget *cancel = icon_button(&appdata, "cancel_thumb", NULL, ivbox);
+  iconbar_register_buttons(&appdata, ok, cancel);
+  gtk_box_pack_start(GTK_BOX(vbox), ivbox, FALSE, FALSE, 0);
+  
+  gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
+#endif // FREMANTLE
 
   gtk_box_pack_start(GTK_BOX(appdata.vbox), hbox, TRUE, TRUE, 0);
 

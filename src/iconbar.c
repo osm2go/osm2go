@@ -357,21 +357,25 @@ GtkWidget *iconbar_new(appdata_t *appdata) {
 
   /* -------------------------------------------------------- */
 
+  /* fremantle has these buttons on the right screen size */
+#if defined(USE_HILDON) && !defined(FINGER_UI)
   GtkWidget *hbox = gtk_hbox_new(FALSE, 0);
 
-#if defined(USE_HILDON) && !defined(FINGER_UI)
   /* make buttons smaller for non-finger maemo */
   gtk_widget_set_size_request(GTK_WIDGET(hbox), -1, 32);
-#endif
 
   iconbar->ok = icon_add(hbox, appdata, TOOL_ICON("ok"), on_ok_clicked);
   iconbar->cancel = icon_add(hbox, appdata, TOOL_ICON("cancel"), on_cancel_clicked);
   gtk_box_pack_end(GTK_BOX(box), hbox, FALSE, FALSE, 0);
+#endif
   
   /* --------------------------------------------------------- */  
 
   icon_bar_map_item_selected(appdata, NULL, FALSE);
+
+#if defined(USE_HILDON) && !defined(FINGER_UI)
   icon_bar_map_cancel_ok(appdata, FALSE, FALSE);
+#endif
 
   return box;
 }
@@ -380,3 +384,21 @@ void iconbar_free(iconbar_t *iconbar) {
   if(iconbar)
     g_free(iconbar);
 }
+
+#if defined(FINGER_UI)
+/* the ok and cancel buttons are moved to the right screen side on */
+/* fremantle. technically they are still part of the iconbar and thus */
+/* are registered there */
+void iconbar_register_buttons(appdata_t *appdata, GtkWidget *ok, GtkWidget *cancel) {
+  g_assert(appdata->iconbar);
+
+  appdata->iconbar->ok = ok;
+  gtk_signal_connect(GTK_OBJECT(ok), "clicked", 
+		     (GtkSignalFunc)on_ok_clicked, appdata);
+  appdata->iconbar->cancel = cancel;
+  gtk_signal_connect(GTK_OBJECT(cancel), "clicked", 
+		     (GtkSignalFunc)on_cancel_clicked, appdata);
+
+  icon_bar_map_cancel_ok(appdata, FALSE, FALSE);
+}
+#endif
