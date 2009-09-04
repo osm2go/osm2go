@@ -427,10 +427,10 @@ GtkWidget *list_new(void)
   g_signal_connect(G_OBJECT(vbox), "destroy",
 		   G_CALLBACK(on_list_destroy), priv);
 
+#ifndef FREMANTLE_PANNABLE_AREA
   priv->view = gtk_tree_view_new();
-#ifdef FREMANTLE_PANNABLE_AREA
-  hildon_gtk_tree_view_set_ui_mode(GTK_TREE_VIEW(priv->view), 
-  				   HILDON_UI_MODE_EDIT);
+#else
+  priv->view = hildon_gtk_tree_view_new(HILDON_UI_MODE_EDIT);
 #endif
 
 #ifdef USE_HILDON
