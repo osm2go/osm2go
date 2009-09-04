@@ -442,7 +442,7 @@ GtkWidget *list_new(void)
  
   gtk_tree_selection_set_select_function(
 	 gtk_tree_view_get_selection(GTK_TREE_VIEW(priv->view)), 
-	 list_selection_function, vbox, NULL);
+  	 list_selection_function, vbox, NULL);
 
 #ifndef FREMANTLE_PANNABLE_AREA
   /* put view into a scrolled window */

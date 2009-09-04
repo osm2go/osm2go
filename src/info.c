@@ -50,8 +50,8 @@ view_selection_func(GtkTreeSelection *selection, GtkTreeModel *model,
     tag_t *tag;
     gtk_tree_model_get(model, &iter, TAG_COL_DATA, &tag, -1);
 
-      /* you just cannot delete or edit the "created_by" tag */
-    if(strcasecmp(tag->key, "created_by") == 0) {
+    /* you just cannot delete or edit the "created_by" tag */
+    if(!tag || strcasecmp(tag->key, "created_by") == 0) {
       list_button_enable(context->list, LIST_BUTTON_REMOVE, FALSE);
       list_button_enable(context->list, LIST_BUTTON_EDIT, FALSE);
     } else {
