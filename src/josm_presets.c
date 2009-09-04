@@ -707,13 +707,6 @@ cb_menu_item(GtkMenuItem *menu_item, gpointer data) {
     /* add new tags to the old list and replace entries with the same key */
 
     while(tag) {
-#if 0
-      printf("current:\n");
-      tag_t *mdst = &tag_context->tag;
-      while(mdst) {
-	printf("%s: %s\n", msdt
-#endif      
-
       tag_t *next = tag->next;
       tag->next = NULL;
 
@@ -736,14 +729,6 @@ cb_menu_item(GtkMenuItem *menu_item, gpointer data) {
       
       tag = next;
     }
-
-#if 0
-    /* free existing tags */
-    osm_tags_free(*tag_context->tag);
-
-    /* attach new tags */
-    *tag_context->tag = tag;
-#endif
 
     info_tags_replace(tag_context);
   }

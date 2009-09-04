@@ -1374,6 +1374,7 @@ gboolean project_load(appdata_t *appdata, char *name) {
   statusbar_set(appdata, NULL, 0);
 
   g_free(proj_name);
+
   return TRUE;
 }
 

@@ -219,6 +219,7 @@ static void on_tag_last(GtkWidget *button, tag_context_t *context) {
 }
 
 static void on_tag_add(GtkWidget *button, tag_context_t *context) {
+
   /* search end of tag chain */
   tag_t **tag = context->tag;
   while(*tag) 
@@ -316,6 +317,7 @@ static GtkWidget *tag_widget(tag_context_t *context) {
   list_set_store(context->list, context->store);
 
   GtkTreeIter iter;
+
   tag_t *tag = *context->tag;
   while(tag) {
     /* Append a row and fill in some data */

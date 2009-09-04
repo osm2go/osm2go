@@ -55,11 +55,13 @@ typedef struct {
 
 } list_priv_t;
 
+#if 1
 #if defined(USE_HILDON) && (MAEMO_VERSION_MAJOR == 5)
-#define FREMANTLE
+#define FREMANTLE_PANNABLE_AREA
 #include <hildon/hildon-gtk.h>
 #include <hildon/hildon-pannable-area.h>
 // #define FREMANTLE_USE_POPUP
+#endif
 #endif
 
 #ifdef FREMANTLE_USE_POPUP
@@ -318,7 +320,7 @@ void list_set_static_buttons(GtkWidget *list, int flags,
   if(cb_new) {
     priv->button.widget[0] = 
       gtk_button_new_with_label(_((flags&LIST_BTN_NEW)?"New":"Add"));
-#ifdef FREMANTLE
+#ifdef FREMANTLE_PANNABLE_AREA
     if(flags & LIST_BTN_BIG)
       hildon_gtk_widget_set_theme_size(priv->button.widget[0], 
 	       (HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH));
@@ -426,9 +428,9 @@ GtkWidget *list_new(void)
 		   G_CALLBACK(on_list_destroy), priv);
 
   priv->view = gtk_tree_view_new();
-#ifdef FREMANTLE
+#ifdef FREMANTLE_PANNABLE_AREA
   hildon_gtk_tree_view_set_ui_mode(GTK_TREE_VIEW(priv->view), 
-				   HILDON_UI_MODE_EDIT);
+  				   HILDON_UI_MODE_EDIT);
 #endif
 
 #ifdef USE_HILDON
@@ -442,7 +444,7 @@ GtkWidget *list_new(void)
 	 gtk_tree_view_get_selection(GTK_TREE_VIEW(priv->view)), 
 	 list_selection_function, vbox, NULL);
 
-#ifndef FREMANTLE
+#ifndef FREMANTLE_PANNABLE_AREA
   /* put view into a scrolled window */
   GtkWidget *scrolled_window = gtk_scrolled_window_new(NULL, NULL);
   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window), 

@@ -41,7 +41,8 @@ void main_ui_enable(appdata_t *appdata) {
   gboolean osm_valid = (appdata->osm != NULL);
 
   /* cancel any action in progress */
-  if(GTK_WIDGET_FLAGS(appdata->iconbar->cancel) & GTK_SENSITIVE) 
+  g_assert(appdata->iconbar->cancel);
+  if(GTK_WIDGET_FLAGS(appdata->iconbar->cancel) & GTK_SENSITIVE)
     map_action_cancel(appdata);
 
   /* ---- set project name as window title ----- */
