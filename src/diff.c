@@ -229,6 +229,15 @@ void diff_save(project_t *project, osm_t *osm) {
 
   printf("data set is dirty, generating diff\n");
 
+  /* check if there already is such a diff file and make it a backup */
+  /* in case new diff saving fails */
+  char *backup = g_strjoin(NULL, project->path, "backup.diff", NULL);
+  if(g_file_test(diff_name, G_FILE_TEST_IS_REGULAR)) {
+    printf("backing up existing file \"%s\" to \"%s\"\n", diff_name, backup);
+    g_remove(backup);
+    g_rename(diff_name, backup);
+  }
+
   LIBXML_TEST_VERSION;
 
   xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
@@ -244,7 +253,12 @@ void diff_save(project_t *project, osm_t *osm) {
   xmlFreeDoc(doc);
   xmlCleanupParser();
 
+  /* if we reach this point writing the new file worked and we */
+  /* can delete the backup */
+  g_remove(backup);
+
   g_free(diff_name);
+  g_free(backup);
 }
 
 static int xml_get_prop_int(xmlNode *node, char *prop, int def) {
@@ -630,16 +644,23 @@ void diff_restore_relation(xmlDoc *doc, xmlNodePtr node_rel, osm_t *osm) {
 void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) {
   if(!project || !osm) return;
 
-  char *diff_name = g_strdup_printf("%s/%s.diff", project->path, project->name);
-
-  if(!g_file_test(diff_name, G_FILE_TEST_EXISTS)) {
-    printf("no diff present!\n");
+  /* first try to open a backup which is only present if saving the */
+  /* actual diff didn't succeed */
+  char *diff_name = g_strjoin(NULL, project->path, "backup.diff", NULL);
+  if(g_file_test(diff_name, G_FILE_TEST_EXISTS)) {
+    printf("diff backup present, loading it instead of real diff ...\n");
+  } else {
     g_free(diff_name);
-    return;
+    diff_name = g_strdup_printf("%s/%s.diff", project->path, project->name);
+
+    if(!g_file_test(diff_name, G_FILE_TEST_EXISTS)) {
+      printf("no diff present!\n");
+      g_free(diff_name);
+      return;
+    }
+    printf("diff found, applying ...\n");
   }
-  
-  printf("diff found, applying ...\n");
-  
+
   xmlDoc *doc = NULL;
   xmlNode *root_element = NULL;
   

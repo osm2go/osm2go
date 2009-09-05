@@ -379,9 +379,23 @@ void track_save(project_t *project, track_t *track) {
     return;
   }
 
+  /* check if there already is such a diff file and make it a backup */
+  /* in case new diff saving fails */
+  char *backup = g_strjoin(NULL, project->path, "backup.trk", NULL);
+  if(g_file_test(trk_name, G_FILE_TEST_IS_REGULAR)) {
+    printf("backing up existing file \"%s\" to \"%s\"\n", trk_name, backup);
+    g_remove(backup);
+    g_rename(trk_name, backup);
+  }
+
   track_write(trk_name, track);
 
+  /* if we reach this point writing the new file worked and we */
+  /* can delete the backup */
+  g_remove(backup);
+  
   g_free(trk_name);
+  g_free(backup);
 }
 
 void track_export(appdata_t *appdata, char *filename) {
@@ -392,18 +406,26 @@ void track_export(appdata_t *appdata, char *filename) {
 /* ----------------------  loading track --------------------------- */
 
 track_t *track_restore(appdata_t *appdata, project_t *project) {
-  char *trk_name = g_strdup_printf("%s/%s.trk", project->path, project->name);
   track_t *track = NULL;
   
   LIBXML_TEST_VERSION;
  
-  if(!g_file_test(trk_name, G_FILE_TEST_EXISTS)) {
-    printf("no track present!\n");
+  /* first try to open a backup which is only present if saving the */
+  /* actual diff didn't succeed */
+  char *trk_name = g_strjoin(NULL, project->path, "backup.trk", NULL);
+  if(g_file_test(trk_name, G_FILE_TEST_EXISTS)) {
+    printf("track backup present, loading it instead of real track ...\n");
+  } else {
     g_free(trk_name);
-    return NULL;
+    trk_name = g_strdup_printf("%s/%s.trk", project->path, project->name);
+
+    if(!g_file_test(trk_name, G_FILE_TEST_EXISTS)) {
+      printf("no track present!\n");
+      g_free(trk_name);
+      return NULL;
+    }
+    printf("track found, loading ...\n");
   }
-  
-  printf("track found, loading ...\n");
 
   track = track_read(appdata->osm, trk_name);
   g_free(trk_name);
