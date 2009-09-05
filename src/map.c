@@ -1007,11 +1007,12 @@ gboolean map_scroll_to_if_offscreen(map_t *map, lpos_t *lpos) {
   gboolean vert_recentre_needed = FALSE;
   gboolean horiz_recentre_needed = FALSE;
   gint sx, sy;
-  canvas_scroll_get(map->canvas, CANVAS_UNIT_PIXEL, &sx, &sy);
-  gint viewport_left   = (sx/pix_per_meter);
-  gint viewport_right  = (sx/pix_per_meter)+aw;
-  gint viewport_top    = (sy/pix_per_meter);
-  gint viewport_bottom = (sy/pix_per_meter)+ah;
+  canvas_scroll_get(map->canvas, CANVAS_UNIT_METER, &sx, &sy);
+  gint viewport_left   = sx-aw/2;
+  gint viewport_right  = sx+aw/2;
+  gint viewport_top    = sy-ah/2;
+  gint viewport_bottom = sy+ah/2;
+
   if (lpos->x > viewport_right) {
     printf("** off right edge (%d > %d)\n", lpos->x, viewport_right);
     horiz_recentre_needed = TRUE;
