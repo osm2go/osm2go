@@ -51,17 +51,16 @@ typedef struct {
   struct {
     gpointer data;
     GtkWidget *widget[6];
+    int flags;
   } button;
 
 } list_priv_t;
 
-#if 1
 #if defined(USE_HILDON) && (MAEMO_VERSION_MAJOR == 5)
 #define FREMANTLE_PANNABLE_AREA
 #include <hildon/hildon-gtk.h>
 #include <hildon/hildon-pannable-area.h>
 // #define FREMANTLE_USE_POPUP
-#endif
 #endif
 
 #ifdef FREMANTLE_USE_POPUP
@@ -124,6 +123,11 @@ void list_set_user_buttons(GtkWidget *list, ...) {
     GCallback cb = va_arg(ap, GCallback);
 
     priv->button.widget[id] = gtk_button_new_with_label(label);
+#ifdef FREMANTLE_PANNABLE_AREA
+    if(priv->button.flags & LIST_BTN_BIG)
+      hildon_gtk_widget_set_theme_size(priv->button.widget[id], 
+	       (HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH));
+#endif
     gtk_table_attach_defaults(GTK_TABLE(priv->table), priv->button.widget[id], 
 	      id-LIST_BUTTON_USER0, id-LIST_BUTTON_USER0+1, 1, 2);
     gtk_signal_connect(GTK_OBJECT(priv->button.widget[id]), "clicked", 
@@ -315,6 +319,7 @@ void list_set_static_buttons(GtkWidget *list, int flags,
   g_assert(priv);
 
   priv->button.data = data;
+  priv->button.flags = flags;
 
   /* add the three default buttons, but keep the disabled for now */
   if(cb_new) {
@@ -338,6 +343,11 @@ void list_set_static_buttons(GtkWidget *list, int flags,
 			  GTK_SIGNAL_FUNC(cb_edit), data);
 #else
     priv->button.widget[1] = gtk_button_new_with_label(_("Edit"));
+#ifdef FREMANTLE_PANNABLE_AREA
+    if(flags & LIST_BTN_BIG)
+      hildon_gtk_widget_set_theme_size(priv->button.widget[1], 
+	       (HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH));
+#endif
     gtk_table_attach_defaults(GTK_TABLE(priv->table), 
 			      priv->button.widget[1], 1, 2, 0, 1);
     gtk_signal_connect(GTK_OBJECT(priv->button.widget[1]), "clicked", 
@@ -352,6 +362,11 @@ void list_set_static_buttons(GtkWidget *list, int flags,
 			  GTK_SIGNAL_FUNC(cb_remove), data);
 #else
     priv->button.widget[2] = gtk_button_new_with_label(_("Remove"));
+#ifdef FREMANTLE_PANNABLE_AREA
+    if(flags & LIST_BTN_BIG)
+      hildon_gtk_widget_set_theme_size(priv->button.widget[2], 
+	       (HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH));
+#endif
     gtk_table_attach_defaults(GTK_TABLE(priv->table), 
 			      priv->button.widget[2], 2, 3, 0, 1);
     gtk_signal_connect(GTK_OBJECT(priv->button.widget[2]), "clicked", 

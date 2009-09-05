@@ -1442,8 +1442,9 @@ static GtkWidget *icon_button(appdata_t *appdata, char *icon, GCallback cb,
   GtkWidget *but = gtk_button_new();
   gtk_button_set_image(GTK_BUTTON(but), 
 		       icon_widget_load(&appdata->icon, icon));
+  gtk_button_set_relief(GTK_BUTTON(but), GTK_RELIEF_NONE);
   hildon_gtk_widget_set_theme_size(but, 
-		   (HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH));
+  		(HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH));
 
   if(cb)
     g_signal_connect(but, "clicked", G_CALLBACK(cb), appdata);
