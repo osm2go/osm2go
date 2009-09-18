@@ -432,7 +432,7 @@ on_map_button_press_event(GtkWidget *widget,
   osm_gps_map_osd_t *osd = osm_gps_map_osd_get(map);
 
   /* osm-gps-map needs this event to handle the OSD */
-  if(osd->check(osd, (int)event->x, (int)event->y))
+  if(osd->check(osd, TRUE, (int)event->x, (int)event->y))
     return FALSE;
 
   /* remove existing marker */
@@ -516,20 +516,11 @@ on_map_button_release_event(GtkWidget *widget,
   }
 
   /* osm-gps-map needs this event to handle the OSD */
-  if(osd->check(osd, (int)event->x, (int)event->y))
+  if(osd->check(osd, TRUE, (int)event->x, (int)event->y))
     return FALSE;
 
   return TRUE;
 }
-
-#if 0
-static void map_zoom(context_t *context, int step) {
-  int zoom;
-  OsmGpsMap *map = OSM_GPS_MAP(context->map.widget);
-  g_object_get(map, "zoom", &zoom, NULL);
-  zoom = osm_gps_map_set_zoom(map, zoom+step);
-}
-#endif
 
 static void
 cb_map_gps(osd_button_t but, context_t *context) {

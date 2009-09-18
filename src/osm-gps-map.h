@@ -83,6 +83,8 @@ typedef enum {
 
 #define OSM_GPS_MAP_SOURCE_LAST  (OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_HYBRID)
 
+#define OSM_GPS_MAP_INVALID  (0.0/0.0)
+
 typedef struct {
     gint x, y, w, h;
 } OsmGpsMapRect_t;
@@ -109,7 +111,7 @@ typedef struct osm_gps_map_osd_s {
 
     void(*render)(struct osm_gps_map_osd_s *);
     void(*draw)(struct osm_gps_map_osd_s *, GdkDrawable *);
-    osd_button_t(*check)(struct osm_gps_map_osd_s *,gint, gint);       /* check if x/y lies within OSD */
+    osd_button_t(*check)(struct osm_gps_map_osd_s *,gboolean,gint, gint);       /* check if x/y lies within OSD */
     gboolean(*busy)(struct osm_gps_map_osd_s *);
     void(*free)(struct osm_gps_map_osd_s *);
 
@@ -153,10 +155,6 @@ void osm_gps_map_geographic_to_screen (OsmGpsMap *map,
                                        gint *pixel_x, gint *pixel_y);
 void osm_gps_map_scroll (OsmGpsMap *map, gint dx, gint dy);
 float osm_gps_map_get_scale(OsmGpsMap *map);
-#ifdef ENABLE_BALLOON
-void osm_gps_map_draw_balloon (OsmGpsMap *map, float latitude, float longitude, OsmGpsMapBalloonCallback cb, gpointer data);
-void osm_gps_map_clear_balloon (OsmGpsMap *map);
-#endif
 #ifdef ENABLE_OSD
 void osm_gps_map_register_osd(OsmGpsMap *map, osm_gps_map_osd_t *osd);
 void osm_gps_map_redraw (OsmGpsMap *map);

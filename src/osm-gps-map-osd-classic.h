@@ -35,4 +35,11 @@ osd_button_t osm_gps_map_osd_check(OsmGpsMap *map, gint x, gint y);
 void osm_gps_map_osd_enable_gps (OsmGpsMap *map, OsmGpsMapOsdCallback cb, gpointer data);
 #endif
 
+#ifdef OSD_BALLOON
+void osm_gps_map_osd_draw_balloon (OsmGpsMap *map, 
+                                   float latitude, float longitude, 
+                                   OsmGpsMapBalloonCallback cb, gpointer data);
+void osm_gps_map_osd_clear_balloon (OsmGpsMap *map);
+#endif
+
 #endif

@@ -60,8 +60,6 @@
 //....
 #define URI_FLAG_END (1 << 8)
 
-#define OSM_NAN  (0.0/0.0)
-
 /* equatorial radius in meters */
 #define OSM_EQ_RADIUS   (6378137.0)
 
