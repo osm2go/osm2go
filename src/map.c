@@ -1569,13 +1569,16 @@ static gboolean map_motion_notify_event(GtkWidget *widget,
 
   if(!appdata->osm) return FALSE;
 
-#ifdef USE_HILDON
+#if 0 // def USE_HILDON
   /* reduce update frequency on hildon to keep screen update fluid */
   static guint32 last_time = 0;
 
   if(event->time - last_time < 250) return FALSE;
   last_time = event->time;
 #endif
+
+  if(gtk_events_pending())
+    return FALSE;
 
   if(!map->pen_down.is) 
     return FALSE;
