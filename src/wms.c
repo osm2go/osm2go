@@ -39,6 +39,7 @@ typedef struct {
 typedef struct wms_layer_s {
   char *title;
   char *name;
+  char *srs;
   gboolean epsg4326, selected;
   wms_llbbox_t llbbox;
 
@@ -142,8 +143,15 @@ static wms_layer_t *wms_cap_parse_layer(xmlDocPtr doc, xmlNode *a_node) {
 	wms_layer->title = g_strdup(str);
 	xmlFree(str);
       } else if(strcasecmp((char*)cur_node->name, "SRS") == 0) {
-	if(xmlTextIs(doc, cur_node->children, "EPSG:4326"))
+	str = (char*)xmlNodeListGetString(doc, cur_node->children, 1);
+	wms_layer->srs = g_strdup(str);
+	xmlFree(str);
+
+	printf("SRS = %s\n", wms_layer->srs);
+
+	if(strcmp(wms_layer->srs, "EPSG:4326") == 0)
 	  wms_layer->epsg4326 = TRUE;
+
       } else if(strcasecmp((char*)cur_node->name, "LatLonBoundingBox") == 0) {
 	wms_layer->llbbox.min.lat = xmlGetPropFloat(cur_node, "miny");
 	wms_layer->llbbox.min.lon = xmlGetPropFloat(cur_node, "minx");
@@ -363,6 +371,7 @@ static void wms_layer_free(wms_layer_t *layer) {
 
     if(layer->title) g_free(layer->title);
     if(layer->name)  g_free(layer->name);
+    if(layer->srs)   g_free(layer->srs);
 
     if(layer->children) wms_layer_free(layer->children);
 
@@ -414,13 +423,14 @@ static gboolean wms_llbbox_fits(project_t *project, wms_llbbox_t *llbbox) {
 }
 
 static void wms_get_child_layers(wms_layer_t *layer,
-		 gint depth, gboolean epsg4326, wms_llbbox_t *llbbox,
-		 wms_layer_t **c_layer) {
+	 gint depth, gboolean epsg4326, wms_llbbox_t *llbbox, char *srs,
+	 wms_layer_t **c_layer) {
   while(layer) {
 
     /* get a copy of the parents values for the current one ... */
     wms_llbbox_t *local_llbbox = llbbox;
     gboolean local_epsg4326 = epsg4326;
+    char *local_srs = srs?g_strdup(srs):NULL;
 
     /* ... and overwrite the inherited stuff with better local stuff */
     if(layer->llbbox.valid)                    local_llbbox = &layer->llbbox;
@@ -431,6 +441,7 @@ static void wms_get_child_layers(wms_layer_t *layer,
       *c_layer = g_new0(wms_layer_t, 1);
       (*c_layer)->name     = g_strdup(layer->name);
       (*c_layer)->title    = g_strdup(layer->title);
+      (*c_layer)->srs      = g_strdup(local_srs);
       (*c_layer)->epsg4326 = local_epsg4326;
       (*c_layer)->llbbox   = *local_llbbox;
       c_layer = &((*c_layer)->next);
@@ -438,8 +449,9 @@ static void wms_get_child_layers(wms_layer_t *layer,
 
     wms_get_child_layers(layer->children, depth+1,
 			 local_epsg4326, local_llbbox,
-			 c_layer);
+			 local_srs, c_layer);
 
+    if(local_srs) g_free(local_srs);
     layer = layer->next;
   }
 }
@@ -455,7 +467,7 @@ static wms_layer_t *wms_get_requestable_layers(wms_t *wms) {
     if(llbbox && !llbbox->valid) llbbox = NULL;
 
     wms_get_child_layers(layer->children, 1, 
-		 layer->epsg4326, llbbox, c_layer);
+	 layer->epsg4326, llbbox, layer->srs, c_layer);
 
     layer = layer->next;
   }
@@ -1164,9 +1176,11 @@ void wms_import(appdata_t *appdata) {
     errorf(GTK_WIDGET(appdata->window), 
 	   _("Server provides no data in the required format!\n\n"
 	     "(epsg4326 and LatLonBoundingBox are mandatory for osm2go)"));
+#if 0
     wms_layer_free(layer);
     wms_free(wms);
     return;
+#endif
   }
 
   if(!wms_layer_dialog(appdata, layer)) {
@@ -1202,6 +1216,14 @@ void wms_import(appdata_t *appdata) {
     }
     t = t->next;
   }
+
+  /* uses epsg4326 if possible */
+  char *srs = NULL;
+  if(layer->epsg4326)
+    srs = g_strdup("EPSG:4326");
+  else if(layer->srs)
+    srs = g_strdup(layer->srs);
+
   wms_layer_free(layer);
 
   /* append styles entry */
@@ -1239,11 +1261,20 @@ void wms_import(appdata_t *appdata) {
 
   /* build complete url */
   old = url;
+
+#if 0
   url = g_strdup_printf("%s&SRS=EPSG:4326&BBOX=%s,%s,%s,%s"
 			"&WIDTH=%d&HEIGHT=%d&FORMAT=%s"
 			"&reaspect=false", url,
 			minlon, minlat, maxlon, maxlat, wms->width, 
 			wms->height, formats[format]);
+#endif
+  url = g_strdup_printf("%s&SRS=%s&BBOX=%s,%s,%s,%s"
+			"&WIDTH=%d&HEIGHT=%d&FORMAT=%s"
+			"&reaspect=false", url, srs,
+			minlon, minlat, maxlon, maxlat, wms->width, 
+			wms->height, formats[format]);
+  if(srs) g_free(srs);
   g_free(old);
 
   const char *exts[] = { "jpg", "jpg", "png", "gif" };
