@@ -30,6 +30,9 @@ static struct http_message_s {
 } http_messages [] = {
   {   0, "Curl internal failure" },
   { 200, "Ok" },
+  { 301, "Moved permanently" },
+  { 302, "Found" },
+  { 303, "See Other" },
   { 400, "Bad Request (area too big?)" },
   { 401, "Unauthorized (wrong user/password?)" },
   { 403, "Forbidden" },
@@ -251,6 +254,8 @@ static void *worker_thread(void *ptr) {
       curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, request);
 
       curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, request->buffer);
+
+      curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1l);
 
       /* play nice and report some user agent */
       curl_easy_setopt(curl, CURLOPT_USERAGENT, PACKAGE "-libcurl/" VERSION); 

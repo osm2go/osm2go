@@ -76,8 +76,6 @@ gboolean xmlTextIs(xmlDocPtr doc, xmlNodePtr list, char *str) {
   char *nstr = (char*)xmlNodeListGetString(doc, list, 1);
   if(!nstr) return FALSE;
 
-  printf("text = %s\n", nstr);
-
   gboolean match = (strcmp(str, nstr) == 0);  
   xmlFree(nstr);
   return match;
@@ -1164,7 +1162,7 @@ void wms_import(appdata_t *appdata) {
 
   if(!at_least_one_ok) {
     errorf(GTK_WIDGET(appdata->window), 
-	   _("Server provides no data in the required format!\n"
+	   _("Server provides no data in the required format!\n\n"
 	     "(epsg4326 and LatLonBoundingBox are mandatory for osm2go)"));
     wms_layer_free(layer);
     wms_free(wms);
