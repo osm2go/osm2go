@@ -245,9 +245,10 @@ void settings_save(settings_t *settings) {
 
     switch(st->type) {
     case STORE_STRING: 
-      if((char*)(*ptr)) {
+      if((char*)(*ptr))
 	gconf_client_set_string(client, key, (char*)(*ptr), NULL);
-      }
+      else
+	gconf_client_unset(client, key, NULL);
       break;
 
     case STORE_BOOL: 

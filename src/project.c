@@ -549,7 +549,7 @@ project_t *project_new(select_context_t *context) {
 
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox);
 
-  /* don't all user to click ok until something useful has been entered */
+  /* don't allow user to click ok until a valid area has been specified */
   gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog), 
 				    GTK_RESPONSE_ACCEPT, FALSE);
 
@@ -945,14 +945,16 @@ static void on_edit_clicked(GtkButton *button, gpointer data) {
     pos_lon_label_set(context->maxlat, context->project->max.lat);
     pos_lon_label_set(context->maxlon, context->project->max.lon);
 
-    gtk_widget_set_sensitive(context->download, 
-			     project_pos_is_valid(context->project));
+    gboolean pos_valid = project_pos_is_valid(context->project);
+    gtk_widget_set_sensitive(context->download, pos_valid);
 
     /* (re-) download area */
-    if(osm_download(GTK_WIDGET(context->dialog), 
-	    context->area_edit.appdata->settings, context->project))
-       context->project->data_dirty = FALSE;
-    
+    if (pos_valid)
+    {
+      if(osm_download(GTK_WIDGET(context->dialog), 
+	      context->area_edit.appdata->settings, context->project))
+         context->project->data_dirty = FALSE;
+    }   
     project_filesize(context);
   }
 }
@@ -1028,7 +1030,6 @@ project_edit(appdata_t *appdata, GtkWidget *parent, settings_t *settings,
   context->area_edit.settings = context->settings = settings;
   context->area_edit.appdata = appdata;
   context->is_new = is_new;
-  
   context->area_edit.min = &project->min;
   context->area_edit.max = &project->max;
 
@@ -1254,6 +1255,13 @@ gboolean project_close(appdata_t *appdata) {
   if(appdata->osm) {
     osm_free(&appdata->icon, appdata->osm);
     appdata->osm = NULL;
+  }
+
+  /* remember in settings that no project is open */
+  if(appdata->settings->project)
+  {
+    g_free(appdata->settings->project);
+    appdata->settings->project = NULL;
   }
 
   /* update project file on disk */

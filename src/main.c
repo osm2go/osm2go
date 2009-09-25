@@ -154,6 +154,7 @@ cb_menu_about(GtkMenuItem *item, gpointer data) {
     "Andrew Chadwick <andrewc-osm2go@piffle.org>",
     "Marcus Bauer <marcus.bauer@gmail.com>",
     "John Stowers <john.stowers@gmail.com>",
+    "Rolf Bode-Meyer <robome@gmail.com>",
     NULL };
 
   const gchar *artists[] = {
