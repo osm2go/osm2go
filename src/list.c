@@ -279,8 +279,9 @@ list_selection_function(GtkTreeSelection *selection, GtkTreeModel *model,
   if(gtk_tree_model_get_iter(model, &iter, path)) {
     g_assert(gtk_tree_path_get_depth(path) == 1);
 
-    list_button_enable(GTK_WIDGET(list), LIST_BUTTON_REMOVE, TRUE);
-    list_button_enable(GTK_WIDGET(list), LIST_BUTTON_EDIT, TRUE);
+    /* this is now handled by the "changed" event handler */
+    //    list_button_enable(GTK_WIDGET(list), LIST_BUTTON_REMOVE, TRUE);
+    //    list_button_enable(GTK_WIDGET(list), LIST_BUTTON_EDIT, TRUE);
   }
 
   if(priv->sel.func)
@@ -420,11 +421,20 @@ static gint on_list_destroy(GtkWidget *list, gpointer data) {
   list_priv_t *priv = g_object_get_data(G_OBJECT(list), "priv");
   g_assert(priv);
 
-  printf("destroy list\n");
-
   g_free(priv);
   
   return FALSE;
+}
+
+static void changed(GtkTreeSelection *treeselection, gpointer user_data) {
+  GtkWidget *list = (GtkWidget*)user_data;
+
+  GtkTreeModel *model;
+  GtkTreeIter iter;
+  gboolean selected = list_get_selected(list, &model, &iter);
+
+  list_button_enable(GTK_WIDGET(list), LIST_BUTTON_REMOVE, selected);
+  list_button_enable(GTK_WIDGET(list), LIST_BUTTON_EDIT, selected);
 }
 
 /* a generic list widget with "add", "edit" and "remove" buttons as used */
@@ -455,9 +465,13 @@ GtkWidget *list_new(void)
   }
 #endif
  
-  gtk_tree_selection_set_select_function(
-	 gtk_tree_view_get_selection(GTK_TREE_VIEW(priv->view)), 
+  GtkTreeSelection *sel = 
+    gtk_tree_view_get_selection(GTK_TREE_VIEW(priv->view));
+
+  gtk_tree_selection_set_select_function(sel, 
   	 list_selection_function, vbox, NULL);
+
+  g_signal_connect(G_OBJECT(sel), "changed", G_CALLBACK(changed), vbox);
 
 #ifndef FREMANTLE_PANNABLE_AREA
   /* put view into a scrolled window */
