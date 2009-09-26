@@ -955,18 +955,12 @@ project_pos_is_valid(project_t *project) {
 static void on_edit_clicked(GtkButton *button, gpointer data) {
   project_context_t *context = (project_context_t*)data;
 
-  if(diff_present(context->project) || project_active_n_dirty(context)) {
-    if(!yes_no_f(context->dialog, NULL, 0, 0,
-		 _("Discard pending changes?"),
-		 _("You have pending changes in this project. Changing "
-		   "the area will discard these changes.\n\nDo you want to "
-		   "discard all your changes?")))
-      return;
-
-    diff_remove(context->project);
-    project_diffstat(context);
-    gtk_widget_set_sensitive(context->diff_remove,  FALSE);
-  }
+  if(diff_present(context->project) || project_active_n_dirty(context)) 
+    messagef(context->dialog,
+	     _("Pending changes"),
+	     _("You have pending changes in this project.\n\n"
+	       "Changing the area may cause pending changes to be "
+	       "lost if they are outside the updated area."));
 
   if(area_edit(&context->area_edit)) {
     printf("coordinates changed!!\n");
