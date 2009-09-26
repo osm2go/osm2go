@@ -327,7 +327,6 @@ cb_menu_undo_changes(GtkMenuItem *item, gpointer data) {
 		 "uploaded yet? This can't be undone.")))
     return;
 
-  banner_busy_start(appdata, 1, _("Redrawing"));
   map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
 
   osm_free(&appdata->icon, appdata->osm);
@@ -336,7 +335,6 @@ cb_menu_undo_changes(GtkMenuItem *item, gpointer data) {
   diff_remove(appdata->project);
   appdata->osm = osm_parse(appdata->project->path, appdata->project->osm);
   map_paint(appdata);
-  banner_busy_stop(appdata);  //"Redrawing"
 
   banner_show_info(appdata, _("Undo all changes"));
 }

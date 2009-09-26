@@ -521,7 +521,7 @@ gboolean project_delete(select_context_t *context, project_t *project) {
   /* free project structure */
   project_free(project);
 
-  /* disable edit/remove buttons */
+  /* disable ok button button */
   view_selected(context, NULL);
 
   return TRUE;
@@ -606,7 +606,7 @@ project_t *project_new(select_context_t *context) {
 }
 
 // predecs
-void project_get_status_icon_stock_id(project_t *project, gchar **stock_id);
+static void project_get_status_icon_stock_id(select_context_t *context, project_t *project, gchar **stock_id);
 
 static void on_project_new(GtkButton *button, gpointer data) {
   select_context_t *context = (select_context_t*)data;
@@ -618,7 +618,7 @@ static void on_project_new(GtkButton *button, gpointer data) {
 
     GtkTreeIter iter;
     gchar *status_stock_id = NULL;
-    project_get_status_icon_stock_id(*project, &status_stock_id);
+    project_get_status_icon_stock_id(context, *project, &status_stock_id);
     gtk_list_store_append(GTK_LIST_STORE(model), &iter);
     gtk_list_store_set(GTK_LIST_STORE(model), &iter,
 		       PROJECT_COL_NAME,        (*project)->name,
@@ -674,7 +674,7 @@ static void on_project_edit(GtkButton *button, gpointer data) {
 
     //     gtk_tree_model_get(model, &iter, PROJECT_COL_DATA, &project, -1);
     gchar *status_stock_id = NULL;
-    project_get_status_icon_stock_id(project, &status_stock_id);
+    project_get_status_icon_stock_id(context, project, &status_stock_id);
     gtk_list_store_set(GTK_LIST_STORE(model), &iter, 
 		       PROJECT_COL_NAME, project->name, 
                        PROJECT_COL_STATUS, status_stock_id,
@@ -747,10 +747,23 @@ gboolean project_osm_present(project_t *project) {
   return is_present;
 }
 
-void project_get_status_icon_stock_id(project_t *project, gchar **stock_id) {
-    *stock_id = (! project_osm_present(project)) ? GTK_STOCK_DIALOG_WARNING
-         : diff_present(project) ? GTK_STOCK_PROPERTIES
-         : GTK_STOCK_FILE;
+static void 
+project_get_status_icon_stock_id(select_context_t *context, 
+				 project_t *project, gchar **stock_id) {
+
+  appdata_t *appdata = context->appdata;
+
+  /* is this the currently open project? */
+  if(appdata->project && 
+     !strcmp(appdata->project->name, project->name)) 
+    *stock_id = GTK_STOCK_OPEN;
+  else if(!project_osm_present(project))
+    *stock_id = GTK_STOCK_DIALOG_WARNING;
+  else if(diff_present(project))
+    *stock_id = GTK_STOCK_PROPERTIES;
+  else 
+    *stock_id = GTK_STOCK_FILE;
+
     // TODO: check for outdatedness too. Which icon to use?
 }
 
@@ -777,7 +790,7 @@ static GtkWidget *project_list_widget(select_context_t *context) {
   project_t *project = context->project;
   while(project) {
     gchar *status_stock_id = NULL;
-    project_get_status_icon_stock_id(project, &status_stock_id);
+    project_get_status_icon_stock_id(context, project, &status_stock_id);
     /* Append a row and fill in some data */
     gtk_list_store_append(store, &iter);
     gtk_list_store_set(store, &iter,
@@ -900,10 +913,28 @@ void project_filesize(project_context_t *context) {
   }
 }
 
+/* a project may currently be open. "unsaved changes" then also */
+/* means that the user may have unsaved changes */
+static gboolean project_active_n_dirty(project_context_t *context) {
+
+  if(!context->area_edit.appdata->osm) return FALSE;
+
+  if(context->area_edit.appdata->project && 
+     !strcmp(context->area_edit.appdata->project->name, 
+	     context->project->name)) {
+
+    printf("editing the currently open project\n");
+    
+    return(!diff_is_clean(context->area_edit.appdata->osm, TRUE));
+  }
+
+  return FALSE;
+}
+
 void project_diffstat(project_context_t *context) {
   char *str = NULL;
 
-  if(diff_present(context->project)) {
+  if(diff_present(context->project) || project_active_n_dirty(context)) {
     /* this should prevent the user from changing the area */
     str = g_strdup(_("unsaved changes pending"));
   } else
@@ -924,7 +955,7 @@ project_pos_is_valid(project_t *project) {
 static void on_edit_clicked(GtkButton *button, gpointer data) {
   project_context_t *context = (project_context_t*)data;
 
-  if(diff_present(context->project)) {
+  if(diff_present(context->project) || project_active_n_dirty(context)) {
     if(!yes_no_f(context->dialog, NULL, 0, 0,
 		 _("Discard pending changes?"),
 		 _("You have pending changes in this project. Changing "
@@ -987,9 +1018,27 @@ static void on_diff_remove_clicked(GtkButton *button, gpointer data) {
       
   gtk_window_set_title(GTK_WINDOW(dialog), _("Discard changes?"));
   
-  /* set the active flag again if the user answered "no" */
   if(GTK_RESPONSE_YES == gtk_dialog_run(GTK_DIALOG(dialog))) {
+    appdata_t *appdata = context->area_edit.appdata;
+
     diff_remove(context->project);
+
+    /* if this is the currently open project, we need to undo */
+    /* the map changes as well */
+ 
+    if(appdata->project && 
+       !strcmp(appdata->project->name, context->project->name)) {
+
+      printf("undo all on current project: delete map changes as well\n");
+
+      /* just reload the map */
+      map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
+      osm_free(&appdata->icon, appdata->osm);
+      appdata->osm = osm_parse(appdata->project->path, appdata->project->osm);
+      map_paint(appdata);
+    }
+
+    /* update button/label state */
     project_diffstat(context);
     gtk_widget_set_sensitive(context->diff_remove,  FALSE);
   }
@@ -1128,7 +1177,7 @@ project_edit(appdata_t *appdata, GtkWidget *parent, settings_t *settings,
   project_diffstat(context);
   gtk_table_attach_defaults(GTK_TABLE(table), context->diff_stat, 1, 4, 5, 6);
   context->diff_remove = gtk_button_new_with_label(_("Undo all"));
-  if(!diff_present(project)) 
+  if(!diff_present(project) && !project_active_n_dirty(context))
     gtk_widget_set_sensitive(context->diff_remove,  FALSE);
   gtk_signal_connect(GTK_OBJECT(context->diff_remove), "clicked",
 		     (GtkSignalFunc)on_diff_remove_clicked, context);
