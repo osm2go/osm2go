@@ -324,7 +324,7 @@ cb_menu_undo_changes(GtkMenuItem *item, gpointer data) {
   if(!yes_no_f(GTK_WIDGET(appdata->window), NULL, 0, 0,
 	       _("Undo all changes?"), 
 	       _("Throw away all the changes you've not "
-		 "uploaded yet? This can't be undone.")))
+		 "uploaded yet? This cannot be undone.")))
     return;
 
   map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
