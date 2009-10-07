@@ -40,6 +40,11 @@ void main_ui_enable(appdata_t *appdata) {
   gboolean project_valid = (appdata->project != NULL);
   gboolean osm_valid = (appdata->osm != NULL);
 
+  if(!appdata->window) {
+    printf("main_ui_enable: main window gone\n");
+    return;
+  }
+
   /* cancel any action in progress */
   g_assert(appdata->iconbar->cancel);
   if(GTK_WIDGET_FLAGS(appdata->iconbar->cancel) & GTK_SENSITIVE)
@@ -241,7 +246,8 @@ cb_menu_download(GtkMenuItem *item, gpointer data) {
   // download
   if(osm_download(GTK_WIDGET(appdata->window), appdata->settings, 
 		  appdata->project)) {
-    banner_busy_start(appdata, 1, "Redrawing");
+
+    banner_busy_start(appdata, 1, "Drawing");
     appdata->osm = osm_parse(appdata->project->path, appdata->project->osm);
     diff_restore(appdata, appdata->project, appdata->osm);
     map_paint(appdata);
@@ -1312,6 +1318,8 @@ static void menu_accels_save(appdata_t *appdata) {
 
 
 void cleanup(appdata_t *appdata) {
+  printf("cleaning up ...\n");
+
 #ifdef UISPECIFIC_MENU_HAS_ACCELS
   menu_accels_save(appdata);
 #endif
@@ -1370,6 +1378,8 @@ void cleanup(appdata_t *appdata) {
 
 void on_window_destroy (GtkWidget *widget, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
+
+  puts("main window destroy");
 
   gtk_main_quit();
   appdata->window = NULL;
@@ -1453,6 +1463,13 @@ static GtkWidget *icon_button(appdata_t *appdata, char *icon, GCallback cb,
 }
 #endif
 
+/* handle pending gtk events, but don't let the user actually do something */
+static void gtk_process_blocking(appdata_t *appdata) {
+  while(gtk_events_pending()) 
+    gtk_main_iteration();
+}
+
+
 int main(int argc, char *argv[]) {
   appdata_t appdata;
 
@@ -1516,11 +1533,10 @@ int main(int argc, char *argv[]) {
 		      icon_load(&appdata.icon, PACKAGE));
 #endif
 
-  g_signal_connect(G_OBJECT(appdata.window), "destroy", 
-		   G_CALLBACK(on_window_destroy), &appdata);
-
   g_signal_connect(G_OBJECT(appdata.window), "key_press_event",
  		   G_CALLBACK(on_window_key_press), &appdata);
+  g_signal_connect(G_OBJECT(appdata.window), "destroy", 
+		   G_CALLBACK(on_window_destroy), &appdata);
 
   /* user specific init */
   appdata.settings = settings_load();  
@@ -1629,8 +1645,12 @@ int main(int argc, char *argv[]) {
 
   /* let gtk do its thing before loading the data, */
   /* so the user sees something */
-  while(gtk_events_pending()) 
-    gtk_main_iteration();
+  gtk_process_blocking(&appdata);
+  if(!appdata.window) {
+    printf("shutdown while starting up (1)\n");
+    cleanup(&appdata);
+    return -1;
+  }
 
   /* load project if one is specified in the settings */
   if(appdata.settings->project)
@@ -1643,8 +1663,12 @@ int main(int argc, char *argv[]) {
     track_enable_gps(&appdata, TRUE);
 
   /* again let the ui do its thing */
-  while(gtk_events_pending()) 
-    gtk_main_iteration();
+  gtk_process_blocking(&appdata);
+  if(!appdata.window) {
+    printf("shutdown while starting up (2)\n");
+    cleanup(&appdata);
+    return -1;
+  }
 
   /* start to interact with the user now that the gui is running */
   if(appdata.settings->first_run_demo) {
@@ -1661,6 +1685,8 @@ int main(int argc, char *argv[]) {
 	       "the OSM main database."
 	       ));
   }
+
+  puts("main up");
 
   /* ------------ jump into main loop ---------------- */
   gtk_main();

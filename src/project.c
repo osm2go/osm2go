@@ -1341,11 +1341,13 @@ gboolean project_load(appdata_t *appdata, char *name) {
 
   /* close current project */
   banner_busy_tick();
+
   if(appdata->project) 
     project_close(appdata);
 
   /* open project itself */
   banner_busy_tick();
+
   if(!project_open(appdata, proj_name)) {
     printf("error opening requested project\n");
 
@@ -1367,6 +1369,11 @@ gboolean project_load(appdata_t *appdata, char *name) {
     g_free(proj_name);
     return FALSE;
   }    
+
+  if(!appdata->window) {
+    g_free(proj_name);
+    return FALSE;
+  }
 
   /* check if OSM data is valid */
   banner_busy_tick();
@@ -1394,20 +1401,27 @@ gboolean project_load(appdata_t *appdata, char *name) {
 
   /* load diff possibly preset */
   banner_busy_tick();
+  if(!appdata->window) goto fail;
+
   diff_restore(appdata, appdata->project, appdata->osm);
 
   /* prepare colors etc, draw data and adjust scroll/zoom settings */
   banner_busy_tick();
+  if(!appdata->window) goto fail;
+
   map_init(appdata);
 
   /* restore a track */
   banner_busy_tick();
+  if(!appdata->window) goto fail;
+
   appdata->track.track = track_restore(appdata, appdata->project);
   if(appdata->track.track)
     map_track_draw(appdata->map, appdata->track.track);
 
   /* finally load a background if present */
   banner_busy_tick();
+  if(!appdata->window) goto fail;
   wms_load(appdata);
 
   /* save the name of the project for the perferences */
@@ -1427,6 +1441,23 @@ gboolean project_load(appdata_t *appdata, char *name) {
   g_free(proj_name);
 
   return TRUE;
+
+ fail:
+  printf("project loading interrupted by user\n");
+
+  if(appdata->project) {
+    project_free(appdata->project);
+    appdata->project = NULL;
+  }
+  
+  if(appdata->osm) {
+    osm_free(&appdata->icon, appdata->osm);
+    appdata->osm = NULL;
+  }
+  
+  g_free(proj_name);
+  
+  return FALSE;
 }
 
 /* ------------------- project setup wizard ----------------- */
