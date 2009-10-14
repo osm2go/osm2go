@@ -1,6 +1,7 @@
 TEMPLATE_ELEMSTYLES=elemstyles-mapnik.xml
 APP = @PACKAGE@
-PREFIX = @prefix@
+prefix = @prefix@
+datarootdir = @datarootdir@
 datadir = @datarootdir@
 
 all: $(TEMPLATE_ELEMSTYLES)
@@ -13,38 +14,40 @@ clean:
 	rm -f $(TEMPLATE_ELEMSTYLES)
 
 install-debian:
-	install -d $(DESTDIR)$(PREFIX)$(datadir)/applications
-	install $(APP)-ubuntu.desktop $(DESTDIR)$(PREFIX)$(datadir)/applications/$(APP).desktop
+	install -d $(DESTDIR)$(datadir)/applications
+	install $(APP)-ubuntu.desktop $(DESTDIR)$(datadir)/applications/$(APP).desktop
 	for s in 64 32 22 16; do \
-	  install -d $(DESTDIR)$(PREFIX)$(datadir)/icons/hicolor/$${s}x$${s}/apps ;\
-	  install -m 644 $(APP).$$s.png $(DESTDIR)$(PREFIX)$(datadir)/icons/hicolor/$${s}x$${s}/apps/$(APP).png ;\
+	  install -d $(DESTDIR)$(datadir)/icons/hicolor/$${s}x$${s}/apps ;\
+	  install -m 644 $(APP).$$s.png $(DESTDIR)$(datadir)/icons/hicolor/$${s}x$${s}/apps/$(APP).png ;\
 	done
-	install -d $(DESTDIR)$(PREFIX)$(datadir)/icons/hicolor/scalable/apps
-	install -m 644 $(APP).svg $(DESTDIR)$(PREFIX)$(datadir)/icons/hicolor/scalable/apps/$(APP).svg
+	install -d $(DESTDIR)$(datadir)/icons/hicolor/scalable/apps
+	install -m 644 $(APP).svg $(DESTDIR)$(datadir)/icons/hicolor/scalable/apps/$(APP).svg
 
 
 install-maemo:
-	install -d $(DESTDIR)$(PREFIX)$(datadir)/applications/hildon
-	install $(APP).desktop $(DESTDIR)$(PREFIX)$(datadir)/applications/hildon
+	# on maemo datadir may not point to the place where the system is
+	# expecting the icons. thus we hardcode the /share path
+	install -d $(DESTDIR)$(datadir)/applications/hildon 
+	install $(APP).desktop $(DESTDIR)$(prefix)/share/applications/hildon
 	for s in 40 26; do \
-	  install -d $(DESTDIR)$(PREFIX)$(datadir)/icons/hicolor/$${s}x$${s}/hildon ;\
-	  install -m 644 $(APP).$$s.png $(DESTDIR)$(PREFIX)$(datadir)/icons/hicolor/$${s}x$${s}/hildon/$(APP).png ;\
+	  install -d $(DESTDIR)$(prefix)/share/icons/hicolor/$${s}x$${s}/hildon ;\
+	  install -m 644 $(APP).$$s.png $(DESTDIR)$(prefix)/share/icons/hicolor/$${s}x$${s}/hildon/$(APP).png ;\
 	done
 	# .png file in scalable? Maemo is strange...
-	install -d $(DESTDIR)$(PREFIX)$(datadir)/icons/hicolor/scalable/hildon
-	install -m 644 $(APP).64.png $(DESTDIR)$(PREFIX)$(datadir)/icons/hicolor/scalable/hildon/$(APP).png
+	install -d $(DESTDIR)$(prefix)/share/icons/hicolor/scalable/hildon
+	install -m 644 $(APP).64.png $(DESTDIR)$(prefix)/share/icons/hicolor/scalable/hildon/$(APP).png
 
 
 install: @INSTALL_PLATTFORM@ $(TEMPLATE_ELEMSTYLES)
-	install -d $(DESTDIR)$(PREFIX)$(datadir)/$(APP)	
-	install -m 644 *.txt $(DESTDIR)$(PREFIX)$(datadir)/$(APP)
-	install -m 644 *.xml $(DESTDIR)$(PREFIX)$(datadir)/$(APP)
-	install -m 644 *.style $(DESTDIR)$(PREFIX)$(datadir)/$(APP)
+	install -d $(DESTDIR)$(datadir)/$(APP)	
+	install -m 644 *.txt $(DESTDIR)$(datadir)/$(APP)
+	install -m 644 *.xml $(DESTDIR)$(datadir)/$(APP)
+	install -m 644 *.style $(DESTDIR)$(datadir)/$(APP)
 	for f in `find icons -name "*.png"`; do \
-	   install -d $(DESTDIR)$(PREFIX)$(datadir)/$(APP)/`dirname $$f` ;\
-	   install -m 644 $$f $(DESTDIR)$(PREFIX)$(datadir)/$(APP)/$$f ;\
+	   install -d $(DESTDIR)$(datadir)/$(APP)/`dirname $$f` ;\
+	   install -m 644 $$f $(DESTDIR)$(datadir)/$(APP)/$$f ;\
 	done;
-	install -d $(DESTDIR)$(PREFIX)$(datadir)/$(APP)/demo
-	install -m 644 demo/* $(DESTDIR)$(PREFIX)$(datadir)/$(APP)/demo
+	install -d $(DESTDIR)$(datadir)/$(APP)/demo
+	install -m 644 demo/* $(DESTDIR)$(datadir)/$(APP)/demo
 
 distclean: clean

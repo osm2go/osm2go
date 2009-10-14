@@ -4096,6 +4096,10 @@ XB-Maemo-Icon-26:
   # and add a space before each line
   ICON="$ICON`uuencode -m data/$ICONNAME $ICONNAME | sed '1d;$d;s/^/ /' -`"
 
+  # the data root dir is /opt on fremantle
+  if [ "$MAJOR" == "5" ]; then
+    datarootdir=/opt
+  fi
 
 else
 

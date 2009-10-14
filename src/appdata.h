@@ -27,7 +27,7 @@
 #include <locale.h>
 #include <libintl.h>
 
-#define LOCALEDIR "/usr/share/locale"
+#define LOCALEDIR PREFIX "/locale"
 
 #define _(String) gettext(String)
 #define N_(String) (String)

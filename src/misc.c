@@ -137,7 +137,7 @@ gboolean yes_no_f(GtkWidget *parent, appdata_t *appdata, gulong again_bit,
 
 static const char *data_paths[] = {
   "~/." PACKAGE,             // in home directory
-  PREFIX "/share/" PACKAGE , // final installation path 
+  DATADIR ,                  // final installation path 
 #ifdef USE_HILDON
   "/media/mmc1/" PACKAGE,    // path to external memory card
   "/media/mmc2/" PACKAGE,    // path to internal memory card

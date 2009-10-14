@@ -18,7 +18,9 @@
 #
 
 APP = @PACKAGE@
-PREFIX ?= @prefix@
+prefix = @prefix@
+datarootdir = @datarootdir@
+datadir = @datarootdir@
 EXTRA_OBJS = @EXTRA_OBJS@
 VERSION = $${VERSION_PREFIX}@PACKAGE_VERSION@$${VERSION_SUFFIX}
 
@@ -32,7 +34,7 @@ OBJS = main.o map.o osm.o osm_api.o wms.o \
 	josm_elemstyles.o style.o net_io.o banner.o undo.o canvas.o \
 	list.o scale_popup.o $(EXTRA_OBJS)
 
-DEFS = -DPACKAGE=\"$(APP)\" -DPREFIX=\"@prefix@\" -DVERSION=\"$(VERSION)\"
+DEFS = -DPACKAGE=\"$(APP)\" -DPREFIX=\"@prefix@\" -DDATADIR=\"$(datadir)/$(APP)\" -DVERSION=\"$(VERSION)\"
 CFLAGS = -Wall $(DEFS) @CFLAGS@ -DCANVAS_CUSTOM_ITEM_AT
 LDFLAGS = @LIBS@
 
@@ -48,8 +50,8 @@ clean:
 	rm -f osm2go *.o *~ */*~ \#*\# version.h *.bak
 
 install: $(APP)
-	install -d $(DESTDIR)$(PREFIX)$(bindir)
-	install $(APP) $(DESTDIR)$(PREFIX)$(bindir)
+	install -d $(DESTDIR)$(prefix)$(bindir)
+	install $(APP) $(DESTDIR)$(prefix)$(bindir)
 
 dep:
 	makedepend -Y -fMakefile.in *.c
