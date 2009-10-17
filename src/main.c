@@ -157,8 +157,10 @@ cb_menu_about(GtkMenuItem *item, gpointer data) {
   const gchar *authors[] = {
     "Till Harbaum <till@harbaum.org>",
     "Andrew Chadwick <andrewc-osm2go@piffle.org>",
+    "\nOriginal OSM-GPS-MAP widget by:",
     "Marcus Bauer <marcus.bauer@gmail.com>",
     "John Stowers <john.stowers@gmail.com>",
+    "\nVarious patches by:",
     "Rolf Bode-Meyer <robome@gmail.com>",
     NULL };
 
@@ -173,7 +175,7 @@ cb_menu_about(GtkMenuItem *item, gpointer data) {
 			"authors", authors,		
 			"artists", artists,		
 			"website", _("http://www.harbaum.org/till/maemo"),
-			"comments", _("Mobile OSM Editor"),
+			"comments", _("Mobile OpenStreeMap Editor"),
 			NULL);
 
 #ifdef ENABLE_BROWSER_INTERFACE
