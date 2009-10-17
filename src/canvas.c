@@ -334,8 +334,7 @@ canvas_item_t *canvas_item_info_get_at(canvas_t *canvas, gint x, gint y) {
     EXTRA_FUZZINESS_PIXEL / canvas_get_zoom(canvas);
 
   /* search from top to bottom */
-  for(group = CANVAS_GROUPS; group;) {
-    group--;
+  for(group = CANVAS_GROUPS - 1; group > 0; group--) {
     canvas_item_info_t *item = canvas->item_info[group].first;
     //    if(item) printf("searching in group %d\n", group);
 
@@ -350,7 +349,6 @@ canvas_item_t *canvas_item_info_get_at(canvas_t *canvas, gint x, gint y) {
 
 	  gint xdist = item->data.circle.center.x - x;
 	  gint ydist = item->data.circle.center.y - y;
-	
 	  if(xdist*xdist + ydist*ydist < 
 	     (item->data.circle.r+fuzziness)*(item->data.circle.r+fuzziness)) {
 	    printf("circle item %p at %d/%d(%d)\n", item,

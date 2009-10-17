@@ -301,16 +301,18 @@ canvas_item_t *canvas_polygon_new(canvas_t *canvas, canvas_group_t group,
   return item;
 }
 
+/* place the image in pix centered on x/y on the canvas */
 canvas_item_t *canvas_image_new(canvas_t *canvas, canvas_group_t group, 
 		GdkPixbuf *pix, gint x, gint y, float hscale, float vscale) {
 
   canvas_item_t *item = goo_canvas_image_new(canvas->group[group], pix, 
-					     x/hscale, y/vscale, NULL);
+			                     x/hscale - gdk_pixbuf_get_width(pix)/2,
+			                     y/vscale - gdk_pixbuf_get_height(pix)/2, NULL);
   goo_canvas_item_scale(item, hscale, vscale);
 
 #ifdef CANVAS_CUSTOM_ITEM_AT
   if(CANVAS_SELECTABLE & (1<<group)) {
-    gint radius = MAX(gdk_pixbuf_get_width(pix), gdk_pixbuf_get_height(pix));
+    gint radius = 0.75 * hscale * MAX(gdk_pixbuf_get_width(pix), gdk_pixbuf_get_height(pix)); /* hscale and vscale are the same */
     canvas_item_info_attach_circle(canvas, group, item, x, y, radius);
   }
 #endif

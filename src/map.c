@@ -26,17 +26,18 @@
 
 static void map_statusbar(map_t *map, map_item_t *map_item) {
   tag_t *tag = OBJECT_TAG(map_item->object);
-  char *str = NULL;
 
   gboolean collision = FALSE;
   tag_t *tags = tag;
   while(tag) {
-    if(!collision && info_tag_key_collision(tags, tag))
+    if(info_tag_key_collision(tags, tag)) {
       collision = TRUE;
+      break;
+    }
     tag = tag->next;
   }
 
-  str = osm_object_get_name(&map_item->object);
+  char *str = osm_object_get_name(&map_item->object);
   statusbar_set(map->appdata, str, collision);
   g_free(str);
 }
@@ -111,15 +112,17 @@ static void map_node_select(appdata_t *appdata, node_t *node) {
   memcpy(new_map_item, map_item, sizeof(map_item_t));
   new_map_item->highlight = TRUE;
 
-  float radius = map->style->highlight.width + map->style->node.radius;
-  if(!node->ways) radius += map->style->node.border_radius;
+  float radius = 0;
   if(node->icon_buf && map->style->icon.enable) {
     gint w = gdk_pixbuf_get_width(map_item->object.node->icon_buf);
     gint h = gdk_pixbuf_get_height(map_item->object.node->icon_buf);
     
     /* icons are technically square, so a radius slightly bigger */
     /* than sqrt(2)*MAX(w,h) should fit nicely */
-    radius = 0.75 * map->style->icon.scale * ((w>h)?w:h);
+    radius = 0.75 * map->style->icon.scale * MAX(w, h);
+  } else {
+    radius = map->style->highlight.width + map->style->node.radius;
+    if(!node->ways) radius += map->style->node.border_radius;
   }
 
   radius *= map->state->detail;
@@ -425,11 +428,7 @@ static canvas_item_t *map_node_new(map_t *map, node_t *node, gint radius,
        node->lpos.x, node->lpos.y, radius, width, fill, border);
   else
     map_item->item = canvas_image_new(map->canvas, CANVAS_GROUP_NODES, 
-      node->icon_buf, 
-      node->lpos.x - map->style->icon.scale/2 * map->state->detail *
-		      gdk_pixbuf_get_width(node->icon_buf), 
-      node->lpos.y - map->style->icon.scale/2 * map->state->detail *
-		      gdk_pixbuf_get_height(node->icon_buf), 
+      node->icon_buf, node->lpos.x, node->lpos.y, 
 		      map->state->detail * map->style->icon.scale, 
 		      map->state->detail * map->style->icon.scale);
  
@@ -1270,15 +1269,6 @@ void map_way_delete(appdata_t *appdata, way_t *way) {
   /* remove it visually from the screen */
   map_item_chain_destroy(&way->map_item_chain);
 
-  /* also remove the visible representation of all nodes (nodes with tags) */
-  node_chain_t *chain = way->node_chain;
-  while(chain) {
-    if(chain->node->map_item_chain) 
-      map_item_chain_destroy(&chain->node->map_item_chain);
-      
-    chain = chain->next;
-  }
-
   /* and mark it "deleted" in the database */
   osm_way_remove_from_relation(appdata->osm, way);
 
@@ -2013,9 +2003,6 @@ void map_delete_selected(appdata_t *appdata) {
       }
     }
 
-    /* remove it visually from the screen */
-    map_item_chain_destroy(&item.object.node->map_item_chain);
-
     /* and mark it "deleted" in the database */
     osm_node_remove_from_relation(appdata->osm, item.object.node);
     way_chain_t *chain = osm_node_delete(appdata->osm, 
@@ -2402,25 +2389,29 @@ void map_detail_change(map_t *map, float detail) {
   map->state->detail = detail;
   printf("changing detail factor to %f\n", map->state->detail);
 
-  banner_busy_start(appdata, 1, _("Redrawing"));
   map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
   map_paint(appdata);
-  banner_busy_stop(appdata);
 }
 
 void map_detail_increase(map_t *map) {
   if(!map) return;
+  banner_busy_start(map->appdata, 1, _("Increasing detail level"));
   map_detail_change(map, map->state->detail * MAP_DETAIL_STEP);
+  banner_busy_stop(map->appdata);
 }
 
 void map_detail_decrease(map_t *map) {
   if(!map) return;
+  banner_busy_start(map->appdata, 1, _("Decreasing detail level"));
   map_detail_change(map, map->state->detail / MAP_DETAIL_STEP);
+  banner_busy_stop(map->appdata);
 }
 
 void map_detail_normal(map_t *map) {
   if(!map) return;
+  banner_busy_start(map->appdata, 1, _("Restoring default detail level"));
   map_detail_change(map, 1.0);
+  banner_busy_stop(map->appdata);
 }
 
 // vim:et:ts=8:sw=2:sts=2:ai

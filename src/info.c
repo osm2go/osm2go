@@ -297,7 +297,7 @@ static GtkWidget *tag_widget(tag_context_t *context) {
 	   LIST_FLAG_ELLIPSIZE,
       NULL);
 
-  GtkWidget *presets = josm_presets_select(context->appdata, context);
+  GtkWidget *presets = josm_build_presets_button(context->appdata, context);
   if(presets)
     list_set_custom_user_button(context->list, LIST_BUTTON_USER1, presets);
 

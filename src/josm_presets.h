@@ -93,7 +93,7 @@ typedef struct presets_item_s {
 } presets_item_t;
 
 presets_item_t *josm_presets_load(void);
-GtkWidget *josm_presets_select(appdata_t *appdata, tag_context_t *tag_context);
+GtkWidget *josm_build_presets_button(appdata_t *appdata, tag_context_t *tag_context);
 void josm_presets_free(presets_item_t *presets);
 char *josm_icon_name_adjust(char *name);
 

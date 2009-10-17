@@ -1702,6 +1702,10 @@ way_chain_t *osm_node_delete(osm_t *osm, icon_t **icon,
     way = way->next;
   }
 
+  /* remove that nodes map representations */
+  if(node->map_item_chain)
+    map_item_chain_destroy(&node->map_item_chain);
+
   if(!permanently) {
     printf("mark node #" ITEM_ID_FORMAT " as deleted\n", OSM_ID(node));
     OSM_FLAGS(node) |= OSM_FLAG_DELETED;
@@ -2016,7 +2020,6 @@ void osm_way_delete(osm_t *osm, icon_t **icon,
   /* delete all nodes that aren't in other use now */
   node_chain_t **chain = &way->node_chain;
   while(*chain) {
-
     (*chain)->node->ways--;
     printf("checking node #" ITEM_ID_FORMAT " (still used by %d)\n", 
 	   OSM_ID((*chain)->node), (*chain)->node->ways);
@@ -2024,7 +2027,7 @@ void osm_way_delete(osm_t *osm, icon_t **icon,
     /* this node must only be part of this way */
     if(!(*chain)->node->ways) {
       /* delete this node, but don't let this actually affect the */
-      /* associated ways as the only such way is the oen we are currently */
+      /* associated ways as the only such way is the one we are currently */
       /* deleting */
       way_chain_t *way_chain = 
 	osm_node_delete(osm, icon, (*chain)->node, FALSE, FALSE);
@@ -2041,6 +2044,7 @@ void osm_way_delete(osm_t *osm, icon_t **icon,
     *chain = cur->next;
     g_free(cur);
   }
+
   way->node_chain = NULL;
 
   if(!permanently) {

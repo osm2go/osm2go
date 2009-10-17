@@ -400,22 +400,23 @@ void josm_elemstyles_colorize_node(style_t *style, node_t *node) {
   node->zoom_max = style->node.zoom_max;
   elemstyle_t *elemstyle = style->elemstyles;
 
+  gboolean somematch = FALSE;
   while(elemstyle) {
     gboolean match = FALSE;
-    
+
     if(elemstyle->condition.key) {
       char *value = osm_node_get_value(node, elemstyle->condition.key);
       if(value) {
 	if(elemstyle->condition.value) {
 	  if(strcasecmp(value, elemstyle->condition.value) == 0)
-	    match = TRUE;
+	    somematch = match = TRUE;
 	} else
-	  match = TRUE;
+	  somematch = match = TRUE;
       }
     } else
       if(osm_node_has_value(node, elemstyle->condition.value)) 
-	match = TRUE;
-    
+	somematch = match = TRUE;
+
 
     if(match && elemstyle->icon) {
       char *name = g_strdup_printf("styles/%s/%s",
@@ -437,6 +438,12 @@ void josm_elemstyles_colorize_node(style_t *style, node_t *node) {
     }
     
     elemstyle = elemstyle->next;
+  }
+
+  /* clear icon for node if not matched at least one rule and has an icon attached */
+  if (!somematch && node->icon_buf) {
+    icon_free(style->iconP, node->icon_buf);
+    node->icon_buf = NULL;
   }
 }
 

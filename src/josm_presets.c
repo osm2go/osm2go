@@ -737,7 +737,7 @@ cb_menu_item(GtkMenuItem *menu_item, gpointer data) {
 static GtkWidget *build_menu(presets_context_t *context, 
 			     presets_item_t *item) {
   GtkWidget *menu = gtk_menu_new();
-  
+
   while(item) {
     GtkWidget *menu_item;
 
@@ -780,6 +780,10 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event,
   if(event->type == GDK_BUTTON_PRESS) {
     printf("button press %d %d\n", event->button, event->time);
 
+    if (!context->menu)
+      context->menu = build_menu(context, context->appdata->presets);
+    gtk_widget_show_all( GTK_WIDGET(context->menu) );
+
     gtk_menu_popup(GTK_MENU(context->menu), NULL, NULL, NULL, NULL,
 		   event->button, event->time);
 
@@ -794,20 +798,18 @@ static gint on_button_destroy(GtkWidget *widget, gpointer data) {
   presets_context_t *context = (presets_context_t*)data;
 
   printf("freeing preset button context\n");
-  gtk_widget_destroy(context->menu);
+  if (context->menu)
+    gtk_widget_destroy(context->menu);
   g_free(context);
 
   return FALSE;
 }
 
-GtkWidget *josm_presets_select(appdata_t *appdata, 
+GtkWidget *josm_build_presets_button(appdata_t *appdata, 
 			       tag_context_t *tag_context) {
   presets_context_t *context = g_new0(presets_context_t, 1);
   context->appdata = appdata;
   context->tag_context = tag_context;
-
-  context->menu = build_menu(context, appdata->presets);
-  gtk_widget_show_all( GTK_WIDGET(context->menu) );
 
   GtkWidget *but = gtk_button_new_with_label(_("Presets"));
   gtk_widget_set_events(but, GDK_EXPOSURE_MASK);

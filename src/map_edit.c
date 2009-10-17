@@ -273,7 +273,7 @@ void map_edit_way_add_ok(map_t *map) {
     /* being moved to the osm node chain */
     if(OSM_ID(chain->node) == ID_ILLEGAL) 
       osm_node_attach(map->appdata->osm, chain->node);
-    
+
     chain = chain->next;
   }
 
@@ -422,7 +422,7 @@ void map_edit_way_node_add(map_t *map, gint x, gint y) {
       /* create new node */
       node_t* node = osm_node_new(map->appdata->osm, x, y);
       osm_node_attach(map->appdata->osm, node);
-      
+
       /* insert it into ways chain of nodes */
       way_t *way = item->object.way;
       
@@ -450,6 +450,9 @@ void map_edit_way_node_add(map_t *map, gint x, gint y) {
       
       /* remember that this node is contained in one way */
       node->ways=1;
+
+      /* and now draw the node */
+      map_node_draw(map, node);
       
       /* and that the way needs to be uploaded */
       OSM_FLAGS(way) |= OSM_FLAG_DIRTY;
