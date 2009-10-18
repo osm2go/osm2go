@@ -175,7 +175,7 @@ cb_menu_about(GtkMenuItem *item, gpointer data) {
 			"authors", authors,		
 			"artists", artists,		
 			"website", _("http://www.harbaum.org/till/maemo"),
-			"comments", _("Mobile OpenStreeMap Editor"),
+			"comments", _("Mobile OpenStreetMap Editor"),
 			NULL);
 
 #ifdef ENABLE_BROWSER_INTERFACE
