@@ -27,7 +27,7 @@ install-debian:
 install-maemo:
 	# on maemo datadir may not point to the place where the system is
 	# expecting the icons. thus we hardcode the /share path
-	install -d $(DESTDIR)$(datadir)/applications/hildon 
+	install -d $(DESTDIR)$(prefix)/share/applications/hildon 
 	install $(APP).desktop $(DESTDIR)$(prefix)/share/applications/hildon
 	for s in 40 26; do \
 	  install -d $(DESTDIR)$(prefix)/share/icons/hicolor/$${s}x$${s}/hildon ;\

@@ -25,12 +25,17 @@ static void vmessagef(GtkWidget *parent, int type, int buttons,
 
   char *buf = g_strdup_vprintf(fmt, args);
 
+#if !defined(USE_MAEMO) || (MAEMO_VERSION_MAJOR < 5)
   GtkWidget *dialog = gtk_message_dialog_new(
-		     GTK_WINDOW(parent),
-                     GTK_DIALOG_DESTROY_WITH_PARENT,
-                     type, buttons, buf);
+			   GTK_WINDOW(parent),
+			   GTK_DIALOG_DESTROY_WITH_PARENT,
+			   type, buttons, buf);
 
   gtk_window_set_title(GTK_WINDOW(dialog), title);
+#else
+  GtkWidget *dialog = 
+    hildon_note_new_information(GTK_WINDOW(parent), buf);
+#endif
 
   gtk_dialog_run(GTK_DIALOG(dialog));
   gtk_widget_destroy(dialog);
@@ -38,16 +43,10 @@ static void vmessagef(GtkWidget *parent, int type, int buttons,
   g_free(buf);
 }
 
-#if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
-#define MSG_TYPE(a)  a
-#else
-#define MSG_TYPE(a)  GTK_MESSAGE_OTHER
-#endif
-
 void messagef(GtkWidget *parent, char *title, const char *fmt, ...) {
   va_list args;
   va_start( args, fmt );
-  vmessagef(parent, MSG_TYPE(GTK_MESSAGE_INFO), 
+  vmessagef(parent, GTK_MESSAGE_INFO, 
 	    GTK_BUTTONS_OK, title, fmt, args);
   va_end( args );
 }
@@ -56,7 +55,7 @@ void errorf(GtkWidget *parent, const char *fmt, ...) {
   va_list args;
   va_start( args, fmt );
 
-  vmessagef(parent, MSG_TYPE(GTK_MESSAGE_ERROR), 
+  vmessagef(parent, GTK_MESSAGE_ERROR, 
 	    GTK_BUTTONS_CLOSE, _("Error"), fmt, args);
   va_end( args );
 }
@@ -64,7 +63,7 @@ void errorf(GtkWidget *parent, const char *fmt, ...) {
 void warningf(GtkWidget *parent, const char *fmt, ...) {
   va_list args;
   va_start( args, fmt );
-  vmessagef(parent, MSG_TYPE(GTK_MESSAGE_WARNING), 
+  vmessagef(parent, GTK_MESSAGE_WARNING, 
 	    GTK_BUTTONS_CLOSE, _("Warning"), fmt, args);
   va_end( args );
 }

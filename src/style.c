@@ -67,6 +67,7 @@ static style_t *parse_style(xmlDocPtr doc, xmlNode *a_node) {
   style->track.width            = 6.0;
   style->track.color            = 0x0000ff40; // blue
   style->track.gps_color        = 0x000080ff;
+  style->track.gps_icon         = NULL;
 
   style->way.width              = 3.0;
   style->way.color              = 0x606060ff; // grey
@@ -165,6 +166,11 @@ static style_t *parse_style(xmlDocPtr doc, xmlNode *a_node) {
       } else if(strcasecmp((char*)cur_node->name, "track") == 0) {
 	parse_color(cur_node, "color", &style->track.color);
 	parse_color(cur_node, "gps-color", &style->track.gps_color);
+	char *str = (char*)xmlGetProp(cur_node, BAD_CAST "gps-icon");
+	if(str) {
+	  style->track.gps_icon_name = g_strdup(str);
+	  xmlFree(str);
+	}
 	xml_get_prop_float(cur_node, "width", &style->track.width);
 
 	/* ---------- area ------------------------------------- */
@@ -260,6 +266,8 @@ style_t *style_load(appdata_t *appdata, char *name) {
   style_t *style = style_parse(appdata, fullname);
   g_free(fullname);
 
+  style->track.gps_icon = icon_load(style->iconP, style->track.gps_icon_name);
+
   printf("  elemstyle filename: %s\n", style->elemstyles_filename);
   elemstyle_t *elemstyles = 
     josm_elemstyles_load(style->elemstyles_filename);
@@ -280,6 +288,10 @@ void style_free(style_t *style) {
   if(style->name) g_free(style->name);
 
   if (style->icon.path_prefix) g_free(style->icon.path_prefix);
+
+  if (style->track.gps_icon_name) g_free(style->track.gps_icon_name);
+
+  if (style->track.gps_icon) icon_free(style->iconP, style->track.gps_icon);
 
   g_free(style);
 }

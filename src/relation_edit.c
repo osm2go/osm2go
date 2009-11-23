@@ -600,7 +600,12 @@ member_list_selection_func(GtkTreeSelection *selection, GtkTreeModel *model,
 
 static GtkWidget *member_list_widget(member_context_t *context) {
   GtkWidget *vbox = gtk_vbox_new(FALSE,3);
+
+#ifndef FREMANTLE_PANNABLE_AREA
   context->view = gtk_tree_view_new();
+#else
+  context->view = hildon_gtk_tree_view_new(HILDON_UI_MODE_EDIT);
+#endif
 
   gtk_tree_selection_set_select_function(
 	 gtk_tree_view_get_selection(GTK_TREE_VIEW(context->view)), 
@@ -684,6 +689,7 @@ static GtkWidget *member_list_widget(member_context_t *context) {
 
   g_object_unref(context->store);
 
+#ifndef FREMANTLE_PANNABLE_AREA
   /* put it into a scrolled window */
   GtkWidget *scrolled_window = gtk_scrolled_window_new(NULL, NULL);
   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window), 
@@ -693,6 +699,12 @@ static GtkWidget *member_list_widget(member_context_t *context) {
   gtk_container_add(GTK_CONTAINER(scrolled_window), context->view);
 
   gtk_box_pack_start_defaults(GTK_BOX(vbox), scrolled_window);
+#else
+  /* put view into a pannable area */
+  GtkWidget *pannable_area = hildon_pannable_area_new();
+  gtk_container_add(GTK_CONTAINER(pannable_area), context->view);
+  gtk_box_pack_start_defaults(GTK_BOX(vbox), pannable_area);
+#endif
 
   return vbox;
 }

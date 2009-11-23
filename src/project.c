@@ -1546,7 +1546,7 @@ static GtkWidget *wizard_create_intro_page(wizard_page_t *page) {
 }
 
 /* ---------------- page 2: source selection ----------------- */
-static gboolean gtk_widget_get_sensitive(GtkWidget *widget) {
+static gboolean widget_get_sensitive(GtkWidget *widget) {
   GValue is_sensitive= { 0, };
   g_value_init(&is_sensitive, G_TYPE_BOOLEAN);
   g_object_get_property(G_OBJECT(widget), "sensitive", &is_sensitive);
@@ -1585,7 +1585,7 @@ static void wizard_update_source_selection_page(wizard_page_t *page) {
   for(i=0;i<4;i++) {
     if(gtk_toggle_button_get_active(
 	    GTK_TOGGLE_BUTTON(page->state.source_selection.check[i])))
-      sel_ok = gtk_widget_get_sensitive(page->state.source_selection.check[i]);
+      sel_ok = widget_get_sensitive(page->state.source_selection.check[i]);
   }
 
   /* set page to "completed" if a valid entry is selected */

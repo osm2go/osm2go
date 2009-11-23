@@ -56,13 +56,6 @@ typedef struct {
 
 } list_priv_t;
 
-#if defined(USE_HILDON) && (MAEMO_VERSION_MAJOR == 5)
-#define FREMANTLE_PANNABLE_AREA
-#include <hildon/hildon-gtk.h>
-#include <hildon/hildon-pannable-area.h>
-// #define FREMANTLE_USE_POPUP
-#endif
-
 #ifdef FREMANTLE_USE_POPUP
 
 static void cmenu_init(GtkWidget *list) {

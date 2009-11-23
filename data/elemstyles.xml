@@ -15,10 +15,42 @@ Using both area and line attributes for the same key/value pair doesn't work!
 -->
 
 <rules>
+  <!--
+    Karlsruhe schema address interpolation:
+    http://wiki.openstreetmap.org/wiki/Proposed_features/House_numbers/Karlsruhe_Schema
+  -->
+	<rule>
+		<condition k="addr:housenumber"/>
+		<icon src="misc/housenumber.png"/>
+		<scale_min>1</scale_min>
+		<scale_max>5000</scale_max>
+	</rule>
+
+	<rule>
+		<condition k="addr:street"/>
+		<icon src="misc/housenumber.png"/>
+		<scale_min>1</scale_min>
+		<scale_max>5000</scale_max>
+	</rule>
+
+	<rule>
+		<condition k="addr:postcode"/>
+		<icon src="misc/housenumber.png"/>
+		<scale_min>1</scale_min>
+		<scale_max>5000</scale_max>
+	</rule>
+
+	<rule>
+		<condition k="addr:interpolation"/>
+		<line width="1" realwidth="1" dashed="true" dash_length="2" colour="#1c86ee"/>
+		<scale_min>1</scale_min>
+		<scale_max>5000</scale_max>
+	</rule>
+
 <!-- highway tags -->
 	<rule>
 		<condition k="highway" v="motorway"/>
-        <line width="3" realwidth="8" colour="#809bc0"  width_bg="5" colour_bg="#FFFF00"/>
+        <line width="3" realwidth="8" colour="#809bc0" width_bg="5" colour_bg="#FFFF00"/>
         <scale_min>1</scale_min>
         <scale_max>200000000</scale_max>
 	</rule>
@@ -102,7 +134,7 @@ Using both area and line attributes for the same key/value pair doesn't work!
 
 	<rule>
 		<condition k="highway" v="living_street"/>
-		<line width="1" realwidth="3" colour="#c0c0c0"/> 
+		<line width="1" realwidth="3" colour="#c0c0c0" width_bg="1" colour_bg="#00ff00" dashed="true" dash_length="3"/> 
         <scale_min>1</scale_min>
         <scale_max>40000</scale_max>
     </rule>
@@ -136,6 +168,14 @@ Using both area and line attributes for the same key/value pair doesn't work!
 	</rule>
 
 	<rule>
+		<condition k="highway" v="path"/>
+		<line width="1" colour="#00ff00" dashed="true" dash_length="4"/>
+		<scale_min>1</scale_min>
+		<scale_max>12500</scale_max>
+	</rule>
+
+
+	<rule>
 		<condition k="highway" v="pedestrian"/>
 		<line width="3" realwidth="5" colour="#00ff00"/>
         <scale_min>1</scale_min>
@@ -144,7 +184,7 @@ Using both area and line attributes for the same key/value pair doesn't work!
 
     <rule>
         <condition k="highway" v="steps"/>
-        <line width="1" realwidth="1" colour="#00ff00"/>
+        <line width="1" realwidth="1" dashed="true" dash_length="1" colour="#00ff00"/>
         <scale_min>1</scale_min>
         <scale_max>10000</scale_max>
 	</rule>
@@ -336,12 +376,12 @@ Using both area and line attributes for the same key/value pair doesn't work!
         <scale_max>50000</scale_max>
 	</rule>
 
-	<!--rule>
+	<rule>
 		<condition k="waterway" v="riverbank"/>
-        <line width="1" colour="#00005f" width_bg="1" colour_bg="#00001f"/>
-        <scale_min>1</scale_min>
-        <scale_max>50000</scale_max>
-	</rule-->
+		<area colour="#0000cf"/>
+        	<scale_min>1</scale_min>
+        	<scale_max>50000</scale_max>
+	</rule>
 
 	<rule>
 		<condition k="waterway" v="canal"/>
@@ -1119,10 +1159,26 @@ Using both area and line attributes for the same key/value pair doesn't work!
 
 	<rule>
 		<condition k="amenity" v="hospital" />
-        <area colour="#eeeeee" />
+        	<area colour="#eeeeee" />
 		<icon annotate="true" src="health/hospital.png" />
         <scale_min>1</scale_min>
         <scale_max>50000</scale_max>
+	</rule>
+
+	<rule>
+		<condition k="amenity" v="doctors"/>
+		<area colour="health#eeeeee"/>
+		<icon annotate="true" src="health/doctor.png"/>
+		<scale_min>1</scale_min>
+		<scale_max>50000</scale_max>
+	</rule>
+
+	<rule>
+		<condition k="amenity" v="dentist"/>
+		<area colour="health#eeeeee"/>
+		<icon annotate="true" src="health/dentist.png"/>
+		<scale_min>1</scale_min>
+		<scale_max>50000</scale_max>
 	</rule>
 
 	<rule>
@@ -1230,6 +1286,13 @@ Using both area and line attributes for the same key/value pair doesn't work!
 	<rule>
 		<condition k="shop" v="convenience" />
 		<icon annotate="true" src="shopping/supermarket.png" />
+        <scale_min>1</scale_min>
+        <scale_max>50000</scale_max>
+	</rule>
+
+	<rule>
+		<condition k="shop" v="bakery" />
+		<icon annotate="true" src="shopping/groceries/baker.png" />
         <scale_min>1</scale_min>
         <scale_max>50000</scale_max>
 	</rule>
@@ -2279,13 +2342,6 @@ Using both area and line attributes for the same key/value pair doesn't work!
 	</rule>
 
 	<rule>
-		<condition k="shop" v="bakery" />
-		<icon annotate="true" src="misc/proposed.png" />
-        <scale_min>1</scale_min>
-        <scale_max>50000</scale_max>
-	</rule>
-
-	<rule>
 		<condition k="shop" v="chemist" />
 		<icon annotate="true" src="misc/proposed.png" />
         <scale_min>1</scale_min>
@@ -2322,14 +2378,14 @@ Using both area and line attributes for the same key/value pair doesn't work!
 
 	<rule>
 		<condition k="barrier" v="bollard" />
-		<icon annotate="true" src="misc/proposed.png" />
+		<icon annotate="true" src="vehicle/restrictions/bollard.png" />
 		<scale_min>1</scale_min>
-		<scale_max>50000</scale_max>
+		<scale_max>5000</scale_max>
 	</rule>
 	<rule>
 		<condition k="building" v="yes"/>
 		<icon annotate="true" src="misc/proposed.png" />
-		<area colour="#bde3cb"/>
+		<area colour="#cb9999"/>
 		<scale_min>1</scale_min>
 		<scale_max>50000</scale_max>
 	</rule>

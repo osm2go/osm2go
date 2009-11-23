@@ -939,7 +939,12 @@ layer_toggled(GtkCellRendererToggle *cell, const gchar *path_str,
 
 static GtkWidget *wms_layer_widget(appdata_t *appdata, wms_layer_t *layer, 
 				   GtkWidget *dialog) {
+
+#ifndef FREMANTLE_PANNABLE_AREA
   GtkWidget *view = gtk_tree_view_new();
+#else
+  GtkWidget *view = hildon_gtk_tree_view_new(HILDON_UI_MODE_EDIT);
+#endif
 
   /* build the store */
   GtkListStore *store = gtk_list_store_new(LAYER_NUM_COLS, 
@@ -988,6 +993,7 @@ static GtkWidget *wms_layer_widget(appdata_t *appdata, wms_layer_t *layer,
   
   g_object_unref(store);
 
+#ifndef FREMANTLE_PANNABLE_AREA
   /* put it into a scrolled window */
   GtkWidget *scrolled_window = gtk_scrolled_window_new(NULL, NULL);
   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window), 
@@ -995,8 +1001,14 @@ static GtkWidget *wms_layer_widget(appdata_t *appdata, wms_layer_t *layer,
   gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scrolled_window), 
 				      GTK_SHADOW_ETCHED_IN);
   gtk_container_add(GTK_CONTAINER(scrolled_window), view);
-
   return scrolled_window;
+#else
+  /* put view into a pannable area */
+  GtkWidget *pannable_area = hildon_pannable_area_new();
+  gtk_container_add(GTK_CONTAINER(pannable_area), view);
+  gtk_box_pack_start_defaults(GTK_BOX(vbox), pannable_area);
+  return pannable_area;
+#endif
 }
 
 

@@ -2281,17 +2281,24 @@ void map_track_pos(appdata_t *appdata, pos_t *pos) {
     lpos_t lpos;
     pos2lpos(appdata->osm->bounds, pos, &lpos);
 
-    float radius = appdata->map->style->track.width/2.0;
-    gdouble zoom = canvas_get_zoom(appdata->map->canvas);
-    if(zoom < GPS_RADIUS_LIMIT) {
-      radius *= GPS_RADIUS_LIMIT;
-      radius /= zoom;
+    if (appdata->map->style->track.gps_icon) {
+      appdata->track.gps_item = 
+        canvas_image_new(appdata->map->canvas, CANVAS_GROUP_GPS, appdata->map->style->track.gps_icon,
+	  		lpos.x, lpos.y, 1, 1);
     }
+    else {
+      float radius = appdata->map->style->track.width/2.0;
+      gdouble zoom = canvas_get_zoom(appdata->map->canvas);
+      if(zoom < GPS_RADIUS_LIMIT) {
+        radius *= GPS_RADIUS_LIMIT;
+        radius /= zoom;
+      }
 
-    appdata->track.gps_item = 
-      canvas_circle_new(appdata->map->canvas, CANVAS_GROUP_GPS, 
-			lpos.x, lpos.y, radius, 0, 
-			appdata->map->style->track.gps_color, NO_COLOR);
+      appdata->track.gps_item = 
+        canvas_circle_new(appdata->map->canvas, CANVAS_GROUP_GPS, 
+			  lpos.x, lpos.y, radius, 0, 
+			  appdata->map->style->track.gps_color, NO_COLOR);
+    }
   }
 }
 
