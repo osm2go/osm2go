@@ -118,7 +118,7 @@ static GtkWidget *busy_dialog(GtkWidget *parent, GtkWidget **pbar,
 
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), *pbar);
 
-  GtkWidget *button = gtk_button_new_with_label(_("Cancel"));
+  GtkWidget *button = button_new_with_label(_("Cancel"));
   gtk_signal_connect(GTK_OBJECT(button), "clicked",
 		     GTK_SIGNAL_FUNC(on_cancel), (gpointer)cancel_ind);
   gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->action_area), button);

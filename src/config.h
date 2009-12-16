@@ -28,7 +28,6 @@
 #ifdef USE_HILDON
 #include <hildon/hildon-defines.h>
 #if (MAEMO_VERSION_MAJOR < 5)
-#define OSD_DIAMETER  40
 #define OSM_GPS_MAP_KEY_FULLSCREEN  HILDON_HARDKEY_FULLSCREEN
 #else
 #define OSD_DIAMETER  60
@@ -47,16 +46,6 @@
 #define OSM_GPS_MAP_KEY_LEFT        GDK_Left
 #define OSM_GPS_MAP_KEY_RIGHT       GDK_Right
 
-/* specify OSD colors explicitely. Otherwise gtk default */
-/* colors are used. fremantle always uses gtk defaults */
-#if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
-#define OSD_COLOR_BG         1, 1, 1         // white background
-#define OSD_COLOR            0.5, 0.5, 1     // light blue border and controls
-#define OSD_COLOR_DISABLED   0.8, 0.8, 0.8   // light grey disabled controls
-#define OSD_SHADOW_ENABLE
-#endif
-
 #define OSD_DOUBLE_BUFFER    // render osd/map together offscreen
-#define OSD_GPS_BUTTON       // display a GPS button
 
 #endif // CONFIG_H

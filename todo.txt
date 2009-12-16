@@ -1,0 +1,6 @@
+- crash when selecting relations of a relation
+- make style popup a picker on fremantle
+- make preset selection a picker on fremantle
+- fremantlize preset dialog
+- replace all combo boxes by pickers
+- special drag/select overlay for area map

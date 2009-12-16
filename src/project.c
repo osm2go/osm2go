@@ -542,7 +542,7 @@ project_t *project_new(select_context_t *context) {
   gtk_box_pack_start_defaults(GTK_BOX(hbox), gtk_label_new(_("Name:")));
 
   name_callback_context_t name_context = { dialog, context->settings };
-  GtkWidget *entry = gtk_entry_new();
+  GtkWidget *entry = entry_new();
   gtk_box_pack_start_defaults(GTK_BOX(hbox), entry);
   g_signal_connect(G_OBJECT(entry), "changed",
 		   G_CALLBACK(callback_modified_name), &name_context);
@@ -638,21 +638,9 @@ static void on_project_delete(GtkButton *button, gpointer data) {
 
   char *str = g_strdup_printf(_("Do you really want to delete the "
 				"project \"%s\"?"), project->name);
-  GtkWidget *dialog = gtk_message_dialog_new(
-	     GTK_WINDOW(context->dialog),
-	     GTK_DIALOG_DESTROY_WITH_PARENT,
-	     GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO, str);
-  g_free(str);
 
-  gtk_window_set_title(GTK_WINDOW(dialog), _("Delete project?"));
-      
-  /* set the active flag again if the user answered "no" */
-  if(GTK_RESPONSE_NO == gtk_dialog_run(GTK_DIALOG(dialog))) {
-    gtk_widget_destroy(dialog);
+  if(!yes_no_f(context->dialog, NULL, 0, 0, _("Delete project?"), str)) 
     return;
-  }
-
-  gtk_widget_destroy(dialog);
 
   if(!project_delete(context, project)) 
     printf("unable to delete project\n");
@@ -805,7 +793,7 @@ static GtkWidget *project_list_widget(select_context_t *context) {
   list_set_store(context->list, store);
   g_object_unref(store);
 
-  list_set_static_buttons(context->list, LIST_BTN_NEW | LIST_BTN_BIG, 
+  list_set_static_buttons(context->list, LIST_BTN_NEW, 
 	  G_CALLBACK(on_project_new), G_CALLBACK(on_project_edit), 
 	  G_CALLBACK(on_project_delete), context);
 
@@ -1002,21 +990,14 @@ static void on_diff_remove_clicked(GtkButton *button, gpointer data) {
 
   printf("clicked diff remove\n");
 
-  GtkWidget *dialog = gtk_message_dialog_new(
-	     GTK_WINDOW(context->dialog),
-	     GTK_DIALOG_DESTROY_WITH_PARENT,
-	     GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO,
-	       _("Do you really want to discard your changes? This "
-		 "permanently undo all changes you've made so far and which "
-		 "you didn't upload yet."));
-      
-  gtk_window_set_title(GTK_WINDOW(dialog), _("Discard changes?"));
-  
-  if(GTK_RESPONSE_YES == gtk_dialog_run(GTK_DIALOG(dialog))) {
+  if(yes_no_f(context->dialog, NULL, 0, 0, _("Discard changes?"),
+	      _("Do you really want to discard your changes? This "
+		"permanently undo all changes you've made so far and which "
+		"you didn't upload yet."))) {
     appdata_t *appdata = context->area_edit.appdata;
-
+    
     diff_remove(context->project);
-
+    
     /* if this is the currently open project, we need to undo */
     /* the map changes as well */
  
@@ -1036,8 +1017,6 @@ static void on_diff_remove_clicked(GtkButton *button, gpointer data) {
     project_diffstat(context);
     gtk_widget_set_sensitive(context->diff_remove,  FALSE);
   }
-  
-  gtk_widget_destroy(dialog);
 }
 
 gboolean project_check_demo(GtkWidget *parent, project_t *project) {
@@ -1106,11 +1085,11 @@ project_edit(appdata_t *appdata, GtkWidget *parent, settings_t *settings,
 
   label = gtk_label_left_new(_("Description:"));
   gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 0, 1);
-  context->desc = gtk_entry_new();
+  context->desc = entry_new();
   gtk_entry_set_activates_default(GTK_ENTRY(context->desc), TRUE);
   if(project->desc) 
     gtk_entry_set_text(GTK_ENTRY(context->desc), project->desc);
-  gtk_table_attach_defaults(GTK_TABLE(table),  context->desc, 1, 4, 0, 1);
+  gtk_table_attach_defaults(GTK_TABLE(table),  context->desc, 1, 5, 0, 1);
   gtk_table_set_row_spacing(GTK_TABLE(table), 0, 4);
 
   label = gtk_label_left_new(_("Latitude:"));
@@ -1131,7 +1110,7 @@ project_edit(appdata_t *appdata, GtkWidget *parent, settings_t *settings,
   context->maxlon = pos_lon_label_new(project->max.lon);
   gtk_table_attach_defaults(GTK_TABLE(table), context->maxlon, 3, 4, 2, 3);
 
-  GtkWidget *edit = gtk_button_new_with_label(_("Edit"));
+  GtkWidget *edit = button_new_with_label(_("Edit"));
   gtk_signal_connect(GTK_OBJECT(edit), "clicked",
   		     (GtkSignalFunc)on_edit_clicked, context);
   gtk_table_attach(GTK_TABLE(table), edit, 4, 5, 1, 3, 
@@ -1142,7 +1121,7 @@ project_edit(appdata_t *appdata, GtkWidget *parent, settings_t *settings,
 #ifdef SERVER_EDITABLE
   label = gtk_label_left_new(_("Server:"));
   gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 3, 4);
-  context->server = gtk_entry_new();
+  context->server = entry_new();
   gtk_entry_set_activates_default(GTK_ENTRY(context->server), TRUE);
   HILDON_ENTRY_NO_AUTOCAP(context->server);
   gtk_entry_set_text(GTK_ENTRY(context->server), project->server);
@@ -1156,7 +1135,7 @@ project_edit(appdata_t *appdata, GtkWidget *parent, settings_t *settings,
   context->fsize = gtk_label_left_new(_(""));
   project_filesize(context);
   gtk_table_attach_defaults(GTK_TABLE(table), context->fsize, 1, 4, 4, 5);
-  context->download = gtk_button_new_with_label(_("Download"));
+  context->download = button_new_with_label(_("Download"));
   gtk_signal_connect(GTK_OBJECT(context->download), "clicked",
 		     (GtkSignalFunc)on_download_clicked, context);
   gtk_widget_set_sensitive(context->download, project_pos_is_valid(project));
@@ -1170,7 +1149,7 @@ project_edit(appdata_t *appdata, GtkWidget *parent, settings_t *settings,
   context->diff_stat = gtk_label_left_new(_(""));
   project_diffstat(context);
   gtk_table_attach_defaults(GTK_TABLE(table), context->diff_stat, 1, 4, 5, 6);
-  context->diff_remove = gtk_button_new_with_label(_("Undo all"));
+  context->diff_remove = button_new_with_label(_("Undo all"));
   if(!diff_present(project) && !project_active_n_dirty(context))
     gtk_widget_set_sensitive(context->diff_remove,  FALSE);
   gtk_signal_connect(GTK_OBJECT(context->diff_remove), "clicked",

@@ -36,8 +36,12 @@
 #if (MAEMO_VERSION_MAJOR >= 5)
 #define FREMANTLE
 #define FREMANTLE_PANNABLE_AREA
+#define USE_PANNABLE_AREA
 #include <hildon/hildon-gtk.h>
 #include <hildon/hildon-pannable-area.h>
+#include <hildon/hildon-entry.h>
+#include <hildon/hildon-note.h>
+#include <hildon/hildon-check-button.h>
 #endif
 
 #include <hildon/hildon-program.h>
@@ -61,6 +65,14 @@
 
 #include <libgnomevfs/gnome-vfs.h>
 #include <libgnomevfs/gnome-vfs-inet-connection.h>
+
+#ifdef ENABLE_BROWSER_INTERFACE
+#ifndef USE_HILDON
+#include <libgnome/gnome-url.h>
+#else
+#include <tablet-browser-interface.h>
+#endif
+#endif
 
 #include "pos.h"
 #include "osm.h"
@@ -183,6 +195,7 @@ typedef struct appdata_s {
 #include "banner.h"
 #include "list.h"
 #include "scale_popup.h"
+#include "about.h"
 
 void main_ui_enable(appdata_t *appdata);
 

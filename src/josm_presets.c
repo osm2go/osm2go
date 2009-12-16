@@ -27,11 +27,6 @@
 #endif
 
 #ifdef ENABLE_BROWSER_INTERFACE
-#ifndef USE_HILDON
-#include <libgnome/gnome-url.h>
-#else
-#include <tablet-browser-interface.h>
-#endif
 
 typedef struct {
   appdata_t *appdata;
@@ -561,9 +556,8 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
 	  else       def = widget->check_w.def;
 
 	  gtk_widgets[widget_cnt] = 
-	    gtk_check_button_new_with_label(widget->text);
-	  gtk_toggle_button_set_active(
-	    GTK_TOGGLE_BUTTON(gtk_widgets[widget_cnt]), def);
+	    check_button_new_with_label(widget->text);
+	  check_button_set_active(gtk_widgets[widget_cnt], def);
 	  attach_right(table, gtk_widgets[widget_cnt], widget_cnt-widget_skip);
       } break;
       
@@ -571,7 +565,7 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
       attach_text(table, widget->text, widget_cnt-widget_skip);
       
       if(!preset && widget->text_w.def) preset = widget->text_w.def;
-      gtk_widgets[widget_cnt] = gtk_entry_new();
+      gtk_widgets[widget_cnt] = entry_new();
       if(preset)
 	gtk_entry_set_text(GTK_ENTRY(gtk_widgets[widget_cnt]), preset);
 
@@ -591,12 +585,19 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
     gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), table);
     gtk_window_set_default_size(GTK_WINDOW(dialog), 300, 50);
 #else
+#ifndef FREMANTLE_PANNABLE_AREA
     /* put it into a scrolled window */
     GtkWidget *scroll_win = gtk_scrolled_window_new(NULL, NULL);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll_win), 
 				   GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
     gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(scroll_win), 
     					  table);
+#else
+    gtk_window_set_default_size(GTK_WINDOW(dialog), -1, 500);
+    /* put view into a pannable area */
+    GtkWidget *scroll_win = hildon_pannable_area_new();
+    hildon_pannable_area_add_with_viewport(HILDON_PANNABLE_AREA(scroll_win), table);
+#endif
 
     gboolean first = TRUE;
     gtk_signal_connect(GTK_OBJECT(table), "expose_event",
@@ -648,8 +649,7 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
 		 GTK_TYPE_CHECK_BUTTON);
 
 	ctag = store_value(widget, ctag,
-                 gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(
-			   gtk_widgets[widget_cnt]))?"yes":
+                 check_button_get_active(gtk_widgets[widget_cnt])?"yes":
 		    (widget->del_if_empty?NULL:"no"));
 	break;
 
@@ -811,7 +811,7 @@ GtkWidget *josm_build_presets_button(appdata_t *appdata,
   context->appdata = appdata;
   context->tag_context = tag_context;
 
-  GtkWidget *but = gtk_button_new_with_label(_("Presets"));
+  GtkWidget *but = button_new_with_label(_("Presets"));
   gtk_widget_set_events(but, GDK_EXPOSURE_MASK);
   gtk_widget_add_events(but, GDK_BUTTON_PRESS_MASK);
   gtk_signal_connect(GTK_OBJECT(but), "button-press-event",

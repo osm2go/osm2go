@@ -66,4 +66,20 @@ GtkWidget *misc_scrolled_window_new(gboolean etched_in);
 void misc_scrolled_window_add_with_viewport(GtkWidget *win, GtkWidget *child);
 const char *misc_get_proxy_uri(settings_t *settings);
 void misc_table_attach(GtkWidget *table, GtkWidget *widget, int x, int y);
+
+/* unified widgets */
+GtkWidget *entry_new(void);
+
+GtkWidget *button_new(void);
+GtkWidget *button_new_with_label(char *label);
+
+GtkWidget *check_button_new_with_label(char *label);
+void check_button_set_active(GtkWidget *button, gboolean active);
+gboolean check_button_get_active(GtkWidget *button);
+
+GtkWidget *notebook_new(void);
+void notebook_append_page(GtkWidget *notebook, 
+			  GtkWidget *page, char *label);
+GtkWidget *notebook_get_gtk_notebook(GtkWidget *notebook);
+
 #endif // MISC_H

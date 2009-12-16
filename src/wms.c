@@ -648,7 +648,7 @@ gboolean wms_server_edit(wms_server_context_t *context, gboolean edit_name,
 		   GTK_FILL, 0, 0, 0);
   gtk_misc_set_alignment(GTK_MISC(label), 0.f, 0.5f);
   gtk_table_attach_defaults(GTK_TABLE(table), 
-		    name = gtk_entry_new(), 1, 2, 0, 1);
+		    name = entry_new(), 1, 2, 0, 1);
   gtk_entry_set_activates_default(GTK_ENTRY(name), TRUE);
   HILDON_ENTRY_NO_AUTOCAP(name);
   gtk_widget_set_sensitive(GTK_WIDGET(name), edit_name);
@@ -660,7 +660,7 @@ gboolean wms_server_edit(wms_server_context_t *context, gboolean edit_name,
 		   GTK_FILL, 0, 0, 0);
   gtk_misc_set_alignment(GTK_MISC(label), 0.f, 0.5f);
   gtk_table_attach_defaults(GTK_TABLE(table), 
-		    server = gtk_entry_new(), 1, 2, 1, 2);
+		    server = entry_new(), 1, 2, 1, 2);
   gtk_entry_set_activates_default(GTK_ENTRY(server), TRUE);
   HILDON_ENTRY_NO_AUTOCAP(server);
 
@@ -669,7 +669,7 @@ gboolean wms_server_edit(wms_server_context_t *context, gboolean edit_name,
 		   GTK_FILL, 0, 0, 0);
   gtk_misc_set_alignment(GTK_MISC(label), 0.f, 0.5f);
   gtk_table_attach_defaults(GTK_TABLE(table), 
-		    path = gtk_entry_new(), 1, 2, 2, 3);
+		    path = entry_new(), 1, 2, 2, 3);
   gtk_entry_set_activates_default(GTK_ENTRY(path), TRUE);
   HILDON_ENTRY_NO_AUTOCAP(path);
 
@@ -805,7 +805,7 @@ static GtkWidget *wms_server_widget(wms_server_context_t *context) {
   
   g_object_unref(context->store);
 
-  list_set_static_buttons(context->list, LIST_BTN_BIG, 
+  list_set_static_buttons(context->list, 0, 
 	  G_CALLBACK(on_server_add), G_CALLBACK(on_server_edit), 
 	  G_CALLBACK(on_server_remove), context);
 
@@ -1006,7 +1006,6 @@ static GtkWidget *wms_layer_widget(appdata_t *appdata, wms_layer_t *layer,
   /* put view into a pannable area */
   GtkWidget *pannable_area = hildon_pannable_area_new();
   gtk_container_add(GTK_CONTAINER(pannable_area), view);
-  gtk_box_pack_start_defaults(GTK_BOX(vbox), pannable_area);
   return pannable_area;
 #endif
 }

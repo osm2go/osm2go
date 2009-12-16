@@ -151,7 +151,7 @@ static gboolean tag_edit(tag_context_t *context) {
 		   0, 1, 0, 1, 0, 0, 0, 0);
   gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
   gtk_table_attach_defaults(GTK_TABLE(table), 
-			    key = gtk_entry_new(), 1, 2, 0, 1);
+			    key = entry_new(), 1, 2, 0, 1);
   gtk_entry_set_activates_default(GTK_ENTRY(key), TRUE);
   HILDON_ENTRY_NO_AUTOCAP(key);
 
@@ -159,7 +159,7 @@ static gboolean tag_edit(tag_context_t *context) {
 		   0, 1, 1, 2, 0, 0, 0, 0);
   gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
   gtk_table_attach_defaults(GTK_TABLE(table), 
-		    value = gtk_entry_new(), 1, 2, 1, 2);
+		    value = entry_new(), 1, 2, 1, 2);
   gtk_entry_set_activates_default(GTK_ENTRY(value), TRUE);
   HILDON_ENTRY_NO_AUTOCAP(value);
 
@@ -277,7 +277,7 @@ static void on_relations(GtkWidget *button, tag_context_t *context) {
 }
 
 static GtkWidget *tag_widget(tag_context_t *context) {
-  context->list = list_new(LIST_HILDON_WITH_HEADERS_ON_MAEMO5);
+  context->list = list_new(LIST_HILDON_WITHOUT_HEADERS);
 
   list_set_static_buttons(context->list, 0, G_CALLBACK(on_tag_add), 
 	  G_CALLBACK(on_tag_edit), G_CALLBACK(on_tag_remove), context);
@@ -341,8 +341,12 @@ static void on_relation_members(GtkWidget *but, tag_context_t *context) {
   relation_show_members(context->dialog, context->object.relation);
 }
 
-static GtkWidget *details_widget(tag_context_t *context) {
-  GtkWidget *table = gtk_table_new(2, 2, FALSE);  // x, y
+static void table_attach(GtkWidget *table, GtkWidget *child, int x, int y) {
+  gtk_table_attach_defaults(GTK_TABLE(table), child, x, x+1, y, y+1);
+}
+
+static GtkWidget *details_widget(tag_context_t *context, gboolean big) {
+  GtkWidget *table = gtk_table_new(big?4:2, 2, FALSE);  // y, x
 
   user_t *user = OBJECT_USER(context->object);
   time_t stime = OBJECT_TIME(context->object);
@@ -350,18 +354,21 @@ static GtkWidget *details_widget(tag_context_t *context) {
 
   /* ------------ user ----------------- */
   if(user) {
+    if(big) table_attach(table, gtk_label_new(_("User:")), 0, 0);
+
     label = gtk_label_new(user->name);
     gtk_label_set_ellipsize(GTK_LABEL(label), PANGO_ELLIPSIZE_END);
-    gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 0, 1);
+    table_attach(table, label, big?1:0, 0);
   }
 
   /* ------------ time ----------------- */
 
+  if(big) table_attach(table, gtk_label_new(_("Date/Time:")), 0, 1);
   struct tm *loctime = localtime(&stime);
   char time_str[32];
   strftime(time_str, sizeof(time_str), "%x %X", loctime);
   label = gtk_label_new(time_str);
-  gtk_table_attach_defaults(GTK_TABLE(table),  label, 1, 2, 0, 1);
+  table_attach(table, label, 1, big?1:0);
 
   /* ------------ coordinate (only for nodes) ----------------- */
   switch(context->object.type) {
@@ -369,17 +376,21 @@ static GtkWidget *details_widget(tag_context_t *context) {
     char pos_str[32];
     pos_lat_str(pos_str, sizeof(pos_str), context->object.node->pos.lat);
     label = gtk_label_new(pos_str);
-    gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 1, 2);
+    if(big) table_attach(table, gtk_label_new(_("Latitude:")), 0, 2);
+    table_attach(table, label, big?1:0, big?2:1);
     pos_lat_str(pos_str, sizeof(pos_str), context->object.node->pos.lon);
     label = gtk_label_new(pos_str);
-    gtk_table_attach_defaults(GTK_TABLE(table),  label, 1, 2, 1, 2);
+    if(big) table_attach(table, gtk_label_new(_("Longitude:")), 0, 3);
+    table_attach(table, label, 1, big?3:1);
   } break;
 
   case WAY: {
-    char *nodes_str = g_strdup_printf(_("Length: %u nodes"), 
+    char *nodes_str = g_strdup_printf(_("%s%u nodes"), 
+	      big?"":_("Length: "),
 	      osm_way_number_of_nodes(context->object.way));
     label = gtk_label_new(nodes_str);
-    gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 1, 2);
+    if(big) table_attach(table, gtk_label_new(_("Length:")), 0, 2);
+    table_attach(table, label, big?1:0, big?2:1);
     g_free(nodes_str);
     
     char *type_str = g_strdup_printf("%s (%s)",
@@ -390,7 +401,8 @@ static GtkWidget *details_widget(tag_context_t *context) {
 			       "area":"line");
  
     label = gtk_label_new(type_str);      
-    gtk_table_attach_defaults(GTK_TABLE(table),  label, 1, 2, 1, 2);
+    if(big) table_attach(table, gtk_label_new(_("Type:")), 0, 3);
+    table_attach(table, label, 1, big?3:1);
     g_free(type_str);
   } break;
 
@@ -424,10 +436,12 @@ static GtkWidget *details_widget(tag_context_t *context) {
       g_strdup_printf(_("Members: %d nodes, %d ways, %d relations"),
 		      nodes, ways, relations);
 
-    GtkWidget *member_btn = gtk_button_new_with_label(str);
+    GtkWidget *member_btn = button_new_with_label(str);
     gtk_signal_connect(GTK_OBJECT(member_btn), "clicked", 
 		       GTK_SIGNAL_FUNC(on_relation_members), context);
-    gtk_table_attach_defaults(GTK_TABLE(table), member_btn, 0, 2, 1, 2);
+
+    gtk_table_attach_defaults(GTK_TABLE(table), member_btn, 0, 2, 
+			      big?2:1, big?4:2);
 
     g_free(str);
     break;
@@ -455,7 +469,7 @@ static void info_more(tag_context_t *context) {
 				  GTK_RESPONSE_CANCEL);
 
   gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), 
-		     details_widget(context),
+		     details_widget(context, TRUE),
 		     FALSE, FALSE, 0);
   gtk_widget_show_all(dialog);
   gtk_dialog_run(GTK_DIALOG(dialog));
@@ -538,7 +552,7 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
 #ifndef FREMANTLE
   /* -------- details box --------- */
   gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context->dialog)->vbox), 
-		     details_widget(context),
+		     details_widget(context, FALSE),
 		     FALSE, FALSE, 0);
 #endif
 

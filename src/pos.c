@@ -86,7 +86,7 @@ static void callback_modified_lat(GtkWidget *widget, gpointer data ) {
 /* a entry that is colored red when being "active" */
 GtkWidget *pos_lat_entry_new(pos_float_t lat) {
   GdkColor color;
-  GtkWidget *widget = gtk_entry_new();
+  GtkWidget *widget = entry_new();
   gdk_color_parse("red", &color);
   gtk_widget_modify_text(widget, TAG_STATE, &color);
 
@@ -108,7 +108,7 @@ static void callback_modified_lon(GtkWidget *widget, gpointer data ) {
 /* a entry that is colored red when filled with invalid coordinate */
 GtkWidget *pos_lon_entry_new(pos_float_t lon) {
   GdkColor color;
-  GtkWidget *widget = gtk_entry_new();
+  GtkWidget *widget = entry_new();
   gdk_color_parse("#ff0000", &color);
   gtk_widget_modify_text(widget, TAG_STATE, &color);
 

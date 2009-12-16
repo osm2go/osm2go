@@ -21,7 +21,7 @@
 
 #ifdef ENABLE_OSM_GPS_MAP
 #include "osm-gps-map.h"
-#include "osm-gps-map-osd-classic.h"
+#include "osm-gps-map-osd-select.h"
 #endif
 
 #define TAB_LABEL_MAP    "Map"
@@ -41,7 +41,6 @@ typedef struct {
   GtkWidget *dialog, *notebook;
   area_edit_t *area;
   pos_t min, max;      /* local copy to work on */
-  GtkWidget *minlat, *maxlat, *minlon, *maxlon;
   GtkWidget *warning;
 
   struct {
@@ -84,16 +83,18 @@ static void parse_and_set_lon(GtkWidget *src, pos_float_t *store) {
 }
 
 static gboolean current_tab_is(context_t *context, gint page_num, char *str) {
+  GtkWidget *nb = notebook_get_gtk_notebook(context->notebook);
+
   if(page_num < 0)
     page_num = 
-      gtk_notebook_get_current_page(GTK_NOTEBOOK(context->notebook));
+      gtk_notebook_get_current_page(GTK_NOTEBOOK(nb));
 
   if(page_num < 0) return FALSE;
 
   GtkWidget *w = 
-    gtk_notebook_get_nth_page(GTK_NOTEBOOK(context->notebook), page_num);
+    gtk_notebook_get_nth_page(GTK_NOTEBOOK(nb), page_num);
   const char *name = 
-    gtk_notebook_get_tab_label_text(GTK_NOTEBOOK(context->notebook), w);
+    gtk_notebook_get_tab_label_text(GTK_NOTEBOOK(nb), w);
   
   return(strcasecmp(name, _(str)) == 0);
 }
@@ -151,11 +152,6 @@ static gboolean area_warning(context_t *context) {
 }
 
 static void area_main_update(context_t *context) {
-  pos_lat_label_set(context->minlat, context->min.lat);
-  pos_lat_label_set(context->maxlat, context->max.lat);
-  pos_lon_label_set(context->minlon, context->min.lon);
-  pos_lon_label_set(context->maxlon, context->max.lon);
-
   /* also setup the local error messages here, so they are */
   /* updated for all entries at once */
   if(isnan(context->min.lat) || isnan(context->min.lon) ||
@@ -528,26 +524,6 @@ on_map_button_release_event(GtkWidget *widget,
   return TRUE;
 }
 
-static void
-cb_map_gps(osd_button_t but, context_t *context) {
-  if(but == OSD_GPS) {
-    pos_t pos;
-  
-    /* user clicked "gps" button -> jump to position */
-    gboolean gps_on = 
-      context->area->appdata->settings && 
-      context->area->appdata->settings->enable_gps;
-    
-    if(gps_on && gps_get_pos(context->area->appdata, &pos, NULL)) {
-      osm_gps_map_set_center(OSM_GPS_MAP(context->map.widget),
-			     pos.lat, pos.lon);	    
-
-      /* re-enable centering */
-      g_object_set(context->map.widget, "auto-center", TRUE, NULL);
-    }
-  }
-}
-
 static void on_page_switch(GtkNotebook *notebook, GtkNotebookPage *page,
 			   guint page_num, context_t *context) {
 
@@ -569,10 +545,6 @@ static gboolean map_gps_update(gpointer data) {
   pos_t pos = { NAN, NAN }; 
   gboolean gps_fix = gps_on && 
     gps_get_pos(context->area->appdata, &pos, NULL);
-
-  /* ... and enable "goto" button if it's valid */
-  osm_gps_map_osd_enable_gps(OSM_GPS_MAP(context->map.widget), 
-     OSM_GPS_MAP_OSD_CALLBACK(gps_fix?cb_map_gps:NULL), context);
 
   if(gps_fix) {
     g_object_set(context->map.widget, "gps-track-highlight-radius", 0, NULL);
@@ -606,38 +578,17 @@ gboolean area_edit(area_edit_t *area) {
           GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
           NULL);
 
-  GtkWidget *table = gtk_table_new(5, 2, FALSE);  // x, y
+  context.warning = 
+    gtk_dialog_add_button(GTK_DIALOG(context.dialog), _("Warning"), 
+			  GTK_RESPONSE_HELP);
 
-  GtkWidget *label = gtk_label_new(_("Latitude:"));
-  misc_table_attach(table, label, 0, 0);
-  context.minlat = pos_lat_label_new(area->min->lat);
-  misc_table_attach(table, context.minlat, 1, 0);
-  label = gtk_label_new(_("to"));
-  misc_table_attach(table, label, 2, 0);
-  context.maxlat = pos_lat_label_new(area->max->lat);
-  misc_table_attach(table, context.maxlat, 3, 0);
-
-  label = gtk_label_new(_("Longitude:"));
-  misc_table_attach(table, label, 0, 1);
-  context.minlon = pos_lon_label_new(area->min->lon);
-  misc_table_attach(table, context.minlon, 1, 1);
-  label = gtk_label_new(_("to"));
-  misc_table_attach(table, label, 2, 1);
-  context.maxlon = pos_lon_label_new(area->max->lon);
-  misc_table_attach(table, context.maxlon, 3, 1);
-
-  context.warning = gtk_button_new();
   gtk_button_set_image(GTK_BUTTON(context.warning), 
 		       gtk_image_new_from_stock(GTK_STOCK_DIALOG_WARNING, 
 						GTK_ICON_SIZE_BUTTON));
   g_signal_connect(context.warning, "clicked", 
   		   G_CALLBACK(on_area_warning_clicked), &context);
-  gtk_table_attach_defaults(GTK_TABLE(table), context.warning, 4, 5, 0, 2);
 
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context.dialog)->vbox),
-			      table, FALSE, FALSE, 0);
-
-  context.notebook = gtk_notebook_new();
+  context.notebook = notebook_new();
 
 #ifdef ENABLE_OSM_GPS_MAP
   /* ------------- fetch from map ------------------------ */
@@ -650,7 +601,7 @@ gboolean area_edit(area_edit_t *area) {
 	        "tile-cache", NULL,
 		 NULL);
 
-  osm_gps_map_osd_classic_init(OSM_GPS_MAP(context.map.widget)); 
+  osm_gps_map_osd_select_init(OSM_GPS_MAP(context.map.widget)); 
 
   g_signal_connect(G_OBJECT(context.map.widget), "configure-event",
 		   G_CALLBACK(on_map_configure), &context);
@@ -665,20 +616,20 @@ gboolean area_edit(area_edit_t *area) {
   context.map.handler_id = gtk_timeout_add(1000, map_gps_update, &context);
   context.map.start.rlon = context.map.start.rlat = NAN;
 
-  gtk_notebook_append_page(GTK_NOTEBOOK(context.notebook),
-		   context.map.widget, gtk_label_new(_(TAB_LABEL_MAP)));
+  notebook_append_page(context.notebook, context.map.widget, _(TAB_LABEL_MAP));
 #endif
 
   /* ------------ direct min/max edit --------------- */
 
   vbox = gtk_vbox_new(FALSE, 10);
-  table = gtk_table_new(3, 4, FALSE);  // x, y
+
+  GtkWidget *table = gtk_table_new(3, 4, FALSE);  // x, y
   gtk_table_set_col_spacings(GTK_TABLE(table), 10);
   gtk_table_set_row_spacings(GTK_TABLE(table), 5);
 
   context.direct.minlat = pos_lat_entry_new(0.0);
   misc_table_attach(table, context.direct.minlat, 0, 0);
-  label = gtk_label_new(_("to"));
+  GtkWidget *label = gtk_label_new(_("to"));
   misc_table_attach(table,  label, 1, 0);
   context.direct.maxlat = pos_lat_entry_new(0.0);
   misc_table_attach(table, context.direct.maxlat, 2, 0);
@@ -713,8 +664,7 @@ gboolean area_edit(area_edit_t *area) {
   gtk_table_attach_defaults(GTK_TABLE(table), context.direct.error, 0, 3, 3, 4);
 
   gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
-  gtk_notebook_append_page(GTK_NOTEBOOK(context.notebook),
-	   vbox, gtk_label_new(_(TAB_LABEL_DIRECT)));
+  notebook_append_page(context.notebook, vbox, _(TAB_LABEL_DIRECT));
 
   /* ------------- center/extent edit ------------------------ */
 
@@ -736,13 +686,13 @@ gboolean area_edit(area_edit_t *area) {
   label = gtk_label_new(_("Width:"));
   gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
   gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 1, 2);
-  context.extent.width = gtk_entry_new();
+  context.extent.width = entry_new();
   gtk_table_attach_defaults(GTK_TABLE(table), context.extent.width, 1, 2, 1, 2);
 
   label = gtk_label_new(_("Height:"));
   gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
   gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 2, 3);
-  context.extent.height = gtk_entry_new();
+  context.extent.height = entry_new();
   gtk_table_attach_defaults(GTK_TABLE(table), 
 			    context.extent.height, 1, 2, 2, 3);
 
@@ -779,8 +729,7 @@ gboolean area_edit(area_edit_t *area) {
   gtk_table_attach_defaults(GTK_TABLE(table), context.extent.error, 0, 3, 4, 5);
   
   gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
-  gtk_notebook_append_page(GTK_NOTEBOOK(context.notebook),
-		   vbox, gtk_label_new(_(TAB_LABEL_EXTENT)));
+  notebook_append_page(context.notebook, vbox, _(TAB_LABEL_EXTENT));
 
 #ifdef HAS_MAEMO_MAPPER
   /* ------------- fetch from maemo mapper ------------------------ */
@@ -798,8 +747,7 @@ gboolean area_edit(area_edit_t *area) {
   gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
 
 
-  gtk_notebook_append_page(GTK_NOTEBOOK(context.notebook),
-		   vbox, gtk_label_new(_(TAB_LABEL_MM)));
+  notebook_append_page(context.notebook, vbox, gtk_label_new(_(TAB_LABEL_MM)));
 #endif
 
   /* ------------------------------------------------------ */
@@ -818,12 +766,14 @@ gboolean area_edit(area_edit_t *area) {
 
   gboolean leave = FALSE, ok = FALSE;
   do {
-    if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(context.dialog))) {
+    int response = gtk_dialog_run(GTK_DIALOG(context.dialog));
+
+    if(GTK_RESPONSE_ACCEPT == response) {
       if(area_warning(&context)) {
 	leave = TRUE;
 	ok = TRUE;
       }
-    } else 
+    } else if(response != GTK_RESPONSE_HELP)
       leave = TRUE;
   } while(!leave);
 

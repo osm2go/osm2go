@@ -107,7 +107,10 @@ void list_set_user_buttons(GtkWidget *list, ...) {
   va_list ap;
 
   /* make space for user buttons */
-  gtk_table_resize(GTK_TABLE(priv->table), 2, 3);
+  if(!(priv->button.flags & LIST_BTN_WIDE))
+    gtk_table_resize(GTK_TABLE(priv->table), 2, 3);
+  else
+    gtk_table_resize(GTK_TABLE(priv->table), 1, 5);
 
   va_start(ap, list);
   list_button_t id = va_arg(ap, list_button_t);
@@ -115,14 +118,14 @@ void list_set_user_buttons(GtkWidget *list, ...) {
     char *label = va_arg(ap, char*);
     GCallback cb = va_arg(ap, GCallback);
 
-    priv->button.widget[id] = gtk_button_new_with_label(label);
-#ifdef FREMANTLE_PANNABLE_AREA
-    if(priv->button.flags & LIST_BTN_BIG)
-      hildon_gtk_widget_set_theme_size(priv->button.widget[id], 
-	       (HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH));
-#endif
-    gtk_table_attach_defaults(GTK_TABLE(priv->table), priv->button.widget[id], 
-	      id-LIST_BUTTON_USER0, id-LIST_BUTTON_USER0+1, 1, 2);
+    priv->button.widget[id] = button_new_with_label(label);
+    if(!(priv->button.flags & LIST_BTN_WIDE))
+      gtk_table_attach_defaults(GTK_TABLE(priv->table), priv->button.widget[id], 
+		id-LIST_BUTTON_USER0, id-LIST_BUTTON_USER0+1, 1, 2);
+    else
+      gtk_table_attach_defaults(GTK_TABLE(priv->table), priv->button.widget[id], 
+		3+id-LIST_BUTTON_USER0, 3+id-LIST_BUTTON_USER0+1, 0, 1);
+
     gtk_signal_connect(GTK_OBJECT(priv->button.widget[id]), "clicked", 
 		       GTK_SIGNAL_FUNC(cb), priv->button.data);
 
@@ -211,8 +214,13 @@ void list_set_custom_user_button(GtkWidget *list, list_button_t id,
   /* make space for user buttons */
   gtk_table_resize(GTK_TABLE(priv->table), 2, 3);
   
-  gtk_table_attach_defaults(GTK_TABLE(priv->table), widget,
-		    id-LIST_BUTTON_USER0, id-LIST_BUTTON_USER0+1, 1, 2);
+  if(!(priv->button.flags & LIST_BTN_WIDE))
+    gtk_table_attach_defaults(GTK_TABLE(priv->table), widget,
+	      id-LIST_BUTTON_USER0, id-LIST_BUTTON_USER0+1, 1, 2);
+  else
+    gtk_table_attach_defaults(GTK_TABLE(priv->table), widget,
+	      3+id-LIST_BUTTON_USER0, 3+id-LIST_BUTTON_USER0+1, 0, 1);
+
   priv->button.widget[id] = widget;
 }
 
@@ -318,12 +326,7 @@ void list_set_static_buttons(GtkWidget *list, int flags,
   /* add the three default buttons, but keep the disabled for now */
   if(cb_new) {
     priv->button.widget[0] = 
-      gtk_button_new_with_label(_((flags&LIST_BTN_NEW)?"New":"Add"));
-#ifdef FREMANTLE_PANNABLE_AREA
-    if(flags & LIST_BTN_BIG)
-      hildon_gtk_widget_set_theme_size(priv->button.widget[0], 
-	       (HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH));
-#endif
+      button_new_with_label(_((flags&LIST_BTN_NEW)?"New":"Add"));
     gtk_table_attach_defaults(GTK_TABLE(priv->table), 
 			      priv->button.widget[0], 0, 1, 0, 1);
     gtk_signal_connect(GTK_OBJECT(priv->button.widget[0]), "clicked", 
@@ -336,12 +339,7 @@ void list_set_static_buttons(GtkWidget *list, int flags,
     priv->button.widget[1] = cmenu_append(list, _("Edit"), 
 			  GTK_SIGNAL_FUNC(cb_edit), data);
 #else
-    priv->button.widget[1] = gtk_button_new_with_label(_("Edit"));
-#ifdef FREMANTLE_PANNABLE_AREA
-    if(flags & LIST_BTN_BIG)
-      hildon_gtk_widget_set_theme_size(priv->button.widget[1], 
-	       (HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH));
-#endif
+    priv->button.widget[1] = button_new_with_label(_("Edit"));
     gtk_table_attach_defaults(GTK_TABLE(priv->table), 
 			      priv->button.widget[1], 1, 2, 0, 1);
     gtk_signal_connect(GTK_OBJECT(priv->button.widget[1]), "clicked", 
@@ -355,12 +353,7 @@ void list_set_static_buttons(GtkWidget *list, int flags,
     priv->button.widget[2] = cmenu_append(list, _("Remove"), 
 			  GTK_SIGNAL_FUNC(cb_remove), data);
 #else
-    priv->button.widget[2] = gtk_button_new_with_label(_("Remove"));
-#ifdef FREMANTLE_PANNABLE_AREA
-    if(flags & LIST_BTN_BIG)
-      hildon_gtk_widget_set_theme_size(priv->button.widget[2], 
-	       (HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH));
-#endif
+    priv->button.widget[2] = button_new_with_label(_("Remove"));
     gtk_table_attach_defaults(GTK_TABLE(priv->table), 
 			      priv->button.widget[2], 2, 3, 0, 1);
     gtk_signal_connect(GTK_OBJECT(priv->button.widget[2]), "clicked", 

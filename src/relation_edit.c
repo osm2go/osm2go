@@ -113,7 +113,7 @@ static gboolean relation_add_item(GtkWidget *parent,
       chain = next;
     }
   } else
-    entry = gtk_entry_new();
+    entry = entry_new();
 
   gtk_box_pack_start_defaults(GTK_BOX(hbox), entry);
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox);
@@ -446,7 +446,7 @@ static GtkWidget *relation_item_list_widget(relitem_context_t *context) {
   
   g_object_unref(context->store);
 
-  list_set_static_buttons(context->list, LIST_BTN_BIG, 
+  list_set_static_buttons(context->list, 0, 
     G_CALLBACK(on_relation_item_add), G_CALLBACK(on_relation_item_edit),
     G_CALLBACK(on_relation_item_remove), context);
 
@@ -932,7 +932,7 @@ static GtkWidget *relation_list_widget(relation_context_t *context) {
   
   g_object_unref(context->store);
 
-  list_set_static_buttons(context->list, LIST_BTN_NEW, 
+  list_set_static_buttons(context->list, LIST_BTN_NEW | LIST_BTN_WIDE, 
 	  G_CALLBACK(on_relation_add), G_CALLBACK(on_relation_edit), 
 	  G_CALLBACK(on_relation_remove), context);
 

@@ -25,7 +25,7 @@ static void vmessagef(GtkWidget *parent, int type, int buttons,
 
   char *buf = g_strdup_vprintf(fmt, args);
 
-#if !defined(USE_MAEMO) || (MAEMO_VERSION_MAJOR < 5)
+#if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
   GtkWidget *dialog = gtk_message_dialog_new(
 			   GTK_WINDOW(parent),
 			   GTK_DIALOG_DESTROY_WITH_PARENT,
@@ -68,19 +68,27 @@ void warningf(GtkWidget *parent, const char *fmt, ...) {
   va_end( args );
 }
 
+#ifndef FREMANTLE
+#define RESPONSE_YES  GTK_RESPONSE_YES
+#define RESPONSE_NO   GTK_RESPONSE_NO
+#else
+/* hildon names the yes/no buttons ok/cancel ??? */
+#define RESPONSE_YES  GTK_RESPONSE_OK
+#define RESPONSE_NO   GTK_RESPONSE_CANCEL
+#endif
+
 static void on_toggled(GtkWidget *button, gpointer data) {
-  gboolean active = 
-    gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button));
+  gboolean active = check_button_get_active(button);
 
   GtkWidget *dialog = gtk_widget_get_toplevel(button);
 
   if(*(gint*)data & MISC_AGAIN_FLAG_DONT_SAVE_NO)
     gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog),
-				      GTK_RESPONSE_NO, !active);
+				      RESPONSE_NO, !active);
 
   if(*(gint*)data & MISC_AGAIN_FLAG_DONT_SAVE_YES)
     gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog),
-				      GTK_RESPONSE_YES, !active);
+				      RESPONSE_YES, !active);
 }
 
 gboolean yes_no_f(GtkWidget *parent, appdata_t *appdata, gulong again_bit, 
@@ -96,6 +104,7 @@ gboolean yes_no_f(GtkWidget *parent, appdata_t *appdata, gulong again_bit,
 
   printf("%s: \"%s\"\n", title, buf); 
 
+#ifndef FREMANTLE
   GtkWidget *dialog = gtk_message_dialog_new(
 		     GTK_WINDOW(parent),
                      GTK_DIALOG_DESTROY_WITH_PARENT,
@@ -103,13 +112,20 @@ gboolean yes_no_f(GtkWidget *parent, appdata_t *appdata, gulong again_bit,
                      buf);
 
   gtk_window_set_title(GTK_WINDOW(dialog), title);
+#else
+  GtkWidget *dialog = 
+    hildon_note_new_confirmation(GTK_WINDOW(parent), buf);
+#endif
 
   GtkWidget *cbut = NULL;
   if(appdata && again_bit) {
+    /* make sure there's some space before the checkbox */
+    gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), 
+				gtk_label_new(" "));
+
     GtkWidget *alignment = gtk_alignment_new(0.5, 0, 0, 0);
 
-    cbut = gtk_check_button_new_with_label(
-            _("Don't ask this question again"));
+    cbut = check_button_new_with_label(_("Don't ask this question again"));
     g_signal_connect(cbut, "toggled", G_CALLBACK(on_toggled), &flags);
 
     gtk_container_add(GTK_CONTAINER(alignment), cbut);
@@ -118,7 +134,7 @@ gboolean yes_no_f(GtkWidget *parent, appdata_t *appdata, gulong again_bit,
     gtk_widget_show_all(dialog);
   }
 
-  gboolean yes = (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_YES);
+  gboolean yes = (gtk_dialog_run(GTK_DIALOG(dialog)) == RESPONSE_YES);
 
   if(cbut && gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cbut))) {
     /* the user doesn't want to see this dialog again */
@@ -324,3 +340,147 @@ const char *misc_get_proxy_uri(settings_t *settings) {
 void misc_table_attach(GtkWidget *table, GtkWidget *widget, int x, int y) {
   gtk_table_attach_defaults(GTK_TABLE(table), widget, x, x+1, y, y+1);
 }
+
+/* ---------- unified widgets for fremantle/others --------------- */
+
+GtkWidget *entry_new(void) {
+#ifndef FREMANTLE
+  return gtk_entry_new();
+#else
+  return hildon_entry_new(HILDON_SIZE_AUTO);
+#endif
+}
+
+GtkWidget *button_new(void) {
+  GtkWidget *button = gtk_button_new();
+#ifdef FREMANTLE
+  hildon_gtk_widget_set_theme_size(button, 
+           (HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH));
+#endif  
+  return button;
+}
+
+GtkWidget *button_new_with_label(char *label) {
+  GtkWidget *button = gtk_button_new_with_label(label);
+#ifdef FREMANTLE
+  hildon_gtk_widget_set_theme_size(button, 
+           (HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH));
+#endif  
+  return button;
+}
+
+GtkWidget *check_button_new_with_label(char *label) {
+#ifndef FREMANTLE
+  return gtk_check_button_new_with_label(label);
+#else
+  GtkWidget *cbut = 
+    hildon_check_button_new(HILDON_SIZE_FINGER_HEIGHT | 
+                            HILDON_SIZE_AUTO_WIDTH);
+  gtk_button_set_label(GTK_BUTTON(cbut), label);
+  return cbut;
+#endif
+}
+
+void check_button_set_active(GtkWidget *button, gboolean active) {
+#ifndef FREMANTLE
+  gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), active);
+#else
+  hildon_check_button_set_active(HILDON_CHECK_BUTTON(button), active);
+#endif
+}
+
+gboolean check_button_get_active(GtkWidget *button) {
+#ifndef FREMANTLE
+  return gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button));
+#else
+  return hildon_check_button_get_active(HILDON_CHECK_BUTTON(button));
+#endif
+}
+
+GtkWidget *notebook_new(void) {
+#ifdef FREMANTLE
+  GtkWidget *vbox = gtk_vbox_new(FALSE, 0);
+
+  GtkWidget *notebook =  gtk_notebook_new();
+
+  /* solution for fremantle: we use a row of ordinary buttons instead */
+  /* of regular tabs */
+
+  /* hide the regular tabs */
+  gtk_notebook_set_show_tabs(GTK_NOTEBOOK(notebook), FALSE);
+
+  gtk_box_pack_start_defaults(GTK_BOX(vbox), notebook);
+
+  /* store a reference to the notebook in the vbox */
+  g_object_set_data(G_OBJECT(vbox), "notebook", (gpointer)notebook);
+
+  /* create a hbox for the buttons */
+  GtkWidget *hbox = gtk_hbox_new(TRUE, 0);
+  gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
+  g_object_set_data(G_OBJECT(vbox), "hbox", (gpointer)hbox);
+
+  return vbox;
+#else
+  return gtk_notebook_new();
+#endif
+}
+
+GtkWidget *notebook_get_gtk_notebook(GtkWidget *notebook) {
+#ifdef FREMANTLE
+  return GTK_WIDGET(g_object_get_data(G_OBJECT(notebook), "notebook"));
+#else
+  return notebook;
+#endif
+}
+
+
+#ifdef FREMANTLE
+static void on_notebook_button_clicked(GtkWidget *button, gpointer data) {
+  GtkNotebook *nb = 
+    GTK_NOTEBOOK(g_object_get_data(G_OBJECT(data), "notebook"));
+
+  gint page = (gint)g_object_get_data(G_OBJECT(button), "page");
+  gtk_notebook_set_current_page(nb, page);
+}
+#endif
+
+void notebook_append_page(GtkWidget *notebook, 
+			  GtkWidget *page, char *label) {
+#ifdef FREMANTLE
+  GtkNotebook *nb = 
+    GTK_NOTEBOOK(g_object_get_data(G_OBJECT(notebook), "notebook"));
+
+  gint page_num = gtk_notebook_append_page(nb, page, gtk_label_new(label));
+  GtkWidget *button = NULL;
+
+  /* select button for page 0 by default */
+  if(!page_num) {
+    button = gtk_radio_button_new_with_label(NULL, label);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), TRUE);
+    g_object_set_data(G_OBJECT(notebook), "group_master", (gpointer)button);
+  } else {
+    GtkWidget *master = g_object_get_data(G_OBJECT(notebook), "group_master");
+    button = gtk_radio_button_new_with_label_from_widget(
+				 GTK_RADIO_BUTTON(master), label);
+  }
+
+  gtk_toggle_button_set_mode(GTK_TOGGLE_BUTTON(button), FALSE);
+  g_object_set_data(G_OBJECT(button), "page", (gpointer)page_num);
+
+  gtk_signal_connect(GTK_OBJECT(button), "clicked",
+	   GTK_SIGNAL_FUNC(on_notebook_button_clicked), notebook);
+
+#if defined(USE_HILDON) && (MAEMO_VERSION_MAJOR == 5)
+  hildon_gtk_widget_set_theme_size(button, 
+	   (HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH));
+#endif  
+
+  gtk_box_pack_start_defaults(
+     GTK_BOX(g_object_get_data(G_OBJECT(notebook), "hbox")),
+     button);
+
+#else
+  gtk_notebook_append_page(GTK_NOTEBOOK(notebook), page, gtk_label_new(label));
+#endif
+}
+

@@ -40,6 +40,7 @@ install-maemo:
 
 install: @INSTALL_PLATTFORM@ $(TEMPLATE_ELEMSTYLES)
 	install -d $(DESTDIR)$(datadir)/$(APP)	
+	install -m 644 COPYING $(DESTDIR)$(datadir)/$(APP)
 	install -m 644 *.txt $(DESTDIR)$(datadir)/$(APP)
 	install -m 644 *.xml $(DESTDIR)$(datadir)/$(APP)
 	install -m 644 *.style $(DESTDIR)$(datadir)/$(APP)

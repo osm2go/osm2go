@@ -878,12 +878,12 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
 
   table = gtk_table_new(2, 2, FALSE);
   table_attach_label_l(table, _("Username:"), 0, 1, 0, 1);
-  GtkWidget *uentry = gtk_entry_new();
+  GtkWidget *uentry = entry_new();
   HILDON_ENTRY_NO_AUTOCAP(uentry);
   gtk_entry_set_text(GTK_ENTRY(uentry), appdata->settings->username);
   gtk_table_attach_defaults(GTK_TABLE(table),  uentry, 1, 2, 0, 1);
   table_attach_label_l(table, _("Password:"), 0, 1, 1, 2);
-  GtkWidget *pentry = gtk_entry_new();
+  GtkWidget *pentry = entry_new();
   HILDON_ENTRY_NO_AUTOCAP(pentry);
   gtk_entry_set_text(GTK_ENTRY(pentry), appdata->settings->password);
   gtk_entry_set_visibility(GTK_ENTRY(pentry), FALSE);
