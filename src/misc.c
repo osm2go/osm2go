@@ -19,6 +19,14 @@
 
 #include "appdata.h"
 
+#ifdef FREMANTLE
+#include <hildon/hildon-check-button.h>
+#include <hildon/hildon-picker-button.h>
+#include <hildon/hildon-entry.h>
+#include <hildon/hildon-touch-selector-entry.h>
+#include <hildon/hildon-note.h>
+#endif
+
 static void vmessagef(GtkWidget *parent, int type, int buttons,
 		      char *title, const char *fmt, 
 		      va_list args) {
@@ -351,6 +359,14 @@ GtkWidget *entry_new(void) {
 #endif
 }
 
+GType entry_type(void) {
+#ifndef FREMANTLE
+  return GTK_TYPE_ENTRY;
+#else
+  return HILDON_TYPE_ENTRY;
+#endif
+}
+
 GtkWidget *button_new(void) {
   GtkWidget *button = gtk_button_new();
 #ifdef FREMANTLE
@@ -378,6 +394,14 @@ GtkWidget *check_button_new_with_label(char *label) {
                             HILDON_SIZE_AUTO_WIDTH);
   gtk_button_set_label(GTK_BUTTON(cbut), label);
   return cbut;
+#endif
+}
+
+GType check_button_type(void) {
+#ifndef FREMANTLE
+  return GTK_TYPE_CHECK_BUTTON;
+#else
+  return HILDON_TYPE_CHECK_BUTTON;
 #endif
 }
 
@@ -484,3 +508,96 @@ void notebook_append_page(GtkWidget *notebook,
 #endif
 }
 
+void on_value_changed(HildonPickerButton *widget, gpointer  user_data) {
+  g_signal_emit_by_name(widget, "changed");
+}
+
+static GtkWidget *combo_box_new_with_selector(char *title, GtkWidget *selector) {
+  GtkWidget *button = 
+    hildon_picker_button_new(HILDON_SIZE_FINGER_HEIGHT | 
+			     HILDON_SIZE_AUTO_WIDTH, 
+			     HILDON_BUTTON_ARRANGEMENT_VERTICAL);
+
+  hildon_button_set_title_alignment(HILDON_BUTTON(button), 0.5, 0.5);
+  hildon_button_set_value_alignment(HILDON_BUTTON(button), 0.5, 0.5);
+  
+  /* allow button to emit "changed" signal */
+  g_signal_connect(button, "value-changed", G_CALLBACK(on_value_changed), NULL);
+
+  hildon_button_set_title(HILDON_BUTTON (button), title);
+
+  hildon_picker_button_set_selector(HILDON_PICKER_BUTTON(button),
+				    HILDON_TOUCH_SELECTOR(selector));
+
+  return button;
+}
+
+/* the title is only used on fremantle with the picker widget */
+GtkWidget *combo_box_new(char *title) {
+#ifndef FREMANTLE
+  return gtk_combo_box_new_text();
+#else
+  GtkWidget *selector = hildon_touch_selector_new_text();
+  return combo_box_new_with_selector(title, selector);
+#endif
+}
+
+GtkWidget *combo_box_entry_new(char *title) {
+#ifndef FREMANTLE
+  return gtk_combo_box_entry_new_text();
+#else
+  GtkWidget *selector = hildon_touch_selector_entry_new_text();
+  return combo_box_new_with_selector(title, selector);
+#endif
+}
+
+void combo_box_append_text(GtkWidget *cbox, char *text) {
+#ifndef FREMANTLE
+  gtk_combo_box_append_text(GTK_COMBO_BOX(cbox), text);
+#else
+  HildonTouchSelector *selector =
+    hildon_picker_button_get_selector(HILDON_PICKER_BUTTON(cbox));
+
+  hildon_touch_selector_append_text(selector, text);
+#endif
+}
+
+void combo_box_set_active(GtkWidget *cbox, int index) {
+#ifndef FREMANTLE
+  gtk_combo_box_set_active(GTK_COMBO_BOX(cbox), index);
+#else
+  hildon_picker_button_set_active(HILDON_PICKER_BUTTON(cbox), index);
+#endif
+}
+
+int combo_box_get_active(GtkWidget *cbox) {
+#ifndef FREMANTLE
+  return gtk_combo_box_get_active(GTK_COMBO_BOX(cbox));
+#else
+  return hildon_picker_button_get_active(HILDON_PICKER_BUTTON(cbox));
+#endif
+}
+
+const char *combo_box_get_active_text(GtkWidget *cbox) {
+#ifndef FREMANTLE
+  return gtk_combo_box_get_active_text(GTK_COMBO_BOX(cbox));
+#else
+  return hildon_button_get_value(HILDON_BUTTON(cbox));
+#endif
+}
+
+GType combo_box_type(void) {
+#ifndef FREMANTLE
+  return GTK_TYPE_COMBO_BOX;
+#else
+  return HILDON_TYPE_PICKER_BUTTON;
+#endif
+}
+
+void misc_init(void) {
+#ifdef FREMANTLE
+  g_signal_new ("changed", HILDON_TYPE_PICKER_BUTTON,
+		G_SIGNAL_RUN_FIRST, 0, NULL, NULL,
+		g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+#endif
+}

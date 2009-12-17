@@ -69,6 +69,7 @@ void misc_table_attach(GtkWidget *table, GtkWidget *widget, int x, int y);
 
 /* unified widgets */
 GtkWidget *entry_new(void);
+GType entry_type(void);
 
 GtkWidget *button_new(void);
 GtkWidget *button_new_with_label(char *label);
@@ -76,10 +77,21 @@ GtkWidget *button_new_with_label(char *label);
 GtkWidget *check_button_new_with_label(char *label);
 void check_button_set_active(GtkWidget *button, gboolean active);
 gboolean check_button_get_active(GtkWidget *button);
+GType check_button_type(void);
 
 GtkWidget *notebook_new(void);
 void notebook_append_page(GtkWidget *notebook, 
 			  GtkWidget *page, char *label);
 GtkWidget *notebook_get_gtk_notebook(GtkWidget *notebook);
+
+GtkWidget *combo_box_new(char *title);
+GtkWidget *combo_box_entry_new(char *title);
+void combo_box_append_text(GtkWidget *cbox, char *text);
+void combo_box_set_active(GtkWidget *cbox, int index);
+int combo_box_get_active(GtkWidget *cbox);
+const char *combo_box_get_active_text(GtkWidget *cbox);
+GType combo_box_type(void);
+
+void misc_init(void);
 
 #endif // MISC_H

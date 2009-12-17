@@ -17,6 +17,7 @@
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "appdata.h" 
 #include "config.h" 
 
 #include <stdlib.h>  // abs
@@ -28,10 +29,10 @@
 #include "converter.h"
 #include "osm-gps-map-osd-select.h"
 
-#ifdef FREMANTLE 
-#define OSD_W 40
-#else
+#ifdef USE_HILDON 
 #define OSD_W 80
+#else
+#define OSD_W 40
 #endif
 
 #define OSD_H (2*OSD_W)
@@ -43,8 +44,15 @@
 
 //the osd controls
 typedef struct {
-    cairo_surface_t *surface;
-    gboolean state;
+    struct {
+        cairo_surface_t *surface;
+        gboolean state;
+    } select_toggle;
+
+    struct {
+        cairo_surface_t *surface;
+    } zoom;
+
 } osd_priv_t;
 
 #define ARROW_W  (ICON_SIZE/3)
@@ -69,17 +77,90 @@ static void
 osd_render_toggle(osm_gps_map_osd_t *osd) {
     osd_priv_t *priv = (osd_priv_t*)osd->priv; 
 
-    g_assert(priv->surface);
+    g_assert(priv->select_toggle.surface);
 
     /* first fill with transparency */
-    cairo_t *cr = cairo_create(priv->surface);
+    cairo_t *cr = cairo_create(priv->select_toggle.surface);
     cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
     cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 0.0);
     cairo_paint(cr);
     
     /* now start painting on top */
     cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
+
+    /* draw dark transparent background for right border */
+    cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 0.5);
+    cairo_move_to (cr, OSD_W, 0);    
+    cairo_line_to (cr, CRAD, 0);    
+    cairo_arc_negative (cr, CRAD, CRAD, CRAD, -M_PI/2, M_PI);
+    cairo_line_to (cr, 0, OSD_H-CRAD);
+    cairo_arc_negative (cr, CRAD, OSD_H-CRAD, CRAD, M_PI, M_PI/2);
+    cairo_line_to (cr, OSD_W, OSD_H);
+    cairo_close_path (cr);
+    cairo_fill(cr);
+
+#if 0    
+#define IBORDER (ICON_BORDER/2)
+#define IRAD    (CRAD/2)
     
+    /* highlight one icon */
+    cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 0.5);
+    cairo_move_to (cr, IBORDER+IRAD, (priv->select_toggle.state?OSD_W:0)+IBORDER);    
+    cairo_line_to (cr, OSD_W-IBORDER-IRAD, (priv->select_toggle.state?OSD_W:0)+IBORDER);    
+    cairo_arc (cr, OSD_W-IBORDER-IRAD, (priv->select_toggle.state?OSD_W:0)+IBORDER+IRAD, IRAD, -M_PI/2, 0);
+    cairo_line_to (cr, OSD_W-IBORDER, (priv->select_toggle.state?OSD_W:0)+OSD_W-IBORDER-IRAD);
+    cairo_arc (cr, OSD_W-IBORDER-IRAD, (priv->select_toggle.state?OSD_W:0)+OSD_W-IBORDER-IRAD, IRAD, 0, M_PI/2);
+    cairo_line_to (cr, IBORDER+IRAD, (priv->select_toggle.state?OSD_W:0)+OSD_W-IBORDER);
+    cairo_arc (cr, IBORDER+IRAD, (priv->select_toggle.state?OSD_W:0)+OSD_W-IBORDER-IRAD, IRAD, M_PI/2, M_PI);
+    cairo_line_to (cr, IBORDER, (priv->select_toggle.state?OSD_W:0)+OSD_W-IBORDER-IRAD);
+    cairo_arc (cr, IBORDER+IRAD, (priv->select_toggle.state?OSD_W:0)+IBORDER+IRAD, IRAD, M_PI, -M_PI/2);
+    cairo_close_path (cr);
+    cairo_fill(cr);
+#endif
+    
+    /* draw select icon on top */
+    cairo_set_line_width (cr, ICON_LINE_W);
+
+    float bright = priv->select_toggle.state?0.5:1.0;
+    cairo_set_source_rgb(cr, bright, bright, bright);
+
+    cairo_rectangle(cr, ICON_BORDER, ICON_BORDER, 
+                    ICON_SIZE-ICON_BORDER, ICON_SIZE-ICON_BORDER);
+    cairo_stroke(cr);
+    double dash[] = { ICON_LINE_W, ICON_LINE_W };
+    cairo_set_dash(cr, dash, 2, 0.0);
+    cairo_rectangle(cr, ICON_BORDER, ICON_BORDER, 
+                    ICON_SIZE, ICON_SIZE);
+    cairo_stroke(cr);
+    
+    /* draw drag icon below */
+    bright = priv->select_toggle.state?1.0:0.5;
+    cairo_set_source_rgb(cr, bright, bright, bright);
+
+    cairo_set_dash(cr, NULL, 0, 0.0);
+    render_arrow(cr, 1*OSD_W/4, 3*OSD_H/4, 0);
+    render_arrow(cr, 3*OSD_W/4, 3*OSD_H/4, M_PI);
+    render_arrow(cr,   OSD_W/2, 3*OSD_H/4-OSD_W/4, -M_PI/2);
+    render_arrow(cr,   OSD_W/2, 3*OSD_H/4+OSD_W/4,  M_PI/2);
+    
+    cairo_destroy(cr);
+}
+
+static void
+osd_render_zoom(osm_gps_map_osd_t *osd) {
+    osd_priv_t *priv = (osd_priv_t*)osd->priv; 
+
+    g_assert(priv->zoom.surface);
+
+    /* first fill with transparency */
+    cairo_t *cr = cairo_create(priv->zoom.surface);
+    cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+    cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 0.0);
+    cairo_paint(cr);
+    
+    /* now start painting on top */
+    cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
+
     /* draw dark transparent background */
     cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 0.5);
     cairo_move_to (cr, 0, 0);    
@@ -90,74 +171,60 @@ osd_render_toggle(osm_gps_map_osd_t *osd) {
     cairo_line_to (cr, 0, OSD_H);
     cairo_close_path (cr);
     cairo_fill(cr);
-    
-#define IBORDER (ICON_BORDER/2)
-#define IRAD    (CRAD/2)
-    
-    /* highlight one icon */
-    cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 0.5);
-    cairo_move_to (cr, IBORDER+IRAD, (priv->state?OSD_W:0)+IBORDER);    
-    cairo_line_to (cr, OSD_W-IBORDER-IRAD, (priv->state?OSD_W:0)+IBORDER);    
-    cairo_arc (cr, OSD_W-IBORDER-IRAD, (priv->state?OSD_W:0)+IBORDER+IRAD, IRAD, -M_PI/2, 0);
-    cairo_line_to (cr, OSD_W-IBORDER, (priv->state?OSD_W:0)+OSD_W-IBORDER-IRAD);
-    cairo_arc (cr, OSD_W-IBORDER-IRAD, (priv->state?OSD_W:0)+OSD_W-IBORDER-IRAD, IRAD, 0, M_PI/2);
-    cairo_line_to (cr, IBORDER+IRAD, (priv->state?OSD_W:0)+OSD_W-IBORDER);
-    cairo_arc (cr, IBORDER+IRAD, (priv->state?OSD_W:0)+OSD_W-IBORDER-IRAD, IRAD, M_PI/2, M_PI);
-    cairo_line_to (cr, IBORDER, (priv->state?OSD_W:0)+OSD_W-IBORDER-IRAD);
-    cairo_arc (cr, IBORDER+IRAD, (priv->state?OSD_W:0)+IBORDER+IRAD, IRAD, M_PI, -M_PI/2);
-    cairo_close_path (cr);
-    cairo_fill(cr);
-    
+
     /* draw select icon on top */
-    cairo_set_line_width (cr, ICON_LINE_W);
-    cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 1.0);
-    cairo_rectangle(cr, ICON_BORDER, ICON_BORDER, 
-                    ICON_SIZE-ICON_BORDER, ICON_SIZE-ICON_BORDER);
+    cairo_set_line_width (cr, 2*ICON_LINE_W);
+    cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
+
+    cairo_move_to (cr, ICON_BORDER, OSD_W/2);    
+    cairo_line_to (cr, OSD_W-ICON_BORDER, OSD_W/2);    
+    cairo_move_to (cr, OSD_W/2, ICON_BORDER);    
+    cairo_line_to (cr, OSD_W/2, OSD_W-ICON_BORDER);    
     cairo_stroke(cr);
-    double dash[] = { ICON_LINE_W, ICON_LINE_W };
-    cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 1.0);
-    cairo_set_dash(cr, dash, 2, 0.0);
-    cairo_rectangle(cr, ICON_BORDER, ICON_BORDER, 
-                    ICON_SIZE, ICON_SIZE);
+
+    cairo_move_to (cr, ICON_BORDER, OSD_W+OSD_W/2);    
+    cairo_line_to (cr, OSD_W-ICON_BORDER, OSD_W+OSD_W/2);    
     cairo_stroke(cr);
-    
-    /* draw drag icon below */
-    cairo_set_dash(cr, NULL, 0, 0.0);
-    render_arrow(cr, 1*OSD_W/4, 3*OSD_H/4, 0);
-    render_arrow(cr, 3*OSD_W/4, 3*OSD_H/4, M_PI);
-    render_arrow(cr,   OSD_W/2, 3*OSD_H/4-OSD_W/4, -M_PI/2);
-    render_arrow(cr,   OSD_W/2, 3*OSD_H/4+OSD_W/4,  M_PI/2);
-    
+
     cairo_destroy(cr);
 }
+
 
 static osd_button_t
 osd_check(osm_gps_map_osd_t *osd, gboolean down, gint x, gint y) {
     osd_priv_t *priv = (osd_priv_t*)osd->priv; 
+    osd_button_t but = OSD_NONE;
 
     y -= (osd->widget->allocation.height - OSD_H)/2;
 
-    osd_button_t but = OSD_NONE;
-
-    printf("OSD check\n");
-
-    if(y >= 0 && y <= OSD_H && x >= 0 && x <= OSD_W) {
-        if(y < OSD_W) {
-            if(priv->state) {
-                priv->state = FALSE;
-                osd_render_toggle(osd);
-                osm_gps_map_repaint(OSM_GPS_MAP(osd->widget));
+    if(x < osd->widget->allocation.width/2) {
+        if(y >= 0 && y <= OSD_H && x >= 0 && x <= OSD_W) {
+            if(y < OSD_W) 
+                but = OSD_IN;
+            else 
+                but = OSD_OUT;
+        }
+    } else { 
+        x -= osd->widget->allocation.width - OSD_W;
+        
+        if(y >= 0 && y <= OSD_H && x >= 0 && x <= OSD_W) {
+            if(y < OSD_W) {
+                if(priv->select_toggle.state) {
+                    priv->select_toggle.state = FALSE;
+                    osd_render_toggle(osd);
+                    osm_gps_map_repaint(OSM_GPS_MAP(osd->widget));
+                }
+                
+                but = OSD_SELECT;
+            } else {
+                if(!priv->select_toggle.state) {
+                    priv->select_toggle.state = TRUE;
+                    osd_render_toggle(osd);
+                    osm_gps_map_repaint(OSM_GPS_MAP(osd->widget));
+                }
+                
+                but = OSD_DRAG;
             }
-
-            but = OSD_SELECT;
-        } else {
-            if(!priv->state) {
-                priv->state = TRUE;
-                osd_render_toggle(osd);
-                osm_gps_map_repaint(OSM_GPS_MAP(osd->widget));
-            }
-
-            but = OSD_DRAG;
         }
     }
 
@@ -174,14 +241,18 @@ osd_render(osm_gps_map_osd_t *osd)
     /* The different OSD parts have to make sure that they don't */
     /* render unneccessarily often and thus waste CPU power */
 
-    if(!priv->surface) {
-        printf("OSD render\n");
-
-        priv->surface = 
-            cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 
-                                       OSD_W, OSD_H);
+    if(!priv->select_toggle.surface) {
+        priv->select_toggle.surface = 
+            cairo_image_surface_create(CAIRO_FORMAT_ARGB32, OSD_W, OSD_H);
 
         osd_render_toggle(osd);
+    }
+
+    if(!priv->zoom.surface) {
+        priv->zoom.surface = 
+            cairo_image_surface_create(CAIRO_FORMAT_ARGB32, OSD_W, OSD_H);
+
+        osd_render_zoom(osd);
     }
 }
 
@@ -192,15 +263,19 @@ osd_draw(osm_gps_map_osd_t *osd, GdkDrawable *drawable)
 
     printf("OSD draw\n");
 
-    /* create surface once */
-    if(!priv->surface) 
+    if(!priv->select_toggle.surface) 
         osd_render(osd);
 
     // now draw this onto the original context 
     cairo_t *cr = gdk_cairo_create(drawable);
 
-    cairo_set_source_surface(cr, priv->surface, 0, 
-             (osd->widget->allocation.height - OSD_H)/2);
+    cairo_set_source_surface(cr, priv->select_toggle.surface, 
+                             osd->widget->allocation.width - OSD_W, 
+                             (osd->widget->allocation.height - OSD_H)/2);
+    cairo_paint(cr);
+
+    cairo_set_source_surface(cr, priv->zoom.surface, 0,
+                             (osd->widget->allocation.height - OSD_H)/2);
     cairo_paint(cr);
 
     cairo_destroy(cr);
@@ -211,8 +286,11 @@ osd_free(osm_gps_map_osd_t *osd)
 {
     osd_priv_t *priv = (osd_priv_t *)(osd->priv);
 
-    if(priv->surface)
-        cairo_surface_destroy(priv->surface);
+    if(priv->select_toggle.surface)
+        cairo_surface_destroy(priv->select_toggle.surface);
+
+    if(priv->zoom.surface)
+        cairo_surface_destroy(priv->zoom.surface);
 
     g_free(priv);
 }
@@ -245,7 +323,7 @@ osm_gps_map_osd_select_init(OsmGpsMap *map)
     osd_priv_t *priv = osd_select.priv = g_new0(osd_priv_t, 1);
 
     osd_select.priv = priv;
-    priv->state = TRUE;
+    priv->select_toggle.state = TRUE;
 
     osm_gps_map_register_osd(map, &osd_select);
 }
@@ -257,5 +335,5 @@ osm_gps_map_osd_get_state(OsmGpsMap *map) {
     osd_priv_t *priv = (osd_priv_t *)(osd->priv);
     g_return_val_if_fail (priv, FALSE);
 
-    return priv->state;
+    return priv->select_toggle.state;
 }

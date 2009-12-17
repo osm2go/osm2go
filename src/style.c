@@ -312,42 +312,27 @@ static char *style_basename(char *name) {
   return retval;
 }
 
-void style_select(GtkWidget *parent, appdata_t *appdata) {
+GtkWidget *style_select_widget(appdata_t *appdata) {
   file_chain_t *chain = file_scan("*.style");
-
-  printf("select style\n");
 
   /* there must be at least one style, otherwise */
   /* the program wouldn't be running */
   g_assert(chain);
 
-  /* ------------------ style dialog ---------------- */
-  GtkWidget *dialog = 
-    misc_dialog_new(MISC_DIALOG_NOSIZE,_("Select style"),
-		    GTK_WINDOW(parent),
-		    GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, 
-		    GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-		    NULL);
-
-  gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_ACCEPT);
-
-  GtkWidget *hbox = gtk_hbox_new(FALSE, 8);
-  gtk_box_pack_start_defaults(GTK_BOX(hbox), gtk_label_new(_("Style:")));
-
-  GtkWidget *cbox = NULL;
-  cbox = gtk_combo_box_new_text();
+  GtkWidget *cbox = combo_box_new(_("Style"));
 
   /* fill combo box with presets */
   int cnt = 0, match = -1;
-  file_chain_t *lchain = chain;
-  while(lchain) {
-    printf("  file: %s\n", lchain->name);
-    
-    style_t *style = style_parse(appdata, lchain->name);
-    printf("    name: %s\n", style->name);
-    gtk_combo_box_append_text(GTK_COMBO_BOX(cbox), style->name);
+  while(chain) {
+    file_chain_t *next = chain->next;
 
-    char *basename = style_basename(lchain->name);
+    printf("  file: %s\n", chain->name);
+    
+    style_t *style = style_parse(appdata, chain->name);
+    printf("    name: %s\n", style->name);
+    combo_box_append_text(cbox, style->name);
+
+    char *basename = style_basename(chain->name);
     if(strcmp(basename, appdata->settings->style) == 0) match = cnt;
     g_free(basename);
     
@@ -355,36 +340,29 @@ void style_select(GtkWidget *parent, appdata_t *appdata) {
     style->elemstyles_filename = NULL;
     style_free(style);
     
-    lchain = lchain->next;
     cnt++;
+
+    g_free(chain);
+    chain = next;
   }
 
   if(match >= 0)
-    gtk_combo_box_set_active(GTK_COMBO_BOX(cbox), match);
+    combo_box_set_active(cbox, match);
   
-  gtk_box_pack_start_defaults(GTK_BOX(hbox), cbox);
-  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox);
+  return cbox;
+}
 
-  gtk_widget_show_all(dialog);
+void style_change(appdata_t *appdata, const char *name) {
+  char *new_style = NULL;
 
-  if(GTK_RESPONSE_ACCEPT != gtk_dialog_run(GTK_DIALOG(dialog))) {
-    printf("user clicked cancel\n");
-    gtk_widget_destroy(dialog);
-    return;
-  }
-  
-  char *ptr = gtk_combo_box_get_active_text(GTK_COMBO_BOX(cbox));
-  printf("user clicked ok on %s\n", ptr);  
+  file_chain_t *chain = file_scan("*.style");
 
   while(chain) {
     file_chain_t *next = chain->next;
     style_t *style = style_parse(appdata, chain->name);
 
-    if(strcmp(style->name, ptr) == 0) {
-      if(appdata->settings->style)
-	g_free(appdata->settings->style);
-
-      appdata->settings->style = style_basename(chain->name);
+    if(strcmp(style->name, name) == 0) {
+      new_style = style_basename(chain->name);
     }
 
     xmlFree(style->elemstyles_filename);
@@ -395,7 +373,17 @@ void style_select(GtkWidget *parent, appdata_t *appdata) {
     chain = next;
   }
 
-  gtk_widget_destroy(dialog);
+  /* check of style has really been changed */
+  if(appdata->settings->style && 
+     !strcmp(appdata->settings->style, new_style)) {
+    g_free(new_style);
+    return;
+  }
+
+  if(appdata->settings->style)
+    g_free(appdata->settings->style);
+
+  appdata->settings->style = new_style;
 
   map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
   /* let gtk clean up first */
@@ -413,5 +401,47 @@ void style_select(GtkWidget *parent, appdata_t *appdata) {
 
   map_paint(appdata);
 }
+
+#ifndef FREMANTLE
+/* in fremantle this happens inside the submenu handling since this button */
+/* is actually placed inside the submenu there */
+void style_select(GtkWidget *parent, appdata_t *appdata) {
+
+  printf("select style\n");
+
+  /* ------------------ style dialog ---------------- */
+  GtkWidget *dialog = 
+    misc_dialog_new(MISC_DIALOG_NOSIZE,_("Select style"),
+		    GTK_WINDOW(parent),
+		    GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, 
+		    GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+		    NULL);
+
+  gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_ACCEPT);
+
+  GtkWidget *cbox = style_select_widget(appdata);
+
+  GtkWidget *hbox = gtk_hbox_new(FALSE, 8);
+  gtk_box_pack_start_defaults(GTK_BOX(hbox), gtk_label_new(_("Style:")));
+
+  gtk_box_pack_start_defaults(GTK_BOX(hbox), cbox);
+  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox);
+
+  gtk_widget_show_all(dialog);
+
+  if(GTK_RESPONSE_ACCEPT != gtk_dialog_run(GTK_DIALOG(dialog))) {
+    printf("user clicked cancel\n");
+    gtk_widget_destroy(dialog);
+    return;
+  }
+  
+  const char *ptr = combo_box_get_active_text(cbox);
+  printf("user clicked ok on %s\n", ptr);  
+
+  gtk_widget_destroy(dialog);
+
+  style_change(appdata, ptr);
+}
+#endif
 
 //vim:et:ts=8:sw=2:sts=2:ai

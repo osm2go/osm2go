@@ -209,7 +209,7 @@ cb_menu_map_show_all(GtkMenuItem *item, gpointer data) {
 
 /* ---------------------------------------------------------- */
 
-#if defined(USE_HILDON) && (MAEMO_VERSION_MAJOR == 5)
+#ifdef FREMANTLE
 #define MENU_CHECK_ITEM HildonCheckButton
 #define MENU_CHECK_ITEM_ACTIVE(a) hildon_check_button_get_active(a) 
 #else
@@ -217,12 +217,14 @@ cb_menu_map_show_all(GtkMenuItem *item, gpointer data) {
 #define MENU_CHECK_ITEM_ACTIVE(a) gtk_check_menu_item_get_active(a)
 #endif
 
+#ifndef FREMANTLE
 static void 
 cb_menu_style(GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
 
   style_select(GTK_WIDGET(appdata->window), appdata);
 }
+#endif
 
 static void 
 cb_menu_undo(GtkMenuItem *item, gpointer data) {
@@ -939,41 +941,6 @@ static GtkWidget *app_menu_create(appdata_t *appdata,
   return GTK_WIDGET(menu);
 }
 
-#ifdef MAEMO5_SUBMENU_POPUP
-static GtkWidget *app_submenu_create(appdata_t *appdata, 
-				     const submenu_t *submenu) {
-  return app_menu_create(appdata, submenu->menu);
-}
-
-static void submenu_popup(GtkWidget *menu) {
-  GtkWidget *top = hildon_window_stack_peek(hildon_window_stack_get_default());
-
-#if 0 // nasty workaround for race condition in hildonappmenu
-  int start, end;
-  GTimeVal tv;
-  g_get_current_time(&tv);
-  start = tv.tv_sec * 1000 + tv.tv_usec / 1000; 
-  do {
-    if(gtk_events_pending()) 
-      while(gtk_events_pending()) {
-	putchar('.'); fflush(stdout);
-	gtk_main_iteration();
-      }
-    else
-      usleep(100);
-
-    g_get_current_time(&tv);
-    end = tv.tv_sec * 1000 + tv.tv_usec / 1000; 
-  } while(end-start < 500);
-#endif
-
-  hildon_app_menu_popup(HILDON_APP_MENU(menu), GTK_WINDOW(top));
-}
-
-static void submenu_cleanup(GtkWidget *menu) {
-  g_object_unref(menu);
-}
-#else
 #define COLUMNS  2
 
 void on_submenu_entry_clicked(GtkButton *button, GtkWidget *menu) {
@@ -1004,41 +971,48 @@ static GtkWidget *app_submenu_create(appdata_t *appdata,
   while(menu_entries->label) {
     GtkWidget *button = NULL;
 
-    if(!menu_entries->toggle) {
-      button = hildon_button_new_with_text(
-	    HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH,
-	    HILDON_BUTTON_ARRANGEMENT_VERTICAL,
-	    _(menu_entries->label), _(menu_entries->value));
-
-      g_signal_connect(button, "clicked", 
-		       G_CALLBACK(on_submenu_entry_clicked), dialog); 
-
-      g_signal_connect(button, "clicked", 
-		       menu_entries->activate_cb, appdata); 
-      
-      hildon_button_set_title_alignment(HILDON_BUTTON(button), 0.5, 0.5);
-      hildon_button_set_value_alignment(HILDON_BUTTON(button), 0.5, 0.5);
+    /* the "Style" menu entry is very special */
+    /* and is being handled seperately */
+    if(!strcmp("Style", menu_entries->label)) {
+      button = style_select_widget(appdata);
+      g_object_set_data(G_OBJECT(dialog), "style_widget", button);
     } else {
-      button = hildon_check_button_new(HILDON_SIZE_AUTO);
-      gtk_button_set_label(GTK_BUTTON(button), _(menu_entries->label));
-      printf("requesting check for %s: %p\n", menu_entries->label,
-	     menu_entries->toggle);
-      hildon_check_button_set_active(HILDON_CHECK_BUTTON(button), 
-				     menu_entries->toggle(appdata));
+      if(!menu_entries->toggle) {
+	button = hildon_button_new_with_text(
+	     HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH,
+	     HILDON_BUTTON_ARRANGEMENT_VERTICAL,
+	     _(menu_entries->label), _(menu_entries->value));
 
-      g_signal_connect(button, "clicked", 
-		       G_CALLBACK(on_submenu_entry_clicked), dialog); 
+	g_signal_connect(button, "clicked", 
+			 G_CALLBACK(on_submenu_entry_clicked), dialog); 
 
-      g_signal_connect(button, "toggled", 
-		       menu_entries->activate_cb, appdata); 
-
-      gtk_button_set_alignment(GTK_BUTTON(button), 0.5, 0.5);
+	g_signal_connect(button, "clicked", 
+			 menu_entries->activate_cb, appdata); 
+      
+	hildon_button_set_title_alignment(HILDON_BUTTON(button), 0.5, 0.5);
+	hildon_button_set_value_alignment(HILDON_BUTTON(button), 0.5, 0.5);
+      } else {
+	button = hildon_check_button_new(HILDON_SIZE_AUTO);
+	gtk_button_set_label(GTK_BUTTON(button), _(menu_entries->label));
+	printf("requesting check for %s: %p\n", menu_entries->label,
+	       menu_entries->toggle);
+	hildon_check_button_set_active(HILDON_CHECK_BUTTON(button), 
+				       menu_entries->toggle(appdata));
+	
+	g_signal_connect(button, "clicked", 
+			 G_CALLBACK(on_submenu_entry_clicked), dialog); 
+	
+	g_signal_connect(button, "toggled", 
+			 menu_entries->activate_cb, appdata); 
+	
+	gtk_button_set_alignment(GTK_BUTTON(button), 0.5, 0.5);
+      }
     }
 
     /* offset to GtkWidget pointer was given -> store pointer */
     if(menu_entries->offset) 
       *(GtkWidget**)(((void*)appdata)+menu_entries->offset) = button;
-
+    
     gtk_widget_set_sensitive(button, menu_entries->enabled);
 
     gtk_table_attach_defaults(GTK_TABLE(table),  button, x, x+1, y, y+1);
@@ -1056,32 +1030,38 @@ static GtkWidget *app_submenu_create(appdata_t *appdata,
 }
 
 /* popup the dialog shaped submenu */
-static void submenu_popup(GtkWidget *menu) {
+static void submenu_popup(appdata_t *appdata, GtkWidget *menu) {
   gtk_widget_show_all(menu);
   gtk_dialog_run(GTK_DIALOG(menu));
   gtk_widget_hide(menu);
+
+  /* check if the style menu was in here */
+  GtkWidget *style_widget = GTK_WIDGET(g_object_get_data(G_OBJECT(menu), "style_widget"));
+  if(style_widget) {
+    const char *ptr = combo_box_get_active_text(style_widget);
+    if(ptr) style_change(appdata, ptr);
+  }
 }
 
 static void submenu_cleanup(GtkWidget *menu) {
   gtk_widget_destroy(menu);
 }
-#endif
 
 /* the view submenu */
 void on_submenu_view_clicked(GtkButton *button, appdata_t *appdata) {
-  submenu_popup(appdata->app_menu_view);
+  submenu_popup(appdata, appdata->app_menu_view);
 }
 
 void on_submenu_map_clicked(GtkButton *button, appdata_t *appdata) {
-  submenu_popup(appdata->app_menu_map);
+  submenu_popup(appdata, appdata->app_menu_map);
 }
 
 void on_submenu_wms_clicked(GtkButton *button, appdata_t *appdata) {
-  submenu_popup(appdata->app_menu_wms);
+  submenu_popup(appdata, appdata->app_menu_wms);
 }
 
 void on_submenu_track_clicked(GtkButton *button, appdata_t *appdata) {
-  submenu_popup(appdata->app_menu_track);
+  submenu_popup(appdata, appdata->app_menu_track);
 }
 
 #define APP_OFFSET(a)  offsetof(appdata_t, a)
@@ -1102,7 +1082,7 @@ static const menu_entry_t submenu_view_entries[] = {
   SIMPLE_ENTRY("Zoom out",        cb_menu_zoomout),
 #endif
   /* --- */
-  SIMPLE_ENTRY("Style",           cb_menu_style),
+  SIMPLE_ENTRY("Style",           NULL),
   /* --- */
 #ifndef DETAIL_POPUP
   SIMPLE_ENTRY("Normal details",  cb_menu_view_detail_normal),
@@ -1407,6 +1387,8 @@ int main(int argc, char *argv[]) {
   g_thread_init(NULL);
   
   gtk_init (&argc, &argv);
+
+  misc_init();
 
   gps_init(&appdata);
 

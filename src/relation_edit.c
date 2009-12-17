@@ -99,16 +99,20 @@ static gboolean relation_add_item(GtkWidget *parent,
 				gtk_label_new(name));
 
   GtkWidget *hbox = gtk_hbox_new(FALSE, 8);
-  gtk_box_pack_start_defaults(GTK_BOX(hbox), gtk_label_new(_("Role:")));
+
+#ifdef FREMANTLE
+  if(!chain) 
+#endif
+    gtk_box_pack_start_defaults(GTK_BOX(hbox), gtk_label_new(_("Role:")));
 
   GtkWidget *entry = NULL;
   if(chain) {
-    entry = gtk_combo_box_entry_new_text();
+    entry = combo_box_entry_new(_("Role"));
 
     /* fill combo box with presets */
     while(chain) {
       role_chain_t *next = chain->next;
-      gtk_combo_box_append_text(GTK_COMBO_BOX(entry), chain->role);
+      combo_box_append_text(entry, chain->role);
       g_free(chain);
       chain = next;
     }
@@ -128,12 +132,12 @@ static gboolean relation_add_item(GtkWidget *parent,
   printf("user clicked ok\n");
 
   /* get role from dialog */
-  char *ptr = NULL;
+  const char *ptr = NULL;
 
-  if(GTK_IS_COMBO_BOX(entry))
-    ptr = gtk_combo_box_get_active_text(GTK_COMBO_BOX(entry));
+  if(GTK_WIDGET_TYPE(entry) == combo_box_type())
+    ptr = combo_box_get_active_text(entry);
   else
-    ptr = (char*)gtk_entry_get_text(GTK_ENTRY(entry));
+    ptr = gtk_entry_get_text(GTK_ENTRY(entry));
 
   char *role = NULL;
   if(ptr && strlen(ptr)) role = g_strdup(ptr);

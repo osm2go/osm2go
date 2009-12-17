@@ -87,6 +87,12 @@ typedef struct style_s {
 
 style_t *style_load(appdata_t *appdata, char *name);
 void style_free(style_t *style);
+
+#ifndef FREMANTLE
 void style_select(GtkWidget *parent, appdata_t *appdata);
+#else
+GtkWidget *style_select_widget(appdata_t *appdata);
+void style_change(appdata_t *appdata, const char *name);
+#endif
 
 #endif // STYLE_H

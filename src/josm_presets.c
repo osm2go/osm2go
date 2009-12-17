@@ -528,25 +528,30 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
 	break;
 	
       case WIDGET_TYPE_COMBO:
+#ifndef FREMANTLE
 	attach_text(table, widget->text, widget_cnt-widget_skip);
+#endif
 
 	if(!preset && widget->combo_w.def) preset = widget->combo_w.def;
-	gtk_widgets[widget_cnt] = gtk_combo_box_new_text();
+	gtk_widgets[widget_cnt] = combo_box_new(widget->text);
+	combo_box_append_text(gtk_widgets[widget_cnt], _("<unset>"));
 	presets_value_t *value = widget->combo_w.values;
-	int count = 0, active = -1;
+	int count = 1, active = 0;
 	while(value) {
-	  if(active < 0 && preset && strcmp(preset, value->text)==0)
+	  if(active < 1 && preset && strcmp(preset, value->text)==0)
 	    active = count;
 	  
-	  gtk_combo_box_append_text(GTK_COMBO_BOX(gtk_widgets[widget_cnt]), 
-				    value->text);
+	  combo_box_append_text(gtk_widgets[widget_cnt], value->text);
 	  value = value->next;
 	  count++;
 	}
 	
-	gtk_combo_box_set_active(GTK_COMBO_BOX(gtk_widgets[widget_cnt]), 
-				 active);
+	combo_box_set_active(gtk_widgets[widget_cnt], active);
+#ifndef FREMANTLE
 	attach_right(table, gtk_widgets[widget_cnt], widget_cnt-widget_skip);
+#else
+	attach_both(table, gtk_widgets[widget_cnt], widget_cnt-widget_skip);
+#endif
 	break;
 	
       case WIDGET_TYPE_CHECK:
@@ -558,7 +563,11 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
 	  gtk_widgets[widget_cnt] = 
 	    check_button_new_with_label(widget->text);
 	  check_button_set_active(gtk_widgets[widget_cnt], def);
+#ifndef FREMANTLE
 	  attach_right(table, gtk_widgets[widget_cnt], widget_cnt-widget_skip);
+#else
+	  attach_both(table, gtk_widgets[widget_cnt], widget_cnt-widget_skip);
+#endif
       } break;
       
     case WIDGET_TYPE_TEXT:
@@ -629,24 +638,23 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
     while(widget) {
       switch(widget->type) {
       case WIDGET_TYPE_COMBO:
-	g_assert(GTK_WIDGET_TYPE(gtk_widgets[widget_cnt]) == 
-		 GTK_TYPE_COMBO_BOX);
+	g_assert(GTK_WIDGET_TYPE(gtk_widgets[widget_cnt]) == combo_box_type());
 
-	ctag = store_value(widget, ctag, gtk_combo_box_get_active_text(
-		GTK_COMBO_BOX(gtk_widgets[widget_cnt])));
+	char *text = (char*)combo_box_get_active_text(gtk_widgets[widget_cnt]);
+	if(!strcmp(text, _("<unset>"))) text = NULL;
+
+	ctag = store_value(widget, ctag, text);
 	break;
 
       case WIDGET_TYPE_TEXT:
-	g_assert(GTK_WIDGET_TYPE(gtk_widgets[widget_cnt]) == 
-		 GTK_TYPE_ENTRY);
+	g_assert(GTK_WIDGET_TYPE(gtk_widgets[widget_cnt]) == entry_type());
 
 	ctag = store_value(widget, ctag, (char*)gtk_entry_get_text(
 		     GTK_ENTRY(gtk_widgets[widget_cnt])));
 	break;
 
       case WIDGET_TYPE_CHECK:
-	g_assert(GTK_WIDGET_TYPE(gtk_widgets[widget_cnt]) == 
-		 GTK_TYPE_CHECK_BUTTON);
+	g_assert(GTK_WIDGET_TYPE(gtk_widgets[widget_cnt]) == check_button_type());
 
 	ctag = store_value(widget, ctag,
                  check_button_get_active(gtk_widgets[widget_cnt])?"yes":

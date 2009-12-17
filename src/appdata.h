@@ -39,9 +39,6 @@
 #define USE_PANNABLE_AREA
 #include <hildon/hildon-gtk.h>
 #include <hildon/hildon-pannable-area.h>
-#include <hildon/hildon-entry.h>
-#include <hildon/hildon-note.h>
-#include <hildon/hildon-check-button.h>
 #endif
 
 #include <hildon/hildon-program.h>

@@ -143,7 +143,7 @@ static gboolean area_warning(context_t *context) {
     ret = yes_no_f(context->dialog, context->area->appdata, 
 		   MISC_AGAIN_ID_AREA_TOO_BIG, MISC_AGAIN_FLAG_DONT_SAVE_NO,
 		   _("Area size warning!"),
-		   _("%s Do you really want to continue?"), wtext);
+		   _("%s\n\nDo you really want to continue?"), wtext);
 
     g_free(wtext);
   }
@@ -363,8 +363,8 @@ static void callback_modified_unit(GtkWidget *widget, gpointer data) {
   double width  = pos_dist_get(context->extent.width, context->extent.is_mil);
 
   /* adjust unit flag */
-  context->extent.is_mil = gtk_combo_box_get_active(
-		    GTK_COMBO_BOX(context->extent.mil_km)) == 0;
+  context->extent.is_mil = 
+    combo_box_get_active(context->extent.mil_km) == 0;
 
   /* save values */
   pos_dist_entry_set(context->extent.width, width, context->extent.is_mil);
@@ -437,6 +437,9 @@ on_map_button_press_event(GtkWidget *widget,
   if(osd->check(osd, TRUE, (int)event->x, (int)event->y))
     return FALSE;
 
+  if(osm_gps_map_osd_get_state(OSM_GPS_MAP(widget)))
+    return FALSE;
+
   /* remove existing marker */
   osm_gps_map_clear_tracks(map);
 
@@ -469,8 +472,8 @@ on_map_motion_notify_event(GtkWidget *widget,
     osm_gps_map_add_track(map, box);
   }
 
-  /* always returning true here disables dragging in osm-gps-map */
-  return TRUE;
+  /* returning true here disables dragging in osm-gps-map */
+  return !osm_gps_map_osd_get_state(OSM_GPS_MAP(widget));
 }
 
 static gboolean
@@ -521,7 +524,8 @@ on_map_button_release_event(GtkWidget *widget,
   if(osd->check(osd, TRUE, (int)event->x, (int)event->y))
     return FALSE;
 
-  return TRUE;
+  /* returning true here disables dragging in osm-gps-map */
+  return !osm_gps_map_osd_get_state(OSM_GPS_MAP(widget));
 }
 
 static void on_page_switch(GtkNotebook *notebook, GtkNotebookPage *page,
@@ -696,11 +700,11 @@ gboolean area_edit(area_edit_t *area) {
   gtk_table_attach_defaults(GTK_TABLE(table), 
 			    context.extent.height, 1, 2, 2, 3);
 
-  context.extent.mil_km = gtk_combo_box_new_text();
-  gtk_combo_box_append_text(GTK_COMBO_BOX(context.extent.mil_km), _("mi"));
-  gtk_combo_box_append_text(GTK_COMBO_BOX(context.extent.mil_km), _("km"));
-  gtk_combo_box_set_active(GTK_COMBO_BOX(context.extent.mil_km), 1); // km
-
+  context.extent.mil_km = combo_box_new(_("Unit"));
+  combo_box_append_text(context.extent.mil_km, _("mi"));
+  combo_box_append_text(context.extent.mil_km, _("km"));
+  combo_box_set_active(context.extent.mil_km, 1); // km
+  
   gtk_table_attach(GTK_TABLE(table), context.extent.mil_km, 2, 3, 1, 3, 
 		   0, 0, 0, 0);
 

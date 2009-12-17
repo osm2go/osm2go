@@ -991,9 +991,9 @@ static void on_diff_remove_clicked(GtkButton *button, gpointer data) {
   printf("clicked diff remove\n");
 
   if(yes_no_f(context->dialog, NULL, 0, 0, _("Discard changes?"),
-	      _("Do you really want to discard your changes? This "
-		"permanently undo all changes you've made so far and which "
-		"you didn't upload yet."))) {
+	      _("Do you really want to discard your changes? This will "
+		"permanently undo all changes you have made so far and which "
+		"you did not upload yet."))) {
     appdata_t *appdata = context->area_edit.appdata;
     
     diff_remove(context->project);
