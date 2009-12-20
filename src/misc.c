@@ -596,6 +596,14 @@ GType combo_box_type(void) {
 #endif
 }
 
+GType combo_box_entry_type(void) {
+#ifndef FREMANTLE
+  return GTK_TYPE_COMBO_BOX_ENTRY;
+#else
+  return HILDON_TYPE_PICKER_BUTTON;
+#endif
+}
+
 void misc_init(void) {
 #ifdef FREMANTLE
   g_signal_new ("changed", HILDON_TYPE_PICKER_BUTTON,

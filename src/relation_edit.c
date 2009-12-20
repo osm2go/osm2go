@@ -133,7 +133,7 @@ static gboolean relation_add_item(GtkWidget *parent,
   /* get role from dialog */
   const char *ptr = NULL;
 
-  if(GTK_WIDGET_TYPE(entry) == combo_box_type())
+  if(GTK_WIDGET_TYPE(entry) == combo_box_entry_type()) 
     ptr = combo_box_get_active_text(entry);
   else
     ptr = gtk_entry_get_text(GTK_ENTRY(entry));
@@ -230,47 +230,6 @@ static char *relitem_get_role_in_relation(object_t *item, relation_t *relation) 
   return NULL;
 }
 
-#if 0 //XXX
-static void
-relitem_toggled(GtkCellRendererToggle *cell, const gchar *path_str,
-		relitem_context_t *context) {
-  GtkTreePath *path;
-  GtkTreeIter iter;
-
-  path = gtk_tree_path_new_from_string(path_str);
-  gtk_tree_model_get_iter(GTK_TREE_MODEL(context->store), &iter, path);
-  gtk_tree_path_free(path);
-
-  /* get current enabled flag */
-  gboolean enabled;
-  relation_t *relation = NULL;
-  gtk_tree_model_get(GTK_TREE_MODEL(context->store), &iter, 
-		     //		     RELITEM_COL_SELECTED, &enabled, 
-		     RELITEM_COL_DATA, &relation, 
-		     -1);
-
-  list_pre_inplace_edit_tweak(GTK_TREE_MODEL(context->store));
-
-  if(!enabled) {
-    printf("will now become be part of this relation\n");
-    if(relation_add_item(context->dialog, relation, context->item))
-      gtk_list_store_set(context->store, &iter, 
-			 //		 RELITEM_COL_SELECTED, TRUE, 
-		 RELITEM_COL_ROLE, 
-		 relitem_get_role_in_relation(context->item, relation),
-		 -1);
-  } else {
-    printf("item will not be part of this relation anymore\n");
-    relation_remove_item(relation, context->item);
-    gtk_list_store_set(context->store, &iter, 
-		       //		       RELITEM_COL_SELECTED, FALSE, 
-		       RELITEM_COL_ROLE, NULL, 
-		       -1);
-  }
-
-}
-#endif
-
 static gboolean relitem_is_in_relation(object_t *item, relation_t *relation) {
   member_t *member = relation->member;
   while(member) {
@@ -294,11 +253,55 @@ static gboolean relitem_is_in_relation(object_t *item, relation_t *relation) {
   return FALSE;
 }
 
-static void changed(GtkTreeSelection *treeselection, gpointer user_data) {
+static void changed(GtkTreeSelection *sel, gpointer user_data) {
+  relitem_context_t *context = (relitem_context_t*)user_data;
+
   printf("relation-edit changed event\n");  
 
   /* we need to know what changed in order to let the user acknowlege it! */
 
+  /* walk the entire store xyz */
+
+  GtkTreeIter iter;
+  gboolean done = FALSE, ok = 
+    gtk_tree_model_get_iter_first(GTK_TREE_MODEL(context->store), &iter);
+  while(ok && !done) {
+    relation_t *relation = NULL;
+    gtk_tree_model_get(GTK_TREE_MODEL(context->store), &iter, 
+		       RELITEM_COL_DATA, &relation, -1);    
+    g_assert(relation);
+
+    if(!relitem_is_in_relation(context->item, relation) && 
+       gtk_tree_selection_iter_is_selected(sel, &iter)) {
+
+      printf("selected: "ITEM_ID_FORMAT"\n", OSM_ID(relation));
+
+      /* either accept this or unselect again */
+      if(relation_add_item(context->dialog, relation, context->item))
+	gtk_list_store_set(context->store, &iter, 
+	   RELITEM_COL_ROLE, 
+	   relitem_get_role_in_relation(context->item, relation),
+			   -1);
+      else
+	gtk_tree_selection_unselect_iter(sel, &iter);
+
+      done = TRUE;
+    } else if(relitem_is_in_relation(context->item, relation) && 
+	      !gtk_tree_selection_iter_is_selected(sel, &iter)) {
+
+      printf("deselected: "ITEM_ID_FORMAT"\n", OSM_ID(relation));
+
+      relation_remove_item(relation, context->item);
+      gtk_list_store_set(context->store, &iter, 
+		       RELITEM_COL_ROLE, NULL, 
+		       -1);
+
+      done = TRUE;
+    }
+
+    if(!done)
+      ok = gtk_tree_model_iter_next(GTK_TREE_MODEL(context->store), &iter);
+  }
 }
 
 #ifndef FREMANTLE
@@ -309,8 +312,6 @@ static void changed(GtkTreeSelection *treeselection, gpointer user_data) {
 /* default behaviour already is what we want. */
 static gboolean on_view_clicked(GtkWidget *widget, GdkEventButton *event,
 				gpointer user_data) {
-  relitem_context_t *context = (relitem_context_t*)user_data;
-
   if(event->window == gtk_tree_view_get_bin_window(GTK_TREE_VIEW(widget))) {  
     GtkTreePath *path;
     
@@ -318,21 +319,6 @@ static gboolean on_view_clicked(GtkWidget *widget, GdkEventButton *event,
 		     event->x, event->y, &path, NULL, NULL, NULL)) {
       GtkTreeSelection *sel = 
 	gtk_tree_view_get_selection(GTK_TREE_VIEW(widget));
-
-#if 0
-      GtkTreeIter iter;
-
-      /* get pointer to relation we are working on */
-      relation_t *relation = NULL;
-      gtk_tree_model_get_iter(GTK_TREE_MODEL(context->store), &iter, path);
-      gtk_tree_model_get(GTK_TREE_MODEL(context->store), &iter, 
-			 RELITEM_COL_DATA, &relation, -1);
-
-      if(relation) {
-	/* xyz */
-	printf("user clicked relation "ITEM_ID_FORMAT"\n", OSM_ID(relation));
-      }
-#endif
 
       if(!gtk_tree_selection_path_is_selected(sel, path))
 	gtk_tree_selection_select_path(sel, path);
@@ -368,8 +354,16 @@ static GtkWidget *relation_item_list_widget(relitem_context_t *context) {
 		   G_CALLBACK(on_view_clicked), context); 
 #endif
 
-  /* --- "Type" column --- */
+  /* --- "Name" column --- */
   GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
+  g_object_set(renderer, "ellipsize", PANGO_ELLIPSIZE_END, NULL );
+  GtkTreeViewColumn *column = gtk_tree_view_column_new_with_attributes(
+       "Name", renderer, "text", RELITEM_COL_NAME, NULL);
+  gtk_tree_view_column_set_expand(column, TRUE);
+  gtk_tree_view_insert_column(GTK_TREE_VIEW(context->view), column, -1);
+
+  /* --- "Type" column --- */
+  renderer = gtk_cell_renderer_text_new();
   gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(context->view), 
       -1, "Type", renderer, "text", RELITEM_COL_TYPE, NULL);
 
@@ -377,14 +371,6 @@ static GtkWidget *relation_item_list_widget(relitem_context_t *context) {
   renderer = gtk_cell_renderer_text_new();
   gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(context->view), 
       -1, "Role", renderer, "text", RELITEM_COL_ROLE, NULL);
-
-  /* --- "Name" column --- */
-  renderer = gtk_cell_renderer_text_new();
-  g_object_set(renderer, "ellipsize", PANGO_ELLIPSIZE_END, NULL );
-  GtkTreeViewColumn *column = gtk_tree_view_column_new_with_attributes(
-       "Name", renderer, "text", RELITEM_COL_NAME, NULL);
-  gtk_tree_view_column_set_expand(column, TRUE);
-  gtk_tree_view_insert_column(GTK_TREE_VIEW(context->view), column, -1);
 
   /* build and fill the store */
   context->store = gtk_list_store_new(RELITEM_NUM_COLS, 
@@ -424,7 +410,8 @@ static GtkWidget *relation_item_list_widget(relitem_context_t *context) {
     relation = relation->next;
   }
   
-  g_signal_connect(G_OBJECT(selection), "changed", G_CALLBACK(changed), NULL);
+  g_signal_connect(G_OBJECT(selection), "changed", 
+		   G_CALLBACK(changed), context);
 
 #ifndef FREMANTLE_PANNABLE_AREA
   /* put view into a scrolled window */
@@ -874,9 +861,8 @@ static GtkWidget *relation_list_widget(relation_context_t *context) {
 			      context);
 
   list_set_columns(context->list,
-		   _("Id"),      RELATION_COL_ID, 0,
-		   _("Type"),    RELATION_COL_TYPE, 0,
 		   _("Name"),    RELATION_COL_NAME, LIST_FLAG_ELLIPSIZE,
+		   _("Type"),    RELATION_COL_TYPE, 0,
 		   _("Members"), RELATION_COL_MEMBERS, 0,
 		   NULL);
 

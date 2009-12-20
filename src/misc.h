@@ -91,6 +91,7 @@ void combo_box_set_active(GtkWidget *cbox, int index);
 int combo_box_get_active(GtkWidget *cbox);
 const char *combo_box_get_active_text(GtkWidget *cbox);
 GType combo_box_type(void);
+GType combo_box_entry_type(void);
 
 void misc_init(void);
 
