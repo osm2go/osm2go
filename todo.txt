@@ -1,4 +1,4 @@
 - crash when selecting relations of a relation
-- make preset selection a picker on fremantle
-- hildon_entry in upload
 - convert those "check box" lists into multi-select lists
+- handle pre-selected entries in fremantle correctly (e.g. after "new" proj)
+- direct/extent does not update map selection

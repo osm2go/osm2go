@@ -24,6 +24,10 @@
 #include <curl/easy.h> /* new for v7 */
 #include <unistd.h>
 
+#ifdef FREMANTLE
+#include <hildon/hildon-text-view.h>
+#endif
+
 #define COLOR_ERR  "red"
 #define COLOR_OK   "darkgreen"
 
@@ -890,11 +894,7 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   gtk_table_attach_defaults(GTK_TABLE(table),  pentry, 1, 2, 1, 2);
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), table);
 
-  GtkWidget *scrolled_win = gtk_scrolled_window_new(NULL, NULL);
-  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_win), 
-  				 GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-  gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scrolled_win),
-				      GTK_SHADOW_IN);
+  GtkWidget *scrolled_win = misc_scrolled_window_new(TRUE);
 
   GtkTextBuffer *buffer = gtk_text_buffer_new(NULL);
   gtk_text_buffer_set_text(buffer, _("Please add a comment"), -1);
@@ -906,7 +906,13 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   g_signal_connect(G_OBJECT(buffer), "changed",
 		   G_CALLBACK(callback_buffer_modified), dialog);
 
+#ifndef FREMANTLE
   GtkWidget *view = gtk_text_view_new_with_buffer(buffer);
+#else
+  GtkWidget *view = hildon_text_view_new();
+  hildon_text_view_set_buffer(HILDON_TEXT_VIEW(view), buffer);
+#endif
+
   gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(view), GTK_WRAP_WORD);
   gtk_text_view_set_editable(GTK_TEXT_VIEW(view), TRUE);
   gtk_text_view_set_left_margin(GTK_TEXT_VIEW(view), 2 );

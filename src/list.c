@@ -234,15 +234,33 @@ GtkTreeSelection *list_get_selection(GtkWidget *list) {
   return sel;
 }
 
+/* returns true if something is selected. on in mode multiple returns */
+/* true if exactly one item is selected */
 gboolean list_get_selected(GtkWidget *list, GtkTreeModel **model,
 			   GtkTreeIter *iter) {
+  gboolean retval = FALSE;
   list_priv_t *priv = g_object_get_data(G_OBJECT(list), "priv");
   g_assert(priv);
 
+#if 1  
+  // this copes with multiple selections ...
   GtkTreeSelection *sel =
     gtk_tree_view_get_selection(GTK_TREE_VIEW(priv->view));
 
+  GList *slist = gtk_tree_selection_get_selected_rows(sel, model);
+  printf("%d are selected\n", g_list_length(slist));
+  
+  if(g_list_length(slist) == 1) 
+    retval = gtk_tree_model_get_iter(*model, iter, slist->data);
+
+  g_list_foreach(slist, (GFunc)gtk_tree_path_free, NULL);
+  g_list_free(slist);
+
+  return retval;
+#else
+  // ... this doesn't
   return gtk_tree_selection_get_selected(sel, model, iter);
+#endif
 }
 
 void list_button_enable(GtkWidget *list, list_button_t id, gboolean enable) {

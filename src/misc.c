@@ -249,7 +249,7 @@ static const gint dialog_sizes[][2] = {
 #else
   /* in maemo5 most dialogs are full screen */
   { 800, 480 },  // MEDIUM
-  { 800, 380 },  // LARGE
+  { 790, 380 },  // LARGE
 #endif
   { 640, 100 },  // WIDE
   { 450, 480 },  // HIGH
@@ -500,14 +500,15 @@ void notebook_append_page(GtkWidget *notebook,
 #endif  
 
   gtk_box_pack_start_defaults(
-     GTK_BOX(g_object_get_data(G_OBJECT(notebook), "hbox")),
-     button);
+	      GTK_BOX(g_object_get_data(G_OBJECT(notebook), "hbox")),
+	      button);
 
 #else
   gtk_notebook_append_page(GTK_NOTEBOOK(notebook), page, gtk_label_new(label));
 #endif
 }
 
+#ifdef FREMANTLE
 void on_value_changed(HildonPickerButton *widget, gpointer  user_data) {
   g_signal_emit_by_name(widget, "changed");
 }
@@ -531,6 +532,7 @@ static GtkWidget *combo_box_new_with_selector(char *title, GtkWidget *selector) 
 
   return button;
 }
+#endif
 
 /* the title is only used on fremantle with the picker widget */
 GtkWidget *combo_box_new(char *title) {

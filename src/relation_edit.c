@@ -24,13 +24,12 @@
 typedef struct {
   object_t *item;
   appdata_t *appdata;
-  GtkWidget *dialog, *list;
+  GtkWidget *dialog, *view;
   GtkListStore *store;
 } relitem_context_t;
 
 enum {
-  RELITEM_COL_SELECTED = 0,
-  RELITEM_COL_TYPE,
+  RELITEM_COL_TYPE = 0,
   RELITEM_COL_ROLE,
   RELITEM_COL_NAME,
   RELITEM_COL_DATA,
@@ -188,13 +187,6 @@ static void relation_remove_item(relation_t *relation, object_t *object) {
   g_assert(0);
 }
 
-static void relation_item_list_selected(relitem_context_t *context, 
-				   gboolean selected) {
-
-  list_button_enable(context->list, LIST_BUTTON_REMOVE, selected);
-  list_button_enable(context->list, LIST_BUTTON_EDIT, selected);
-}
-
 /* try to find something descriptive */
 static char *relation_get_descriptive_name(relation_t *relation) {
   char *name = osm_tag_get_by_key(OSM_TAG(relation), "ref");
@@ -214,112 +206,6 @@ static gboolean relation_info_dialog(GtkWidget *parent, appdata_t *appdata,
   object.relation = relation;
   return info_dialog(parent, appdata, &object);
 } 
-
-static void on_relation_item_add(GtkWidget *but, relitem_context_t *context) {
-  /* create a new relation */
-
-  relation_t *relation = osm_relation_new();
-  if(!relation_info_dialog(context->dialog, context->appdata, relation)) {
-    printf("tag edit cancelled\n");
-    osm_relation_free(relation);
-  } else {
-    osm_relation_attach(context->appdata->osm, relation);
-
-    /* add to list */
-
-    /* append a row for the new data */
-    char *name = relation_get_descriptive_name(relation);
-
-    GtkTreeIter iter;
-    gtk_list_store_append(context->store, &iter);
-    gtk_list_store_set(context->store, &iter,
-		       RELITEM_COL_SELECTED, FALSE,
-		       RELITEM_COL_TYPE, 
-		       osm_tag_get_by_key(OSM_TAG(relation), "type"),
-		       RELITEM_COL_NAME, name,
-		       RELITEM_COL_DATA, relation,
-		       -1);
-
-    gtk_tree_selection_select_iter(list_get_selection(context->list), &iter);
-  }
-}
-
-static relation_t *get_selection(relitem_context_t *context) {
-  GtkTreeSelection *selection;
-  GtkTreeModel     *model;
-  GtkTreeIter       iter;
-
-  selection = list_get_selection(context->list);
-  if(gtk_tree_selection_get_selected(selection, &model, &iter)) {
-    relation_t *relation;
-    gtk_tree_model_get(model, &iter, RELITEM_COL_DATA, &relation, -1);
-    return(relation);
-  }
-  return NULL;
-}
-
-static void on_relation_item_edit(GtkWidget *but, relitem_context_t *context) {
-  relation_t *sel = get_selection(context);
-  if(!sel) return;
-
-  printf("edit relation item #" ITEM_ID_FORMAT "\n", OSM_ID(sel));
-
-  if (!relation_info_dialog(context->dialog, context->appdata, sel))
-    return;
-
-  // Locate the changed item
-  GtkTreeIter iter;
-  gboolean valid = gtk_tree_model_get_iter_first(
-    GTK_TREE_MODEL(context->store), &iter);
-  while (valid) {
-    relation_t *row_rel;
-    gtk_tree_model_get(GTK_TREE_MODEL(context->store), &iter,
-                       RELITEM_COL_DATA, &row_rel,
-                       -1);
-    if (row_rel == sel)
-      break;
-    valid = gtk_tree_model_iter_next(GTK_TREE_MODEL(context->store), &iter);
-  }
-  if (!valid)
-    return;
-
-  // Found it. Update all visible fields that belong to the relation iself.
-  gtk_list_store_set(context->store, &iter,
-     RELITEM_COL_TYPE,    osm_tag_get_by_key(OSM_TAG(sel), "type"),
-     RELITEM_COL_NAME,    relation_get_descriptive_name(sel),
-    -1);
-
-  // Order will probably have changed, so refocus
-  list_focus_on(context->list, &iter, TRUE);
-}
-
-/* remove the selected relation */
-static void on_relation_item_remove(GtkWidget *but, relitem_context_t *context) {
-  relation_t *sel = get_selection(context);
-  if(!sel) return;
-
-  printf("remove relation #" ITEM_ID_FORMAT "\n", OSM_ID(sel));
-
-  gint members = osm_relation_members_num(sel);
-
-  if(members) 
-    if(!yes_no_f(context->dialog, NULL, 0, 0,
-		 _("Delete non-empty relation?"), 
-		 _("This relation still has %d members. "
-		   "Delete it anyway?"), members))
-      return;
-  
-  /* first remove selected row from list */
-  GtkTreeIter       iter;
-  GtkTreeSelection *selection = list_get_selection(context->list);
-  if(gtk_tree_selection_get_selected(selection, NULL, &iter)) 
-    gtk_list_store_remove(context->store, &iter);
-
-  /* then really delete it */
-  osm_relation_delete(context->appdata->osm, sel, FALSE); 
-
-  relation_item_list_selected(context, FALSE);
-}
 
 static char *relitem_get_role_in_relation(object_t *item, relation_t *relation) {
   member_t *member = relation->member;
@@ -344,6 +230,7 @@ static char *relitem_get_role_in_relation(object_t *item, relation_t *relation) 
   return NULL;
 }
 
+#if 0 //XXX
 static void
 relitem_toggled(GtkCellRendererToggle *cell, const gchar *path_str,
 		relitem_context_t *context) {
@@ -358,7 +245,7 @@ relitem_toggled(GtkCellRendererToggle *cell, const gchar *path_str,
   gboolean enabled;
   relation_t *relation = NULL;
   gtk_tree_model_get(GTK_TREE_MODEL(context->store), &iter, 
-		     RELITEM_COL_SELECTED, &enabled, 
+		     //		     RELITEM_COL_SELECTED, &enabled, 
 		     RELITEM_COL_DATA, &relation, 
 		     -1);
 
@@ -368,7 +255,7 @@ relitem_toggled(GtkCellRendererToggle *cell, const gchar *path_str,
     printf("will now become be part of this relation\n");
     if(relation_add_item(context->dialog, relation, context->item))
       gtk_list_store_set(context->store, &iter, 
-		 RELITEM_COL_SELECTED, TRUE, 
+			 //		 RELITEM_COL_SELECTED, TRUE, 
 		 RELITEM_COL_ROLE, 
 		 relitem_get_role_in_relation(context->item, relation),
 		 -1);
@@ -376,12 +263,13 @@ relitem_toggled(GtkCellRendererToggle *cell, const gchar *path_str,
     printf("item will not be part of this relation anymore\n");
     relation_remove_item(relation, context->item);
     gtk_list_store_set(context->store, &iter, 
-		       RELITEM_COL_SELECTED, FALSE, 
+		       //		       RELITEM_COL_SELECTED, FALSE, 
 		       RELITEM_COL_ROLE, NULL, 
 		       -1);
   }
 
 }
+#endif
 
 static gboolean relitem_is_in_relation(object_t *item, relation_t *relation) {
   member_t *member = relation->member;
@@ -406,28 +294,113 @@ static gboolean relitem_is_in_relation(object_t *item, relation_t *relation) {
   return FALSE;
 }
 
-static GtkWidget *relation_item_list_widget(relitem_context_t *context) {
-  context->list = list_new(LIST_HILDON_WITH_HEADERS);
+static void changed(GtkTreeSelection *treeselection, gpointer user_data) {
+  printf("relation-edit changed event\n");  
 
-  list_set_columns(context->list, 
-		   _(""), RELITEM_COL_SELECTED, LIST_FLAG_TOGGLE, 
-		            G_CALLBACK(relitem_toggled), context,
-		   _("Type"), RELITEM_COL_TYPE, 0,
-		   _("Role"), RELITEM_COL_ROLE, 0,
-		   _("Name"), RELITEM_COL_NAME, LIST_FLAG_ELLIPSIZE,
-		   NULL);
+  /* we need to know what changed in order to let the user acknowlege it! */
+
+}
+
+#ifndef FREMANTLE
+/* we handle these events on our own in order to implement */
+/* a very direct selection mechanism (multiple selections usually */
+/* require the control key to be pressed). This interferes with */
+/* fremantle finger scrolling, but fortunately the fremantle */
+/* default behaviour already is what we want. */
+static gboolean on_view_clicked(GtkWidget *widget, GdkEventButton *event,
+				gpointer user_data) {
+  relitem_context_t *context = (relitem_context_t*)user_data;
+
+  if(event->window == gtk_tree_view_get_bin_window(GTK_TREE_VIEW(widget))) {  
+    GtkTreePath *path;
+    
+    if(gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget), 
+		     event->x, event->y, &path, NULL, NULL, NULL)) {
+      GtkTreeSelection *sel = 
+	gtk_tree_view_get_selection(GTK_TREE_VIEW(widget));
+
+#if 0
+      GtkTreeIter iter;
+
+      /* get pointer to relation we are working on */
+      relation_t *relation = NULL;
+      gtk_tree_model_get_iter(GTK_TREE_MODEL(context->store), &iter, path);
+      gtk_tree_model_get(GTK_TREE_MODEL(context->store), &iter, 
+			 RELITEM_COL_DATA, &relation, -1);
+
+      if(relation) {
+	/* xyz */
+	printf("user clicked relation "ITEM_ID_FORMAT"\n", OSM_ID(relation));
+      }
+#endif
+
+      if(!gtk_tree_selection_path_is_selected(sel, path))
+	gtk_tree_selection_select_path(sel, path);
+      else
+	gtk_tree_selection_unselect_path(sel, path);
+    }
+    return TRUE;
+  }
+  return FALSE;
+}
+#endif
+
+static GtkWidget *relation_item_list_widget(relitem_context_t *context) {
+#ifndef FREMANTLE
+  context->view = gtk_tree_view_new();
+#else
+  context->view = hildon_gtk_tree_view_new(HILDON_UI_MODE_EDIT);
+#endif
+
+#ifdef USE_HILDON
+  /* hildon hides these by default */
+  gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(context->view), TRUE); 
+#endif
+
+  /* change list mode to "multiple" */
+  GtkTreeSelection *selection = 
+    gtk_tree_view_get_selection(GTK_TREE_VIEW(context->view));
+  gtk_tree_selection_set_mode(selection, GTK_SELECTION_MULTIPLE);
+
+#ifndef FREMANTLE
+  /* catch views button-press event for our custom handling */
+  g_signal_connect(context->view, "button-press-event", 
+		   G_CALLBACK(on_view_clicked), context); 
+#endif
+
+  /* --- "Type" column --- */
+  GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
+  gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(context->view), 
+      -1, "Type", renderer, "text", RELITEM_COL_TYPE, NULL);
+
+  /* --- "Role" column --- */
+  renderer = gtk_cell_renderer_text_new();
+  gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(context->view), 
+      -1, "Role", renderer, "text", RELITEM_COL_ROLE, NULL);
+
+  /* --- "Name" column --- */
+  renderer = gtk_cell_renderer_text_new();
+  g_object_set(renderer, "ellipsize", PANGO_ELLIPSIZE_END, NULL );
+  GtkTreeViewColumn *column = gtk_tree_view_column_new_with_attributes(
+       "Name", renderer, "text", RELITEM_COL_NAME, NULL);
+  gtk_tree_view_column_set_expand(column, TRUE);
+  gtk_tree_view_insert_column(GTK_TREE_VIEW(context->view), column, -1);
 
   /* build and fill the store */
   context->store = gtk_list_store_new(RELITEM_NUM_COLS, 
-		G_TYPE_BOOLEAN, G_TYPE_STRING, G_TYPE_STRING, 
+		G_TYPE_STRING, G_TYPE_STRING, 
 	        G_TYPE_STRING, G_TYPE_POINTER);
 
-  list_set_store(context->list, context->store);
+  gtk_tree_view_set_model(GTK_TREE_VIEW(context->view), 
+			  GTK_TREE_MODEL(context->store));
+  g_object_unref(context->store);
 
   // Debatable whether to sort by the "selected" or the "Name" column by
   // default. Both are be useful, in different ways.
   gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(context->store),
                                        RELITEM_COL_NAME, GTK_SORT_ASCENDING);
+
+  /* build a list of iters of all items that should be selected */
 
   GtkTreeIter iter;
   relation_t *relation = context->appdata->osm->relation;
@@ -438,28 +411,45 @@ static GtkWidget *relation_item_list_widget(relitem_context_t *context) {
     /* Append a row and fill in some data */
     gtk_list_store_append(context->store, &iter);
     gtk_list_store_set(context->store, &iter,
-       RELITEM_COL_SELECTED, relitem_is_in_relation(context->item, relation),
        RELITEM_COL_TYPE, osm_tag_get_by_key(OSM_TAG(relation), "type"),
        RELITEM_COL_ROLE, relitem_get_role_in_relation(context->item, relation),
        RELITEM_COL_NAME, name,
        RELITEM_COL_DATA, relation,
        -1);
-    
+
+    /* select all relations the current object is part of */
+    if(relitem_is_in_relation(context->item, relation)) 
+      gtk_tree_selection_select_iter(selection, &iter);
+   
     relation = relation->next;
   }
   
-  g_object_unref(context->store);
+  g_signal_connect(G_OBJECT(selection), "changed", G_CALLBACK(changed), NULL);
 
-  list_set_static_buttons(context->list, 0, 
-    G_CALLBACK(on_relation_item_add), G_CALLBACK(on_relation_item_edit),
-    G_CALLBACK(on_relation_item_remove), context);
-
-  relation_item_list_selected(context, FALSE);
-
-  return context->list;
+#ifndef FREMANTLE_PANNABLE_AREA
+  /* put view into a scrolled window */
+  GtkWidget *scrolled_window = gtk_scrolled_window_new(NULL, NULL);
+  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window), 
+				 GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+  gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scrolled_window), 
+				      GTK_SHADOW_ETCHED_IN);
+  gtk_container_add(GTK_CONTAINER(scrolled_window), context->view);
+  return scrolled_window;
+#else
+  /* put view into a pannable area */
+  GtkWidget *pannable_area = hildon_pannable_area_new();
+  gtk_container_add(GTK_CONTAINER(pannable_area), context->view);
+  return pannable_area;
+#endif
 }
 
-void relation_add_dialog(GtkWidget *parent, 
+static void 
+on_dialog_destroy(GtkWidget *widget, gpointer user_data ) {
+  relitem_context_t *context = (relitem_context_t*)user_data;
+  g_free(context);
+}
+
+void relation_membership_dialog(GtkWidget *parent, 
 			 appdata_t *appdata, object_t *object) {
   relitem_context_t *context = g_new0(relitem_context_t, 1);
   map_t *map = appdata->map;
@@ -471,11 +461,11 @@ void relation_add_dialog(GtkWidget *parent,
   char *str = NULL;
   switch(object->type) {
   case NODE:
-    str = g_strdup_printf(_("Relations for node #" ITEM_ID_FORMAT), 
+    str = g_strdup_printf(_("Relation memberships of node #" ITEM_ID_FORMAT), 
 			  OBJECT_ID(*object));
     break;
   case WAY:
-    str = g_strdup_printf(_("Relations for way #" ITEM_ID_FORMAT), 
+    str = g_strdup_printf(_("Relation memberships of way #" ITEM_ID_FORMAT), 
 			  OBJECT_ID(*object));
     break;
   default:
@@ -490,6 +480,9 @@ void relation_add_dialog(GtkWidget *parent,
 		    NULL);
   g_free(str);
   
+  gtk_signal_connect(GTK_OBJECT(context->dialog), "destroy", 
+	     (GtkSignalFunc)on_dialog_destroy, context);
+
   gtk_dialog_set_default_response(GTK_DIALOG(context->dialog), 
 				  GTK_RESPONSE_CLOSE);
 
@@ -501,8 +494,6 @@ void relation_add_dialog(GtkWidget *parent,
   gtk_widget_show_all(context->dialog);
   gtk_dialog_run(GTK_DIALOG(context->dialog));
   gtk_widget_destroy(context->dialog);
-
-  g_free(context);
 }
 
 /* -------------------- global relation list ----------------- */
@@ -866,8 +857,8 @@ static void on_relation_remove(GtkWidget *but, relation_context_t *context) {
   
   /* first remove selected row from list */
   GtkTreeIter       iter;
-  GtkTreeSelection *selection = list_get_selection(context->list);
-  if(gtk_tree_selection_get_selected(selection, NULL, &iter)) 
+  GtkTreeModel      *model;
+  if(list_get_selected(context->list, &model, &iter)) 
     gtk_list_store_remove(context->store, &iter);
 
   /* then really delete it */

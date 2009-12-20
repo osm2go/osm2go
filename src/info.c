@@ -273,7 +273,8 @@ void info_tags_replace(tag_context_t *context) {
 }
 
 static void on_relations(GtkWidget *button, tag_context_t *context) {
-  relation_add_dialog(context->dialog, context->appdata, &context->object);
+  relation_membership_dialog(context->dialog, context->appdata, 
+			     &context->object);
 }
 
 static GtkWidget *tag_widget(tag_context_t *context) {

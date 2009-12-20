@@ -22,6 +22,11 @@
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 
+#ifdef FREMANTLE
+#include <hildon/hildon-picker-button.h>
+#define PICKER_MENU
+#endif
+
 #ifndef LIBXML_TREE_ENABLED
 #error "Tree not enabled in libxml"
 #endif
@@ -149,17 +154,7 @@ static presets_widget_t **parse_widgets(xmlNode *a_node,
   for(cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if(cur_node->type == XML_ELEMENT_NODE) {
 
-      if(strcasecmp((char*)cur_node->name, "space") == 0) {
-
-	/* --------- space widget --------- */
-	/* we are low on screen space on the handhelds, */
-	/* so we just ignore extra spaces */
-#ifndef USE_HILDON
-	*widget = g_new0(presets_widget_t, 1);
-	(*widget)->type = WIDGET_TYPE_SPACE;
-#endif
-
-      } else if(strcasecmp((char*)cur_node->name, "label") == 0) {
+      if(strcasecmp((char*)cur_node->name, "label") == 0) {
 
 	/* --------- label widget --------- */
 	*widget = g_new0(presets_widget_t, 1);
@@ -177,11 +172,13 @@ static presets_widget_t **parse_widgets(xmlNode *a_node,
 
       }
       else if(strcasecmp((char*)cur_node->name, "space") == 0) {
+#ifndef USE_HILDON
         // new-style separators
         *widget = g_new0(presets_widget_t, 1);
         (*widget)->type = WIDGET_TYPE_SEPARATOR;
 	(*widget)->text = NULL;
 	widget = &((*widget)->next);
+#endif
       } 
       else if(strcasecmp((char*)cur_node->name, "text") == 0) {
 
@@ -693,17 +690,14 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
 
 typedef struct {
   appdata_t *appdata;
+#ifndef FREMANTLE
   GtkWidget *menu;
+#endif
   tag_context_t *tag_context;
 } presets_context_t;
 
 static void 
-cb_menu_item(GtkMenuItem *menu_item, gpointer data) {
-  presets_context_t *context = (presets_context_t*)data;
-
-  presets_item_t *item = g_object_get_data(G_OBJECT(menu_item), "item");
-  g_assert(item);
-
+do_item( presets_context_t *context, presets_item_t *item) {
   tag_t *tag = 
     presets_item_dialog(context->appdata, 
 			GTK_WINDOW(context->tag_context->dialog), item,
@@ -740,6 +734,17 @@ cb_menu_item(GtkMenuItem *menu_item, gpointer data) {
 
     info_tags_replace(tag_context);
   }
+}
+
+#ifndef PICKER_MENU
+static void 
+cb_menu_item(GtkWidget *menu_item, gpointer data) {
+  presets_context_t *context = (presets_context_t*)data;
+
+  presets_item_t *item = g_object_get_data(G_OBJECT(menu_item), "item");
+  g_assert(item);
+
+  do_item(context, item);
 }
 
 static GtkWidget *build_menu(presets_context_t *context, 
@@ -780,6 +785,179 @@ static GtkWidget *build_menu(presets_context_t *context,
 
   return menu;
 }
+#else // PICKER_MENU
+
+enum {
+  PRESETS_PICKER_COL_ICON = 0,
+  PRESETS_PICKER_COL_NAME,
+  PRESETS_PICKER_COL_ITEM_PTR,
+  PRESETS_PICKER_COL_SUBMENU_ICON,
+  PRESETS_PICKER_COL_SUBMENU_PTR,
+  PRESETS_PICKER_NUM_COLS
+};
+
+static GtkWidget 
+*presets_picker(presets_context_t *context, presets_item_t *item);
+
+static void 
+on_presets_picker_selected(GtkTreeSelection *selection, gpointer data) {
+  presets_context_t *context = (presets_context_t*)data;
+
+#ifdef FREMANTLE
+  /* try to prevent inital selection */
+  if(!g_object_get_data(G_OBJECT(selection), "setup_done")) {
+    gtk_tree_selection_unselect_all (selection);
+    g_object_set_data(G_OBJECT(selection), "setup_done", (gpointer)TRUE);
+    return;
+  }
+#endif
+
+  GtkTreeIter   iter;
+  GtkTreeModel *model;
+
+  if (gtk_tree_selection_get_selected (selection, &model, &iter)) {
+    char *name = NULL;
+    presets_item_t *item = NULL, *sub_item = NULL;
+    gtk_tree_model_get(model, &iter, 
+		       PRESETS_PICKER_COL_NAME, &name, 
+		       PRESETS_PICKER_COL_SUBMENU_PTR, &sub_item, 
+		       PRESETS_PICKER_COL_ITEM_PTR, &item, 
+		       -1);
+
+    printf("clicked on %s, submenu = %p\n", name, sub_item);
+
+    GtkWidget *view = 
+      GTK_WIDGET(gtk_tree_selection_get_tree_view(selection));
+
+    if(sub_item) {
+      /* check if this already had a submenu */
+      GtkWidget *sub = GTK_WIDGET(g_object_get_data(G_OBJECT(view), "sub"));
+      g_assert(sub);
+
+      gtk_widget_destroy(sub);
+
+      /* views parent is a scrolled window whichs parent in turn is the hbox */
+      GtkWidget *hbox = view->parent->parent; 
+
+      sub = presets_picker(context, sub_item);
+      gtk_box_pack_start_defaults(GTK_BOX(hbox), sub);
+      gtk_widget_show_all(sub);
+      g_object_set_data(G_OBJECT(view), "sub", (gpointer)sub);
+    } else {
+      /* save item pointer in dialog */
+      g_object_set_data(G_OBJECT(gtk_widget_get_toplevel(view)), 
+			"item", (gpointer)item);
+
+      /* and request closing of menu */
+      gtk_dialog_response(GTK_DIALOG(gtk_widget_get_toplevel(view)), 
+			  GTK_RESPONSE_ACCEPT);
+    }
+  }
+}
+  
+static GtkWidget 
+*presets_picker(presets_context_t *context, presets_item_t *item) {
+  GtkCellRenderer *renderer;
+  GtkListStore    *store;
+
+#ifndef FREMANTLE
+  GtkWidget *view = gtk_tree_view_new();
+#else
+  GtkWidget *view = hildon_gtk_tree_view_new(HILDON_UI_MODE_EDIT);
+#endif
+  
+  gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(view), FALSE); 
+  
+  /* --- "Icon" column --- */
+  renderer = gtk_cell_renderer_pixbuf_new();
+  gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(view),
+      -1, "Icon", renderer, "pixbuf", PRESETS_PICKER_COL_ICON, NULL);
+
+  /* --- "Name" column --- */
+  renderer = gtk_cell_renderer_text_new();
+  g_object_set(renderer, "ellipsize", PANGO_ELLIPSIZE_END, NULL );
+  GtkTreeViewColumn *column = gtk_tree_view_column_new_with_attributes(
+		 "Name", renderer, "text", PRESETS_PICKER_COL_NAME, NULL);
+  gtk_tree_view_column_set_expand(column, TRUE);
+  gtk_tree_view_insert_column(GTK_TREE_VIEW(view), column, -1);
+
+  /* --- "submenu icon" column --- */
+  renderer = gtk_cell_renderer_pixbuf_new();
+  gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(view),
+      -1, "Submenu Icon", renderer, "pixbuf", 
+      PRESETS_PICKER_COL_SUBMENU_ICON, NULL);
+
+  store = gtk_list_store_new(PRESETS_PICKER_NUM_COLS, 
+			     GDK_TYPE_PIXBUF,
+			     G_TYPE_STRING,
+			     G_TYPE_POINTER,
+			     GDK_TYPE_PIXBUF,
+			     G_TYPE_POINTER
+			     );
+
+
+  while(item) {
+    /* check if this presets entry is appropriate for the current item */
+    if(item->type & context->tag_context->presets_type) {
+
+      if(item->name) {
+	/* icon load can cope with NULL as name (returns NULL then) */
+	GdkPixbuf *icon = icon_load(&context->appdata->icon, item->icon);
+	GtkTreeIter     iter;
+
+	/* Append a row and fill in some data */
+	gtk_list_store_append (store, &iter);
+
+	gtk_list_store_set(store, &iter,
+			   PRESETS_PICKER_COL_ICON, icon,
+			   PRESETS_PICKER_COL_NAME, item->name,
+			   PRESETS_PICKER_COL_ITEM_PTR, item,
+			   -1);
+
+	/* mark submenues as such */
+	if(item->is_group) {
+	  GdkPixbuf *subicon = icon_load(&context->appdata->icon, 
+				      "submenu_arrow");
+
+	  gtk_list_store_set(store, &iter,
+			     PRESETS_PICKER_COL_SUBMENU_PTR,  item->group,
+			     PRESETS_PICKER_COL_SUBMENU_ICON, subicon,
+			     -1);
+
+	}
+
+      }
+    }
+
+    item = item->next;
+  }
+
+  gtk_tree_view_set_model(GTK_TREE_VIEW(view), GTK_TREE_MODEL(store));
+  g_object_unref(store);
+
+  /* Setup the selection handler */
+  GtkTreeSelection *select = 
+    gtk_tree_view_get_selection (GTK_TREE_VIEW (view));
+  gtk_tree_selection_set_mode (select, GTK_SELECTION_SINGLE);
+  g_signal_connect (G_OBJECT (select), "changed",
+		    G_CALLBACK (on_presets_picker_selected), context);
+
+  gtk_tree_selection_unselect_all (select);
+
+  /* put this inside a scrolled view */
+#ifndef USE_PANNABLE_AREA
+  GtkWidget *scrolled_window = gtk_scrolled_window_new (NULL, NULL);
+  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window), 
+				 GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+  gtk_container_add(GTK_CONTAINER(scrolled_window), view);
+  return scrolled_window;
+#else
+  GtkWidget *pannable_area = hildon_pannable_area_new();
+  gtk_container_add(GTK_CONTAINER(pannable_area), view);
+  return pannable_area;
+#endif
+}
+#endif
 
 static gint button_press(GtkWidget *widget, GdkEventButton *event, 
 			 gpointer data) {
@@ -788,12 +966,48 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event,
   if(event->type == GDK_BUTTON_PRESS) {
     printf("button press %d %d\n", event->button, event->time);
 
+#ifndef PICKER_MENU
     if (!context->menu)
       context->menu = build_menu(context, context->appdata->presets);
     gtk_widget_show_all( GTK_WIDGET(context->menu) );
 
     gtk_menu_popup(GTK_MENU(context->menu), NULL, NULL, NULL, NULL,
 		   event->button, event->time);
+#else
+    /* popup our special picker like menu */
+    GtkWidget *dialog = 
+      gtk_dialog_new_with_buttons(_("Presets"),
+		  GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(widget))), 
+				  GTK_DIALOG_MODAL,
+          GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, 
+	  NULL);
+
+    gtk_window_set_default_size(GTK_WINDOW(dialog), 400, 480);
+    
+    /* create root picker */
+    GtkWidget *hbox = gtk_hbox_new(TRUE, 0);
+
+    GtkWidget *root = presets_picker(context, context->appdata->presets);
+    gtk_box_pack_start_defaults(GTK_BOX(hbox), root);
+
+    GtkWidget *sub = gtk_label_new("");
+    gtk_box_pack_start_defaults(GTK_BOX(hbox), sub);
+
+    g_object_set_data(G_OBJECT(gtk_bin_get_child(GTK_BIN(root))), 
+		      "sub", (gpointer)sub);
+
+    gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox);
+
+    gtk_widget_show_all(dialog);
+    presets_item_t *item = NULL;
+    if(gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT)
+      item = (presets_item_t*)g_object_get_data(G_OBJECT(dialog), "item");
+
+    gtk_widget_destroy(dialog);
+
+    if(item) 
+      do_item(context, item);
+#endif
 
     /* Tell calling code that we have handled this event; the buck
      * stops here. */
@@ -805,9 +1019,12 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event,
 static gint on_button_destroy(GtkWidget *widget, gpointer data) {
   presets_context_t *context = (presets_context_t*)data;
 
+#ifndef FREMANTLE
   printf("freeing preset button context\n");
   if (context->menu)
     gtk_widget_destroy(context->menu);
+#endif
+
   g_free(context);
 
   return FALSE;
