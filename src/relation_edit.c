@@ -196,6 +196,9 @@ static char *relation_get_descriptive_name(relation_t *relation) {
     name = osm_tag_get_by_key(OSM_TAG(relation), "note");
   if (!name)
     name = osm_tag_get_by_key(OSM_TAG(relation), "fix" "me");
+  if(!name)
+    name = g_strdup_printf("<ID #"ITEM_ID_FORMAT">", OSM_ID(relation));
+
   return name;
 }
 
@@ -493,8 +496,7 @@ typedef struct {
 } relation_context_t;
 
 enum {
-  RELATION_COL_ID = 0,
-  RELATION_COL_TYPE,
+  RELATION_COL_TYPE = 0,
   RELATION_COL_NAME,
   RELATION_COL_MEMBERS,
   RELATION_COL_DATA,
@@ -771,7 +773,6 @@ static void on_relation_add(GtkWidget *but, relation_context_t *context) {
     GtkTreeIter iter;
     gtk_list_store_append(context->store, &iter);
     gtk_list_store_set(context->store, &iter,
-		       RELATION_COL_ID, OSM_ID(relation),
 		       RELATION_COL_TYPE,
 		       osm_tag_get_by_key(OSM_TAG(relation), "type"),
 		       RELATION_COL_NAME, name,
@@ -815,7 +816,6 @@ static void on_relation_edit(GtkWidget *but, relation_context_t *context) {
 
   // Found it. Update all visible fields.
   gtk_list_store_set(context->store, &iter,
-    RELATION_COL_ID,      OSM_ID(sel),
     RELATION_COL_TYPE,    osm_tag_get_by_key(OSM_TAG(sel), "type"),
     RELATION_COL_NAME,    relation_get_descriptive_name(sel),
     RELATION_COL_MEMBERS, osm_relation_members_num(sel),
@@ -868,7 +868,7 @@ static GtkWidget *relation_list_widget(relation_context_t *context) {
 
   /* build and fill the store */
   context->store = gtk_list_store_new(RELATION_NUM_COLS, 
-		G_TYPE_ITEM_ID_T, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_UINT, 
+		G_TYPE_STRING, G_TYPE_STRING, G_TYPE_UINT, 
 	        G_TYPE_POINTER);
 
   list_set_store(context->list, context->store);
@@ -896,7 +896,6 @@ static GtkWidget *relation_list_widget(relation_context_t *context) {
     /* Append a row and fill in some data */
     gtk_list_store_append(context->store, &iter);
     gtk_list_store_set(context->store, &iter,
-		       RELATION_COL_ID, OSM_ID(rel),
 		       RELATION_COL_TYPE,
 		       osm_tag_get_by_key(OSM_TAG(rel), "type"),
 		       RELATION_COL_NAME, name,
