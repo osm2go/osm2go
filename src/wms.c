@@ -1365,9 +1365,23 @@ void wms_load(appdata_t *appdata) {
   }
 }
 
-void wms_remove(appdata_t *appdata) {
+void wms_remove_file(project_t *project) {
   const char *exts[] = { "png", "gif", "jpg", "" };
   int i=0;
+
+  while(exts[i][0]) {
+    char *filename = 
+      g_strdup_printf("%s/wms.%s", project->path, exts[i]);
+
+    if(g_file_test(filename, G_FILE_TEST_EXISTS)) 
+      g_remove(filename);
+
+    g_free(filename);
+    i++;
+  }
+}
+
+void wms_remove(appdata_t *appdata) {
 
   /* this cancels any wms adjustment in progress */
   if(appdata->map->action.type == MAP_ACTION_BG_ADJUST)
@@ -1378,16 +1392,7 @@ void wms_remove(appdata_t *appdata) {
 
   map_remove_bg_image(appdata->map);
 
-  while(exts[i][0]) {
-    char *filename = g_strdup_printf("%s/wms.%s", appdata->project->path, 
-				     exts[i]);
-
-    if(g_file_test(filename, G_FILE_TEST_EXISTS)) 
-      g_remove(filename);
-
-    g_free(filename);
-    i++;
-  }
+  wms_remove_file(appdata->project);
 }
 
 struct server_preset_s {

@@ -376,8 +376,12 @@ node_chain_t *osm_parse_osm_way_nd(osm_t *osm,
 
     /* search matching node */
     node_chain->node = osm_get_node_by_id(osm, id);
-    if(!node_chain->node) printf("Node id " ITEM_ID_FORMAT " not found\n", id);
-    else                  node_chain->node->ways++;
+    if(!node_chain->node) {
+      printf("Node id " ITEM_ID_FORMAT " not found\n", id);
+      g_free(node_chain);
+      node_chain = NULL;
+    } else
+      node_chain->node->ways++;
 
     xmlFree(prop);
 

@@ -523,7 +523,6 @@ void map_show_node(map_t *map, node_t *node) {
 }
 
 void map_way_draw(map_t *map, way_t *way) {
-
   /* don't draw a way that's not there anymore */
   if(OSM_FLAGS(way) & (OSM_FLAG_DELETED | OSM_FLAG_HIDDEN))
     return;
@@ -537,7 +536,7 @@ void map_way_draw(map_t *map, way_t *way) {
 		       map->style->node.color, 0);
   } else {
     canvas_points_t *points = canvas_points_new(nodes);
-    
+
     int node = 0;
     node_chain_t *node_chain = way->node_chain;
     while(node_chain) {
@@ -552,7 +551,6 @@ void map_way_draw(map_t *map, way_t *way) {
       map_way_new(map, CANVAS_GROUP_POLYGONS, way, points, 
 		  width, way->draw.color, way->draw.area.color);
     } else {
-  
       if(way->draw.flags & OSM_DRAW_FLAG_BG) {
 	map_way_new(map, CANVAS_GROUP_WAYS_INT, way, points, 
 		    width, way->draw.color, NO_COLOR);
@@ -1732,13 +1730,15 @@ static gboolean map_autosave(gpointer data) {
   /* only do this if root window has focus as otherwise */
   /* a dialog may be open and modifying the basic structures */
   if(GTK_WIDGET_HAS_FOCUS(map->appdata->window)) {
+    printf("autosave ...\n");
 
     if(map->appdata->project && map->appdata->osm) {
       track_save(map->appdata->project, map->appdata->track.track);
       diff_save(map->appdata->project, map->appdata->osm);
       banner_show_info(map->appdata, _("Autosave"));
     }
-  }
+  } else
+    printf("autosave supressed\n");
 
   return TRUE;
 }

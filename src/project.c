@@ -953,6 +953,9 @@ static void on_edit_clicked(GtkButton *button, gpointer data) {
   if(area_edit(&context->area_edit)) {
     printf("coordinates changed!!\n");
 
+    /* the wms layer isn't usable with new coordinates */
+    wms_remove_file(context->project);
+
     pos_lon_label_set(context->minlat, context->project->min.lat);
     pos_lon_label_set(context->minlon, context->project->min.lon);
     pos_lon_label_set(context->maxlat, context->project->max.lat);
