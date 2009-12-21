@@ -1,5 +1,4 @@
 - crash when selecting relations of a relation (now disabled)
 - gps enable/disable in fremanlte
 - check if selection_func is really still needed
-- check autosave fix
 - internationalization patch (where is it?)

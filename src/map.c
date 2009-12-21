@@ -1725,17 +1725,15 @@ map_state_t *map_state_new(void) {
 static gboolean map_autosave(gpointer data) {
   map_t *map = (map_t*)data;
 
-  printf("autosave ...\n");
-
   /* only do this if root window has focus as otherwise */
   /* a dialog may be open and modifying the basic structures */
-  if(GTK_WIDGET_HAS_FOCUS(map->appdata->window)) {
+  if(gtk_window_is_active(GTK_WINDOW(map->appdata->window))) {
     printf("autosave ...\n");
 
     if(map->appdata->project && map->appdata->osm) {
       track_save(map->appdata->project, map->appdata->track.track);
       diff_save(map->appdata->project, map->appdata->osm);
-      banner_show_info(map->appdata, _("Autosave"));
+      //      banner_show_info(map->appdata, _("Autosave"));
     }
   } else
     printf("autosave supressed\n");
