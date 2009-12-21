@@ -5,7 +5,7 @@
 	<way width="3" color="#c0c0c0"/>
         <area border-width="1" color="#00000066"/>
         <background color="black"/>
-        <track width="6" color="#0000ff40" gps-color="#00008040" gps-icon="gpscross3"/>
+        <track width="6" color="#0000ff40" gps-color="#00008040"/>
         <highlight color="#ffff00c0" node-color="#ff0000c0"  touch-color="#0000ffc0" width="2"/>
 	<frisket mult="3" color="#00000000">
   		<border width="20" color="#ff0000c0"/>

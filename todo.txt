@@ -4,3 +4,5 @@
 - review gps icons
 - check autosave fix
 - internationalization patch
+- clear wms after coordinate change
+

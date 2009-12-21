@@ -33,8 +33,6 @@ typedef struct style_s {
   struct {
     elemstyle_color_t color;
     elemstyle_color_t gps_color;
-    char *gps_icon_name;
-    GdkPixbuf *gps_icon;
     float width;
   } track;
 
