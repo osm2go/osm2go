@@ -840,7 +840,7 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
 
 
   GtkWidget *dialog = 
-    misc_dialog_new(MISC_DIALOG_NOSIZE, _("Upload to OSM"),
+    misc_dialog_new(MISC_DIALOG_MEDIUM, _("Upload to OSM"),
 		    GTK_WINDOW(appdata->window),
 		    GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, 
 		    GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
@@ -871,12 +871,12 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   table_attach_int(table, dirty.relations.dirty,   3, 4, 3, 4);
   table_attach_int(table, dirty.relations.deleted, 4, 5, 3, 4);
 
-  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), table);
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, FALSE, FALSE, 0);
 
   /* ------------------------------------------------------ */
 
-  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), 
-			      gtk_hseparator_new());
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), 
+		     gtk_hseparator_new(), FALSE, FALSE, 0);
 
   /* ------- add username and password entries ------------ */
 
@@ -892,7 +892,7 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   gtk_entry_set_text(GTK_ENTRY(pentry), appdata->settings->password);
   gtk_entry_set_visibility(GTK_ENTRY(pentry), FALSE);
   gtk_table_attach_defaults(GTK_TABLE(table),  pentry, 1, 2, 1, 2);
-  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), table);
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, FALSE, FALSE, 0);
 
   GtkWidget *scrolled_win = misc_scrolled_window_new(TRUE);
 
@@ -976,7 +976,7 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), 
 				    GTK_RESPONSE_CLOSE, FALSE);
 
-  /* ------- main ui elelent is this text view --------------- */
+  /* ------- main ui element is this text view --------------- */
 
   GtkWidget *scrolled_window = gtk_scrolled_window_new(NULL, NULL);
   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window), 

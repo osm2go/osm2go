@@ -890,51 +890,67 @@ static gboolean wms_server_dialog(appdata_t *appdata, wms_t *wms) {
 
 enum {
   LAYER_COL_TITLE = 0,
-  LAYER_COL_SELECTED,
   LAYER_COL_FITS,
   LAYER_COL_DATA,
   LAYER_NUM_COLS
 };
 
-static void
-layer_toggled(GtkCellRendererToggle *cell, const gchar *path_str,
-	      GtkListStore *store) {
-  GtkTreePath *path;
+#ifndef FREMANTLE
+/* we handle these events on our own in order to implement */
+/* a very direct selection mechanism (multiple selections usually */
+/* require the control key to be pressed). This interferes with */
+/* fremantle finger scrolling, but fortunately the fremantle */
+/* default behaviour already is what we want. */
+static gboolean on_view_clicked(GtkWidget *widget, GdkEventButton *event,
+				gpointer user_data) {
+  if(event->window == gtk_tree_view_get_bin_window(GTK_TREE_VIEW(widget))) {  
+    GtkTreePath *path;
+    
+    if(gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget), 
+		     event->x, event->y, &path, NULL, NULL, NULL)) {
+      GtkTreeSelection *sel = 
+	gtk_tree_view_get_selection(GTK_TREE_VIEW(widget));
+
+      if(!gtk_tree_selection_path_is_selected(sel, path))
+	gtk_tree_selection_select_path(sel, path);
+      else
+	gtk_tree_selection_unselect_path(sel, path);
+    }
+    return TRUE;
+  }
+  return FALSE;
+}
+#endif
+
+static void changed(GtkTreeSelection *sel, gpointer user_data) {
+  /* we need to know what changed in order to let the user acknowlege it! */
+
+  /* get view from selection ... */
+  GtkTreeView *view = gtk_tree_selection_get_tree_view(sel);
+  g_assert(view);
+
+  /* ... and get model from view */
+  GtkTreeModel *model = gtk_tree_view_get_model(view);
+  g_assert(model);
+
+  /* walk the entire store */
   GtkTreeIter iter;
+  gboolean one = FALSE, ok = gtk_tree_model_get_iter_first(model, &iter);
+  while(ok) {
+    wms_layer_t *layer = NULL;
 
-  path = gtk_tree_path_new_from_string(path_str);
-  gtk_tree_model_get_iter(GTK_TREE_MODEL(store), &iter, path);
+    gtk_tree_model_get(model, &iter, LAYER_COL_DATA, &layer, -1);    
+    g_assert(layer);
 
-  /* get current enabled flag */
-  gboolean enabled;
-  gtk_tree_model_get(GTK_TREE_MODEL(store), &iter, 
-		     LAYER_COL_SELECTED, &enabled, -1);
+    layer->selected = gtk_tree_selection_iter_is_selected(sel, &iter);
+    if(layer->selected) one = TRUE;
 
-  /* change it and store it */
-  enabled = !enabled;
-  gtk_list_store_set(store, &iter, LAYER_COL_SELECTED, enabled, -1);
-
-  /* and store it in the layer itself */
-  wms_layer_t *layer = NULL;
-  gtk_tree_model_get(GTK_TREE_MODEL(store), &iter, LAYER_COL_DATA, &layer, -1);
-  layer->selected = enabled;
-
-  /* walk the entire store to get all values */
-  if(gtk_tree_model_get_iter_first(GTK_TREE_MODEL(store), &iter)) {
-    gtk_tree_model_get(GTK_TREE_MODEL(store), &iter, 
-		       LAYER_COL_SELECTED, &enabled, -1);
-
-    while(gtk_tree_model_iter_next(GTK_TREE_MODEL(store), &iter) &&
-	  !enabled) 
-      gtk_tree_model_get(GTK_TREE_MODEL(store), &iter, 
-			 LAYER_COL_SELECTED, &enabled, -1);
+    ok = gtk_tree_model_iter_next(model, &iter);
   }
 
-  GtkWidget *dialog = g_object_get_data(G_OBJECT(store), "dialog");
+  GtkWidget *dialog = gtk_widget_get_toplevel(GTK_WIDGET(view));
   gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog), 
-				    GTK_RESPONSE_ACCEPT, enabled);
-  
-  gtk_tree_path_free(path);
+				    GTK_RESPONSE_ACCEPT, one);
 }
 
 static GtkWidget *wms_layer_widget(appdata_t *appdata, wms_layer_t *layer, 
@@ -946,24 +962,23 @@ static GtkWidget *wms_layer_widget(appdata_t *appdata, wms_layer_t *layer,
   GtkWidget *view = hildon_gtk_tree_view_new(HILDON_UI_MODE_EDIT);
 #endif
 
+  /* change list mode to "multiple" */
+  GtkTreeSelection *selection = 
+    gtk_tree_view_get_selection(GTK_TREE_VIEW(view));
+  gtk_tree_selection_set_mode(selection, GTK_SELECTION_MULTIPLE);
+
+#ifndef FREMANTLE
+  /* catch views button-press event for our custom handling */
+  g_signal_connect(view, "button-press-event", 
+		   G_CALLBACK(on_view_clicked), NULL); 
+#endif
+
   /* build the store */
   GtkListStore *store = gtk_list_store_new(LAYER_NUM_COLS, 
-      G_TYPE_STRING, G_TYPE_BOOLEAN, G_TYPE_BOOLEAN, G_TYPE_POINTER);
-
-  g_object_set_data(G_OBJECT(store), "dialog", dialog);
-
-  /* --- "selected" column --- */
-  GtkCellRenderer *renderer = gtk_cell_renderer_toggle_new();
-  g_signal_connect(renderer, "toggled", G_CALLBACK(layer_toggled), store);
-  gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(view),
-	-1, _(""), renderer, 
-        "active", LAYER_COL_SELECTED, 
-	"sensitive", LAYER_COL_FITS, 
-        "activatable", LAYER_COL_FITS, 
-	NULL);
+      G_TYPE_STRING, G_TYPE_BOOLEAN, G_TYPE_POINTER);
 
   /* --- "Title" column --- */
-  renderer = gtk_cell_renderer_text_new();
+  GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
   g_object_set(renderer, "ellipsize", PANGO_ELLIPSIZE_END, NULL );
   GtkTreeViewColumn *column = gtk_tree_view_column_new_with_attributes(
 		 _("Title"), renderer, 
@@ -983,7 +998,6 @@ static GtkWidget *wms_layer_widget(appdata_t *appdata, wms_layer_t *layer,
     /* Append a row and fill in some data */
     gtk_list_store_append(store, &iter);
     gtk_list_store_set(store, &iter,
-	       LAYER_COL_SELECTED, FALSE,
 	       LAYER_COL_TITLE, layer->title,
 	       LAYER_COL_FITS, fits,
 	       LAYER_COL_DATA, layer,
@@ -992,6 +1006,8 @@ static GtkWidget *wms_layer_widget(appdata_t *appdata, wms_layer_t *layer,
   }
   
   g_object_unref(store);
+
+  g_signal_connect(G_OBJECT(selection), "changed", G_CALLBACK(changed), layer);
 
 #ifndef FREMANTLE_PANNABLE_AREA
   /* put it into a scrolled window */
@@ -1273,13 +1289,6 @@ void wms_import(appdata_t *appdata) {
   /* build complete url */
   old = url;
 
-#if 0
-  url = g_strdup_printf("%s&SRS=EPSG:4326&BBOX=%s,%s,%s,%s"
-			"&WIDTH=%d&HEIGHT=%d&FORMAT=%s"
-			"&reaspect=false", url,
-			minlon, minlat, maxlon, maxlat, wms->width, 
-			wms->height, formats[format]);
-#endif
   url = g_strdup_printf("%s&SRS=%s&BBOX=%s,%s,%s,%s"
 			"&WIDTH=%d&HEIGHT=%d&FORMAT=%s"
 			"&reaspect=false", url, srs,
@@ -1306,6 +1315,12 @@ void wms_import(appdata_t *appdata) {
 
   /* there should be a matching file on disk now */
   map_set_bg_image(appdata->map, filename);
+
+  gint x = appdata->osm->bounds->min.x + appdata->map->bg.offset.x;
+  gint y = appdata->osm->bounds->min.y + appdata->map->bg.offset.y;
+  canvas_image_move(appdata->map->bg.item, x, y, 
+		    appdata->map->bg.scale.x, appdata->map->bg.scale.y);
+
 
   g_free(filename);
   g_free(url);

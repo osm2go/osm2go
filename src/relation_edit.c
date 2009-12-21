@@ -263,7 +263,7 @@ static void changed(GtkTreeSelection *sel, gpointer user_data) {
 
   /* we need to know what changed in order to let the user acknowlege it! */
 
-  /* walk the entire store xyz */
+  /* walk the entire store */
 
   GtkTreeIter iter;
   gboolean done = FALSE, ok = 

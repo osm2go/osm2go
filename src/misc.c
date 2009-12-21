@@ -127,9 +127,11 @@ gboolean yes_no_f(GtkWidget *parent, appdata_t *appdata, gulong again_bit,
 
   GtkWidget *cbut = NULL;
   if(appdata && again_bit) {
+#ifdef FREMANTLE
     /* make sure there's some space before the checkbox */
     gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), 
 				gtk_label_new(" "));
+#endif
 
     GtkWidget *alignment = gtk_alignment_new(0.5, 0, 0, 0);
 

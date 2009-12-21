@@ -1,4 +1,5 @@
 - crash when selecting relations of a relation
-- convert those "check box" lists into multi-select lists
 - handle pre-selected entries in fremantle correctly (e.g. after "new" proj)
 - direct/extent does not update map selection
+- list entry selected after cancelled "new", but edit/remove not enabled
+- gps enable/disable in fremanlte
