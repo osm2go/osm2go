@@ -3,3 +3,4 @@
 - check if selection_func is really needed anymore
 - review gps icons
 - check autosave fix
+- internationalization patch
