@@ -1729,10 +1729,15 @@ static gboolean map_autosave(gpointer data) {
 
   printf("autosave ...\n");
 
-  if(map->appdata->project && map->appdata->osm) {
-    track_save(map->appdata->project, map->appdata->track.track);
-    diff_save(map->appdata->project, map->appdata->osm);
-    banner_show_info(map->appdata, _("Autosave"));
+  /* only do this if root window has focus as otherwise */
+  /* a dialog may be open and modifying the basic structures */
+  if(GTK_WIDGET_HAS_FOCUS(map->appdata->window)) {
+
+    if(map->appdata->project && map->appdata->osm) {
+      track_save(map->appdata->project, map->appdata->track.track);
+      diff_save(map->appdata->project, map->appdata->osm);
+      banner_show_info(map->appdata, _("Autosave"));
+    }
   }
 
   return TRUE;

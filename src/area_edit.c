@@ -95,7 +95,7 @@ static gboolean current_tab_is(context_t *context, gint page_num, char *str) {
     gtk_notebook_get_nth_page(GTK_NOTEBOOK(nb), page_num);
   const char *name = 
     gtk_notebook_get_tab_label_text(GTK_NOTEBOOK(nb), w);
-  
+
   return(strcasecmp(name, _(str)) == 0);
 }
 
@@ -212,9 +212,12 @@ static void map_update(context_t *context, gboolean forced) {
 
   /* map is first tab (page 0) */
   if(!forced && !current_tab_is(context, -1, TAB_LABEL_MAP)) {
+    printf("schedule map redraw\n");
     context->map.needs_redraw = TRUE;
     return;
   }
+  
+  printf("do map redraw\n");
 
   /* check if the position is invalid */
   if(isnan(context->min.lat) || isnan(context->min.lon) ||
@@ -760,8 +763,8 @@ gboolean area_edit(area_edit_t *area) {
 			      context.notebook);
 
 #ifdef ENABLE_OSM_GPS_MAP
-  g_signal_connect(G_OBJECT(context.notebook), "switch-page",
-		   G_CALLBACK(on_page_switch), &context);
+  g_signal_connect(G_OBJECT(notebook_get_gtk_notebook(context.notebook)), 
+		   "switch-page", G_CALLBACK(on_page_switch), &context);
 #endif
 
   gtk_widget_show_all(context.dialog);

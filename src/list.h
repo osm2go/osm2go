@@ -82,5 +82,6 @@ void list_pre_inplace_edit_tweak (GtkTreeModel *model);
 void list_focus_on(GtkWidget *list, GtkTreeIter *iter, gboolean highlight);
 gboolean list_get_selected(GtkWidget *list, GtkTreeModel **model,
 			   GtkTreeIter *iter);
+void list_override_changed_event(GtkWidget *list, void(*handler)(GtkTreeSelection*,gpointer), gpointer data);
 
 #endif // LIST_H

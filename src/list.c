@@ -46,6 +46,11 @@ typedef struct {
     gpointer data;
   } sel;
 
+  struct {
+    void(*func)(GtkTreeSelection *, gpointer);
+    gpointer data;
+  } change;
+
   GtkWidget *table;
 
   struct {
@@ -248,7 +253,6 @@ gboolean list_get_selected(GtkWidget *list, GtkTreeModel **model,
     gtk_tree_view_get_selection(GTK_TREE_VIEW(priv->view));
 
   GList *slist = gtk_tree_selection_get_selected_rows(sel, model);
-  printf("%d are selected\n", g_list_length(slist));
   
   if(g_list_length(slist) == 1) 
     retval = gtk_tree_model_get_iter(*model, iter, slist->data);
@@ -432,10 +436,36 @@ static gint on_list_destroy(GtkWidget *list, gpointer data) {
 
 static void changed(GtkTreeSelection *treeselection, gpointer user_data) {
   GtkWidget *list = (GtkWidget*)user_data;
+  list_priv_t *priv = g_object_get_data(G_OBJECT(list), "priv");
 
   GtkTreeModel *model;
   GtkTreeIter iter;
   gboolean selected = list_get_selected(list, &model, &iter);
+
+  /* scroll to selected entry if exactly one is selected */
+  if(selected) {
+    /* check if the entry isn't already visible */
+    GtkTreePath *start = NULL, *end = NULL;
+    GtkTreePath *path = gtk_tree_model_get_path(model, &iter);
+
+    gtk_tree_view_get_visible_range(GTK_TREE_VIEW(priv->view), &start, &end);
+      
+    /* check if path is before start of visible area or behin end of it */
+    if((start && (gtk_tree_path_compare(path, start)) < 0) ||
+       (end && (gtk_tree_path_compare(path, end) > 0)))
+      gtk_tree_view_scroll_to_cell(GTK_TREE_VIEW(priv->view), 
+				   path, NULL, TRUE, 0.5, 0.5);
+
+    if(start) gtk_tree_path_free(start);
+    if(end)   gtk_tree_path_free(end);
+    gtk_tree_path_free(path);
+  }
+
+  /* the change event handler is overridden */
+  if(priv->change.func) { 
+    priv->change.func(treeselection, priv->change.data);
+    return;
+  }
 
   list_button_enable(GTK_WIDGET(list), LIST_BUTTON_REMOVE, selected);
   list_button_enable(GTK_WIDGET(list), LIST_BUTTON_EDIT, selected);
@@ -473,7 +503,7 @@ GtkWidget *list_new(void)
     gtk_tree_view_get_selection(GTK_TREE_VIEW(priv->view));
 
   gtk_tree_selection_set_select_function(sel, 
-  	 list_selection_function, vbox, NULL);
+			 list_selection_function, vbox, NULL);
 
   g_signal_connect(G_OBJECT(sel), "changed", G_CALLBACK(changed), vbox);
 
@@ -509,3 +539,11 @@ GtkWidget *list_new(void)
   return vbox;
 }
 
+void list_override_changed_event(GtkWidget *list, 
+      void(*handler)(GtkTreeSelection*,gpointer), gpointer data) {
+  list_priv_t *priv = g_new0(list_priv_t, 1);
+  g_assert(priv);
+
+  priv->change.func = handler;
+  priv->change.data = data;
+}

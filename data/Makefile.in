@@ -1,5 +1,6 @@
 TEMPLATE_ELEMSTYLES=elemstyles-mapnik.xml
 APP = @PACKAGE@
+MAEMO_VERSION_MAJOR = @MAEMO_VERSION_MAJOR@
 prefix = @prefix@
 datarootdir = @datarootdir@
 datadir = @datarootdir@
@@ -36,7 +37,11 @@ install-maemo:
 	# .png file in scalable? Maemo is strange...
 	install -d $(DESTDIR)$(prefix)/share/icons/hicolor/scalable/hildon
 	install -m 644 $(APP).64.png $(DESTDIR)$(prefix)/share/icons/hicolor/scalable/hildon/$(APP).png
-
+	if [ $(MAEMO_VERSION_MAJOR) -ge 5 ]; then \
+	  echo "Installing backup configuration for maemo >= 5"; \
+	  install -d $(DESTDIR)/etc/osso-backup/applications ;\
+	  install $(APP).conf $(DESTDIR)/etc/osso-backup/applications ;\
+	fi
 
 install: @INSTALL_PLATTFORM@ $(TEMPLATE_ELEMSTYLES)
 	install -d $(DESTDIR)$(datadir)/$(APP)	

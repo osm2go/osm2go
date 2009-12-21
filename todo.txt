@@ -1,5 +1,5 @@
-- crash when selecting relations of a relation
-- handle pre-selected entries in fremantle correctly (e.g. after "new" proj)
-- direct/extent does not update map selection
-- list entry selected after cancelled "new", but edit/remove not enabled
+- crash when selecting relations of a relation (now disabled)
 - gps enable/disable in fremanlte
+- check if selection_func is really needed anymore
+- review gps icons
+- check autosave fix

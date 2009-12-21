@@ -781,10 +781,6 @@ static void on_relation_add(GtkWidget *but, relation_context_t *context) {
 		       -1);
 
     gtk_tree_selection_select_iter(list_get_selection(context->list), &iter);
-
-    /* scroll to end */
-    //    GtkAdjustment *adj = gtk_scrolled_window_get_vadjustment();
-    /* xyz */
   }
 }
 

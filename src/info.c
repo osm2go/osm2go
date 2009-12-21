@@ -37,31 +37,26 @@ gboolean info_tag_key_collision(tag_t *tags, tag_t *tag) {
   return FALSE;
 }
 
-static gboolean
-view_selection_func(GtkTreeSelection *selection, GtkTreeModel *model,
-		     GtkTreePath *path, gboolean path_currently_selected,
-		     gpointer userdata) {
-  tag_context_t *context = (tag_context_t*)userdata;
+static void changed(GtkTreeSelection *treeselection, gpointer user_data) {
+  GtkWidget *list = (GtkWidget*)user_data;
+
+  GtkTreeModel *model;
   GtkTreeIter iter;
+  gboolean selected = list_get_selected(list, &model, &iter);
 
-  if(gtk_tree_model_get_iter(model, &iter, path)) {
-    g_assert(gtk_tree_path_get_depth(path) == 1);
-
+  if(selected) {
     tag_t *tag;
     gtk_tree_model_get(model, &iter, TAG_COL_DATA, &tag, -1);
 
     /* you just cannot delete or edit the "created_by" tag */
-    if(!tag || strcasecmp(tag->key, "created_by") == 0) {
-      list_button_enable(context->list, LIST_BUTTON_REMOVE, FALSE);
-      list_button_enable(context->list, LIST_BUTTON_EDIT, FALSE);
-    } else {
-      list_button_enable(context->list, LIST_BUTTON_REMOVE, TRUE);
-      list_button_enable(context->list, LIST_BUTTON_EDIT, TRUE);
-    }
+    if(!tag || strcasecmp(tag->key, "created_by") == 0) 
+      selected = FALSE;
   }
   
-  return TRUE; /* allow selection state to change */
+  list_button_enable(GTK_WIDGET(list), LIST_BUTTON_REMOVE, selected);
+  list_button_enable(GTK_WIDGET(list), LIST_BUTTON_EDIT, selected);
 }
+
 
 static void update_collisions(GtkListStore *store, tag_t *tags) {
   GtkTreeIter iter;
@@ -109,10 +104,6 @@ static void on_tag_remove(GtkWidget *but, tag_context_t *context) {
 
     update_collisions(context->store, *context->tag);
   }
-  
-  /* disable remove and edit buttons */
-  list_button_enable(context->list, LIST_BUTTON_REMOVE, FALSE);
-  list_button_enable(context->list, LIST_BUTTON_EDIT, FALSE);
 }
 
 static gboolean tag_edit(tag_context_t *context) {
@@ -247,7 +238,7 @@ static void on_tag_add(GtkWidget *button, tag_context_t *context) {
 		     -1);
 
   gtk_tree_selection_select_iter(
-	 list_get_selection(context->list), &iter);
+     list_get_selection(context->list), &iter);
 
   if(!tag_edit(context)) {
     printf("cancelled\n");
@@ -283,12 +274,17 @@ static GtkWidget *tag_widget(tag_context_t *context) {
   list_set_static_buttons(context->list, 0, G_CALLBACK(on_tag_add), 
 	  G_CALLBACK(on_tag_edit), G_CALLBACK(on_tag_remove), context);
 
-  list_set_selection_function(context->list, view_selection_func, context);
+  list_override_changed_event(context->list, changed, context->list);
 
   list_set_user_buttons(context->list, 
 			LIST_BUTTON_USER0, _("Last"),      on_tag_last,
 			LIST_BUTTON_USER2, _("Relations"), on_relations,
 			0);
+
+  /* "relations of a relation" is something we can't handle correctly */
+  /* at the moment */
+  if(context->object.type == RELATION)
+    list_button_enable(context->list, LIST_BUTTON_USER2, FALSE);
 
   /* setup both columns */
   list_set_columns(context->list, 

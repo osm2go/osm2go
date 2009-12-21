@@ -261,8 +261,6 @@ osd_draw(osm_gps_map_osd_t *osd, GdkDrawable *drawable)
 {
     osd_priv_t *priv = (osd_priv_t*)osd->priv; 
 
-    printf("OSD draw\n");
-
     if(!priv->select_toggle.surface) 
         osd_render(osd);
 

@@ -1112,7 +1112,7 @@ static const menu_entry_t submenu_map_entries[] = {
 };
 
 static const submenu_t submenu_map = {
-  "Map", submenu_map_entries, 
+  "OSM", submenu_map_entries, 
   sizeof(submenu_map_entries)/sizeof(menu_entry_t)-1
 };
 
@@ -1154,7 +1154,7 @@ static const menu_entry_t main_menu[] = {
   SIMPLE_ENTRY("About",   cb_menu_about),
   SIMPLE_ENTRY("Project", cb_menu_project_open),
   ENABLED_ENTRY("View",   on_submenu_view_clicked,  submenu_view),
-  ENABLED_ENTRY("Map",    on_submenu_map_clicked,   submenu_map),
+  ENABLED_ENTRY("OSM",    on_submenu_map_clicked,   submenu_map),
   ENABLED_ENTRY("Relations", cb_menu_osm_relations, menu_item_map_relations),
   ENABLED_ENTRY("WMS",    on_submenu_wms_clicked,   submenu_wms),
   ENABLED_ENTRY("Track",  on_submenu_track_clicked, track.submenu_track),
