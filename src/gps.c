@@ -99,8 +99,8 @@ void gps_release(appdata_t *appdata) {
      && gps_state->control->can_control
 #endif
      ) {
-    printf("Having control over GPSD, stopping it\n");
-    if(appdata->settings->enable_gps)
+    printf("Having control over GPSD and its running, stopping it\n");
+    if(appdata->gps_state->gps_is_on)
       location_gpsd_control_stop(gps_state->control);
   }
 #endif
