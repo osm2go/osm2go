@@ -1,0 +1,23 @@
+#!/usr/bin/perl
+
+$CHANGELOG = 'debian/changelog';
+
+($what, $trunkv) = (@ARGV);
+defined($what) && defined($trunkv) or die "usage: $0 WHAT TRUNK_VERSION\n";
+$trunkv_re = quotemeta($trunkv);
+open(CL, '<', $CHANGELOG) || die "open($CHANGELOG) failed: $!\n";
+while (<CL>) {
+    m{\((.*?)\b$trunkv_re\b(.*?)\)} or next;
+    ($prefix, $suffix) = ($1, $2);
+    last;
+}
+close CL;
+if (! (defined($suffix) || defined($prefix))) {
+    die "error: $CHANGELOG does not list trunk version $trunkv\n";
+}
+if ($what eq 'prefix') {
+    print $prefix, "\n";
+}
+else {
+    print $suffix, "\n";
+}

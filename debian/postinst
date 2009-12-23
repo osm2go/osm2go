@@ -1,0 +1,54 @@
+#! /bin/sh
+
+# Do we need to run this with -f ? The clock might be wrong,
+# but forcing it slows the install...
+gtk-update-icon-cache -f /usr/share/icons/hicolor
+
+oldversion="$2"
+if [ -z "$oldversion" ]; then
+  if [ -f /usr/bin/maemo-select-menu-location ]; then
+    maemo-select-menu-location osm2go.desktop
+  fi
+fi
+
+# determine path to use. Since the environment variables 
+# (INTERNAL_MMC_MOUNTPOINT etc) are too unreliable, we
+# search for mountpoints ourselves 
+if [ "`mount | grep /home/user/MyDocs`" != "" ]; then
+  echo "MMC-PATH: mount /home/user/MyDocs"
+  MMC_PATH=/home/user/MyDocs
+elif [ "`mount | grep /media/mmc2`" != "" ]; then
+  echo "MMC-PATH: mount /media/mmc2"
+  MMC_PATH=/media/mmc2
+elif [ "$HOME" != "" ]; then
+  echo "MMC-PATH: HOME env"
+  MMC_PATH=$HOME
+else
+  echo "MMC-PATH: /tmp"
+  MMC_PATH=/tmp
+fi
+
+# hide directory if we are working within a users home dir
+if [ "`echo $MMC_PATH | cut -d / -f-2`" == "/home" ]; then
+  MMC_PATH=$MMC_PATH/.osm2go
+else
+  MMC_PATH=$MMC_PATH/osm2go
+fi
+
+echo "Using data location at $MMC_PATH"
+
+if [ -d $MMC_PATH ]; then
+  echo "$MMC_PATH already exists, doing nothing."
+else
+  echo "$MMC_PATH doesn't exist yet. Installing demo project."
+  mkdir $MMC_PATH
+  if [ -d /usr/share/osm2go/demo ]; then
+    mv /usr/share/osm2go/demo $MMC_PATH
+  elif [ -d /opt/osm2go/demo ]; then  
+    mv /opt/osm2go/demo $MMC_PATH
+  else
+    echo "Cannot find demo project!"
+  fi
+fi
+
+exit 0

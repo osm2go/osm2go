@@ -1,0 +1,26 @@
+Source: osm2go
+Section: user/navigation
+Priority: extra
+Maintainer: Till Harbaum <Till@Harbaum.org>
+Build-Depends: debhelper (>= 5), sharutils, maemo-version-dev, libcurl3-openssl-dev, libgoocanvas-dev, libosso-dev, liblocation-dev|libgpsmgr-dev, libosso-gnomevfs2-dev, libhildonfm2-dev, mce-dev, perl-base (>= 5), tablet-browser-interface-dev|devscripts, libsoup2.4-dev|libsoup2.2-dev
+Standards-Version: 3.7.2
+
+Package: osm2go
+Architecture: any
+Pre-Depends: 
+Depends: ${shlibs:Depends}, libgoocanvas3
+Description: A mobile OpenStreetMap Editor
+ OSM2Go is a lightweight editor for OpenStreetMap intended for mobile
+ devices and small screens.
+ .
+ This mapping tool is particularly suited for small-screen portable
+ systems such as subnotebooks, handheld devices and netbooks which do
+ not have a network connection at all times.
+ .
+ OSM2Go features a tagging presets system, background satellite/WMS
+ layers, and gpsd integration. It was originally designed for the Maemo
+ mobile Linux platform, and so is lightweight and sports a simple,
+ speedy interface to map editing.
+XSBC-Bugtracker: http://garage.maemo.org/tracker/?group_id=830
+XB-Maemo-Display-Name: OSM2Go
+#@ICON@
