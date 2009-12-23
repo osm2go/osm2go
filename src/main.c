@@ -1440,6 +1440,9 @@ int main(int argc, char *argv[]) {
   /* user specific init */
   appdata.settings = settings_load();  
 
+  /* if tracking is enable, start it now */
+  track_enable_gps(&appdata, TRUE);
+
   appdata.vbox = gtk_vbox_new(FALSE,0);
   menu_create(&appdata);
 #ifdef UISPECIFIC_MENU_HAS_ACCELS

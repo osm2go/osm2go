@@ -79,6 +79,7 @@ typedef struct gps_state_s {
   LocationGPSDevice *device;
 #ifdef LL_CONTROL_GPSD
   LocationGPSDControl *control;
+  gboolean gps_is_on;
 #endif
   guint idd_changed;
 
