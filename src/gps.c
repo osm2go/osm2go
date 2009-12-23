@@ -121,8 +121,20 @@ void gps_release(appdata_t *appdata) {
 }
 
 void gps_enable(appdata_t *appdata, gboolean enable) {
-  if(appdata->settings)
+  if(appdata->settings) {
+    if(appdata->settings->enable_gps != enable) {
+      gps_state_t *gps_state = appdata->gps_state;
+
+      if(gps_state->device) {
+	if(enable)
+	  location_gpsd_control_start(gps_state->control);
+	else
+	  location_gpsd_control_stop(gps_state->control);	
+      }
+    }
+
     appdata->settings->enable_gps = enable;
+  }
 }
 
 #else  // ENABLE_LIBLOCATION
@@ -288,7 +300,7 @@ static void gps_unpack(char *buf, struct gps_data_t *gpsdata) {
 }
 
 void gps_enable(appdata_t *appdata, gboolean enable) {
-  if(appdata->settings)
+  if(appdata->settings) 
     appdata->settings->enable_gps = enable;
 }
 

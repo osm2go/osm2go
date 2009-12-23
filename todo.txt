@@ -1,3 +1,2 @@
 - crash when selecting relations of a relation (now disabled)
-- gps enable/disable in fremanlte
 - internationalization patch (where is it?)
