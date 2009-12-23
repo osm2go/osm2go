@@ -529,22 +529,17 @@ static void relation_list_selected(relation_context_t *context,
   list_button_enable(context->list, LIST_BUTTON_EDIT, selected != NULL);
 }
 
-static gboolean
-relation_list_selection_func(GtkTreeSelection *selection, GtkTreeModel *model,
-		     GtkTreePath *path, gboolean path_currently_selected,
-		     gpointer userdata) {
+static void
+relation_list_changed(GtkTreeSelection *selection, gpointer userdata) {
   relation_context_t *context = (relation_context_t*)userdata;
+  GtkTreeModel *model = NULL;
   GtkTreeIter iter;
-    
-  if(gtk_tree_model_get_iter(model, &iter, path)) {
-    g_assert(gtk_tree_path_get_depth(path) == 1);
-    
+  
+  if(gtk_tree_selection_get_selected(selection, &model, &iter)) {
     relation_t *relation = NULL;
     gtk_tree_model_get(model, &iter, RELATION_COL_DATA, &relation, -1);
     relation_list_selected(context, relation);
   }
-  
-  return TRUE; /* allow selection state to change */
 }
 
 typedef struct {
@@ -853,8 +848,7 @@ static void on_relation_remove(GtkWidget *but, relation_context_t *context) {
 static GtkWidget *relation_list_widget(relation_context_t *context) {
   context->list = list_new(LIST_HILDON_WITH_HEADERS);
 
-  list_set_selection_function(context->list, relation_list_selection_func, 
-			      context);
+  list_override_changed_event(context->list, relation_list_changed, context);
 
   list_set_columns(context->list,
 		   _("Name"),    RELATION_COL_NAME, LIST_FLAG_ELLIPSIZE,

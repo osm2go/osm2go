@@ -40,13 +40,6 @@ typedef struct {
   GtkMenu *menu;
 
   struct {
-    gboolean(*func)(GtkTreeSelection *, GtkTreeModel *,
-		    GtkTreePath *, gboolean,
-		    gpointer);
-    gpointer data;
-  } sel;
-
-  struct {
     void(*func)(GtkTreeSelection *, gpointer);
     gpointer data;
   } change;
@@ -60,42 +53,6 @@ typedef struct {
   } button;
 
 } list_priv_t;
-
-#ifdef FREMANTLE_USE_POPUP
-
-static void cmenu_init(GtkWidget *list) {
-  list_priv_t *priv = g_object_get_data(G_OBJECT(list), "priv");
-  g_assert(priv);
-
-  /* Create needed handles. */
-  priv->menu = GTK_MENU(gtk_menu_new());
-
-  gtk_widget_tap_and_hold_setup(priv->view, GTK_WIDGET(priv->menu), NULL, 0);
-}
-
-static GtkWidget *cmenu_append(GtkWidget *list, char *label, 
-			       GCallback cb, gpointer data) {
-  list_priv_t *priv = g_object_get_data(G_OBJECT(list), "priv");
-  g_assert(priv);
-
-  GtkWidget *menu_item;
-
-  /* Setup the map context menu. */
-  gtk_menu_append(priv->menu, menu_item
-		  = gtk_menu_item_new_with_label(label));
-
-  hildon_gtk_widget_set_theme_size(menu_item, 
-	   (HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH));
-
-  gtk_signal_connect(GTK_OBJECT(menu_item), "activate", 
-		     GTK_SIGNAL_FUNC(cb), data);
-
-  gtk_widget_show_all(GTK_WIDGET(priv->menu));
-
-  return menu_item;
-}
-
-#endif
 
 GtkWidget *list_get_view(GtkWidget *list) {
   list_priv_t *priv = g_object_get_data(G_OBJECT(list), "priv");
@@ -277,41 +234,6 @@ void list_set_store(GtkWidget *list, GtkListStore *store) {
   g_assert(priv);
 
   gtk_tree_view_set_model(GTK_TREE_VIEW(priv->view), GTK_TREE_MODEL(store));
-}
-
-void list_set_selection_function(GtkWidget *list, GtkTreeSelectionFunc func,
-				 gpointer data) {
-  list_priv_t *priv = g_object_get_data(G_OBJECT(list), "priv");
-  g_assert(priv);
-
-  priv->sel.func = func;
-  priv->sel.data = data;
-}
-
-/* default selection function enables edit and remove if a row is being */
-/* selected */
-static gboolean
-list_selection_function(GtkTreeSelection *selection, GtkTreeModel *model,
-			GtkTreePath *path, gboolean path_currently_selected,
-			gpointer list) {
-  list_priv_t *priv = g_object_get_data(G_OBJECT(list), "priv");
-  g_assert(priv);
-
-  GtkTreeIter iter;
-
-  if(gtk_tree_model_get_iter(model, &iter, path)) {
-    g_assert(gtk_tree_path_get_depth(path) == 1);
-
-    /* this is now handled by the "changed" event handler */
-    //    list_button_enable(GTK_WIDGET(list), LIST_BUTTON_REMOVE, TRUE);
-    //    list_button_enable(GTK_WIDGET(list), LIST_BUTTON_EDIT, TRUE);
-  }
-
-  if(priv->sel.func)
-    return priv->sel.func(selection, model, path, path_currently_selected, 
-			  priv->sel.data);
-
-  return TRUE; /* allow selection state to change */
 }
 
 static void on_row_activated(GtkTreeView *treeview,
@@ -502,9 +424,6 @@ GtkWidget *list_new(void)
   GtkTreeSelection *sel = 
     gtk_tree_view_get_selection(GTK_TREE_VIEW(priv->view));
 
-  gtk_tree_selection_set_select_function(sel, 
-			 list_selection_function, vbox, NULL);
-
   g_signal_connect(G_OBJECT(sel), "changed", G_CALLBACK(changed), vbox);
 
 #ifndef FREMANTLE_PANNABLE_AREA
@@ -541,7 +460,7 @@ GtkWidget *list_new(void)
 
 void list_override_changed_event(GtkWidget *list, 
       void(*handler)(GtkTreeSelection*,gpointer), gpointer data) {
-  list_priv_t *priv = g_new0(list_priv_t, 1);
+  list_priv_t *priv = g_object_get_data(G_OBJECT(list), "priv");
   g_assert(priv);
 
   priv->change.func = handler;

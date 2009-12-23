@@ -558,22 +558,19 @@ static void wms_server_selected(wms_server_context_t *context,
   }
 }
 
-static gboolean
-wms_server_selection_func(GtkTreeSelection *selection, GtkTreeModel *model,
-		     GtkTreePath *path, gboolean path_currently_selected,
-		     gpointer userdata) {
+static void
+wms_server_changed(GtkTreeSelection *selection, gpointer userdata) {
   wms_server_context_t *context = (wms_server_context_t*)userdata;
+
+  GtkTreeModel *model = NULL;
   GtkTreeIter iter;
-    
-  if(gtk_tree_model_get_iter(model, &iter, path)) {
+  
+  if(gtk_tree_selection_get_selected(selection, &model, &iter)) {
     wms_server_t *wms_server = NULL;
 
-    g_assert(gtk_tree_path_get_depth(path) == 1);
     gtk_tree_model_get(model, &iter, WMS_SERVER_COL_DATA, &wms_server, -1);
     wms_server_selected(context, wms_server);
   }
-  
-  return TRUE; /* allow selection state to change */
 }
 
 static void on_server_remove(GtkWidget *but, wms_server_context_t *context) {
@@ -777,8 +774,7 @@ static GtkWidget *wms_server_widget(wms_server_context_t *context) {
 
   context->list = list_new(LIST_HILDON_WITHOUT_HEADERS);
 
-  list_set_selection_function(context->list, wms_server_selection_func, 
-			      context);
+  list_override_changed_event(context->list, wms_server_changed, context);
 
   list_set_columns(context->list, 
 		   _("Name"), WMS_SERVER_COL_NAME, LIST_FLAG_ELLIPSIZE, 

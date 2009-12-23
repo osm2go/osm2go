@@ -385,22 +385,23 @@ static void view_selected(select_context_t *context, project_t *project) {
       project && osm_file_exists(project->path, project->osm));
 }
 
-static gboolean
-view_selection_func(GtkTreeSelection *selection, GtkTreeModel *model,
-		     GtkTreePath *path, gboolean path_currently_selected,
-		     gpointer userdata) {
+static void
+changed(GtkTreeSelection *selection, gpointer userdata) {
   select_context_t *context = (select_context_t*)userdata;
-  GtkTreeIter iter;
     
-  if(gtk_tree_model_get_iter(model, &iter, path)) {
+  GtkTreeModel *model = NULL;
+  GtkTreeIter iter;
+
+  gboolean sel = gtk_tree_selection_get_selected(selection, &model, &iter);
+  if(sel) {
     project_t *project = NULL;
     gtk_tree_model_get(model, &iter, PROJECT_COL_DATA, &project, -1);
-    g_assert(gtk_tree_path_get_depth(path) == 1);
 
     view_selected(context, project);
   }
   
-  return TRUE; /* allow selection state to change */
+  list_button_enable(GTK_WIDGET(context->list), LIST_BUTTON_REMOVE, sel);
+  list_button_enable(GTK_WIDGET(context->list), LIST_BUTTON_EDIT, sel);
 }
 
 /* get the currently selected project in the list, NULL if none */
@@ -758,7 +759,7 @@ project_get_status_icon_stock_id(select_context_t *context,
 static GtkWidget *project_list_widget(select_context_t *context) {
   context->list = list_new(LIST_HILDON_WITHOUT_HEADERS);
 
-  list_set_selection_function(context->list, view_selection_func, context);
+  list_override_changed_event(context->list, changed, context);
 
   list_set_columns(context->list,
 	   _("Name"), PROJECT_COL_NAME, 0,

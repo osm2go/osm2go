@@ -72,8 +72,6 @@ void list_set_custom_user_button(GtkWidget *list, list_button_t id,
 GtkTreeSelection *list_get_selection(GtkWidget *list);
 void list_button_enable(GtkWidget *list, list_button_t id, gboolean enable);
 void list_set_store(GtkWidget *list, GtkListStore *store);
-void list_set_selection_function(GtkWidget *list, GtkTreeSelectionFunc func,
-				 gpointer data);
 void list_set_static_buttons(GtkWidget *list, int flags, 
 GCallback cb_new, GCallback cb_edit, GCallback cb_remove, 
 	     gpointer data);
