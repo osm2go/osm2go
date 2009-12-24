@@ -743,7 +743,7 @@ gboolean area_edit(area_edit_t *area) {
 
   vbox = gtk_vbox_new(FALSE, 8);
   context.mmapper.fetch = 
-    gtk_button_new_with_label(_("Get from Maemo Mapper"));
+    button_new_with_label(_("Get from Maemo Mapper"));
   gtk_box_pack_start(GTK_BOX(vbox), context.mmapper.fetch, FALSE, FALSE, 0);
 
   g_signal_connect(G_OBJECT(context.mmapper.fetch), "clicked",
