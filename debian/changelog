@@ -1,3 +1,9 @@
+osm2go (1:0.8.2-maemo1) unstable; urgency=low
+
+  * Fixed Maemo Mapper tab, re-enabled Maemo Mapper support in Fremantle
+
+ -- Till Harbaum <till@harbaum.org>  Thu, 24 Dec 2009 10:30:18 +0100
+
 osm2go (1:0.8.1-maemo1) unstable; urgency=low
 
   * Another Fremantle GPS fix

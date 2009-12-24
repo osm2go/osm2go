@@ -28,8 +28,8 @@
 #define TAB_LABEL_DIRECT "Direct"
 #define TAB_LABEL_EXTENT "Extent"
 
-/* maemo5 currently has no maemo mapper */
-#if defined(USE_HILDON) && (MAEMO_VERSION_MAJOR < 5)
+/* maemo5 just got maemo mapper */
+#if defined(USE_HILDON)
 #define HAS_MAEMO_MAPPER
 #define TAB_LABEL_MM     "Maemo Mapper"
 #endif
@@ -753,8 +753,7 @@ gboolean area_edit(area_edit_t *area) {
   label = gtk_label_new(_("(recommended MM zoom level < 7)"));
   gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
 
-
-  notebook_append_page(context.notebook, vbox, gtk_label_new(_(TAB_LABEL_MM)));
+  notebook_append_page(context.notebook, vbox, _(TAB_LABEL_MM));
 #endif
 
   /* ------------------------------------------------------ */
