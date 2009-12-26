@@ -31,7 +31,11 @@
 /* maemo5 just got maemo mapper */
 #if defined(USE_HILDON)
 #define HAS_MAEMO_MAPPER
+#ifdef FREMANTLE
+#define TAB_LABEL_MM     "M.Mapper"
+#else
 #define TAB_LABEL_MM     "Maemo Mapper"
+#endif
 #endif
 
 /* limit of square kilometers above the warning is enabled */

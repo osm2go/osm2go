@@ -149,6 +149,7 @@ struct _OsmGpsMapPrivate
     int drag_start_mouse_y;
     int drag_start_map_x;
     int drag_start_map_y;
+    guint drag_expose;
 
     //for customizing the redering of the gps track
     int ui_gps_track_width;
@@ -157,7 +158,6 @@ struct _OsmGpsMapPrivate
 
     guint is_disposed : 1;
     guint dragging : 1;
-    guint center_coord_set : 1;
 };
 
 #define OSM_GPS_MAP_PRIVATE(o)  (OSM_GPS_MAP (o)->priv)
@@ -1247,13 +1247,23 @@ osm_gps_map_map_redraw (OsmGpsMap *map)
 {
     OsmGpsMapPrivate *priv = map->priv;
 
+    /* on diablo the map comes up at 1x1 pixel size and */
+    /* isn't really usable. we'll just ignore this ... */
+    if((GTK_WIDGET(map)->allocation.width < 2) ||
+       (GTK_WIDGET(map)->allocation.height < 2)) {
+        printf("not a useful sized map yet ...\n");
+        return FALSE;
+    }
+
     priv->idle_map_redraw = 0;
 
+#ifdef ENABLE_OSD
     /* don't redraw the entire map while the OSD is doing */
     /* some animation or the like. This is to keep the animation */
     /* fluid */
     if (priv->osd->busy(priv->osd))
         return FALSE;
+#endif
 
 #ifdef DRAG_DEBUG
     printf("trying redraw\n");
@@ -1273,8 +1283,7 @@ osm_gps_map_map_redraw (OsmGpsMap *map)
     priv->redraw_cycle++;
 
     /* draw white background to initialise pixmap */
-    gdk_draw_rectangle (
-                        priv->pixmap,
+    gdk_draw_rectangle (priv->pixmap,
                         GTK_WIDGET(map)->style->white_gc,
                         TRUE,
                         0, 0,
@@ -1306,6 +1315,19 @@ osm_gps_map_map_redraw_idle (OsmGpsMap *map)
 
     if (priv->idle_map_redraw == 0)
         priv->idle_map_redraw = g_idle_add ((GSourceFunc)osm_gps_map_map_redraw, map);
+}
+
+static void
+center_coord_update(GtkWidget *widget) {
+    OsmGpsMapPrivate *priv = OSM_GPS_MAP_PRIVATE(widget);
+
+    // pixel_x,y, offsets
+    gint pixel_x = priv->map_x + widget->allocation.width/2;
+    gint pixel_y = priv->map_y + widget->allocation.height/2;
+
+    printf("coord update\n");
+    priv->center_rlon = pixel2lon(priv->map_zoom, pixel_x);
+    priv->center_rlat = pixel2lat(priv->map_zoom, pixel_y);
 }
 
 #ifdef OSM_GPS_MAP_KEYS
@@ -1347,7 +1369,7 @@ on_window_key_press(GtkWidget *widget,
 #ifdef OSM_GPS_MAP_KEY_UP
   case OSM_GPS_MAP_KEY_UP:
       priv->map_y -= step;
-      priv->center_coord_set = FALSE;
+      center_coord_update(widget);
       osm_gps_map_map_redraw_idle(OSM_GPS_MAP(widget));
       handled = TRUE;
       break;
@@ -1356,7 +1378,7 @@ on_window_key_press(GtkWidget *widget,
 #ifdef OSM_GPS_MAP_KEY_DOWN
   case OSM_GPS_MAP_KEY_DOWN:
       priv->map_y += step;
-      priv->center_coord_set = FALSE;
+      center_coord_update(widget);
       osm_gps_map_map_redraw_idle(OSM_GPS_MAP(widget));
       handled = TRUE;
       break;
@@ -1365,7 +1387,7 @@ on_window_key_press(GtkWidget *widget,
 #ifdef OSM_GPS_MAP_KEY_LEFT
   case OSM_GPS_MAP_KEY_LEFT:
       priv->map_x -= step;
-      priv->center_coord_set = FALSE;
+      center_coord_update(widget);
       osm_gps_map_map_redraw_idle(OSM_GPS_MAP(widget));
       handled = TRUE;
       break;
@@ -1374,7 +1396,7 @@ on_window_key_press(GtkWidget *widget,
 #ifdef OSM_GPS_MAP_KEY_RIGHT
   case OSM_GPS_MAP_KEY_RIGHT:
       priv->map_x += step;
-      priv->center_coord_set = FALSE;
+      center_coord_update(widget);
       osm_gps_map_map_redraw_idle(OSM_GPS_MAP(widget));
       handled = TRUE;
       break;
@@ -1427,7 +1449,7 @@ osm_gps_map_init (OsmGpsMap *object)
 
 #ifndef LIBSOUP22
     //Change naumber of concurrent connections option?
-    priv->soup_session = 
+    priv->soup_session =
         soup_session_async_new_with_options(SOUP_SESSION_USER_AGENT,
                                             USER_AGENT, NULL);
 #else
@@ -1435,7 +1457,6 @@ osm_gps_map_init (OsmGpsMap *object)
     /* set it seperately as an extra header field for each reuest */
     priv->soup_session = soup_session_async_new();
 #endif
-
     //Hash table which maps tile d/l URIs to SoupMessage requests
     priv->tile_queue = g_hash_table_new (g_str_hash, g_str_equal);
 
@@ -1546,6 +1567,9 @@ osm_gps_map_dispose (GObject *object)
     if (priv->idle_map_redraw != 0)
         g_source_remove (priv->idle_map_redraw);
 
+    if (priv->drag_expose != 0)
+        g_source_remove (priv->drag_expose);
+
     g_free(priv->gps);
 
 #ifdef ENABLE_OSD
@@ -1642,11 +1666,11 @@ osm_gps_map_set_property (GObject *object, guint prop_id, const GValue *value, G
             break;
         case PROP_MAP_X:
             priv->map_x = g_value_get_int (value);
-            priv->center_coord_set = FALSE;
+            center_coord_update(GTK_WIDGET(object));
             break;
         case PROP_MAP_Y:
             priv->map_y = g_value_get_int (value);
-            priv->center_coord_set = FALSE;
+            center_coord_update(GTK_WIDGET(object));
             break;
         case PROP_GPS_TRACK_WIDTH:
             priv->ui_gps_track_width = g_value_get_int (value);
@@ -1695,7 +1719,6 @@ static void
 osm_gps_map_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
     g_return_if_fail (OSM_IS_GPS_MAP (object));
-    float lat,lon;
     OsmGpsMap *map = OSM_GPS_MAP(object);
     OsmGpsMapPrivate *priv = map->priv;
 
@@ -1732,14 +1755,10 @@ osm_gps_map_get_property (GObject *object, guint prop_id, GValue *value, GParamS
             g_value_set_int(value, priv->min_zoom);
             break;
         case PROP_LATITUDE:
-            lat = pixel2lat(priv->map_zoom,
-                            priv->map_y + (GTK_WIDGET(map)->allocation.height / 2));
-            g_value_set_float(value, rad2deg(lat));
+            g_value_set_float(value, rad2deg(priv->center_rlat));
             break;
         case PROP_LONGITUDE:
-            lon = pixel2lon(priv->map_zoom,
-                            priv->map_x + (GTK_WIDGET(map)->allocation.width / 2));
-            g_value_set_float(value, rad2deg(lon));
+            g_value_set_float(value, rad2deg(priv->center_rlon));
             break;
         case PROP_MAP_X:
             g_value_set_int(value, priv->map_x);
@@ -1809,28 +1828,28 @@ osm_gps_map_button_press (GtkWidget *widget, GdkEventButton *event)
             switch(but) {
             case OSD_UP:
                 priv->map_y -= step;
-                priv->center_coord_set = FALSE;
+                center_coord_update(widget);
                 g_object_set(G_OBJECT(widget), "auto-center", FALSE, NULL);
                 osm_gps_map_map_redraw_idle(OSM_GPS_MAP(widget));
                 break;
 
             case OSD_DOWN:
                 priv->map_y += step;
-                priv->center_coord_set = FALSE;
+                center_coord_update(widget);
                 g_object_set(G_OBJECT(widget), "auto-center", FALSE, NULL);
                 osm_gps_map_map_redraw_idle(OSM_GPS_MAP(widget));
                 break;
 
             case OSD_LEFT:
                 priv->map_x -= step;
-                priv->center_coord_set = FALSE;
+                center_coord_update(widget);
                 g_object_set(G_OBJECT(widget), "auto-center", FALSE, NULL);
                 osm_gps_map_map_redraw_idle(OSM_GPS_MAP(widget));
                 break;
                 
             case OSD_RIGHT:
                 priv->map_x += step;
-                priv->center_coord_set = FALSE;
+                center_coord_update(widget);
                 g_object_set(G_OBJECT(widget), "auto-center", FALSE, NULL);
                 osm_gps_map_map_redraw_idle(OSM_GPS_MAP(widget));
                 break;
@@ -1879,7 +1898,7 @@ osm_gps_map_button_release (GtkWidget *widget, GdkEventButton *event)
         priv->map_x += (priv->drag_start_mouse_x - (int) event->x);
         priv->map_y += (priv->drag_start_mouse_y - (int) event->y);
 
-        priv->center_coord_set = FALSE;
+        center_coord_update(widget);
 
         osm_gps_map_map_redraw_idle(OSM_GPS_MAP(widget));
     }
@@ -1888,7 +1907,6 @@ osm_gps_map_button_release (GtkWidget *widget, GdkEventButton *event)
     else if(priv->osd) 
         priv->osd->check(priv->osd, FALSE, event->x, event->y);
 #endif
-
 
 #ifdef DRAG_DEBUG
     printf("dragging done\n");
@@ -1901,6 +1919,16 @@ osm_gps_map_button_release (GtkWidget *widget, GdkEventButton *event)
 
 static gboolean
 osm_gps_map_expose (GtkWidget *widget, GdkEventExpose  *event);
+
+static gboolean
+osm_gps_map_map_expose (GtkWidget *widget)
+{
+    OsmGpsMapPrivate *priv = OSM_GPS_MAP(widget)->priv;
+
+    priv->drag_expose = 0;
+    osm_gps_map_expose (widget, NULL);
+    return FALSE;
+}
 
 static gboolean
 osm_gps_map_motion_notify (GtkWidget *widget, GdkEventMotion  *event)
@@ -1925,19 +1953,14 @@ osm_gps_map_motion_notify (GtkWidget *widget, GdkEventMotion  *event)
     if (priv->drag_counter < 0) 
         return FALSE;
 
-    priv->drag_counter++;
-
-    // we havent dragged more than 6 pixels
-    if (priv->drag_counter < 6)
+    /* not yet dragged far enough? */
+    if(!priv->drag_counter &&
+       ( (x - priv->drag_start_mouse_x) * (x - priv->drag_start_mouse_x) + 
+         (y - priv->drag_start_mouse_y) * (y - priv->drag_start_mouse_y) <
+         10*10))
         return FALSE;
 
-#ifdef OSM_GPS_MAP_REFRESH
-    /* reduce update frequency on maemo to keep screen update fluid */
-    static guint32 last_time = 0;
-
-    if(event->time - last_time < (1000/OSM_GPS_MAP_REFRESH)) return FALSE;
-    last_time = event->time;
-#endif
+    priv->drag_counter++;
 
     priv->dragging = TRUE;
 
@@ -1947,7 +1970,10 @@ osm_gps_map_motion_notify (GtkWidget *widget, GdkEventMotion  *event)
     priv->drag_mouse_dx = x - priv->drag_start_mouse_x;
     priv->drag_mouse_dy = y - priv->drag_start_mouse_y;
 
-    osm_gps_map_expose (widget, NULL);
+    /* instead of redrawing directly just add an idle function */
+    if (!priv->drag_expose)
+        priv->drag_expose = 
+            g_idle_add ((GSourceFunc)osm_gps_map_map_expose, widget);
 
     return FALSE;
 }
@@ -1966,6 +1992,13 @@ osm_gps_map_configure (GtkWidget *widget, GdkEventConfigure *event)
                         widget->allocation.width + EXTRA_BORDER * 2,
                         widget->allocation.height + EXTRA_BORDER * 2,
                         -1);
+
+    // pixel_x,y, offsets
+    gint pixel_x = lon2pixel(priv->map_zoom, priv->center_rlon);
+    gint pixel_y = lat2pixel(priv->map_zoom, priv->center_rlat);
+
+    priv->map_x = pixel_x - widget->allocation.width/2;
+    priv->map_y = pixel_y - widget->allocation.height/2;
 
 #ifdef ENABLE_OSD
 
@@ -2315,6 +2348,8 @@ osm_gps_map_source_get_friendly_name(OsmGpsMapSource_t source)
             return "OpenStreetMap II";
         case OSM_GPS_MAP_SOURCE_OPENCYCLEMAP:
             return "OpenCycleMap";
+        case OSM_GPS_MAP_SOURCE_OSM_PUBLIC_TRANSPORT:
+            return "Public Transport";
         case OSM_GPS_MAP_SOURCE_OSMC_TRAILS:
             return "OSMC Trails";
         case OSM_GPS_MAP_SOURCE_MAPS_FOR_FREE:
@@ -2360,6 +2395,8 @@ osm_gps_map_source_get_repo_uri(OsmGpsMapSource_t source)
             return "http://tah.openstreetmap.org/Tiles/tile/#Z/#X/#Y.png";
         case OSM_GPS_MAP_SOURCE_OPENCYCLEMAP:
             return "http://c.andy.sandbox.cloudmade.com/tiles/cycle/#Z/#X/#Y.png";
+        case OSM_GPS_MAP_SOURCE_OSM_PUBLIC_TRANSPORT:
+            return "http://tile.xn--pnvkarte-m4a.de/tilegen/#Z/#X/#Y.png";
         case OSM_GPS_MAP_SOURCE_OSMC_TRAILS:
             return "http://topo.geofabrik.de/trails/#Z/#X/#Y.png";
         case OSM_GPS_MAP_SOURCE_MAPS_FOR_FREE:
@@ -2400,6 +2437,7 @@ osm_gps_map_source_get_image_format(OsmGpsMapSource_t source)
         case OSM_GPS_MAP_SOURCE_OPENSTREETMAP:
         case OSM_GPS_MAP_SOURCE_OPENSTREETMAP_RENDERER:
         case OSM_GPS_MAP_SOURCE_OPENCYCLEMAP:
+        case OSM_GPS_MAP_SOURCE_OSM_PUBLIC_TRANSPORT:
         case OSM_GPS_MAP_SOURCE_OSMC_TRAILS:
             return "png";
         case OSM_GPS_MAP_SOURCE_MAPS_FOR_FREE:
@@ -2434,6 +2472,7 @@ osm_gps_map_source_get_max_zoom(OsmGpsMapSource_t source)
             return 18;
         case OSM_GPS_MAP_SOURCE_OPENSTREETMAP:
         case OSM_GPS_MAP_SOURCE_OPENCYCLEMAP:
+        case OSM_GPS_MAP_SOURCE_OSM_PUBLIC_TRANSPORT:
             return OSM_MAX_ZOOM;
         case OSM_GPS_MAP_SOURCE_OPENSTREETMAP_RENDERER:
         case OSM_GPS_MAP_SOURCE_GOOGLE_STREET:
@@ -2539,7 +2578,6 @@ osm_gps_map_set_center (OsmGpsMap *map, float latitude, float longitude)
 
     priv->center_rlat = deg2rad(latitude);
     priv->center_rlon = deg2rad(longitude);
-    priv->center_coord_set = TRUE;
 
     // pixel_x,y, offsets
     pixel_x = lon2pixel(priv->map_zoom, priv->center_rlon);
@@ -2571,17 +2609,8 @@ osm_gps_map_set_zoom (OsmGpsMap *map, int zoom)
         //constrain zoom min_zoom -> max_zoom
         priv->map_zoom = CLAMP(zoom, priv->min_zoom, priv->max_zoom);
 
-        if (priv->center_coord_set)
-        {
-            priv->map_x = lon2pixel(priv->map_zoom, priv->center_rlon) - width_center;
-            priv->map_y = lat2pixel(priv->map_zoom, priv->center_rlat) - height_center;
-        }
-        else
-        {
-            factor = exp(priv->map_zoom * M_LN2)/exp(zoom_old * M_LN2);
-            priv->map_x = ((priv->map_x + width_center) * factor) - width_center;
-            priv->map_y = ((priv->map_y + height_center) * factor) - height_center;
-        }
+        priv->map_x = lon2pixel(priv->map_zoom, priv->center_rlon) - width_center;
+        priv->map_y = lat2pixel(priv->map_zoom, priv->center_rlat) - height_center;
 
         g_debug("Zoom changed from %d to %d factor:%f x:%d",
                 zoom_old, priv->map_zoom, factor, priv->map_x);
@@ -2719,7 +2748,7 @@ osm_gps_map_draw_gps (OsmGpsMap *map, float latitude, float longitude, float hea
 
             priv->map_x = pixel_x - GTK_WIDGET(map)->allocation.width/2;
             priv->map_y = pixel_y - GTK_WIDGET(map)->allocation.height/2;
-            priv->center_coord_set = FALSE;
+            center_coord_update(GTK_WIDGET(map));
         }
     }
 
@@ -2793,9 +2822,9 @@ osm_gps_map_scroll (OsmGpsMap *map, gint dx, gint dy)
     g_return_if_fail (OSM_IS_GPS_MAP (map));
     priv = map->priv;
 
-    priv->center_coord_set = FALSE;
     priv->map_x += dx;
     priv->map_y += dy;
+    center_coord_update(GTK_WIDGET(map));
 
 #ifdef ENABLE_OSD
     /* OSD may contain a coordinate, so we may have to re-render it */
@@ -2825,12 +2854,16 @@ osm_gps_map_redraw (OsmGpsMap *map)
     osm_gps_map_map_redraw_idle(map);
 }
 
-osm_gps_map_osd_t *osm_gps_map_osd_get(OsmGpsMap *map) {
+osm_gps_map_osd_t *
+osm_gps_map_osd_get(OsmGpsMap *map) 
+{
     g_return_val_if_fail (OSM_IS_GPS_MAP (map), NULL);
     return map->priv->osd;
 }
 
-void osm_gps_map_register_osd(OsmGpsMap *map, osm_gps_map_osd_t *osd) {
+void 
+osm_gps_map_register_osd(OsmGpsMap *map, osm_gps_map_osd_t *osd) 
+{
     OsmGpsMapPrivate *priv;
 
     g_return_if_fail (OSM_IS_GPS_MAP (map));
@@ -2842,8 +2875,20 @@ void osm_gps_map_register_osd(OsmGpsMap *map, osm_gps_map_osd_t *osd) {
 }
 
 void
-osm_gps_map_repaint (OsmGpsMap *map) {
+osm_gps_map_repaint (OsmGpsMap *map) 
+{
     osm_gps_map_expose (GTK_WIDGET(map), NULL);    
+}
+
+coord_t *
+osm_gps_map_get_gps (OsmGpsMap *map) 
+{
+    g_return_val_if_fail (OSM_IS_GPS_MAP (map), NULL);
+
+    if(!map->priv->gps_valid)
+        return NULL;
+    
+    return map->priv->gps;
 }
 
 #endif
