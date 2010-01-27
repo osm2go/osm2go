@@ -1,3 +1,10 @@
+osm2go (1:0.8.3-maemo1) karmic; urgency=low
+
+  * Fixed [#5074] Minor problem in error handling when creating new project
+  * Fixed [#4991] Trunk fails to build
+
+ -- Till Harbaum <till@harbaum.org>  Wed, 27 Jan 2010 20:39:33 +0100
+
 osm2go (1:0.8.2-maemo1) unstable; urgency=low
 
   * Fixed Maemo Mapper tab, re-enabled Maemo Mapper support in Fremantle

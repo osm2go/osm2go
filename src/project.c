@@ -589,10 +589,12 @@ project_t *project_new(select_context_t *context) {
   project->max.lat = NAN;  project->max.lon = NAN;
 
   /* create project file on disk */
-  project_save(context->dialog, project);
+  if(!project_save(context->dialog, project)) {
+    project_delete(context, project);
 
-  if(!project_edit(context->appdata, context->dialog,  
-		   context->settings, project, TRUE)) {
+    project = NULL;
+  } else if(!project_edit(context->appdata, context->dialog,  
+			  context->settings, project, TRUE)) {
     printf("new/edit cancelled!!\n");
 
     project_delete(context, project);

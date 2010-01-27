@@ -66,7 +66,7 @@ typedef enum {
     OSM_GPS_MAP_SOURCE_OPENSTREETMAP,
     OSM_GPS_MAP_SOURCE_OPENSTREETMAP_RENDERER,
     OSM_GPS_MAP_SOURCE_OPENCYCLEMAP,
-    OSM_GPS_MAP_SOURCE_OSMC_TRAILS,
+    OSM_GPS_MAP_SOURCE_OSM_PUBLIC_TRANSPORT,
     OSM_GPS_MAP_SOURCE_GOOGLE_STREET,
     OSM_GPS_MAP_SOURCE_GOOGLE_SATELLITE,
     OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_STREET,
@@ -76,9 +76,10 @@ typedef enum {
     /* entries below are currently unusable */
     OSM_GPS_MAP_SOURCE_MAPS_FOR_FREE,    /* not enough details */
     OSM_GPS_MAP_SOURCE_GOOGLE_HYBRID,    /* disabled by google */
-    OSM_GPS_MAP_SOURCE_YAHOO_STREET,     /* no implemented yet */
-    OSM_GPS_MAP_SOURCE_YAHOO_SATELLITE,  /* no implemented yet */
-    OSM_GPS_MAP_SOURCE_YAHOO_HYBRID      /* no implemented yet */
+    OSM_GPS_MAP_SOURCE_YAHOO_STREET,     /* not implemented yet */
+    OSM_GPS_MAP_SOURCE_YAHOO_SATELLITE,  /* not implemented yet */
+    OSM_GPS_MAP_SOURCE_YAHOO_HYBRID,     /* not implemented yet */
+    OSM_GPS_MAP_SOURCE_OSMC_TRAILS       /* only for germany */
 } OsmGpsMapSource_t;
 
 #define OSM_GPS_MAP_SOURCE_LAST  (OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_HYBRID)
