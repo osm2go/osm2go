@@ -1,3 +1,9 @@
+osm2go (1:0.8.3-maemo2) karmic; urgency=low
+
+  * Optified binary on fremantle
+
+ -- Till Harbaum <till@harbaum.org>  Sun, 31 Jan 2010 20:29:32 +0100
+
 osm2go (1:0.8.3-maemo1) karmic; urgency=low
 
   * Fixed [#5074] Minor problem in error handling when creating new project

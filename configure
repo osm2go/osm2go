@@ -604,6 +604,7 @@ ac_unique_file="src/main.c"
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
 ICON
+MAEMO_VERSION_MAJOR
 gnome2_LIBS
 gnome2_CFLAGS
 gtk_LIBS
@@ -4180,6 +4181,7 @@ $as_echo "$as_me: Configuring for Maemo $VERSION" >&6;}
     CFLAGS="$CFLAGS -DMAEMO_VERSION=\\\"$VERSION\\\""
     MAJOR=`echo $VERSION | cut -b1 -`
     CFLAGS="$CFLAGS -DMAEMO_VERSION_MAJOR=$MAJOR"
+    MAEMO_VERSION_MAJOR=$MAJOR
 
 else
 
@@ -4388,8 +4390,10 @@ fi
 
 
   ICON=" No icon"
+  MAEMO_VERSION_MAJOR=""
 
 fi
+
 
 
 ac_config_files="$ac_config_files Makefile src/Makefile data/Makefile debian/control"

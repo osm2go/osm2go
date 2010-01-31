@@ -136,7 +136,8 @@ PKG_CHECK_EXISTS(maemo-version, [
     CFLAGS="$CFLAGS -DMAEMO_VERSION=\\\"$VERSION\\\""
     MAJOR=`echo $VERSION | cut -b1 -`
     CFLAGS="$CFLAGS -DMAEMO_VERSION_MAJOR=$MAJOR"
-  ], [
+    MAEMO_VERSION_MAJOR=$MAJOR
+   ], [
     AC_MSG_ERROR([maemo-version not found])
   ])
 
@@ -187,8 +188,10 @@ XB-Maemo-Icon-26:
   AC_SUBST(INSTALL_PLATTFORM)
 
   ICON=" No icon"
+  MAEMO_VERSION_MAJOR=""
 ])
 
+AC_SUBST(MAEMO_VERSION_MAJOR)
 AC_SUBST(ICON)
 AC_CONFIG_FILES([Makefile src/Makefile data/Makefile debian/control])
 
