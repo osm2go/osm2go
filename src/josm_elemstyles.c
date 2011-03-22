@@ -227,13 +227,21 @@ static elemstyle_icon_t *parse_icon(xmlDocPtr doc, xmlNode *a_node) {
 static elemstyle_t *parse_rule(xmlDocPtr doc, xmlNode *a_node) {
   xmlNode *cur_node = NULL;
   elemstyle_t *elemstyle = g_new0(elemstyle_t, 1);
+  elemstyle_condition_t *lastcond = NULL;
 
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcasecmp((char*)cur_node->name, "condition") == 0) {
-	/* ------ parse condition ------ */
-	elemstyle->condition.key   = (char*)xmlGetProp(cur_node, BAD_CAST "k");
-	elemstyle->condition.value = (char*)xmlGetProp(cur_node, BAD_CAST "v");
+        /* ------ parse condition ------ */
+        elemstyle_condition_t *newcond = g_new0(elemstyle_condition_t, 1);
+        newcond->key   = (char*)xmlGetProp(cur_node, BAD_CAST "k");
+        newcond->value = (char*)xmlGetProp(cur_node, BAD_CAST "v");
+        if (!lastcond)
+          elemstyle->condition = newcond;
+        else
+          lastcond->next = newcond;
+
+        lastcond = newcond;
 	/* todo: add support for "b" (boolean) value */
       } else if(strcasecmp((char*)cur_node->name, "line") == 0) {
 	/* ------ parse line ------ */
@@ -366,8 +374,14 @@ static void free_icon(elemstyle_icon_t *icon) {
 }
 
 static void elemstyle_free(elemstyle_t *elemstyle) {
-  if(elemstyle->condition.key)   xmlFree(elemstyle->condition.key);
-  if(elemstyle->condition.value) xmlFree(elemstyle->condition.value);
+  elemstyle_condition_t *cond;
+  for (cond = elemstyle->condition; cond;) {
+    if(cond->key)   xmlFree(cond->key);
+    if(cond->value) xmlFree(cond->value);
+    elemstyle_condition_t *prevcond = cond;
+    cond = cond->next;
+    g_free(prevcond);
+  }
 
   switch(elemstyle->type) {
   case ES_TYPE_NONE:
@@ -402,21 +416,23 @@ void josm_elemstyles_colorize_node(style_t *style, node_t *node) {
 
   gboolean somematch = FALSE;
   while(elemstyle) {
-    gboolean match = FALSE;
+    // Rule without conditions matches everything (should it?)
+    gboolean match = elemstyle->condition ? TRUE : FALSE;
 
-    if(elemstyle->condition.key) {
-      char *value = osm_node_get_value(node, elemstyle->condition.key);
-      if(value) {
-	if(elemstyle->condition.value) {
-	  if(strcasecmp(value, elemstyle->condition.value) == 0)
-	    somematch = match = TRUE;
-	} else
-	  somematch = match = TRUE;
+    // For rule with conditions, if any condition mismatches->rule mismatches
+    elemstyle_condition_t *cond;
+    for (cond = elemstyle->condition; cond; cond = cond->next) {
+      if(cond->key) {
+        char *value = osm_node_get_value(node, cond->key);
+        if(!value || (cond->value && strcasecmp(value, cond->value) != 0))
+          match = FALSE;
+      } else if(cond->value) {
+        if(!osm_node_has_value(node, cond->value)) 
+          match = FALSE;
       }
-    } else
-      if(osm_node_has_value(node, elemstyle->condition.value)) 
-	somematch = match = TRUE;
+    }
 
+    somematch = match ? TRUE : somematch;
 
     if(match && elemstyle->icon) {
       char *name = g_strdup_printf("styles/%s/%s",
@@ -486,20 +502,19 @@ void josm_elemstyles_colorize_way(style_t *style, way_t *way) {
     //  printf("a %s %s\n", elemstyle->condition.key, 
     //                        elemstyle->condition.value);
 
-    gboolean match = FALSE;
+    gboolean match = elemstyle->condition ? TRUE : FALSE;
 
-    if(elemstyle->condition.key) {
-      char *value = osm_way_get_value(way, elemstyle->condition.key);
-      if(value) {
-	if(elemstyle->condition.value) {
-	  if(strcasecmp(value, elemstyle->condition.value) == 0)
-	    match = TRUE;
-	} else
-	  match = TRUE;
+    elemstyle_condition_t *cond;
+    for (cond = elemstyle->condition; cond; cond = cond->next) {
+      if(cond->key) {
+        char *value = osm_way_get_value(way, cond->key);
+        if(!value || (cond->value && strcasecmp(value, cond->value) != 0))
+          match = FALSE;
+      } else if(cond->value) {
+        if(!osm_way_has_value(way, cond->value)) 
+          match = FALSE;
       }
-    } else
-      if(osm_way_has_value(way, elemstyle->condition.value)) 
-	match = TRUE;
+    }
 
     if(match) {
       switch(elemstyle->type) {

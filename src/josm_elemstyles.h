@@ -94,11 +94,14 @@ typedef struct {
   float zoom_max;   // XXX probably belongs in elemstyle_s
 } elemstyle_icon_t;
 
-typedef struct elemstyle_s {
-  struct {
+typedef struct elemstyle_condition_s {
     char *key;
     char *value;
-  } condition;
+    struct elemstyle_condition_s *next;
+} elemstyle_condition_t;
+
+typedef struct elemstyle_s {
+  elemstyle_condition_t *condition;
 
   elemstyle_type_t type;
 
