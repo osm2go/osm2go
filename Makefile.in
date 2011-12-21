@@ -20,17 +20,17 @@ APP = @PACKAGE@
 VERSION = $${VERSION_PREFIX}@PACKAGE_VERSION@$${VERSION_SUFFIX}
 
 all:
-	cd src && make
-	cd data && make
+	cd src && ${MAKE}
+	cd data && ${MAKE}
 
 install:
-	cd src && make install
-	cd data && make install
+	cd src && ${MAKE} install
+	cd data && ${MAKE} install
 
 clean:
 	rm -f *~ \#*\# *.bak *-stamp
-	cd src && make clean
-	cd data && make clean
+	cd src && ${MAKE} clean
+	cd data && ${MAKE} clean
 
 distclean: clean
 	rm -f Makefile src/Makefile data/Makefile config.log config.status
