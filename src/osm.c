@@ -157,7 +157,6 @@ tag_t *osm_parse_osm_tag(osm_t *osm, xmlDocPtr doc, xmlNode *a_node) {
 
 gboolean osm_is_creator_tag(tag_t *tag) {
   if(strcasecmp(tag->key, "created_by") == 0) return TRUE;
-  if(strcasecmp(tag->key, "source") == 0) return TRUE;
 
   return FALSE;
 }
