@@ -256,6 +256,8 @@ static gboolean osm_update_item(struct log_s *log, char *xml_str,
     /* specify target URL, and note that this URL should include a file
        name, not only a directory */
     curl_easy_setopt(curl, CURLOPT_URL, url);
+
+	curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
     
     /* now specify which file to upload */
     curl_easy_setopt(curl, CURLOPT_READDATA, &read_data);
@@ -382,6 +384,8 @@ static gboolean osm_delete_item(struct log_s *log, char *xml_str,
     /* specify target URL, and note that this URL should include a file
        name, not only a directory */
     curl_easy_setopt(curl, CURLOPT_URL, url);
+
+	curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
     
     /* some servers don't like requests that are made without a user-agent
        field, so we provide one */

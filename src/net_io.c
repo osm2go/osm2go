@@ -225,6 +225,8 @@ static void *worker_thread(void *ptr) {
 
     if(ok) {
       curl_easy_setopt(curl, CURLOPT_URL, request->url);
+
+    curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
       
       switch(request->type) {
       case NET_IO_DL_FILE:
