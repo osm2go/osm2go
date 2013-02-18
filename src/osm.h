@@ -29,18 +29,9 @@
 
 /* item_id_t needs to be signed as osm2go uses negative ids for items */
 /* not yet registered with the main osm database */
-#if 1
-/* currently 31 bit is still sufficient since there are less than */
-/* 2 billion nodes or changesets */
-typedef gint32 item_id_t;
-#define G_TYPE_ITEM_ID_T G_TYPE_INT
-#define ITEM_ID_FORMAT  "%" G_GINT32_FORMAT
-#else
-/* the future may require us to switch to 64 bits */
 typedef gint64 item_id_t;
 #define G_TYPE_ITEM_ID_T G_TYPE_INT64
 #define ITEM_ID_FORMAT  "%" G_GINT64_FORMAT
-#endif
 
 #define ID_ILLEGAL  ((item_id_t)0)
 
