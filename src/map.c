@@ -2317,7 +2317,7 @@ static gint map_bg_item_destroy_event(GtkWidget *widget, gpointer data) {
   map->bg.item = NULL;
   if(map->bg.pix) {
     printf("destroying background item\n");
-    gdk_pixbuf_unref(map->bg.pix);
+    g_object_unref(map->bg.pix);
     map->bg.pix = NULL;
   }
   return FALSE;
