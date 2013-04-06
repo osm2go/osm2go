@@ -190,7 +190,7 @@ static void on_tag_edit(GtkWidget *button, tag_context_t *context) {
 static void on_tag_last(GtkWidget *button, tag_context_t *context) {
   static const char *type_name[] = { "illegal", "node", "way", "relation" };
 
-  if(yes_no_f(context->dialog, 
+  if(!*context->tag || yes_no_f(context->dialog,
 	      context->appdata, MISC_AGAIN_ID_OVERWRITE_TAGS, 0,
 	      _("Overwrite tags?"),
 	      _("This will overwrite all tags of this %s with the "
