@@ -885,7 +885,7 @@ void project_filesize(project_context_t *context) {
     gtk_widget_modify_fg(context->fsize, GTK_STATE_NORMAL, NULL);
 
     if(!context->project->data_dirty)
-      str = g_strdup_printf(_("%d bytes present"), 
+      str = g_strdup_printf(_("%zi bytes present"),
 			    file_length(context->project->path,
 					context->project->osm));
     else
