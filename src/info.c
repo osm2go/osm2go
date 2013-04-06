@@ -206,6 +206,11 @@ static void on_tag_last(GtkWidget *button, tag_context_t *context) {
       *context->tag = osm_tags_copy(context->appdata->map->last_way_tags);
 
     info_tags_replace(context);
+
+    // Adding those tags above will usually make the first of the newly
+    // added tags selected. Enable edit/remove buttons now.
+    GtkTreeSelection *sel = list_get_selection(context->list);
+    changed(sel, context->list);
   }
 }
 
