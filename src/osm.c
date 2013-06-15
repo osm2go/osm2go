@@ -370,7 +370,7 @@ node_chain_t *osm_parse_osm_way_nd(osm_t *osm,
   char *prop;
 
   if((prop = (char*)xmlGetProp(a_node, (unsigned char*)"ref"))) {
-    item_id_t id = strtoul(prop, NULL, 10);
+    item_id_t id = strtoll(prop, NULL, 10);
     node_chain_t *node_chain = g_new0(node_chain_t, 1);
 
     /* search matching node */
@@ -486,7 +486,7 @@ member_t *osm_parse_osm_relation_member(osm_t *osm,
   }
 
   if((prop = (char*)xmlGetProp(a_node, (unsigned char*)"ref"))) {
-    item_id_t id = strtoul(prop, NULL, 10);
+    item_id_t id = strtoll(prop, NULL, 10);
 
     switch(member->object.type) {
     case ILLEGAL:
@@ -715,7 +715,7 @@ static node_t *process_node(xmlTextReaderPtr reader, osm_t *osm) {
 
   char *prop;
   if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "id"))) {
-    OSM_ID(node) = strtoul(prop, NULL, 10);
+    OSM_ID(node) = strtoll(prop, NULL, 10);
     xmlFree(prop);
   }
 
@@ -794,7 +794,7 @@ static node_chain_t *process_nd(xmlTextReaderPtr reader, osm_t *osm) {
   char *prop;
 
   if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "ref"))) {
-    item_id_t id = strtoul(prop, NULL, 10);
+    item_id_t id = strtoll(prop, NULL, 10);
     node_chain_t *node_chain = g_new0(node_chain_t, 1);
     
     /* search matching node */
@@ -818,7 +818,7 @@ static way_t *process_way(xmlTextReaderPtr reader, osm_t *osm) {
 
   char *prop;
   if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "id"))) {
-    OSM_ID(way) = strtoul(prop, NULL, 10);
+    OSM_ID(way) = strtoll(prop, NULL, 10);
     xmlFree(prop);
   }
 
@@ -898,7 +898,7 @@ static member_t *process_member(xmlTextReaderPtr reader, osm_t *osm) {
   }
 
   if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "ref"))) {
-    item_id_t id = strtoul(prop, NULL, 10);
+    item_id_t id = strtoll(prop, NULL, 10);
 
     switch(member->object.type) {
     case ILLEGAL:
@@ -955,7 +955,7 @@ static relation_t *process_relation(xmlTextReaderPtr reader, osm_t *osm) {
 
   char *prop;
   if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "id"))) {
-    OSM_ID(relation) = strtoul(prop, NULL, 10);
+    OSM_ID(relation) = strtoll(prop, NULL, 10);
     xmlFree(prop);
   }
 
