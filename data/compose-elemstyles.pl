@@ -7,6 +7,9 @@
 use strict;
 use warnings FATAL => qw{all};
 
+# XXX: TEMPORARY HACK TO MAKE IT COMPILE ON MY DESKTOP // AMDmi3
+exit 0;
+
 our $OPACITY = shift(@ARGV);
 our $BG_COL = shift(@ARGV);
 defined($OPACITY) && defined($BG_COL)
