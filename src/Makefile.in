@@ -36,16 +36,17 @@ OBJS = main.o map.o osm.o osm_api.o wms.o about.o \
 	list.o scale_popup.o $(EXTRA_OBJS)
 
 DEFS = -DPACKAGE=\"$(APP)\" -DPREFIX=\"@prefix@\" -DDATADIR=\"$(datadir)/$(APP)\" -DVERSION=\"$(VERSION)\"
+CC = @CC@
 CFLAGS = -Wall $(DEFS) @CFLAGS@ -DCANVAS_CUSTOM_ITEM_AT
 LDFLAGS = @LIBS@
 
 all: $(APP)
 
 %.o: %.c Makefile
-	gcc $(CFLAGS) -o $@ -c $<
+	$(CC) $(CFLAGS) -o $@ -c $<
 
 $(APP): $(OBJS) Makefile
-	gcc $(LDFLAGS) -o $@ $(OBJS)
+	$(CC) $(LDFLAGS) -o $@ $(OBJS)
 
 clean:
 	rm -f osm2go *.o *~ */*~ \#*\# version.h *.bak
