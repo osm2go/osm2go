@@ -1,0 +1,10 @@
+*.o
+Makefile
+aclocal.m4
+autom4te.cache
+config.log
+config.status
+configure
+data/elemstyles-mapnik.xml
+debian/control
+src/osm2go
