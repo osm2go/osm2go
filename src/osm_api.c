@@ -20,9 +20,6 @@
 #include "appdata.h"
 
 #include <curl/curl.h>
-#ifndef __FreeBSD__ // XXX: TEMPORARY HACK TO MAKE IT COMPILE ON MY DESKTOP // AMDmi3
-#include <curl/types.h> /* new for v7 */
-#endif
 #include <curl/easy.h> /* new for v7 */
 #include <unistd.h>
 
