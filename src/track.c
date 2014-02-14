@@ -212,12 +212,6 @@ static track_t *track_parse_doc(bounds_t *bounds, xmlDocPtr doc) {
   /*free the document */
   xmlFreeDoc(doc);
 
-  /*
-   * Free the global variables that may
-   * have been allocated by the parser.
-   */
-  xmlCleanupParser();
-
   return track;
 }
 
@@ -355,7 +349,6 @@ void track_write(char *name, track_t *track) {
 
   xmlSaveFormatFileEnc(name, doc, "UTF-8", 1);
   xmlFreeDoc(doc);
-  xmlCleanupParser();
 
   track->dirty = FALSE;
 }

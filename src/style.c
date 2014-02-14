@@ -209,7 +209,6 @@ static style_t *parse_doc(xmlDocPtr doc) {
   }
     
   xmlFreeDoc(doc);
-  xmlCleanupParser();
   return style;
 }
 

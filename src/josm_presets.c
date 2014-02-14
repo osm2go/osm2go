@@ -348,7 +348,6 @@ static presets_item_t *parse_doc(xmlDocPtr doc) {
   }
     
   xmlFreeDoc(doc);
-  xmlCleanupParser();
   return presets;
 }
 

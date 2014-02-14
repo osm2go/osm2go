@@ -1126,8 +1126,6 @@ osm_t *osm_parse(char *path, char *filename) {
     g_free(full);
   }
 
-  xmlCleanupParser();
-
   struct timeval end;
   gettimeofday(&end, NULL);
 
@@ -1388,7 +1386,6 @@ static char *osm_generate_xml(osm_t *osm, item_id_t changeset,
 
   xmlDocDumpFormatMemoryEnc(doc, &result, &len, "UTF-8", 1);
   xmlFreeDoc(doc);
-  xmlCleanupParser();
 
   //  puts("xml encoding result:");
   //  puts((char*)result);
@@ -1434,7 +1431,6 @@ char *osm_generate_xml_changeset(osm_t *osm, char *comment) {
 
   xmlDocDumpFormatMemoryEnc(doc, &result, &len, "UTF-8", 1);
   xmlFreeDoc(doc);
-  xmlCleanupParser();
 
   return (char*)result;
 }
