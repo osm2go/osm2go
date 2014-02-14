@@ -1,7 +1,7 @@
 language: c
 compiler:
-  - gcc
+  #- gcc # fails to link with gnome libs for some reason
   - clang
 before_install:
-  - sudo apt-get install libgnome2-dev libgoocanvas-dev libcurl4-openssl-dev libsoup2.4-dev libgtk2.0-dev libgnomevfs2-dev
+  - sudo apt-get install -qq libgnome2-dev libgoocanvas-dev libcurl4-openssl-dev libsoup2.4-dev libgtk2.0-dev libgnomevfs2-dev
 script: autoreconf -fi && ./configure && make
