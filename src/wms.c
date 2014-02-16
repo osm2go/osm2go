@@ -1388,7 +1388,7 @@ void wms_remove(appdata_t *appdata) {
 struct server_preset_s {
   char *name, *server, *path;
 } default_servers[] = {
-  { "NASA landsat", "http://onearth.jpl.nasa.gov", "/wms.cgi" },
+  { "Open Geospatial Consortium Web Services", "http://ows.terrestris.de", "/osm/service?" },
   /* add more servers here ... */
   { NULL, NULL, NULL }
 };
