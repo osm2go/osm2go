@@ -319,12 +319,6 @@ static void wms_cap_parse_doc(wms_t *wms, xmlDocPtr doc) {
 
   /*free the document */
   xmlFreeDoc(doc);
-
-  /*
-   * Free the global variables that may
-   * have been allocated by the parser.
-   */
-  xmlCleanupParser();
 }
 
 /* get pixel extent of image display */

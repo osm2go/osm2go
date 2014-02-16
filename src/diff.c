@@ -251,7 +251,6 @@ void diff_save(project_t *project, osm_t *osm) {
 
   xmlSaveFormatFileEnc(diff_name, doc, "UTF-8", 1);
   xmlFreeDoc(doc);
-  xmlCleanupParser();
 
   /* if we reach this point writing the new file worked and we */
   /* can delete the backup */
@@ -715,7 +714,6 @@ void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) {
   g_free(diff_name);
 
   xmlFreeDoc(doc);
-  xmlCleanupParser();
 
   /* check for hidden ways and update menu accordingly */
   gboolean something_is_hidden = FALSE;

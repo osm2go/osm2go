@@ -187,7 +187,6 @@ static gboolean project_read(appdata_t *appdata,
   }
 
   xmlFreeDoc(doc);
-  xmlCleanupParser();
 
   return TRUE;
 }
@@ -264,7 +263,6 @@ gboolean project_save(GtkWidget *parent, project_t *project) {
 
   xmlSaveFormatFileEnc(project_file, doc, "UTF-8", 1);
   xmlFreeDoc(doc);
-  xmlCleanupParser();
 
   g_free(project_file);
 

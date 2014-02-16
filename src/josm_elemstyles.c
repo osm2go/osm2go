@@ -321,7 +321,6 @@ static elemstyle_t *parse_doc(xmlDocPtr doc) {
   }
     
   xmlFreeDoc(doc);
-  xmlCleanupParser();
   return elemstyles;
 }
 

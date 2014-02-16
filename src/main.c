@@ -1249,6 +1249,8 @@ void cleanup(appdata_t *appdata) {
   osm_free(&appdata->icon, appdata->osm);
   appdata->osm = NULL;
 
+  xmlCleanupParser();
+
   curl_global_cleanup();
 
   josm_presets_free(appdata->presets);
@@ -1382,6 +1384,9 @@ int main(int argc, char *argv[]) {
 
   /* Must initialize libcurl before any threads are started */
   curl_global_init(CURL_GLOBAL_ALL);
+
+  /* Same for libxml2 */
+  xmlInitParser();
 
   g_thread_init(NULL);
   
