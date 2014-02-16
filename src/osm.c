@@ -93,17 +93,13 @@ static
 time_t convert_iso8601(const char *str) {
   if(!str) return 0;
 
-  tzset();
-
   struct tm ctime;
   memset(&ctime, 0, sizeof(struct tm));
   strptime(str, "%FT%T%z", &ctime);
- 
-#ifdef __FreeBSD__ // XXX: TEMPORARY HACK TO MAKE IT COMPILE ON MY DESKTOP // AMDmi3
-  return mktime(&ctime);
-#else
-  return mktime(&ctime) - timezone;
-#endif
+
+  long gmtoff = ctime.tm_gmtoff;
+
+  return timegm(&ctime) - gmtoff;
 }
 
 /* -------------------- tag handling ----------------------- */
