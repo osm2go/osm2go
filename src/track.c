@@ -33,6 +33,13 @@
 // predecs
 static void track_do_enable_gps(appdata_t *appdata);
 static void track_do_disable_gps(appdata_t *appdata);
+enum {
+  PROJECT_COL_NAME = 0,
+  PROJECT_COL_STATUS,
+  PROJECT_COL_DESCRIPTION,
+  PROJECT_COL_DATA,
+  PROJECT_NUM_COLS
+};*
 
 /* make menu represent the track state */
 static void track_menu_set(appdata_t *appdata, gboolean present) {
@@ -519,7 +526,7 @@ static void track_append_position(appdata_t *appdata, pos_t *pos, float alt) {
 	temp=PROJECT_COL_DATA;
 	while(temp!=NULL){
 		if(*temp->osm){
-			if(*temp->min.lat){
+			if(temp->min.lat){
 		/*if position is inside project bounds , then name=*temp->name; and exit the loop */
 			}
 		}
