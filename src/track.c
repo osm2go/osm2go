@@ -24,6 +24,7 @@
 #include <time.h>
 
 #include "appdata.h"
+#include "project.h"
 
 #ifndef LIBXML_TREE_ENABLED
 #error "Tree not enabled in libxml"
@@ -507,8 +508,8 @@ static void track_append_position(appdata_t *appdata, pos_t *pos, float alt) {
   
   if(appdata->settings && appdata->settings->follow_gps) {
     lpos_t lpos;
-    chars * name;
-    project * temp;
+    char * name;
+    project_t * temp;
     pos2lpos(appdata->osm->bounds, pos, &lpos);
     if(!map_scroll_to_if_offscreen(appdata->map, &lpos)) {
       if(!--appdata->track.warn_cnt) {
@@ -516,9 +517,9 @@ static void track_append_position(appdata_t *appdata, pos_t *pos, float alt) {
 	/* position is outside the working area */
 	banner_show_info(appdata, _("GPS position outside working area!"));
 	temp=PROJECT_COL_DATA;
-	while(*temp){
+	while(temp!=NULL){
 		if(*temp->osm){
-			if(*temp->osm->bounds){
+			if(*temp->min.lat){
 		/*if position is inside project bounds , then name=*temp->name; and exit the loop */
 			}
 		}
