@@ -513,6 +513,21 @@ static void track_append_position(appdata_t *appdata, pos_t *pos, float alt) {
 	/* warn user once a minute that the current gps */
 	/* position is outside the working area */
 	banner_show_info(appdata, _("GPS position outside working area!"));
+	temp=PROJECT_COL_DATA;
+	while(*temp){
+		if(*temp->osm){
+			if(*temp->osm->bounds){
+		/*if position is inside project bounds , then chars * name=*temp->name; and exit the loop */
+			}
+		}
+	}
+	/* closing current project */
+	if(*name){
+	project_save(GTK_WIDGET(appdata->window), appdata->project);
+/* or this one:	project_close(appdata); */
+	/* opening next project */
+	project_open(appdata, name);
+	}
 	appdata->track.warn_cnt = 60;  // warn again after one minute
       }
     }
