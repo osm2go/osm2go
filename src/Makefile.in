@@ -46,7 +46,7 @@ all: $(APP)
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 $(APP): $(OBJS) Makefile
-	$(CC) $(LDFLAGS) -o $@ $(OBJS)
+	$(CC) -o $@ $(OBJS) $(LDFLAGS)
 
 clean:
 	rm -f osm2go *.o *~ */*~ \#*\# version.h *.bak
