@@ -1,11 +1,16 @@
 language: c
-sudo: required
+sudo: false
 compiler:
   - gcc
   - clang
-before_install:
-  - sudo apt-get update -qq
-  - sudo apt-get install -qq libgoocanvas-dev libcurl4-openssl-dev libsoup2.4-dev libgtk2.0-dev libgnomevfs2-dev
+addons:
+  apt:
+    packages:
+    - libgoocanvas-dev
+    - libcurl4-openssl-dev
+    - libsoup2.4-dev
+    - libgtk2.0-dev
+    - libgnomevfs2-dev
 script:
   - mkdir build
   - autoreconf -fi && cd build && ../configure && make
