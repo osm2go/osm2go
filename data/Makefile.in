@@ -46,7 +46,9 @@ install-maemo:
 install: @INSTALL_PLATTFORM@ $(TEMPLATE_ELEMSTYLES)
 	install -d $(DESTDIR)$(datadir)/$(APP)	
 	install -m 644 $(srcdir)/COPYING $(DESTDIR)$(datadir)/$(APP)
-	install -m 644 $(srcdir)/*.txt $(DESTDIR)$(datadir)/$(APP)
+	for f in `find $(srcdir)/ -name "*.txt" -a '!' -name CMakeLists.txt`; do \
+	   install -m 644 $$f $(DESTDIR)$(datadir)/$(APP)/ ;\
+	done;
 	install -m 644 $(srcdir)/*.xml $(DESTDIR)$(datadir)/$(APP)
 	install -m 644 $(TEMPLATE_ELEMSTYLES) $(DESTDIR)$(datadir)/$(APP)
 	install -m 644 $(srcdir)/*.style $(DESTDIR)$(datadir)/$(APP)

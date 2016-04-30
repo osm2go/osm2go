@@ -3,6 +3,9 @@ sudo: false
 compiler:
   - gcc
   - clang
+env:
+  global:
+    - CMAKE_VERSION=3.6.1
 addons:
   apt:
     packages:
@@ -12,5 +15,11 @@ addons:
     - libgtk2.0-dev
     - libgnomevfs2-dev
 script:
-  - mkdir build
-  - autoreconf -fi && cd build && ../configure && make
+  # install a working version from upstream, the Ubuntu version is too old
+  - wget -O /tmp/cmake.tar --no-check-certificate https://cmake.org/files/v$(echo ${CMAKE_VERSION} | sed 's/\.[0-9]*$//')/cmake-${CMAKE_VERSION}-Linux-x86_64.tar.gz
+  - tar xf /tmp/cmake.tar -C /tmp
+  - export PATH=/tmp/cmake-${CMAKE_VERSION}-Linux-x86_64/bin:${PATH}
+  - mkdir build-am build-cm
+  - autoreconf -fi && pushd build-am && ../configure && make && popd
+  - pushd build-cm
+  - cmake .. && make VERBOSE=1
