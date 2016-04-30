@@ -862,7 +862,11 @@ static gsize file_length(char *path, char *name) {
 
   if(!gmap) return -1;
   gsize size = g_mapped_file_get_length(gmap); 
+#if GLIB_CHECK_VERSION(2,22,0)
+  g_mapped_file_unref(gmap);
+#else
   g_mapped_file_free(gmap);
+#endif
   return size;
 }
 
