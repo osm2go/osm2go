@@ -20,6 +20,10 @@
 #ifndef AREA_EDIT_H
 #define AREA_EDIT_H
 
+#include "appdata.h"
+#include "pos.h"
+#include "settings.h"
+
 typedef struct {
   appdata_t *appdata;
   GtkWidget *parent;   /* parent widget to be placed upon */

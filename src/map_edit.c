@@ -785,11 +785,9 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 
 	  /* take all nodes from way[1] and append them to way[0] */
 	  /* check if we have to append or prepend to way[0] */
-	  gboolean reverse = FALSE;
 	  if(ways2join[0]->node_chain->node == node) {
 	    /* make "prepend" to be "append" by reversing way[0] */
 	    printf("  target prepend -> reverse\n");	    
-	    reverse = TRUE;
 	    osm_way_reverse(ways2join[0]);
 	  } 
 	  

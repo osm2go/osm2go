@@ -93,7 +93,7 @@ void icon_free(icon_t **icon, GdkPixbuf *buf) {
 	//	printf("freeing unused icon %s\n", (*icon)->name);
 
 	g_free((*icon)->name);
-	gdk_pixbuf_unref((*icon)->buf);
+	g_object_unref((*icon)->buf);
 	icon_t *next = (*icon)->next;
 	g_free(*icon);
 	*icon = next;
@@ -118,7 +118,7 @@ void icon_free_all(icon_t **icons) {
   while(icon) {
     cnt++;
     g_free(icon->name);
-    gdk_pixbuf_unref(icon->buf);
+    g_object_unref(icon->buf);
     icon_t *next = icon->next;
     g_free(icon);
     icon = next;

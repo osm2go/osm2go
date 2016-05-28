@@ -247,6 +247,10 @@ static void
 cb_menu_undo_changes(GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
 
+  // if there is nothing to clean then don't ask
+  if (!diff_present(appdata->project) && diff_is_clean(appdata->osm, TRUE))
+    return;
+
   if(!yes_no_f(GTK_WIDGET(appdata->window), NULL, 0, 0,
 	       _("Undo all changes?"), 
 	       _("Throw away all the changes you've not "

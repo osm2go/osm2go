@@ -862,7 +862,11 @@ static gsize file_length(char *path, char *name) {
 
   if(!gmap) return -1;
   gsize size = g_mapped_file_get_length(gmap); 
+#if GLIB_CHECK_VERSION(2,22,0)
+  g_mapped_file_unref(gmap);
+#else
   g_mapped_file_free(gmap);
+#endif
   return size;
 }
 
@@ -885,7 +889,7 @@ void project_filesize(project_context_t *context) {
     gtk_widget_modify_fg(context->fsize, GTK_STATE_NORMAL, NULL);
 
     if(!context->project->data_dirty)
-      str = g_strdup_printf(_("%d bytes present"), 
+      str = g_strdup_printf(_("%zi bytes present"),
 			    file_length(context->project->path,
 					context->project->osm));
     else

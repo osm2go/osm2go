@@ -149,9 +149,10 @@ static void request_free(net_io_request_t *request) {
   g_free(request);
 }
 
-static int curl_progress_func(net_io_request_t *request,
+static int curl_progress_func(void *req,
 			    double t, /* dltotal */ double d, /* dlnow */
 			    double ultotal, double ulnow) {
+  net_io_request_t *request = req;
   request->progress = t?d/t:0;
   return 0;
 }

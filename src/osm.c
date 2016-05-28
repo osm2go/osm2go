@@ -1288,7 +1288,7 @@ static char *osm_generate_xml(osm_t *osm, item_id_t changeset,
 	snprintf(str, sizeof(str), ITEM_ID_FORMAT, OSM_ID(node));
 	xmlNewProp(node_node, BAD_CAST "id", BAD_CAST str);
       }
-      snprintf(str, sizeof(str), "%u", (unsigned)OSM_VERSION(node));
+      snprintf(str, sizeof(str), ITEM_ID_FORMAT, OSM_VERSION(node));
       xmlNewProp(node_node, BAD_CAST "version", BAD_CAST str);
       snprintf(str, sizeof(str), "%u", (unsigned)changeset);
       xmlNewProp(node_node, BAD_CAST "changeset", BAD_CAST str);
@@ -1306,7 +1306,7 @@ static char *osm_generate_xml(osm_t *osm, item_id_t changeset,
       xmlNodePtr way_node = xmlNewChild(root_node, NULL, BAD_CAST "way", NULL);
       snprintf(str, sizeof(str), ITEM_ID_FORMAT, OSM_ID(way));
       xmlNewProp(way_node, BAD_CAST "id", BAD_CAST str);
-      snprintf(str, sizeof(str), "%u", (unsigned)OSM_VERSION(way));
+      snprintf(str, sizeof(str), ITEM_ID_FORMAT, OSM_VERSION(way));
       xmlNewProp(way_node, BAD_CAST "version", BAD_CAST str);
       snprintf(str, sizeof(str), "%u", (unsigned)changeset);
       xmlNewProp(way_node, BAD_CAST "changeset", BAD_CAST str);
@@ -1331,7 +1331,7 @@ static char *osm_generate_xml(osm_t *osm, item_id_t changeset,
 					BAD_CAST "relation", NULL);
       snprintf(str, sizeof(str), ITEM_ID_FORMAT, OSM_ID(relation));
       xmlNewProp(rel_node, BAD_CAST "id", BAD_CAST str);
-      snprintf(str, sizeof(str), "%u", (unsigned)OSM_VERSION(relation));
+      snprintf(str, sizeof(str), ITEM_ID_FORMAT, OSM_VERSION(relation));
       xmlNewProp(rel_node, BAD_CAST "version", BAD_CAST str);
       snprintf(str, sizeof(str), "%u", (unsigned)changeset);
       xmlNewProp(rel_node, BAD_CAST "changeset", BAD_CAST str);

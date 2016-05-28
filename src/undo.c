@@ -30,8 +30,8 @@
 #define UNDO_ENABLE_CHECK   if(!appdata->menu_item_map_undo) return;
 
 /* return plain text of type */
-static char *undo_type_string(type_t type) {
-  const struct { undo_type_t type; char *name; } types[] = {
+static const char *undo_type_string(const undo_type_t type) {
+  const struct { undo_type_t type; const char *name; } types[] = {
     { UNDO_DELETE, "deletion" },
     { UNDO_CREATE, "creation" },
     { UNDO_MODIFY, "modification" },
