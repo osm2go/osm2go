@@ -190,7 +190,7 @@ static void appendf(struct log_s *log, char *colname,
   char *buf = g_strdup_vprintf(fmt, args);
   va_end( args );
 
-  printf(buf);
+  printf("%s", buf);
 
   GtkTextTag *tag = NULL;
   if(colname)

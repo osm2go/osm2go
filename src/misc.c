@@ -37,7 +37,7 @@ static void vmessagef(GtkWidget *parent, int type, int buttons,
   GtkWidget *dialog = gtk_message_dialog_new(
 			   GTK_WINDOW(parent),
 			   GTK_DIALOG_DESTROY_WITH_PARENT,
-			   type, buttons, buf);
+			   type, buttons, "%s", buf);
 
   gtk_window_set_title(GTK_WINDOW(dialog), title);
 #else
@@ -117,7 +117,7 @@ gboolean yes_no_f(GtkWidget *parent, appdata_t *appdata, gulong again_bit,
 		     GTK_WINDOW(parent),
                      GTK_DIALOG_DESTROY_WITH_PARENT,
 		     GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO,
-                     buf);
+                     "%s", buf);
 
   gtk_window_set_title(GTK_WINDOW(dialog), title);
 #else
