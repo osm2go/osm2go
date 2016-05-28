@@ -340,7 +340,7 @@ gpointer gps_thread(gpointer data) {
 	    if(vfs_result == GNOME_VFS_OK) {
 	      str[bytes_read] = 0; 
 	    
-	      printf("msg: %s (%zi)\n", str, strlen(str));
+	      printf("msg: %s (%zu)\n", str, strlen(str));
 	      
 	      g_mutex_lock(appdata->gps_state->mutex);
 	      
