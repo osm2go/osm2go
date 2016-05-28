@@ -55,6 +55,9 @@ AC_PROG_MAKE_SET
 #AC_FUNC_STRTOD
 #AC_CHECK_FUNCS([gettimeofday localtime_r memset pow setlocale sqrt strcasecmp strchr strcspn strdup strerror strrchr strstr strtoul tzset])
 
+# add libm, used for cos()
+AC_CHECK_LIB([m], [cos])
+
 # check for libcurl
 PKG_CHECK_MODULES([libcurl], [libcurl], [], [AC_MSG_ERROR([libcurl missing])])
 CFLAGS="$CFLAGS $libcurl_CFLAGS"
