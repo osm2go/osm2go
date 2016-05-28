@@ -24,6 +24,7 @@
 #include <time.h>
 
 #include "appdata.h"
+#include "project.h"
 
 #ifndef LIBXML_TREE_ENABLED
 #error "Tree not enabled in libxml"
@@ -32,6 +33,13 @@
 // predecs
 static void track_do_enable_gps(appdata_t *appdata);
 static void track_do_disable_gps(appdata_t *appdata);
+enum {
+  PROJECT_COL_NAME = 0,
+  PROJECT_COL_STATUS,
+  PROJECT_COL_DESCRIPTION,
+  PROJECT_COL_DATA,
+  PROJECT_NUM_COLS
+};*
 
 /* make menu represent the track state */
 static void track_menu_set(appdata_t *appdata, gboolean present) {
@@ -507,12 +515,29 @@ static void track_append_position(appdata_t *appdata, pos_t *pos, float alt) {
   
   if(appdata->settings && appdata->settings->follow_gps) {
     lpos_t lpos;
+    char * name;
+    project_t * temp;
     pos2lpos(appdata->osm->bounds, pos, &lpos);
     if(!map_scroll_to_if_offscreen(appdata->map, &lpos)) {
       if(!--appdata->track.warn_cnt) {
 	/* warn user once a minute that the current gps */
 	/* position is outside the working area */
 	banner_show_info(appdata, _("GPS position outside working area!"));
+	temp=PROJECT_COL_DATA;
+	while(temp!=NULL){
+		if(*temp->osm){
+			if(temp->min.lat){
+		/*if position is inside project bounds , then name=*temp->name; and exit the loop */
+			}
+		}
+	}
+	/* closing current project */
+	if(*name){
+	project_save(GTK_WIDGET(appdata->window), appdata->project);
+/* or this one:	project_close(appdata); */
+	/* opening next project */
+	project_open(appdata, name);
+	}
 	appdata->track.warn_cnt = 60;  // warn again after one minute
       }
     }
