@@ -27,7 +27,7 @@ typedef enum {
   UNDO_DELETE = 0,
   UNDO_CREATE,
   UNDO_MODIFY
-  
+
 } undo_type_t;
 
 /* the data required for an undo is the undo_state_t. It consists of one */

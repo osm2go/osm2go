@@ -20,9 +20,9 @@
 #ifndef NET_IO_H
 #define NET_IO_H
 
-gboolean net_io_download_file(GtkWidget *parent, settings_t *settings, 
+gboolean net_io_download_file(GtkWidget *parent, settings_t *settings,
 			      char *url, char *filename);
-gboolean net_io_download_mem(GtkWidget *parent, settings_t *settings, 
+gboolean net_io_download_mem(GtkWidget *parent, settings_t *settings,
 			     char *url, char **mem);
 
 #include <curl/curl.h>

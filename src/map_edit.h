@@ -25,14 +25,14 @@ void map_edit_way_add_segment(map_t *map, gint x, gint y);
 void map_edit_way_add_cancel(map_t *map);
 void map_edit_way_add_ok(map_t *map);
 
-void map_edit_way_node_add_highlight(map_t *map, map_item_t *item, 
+void map_edit_way_node_add_highlight(map_t *map, map_item_t *item,
 				     gint x, gint y);
 void map_edit_way_node_add(map_t *map, gint x, gint y);
 
 void map_edit_way_cut_highlight(map_t *map, map_item_t *item, gint x, gint y);
 void map_edit_way_cut(map_t *map, gint x, gint y);
 
-void map_edit_node_move(appdata_t *appdata, map_item_t *map_item, 
+void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 			gint ex, gint ey);
 
 void map_edit_way_reverse(appdata_t *appdata);

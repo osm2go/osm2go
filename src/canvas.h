@@ -22,7 +22,7 @@
 
 /* --------- generic canvas --------- */
 
-typedef enum { 
+typedef enum {
   CANVAS_GROUP_BG=0,       // 0: background layer (wms overlay)
   CANVAS_GROUP_POLYGONS,   // 1: polygons (forrests, buildings, lakes) */
   CANVAS_GROUP_WAYS_HL,    // 2: highlighting of ways
@@ -68,8 +68,8 @@ typedef struct {
   GooCanvasItem *group[CANVAS_GROUPS];
 
 #ifdef CANVAS_CUSTOM_ITEM_AT
-  struct { 
-    struct canvas_item_info_s *first, *last; 
+  struct {
+    struct canvas_item_info_s *first, *last;
   } item_info[CANVAS_GROUPS];
 #endif
 
@@ -84,7 +84,7 @@ typedef gulong canvas_color_t;
 
 
 
-#else 
+#else
 #error "No canvas type defined!"
 #endif
 
@@ -144,21 +144,21 @@ gdouble canvas_get_viewport_width(canvas_t *canvas, canvas_unit_t unit);
 gdouble canvas_get_viewport_height(canvas_t *canvas, canvas_unit_t unit);
 void canvas_scroll_to(canvas_t *canvas, canvas_unit_t unit, gint sx, gint sy);
 void canvas_scroll_get(canvas_t *canvas, canvas_unit_t unit, gint *sx, gint *sy);
-void canvas_set_bounds(canvas_t *canvas, gint minx, gint miny, 
+void canvas_set_bounds(canvas_t *canvas, gint minx, gint miny,
 		       gint maxx, gint maxy);
 
 
 /***** creating/destroying items ******/
-canvas_item_t *canvas_circle_new(canvas_t *canvas, canvas_group_t group, 
+canvas_item_t *canvas_circle_new(canvas_t *canvas, canvas_group_t group,
 		 gint x, gint y, gint radius, gint border,
 		 canvas_color_t fill_col, canvas_color_t border_col);
-canvas_item_t *canvas_polyline_new(canvas_t *canvas, canvas_group_t group, 
+canvas_item_t *canvas_polyline_new(canvas_t *canvas, canvas_group_t group,
 		 canvas_points_t *points, gint width, canvas_color_t color);
-canvas_item_t *canvas_polygon_new(canvas_t *canvas, canvas_group_t group, 
+canvas_item_t *canvas_polygon_new(canvas_t *canvas, canvas_group_t group,
 		  canvas_points_t *points, gint width, canvas_color_t color,
 		  canvas_color_t fill);
 canvas_item_t *canvas_image_new(canvas_t *canvas, canvas_group_t group,
-				GdkPixbuf *pix, gint x, gint y, 
+				GdkPixbuf *pix, gint x, gint y,
 				float hscale, float vscale);
 
 canvas_points_t *canvas_points_new(gint points);
@@ -177,9 +177,9 @@ void canvas_item_set_dashed(canvas_item_t *item, gint line_width, gint dash_leng
 void canvas_item_to_bottom(canvas_item_t *item);
 void canvas_item_set_user_data(canvas_item_t *item, void *data);
 void *canvas_item_get_user_data(canvas_item_t *item);
-void canvas_item_destroy_connect(canvas_item_t *item, 
+void canvas_item_destroy_connect(canvas_item_t *item,
 				 GCallback c_handler, gpointer data);
-void canvas_image_move(canvas_item_t *item, gint x, gint y, 
+void canvas_image_move(canvas_item_t *item, gint x, gint y,
 		       float hscale, float vscale);
 gint canvas_item_get_segment(canvas_item_t *item, gint x, gint y);
 void canvas_item_get_segment_pos(canvas_item_t *item, gint seg,
@@ -188,8 +188,8 @@ void canvas_item_get_segment_pos(canvas_item_t *item, gint seg,
 #ifdef CANVAS_CUSTOM_ITEM_AT
 void canvas_item_info_attach_circle(canvas_t *canvas, canvas_group_t group,
 			    canvas_item_t *item, gint x, gint y, gint r);
-void canvas_item_info_attach_poly(canvas_t *canvas, canvas_group_t group, 
-		  canvas_item_t *item, 
+void canvas_item_info_attach_poly(canvas_t *canvas, canvas_group_t group,
+		  canvas_item_t *item,
 		  gboolean is_polygon, canvas_points_t *points, gint width);
 canvas_item_t *canvas_item_info_get_at(canvas_t *canvas, gint x, gint y);
 void canvas_item_info_push(canvas_t *canvas, canvas_item_t *item);

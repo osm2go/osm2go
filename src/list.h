@@ -65,15 +65,15 @@ GtkWidget *list_new(void);
 GtkWidget *list_get_view(GtkWidget *list);
 void list_set_user_buttons(GtkWidget *list, ...);
 void list_set_columns(GtkWidget *list, ...);
-void list_button_connect(GtkWidget *list, list_button_t id, 
+void list_button_connect(GtkWidget *list, list_button_t id,
 			 GCallback cb, gpointer data);
-void list_set_custom_user_button(GtkWidget *list, list_button_t id, 
+void list_set_custom_user_button(GtkWidget *list, list_button_t id,
 				 GtkWidget *widget);
 GtkTreeSelection *list_get_selection(GtkWidget *list);
 void list_button_enable(GtkWidget *list, list_button_t id, gboolean enable);
 void list_set_store(GtkWidget *list, GtkListStore *store);
-void list_set_static_buttons(GtkWidget *list, int flags, 
-GCallback cb_new, GCallback cb_edit, GCallback cb_remove, 
+void list_set_static_buttons(GtkWidget *list, int flags,
+GCallback cb_new, GCallback cb_edit, GCallback cb_remove,
 	     gpointer data);
 GtkTreeModel *list_get_model(GtkWidget *list);
 void list_pre_inplace_edit_tweak (GtkTreeModel *model);

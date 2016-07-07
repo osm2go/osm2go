@@ -72,7 +72,7 @@ static gboolean track_get_prop_pos(xmlNode *node, pos_t *pos) {
   return TRUE;
 }
 
-static track_point_t *track_parse_trkpt(bounds_t *bounds, xmlDocPtr doc, 
+static track_point_t *track_parse_trkpt(bounds_t *bounds, xmlDocPtr doc,
 					xmlNode *a_node) {
   track_point_t *point = g_new0(track_point_t, 1);
   point->altitude = NAN;
@@ -109,7 +109,7 @@ static track_point_t *track_parse_trkpt(bounds_t *bounds, xmlDocPtr doc,
   return point;
 }
 
-static void track_parse_trkseg(track_t *track, bounds_t *bounds, 
+static void track_parse_trkseg(track_t *track, bounds_t *bounds,
 			       xmlDocPtr doc, xmlNode *a_node) {
   xmlNode *cur_node = NULL;
   track_point_t **point = NULL;
@@ -142,12 +142,12 @@ static void track_parse_trkseg(track_t *track, bounds_t *bounds,
 	}
       } else
 	printf("found unhandled gpx/trk/trkseg/%s\n", cur_node->name);
-      
+
     }
   }
 }
 
-static track_t *track_parse_trk(bounds_t *bounds, 
+static track_t *track_parse_trk(bounds_t *bounds,
 				xmlDocPtr doc, xmlNode *a_node) {
   track_t *track = g_new0(track_t, 1);
   xmlNode *cur_node = NULL;
@@ -158,13 +158,13 @@ static track_t *track_parse_trk(bounds_t *bounds,
 	track_parse_trkseg(track, bounds, doc, cur_node);
       } else
 	printf("found unhandled gpx/trk/%s\n", cur_node->name);
-      
+
     }
   }
   return track;
 }
 
-static track_t *track_parse_gpx(bounds_t *bounds, 
+static track_t *track_parse_gpx(bounds_t *bounds,
 				xmlDocPtr doc, xmlNode *a_node) {
   track_t *track = NULL;
   xmlNode *cur_node = NULL;
@@ -172,19 +172,19 @@ static track_t *track_parse_gpx(bounds_t *bounds,
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcasecmp((char*)cur_node->name, "trk") == 0) {
-	if(!track) 
+	if(!track)
 	  track = track_parse_trk(bounds, doc, cur_node);
 	else
 	  printf("ignoring additional track\n");
       } else
-	printf("found unhandled gpx/%s\n", cur_node->name);      
+	printf("found unhandled gpx/%s\n", cur_node->name);
     }
   }
   return track;
 }
 
 /* parse root element and search for "track" */
-static track_t *track_parse_root(bounds_t *bounds, 
+static track_t *track_parse_root(bounds_t *bounds,
 				 xmlDocPtr doc, xmlNode *a_node) {
   track_t *track = NULL;
   xmlNode *cur_node = NULL;
@@ -192,9 +192,9 @@ static track_t *track_parse_root(bounds_t *bounds,
   for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       /* parse track file ... */
-      if(strcasecmp((char*)cur_node->name, "gpx") == 0) 
+      if(strcasecmp((char*)cur_node->name, "gpx") == 0)
       	track = track_parse_gpx(bounds, doc, cur_node);
-      else 
+      else
 	printf("found unhandled %s\n", cur_node->name);
     }
   }
@@ -207,7 +207,7 @@ static track_t *track_parse_doc(bounds_t *bounds, xmlDocPtr doc) {
   /* Get the root element node */
   xmlNode *root_element = xmlDocGetRootElement(doc);
 
-  track = track_parse_root(bounds, doc, root_element);  
+  track = track_parse_root(bounds, doc, root_element);
 
   /*free the document */
   xmlFreeDoc(doc);
@@ -233,11 +233,11 @@ void track_info(track_t *track) {
 static track_t *track_read(osm_t *osm, char *filename) {
   printf("============================================================\n");
   printf("loading track %s\n", filename);
- 
+
   xmlDoc *doc = NULL;
 
   LIBXML_TEST_VERSION;
-  
+
   /* parse the file and get the DOM */
   if((doc = xmlReadFile(filename, NULL, 0)) == NULL) {
     xmlErrorPtr	errP = xmlGetLastError();
@@ -245,7 +245,7 @@ static track_t *track_read(osm_t *osm, char *filename) {
     return NULL;
   }
 
-  track_t *track = track_parse_doc(osm->bounds, doc); 
+  track_t *track = track_parse_doc(osm->bounds, doc);
 
   if(!track || !track->track_seg) {
     printf("track was empty/invalid track\n");
@@ -254,7 +254,7 @@ static track_t *track_read(osm_t *osm, char *filename) {
 
   track->dirty = TRUE;
   track_info(track);
-  
+
   return track;
 }
 
@@ -305,7 +305,7 @@ void track_save_points(track_point_t *point, xmlNodePtr node) {
 
     g_ascii_formatd(str, sizeof(str), LL_FORMAT, point->pos.lat);
     xmlNewProp(node_point, BAD_CAST "lat", BAD_CAST str);
-    
+
     g_ascii_formatd(str, sizeof(str), LL_FORMAT, point->pos.lon);
     xmlNewProp(node_point, BAD_CAST "lon", BAD_CAST str);
 
@@ -335,16 +335,16 @@ void track_write(char *name, track_t *track) {
   printf("writing track to %s\n", name);
 
   LIBXML_TEST_VERSION;
- 
+
   xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
   xmlNodePtr root_node = xmlNewNode(NULL, BAD_CAST "gpx");
   xmlNewProp(root_node, BAD_CAST "creator", BAD_CAST PACKAGE " v" VERSION);
-  xmlNewProp(root_node, BAD_CAST "xmlns", BAD_CAST 
+  xmlNewProp(root_node, BAD_CAST "xmlns", BAD_CAST
 	     "http://www.topografix.com/GPX/1/0");
 
   xmlNodePtr trk_node = xmlNewChild(root_node, NULL, BAD_CAST "trk", NULL);
   xmlDocSetRootElement(doc, root_node);
-  
+
   track_save_segs(track->track_seg, trk_node);
 
   xmlSaveFormatFileEnc(name, doc, "UTF-8", 1);
@@ -386,23 +386,23 @@ void track_save(project_t *project, track_t *track) {
   /* if we reach this point writing the new file worked and we */
   /* can delete the backup */
   g_remove(backup);
-  
+
   g_free(trk_name);
   g_free(backup);
 }
 
 void track_export(appdata_t *appdata, char *filename) {
   g_assert(appdata->track.track);
-  track_write(filename, appdata->track.track);  
+  track_write(filename, appdata->track.track);
 }
 
 /* ----------------------  loading track --------------------------- */
 
 track_t *track_restore(appdata_t *appdata, project_t *project) {
   track_t *track = NULL;
-  
+
   LIBXML_TEST_VERSION;
- 
+
   /* first try to open a backup which is only present if saving the */
   /* actual diff didn't succeed */
   char *trk_name = g_strjoin(NULL, project->path, "backup.trk", NULL);
@@ -424,7 +424,7 @@ track_t *track_restore(appdata_t *appdata, project_t *project) {
   g_free(trk_name);
 
   track_menu_set(appdata, track != NULL);
-  
+
   printf("restored track\n");
   if(track) {
     track->dirty = FALSE;
@@ -436,12 +436,12 @@ track_t *track_restore(appdata_t *appdata, project_t *project) {
 
 static void track_end_segment(track_t *track) {
   if(!track) return;
-    
+
   if(track->cur_seg) {
     printf("ending a segment\n");
-   
+
     /* todo: check if segment only has 1 point */
- 
+
     track->cur_seg = NULL;
   }
 }
@@ -459,7 +459,7 @@ static void track_append_position(appdata_t *appdata, pos_t *pos, float alt) {
 
   if(!track->cur_seg) {
     printf("starting new segment\n");
-    
+
     track_seg_t **seg = &(track->track_seg);
     while(*seg) seg = &((*seg)->next);
 
@@ -477,7 +477,7 @@ static void track_append_position(appdata_t *appdata, pos_t *pos, float alt) {
   track_point_t *prev = track->cur_seg->track_point;
   while(prev && prev->next) prev = prev->next;
 
-  if(prev && prev->pos.lat == pos->lat && 
+  if(prev && prev->pos.lat == pos->lat &&
              prev->pos.lon == pos->lon) {
     printf("same value as last point -> ignore\n");
   } else {
@@ -495,16 +495,16 @@ static void track_append_position(appdata_t *appdata, pos_t *pos, float alt) {
       g_assert(!track->cur_seg->item_chain);
       map_track_draw_seg(appdata->map, track->cur_seg);
     }
-      
+
     /* if segment length was > 0 the segment has to be updated */
     if(seg_len > 0) {
       printf("update draw with seg_len %d\n", seg_len+1);
-      
+
       g_assert(track->cur_seg->item_chain);
       map_track_update_seg(appdata->map, track->cur_seg);
     }
   }
-  
+
   if(appdata->settings && appdata->settings->follow_gps) {
     lpos_t lpos;
     pos2lpos(appdata->osm->bounds, pos, &lpos);
@@ -521,7 +521,7 @@ static void track_append_position(appdata_t *appdata, pos_t *pos, float alt) {
 
 static gboolean update(gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
-  
+
   /* ignore updates while no valid osm file is loaded, e.g. when switching */
   /* projects */
   if(!appdata->osm)
@@ -530,14 +530,14 @@ static gboolean update(gpointer data) {
   /* the map is only gone of the main screen is being closed */
   if(!appdata->map) {
     printf("map has gone while tracking was active, stopping tracker\n");
-    
+
 #ifndef ENABLE_LIBLOCATION
     if(appdata->track.handler_id) {
       gtk_timeout_remove(appdata->track.handler_id);
       appdata->track.handler_id = 0;
     }
 #else
-    if(appdata->gps_state->cb) 
+    if(appdata->gps_state->cb)
       appdata->gps_state->cb = NULL;
 #endif
 
@@ -597,7 +597,7 @@ static void track_do_disable_gps(appdata_t *appdata) {
     appdata->track.handler_id = 0;
   }
 #else
-  if(appdata->gps_state->cb) 
+  if(appdata->gps_state->cb)
     appdata->gps_state->cb = NULL;
 #endif
 

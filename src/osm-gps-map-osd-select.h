@@ -19,7 +19,7 @@
 
 #ifndef _OSM_GPS_MAP_OSD_SELECT_H_
 #define _OSM_GPS_MAP_OSD_SELECT_H_
- 
+
 #include "osm-gps-map.h"
 
 #define OSD_SELECT   OSD_CUSTOM

@@ -36,7 +36,7 @@
 // given by an elemstyles.xml is the denominator of a screen:real ratio.
 
 #define N810_PX_PER_METRE (800 / 0.09)
-    // XXX should probably ask the windowing system for DPI and 
+    // XXX should probably ask the windowing system for DPI and
     // work from that instead
 
 inline float scaledn_to_zoom(const float scaledn) {
@@ -66,7 +66,7 @@ static int get_hex_byte(char *str) {
   return 16*d0+d1;
 }
 
-gboolean parse_color(xmlNode *a_node, char *name, 
+gboolean parse_color(xmlNode *a_node, char *name,
 		     elemstyle_color_t *color) {
   char *color_str = (char*)xmlGetProp(a_node, BAD_CAST name);
   if(color_str) {
@@ -87,7 +87,7 @@ gboolean parse_color(xmlNode *a_node, char *name,
 	a = get_hex_byte(begin+6);
 	if(a < 0) a = 0xff;
       }
-      
+
       *color = (r<<24) + (g<<16) + (b<<8) + a;
       xmlFree(color_str);
       return TRUE;
@@ -95,12 +95,12 @@ gboolean parse_color(xmlNode *a_node, char *name,
 
     GdkColor gdk_color;
     if(gdk_color_parse(color_str, &gdk_color)) {
-      *color = 
+      *color =
 	((gdk_color.red   << 16) & 0xff000000) |
 	((gdk_color.green <<  8) & 0xff0000) |
 	((gdk_color.blue       ) & 0xff00) |
 	(0xff);
-      
+
       xmlFree(color_str);
       return TRUE;
     }
@@ -154,10 +154,10 @@ static elemstyle_line_t *parse_line(xmlDocPtr doc, xmlNode *a_node) {
   g_assert(parse_color(a_node, "colour", &line->color));
   g_assert(parse_gint(a_node, "width", &line->width));
 
-  line->real.valid = 
+  line->real.valid =
     parse_gint(a_node, "realwidth", &line->real.width);
 
-  line->bg.valid = 
+  line->bg.valid =
     parse_gint(a_node, "width_bg", &line->bg.width) &&
     parse_color(a_node, "colour_bg", &line->bg.color);
 
@@ -170,7 +170,7 @@ static elemstyle_line_t *parse_line(xmlDocPtr doc, xmlNode *a_node) {
 }
 
 /* parse "+123", "-123" and "123%" */
-static void parse_width_mod(xmlNode *a_node, char *name, 
+static void parse_width_mod(xmlNode *a_node, char *name,
 			    elemstyle_width_mod_t *value) {
   char *mod_str = (char*)xmlGetProp(a_node, BAD_CAST name);
   if(mod_str && strlen(mod_str) > 0) {
@@ -253,14 +253,14 @@ static elemstyle_t *parse_rule(xmlDocPtr doc, xmlNode *a_node) {
 	g_assert(elemstyle->type == ES_TYPE_NONE);
 	elemstyle->type = ES_TYPE_LINE_MOD;
 	elemstyle->line_mod = parse_line_mod(doc, cur_node);
-      } else if(strcasecmp((char*)cur_node->name, "area") == 0) { 
+      } else if(strcasecmp((char*)cur_node->name, "area") == 0) {
 	/* ------ parse area ------ */
 	g_assert(elemstyle->type == ES_TYPE_NONE);
 	elemstyle->type = ES_TYPE_AREA;
 	elemstyle->area = parse_area(doc, cur_node);
-      } else if(strcasecmp((char*)cur_node->name, "icon") == 0) { 
+      } else if(strcasecmp((char*)cur_node->name, "icon") == 0) {
 	elemstyle->icon = parse_icon(doc, cur_node);
-      } else if(strcasecmp((char*)cur_node->name, "scale_min") == 0) { 
+      } else if(strcasecmp((char*)cur_node->name, "scale_min") == 0) {
 	/* scale_min is currently ignored */
       } else if(strcasecmp((char*)cur_node->name, "scale_max") == 0) {
 	switch (elemstyle->type) {
@@ -275,7 +275,7 @@ static elemstyle_t *parse_rule(xmlDocPtr doc, xmlNode *a_node) {
             parse_scale_max(cur_node, &elemstyle->icon->zoom_max);
 	  }
 	  else {
-	    printf("scale_max for unhandled elemstyletype=0x02%x\n", 
+	    printf("scale_max for unhandled elemstyletype=0x02%x\n",
 		   elemstyle->type);
 	  }
 	  break;
@@ -284,7 +284,7 @@ static elemstyle_t *parse_rule(xmlDocPtr doc, xmlNode *a_node) {
 	printf("found unhandled rules/rule/%s\n", cur_node->name);
       }
     }
-  }  
+  }
 
   return elemstyle;
 }
@@ -301,25 +301,25 @@ static elemstyle_t *parse_rules(xmlDocPtr doc, xmlNode *a_node) {
       } else
 	printf("found unhandled rules/%s\n", cur_node->name);
     }
-  }  
+  }
   return elemstyles;
 }
 
 static elemstyle_t *parse_doc(xmlDocPtr doc) {
   /* Get the root element node */
   xmlNode *cur_node = NULL;
-  elemstyle_t *elemstyles = NULL; 
+  elemstyle_t *elemstyles = NULL;
 
-  for(cur_node = xmlDocGetRootElement(doc); 
+  for(cur_node = xmlDocGetRootElement(doc);
       cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcasecmp((char*)cur_node->name, "rules") == 0) {
 	elemstyles = parse_rules(doc, cur_node);
-      } else 
+      } else
 	printf("found unhandled %s\n", cur_node->name);
     }
   }
-    
+
   xmlFreeDoc(doc);
   return elemstyles;
 }
@@ -334,7 +334,7 @@ elemstyle_t *josm_elemstyles_load(char *name) {
     printf("elemstyle file not found\n");
     return NULL;
   }
-    
+
   LIBXML_TEST_VERSION;
 
   /* parse the file and get the DOM */
@@ -426,7 +426,7 @@ void josm_elemstyles_colorize_node(style_t *style, node_t *node) {
         if(!value || (cond->value && strcasecmp(value, cond->value) != 0))
           match = FALSE;
       } else if(cond->value) {
-        if(!osm_node_has_value(node, cond->value)) 
+        if(!osm_node_has_value(node, cond->value))
           match = FALSE;
       }
     }
@@ -451,7 +451,7 @@ void josm_elemstyles_colorize_node(style_t *style, node_t *node) {
         node->zoom_max = elemstyle->icon->zoom_max;
       }
     }
-    
+
     elemstyle = elemstyle->next;
   }
 
@@ -466,15 +466,15 @@ static void line_mod_apply(gint *width, elemstyle_width_mod_t *mod) {
   switch(mod->mod) {
   case ES_MOD_NONE:
     break;
-    
+
   case ES_MOD_ADD:
     *width += mod->width;
     break;
-    
+
   case ES_MOD_SUB:
     *width -= mod->width;
     break;
-      
+
   case ES_MOD_PERCENT:
     *width = 100 * *width / mod->width;
     break;
@@ -492,13 +492,13 @@ void josm_elemstyles_colorize_way(style_t *style, way_t *way) {
 
   /* during the elemstyle search a line_mod may be found. save it here */
   elemstyle_line_mod_t *line_mod = NULL;
-  
+
   gboolean way_processed = FALSE;
-  gboolean way_is_closed = 
+  gboolean way_is_closed =
     (osm_way_get_last_node(way) == osm_way_get_first_node(way));
 
   while(elemstyle) {
-    //  printf("a %s %s\n", elemstyle->condition.key, 
+    //  printf("a %s %s\n", elemstyle->condition.key,
     //                        elemstyle->condition.value);
 
     gboolean match = elemstyle->condition ? TRUE : FALSE;
@@ -510,7 +510,7 @@ void josm_elemstyles_colorize_way(style_t *style, way_t *way) {
         if(!value || (cond->value && strcasecmp(value, cond->value) != 0))
           match = FALSE;
       } else if(cond->value) {
-        if(!osm_way_has_value(way, cond->value)) 
+        if(!osm_way_has_value(way, cond->value))
           match = FALSE;
       }
     }
@@ -562,7 +562,7 @@ void josm_elemstyles_colorize_way(style_t *style, way_t *way) {
 
 	  way->draw.width =  WIDTH_SCALE * style->area.border_width;
 	  /* apply area alpha */
-	  way->draw.area.color = 
+	  way->draw.area.color =
 	    RGBA_COMBINE(elemstyle->area->color, style->area.color);
 	  if (elemstyle->area->zoom_max > 0) {
 	    way->draw.zoom_max = elemstyle->area->zoom_max;
@@ -580,13 +580,13 @@ void josm_elemstyles_colorize_way(style_t *style, way_t *way) {
 
   /* apply the last line mod entry that has been found during search */
   if(line_mod) {
-    printf("applying last matching line mod to way #"ITEM_ID_FORMAT"\n", 
+    printf("applying last matching line mod to way #"ITEM_ID_FORMAT"\n",
 	   OSM_ID(way));
     line_mod_apply(&way->draw.width, &line_mod->line);
 
     /* special case: the way does not have a background, but it is to */
     /* be modified */
-    if((line_mod->bg.mod != ES_MOD_NONE) && 
+    if((line_mod->bg.mod != ES_MOD_NONE) &&
        (!(way->draw.flags & OSM_DRAW_FLAG_BG))) {
       printf("forcing background\n");
 

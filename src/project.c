@@ -49,14 +49,14 @@ typedef struct {
   area_edit_t area_edit;
 } project_context_t;
 
-static gboolean project_edit(appdata_t *appdata, GtkWidget *parent, 
+static gboolean project_edit(appdata_t *appdata, GtkWidget *parent,
 		      settings_t *settings, project_t *project,
 		      gboolean is_new);
 
 
 /* ------------ project file io ------------- */
 
-static gboolean project_read(appdata_t *appdata, 
+static gboolean project_read(appdata_t *appdata,
 	     char *project_file, project_t *project) {
 
   LIBXML_TEST_VERSION;
@@ -69,7 +69,7 @@ static gboolean project_read(appdata_t *appdata,
     printf("error: could not parse file %s\n", project_file);
     return FALSE;
   }
-  
+
   /* Get the root element node */
   root_element = xmlDocGetRootElement(doc);
 
@@ -78,15 +78,15 @@ static gboolean project_read(appdata_t *appdata,
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcasecmp((char*)cur_node->name, "proj") == 0) {
 	char *str;
-	
+
 	if((str = (char*)xmlGetProp(cur_node, BAD_CAST "dirty"))) {
 	  project->data_dirty = (strcasecmp(str, "true") == 0);
 	  xmlFree(str);
 	} else
 	  project->data_dirty = FALSE;
-	
+
 	xmlNode *node = cur_node->children;
-	
+
 	while(node != NULL) {
 	  if(node->type == XML_ELEMENT_NODE) {
 
@@ -101,46 +101,46 @@ static gboolean project_read(appdata_t *appdata,
 	      project->server = g_strdup(str);
 	      printf("server = %s\n", project->server);
 	      xmlFree(str);
-	      
-	    } else if(project->map_state && 
+
+	    } else if(project->map_state &&
 		      strcasecmp((char*)node->name, "map") == 0) {
 
 	      if((str = (char*)xmlGetProp(node, BAD_CAST "zoom"))) {
 		project->map_state->zoom = g_ascii_strtod(str, NULL);
 		xmlFree(str);
-	      } 
+	      }
 	      if((str = (char*)xmlGetProp(node, BAD_CAST "detail"))) {
 		project->map_state->detail = g_ascii_strtod(str, NULL);
 		xmlFree(str);
-	      } 
+	      }
 	      if((str = (char*)xmlGetProp(node, BAD_CAST "scroll-offset-x"))) {
 		project->map_state->scroll_offset.x = strtoul(str, NULL, 10);
 		xmlFree(str);
-	      } 
+	      }
 	      if((str = (char*)xmlGetProp(node, BAD_CAST "scroll-offset-y"))) {
 		project->map_state->scroll_offset.y = strtoul(str, NULL, 10);
 		xmlFree(str);
-	      } 
+	      }
 
 	    } else if(strcasecmp((char*)node->name, "wms") == 0) {
 
 	      if((str = (char*)xmlGetProp(node, BAD_CAST "server"))) {
 		project->wms_server = g_strdup(str);
 		xmlFree(str);
-	      } 
+	      }
 	      if((str = (char*)xmlGetProp(node, BAD_CAST "path"))) {
 		project->wms_path = g_strdup(str);
 		xmlFree(str);
-	      } 
+	      }
 	      if((str = (char*)xmlGetProp(node, BAD_CAST "x-offset"))) {
 		project->wms_offset.x = strtoul(str, NULL, 10);
 		xmlFree(str);
-	      } 
+	      }
 	      if((str = (char*)xmlGetProp(node, BAD_CAST "y-offset"))) {
 		project->wms_offset.y = strtoul(str, NULL, 10);
 		xmlFree(str);
-	      } 
-	      
+	      }
+
 	    } else if(strcasecmp((char*)node->name, "osm") == 0) {
 	      str = (char*)xmlNodeListGetString(doc, node->children, 1);
 	      printf("osm = %s\n", str);
@@ -163,7 +163,7 @@ static gboolean project_read(appdata_t *appdata,
 	      if((str = (char*)xmlGetProp(node, BAD_CAST "lat"))) {
 		project->min.lat = g_ascii_strtod(str, NULL);
 		xmlFree(str);
-	      } 
+	      }
 	      if((str = (char*)xmlGetProp(node, BAD_CAST "lon"))) {
 		project->min.lon = g_ascii_strtod(str, NULL);
 		xmlFree(str);
@@ -193,7 +193,7 @@ static gboolean project_read(appdata_t *appdata,
 
 gboolean project_save(GtkWidget *parent, project_t *project) {
   char str[32];
-  char *project_file = g_strdup_printf("%s%s.proj", 
+  char *project_file = g_strdup_printf("%s%s.proj",
 		       project->path, project->name);
 
   printf("saving project to %s\n", project_file);
@@ -202,7 +202,7 @@ gboolean project_save(GtkWidget *parent, project_t *project) {
   if(!g_file_test(project->path, G_FILE_TEST_IS_DIR)) {
     /* make sure project base path exists */
     if(g_mkdir_with_parents(project->path, S_IRWXU) != 0) {
-      errorf(GTK_WIDGET(parent), 
+      errorf(GTK_WIDGET(parent),
 	     _("Unable to create project path %s"), project->path);
       return FALSE;
     }
@@ -219,7 +219,7 @@ gboolean project_save(GtkWidget *parent, project_t *project) {
   xmlDocSetRootElement(doc, root_node);
 
   if(project->server)
-    xmlNewChild(root_node, NULL, BAD_CAST "server", 
+    xmlNewChild(root_node, NULL, BAD_CAST "server",
 		BAD_CAST project->server);
 
   if(project->desc)
@@ -280,7 +280,7 @@ void project_free(project_t *project) {
 
   if(project->wms_server) g_free(project->wms_server);
   if(project->wms_path)   g_free(project->wms_path);
- 
+
   if(project->path)       g_free(project->path);
   if(project->osm)        g_free(project->osm);
 
@@ -304,11 +304,11 @@ gboolean project_exists(settings_t *settings, const char *name) {
     /* check for project file */
     char *fullname = project_fullname(settings, name);
 
-    if(g_file_test(fullname, G_FILE_TEST_IS_REGULAR)) 
+    if(g_file_test(fullname, G_FILE_TEST_IS_REGULAR))
       ok = TRUE;
 
     g_free(fullname);
-  }      
+  }
   g_free(fulldir);
 
   return ok;
@@ -324,13 +324,13 @@ static project_t *project_scan(appdata_t *appdata) {
     if((name = g_dir_read_name(dir))) {
       if(project_exists(appdata->settings, name)) {
 	printf("found project %s\n", name);
-	
+
 	/* try to read project and append it to chain */
 	*current = g_new0(project_t, 1);
 	(*current)->name = g_strdup(name);
-	(*current)->path = g_strdup_printf("%s%s/", 
+	(*current)->path = g_strdup_printf("%s%s/",
 			  appdata->settings->base_path, name);
-	
+
 	char *fullname = project_fullname(appdata->settings, name);
 	if(project_read(appdata, fullname, *current))
 	  current = &((*current)->next);
@@ -342,7 +342,7 @@ static project_t *project_scan(appdata_t *appdata) {
       }
     }
   } while(name);
-  
+
   g_dir_close(dir);
 
   return projects;
@@ -378,15 +378,15 @@ static gboolean osm_file_exists(char *path, char *name) {
 
 static void view_selected(select_context_t *context, project_t *project) {
   /* check if the selected project also has a valid osm file */
-  gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), 
-      GTK_RESPONSE_ACCEPT, 
+  gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog),
+      GTK_RESPONSE_ACCEPT,
       project && osm_file_exists(project->path, project->osm));
 }
 
 static void
 changed(GtkTreeSelection *selection, gpointer userdata) {
   select_context_t *context = (select_context_t*)userdata;
-    
+
   GtkTreeModel *model = NULL;
   GtkTreeIter iter;
 
@@ -397,7 +397,7 @@ changed(GtkTreeSelection *selection, gpointer userdata) {
 
     view_selected(context, project);
   }
-  
+
   list_button_enable(GTK_WIDGET(context->list), LIST_BUTTON_REMOVE, sel);
   list_button_enable(GTK_WIDGET(context->list), LIST_BUTTON_EDIT, sel);
 }
@@ -454,7 +454,7 @@ static void callback_modified_name(GtkWidget *widget, gpointer data) {
     }
   }
 
-  gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), 
+  gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog),
 				    GTK_RESPONSE_ACCEPT, ok);
 }
 
@@ -464,7 +464,7 @@ gboolean project_delete(select_context_t *context, project_t *project) {
   printf("deleting project \"%s\"\n", project->name);
 
   /* check if we are to delete the currently open project */
-  if(context->appdata->project && 
+  if(context->appdata->project &&
      !strcmp(context->appdata->project->name, project->name)) {
 
     if(!yes_no_f(context->dialog, NULL, 0, 0,
@@ -511,7 +511,7 @@ gboolean project_delete(select_context_t *context, project_t *project) {
   /* de-chain entry from project list */
   project_t **project_list = &context->project;
   while(*project_list) {
-    if(*project_list == project) 
+    if(*project_list == project)
       *project_list = (*project_list)->next;
     else
       project_list = &((*project_list)->next);
@@ -530,10 +530,10 @@ project_t *project_new(select_context_t *context) {
   printf("creating project with default values\n");
 
   /* --------------  first choose a name for the project --------------- */
-  GtkWidget *dialog = 
+  GtkWidget *dialog =
     misc_dialog_new(MISC_DIALOG_NOSIZE,  _("Project name"),
 		    GTK_WINDOW(context->dialog),
-		    GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, 
+		    GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
 		    GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
 		    NULL);
 
@@ -549,7 +549,7 @@ project_t *project_new(select_context_t *context) {
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox);
 
   /* don't allow user to click ok until a valid area has been specified */
-  gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog), 
+  gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog),
 				    GTK_RESPONSE_ACCEPT, FALSE);
 
   gtk_widget_show_all(dialog);
@@ -563,7 +563,7 @@ project_t *project_new(select_context_t *context) {
   gtk_widget_destroy(dialog);
 
 
-  project->path = g_strdup_printf("%s%s/", 
+  project->path = g_strdup_printf("%s%s/",
              context->settings->base_path, project->name);
   project->desc = NULL;
 
@@ -591,7 +591,7 @@ project_t *project_new(select_context_t *context) {
     project_delete(context, project);
 
     project = NULL;
-  } else if(!project_edit(context->appdata, context->dialog,  
+  } else if(!project_edit(context->appdata, context->dialog,
 			  context->settings, project, TRUE)) {
     printf("new/edit cancelled!!\n");
 
@@ -640,10 +640,10 @@ static void on_project_delete(GtkButton *button, gpointer data) {
   char *str = g_strdup_printf(_("Do you really want to delete the "
 				"project \"%s\"?"), project->name);
 
-  if(!yes_no_f(context->dialog, NULL, 0, 0, _("Delete project?"), str)) 
+  if(!yes_no_f(context->dialog, NULL, 0, 0, _("Delete project?"), str))
     return;
 
-  if(!project_delete(context, project)) 
+  if(!project_delete(context, project))
     printf("unable to delete project\n");
 }
 
@@ -652,7 +652,7 @@ static void on_project_edit(GtkButton *button, gpointer data) {
   project_t *project = project_get_selected(context->list);
   g_assert(project);
 
-  if(project_edit(context->appdata, context->dialog, 
+  if(project_edit(context->appdata, context->dialog,
 		  context->settings, project, FALSE)) {
     GtkTreeModel     *model;
     GtkTreeIter       iter;
@@ -664,15 +664,15 @@ static void on_project_edit(GtkButton *button, gpointer data) {
     //     gtk_tree_model_get(model, &iter, PROJECT_COL_DATA, &project, -1);
     gchar *status_stock_id = NULL;
     project_get_status_icon_stock_id(context, project, &status_stock_id);
-    gtk_list_store_set(GTK_LIST_STORE(model), &iter, 
-		       PROJECT_COL_NAME, project->name, 
+    gtk_list_store_set(GTK_LIST_STORE(model), &iter,
+		       PROJECT_COL_NAME, project->name,
                        PROJECT_COL_STATUS, status_stock_id,
-		       PROJECT_COL_DESCRIPTION, project->desc, 
+		       PROJECT_COL_DESCRIPTION, project->desc,
 		       -1);
 
-    
+
     /* check if we have actually editing the currently open project */
-    if(context->appdata->project && 
+    if(context->appdata->project &&
        !strcmp(context->appdata->project->name, project->name)) {
       project_t *cur = context->appdata->project;
 
@@ -714,11 +714,11 @@ static void on_project_edit(GtkButton *button, gpointer data) {
 	}
 
 	/* and load the (hopefully) new file */
-	appdata->osm = osm_parse(appdata->project->path, 
+	appdata->osm = osm_parse(appdata->project->path,
 				 appdata->project->osm);
 	diff_restore(appdata, appdata->project, appdata->osm);
 	map_paint(appdata);
-	
+
 	main_ui_enable(appdata);
       }
     }
@@ -736,21 +736,21 @@ gboolean project_osm_present(project_t *project) {
   return is_present;
 }
 
-static void 
-project_get_status_icon_stock_id(select_context_t *context, 
+static void
+project_get_status_icon_stock_id(select_context_t *context,
 				 project_t *project, gchar **stock_id) {
 
   appdata_t *appdata = context->appdata;
 
   /* is this the currently open project? */
-  if(appdata->project && 
-     !strcmp(appdata->project->name, project->name)) 
+  if(appdata->project &&
+     !strcmp(appdata->project->name, project->name))
     *stock_id = GTK_STOCK_OPEN;
   else if(!project_osm_present(project))
     *stock_id = GTK_STOCK_DIALOG_WARNING;
   else if(diff_present(project))
     *stock_id = GTK_STOCK_PROPERTIES;
-  else 
+  else
     *stock_id = GTK_STOCK_FILE;
 
     // TODO: check for outdatedness too. Which icon to use?
@@ -766,10 +766,10 @@ static GtkWidget *project_list_widget(select_context_t *context) {
 	   _("State"), PROJECT_COL_STATUS, LIST_FLAG_STOCK_ICON,
 	   _("Description"), PROJECT_COL_DESCRIPTION, LIST_FLAG_ELLIPSIZE,
 	   NULL);
-		   
+
 
   /* build the store */
-  GtkListStore *store = gtk_list_store_new(PROJECT_NUM_COLS, 
+  GtkListStore *store = gtk_list_store_new(PROJECT_NUM_COLS,
       G_TYPE_STRING,    // name
       G_TYPE_STRING,    // status
       G_TYPE_STRING,    // desc
@@ -790,12 +790,12 @@ static GtkWidget *project_list_widget(select_context_t *context) {
 	       -1);
     project = project->next;
   }
-  
+
   list_set_store(context->list, store);
   g_object_unref(store);
 
-  list_set_static_buttons(context->list, LIST_BTN_NEW, 
-	  G_CALLBACK(on_project_new), G_CALLBACK(on_project_edit), 
+  list_set_static_buttons(context->list, LIST_BTN_NEW,
+	  G_CALLBACK(on_project_new), G_CALLBACK(on_project_edit),
 	  G_CALLBACK(on_project_delete), context);
 
   return context->list;
@@ -810,27 +810,27 @@ static char *project_select(appdata_t *appdata) {
   context->project = project_scan(appdata);
 
   /* create project selection dialog */
-  context->dialog = 
+  context->dialog =
     misc_dialog_new(MISC_DIALOG_MEDIUM,_("Project selection"),
 	  GTK_WINDOW(appdata->window),
-	  GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, 
+	  GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
           GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
           NULL);
 
   /* under fremantle the dialog does not have an "Open" button */
   /* as it's closed when a project is being selected */
-  gtk_dialog_set_default_response(GTK_DIALOG(context->dialog), 
+  gtk_dialog_set_default_response(GTK_DIALOG(context->dialog),
 				  GTK_RESPONSE_ACCEPT);
 
-  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(context->dialog)->vbox), 
+  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(context->dialog)->vbox),
 			      project_list_widget(context));
 
   /* don't all user to click ok until something is selected */
-  gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), 
+  gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog),
 				    GTK_RESPONSE_ACCEPT, FALSE);
 
   gtk_widget_show_all(context->dialog);
-  if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(context->dialog))) 
+  if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(context->dialog)))
     name = g_strdup(project_get_selected(context->list)->name);
 
   gtk_widget_destroy(context->dialog);
@@ -861,7 +861,7 @@ static gsize file_length(char *path, char *name) {
   g_free(str);
 
   if(!gmap) return -1;
-  gsize size = g_mapped_file_get_length(gmap); 
+  gsize size = g_mapped_file_get_length(gmap);
 #if GLIB_CHECK_VERSION(2,22,0)
   g_mapped_file_unref(gmap);
 #else
@@ -882,7 +882,7 @@ void project_filesize(project_context_t *context) {
 
     str = g_strdup(_("Not downloaded!"));
 
-    gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), 
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog),
 				      GTK_RESPONSE_ACCEPT, !context->is_new);
 
   } else {
@@ -895,13 +895,13 @@ void project_filesize(project_context_t *context) {
     else
       str = g_strdup_printf(_("Outdated, please download!"));
 
-    gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), 
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog),
 		      GTK_RESPONSE_ACCEPT, !context->is_new ||
 				      !context->project->data_dirty);
   }
 
   if(str) {
-    gtk_label_set_text(GTK_LABEL(context->fsize), str); 
+    gtk_label_set_text(GTK_LABEL(context->fsize), str);
     g_free(str);
   }
 }
@@ -912,12 +912,12 @@ static gboolean project_active_n_dirty(project_context_t *context) {
 
   if(!context->area_edit.appdata->osm) return FALSE;
 
-  if(context->area_edit.appdata->project && 
-     !strcmp(context->area_edit.appdata->project->name, 
+  if(context->area_edit.appdata->project &&
+     !strcmp(context->area_edit.appdata->project->name,
 	     context->project->name)) {
 
     printf("editing the currently open project\n");
-    
+
     return(!diff_is_clean(context->area_edit.appdata->osm, TRUE));
   }
 
@@ -933,11 +933,11 @@ void project_diffstat(project_context_t *context) {
   } else
     str = g_strdup(_("no pending changes"));
 
-  gtk_label_set_text(GTK_LABEL(context->diff_stat), str); 
+  gtk_label_set_text(GTK_LABEL(context->diff_stat), str);
   g_free(str);
 }
 
-static gboolean 
+static gboolean
 project_pos_is_valid(project_t *project) {
   return(!isnan(project->min.lat) &&
 	 !isnan(project->min.lon) &&
@@ -948,7 +948,7 @@ project_pos_is_valid(project_t *project) {
 static void on_edit_clicked(GtkButton *button, gpointer data) {
   project_context_t *context = (project_context_t*)data;
 
-  if(diff_present(context->project) || project_active_n_dirty(context)) 
+  if(diff_present(context->project) || project_active_n_dirty(context))
     messagef(context->dialog,
 	     _("Pending changes"),
 	     _("You have pending changes in this project.\n\n"
@@ -972,10 +972,10 @@ static void on_edit_clicked(GtkButton *button, gpointer data) {
     /* (re-) download area */
     if (pos_valid)
     {
-      if(osm_download(GTK_WIDGET(context->dialog), 
+      if(osm_download(GTK_WIDGET(context->dialog),
 	      context->area_edit.appdata->settings, context->project))
          context->project->data_dirty = FALSE;
-    }   
+    }
     project_filesize(context);
   }
 }
@@ -985,10 +985,10 @@ static void on_download_clicked(GtkButton *button, gpointer data) {
 
   printf("download %s\n", context->project->osm);
 
-  if(osm_download(context->dialog, context->settings, context->project)) 
+  if(osm_download(context->dialog, context->settings, context->project))
     context->project->data_dirty = FALSE;
   else
-    printf("download failed\n"); 
+    printf("download failed\n");
 
   project_filesize(context);
 }
@@ -1003,13 +1003,13 @@ static void on_diff_remove_clicked(GtkButton *button, gpointer data) {
 		"permanently undo all changes you have made so far and which "
 		"you did not upload yet."))) {
     appdata_t *appdata = context->area_edit.appdata;
-    
+
     diff_remove(context->project);
-    
+
     /* if this is the currently open project, we need to undo */
     /* the map changes as well */
- 
-    if(appdata->project && 
+
+    if(appdata->project &&
        !strcmp(appdata->project->name, context->project->name)) {
 
       printf("undo all on current project: delete map changes as well\n");
@@ -1028,13 +1028,13 @@ static void on_diff_remove_clicked(GtkButton *button, gpointer data) {
 }
 
 gboolean project_check_demo(GtkWidget *parent, project_t *project) {
-  if(!project->server) 
-    messagef(parent, "Demo project", 
+  if(!project->server)
+    messagef(parent, "Demo project",
 	     "This is a preinstalled demo project. This means that the "
 	     "basic project parameters cannot be changed and no data can "
-	     "be up- or downloaded via the OSM servers.\n\n" 
+	     "be up- or downloaded via the OSM servers.\n\n"
 	     "Please setup a new project to do these things.");
-    
+
   return !project->server;
 }
 
@@ -1045,8 +1045,8 @@ static GtkWidget *gtk_label_left_new(char *str) {
   return label;
 }
 
-static gboolean 
-project_edit(appdata_t *appdata, GtkWidget *parent, settings_t *settings, 
+static gboolean
+project_edit(appdata_t *appdata, GtkWidget *parent, settings_t *settings,
 	     project_t *project, gboolean is_new) {
   gboolean ok = FALSE;
 
@@ -1067,23 +1067,23 @@ project_edit(appdata_t *appdata, GtkWidget *parent, settings_t *settings,
   if(is_new) {
     char *str = g_strdup_printf(_("New project - %s"), project->name);
 
-    context->area_edit.parent = 
+    context->area_edit.parent =
       context->dialog = misc_dialog_new(MISC_DIALOG_WIDE, str,
 				GTK_WINDOW(parent),
-				GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, 
+				GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
 				GTK_STOCK_OK, GTK_RESPONSE_ACCEPT, NULL);
     g_free(str);
   } else {
     char *str = g_strdup_printf(_("Edit project - %s"), project->name);
 
-    context->area_edit.parent = 
+    context->area_edit.parent =
       context->dialog = misc_dialog_new(MISC_DIALOG_WIDE, str,
 				GTK_WINDOW(parent),
 				GTK_STOCK_CLOSE, GTK_RESPONSE_ACCEPT, NULL);
     g_free(str);
   }
 
-  gtk_dialog_set_default_response(GTK_DIALOG(context->dialog), 
+  gtk_dialog_set_default_response(GTK_DIALOG(context->dialog),
 				  GTK_RESPONSE_ACCEPT);
 
   GtkWidget *label;
@@ -1095,7 +1095,7 @@ project_edit(appdata_t *appdata, GtkWidget *parent, settings_t *settings,
   gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 0, 1);
   context->desc = entry_new();
   gtk_entry_set_activates_default(GTK_ENTRY(context->desc), TRUE);
-  if(project->desc) 
+  if(project->desc)
     gtk_entry_set_text(GTK_ENTRY(context->desc), project->desc);
   gtk_table_attach_defaults(GTK_TABLE(table),  context->desc, 1, 5, 0, 1);
   gtk_table_set_row_spacing(GTK_TABLE(table), 0, 4);
@@ -1121,7 +1121,7 @@ project_edit(appdata_t *appdata, GtkWidget *parent, settings_t *settings,
   GtkWidget *edit = button_new_with_label(_("Edit"));
   gtk_signal_connect(GTK_OBJECT(edit), "clicked",
   		     (GtkSignalFunc)on_edit_clicked, context);
-  gtk_table_attach(GTK_TABLE(table), edit, 4, 5, 1, 3, 
+  gtk_table_attach(GTK_TABLE(table), edit, 4, 5, 1, 3,
 		   GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL,0,0);
 
   gtk_table_set_row_spacing(GTK_TABLE(table), 2, 4);
@@ -1163,16 +1163,16 @@ project_edit(appdata_t *appdata, GtkWidget *parent, settings_t *settings,
   gtk_signal_connect(GTK_OBJECT(context->diff_remove), "clicked",
 		     (GtkSignalFunc)on_diff_remove_clicked, context);
   gtk_table_attach_defaults(GTK_TABLE(table), context->diff_remove, 4, 5, 5, 6);
-  
+
   /* ---------------------------------------------------------------- */
 
-  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(context->dialog)->vbox), 
+  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(context->dialog)->vbox),
 			      table);
 
   /* disable "ok" if there's no valid file downloaded */
   if(is_new)
-    gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), 
-		    GTK_RESPONSE_ACCEPT, 
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog),
+		    GTK_RESPONSE_ACCEPT,
 		    osm_file_exists(project->path, project->name));
 
   gtk_widget_show_all(context->dialog);
@@ -1183,7 +1183,7 @@ project_edit(appdata_t *appdata, GtkWidget *parent, settings_t *settings,
   ok = (GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(context->dialog)));
 
   /* transfer values from edit dialog into project structure */
-  
+
   /* fetch values from dialog */
   if(context->project->desc) g_free(context->project->desc);
   context->project->desc = g_strdup(gtk_entry_get_text(
@@ -1221,14 +1221,14 @@ gboolean project_open(appdata_t *appdata, char *name) {
     project->map_state = appdata->map->state;
   } else {
     printf("Project: Creating new map_state\n");
-    project->map_state = map_state_new();	      
+    project->map_state = map_state_new();
   }
 
   map_state_reset(project->map_state);
-  project->map_state->refcount++;	
+  project->map_state->refcount++;
 
   /* build project path */
-  project->path = g_strdup_printf("%s%s/", 
+  project->path = g_strdup_printf("%s%s/",
 		  appdata->settings->base_path, name);
   project->name = g_strdup(name);
 
@@ -1268,7 +1268,7 @@ gboolean project_open(appdata_t *appdata, char *name) {
 
 gboolean project_close(appdata_t *appdata) {
   if(!appdata->project) return FALSE;
-  
+
   printf("closing current project\n");
 
   /* redraw the entire map by destroying all map items and redrawing them */
@@ -1329,7 +1329,7 @@ gboolean project_load(appdata_t *appdata, char *name) {
   /* close current project */
   banner_busy_tick();
 
-  if(appdata->project) 
+  if(appdata->project)
     project_close(appdata);
 
   /* open project itself */
@@ -1348,14 +1348,14 @@ gboolean project_load(appdata_t *appdata, char *name) {
       appdata->osm = NULL;
     }
 
-    snprintf(banner_txt, _PROJECT_LOAD_BUF_SIZ, 
+    snprintf(banner_txt, _PROJECT_LOAD_BUF_SIZ,
 	     _("Error opening %s"), proj_name);
     banner_busy_stop(appdata);
     banner_show_info(appdata, banner_txt);
 
     g_free(proj_name);
     return FALSE;
-  }    
+  }
 
   if(!appdata->window) {
     g_free(proj_name);
@@ -1377,7 +1377,7 @@ gboolean project_load(appdata_t *appdata, char *name) {
       appdata->osm = NULL;
     }
 
-    snprintf(banner_txt, _PROJECT_LOAD_BUF_SIZ, 
+    snprintf(banner_txt, _PROJECT_LOAD_BUF_SIZ,
 	     _("Error opening %s"), proj_name);
     banner_busy_stop(appdata);
     banner_show_info(appdata, banner_txt);
@@ -1436,14 +1436,14 @@ gboolean project_load(appdata_t *appdata, char *name) {
     project_free(appdata->project);
     appdata->project = NULL;
   }
-  
+
   if(appdata->osm) {
     osm_free(&appdata->icon, appdata->osm);
     appdata->osm = NULL;
   }
-  
+
   g_free(proj_name);
-  
+
   return FALSE;
 }
 
@@ -1522,7 +1522,7 @@ static GtkWidget *wizard_text(const char *text) {
 
 /* ---------------- page 1: intro ----------------- */
 static GtkWidget *wizard_create_intro_page(wizard_page_t *page) {
-  static const char *text = 
+  static const char *text =
     "This wizard will guide you through the setup of a new project.\n\n"
     "An osm2go project covers a certain area of the world as seen "
     "by openstreetmap.org. The wizard will help you downloading "
@@ -1542,13 +1542,13 @@ static gboolean widget_get_sensitive(GtkWidget *widget) {
 
 static void wizard_update_source_selection_page(wizard_page_t *page) {
 
-  gboolean gps_on = page->wizard->appdata && 
-    page->wizard->appdata->settings && 
+  gboolean gps_on = page->wizard->appdata &&
+    page->wizard->appdata->settings &&
     page->wizard->appdata->settings->enable_gps;
   gboolean gps_fix = gps_on && gps_get_pos(page->wizard->appdata, NULL, NULL);
 
   gtk_widget_set_sensitive(page->state.source_selection.check[0], gps_fix);
-  if(gps_fix) 
+  if(gps_fix)
     gtk_label_set_text(GTK_LABEL(page->state.source_selection.label[0]),
 		       "(GPS has a valid position)");
   else if(gps_on)
@@ -1583,14 +1583,14 @@ static void wizard_update_source_selection_page(wizard_page_t *page) {
 /* the user has changed the selected source, update dialog */
 static void on_wizard_source_selection_toggled(GtkToggleButton *togglebutton,
 					    gpointer user_data) {
-  if(gtk_toggle_button_get_active(togglebutton)) 
+  if(gtk_toggle_button_get_active(togglebutton))
     wizard_update_source_selection_page((wizard_page_t*)user_data);
 }
 
 static GtkWidget *wizard_create_source_selection_page(wizard_page_t *page) {
   GtkWidget *vbox = gtk_vbox_new(FALSE, 0);
 
-  gtk_box_pack_start_defaults(GTK_BOX(vbox), 
+  gtk_box_pack_start_defaults(GTK_BOX(vbox),
 	      wizard_text("Please choose how to determine the area you "
 			  "are planning to work on."));
 
@@ -1607,21 +1607,21 @@ static GtkWidget *wizard_create_source_selection_page(wizard_page_t *page) {
       "Specify area manually"
     };
 
-    page->state.source_selection.check[i] = 
+    page->state.source_selection.check[i] =
       gtk_radio_button_new_with_label_from_widget(
-	      i?GTK_RADIO_BUTTON(page->state.source_selection.check[0]):NULL, 
+	      i?GTK_RADIO_BUTTON(page->state.source_selection.check[0]):NULL,
 	      _(labels[i]));
-    g_signal_connect(G_OBJECT(page->state.source_selection.check[i]), 
+    g_signal_connect(G_OBJECT(page->state.source_selection.check[i]),
 	"toggled", G_CALLBACK(on_wizard_source_selection_toggled), page);
-    gtk_box_pack_start(GTK_BOX(vbox2), page->state.source_selection.check[i], 
+    gtk_box_pack_start(GTK_BOX(vbox2), page->state.source_selection.check[i],
 		       TRUE, TRUE, 2);
     page->state.source_selection.label[i] = gtk_label_new("");
-    gtk_box_pack_start(GTK_BOX(vbox2), page->state.source_selection.label[i], 
+    gtk_box_pack_start(GTK_BOX(vbox2), page->state.source_selection.label[i],
 		       TRUE, TRUE, 2);
   }
 
-  gtk_box_pack_start(GTK_BOX(hbox), vbox2, TRUE, FALSE, 0); 
-  gtk_box_pack_start(GTK_BOX(vbox), hbox, TRUE, TRUE, 0); 
+  gtk_box_pack_start(GTK_BOX(hbox), vbox2, TRUE, FALSE, 0);
+  gtk_box_pack_start(GTK_BOX(vbox), hbox, TRUE, TRUE, 0);
   return vbox;
 }
 
@@ -1653,7 +1653,7 @@ void project_wizard(appdata_t *appdata) {
     { "Confirmation",           NULL, NULL,
       GTK_ASSISTANT_PAGE_CONFIRM,  TRUE},
   };
-  
+
   wizard_t wizard = {
     TRUE,
 
@@ -1671,7 +1671,7 @@ void project_wizard(appdata_t *appdata) {
     wizard.page[i].wizard = &wizard;
 
     if(wizard.page[i].setup)
-      wizard.page[i].widget = 
+      wizard.page[i].widget =
 	wizard.page[i].setup(&wizard.page[i]);
     else {
       char *str = g_strdup_printf("Page %d", i);
@@ -1701,7 +1701,7 @@ void project_wizard(appdata_t *appdata) {
 
   /* make it a modal subdialog of the main window */
   gtk_window_set_modal(GTK_WINDOW(wizard.assistant), TRUE);
-  gtk_window_set_transient_for(GTK_WINDOW(wizard.assistant), 
+  gtk_window_set_transient_for(GTK_WINDOW(wizard.assistant),
 			       GTK_WINDOW(appdata->window));
 
   gtk_widget_show_all(wizard.assistant);
@@ -1716,9 +1716,9 @@ void project_wizard(appdata_t *appdata) {
 		   G_CALLBACK(on_assistant_close), &wizard);
 
   do {
-    if(gtk_events_pending()) 
+    if(gtk_events_pending())
       gtk_main_iteration();
-    else 
+    else
       usleep(1000);
 
   } while(wizard.running);

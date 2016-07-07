@@ -63,7 +63,7 @@ typedef struct {
   gboolean visible;
   int flags;
   tag_t *tag;
-  
+
 } base_object_t;
 
 typedef struct node_s {
@@ -120,13 +120,13 @@ typedef struct way_s {
 	gulong color;
 	gint width;
       } bg;
-      
+
       struct {
 	gulong color;
       } area;
-    };     
+    };
   } draw;
-  
+
   /* a link to the visual representation on screen */
   struct map_item_chain_s *map_item_chain;
 
@@ -266,7 +266,7 @@ gboolean osm_tag_key_other_value_present(tag_t *haystack, tag_t *tag);
 char *osm_generate_xml_changeset(osm_t *osm, char *comment);
 char *osm_generate_xml_node(osm_t *osm, item_id_t changeset, node_t *node);
 char *osm_generate_xml_way(osm_t *osm, item_id_t changeset, way_t *way);
-char *osm_generate_xml_relation(osm_t *osm, item_id_t changeset, 
+char *osm_generate_xml_relation(osm_t *osm, item_id_t changeset,
 				relation_t *relation);
 
 node_t *osm_get_node_by_id(osm_t *osm, item_id_t id);
@@ -274,9 +274,9 @@ way_t *osm_get_way_by_id(osm_t *osm, item_id_t id);
 relation_t *osm_get_relation_by_id(osm_t *osm, item_id_t id);
 
 guint osm_way_number_of_nodes(way_t *way);
-relation_chain_t *osm_node_to_relation(osm_t *osm, node_t *node, 
+relation_chain_t *osm_node_to_relation(osm_t *osm, node_t *node,
 				       gboolean via_way);
-relation_chain_t *osm_way_to_relation(osm_t *osm, way_t *way); 
+relation_chain_t *osm_way_to_relation(osm_t *osm, way_t *way);
 relation_chain_t *osm_relation_to_relation(osm_t *osm, relation_t *relation);
 relation_chain_t *osm_object_to_relation(osm_t *osm, object_t *object);
 void osm_relation_chain_free(relation_chain_t *relation_chain);
@@ -286,9 +286,9 @@ way_chain_t *osm_node_to_way(osm_t *osm, node_t *node);
 node_t *osm_node_new(osm_t *osm, gint x, gint y);
 void osm_node_attach(osm_t *osm, node_t *node);
 void osm_node_restore(osm_t *osm, node_t *node);
-way_chain_t *osm_node_delete(osm_t *osm, struct icon_s **icon, node_t *node, 
+way_chain_t *osm_node_delete(osm_t *osm, struct icon_s **icon, node_t *node,
 			     gboolean permanently, gboolean affect_ways);
-void osm_way_delete(osm_t *osm, struct icon_s **icon, way_t *way, 
+void osm_way_delete(osm_t *osm, struct icon_s **icon, way_t *way,
 		    gboolean perm);
 void osm_way_restore(osm_t *osm, way_t *way, item_id_chain_t *id_chain);
 
@@ -315,7 +315,7 @@ tag_t *osm_tags_copy(tag_t *tag);
 relation_t *osm_relation_new(void);
 void osm_relation_free(relation_t *relation);
 void osm_relation_attach(osm_t *osm, relation_t *relation);
-void osm_relation_delete(osm_t *osm, relation_t *relation, 
+void osm_relation_delete(osm_t *osm, relation_t *relation,
 			 gboolean permanently);
 gint osm_relation_members_num(relation_t *relation);
 

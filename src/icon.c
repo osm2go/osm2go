@@ -33,7 +33,7 @@ icon_file_exists(const gchar *file) {
     filename = g_strdup_printf("icons/%s.%s", file, icon_exts[idx]);
     fullname = find_file(filename);
     g_free(filename);
-    
+
     if(fullname)
       return fullname;
 
@@ -60,13 +60,13 @@ GdkPixbuf *icon_load(icon_t **icon, const char *name) {
   if(fullname) {
     GdkPixbuf *pix = gdk_pixbuf_new_from_file(fullname, NULL);
     g_free(fullname);
-    
+
     //    printf("Successfully loaded icon %s to %p\n", name, pix);
       *icon = g_new0(icon_t, 1);
       (*icon)->name = strdup(name);
       (*icon)->buf = pix;
       (*icon)->use = 1;
-      
+
       return pix;
   }
 
@@ -99,7 +99,7 @@ void icon_free(icon_t **icon, GdkPixbuf *buf) {
 	*icon = next;
 
       } else {
-	//	printf("keeping icon %s still in use by %d\n", 
+	//	printf("keeping icon %s still in use by %d\n",
 	//	       (*icon)->name, (*icon)->use);
       }
 

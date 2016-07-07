@@ -22,10 +22,10 @@
 #if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
 void statusbar_highlight(appdata_t *appdata, gboolean highlight) {
   GtkStatusbar *bar = (GtkStatusbar*)appdata->statusbar->widget;
-  
+
   if(highlight) {
     GdkColor color;
-    gdk_color_parse("red", &color); 
+    gdk_color_parse("red", &color);
     gtk_widget_modify_fg(bar->label, GTK_STATE_NORMAL, &color);
     gtk_widget_modify_text(bar->label, GTK_STATE_NORMAL, &color);
   } else {
@@ -69,7 +69,7 @@ static gboolean statusbar_brief_clear(gpointer data) {
 }
 
 // Flash up a brief, temporary message. Once it disappears, drop back to any
-// persistent message set with statusbar_set(). 
+// persistent message set with statusbar_set().
 //
 // If msg is NULL, clear the message and don't establish a handler.
 //
@@ -96,7 +96,7 @@ void statusbar_brief(appdata_t *appdata, const char *msg, gint timeout) {
     if (timeout == 0) {
       timeout = STATUSBAR_DEFAULT_BRIEF_TIME;
     }
-    appdata->statusbar->brief_handler_id 
+    appdata->statusbar->brief_handler_id
       = gtk_timeout_add(timeout, statusbar_brief_clear, appdata);
   }
 }
@@ -110,7 +110,7 @@ GtkWidget *statusbar_new(appdata_t *appdata) {
 #ifdef USE_HILDON
   /* why the heck does hildon show this by default? It's useless!! */
   g_object_set(appdata->statusbar->widget,
-	       "has-resize-grip", FALSE, 
+	       "has-resize-grip", FALSE,
 	       NULL );
 #endif
 
@@ -124,7 +124,7 @@ GtkWidget *statusbar_new(appdata_t *appdata) {
 void statusbar_highlight(appdata_t *appdata, gboolean highlight) {
   if(highlight) {
     GdkColor color;
-    gdk_color_parse("red", &color); 
+    gdk_color_parse("red", &color);
     gtk_widget_modify_fg(appdata->statusbar->widget, GTK_STATE_NORMAL, &color);
     gtk_widget_modify_text(appdata->statusbar->widget, GTK_STATE_NORMAL, &color);
   } else {

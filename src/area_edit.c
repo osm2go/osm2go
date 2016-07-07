@@ -76,13 +76,13 @@ typedef struct {
 
 static void parse_and_set_lat(GtkWidget *src, pos_float_t *store) {
   pos_float_t i = pos_parse_lat((char*)gtk_entry_get_text(GTK_ENTRY(src)));
-  if(pos_lat_valid(i)) 
+  if(pos_lat_valid(i))
     *store = i;
 }
 
 static void parse_and_set_lon(GtkWidget *src, pos_float_t *store) {
   pos_float_t i = pos_parse_lon((char*)gtk_entry_get_text(GTK_ENTRY(src)));
-  if(pos_lon_valid(i)) 
+  if(pos_lon_valid(i))
     *store = i;
 }
 
@@ -90,14 +90,14 @@ static gboolean current_tab_is(context_t *context, gint page_num, char *str) {
   GtkWidget *nb = notebook_get_gtk_notebook(context->notebook);
 
   if(page_num < 0)
-    page_num = 
+    page_num =
       gtk_notebook_get_current_page(GTK_NOTEBOOK(nb));
 
   if(page_num < 0) return FALSE;
 
-  GtkWidget *w = 
+  GtkWidget *w =
     gtk_notebook_get_nth_page(GTK_NOTEBOOK(nb), page_num);
-  const char *name = 
+  const char *name =
     gtk_notebook_get_tab_label_text(GTK_NOTEBOOK(nb), w);
 
   return(strcasecmp(name, _(str)) == 0);
@@ -108,15 +108,15 @@ static char *warn_text(context_t *context) {
   pos_float_t center_lat = (context->max.lat + context->min.lat)/2;
   double vscale = DEG2RAD(POS_EQ_RADIUS / 1000.0);
   double hscale = DEG2RAD(cos(DEG2RAD(center_lat)) * POS_EQ_RADIUS / 1000.0);
-  
+
   double area = vscale * (context->max.lat - context->min.lat) *
     hscale * (context->max.lon - context->min.lon);
-  
+
   return g_strdup_printf(
      _("The currently selected area is %.02f km² (%.02f mi²) in size. "
        "This is more than the recommended %.02f km² (%.02f mi²).\n\n"
        "Continuing may result in a big or failing download and low "
-       "mapping performance in a densly mapped area (e.g. cities)!"), 
+       "mapping performance in a densly mapped area (e.g. cities)!"),
      area, area/(KMPMIL*KMPMIL),
      WARN_OVER, WARN_OVER/(KMPMIL*KMPMIL)
      );
@@ -144,7 +144,7 @@ static gboolean area_warning(context_t *context) {
   if(area > WARN_OVER) {
     char *wtext = warn_text(context);
 
-    ret = yes_no_f(context->dialog, context->area->appdata, 
+    ret = yes_no_f(context->dialog, context->area->appdata,
 		   MISC_AGAIN_ID_AREA_TOO_BIG, MISC_AGAIN_FLAG_DONT_SAVE_NO,
 		   _("Area size warning!"),
 		   _("%s\n\nDo you really want to continue?"), wtext);
@@ -160,24 +160,24 @@ static void area_main_update(context_t *context) {
   /* updated for all entries at once */
   if(isnan(context->min.lat) || isnan(context->min.lon) ||
      isnan(context->min.lat) || isnan(context->min.lon)) {
-    gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), 
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog),
 				      GTK_RESPONSE_ACCEPT, FALSE);
   } else {
     if(context->min.lat >= context->max.lat ||
        context->min.lon >= context->max.lon) {
-      gtk_label_set(GTK_LABEL(context->direct.error), 
-		  _("\"From\" must be smaller than \"to\" value!")); 
-      gtk_label_set(GTK_LABEL(context->extent.error), 
+      gtk_label_set(GTK_LABEL(context->direct.error),
+		  _("\"From\" must be smaller than \"to\" value!"));
+      gtk_label_set(GTK_LABEL(context->extent.error),
 		  _("Extents must be positive!"));
-      gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), 
+      gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog),
 				      GTK_RESPONSE_ACCEPT, FALSE);
-    } 
+    }
     else
     {
       gtk_label_set(GTK_LABEL(context->direct.error), "");
       gtk_label_set(GTK_LABEL(context->extent.error), "");
 
-      gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), 
+      gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog),
 				      GTK_RESPONSE_ACCEPT, TRUE);
     }
   }
@@ -201,7 +201,7 @@ static void area_main_update(context_t *context) {
 
 static GSList *pos_append_rad(GSList *list, pos_float_t lat, pos_float_t lon) {
   coord_t *coo = g_new0(coord_t, 1);
-  coo->rlat = lat; 
+  coo->rlat = lat;
   coo->rlon = lon;
   list = g_slist_append(list, coo);
   return list;
@@ -220,7 +220,7 @@ static void map_update(context_t *context, gboolean forced) {
     context->map.needs_redraw = TRUE;
     return;
   }
-  
+
   printf("do map redraw\n");
 
   /* check if the position is invalid */
@@ -228,7 +228,7 @@ static void map_update(context_t *context, gboolean forced) {
      isnan(context->min.lat) || isnan(context->min.lon)) {
 
     /* no coordinates given: display the entire world */
-    osm_gps_map_set_mapcenter(OSM_GPS_MAP(context->map.widget), 
+    osm_gps_map_set_mapcenter(OSM_GPS_MAP(context->map.widget),
 			      0.0, 0.0, 1);
 
     osm_gps_map_clear_tracks(OSM_GPS_MAP(context->map.widget));
@@ -241,18 +241,18 @@ static void map_update(context_t *context, gboolean forced) {
     /* we want the zoom! */
     double vzoom = LOG2((45.0 * context->map.widget->allocation.height)/
 			((context->max.lat - context->min.lat)*32.0)) -1;
-    
+
     double hzoom = LOG2((45.0 * context->map.widget->allocation.width)/
 			((context->max.lon - context->min.lon)*32.0)) -1;
-    
+
     osm_gps_map_set_center(OSM_GPS_MAP(context->map.widget),
-			   center_lat, center_lon);	    
-    
+			   center_lat, center_lon);
+
     /* use smallest zoom, so everything fits on screen */
-    osm_gps_map_set_zoom(OSM_GPS_MAP(context->map.widget), 
+    osm_gps_map_set_zoom(OSM_GPS_MAP(context->map.widget),
 			 (vzoom < hzoom)?vzoom:hzoom);
-    
-    /* ---------- draw border (as a gps track) -------------- */  
+
+    /* ---------- draw border (as a gps track) -------------- */
     osm_gps_map_clear_tracks(OSM_GPS_MAP(context->map.widget));
 
     if(context->max.lat > context->min.lat &&
@@ -262,11 +262,11 @@ static void map_update(context_t *context, gboolean forced) {
       box = pos_append(box, context->max.lat, context->max.lon);
       box = pos_append(box, context->min.lat, context->max.lon);
       box = pos_append(box, context->min.lat, context->min.lon);
-      
+
       osm_gps_map_add_track(OSM_GPS_MAP(context->map.widget), box);
     }
   }
-    
+
   context->map.needs_redraw = FALSE;
 }
 
@@ -308,7 +308,7 @@ static void callback_modified_direct(GtkWidget *widget, gpointer data) {
   context_t *context = (context_t*)data;
 
   /* direct is second tab (page 1) */
-  if(!current_tab_is(context, -1, TAB_LABEL_DIRECT)) 
+  if(!current_tab_is(context, -1, TAB_LABEL_DIRECT))
     return;
 
   /* parse the fields from the direct entry pad */
@@ -330,7 +330,7 @@ static void callback_modified_extent(GtkWidget *widget, gpointer data) {
   context_t *context = (context_t*)data;
 
   /* extent is third tab (page 2) */
-  if(!current_tab_is(context, -1, TAB_LABEL_EXTENT)) 
+  if(!current_tab_is(context, -1, TAB_LABEL_EXTENT))
     return;
 
   pos_float_t center_lat = pos_lat_get(context->extent.lat);
@@ -338,7 +338,7 @@ static void callback_modified_extent(GtkWidget *widget, gpointer data) {
 
   if(!pos_lat_valid(center_lat) || !pos_lon_valid(center_lon))
     return;
-  
+
   double vscale = DEG2RAD(POS_EQ_RADIUS / 1000.0);
   double hscale = DEG2RAD(cos(DEG2RAD(center_lat)) * POS_EQ_RADIUS / 1000.0);
 
@@ -354,7 +354,7 @@ static void callback_modified_extent(GtkWidget *widget, gpointer data) {
   context->max.lon = center_lon + width;
 
   area_main_update(context);
-  
+
   /* also update other tabs */
   direct_update(context);
 #ifdef ENABLE_OSM_GPS_MAP
@@ -370,12 +370,12 @@ static void callback_modified_unit(GtkWidget *widget, gpointer data) {
   double width  = pos_dist_get(context->extent.width, context->extent.is_mil);
 
   /* adjust unit flag */
-  context->extent.is_mil = 
+  context->extent.is_mil =
     combo_box_get_active(context->extent.mil_km) == 0;
 
   /* save values */
   pos_dist_entry_set(context->extent.width, width, context->extent.is_mil);
-  pos_dist_entry_set(context->extent.height, height, context->extent.is_mil);  
+  pos_dist_entry_set(context->extent.height, height, context->extent.is_mil);
 }
 
 #ifdef HAS_MAEMO_MAPPER
@@ -383,7 +383,7 @@ static void callback_fetch_mm_clicked(GtkButton *button, gpointer data) {
   context_t *context = (context_t*)data;
 
   if(!dbus_mm_set_position(context->area->appdata->osso_context, NULL)) {
-    errorf(context->dialog, 
+    errorf(context->dialog,
 	   _("Unable to communicate with Maemo Mapper. "
 	     "You need to have Maemo Mapper installed "
 	     "to use this feature."));
@@ -391,7 +391,7 @@ static void callback_fetch_mm_clicked(GtkButton *button, gpointer data) {
   }
 
   if(!context->area->appdata->mmpos.valid) {
-    errorf(context->dialog, 
+    errorf(context->dialog,
 	   _("No valid position received yet. You need "
 	     "to scroll or zoom the Maemo Mapper view "
 	     "in order to force it to send its current "
@@ -400,7 +400,7 @@ static void callback_fetch_mm_clicked(GtkButton *button, gpointer data) {
   }
 
   /* maemo mapper is fourth tab (page 3) */
-  if(!current_tab_is(context, -1, TAB_LABEL_MM)) 
+  if(!current_tab_is(context, -1, TAB_LABEL_MM))
     return;
 
   /* maemo mapper pos data ... */
@@ -410,12 +410,12 @@ static void callback_fetch_mm_clicked(GtkButton *button, gpointer data) {
 
   if(!pos_lat_valid(center_lat) || !pos_lon_valid(center_lon))
     return;
-  
+
   double vscale = DEG2RAD(POS_EQ_RADIUS);
   double height = 8 * (1<<zoom) / vscale;
   context->min.lat = center_lat - height;
   context->max.lat = center_lat + height;
-  
+
   double hscale = DEG2RAD(cos(DEG2RAD(center_lat)) * POS_EQ_RADIUS);
   double width  = 16 * (1<<zoom) / hscale;
   context->min.lon = center_lon - width;
@@ -435,7 +435,7 @@ static void callback_fetch_mm_clicked(GtkButton *button, gpointer data) {
 #ifdef ENABLE_OSM_GPS_MAP
 
 static gboolean
-on_map_button_press_event(GtkWidget *widget, 
+on_map_button_press_event(GtkWidget *widget,
 			  GdkEventButton *event, context_t *context) {
   OsmGpsMap *map = OSM_GPS_MAP(context->map.widget);
   osm_gps_map_osd_t *osd = osm_gps_map_osd_get(map);
@@ -451,25 +451,25 @@ on_map_button_press_event(GtkWidget *widget,
   osm_gps_map_clear_tracks(map);
 
   /* and remember this location as the start */
-  context->map.start = 
+  context->map.start =
     osm_gps_map_get_co_ordinates(map, (int)event->x, (int)event->y);
 
   return TRUE;
 }
 
 static gboolean
-on_map_motion_notify_event(GtkWidget *widget, 
+on_map_motion_notify_event(GtkWidget *widget,
 			   GdkEventMotion  *event, context_t *context) {
-  if(!isnan(context->map.start.rlon) && 
+  if(!isnan(context->map.start.rlon) &&
      !isnan(context->map.start.rlat)) {
     OsmGpsMap *map = OSM_GPS_MAP(context->map.widget);
 
     /* remove existing marker */
     osm_gps_map_clear_tracks(map);
 
-    coord_t start = context->map.start, end = 
+    coord_t start = context->map.start, end =
       osm_gps_map_get_co_ordinates(map, (int)event->x, (int)event->y);
-    
+
     GSList *box = pos_append_rad(NULL, start.rlat, start.rlon);
     box = pos_append_rad(box, end.rlat,   start.rlon);
     box = pos_append_rad(box, end.rlat,   end.rlon);
@@ -484,18 +484,18 @@ on_map_motion_notify_event(GtkWidget *widget,
 }
 
 static gboolean
-on_map_button_release_event(GtkWidget *widget, 
+on_map_button_release_event(GtkWidget *widget,
 			    GdkEventButton *event, context_t *context) {
 
   OsmGpsMap *map = OSM_GPS_MAP(context->map.widget);
   osm_gps_map_osd_t *osd = osm_gps_map_osd_get(map);
 
-  if(!isnan(context->map.start.rlon) && 
+  if(!isnan(context->map.start.rlon) &&
      !isnan(context->map.start.rlat)) {
 
-    coord_t start = context->map.start, end = 
+    coord_t start = context->map.start, end =
       osm_gps_map_get_co_ordinates(map, (int)event->x, (int)event->y);
-    
+
     GSList *box = pos_append_rad(NULL, start.rlat, start.rlon);
     box = pos_append_rad(box, end.rlat,   start.rlon);
     box = pos_append_rad(box, end.rlat,   end.rlon);
@@ -541,29 +541,29 @@ static void on_page_switch(GtkNotebook *notebook, GtkNotebookPage *page,
   /* updating the map while the user manually changes some coordinates */
   /* may confuse the map. so we delay those updates until the map tab */
   /* is becoming visible */
-  if(current_tab_is(context, page_num, TAB_LABEL_MAP) && 
-     context->map.needs_redraw) 
+  if(current_tab_is(context, page_num, TAB_LABEL_MAP) &&
+     context->map.needs_redraw)
     map_update(context, TRUE);
 }
 
 static gboolean map_gps_update(gpointer data) {
   context_t *context = (context_t*)data;
 
-  gboolean gps_on = 
-    context->area->appdata->settings && 
+  gboolean gps_on =
+    context->area->appdata->settings &&
     context->area->appdata->settings->enable_gps;
 
-  pos_t pos = { NAN, NAN }; 
-  gboolean gps_fix = gps_on && 
+  pos_t pos = { NAN, NAN };
+  gboolean gps_fix = gps_on &&
     gps_get_pos(context->area->appdata, &pos, NULL);
 
   if(gps_fix) {
     g_object_set(context->map.widget, "gps-track-highlight-radius", 0, NULL);
-    osm_gps_map_draw_gps(OSM_GPS_MAP(context->map.widget), 
+    osm_gps_map_draw_gps(OSM_GPS_MAP(context->map.widget),
 			 pos.lat, pos.lon, NAN);
   } else
     osm_gps_map_clear_gps(OSM_GPS_MAP(context->map.widget));
- 
+
   return TRUE;
 }
 
@@ -582,21 +582,21 @@ gboolean area_edit(area_edit_t *area) {
   context.max.lat = area->max->lat;
   context.max.lon = area->max->lon;
 
-  context.dialog = 
+  context.dialog =
     misc_dialog_new(MISC_DIALOG_HIGH, _("Area editor"),
 	  GTK_WINDOW(area->parent),
-	  GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, 
+	  GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
           GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
           NULL);
 
-  context.warning = 
-    gtk_dialog_add_button(GTK_DIALOG(context.dialog), _("Warning"), 
+  context.warning =
+    gtk_dialog_add_button(GTK_DIALOG(context.dialog), _("Warning"),
 			  GTK_RESPONSE_HELP);
 
-  gtk_button_set_image(GTK_BUTTON(context.warning), 
-		       gtk_image_new_from_stock(GTK_STOCK_DIALOG_WARNING, 
+  gtk_button_set_image(GTK_BUTTON(context.warning),
+		       gtk_image_new_from_stock(GTK_STOCK_DIALOG_WARNING,
 						GTK_ICON_SIZE_BUTTON));
-  g_signal_connect(context.warning, "clicked", 
+  g_signal_connect(context.warning, "clicked",
   		   G_CALLBACK(on_area_warning_clicked), &context);
 
   context.notebook = notebook_new();
@@ -612,7 +612,7 @@ gboolean area_edit(area_edit_t *area) {
 	        "tile-cache", NULL,
 		 NULL);
 
-  osm_gps_map_osd_select_init(OSM_GPS_MAP(context.map.widget)); 
+  osm_gps_map_osd_select_init(OSM_GPS_MAP(context.map.widget));
 
   g_signal_connect(G_OBJECT(context.map.widget), "configure-event",
 		   G_CALLBACK(on_map_configure), &context);
@@ -704,15 +704,15 @@ gboolean area_edit(area_edit_t *area) {
   gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
   gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 2, 3);
   context.extent.height = entry_new();
-  gtk_table_attach_defaults(GTK_TABLE(table), 
+  gtk_table_attach_defaults(GTK_TABLE(table),
 			    context.extent.height, 1, 2, 2, 3);
 
   context.extent.mil_km = combo_box_new(_("Unit"));
   combo_box_append_text(context.extent.mil_km, _("mi"));
   combo_box_append_text(context.extent.mil_km, _("km"));
   combo_box_set_active(context.extent.mil_km, 1); // km
-  
-  gtk_table_attach(GTK_TABLE(table), context.extent.mil_km, 2, 3, 1, 3, 
+
+  gtk_table_attach(GTK_TABLE(table), context.extent.mil_km, 2, 3, 1, 3,
 		   0, 0, 0, 0);
 
   /* setup this page */
@@ -738,7 +738,7 @@ gboolean area_edit(area_edit_t *area) {
   context.extent.error = gtk_label_new("");
   gtk_widget_modify_fg(context.extent.error, GTK_STATE_NORMAL, &color);
   gtk_table_attach_defaults(GTK_TABLE(table), context.extent.error, 0, 3, 4, 5);
-  
+
   gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
   notebook_append_page(context.notebook, vbox, _(TAB_LABEL_EXTENT));
 
@@ -746,7 +746,7 @@ gboolean area_edit(area_edit_t *area) {
   /* ------------- fetch from maemo mapper ------------------------ */
 
   vbox = gtk_vbox_new(FALSE, 8);
-  context.mmapper.fetch = 
+  context.mmapper.fetch =
     button_new_with_label(_("Get from Maemo Mapper"));
   gtk_box_pack_start(GTK_BOX(vbox), context.mmapper.fetch, FALSE, FALSE, 0);
 
@@ -762,11 +762,11 @@ gboolean area_edit(area_edit_t *area) {
 
   /* ------------------------------------------------------ */
 
-  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(context.dialog)->vbox), 
+  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(context.dialog)->vbox),
 			      context.notebook);
 
 #ifdef ENABLE_OSM_GPS_MAP
-  g_signal_connect(G_OBJECT(notebook_get_gtk_notebook(context.notebook)), 
+  g_signal_connect(G_OBJECT(notebook_get_gtk_notebook(context.notebook)),
 		   "switch-page", G_CALLBACK(on_page_switch), &context);
 #endif
 

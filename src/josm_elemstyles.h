@@ -26,9 +26,9 @@ float scaledn_to_zoom(const float scaledn);
 float zoom_to_scaledn(const float zoom);
 
 
-typedef enum { 
-  ES_TYPE_NONE = 0, 
-  ES_TYPE_LINE, 
+typedef enum {
+  ES_TYPE_NONE = 0,
+  ES_TYPE_LINE,
   ES_TYPE_AREA,
   ES_TYPE_LINE_MOD
 } elemstyle_type_t;
@@ -48,7 +48,7 @@ typedef struct {
   gint width;
   elemstyle_color_t color;
   gboolean dashed;
-  gint dash_length;  // <= 0 means dash length is based on the width 
+  gint dash_length;  // <= 0 means dash length is based on the width
 
   struct {
     gboolean valid;
@@ -65,7 +65,7 @@ typedef struct {
 } elemstyle_line_t;
 
 /* attribute modifiers */
-typedef enum { 
+typedef enum {
   ES_MOD_NONE = 0,  // don't change attribute
   ES_MOD_ADD,       // add constant value
   ES_MOD_SUB,       // subtract constant value
@@ -110,7 +110,7 @@ typedef struct elemstyle_s {
     elemstyle_line_t *line;
     elemstyle_area_t *area;
   };
-  
+
   elemstyle_icon_t *icon;
 
   struct elemstyle_s *next;

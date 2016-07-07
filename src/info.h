@@ -30,7 +30,7 @@ typedef struct {
 } tag_context_t;
 
 
-gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, 
+gboolean info_dialog(GtkWidget *parent, appdata_t *appdata,
 		     object_t *object);
 void info_tags_replace(tag_context_t *context);
 gboolean info_tag_key_collision(tag_t *tags, tag_t *tag);

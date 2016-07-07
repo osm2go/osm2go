@@ -92,7 +92,7 @@ static style_t *parse_style(xmlDocPtr doc, xmlNode *a_node) {
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcasecmp((char*)cur_node->name, "elemstyles") == 0) {
-	style->elemstyles_filename = 
+	style->elemstyles_filename =
 	  (char*)xmlGetProp(cur_node, BAD_CAST "filename");
 
 	/* ---------- node ------------------------------------- */
@@ -100,7 +100,7 @@ static style_t *parse_style(xmlDocPtr doc, xmlNode *a_node) {
 	parse_color(cur_node, "color", &style->node.color);
 	parse_color(cur_node, "fill-color", &style->node.fill_color);
 	xml_get_prop_float(cur_node, "radius", &style->node.radius);
-	xml_get_prop_float(cur_node, "border-radius", 
+	xml_get_prop_float(cur_node, "border-radius",
 			   &style->node.border_radius);
         float scale_max = 0;
 	xml_get_prop_float(cur_node, "scale-max", &scale_max);
@@ -109,7 +109,7 @@ static style_t *parse_style(xmlDocPtr doc, xmlNode *a_node) {
 	else
 	  style->node.zoom_max = 0;
 
-	style->node.show_untagged = 
+	style->node.show_untagged =
 	  xml_prop_is(cur_node, "show-untagged", "true");
 
 	/* ---------- icon ------------------------------------- */
@@ -119,7 +119,7 @@ static style_t *parse_style(xmlDocPtr doc, xmlNode *a_node) {
 	if(prefix) {
 	  if(style->icon.path_prefix) g_free(style->icon.path_prefix);
 	  style->icon.path_prefix = prefix;
-	}	  
+	}
 	style->icon.enable = xml_prop_is(cur_node, "enable", "true");
 
 	/* ---------- way ------------------------------------- */
@@ -143,7 +143,7 @@ static style_t *parse_style(xmlDocPtr doc, xmlNode *a_node) {
 	  if(sub_node->type == XML_ELEMENT_NODE) {
 	    if(strcasecmp((char*)sub_node->name, "border") == 0) {
 	      style->frisket.border.present = TRUE;
-	      xml_get_prop_float(sub_node, "width", 
+	      xml_get_prop_float(sub_node, "width",
 				 &style->frisket.border.width);
 
 	      parse_color(sub_node, "color", &style->frisket.border.color);
@@ -158,7 +158,7 @@ static style_t *parse_style(xmlDocPtr doc, xmlNode *a_node) {
 	parse_color(cur_node, "touch-color", &style->highlight.touch_color);
 	parse_color(cur_node, "arrow-color", &style->highlight.arrow_color);
 	xml_get_prop_float(cur_node, "width", &style->highlight.width);
-	xml_get_prop_float(cur_node, "arrow-limit", 
+	xml_get_prop_float(cur_node, "arrow-limit",
 			   &style->highlight.arrow_limit);
 
 	/* ---------- track ------------------------------------ */
@@ -169,7 +169,7 @@ static style_t *parse_style(xmlDocPtr doc, xmlNode *a_node) {
 
 	/* ---------- area ------------------------------------- */
       } else if(strcasecmp((char*)cur_node->name, "area") == 0) {
-	style->area.has_border_color = 
+	style->area.has_border_color =
 	  parse_color(cur_node, "border-color", &style->area.border_color);
 	xml_get_prop_float(cur_node,"border-width", &style->area.border_width);
 	float scale_max = 0;
@@ -188,45 +188,45 @@ static style_t *parse_style(xmlDocPtr doc, xmlNode *a_node) {
       } else
 	printf("  found unhandled style/%s\n", cur_node->name);
     }
-  }  
+  }
   return style;
 }
 
 static style_t *parse_doc(xmlDocPtr doc) {
   /* Get the root element node */
   xmlNode *cur_node = NULL;
-  style_t *style = NULL; 
+  style_t *style = NULL;
 
-  for(cur_node = xmlDocGetRootElement(doc); 
+  for(cur_node = xmlDocGetRootElement(doc);
       cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcasecmp((char*)cur_node->name, "style") == 0) {
 	if(!style)
 	  style = parse_style(doc, cur_node);
-      } else 
+      } else
 	printf("  found unhandled %s\n", cur_node->name);
     }
   }
-    
+
   xmlFreeDoc(doc);
   return style;
 }
 
 static style_t *style_parse(appdata_t *appdata, char *fullname) {
   style_t *style = NULL;
-  
+
   xmlDoc *doc = NULL;
-    
+
   LIBXML_TEST_VERSION;
-    
+
   /* parse the file and get the DOM */
   if((doc = xmlReadFile(fullname, NULL, 0)) == NULL) {
     xmlErrorPtr errP = xmlGetLastError();
-    errorf(GTK_WIDGET(appdata->window), 
+    errorf(GTK_WIDGET(appdata->window),
 	   _("Style parsing failed:\n\n"
 	     "XML error while parsing style file\n"
 	     "%s"), errP->message);
-    
+
     return NULL;
   } else {
     style = parse_doc(doc);
@@ -260,7 +260,7 @@ style_t *style_load(appdata_t *appdata, char *name) {
   g_free(fullname);
 
   printf("  elemstyle filename: %s\n", style->elemstyles_filename);
-  elemstyle_t *elemstyles = 
+  elemstyle_t *elemstyles =
     josm_elemstyles_load(style->elemstyles_filename);
   xmlFree(style->elemstyles_filename);
   style->elemstyles = elemstyles;
@@ -314,7 +314,7 @@ GtkWidget *style_select_widget(appdata_t *appdata) {
     file_chain_t *next = chain->next;
 
     printf("  file: %s\n", chain->name);
-    
+
     style_t *style = style_parse(appdata, chain->name);
     printf("    name: %s\n", style->name);
     combo_box_append_text(cbox, style->name);
@@ -322,11 +322,11 @@ GtkWidget *style_select_widget(appdata_t *appdata) {
     char *basename = style_basename(chain->name);
     if(strcmp(basename, appdata->settings->style) == 0) match = cnt;
     g_free(basename);
-    
+
     xmlFree(style->elemstyles_filename);
     style->elemstyles_filename = NULL;
     style_free(style);
-    
+
     cnt++;
 
     g_free(chain);
@@ -335,7 +335,7 @@ GtkWidget *style_select_widget(appdata_t *appdata) {
 
   if(match >= 0)
     combo_box_set_active(cbox, match);
-  
+
   return cbox;
 }
 
@@ -361,7 +361,7 @@ void style_change(appdata_t *appdata, const char *name) {
   }
 
   /* check of style has really been changed */
-  if(appdata->settings->style && 
+  if(appdata->settings->style &&
      !strcmp(appdata->settings->style, new_style)) {
     g_free(new_style);
     return;
@@ -383,7 +383,7 @@ void style_change(appdata_t *appdata, const char *name) {
   appdata->map->style = style_load(appdata, appdata->settings->style);
 
   /* canvas background may have changed */
-  canvas_set_background(appdata->map->canvas, 
+  canvas_set_background(appdata->map->canvas,
 			appdata->map->style->background.color);
 
   map_paint(appdata);
@@ -397,10 +397,10 @@ void style_select(GtkWidget *parent, appdata_t *appdata) {
   printf("select style\n");
 
   /* ------------------ style dialog ---------------- */
-  GtkWidget *dialog = 
+  GtkWidget *dialog =
     misc_dialog_new(MISC_DIALOG_NOSIZE,_("Select style"),
 		    GTK_WINDOW(parent),
-		    GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, 
+		    GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
 		    GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
 		    NULL);
 
@@ -421,9 +421,9 @@ void style_select(GtkWidget *parent, appdata_t *appdata) {
     gtk_widget_destroy(dialog);
     return;
   }
-  
+
   const char *ptr = combo_box_get_active_text(cbox);
-  printf("user clicked ok on %s\n", ptr);  
+  printf("user clicked ok on %s\n", ptr);
 
   gtk_widget_destroy(dialog);
 

@@ -133,7 +133,7 @@ pos_float_t pos_lon_get(GtkWidget *widget) {
 }
 
 void pos_lat_entry_set(GtkWidget *entry, pos_float_t lat) {
-  char str[32]; 
+  char str[32];
   pos_lat_str(str, sizeof(str), lat);
   gtk_entry_set_text(GTK_ENTRY(entry), str);
 }
@@ -157,7 +157,7 @@ GtkWidget *pos_lon_label_new(pos_float_t lon) {
 }
 
 void pos_lat_label_set(GtkWidget *label, pos_float_t lat) {
-  char str[32]; 
+  char str[32];
   pos_lat_str(str, sizeof(str), lat);
   gtk_label_set_text(GTK_LABEL(label), str);
 }
@@ -171,9 +171,9 @@ void pos_lon_label_set(GtkWidget *label, pos_float_t lon) {
 void pos2lpos(bounds_t *bounds, pos_t *pos, lpos_t *lpos) {
   lpos->x = POS_EQ_RADIUS * DEG2RAD(pos->lon);
 #ifdef USE_FLOAT
-  lpos->y = POS_EQ_RADIUS * logf(tanf(M_PI/4 + DEG2RAD(pos->lat)/2)); 
+  lpos->y = POS_EQ_RADIUS * logf(tanf(M_PI/4 + DEG2RAD(pos->lat)/2));
 #else
-  lpos->y = POS_EQ_RADIUS * log(tan(M_PI/4 + DEG2RAD(pos->lat)/2)); 
+  lpos->y = POS_EQ_RADIUS * log(tan(M_PI/4 + DEG2RAD(pos->lat)/2));
 #endif
   lpos->x = ( lpos->x - bounds->center.x) * bounds->scale;
   lpos->y = (-lpos->y + bounds->center.y) * bounds->scale;
@@ -183,9 +183,9 @@ void pos2lpos(bounds_t *bounds, pos_t *pos, lpos_t *lpos) {
 void pos2lpos_center(pos_t *pos, lpos_t *lpos) {
   lpos->x = POS_EQ_RADIUS * DEG2RAD(pos->lon);
 #ifdef USE_FLOAT
-  lpos->y = POS_EQ_RADIUS * logf(tanf(M_PI/4 + DEG2RAD(pos->lat)/2)); 
+  lpos->y = POS_EQ_RADIUS * logf(tanf(M_PI/4 + DEG2RAD(pos->lat)/2));
 #else
-  lpos->y = POS_EQ_RADIUS * log(tan(M_PI/4 + DEG2RAD(pos->lat)/2)); 
+  lpos->y = POS_EQ_RADIUS * log(tan(M_PI/4 + DEG2RAD(pos->lat)/2));
 #endif
 }
 

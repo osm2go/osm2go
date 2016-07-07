@@ -83,7 +83,7 @@ typedef struct presets_item_s {
   int type;
   char *name, *icon, *link;
   gboolean is_group;
-  
+
   union {
     presets_widget_t *widget;
     struct presets_item_s *group;

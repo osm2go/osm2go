@@ -32,7 +32,7 @@
 
 static void diff_save_tags(tag_t *tag, xmlNodePtr node) {
   while(tag) {
-    xmlNodePtr tag_node = xmlNewChild(node, NULL, 
+    xmlNodePtr tag_node = xmlNewChild(node, NULL,
 				      BAD_CAST "tag", NULL);
     xmlNewProp(tag_node, BAD_CAST "k", BAD_CAST tag->key);
     xmlNewProp(tag_node, BAD_CAST "v", BAD_CAST tag->value);
@@ -41,9 +41,9 @@ static void diff_save_tags(tag_t *tag, xmlNodePtr node) {
 }
 
 static void diff_save_state_n_id(int flags, xmlNodePtr node, item_id_t id) {
-  if(flags & OSM_FLAG_DELETED) 
+  if(flags & OSM_FLAG_DELETED)
     xmlNewProp(node, BAD_CAST "state", BAD_CAST "deleted");
-  else if(flags & OSM_FLAG_NEW) 
+  else if(flags & OSM_FLAG_NEW)
     xmlNewProp(node, BAD_CAST "state", BAD_CAST "new");
 
   /* all items need an id */
@@ -55,8 +55,8 @@ static void diff_save_state_n_id(int flags, xmlNodePtr node, item_id_t id) {
 static void diff_save_nodes(node_t *node, xmlNodePtr root_node) {
   /* store all modfied nodes */
   while(node) {
-    if(OSM_FLAGS(node)) { 
-      xmlNodePtr node_node = xmlNewChild(root_node, NULL, 
+    if(OSM_FLAGS(node)) {
+      xmlNodePtr node_node = xmlNewChild(root_node, NULL,
 					 BAD_CAST "node", NULL);
 
       diff_save_state_n_id(OSM_FLAGS(node), node_node, OSM_ID(node));
@@ -84,22 +84,22 @@ static void diff_save_ways(way_t *way, xmlNodePtr root_node) {
   /* store all modfied ways */
   while(way) {
     if(OSM_FLAGS(way)) {
-      xmlNodePtr node_way = xmlNewChild(root_node, NULL, 
+      xmlNodePtr node_way = xmlNewChild(root_node, NULL,
 					 BAD_CAST "way", NULL);
 
       diff_save_state_n_id(OSM_FLAGS(way), node_way, OSM_ID(way));
-      
-      if(OSM_FLAGS(way) & OSM_FLAG_HIDDEN) 
+
+      if(OSM_FLAGS(way) & OSM_FLAG_HIDDEN)
 	xmlNewProp(node_way, BAD_CAST "hidden", BAD_CAST "true");
 
       /* additional info is only required if the way hasn't been deleted */
       /* and of the dirty or new flags are set. (otherwise e.g. only */
       /* the hidden flag may be set) */
-      if((!(OSM_FLAGS(way) & OSM_FLAG_DELETED)) && 
+      if((!(OSM_FLAGS(way) & OSM_FLAG_DELETED)) &&
 	 (OSM_FLAGS(way) & (OSM_FLAG_DIRTY | OSM_FLAG_NEW))) {
 	node_chain_t *node_chain = way->node_chain;
 	while(node_chain) {
-	  xmlNodePtr node_node = xmlNewChild(node_way, NULL, 
+	  xmlNodePtr node_node = xmlNewChild(node_way, NULL,
 					     BAD_CAST "nd", NULL);
 	  char *id = g_strdup_printf(ITEM_ID_FORMAT, OSM_ID(node_chain->node));
 	  xmlNewProp(node_node, BAD_CAST "ref", BAD_CAST id);
@@ -117,18 +117,18 @@ static void diff_save_relations(relation_t *relation, xmlNodePtr root_node) {
 
   /* store all modfied relations */
   while(relation) {
-    if(OSM_FLAGS(relation)) { 
-      xmlNodePtr node_rel = xmlNewChild(root_node, NULL, 
+    if(OSM_FLAGS(relation)) {
+      xmlNodePtr node_rel = xmlNewChild(root_node, NULL,
 					 BAD_CAST "relation", NULL);
 
       diff_save_state_n_id(OSM_FLAGS(relation), node_rel, OSM_ID(relation));
-      
+
       if(!(OSM_FLAGS(relation) & OSM_FLAG_DELETED)) {
 	/* additional info is only required if the relation */
 	/* hasn't been deleted */
 	member_t *member = relation->member;
 	while(member) {
-	  xmlNodePtr node_member = xmlNewChild(node_rel, NULL, 
+	  xmlNodePtr node_member = xmlNewChild(node_rel, NULL,
 					     BAD_CAST "member", NULL);
 
 	  char *ref = NULL;
@@ -170,7 +170,7 @@ static void diff_save_relations(relation_t *relation, xmlNodePtr root_node) {
 	  xmlNewProp(node_member, BAD_CAST "ref", BAD_CAST ref);
 	  g_free(ref);
 
-	  if(member->role) 
+	  if(member->role)
 	    xmlNewProp(node_member, BAD_CAST "role", BAD_CAST member->role);
 
 	  member = member->next;
@@ -199,7 +199,7 @@ gboolean diff_is_clean(osm_t *osm, gboolean honor_hidden_flags) {
     if(honor_hidden_flags) {
       if(OSM_FLAGS(way)) clean = FALSE;
     } else
-      if(OSM_FLAGS(way) & ~OSM_FLAG_HIDDEN) 
+      if(OSM_FLAGS(way) & ~OSM_FLAG_HIDDEN)
 	clean = FALSE;
 
     way = way->next;
@@ -217,7 +217,7 @@ gboolean diff_is_clean(osm_t *osm, gboolean honor_hidden_flags) {
 void diff_save(project_t *project, osm_t *osm) {
   if(!project || !osm) return;
 
-  char *diff_name = 
+  char *diff_name =
   g_strdup_printf("%s/%s.diff", project->path, project->name);
 
   if(diff_is_clean(osm, TRUE)) {
@@ -347,14 +347,14 @@ void diff_restore_node(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
     printf("  Node not deleted, but no valid position\n");
     return;
   }
-    
+
   /* evaluate properties */
   node_t *node = NULL;
 
   switch(state) {
   case OSM_FLAG_NEW:
     printf("  Restoring NEW node\n");
-    
+
     node = g_new0(node_t, 1);
     OSM_VISIBLE(node) = TRUE;
     OSM_FLAGS(node) = OSM_FLAG_NEW;
@@ -363,23 +363,23 @@ void diff_restore_node(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
 
     /* attach to end of node list */
     node_t **lnode = &osm->node;
-    while(*lnode) lnode = &(*lnode)->next;  
+    while(*lnode) lnode = &(*lnode)->next;
     *lnode = node;
     break;
 
   case OSM_FLAG_DELETED:
     printf("  Restoring DELETE flag\n");
-    
-    if((node = osm_get_node_by_id(osm, id))) 
-      OSM_FLAGS(node) |= OSM_FLAG_DELETED;      
+
+    if((node = osm_get_node_by_id(osm, id)))
+      OSM_FLAGS(node) |= OSM_FLAG_DELETED;
     else
       printf("  WARNING: no node with that id found\n");
     break;
 
   case OSM_FLAG_DIRTY:
     printf("  Valid id/position (DIRTY)\n");
-    
-    if((node = osm_get_node_by_id(osm, id))) 
+
+    if((node = osm_get_node_by_id(osm, id)))
       OSM_FLAGS(node) |= OSM_FLAG_DIRTY;
     else
       printf("  WARNING: no node with that id found\n");
@@ -390,9 +390,9 @@ void diff_restore_node(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
     return;
     break;
   }
-  
+
   if(!node) {
-    printf("  no valid node\n");		    
+    printf("  no valid node\n");
     return;
   }
 
@@ -401,12 +401,12 @@ void diff_restore_node(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
   if(pos) {
     node->pos.lat = pos->lat;
     node->pos.lon = pos->lon;
-    
+
     pos2lpos(osm->bounds, &node->pos, &node->lpos);
 
     g_free(pos);
   }
-  
+
   /* node may be an existing node, so remove tags to */
   /* make space for new ones */
   if(OSM_TAG(node)) {
@@ -414,13 +414,13 @@ void diff_restore_node(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
     osm_tag_free(OSM_TAG(node));
     OSM_TAG(node) = NULL;
   }
-  
+
   OSM_TAG(node) = xml_scan_tags(doc, node_node->children, osm);
 }
 
 void diff_restore_way(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
   printf("Restoring way\n");
-	      
+
   item_id_t id = xml_get_prop_int(node_node, "id", ID_ILLEGAL);
   if(id == ID_ILLEGAL) {
     printf("  entry missing id\n");
@@ -432,8 +432,8 @@ void diff_restore_way(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
   /* handle hidden flag */
   gboolean hidden = FALSE;
   char *str = (char*)xmlGetProp(node_node, BAD_CAST "hidden");
-  if(str) { 
-    if(strcasecmp(str, "true") == 0) 
+  if(str) {
+    if(strcasecmp(str, "true") == 0)
       hidden = TRUE;
 
     xmlFree(str);
@@ -445,7 +445,7 @@ void diff_restore_way(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
   switch(state) {
   case OSM_FLAG_NEW:
     printf("  Restoring NEW way\n");
-    
+
     way = g_new0(way_t, 1);
     OSM_VISIBLE(way) = TRUE;
     OSM_FLAGS(way) = OSM_FLAG_NEW;
@@ -454,13 +454,13 @@ void diff_restore_way(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
 
     /* attach to end of way list */
     way_t **lway = &osm->way;
-    while(*lway) lway = &(*lway)->next;  
+    while(*lway) lway = &(*lway)->next;
     *lway = way;
     break;
 
   case OSM_FLAG_DELETED:
     printf("  Restoring DELETE flag\n");
-    
+
     if((way = osm_get_way_by_id(osm, id)))
       OSM_FLAGS(way) |= OSM_FLAG_DELETED;
     else
@@ -470,7 +470,7 @@ void diff_restore_way(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
   case OSM_FLAG_DIRTY:
     printf("  Valid id (DIRTY)\n");
 
-    if((way = osm_get_way_by_id(osm, id))) 
+    if((way = osm_get_way_by_id(osm, id)))
       OSM_FLAGS(way) |= OSM_FLAG_DIRTY;
     else
       printf("  WARNING: no way with that id found\n");
@@ -485,14 +485,14 @@ void diff_restore_way(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
     printf("  no valid way\n");
     return;
   }
-  
+
   /* update id from diff */
   OSM_ID(way) = id;
-    
+
   /* update node_chain */
   if(hidden)
     OSM_FLAGS(way) |= OSM_FLAG_HIDDEN;
-    
+
   gboolean installed_new_nodes = FALSE;
 
   /* scan for nodes */
@@ -518,7 +518,7 @@ void diff_restore_way(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
 
 	/* attach node to node_chain */
 	*node_chain = osm_parse_osm_way_nd(osm, doc, nd_node);
-	if(*node_chain) 
+	if(*node_chain)
 	  node_chain = &((*node_chain)->next);
       }
     }
@@ -528,7 +528,7 @@ void diff_restore_way(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
   /* were found this wasn't a dirty entry but e.g. only the hidden */
   /* flag had been set */
   if(installed_new_nodes) {
-  
+
     /* node may be an existing node, so remove tags to */
     /* make space for new ones */
     if(OSM_TAG(way)) {
@@ -536,7 +536,7 @@ void diff_restore_way(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
       osm_tag_free(OSM_TAG(way));
       OSM_TAG(way) = NULL;
     }
-    
+
     OSM_TAG(way) = xml_scan_tags(doc, node_node->children, osm);
   } else {
     printf("  no nodes restored, way isn't dirty!\n");
@@ -546,7 +546,7 @@ void diff_restore_way(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
 
 void diff_restore_relation(xmlDoc *doc, xmlNodePtr node_rel, osm_t *osm) {
   printf("Restoring relation\n");
-	      
+
   item_id_t id = xml_get_prop_int(node_rel, "id", ID_ILLEGAL);
   if(id == ID_ILLEGAL) {
     printf("  entry missing id\n");
@@ -560,7 +560,7 @@ void diff_restore_relation(xmlDoc *doc, xmlNodePtr node_rel, osm_t *osm) {
   switch(state) {
   case OSM_FLAG_NEW:
     printf("  Restoring NEW relation\n");
-    
+
     relation = g_new0(relation_t, 1);
     OSM_VISIBLE(relation) = TRUE;
     OSM_FLAGS(relation) = OSM_FLAG_NEW;
@@ -569,13 +569,13 @@ void diff_restore_relation(xmlDoc *doc, xmlNodePtr node_rel, osm_t *osm) {
 
     /* attach to end of relation list */
     relation_t **lrelation = &osm->relation;
-    while(*lrelation) lrelation = &(*lrelation)->next;  
+    while(*lrelation) lrelation = &(*lrelation)->next;
     *lrelation = relation;
     break;
 
   case OSM_FLAG_DELETED:
     printf("  Restoring DELETE flag\n");
-    
+
     if((relation = osm_get_relation_by_id(osm, id)))
       OSM_FLAGS(relation) |= OSM_FLAG_DELETED;
     else
@@ -584,8 +584,8 @@ void diff_restore_relation(xmlDoc *doc, xmlNodePtr node_rel, osm_t *osm) {
 
   case OSM_FLAG_DIRTY:
     printf("  Valid id (DIRTY)\n");
-    
-    if((relation = osm_get_relation_by_id(osm, id))) 
+
+    if((relation = osm_get_relation_by_id(osm, id)))
       OSM_FLAGS(relation) |= OSM_FLAG_DIRTY;
     else
       printf("  WARNING: no relation with that id found\n");
@@ -600,12 +600,12 @@ void diff_restore_relation(xmlDoc *doc, xmlNodePtr node_rel, osm_t *osm) {
     printf("  no valid relation\n");
     return;
   }
-  
+
   /* update id from diff */
   OSM_ID(relation) = id;
-    
+
   /* update members */
-    
+
   /* this may be an existing relation, so remove members to */
   /* make space for new ones */
   if(relation->member) {
@@ -617,18 +617,18 @@ void diff_restore_relation(xmlDoc *doc, xmlNodePtr node_rel, osm_t *osm) {
   /* scan for members */
   member_t **member = &relation->member;
   xmlNode *member_node = NULL;
-  for(member_node = node_rel->children; member_node; 
+  for(member_node = node_rel->children; member_node;
       member_node = member_node->next) {
     if(member_node->type == XML_ELEMENT_NODE) {
       if(strcasecmp((char*)member_node->name, "member") == 0) {
 	/* attach member to member_chain */
 	*member = osm_parse_osm_relation_member(osm, doc, member_node);
-	if(*member) 
+	if(*member)
 	  member = &((*member)->next);
       }
     }
   }
-  
+
   /* node may be an existing node, so remove tags to */
   /* make space for new ones */
   if(OSM_TAG(relation)) {
@@ -636,7 +636,7 @@ void diff_restore_relation(xmlDoc *doc, xmlNodePtr node_rel, osm_t *osm) {
     osm_tag_free(OSM_TAG(relation));
     OSM_TAG(relation) = NULL;
   }
-  
+
   OSM_TAG(relation) = xml_scan_tags(doc, node_rel->children, osm);
 }
 
@@ -662,18 +662,18 @@ void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) {
 
   xmlDoc *doc = NULL;
   xmlNode *root_element = NULL;
-  
+
   /* parse the file and get the DOM */
   if((doc = xmlReadFile(diff_name, NULL, 0)) == NULL) {
-    errorf(GTK_WIDGET(appdata->window), 
+    errorf(GTK_WIDGET(appdata->window),
 	   "Error: could not parse file %s\n", diff_name);
     g_free(diff_name);
     return;
   }
-  
+
   /* Get the root element node */
   root_element = xmlDocGetRootElement(doc);
-  
+
   xmlNode *cur_node = NULL;
   for (cur_node = root_element; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
@@ -682,7 +682,7 @@ void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) {
 	if(str) {
 	  printf("diff for project %s\n", str);
 	  if(strcmp(project->name, str) != 0) {
-	    messagef(GTK_WIDGET(appdata->window), _("Warning"), 
+	    messagef(GTK_WIDGET(appdata->window), _("Warning"),
 		     "Diff name (%s) does not match project name (%s)",
 		     str, project->name);
 	  }
@@ -693,16 +693,16 @@ void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) {
 	while(node_node) {
 	  if(node_node->type == XML_ELEMENT_NODE) {
 
-	    if(strcasecmp((char*)node_node->name, "node") == 0) 
+	    if(strcasecmp((char*)node_node->name, "node") == 0)
 	      diff_restore_node(doc, node_node, osm);
-	    
-	    else if(strcasecmp((char*)node_node->name, "way") == 0) 
+
+	    else if(strcasecmp((char*)node_node->name, "way") == 0)
 	      diff_restore_way(doc, node_node, osm);
 
-	    else if(strcasecmp((char*)node_node->name, "relation") == 0) 
+	    else if(strcasecmp((char*)node_node->name, "relation") == 0)
 	      diff_restore_relation(doc, node_node, osm);
 
-	    else 
+	    else
 	      printf("WARNING: item %s not restored\n", node_node->name);
 	  }
 	  node_node = node_node->next;
@@ -710,7 +710,7 @@ void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) {
       }
     }
   }
- 
+
   g_free(diff_name);
 
   xmlFreeDoc(doc);
@@ -732,16 +732,16 @@ void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) {
     gtk_widget_set_sensitive(appdata->menu_item_map_show_all, TRUE);
   }
 }
-  
+
 gboolean diff_present(project_t *project) {
   char *diff_name = g_strdup_printf("%s/%s.diff", project->path, project->name);
-  
+
   if(!g_file_test(diff_name, G_FILE_TEST_EXISTS)) {
     printf("no diff present!\n");
     g_free(diff_name);
     return FALSE;
   }
-  
+
   g_free(diff_name);
   return TRUE;
 }

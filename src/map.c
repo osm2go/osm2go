@@ -43,7 +43,7 @@ static void map_statusbar(map_t *map, map_item_t *map_item) {
 }
 
 void map_outside_error(appdata_t *appdata) {
-  errorf(GTK_WIDGET(appdata->window), 
+  errorf(GTK_WIDGET(appdata->window),
 	 _("Items must not be placed outside the working area!"));
 }
 
@@ -88,7 +88,7 @@ void map_item_chain_destroy(map_item_chain_t **chainP) {
 static void map_node_select(appdata_t *appdata, node_t *node) {
   map_t *map = appdata->map;
   map_item_t *map_item = &map->selected;
-  
+
   g_assert(!map->highlight);
 
   map_item->object.type      = NODE;
@@ -96,7 +96,7 @@ static void map_node_select(appdata_t *appdata, node_t *node) {
   map_item->highlight = FALSE;
 
   /* node may not have any visible representation at all */
-  if(node->map_item_chain) 
+  if(node->map_item_chain)
     map_item->item = node->map_item_chain->map_item->item;
   else
     map_item->item = NULL;
@@ -116,7 +116,7 @@ static void map_node_select(appdata_t *appdata, node_t *node) {
   if(node->icon_buf && map->style->icon.enable) {
     gint w = gdk_pixbuf_get_width(map_item->object.node->icon_buf);
     gint h = gdk_pixbuf_get_height(map_item->object.node->icon_buf);
-    
+
     /* icons are technically square, so a radius slightly bigger */
     /* than sqrt(2)*MAX(w,h) should fit nicely */
     radius = 0.75 * map->style->icon.scale * MAX(w, h);
@@ -127,16 +127,16 @@ static void map_node_select(appdata_t *appdata, node_t *node) {
 
   radius *= map->state->detail;
 
-  map_hl_circle_new(map, CANVAS_GROUP_NODES_HL, new_map_item, 
+  map_hl_circle_new(map, CANVAS_GROUP_NODES_HL, new_map_item,
 		    x, y, radius, map->style->highlight.color);
-  
+
   if(!map_item->item) {
     /* and draw a fake node */
     new_map_item = g_new0(map_item_t, 1);
     memcpy(new_map_item, map_item, sizeof(map_item_t));
     new_map_item->highlight = TRUE;
-    map_hl_circle_new(map, CANVAS_GROUP_NODES_IHL, new_map_item, 
-		      x, y, map->style->node.radius, 
+    map_hl_circle_new(map, CANVAS_GROUP_NODES_IHL, new_map_item,
+		      x, y, map->style->node.radius,
 		      map->style->highlight.node_color);
   }
 }
@@ -144,7 +144,7 @@ static void map_node_select(appdata_t *appdata, node_t *node) {
 void map_way_select(appdata_t *appdata, way_t *way) {
   map_t *map = appdata->map;
   map_item_t *map_item = &map->selected;
-  
+
   g_assert(!map->highlight);
 
   map_item->object.type      = WAY;
@@ -155,12 +155,12 @@ void map_way_select(appdata_t *appdata, way_t *way) {
   map_statusbar(map, map_item);
   icon_bar_map_item_selected(appdata, map_item, TRUE);
   gtk_widget_set_sensitive(appdata->menu_item_map_hide_sel, TRUE);
-  
+
   gint arrow_width = ((map_item->object.way->draw.flags & OSM_DRAW_FLAG_BG)?
 		      map->style->highlight.width + map_item->object.way->draw.bg.width/2:
 		      map->style->highlight.width + map_item->object.way->draw.width/2)
     * map->state->detail;
-  
+
   node_chain_t *node_chain = map_item->object.way->node_chain;
   node_t *last = NULL;
   while(node_chain) {
@@ -187,8 +187,8 @@ void map_way_select(appdata_t *appdata, way_t *way) {
       float len = sqrt(pow(diff.x, 2)+pow(diff.y, 2));
       if(len > map->style->highlight.arrow_limit*arrow_width) {
 	len /= arrow_width;
-	diff.x = diff.x / len; 
-	diff.y = diff.y / len; 
+	diff.x = diff.x / len;
+	diff.y = diff.y / len;
 
 	canvas_points_t *points = canvas_points_new(4);
 	points->coords[2*0+0] = points->coords[2*3+0] = center.x + diff.x;
@@ -197,14 +197,14 @@ void map_way_select(appdata_t *appdata, way_t *way) {
 	points->coords[2*1+1] = center.y - diff.x - diff.y;
 	points->coords[2*2+0] = center.x - diff.y - diff.x;
 	points->coords[2*2+1] = center.y + diff.x - diff.y;
-	
-	map_hl_polygon_new(map, CANVAS_GROUP_WAYS_DIR, new_map_item, 
+
+	map_hl_polygon_new(map, CANVAS_GROUP_WAYS_DIR, new_map_item,
 			   points, map->style->highlight.arrow_color);
-	
+
 	canvas_points_free(points);
       }
     }
-      
+
     if(!map_hl_item_is_highlighted(map, &item)) {
 
       /* create a new map item for every node */
@@ -212,11 +212,11 @@ void map_way_select(appdata_t *appdata, way_t *way) {
       new_map_item->object.type = NODE;
       new_map_item->object.node = node_chain->node;
       new_map_item->highlight = TRUE;
-    
+
       gint x = node_chain->node->lpos.x;
       gint y = node_chain->node->lpos.y;
 
-      map_hl_circle_new(map, CANVAS_GROUP_NODES_IHL, new_map_item, 
+      map_hl_circle_new(map, CANVAS_GROUP_NODES_IHL, new_map_item,
 			x, y, map->style->node.radius * map->state->detail,
 			map->style->highlight.node_color);
     }
@@ -228,7 +228,7 @@ void map_way_select(appdata_t *appdata, way_t *way) {
   /* a way needs at least 2 points to be drawn */
   guint nodes = osm_way_number_of_nodes(way);
   if(nodes > 1) {
-    
+
     /* allocate space for nodes */
     canvas_points_t *points = canvas_points_new(nodes);
 
@@ -238,18 +238,18 @@ void map_way_select(appdata_t *appdata, way_t *way) {
       canvas_point_set_pos(points, node++, &node_chain->node->lpos);
       node_chain = node_chain->next;
     }
-    
+
     /* create a copy of this map item and mark it as being a highlight */
     map_item_t *new_map_item = g_new0(map_item_t, 1);
     memcpy(new_map_item, map_item, sizeof(map_item_t));
     new_map_item->highlight = TRUE;
-    
-    map_hl_polyline_new(map, CANVAS_GROUP_WAYS_HL, new_map_item, points, 
+
+    map_hl_polyline_new(map, CANVAS_GROUP_WAYS_HL, new_map_item, points,
 		 ((map_item->object.way->draw.flags & OSM_DRAW_FLAG_BG)?
 		 2*map->style->highlight.width + map_item->object.way->draw.bg.width:
 		 2*map->style->highlight.width + map_item->object.way->draw.width)
 		* map->state->detail, map->style->highlight.color);
-    
+
     canvas_points_free(points);
   }
 }
@@ -282,9 +282,9 @@ void map_relation_select(appdata_t *appdata, relation_t *relation) {
       node_t *node = member->object.node;
       printf("  -> node "ITEM_ID_FORMAT"\n", OSM_ID(node));
 
-      item = canvas_circle_new(map->canvas, CANVAS_GROUP_NODES_HL, 
-			node->lpos.x, node->lpos.y, 
-			map->style->highlight.width + map->style->node.radius, 
+      item = canvas_circle_new(map->canvas, CANVAS_GROUP_NODES_HL,
+			node->lpos.x, node->lpos.y,
+			map->style->highlight.width + map->style->node.radius,
 			0, map->style->highlight.color, NO_COLOR);
       } break;
 
@@ -293,10 +293,10 @@ void map_relation_select(appdata_t *appdata, relation_t *relation) {
       /* a way needs at least 2 points to be drawn */
       guint nodes = osm_way_number_of_nodes(way);
       if(nodes > 1) {
-	
+
 	/* allocate space for nodes */
 	canvas_points_t *points = canvas_points_new(nodes);
-	
+
 	int node = 0;
 	node_chain_t *node_chain = way->node_chain;
 	while(node_chain) {
@@ -304,19 +304,19 @@ void map_relation_select(appdata_t *appdata, relation_t *relation) {
 	  node_chain = node_chain->next;
 	}
 
-	if(way->draw.flags & OSM_DRAW_FLAG_AREA) 
+	if(way->draw.flags & OSM_DRAW_FLAG_AREA)
 	  item = canvas_polygon_new(map->canvas, CANVAS_GROUP_WAYS_HL, points, 0, 0,
 				    map->style->highlight.color);
 	else
 	  item = canvas_polyline_new(map->canvas, CANVAS_GROUP_WAYS_HL, points,
 			      (way->draw.flags & OSM_DRAW_FLAG_BG)?
 			      2*map->style->highlight.width + way->draw.bg.width:
-			      2*map->style->highlight.width + way->draw.width, 
+			      2*map->style->highlight.width + way->draw.width,
 			      map->style->highlight.color);
 
 	canvas_points_free(points);
       } } break;
-      
+
     default:
       break;
     }
@@ -354,16 +354,16 @@ void map_item_deselect(appdata_t *appdata) {
 
   /* save tags for "last" function in info dialog */
   if(appdata->map->selected.object.type == NODE) {
-    if(appdata->map->last_node_tags) 
+    if(appdata->map->last_node_tags)
       osm_tags_free(appdata->map->last_node_tags);
 
-    appdata->map->last_node_tags = 
+    appdata->map->last_node_tags =
       osm_tags_copy(OBJECT_TAG(appdata->map->selected.object));
   } else if(appdata->map->selected.object.type == WAY) {
-    if(appdata->map->last_way_tags) 
+    if(appdata->map->last_way_tags)
       osm_tags_free(appdata->map->last_way_tags);
 
-    appdata->map->last_way_tags = 
+    appdata->map->last_way_tags =
       osm_tags_copy(OBJECT_TAG(appdata->map->selected.object));
   }
 
@@ -416,23 +416,23 @@ static gint map_item_destroy_event(GtkWidget *widget, gpointer data) {
   return FALSE;
 }
 
-static canvas_item_t *map_node_new(map_t *map, node_t *node, gint radius, 
+static canvas_item_t *map_node_new(map_t *map, node_t *node, gint radius,
 		   gint width, canvas_color_t fill, canvas_color_t border) {
 
   map_item_t *map_item = g_new0(map_item_t, 1);
   map_item->object.type = NODE;
   map_item->object.node = node;
 
-  if(!node->icon_buf || !map->style->icon.enable) 
-    map_item->item = canvas_circle_new(map->canvas, CANVAS_GROUP_NODES, 
+  if(!node->icon_buf || !map->style->icon.enable)
+    map_item->item = canvas_circle_new(map->canvas, CANVAS_GROUP_NODES,
        node->lpos.x, node->lpos.y, radius, width, fill, border);
   else
-    map_item->item = canvas_image_new(map->canvas, CANVAS_GROUP_NODES, 
-      node->icon_buf, node->lpos.x, node->lpos.y, 
-		      map->state->detail * map->style->icon.scale, 
+    map_item->item = canvas_image_new(map->canvas, CANVAS_GROUP_NODES,
+      node->icon_buf, node->lpos.x, node->lpos.y,
+		      map->state->detail * map->style->icon.scale,
 		      map->state->detail * map->style->icon.scale);
- 
-  canvas_item_set_zoom_max(map_item->item, 
+
+  canvas_item_set_zoom_max(map_item->item,
 			   node->zoom_max / (2 * map->state->detail));
 
   /* attach map_item to nodes map_item_chain */
@@ -443,7 +443,7 @@ static canvas_item_t *map_node_new(map_t *map, node_t *node, gint radius,
 
   canvas_item_set_user_data(map_item->item, map_item);
 
-  canvas_item_destroy_connect(map_item->item, 
+  canvas_item_destroy_connect(map_item->item,
           G_CALLBACK(map_item_destroy_event), map_item);
 
   return map_item->item;
@@ -451,14 +451,14 @@ static canvas_item_t *map_node_new(map_t *map, node_t *node, gint radius,
 
 /* in the rare case that a way consists of only one node, it is */
 /* drawn as a circle. This e.g. happens when drawing a new way */
-static canvas_item_t *map_way_single_new(map_t *map, way_t *way, gint radius, 
+static canvas_item_t *map_way_single_new(map_t *map, way_t *way, gint radius,
 		   gint width, canvas_color_t fill, canvas_color_t border) {
 
   map_item_t *map_item = g_new0(map_item_t, 1);
   map_item->object.type = WAY;
   map_item->object.way = way;
-  map_item->item = canvas_circle_new(map->canvas, CANVAS_GROUP_WAYS, 
-	  way->node_chain->node->lpos.x, way->node_chain->node->lpos.y, 
+  map_item->item = canvas_circle_new(map->canvas, CANVAS_GROUP_WAYS,
+	  way->node_chain->node->lpos.x, way->node_chain->node->lpos.y,
 				     radius, width, fill, border);
 
   // TODO: decide: do we need canvas_item_set_zoom_max() here too?
@@ -471,14 +471,14 @@ static canvas_item_t *map_way_single_new(map_t *map, way_t *way, gint radius,
 
   canvas_item_set_user_data(map_item->item, map_item);
 
-  canvas_item_destroy_connect(map_item->item, 
+  canvas_item_destroy_connect(map_item->item,
           G_CALLBACK(map_item_destroy_event), map_item);
 
   return map_item->item;
 }
 
-static canvas_item_t *map_way_new(map_t *map, canvas_group_t group, 
-	  way_t *way, canvas_points_t *points, gint width, 
+static canvas_item_t *map_way_new(map_t *map, canvas_group_t group,
+	  way_t *way, canvas_points_t *points, gint width,
 	  canvas_color_t color, canvas_color_t fill_color) {
   map_item_t *map_item = g_new0(map_item_t, 1);
   map_item->object.type = WAY;
@@ -486,16 +486,16 @@ static canvas_item_t *map_way_new(map_t *map, canvas_group_t group,
 
   if(way->draw.flags & OSM_DRAW_FLAG_AREA) {
     if(map->style->area.color & 0xff)
-      map_item->item = canvas_polygon_new(map->canvas, group, points, 
+      map_item->item = canvas_polygon_new(map->canvas, group, points,
 					  width, color, fill_color);
     else
-      map_item->item = canvas_polyline_new(map->canvas, group, points, 
+      map_item->item = canvas_polyline_new(map->canvas, group, points,
 					   width, color);
   } else {
     map_item->item = canvas_polyline_new(map->canvas, group, points, width, color);
   }
 
-  canvas_item_set_zoom_max(map_item->item, 
+  canvas_item_set_zoom_max(map_item->item,
 			   way->draw.zoom_max / (2 * map->state->detail));
 
   /* a ways outline itself is never dashed */
@@ -511,7 +511,7 @@ static canvas_item_t *map_way_new(map_t *map, canvas_group_t group,
 
   canvas_item_set_user_data(map_item->item, map_item);
 
-  canvas_item_destroy_connect(map_item->item, 
+  canvas_item_destroy_connect(map_item->item,
 	      G_CALLBACK(map_item_destroy_event), map_item);
 
   return map_item->item;
@@ -532,7 +532,7 @@ void map_way_draw(map_t *map, way_t *way) {
   guint nodes = osm_way_number_of_nodes(way);
   if(nodes == 1) {
     /* draw a single dot where this single node is */
-    map_way_single_new(map, way, map->style->node.radius, 0, 
+    map_way_single_new(map, way, map->style->node.radius, 0,
 		       map->style->node.color, 0);
   } else {
     canvas_points_t *points = canvas_points_new(nodes);
@@ -543,24 +543,24 @@ void map_way_draw(map_t *map, way_t *way) {
       canvas_point_set_pos(points, node++, &node_chain->node->lpos);
       node_chain = node_chain->next;
     }
-    
+
     /* draw way */
     float width = way->draw.width * map->state->detail;
 
     if(way->draw.flags & OSM_DRAW_FLAG_AREA) {
-      map_way_new(map, CANVAS_GROUP_POLYGONS, way, points, 
+      map_way_new(map, CANVAS_GROUP_POLYGONS, way, points,
 		  width, way->draw.color, way->draw.area.color);
     } else {
       if(way->draw.flags & OSM_DRAW_FLAG_BG) {
-	map_way_new(map, CANVAS_GROUP_WAYS_INT, way, points, 
+	map_way_new(map, CANVAS_GROUP_WAYS_INT, way, points,
 		    width, way->draw.color, NO_COLOR);
 
-	map_way_new(map, CANVAS_GROUP_WAYS_OL, way, points, 
-		    way->draw.bg.width * map->state->detail, 
+	map_way_new(map, CANVAS_GROUP_WAYS_OL, way, points,
+		    way->draw.bg.width * map->state->detail,
 		    way->draw.bg.color, NO_COLOR);
 
       } else
-	map_way_new(map, CANVAS_GROUP_WAYS, way, points, 
+	map_way_new(map, CANVAS_GROUP_WAYS, way, points,
 		    width, way->draw.color, NO_COLOR);
     }
     canvas_points_free(points);
@@ -572,15 +572,15 @@ void map_node_draw(map_t *map, node_t *node) {
   if(OSM_FLAGS(node) & OSM_FLAG_DELETED)
     return;
 
-  if(!node->ways) 
-    map_node_new(map, node, 
+  if(!node->ways)
+    map_node_new(map, node,
 		 map->style->node.radius * map->state->detail,
 		 map->style->node.border_radius * map->state->detail,
-		 map->style->node.fill_color, 
+		 map->style->node.fill_color,
 		 map->style->node.color);
-  
-  else if(map->style->node.show_untagged || osm_node_has_tag(node)) 
-    map_node_new(map, node, 
+
+  else if(map->style->node.show_untagged || osm_node_has_tag(node))
+    map_node_new(map, node,
 		 map->style->node.radius * map->state->detail, 0,
 		 map->style->node.color, 0);
 }
@@ -651,11 +651,11 @@ void map_item_redraw(appdata_t *appdata, map_item_t *map_item) {
   map_item_draw(appdata->map, &item);
 
   /* restore selection if there was one */
-  if(is_selected) 
+  if(is_selected)
     map_object_select(appdata, &item.object);
 }
 
-static void map_frisket_rectangle(canvas_points_t *points, 
+static void map_frisket_rectangle(canvas_points_t *points,
 				  gint x0, gint x1, gint y0, gint y1) {
   points->coords[2*0+0] = points->coords[2*3+0] = points->coords[2*4+0] = x0;
   points->coords[2*1+0] = points->coords[2*2+0] = x1;
@@ -676,26 +676,26 @@ void map_frisket_draw(map_t *map, bounds_t *bounds) {
 
     /* top rectangle */
     map_frisket_rectangle(points, mult*bounds->min.x, mult*bounds->max.x,
-			  mult*bounds->min.y, bounds->min.y);    
-    canvas_polygon_new(map->canvas, CANVAS_GROUP_FRISKET, points, 
+			  mult*bounds->min.y, bounds->min.y);
+    canvas_polygon_new(map->canvas, CANVAS_GROUP_FRISKET, points,
 		       1, NO_COLOR, color);
-    
+
     /* bottom rectangle */
     map_frisket_rectangle(points, mult*bounds->min.x, mult*bounds->max.x,
 			  bounds->max.y, mult*bounds->max.y);
-    canvas_polygon_new(map->canvas, CANVAS_GROUP_FRISKET, points, 
+    canvas_polygon_new(map->canvas, CANVAS_GROUP_FRISKET, points,
 		       1, NO_COLOR, color);
 
     /* left rectangle */
     map_frisket_rectangle(points, mult*bounds->min.x, bounds->min.x,
 			  mult*bounds->min.y, mult*bounds->max.y);
-    canvas_polygon_new(map->canvas, CANVAS_GROUP_FRISKET, points, 
+    canvas_polygon_new(map->canvas, CANVAS_GROUP_FRISKET, points,
 		       1, NO_COLOR, color);
 
     /* right rectangle */
     map_frisket_rectangle(points, bounds->max.x, mult*bounds->max.x,
 			  mult*bounds->min.y, mult*bounds->max.y);
-    canvas_polygon_new(map->canvas, CANVAS_GROUP_FRISKET, points, 
+    canvas_polygon_new(map->canvas, CANVAS_GROUP_FRISKET, points,
 		       1, NO_COLOR, color);
 
   }
@@ -703,12 +703,12 @@ void map_frisket_draw(map_t *map, bounds_t *bounds) {
   if(map->style->frisket.border.present) {
     // Edge marker line
     gint ew2 = map->style->frisket.border.width/2;
-    map_frisket_rectangle(points, 
+    map_frisket_rectangle(points,
 			  bounds->min.x-ew2, bounds->max.x+ew2,
 			  bounds->min.y-ew2, bounds->max.y+ew2);
-    
+
     canvas_polyline_new(map->canvas, CANVAS_GROUP_FRISKET, points,
-			map->style->frisket.border.width, 
+			map->style->frisket.border.width,
 			map->style->frisket.border.color);
 
   }
@@ -738,9 +738,9 @@ static void map_draw(map_t *map, osm_t *osm) {
 
 void map_state_free(map_state_t *state) {
   if(!state) return;
-  
+
   /* free state of noone else references it */
-  if(state->refcount > 1) 
+  if(state->refcount > 1)
     state->refcount--;
   else
     g_free(state);
@@ -764,7 +764,7 @@ void map_free_map_item_chains(appdata_t *appdata) {
     node->map_item_chain = NULL;
     node = node->next;
   }
-  
+
   way_t *way = appdata->osm->way;
   while(way) {
     map_item_chain_t *chain = way->map_item_chain;
@@ -786,7 +786,7 @@ static gint map_destroy_event(GtkWidget *widget, gpointer data) {
   gtk_timeout_remove(map->autosave_handler_id);
 
   printf("destroying entire map\n");
-  
+
   map_free_map_item_chains(appdata);
 
   /* free buffered tags */
@@ -818,15 +818,15 @@ static gint map_destroy_event(GtkWidget *widget, gpointer data) {
 }
 
 /* get the item at position x, y */
-map_item_t *map_item_at(map_t *map, gint x, gint y) {	  
+map_item_t *map_item_at(map_t *map, gint x, gint y) {
   printf("map check at %d/%d\n", x, y);
 
   canvas_window2world(map->canvas, x, y, &x, &y);
 
   printf("world check at %d/%d\n", x, y);
-  
+
   canvas_item_t *item = canvas_get_item_at(map->canvas, x, y);
-	  
+
   if(!item) {
     printf("  there's no item\n");
     return NULL;
@@ -840,19 +840,19 @@ map_item_t *map_item_at(map_t *map, gint x, gint y) {
     printf("  item has no user data!\n");
     return NULL;
   }
-    
-  if(map_item->highlight) 
-    printf("  item is highlight\n");    
 
-  printf("  item is %s #"ITEM_ID_FORMAT"\n", 
+  if(map_item->highlight)
+    printf("  item is highlight\n");
+
+  printf("  item is %s #"ITEM_ID_FORMAT"\n",
 	 osm_object_type_string(&map_item->object),
 	 OBJECT_ID(map_item->object));
 
   return map_item;
-}    
+}
 
 /* get the real item (no highlight) at x, y */
-map_item_t *map_real_item_at(map_t *map, gint x, gint y) { 
+map_item_t *map_real_item_at(map_t *map, gint x, gint y) {
   map_item_t *map_item = map_item_at(map, x, y);
 
   /* no item or already a real one */
@@ -867,8 +867,8 @@ map_item_t *map_real_item_at(map_t *map, gint x, gint y) {
       parent = map_item->object.node->map_item_chain->map_item;
 
     if(parent)
-      printf("  using parent item node #" ITEM_ID_FORMAT "\n", 
-	     OBJECT_ID(parent->object));      
+      printf("  using parent item node #" ITEM_ID_FORMAT "\n",
+	     OBJECT_ID(parent->object));
     break;
 
   case WAY:
@@ -876,19 +876,19 @@ map_item_t *map_real_item_at(map_t *map, gint x, gint y) {
       parent = map_item->object.way->map_item_chain->map_item;
 
     if(parent)
-      printf("  using parent item way #" ITEM_ID_FORMAT "\n", 
-	     OBJECT_ID(parent->object));      
+      printf("  using parent item way #" ITEM_ID_FORMAT "\n",
+	     OBJECT_ID(parent->object));
     break;
 
   default:
     g_assert((map_item->object.type == NODE) ||
-	     (map_item->object.type == WAY)); 
+	     (map_item->object.type == WAY));
     break;
   }
-  
-  if(parent) 
+
+  if(parent)
     map_item = parent;
-  else 
+  else
     printf("  no parent, working on highlight itself\n");
 
   return map_item;
@@ -896,7 +896,7 @@ map_item_t *map_real_item_at(map_t *map, gint x, gint y) {
 
 /* Limitations on the amount by which we can scroll. Keeps part of the
  * map visible at all times */
-static void map_limit_scroll(map_t *map, canvas_unit_t unit, 
+static void map_limit_scroll(map_t *map, canvas_unit_t unit,
 			     gint *sx, gint *sy) {
 
   /* get scale factor for pixel->meter conversion. set to 1 if */
@@ -906,18 +906,18 @@ static void map_limit_scroll(map_t *map, canvas_unit_t unit,
   /* convert pixels to meters if necessary */
   gdouble sx_cu = *sx / scale;
   gdouble sy_cu = *sy / scale;
-  
+
   /* get size of visible area in canvas units (meters) */
   gint aw_cu = canvas_get_viewport_width(map->canvas, CANVAS_UNIT_METER)/2;
   gint ah_cu = canvas_get_viewport_height(map->canvas, CANVAS_UNIT_METER)/2;
-  
+
   // Data rect minimum and maximum
   gint min_x, min_y, max_x, max_y;
   min_x = map->appdata->osm->bounds->min.x;
   min_y = map->appdata->osm->bounds->min.y;
   max_x = map->appdata->osm->bounds->max.x;
   max_y = map->appdata->osm->bounds->max.y;
-  
+
   // limit stops - prevent scrolling beyond these
   gint min_sy_cu = 0.95*(min_y - ah_cu);
   gint min_sx_cu = 0.95*(min_x - aw_cu);
@@ -942,9 +942,9 @@ static gboolean map_limit_zoom(map_t *map, gdouble *zoom) {
 
     /* get size of visible area in pixels and convert to meters of intended */
     /* zoom by deviding by zoom (which is basically pix/m) */
-    gint aw_cu = 
+    gint aw_cu =
       canvas_get_viewport_width(map->canvas, CANVAS_UNIT_PIXEL) / *zoom;
-    gint ah_cu = 
+    gint ah_cu =
       canvas_get_viewport_height(map->canvas, CANVAS_UNIT_PIXEL) / *zoom;
 
     gdouble oldzoom = *zoom;
@@ -1062,8 +1062,8 @@ void map_deselect_if_zoom_below_zoom_max(map_t *map) {
 }
 
 #define GPS_RADIUS_LIMIT  3.0
-    
-void map_set_zoom(map_t *map, double zoom, 
+
+void map_set_zoom(map_t *map, double zoom,
 		  gboolean update_scroll_offsets) {
   gboolean at_zoom_limit = 0;
   at_zoom_limit = map_limit_zoom(map, &zoom);
@@ -1079,12 +1079,12 @@ void map_set_zoom(map_t *map, double zoom,
       gint sx, sy;
       canvas_scroll_get(map->canvas, CANVAS_UNIT_PIXEL, &sx, &sy);
       map_limit_scroll(map, CANVAS_UNIT_PIXEL, &sx, &sy);
-      
+
       // keep the map visible
       canvas_scroll_to(map->canvas, CANVAS_UNIT_PIXEL, sx, sy);
     }
 
-    canvas_scroll_get(map->canvas, CANVAS_UNIT_METER, 
+    canvas_scroll_get(map->canvas, CANVAS_UNIT_METER,
 		      &map->state->scroll_offset.x,
 		      &map->state->scroll_offset.y);
   }
@@ -1094,8 +1094,8 @@ void map_set_zoom(map_t *map, double zoom,
     if(zoom < GPS_RADIUS_LIMIT) {
       radius *= GPS_RADIUS_LIMIT;
       radius /= zoom;
-      
-      canvas_item_set_radius(map->appdata->track.gps_item, radius); 
+
+      canvas_item_set_radius(map->appdata->track.gps_item, radius);
     }
   }
 }
@@ -1107,11 +1107,11 @@ static gboolean map_scroll_event(GtkWidget *widget, GdkEventScroll *event,
   if(!appdata->osm) return FALSE;
 
   if(event->type == GDK_SCROLL && appdata->map && appdata->map->state) {
-    if(event->direction) 
-      map_set_zoom(appdata->map, 
+    if(event->direction)
+      map_set_zoom(appdata->map,
 		   appdata->map->state->zoom / ZOOM_FACTOR_WHEEL, TRUE);
     else
-      map_set_zoom(appdata->map, 
+      map_set_zoom(appdata->map,
 		   appdata->map->state->zoom * ZOOM_FACTOR_WHEEL, TRUE);
   }
 
@@ -1138,7 +1138,7 @@ static void map_do_scroll(map_t *map, gint x, gint y) {
   map_limit_scroll(map, CANVAS_UNIT_PIXEL, &sx, &sy);
   canvas_scroll_to(map->canvas, CANVAS_UNIT_PIXEL, sx, sy);
 
-  canvas_scroll_get(map->canvas, CANVAS_UNIT_METER, 
+  canvas_scroll_get(map->canvas, CANVAS_UNIT_METER,
 		    &map->state->scroll_offset.x,
 		    &map->state->scroll_offset.y);
 }
@@ -1153,7 +1153,7 @@ static void map_do_scroll_step(map_t *map, gint x, gint y) {
   map_limit_scroll(map, CANVAS_UNIT_PIXEL, &sx, &sy);
   canvas_scroll_to(map->canvas, CANVAS_UNIT_PIXEL, sx, sy);
 
-  canvas_scroll_get(map->canvas, CANVAS_UNIT_METER, 
+  canvas_scroll_get(map->canvas, CANVAS_UNIT_METER,
 		    &map->state->scroll_offset.x,
 		    &map->state->scroll_offset.y);
 }
@@ -1195,12 +1195,12 @@ gboolean map_item_is_selected_node(map_t *map, map_item_t *map_item) {
       if(node_chain->node == map_item->object.node) {
 	printf("  requested item is part of selected way\n");
 	return TRUE;
-      } 
+      }
       node_chain = node_chain->next;
     }
     printf("  but it doesn't include the requested node\n");
     return FALSE;
-    
+
   } else {
     printf("  selected item is unknown\n");
     return FALSE;
@@ -1252,7 +1252,7 @@ void map_highlight_refresh(appdata_t *appdata) {
   object_t old = map->selected.object;
 
   printf("type to refresh is %d\n", old.type);
-  if(old.type == ILLEGAL) 
+  if(old.type == ILLEGAL)
     return;
 
   map_item_deselect(appdata);
@@ -1349,7 +1349,7 @@ static void map_touchnode_update(appdata_t *appdata, gint x, gint y) {
     while(!map->touchnode && chain && chain->next) {
       gint nx = abs(x - chain->node->lpos.x);
       gint ny = abs(y - chain->node->lpos.y);
-	  
+
       if((nx < map->style->node.radius) && (ny < map->style->node.radius) &&
 	 (nx*nx + ny*ny < map->style->node.radius * map->style->node.radius))
 	map_hl_touchnode_draw(map, chain->node);
@@ -1363,7 +1363,7 @@ static void map_button_press(map_t *map, gint x, gint y) {
 
   printf("left button pressed\n");
   map->pen_down.is = TRUE;
-      
+
   /* save press position */
   map->pen_down.at.x = x;
   map->pen_down.at.y = y;
@@ -1371,12 +1371,12 @@ static void map_button_press(map_t *map, gint x, gint y) {
 
   /* determine wether this press was on an item */
   map->pen_down.on_item = map_real_item_at(map, x, y);
-  
+
   /* check if the clicked item is a highlighted node as the user */
   /* might want to drag that */
   map->pen_down.on_selected_node = FALSE;
   if(map->pen_down.on_item)
-    map->pen_down.on_selected_node = 
+    map->pen_down.on_selected_node =
       map_item_is_selected_node(map, map->pen_down.on_item);
 
   /* button press */
@@ -1405,7 +1405,7 @@ static void map_button_press(map_t *map, gint x, gint y) {
 }
 
 /* move the background image (wms data) during wms adjustment */
-static void map_bg_adjust(map_t *map, gint x, gint y) {    
+static void map_bg_adjust(map_t *map, gint x, gint y) {
   g_assert(map->appdata);
   g_assert(map->appdata->osm);
   g_assert(map->appdata->osm->bounds);
@@ -1433,41 +1433,41 @@ static void map_button_release(map_t *map, gint x, gint y) {
     /* check if distance to press is above drag limit */
     if(!map->pen_down.drag)
       map->pen_down.drag = distance_above(map, x, y, MAP_DRAG_LIMIT);
-    
+
     if(!map->pen_down.drag) {
       printf("left button released after click\n");
-      
+
       map_item_t old_sel = map->selected;
       map_handle_click(map->appdata, map);
-      
-      if((old_sel.object.type != ILLEGAL) && 
+
+      if((old_sel.object.type != ILLEGAL) &&
 	 (old_sel.object.type == map->selected.object.type) &&
 	 (old_sel.object.ptr == map->selected.object.ptr)) {
 	printf("re-selected same item of type %d, "
 	       "pushing it to the bottom\n", old_sel.object.type);
-	
+
 	if(!map->selected.item) {
 	  printf("  item has no visible representation to push\n");
 	} else {
 	  canvas_item_to_bottom(map->selected.item);
-	  
+
 	  /* update clicked item, to correctly handle the click */
-	  map->pen_down.on_item = 
+	  map->pen_down.on_item =
 	    map_real_item_at(map, map->pen_down.at.x, map->pen_down.at.y);
-	  
+
 	  map_handle_click(map->appdata, map);
 	}
       }
     } else {
       printf("left button released after drag\n");
-      
+
       /* just scroll if we didn't drag an selected item */
       if(!map->pen_down.on_selected_node)
 	map_do_scroll(map, x, y);
       else {
 	printf("released after dragging node\n");
 	map_hl_cursor_clear(map);
-	
+
 	/* now actually move the node */
 	map_edit_node_move(map->appdata, map->pen_down.on_item, x, y);
       }
@@ -1482,7 +1482,7 @@ static void map_button_release(map_t *map, gint x, gint y) {
     canvas_window2world(map->canvas, x, y, &x, &y);
 
     node_t *node = NULL;
-    if(!osm_position_within_bounds(map->appdata->osm, x, y)) 
+    if(!osm_position_within_bounds(map->appdata->osm, x, y))
       map_outside_error(map->appdata);
     else {
       node = osm_node_new(map->appdata->osm, x, y);
@@ -1490,7 +1490,7 @@ static void map_button_release(map_t *map, gint x, gint y) {
       map_node_draw(map, node);
     }
     map_action_set(map->appdata, MAP_ACTION_IDLE);
-      
+
     map_item_deselect(map->appdata);
 
     if(node) {
@@ -1538,17 +1538,17 @@ static gboolean map_button_event(GtkWidget *widget, GdkEventButton *event,
   if(event->button == 1) {
     gint x = event->x, y = event->y;
 
-    if(event->type == GDK_BUTTON_PRESS) 
+    if(event->type == GDK_BUTTON_PRESS)
       map_button_press(map, x, y);
 
-    if(event->type == GDK_BUTTON_RELEASE) 
+    if(event->type == GDK_BUTTON_RELEASE)
       map_button_release(map, x, y);
   }
 
   return FALSE;  /* forward to further processing */
 }
 
-static gboolean map_motion_notify_event(GtkWidget *widget, 
+static gboolean map_motion_notify_event(GtkWidget *widget,
                              GdkEventMotion *event, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
   map_t *map = appdata->map;
@@ -1568,7 +1568,7 @@ static gboolean map_motion_notify_event(GtkWidget *widget,
   if(gtk_events_pending())
     return FALSE;
 
-  if(!map->pen_down.is) 
+  if(!map->pen_down.is)
     return FALSE;
 
   /* handle hints */
@@ -1583,7 +1583,7 @@ static gboolean map_motion_notify_event(GtkWidget *widget,
   /* check if distance to press is above drag limit */
   if(!map->pen_down.drag)
     map->pen_down.drag = distance_above(map, x, y, MAP_DRAG_LIMIT);
-  
+
   /* drag */
   switch(map->action.type) {
   case MAP_ACTION_BG_ADJUST:
@@ -1601,7 +1601,7 @@ static gboolean map_motion_notify_event(GtkWidget *widget,
       }
     }
     break;
-    
+
   case MAP_ACTION_NODE_ADD:
     map_hl_cursor_draw(map, x, y, FALSE, map->style->node.radius);
     break;
@@ -1636,7 +1636,7 @@ gboolean map_key_press_event(appdata_t *appdata, GdkEventKey *event) {
   if(!appdata->osm) return FALSE;
 
   /* map needs to be there to handle buttons */
-  if(!appdata->map->canvas) 
+  if(!appdata->map->canvas)
     return FALSE;
 
   if(event->type == GDK_KEY_PRESS) {
@@ -1661,7 +1661,7 @@ gboolean map_key_press_event(appdata_t *appdata, GdkEventKey *event) {
 
     case GDK_Return:   // same as HILDON_HARDKEY_SELECT
       /* if the ok button is enabled, call its function */
-      if(GTK_WIDGET_FLAGS(appdata->iconbar->ok) & GTK_SENSITIVE) 
+      if(GTK_WIDGET_FLAGS(appdata->iconbar->ok) & GTK_SENSITIVE)
 	map_action_ok(appdata);
       /* otherwise if info is enabled call that */
       else if(GTK_WIDGET_FLAGS(appdata->iconbar->info) & GTK_SENSITIVE)
@@ -1670,7 +1670,7 @@ gboolean map_key_press_event(appdata_t *appdata, GdkEventKey *event) {
 
     case GDK_Escape:   // same as HILDON_HARDKEY_ESC
       /* if the cancel button is enabled, call its function */
-      if(GTK_WIDGET_FLAGS(appdata->iconbar->cancel) & GTK_SENSITIVE) 
+      if(GTK_WIDGET_FLAGS(appdata->iconbar->cancel) & GTK_SENSITIVE)
 	map_action_cancel(appdata);
       break;
 
@@ -1758,7 +1758,7 @@ GtkWidget *map_new(appdata_t *appdata) {
     printf("Creating new map state\n");
     map->state = map_state_new();
   }
-  
+
   map->state->refcount++;
 
   map->pen_down.at.x = -1;
@@ -1780,16 +1780,16 @@ GtkWidget *map_new(appdata_t *appdata) {
   /* autosave happens every two minutes */
   map->autosave_handler_id = gtk_timeout_add(120*1000, map_autosave, map);
 
-  gtk_signal_connect(GTK_OBJECT(canvas_widget), 
+  gtk_signal_connect(GTK_OBJECT(canvas_widget),
      "button_press_event", G_CALLBACK(map_button_event), appdata);
-  gtk_signal_connect(GTK_OBJECT(canvas_widget), 
+  gtk_signal_connect(GTK_OBJECT(canvas_widget),
      "button_release_event", G_CALLBACK(map_button_event), appdata);
-  gtk_signal_connect(GTK_OBJECT(canvas_widget), 
+  gtk_signal_connect(GTK_OBJECT(canvas_widget),
      "motion_notify_event", G_CALLBACK(map_motion_notify_event), appdata);
-  gtk_signal_connect(GTK_OBJECT(canvas_widget), 
+  gtk_signal_connect(GTK_OBJECT(canvas_widget),
      "scroll_event", G_CALLBACK(map_scroll_event), appdata);
 
-  gtk_signal_connect(GTK_OBJECT(canvas_widget), 
+  gtk_signal_connect(GTK_OBJECT(canvas_widget),
      "destroy", G_CALLBACK(map_destroy_event), appdata);
 
   return canvas_widget;
@@ -1808,7 +1808,7 @@ void map_init(appdata_t *appdata) {
   map_draw(map, appdata->osm);
 
   float mult = appdata->map->style->frisket.mult;
-  canvas_set_bounds(map->canvas, 
+  canvas_set_bounds(map->canvas,
 		    mult*appdata->osm->bounds->min.x,
 		    mult*appdata->osm->bounds->min.y,
 		    mult*appdata->osm->bounds->max.x,
@@ -1817,9 +1817,9 @@ void map_init(appdata_t *appdata) {
   printf("restore scroll position %d/%d\n",
 	 map->state->scroll_offset.x, map->state->scroll_offset.y);
 
-  map_limit_scroll(map, CANVAS_UNIT_METER, 
+  map_limit_scroll(map, CANVAS_UNIT_METER,
 	   &map->state->scroll_offset.x, &map->state->scroll_offset.y);
-  canvas_scroll_to(map->canvas, CANVAS_UNIT_METER, 
+  canvas_scroll_to(map->canvas, CANVAS_UNIT_METER,
 	   map->state->scroll_offset.x, map->state->scroll_offset.y);
 }
 
@@ -1833,7 +1833,7 @@ void map_clear(appdata_t *appdata, gint group_mask) {
 
   /* remove a possibly existing highlight */
   map_item_deselect(appdata);
-  
+
   canvas_erase(map->canvas, group_mask);
 }
 
@@ -1887,11 +1887,11 @@ void map_action_set(appdata_t *appdata, map_action_t action) {
   }
 
   icon_bar_map_action_idle(appdata, action == MAP_ACTION_IDLE);
-  gtk_widget_set_sensitive(appdata->menu_item_wms_adjust, 
+  gtk_widget_set_sensitive(appdata->menu_item_wms_adjust,
 			   action == MAP_ACTION_IDLE);
 
-  const char *str_state[] = { 
-    NULL, 
+  const char *str_state[] = {
+    NULL,
     _("Place a node"),
     _("Adjust background image position"),
     _("Place first node of new way"),
@@ -1958,9 +1958,9 @@ void map_action_ok(appdata_t *appdata) {
 void map_delete_selected(appdata_t *appdata) {
   map_t *map = appdata->map;
 
-  if(!yes_no_f(GTK_WIDGET(appdata->window), 
+  if(!yes_no_f(GTK_WIDGET(appdata->window),
 	       appdata, MISC_AGAIN_ID_DELETE, MISC_AGAIN_FLAG_DONT_SAVE_NO,
-	       _("Delete selected object?"), 
+	       _("Delete selected object?"),
 	       _("Do you really want to delete the selected object?")))
     return;
 
@@ -1974,7 +1974,7 @@ void map_delete_selected(appdata_t *appdata) {
 
   switch(item.object.type) {
   case NODE:
-    printf("request to delete node #" ITEM_ID_FORMAT "\n", 
+    printf("request to delete node #" ITEM_ID_FORMAT "\n",
 	   OBJECT_ID(item.object));
 
     undo_append_object(appdata, UNDO_DELETE, &item.object);
@@ -1984,12 +1984,12 @@ void map_delete_selected(appdata_t *appdata) {
     way_chain_t *way_chain = osm_node_to_way(appdata->osm, item.object.node);
     if(way_chain) {
       gboolean short_way = FALSE;
-      
+
       /* free the chain of ways */
       while(way_chain && !short_way) {
 	way_chain_t *next = way_chain->next;
 
-	if(osm_way_number_of_nodes(way_chain->way) <= 2) 
+	if(osm_way_number_of_nodes(way_chain->way) <= 2)
 	  short_way = TRUE;
 
 	g_free(way_chain);
@@ -2008,7 +2008,7 @@ void map_delete_selected(appdata_t *appdata) {
 
     /* and mark it "deleted" in the database */
     osm_node_remove_from_relation(appdata->osm, item.object.node);
-    way_chain_t *chain = osm_node_delete(appdata->osm, 
+    way_chain_t *chain = osm_node_delete(appdata->osm,
 			 &appdata->icon, item.object.node, FALSE, TRUE);
 
     /* redraw all affected ways */
@@ -2036,7 +2036,7 @@ void map_delete_selected(appdata_t *appdata) {
     break;
 
   case WAY:
-    printf("request to delete way #" ITEM_ID_FORMAT "\n", 
+    printf("request to delete way #" ITEM_ID_FORMAT "\n",
 	   OBJECT_ID(item.object));
     map_way_delete(appdata, item.object.way);
     break;
@@ -2071,7 +2071,7 @@ void map_track_draw_seg(map_t *map, track_seg_t *seg) {
 
   /* nothing should have been drawn by now ... */
   g_assert(!seg->item_chain);
-  
+
   track_item_chain_t **itemP = &seg->item_chain;
   track_point_t *track_point = seg->track_point;
   while(track_point) {
@@ -2101,12 +2101,12 @@ void map_track_draw_seg(map_t *map, track_seg_t *seg) {
     }
 
     /* also use last one that's offscreen to nicely leave the visible area */
-    if(tmp && tmp->next) 
+    if(tmp && tmp->next)
       visible++;
 
     /* allocate space for nodes */
     canvas_points_t *points = canvas_points_new(visible);
-    
+
     printf("visible are %d\n", visible);
     int point;
     for(point=0;point<visible;point++) {
@@ -2151,16 +2151,16 @@ void map_track_update_seg(map_t *map, track_seg_t *seg) {
     second_last = second_last->next;
   }
   track_point_t *last = second_last->next;
-  
+
   /* since we are updating an existing track, it sure has at least two */
   /* points, second_last must be valid and its "next" (last) also */
   g_assert(second_last);
   g_assert(last);
 
   /* check if the last and second_last points are visible */
-  gboolean last_is_visible = 
+  gboolean last_is_visible =
     track_pos2lpos(bounds, &last->pos, &lpos);
-  gboolean second_last_is_visible = 
+  gboolean second_last_is_visible =
     track_pos2lpos(bounds, &second_last->pos, &lpos);
 
   /* if both are invisible, then nothing has changed on screen */
@@ -2181,7 +2181,7 @@ void map_track_update_seg(map_t *map, track_seg_t *seg) {
     g_assert(begin);
 
     printf("second_last is visible -> append\n");
-    
+
     /* count points to be placed */
     int npoints = 0;
     track_point_t *tmp = begin;
@@ -2200,10 +2200,10 @@ void map_track_update_seg(map_t *map, track_seg_t *seg) {
       canvas_point_set_pos(points, point++, &lpos);
       begin = begin->next;
     }
-    
+
     canvas_item_set_points(item->item, points);
     canvas_points_free(points);
-    
+
   } else {
     printf("second last is invisible -> start new screen segment\n");
 
@@ -2233,10 +2233,10 @@ void map_track_update_seg(map_t *map, track_seg_t *seg) {
       canvas_point_set_pos(points, point++, &lpos);
       begin = begin->next;
     }
-    
+
     item->item = canvas_polyline_new(map->canvas, CANVAS_GROUP_TRACK,
 		 points, map->style->track.width, map->style->track.color);
-    
+
     canvas_points_free(points);
   }
 
@@ -2268,7 +2268,7 @@ void map_track_remove(appdata_t *appdata) {
       canvas_item_destroy(item->item);
       item = next;
     }
-    
+
     seg->item_chain = NULL;
     seg = seg->next;
   }
@@ -2291,9 +2291,9 @@ void map_track_pos(appdata_t *appdata, pos_t *pos) {
       radius /= zoom;
     }
 
-    appdata->track.gps_item = 
-      canvas_circle_new(appdata->map->canvas, CANVAS_GROUP_GPS, 
-			lpos.x, lpos.y, radius, 0, 
+    appdata->track.gps_item =
+      canvas_circle_new(appdata->map->canvas, CANVAS_GROUP_GPS,
+			lpos.x, lpos.y, radius, 0,
 			appdata->map->style->track.gps_color, NO_COLOR);
   }
 }
@@ -2336,12 +2336,12 @@ void map_set_bg_image(map_t *map, char *filename) {
   map->bg.scale.y = (float)(bounds->max.y - bounds->min.y)/
     (float)gdk_pixbuf_get_height(map->bg.pix);
 
-  map->bg.item = canvas_image_new(map->canvas, CANVAS_GROUP_BG, map->bg.pix, 
+  map->bg.item = canvas_image_new(map->canvas, CANVAS_GROUP_BG, map->bg.pix,
 	  bounds->min.x, bounds->min.y, map->bg.scale.x, map->bg.scale.y);
 
-  canvas_item_destroy_connect(map->bg.item, 
+  canvas_item_destroy_connect(map->bg.item,
           G_CALLBACK(map_bg_item_destroy_event), map);
-}  
+}
 
 
 /* -------- hide and show objects (for performance reasons) ------- */

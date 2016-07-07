@@ -29,7 +29,7 @@
 #include <glib.h>
 #include <dbus/dbus-glib.h>
 
-static DBusHandlerResult signal_filter 
+static DBusHandlerResult signal_filter
       (DBusConnection *connection, DBusMessage *message, void *user_data);
 
 static DBusHandlerResult
@@ -42,14 +42,14 @@ signal_filter(DBusConnection *connection, DBusMessage *message, void *user_data)
     double lat, lon;
     long zoom;
     dbus_error_init(&error);
-  
-    if(dbus_message_get_args(message, &error, 
-			     DBUS_TYPE_DOUBLE, &lat, 
-			     DBUS_TYPE_DOUBLE, &lon, 
+
+    if(dbus_message_get_args(message, &error,
+			     DBUS_TYPE_DOUBLE, &lat,
+			     DBUS_TYPE_DOUBLE, &lon,
 			     DBUS_TYPE_INT32,  &zoom,
 			     DBUS_TYPE_INVALID)) {
 
-      g_print("MM: position received: %f/%f, zoom = %ld\n", 
+      g_print("MM: position received: %f/%f, zoom = %ld\n",
 	      (float)lat, (float)lon, zoom);
 
       /* store position for further processing */
@@ -75,24 +75,24 @@ gboolean dbus_mm_set_position(osso_context_t *osso_context, pos_t *pos) {
   osso_return_t ret;
 
   if(pos)
-    ret = osso_rpc_run(osso_context, 
-		       MM_DBUS_SERVICE, 
-		       MM_DBUS_PATH, 
-		       MM_DBUS_INTERFACE, 
-		       "set_view_center", 
-		       &retval, 
+    ret = osso_rpc_run(osso_context,
+		       MM_DBUS_SERVICE,
+		       MM_DBUS_PATH,
+		       MM_DBUS_INTERFACE,
+		       "set_view_center",
+		       &retval,
 		       DBUS_TYPE_DOUBLE, (double)pos->lat,
 		       DBUS_TYPE_DOUBLE, (double)pos->lon,
 		       DBUS_TYPE_INVALID);
   else
-    ret = osso_rpc_run(osso_context, 
-		       MM_DBUS_SERVICE, 
-		       MM_DBUS_PATH, 
-		       MM_DBUS_INTERFACE, 
-		       "set_view_center", 
-		       &retval, 
+    ret = osso_rpc_run(osso_context,
+		       MM_DBUS_SERVICE,
+		       MM_DBUS_PATH,
+		       MM_DBUS_INTERFACE,
+		       "set_view_center",
+		       &retval,
 		       DBUS_TYPE_INVALID);
-  
+
   osso_rpc_free_val(&retval);
 
   return(ret == OSSO_OK);

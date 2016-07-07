@@ -37,20 +37,20 @@ static gboolean
 pointer_in_window(GtkWidget *widget, gint x_root, gint y_root) {
   if(GTK_WIDGET_MAPPED(gtk_widget_get_toplevel(widget))) {
     gint window_x, window_y;
-    
-    gdk_window_get_position(gtk_widget_get_toplevel(widget)->window, 
+
+    gdk_window_get_position(gtk_widget_get_toplevel(widget)->window,
 			    &window_x, &window_y);
-    
+
     if(x_root >= window_x && x_root < window_x + widget->allocation.width &&
 	y_root >= window_y && y_root < window_y + widget->allocation.height)
       return TRUE;
   }
-  
+
   return FALSE;
 }
 
 static gboolean
-on_button_press_event(GtkWidget *widget, 
+on_button_press_event(GtkWidget *widget,
 			  GdkEventButton *event, popup_context_t *context) {
   gboolean in = pointer_in_window(widget, event->x_root, event->y_root);
 
@@ -59,7 +59,7 @@ on_button_press_event(GtkWidget *widget,
 }
 
 static gboolean
-on_button_release_event(GtkWidget *widget, 
+on_button_release_event(GtkWidget *widget,
 			  GdkEventButton *event, popup_context_t *context) {
   gboolean in = pointer_in_window(widget, event->x_root, event->y_root);
 
@@ -97,12 +97,12 @@ run_unmap_handler(GtkWindow *window, popup_context_t *context) {
   shutdown_loop(context);
 }
 
-static void 
+static void
 on_value_changed(GtkAdjustment *adjustment,  popup_context_t *context) {
-  printf("value changed to %f (%f)\n", 
+  printf("value changed to %f (%f)\n",
 	 gtk_adjustment_get_value(adjustment),
 	 pow(MAP_DETAIL_STEP, -gtk_adjustment_get_value(adjustment)));
-  map_detail_change(context->appdata->map, pow(MAP_DETAIL_STEP, 
+  map_detail_change(context->appdata->map, pow(MAP_DETAIL_STEP,
 				      -gtk_adjustment_get_value(adjustment)));
 }
 
@@ -113,19 +113,19 @@ void scale_popup(GtkWidget *button, appdata_t *appdata) {
   if(!appdata->project || !appdata->project->map_state)
     return;
 
-  float lin = 
+  float lin =
     -rint(log(appdata->project->map_state->detail)/log(MAP_DETAIL_STEP));
 
   context.window = gtk_window_new(GTK_WINDOW_POPUP);
   gtk_widget_realize(context.window);
-  gtk_window_set_default_size(GTK_WINDOW(context.window), 
-			      button->allocation.width, HEIGHT); 
-  gtk_window_resize(GTK_WINDOW(context.window), 
-		    button->allocation.width, HEIGHT); 
+  gtk_window_set_default_size(GTK_WINDOW(context.window),
+			      button->allocation.width, HEIGHT);
+  gtk_window_resize(GTK_WINDOW(context.window),
+		    button->allocation.width, HEIGHT);
   //  gtk_window_set_resizable(GTK_WINDOW(context.window), FALSE);
-  gtk_window_set_transient_for(GTK_WINDOW(context.window), 
+  gtk_window_set_transient_for(GTK_WINDOW(context.window),
 			       GTK_WINDOW(appdata->window));
-  gtk_window_set_keep_above(GTK_WINDOW(context.window), TRUE);    
+  gtk_window_set_keep_above(GTK_WINDOW(context.window), TRUE);
   gtk_window_set_destroy_with_parent(GTK_WINDOW(context.window), TRUE);
   gtk_window_set_gravity(GTK_WINDOW(context.window), GDK_GRAVITY_STATIC);
   gtk_window_set_modal(GTK_WINDOW(context.window), TRUE);
@@ -141,7 +141,7 @@ void scale_popup(GtkWidget *button, appdata_t *appdata) {
 		   G_CALLBACK(run_destroy_handler), &context);
   g_signal_connect(G_OBJECT(context.window), "unmap",
 		   G_CALLBACK(run_unmap_handler), &context);
-  
+
   gdk_pointer_grab(context.window->window, TRUE,
      GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_BUTTON_MOTION_MASK,
 		   NULL, NULL, GDK_CURRENT_TIME);
@@ -149,9 +149,9 @@ void scale_popup(GtkWidget *button, appdata_t *appdata) {
 
   gint x, y;
   gdk_window_get_origin(button->window, &x, &y);
- 
+
   gtk_window_move(GTK_WINDOW(context.window),
-		  x + button->allocation.x, 
+		  x + button->allocation.x,
   		  y + button->allocation.y - HEIGHT);
 
   /* a frame with a vscale inside */
@@ -179,16 +179,16 @@ void scale_popup(GtkWidget *button, appdata_t *appdata) {
   gtk_box_pack_start_defaults(GTK_BOX(hbox), scale);
   gtk_container_add(GTK_CONTAINER(frame), hbox);
   gtk_container_add(GTK_CONTAINER(context.window), frame);
-  
+
   gtk_widget_show_all(context.window);
 
   /* handle this popup until it's gone */
-  
+
   context.loop = g_main_loop_new(NULL, FALSE);
 
-  GDK_THREADS_LEAVE();  
+  GDK_THREADS_LEAVE();
   g_main_loop_run(context.loop);
-  GDK_THREADS_ENTER();  
+  GDK_THREADS_ENTER();
 
   g_main_loop_unref(context.loop);
 

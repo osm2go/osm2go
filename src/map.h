@@ -29,7 +29,7 @@
 #define MAP_COLOR_NONE   0x0
 #define NO_COLOR         CANVAS_COLOR(0x00,0x00,0x00,0x00)
 
-#define RGBA_COMBINE(a,b) (((a)&~0xff) | ((b)&0xff)) 
+#define RGBA_COMBINE(a,b) (((a)&~0xff) | ((b)&0xff))
 
 #define ZOOM_FACTOR_MENU   (1.5)
 #define ZOOM_FACTOR_WHEEL  (1.1)
@@ -49,9 +49,9 @@
 
 /* don't reorder these as some things in map.c */
 /* rely on a certain order */
-typedef enum { 
-  MAP_ACTION_IDLE=0, 
-  MAP_ACTION_NODE_ADD, 
+typedef enum {
+  MAP_ACTION_IDLE=0,
+  MAP_ACTION_NODE_ADD,
   MAP_ACTION_BG_ADJUST,
   MAP_ACTION_WAY_ADD,
   MAP_ACTION_WAY_NODE_ADD,
@@ -82,7 +82,7 @@ typedef struct {
   gint refcount;
   float zoom;                          // zoom level (1.0 = 1m/pixel
   float detail;                        // deatil level (1.0 = normal)
-  struct { gint x,y; } scroll_offset;  // initial scroll offset 
+  struct { gint x,y; } scroll_offset;  // initial scroll offset
 } map_state_t;
 
 typedef struct map_s {
@@ -97,13 +97,13 @@ typedef struct map_s {
   map_highlight_t *highlight;      // list of elements used for highlighting
 
   map_item_t selected;             // the currently selected item (node or way)
-  
+
   canvas_item_t *cursor;           // the cursor visible on the draw layer
   canvas_item_t *touchnode;        // the blue "touch node" on the draw layer
 
   tag_t *last_node_tags;           // used to "repeat" tagging
   tag_t *last_way_tags;
-  
+
   /* background image related stuff */
   struct {
     GdkPixbuf *pix;
@@ -117,7 +117,7 @@ typedef struct map_s {
 
     struct {                       // action related variables/states
       way_t *way;
-      way_t *extending, *ends_on;  // ways touched by first and last node 
+      way_t *extending, *ends_on;  // ways touched by first and last node
     };
   } action;
 
@@ -127,8 +127,8 @@ typedef struct map_s {
     gboolean drag;
     map_item_t *on_item;
     struct { gint x,y; } at;    // point mouse button was last pressed
-    struct { gint x,y; } so;    // initial scroll offset 
-    gboolean on_selected_node;  // the currently clicked node 
+    struct { gint x,y; } so;    // initial scroll offset
+    gboolean on_selected_node;  // the currently clicked node
                                 // (may be part of a selected way)
   } pen_down;
 

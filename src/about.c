@@ -42,9 +42,9 @@ static void browser_url(appdata_t *appdata, char *url) {
 static gboolean on_link_clicked(GtkWidget *widget, GdkEventButton *event,
 				gpointer user_data) {
 
-  const char *str = 
+  const char *str =
     gtk_label_get_text(GTK_LABEL(gtk_bin_get_child(GTK_BIN(widget))));
-  
+
   browser_url((appdata_t*)user_data, (char*)str);
   return TRUE;
 }
@@ -54,16 +54,16 @@ static GtkWidget *link_new(appdata_t *appdata, const char *url) {
 #ifdef ENABLE_BROWSER_INTERFACE
   if(appdata) {
     GtkWidget *label = gtk_label_new("");
-    char *str = g_strdup_printf("<span color=\"" LINK_COLOR 
+    char *str = g_strdup_printf("<span color=\"" LINK_COLOR
 				"\"><u>%s</u></span>", url);
     gtk_label_set_markup(GTK_LABEL(label), str);
     g_free(str);
-    
+
     GtkWidget *eventbox = gtk_event_box_new();
     gtk_container_add(GTK_CONTAINER(eventbox), label);
-    
-    g_signal_connect(eventbox, "button-press-event", 
-		     G_CALLBACK(on_link_clicked), appdata); 
+
+    g_signal_connect(eventbox, "button-press-event",
+		     G_CALLBACK(on_link_clicked), appdata);
     return eventbox;
   }
 #endif
@@ -76,8 +76,8 @@ static GtkWidget *link_new(appdata_t *appdata, const char *url) {
 
 #ifdef ENABLE_BROWSER_INTERFACE
 void on_paypal_button_clicked(GtkButton *button, appdata_t *appdata) {
-  //  gtk_dialog_response(GTK_DIALOG(context->dialog), GTK_RESPONSE_ACCEPT); 
-  browser_url(appdata, 
+  //  gtk_dialog_response(GTK_DIALOG(context->dialog), GTK_RESPONSE_ACCEPT);
+  browser_url(appdata,
 	      "https://www.paypal.com/cgi-bin/webscr"
 	      "?cmd=_s-xclick&hosted_button_id=7400558");
 }
@@ -85,7 +85,7 @@ void on_paypal_button_clicked(GtkButton *button, appdata_t *appdata) {
 
 GtkWidget *label_big(char *str) {
   GtkWidget *label = gtk_label_new("");
-  char *markup = 
+  char *markup =
     g_markup_printf_escaped("<span size='x-large'>%s</span>", str);
   gtk_label_set_markup(GTK_LABEL(label), markup);
   g_free(markup);
@@ -94,14 +94,14 @@ GtkWidget *label_big(char *str) {
 
 GtkWidget *label_xbig(char *str) {
   GtkWidget *label = gtk_label_new("");
-  char *markup = 
+  char *markup =
     g_markup_printf_escaped("<span size='xx-large'>%s</span>", str);
   gtk_label_set_markup(GTK_LABEL(label), markup);
   g_free(markup);
   return label;
 }
 
-static void  
+static void
 on_label_realize(GtkWidget *widget, gpointer user_data)  {
   /* get parent size (which is a container) */
   gtk_widget_set_size_request(widget, widget->parent->allocation.width, -1);
@@ -155,16 +155,16 @@ GtkWidget *license_page_new(void) {
 
 #ifndef USE_PANNABLE_AREA
   GtkWidget *scrolled_window = gtk_scrolled_window_new(NULL, NULL);
-  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window), 
+  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window),
   				 GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-  gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(scrolled_window), 
+  gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(scrolled_window),
 					label);
   gtk_scrolled_window_set_shadow_type( GTK_SCROLLED_WINDOW(scrolled_window),
 				       GTK_SHADOW_IN);
   return scrolled_window;
 #else
   GtkWidget *pannable_area = hildon_pannable_area_new();
-  hildon_pannable_area_add_with_viewport(HILDON_PANNABLE_AREA(pannable_area), 
+  hildon_pannable_area_add_with_viewport(HILDON_PANNABLE_AREA(pannable_area),
 					label);
   return pannable_area;
 #endif
@@ -178,20 +178,20 @@ GtkWidget *copyright_page_new(appdata_t *appdata) {
 
   GtkWidget *hbox = gtk_hbox_new(FALSE, 0);
   GtkWidget *ihbox = gtk_hbox_new(FALSE, 20);
-  gtk_box_pack_start(GTK_BOX(ihbox), 
+  gtk_box_pack_start(GTK_BOX(ihbox),
 #ifdef FREMANTLE
 		     icon_widget_load(&appdata->icon, "osm2go"),
 #else
 		     icon_widget_load(&appdata->icon, "osm2go.32"),
 #endif
 		     FALSE, FALSE, 0);
-  gtk_box_pack_start(GTK_BOX(ihbox), label_xbig("OSM2Go"), 
+  gtk_box_pack_start(GTK_BOX(ihbox), label_xbig("OSM2Go"),
 		     FALSE, FALSE, 0);
 
   gtk_box_pack_start(GTK_BOX(hbox), ihbox, TRUE, FALSE, 0);
   gtk_box_pack_start_defaults(GTK_BOX(ivbox), hbox);
 
-  gtk_box_pack_start_defaults(GTK_BOX(ivbox), 
+  gtk_box_pack_start_defaults(GTK_BOX(ivbox),
 		      label_big(_("Mobile OpenStreetMap Editor")));
 
   gtk_box_pack_start(GTK_BOX(vbox), ivbox, TRUE, FALSE, 0);
@@ -199,9 +199,9 @@ GtkWidget *copyright_page_new(appdata_t *appdata) {
   /* ------------------------ */
   ivbox = gtk_vbox_new(FALSE, 0);
 
-  gtk_box_pack_start(GTK_BOX(ivbox), 
+  gtk_box_pack_start(GTK_BOX(ivbox),
 		      gtk_label_new("Version " VERSION " (AMDmi3's fork)"), FALSE, FALSE, 0);
-  gtk_box_pack_start(GTK_BOX(ivbox), 
+  gtk_box_pack_start(GTK_BOX(ivbox),
 		      gtk_label_new(__DATE__ " " __TIME__), FALSE, FALSE, 0);
 
   gtk_box_pack_start(GTK_BOX(vbox), ivbox, TRUE, FALSE, 0);
@@ -209,10 +209,10 @@ GtkWidget *copyright_page_new(appdata_t *appdata) {
   /* ------------------------ */
   ivbox = gtk_vbox_new(FALSE, 0);
 
-  gtk_box_pack_start(GTK_BOX(ivbox), 
+  gtk_box_pack_start(GTK_BOX(ivbox),
 	      gtk_label_new(_("Copyright 2008-2014")), FALSE, FALSE, 0);
 
-  gtk_box_pack_start(GTK_BOX(ivbox), 
+  gtk_box_pack_start(GTK_BOX(ivbox),
       link_new(appdata, "http://www.harbaum.org/till/maemo#osm2go"),
 			      FALSE, FALSE, 0);
 
@@ -270,39 +270,39 @@ GtkWidget *authors_page_new(void) {
 
 #ifndef USE_PANNABLE_AREA
   GtkWidget *scrolled_window = gtk_scrolled_window_new(NULL, NULL);
-  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window), 
+  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window),
   				 GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-  gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(scrolled_window), 
+  gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(scrolled_window),
 					vbox);
   gtk_scrolled_window_set_shadow_type( GTK_SCROLLED_WINDOW(scrolled_window),
 				       GTK_SHADOW_IN);
   return scrolled_window;
 #else
   GtkWidget *pannable_area = hildon_pannable_area_new();
-  hildon_pannable_area_add_with_viewport(HILDON_PANNABLE_AREA(pannable_area), 
+  hildon_pannable_area_add_with_viewport(HILDON_PANNABLE_AREA(pannable_area),
 					vbox);
   return pannable_area;
 #endif
-}  
+}
 
 GtkWidget *donate_page_new(appdata_t *appdata) {
   GtkWidget *vbox = gtk_vbox_new(FALSE, 0);
 
-  gtk_box_pack_start_defaults(GTK_BOX(vbox), 
+  gtk_box_pack_start_defaults(GTK_BOX(vbox),
       label_wrap(_("If you like OSM2Go and want to support its future development "
 		   "please consider donating to the developer. You can either "
 		   "donate via paypal to")));
-  
-  gtk_box_pack_start_defaults(GTK_BOX(vbox), 
+
+  gtk_box_pack_start_defaults(GTK_BOX(vbox),
 			      link_new(NULL, "till@harbaum.org"));
-  
-  gtk_box_pack_start_defaults(GTK_BOX(vbox), 
+
+  gtk_box_pack_start_defaults(GTK_BOX(vbox),
       label_wrap(_("or you can just click the button below which will open "
 		   "the appropriate web page in your browser.")));
 
   GtkWidget *ihbox = gtk_hbox_new(FALSE, 0);
   GtkWidget *button = gtk_button_new();
-  gtk_button_set_image(GTK_BUTTON(button), 
+  gtk_button_set_image(GTK_BUTTON(button),
 #ifdef FREMANTLE
 		     icon_widget_load(&appdata->icon, "paypal.64")
 #else
@@ -310,37 +310,37 @@ GtkWidget *donate_page_new(appdata_t *appdata) {
 #endif
 		       );
   gtk_button_set_relief(GTK_BUTTON(button), GTK_RELIEF_NONE);
-  g_signal_connect(button, "clicked", 
-		   G_CALLBACK(on_paypal_button_clicked), appdata); 
+  g_signal_connect(button, "clicked",
+		   G_CALLBACK(on_paypal_button_clicked), appdata);
   gtk_box_pack_start(GTK_BOX(ihbox), button, TRUE, FALSE, 0);
   gtk_box_pack_start_defaults(GTK_BOX(vbox), ihbox);
 
   return vbox;
-}  
+}
 
 GtkWidget *bugs_page_new(appdata_t *appdata) {
   GtkWidget *vbox = gtk_vbox_new(FALSE, 0);
 
-  gtk_box_pack_start_defaults(GTK_BOX(vbox), 
+  gtk_box_pack_start_defaults(GTK_BOX(vbox),
       label_wrap(_("Please report bugs or feature requests via the OSM2Go "
 		   "bug tracker. This bug tracker can directly be reached via "
 		   "the following link:")));
 
-  gtk_box_pack_start_defaults(GTK_BOX(vbox), 
+  gtk_box_pack_start_defaults(GTK_BOX(vbox),
        link_new(appdata, "http://garage.maemo.org/tracker/?group_id=830"));
 
-  gtk_box_pack_start_defaults(GTK_BOX(vbox), 
+  gtk_box_pack_start_defaults(GTK_BOX(vbox),
       label_wrap(_("You might also be interested in joining the mailing lists "
 		   "or the forum:")));
 
-  gtk_box_pack_start_defaults(GTK_BOX(vbox), 
+  gtk_box_pack_start_defaults(GTK_BOX(vbox),
 	      link_new(appdata, "http://garage.maemo.org/projects/osm2go/"));
 
-  gtk_box_pack_start_defaults(GTK_BOX(vbox), 
+  gtk_box_pack_start_defaults(GTK_BOX(vbox),
       label_wrap(_("Thank you for contributing!")));
 
   return vbox;
-}  
+}
 
 void about_box(appdata_t *appdata) {
   GtkWidget *dialog = gtk_dialog_new_with_buttons(_("About OSM2Go"),

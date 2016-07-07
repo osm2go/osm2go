@@ -42,8 +42,8 @@ static void osm_bounds_free(bounds_t *bounds) {
 }
 
 static void osm_bounds_dump(bounds_t *bounds) {
-  printf("\nBounds: %f->%f %f->%f\n", 
-	 bounds->ll_min.lat, bounds->ll_max.lat, 
+  printf("\nBounds: %f->%f %f->%f\n",
+	 bounds->ll_min.lat, bounds->ll_max.lat,
 	 bounds->ll_min.lon, bounds->ll_max.lon);
 }
 
@@ -73,7 +73,7 @@ static user_t *osm_user(osm_t *osm, char *name) {
 
   /* search through user list */
   user_t **user = &osm->user;
-  while(*user && strcasecmp((*user)->name, name) < 0) 
+  while(*user && strcasecmp((*user)->name, name) < 0)
     user = &(*user)->next;
 
   /* end of list or inexact match? create new user entry! */
@@ -148,8 +148,8 @@ tag_t *osm_parse_osm_tag(osm_t *osm, xmlDocPtr doc, xmlNode *a_node) {
     return NULL;
   }
 
-  for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) 
-    if (cur_node->type == XML_ELEMENT_NODE) 
+  for (cur_node = a_node->children; cur_node; cur_node = cur_node->next)
+    if (cur_node->type == XML_ELEMENT_NODE)
       printf("found unhandled osm/node/tag/%s\n", cur_node->name);
 
   return tag;
@@ -175,9 +175,9 @@ gboolean osm_tag_key_and_value_present(tag_t *haystack, tag_t *tag) {
 gboolean osm_tag_key_other_value_present(tag_t *haystack, tag_t *tag) {
   while(haystack) {
     if((strcasecmp(haystack->key, tag->key) == 0) &&
-       (strcasecmp(haystack->value, tag->value) != 0)) 
+       (strcasecmp(haystack->value, tag->value) != 0))
       return TRUE;
-    
+
     haystack = haystack->next;
   }
   return FALSE;
@@ -206,7 +206,7 @@ gboolean osm_way_ends_with_node(way_t *way, node_t *node) {
 void osm_node_free(hash_table_t *hash_table, icon_t **icon, node_t *node) {
   item_id_t id = OSM_ID(node);
 
-  if(node->icon_buf) 
+  if(node->icon_buf)
     icon_free(icon, node->icon_buf);
 
   /* there must not be anything left in this chain */
@@ -227,7 +227,7 @@ void osm_node_free(hash_table_t *hash_table, icon_t **icon, node_t *node) {
 	g_free(cur);
 	return;
       }
-      
+
       item = &(*item)->next;
     }
   }
@@ -244,11 +244,11 @@ static void osm_nodes_free(hash_table_t *table, icon_t **icon, node_t *node) {
 void osm_node_dump(node_t *node) {
   char buf[64];
   struct tm tm;
-    
+
   printf("Id:      "ITEM_ID_FORMAT"\n", OSM_ID(node));
   printf("User:    %s\n", OSM_USER(node)?OSM_USER(node)->name:"<unspecified>");
   printf("Visible: %s\n", OSM_VISIBLE(node)?"yes":"no");
-  
+
   localtime_r(&OSM_TIME(node), &tm);
   strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S %Z", &tm);
   printf("Time:    %s\n", buf);
@@ -301,7 +301,7 @@ void osm_way_free(hash_table_t *hash_table, way_t *way) {
 	g_free(cur);
 	return;
       }
-      
+
       item = &(*item)->next;
     }
   }
@@ -318,7 +318,7 @@ static void osm_ways_free(hash_table_t *hash_table, way_t *way) {
 void osm_way_append_node(way_t *way, node_t *node) {
   node_chain_t **node_chain = &way->node_chain;
 
-  while(*node_chain) 
+  while(*node_chain)
     node_chain = &((*node_chain)->next);
 
   *node_chain = g_new0(node_chain_t, 1);
@@ -349,7 +349,7 @@ void osm_way_dump(way_t *way) {
     printf("  Node:  "ITEM_ID_FORMAT"\n", OSM_ID(node_chain->node));
     node_chain = node_chain->next;
   }
-  
+
   localtime_r(&OSM_TIME(way), &tm);
   strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S %Z", &tm);
   printf("Time:    %s\n", buf);
@@ -365,7 +365,7 @@ void osm_ways_dump(way_t *way) {
   }
 }
 
-node_chain_t *osm_parse_osm_way_nd(osm_t *osm, 
+node_chain_t *osm_parse_osm_way_nd(osm_t *osm,
 			  xmlDocPtr doc, xmlNode *a_node) {
   char *prop;
 
@@ -427,7 +427,7 @@ void osm_relations_dump(relation_t *relation) {
     struct tm tm;
 
     printf("Id:      "ITEM_ID_FORMAT"\n", OSM_ID(relation));
-    printf("User:    %s\n", 
+    printf("User:    %s\n",
 	   OSM_USER(relation)?OSM_USER(relation)->name:"<unspecified>");
     printf("Visible: %s\n", OSM_VISIBLE(relation)?"yes":"no");
 
@@ -442,37 +442,37 @@ void osm_relations_dump(relation_t *relation) {
 
       case NODE:
 	if(member->object.node)
-	  printf(" Member: Node, id = " ITEM_ID_FORMAT ", role = %s\n", 
+	  printf(" Member: Node, id = " ITEM_ID_FORMAT ", role = %s\n",
 		 OBJECT_ID(member->object), member->role);
 	break;
 
       case WAY:
 	if(member->object.way)
-	  printf(" Member: Way, id = " ITEM_ID_FORMAT ", role = %s\n", 
+	  printf(" Member: Way, id = " ITEM_ID_FORMAT ", role = %s\n",
 		 OBJECT_ID(member->object), member->role);
 	break;
-	
+
       case RELATION:
 	if(member->object.relation)
-	  printf(" Member: Relation, id = " ITEM_ID_FORMAT ", role = %s\n", 
+	  printf(" Member: Relation, id = " ITEM_ID_FORMAT ", role = %s\n",
 		 OBJECT_ID(member->object), member->role);
 	break;
       }
 
       member = member->next;
     }
-    
+
     localtime_r(&OSM_TIME(relation), &tm);
     strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S %Z", &tm);
     printf("Time:    %s\n", buf);
     osm_tags_dump(OSM_TAG(relation));
-    
+
     printf("\n");
     relation = relation->next;
   }
 }
 
-member_t *osm_parse_osm_relation_member(osm_t *osm, 
+member_t *osm_parse_osm_relation_member(osm_t *osm,
 			  xmlDocPtr doc, xmlNode *a_node) {
   char *prop;
   member_t *member = g_new0(member_t, 1);
@@ -606,7 +606,7 @@ static gboolean skip_element(xmlTextReaderPtr reader) {
     return TRUE;
 
   int ret = xmlTextReaderRead(reader);
-  while((ret == 1) && 
+  while((ret == 1) &&
 	((xmlTextReaderNodeType(reader) != XML_READER_TYPE_END_ELEMENT) ||
 	 (xmlTextReaderDepth(reader) > depth) ||
 	 (my_strcmp(xmlTextReaderConstName(reader), name) != 0))) {
@@ -639,14 +639,14 @@ static bounds_t *process_bounds(xmlTextReaderPtr reader) {
   }
 
   if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "maxlon"))) {
-    bounds->ll_max.lon = g_ascii_strtod(prop, NULL); 
-    xmlFree(prop); 
+    bounds->ll_max.lon = g_ascii_strtod(prop, NULL);
+    xmlFree(prop);
   }
 
-  if(isnan(bounds->ll_min.lat) || isnan(bounds->ll_min.lon) || 
+  if(isnan(bounds->ll_min.lat) || isnan(bounds->ll_min.lon) ||
      isnan(bounds->ll_max.lat) || isnan(bounds->ll_max.lon)) {
     errorf(NULL, "Invalid coordinate in bounds (%f/%f/%f/%f)",
-	   bounds->ll_min.lat, bounds->ll_min.lon, 
+	   bounds->ll_min.lat, bounds->ll_min.lon,
 	   bounds->ll_max.lat, bounds->ll_max.lon);
 
     osm_bounds_free(bounds);
@@ -658,7 +658,7 @@ static bounds_t *process_bounds(xmlTextReaderPtr reader) {
 
   /* calculate map zone which will be used as a reference for all */
   /* drawing/projection later on */
-  pos_t center = { (bounds->ll_max.lat + bounds->ll_min.lat)/2, 
+  pos_t center = { (bounds->ll_max.lat + bounds->ll_min.lat)/2,
 		   (bounds->ll_max.lon + bounds->ll_min.lon)/2 };
 
   pos2lpos_center(&center, &bounds->center);
@@ -756,7 +756,7 @@ static node_t *process_node(xmlTextReaderPtr reader, osm_t *osm) {
   if(osm->node_hash) {
     hash_item_t **item = &osm->node_hash->hash[ID2HASH(OSM_ID(node))];
     while(*item) item = &(*item)->next;
-    
+
     *item = g_new0(hash_item_t, 1);
     (*item)->data.node = node;
   }
@@ -765,13 +765,13 @@ static node_t *process_node(xmlTextReaderPtr reader, osm_t *osm) {
   if(xmlTextReaderIsEmptyElement(reader))
     return node;
 
-  /* parse tags if present */  
+  /* parse tags if present */
   int depth = xmlTextReaderDepth(reader);
 
   /* scan all elements on same level or its children */
   tag_t **tag = &OSM_TAG(node);
   int ret = xmlTextReaderRead(reader);
-  while((ret == 1) && 
+  while((ret == 1) &&
 	((xmlTextReaderNodeType(reader) != XML_READER_TYPE_END_ELEMENT) ||
 	 (xmlTextReaderDepth(reader) != depth))) {
 
@@ -796,7 +796,7 @@ static node_chain_t *process_nd(xmlTextReaderPtr reader, osm_t *osm) {
   if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "ref"))) {
     item_id_t id = strtoll(prop, NULL, 10);
     node_chain_t *node_chain = g_new0(node_chain_t, 1);
-    
+
     /* search matching node */
     node_chain->node = osm_get_node_by_id(osm, id);
     if(!node_chain->node) printf("Node id " ITEM_ID_FORMAT " not found\n", id);
@@ -847,7 +847,7 @@ static way_t *process_way(xmlTextReaderPtr reader, osm_t *osm) {
   if(osm->way_hash) {
     hash_item_t **item = &osm->way_hash->hash[ID2HASH(OSM_ID(way))];
     while(*item) item = &(*item)->next;
-    
+
     *item = g_new0(hash_item_t, 1);
     (*item)->data.way = way;
   }
@@ -857,14 +857,14 @@ static way_t *process_way(xmlTextReaderPtr reader, osm_t *osm) {
   if(xmlTextReaderIsEmptyElement(reader))
     return way;
 
-  /* parse tags/nodes if present */  
+  /* parse tags/nodes if present */
   int depth = xmlTextReaderDepth(reader);
 
   /* scan all elements on same level or its children */
   tag_t **tag = &OSM_TAG(way);
   node_chain_t **node_chain = &way->node_chain;
   int ret = xmlTextReaderRead(reader);
-  while((ret == 1) && 
+  while((ret == 1) &&
 	((xmlTextReaderNodeType(reader) != XML_READER_TYPE_END_ELEMENT) ||
 	 (xmlTextReaderDepth(reader) != depth))) {
 
@@ -986,14 +986,14 @@ static relation_t *process_relation(xmlTextReaderPtr reader, osm_t *osm) {
   if(xmlTextReaderIsEmptyElement(reader))
     return relation;
 
-  /* parse tags/member if present */  
+  /* parse tags/member if present */
   int depth = xmlTextReaderDepth(reader);
 
   /* scan all elements on same level or its children */
   tag_t **tag = &OSM_TAG(relation);
   member_t **member = &relation->member;
   int ret = xmlTextReaderRead(reader);
-  while((ret == 1) && 
+  while((ret == 1) &&
 	((xmlTextReaderNodeType(reader) != XML_READER_TYPE_END_ELEMENT) ||
 	 (xmlTextReaderDepth(reader) != depth))) {
 
@@ -1023,7 +1023,7 @@ static osm_t *process_osm(xmlTextReaderPtr reader) {
   node_t **node = &osm->node;
   way_t **way = &osm->way;
   relation_t **relation = &osm->relation;
-  
+
   /* no attributes of interest */
 
   const xmlChar *name = xmlTextReaderConstName(reader);
@@ -1057,13 +1057,13 @@ static osm_t *process_osm(xmlTextReaderPtr reader) {
 	skip_element(reader);
       }
       break;
-      
+
     case XML_READER_TYPE_END_ELEMENT:
       /* end element must be for the current element */
       g_assert(xmlTextReaderDepth(reader) == 0);
       return osm;
       break;
-      
+
     default:
       break;
     }
@@ -1083,7 +1083,7 @@ static osm_t *process_file(const char *filename) {
   osm_t *osm = NULL;
   xmlTextReaderPtr reader;
   int ret;
-  
+
   reader = xmlReaderForFile(filename, NULL, 0);
   if (reader != NULL) {
     ret = xmlTextReaderRead(reader);
@@ -1125,7 +1125,7 @@ osm_t *osm_parse(char *path, char *filename) {
   struct timeval end;
   gettimeofday(&end, NULL);
 
-  printf("total parse time: %ldms\n", 
+  printf("total parse time: %ldms\n",
 	 (end.tv_usec - start.tv_usec)/1000 +
 	 (end.tv_sec - start.tv_sec)*1000);
 
@@ -1265,7 +1265,7 @@ static void osm_generate_tags(tag_t *tag, xmlNodePtr node) {
 }
 
 /* build xml representation for a way */
-static char *osm_generate_xml(osm_t *osm, item_id_t changeset, 
+static char *osm_generate_xml(osm_t *osm, item_id_t changeset,
 		       type_t type, void *item) {
   char str[32];
   xmlChar *result = NULL;
@@ -1278,10 +1278,10 @@ static char *osm_generate_xml(osm_t *osm, item_id_t changeset,
   xmlDocSetRootElement(doc, root_node);
 
   switch(type) {
-  case NODE: 
+  case NODE:
     {
       node_t *node = (node_t*)item;
-      xmlNodePtr node_node = xmlNewChild(root_node, NULL, 
+      xmlNodePtr node_node = xmlNewChild(root_node, NULL,
 					 BAD_CAST "node", NULL);
       /* new nodes don't have an id, but get one after the upload */
       if(!(OSM_FLAGS(node) & OSM_FLAG_NEW)) {
@@ -1295,12 +1295,12 @@ static char *osm_generate_xml(osm_t *osm, item_id_t changeset,
       g_ascii_formatd(str, sizeof(str), LL_FORMAT, node->pos.lat);
       xmlNewProp(node_node, BAD_CAST "lat", BAD_CAST str);
       g_ascii_formatd(str, sizeof(str), LL_FORMAT, node->pos.lon);
-      xmlNewProp(node_node, BAD_CAST "lon", BAD_CAST str);    
+      xmlNewProp(node_node, BAD_CAST "lon", BAD_CAST str);
       osm_generate_tags(OSM_TAG(node), node_node);
     }
     break;
 
-  case WAY: 
+  case WAY:
     {
       way_t *way = (way_t*)item;
       xmlNodePtr way_node = xmlNewChild(root_node, NULL, BAD_CAST "way", NULL);
@@ -1310,7 +1310,7 @@ static char *osm_generate_xml(osm_t *osm, item_id_t changeset,
       xmlNewProp(way_node, BAD_CAST "version", BAD_CAST str);
       snprintf(str, sizeof(str), "%u", (unsigned)changeset);
       xmlNewProp(way_node, BAD_CAST "changeset", BAD_CAST str);
-      
+
       node_chain_t *node_chain = way->node_chain;
       while(node_chain) {
 	xmlNodePtr nd_node = xmlNewChild(way_node, NULL, BAD_CAST "nd", NULL);
@@ -1319,15 +1319,15 @@ static char *osm_generate_xml(osm_t *osm, item_id_t changeset,
 	g_free(str);
 	node_chain = node_chain->next;
       }
-      
+
       osm_generate_tags(OSM_TAG(way), way_node);
-    } 
+    }
     break;
 
   case RELATION:
     {
       relation_t *relation = (relation_t*)item;
-      xmlNodePtr rel_node = xmlNewChild(root_node, NULL, 
+      xmlNodePtr rel_node = xmlNewChild(root_node, NULL,
 					BAD_CAST "relation", NULL);
       snprintf(str, sizeof(str), ITEM_ID_FORMAT, OSM_ID(relation));
       xmlNewProp(rel_node, BAD_CAST "id", BAD_CAST str);
@@ -1335,7 +1335,7 @@ static char *osm_generate_xml(osm_t *osm, item_id_t changeset,
       xmlNewProp(rel_node, BAD_CAST "version", BAD_CAST str);
       snprintf(str, sizeof(str), "%u", (unsigned)changeset);
       xmlNewProp(rel_node, BAD_CAST "changeset", BAD_CAST str);
-      
+
       member_t *member = relation->member;
       while(member) {
 	xmlNodePtr m_node = xmlNewChild(rel_node,NULL,BAD_CAST "member", NULL);
@@ -1400,7 +1400,7 @@ char *osm_generate_xml_way(osm_t *osm, item_id_t changeset, way_t *way) {
 }
 
 /* build xml representation for a relation */
-char *osm_generate_xml_relation(osm_t *osm, item_id_t changeset, 
+char *osm_generate_xml_relation(osm_t *osm, item_id_t changeset,
 				relation_t *relation) {
   return osm_generate_xml(osm, changeset, RELATION, relation);
 }
@@ -1411,9 +1411,9 @@ char *osm_generate_xml_changeset(osm_t *osm, char *comment) {
   int len = 0;
 
   /* tags for this changeset */
-  tag_t tag_comment = { 
+  tag_t tag_comment = {
     .key = "comment", .value = comment, .next = NULL };
-  tag_t tag_creator = { 
+  tag_t tag_creator = {
     .key = "created_by", .value = PACKAGE " v" VERSION, .next = &tag_comment };
 
   LIBXML_TEST_VERSION;
@@ -1441,7 +1441,7 @@ node_t *osm_get_node_by_id(osm_t *osm, item_id_t id) {
     while(item) {
       if(OSM_ID(item->data.node) == id)
 	return item->data.node;
-      
+
       item = item->next;
     }
   }
@@ -1451,7 +1451,7 @@ node_t *osm_get_node_by_id(osm_t *osm, item_id_t id) {
   while(node) {
     if(OSM_ID(node) == id)
       return node;
-    
+
     node = node->next;
   }
 
@@ -1465,7 +1465,7 @@ way_t *osm_get_way_by_id(osm_t *osm, item_id_t id) {
     while(item) {
       if(OSM_ID(item->data.way) == id)
 	return item->data.way;
-      
+
       item = item->next;
     }
   }
@@ -1475,7 +1475,7 @@ way_t *osm_get_way_by_id(osm_t *osm, item_id_t id) {
   while(way) {
     if(OSM_ID(way) == id)
       return way;
-    
+
     way = way->next;
   }
 
@@ -1491,7 +1491,7 @@ relation_t *osm_get_relation_by_id(osm_t *osm, item_id_t id) {
 
     relation = relation->next;
   }
-  
+
   return NULL;
 }
 
@@ -1568,7 +1568,7 @@ node_t *osm_node_new(osm_t *osm, gint x, gint y) {
 
   node_t *node = g_new0(node_t, 1);
   OSM_VERSION(node) = 1;
-  node->lpos.x = x; 
+  node->lpos.x = x;
   node->lpos.y = y;
   OSM_VISIBLE(node) = TRUE;
   OSM_TIME(node) = time(NULL);
@@ -1576,7 +1576,7 @@ node_t *osm_node_new(osm_t *osm, gint x, gint y) {
   /* convert screen position back to ll */
   lpos2pos(osm->bounds, &node->lpos, &node->pos);
 
-  printf("  new at %d %d (%f %f)\n", 
+  printf("  new at %d %d (%f %f)\n",
 	 node->lpos.x, node->lpos.y, node->pos.lat, node->pos.lon);
 
   return node;
@@ -1591,7 +1591,7 @@ void osm_node_attach(osm_t *osm, node_t *node) {
 
   /* attach to end of node list */
   node_t **lnode = &osm->node;
-  while(*lnode) lnode = &(*lnode)->next;  
+  while(*lnode) lnode = &(*lnode)->next;
   *lnode = node;
 }
 
@@ -1600,7 +1600,7 @@ void osm_node_restore(osm_t *osm, node_t *node) {
 
   /* attach to end of node list */
   node_t **lnode = &osm->node;
-  while(*lnode) lnode = &(*lnode)->next;  
+  while(*lnode) lnode = &(*lnode)->next;
   *lnode = node;
 }
 
@@ -1624,7 +1624,7 @@ void osm_way_attach(osm_t *osm, way_t *way) {
 
   /* attach to end of way list */
   way_t **lway = &osm->way;
-  while(*lway) lway = &(*lway)->next;  
+  while(*lway) lway = &(*lway)->next;
   *lway = way;
 }
 
@@ -1633,7 +1633,7 @@ void osm_way_restore(osm_t *osm, way_t *way, item_id_chain_t *id_chain) {
 
   /* attach to end of node list */
   way_t **lway = &osm->way;
-  while(*lway) lway = &(*lway)->next;  
+  while(*lway) lway = &(*lway)->next;
   *lway = way;
 
   /* restore node memberships by converting ids into real pointers */
@@ -1658,14 +1658,14 @@ void osm_way_restore(osm_t *osm, way_t *way, item_id_chain_t *id_chain) {
 }
 
 /* returns pointer to chain of ways affected by this deletion */
-way_chain_t *osm_node_delete(osm_t *osm, icon_t **icon, 
+way_chain_t *osm_node_delete(osm_t *osm, icon_t **icon,
 			     node_t *node, gboolean permanently,
 			     gboolean affect_ways) {
   way_chain_t *way_chain = NULL, **cur_way_chain = &way_chain;
 
   /* new nodes aren't stored on the server and are just deleted permanently */
   if(OSM_FLAGS(node) & OSM_FLAG_NEW) {
-    printf("About to delete NEW node #" ITEM_ID_FORMAT 
+    printf("About to delete NEW node #" ITEM_ID_FORMAT
 	   " -> force permanent delete\n", OSM_ID(node));
     permanently = TRUE;
   }
@@ -1691,7 +1691,7 @@ way_chain_t *osm_node_delete(osm_t *osm, icon_t **icon,
 
     if(modified) {
       OSM_FLAGS(way) |= OSM_FLAG_DIRTY;
-      
+
       /* and add the way to the list of affected ways */
       *cur_way_chain = g_new0(way_chain_t, 1);
       (*cur_way_chain)->way = way;
@@ -1742,7 +1742,7 @@ guint osm_way_number_of_nodes(way_t *way) {
 }
 
 /* return all relations a node is in */
-relation_chain_t *osm_node_to_relation(osm_t *osm, node_t *node, 
+relation_chain_t *osm_node_to_relation(osm_t *osm, node_t *node,
 				       gboolean via_way) {
   relation_chain_t *rel_chain = NULL, **cur_rel_chain = &rel_chain;
 
@@ -1759,14 +1759,14 @@ relation_chain_t *osm_node_to_relation(osm_t *osm, node_t *node,
 	  is_member = TRUE;
 	break;
 
-      case WAY: 
+      case WAY:
 	if(via_way) {
 	  /* ways have to be checked for the nodes they consist of */
 	  node_chain_t *chain = member->object.way->node_chain;
 	  while(chain && !is_member) {
 	    if(chain->node == node)
 	      is_member = TRUE;
-	    
+
 	    chain = chain->next;
 	  }
 	}
@@ -1807,7 +1807,7 @@ relation_chain_t *osm_way_to_relation(osm_t *osm, way_t *way) {
 	if(member->object.way == way)
 	  is_member = TRUE;
       } break;
-      
+
       default:
 	break;
       }
@@ -1843,7 +1843,7 @@ relation_chain_t *osm_relation_to_relation(osm_t *osm, relation_t *rel) {
 	if(member->object.relation == rel)
 	  is_member = TRUE;
       } break;
-      
+
       default:
 	break;
       }
@@ -1943,7 +1943,7 @@ void osm_node_remove_from_relation(osm_t *osm, node_t *node) {
 	 ((*member)->object.node == node)) {
 
 	printf("  from relation #" ITEM_ID_FORMAT "\n", OSM_ID(relation));
-	
+
 	member_t *cur = *member;
 	*member = (*member)->next;
 	osm_member_free(cur);
@@ -1968,7 +1968,7 @@ void osm_way_remove_from_relation(osm_t *osm, way_t *way) {
 	 ((*member)->object.way == way)) {
 
 	printf("  from relation #" ITEM_ID_FORMAT "\n", OSM_ID(relation));
-	
+
 	member_t *cur = *member;
 	*member = (*member)->next;
 	osm_member_free(cur);
@@ -2001,17 +2001,17 @@ void osm_relation_attach(osm_t *osm, relation_t *relation) {
 
   /* attach to end of relation list */
   relation_t **lrelation = &osm->relation;
-  while(*lrelation) lrelation = &(*lrelation)->next;  
+  while(*lrelation) lrelation = &(*lrelation)->next;
   *lrelation = relation;
 }
 
 
-void osm_way_delete(osm_t *osm, icon_t **icon, 
+void osm_way_delete(osm_t *osm, icon_t **icon,
 		    way_t *way, gboolean permanently) {
 
   /* new ways aren't stored on the server and are just deleted permanently */
   if(OSM_FLAGS(way) & OSM_FLAG_NEW) {
-    printf("About to delete NEW way #" ITEM_ID_FORMAT 
+    printf("About to delete NEW way #" ITEM_ID_FORMAT
 	   " -> force permanent delete\n", OSM_ID(way));
     permanently = TRUE;
   }
@@ -2020,7 +2020,7 @@ void osm_way_delete(osm_t *osm, icon_t **icon,
   node_chain_t **chain = &way->node_chain;
   while(*chain) {
     (*chain)->node->ways--;
-    printf("checking node #" ITEM_ID_FORMAT " (still used by %d)\n", 
+    printf("checking node #" ITEM_ID_FORMAT " (still used by %d)\n",
 	   OSM_ID((*chain)->node), (*chain)->node->ways);
 
     /* this node must only be part of this way */
@@ -2028,7 +2028,7 @@ void osm_way_delete(osm_t *osm, icon_t **icon,
       /* delete this node, but don't let this actually affect the */
       /* associated ways as the only such way is the one we are currently */
       /* deleting */
-      way_chain_t *way_chain = 
+      way_chain_t *way_chain =
 	osm_node_delete(osm, icon, (*chain)->node, FALSE, FALSE);
       g_assert(way_chain);
       while(way_chain) {
@@ -2038,7 +2038,7 @@ void osm_way_delete(osm_t *osm, icon_t **icon,
 	way_chain = way_next;
       }
     }
-    
+
     node_chain_t *cur = (*chain);
     *chain = cur->next;
     g_free(cur);
@@ -2070,13 +2070,13 @@ void osm_way_delete(osm_t *osm, icon_t **icon,
   }
 }
 
-void osm_relation_delete(osm_t *osm, relation_t *relation, 
+void osm_relation_delete(osm_t *osm, relation_t *relation,
 			 gboolean permanently) {
 
   /* new relations aren't stored on the server and are just */
   /* deleted permanently */
   if(OSM_FLAGS(relation) & OSM_FLAG_NEW) {
-    printf("About to delete NEW relation #" ITEM_ID_FORMAT 
+    printf("About to delete NEW relation #" ITEM_ID_FORMAT
 	   " -> force permanent delete\n", OSM_ID(relation));
     permanently = TRUE;
   }
@@ -2088,7 +2088,7 @@ void osm_relation_delete(osm_t *osm, relation_t *relation,
     printf("mark relation #" ITEM_ID_FORMAT " as deleted\n", OSM_ID(relation));
     OSM_FLAGS(relation) |= OSM_FLAG_DELETED;
   } else {
-    printf("permanently delete relation #" ITEM_ID_FORMAT "\n", 
+    printf("permanently delete relation #" ITEM_ID_FORMAT "\n",
 	   OSM_ID(relation));
 
     /* remove it from the chain */
@@ -2141,7 +2141,7 @@ osm_way_reverse_direction_sensitive_tags (way_t *way) {
   while (tag != NULL) {
     char *lc_key = g_ascii_strdown(tag->key, -1);
     char *lc_value = g_ascii_strdown(tag->value, -1);
-    
+
     if (strcmp(lc_key, "oneway") == 0) {
       // oneway={yes/true/1/-1} is unusual.
       // Favour "yes" and "-1".
@@ -2209,10 +2209,10 @@ osm_way_reverse_direction_sensitive_roles(osm_t *osm, way_t *way) {
 
   for (; rel_chain != NULL; rel_chain = rel_chain->next) {
     char *type = osm_tag_get_by_key(OSM_TAG(rel_chain->relation), "type");
-    
+
     // Route relations; http://wiki.openstreetmap.org/wiki/Relation:route
     if (strcasecmp(type, "route") == 0) {
-      
+
       // First find the member corresponding to our way:
       member_t *member = rel_chain->relation->member;
       for (; member != NULL; member = member->next) {
@@ -2226,7 +2226,7 @@ osm_way_reverse_direction_sensitive_roles(osm_t *osm, way_t *way) {
         }
       }
       g_assert(member);  // osm_way_to_relation() broken?
-      
+
       // Then flip its role if it's one of the direction-sensitive ones
       if (member->role == NULL) {
         printf("null role in route relation -> ignore\n");
@@ -2310,7 +2310,7 @@ tag_t *osm_tags_copy(tag_t *src_tag) {
     }
     src_tag = src_tag->next;
   }
-  
+
   return new_tags;
 }
 
@@ -2328,7 +2328,7 @@ char *osm_object_type_string(object_t *object) {
   };
 
   int i;
-  for(i=0;types[i].name;i++) 
+  for(i=0;types[i].name;i++)
     if(object->type == types[i].type)
       return types[i].name;
 
@@ -2341,7 +2341,7 @@ char *osm_object_get_name(object_t *object) {
   tag_t *tags = osm_object_get_tags(object);
 
   /* worst case: we have no tags at all. return techincal info then */
-  if(!tags) 
+  if(!tags)
     return g_strdup_printf("unspecified %s", osm_object_type_string(object));
 
   /* try to figure out _what_ this is */
@@ -2397,7 +2397,7 @@ char *osm_object_get_name(object_t *object) {
   else if(type && !name)
     ret = g_strdup(type);
   else if(name && !type)
-    ret = g_strdup_printf("%s: \"%s\"", 
+    ret = g_strdup_printf("%s: \"%s\"",
 	  osm_object_type_string(object), name);
   else
     ret = g_strdup_printf("unspecified %s", osm_object_type_string(object));
@@ -2408,9 +2408,9 @@ char *osm_object_get_name(object_t *object) {
   /* remove underscores from string and replace them by spaces as this is */
   /* usually nicer */
   char *p = ret;
-  while(*p) { 
-    if(*p == '_') 
-      *p = ' ';  
+  while(*p) {
+    if(*p == '_')
+      *p = ' ';
     p++;
   }
 
@@ -2420,7 +2420,7 @@ char *osm_object_get_name(object_t *object) {
 char *osm_object_string(object_t *object) {
   char *type_str = osm_object_type_string(object);
 
-  if(!object) 
+  if(!object)
     return g_strdup_printf("%s #<invalid>", type_str);
 
   switch(object->type) {
@@ -2431,7 +2431,7 @@ char *osm_object_string(object_t *object) {
   case WAY:
   case RELATION:
     g_assert(object->ptr);
-    return g_strdup_printf("%s #" ITEM_ID_FORMAT, type_str, 
+    return g_strdup_printf("%s #" ITEM_ID_FORMAT, type_str,
 			   OBJECT_ID(*object));
     break;
     break;

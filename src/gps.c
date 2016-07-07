@@ -41,7 +41,7 @@ gboolean gps_get_pos(appdata_t *appdata, pos_t *pos, float *alt) {
     pos->lon = gps_state->longitude;
   }
 
-  if(alt) 
+  if(alt)
     *alt = gps_state->altitude;
 
   return TRUE;
@@ -50,9 +50,9 @@ gboolean gps_get_pos(appdata_t *appdata, pos_t *pos, float *alt) {
 static void
 location_changed(LocationGPSDevice *device, gps_state_t *gps_state) {
 
-  gps_state->fix = 
+  gps_state->fix =
     (device->fix->fields & LOCATION_GPS_DEVICE_LATLONG_SET);
-  
+
   if(gps_state->fix) {
     gps_state->latitude = device->fix->latitude;
     gps_state->longitude = device->fix->longitude;
@@ -63,7 +63,7 @@ location_changed(LocationGPSDevice *device, gps_state_t *gps_state) {
   else
     gps_state->altitude = NAN;
 
-  if(gps_state->cb) 
+  if(gps_state->cb)
     if(!gps_state->cb(gps_state->data))
       gps_state->cb = NULL;
 }
@@ -73,14 +73,14 @@ void gps_init(appdata_t *appdata) {
 
   printf("GPS init: Using liblocation\n");
 
-  gps_state->device = g_object_new(LOCATION_TYPE_GPS_DEVICE, NULL);  
+  gps_state->device = g_object_new(LOCATION_TYPE_GPS_DEVICE, NULL);
   if(!gps_state->device) {
     printf("Unable to connect to liblocation\n");
     return;
   }
 
-  gps_state->idd_changed = 
-    g_signal_connect(gps_state->device, "changed", 
+  gps_state->idd_changed =
+    g_signal_connect(gps_state->device, "changed",
 		     G_CALLBACK(location_changed), gps_state);
 
 #ifdef LL_CONTROL_GPSD
@@ -88,7 +88,7 @@ void gps_init(appdata_t *appdata) {
 #endif
 }
 
-void gps_release(appdata_t *appdata) { 
+void gps_release(appdata_t *appdata) {
   gps_state_t *gps_state = appdata->gps_state;
 
   if(!gps_state->device) return;
@@ -104,7 +104,7 @@ void gps_release(appdata_t *appdata) {
       location_gpsd_control_stop(gps_state->control);
   }
 #endif
-    
+
   /* Disconnect signal */
   g_signal_handler_disconnect(gps_state->device, gps_state->idd_changed);
 
@@ -117,7 +117,7 @@ void gps_enable(appdata_t *appdata, gboolean enable) {
     gps_state_t *gps_state = appdata->gps_state;
 
     if(enable != appdata->gps_state->gps_is_on) {
-      if(gps_state->device && gps_state->control 
+      if(gps_state->device && gps_state->control
 #if MAEMO_VERSION_MAJOR < 5
 	 && gps_state->control->can_control
 #endif
@@ -127,12 +127,12 @@ void gps_enable(appdata_t *appdata, gboolean enable) {
 	  location_gpsd_control_start(gps_state->control);
 	} else {
 	  printf("stopping gpsd\n");
-	  location_gpsd_control_stop(gps_state->control);	
+	  location_gpsd_control_stop(gps_state->control);
 	}
 	appdata->gps_state->gps_is_on = enable;
       }
     }
-    
+
     appdata->settings->enable_gps = enable;
   }
 }
@@ -157,15 +157,15 @@ gboolean gps_get_pos(appdata_t *appdata, pos_t *pos, float *alt) {
   g_mutex_lock(appdata->gps_state->mutex);
   if(appdata->gps_state->gpsdata.set & STATUS_SET) {
     if(appdata->gps_state->gpsdata.status != STATUS_NO_FIX) {
-      if(appdata->gps_state->gpsdata.set & LATLON_SET) 
+      if(appdata->gps_state->gpsdata.set & LATLON_SET)
 	*pos = appdata->gps_state->gpsdata.fix.pos;
-      if(alt && appdata->gps_state->gpsdata.set & ALTITUDE_SET) 
+      if(alt && appdata->gps_state->gpsdata.set & ALTITUDE_SET)
 	*alt = appdata->gps_state->gpsdata.fix.alt;
     }
   }
-  
+
   g_mutex_unlock(appdata->gps_state->mutex);
-  
+
   return(!isnan(pos->lat));
 }
 
@@ -193,7 +193,7 @@ static int gps_connect(gps_state_t *gps_state) {
   printf("GPSD: trying to connect to %s %d\n", GPSD_HOST, GPSD_PORT);
 
   int retries = 5;
-  while(retries && 
+  while(retries &&
 	(GNOME_VFS_OK != (vfs_result = gnome_vfs_inet_connection_create(
 		&gps_state->iconn, GPSD_HOST, GPSD_PORT, NULL)))) {
     printf("Error creating connection to GPSD, retrying ...\n");
@@ -208,7 +208,7 @@ static int gps_connect(gps_state_t *gps_state) {
   }
 
   retries = 5;
-  while(retries && ((gps_state->socket = 
+  while(retries && ((gps_state->socket =
      gnome_vfs_inet_connection_to_socket(gps_state->iconn)) == NULL)) {
     printf("Error creating connecting GPSD socket, retrying ...\n");
 
@@ -228,12 +228,12 @@ static int gps_connect(gps_state_t *gps_state) {
     printf("Error setting GPSD timeout\n");
     gnome_vfs_inet_connection_destroy(gps_state->iconn, NULL);
     return -1;
-  } 
+  }
 
   printf("GPSD connected ...\n");
 
   return 0;
-}	
+}
 
 void gps_clear_fix(struct gps_fix_t *fixp) {
   fixp->mode = MODE_NOT_SEEN;
@@ -253,11 +253,11 @@ static void gps_unpack(char *buf, struct gps_data_t *gpsdata) {
 	tp = sp + strcspn(sp, ",\r\n");
 	if (*tp == '\0') tp--;
 	else *tp = '\0';
-	
+
 	switch (*sp) {
 	case 'O':
 	  if (sp[2] == '?') {
-	    gpsdata->set = 
+	    gpsdata->set =
 	      (gpsdata->set & SATELLITE_SET) | // fix for below
 	      MODE_SET | STATUS_SET;  // this clears sat info??
 	    gpsdata->status = STATUS_NO_FIX;
@@ -265,7 +265,7 @@ static void gps_unpack(char *buf, struct gps_data_t *gpsdata) {
 	  } else {
 	    struct gps_fix_t nf;
 	    char tag[MAXTAGLEN+1], alt[20], eph[20], lat[20], lon[20], mode[2];
-	    int st = sscanf(sp+2, 
+	    int st = sscanf(sp+2,
 			    "%8s %*s %*s %19s %19s "
 			    "%19s %19s %*s %*s %*s %*s "
 			    "%*s %*s %*s %1s",
@@ -300,7 +300,7 @@ static void gps_unpack(char *buf, struct gps_data_t *gpsdata) {
 }
 
 void gps_enable(appdata_t *appdata, gboolean enable) {
-  if(appdata->settings) 
+  if(appdata->settings)
     appdata->settings->enable_gps = enable;
 }
 
@@ -323,30 +323,30 @@ gpointer gps_thread(gpointer data) {
 
 	if(gps_connect(appdata->gps_state) < 0)
 	  sleep(10);
-	else 
+	else
 	  connected = TRUE;
       } else {
-	if(GNOME_VFS_OK == 
+	if(GNOME_VFS_OK ==
 	   (vfs_result = gnome_vfs_socket_write(appdata->gps_state->socket,
 		      msg, strlen(msg)+1, &bytes_read, NULL))) {
 
 	  /* update every second, wait here to make sure a complete */
 	  /* reply is received */
 	  sleep(1);
-	  
+
 	  if(bytes_read == (strlen(msg)+1)) {
 	    vfs_result = gnome_vfs_socket_read(appdata->gps_state->socket,
 			       str, sizeof(str)-1, &bytes_read, NULL);
 	    if(vfs_result == GNOME_VFS_OK) {
-	      str[bytes_read] = 0; 
-	    
+	      str[bytes_read] = 0;
+
 	      printf("msg: %s (%zu)\n", str, strlen(str));
-	      
+
 	      g_mutex_lock(appdata->gps_state->mutex);
-	      
-	      appdata->gps_state->gpsdata.set &= 
+
+	      appdata->gps_state->gpsdata.set &=
 		~(LATLON_SET|MODE_SET|STATUS_SET);
-	    
+
 	      gps_unpack(str, &appdata->gps_state->gpsdata);
 	      g_mutex_unlock(appdata->gps_state->mutex);
 	    }
@@ -378,11 +378,11 @@ void gps_init(appdata_t *appdata) {
 
   /* start a new thread to listen to gpsd */
   appdata->gps_state->mutex = g_mutex_new();
-  appdata->gps_state->thread_p = 
+  appdata->gps_state->thread_p =
     g_thread_create(gps_thread, appdata, FALSE, NULL);
 }
 
-void gps_release(appdata_t *appdata) { 
+void gps_release(appdata_t *appdata) {
 #ifdef ENABLE_GPSBT
   gpsbt_stop(&appdata->gps_state->context);
 #endif

@@ -146,7 +146,7 @@ static int josm_type_parse(char *type) {
 }
 
 /* parse children of a given node for into *widget */
-static presets_widget_t **parse_widgets(xmlNode *a_node, 
+static presets_widget_t **parse_widgets(xmlNode *a_node,
 					presets_item_t *item,
 					presets_widget_t **widget) {
   xmlNode *cur_node = NULL;
@@ -179,7 +179,7 @@ static presets_widget_t **parse_widgets(xmlNode *a_node,
 	(*widget)->text = NULL;
 	widget = &((*widget)->next);
 #endif
-      } 
+      }
       else if(strcasecmp((char*)cur_node->name, "text") == 0) {
 
 	/* --------- text widget --------- */
@@ -198,9 +198,9 @@ static presets_widget_t **parse_widgets(xmlNode *a_node,
 	(*widget)->type = WIDGET_TYPE_COMBO;
 	(*widget)->text = (char*)xmlGetProp(cur_node, BAD_CAST "text");
 	(*widget)->key = (char*)xmlGetProp(cur_node, BAD_CAST "key");
-	(*widget)->del_if_empty = xmlGetPropIs(cur_node, 
+	(*widget)->del_if_empty = xmlGetPropIs(cur_node,
 					       "delete_if_empty", "true");
-	(*widget)->combo_w.def = (char*)xmlGetProp(cur_node, 
+	(*widget)->combo_w.def = (char*)xmlGetProp(cur_node,
 						   BAD_CAST "default");
 	(*widget)->combo_w.values = xmlGetPropValues(cur_node, "values");
 	widget = &((*widget)->next);
@@ -221,7 +221,7 @@ static presets_widget_t **parse_widgets(xmlNode *a_node,
 	(*widget)->type = WIDGET_TYPE_CHECK;
 	(*widget)->text = (char*)xmlGetProp(cur_node, BAD_CAST "text");
 	(*widget)->key = (char*)xmlGetProp(cur_node, BAD_CAST "key");
-	(*widget)->del_if_empty = xmlGetPropIs(cur_node, 
+	(*widget)->del_if_empty = xmlGetPropIs(cur_node,
 					       "delete_if_empty", "true");
 	(*widget)->check_w.def = xmlGetPropIs(cur_node, "default", "on");
 	widget = &((*widget)->next);
@@ -241,8 +241,8 @@ static presets_widget_t **parse_widgets(xmlNode *a_node,
 	  item->link = (char*)xmlGetProp(cur_node, BAD_CAST "href");
 	} else
 	  printf("ignoring surplus link\n");
-	
-      } else 
+
+      } else
 	printf("found unhandled annotations/item/%s\n", cur_node->name);
     }
   }
@@ -256,10 +256,10 @@ static presets_item_t *parse_item(xmlDocPtr doc, xmlNode *a_node) {
   /* ------ parse items own properties ------ */
   item->name = (char*)xmlGetProp(a_node, BAD_CAST "name");
 
-  item->icon = 
+  item->icon =
     josm_icon_name_adjust((char*)xmlGetProp(a_node, BAD_CAST "icon"));
 
-  item->type = 
+  item->type =
     josm_type_parse((char*)xmlGetProp(a_node, BAD_CAST "type"));
 
   presets_widget_t **widget = &item->widget;
@@ -272,11 +272,11 @@ static presets_item_t *parse_group(xmlDocPtr doc, xmlNode *a_node) {
 
   presets_item_t *group = g_new0(presets_item_t, 1);
   group->is_group = TRUE;
-  
+
   /* ------ parse groups own properties ------ */
   group->name = (char*)xmlGetProp(a_node, BAD_CAST "name");
 
-  group->icon = 
+  group->icon =
     josm_icon_name_adjust((char*)xmlGetProp(a_node, BAD_CAST "icon"));
 
   group->type = 0;
@@ -300,12 +300,12 @@ static presets_item_t *parse_group(xmlDocPtr doc, xmlNode *a_node) {
       } else if(strcasecmp((char*)cur_node->name, "separator") == 0) {
 	*preset = g_new0(presets_item_t, 1);
 	preset = &((*preset)->next);
-      } else 
+      } else
 	printf("found unhandled annotations/group/%s\n", cur_node->name);
     }
-  }  
+  }
 
-  
+
 
   return group;
 }
@@ -325,28 +325,28 @@ static presets_item_t *parse_annotations(xmlDocPtr doc, xmlNode *a_node) {
       } else if(strcasecmp((char*)cur_node->name, "separator") == 0) {
 	*preset = g_new0(presets_item_t, 1);
 	preset = &((*preset)->next);
-      } else 
+      } else
 	printf("found unhandled annotations/%s\n", cur_node->name);
     }
-  }  
+  }
   return presets;
 }
 
 static presets_item_t *parse_doc(xmlDocPtr doc) {
   /* Get the root element node */
   xmlNode *cur_node = NULL;
-  presets_item_t *presets = NULL; 
+  presets_item_t *presets = NULL;
 
-  for(cur_node = xmlDocGetRootElement(doc); 
+  for(cur_node = xmlDocGetRootElement(doc);
       cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcasecmp((char*)cur_node->name, "annotations") == 0) {
 	presets = parse_annotations(doc, cur_node);
-      } else 
+      } else
 	printf("found unhandled %s\n", cur_node->name);
     }
   }
-    
+
   xmlFreeDoc(doc);
   return presets;
 }
@@ -355,12 +355,12 @@ presets_item_t *josm_presets_load(void) {
   presets_item_t *presets = NULL;
 
   printf("Loading JOSM presets ...\n");
-    
+
   LIBXML_TEST_VERSION;
 
   char *filename = find_file("presets.xml");
   if(!filename) return NULL;
-  
+
   /* parse the file and get the DOM */
   xmlDoc *doc = NULL;
   if((doc = xmlReadFile(filename, NULL, 0)) == NULL) {
@@ -380,30 +380,30 @@ presets_item_t *josm_presets_load(void) {
 /* --------------------- the items dialog -------------------- */
 
 static void attach_both(GtkWidget *table, GtkWidget *widget, gint y) {
-  gtk_table_attach(GTK_TABLE(table), widget, 0,2,y,y+1, 
+  gtk_table_attach(GTK_TABLE(table), widget, 0,2,y,y+1,
 		   GTK_EXPAND | GTK_FILL, 0,0,0);
 }
 
 static void attach_text(GtkWidget *table, char *text, gint y) {
-  gtk_table_attach(GTK_TABLE(table), gtk_label_new(text), 0,1,y,y+1, 
+  gtk_table_attach(GTK_TABLE(table), gtk_label_new(text), 0,1,y,y+1,
 		   GTK_EXPAND | GTK_FILL, 0,0,0);
 }
 
 static void attach_right(GtkWidget *table, GtkWidget *widget, gint y) {
-  gtk_table_attach(GTK_TABLE(table), widget, 1,2,y,y+1, 
+  gtk_table_attach(GTK_TABLE(table), widget, 1,2,y,y+1,
 		   GTK_EXPAND | GTK_FILL, 0,0,0);
 }
 
-static tag_t **store_value(presets_widget_t *widget, tag_t **ctag, 
+static tag_t **store_value(presets_widget_t *widget, tag_t **ctag,
 			   char *value) {
   if((value && strlen(value)) || !widget->del_if_empty) {
     *ctag = g_new0(tag_t, 1);
     (*ctag)->key = g_strdup(widget->key);
     (*ctag)->value = g_strdup(value?value:"");
-	  
-    printf("key = %s, value = %s\n", 
+
+    printf("key = %s, value = %s\n",
 	   widget->key, (*ctag)->value);
-    
+
     ctag = &((*ctag)->next);
   } else
     printf("ignore empty key = %s\n", widget->key);
@@ -412,15 +412,15 @@ static tag_t **store_value(presets_widget_t *widget, tag_t **ctag,
 }
 
 #ifdef USE_HILDON
-static gint table_expose_event(GtkWidget *widget, GdkEventExpose *event, 
+static gint table_expose_event(GtkWidget *widget, GdkEventExpose *event,
 			 gboolean *first) {
 
   if(*first) {
-    guint border_width = 
+    guint border_width =
       gtk_container_get_border_width(GTK_CONTAINER(widget->parent));
     gtk_viewport_set_shadow_type(GTK_VIEWPORT(widget->parent), GTK_SHADOW_NONE);
 
-    gtk_widget_set_size_request(GTK_WIDGET(widget->parent), -1, 
+    gtk_widget_set_size_request(GTK_WIDGET(widget->parent), -1,
 				widget->allocation.height +  2*border_width);
     *first = FALSE;
   }
@@ -428,7 +428,7 @@ static gint table_expose_event(GtkWidget *widget, GdkEventExpose *event,
 }
 #endif
 
-static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent, 
+static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
 		     presets_item_t *item, tag_t *orig_tag) {
   GtkWidget *dialog = NULL;
   gboolean ok = FALSE;
@@ -460,10 +460,10 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
   GtkWidget **gtk_widgets = (GtkWidget**)g_new0(GtkWidget, widget_cnt);
 
   if(interactive_widget_cnt)  {
-    dialog = 
+    dialog =
       misc_dialog_new(MISC_DIALOG_NOSIZE,
 		      item->name, parent,
-		      GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, 
+		      GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
 		      GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
 		      NULL);
 
@@ -474,7 +474,7 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
       www_context = g_new0(www_context_t, 1);
       www_context->link = item->link;
       www_context->appdata = appdata;
-      
+
       GtkWidget *button = gtk_dialog_add_button(GTK_DIALOG(dialog), _
 			("Info"), GTK_RESPONSE_HELP);
       gtk_signal_connect(GTK_OBJECT(button), "clicked",
@@ -492,7 +492,7 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
       widget = widget->next;
 
       /* skip all following separators (and keys) */
-      while(widget && 
+      while(widget &&
 	    ((widget->type == WIDGET_TYPE_SEPARATOR) ||
 	     (widget->type == WIDGET_TYPE_SPACE) ||
 	     (widget->type == WIDGET_TYPE_KEY))) {
@@ -503,7 +503,7 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
 
     /* create table of required size */
     GtkWidget *table = gtk_table_new(widget_cnt-widget_skip, 2, FALSE);
-  
+
     widget_cnt = widget_skip;
     while(widget) {
       /* check if there's a value with this key already */
@@ -522,7 +522,7 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
       case WIDGET_TYPE_LABEL:
 	attach_both(table, gtk_label_new(widget->text), widget_cnt-widget_skip);
 	break;
-	
+
       case WIDGET_TYPE_COMBO:
 #ifndef FREMANTLE
 	attach_text(table, widget->text, widget_cnt-widget_skip);
@@ -536,12 +536,12 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
 	while(value) {
 	  if(active < 1 && preset && strcmp(preset, value->text)==0)
 	    active = count;
-	  
+
 	  combo_box_append_text(gtk_widgets[widget_cnt], value->text);
 	  value = value->next;
 	  count++;
 	}
-	
+
 	combo_box_set_active(gtk_widgets[widget_cnt], active);
 #ifndef FREMANTLE
 	attach_right(table, gtk_widgets[widget_cnt], widget_cnt-widget_skip);
@@ -549,14 +549,14 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
 	attach_both(table, gtk_widgets[widget_cnt], widget_cnt-widget_skip);
 #endif
 	break;
-	
+
       case WIDGET_TYPE_CHECK:
 	{ gboolean def = FALSE;
 	  if(preset) def = ((strcasecmp(preset, "true") == 0) ||
 			    (strcasecmp(preset, "yes") == 0));
 	  else       def = widget->check_w.def;
 
-	  gtk_widgets[widget_cnt] = 
+	  gtk_widgets[widget_cnt] =
 	    check_button_new_with_label(widget->text);
 	  check_button_set_active(gtk_widgets[widget_cnt], def);
 #ifndef FREMANTLE
@@ -565,10 +565,10 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
 	  attach_both(table, gtk_widgets[widget_cnt], widget_cnt-widget_skip);
 #endif
       } break;
-      
+
     case WIDGET_TYPE_TEXT:
       attach_text(table, widget->text, widget_cnt-widget_skip);
-      
+
       if(!preset && widget->text_w.def) preset = widget->text_w.def;
       gtk_widgets[widget_cnt] = entry_new();
       if(preset)
@@ -576,15 +576,15 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
 
       attach_right(table, gtk_widgets[widget_cnt], widget_cnt-widget_skip);
       break;
-      
+
       default:
 	break;
       }
-      
+
       widget_cnt++;
       widget = widget->next;
     }
-    
+
 #ifndef USE_HILDON
     /* add widget to dialog */
     gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), table);
@@ -593,9 +593,9 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
 #ifndef FREMANTLE_PANNABLE_AREA
     /* put it into a scrolled window */
     GtkWidget *scroll_win = gtk_scrolled_window_new(NULL, NULL);
-    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll_win), 
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll_win),
 				   GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-    gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(scroll_win), 
+    gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(scroll_win),
     					  table);
 #else
     gtk_window_set_default_size(GTK_WINDOW(dialog), -1, 500);
@@ -610,12 +610,12 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
 
     gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), scroll_win);
 #endif
-    
+
     gtk_widget_show_all(dialog);
 
     /* run gtk_dialog_run, but continue if e.g. the help button was pressed */
     int result = -1;
-    do 
+    do
       result = gtk_dialog_run(GTK_DIALOG(dialog));
     while((result != GTK_RESPONSE_DELETE_EVENT) &&
 	  (result != GTK_RESPONSE_ACCEPT) &&
@@ -626,7 +626,7 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
 
   } else
     ok = TRUE;
-  
+
   if(ok) {
     /* handle all children of the table */
     widget = item->widget;
@@ -666,7 +666,7 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
       default:
 	break;
       }
-      
+
       widget_cnt++;
       widget = widget->next;
     }
@@ -685,7 +685,7 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
   return tag;
 }
 
-/* ------------------- the item list (popup menu) -------------- */ 
+/* ------------------- the item list (popup menu) -------------- */
 
 typedef struct {
   appdata_t *appdata;
@@ -695,10 +695,10 @@ typedef struct {
   tag_context_t *tag_context;
 } presets_context_t;
 
-static void 
+static void
 do_item( presets_context_t *context, presets_item_t *item) {
-  tag_t *tag = 
-    presets_item_dialog(context->appdata, 
+  tag_t *tag =
+    presets_item_dialog(context->appdata,
 			GTK_WINDOW(context->tag_context->dialog), item,
 			*context->tag_context->tag);
 
@@ -723,11 +723,11 @@ do_item( presets_context_t *context, presets_item_t *item) {
       }
 
       /* if nothing was replaced, then just append new tag */
-      if(!replaced) 
+      if(!replaced)
 	*dst = tag;
       else
 	osm_tag_free(tag);
-      
+
       tag = next;
     }
 
@@ -736,7 +736,7 @@ do_item( presets_context_t *context, presets_item_t *item) {
 }
 
 #ifndef PICKER_MENU
-static void 
+static void
 cb_menu_item(GtkWidget *menu_item, gpointer data) {
   presets_context_t *context = (presets_context_t*)data;
 
@@ -746,7 +746,7 @@ cb_menu_item(GtkWidget *menu_item, gpointer data) {
   do_item(context, item);
 }
 
-static GtkWidget *build_menu(presets_context_t *context, 
+static GtkWidget *build_menu(presets_context_t *context,
 			     presets_item_t *item) {
   GtkWidget *menu = gtk_menu_new();
 
@@ -761,22 +761,22 @@ static GtkWidget *build_menu(presets_context_t *context,
 	  menu_item = gtk_menu_item_new_with_label(item->name);
 	else {
 	  menu_item = gtk_image_menu_item_new_with_label(item->name);
-	  gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(menu_item), 
+	  gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(menu_item),
 			icon_widget_load(&context->appdata->icon, item->icon));
 	}
-	
-	if(item->is_group) 
-	  gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item), 
+
+	if(item->is_group)
+	  gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item),
 				    build_menu(context, item->group));
 	else {
 	  g_object_set_data(G_OBJECT(menu_item), "item", item);
-	  g_signal_connect(menu_item, "activate", 
+	  g_signal_connect(menu_item, "activate",
 			   GTK_SIGNAL_FUNC(cb_menu_item), context);
 	}
       } else
 	menu_item = gtk_separator_menu_item_new();
 
-      gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);      
+      gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);
     }
 
     item = item->next;
@@ -795,10 +795,10 @@ enum {
   PRESETS_PICKER_NUM_COLS
 };
 
-static GtkWidget 
+static GtkWidget
 *presets_picker(presets_context_t *context, presets_item_t *item);
 
-static void 
+static void
 on_presets_picker_selected(GtkTreeSelection *selection, gpointer data) {
   presets_context_t *context = (presets_context_t*)data;
 
@@ -817,15 +817,15 @@ on_presets_picker_selected(GtkTreeSelection *selection, gpointer data) {
   if (gtk_tree_selection_get_selected (selection, &model, &iter)) {
     char *name = NULL;
     presets_item_t *item = NULL, *sub_item = NULL;
-    gtk_tree_model_get(model, &iter, 
-		       PRESETS_PICKER_COL_NAME, &name, 
-		       PRESETS_PICKER_COL_SUBMENU_PTR, &sub_item, 
-		       PRESETS_PICKER_COL_ITEM_PTR, &item, 
+    gtk_tree_model_get(model, &iter,
+		       PRESETS_PICKER_COL_NAME, &name,
+		       PRESETS_PICKER_COL_SUBMENU_PTR, &sub_item,
+		       PRESETS_PICKER_COL_ITEM_PTR, &item,
 		       -1);
 
     printf("clicked on %s, submenu = %p\n", name, sub_item);
 
-    GtkWidget *view = 
+    GtkWidget *view =
       GTK_WIDGET(gtk_tree_selection_get_tree_view(selection));
 
     if(sub_item) {
@@ -836,7 +836,7 @@ on_presets_picker_selected(GtkTreeSelection *selection, gpointer data) {
       gtk_widget_destroy(sub);
 
       /* views parent is a scrolled window whichs parent in turn is the hbox */
-      GtkWidget *hbox = view->parent->parent; 
+      GtkWidget *hbox = view->parent->parent;
 
       sub = presets_picker(context, sub_item);
       gtk_box_pack_start_defaults(GTK_BOX(hbox), sub);
@@ -844,17 +844,17 @@ on_presets_picker_selected(GtkTreeSelection *selection, gpointer data) {
       g_object_set_data(G_OBJECT(view), "sub", (gpointer)sub);
     } else {
       /* save item pointer in dialog */
-      g_object_set_data(G_OBJECT(gtk_widget_get_toplevel(view)), 
+      g_object_set_data(G_OBJECT(gtk_widget_get_toplevel(view)),
 			"item", (gpointer)item);
 
       /* and request closing of menu */
-      gtk_dialog_response(GTK_DIALOG(gtk_widget_get_toplevel(view)), 
+      gtk_dialog_response(GTK_DIALOG(gtk_widget_get_toplevel(view)),
 			  GTK_RESPONSE_ACCEPT);
     }
   }
 }
-  
-static GtkWidget 
+
+static GtkWidget
 *presets_picker(presets_context_t *context, presets_item_t *item) {
   GtkCellRenderer *renderer;
   GtkListStore    *store;
@@ -864,9 +864,9 @@ static GtkWidget
 #else
   GtkWidget *view = hildon_gtk_tree_view_new(HILDON_UI_MODE_EDIT);
 #endif
-  
-  gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(view), FALSE); 
-  
+
+  gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(view), FALSE);
+
   /* --- "Icon" column --- */
   renderer = gtk_cell_renderer_pixbuf_new();
   gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(view),
@@ -883,10 +883,10 @@ static GtkWidget
   /* --- "submenu icon" column --- */
   renderer = gtk_cell_renderer_pixbuf_new();
   gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(view),
-      -1, "Submenu Icon", renderer, "pixbuf", 
+      -1, "Submenu Icon", renderer, "pixbuf",
       PRESETS_PICKER_COL_SUBMENU_ICON, NULL);
 
-  store = gtk_list_store_new(PRESETS_PICKER_NUM_COLS, 
+  store = gtk_list_store_new(PRESETS_PICKER_NUM_COLS,
 			     GDK_TYPE_PIXBUF,
 			     G_TYPE_STRING,
 			     G_TYPE_POINTER,
@@ -915,7 +915,7 @@ static GtkWidget
 
 	/* mark submenues as such */
 	if(item->is_group) {
-	  GdkPixbuf *subicon = icon_load(&context->appdata->icon, 
+	  GdkPixbuf *subicon = icon_load(&context->appdata->icon,
 				      "submenu_arrow");
 
 	  gtk_list_store_set(store, &iter,
@@ -935,7 +935,7 @@ static GtkWidget
   g_object_unref(store);
 
   /* Setup the selection handler */
-  GtkTreeSelection *select = 
+  GtkTreeSelection *select =
     gtk_tree_view_get_selection (GTK_TREE_VIEW (view));
   gtk_tree_selection_set_mode (select, GTK_SELECTION_SINGLE);
   g_signal_connect (G_OBJECT (select), "changed",
@@ -946,7 +946,7 @@ static GtkWidget
   /* put this inside a scrolled view */
 #ifndef USE_PANNABLE_AREA
   GtkWidget *scrolled_window = gtk_scrolled_window_new (NULL, NULL);
-  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window), 
+  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window),
 				 GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
   gtk_container_add(GTK_CONTAINER(scrolled_window), view);
   return scrolled_window;
@@ -958,7 +958,7 @@ static GtkWidget
 }
 #endif
 
-static gint button_press(GtkWidget *widget, GdkEventButton *event, 
+static gint button_press(GtkWidget *widget, GdkEventButton *event,
 			 gpointer data) {
   presets_context_t *context = (presets_context_t*)data;
 
@@ -974,15 +974,15 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event,
 		   event->button, event->time);
 #else
     /* popup our special picker like menu */
-    GtkWidget *dialog = 
+    GtkWidget *dialog =
       gtk_dialog_new_with_buttons(_("Presets"),
-		  GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(widget))), 
+		  GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(widget))),
 				  GTK_DIALOG_MODAL,
-          GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, 
+          GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
 	  NULL);
 
     gtk_window_set_default_size(GTK_WINDOW(dialog), 400, 480);
-    
+
     /* create root picker */
     GtkWidget *hbox = gtk_hbox_new(TRUE, 0);
 
@@ -992,7 +992,7 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event,
     GtkWidget *sub = gtk_label_new("");
     gtk_box_pack_start_defaults(GTK_BOX(hbox), sub);
 
-    g_object_set_data(G_OBJECT(gtk_bin_get_child(GTK_BIN(root))), 
+    g_object_set_data(G_OBJECT(gtk_bin_get_child(GTK_BIN(root))),
 		      "sub", (gpointer)sub);
 
     gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox);
@@ -1004,7 +1004,7 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event,
 
     gtk_widget_destroy(dialog);
 
-    if(item) 
+    if(item)
       do_item(context, item);
 #endif
 
@@ -1029,7 +1029,7 @@ static gint on_button_destroy(GtkWidget *widget, gpointer data) {
   return FALSE;
 }
 
-GtkWidget *josm_build_presets_button(appdata_t *appdata, 
+GtkWidget *josm_build_presets_button(appdata_t *appdata,
 			       tag_context_t *tag_context) {
   presets_context_t *context = g_new0(presets_context_t, 1);
   context->appdata = appdata;

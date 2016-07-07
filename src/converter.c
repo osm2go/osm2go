@@ -81,7 +81,7 @@ pixel2lon(  float zoom,
 {
     float lon;
 
-    lon = ((pixel_x - ( exp(zoom * M_LN2) * (TILESIZE/2) ) ) *2*M_PI) / 
+    lon = ((pixel_x - ( exp(zoom * M_LN2) * (TILESIZE/2) ) ) *2*M_PI) /
         (TILESIZE * exp(zoom * M_LN2) );
 
     return lon;

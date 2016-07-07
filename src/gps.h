@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2008 Till Harbaum <till@harbaum.org>.
- * 
+ *
  * This file is based upon parts of gpsd/libgps
  *
  * This file is part of OSM2Go.

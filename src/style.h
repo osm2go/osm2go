@@ -52,12 +52,12 @@ typedef struct style_s {
 
   struct {
     float mult;
-    elemstyle_color_t color;      
+    elemstyle_color_t color;
 
     struct {
       gboolean present;
       float width;
-      elemstyle_color_t color;      
+      elemstyle_color_t color;
     } border;
   } frisket;
 

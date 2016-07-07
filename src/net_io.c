@@ -55,7 +55,7 @@ typedef enum { NET_IO_DL_FILE, NET_IO_DL_MEM, NET_IO_DELETE } net_io_type_t;
 /* structure shared between worker and master thread */
 typedef struct {
   net_io_type_t type;
-  gint refcount;       /* reference counter for master and worker thread */ 
+  gint refcount;       /* reference counter for master and worker thread */
 
   char *url, *user;
   gboolean cancel;
@@ -122,7 +122,7 @@ static GtkWidget *busy_dialog(GtkWidget *parent, GtkWidget **pbar,
 		     GTK_SIGNAL_FUNC(on_cancel), (gpointer)cancel_ind);
   gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->action_area), button);
 
-  gtk_signal_connect(GTK_OBJECT(dialog), "destroy", 
+  gtk_signal_connect(GTK_OBJECT(dialog), "destroy",
 	     G_CALLBACK(dialog_destroy_event), (gpointer)cancel_ind);
 
   gtk_widget_show_all(dialog);
@@ -157,10 +157,10 @@ static int curl_progress_func(void *req,
   return 0;
 }
 
-static size_t mem_write(void *ptr, size_t size, size_t nmemb, 
+static size_t mem_write(void *ptr, size_t size, size_t nmemb,
 			void *stream) {
   curl_mem_t *p = (curl_mem_t*)stream;
-  
+
   p->ptr = g_realloc(p->ptr, p->len + size*nmemb + 1);
   if(p->ptr) {
     memcpy(p->ptr+p->len, ptr, size*nmemb);
@@ -172,7 +172,7 @@ static size_t mem_write(void *ptr, size_t size, size_t nmemb,
 
 void net_io_set_proxy(CURL *curl, proxy_t *proxy) {
   if(proxy) {
-    if(proxy->ignore_hosts) 
+    if(proxy->ignore_hosts)
       printf("WARNING: Pproxy \"ignore_hosts\" unsupported!\n");
 
     printf("net_io: using proxy %s:%d\n", proxy->host, proxy->port);
@@ -182,8 +182,8 @@ void net_io_set_proxy(CURL *curl, proxy_t *proxy) {
 
     if(proxy->use_authentication) {
       printf("net_io:   use auth for user %s\n", proxy->authentication_user);
-      
-      char *cred = g_strdup_printf("%s:%s", 
+
+      char *cred = g_strdup_printf("%s:%s",
 				   proxy->authentication_user,
 				   proxy->authentication_password);
 
@@ -195,7 +195,7 @@ void net_io_set_proxy(CURL *curl, proxy_t *proxy) {
 
 static void *worker_thread(void *ptr) {
   net_io_request_t *request = (net_io_request_t*)ptr;
-  
+
   printf("thread: running\n");
 
   CURL *curl = curl_easy_init();
@@ -227,7 +227,7 @@ static void *worker_thread(void *ptr) {
       curl_easy_setopt(curl, CURLOPT_URL, request->url);
 
     curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
-      
+
       switch(request->type) {
       case NET_IO_DL_FILE:
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, outfile);
@@ -238,9 +238,9 @@ static void *worker_thread(void *ptr) {
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &request->mem);
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, mem_write);
 	break;
-	
+
       case NET_IO_DELETE:
-	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "DELETE"); 
+	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "DELETE");
 	break;
       }
 
@@ -260,11 +260,11 @@ static void *worker_thread(void *ptr) {
       curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1l);
 
       /* play nice and report some user agent */
-      curl_easy_setopt(curl, CURLOPT_USERAGENT, PACKAGE "-libcurl/" VERSION); 
- 
+      curl_easy_setopt(curl, CURLOPT_USERAGENT, PACKAGE "-libcurl/" VERSION);
+
       request->res = curl_easy_perform(curl);
       printf("thread: curl perform returned with %d\n", request->res);
-    
+
       curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &request->response);
 
 #if 0
@@ -274,7 +274,7 @@ static void *worker_thread(void *ptr) {
       curl_easy_setopt(curl, CURLOPT_HTTPHEADER, slist);
 #endif
 
-      if(request->type == NET_IO_DL_FILE) 
+      if(request->type == NET_IO_DL_FILE)
 	fclose(outfile);
     }
 
@@ -282,7 +282,7 @@ static void *worker_thread(void *ptr) {
     curl_easy_cleanup(curl);
   } else
     printf("thread: unable to init curl\n");
-  
+
   printf("thread: io done\n");
   request_free(request);
 
@@ -299,7 +299,7 @@ static gboolean net_io_do(GtkWidget *parent, net_io_request_t *request) {
 
   GtkWidget *pbar = NULL;
   GtkWidget *dialog = busy_dialog(parent, &pbar, &request->cancel);
-  
+
   /* create worker thread */
   request->refcount = 2;   // master and worker hold a reference
   if(!g_thread_create(&worker_thread, request, FALSE, NULL) != 0) {
@@ -321,8 +321,8 @@ static gboolean net_io_do(GtkWidget *parent, net_io_request_t *request) {
     if(request->progress != progress) {
       gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(pbar), request->progress);
       progress = request->progress;
-    } else 
-      if(!progress) 
+    } else
+      if(!progress)
 	gtk_progress_bar_pulse(GTK_PROGRESS_BAR(pbar));
 
     usleep(100000);
@@ -348,7 +348,7 @@ static gboolean net_io_do(GtkWidget *parent, net_io_request_t *request) {
 
   /* a valid http connection may have returned an error */
   if(request->response != 200) {
-    errorf(parent, _("Download failed with code %ld:\n\n%s\n"), 
+    errorf(parent, _("Download failed with code %ld:\n\n%s\n"),
 	   request->response, http_message(request->response));
     return FALSE;
   }
@@ -356,7 +356,7 @@ static gboolean net_io_do(GtkWidget *parent, net_io_request_t *request) {
   return TRUE;
 }
 
-gboolean net_io_download_file(GtkWidget *parent, settings_t *settings, 
+gboolean net_io_download_file(GtkWidget *parent, settings_t *settings,
 			      char *url, char *filename) {
   net_io_request_t *request = g_new0(net_io_request_t, 1);
 
@@ -388,7 +388,7 @@ gboolean net_io_download_file(GtkWidget *parent, settings_t *settings,
 }
 
 
-gboolean net_io_download_mem(GtkWidget *parent, settings_t *settings, 
+gboolean net_io_download_mem(GtkWidget *parent, settings_t *settings,
 			     char *url, char **mem) {
   net_io_request_t *request = g_new0(net_io_request_t, 1);
 
@@ -403,7 +403,7 @@ gboolean net_io_download_mem(GtkWidget *parent, settings_t *settings,
     printf("ptr = %p, len = %d\n", request->mem.ptr, request->mem.len);
     *mem = request->mem.ptr;
   }
-  
+
   request_free(request);
   return result;
 }

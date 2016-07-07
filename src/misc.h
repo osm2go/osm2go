@@ -46,7 +46,7 @@ typedef struct file_chain_s {
 void errorf(GtkWidget *parent, const char *fmt, ...);
 void warningf(GtkWidget *parent, const char *fmt, ...);
 void messagef(GtkWidget *parent, char *title, const char *fmt, ...);
-gboolean yes_no_f(GtkWidget *parent, 
+gboolean yes_no_f(GtkWidget *parent,
 		  appdata_t *appdata, gulong again_bit, gint flags,
 		  char *title, const char *fmt, ...);
 
@@ -80,7 +80,7 @@ gboolean check_button_get_active(GtkWidget *button);
 GType check_button_type(void);
 
 GtkWidget *notebook_new(void);
-void notebook_append_page(GtkWidget *notebook, 
+void notebook_append_page(GtkWidget *notebook,
 			  GtkWidget *page, char *label);
 GtkWidget *notebook_get_gtk_notebook(GtkWidget *notebook);
 

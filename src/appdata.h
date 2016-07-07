@@ -54,7 +54,7 @@
 #define HILDON_ENTRY_NO_AUTOCAP(a)
 #endif
 
-#define ZOOM_BUTTONS  
+#define ZOOM_BUTTONS
 #define DETAIL_POPUP
 
 #include <gtk/gtk.h>

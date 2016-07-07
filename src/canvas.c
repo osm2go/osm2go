@@ -17,12 +17,12 @@
  * along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* canvas.c 
+/* canvas.c
  *
- * this file contains framework independant canvas functionality like 
+ * this file contains framework independant canvas functionality like
  * e.g. a canvas agnostic way of detecting which items are at a certain
  * position. This is required for some canvas that don't provide this
- * function 
+ * function
  *
  * This also allows for a less precise item selection and especially
  * to differentiate between the clicks on a polygon border and its
@@ -40,7 +40,7 @@
 /* The fuzziness allows to specify how far besides an object a user may */
 /* click so it's still considered a click onto that object. This can */
 /* be given in meters _and_ in pixels. Both values will be added to */
-/* the total fuzziness. */ 
+/* the total fuzziness. */
 #define EXTRA_FUZZINESS_METER  0
 #define EXTRA_FUZZINESS_PIXEL  8
 
@@ -58,7 +58,7 @@ static void canvas_item_info_dechain(canvas_item_info_t *item_info) {
 
   /* search for item in chain */
   canvas_item_info_t **itemP = &canvas->item_info[item_info->group].first;
-  while(*itemP && *itemP != item_info) 
+  while(*itemP && *itemP != item_info)
     itemP = &(*itemP)->next;
 
   g_assert(*itemP);
@@ -84,7 +84,7 @@ static void canvas_item_info_dechain(canvas_item_info_t *item_info) {
     g_assert(sc_item->prev == prev);
 
     /* last in chain must be pointed at by last_item_info */
-    if(!sc_item->next) 
+    if(!sc_item->next)
       g_assert(sc_item == canvas->item_info.last);
 
     prev = sc_item;
@@ -95,7 +95,7 @@ static void canvas_item_info_dechain(canvas_item_info_t *item_info) {
 
 /* remove item_info from chain as its visual representation */
 /* has been destroyed */
-static gint item_info_destroy(canvas_item_t *canvas_item, 
+static gint item_info_destroy(canvas_item_t *canvas_item,
 			      canvas_item_info_t *item_info) {
   //  printf("######## destroy %p\n", item_info);
 
@@ -105,7 +105,7 @@ static gint item_info_destroy(canvas_item_t *canvas_item,
   return FALSE;
 }
 
-static void canvas_item_prepend(canvas_t *canvas, canvas_group_t group, 
+static void canvas_item_prepend(canvas_t *canvas, canvas_group_t group,
 			canvas_item_t *canvas_item, canvas_item_info_t *item) {
   if(!canvas->item_info[group].first) {
     g_assert(!canvas->item_info[group].last);
@@ -115,37 +115,37 @@ static void canvas_item_prepend(canvas_t *canvas, canvas_group_t group,
 
   /* attach destroy event handler if it hasn't already been attached */
   if(!item->item)
-    canvas_item_destroy_connect(canvas_item, 
+    canvas_item_destroy_connect(canvas_item,
 				(GCallback)item_info_destroy, item);
 
   item->group = group;
   item->next = canvas->item_info[group].first;
-  canvas->item_info[group].first = item;  
+  canvas->item_info[group].first = item;
   item->item = canvas_item;   /* reference to visual representation */
   item->canvas = canvas;
 }
 
-static void canvas_item_append(canvas_t *canvas, canvas_group_t group, 
+static void canvas_item_append(canvas_t *canvas, canvas_group_t group,
 	       canvas_item_t *canvas_item, canvas_item_info_t *item) {
   if(!canvas->item_info[group].last) {
     g_assert(!canvas->item_info[group].first);
     canvas->item_info[group].first = item;
-  } else                        
+  } else
     canvas->item_info[group].last->next = item;
 
   /* attach destroy event handler if it hasn't already been attached */
   if(!item->item)
-    canvas_item_destroy_connect(canvas_item, 
+    canvas_item_destroy_connect(canvas_item,
 				(GCallback)item_info_destroy, item);
 
   item->group = group;
   item->prev = canvas->item_info[group].last;
-  canvas->item_info[group].last = item;  
+  canvas->item_info[group].last = item;
   item->item = canvas_item;   /* reference to visual representation */
   item->canvas = canvas;
 }
 
-static canvas_item_info_t *canvas_item_get_info(canvas_t *canvas, 
+static canvas_item_info_t *canvas_item_get_info(canvas_t *canvas,
 						canvas_item_t *item) {
   /* search for item in all chains */
   canvas_group_t group;
@@ -154,7 +154,7 @@ static canvas_item_info_t *canvas_item_get_info(canvas_t *canvas,
     while(item_info) {
       if(item_info->item == item)
 	return item_info;
-      
+
       item_info = item_info->next;
     }
   }
@@ -168,13 +168,13 @@ void canvas_item_info_push(canvas_t *canvas, canvas_item_t *item) {
   printf("pushing item_info %p to background\n", item_info);
 
   canvas_item_info_dechain(item_info);
-  canvas_item_append(canvas, item_info->group, 
+  canvas_item_append(canvas, item_info->group,
 		     item_info->item, item_info);
 }
 
 /* store local information about the location of a circle to be able */
 /* to find it when searching for items at a certain position on screen */
-void canvas_item_info_attach_circle(canvas_t *canvas, canvas_group_t group, 
+void canvas_item_info_attach_circle(canvas_t *canvas, canvas_group_t group,
 		    canvas_item_t *canvas_item, gint x, gint y, gint r) {
 
   /* create a new object and insert it into the chain */
@@ -204,9 +204,9 @@ void canvas_item_info_attach_poly(canvas_t *canvas, canvas_group_t group,
   item->data.poly.points = g_new0(lpos_t, item->data.poly.num_points);
   gint i;
 
-  item->data.poly.bbox.top_left.x = 
+  item->data.poly.bbox.top_left.x =
     item->data.poly.bbox.top_left.y = G_MAXINT;
-  item->data.poly.bbox.bottom_right.x = 
+  item->data.poly.bbox.bottom_right.x =
     item->data.poly.bbox.bottom_right.y = G_MININT;
 
   for(i=0;i<item->data.poly.num_points;i++) {
@@ -239,8 +239,8 @@ static gboolean inpoly(lpos_t *poly, gint npoints, gint x, gint y) {
   int x2, y2;
   int i;
   gboolean inside = FALSE;
-  
-  if(npoints < 3) 
+
+  if(npoints < 3)
     return 0;
 
   xold = poly[npoints-1].x;
@@ -261,7 +261,7 @@ static gboolean inpoly(lpos_t *poly, gint npoints, gint x, gint y) {
     }
     if ((xnew < x) == (x <= xold)          /* edge "open" at one end */
 	&& ((long)y-(long)y1)*(long)(x2-x1)
-	< ((long)y2-(long)y1)*(long)(x-x1)) 
+	< ((long)y2-(long)y1)*(long)(x-x1))
       inside = !inside;
 
     xold = xnew;
@@ -273,7 +273,7 @@ static gboolean inpoly(lpos_t *poly, gint npoints, gint x, gint y) {
 
 
 /* get the polygon/polyway segment a certain coordinate is over */
-static gint canvas_item_info_get_segment(canvas_item_info_t *item, 
+static gint canvas_item_info_get_segment(canvas_item_info_t *item,
 					 gint x, gint y, gint fuzziness) {
 
   g_assert(item->type == CANVAS_ITEM_POLY);
@@ -283,7 +283,7 @@ static gint canvas_item_info_get_segment(canvas_item_info_t *item,
   gint retval = -1, i;
   float mindist = 1000000.0;
   for(i=0;i<item->data.poly.num_points-1;i++) {
-    
+
 #define AX (item->data.poly.points[i].x)
 #define AY (item->data.poly.points[i].y)
 #define BX (item->data.poly.points[i+1].x)
@@ -293,15 +293,15 @@ static gint canvas_item_info_get_segment(canvas_item_info_t *item,
 
     float len2 = pow(BY-AY,2)+pow(BX-AX,2);
     float m = ((CX-AX)*(BX-AX)+(CY-AY)*(BY-AY)) / len2;
-    
+
     /* this is a possible candidate */
     if((m >= 0.0) && (m <= 1.0)) {
 
       float n;
       if(fabs(BX-AX) > fabs(BY-AY))
-	n = fabs(sqrt(len2) * (AY+m*(BY-AY)-CY)/(BX-AX)); 
+	n = fabs(sqrt(len2) * (AY+m*(BY-AY)-CY)/(BX-AX));
       else
-	n = fabs(sqrt(len2) * -(AX+m*(BX-AX)-CX)/(BY-AY)); 
+	n = fabs(sqrt(len2) * -(AX+m*(BX-AX)-CX)/(BY-AY));
 
       /* check if this is actually on the line and closer than anything */
       /* we found so far */
@@ -330,7 +330,7 @@ canvas_item_t *canvas_item_info_get_at(canvas_t *canvas, gint x, gint y) {
   canvas_group_t group;
 
   /* convert all "fuzziness" into meters */
-  gint fuzziness = EXTRA_FUZZINESS_METER + 
+  gint fuzziness = EXTRA_FUZZINESS_METER +
     EXTRA_FUZZINESS_PIXEL / canvas_get_zoom(canvas);
 
   /* search from top to bottom */
@@ -349,45 +349,45 @@ canvas_item_t *canvas_item_info_get_at(canvas_t *canvas, gint x, gint y) {
 
 	  gint xdist = item->data.circle.center.x - x;
 	  gint ydist = item->data.circle.center.y - y;
-	  if(xdist*xdist + ydist*ydist < 
+	  if(xdist*xdist + ydist*ydist <
 	     (item->data.circle.r+fuzziness)*(item->data.circle.r+fuzziness)) {
 	    printf("circle item %p at %d/%d(%d)\n", item,
-		   item->data.circle.center.x, 
+		   item->data.circle.center.x,
 		   item->data.circle.center.y,
 		   item->data.circle.r);
 	    return item->item;
 	  }
 	}
       } break;
-      
+
       case CANVAS_ITEM_POLY: {
 	if((x >= item->data.poly.bbox.top_left.x - fuzziness) &&
 	   (y >= item->data.poly.bbox.top_left.y - fuzziness) &&
 	   (x <= item->data.poly.bbox.bottom_right.x + fuzziness) &&
 	   (y <= item->data.poly.bbox.bottom_right.y + fuzziness)) {
-	  
+
 	  int on_segment = canvas_item_info_get_segment(item, x, y, fuzziness);
 	  gboolean in_poly = FALSE;
-	  if(item->data.poly.is_polygon) 
-	    in_poly = inpoly(item->data.poly.points, 
+	  if(item->data.poly.is_polygon)
+	    in_poly = inpoly(item->data.poly.points,
 			     item->data.poly.num_points, x, y);
-	  
+
 	  if((on_segment >= 0) || in_poly) {
-	    printf("bbox item %p, %d pts -> %d %s\n", item, 
+	    printf("bbox item %p, %d pts -> %d %s\n", item,
 		   item->data.poly.num_points, on_segment,
 		   in_poly?"in_poly":"");
-	    
+
 	    return item->item;
 	  }
 	}
-      } break;      
-      
+      } break;
+
       default:
-	g_assert(item->type == CANVAS_ITEM_CIRCLE || 
+	g_assert(item->type == CANVAS_ITEM_CIRCLE ||
 		 item->type == CANVAS_ITEM_POLY);
 	break;
       }
-      
+
       item = item->next;
     }
   }

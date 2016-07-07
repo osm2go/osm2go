@@ -122,7 +122,7 @@ typedef struct osm_gps_map_osd_s {
     gpointer priv;
 } osm_gps_map_osd_t;
 
-typedef void (*OsmGpsMapBalloonCallback)(cairo_t *, OsmGpsMapRect_t *rect, 
+typedef void (*OsmGpsMapBalloonCallback)(cairo_t *, OsmGpsMapRect_t *rect,
                                          gpointer data);
 #define	OSM_GPS_MAP_BALLOON_CALLBACK(f) ((OsmGpsMapBalloonCallback) (f))
 

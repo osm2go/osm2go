@@ -28,7 +28,7 @@
 // Clear any current animations.
 
 void banner_clear(appdata_t *appdata) {
-  if (! (appdata->window && appdata->banner)) 
+  if (! (appdata->window && appdata->banner))
     return;
   if (appdata->banner_is_grabby) {
     gtk_grab_remove(YETI_PASSIVE_WIDGET);
@@ -133,7 +133,7 @@ void banner_clear(appdata_t *appdata) {
     win = GTK_WIDGET(appdata->window);
     gtk_widget_set_sensitive(win, TRUE);
     gtk_grab_remove(YETI_PASSIVE_WIDGET);
-  }  
+  }
 }
 
 

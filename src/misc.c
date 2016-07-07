@@ -28,7 +28,7 @@
 #endif
 
 static void vmessagef(GtkWidget *parent, int type, int buttons,
-		      char *title, const char *fmt, 
+		      char *title, const char *fmt,
 		      va_list args) {
 
   char *buf = g_strdup_vprintf(fmt, args);
@@ -41,7 +41,7 @@ static void vmessagef(GtkWidget *parent, int type, int buttons,
 
   gtk_window_set_title(GTK_WINDOW(dialog), title);
 #else
-  GtkWidget *dialog = 
+  GtkWidget *dialog =
     hildon_note_new_information(GTK_WINDOW(parent), buf);
 #endif
 
@@ -54,7 +54,7 @@ static void vmessagef(GtkWidget *parent, int type, int buttons,
 void messagef(GtkWidget *parent, char *title, const char *fmt, ...) {
   va_list args;
   va_start( args, fmt );
-  vmessagef(parent, GTK_MESSAGE_INFO, 
+  vmessagef(parent, GTK_MESSAGE_INFO,
 	    GTK_BUTTONS_OK, title, fmt, args);
   va_end( args );
 }
@@ -63,7 +63,7 @@ void errorf(GtkWidget *parent, const char *fmt, ...) {
   va_list args;
   va_start( args, fmt );
 
-  vmessagef(parent, GTK_MESSAGE_ERROR, 
+  vmessagef(parent, GTK_MESSAGE_ERROR,
 	    GTK_BUTTONS_CLOSE, _("Error"), fmt, args);
   va_end( args );
 }
@@ -71,7 +71,7 @@ void errorf(GtkWidget *parent, const char *fmt, ...) {
 void warningf(GtkWidget *parent, const char *fmt, ...) {
   va_list args;
   va_start( args, fmt );
-  vmessagef(parent, GTK_MESSAGE_WARNING, 
+  vmessagef(parent, GTK_MESSAGE_WARNING,
 	    GTK_BUTTONS_CLOSE, _("Warning"), fmt, args);
   va_end( args );
 }
@@ -99,10 +99,10 @@ static void on_toggled(GtkWidget *button, gpointer data) {
 				      RESPONSE_YES, !active);
 }
 
-gboolean yes_no_f(GtkWidget *parent, appdata_t *appdata, gulong again_bit, 
+gboolean yes_no_f(GtkWidget *parent, appdata_t *appdata, gulong again_bit,
 		  gint flags, char *title, const char *fmt, ...) {
 
-  if(appdata && again_bit && (appdata->dialog_again.not & again_bit)) 
+  if(appdata && again_bit && (appdata->dialog_again.not & again_bit))
     return((appdata->dialog_again.reply & again_bit) != 0);
 
   va_list args;
@@ -110,7 +110,7 @@ gboolean yes_no_f(GtkWidget *parent, appdata_t *appdata, gulong again_bit,
   char *buf = g_strdup_vprintf(fmt, args);
   va_end( args );
 
-  printf("%s: \"%s\"\n", title, buf); 
+  printf("%s: \"%s\"\n", title, buf);
 
 #ifndef FREMANTLE
   GtkWidget *dialog = gtk_message_dialog_new(
@@ -121,7 +121,7 @@ gboolean yes_no_f(GtkWidget *parent, appdata_t *appdata, gulong again_bit,
 
   gtk_window_set_title(GTK_WINDOW(dialog), title);
 #else
-  GtkWidget *dialog = 
+  GtkWidget *dialog =
     hildon_note_new_confirmation(GTK_WINDOW(parent), buf);
 #endif
 
@@ -129,7 +129,7 @@ gboolean yes_no_f(GtkWidget *parent, appdata_t *appdata, gulong again_bit,
   if(appdata && again_bit) {
 #ifdef FREMANTLE
     /* make sure there's some space before the checkbox */
-    gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), 
+    gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox),
 				gtk_label_new(" "));
 #endif
 
@@ -162,7 +162,7 @@ gboolean yes_no_f(GtkWidget *parent, appdata_t *appdata, gulong again_bit,
 
 static const char *data_paths[] = {
   "~/." PACKAGE,             // in home directory
-  DATADIR ,                  // final installation path 
+  DATADIR ,                  // final installation path
 #ifdef USE_HILDON
   "/media/mmc1/" PACKAGE,    // path to external memory card
   "/media/mmc2/" PACKAGE,    // path to internal memory card
@@ -178,7 +178,7 @@ char *find_file(char *name) {
   while(*path) {
     char *full_path = NULL;
 
-    if(*path[0] == '~') 
+    if(*path[0] == '~')
       full_path = g_strdup_printf("%s/%s/%s", p, *path+2, name);
     else
       full_path = g_strdup_printf("%s/%s", *path, name);
@@ -203,18 +203,18 @@ file_chain_t *file_scan(char *pattern) {
 
   while(*path) {
     GDir *dir = NULL;
-    
+
     /* scan for projects */
     const char *dirname = *path;
 
-    if(*path[0] == '~') 
+    if(*path[0] == '~')
       dirname = g_strdup_printf("%s/%s", p, *path+2);
 
     if((dir = g_dir_open(dirname, 0, NULL))) {
       const char *name = NULL;
       do {
 	name = g_dir_read_name(dir);
-	
+
 	if(name) {
 	  char *fullname = g_strdup_printf("%s/%s", dirname, name);
 	  if(g_file_test(fullname, G_FILE_TEST_IS_REGULAR)) {
@@ -231,7 +231,7 @@ file_chain_t *file_scan(char *pattern) {
 
       g_dir_close(dir);
 
-      if(*path[0] == '~') 
+      if(*path[0] == '~')
 	g_free((char*)dirname);
     }
 
@@ -267,14 +267,14 @@ static const gint dialog_sizes[][2] = {
 #endif
 
 /* create a modal dialog using one of the predefined size hints */
-GtkWidget *misc_dialog_new(guint hint, const char *title, 
+GtkWidget *misc_dialog_new(guint hint, const char *title,
 			   GtkWindow *parent, ...) {
   va_list args;
   va_start( args, parent );
 
   /* create dialog itself */
   GtkWidget *dialog = gtk_dialog_new();
-  
+
   gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);
   if(title) gtk_window_set_title(GTK_WINDOW(dialog), title);
   if(parent) gtk_window_set_transient_for(GTK_WINDOW(dialog), parent);
@@ -284,11 +284,11 @@ GtkWidget *misc_dialog_new(guint hint, const char *title,
     gtk_dialog_add_button(GTK_DIALOG(dialog), button_text, va_arg(args, gint));
     button_text = va_arg(args, const gchar *);
   }
-  
+
   va_end( args );
 
   if(hint != MISC_DIALOG_NOSIZE)
-    gtk_window_set_default_size(GTK_WINDOW(dialog), 
+    gtk_window_set_default_size(GTK_WINDOW(dialog),
 			dialog_sizes[hint][0], dialog_sizes[hint][1]);
 
   return dialog;
@@ -309,13 +309,13 @@ void misc_scrolled_window_add_with_viewport(GtkWidget *win, GtkWidget *child) {
 /* create a scrolled window */
 GtkWidget *misc_scrolled_window_new(gboolean etched_in) {
   GtkWidget *scrolled_window = gtk_scrolled_window_new(NULL, NULL);
-  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window), 
+  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window),
   				 GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
   if(etched_in)
-    gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scrolled_window), 
+    gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scrolled_window),
 					GTK_SHADOW_ETCHED_IN);
   return scrolled_window;
-} 
+}
 
 void misc_scrolled_window_add_with_viewport(GtkWidget *win, GtkWidget *child) {
   gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(win), child);
@@ -335,11 +335,11 @@ const char *misc_get_proxy_uri(settings_t *settings) {
   }
 
   /* otherwise try settings */
-  if(!settings || !settings->proxy || 
+  if(!settings || !settings->proxy ||
      !settings->proxy->host) return NULL;
 
-  snprintf(proxy_buffer, sizeof(proxy_buffer), "%s%s:%u", 
-	   strncmp(settings->proxy->host, "http://", 7)?"http://":"", 
+  snprintf(proxy_buffer, sizeof(proxy_buffer), "%s%s:%u",
+	   strncmp(settings->proxy->host, "http://", 7)?"http://":"",
 	   settings->proxy->host, settings->proxy->port);
 
   proxy_buffer[sizeof(proxy_buffer)-1] = 0;
@@ -372,18 +372,18 @@ GType entry_type(void) {
 GtkWidget *button_new(void) {
   GtkWidget *button = gtk_button_new();
 #ifdef FREMANTLE
-  hildon_gtk_widget_set_theme_size(button, 
+  hildon_gtk_widget_set_theme_size(button,
            (HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH));
-#endif  
+#endif
   return button;
 }
 
 GtkWidget *button_new_with_label(char *label) {
   GtkWidget *button = gtk_button_new_with_label(label);
 #ifdef FREMANTLE
-  hildon_gtk_widget_set_theme_size(button, 
+  hildon_gtk_widget_set_theme_size(button,
            (HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH));
-#endif  
+#endif
   return button;
 }
 
@@ -391,8 +391,8 @@ GtkWidget *check_button_new_with_label(char *label) {
 #ifndef FREMANTLE
   return gtk_check_button_new_with_label(label);
 #else
-  GtkWidget *cbut = 
-    hildon_check_button_new(HILDON_SIZE_FINGER_HEIGHT | 
+  GtkWidget *cbut =
+    hildon_check_button_new(HILDON_SIZE_FINGER_HEIGHT |
                             HILDON_SIZE_AUTO_WIDTH);
   gtk_button_set_label(GTK_BUTTON(cbut), label);
   return cbut;
@@ -462,7 +462,7 @@ GtkWidget *notebook_get_gtk_notebook(GtkWidget *notebook) {
 
 #ifdef FREMANTLE
 static void on_notebook_button_clicked(GtkWidget *button, gpointer data) {
-  GtkNotebook *nb = 
+  GtkNotebook *nb =
     GTK_NOTEBOOK(g_object_get_data(G_OBJECT(data), "notebook"));
 
   gint page = (gint)g_object_get_data(G_OBJECT(button), "page");
@@ -470,10 +470,10 @@ static void on_notebook_button_clicked(GtkWidget *button, gpointer data) {
 }
 #endif
 
-void notebook_append_page(GtkWidget *notebook, 
+void notebook_append_page(GtkWidget *notebook,
 			  GtkWidget *page, char *label) {
 #ifdef FREMANTLE
-  GtkNotebook *nb = 
+  GtkNotebook *nb =
     GTK_NOTEBOOK(g_object_get_data(G_OBJECT(notebook), "notebook"));
 
   gint page_num = gtk_notebook_append_page(nb, page, gtk_label_new(label));
@@ -497,9 +497,9 @@ void notebook_append_page(GtkWidget *notebook,
 	   GTK_SIGNAL_FUNC(on_notebook_button_clicked), notebook);
 
 #if defined(USE_HILDON) && (MAEMO_VERSION_MAJOR == 5)
-  hildon_gtk_widget_set_theme_size(button, 
+  hildon_gtk_widget_set_theme_size(button,
 	   (HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH));
-#endif  
+#endif
 
   gtk_box_pack_start_defaults(
 	      GTK_BOX(g_object_get_data(G_OBJECT(notebook), "hbox")),
@@ -516,14 +516,14 @@ void on_value_changed(HildonPickerButton *widget, gpointer  user_data) {
 }
 
 static GtkWidget *combo_box_new_with_selector(char *title, GtkWidget *selector) {
-  GtkWidget *button = 
-    hildon_picker_button_new(HILDON_SIZE_FINGER_HEIGHT | 
-			     HILDON_SIZE_AUTO_WIDTH, 
+  GtkWidget *button =
+    hildon_picker_button_new(HILDON_SIZE_FINGER_HEIGHT |
+			     HILDON_SIZE_AUTO_WIDTH,
 			     HILDON_BUTTON_ARRANGEMENT_VERTICAL);
 
   hildon_button_set_title_alignment(HILDON_BUTTON(button), 0.5, 0.5);
   hildon_button_set_value_alignment(HILDON_BUTTON(button), 0.5, 0.5);
-  
+
   /* allow button to emit "changed" signal */
   g_signal_connect(button, "value-changed", G_CALLBACK(on_value_changed), NULL);
 

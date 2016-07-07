@@ -70,15 +70,15 @@ settings_t *settings_load(void) {
 #ifdef USE_HILDON
   /* try to use internal memory card on hildon/maemo */
   p = getenv("INTERNAL_MMC_MOUNTPOINT");
-  if(!p) 
+  if(!p)
 #endif
     p = getenv("HOME");
-  
+
   /* if everthing fails use tmp dir */
   if(!p) p = "/tmp";
-  
+
   /* build image path in home directory */
-  if(strncmp(p, "/home", 5) == 0) 
+  if(strncmp(p, "/home", 5) == 0)
     settings->base_path = g_strdup_printf("%s/.osm2go/", p);
   else
     settings->base_path = g_strdup_printf("%s/osm2go/", p);
@@ -113,33 +113,33 @@ settings_t *settings_load(void) {
       /* check if key is present */
       GConfValue *value = gconf_client_get(client, key, NULL);
       if(value) {
-	gconf_value_free(value); 
-      
+	gconf_value_free(value);
+
 	switch(st->type) {
 	case STORE_STRING: {
 	  char **str = (char**)ptr;
 	  if(*str) g_free(*str);
 	  *str = gconf_client_get_string(client, key, NULL);
 	} break;
-	  
-	case STORE_BOOL: 
+
+	case STORE_BOOL:
 	  *((int*)ptr) = gconf_client_get_bool(client, key, NULL);
 	  break;
-	  
-	case STORE_INT: 
+
+	case STORE_INT:
 	  *((int*)ptr) = gconf_client_get_int(client, key, NULL);
 	  break;
-	  
-	case STORE_FLOAT: 
+
+	case STORE_FLOAT:
 	  *((float*)ptr) = gconf_client_get_float(client, key, NULL);
 	  break;
-	  
+
 	default:
 	  printf("Unsupported type %d\n", st->type);
 	  break;
 	}
       }
-      
+
       g_free(key);
       st++;
     }
@@ -148,11 +148,11 @@ settings_t *settings_load(void) {
     char *key = g_strdup_printf("/apps/" PACKAGE "/wms/count");
     GConfValue *value = gconf_client_get(client, key, NULL);
     if(value) {
-      gconf_value_free(value); 
-      
+      gconf_value_free(value);
+
       int i, count = gconf_client_get_int(client, key, NULL);
       g_free(key);
-      
+
       wms_server_t **cur = &settings->wms_server;
       for(i=0;i<count;i++) {
 	key = g_strdup_printf("/apps/" PACKAGE "/wms/name%d", i);
@@ -164,7 +164,7 @@ settings_t *settings_load(void) {
 	key = g_strdup_printf("/apps/" PACKAGE "/wms/path%d", i);
 	char *path = gconf_client_get_string(client, key, NULL);
 	g_free(key);
-	
+
 	/* apply valid entry to list */
 	if(name && server && path) {
 	  *cur = g_new0(wms_server_t, 1);
@@ -180,44 +180,44 @@ settings_t *settings_load(void) {
       }
     } else {
       g_free(key);
-      
+
       /* add default server(s) */
       printf("No WMS servers configured, adding default\n");
       settings->wms_server = wms_server_get_default();
     }
-    
+
     /* ------------- get proxy settings -------------------- */
     if(gconf_client_get_bool(client, PROXY_KEY "use_http_proxy", NULL)) {
       proxy_t *proxy = settings->proxy = g_new0(proxy_t, 1);
-      
+
       /* get basic settings */
       proxy->host = gconf_client_get_string(client, PROXY_KEY "host", NULL);
       proxy->port = gconf_client_get_int(client, PROXY_KEY "port", NULL);
-      proxy->ignore_hosts = 
+      proxy->ignore_hosts =
 	gconf_client_get_string(client, PROXY_KEY "ignore_hosts", NULL);
-      
+
       /* check for authentication */
-      proxy->use_authentication = 
+      proxy->use_authentication =
 	gconf_client_get_bool(client, PROXY_KEY "use_authentication", NULL);
-      
+
       if(proxy->use_authentication) {
-	proxy->authentication_user = 
+	proxy->authentication_user =
 	  gconf_client_get_string(client, PROXY_KEY "authentication_user", NULL);
-	proxy->authentication_password = 
-	  gconf_client_get_string(client, PROXY_KEY "authentication_password", 
+	proxy->authentication_password =
+	  gconf_client_get_string(client, PROXY_KEY "authentication_password",
 				  NULL);
       }
     }
-    
+
     /* use demo setup if present */
     if(!settings->project) {
       char *key = g_strdup_printf("/apps/" PACKAGE "/base_path");
       GConfValue *value = gconf_client_get(client, key, NULL);
-      if(value) 
-	gconf_value_free(value); 
+      if(value)
+	gconf_value_free(value);
       else {
 	printf("base_path not set, assuming first time boot\n");
-	
+
 	/* check for presence of demo project */
 	if(project_exists(settings, "demo")) {
 	  printf("demo project exists, use it as default\n");
@@ -244,22 +244,22 @@ void settings_save(settings_t *settings) {
     char *key = g_strdup_printf("/apps/" PACKAGE "/%s", st->key);
 
     switch(st->type) {
-    case STORE_STRING: 
+    case STORE_STRING:
       if((char*)(*ptr))
 	gconf_client_set_string(client, key, (char*)(*ptr), NULL);
       else
 	gconf_client_unset(client, key, NULL);
       break;
 
-    case STORE_BOOL: 
+    case STORE_BOOL:
       gconf_client_set_bool(client, key, *((int*)ptr), NULL);
       break;
 
-    case STORE_INT: 
+    case STORE_INT:
       gconf_client_set_int(client, key, *((int*)ptr), NULL);
       break;
 
-    case STORE_FLOAT: 
+    case STORE_FLOAT:
       gconf_client_set_float(client, key, *((float*)ptr), NULL);
       break;
 
@@ -285,7 +285,7 @@ void settings_save(settings_t *settings) {
     key = g_strdup_printf("/apps/" PACKAGE "/wms/path%d", count);
     gconf_client_set_string(client, key, cur->path, NULL);
     g_free(key);
-    
+
     count++;
     cur = cur->next;
   }
@@ -299,14 +299,14 @@ void settings_free(settings_t *settings) {
   store_t *st = store;
 
   wms_servers_free(settings->wms_server);
-  
+
   while(st->key) {
     void **ptr = ((void*)settings) + st->offset;
 
     if(st->type == STORE_STRING)
-      if((char*)(*ptr)) 
+      if((char*)(*ptr))
 	g_free((char*)(*ptr));
-	
+
     st++;
   }
 
