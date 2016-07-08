@@ -4,11 +4,12 @@ MAEMO_VERSION_MAJOR = @MAEMO_VERSION_MAJOR@
 prefix = @prefix@
 datarootdir = @datarootdir@
 datadir = @datarootdir@
+srcdir = @srcdir@
 
 all: $(TEMPLATE_ELEMSTYLES)
 
-elemstyles-mapnik.xml: elemstyles-mapnik.xml.in
-	perl ./compose-elemstyles.pl 0.4 '#f2eee8' elemstyles-mapnik.xml.in > $@.tmp
+elemstyles-mapnik.xml: $(srcdir)/elemstyles-mapnik.xml.in
+	perl $(srcdir)/compose-elemstyles.pl 0.4 '#f2eee8' $(srcdir)/elemstyles-mapnik.xml.in > $@.tmp
 	mv $@.tmp $@
 
 clean:
