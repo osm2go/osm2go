@@ -7,4 +7,5 @@ before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -qq libgnome2-dev libgoocanvas-dev libcurl4-openssl-dev libsoup2.4-dev libgtk2.0-dev libgnomevfs2-dev
 script:
-  - autoreconf -fi && ./configure && make
+  - mkdir build
+  - autoreconf -fi && cd build && ../configure && make
