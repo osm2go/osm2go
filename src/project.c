@@ -737,6 +737,26 @@ gboolean project_osm_present(project_t *project) {
 }
 
 static void
+on_project_update_all(GtkButton *button, gpointer data)
+{
+  select_context_t *context = (select_context_t*)data;
+  GtkTreeIter iter;
+  GtkTreeModel *model = list_get_model(context->list);
+  if(gtk_tree_model_get_iter_first(model, &iter)) {
+    do {
+      project_t *prj = NULL;
+      gtk_tree_model_get(model, &iter, PROJECT_COL_DATA, &prj, -1);
+      /* if the project was already downloaded do it again */
+      if(prj && project_osm_present(prj)) {
+        printf("found %s to update\n", prj->name);
+        osm_download(GTK_WIDGET(context->dialog),
+                     context->settings, prj);
+      }
+    } while(gtk_tree_model_iter_next(model, &iter));
+  }
+}
+
+static void
 project_get_status_icon_stock_id(select_context_t *context,
 				 project_t *project, gchar **stock_id) {
 
@@ -797,6 +817,10 @@ static GtkWidget *project_list_widget(select_context_t *context) {
   list_set_static_buttons(context->list, LIST_BTN_NEW,
 	  G_CALLBACK(on_project_new), G_CALLBACK(on_project_edit),
 	  G_CALLBACK(on_project_delete), context);
+
+  list_set_user_buttons(context->list,
+			LIST_BUTTON_USER0, _("Update all"), on_project_update_all,
+			0);
 
   return context->list;
 }
