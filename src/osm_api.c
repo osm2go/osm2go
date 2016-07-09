@@ -128,7 +128,8 @@ gboolean osm_download(GtkWidget *parent, settings_t *settings,
     g_rename(fname, backup);
   }
 
-  gboolean result = net_io_download_file(parent, settings, url, fname);
+  gboolean result = net_io_download_file(parent, settings, url, fname,
+                                         project->name);
 
   /* if there's no new file use the backup */
   if(!g_file_test(fname, G_FILE_TEST_IS_REGULAR)) {

@@ -101,11 +101,16 @@ static void on_cancel(GtkWidget *widget, gpointer data) {
 
 /* create the dialog box shown while worker is running */
 static GtkWidget *busy_dialog(GtkWidget *parent, GtkWidget **pbar,
-			      gboolean *cancel_ind) {
+			      gboolean *cancel_ind, const char *title) {
   GtkWidget *dialog = gtk_dialog_new();
 
   gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
-  gtk_window_set_title(GTK_WINDOW(dialog), _("Downloading"));
+  if(title) {
+    char *str = g_strdup_printf(_("Downloading %s"), title);
+    gtk_window_set_title(GTK_WINDOW(dialog), str);
+    g_free(str);
+  } else
+    gtk_window_set_title(GTK_WINDOW(dialog), _("Downloading"));
   gtk_window_set_default_size(GTK_WINDOW(dialog), 300, 10);
 
   gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);
@@ -290,7 +295,8 @@ static void *worker_thread(void *ptr) {
   return NULL;
 }
 
-static gboolean net_io_do(GtkWidget *parent, net_io_request_t *request) {
+static gboolean net_io_do(GtkWidget *parent, net_io_request_t *request,
+                          const char *title) {
   /* the request structure is shared between master and worker thread. */
   /* typically the master thread will do some waiting until the worker */
   /* thread returns. But the master may very well stop waiting since e.g. */
@@ -298,7 +304,7 @@ static gboolean net_io_do(GtkWidget *parent, net_io_request_t *request) {
   /* from the fact that it's holding the only reference to the request */
 
   GtkWidget *pbar = NULL;
-  GtkWidget *dialog = busy_dialog(parent, &pbar, &request->cancel);
+  GtkWidget *dialog = busy_dialog(parent, &pbar, &request->cancel, title);
 
   /* create worker thread */
   request->refcount = 2;   // master and worker hold a reference
@@ -357,7 +363,7 @@ static gboolean net_io_do(GtkWidget *parent, net_io_request_t *request) {
 }
 
 gboolean net_io_download_file(GtkWidget *parent, settings_t *settings,
-			      char *url, char *filename) {
+			      char *url, char *filename, const char *title) {
   net_io_request_t *request = g_new0(net_io_request_t, 1);
 
   printf("net_io: download %s to file %s\n", url, filename);
@@ -367,7 +373,7 @@ gboolean net_io_download_file(GtkWidget *parent, settings_t *settings,
   if(settings && settings->proxy)
     request->proxy = settings->proxy;
 
-  gboolean result = net_io_do(parent, request);
+  gboolean result = net_io_do(parent, request, title);
   if(!result) {
 
     /* remove the file that may have been written by now. the kernel */
@@ -398,7 +404,7 @@ gboolean net_io_download_mem(GtkWidget *parent, settings_t *settings,
   if(settings && settings->proxy)
     request->proxy = settings->proxy;
 
-  gboolean result = net_io_do(parent, request);
+  gboolean result = net_io_do(parent, request, NULL);
   if(result) {
     printf("ptr = %p, len = %d\n", request->mem.ptr, request->mem.len);
     *mem = request->mem.ptr;

@@ -1296,7 +1296,7 @@ void wms_import(appdata_t *appdata) {
   wms_remove(appdata);
 
   if(!net_io_download_file(GTK_WIDGET(appdata->window), appdata->settings,
-			   url, filename)) {
+			   url, filename, NULL)) {
     g_free(filename);
     g_free(url);
     wms_free(wms);
