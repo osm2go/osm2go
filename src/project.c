@@ -582,7 +582,6 @@ project_t *project_new(select_context_t *context) {
   /* build project osm file name */
   project->osm = g_strdup_printf("%s.osm", project->name);
 
-  /* around the castle in karlsruhe, germany ... */
   project->min.lat = NAN;  project->min.lon = NAN;
   project->max.lat = NAN;  project->max.lon = NAN;
 
