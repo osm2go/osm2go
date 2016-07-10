@@ -330,6 +330,47 @@ static tag_t *xml_scan_tags(xmlDoc *doc, xmlNodePtr node, osm_t *osm) {
   return first_tag;
 }
 
+/*
+ * @brief check if all local modifications of a node are already in the upstream node
+ * @param node upstream node
+ * @param pos new position
+ * @param ntags new tags
+ * @return if changes are redundant
+ * @retval TRUE the changes are the same as the upstream node
+ * @retval FALSE local changes are real
+ */
+static gboolean
+node_compare_changes(const node_t *node, const pos_t *pos, const tag_t *ntags)
+{
+  if (node->pos.lat != pos->lat || node->pos.lon != pos->lon)
+    return FALSE;
+
+  unsigned int ocnt = 0, ncnt = 0;
+  const tag_t *ntag;
+
+  /* first check list length, otherwise deleted tags are hard to detect */
+  for(ntag = ntags; ntag != NULL; ntag = ntag->next)
+    ncnt++;
+  for(ntag = OSM_TAG(node); ntag != NULL; ntag = ntag->next)
+    ocnt++;
+
+  if (ncnt != ocnt)
+    return FALSE;
+
+  for (ntag = ntags; ntag != NULL; ntag = ntag->next) {
+    const tag_t *otag;
+    for (otag = OSM_TAG(node); otag != NULL; otag = otag->next) {
+      if (strcmp(otag->key, ntag->key) == 0) {
+        if (strcmp(otag->value, ntag->value) != 0)
+          return FALSE;
+        break;
+      }
+    }
+  }
+
+  return TRUE;
+}
+
 void diff_restore_node(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
   printf("Restoring node\n");
 
@@ -360,6 +401,7 @@ void diff_restore_node(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
     OSM_FLAGS(node) = OSM_FLAG_NEW;
     OSM_TIME(node) = xml_get_prop_int(node_node, "time", 0);
     if(!OSM_TIME(node)) OSM_TIME(node) = time(NULL);
+    OSM_ID(node) = id;
 
     /* attach to end of node list */
     node_t **lnode = &osm->node;
@@ -396,8 +438,26 @@ void diff_restore_node(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
     return;
   }
 
-  /* update id and position from diff */
-  OSM_ID(node) = id;
+  tag_t *ntags = xml_scan_tags(doc, node_node->children, osm);
+  /* check if the same changes have been done upstream */
+  if(state == OSM_FLAG_DIRTY && node_compare_changes(node, pos, ntags)) {
+    printf("node " ITEM_ID_FORMAT " has the same values and position as upstream, discarding diff\n", id);
+    g_free(pos);
+    g_free(ntags);
+    OSM_FLAGS(node) &= ~OSM_FLAG_DIRTY;
+    return;
+  }
+
+  /* node may be an existing node, so remove tags to */
+  /* make space for new ones */
+  if(OSM_TAG(node)) {
+    printf("  removing existing tags for diff tags\n");
+    osm_tag_free(OSM_TAG(node));
+  }
+
+  OSM_TAG(node) = ntags;
+
+  /* update position from diff */
   if(pos) {
     node->pos.lat = pos->lat;
     node->pos.lon = pos->lon;
@@ -406,16 +466,6 @@ void diff_restore_node(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
 
     g_free(pos);
   }
-
-  /* node may be an existing node, so remove tags to */
-  /* make space for new ones */
-  if(OSM_TAG(node)) {
-    printf("  removing existing tags for diff tags\n");
-    osm_tag_free(OSM_TAG(node));
-    OSM_TAG(node) = NULL;
-  }
-
-  OSM_TAG(node) = xml_scan_tags(doc, node_node->children, osm);
 }
 
 void diff_restore_way(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
