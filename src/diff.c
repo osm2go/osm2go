@@ -260,7 +260,7 @@ void diff_save(project_t *project, osm_t *osm) {
   g_free(backup);
 }
 
-static int xml_get_prop_int(xmlNode *node, char *prop, int def) {
+static int xml_get_prop_int(const xmlNode *node, char *prop, int def) {
   xmlChar *str = xmlGetProp(node, BAD_CAST prop);
   int value = def;
 
@@ -272,18 +272,18 @@ static int xml_get_prop_int(xmlNode *node, char *prop, int def) {
   return value;
 }
 
-static int xml_get_prop_state(xmlNode *node, char *prop) {
-  xmlChar *str = xmlGetProp(node, BAD_CAST prop);
+static int xml_get_prop_state(const xmlNode *node) {
+  xmlChar *str = xmlGetProp(node, BAD_CAST "state");
 
   if(str) {
     if(strcasecmp((char*)str, "new") == 0) {
       xmlFree(str);
       return OSM_FLAG_NEW;
-    }
-
-    if(strcasecmp((char*)str, "deleted") == 0) {
+    } else if(strcasecmp((char*)str, "deleted") == 0) {
       xmlFree(str);
       return OSM_FLAG_DELETED;
+    } else {
+      xmlFree(str);
     }
 
     g_assert(0);
@@ -292,7 +292,7 @@ static int xml_get_prop_state(xmlNode *node, char *prop) {
   return OSM_FLAG_DIRTY;
 }
 
-static pos_t *xml_get_prop_pos(xmlNode *node) {
+static pos_t *xml_get_prop_pos(const xmlNode *node) {
   xmlChar *str_lat = xmlGetProp(node, BAD_CAST "lat");
   xmlChar *str_lon = xmlGetProp(node, BAD_CAST "lon");
 
@@ -383,7 +383,7 @@ void diff_restore_node(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
 
   printf(" " ITEM_ID_FORMAT "\n", id);
 
-  int state = xml_get_prop_state(node_node, "state");
+  int state = xml_get_prop_state(node_node);
   pos_t *pos = xml_get_prop_pos(node_node);
 
   if(!(state & OSM_FLAG_DELETED) && !pos) {
@@ -481,7 +481,7 @@ void diff_restore_way(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
 
   printf(" " ITEM_ID_FORMAT "\n", id);
 
-  int state = xml_get_prop_state(node_node, "state");
+  int state = xml_get_prop_state(node_node);
 
   /* handle hidden flag */
   gboolean hidden = FALSE;
@@ -609,7 +609,7 @@ void diff_restore_relation(xmlDoc *doc, xmlNodePtr node_rel, osm_t *osm) {
 
   printf(" " ITEM_ID_FORMAT "\n", id);
 
-  int state = xml_get_prop_state(node_rel, "state");
+  int state = xml_get_prop_state(node_rel);
 
   /* evaluate properties */
   relation_t *relation = NULL;
