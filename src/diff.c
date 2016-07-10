@@ -372,14 +372,16 @@ node_compare_changes(const node_t *node, const pos_t *pos, const tag_t *ntags)
 }
 
 void diff_restore_node(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
-  printf("Restoring node\n");
+  printf("Restoring node");
 
   /* read properties */
   item_id_t id = xml_get_prop_int(node_node, "id", ID_ILLEGAL);
   if(id == ID_ILLEGAL) {
-    printf("  Node entry missing id\n");
+    printf("\n  Node entry missing id\n");
     return;
   }
+
+  printf(" " ITEM_ID_FORMAT "\n", id);
 
   int state = xml_get_prop_state(node_node, "state");
   pos_t *pos = xml_get_prop_pos(node_node);
@@ -469,13 +471,15 @@ void diff_restore_node(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
 }
 
 void diff_restore_way(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
-  printf("Restoring way\n");
+  printf("Restoring way");
 
   item_id_t id = xml_get_prop_int(node_node, "id", ID_ILLEGAL);
   if(id == ID_ILLEGAL) {
-    printf("  entry missing id\n");
+    printf("\n  entry missing id\n");
     return;
   }
+
+  printf(" " ITEM_ID_FORMAT "\n", id);
 
   int state = xml_get_prop_state(node_node, "state");
 
@@ -595,13 +599,15 @@ void diff_restore_way(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
 }
 
 void diff_restore_relation(xmlDoc *doc, xmlNodePtr node_rel, osm_t *osm) {
-  printf("Restoring relation\n");
+  printf("Restoring relation");
 
   item_id_t id = xml_get_prop_int(node_rel, "id", ID_ILLEGAL);
   if(id == ID_ILLEGAL) {
-    printf("  entry missing id\n");
+    printf("\n  entry missing id\n");
     return;
   }
+
+  printf(" " ITEM_ID_FORMAT "\n", id);
 
   int state = xml_get_prop_state(node_rel, "state");
 
