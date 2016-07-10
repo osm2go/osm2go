@@ -261,11 +261,11 @@ void diff_save(project_t *project, osm_t *osm) {
 }
 
 static int xml_get_prop_int(xmlNode *node, char *prop, int def) {
-  char *str = (char*)xmlGetProp(node, BAD_CAST prop);
+  xmlChar *str = xmlGetProp(node, BAD_CAST prop);
   int value = def;
 
   if(str) {
-    value = strtoul(str, NULL, 10);
+    value = strtoul((char*)str, NULL, 10);
     xmlFree(str);
   }
 
@@ -273,15 +273,15 @@ static int xml_get_prop_int(xmlNode *node, char *prop, int def) {
 }
 
 static int xml_get_prop_state(xmlNode *node, char *prop) {
-  char *str = (char*)xmlGetProp(node, BAD_CAST prop);
+  xmlChar *str = xmlGetProp(node, BAD_CAST prop);
 
   if(str) {
-    if(strcasecmp(str, "new") == 0) {
+    if(strcasecmp((char*)str, "new") == 0) {
       xmlFree(str);
       return OSM_FLAG_NEW;
     }
 
-    if(strcasecmp(str, "deleted") == 0) {
+    if(strcasecmp((char*)str, "deleted") == 0) {
       xmlFree(str);
       return OSM_FLAG_DELETED;
     }
@@ -293,8 +293,8 @@ static int xml_get_prop_state(xmlNode *node, char *prop) {
 }
 
 static pos_t *xml_get_prop_pos(xmlNode *node) {
-  char *str_lat = (char*)xmlGetProp(node, BAD_CAST "lat");
-  char *str_lon = (char*)xmlGetProp(node, BAD_CAST "lon");
+  xmlChar *str_lat = xmlGetProp(node, BAD_CAST "lat");
+  xmlChar *str_lon = xmlGetProp(node, BAD_CAST "lon");
 
   if(!str_lon || !str_lat) {
     if(!str_lon) xmlFree(str_lon);
@@ -303,8 +303,8 @@ static pos_t *xml_get_prop_pos(xmlNode *node) {
   }
 
   pos_t *pos = g_new0(pos_t, 1);
-  pos->lat = g_ascii_strtod(str_lat, NULL);
-  pos->lon = g_ascii_strtod(str_lon, NULL);
+  pos->lat = g_ascii_strtod((char*)str_lat, NULL);
+  pos->lon = g_ascii_strtod((char*)str_lon, NULL);
 
   xmlFree(str_lon);
   xmlFree(str_lat);
@@ -485,9 +485,9 @@ void diff_restore_way(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
 
   /* handle hidden flag */
   gboolean hidden = FALSE;
-  char *str = (char*)xmlGetProp(node_node, BAD_CAST "hidden");
+  xmlChar *str = xmlGetProp(node_node, BAD_CAST "hidden");
   if(str) {
-    if(strcasecmp(str, "true") == 0)
+    if(strcasecmp((char*)str, "true") == 0)
       hidden = TRUE;
 
     xmlFree(str);
@@ -734,13 +734,14 @@ void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) {
   for (cur_node = root_element; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcasecmp((char*)cur_node->name, "diff") == 0) {
-	char *str = (char*)xmlGetProp(cur_node, BAD_CAST "name");
+	xmlChar *str = xmlGetProp(cur_node, BAD_CAST "name");
 	if(str) {
-	  printf("diff for project %s\n", str);
-	  if(strcmp(project->name, str) != 0) {
+	  const char *cstr = (const char*)str;
+	  printf("diff for project %s\n", cstr);
+	  if(strcmp(project->name, cstr) != 0) {
 	    messagef(GTK_WIDGET(appdata->window), _("Warning"),
 		     "Diff name (%s) does not match project name (%s)",
-		     str, project->name);
+		     cstr, project->name);
 	  }
 	  xmlFree(str);
 	}
