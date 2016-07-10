@@ -399,11 +399,11 @@ void diff_restore_node(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
     printf("  Restoring NEW node\n");
 
     node = g_new0(node_t, 1);
+    OSM_ID(node) = id;
     OSM_VISIBLE(node) = TRUE;
     OSM_FLAGS(node) = OSM_FLAG_NEW;
     OSM_TIME(node) = xml_get_prop_int(node_node, "time", 0);
     if(!OSM_TIME(node)) OSM_TIME(node) = time(NULL);
-    OSM_ID(node) = id;
 
     /* attach to end of node list */
     node_t **lnode = &osm->node;
@@ -501,6 +501,7 @@ void diff_restore_way(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
     printf("  Restoring NEW way\n");
 
     way = g_new0(way_t, 1);
+    OSM_ID(way) = id;
     OSM_VISIBLE(way) = TRUE;
     OSM_FLAGS(way) = OSM_FLAG_NEW;
     OSM_TIME(way) = xml_get_prop_int(node_node, "time", 0);
@@ -539,9 +540,6 @@ void diff_restore_way(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
     printf("  no valid way\n");
     return;
   }
-
-  /* update id from diff */
-  OSM_ID(way) = id;
 
   /* update node_chain */
   if(hidden)
@@ -618,6 +616,7 @@ void diff_restore_relation(xmlDoc *doc, xmlNodePtr node_rel, osm_t *osm) {
     printf("  Restoring NEW relation\n");
 
     relation = g_new0(relation_t, 1);
+    OSM_ID(relation) = id;
     OSM_VISIBLE(relation) = TRUE;
     OSM_FLAGS(relation) = OSM_FLAG_NEW;
     OSM_TIME(relation) = xml_get_prop_int(node_rel, "time", 0);
@@ -656,9 +655,6 @@ void diff_restore_relation(xmlDoc *doc, xmlNodePtr node_rel, osm_t *osm) {
     printf("  no valid relation\n");
     return;
   }
-
-  /* update id from diff */
-  OSM_ID(relation) = id;
 
   /* update members */
 
