@@ -542,9 +542,15 @@ static void wms_server_selected(wms_server_context_t *context,
     if(context->wms->server)
       gtk_label_set_text(GTK_LABEL(context->server_label),
 			 context->wms->server);
+    else
+      gtk_label_set_text(GTK_LABEL(context->server_label),
+			 "");
     if(context->wms->path)
       gtk_label_set_text(GTK_LABEL(context->path_label),
 			 context->wms->path);
+    else
+      gtk_label_set_text(GTK_LABEL(context->path_label),
+			 "");
   }
 }
 
