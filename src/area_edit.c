@@ -227,9 +227,18 @@ static void map_update(context_t *context, gboolean forced) {
   if(isnan(context->min.lat) || isnan(context->min.lon) ||
      isnan(context->min.lat) || isnan(context->min.lon)) {
 
-    /* no coordinates given: display the entire world */
+    /* no coordinates given: display around the current GPS position if available */
+    pos_t pos;
+    int zoom = 12;
+    if(!gps_get_pos(context->area->appdata, &pos, NULL)) {
+      /* no GPS position available: display the entire world */
+      pos.lat = 0.0;
+      pos.lon = 0.0;
+      zoom = 1;
+    }
+
     osm_gps_map_set_center_and_zoom(OSM_GPS_MAP(context->map.widget),
-			      0.0, 0.0, 1);
+			      pos.lat, pos.lon, zoom);
 
     osm_gps_map_track_remove_all(OSM_GPS_MAP(context->map.widget));
   } else {
