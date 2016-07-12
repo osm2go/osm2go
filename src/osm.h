@@ -256,9 +256,9 @@ void osm_member_free(member_t *member);
 void osm_tag_free(tag_t *tag);
 void osm_tags_free(tag_t *tag);
 char *osm_tag_get_by_key(tag_t *tag, char *key);
-gboolean osm_is_creator_tag(tag_t *tag);
-gboolean osm_tag_key_and_value_present(tag_t *haystack, tag_t *tag);
-gboolean osm_tag_key_other_value_present(tag_t *haystack, tag_t *tag);
+gboolean osm_is_creator_tag(const tag_t *tag);
+gboolean osm_tag_key_and_value_present(const tag_t *haystack, const tag_t *tag);
+gboolean osm_tag_key_other_value_present(const tag_t *haystack, const tag_t *tag);
 gboolean osm_tag_lists_diff(const tag_t *t1, const tag_t *t2);
 
 char *osm_generate_xml_changeset(osm_t *osm, char *comment);

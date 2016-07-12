@@ -134,13 +134,13 @@ tag_t *osm_parse_osm_tag(osm_t *osm, xmlDocPtr doc, xmlNode *a_node) {
   return tag;
 }
 
-gboolean osm_is_creator_tag(tag_t *tag) {
+gboolean osm_is_creator_tag(const tag_t *tag) {
   if(strcasecmp(tag->key, "created_by") == 0) return TRUE;
 
   return FALSE;
 }
 
-gboolean osm_tag_key_and_value_present(tag_t *haystack, tag_t *tag) {
+gboolean osm_tag_key_and_value_present(const tag_t *haystack, const tag_t *tag) {
   while(haystack) {
     if((strcasecmp(haystack->key, tag->key) == 0) &&
        (strcasecmp(haystack->value, tag->value) == 0))
@@ -151,7 +151,7 @@ gboolean osm_tag_key_and_value_present(tag_t *haystack, tag_t *tag) {
   return FALSE;
 }
 
-gboolean osm_tag_key_other_value_present(tag_t *haystack, tag_t *tag) {
+gboolean osm_tag_key_other_value_present(const tag_t *haystack, const tag_t *tag) {
   while(haystack) {
     if((strcasecmp(haystack->key, tag->key) == 0) &&
        (strcasecmp(haystack->value, tag->value) != 0))
