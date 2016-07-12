@@ -445,7 +445,7 @@ void diff_restore_node(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
   if(state == OSM_FLAG_DIRTY && node_compare_changes(node, pos, ntags)) {
     printf("node " ITEM_ID_FORMAT " has the same values and position as upstream, discarding diff\n", id);
     g_free(pos);
-    g_free(ntags);
+    osm_tags_free(ntags);
     OSM_FLAGS(node) &= ~OSM_FLAG_DIRTY;
     return;
   }
