@@ -802,7 +802,7 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
 
   /* count nodes */
   osm_dirty_t dirty;
-  memset(&dirty, 0, sizeof(osm_dirty_t));
+  memset(&dirty, 0, sizeof(dirty));
 
   node_t *node = osm->node;
   while(node) {

@@ -175,7 +175,7 @@ static int gps_connect(gps_state_t *gps_state) {
   char errstr[256] = "";
 
   /* We need to start gpsd (via gpsbt) first. */
-  memset(&gps_state->context, 0, sizeof(gpsbt_t));
+  memset(&gps_state->context, 0, sizeof(gps_state->context));
   errno = 0;
 
   if(gpsbt_start(NULL, 0, 0, 0, errstr, sizeof(errstr),

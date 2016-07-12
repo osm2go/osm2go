@@ -575,7 +575,7 @@ gboolean area_edit(area_edit_t *area) {
   gdk_color_parse("red", &color);
 
   context_t context;
-  memset(&context, 0, sizeof(context_t));
+  memset(&context, 0, sizeof(context));
   context.area = area;
   context.min.lat = area->min->lat;
   context.min.lon = area->min->lon;

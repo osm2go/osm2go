@@ -94,7 +94,7 @@ time_t convert_iso8601(const char *str) {
   if(!str) return 0;
 
   struct tm ctime;
-  memset(&ctime, 0, sizeof(struct tm));
+  memset(&ctime, 0, sizeof(ctime));
   strptime(str, "%FT%T%z", &ctime);
 
   long gmtoff = ctime.tm_gmtoff;
