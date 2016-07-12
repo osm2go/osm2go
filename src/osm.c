@@ -171,19 +171,34 @@ gboolean osm_tag_key_other_value_present(const tag_t *haystack, const tag_t *tag
 gboolean osm_tag_lists_diff(const tag_t *t1, const tag_t *t2) {
   unsigned int ocnt = 0, ncnt = 0;
   const tag_t *ntag;
+  const tag_t *t1creator = NULL, *t2creator = NULL;
 
   /* first check list length, otherwise deleted tags are hard to detect */
-  for(ntag = t1; ntag != NULL; ntag = ntag->next)
-    ncnt++;
-  for(ntag = t2; ntag != NULL; ntag = ntag->next)
-    ocnt++;
+  for(ntag = t1; ntag != NULL; ntag = ntag->next) {
+    if(osm_is_creator_tag(ntag))
+      t1creator = ntag;
+    else
+      ncnt++;
+  }
+  for(ntag = t2; ntag != NULL; ntag = ntag->next) {
+    if(osm_is_creator_tag(ntag))
+      t2creator = ntag;
+    else
+      ocnt++;
+  }
 
   if (ncnt != ocnt)
     return TRUE;
 
   for (ntag = t1; ntag != NULL; ntag = ntag->next) {
+    if (ntag == t1creator)
+      continue;
+
     const tag_t *otag;
     for (otag = t2; otag != NULL; otag = otag->next) {
+      if(otag == t2creator)
+        continue;
+
       if (strcmp(otag->key, ntag->key) == 0) {
         if (strcmp(otag->value, ntag->value) != 0)
           return TRUE;
