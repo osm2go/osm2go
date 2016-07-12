@@ -260,7 +260,7 @@ void diff_save(project_t *project, osm_t *osm) {
   g_free(backup);
 }
 
-static int xml_get_prop_int(const xmlNode *node, char *prop, int def) {
+static int xml_get_prop_int(xmlNode *node, char *prop, int def) {
   xmlChar *str = xmlGetProp(node, BAD_CAST prop);
   int value = def;
 
@@ -272,7 +272,7 @@ static int xml_get_prop_int(const xmlNode *node, char *prop, int def) {
   return value;
 }
 
-static int xml_get_prop_state(const xmlNode *node) {
+static int xml_get_prop_state(xmlNode *node) {
   xmlChar *str = xmlGetProp(node, BAD_CAST "state");
 
   if(str) {
@@ -292,7 +292,7 @@ static int xml_get_prop_state(const xmlNode *node) {
   return OSM_FLAG_DIRTY;
 }
 
-static pos_t *xml_get_prop_pos(const xmlNode *node) {
+static pos_t *xml_get_prop_pos(xmlNode *node) {
   xmlChar *str_lat = xmlGetProp(node, BAD_CAST "lat");
   xmlChar *str_lon = xmlGetProp(node, BAD_CAST "lon");
 
