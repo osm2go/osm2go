@@ -306,7 +306,6 @@ void gps_enable(appdata_t *appdata, gboolean enable) {
 
 gpointer gps_thread(gpointer data) {
   GnomeVFSFileSize bytes_read;
-  GnomeVFSResult vfs_result;
   char str[512];
   appdata_t *appdata = (appdata_t*)data;
 
@@ -325,31 +324,27 @@ gpointer gps_thread(gpointer data) {
 	  sleep(10);
 	else
 	  connected = TRUE;
-      } else {
-	if(GNOME_VFS_OK ==
-	   (vfs_result = gnome_vfs_socket_write(appdata->gps_state->socket,
-		      msg, strlen(msg)+1, &bytes_read, NULL))) {
+      } else if(gnome_vfs_socket_write(appdata->gps_state->socket,
+		msg, strlen(msg)+1, &bytes_read, NULL) == GNOME_VFS_OK) {
 
-	  /* update every second, wait here to make sure a complete */
-	  /* reply is received */
-	  sleep(1);
+	/* update every second, wait here to make sure a complete */
+	/* reply is received */
+	sleep(1);
 
-	  if(bytes_read == (strlen(msg)+1)) {
-	    vfs_result = gnome_vfs_socket_read(appdata->gps_state->socket,
-			       str, sizeof(str)-1, &bytes_read, NULL);
-	    if(vfs_result == GNOME_VFS_OK) {
-	      str[bytes_read] = 0;
+	if(bytes_read == (strlen(msg)+1)) {
+	  if(gnome_vfs_socket_read(appdata->gps_state->socket,
+	     str, sizeof(str)-1, &bytes_read, NULL) == GNOME_VFS_OK) {
+	    str[bytes_read] = 0;
 
-	      printf("msg: %s (%zu)\n", str, strlen(str));
+	    printf("msg: %s (%zu)\n", str, strlen(str));
 
-	      g_mutex_lock(appdata->gps_state->mutex);
+	    g_mutex_lock(appdata->gps_state->mutex);
 
-	      appdata->gps_state->gpsdata.set &=
-		~(LATLON_SET|MODE_SET|STATUS_SET);
+	    appdata->gps_state->gpsdata.set &=
+	      ~(LATLON_SET|MODE_SET|STATUS_SET);
 
-	      gps_unpack(str, &appdata->gps_state->gpsdata);
-	      g_mutex_unlock(appdata->gps_state->mutex);
-	    }
+	    gps_unpack(str, &appdata->gps_state->gpsdata);
+	    g_mutex_unlock(appdata->gps_state->mutex);
 	  }
 	}
       }
