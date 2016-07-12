@@ -543,7 +543,7 @@ void diff_restore_way(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
 
     if(was_modified == FALSE) {
       osm_node_chain_free(new_chain);
-      new_chain = NULL;
+      new_chain = NULL; /* indicate that waypoints did not change */
     } else {
       /* way may be an existing way, so remove nodes to */
       /* make space for new ones */
@@ -559,15 +559,24 @@ void diff_restore_way(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
     /* were found this wasn't a dirty entry but e.g. only the hidden */
     /* flag had been set */
 
-    /* way may be an existing way, so remove tags to */
-    /* make space for new ones */
-    if(OSM_TAG(way)) {
-      printf("  removing existing tags for diff tags\n");
-      osm_tag_free(OSM_TAG(way));
-      OSM_TAG(way) = NULL;
-    }
+    tag_t *ntags = xml_scan_tags(doc, node_node->children, osm);
+    if (osm_tag_lists_diff(OSM_TAG(way), ntags)) {
+      /* way may be an existing way, so remove tags to */
+      /* make space for new ones */
+      if(OSM_TAG(way)) {
+        printf("  removing existing tags for diff tags\n");
+        osm_tags_free(OSM_TAG(way));
+      }
 
-    OSM_TAG(way) = xml_scan_tags(doc, node_node->children, osm);
+      OSM_TAG(way) = ntags;
+    } else if (new_chain != NULL) {
+      osm_tags_free(ntags);
+    } else {
+      printf("way " ITEM_ID_FORMAT " has the same nodes and tags as upstream, discarding diff\n", id);
+      osm_tags_free(ntags);
+      OSM_FLAGS(way) &= ~OSM_FLAG_DIRTY;
+      return;
+    }
   } else {
     printf("  no nodes restored, way isn't dirty!\n");
     OSM_FLAGS(way) &= ~OSM_FLAG_DIRTY;
