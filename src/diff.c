@@ -431,7 +431,7 @@ void diff_restore_node(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
   /* make space for new ones */
   if(OSM_TAG(node)) {
     printf("  removing existing tags for diff tags\n");
-    osm_tag_free(OSM_TAG(node));
+    osm_tags_free(OSM_TAG(node));
   }
 
   OSM_TAG(node) = ntags;
@@ -672,8 +672,7 @@ void diff_restore_relation(xmlDoc *doc, xmlNodePtr node_rel, osm_t *osm) {
   /* make space for new ones */
   if(OSM_TAG(relation)) {
     printf("  removing existing tags for diff tags\n");
-    osm_tag_free(OSM_TAG(relation));
-    OSM_TAG(relation) = NULL;
+    osm_tags_free(OSM_TAG(relation));
   }
 
   OSM_TAG(relation) = xml_scan_tags(doc, node_rel->children, osm);
