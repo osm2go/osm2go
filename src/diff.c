@@ -562,14 +562,21 @@ void diff_restore_way(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
   /* only replace the original nodes if new nodes have actually been */
   /* found. */
   if(new_chain != NULL) {
-    /* way may be an existing way, so remove nodes to */
-    /* make space for new ones */
-    if(way->node_chain) {
-      printf("  removing existing nodes for diff nodes\n");
-      osm_node_chain_free(way->node_chain);
-      way->node_chain = NULL;
+    gboolean was_modified = osm_node_chain_diff(way->node_chain, new_chain);
+
+    if(was_modified == FALSE) {
+      osm_node_chain_free(new_chain);
+      new_chain = NULL;
+    } else {
+      /* way may be an existing way, so remove nodes to */
+      /* make space for new ones */
+      if(way->node_chain) {
+        printf("  removing existing nodes for diff nodes\n");
+        osm_node_chain_free(way->node_chain);
+        way->node_chain = NULL;
+      }
+      way->node_chain = new_chain;
     }
-    way->node_chain = new_chain;
 
     /* only replace tags if nodes have been found before. if no nodes */
     /* were found this wasn't a dirty entry but e.g. only the hidden */

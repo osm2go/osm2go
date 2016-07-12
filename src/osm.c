@@ -337,6 +337,27 @@ unsigned int osm_node_chain_length(const node_chain_t *node_chain) {
   return cnt;
 }
 
+/**
+ * @brief check if 2 node chains differ
+ * @param n1 first chain
+ * @param n2 second chain
+ * @retval if the chains differ
+ */
+gboolean osm_node_chain_diff(const node_chain_t *n1, const node_chain_t *n2) {
+  while(n1) {
+    if (n2 == NULL)
+      return TRUE;
+
+    if (OSM_ID(n1->node) != OSM_ID(n2->node))
+      return TRUE;
+
+    n1 = n1->next;
+    n2 = n2->next;
+  }
+
+  return (n2 != NULL) ? TRUE : FALSE;
+}
+
 void osm_way_dump(way_t *way) {
   char buf[64];
   struct tm tm;
