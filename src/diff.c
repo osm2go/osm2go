@@ -545,29 +545,12 @@ void diff_restore_way(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
   if(hidden)
     OSM_FLAGS(way) |= OSM_FLAG_HIDDEN;
 
-  gboolean installed_new_nodes = FALSE;
-
   /* scan for nodes */
-  node_chain_t **node_chain = &way->node_chain;
+  node_chain_t *new_chain = NULL, **node_chain = &new_chain;
   xmlNode *nd_node = NULL;
   for(nd_node = node_node->children; nd_node; nd_node = nd_node->next) {
     if(nd_node->type == XML_ELEMENT_NODE) {
       if(strcasecmp((char*)nd_node->name, "nd") == 0) {
-
-	/* only replace the original nodes if new nodes have actually been */
-	/* found. */
-	if(!installed_new_nodes) {
-	  /* way may be an existing way, so remove nodes to */
-	  /* make space for new ones */
-	  if(way->node_chain) {
-	    printf("  removing existing nodes for diff nodes\n");
-	    osm_node_chain_free(way->node_chain);
-	    way->node_chain = NULL;
-	  }
-
-	  installed_new_nodes = TRUE;
-	}
-
 	/* attach node to node_chain */
 	*node_chain = osm_parse_osm_way_nd(osm, doc, nd_node);
 	if(*node_chain)
@@ -576,10 +559,21 @@ void diff_restore_way(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
     }
   }
 
-  /* only replace tags if nodes have been found before. if no nodes */
-  /* were found this wasn't a dirty entry but e.g. only the hidden */
-  /* flag had been set */
-  if(installed_new_nodes) {
+  /* only replace the original nodes if new nodes have actually been */
+  /* found. */
+  if(new_chain != NULL) {
+    /* way may be an existing way, so remove nodes to */
+    /* make space for new ones */
+    if(way->node_chain) {
+      printf("  removing existing nodes for diff nodes\n");
+      osm_node_chain_free(way->node_chain);
+      way->node_chain = NULL;
+    }
+    way->node_chain = new_chain;
+
+    /* only replace tags if nodes have been found before. if no nodes */
+    /* were found this wasn't a dirty entry but e.g. only the hidden */
+    /* flag had been set */
 
     /* node may be an existing node, so remove tags to */
     /* make space for new ones */
