@@ -327,8 +327,8 @@ void osm_way_append_node(way_t *way, node_t *node) {
   node->ways++;
 }
 
-int osm_node_chain_length(node_chain_t *node_chain) {
-  int cnt = 0;
+unsigned int osm_node_chain_length(const node_chain_t *node_chain) {
+  unsigned int cnt = 0;
   while(node_chain) {
     cnt++;
     node_chain = node_chain->next;

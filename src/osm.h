@@ -250,7 +250,7 @@ gboolean osm_node_in_way(way_t *way, node_t *node);
 gboolean osm_node_in_other_way(osm_t *osm, way_t *way, node_t *node);
 
 void osm_node_chain_free(node_chain_t *node_chain);
-int osm_node_chain_length(node_chain_t *node_chain);
+unsigned int osm_node_chain_length(const node_chain_t *node_chain);
 void osm_node_free(hash_table_t *hash, struct icon_s **icon, node_t *node);
 
 void osm_members_free(member_t *member);
