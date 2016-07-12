@@ -255,7 +255,7 @@ void osm_member_free(member_t *member);
 
 void osm_tag_free(tag_t *tag);
 void osm_tags_free(tag_t *tag);
-char *osm_tag_get_by_key(tag_t *tag, char *key);
+char *osm_tag_get_by_key(tag_t *tag, const char *key);
 gboolean osm_is_creator_tag(const tag_t *tag);
 gboolean osm_tag_key_and_value_present(const tag_t *haystack, const tag_t *tag);
 gboolean osm_tag_key_other_value_present(const tag_t *haystack, const tag_t *tag);
@@ -317,15 +317,15 @@ void osm_relation_delete(osm_t *osm, relation_t *relation,
 			 gboolean permanently);
 gint osm_relation_members_num(relation_t *relation);
 
-gboolean osm_object_is_real(object_t *object);
+gboolean osm_object_is_real(const object_t *object);
 char *osm_object_type_string(object_t *object);
 char *osm_object_id_string(object_t *object);
 char *osm_object_string(object_t *object);
 tag_t *osm_object_get_tags(object_t *object);
-item_id_t osm_object_get_id(object_t *object);
+item_id_t osm_object_get_id(const object_t *object);
 void osm_object_set_flags(object_t *map_item, int set, int clr);
 char *osm_object_get_name(object_t *object);
-gboolean osm_object_is_same(object_t *obj1, object_t *obj2);
+gboolean osm_object_is_same(const object_t *obj1, const object_t *obj2);
 
 #endif /* OSM_H */
 

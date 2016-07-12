@@ -804,7 +804,7 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   osm_dirty_t dirty;
   memset(&dirty, 0, sizeof(dirty));
 
-  node_t *node = osm->node;
+  const node_t *node = osm->node;
   while(node) {
     dirty.nodes.total++;
     if(OSM_FLAGS(node) & OSM_FLAG_DELETED)     dirty.nodes.deleted++;
@@ -817,7 +817,7 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
 	 dirty.nodes.new, dirty.nodes.dirty, dirty.nodes.deleted);
 
   /* count ways */
-  way_t *way = osm->way;
+  const way_t *way = osm->way;
   while(way) {
     dirty.ways.total++;
     if(OSM_FLAGS(way) & OSM_FLAG_DELETED)      dirty.ways.deleted++;
@@ -830,7 +830,7 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
 	 dirty.ways.new, dirty.ways.dirty, dirty.ways.deleted);
 
   /* count relations */
-  relation_t *relation = osm->relation;
+  const relation_t *relation = osm->relation;
   while(relation) {
     dirty.relations.total++;
     if(OSM_FLAGS(relation) & OSM_FLAG_DELETED)      dirty.relations.deleted++;

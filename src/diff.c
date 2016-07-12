@@ -30,7 +30,7 @@
 #error "libxml doesn't support required tree or output"
 #endif
 
-static void diff_save_tags(tag_t *tag, xmlNodePtr node) {
+static void diff_save_tags(const tag_t *tag, xmlNodePtr node) {
   while(tag) {
     xmlNodePtr tag_node = xmlNewChild(node, NULL,
 				      BAD_CAST "tag", NULL);
@@ -52,7 +52,7 @@ static void diff_save_state_n_id(int flags, xmlNodePtr node, item_id_t id) {
   g_free(id_str);
 }
 
-static void diff_save_nodes(node_t *node, xmlNodePtr root_node) {
+static void diff_save_nodes(const node_t *node, xmlNodePtr root_node) {
   /* store all modfied nodes */
   while(node) {
     if(OSM_FLAGS(node)) {
@@ -79,7 +79,7 @@ static void diff_save_nodes(node_t *node, xmlNodePtr root_node) {
   }
 }
 
-static void diff_save_ways(way_t *way, xmlNodePtr root_node) {
+static void diff_save_ways(const way_t *way, xmlNodePtr root_node) {
 
   /* store all modfied ways */
   while(way) {
@@ -113,7 +113,7 @@ static void diff_save_ways(way_t *way, xmlNodePtr root_node) {
   }
 }
 
-static void diff_save_relations(relation_t *relation, xmlNodePtr root_node) {
+static void diff_save_relations(const relation_t *relation, xmlNodePtr root_node) {
 
   /* store all modfied relations */
   while(relation) {
@@ -184,7 +184,7 @@ static void diff_save_relations(relation_t *relation, xmlNodePtr root_node) {
 
 
 /* return true if no diff needs to be saved */
-gboolean diff_is_clean(osm_t *osm, gboolean honor_hidden_flags) {
+gboolean diff_is_clean(const osm_t *osm, gboolean honor_hidden_flags) {
   gboolean clean = TRUE;
 
   /* check if a diff is necessary */
@@ -214,7 +214,7 @@ gboolean diff_is_clean(osm_t *osm, gboolean honor_hidden_flags) {
   return clean;
 }
 
-void diff_save(project_t *project, osm_t *osm) {
+void diff_save(const project_t *project, const osm_t *osm) {
   if(!project || !osm) return;
 
   char *diff_name =
@@ -756,7 +756,7 @@ void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) {
 
   /* check for hidden ways and update menu accordingly */
   gboolean something_is_hidden = FALSE;
-  way_t *way = osm->way;
+  const way_t *way = osm->way;
   while(!something_is_hidden && way) {
     if(OSM_FLAGS(way) & OSM_FLAG_HIDDEN)
       something_is_hidden = TRUE;
@@ -772,7 +772,7 @@ void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) {
   }
 }
 
-gboolean diff_present(project_t *project) {
+gboolean diff_present(const project_t *project) {
   char *diff_name = g_strdup_printf("%s/%s.diff", project->path, project->name);
 
   if(!g_file_test(diff_name, G_FILE_TEST_EXISTS)) {

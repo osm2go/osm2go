@@ -1085,7 +1085,7 @@ gboolean osm_sanity_check(GtkWidget *parent, osm_t *osm) {
 
 /* ------------------------- misc access functions -------------- */
 
-char *osm_tag_get_by_key(tag_t *tag, char *key) {
+char *osm_tag_get_by_key(tag_t *tag, const char *key) {
   if(!tag || !key) return NULL;
 
   while(tag) {
@@ -2402,7 +2402,7 @@ char *osm_object_id_string(object_t *object) {
 }
 
 
-gboolean osm_object_is_real(object_t *object) {
+gboolean osm_object_is_real(const object_t *object) {
   return((object->type == NODE) ||
 	 (object->type == WAY)  ||
 	 (object->type == RELATION));
@@ -2415,7 +2415,7 @@ tag_t *osm_object_get_tags(object_t *object) {
 }
 
 
-item_id_t osm_object_get_id(object_t *object) {
+item_id_t osm_object_get_id(const object_t *object) {
   if(!object) return ID_ILLEGAL;
 
   if(object->type == ILLEGAL)     return ID_ILLEGAL;
@@ -2440,7 +2440,7 @@ void osm_object_set_flags(object_t *object, int set, int clr) {
   OBJECT_FLAGS(*object) &= ~clr;
 }
 
-gboolean osm_object_is_same(object_t *obj1, object_t *obj2) {
+gboolean osm_object_is_same(const object_t *obj1, const object_t *obj2) {
   item_id_t id1 = osm_object_get_id(obj1);
   item_id_t id2 = osm_object_get_id(obj2);
 
