@@ -367,10 +367,10 @@ void osm_ways_dump(way_t *way) {
 
 node_chain_t *osm_parse_osm_way_nd(osm_t *osm,
 			  xmlDocPtr doc, xmlNode *a_node) {
-  char *prop;
+  xmlChar *prop;
 
-  if((prop = (char*)xmlGetProp(a_node, (unsigned char*)"ref"))) {
-    item_id_t id = strtoll(prop, NULL, 10);
+  if((prop = xmlGetProp(a_node, (unsigned char*)"ref"))) {
+    item_id_t id = strtoll((char*)prop, NULL, 10);
     node_chain_t *node_chain = g_new0(node_chain_t, 1);
 
     /* search matching node */
