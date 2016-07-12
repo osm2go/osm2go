@@ -41,12 +41,6 @@ static void osm_bounds_free(bounds_t *bounds) {
   free(bounds);
 }
 
-static void osm_bounds_dump(bounds_t *bounds) {
-  printf("\nBounds: %f->%f %f->%f\n",
-	 bounds->ll_min.lat, bounds->ll_max.lat,
-	 bounds->ll_min.lon, bounds->ll_max.lon);
-}
-
 /* ------------------------- user handling --------------------- */
 
 void osm_users_free(user_t *user) {
@@ -57,14 +51,6 @@ void osm_users_free(user_t *user) {
     g_free(user);
 
     user = next;
-  }
-}
-
-void osm_users_dump(user_t *user) {
-  printf("\nUser list:\n");
-  while(user) {
-    printf("Name: %s\n", user->name);
-    user = user->next;
   }
 }
 
@@ -115,13 +101,6 @@ void osm_tags_free(tag_t *tag) {
     tag_t *next = tag->next;
     osm_tag_free(tag);
     tag = next;
-  }
-}
-
-static void osm_tags_dump(tag_t *tag) {
-  while(tag) {
-    printf("Key/Val: %s/%s\n", tag->key, tag->value);
-    tag = tag->next;
   }
 }
 
@@ -241,29 +220,6 @@ static void osm_nodes_free(hash_table_t *table, icon_t **icon, node_t *node) {
   }
 }
 
-void osm_node_dump(node_t *node) {
-  char buf[64];
-  struct tm tm;
-
-  printf("Id:      "ITEM_ID_FORMAT"\n", OSM_ID(node));
-  printf("User:    %s\n", OSM_USER(node)?OSM_USER(node)->name:"<unspecified>");
-  printf("Visible: %s\n", OSM_VISIBLE(node)?"yes":"no");
-
-  localtime_r(&OSM_TIME(node), &tm);
-  strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S %Z", &tm);
-  printf("Time:    %s\n", buf);
-  osm_tags_dump(OSM_TAG(node));
-}
-
-void osm_nodes_dump(node_t *node) {
-  printf("\nNode list:\n");
-  while(node) {
-    osm_node_dump(node);
-    printf("\n");
-    node = node->next;
-  }
-}
-
 /* ------------------- way handling ------------------- */
 
 void osm_node_chain_free(node_chain_t *node_chain) {
@@ -358,34 +314,6 @@ gboolean osm_node_chain_diff(const node_chain_t *n1, const node_chain_t *n2) {
   return (n2 != NULL) ? TRUE : FALSE;
 }
 
-void osm_way_dump(way_t *way) {
-  char buf[64];
-  struct tm tm;
-
-  printf("Id:      "ITEM_ID_FORMAT"\n", OSM_ID(way));
-  printf("User:    %s\n", OSM_USER(way)?OSM_USER(way)->name:"<unspecified>");
-  printf("Visible: %s\n", OSM_VISIBLE(way)?"yes":"no");
-  node_chain_t *node_chain = way->node_chain;
-  while(node_chain) {
-    printf("  Node:  "ITEM_ID_FORMAT"\n", OSM_ID(node_chain->node));
-    node_chain = node_chain->next;
-  }
-
-  localtime_r(&OSM_TIME(way), &tm);
-  strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S %Z", &tm);
-  printf("Time:    %s\n", buf);
-  osm_tags_dump(OSM_TAG(way));
-}
-
-void osm_ways_dump(way_t *way) {
-  printf("\nWay list:\n");
-  while(way) {
-    osm_way_dump(way);
-    printf("\n");
-    way = way->next;
-  }
-}
-
 node_chain_t *osm_parse_osm_way_nd(osm_t *osm,
 			  xmlDocPtr doc, xmlNode *a_node) {
   xmlChar *prop;
@@ -438,58 +366,6 @@ static void osm_relations_free(relation_t *relation) {
     relation_t *next = relation->next;
     osm_relation_free(relation);
     relation = next;
-  }
-}
-
-void osm_relations_dump(relation_t *relation) {
-  printf("\nRelation list:\n");
-  while(relation) {
-    char buf[64];
-    struct tm tm;
-
-    printf("Id:      "ITEM_ID_FORMAT"\n", OSM_ID(relation));
-    printf("User:    %s\n",
-	   OSM_USER(relation)?OSM_USER(relation)->name:"<unspecified>");
-    printf("Visible: %s\n", OSM_VISIBLE(relation)?"yes":"no");
-
-    member_t *member = relation->member;
-    while(member) {
-      switch(member->object.type) {
-      case ILLEGAL:
-      case NODE_ID:
-      case WAY_ID:
-      case RELATION_ID:
-	break;
-
-      case NODE:
-	if(member->object.node)
-	  printf(" Member: Node, id = " ITEM_ID_FORMAT ", role = %s\n",
-		 OBJECT_ID(member->object), member->role);
-	break;
-
-      case WAY:
-	if(member->object.way)
-	  printf(" Member: Way, id = " ITEM_ID_FORMAT ", role = %s\n",
-		 OBJECT_ID(member->object), member->role);
-	break;
-
-      case RELATION:
-	if(member->object.relation)
-	  printf(" Member: Relation, id = " ITEM_ID_FORMAT ", role = %s\n",
-		 OBJECT_ID(member->object), member->role);
-	break;
-      }
-
-      member = member->next;
-    }
-
-    localtime_r(&OSM_TIME(relation), &tm);
-    strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S %Z", &tm);
-    printf("Time:    %s\n", buf);
-    osm_tags_dump(OSM_TAG(relation));
-
-    printf("\n");
-    relation = relation->next;
   }
 }
 
@@ -594,14 +470,6 @@ void osm_free(icon_t **icon, osm_t *osm) {
   if(osm->node)     osm_nodes_free(osm->node_hash, icon, osm->node);
   if(osm->relation) osm_relations_free(osm->relation);
   g_free(osm);
-}
-
-void osm_dump(osm_t *osm) {
-  osm_bounds_dump(osm->bounds);
-  osm_users_dump(osm->user);
-  osm_nodes_dump(osm->node);
-  osm_ways_dump(osm->way);
-  osm_relations_dump(osm->relation);
 }
 
 /* -------------------------- stream parser ------------------- */

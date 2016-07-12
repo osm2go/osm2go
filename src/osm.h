@@ -231,16 +231,12 @@ gboolean osm_sanity_check(GtkWidget *parent, osm_t *osm);
 tag_t *osm_parse_osm_tag(osm_t *osm, xmlDocPtr doc, xmlNode *a_node);
 node_chain_t *osm_parse_osm_way_nd(osm_t *osm, xmlDocPtr doc, xmlNode *a_node);
 member_t *osm_parse_osm_relation_member(osm_t *osm, xmlDocPtr doc, xmlNode *a_node);
-void osm_dump(osm_t *osm);
 void osm_free(struct icon_s **icon, osm_t *osm);
 
 char *osm_node_get_value(node_t *node, char *key);
 gboolean osm_node_has_tag(node_t *node);
 
-void osm_node_dump(node_t *node);
-
 void osm_way_free(hash_table_t *hash_table, way_t *way);
-void osm_way_dump(way_t *way);
 char *osm_way_get_value(way_t *way, char *key);
 gboolean osm_node_has_value(node_t *node, char *str);
 gboolean osm_way_has_value(way_t *way, char *str);
