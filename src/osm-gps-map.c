@@ -1495,8 +1495,7 @@ osm_gps_map_setup(OsmGpsMapPrivate *priv) {
 
         priv->null_tile = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, 256, 256);
         gdk_pixbuf_fill(priv->null_tile, 0xcccccc00);
-    }
-    else if (priv->map_source >= 0) {
+    } else {
         //check if the source given is valid
         uri = osm_gps_map_source_get_repo_uri(priv->map_source);
         if (uri) {
