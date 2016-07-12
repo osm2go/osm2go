@@ -377,7 +377,12 @@ void gps_init(appdata_t *appdata) {
   printf("GPS init: Using gpsd\n");
 
   /* start a new thread to listen to gpsd */
+#if GLIB_CHECK_VERSION(2,32,0)
+  appdata->gps_state->mutex = &appdata->gps_state->rmutex;
+  g_mutex_init(appdata->gps_state->mutex);
+#else
   appdata->gps_state->mutex = g_mutex_new();
+#endif
   appdata->gps_state->thread_p =
     g_thread_create(gps_thread, appdata, FALSE, NULL);
 }
@@ -385,6 +390,11 @@ void gps_init(appdata_t *appdata) {
 void gps_release(appdata_t *appdata) {
 #ifdef ENABLE_GPSBT
   gpsbt_stop(&appdata->gps_state->context);
+#endif
+#if GLIB_CHECK_VERSION(2,32,0)
+  g_mutex_clear(appdata->gps_state->mutex);
+#else
+  g_mutex_free(appdata->gps_state->mutex);
 #endif
   g_free(appdata->gps_state);
   appdata->gps_state = NULL;

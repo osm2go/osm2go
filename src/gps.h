@@ -103,6 +103,10 @@ typedef struct gps_state_s {
   GnomeVFSSocket *socket;
 
   struct gps_data_t gpsdata;
+
+#if GLIB_CHECK_VERSION(2,32,0)
+  GMutex rmutex;
+#endif
 #endif
 } gps_state_t;
 
