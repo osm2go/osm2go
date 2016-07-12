@@ -582,7 +582,7 @@ void diff_restore_way(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
     /* were found this wasn't a dirty entry but e.g. only the hidden */
     /* flag had been set */
 
-    /* node may be an existing node, so remove tags to */
+    /* way may be an existing way, so remove tags to */
     /* make space for new ones */
     if(OSM_TAG(way)) {
       printf("  removing existing tags for diff tags\n");
@@ -682,7 +682,7 @@ void diff_restore_relation(xmlDoc *doc, xmlNodePtr node_rel, osm_t *osm) {
     }
   }
 
-  /* node may be an existing node, so remove tags to */
+  /* relation may be an existing relation, so remove tags to */
   /* make space for new ones */
   if(OSM_TAG(relation)) {
     printf("  removing existing tags for diff tags\n");
