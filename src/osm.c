@@ -162,6 +162,39 @@ gboolean osm_tag_key_other_value_present(tag_t *haystack, tag_t *tag) {
   return FALSE;
 }
 
+/**
+ * @brief compare 2 tag lists
+ * @param t1 first list
+ * @param t2 second list
+ * @return if the lists differ
+ */
+gboolean osm_tag_lists_diff(const tag_t *t1, const tag_t *t2) {
+  unsigned int ocnt = 0, ncnt = 0;
+  const tag_t *ntag;
+
+  /* first check list length, otherwise deleted tags are hard to detect */
+  for(ntag = t1; ntag != NULL; ntag = ntag->next)
+    ncnt++;
+  for(ntag = t2; ntag != NULL; ntag = ntag->next)
+    ocnt++;
+
+  if (ncnt != ocnt)
+    return TRUE;
+
+  for (ntag = t1; ntag != NULL; ntag = ntag->next) {
+    const tag_t *otag;
+    for (otag = t2; otag != NULL; otag = otag->next) {
+      if (strcmp(otag->key, ntag->key) == 0) {
+        if (strcmp(otag->value, ntag->value) != 0)
+          return TRUE;
+        break;
+      }
+    }
+  }
+
+  return FALSE;
+}
+
 gboolean osm_way_ends_with_node(way_t *way, node_t *node) {
   /* and deleted way may even not contain any nodes at all */
   /* so ignore it */

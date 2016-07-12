@@ -345,30 +345,7 @@ node_compare_changes(const node_t *node, const pos_t *pos, const tag_t *ntags)
   if (node->pos.lat != pos->lat || node->pos.lon != pos->lon)
     return FALSE;
 
-  unsigned int ocnt = 0, ncnt = 0;
-  const tag_t *ntag;
-
-  /* first check list length, otherwise deleted tags are hard to detect */
-  for(ntag = ntags; ntag != NULL; ntag = ntag->next)
-    ncnt++;
-  for(ntag = OSM_TAG(node); ntag != NULL; ntag = ntag->next)
-    ocnt++;
-
-  if (ncnt != ocnt)
-    return FALSE;
-
-  for (ntag = ntags; ntag != NULL; ntag = ntag->next) {
-    const tag_t *otag;
-    for (otag = OSM_TAG(node); otag != NULL; otag = otag->next) {
-      if (strcmp(otag->key, ntag->key) == 0) {
-        if (strcmp(otag->value, ntag->value) != 0)
-          return FALSE;
-        break;
-      }
-    }
-  }
-
-  return TRUE;
+  return !osm_tag_lists_diff(OSM_TAG(node), ntags);
 }
 
 void diff_restore_node(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
