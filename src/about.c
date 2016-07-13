@@ -296,6 +296,7 @@ GtkWidget *donate_page_new(appdata_t *appdata) {
   gtk_box_pack_start_defaults(GTK_BOX(vbox),
 			      link_new(NULL, "till@harbaum.org"));
 
+#ifdef ENABLE_BROWSER_INTERFACE
   gtk_box_pack_start_defaults(GTK_BOX(vbox),
       label_wrap(_("or you can just click the button below which will open "
 		   "the appropriate web page in your browser.")));
@@ -314,6 +315,7 @@ GtkWidget *donate_page_new(appdata_t *appdata) {
 		   G_CALLBACK(on_paypal_button_clicked), appdata);
   gtk_box_pack_start(GTK_BOX(ihbox), button, TRUE, FALSE, 0);
   gtk_box_pack_start_defaults(GTK_BOX(vbox), ihbox);
+#endif
 
   return vbox;
 }
