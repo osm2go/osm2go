@@ -110,11 +110,13 @@ cb_menu_project_open(GtkMenuItem *item, gpointer data) {
   main_ui_enable(appdata);
 }
 
+#ifndef USE_HILDON
 static void
 cb_menu_project_wizard(GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
   project_wizard(appdata);
 }
+#endif
 
 void on_window_destroy (GtkWidget *widget, gpointer data);
 
@@ -235,6 +237,7 @@ cb_menu_undo(GtkMenuItem *item, gpointer data) {
   // the banner will be displayed from within undo with more details
 }
 
+#ifndef USE_HILDON
 static void
 cb_menu_save_changes(GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
@@ -242,6 +245,7 @@ cb_menu_save_changes(GtkMenuItem *item, gpointer data) {
   diff_save(appdata->project, appdata->osm);
   banner_show_info(appdata, _("Saved local changes"));
 }
+#endif
 
 static void
 cb_menu_undo_changes(GtkMenuItem *item, gpointer data) {
