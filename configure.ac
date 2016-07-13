@@ -168,7 +168,7 @@ XB-Maemo-Icon-26:
 
   # generate base64 icon, remove first and last line 
   # and add a space before each line
-  ICON="$ICON`uuencode -m data/$ICONNAME $ICONNAME | sed '1d;$d;s/^/ /' -`"
+  ICON="$ICON`uuencode -m $srcdir/data/$ICONNAME $ICONNAME | sed '1d;$d;s/^/ /' -`"
 
   # the data root dir is /opt on fremantle
   if [[ "$MAJOR" == "5" ]]; then
