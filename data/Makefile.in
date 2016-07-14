@@ -2,7 +2,6 @@ TEMPLATE_ELEMSTYLES=elemstyles-mapnik.xml
 APP = @PACKAGE@
 MAEMO_VERSION_MAJOR = @MAEMO_VERSION_MAJOR@
 prefix = @prefix@
-datarootdir = @datarootdir@
 datadir = @datarootdir@
 srcdir = @srcdir@
 

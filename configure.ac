@@ -142,7 +142,6 @@ PKG_CHECK_EXISTS(maemo-version, [
 
   # maemo uses dbus for ipc with maemo mapper
   EXTRA_OBJS="$EXTRA_OBJS dbus.o"
-  AC_SUBST(EXTRA_OBJS)
 
   INSTALL_PLATTFORM="install-maemo"
   
@@ -188,6 +187,7 @@ XB-Maemo-Icon-26:
   MAEMO_VERSION_MAJOR=""
 ])
 
+AC_SUBST(EXTRA_OBJS)
 AC_SUBST(INSTALL_PLATTFORM)
 AC_SUBST(MAEMO_VERSION_MAJOR)
 AC_SUBST(ICON)

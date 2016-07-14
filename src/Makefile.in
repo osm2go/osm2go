@@ -19,9 +19,7 @@
 
 APP = @PACKAGE@
 prefix = @prefix@
-datarootdir = @datarootdir@
 datadir = @datarootdir@
-EXTRA_OBJS = @EXTRA_OBJS@
 VERSION = $${VERSION_PREFIX}@PACKAGE_VERSION@$${VERSION_SUFFIX}
 MAEMO_VERSION_MAJOR = @MAEMO_VERSION_MAJOR@
 
@@ -33,7 +31,8 @@ OBJS = main.o map.o osm.o osm_api.o wms.o about.o \
 	iconbar.o info.o icon.o track.o gps.o canvas_goocanvas.o \
 	area_edit.o josm_presets.o relation_edit.o misc.o map_edit.o \
 	josm_elemstyles.o style.o net_io.o banner.o undo.o canvas.o \
-	list.o scale_popup.o $(EXTRA_OBJS)
+	list.o scale_popup.o \
+	@EXTRA_OBJS@
 
 DEFS = -DPACKAGE=\"$(APP)\" -DPREFIX=\"@prefix@\" -DDATADIR=\"$(datadir)/$(APP)\" -DVERSION=\"$(VERSION)\"
 CC = @CC@
