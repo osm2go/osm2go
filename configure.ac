@@ -99,6 +99,13 @@ PKG_CHECK_EXISTS(maemo-version, [
   MAEMO="yes"
   AC_MSG_RESULT(yes)
 
+  VERSION=`pkg-config --modversion maemo-version`
+  AC_MSG_NOTICE([Configuring for Maemo $VERSION])
+  CFLAGS="$CFLAGS -DMAEMO_VERSION=\\\"$VERSION\\\""
+  MAJOR=`echo $VERSION | cut -b1 -`
+  CFLAGS="$CFLAGS -DMAEMO_VERSION_MAJOR=$MAJOR"
+  MAEMO_VERSION_MAJOR=$MAJOR
+
   PKG_CHECK_MODULES([hildon], [hildon-1], [], [AC_MSG_ERROR([hildon-1 missing])])
   CFLAGS="$CFLAGS  -DUSE_HILDON $hildon_CFLAGS"
   LIBS="$LIBS $hildon_LIBS"
@@ -132,17 +139,6 @@ PKG_CHECK_EXISTS(maemo-version, [
   PKG_CHECK_EXISTS(tablet-browser-interface, [
     CFLAGS="$CFLAGS -DENABLE_BROWSER_INTERFACE"
   ], [AC_MSG_NOTICE([WARNING: No tablet-browser-interface found, disabling microb interface!])])
-
-  PKG_CHECK_EXISTS(maemo-version, [
-    VERSION=`pkg-config --modversion maemo-version`
-    AC_MSG_NOTICE([Configuring for Maemo $VERSION])
-    CFLAGS="$CFLAGS -DMAEMO_VERSION=\\\"$VERSION\\\""
-    MAJOR=`echo $VERSION | cut -b1 -`
-    CFLAGS="$CFLAGS -DMAEMO_VERSION_MAJOR=$MAJOR"
-    MAEMO_VERSION_MAJOR=$MAJOR
-   ], [
-    AC_MSG_ERROR([maemo-version not found])
-  ])
 
   # maemo uses dbus for ipc with maemo mapper
   EXTRA_OBJS="$EXTRA_OBJS dbus.o"
