@@ -57,7 +57,7 @@ install: $(APP)
 		echo "Optifying binary"; \
 		install -d $(DESTDIR)$(datadir)/$(APP); \
 		install $(APP) $(DESTDIR)$(datadir)/$(APP)/$(APP).bin; \
-		ln -s $(datadir)/$(APP)/$(APP).bin $(DESTDIR)$(prefix)$(bindir)/$(APP); \
+		ln -sf $(datadir)/$(APP)/$(APP).bin $(DESTDIR)$(prefix)$(bindir)/$(APP); \
 	else \
 		echo "Not Optifying binary"; \
 		install $(APP) $(DESTDIR)$(prefix)$(bindir); \
