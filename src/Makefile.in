@@ -48,7 +48,7 @@ $(APP): $(OBJS) Makefile
 	$(CC) -o $@ $(OBJS) $(LDFLAGS)
 
 clean:
-	rm -f osm2go *.o *~ */*~ \#*\# version.h *.bak
+	rm -f $(APP) *.o *~ */*~ \#*\# version.h *.bak
 
 install: $(APP)
 	install -d $(DESTDIR)$(prefix)$(bindir)
