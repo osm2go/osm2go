@@ -235,7 +235,7 @@ static int gps_connect(gps_state_t *gps_state) {
   return 0;
 }
 
-void gps_clear_fix(struct gps_fix_t *fixp) {
+static void gps_clear_fix(struct gps_fix_t *fixp) {
   fixp->mode = MODE_NOT_SEEN;
   fixp->pos.lat = fixp->pos.lon = NAN;
   fixp->alt = NAN;
