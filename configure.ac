@@ -145,7 +145,6 @@ PKG_CHECK_EXISTS(maemo-version, [
   AC_SUBST(EXTRA_OBJS)
 
   INSTALL_PLATTFORM="install-maemo"
-  AC_SUBST(INSTALL_PLATTFORM)
   
   # fremantle uses icons of 48x48 pixels for the app installer,
   # older versions used 26x26
@@ -184,12 +183,12 @@ XB-Maemo-Icon-26:
   LIBS="$LIBS $gnome2_LIBS"
 
   INSTALL_PLATTFORM="install-debian"
-  AC_SUBST(INSTALL_PLATTFORM)
 
   ICON=" No icon"
   MAEMO_VERSION_MAJOR=""
 ])
 
+AC_SUBST(INSTALL_PLATTFORM)
 AC_SUBST(MAEMO_VERSION_MAJOR)
 AC_SUBST(ICON)
 AC_CONFIG_FILES([Makefile src/Makefile data/Makefile debian/control])
