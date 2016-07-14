@@ -17,44 +17,45 @@ clean:
 
 install-debian:
 	install -d $(DESTDIR)$(datadir)/applications
-	install $(APP)-ubuntu.desktop $(DESTDIR)$(datadir)/applications/$(APP).desktop
+	install $(srcdir)/$(APP)-ubuntu.desktop $(DESTDIR)$(datadir)/applications/$(APP).desktop
 	for s in 64 32 22 16; do \
 	  install -d $(DESTDIR)$(datadir)/icons/hicolor/$${s}x$${s}/apps ;\
-	  install -m 644 $(APP).$$s.png $(DESTDIR)$(datadir)/icons/hicolor/$${s}x$${s}/apps/$(APP).png ;\
+	  install -m 644 $(srcdir)/$(APP).$$s.png $(DESTDIR)$(datadir)/icons/hicolor/$${s}x$${s}/apps/$(APP).png ;\
 	done
 	install -d $(DESTDIR)$(datadir)/icons/hicolor/scalable/apps
-	install -m 644 $(APP).svg $(DESTDIR)$(datadir)/icons/hicolor/scalable/apps/$(APP).svg
+	install -m 644 $(srcdir)/$(APP).svg $(DESTDIR)$(datadir)/icons/hicolor/scalable/apps/$(APP).svg
 
 
 install-maemo:
 	# on maemo datadir may not point to the place where the system is
 	# expecting the icons. thus we hardcode the /share path
 	install -d $(DESTDIR)$(prefix)/share/applications/hildon 
-	install $(APP).desktop $(DESTDIR)$(prefix)/share/applications/hildon
+	install $(srcdir)/$(APP).desktop $(DESTDIR)$(prefix)/share/applications/hildon
 	for s in 40 26; do \
 	  install -d $(DESTDIR)$(prefix)/share/icons/hicolor/$${s}x$${s}/hildon ;\
-	  install -m 644 $(APP).$$s.png $(DESTDIR)$(prefix)/share/icons/hicolor/$${s}x$${s}/hildon/$(APP).png ;\
+	  install -m 644 $(srcdir)/$(APP).$$s.png $(DESTDIR)$(prefix)/share/icons/hicolor/$${s}x$${s}/hildon/$(APP).png ;\
 	done
 	# .png file in scalable? Maemo is strange...
 	install -d $(DESTDIR)$(prefix)/share/icons/hicolor/scalable/hildon
-	install -m 644 $(APP).64.png $(DESTDIR)$(prefix)/share/icons/hicolor/scalable/hildon/$(APP).png
+	install -m 644 $(srcdir)/$(APP).64.png $(DESTDIR)$(prefix)/share/icons/hicolor/scalable/hildon/$(APP).png
 	if [ $(MAEMO_VERSION_MAJOR) -ge 5 ]; then \
 	  echo "Installing backup configuration for maemo >= 5"; \
 	  install -d $(DESTDIR)/etc/osso-backup/applications ;\
-	  install $(APP).conf $(DESTDIR)/etc/osso-backup/applications ;\
+	  install $(srcdir)/$(APP).conf $(DESTDIR)/etc/osso-backup/applications ;\
 	fi
 
 install: @INSTALL_PLATTFORM@ $(TEMPLATE_ELEMSTYLES)
 	install -d $(DESTDIR)$(datadir)/$(APP)	
-	install -m 644 COPYING $(DESTDIR)$(datadir)/$(APP)
-	install -m 644 *.txt $(DESTDIR)$(datadir)/$(APP)
-	install -m 644 *.xml $(DESTDIR)$(datadir)/$(APP)
-	install -m 644 *.style $(DESTDIR)$(datadir)/$(APP)
-	for f in `find icons -name "*.png"`; do \
+	install -m 644 $(srcdir)/COPYING $(DESTDIR)$(datadir)/$(APP)
+	install -m 644 $(srcdir)/*.txt $(DESTDIR)$(datadir)/$(APP)
+	install -m 644 $(srcdir)/*.xml $(DESTDIR)$(datadir)/$(APP)
+	install -m 644 $(TEMPLATE_ELEMSTYLES) $(DESTDIR)$(datadir)/$(APP)
+	install -m 644 $(srcdir)/*.style $(DESTDIR)$(datadir)/$(APP)
+	for f in `find $(srcdir)/icons -name "*.png"`; do \
 	   install -d $(DESTDIR)$(datadir)/$(APP)/`dirname $$f` ;\
 	   install -m 644 $$f $(DESTDIR)$(datadir)/$(APP)/$$f ;\
 	done;
 	install -d $(DESTDIR)$(datadir)/$(APP)/demo
-	install -m 644 demo/* $(DESTDIR)$(datadir)/$(APP)/demo
+	install -m 644 $(srcdir)/demo/* $(DESTDIR)$(datadir)/$(APP)/demo
 
 distclean: clean
