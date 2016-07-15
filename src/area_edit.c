@@ -558,10 +558,10 @@ static gboolean map_gps_update(gpointer data) {
 
   if(gps_fix) {
     g_object_set(context->map.widget, "gps-track-highlight-radius", 0, NULL);
-    osm_gps_map_draw_gps(OSM_GPS_MAP(context->map.widget),
+    osm_gps_map_gps_add(OSM_GPS_MAP(context->map.widget),
 			 pos.lat, pos.lon, NAN);
   } else
-    osm_gps_map_clear_gps(OSM_GPS_MAP(context->map.widget));
+    osm_gps_map_gps_clear(OSM_GPS_MAP(context->map.widget));
 
   return TRUE;
 }

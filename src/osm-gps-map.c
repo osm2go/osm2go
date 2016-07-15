@@ -205,7 +205,6 @@ static gchar    *replace_string(const gchar *src, const gchar *from, const gchar
 static void     inspect_map_uri(OsmGpsMap *map);
 static gchar    *replace_map_uri(OsmGpsMap *map, const gchar *uri, int zoom, int x, int y);
 static void     osm_gps_map_print_images (OsmGpsMap *map);
-static void     osm_gps_map_draw_gps_point (OsmGpsMap *map);
 static void     osm_gps_map_blit_tile(OsmGpsMap *map, GdkPixbuf *pixbuf, int offset_x, int offset_y);
 #ifdef LIBSOUP22
 static void     osm_gps_map_tile_download_complete (SoupMessage *msg, gpointer user_data);
@@ -2649,7 +2648,7 @@ osm_gps_map_clear_tracks (OsmGpsMap *map)
 }
 
 void
-osm_gps_map_draw_gps (OsmGpsMap *map, float latitude, float longitude, float heading)
+osm_gps_map_gps_add (OsmGpsMap *map, float latitude, float longitude, float heading)
 {
     int pixel_x, pixel_y;
     OsmGpsMapPrivate *priv;
@@ -2701,7 +2700,7 @@ osm_gps_map_draw_gps (OsmGpsMap *map, float latitude, float longitude, float hea
 }
 
 void
-osm_gps_map_clear_gps (OsmGpsMap *map)
+osm_gps_map_gps_clear (OsmGpsMap *map)
 {
     osm_gps_map_free_trip(map);
     osm_gps_map_map_redraw_idle(map);
