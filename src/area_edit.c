@@ -69,7 +69,7 @@ typedef struct {
     GtkWidget *widget;
     gboolean needs_redraw;
     gint handler_id;
-    coord_t start;
+    OsmGpsMapPoint start;
   } map;
 #endif
 } context_t;
@@ -200,7 +200,7 @@ static void area_main_update(context_t *context) {
 #define LOG2(x) (log(x) / log(2))
 
 static GSList *pos_append_rad(GSList *list, pos_float_t lat, pos_float_t lon) {
-  coord_t *coo = g_new0(coord_t, 1);
+  OsmGpsMapPoint *coo = g_new0(OsmGpsMapPoint, 1);
   coo->rlat = lat;
   coo->rlon = lon;
   list = g_slist_append(list, coo);
@@ -467,7 +467,7 @@ on_map_motion_notify_event(GtkWidget *widget,
     /* remove existing marker */
     osm_gps_map_clear_tracks(map);
 
-    coord_t start = context->map.start, end =
+    OsmGpsMapPoint start = context->map.start, end =
       osm_gps_map_get_co_ordinates(map, (int)event->x, (int)event->y);
 
     GSList *box = pos_append_rad(NULL, start.rlat, start.rlon);
@@ -493,7 +493,7 @@ on_map_button_release_event(GtkWidget *widget,
   if(!isnan(context->map.start.rlon) &&
      !isnan(context->map.start.rlat)) {
 
-    coord_t start = context->map.start, end =
+    OsmGpsMapPoint start = context->map.start, end =
       osm_gps_map_get_co_ordinates(map, (int)event->x, (int)event->y);
 
     GSList *box = pos_append_rad(NULL, start.rlat, start.rlon);

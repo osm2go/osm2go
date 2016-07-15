@@ -90,7 +90,7 @@ typedef struct {
 } tile_t;
 
 typedef struct {
-    coord_t pt;
+    OsmGpsMapPoint pt;
     GdkPixbuf *image;
     int w;
     int h;

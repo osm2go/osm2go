@@ -27,6 +27,8 @@
 
 #include "config.h"
 
+#include <osm-gps-map-point.h>
+
 #include <glib.h>
 #include <glib-object.h>
 #include <gtk/gtk.h>
@@ -55,11 +57,6 @@ struct _OsmGpsMap
     GtkDrawingArea parent_instance;
     OsmGpsMapPrivate *priv;
 };
-
-typedef struct {
-    float rlat;
-    float rlon;
-} coord_t;
 
 typedef enum {
     OSM_GPS_MAP_SOURCE_NULL,
@@ -134,8 +131,8 @@ const char *osm_gps_map_source_get_image_format(OsmGpsMapSource_t source);
 int osm_gps_map_source_get_min_zoom(OsmGpsMapSource_t source);
 int osm_gps_map_source_get_max_zoom(OsmGpsMapSource_t source);
 
-void osm_gps_map_download_maps (OsmGpsMap *map, coord_t *pt1, coord_t *pt2, int zoom_start, int zoom_end);
-void osm_gps_map_get_bbox (OsmGpsMap *map, coord_t *pt1, coord_t *pt2);
+void osm_gps_map_download_maps (OsmGpsMap *map, OsmGpsMapPoint *pt1, OsmGpsMapPoint *pt2, int zoom_start, int zoom_end);
+void osm_gps_map_get_bbox (OsmGpsMap *map, OsmGpsMapPoint *pt1, OsmGpsMapPoint *pt2);
 void osm_gps_map_set_mapcenter (OsmGpsMap *map, float latitude, float longitude, int zoom);
 void osm_gps_map_set_center (OsmGpsMap *map, float latitude, float longitude);
 int osm_gps_map_set_zoom (OsmGpsMap *map, int zoom);
@@ -146,7 +143,7 @@ gboolean osm_gps_map_remove_image (OsmGpsMap *map, GdkPixbuf *image);
 void osm_gps_map_clear_images (OsmGpsMap *map);
 void osm_gps_map_draw_gps (OsmGpsMap *map, float latitude, float longitude, float heading);
 void osm_gps_map_clear_gps (OsmGpsMap *map);
-coord_t osm_gps_map_get_co_ordinates (OsmGpsMap *map, int pixel_x, int pixel_y);
+OsmGpsMapPoint osm_gps_map_get_co_ordinates (OsmGpsMap *map, int pixel_x, int pixel_y);
 GtkWidget * osm_gps_map_new(void);
 void osm_gps_map_screen_to_geographic (OsmGpsMap *map,
                                        gint pixel_x, gint pixel_y,

@@ -114,7 +114,7 @@ struct _OsmGpsMapPrivate
     gboolean record_trip_history;
     gboolean show_trip_history;
     GSList *trip_history;
-    coord_t *gps;
+    OsmGpsMapPoint *gps;
     float gps_heading;
     gboolean gps_valid;
 
@@ -1159,7 +1159,7 @@ osm_gps_map_print_track (OsmGpsMap *map, GSList *trackpoint_list)
     map_y0 = priv->map_y - EXTRA_BORDER;
     for(list = trackpoint_list; list != NULL; list = list->next)
     {
-        coord_t *tp = list->data;
+        OsmGpsMapPoint *tp = list->data;
 
         x = lon2pixel(priv->map_zoom, tp->rlon) - map_x0;
         y = lat2pixel(priv->map_zoom, tp->rlat) - map_y0;
@@ -1421,7 +1421,7 @@ osm_gps_map_init (OsmGpsMap *object)
     priv->pixmap = NULL;
 
     priv->trip_history = NULL;
-    priv->gps = g_new0(coord_t, 1);
+    priv->gps = g_new0(OsmGpsMapPoint, 1);
     priv->gps_valid = FALSE;
     priv->gps_heading = OSM_GPS_MAP_INVALID;
 
@@ -2496,7 +2496,7 @@ osm_gps_map_source_get_max_zoom(OsmGpsMapSource_t source)
 }
 
 void
-osm_gps_map_download_maps (OsmGpsMap *map, coord_t *pt1, coord_t *pt2, int zoom_start, int zoom_end)
+osm_gps_map_download_maps (OsmGpsMap *map, OsmGpsMapPoint *pt1, OsmGpsMapPoint *pt2, int zoom_start, int zoom_end)
 {
     int i,j,zoom,num_tiles;
     OsmGpsMapPrivate *priv = map->priv;
@@ -2545,7 +2545,7 @@ osm_gps_map_download_maps (OsmGpsMap *map, coord_t *pt1, coord_t *pt2, int zoom_
 }
 
 void
-osm_gps_map_get_bbox (OsmGpsMap *map, coord_t *pt1, coord_t *pt2)
+osm_gps_map_get_bbox (OsmGpsMap *map, OsmGpsMapPoint *pt1, OsmGpsMapPoint *pt2)
 {
     OsmGpsMapPrivate *priv = map->priv;
 
@@ -2724,7 +2724,7 @@ osm_gps_map_draw_gps (OsmGpsMap *map, float latitude, float longitude, float hea
 
     //If trip marker add to list of gps points.
     if (priv->record_trip_history) {
-        coord_t *tp = g_new0(coord_t,1);
+        OsmGpsMapPoint *tp = g_new0(OsmGpsMapPoint,1);
         tp->rlat = priv->gps->rlat;
         tp->rlon = priv->gps->rlon;
         priv->trip_history = g_slist_append(priv->trip_history, tp);
@@ -2763,10 +2763,10 @@ osm_gps_map_clear_gps (OsmGpsMap *map)
     osm_gps_map_map_redraw_idle(map);
 }
 
-coord_t
+OsmGpsMapPoint
 osm_gps_map_get_co_ordinates (OsmGpsMap *map, int pixel_x, int pixel_y)
 {
-    coord_t coord;
+    OsmGpsMapPoint coord;
     OsmGpsMapPrivate *priv = map->priv;
 
     coord.rlat = pixel2lat(priv->map_zoom, priv->map_y + pixel_y);
@@ -2879,7 +2879,7 @@ osm_gps_map_repaint (OsmGpsMap *map)
     osm_gps_map_expose (GTK_WIDGET(map), NULL);
 }
 
-coord_t *
+OsmGpsMapPoint *
 osm_gps_map_get_gps (OsmGpsMap *map)
 {
     g_return_val_if_fail (OSM_IS_GPS_MAP (map), NULL);
