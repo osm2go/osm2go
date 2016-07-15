@@ -231,7 +231,7 @@ static void map_update(context_t *context, gboolean forced) {
     osm_gps_map_set_mapcenter(OSM_GPS_MAP(context->map.widget),
 			      0.0, 0.0, 1);
 
-    osm_gps_map_clear_tracks(OSM_GPS_MAP(context->map.widget));
+    osm_gps_map_track_remove_all(OSM_GPS_MAP(context->map.widget));
   } else {
 
     pos_float_t center_lat = (context->max.lat + context->min.lat)/2;
@@ -253,7 +253,7 @@ static void map_update(context_t *context, gboolean forced) {
 			 (vzoom < hzoom)?vzoom:hzoom);
 
     /* ---------- draw border (as a gps track) -------------- */
-    osm_gps_map_clear_tracks(OSM_GPS_MAP(context->map.widget));
+    osm_gps_map_track_remove_all(OSM_GPS_MAP(context->map.widget));
 
     if(context->max.lat > context->min.lat &&
        context->max.lon > context->min.lon) {
@@ -448,7 +448,7 @@ on_map_button_press_event(GtkWidget *widget,
     return FALSE;
 
   /* remove existing marker */
-  osm_gps_map_clear_tracks(map);
+  osm_gps_map_track_remove_all(map);
 
   /* and remember this location as the start */
   osm_gps_map_convert_screen_to_geographic(map, (gint)event->x, (gint)event->y, &context->map.start);
@@ -464,7 +464,7 @@ on_map_motion_notify_event(GtkWidget *widget,
     OsmGpsMap *map = OSM_GPS_MAP(context->map.widget);
 
     /* remove existing marker */
-    osm_gps_map_clear_tracks(map);
+    osm_gps_map_track_remove_all(map);
 
     OsmGpsMapPoint start = context->map.start, end;
     osm_gps_map_convert_screen_to_geographic(map, (gint)event->x, (gint)event->y, &end);

@@ -2639,7 +2639,7 @@ osm_gps_map_add_track (OsmGpsMap *map, GSList *track)
 }
 
 void
-osm_gps_map_clear_tracks (OsmGpsMap *map)
+osm_gps_map_track_remove_all (OsmGpsMap *map)
 {
     g_return_if_fail (OSM_IS_GPS_MAP (map));
 
