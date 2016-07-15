@@ -28,6 +28,7 @@
 #include "config.h"
 
 #include <osm-gps-map-point.h>
+#include <osm-gps-map-widget.h>
 
 #include <glib.h>
 #include <glib-object.h>
@@ -35,28 +36,6 @@
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
 G_BEGIN_DECLS
-
-#define OSM_TYPE_GPS_MAP             (osm_gps_map_get_type ())
-#define OSM_GPS_MAP(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), OSM_TYPE_GPS_MAP, OsmGpsMap))
-#define OSM_GPS_MAP_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), OSM_TYPE_GPS_MAP, OsmGpsMapClass))
-#define OSM_IS_GPS_MAP(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), OSM_TYPE_GPS_MAP))
-#define OSM_IS_GPS_MAP_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), OSM_TYPE_GPS_MAP))
-#define OSM_GPS_MAP_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), OSM_TYPE_GPS_MAP, OsmGpsMapClass))
-
-typedef struct _OsmGpsMapClass OsmGpsMapClass;
-typedef struct _OsmGpsMap OsmGpsMap;
-typedef struct _OsmGpsMapPrivate OsmGpsMapPrivate;
-
-struct _OsmGpsMapClass
-{
-    GtkDrawingAreaClass parent_class;
-};
-
-struct _OsmGpsMap
-{
-    GtkDrawingArea parent_instance;
-    OsmGpsMapPrivate *priv;
-};
 
 typedef enum {
     OSM_GPS_MAP_SOURCE_NULL,
@@ -80,8 +59,6 @@ typedef enum {
 } OsmGpsMapSource_t;
 
 #define OSM_GPS_MAP_SOURCE_LAST  (OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_HYBRID)
-
-#define OSM_GPS_MAP_INVALID  (0.0/0.0)
 
 typedef struct {
     gint x, y, w, h;
@@ -123,27 +100,13 @@ typedef void (*OsmGpsMapBalloonCallback)(cairo_t *, OsmGpsMapRect_t *rect,
                                          gpointer data);
 #define	OSM_GPS_MAP_BALLOON_CALLBACK(f) ((OsmGpsMapBalloonCallback) (f))
 
-GType osm_gps_map_get_type (void) G_GNUC_CONST;
-
 const char* osm_gps_map_source_get_friendly_name(OsmGpsMapSource_t source);
 const char* osm_gps_map_source_get_repo_uri(OsmGpsMapSource_t source);
 const char *osm_gps_map_source_get_image_format(OsmGpsMapSource_t source);
 int osm_gps_map_source_get_min_zoom(OsmGpsMapSource_t source);
 int osm_gps_map_source_get_max_zoom(OsmGpsMapSource_t source);
 
-void osm_gps_map_download_maps (OsmGpsMap *map, OsmGpsMapPoint *pt1, OsmGpsMapPoint *pt2, int zoom_start, int zoom_end);
-void osm_gps_map_get_bbox (OsmGpsMap *map, OsmGpsMapPoint *pt1, OsmGpsMapPoint *pt2);
-void osm_gps_map_set_center_and_zoom (OsmGpsMap *map, float latitude, float longitude, int zoom);
-void osm_gps_map_set_center (OsmGpsMap *map, float latitude, float longitude);
-int osm_gps_map_set_zoom (OsmGpsMap *map, int zoom);
 void osm_gps_map_add_track (OsmGpsMap *map, GSList *track);
-void osm_gps_map_track_remove_all (OsmGpsMap *map);
-void osm_gps_map_gps_add (OsmGpsMap *map, float latitude, float longitude, float heading);
-void osm_gps_map_gps_clear (OsmGpsMap *map);
-void osm_gps_map_convert_screen_to_geographic (OsmGpsMap *map, gint pixel_x, gint pixel_y, OsmGpsMapPoint *pt);
-GtkWidget * osm_gps_map_new(void);
-void osm_gps_map_scroll (OsmGpsMap *map, gint dx, gint dy);
-float osm_gps_map_get_scale(OsmGpsMap *map);
 #ifdef ENABLE_OSD
 void osm_gps_map_register_osd(OsmGpsMap *map, osm_gps_map_osd_t *osd);
 void osm_gps_map_redraw (OsmGpsMap *map);
