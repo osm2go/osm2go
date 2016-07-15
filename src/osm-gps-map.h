@@ -142,12 +142,6 @@ void osm_gps_map_draw_gps (OsmGpsMap *map, float latitude, float longitude, floa
 void osm_gps_map_clear_gps (OsmGpsMap *map);
 void osm_gps_map_convert_screen_to_geographic (OsmGpsMap *map, gint pixel_x, gint pixel_y, OsmGpsMapPoint *pt);
 GtkWidget * osm_gps_map_new(void);
-void osm_gps_map_screen_to_geographic (OsmGpsMap *map,
-                                       gint pixel_x, gint pixel_y,
-                                       gfloat *latitude, gfloat *longitude);
-void osm_gps_map_geographic_to_screen (OsmGpsMap *map,
-                                       gfloat latitude, gfloat longitude,
-                                       gint *pixel_x, gint *pixel_y);
 void osm_gps_map_scroll (OsmGpsMap *map, gint dx, gint dy);
 float osm_gps_map_get_scale(OsmGpsMap *map);
 #ifdef ENABLE_OSD

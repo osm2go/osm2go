@@ -2723,39 +2723,6 @@ osm_gps_map_new (void)
 }
 
 void
-osm_gps_map_screen_to_geographic (OsmGpsMap *map, gint pixel_x, gint pixel_y,
-                                  gfloat *latitude, gfloat *longitude)
-{
-    OsmGpsMapPrivate *priv;
-
-    g_return_if_fail (OSM_IS_GPS_MAP (map));
-    priv = map->priv;
-
-    if (latitude)
-        *latitude = rad2deg(pixel2lat(priv->map_zoom, priv->map_y + pixel_y));
-    if (longitude)
-        *longitude = rad2deg(pixel2lon(priv->map_zoom, priv->map_x + pixel_x));
-}
-
-void
-osm_gps_map_geographic_to_screen (OsmGpsMap *map,
-                                  gfloat latitude, gfloat longitude,
-                                  gint *pixel_x, gint *pixel_y)
-{
-    OsmGpsMapPrivate *priv;
-
-    g_return_if_fail (OSM_IS_GPS_MAP (map));
-    priv = map->priv;
-
-    if (pixel_x)
-        *pixel_x = lon2pixel(priv->map_zoom, deg2rad(longitude)) -
-            priv->map_x + priv->drag_mouse_dx;
-    if (pixel_y)
-        *pixel_y = lat2pixel(priv->map_zoom, deg2rad(latitude)) -
-            priv->map_y + priv->drag_mouse_dy;
-}
-
-void
 osm_gps_map_scroll (OsmGpsMap *map, gint dx, gint dy)
 {
     OsmGpsMapPrivate *priv;
