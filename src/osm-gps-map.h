@@ -28,6 +28,7 @@
 #include "config.h"
 
 #include <osm-gps-map-point.h>
+#include <osm-gps-map-source.h>
 #include <osm-gps-map-widget.h>
 
 #include <glib.h>
@@ -36,29 +37,6 @@
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
 G_BEGIN_DECLS
-
-typedef enum {
-    OSM_GPS_MAP_SOURCE_NULL,
-    OSM_GPS_MAP_SOURCE_OPENSTREETMAP,
-    OSM_GPS_MAP_SOURCE_OPENSTREETMAP_RENDERER,
-    OSM_GPS_MAP_SOURCE_OPENCYCLEMAP,
-    OSM_GPS_MAP_SOURCE_OSM_PUBLIC_TRANSPORT,
-    OSM_GPS_MAP_SOURCE_GOOGLE_STREET,
-    OSM_GPS_MAP_SOURCE_GOOGLE_SATELLITE,
-    OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_STREET,
-    OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_SATELLITE,
-    OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_HYBRID,
-
-    /* entries below are currently unusable */
-    OSM_GPS_MAP_SOURCE_MAPS_FOR_FREE,    /* not enough details */
-    OSM_GPS_MAP_SOURCE_GOOGLE_HYBRID,    /* disabled by google */
-    OSM_GPS_MAP_SOURCE_YAHOO_STREET,     /* not implemented yet */
-    OSM_GPS_MAP_SOURCE_YAHOO_SATELLITE,  /* not implemented yet */
-    OSM_GPS_MAP_SOURCE_YAHOO_HYBRID,     /* not implemented yet */
-    OSM_GPS_MAP_SOURCE_OSMC_TRAILS       /* only for germany */
-} OsmGpsMapSource_t;
-
-#define OSM_GPS_MAP_SOURCE_LAST  (OSM_GPS_MAP_SOURCE_VIRTUAL_EARTH_HYBRID)
 
 typedef struct {
     gint x, y, w, h;
@@ -99,12 +77,6 @@ typedef struct osm_gps_map_osd_s {
 typedef void (*OsmGpsMapBalloonCallback)(cairo_t *, OsmGpsMapRect_t *rect,
                                          gpointer data);
 #define	OSM_GPS_MAP_BALLOON_CALLBACK(f) ((OsmGpsMapBalloonCallback) (f))
-
-const char* osm_gps_map_source_get_friendly_name(OsmGpsMapSource_t source);
-const char* osm_gps_map_source_get_repo_uri(OsmGpsMapSource_t source);
-const char *osm_gps_map_source_get_image_format(OsmGpsMapSource_t source);
-int osm_gps_map_source_get_min_zoom(OsmGpsMapSource_t source);
-int osm_gps_map_source_get_max_zoom(OsmGpsMapSource_t source);
 
 void osm_gps_map_add_track (OsmGpsMap *map, GSList *track);
 #ifdef ENABLE_OSD
