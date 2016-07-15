@@ -140,7 +140,7 @@ void osm_gps_map_add_track (OsmGpsMap *map, GSList *track);
 void osm_gps_map_clear_tracks (OsmGpsMap *map);
 void osm_gps_map_draw_gps (OsmGpsMap *map, float latitude, float longitude, float heading);
 void osm_gps_map_clear_gps (OsmGpsMap *map);
-OsmGpsMapPoint osm_gps_map_get_co_ordinates (OsmGpsMap *map, int pixel_x, int pixel_y);
+void osm_gps_map_convert_screen_to_geographic (OsmGpsMap *map, gint pixel_x, gint pixel_y, OsmGpsMapPoint *pt);
 GtkWidget * osm_gps_map_new(void);
 void osm_gps_map_screen_to_geographic (OsmGpsMap *map,
                                        gint pixel_x, gint pixel_y,

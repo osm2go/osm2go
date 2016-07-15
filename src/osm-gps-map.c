@@ -2707,15 +2707,13 @@ osm_gps_map_clear_gps (OsmGpsMap *map)
     osm_gps_map_map_redraw_idle(map);
 }
 
-OsmGpsMapPoint
-osm_gps_map_get_co_ordinates (OsmGpsMap *map, int pixel_x, int pixel_y)
+void
+osm_gps_map_convert_screen_to_geographic(OsmGpsMap *map, gint pixel_x, gint pixel_y, OsmGpsMapPoint *pt)
 {
-    OsmGpsMapPoint coord;
     OsmGpsMapPrivate *priv = map->priv;
 
-    coord.rlat = pixel2lat(priv->map_zoom, priv->map_y + pixel_y);
-    coord.rlon = pixel2lon(priv->map_zoom, priv->map_x + pixel_x);
-    return coord;
+    pt->rlat = pixel2lat(priv->map_zoom, priv->map_y + pixel_y);
+    pt->rlon = pixel2lon(priv->map_zoom, priv->map_x + pixel_x);
 }
 
 GtkWidget *
