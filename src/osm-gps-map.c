@@ -2559,7 +2559,7 @@ osm_gps_map_get_bbox (OsmGpsMap *map, OsmGpsMapPoint *pt1, OsmGpsMapPoint *pt2)
 }
 
 void
-osm_gps_map_set_mapcenter (OsmGpsMap *map, float latitude, float longitude, int zoom)
+osm_gps_map_set_center_and_zoom (OsmGpsMap *map, float latitude, float longitude, int zoom)
 {
     osm_gps_map_set_center (map, latitude, longitude);
     osm_gps_map_set_zoom (map, zoom);

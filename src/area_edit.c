@@ -228,7 +228,7 @@ static void map_update(context_t *context, gboolean forced) {
      isnan(context->min.lat) || isnan(context->min.lon)) {
 
     /* no coordinates given: display the entire world */
-    osm_gps_map_set_mapcenter(OSM_GPS_MAP(context->map.widget),
+    osm_gps_map_set_center_and_zoom(OSM_GPS_MAP(context->map.widget),
 			      0.0, 0.0, 1);
 
     osm_gps_map_track_remove_all(OSM_GPS_MAP(context->map.widget));
