@@ -124,6 +124,7 @@ PKG_CHECK_EXISTS(maemo-version, [
     PKG_CHECK_MODULES([gpsbt], [gpsbt], [], [])
     CFLAGS="$CFLAGS -DENABLE_GPSBT $gpsbt_CFLAGS"
     LIBS="$LIBS $gpsbt_LIBS"
+    EXTRA_OBJS="$EXTRA_OBJS gps.o"
   ], [
     AC_MSG_NOTICE([gpsbt not found, trying liblocation])
 
@@ -131,8 +132,10 @@ PKG_CHECK_EXISTS(maemo-version, [
       PKG_CHECK_MODULES([liblocation], [liblocation], [], [])
       CFLAGS="$CFLAGS -DENABLE_LIBLOCATION $liblocation_CFLAGS"
       LIBS="$LIBS $liblocation_LIBS"
+      EXTRA_OBJS="$EXTRA_OBJS gps_liblocation.o"
     ], [
       AC_MSG_NOTICE([WARNING: No liblocation nor gpsbt found, disabling gps auto start!])
+      EXTRA_OBJS="$EXTRA_OBJS gps.o"
     ])
   ]) 
 
@@ -180,6 +183,8 @@ XB-Maemo-Icon-26:
   PKG_CHECK_MODULES([gnome2], [libgnome-2.0], [], [AC_MSG_ERROR([libgnome-2.0 missing])])
   CFLAGS="$CFLAGS $gnome2_CFLAGS -DENABLE_BROWSER_INTERFACE"
   LIBS="$LIBS $gnome2_LIBS"
+
+  EXTRA_OBJS="$EXTRA_OBJS gps.o"
 
   INSTALL_PLATTFORM="install-debian"
 

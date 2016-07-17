@@ -28,7 +28,7 @@ srcdir = @srcdir@
 
 OBJS = main.o map.o osm.o osm_api.o wms.o about.o \
 	statusbar.o project.o settings.o pos.o diff.o map_hl.o \
-	iconbar.o info.o icon.o track.o gps.o canvas_goocanvas.o \
+	iconbar.o info.o icon.o track.o canvas_goocanvas.o \
 	area_edit.o josm_presets.o relation_edit.o misc.o map_edit.o \
 	josm_elemstyles.o style.o net_io.o banner.o undo.o canvas.o \
 	list.o scale_popup.o \
@@ -110,6 +110,12 @@ gps.o: $(srcdir)/osm_api.h $(srcdir)/project.h $(srcdir)/statusbar.h $(srcdir)/a
 gps.o: $(srcdir)/info.h $(srcdir)/track.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/josm_presets.h $(srcdir)/relation_edit.h $(srcdir)/misc.h
 gps.o: $(srcdir)/map_edit.h $(srcdir)/josm_elemstyles.h $(srcdir)/style.h $(srcdir)/net_io.h $(srcdir)/banner.h $(srcdir)/list.h
 gps.o: $(srcdir)/scale_popup.h $(srcdir)/about.h
+gps_liblocation.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/settings.h $(srcdir)/map.h
+gps_liblocation.o: $(srcdir)/map_hl.h $(srcdir)/osm_api.h $(srcdir)/project.h $(srcdir)/statusbar.h $(srcdir)/area_edit.h
+gps_liblocation.o: $(srcdir)/diff.h $(srcdir)/iconbar.h $(srcdir)/icon.h $(srcdir)/info.h $(srcdir)/track.h $(srcdir)/gps.h $(srcdir)/wms.h
+gps_liblocation.o: $(srcdir)/josm_presets.h $(srcdir)/relation_edit.h $(srcdir)/misc.h $(srcdir)/map_edit.h
+gps_liblocation.o: $(srcdir)/josm_elemstyles.h $(srcdir)/style.h $(srcdir)/net_io.h $(srcdir)/banner.h $(srcdir)/list.h
+gps_liblocation.o: $(srcdir)/scale_popup.h $(srcdir)/about.h
 iconbar.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/settings.h $(srcdir)/map.h $(srcdir)/map_hl.h
 iconbar.o: $(srcdir)/osm_api.h $(srcdir)/project.h $(srcdir)/statusbar.h $(srcdir)/area_edit.h $(srcdir)/diff.h $(srcdir)/iconbar.h
 iconbar.o: $(srcdir)/icon.h $(srcdir)/info.h $(srcdir)/track.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/josm_presets.h $(srcdir)/relation_edit.h
