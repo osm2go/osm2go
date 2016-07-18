@@ -2484,6 +2484,19 @@ See also http://josm.openstreetmap.de/wiki/TaggingPresets.
             <key key="amenity" value="veterinary" />
             <text key="name" text="Name" default="" delete_if_empty="true" />
         </item>
+        <item name="Fire hydrant" icon="presets/fire_hydrant.png">
+            <link href="http://wiki.openstreetmap.org/wiki/Tag:emergency%3Dfire_hydrant"
+                  de.href="http://wiki.openstreetmap.org/wiki/DE:Tag:emergency%3Dfire_hydrant" />
+            <label text="Edit Fire Hydrant" />
+            <space />
+            <key key="emergency" value="fire_hydrant" />
+            <text key="ref" text="Point Number" default="" delete_if_empty="true" />
+            <text key="fire_hydrant:type" text="Hydrant type" values="underground,pillar,wall,pond" default="" delete_if_empty="true" />
+            <text key="fire_hydrant:diameter" text="Width of the water main (in mm)" default="" delete_if_empty="true" />
+            <combo key="fire_hydrant:position" text="Relative position" values="lane,parking_lot,sidewalk,green" default="" delete_if_empty="true" />
+            <text key="operator" text="Operator" default="" delete_if_empty="true" />
+            <space />
+        </item>
     </group> <!-- Health -->
     <separator/>
     <group name="Places" icon="presets/places.png">
