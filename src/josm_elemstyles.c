@@ -83,9 +83,9 @@ gboolean parse_color(xmlNode *a_node, char *name,
 }
 
 static gboolean parse_gint(xmlNode *a_node, char *name, gint *val) {
-  char *num_str = (char*)xmlGetProp(a_node, BAD_CAST name);
+  xmlChar *num_str = xmlGetProp(a_node, BAD_CAST name);
   if(num_str) {
-    *val = strtoul(num_str, NULL, 10);
+    *val = strtoul((const char*)num_str, NULL, 10);
     xmlFree(num_str);
     return TRUE;
   }
@@ -103,7 +103,7 @@ static gboolean parse_scale_max(xmlNode *a_node, float *val) {
 }
 
 static gboolean parse_gboolean(xmlNode *a_node, char *name, gboolean *val) {
-  char *bool_str = (char*)xmlGetProp(a_node, BAD_CAST name);
+  xmlChar *bool_str = xmlGetProp(a_node, BAD_CAST name);
   if (!bool_str) {
     *val = FALSE;
     return FALSE;
@@ -111,7 +111,7 @@ static gboolean parse_gboolean(xmlNode *a_node, char *name, gboolean *val) {
   static const char *true_str[]  = { "1", "yes", "true", 0 };
   int i;
   for (i=0; true_str[i]; ++i) {
-    if (strcasecmp(bool_str, true_str[i])==0) {
+    if (strcasecmp((const char*)bool_str, true_str[i])==0) {
       *val = TRUE;
       return TRUE;
     }
@@ -181,9 +181,9 @@ static elemstyle_area_t *parse_area(xmlDocPtr doc, xmlNode *a_node) {
 static elemstyle_icon_t *parse_icon(xmlDocPtr doc, xmlNode *a_node) {
   elemstyle_icon_t *icon = g_new0(elemstyle_icon_t, 1);
 
-  char *annotate = (char*)xmlGetProp(a_node, BAD_CAST "annotate");
+  xmlChar *annotate = xmlGetProp(a_node, BAD_CAST "annotate");
   if(annotate) {
-    icon->annotate = (strcasecmp(annotate, "true")==0);
+    icon->annotate = (strcasecmp((const char*)annotate, "true")==0);
     xmlFree(annotate);
   }
 
