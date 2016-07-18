@@ -1127,6 +1127,13 @@ Using both area and line attributes for the same key/value pair doesn't work!
 	</rule>
 
 	<rule>
+		<condition k="emergency" v="fire_hydrant" />
+		<icon annotate="true" src="public/fire_hydrant.png" />
+        <scale_min>1</scale_min>
+        <scale_max>50000</scale_max>
+	</rule>
+
+	<rule>
 		<condition k="amenity" v="school" />
 		<icon annotate="true" src="education/school.png" />
 		<area colour="#f7efb7"/>
