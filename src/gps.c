@@ -129,53 +129,51 @@ static void gps_clear_fix(struct gps_fix_t *fixp) {
 static void gps_unpack(char *buf, struct gps_data_t *gpsdata) {
   char *ns, *sp, *tp;
 
-  for(ns = buf; ns; ns = strstr(ns+1, "GPSD")) {
-    if(strncmp(ns, "GPSD", 4) == 0) {
-      /* the following should execute each time we have a good next sp */
-      for (sp = ns + 5; *sp != '\0'; sp = tp+1) {
-	tp = sp + strcspn(sp, ",\r\n");
-	if (*tp == '\0') tp--;
-	else *tp = '\0';
+  for(ns = strstr(buf,"GPSD"); ns; ns = strstr(ns+1, "GPSD")) {
+    /* the following should execute each time we have a good next sp */
+    for (sp = ns + 5; *sp != '\0'; sp = tp+1) {
+      tp = sp + strcspn(sp, ",\r\n");
+      if (*tp == '\0')
+        tp--;
+      else
+        *tp = '\0';
 
-	switch (*sp) {
-	case 'O':
-	  if (sp[2] == '?') {
-	    gpsdata->set =
-	      (gpsdata->set & SATELLITE_SET) | // fix for below
-	      MODE_SET | STATUS_SET;  // this clears sat info??
-	    gpsdata->status = STATUS_NO_FIX;
-	    gps_clear_fix(&gpsdata->fix);
-	  } else {
-	    struct gps_fix_t nf;
-	    char tag[MAXTAGLEN+1], alt[20], eph[20], lat[20], lon[20], mode[2];
-	    int st = sscanf(sp+2,
-			    "%8s %*s %*s %19s %19s "
-			    "%19s %19s %*s %*s %*s %*s "
-			    "%*s %*s %*s %1s",
-			    tag, lat, lon,
-			    alt, eph,
-			    mode);
-	    if (st >= 5) {
+      if (*sp == '0') {
+	if (sp[2] == '?') {
+	  gpsdata->set =
+	    (gpsdata->set & SATELLITE_SET) | // fix for below
+	    MODE_SET | STATUS_SET;  // this clears sat info??
+	  gpsdata->status = STATUS_NO_FIX;
+	  gps_clear_fix(&gpsdata->fix);
+	} else {
+	  struct gps_fix_t nf;
+	  char tag[MAXTAGLEN+1], alt[20], eph[20], lat[20], lon[20], mode[2];
+	  int st = sscanf(sp+2,
+			  "%8s %*s %*s %19s %19s "
+			  "%19s %19s %*s %*s %*s %*s "
+			  "%*s %*s %*s %1s",
+			  tag, lat, lon,
+			  alt, eph,
+			  mode);
+	  if (st >= 5) {
 #define DEFAULT(val) (val[0] == '?') ? NAN : g_ascii_strtod(val, NULL)
-	      nf.pos.lat = DEFAULT(lat);
-	      nf.pos.lon = DEFAULT(lon);
-	      nf.eph = DEFAULT(eph);
-	      nf.alt = DEFAULT(alt);
+	    nf.pos.lat = DEFAULT(lat);
+	    nf.pos.lon = DEFAULT(lon);
+	    nf.eph = DEFAULT(eph);
+	    nf.alt = DEFAULT(alt);
 #undef DEFAULT
-	      if (st >= 6)
-		nf.mode = (mode[0] == '?') ? MODE_NOT_SEEN : atoi(mode);
-	      else
-		nf.mode = (alt[0] == '?') ? MODE_2D : MODE_3D;
-	      gpsdata->fix = nf;
-	      gpsdata->set |= LATLON_SET|MODE_SET;
-	      gpsdata->status = STATUS_FIX;
-	      gpsdata->set |= STATUS_SET;
+	    if (st >= 6)
+	      nf.mode = (mode[0] == '?') ? MODE_NOT_SEEN : atoi(mode);
+	    else
+	      nf.mode = (alt[0] == '?') ? MODE_2D : MODE_3D;
+	    gpsdata->fix = nf;
+	    gpsdata->set |= LATLON_SET|MODE_SET;
+	    gpsdata->status = STATUS_FIX;
+	    gpsdata->set |= STATUS_SET;
 
-	      if(alt[0] != '?')
-		gpsdata->set |= ALTITUDE_SET;
-	    }
+	    if(alt[0] != '?')
+	      gpsdata->set |= ALTITUDE_SET;
 	  }
-	  break;
 	}
       }
     }
