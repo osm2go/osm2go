@@ -2441,7 +2441,7 @@ See also http://josm.openstreetmap.de/wiki/TaggingPresets.
             <text key="operator" text="Operator" default="" delete_if_empty="true" />
         </item>
     </group> <!-- Cash -->
-    <group name="Health" icon="presets/pharmacy.png">
+    <group name="Health/Emergency" icon="presets/pharmacy.png">
         <item name="Doctors" icon="presets/empty.png">
             <link href="http://wiki.openstreetmap.org/wiki/Tag:amenity=doctors" />
             <label text="Edit Doctors" />
