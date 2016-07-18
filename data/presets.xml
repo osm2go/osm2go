@@ -2487,12 +2487,6 @@ See also http://josm.openstreetmap.de/wiki/TaggingPresets.
     </group> <!-- Health -->
     <separator/>
     <group name="Places" icon="presets/places.png">
-        <item name="Continent" icon="presets/places.png">
-            <label text="Edit a Continent" />
-            <space />
-            <key key="place" value="continent" />
-            <text key="name" text="Name" default="" delete_if_empty="true" />
-        </item>
         <item name="Country" icon="presets/places.png">
             <label text="Edit Country" />
             <space />
