@@ -28,6 +28,7 @@
 #endif
 
 #include "appdata.h"
+#include "banner.h"
 #include "track.h"
 
 // predecs

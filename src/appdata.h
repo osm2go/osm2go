@@ -184,7 +184,6 @@ typedef struct appdata_s {
 #include "misc.h"
 #include "map_edit.h"
 #include "net_io.h"
-#include "banner.h"
 
 void main_ui_enable(appdata_t *appdata);
 

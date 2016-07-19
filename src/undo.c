@@ -26,6 +26,7 @@
  */
 
 #include "appdata.h"
+#include "banner.h"
 
 #define UNDO_ENABLE_CHECK   if(!appdata->menu_item_map_undo) return;
 
