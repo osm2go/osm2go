@@ -18,6 +18,7 @@
  */
 
 #include "appdata.h"
+#include "track.h"
 
 #include <gdk/gdkkeysyms.h>
 

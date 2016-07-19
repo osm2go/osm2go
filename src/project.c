@@ -23,6 +23,7 @@
 
 #include "appdata.h"
 #include "banner.h"
+#include "track.h"
 
 #include <sys/stat.h>
 

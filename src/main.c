@@ -34,6 +34,7 @@
 
 #include "appdata.h"
 #include "banner.h"
+#include "track.h"
 
 /* disable/enable main screen control dependant on presence of open project */
 void main_ui_enable(appdata_t *appdata) {

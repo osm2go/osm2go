@@ -23,11 +23,12 @@
 #define __USE_XOPEN
 #include <time.h>
 
-#include "appdata.h"
-
 #ifndef LIBXML_TREE_ENABLED
 #error "Tree not enabled in libxml"
 #endif
+
+#include "appdata.h"
+#include "track.h"
 
 // predecs
 static void track_do_enable_gps(appdata_t *appdata);

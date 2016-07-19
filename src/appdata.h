@@ -179,7 +179,6 @@ typedef struct appdata_s {
 #include "iconbar.h"
 #include "icon.h"
 #include "info.h"
-#include "track.h"
 #include "gps.h"
 #include "wms.h"
 #include "josm_presets.h"
