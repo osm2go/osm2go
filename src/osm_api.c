@@ -18,6 +18,7 @@
  */
 
 #include "appdata.h"
+#include "net_io.h"
 
 #include <curl/curl.h>
 #include <curl/easy.h> /* new for v7 */

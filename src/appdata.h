@@ -183,7 +183,6 @@ typedef struct appdata_s {
 #include "wms.h"
 #include "misc.h"
 #include "map_edit.h"
-#include "net_io.h"
 
 void main_ui_enable(appdata_t *appdata);
 
