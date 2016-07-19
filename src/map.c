@@ -19,6 +19,7 @@
 
 #include "appdata.h"
 #include "banner.h"
+#include "map_edit.h"
 #include "style.h"
 #include "track.h"
 

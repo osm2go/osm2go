@@ -18,6 +18,7 @@
  */
 
 #include "appdata.h"
+#include "map_edit.h"
 
 #ifdef FINGER_UI
 #define TOOL_ICON(a)  a "_thumb"
