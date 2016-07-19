@@ -2716,12 +2716,6 @@ osm_gps_map_convert_screen_to_geographic(OsmGpsMap *map, gint pixel_x, gint pixe
     pt->rlon = pixel2lon(priv->map_zoom, priv->map_x + pixel_x);
 }
 
-GtkWidget *
-osm_gps_map_new (void)
-{
-    return g_object_new (OSM_TYPE_GPS_MAP, NULL);
-}
-
 void
 osm_gps_map_scroll (OsmGpsMap *map, gint dx, gint dy)
 {

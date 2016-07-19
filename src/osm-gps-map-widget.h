@@ -60,8 +60,6 @@ struct _OsmGpsMap
 
 GType osm_gps_map_get_type (void) G_GNUC_CONST;
 
-GtkWidget* osm_gps_map_new (void);
-
 void osm_gps_map_download_maps (OsmGpsMap *map, OsmGpsMapPoint *pt1, OsmGpsMapPoint *pt2, int zoom_start, int zoom_end);
 void osm_gps_map_get_bbox (OsmGpsMap *map, OsmGpsMapPoint *pt1, OsmGpsMapPoint *pt2);
 void osm_gps_map_set_center_and_zoom (OsmGpsMap *map, float latitude, float longitude, int zoom);
