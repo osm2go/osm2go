@@ -18,6 +18,7 @@
  */
 
 #include "appdata.h"
+#include "icon.h"
 #include "josm_presets.h"
 #include "misc.h"
 

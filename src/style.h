@@ -20,6 +20,7 @@
 #ifndef STYLE_H
 #define STYLE_H
 
+#include "icon.h"
 #include "josm_elemstyles.h"
 
 typedef struct style_s {

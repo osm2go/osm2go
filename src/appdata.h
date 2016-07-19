@@ -177,7 +177,6 @@ typedef struct appdata_s {
 #include "project.h"
 #include "diff.h"
 #include "iconbar.h"
-#include "icon.h"
 
 void main_ui_enable(appdata_t *appdata);
 

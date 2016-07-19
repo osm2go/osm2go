@@ -18,6 +18,7 @@
  */
 
 #include "appdata.h"
+#include "icon.h"
 #include "misc.h"
 
 #ifndef FREMANTLE

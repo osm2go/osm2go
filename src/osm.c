@@ -30,6 +30,7 @@
 
 #include "appdata.h"
 #include "banner.h"
+#include "icon.h"
 #include "misc.h"
 
 #ifndef LIBXML_TREE_ENABLED
