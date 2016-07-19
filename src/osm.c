@@ -30,6 +30,7 @@
 
 #include "appdata.h"
 #include "banner.h"
+#include "misc.h"
 
 #ifndef LIBXML_TREE_ENABLED
 #error "Tree not enabled in libxml"

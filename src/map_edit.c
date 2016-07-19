@@ -19,6 +19,7 @@
 
 #include "appdata.h"
 #include "banner.h"
+#include "misc.h"
 #include "style.h"
 
 /* --------------------- misc local helper functions ---------------- */

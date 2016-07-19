@@ -19,6 +19,7 @@
 
 #include "appdata.h"
 #include "list.h"
+#include "misc.h"
 #include "relation_edit.h"
 
 /* --------------- relation dialog for an item (node or way) ----------- */

@@ -40,6 +40,7 @@
 #include "converter.h"
 #include "osm-gps-map-types.h"
 #include "osm-gps-map.h"
+#include "misc.h"
 
 #ifdef USE_CAIRO
 #include <cairo.h>

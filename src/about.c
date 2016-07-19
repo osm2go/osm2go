@@ -18,6 +18,7 @@
  */
 
 #include "appdata.h"
+#include "misc.h"
 
 #ifndef FREMANTLE
 #define LINK_COLOR "blue"

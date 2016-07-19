@@ -20,6 +20,7 @@
 #include <ctype.h>
 
 #include "appdata.h"
+#include "misc.h"
 
 #define TAG_STATE  GTK_STATE_PRELIGHT
 

@@ -19,6 +19,7 @@
 
 #include "appdata.h"
 #include "list.h"
+#include "misc.h"
 #include "net_io.h"
 
 #include <libxml/parser.h>

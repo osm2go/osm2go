@@ -33,6 +33,7 @@
 
 #include "appdata.h"
 #include "list.h"
+#include "misc.h"
 
 #include <stdarg.h>
 

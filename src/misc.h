@@ -43,11 +43,13 @@ typedef struct file_chain_s {
 #define MISC_AGAIN_FLAG_DONT_SAVE_NO  (1<<0)
 #define MISC_AGAIN_FLAG_DONT_SAVE_YES (1<<1)
 
+struct appdata_s;
+
 void errorf(GtkWidget *parent, const char *fmt, ...);
 void warningf(GtkWidget *parent, const char *fmt, ...);
 void messagef(GtkWidget *parent, char *title, const char *fmt, ...);
 gboolean yes_no_f(GtkWidget *parent,
-		  appdata_t *appdata, gulong again_bit, gint flags,
+		  struct appdata_s *appdata, gulong again_bit, gint flags,
 		  char *title, const char *fmt, ...);
 
 char *find_file(char *name);
@@ -61,10 +63,12 @@ file_chain_t *file_scan(char *pattern);
 #define MISC_DIALOG_WIDE     3
 #define MISC_DIALOG_HIGH     4
 
+struct settings_s;
+
 GtkWidget *misc_dialog_new(guint hint, const char *title, GtkWindow *parent, ...);
 GtkWidget *misc_scrolled_window_new(gboolean etched_in);
 void misc_scrolled_window_add_with_viewport(GtkWidget *win, GtkWidget *child);
-const char *misc_get_proxy_uri(settings_t *settings);
+const char *misc_get_proxy_uri(struct settings_s *settings);
 void misc_table_attach(GtkWidget *table, GtkWidget *widget, int x, int y);
 
 /* unified widgets */

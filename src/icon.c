@@ -19,6 +19,7 @@
 
 #include <sys/stat.h>
 #include "appdata.h"
+#include "misc.h"
 
 static const char *icon_exts[] = {
   "gif", "png", "jpg", ""

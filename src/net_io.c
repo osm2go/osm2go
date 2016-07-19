@@ -19,6 +19,7 @@
 
 #include "appdata.h"
 #include "banner.h"
+#include "misc.h"
 #include "net_io.h"
 
 #include <curl/curl.h>

@@ -24,6 +24,7 @@
 #include "appdata.h"
 #include "banner.h"
 #include "list.h"
+#include "misc.h"
 #include "track.h"
 
 #include <sys/stat.h>

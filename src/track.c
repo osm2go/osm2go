@@ -29,6 +29,7 @@
 
 #include "appdata.h"
 #include "banner.h"
+#include "misc.h"
 #include "track.h"
 
 // predecs

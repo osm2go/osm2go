@@ -22,6 +22,7 @@
  */
 
 #include "appdata.h"
+#include "misc.h"
 
 #include <libxml/parser.h>
 #include <libxml/tree.h>

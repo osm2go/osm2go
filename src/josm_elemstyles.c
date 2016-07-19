@@ -24,6 +24,7 @@
 #include "appdata.h"
 #include "josm_elemstyles.h"
 #include "josm_presets.h"
+#include "misc.h"
 #include "style.h"
 
 #include <libxml/parser.h>
