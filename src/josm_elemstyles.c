@@ -108,8 +108,8 @@ static gboolean parse_scale_max(xmlNode *a_node, float *val) {
 
 static gboolean parse_gboolean(xmlNode *a_node, char *name, gboolean *val) {
   xmlChar *bool_str = xmlGetProp(a_node, BAD_CAST name);
+  *val = FALSE;
   if (!bool_str) {
-    *val = FALSE;
     return FALSE;
   }
   static const char *true_str[]  = { "1", "yes", "true", 0 };
@@ -117,10 +117,10 @@ static gboolean parse_gboolean(xmlNode *a_node, char *name, gboolean *val) {
   for (i=0; true_str[i]; ++i) {
     if (strcasecmp((const char*)bool_str, true_str[i])==0) {
       *val = TRUE;
-      return TRUE;
+      break;
     }
   }
-  *val = FALSE;
+  xmlFree(bool_str);
   return TRUE;
 }
 
@@ -150,7 +150,9 @@ static elemstyle_line_t *parse_line(xmlDocPtr doc, xmlNode *a_node) {
 static void parse_width_mod(xmlNode *a_node, char *name,
 			    elemstyle_width_mod_t *value) {
   char *mod_str = (char*)xmlGetProp(a_node, BAD_CAST name);
-  if(mod_str && strlen(mod_str) > 0) {
+  if(!mod_str)
+    return;
+  if(strlen(mod_str) > 0) {
     if(mod_str[0] == '+') {
       value->mod = ES_MOD_ADD;
       value->width = strtoul(mod_str+1, NULL, 10);
@@ -163,6 +165,7 @@ static void parse_width_mod(xmlNode *a_node, char *name,
     } else
       printf("warning: unable to parse modifier %s\n", mod_str);
   }
+  xmlFree(mod_str);
 }
 
 static elemstyle_line_mod_t *parse_line_mod(xmlDocPtr doc, xmlNode *a_node) {
