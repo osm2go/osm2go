@@ -97,10 +97,7 @@ static track_point_t *track_parse_trkpt(bounds_t *bounds, xmlDocPtr doc,
 	xmlChar *str = xmlNodeGetContent(cur_node);
 	point->altitude = g_ascii_strtod((const gchar*)str, NULL);
  	xmlFree(str);
-      }
-
-      /* time */
-      if(strcasecmp((char*)cur_node->name, "time") == 0) {
+      } else if(strcasecmp((char*)cur_node->name, "time") == 0) {
 	struct tm time;
 	xmlChar *str = xmlNodeGetContent(cur_node);
 	char *ptr = strptime((const char*)str, DATE_FORMAT, &time);
