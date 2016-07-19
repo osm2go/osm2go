@@ -28,6 +28,7 @@
 #include "gps.h"
 #include "list.h"
 #include "misc.h"
+#include "statusbar.h"
 #include "track.h"
 #include "wms.h"
 

@@ -22,6 +22,7 @@
 #include "iconbar.h"
 #include "info.h"
 #include "misc.h"
+#include "statusbar.h"
 #include "style.h"
 
 /* --------------------- misc local helper functions ---------------- */

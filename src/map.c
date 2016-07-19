@@ -24,6 +24,7 @@
 #include "info.h"
 #include "map_edit.h"
 #include "misc.h"
+#include "statusbar.h"
 #include "style.h"
 #include "track.h"
 

@@ -24,6 +24,7 @@
 #include "appdata.h"
 #include "diff.h"
 #include "misc.h"
+#include "statusbar.h"
 
 #include <libxml/parser.h>
 #include <libxml/tree.h>

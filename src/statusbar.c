@@ -18,6 +18,7 @@
  */
 
 #include "appdata.h"
+#include "statusbar.h"
 
 #if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
 void statusbar_highlight(appdata_t *appdata, gboolean highlight) {

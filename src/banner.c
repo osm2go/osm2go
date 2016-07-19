@@ -18,6 +18,7 @@
  */
 
 #include "banner.h"
+#include "statusbar.h"
 #include <gtk/gtk.h>
 
 #define YETI_PASSIVE_WIDGET appdata->statusbar->widget

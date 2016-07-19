@@ -42,6 +42,7 @@
 #include "misc.h"
 #include "relation_edit.h"
 #include "scale_popup.h"
+#include "statusbar.h"
 #include "style.h"
 #include "track.h"
 #include "wms.h"
