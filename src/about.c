@@ -28,11 +28,15 @@
 #endif
 
 #ifdef ENABLE_BROWSER_INTERFACE
+#ifdef USE_HILDON
+#include <tablet-browser-interface.h>
+#else
+#include <gtk/gtk.h>
+#endif
+
 static void browser_url(appdata_t *appdata, char *url) {
 #ifndef USE_HILDON
-  /* taken from gnome-open, part of libgnome */
-  GError *err = NULL;
-  gnome_url_show(url, &err);
+  gtk_show_uri(NULL, url, GDK_CURRENT_TIME, NULL);
 #else
   osso_rpc_run_with_defaults(appdata->osso_context, "osso_browser",
 			     OSSO_BROWSER_OPEN_NEW_WINDOW_REQ, NULL,

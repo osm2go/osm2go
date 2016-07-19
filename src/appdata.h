@@ -63,14 +63,6 @@
 #include <libgnomevfs/gnome-vfs.h>
 #include <libgnomevfs/gnome-vfs-inet-connection.h>
 
-#ifdef ENABLE_BROWSER_INTERFACE
-#ifndef USE_HILDON
-#include <libgnome/gnome-url.h>
-#else
-#include <tablet-browser-interface.h>
-#endif
-#endif
-
 #include "pos.h"
 #include "osm.h"
 

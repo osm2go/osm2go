@@ -35,6 +35,11 @@
 #endif
 
 #ifdef ENABLE_BROWSER_INTERFACE
+#ifdef USE_HILDON
+#include <tablet-browser-interface.h>
+#else
+#include <gtk/gtk.h>
+#endif
 
 typedef struct {
   appdata_t *appdata;
@@ -44,9 +49,7 @@ typedef struct {
 /* ---------- simple interface to the systems web browser ---------- */
 static void on_info(GtkWidget *widget, www_context_t *context) {
 #ifndef USE_HILDON
-  /* taken from gnome-open, part of libgnome */
-  GError *err = NULL;
-  gnome_url_show(context->link, &err);
+  gtk_show_uri(NULL, context->link, GDK_CURRENT_TIME, NULL);
 #else
   osso_rpc_run_with_defaults(context->appdata->osso_context, "osso_browser",
 			     OSSO_BROWSER_OPEN_NEW_WINDOW_REQ, NULL,
