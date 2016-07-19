@@ -181,7 +181,6 @@ typedef struct appdata_s {
 #include "info.h"
 #include "gps.h"
 #include "wms.h"
-#include "josm_presets.h"
 #include "relation_edit.h"
 #include "misc.h"
 #include "map_edit.h"

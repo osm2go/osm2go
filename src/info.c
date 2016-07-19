@@ -18,6 +18,7 @@
  */
 
 #include "appdata.h"
+#include "josm_presets.h"
 
 enum {
   TAG_COL_KEY = 0,

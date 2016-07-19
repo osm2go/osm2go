@@ -18,6 +18,7 @@
  */
 
 #include "appdata.h"
+#include "josm_presets.h"
 
 #include <libxml/parser.h>
 #include <libxml/tree.h>
