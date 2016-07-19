@@ -19,6 +19,7 @@
 
 #include "appdata.h"
 #include "josm_presets.h"
+#include "relation_edit.h"
 
 enum {
   TAG_COL_KEY = 0,

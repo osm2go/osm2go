@@ -70,147 +70,144 @@ dep:
 
 about.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/settings.h $(srcdir)/map.h $(srcdir)/map_hl.h
 about.o: $(srcdir)/osm_api.h $(srcdir)/project.h $(srcdir)/statusbar.h $(srcdir)/area_edit.h $(srcdir)/diff.h $(srcdir)/iconbar.h $(srcdir)/icon.h
-about.o: $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/relation_edit.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h
-about.o: $(srcdir)/banner.h $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h
+about.o: $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h $(srcdir)/banner.h $(srcdir)/list.h
+about.o: $(srcdir)/scale_popup.h $(srcdir)/about.h
 area_edit.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/settings.h $(srcdir)/map.h $(srcdir)/map_hl.h
 area_edit.o: $(srcdir)/osm_api.h $(srcdir)/project.h $(srcdir)/statusbar.h $(srcdir)/area_edit.h $(srcdir)/diff.h $(srcdir)/iconbar.h
-area_edit.o: $(srcdir)/icon.h $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/relation_edit.h $(srcdir)/misc.h $(srcdir)/map_edit.h
-area_edit.o: $(srcdir)/net_io.h $(srcdir)/banner.h $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h
+area_edit.o: $(srcdir)/icon.h $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h $(srcdir)/banner.h
+area_edit.o: $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h
 banner.o: $(srcdir)/banner.h $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/settings.h $(srcdir)/map.h
 banner.o: $(srcdir)/map_hl.h $(srcdir)/osm_api.h $(srcdir)/project.h $(srcdir)/statusbar.h $(srcdir)/area_edit.h $(srcdir)/diff.h
-banner.o: $(srcdir)/iconbar.h $(srcdir)/icon.h $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/relation_edit.h $(srcdir)/misc.h
-banner.o: $(srcdir)/map_edit.h $(srcdir)/net_io.h $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h
+banner.o: $(srcdir)/iconbar.h $(srcdir)/icon.h $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h
+banner.o: $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h
 canvas.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/settings.h $(srcdir)/map.h $(srcdir)/map_hl.h
 canvas.o: $(srcdir)/osm_api.h $(srcdir)/project.h $(srcdir)/statusbar.h $(srcdir)/area_edit.h $(srcdir)/diff.h $(srcdir)/iconbar.h $(srcdir)/icon.h
-canvas.o: $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/relation_edit.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h
-canvas.o: $(srcdir)/banner.h $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h
+canvas.o: $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h $(srcdir)/banner.h $(srcdir)/list.h
+canvas.o: $(srcdir)/scale_popup.h $(srcdir)/about.h
 canvas_goocanvas.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/settings.h $(srcdir)/map.h
 canvas_goocanvas.o: $(srcdir)/map_hl.h $(srcdir)/osm_api.h $(srcdir)/project.h $(srcdir)/statusbar.h $(srcdir)/area_edit.h
-canvas_goocanvas.o: $(srcdir)/diff.h $(srcdir)/iconbar.h $(srcdir)/icon.h $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h
-canvas_goocanvas.o: $(srcdir)/relation_edit.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h $(srcdir)/banner.h
-canvas_goocanvas.o: $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h
+canvas_goocanvas.o: $(srcdir)/diff.h $(srcdir)/iconbar.h $(srcdir)/icon.h $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/misc.h
+canvas_goocanvas.o: $(srcdir)/map_edit.h $(srcdir)/net_io.h $(srcdir)/banner.h $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h
 converter.o: $(srcdir)/osm-gps-map-types.h $(srcdir)/osm-gps-map.h $(srcdir)/config.h $(srcdir)/converter.h
 dbus.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/settings.h $(srcdir)/map.h $(srcdir)/map_hl.h
 dbus.o: $(srcdir)/osm_api.h $(srcdir)/project.h $(srcdir)/statusbar.h $(srcdir)/area_edit.h $(srcdir)/diff.h $(srcdir)/iconbar.h $(srcdir)/icon.h
-dbus.o: $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/relation_edit.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h
-dbus.o: $(srcdir)/banner.h $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h
+dbus.o: $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h $(srcdir)/banner.h $(srcdir)/list.h
+dbus.o: $(srcdir)/scale_popup.h $(srcdir)/about.h
 diff.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/settings.h $(srcdir)/map.h $(srcdir)/map_hl.h
 diff.o: $(srcdir)/osm_api.h $(srcdir)/project.h $(srcdir)/statusbar.h $(srcdir)/area_edit.h $(srcdir)/diff.h $(srcdir)/iconbar.h $(srcdir)/icon.h
-diff.o: $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/relation_edit.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h
-diff.o: $(srcdir)/banner.h $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h
+diff.o: $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h $(srcdir)/banner.h $(srcdir)/list.h
+diff.o: $(srcdir)/scale_popup.h $(srcdir)/about.h
 gps.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/settings.h $(srcdir)/map.h $(srcdir)/map_hl.h
 gps.o: $(srcdir)/osm_api.h $(srcdir)/project.h $(srcdir)/statusbar.h $(srcdir)/area_edit.h $(srcdir)/diff.h $(srcdir)/iconbar.h $(srcdir)/icon.h
-gps.o: $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/relation_edit.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h $(srcdir)/banner.h
-gps.o: $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h
+gps.o: $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h $(srcdir)/banner.h $(srcdir)/list.h
+gps.o: $(srcdir)/scale_popup.h $(srcdir)/about.h
 gps_liblocation.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/settings.h $(srcdir)/map.h
 gps_liblocation.o: $(srcdir)/map_hl.h $(srcdir)/osm_api.h $(srcdir)/project.h $(srcdir)/statusbar.h $(srcdir)/area_edit.h
-gps_liblocation.o: $(srcdir)/diff.h $(srcdir)/iconbar.h $(srcdir)/icon.h $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/relation_edit.h
-gps_liblocation.o: $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h $(srcdir)/banner.h $(srcdir)/list.h $(srcdir)/scale_popup.h
-gps_liblocation.o: $(srcdir)/about.h
+gps_liblocation.o: $(srcdir)/diff.h $(srcdir)/iconbar.h $(srcdir)/icon.h $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/misc.h
+gps_liblocation.o: $(srcdir)/map_edit.h $(srcdir)/net_io.h $(srcdir)/banner.h $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h
 iconbar.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/settings.h $(srcdir)/map.h $(srcdir)/map_hl.h
 iconbar.o: $(srcdir)/osm_api.h $(srcdir)/project.h $(srcdir)/statusbar.h $(srcdir)/area_edit.h $(srcdir)/diff.h $(srcdir)/iconbar.h
-iconbar.o: $(srcdir)/icon.h $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/relation_edit.h $(srcdir)/misc.h $(srcdir)/map_edit.h
-iconbar.o: $(srcdir)/net_io.h $(srcdir)/banner.h $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h
+iconbar.o: $(srcdir)/icon.h $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h $(srcdir)/banner.h
+iconbar.o: $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h
 icon.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/settings.h $(srcdir)/map.h $(srcdir)/map_hl.h
 icon.o: $(srcdir)/osm_api.h $(srcdir)/project.h $(srcdir)/statusbar.h $(srcdir)/area_edit.h $(srcdir)/diff.h $(srcdir)/iconbar.h $(srcdir)/icon.h
-icon.o: $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/relation_edit.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h
-icon.o: $(srcdir)/banner.h $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h
+icon.o: $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h $(srcdir)/banner.h $(srcdir)/list.h
+icon.o: $(srcdir)/scale_popup.h $(srcdir)/about.h
 info.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/settings.h $(srcdir)/map.h $(srcdir)/map_hl.h
 info.o: $(srcdir)/osm_api.h $(srcdir)/project.h $(srcdir)/statusbar.h $(srcdir)/area_edit.h $(srcdir)/diff.h $(srcdir)/iconbar.h $(srcdir)/icon.h
-info.o: $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/relation_edit.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h
-info.o: $(srcdir)/banner.h $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h $(srcdir)/josm_presets.h
+info.o: $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h $(srcdir)/banner.h $(srcdir)/list.h
+info.o: $(srcdir)/scale_popup.h $(srcdir)/about.h $(srcdir)/josm_presets.h $(srcdir)/relation_edit.h
 josm_elemstyles.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/settings.h $(srcdir)/map.h
 josm_elemstyles.o: $(srcdir)/map_hl.h $(srcdir)/osm_api.h $(srcdir)/project.h $(srcdir)/statusbar.h $(srcdir)/area_edit.h
-josm_elemstyles.o: $(srcdir)/diff.h $(srcdir)/iconbar.h $(srcdir)/icon.h $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/relation_edit.h
-josm_elemstyles.o: $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h $(srcdir)/banner.h $(srcdir)/list.h $(srcdir)/scale_popup.h
-josm_elemstyles.o: $(srcdir)/about.h $(srcdir)/josm_elemstyles.h $(srcdir)/josm_presets.h $(srcdir)/style.h
+josm_elemstyles.o: $(srcdir)/diff.h $(srcdir)/iconbar.h $(srcdir)/icon.h $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/misc.h
+josm_elemstyles.o: $(srcdir)/map_edit.h $(srcdir)/net_io.h $(srcdir)/banner.h $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h
+josm_elemstyles.o: $(srcdir)/josm_elemstyles.h $(srcdir)/josm_presets.h $(srcdir)/style.h
 josm_presets.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/settings.h $(srcdir)/map.h
 josm_presets.o: $(srcdir)/map_hl.h $(srcdir)/osm_api.h $(srcdir)/project.h $(srcdir)/statusbar.h $(srcdir)/area_edit.h $(srcdir)/diff.h
-josm_presets.o: $(srcdir)/iconbar.h $(srcdir)/icon.h $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/relation_edit.h $(srcdir)/misc.h
-josm_presets.o: $(srcdir)/map_edit.h $(srcdir)/net_io.h $(srcdir)/banner.h $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h
-josm_presets.o: $(srcdir)/josm_presets.h
+josm_presets.o: $(srcdir)/iconbar.h $(srcdir)/icon.h $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/misc.h $(srcdir)/map_edit.h
+josm_presets.o: $(srcdir)/net_io.h $(srcdir)/banner.h $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h $(srcdir)/josm_presets.h
 list.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/settings.h $(srcdir)/map.h $(srcdir)/map_hl.h
 list.o: $(srcdir)/osm_api.h $(srcdir)/project.h $(srcdir)/statusbar.h $(srcdir)/area_edit.h $(srcdir)/diff.h $(srcdir)/iconbar.h $(srcdir)/icon.h
-list.o: $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/relation_edit.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h
-list.o: $(srcdir)/banner.h $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h
+list.o: $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h $(srcdir)/banner.h $(srcdir)/list.h
+list.o: $(srcdir)/scale_popup.h $(srcdir)/about.h
 main.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/settings.h $(srcdir)/map.h $(srcdir)/map_hl.h
 main.o: $(srcdir)/osm_api.h $(srcdir)/project.h $(srcdir)/statusbar.h $(srcdir)/area_edit.h $(srcdir)/diff.h $(srcdir)/iconbar.h $(srcdir)/icon.h
-main.o: $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/relation_edit.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h
-main.o: $(srcdir)/banner.h $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h $(srcdir)/josm_presets.h $(srcdir)/style.h
+main.o: $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h $(srcdir)/banner.h $(srcdir)/list.h
+main.o: $(srcdir)/scale_popup.h $(srcdir)/about.h $(srcdir)/josm_presets.h $(srcdir)/relation_edit.h $(srcdir)/style.h
 main.o: $(srcdir)/josm_elemstyles.h $(srcdir)/track.h
 map.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/settings.h $(srcdir)/map.h $(srcdir)/map_hl.h
 map.o: $(srcdir)/osm_api.h $(srcdir)/project.h $(srcdir)/statusbar.h $(srcdir)/area_edit.h $(srcdir)/diff.h $(srcdir)/iconbar.h $(srcdir)/icon.h
-map.o: $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/relation_edit.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h $(srcdir)/banner.h
-map.o: $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h $(srcdir)/style.h $(srcdir)/josm_elemstyles.h $(srcdir)/track.h
+map.o: $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h $(srcdir)/banner.h $(srcdir)/list.h
+map.o: $(srcdir)/scale_popup.h $(srcdir)/about.h $(srcdir)/style.h $(srcdir)/josm_elemstyles.h $(srcdir)/track.h
 map_edit.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/settings.h $(srcdir)/map.h $(srcdir)/map_hl.h
 map_edit.o: $(srcdir)/osm_api.h $(srcdir)/project.h $(srcdir)/statusbar.h $(srcdir)/area_edit.h $(srcdir)/diff.h $(srcdir)/iconbar.h
-map_edit.o: $(srcdir)/icon.h $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/relation_edit.h $(srcdir)/misc.h $(srcdir)/map_edit.h
-map_edit.o: $(srcdir)/net_io.h $(srcdir)/banner.h $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h $(srcdir)/style.h
-map_edit.o: $(srcdir)/josm_elemstyles.h
+map_edit.o: $(srcdir)/icon.h $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h $(srcdir)/banner.h
+map_edit.o: $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h $(srcdir)/style.h $(srcdir)/josm_elemstyles.h
 map_hl.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/settings.h $(srcdir)/map.h $(srcdir)/map_hl.h
 map_hl.o: $(srcdir)/osm_api.h $(srcdir)/project.h $(srcdir)/statusbar.h $(srcdir)/area_edit.h $(srcdir)/diff.h $(srcdir)/iconbar.h $(srcdir)/icon.h
-map_hl.o: $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/relation_edit.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h
-map_hl.o: $(srcdir)/banner.h $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h $(srcdir)/style.h $(srcdir)/josm_elemstyles.h
+map_hl.o: $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h $(srcdir)/banner.h $(srcdir)/list.h
+map_hl.o: $(srcdir)/scale_popup.h $(srcdir)/about.h $(srcdir)/style.h $(srcdir)/josm_elemstyles.h
 misc.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/settings.h $(srcdir)/map.h $(srcdir)/map_hl.h
 misc.o: $(srcdir)/osm_api.h $(srcdir)/project.h $(srcdir)/statusbar.h $(srcdir)/area_edit.h $(srcdir)/diff.h $(srcdir)/iconbar.h $(srcdir)/icon.h
-misc.o: $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/relation_edit.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h
-misc.o: $(srcdir)/banner.h $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h
+misc.o: $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h $(srcdir)/banner.h $(srcdir)/list.h
+misc.o: $(srcdir)/scale_popup.h $(srcdir)/about.h
 net_io.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/settings.h $(srcdir)/map.h $(srcdir)/map_hl.h
 net_io.o: $(srcdir)/osm_api.h $(srcdir)/project.h $(srcdir)/statusbar.h $(srcdir)/area_edit.h $(srcdir)/diff.h $(srcdir)/iconbar.h $(srcdir)/icon.h
-net_io.o: $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/relation_edit.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h
-net_io.o: $(srcdir)/banner.h $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h
+net_io.o: $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h $(srcdir)/banner.h $(srcdir)/list.h
+net_io.o: $(srcdir)/scale_popup.h $(srcdir)/about.h
 osm_api.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/settings.h $(srcdir)/map.h $(srcdir)/map_hl.h
 osm_api.o: $(srcdir)/osm_api.h $(srcdir)/project.h $(srcdir)/statusbar.h $(srcdir)/area_edit.h $(srcdir)/diff.h $(srcdir)/iconbar.h
-osm_api.o: $(srcdir)/icon.h $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/relation_edit.h $(srcdir)/misc.h $(srcdir)/map_edit.h
-osm_api.o: $(srcdir)/net_io.h $(srcdir)/banner.h $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h
+osm_api.o: $(srcdir)/icon.h $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h $(srcdir)/banner.h
+osm_api.o: $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h
 osm.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/settings.h $(srcdir)/map.h $(srcdir)/map_hl.h
 osm.o: $(srcdir)/osm_api.h $(srcdir)/project.h $(srcdir)/statusbar.h $(srcdir)/area_edit.h $(srcdir)/diff.h $(srcdir)/iconbar.h $(srcdir)/icon.h
-osm.o: $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/relation_edit.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h $(srcdir)/banner.h
-osm.o: $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h
+osm.o: $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h $(srcdir)/banner.h $(srcdir)/list.h
+osm.o: $(srcdir)/scale_popup.h $(srcdir)/about.h
 osm-gps-map.o: $(srcdir)/config.h $(srcdir)/converter.h $(srcdir)/osm-gps-map-types.h $(srcdir)/osm-gps-map.h
 osm-gps-map-osd-select.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/settings.h
 osm-gps-map-osd-select.o: $(srcdir)/map.h $(srcdir)/map_hl.h $(srcdir)/osm_api.h $(srcdir)/project.h $(srcdir)/statusbar.h
 osm-gps-map-osd-select.o: $(srcdir)/area_edit.h $(srcdir)/diff.h $(srcdir)/iconbar.h $(srcdir)/icon.h $(srcdir)/info.h $(srcdir)/gps.h
-osm-gps-map-osd-select.o: $(srcdir)/wms.h $(srcdir)/relation_edit.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h
-osm-gps-map-osd-select.o: $(srcdir)/banner.h $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h $(srcdir)/config.h
-osm-gps-map-osd-select.o: $(srcdir)/osm-gps-map.h $(srcdir)/converter.h $(srcdir)/osm-gps-map-osd-select.h
+osm-gps-map-osd-select.o: $(srcdir)/wms.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h $(srcdir)/banner.h $(srcdir)/list.h
+osm-gps-map-osd-select.o: $(srcdir)/scale_popup.h $(srcdir)/about.h $(srcdir)/config.h $(srcdir)/osm-gps-map.h
+osm-gps-map-osd-select.o: $(srcdir)/converter.h $(srcdir)/osm-gps-map-osd-select.h
 pos.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/settings.h $(srcdir)/map.h $(srcdir)/map_hl.h
 pos.o: $(srcdir)/osm_api.h $(srcdir)/project.h $(srcdir)/statusbar.h $(srcdir)/area_edit.h $(srcdir)/diff.h $(srcdir)/iconbar.h $(srcdir)/icon.h
-pos.o: $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/relation_edit.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h $(srcdir)/banner.h
-pos.o: $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h
+pos.o: $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h $(srcdir)/banner.h $(srcdir)/list.h
+pos.o: $(srcdir)/scale_popup.h $(srcdir)/about.h
 project.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/settings.h $(srcdir)/map.h $(srcdir)/map_hl.h
 project.o: $(srcdir)/osm_api.h $(srcdir)/project.h $(srcdir)/statusbar.h $(srcdir)/area_edit.h $(srcdir)/diff.h $(srcdir)/iconbar.h
-project.o: $(srcdir)/icon.h $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/relation_edit.h $(srcdir)/misc.h $(srcdir)/map_edit.h
-project.o: $(srcdir)/net_io.h $(srcdir)/banner.h $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h $(srcdir)/track.h
+project.o: $(srcdir)/icon.h $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h $(srcdir)/banner.h
+project.o: $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h $(srcdir)/track.h
 relation_edit.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/settings.h $(srcdir)/map.h
 relation_edit.o: $(srcdir)/map_hl.h $(srcdir)/osm_api.h $(srcdir)/project.h $(srcdir)/statusbar.h $(srcdir)/area_edit.h $(srcdir)/diff.h
-relation_edit.o: $(srcdir)/iconbar.h $(srcdir)/icon.h $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/relation_edit.h $(srcdir)/misc.h
-relation_edit.o: $(srcdir)/map_edit.h $(srcdir)/net_io.h $(srcdir)/banner.h $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h
+relation_edit.o: $(srcdir)/iconbar.h $(srcdir)/icon.h $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/misc.h $(srcdir)/map_edit.h
+relation_edit.o: $(srcdir)/net_io.h $(srcdir)/banner.h $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h
+relation_edit.o: $(srcdir)/relation_edit.h
 scale_popup.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/settings.h $(srcdir)/map.h
 scale_popup.o: $(srcdir)/map_hl.h $(srcdir)/osm_api.h $(srcdir)/project.h $(srcdir)/statusbar.h $(srcdir)/area_edit.h $(srcdir)/diff.h
-scale_popup.o: $(srcdir)/iconbar.h $(srcdir)/icon.h $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/relation_edit.h $(srcdir)/misc.h
-scale_popup.o: $(srcdir)/map_edit.h $(srcdir)/net_io.h $(srcdir)/banner.h $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h
+scale_popup.o: $(srcdir)/iconbar.h $(srcdir)/icon.h $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h
+scale_popup.o: $(srcdir)/banner.h $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h
 settings.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/settings.h $(srcdir)/map.h $(srcdir)/map_hl.h
 settings.o: $(srcdir)/osm_api.h $(srcdir)/project.h $(srcdir)/statusbar.h $(srcdir)/area_edit.h $(srcdir)/diff.h $(srcdir)/iconbar.h
-settings.o: $(srcdir)/icon.h $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/relation_edit.h $(srcdir)/misc.h $(srcdir)/map_edit.h
-settings.o: $(srcdir)/net_io.h $(srcdir)/banner.h $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h
+settings.o: $(srcdir)/icon.h $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h $(srcdir)/banner.h
+settings.o: $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h
 statusbar.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/settings.h $(srcdir)/map.h $(srcdir)/map_hl.h
 statusbar.o: $(srcdir)/osm_api.h $(srcdir)/project.h $(srcdir)/statusbar.h $(srcdir)/area_edit.h $(srcdir)/diff.h $(srcdir)/iconbar.h
-statusbar.o: $(srcdir)/icon.h $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/relation_edit.h $(srcdir)/misc.h $(srcdir)/map_edit.h
-statusbar.o: $(srcdir)/net_io.h $(srcdir)/banner.h $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h
+statusbar.o: $(srcdir)/icon.h $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h $(srcdir)/banner.h
+statusbar.o: $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h
 style.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/settings.h $(srcdir)/map.h $(srcdir)/map_hl.h
 style.o: $(srcdir)/osm_api.h $(srcdir)/project.h $(srcdir)/statusbar.h $(srcdir)/area_edit.h $(srcdir)/diff.h $(srcdir)/iconbar.h $(srcdir)/icon.h
-style.o: $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/relation_edit.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h
-style.o: $(srcdir)/banner.h $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h $(srcdir)/style.h $(srcdir)/josm_elemstyles.h
+style.o: $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h $(srcdir)/banner.h $(srcdir)/list.h
+style.o: $(srcdir)/scale_popup.h $(srcdir)/about.h $(srcdir)/style.h $(srcdir)/josm_elemstyles.h
 track.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/settings.h $(srcdir)/map.h $(srcdir)/map_hl.h
 track.o: $(srcdir)/osm_api.h $(srcdir)/project.h $(srcdir)/statusbar.h $(srcdir)/area_edit.h $(srcdir)/diff.h $(srcdir)/iconbar.h $(srcdir)/icon.h
-track.o: $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/relation_edit.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h
-track.o: $(srcdir)/banner.h $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h $(srcdir)/track.h
+track.o: $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h $(srcdir)/banner.h $(srcdir)/list.h
+track.o: $(srcdir)/scale_popup.h $(srcdir)/about.h $(srcdir)/track.h
 undo.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/settings.h $(srcdir)/map.h $(srcdir)/map_hl.h
 undo.o: $(srcdir)/osm_api.h $(srcdir)/project.h $(srcdir)/statusbar.h $(srcdir)/area_edit.h $(srcdir)/diff.h $(srcdir)/iconbar.h $(srcdir)/icon.h
-undo.o: $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/relation_edit.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h
-undo.o: $(srcdir)/banner.h $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h
+undo.o: $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h $(srcdir)/banner.h $(srcdir)/list.h
+undo.o: $(srcdir)/scale_popup.h $(srcdir)/about.h
 wms.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/settings.h $(srcdir)/map.h $(srcdir)/map_hl.h
 wms.o: $(srcdir)/osm_api.h $(srcdir)/project.h $(srcdir)/statusbar.h $(srcdir)/area_edit.h $(srcdir)/diff.h $(srcdir)/iconbar.h $(srcdir)/icon.h
-wms.o: $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/relation_edit.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h $(srcdir)/banner.h
-wms.o: $(srcdir)/list.h $(srcdir)/scale_popup.h $(srcdir)/about.h
+wms.o: $(srcdir)/info.h $(srcdir)/gps.h $(srcdir)/wms.h $(srcdir)/misc.h $(srcdir)/map_edit.h $(srcdir)/net_io.h $(srcdir)/banner.h $(srcdir)/list.h
+wms.o: $(srcdir)/scale_popup.h $(srcdir)/about.h

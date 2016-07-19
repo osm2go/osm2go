@@ -35,6 +35,7 @@
 #include "appdata.h"
 #include "banner.h"
 #include "josm_presets.h"
+#include "relation_edit.h"
 #include "style.h"
 #include "track.h"
 
