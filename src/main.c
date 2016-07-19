@@ -33,6 +33,7 @@
 #endif
 
 #include "appdata.h"
+#include "about.h"
 #include "banner.h"
 #include "josm_presets.h"
 #include "relation_edit.h"
