@@ -37,6 +37,7 @@
 #include "banner.h"
 #include "josm_presets.h"
 #include "relation_edit.h"
+#include "scale_popup.h"
 #include "style.h"
 #include "track.h"
 
