@@ -18,6 +18,7 @@
  */
 
 #include "appdata.h"
+#include "gps.h"
 #include "misc.h"
 
 #ifdef ENABLE_OSM_GPS_MAP

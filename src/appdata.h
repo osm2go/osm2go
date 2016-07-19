@@ -179,7 +179,6 @@ typedef struct appdata_s {
 #include "iconbar.h"
 #include "icon.h"
 #include "info.h"
-#include "gps.h"
 
 void main_ui_enable(appdata_t *appdata);
 
