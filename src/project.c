@@ -1312,8 +1312,7 @@ gboolean project_close(appdata_t *appdata) {
 
   /* Save track and turn off the handler callback */
   track_save(appdata->project, appdata->track.track);
-  track_clear(appdata, appdata->track.track);
-  appdata->track.track = NULL;
+  track_clear(appdata);
 
   map_clear(appdata, MAP_LAYER_ALL);
 

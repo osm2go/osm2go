@@ -51,7 +51,7 @@ void track_save(project_t *project, track_t *track);
 track_t *track_restore(appdata_t *appdata, project_t *project);
 
 /* accessible via the menu */
-void track_clear(appdata_t *appdata, track_t *track);
+void track_clear(appdata_t *appdata);
 void track_export(appdata_t *appdata, char *filename);
 track_t *track_import(appdata_t *appdata, char *filename);
 

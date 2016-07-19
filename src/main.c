@@ -480,8 +480,7 @@ cb_menu_track_export(GtkMenuItem *item, appdata_t *appdata) {
 static void
 cb_menu_track_clear(GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
-  track_clear(appdata, appdata->track.track);
-  appdata->track.track = NULL;
+  track_clear(appdata);
 }
 
 
@@ -1623,8 +1622,7 @@ int main(int argc, char *argv[]) {
   puts("gtk_main() left");
 
   track_save(appdata.project, appdata.track.track);
-  track_clear(&appdata, appdata.track.track);
-  appdata.track.track = NULL;
+  track_clear(&appdata);
 
   /* save a diff if there are dirty entries */
   diff_save(appdata.project, appdata.osm);

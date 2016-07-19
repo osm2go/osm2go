@@ -276,13 +276,17 @@ void track_seg_free(track_seg_t *seg) {
 
 /* --------------------------------------------------------------- */
 
-void track_clear(appdata_t *appdata, track_t *track) {
+void track_clear(appdata_t *appdata) {
+  track_t *track = appdata->track.track;
   if (! track) return;
 
   printf("clearing track\n");
 
   if(appdata && appdata->map)
     map_track_remove(appdata);
+
+  appdata->track.track = NULL;
+  track_menu_set(appdata, FALSE);
 
   track_seg_t *seg = track->track_seg;
   while(seg) {
@@ -292,8 +296,6 @@ void track_clear(appdata_t *appdata, track_t *track) {
   }
 
   g_free(track);
-
-  track_menu_set(appdata, FALSE);
 }
 
 /* ----------------------  saving track --------------------------- */
@@ -624,8 +626,7 @@ track_t *track_import(appdata_t *appdata, char *name) {
 
   /* remove any existing track */
   if(appdata->track.track) {
-    track_clear(appdata, appdata->track.track);
-    appdata->track.track = NULL;
+    track_clear(appdata);
   }
 
   track_t *track = track_read(appdata->osm, name);
