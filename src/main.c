@@ -36,6 +36,7 @@
 #include "about.h"
 #include "banner.h"
 #include "gps.h"
+#include "iconbar.h"
 #include "josm_presets.h"
 #include "misc.h"
 #include "relation_edit.h"

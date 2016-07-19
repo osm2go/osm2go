@@ -19,8 +19,9 @@
 
 #include "appdata.h"
 #include "banner.h"
-#include "map_edit.h"
+#include "iconbar.h"
 #include "info.h"
+#include "map_edit.h"
 #include "misc.h"
 #include "style.h"
 #include "track.h"

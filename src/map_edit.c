@@ -19,6 +19,7 @@
 
 #include "appdata.h"
 #include "banner.h"
+#include "iconbar.h"
 #include "info.h"
 #include "misc.h"
 #include "style.h"

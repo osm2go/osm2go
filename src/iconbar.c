@@ -19,6 +19,7 @@
 
 #include "appdata.h"
 #include "icon.h"
+#include "iconbar.h"
 #include "info.h"
 #include "map_edit.h"
 
