@@ -18,6 +18,7 @@
  */
 
 #include "appdata.h"
+#include "style.h"
 
 #include <libxml/parser.h>
 #include <libxml/tree.h>

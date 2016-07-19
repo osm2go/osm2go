@@ -20,6 +20,8 @@
 #ifndef STYLE_H
 #define STYLE_H
 
+#include "josm_elemstyles.h"
+
 typedef struct style_s {
   icon_t **iconP;  // pointer to global list of icons
   char *name;

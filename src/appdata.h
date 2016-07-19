@@ -185,8 +185,6 @@ typedef struct appdata_s {
 #include "relation_edit.h"
 #include "misc.h"
 #include "map_edit.h"
-#include "josm_elemstyles.h"
-#include "style.h"
 #include "net_io.h"
 #include "banner.h"
 #include "list.h"

@@ -34,6 +34,7 @@
 
 #include "appdata.h"
 #include "banner.h"
+#include "style.h"
 #include "track.h"
 
 /* disable/enable main screen control dependant on presence of open project */

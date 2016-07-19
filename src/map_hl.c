@@ -18,6 +18,7 @@
  */
 
 #include "appdata.h"
+#include "style.h"
 
 /* create a new item for the cursor */
 void map_hl_cursor_draw(map_t *map, gint x, gint y, gboolean is_world,
