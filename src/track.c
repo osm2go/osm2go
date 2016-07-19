@@ -58,8 +58,8 @@ gint track_seg_points(track_seg_t *seg) {
 }
 
 static gboolean track_get_prop_pos(xmlNode *node, pos_t *pos) {
-  char *str_lat = (char*)xmlGetProp(node, BAD_CAST "lat");
-  char *str_lon = (char*)xmlGetProp(node, BAD_CAST "lon");
+  xmlChar *str_lat = xmlGetProp(node, BAD_CAST "lat");
+  xmlChar *str_lon = xmlGetProp(node, BAD_CAST "lon");
 
   if(!str_lon || !str_lat) {
     if(!str_lon) xmlFree(str_lon);
@@ -67,8 +67,8 @@ static gboolean track_get_prop_pos(xmlNode *node, pos_t *pos) {
     return FALSE;
   }
 
-  pos->lat = g_ascii_strtod(str_lat, NULL);
-  pos->lon = g_ascii_strtod(str_lon, NULL);
+  pos->lat = g_ascii_strtod((const gchar*)str_lat, NULL);
+  pos->lon = g_ascii_strtod((const gchar*)str_lon, NULL);
 
   xmlFree(str_lon);
   xmlFree(str_lat);
@@ -94,16 +94,16 @@ static track_point_t *track_parse_trkpt(bounds_t *bounds, xmlDocPtr doc,
 
       /* elevation (altitude) */
       if(strcasecmp((char*)cur_node->name, "ele") == 0) {
-	char *str = (char*)xmlNodeGetContent(cur_node);
-	point->altitude = g_ascii_strtod(str, NULL);
+	xmlChar *str = xmlNodeGetContent(cur_node);
+	point->altitude = g_ascii_strtod((const gchar*)str, NULL);
  	xmlFree(str);
       }
 
       /* time */
       if(strcasecmp((char*)cur_node->name, "time") == 0) {
 	struct tm time;
-	char *str = (char*)xmlNodeGetContent(cur_node);
-	char *ptr = strptime(str, DATE_FORMAT, &time);
+	xmlChar *str = xmlNodeGetContent(cur_node);
+	char *ptr = strptime((const char*)str, DATE_FORMAT, &time);
 	if(ptr) point->time = mktime(&time);
  	xmlFree(str);
       }
