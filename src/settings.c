@@ -18,6 +18,7 @@
  */
 
 #include "appdata.h"
+#include "wms.h"
 
 #include <gconf/gconf.h>
 #include <gconf/gconf-client.h>

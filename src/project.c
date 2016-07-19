@@ -26,6 +26,7 @@
 #include "list.h"
 #include "misc.h"
 #include "track.h"
+#include "wms.h"
 
 #include <sys/stat.h>
 

@@ -41,6 +41,7 @@
 #include "scale_popup.h"
 #include "style.h"
 #include "track.h"
+#include "wms.h"
 
 /* disable/enable main screen control dependant on presence of open project */
 void main_ui_enable(appdata_t *appdata) {

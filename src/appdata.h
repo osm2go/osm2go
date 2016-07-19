@@ -180,7 +180,6 @@ typedef struct appdata_s {
 #include "icon.h"
 #include "info.h"
 #include "gps.h"
-#include "wms.h"
 
 void main_ui_enable(appdata_t *appdata);
 

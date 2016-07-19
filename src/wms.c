@@ -21,6 +21,7 @@
 #include "list.h"
 #include "misc.h"
 #include "net_io.h"
+#include "wms.h"
 
 #include <libxml/parser.h>
 #include <libxml/tree.h>
