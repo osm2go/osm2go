@@ -19,6 +19,7 @@
 
 #include "appdata.h"
 #include "josm_presets.h"
+#include "list.h"
 #include "relation_edit.h"
 
 enum {

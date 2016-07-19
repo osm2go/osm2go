@@ -32,6 +32,7 @@
  */
 
 #include "appdata.h"
+#include "list.h"
 
 #include <stdarg.h>
 
