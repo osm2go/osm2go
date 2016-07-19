@@ -22,6 +22,7 @@
  */
 
 #include "appdata.h"
+#include "area_edit.h"
 #include "banner.h"
 #include "diff.h"
 #include "gps.h"

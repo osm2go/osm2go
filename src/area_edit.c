@@ -18,6 +18,7 @@
  */
 
 #include "appdata.h"
+#include "area_edit.h"
 #include "gps.h"
 #include "misc.h"
 
