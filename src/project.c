@@ -33,6 +33,7 @@
 #include "wms.h"
 
 #include <sys/stat.h>
+#include <glib/gstdio.h>
 
 #include <libxml/parser.h>
 #include <libxml/tree.h>
@@ -882,23 +883,26 @@ static char *project_select(appdata_t *appdata) {
 /* ---------------------------------------------------- */
 
 /* return file length or -1 on error */
-static gsize file_length(char *path, char *name) {
-  char *str = NULL;
-
-  if(name[0] == '/') str = g_strdup(name);
-  else               str = g_strjoin(NULL, path, name, NULL);
-
-  GMappedFile *gmap = g_mapped_file_new(str, FALSE, NULL);
-  g_free(str);
-
-  if(!gmap) return -1;
-  gsize size = g_mapped_file_get_length(gmap);
-#if GLIB_CHECK_VERSION(2,22,0)
-  g_mapped_file_unref(gmap);
+static gsize file_length(const char *path, const char *name) {
+  /* no idea if that check is correct, but this way it works both for the N900 and my desktop */
+#if GLIB_CHECK_VERSION(2,24,1)
+  GStatBuf st;
 #else
-  g_mapped_file_free(gmap);
+  struct stat st;
 #endif
-  return size;
+  int r;
+
+  if (name[0] == '/') {
+    r = g_stat(name, &st);
+  } else {
+    char *str = g_strjoin(NULL, path, name, NULL);
+    r = g_stat(str, &st);
+    g_free(str);
+  }
+
+  if(r != 0) return -1;
+
+  return st.st_size;
 }
 
 void project_filesize(project_context_t *context) {
