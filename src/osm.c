@@ -500,6 +500,7 @@ static void hash_table_free(hash_table_t *table) {
       item = next;
     }
   }
+  g_free(table);
 }
 
 void osm_hash_tables_free(osm_t *osm) {
