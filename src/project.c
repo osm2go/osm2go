@@ -23,6 +23,7 @@
 
 #include "appdata.h"
 #include "banner.h"
+#include "diff.h"
 #include "gps.h"
 #include "list.h"
 #include "misc.h"

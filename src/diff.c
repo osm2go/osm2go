@@ -22,6 +22,7 @@
  */
 
 #include "appdata.h"
+#include "diff.h"
 #include "misc.h"
 
 #include <libxml/parser.h>

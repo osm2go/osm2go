@@ -35,6 +35,7 @@
 #include "appdata.h"
 #include "about.h"
 #include "banner.h"
+#include "diff.h"
 #include "gps.h"
 #include "iconbar.h"
 #include "josm_presets.h"

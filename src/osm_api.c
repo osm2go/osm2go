@@ -18,6 +18,7 @@
  */
 
 #include "appdata.h"
+#include "diff.h"
 #include "misc.h"
 #include "net_io.h"
 
