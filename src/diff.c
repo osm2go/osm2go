@@ -260,12 +260,12 @@ void diff_save(const project_t *project, const osm_t *osm) {
   g_free(backup);
 }
 
-static int xml_get_prop_int(xmlNode *node, char *prop, int def) {
+static item_id_t xml_get_prop_int(xmlNode *node, char *prop, item_id_t def) {
   xmlChar *str = xmlGetProp(node, BAD_CAST prop);
-  int value = def;
+  item_id_t value = def;
 
   if(str) {
-    value = strtoul((char*)str, NULL, 10);
+    value = strtoll((char*)str, NULL, 10);
     xmlFree(str);
   }
 
