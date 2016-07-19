@@ -18,6 +18,7 @@
  */
 
 #include "appdata.h"
+#include "info.h"
 #include "list.h"
 #include "misc.h"
 #include "relation_edit.h"

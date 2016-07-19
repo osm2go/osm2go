@@ -20,6 +20,8 @@
 #ifndef JOSM_PRESETS_H
 #define JOSM_PRESETS_H
 
+#include "info.h"
+
 // set this if _all_ josm icons are in data/presets
 // #define JOSM_PATH_ADJUST
 

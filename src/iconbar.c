@@ -18,6 +18,7 @@
  */
 
 #include "appdata.h"
+#include "info.h"
 #include "map_edit.h"
 
 #ifdef FINGER_UI
