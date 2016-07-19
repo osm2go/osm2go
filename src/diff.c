@@ -33,6 +33,10 @@
 #error "libxml doesn't support required tree or output"
 #endif
 
+static gchar *diff_filename(const project_t *project) {
+  return g_strdup_printf("%s%s.diff", project->path, project->name);
+}
+
 static void diff_save_tags(const tag_t *tag, xmlNodePtr node) {
   while(tag) {
     xmlNodePtr tag_node = xmlNewChild(node, NULL,
@@ -220,8 +224,7 @@ gboolean diff_is_clean(const osm_t *osm, gboolean honor_hidden_flags) {
 void diff_save(const project_t *project, const osm_t *osm) {
   if(!project || !osm) return;
 
-  char *diff_name =
-  g_strdup_printf("%s/%s.diff", project->path, project->name);
+  gchar *diff_name = diff_filename(project);
 
   if(diff_is_clean(osm, TRUE)) {
     printf("data set is clean, removing diff if present\n");
@@ -691,7 +694,7 @@ void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) {
     printf("diff backup present, loading it instead of real diff ...\n");
   } else {
     g_free(diff_name);
-    diff_name = g_strdup_printf("%s/%s.diff", project->path, project->name);
+    diff_name = diff_filename(project);
 
     if(!g_file_test(diff_name, G_FILE_TEST_EXISTS)) {
       printf("no diff present!\n");
@@ -776,7 +779,7 @@ void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) {
 }
 
 gboolean diff_present(const project_t *project) {
-  char *diff_name = g_strdup_printf("%s/%s.diff", project->path, project->name);
+  gchar *diff_name = diff_filename(project);
 
   if(!g_file_test(diff_name, G_FILE_TEST_EXISTS)) {
     printf("no diff present!\n");
@@ -789,7 +792,7 @@ gboolean diff_present(const project_t *project) {
 }
 
 void diff_remove(project_t *project) {
-  char *diff_name = g_strdup_printf("%s/%s.diff", project->path, project->name);
+  gchar *diff_name = diff_filename(project);
   g_remove(diff_name);
   g_free(diff_name);
 }
