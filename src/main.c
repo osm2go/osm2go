@@ -1426,9 +1426,7 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "error initiating osso context\n");
 
   dbus_register(&appdata.mmpos);
-#endif
 
-#ifdef USE_HILDON
   /* Create the hildon program and setup the title */
   appdata.program = HILDON_PROGRAM(hildon_program_get_instance());
   g_set_application_name("OSM2Go");
