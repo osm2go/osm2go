@@ -20,6 +20,8 @@
 #ifndef UNDO_H
 #define UNDO_H
 
+#include "osm.h"
+
 /* remember the last X operations for undo */
 #define UNDO_QUEUE_LEN  4
 

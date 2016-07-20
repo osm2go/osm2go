@@ -20,7 +20,11 @@
 #ifndef OSM_H
 #define OSM_H
 
+#include "pos.h"
+
 #include <math.h>
+#include <glib.h>
+#include <gtk/gtk.h>
 
 #define OSM_FLAG_DIRTY    (1<<0)
 #define OSM_FLAG_DELETED  (1<<1)

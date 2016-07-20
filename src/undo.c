@@ -25,6 +25,8 @@
  * + handle permamently deleted objects (newly created, then deleted)
  */
 
+#include "undo.h"
+
 #include "appdata.h"
 #include "banner.h"
 #include "map.h"

@@ -17,22 +17,29 @@
  * along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
+#define _DEFAULT_SOURCE
+#define _GNU_SOURCE
 
-#define __USE_XOPEN
-#include <time.h>
-
-#include <libxml/parser.h>
-#include <libxml/tree.h>
+#include "osm.h"
 
 #include "appdata.h"
 #include "banner.h"
 #include "icon.h"
 #include "map.h"
 #include "misc.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+
+#ifndef __USE_XOPEN
+#define __USE_XOPEN
+#endif
+#include <time.h>
+
+#include <libxml/parser.h>
+#include <libxml/tree.h>
 
 #ifndef LIBXML_TREE_ENABLED
 #error "Tree not enabled in libxml"
