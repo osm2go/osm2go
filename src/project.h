@@ -20,6 +20,8 @@
 #ifndef PROJECT_H
 #define PROJECT_H
 
+#include "map.h"
+
 typedef struct project_s {
   char *name;
   char *path;

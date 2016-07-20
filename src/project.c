@@ -29,6 +29,7 @@
 #include "list.h"
 #include "misc.h"
 #include "osm_api.h"
+#include "project.h"
 #include "statusbar.h"
 #include "track.h"
 #include "wms.h"

@@ -20,6 +20,9 @@
 #ifndef WMS_H
 #define WMS_H
 
+#include "appdata.h"
+#include "project.h"
+
 typedef struct wms_server_s {
   char *name, *server, *path;
   struct wms_server_s *next;

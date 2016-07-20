@@ -19,6 +19,8 @@
 
 
 #include "appdata.h"
+#include "map.h"
+#include "project.h"
 
 typedef struct {
   appdata_t *appdata;

@@ -18,6 +18,7 @@
  */
 
 #include "appdata.h"
+#include "map.h"
 #include "misc.h"
 #include "style.h"
 

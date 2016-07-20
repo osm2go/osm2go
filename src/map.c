@@ -22,6 +22,7 @@
 #include "diff.h"
 #include "iconbar.h"
 #include "info.h"
+#include "map.h"
 #include "map_edit.h"
 #include "map_hl.h"
 #include "misc.h"

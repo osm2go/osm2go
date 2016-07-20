@@ -20,6 +20,12 @@
 #ifndef ICONBAR_H
 #define ICONBAR_H
 
+#include "appdata.h"
+#include "map.h"
+
+#include <glib.h>
+#include <gtk/gtk.h>
+
 #if defined(USE_HILDON) && (MAEMO_VERSION_MAJOR == 5)
 #define FINGER_UI
 #endif

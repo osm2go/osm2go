@@ -20,6 +20,12 @@
 #ifndef DIFF_H
 #define DIFF_H
 
+#include "appdata.h"
+#include "osm.h"
+#include "project.h"
+
+#include <glib.h>
+
 void diff_save(const project_t *project, const osm_t *osm);
 void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm);
 gboolean diff_present(const project_t *project);

@@ -20,6 +20,8 @@
 #ifndef JOSM_ELEMSTYLES_H
 #define JOSM_ELEMSTYLES_H
 
+#include <glib.h>
+
 // Ratio conversions
 
 float scaledn_to_zoom(const float scaledn);
@@ -119,6 +121,8 @@ typedef struct elemstyle_s {
 elemstyle_t *josm_elemstyles_load(char *name);
 void josm_elemstyles_free(elemstyle_t *elemstyles);
 gboolean parse_color(xmlNode *a_node, char *name, elemstyle_color_t *color);
+
+struct style_s;
 
 void josm_elemstyles_colorize_node(struct style_s *style, node_t *node);
 void josm_elemstyles_colorize_way(struct style_s *style, way_t *way);

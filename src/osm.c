@@ -31,6 +31,7 @@
 #include "appdata.h"
 #include "banner.h"
 #include "icon.h"
+#include "map.h"
 #include "misc.h"
 
 #ifndef LIBXML_TREE_ENABLED

@@ -20,6 +20,10 @@
 #ifndef TRACK_H
 #define TRACK_H
 
+#include "canvas.h"
+#include "pos.h"
+#include "project.h"
+
 typedef struct track_point_s {
   pos_t pos;               /* position in lat/lon format */
   time_t time;
