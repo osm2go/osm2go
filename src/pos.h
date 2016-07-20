@@ -20,6 +20,8 @@
 #ifndef POS_H
 #define POS_H
 
+#include <glib.h>
+#include <gtk/gtk.h>
 #include <math.h>
 
 /* format string used to write lat/lon coordinates, altitude and time */

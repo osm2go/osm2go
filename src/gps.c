@@ -17,18 +17,20 @@
  * along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "gps.h"
+
+#include "appdata.h"
+#include "settings.h"
+
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
-#include <math.h>
+#include <unistd.h>
 #ifdef ENABLE_GPSBT
 #include <gpsbt.h>
 #include <gpsmgr.h>
 #include <errno.h>
 #endif
-
-#include "appdata.h"
-#include "gps.h"
-#include "settings.h"
 
 /* maybe user configurable later on ... */
 #define GPSD_HOST "127.0.0.1"

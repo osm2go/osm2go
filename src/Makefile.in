@@ -78,7 +78,7 @@ converter.o: $(srcdir)/osm-gps-map-types.h $(srcdir)/osm-gps-map.h $(srcdir)/con
 dbus.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h
 diff.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/diff.h $(srcdir)/project.h $(srcdir)/map.h
 diff.o: $(srcdir)/settings.h $(srcdir)/misc.h $(srcdir)/statusbar.h
-gps.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/gps.h $(srcdir)/settings.h
+gps.o: $(srcdir)/gps.h $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/settings.h
 gps_liblocation.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h
 iconbar.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/icon.h $(srcdir)/iconbar.h $(srcdir)/map.h
 iconbar.o: $(srcdir)/info.h $(srcdir)/map_edit.h

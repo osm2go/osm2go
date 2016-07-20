@@ -23,6 +23,12 @@
 #ifndef GPS_H
 #define GPS_H
 
+#include "appdata.h"
+#include "pos.h"
+
+#include <glib.h>
+#include <libgnomevfs/gnome-vfs-inet-connection.h>
+
 #ifndef NAN
 #define NAN (0.0/0.0)
 #endif /* !NAN */
