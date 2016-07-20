@@ -119,10 +119,6 @@ gboolean osm_download(GtkWidget *parent, settings_t *settings,
   char *url = g_strdup_printf("%s/map?bbox=%s,%s,%s,%s",
 		project->server, minlon, minlat, maxlon, maxlat);
 
-  char *fname = NULL;
-  if(project->osm[0] == '/') fname = g_strdup(project->osm);
-  else fname = g_strjoin(NULL, project->path, project->osm, NULL);
-
   /* Download the new file to a new name. If something goes wrong then the
    * old file will still be in place to be opened. */
   gchar *update = g_strjoin(NULL, project->path, "update.osm", NULL);
@@ -134,11 +130,18 @@ gboolean osm_download(GtkWidget *parent, settings_t *settings,
   /* if there's a new file use this from now on */
   if(result && g_file_test(update, G_FILE_TEST_IS_REGULAR)) {
     printf("download ok, replacing previous file\n");
-    g_rename(update, fname);
+
+    if(project->osm[0] == '/') {
+      g_rename(update, project->osm);
+    } else {
+      gchar *fname = g_strjoin(NULL, project->path, project->osm, NULL);
+      g_rename(update, fname);
+      g_free(fname);
+    }
+
     result = TRUE;
   }
 
-  g_free(fname);
   g_free(update);
 
   g_free(url);
