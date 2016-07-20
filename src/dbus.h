@@ -20,6 +20,11 @@
 #ifndef HDR_DBUS_H
 #define HDR_DBUS_H
 
+#include "pos.h"
+
+#include <glib.h>
+#include <libosso.h>
+
 typedef struct {
   pos_t pos;
   int zoom;

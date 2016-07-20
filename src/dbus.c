@@ -17,6 +17,8 @@
  * along with OSM2Go. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "dbus.h"
+
 #include <libosso.h>
 #include <dbus/dbus-glib-lowlevel.h>
 
