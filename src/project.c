@@ -34,11 +34,11 @@
 #include "track.h"
 #include "wms.h"
 
-#include <sys/stat.h>
 #include <glib/gstdio.h>
-
 #include <libxml/parser.h>
 #include <libxml/tree.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #if !defined(LIBXML_TREE_ENABLED) || !defined(LIBXML_OUTPUT_ENABLED)
 #error "libxml doesn't support required tree or output"

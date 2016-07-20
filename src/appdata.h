@@ -60,9 +60,6 @@
 #include <gtk/gtk.h>
 #include <glib/gstdio.h>
 
-#include <libgnomevfs/gnome-vfs.h>
-#include <libgnomevfs/gnome-vfs-inet-connection.h>
-
 #include "pos.h"
 #include "osm.h"
 
