@@ -31,8 +31,7 @@ typedef struct {
   gboolean valid;
 } dbus_mm_pos_t;
 
-struct appdata_s;
-void dbus_register(struct appdata_s *appdata);
+void dbus_register(dbus_mm_pos_t *appdata);
 gboolean dbus_mm_set_position(osso_context_t *osso_context, pos_t *pos);
 
 #endif // HDR_DBUS_H

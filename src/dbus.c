@@ -33,8 +33,8 @@
 
 static DBusHandlerResult
 signal_filter(DBusConnection *connection, DBusMessage *message, void *user_data) {
-  /* User data is the event loop we are running in */
-  appdata_t *appdata = (appdata_t*)user_data;
+  /* User data is the place to store the received position */
+  dbus_mm_pos_t *mmpos = user_data;
 
   if(dbus_message_is_signal(message, MM_DBUS_SERVICE, "view_position_changed")) {
     DBusError error;
@@ -52,10 +52,10 @@ signal_filter(DBusConnection *connection, DBusMessage *message, void *user_data)
 	      (float)lat, (float)lon, zoom);
 
       /* store position for further processing */
-      appdata->mmpos.pos.lat = lat;
-      appdata->mmpos.pos.lon = lon;
-      appdata->mmpos.zoom = zoom;
-      appdata->mmpos.valid = TRUE;
+      mmpos->pos.lat = lat;
+      mmpos->pos.lon = lon;
+      mmpos->zoom = zoom;
+      mmpos->valid = TRUE;
 
     } else {
       g_print("  Error getting message: %s\n", error.message);
@@ -97,7 +97,7 @@ gboolean dbus_mm_set_position(osso_context_t *osso_context, pos_t *pos) {
   return(ret == OSSO_OK);
 }
 
-void dbus_register(appdata_t *appdata) {
+void dbus_register(dbus_mm_pos_t *mmpos) {
   DBusConnection *bus;
   DBusError error;
 
@@ -112,5 +112,5 @@ void dbus_register(appdata_t *appdata) {
 
   /* listening to messages from all objects as no path is specified */
   dbus_bus_add_match(bus, "type='signal',interface='"MM_DBUS_INTERFACE"'", &error);
-  dbus_connection_add_filter(bus, signal_filter, appdata, NULL);
+  dbus_connection_add_filter(bus, signal_filter, mmpos, NULL);
 }

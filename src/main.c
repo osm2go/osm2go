@@ -1425,7 +1425,7 @@ int main(int argc, char *argv[]) {
   if(appdata.osso_context == NULL)
     fprintf(stderr, "error initiating osso context\n");
 
-  dbus_register(&appdata);
+  dbus_register(&appdata.mmpos);
 #endif
 
 #ifdef USE_HILDON
