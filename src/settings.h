@@ -20,6 +20,8 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
 
+#include <glib.h>
+
 /* define this for a vertical UI layout */
 #undef PORTRAIT
 

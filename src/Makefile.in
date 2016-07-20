@@ -119,8 +119,8 @@ relation_edit.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/c
 relation_edit.o: $(srcdir)/misc.h $(srcdir)/relation_edit.h
 scale_popup.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/map.h $(srcdir)/project.h
 scale_popup.o: $(srcdir)/settings.h
-settings.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/wms.h $(srcdir)/project.h $(srcdir)/map.h
-settings.o: $(srcdir)/settings.h
+settings.o: $(srcdir)/settings.h $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/wms.h $(srcdir)/project.h
+settings.o: $(srcdir)/map.h
 statusbar.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/statusbar.h
 style.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/map.h $(srcdir)/misc.h $(srcdir)/settings.h
 style.o: $(srcdir)/style.h $(srcdir)/icon.h $(srcdir)/josm_elemstyles.h
