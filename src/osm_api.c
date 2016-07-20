@@ -123,32 +123,23 @@ gboolean osm_download(GtkWidget *parent, settings_t *settings,
   if(project->osm[0] == '/') fname = g_strdup(project->osm);
   else fname = g_strjoin(NULL, project->path, project->osm, NULL);
 
-  /* check if there already is such a file and make it a backup */
-  /* in case the download fails */
-  char *backup = g_strjoin(NULL, project->path, "backup.osm", NULL);
-  if(g_file_test(fname, G_FILE_TEST_IS_REGULAR)) {
-    printf("backing up existing file \"%s\" to \"%s\"\n", fname, backup);
-    g_rename(fname, backup);
-  }
+  /* Download the new file to a new name. If something goes wrong then the
+   * old file will still be in place to be opened. */
+  gchar *update = g_strjoin(NULL, project->path, "update.osm", NULL);
+  g_remove(update);
 
-  gboolean result = net_io_download_file(parent, settings, url, fname,
+  gboolean result = net_io_download_file(parent, settings, url, update,
                                          project->name);
 
-  /* if there's no new file use the backup */
-  if(!g_file_test(fname, G_FILE_TEST_IS_REGULAR)) {
-    if(g_file_test(backup, G_FILE_TEST_IS_REGULAR)) {
-      printf("no file downloaded, using backup \"%s\"\n", backup);
-      g_rename(backup, fname);
-      result = TRUE;
-    } else
-      printf("no file downloaded, but also no backup present\n");
-  } else {
-    printf("download ok, deleting backup\n");
-    g_remove(backup);
+  /* if there's a new file use this from now on */
+  if(result && g_file_test(update, G_FILE_TEST_IS_REGULAR)) {
+    printf("download ok, replacing previous file\n");
+    g_rename(update, fname);
+    result = TRUE;
   }
 
   g_free(fname);
-  g_free(backup);
+  g_free(update);
 
   g_free(url);
   return result;
