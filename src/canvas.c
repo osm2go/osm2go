@@ -33,6 +33,8 @@
  * http://www.visibone.com/inpoly/
  */
 
+#include "canvas.h"
+
 #include "appdata.h"
 
 #ifdef CANVAS_CUSTOM_ITEM_AT

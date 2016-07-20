@@ -72,7 +72,7 @@ about.o: $(srcdir)/about.h $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $
 area_edit.o: $(srcdir)/area_edit.h $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/settings.h
 area_edit.o: $(srcdir)/gps.h $(srcdir)/misc.h
 banner.o: $(srcdir)/banner.h $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/statusbar.h
-canvas.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h
+canvas.o: $(srcdir)/canvas.h $(srcdir)/pos.h $(srcdir)/appdata.h $(srcdir)/osm.h $(srcdir)/undo.h
 canvas_goocanvas.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h
 converter.o: $(srcdir)/converter.h $(srcdir)/osm-gps-map-types.h $(srcdir)/osm-gps-map.h $(srcdir)/config.h
 dbus.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h

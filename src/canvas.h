@@ -20,6 +20,11 @@
 #ifndef CANVAS_H
 #define CANVAS_H
 
+#include "pos.h"
+
+#include <glib.h>
+#include <gtk/gtk.h>
+
 /* --------- generic canvas --------- */
 
 typedef enum {
