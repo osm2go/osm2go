@@ -31,9 +31,6 @@
 #include <glib.h>
 #include <dbus/dbus-glib.h>
 
-static DBusHandlerResult signal_filter
-      (DBusConnection *connection, DBusMessage *message, void *user_data);
-
 static DBusHandlerResult
 signal_filter(DBusConnection *connection, DBusMessage *message, void *user_data) {
   /* User data is the event loop we are running in */
