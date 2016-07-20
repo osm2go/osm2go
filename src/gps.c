@@ -257,11 +257,13 @@ void gps_init(appdata_t *appdata) {
 #if GLIB_CHECK_VERSION(2,32,0)
   appdata->gps_state->mutex = &appdata->gps_state->rmutex;
   g_mutex_init(appdata->gps_state->mutex);
+  appdata->gps_state->thread_p =
+    g_thread_try_new("gps", gps_thread, appdata, NULL);
 #else
   appdata->gps_state->mutex = g_mutex_new();
-#endif
   appdata->gps_state->thread_p =
     g_thread_create(gps_thread, appdata, FALSE, NULL);
+#endif
 }
 
 void gps_release(appdata_t *appdata) {
@@ -270,6 +272,8 @@ void gps_release(appdata_t *appdata) {
 #endif
 #if GLIB_CHECK_VERSION(2,32,0)
   g_mutex_clear(appdata->gps_state->mutex);
+  if (appdata->gps_state->thread_p)
+    g_thread_unref(appdata->gps_state->thread_p);
 #else
   g_mutex_free(appdata->gps_state->mutex);
 #endif
