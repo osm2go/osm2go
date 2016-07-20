@@ -67,30 +67,18 @@ signal_filter(DBusConnection *connection, DBusMessage *message, void *user_data)
   return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 }
 
-/* if pos==NULL only the screen is refreshed, useful if e.g. */
-/* the poi database changed */
-gboolean dbus_mm_set_position(osso_context_t *osso_context, pos_t *pos) {
+/* only the screen is refreshed, useful if e.g. the poi database changed */
+gboolean dbus_mm_set_position(osso_context_t *osso_context) {
   osso_rpc_t retval;
   osso_return_t ret;
 
-  if(pos)
-    ret = osso_rpc_run(osso_context,
-		       MM_DBUS_SERVICE,
-		       MM_DBUS_PATH,
-		       MM_DBUS_INTERFACE,
-		       "set_view_center",
-		       &retval,
-		       DBUS_TYPE_DOUBLE, (double)pos->lat,
-		       DBUS_TYPE_DOUBLE, (double)pos->lon,
-		       DBUS_TYPE_INVALID);
-  else
-    ret = osso_rpc_run(osso_context,
-		       MM_DBUS_SERVICE,
-		       MM_DBUS_PATH,
-		       MM_DBUS_INTERFACE,
-		       "set_view_center",
-		       &retval,
-		       DBUS_TYPE_INVALID);
+  ret = osso_rpc_run(osso_context,
+		     MM_DBUS_SERVICE,
+		     MM_DBUS_PATH,
+		     MM_DBUS_INTERFACE,
+		     "set_view_center",
+		     &retval,
+		     DBUS_TYPE_INVALID);
 
   osso_rpc_free_val(&retval);
 

@@ -32,6 +32,6 @@ typedef struct {
 } dbus_mm_pos_t;
 
 void dbus_register(dbus_mm_pos_t *appdata);
-gboolean dbus_mm_set_position(osso_context_t *osso_context, pos_t *pos);
+gboolean dbus_mm_set_position(osso_context_t *osso_context);
 
 #endif // HDR_DBUS_H

@@ -395,7 +395,7 @@ static void callback_modified_unit(GtkWidget *widget, gpointer data) {
 static void callback_fetch_mm_clicked(GtkButton *button, gpointer data) {
   context_t *context = (context_t*)data;
 
-  if(!dbus_mm_set_position(context->area->appdata->osso_context, NULL)) {
+  if(!dbus_mm_set_position(context->area->appdata->osso_context)) {
     errorf(context->dialog,
 	   _("Unable to communicate with Maemo Mapper. "
 	     "You need to have Maemo Mapper installed "
