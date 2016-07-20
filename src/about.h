@@ -20,6 +20,8 @@
 #ifndef ABOUT_H
 #define ABOUT_H
 
+#include "appdata.h"
+
 void about_box(appdata_t *appdata);
 
 #endif // ABOUT_H

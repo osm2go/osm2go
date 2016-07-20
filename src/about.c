@@ -17,6 +17,8 @@
  * along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "about.h"
+
 #include "appdata.h"
 #include "icon.h"
 #include "misc.h"
@@ -30,11 +32,11 @@
 #ifdef ENABLE_BROWSER_INTERFACE
 #ifdef USE_HILDON
 #include <tablet-browser-interface.h>
-#else
-#include <gtk/gtk.h>
 #endif
 
-static void browser_url(appdata_t *appdata, char *url) {
+#include <gtk/gtk.h>
+
+static void browser_url(appdata_t *appdata, const char *url) {
 #ifndef USE_HILDON
   gtk_show_uri(NULL, url, GDK_CURRENT_TIME, NULL);
 #else

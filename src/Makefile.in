@@ -68,7 +68,7 @@ dep:
 
 # DO NOT DELETE
 
-about.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/icon.h $(srcdir)/misc.h
+about.o: $(srcdir)/about.h $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/icon.h $(srcdir)/misc.h
 area_edit.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/area_edit.h $(srcdir)/settings.h
 area_edit.o: $(srcdir)/gps.h $(srcdir)/misc.h
 banner.o: $(srcdir)/banner.h $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/statusbar.h
