@@ -311,7 +311,14 @@ static gboolean net_io_do(GtkWidget *parent, net_io_request_t *request,
 
   /* create worker thread */
   request->refcount = 2;   // master and worker hold a reference
-  if(g_thread_create(&worker_thread, request, FALSE, NULL) == NULL) {
+  GThread *worker;
+
+#if GLIB_CHECK_VERSION(2,32,0)
+  worker = g_thread_try_new("download", &worker_thread, request, NULL);
+#else
+  worker = g_thread_create(&worker_thread, request, FALSE, NULL);
+#endif
+  if(worker == NULL) {
     g_warning("failed to create the worker thread");
 
     /* free request and return error */
@@ -337,6 +344,9 @@ static gboolean net_io_do(GtkWidget *parent, net_io_request_t *request,
     usleep(100000);
   }
 
+#if GLIB_CHECK_VERSION(2,32,0)
+  g_thread_unref(worker);
+#endif
   gtk_widget_destroy(dialog);
 
   /* user pressed cancel */
