@@ -69,12 +69,12 @@ dep:
 # DO NOT DELETE
 
 about.o: $(srcdir)/about.h $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/icon.h $(srcdir)/misc.h
-area_edit.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/area_edit.h $(srcdir)/settings.h
+area_edit.o: $(srcdir)/area_edit.h $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/settings.h
 area_edit.o: $(srcdir)/gps.h $(srcdir)/misc.h
 banner.o: $(srcdir)/banner.h $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/statusbar.h
 canvas.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h
 canvas_goocanvas.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h
-converter.o: $(srcdir)/osm-gps-map-types.h $(srcdir)/osm-gps-map.h $(srcdir)/config.h $(srcdir)/converter.h
+converter.o: $(srcdir)/converter.h $(srcdir)/osm-gps-map-types.h $(srcdir)/osm-gps-map.h $(srcdir)/config.h
 dbus.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h
 diff.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/diff.h $(srcdir)/project.h $(srcdir)/map.h
 diff.o: $(srcdir)/settings.h $(srcdir)/misc.h $(srcdir)/statusbar.h
@@ -112,8 +112,8 @@ osm-gps-map.o: $(srcdir)/config.h $(srcdir)/converter.h $(srcdir)/osm-gps-map-ty
 osm-gps-map-osd-select.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/config.h
 osm-gps-map-osd-select.o: $(srcdir)/osm-gps-map.h $(srcdir)/converter.h $(srcdir)/osm-gps-map-osd-select.h
 pos.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/misc.h
-project.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/area_edit.h $(srcdir)/settings.h
-project.o: $(srcdir)/banner.h $(srcdir)/diff.h $(srcdir)/project.h $(srcdir)/map.h $(srcdir)/gps.h $(srcdir)/list.h $(srcdir)/misc.h $(srcdir)/osm_api.h
+project.o: $(srcdir)/project.h $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/map.h $(srcdir)/settings.h
+project.o: $(srcdir)/area_edit.h $(srcdir)/banner.h $(srcdir)/diff.h $(srcdir)/gps.h $(srcdir)/list.h $(srcdir)/misc.h $(srcdir)/osm_api.h
 project.o: $(srcdir)/statusbar.h $(srcdir)/track.h $(srcdir)/wms.h
 relation_edit.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/info.h $(srcdir)/list.h $(srcdir)/map.h
 relation_edit.o: $(srcdir)/misc.h $(srcdir)/relation_edit.h

@@ -19,12 +19,12 @@
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <math.h>
-#include <stdio.h>
-
-#include "osm-gps-map-types.h"
 #include "converter.h"
 
+#include "osm-gps-map-types.h"
+
+#include <math.h>
+#include <stdio.h>
 
 float
 deg2rad(float deg)

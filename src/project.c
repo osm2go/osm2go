@@ -17,6 +17,8 @@
  * along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "project.h"
+
 #include "appdata.h"
 #include "area_edit.h"
 #include "banner.h"
@@ -25,7 +27,6 @@
 #include "list.h"
 #include "misc.h"
 #include "osm_api.h"
-#include "project.h"
 #include "statusbar.h"
 #include "track.h"
 #include "wms.h"

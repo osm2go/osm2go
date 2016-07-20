@@ -17,8 +17,9 @@
  * along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "appdata.h"
 #include "area_edit.h"
+
+#include "appdata.h"
 #include "gps.h"
 #include "misc.h"
 

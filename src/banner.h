@@ -28,6 +28,7 @@
 
 #include "appdata.h"
 
+#include <glib.h>
 
 // Shows a brief info splash in a suitable way for the app environment being used
 void banner_show_info(appdata_t *appdata, char *text);
