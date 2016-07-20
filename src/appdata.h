@@ -163,7 +163,6 @@ typedef struct appdata_s {
 #include "settings.h"
 #include "map.h"
 #include "map_hl.h"
-#include "osm_api.h"
 #include "project.h"
 
 void main_ui_enable(appdata_t *appdata);

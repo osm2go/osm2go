@@ -20,6 +20,8 @@
 #ifndef OSM_API_H
 #define OSM_API_H
 
+#include "appdata.h"
+#include "osm.h"
 #include "project.h"
 
 gboolean osm_download(GtkWidget *parent, settings_t *settings,

@@ -17,6 +17,8 @@
  * along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "osm_api.h"
+
 #include "appdata.h"
 #include "diff.h"
 #include "misc.h"

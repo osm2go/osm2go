@@ -40,6 +40,7 @@
 #include "iconbar.h"
 #include "josm_presets.h"
 #include "misc.h"
+#include "osm_api.h"
 #include "relation_edit.h"
 #include "scale_popup.h"
 #include "statusbar.h"
