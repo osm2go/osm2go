@@ -18,6 +18,7 @@
  */
 
 #include "appdata.h"
+#include "map_hl.h"
 #include "style.h"
 
 /* create a new item for the cursor */

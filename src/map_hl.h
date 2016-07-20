@@ -20,6 +20,12 @@
 #ifndef MAP_HL_H
 #define MAP_HL_H
 
+#include "appdata.h"
+#include "canvas.h"
+#include "map.h"
+
+#include <glib.h>
+
 void map_hl_cursor_draw(map_t *map, gint x, gint y, gboolean is_world, gint radius);
 void map_hl_cursor_clear(map_t *map);
 

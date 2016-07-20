@@ -23,6 +23,7 @@
 #include "iconbar.h"
 #include "info.h"
 #include "map_edit.h"
+#include "map_hl.h"
 #include "misc.h"
 #include "statusbar.h"
 #include "style.h"
