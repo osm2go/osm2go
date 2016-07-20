@@ -884,7 +884,7 @@ static char *project_select(appdata_t *appdata) {
 /* return file length or -1 on error */
 static gsize file_length(const char *path, const char *name) {
   /* no idea if that check is correct, but this way it works both for the N900 and my desktop */
-#if GLIB_CHECK_VERSION(2,24,1)
+#if GLIB_CHECK_VERSION(2,24,2)
   GStatBuf st;
 #else
   struct stat st;
