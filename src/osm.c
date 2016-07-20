@@ -48,7 +48,7 @@
 /* ------------------------- bounds handling --------------------- */
 
 static void osm_bounds_free(bounds_t *bounds) {
-  free(bounds);
+  g_free(bounds);
 }
 
 /* ------------------------- user handling --------------------- */
