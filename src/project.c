@@ -17,10 +17,6 @@
  * along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
- * TODO:
- */
-
 #include "appdata.h"
 #include "area_edit.h"
 #include "banner.h"
