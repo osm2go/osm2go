@@ -20,6 +20,7 @@
 #include "appdata.h"
 #include "map.h"
 #include "misc.h"
+#include "settings.h"
 #include "style.h"
 
 #include <libxml/parser.h>

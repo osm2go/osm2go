@@ -20,7 +20,13 @@
 #ifndef PROJECT_H
 #define PROJECT_H
 
+#include "appdata.h"
 #include "map.h"
+#include "pos.h"
+#include "settings.h"
+
+#include <glib.h>
+#include <gtk/gtk.h>
 
 typedef struct project_s {
   char *name;

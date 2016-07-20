@@ -20,6 +20,11 @@
 #ifndef NET_IO_H
 #define NET_IO_H
 
+#include "settings.h"
+
+#include <glib.h>
+#include <gtk/gtk.h>
+
 gboolean net_io_download_file(GtkWidget *parent, settings_t *settings,
 			      char *url, char *filename, const char *title);
 gboolean net_io_download_mem(GtkWidget *parent, settings_t *settings,

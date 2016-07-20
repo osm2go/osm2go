@@ -28,6 +28,7 @@
 
 #include "appdata.h"
 #include "gps.h"
+#include "settings.h"
 
 /* maybe user configurable later on ... */
 #define GPSD_HOST "127.0.0.1"

@@ -19,6 +19,7 @@
 
 #include "appdata.h"
 #include "misc.h"
+#include "settings.h"
 
 #ifdef FREMANTLE
 #include <hildon/hildon-check-button.h>

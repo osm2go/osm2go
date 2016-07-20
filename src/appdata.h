@@ -160,8 +160,6 @@ typedef struct appdata_s {
 
 } appdata_t;
 
-#include "settings.h"
-
 void main_ui_enable(appdata_t *appdata);
 
 #endif // APPDATA_H
