@@ -116,7 +116,7 @@ gboolean osm_download(GtkWidget *parent, settings_t *settings,
     project->server[strlen(project->server)-1] = 0;
   }
 
-  char *url = g_strdup_printf("%s/map?bbox=%s,%s,%s,%s",
+  gchar *url = g_strdup_printf("%s/map?bbox=%s,%s,%s,%s",
 		project->server, minlon, minlat, maxlon, maxlat);
 
   /* Download the new file to a new name. If something goes wrong then the
@@ -126,6 +126,7 @@ gboolean osm_download(GtkWidget *parent, settings_t *settings,
 
   gboolean result = net_io_download_file(parent, settings, url, update,
                                          project->name);
+  g_free(url);
 
   /* if there's a new file use this from now on */
   if(result && g_file_test(update, G_FILE_TEST_IS_REGULAR)) {
@@ -144,7 +145,6 @@ gboolean osm_download(GtkWidget *parent, settings_t *settings,
 
   g_free(update);
 
-  g_free(url);
   return result;
 }
 
