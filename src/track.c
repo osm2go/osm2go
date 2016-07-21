@@ -360,17 +360,16 @@ static void track_write(const char *name, track_t *track) {
 void track_save(project_t *project, track_t *track) {
   if(!project) return;
 
-  char *trk_name = g_strdup_printf("%s/%s.trk", project->path, project->name);
-
-  if(!track) {
-    g_remove(trk_name);
-    g_free(trk_name);
+  /* no need to save again if it has already been saved */
+  if(track && !track->dirty) {
+    printf("track is not dirty, no need to save it (again)\n");
     return;
   }
 
-  /* no need to save again if it has already been saved */
-  if(!track->dirty) {
-    printf("track is not dirty, no need to save it (again)\n");
+  gchar *trk_name = g_strdup_printf("%s%s.trk", project->path, project->name);
+
+  if(!track) {
+    g_remove(trk_name);
     g_free(trk_name);
     return;
   }
@@ -413,7 +412,7 @@ track_t *track_restore(appdata_t *appdata, project_t *project) {
     printf("track backup present, loading it instead of real track ...\n");
   } else {
     g_free(trk_name);
-    trk_name = g_strdup_printf("%s/%s.trk", project->path, project->name);
+    trk_name = g_strdup_printf("%s%s.trk", project->path, project->name);
 
     if(!g_file_test(trk_name, G_FILE_TEST_EXISTS)) {
       printf("no track present!\n");
