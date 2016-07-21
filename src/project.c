@@ -1436,7 +1436,7 @@ gboolean project_load(appdata_t *appdata, char *name) {
   if(!appdata->window) goto fail;
 
   track_clear(appdata);
-  appdata->track.track = track_restore(appdata, appdata->project);
+  appdata->track.track = track_restore(appdata);
   if(appdata->track.track)
     map_track_draw(appdata->map, appdata->track.track);
 

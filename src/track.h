@@ -52,7 +52,7 @@ gint track_seg_points(const track_seg_t *seg);
 
 /* used internally to save and restore the currently displayed track */
 void track_save(project_t *project, track_t *track);
-track_t *track_restore(appdata_t *appdata, project_t *project);
+track_t *track_restore(appdata_t *appdata);
 
 /* accessible via the menu */
 void track_clear(appdata_t *appdata);

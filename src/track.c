@@ -400,8 +400,9 @@ void track_export(appdata_t *appdata, const char *filename) {
 
 /* ----------------------  loading track --------------------------- */
 
-track_t *track_restore(appdata_t *appdata, project_t *project) {
+track_t *track_restore(appdata_t *appdata) {
   track_t *track = NULL;
+  const project_t *project = appdata->project;
 
   LIBXML_TEST_VERSION;
 
