@@ -121,4 +121,14 @@ void gps_release(appdata_t *appdata);
 gboolean gps_get_pos(appdata_t *appdata, pos_t *pos, float *alt);
 void gps_enable(appdata_t *appdata, gboolean enable);
 
+/**
+ * @brief register or clear the GPS callback
+ * @param appdata the global information structure
+ * @param cb the new callback function, set to NULL to unregister
+ * @return if there was a previous handler
+ *
+ * Does nothing if a handler already exists.
+ */
+gboolean gps_register_callback(appdata_t *appdata, GtkFunction cb);
+
 #endif // GPS_H

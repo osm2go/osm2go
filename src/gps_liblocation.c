@@ -116,6 +116,8 @@ void gps_enable(appdata_t *appdata, gboolean enable) {
   if(appdata->settings) {
     gps_state_t *gps_state = appdata->gps_state;
 
+    /* for location update callbacks */
+    gps_state->data = appdata;
     if(enable != appdata->gps_state->gps_is_on) {
       if(gps_state->device && gps_state->control
 #if MAEMO_VERSION_MAJOR < 5
@@ -135,4 +137,11 @@ void gps_enable(appdata_t *appdata, gboolean enable) {
 
     appdata->settings->enable_gps = enable;
   }
+}
+
+gboolean gps_register_callback(appdata_t *appdata, GtkFunction cb) {
+  gboolean ret = (appdata->gps_state->cb != NULL) ? TRUE : FALSE;
+  if(!ret)
+    appdata->gps_state->cb = cb;
+  return ret;
 }

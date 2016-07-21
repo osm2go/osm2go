@@ -283,3 +283,18 @@ void gps_release(appdata_t *appdata) {
   g_free(appdata->gps_state);
   appdata->gps_state = NULL;
 }
+
+gboolean gps_register_callback(appdata_t *appdata, GtkFunction cb) {
+  if(appdata->track.handler_id) {
+    if(cb == NULL) {
+      gtk_timeout_remove(appdata->track.handler_id);
+      appdata->track.handler_id = 0;
+    }
+    return TRUE;
+  } else {
+    if(cb != NULL) {
+      appdata->track.handler_id = gtk_timeout_add(1000, cb, appdata);
+    }
+    return FALSE;
+  }
+}
