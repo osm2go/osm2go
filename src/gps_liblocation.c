@@ -17,12 +17,15 @@
  * along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "gps.h"
+
+#include "appdata.h"
+#include "settings.h"
+
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
 #include <location/location-gps-device.h>
-
-#include "appdata.h"
 
 gboolean gps_get_pos(appdata_t *appdata, pos_t *pos, float *alt) {
   if(!appdata->settings || !appdata->settings->enable_gps)
