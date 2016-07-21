@@ -471,13 +471,17 @@ static void track_append_position(appdata_t *appdata, const pos_t *pos, float al
   } else
     printf("appending to current segment\n");
 
-  track_point_t **point = &(track->cur_seg->track_point);
-  while(*point) { point = &((*point)->next); }
+  track_point_t **point;
+  track_point_t *prev = track->cur_seg->track_point;
+  if (prev) {
+    while(prev->next)
+      prev = prev->next;
+    point = &(prev->next);
+  } else {
+    point = &(track->cur_seg->track_point);
+  }
 
   /* don't append if point is the same as last time */
-  track_point_t *prev = track->cur_seg->track_point;
-  while(prev && prev->next) prev = prev->next;
-
   if(prev && prev->pos.lat == pos->lat &&
              prev->pos.lon == pos->lon) {
     printf("same value as last point -> ignore\n");
