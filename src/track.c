@@ -46,7 +46,7 @@ static void track_menu_set(appdata_t *appdata, gboolean present) {
   gtk_widget_set_sensitive(appdata->track.menu_item_track_export, present);
 }
 
-gint track_seg_points(const track_seg_t *seg) {
+static gint track_seg_points(const track_seg_t *seg) {
   gint points = 0;
 
   const track_point_t *point = seg->track_point;
@@ -55,6 +55,10 @@ gint track_seg_points(const track_seg_t *seg) {
     point = point->next;
   }
   return points;
+}
+
+gboolean track_is_empty(const track_seg_t *seg) {
+  return (seg->track_point == NULL) ? TRUE : FALSE;
 }
 
 static gboolean track_get_prop_pos(xmlNode *node, pos_t *pos) {

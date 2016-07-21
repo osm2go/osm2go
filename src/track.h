@@ -48,7 +48,7 @@ typedef struct track_s {
   track_seg_t *cur_seg;
 } track_t;
 
-gint track_seg_points(const track_seg_t *seg);
+gboolean track_is_empty(const track_seg_t *seg);
 
 /* used internally to save and restore the currently displayed track */
 void track_save(project_t *project, track_t *track);

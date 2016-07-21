@@ -2074,10 +2074,7 @@ void map_track_draw_seg(map_t *map, track_seg_t *seg) {
   bounds_t *bounds = map->appdata->osm->bounds;
 
   /* a track_seg needs at least 2 points to be drawn */
-  guint pnum = track_seg_points(seg);
-  printf("seg of length %d\n", pnum);
-
-  if(!pnum)
+  if (track_is_empty(seg))
     return;
 
   /* nothing should have been drawn by now ... */
@@ -2143,10 +2140,6 @@ void map_track_update_seg(map_t *map, track_seg_t *seg) {
   bounds_t *bounds = map->appdata->osm->bounds;
 
   printf("-- APPENDING TO TRACK --\n");
-
-  /* a track_seg needs at least 2 points to be drawn */
-  guint pnum = track_seg_points(seg);
-  printf("seg of length %d\n", pnum);
 
   /* there are two cases: either the second last point was on screen */
   /* or it wasn't. We'll have to start a new screen item if the latter */
