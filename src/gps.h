@@ -99,6 +99,10 @@ typedef struct gps_state_s {
 #else
   /* setup for direct gpsd based communication */
 
+  /* when using liblocation, events are generated on position change */
+  /* and no seperate timer is required */
+  guint handler_id;
+
 #ifdef ENABLE_GPSBT
   gpsbt_t context;
 #endif
