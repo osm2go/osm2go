@@ -48,7 +48,7 @@ typedef struct track_s {
   track_seg_t *cur_seg;
 } track_t;
 
-gint track_seg_points(track_seg_t *seg);
+gint track_seg_points(const track_seg_t *seg);
 
 /* used internally to save and restore the currently displayed track */
 void track_save(project_t *project, track_t *track);
@@ -56,8 +56,8 @@ track_t *track_restore(appdata_t *appdata, project_t *project);
 
 /* accessible via the menu */
 void track_clear(appdata_t *appdata);
-void track_export(appdata_t *appdata, char *filename);
-track_t *track_import(appdata_t *appdata, char *filename);
+void track_export(appdata_t *appdata, const char *filename);
+track_t *track_import(appdata_t *appdata, const char *filename);
 
 void track_enable_gps(appdata_t *appdata, gboolean enable);
 

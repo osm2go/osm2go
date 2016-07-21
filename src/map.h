@@ -164,10 +164,10 @@ struct track_seg_s;
 void map_track_draw_seg(map_t *map, struct track_seg_s *seg);
 void map_track_update_seg(map_t *map, struct track_seg_s *seg);
 void map_track_remove(appdata_t *appdata);
-void map_track_pos(appdata_t *appdata, pos_t *pos);
+void map_track_pos(appdata_t *appdata, const pos_t *pos);
 
 /* background stuff */
-void map_set_bg_image(map_t *map, char *filename);
+void map_set_bg_image(map_t *map, const char *filename);
 void map_remove_bg_image(map_t *map);
 
 void map_hide_selected(appdata_t *appdata);

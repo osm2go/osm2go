@@ -46,10 +46,10 @@ static void track_menu_set(appdata_t *appdata, gboolean present) {
   gtk_widget_set_sensitive(appdata->track.menu_item_track_export, present);
 }
 
-gint track_seg_points(track_seg_t *seg) {
+gint track_seg_points(const track_seg_t *seg) {
   gint points = 0;
 
-  track_point_t *point = seg->track_point;
+  const track_point_t *point = seg->track_point;
   while(point) {
     points++;
     point = point->next;
@@ -216,11 +216,11 @@ static track_t *track_parse_doc(bounds_t *bounds, xmlDocPtr doc) {
   return track;
 }
 
-void track_info(track_t *track) {
+static void track_info(const track_t *track) {
   printf("Track is %sdirty.\n", track->dirty?"":"not ");
 
   gint segs = 0, points = 0;
-  track_seg_t *seg = track->track_seg;
+  const track_seg_t *seg = track->track_seg;
   while(seg) {
     points += track_seg_points(seg);
     segs++;
@@ -231,7 +231,7 @@ void track_info(track_t *track) {
 
 }
 
-static track_t *track_read(osm_t *osm, char *filename) {
+static track_t *track_read(osm_t *osm, const char *filename) {
   printf("============================================================\n");
   printf("loading track %s\n", filename);
 
@@ -259,11 +259,11 @@ static track_t *track_read(osm_t *osm, char *filename) {
   return track;
 }
 
-void track_point_free(track_point_t *point) {
+static void track_point_free(track_point_t *point) {
   g_free(point);
 }
 
-void track_seg_free(track_seg_t *seg) {
+static void track_seg_free(track_seg_t *seg) {
   track_point_t *point = seg->track_point;
   while(point) {
     track_point_t *next = point->next;
@@ -300,7 +300,7 @@ void track_clear(appdata_t *appdata) {
 
 /* ----------------------  saving track --------------------------- */
 
-void track_save_points(track_point_t *point, xmlNodePtr node) {
+static void track_save_points(const track_point_t *point, xmlNodePtr node) {
   while(point) {
     char str[G_ASCII_DTOSTR_BUF_SIZE];
 
@@ -326,7 +326,7 @@ void track_save_points(track_point_t *point, xmlNodePtr node) {
   }
 }
 
-void track_save_segs(track_seg_t *seg, xmlNodePtr node) {
+static void track_save_segs(const track_seg_t *seg, xmlNodePtr node) {
   while(seg) {
     xmlNodePtr node_seg = xmlNewChild(node, NULL, BAD_CAST "trkseg", NULL);
     track_save_points(seg->track_point, node_seg);
@@ -334,7 +334,7 @@ void track_save_segs(track_seg_t *seg, xmlNodePtr node) {
   }
 }
 
-void track_write(char *name, track_t *track) {
+static void track_write(const char *name, track_t *track) {
   printf("writing track to %s\n", name);
 
   LIBXML_TEST_VERSION;
@@ -394,7 +394,7 @@ void track_save(project_t *project, track_t *track) {
   g_free(backup);
 }
 
-void track_export(appdata_t *appdata, char *filename) {
+void track_export(appdata_t *appdata, const char *filename) {
   g_assert(appdata->track.track);
   track_write(filename, appdata->track.track);
 }
@@ -408,7 +408,7 @@ track_t *track_restore(appdata_t *appdata, project_t *project) {
 
   /* first try to open a backup which is only present if saving the */
   /* actual diff didn't succeed */
-  char *trk_name = g_strjoin(NULL, project->path, "backup.trk", NULL);
+  gchar *trk_name = g_strjoin(NULL, project->path, "backup.trk", NULL);
   if(g_file_test(trk_name, G_FILE_TEST_EXISTS)) {
     printf("track backup present, loading it instead of real track ...\n");
   } else {
@@ -449,7 +449,7 @@ static void track_end_segment(track_t *track) {
   }
 }
 
-static void track_append_position(appdata_t *appdata, pos_t *pos, float alt) {
+static void track_append_position(appdata_t *appdata, const pos_t *pos, float alt) {
   track_t *track = appdata->track.track;
 
   track_menu_set(appdata, TRUE);
@@ -621,7 +621,7 @@ void track_enable_gps(appdata_t *appdata, gboolean enable) {
   else       track_do_disable_gps(appdata);
 }
 
-track_t *track_import(appdata_t *appdata, char *name) {
+track_t *track_import(appdata_t *appdata, const char *name) {
   printf("import %s\n", name);
 
   /* remove any existing track */

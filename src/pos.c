@@ -58,11 +58,11 @@ void pos_lon_str(char *str, int len, pos_float_t longitude) {
   strcat(str, "°");
 }
 
-pos_float_t pos_parse_lat(char *str) {
+pos_float_t pos_parse_lat(const char *str) {
   return g_strtod(str, NULL);
 }
 
-pos_float_t pos_parse_lon(char *str) {
+pos_float_t pos_parse_lon(const char *str) {
   return g_strtod(str, NULL);
 }
 
@@ -169,7 +169,7 @@ void pos_lon_label_set(GtkWidget *label, pos_float_t lon) {
   gtk_label_set_text(GTK_LABEL(label), str);
 }
 
-void pos2lpos(bounds_t *bounds, pos_t *pos, lpos_t *lpos) {
+void pos2lpos(const bounds_t *bounds, const pos_t *pos, lpos_t *lpos) {
   lpos->x = POS_EQ_RADIUS * DEG2RAD(pos->lon);
 #ifdef USE_FLOAT
   lpos->y = POS_EQ_RADIUS * logf(tanf(M_PI/4 + DEG2RAD(pos->lat)/2));
@@ -181,7 +181,7 @@ void pos2lpos(bounds_t *bounds, pos_t *pos, lpos_t *lpos) {
 }
 
 /* the maps center is special as it isn't offset (by itself) */
-void pos2lpos_center(pos_t *pos, lpos_t *lpos) {
+void pos2lpos_center(const pos_t *pos, lpos_t *lpos) {
   lpos->x = POS_EQ_RADIUS * DEG2RAD(pos->lon);
 #ifdef USE_FLOAT
   lpos->y = POS_EQ_RADIUS * logf(tanf(M_PI/4 + DEG2RAD(pos->lat)/2));
@@ -190,7 +190,7 @@ void pos2lpos_center(pos_t *pos, lpos_t *lpos) {
 #endif
 }
 
-void lpos2pos(bounds_t *bounds, lpos_t *lpos, pos_t *pos) {
+void lpos2pos(const bounds_t *bounds, const lpos_t *lpos, pos_t *pos) {
   lpos_t tmp = *lpos;
 
   tmp.x = ( tmp.x/bounds->scale) + bounds->center.x;

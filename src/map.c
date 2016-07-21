@@ -2062,7 +2062,7 @@ void map_delete_selected(appdata_t *appdata) {
 
 /* ----------------------- track related stuff ----------------------- */
 
-static gboolean track_pos2lpos(bounds_t *bounds, pos_t *pos, lpos_t *lpos) {
+static gboolean track_pos2lpos(const bounds_t *bounds, const pos_t *pos, lpos_t *lpos) {
   pos2lpos(bounds, pos, lpos);
 
   /* check if point is within bounds */
@@ -2285,7 +2285,7 @@ void map_track_remove(appdata_t *appdata) {
   }
 }
 
-void map_track_pos(appdata_t *appdata, pos_t *pos) {
+void map_track_pos(appdata_t *appdata, const pos_t *pos) {
   if(appdata->track.gps_item) {
     canvas_item_destroy(appdata->track.gps_item);
     appdata->track.gps_item = NULL;
@@ -2334,7 +2334,7 @@ static gint map_bg_item_destroy_event(GtkWidget *widget, gpointer data) {
   return FALSE;
 }
 
-void map_set_bg_image(map_t *map, char *filename) {
+void map_set_bg_image(map_t *map, const char *filename) {
   bounds_t *bounds = map->appdata->osm->bounds;
 
   map_remove_bg_image(map);

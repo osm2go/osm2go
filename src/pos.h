@@ -60,15 +60,15 @@ typedef struct lpos {
 } lpos_t;
 
 struct bounds_s;
-void pos2lpos(struct bounds_s *bounds, pos_t *pos, lpos_t *lpos);
-void pos2lpos_center(pos_t *pos, lpos_t *lpos);
-void lpos2pos(struct bounds_s *bounds, lpos_t *lpos, pos_t *pos);
+void pos2lpos(const struct bounds_s *bounds, const pos_t *pos, lpos_t *lpos);
+void pos2lpos_center(const pos_t *pos, lpos_t *lpos);
+void lpos2pos(const struct bounds_s *bounds, const lpos_t *lpos, pos_t *pos);
 
 void pos_lat_str(char *str, int len, pos_float_t latitude);
 void pos_lon_str(char *str, int len, pos_float_t longitude);
 
-pos_float_t pos_parse_lat(char *str);
-pos_float_t pos_parse_lon(char *str);
+pos_float_t pos_parse_lat(const char *str);
+pos_float_t pos_parse_lon(const char *str);
 
 GtkWidget *pos_lat_entry_new(pos_float_t lat);
 GtkWidget *pos_lon_entry_new(pos_float_t lon);
