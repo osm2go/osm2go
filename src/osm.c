@@ -64,7 +64,7 @@ static void osm_users_free(user_t *user) {
   }
 }
 
-static user_t *osm_user(osm_t *osm, char *name) {
+static user_t *osm_user(osm_t *osm, const char *name) {
   if(!name) return NULL;
 
   /* search through user list */
