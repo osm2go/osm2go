@@ -40,7 +40,8 @@ typedef struct gps_state_s {
   guint idd_changed;
 
   gboolean fix, fix3d;
-  double latitude, longitude, altitude;
+  pos_t pos;
+  float altitude;
 
   /* callback called on gps change event */
   GtkFunction cb;
@@ -57,8 +58,7 @@ gboolean gps_get_pos(appdata_t *appdata, pos_t *pos, float *alt) {
     return FALSE;
 
   if(pos) {
-    pos->lat = gps_state->latitude;
-    pos->lon = gps_state->longitude;
+    *pos = gps_state->pos;
   }
 
   if(alt)
@@ -74,8 +74,8 @@ location_changed(LocationGPSDevice *device, gps_state_t *gps_state) {
     (device->fix->fields & LOCATION_GPS_DEVICE_LATLONG_SET);
 
   if(gps_state->fix) {
-    gps_state->latitude = device->fix->latitude;
-    gps_state->longitude = device->fix->longitude;
+    gps_state->pos.lat = device->fix->latitude;
+    gps_state->pos.lon = device->fix->longitude;
   }
 
   if(device->fix->fields & LOCATION_GPS_DEVICE_ALTITUDE_SET)
