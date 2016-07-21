@@ -26,6 +26,26 @@
 #include <string.h>
 #include <math.h>
 #include <location/location-gps-device.h>
+#include <location/location-gpsd-control.h>
+
+/* force usage of gpsd start/stop */
+#define LL_CONTROL_GPSD
+
+typedef struct gps_state_s {
+  LocationGPSDevice *device;
+#ifdef LL_CONTROL_GPSD
+  LocationGPSDControl *control;
+  gboolean gps_is_on;
+#endif
+  guint idd_changed;
+
+  gboolean fix, fix3d;
+  double latitude, longitude, altitude;
+
+  /* callback called on gps change event */
+  GtkFunction cb;
+  gpointer data;
+} gps_state_t;
 
 gboolean gps_get_pos(appdata_t *appdata, pos_t *pos, float *alt) {
   if(!appdata->settings || !appdata->settings->enable_gps)

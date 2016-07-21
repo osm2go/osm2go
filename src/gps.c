@@ -22,6 +22,7 @@
 #include "appdata.h"
 #include "settings.h"
 
+#include <libgnomevfs/gnome-vfs-inet-connection.h>
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
@@ -31,6 +32,61 @@
 #include <gpsmgr.h>
 #include <errno.h>
 #endif
+
+#define MAXTAGLEN    8       /* maximum length of sentence tag name */
+
+struct gps_fix_t {
+    int    mode;	/* Mode of fix */
+#define MODE_NOT_SEEN	0	/* mode update not seen yet */
+#define MODE_NO_FIX	1	/* none */
+#define MODE_2D  	2	/* good for latitude/longitude */
+#define MODE_3D  	3	/* good for altitude/climb too */
+    pos_t pos;          /* Latitude/Longitude in degrees (valid if mode >= 2) */
+    double alt;
+    double eph;  	/* Horizontal position uncertainty, meters */
+};
+
+typedef unsigned int gps_mask_t;
+
+struct gps_data_t {
+    gps_mask_t set;	/* has field been set since this was last cleared? */
+#define LATLON_SET	0x00000008u
+#define ALTITUDE_SET	0x00000010u
+#define STATUS_SET	0x00000100u
+#define MODE_SET	0x00000200u
+#define SATELLITE_SET	0x00040000u
+
+    struct gps_fix_t	fix;		/* accumulated PVT data */
+
+    /* GPS status -- always valid */
+    int    status;		/* Do we have a fix? */
+#define STATUS_NO_FIX	0	/* no */
+#define STATUS_FIX	1	/* yes, without DGPS */
+#define STATUS_DGPS_FIX	2	/* yes, with DGPS */
+
+};
+
+/* setup for direct gpsd based communication */
+typedef struct gps_state_s {
+  /* when using liblocation, events are generated on position change */
+  /* and no seperate timer is required */
+  guint handler_id;
+
+#ifdef ENABLE_GPSBT
+  gpsbt_t context;
+#endif
+
+  GThread* thread_p;
+  GMutex *mutex;
+  GnomeVFSInetConnection *iconn;
+  GnomeVFSSocket *socket;
+
+  struct gps_data_t gpsdata;
+
+#if GLIB_CHECK_VERSION(2,32,0)
+  GMutex rmutex;
+#endif
+} gps_state_t;
 
 /* maybe user configurable later on ... */
 #define GPSD_HOST "127.0.0.1"

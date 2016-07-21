@@ -130,7 +130,7 @@ PKG_CHECK_EXISTS(maemo-version, [
 
     PKG_CHECK_EXISTS(liblocation, [ 
       PKG_CHECK_MODULES([liblocation], [liblocation], [], [])
-      CFLAGS="$CFLAGS -DENABLE_LIBLOCATION $liblocation_CFLAGS"
+      CFLAGS="$CFLAGS $liblocation_CFLAGS"
       LIBS="$LIBS $liblocation_LIBS"
       EXTRA_OBJS="$EXTRA_OBJS gps_liblocation.o"
     ], [
