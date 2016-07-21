@@ -318,7 +318,7 @@ static pos_t *xml_get_prop_pos(xmlNode *node) {
   return pos;
 }
 
-static tag_t *xml_scan_tags(xmlDoc *doc, xmlNodePtr node, osm_t *osm) {
+static tag_t *xml_scan_tags(xmlNodePtr node, osm_t *osm) {
   /* scan for tags */
   tag_t *first_tag = NULL;
   tag_t **tag = &first_tag;
@@ -327,7 +327,7 @@ static tag_t *xml_scan_tags(xmlDoc *doc, xmlNodePtr node, osm_t *osm) {
     if(node->type == XML_ELEMENT_NODE) {
       if(strcasecmp((char*)node->name, "tag") == 0) {
 	/* attach tag to node/way */
-	*tag = osm_parse_osm_tag(osm, doc, node);
+	*tag = osm_parse_osm_tag(osm, node);
 	if(*tag) tag = &((*tag)->next);
       }
     }
@@ -354,7 +354,7 @@ node_compare_changes(const node_t *node, const pos_t *pos, const tag_t *ntags)
   return !osm_tag_lists_diff(OSM_TAG(node), ntags);
 }
 
-void diff_restore_node(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
+static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
   printf("Restoring node");
 
   /* read properties */
@@ -423,7 +423,7 @@ void diff_restore_node(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
     return;
   }
 
-  tag_t *ntags = xml_scan_tags(doc, node_node->children, osm);
+  tag_t *ntags = xml_scan_tags(node_node->children, osm);
   /* check if the same changes have been done upstream */
   if(state == OSM_FLAG_DIRTY && node_compare_changes(node, pos, ntags)) {
     printf("node " ITEM_ID_FORMAT " has the same values and position as upstream, discarding diff\n", id);
@@ -453,7 +453,7 @@ void diff_restore_node(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
   }
 }
 
-void diff_restore_way(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
+static void diff_restore_way(xmlNodePtr node_node, osm_t *osm) {
   printf("Restoring way");
 
   item_id_t id = xml_get_prop_int(node_node, "id", ID_ILLEGAL);
@@ -535,7 +535,7 @@ void diff_restore_way(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
     if(nd_node->type == XML_ELEMENT_NODE) {
       if(strcasecmp((char*)nd_node->name, "nd") == 0) {
 	/* attach node to node_chain */
-	*node_chain = osm_parse_osm_way_nd(osm, doc, nd_node);
+	*node_chain = osm_parse_osm_way_nd(osm, nd_node);
 	if(*node_chain)
 	  node_chain = &((*node_chain)->next);
       }
@@ -565,7 +565,7 @@ void diff_restore_way(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
     /* were found this wasn't a dirty entry but e.g. only the hidden */
     /* flag had been set */
 
-    tag_t *ntags = xml_scan_tags(doc, node_node->children, osm);
+    tag_t *ntags = xml_scan_tags(node_node->children, osm);
     if (osm_tag_lists_diff(OSM_TAG(way), ntags)) {
       /* way may be an existing way, so remove tags to */
       /* make space for new ones */
@@ -589,7 +589,7 @@ void diff_restore_way(xmlDoc *doc, xmlNodePtr node_node, osm_t *osm) {
   }
 }
 
-void diff_restore_relation(xmlDoc *doc, xmlNodePtr node_rel, osm_t *osm) {
+static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
   printf("Restoring relation");
 
   item_id_t id = xml_get_prop_int(node_rel, "id", ID_ILLEGAL);
@@ -667,7 +667,7 @@ void diff_restore_relation(xmlDoc *doc, xmlNodePtr node_rel, osm_t *osm) {
     if(member_node->type == XML_ELEMENT_NODE) {
       if(strcasecmp((char*)member_node->name, "member") == 0) {
 	/* attach member to member_chain */
-	*member = osm_parse_osm_relation_member(osm, doc, member_node);
+	*member = osm_parse_osm_relation_member(osm, member_node);
 	if(*member)
 	  member = &((*member)->next);
       }
@@ -681,7 +681,7 @@ void diff_restore_relation(xmlDoc *doc, xmlNodePtr node_rel, osm_t *osm) {
     osm_tags_free(OSM_TAG(relation));
   }
 
-  OSM_TAG(relation) = xml_scan_tags(doc, node_rel->children, osm);
+  OSM_TAG(relation) = xml_scan_tags(node_rel->children, osm);
 }
 
 void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) {
@@ -739,13 +739,13 @@ void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) {
 	  if(node_node->type == XML_ELEMENT_NODE) {
 
 	    if(strcasecmp((char*)node_node->name, "node") == 0)
-	      diff_restore_node(doc, node_node, osm);
+	      diff_restore_node(node_node, osm);
 
 	    else if(strcasecmp((char*)node_node->name, "way") == 0)
-	      diff_restore_way(doc, node_node, osm);
+	      diff_restore_way(node_node, osm);
 
 	    else if(strcasecmp((char*)node_node->name, "relation") == 0)
-	      diff_restore_relation(doc, node_node, osm);
+	      diff_restore_relation(node_node, osm);
 
 	    else
 	      printf("WARNING: item %s not restored\n", node_node->name);

@@ -230,11 +230,11 @@ typedef struct osm_s {
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 
-osm_t *osm_parse(char *path, char *filename);
+osm_t *osm_parse(const char *path, const char *filename);
 gboolean osm_sanity_check(GtkWidget *parent, osm_t *osm);
-tag_t *osm_parse_osm_tag(osm_t *osm, xmlDocPtr doc, xmlNode *a_node);
-node_chain_t *osm_parse_osm_way_nd(osm_t *osm, xmlDocPtr doc, xmlNode *a_node);
-member_t *osm_parse_osm_relation_member(osm_t *osm, xmlDocPtr doc, xmlNode *a_node);
+tag_t *osm_parse_osm_tag(osm_t *osm, xmlNode *a_node);
+node_chain_t *osm_parse_osm_way_nd(osm_t *osm, xmlNode *a_node);
+member_t *osm_parse_osm_relation_member(osm_t *osm, xmlNode *a_node);
 void osm_free(struct icon_s **icon, osm_t *osm);
 
 char *osm_node_get_value(node_t *node, char *key);

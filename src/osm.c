@@ -114,9 +114,7 @@ void osm_tags_free(tag_t *tag) {
   }
 }
 
-tag_t *osm_parse_osm_tag(osm_t *osm, xmlDocPtr doc, xmlNode *a_node) {
-  xmlNode *cur_node = NULL;
-
+tag_t *osm_parse_osm_tag(osm_t *osm, xmlNode *a_node) {
   /* allocate a new tag structure */
   tag_t *tag = g_new0(tag_t, 1);
 
@@ -137,6 +135,7 @@ tag_t *osm_parse_osm_tag(osm_t *osm, xmlDocPtr doc, xmlNode *a_node) {
     return NULL;
   }
 
+  const xmlNode *cur_node = NULL;
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next)
     if (cur_node->type == XML_ELEMENT_NODE)
       printf("found unhandled osm/node/tag/%s\n", cur_node->name);
@@ -372,8 +371,7 @@ gboolean osm_node_chain_diff(const node_chain_t *n1, const node_chain_t *n2) {
   return (n2 != NULL) ? TRUE : FALSE;
 }
 
-node_chain_t *osm_parse_osm_way_nd(osm_t *osm,
-			  xmlDocPtr doc, xmlNode *a_node) {
+node_chain_t *osm_parse_osm_way_nd(osm_t *osm, xmlNode *a_node) {
   xmlChar *prop;
 
   if((prop = xmlGetProp(a_node, (unsigned char*)"ref"))) {
@@ -427,8 +425,7 @@ static void osm_relations_free(relation_t *relation) {
   }
 }
 
-member_t *osm_parse_osm_relation_member(osm_t *osm,
-			  xmlDocPtr doc, xmlNode *a_node) {
+member_t *osm_parse_osm_relation_member(osm_t *osm, xmlNode *a_node) {
   char *prop;
   member_t *member = g_new0(member_t, 1);
   member->object.type = ILLEGAL;
@@ -484,7 +481,7 @@ member_t *osm_parse_osm_relation_member(osm_t *osm,
     xmlFree(prop);
   }
 
-  if((prop = (char*)xmlGetProp(a_node, (unsigned char*)"role"))) {
+  if((prop = (char*)xmlGetProp(a_node, BAD_CAST "role"))) {
     if(strlen(prop) > 0) member->role = g_strdup(prop);
     xmlFree(prop);
   }
@@ -1053,7 +1050,7 @@ static osm_t *process_file(const char *filename) {
 
 #include <sys/time.h>
 
-osm_t *osm_parse(char *path, char *filename) {
+osm_t *osm_parse(const char *path, const char *filename) {
 
   struct timeval start;
   gettimeofday(&start, NULL);
