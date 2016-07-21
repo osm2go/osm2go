@@ -249,6 +249,7 @@ static track_t *track_read(osm_t *osm, const char *filename) {
   track_t *track = track_parse_doc(osm->bounds, doc);
 
   if(!track || !track->track_seg) {
+    g_free(track);
     printf("track was empty/invalid track\n");
     return NULL;
   }
