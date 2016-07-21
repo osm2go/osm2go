@@ -471,9 +471,8 @@ static void track_append_position(appdata_t *appdata, const pos_t *pos, float al
   } else
     printf("appending to current segment\n");
 
-  gint seg_len = 0;
   track_point_t **point = &(track->cur_seg->track_point);
-  while(*point) { seg_len++; point = &((*point)->next); }
+  while(*point) { point = &((*point)->next); }
 
   /* don't append if point is the same as last time */
   track_point_t *prev = track->cur_seg->track_point;
@@ -483,25 +482,19 @@ static void track_append_position(appdata_t *appdata, const pos_t *pos, float al
              prev->pos.lon == pos->lon) {
     printf("same value as last point -> ignore\n");
   } else {
-
     *point = g_new0(track_point_t, 1);
     (*point)->altitude = alt;
     (*point)->time = time(NULL);
     (*point)->pos = *pos;
     track->dirty = TRUE;
 
-    /* if segment length was 1 the segment can now be drawn */
-    /* for the first time */
-    if(!seg_len) {
+    if(!prev) {
+      /* the segment can now be drawn for the first time */
       printf("initial draw\n");
       g_assert(!track->cur_seg->item_chain);
       map_track_draw_seg(appdata->map, track->cur_seg);
-    }
-
-    /* if segment length was > 0 the segment has to be updated */
-    if(seg_len > 0) {
-      printf("update draw with seg_len %d\n", seg_len+1);
-
+    } else {
+      /* the segment has to be updated */
       g_assert(track->cur_seg->item_chain);
       map_track_update_seg(appdata->map, track->cur_seg);
     }
