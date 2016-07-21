@@ -475,8 +475,6 @@ static void track_append_position(appdata_t *appdata, const pos_t *pos, float al
   track_point_t **point = &(track->cur_seg->track_point);
   while(*point) { seg_len++; point = &((*point)->next); }
 
-  map_track_pos(appdata, pos);
-
   /* don't append if point is the same as last time */
   track_point_t *prev = track->cur_seg->track_point;
   while(prev && prev->next) prev = prev->next;
@@ -551,6 +549,7 @@ static gboolean update(gpointer data) {
   if(gps_get_pos(appdata, &pos, &alt)) {
     printf("valid position %.6f/%.6f alt %.2f\n", pos.lat, pos.lon, alt);
     track_append_position(appdata, &pos, alt);
+    map_track_pos(appdata, &pos);
   } else {
     printf("no valid position\n");
     /* end segment */
