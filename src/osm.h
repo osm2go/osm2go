@@ -63,11 +63,10 @@ typedef struct {
   item_id_t id;
   item_id_t version;
   user_t *user;
-  time_t time;
-  gboolean visible;
-  int flags;
   tag_t *tag;
-
+  time_t time;
+  gboolean visible:8;
+  int flags:24;
 } base_object_t;
 
 typedef struct node_s {
