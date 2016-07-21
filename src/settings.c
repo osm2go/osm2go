@@ -121,7 +121,7 @@ settings_t *settings_load(void) {
 	switch(st->type) {
 	case STORE_STRING: {
 	  char **str = (char**)ptr;
-	  if(*str) g_free(*str);
+	  g_free(*str);
 	  *str = gconf_client_get_string(client, key, NULL);
 	} break;
 
@@ -176,9 +176,9 @@ settings_t *settings_load(void) {
 	  (*cur)->path = path;
 	  cur = &(*cur)->next;
 	} else {
-	  if(name) g_free(name);
-	  if(server) g_free(server);
-	  if(path) g_free(path);
+	  g_free(name);
+	  g_free(server);
+	  g_free(path);
 	}
       }
     } else {
@@ -307,8 +307,7 @@ void settings_free(settings_t *settings) {
     void **ptr = ((void*)settings) + st->offset;
 
     if(st->type == STORE_STRING)
-      if((char*)(*ptr))
-	g_free((char*)(*ptr));
+      g_free(*ptr);
 
     st++;
   }
@@ -317,10 +316,10 @@ void settings_free(settings_t *settings) {
   if(settings->proxy) {
     proxy_t *proxy = settings->proxy;
 
-    if(proxy->host)                    g_free(proxy->host);
-    if(proxy->ignore_hosts)            g_free(proxy->ignore_hosts);
-    if(proxy->authentication_user)     g_free(proxy->authentication_user);
-    if(proxy->authentication_password) g_free(proxy->authentication_password);
+    g_free(proxy->host);
+    g_free(proxy->ignore_hosts);
+    g_free(proxy->authentication_user);
+    g_free(proxy->authentication_password);
 
     g_free(proxy);
   }

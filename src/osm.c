@@ -53,11 +53,11 @@ static void osm_bounds_free(bounds_t *bounds) {
 
 /* ------------------------- user handling --------------------- */
 
-void osm_users_free(user_t *user) {
+static void osm_users_free(user_t *user) {
   while(user) {
     user_t *next = user->next;
 
-    if(user->name) g_free(user->name);
+    g_free(user->name);
     g_free(user);
 
     user = next;
@@ -101,8 +101,8 @@ time_t convert_iso8601(const char *str) {
 /* -------------------- tag handling ----------------------- */
 
 void osm_tag_free(tag_t *tag) {
-  if(tag->key)   g_free(tag->key);
-  if(tag->value) g_free(tag->value);
+  g_free(tag->key);
+  g_free(tag->value);
   g_free(tag);
 }
 
@@ -400,7 +400,7 @@ node_chain_t *osm_parse_osm_way_nd(osm_t *osm,
 /* ------------------- relation handling ------------------- */
 
 void osm_member_free(member_t *member) {
-  if(member->role) g_free(member->role);
+  g_free(member->role);
   g_free(member);
 }
 
@@ -523,11 +523,11 @@ void osm_free(icon_t **icon, osm_t *osm) {
 
   osm_hash_tables_free(osm);
 
-  if(osm->bounds)   osm_bounds_free(osm->bounds);
-  if(osm->user)     osm_users_free(osm->user);
-  if(osm->way)      osm_ways_free(osm->way_hash, osm->way);
-  if(osm->node)     osm_nodes_free(osm->node_hash, icon, osm->node);
-  if(osm->relation) osm_relations_free(osm->relation);
+  osm_bounds_free(osm->bounds);
+  osm_users_free(osm->user);
+  osm_ways_free(osm->way_hash, osm->way);
+  osm_nodes_free(osm->node_hash, icon, osm->node);
+  osm_relations_free(osm->relation);
   g_free(osm);
 }
 
@@ -2199,9 +2199,7 @@ osm_way_reverse_direction_sensitive_roles(osm_t *osm, way_t *way) {
 
 
   }
-  if (rel_chain0) {
-    g_free(rel_chain0);
-  }
+  g_free(rel_chain0);
   return n_roles_flipped;
 }
 

@@ -282,15 +282,15 @@ gboolean project_save(GtkWidget *parent, project_t *project) {
 void project_free(project_t *project) {
   if(!project) return;
 
-  if(project->name)       g_free(project->name);
-  if(project->desc)       g_free(project->desc);
-  if(project->server)     g_free(project->server);
+  g_free(project->name);
+  g_free(project->desc);
+  g_free(project->server);
 
-  if(project->wms_server) g_free(project->wms_server);
-  if(project->wms_path)   g_free(project->wms_path);
+  g_free(project->wms_server);
+  g_free(project->wms_path);
 
-  if(project->path)       g_free(project->path);
-  if(project->osm)        g_free(project->osm);
+  g_free(project->path);
+  g_free(project->osm);
 
   map_state_free(project->map_state);
 
@@ -1219,7 +1219,7 @@ project_edit(appdata_t *appdata, GtkWidget *parent, settings_t *settings,
   /* transfer values from edit dialog into project structure */
 
   /* fetch values from dialog */
-  if(context->project->desc) g_free(context->project->desc);
+  g_free(context->project->desc);
   context->project->desc = g_strdup(gtk_entry_get_text(
 			      GTK_ENTRY(context->desc)));
   if(strlen(context->project->desc) == 0) {
@@ -1228,7 +1228,7 @@ project_edit(appdata_t *appdata, GtkWidget *parent, settings_t *settings,
   }
 
 #ifdef SERVER_EDITABLE
-  if(context->project->server) g_free(context->project->server);
+  g_free(context->project->server);
   context->project->server = g_strdup(gtk_entry_get_text(
 				       GTK_ENTRY(context->server)));
   if(strlen(context->project->server) == 0) {
@@ -1446,8 +1446,7 @@ gboolean project_load(appdata_t *appdata, char *name) {
   wms_load(appdata);
 
   /* save the name of the project for the perferences */
-  if(appdata->settings->project)
-    g_free(appdata->settings->project);
+  g_free(appdata->settings->project);
   appdata->settings->project = g_strdup(appdata->project->name);
 
   banner_busy_stop(appdata);

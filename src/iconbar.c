@@ -387,8 +387,7 @@ GtkWidget *iconbar_new(appdata_t *appdata) {
 }
 
 void iconbar_free(iconbar_t *iconbar) {
-  if(iconbar)
-    g_free(iconbar);
+  g_free(iconbar);
 }
 
 #if defined(FINGER_UI)

@@ -157,8 +157,7 @@ GtkWidget *statusbar_new(appdata_t *appdata) {
 #endif
 
 void statusbar_free(statusbar_t *statusbar) {
-  if(statusbar)
-    g_free(statusbar);
+  g_free(statusbar);
 }
 
 

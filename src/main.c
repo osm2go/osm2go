@@ -392,7 +392,7 @@ cb_menu_track_import(GtkMenuItem *item, appdata_t *appdata) {
     /* load a track */
     appdata->track.track = track_import(appdata, filename);
     if(appdata->track.track) {
-      if(appdata->settings->track_path) g_free(appdata->settings->track_path);
+      g_free(appdata->settings->track_path);
       appdata->settings->track_path = g_strdup(filename);
     }
     g_free (filename);
@@ -465,8 +465,7 @@ cb_menu_track_export(GtkMenuItem *item, appdata_t *appdata) {
 		  "Overwrite existing file",
 		  "The file already exists. "
 		  "Do you really want to replace it?")) {
-	if(appdata->settings->track_path)
-	  g_free(appdata->settings->track_path);
+	g_free(appdata->settings->track_path);
 	appdata->settings->track_path = g_strdup(filename);
 
 	track_export(appdata, filename);

@@ -320,8 +320,7 @@ static gboolean osm_update_item(struct log_s *log, char *xml_str,
       appendf(log, COLOR_ERR, _("%s\n"), write_data.ptr);
     }
 
-    if(write_data.ptr)
-      g_free(write_data.ptr);
+    g_free(write_data.ptr);
 
     /* don't retry unless we had an "internal server error" */
     if(response != 500)
@@ -430,8 +429,7 @@ static gboolean osm_delete_item(struct log_s *log, char *xml_str,
       appendf(log, COLOR_ERR, _("%s\n"), write_data.ptr);
     }
 
-    if(write_data.ptr)
-      g_free(write_data.ptr);
+    g_free(write_data.ptr);
 
     /* don't retry unless we had an "internal server error" */
     if(response != 500)
@@ -941,13 +939,11 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   printf("clicked ok\n");
 
   /* retrieve username and password */
-  if(appdata->settings->username)
-    g_free(appdata->settings->username);
+  g_free(appdata->settings->username);
   appdata->settings->username =
     g_strdup(gtk_entry_get_text(GTK_ENTRY(uentry)));
 
-  if(appdata->settings->password)
-    g_free(appdata->settings->password);
+  g_free(appdata->settings->password);
   appdata->settings->password =
     g_strdup(gtk_entry_get_text(GTK_ENTRY(pentry)));
 
@@ -1097,7 +1093,7 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   gtk_dialog_run(GTK_DIALOG(context->dialog));
   gtk_widget_destroy(context->dialog);
 
-  if(context->comment) g_free(context->comment);
+  g_free(context->comment);
   g_free(context);
 }
 

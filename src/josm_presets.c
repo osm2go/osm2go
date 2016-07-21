@@ -684,8 +684,7 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
     gtk_widget_destroy(dialog);
 
 #ifdef ENABLE_BROWSER_INTERFACE
-  if(www_context)
-    g_free(www_context);
+  g_free(www_context);
 #endif
 
   return tag;
@@ -1058,7 +1057,7 @@ GtkWidget *josm_build_presets_button(appdata_t *appdata,
 static void free_values(presets_value_t *value) {
   while(value) {
     presets_value_t *next = value->next;
-    if(value->text) g_free(value->text);
+    g_free(value->text);
     g_free(value);
     value = next;
   }

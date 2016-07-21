@@ -367,9 +367,9 @@ void wms_setup_extent(project_t *project, wms_t *wms) {
 static void wms_layer_free(wms_layer_t *layer) {
   while(layer) {
 
-    if(layer->title) g_free(layer->title);
-    if(layer->name)  g_free(layer->name);
-    if(layer->srs)   g_free(layer->srs);
+    g_free(layer->title);
+    g_free(layer->name);
+    g_free(layer->srs);
 
     if(layer->children) wms_layer_free(layer->children);
 
@@ -395,13 +395,13 @@ static void wms_cap_free(wms_cap_t *cap) {
 }
 
 static void wms_service_free(wms_service_t *service) {
-  if(service->title)    g_free(service->title);
+  g_free(service->title);
   g_free(service);
 }
 
 static void wms_free(wms_t *wms) {
-  if(wms->server)  g_free(wms->server);
-  if(wms->path)    g_free(wms->path);
+  g_free(wms->server);
+  g_free(wms->path);
   if(wms->cap)     wms_cap_free(wms->cap);
   if(wms->service) wms_service_free(wms->service);
   g_free(wms);
@@ -449,7 +449,7 @@ static void wms_get_child_layers(wms_layer_t *layer,
 			 local_epsg4326, local_llbbox,
 			 local_srs, c_layer);
 
-    if(local_srs) g_free(local_srs);
+    g_free(local_srs);
     layer = layer->next;
   }
 }
@@ -864,9 +864,9 @@ static gboolean wms_server_dialog(appdata_t *appdata, wms_t *wms) {
     if(server) {
       /* fetch parameters from selected entry */
       printf("WMS: using %s\n", server->name);
-      if(wms->server) g_free(wms->server);
+      g_free(wms->server);
       wms->server = g_strdup(server->server);
-      if(wms->path) g_free(wms->path);
+      g_free(wms->path);
       wms->path = g_strdup(server->path);
       ok = TRUE;
     } else {
@@ -1112,15 +1112,13 @@ void wms_import(appdata_t *appdata) {
   /* ------------- copy values back into project ---------------- */
   if(!appdata->project->wms_server ||
      strcmp(appdata->project->wms_server, wms->server) != 0) {
-    if(appdata->project->wms_server)
-      g_free(appdata->project->wms_server);
+    g_free(appdata->project->wms_server);
     appdata->project->wms_server = g_strdup(wms->server);
   }
 
   if(!appdata->project->wms_path ||
      strcmp(appdata->project->wms_path, wms->path) != 0) {
-    if(appdata->project->wms_path)
-      g_free(appdata->project->wms_path);
+    g_free(appdata->project->wms_path);
     appdata->project->wms_path = g_strdup(wms->path);
   }
 
@@ -1288,7 +1286,7 @@ void wms_import(appdata_t *appdata) {
 			"&reaspect=false", url, srs,
 			minlon, minlat, maxlon, maxlat, wms->width,
 			wms->height, formats[format]);
-  if(srs) g_free(srs);
+  g_free(srs);
   g_free(old);
 
   const char *exts[] = { "jpg", "jpg", "png", "gif" };
@@ -1414,9 +1412,9 @@ wms_server_t *wms_server_get_default(void) {
 }
 
 void wms_server_free(wms_server_t *wms_server) {
-  if(wms_server->name)   g_free(wms_server->name);
-  if(wms_server->server) g_free(wms_server->server);
-  if(wms_server->path)   g_free(wms_server->path);
+  g_free(wms_server->name);
+  g_free(wms_server->server);
+  g_free(wms_server->path);
   g_free(wms_server);
 }
 

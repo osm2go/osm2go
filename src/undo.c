@@ -100,8 +100,7 @@ static void undo_op_free(osm_t *osm, undo_op_t *op) {
 static void undo_state_free(osm_t *osm, undo_state_t *state) {
   printf(" free state: %s\n", undo_type_string(state->type));
 
-  if(state->name)
-    g_free(state->name);
+  g_free(state->name);
 
   undo_op_t *op = state->op;
   while(op) {

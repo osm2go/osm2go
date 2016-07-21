@@ -1590,12 +1590,8 @@ osm_gps_map_finalize (GObject *object)
     OsmGpsMap *map = OSM_GPS_MAP(object);
     OsmGpsMapPrivate *priv = map->priv;
 
-    if(priv->tile_dir)
-        g_free(priv->tile_dir);
-
-    if(priv->cache_dir)
-        g_free(priv->cache_dir);
-
+    g_free(priv->tile_dir);
+    g_free(priv->cache_dir);
     g_free(priv->repo_uri);
     g_free(priv->image_format);
 

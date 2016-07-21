@@ -121,7 +121,7 @@ static style_t *parse_style(xmlDocPtr doc, xmlNode *a_node) {
 	xml_get_prop_float(cur_node, "scale", &style->icon.scale);
 	char *prefix = (char*)xmlGetProp(cur_node, BAD_CAST "path-prefix");
 	if(prefix) {
-	  if(style->icon.path_prefix) g_free(style->icon.path_prefix);
+	  g_free(style->icon.path_prefix);
 	  style->icon.path_prefix = prefix;
 	}
 	style->icon.enable = xml_prop_is(cur_node, "enable", "true");
@@ -280,10 +280,8 @@ void style_free(style_t *style) {
   if(style->elemstyles)
     josm_elemstyles_free(style->elemstyles);
 
-  if(style->name) g_free(style->name);
-
-  if (style->icon.path_prefix) g_free(style->icon.path_prefix);
-
+  g_free(style->name);
+  g_free(style->icon.path_prefix);
   g_free(style);
 }
 
@@ -371,8 +369,7 @@ void style_change(appdata_t *appdata, const char *name) {
     return;
   }
 
-  if(appdata->settings->style)
-    g_free(appdata->settings->style);
+  g_free(appdata->settings->style);
 
   appdata->settings->style = new_style;
 

@@ -147,11 +147,11 @@ static void request_free(net_io_request_t *request) {
   }
 
   printf("no references left, freeing request\n");
-  if(request->url)  g_free(request->url);
-  if(request->user) g_free(request->user);
+  g_free(request->url);
+  g_free(request->user);
 
   /* filename is only a valid filename in NET_IO_DL_FILE mode */
-  if(request->type == NET_IO_DL_FILE && request->filename)
+  if(request->type == NET_IO_DL_FILE)
     g_free(request->filename);
 
   g_free(request);
