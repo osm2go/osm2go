@@ -880,15 +880,14 @@ static char *project_select(appdata_t *appdata) {
 }
 
 /* ---------------------------------------------------- */
+  /* no idea if that check is correct, but this way it works both for the N900 and my desktop */
+#if !GLIB_CHECK_VERSION(2,24,2)
+typedef struct stat GStatBuf;
+#endif
 
 /* return file length or -1 on error */
-static gsize file_length(const char *path, const char *name) {
-  /* no idea if that check is correct, but this way it works both for the N900 and my desktop */
-#if GLIB_CHECK_VERSION(2,24,2)
+static GStatBuf file_info(const char *path, const char *name) {
   GStatBuf st;
-#else
-  struct stat st;
-#endif
   int r;
 
   if (name[0] == '/') {
@@ -899,9 +898,10 @@ static gsize file_length(const char *path, const char *name) {
     g_free(str);
   }
 
-  if(r != 0) return -1;
+  if(r != 0)
+    memset(&st, 0, sizeof(st));
 
-  return st.st_size;
+  return st;
 }
 
 void project_filesize(project_context_t *context) {
@@ -922,11 +922,17 @@ void project_filesize(project_context_t *context) {
   } else {
     gtk_widget_modify_fg(context->fsize, GTK_STATE_NORMAL, NULL);
 
-    if(!context->project->data_dirty)
-      str = g_strdup_printf(_("%"G_GSIZE_FORMAT" bytes present"),
-			    file_length(context->project->path,
-					context->project->osm));
-    else
+    if(!context->project->data_dirty) {
+      GStatBuf st = file_info(context->project->path,
+					context->project->osm);
+      struct tm loctime;
+      localtime_r(&st.st_mtim.tv_sec, &loctime);
+      char time_str[32];
+      strftime(time_str, sizeof(time_str), "%x %X", &loctime);
+
+      str = g_strdup_printf(_("%"G_GOFFSET_FORMAT" bytes present\nfrom %s"),
+			    (goffset)st.st_size, time_str);
+    } else
       str = g_strdup_printf(_("Outdated, please download!"));
 
     gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog),
