@@ -787,6 +787,22 @@ void map_free_map_item_chains(appdata_t *appdata) {
     way->map_item_chain = NULL;
     way = way->next;
   }
+
+  if (appdata->track.track) {
+    /* remove all segments */
+    track_seg_t *seg = appdata->track.track->track_seg;
+    while(seg) {
+      track_item_chain_t *item = seg->item_chain;
+      while(item) {
+        track_item_chain_t *next = item->next;
+        g_free(item);
+        item = next;
+      }
+
+      seg->item_chain = NULL;
+      seg = seg->next;
+    }
+  }
 #endif
 }
 
@@ -2261,6 +2277,7 @@ void map_track_remove(appdata_t *appdata) {
     while(item) {
       track_item_chain_t *next = item->next;
       canvas_item_destroy(item->item);
+      g_free(item);
       item = next;
     }
 
