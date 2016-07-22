@@ -2321,13 +2321,11 @@ char *osm_object_get_name(object_t *object) {
     }
 
     else if(!strcmp(highway, "pedestrian")) {
-      type = g_strdup_printf("%s way/area", highway);
-      free_type = TRUE;
+      type = "pedestrian way/area";
     }
 
     else if(!strcmp(highway, "construction")) {
-      type = g_strdup_printf("road/street under %s", highway);
-      free_type = TRUE;
+      type = "road/street under construction";
     }
 
     else
