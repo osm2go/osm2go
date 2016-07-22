@@ -2136,9 +2136,7 @@ void map_track_draw_seg(map_t *map, track_seg_t *seg) {
     int point;
     for(point=0;point<visible;point++) {
       track_pos2lpos(bounds, &track_point->pos, &lpos);
-
-      points->coords[2*point+0] = lpos.x;
-      points->coords[2*point+1] = lpos.y;
+      canvas_point_set_pos(points, point, &lpos);
       track_point = track_point->next;
     }
 
