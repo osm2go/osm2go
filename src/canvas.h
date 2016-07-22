@@ -167,7 +167,7 @@ canvas_item_t *canvas_image_new(canvas_t *canvas, canvas_group_t group,
 				float hscale, float vscale);
 
 canvas_points_t *canvas_points_new(gint points);
-void canvas_point_set_pos(canvas_points_t *points, gint index, lpos_t *lpos);
+void canvas_point_set_pos(canvas_points_t *points, gint index, const lpos_t *lpos);
 void canvas_points_free(canvas_points_t *points);
 gint canvas_points_num(canvas_points_t *points);
 void canvas_point_get_lpos(canvas_points_t *points, gint index, lpos_t *lpos);

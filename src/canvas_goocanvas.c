@@ -243,7 +243,7 @@ canvas_points_t *canvas_points_new(gint points) {
   return goo_canvas_points_new(points);
 }
 
-void canvas_point_set_pos(canvas_points_t *points, gint index, lpos_t *lpos) {
+void canvas_point_set_pos(canvas_points_t *points, gint index, const lpos_t *lpos) {
   points->coords[2*index+0] = lpos->x;
   points->coords[2*index+1] = lpos->y;
 }
