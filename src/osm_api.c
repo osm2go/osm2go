@@ -37,9 +37,9 @@
 
 #define NO_EXPECT
 
-static struct http_message_s {
+static const struct http_message_s {
   int id;
-  char *msg;
+  const char *msg;
 } http_messages [] = {
   { 200, "Ok" },
   { 203, "No Content" },
@@ -60,7 +60,7 @@ static struct http_message_s {
 };
 
 static char *osm_http_message(int id) {
-  struct http_message_s *msg = http_messages;
+  const struct http_message_s *msg = http_messages;
 
   while(msg->id) {
     if(msg->id == id) return _(msg->msg);
