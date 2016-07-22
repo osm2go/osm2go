@@ -2187,12 +2187,7 @@ void map_track_update_seg(map_t *map, track_seg_t *seg) {
     printf("second_last is visible -> append\n");
 
     /* count points to be placed */
-    int npoints = 0;
-    track_point_t *tmp = begin;
-    while(tmp) {
-      tmp = tmp->next;
-      npoints++;
-    }
+    gint npoints = track_points_count(begin);
 
     printf("updating last segment to %d points\n", npoints);
 
@@ -2220,12 +2215,7 @@ void map_track_update_seg(map_t *map, track_seg_t *seg) {
     item = item->next;
 
     /* count points to be placed */
-    int npoints = 0;
-    track_point_t *tmp = begin;
-    while(tmp) {
-      tmp = tmp->next;
-      npoints++;
-    }
+    gint npoints = track_points_count(begin);
 
     printf("attaching new segment with %d points\n", npoints);
 

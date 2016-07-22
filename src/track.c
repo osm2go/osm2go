@@ -46,10 +46,10 @@ static void track_menu_set(appdata_t *appdata, gboolean present) {
   gtk_widget_set_sensitive(appdata->track.menu_item_track_export, present);
 }
 
-static gint track_seg_points(const track_seg_t *seg) {
+gint track_points_count(const track_point_t *point)
+{
   gint points = 0;
 
-  const track_point_t *point = seg->track_point;
   while(point) {
     points++;
     point = point->next;
@@ -226,7 +226,7 @@ static void track_info(const track_t *track) {
   gint segs = 0, points = 0;
   const track_seg_t *seg = track->track_seg;
   while(seg) {
-    points += track_seg_points(seg);
+    points += track_points_count(seg->track_point);
     segs++;
     seg = seg->next;
   }

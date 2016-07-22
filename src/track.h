@@ -48,6 +48,13 @@ typedef struct track_s {
   track_seg_t *cur_seg;
 } track_t;
 
+/**
+ * @brief count a point sequence
+ * @param point first point
+ * @return how many points are in the given sequence
+ * @retval 0 point is NULL
+ */
+gint track_points_count(const track_point_t *point);
 gboolean track_is_empty(const track_seg_t *seg);
 
 /* used internally to save and restore the currently displayed track */
