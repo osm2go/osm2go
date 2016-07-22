@@ -340,9 +340,12 @@ const char *misc_get_proxy_uri(settings_t *settings) {
   if(!settings || !settings->proxy ||
      !settings->proxy->host) return NULL;
 
+  const char *protocol = strncmp(settings->proxy->host, "http://", 7) ? "" :
+			 strncmp(settings->proxy->host, "https://", 8) ? "" :
+			 "http://";
+
   snprintf(proxy_buffer, sizeof(proxy_buffer), "%s%s:%u",
-	   strncmp(settings->proxy->host, "http://", 7)?"http://":"",
-	   settings->proxy->host, settings->proxy->port);
+	   protocol, settings->proxy->host, settings->proxy->port);
 
   proxy_buffer[sizeof(proxy_buffer)-1] = 0;
   printf("gconf_proxy: %s\n", proxy_buffer);
