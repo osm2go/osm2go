@@ -323,7 +323,9 @@ static void track_save_points(const track_point_t *point, xmlNodePtr node) {
     }
 
     if(point->time) {
-      strftime(str, sizeof(str), DATE_FORMAT, localtime(&point->time));
+      struct tm loctime;
+      localtime_r(&point->time, &loctime);
+      strftime(str, sizeof(str), DATE_FORMAT, &loctime);
       xmlNewTextChild(node_point, NULL, BAD_CAST "time", BAD_CAST str);
     }
 

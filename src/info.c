@@ -372,9 +372,10 @@ static GtkWidget *details_widget(tag_context_t *context, gboolean big) {
   /* ------------ time ----------------- */
 
   if(big) table_attach(table, gtk_label_new(_("Date/Time:")), 0, 1);
-  struct tm *loctime = localtime(&stime);
+  struct tm loctime;
+  localtime_r(&stime, &loctime);
   char time_str[32];
-  strftime(time_str, sizeof(time_str), "%x %X", loctime);
+  strftime(time_str, sizeof(time_str), "%x %X", &loctime);
   label = gtk_label_new(time_str);
   table_attach(table, label, 1, big?1:0);
 
