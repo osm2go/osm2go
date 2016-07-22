@@ -102,7 +102,7 @@ static void on_toggled(GtkWidget *button, gpointer data) {
 }
 
 gboolean yes_no_f(GtkWidget *parent, appdata_t *appdata, gulong again_bit,
-		  gint flags, char *title, const char *fmt, ...) {
+		  gint flags, const char *title, const char *fmt, ...) {
 
   if(appdata && again_bit && (appdata->dialog_again.not & again_bit))
     return((appdata->dialog_again.reply & again_bit) != 0);
@@ -173,7 +173,7 @@ static const char *data_paths[] = {
   NULL
 };
 
-char *find_file(char *name) {
+char *find_file(const char *name) {
   const char **path = data_paths;
   char *p = getenv("HOME");
 
@@ -197,7 +197,7 @@ char *find_file(char *name) {
 
 /* scan all data directories for the given file pattern and */
 /* return a list of files matching this pattern */
-file_chain_t *file_scan(char *pattern) {
+file_chain_t *file_scan(const char *pattern) {
   file_chain_t *chain = NULL, **chainP = &chain;
 
   const char **path = data_paths;
@@ -269,7 +269,7 @@ static const gint dialog_sizes[][2] = {
 #endif
 
 /* create a modal dialog using one of the predefined size hints */
-GtkWidget *misc_dialog_new(guint hint, const char *title,
+GtkWidget *misc_dialog_new(guint hint, const gchar *title,
 			   GtkWindow *parent, ...) {
   va_list args;
   va_start( args, parent );
@@ -383,7 +383,7 @@ GtkWidget *button_new(void) {
   return button;
 }
 
-GtkWidget *button_new_with_label(char *label) {
+GtkWidget *button_new_with_label(const gchar *label) {
   GtkWidget *button = gtk_button_new_with_label(label);
 #ifdef FREMANTLE
   hildon_gtk_widget_set_theme_size(button,
@@ -392,7 +392,7 @@ GtkWidget *button_new_with_label(char *label) {
   return button;
 }
 
-GtkWidget *check_button_new_with_label(char *label) {
+GtkWidget *check_button_new_with_label(const gchar *label) {
 #ifndef FREMANTLE
   return gtk_check_button_new_with_label(label);
 #else
@@ -476,7 +476,7 @@ static void on_notebook_button_clicked(GtkWidget *button, gpointer data) {
 #endif
 
 void notebook_append_page(GtkWidget *notebook,
-			  GtkWidget *page, char *label) {
+			  GtkWidget *page, const gchar *label) {
 #ifdef FREMANTLE
   GtkNotebook *nb =
     GTK_NOTEBOOK(g_object_get_data(G_OBJECT(notebook), "notebook"));
@@ -520,7 +520,7 @@ void on_value_changed(HildonPickerButton *widget, gpointer  user_data) {
   g_signal_emit_by_name(widget, "changed");
 }
 
-static GtkWidget *combo_box_new_with_selector(char *title, GtkWidget *selector) {
+static GtkWidget *combo_box_new_with_selector(const gchar *title, GtkWidget *selector) {
   GtkWidget *button =
     hildon_picker_button_new(HILDON_SIZE_FINGER_HEIGHT |
 			     HILDON_SIZE_AUTO_WIDTH,
@@ -542,7 +542,7 @@ static GtkWidget *combo_box_new_with_selector(char *title, GtkWidget *selector) 
 #endif
 
 /* the title is only used on fremantle with the picker widget */
-GtkWidget *combo_box_new(char *title) {
+GtkWidget *combo_box_new(const gchar *title) {
 #ifndef FREMANTLE
   return gtk_combo_box_new_text();
 #else
@@ -551,7 +551,7 @@ GtkWidget *combo_box_new(char *title) {
 #endif
 }
 
-GtkWidget *combo_box_entry_new(char *title) {
+GtkWidget *combo_box_entry_new(const gchar *title) {
 #ifndef FREMANTLE
   return gtk_combo_box_entry_new_text();
 #else
@@ -560,7 +560,7 @@ GtkWidget *combo_box_entry_new(char *title) {
 #endif
 }
 
-void combo_box_append_text(GtkWidget *cbox, char *text) {
+void combo_box_append_text(GtkWidget *cbox, const gchar *text) {
 #ifndef FREMANTLE
   gtk_combo_box_append_text(GTK_COMBO_BOX(cbox), text);
 #else

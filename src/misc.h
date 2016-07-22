@@ -50,10 +50,10 @@ void warningf(GtkWidget *parent, const char *fmt, ...);
 void messagef(GtkWidget *parent, char *title, const char *fmt, ...);
 gboolean yes_no_f(GtkWidget *parent,
 		  struct appdata_s *appdata, gulong again_bit, gint flags,
-		  char *title, const char *fmt, ...);
+		  const char *title, const char *fmt, ...);
 
-char *find_file(char *name);
-file_chain_t *file_scan(char *pattern);
+char *find_file(const char *name);
+file_chain_t *file_scan(const char *pattern);
 
 /* dialog size are specified rather fuzzy */
 #define MISC_DIALOG_NOSIZE  -1
@@ -65,7 +65,7 @@ file_chain_t *file_scan(char *pattern);
 
 struct settings_s;
 
-GtkWidget *misc_dialog_new(guint hint, const char *title, GtkWindow *parent, ...);
+GtkWidget *misc_dialog_new(guint hint, const gchar *title, GtkWindow *parent, ...);
 GtkWidget *misc_scrolled_window_new(gboolean etched_in);
 void misc_scrolled_window_add_with_viewport(GtkWidget *win, GtkWidget *child);
 const char *misc_get_proxy_uri(struct settings_s *settings);
@@ -76,21 +76,21 @@ GtkWidget *entry_new(void);
 GType entry_type(void);
 
 GtkWidget *button_new(void);
-GtkWidget *button_new_with_label(char *label);
+GtkWidget *button_new_with_label(const gchar *label);
 
-GtkWidget *check_button_new_with_label(char *label);
+GtkWidget *check_button_new_with_label(const gchar *label);
 void check_button_set_active(GtkWidget *button, gboolean active);
 gboolean check_button_get_active(GtkWidget *button);
 GType check_button_type(void);
 
 GtkWidget *notebook_new(void);
 void notebook_append_page(GtkWidget *notebook,
-			  GtkWidget *page, char *label);
+			  GtkWidget *page, const gchar *label);
 GtkWidget *notebook_get_gtk_notebook(GtkWidget *notebook);
 
-GtkWidget *combo_box_new(char *title);
-GtkWidget *combo_box_entry_new(char *title);
-void combo_box_append_text(GtkWidget *cbox, char *text);
+GtkWidget *combo_box_new(const gchar *title);
+GtkWidget *combo_box_entry_new(const gchar *title);
+void combo_box_append_text(GtkWidget *cbox, const gchar *text);
 void combo_box_set_active(GtkWidget *cbox, int index);
 int combo_box_get_active(GtkWidget *cbox);
 const char *combo_box_get_active_text(GtkWidget *cbox);
