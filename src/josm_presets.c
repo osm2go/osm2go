@@ -116,7 +116,7 @@ char *josm_icon_name_adjust(char *name) {
   return name;
 }
 
-static int josm_type_bit(char *type) {
+static int josm_type_bit(const char *type) {
   struct { int bit; char *str; } types[] = {
     { PRESETS_TYPE_WAY,       "way"       },
     { PRESETS_TYPE_NODE,      "node"      },
@@ -148,6 +148,7 @@ static int josm_type_parse(char *type) {
   }
 
   type_mask |= josm_type_bit(type);
+  xmlFree(type);
   return type_mask;
 }
 
@@ -1101,6 +1102,7 @@ static void free_items(presets_item_t *item);
 static void free_item(presets_item_t *item) {
   if(item->name) xmlFree(item->name);
   if(item->icon) xmlFree(item->icon);
+  if(item->link) xmlFree(item->link);
 
   if(item->is_group)
     free_items(item->group);
