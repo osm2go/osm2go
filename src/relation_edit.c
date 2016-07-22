@@ -198,6 +198,8 @@ static char *relation_get_descriptive_name(relation_t *relation) {
   if (!name)
     name = osm_tag_get_by_key(OSM_TAG(relation), "name");
   if (!name)
+    name = osm_tag_get_by_key(OSM_TAG(relation), "description");
+  if (!name)
     name = osm_tag_get_by_key(OSM_TAG(relation), "note");
   if (!name)
     name = osm_tag_get_by_key(OSM_TAG(relation), "fix" "me");
