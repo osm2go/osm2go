@@ -2087,6 +2087,27 @@ static gboolean track_pos2lpos(const bounds_t *bounds, const pos_t *pos, lpos_t 
 	  (lpos->y >= bounds->min.y) && (lpos->y <= bounds->max.y));
 }
 
+/**
+ * @brief allocate a point array and initialize it with screen coordinates
+ * @param bounds screen boundary
+ * @param point first track point to use
+ * @param count number of points to use
+ * @return point array
+ */
+static canvas_points_t *canvas_points_init(const bounds_t *bounds, const track_point_t *point, const gint count) {
+  canvas_points_t *points = canvas_points_new(count);
+  gint i;
+  lpos_t lpos;
+
+  for(i = 0; i < count; i++) {
+    track_pos2lpos(bounds, &point->pos, &lpos);
+    canvas_point_set_pos(points, i, &lpos);
+    point = point->next;
+  }
+
+  return points;
+}
+
 void map_track_draw_seg(map_t *map, track_seg_t *seg) {
   bounds_t *bounds = map->appdata->osm->bounds;
 
@@ -2126,19 +2147,18 @@ void map_track_draw_seg(map_t *map, track_seg_t *seg) {
     }
 
     /* also use last one that's offscreen to nicely leave the visible area */
-    if(tmp && tmp->next)
+    /* also determine the first item to use in the next loop */
+    if(tmp && tmp->next) {
       visible++;
+      tmp = tmp->next;
+    } else {
+      tmp = NULL;
+    }
 
     /* allocate space for nodes */
-    canvas_points_t *points = canvas_points_new(visible);
-
     printf("visible are %d\n", visible);
-    int point;
-    for(point=0;point<visible;point++) {
-      track_pos2lpos(bounds, &track_point->pos, &lpos);
-      canvas_point_set_pos(points, point, &lpos);
-      track_point = track_point->next;
-    }
+    canvas_points_t *points = canvas_points_init(bounds, track_point, visible);
+    track_point = tmp;
 
     *itemP = g_new0(track_item_chain_t, 1);
     (*itemP)->item = canvas_polyline_new(map->canvas, CANVAS_GROUP_TRACK,
@@ -2206,14 +2226,7 @@ void map_track_update_seg(map_t *map, track_seg_t *seg) {
 
     printf("updating last segment to %d points\n", npoints);
 
-    canvas_points_t *points = canvas_points_new(npoints);
-
-    gint point = 0;
-    while(begin) {
-      track_pos2lpos(bounds, &begin->pos, &lpos);
-      canvas_point_set_pos(points, point++, &lpos);
-      begin = begin->next;
-    }
+    canvas_points_t *points = canvas_points_init(bounds, begin, npoints);
 
     canvas_item_set_points(item->item, points);
     canvas_points_free(points);
@@ -2234,14 +2247,7 @@ void map_track_update_seg(map_t *map, track_seg_t *seg) {
 
     printf("attaching new segment with %d points\n", npoints);
 
-    canvas_points_t *points = canvas_points_new(npoints);
-
-    gint point = 0;
-    while(begin) {
-      track_pos2lpos(bounds, &begin->pos, &lpos);
-      canvas_point_set_pos(points, point++, &lpos);
-      begin = begin->next;
-    }
+    canvas_points_t *points = canvas_points_init(bounds, begin, npoints);
 
     item->item = canvas_polyline_new(map->canvas, CANVAS_GROUP_TRACK,
 		 points, map->style->track.width, map->style->track.color);
