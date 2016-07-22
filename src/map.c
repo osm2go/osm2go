@@ -1753,7 +1753,7 @@ static gboolean map_autosave(gpointer data) {
 }
 
 GtkWidget *map_new(appdata_t *appdata) {
-  map_t *map = appdata->map = g_new0(map_t, 1);
+  map_t *map = g_new0(map_t, 1);
 
   map->style = style_load(appdata, appdata->settings->style);
   if(!map->style) {
@@ -1761,6 +1761,7 @@ GtkWidget *map_new(appdata_t *appdata) {
     g_free(map);
     return NULL;
   }
+  appdata->map = map;
 
   if(appdata->project && appdata->project->map_state) {
     printf("Using projects map state\n");
