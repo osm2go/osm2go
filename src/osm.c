@@ -2349,11 +2349,10 @@ char *osm_object_get_name(object_t *object) {
 
   /* remove underscores from string and replace them by spaces as this is */
   /* usually nicer */
-  char *p = ret;
-  while(*p) {
-    if(*p == '_')
-      *p = ' ';
-    p++;
+  char *p = strchr(ret, '_');
+  while(p) {
+    *p = ' ';
+    p = strchr(p + 1, '_');
   }
 
   return ret;
