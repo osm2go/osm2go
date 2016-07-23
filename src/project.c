@@ -756,8 +756,9 @@ on_project_update_all(GtkButton *button, gpointer data)
       /* if the project was already downloaded do it again */
       if(prj && project_osm_present(prj)) {
         printf("found %s to update\n", prj->name);
-        osm_download(GTK_WIDGET(context->dialog),
-                     context->settings, prj);
+        if (!osm_download(GTK_WIDGET(context->dialog),
+                     context->settings, prj))
+          break;
       }
     } while(gtk_tree_model_iter_next(model, &iter));
   }
