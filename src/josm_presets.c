@@ -104,8 +104,9 @@ char *josm_icon_name_adjust(char *name) {
 
 #ifdef JOSM_PATH_ADJUST
   if(strncmp(name, "presets/", strlen("presets/")) != 0) {
-    if(strrchr(name, '/')) {
-      char *new = g_strdup_printf("presets%s", strrchr(name, '/'));
+    const char *slash = strrchr(name, '/');
+    if(slash) {
+      char *new = g_strconcat("presets", slash, NULL);
       xmlFree(name);
       name = new;
 

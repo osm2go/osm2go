@@ -373,7 +373,7 @@ void track_save(project_t *project, track_t *track) {
     return;
   }
 
-  gchar *trk_name = g_strdup_printf("%s%s.trk", project->path, project->name);
+  gchar *trk_name = g_strconcat(project->path, project->name, ".trk", NULL);
 
   if(!track) {
     g_remove(trk_name);
@@ -383,7 +383,7 @@ void track_save(project_t *project, track_t *track) {
 
   /* check if there already is such a diff file and make it a backup */
   /* in case new diff saving fails */
-  char *backup = g_strjoin(NULL, project->path, "backup.trk", NULL);
+  char *backup = g_strconcat(project->path, "backup.trk", NULL);
   if(g_file_test(trk_name, G_FILE_TEST_IS_REGULAR)) {
     printf("backing up existing file \"%s\" to \"%s\"\n", trk_name, backup);
     g_remove(backup);
@@ -415,12 +415,12 @@ track_t *track_restore(appdata_t *appdata) {
 
   /* first try to open a backup which is only present if saving the */
   /* actual diff didn't succeed */
-  gchar *trk_name = g_strjoin(NULL, project->path, "backup.trk", NULL);
+  gchar *trk_name = g_strconcat(project->path, "backup.trk", NULL);
   if(g_file_test(trk_name, G_FILE_TEST_EXISTS)) {
     printf("track backup present, loading it instead of real track ...\n");
   } else {
     g_free(trk_name);
-    trk_name = g_strdup_printf("%s%s.trk", project->path, project->name);
+    trk_name = g_strconcat(project->path, project->name, ".trk", NULL);
 
     if(!g_file_test(trk_name, G_FILE_TEST_EXISTS)) {
       printf("no track present!\n");

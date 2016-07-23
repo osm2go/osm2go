@@ -1062,7 +1062,7 @@ osm_t *osm_parse(const char *path, const char *filename) {
   if(filename[0] == '/')
     osm = process_file(filename);
   else {
-    char *full = g_strjoin(NULL, path, filename, NULL);
+    char *full = g_strconcat(path, filename, NULL);
     osm = process_file(full);
     g_free(full);
   }
@@ -2284,7 +2284,7 @@ char *osm_object_get_name(object_t *object) {
 
   /* worst case: we have no tags at all. return techincal info then */
   if(!tags)
-    return g_strdup_printf("unspecified %s", osm_object_type_string(object));
+    return g_strconcat("unspecified ", osm_object_type_string(object), NULL);
 
   /* try to figure out _what_ this is */
 
@@ -2316,7 +2316,7 @@ char *osm_object_get_name(object_t *object) {
        (!strcmp(highway, "unclassified")) ||
        (!strcmp(highway, "residential")) ||
        (!strcmp(highway, "service"))) {
-      type = g_strdup_printf("%s road", highway);
+      type = g_strconcat(highway, " road", NULL);
       free_type = TRUE;
     }
 
@@ -2333,14 +2333,18 @@ char *osm_object_get_name(object_t *object) {
   }
 
   if(type && name)
-    ret = g_strdup_printf("%s: \"%s\"", type, name);
-  else if(type && !name)
-    ret = g_strdup(type);
-  else if(name && !type)
-    ret = g_strdup_printf("%s: \"%s\"",
-	  osm_object_type_string(object), name);
+    ret = g_strconcat(type, ": \"", name, "\"", NULL);
+  else if(type && !name) {
+    if(free_type) {
+      ret = type;
+      free_type = FALSE;
+    } else
+      ret = g_strdup(type);
+  } else if(name && !type)
+    ret = g_strconcat(
+	  osm_object_type_string(object), ": \"", name, "\"", NULL);
   else
-    ret = g_strdup_printf("unspecified %s", osm_object_type_string(object));
+    ret = g_strconcat("unspecified ", osm_object_type_string(object), NULL);
 
   if(free_type)
     g_free(type);
@@ -2360,11 +2364,11 @@ char *osm_object_string(object_t *object) {
   char *type_str = osm_object_type_string(object);
 
   if(!object)
-    return g_strdup_printf("%s #<invalid>", type_str);
+    return g_strconcat(type_str, " #<invalid>", NULL);
 
   switch(object->type) {
   case ILLEGAL:
-    return g_strdup_printf("%s #<unspec>", type_str);
+    return g_strconcat(type_str, " #<unspec>", NULL);
     break;
   case NODE:
   case WAY:

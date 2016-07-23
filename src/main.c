@@ -81,9 +81,9 @@ void main_ui_enable(appdata_t *appdata) {
   hildon_window_set_markup(HILDON_WINDOW(appdata->window), str);
 #else
   if(project_valid)
-    str = g_strdup_printf("%s - OSM2Go", appdata->project->name);
+    str = g_strconcat(appdata->project->name, " - OSM2Go", NULL);
   else
-    str = g_strdup_printf("OSM2Go");
+    str = g_strdup("OSM2Go");
 
   gtk_window_set_title(GTK_WINDOW(appdata->window), str);
 #endif
@@ -1217,15 +1217,15 @@ void menu_cleanup(appdata_t *appdata) {
 #define ACCELS_FILE "accels"
 
 static void menu_accels_load(appdata_t *appdata) {
-  char *accels_file = g_strdup_printf("%s/" ACCELS_FILE,
-                                      appdata->settings->base_path);
+  char *accels_file = g_strconcat(appdata->settings->base_path, ACCELS_FILE,
+                                      NULL);
   gtk_accel_map_load(accels_file);
   g_free(accels_file);
 }
 
 static void menu_accels_save(appdata_t *appdata) {
-  char *accels_file = g_strdup_printf("%s" ACCELS_FILE,
-                                      appdata->settings->base_path);
+  char *accels_file = g_strconcat(appdata->settings->base_path, ACCELS_FILE,
+                                      NULL);
   gtk_accel_map_save(accels_file);
   g_free(accels_file);
 }

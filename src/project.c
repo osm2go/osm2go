@@ -201,8 +201,8 @@ static gboolean project_read(appdata_t *appdata,
 
 gboolean project_save(GtkWidget *parent, project_t *project) {
   char str[32];
-  char *project_file = g_strdup_printf("%s%s.proj",
-		       project->path, project->name);
+  char *project_file = g_strconcat(project->path, project->name,
+				 ".proj", NULL);
 
   printf("saving project to %s\n", project_file);
 
@@ -300,12 +300,12 @@ void project_free(project_t *project) {
 /* ------------ project selection dialog ------------- */
 
 static char *project_fullname(settings_t *settings, const char *name) {
-  return g_strdup_printf("%s%s/%s.proj", settings->base_path, name, name);
+  return g_strconcat(settings->base_path, name, "/", name, ".proj", NULL);
 }
 
 gboolean project_exists(settings_t *settings, const char *name) {
   gboolean ok = FALSE;
-  char *fulldir = g_strdup_printf("%s%s", settings->base_path, name);
+  char *fulldir = g_strconcat(settings->base_path, name, NULL);
 
   if(g_file_test(fulldir, G_FILE_TEST_IS_DIR)) {
 
@@ -336,8 +336,8 @@ static project_t *project_scan(appdata_t *appdata) {
 	/* try to read project and append it to chain */
 	*current = g_new0(project_t, 1);
 	(*current)->name = g_strdup(name);
-	(*current)->path = g_strdup_printf("%s%s/",
-			  appdata->settings->base_path, name);
+	(*current)->path = g_strconcat(
+			  appdata->settings->base_path, name, "/", NULL);
 
 	char *fullname = project_fullname(appdata->settings, name);
 	if(project_read(appdata, fullname, *current))
@@ -377,7 +377,7 @@ static gboolean osm_file_exists(char *path, char *name) {
   if(name[0] == '/')
     exists = g_file_test(name, G_FILE_TEST_IS_REGULAR);
   else {
-    char *full = g_strjoin(NULL, path, name, NULL);
+    char *full = g_strconcat(path, name, NULL);
     exists = g_file_test(full, G_FILE_TEST_IS_REGULAR);
     g_free(full);
   }
@@ -490,7 +490,7 @@ gboolean project_delete(select_context_t *context, project_t *project) {
   const char *name = NULL;
   do {
     if((name = g_dir_read_name(dir))) {
-      char *fullname = g_strdup_printf("%s/%s", project->path, name);
+      char *fullname = g_strjoin("/", project->path, name, NULL);
       g_remove(fullname);
       g_free(fullname);
     }
@@ -571,8 +571,8 @@ project_t *project_new(select_context_t *context) {
   gtk_widget_destroy(dialog);
 
 
-  project->path = g_strdup_printf("%s%s/",
-             context->settings->base_path, project->name);
+  project->path = g_strconcat(
+             context->settings->base_path, project->name, "/", NULL);
   project->desc = NULL;
 
   /* no data downloaded yet */
@@ -588,7 +588,7 @@ project_t *project_new(select_context_t *context) {
   project->server   = g_strdup(context->settings->server);
 
   /* build project osm file name */
-  project->osm = g_strdup_printf("%s.osm", project->name);
+  project->osm = g_strconcat(project->name, ".osm", NULL);
 
   project->min.lat = NAN;  project->min.lon = NAN;
   project->max.lat = NAN;  project->max.lon = NAN;
@@ -737,7 +737,7 @@ static void on_project_edit(GtkButton *button, gpointer data) {
 
 
 gboolean project_osm_present(project_t *project) {
-  char *osm_name = g_strdup_printf("%s/%s.osm", project->path, project->name);
+  char *osm_name = g_strconcat(project->path, "/", project->name, ".osm", NULL);
   gboolean is_present = g_file_test(osm_name, G_FILE_TEST_EXISTS);
   g_free(osm_name);
   return is_present;
@@ -893,7 +893,7 @@ static GStatBuf file_info(const char *path, const char *name) {
   if (name[0] == '/') {
     r = g_stat(name, &st);
   } else {
-    char *str = g_strjoin(NULL, path, name, NULL);
+    char *str = g_strconcat(path, name, NULL);
     r = g_stat(str, &st);
     g_free(str);
   }
@@ -933,7 +933,7 @@ void project_filesize(project_context_t *context) {
       str = g_strdup_printf(_("%"G_GOFFSET_FORMAT" bytes present\nfrom %s"),
 			    (goffset)st.st_size, time_str);
     } else
-      str = g_strdup_printf(_("Outdated, please download!"));
+      str = g_strdup(_("Outdated, please download!"));
 
     gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog),
 		      GTK_RESPONSE_ACCEPT, !context->is_new ||
@@ -1268,11 +1268,11 @@ gboolean project_open(appdata_t *appdata, char *name) {
   project->map_state->refcount++;
 
   /* build project path */
-  project->path = g_strdup_printf("%s%s/",
-		  appdata->settings->base_path, name);
+  project->path = g_strconcat(
+		  appdata->settings->base_path, name, "/", NULL);
   project->name = g_strdup(name);
 
-  char *project_file = g_strdup_printf("%s%s.proj", project->path, name);
+  char *project_file = g_strconcat(project->path, name, ".proj", NULL);
 
   printf("project file = %s\n", project_file);
   if(!g_file_test(project_file, G_FILE_TEST_IS_REGULAR)) {

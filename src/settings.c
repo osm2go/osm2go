@@ -82,14 +82,14 @@ settings_t *settings_load(void) {
 
   /* build image path in home directory */
   if(strncmp(p, "/home", 5) == 0)
-    settings->base_path = g_strdup_printf("%s/.osm2go/", p);
+    settings->base_path = g_strconcat(p, "/.osm2go/", NULL);
   else
-    settings->base_path = g_strdup_printf("%s/osm2go/", p);
+    settings->base_path = g_strconcat(p, "/osm2go/", NULL);
 
   fprintf(stderr, "base_path = %s\n", settings->base_path);
 
   /* ------------- setup download defaults -------------------- */
-  settings->server = strdup("http://api.openstreetmap.org/api/0.6");
+  settings->server = g_strdup("http://api.openstreetmap.org/api/0.6");
   if((p = getenv("OSM_USER")))
     settings->username = g_strdup(p);
   else
@@ -98,7 +98,7 @@ settings_t *settings_load(void) {
   if((p = getenv("OSM_PASS")))
     settings->password = g_strdup(p);
   else
-    settings->password = strdup("<password>");
+    settings->password = g_strdup(_("<password>"));
 
   settings->style = g_strdup(DEFAULT_STYLE);
 
@@ -111,7 +111,7 @@ settings_t *settings_load(void) {
     store_t *st = store;
     while(st->key) {
       void **ptr = ((void*)settings) + st->offset;
-      char *key = g_strdup_printf("/apps/" PACKAGE "/%s", st->key);
+      gchar *key = g_strconcat("/apps/" PACKAGE "/", st->key, NULL);
 
       /* check if key is present */
       GConfValue *value = gconf_client_get(client, key, NULL);
@@ -148,17 +148,16 @@ settings_t *settings_load(void) {
     }
 
     /* restore wms server list */
-    char *key = g_strdup_printf("/apps/" PACKAGE "/wms/count");
-    GConfValue *value = gconf_client_get(client, key, NULL);
+    const gchar *countkey = "/apps/" PACKAGE "/wms/count";
+    GConfValue *value = gconf_client_get(client, countkey, NULL);
     if(value) {
       gconf_value_free(value);
 
-      int i, count = gconf_client_get_int(client, key, NULL);
-      g_free(key);
+      int i, count = gconf_client_get_int(client, countkey, NULL);
 
       wms_server_t **cur = &settings->wms_server;
       for(i=0;i<count;i++) {
-	key = g_strdup_printf("/apps/" PACKAGE "/wms/name%d", i);
+	gchar *key = g_strdup_printf("/apps/" PACKAGE "/wms/name%d", i);
 	char *name = gconf_client_get_string(client, key, NULL);
 	g_free(key);
 	key = g_strdup_printf("/apps/" PACKAGE "/wms/server%d", i);
@@ -182,8 +181,6 @@ settings_t *settings_load(void) {
 	}
       }
     } else {
-      g_free(key);
-
       /* add default server(s) */
       printf("No WMS servers configured, adding default\n");
       settings->wms_server = wms_server_get_default();
@@ -214,7 +211,7 @@ settings_t *settings_load(void) {
 
     /* use demo setup if present */
     if(!settings->project) {
-      char *key = g_strdup_printf("/apps/" PACKAGE "/base_path");
+      char *key = g_strdup("/apps/" PACKAGE "/base_path");
       GConfValue *value = gconf_client_get(client, key, NULL);
       if(value)
 	gconf_value_free(value);
@@ -244,7 +241,7 @@ void settings_save(settings_t *settings) {
   store_t *st = store;
   while(st->key) {
     void **ptr = ((void*)settings) + st->offset;
-    char *key = g_strdup_printf("/apps/" PACKAGE "/%s", st->key);
+    char *key = g_strconcat("/apps/" PACKAGE "/", st->key, NULL);
 
     switch(st->type) {
     case STORE_STRING:
@@ -293,9 +290,7 @@ void settings_save(settings_t *settings) {
     cur = cur->next;
   }
 
-  char *key = g_strdup_printf("/apps/" PACKAGE "/wms/count");
-  gconf_client_set_int(client, key, count, NULL);
-  g_free(key);
+  gconf_client_set_int(client, "/apps/" PACKAGE "/wms/count", count, NULL);
 }
 
 void settings_free(settings_t *settings) {

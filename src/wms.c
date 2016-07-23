@@ -1290,9 +1290,8 @@ void wms_import(appdata_t *appdata) {
   g_free(old);
 
   const char *exts[] = { "jpg", "jpg", "png", "gif" };
-  char *filename = g_strdup_printf("%s/wms.%s", appdata->project->path,
-				   exts[format]);
-
+  char *filename = g_strjoin("/wms.", appdata->project->path,
+				   exts[format], NULL);
 
   /* remove any existing image before */
   wms_remove(appdata);
@@ -1330,8 +1329,8 @@ void wms_load(appdata_t *appdata) {
   int i=0;
 
   while(exts[i][0]) {
-    char *filename = g_strdup_printf("%s/wms.%s", appdata->project->path,
-				     exts[i]);
+    char *filename = g_strjoin("/wms.", appdata->project->path,
+				     exts[i], NULL);
 
     if(g_file_test(filename, G_FILE_TEST_EXISTS)) {
       appdata->map->bg.offset.x = appdata->project->wms_offset.x;
@@ -1363,7 +1362,7 @@ void wms_remove_file(project_t *project) {
 
   while(exts[i][0]) {
     char *filename =
-      g_strdup_printf("%s/wms.%s", project->path, exts[i]);
+      g_strjoin("/wms.", project->path, exts[i], NULL);
 
     if(g_file_test(filename, G_FILE_TEST_EXISTS))
       g_remove(filename);

@@ -402,12 +402,14 @@ static GtkWidget *details_widget(tag_context_t *context, gboolean big) {
     table_attach(table, label, big?1:0, big?2:1);
     g_free(nodes_str);
 
-    char *type_str = g_strdup_printf("%s (%s)",
+    char *type_str = g_strconcat(
      (osm_way_get_last_node(context->object.way) ==
       osm_way_get_first_node(context->object.way))?
 			     "closed way":"open way",
+			     " (",
 	     (context->object.way->draw.flags & OSM_DRAW_FLAG_AREA)?
-			       "area":"line");
+			       "area":"line",
+			     ")", NULL);
 
     label = gtk_label_new(type_str);
     if(big) table_attach(table, gtk_label_new(_("Type:")), 0, 3);

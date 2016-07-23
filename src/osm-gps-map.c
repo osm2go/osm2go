@@ -415,13 +415,13 @@ replace_map_uri(OsmGpsMap *map, const gchar *uri, int zoom, int x, int y)
                 break;
             case URI_HAS_Q:
                 map_convert_coords_to_quadtree_string(map,x,y,zoom,location,'t',"qrts");
-                s = g_strdup_printf("%s", location);
+                s = g_strdup(location);
                 url = replace_string(url, URI_MARKER_Q, s);
                 //g_debug("FOUND " URI_MARKER_Q);
                 break;
             case URI_HAS_Q0:
                 map_convert_coords_to_quadtree_string(map,x,y,zoom,location,'\0', "0123");
-                s = g_strdup_printf("%s", location);
+                s = g_strdup(location);
                 url = replace_string(url, URI_MARKER_Q0, s);
                 //g_debug("FOUND " URI_MARKER_Q0);
                 break;
@@ -1515,7 +1515,7 @@ osm_gps_map_setup(OsmGpsMapPrivate *priv) {
 
     if (priv->tile_dir) {
         //the new cachedir is the given cache dir + the friendly name of the repo_uri
-        priv->cache_dir = g_strdup_printf("%s%c%s", priv->tile_dir, G_DIR_SEPARATOR, fname);
+        priv->cache_dir = g_strjoin(G_DIR_SEPARATOR_S, priv->tile_dir, fname, NULL);
         g_debug("Adjusting cache dir %s -> %s", priv->tile_dir, priv->cache_dir);
     }
 }

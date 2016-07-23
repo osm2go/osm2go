@@ -34,7 +34,7 @@
 #endif
 
 static gchar *diff_filename(const project_t *project) {
-  return g_strdup_printf("%s%s.diff", project->path, project->name);
+  return g_strconcat(project->path, project->name, ".diff", NULL);
 }
 
 static void diff_save_tags(const tag_t *tag, xmlNodePtr node) {
@@ -237,7 +237,7 @@ void diff_save(const project_t *project, const osm_t *osm) {
 
   /* check if there already is such a diff file and make it a backup */
   /* in case new diff saving fails */
-  char *backup = g_strjoin(NULL, project->path, "backup.diff", NULL);
+  char *backup = g_strconcat(project->path, "backup.diff", NULL);
   if(g_file_test(diff_name, G_FILE_TEST_IS_REGULAR)) {
     printf("backing up existing file \"%s\" to \"%s\"\n", diff_name, backup);
     g_remove(backup);
@@ -689,7 +689,7 @@ void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) {
 
   /* first try to open a backup which is only present if saving the */
   /* actual diff didn't succeed */
-  char *diff_name = g_strjoin(NULL, project->path, "backup.diff", NULL);
+  char *diff_name = g_strconcat(project->path, "backup.diff", NULL);
   if(g_file_test(diff_name, G_FILE_TEST_EXISTS)) {
     printf("diff backup present, loading it instead of real diff ...\n");
   } else {

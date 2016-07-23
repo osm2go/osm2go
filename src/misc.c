@@ -181,9 +181,9 @@ char *find_file(const char *name) {
     char *full_path = NULL;
 
     if(*path[0] == '~')
-      full_path = g_strdup_printf("%s/%s/%s", p, *path+2, name);
+      full_path = g_strjoin("/", p, *path+2, name, NULL);
     else
-      full_path = g_strdup_printf("%s/%s", *path, name);
+      full_path = g_strjoin("/", *path, name, NULL);
 
     if(g_file_test(full_path, G_FILE_TEST_IS_REGULAR))
       return full_path;
@@ -210,7 +210,7 @@ file_chain_t *file_scan(const char *pattern) {
     const char *dirname = *path;
 
     if(*path[0] == '~')
-      dirname = g_strdup_printf("%s/%s", p, *path+2);
+      dirname = g_strjoin("/", p, *path+2, NULL);
 
     if((dir = g_dir_open(dirname, 0, NULL))) {
       const char *name = NULL;
@@ -218,7 +218,7 @@ file_chain_t *file_scan(const char *pattern) {
 	name = g_dir_read_name(dir);
 
 	if(name) {
-	  char *fullname = g_strdup_printf("%s/%s", dirname, name);
+	  char *fullname = g_strjoin("/", dirname, name, NULL);
 	  if(g_file_test(fullname, G_FILE_TEST_IS_REGULAR)) {
 	    if(g_pattern_match_simple(pattern, name)) {
 	      *chainP = g_new0(file_chain_t, 1);

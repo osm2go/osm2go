@@ -23,7 +23,7 @@
 #include "misc.h"
 
 static const char *icon_exts[] = {
-  "gif", "png", "jpg", ""
+  ".gif", ".png", ".jpg", NULL
 };
 
 static gchar*
@@ -31,8 +31,8 @@ icon_file_exists(const gchar *file) {
   gchar *filename, *fullname;
   gint idx = 0;
 
-  while(icon_exts[idx][0]) {
-    filename = g_strdup_printf("icons/%s.%s", file, icon_exts[idx]);
+  while(icon_exts[idx]) {
+    filename = g_strconcat("icons/", file, icon_exts[idx], NULL);
     fullname = find_file(filename);
     g_free(filename);
 

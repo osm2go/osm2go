@@ -415,9 +415,8 @@ void josm_elemstyles_colorize_node(style_t *style, node_t *node) {
     somematch = match ? TRUE : somematch;
 
     if(match && elemstyle->icon) {
-      char *name = g_strdup_printf("styles/%s/%s",
-                   style->icon.path_prefix,
-				   elemstyle->icon->filename);
+      char *name = g_strjoin("/", "styles", style->icon.path_prefix,
+				   elemstyle->icon->filename, NULL);
 
       /* free old icon if there's one present */
       if(node->icon_buf) {

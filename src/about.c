@@ -62,8 +62,8 @@ static GtkWidget *link_new(appdata_t *appdata, const char *url) {
 #ifdef ENABLE_BROWSER_INTERFACE
   if(appdata) {
     GtkWidget *label = gtk_label_new("");
-    char *str = g_strdup_printf("<span color=\"" LINK_COLOR
-				"\"><u>%s</u></span>", url);
+    char *str = g_strconcat("<span color=\"" LINK_COLOR
+				"\"><u>", url, "</u></span>", NULL);
     gtk_label_set_markup(GTK_LABEL(label), str);
     g_free(str);
 
@@ -76,7 +76,7 @@ static GtkWidget *link_new(appdata_t *appdata, const char *url) {
   }
 #endif
   GtkWidget *label = gtk_label_new("");
-  char *str = g_strdup_printf("<span color=\"" LINK_COLOR "\">%s</span>", url);
+  char *str = g_strconcat("<span color=\"" LINK_COLOR "\">", url, "</span>", NULL);
   gtk_label_set_markup(GTK_LABEL(label), str);
   g_free(str);
   return label;

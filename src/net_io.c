@@ -191,9 +191,10 @@ void net_io_set_proxy(CURL *curl, proxy_t *proxy) {
     if(proxy->use_authentication) {
       printf("net_io:   use auth for user %s\n", proxy->authentication_user);
 
-      char *cred = g_strdup_printf("%s:%s",
+      char *cred = g_strjoin(":",
 				   proxy->authentication_user,
-				   proxy->authentication_password);
+				   proxy->authentication_password,
+				   NULL);
 
       curl_easy_setopt(curl, CURLOPT_PROXYUSERPWD, cred);
       g_free(cred);

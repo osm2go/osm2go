@@ -243,15 +243,13 @@ static style_t *style_parse(appdata_t *appdata, char *fullname) {
 style_t *style_load(appdata_t *appdata, char *name) {
   printf("Trying to load style %s\n", name);
 
-  char *filename = g_strdup_printf("%s.style", name);
+  char *filename = g_strconcat(name, ".style", NULL);
   char *fullname = find_file(filename);
   g_free(filename);
 
   if (!fullname) {
     printf("style %s not found, trying %s instead\n", name, DEFAULT_STYLE);
-    filename = g_strdup_printf("%s.style", DEFAULT_STYLE);
-    fullname = find_file(filename);
-    g_free(filename);
+    fullname = find_file(DEFAULT_STYLE ".style");
     if (!fullname) {
       printf("  style not found, failed to find fallback style too\n");
       return NULL;

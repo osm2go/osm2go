@@ -70,6 +70,11 @@ static char *osm_http_message(int id) {
   return NULL;
 }
 
+static gchar *format_credentials(const settings_t *settings)
+{
+  return g_strjoin(":", settings->username, settings->password, NULL);
+}
+
 typedef struct {
   appdata_t *appdata;
   GtkWidget *dialog;
@@ -118,12 +123,13 @@ gboolean osm_download(GtkWidget *parent, settings_t *settings,
     project->server[strlen(project->server)-1] = 0;
   }
 
-  gchar *url = g_strdup_printf("%s/map?bbox=%s,%s,%s,%s",
-		project->server, minlon, minlat, maxlon, maxlat);
+  gchar *url = g_strconcat(project->server, "/map?bbox=",
+		     minlon, ",", minlat,
+		",", maxlon, ",", maxlat, NULL);
 
   /* Download the new file to a new name. If something goes wrong then the
    * old file will still be in place to be opened. */
-  gchar *update = g_strjoin(NULL, project->path, "update.osm", NULL);
+  gchar *update = g_strconcat(project->path, "update.osm", NULL);
   g_remove(update);
 
   gboolean result = net_io_download_file(parent, settings, url, update,
@@ -137,7 +143,7 @@ gboolean osm_download(GtkWidget *parent, settings_t *settings,
     if(project->osm[0] == '/') {
       g_rename(update, project->osm);
     } else {
-      gchar *fname = g_strjoin(NULL, project->path, project->osm, NULL);
+      gchar *fname = g_strconcat(project->path, project->osm, NULL);
       g_rename(update, fname);
       g_free(fname);
     }
@@ -484,9 +490,7 @@ static void osm_delete_nodes(osm_upload_context_t *context) {
 
       char *url = g_strdup_printf("%s/node/" ITEM_ID_FORMAT,
 				  project->server, OSM_ID(node));
-      char *cred = g_strdup_printf("%s:%s",
-				   context->appdata->settings->username,
-				   context->appdata->settings->password);
+      gchar *cred = format_credentials(context->appdata->settings);
 
       char *xml_str =
 	osm_generate_xml_node(context->osm, context->changeset, node);
@@ -515,7 +519,7 @@ static void osm_upload_nodes(osm_upload_context_t *context) {
       char *url = NULL;
 
       if(OSM_FLAGS(node) & OSM_FLAG_NEW) {
-	url = g_strdup_printf("%s/node/create", project->server);
+	url = g_strconcat(project->server, "/node/create", NULL);
 	appendf(&context->log, NULL, _("New node "));
       } else {
 	url = g_strdup_printf("%s/node/" ITEM_ID_FORMAT,
@@ -529,9 +533,8 @@ static void osm_upload_nodes(osm_upload_context_t *context) {
       if(xml_str) {
 	printf("uploading node %s from address %p\n", url, xml_str);
 
-	char *cred = g_strdup_printf("%s:%s",
-				     context->appdata->settings->username,
-				     context->appdata->settings->password);
+        gchar *cred = format_credentials(context->appdata->settings);
+
 	if(osm_update_item(&context->log, xml_str, url, cred,
 	   (OSM_FLAGS(node) & OSM_FLAG_NEW)?&(OSM_ID(node)):&OSM_VERSION(node),
 			   context->proxy)) {
@@ -561,9 +564,7 @@ static void osm_delete_ways(osm_upload_context_t *context) {
 
       char *url = g_strdup_printf("%s/way/" ITEM_ID_FORMAT,
 				  project->server, OSM_ID(way));
-      char *cred = g_strdup_printf("%s:%s",
-				   context->appdata->settings->username,
-				   context->appdata->settings->password);
+      gchar *cred = format_credentials(context->appdata->settings);
 
       char *xml_str =
 	osm_generate_xml_way(context->osm, context->changeset, way);
@@ -593,7 +594,7 @@ static void osm_upload_ways(osm_upload_context_t *context) {
       char *url = NULL;
 
       if(OSM_FLAGS(way) & OSM_FLAG_NEW) {
-	url = g_strdup_printf("%s/way/create", project->server);
+	url = g_strconcat(project->server, "/way/create", NULL);
 	appendf(&context->log, NULL, _("New way "));
       } else {
 	url = g_strdup_printf("%s/way/" ITEM_ID_FORMAT,
@@ -607,9 +608,8 @@ static void osm_upload_ways(osm_upload_context_t *context) {
       if(xml_str) {
 	printf("uploading way %s from address %p\n", url, xml_str);
 
-	char *cred = g_strdup_printf("%s:%s",
-				     context->appdata->settings->username,
-				     context->appdata->settings->password);
+        gchar *cred = format_credentials(context->appdata->settings);
+
 	if(osm_update_item(&context->log, xml_str, url, cred,
 	   (OSM_FLAGS(way) & OSM_FLAG_NEW)?&(OSM_ID(way)):&OSM_VERSION(way),
 			   context->proxy)) {
@@ -640,9 +640,7 @@ static void osm_delete_relations(osm_upload_context_t *context) {
 
       char *url = g_strdup_printf("%s/relation/" ITEM_ID_FORMAT,
 				  project->server, OSM_ID(relation));
-      char *cred = g_strdup_printf("%s:%s",
-				   context->appdata->settings->username,
-				   context->appdata->settings->password);
+      gchar *cred = format_credentials(context->appdata->settings);
 
       char *xml_str =
 	osm_generate_xml_relation(context->osm, context->changeset, relation);
@@ -687,9 +685,8 @@ static void osm_upload_relations(osm_upload_context_t *context) {
       if(xml_str) {
 	printf("uploading relation %s from address %p\n", url, xml_str);
 
-	char *cred = g_strdup_printf("%s:%s",
-				     context->appdata->settings->username,
-				     context->appdata->settings->password);
+        gchar *cred = format_credentials(context->appdata->settings);
+
 	if(osm_update_item(&context->log, xml_str, url, cred,
 	   (OSM_FLAGS(relation) & OSM_FLAG_NEW)?&(OSM_ID(relation)):&
 			   OSM_VERSION(relation), context->proxy)) {
@@ -720,9 +717,7 @@ static gboolean osm_create_changeset(osm_upload_context_t *context) {
   if(xml_str) {
     printf("creating changeset %s from address %p\n", url, xml_str);
 
-    char *cred = g_strdup_printf("%s:%s",
-				 context->appdata->settings->username,
-				 context->appdata->settings->password);
+    gchar *cred = format_credentials(context->appdata->settings);
 
     if(osm_update_item(&context->log, xml_str, url, cred,
 		       &context->changeset, context->proxy)) {
@@ -750,9 +745,7 @@ static gboolean osm_close_changeset(osm_upload_context_t *context) {
 			      project->server, context->changeset);
   appendf(&context->log, NULL, _("Close changeset "));
 
-  char *cred = g_strdup_printf("%s:%s",
-			       context->appdata->settings->username,
-			       context->appdata->settings->password);
+  gchar *cred = format_credentials(context->appdata->settings);
 
   if(osm_update_item(&context->log, NULL, url, cred, NULL, context->proxy))
     result = TRUE;
