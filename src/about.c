@@ -132,26 +132,22 @@ GtkWidget *license_page_new(void) {
 
   GtkWidget *label = label_wrap("");
 
-  /* load license into buffer */
-  FILE *file = fopen(name, "r");
+  GMappedFile *licMap = g_mapped_file_new(name, FALSE, NULL);
   g_free(name);
-
-  if(!file) {
+  if (licMap == NULL) {
     /* loading from installation path failed, try to load */
     /* from local directory (for debugging) */
-    file = fopen("./data/COPYING", "r");
+    licMap = g_mapped_file_new("./data/COPYING", FALSE, NULL);
   }
 
-  if(file) {
-    fseek(file, 0l, SEEK_END);
-    int flen = ftell(file);
-    fseek(file, 0l, SEEK_SET);
-
-    char *buffer = g_malloc(flen+1);
-    fread(buffer, 1, flen, file);
-    fclose(file);
-
-    buffer[flen]=0;
+  if(licMap) {
+    gchar *buffer = g_strndup(g_mapped_file_get_contents(licMap),
+                              g_mapped_file_get_length(licMap));
+#if GLIB_CHECK_VERSION(2,22,0)
+    g_mapped_file_unref(licMap);
+#else
+    g_mapped_file_free(licMap);
+#endif
 
     gtk_label_set_text(GTK_LABEL(label), buffer);
 
