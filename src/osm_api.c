@@ -469,9 +469,9 @@ static GtkWidget *table_attach_label_l(GtkWidget *table, char *str,
 
 static GtkWidget *table_attach_int(GtkWidget *table, int num,
 				   int x1, int x2, int y1, int y2) {
-  char *str = g_strdup_printf("%d", num);
+  gchar str[G_ASCII_DTOSTR_BUF_SIZE];
+  g_snprintf(str, sizeof(str), "%d", num);
   GtkWidget *label = table_attach_label_c(table, str, x1, x2, y1, y2);
-  g_free(str);
   return label;
 }
 

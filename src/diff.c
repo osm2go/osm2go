@@ -54,9 +54,9 @@ static void diff_save_state_n_id(int flags, xmlNodePtr node, item_id_t id) {
     xmlNewProp(node, BAD_CAST "state", BAD_CAST "new");
 
   /* all items need an id */
-  char *id_str = g_strdup_printf(ITEM_ID_FORMAT, id);
+  gchar id_str[G_ASCII_DTOSTR_BUF_SIZE];
+  g_snprintf(id_str, sizeof(id_str), ITEM_ID_FORMAT, id);
   xmlNewProp(node, BAD_CAST "id", BAD_CAST id_str);
-  g_free(id_str);
 }
 
 static void diff_save_nodes(const node_t *node, xmlNodePtr root_node) {
@@ -108,9 +108,9 @@ static void diff_save_ways(const way_t *way, xmlNodePtr root_node) {
 	while(node_chain) {
 	  xmlNodePtr node_node = xmlNewChild(node_way, NULL,
 					     BAD_CAST "nd", NULL);
-	  char *id = g_strdup_printf(ITEM_ID_FORMAT, OSM_ID(node_chain->node));
+	  gchar id[G_ASCII_DTOSTR_BUF_SIZE];
+	  g_snprintf(id, sizeof(id), ITEM_ID_FORMAT, OSM_ID(node_chain->node));
 	  xmlNewProp(node_node, BAD_CAST "ref", BAD_CAST id);
-	  g_free(id);
 	  node_chain = node_chain->next;
 	}
 	diff_save_tags(OSM_TAG(way), node_way);
@@ -138,34 +138,34 @@ static void diff_save_relations(const relation_t *relation, xmlNodePtr root_node
 	  xmlNodePtr node_member = xmlNewChild(node_rel, NULL,
 					     BAD_CAST "member", NULL);
 
-	  char *ref = NULL;
+	  gchar ref[G_ASCII_DTOSTR_BUF_SIZE];
 	  switch(member->object.type) {
 	  case NODE:
 	    xmlNewProp(node_member, BAD_CAST "type", BAD_CAST "node");
-	    ref = g_strdup_printf(ITEM_ID_FORMAT, OBJECT_ID(member->object));
+	    g_snprintf(ref, sizeof(ref), ITEM_ID_FORMAT, OBJECT_ID(member->object));
 	    break;
 	  case WAY:
 	    xmlNewProp(node_member, BAD_CAST "type", BAD_CAST "way");
-	    ref = g_strdup_printf(ITEM_ID_FORMAT, OBJECT_ID(member->object));
+	    g_snprintf(ref, sizeof(ref), ITEM_ID_FORMAT, OBJECT_ID(member->object));
 	    break;
 	  case RELATION:
 	    xmlNewProp(node_member, BAD_CAST "type", BAD_CAST "relation");
-	    ref = g_strdup_printf(ITEM_ID_FORMAT, OBJECT_ID(member->object));
+	    g_snprintf(ref, sizeof(ref), ITEM_ID_FORMAT, OBJECT_ID(member->object));
 	    break;
 
 	    /* XXX_ID's are used if this is a reference to an item not */
 	    /* stored in this xml data set */
 	  case NODE_ID:
 	    xmlNewProp(node_member, BAD_CAST "type", BAD_CAST "node");
-	    ref = g_strdup_printf(ITEM_ID_FORMAT, member->object.id);
+	    g_snprintf(ref, sizeof(ref), ITEM_ID_FORMAT, member->object.id);
 	    break;
 	  case WAY_ID:
 	    xmlNewProp(node_member, BAD_CAST "type", BAD_CAST "way");
-	    ref = g_strdup_printf(ITEM_ID_FORMAT, member->object.id);
+	    g_snprintf(ref, sizeof(ref), ITEM_ID_FORMAT, member->object.id);
 	    break;
 	  case RELATION_ID:
 	    xmlNewProp(node_member, BAD_CAST "type", BAD_CAST "relation");
-	    ref = g_strdup_printf(ITEM_ID_FORMAT, member->object.id);
+	    g_snprintf(ref, sizeof(ref), ITEM_ID_FORMAT, member->object.id);
 	    break;
 
 	  default:
@@ -175,7 +175,6 @@ static void diff_save_relations(const relation_t *relation, xmlNodePtr root_node
 	  }
 
 	  xmlNewProp(node_member, BAD_CAST "ref", BAD_CAST ref);
-	  g_free(ref);
 
 	  if(member->role)
 	    xmlNewProp(node_member, BAD_CAST "role", BAD_CAST member->role);

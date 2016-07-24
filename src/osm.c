@@ -1258,9 +1258,9 @@ static char *osm_generate_xml(osm_t *osm, item_id_t changeset,
       node_chain_t *node_chain = way->node_chain;
       while(node_chain) {
 	xmlNodePtr nd_node = xmlNewChild(way_node, NULL, BAD_CAST "nd", NULL);
-	char *str = g_strdup_printf(ITEM_ID_FORMAT, OSM_ID(node_chain->node));
+	gchar str[G_ASCII_DTOSTR_BUF_SIZE];
+	g_snprintf(str, sizeof(str), ITEM_ID_FORMAT, OSM_ID(node_chain->node));
 	xmlNewProp(nd_node, BAD_CAST "ref", BAD_CAST str);
-	g_free(str);
 	node_chain = node_chain->next;
       }
 
@@ -1283,7 +1283,8 @@ static char *osm_generate_xml(osm_t *osm, item_id_t changeset,
       member_t *member = relation->member;
       while(member) {
 	xmlNodePtr m_node = xmlNewChild(rel_node,NULL,BAD_CAST "member", NULL);
-	char *str = g_strdup_printf(ITEM_ID_FORMAT, OBJECT_ID(member->object));
+	gchar str[G_ASCII_DTOSTR_BUF_SIZE];
+	g_snprintf(str, sizeof(str), ITEM_ID_FORMAT, OBJECT_ID(member->object));
 
 	switch(member->object.type) {
 	case NODE:
@@ -1302,10 +1303,7 @@ static char *osm_generate_xml(osm_t *osm, item_id_t changeset,
 	  break;
 	}
 
-	if(str) {
-	  xmlNewProp(m_node, BAD_CAST "ref", BAD_CAST str);
-	  g_free(str);
-	}
+	xmlNewProp(m_node, BAD_CAST "ref", BAD_CAST str);
 
 	if(member->role)
 	  xmlNewProp(m_node, BAD_CAST "role", BAD_CAST member->role);
