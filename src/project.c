@@ -966,16 +966,15 @@ static gboolean project_active_n_dirty(project_context_t *context) {
 }
 
 void project_diffstat(project_context_t *context) {
-  char *str = NULL;
+  const char *str;
 
   if(diff_present(context->project) || project_active_n_dirty(context)) {
     /* this should prevent the user from changing the area */
-    str = g_strdup(_("unsaved changes pending"));
+    str = _("unsaved changes pending");
   } else
-    str = g_strdup(_("no pending changes"));
+    str = _("no pending changes");
 
   gtk_label_set_text(GTK_LABEL(context->diff_stat), str);
-  g_free(str);
 }
 
 static gboolean

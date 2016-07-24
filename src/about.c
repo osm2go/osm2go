@@ -139,9 +139,7 @@ GtkWidget *license_page_new(void) {
   if(!file) {
     /* loading from installation path failed, try to load */
     /* from local directory (for debugging) */
-    name = g_strdup("./data/COPYING");
-    file = fopen(name, "r");
-    g_free(name);
+    file = fopen("./data/COPYING", "r");
   }
 
   if(file) {
