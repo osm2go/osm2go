@@ -459,7 +459,7 @@ static GtkWidget *details_widget(tag_context_t *context, gboolean big) {
 
   default:
     printf("ERROR: No node, way or relation\n");
-    g_assert(0);
+    g_assert_not_reached();
     break;
   } }
 
@@ -541,9 +541,7 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
     break;
 
   default:
-    g_assert((context->object.type == NODE) ||
-	     (context->object.type == WAY) ||
-	     (context->object.type == RELATION));
+    g_assert_not_reached();
     break;
   }
 

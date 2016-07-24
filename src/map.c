@@ -355,8 +355,7 @@ static void map_object_select(appdata_t *appdata, object_t *object) {
     map_relation_select(appdata, object->relation);
     break;
   default:
-    g_assert((object->type == NODE)||(object->type == RELATION)||
-	     (object->type == WAY));
+    g_assert_not_reached();
     break;
   }
 }
@@ -605,8 +604,7 @@ static void map_item_draw(map_t *map, map_item_t *map_item) {
     map_way_draw(map, map_item->object.way);
     break;
   default:
-    g_assert((map_item->object.type == NODE) ||
-	     (map_item->object.type == WAY));
+    g_assert_not_reached();
   }
 }
 
@@ -621,8 +619,7 @@ static void map_item_remove(map_t *map, map_item_t *map_item) {
     chainP = &map_item->object.way->map_item_chain;
     break;
   default:
-    g_assert((map_item->object.type == NODE) ||
-	     (map_item->object.type == WAY));
+    g_assert_not_reached();
   }
 
   map_item_chain_destroy(chainP);
@@ -637,8 +634,7 @@ static void map_item_init(style_t *style, map_item_t *map_item) {
       josm_elemstyles_colorize_node(style, map_item->object.node);
       break;
     default:
-      g_assert((map_item->object.type == NODE) ||
-	           (map_item->object.type == WAY));
+      g_assert_not_reached();
   }
 }
 
@@ -908,8 +904,7 @@ map_item_t *map_real_item_at(map_t *map, gint x, gint y) {
     break;
 
   default:
-    g_assert((map_item->object.type == NODE) ||
-	     (map_item->object.type == WAY));
+    g_assert_not_reached();
     break;
   }
 
@@ -1232,9 +1227,6 @@ gboolean map_item_is_selected_node(map_t *map, map_item_t *map_item) {
     printf("  selected item is unknown\n");
     return FALSE;
   }
-
-  g_assert(0);
-  return TRUE;
 }
 
 /* return true if the item given is the currenly selected way */
@@ -1322,8 +1314,7 @@ static void map_handle_click(appdata_t *appdata, map_t *map) {
       break;
 
     default:
-      g_assert((map_item.object.type == NODE) ||
-	       (map_item.object.type == WAY));
+      g_assert_not_reached();
       break;
     }
   }
@@ -2070,8 +2061,7 @@ void map_delete_selected(appdata_t *appdata) {
     break;
 
   default:
-    g_assert((item.object.type == NODE) ||
-	     (item.object.type == WAY));
+    g_assert_not_reached();
     break;
   }
   undo_close_state(appdata);

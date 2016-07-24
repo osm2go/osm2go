@@ -998,7 +998,7 @@ static osm_t *process_osm(xmlTextReaderPtr reader) {
 	if(*relation) relation = &(*relation)->next;
       } else {
 	printf("something unknown found\n");
-	g_assert(0);
+	g_assert_not_reached();
 	skip_element(reader);
       }
       break;
@@ -1020,7 +1020,7 @@ static osm_t *process_osm(xmlTextReaderPtr reader) {
     }
   }
 
-  g_assert(0);
+  g_assert_not_reached();
   return NULL;
 }
 
@@ -1320,7 +1320,7 @@ static char *osm_generate_xml(osm_t *osm, item_id_t changeset,
 
   default:
     printf("neither NODE nor WAY nor RELATION\n");
-    g_assert(0);
+    g_assert_not_reached();
     break;
   }
 
@@ -1459,7 +1459,7 @@ item_id_t osm_new_way_id(osm_t *osm) {
 
     id--;
   }
-  g_assert(0);
+  g_assert_not_reached();
   return 0;
 }
 
@@ -1481,7 +1481,7 @@ item_id_t osm_new_node_id(osm_t *osm) {
 
     id--;
   }
-  g_assert(0);
+  g_assert_not_reached();
   return 0;
 }
 
@@ -1503,7 +1503,7 @@ item_id_t osm_new_relation_id(osm_t *osm) {
 
     id--;
   }
-  g_assert(0);
+  g_assert_not_reached();
   return 0;
 }
 

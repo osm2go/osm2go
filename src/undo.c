@@ -82,7 +82,7 @@ static void undo_object_free(osm_t *osm, object_t *obj) {
     default:
       printf("ERROR: unsupported object %s\n",
 	     osm_object_type_string(obj));
-      g_assert(0);
+      g_assert_not_reached();
       break;
     }
   }
@@ -410,7 +410,7 @@ static void undo_operation_object_restore(appdata_t *appdata, object_t *obj,
 
   default:
     printf("Unsupported object type\n");
-    g_assert(0);
+    g_assert_not_reached();
     break;
   }
 }
@@ -426,7 +426,7 @@ static void undo_operation(appdata_t *appdata, undo_op_t *op) {
 
   default:
     printf("unsupported UNDO operation\n");
-    g_assert(0);
+    g_assert_not_reached();
     break;
   }
 }

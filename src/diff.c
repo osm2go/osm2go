@@ -170,10 +170,10 @@ static void diff_save_relations(const relation_t *relation, xmlNodePtr root_node
 
 	  default:
 	    printf("unexpected member type %d\n", member->object.type);
+	    g_assert_not_reached();
 	    break;
 	  }
 
-	  g_assert(ref);
 	  xmlNewProp(node_member, BAD_CAST "ref", BAD_CAST ref);
 	  g_free(ref);
 
@@ -292,7 +292,7 @@ static int xml_get_prop_state(xmlNode *node) {
       xmlFree(str);
     }
 
-    g_assert(0);
+    g_assert_not_reached();
   }
 
   return OSM_FLAG_DIRTY;

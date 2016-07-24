@@ -189,7 +189,7 @@ static void relation_remove_item(relation_t *relation, object_t *object) {
     } else
       member = &(*member)->next;
   }
-  g_assert(0);
+  g_assert_not_reached();
 }
 
 /* try to find something descriptive */
@@ -466,7 +466,7 @@ void relation_membership_dialog(GtkWidget *parent,
 			  OBJECT_ID(*object));
     break;
   default:
-    g_assert((object->type == NODE) || (object->type == WAY));
+    g_assert_not_reached();
     break;
   }
 

@@ -385,8 +385,7 @@ canvas_item_t *canvas_item_info_get_at(canvas_t *canvas, gint x, gint y) {
       } break;
 
       default:
-	g_assert(item->type == CANVAS_ITEM_CIRCLE ||
-		 item->type == CANVAS_ITEM_POLY);
+	g_assert_not_reached();
 	break;
       }
 
