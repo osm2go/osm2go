@@ -136,8 +136,9 @@ static int josm_type_bit(const char *type) {
 }
 
 /* parse a comma seperated list of types and set their bits */
-static int josm_type_parse(char *type) {
+static int josm_type_parse(xmlChar *xtype) {
   int type_mask = 0;
+  char *type = (char*)xtype;
 
   if(!type) return PRESETS_TYPE_ALL;
 
@@ -149,7 +150,7 @@ static int josm_type_parse(char *type) {
   }
 
   type_mask |= josm_type_bit(type);
-  xmlFree(type);
+  xmlFree(xtype);
   return type_mask;
 }
 
@@ -268,7 +269,7 @@ static presets_item_t *parse_item(xmlDocPtr doc, xmlNode *a_node) {
     josm_icon_name_adjust((char*)xmlGetProp(a_node, BAD_CAST "icon"));
 
   item->type =
-    josm_type_parse((char*)xmlGetProp(a_node, BAD_CAST "type"));
+    josm_type_parse(xmlGetProp(a_node, BAD_CAST "type"));
 
   presets_widget_t **widget = &item->widget;
   parse_widgets(a_node, item, widget);
