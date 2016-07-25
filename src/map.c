@@ -1692,6 +1692,12 @@ gboolean map_key_press_event(appdata_t *appdata, GdkEventKey *event) {
 	map_action_cancel(appdata);
       break;
 
+    case GDK_Delete:
+      /* if the delete button is enabled, call its function */
+      if(GTK_WIDGET_FLAGS(appdata->iconbar->trash) & GTK_SENSITIVE)
+	map_delete_selected(appdata);
+      break;
+
 #ifdef USE_HILDON
     case HILDON_HARDKEY_INCREASE:
 #else
