@@ -438,6 +438,18 @@ static gint table_expose_event(GtkWidget *widget, GdkEventExpose *event,
 }
 #endif
 
+static gboolean is_widget_interactive(const presets_widget_t *w)
+{
+  switch(w->type) {
+  case WIDGET_TYPE_LABEL:
+  case WIDGET_TYPE_SEPARATOR:
+  case WIDGET_TYPE_KEY:
+    return FALSE;
+  default:
+    return TRUE;
+  }
+}
+
 static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
 		     presets_item_t *item, tag_t *orig_tag) {
   GtkWidget *dialog = NULL;
@@ -457,9 +469,7 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
   /* at all if there's no interactive gui element at all */
   gint widget_cnt = 0, interactive_widget_cnt = 0;
   while(widget) {
-    if((widget->type != WIDGET_TYPE_LABEL) &&
-       (widget->type != WIDGET_TYPE_SEPARATOR) &&
-       (widget->type != WIDGET_TYPE_KEY))
+    if(is_widget_interactive(widget))
       interactive_widget_cnt++;
 
     widget_cnt++;
@@ -755,8 +765,23 @@ cb_menu_item(GtkWidget *menu_item, gpointer data) {
   do_item(context, item);
 }
 
+static GtkWidget *create_menuitem(presets_context_t *context, presets_item_t *item)
+{
+  GtkWidget *menu_item;
+
+  if(!item->icon)
+    menu_item = gtk_menu_item_new_with_label(item->name);
+  else {
+    menu_item = gtk_image_menu_item_new_with_label(item->name);
+    gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(menu_item),
+                                  icon_widget_load(&context->appdata->icon, item->icon));
+  }
+
+  return menu_item;
+}
+
 static GtkWidget *build_menu(presets_context_t *context,
-			     presets_item_t *item) {
+			     presets_item_t *item, GtkWidget **matches) {
   GtkWidget *menu = gtk_menu_new();
 
   while(item) {
@@ -766,21 +791,45 @@ static GtkWidget *build_menu(presets_context_t *context,
     if(item->type & context->tag_context->presets_type) {
 
       if(item->name) {
-	if(!item->icon)
-	  menu_item = gtk_menu_item_new_with_label(item->name);
-	else {
-	  menu_item = gtk_image_menu_item_new_with_label(item->name);
-	  gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(menu_item),
-			icon_widget_load(&context->appdata->icon, item->icon));
-	}
+	menu_item = create_menuitem(context, item);
 
 	if(item->is_group)
 	  gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item),
-				    build_menu(context, item->group));
+				    build_menu(context, item->group, matches));
 	else {
 	  g_object_set_data(G_OBJECT(menu_item), "item", item);
 	  g_signal_connect(menu_item, "activate",
 			   GTK_SIGNAL_FUNC(cb_menu_item), context);
+
+	  gboolean matches_all = FALSE;
+	  gboolean is_interactive = FALSE;
+	  const presets_widget_t *w = item->widget;
+	  for(w = item->widget; w; w = w->next) {
+	    if(w->type != WIDGET_TYPE_KEY) {
+	      is_interactive |= is_widget_interactive(w);
+	      continue;
+	    }
+	    const tag_t t = {
+	      .key = w->key,
+	      .value = w->key_w.value
+	    };
+	    if(osm_tag_key_and_value_present(*(context->tag_context->tag), &t)) {
+	      matches_all = TRUE;
+	    } else {
+	      matches_all = FALSE;
+	      break;
+	    }
+	  }
+	  if(matches_all && is_interactive) {
+	    if(!*matches)
+	      *matches = gtk_menu_new();
+
+	    GtkWidget *used_item = create_menuitem(context, item);
+	    g_object_set_data(G_OBJECT(used_item), "item", item);
+	    g_signal_connect(used_item, "activate",
+	                     GTK_SIGNAL_FUNC(cb_menu_item), context);
+	    gtk_menu_shell_append(GTK_MENU_SHELL(*matches), used_item);
+	  }
 	}
       } else
 	menu_item = gtk_separator_menu_item_new();
@@ -975,8 +1024,16 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event,
     printf("button press %d %d\n", event->button, event->time);
 
 #ifndef PICKER_MENU
-    if (!context->menu)
-      context->menu = build_menu(context, context->appdata->presets);
+    if (!context->menu) {
+      GtkWidget *matches = NULL;
+      context->menu = build_menu(context, context->appdata->presets, &matches);
+      if(matches) {
+        GtkWidget *menu_item = gtk_menu_item_new_with_label(_("Used presets"));
+
+        gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item), matches);
+        gtk_menu_shell_prepend(GTK_MENU_SHELL(context->menu), menu_item);
+      }
+    }
     gtk_widget_show_all( GTK_WIDGET(context->menu) );
 
     gtk_menu_popup(GTK_MENU(context->menu), NULL, NULL, NULL, NULL,
