@@ -117,7 +117,7 @@ char *josm_icon_name_adjust(char *name) {
   return name;
 }
 
-static int josm_type_bit(const char *type) {
+static int josm_type_bit(const char *type, char sep) {
   struct { int bit; char *str; } types[] = {
     { PRESETS_TYPE_WAY,       "way"       },
     { PRESETS_TYPE_NODE,      "node"      },
@@ -127,7 +127,8 @@ static int josm_type_bit(const char *type) {
 
   int i;
   for(i=0;types[i].bit;i++) {
-    if(strcasecmp(types[i].str, type) == 0)
+    const size_t tlen = strlen(types[i].str);
+    if(strncmp(types[i].str, type, tlen) == 0 && type[tlen] == sep)
       return types[i].bit;
   }
 
@@ -138,18 +139,18 @@ static int josm_type_bit(const char *type) {
 /* parse a comma seperated list of types and set their bits */
 static int josm_type_parse(xmlChar *xtype) {
   int type_mask = 0;
-  char *type = (char*)xtype;
+  const char *type = (const char*)xtype;
 
   if(!type) return PRESETS_TYPE_ALL;
 
-  while(strchr(type, ',')) {
-    *strchr(type, ',') = 0;
-
-    type_mask |= josm_type_bit(type);
-    type = type + strlen(type) + 1;
+  const char *ntype = strchr(type, ',');
+  while(ntype) {
+    type_mask |= josm_type_bit(type, ',');
+    type = ntype + 1;
+    ntype = strchr(type, ',');
   }
 
-  type_mask |= josm_type_bit(type);
+  type_mask |= josm_type_bit(type, '\0');
   xmlFree(xtype);
   return type_mask;
 }
