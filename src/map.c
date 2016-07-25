@@ -1702,6 +1702,7 @@ gboolean map_key_press_event(appdata_t *appdata, GdkEventKey *event) {
     case HILDON_HARDKEY_INCREASE:
 #else
     case '+':
+    case GDK_KP_Add:
 #endif
       zoom = appdata->map->state->zoom;
       zoom *= ZOOM_FACTOR_BUTTON;
@@ -1714,6 +1715,7 @@ gboolean map_key_press_event(appdata_t *appdata, GdkEventKey *event) {
     case HILDON_HARDKEY_DECREASE:
 #else
     case '-':
+    case GDK_KP_Subtract:
 #endif
       zoom = appdata->map->state->zoom;
       zoom /= ZOOM_FACTOR_BUTTON;
