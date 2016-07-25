@@ -193,16 +193,13 @@ static void relation_remove_item(relation_t *relation, object_t *object) {
 }
 
 /* try to find something descriptive */
-static char *relation_get_descriptive_name(relation_t *relation) {
-  char *name = osm_tag_get_by_key(OSM_TAG(relation), "ref");
-  if (!name)
-    name = osm_tag_get_by_key(OSM_TAG(relation), "name");
-  if (!name)
-    name = osm_tag_get_by_key(OSM_TAG(relation), "description");
-  if (!name)
-    name = osm_tag_get_by_key(OSM_TAG(relation), "note");
-  if (!name)
-    name = osm_tag_get_by_key(OSM_TAG(relation), "fix" "me");
+static gchar *relation_get_descriptive_name(relation_t *relation) {
+  gchar *name = NULL;
+  const char *keys[] = { "ref", "name", "description", "note", "fix" "me", NULL};
+  unsigned int i;
+  for (i = 0; (keys[i] != NULL) && (name == NULL); i++)
+    name = osm_tag_get_by_key(OSM_TAG(relation), keys[i]);
+
   if(!name)
     name = g_strdup_printf("<ID #"ITEM_ID_FORMAT">", OSM_ID(relation));
 
