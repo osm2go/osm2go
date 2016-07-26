@@ -62,7 +62,8 @@ typedef struct {
 
   char *url, *user;
   gboolean cancel;
-  float progress;
+  curl_off_t download_cur;
+  curl_off_t download_end;
 
   /* curl/http related stuff: */
   CURLcode res;
@@ -103,7 +104,7 @@ static void on_cancel(GtkWidget *widget, gpointer data) {
 }
 
 /* create the dialog box shown while worker is running */
-static GtkWidget *busy_dialog(GtkWidget *parent, GtkWidget **pbar,
+static GtkWidget *busy_dialog(GtkWidget *parent, GtkProgressBar **pbar,
 			      gboolean *cancel_ind, const char *title) {
   GtkWidget *dialog = gtk_dialog_new();
 
@@ -120,10 +121,11 @@ static GtkWidget *busy_dialog(GtkWidget *parent, GtkWidget **pbar,
   gtk_window_set_transient_for(GTK_WINDOW(dialog), GTK_WINDOW(parent));
 
   g_assert(pbar);
-  *pbar = gtk_progress_bar_new();
-  gtk_progress_bar_set_pulse_step(GTK_PROGRESS_BAR(*pbar), 0.1);
+  /* extra cast as the version used in Maemo returns GtkWidget for whatever reason */
+  *pbar = GTK_PROGRESS_BAR(gtk_progress_bar_new());
+  gtk_progress_bar_set_pulse_step(*pbar, 0.1);
 
-  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), *pbar);
+  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), GTK_WIDGET(*pbar));
 
   GtkWidget *button = button_new_with_label(_("Cancel"));
   gtk_signal_connect(GTK_OBJECT(button), "clicked",
@@ -157,11 +159,18 @@ static void request_free(net_io_request_t *request) {
   g_free(request);
 }
 
+#ifdef CURLOPT_XFERINFOFUNCTION
+static int curl_progress_func(void *req,
+			    curl_off_t t, /* dltotal */ curl_off_t d, /* dlnow */
+			    curl_off_t ultotal, curl_off_t ulnow) {
+#else
 static int curl_progress_func(void *req,
 			    double t, /* dltotal */ double d, /* dlnow */
 			    double ultotal, double ulnow) {
+#endif
   net_io_request_t *request = req;
-  request->progress = t?d/t:0;
+  request->download_cur = (curl_off_t)d;
+  request->download_end = (curl_off_t)t;
   return 0;
 }
 
@@ -261,7 +270,11 @@ static void *worker_thread(void *ptr) {
 
       /* setup progress notification */
       curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
+#ifdef CURLOPT_XFERINFOFUNCTION
+      curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, curl_progress_func);
+#else
       curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, curl_progress_func);
+#endif
       curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, request);
 
       curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, request->buffer);
@@ -307,7 +320,7 @@ static gboolean net_io_do(GtkWidget *parent, net_io_request_t *request,
   /* the user activated some cancel button. The client will learn this */
   /* from the fact that it's holding the only reference to the request */
 
-  GtkWidget *pbar = NULL;
+  GtkProgressBar *pbar = NULL;
   GtkWidget *dialog = busy_dialog(parent, &pbar, &request->cancel, title);
 
   /* create worker thread */
@@ -329,18 +342,24 @@ static gboolean net_io_do(GtkWidget *parent, net_io_request_t *request,
   }
 
   /* wait for worker thread */
-  float progress = 0;
+  curl_off_t last = 0;
   while(request->refcount > 1 && !request->cancel) {
     while(gtk_events_pending())
       gtk_main_iteration();
 
     /* worker has made progress changed the progress value */
-    if(request->progress != progress) {
-      gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(pbar), request->progress);
-      progress = request->progress;
-    } else
-      if(!progress)
-	gtk_progress_bar_pulse(GTK_PROGRESS_BAR(pbar));
+    if(request->download_cur != last) {
+      if(request->download_end != 0) {
+        gdouble progress = (gdouble)request->download_cur / (gdouble)request->download_end;
+        gtk_progress_bar_set_fraction(pbar, progress);
+      } else {
+        gtk_progress_bar_pulse(pbar);
+      }
+
+      gchar buf[G_ASCII_DTOSTR_BUF_SIZE];
+      g_snprintf(buf, sizeof(buf), "%llu", (unsigned long long)request->download_cur);
+      gtk_progress_bar_set_text(pbar, buf);
+    }
 
     usleep(100000);
   }
