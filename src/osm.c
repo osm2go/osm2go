@@ -119,12 +119,12 @@ tag_t *osm_parse_osm_tag(xmlNode *a_node) {
   tag_t *tag = g_new0(tag_t, 1);
 
   char *prop;
-  if((prop = (char*)xmlGetProp(a_node, (unsigned char*)"k"))) {
+  if((prop = (char*)xmlGetProp(a_node, BAD_CAST "k"))) {
     if(strlen(prop) > 0) tag->key = g_strdup(prop);
     xmlFree(prop);
   }
 
-  if((prop = (char*)xmlGetProp(a_node, (unsigned char*)"v"))) {
+  if((prop = (char*)xmlGetProp(a_node, BAD_CAST "v"))) {
     if(strlen(prop) > 0) tag->value = g_strdup(prop);
     xmlFree(prop);
   }
@@ -375,7 +375,7 @@ gboolean osm_node_chain_diff(const node_chain_t *n1, const node_chain_t *n2) {
 node_chain_t *osm_parse_osm_way_nd(osm_t *osm, xmlNode *a_node) {
   xmlChar *prop;
 
-  if((prop = xmlGetProp(a_node, (unsigned char*)"ref"))) {
+  if((prop = xmlGetProp(a_node, BAD_CAST "ref"))) {
     item_id_t id = strtoll((char*)prop, NULL, 10);
     node_chain_t *node_chain = g_new0(node_chain_t, 1);
 
@@ -431,14 +431,14 @@ member_t *osm_parse_osm_relation_member(osm_t *osm, xmlNode *a_node) {
   member_t *member = g_new0(member_t, 1);
   member->object.type = ILLEGAL;
 
-  if((prop = (char*)xmlGetProp(a_node, (unsigned char*)"type"))) {
+  if((prop = (char*)xmlGetProp(a_node, BAD_CAST "type"))) {
     if(strcasecmp(prop, "way") == 0)           member->object.type = WAY;
     else if(strcasecmp(prop, "node") == 0)     member->object.type = NODE;
     else if(strcasecmp(prop, "relation") == 0) member->object.type = RELATION;
     xmlFree(prop);
   }
 
-  if((prop = (char*)xmlGetProp(a_node, (unsigned char*)"ref"))) {
+  if((prop = (char*)xmlGetProp(a_node, BAD_CAST "ref"))) {
     item_id_t id = strtoll(prop, NULL, 10);
 
     switch(member->object.type) {
