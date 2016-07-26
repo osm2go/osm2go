@@ -509,7 +509,7 @@ static void hash_table_free(hash_table_t *table) {
   g_free(table);
 }
 
-void osm_hash_tables_free(osm_t *osm) {
+static void osm_hash_tables_free(osm_t *osm) {
   hash_table_free(osm->node_hash);
   osm->node_hash = NULL;
   hash_table_free(osm->way_hash);
