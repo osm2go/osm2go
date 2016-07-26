@@ -50,9 +50,9 @@ install: @INSTALL_PLATTFORM@ $(TEMPLATE_ELEMSTYLES)
 	install -m 644 $(srcdir)/*.xml $(DESTDIR)$(datadir)/$(APP)
 	install -m 644 $(TEMPLATE_ELEMSTYLES) $(DESTDIR)$(datadir)/$(APP)
 	install -m 644 $(srcdir)/*.style $(DESTDIR)$(datadir)/$(APP)
-	for f in `find $(srcdir)/icons -name "*.png"`; do \
+	for f in `cd $(srcdir); find icons -name "*.png"`; do \
 	   install -d $(DESTDIR)$(datadir)/$(APP)/`dirname $$f` ;\
-	   install -m 644 $$f $(DESTDIR)$(datadir)/$(APP)/$$f ;\
+	   install -m 644 $(srcdir)/$$f $(DESTDIR)$(datadir)/$(APP)/$$f ;\
 	done;
 	install -d $(DESTDIR)$(datadir)/$(APP)/demo
 	install -m 644 $(srcdir)/demo/* $(DESTDIR)$(datadir)/$(APP)/demo
