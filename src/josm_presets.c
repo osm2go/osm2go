@@ -197,7 +197,6 @@ static presets_widget_t **parse_widgets(xmlNode *a_node,
 	(*widget)->type = WIDGET_TYPE_TEXT;
 	(*widget)->text = (char*)xmlGetProp(cur_node, BAD_CAST "text");
 	(*widget)->key = (char*)xmlGetProp(cur_node, BAD_CAST "key");
-	(*widget)->del_if_empty = xmlGetPropIs(cur_node, "delete_if_empty", "true");
 	(*widget)->text_w.def = (char*)xmlGetProp(cur_node, BAD_CAST "default");
 	widget = &((*widget)->next);
 
@@ -208,8 +207,6 @@ static presets_widget_t **parse_widgets(xmlNode *a_node,
 	(*widget)->type = WIDGET_TYPE_COMBO;
 	(*widget)->text = (char*)xmlGetProp(cur_node, BAD_CAST "text");
 	(*widget)->key = (char*)xmlGetProp(cur_node, BAD_CAST "key");
-	(*widget)->del_if_empty = xmlGetPropIs(cur_node,
-					       "delete_if_empty", "true");
 	(*widget)->combo_w.def = (char*)xmlGetProp(cur_node,
 						   BAD_CAST "default");
 	(*widget)->combo_w.values = xmlGetPropValues(cur_node, "values");
@@ -231,8 +228,6 @@ static presets_widget_t **parse_widgets(xmlNode *a_node,
 	(*widget)->type = WIDGET_TYPE_CHECK;
 	(*widget)->text = (char*)xmlGetProp(cur_node, BAD_CAST "text");
 	(*widget)->key = (char*)xmlGetProp(cur_node, BAD_CAST "key");
-	(*widget)->del_if_empty = xmlGetPropIs(cur_node,
-					       "delete_if_empty", "true");
 	(*widget)->check_w.def = xmlGetPropIs(cur_node, "default", "on");
 	widget = &((*widget)->next);
 
@@ -406,7 +401,7 @@ static void attach_right(GtkWidget *table, GtkWidget *widget, gint y) {
 
 static tag_t **store_value(presets_widget_t *widget, tag_t **ctag,
 			   const char *value) {
-  if((value && strlen(value)) || !widget->del_if_empty) {
+  if((value && strlen(value))) {
     *ctag = g_new0(tag_t, 1);
     (*ctag)->key = g_strdup(widget->key);
     (*ctag)->value = g_strdup(value);
@@ -672,8 +667,7 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
 	g_assert(GTK_WIDGET_TYPE(gtk_widgets[widget_cnt]) == check_button_type());
 
 	ctag = store_value(widget, ctag,
-                 check_button_get_active(gtk_widgets[widget_cnt])?"yes":
-		    (widget->del_if_empty?NULL:"no"));
+                 check_button_get_active(gtk_widgets[widget_cnt])?"yes":NULL);
 	break;
 
       case WIDGET_TYPE_KEY:

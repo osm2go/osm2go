@@ -52,7 +52,6 @@ typedef struct presets_widget_s {
   presets_widget_type_t type;
 
   char *key, *text;
-  gboolean del_if_empty;
 
   union {
     /* a tag with an arbitrary text value */
