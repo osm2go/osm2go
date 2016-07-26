@@ -757,8 +757,6 @@ void map_free_map_item_chains(appdata_t *appdata) {
   if(!appdata->osm) return;
 
 #ifndef DESTROY_WAIT_FOR_GTK
-  printf("  DESTROY_WAIT_FOR_GTK not set, removing all chains now\n");
-
   /* free all map_item_chains */
   node_t *node = appdata->osm->node;
   while(node) {
