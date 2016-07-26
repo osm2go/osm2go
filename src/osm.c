@@ -226,7 +226,8 @@ gboolean osm_way_ends_with_node(way_t *way, node_t *node) {
     return FALSE;
 
   /* any valid way must have at least two nodes */
-  g_assert(way->node_chain && way->node_chain->next);
+  g_assert(way->node_chain);
+  g_assert(way->node_chain->next);
 
   node_chain_t *chain = way->node_chain;
   if(chain->node == node) return TRUE;
@@ -281,7 +282,7 @@ static void osm_nodes_free(hash_table_t *table, icon_t **icon, node_t *node) {
 
 void osm_node_chain_free(node_chain_t *node_chain) {
   while(node_chain) {
-    g_assert(node_chain->node->ways);
+    g_assert_cmpint(node_chain->node->ways, >, 0);
 
     node_chain_t *next = node_chain->next;
     node_chain->node->ways--;
@@ -983,7 +984,7 @@ static osm_t *process_osm(xmlTextReaderPtr reader) {
     switch(xmlTextReaderNodeType(reader)) {
     case XML_READER_TYPE_ELEMENT:
 
-      g_assert(xmlTextReaderDepth(reader) == 1);
+      g_assert_cmpint(xmlTextReaderDepth(reader), ==, 1);
       char *name = (char*)xmlTextReaderConstName(reader);
       if(strcasecmp(name, "bounds") == 0) {
 	osm->bounds = process_bounds(reader);
@@ -1005,7 +1006,7 @@ static osm_t *process_osm(xmlTextReaderPtr reader) {
 
     case XML_READER_TYPE_END_ELEMENT:
       /* end element must be for the current element */
-      g_assert(xmlTextReaderDepth(reader) == 0);
+      g_assert_cmpint(xmlTextReaderDepth(reader), ==, 0);
       return osm;
       break;
 
@@ -1667,7 +1668,7 @@ way_chain_t *osm_node_delete(osm_t *osm, icon_t **icon,
       } else
 	cnode = &((*cnode)->next);
     }
-    g_assert(found == 1);
+    g_assert_cmpint(found, ==, 1);
   }
 
   return way_chain;
@@ -2008,7 +2009,7 @@ void osm_way_delete(osm_t *osm, icon_t **icon,
       } else
 	cway = &((*cway)->next);
     }
-    g_assert(found == 1);
+    g_assert_cmpint(found, ==, 1);
   }
 }
 
@@ -2046,7 +2047,7 @@ void osm_relation_delete(osm_t *osm, relation_t *relation,
       } else
 	crelation = &((*crelation)->next);
     }
-    g_assert(found == 1);
+    g_assert_cmpint(found, ==, 1);
   }
 }
 

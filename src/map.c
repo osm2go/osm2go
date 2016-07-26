@@ -1882,8 +1882,8 @@ void map_action_set(appdata_t *appdata, map_action_t action) {
   const gboolean ok_state[] = { FALSE, FALSE, TRUE, FALSE, FALSE, FALSE };
   const gboolean cancel_state[] = { FALSE, TRUE, TRUE, TRUE, TRUE, TRUE };
 
-  g_assert(MAP_ACTION_NUM == sizeof(ok_state)/sizeof(gboolean));
-  g_assert(action < sizeof(ok_state)/sizeof(gboolean));
+  g_assert_cmpint(MAP_ACTION_NUM, ==, sizeof(ok_state)/sizeof(gboolean));
+  g_assert_cmpint(action, <, sizeof(ok_state)/sizeof(gboolean));
 
   icon_bar_map_cancel_ok(appdata, cancel_state[action], ok_state[action]);
 
@@ -1926,7 +1926,7 @@ void map_action_set(appdata_t *appdata, map_action_t action) {
     _("Select segment to cut way"),
   };
 
-  g_assert(MAP_ACTION_NUM == sizeof(str_state)/sizeof(char*));
+  g_assert_cmpint(MAP_ACTION_NUM, ==, sizeof(str_state)/sizeof(char*));
 
   statusbar_set(appdata, str_state[action], FALSE);
 }

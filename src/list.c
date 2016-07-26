@@ -173,7 +173,8 @@ void list_set_custom_user_button(GtkWidget *list, list_button_t id,
 				 GtkWidget *widget) {
   list_priv_t *priv = g_object_get_data(G_OBJECT(list), "priv");
   g_assert(priv);
-  g_assert((id >= 3) && (id < 6));
+  g_assert_cmpint(id, >=, 3);
+  g_assert_cmpint(id, <,  6);
 
   /* make space for user buttons */
   gtk_table_resize(GTK_TABLE(priv->table), 2, 3);

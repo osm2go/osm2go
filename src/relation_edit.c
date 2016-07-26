@@ -569,7 +569,7 @@ member_list_selection_func(GtkTreeSelection *selection, GtkTreeModel *model,
   GtkTreeIter iter;
 
   if(gtk_tree_model_get_iter(model, &iter, path)) {
-    g_assert(gtk_tree_path_get_depth(path) == 1);
+    g_assert_cmpint(gtk_tree_path_get_depth(path), ==, 1);
 
     member_t *member = NULL;
     gtk_tree_model_get(model, &iter, MEMBER_COL_DATA, &member, -1);

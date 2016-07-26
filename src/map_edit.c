@@ -732,7 +732,7 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
       OSM_TAG(touchnode) = NULL;
 
       /* touchnode must not have any references to ways anymore */
-      g_assert(!touchnode->ways);
+      g_assert_cmpint(touchnode->ways, ==, 0);
 
       /* delete touchnode */
       /* remove it visually from the screen */

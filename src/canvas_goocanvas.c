@@ -493,7 +493,7 @@ void canvas_item_get_segment_pos(canvas_item_t *item, gint seg,
   g_object_get(G_OBJECT(item), "points", &points, NULL);
 
   g_assert(points);
-  g_assert(seg < points->num_points-1);
+  g_assert_cmpint(seg, <, points->num_points-1);
 
   *x0 = points->coords[2 * seg + 0];
   *y0 = points->coords[2 * seg + 1];
