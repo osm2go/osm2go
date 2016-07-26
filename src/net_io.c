@@ -26,9 +26,9 @@
 #include <curl/easy.h>  /* new for v7 */
 #include <unistd.h>
 
-static struct http_message_s {
+static const struct {
   int id;
-  char *msg;
+  const char *msg;
 } http_messages [] = {
   {   0, "Curl internal failure" },
   { 200, "Ok" },
@@ -81,13 +81,12 @@ typedef struct {
 
 } net_io_request_t;
 
-static char *http_message(int id) {
-  struct http_message_s *msg = http_messages;
+static const char *http_message(int id) {
+  unsigned int i;
 
-  while(msg->msg) {
-    if(msg->id == id) return _(msg->msg);
-    msg++;
-  }
+  for(i = 0; http_messages[i].msg != NULL; i++)
+    if(http_messages[i].id == id)
+      return _(http_messages[i].msg);
 
   return NULL;
 }
