@@ -106,8 +106,7 @@ gboolean osm_download(GtkWidget *parent, settings_t *settings,
 	     _("It seems your current project uses a server/protocol no "
 	       "longer in use by OSM. It has thus been changed to:\n\n%s"),
 	     project->server);
-  } else
-    printf("url ok\n");
+  }
 
   char minlon[G_ASCII_DTOSTR_BUF_SIZE], minlat[G_ASCII_DTOSTR_BUF_SIZE];
   char maxlon[G_ASCII_DTOSTR_BUF_SIZE], maxlat[G_ASCII_DTOSTR_BUF_SIZE];
