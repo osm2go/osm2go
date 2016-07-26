@@ -316,7 +316,7 @@ replace_string(const gchar *src, const gchar *from, const gchar *to)
 }
 
 static void
-map_convert_coords_to_quadtree_string(OsmGpsMap *map, gint x, gint y, gint zoomlevel,
+map_convert_coords_to_quadtree_string(gint x, gint y, gint zoomlevel,
                                       gchar *buffer, const gchar initial,
                                       const gchar *const quadrant)
 {
@@ -414,13 +414,13 @@ replace_map_uri(OsmGpsMap *map, const gchar *uri, int zoom, int x, int y)
                 //g_debug("FOUND " URI_MARKER_S);
                 break;
             case URI_HAS_Q:
-                map_convert_coords_to_quadtree_string(map,x,y,zoom,location,'t',"qrts");
+                map_convert_coords_to_quadtree_string(x,y,zoom,location,'t',"qrts");
                 s = g_strdup(location);
                 url = replace_string(url, URI_MARKER_Q, s);
                 //g_debug("FOUND " URI_MARKER_Q);
                 break;
             case URI_HAS_Q0:
-                map_convert_coords_to_quadtree_string(map,x,y,zoom,location,'\0', "0123");
+                map_convert_coords_to_quadtree_string(x,y,zoom,location,'\0', "0123");
                 s = g_strdup(location);
                 url = replace_string(url, URI_MARKER_Q0, s);
                 //g_debug("FOUND " URI_MARKER_Q0);

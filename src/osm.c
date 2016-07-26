@@ -114,7 +114,7 @@ void osm_tags_free(tag_t *tag) {
   }
 }
 
-tag_t *osm_parse_osm_tag(osm_t *osm, xmlNode *a_node) {
+tag_t *osm_parse_osm_tag(xmlNode *a_node) {
   /* allocate a new tag structure */
   tag_t *tag = g_new0(tag_t, 1);
 
@@ -1210,7 +1210,7 @@ static void osm_generate_tags(tag_t *tag, xmlNodePtr node) {
 }
 
 /* build xml representation for a way */
-static char *osm_generate_xml(osm_t *osm, item_id_t changeset,
+static char *osm_generate_xml(item_id_t changeset,
 		       type_t type, void *item) {
   char str[32];
   xmlChar *result = NULL;
@@ -1333,23 +1333,23 @@ static char *osm_generate_xml(osm_t *osm, item_id_t changeset,
 }
 
 /* build xml representation for a node */
-char *osm_generate_xml_node(osm_t *osm, item_id_t changeset, node_t *node) {
-  return osm_generate_xml(osm, changeset, NODE, node);
+char *osm_generate_xml_node(item_id_t changeset, node_t *node) {
+  return osm_generate_xml(changeset, NODE, node);
 }
 
 /* build xml representation for a way */
-char *osm_generate_xml_way(osm_t *osm, item_id_t changeset, way_t *way) {
-  return osm_generate_xml(osm, changeset, WAY, way);
+char *osm_generate_xml_way(item_id_t changeset, way_t *way) {
+  return osm_generate_xml(changeset, WAY, way);
 }
 
 /* build xml representation for a relation */
-char *osm_generate_xml_relation(osm_t *osm, item_id_t changeset,
+char *osm_generate_xml_relation(item_id_t changeset,
 				relation_t *relation) {
-  return osm_generate_xml(osm, changeset, RELATION, relation);
+  return osm_generate_xml(changeset, RELATION, relation);
 }
 
 /* build xml representation for a changeset */
-char *osm_generate_xml_changeset(osm_t *osm, char *comment) {
+char *osm_generate_xml_changeset(char *comment) {
   xmlChar *result = NULL;
   int len = 0;
 

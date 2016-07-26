@@ -317,7 +317,7 @@ static pos_t *xml_get_prop_pos(xmlNode *node) {
   return pos;
 }
 
-static tag_t *xml_scan_tags(xmlNodePtr node, osm_t *osm) {
+static tag_t *xml_scan_tags(xmlNodePtr node) {
   /* scan for tags */
   tag_t *first_tag = NULL;
   tag_t **tag = &first_tag;
@@ -326,7 +326,7 @@ static tag_t *xml_scan_tags(xmlNodePtr node, osm_t *osm) {
     if(node->type == XML_ELEMENT_NODE) {
       if(strcasecmp((char*)node->name, "tag") == 0) {
 	/* attach tag to node/way */
-	*tag = osm_parse_osm_tag(osm, node);
+	*tag = osm_parse_osm_tag(node);
 	if(*tag) tag = &((*tag)->next);
       }
     }
@@ -422,7 +422,7 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
     return;
   }
 
-  tag_t *ntags = xml_scan_tags(node_node->children, osm);
+  tag_t *ntags = xml_scan_tags(node_node->children);
   /* check if the same changes have been done upstream */
   if(state == OSM_FLAG_DIRTY && node_compare_changes(node, pos, ntags)) {
     printf("node " ITEM_ID_FORMAT " has the same values and position as upstream, discarding diff\n", id);
@@ -564,7 +564,7 @@ static void diff_restore_way(xmlNodePtr node_node, osm_t *osm) {
     /* were found this wasn't a dirty entry but e.g. only the hidden */
     /* flag had been set */
 
-    tag_t *ntags = xml_scan_tags(node_node->children, osm);
+    tag_t *ntags = xml_scan_tags(node_node->children);
     if (osm_tag_lists_diff(OSM_TAG(way), ntags)) {
       /* way may be an existing way, so remove tags to */
       /* make space for new ones */
@@ -680,7 +680,7 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
     osm_tags_free(OSM_TAG(relation));
   }
 
-  OSM_TAG(relation) = xml_scan_tags(node_rel->children, osm);
+  OSM_TAG(relation) = xml_scan_tags(node_rel->children);
 }
 
 void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) {

@@ -231,7 +231,7 @@ typedef struct osm_s {
 
 osm_t *osm_parse(const char *path, const char *filename);
 gboolean osm_sanity_check(GtkWidget *parent, osm_t *osm);
-tag_t *osm_parse_osm_tag(osm_t *osm, xmlNode *a_node);
+tag_t *osm_parse_osm_tag(xmlNode* a_node);
 node_chain_t *osm_parse_osm_way_nd(osm_t *osm, xmlNode *a_node);
 member_t *osm_parse_osm_relation_member(osm_t *osm, xmlNode *a_node);
 void osm_free(struct icon_s **icon, osm_t *osm);
@@ -264,10 +264,10 @@ gboolean osm_tag_key_and_value_present(const tag_t *haystack, const tag_t *tag);
 gboolean osm_tag_key_other_value_present(const tag_t *haystack, const tag_t *tag);
 gboolean osm_tag_lists_diff(const tag_t *t1, const tag_t *t2);
 
-char *osm_generate_xml_changeset(osm_t *osm, char *comment);
-char *osm_generate_xml_node(osm_t *osm, item_id_t changeset, node_t *node);
-char *osm_generate_xml_way(osm_t *osm, item_id_t changeset, way_t *way);
-char *osm_generate_xml_relation(osm_t *osm, item_id_t changeset,
+char *osm_generate_xml_changeset(char* comment);
+char *osm_generate_xml_node(item_id_t changeset, node_t *node);
+char *osm_generate_xml_way(item_id_t changeset, way_t *way);
+char *osm_generate_xml_relation(item_id_t changeset,
 				relation_t *relation);
 
 node_t *osm_get_node_by_id(osm_t *osm, item_id_t id);

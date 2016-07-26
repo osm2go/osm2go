@@ -125,7 +125,7 @@ static gboolean parse_gboolean(xmlNode *a_node, char *name, gboolean *val) {
   return TRUE;
 }
 
-static elemstyle_line_t *parse_line(xmlDocPtr doc, xmlNode *a_node) {
+static elemstyle_line_t *parse_line(xmlNode *a_node) {
   elemstyle_line_t *line = g_new0(elemstyle_line_t, 1);
 
   /* these have to be present */
@@ -169,7 +169,7 @@ static void parse_width_mod(xmlNode *a_node, char *name,
   xmlFree(mod_str);
 }
 
-static elemstyle_line_mod_t *parse_line_mod(xmlDocPtr doc, xmlNode *a_node) {
+static elemstyle_line_mod_t *parse_line_mod(xmlNode *a_node) {
   elemstyle_line_mod_t *line_mod = g_new0(elemstyle_line_mod_t, 1);
 
   parse_width_mod(a_node, "width", &line_mod->line);
@@ -178,7 +178,7 @@ static elemstyle_line_mod_t *parse_line_mod(xmlDocPtr doc, xmlNode *a_node) {
   return line_mod;
 }
 
-static elemstyle_area_t *parse_area(xmlDocPtr doc, xmlNode *a_node) {
+static elemstyle_area_t *parse_area(xmlNode *a_node) {
   elemstyle_area_t *area = g_new0(elemstyle_area_t, 1);
 
   /* these have to be present */
@@ -186,7 +186,7 @@ static elemstyle_area_t *parse_area(xmlDocPtr doc, xmlNode *a_node) {
   return area;
 }
 
-static elemstyle_icon_t *parse_icon(xmlDocPtr doc, xmlNode *a_node) {
+static elemstyle_icon_t *parse_icon(xmlNode *a_node) {
   elemstyle_icon_t *icon = g_new0(elemstyle_icon_t, 1);
 
   xmlChar *annotate = xmlGetProp(a_node, BAD_CAST "annotate");
@@ -228,19 +228,19 @@ static elemstyle_t *parse_rule(xmlDocPtr doc, xmlNode *a_node) {
 	/* ------ parse line ------ */
 	g_assert(elemstyle->type == ES_TYPE_NONE);
 	elemstyle->type = ES_TYPE_LINE;
-	elemstyle->line = parse_line(doc, cur_node);
+	elemstyle->line = parse_line(cur_node);
       } else if(strcasecmp((char*)cur_node->name, "linemod") == 0) {
 	/* ------ parse linemod ------ */
 	g_assert(elemstyle->type == ES_TYPE_NONE);
 	elemstyle->type = ES_TYPE_LINE_MOD;
-	elemstyle->line_mod = parse_line_mod(doc, cur_node);
+	elemstyle->line_mod = parse_line_mod(cur_node);
       } else if(strcasecmp((char*)cur_node->name, "area") == 0) {
 	/* ------ parse area ------ */
 	g_assert(elemstyle->type == ES_TYPE_NONE);
 	elemstyle->type = ES_TYPE_AREA;
-	elemstyle->area = parse_area(doc, cur_node);
+	elemstyle->area = parse_area(cur_node);
       } else if(strcasecmp((char*)cur_node->name, "icon") == 0) {
-	elemstyle->icon = parse_icon(doc, cur_node);
+	elemstyle->icon = parse_icon(cur_node);
       } else if(strcasecmp((char*)cur_node->name, "scale_min") == 0) {
 	/* scale_min is currently ignored */
       } else if(strcasecmp((char*)cur_node->name, "scale_max") == 0) {

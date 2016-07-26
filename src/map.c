@@ -608,7 +608,7 @@ static void map_item_draw(map_t *map, map_item_t *map_item) {
   }
 }
 
-static void map_item_remove(map_t *map, map_item_t *map_item) {
+static void map_item_remove(map_item_t *map_item) {
   map_item_chain_t **chainP = NULL;
 
   switch(map_item->object.type) {
@@ -653,7 +653,7 @@ void map_item_redraw(appdata_t *appdata, map_item_t *map_item) {
     is_selected = TRUE;
   }
 
-  map_item_remove(appdata->map, &item);
+  map_item_remove(&item);
   map_item_init(appdata->map->style, &item);
   map_item_draw(appdata->map, &item);
 

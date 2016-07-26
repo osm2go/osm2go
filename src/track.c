@@ -80,8 +80,7 @@ static gboolean track_get_prop_pos(xmlNode *node, pos_t *pos) {
   return TRUE;
 }
 
-static track_point_t *track_parse_trkpt(bounds_t *bounds, xmlDocPtr doc,
-					xmlNode *a_node) {
+static track_point_t *track_parse_trkpt(xmlNode *a_node) {
   track_point_t *point = g_new0(track_point_t, 1);
   point->altitude = NAN;
 
@@ -126,7 +125,7 @@ static void track_parse_trkseg(track_t *track, bounds_t *bounds,
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcasecmp((char*)cur_node->name, "trkpt") == 0) {
-	track_point_t *cpnt = track_parse_trkpt(bounds, doc, cur_node);
+	track_point_t *cpnt = track_parse_trkpt(cur_node);
 	if(cpnt) {
 	  if(!point) {
 	    /* start a new segment */

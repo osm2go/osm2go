@@ -64,8 +64,7 @@ static gboolean project_edit(appdata_t *appdata, GtkWidget *parent,
 
 /* ------------ project file io ------------- */
 
-static gboolean project_read(appdata_t *appdata,
-	     char *project_file, project_t *project) {
+static gboolean project_read(const char *project_file, project_t *project) {
 
   LIBXML_TEST_VERSION;
 
@@ -340,7 +339,7 @@ static project_t *project_scan(appdata_t *appdata) {
 			  appdata->settings->base_path, name, "/", NULL);
 
 	char *fullname = project_fullname(appdata->settings, name);
-	if(project_read(appdata, fullname, *current))
+	if(project_read(fullname, *current))
 	  current = &((*current)->next);
 	else {
 	  g_free(*current);
@@ -1282,7 +1281,7 @@ gboolean project_open(appdata_t *appdata, char *name) {
     return FALSE;
   }
 
-  if(!project_read(appdata, project_file, project)) {
+  if(!project_read(project_file, project)) {
     printf("error reading project file\n");
     project_free(project);
     g_free(project_file);

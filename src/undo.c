@@ -163,7 +163,7 @@ static void undo_object_copy_base(object_t *dst, object_t *src) {
 }
 
 /* create a local copy of the entire object */
-static object_t *undo_object_save(osm_t *osm, object_t *object,
+static object_t *undo_object_save(object_t *object,
 				  item_id_chain_t **id_chain) {
 
   switch(object->type) {
@@ -296,7 +296,7 @@ void undo_append_object(appdata_t *appdata, undo_type_t type,
   /* create new operation for main object */
   op = g_new0(undo_op_t, 1);
   op->type = type;
-  op->object = undo_object_save(appdata->osm, object, &(op->id_chain));
+  op->object = undo_object_save(object, &(op->id_chain));
 
   /* prepend operation to chain, so that the undo works in reverse order */
   op->next = appdata->undo.open->op;

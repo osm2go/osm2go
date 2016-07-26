@@ -492,8 +492,7 @@ static void osm_delete_nodes(osm_upload_context_t *context) {
 				  project->server, OSM_ID(node));
       gchar *cred = format_credentials(context->appdata->settings);
 
-      char *xml_str =
-	osm_generate_xml_node(context->osm, context->changeset, node);
+      char *xml_str = osm_generate_xml_node(context->changeset, node);
 
       if(osm_delete_item(&context->log, xml_str, url, cred, context->proxy)) {
 	OSM_FLAGS(node) &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
@@ -528,8 +527,7 @@ static void osm_upload_nodes(osm_upload_context_t *context) {
       }
 
       /* upload this node */
-      char *xml_str =
-	osm_generate_xml_node(context->osm, context->changeset, node);
+      char *xml_str = osm_generate_xml_node(context->changeset, node);
       if(xml_str) {
 	printf("uploading node %s from address %p\n", url, xml_str);
 
@@ -566,8 +564,7 @@ static void osm_delete_ways(osm_upload_context_t *context) {
 				  project->server, OSM_ID(way));
       gchar *cred = format_credentials(context->appdata->settings);
 
-      char *xml_str =
-	osm_generate_xml_way(context->osm, context->changeset, way);
+      char *xml_str = osm_generate_xml_way(context->changeset, way);
 
       if(osm_delete_item(&context->log, xml_str, url, cred, context->proxy)) {
 	OSM_FLAGS(way) &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
@@ -603,8 +600,7 @@ static void osm_upload_ways(osm_upload_context_t *context) {
       }
 
       /* upload this node */
-      char *xml_str =
-	osm_generate_xml_way(context->osm, context->changeset, way);
+      char *xml_str = osm_generate_xml_way(context->changeset, way);
       if(xml_str) {
 	printf("uploading way %s from address %p\n", url, xml_str);
 
@@ -642,8 +638,7 @@ static void osm_delete_relations(osm_upload_context_t *context) {
 				  project->server, OSM_ID(relation));
       gchar *cred = format_credentials(context->appdata->settings);
 
-      char *xml_str =
-	osm_generate_xml_relation(context->osm, context->changeset, relation);
+      char *xml_str = osm_generate_xml_relation(context->changeset, relation);
 
       if(osm_delete_item(&context->log, xml_str, url, cred, context->proxy)) {
 	OSM_FLAGS(relation) &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
@@ -680,8 +675,7 @@ static void osm_upload_relations(osm_upload_context_t *context) {
       }
 
       /* upload this relation */
-      char *xml_str =
-	osm_generate_xml_relation(context->osm, context->changeset, relation);
+      char *xml_str = osm_generate_xml_relation(context->changeset, relation);
       if(xml_str) {
 	printf("uploading relation %s from address %p\n", url, xml_str);
 
@@ -713,7 +707,7 @@ static gboolean osm_create_changeset(osm_upload_context_t *context) {
   appendf(&context->log, NULL, _("Create changeset "));
 
   /* create changeset request */
-  char *xml_str = osm_generate_xml_changeset(context->osm, context->comment);
+  char *xml_str = osm_generate_xml_changeset(context->comment);
   if(xml_str) {
     printf("creating changeset %s from address %p\n", url, xml_str);
 

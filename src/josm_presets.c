@@ -259,7 +259,7 @@ static presets_widget_t **parse_widgets(xmlNode *a_node,
   return widget;
 }
 
-static presets_item_t *parse_item(xmlDocPtr doc, xmlNode *a_node) {
+static presets_item_t *parse_item(xmlNode *a_node) {
   presets_item_t *item = g_new0(presets_item_t, 1);
   item->is_group = FALSE;
 
@@ -296,7 +296,7 @@ static presets_item_t *parse_group(xmlDocPtr doc, xmlNode *a_node) {
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcasecmp((char*)cur_node->name, "item") == 0) {
-	*preset = parse_item(doc, cur_node);
+	*preset = parse_item(cur_node);
 	if(*preset) {
 	  group->type |= (*preset)->type;
 	  preset = &((*preset)->next);
@@ -327,7 +327,7 @@ static presets_item_t *parse_annotations(xmlDocPtr doc, xmlNode *a_node) {
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcasecmp((char*)cur_node->name, "item") == 0) {
-	*preset = parse_item(doc, cur_node);
+	*preset = parse_item(cur_node);
 	if(*preset) preset = &((*preset)->next);
       } else if(strcasecmp((char*)cur_node->name, "group") == 0) {
 	*preset = parse_group(doc, cur_node);
