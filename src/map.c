@@ -461,7 +461,7 @@ static canvas_item_t *map_node_new(map_t *map, node_t *node, gint radius,
 
 /* in the rare case that a way consists of only one node, it is */
 /* drawn as a circle. This e.g. happens when drawing a new way */
-static canvas_item_t *map_way_single_new(map_t *map, way_t *way, gint radius,
+static map_item_chain_t *map_way_single_new(map_t *map, way_t *way, gint radius,
 		   gint width, canvas_color_t fill, canvas_color_t border) {
 
   map_item_t *map_item = g_new0(map_item_t, 1);
@@ -473,21 +473,18 @@ static canvas_item_t *map_way_single_new(map_t *map, way_t *way, gint radius,
 
   // TODO: decide: do we need canvas_item_set_zoom_max() here too?
 
-  /* attach map_item to nodes map_item_chain */
-  map_item_chain_t **chain = &way->map_item_chain;
-  while(*chain) chain = &(*chain)->next;
-  *chain = g_new0(map_item_chain_t, 1);
-  (*chain)->map_item = map_item;
+  map_item_chain_t *chain = g_new0(map_item_chain_t, 1);
+  chain->map_item = map_item;
 
   canvas_item_set_user_data(map_item->item, map_item);
 
   canvas_item_destroy_connect(map_item->item,
           G_CALLBACK(map_item_destroy_event), map_item);
 
-  return map_item->item;
+  return chain;
 }
 
-static canvas_item_t *map_way_new(map_t *map, canvas_group_t group,
+static map_item_chain_t *map_way_new(map_t *map, canvas_group_t group,
 	  way_t *way, canvas_points_t *points, gint width,
 	  canvas_color_t color, canvas_color_t fill_color) {
   map_item_t *map_item = g_new0(map_item_t, 1);
@@ -513,18 +510,15 @@ static canvas_item_t *map_way_new(map_t *map, canvas_group_t group,
     if (way->draw.dashed)
       canvas_item_set_dashed(map_item->item, width, way->draw.dash_length);
 
-  /* attach map_item to ways map_item_chain */
-  map_item_chain_t **chain = &way->map_item_chain;
-  while(*chain) chain = &(*chain)->next;
-  *chain = g_new0(map_item_chain_t, 1);
-  (*chain)->map_item = map_item;
+  map_item_chain_t *chain = g_new0(map_item_chain_t, 1);
+  chain->map_item = map_item;
 
   canvas_item_set_user_data(map_item->item, map_item);
 
   canvas_item_destroy_connect(map_item->item,
 	      G_CALLBACK(map_item_destroy_event), map_item);
 
-  return map_item->item;
+  return chain;
 }
 
 void map_show_node(map_t *map, node_t *node) {
@@ -540,9 +534,14 @@ void map_way_draw(map_t *map, way_t *way) {
   /* allocate space for nodes */
   /* a way needs at least 2 points to be drawn */
   guint nodes = osm_way_number_of_nodes(way);
+
+  /* attach map_item to ways map_item_chain */
+  map_item_chain_t **chain = &way->map_item_chain;
+  while(*chain) chain = &(*chain)->next;
+
   if(nodes == 1) {
     /* draw a single dot where this single node is */
-    map_way_single_new(map, way, map->style->node.radius, 0,
+    *chain = map_way_single_new(map, way, map->style->node.radius, 0,
 		       map->style->node.color, 0);
   } else {
     canvas_points_t *points = canvas_points_new(nodes);
@@ -558,19 +557,19 @@ void map_way_draw(map_t *map, way_t *way) {
     float width = way->draw.width * map->state->detail;
 
     if(way->draw.flags & OSM_DRAW_FLAG_AREA) {
-      map_way_new(map, CANVAS_GROUP_POLYGONS, way, points,
+      *chain = map_way_new(map, CANVAS_GROUP_POLYGONS, way, points,
 		  width, way->draw.color, way->draw.area.color);
     } else {
       if(way->draw.flags & OSM_DRAW_FLAG_BG) {
-	map_way_new(map, CANVAS_GROUP_WAYS_INT, way, points,
+	*chain = map_way_new(map, CANVAS_GROUP_WAYS_INT, way, points,
 		    width, way->draw.color, NO_COLOR);
 
-	map_way_new(map, CANVAS_GROUP_WAYS_OL, way, points,
+	(*chain)->next = map_way_new(map, CANVAS_GROUP_WAYS_OL, way, points,
 		    way->draw.bg.width * map->state->detail,
 		    way->draw.bg.color, NO_COLOR);
 
       } else
-	map_way_new(map, CANVAS_GROUP_WAYS, way, points,
+	*chain = map_way_new(map, CANVAS_GROUP_WAYS, way, points,
 		    width, way->draw.color, NO_COLOR);
     }
     canvas_points_free(points);
