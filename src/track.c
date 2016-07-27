@@ -33,10 +33,6 @@
 #include "misc.h"
 #include "track.h"
 
-// predecs
-static void track_do_enable_gps(appdata_t *appdata);
-static void track_do_disable_gps(appdata_t *appdata);
-
 /* make menu represent the track state */
 static void track_menu_set(appdata_t *appdata, gboolean present) {
   if(!appdata->window) return;
@@ -504,6 +500,19 @@ static void track_append_position(appdata_t *appdata, const pos_t *pos, float al
   }
 }
 
+static void track_do_disable_gps(appdata_t *appdata) {
+  gps_enable(appdata, FALSE);
+
+  gps_register_callback(appdata, NULL);
+
+  /* stopping the GPS removes the marker ... */
+  map_track_pos(appdata, NULL);
+
+  /* ... and terminates the current segment if present */
+  if(appdata->track.track)
+    appdata->track.track->cur_seg = NULL;
+}
+
 static gboolean update(gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
 
@@ -555,19 +564,6 @@ static void track_do_enable_gps(appdata_t *appdata) {
     } else
       printf("GPS: extending existing track\n");
   }
-}
-
-static void track_do_disable_gps(appdata_t *appdata) {
-  gps_enable(appdata, FALSE);
-
-  gps_register_callback(appdata, NULL);
-
-  /* stopping the GPS removes the marker ... */
-  map_track_pos(appdata, NULL);
-
-  /* ... and terminates the current segment if present */
-  if(appdata->track.track)
-    appdata->track.track->cur_seg = NULL;
 }
 
 void track_enable_gps(appdata_t *appdata, gboolean enable) {
