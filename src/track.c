@@ -234,7 +234,7 @@ static void track_info(const track_t *track) {
 
 }
 
-static track_t *track_read(osm_t *osm, const char *filename) {
+static track_t *track_read(osm_t *osm, const char *filename, gboolean dirty) {
   printf("============================================================\n");
   printf("loading track %s\n", filename);
 
@@ -257,7 +257,7 @@ static track_t *track_read(osm_t *osm, const char *filename) {
     return NULL;
   }
 
-  track->dirty = TRUE;
+  track->dirty = dirty;
   track_info(track);
 
   return track;
@@ -429,16 +429,12 @@ track_t *track_restore(appdata_t *appdata) {
     printf("track found, loading ...\n");
   }
 
-  track = track_read(appdata->osm, trk_name);
+  track = track_read(appdata->osm, trk_name, FALSE);
   g_free(trk_name);
 
   track_menu_set(appdata, track != NULL);
 
   printf("restored track\n");
-  if(track) {
-    track->dirty = FALSE;
-    track_info(track);
-  }
 
   return track;
 }
@@ -606,13 +602,11 @@ track_t *track_import(appdata_t *appdata, const char *name) {
     track_clear(appdata);
   }
 
-  track_t *track = track_read(appdata->osm, name);
+  track_t *track = track_read(appdata->osm, name, TRUE);
   track_menu_set(appdata, track != NULL);
 
-  if(track) {
+  if(track)
     map_track_draw(appdata->map, track);
-    track->dirty = TRUE;
-  }
 
   return track;
 }
