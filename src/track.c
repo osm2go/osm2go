@@ -82,7 +82,6 @@ static gboolean track_get_prop_pos(xmlNode *node, pos_t *pos) {
 
 static track_point_t *track_parse_trkpt(xmlNode *a_node) {
   track_point_t *point = g_new0(track_point_t, 1);
-  point->altitude = NAN;
 
   /* parse position */
   if(!track_get_prop_pos(a_node, &point->pos)) {
@@ -90,8 +89,9 @@ static track_point_t *track_parse_trkpt(xmlNode *a_node) {
     return NULL;
   }
 
+  point->altitude = NAN;
   /* scan for children */
-  xmlNode *cur_node = NULL;
+  xmlNode *cur_node;
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
 
@@ -99,13 +99,13 @@ static track_point_t *track_parse_trkpt(xmlNode *a_node) {
       if(strcmp((char*)cur_node->name, "ele") == 0) {
 	xmlChar *str = xmlNodeGetContent(cur_node);
 	point->altitude = g_ascii_strtod((const gchar*)str, NULL);
- 	xmlFree(str);
+	xmlFree(str);
       } else if(strcmp((char*)cur_node->name, "time") == 0) {
 	struct tm time = { 0 };
 	xmlChar *str = xmlNodeGetContent(cur_node);
 	char *ptr = strptime((const char*)str, DATE_FORMAT, &time);
 	if(ptr) point->time = mktime(&time);
- 	xmlFree(str);
+	xmlFree(str);
       }
     }
   }
@@ -115,7 +115,7 @@ static track_point_t *track_parse_trkpt(xmlNode *a_node) {
 
 static void track_parse_trkseg(track_t *track, bounds_t *bounds,
 			       xmlDocPtr doc, xmlNode *a_node) {
-  xmlNode *cur_node = NULL;
+  xmlNode *cur_node;
   track_point_t **point = NULL;
   track_seg_t **seg = &(track->track_seg);
 
@@ -154,7 +154,7 @@ static void track_parse_trkseg(track_t *track, bounds_t *bounds,
 static track_t *track_parse_trk(bounds_t *bounds,
 				xmlDocPtr doc, xmlNode *a_node) {
   track_t *track = g_new0(track_t, 1);
-  xmlNode *cur_node = NULL;
+  xmlNode *cur_node;
 
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
@@ -171,7 +171,7 @@ static track_t *track_parse_trk(bounds_t *bounds,
 static track_t *track_parse_gpx(bounds_t *bounds,
 				xmlDocPtr doc, xmlNode *a_node) {
   track_t *track = NULL;
-  xmlNode *cur_node = NULL;
+  xmlNode *cur_node;
 
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
@@ -191,7 +191,7 @@ static track_t *track_parse_gpx(bounds_t *bounds,
 static track_t *track_parse_root(bounds_t *bounds,
 				 xmlDocPtr doc, xmlNode *a_node) {
   track_t *track = NULL;
-  xmlNode *cur_node = NULL;
+  xmlNode *cur_node;
 
   for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
