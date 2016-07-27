@@ -113,14 +113,20 @@ static track_point_t *track_parse_trkpt(xmlNode *a_node) {
   return point;
 }
 
-static void track_parse_trkseg(track_t *track, bounds_t *bounds,
-			       xmlDocPtr doc, xmlNode *a_node) {
+/**
+ * @brief parse a <trkseg>
+ * @param a_node the <trkseg> node
+ * @param points counter for the created points (will not be reset)
+ * @param segs counter for the created segments (will not be reset)
+ * @returns the first of the newly created track segments
+ *
+ * This may create multiple track_seg_t objects.
+ */
+static track_seg_t *track_parse_trkseg(xmlNode *a_node, gint *points, gint *segs) {
   xmlNode *cur_node;
   track_point_t **point = NULL;
-  track_seg_t **seg = &(track->track_seg);
-
-  /* search end of track_seg list */
-  while(*seg) seg = &((*seg)->next);
+  track_seg_t *ret = NULL;
+  track_seg_t **seg = &ret;
 
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
@@ -130,11 +136,13 @@ static void track_parse_trkseg(track_t *track, bounds_t *bounds,
 	  if(!point) {
 	    /* start a new segment */
 	    *seg = g_new0(track_seg_t, 1);
+	    (*segs)++;
 	    point = &((*seg)->track_point);
 	  }
 	  /* attach point to chain */
 	  *point = cpnt;
 	  point = &((*point)->next);
+	  (*points)++;
 	} else {
 	  /* end segment if point could not be parsed and start a new one */
 	  /* close segment if there is one */
@@ -149,17 +157,22 @@ static void track_parse_trkseg(track_t *track, bounds_t *bounds,
 
     }
   }
+  return ret;
 }
 
-static track_t *track_parse_trk(bounds_t *bounds,
-				xmlDocPtr doc, xmlNode *a_node) {
+static track_t *track_parse_trk(xmlNode *a_node, gint *points, gint *segs) {
   track_t *track = g_new0(track_t, 1);
   xmlNode *cur_node;
+  *points = 0;
+  *segs = 0;
+  track_seg_t **last = &track->track_seg;
 
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcasecmp((char*)cur_node->name, "trkseg") == 0) {
-	track_parse_trkseg(track, bounds, doc, cur_node);
+        *last = track_parse_trkseg(cur_node, points, segs);
+        while (*last)
+          last = &((*last)->next);
       } else
 	printf("found unhandled gpx/trk/%s\n", cur_node->name);
 
@@ -168,8 +181,7 @@ static track_t *track_parse_trk(bounds_t *bounds,
   return track;
 }
 
-static track_t *track_parse_gpx(bounds_t *bounds,
-				xmlDocPtr doc, xmlNode *a_node) {
+static track_t *track_parse_gpx(xmlNode *a_node, gint *points, gint *segs) {
   track_t *track = NULL;
   xmlNode *cur_node;
 
@@ -177,7 +189,7 @@ static track_t *track_parse_gpx(bounds_t *bounds,
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcasecmp((char*)cur_node->name, "trk") == 0) {
 	if(!track)
-	  track = track_parse_trk(bounds, doc, cur_node);
+	  track = track_parse_trk(cur_node, points, segs);
 	else
 	  printf("ignoring additional track\n");
       } else
@@ -187,51 +199,21 @@ static track_t *track_parse_gpx(bounds_t *bounds,
   return track;
 }
 
-/* parse root element and search for "track" */
-static track_t *track_parse_root(bounds_t *bounds,
-				 xmlDocPtr doc, xmlNode *a_node) {
+static track_t *track_parse_doc(xmlDocPtr doc, gint *points, gint *segs) {
   track_t *track = NULL;
   xmlNode *cur_node;
 
-  for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
+  for (cur_node = xmlDocGetRootElement(doc); cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       /* parse track file ... */
       if(strcasecmp((char*)cur_node->name, "gpx") == 0)
-      	track = track_parse_gpx(bounds, doc, cur_node);
+        track = track_parse_gpx(cur_node, points, segs);
       else
-	printf("found unhandled %s\n", cur_node->name);
+        printf("found unhandled %s\n", cur_node->name);
     }
   }
-  return track;
-}
-
-static track_t *track_parse_doc(bounds_t *bounds, xmlDocPtr doc) {
-  track_t *track;
-
-  /* Get the root element node */
-  xmlNode *root_element = xmlDocGetRootElement(doc);
-
-  track = track_parse_root(bounds, doc, root_element);
-
-  /*free the document */
-  xmlFreeDoc(doc);
 
   return track;
-}
-
-static void track_info(const track_t *track) {
-  printf("Track is %sdirty.\n", track->dirty?"":"not ");
-
-  gint segs = 0, points = 0;
-  const track_seg_t *seg = track->track_seg;
-  while(seg) {
-    points += track_points_count(seg->track_point);
-    segs++;
-    seg = seg->next;
-  }
-
-  printf("%d points in %d segments\n", points, segs);
-
 }
 
 static track_t *track_read(osm_t *osm, const char *filename, gboolean dirty) {
@@ -249,7 +231,9 @@ static track_t *track_read(osm_t *osm, const char *filename, gboolean dirty) {
     return NULL;
   }
 
-  track_t *track = track_parse_doc(osm->bounds, doc);
+  gint points, segs;
+  track_t *track = track_parse_doc(doc, &points, &segs);
+  xmlFreeDoc(doc);
 
   if(!track || !track->track_seg) {
     g_free(track);
@@ -258,7 +242,8 @@ static track_t *track_read(osm_t *osm, const char *filename, gboolean dirty) {
   }
 
   track->dirty = dirty;
-  track_info(track);
+  printf("Track is %sdirty.\n", dirty?"":"not ");
+  printf("%d points in %d segments\n", points, segs);
 
   return track;
 }
