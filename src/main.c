@@ -593,7 +593,7 @@ menu_append_new_item(appdata_t *appdata,
   return item;
 }
 
-void menu_create(appdata_t *appdata) {
+static void menu_create(appdata_t *appdata) {
   GtkWidget *menu, *item, *submenu;
   GtkWidget *about_quit_items_menu;
 
@@ -1181,7 +1181,7 @@ static const menu_entry_t main_menu[] = {
   LAST_ENTRY
 };
 
-void menu_create(appdata_t *appdata) {
+static void menu_create(appdata_t *appdata) {
   HildonAppMenu *menu = HILDON_APP_MENU(hildon_app_menu_new());
 
   /* build menu/submenus */
