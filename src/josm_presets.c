@@ -952,7 +952,8 @@ static GtkWidget
 			     G_TYPE_POINTER
 			     );
 
-
+  GdkPixbuf *subicon = icon_load(&context->appdata->icon,
+                                 "submenu_arrow");
   while(item) {
     /* check if this presets entry is appropriate for the current item */
     if(item->type & context->tag_context->presets_type) {
@@ -973,9 +974,6 @@ static GtkWidget
 
 	/* mark submenues as such */
 	if(item->is_group) {
-	  GdkPixbuf *subicon = icon_load(&context->appdata->icon,
-				      "submenu_arrow");
-
 	  gtk_list_store_set(store, &iter,
 			     PRESETS_PICKER_COL_SUBMENU_PTR,  item->group,
 			     PRESETS_PICKER_COL_SUBMENU_ICON, subicon,
@@ -988,6 +986,8 @@ static GtkWidget
 
     item = item->next;
   }
+
+  icon_free(&context->appdata->icon, subicon);
 
   gtk_tree_view_set_model(GTK_TREE_VIEW(view), GTK_TREE_MODEL(store));
   g_object_unref(store);
