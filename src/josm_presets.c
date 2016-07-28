@@ -954,37 +954,34 @@ static GtkWidget
 
   GdkPixbuf *subicon = icon_load(&context->appdata->icon,
                                  "submenu_arrow");
-  while(item) {
+  for(; item; item = item->next) {
     /* check if this presets entry is appropriate for the current item */
-    if(item->type & context->tag_context->presets_type) {
+    if(!(item->type & context->tag_context->presets_type))
+      continue;
 
-      if(item->name) {
-	/* icon load can cope with NULL as name (returns NULL then) */
-	GdkPixbuf *icon = icon_load(&context->appdata->icon, item->icon);
-	GtkTreeIter     iter;
+    if(!item->name)
+      continue;
 
-	/* Append a row and fill in some data */
-	gtk_list_store_append (store, &iter);
+    /* icon load can cope with NULL as name (returns NULL then) */
+    GdkPixbuf *icon = icon_load(&context->appdata->icon, item->icon);
+    GtkTreeIter     iter;
 
-	gtk_list_store_set(store, &iter,
-			   PRESETS_PICKER_COL_ICON, icon,
-			   PRESETS_PICKER_COL_NAME, item->name,
-			   PRESETS_PICKER_COL_ITEM_PTR, item,
-			   -1);
+    /* Append a row and fill in some data */
+    gtk_list_store_append (store, &iter);
 
-	/* mark submenues as such */
-	if(item->is_group) {
-	  gtk_list_store_set(store, &iter,
-			     PRESETS_PICKER_COL_SUBMENU_PTR,  item->group,
-			     PRESETS_PICKER_COL_SUBMENU_ICON, subicon,
-			     -1);
+    gtk_list_store_set(store, &iter,
+		       PRESETS_PICKER_COL_ICON, icon,
+		       PRESETS_PICKER_COL_NAME, item->name,
+		       PRESETS_PICKER_COL_ITEM_PTR, item,
+		       -1);
 
-	}
-
-      }
+    /* mark submenues as such */
+    if(item->is_group) {
+      gtk_list_store_set(store, &iter,
+			 PRESETS_PICKER_COL_SUBMENU_PTR,  item->group,
+			 PRESETS_PICKER_COL_SUBMENU_ICON, subicon,
+			 -1);
     }
-
-    item = item->next;
   }
 
   icon_free(&context->appdata->icon, subicon);
