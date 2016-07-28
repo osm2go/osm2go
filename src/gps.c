@@ -343,13 +343,13 @@ void gps_release(appdata_t *appdata) {
 gboolean gps_register_callback(appdata_t *appdata, GtkFunction cb) {
   if(appdata->gps_state->handler_id) {
     if(cb == NULL) {
-      gtk_timeout_remove(appdata->gps_state->handler_id);
+      g_source_remove(appdata->gps_state->handler_id);
       appdata->gps_state->handler_id = 0;
     }
     return TRUE;
   } else {
     if(cb != NULL) {
-      appdata->gps_state->handler_id = gtk_timeout_add(1000, cb, appdata);
+      appdata->gps_state->handler_id = g_timeout_add_seconds(1, cb, appdata);
     }
     return FALSE;
   }
