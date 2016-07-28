@@ -228,6 +228,7 @@ settings_t *settings_load(void) {
     }
   }
 
+  g_object_unref(client);
 
   return settings;
 }
@@ -291,6 +292,8 @@ void settings_save(settings_t *settings) {
   }
 
   gconf_client_set_int(client, "/apps/" PACKAGE "/wms/count", count, NULL);
+
+  g_object_unref(client);
 }
 
 void settings_free(settings_t *settings) {
