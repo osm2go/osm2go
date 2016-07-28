@@ -326,6 +326,7 @@ void gps_init(appdata_t *appdata) {
 }
 
 void gps_release(appdata_t *appdata) {
+  gps_register_callback(appdata, NULL);
 #ifdef ENABLE_GPSBT
   gpsbt_stop(&appdata->gps_state->context);
 #endif
