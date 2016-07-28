@@ -387,11 +387,11 @@ void canvas_item_set_dashed(canvas_item_t *item,
     cap = CAIRO_LINE_CAP_ROUND;
   }
   dash = goo_canvas_line_dash_new(2, on_len, off_len, 0);
-  goo_canvas_line_dash_ref(dash);
   g_object_set(G_OBJECT(item),
                "line-dash", dash,
                "line-cap", cap,
                NULL);
+  goo_canvas_line_dash_unref(dash);
 }
 
 void canvas_item_set_user_data(canvas_item_t *item, void *data) {
