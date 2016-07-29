@@ -409,7 +409,7 @@ static tag_t **store_value(presets_widget_t *widget, tag_t **ctag,
   if((value && strlen(value)) || !widget->del_if_empty) {
     *ctag = g_new0(tag_t, 1);
     (*ctag)->key = g_strdup(widget->key);
-    (*ctag)->value = g_strdup(value?value:"");
+    (*ctag)->value = g_strdup(value);
 
     printf("key = %s, value = %s\n",
 	   widget->key, (*ctag)->value);
