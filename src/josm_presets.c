@@ -754,6 +754,32 @@ do_item( presets_context_t *context, presets_item_t *item) {
   }
 }
 
+/**
+ * @brief check if the currently active object uses this preset and the preset is interactive
+ */
+static gboolean preset_is_used(const presets_item_t *item, const presets_context_t *context)
+{
+  gboolean matches_all = FALSE;
+  gboolean is_interactive = FALSE;
+  const presets_widget_t *w = item->widget;
+  for(w = item->widget; w; w = w->next) {
+    if(w->type != WIDGET_TYPE_KEY) {
+      is_interactive |= is_widget_interactive(w);
+      continue;
+    }
+    const tag_t t = {
+      .key = w->key,
+      .value = w->key_w.value
+    };
+    if(osm_tag_key_and_value_present(*(context->tag_context->tag), &t))
+      matches_all = TRUE;
+    else
+      return FALSE;
+  }
+
+  return matches_all && is_interactive;
+}
+
 #ifndef PICKER_MENU
 static void
 cb_menu_item(GtkWidget *menu_item, gpointer data) {
@@ -801,26 +827,7 @@ static GtkWidget *build_menu(presets_context_t *context,
 	  g_signal_connect(menu_item, "activate",
 			   GTK_SIGNAL_FUNC(cb_menu_item), context);
 
-	  gboolean matches_all = FALSE;
-	  gboolean is_interactive = FALSE;
-	  const presets_widget_t *w = item->widget;
-	  for(w = item->widget; w; w = w->next) {
-	    if(w->type != WIDGET_TYPE_KEY) {
-	      is_interactive |= is_widget_interactive(w);
-	      continue;
-	    }
-	    const tag_t t = {
-	      .key = w->key,
-	      .value = w->key_w.value
-	    };
-	    if(osm_tag_key_and_value_present(*(context->tag_context->tag), &t)) {
-	      matches_all = TRUE;
-	    } else {
-	      matches_all = FALSE;
-	      break;
-	    }
-	  }
-	  if(matches_all && is_interactive) {
+	  if(preset_is_used(item, context)) {
 	    if(!*matches)
 	      *matches = gtk_menu_new();
 
@@ -853,8 +860,7 @@ enum {
   PRESETS_PICKER_NUM_COLS
 };
 
-static GtkWidget
-*presets_picker(presets_context_t *context, presets_item_t *item);
+static GtkWidget *presets_picker(presets_context_t *context, presets_item_t *item);
 
 static void
 on_presets_picker_selected(GtkTreeSelection *selection, gpointer data) {
@@ -912,45 +918,93 @@ on_presets_picker_selected(GtkTreeSelection *selection, gpointer data) {
   }
 }
 
-static GtkWidget
-*presets_picker(presets_context_t *context, presets_item_t *item) {
+static GtkListStore *presets_picker_store(GtkTreeView **view) {
   GtkCellRenderer *renderer;
-  GtkListStore    *store;
 
 #ifndef FREMANTLE
-  GtkWidget *view = gtk_tree_view_new();
+  *view = GTK_TREE_VIEW(gtk_tree_view_new());
 #else
-  GtkWidget *view = hildon_gtk_tree_view_new(HILDON_UI_MODE_EDIT);
+  *view = GTK_TREE_VIEW(hildon_gtk_tree_view_new(HILDON_UI_MODE_EDIT));
 #endif
 
-  gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(view), FALSE);
+  gtk_tree_view_set_headers_visible(*view, FALSE);
 
   /* --- "Icon" column --- */
   renderer = gtk_cell_renderer_pixbuf_new();
-  gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(view),
+  gtk_tree_view_insert_column_with_attributes(*view,
       -1, "Icon", renderer, "pixbuf", PRESETS_PICKER_COL_ICON, NULL);
 
   /* --- "Name" column --- */
   renderer = gtk_cell_renderer_text_new();
-  g_object_set(renderer, "ellipsize", PANGO_ELLIPSIZE_END, NULL );
+  g_object_set(renderer, "ellipsize", PANGO_ELLIPSIZE_END, NULL);
   GtkTreeViewColumn *column = gtk_tree_view_column_new_with_attributes(
 		 "Name", renderer, "text", PRESETS_PICKER_COL_NAME, NULL);
   gtk_tree_view_column_set_expand(column, TRUE);
-  gtk_tree_view_insert_column(GTK_TREE_VIEW(view), column, -1);
+  gtk_tree_view_insert_column(*view, column, -1);
 
   /* --- "submenu icon" column --- */
   renderer = gtk_cell_renderer_pixbuf_new();
-  gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(view),
+  gtk_tree_view_insert_column_with_attributes(*view,
       -1, "Submenu Icon", renderer, "pixbuf",
       PRESETS_PICKER_COL_SUBMENU_ICON, NULL);
 
-  store = gtk_list_store_new(PRESETS_PICKER_NUM_COLS,
+  return gtk_list_store_new(PRESETS_PICKER_NUM_COLS,
 			     GDK_TYPE_PIXBUF,
 			     G_TYPE_STRING,
 			     G_TYPE_POINTER,
 			     GDK_TYPE_PIXBUF,
 			     G_TYPE_POINTER
 			     );
+}
+
+static GtkWidget *presets_picker_embed(GtkTreeView *view, GtkListStore *store,
+                                       presets_context_t *context) {
+  gtk_tree_view_set_model(view, GTK_TREE_MODEL(store));
+  g_object_unref(store);
+
+  /* Setup the selection handler */
+  GtkTreeSelection *select = gtk_tree_view_get_selection(view);
+  gtk_tree_selection_set_mode (select, GTK_SELECTION_SINGLE);
+  g_signal_connect (G_OBJECT (select), "changed",
+		    G_CALLBACK (on_presets_picker_selected), context);
+
+  gtk_tree_selection_unselect_all(select);
+
+  /* put this inside a scrolled view */
+  GtkWidget *c;
+#ifndef USE_PANNABLE_AREA
+  c = gtk_scrolled_window_new (NULL, NULL);
+  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(c),
+				 GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+#else
+  c = hildon_pannable_area_new();
+#endif
+  gtk_container_add(GTK_CONTAINER(c), GTK_WIDGET(view));
+  return c;
+}
+
+static GtkTreeIter preset_insert_item(const presets_item_t *item, icon_t **icons,
+                                      GtkListStore *store) {
+  /* icon load can cope with NULL as name (returns NULL then) */
+  GdkPixbuf *icon = icon_load(icons, item->icon);
+
+  /* Append a row and fill in some data */
+  GtkTreeIter iter;
+  gtk_list_store_append(store, &iter);
+
+  gtk_list_store_set(store, &iter,
+		     PRESETS_PICKER_COL_ICON, icon,
+		     PRESETS_PICKER_COL_NAME, item->name,
+		     PRESETS_PICKER_COL_ITEM_PTR, item,
+		     -1);
+
+  return iter;
+}
+
+static GtkWidget
+*presets_picker(presets_context_t *context, presets_item_t *item) {
+  GtkTreeView *view;
+  GtkListStore *store = presets_picker_store(&view);
 
   GdkPixbuf *subicon = icon_load(&context->appdata->icon,
                                  "submenu_arrow");
@@ -962,18 +1016,7 @@ static GtkWidget
     if(!item->name)
       continue;
 
-    /* icon load can cope with NULL as name (returns NULL then) */
-    GdkPixbuf *icon = icon_load(&context->appdata->icon, item->icon);
-    GtkTreeIter     iter;
-
-    /* Append a row and fill in some data */
-    gtk_list_store_append (store, &iter);
-
-    gtk_list_store_set(store, &iter,
-		       PRESETS_PICKER_COL_ICON, icon,
-		       PRESETS_PICKER_COL_NAME, item->name,
-		       PRESETS_PICKER_COL_ITEM_PTR, item,
-		       -1);
+    GtkTreeIter iter = preset_insert_item(item, &context->appdata->icon, store);
 
     /* mark submenues as such */
     if(item->is_group) {
@@ -986,30 +1029,7 @@ static GtkWidget
 
   icon_free(&context->appdata->icon, subicon);
 
-  gtk_tree_view_set_model(GTK_TREE_VIEW(view), GTK_TREE_MODEL(store));
-  g_object_unref(store);
-
-  /* Setup the selection handler */
-  GtkTreeSelection *select =
-    gtk_tree_view_get_selection (GTK_TREE_VIEW (view));
-  gtk_tree_selection_set_mode (select, GTK_SELECTION_SINGLE);
-  g_signal_connect (G_OBJECT (select), "changed",
-		    G_CALLBACK (on_presets_picker_selected), context);
-
-  gtk_tree_selection_unselect_all (select);
-
-  /* put this inside a scrolled view */
-#ifndef USE_PANNABLE_AREA
-  GtkWidget *scrolled_window = gtk_scrolled_window_new (NULL, NULL);
-  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window),
-				 GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-  gtk_container_add(GTK_CONTAINER(scrolled_window), view);
-  return scrolled_window;
-#else
-  GtkWidget *pannable_area = hildon_pannable_area_new();
-  gtk_container_add(GTK_CONTAINER(pannable_area), view);
-  return pannable_area;
-#endif
+  return presets_picker_embed(view, store, context);
 }
 #endif
 
