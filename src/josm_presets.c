@@ -851,6 +851,21 @@ static GtkWidget *build_menu(presets_context_t *context,
 }
 #else // PICKER_MENU
 
+static gboolean preset_group_is_used(const presets_item_t *item, const presets_context_t *context)
+{
+  g_assert(item->is_group);
+  const presets_item_t *child;
+  for (child = item->group; child; child = child->next) {
+    if(child->is_group) {
+      if(preset_group_is_used(child, context))
+        return TRUE;
+    } else if(preset_is_used(child, context))
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
 enum {
   PRESETS_PICKER_COL_ICON = 0,
   PRESETS_PICKER_COL_NAME,
@@ -861,6 +876,7 @@ enum {
 };
 
 static GtkWidget *presets_picker(presets_context_t *context, presets_item_t *item);
+static GtkWidget *preset_picker_recent(presets_context_t *context);
 
 static void
 on_presets_picker_selected(GtkTreeSelection *selection, gpointer data) {
@@ -892,7 +908,7 @@ on_presets_picker_selected(GtkTreeSelection *selection, gpointer data) {
     GtkWidget *view =
       GTK_WIDGET(gtk_tree_selection_get_tree_view(selection));
 
-    if(sub_item) {
+    if(sub_item || (!item && !sub_item)) {
       /* check if this already had a submenu */
       GtkWidget *sub = GTK_WIDGET(g_object_get_data(G_OBJECT(view), "sub"));
       g_assert(sub);
@@ -902,7 +918,13 @@ on_presets_picker_selected(GtkTreeSelection *selection, gpointer data) {
       /* views parent is a scrolled window whichs parent in turn is the hbox */
       GtkWidget *hbox = view->parent->parent;
 
-      sub = presets_picker(context, sub_item);
+      if(sub_item) {
+        /* normal submenu */
+        sub = presets_picker(context, sub_item);
+      } else {
+        /* used presets submenu */
+        sub = preset_picker_recent(context);
+      }
       gtk_box_pack_start_defaults(GTK_BOX(hbox), sub);
       gtk_widget_show_all(sub);
       g_object_set_data(G_OBJECT(view), "sub", (gpointer)sub);
@@ -1001,11 +1023,41 @@ static GtkTreeIter preset_insert_item(const presets_item_t *item, icon_t **icons
   return iter;
 }
 
+static void insert_recent_items(const presets_item_t *first, presets_context_t *context,
+                                GtkListStore *store) {
+  const presets_item_t *preset;
+  for(preset = first; preset; preset = preset->next) {
+    if(preset->is_group)
+      insert_recent_items(preset->group, context, store);
+    else if(preset_is_used(preset, context))
+      preset_insert_item(preset, &context->appdata->icon, store);
+  }
+}
+
+static GtkWidget *preset_picker_recent(presets_context_t *context) {
+  GtkTreeView *view;
+  GtkListStore *store = presets_picker_store(&view);
+
+  const presets_item_t *preset;
+
+  /* scan all presets if they are used */
+  for(preset = context->appdata->presets; preset; preset = preset->next) {
+    if(preset->is_group)
+      insert_recent_items(preset->group, context, store);
+    else if(preset_is_used(preset, context))
+      preset_insert_item(preset, &context->appdata->icon, store);
+  }
+
+  return presets_picker_embed(view, store, context);
+}
+
 static GtkWidget
 *presets_picker(presets_context_t *context, presets_item_t *item) {
   GtkTreeView *view;
   GtkListStore *store = presets_picker_store(&view);
 
+  gboolean scan_for_recent = (item == context->appdata->presets);
+  gboolean show_recent = FALSE;
   GdkPixbuf *subicon = icon_load(&context->appdata->icon,
                                  "submenu_arrow");
   for(; item; item = item->next) {
@@ -1024,7 +1076,26 @@ static GtkWidget
 			 PRESETS_PICKER_COL_SUBMENU_PTR,  item->group,
 			 PRESETS_PICKER_COL_SUBMENU_ICON, subicon,
 			 -1);
+      if(scan_for_recent) {
+        show_recent = preset_group_is_used(item, context);
+        if(show_recent)
+          scan_for_recent = FALSE;
+      }
+    } else if(scan_for_recent) {
+      show_recent = preset_is_used(item, context);
+      if(show_recent)
+        scan_for_recent = FALSE;
     }
+  }
+  if(show_recent) {
+    GtkTreeIter     iter;
+
+    /* Append a row and fill in some data */
+    gtk_list_store_prepend(store, &iter);
+    gtk_list_store_set(store, &iter,
+		       PRESETS_PICKER_COL_NAME, _("Used presets"),
+		       PRESETS_PICKER_COL_SUBMENU_ICON, subicon,
+		       -1);
   }
 
   icon_free(&context->appdata->icon, subicon);
