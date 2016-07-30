@@ -405,7 +405,7 @@ static void attach_right(GtkWidget *table, GtkWidget *widget, gint y) {
 }
 
 static tag_t **store_value(presets_widget_t *widget, tag_t **ctag,
-			   char *value) {
+			   const char *value) {
   if((value && strlen(value)) || !widget->del_if_empty) {
     *ctag = g_new0(tag_t, 1);
     (*ctag)->key = g_strdup(widget->key);
@@ -728,24 +728,26 @@ do_item( presets_context_t *context, presets_item_t *item) {
 
     while(tag) {
       tag_t *next = tag->next;
-      tag->next = NULL;
 
       tag_t **dst = tag_context->tag;
       gboolean replaced = FALSE;
       while(*dst && !replaced) {
 	if(strcasecmp((*dst)->key, tag->key) == 0) {
-	  g_free((*dst)->value);
-	  (*dst)->value = g_strdup(tag->value);
+	  /* just swap the values, and then free the temporary instance */
+	  char *swap = tag->value;
+	  tag->value = (*dst)->value;
+	  (*dst)->value = swap;
+	  osm_tag_free(tag);
 	  replaced = TRUE;
-	}
-	dst = &(*dst)->next;
+	} else
+	  dst = &(*dst)->next;
       }
 
       /* if nothing was replaced, then just append new tag */
-      if(!replaced)
-	*dst = tag;
-      else
-	osm_tag_free(tag);
+      if(!replaced) {
+        tag->next = NULL;
+        *dst = tag;
+      }
 
       tag = next;
     }
