@@ -495,12 +495,12 @@ static void info_more(tag_context_t *context) {
 /* given */
 gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
 
-  tag_context_t *context = g_new0(tag_context_t, 1);
+  tag_context_t context = { 0 };
   char *str = NULL;
   tag_t *work_copy = NULL;
 
-  context->appdata = appdata;
-  context->tag = &work_copy;
+  context.appdata = appdata;
+  context.tag = &work_copy;
 
   /* use implicit selection if not explicitely given */
   if(!object) {
@@ -508,39 +508,39 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
 	     (appdata->map->selected.object.type == WAY) ||
 	     (appdata->map->selected.object.type == RELATION));
 
-    context->object = appdata->map->selected.object;
+    context.object = appdata->map->selected.object;
   } else
-    context->object = *object;
+    context.object = *object;
 
-  //  str = osm_object_string(&context->object);
+  //  str = osm_object_string(&context.object);
   //  str[0] =  g_ascii_toupper   (str[0]);
 
-  g_assert(osm_object_is_real(&context->object));
+  g_assert(osm_object_is_real(&context.object));
 
-  work_copy = osm_tags_copy(OBJECT_TAG(context->object));
+  work_copy = osm_tags_copy(OBJECT_TAG(context.object));
 
-  switch(context->object.type) {
+  switch(context.object.type) {
   case NODE:
     str = g_strdup_printf(_("Node #" ITEM_ID_FORMAT),
-			  OBJECT_ID(context->object));
-    context->presets_type = PRESETS_TYPE_NODE;
+			  OBJECT_ID(context.object));
+    context.presets_type = PRESETS_TYPE_NODE;
     break;
 
   case WAY:
     str = g_strdup_printf(_("Way #" ITEM_ID_FORMAT),
-			  OBJECT_ID(context->object));
-    context->presets_type = PRESETS_TYPE_WAY;
+			  OBJECT_ID(context.object));
+    context.presets_type = PRESETS_TYPE_WAY;
 
-    if(osm_way_get_last_node(context->object.way) ==
-       osm_way_get_first_node(context->object.way))
-      context->presets_type |= PRESETS_TYPE_CLOSEDWAY;
+    if(osm_way_get_last_node(context.object.way) ==
+       osm_way_get_first_node(context.object.way))
+      context.presets_type |= PRESETS_TYPE_CLOSEDWAY;
 
     break;
 
   case RELATION:
     str = g_strdup_printf(_("Relation #" ITEM_ID_FORMAT),
-			  OBJECT_ID(context->object));
-    context->presets_type = PRESETS_TYPE_RELATION;
+			  OBJECT_ID(context.object));
+    context.presets_type = PRESETS_TYPE_RELATION;
     break;
 
   default:
@@ -548,7 +548,7 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
     break;
   }
 
-  context->dialog = misc_dialog_new(MISC_DIALOG_LARGE, str,
+  context.dialog = misc_dialog_new(MISC_DIALOG_LARGE, str,
 	  GTK_WINDOW(parent),
 #ifdef FREMANTLE
 	  _("More"), GTK_RESPONSE_HELP,
@@ -558,35 +558,35 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
 	  NULL);
   g_free(str);
 
-  gtk_dialog_set_default_response(GTK_DIALOG(context->dialog),
+  gtk_dialog_set_default_response(GTK_DIALOG(context.dialog),
 				  GTK_RESPONSE_ACCEPT);
 
 #ifndef FREMANTLE
   /* -------- details box --------- */
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context->dialog)->vbox),
-		     details_widget(context, FALSE),
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context.dialog)->vbox),
+		     details_widget(&context, FALSE),
 		     FALSE, FALSE, 0);
 #endif
 
   /* ------------ tags ----------------- */
 
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context->dialog)->vbox),
-		     tag_widget(context), TRUE, TRUE, 0);
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context.dialog)->vbox),
+		     tag_widget(&context), TRUE, TRUE, 0);
 
   /* ----------------------------------- */
 
-  gtk_widget_show_all(context->dialog);
+  gtk_widget_show_all(context.dialog);
   gboolean ok = FALSE, quit = FALSE;
 
   do {
-    switch(gtk_dialog_run(GTK_DIALOG(context->dialog))) {
+    switch(gtk_dialog_run(GTK_DIALOG(context.dialog))) {
     case GTK_RESPONSE_ACCEPT:
       quit = TRUE;
       ok = TRUE;
       break;
 #ifdef FREMANTLE
     case GTK_RESPONSE_HELP:
-      info_more(context);
+      info_more(&context);
       break;
 #endif
 
@@ -597,23 +597,22 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
 
   } while(!quit);
 
-  gtk_widget_destroy(context->dialog);
+  gtk_widget_destroy(context.dialog);
 
   if(ok) {
-    if(osm_object_is_real(&context->object)) {
-      osm_tags_free(OBJECT_TAG(context->object));
-      OBJECT_TAG(context->object) = osm_tags_copy(work_copy);
+    if(osm_object_is_real(&context.object)) {
+      osm_tags_free(OBJECT_TAG(context.object));
+      OBJECT_TAG(context.object) = osm_tags_copy(work_copy);
     }
 
     /* since nodes being parts of ways but with no tags are invisible, */
     /* the result of editing them may have changed their visibility */
-    if(!object && context->object.type != RELATION)
+    if(!object && context.object.type != RELATION)
       map_item_redraw(appdata, &appdata->map->selected);
 
-    osm_object_set_flags(&context->object, OSM_FLAG_DIRTY, 0);
+    osm_object_set_flags(&context.object, OSM_FLAG_DIRTY, 0);
   } else
     osm_tags_free(work_copy);
 
-  g_free(context);
   return ok;
 }
