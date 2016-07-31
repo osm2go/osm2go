@@ -1094,15 +1094,24 @@ gboolean osm_sanity_check(GtkWidget *parent, osm_t *osm) {
 
 /* ------------------------- misc access functions -------------- */
 
-char *osm_tag_get_by_key(tag_t *tag, const char *key) {
-  if(!tag || !key) return NULL;
+tag_t *osm_tag_find(tag_t *tag, const char *key) {
+  if(!key) return NULL;
 
   while(tag) {
     if(strcasecmp(tag->key, key) == 0)
-      return tag->value;
+      return tag;
 
     tag = tag->next;
   }
+
+  return NULL;
+}
+
+char *osm_tag_get_by_key(tag_t *tag, const char *key) {
+  tag_t *t = osm_tag_find(tag, key);
+
+  if (t)
+    return t->value;
 
   return NULL;
 }
