@@ -451,7 +451,7 @@ static gboolean is_widget_interactive(const presets_widget_t *w)
 }
 
 static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
-		     presets_item_t *item, tag_t *orig_tag) {
+		     const presets_item_t *item, tag_t *orig_tag) {
   GtkWidget *dialog = NULL;
   gboolean ok = FALSE;
   tag_t *tag = NULL, **ctag = &tag;
@@ -710,7 +710,7 @@ typedef struct {
 } presets_context_t;
 
 static void
-do_item( presets_context_t *context, presets_item_t *item) {
+do_item( presets_context_t *context, const presets_item_t *item) {
   tag_t *tag =
     presets_item_dialog(context->appdata,
 			GTK_WINDOW(context->tag_context->dialog), item,
