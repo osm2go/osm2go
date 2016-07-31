@@ -236,11 +236,11 @@ node_chain_t *osm_parse_osm_way_nd(osm_t *osm, xmlNode *a_node);
 member_t *osm_parse_osm_relation_member(osm_t *osm, xmlNode *a_node);
 void osm_free(struct icon_s **icon, osm_t *osm);
 
-char *osm_node_get_value(node_t *node, char *key);
+char *osm_node_get_value(node_t *node, const char *key);
 gboolean osm_node_has_tag(node_t *node);
 
 void osm_way_free(hash_table_t *hash_table, way_t *way);
-char *osm_way_get_value(way_t *way, char *key);
+char *osm_way_get_value(way_t *way, const char *key);
 gboolean osm_node_has_value(node_t *node, char *str);
 gboolean osm_way_has_value(way_t *way, char *str);
 void osm_way_append_node(way_t *way, node_t *node);

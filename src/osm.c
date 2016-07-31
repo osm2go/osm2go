@@ -1107,30 +1107,12 @@ char *osm_tag_get_by_key(tag_t *tag, const char *key) {
   return NULL;
 }
 
-char *osm_way_get_value(way_t *way, char *key) {
-  tag_t *tag = OSM_TAG(way);
-
-  while(tag) {
-    if(strcasecmp(tag->key, key) == 0)
-      return tag->value;
-
-    tag = tag->next;
-  }
-
-  return NULL;
+char *osm_way_get_value(way_t *way, const char *key) {
+  return osm_tag_get_by_key(OSM_TAG(way), key);
 }
 
-char *osm_node_get_value(node_t *node, char *key) {
-  tag_t *tag = OSM_TAG(node);
-
-  while(tag) {
-    if(strcasecmp(tag->key, key) == 0)
-      return tag->value;
-
-    tag = tag->next;
-  }
-
-  return NULL;
+char *osm_node_get_value(node_t *node, const char *key) {
+  return osm_tag_get_by_key(OSM_TAG(node), key);
 }
 
 gboolean osm_way_has_value(way_t *way, char *str) {
