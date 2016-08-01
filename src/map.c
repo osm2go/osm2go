@@ -181,12 +181,6 @@ void map_way_select(appdata_t *appdata, way_t *way) {
 
     /* draw an arrow between every two nodes */
     if(last) {
-      /* create a new map item for every arrow */
-      map_item_t *new_map_item = g_new0(map_item_t, 1);
-      new_map_item->object.type = WAY;
-      new_map_item->object.way = way;
-      new_map_item->highlight = TRUE;
-
       struct { float x, y;} center, diff;
       center.x = (last->lpos.x + node_chain->node->lpos.x)/2;
       center.y = (last->lpos.y + node_chain->node->lpos.y)/2;
@@ -197,6 +191,12 @@ void map_way_select(appdata_t *appdata, way_t *way) {
       /* TODO: what if there's not enough space anywhere? */
       float len = sqrt(pow(diff.x, 2)+pow(diff.y, 2));
       if(len > map->style->highlight.arrow_limit*arrow_width) {
+        /* create a new map item for every arrow */
+        map_item_t *new_map_item = g_new0(map_item_t, 1);
+        new_map_item->object.type = WAY;
+        new_map_item->object.way = way;
+        new_map_item->highlight = TRUE;
+
 	len /= arrow_width;
 	diff.x = diff.x / len;
 	diff.y = diff.y / len;
