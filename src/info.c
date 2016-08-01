@@ -602,7 +602,7 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
   if(ok) {
     if(osm_object_is_real(&context.object)) {
       osm_tags_free(OBJECT_TAG(context.object));
-      OBJECT_TAG(context.object) = osm_tags_copy(work_copy);
+      OBJECT_TAG(context.object) = work_copy;
     }
 
     /* since nodes being parts of ways but with no tags are invisible, */
