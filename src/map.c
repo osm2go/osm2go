@@ -364,14 +364,12 @@ void map_item_deselect(appdata_t *appdata) {
 
   /* save tags for "last" function in info dialog */
   if(appdata->map->selected.object.type == NODE) {
-    if(appdata->map->last_node_tags)
-      osm_tags_free(appdata->map->last_node_tags);
+    osm_tags_free(appdata->map->last_node_tags);
 
     appdata->map->last_node_tags =
       osm_tags_copy(OBJECT_TAG(appdata->map->selected.object));
   } else if(appdata->map->selected.object.type == WAY) {
-    if(appdata->map->last_way_tags)
-      osm_tags_free(appdata->map->last_way_tags);
+    osm_tags_free(appdata->map->last_way_tags);
 
     appdata->map->last_way_tags =
       osm_tags_copy(OBJECT_TAG(appdata->map->selected.object));
@@ -810,8 +808,8 @@ static gint map_destroy_event(GtkWidget *widget, gpointer data) {
   map_free_map_item_chains(appdata);
 
   /* free buffered tags */
-  if(map->last_node_tags) osm_tags_free(map->last_node_tags);
-  if(map->last_way_tags) osm_tags_free(map->last_way_tags);
+  osm_tags_free(map->last_node_tags);
+  osm_tags_free(map->last_way_tags);
 
   map_state_free(map->state);
 
