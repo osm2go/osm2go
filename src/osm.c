@@ -2295,6 +2295,7 @@ char *osm_object_get_name(object_t *object) {
   if(!type) type = osm_tag_get_by_key(tags, "railway");
   if(!type) type = osm_tag_get_by_key(tags, "natural");
   if(!type && osm_tag_get_by_key(tags, "building")) type = "building";
+  if(!type) type = osm_tag_get_by_key(tags, "emergency");
 
   /* highways are a little bit difficult */
   char *highway = osm_tag_get_by_key(tags, "highway");
