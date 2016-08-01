@@ -892,15 +892,13 @@ on_presets_picker_selected(GtkTreeSelection *selection, gpointer data) {
   GtkTreeModel *model;
 
   if (gtk_tree_selection_get_selected (selection, &model, &iter)) {
-    char *name = NULL;
     presets_item_t *item = NULL, *sub_item = NULL;
     gtk_tree_model_get(model, &iter,
-		       PRESETS_PICKER_COL_NAME, &name,
 		       PRESETS_PICKER_COL_SUBMENU_PTR, &sub_item,
 		       PRESETS_PICKER_COL_ITEM_PTR, &item,
 		       -1);
 
-    printf("clicked on %s, submenu = %p\n", name, sub_item);
+    printf("clicked on %s, submenu = %p\n", item ? item->name : "''", sub_item);
 
     GtkWidget *view =
       GTK_WIDGET(gtk_tree_selection_get_tree_view(selection));
