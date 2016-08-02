@@ -50,13 +50,13 @@ typedef struct bounds_s {
 } bounds_t;
 
 typedef struct user_s {
-  char *name;
   struct user_s *next;
+  char *name;
 } user_t;
 
 typedef struct tag_s {
-  char *key, *value;
   struct tag_s *next;
+  char *key, *value;
 } tag_t;
 
 typedef struct {
@@ -72,6 +72,8 @@ typedef struct {
 typedef struct node_s {
   base_object_t base;
 
+  struct node_s *next;
+
   pos_t pos;
   lpos_t lpos;
   int ways;
@@ -82,8 +84,6 @@ typedef struct node_s {
 
   /* a link to the visual representation on screen */
   struct map_item_chain_s *map_item_chain;
-
-  struct node_s *next;
 } node_t;
 
 typedef enum {
@@ -91,14 +91,14 @@ typedef enum {
 } type_t;
 
 typedef struct item_id_chain_s {
+  struct item_id_chain_s *next;
   type_t type;
   item_id_t id;
-  struct item_id_chain_s *next;
 } item_id_chain_t;
 
 typedef struct node_chain {
-  node_t *node;
   struct node_chain *next;
+  node_t *node;
 } node_chain_t;
 
 #define OSM_DRAW_FLAG_AREA  (1<<0)
@@ -106,6 +106,8 @@ typedef struct node_chain {
 
 typedef struct way_s {
   base_object_t base;
+
+  struct way_s *next;
 
   node_chain_t *node_chain;
 
@@ -132,13 +134,11 @@ typedef struct way_s {
 
   /* a link to the visual representation on screen */
   struct map_item_chain_s *map_item_chain;
-
-  struct way_s *next;
 } way_t;
 
 typedef struct way_chain {
-  way_t *way;
   struct way_chain *next;
+  way_t *way;
 } way_chain_t;
 
 /* return a pointer to the "base" object of an object */
@@ -164,13 +164,13 @@ typedef struct way_chain {
 typedef struct relation_s {
   base_object_t base;
 
-  struct member_s *member;
   struct relation_s *next;
+  struct member_s *member;
 } relation_t;
 
 typedef struct relation_chain_s {
-  relation_t *relation;
   struct relation_chain_s *next;
+  relation_t *relation;
 } relation_chain_t;
 
 /* two of these hash tables are used, one for nodes and one for ways */
@@ -181,13 +181,13 @@ typedef struct relation_chain_s {
 /* 256 kbytes (2^16 * sizeof(void*)) in size */
 #define ID2HASH(a) ((unsigned short)(a) ^ (unsigned short)((a)>>16))
 typedef struct hash_item_s {
+  struct hash_item_s *next;
+
   union {
     node_t *node;
     way_t *way;
     relation_t *relation;
   } data;
-
-  struct hash_item_s *next;
 } hash_item_t;
 
 typedef struct {
@@ -206,9 +206,9 @@ typedef struct {
 } object_t;
 
 typedef struct member_s {
+  struct member_s *next;
   object_t object;
   char   *role;
-  struct member_s *next;
 } member_t;
 
 typedef struct osm_s {
