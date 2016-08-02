@@ -61,23 +61,23 @@ static void on_info(GtkWidget *widget, www_context_t *context) {
 
 /* --------------------- presets.xml parsing ----------------------- */
 
-static gboolean xmlGetPropIs(xmlNode *node, char *prop, char *is) {
-  char *prop_str = (char*)xmlGetProp(node, BAD_CAST prop);
+static gboolean xmlGetPropIs(xmlNode *node, const char *prop, const char *is) {
+  xmlChar *prop_str = xmlGetProp(node, BAD_CAST prop);
   if(!prop_str) return FALSE;
 
   gboolean retval = FALSE;
-  retval = (strcasecmp(prop_str, is) == 0);
+  retval = (strcasecmp((const char*)prop_str, is) == 0);
   xmlFree(prop_str);
   return retval;
 }
 
-static presets_value_t *xmlGetPropValues(xmlNode *node, char *prop) {
-  char *prop_str = (char*)xmlGetProp(node, BAD_CAST prop);
+static presets_value_t *xmlGetPropValues(xmlNode *node, const char *prop) {
+  xmlChar *prop_str = xmlGetProp(node, BAD_CAST prop);
   if(!prop_str) return NULL;
   presets_value_t *value = NULL, **cur = &value;
 
   /* cut values strings */
-  char *c, *p = prop_str;
+  const char *c, *p = (const char*)prop_str;
   while((c = strchr(p, ','))) {
 
     *cur = g_new0(presets_value_t, 1);
