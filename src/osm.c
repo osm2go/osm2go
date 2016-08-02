@@ -2185,7 +2185,7 @@ osm_way_reverse_direction_sensitive_roles(osm_t *osm, way_t *way) {
 
 
   }
-  g_free(rel_chain0);
+  osm_relation_chain_free(rel_chain0);
   return n_roles_flipped;
 }
 
