@@ -65,7 +65,7 @@ GdkPixbuf *icon_load(icon_t **icon, const char *name) {
 
     //    printf("Successfully loaded icon %s to %p\n", name, pix);
       *icon = g_new0(icon_t, 1);
-      (*icon)->name = strdup(name);
+      (*icon)->name = g_strdup(name);
       (*icon)->buf = pix;
       (*icon)->use = 1;
 

@@ -688,13 +688,13 @@ gboolean wms_server_edit(wms_server_context_t *context, gboolean edit_name,
 			 -1);
 
       g_free(wms_server->name);
-      wms_server->name = strdup((char*)gtk_entry_get_text(GTK_ENTRY(name)));
+      wms_server->name = g_strdup(gtk_entry_get_text(GTK_ENTRY(name)));
     }
 
     g_free(wms_server->server);
-    wms_server->server = strdup((char*)gtk_entry_get_text(GTK_ENTRY(server)));
+    wms_server->server = g_strdup(gtk_entry_get_text(GTK_ENTRY(server)));
     g_free(wms_server->path);
-    wms_server->path = strdup((char*)gtk_entry_get_text(GTK_ENTRY(path)));
+    wms_server->path = g_strdup(gtk_entry_get_text(GTK_ENTRY(path)));
     printf("setting %s/%s\n", wms_server->server, wms_server->path);
 
     /* set texts below */

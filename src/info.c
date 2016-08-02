@@ -169,8 +169,8 @@ static gboolean tag_edit(tag_context_t *context) {
 
   if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog))) {
     free(tag->key); free(tag->value);
-    tag->key = strdup((char*)gtk_entry_get_text(GTK_ENTRY(key)));
-    tag->value = strdup((char*)gtk_entry_get_text(GTK_ENTRY(value)));
+    tag->key = g_strdup(gtk_entry_get_text(GTK_ENTRY(key)));
+    tag->value = g_strdup(gtk_entry_get_text(GTK_ENTRY(value)));
     printf("setting %s/%s\n", tag->key, tag->value);
 
     gtk_list_store_set(context->store, &iter,
@@ -235,8 +235,8 @@ static void on_tag_add(GtkWidget *button, tag_context_t *context) {
   }
 
   /* fill with some empty strings */
-  (*tag)->key = strdup("");
-  (*tag)->value = strdup("");
+  (*tag)->key = g_strdup("");
+  (*tag)->value = g_strdup("");
 
   /* append a row for the new data */
   GtkTreeIter iter;
