@@ -2073,9 +2073,9 @@ osm_way_reverse_direction_sensitive_tags (way_t *way) {
   guint n_tags_altered = 0;
   while (tag != NULL) {
     char *lc_key = g_ascii_strdown(tag->key, -1);
-    char *lc_value = g_ascii_strdown(tag->value, -1);
 
     if (strcmp(lc_key, "oneway") == 0) {
+      char *lc_value = g_ascii_strdown(tag->value, -1);
       // oneway={yes/true/1/-1} is unusual.
       // Favour "yes" and "-1".
       if ((strcmp(lc_value, DS_ONEWAY_FWD) == 0) ||
@@ -2093,6 +2093,7 @@ osm_way_reverse_direction_sensitive_tags (way_t *way) {
       else {
         printf("warning: unknown tag: %s=%s\n", tag->key, tag->value);
       }
+      g_free(lc_value);
     }
 
     // :left and :right suffixes
@@ -2118,7 +2119,6 @@ osm_way_reverse_direction_sensitive_tags (way_t *way) {
     }
 
     g_free(lc_key);
-    g_free(lc_value);
     tag = tag->next;
   }
   if (n_tags_altered > 0) {
