@@ -57,7 +57,6 @@ static void osm_users_free(user_t *user) {
   while(user) {
     user_t *next = user->next;
 
-    g_free(user->name);
     g_free(user);
 
     user = next;
@@ -74,8 +73,9 @@ static user_t *osm_user(osm_t *osm, const char *name) {
 
   /* end of list or inexact match? create new user entry! */
   if(!*user || strcasecmp((*user)->name, name)) {
-    user_t *new = g_new0(user_t, 1);
-    new->name = g_strdup(name);
+    const size_t nlen = strlen(name) + 1;
+    user_t *new = g_malloc(sizeof(user) + nlen);
+    memcpy(new->name, name, nlen);
     new->next = *user;
     *user = new;
 
