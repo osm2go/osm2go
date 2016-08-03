@@ -420,6 +420,33 @@ gboolean osm_node_chain_diff(const node_chain_t *n1, const node_chain_t *n2) {
   return (n2 != NULL) ? TRUE : FALSE;
 }
 
+/**
+ * @brief check if 2 member lists differ
+ * @param n1 first list
+ * @param n2 second list
+ * @retval if the lists differ
+ */
+gboolean osm_members_diff(const member_t *n1, const member_t *n2) {
+  while(n1) {
+    if (n2 == NULL)
+      return TRUE;
+
+    if (n1->object.id != n2->object.id)
+      return TRUE;
+
+    if (n1->object.type != n2->object.type)
+      return TRUE;
+
+    if (strcmp(n1->role, n2->role) != 0)
+      return TRUE;
+
+    n1 = n1->next;
+    n2 = n2->next;
+  }
+
+  return (n2 != NULL) ? TRUE : FALSE;
+}
+
 node_chain_t *osm_parse_osm_way_nd(osm_t *osm, xmlNode *a_node) {
   xmlChar *prop;
 

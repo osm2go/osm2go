@@ -648,18 +648,23 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
     return;
   }
 
-  /* update members */
+  gboolean was_changed = FALSE;
+  tag_t *ntags = xml_scan_tags(node_rel->children);
+  if (osm_tag_lists_diff(OSM_TAG(relation), ntags)) {
+    /* relation may be an existing relation, so remove tags to */
+    /* make space for new ones */
+    osm_tags_free(OSM_TAG(relation));
 
-  /* this may be an existing relation, so remove members to */
-  /* make space for new ones */
-  if(relation->member) {
-    printf("  removing existing members for diff members\n");
-    osm_members_free(relation->member);
-    relation->member = NULL;
+    OSM_TAG(relation) = ntags;
+    was_changed = TRUE;
+  } else {
+    osm_tags_free(ntags);
   }
 
+  /* update members */
+
   /* scan for members */
-  member_t **member = &relation->member;
+  member_t *nmember = NULL, **member = &nmember;
   xmlNode *member_node = NULL;
   for(member_node = node_rel->children; member_node;
       member_node = member_node->next) {
@@ -673,14 +678,20 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
     }
   }
 
-  /* relation may be an existing relation, so remove tags to */
-  /* make space for new ones */
-  if(OSM_TAG(relation)) {
-    printf("  removing existing tags for diff tags\n");
-    osm_tags_free(OSM_TAG(relation));
+  if(osm_members_diff(relation->member, nmember)) {
+    /* this may be an existing relation, so remove members to */
+    /* make space for new ones */
+    osm_members_free(relation->member);
+    was_changed = TRUE;
+    relation->member = nmember;
+  } else {
+    osm_members_free(nmember);
   }
 
-  OSM_TAG(relation) = xml_scan_tags(node_rel->children);
+  if(!was_changed && (OSM_FLAGS(relation) & OSM_FLAG_DIRTY)) {
+    printf("relation " ITEM_ID_FORMAT " has the same members and tags as upstream, discarding diff\n", id);
+    OSM_FLAGS(relation) &= ~OSM_FLAG_DIRTY;
+  }
 }
 
 void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) {

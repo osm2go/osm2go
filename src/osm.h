@@ -253,6 +253,7 @@ unsigned int osm_node_chain_length(const node_chain_t *node_chain);
 gboolean osm_node_chain_diff(const node_chain_t *n1, const node_chain_t *n2);
 void osm_node_free(hash_table_t *hash, struct icon_s **icon, node_t *node);
 
+gboolean osm_members_diff(const member_t *n1, const member_t *n2);
 void osm_members_free(member_t *member);
 void osm_member_free(member_t *member);
 
