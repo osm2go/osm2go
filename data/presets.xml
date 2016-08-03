@@ -2484,19 +2484,28 @@ See also http://josm.openstreetmap.de/wiki/TaggingPresets.
             <key key="amenity" value="veterinary" />
             <text key="name" text="Name" default="" delete_if_empty="true" />
         </item>
-        <item name="Fire hydrant" icon="presets/fire_hydrant.png">
-            <link href="http://wiki.openstreetmap.org/wiki/Tag:emergency%3Dfire_hydrant"
-                  de.href="http://wiki.openstreetmap.org/wiki/DE:Tag:emergency%3Dfire_hydrant" />
-            <label text="Edit Fire Hydrant" />
+        <item name="Fire hydrant" icon="presets/fire_hydrant.png" type="node">
+            <link href="http://wiki.openstreetmap.org/wiki/Tag:emergency=fire_hydrant"
+                  de.href="http://wiki.openstreetmap.org/wiki/DE:Tag:emergency=fire_hydrant"
+                  fr.href="http://wiki.openstreetmap.org/wiki/FR:Tag:emergency=fire_hydrant"
+                  ja.href="http://wiki.openstreetmap.org/wiki/JA:Tag:emergency=fire_hydrant"
+                  pl.href="http://wiki.openstreetmap.org/wiki/Pl:Tag:emergency=fire_hydrant"
+                  pt_BR.href="http://wiki.openstreetmap.org/wiki/Pt-br:Tag:emergency=fire_hydrant"
+                  ru.href="http://wiki.openstreetmap.org/wiki/RU:Tag:emergency=fire_hydrant"
+                  uk.href="http://wiki.openstreetmap.org/wiki/Uk:Tag:emergency=fire_hydrant" />
             <space />
             <key key="emergency" value="fire_hydrant" />
-            <text key="ref" text="Point Number" default="" delete_if_empty="true" />
-            <text key="fire_hydrant:type" text="Hydrant type" values="underground,pillar,wall,pond" default="" delete_if_empty="true" />
-            <text key="fire_hydrant:diameter" text="Width of the water main (in mm)" default="" delete_if_empty="true" />
-            <combo key="fire_hydrant:position" text="Relative position" values="lane,parking_lot,sidewalk,green" default="" delete_if_empty="true" />
-            <text key="operator" text="Operator" default="" delete_if_empty="true" />
+            <combo key="fire_hydrant:type" text="Type" values="underground,pillar,wall,pond" values_context="pipeline" default="pillar" delete_if_empty="true" />
+            <combo key="fire_hydrant:diameter" text="Diameter (in mm)" values="50,80,100,150,200,250,300,400" delete_if_empty="true" />
             <space />
-        </item>
+            <text key="name" text="Name" delete_if_empty="true" />
+            <text key="ref" text="Reference" delete_if_empty="true" />
+            <text key="operator" text="Operator" delete_if_empty="true" />
+            <space />
+            <combo key="fire_hydrant:position" text="Hydrant Position" values="lane,parking_lot,sidewalk,green" values_context="hydrant position" delete_if_empty="true" />
+            <combo key="fire_hydrant:pressure" text="Pressure (in bar)" values="5,6,8,suction" delete_if_empty="true" />
+            <text key="fire_hydrant:count" text="Count" delete_if_empty="true" />
+        </item> <!-- Fire Hydrant -->
     </group> <!-- Health -->
     <separator/>
     <group name="Places" icon="presets/places.png">
