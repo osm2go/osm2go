@@ -797,7 +797,7 @@ static node_t *process_node(xmlTextReaderPtr reader, osm_t *osm) {
 	 (xmlTextReaderDepth(reader) != depth))) {
 
     if(xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT) {
-      char *subname = (char*)xmlTextReaderConstName(reader);
+      const char *subname = (const char*)xmlTextReaderConstName(reader);
       if(strcasecmp(subname, "tag") == 0) {
 	*tag = process_tag(reader);
 	if(*tag) tag = &(*tag)->next;
@@ -890,7 +890,7 @@ static way_t *process_way(xmlTextReaderPtr reader, osm_t *osm) {
 	 (xmlTextReaderDepth(reader) != depth))) {
 
     if(xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT) {
-      char *subname = (char*)xmlTextReaderConstName(reader);
+      const char *subname = (const char*)xmlTextReaderConstName(reader);
       if(strcasecmp(subname, "nd") == 0) {
 	*node_chain = process_nd(reader, osm);
 	if(*node_chain) node_chain = &(*node_chain)->next;
@@ -1019,7 +1019,7 @@ static relation_t *process_relation(xmlTextReaderPtr reader, osm_t *osm) {
 	 (xmlTextReaderDepth(reader) != depth))) {
 
     if(xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT) {
-      char *subname = (char*)xmlTextReaderConstName(reader);
+      const char *subname = (const char*)xmlTextReaderConstName(reader);
       if(strcasecmp(subname, "member") == 0) {
 	*member = process_member(reader, osm);
 	if(*member) member = &(*member)->next;
@@ -1060,7 +1060,7 @@ static osm_t *process_osm(xmlTextReaderPtr reader) {
     case XML_READER_TYPE_ELEMENT:
 
       g_assert_cmpint(xmlTextReaderDepth(reader), ==, 1);
-      char *name = (char*)xmlTextReaderConstName(reader);
+      const char *name = (const char*)xmlTextReaderConstName(reader);
       if(strcasecmp(name, "bounds") == 0) {
 	osm->bounds = process_bounds(reader);
       } else if(strcasecmp(name, "node") == 0) {
@@ -1109,7 +1109,7 @@ static osm_t *process_file(const char *filename) {
   if (reader != NULL) {
     ret = xmlTextReaderRead(reader);
     if(ret == 1) {
-      char *name = (char*)xmlTextReaderConstName(reader);
+      const char *name = (const char*)xmlTextReaderConstName(reader);
       if(name && strcasecmp(name, "osm") == 0)
 	osm = process_osm(reader);
     } else
