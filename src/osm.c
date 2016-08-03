@@ -728,24 +728,45 @@ static tag_t *process_tag(xmlTextReaderPtr reader) {
   return tag;
 }
 
+static void process_base_attributes(base_object_t *obj, xmlTextReaderPtr reader, osm_t *osm)
+{
+  xmlChar *prop;
+  if((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "id"))) {
+    OSM_ID(obj) = strtoll((char*)prop, NULL, 10);
+    xmlFree(prop);
+  }
+
+  /* new in api 0.6: */
+  if((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "version"))) {
+    OSM_VERSION(obj) = strtoul((char*)prop, NULL, 10);
+    xmlFree(prop);
+  }
+
+  if((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "user"))) {
+    OSM_USER(obj) = osm_user(osm, (char*)prop);
+    xmlFree(prop);
+  }
+
+  if((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "visible"))) {
+    OSM_VISIBLE(obj) = (strcasecmp((char*)prop, "true") == 0);
+    xmlFree(prop);
+  }
+
+  if((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "timestamp"))) {
+    OSM_TIME(obj) = convert_iso8601((char*)prop);
+    xmlFree(prop);
+  }
+}
+
 static node_t *process_node(xmlTextReaderPtr reader, osm_t *osm) {
 
   /* allocate a new node structure */
   node_t *node = g_new0(node_t, 1);
   node->pos.lat = node->pos.lon = NAN;
 
+  process_base_attributes(&node->base, reader, osm);
+
   xmlChar *prop;
-  if((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "id"))) {
-    OSM_ID(node) = strtoll((char*)prop, NULL, 10);
-    xmlFree(prop);
-  }
-
-  /* new in api 0.6: */
-  if((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "version"))) {
-    OSM_VERSION(node) = strtoul((char*)prop, NULL, 10);
-    xmlFree(prop);
-  }
-
   if((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "lat"))) {
     node->pos.lat = g_ascii_strtod((char*)prop, NULL);
     xmlFree(prop);
@@ -753,21 +774,6 @@ static node_t *process_node(xmlTextReaderPtr reader, osm_t *osm) {
 
   if((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "lon"))) {
     node->pos.lon = g_ascii_strtod((char*)prop, NULL);
-    xmlFree(prop);
-  }
-
-  if((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "user"))) {
-    OSM_USER(node) = osm_user(osm, (char*)prop);
-    xmlFree(prop);
-  }
-
-  if((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "visible"))) {
-    OSM_VISIBLE(node) = (strcasecmp((char*)prop, "true") == 0);
-    xmlFree(prop);
-  }
-
-  if((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "timestamp"))) {
-    OSM_TIME(node) = convert_iso8601((char*)prop);
     xmlFree(prop);
   }
 
@@ -837,32 +843,7 @@ static way_t *process_way(xmlTextReaderPtr reader, osm_t *osm) {
   /* allocate a new way structure */
   way_t *way = g_new0(way_t, 1);
 
-  xmlChar *prop;
-  if((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "id"))) {
-    OSM_ID(way) = strtoll((char*)prop, NULL, 10);
-    xmlFree(prop);
-  }
-
-  /* new in api 0.6: */
-  if((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "version"))) {
-    OSM_VERSION(way) = strtoul((char*)prop, NULL, 10);
-    xmlFree(prop);
-  }
-
-  if((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "user"))) {
-    OSM_USER(way) = osm_user(osm, (char*)prop);
-    xmlFree(prop);
-  }
-
-  if((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "visible"))) {
-    OSM_VISIBLE(way) = (strcasecmp((char*)prop, "true") == 0);
-    xmlFree(prop);
-  }
-
-  if((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "timestamp"))) {
-    OSM_TIME(way) = convert_iso8601((char*)prop);
-    xmlFree(prop);
-  }
+  process_base_attributes(&way->base, reader, osm);
 
   /* append way to end of hash table if present */
   if(osm->way_hash) {
@@ -974,32 +955,7 @@ static relation_t *process_relation(xmlTextReaderPtr reader, osm_t *osm) {
   /* allocate a new relation structure */
   relation_t *relation = g_new0(relation_t, 1);
 
-  xmlChar *prop;
-  if((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "id"))) {
-    OSM_ID(relation) = strtoll((char*)prop, NULL, 10);
-    xmlFree(prop);
-  }
-
-  /* new in api 0.6: */
-  if((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "version"))) {
-    OSM_VERSION(relation) = strtoul((char*)prop, NULL, 10);
-    xmlFree(prop);
-  }
-
-  if((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "user"))) {
-    OSM_USER(relation) = osm_user(osm, (char*)prop);
-    xmlFree(prop);
-  }
-
-  if((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "visible"))) {
-    OSM_VISIBLE(relation) = (strcasecmp((char*)prop, "true") == 0);
-    xmlFree(prop);
-  }
-
-  if((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "timestamp"))) {
-    OSM_TIME(relation) = convert_iso8601((char*)prop);
-    xmlFree(prop);
-  }
+  process_base_attributes(&relation->base, reader, osm);
 
   /* just an empty element? then return the relation as it is */
   /* (this should in fact never happen as this would be a relation */
