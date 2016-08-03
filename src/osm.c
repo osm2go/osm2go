@@ -2110,8 +2110,17 @@ void osm_way_reverse(way_t *way) {
 
 static const char *DS_ONEWAY_FWD = "yes";
 static const char *DS_ONEWAY_REV = "-1";
-static const char *DS_LEFT_SUFFIX = ":left";
-static const char *DS_RIGHT_SUFFIX = ":right";
+
+static const struct {
+	const char *orig;
+	const char *reverse;
+} rtable[] = {
+	{ .orig = ":left",     .reverse = ":right" },
+	{ .orig = ":right",    .reverse = ":left" },
+	{ .orig = ":forward",  .reverse = ":backward" },
+	{ .orig = ":backward", .reverse = ":forward" },
+	{ .orig = NULL,        .reverse = NULL }
+};
 
 /* Reverse direction-sensitive tags like "oneway". Marks the way as dirty if
  * anything is changed, and returns the number of flipped tags. */
@@ -2141,28 +2150,23 @@ osm_way_reverse_direction_sensitive_tags (way_t *way) {
         printf("warning: unknown tag: %s=%s\n", tag->key, tag->value);
       }
       g_free(lc_value);
-    }
-
-    // :left and :right suffixes
-    else if (g_str_has_suffix(lc_key, DS_LEFT_SUFFIX)) {
-      char *key_old = tag->key;
-      char *lastcolon = rindex(key_old, ':');
-      g_assert(lastcolon != NULL);
-      *lastcolon = '\000';
-      tag->key = g_strconcat(key_old, DS_RIGHT_SUFFIX, NULL);
-      *lastcolon = ':';
-      g_free(key_old);
-      n_tags_altered++;
-    }
-    else if (g_str_has_suffix(lc_key, DS_RIGHT_SUFFIX)) {
-      char *key_old = tag->key;
-      char *lastcolon = rindex(key_old, ':');
-      g_assert(lastcolon != NULL);
-      *lastcolon = '\000';
-      tag->key = g_strconcat(key_old, DS_LEFT_SUFFIX, NULL);
-      *lastcolon = ':';
-      g_free(key_old);
-      n_tags_altered++;
+    } else {
+      // suffixes
+      unsigned int i;
+      for (i = 0; rtable[i].orig != NULL; i++) {
+        if (g_str_has_suffix(lc_key, rtable[i].orig)) {
+          /* length of key that will persist */
+          size_t plen = strlen(tag->key) - strlen(rtable[i].orig);
+          /* add length of new suffix */
+          tag->key = g_realloc(tag->key, plen + 1 + strlen(rtable[i].reverse));
+          char *lastcolon = tag->key + plen;
+          g_assert(*lastcolon == ':');
+          /* replace suffix */
+          strcpy(lastcolon, rtable[i].reverse);
+          n_tags_altered++;
+          break;
+        }
+      }
     }
 
     g_free(lc_key);
