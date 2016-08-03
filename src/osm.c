@@ -2294,12 +2294,27 @@ char *osm_object_get_name(object_t *object) {
   if(!type) type = osm_tag_get_by_key(tags, "waterway");
   if(!type) type = osm_tag_get_by_key(tags, "railway");
   if(!type) type = osm_tag_get_by_key(tags, "natural");
-  if(!type && osm_tag_get_by_key(tags, "building")) type = "building";
+  if(!type && osm_tag_get_by_key(tags, "building")) {
+    const char *street = osm_tag_get_by_key(tags, "addr:street");
+    const char *hn = osm_tag_get_by_key(tags, "addr:housenumber");
+    type = "building";
+
+    if(street && hn) {
+      if(hn) {
+        type = g_strjoin(" ", "building", street, hn, NULL);
+        free_type = TRUE;
+      }
+    } else if(hn) {
+      type = g_strconcat("building housenumber ", hn, NULL);
+      free_type = TRUE;
+    } else if(!name)
+      name = osm_tag_get_by_key(tags, "addr:housename");
+  }
   if(!type) type = osm_tag_get_by_key(tags, "emergency");
 
   /* highways are a little bit difficult */
   char *highway = osm_tag_get_by_key(tags, "highway");
-  if(highway) {
+  if(highway && !free_type) {
     if((!strcmp(highway, "primary")) ||
        (!strcmp(highway, "secondary")) ||
        (!strcmp(highway, "tertiary")) ||
