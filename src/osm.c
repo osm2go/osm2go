@@ -615,8 +615,8 @@ void osm_free(icon_t **icon, osm_t *osm) {
 
   osm_bounds_free(osm->bounds);
   osm_users_free(osm->user);
-  osm_ways_free(osm->way_hash, osm->way);
-  osm_nodes_free(osm->node_hash, icon, osm->node);
+  osm_ways_free(NULL, osm->way);
+  osm_nodes_free(NULL, icon, osm->node);
   osm_relations_free(osm->relation);
   g_free(osm);
 }
