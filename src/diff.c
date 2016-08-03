@@ -297,24 +297,23 @@ static int xml_get_prop_state(xmlNode *node) {
   return OSM_FLAG_DIRTY;
 }
 
-static pos_t *xml_get_prop_pos(xmlNode *node) {
+static gboolean xml_get_prop_pos(xmlNode *node, pos_t *pos) {
   xmlChar *str_lat = xmlGetProp(node, BAD_CAST "lat");
   xmlChar *str_lon = xmlGetProp(node, BAD_CAST "lon");
 
   if(!str_lon || !str_lat) {
     if(!str_lon) xmlFree(str_lon);
     if(!str_lat) xmlFree(str_lat);
-    return NULL;
+    return FALSE;
   }
 
-  pos_t *pos = g_new0(pos_t, 1);
   pos->lat = g_ascii_strtod((char*)str_lat, NULL);
   pos->lon = g_ascii_strtod((char*)str_lon, NULL);
 
   xmlFree(str_lon);
   xmlFree(str_lat);
 
-  return pos;
+  return TRUE;
 }
 
 static tag_t *xml_scan_tags(xmlNodePtr node) {
@@ -366,9 +365,10 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
   printf(" " ITEM_ID_FORMAT "\n", id);
 
   int state = xml_get_prop_state(node_node);
-  pos_t *pos = xml_get_prop_pos(node_node);
+  pos_t pos;
+  gboolean pos_diff = xml_get_prop_pos(node_node, &pos);
 
-  if(!(state & OSM_FLAG_DELETED) && !pos) {
+  if(!(state & OSM_FLAG_DELETED) && !pos_diff) {
     printf("  Node not deleted, but no valid position\n");
     return;
   }
@@ -424,9 +424,8 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
 
   tag_t *ntags = xml_scan_tags(node_node->children);
   /* check if the same changes have been done upstream */
-  if(state == OSM_FLAG_DIRTY && node_compare_changes(node, pos, ntags)) {
+  if(state == OSM_FLAG_DIRTY && node_compare_changes(node, &pos, ntags)) {
     printf("node " ITEM_ID_FORMAT " has the same values and position as upstream, discarding diff\n", id);
-    g_free(pos);
     osm_tags_free(ntags);
     OSM_FLAGS(node) &= ~OSM_FLAG_DIRTY;
     return;
@@ -442,13 +441,10 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
   OSM_TAG(node) = ntags;
 
   /* update position from diff */
-  if(pos) {
-    node->pos.lat = pos->lat;
-    node->pos.lon = pos->lon;
+  if(pos_diff) {
+    node->pos = pos;
 
     pos2lpos(osm->bounds, &node->pos, &node->lpos);
-
-    g_free(pos);
   }
 }
 
