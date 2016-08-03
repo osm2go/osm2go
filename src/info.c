@@ -168,9 +168,8 @@ static gboolean tag_edit(tag_context_t *context) {
   gtk_widget_show_all(dialog);
 
   if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog))) {
-    free(tag->key); free(tag->value);
-    tag->key = g_strdup(gtk_entry_get_text(GTK_ENTRY(key)));
-    tag->value = g_strdup(gtk_entry_get_text(GTK_ENTRY(value)));
+    osm_tag_update(tag, gtk_entry_get_text(GTK_ENTRY(key)),
+                        gtk_entry_get_text(GTK_ENTRY(value)));
     printf("setting %s/%s\n", tag->key, tag->value);
 
     gtk_list_store_set(context->store, &iter,

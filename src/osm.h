@@ -264,6 +264,9 @@ gboolean osm_is_creator_tag(const tag_t *tag);
 gboolean osm_tag_key_and_value_present(const tag_t *haystack, const tag_t *tag);
 gboolean osm_tag_key_other_value_present(const tag_t *haystack, const tag_t *tag);
 gboolean osm_tag_lists_diff(const tag_t *t1, const tag_t *t2);
+gboolean osm_tag_update(tag_t *tag, const char *key, const char *value);
+void osm_tag_update_key(tag_t *tag, const char *key);
+void osm_tag_update_value(tag_t *tag, const char *value);
 
 char *osm_generate_xml_changeset(char* comment);
 char *osm_generate_xml_node(item_id_t changeset, node_t *node);

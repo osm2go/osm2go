@@ -218,6 +218,55 @@ gboolean osm_tag_lists_diff(const tag_t *t1, const tag_t *t2) {
   return FALSE;
 }
 
+/**
+ * @brief update the key and value of a tag
+ * @param tag the tag struct to update
+ * @param key the new key
+ * @param value the new value
+ * @return if tag was actually changed
+ *
+ * This will update the key and value, but will avoid memory allocations
+ * in case key or value have not changed.
+ *
+ * This would be a no-op:
+ * \code
+ * osm_tag_update(tag, tag->key, tag->value);
+ * \endcode
+ */
+gboolean osm_tag_update(tag_t *tag, const char *key, const char *value)
+{
+  gboolean ret = FALSE;
+  if(strcmp(tag->key, key) == 0) {
+    osm_tag_update_key(tag, key);
+    ret = TRUE;
+  }
+  if(strcmp(tag->value, value) == 0) {
+    osm_tag_update_value(tag, value);
+    ret = TRUE;
+  }
+  return ret;
+}
+
+/**
+ * @brief replace the key of a tag
+ */
+void osm_tag_update_key(tag_t *tag, const char *key)
+{
+  const size_t nlen = strlen(key) + 1;
+  tag->key = g_realloc(tag->key, nlen);
+  memcpy(tag->key, key, nlen);
+}
+
+/**
+ * @brief replace the value of a tag
+ */
+void osm_tag_update_value(tag_t *tag, const char *value)
+{
+  const size_t nlen = strlen(value) + 1;
+  tag->value = g_realloc(tag->value, nlen);
+  memcpy(tag->value, value, nlen);
+}
+
 gboolean osm_way_ends_with_node(way_t *way, node_t *node) {
   /* and deleted way may even not contain any nodes at all */
   /* so ignore it */
@@ -2081,13 +2130,11 @@ osm_way_reverse_direction_sensitive_tags (way_t *way) {
       if ((strcmp(lc_value, DS_ONEWAY_FWD) == 0) ||
           (strcmp(lc_value, "true") == 0) ||
           (strcmp(lc_value, "1") == 0)) {
-        g_free(tag->value);
-        tag->value = g_strdup(DS_ONEWAY_REV);
+        osm_tag_update_value(tag, DS_ONEWAY_REV);
         n_tags_altered++;
       }
       else if (strcmp(lc_value, DS_ONEWAY_REV) == 0) {
-        g_free(tag->value);
-        tag->value = g_strdup(DS_ONEWAY_FWD);
+        osm_tag_update_value(tag, DS_ONEWAY_FWD);
         n_tags_altered++;
       }
       else {
