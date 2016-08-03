@@ -2150,6 +2150,11 @@ osm_way_reverse_direction_sensitive_tags (way_t *way) {
         printf("warning: unknown tag: %s=%s\n", tag->key, tag->value);
       }
       g_free(lc_value);
+    } else if (strcmp(lc_key, "sidewalk") == 0) {
+      if (strcasecmp(tag->value, "right") == 0)
+        osm_tag_update_value(tag, "left");
+      else if (strcasecmp(tag->value, "left") == 0)
+        osm_tag_update_value(tag, "right");
     } else {
       // suffixes
       unsigned int i;
