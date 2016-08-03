@@ -168,19 +168,21 @@ static gboolean tag_edit(tag_context_t *context) {
   gtk_widget_show_all(dialog);
 
   if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog))) {
-    osm_tag_update(tag, gtk_entry_get_text(GTK_ENTRY(key)),
-                        gtk_entry_get_text(GTK_ENTRY(value)));
-    printf("setting %s/%s\n", tag->key, tag->value);
+    if(osm_tag_update(tag, gtk_entry_get_text(GTK_ENTRY(key)),
+                        gtk_entry_get_text(GTK_ENTRY(value)))) {
+      printf("setting %s/%s\n", tag->key, tag->value);
 
-    gtk_list_store_set(context->store, &iter,
-		       TAG_COL_KEY, tag->key,
-		       TAG_COL_VALUE, tag->value,
-		       -1);
+      gtk_list_store_set(context->store, &iter,
+		         TAG_COL_KEY, tag->key,
+		         TAG_COL_VALUE, tag->value,
+		         -1);
+
+      /* update collisions for all entries */
+      update_collisions(context->store, *context->tag);
+    }
 
     gtk_widget_destroy(dialog);
 
-    /* update collisions for all entries */
-    update_collisions(context->store, *context->tag);
     return TRUE;
   }
 
