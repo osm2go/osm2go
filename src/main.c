@@ -525,7 +525,7 @@ menu_append_new_item(appdata_t *appdata,
                      char *label,
                      const gchar *icon_name, // stock id or name for icon_load
                                     // overridden by label, accels, icon_name
-                     const gchar *accel_path,
+                     const gchar *accel_path, // must be a static string
                      guint accel_key,      // from gdk/gdkkeysyms.h
                      GdkModifierType accel_mods, // e.g. GDK_CONTROL_MASK
 		     gboolean enabled,
@@ -572,6 +572,7 @@ menu_append_new_item(appdata_t *appdata,
   // Accelerators
   // Default
   if (accel_path != NULL) {
+    accel_path = g_intern_static_string(accel_path);
     gtk_menu_item_set_accel_path(GTK_MENU_ITEM(item), accel_path);
     if (accel_key != 0) {
       gtk_accel_map_add_entry( accel_path, accel_key, accel_mods );
