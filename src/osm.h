@@ -177,22 +177,7 @@ typedef struct relation_chain_s {
 /* currently relations aren't used often enough to justify the use */
 /* of a hash table */
 
-/* the current hash table uses 16 bits. each table thus is */
-/* 256 kbytes (2^16 * sizeof(void*)) in size */
-#define ID2HASH(a) ((unsigned short)(a) ^ (unsigned short)((a)>>16))
-typedef struct hash_item_s {
-  struct hash_item_s *next;
-
-  union {
-    node_t *node;
-    way_t *way;
-    relation_t *relation;
-  } data;
-} hash_item_t;
-
-typedef struct {
-  hash_item_t *hash[65536];
-} hash_table_t;
+typedef struct hash_table_s hash_table_t;
 
 typedef struct {
   type_t type;

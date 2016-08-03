@@ -45,6 +45,23 @@
 #error "Tree not enabled in libxml"
 #endif
 
+#define ID2HASH(a) ((unsigned short)(a) ^ (unsigned short)((a)>>16))
+
+/* the current hash table uses 16 bits. each table thus is */
+/* 256 kbytes (2^16 * sizeof(void*)) in size */
+typedef struct hash_item_s {
+  struct hash_item_s *next;
+
+  union {
+    node_t *node;
+    way_t *way;
+  } data;
+} hash_item_t;
+
+struct hash_table_s {
+  hash_item_t *hash[65536];
+};
+
 /* ------------------------- bounds handling --------------------- */
 
 static void osm_bounds_free(bounds_t *bounds) {
