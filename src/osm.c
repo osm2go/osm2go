@@ -80,19 +80,30 @@ static void osm_users_free(user_t *user) {
   }
 }
 
-static user_t *osm_user(osm_t *osm, const char *name) {
+static user_t *osm_user(osm_t *osm, const char *name, int uid) {
   if(!name) return NULL;
 
   /* search through user list */
   user_t **user = &osm->user;
-  while(*user && strcasecmp((*user)->name, name) < 0)
-    user = &(*user)->next;
+
+  if(uid >= 0) {
+    /* match using the uid */
+    for (; *user; user = &(*user)->next)
+      if((*user)->uid >= uid)
+        break;
+  } else {
+    /* match with the name, but only against users without uid */
+    for (; *user; user = &(*user)->next)
+      if((*user)->uid >= 0 || strcasecmp((*user)->name, name) >= 0)
+        break;
+  }
 
   /* end of list or inexact match? create new user entry! */
   if(!*user || strcasecmp((*user)->name, name)) {
     const size_t nlen = strlen(name) + 1;
     user_t *new = g_malloc(sizeof(**user) + nlen);
     memcpy(new->name, name, nlen);
+    new->uid = uid;
     new->next = *user;
     *user = new;
 
@@ -760,7 +771,18 @@ static void process_base_attributes(base_object_t *obj, xmlTextReaderPtr reader,
   }
 
   if((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "user"))) {
-    OSM_USER(obj) = osm_user(osm, (char*)prop);
+    int uid = -1;
+    xmlChar *puid = xmlTextReaderGetAttribute(reader, BAD_CAST "uid");
+    if(puid) {
+      char *endp;
+      uid = strtol((char*)puid, &endp, 10);
+      if(*endp) {
+        printf("WARNING: cannot parse uid '%s' for user '%s'\n", puid, prop);
+        uid = -1;
+      }
+      xmlFree(puid);
+    }
+    OSM_USER(obj) = osm_user(osm, (char*)prop, uid);
     xmlFree(prop);
   }
 

@@ -51,6 +51,7 @@ typedef struct bounds_s {
 
 typedef struct user_s {
   struct user_s *next;
+  int uid;
   char name[];
 } user_t;
 
