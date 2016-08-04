@@ -1047,6 +1047,19 @@ static osm_t *process_osm(xmlTextReaderPtr reader) {
 
   /* read next node */
   int num_elems = 0;
+
+  /* the objects come in exactly this order, so some parsing time can be
+   * saved as it is clear that e.g. no node can show up if the first way
+   * was seen. */
+  enum blocks {
+    BLOCK_OSM = 0,
+    BLOCK_BOUNDS,
+    BLOCK_NODES,
+    BLOCK_WAYS,
+    BLOCK_RELATIONS
+  };
+  enum blocks block = BLOCK_OSM;
+
   const int tick_every = 50; // Balance responsive appearance with performance.
   int ret = xmlTextReaderRead(reader);
   while(ret == 1) {
@@ -1056,17 +1069,21 @@ static osm_t *process_osm(xmlTextReaderPtr reader) {
 
       g_assert_cmpint(xmlTextReaderDepth(reader), ==, 1);
       const char *name = (const char*)xmlTextReaderConstName(reader);
-      if(strcmp(name, "bounds") == 0) {
+      if(block <= BLOCK_BOUNDS && strcmp(name, "bounds") == 0) {
 	osm->bounds = process_bounds(reader);
-      } else if(strcmp(name, "node") == 0) {
+	block = BLOCK_BOUNDS;
+      } else if(block <= BLOCK_NODES && strcmp(name, "node") == 0) {
 	*node = process_node(reader, osm);
 	if(*node) node = &(*node)->next;
-      } else if(strcmp(name, "way") == 0) {
+	block = BLOCK_NODES;
+      } else if(block <= BLOCK_WAYS && strcmp(name, "way") == 0) {
 	*way = process_way(reader, osm);
 	if(*way) way = &(*way)->next;
-      } else if(strcmp(name, "relation") == 0) {
+	block = BLOCK_WAYS;
+      } else if(block <= BLOCK_RELATIONS && strcmp(name, "relation") == 0) {
 	*relation = process_relation(reader, osm);
 	if(*relation) relation = &(*relation)->next;
+	block = BLOCK_RELATIONS;
       } else {
 	printf("something unknown found\n");
 	g_assert_not_reached();
