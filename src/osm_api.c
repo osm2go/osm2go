@@ -70,11 +70,6 @@ static char *osm_http_message(int id) {
   return NULL;
 }
 
-static gchar *format_credentials(const settings_t *settings)
-{
-  return g_strjoin(":", settings->username, settings->password, NULL);
-}
-
 typedef struct {
   appdata_t *appdata;
   GtkWidget *dialog;
@@ -474,7 +469,7 @@ static GtkWidget *table_attach_int(GtkWidget *table, int num,
   return label;
 }
 
-static void osm_delete_nodes(osm_upload_context_t *context) {
+static void osm_delete_nodes(osm_upload_context_t *context, gchar *cred) {
   node_t *node = context->osm->node;
   project_t *project = context->project;
 
@@ -489,7 +484,6 @@ static void osm_delete_nodes(osm_upload_context_t *context) {
 
       char *url = g_strdup_printf("%s/node/" ITEM_ID_FORMAT,
 				  project->server, OSM_ID(node));
-      gchar *cred = format_credentials(context->appdata->settings);
 
       char *xml_str = osm_generate_xml_node(context->changeset, node);
 
@@ -498,13 +492,12 @@ static void osm_delete_nodes(osm_upload_context_t *context) {
 	project->data_dirty = TRUE;
       }
 
-      g_free(cred);
     }
     node = node->next;
   }
 }
 
-static void osm_upload_nodes(osm_upload_context_t *context) {
+static void osm_upload_nodes(osm_upload_context_t *context, gchar *cred) {
   node_t *node = context->osm->node;
   project_t *project = context->project;
 
@@ -530,8 +523,6 @@ static void osm_upload_nodes(osm_upload_context_t *context) {
       if(xml_str) {
 	printf("uploading node %s from address %p\n", url, xml_str);
 
-        gchar *cred = format_credentials(context->appdata->settings);
-
 	if(osm_update_item(&context->log, xml_str, url, cred,
 	   (OSM_FLAGS(node) & OSM_FLAG_NEW)?&(OSM_ID(node)):&OSM_VERSION(node),
 			   context->proxy)) {
@@ -540,13 +531,12 @@ static void osm_upload_nodes(osm_upload_context_t *context) {
 	}
 	g_free(cred);
       }
-      g_free(url);
     }
     node = node->next;
   }
 }
 
-static void osm_delete_ways(osm_upload_context_t *context) {
+static void osm_delete_ways(osm_upload_context_t *context, gchar *cred) {
   way_t *way = context->osm->way;
   project_t *project = context->project;
 
@@ -561,23 +551,19 @@ static void osm_delete_ways(osm_upload_context_t *context) {
 
       char *url = g_strdup_printf("%s/way/" ITEM_ID_FORMAT,
 				  project->server, OSM_ID(way));
-      gchar *cred = format_credentials(context->appdata->settings);
-
       char *xml_str = osm_generate_xml_way(context->changeset, way);
 
       if(osm_delete_item(&context->log, xml_str, url, cred, context->proxy)) {
 	OSM_FLAGS(way) &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
 	project->data_dirty = TRUE;
       }
-
-      g_free(cred);
     }
     way = way->next;
   }
 }
 
 
-static void osm_upload_ways(osm_upload_context_t *context) {
+static void osm_upload_ways(osm_upload_context_t *context, gchar *cred) {
   way_t *way = context->osm->way;
   project_t *project = context->project;
 
@@ -603,15 +589,12 @@ static void osm_upload_ways(osm_upload_context_t *context) {
       if(xml_str) {
 	printf("uploading way %s from address %p\n", url, xml_str);
 
-        gchar *cred = format_credentials(context->appdata->settings);
-
 	if(osm_update_item(&context->log, xml_str, url, cred,
 	   (OSM_FLAGS(way) & OSM_FLAG_NEW)?&(OSM_ID(way)):&OSM_VERSION(way),
 			   context->proxy)) {
 	  OSM_FLAGS(way) &= ~(OSM_FLAG_DIRTY | OSM_FLAG_NEW);
 	  project->data_dirty = TRUE;
 	}
-	g_free(cred);
       }
       g_free(url);
     }
@@ -619,7 +602,7 @@ static void osm_upload_ways(osm_upload_context_t *context) {
   }
 }
 
-static void osm_delete_relations(osm_upload_context_t *context) {
+static void osm_delete_relations(osm_upload_context_t *context, gchar *cred) {
   relation_t *relation = context->osm->relation;
   project_t *project = context->project;
 
@@ -635,23 +618,19 @@ static void osm_delete_relations(osm_upload_context_t *context) {
 
       char *url = g_strdup_printf("%s/relation/" ITEM_ID_FORMAT,
 				  project->server, OSM_ID(relation));
-      gchar *cred = format_credentials(context->appdata->settings);
-
       char *xml_str = osm_generate_xml_relation(context->changeset, relation);
 
       if(osm_delete_item(&context->log, xml_str, url, cred, context->proxy)) {
 	OSM_FLAGS(relation) &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
 	project->data_dirty = TRUE;
       }
-
-      g_free(cred);
     }
     relation = relation->next;
   }
 }
 
 
-static void osm_upload_relations(osm_upload_context_t *context) {
+static void osm_upload_relations(osm_upload_context_t *context, gchar *cred) {
   relation_t *relation = context->osm->relation;
   project_t *project = context->project;
 
@@ -678,15 +657,12 @@ static void osm_upload_relations(osm_upload_context_t *context) {
       if(xml_str) {
 	printf("uploading relation %s from address %p\n", url, xml_str);
 
-        gchar *cred = format_credentials(context->appdata->settings);
-
 	if(osm_update_item(&context->log, xml_str, url, cred,
 	   (OSM_FLAGS(relation) & OSM_FLAG_NEW)?&(OSM_ID(relation)):&
 			   OSM_VERSION(relation), context->proxy)) {
 	  OSM_FLAGS(relation) &= ~(OSM_FLAG_DIRTY | OSM_FLAG_NEW);
 	  project->data_dirty = TRUE;
 	}
-	g_free(cred);
       }
       g_free(url);
     }
@@ -694,7 +670,7 @@ static void osm_upload_relations(osm_upload_context_t *context) {
   }
 }
 
-static gboolean osm_create_changeset(osm_upload_context_t *context) {
+static gboolean osm_create_changeset(osm_upload_context_t *context, gchar **cred) {
   gboolean result = FALSE;
   context->changeset = ILLEGAL;
   project_t *project = context->project;
@@ -710,22 +686,23 @@ static gboolean osm_create_changeset(osm_upload_context_t *context) {
   if(xml_str) {
     printf("creating changeset %s from address %p\n", url, xml_str);
 
-    gchar *cred = format_credentials(context->appdata->settings);
+    *cred = g_strjoin(":", context->appdata->settings->username,
+                      context->appdata->settings->password, NULL);
 
-    if(osm_update_item(&context->log, xml_str, url, cred,
+    if(osm_update_item(&context->log, xml_str, url, *cred,
 		       &context->changeset, context->proxy)) {
       printf("got changeset id " ITEM_ID_FORMAT "\n", context->changeset);
       result = TRUE;
+    } else {
+      g_free(*cred);
     }
-
-    g_free(cred);
   }
   g_free(url);
 
   return result;
 }
 
-static gboolean osm_close_changeset(osm_upload_context_t *context) {
+static gboolean osm_close_changeset(osm_upload_context_t *context, gchar *cred) {
   gboolean result = FALSE;
   project_t *project = context->project;
 
@@ -737,8 +714,6 @@ static gboolean osm_close_changeset(osm_upload_context_t *context) {
   char *url = g_strdup_printf("%s/changeset/" ITEM_ID_FORMAT "/close",
 			      project->server, context->changeset);
   appendf(&context->log, NULL, _("Close changeset "));
-
-  gchar *cred = format_credentials(context->appdata->settings);
 
   if(osm_update_item(&context->log, NULL, url, cred, NULL, context->proxy))
     result = TRUE;
@@ -1004,23 +979,24 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   appendf(&context->log, NULL, _("Uploading to %s\n"), project->server);
 
   /* create a new changeset */
-  if(osm_create_changeset(context)) {
+  gchar *cred;
+  if(osm_create_changeset(context, &cred)) {
     /* check for dirty entries */
     appendf(&context->log, NULL, _("Uploading nodes:\n"));
-    osm_upload_nodes(context);
+    osm_upload_nodes(context, cred);
     appendf(&context->log, NULL, _("Uploading ways:\n"));
-    osm_upload_ways(context);
+    osm_upload_ways(context, cred);
     appendf(&context->log, NULL, _("Uploading relations:\n"));
-    osm_upload_relations(context);
+    osm_upload_relations(context, cred);
     appendf(&context->log, NULL, _("Deleting relations:\n"));
-    osm_delete_relations(context);
+    osm_delete_relations(context, cred);
     appendf(&context->log, NULL, _("Deleting ways:\n"));
-    osm_delete_ways(context);
+    osm_delete_ways(context, cred);
     appendf(&context->log, NULL, _("Deleting nodes:\n"));
-    osm_delete_nodes(context);
+    osm_delete_nodes(context, cred);
 
     /* close changeset */
-    osm_close_changeset(context);
+    osm_close_changeset(context, cred);
   }
 
   appendf(&context->log, NULL, _("Upload done.\n"));
