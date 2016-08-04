@@ -281,10 +281,10 @@ static int xml_get_prop_state(xmlNode *node) {
   xmlChar *str = xmlGetProp(node, BAD_CAST "state");
 
   if(str) {
-    if(strcasecmp((char*)str, "new") == 0) {
+    if(strcmp((char*)str, "new") == 0) {
       xmlFree(str);
       return OSM_FLAG_NEW;
-    } else if(strcasecmp((char*)str, "deleted") == 0) {
+    } else if(strcmp((char*)str, "deleted") == 0) {
       xmlFree(str);
       return OSM_FLAG_DELETED;
     } else {
@@ -323,7 +323,7 @@ static tag_t *xml_scan_tags(xmlNodePtr node) {
 
   while(node) {
     if(node->type == XML_ELEMENT_NODE) {
-      if(strcasecmp((char*)node->name, "tag") == 0) {
+      if(strcmp((char*)node->name, "tag") == 0) {
 	/* attach tag to node/way */
 	*tag = osm_parse_osm_tag(node);
 	if(*tag) tag = &((*tag)->next);
@@ -528,7 +528,7 @@ static void diff_restore_way(xmlNodePtr node_node, osm_t *osm) {
   xmlNode *nd_node = NULL;
   for(nd_node = node_node->children; nd_node; nd_node = nd_node->next) {
     if(nd_node->type == XML_ELEMENT_NODE) {
-      if(strcasecmp((char*)nd_node->name, "nd") == 0) {
+      if(strcmp((char*)nd_node->name, "nd") == 0) {
 	/* attach node to node_chain */
 	*node_chain = osm_parse_osm_way_nd(osm, nd_node);
 	if(*node_chain)
@@ -665,7 +665,7 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
   for(member_node = node_rel->children; member_node;
       member_node = member_node->next) {
     if(member_node->type == XML_ELEMENT_NODE) {
-      if(strcasecmp((char*)member_node->name, "member") == 0) {
+      if(strcmp((char*)member_node->name, "member") == 0) {
 	/* attach member to member_chain */
 	*member = osm_parse_osm_relation_member(osm, member_node);
 	if(*member)
@@ -727,7 +727,7 @@ void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) {
   xmlNode *cur_node = NULL;
   for (cur_node = root_element; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
-      if(strcasecmp((char*)cur_node->name, "diff") == 0) {
+      if(strcmp((char*)cur_node->name, "diff") == 0) {
 	xmlChar *str = xmlGetProp(cur_node, BAD_CAST "name");
 	if(str) {
 	  const char *cstr = (const char*)str;
@@ -744,13 +744,13 @@ void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) {
 	while(node_node) {
 	  if(node_node->type == XML_ELEMENT_NODE) {
 
-	    if(strcasecmp((char*)node_node->name, "node") == 0)
+	    if(strcmp((char*)node_node->name, "node") == 0)
 	      diff_restore_node(node_node, osm);
 
-	    else if(strcasecmp((char*)node_node->name, "way") == 0)
+	    else if(strcmp((char*)node_node->name, "way") == 0)
 	      diff_restore_way(node_node, osm);
 
-	    else if(strcasecmp((char*)node_node->name, "relation") == 0)
+	    else if(strcmp((char*)node_node->name, "relation") == 0)
 	      diff_restore_relation(node_node, osm);
 
 	    else
