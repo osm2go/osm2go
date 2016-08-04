@@ -91,7 +91,7 @@ static user_t *osm_user(osm_t *osm, const char *name) {
   /* end of list or inexact match? create new user entry! */
   if(!*user || strcasecmp((*user)->name, name)) {
     const size_t nlen = strlen(name) + 1;
-    user_t *new = g_malloc(sizeof(user) + nlen);
+    user_t *new = g_malloc(sizeof(**user) + nlen);
     memcpy(new->name, name, nlen);
     new->next = *user;
     *user = new;
