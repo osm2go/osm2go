@@ -535,9 +535,9 @@ member_t *osm_parse_osm_relation_member(osm_t *osm, xmlNode *a_node) {
   member->object.type = ILLEGAL;
 
   if((prop = (char*)xmlGetProp(a_node, BAD_CAST "type"))) {
-    if(strcasecmp(prop, "way") == 0)           member->object.type = WAY;
-    else if(strcasecmp(prop, "node") == 0)     member->object.type = NODE;
-    else if(strcasecmp(prop, "relation") == 0) member->object.type = RELATION;
+    if(strcmp(prop, "way") == 0)           member->object.type = WAY;
+    else if(strcmp(prop, "node") == 0)     member->object.type = NODE;
+    else if(strcmp(prop, "relation") == 0) member->object.type = RELATION;
     xmlFree(prop);
   }
 
@@ -843,7 +843,7 @@ static node_t *process_node(xmlTextReaderPtr reader, osm_t *osm) {
 
     if(xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT) {
       const char *subname = (const char*)xmlTextReaderConstName(reader);
-      if(strcasecmp(subname, "tag") == 0) {
+      if(strcmp(subname, "tag") == 0) {
 	*tag = process_tag(reader);
 	if(*tag) tag = &(*tag)->next;
       } else
@@ -911,10 +911,10 @@ static way_t *process_way(xmlTextReaderPtr reader, osm_t *osm) {
 
     if(xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT) {
       const char *subname = (const char*)xmlTextReaderConstName(reader);
-      if(strcasecmp(subname, "nd") == 0) {
+      if(strcmp(subname, "nd") == 0) {
 	*node_chain = process_nd(reader, osm);
 	if(*node_chain) node_chain = &(*node_chain)->next;
-      } else if(strcasecmp(subname, "tag") == 0) {
+      } else if(strcmp(subname, "tag") == 0) {
 	*tag = process_tag(reader);
 	if(*tag) tag = &(*tag)->next;
       } else
@@ -932,9 +932,9 @@ static member_t *process_member(xmlTextReaderPtr reader, osm_t *osm) {
   member->object.type = ILLEGAL;
 
   if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "type"))) {
-    if(strcasecmp(prop, "way") == 0)           member->object.type = WAY;
-    else if(strcasecmp(prop, "node") == 0)     member->object.type = NODE;
-    else if(strcasecmp(prop, "relation") == 0) member->object.type = RELATION;
+    if(strcmp(prop, "way") == 0)           member->object.type = WAY;
+    else if(strcmp(prop, "node") == 0)     member->object.type = NODE;
+    else if(strcmp(prop, "relation") == 0) member->object.type = RELATION;
     xmlFree(prop);
   }
 
@@ -1015,10 +1015,10 @@ static relation_t *process_relation(xmlTextReaderPtr reader, osm_t *osm) {
 
     if(xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT) {
       const char *subname = (const char*)xmlTextReaderConstName(reader);
-      if(strcasecmp(subname, "member") == 0) {
+      if(strcmp(subname, "member") == 0) {
 	*member = process_member(reader, osm);
 	if(*member) member = &(*member)->next;
-      } else if(strcasecmp(subname, "tag") == 0) {
+      } else if(strcmp(subname, "tag") == 0) {
 	*tag = process_tag(reader);
 	if(*tag) tag = &(*tag)->next;
       } else
@@ -1056,15 +1056,15 @@ static osm_t *process_osm(xmlTextReaderPtr reader) {
 
       g_assert_cmpint(xmlTextReaderDepth(reader), ==, 1);
       const char *name = (const char*)xmlTextReaderConstName(reader);
-      if(strcasecmp(name, "bounds") == 0) {
+      if(strcmp(name, "bounds") == 0) {
 	osm->bounds = process_bounds(reader);
-      } else if(strcasecmp(name, "node") == 0) {
+      } else if(strcmp(name, "node") == 0) {
 	*node = process_node(reader, osm);
 	if(*node) node = &(*node)->next;
-      } else if(strcasecmp(name, "way") == 0) {
+      } else if(strcmp(name, "way") == 0) {
 	*way = process_way(reader, osm);
 	if(*way) way = &(*way)->next;
-      } else if(strcasecmp(name, "relation") == 0) {
+      } else if(strcmp(name, "relation") == 0) {
 	*relation = process_relation(reader, osm);
 	if(*relation) relation = &(*relation)->next;
       } else {
@@ -1105,7 +1105,7 @@ static osm_t *process_file(const char *filename) {
     ret = xmlTextReaderRead(reader);
     if(ret == 1) {
       const char *name = (const char*)xmlTextReaderConstName(reader);
-      if(name && strcasecmp(name, "osm") == 0)
+      if(name && strcmp(name, "osm") == 0)
 	osm = process_osm(reader);
     } else
       printf("file empty\n");
