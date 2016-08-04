@@ -454,7 +454,7 @@ gboolean osm_members_diff(const member_t *n1, const member_t *n2) {
     if (n1->object.type != n2->object.type)
       return TRUE;
 
-    if (strcmp(n1->role, n2->role) != 0)
+    if (g_strcmp0(n1->role, n2->role) != 0)
       return TRUE;
 
     n1 = n1->next;
