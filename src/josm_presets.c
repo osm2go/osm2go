@@ -34,6 +34,61 @@
 #error "Tree not enabled in libxml"
 #endif
 
+typedef enum {
+  WIDGET_TYPE_LABEL = 0,
+  WIDGET_TYPE_SEPARATOR,
+  WIDGET_TYPE_SPACE,
+  WIDGET_TYPE_COMBO,
+  WIDGET_TYPE_CHECK,
+  WIDGET_TYPE_TEXT,
+  WIDGET_TYPE_KEY
+} presets_widget_type_t;
+
+typedef struct presets_widget_s {
+  presets_widget_type_t type;
+
+  char *key, *text;
+
+  union {
+    /* a tag with an arbitrary text value */
+    struct {
+      char *def;
+    } text_w;
+
+    /* a combo box with pre-defined values */
+    struct {
+      char *def;
+      char *values;
+    } combo_w;
+
+    /* a key is just a static key */
+    struct {
+      char *value;
+    } key_w;
+
+    /* single checkbox */
+    struct {
+      gboolean def;
+    } check_w;
+
+  };
+
+  struct presets_widget_s *next;
+} presets_widget_t;
+
+struct presets_item_s {
+  int type;
+  char *name, *icon, *link;
+  gboolean is_group;
+
+  union {
+    presets_widget_t *widget;
+    struct presets_item_s *group;
+  };
+
+  struct presets_item_s *next;
+};
+
 #ifdef ENABLE_BROWSER_INTERFACE
 #ifdef USE_HILDON
 #include <tablet-browser-interface.h>
