@@ -71,30 +71,6 @@ static gboolean xmlGetPropIs(xmlNode *node, const char *prop, const char *is) {
   return retval;
 }
 
-static presets_value_t *xmlGetPropValues(xmlNode *node, const char *prop) {
-  xmlChar *prop_str = xmlGetProp(node, BAD_CAST prop);
-  if(!prop_str) return NULL;
-  presets_value_t *value = NULL, **cur = &value;
-
-  /* cut values strings */
-  const char *c, *p = (const char*)prop_str;
-  while((c = strchr(p, ','))) {
-
-    *cur = g_new0(presets_value_t, 1);
-    (*cur)->text = g_strndup(p, c-p);
-    cur = &((*cur)->next);
-
-    p = c+1;
-  }
-
-  /* attach remaining string as last value */
-  *cur = g_new0(presets_value_t, 1);
-  (*cur)->text = g_strdup(p);
-
-  xmlFree(prop_str);
-  return value;
-}
-
 char *josm_icon_name_adjust(char *name) {
   if(!name) return NULL;
 
@@ -209,7 +185,7 @@ static presets_widget_t **parse_widgets(xmlNode *a_node,
 	(*widget)->key = (char*)xmlGetProp(cur_node, BAD_CAST "key");
 	(*widget)->combo_w.def = (char*)xmlGetProp(cur_node,
 						   BAD_CAST "default");
-	(*widget)->combo_w.values = xmlGetPropValues(cur_node, "values");
+	(*widget)->combo_w.values = (char*)xmlGetProp(cur_node, BAD_CAST "values");
 	widget = &((*widget)->next);
 
       } else if(strcasecmp((char*)cur_node->name, "key") == 0) {
@@ -445,6 +421,14 @@ static gboolean is_widget_interactive(const presets_widget_t *w)
   }
 }
 
+static gboolean preset_combo_insert_value(GtkWidget *combo, const char *value,
+                                          const char *preset)
+{
+  combo_box_append_text(combo, value);
+
+  return (g_strcmp0(preset, value) == 0) ? TRUE : FALSE;
+}
+
 static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
 		     const presets_item_t *item, tag_t *orig_tag) {
   GtkWidget *dialog = NULL;
@@ -545,15 +529,30 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
 	if(!preset && widget->combo_w.def) preset = widget->combo_w.def;
 	gtk_widgets[widget_cnt] = combo_box_new(widget->text);
 	combo_box_append_text(gtk_widgets[widget_cnt], _("<unset>"));
-	presets_value_t *value = widget->combo_w.values;
-	int count = 1, active = 0;
-	while(value) {
-	  if(active < 1 && preset && strcmp(preset, value->text)==0)
-	    active = count;
+	const char *value = widget->combo_w.values;
+	int active = 0;
 
-	  combo_box_append_text(gtk_widgets[widget_cnt], value->text);
-	  value = value->next;
-	  count++;
+	/* cut values strings */
+	if(value) {
+	  const char *c, *p = value;
+	  int count = 1;
+	  while((c = strchr(p, ','))) {
+	    /* maximum length of an OSM value, shouldn't be reached anyway. */
+	    char cur[256];
+	    g_strlcpy(cur, p, sizeof(cur));
+	    if(c - p < sizeof(cur))
+	      cur[c - p] = '\0';
+	    if (preset_combo_insert_value(gtk_widgets[widget_cnt], cur, preset)) {
+	      active = count;
+	      preset = NULL;
+	    }
+
+	    count++;
+	    p = c + 1;
+	  }
+	  /* attach remaining string as last value */
+	  if (preset_combo_insert_value(gtk_widgets[widget_cnt], p, preset))
+	    active = count;
 	}
 
 	combo_box_set_active(gtk_widgets[widget_cnt], active);
@@ -1192,16 +1191,6 @@ GtkWidget *josm_build_presets_button(appdata_t *appdata,
 
 /* ----------------------- cleaning up --------------------- */
 
-static void free_values(presets_value_t *value) {
-  while(value) {
-    presets_value_t *next = value->next;
-    g_free(value->text);
-    g_free(value);
-    value = next;
-  }
-
-}
-
 static void free_widget(presets_widget_t *widget) {
   if(widget->key) xmlFree(widget->key);
   if(widget->text) xmlFree(widget->text);
@@ -1213,7 +1202,7 @@ static void free_widget(presets_widget_t *widget) {
 
   case WIDGET_TYPE_COMBO:
     if(widget->combo_w.def) xmlFree(widget->combo_w.def);
-    if(widget->combo_w.values) free_values(widget->combo_w.values);
+    if(widget->combo_w.values) xmlFree(widget->combo_w.values);
     break;
 
   case WIDGET_TYPE_KEY:

@@ -43,11 +43,6 @@ typedef enum {
 #define PRESETS_TYPE_CLOSEDWAY (1<<3)
 #define PRESETS_TYPE_ALL       (0xffff)
 
-typedef struct presets_value_s {
-  char *text;
-  struct presets_value_s *next;
-} presets_value_t;
-
 typedef struct presets_widget_s {
   presets_widget_type_t type;
 
@@ -62,7 +57,7 @@ typedef struct presets_widget_s {
     /* a combo box with pre-defined values */
     struct {
       char *def;
-      presets_value_t *values;
+      char *values;
     } combo_w;
 
     /* a key is just a static key */
