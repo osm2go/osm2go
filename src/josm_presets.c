@@ -47,23 +47,23 @@ typedef enum {
 typedef struct presets_widget_s {
   presets_widget_type_t type;
 
-  char *key, *text;
+  xmlChar *key, *text;
 
   union {
     /* a tag with an arbitrary text value */
     struct {
-      char *def;
+      xmlChar *def;
     } text_w;
 
     /* a combo box with pre-defined values */
     struct {
-      char *def;
-      char *values;
+      xmlChar *def;
+      xmlChar *values;
     } combo_w;
 
     /* a key is just a static key */
     struct {
-      char *value;
+      xmlChar *value;
     } key_w;
 
     /* single checkbox */
@@ -78,7 +78,7 @@ typedef struct presets_widget_s {
 
 struct presets_item_s {
   int type;
-  char *name, *icon, *link;
+  xmlChar *name, *icon, *link;
   gboolean is_group;
 
   union {
@@ -200,10 +200,10 @@ static presets_widget_t **parse_widgets(xmlNode *a_node,
 	/* --------- label widget --------- */
 	*widget = g_new0(presets_widget_t, 1);
 	(*widget)->type = WIDGET_TYPE_LABEL;
-	(*widget)->text = (char*)xmlGetProp(cur_node, BAD_CAST "text");
+	(*widget)->text = xmlGetProp(cur_node, BAD_CAST "text");
 
 	/* special handling of pre-<space/> separators */
-	if(!(*widget)->text || (strcmp((*widget)->text, " ") == 0)) {
+	if(!(*widget)->text || (strcmp((char*)(*widget)->text, " ") == 0)) {
 	  (*widget)->type = WIDGET_TYPE_SEPARATOR;
 	  if((*widget)->text) xmlFree((*widget)->text);
 	  (*widget)->text = NULL;
@@ -226,9 +226,9 @@ static presets_widget_t **parse_widgets(xmlNode *a_node,
 	/* --------- text widget --------- */
 	*widget = g_new0(presets_widget_t, 1);
 	(*widget)->type = WIDGET_TYPE_TEXT;
-	(*widget)->text = (char*)xmlGetProp(cur_node, BAD_CAST "text");
-	(*widget)->key = (char*)xmlGetProp(cur_node, BAD_CAST "key");
-	(*widget)->text_w.def = (char*)xmlGetProp(cur_node, BAD_CAST "default");
+	(*widget)->text = xmlGetProp(cur_node, BAD_CAST "text");
+	(*widget)->key = xmlGetProp(cur_node, BAD_CAST "key");
+	(*widget)->text_w.def = xmlGetProp(cur_node, BAD_CAST "default");
 	widget = &((*widget)->next);
 
       } else if(strcasecmp((char*)cur_node->name, "combo") == 0) {
@@ -236,11 +236,11 @@ static presets_widget_t **parse_widgets(xmlNode *a_node,
 	/* --------- combo widget --------- */
 	*widget = g_new0(presets_widget_t, 1);
 	(*widget)->type = WIDGET_TYPE_COMBO;
-	(*widget)->text = (char*)xmlGetProp(cur_node, BAD_CAST "text");
-	(*widget)->key = (char*)xmlGetProp(cur_node, BAD_CAST "key");
-	(*widget)->combo_w.def = (char*)xmlGetProp(cur_node,
+	(*widget)->text = xmlGetProp(cur_node, BAD_CAST "text");
+	(*widget)->key = xmlGetProp(cur_node, BAD_CAST "key");
+	(*widget)->combo_w.def = xmlGetProp(cur_node,
 						   BAD_CAST "default");
-	(*widget)->combo_w.values = (char*)xmlGetProp(cur_node, BAD_CAST "values");
+	(*widget)->combo_w.values = xmlGetProp(cur_node, BAD_CAST "values");
 	widget = &((*widget)->next);
 
       } else if(strcasecmp((char*)cur_node->name, "key") == 0) {
@@ -248,8 +248,8 @@ static presets_widget_t **parse_widgets(xmlNode *a_node,
 	/* --------- invisible key widget --------- */
 	*widget = g_new0(presets_widget_t, 1);
 	(*widget)->type = WIDGET_TYPE_KEY;
-	(*widget)->key = (char*)xmlGetProp(cur_node, BAD_CAST "key");
-	(*widget)->key_w.value = (char*)xmlGetProp(cur_node, BAD_CAST "value");
+	(*widget)->key = xmlGetProp(cur_node, BAD_CAST "key");
+	(*widget)->key_w.value = xmlGetProp(cur_node, BAD_CAST "value");
 	widget = &((*widget)->next);
 
       } else if(strcasecmp((char*)cur_node->name, "check") == 0) {
@@ -257,8 +257,8 @@ static presets_widget_t **parse_widgets(xmlNode *a_node,
 	/* --------- check widget --------- */
 	*widget = g_new0(presets_widget_t, 1);
 	(*widget)->type = WIDGET_TYPE_CHECK;
-	(*widget)->text = (char*)xmlGetProp(cur_node, BAD_CAST "text");
-	(*widget)->key = (char*)xmlGetProp(cur_node, BAD_CAST "key");
+	(*widget)->text = xmlGetProp(cur_node, BAD_CAST "text");
+	(*widget)->key = xmlGetProp(cur_node, BAD_CAST "key");
 	(*widget)->check_w.def = xmlGetPropIs(cur_node, "default", "on");
 	widget = &((*widget)->next);
 
@@ -274,7 +274,7 @@ static presets_widget_t **parse_widgets(xmlNode *a_node,
 
 	/* --------- link is not a widget, but a property of item --------- */
 	if(!item->link) {
-	  item->link = (char*)xmlGetProp(cur_node, BAD_CAST "href");
+	  item->link = xmlGetProp(cur_node, BAD_CAST "href");
 	} else
 	  printf("ignoring surplus link\n");
 
@@ -290,9 +290,9 @@ static presets_item_t *parse_item(xmlNode *a_node) {
   item->is_group = FALSE;
 
   /* ------ parse items own properties ------ */
-  item->name = (char*)xmlGetProp(a_node, BAD_CAST "name");
+  item->name = xmlGetProp(a_node, BAD_CAST "name");
 
-  item->icon =
+  item->icon = BAD_CAST
     josm_icon_name_adjust((char*)xmlGetProp(a_node, BAD_CAST "icon"));
 
   item->type =
@@ -310,9 +310,9 @@ static presets_item_t *parse_group(xmlDocPtr doc, xmlNode *a_node) {
   group->is_group = TRUE;
 
   /* ------ parse groups own properties ------ */
-  group->name = (char*)xmlGetProp(a_node, BAD_CAST "name");
+  group->name = xmlGetProp(a_node, BAD_CAST "name");
 
-  group->icon =
+  group->icon = BAD_CAST
     josm_icon_name_adjust((char*)xmlGetProp(a_node, BAD_CAST "icon"));
 
   group->type = 0;
@@ -434,7 +434,7 @@ static tag_t **store_value(presets_widget_t *widget, tag_t **ctag,
 			   const char *value) {
   if((value && strlen(value))) {
     *ctag = g_new0(tag_t, 1);
-    (*ctag)->key = g_strdup(widget->key);
+    (*ctag)->key = g_strdup((char*)widget->key);
     (*ctag)->value = g_strdup(value);
 
     printf("key = %s, value = %s\n",
@@ -516,7 +516,7 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
   if(interactive_widget_cnt)  {
     dialog =
       misc_dialog_new(MISC_DIALOG_NOSIZE,
-		      item->name, parent,
+		      (gchar*)item->name, parent,
 		      GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
 		      GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
 		      NULL);
@@ -525,7 +525,7 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
     /* if a web link has been provided for this item install */
     /* a button for this */
     if(item->link) {
-      www_context.link = item->link;
+      www_context.link = (char*)item->link;
       www_context.appdata = appdata;
 
       GtkWidget *button = gtk_dialog_add_button(GTK_DIALOG(dialog), _
@@ -539,7 +539,7 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
     guint widget_skip = 0;  // number of initial widgets to skip
     widget = item->widget;
     if(widget && (widget->type == WIDGET_TYPE_LABEL)) {
-      gtk_window_set_title(GTK_WINDOW(dialog), widget->text);
+      gtk_window_set_title(GTK_WINDOW(dialog), (char*)widget->text);
 
       widget_skip++;   // this widget isn't part of the contents anymore
       widget = widget->next;
@@ -560,7 +560,7 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
     widget_cnt = widget_skip;
     while(widget) {
       /* check if there's a value with this key already */
-      char *preset = osm_tag_get_by_key(orig_tag, widget->key);
+      char *preset = osm_tag_get_by_key(orig_tag, (char*)widget->key);
 
       switch(widget->type) {
       case WIDGET_TYPE_SEPARATOR:
@@ -573,23 +573,24 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
 	break;
 
       case WIDGET_TYPE_LABEL:
-	attach_both(table, gtk_label_new(widget->text), widget_cnt-widget_skip);
+	attach_both(table, gtk_label_new((char*)widget->text), widget_cnt-widget_skip);
 	break;
 
       case WIDGET_TYPE_COMBO:
 #ifndef FREMANTLE
-	attach_text(table, widget->text, widget_cnt-widget_skip);
+	attach_text(table, (char*)widget->text, widget_cnt-widget_skip);
 #endif
 
-	if(!preset && widget->combo_w.def) preset = widget->combo_w.def;
-	gtk_widgets[widget_cnt] = combo_box_new(widget->text);
+	if(!preset && widget->combo_w.def)
+	  preset = (char*)widget->combo_w.def;
+	gtk_widgets[widget_cnt] = combo_box_new((char*)widget->text);
 	combo_box_append_text(gtk_widgets[widget_cnt], _("<unset>"));
-	const char *value = widget->combo_w.values;
+	const xmlChar *value = widget->combo_w.values;
 	int active = 0;
 
 	/* cut values strings */
 	if(value) {
-	  const char *c, *p = value;
+	  const char *c, *p = (char*)value;
 	  int count = 1;
 	  while((c = strchr(p, ','))) {
 	    /* maximum length of an OSM value, shouldn't be reached anyway. */
@@ -625,7 +626,7 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
 	  else       def = widget->check_w.def;
 
 	  gtk_widgets[widget_cnt] =
-	    check_button_new_with_label(widget->text);
+	    check_button_new_with_label((char*)widget->text);
 	  check_button_set_active(gtk_widgets[widget_cnt], def);
 #ifndef FREMANTLE
 	  attach_right(table, gtk_widgets[widget_cnt], widget_cnt-widget_skip);
@@ -635,9 +636,10 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
       } break;
 
     case WIDGET_TYPE_TEXT:
-      attach_text(table, widget->text, widget_cnt-widget_skip);
+      attach_text(table, (char*)widget->text, widget_cnt-widget_skip);
 
-      if(!preset && widget->text_w.def) preset = widget->text_w.def;
+      if(!preset && widget->text_w.def)
+        preset = (char*)widget->text_w.def;
       gtk_widgets[widget_cnt] = entry_new();
       if(preset)
 	gtk_entry_set_text(GTK_ENTRY(gtk_widgets[widget_cnt]), preset);
@@ -727,7 +729,7 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
       case WIDGET_TYPE_KEY:
 	g_assert(!gtk_widgets[widget_cnt]);
 
-	ctag = store_value(widget, ctag, widget->key_w.value);
+	ctag = store_value(widget, ctag, (char*)widget->key_w.value);
 	break;
 
       default:
@@ -813,8 +815,8 @@ static gboolean preset_is_used(const presets_item_t *item, const presets_context
       continue;
     }
     const tag_t t = {
-      .key = w->key,
-      .value = w->key_w.value
+      .key = (char*) w->key,
+      .value = (char*) w->key_w.value
     };
     if(osm_tag_key_and_value_present(*(context->tag_context->tag), &t))
       matches_all = TRUE;
@@ -841,11 +843,12 @@ static GtkWidget *create_menuitem(presets_context_t *context, presets_item_t *it
   GtkWidget *menu_item;
 
   if(!item->icon)
-    menu_item = gtk_menu_item_new_with_label(item->name);
+    menu_item = gtk_menu_item_new_with_label((gchar*)item->name);
   else {
-    menu_item = gtk_image_menu_item_new_with_label(item->name);
+    menu_item = gtk_image_menu_item_new_with_label((gchar*)item->name);
     gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(menu_item),
-                                  icon_widget_load(&context->appdata->icon, item->icon));
+                                  icon_widget_load(&context->appdata->icon,
+                                                   (char*)item->icon));
   }
 
   return menu_item;
@@ -946,7 +949,7 @@ on_presets_picker_selected(GtkTreeSelection *selection, gpointer data) {
 		       PRESETS_PICKER_COL_ITEM_PTR, &item,
 		       -1);
 
-    printf("clicked on %s, submenu = %p\n", item ? item->name : "''", sub_item);
+    printf("clicked on %s, submenu = %p\n", item ? (char*)item->name : "''", sub_item);
 
     GtkWidget *view =
       GTK_WIDGET(gtk_tree_selection_get_tree_view(selection));
@@ -1051,7 +1054,7 @@ static GtkWidget *presets_picker_embed(GtkTreeView *view, GtkListStore *store,
 static GtkTreeIter preset_insert_item(const presets_item_t *item, icon_t **icons,
                                       GtkListStore *store) {
   /* icon load can cope with NULL as name (returns NULL then) */
-  GdkPixbuf *icon = icon_load(icons, item->icon);
+  GdkPixbuf *icon = icon_load(icons, (char*)item->icon);
 
   /* Append a row and fill in some data */
   GtkTreeIter iter;
