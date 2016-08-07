@@ -83,7 +83,7 @@ static GtkWidget *link_new(appdata_t *appdata, const char *url) {
 }
 
 #ifdef ENABLE_BROWSER_INTERFACE
-void on_paypal_button_clicked(GtkButton *button, appdata_t *appdata) {
+static void on_paypal_button_clicked(GtkButton *button, appdata_t *appdata) {
   //  gtk_dialog_response(GTK_DIALOG(context->dialog), GTK_RESPONSE_ACCEPT);
   browser_url(appdata,
 	      "https://www.paypal.com/cgi-bin/webscr"
@@ -91,7 +91,7 @@ void on_paypal_button_clicked(GtkButton *button, appdata_t *appdata) {
 }
 #endif
 
-GtkWidget *label_big(char *str) {
+static GtkWidget *label_big(const char *str) {
   GtkWidget *label = gtk_label_new("");
   char *markup =
     g_markup_printf_escaped("<span size='x-large'>%s</span>", str);
@@ -100,7 +100,7 @@ GtkWidget *label_big(char *str) {
   return label;
 }
 
-GtkWidget *label_xbig(char *str) {
+static GtkWidget *label_xbig(const char *str) {
   GtkWidget *label = gtk_label_new("");
   char *markup =
     g_markup_printf_escaped("<span size='xx-large'>%s</span>", str);
@@ -115,7 +115,7 @@ on_label_realize(GtkWidget *widget, gpointer user_data)  {
   gtk_widget_set_size_request(widget, widget->parent->allocation.width, -1);
 }
 
-GtkWidget *label_wrap(char *str) {
+static GtkWidget *label_wrap(const char *str) {
   GtkWidget *label = gtk_label_new(str);
 
   gtk_label_set_line_wrap_mode(GTK_LABEL(label), PANGO_WRAP_WORD);
@@ -127,7 +127,7 @@ GtkWidget *label_wrap(char *str) {
   return label;
 }
 
-GtkWidget *license_page_new(void) {
+static GtkWidget *license_page_new(void) {
   gchar *name = find_file("COPYING", NULL, NULL);
 
   GtkWidget *label = label_wrap("");
@@ -167,7 +167,7 @@ GtkWidget *license_page_new(void) {
 #endif
 }
 
-GtkWidget *copyright_page_new(appdata_t *appdata) {
+static GtkWidget *copyright_page_new(appdata_t *appdata) {
   GtkWidget *vbox = gtk_vbox_new(FALSE, 0);
 
   /* ------------------------ */
@@ -219,17 +219,17 @@ GtkWidget *copyright_page_new(appdata_t *appdata) {
 }
 
 /* a label that is left aligned */
-GtkWidget *left_label(char *str) {
+static GtkWidget *left_label(const char *str) {
   GtkWidget *widget = gtk_label_new(str);
   gtk_misc_set_alignment(GTK_MISC(widget), 0.0f, 0.5f);
   return widget;
 }
 
-static void author_add(GtkWidget *box, char *str) {
+static void author_add(GtkWidget *box, const char *str) {
   gtk_box_pack_start(GTK_BOX(box), left_label(str), FALSE, FALSE, 0);
 }
 
-GtkWidget *authors_page_new(void) {
+static GtkWidget *authors_page_new(void) {
   GtkWidget *ivbox, *vbox = gtk_vbox_new(FALSE, 16);
 
   /* -------------------------------------------- */
@@ -282,7 +282,7 @@ GtkWidget *authors_page_new(void) {
 #endif
 }
 
-GtkWidget *donate_page_new(appdata_t *appdata) {
+static GtkWidget *donate_page_new(appdata_t *appdata) {
   GtkWidget *vbox = gtk_vbox_new(FALSE, 0);
 
   gtk_box_pack_start_defaults(GTK_BOX(vbox),
@@ -317,7 +317,7 @@ GtkWidget *donate_page_new(appdata_t *appdata) {
   return vbox;
 }
 
-GtkWidget *bugs_page_new(appdata_t *appdata) {
+static GtkWidget *bugs_page_new(appdata_t *appdata) {
   GtkWidget *vbox = gtk_vbox_new(FALSE, 0);
 
   gtk_box_pack_start_defaults(GTK_BOX(vbox),
