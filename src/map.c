@@ -1765,7 +1765,7 @@ static gboolean map_autosave(gpointer data) {
 GtkWidget *map_new(appdata_t *appdata) {
   map_t *map = g_new0(map_t, 1);
 
-  map->style = style_load(appdata, appdata->settings->style);
+  map->style = style_load(appdata);
   if(!map->style) {
     errorf(NULL, _("Unable to load valid style, terminating."));
     g_free(map);

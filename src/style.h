@@ -86,7 +86,7 @@ typedef struct style_s {
   };
 } style_t;
 
-style_t *style_load(appdata_t *appdata, char *name);
+style_t *style_load(appdata_t *appdata);
 void style_free(style_t *style);
 
 #ifndef FREMANTLE

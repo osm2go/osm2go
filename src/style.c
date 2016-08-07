@@ -216,7 +216,7 @@ static style_t *parse_doc(xmlDocPtr doc) {
   return style;
 }
 
-static style_t *style_parse(appdata_t *appdata, char *fullname) {
+static style_t *style_parse(appdata_t *appdata, const char *fullname) {
   style_t *style = NULL;
 
   xmlDoc *doc = NULL;
@@ -240,7 +240,8 @@ static style_t *style_parse(appdata_t *appdata, char *fullname) {
   return style;
 }
 
-style_t *style_load(appdata_t *appdata, char *name) {
+style_t *style_load(appdata_t *appdata) {
+  const char *name = appdata->settings->style;
   printf("Trying to load style %s\n", name);
 
   char *fullname = find_file(name, ".style", NULL);
@@ -377,7 +378,7 @@ void style_change(appdata_t *appdata, const char *name) {
   }
 
   style_free(appdata->map->style);
-  appdata->map->style = style_load(appdata, appdata->settings->style);
+  appdata->map->style = style_load(appdata);
 
   /* canvas background may have changed */
   canvas_set_background(appdata->map->canvas,
