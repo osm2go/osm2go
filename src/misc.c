@@ -162,14 +162,15 @@ gboolean yes_no_f(GtkWidget *parent, appdata_t *appdata, gulong again_bit,
   return yes;
 }
 
+/* all entries must contain a trailing '/' ! */
 static const char *data_paths[] = {
-  "~/." PACKAGE,             // in home directory
-  DATADIR ,                  // final installation path
+  "~/." PACKAGE "/",           // in home directory
+  DATADIR "/",                 // final installation path
 #ifdef USE_HILDON
-  "/media/mmc1/" PACKAGE,    // path to external memory card
-  "/media/mmc2/" PACKAGE,    // path to internal memory card
+  "/media/mmc1/" PACKAGE "/",  // path to external memory card
+  "/media/mmc2/" PACKAGE "/",  // path to internal memory card
 #endif
-  "./data", "../data",       // local paths for testing
+  "./data/", "../data/",       // local paths for testing
   NULL
 };
 
@@ -181,9 +182,9 @@ char *find_file(const char *name) {
     char *full_path = NULL;
 
     if(*path[0] == '~')
-      full_path = g_strjoin("/", p, *path+2, name, NULL);
+      full_path = g_strconcat(p, *path + 1, name, NULL);
     else
-      full_path = g_strjoin("/", *path, name, NULL);
+      full_path = g_strconcat(*path, name, NULL);
 
     if(g_file_test(full_path, G_FILE_TEST_IS_REGULAR))
       return full_path;
