@@ -211,7 +211,7 @@ file_chain_t *file_scan(const char *pattern) {
     const char *dirname = *path;
 
     if(*path[0] == '~')
-      dirname = g_strjoin("/", p, *path+2, NULL);
+      dirname = g_strjoin(p, *path + 1, NULL);
 
     if((dir = g_dir_open(dirname, 0, NULL))) {
       const char *name = NULL;
@@ -219,7 +219,7 @@ file_chain_t *file_scan(const char *pattern) {
 	name = g_dir_read_name(dir);
 
 	if(name) {
-	  char *fullname = g_strjoin("/", dirname, name, NULL);
+	  char *fullname = g_strconcat(dirname, name, NULL);
 	  if(g_file_test(fullname, G_FILE_TEST_IS_REGULAR)) {
 	    if(g_pattern_match_simple(pattern, name)) {
 	      *chainP = g_new0(file_chain_t, 1);
