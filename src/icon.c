@@ -83,6 +83,17 @@ GtkWidget *icon_widget_load(icon_t **icon, const char *name) {
   return gtk_image_new_from_pixbuf(pix);
 }
 
+static icon_t *icon_destroy(icon_t *icon) {
+  icon_t *next = icon->next;
+
+  g_free(icon->name);
+  if(icon->buf)
+    g_object_unref(icon->buf);
+  g_free(icon);
+
+  return next;
+}
+
 void icon_free(icon_t **icon, GdkPixbuf *buf) {
   //  printf("request to free icon %p\n", buf);
 
@@ -94,11 +105,7 @@ void icon_free(icon_t **icon, GdkPixbuf *buf) {
       if(!(*icon)->use) {
 	//	printf("freeing unused icon %s\n", (*icon)->name);
 
-	g_free((*icon)->name);
-	g_object_unref((*icon)->buf);
-	icon_t *next = (*icon)->next;
-	g_free(*icon);
-	*icon = next;
+	*icon = icon_destroy(*icon);;
 
       } else {
 	//	printf("keeping icon %s still in use by %d\n",
@@ -119,11 +126,7 @@ void icon_free_all(icon_t **icons) {
   icon_t *icon = *icons;
   while(icon) {
     cnt++;
-    g_free(icon->name);
-    g_object_unref(icon->buf);
-    icon_t *next = icon->next;
-    g_free(icon);
-    icon = next;
+    icon = icon_destroy(icon);
   }
 
   *icons = NULL;
