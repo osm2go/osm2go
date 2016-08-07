@@ -299,7 +299,7 @@ static char *style_basename(char *name) {
 }
 
 GtkWidget *style_select_widget(appdata_t *appdata) {
-  file_chain_t *chain = file_scan("*.style");
+  file_chain_t *chain = file_scan(".style");
 
   /* there must be at least one style, otherwise */
   /* the program wouldn't be running */
@@ -341,7 +341,7 @@ GtkWidget *style_select_widget(appdata_t *appdata) {
 void style_change(appdata_t *appdata, const char *name) {
   char *new_style = NULL;
 
-  file_chain_t *chain = file_scan("*.style");
+  file_chain_t *chain = file_scan(".style");
 
   while(chain) {
     file_chain_t *next = chain->next;

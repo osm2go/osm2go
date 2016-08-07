@@ -196,9 +196,9 @@ gchar *find_file(const char *n1, const char *n2, const char *n3) {
   return NULL;
 }
 
-/* scan all data directories for the given file pattern and */
-/* return a list of files matching this pattern */
-file_chain_t *file_scan(const char *pattern) {
+/* scan all data directories for the given file extension and */
+/* return a list of files matching this extension */
+file_chain_t *file_scan(const char *extension) {
   file_chain_t *chain = NULL, **chainP = &chain;
 
   const char **path = data_paths;
@@ -221,7 +221,7 @@ file_chain_t *file_scan(const char *pattern) {
 	if(name) {
 	  char *fullname = g_strconcat(dirname, name, NULL);
 	  if(g_file_test(fullname, G_FILE_TEST_IS_REGULAR)) {
-	    if(g_pattern_match_simple(pattern, name)) {
+	    if(g_str_has_suffix(name, extension)) {
 	      *chainP = g_new0(file_chain_t, 1);
 	      (*chainP)->name = fullname;
 	      chainP = &(*chainP)->next;
