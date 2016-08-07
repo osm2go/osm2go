@@ -264,11 +264,11 @@ gboolean osm_tag_lists_diff(const tag_t *t1, const tag_t *t2) {
 gboolean osm_tag_update(tag_t *tag, const char *key, const char *value)
 {
   gboolean ret = FALSE;
-  if(strcmp(tag->key, key) == 0) {
+  if(strcmp(tag->key, key) != 0) {
     osm_tag_update_key(tag, key);
     ret = TRUE;
   }
-  if(strcmp(tag->value, value) == 0) {
+  if(strcmp(tag->value, value) != 0) {
     osm_tag_update_value(tag, value);
     ret = TRUE;
   }
