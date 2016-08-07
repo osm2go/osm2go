@@ -682,7 +682,7 @@ gboolean area_edit(area_edit_t *area) {
   gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 3, 2, 3);
 
   /* error label */
-  context.direct.error = gtk_label_new("");
+  context.direct.error = gtk_label_new(NULL);
   gtk_widget_modify_fg(context.direct.error, GTK_STATE_NORMAL, &color);
   gtk_table_attach_defaults(GTK_TABLE(table), context.direct.error, 0, 3, 3, 4);
 
@@ -747,7 +747,7 @@ gboolean area_edit(area_edit_t *area) {
   gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 3, 3, 4);
 
   /* error label */
-  context.extent.error = gtk_label_new("");
+  context.extent.error = gtk_label_new(NULL);
   gtk_widget_modify_fg(context.extent.error, GTK_STATE_NORMAL, &color);
   gtk_table_attach_defaults(GTK_TABLE(table), context.extent.error, 0, 3, 4, 5);
 

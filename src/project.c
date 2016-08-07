@@ -1653,7 +1653,7 @@ static GtkWidget *wizard_create_source_selection_page(wizard_page_t *page) {
 	"toggled", G_CALLBACK(on_wizard_source_selection_toggled), page);
     gtk_box_pack_start(GTK_BOX(vbox2), page->state.source_selection.check[i],
 		       TRUE, TRUE, 2);
-    page->state.source_selection.label[i] = gtk_label_new("");
+    page->state.source_selection.label[i] = gtk_label_new(NULL);
     gtk_box_pack_start(GTK_BOX(vbox2), page->state.source_selection.label[i],
 		       TRUE, TRUE, 2);
   }

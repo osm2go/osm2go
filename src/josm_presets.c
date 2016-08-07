@@ -1189,7 +1189,7 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event,
     GtkWidget *root = presets_picker(context, context->appdata->presets);
     gtk_box_pack_start_defaults(GTK_BOX(hbox), root);
 
-    GtkWidget *sub = gtk_label_new("");
+    GtkWidget *sub = gtk_label_new(NULL);
     gtk_box_pack_start_defaults(GTK_BOX(hbox), sub);
 
     g_object_set_data(G_OBJECT(gtk_bin_get_child(GTK_BIN(root))),

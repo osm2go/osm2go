@@ -834,7 +834,7 @@ static gboolean wms_server_dialog(appdata_t *appdata, wms_t *wms) {
   label = gtk_label_new(_("Server:"));
   gtk_misc_set_alignment(GTK_MISC(label), 0.f, 0.5f);
   gtk_table_attach(GTK_TABLE(table),  label, 0, 1, 0, 1, GTK_FILL, 0,0,0);
-  context->server_label = gtk_label_new("");
+  context->server_label = gtk_label_new(NULL);
   gtk_label_set_ellipsize(GTK_LABEL(context->server_label),
 			  PANGO_ELLIPSIZE_MIDDLE);
   gtk_misc_set_alignment(GTK_MISC(context->server_label), 0.f, 0.5f);
@@ -844,7 +844,7 @@ static gboolean wms_server_dialog(appdata_t *appdata, wms_t *wms) {
   label = gtk_label_new(_("Path:"));
   gtk_misc_set_alignment(GTK_MISC(label), 0.f, 0.5f);
   gtk_table_attach(GTK_TABLE(table),  label, 0, 1, 1, 2, GTK_FILL, 0,0,0);
-  context->path_label = gtk_label_new("");
+  context->path_label = gtk_label_new(NULL);
   gtk_label_set_ellipsize(GTK_LABEL(context->path_label),
 			  PANGO_ELLIPSIZE_MIDDLE);
   gtk_misc_set_alignment(GTK_MISC(context->path_label), 0.f, 0.5f);

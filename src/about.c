@@ -61,7 +61,7 @@ static gboolean on_link_clicked(GtkWidget *widget, GdkEventButton *event,
 static GtkWidget *link_new(appdata_t *appdata, const char *url) {
 #ifdef ENABLE_BROWSER_INTERFACE
   if(appdata) {
-    GtkWidget *label = gtk_label_new("");
+    GtkWidget *label = gtk_label_new(NULL);
     char *str = g_strconcat("<span color=\"" LINK_COLOR
 				"\"><u>", url, "</u></span>", NULL);
     gtk_label_set_markup(GTK_LABEL(label), str);
@@ -75,7 +75,7 @@ static GtkWidget *link_new(appdata_t *appdata, const char *url) {
     return eventbox;
   }
 #endif
-  GtkWidget *label = gtk_label_new("");
+  GtkWidget *label = gtk_label_new(NULL);
   char *str = g_strconcat("<span color=\"" LINK_COLOR "\">", url, "</span>", NULL);
   gtk_label_set_markup(GTK_LABEL(label), str);
   g_free(str);
@@ -92,7 +92,7 @@ static void on_paypal_button_clicked(GtkButton *button, appdata_t *appdata) {
 #endif
 
 static GtkWidget *label_big(const char *str) {
-  GtkWidget *label = gtk_label_new("");
+  GtkWidget *label = gtk_label_new(NULL);
   char *markup =
     g_markup_printf_escaped("<span size='x-large'>%s</span>", str);
   gtk_label_set_markup(GTK_LABEL(label), markup);
@@ -101,7 +101,7 @@ static GtkWidget *label_big(const char *str) {
 }
 
 static GtkWidget *label_xbig(const char *str) {
-  GtkWidget *label = gtk_label_new("");
+  GtkWidget *label = gtk_label_new(NULL);
   char *markup =
     g_markup_printf_escaped("<span size='xx-large'>%s</span>", str);
   gtk_label_set_markup(GTK_LABEL(label), markup);

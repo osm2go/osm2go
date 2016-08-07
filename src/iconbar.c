@@ -245,7 +245,7 @@ static GtkWidget *tool_add(GtkWidget *toolbar, appdata_t *appdata,
     GTK_WIDGET(gtk_tool_button_new(
 	   icon_widget_load(&appdata->icon, icon_str), NULL));
 
-  GtkWidget *label = gtk_label_new("");
+  GtkWidget *label = gtk_label_new(NULL);
   char *markup = g_markup_printf_escaped(MARKUP, tooltip_str);
   gtk_label_set_markup(GTK_LABEL(label), markup);
   g_free(markup);
@@ -315,7 +315,7 @@ GtkWidget *iconbar_new(appdata_t *appdata) {
     GTK_WIDGET(gtk_tool_button_new(
 	   icon_widget_load(&appdata->icon, TOOL_ICON("way")), NULL));
 
-  GtkWidget *label = gtk_label_new("");
+  GtkWidget *label = gtk_label_new(NULL);
   char *markup = g_markup_printf_escaped(MARKUP, _("Way"));
   gtk_label_set_markup(GTK_LABEL(label), markup);
   g_free(markup);

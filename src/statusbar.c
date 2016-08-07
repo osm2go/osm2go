@@ -150,7 +150,7 @@ void statusbar_set(appdata_t *appdata, const char *msg, gboolean highlight) {
 GtkWidget *statusbar_new(appdata_t *appdata) {
   appdata->statusbar = (statusbar_t*)g_new0(statusbar_t, 1);
 
-  appdata->statusbar->widget = gtk_label_new("");
+  appdata->statusbar->widget = gtk_label_new(NULL);
   return appdata->statusbar->widget;
 }
 
