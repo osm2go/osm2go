@@ -167,15 +167,11 @@ void icon_bar_map_item_selected(appdata_t *appdata,
   gtk_widget_set_sensitive(iconbar->relation_add, map_item && selected);
 #endif
 
-  if(selected && map_item && map_item->object.type == WAY) {
-    gtk_widget_set_sensitive(iconbar->way_node_add, TRUE);
-    gtk_widget_set_sensitive(iconbar->way_cut, TRUE);
-    gtk_widget_set_sensitive(iconbar->way_reverse, TRUE);
-  } else {
-    gtk_widget_set_sensitive(iconbar->way_node_add, FALSE);
-    gtk_widget_set_sensitive(iconbar->way_cut, FALSE);
-    gtk_widget_set_sensitive(iconbar->way_reverse, FALSE);
-  }
+  gboolean way_en = (selected && map_item && map_item->object.type == WAY) ?
+                    TRUE : FALSE;
+  gtk_widget_set_sensitive(iconbar->way_node_add, way_en);
+  gtk_widget_set_sensitive(iconbar->way_cut, way_en);
+  gtk_widget_set_sensitive(iconbar->way_reverse, way_en);
 }
 
 /* if a user action is on progress, then disable all buttons that */
@@ -207,21 +203,11 @@ void icon_bar_map_action_idle(appdata_t *appdata, gboolean idle) {
     gtk_widget_set_sensitive(action_disable_widgets[i], FALSE);
 
   /* special handling for icons that depend on further state */
-  if(!idle) {
-    gtk_widget_set_sensitive(appdata->iconbar->way_node_add, FALSE);
-    gtk_widget_set_sensitive(appdata->iconbar->way_cut, FALSE);
-    gtk_widget_set_sensitive(appdata->iconbar->way_reverse, FALSE);
-  } else {
-    if(appdata->map->selected.object.type == WAY) {
-      gtk_widget_set_sensitive(appdata->iconbar->way_node_add, TRUE);
-      gtk_widget_set_sensitive(appdata->iconbar->way_cut, TRUE);
-      gtk_widget_set_sensitive(appdata->iconbar->way_reverse, TRUE);
-    } else {
-      gtk_widget_set_sensitive(appdata->iconbar->way_node_add, FALSE);
-      gtk_widget_set_sensitive(appdata->iconbar->way_cut, FALSE);
-      gtk_widget_set_sensitive(appdata->iconbar->way_reverse, FALSE);
-    }
-  }
+  gboolean way_en = (idle && (appdata->map->selected.object.type == WAY)) ?
+                    TRUE : FALSE;
+  gtk_widget_set_sensitive(appdata->iconbar->way_node_add, way_en);
+  gtk_widget_set_sensitive(appdata->iconbar->way_cut, way_en);
+  gtk_widget_set_sensitive(appdata->iconbar->way_reverse, way_en);
 }
 
 GtkWidget *icon_add(GtkWidget *vbox, appdata_t *appdata,
