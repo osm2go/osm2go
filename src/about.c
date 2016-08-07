@@ -134,11 +134,6 @@ GtkWidget *license_page_new(void) {
 
   GMappedFile *licMap = g_mapped_file_new(name, FALSE, NULL);
   g_free(name);
-  if (licMap == NULL) {
-    /* loading from installation path failed, try to load */
-    /* from local directory (for debugging) */
-    licMap = g_mapped_file_new("./data/COPYING", FALSE, NULL);
-  }
 
   if(licMap) {
     gchar *buffer = g_strndup(g_mapped_file_get_contents(licMap),
