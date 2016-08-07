@@ -243,6 +243,7 @@ static GtkWidget *authors_page_new(void) {
   ivbox = gtk_vbox_new(FALSE, 0);
   author_add(ivbox, _("Patches by:"));
   author_add(ivbox, "Rolf Bode-Meyer <robome@gmail.com>");
+  author_add(ivbox, "Rolf Eike Beer <eike@sf-mail.de>");
   gtk_box_pack_start(GTK_BOX(vbox), ivbox, TRUE, FALSE, 0);
 
   /* -------------------------------------------- */
