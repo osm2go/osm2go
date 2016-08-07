@@ -70,18 +70,13 @@ static void update_collisions(GtkListStore *store, tag_t *tags) {
 
   /* walk the entire store to get all values */
   if(gtk_tree_model_get_iter_first(GTK_TREE_MODEL(store), &iter)) {
-    gtk_tree_model_get(GTK_TREE_MODEL(store), &iter, TAG_COL_DATA, &tag, -1);
-    g_assert(tag);
-    gtk_list_store_set(store, &iter,
-       TAG_COL_COLLISION, info_tag_key_collision(tags, tag), -1);
-
-    while(gtk_tree_model_iter_next(GTK_TREE_MODEL(store), &iter)) {
-      gtk_tree_model_get(GTK_TREE_MODEL(store), &iter,
-			   TAG_COL_DATA, &tag, -1);
+    do {
+      gtk_tree_model_get(GTK_TREE_MODEL(store), &iter, TAG_COL_DATA, &tag, -1);
       g_assert(tag);
       gtk_list_store_set(store, &iter,
-	 TAG_COL_COLLISION, info_tag_key_collision(tags, tag), -1);
-    }
+         TAG_COL_COLLISION, info_tag_key_collision(tags, tag), -1);
+
+    } while(gtk_tree_model_iter_next(GTK_TREE_MODEL(store), &iter));
   }
 }
 
