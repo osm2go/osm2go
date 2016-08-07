@@ -394,7 +394,7 @@ presets_item_t *josm_presets_load(void) {
 
   LIBXML_TEST_VERSION;
 
-  char *filename = find_file("presets.xml");
+  gchar *filename = find_file("presets.xml", NULL, NULL);
   if(!filename) return NULL;
 
   /* parse the file and get the DOM */

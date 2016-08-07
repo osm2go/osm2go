@@ -52,7 +52,7 @@ gboolean yes_no_f(GtkWidget *parent,
 		  struct appdata_s *appdata, gulong again_bit, gint flags,
 		  const char *title, const char *fmt, ...);
 
-char *find_file(const char *name);
+gchar *find_file(const char *n1, const char *n2, const char *n3);
 file_chain_t *file_scan(const char *pattern);
 
 /* dialog size are specified rather fuzzy */

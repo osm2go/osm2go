@@ -310,7 +310,7 @@ elemstyle_t *josm_elemstyles_load(char *name) {
 
   printf("Loading JOSM elemstyles ...\n");
 
-  char *filename = find_file(name);
+  gchar *filename = find_file(name, NULL, NULL);
   if(!filename) {
     printf("elemstyle file not found\n");
     return NULL;

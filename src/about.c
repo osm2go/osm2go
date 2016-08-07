@@ -128,7 +128,7 @@ GtkWidget *label_wrap(char *str) {
 }
 
 GtkWidget *license_page_new(void) {
-  char *name = find_file("COPYING");
+  gchar *name = find_file("COPYING", NULL, NULL);
 
   GtkWidget *label = label_wrap("");
 

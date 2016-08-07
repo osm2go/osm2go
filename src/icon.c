@@ -28,20 +28,18 @@ static const char *icon_exts[] = {
 
 static gchar*
 icon_file_exists(const gchar *file) {
-  gchar *filename, *fullname;
+  gchar *fullname;
   gint idx = 0;
 
   while(icon_exts[idx]) {
-    filename = g_strconcat("icons/", file, icon_exts[idx], NULL);
-    fullname = find_file(filename);
-    g_free(filename);
+    fullname = find_file("icons/", file, icon_exts[idx]);
 
     if(fullname)
-      return fullname;
+      break;
 
     idx++;
   }
-  return NULL;
+  return fullname;
 }
 
 GdkPixbuf *icon_load(icon_t **icon, const char *name) {

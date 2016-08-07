@@ -174,17 +174,17 @@ static const char *data_paths[] = {
   NULL
 };
 
-char *find_file(const char *name) {
+gchar *find_file(const char *n1, const char *n2, const char *n3) {
   const char **path = data_paths;
   char *p = getenv("HOME");
 
   while(*path) {
-    char *full_path = NULL;
+    gchar *full_path = NULL;
 
     if(*path[0] == '~')
-      full_path = g_strconcat(p, *path + 1, name, NULL);
+      full_path = g_strconcat(p, *path + 1, n1, n2, n3, NULL);
     else
-      full_path = g_strconcat(*path, name, NULL);
+      full_path = g_strconcat(*path, n1, n2, n3, NULL);
 
     if(g_file_test(full_path, G_FILE_TEST_IS_REGULAR))
       return full_path;
