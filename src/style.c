@@ -358,7 +358,7 @@ void style_change(appdata_t *appdata, const char *name) {
     chain = next;
   }
 
-  /* check of style has really been changed */
+  /* check if style has really been changed */
   if(appdata->settings->style &&
      !strcmp(appdata->settings->style, new_style)) {
     g_free(new_style);
