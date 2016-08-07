@@ -219,16 +219,15 @@ file_chain_t *file_scan(const char *extension) {
 	name = g_dir_read_name(dir);
 
 	if(name) {
-	  char *fullname = g_strconcat(dirname, name, NULL);
-	  if(g_file_test(fullname, G_FILE_TEST_IS_REGULAR)) {
-	    if(g_str_has_suffix(name, extension)) {
+	  if(g_str_has_suffix(name, extension)) {
+	    gchar *fullname = g_strconcat(dirname, name, NULL);
+	    if(g_file_test(fullname, G_FILE_TEST_IS_REGULAR)) {
 	      *chainP = g_new0(file_chain_t, 1);
 	      (*chainP)->name = fullname;
 	      chainP = &(*chainP)->next;
 	    } else
 	      g_free(fullname);
-	  } else
-	    g_free(fullname);
+	  }
 	}
       } while(name);
 
