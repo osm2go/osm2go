@@ -278,8 +278,8 @@ GtkWidget *misc_dialog_new(guint hint, const gchar *title,
   GtkWidget *dialog = gtk_dialog_new();
 
   gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);
-  if(title) gtk_window_set_title(GTK_WINDOW(dialog), title);
-  if(parent) gtk_window_set_transient_for(GTK_WINDOW(dialog), parent);
+  gtk_window_set_title(GTK_WINDOW(dialog), title);
+  gtk_window_set_transient_for(GTK_WINDOW(dialog), parent);
 
   const gchar *button_text = va_arg(args, const gchar *);
   while(button_text) {
