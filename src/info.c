@@ -112,26 +112,14 @@ static void on_tag_remove(GtkWidget *but, tag_context_t *context) {
   }
 }
 
-static gboolean tag_edit(tag_context_t *context) {
-
-  GtkTreeModel *model;
-  GtkTreeIter iter;
-  tag_t *tag;
-
-  GtkTreeSelection *sel = list_get_selection(context->list);
-  if(!sel) {
-    printf("got no selection object\n");
-    return FALSE;
-  }
-
-  if(!gtk_tree_selection_get_selected(sel, &model, &iter)) {
-    printf("nothing selected\n");
-    return FALSE;
-  }
-
-  gtk_tree_model_get(model, &iter, TAG_COL_DATA, &tag, -1);
-  printf("got %s/%s\n", tag->key, tag->value);
-
+/**
+ * @brief request user input for the given tag
+ * @param context edit context
+ * @param tag the tag to change
+ * @return if the tag was actually modified
+ * @retval FALSE the tag is the same as before
+ */
+static gboolean tag_edit(tag_context_t *context, tag_t *tag) {
   GtkWidget *dialog = misc_dialog_new(MISC_DIALOG_SMALL, _("Edit Tag"),
 			  GTK_WINDOW(context->dialog),
 			  GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
@@ -167,31 +155,46 @@ static gboolean tag_edit(tag_context_t *context) {
 
   gtk_widget_show_all(dialog);
 
+  gboolean ret = FALSE;
   if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog))) {
-    if(osm_tag_update(tag, gtk_entry_get_text(GTK_ENTRY(key)),
-                        gtk_entry_get_text(GTK_ENTRY(value)))) {
-      printf("setting %s/%s\n", tag->key, tag->value);
-
-      gtk_list_store_set(context->store, &iter,
-		         TAG_COL_KEY, tag->key,
-		         TAG_COL_VALUE, tag->value,
-		         -1);
-
-      /* update collisions for all entries */
-      update_collisions(context->store, *context->tag);
-    }
-
-    gtk_widget_destroy(dialog);
-
-    return TRUE;
+    ret = osm_tag_update(tag, gtk_entry_get_text(GTK_ENTRY(key)),
+                         gtk_entry_get_text(GTK_ENTRY(value)));
   }
 
   gtk_widget_destroy(dialog);
-  return FALSE;
+  return ret;
 }
 
 static void on_tag_edit(GtkWidget *button, tag_context_t *context) {
-  tag_edit(context);
+  GtkTreeModel *model;
+  GtkTreeIter iter;
+  tag_t *tag;
+
+  GtkTreeSelection *sel = list_get_selection(context->list);
+  if(!sel) {
+    printf("got no selection object\n");
+    return;
+  }
+
+  if(!gtk_tree_selection_get_selected(sel, &model, &iter)) {
+    printf("nothing selected\n");
+    return;
+  }
+
+  gtk_tree_model_get(model, &iter, TAG_COL_DATA, &tag, -1);
+  printf("got %s/%s\n", tag->key, tag->value);
+
+  if(tag_edit(context, tag)) {
+    printf("setting %s/%s\n", tag->key, tag->value);
+
+    gtk_list_store_set(context->store, &iter,
+		       TAG_COL_KEY, tag->key,
+		       TAG_COL_VALUE, tag->value,
+		       -1);
+
+    /* update collisions for all entries */
+    update_collisions(context->store, *context->tag);
+  }
 }
 
 static void on_tag_last(GtkWidget *button, tag_context_t *context) {
@@ -239,22 +242,25 @@ static void on_tag_add(GtkWidget *button, tag_context_t *context) {
   (*tag)->key = g_strdup("");
   (*tag)->value = g_strdup("");
 
-  /* append a row for the new data */
-  GtkTreeIter iter;
-  gtk_list_store_append(context->store, &iter);
-  gtk_list_store_set(context->store, &iter,
-		     TAG_COL_KEY, (*tag)->key,
-		     TAG_COL_VALUE, (*tag)->value,
-		     TAG_COL_COLLISION, FALSE,
-		     TAG_COL_DATA, *tag,
-		     -1);
-
-  gtk_tree_selection_select_iter(
-     list_get_selection(context->list), &iter);
-
-  if(!tag_edit(context)) {
+  if(!tag_edit(context, *tag)) {
     printf("cancelled\n");
-    on_tag_remove(NULL, context);
+    osm_tag_free(*tag);
+    *tag = NULL;
+  } else {
+    /* append a row for the new data */
+    GtkTreeIter iter;
+    gtk_list_store_append(context->store, &iter);
+    gtk_list_store_set(context->store, &iter,
+		       TAG_COL_KEY, (*tag)->key,
+		       TAG_COL_VALUE, (*tag)->value,
+		       TAG_COL_COLLISION, FALSE,
+		       TAG_COL_DATA, *tag,
+		       -1);
+
+    gtk_tree_selection_select_iter(
+       list_get_selection(context->list), &iter);
+
+    update_collisions(context->store, *context->tag);
   }
 }
 
