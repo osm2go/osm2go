@@ -130,7 +130,7 @@ static GtkWidget *label_wrap(const char *str) {
 static GtkWidget *license_page_new(void) {
   gchar *name = find_file("COPYING", NULL, NULL);
 
-  GtkWidget *label = label_wrap("");
+  GtkWidget *label = label_wrap(NULL);
 
   GMappedFile *licMap = g_mapped_file_new(name, FALSE, NULL);
   g_free(name);
