@@ -101,7 +101,6 @@ PKG_CHECK_EXISTS(maemo-version, [
 
   VERSION=`pkg-config --modversion maemo-version`
   AC_MSG_NOTICE([Configuring for Maemo $VERSION])
-  CFLAGS="$CFLAGS -DMAEMO_VERSION=\\\"$VERSION\\\""
   MAJOR=`echo $VERSION | cut -b1 -`
   CFLAGS="$CFLAGS -DMAEMO_VERSION_MAJOR=$MAJOR"
   MAEMO_VERSION_MAJOR=$MAJOR

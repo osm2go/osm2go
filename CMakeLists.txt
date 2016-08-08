@@ -144,7 +144,7 @@ if (MAEMO_FOUND)
 		src/dbus.h
 	)
 
-	add_definitions(-DMAEMO_VERSION=\"${MAEMO_VERSION}\" -DMAEMO_VERSION_MAJOR=${MAEMO_VERSION_MAJOR} -DUSE_HILDON)
+	add_definitions(-DMAEMO_VERSION_MAJOR=${MAEMO_VERSION_MAJOR} -DUSE_HILDON)
 
 	# fremantle uses icons of 48x48 pixels for the app installer,
 	# older versions used 26x26

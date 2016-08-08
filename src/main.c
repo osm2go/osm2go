@@ -1444,7 +1444,7 @@ int main(int argc, char *argv[]) {
 #if (MAEMO_VERSION_MAJOR == 5) && !defined(__i386__)
   g_signal_connect(G_OBJECT(appdata.window), "realize",
 		   G_CALLBACK(on_window_realize), &appdata);
-#endif // MAEMO_VERSION
+#endif // MAEMO_VERSION_MAJOR
 
 #else
   /* Create a Window. */
