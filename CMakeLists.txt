@@ -77,9 +77,6 @@ pkg_search_module(SOUP IMPORTED_TARGET libsoup-2.4 libsoup-2.2)
 
 if (SOUP_FOUND)
 	add_definitions(-DENABLE_OSM_GPS_MAP)
-	if (SOUP_VERSION VERSION_LESS 2.4)
-		add_definitions(-DLIBSOUP22)
-	endif ()
 	list(APPEND osm2go_SOURCE_FILES
 		src/converter.c
 		src/converter.h
@@ -93,6 +90,9 @@ if (SOUP_FOUND)
 		src/osm-gps-map-osd-select.h
 	)
 	list(APPEND MORE_LIBS PkgConfig::SOUP)
+	if (SOUP_VERSION VERSION_LESS 2.4)
+		set_property(SOURCE src/osm-gps-map.c APPEND PROPERTY COMPILE_DEFINITIONS LIBSOUP22)
+	endif ()
 else ()
 	message(WARNING "libsoup-2.4/2.2 missing, disabling internal map")
 endif ()

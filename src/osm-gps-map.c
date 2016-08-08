@@ -45,6 +45,9 @@
 #ifdef USE_CAIRO
 #include <cairo.h>
 #endif
+#ifdef LIBSOUP22
+#include <libsoup/soup.h>
+#endif
 
 #define ENABLE_DEBUG 0
 
@@ -198,6 +201,19 @@ enum
 };
 
 G_DEFINE_TYPE (OsmGpsMap, osm_gps_map, GTK_TYPE_DRAWING_AREA);
+
+typedef struct {
+    /* The details of the tile to download */
+    char *uri;
+    char *folder;
+    char *filename;
+    OsmGpsMap *map;
+    /* whether to redraw the map when the tile arrives */
+    gboolean redraw;
+#ifdef LIBSOUP22
+    SoupSession *session;
+#endif
+} tile_download_t;
 
 /*
  * Drawing function forward defintions
