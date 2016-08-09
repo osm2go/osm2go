@@ -29,6 +29,14 @@
 #include <hildon/hildon-note.h>
 #endif
 
+#ifdef ENABLE_BROWSER_INTERFACE
+#ifdef USE_HILDON
+#include <tablet-browser-interface.h>
+#else
+#include <gtk/gtk.h>
+#endif
+#endif
+
 static void vmessagef(GtkWidget *parent, int type, int buttons,
 		      char *title, const char *fmt,
 		      va_list args) {
@@ -608,6 +616,23 @@ GType combo_box_entry_type(void) {
   return GTK_TYPE_COMBO_BOX_ENTRY;
 #else
   return HILDON_TYPE_PICKER_BUTTON;
+#endif
+}
+
+/* ---------- simple interface to the systems web browser ---------- */
+void open_url(struct appdata_s *appdata, const char *url)
+{
+#ifdef ENABLE_BROWSER_INTERFACE
+#ifndef USE_HILDON
+  gtk_show_uri(NULL, url, GDK_CURRENT_TIME, NULL);
+#else
+  osso_rpc_run_with_defaults(appdata->osso_context, "osso_browser",
+                             OSSO_BROWSER_OPEN_NEW_WINDOW_REQ, NULL,
+                             DBUS_TYPE_STRING, url,
+                             DBUS_TYPE_BOOLEAN, FALSE, DBUS_TYPE_INVALID);
+#endif
+  (void)appdata;
+  (void)url;
 #endif
 }
 

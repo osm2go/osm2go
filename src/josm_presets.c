@@ -90,27 +90,14 @@ struct presets_item_s {
 };
 
 #ifdef ENABLE_BROWSER_INTERFACE
-#ifdef USE_HILDON
-#include <tablet-browser-interface.h>
-#else
-#include <gtk/gtk.h>
-#endif
 
 typedef struct {
   appdata_t *appdata;
   char *link;
 } www_context_t;
 
-/* ---------- simple interface to the systems web browser ---------- */
 static void on_info(GtkWidget *widget, www_context_t *context) {
-#ifndef USE_HILDON
-  gtk_show_uri(NULL, context->link, GDK_CURRENT_TIME, NULL);
-#else
-  osso_rpc_run_with_defaults(context->appdata->osso_context, "osso_browser",
-			     OSSO_BROWSER_OPEN_NEW_WINDOW_REQ, NULL,
-			     DBUS_TYPE_STRING, context->link,
-			     DBUS_TYPE_BOOLEAN, FALSE, DBUS_TYPE_INVALID);
-#endif
+  open_url(context->appdata, context->link);
 }
 #endif
 

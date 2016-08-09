@@ -29,23 +29,9 @@
 #define LINK_COLOR "lightblue"
 #endif
 
-#ifdef ENABLE_BROWSER_INTERFACE
-#ifdef USE_HILDON
-#include <tablet-browser-interface.h>
-#endif
-
 #include <gtk/gtk.h>
 
-static void browser_url(appdata_t *appdata, const char *url) {
-#ifndef USE_HILDON
-  gtk_show_uri(NULL, url, GDK_CURRENT_TIME, NULL);
-#else
-  osso_rpc_run_with_defaults(appdata->osso_context, "osso_browser",
-			     OSSO_BROWSER_OPEN_NEW_WINDOW_REQ, NULL,
-			     DBUS_TYPE_STRING, url,
-			     DBUS_TYPE_BOOLEAN, FALSE, DBUS_TYPE_INVALID);
-#endif
-}
+#ifdef ENABLE_BROWSER_INTERFACE
 
 static gboolean on_link_clicked(GtkWidget *widget, GdkEventButton *event,
 				gpointer user_data) {
@@ -53,7 +39,7 @@ static gboolean on_link_clicked(GtkWidget *widget, GdkEventButton *event,
   const char *str =
     gtk_label_get_text(GTK_LABEL(gtk_bin_get_child(GTK_BIN(widget))));
 
-  browser_url((appdata_t*)user_data, (char*)str);
+  open_url((appdata_t*)user_data, str);
   return TRUE;
 }
 #endif
@@ -85,7 +71,7 @@ static GtkWidget *link_new(appdata_t *appdata, const char *url) {
 #ifdef ENABLE_BROWSER_INTERFACE
 static void on_paypal_button_clicked(GtkButton *button, appdata_t *appdata) {
   //  gtk_dialog_response(GTK_DIALOG(context->dialog), GTK_RESPONSE_ACCEPT);
-  browser_url(appdata,
+  open_url(appdata,
 	      "https://www.paypal.com/cgi-bin/webscr"
 	      "?cmd=_s-xclick&hosted_button_id=7400558");
 }

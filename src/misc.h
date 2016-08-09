@@ -97,6 +97,8 @@ const char *combo_box_get_active_text(GtkWidget *cbox);
 GType combo_box_type(void);
 GType combo_box_entry_type(void);
 
+void open_url(struct appdata_s *appdata, const char *url);
+
 void misc_init(void);
 
 #endif // MISC_H
