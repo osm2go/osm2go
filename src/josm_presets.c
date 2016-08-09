@@ -90,14 +90,9 @@ struct presets_item_s {
 };
 
 #ifdef ENABLE_BROWSER_INTERFACE
-
-typedef struct {
-  appdata_t *appdata;
-  char *link;
-} www_context_t;
-
-static void on_info(GtkWidget *widget, www_context_t *context) {
-  open_url(context->appdata, context->link);
+static void on_info(GtkWidget *widget, gpointer context) {
+  const presets_item_t *item = (presets_item_t*)g_object_get_data(G_OBJECT(widget), "presets_item");
+  open_url((appdata_t*)context, (char*)item->link);
 }
 #endif
 
@@ -476,9 +471,6 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
   GtkWidget *dialog = NULL;
   gboolean ok = FALSE;
   tag_t *tag = NULL, **ctag = &tag;
-#ifdef ENABLE_BROWSER_INTERFACE
-  www_context_t www_context = { 0 };
-#endif
 
   printf("dialog for item %s\n", item->name);
 
@@ -512,13 +504,11 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
     /* if a web link has been provided for this item install */
     /* a button for this */
     if(item->link) {
-      www_context.link = (char*)item->link;
-      www_context.appdata = appdata;
-
       GtkWidget *button = gtk_dialog_add_button(GTK_DIALOG(dialog), _
 			("Info"), GTK_RESPONSE_HELP);
+      g_object_set_data(G_OBJECT(button), "presets_item", (gpointer)item);
       gtk_signal_connect(GTK_OBJECT(button), "clicked",
-			 GTK_SIGNAL_FUNC(on_info), (gpointer)&www_context);
+			 GTK_SIGNAL_FUNC(on_info), appdata);
     }
 #endif
 
