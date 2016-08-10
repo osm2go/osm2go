@@ -412,21 +412,47 @@ static void attach_right(GtkWidget *table, GtkWidget *widget, gint y) {
 		   GTK_EXPAND | GTK_FILL, 0,0,0);
 }
 
-static tag_t **store_value(presets_widget_t *widget, tag_t **ctag,
-			   const char *value) {
-  if((value && strlen(value))) {
-    *ctag = g_new0(tag_t, 1);
-    (*ctag)->key = g_strdup((char*)widget->key);
-    (*ctag)->value = g_strdup(value);
+static gboolean store_value(presets_widget_t *widget,
+                            tag_t **ctag, const char *value, tag_t *otag) {
+  gboolean changed = FALSE;
+  if(value && strlen(value)) {
+    const char *chstr;
+    tag_t *tag;
+    if(otag) {
+      /* update the previous tag structure */
+      tag = otag;
+      g_assert(strcasecmp(otag->key, (char*)widget->key) == 0);
+      /* only update if the value actually changed */
+      if(strcmp(otag->value, value) != 0) {
+        changed = TRUE; /* mark as updated, actual change below */
+        chstr = "updated ";
+      } else {
+        chstr = "kept ";
+      }
+    } else {
+      /* no old entry, create a new one */
+      tag = g_new0(tag_t, 1);
+      osm_tag_update_key(tag, (char*)widget->key);
+      /* value will be updated below */
+      *ctag = tag;
+      changed = TRUE;
+      chstr = "new ";
+    }
 
-    printf("key = %s, value = %s\n",
-	   widget->key, (*ctag)->value);
+    if(changed)
+      osm_tag_update_value(tag, value);
 
-    ctag = &((*ctag)->next);
+    printf("%skey = %s, value = %s\n", chstr,
+           widget->key, tag->value);
+  } else if (otag) {
+    g_free(otag->value);
+    otag->value = NULL; /* mark this entry as deleted */
+    changed = TRUE;
+    printf("removed key = %s\n", widget->key);
   } else
     printf("ignore empty key = %s\n", widget->key);
 
-  return ctag;
+  return changed;
 }
 
 #ifdef USE_HILDON
@@ -466,11 +492,22 @@ static gboolean preset_combo_insert_value(GtkWidget *combo, const char *value,
   return (g_strcmp0(preset, value) == 0) ? TRUE : FALSE;
 }
 
-static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
-		     const presets_item_t *item, tag_t *orig_tag) {
+typedef struct {
+  appdata_t *appdata;
+#ifndef FREMANTLE
+  GtkWidget *menu;
+#endif
+  tag_context_t *tag_context;
+} presets_context_t;
+
+static void presets_item_dialog(presets_context_t *context,
+                                const presets_item_t *item) {
+  appdata_t *appdata = context->appdata;
+  GtkWindow *parent = GTK_WINDOW(context->tag_context->dialog);
+  tag_t **orig_tag = context->tag_context->tag;
+
   GtkWidget *dialog = NULL;
   gboolean ok = FALSE;
-  tag_t *tag = NULL, **ctag = &tag;
 
   printf("dialog for item %s\n", item->name);
 
@@ -537,7 +574,8 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
     widget_cnt = widget_skip;
     while(widget) {
       /* check if there's a value with this key already */
-      char *preset = osm_tag_get_by_key(orig_tag, (char*)widget->key);
+      tag_t *otag = osm_tag_find(*orig_tag, (char*)widget->key);
+      char *preset = otag ? otag->value : NULL;
 
       switch(widget->type) {
       case WIDGET_TYPE_SEPARATOR:
@@ -628,6 +666,9 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
 	break;
       }
 
+      if(gtk_widgets[widget_cnt] && otag)
+        g_object_set_data(G_OBJECT(gtk_widgets[widget_cnt]), "tag", otag);
+
       widget_cnt++;
       widget = widget->next;
     }
@@ -676,45 +717,72 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
 
   if(ok) {
     /* handle all children of the table */
+    gboolean changed = FALSE;
     widget = item->widget;
     widget_cnt = 0;
+    tag_t **last = orig_tag;
+    while (*last)
+      last = &(*last)->next;
+
     while(widget) {
+      tag_t *otag = gtk_widgets[widget_cnt] ? g_object_get_data(G_OBJECT(gtk_widgets[widget_cnt]), "tag") : NULL;
       switch(widget->type) {
       case WIDGET_TYPE_COMBO:
 	g_assert(GTK_WIDGET_TYPE(gtk_widgets[widget_cnt]) == combo_box_type());
 
-	char *text = (char*)combo_box_get_active_text(gtk_widgets[widget_cnt]);
-	if(!strcmp(text, _("<unset>"))) text = NULL;
+	const char *text = combo_box_get_active_text(gtk_widgets[widget_cnt]);
+	if(!strcmp(text, _("<unset>")))
+	  text = NULL;
 
-	ctag = store_value(widget, ctag, text);
+	changed |= store_value(widget, last, text, otag);
 	break;
 
       case WIDGET_TYPE_TEXT:
 	g_assert(GTK_WIDGET_TYPE(gtk_widgets[widget_cnt]) == entry_type());
 
-	ctag = store_value(widget, ctag, (char*)gtk_entry_get_text(
-		     GTK_ENTRY(gtk_widgets[widget_cnt])));
+	changed |= store_value(widget, last, gtk_entry_get_text(
+		     GTK_ENTRY(gtk_widgets[widget_cnt])), otag);
 	break;
 
       case WIDGET_TYPE_CHECK:
 	g_assert(GTK_WIDGET_TYPE(gtk_widgets[widget_cnt]) == check_button_type());
 
-	ctag = store_value(widget, ctag,
-                 check_button_get_active(gtk_widgets[widget_cnt])?"yes":NULL);
+	changed |= store_value(widget, last,
+                 check_button_get_active(gtk_widgets[widget_cnt])?"yes":NULL, otag);
 	break;
 
       case WIDGET_TYPE_KEY:
 	g_assert(!gtk_widgets[widget_cnt]);
+	g_assert(!otag);
+	otag = osm_tag_find(*orig_tag, (char*)widget->key);
 
-	ctag = store_value(widget, ctag, (char*)widget->key_w.value);
+	changed |= store_value(widget, last, (char*)widget->key_w.value, otag);
 	break;
 
       default:
 	break;
       }
 
+      if(*last)
+        last = &(*last)->next;
+
       widget_cnt++;
       widget = widget->next;
+    }
+
+    if(changed) {
+      tag_t **last = orig_tag;
+      while (*last) {
+        tag_t *tmp = *last;
+        /* marked as deleted by store_value() */
+        if(tmp->value == NULL) {
+          *last = tmp->next;
+          g_free(tmp);
+        } else {
+          last = &tmp->next;
+        }
+      }
+      info_tags_replace(context->tag_context);
     }
   }
 
@@ -722,61 +790,9 @@ static tag_t *presets_item_dialog(appdata_t *appdata, GtkWindow *parent,
 
   if(interactive_widget_cnt)
     gtk_widget_destroy(dialog);
-
-  return tag;
 }
 
 /* ------------------- the item list (popup menu) -------------- */
-
-typedef struct {
-  appdata_t *appdata;
-#ifndef FREMANTLE
-  GtkWidget *menu;
-#endif
-  tag_context_t *tag_context;
-} presets_context_t;
-
-static void
-do_item( presets_context_t *context, const presets_item_t *item) {
-  tag_t *tag =
-    presets_item_dialog(context->appdata,
-			GTK_WINDOW(context->tag_context->dialog), item,
-			*context->tag_context->tag);
-
-  if(tag) {
-    tag_context_t *tag_context = context->tag_context;
-
-    /* add new tags to the old list and replace entries with the same key */
-
-    while(tag) {
-      tag_t *next = tag->next;
-
-      tag_t **dst = tag_context->tag;
-      gboolean replaced = FALSE;
-      while(*dst && !replaced) {
-	if(strcasecmp((*dst)->key, tag->key) == 0) {
-	  /* just swap the values, and then free the temporary instance */
-	  char *swap = tag->value;
-	  tag->value = (*dst)->value;
-	  (*dst)->value = swap;
-	  osm_tag_free(tag);
-	  replaced = TRUE;
-	} else
-	  dst = &(*dst)->next;
-      }
-
-      /* if nothing was replaced, then just append new tag */
-      if(!replaced) {
-        tag->next = NULL;
-        *dst = tag;
-      }
-
-      tag = next;
-    }
-
-    info_tags_replace(tag_context);
-  }
-}
 
 /**
  * @brief check if the currently active object uses this preset and the preset is interactive
@@ -812,7 +828,7 @@ cb_menu_item(GtkWidget *menu_item, gpointer data) {
   presets_item_t *item = g_object_get_data(G_OBJECT(menu_item), "item");
   g_assert(item);
 
-  do_item(context, item);
+  presets_item_dialog(context, item);
 }
 
 static GtkWidget *create_menuitem(presets_context_t *context, presets_item_t *item)
@@ -1182,7 +1198,7 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event,
     gtk_widget_destroy(dialog);
 
     if(item)
-      do_item(context, item);
+      presets_item_dialog(context, item);
 #endif
 
     /* Tell calling code that we have handled this event; the buck
