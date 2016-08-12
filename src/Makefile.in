@@ -79,7 +79,7 @@ dbus.o: $(srcdir)/dbus.h $(srcdir)/pos.h $(srcdir)/appdata.h $(srcdir)/osm.h $(s
 diff.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/diff.h $(srcdir)/project.h $(srcdir)/map.h
 diff.o: $(srcdir)/settings.h $(srcdir)/misc.h $(srcdir)/statusbar.h
 gps.o: $(srcdir)/gps.h $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/settings.h
-gps_liblocation.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h
+gps_liblocation.o: $(srcdir)/gps.h $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/settings.h
 iconbar.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/icon.h $(srcdir)/iconbar.h $(srcdir)/map.h
 iconbar.o: $(srcdir)/info.h $(srcdir)/map_edit.h
 icon.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/icon.h $(srcdir)/misc.h
@@ -95,8 +95,8 @@ main.o: $(srcdir)/project.h $(srcdir)/map.h $(srcdir)/settings.h $(srcdir)/gps.h
 main.o: $(srcdir)/misc.h $(srcdir)/osm_api.h $(srcdir)/relation_edit.h $(srcdir)/scale_popup.h $(srcdir)/statusbar.h $(srcdir)/style.h
 main.o: $(srcdir)/icon.h $(srcdir)/josm_elemstyles.h $(srcdir)/track.h $(srcdir)/wms.h
 map.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/banner.h $(srcdir)/diff.h $(srcdir)/project.h $(srcdir)/map.h
-map.o: $(srcdir)/settings.h $(srcdir)/iconbar.h $(srcdir)/info.h $(srcdir)/map_edit.h $(srcdir)/map_hl.h $(srcdir)/misc.h $(srcdir)/statusbar.h
-map.o: $(srcdir)/style.h $(srcdir)/icon.h $(srcdir)/josm_elemstyles.h $(srcdir)/track.h
+map.o: $(srcdir)/settings.h $(srcdir)/gps.h $(srcdir)/iconbar.h $(srcdir)/info.h $(srcdir)/map_edit.h $(srcdir)/map_hl.h $(srcdir)/misc.h
+map.o: $(srcdir)/statusbar.h $(srcdir)/style.h $(srcdir)/icon.h $(srcdir)/josm_elemstyles.h $(srcdir)/track.h
 map_edit.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/banner.h $(srcdir)/iconbar.h $(srcdir)/map.h
 map_edit.o: $(srcdir)/info.h $(srcdir)/map_hl.h $(srcdir)/misc.h $(srcdir)/statusbar.h $(srcdir)/style.h $(srcdir)/icon.h
 map_edit.o: $(srcdir)/josm_elemstyles.h

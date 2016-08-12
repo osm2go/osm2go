@@ -276,6 +276,7 @@ way_chain_t *osm_node_to_way(osm_t *osm, node_t *node);
 
 /* ----------- edit functions ----------- */
 node_t *osm_node_new(osm_t *osm, gint x, gint y);
+node_t *osm_node_new_pos(osm_t *osm, const pos_t *pos);
 void osm_node_attach(osm_t *osm, node_t *node);
 void osm_node_restore(osm_t *osm, node_t *node);
 way_chain_t *osm_node_delete(osm_t *osm, struct icon_s **icon, node_t *node,

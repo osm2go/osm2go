@@ -20,6 +20,7 @@
 #include "appdata.h"
 #include "banner.h"
 #include "diff.h"
+#include "gps.h"
 #include "iconbar.h"
 #include "info.h"
 #include "map.h"
@@ -1874,7 +1875,7 @@ void map_action_set(appdata_t *appdata, map_action_t action) {
 
   /* enable/disable ok/cancel buttons */
   // MAP_ACTION_IDLE=0, NODE_ADD, BG_ADJUST, WAY_ADD, WAY_NODE_ADD, WAY_CUT
-  const gboolean ok_state[] = { FALSE, FALSE, TRUE, FALSE, FALSE, FALSE };
+  const gboolean ok_state[] = { FALSE, TRUE, TRUE, FALSE, FALSE, FALSE };
   const gboolean cancel_state[] = { FALSE, TRUE, TRUE, TRUE, TRUE, TRUE };
 
   g_assert_cmpint(MAP_ACTION_NUM, ==, sizeof(ok_state)/sizeof(gboolean));
@@ -1970,6 +1971,41 @@ void map_action_ok(appdata_t *appdata) {
     appdata->project->wms_offset.x = map->bg.offset.x;
     appdata->project->wms_offset.y = map->bg.offset.y;
     break;
+
+  case MAP_ACTION_NODE_ADD:
+    {
+    pos_t pos;
+    if(!gps_get_pos(appdata, &pos, NULL))
+      break;
+
+    gboolean in_bounds = TRUE;
+    if((pos.lat < appdata->osm->bounds->ll_min.lat) ||
+       (pos.lat > appdata->osm->bounds->ll_max.lat))
+      in_bounds = FALSE;
+    if((pos.lon < appdata->osm->bounds->ll_min.lon) ||
+       (pos.lon > appdata->osm->bounds->ll_max.lon))
+      in_bounds = FALSE;
+
+    node_t *node = NULL;
+
+    if(!in_bounds)
+      map_outside_error(appdata);
+    else {
+      node = osm_node_new_pos(appdata->osm, &pos);
+      osm_node_attach(appdata->osm, node);
+      map_node_draw(map, node);
+    }
+    map_action_set(appdata, MAP_ACTION_IDLE);
+
+    map_item_deselect(appdata);
+
+    if(node) {
+      map_node_select(appdata, node);
+
+      /* let the user specify some tags for the new node */
+      info_dialog(GTK_WIDGET(appdata->window), appdata, NULL);
+    }
+    }
 
   default:
     break;

@@ -1603,6 +1603,24 @@ node_t *osm_node_new(osm_t *osm, gint x, gint y) {
   return node;
 }
 
+node_t *osm_node_new_pos(osm_t *osm, const pos_t *pos) {
+  printf("Creating new node from lat/lon\n");
+
+  node_t *node = g_new0(node_t, 1);
+  OSM_VERSION(node) = 1;
+  node->pos = *pos;
+  OSM_VISIBLE(node) = TRUE;
+  OSM_TIME(node) = time(NULL);
+
+  /* convert ll position to screen */
+  pos2lpos(osm->bounds, &node->pos, &node->lpos);
+
+  printf("  new at %d %d (%f %f)\n",
+	 node->lpos.x, node->lpos.y, node->pos.lat, node->pos.lon);
+
+  return node;
+}
+
 
 void osm_node_attach(osm_t *osm, node_t *node) {
   printf("Attaching node\n");
