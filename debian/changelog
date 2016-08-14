@@ -1,3 +1,35 @@
+osm2go (1:0.8.7-maemo1) karmic; urgency=low
+
+  * add "Download all" button to project list to simplify mass refresh
+  * drop modified flag from objects if the same change has been done upstream
+  * avoid deprecated glib APIs if replacement versions are available
+  * when creating new projects start the selection map near the current position
+    instead of the whole world
+  * add emergency=fire_hydrant to presets
+  * fix local modification being lost if they were on an object (typically node)
+    with an id > 2^31 if they were loaded from diff
+  * speed up track parsing
+  * rework OSM data file backup handling so data is always present even if the
+    program was interrupted during download
+  * remove some dead code
+  * improve memory allocations at several places
+  * show the download date of OSM data in project settings
+  * permit HTTPS proxy URLs
+  * use "description" tag to describe a relation before using "note"
+  * disable presets button if no presets have been loaded
+  * add a submenu for all used presets of an object
+  * show size of downloaded data in progress bar
+  * show types of emergency objects if they are not described by anything else
+  * show address when trying to describe buildings
+  * also check :forward and :backward suffixes of tags when reversing ways
+  * also handle sidewalk=(left|right) when reversing ways
+  * fix deleting entries from presets
+  * allow adding a new node at the current GPS position
+  * plug several memleaks
+  * several internal cleanups
+
+ -- Rolf Eike Beer <eike@sf-mail.de>  Sun, 14 Aug 2016 12:16:29 +0200
+
 osm2go (1:0.8.3-maemo2) karmic; urgency=low
 
   * Optified binary on fremantle

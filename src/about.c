@@ -195,7 +195,7 @@ static GtkWidget *copyright_page_new(appdata_t *appdata) {
   ivbox = gtk_vbox_new(FALSE, 0);
 
   gtk_box_pack_start(GTK_BOX(ivbox),
-	      gtk_label_new(_("Copyright 2008-2014")), FALSE, FALSE, 0);
+	      gtk_label_new(_("Copyright 2008-2016")), FALSE, FALSE, 0);
 
   gtk_box_pack_start(GTK_BOX(ivbox),
       link_new(appdata, "http://www.harbaum.org/till/maemo#osm2go"),
