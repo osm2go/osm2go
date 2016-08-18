@@ -185,7 +185,7 @@ static GtkWidget *copyright_page_new(appdata_t *appdata) {
   ivbox = gtk_vbox_new(FALSE, 0);
 
   gtk_box_pack_start(GTK_BOX(ivbox),
-		      gtk_label_new("Version " VERSION " (AMDmi3's fork)"), FALSE, FALSE, 0);
+		      gtk_label_new("Version " VERSION " (https://github.com/osm2go/osm2go)"), FALSE, FALSE, 0);
   gtk_box_pack_start(GTK_BOX(ivbox),
 		      gtk_label_new(__DATE__ " " __TIME__), FALSE, FALSE, 0);
 
