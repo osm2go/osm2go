@@ -298,25 +298,27 @@ void project_free(project_t *project) {
 
 /* ------------ project selection dialog ------------- */
 
-static char *project_fullname(settings_t *settings, const char *name) {
-  return g_strconcat(settings->base_path, name, "/", name, ".proj", NULL);
-}
-
-gboolean project_exists(settings_t *settings, const char *name) {
+/**
+ * @brief check if a project with the given name exists
+ * @param settings settings
+ * @param name project name
+ * @param filename where to store absolute filename if project exists or NULL
+ * @returns if project exists
+ */
+gboolean project_exists(settings_t *settings, const char *name, gchar **filename) {
   gboolean ok = FALSE;
-  char *fulldir = g_strconcat(settings->base_path, name, NULL);
+  gchar *fullname = g_strconcat(settings->base_path, name, "/", name, ".proj", NULL);
 
-  if(g_file_test(fulldir, G_FILE_TEST_IS_DIR)) {
-
-    /* check for project file */
-    char *fullname = project_fullname(settings, name);
-
-    if(g_file_test(fullname, G_FILE_TEST_IS_REGULAR))
-      ok = TRUE;
-
-    g_free(fullname);
+  /* check for project file */
+  if(g_file_test(fullname, G_FILE_TEST_IS_REGULAR)) {
+    if(filename) {
+      *filename = fullname;
+      fullname = NULL;
+    }
+    ok = TRUE;
   }
-  g_free(fulldir);
+
+  g_free(fullname);
 
   return ok;
 }
@@ -329,7 +331,8 @@ static project_t *project_scan(appdata_t *appdata) {
   const char *name = NULL;
   do {
     if((name = g_dir_read_name(dir))) {
-      if(project_exists(appdata->settings, name)) {
+      gchar *fullname;
+      if(project_exists(appdata->settings, name, &fullname)) {
 	printf("found project %s\n", name);
 
 	/* try to read project and append it to chain */
@@ -338,7 +341,6 @@ static project_t *project_scan(appdata_t *appdata) {
 	(*current)->path = g_strconcat(
 			  appdata->settings->base_path, name, "/", NULL);
 
-	char *fullname = project_fullname(appdata->settings, name);
 	if(project_read(fullname, *current))
 	  current = &((*current)->next);
 	else {
@@ -456,7 +458,7 @@ static void callback_modified_name(GtkWidget *widget, gpointer data) {
     /* check if it consists of valid characters */
     if(!strchrs(name, "\\*?()\n\t\r")) {
       /* check if such a project already exists */
-      if(!project_exists(context->settings, name))
+      if(!project_exists(context->settings, name, NULL))
 	ok = TRUE;
     }
   }

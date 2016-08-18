@@ -219,7 +219,7 @@ settings_t *settings_load(void) {
 	printf("base_path not set, assuming first time boot\n");
 
 	/* check for presence of demo project */
-	if(project_exists(settings, "demo")) {
+	if(project_exists(settings, "demo", NULL)) {
 	  printf("demo project exists, use it as default\n");
 	  settings->project = g_strdup("demo");
 	  settings->first_run_demo = TRUE;
