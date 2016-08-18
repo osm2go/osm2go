@@ -838,13 +838,13 @@ static GtkWidget *project_list_widget(select_context_t *context) {
 static char *project_select(appdata_t *appdata) {
   char *name = NULL;
 
-  select_context_t *context = g_new0(select_context_t, 1);
-  context->appdata = appdata;
-  context->settings = appdata->settings;
-  context->project = project_scan(appdata);
+  select_context_t context = { 0 };
+  context.appdata = appdata;
+  context.settings = appdata->settings;
+  context.project = project_scan(appdata);
 
   /* create project selection dialog */
-  context->dialog =
+  context.dialog =
     misc_dialog_new(MISC_DIALOG_MEDIUM,_("Project selection"),
 	  GTK_WINDOW(appdata->window),
 	  GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
@@ -853,31 +853,29 @@ static char *project_select(appdata_t *appdata) {
 
   /* under fremantle the dialog does not have an "Open" button */
   /* as it's closed when a project is being selected */
-  gtk_dialog_set_default_response(GTK_DIALOG(context->dialog),
+  gtk_dialog_set_default_response(GTK_DIALOG(context.dialog),
 				  GTK_RESPONSE_ACCEPT);
 
-  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(context->dialog)->vbox),
-			      project_list_widget(context));
+  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(context.dialog)->vbox),
+			      project_list_widget(&context));
 
   /* don't all user to click ok until something is selected */
-  gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog),
+  gtk_dialog_set_response_sensitive(GTK_DIALOG(context.dialog),
 				    GTK_RESPONSE_ACCEPT, FALSE);
 
-  gtk_widget_show_all(context->dialog);
-  if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(context->dialog)))
-    name = g_strdup(project_get_selected(context->list)->name);
+  gtk_widget_show_all(context.dialog);
+  if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(context.dialog)))
+    name = g_strdup(project_get_selected(context.list)->name);
 
-  gtk_widget_destroy(context->dialog);
+  gtk_widget_destroy(context.dialog);
 
   /* free all entries */
-  project_t *project = context->project;
+  project_t *project = context.project;
   while(project) {
     project_t *next = project->next;
     project_free(project);
     project = next;
   }
-
-  g_free(context);
 
   return name;
 }
@@ -1097,20 +1095,20 @@ project_edit(appdata_t *appdata, GtkWidget *parent, settings_t *settings,
 
   /* ------------ project edit dialog ------------- */
 
-  project_context_t *context = g_new0(project_context_t, 1);
-  context->project = project;
-  context->area_edit.settings = context->settings = settings;
-  context->area_edit.appdata = appdata;
-  context->is_new = is_new;
-  context->area_edit.min = &project->min;
-  context->area_edit.max = &project->max;
+  project_context_t context = { 0 };
+  context.project = project;
+  context.area_edit.settings = context.settings = settings;
+  context.area_edit.appdata = appdata;
+  context.is_new = is_new;
+  context.area_edit.min = &project->min;
+  context.area_edit.max = &project->max;
 
   /* cancel is enabled for "new" projects only */
   if(is_new) {
     char *str = g_strdup_printf(_("New project - %s"), project->name);
 
-    context->area_edit.parent =
-      context->dialog = misc_dialog_new(MISC_DIALOG_WIDE, str,
+    context.area_edit.parent =
+      context.dialog = misc_dialog_new(MISC_DIALOG_WIDE, str,
 				GTK_WINDOW(parent),
 				GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
 				GTK_STOCK_OK, GTK_RESPONSE_ACCEPT, NULL);
@@ -1118,14 +1116,14 @@ project_edit(appdata_t *appdata, GtkWidget *parent, settings_t *settings,
   } else {
     char *str = g_strdup_printf(_("Edit project - %s"), project->name);
 
-    context->area_edit.parent =
-      context->dialog = misc_dialog_new(MISC_DIALOG_WIDE, str,
+    context.area_edit.parent =
+      context.dialog = misc_dialog_new(MISC_DIALOG_WIDE, str,
 				GTK_WINDOW(parent),
 				GTK_STOCK_CLOSE, GTK_RESPONSE_ACCEPT, NULL);
     g_free(str);
   }
 
-  gtk_dialog_set_default_response(GTK_DIALOG(context->dialog),
+  gtk_dialog_set_default_response(GTK_DIALOG(context.dialog),
 				  GTK_RESPONSE_ACCEPT);
 
   GtkWidget *label;
@@ -1135,34 +1133,34 @@ project_edit(appdata_t *appdata, GtkWidget *parent, settings_t *settings,
 
   label = gtk_label_left_new(_("Description:"));
   gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 0, 1);
-  context->desc = entry_new();
-  gtk_entry_set_activates_default(GTK_ENTRY(context->desc), TRUE);
+  context.desc = entry_new();
+  gtk_entry_set_activates_default(GTK_ENTRY(context.desc), TRUE);
   if(project->desc)
-    gtk_entry_set_text(GTK_ENTRY(context->desc), project->desc);
-  gtk_table_attach_defaults(GTK_TABLE(table),  context->desc, 1, 5, 0, 1);
+    gtk_entry_set_text(GTK_ENTRY(context.desc), project->desc);
+  gtk_table_attach_defaults(GTK_TABLE(table),  context.desc, 1, 5, 0, 1);
   gtk_table_set_row_spacing(GTK_TABLE(table), 0, 4);
 
   label = gtk_label_left_new(_("Latitude:"));
   gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 1, 2);
-  context->minlat = pos_lat_label_new(project->min.lat);
-  gtk_table_attach_defaults(GTK_TABLE(table), context->minlat, 1, 2, 1, 2);
+  context.minlat = pos_lat_label_new(project->min.lat);
+  gtk_table_attach_defaults(GTK_TABLE(table), context.minlat, 1, 2, 1, 2);
   label = gtk_label_new(_("to"));
   gtk_table_attach_defaults(GTK_TABLE(table),  label, 2, 3, 1, 2);
-  context->maxlat = pos_lon_label_new(project->max.lat);
-  gtk_table_attach_defaults(GTK_TABLE(table), context->maxlat, 3, 4, 1, 2);
+  context.maxlat = pos_lon_label_new(project->max.lat);
+  gtk_table_attach_defaults(GTK_TABLE(table), context.maxlat, 3, 4, 1, 2);
 
   label = gtk_label_left_new(_("Longitude:"));
   gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 2, 3);
-  context->minlon = pos_lat_label_new(project->min.lon);
-  gtk_table_attach_defaults(GTK_TABLE(table), context->minlon, 1, 2, 2, 3);
+  context.minlon = pos_lat_label_new(project->min.lon);
+  gtk_table_attach_defaults(GTK_TABLE(table), context.minlon, 1, 2, 2, 3);
   label = gtk_label_new(_("to"));
   gtk_table_attach_defaults(GTK_TABLE(table),  label, 2, 3, 2, 3);
-  context->maxlon = pos_lon_label_new(project->max.lon);
-  gtk_table_attach_defaults(GTK_TABLE(table), context->maxlon, 3, 4, 2, 3);
+  context.maxlon = pos_lon_label_new(project->max.lon);
+  gtk_table_attach_defaults(GTK_TABLE(table), context.maxlon, 3, 4, 2, 3);
 
   GtkWidget *edit = button_new_with_label(_("Edit"));
   gtk_signal_connect(GTK_OBJECT(edit), "clicked",
-  		     (GtkSignalFunc)on_edit_clicked, context);
+  		     (GtkSignalFunc)on_edit_clicked, &context);
   gtk_table_attach(GTK_TABLE(table), edit, 4, 5, 1, 3,
 		   GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL,0,0);
 
@@ -1171,85 +1169,84 @@ project_edit(appdata_t *appdata, GtkWidget *parent, settings_t *settings,
 #ifdef SERVER_EDITABLE
   label = gtk_label_left_new(_("Server:"));
   gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 3, 4);
-  context->server = entry_new();
-  gtk_entry_set_activates_default(GTK_ENTRY(context->server), TRUE);
-  HILDON_ENTRY_NO_AUTOCAP(context->server);
-  gtk_entry_set_text(GTK_ENTRY(context->server), project->server);
-  gtk_table_attach_defaults(GTK_TABLE(table),  context->server, 1, 4, 3, 4);
+  context.server = entry_new();
+  gtk_entry_set_activates_default(GTK_ENTRY(context.server), TRUE);
+  HILDON_ENTRY_NO_AUTOCAP(context.server);
+  gtk_entry_set_text(GTK_ENTRY(context.server), project->server);
+  gtk_table_attach_defaults(GTK_TABLE(table),  context.server, 1, 4, 3, 4);
 
   gtk_table_set_row_spacing(GTK_TABLE(table), 3, 4);
 #endif
 
   label = gtk_label_left_new(_("Map data:"));
   gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 4, 5);
-  context->fsize = gtk_label_left_new(_(""));
-  project_filesize(context);
-  gtk_table_attach_defaults(GTK_TABLE(table), context->fsize, 1, 4, 4, 5);
-  context->download = button_new_with_label(_("Download"));
-  gtk_signal_connect(GTK_OBJECT(context->download), "clicked",
-		     (GtkSignalFunc)on_download_clicked, context);
-  gtk_widget_set_sensitive(context->download, project_pos_is_valid(project));
+  context.fsize = gtk_label_left_new(_(""));
+  project_filesize(&context);
+  gtk_table_attach_defaults(GTK_TABLE(table), context.fsize, 1, 4, 4, 5);
+  context.download = button_new_with_label(_("Download"));
+  gtk_signal_connect(GTK_OBJECT(context.download), "clicked",
+		     (GtkSignalFunc)on_download_clicked, &context);
+  gtk_widget_set_sensitive(context.download, project_pos_is_valid(project));
 
-  gtk_table_attach_defaults(GTK_TABLE(table), context->download, 4, 5, 4, 5);
+  gtk_table_attach_defaults(GTK_TABLE(table), context.download, 4, 5, 4, 5);
 
   gtk_table_set_row_spacing(GTK_TABLE(table), 4, 4);
 
   label = gtk_label_left_new(_("Changes:"));
   gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 5, 6);
-  context->diff_stat = gtk_label_left_new(_(""));
-  project_diffstat(context);
-  gtk_table_attach_defaults(GTK_TABLE(table), context->diff_stat, 1, 4, 5, 6);
-  context->diff_remove = button_new_with_label(_("Undo all"));
-  if(!diff_present(project) && !project_active_n_dirty(context))
-    gtk_widget_set_sensitive(context->diff_remove,  FALSE);
-  gtk_signal_connect(GTK_OBJECT(context->diff_remove), "clicked",
-		     (GtkSignalFunc)on_diff_remove_clicked, context);
-  gtk_table_attach_defaults(GTK_TABLE(table), context->diff_remove, 4, 5, 5, 6);
+  context.diff_stat = gtk_label_left_new(_(""));
+  project_diffstat(&context);
+  gtk_table_attach_defaults(GTK_TABLE(table), context.diff_stat, 1, 4, 5, 6);
+  context.diff_remove = button_new_with_label(_("Undo all"));
+  if(!diff_present(project) && !project_active_n_dirty(&context))
+    gtk_widget_set_sensitive(context.diff_remove,  FALSE);
+  gtk_signal_connect(GTK_OBJECT(context.diff_remove), "clicked",
+		     (GtkSignalFunc)on_diff_remove_clicked, &context);
+  gtk_table_attach_defaults(GTK_TABLE(table), context.diff_remove, 4, 5, 5, 6);
 
   /* ---------------------------------------------------------------- */
 
-  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(context->dialog)->vbox),
+  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(context.dialog)->vbox),
 			      table);
 
   /* disable "ok" if there's no valid file downloaded */
   if(is_new)
-    gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog),
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(context.dialog),
 		    GTK_RESPONSE_ACCEPT,
 		    osm_file_exists(project->path, project->name));
 
-  gtk_widget_show_all(context->dialog);
+  gtk_widget_show_all(context.dialog);
 
   /* the return value may actually be != ACCEPT, but only if the editor */
   /* is run for a new project which is completely removed afterwards if */
   /* cancel has been selected */
-  ok = (GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(context->dialog)));
+  ok = (GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(context.dialog)));
 
   /* transfer values from edit dialog into project structure */
 
   /* fetch values from dialog */
-  g_free(context->project->desc);
-  context->project->desc = g_strdup(gtk_entry_get_text(
-			      GTK_ENTRY(context->desc)));
-  if(strlen(context->project->desc) == 0) {
-    g_free(context->project->desc);
-    context->project->desc = NULL;
+  g_free(context.project->desc);
+  context.project->desc = g_strdup(gtk_entry_get_text(
+			      GTK_ENTRY(context.desc)));
+  if(strlen(context.project->desc) == 0) {
+    g_free(context.project->desc);
+    context.project->desc = NULL;
   }
 
 #ifdef SERVER_EDITABLE
-  g_free(context->project->server);
-  context->project->server = g_strdup(gtk_entry_get_text(
-				       GTK_ENTRY(context->server)));
-  if(strlen(context->project->server) == 0) {
-    g_free(context->project->server);
-    context->project->server = NULL;
+  g_free(context.project->server);
+  context.project->server = g_strdup(gtk_entry_get_text(
+				       GTK_ENTRY(context.server)));
+  if(strlen(context.project->server) == 0) {
+    g_free(context.project->server);
+    context.project->server = NULL;
   }
 #endif
 
   /* save project */
-  project_save(context->dialog, project);
+  project_save(context.dialog, project);
 
-  gtk_widget_destroy(context->dialog);
-  g_free(context);
+  gtk_widget_destroy(context.dialog);
 
   return ok;
 }
