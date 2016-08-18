@@ -21,6 +21,6 @@ Description: A mobile OpenStreetMap Editor
  layers, and gpsd integration. It was originally designed for the Maemo
  mobile Linux platform, and so is lightweight and sports a simple,
  speedy interface to map editing.
-XSBC-Bugtracker: http://garage.maemo.org/tracker/?group_id=830
+XSBC-Bugtracker: https://github.com/osm2go/osm2go/issues
 XB-Maemo-Display-Name: OSM2Go
 #@ICON@

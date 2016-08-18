@@ -315,7 +315,7 @@ static GtkWidget *bugs_page_new(appdata_t *appdata) {
 		   "the following link:")));
 
   gtk_box_pack_start_defaults(GTK_BOX(vbox),
-       link_new(appdata, "http://garage.maemo.org/tracker/?group_id=830"));
+       link_new(appdata, "https://github.com/osm2go/osm2go/issues"));
 
   gtk_box_pack_start_defaults(GTK_BOX(vbox),
       label_wrap(_("You might also be interested in joining the mailing lists "
