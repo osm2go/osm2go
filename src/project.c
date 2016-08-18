@@ -496,6 +496,7 @@ gboolean project_delete(select_context_t *context, project_t *project) {
       g_free(fullname);
     }
   } while(name);
+  g_dir_close(dir);
 
   /* remove the projects directory */
   g_remove(project->path);
