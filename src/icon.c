@@ -56,10 +56,12 @@ GdkPixbuf *icon_load(icon_t **icon, const char *name) {
     g_free(fullname);
 
     //    printf("Successfully loaded icon %s to %p\n", name, pix);
-      *icon = g_new0(icon_t, 1);
-      (*icon)->name = g_strdup(name);
+      size_t nlen = strlen(name) + 1;
+      *icon = g_malloc(sizeof(**icon) + nlen);
+      memcpy((*icon)->name, name, nlen);
       (*icon)->buf = pix;
       (*icon)->use = 1;
+      (*icon)->next = NULL;
 
       return pix;
   }
@@ -78,7 +80,6 @@ GtkWidget *icon_widget_load(icon_t **icon, const char *name) {
 static icon_t *icon_destroy(icon_t *icon) {
   icon_t *next = icon->next;
 
-  g_free(icon->name);
   if(icon->buf)
     g_object_unref(icon->buf);
   g_free(icon);

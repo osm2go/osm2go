@@ -21,10 +21,10 @@
 #define ICON_H
 
 typedef struct icon_s {
-  char *name;
   GdkPixbuf *buf;
   int use;
   struct icon_s *next;
+  gchar name[];
 } icon_t;
 
 GdkPixbuf *icon_load(icon_t **icon, const char *name);
