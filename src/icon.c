@@ -22,24 +22,18 @@
 #include "icon.h"
 #include "misc.h"
 
-static const char *icon_exts[] = {
-  ".gif", ".png", ".jpg", NULL
-};
-
 static gchar*
 icon_file_exists(const gchar *file) {
-  gchar *fullname;
-  gint idx = 0;
+  const char *icon_exts[] = { ".gif", ".png", ".jpg", NULL };
+  gint idx;
 
-  while(icon_exts[idx]) {
-    fullname = find_file("icons/", file, icon_exts[idx]);
+  for (idx = 0; icon_exts[idx]; idx++) {
+    gchar *fullname = find_file("icons/", file, icon_exts[idx]);
 
     if(fullname)
-      break;
-
-    idx++;
+      return fullname;
   }
-  return fullname;
+  return NULL;
 }
 
 GdkPixbuf *icon_load(icon_t **icon, const char *name) {
