@@ -910,6 +910,7 @@ static GStatBuf file_info(const char *path, const char *name) {
 
 void project_filesize(project_context_t *context) {
   char *str = NULL;
+  gchar *gstr = NULL;
 
   printf("Checking size of %s\n", context->project->osm);
 
@@ -918,7 +919,7 @@ void project_filesize(project_context_t *context) {
     gdk_color_parse("red", &color);
     gtk_widget_modify_fg(context->fsize, GTK_STATE_NORMAL, &color);
 
-    str = g_strdup(_("Not downloaded!"));
+    str = _("Not downloaded!");
 
     gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog),
 				      GTK_RESPONSE_ACCEPT, !context->is_new);
@@ -934,10 +935,11 @@ void project_filesize(project_context_t *context) {
       char time_str[32];
       strftime(time_str, sizeof(time_str), "%x %X", &loctime);
 
-      str = g_strdup_printf(_("%"G_GOFFSET_FORMAT" bytes present\nfrom %s"),
+      gstr = g_strdup_printf(_("%"G_GOFFSET_FORMAT" bytes present\nfrom %s"),
 			    (goffset)st.st_size, time_str);
+      str = gstr;
     } else
-      str = g_strdup(_("Outdated, please download!"));
+      str = _("Outdated, please download!");
 
     gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog),
 		      GTK_RESPONSE_ACCEPT, !context->is_new ||
@@ -946,7 +948,7 @@ void project_filesize(project_context_t *context) {
 
   if(str) {
     gtk_label_set_text(GTK_LABEL(context->fsize), str);
-    g_free(str);
+    g_free(gstr);
   }
 }
 
