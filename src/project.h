@@ -27,12 +27,13 @@
 
 #include <glib.h>
 #include <gtk/gtk.h>
+#include <libxml/parser.h>
 
 typedef struct project_s {
   char *name;
   char *path;
 
-  char *desc;
+  xmlChar *desc;
   char *server;
   char *osm;
 

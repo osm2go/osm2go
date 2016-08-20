@@ -98,10 +98,8 @@ static gboolean project_read(const char *project_file, project_t *project) {
 	  if(node->type == XML_ELEMENT_NODE) {
 
 	    if(strcasecmp((char*)node->name, "desc") == 0) {
-	      str = (char*)xmlNodeListGetString(doc, node->children, 1);
-	      project->desc = g_strdup(str);
+	      project->desc = xmlNodeListGetString(doc, node->children, 1);
 	      printf("desc = %s\n", project->desc);
-	      xmlFree(str);
 
 	    } else if(strcasecmp((char*)node->name, "server") == 0) {
 	      str = (char*)xmlNodeListGetString(doc, node->children, 1);
@@ -230,7 +228,7 @@ gboolean project_save(GtkWidget *parent, project_t *project) {
 		BAD_CAST project->server);
 
   if(project->desc)
-    xmlNewChild(root_node, NULL, BAD_CAST "desc", BAD_CAST project->desc);
+    xmlNewChild(root_node, NULL, BAD_CAST "desc", project->desc);
 
   xmlNewChild(root_node, NULL, BAD_CAST "osm", BAD_CAST project->osm);
 
@@ -282,7 +280,7 @@ void project_free(project_t *project) {
   if(!project) return;
 
   g_free(project->name);
-  g_free(project->desc);
+  xmlFree(project->desc);
   g_free(project->server);
 
   g_free(project->wms_server);
@@ -691,7 +689,7 @@ static void on_project_edit(GtkButton *button, gpointer data) {
 
       /* update description */
       if(cur->desc) { free(cur->desc); cur->desc = NULL; }
-      if(project->desc) cur->desc = g_strdup(project->desc);
+      if(project->desc) cur->desc = xmlStrdup(project->desc);
 
       /* update server */
       if(cur->server) { free(cur->server); cur->server = NULL; }
@@ -1141,7 +1139,7 @@ project_edit(appdata_t *appdata, GtkWidget *parent, settings_t *settings,
   context.desc = entry_new();
   gtk_entry_set_activates_default(GTK_ENTRY(context.desc), TRUE);
   if(project->desc)
-    gtk_entry_set_text(GTK_ENTRY(context.desc), project->desc);
+    gtk_entry_set_text(GTK_ENTRY(context.desc), (gchar*)project->desc);
   gtk_table_attach_defaults(GTK_TABLE(table),  context.desc, 1, 5, 0, 1);
   gtk_table_set_row_spacing(GTK_TABLE(table), 0, 4);
 
@@ -1230,13 +1228,12 @@ project_edit(appdata_t *appdata, GtkWidget *parent, settings_t *settings,
   /* transfer values from edit dialog into project structure */
 
   /* fetch values from dialog */
-  g_free(context.project->desc);
-  context.project->desc = g_strdup(gtk_entry_get_text(
-			      GTK_ENTRY(context.desc)));
-  if(strlen(context.project->desc) == 0) {
-    g_free(context.project->desc);
+  xmlFree(context.project->desc);
+  const gchar *ndesc = gtk_entry_get_text(GTK_ENTRY(context.desc));
+  if(ndesc && strlen(ndesc))
+    context.project->desc = xmlStrdup(BAD_CAST ndesc);
+  else
     context.project->desc = NULL;
-  }
 
 #ifdef SERVER_EDITABLE
   g_free(context.project->server);
