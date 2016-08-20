@@ -263,6 +263,7 @@ void map_way_select(appdata_t *appdata, way_t *way) {
   }
 
   /* a way needs at least 2 points to be drawn */
+  g_assert(map_item->object.way == way);
   canvas_points_t *points = points_from_node_chain(way);
   if(points != NULL) {
     /* create a copy of this map item and mark it as being a highlight */
@@ -271,9 +272,9 @@ void map_way_select(appdata_t *appdata, way_t *way) {
     new_map_item->highlight = TRUE;
 
     map_hl_polyline_new(map, CANVAS_GROUP_WAYS_HL, new_map_item, points,
-		 ((map_item->object.way->draw.flags & OSM_DRAW_FLAG_BG)?
-		 2*map->style->highlight.width + map_item->object.way->draw.bg.width:
-		 2*map->style->highlight.width + map_item->object.way->draw.width)
+		 ((way->draw.flags & OSM_DRAW_FLAG_BG)?
+		 2*map->style->highlight.width + way->draw.bg.width:
+		 2*map->style->highlight.width + way->draw.width)
 		* map->state->detail, map->style->highlight.color);
 
     canvas_points_free(points);
