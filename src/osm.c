@@ -417,16 +417,6 @@ void osm_way_append_node(way_t *way, node_t *node) {
   node->ways++;
 }
 
-unsigned int osm_node_chain_length(const node_chain_t *node_chain) {
-  unsigned int cnt = 0;
-  while(node_chain) {
-    cnt++;
-    node_chain = node_chain->next;
-  }
-
-  return cnt;
-}
-
 /**
  * @brief check if 2 node chains differ
  * @param n1 first chain
