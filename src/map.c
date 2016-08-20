@@ -153,6 +153,31 @@ static void map_node_select(appdata_t *appdata, node_t *node) {
   }
 }
 
+/**
+ * @brief create a canvas point array for a way
+ * @param way the way to convert
+ * @return canvas node array if at least 2 nodes were present
+ * @retval NULL the way has less than 2 ways
+ */
+static canvas_points_t *
+points_from_node_chain(const way_t *way)
+{
+  /* a way needs at least 2 points to be drawn */
+  guint nodes = osm_way_number_of_nodes(way);
+  if (nodes < 2)
+    return NULL;
+
+  const node_chain_t *chain = way->node_chain;
+  /* allocate space for nodes */
+  canvas_points_t *points = canvas_points_new(nodes);
+
+  int node = 0;
+  for (node = 0; chain != NULL; chain = chain->next)
+    canvas_point_set_pos(points, node++, &chain->node->lpos);
+
+  return points;
+}
+
 void map_way_select(appdata_t *appdata, way_t *way) {
   map_t *map = appdata->map;
   map_item_t *map_item = &map->selected;
@@ -238,19 +263,8 @@ void map_way_select(appdata_t *appdata, way_t *way) {
   }
 
   /* a way needs at least 2 points to be drawn */
-  guint nodes = osm_way_number_of_nodes(way);
-  if(nodes > 1) {
-
-    /* allocate space for nodes */
-    canvas_points_t *points = canvas_points_new(nodes);
-
-    int node = 0;
-    node_chain = map_item->object.way->node_chain;
-    while(node_chain) {
-      canvas_point_set_pos(points, node++, &node_chain->node->lpos);
-      node_chain = node_chain->next;
-    }
-
+  canvas_points_t *points = points_from_node_chain(way);
+  if(points != NULL) {
     /* create a copy of this map item and mark it as being a highlight */
     map_item_t *new_map_item = g_new0(map_item_t, 1);
     memcpy(new_map_item, map_item, sizeof(map_item_t));
@@ -303,19 +317,8 @@ void map_relation_select(appdata_t *appdata, relation_t *relation) {
     case WAY: {
       way_t *way = member->object.way;
       /* a way needs at least 2 points to be drawn */
-      guint nodes = osm_way_number_of_nodes(way);
-      if(nodes > 1) {
-
-	/* allocate space for nodes */
-	canvas_points_t *points = canvas_points_new(nodes);
-
-	int node = 0;
-	node_chain_t *node_chain = way->node_chain;
-	while(node_chain) {
-	  canvas_point_set_pos(points, node++, &node_chain->node->lpos);
-	  node_chain = node_chain->next;
-	}
-
+      canvas_points_t *points = points_from_node_chain(way);
+      if(points != NULL) {
 	if(way->draw.flags & OSM_DRAW_FLAG_AREA)
 	  item = canvas_polygon_new(map->canvas, CANVAS_GROUP_WAYS_HL, points, 0, 0,
 				    map->style->highlight.color);
@@ -530,28 +533,18 @@ void map_way_draw(map_t *map, way_t *way) {
   if(OSM_FLAGS(way) & (OSM_FLAG_DELETED | OSM_FLAG_HIDDEN))
     return;
 
-  /* allocate space for nodes */
-  /* a way needs at least 2 points to be drawn */
-  guint nodes = osm_way_number_of_nodes(way);
-
   /* attach map_item to ways map_item_chain */
   map_item_chain_t **chain = &way->map_item_chain;
   while(*chain) chain = &(*chain)->next;
 
-  if(nodes == 1) {
+  /* allocate space for nodes */
+  /* a way needs at least 2 points to be drawn */
+  canvas_points_t *points = points_from_node_chain(way);
+  if(points == NULL) {
     /* draw a single dot where this single node is */
     *chain = map_way_single_new(map, way, map->style->node.radius, 0,
 		       map->style->node.color, 0);
   } else {
-    canvas_points_t *points = canvas_points_new(nodes);
-
-    int node = 0;
-    node_chain_t *node_chain = way->node_chain;
-    while(node_chain) {
-      canvas_point_set_pos(points, node++, &node_chain->node->lpos);
-      node_chain = node_chain->next;
-    }
-
     /* draw way */
     float width = way->draw.width * map->state->detail;
 
