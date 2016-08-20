@@ -317,14 +317,6 @@ GtkTreeModel *list_get_model(GtkWidget *list) {
   return gtk_tree_view_get_model(GTK_TREE_VIEW(priv->view));
 }
 
-void list_pre_inplace_edit_tweak (GtkTreeModel *model) {
-  // Remove any current sort ordering, leaving items where they are.
-  gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(model),
-                                 GTK_TREE_SORTABLE_UNSORTED_SORT_COLUMN_ID,
-                                 GTK_SORT_ASCENDING);
-}
-
-
 /* Refocus a GtkTreeView an item specified by iter, unselecting the current
    selection and optionally highlighting the new one. Typically called after
    making an edit to an item with a covering sub-dialog. */
