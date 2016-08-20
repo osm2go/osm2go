@@ -372,8 +372,8 @@ enum {
   PROJECT_NUM_COLS
 };
 
-static gboolean osm_file_exists(char *path, char *name) {
-  gboolean exists = FALSE;
+static gboolean osm_file_exists(const char *path, const char *name) {
+  gboolean exists;
 
   if(name[0] == '/')
     exists = g_file_test(name, G_FILE_TEST_IS_REGULAR);
