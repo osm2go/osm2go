@@ -193,7 +193,7 @@ void map_edit_way_add_segment(map_t *map, gint x, gint y) {
       g_assert(map->action.way);
       osm_way_append_node(map->action.way, node);
 
-      switch(osm_node_chain_length(map->action.way->node_chain)) {
+      switch(osm_way_number_of_nodes(map->action.way)) {
       case 1:
 	/* replace "place first node..." message */
 	statusbar_set(map->appdata, _("Place next node of way"), FALSE);
