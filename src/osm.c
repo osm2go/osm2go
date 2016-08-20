@@ -1760,9 +1760,9 @@ way_chain_t *osm_node_delete(osm_t *osm, icon_t **icon,
   return way_chain;
 }
 
-guint osm_way_number_of_nodes(way_t *way) {
+guint osm_way_number_of_nodes(const way_t *way) {
   guint nodes = 0;
-  node_chain_t *chain = way->node_chain;
+  const node_chain_t *chain = way->node_chain;
   while(chain) {
     nodes++;
     chain = chain->next;

@@ -264,7 +264,7 @@ node_t *osm_get_node_by_id(osm_t *osm, item_id_t id);
 way_t *osm_get_way_by_id(osm_t *osm, item_id_t id);
 relation_t *osm_get_relation_by_id(osm_t *osm, item_id_t id);
 
-guint osm_way_number_of_nodes(way_t *way);
+guint osm_way_number_of_nodes(const way_t *way);
 relation_chain_t *osm_node_to_relation(osm_t *osm, node_t *node,
 				       gboolean via_way);
 relation_chain_t *osm_way_to_relation(osm_t *osm, way_t *way);
