@@ -466,7 +466,7 @@ static void callback_modified_name(GtkWidget *widget, gpointer data) {
 }
 
 
-gboolean project_delete(select_context_t *context, project_t *project) {
+static gboolean project_delete(select_context_t *context, project_t *project) {
 
   printf("deleting project \"%s\"\n", project->name);
 
