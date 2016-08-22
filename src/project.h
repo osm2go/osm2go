@@ -46,8 +46,6 @@ typedef struct project_s {
   pos_t min, max;
 
   gboolean data_dirty;     /* needs to download new data */
-
-  struct project_s *next;  /* for chaining projects (e.g. during scan) */
 } project_t;
 
 gboolean project_exists(settings_t *settings, const char *name, gchar **filename);

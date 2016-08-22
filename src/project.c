@@ -321,8 +321,8 @@ gboolean project_exists(settings_t *settings, const char *name, gchar **filename
   return ok;
 }
 
-static project_t *project_scan(appdata_t *appdata) {
-  project_t *projects = NULL;
+static GSList *project_scan(appdata_t *appdata) {
+  GSList *projects = NULL;
 
   /* scan for projects */
   GDir *dir = g_dir_open(appdata->settings->base_path, 0, NULL);
@@ -339,12 +339,10 @@ static project_t *project_scan(appdata_t *appdata) {
 	n->path = g_strconcat(
 			  appdata->settings->base_path, name, "/", NULL);
 
-	if(project_read(fullname, n)) {
-	  n->next = projects;
-	  projects = n;
-	} else {
+	if(project_read(fullname, n))
+	  projects = g_slist_prepend(projects, n);
+	else
 	  g_free(n);
-	}
 	g_free(fullname);
       }
     }
@@ -357,7 +355,7 @@ static project_t *project_scan(appdata_t *appdata) {
 
 typedef struct {
   appdata_t *appdata;
-  project_t *project;
+  GSList *project;
   GtkWidget *dialog, *list;
   settings_t *settings;
 } select_context_t;
@@ -517,13 +515,7 @@ static gboolean project_delete(select_context_t *context, project_t *project) {
   }
 
   /* de-chain entry from project list */
-  project_t **project_list = &context->project;
-  while(*project_list) {
-    if(*project_list == project)
-      *project_list = (*project_list)->next;
-    else
-      project_list = &((*project_list)->next);
-  }
+  context->project = g_slist_remove(context->project, project);
 
   /* free project structure */
   project_free(project);
@@ -618,21 +610,21 @@ static void project_get_status_icon_stock_id(select_context_t *context, project_
 
 static void on_project_new(GtkButton *button, gpointer data) {
   select_context_t *context = (select_context_t*)data;
-  project_t **project = &context->project;
-  *project = project_new(context);
-  if(*project) {
+  project_t *project = project_new(context);
+  context->project = g_slist_prepend(context->project, project);
+  if(project) {
 
     GtkTreeModel *model = list_get_model(context->list);
 
     GtkTreeIter iter;
     gchar *status_stock_id = NULL;
-    project_get_status_icon_stock_id(context, *project, &status_stock_id);
+    project_get_status_icon_stock_id(context, project, &status_stock_id);
     gtk_list_store_append(GTK_LIST_STORE(model), &iter);
     gtk_list_store_set(GTK_LIST_STORE(model), &iter,
-		       PROJECT_COL_NAME,        (*project)->name,
+		       PROJECT_COL_NAME,        project->name,
 		       PROJECT_COL_STATUS,      status_stock_id,
-		       PROJECT_COL_DESCRIPTION, (*project)->desc,
-		       PROJECT_COL_DATA,        *project,
+		       PROJECT_COL_DESCRIPTION, project->desc,
+		       PROJECT_COL_DATA,        project,
 		       -1);
 
     GtkTreeSelection *selection = list_get_selection(context->list);
@@ -806,8 +798,10 @@ static GtkWidget *project_list_widget(select_context_t *context) {
       G_TYPE_POINTER);  // data
 
   GtkTreeIter iter;
-  project_t *project = context->project;
-  while(project) {
+  GSList *cur = context->project;
+  while(cur) {
+    project_t *project = (project_t *)cur->data;
+    cur = g_slist_next(cur);
     gchar *status_stock_id = NULL;
     project_get_status_icon_stock_id(context, project, &status_stock_id);
     /* Append a row and fill in some data */
@@ -818,7 +812,6 @@ static GtkWidget *project_list_widget(select_context_t *context) {
 	       PROJECT_COL_DESCRIPTION, project->desc,
 	       PROJECT_COL_DATA,        project,
 	       -1);
-    project = project->next;
   }
 
   list_set_store(context->list, store);
@@ -836,6 +829,14 @@ static GtkWidget *project_list_widget(select_context_t *context) {
                                        PROJECT_COL_NAME, GTK_SORT_ASCENDING);
 
   return context->list;
+}
+
+#if GLIB_CHECK_VERSION(2,28,0)
+static void project_free_notify(gpointer data) {
+#else
+static void project_free_notify(gpointer data, gpointer user_data) {
+#endif
+  project_free((project_t*)data);
 }
 
 static char *project_select(appdata_t *appdata) {
@@ -873,12 +874,12 @@ static char *project_select(appdata_t *appdata) {
   gtk_widget_destroy(context.dialog);
 
   /* free all entries */
-  project_t *project = context.project;
-  while(project) {
-    project_t *next = project->next;
-    project_free(project);
-    project = next;
-  }
+#if GLIB_CHECK_VERSION(2,28,0)
+  g_slist_free_full(context.project, project_free_notify);
+#else
+  g_slist_foreach(context.project, project_free_notify, NULL);
+  g_slist_free(context.project);
+#endif
 
   return name;
 }
