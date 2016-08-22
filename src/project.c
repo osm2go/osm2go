@@ -322,7 +322,7 @@ gboolean project_exists(settings_t *settings, const char *name, gchar **filename
 }
 
 static project_t *project_scan(appdata_t *appdata) {
-  project_t *projects = NULL, **current = &projects;
+  project_t *projects = NULL;
 
   /* scan for projects */
   GDir *dir = g_dir_open(appdata->settings->base_path, 0, NULL);
@@ -334,16 +334,16 @@ static project_t *project_scan(appdata_t *appdata) {
 	printf("found project %s\n", name);
 
 	/* try to read project and append it to chain */
-	*current = g_new0(project_t, 1);
-	(*current)->name = g_strdup(name);
-	(*current)->path = g_strconcat(
+	project_t *n = g_new0(project_t, 1);
+	n->name = g_strdup(name);
+	n->path = g_strconcat(
 			  appdata->settings->base_path, name, "/", NULL);
 
-	if(project_read(fullname, *current))
-	  current = &((*current)->next);
-	else {
-	  g_free(*current);
-	  *current = NULL;
+	if(project_read(fullname, n)) {
+	  n->next = projects;
+	  projects = n;
+	} else {
+	  g_free(n);
 	}
 	g_free(fullname);
       }
