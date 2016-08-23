@@ -787,14 +787,10 @@ void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) {
 gboolean diff_present(const project_t *project) {
   gchar *diff_name = diff_filename(project);
 
-  if(!g_file_test(diff_name, G_FILE_TEST_EXISTS)) {
-    printf("no diff present!\n");
-    g_free(diff_name);
-    return FALSE;
-  }
+  gboolean ret = g_file_test(diff_name, G_FILE_TEST_EXISTS);
 
   g_free(diff_name);
-  return TRUE;
+  return ret;
 }
 
 void diff_remove(project_t *project) {
