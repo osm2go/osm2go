@@ -234,14 +234,9 @@ void diff_save(const project_t *project, const osm_t *osm) {
 
   printf("data set is dirty, generating diff\n");
 
-  /* check if there already is such a diff file and make it a backup */
-  /* in case new diff saving fails */
-  char *backup = g_strconcat(project->path, "backup.diff", NULL);
-  if(g_file_test(diff_name, G_FILE_TEST_IS_REGULAR)) {
-    printf("backing up existing file \"%s\" to \"%s\"\n", diff_name, backup);
-    g_remove(backup);
-    g_rename(diff_name, backup);
-  }
+  /* write the diff to a new file so the original one needs intact until
+   * saving is completed */
+  char *ndiff = g_strconcat(project->path, "save.diff", NULL);
 
   LIBXML_TEST_VERSION;
 
@@ -254,15 +249,15 @@ void diff_save(const project_t *project, const osm_t *osm) {
   diff_save_ways(osm->way, root_node);
   diff_save_relations(osm->relation, root_node);
 
-  xmlSaveFormatFileEnc(diff_name, doc, "UTF-8", 1);
+  xmlSaveFormatFileEnc(ndiff, doc, "UTF-8", 1);
   xmlFreeDoc(doc);
 
   /* if we reach this point writing the new file worked and we */
   /* can delete the backup */
-  g_remove(backup);
+  g_rename(ndiff, diff_name);
 
   g_free(diff_name);
-  g_free(backup);
+  g_free(ndiff);
 }
 
 static item_id_t xml_get_prop_int(xmlNode *node, char *prop, item_id_t def) {
