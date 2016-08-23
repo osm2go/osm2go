@@ -721,6 +721,8 @@ void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) {
     return;
   }
 
+  g_free(diff_name);
+
   /* Get the root element node */
   root_element = xmlDocGetRootElement(doc);
 
@@ -761,8 +763,6 @@ void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) {
       }
     }
   }
-
-  g_free(diff_name);
 
   xmlFreeDoc(doc);
 
