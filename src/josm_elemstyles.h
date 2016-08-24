@@ -118,7 +118,7 @@ typedef struct elemstyle_s {
   struct elemstyle_s *next;
 } elemstyle_t;
 
-elemstyle_t *josm_elemstyles_load(char *name);
+elemstyle_t *josm_elemstyles_load(const char *name);
 void josm_elemstyles_free(elemstyle_t *elemstyles);
 gboolean parse_color(xmlNode *a_node, char *name, elemstyle_color_t *color);
 

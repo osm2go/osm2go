@@ -87,7 +87,7 @@ gboolean parse_color(xmlNode *a_node, char *name,
   return ret;
 }
 
-static gboolean parse_gint(xmlNode *a_node, char *name, gint *val) {
+static gboolean parse_gint(xmlNode *a_node, const char *name, gint *val) {
   xmlChar *num_str = xmlGetProp(a_node, BAD_CAST name);
   if(num_str) {
     *val = strtoul((const char*)num_str, NULL, 10);
@@ -107,22 +107,22 @@ static gboolean parse_scale_max(xmlNode *a_node, float *val) {
   return FALSE;
 }
 
-static gboolean parse_gboolean(xmlNode *a_node, char *name, gboolean *val) {
+static gboolean parse_gboolean(xmlNode *a_node, const char *name) {
   xmlChar *bool_str = xmlGetProp(a_node, BAD_CAST name);
-  *val = FALSE;
   if (!bool_str) {
     return FALSE;
   }
   static const char *true_str[]  = { "1", "yes", "true", 0 };
   int i;
+  gboolean ret = FALSE;
   for (i=0; true_str[i]; ++i) {
     if (strcasecmp((const char*)bool_str, true_str[i])==0) {
-      *val = TRUE;
+      ret = TRUE;
       break;
     }
   }
   xmlFree(bool_str);
-  return TRUE;
+  return ret;
 }
 
 static elemstyle_line_t *parse_line(xmlNode *a_node) {
@@ -139,7 +139,7 @@ static elemstyle_line_t *parse_line(xmlNode *a_node) {
     parse_gint(a_node, "width_bg", &line->bg.width) &&
     parse_color(a_node, "colour_bg", &line->bg.color);
 
-  parse_gboolean(a_node, "dashed", &line->dashed);
+  line->dashed = parse_gboolean(a_node, "dashed");
   if (!parse_gint(a_node, "dash_length", &line->dash_length)) {
     line->dash_length = DEFAULT_DASH_LENGTH;
   }
@@ -148,7 +148,7 @@ static elemstyle_line_t *parse_line(xmlNode *a_node) {
 }
 
 /* parse "+123", "-123" and "123%" */
-static void parse_width_mod(xmlNode *a_node, char *name,
+static void parse_width_mod(xmlNode *a_node, const char *name,
 			    elemstyle_width_mod_t *value) {
   char *mod_str = (char*)xmlGetProp(a_node, BAD_CAST name);
   if(!mod_str)
@@ -305,7 +305,7 @@ static elemstyle_t *parse_doc(xmlDocPtr doc) {
   return elemstyles;
 }
 
-elemstyle_t *josm_elemstyles_load(char *name) {
+elemstyle_t *josm_elemstyles_load(const char *name) {
   elemstyle_t *elemstyles = NULL;
 
   printf("Loading JOSM elemstyles ...\n");
