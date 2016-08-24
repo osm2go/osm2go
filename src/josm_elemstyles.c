@@ -35,6 +35,12 @@
 #error "Tree not enabled in libxml"
 #endif
 
+typedef struct elemstyle_condition_s {
+    char *key;
+    char *value;
+    struct elemstyle_condition_s *next;
+} elemstyle_condition_t;
+
 // ratio conversions
 
 // Scaling constants. Our "zoom" is a screenpx:canvasunit ratio, and the figure
