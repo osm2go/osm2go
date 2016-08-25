@@ -36,8 +36,8 @@
 #endif
 
 typedef struct elemstyle_condition_s {
-    char *key;
-    char *value;
+    xmlChar *key;
+    xmlChar *value;
     struct elemstyle_condition_s *next;
 } elemstyle_condition_t;
 
@@ -221,8 +221,8 @@ static elemstyle_t *parse_rule(xmlDocPtr doc, xmlNode *a_node) {
       if(strcasecmp((char*)cur_node->name, "condition") == 0) {
         /* ------ parse condition ------ */
         elemstyle_condition_t *newcond = g_new0(elemstyle_condition_t, 1);
-        newcond->key   = (char*)xmlGetProp(cur_node, BAD_CAST "k");
-        newcond->value = (char*)xmlGetProp(cur_node, BAD_CAST "v");
+        newcond->key   = xmlGetProp(cur_node, BAD_CAST "k");
+        newcond->value = xmlGetProp(cur_node, BAD_CAST "v");
         if (!lastcond)
           elemstyle->condition = newcond;
         else
@@ -409,11 +409,11 @@ void josm_elemstyles_colorize_node(style_t *style, node_t *node) {
     elemstyle_condition_t *cond;
     for (cond = elemstyle->condition; cond; cond = cond->next) {
       if(cond->key) {
-        char *value = osm_node_get_value(node, cond->key);
-        if(!value || (cond->value && strcasecmp(value, cond->value) != 0))
+        char *value = osm_node_get_value(node, (char*)cond->key);
+        if(!value || (cond->value && strcasecmp(value, (char*)cond->value) != 0))
           match = FALSE;
       } else if(cond->value) {
-        if(!osm_node_has_value(node, cond->value))
+        if(!osm_node_has_value(node, (char*)cond->value))
           match = FALSE;
       }
     }
@@ -492,11 +492,11 @@ void josm_elemstyles_colorize_way(style_t *style, way_t *way) {
     elemstyle_condition_t *cond;
     for (cond = elemstyle->condition; cond; cond = cond->next) {
       if(cond->key) {
-        char *value = osm_way_get_value(way, cond->key);
-        if(!value || (cond->value && strcasecmp(value, cond->value) != 0))
+        char *value = osm_way_get_value(way, (char*)cond->key);
+        if(!value || (cond->value && strcasecmp(value, (char*)cond->value) != 0))
           match = FALSE;
       } else if(cond->value) {
-        if(!osm_way_has_value(way, cond->value))
+        if(!osm_way_has_value(way, (char*)cond->value))
           match = FALSE;
       }
     }
