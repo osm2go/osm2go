@@ -61,7 +61,7 @@ inline float zoom_to_scaledn(const float zoom) {
 
 /* --------------------- elemstyles.xml parsing ----------------------- */
 
-gboolean parse_color(xmlNode *a_node, char *name,
+gboolean parse_color(xmlNode *a_node, const char *name,
 		     elemstyle_color_t *color) {
   xmlChar *color_str = xmlGetProp(a_node, BAD_CAST name);
   gboolean ret = FALSE;
