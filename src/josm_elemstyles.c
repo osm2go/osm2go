@@ -214,7 +214,7 @@ static elemstyle_icon_t *parse_icon(xmlNode *a_node) {
 static elemstyle_t *parse_rule(xmlDocPtr doc, xmlNode *a_node) {
   xmlNode *cur_node = NULL;
   elemstyle_t *elemstyle = g_new0(elemstyle_t, 1);
-  elemstyle_condition_t *lastcond = NULL;
+  elemstyle_condition_t **lastcond = &elemstyle->condition;
 
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
@@ -223,12 +223,8 @@ static elemstyle_t *parse_rule(xmlDocPtr doc, xmlNode *a_node) {
         elemstyle_condition_t *newcond = g_new0(elemstyle_condition_t, 1);
         newcond->key   = xmlGetProp(cur_node, BAD_CAST "k");
         newcond->value = xmlGetProp(cur_node, BAD_CAST "v");
-        if (!lastcond)
-          elemstyle->condition = newcond;
-        else
-          lastcond->next = newcond;
-
-        lastcond = newcond;
+        *lastcond = newcond;
+        lastcond = &newcond->next;
 	/* todo: add support for "b" (boolean) value */
       } else if(strcasecmp((char*)cur_node->name, "line") == 0) {
 	/* ------ parse line ------ */
