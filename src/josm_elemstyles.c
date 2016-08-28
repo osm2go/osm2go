@@ -392,7 +392,7 @@ void josm_elemstyles_free(elemstyle_t *elemstyles) {
 
 #define WIDTH_SCALE (1.0)
 
-void josm_elemstyles_colorize_node(style_t *style, node_t *node) {
+void josm_elemstyles_colorize_node(const style_t *style, node_t *node) {
   node->zoom_max = style->node.zoom_max;
   elemstyle_t *elemstyle = style->elemstyles;
 
@@ -444,7 +444,7 @@ void josm_elemstyles_colorize_node(style_t *style, node_t *node) {
   }
 }
 
-static void line_mod_apply(gint *width, elemstyle_width_mod_t *mod) {
+static void line_mod_apply(gint *width, const elemstyle_width_mod_t *mod) {
   switch(mod->mod) {
   case ES_MOD_NONE:
     break;
@@ -463,7 +463,7 @@ static void line_mod_apply(gint *width, elemstyle_width_mod_t *mod) {
   }
 }
 
-void josm_elemstyles_colorize_way(style_t *style, way_t *way) {
+void josm_elemstyles_colorize_way(const style_t *style, way_t *way) {
   elemstyle_t *elemstyle = style->elemstyles;
 
   /* use dark grey/no stroke/not filled for everything unknown */
@@ -582,7 +582,7 @@ void josm_elemstyles_colorize_way(style_t *style, way_t *way) {
   }
 }
 
-void josm_elemstyles_colorize_world(style_t *styles, osm_t *osm) {
+void josm_elemstyles_colorize_world(const style_t *styles, osm_t *osm) {
 
   printf("preparing colors\n");
 

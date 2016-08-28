@@ -118,9 +118,9 @@ gboolean parse_color(xmlNode *a_node, const char *name, elemstyle_color_t *color
 
 struct style_s;
 
-void josm_elemstyles_colorize_node(struct style_s *style, node_t *node);
-void josm_elemstyles_colorize_way(struct style_s *style, way_t *way);
-void josm_elemstyles_colorize_world(struct style_s *style, osm_t *osm);
+void josm_elemstyles_colorize_node(const struct style_s *style, node_t *node);
+void josm_elemstyles_colorize_way(const struct style_s *style, way_t *way);
+void josm_elemstyles_colorize_world(const struct style_s *style, osm_t *osm);
 
 #endif // JOSM_ELEMSTYLES_H
 
