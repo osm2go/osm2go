@@ -28,6 +28,8 @@
 #include "osm-gps-map-osd-select.h"
 #endif
 
+#include <math.h>
+
 #define TAB_LABEL_MAP    "Map"
 #define TAB_LABEL_DIRECT "Direct"
 #define TAB_LABEL_EXTENT "Extent"
