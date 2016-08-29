@@ -201,7 +201,9 @@ static void area_main_update(context_t *context) {
 }
 
 #ifdef ENABLE_OSM_GPS_MAP
+#ifndef LOG2
 #define LOG2(x) (log(x) / log(2))
+#endif
 
 static GSList *pos_append_rad(GSList *list, pos_float_t lat, pos_float_t lon) {
   OsmGpsMapPoint *coo = g_new0(OsmGpsMapPoint, 1);

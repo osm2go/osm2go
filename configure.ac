@@ -58,6 +58,11 @@ AC_PROG_MAKE_SET
 # add libm, used for cos()
 AC_CHECK_LIB([m], [cos])
 
+LIBS_SAVE=$LIBS
+LIBS="$LIBS $LIBM"
+AC_CHECK_FUNCS([log2], [ CFLAGS="$CFLAGS -DLOG2=log2" ])
+LIBS=$LIBS_SAVE
+
 # check for libcurl
 PKG_CHECK_MODULES([libcurl], [libcurl], [], [AC_MSG_ERROR([libcurl missing])])
 CFLAGS="$CFLAGS $libcurl_CFLAGS"

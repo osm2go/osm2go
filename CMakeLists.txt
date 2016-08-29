@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.6 FATAL_ERROR)
 project(osm2go VERSION 0.8.7 LANGUAGES C)
 
 include(GNUInstallDirs)
+include(CheckFunctionExists)
+include(CMakePushCheckState)
 
 find_package(CURL REQUIRED)
 find_package(LibXml2 REQUIRED)
@@ -182,6 +184,11 @@ else ()
 	list(APPEND osm2go_SOURCE_FILES src/gps.c)
 endif ()
 
+cmake_push_check_state(RESET)
+set(CMAKE_REQUIRED_LIBRARIES ${MATH_LIBRARY})
+set(CMAKE_REQUIRED_INCLUDES math.h)
+check_function_exists(log2 HAVE_LOG2)
+cmake_pop_check_state()
 
 include_directories(
 	${CURL_INCLUDE_DIRS}
@@ -194,6 +201,9 @@ add_executable(osm2go
 )
 
 set_source_files_properties(src/misc.c PROPERTIES COMPILE_DEFINITIONS "DATADIR=\"${DATA_DIR}\"")
+if (HAVE_LOG2)
+	set_source_files_properties(src/area_edit.c PROPERTIES COMPILE_DEFINITIONS "LOG2=log2")
+endif ()
 
 target_link_libraries(osm2go
 	${CURL_LIBRARIES}
