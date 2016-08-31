@@ -25,10 +25,10 @@
 #include "project.h"
 
 typedef struct track_point_s {
+  struct track_point_s *next;
   pos_t pos;               /* position in lat/lon format */
   time_t time;
   float altitude;
-  struct track_point_s *next;
 } track_point_t;
 
 typedef struct track_item_chain_s {
