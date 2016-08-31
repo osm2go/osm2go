@@ -1972,19 +1972,14 @@ void map_action_ok(appdata_t *appdata) {
     if(!gps_get_pos(appdata, &pos, NULL))
       break;
 
-    gboolean in_bounds = TRUE;
-    if((pos.lat < appdata->osm->bounds->ll_min.lat) ||
-       (pos.lat > appdata->osm->bounds->ll_max.lat))
-      in_bounds = FALSE;
-    if((pos.lon < appdata->osm->bounds->ll_min.lon) ||
-       (pos.lon > appdata->osm->bounds->ll_max.lon))
-      in_bounds = FALSE;
-
     node_t *node = NULL;
 
-    if(!in_bounds)
+    if((pos.lat < appdata->osm->bounds->ll_min.lat) ||
+       (pos.lat > appdata->osm->bounds->ll_max.lat) ||
+       (pos.lon < appdata->osm->bounds->ll_min.lon) ||
+       (pos.lon > appdata->osm->bounds->ll_max.lon)) {
       map_outside_error(appdata);
-    else {
+    } else {
       node = osm_node_new_pos(appdata->osm, &pos);
       osm_node_attach(appdata->osm, node);
       map_node_draw(map, node);
