@@ -171,6 +171,8 @@ else ()
 	find_package(GTK2 REQUIRED)
 
 	add_definitions(-DENABLE_BROWSER_INTERFACE -DMAEMO_VERSION_MAJOR)
+
+	list(APPEND MORE_LIBS ${GTK2_TARGETS})
 endif ()
 
 find_library(MATH_LIBRARY m)
