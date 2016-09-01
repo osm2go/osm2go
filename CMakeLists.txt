@@ -38,7 +38,6 @@ set(osm2go_SOURCE_FILES
 	src/josm_presets.h
 	src/list.c
 	src/list.h
-	src/main.c
 	src/map.c
 	src/map.h
 	src/map_edit.c
@@ -198,22 +197,34 @@ include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
-add_executable(osm2go
-	${osm2go_SOURCE_FILES}
-)
-
 set_source_files_properties(src/misc.c PROPERTIES COMPILE_DEFINITIONS "DATADIR=\"${DATA_DIR}\"")
 if (HAVE_LOG2)
 	set_source_files_properties(src/area_edit.c PROPERTIES COMPILE_DEFINITIONS "LOG2=log2")
 endif ()
 
-target_link_libraries(osm2go
+add_library(osm2go_lib STATIC
+	${osm2go_SOURCE_FILES}
+)
+
+target_link_libraries(osm2go_lib
 	${CURL_LIBRARIES}
 	${LIBXML2_LIBRARIES}
 	PkgConfig::GooCanvas
 	PkgConfig::GVFS
 	${MORE_LIBS}
 	${MATH_LIBRARY}
+)
+
+add_executable(osm2go
+	src/main.c
+)
+
+target_link_libraries(osm2go
+	osm2go_lib
+	${CURL_LIBRARIES}
+	${LIBXML2_LIBRARIES}
+	PkgConfig::GooCanvas
+	${MORE_LIBS}
 )
 
 if (MAEMO_FOUND)
