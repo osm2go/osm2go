@@ -310,6 +310,7 @@ void osm_relation_attach(osm_t *osm, relation_t *relation);
 void osm_relation_delete(osm_t *osm, relation_t *relation,
 			 gboolean permanently);
 gint osm_relation_members_num(relation_t *relation);
+gchar *relation_get_descriptive_name(relation_t *relation);
 
 gboolean osm_object_is_real(const object_t *object);
 char *osm_object_type_string(object_t *object);

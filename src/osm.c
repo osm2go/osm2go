@@ -583,6 +583,20 @@ member_t *osm_parse_osm_relation_member(osm_t *osm, xmlNode *a_node) {
   return member;
 }
 
+/* try to find something descriptive */
+gchar *relation_get_descriptive_name(relation_t *relation) {
+  gchar *name = NULL;
+  const char *keys[] = { "ref", "name", "description", "note", "fix" "me", NULL};
+  unsigned int i;
+  for (i = 0; (keys[i] != NULL) && (name == NULL); i++)
+    name = osm_tag_get_by_key(OSM_TAG(relation), keys[i]);
+
+  if(!name)
+    name = g_strdup_printf("<ID #"ITEM_ID_FORMAT">", OSM_ID(relation));
+
+  return name;
+}
+
 /* ------------------ osm handling ----------------- */
 
 /* the two hash tables eat over 512kBytes memory and may thus be */
