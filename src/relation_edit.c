@@ -922,39 +922,40 @@ static GtkWidget *relation_list_widget(relation_context_t *context) {
 
 /* a global view on all relations */
 void relation_list(GtkWidget *parent, appdata_t *appdata, object_t *object) {
-  relation_context_t *context = g_new0(relation_context_t, 1);
-  context->appdata = appdata;
+  relation_context_t context = { 0 };
+  context.appdata = appdata;
 
-  char *str = NULL;
+  char *str;
+  gchar *dstr = NULL;
   if(!object)
-    str = g_strdup(_("All relations"));
+    str = _("All relations");
   else {
-    str = g_strdup_printf(_("Relations of %s"), osm_object_string(object));
-    context->object = object;
+    dstr = g_strdup_printf(_("Relations of %s"), osm_object_string(object));
+    str = dstr;
+    context.object = object;
   }
 
-  context->dialog =
+  context.dialog =
     misc_dialog_new(MISC_DIALOG_LARGE, str,
 		    GTK_WINDOW(parent),
 		    GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
 		    NULL);
 
-  g_free(str);
+  g_free(dstr);
 
-  gtk_dialog_set_default_response(GTK_DIALOG(context->dialog),
+  gtk_dialog_set_default_response(GTK_DIALOG(context.dialog),
 				  GTK_RESPONSE_CLOSE);
 
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context->dialog)->vbox),
-  		     relation_list_widget(context), TRUE, TRUE, 0);
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context.dialog)->vbox),
+                     relation_list_widget(&context), TRUE, TRUE, 0);
 
   /* ----------------------------------- */
 
 
-  gtk_widget_show_all(context->dialog);
-  gtk_dialog_run(GTK_DIALOG(context->dialog));
+  gtk_widget_show_all(context.dialog);
+  gtk_dialog_run(GTK_DIALOG(context.dialog));
 
-  gtk_widget_destroy(context->dialog);
-  g_free(context);
+  gtk_widget_destroy(context.dialog);
 }
 
 // vim:et:ts=8:sw=2:sts=2:ai
