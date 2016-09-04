@@ -509,8 +509,7 @@ static void track_do_disable_gps(appdata_t *appdata) {
   map_track_pos(appdata, NULL);
 
   /* ... and terminates the current segment if present */
-  if(appdata->track.track)
-    appdata->track.track->cur_seg = NULL;
+  track_end_segment(appdata->track.track);
 }
 
 static gboolean update(gpointer data) {
