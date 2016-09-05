@@ -432,7 +432,15 @@ static void track_end_segment(track_t *track) {
   }
 }
 
-static void track_append_position(appdata_t *appdata, const pos_t *pos, float alt) {
+/**
+ * @brief append the new position to the current track
+ * @param appdata application data
+ * @param pos the new position
+ * @param alt the new altitude
+ * @returns if the position changed
+ * @retval FALSE if the GPS position marker needs to be redrawn (i.e. the position changed)
+ */
+static gboolean track_append_position(appdata_t *appdata, const pos_t *pos, float alt) {
   track_t *track = appdata->track.track;
 
   track_menu_set(appdata, TRUE);
@@ -464,10 +472,13 @@ static void track_append_position(appdata_t *appdata, const pos_t *pos, float al
   }
 
   /* don't append if point is the same as last time */
+  gboolean ret;
   if(prev && prev->pos.lat == pos->lat &&
              prev->pos.lon == pos->lon) {
     printf("same value as last point -> ignore\n");
+    ret = FALSE;
   } else {
+    ret = TRUE;
     *point = g_new0(track_point_t, 1);
     (*point)->altitude = alt;
     (*point)->time = time(NULL);
@@ -496,8 +507,11 @@ static void track_append_position(appdata_t *appdata, const pos_t *pos, float al
 	banner_show_info(appdata, _("GPS position outside working area!"));
 	appdata->track.warn_cnt = 60;  // warn again after one minute
       }
-    }
+    } else
+      ret = TRUE;
   }
+
+  return ret;
 }
 
 static void track_do_disable_gps(appdata_t *appdata) {
@@ -539,8 +553,8 @@ static gboolean update(gpointer data) {
   float alt;
   if(gps_get_pos(appdata, &pos, &alt)) {
     printf("valid position %.6f/%.6f alt %.2f\n", pos.lat, pos.lon, alt);
-    track_append_position(appdata, &pos, alt);
-    map_track_pos(appdata, &pos);
+    if(track_append_position(appdata, &pos, alt))
+      map_track_pos(appdata, &pos);
   } else {
     printf("no valid position\n");
     /* end segment */
