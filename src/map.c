@@ -2308,27 +2308,36 @@ void map_track_remove(appdata_t *appdata) {
   }
 }
 
+/**
+ * @brief show the marker item for the current GPS position
+ */
 void map_track_pos(appdata_t *appdata, const pos_t *pos) {
+  /* remove the old item */
+  map_track_remove_pos(appdata);
+
+  lpos_t lpos;
+  pos2lpos(appdata->osm->bounds, pos, &lpos);
+
+  float radius = appdata->map->style->track.width / 2.0;
+  gdouble zoom = canvas_get_zoom(appdata->map->canvas);
+  if(zoom < GPS_RADIUS_LIMIT) {
+    radius *= GPS_RADIUS_LIMIT;
+    radius /= zoom;
+  }
+
+  appdata->track.gps_item =
+    canvas_circle_new(appdata->map->canvas, CANVAS_GROUP_GPS,
+                      lpos.x, lpos.y, radius, 0,
+                      appdata->map->style->track.gps_color, NO_COLOR);
+}
+
+/**
+ * @brief remove the marker item for the current GPS position
+ */
+void map_track_remove_pos(appdata_t *appdata) {
   if(appdata->track.gps_item) {
     canvas_item_destroy(appdata->track.gps_item);
     appdata->track.gps_item = NULL;
-  }
-
-  if(pos) {
-    lpos_t lpos;
-    pos2lpos(appdata->osm->bounds, pos, &lpos);
-
-    float radius = appdata->map->style->track.width/2.0;
-    gdouble zoom = canvas_get_zoom(appdata->map->canvas);
-    if(zoom < GPS_RADIUS_LIMIT) {
-      radius *= GPS_RADIUS_LIMIT;
-      radius /= zoom;
-    }
-
-    appdata->track.gps_item =
-      canvas_circle_new(appdata->map->canvas, CANVAS_GROUP_GPS,
-			lpos.x, lpos.y, radius, 0,
-			appdata->map->style->track.gps_color, NO_COLOR);
   }
 }
 

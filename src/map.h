@@ -165,6 +165,7 @@ void map_track_draw_seg(map_t *map, struct track_seg_s *seg);
 void map_track_update_seg(map_t *map, struct track_seg_s *seg);
 void map_track_remove(appdata_t *appdata);
 void map_track_pos(appdata_t *appdata, const pos_t *pos);
+void map_track_remove_pos(appdata_t *appdata);
 
 /* background stuff */
 void map_set_bg_image(map_t *map, const char *filename);
