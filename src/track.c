@@ -440,7 +440,7 @@ static void track_end_segment(track_t *track) {
  * @returns if the position changed
  * @retval FALSE if the GPS position marker needs to be redrawn (i.e. the position changed)
  */
-static gboolean track_append_position(appdata_t *appdata, const pos_t *pos, float alt) {
+static gboolean track_append_position(appdata_t *appdata, const pos_t *pos, float alt, const lpos_t *lpos) {
   track_t *track = appdata->track.track;
 
   track_menu_set(appdata, TRUE);
@@ -498,9 +498,7 @@ static gboolean track_append_position(appdata_t *appdata, const pos_t *pos, floa
   }
 
   if(appdata->settings && appdata->settings->follow_gps) {
-    lpos_t lpos;
-    pos2lpos(appdata->osm->bounds, pos, &lpos);
-    if(!map_scroll_to_if_offscreen(appdata->map, &lpos)) {
+    if(!map_scroll_to_if_offscreen(appdata->map, lpos)) {
       if(!--appdata->track.warn_cnt) {
 	/* warn user once a minute that the current gps */
 	/* position is outside the working area */
@@ -553,8 +551,10 @@ static gboolean update(gpointer data) {
   float alt;
   if(gps_get_pos(appdata, &pos, &alt)) {
     printf("valid position %.6f/%.6f alt %.2f\n", pos.lat, pos.lon, alt);
-    if(track_append_position(appdata, &pos, alt))
-      map_track_pos(appdata, &pos);
+    lpos_t lpos;
+    pos2lpos(appdata->osm->bounds, &pos, &lpos);
+    if(track_append_position(appdata, &pos, alt, &lpos))
+      map_track_pos(appdata, &lpos);
   } else {
     printf("no valid position\n");
     /* end segment */

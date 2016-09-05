@@ -987,7 +987,7 @@ static gboolean map_limit_zoom(map_t *map, gdouble *zoom) {
  * Return true if this was possible, false if position is outside
  * working area
  */
-gboolean map_scroll_to_if_offscreen(map_t *map, lpos_t *lpos) {
+gboolean map_scroll_to_if_offscreen(map_t *map, const lpos_t *lpos) {
 
   // Ignore anything outside the working area
   if (!(map && map->appdata && map->appdata->osm)) {
@@ -2311,12 +2311,9 @@ void map_track_remove(appdata_t *appdata) {
 /**
  * @brief show the marker item for the current GPS position
  */
-void map_track_pos(appdata_t *appdata, const pos_t *pos) {
+void map_track_pos(appdata_t *appdata, const lpos_t *lpos) {
   /* remove the old item */
   map_track_remove_pos(appdata);
-
-  lpos_t lpos;
-  pos2lpos(appdata->osm->bounds, pos, &lpos);
 
   float radius = appdata->map->style->track.width / 2.0;
   gdouble zoom = canvas_get_zoom(appdata->map->canvas);
@@ -2327,7 +2324,7 @@ void map_track_pos(appdata_t *appdata, const pos_t *pos) {
 
   appdata->track.gps_item =
     canvas_circle_new(appdata->map->canvas, CANVAS_GROUP_GPS,
-                      lpos.x, lpos.y, radius, 0,
+                      lpos->x, lpos->y, radius, 0,
                       appdata->map->style->track.gps_color, NO_COLOR);
 }
 

@@ -164,7 +164,7 @@ struct track_seg_s;
 void map_track_draw_seg(map_t *map, struct track_seg_s *seg);
 void map_track_update_seg(map_t *map, struct track_seg_s *seg);
 void map_track_remove(appdata_t *appdata);
-void map_track_pos(appdata_t *appdata, const pos_t *pos);
+void map_track_pos(appdata_t *appdata, const lpos_t *lpos);
 void map_track_remove_pos(appdata_t *appdata);
 
 /* background stuff */
@@ -175,7 +175,7 @@ void map_hide_selected(appdata_t *appdata);
 void map_show_all(appdata_t *appdata);
 
 void map_set_zoom(map_t *map, double zoom, gboolean update_scroll_offsets);
-gboolean map_scroll_to_if_offscreen(map_t *map, lpos_t *lpos);
+gboolean map_scroll_to_if_offscreen(map_t *map, const lpos_t *lpos);
 
 /* various functions required by map_edit */
 gboolean map_item_is_selected_node(map_t *map, map_item_t *map_item);
