@@ -217,8 +217,12 @@ gboolean list_get_selected(GtkWidget *list, GtkTreeModel **model,
   if(g_list_length(slist) == 1)
     retval = gtk_tree_model_get_iter(*model, iter, slist->data);
 
+#if GLIB_CHECK_VERSION(2,28,0)
+  g_list_free_full(slist, (GDestroyNotify)gtk_tree_path_free);
+#else
   g_list_foreach(slist, (GFunc)gtk_tree_path_free, NULL);
   g_list_free(slist);
+#endif
 
   return retval;
 #else
