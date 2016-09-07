@@ -49,9 +49,9 @@ typedef struct project_s {
 } project_t;
 
 gboolean project_exists(settings_t *settings, const char *name, gchar **filename);
-gboolean project_open(appdata_t *appdata, char *name);
+gboolean project_open(appdata_t *appdata, const char *name);
 gboolean project_save(GtkWidget *parent, project_t *project);
-gboolean project_load(appdata_t *appdata, char *name);
+gboolean project_load(appdata_t *appdata, const char *name);
 gboolean project_close(appdata_t *appdata);
 gboolean project_check_demo(GtkWidget *parent, project_t *project);
 void project_wizard(appdata_t *appdata);

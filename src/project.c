@@ -1256,7 +1256,7 @@ project_edit(appdata_t *appdata, GtkWidget *parent, settings_t *settings,
   return ok;
 }
 
-gboolean project_open(appdata_t *appdata, char *name) {
+gboolean project_open(appdata_t *appdata, const char *name) {
   project_t *project = g_new0(project_t, 1);
 
   /* link to map state if a map already exists */
@@ -1348,7 +1348,7 @@ gboolean project_close(appdata_t *appdata) {
 
 #define _PROJECT_LOAD_BUF_SIZ 64
 
-gboolean project_load(appdata_t *appdata, char *name) {
+gboolean project_load(appdata_t *appdata, const char *name) {
   char *proj_name = NULL;
 
   if(!name) {
