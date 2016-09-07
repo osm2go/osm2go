@@ -1974,10 +1974,8 @@ void map_action_ok(appdata_t *appdata) {
 
     node_t *node = NULL;
 
-    if((pos.lat < appdata->osm->bounds->ll_min.lat) ||
-       (pos.lat > appdata->osm->bounds->ll_max.lat) ||
-       (pos.lon < appdata->osm->bounds->ll_min.lon) ||
-       (pos.lon > appdata->osm->bounds->ll_max.lon)) {
+    if(!osm_position_within_bounds_ll(&appdata->osm->bounds->ll_min,
+                                      &appdata->osm->bounds->ll_max, &pos)) {
       map_outside_error(appdata);
     } else {
       node = osm_node_new_pos(appdata->osm, &pos);

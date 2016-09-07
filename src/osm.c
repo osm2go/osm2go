@@ -1973,6 +1973,12 @@ gboolean osm_position_within_bounds(osm_t *osm, gint x, gint y) {
   return TRUE;
 }
 
+gboolean osm_position_within_bounds_ll(const pos_t *ll_min, const pos_t *ll_max, const pos_t *pos) {
+  if((pos->lat < ll_min->lat) || (pos->lat > ll_max->lat)) return FALSE;
+  if((pos->lon < ll_min->lon) || (pos->lon > ll_max->lon)) return FALSE;
+  return TRUE;
+}
+
 /* remove the given node from all relations. used if the node is to */
 /* be deleted */
 void osm_node_remove_from_relation(osm_t *osm, node_t *node) {
