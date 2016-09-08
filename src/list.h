@@ -29,8 +29,9 @@ typedef enum {
   LIST_BUTTON_USER2
 } list_button_t;
 
-#define LIST_BTN_NEW  (1<<0)   // use "new" instead of "add" button
-#define LIST_BTN_WIDE (1<<1)   // use "wide" button layout on maemo5
+#define LIST_BTN_NEW   (1<<0)   // use "new" instead of "add" button
+#define LIST_BTN_WIDE  (1<<1)   // use "wide" button layout (i.e. 5 buttons in one row)
+#define LIST_BTN_WIDE4 (1<<2)   // same as LIST_BTN_WIDE, but only make room for 1 user button
 
 /* list item flags */
 #define LIST_FLAG_EXPAND         (1<<0)   /* column expands with dialog size */

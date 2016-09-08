@@ -817,7 +817,7 @@ static GtkWidget *project_list_widget(select_context_t *context) {
   list_set_store(context->list, store);
   g_object_unref(store);
 
-  list_set_static_buttons(context->list, LIST_BTN_NEW | LIST_BTN_WIDE,
+  list_set_static_buttons(context->list, LIST_BTN_NEW | LIST_BTN_WIDE | LIST_BTN_WIDE4,
 	  G_CALLBACK(on_project_new), G_CALLBACK(on_project_edit),
 	  G_CALLBACK(on_project_delete), context);
 

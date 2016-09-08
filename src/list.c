@@ -73,8 +73,10 @@ void list_set_user_buttons(GtkWidget *list, ...) {
   /* make space for user buttons */
   if(!(priv->button.flags & LIST_BTN_WIDE))
     gtk_table_resize(GTK_TABLE(priv->table), 2, 3);
-  else
+  else if((priv->button.flags & (LIST_BTN_WIDE4 | LIST_BTN_WIDE)) == LIST_BTN_WIDE)
     gtk_table_resize(GTK_TABLE(priv->table), 1, 5);
+  else
+    gtk_table_resize(GTK_TABLE(priv->table), 1, 4);
 
   va_start(ap, list);
   list_button_t id = va_arg(ap, list_button_t);
