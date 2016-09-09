@@ -385,7 +385,7 @@ static GtkWidget *relation_item_list_widget(relitem_context_t *context) {
   relation_t *relation = context->appdata->osm->relation;
   while(relation) {
     /* try to find something descriptive */
-    char *name = relation_get_descriptive_name(relation);
+    gchar *name = relation_get_descriptive_name(relation);
 
     /* Append a row and fill in some data */
     gtk_list_store_append(context->store, &iter);
@@ -395,6 +395,7 @@ static GtkWidget *relation_item_list_widget(relitem_context_t *context) {
        RELITEM_COL_NAME, name,
        RELITEM_COL_DATA, relation,
        -1);
+    g_free(name);
 
     /* select all relations the current object is part of */
     if(relitem_is_in_relation(context->item, relation))
