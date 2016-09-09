@@ -467,3 +467,20 @@ void list_override_changed_event(GtkWidget *list,
   priv->change.func = handler;
   priv->change.data = data;
 }
+
+void list_scroll(GtkWidget* list, GtkTreeIter* iter) {
+  list_priv_t *priv = g_object_get_data(G_OBJECT(list), "priv");
+  g_assert(priv);
+
+  list_view_scroll(GTK_TREE_VIEW(priv->view), list_get_selection(list), iter);
+}
+
+void list_view_scroll(GtkTreeView *view, GtkTreeSelection *sel, GtkTreeIter* iter) {
+  GtkTreeModel *model = gtk_tree_view_get_model(view);
+
+  gtk_tree_selection_select_iter(sel, iter);
+
+  GtkTreePath *mpath = gtk_tree_model_get_path(model, iter);
+  gtk_tree_view_scroll_to_cell(view, mpath, NULL, FALSE, 0.0f, 0.0f);
+  gtk_tree_path_free(mpath);
+}

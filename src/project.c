@@ -778,7 +778,12 @@ project_get_status_icon_stock_id(select_context_t *context,
     // TODO: check for outdatedness too. Which icon to use?
 }
 
-static GtkWidget *project_list_widget(select_context_t *context) {
+/**
+ * @brief create a widget to list the projects
+ * @param context the context struct
+ * @param has_sel if an item has been selected
+ */
+static GtkWidget *project_list_widget(select_context_t *context, gboolean *has_sel) {
   context->list = list_new(LIST_HILDON_WITHOUT_HEADERS);
 
   list_override_changed_event(context->list, changed, context);
@@ -797,8 +802,14 @@ static GtkWidget *project_list_widget(select_context_t *context) {
       G_TYPE_STRING,    // desc
       G_TYPE_POINTER);  // data
 
-  GtkTreeIter iter;
+  GtkTreeIter iter, seliter;
   GSList *cur = context->project;
+  gboolean check_pos;
+  pos_t pos;
+  *has_sel = FALSE;
+
+  check_pos = gps_get_pos(context->appdata, &pos, NULL);
+
   while(cur) {
     project_t *project = (project_t *)cur->data;
     cur = g_slist_next(cur);
@@ -812,6 +823,13 @@ static GtkWidget *project_list_widget(select_context_t *context) {
 	       PROJECT_COL_DESCRIPTION, project->desc,
 	       PROJECT_COL_DATA,        project,
 	       -1);
+
+    /* decide if to select this project because it matches the current position */
+    if(check_pos && osm_position_within_bounds_ll(&project->min, &project->max, &pos)) {
+      seliter = iter;
+      *has_sel = TRUE;
+      check_pos = FALSE;
+    }
   }
 
   list_set_store(context->list, store);
@@ -827,6 +845,9 @@ static GtkWidget *project_list_widget(select_context_t *context) {
 
   gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(store),
                                        PROJECT_COL_NAME, GTK_SORT_ASCENDING);
+
+  if(*has_sel)
+    list_scroll(context->list, &seliter);
 
   return context->list;
 }
@@ -860,12 +881,13 @@ static char *project_select(appdata_t *appdata) {
   gtk_dialog_set_default_response(GTK_DIALOG(context.dialog),
 				  GTK_RESPONSE_ACCEPT);
 
+  gboolean has_sel;
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(context.dialog)->vbox),
-			      project_list_widget(&context));
+			      project_list_widget(&context, &has_sel));
 
   /* don't all user to click ok until something is selected */
   gtk_dialog_set_response_sensitive(GTK_DIALOG(context.dialog),
-				    GTK_RESPONSE_ACCEPT, FALSE);
+				    GTK_RESPONSE_ACCEPT, has_sel);
 
   gtk_widget_show_all(context.dialog);
   if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(context.dialog)))

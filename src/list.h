@@ -81,5 +81,7 @@ void list_focus_on(GtkWidget *list, GtkTreeIter *iter, gboolean highlight);
 gboolean list_get_selected(GtkWidget *list, GtkTreeModel **model,
 			   GtkTreeIter *iter);
 void list_override_changed_event(GtkWidget *list, void(*handler)(GtkTreeSelection*,gpointer), gpointer data);
+void list_scroll(GtkWidget *list, GtkTreeIter *iter);
+void list_view_scroll(GtkTreeView *view, GtkTreeSelection *sel, GtkTreeIter* iter);
 
 #endif // LIST_H
