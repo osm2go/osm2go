@@ -279,7 +279,7 @@ void list_set_static_buttons(GtkWidget *list, int flags,
   /* add the three default buttons, but keep the disabled for now */
   if(cb_new) {
     priv->button.widget[0] =
-      button_new_with_label(_((flags&LIST_BTN_NEW)?"New":"Add"));
+      gtk_button_new_with_mnemonic(_((flags&LIST_BTN_NEW)?"_New":"_Add"));
     gtk_table_attach_defaults(GTK_TABLE(priv->table),
 			      priv->button.widget[0], 0, 1, 0, 1);
     gtk_signal_connect(GTK_OBJECT(priv->button.widget[0]), "clicked",
@@ -292,7 +292,7 @@ void list_set_static_buttons(GtkWidget *list, int flags,
     priv->button.widget[1] = cmenu_append(list, _("Edit"),
 			  GTK_SIGNAL_FUNC(cb_edit), data);
 #else
-    priv->button.widget[1] = button_new_with_label(_("Edit"));
+    priv->button.widget[1] = gtk_button_new_with_mnemonic(_("_Edit"));
     gtk_table_attach_defaults(GTK_TABLE(priv->table),
 			      priv->button.widget[1], 1, 2, 0, 1);
     gtk_signal_connect(GTK_OBJECT(priv->button.widget[1]), "clicked",
