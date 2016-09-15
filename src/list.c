@@ -317,10 +317,7 @@ void list_set_static_buttons(GtkWidget *list, int flags,
 }
 
 GtkTreeModel *list_get_model(GtkWidget *list) {
-  list_priv_t *priv = g_object_get_data(G_OBJECT(list), "priv");
-  g_assert(priv);
-
-  return gtk_tree_view_get_model(GTK_TREE_VIEW(priv->view));
+  return gtk_tree_view_get_model(GTK_TREE_VIEW(list_get_view(list)));
 }
 
 /* Refocus a GtkTreeView an item specified by iter, unselecting the current
