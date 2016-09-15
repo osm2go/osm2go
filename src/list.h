@@ -20,6 +20,8 @@
 #ifndef LIST_H
 #define LIST_H
 
+#include <gtk/gtk.h>
+
 typedef enum {
   LIST_BUTTON_NEW = 0,
   LIST_BUTTON_EDIT,
