@@ -45,23 +45,15 @@ typedef enum {
 #ifdef USE_HILDON
 
 /* on hildon a list may be system default (LIST_HILDON_WITHOUT_HEADERS), */
-/* forced to have headers (LIST_HILDON_WITH_HEADERS) or only be forced */
-/* on MAEMO5 (LIST_HILDON_WITH_HEADERS_ON_MAEMO5) */
+/* or forced to have headers (LIST_HILDON_WITH_HEADERS) */
 
 #define LIST_HILDON_WITH_HEADERS     TRUE
 #define LIST_HILDON_WITHOUT_HEADERS  FALSE
-
-#if MAEMO_VERSION_MAJOR <= 4
-#define LIST_HILDON_WITH_HEADERS_ON_MAEMO5  FALSE
-#else
-#define LIST_HILDON_WITH_HEADERS_ON_MAEMO5  TRUE
-#endif
 
 GtkWidget *list_new(gboolean show_headers);
 #else
 #define LIST_HILDON_WITH_HEADERS
 #define LIST_HILDON_WITHOUT_HEADERS
-#define LIST_HILDON_WITH_HEADERS_ON_MAEMO5
 GtkWidget *list_new(void);
 #endif
 
