@@ -50,12 +50,14 @@ typedef enum {
 #define LIST_HILDON_WITH_HEADERS     TRUE
 #define LIST_HILDON_WITHOUT_HEADERS  FALSE
 
-GtkWidget *list_new(gboolean show_headers);
 #else
-#define LIST_HILDON_WITH_HEADERS
-#define LIST_HILDON_WITHOUT_HEADERS
-GtkWidget *list_new(void);
+
+/* there is more space on the PC, so always show headers there */
+#define LIST_HILDON_WITH_HEADERS TRUE
+#define LIST_HILDON_WITHOUT_HEADERS TRUE
 #endif
+
+GtkWidget *list_new(gboolean show_headers);
 
 GtkWidget *list_get_view(GtkWidget *list);
 void list_set_user_buttons(GtkWidget *list, ...);

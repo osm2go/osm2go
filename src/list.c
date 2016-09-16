@@ -393,11 +393,7 @@ static void changed(GtkTreeSelection *treeselection, gpointer user_data) {
 
 /* a generic list widget with "add", "edit" and "remove" buttons as used */
 /* for all kinds of lists in osm2go */
-#ifdef USE_HILDON
 GtkWidget *list_new(gboolean show_headers)
-#else
-GtkWidget *list_new(void)
-#endif
 {
   list_priv_t *priv = g_new0(list_priv_t, 1);
 
@@ -412,12 +408,8 @@ GtkWidget *list_new(void)
   priv->view = hildon_gtk_tree_view_new(HILDON_UI_MODE_EDIT);
 #endif
 
-#ifdef USE_HILDON
-  if(show_headers) {
-    /* hildon hides these by default */
-    gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(priv->view), TRUE);
-  }
-#endif
+  /* hildon hides these by default */
+  gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(priv->view), show_headers);
 
   GtkTreeSelection *sel =
     gtk_tree_view_get_selection(GTK_TREE_VIEW(priv->view));
