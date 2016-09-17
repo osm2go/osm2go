@@ -931,7 +931,7 @@ static GStatBuf file_info(const char *path, const char *name) {
   return st;
 }
 
-void project_filesize(project_context_t *context) {
+static void project_filesize(project_context_t *context) {
   char *str = NULL;
   gchar *gstr = NULL;
 
