@@ -410,11 +410,9 @@ static GtkWidget *relation_item_list_widget(relitem_context_t *context) {
         selected = TRUE;
       }
     }
-    g_free(name);
 
     relation = relation->next;
   }
-  g_free(selname);
 
   if(selected)
     list_view_scroll(GTK_TREE_VIEW(context->view), selection, &sel_iter);
