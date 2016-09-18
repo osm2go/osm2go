@@ -382,7 +382,6 @@ static GtkWidget *relation_item_list_widget(relitem_context_t *context) {
   /* build a list of iters of all items that should be selected */
 
   GtkTreeIter iter, sel_iter;
-  gboolean selected = FALSE;
   gchar *selname = NULL; /* name of sel_iter */
   relation_t *relation = context->appdata->osm->relation;
   while(relation) {
@@ -402,19 +401,16 @@ static GtkWidget *relation_item_list_widget(relitem_context_t *context) {
     if(relitem_is_in_relation(context->item, relation)) {
       gtk_tree_selection_select_iter(selection, &iter);
       /* check if this element is earlier by name in the list */
-      if(!selected || strcmp(name, selname) < 0) {
-        gchar *tmp = name;
-        name = selname;
-        selname = tmp;
+      if(selname == NULL || strcmp(name, selname) < 0) {
+        selname = name;
         sel_iter = iter;
-        selected = TRUE;
       }
     }
 
     relation = relation->next;
   }
 
-  if(selected)
+  if(selname != NULL)
     list_view_scroll(GTK_TREE_VIEW(context->view), selection, &sel_iter);
 
   g_signal_connect(G_OBJECT(selection), "changed",
