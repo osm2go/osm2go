@@ -1793,5 +1793,4 @@ void project_wizard(appdata_t *appdata) {
   gtk_widget_destroy(wizard.assistant);
 }
 
-
 // vim:et:ts=8:sw=2:sts=2:ai

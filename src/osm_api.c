@@ -1058,4 +1058,3 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   g_free(context->comment);
   g_free(context);
 }
-

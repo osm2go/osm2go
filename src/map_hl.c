@@ -183,4 +183,3 @@ canvas_item_t *map_hl_polyline_new(map_t *map, canvas_group_t group, map_item_t 
 
   return (*hl)->item;
 }
-

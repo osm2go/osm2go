@@ -162,7 +162,4 @@ void banner_busy_tick() {
   }
 }
 
-
 // vim:et:ts=8:sw=2:sts=2:ai
-
-

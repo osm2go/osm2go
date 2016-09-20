@@ -72,5 +72,4 @@ void undo_close_state(struct appdata_s *appdata);
 void undo_free(osm_t *osm, undo_state_t *state);
 void undo(struct appdata_s *appdata);
 
-
 #endif // UNDO_H

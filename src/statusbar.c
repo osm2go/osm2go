@@ -160,5 +160,4 @@ void statusbar_free(statusbar_t *statusbar) {
   g_free(statusbar);
 }
 
-
 // vim:et:ts=8:sw=2:sts=2:ai
