@@ -328,6 +328,7 @@ GtkWidget *style_select_widget(appdata_t *appdata) {
 
     cnt++;
 
+    g_free(chain->name);
     g_free(chain);
     chain = next;
   }
@@ -355,6 +356,7 @@ void style_change(appdata_t *appdata, const char *name) {
     style->elemstyles_filename = NULL;
     style_free(style);
 
+    g_free(chain->name);
     g_free(chain);
     chain = next;
   }
