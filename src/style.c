@@ -282,14 +282,14 @@ void style_free(style_t *style) {
   g_free(style);
 }
 
-static char *style_basename(char *name) {
-  char *retval = name;
+static char *style_basename(const char *name) {
+  char *retval;
+  const char *slash = strrchr(name, '/');
 
-  if(strrchr(name, '/'))
-    retval = strrchr(name, '/') + 1;
-
-  /* create a local copy */
-  retval = g_strdup(retval);
+  if(slash != NULL)
+    retval = g_strdup(slash + 1);
+  else
+    retval = g_strdup(name);
 
   /* and cut off extension */
   if(strrchr(retval, '.'))
