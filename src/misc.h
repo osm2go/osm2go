@@ -53,7 +53,7 @@ gboolean yes_no_f(GtkWidget *parent,
 		  const char *title, const char *fmt, ...);
 
 gchar *find_file(const char *n1, const char *n2, const char *n3);
-file_chain_t *file_scan(const char *pattern);
+file_chain_t *file_scan(const char *extension);
 
 /* dialog size are specified rather fuzzy */
 #define MISC_DIALOG_NOSIZE  -1
