@@ -240,10 +240,10 @@ file_chain_t *file_scan(const char *extension) {
       } while(name);
 
       g_dir_close(dir);
-
-      if(*path[0] == '~')
-	g_free((char*)dirname);
     }
+
+    if(*path[0] == '~')
+      g_free((char*)dirname);
 
     path++;
   }
