@@ -80,10 +80,8 @@ typedef struct style_s {
     elemstyle_color_t color;
   } background;
 
-  union {
-    char *elemstyles_filename;
-    elemstyle_t *elemstyles;
-  };
+  elemstyle_t *elemstyles;
+
 } style_t;
 
 style_t *style_load(appdata_t *appdata);
