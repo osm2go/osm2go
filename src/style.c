@@ -196,35 +196,13 @@ static style_t *parse_style(xmlNode *a_node) {
   return style;
 }
 
-static style_t *parse_doc(xmlDocPtr doc) {
-  /* Get the root element node */
-  xmlNode *cur_node = NULL;
-  style_t *style = NULL;
-
-  for(cur_node = xmlDocGetRootElement(doc);
-      cur_node; cur_node = cur_node->next) {
-    if (cur_node->type == XML_ELEMENT_NODE) {
-      if(strcasecmp((char*)cur_node->name, "style") == 0) {
-	if(!style)
-	  style = parse_style(cur_node);
-      } else
-	printf("  found unhandled %s\n", cur_node->name);
-    }
-  }
-
-  xmlFreeDoc(doc);
-  return style;
-}
-
 static style_t *style_parse(appdata_t *appdata, const char *fullname) {
-  style_t *style = NULL;
-
-  xmlDoc *doc = NULL;
-
   LIBXML_TEST_VERSION;
 
+  xmlDoc *doc = xmlReadFile(fullname, NULL, 0);
+
   /* parse the file and get the DOM */
-  if((doc = xmlReadFile(fullname, NULL, 0)) == NULL) {
+  if(doc == NULL) {
     xmlErrorPtr errP = xmlGetLastError();
     errorf(GTK_WIDGET(appdata->window),
 	   _("Style parsing failed:\n\n"
@@ -233,11 +211,25 @@ static style_t *style_parse(appdata_t *appdata, const char *fullname) {
 
     return NULL;
   } else {
-    style = parse_doc(doc);
-    style->iconP = &appdata->icon;
-  }
+    /* Get the root element node */
+    xmlNode *cur_node = NULL;
+    style_t *style = NULL;
 
-  return style;
+    for(cur_node = xmlDocGetRootElement(doc);
+        cur_node; cur_node = cur_node->next) {
+      if (cur_node->type == XML_ELEMENT_NODE) {
+        if(strcasecmp((char*)cur_node->name, "style") == 0) {
+	  if(!style)
+	    style = parse_style(cur_node);
+        } else
+	  printf("  found unhandled %s\n", cur_node->name);
+      }
+    }
+
+    xmlFreeDoc(doc);
+    style->iconP = &appdata->icon;
+    return style;
+  }
 }
 
 style_t *style_load(appdata_t *appdata) {
