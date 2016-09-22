@@ -808,8 +808,7 @@ static gint map_destroy_event(GtkWidget *widget, gpointer data) {
 
   map_state_free(map->state);
 
-  if(map->style)
-    style_free(map->style);
+  style_free(map->style);
 
   /* destroy existing highlight */
   if(map->highlight) {
