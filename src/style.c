@@ -47,7 +47,7 @@ static gboolean xml_prop_is(xmlNode *node, char *prop, char *str) {
   return match;
 }
 
-static style_t *parse_style(xmlNode *a_node, xmlChar **fname) {
+static style_t *parse_style_node(xmlNode *a_node, xmlChar **fname) {
   xmlNode *cur_node = NULL, *sub_node = NULL;
   style_t *style = g_new0(style_t, 1);
 
@@ -226,7 +226,7 @@ static style_t *style_parse(appdata_t *appdata, const char *fullname, xmlChar **
       if (cur_node->type == XML_ELEMENT_NODE) {
         if(strcasecmp((char*)cur_node->name, "style") == 0) {
 	  if(!style)
-	    style = parse_style(cur_node, fname);
+	    style = parse_style_node(cur_node, fname);
         } else
 	  printf("  found unhandled %s\n", cur_node->name);
       }
