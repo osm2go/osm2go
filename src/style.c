@@ -370,8 +370,17 @@ void style_change(appdata_t *appdata, const char *name) {
     return;
   }
 
-  g_free(appdata->settings->style);
+  style_t *nstyle = style_load_fname(appdata, fname);
+  if (nstyle == NULL) {
+    errorf(GTK_WIDGET(appdata->window),
+           _("Error loading style %s"), fname);
+    g_free(new_style);
+    g_free(fname);
+    return;
+  }
+  g_free(fname);
 
+  g_free(appdata->settings->style);
   appdata->settings->style = new_style;
 
   map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
@@ -382,8 +391,7 @@ void style_change(appdata_t *appdata, const char *name) {
   }
 
   style_free(appdata->map->style);
-  appdata->map->style = style_load_fname(appdata, fname);
-  g_free(fname);
+  appdata->map->style = nstyle;
 
   /* canvas background may have changed */
   canvas_set_background(appdata->map->canvas,
