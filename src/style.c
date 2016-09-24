@@ -238,6 +238,17 @@ static style_t *style_parse(appdata_t *appdata, const char *fullname, xmlChar **
   }
 }
 
+static style_t *style_load_fname(appdata_t *appdata, const char *filename) {
+  xmlChar *fname = NULL;
+  style_t *style = style_parse(appdata, filename, &fname);
+
+  printf("  elemstyle filename: %s\n", fname);
+  style->elemstyles = josm_elemstyles_load((char*)fname);
+  xmlFree(fname);
+
+  return style;
+}
+
 style_t *style_load(appdata_t *appdata) {
   const char *name = appdata->settings->style;
   printf("Trying to load style %s\n", name);
@@ -255,13 +266,8 @@ style_t *style_load(appdata_t *appdata) {
 
   printf("  style filename: %s\n", fullname);
 
-  xmlChar *fname = NULL;
-  style_t *style = style_parse(appdata, fullname, &fname);
+  style_t *style = style_load_fname(appdata, fullname);
   g_free(fullname);
-
-  printf("  elemstyle filename: %s\n", fname);
-  style->elemstyles = josm_elemstyles_load((char*)fname);
-  xmlFree(fname);
 
   return style;
 }
@@ -335,7 +341,7 @@ GtkWidget *style_select_widget(appdata_t *appdata) {
 }
 
 void style_change(appdata_t *appdata, const char *name) {
-  char *new_style = NULL;
+  char *new_style = NULL, *fname = NULL;
 
   file_chain_t *chain = file_scan(".style");
 
@@ -343,8 +349,10 @@ void style_change(appdata_t *appdata, const char *name) {
     file_chain_t *next = chain->next;
     style_t *style = style_parse(appdata, chain->name, NULL);
 
-    if(strcmp(style->name, name) == 0) {
+    if(new_style == NULL && strcmp(style->name, name) == 0) {
       new_style = style_basename(chain->name);
+      fname = chain->name;
+      chain->name = NULL;
     }
 
     style_free(style);
@@ -358,6 +366,7 @@ void style_change(appdata_t *appdata, const char *name) {
   if(appdata->settings->style &&
      !strcmp(appdata->settings->style, new_style)) {
     g_free(new_style);
+    g_free(fname);
     return;
   }
 
@@ -373,7 +382,8 @@ void style_change(appdata_t *appdata, const char *name) {
   }
 
   style_free(appdata->map->style);
-  appdata->map->style = style_load(appdata);
+  appdata->map->style = style_load_fname(appdata, fname);
+  g_free(fname);
 
   /* canvas background may have changed */
   canvas_set_background(appdata->map->canvas,
