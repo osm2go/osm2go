@@ -47,11 +47,8 @@ static gboolean xml_prop_is(xmlNode *node, char *prop, char *str) {
   return match;
 }
 
-static style_t *parse_style_node(xmlNode *a_node, xmlChar **fname) {
+static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t *style) {
   xmlNode *cur_node = NULL, *sub_node = NULL;
-  style_t *style = g_new0(style_t, 1);
-
-  style->name = (char*)xmlGetProp(a_node, BAD_CAST "name");
 
   /* -------------- setup defaults -------------------- */
   /* (the defaults are pretty much the potlatch style) */
@@ -192,7 +189,6 @@ static style_t *parse_style_node(xmlNode *a_node, xmlChar **fname) {
 	printf("  found unhandled style/%s\n", cur_node->name);
     }
   }
-  return style;
 }
 
 /**
@@ -200,9 +196,11 @@ static style_t *parse_style_node(xmlNode *a_node, xmlChar **fname) {
  * @param appdata the global information structure
  * @param fullname absolute path of the file to read
  * @param fname location to store name of the object style XML file or NULL
+ * @param name_only only parse the style name, leave all other fields empty
  * @return a new style pointer
  */
-static style_t *style_parse(appdata_t *appdata, const char *fullname, xmlChar **fname) {
+static style_t *style_parse(appdata_t *appdata, const char *fullname,
+                            xmlChar **fname, gboolean name_only) {
   LIBXML_TEST_VERSION;
 
   xmlDoc *doc = xmlReadFile(fullname, NULL, 0);
@@ -225,22 +223,27 @@ static style_t *style_parse(appdata_t *appdata, const char *fullname, xmlChar **
         cur_node; cur_node = cur_node->next) {
       if (cur_node->type == XML_ELEMENT_NODE) {
         if(strcasecmp((char*)cur_node->name, "style") == 0) {
-	  if(!style)
-	    style = parse_style_node(cur_node, fname);
+          if(!style) {
+            style = g_new0(style_t, 1);
+            style->name = (char*)xmlGetProp(cur_node, BAD_CAST "name");
+            if(name_only)
+              break;
+            parse_style_node(cur_node, fname, style);
+            style->iconP = &appdata->icon;
+          }
         } else
 	  printf("  found unhandled %s\n", cur_node->name);
       }
     }
 
     xmlFreeDoc(doc);
-    style->iconP = &appdata->icon;
     return style;
   }
 }
 
 static style_t *style_load_fname(appdata_t *appdata, const char *filename) {
   xmlChar *fname = NULL;
-  style_t *style = style_parse(appdata, filename, &fname);
+  style_t *style = style_parse(appdata, filename, &fname, FALSE);
 
   printf("  elemstyle filename: %s\n", fname);
   style->elemstyles = josm_elemstyles_load((char*)fname);
@@ -317,7 +320,7 @@ GtkWidget *style_select_widget(appdata_t *appdata) {
 
     printf("  file: %s\n", chain->name);
 
-    style_t *style = style_parse(appdata, chain->name, NULL);
+    style_t *style = style_parse(appdata, chain->name, NULL, TRUE);
     printf("    name: %s\n", style->name);
     combo_box_append_text(cbox, style->name);
 
@@ -347,7 +350,7 @@ void style_change(appdata_t *appdata, const char *name) {
 
   while(chain) {
     file_chain_t *next = chain->next;
-    style_t *style = style_parse(appdata, chain->name, NULL);
+    style_t *style = style_parse(appdata, chain->name, NULL, TRUE);
 
     if(new_style == NULL && strcmp(style->name, name) == 0) {
       new_style = style_basename(chain->name);
