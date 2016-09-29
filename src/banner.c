@@ -55,7 +55,7 @@ void banner_clear(appdata_t *appdata) {
 
 // Cancel any animations currently going, and show a brief text message.
 
-void banner_show_info(appdata_t *appdata, char *text) {
+void banner_show_info(appdata_t *appdata, const char *text) {
   if (!appdata->window)
     return;
   banner_clear(appdata);
@@ -76,7 +76,7 @@ void banner_show_info(appdata_t *appdata, char *text) {
  *   http://mail.gnome.org/archives/gtk-app-devel-list/2006-May/msg00020.html
  */
 
-void banner_busy_start(appdata_t *appdata, gboolean grab, char *text) {
+void banner_busy_start(appdata_t *appdata, gboolean grab, const char *text) {
   if (!appdata->window)
     return;
   banner_clear(appdata);
@@ -112,12 +112,12 @@ void banner_busy_start(appdata_t *appdata, gboolean grab, char *text) {
 
 #include "statusbar.h"
 
-void banner_show_info(appdata_t *appdata, char *text) {
+void banner_show_info(appdata_t *appdata, const char *text) {
   banner_clear(appdata);
   statusbar_brief(appdata, text, 0);
 }
 
-void banner_busy_start(appdata_t *appdata, gboolean grab, char *text) {
+void banner_busy_start(appdata_t *appdata, gboolean grab, const char *text) {
   banner_clear(appdata);
   statusbar_brief(appdata, text, -1);
   appdata->banner_is_grabby = grab;

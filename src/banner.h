@@ -31,12 +31,12 @@
 #include <glib.h>
 
 // Shows a brief info splash in a suitable way for the app environment being used
-void banner_show_info(appdata_t *appdata, char *text);
+void banner_show_info(appdata_t *appdata, const char *text);
 
 // Start, stop, and say "I'm still alive" to a busy message targetted at the
 // app environment in use. This can be an animation for some builds, might be
 // a static statusbar for others, a modal dialog for others.
-void banner_busy_start(appdata_t *appdata, gboolean grab, char *text);
+void banner_busy_start(appdata_t *appdata, gboolean grab, const char *text);
 void banner_busy_tick();    // perhaps move elsewhere "still_alive()"? :)
 void banner_busy_stop(appdata_t *appdata);
 
