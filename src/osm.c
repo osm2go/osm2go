@@ -1215,7 +1215,7 @@ char *osm_node_get_value(node_t *node, const char *key) {
   return osm_tag_get_by_key(OSM_TAG(node), key);
 }
 
-gboolean osm_way_has_value(way_t *way, char *str) {
+gboolean osm_way_has_value(const way_t *way, const char *str) {
   tag_t *tag = OSM_TAG(way);
 
   while(tag) {
@@ -1227,7 +1227,7 @@ gboolean osm_way_has_value(way_t *way, char *str) {
   return FALSE;
 }
 
-gboolean osm_node_has_value(node_t *node, char *str) {
+gboolean osm_node_has_value(const node_t *node, const char *str) {
   tag_t *tag = OSM_TAG(node);
 
   while(tag) {
@@ -1239,7 +1239,7 @@ gboolean osm_node_has_value(node_t *node, char *str) {
   return FALSE;
 }
 
-gboolean osm_node_has_tag(node_t *node) {
+gboolean osm_node_has_tag(const node_t *node) {
   tag_t *tag = OSM_TAG(node);
 
   /* created_by tags don't count as real tags */
@@ -1250,8 +1250,8 @@ gboolean osm_node_has_tag(node_t *node) {
 }
 
 /* return true if node is part of way */
-gboolean osm_node_in_way(way_t *way, node_t *node) {
-  node_chain_t *node_chain = way->node_chain;
+gboolean osm_node_in_way(const way_t *way, const node_t *node) {
+  const node_chain_t *node_chain = way->node_chain;
   while(node_chain) {
     if(node_chain->node == node)
       return TRUE;
@@ -1262,7 +1262,7 @@ gboolean osm_node_in_way(way_t *way, node_t *node) {
 }
 
 /* return true if node is part of other way than this one */
-gboolean osm_node_in_other_way(osm_t *osm, way_t *way, node_t *node) {
+gboolean osm_node_in_other_way(const osm_t *osm, const way_t *way, const node_t *node) {
   gboolean is_other = FALSE;
   way_chain_t *chain = osm_node_to_way(osm, node);
 
@@ -1939,7 +1939,7 @@ void osm_relation_chain_free(relation_chain_t *rchain) {
 }
 
 /* return all ways a node is in */
-way_chain_t *osm_node_to_way(osm_t *osm, node_t *node) {
+way_chain_t *osm_node_to_way(const osm_t *osm, const node_t *node) {
   way_chain_t *chain = NULL, **cur_chain = &chain;
 
   way_t *way = osm->way;
