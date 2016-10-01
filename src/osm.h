@@ -169,11 +169,6 @@ typedef struct relation_s {
   struct member_s *member;
 } relation_t;
 
-typedef struct relation_chain_s {
-  struct relation_chain_s *next;
-  relation_t *relation;
-} relation_chain_t;
-
 /* two of these hash tables are used, one for nodes and one for ways */
 /* currently relations aren't used often enough to justify the use */
 /* of a hash table */
@@ -265,12 +260,11 @@ way_t *osm_get_way_by_id(osm_t *osm, item_id_t id);
 relation_t *osm_get_relation_by_id(osm_t *osm, item_id_t id);
 
 guint osm_way_number_of_nodes(const way_t *way);
-relation_chain_t *osm_node_to_relation(osm_t *osm, node_t *node,
+GSList *osm_node_to_relation(osm_t *osm, node_t *node,
 				       gboolean via_way);
-relation_chain_t *osm_way_to_relation(osm_t *osm, way_t *way);
-relation_chain_t *osm_relation_to_relation(osm_t *osm, relation_t *relation);
-relation_chain_t *osm_object_to_relation(osm_t *osm, object_t *object);
-void osm_relation_chain_free(relation_chain_t *relation_chain);
+GSList *osm_way_to_relation(osm_t *osm, way_t *way);
+GSList *osm_relation_to_relation(osm_t *osm, relation_t *relation);
+GSList *osm_object_to_relation(osm_t *osm, object_t *object);
 way_chain_t *osm_node_to_way(const osm_t *osm, const node_t *node);
 
 /* ----------- edit functions ----------- */

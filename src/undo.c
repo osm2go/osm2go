@@ -245,6 +245,16 @@ static object_t *undo_object_save(object_t *object,
   return NULL;
 }
 
+static void
+undo_append_relation(gpointer data, gpointer user_data)
+{
+  object_t obj = { .type = RELATION };
+  obj.relation = (relation_t*)data;
+  appdata_t *appdata = (appdata_t*)user_data;
+
+  undo_append_object(appdata, UNDO_MODIFY, &obj);
+}
+
 void undo_append_object(appdata_t *appdata, undo_type_t type,
 			object_t *object) {
 
@@ -256,21 +266,13 @@ void undo_append_object(appdata_t *appdata, undo_type_t type,
   /* therefore handle them first and save their state to undo  */
   /* the modifications */
   if(type == UNDO_DELETE) {
-    relation_chain_t *rchain =
+    GSList *rchain =
       osm_object_to_relation(appdata->osm, object);
 
-    while(rchain) {
-      relation_chain_t *next = rchain->next;
-      object_t obj = { .type = RELATION };
-      obj.relation = rchain->relation;
-
-      /* store relation modification as undo operation by recursing */
-      /* into this */
-      undo_append_object(appdata, UNDO_MODIFY, &obj);
-
-      g_free(rchain);
-      rchain = next;
-    }
+    /* store relation modification as undo operation by recursing */
+    /* into objects */
+    g_slist_foreach(rchain, undo_append_relation, appdata);
+    g_slist_free(rchain);
   }
 
   /* a simple stand-alone node deletion is just a single */

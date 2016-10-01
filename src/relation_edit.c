@@ -870,7 +870,7 @@ static GtkWidget *relation_list_widget(relation_context_t *context) {
 
   GtkTreeIter iter;
   relation_t *relation = NULL;
-  relation_chain_t *rchain = NULL;
+  GSList *rchain = NULL;
 
   if(context->object)
     rchain = osm_object_to_relation(context->appdata->osm, context->object);
@@ -878,7 +878,8 @@ static GtkWidget *relation_list_widget(relation_context_t *context) {
     relation = context->appdata->osm->relation;
 
   while(relation || rchain) {
-    relation_t *rel = relation?relation:rchain->relation;
+    relation_t *rel = relation? relation :
+                      (relation_t*)rchain->data;
 
     char *name = relation_get_descriptive_name(rel);
     guint num = osm_relation_members_num(rel);
@@ -894,11 +895,11 @@ static GtkWidget *relation_list_widget(relation_context_t *context) {
 		       -1);
 
     if(relation) relation = relation->next;
-    if(rchain)   rchain = rchain->next;
+    if(rchain)   rchain = g_slist_next(rchain);
   }
 
   if(rchain)
-    osm_relation_chain_free(rchain);
+    g_slist_free(rchain);
 
   g_object_unref(context->store);
 

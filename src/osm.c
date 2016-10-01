@@ -1785,16 +1785,16 @@ guint osm_way_number_of_nodes(const way_t *way) {
 }
 
 /* return all relations a node is in */
-relation_chain_t *osm_node_to_relation(osm_t *osm, node_t *node,
+GSList *osm_node_to_relation(osm_t *osm, node_t *node,
 				       gboolean via_way) {
-  relation_chain_t *rel_chain = NULL, **cur_rel_chain = &rel_chain;
+  GSList *rel_chain = NULL;
 
   relation_t *relation = osm->relation;
-  while(relation) {
+  for(; relation; relation = relation->next) {
     gboolean is_member = FALSE;
 
     member_t *member = relation->member;
-    while(member) {
+    for(; member; member = member->next) {
       switch(member->object.type) {
       case NODE:
 	/* nodes are checked directly */
@@ -1818,32 +1818,26 @@ relation_chain_t *osm_node_to_relation(osm_t *osm, node_t *node,
       default:
 	break;
       }
-      member = member->next;
     }
 
     /* node is a member of this relation, so move it to the member chain */
-    if(is_member) {
-      *cur_rel_chain = g_new0(relation_chain_t, 1);
-      (*cur_rel_chain)->relation = relation;
-      cur_rel_chain = &((*cur_rel_chain)->next);
-    }
-
-    relation = relation->next;
+    if(is_member)
+      rel_chain = g_slist_prepend(rel_chain, relation);
   }
 
   return rel_chain;
 }
 
 /* return all relations a way is in */
-relation_chain_t *osm_way_to_relation(osm_t *osm, way_t *way) {
-  relation_chain_t *rel_chain = NULL, **cur_rel_chain = &rel_chain;
+GSList *osm_way_to_relation(osm_t *osm, way_t *way) {
+  GSList *rel_chain = NULL;
 
   relation_t *relation = osm->relation;
-  while(relation) {
+  for(; relation; relation = relation->next) {
     gboolean is_member = FALSE;
 
     member_t *member = relation->member;
-    while(member) {
+    for(; member; member = member->next) {
       switch(member->object.type) {
       case WAY: {
 	/* ways can be check directly */
@@ -1854,32 +1848,26 @@ relation_chain_t *osm_way_to_relation(osm_t *osm, way_t *way) {
       default:
 	break;
       }
-      member = member->next;
     }
 
     /* way is a member of this relation, so move it to the member chain */
-    if(is_member) {
-      *cur_rel_chain = g_new0(relation_chain_t, 1);
-      (*cur_rel_chain)->relation = relation;
-      cur_rel_chain = &((*cur_rel_chain)->next);
-    }
-
-    relation = relation->next;
+    if(is_member)
+      rel_chain = g_slist_prepend(rel_chain, relation);
   }
 
   return rel_chain;
 }
 
 /* return all relations a relation is in */
-relation_chain_t *osm_relation_to_relation(osm_t *osm, relation_t *rel) {
-  relation_chain_t *rel_chain = NULL, **cur_rel_chain = &rel_chain;
+GSList *osm_relation_to_relation(osm_t *osm, relation_t *rel) {
+  GSList *rel_chain = NULL;
 
   relation_t *relation = osm->relation;
-  while(relation) {
+  for(; relation; relation = relation->next) {
     gboolean is_member = FALSE;
 
     member_t *member = relation->member;
-    while(member) {
+    for(; member; member = member->next) {
       switch(member->object.type) {
       case RELATION: {
 	/* relations can be check directly */
@@ -1890,25 +1878,19 @@ relation_chain_t *osm_relation_to_relation(osm_t *osm, relation_t *rel) {
       default:
 	break;
       }
-      member = member->next;
     }
 
     /* way is a member of this relation, so move it to the member chain */
-    if(is_member) {
-      *cur_rel_chain = g_new0(relation_chain_t, 1);
-      (*cur_rel_chain)->relation = relation;
-      cur_rel_chain = &((*cur_rel_chain)->next);
-    }
-
-    relation = relation->next;
+    if(is_member)
+      rel_chain = g_slist_prepend(rel_chain, relation);
   }
 
   return rel_chain;
 }
 
 /* return all relations an object is in */
-relation_chain_t *osm_object_to_relation(osm_t *osm, object_t *object) {
-  relation_chain_t *rel_chain = NULL;
+GSList *osm_object_to_relation(osm_t *osm, object_t *object) {
+  GSList *rel_chain = NULL;
 
   switch(object->type) {
   case NODE:
@@ -1928,14 +1910,6 @@ relation_chain_t *osm_object_to_relation(osm_t *osm, object_t *object) {
   }
 
   return rel_chain;
-}
-
-void osm_relation_chain_free(relation_chain_t *rchain) {
-  while(rchain) {
-    relation_chain_t *next = rchain->next;
-    g_free(rchain);
-    rchain = next;
-  }
 }
 
 /* return all ways a node is in */
@@ -2259,18 +2233,19 @@ static const char *DS_ROUTE_REVERSE = "reverse";
 
 guint
 osm_way_reverse_direction_sensitive_roles(osm_t *osm, way_t *way) {
-  relation_chain_t *rel_chain0, *rel_chain;
-  rel_chain0 = rel_chain = osm_way_to_relation(osm, way);
+  GSList *rel_chain0, *rel_chain;
+  rel_chain0 = osm_way_to_relation(osm, way);
   guint n_roles_flipped = 0;
 
-  for (; rel_chain != NULL; rel_chain = rel_chain->next) {
-    char *type = osm_tag_get_by_key(OSM_TAG(rel_chain->relation), "type");
+  for (rel_chain = rel_chain0; rel_chain != NULL; rel_chain = g_slist_next(rel_chain)) {
+    relation_t *relation = (relation_t*)rel_chain->data;
+    char *type = osm_tag_get_by_key(OSM_TAG(relation), "type");
 
     // Route relations; http://wiki.openstreetmap.org/wiki/Relation:route
     if (strcasecmp(type, "route") == 0) {
 
       // First find the member corresponding to our way:
-      member_t *member = rel_chain->relation->member;
+      member_t *member = relation->member;
       for (; member != NULL; member = member->next) {
         if (member->object.type == WAY) {
           if (member->object.way == way)
@@ -2290,13 +2265,13 @@ osm_way_reverse_direction_sensitive_roles(osm_t *osm, way_t *way) {
       else if (strcasecmp(member->role, DS_ROUTE_FORWARD) == 0) {
         g_free(member->role);
         member->role = g_strdup(DS_ROUTE_REVERSE);
-        OSM_FLAGS(rel_chain->relation) |= OSM_FLAG_DIRTY;
+        OSM_FLAGS(relation) |= OSM_FLAG_DIRTY;
         ++n_roles_flipped;
       }
       else if (strcasecmp(member->role, DS_ROUTE_REVERSE) == 0) {
         g_free(member->role);
         member->role = g_strdup(DS_ROUTE_FORWARD);
-        OSM_FLAGS(rel_chain->relation) |= OSM_FLAG_DIRTY;
+        OSM_FLAGS(relation) |= OSM_FLAG_DIRTY;
         ++n_roles_flipped;
       }
 
@@ -2308,7 +2283,7 @@ osm_way_reverse_direction_sensitive_roles(osm_t *osm, way_t *way) {
 
 
   }
-  osm_relation_chain_free(rel_chain0);
+  g_slist_free(rel_chain0);
   return n_roles_flipped;
 }
 

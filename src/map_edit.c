@@ -31,17 +31,18 @@
 static void transfer_relations(osm_t *osm, way_t *dst, way_t *src) {
 
   /* transfer relation memberships from the src way to the dst one */
-  relation_chain_t *rchain = osm_way_to_relation(osm, src);
+  GSList *rchain, *rchain0 = osm_way_to_relation(osm, src);
 
-  while(rchain) {
-    relation_chain_t *next = rchain->next;
+  for(rchain = rchain0; rchain; rchain = g_slist_next(rchain)) {
+    relation_t *relation = (relation_t*)rchain->data;
+
     printf("way #"ITEM_ID_FORMAT" is part of relation #"ITEM_ID_FORMAT"\n",
-	   OSM_ID(src), OSM_ID(rchain->relation));
+	   OSM_ID(src), OSM_ID(relation));
 
     /* make new member of the same relation */
 
     /* walk member chain. save role of way if its being found. */
-    member_t **member = &rchain->relation->member;
+    member_t **member = &relation->member;
     char *role = NULL;
     while(*member) {
       /* save role of way */
@@ -57,11 +58,10 @@ static void transfer_relations(osm_t *osm, way_t *dst, way_t *src) {
     if(role) (*member)->role = g_strdup(role);
     member = &(*member)->next;
 
-    OSM_FLAGS(rchain->relation) |= OSM_FLAG_DIRTY;
-
-    g_free(rchain);
-    rchain = next;
+    OSM_FLAGS(relation) |= OSM_FLAG_DIRTY;
   }
+
+  g_slist_free(rchain0);
 }
 
 
@@ -827,20 +827,21 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 	  OSM_TAG(ways2join[1]) = NULL;
 
 	  /* ---- transfer relation membership from way[1] to way[0] ----- */
-	  relation_chain_t *rchain =
+	  GSList *rchain, *rchain0 =
 	    osm_way_to_relation(appdata->osm, ways2join[1]);
 
-	  while(rchain) {
-	    relation_chain_t *next = rchain->next;
+	  for(rchain = rchain0; rchain; rchain = g_slist_next(rchain)) {
+	    relation_t *relation = (relation_t*)rchain->data;
+
 	    printf("way[1] is part of relation #"ITEM_ID_FORMAT"\n",
-		   OSM_ID(rchain->relation));
+		   OSM_ID(relation));
 
 	    /* make way[0] member of the same relation */
 
 	    /* walk member chain. save role of way[1] if its being found. */
 	    /* end search either at end of chain or if way[0] was foind */
 	    /* as it's already a member of that relation */
-	    member_t **member = &rchain->relation->member;
+	    member_t **member = &relation->member;
 	    char *role = NULL;
 	    while(*member &&
 		  !(((*member)->object.type == WAY) &&
@@ -864,13 +865,10 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 	      if(role) (*member)->role = g_strdup(role);
 	      member = &(*member)->next;
 
-	      OSM_FLAGS(rchain->relation) |= OSM_FLAG_DIRTY;
+	      OSM_FLAGS(relation) |= OSM_FLAG_DIRTY;
 	    }
-
-	    g_free(rchain);
-	    rchain = next;
 	  }
-
+	  g_slist_free(rchain0);
 
 	  /* and open dialog to resolve tag collisions if necessary */
 	  if(conflict)
