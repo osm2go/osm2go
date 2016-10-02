@@ -2030,10 +2030,11 @@ void map_delete_selected(appdata_t *appdata) {
       gboolean short_way = FALSE;
 
       /* free the chain of ways */
-      while(way_chain && !short_way) {
+      while(way_chain) {
 	way_chain_t *next = way_chain->next;
 
-	if(osm_way_number_of_nodes(way_chain->way) <= 2)
+	/* avoid counting if not needed */
+	if(!short_way && osm_way_number_of_nodes(way_chain->way) <= 2)
 	  short_way = TRUE;
 
 	g_free(way_chain);
