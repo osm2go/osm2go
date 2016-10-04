@@ -244,3 +244,10 @@ else ()
 endif ()
 
 add_subdirectory(data)
+
+option(ENABLE_TESTS "enable testcases" OFF)
+
+if (ENABLE_TESTS)
+	enable_testing()
+	add_subdirectory(test)
+endif ()

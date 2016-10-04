@@ -2034,7 +2034,7 @@ void map_delete_selected(appdata_t *appdata) {
 	way_chain_t *next = way_chain->next;
 
 	/* avoid counting if not needed */
-	if(!short_way && osm_way_number_of_nodes(way_chain->way) <= 2)
+	if(!short_way && !osm_way_min_length(way_chain->way, 3))
 	  short_way = TRUE;
 
 	g_free(way_chain);
@@ -2060,7 +2060,7 @@ void map_delete_selected(appdata_t *appdata) {
     while(chain) {
       way_chain_t *next = chain->next;
 
-      if(osm_way_number_of_nodes(chain->way) == 1) {
+      if(chain->way != NULL && chain->way->next == NULL) {
 	/* this way now only contains one node and thus isn't a valid */
 	/* way anymore. So it'll also get deleted (which in turn may */
 	/* cause other nodes to be deleted as well) */

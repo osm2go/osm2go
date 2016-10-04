@@ -193,19 +193,19 @@ void map_edit_way_add_segment(map_t *map, gint x, gint y) {
       g_assert(map->action.way);
       osm_way_append_node(map->action.way, node);
 
-      switch(osm_way_number_of_nodes(map->action.way)) {
-      case 1:
-	/* replace "place first node..." message */
-	statusbar_set(map->appdata, _("Place next node of way"), FALSE);
-	break;
-
-      case 2:
-	/* two nodes are enough for a valid way */
-	icon_bar_map_cancel_ok(map->appdata, TRUE, TRUE);
-	break;
-
-      default:
-	break;
+      /* it's cheaper to count a short way multiple times than to
+       * determine the length of a long way once as this trashes the
+       * CPU cache. */
+      if(osm_way_min_length(map->action.way, 1)) {
+	if(osm_way_min_length(map->action.way, 2)) {
+	  if(!osm_way_min_length(map->action.way, 3)) {
+	    /* two nodes are enough for a valid way */
+	    icon_bar_map_cancel_ok(map->appdata, TRUE, TRUE);
+	  }
+	} else {
+	  /* replace "place first node..." message */
+	  statusbar_set(map->appdata, _("Place next node of way"), FALSE);
+	}
       }
 
       /* remove prior version of this way */
@@ -602,7 +602,7 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
 
       /* swap chains of the old way is to be destroyed due to a lack */
       /* of nodes */
-      if(osm_way_number_of_nodes(way) < 2) {
+      if(!osm_way_min_length(way, 2)) {
 	printf("swapping ways to avoid destruction of original way\n");
 	node_chain_t *tmp = way->node_chain;
 	way->node_chain = new->node_chain;
@@ -611,7 +611,7 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
 
       /* the way may still only consist of a single node. */
       /* remove it then */
-      if(osm_way_number_of_nodes(way) < 2) {
+      if(!osm_way_min_length(way, 2)) {
 	printf("original way has less than 2 nodes left, deleting it\n");
 	map_way_delete(map->appdata, way);
 	item = NULL;
@@ -627,7 +627,7 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
 	OSM_FLAGS(way) |= OSM_FLAG_DIRTY;
       }
 
-      if(osm_way_number_of_nodes(new) < 2) {
+      if(!osm_way_min_length(new, 2)) {
 	printf("new way has less than 2 nodes, deleting it\n");
 	map_way_delete(map->appdata, new);
 	new = NULL;

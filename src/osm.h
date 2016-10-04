@@ -259,6 +259,7 @@ node_t *osm_get_node_by_id(osm_t *osm, item_id_t id);
 way_t *osm_get_way_by_id(osm_t *osm, item_id_t id);
 relation_t *osm_get_relation_by_id(osm_t *osm, item_id_t id);
 
+gboolean osm_way_min_length(const way_t *way, guint len);
 guint osm_way_number_of_nodes(const way_t *way);
 GSList *osm_node_to_relation(osm_t *osm, node_t *node,
 				       gboolean via_way);
