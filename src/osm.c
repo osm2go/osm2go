@@ -1783,7 +1783,6 @@ way_chain_t *osm_node_delete(osm_t *osm, icon_t **icon,
  */
 gboolean osm_way_min_length(const way_t *way, guint len) {
   const node_chain_t *chain = way->node_chain;
-printf("way %p min %u\n", way, len);
   for (chain = way->node_chain; chain; chain = chain->next) {
     if (--len == 0)
       return TRUE;
