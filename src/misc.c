@@ -112,7 +112,7 @@ static void on_toggled(GtkWidget *button, gpointer data) {
 gboolean yes_no_f(GtkWidget *parent, appdata_t *appdata, gulong again_bit,
 		  gint flags, const char *title, const char *fmt, ...) {
 
-  if(appdata && again_bit && (appdata->dialog_again.not & again_bit))
+  if(appdata && again_bit && (appdata->dialog_again.not_again & again_bit))
     return((appdata->dialog_again.reply & again_bit) != 0);
 
   va_list args;
@@ -159,7 +159,7 @@ gboolean yes_no_f(GtkWidget *parent, appdata_t *appdata, gulong again_bit,
   if(cbut && gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cbut))) {
     /* the user doesn't want to see this dialog again */
 
-    appdata->dialog_again.not |= again_bit;
+    appdata->dialog_again.not_again |= again_bit;
     if(yes) appdata->dialog_again.reply |=  again_bit;
     else    appdata->dialog_again.reply &= ~again_bit;
   }
