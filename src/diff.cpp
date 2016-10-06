@@ -27,6 +27,7 @@
 #include "misc.h"
 #include "statusbar.h"
 
+#include <algorithm>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 
@@ -478,36 +479,34 @@ static void diff_restore_way(xmlNodePtr node_node, osm_t *osm) {
     OSM_FLAGS(way) |= OSM_FLAG_HIDDEN;
 
   /* scan for nodes */
-  node_chain_t *new_chain = NULL, **node_chain = &new_chain;
+  node_chain_t new_chain;
   xmlNode *nd_node = NULL;
   for(nd_node = node_node->children; nd_node; nd_node = nd_node->next) {
     if(nd_node->type == XML_ELEMENT_NODE) {
       if(strcmp((char*)nd_node->name, "nd") == 0) {
 	/* attach node to node_chain */
-	*node_chain = osm_parse_osm_way_nd(osm, nd_node);
-	if(*node_chain)
-	  node_chain = &((*node_chain)->next);
+	node_t *tmp = osm_parse_osm_way_nd(osm, nd_node);
+	if(tmp)
+	  new_chain.push_back(tmp);
       }
     }
   }
 
   /* only replace the original nodes if new nodes have actually been */
   /* found. */
-  if(new_chain != NULL) {
-    gboolean was_modified = osm_node_chain_diff(way->node_chain, new_chain);
-
-    if(was_modified == FALSE) {
+  if(!new_chain.empty()) {
+    if(*(way->node_chain) == new_chain) {
       osm_node_chain_free(new_chain);
-      new_chain = NULL; /* indicate that waypoints did not change */
+      new_chain.clear(); /* indicate that waypoints did not change */
     } else {
       /* way may be an existing way, so remove nodes to */
       /* make space for new ones */
       if(way->node_chain) {
         printf("  removing existing nodes for diff nodes\n");
-        osm_node_chain_free(way->node_chain);
-        way->node_chain = NULL;
-      }
-      way->node_chain = new_chain;
+        osm_node_chain_free(*(way->node_chain));
+        *(way->node_chain) = new_chain;
+      } else
+        way->node_chain = new node_chain_t(new_chain);
     }
 
     /* only replace tags if nodes have been found before. if no nodes */
@@ -524,7 +523,7 @@ static void diff_restore_way(xmlNodePtr node_node, osm_t *osm) {
       }
 
       OSM_TAG(way) = ntags;
-    } else if (new_chain != NULL) {
+    } else if (!new_chain.empty()) {
       osm_tags_free(ntags);
     } else {
       printf("way " ITEM_ID_FORMAT " has the same nodes and tags as upstream, discarding diff\n", id);

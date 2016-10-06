@@ -158,6 +158,15 @@ static void map_node_select(appdata_t *appdata, node_t *node) {
   }
 }
 
+struct set_point_pos {
+  canvas_points_t * const points;
+  gint node;
+  set_point_pos(canvas_points_t *p) : points(p), node(0) {}
+  void operator()(const node_t *n) {
+    canvas_point_set_pos(points, node++, &n->lpos);
+  }
+};
+
 /**
  * @brief create a canvas point array for a way
  * @param way the way to convert
@@ -172,15 +181,82 @@ points_from_node_chain(const way_t *way)
   if (nodes < 2)
     return NULL;
 
-  const node_chain_t *chain = way->node_chain;
   /* allocate space for nodes */
   canvas_points_t *points = canvas_points_new(nodes);
 
-  int node = 0;
-  for (node = 0; chain != NULL; chain = chain->next)
-    canvas_point_set_pos(points, node++, &chain->node->lpos);
+  std::for_each(way->node_chain->begin(), way->node_chain->end(),
+                set_point_pos(points));
 
   return points;
+}
+
+struct draw_selected_way_functor {
+  node_t *last;
+  const gint arrow_width;
+  map_t * const map;
+  way_t * const way;
+  draw_selected_way_functor(gint a, map_t *m, way_t *w)
+    : last(0), arrow_width(a), map(m), way(w) {}
+  void operator()(node_t *node);
+};
+
+void draw_selected_way_functor::operator()(node_t* node)
+{
+  map_item_t item;
+  item.object.type = NODE;
+  item.object.node = node;
+
+  /* draw an arrow between every two nodes */
+  if(last) {
+    struct { float x, y;} center, diff;
+    center.x = (last->lpos.x + node->lpos.x)/2;
+    center.y = (last->lpos.y + node->lpos.y)/2;
+    diff.x = node->lpos.x - last->lpos.x;
+    diff.y = node->lpos.y - last->lpos.y;
+
+    /* only draw arrow if there's sufficient space */
+    /* TODO: what if there's not enough space anywhere? */
+    float len = sqrt(pow(diff.x, 2)+pow(diff.y, 2));
+    if(len > map->style->highlight.arrow_limit * arrow_width) {
+      /* create a new map item for every arrow */
+      map_item_t *new_map_item = g_new0(map_item_t, 1);
+      new_map_item->object.type = WAY;
+      new_map_item->object.way = way;
+      new_map_item->highlight = TRUE;
+
+      len /= arrow_width;
+      diff.x /= len;
+      diff.y /= len;
+
+      canvas_points_t *points = canvas_points_new(4);
+      points->coords[2 * 0 + 0] = points->coords[2 * 3 + 0] = center.x + diff.x;
+      points->coords[2 * 0 + 1] = points->coords[2 * 3 + 1] = center.y + diff.y;
+      points->coords[2 * 1 + 0] = center.x + diff.y - diff.x;
+      points->coords[2 * 1 + 1] = center.y - diff.x - diff.y;
+      points->coords[2 * 2 + 0] = center.x - diff.y - diff.x;
+      points->coords[2 * 2 + 1] = center.y + diff.x - diff.y;
+
+      map_hl_polygon_new(map, CANVAS_GROUP_WAYS_DIR, new_map_item,
+                         points, map->style->highlight.arrow_color);
+
+      canvas_points_free(points);
+    }
+  }
+
+  if(!map_hl_item_is_highlighted(map, &item)) {
+    /* create a new map item for every node */
+    map_item_t *new_map_item = g_new0(map_item_t, 1);
+    new_map_item->object.type = NODE;
+    new_map_item->object.node = node;
+    new_map_item->highlight = TRUE;
+
+    map_hl_circle_new(map, CANVAS_GROUP_NODES_IHL, new_map_item,
+                      node->lpos.x, node->lpos.y,
+                      map->style->node.radius * map->state->detail,
+                      map->style->highlight.node_color);
+  }
+
+  last = node;
 }
 
 void map_way_select(appdata_t *appdata, way_t *way) {
@@ -203,70 +279,9 @@ void map_way_select(appdata_t *appdata, way_t *way) {
 		      map->style->highlight.width + map_item->object.way->draw.width/2)
     * map->state->detail;
 
-  node_chain_t *node_chain = map_item->object.way->node_chain;
-  node_t *last = NULL;
-  while(node_chain) {
-    map_item_t item;
-    item.object.type = NODE;
-    node_t *node = node_chain->node;
-    item.object.node = node;
-
-    /* draw an arrow between every two nodes */
-    if(last) {
-      struct { float x, y;} center, diff;
-      center.x = (last->lpos.x + node->lpos.x)/2;
-      center.y = (last->lpos.y + node->lpos.y)/2;
-      diff.x = node->lpos.x - last->lpos.x;
-      diff.y = node->lpos.y - last->lpos.y;
-
-      /* only draw arrow if there's sufficient space */
-      /* TODO: what if there's not enough space anywhere? */
-      float len = sqrt(pow(diff.x, 2)+pow(diff.y, 2));
-      if(len > map->style->highlight.arrow_limit*arrow_width) {
-        /* create a new map item for every arrow */
-        map_item_t *new_map_item = g_new0(map_item_t, 1);
-        new_map_item->object.type = WAY;
-        new_map_item->object.way = way;
-        new_map_item->highlight = TRUE;
-
-	len /= arrow_width;
-	diff.x = diff.x / len;
-	diff.y = diff.y / len;
-
-	canvas_points_t *points = canvas_points_new(4);
-	points->coords[2*0+0] = points->coords[2*3+0] = center.x + diff.x;
-	points->coords[2*0+1] = points->coords[2*3+1] = center.y + diff.y;
-	points->coords[2*1+0] = center.x + diff.y - diff.x;
-	points->coords[2*1+1] = center.y - diff.x - diff.y;
-	points->coords[2*2+0] = center.x - diff.y - diff.x;
-	points->coords[2*2+1] = center.y + diff.x - diff.y;
-
-	map_hl_polygon_new(map, CANVAS_GROUP_WAYS_DIR, new_map_item,
-			   points, map->style->highlight.arrow_color);
-
-	canvas_points_free(points);
-      }
-    }
-
-    if(!map_hl_item_is_highlighted(map, &item)) {
-
-      /* create a new map item for every node */
-      map_item_t *new_map_item = g_new0(map_item_t, 1);
-      new_map_item->object.type = NODE;
-      new_map_item->object.node = node;
-      new_map_item->highlight = TRUE;
-
-      gint x = node->lpos.x;
-      gint y = node->lpos.y;
-
-      map_hl_circle_new(map, CANVAS_GROUP_NODES_IHL, new_map_item,
-			x, y, map->style->node.radius * map->state->detail,
-			map->style->highlight.node_color);
-    }
-
-    last = node;
-    node_chain = node_chain->next;
-  }
+  const node_chain_t &node_chain = *map_item->object.way->node_chain;
+  std::for_each(node_chain.begin(), node_chain.end(),
+                draw_selected_way_functor(arrow_width, map, way));
 
   /* a way needs at least 2 points to be drawn */
   g_assert(map_item->object.way == way);
@@ -477,7 +492,7 @@ static map_item_chain_t *map_way_single_new(map_t *map, way_t *way, gint radius,
   map_item->object.type = WAY;
   map_item->object.way = way;
   map_item->item = canvas_circle_new(map->canvas, CANVAS_GROUP_WAYS,
-	  way->node_chain->node->lpos.x, way->node_chain->node->lpos.y,
+	  way->node_chain->front()->lpos.x, way->node_chain->front()->lpos.y,
 				     radius, width, fill, border);
 
   // TODO: decide: do we need canvas_item_set_zoom_max() here too?
@@ -1353,18 +1368,18 @@ static void map_touchnode_update(appdata_t *appdata, gint x, gint y) {
 
   /* during way creation also nodes of the new way */
   /* need to be searched */
-  if(!map->touchnode && map->action.way) {
-    node_chain_t *chain = map->action.way->node_chain;
-    while(!map->touchnode && chain && chain->next) {
-      node = chain->node;
+  if(!map->touchnode && map->action.way && map->action.way->node_chain->size() > 1) {
+    const node_chain_t &chain = *map->action.way->node_chain;
+    const node_chain_t::const_iterator itEnd = chain.end()--;
+    for(node_chain_t::const_iterator it = chain.begin();
+        !map->touchnode && it != itEnd; it++) {
+      node = *it;
       gint nx = abs(x - node->lpos.x);
       gint ny = abs(y - node->lpos.y);
 
       if((nx < map->style->node.radius) && (ny < map->style->node.radius) &&
 	 (nx*nx + ny*ny < map->style->node.radius * map->style->node.radius))
 	map_hl_touchnode_draw(map, node);
-
-      chain = chain->next;
     }
   }
 }

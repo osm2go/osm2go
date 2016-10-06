@@ -20,11 +20,19 @@
 #ifndef OSM_H
 #define OSM_H
 
+#ifdef __cplusplus
+#include <vector>
+
+extern "C" {
+#endif
+
 #include "pos.h"
 
 #include <math.h>
 #include <glib.h>
 #include <gtk/gtk.h>
+#include <libxml/parser.h>
+#include <libxml/tree.h>
 
 #ifdef __cplusplus
 #include <vector>
@@ -106,10 +114,9 @@ typedef struct item_id_chain_t {
   item_id_t id;
 } item_id_chain_t;
 
-typedef struct node_chain_t {
-  struct node_chain_t *next;
-  node_t *node;
-} node_chain_t;
+#ifdef __cplusplus
+typedef std::vector<node_t *> node_chain_t;
+#endif
 
 #define OSM_DRAW_FLAG_AREA  (1<<0)
 #define OSM_DRAW_FLAG_BG    (1<<1)
@@ -118,8 +125,6 @@ typedef struct way_t {
   base_object_t base;
 
   struct way_t *next;
-
-  node_chain_t *node_chain;
 
   /* visual representation from elemstyle */
   struct {
@@ -144,6 +149,12 @@ typedef struct way_t {
 
   /* a link to the visual representation on screen */
   struct map_item_chain_t *map_item_chain;
+
+#ifdef __cplusplus
+  node_chain_t *node_chain;
+#else
+  void *node_chain;
+#endif
 } way_t;
 
 #ifdef __cplusplus
@@ -218,17 +229,9 @@ typedef struct osm_t {
   bounds_t rbounds;
 } osm_t;
 
-#include <libxml/parser.h>
-#include <libxml/tree.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 osm_t *osm_parse(const char *path, const char *filename, struct icon_t **icons);
 gboolean osm_sanity_check(GtkWidget *parent, const osm_t *osm);
 tag_t *osm_parse_osm_tag(xmlNode* a_node);
-node_chain_t *osm_parse_osm_way_nd(osm_t *osm, xmlNode *a_node);
 member_t *osm_parse_osm_relation_member(osm_t *osm, xmlNode *a_node);
 void osm_free(osm_t *osm);
 
@@ -244,8 +247,6 @@ void osm_way_append_node(way_t *way, node_t *node);
 gboolean osm_node_in_way(const way_t *way, const node_t *node);
 gboolean osm_node_in_other_way(const osm_t *osm, const way_t *way, const node_t *node);
 
-void osm_node_chain_free(node_chain_t *node_chain);
-gboolean osm_node_chain_diff(const node_chain_t *n1, const node_chain_t *n2);
 void osm_node_free(osm_t *osm, node_t *node);
 
 gboolean osm_members_diff(const member_t *n1, const member_t *n2);
@@ -306,7 +307,6 @@ void osm_way_remove_from_relation(osm_t *osm, way_t *way);
 const node_t *osm_way_get_last_node(const way_t *way);
 const node_t *osm_way_get_first_node(const way_t *way);
 gboolean osm_way_is_closed(const way_t *way);
-void osm_way_rotate(way_t *way, gint offset);
 
 tag_t *osm_tags_copy(const tag_t *tag);
 
@@ -333,9 +333,13 @@ gboolean osm_object_is_same(const object_t *obj1, const object_t *obj2);
 #ifdef __cplusplus
 }
 
+
+node_t *osm_parse_osm_way_nd(osm_t *osm, xmlNode *a_node);
+void osm_node_chain_free(node_chain_t &node_chain);
 way_chain_t osm_node_to_way(const osm_t *osm, const node_t *node);
 way_chain_t osm_node_delete(osm_t *osm, node_t *node,
                             bool permanently, bool affect_ways);
+void osm_way_rotate(way_t *way, node_chain_t::iterator nfirst);
 
 #endif
 

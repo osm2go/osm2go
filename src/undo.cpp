@@ -220,13 +220,13 @@ static gboolean undo_object_save(const object_t *object,
     /* deleted and restored and thus their address may change */
     node_chain_t *node_chain = object->way->node_chain;
     g_assert(id_chain);
-    while(node_chain) {
+    const node_chain_t::const_iterator itEnd = node_chain->end();
+    for(node_chain_t::const_iterator it = node_chain->begin(); it != itEnd; it++) {
       *id_chain = g_new0(item_id_chain_t, 1);
       (*id_chain)->type = NODE;
-      (*id_chain)->id = OSM_ID(node_chain->node);
+      (*id_chain)->id = OSM_ID(*it);
 
       id_chain = &(*id_chain)->next;
-      node_chain = node_chain->next;
     }
 
     return TRUE;
@@ -329,12 +329,11 @@ void undo_append_object(appdata_t *appdata, undo_type_t type,
   /* a node */
   if((type == UNDO_DELETE) && (object->type == WAY)) {
     node_chain_t *chain = object->way->node_chain;
-    while(chain) {
+    const node_chain_t::const_iterator itEnd = chain->end();
+    for(node_chain_t::const_iterator it = chain->begin(); it != itEnd; it++) {
       /* this node must only be part of this way */
-      if(!osm_node_in_other_way(appdata->osm, object->way, chain->node))
-	undo_append_node(appdata, UNDO_DELETE, chain->node);
-
-      chain = chain->next;
+      if(!osm_node_in_other_way(appdata->osm, object->way, *it))
+        undo_append_node(appdata, UNDO_DELETE, *it);
     }
   }
 }

@@ -222,6 +222,25 @@ void map_edit_way_add_segment(map_t *map, gint x, gint y) {
   }
 }
 
+struct map_unref_ways {
+  osm_t * const osm;
+  map_unref_ways(osm_t *o) : osm(o) {}
+  void operator()(node_t *node);
+};
+
+void map_unref_ways::operator()(node_t* node)
+{
+  printf("    node #" ITEM_ID_FORMAT " (used by %d)\n",
+         OSM_ID(node), node->ways);
+
+  g_assert_cmpint(node->ways, >, 0);
+  node->ways--;
+  if(!node->ways && (OSM_ID(node) == ID_ILLEGAL)) {
+    printf("      -> freeing temp node\n");
+    osm_node_free(osm, node);
+  }
+}
+
 void map_edit_way_add_cancel(map_t *map) {
   osm_t *osm = map->appdata->osm;
   g_assert(osm);
@@ -231,23 +250,9 @@ void map_edit_way_add_cancel(map_t *map) {
 
   /* remove all nodes that have been created for this way */
   /* (their way count will be 0 after removing the way) */
-  node_chain_t *chain = map->action.way->node_chain;
-  while(chain) {
-    node_chain_t *next = chain->next;
-    node_t *node = chain->node;
-
-    printf("    node #" ITEM_ID_FORMAT " (used by %d)\n",
-	   OSM_ID(node), node->ways);
-
-    node->ways--;
-    if(!node->ways && (OSM_ID(node) == ID_ILLEGAL)) {
-      printf("      -> freeing temp node\n");
-      osm_node_free(osm, node);
-    }
-    g_free(chain);
-    chain = next;
-  }
-  map->action.way->node_chain = NULL;
+  node_chain_t &chain = *(map->action.way->node_chain);
+  std::for_each(chain.begin(), chain.end(), map_unref_ways(osm));
+  chain.clear();
 
   /* remove ways visual representation */
   map_item_chain_destroy(&map->action.way->map_item_chain);
@@ -270,20 +275,47 @@ static void merge_node_chains(way_t *way, node_chain_t *nchain, gboolean reverse
   node_chain_t *chain = way->node_chain;
   g_assert(chain);
 
-  /* search end of way to be extended */
-  while(chain->next)
-    chain = chain->next;
+  if(nchain->size() > 1) {
+    /* make enough room for all nodes */
+    chain->reserve(chain->size() + nchain->size() - 1);
 
-  /* skip first node of new way as its the same as the last one of the */
-  /* way we are attaching it to */
-  chain->next = nchain->next;
+    /* skip first node of new way as its the same as the last one of the */
+    /* way we are attaching it to */
+    chain->insert(chain->end(), nchain->begin()++, nchain->end());
 
-  /* terminate new way afer first node */
-  nchain->next = NULL;
+    /* terminate new way afer first node */
+    nchain->resize(1);
+  }
 
   /* and undo reversion of required */
   if(reverse)
     osm_way_reverse(way);
+}
+
+struct map_draw_nodes {
+  map_t * const map;
+  map_draw_nodes(map_t *m) : map(m) {}
+  void operator()(node_t *node);
+};
+
+void map_draw_nodes::operator()(node_t* node)
+{
+  printf("    node #" ITEM_ID_FORMAT " (used by %d)\n",
+         OSM_ID(node), node->ways);
+
+  /* a node may have been a stand-alone node before, so remove its */
+  /* visual representation as its now drawn as part of the way */
+  /* (if at all) */
+  if(OSM_ID(node) != ID_ILLEGAL)
+    map_item_chain_destroy(&node->map_item_chain);
+
+  map_node_draw(map, node);
+
+  /* we can be sure that no node gets inserted twice (even if twice in */
+  /* the ways chain) because it gets assigned a non-ID_ILLEGAL id when */
+  /* being moved to the osm node chain */
+  if(OSM_ID(node) == ID_ILLEGAL)
+    osm_node_attach(map->appdata->osm, node);
 }
 
 void map_edit_way_add_ok(map_t *map) {
@@ -296,33 +328,13 @@ void map_edit_way_add_ok(map_t *map) {
   /* into the node chain */
 
   /* (their way count will be 0 after removing the way) */
-  node_chain_t *chain = map->action.way->node_chain;
-  while(chain) {
-    node_t *node = chain->node;
-    printf("    node #" ITEM_ID_FORMAT " (used by %d)\n",
-	   OSM_ID(node), node->ways);
-
-    /* a node may have been a stand-alone node before, so remove its */
-    /* visual representation as its now drawn as part of the way */
-    /* (if at all) */
-    if(OSM_ID(node) != ID_ILLEGAL)
-      map_item_chain_destroy(&node->map_item_chain);
-
-    map_node_draw(map, node);
-
-    /* we can be sure that no node gets inserted twice (even if twice in */
-    /* the ways chain) because it gets assigned a non-ID_ILLEGAL id when */
-    /* being moved to the osm node chain */
-    if(OSM_ID(node) == ID_ILLEGAL)
-      osm_node_attach(map->appdata->osm, node);
-
-    chain = chain->next;
-  }
+  node_chain_t &chain = *(map->action.way->node_chain);
+  std::for_each(chain.begin(), chain.end(), map_draw_nodes(map));
 
   /* attach to existing way if the user requested so */
   gboolean reverse = FALSE;
   if(map->action.extending) {
-    node_t *nfirst = map->action.way->node_chain->node;
+    node_t *nfirst = map->action.way->node_chain->front();
 
     printf("  request to extend way #" ITEM_ID_FORMAT "\n",
 	   OSM_ID(map->action.extending));
@@ -445,17 +457,8 @@ void map_edit_way_node_add(map_t *map, gint x, gint y) {
       way_t *way = item->object.way;
 
       /* search correct position */
-      node_chain_t **chain = &way->node_chain;
-      while(insert_after--) {
-	g_assert(*chain);
-	chain = &(*chain)->next;
-      }
-
-      /* and actually do the insertion */
-      node_chain_t *new_chain_item = g_new0(node_chain_t, 1);
-      new_chain_item->node = node;
-      new_chain_item->next = *chain;
-      *chain = new_chain_item;
+      node_chain_t *chain = way->node_chain;
+      chain->insert(way->node_chain->begin() + insert_after + 1, node);
 
       /* clear selection */
       map_item_deselect(map->appdata);
@@ -522,7 +525,7 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
     /* convert mouse position to canvas (world) position */
     canvas_window2world(map->canvas, x, y, &x, &y);
 
-    gint cut_at = -1;
+    node_chain_t::iterator cut_at;
     way_t *way = NULL;
     if(cut_at_node) {
       printf("  cut at node\n");
@@ -534,20 +537,18 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
                                  item->object.node)) {
 	way = map->selected.object.way;
 
-	cut_at = 0;
-	node_chain_t *chain = way->node_chain;
-	while(chain && chain->node != item->object.node) {
-	  chain = chain->next;
-	  cut_at++;
-	}
-
+        cut_at = std::find(way->node_chain->begin(), way->node_chain->end(),
+                           item->object.node);
       } else
 	printf("  won't cut as it's last or first node\n");
 
     } else {
       printf("  cut at segment\n");
-      cut_at = canvas_item_get_segment(item->item, x, y);
-      if(cut_at >= 0) way = item->object.way;
+      gint c = canvas_item_get_segment(item->item, x, y);
+      if(c >= 0) {
+        way = item->object.way;
+        cut_at = way->node_chain->begin() + c;
+      }
     }
 
     if(way) {
@@ -559,9 +560,9 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
       /* this prevents a cut polygon to be split into two ways */
       g_assert(way->node_chain);
       if(osm_way_is_closed(way)) {
-	printf("CLOSED WAY -> rotate by %d\n", cut_at);
+	printf("CLOSED WAY -> rotate by %ld\n", cut_at - way->node_chain->begin());
 	osm_way_rotate(way, cut_at);
-	cut_at = 0;
+	cut_at = way->node_chain->begin();
       }
 
       /* ------------  copy all tags ------------- */
@@ -571,30 +572,20 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
       transfer_relations(map->appdata->osm, neww, way);
 
       /* move parts of node_chain to the new way */
-      printf("  moving everthing after segment %d to new way\n", cut_at);
-
-      node_chain_t *chain = way->node_chain;
-      while(cut_at--) {
-	g_assert(chain);
-	chain = chain->next;
-      }
+      printf("  moving everthing after segment %ld to new way\n",
+             cut_at - way->node_chain->begin());
 
       /* attach remaining nodes to new way */
-      neww->node_chain = chain->next;
-
-      /* terminate remainig chain on old way */
-      chain->next = NULL;
+      neww->node_chain = new node_chain_t();
+      neww->node_chain->insert(neww->node_chain->end(), cut_at, way->node_chain->end());
 
       /* if we cut at a node, this node is now part of both ways. so */
-      /* create a copy of the last node of the old way and prepend it to */
-      /* the new way */
-      if(cut_at_node) {
-	node_chain_t *first = g_new0(node_chain_t, 1);
-	first->next = neww->node_chain;
-	first->node = (node_t*)osm_way_get_last_node(way);
-	first->node->ways++;
-	neww->node_chain = first;
-      }
+      /* keep it in the old way. */
+      if(cut_at_node)
+        cut_at++;
+
+      /* terminate remainig chain on old way */
+      way->node_chain->erase(cut_at, way->node_chain->end());
 
       /* now move the way itself into the main data structure */
       osm_way_attach(map->appdata->osm, neww);
@@ -733,20 +724,18 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
       way_t *way = appdata->osm->way;
       while(way) {
 	node_chain_t *chain = way->node_chain;
-	while(chain) {
-	  if(chain->node == touchnode) {
-	    printf("  found node in way #" ITEM_ID_FORMAT "\n", OSM_ID(way));
+        node_chain_t::iterator it = chain->begin();
+        while((it = std::find(it, chain->end(), touchnode)) != chain->end()) {
+          printf("  found node in way #" ITEM_ID_FORMAT "\n", OSM_ID(way));
 
-	    /* replace by node */
-	    chain->node = node;
+          /* replace by node */
+          *it = node;
 
-	    /* and adjust way references of both nodes */
-	    node->ways++;
-	    touchnode->ways--;
+          /* and adjust way references of both nodes */
+          node->ways++;
+          touchnode->ways--;
 
-	    OSM_FLAGS(way) |= OSM_FLAG_DIRTY;
-	  }
-	  chain = chain->next;
+          OSM_FLAGS(way) |= OSM_FLAG_DIRTY;
 	}
 	way = way->next;
       }
@@ -834,7 +823,7 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 
 	  /* take all nodes from way[1] and append them to way[0] */
 	  /* check if we have to append or prepend to way[0] */
-	  if(ways2join[0]->node_chain->node == node) {
+	  if(ways2join[0]->node_chain->front() == node) {
 	    /* make "prepend" to be "append" by reversing way[0] */
 	    printf("  target prepend -> reverse\n");
 	    osm_way_reverse(ways2join[0]);
@@ -842,24 +831,21 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 
 	  /* verify the common node is last in the target way */
 	  node_chain_t *chain = ways2join[0]->node_chain;
-	  while(chain->next) chain = chain->next;
-	  g_assert(chain->node == node);
-	  g_assert(!chain->next);
+	  g_assert(chain->back() == node);
 
 	  /* common node must be first in the chain to attach */
-	  if(ways2join[1]->node_chain->node != node) {
+	  if(ways2join[1]->node_chain->front() != node) {
 	    printf("  source reverse\n");
 	    osm_way_reverse(ways2join[1]);
 	  }
 
 	  /* verify the common node is first in the source way */
-	  g_assert(ways2join[1]->node_chain->node == node);
+	  g_assert(ways2join[1]->node_chain->front() == node);
 
 	  /* finally append source chain to target */
-	  g_assert(!chain->next);
-	  chain->next = ways2join[1]->node_chain->next;
+	  chain->insert(chain->end(), ways2join[1]->node_chain->begin()++, ways2join[1]->node_chain->end());
 
-	  ways2join[1]->node_chain->next = NULL;
+	  ways2join[1]->node_chain->resize(1);
 
 	  /* transfer tags from touchnode to node */
 
