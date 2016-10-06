@@ -20,6 +20,8 @@
 #ifndef MAP_H
 #define MAP_H
 
+#include "appdata.h"
+#include "canvas.h"
 #include "osm.h"
 
 #define MAP_LAYER_ALL (0xffff)

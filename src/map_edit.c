@@ -17,6 +17,8 @@
  * along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "map_edit.h"
+
 #include "appdata.h"
 #include "banner.h"
 #include "iconbar.h"

@@ -20,6 +20,9 @@
 #ifndef MAP_EDIT_H
 #define MAP_EDIT_H
 
+#include "map.h"
+#include "osm.h"
+
 void map_edit_way_add_begin(map_t *map, way_t *way_sel);
 void map_edit_way_add_segment(map_t *map, gint x, gint y);
 void map_edit_way_add_cancel(map_t *map);

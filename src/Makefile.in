@@ -97,8 +97,8 @@ main.o: $(srcdir)/icon.h $(srcdir)/josm_elemstyles.h $(srcdir)/track.h $(srcdir)
 map.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/banner.h $(srcdir)/diff.h $(srcdir)/project.h $(srcdir)/map.h
 map.o: $(srcdir)/settings.h $(srcdir)/gps.h $(srcdir)/iconbar.h $(srcdir)/info.h $(srcdir)/map_edit.h $(srcdir)/map_hl.h $(srcdir)/misc.h
 map.o: $(srcdir)/statusbar.h $(srcdir)/style.h $(srcdir)/icon.h $(srcdir)/josm_elemstyles.h $(srcdir)/track.h
-map_edit.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/banner.h $(srcdir)/iconbar.h $(srcdir)/map.h
-map_edit.o: $(srcdir)/info.h $(srcdir)/map_hl.h $(srcdir)/misc.h $(srcdir)/statusbar.h $(srcdir)/style.h $(srcdir)/icon.h
+map_edit.o: $(srcdir)/map_edit.h $(srcdir)/map.h $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/banner.h
+map_edit.o: $(srcdir)/iconbar.h $(srcdir)/info.h $(srcdir)/map_hl.h $(srcdir)/misc.h $(srcdir)/statusbar.h $(srcdir)/style.h $(srcdir)/icon.h
 map_edit.o: $(srcdir)/josm_elemstyles.h
 map_hl.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/map_hl.h $(srcdir)/map.h $(srcdir)/style.h $(srcdir)/icon.h
 map_hl.o: $(srcdir)/josm_elemstyles.h
