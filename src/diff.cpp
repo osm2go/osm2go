@@ -17,8 +17,8 @@
  * along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
- * diff.c - generate and restore changes on the current data set
+/**
+ * @file diff.cpp generate and restore changes on the current data set
  */
 
 #include "diff.h"
@@ -337,7 +337,7 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
   node_t *node = NULL;
 
   switch(state) {
-  case OSM_FLAG_NEW:
+  case OSM_FLAG_NEW: {
     printf("  Restoring NEW node\n");
 
     node = g_new0(node_t, 1);
@@ -352,6 +352,7 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
     while(*lnode) lnode = &(*lnode)->next;
     *lnode = node;
     break;
+  }
 
   case OSM_FLAG_DELETED:
     printf("  Restoring DELETE flag\n");
@@ -427,7 +428,7 @@ static void diff_restore_way(xmlNodePtr node_node, osm_t *osm) {
   /* evaluate properties */
   way_t *way = NULL;
   switch(state) {
-  case OSM_FLAG_NEW:
+  case OSM_FLAG_NEW: {
     printf("  Restoring NEW way\n");
 
     way = g_new0(way_t, 1);
@@ -442,6 +443,7 @@ static void diff_restore_way(xmlNodePtr node_node, osm_t *osm) {
     while(*lway) lway = &(*lway)->next;
     *lway = way;
     break;
+  }
 
   case OSM_FLAG_DELETED:
     printf("  Restoring DELETE flag\n");
@@ -552,7 +554,7 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
   /* evaluate properties */
   relation_t *relation = NULL;
   switch(state) {
-  case OSM_FLAG_NEW:
+  case OSM_FLAG_NEW: {
     printf("  Restoring NEW relation\n");
 
     relation = g_new0(relation_t, 1);
@@ -567,6 +569,7 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
     while(*lrelation) lrelation = &(*lrelation)->next;
     *lrelation = relation;
     break;
+  }
 
   case OSM_FLAG_DELETED:
     printf("  Restoring DELETE flag\n");
