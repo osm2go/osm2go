@@ -33,6 +33,7 @@
 #include "track.h"
 #include "undo.h"
 
+#include <algorithm>
 #include <gdk/gdkkeysyms.h>
 
 /* this is a chain of map_items which is attached to all entries */
@@ -2007,8 +2008,14 @@ void map_action_ok(appdata_t *appdata) {
   }
 }
 
+struct node_deleted_from_ways {
+  appdata_t * const appdata;
+  node_deleted_from_ways(appdata_t *a) : appdata(a) { }
+  void operator()(way_t *way);
+};
+
 /* redraw all affected ways */
-void node_deleted_from_ways_operator(way_t *way, appdata_t *appdata) {
+void node_deleted_from_ways::operator()(way_t *way) {
   if(way->next == NULL) {
     /* this way now only contains one node and thus isn't a valid */
     /* way anymore. So it'll also get deleted (which in turn may */
@@ -2021,6 +2028,10 @@ void node_deleted_from_ways_operator(way_t *way, appdata_t *appdata) {
     undo_append_object(appdata, UNDO_MODIFY, &(item.object));
     map_item_redraw(appdata, &item);
   }
+}
+
+static bool short_way(const way_t *way) {
+  return !osm_way_min_length(way, 3);
 }
 
 /* called from icon "trash" */
@@ -2050,23 +2061,13 @@ void map_delete_selected(appdata_t *appdata) {
 
     /* check if this node is part of a way with two nodes only. */
     /* we cannot delete this as this would also delete the way */
-    way_chain_t *way_chain = osm_node_to_way(appdata->osm, item.object.node);
-    if(way_chain) {
-      gboolean short_way = FALSE;
+    const way_chain_t &way_chain = osm_node_to_way(appdata->osm, item.object.node);
+    if(!way_chain.empty()) {
 
-      /* free the chain of ways */
-      while(way_chain) {
-	way_chain_t *next = way_chain->next;
+      const way_chain_t::const_iterator it =
+          std::find_if(way_chain.begin(), way_chain.end(), short_way);
 
-	/* avoid counting if not needed */
-	if(!short_way && !osm_way_min_length(static_cast<way_t *>(way_chain->data), 3))
-	  short_way = TRUE;
-
-	g_free(way_chain);
-	way_chain = next;
-      }
-
-      if(short_way) {
+      if(it != way_chain.end()) {
 	if(!yes_no_f(GTK_WIDGET(appdata->window), NULL, 0, 0,
 		     _("Delete node in short way(s)?"),
 		     _("Deleting this node will also delete one or more ways "
@@ -2078,12 +2079,9 @@ void map_delete_selected(appdata_t *appdata) {
 
     /* and mark it "deleted" in the database */
     osm_node_remove_from_relation(appdata->osm, item.object.node);
-    way_chain_t *chain = osm_node_delete(appdata->osm,
-                         item.object.node, FALSE, TRUE);
-
-    /* redraw all affected ways */
-    g_slist_foreach(chain, (GFunc)node_deleted_from_ways_operator, appdata);
-    g_slist_free(chain);
+    const way_chain_t &chain = osm_node_delete(appdata->osm,
+                                        item.object.node, false, true);
+    std::for_each(chain.begin(), chain.end(), node_deleted_from_ways(appdata));
 
     break;
   }

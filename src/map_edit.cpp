@@ -28,7 +28,7 @@
 #include "statusbar.h"
 #include "style.h"
 
-#include <glib.h>
+#include <algorithm>
 
 /* --------------------- misc local helper functions ---------------- */
 struct relation_transfer {
@@ -118,6 +118,14 @@ void map_edit_way_add_begin(map_t *map, way_t *way_sel) {
   map->action.extending = NULL;
 }
 
+struct check_first_last_node {
+  const node_t * const node;
+  check_first_last_node(const node_t *n) : node(n) {}
+  bool operator()(const way_t *way) {
+    return osm_way_ends_with_node(way, node);
+  }
+};
+
 void map_edit_way_add_segment(map_t *map, gint x, gint y) {
 
   /* convert mouse position to canvas (world) position */
@@ -148,12 +156,11 @@ void map_edit_way_add_segment(map_t *map, gint x, gint y) {
 
       /* check whether this node is first or last one of a different way */
       way_t *touch_way = NULL;
-      way_chain_t *way_chain = osm_node_to_way(map->appdata->osm, node);
-      way_chain_t *match = g_slist_find_custom(way_chain, node,
-                                               (GCompareFunc)osm_way_ends_with_node);
-      if(match)
-        touch_way = static_cast<way_t *>(match->data);
-      g_slist_free(way_chain);
+      const way_chain_t &way_chain = osm_node_to_way(map->appdata->osm, node);
+      const way_chain_t::const_iterator it =
+        std::find_if(way_chain.begin(), way_chain.end(), check_first_last_node(node));
+      if(it != way_chain.end())
+        touch_way = *it;
 
       /* remeber this way as this may be the last node placed */
       /* and we might want to join this with this other way */
@@ -775,7 +782,7 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 
       /* and remove it from the data structures */
       osm_node_remove_from_relation(appdata->osm, touchnode);
-      osm_node_delete(appdata->osm, touchnode, FALSE, TRUE);
+      osm_node_delete(appdata->osm, touchnode, false, true);
 
       /* and open dialog to resolve tag collisions if necessary */
       if(conflict)

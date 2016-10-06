@@ -41,7 +41,6 @@
 #endif
 #include <string>
 #include <time.h>
-#include <vector>
 #include <utility>
 
 #include <libxml/parser.h>
@@ -1250,7 +1249,6 @@ gboolean osm_node_in_other_way(const osm_t *osm, const way_t *way, const node_t 
     if(osm_node_in_way(it, node))
       return TRUE;
   }
-
   return FALSE;
 }
 
@@ -1663,27 +1661,27 @@ void osm_way_restore(osm_t *osm, way_t *way, item_id_chain_t *id_chain) {
 }
 
 /* returns pointer to chain of ways affected by this deletion */
-way_chain_t *osm_node_delete(osm_t *osm,
-			     node_t *node, gboolean permanently,
-			     gboolean affect_ways) {
-  way_chain_t *way_chain = NULL;
+way_chain_t osm_node_delete(osm_t *osm,
+			    node_t *node, bool permanently,
+			    bool affect_ways) {
+  way_chain_t way_chain;
 
   /* new nodes aren't stored on the server and are just deleted permanently */
   if(OSM_FLAGS(node) & OSM_FLAG_NEW) {
     printf("About to delete NEW node #" ITEM_ID_FORMAT
 	   " -> force permanent delete\n", OSM_ID(node));
-    permanently = TRUE;
+    permanently = true;
   }
 
   /* first remove node from all ways using it */
   way_t *way = osm->way;
   while(way) {
     node_chain_t **chain = &(way->node_chain);
-    gboolean modified = FALSE;
+    bool modified = false;
     while(*chain) {
       /* remove node from chain */
       if(node == (*chain)->node) {
-	modified = TRUE;
+	modified = true;
 	if(affect_ways) {
 	  node_chain_t *next = (*chain)->next;
 	  g_free(*chain);
@@ -1699,7 +1697,7 @@ way_chain_t *osm_node_delete(osm_t *osm,
       OSM_FLAGS(way) |= OSM_FLAG_DIRTY;
 
       /* and add the way to the list of affected ways */
-      way_chain = g_slist_prepend(way_chain, way);
+      way_chain.push_back(way);
     }
 
     way = way->next;
@@ -1875,14 +1873,14 @@ GSList *osm_object_to_relation(osm_t *osm, const object_t *object) {
 }
 
 /* return all ways a node is in */
-way_chain_t *osm_node_to_way(const osm_t *osm, const node_t *node) {
-  way_chain_t *chain = NULL;
+way_chain_t osm_node_to_way(const osm_t *osm, const node_t *node) {
+  way_chain_t chain;
 
   way_t *way = osm->way;
   for(; way; way = way->next) {
     /* node is a member of this relation, so move it to the member chain */
     if(osm_node_in_way(way, node))
-      chain = g_slist_prepend(chain, way);
+      chain.push_back(way);
   }
 
   return chain;
@@ -1996,9 +1994,12 @@ void osm_way_delete(osm_t *osm, way_t *way, gboolean permanently) {
       /* delete this node, but don't let this actually affect the */
       /* associated ways as the only such way is the one we are currently */
       /* deleting */
-      way_chain_t *way_chain = osm_node_delete(osm, node, FALSE, FALSE);
-      g_assert(way_chain);
-      g_slist_free(way_chain);
+      const way_chain_t &way_chain = osm_node_delete(osm, node, false, false);
+      g_assert(!way_chain.empty());
+      /* no need in end caching here, there should only be one item in the list */
+      for(way_chain_t::const_iterator it = way_chain.begin(); it != way_chain.end(); it++) {
+	g_assert(*it == way);
+      }
     }
 
     node_chain_t *cur = (*chain);

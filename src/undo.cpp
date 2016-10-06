@@ -403,11 +403,10 @@ static void undo_operation_object_restore(appdata_t *appdata, object_t *obj,
       g_assert(OSM_FLAGS(orig) & OSM_FLAG_DELETED);
 
       /* permanently remove the node marked as "deleted" */
-      way_chain_t *wchain =
-	osm_node_delete(appdata->osm, orig, TRUE, TRUE);
+      const way_chain_t &wchain = osm_node_delete(appdata->osm, orig, true, true);
 
       /* the deleted node must not have been part of any way */
-      g_assert(!wchain);
+      g_assert(wchain.empty());
     }
 
     /* then restore old node */

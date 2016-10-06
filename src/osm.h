@@ -26,6 +26,10 @@
 #include <glib.h>
 #include <gtk/gtk.h>
 
+#ifdef __cplusplus
+#include <vector>
+#endif
+
 #define OSM_FLAG_DIRTY    (1<<0)
 #define OSM_FLAG_DELETED  (1<<1)
 #define OSM_FLAG_NEW      (1<<2)
@@ -142,7 +146,9 @@ typedef struct way_t {
   struct map_item_chain_t *map_item_chain;
 } way_t;
 
-typedef GSList way_chain_t;
+#ifdef __cplusplus
+typedef std::vector<way_t *> way_chain_t;
+#endif
 
 /* return a pointer to the "base" object of an object */
 #define OBJECT_BASE(a)     ((base_object_t*)((a).ptr))
@@ -273,15 +279,12 @@ gboolean osm_way_min_length(const way_t *way, guint len);
 guint osm_way_number_of_nodes(const way_t *way);
 GSList *osm_way_to_relation(osm_t *osm, const way_t *way);
 GSList *osm_object_to_relation(osm_t *osm, const object_t *object);
-way_chain_t *osm_node_to_way(const osm_t *osm, const node_t *node);
 
 /* ----------- edit functions ----------- */
 node_t *osm_node_new(osm_t *osm, gint x, gint y);
 node_t *osm_node_new_pos(osm_t *osm, const pos_t *pos);
 void osm_node_attach(osm_t *osm, node_t *node);
 void osm_node_restore(osm_t *osm, node_t *node);
-way_chain_t *osm_node_delete(osm_t *osm, node_t *node,
-			     gboolean permanently, gboolean affect_ways);
 void osm_way_delete(osm_t *osm, way_t *way, gboolean perm);
 void osm_way_restore(osm_t *osm, way_t *way, item_id_chain_t *id_chain);
 
@@ -329,6 +332,11 @@ gboolean osm_object_is_same(const object_t *obj1, const object_t *obj2);
 
 #ifdef __cplusplus
 }
+
+way_chain_t osm_node_to_way(const osm_t *osm, const node_t *node);
+way_chain_t osm_node_delete(osm_t *osm, node_t *node,
+                            bool permanently, bool affect_ways);
+
 #endif
 
 #endif /* OSM_H */
