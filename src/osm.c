@@ -101,13 +101,13 @@ static user_t *osm_user(osm_t *osm, const char *name, int uid) {
   /* end of list or inexact match? create new user entry! */
   if(!*user || strcasecmp((*user)->name, name)) {
     const size_t nlen = strlen(name) + 1;
-    user_t *new = g_malloc(sizeof(**user) + nlen);
-    memcpy(new->name, name, nlen);
-    new->uid = uid;
-    new->next = *user;
-    *user = new;
+    user_t *newu = (user_t*)g_malloc(sizeof(**user) + nlen);
+    memcpy(newu->name, name, nlen);
+    newu->uid = uid;
+    newu->next = *user;
+    *user = newu;
 
-    return new;
+    return newu;
   }
 
   return *user;
@@ -2148,7 +2148,7 @@ void osm_relation_delete(osm_t *osm, relation_t *relation,
 }
 
 void osm_way_reverse(way_t *way) {
-  node_chain_t *new = NULL;
+  node_chain_t *newn = NULL;
 
   /* walk old chain first to last */
   node_chain_t *old = way->node_chain;
@@ -2156,13 +2156,13 @@ void osm_way_reverse(way_t *way) {
     node_chain_t *next = old->next;
 
     /* and prepend each node to the new chain */
-    old->next = new;
-    new = old;
+    old->next = newn;
+    newn = old;
 
     old = next;
   }
 
-  way->node_chain = new;
+  way->node_chain = newn;
 }
 
 static const char *DS_ONEWAY_FWD = "yes";

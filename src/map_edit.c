@@ -548,7 +548,7 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
 
     if(way) {
       /* create a duplicate of the currently selected way */
-      way_t *new = osm_way_new();
+      way_t *neww = osm_way_new();
 
       /* if this is a closed way, reorder (rotate) it, so the */
       /* place to cut is adjecent to the begin/end of the way. */
@@ -561,10 +561,10 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
       }
 
       /* ------------  copy all tags ------------- */
-      OSM_TAG(new) = osm_tags_copy(OSM_TAG(way));
+      OSM_TAG(neww) = osm_tags_copy(OSM_TAG(way));
 
       /* ---- transfer relation membership from way to new ----- */
-      transfer_relations(map->appdata->osm, new, way);
+      transfer_relations(map->appdata->osm, neww, way);
 
       /* move parts of node_chain to the new way */
       printf("  moving everthing after segment %d to new way\n", cut_at);
@@ -576,7 +576,7 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
       }
 
       /* attach remaining nodes to new way */
-      new->node_chain = chain->next;
+      neww->node_chain = chain->next;
 
       /* terminate remainig chain on old way */
       chain->next = NULL;
@@ -586,14 +586,14 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
       /* the new way */
       if(cut_at_node) {
 	node_chain_t *first = g_new0(node_chain_t, 1);
-	first->next = new->node_chain;
+	first->next = neww->node_chain;
 	first->node = osm_way_get_last_node(way);
 	first->node->ways++;
-	new->node_chain = first;
+	neww->node_chain = first;
       }
 
       /* now move the way itself into the main data structure */
-      osm_way_attach(map->appdata->osm, new);
+      osm_way_attach(map->appdata->osm, neww);
 
       /* clear selection */
       map_item_deselect(map->appdata);
@@ -607,8 +607,8 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
       if(!osm_way_min_length(way, 2)) {
 	printf("swapping ways to avoid destruction of original way\n");
 	node_chain_t *tmp = way->node_chain;
-	way->node_chain = new->node_chain;
-	new->node_chain = tmp;
+	way->node_chain = neww->node_chain;
+	neww->node_chain = tmp;
       }
 
       /* the way may still only consist of a single node. */
@@ -629,15 +629,15 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
 	OSM_FLAGS(way) |= OSM_FLAG_DIRTY;
       }
 
-      if(!osm_way_min_length(new, 2)) {
+      if(!osm_way_min_length(neww, 2)) {
 	printf("new way has less than 2 nodes, deleting it\n");
-	map_way_delete(map->appdata, new);
-	new = NULL;
+	map_way_delete(map->appdata, neww);
+	neww = NULL;
       } else {
 
 	/* colorize the new way before drawing */
-	josm_elemstyles_colorize_way(map->style, new);
-	map_way_draw(map, new);
+	josm_elemstyles_colorize_way(map->style, neww);
+	map_way_draw(map, neww);
       }
 
       /* put gui into idle state */
@@ -646,8 +646,8 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
       /* and redo selection if way still exists */
       if(item)
 	map_way_select(map->appdata, way);
-      else if(new)
-	map_way_select(map->appdata, new);
+      else if(neww)
+	map_way_select(map->appdata, neww);
     }
   }
 }

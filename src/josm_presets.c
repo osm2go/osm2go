@@ -119,9 +119,9 @@ char *josm_icon_name_adjust(char *name) {
   if(strncmp(name, "presets/", strlen("presets/")) != 0) {
     const char *slash = strrchr(name, '/');
     if(slash) {
-      char *new = g_strconcat("presets", slash, NULL);
+      char *newn = g_strconcat("presets", slash, NULL);
       xmlFree(name);
-      name = new;
+      name = newn;
 
       printf("icon path adjusted to %s\n", name);
     }
