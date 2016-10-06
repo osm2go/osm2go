@@ -31,18 +31,18 @@
 #endif
 
 static void xml_get_prop_float(xmlNode *node, char *prop, float *value) {
-  char *str = (char*)xmlGetProp(node, BAD_CAST prop);
+  xmlChar *str = xmlGetProp(node, BAD_CAST prop);
   if(str) {
-    *value = g_ascii_strtod(str, NULL);
+    *value = g_ascii_strtod((gchar*)str, NULL);
     xmlFree(str);
   }
 }
 
 static gboolean xml_prop_is(xmlNode *node, char *prop, char *str) {
-  char *prop_str = (char*)xmlGetProp(node, BAD_CAST prop);
+  xmlChar *prop_str = xmlGetProp(node, BAD_CAST prop);
   if(!prop_str) return FALSE;
 
-  gboolean match = (strcasecmp(prop_str, str) == 0);
+  gboolean match = (strcasecmp((char*)prop_str, str) == 0);
   xmlFree(prop_str);
   return match;
 }
