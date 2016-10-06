@@ -64,7 +64,7 @@ static const char *undo_type_string(const undo_type_t type) {
     { UNDO_DELETE, "deletion" },
     { UNDO_CREATE, "creation" },
     { UNDO_MODIFY, "modification" },
-    { 0, NULL }
+    { UNDO_END, NULL }
   };
 
   int i;
@@ -264,7 +264,8 @@ static gboolean undo_object_save(const object_t *object,
 static void
 undo_append_relation(gpointer data, gpointer user_data)
 {
-  object_t obj = { .type = RELATION };
+  object_t obj;
+  obj.type = RELATION;
   obj.relation = (relation_t*)data;
   appdata_t *appdata = (appdata_t*)user_data;
 
@@ -339,14 +340,16 @@ void undo_append_object(appdata_t *appdata, undo_type_t type,
 }
 
 void undo_append_way(appdata_t *appdata, undo_type_t type, way_t *way) {
-  object_t obj = { .type = WAY };
+  object_t obj;
+  obj.type = WAY;
   obj.way = way;
 
   undo_append_object(appdata, type, &obj);
 }
 
 void undo_append_node(appdata_t *appdata, undo_type_t type, node_t *node) {
-  object_t obj = { .type = NODE };
+  object_t obj;
+  obj.type = NODE;
   obj.node = node;
 
   undo_append_object(appdata, type, &obj);

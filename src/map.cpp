@@ -851,7 +851,7 @@ map_item_t *map_item_at(map_t *map, gint x, gint y) {
 
   printf("  there's an item (%p)\n", item);
 
-  map_item_t *map_item = canvas_item_get_user_data(item);
+  map_item_t *map_item = (map_item_t*)canvas_item_get_user_data(item);
 
   if(!map_item) {
     printf("  item has no user data!\n");
@@ -1483,7 +1483,7 @@ static void map_button_release(map_t *map, gint x, gint y) {
     }
     break;
 
-  case MAP_ACTION_NODE_ADD:
+  case MAP_ACTION_NODE_ADD: {
     printf("released after NODE ADD\n");
     map_hl_cursor_clear(map);
 
@@ -1509,7 +1509,7 @@ static void map_button_release(map_t *map, gint x, gint y) {
       info_dialog(GTK_WIDGET(map->appdata->window), map->appdata, NULL);
     }
     break;
-
+  }
   case MAP_ACTION_WAY_ADD:
     printf("released after WAY ADD\n");
     map_hl_cursor_clear(map);
@@ -1586,7 +1586,7 @@ static gboolean map_motion_notify_event(G_GNUC_UNUSED GtkWidget *widget,
   else {
     x = event->x;
     y = event->y;
-    state = event->state;
+    state = (GdkModifierType)event->state;
   }
 
   /* check if distance to press is above drag limit */
@@ -1620,17 +1620,19 @@ static gboolean map_motion_notify_event(G_GNUC_UNUSED GtkWidget *widget,
     map_touchnode_update(appdata, x, y);
     break;
 
-  case MAP_ACTION_WAY_NODE_ADD:
+  case MAP_ACTION_WAY_NODE_ADD: {
     map_hl_cursor_clear(map);
     map_item_t *item = map_item_at(map, x, y);
     if(item) map_edit_way_node_add_highlight(map, item, x, y);
     break;
+  }
 
-  case MAP_ACTION_WAY_CUT:
+  case MAP_ACTION_WAY_CUT: {
     map_hl_cursor_clear(map);
-    item = map_item_at(map, x, y);
+    map_item_t *item = map_item_at(map, x, y);
     if(item) map_edit_way_cut_highlight(map, item, x, y);
     break;
+  }
 
   default:
     break;
@@ -1793,7 +1795,7 @@ GtkWidget *map_new(appdata_t *appdata) {
 			| GDK_BUTTON_RELEASE_MASK
 			| GDK_SCROLL_MASK
 			| GDK_POINTER_MOTION_MASK
-    			| GDK_POINTER_MOTION_HINT_MASK);
+			| GDK_POINTER_MOTION_HINT_MASK);
 
   /* autosave happens every two minutes */
   map->autosave_handler_id = gtk_timeout_add(120*1000, map_autosave, map);
@@ -1887,7 +1889,7 @@ void map_action_set(appdata_t *appdata, map_action_t action) {
     map_item_deselect(appdata);
     break;
 
-  case MAP_ACTION_WAY_ADD:
+  case MAP_ACTION_WAY_ADD: {
     printf("starting new way\n");
 
     /* remember if there was a way selected */
@@ -1898,6 +1900,7 @@ void map_action_set(appdata_t *appdata, map_action_t action) {
     map_item_deselect(appdata);
     map_edit_way_add_begin(appdata->map, way_sel);
     break;
+  }
 
   case MAP_ACTION_NODE_ADD:
     map_item_deselect(appdata);
@@ -1934,7 +1937,7 @@ void map_action_cancel(appdata_t *appdata) {
     map_edit_way_add_cancel(map);
     break;
 
-  case MAP_ACTION_BG_ADJUST:
+  case MAP_ACTION_BG_ADJUST: {
     /* undo all changes to bg_offset */
     map->bg.offset.x = appdata->project->wms_offset.x;
     map->bg.offset.y = appdata->project->wms_offset.y;
@@ -1943,6 +1946,7 @@ void map_action_cancel(appdata_t *appdata) {
     gint y = appdata->osm->bounds->min.y + map->bg.offset.y;
     canvas_image_move(map->bg.item, x, y, map->bg.scale.x, map->bg.scale.y);
     break;
+  }
 
   default:
     break;
@@ -2038,7 +2042,7 @@ void map_delete_selected(appdata_t *appdata) {
   undo_open_new_state(appdata, UNDO_DELETE, &item.object);
 
   switch(item.object.type) {
-  case NODE:
+  case NODE: {
     printf("request to delete node #" ITEM_ID_FORMAT "\n",
 	   OBJECT_ID(item.object));
 
@@ -2055,7 +2059,7 @@ void map_delete_selected(appdata_t *appdata) {
 	way_chain_t *next = way_chain->next;
 
 	/* avoid counting if not needed */
-	if(!short_way && !osm_way_min_length(way_chain->data, 3))
+	if(!short_way && !osm_way_min_length(static_cast<way_t *>(way_chain->data), 3))
 	  short_way = TRUE;
 
 	g_free(way_chain);
@@ -2082,6 +2086,7 @@ void map_delete_selected(appdata_t *appdata) {
     g_slist_free(chain);
 
     break;
+  }
 
   case WAY:
     printf("request to delete way #" ITEM_ID_FORMAT "\n",

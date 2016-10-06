@@ -58,6 +58,11 @@ typedef struct user_t {
 typedef struct tag_t {
   struct tag_t *next;
   char *key, *value;
+#ifdef __cplusplus
+  tag_t(char *k, char *v)
+    : next(0), key(k), value(v)
+  { }
+#endif
 } tag_t;
 
 typedef struct {

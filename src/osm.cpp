@@ -39,7 +39,10 @@
 #ifndef __USE_XOPEN
 #define __USE_XOPEN
 #endif
+#include <string>
 #include <time.h>
+#include <vector>
+#include <utility>
 
 #include <libxml/parser.h>
 #include <libxml/tree.h>
@@ -274,7 +277,7 @@ gboolean osm_tag_update(tag_t *tag, const char *key, const char *value)
 void osm_tag_update_key(tag_t *tag, const char *key)
 {
   const size_t nlen = strlen(key) + 1;
-  tag->key = g_realloc(tag->key, nlen);
+  tag->key = (char*)g_realloc(tag->key, nlen);
   memcpy(tag->key, key, nlen);
 }
 
@@ -284,7 +287,7 @@ void osm_tag_update_key(tag_t *tag, const char *key)
 void osm_tag_update_value(tag_t *tag, const char *value)
 {
   const size_t nlen = strlen(value) + 1;
-  tag->value = g_realloc(tag->value, nlen);
+  tag->value = (char*)g_realloc(tag->value, nlen);
   memcpy(tag->value, value, nlen);
 }
 
@@ -1044,7 +1047,7 @@ static osm_t *process_osm(xmlTextReaderPtr reader) {
   while(ret == 1) {
 
     switch(xmlTextReaderNodeType(reader)) {
-    case XML_READER_TYPE_ELEMENT:
+    case XML_READER_TYPE_ELEMENT: {
 
       g_assert_cmpint(xmlTextReaderDepth(reader), ==, 1);
       const char *name = (const char*)xmlTextReaderConstName(reader);
@@ -1070,6 +1073,7 @@ static osm_t *process_osm(xmlTextReaderPtr reader) {
 	skip_element(reader);
       }
       break;
+    }
 
     case XML_READER_TYPE_END_ELEMENT:
       /* end element must be for the current element */
@@ -1175,7 +1179,7 @@ tag_t *osm_tag_find(tag_t* tag, const char* key) {
 }
 
 const char *osm_tag_get_by_key(const tag_t* tag, const char* key) {
-  const tag_t *t = osm_tag_find((tag_t*)tag, key);
+  const tag_t *t = osm_tag_find(const_cast<tag_t*>(tag), key);
 
   if (t)
     return t->value;
@@ -1402,10 +1406,10 @@ char *osm_generate_xml_changeset(char *comment) {
   int len = 0;
 
   /* tags for this changeset */
-  tag_t tag_comment = {
-    .key = "comment", .value = comment, .next = NULL };
-  const tag_t tag_creator = {
-    .key = "created_by", .value = PACKAGE " v" VERSION, .next = &tag_comment };
+  tag_t tag_comment(const_cast<char*>("comment"), comment);
+  tag_t tag_creator(const_cast<char*>("created_by"),
+                    const_cast<char*>(PACKAGE " v" VERSION));
+  tag_creator.next = &tag_comment;
 
   xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
   xmlNodePtr root_node = xmlNewNode(NULL, BAD_CAST "osm");
@@ -2087,17 +2091,6 @@ void osm_way_reverse(way_t *way) {
 static const char *DS_ONEWAY_FWD = "yes";
 static const char *DS_ONEWAY_REV = "-1";
 
-static const struct {
-	const char *orig;
-	const char *reverse;
-} rtable[] = {
-	{ .orig = ":left",     .reverse = ":right" },
-	{ .orig = ":right",    .reverse = ":left" },
-	{ .orig = ":forward",  .reverse = ":backward" },
-	{ .orig = ":backward", .reverse = ":forward" },
-	{ .orig = NULL,        .reverse = NULL }
-};
-
 /* Reverse direction-sensitive tags like "oneway". Marks the way as dirty if
  * anything is changed, and returns the number of flipped tags. */
 
@@ -2133,17 +2126,25 @@ osm_way_reverse_direction_sensitive_tags (way_t *way) {
         osm_tag_update_value(tag, "right");
     } else {
       // suffixes
+      static std::vector<std::pair<std::string, std::string> > rtable;
+      if(rtable.empty()) {
+        rtable.push_back(std::pair<std::string, std::string>(":left", ":right"));
+        rtable.push_back(std::pair<std::string, std::string>(":right", ":left"));
+        rtable.push_back(std::pair<std::string, std::string>(":forward", ":backward"));
+        rtable.push_back(std::pair<std::string, std::string>(":backward", ":forward"));
+      }
+
       unsigned int i;
-      for (i = 0; rtable[i].orig != NULL; i++) {
-        if (g_str_has_suffix(lc_key, rtable[i].orig)) {
+      for (i = 0; i < rtable.size(); i++) {
+        if (g_str_has_suffix(lc_key, rtable[i].first.c_str())) {
           /* length of key that will persist */
-          size_t plen = strlen(tag->key) - strlen(rtable[i].orig);
+          size_t plen = strlen(tag->key) - rtable[i].first.size();
           /* add length of new suffix */
-          tag->key = g_realloc(tag->key, plen + 1 + strlen(rtable[i].reverse));
+          tag->key = (char*)g_realloc(tag->key, plen + 1 + rtable[i].second.size());
           char *lastcolon = tag->key + plen;
           g_assert(*lastcolon == ':');
           /* replace suffix */
-          strcpy(lastcolon, rtable[i].reverse);
+          strcpy(lastcolon, rtable[i].second.c_str());
           n_tags_altered++;
           break;
         }
@@ -2300,7 +2301,7 @@ const char *osm_object_type_string(const object_t *object) {
     { NODE_ID,     "node id" },
     { WAY_ID,      "way/area id" },
     { RELATION_ID, "relation id" },
-    { 0, NULL }
+    { ILLEGAL, NULL }
   };
 
   int i;

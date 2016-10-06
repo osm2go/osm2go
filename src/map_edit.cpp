@@ -152,7 +152,7 @@ void map_edit_way_add_segment(map_t *map, gint x, gint y) {
       way_chain_t *match = g_slist_find_custom(way_chain, node,
                                                (GCompareFunc)osm_way_ends_with_node);
       if(match)
-        touch_way = match->data;
+        touch_way = static_cast<way_t *>(match->data);
       g_slist_free(way_chain);
 
       /* remeber this way as this may be the last node placed */

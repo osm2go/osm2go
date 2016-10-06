@@ -28,7 +28,8 @@
 typedef enum {
   UNDO_DELETE = 0,
   UNDO_CREATE,
-  UNDO_MODIFY
+  UNDO_MODIFY,
+  UNDO_END = -1
 
 } undo_type_t;
 

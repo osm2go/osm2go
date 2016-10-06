@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.6 FATAL_ERROR)
 
-project(osm2go VERSION 0.8.8 LANGUAGES C)
+project(osm2go VERSION 0.8.8 LANGUAGES C CXX)
 
 include(GNUInstallDirs)
 include(CheckFunctionExists)
@@ -38,9 +38,9 @@ set(osm2go_SOURCE_FILES
 	src/josm_presets.h
 	src/list.c
 	src/list.h
-	src/map.c
+	src/map.cpp
 	src/map.h
-	src/map_edit.c
+	src/map_edit.cpp
 	src/map_edit.h
 	src/map_hl.c
 	src/map_hl.h
@@ -48,7 +48,7 @@ set(osm2go_SOURCE_FILES
 	src/misc.h
 	src/net_io.c
 	src/net_io.h
-	src/osm.c
+	src/osm.cpp
 	src/osm.h
 	src/osm_api.c
 	src/osm_api.h
@@ -68,7 +68,7 @@ set(osm2go_SOURCE_FILES
 	src/style.h
 	src/track.c
 	src/track.h
-	src/undo.c
+	src/undo.cpp
 	src/undo.h
 	src/wms.c
 	src/wms.h
