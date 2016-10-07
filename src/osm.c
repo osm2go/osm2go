@@ -295,7 +295,7 @@ void osm_tag_update_value(tag_t *tag, const char *value)
   memcpy(tag->value, value, nlen);
 }
 
-gboolean osm_way_ends_with_node(way_t *way, node_t *node) {
+gboolean osm_way_ends_with_node(const way_t *way, const node_t *node) {
   /* and deleted way may even not contain any nodes at all */
   /* so ignore it */
   if(OSM_FLAGS(way) & OSM_FLAG_DELETED)
@@ -305,7 +305,7 @@ gboolean osm_way_ends_with_node(way_t *way, node_t *node) {
   g_assert(way->node_chain);
   g_assert(way->node_chain->next);
 
-  node_chain_t *chain = way->node_chain;
+  const node_chain_t *chain = way->node_chain;
   if(chain->node == node) return TRUE;
 
   while(chain->next) chain = chain->next;

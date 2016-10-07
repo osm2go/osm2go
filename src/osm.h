@@ -285,7 +285,7 @@ void osm_way_attach(osm_t *osm, way_t *way);
 gboolean osm_position_within_bounds(osm_t *osm, gint x, gint y);
 gboolean osm_position_within_bounds_ll(const pos_t *ll_min, const pos_t *ll_max, const pos_t *pos);
 item_id_t osm_new_way_id(osm_t *osm);
-gboolean osm_way_ends_with_node(way_t *way, node_t *node);
+gboolean osm_way_ends_with_node(const way_t *way, const node_t *node);
 
 void osm_way_reverse(way_t *way);
 guint osm_way_reverse_direction_sensitive_tags(way_t *way);
