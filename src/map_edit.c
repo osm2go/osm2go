@@ -298,7 +298,7 @@ void map_edit_way_add_ok(map_t *map) {
       printf("  need to prepend\n");
       osm_way_reverse(map->action.extending);
       reverse = TRUE;
-    } else if(osm_way_get_last_node(map->action.extending) == nfirst)
+    } else
       printf("  need to append\n");
 
     /* search end of way to be extended */
