@@ -493,11 +493,9 @@ void map_edit_way_cut_highlight(map_t *map, map_item_t *item, gint x, gint y) {
       map_hl_segment_draw(map, width, x0, y0, x1, y1);
     }
   } else if(map_item_is_selected_node(map, item)) {
-    node_t *nfirst = osm_way_get_first_node(map->selected.object.way);
-    node_t *nlast = osm_way_get_last_node(map->selected.object.way);
-
     /* cutting a way at its first or last node doesn't make much sense ... */
-    if((nfirst != item->object.node) && (nlast != item->object.node))
+    if((osm_way_get_first_node(map->selected.object.way) != item->object.node) &&
+      (osm_way_get_last_node(map->selected.object.way) != item->object.node))
       map_hl_cursor_draw(map, item->object.node->lpos.x, item->object.node->lpos.y,
 			 TRUE, 2*map->style->node.radius);
   }
