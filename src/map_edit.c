@@ -606,6 +606,12 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
 	node_chain_t *tmp = way->node_chain;
 	way->node_chain = neww->node_chain;
 	neww->node_chain = tmp;
+	map_way_delete(map->appdata, neww);
+	neww = NULL;
+      } else if(!osm_way_min_length(neww, 2)) {
+	printf("new way has less than 2 nodes, deleting it\n");
+	map_way_delete(map->appdata, neww);
+	neww = NULL;
       }
 
       /* the way may still only consist of a single node. */
@@ -626,12 +632,7 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
 	OSM_FLAGS(way) |= OSM_FLAG_DIRTY;
       }
 
-      if(!osm_way_min_length(neww, 2)) {
-	printf("new way has less than 2 nodes, deleting it\n");
-	map_way_delete(map->appdata, neww);
-	neww = NULL;
-      } else {
-
+      if(neww != NULL) {
 	/* colorize the new way before drawing */
 	josm_elemstyles_colorize_way(map->style, neww);
 	map_way_draw(map, neww);
