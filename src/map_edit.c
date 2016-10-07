@@ -599,7 +599,7 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
       printf("remove visible version of way #"ITEM_ID_FORMAT"\n", OSM_ID(way));
       map_item_chain_destroy(&way->map_item_chain);
 
-      /* swap chains of the old way is to be destroyed due to a lack */
+      /* swap chains if the old way is to be destroyed due to a lack */
       /* of nodes */
       if(!osm_way_min_length(way, 2)) {
 	printf("swapping ways to avoid destruction of original way\n");
