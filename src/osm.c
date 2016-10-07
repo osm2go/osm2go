@@ -2312,9 +2312,10 @@ node_t *osm_way_get_first_node(way_t *way) {
 node_t *osm_way_get_last_node(way_t *way) {
   node_chain_t *chain = way->node_chain;
 
-  while(chain && chain->next) chain=chain->next;
-
   if(!chain) return NULL;
+
+  while(chain->next)
+    chain = chain->next;
 
   return chain->node;
 }
