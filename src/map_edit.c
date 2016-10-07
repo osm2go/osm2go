@@ -144,14 +144,16 @@ void map_edit_way_add_segment(map_t *map, gint x, gint y) {
       while(way_chain) {
 	way_chain_t *next = way_chain->next;
 
-	if(node == osm_way_get_first_node(way_chain->way)) {
-	  printf("  way #"ITEM_ID_FORMAT" starts with this node\n",
-		 OSM_ID(way_chain->way));
-	  if(!touch_way) touch_way = way_chain->way;
-	} else if(node == osm_way_get_last_node(way_chain->way)) {
-	  printf("  way #"ITEM_ID_FORMAT" ends with this node\n",
-		 OSM_ID(way_chain->way));
-	  if(!touch_way) touch_way = way_chain->way;
+	if(!touch_way) {
+	  if(node == osm_way_get_first_node(way_chain->way)) {
+	    printf("  way #"ITEM_ID_FORMAT" starts with this node\n",
+		   OSM_ID(way_chain->way));
+	    touch_way = way_chain->way;
+	  } else if(node == osm_way_get_last_node(way_chain->way)) {
+	    printf("  way #"ITEM_ID_FORMAT" ends with this node\n",
+		   OSM_ID(way_chain->way));
+	    touch_way = way_chain->way;
+	  }
 	}
 
 	g_free(way_chain);
