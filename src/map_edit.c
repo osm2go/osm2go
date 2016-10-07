@@ -118,7 +118,7 @@ void map_edit_way_add_segment(map_t *map, gint x, gint y) {
   /* check if this was a double click. This is the case if */
   /* the last node placed is less than 5 pixels from the current */
   /* position */
-  node_t *lnode = osm_way_get_last_node(map->action.way);
+  const node_t *lnode = osm_way_get_last_node(map->action.way);
   if(lnode && (map->state->zoom * sqrt((lnode->lpos.x-x)*(lnode->lpos.x-x)+
 		       (lnode->lpos.y-y)*(lnode->lpos.y-y))) < 5) {
 #if 0
@@ -584,7 +584,7 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
       if(cut_at_node) {
 	node_chain_t *first = g_new0(node_chain_t, 1);
 	first->next = neww->node_chain;
-	first->node = osm_way_get_last_node(way);
+	first->node = (node_t*)osm_way_get_last_node(way);
 	first->node->ways++;
 	neww->node_chain = first;
       }

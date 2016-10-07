@@ -2309,8 +2309,8 @@ const node_t *osm_way_get_first_node(const way_t *way) {
   return chain->node;
 }
 
-node_t *osm_way_get_last_node(way_t *way) {
-  node_chain_t *chain = way->node_chain;
+const node_t *osm_way_get_last_node(const way_t *way) {
+  const node_chain_t *chain = way->node_chain;
 
   if(!chain) return NULL;
 
@@ -2323,7 +2323,7 @@ node_t *osm_way_get_last_node(way_t *way) {
 gboolean osm_way_is_closed(const way_t *way) {
   /* check last first, this already handles the case of
    * an empty way */
-  node_t *last = osm_way_get_last_node((way_t*)way);
+  const node_t *last = osm_way_get_last_node(way);
   if(last == NULL)
     return FALSE;
   return (last == way->node_chain->node);
