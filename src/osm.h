@@ -295,7 +295,7 @@ void osm_node_remove_from_relation(osm_t *osm, node_t *node);
 void osm_way_remove_from_relation(osm_t *osm, way_t *way);
 
 node_t *osm_way_get_last_node(way_t *way);
-node_t *osm_way_get_first_node(way_t *way);
+const node_t *osm_way_get_first_node(const way_t *way);
 gboolean osm_way_is_closed(const way_t *way);
 void osm_way_rotate(way_t *way, gint offset);
 

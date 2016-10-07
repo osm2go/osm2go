@@ -2303,8 +2303,8 @@ osm_way_reverse_direction_sensitive_roles(osm_t *osm, way_t *way) {
   return n_roles_flipped;
 }
 
-node_t *osm_way_get_first_node(way_t *way) {
-  node_chain_t *chain = way->node_chain;
+const node_t *osm_way_get_first_node(const way_t *way) {
+  const node_chain_t *chain = way->node_chain;
   if(!chain) return NULL;
   return chain->node;
 }
