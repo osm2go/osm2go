@@ -369,8 +369,7 @@ void map_edit_way_add_ok(map_t *map) {
     transfer_relations(map->appdata->osm, map->action.way, map->action.ends_on);
 
     /* check if we have to reverse (again?) to match the way order */
-    if(osm_way_get_last_node(map->action.ends_on) ==
-       osm_way_get_last_node(map->action.way)) {
+    if(osm_way_is_closed(map->action.way)) {
 
       printf("  need to prepend ends_on\n");
 

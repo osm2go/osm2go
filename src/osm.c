@@ -2320,6 +2320,15 @@ node_t *osm_way_get_last_node(way_t *way) {
   return chain->node;
 }
 
+gboolean osm_way_is_closed(const way_t *way) {
+  /* check last first, this already handles the case of
+   * an empty way */
+  node_t *last = osm_way_get_last_node((way_t*)way);
+  if(last == NULL)
+    return FALSE;
+  return (last == way->node_chain->node);
+}
+
 void osm_way_rotate(way_t *way, gint offset) {
   if(!offset) return;
 

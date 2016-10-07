@@ -407,9 +407,7 @@ static GtkWidget *details_widget(tag_context_t *context, gboolean big) {
     table_attach(table, label, big?1:0, big?2:1);
     g_free(nodes_str);
 
-    char *type_str = g_strconcat(
-     (osm_way_get_last_node(context->object.way) ==
-      osm_way_get_first_node(context->object.way))?
+    char *type_str = g_strconcat(osm_way_is_closed(context->object.way)?
 			     "closed way":"open way",
 			     " (",
 	     (context->object.way->draw.flags & OSM_DRAW_FLAG_AREA)?
@@ -533,8 +531,7 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
 			  OBJECT_ID(context.object));
     context.presets_type = PRESETS_TYPE_WAY;
 
-    if(osm_way_get_last_node(context.object.way) ==
-       osm_way_get_first_node(context.object.way))
+    if(osm_way_is_closed(context.object.way))
       context.presets_type |= PRESETS_TYPE_CLOSEDWAY;
 
     break;
