@@ -211,7 +211,7 @@ typedef struct osm_s {
 #include <libxml/tree.h>
 
 osm_t *osm_parse(const char *path, const char *filename);
-gboolean osm_sanity_check(GtkWidget *parent, osm_t *osm);
+gboolean osm_sanity_check(GtkWidget *parent, const osm_t *osm);
 tag_t *osm_parse_osm_tag(xmlNode* a_node);
 node_chain_t *osm_parse_osm_way_nd(osm_t *osm, xmlNode *a_node);
 member_t *osm_parse_osm_relation_member(osm_t *osm, xmlNode *a_node);
@@ -261,10 +261,10 @@ relation_t *osm_get_relation_by_id(osm_t *osm, item_id_t id);
 
 gboolean osm_way_min_length(const way_t *way, guint len);
 guint osm_way_number_of_nodes(const way_t *way);
-GSList *osm_node_to_relation(osm_t *osm, node_t *node,
+GSList *osm_node_to_relation(osm_t *osm, const node_t *node,
 				       gboolean via_way);
-GSList *osm_way_to_relation(osm_t *osm, way_t *way);
-GSList *osm_relation_to_relation(osm_t *osm, relation_t *relation);
+GSList *osm_way_to_relation(osm_t *osm, const way_t *way);
+GSList *osm_relation_to_relation(osm_t *osm, const relation_t *relation);
 GSList *osm_object_to_relation(osm_t *osm, object_t *object);
 way_chain_t *osm_node_to_way(const osm_t *osm, const node_t *node);
 
@@ -282,7 +282,7 @@ void osm_way_restore(osm_t *osm, way_t *way, item_id_chain_t *id_chain);
 way_t *osm_way_new(void);
 void osm_way_attach(osm_t *osm, way_t *way);
 
-gboolean osm_position_within_bounds(osm_t *osm, gint x, gint y);
+gboolean osm_position_within_bounds(const osm_t *osm, gint x, gint y);
 gboolean osm_position_within_bounds_ll(const pos_t *ll_min, const pos_t *ll_max, const pos_t *pos);
 item_id_t osm_new_way_id(osm_t *osm);
 gboolean osm_way_ends_with_node(const way_t *way, const node_t *node);

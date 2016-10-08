@@ -1169,7 +1169,7 @@ osm_t *osm_parse(const char *path, const char *filename) {
   return osm;
 }
 
-gboolean osm_sanity_check(GtkWidget *parent, osm_t *osm) {
+gboolean osm_sanity_check(GtkWidget *parent, const osm_t *osm) {
   if(!osm->bounds) {
     errorf(parent, _("Invalid data in OSM file:\n"
 		     "Boundary box missing!"));
@@ -1801,7 +1801,7 @@ guint osm_way_number_of_nodes(const way_t *way) {
 }
 
 /* return all relations a node is in */
-GSList *osm_node_to_relation(osm_t *osm, node_t *node,
+GSList *osm_node_to_relation(osm_t *osm, const node_t *node,
 				       gboolean via_way) {
   GSList *rel_chain = NULL;
 
@@ -1845,7 +1845,7 @@ GSList *osm_node_to_relation(osm_t *osm, node_t *node,
 }
 
 /* return all relations a way is in */
-GSList *osm_way_to_relation(osm_t *osm, way_t *way) {
+GSList *osm_way_to_relation(osm_t *osm, const way_t *way) {
   GSList *rel_chain = NULL;
 
   relation_t *relation = osm->relation;
@@ -1875,7 +1875,7 @@ GSList *osm_way_to_relation(osm_t *osm, way_t *way) {
 }
 
 /* return all relations a relation is in */
-GSList *osm_relation_to_relation(osm_t *osm, relation_t *rel) {
+GSList *osm_relation_to_relation(osm_t *osm, const relation_t *rel) {
   GSList *rel_chain = NULL;
 
   relation_t *relation = osm->relation;
@@ -1957,7 +1957,7 @@ way_chain_t *osm_node_to_way(const osm_t *osm, const node_t *node) {
   return chain;
 }
 
-gboolean osm_position_within_bounds(osm_t *osm, gint x, gint y) {
+gboolean osm_position_within_bounds(const osm_t *osm, gint x, gint y) {
   if((x < osm->bounds->min.x) || (x > osm->bounds->max.x)) return FALSE;
   if((y < osm->bounds->min.y) || (y > osm->bounds->max.y)) return FALSE;
   return TRUE;
