@@ -30,7 +30,7 @@
 #error "libxml doesn't support required tree or output"
 #endif
 
-static void xml_get_prop_float(xmlNode *node, char *prop, float *value) {
+static void xml_get_prop_float(xmlNode *node, const char *prop, float *value) {
   xmlChar *str = xmlGetProp(node, BAD_CAST prop);
   if(str) {
     *value = g_ascii_strtod((gchar*)str, NULL);
@@ -38,7 +38,7 @@ static void xml_get_prop_float(xmlNode *node, char *prop, float *value) {
   }
 }
 
-static gboolean xml_prop_is(xmlNode *node, char *prop, char *str) {
+static gboolean xml_prop_is(xmlNode *node, const char *prop, const char *str) {
   xmlChar *prop_str = xmlGetProp(node, BAD_CAST prop);
   if(!prop_str) return FALSE;
 
