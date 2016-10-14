@@ -1298,8 +1298,6 @@ static char *osm_generate_xml(item_id_t changeset,
   xmlChar *result = NULL;
   int len = 0;
 
-  LIBXML_TEST_VERSION;
-
   xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
   xmlNodePtr root_node = xmlNewNode(NULL, BAD_CAST "osm");
   xmlDocSetRootElement(doc, root_node);
