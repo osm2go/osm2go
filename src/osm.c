@@ -1320,23 +1320,23 @@ osm_generate_xml_finish(xmlDocPtr doc)
 char *osm_generate_xml_node(item_id_t changeset, node_t *node) {
   char str[32];
 
-  xmlNodePtr node_node;
-  xmlDocPtr doc = osm_generate_xml_init(&node_node, "node");
+  xmlNodePtr xml_node;
+  xmlDocPtr doc = osm_generate_xml_init(&xml_node, "node");
 
   /* new nodes don't have an id, but get one after the upload */
   if(!(OSM_FLAGS(node) & OSM_FLAG_NEW)) {
     snprintf(str, sizeof(str), ITEM_ID_FORMAT, OSM_ID(node));
-    xmlNewProp(node_node, BAD_CAST "id", BAD_CAST str);
+    xmlNewProp(xml_node, BAD_CAST "id", BAD_CAST str);
   }
   snprintf(str, sizeof(str), ITEM_ID_FORMAT, OSM_VERSION(node));
-  xmlNewProp(node_node, BAD_CAST "version", BAD_CAST str);
+  xmlNewProp(xml_node, BAD_CAST "version", BAD_CAST str);
   snprintf(str, sizeof(str), "%u", (unsigned)changeset);
-  xmlNewProp(node_node, BAD_CAST "changeset", BAD_CAST str);
+  xmlNewProp(xml_node, BAD_CAST "changeset", BAD_CAST str);
   g_ascii_formatd(str, sizeof(str), LL_FORMAT, node->pos.lat);
-  xmlNewProp(node_node, BAD_CAST "lat", BAD_CAST str);
+  xmlNewProp(xml_node, BAD_CAST "lat", BAD_CAST str);
   g_ascii_formatd(str, sizeof(str), LL_FORMAT, node->pos.lon);
-  xmlNewProp(node_node, BAD_CAST "lon", BAD_CAST str);
-  osm_generate_tags(OSM_TAG(node), node_node);
+  xmlNewProp(xml_node, BAD_CAST "lon", BAD_CAST str);
+  osm_generate_tags(OSM_TAG(node), xml_node);
 
   return osm_generate_xml_finish(doc);
 }
@@ -1345,26 +1345,26 @@ char *osm_generate_xml_node(item_id_t changeset, node_t *node) {
 char *osm_generate_xml_way(item_id_t changeset, way_t *way) {
   char str[32];
 
-  xmlNodePtr way_node;
-  xmlDocPtr doc = osm_generate_xml_init(&way_node, "way");
+  xmlNodePtr xml_node;
+  xmlDocPtr doc = osm_generate_xml_init(&xml_node, "way");
 
   snprintf(str, sizeof(str), ITEM_ID_FORMAT, OSM_ID(way));
-  xmlNewProp(way_node, BAD_CAST "id", BAD_CAST str);
+  xmlNewProp(xml_node, BAD_CAST "id", BAD_CAST str);
   snprintf(str, sizeof(str), ITEM_ID_FORMAT, OSM_VERSION(way));
-  xmlNewProp(way_node, BAD_CAST "version", BAD_CAST str);
+  xmlNewProp(xml_node, BAD_CAST "version", BAD_CAST str);
   snprintf(str, sizeof(str), "%u", (unsigned)changeset);
-  xmlNewProp(way_node, BAD_CAST "changeset", BAD_CAST str);
+  xmlNewProp(xml_node, BAD_CAST "changeset", BAD_CAST str);
 
   node_chain_t *node_chain = way->node_chain;
   while(node_chain) {
-    xmlNodePtr nd_node = xmlNewChild(way_node, NULL, BAD_CAST "nd", NULL);
+    xmlNodePtr nd_node = xmlNewChild(xml_node, NULL, BAD_CAST "nd", NULL);
     gchar str[G_ASCII_DTOSTR_BUF_SIZE];
     g_snprintf(str, sizeof(str), ITEM_ID_FORMAT, OSM_ID(node_chain->node));
     xmlNewProp(nd_node, BAD_CAST "ref", BAD_CAST str);
     node_chain = node_chain->next;
   }
 
-  osm_generate_tags(OSM_TAG(way), way_node);
+  osm_generate_tags(OSM_TAG(way), xml_node);
 
   return osm_generate_xml_finish(doc);
 }
@@ -1374,19 +1374,19 @@ char *osm_generate_xml_relation(item_id_t changeset,
 				relation_t *relation) {
   char str[32];
 
-  xmlNodePtr rel_node;
-  xmlDocPtr doc = osm_generate_xml_init(&rel_node, "relation");
+  xmlNodePtr xml_node;
+  xmlDocPtr doc = osm_generate_xml_init(&xml_node, "relation");
 
   snprintf(str, sizeof(str), ITEM_ID_FORMAT, OSM_ID(relation));
-  xmlNewProp(rel_node, BAD_CAST "id", BAD_CAST str);
+  xmlNewProp(xml_node, BAD_CAST "id", BAD_CAST str);
   snprintf(str, sizeof(str), ITEM_ID_FORMAT, OSM_VERSION(relation));
-  xmlNewProp(rel_node, BAD_CAST "version", BAD_CAST str);
+  xmlNewProp(xml_node, BAD_CAST "version", BAD_CAST str);
   snprintf(str, sizeof(str), "%u", (unsigned)changeset);
-  xmlNewProp(rel_node, BAD_CAST "changeset", BAD_CAST str);
+  xmlNewProp(xml_node, BAD_CAST "changeset", BAD_CAST str);
 
   member_t *member = relation->member;
   while(member) {
-    xmlNodePtr m_node = xmlNewChild(rel_node,NULL,BAD_CAST "member", NULL);
+    xmlNodePtr m_node = xmlNewChild(xml_node,NULL,BAD_CAST "member", NULL);
     gchar str[G_ASCII_DTOSTR_BUF_SIZE];
     g_snprintf(str, sizeof(str), ITEM_ID_FORMAT, OBJECT_ID(member->object));
 
@@ -1416,7 +1416,7 @@ char *osm_generate_xml_relation(item_id_t changeset,
 
     member = member->next;
   }
-  osm_generate_tags(OSM_TAG(relation), rel_node);
+  osm_generate_tags(OSM_TAG(relation), xml_node);
 
   return osm_generate_xml_finish(doc);
 }
