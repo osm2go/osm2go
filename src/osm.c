@@ -1291,141 +1291,134 @@ static void osm_generate_tags(const tag_t *tag, xmlNodePtr node) {
   }
 }
 
-/* build xml representation for a way */
-static char *osm_generate_xml(item_id_t changeset,
-		       type_t type, void *item) {
-  char str[32];
-  xmlChar *result = NULL;
-  int len = 0;
-
+static xmlDocPtr
+osm_generate_xml_init(xmlNodePtr *node, const char *node_name)
+{
   xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
   xmlNodePtr root_node = xmlNewNode(NULL, BAD_CAST "osm");
   xmlDocSetRootElement(doc, root_node);
 
-  switch(type) {
-  case NODE:
-    {
-      node_t *node = (node_t*)item;
-      xmlNodePtr node_node = xmlNewChild(root_node, NULL,
-					 BAD_CAST "node", NULL);
-      /* new nodes don't have an id, but get one after the upload */
-      if(!(OSM_FLAGS(node) & OSM_FLAG_NEW)) {
-	snprintf(str, sizeof(str), ITEM_ID_FORMAT, OSM_ID(node));
-	xmlNewProp(node_node, BAD_CAST "id", BAD_CAST str);
-      }
-      snprintf(str, sizeof(str), ITEM_ID_FORMAT, OSM_VERSION(node));
-      xmlNewProp(node_node, BAD_CAST "version", BAD_CAST str);
-      snprintf(str, sizeof(str), "%u", (unsigned)changeset);
-      xmlNewProp(node_node, BAD_CAST "changeset", BAD_CAST str);
-      g_ascii_formatd(str, sizeof(str), LL_FORMAT, node->pos.lat);
-      xmlNewProp(node_node, BAD_CAST "lat", BAD_CAST str);
-      g_ascii_formatd(str, sizeof(str), LL_FORMAT, node->pos.lon);
-      xmlNewProp(node_node, BAD_CAST "lon", BAD_CAST str);
-      osm_generate_tags(OSM_TAG(node), node_node);
-    }
-    break;
+  *node = xmlNewChild(root_node, NULL, BAD_CAST node_name, NULL);
 
-  case WAY:
-    {
-      way_t *way = (way_t*)item;
-      xmlNodePtr way_node = xmlNewChild(root_node, NULL, BAD_CAST "way", NULL);
-      snprintf(str, sizeof(str), ITEM_ID_FORMAT, OSM_ID(way));
-      xmlNewProp(way_node, BAD_CAST "id", BAD_CAST str);
-      snprintf(str, sizeof(str), ITEM_ID_FORMAT, OSM_VERSION(way));
-      xmlNewProp(way_node, BAD_CAST "version", BAD_CAST str);
-      snprintf(str, sizeof(str), "%u", (unsigned)changeset);
-      xmlNewProp(way_node, BAD_CAST "changeset", BAD_CAST str);
+  return doc;
+}
 
-      node_chain_t *node_chain = way->node_chain;
-      while(node_chain) {
-	xmlNodePtr nd_node = xmlNewChild(way_node, NULL, BAD_CAST "nd", NULL);
-	gchar str[G_ASCII_DTOSTR_BUF_SIZE];
-	g_snprintf(str, sizeof(str), ITEM_ID_FORMAT, OSM_ID(node_chain->node));
-	xmlNewProp(nd_node, BAD_CAST "ref", BAD_CAST str);
-	node_chain = node_chain->next;
-      }
-
-      osm_generate_tags(OSM_TAG(way), way_node);
-    }
-    break;
-
-  case RELATION:
-    {
-      relation_t *relation = (relation_t*)item;
-      xmlNodePtr rel_node = xmlNewChild(root_node, NULL,
-					BAD_CAST "relation", NULL);
-      snprintf(str, sizeof(str), ITEM_ID_FORMAT, OSM_ID(relation));
-      xmlNewProp(rel_node, BAD_CAST "id", BAD_CAST str);
-      snprintf(str, sizeof(str), ITEM_ID_FORMAT, OSM_VERSION(relation));
-      xmlNewProp(rel_node, BAD_CAST "version", BAD_CAST str);
-      snprintf(str, sizeof(str), "%u", (unsigned)changeset);
-      xmlNewProp(rel_node, BAD_CAST "changeset", BAD_CAST str);
-
-      member_t *member = relation->member;
-      while(member) {
-	xmlNodePtr m_node = xmlNewChild(rel_node,NULL,BAD_CAST "member", NULL);
-	gchar str[G_ASCII_DTOSTR_BUF_SIZE];
-	g_snprintf(str, sizeof(str), ITEM_ID_FORMAT, OBJECT_ID(member->object));
-
-	switch(member->object.type) {
-	case NODE:
-	  xmlNewProp(m_node, BAD_CAST "type", BAD_CAST "node");
-	  break;
-
-	case WAY:
-	  xmlNewProp(m_node, BAD_CAST "type", BAD_CAST "way");
-	  break;
-
-	case RELATION:
-	  xmlNewProp(m_node, BAD_CAST "type", BAD_CAST "relation");
-	  break;
-
-	default:
-	  break;
-	}
-
-	xmlNewProp(m_node, BAD_CAST "ref", BAD_CAST str);
-
-	if(member->role)
-	  xmlNewProp(m_node, BAD_CAST "role", BAD_CAST member->role);
-	else
-	  xmlNewProp(m_node, BAD_CAST "role", BAD_CAST "");
-
-	member = member->next;
-      }
-      osm_generate_tags(OSM_TAG(relation), rel_node);
-    }
-    break;
-
-  default:
-    printf("neither NODE nor WAY nor RELATION\n");
-    g_assert_not_reached();
-    break;
-  }
+static char *
+osm_generate_xml_finish(xmlDocPtr doc)
+{
+  xmlChar *result = NULL;
+  int len = 0;
 
   xmlDocDumpFormatMemoryEnc(doc, &result, &len, "UTF-8", 1);
   xmlFreeDoc(doc);
 
-  //  puts("xml encoding result:");
-  //  puts((char*)result);
-
   return (char*)result;
+
 }
 
 /* build xml representation for a node */
 char *osm_generate_xml_node(item_id_t changeset, node_t *node) {
-  return osm_generate_xml(changeset, NODE, node);
+  char str[32];
+
+  xmlNodePtr node_node;
+  xmlDocPtr doc = osm_generate_xml_init(&node_node, "node");
+
+  /* new nodes don't have an id, but get one after the upload */
+  if(!(OSM_FLAGS(node) & OSM_FLAG_NEW)) {
+    snprintf(str, sizeof(str), ITEM_ID_FORMAT, OSM_ID(node));
+    xmlNewProp(node_node, BAD_CAST "id", BAD_CAST str);
+  }
+  snprintf(str, sizeof(str), ITEM_ID_FORMAT, OSM_VERSION(node));
+  xmlNewProp(node_node, BAD_CAST "version", BAD_CAST str);
+  snprintf(str, sizeof(str), "%u", (unsigned)changeset);
+  xmlNewProp(node_node, BAD_CAST "changeset", BAD_CAST str);
+  g_ascii_formatd(str, sizeof(str), LL_FORMAT, node->pos.lat);
+  xmlNewProp(node_node, BAD_CAST "lat", BAD_CAST str);
+  g_ascii_formatd(str, sizeof(str), LL_FORMAT, node->pos.lon);
+  xmlNewProp(node_node, BAD_CAST "lon", BAD_CAST str);
+  osm_generate_tags(OSM_TAG(node), node_node);
+
+  return osm_generate_xml_finish(doc);
 }
 
 /* build xml representation for a way */
 char *osm_generate_xml_way(item_id_t changeset, way_t *way) {
-  return osm_generate_xml(changeset, WAY, way);
+  char str[32];
+
+  xmlNodePtr way_node;
+  xmlDocPtr doc = osm_generate_xml_init(&way_node, "way");
+
+  snprintf(str, sizeof(str), ITEM_ID_FORMAT, OSM_ID(way));
+  xmlNewProp(way_node, BAD_CAST "id", BAD_CAST str);
+  snprintf(str, sizeof(str), ITEM_ID_FORMAT, OSM_VERSION(way));
+  xmlNewProp(way_node, BAD_CAST "version", BAD_CAST str);
+  snprintf(str, sizeof(str), "%u", (unsigned)changeset);
+  xmlNewProp(way_node, BAD_CAST "changeset", BAD_CAST str);
+
+  node_chain_t *node_chain = way->node_chain;
+  while(node_chain) {
+    xmlNodePtr nd_node = xmlNewChild(way_node, NULL, BAD_CAST "nd", NULL);
+    gchar str[G_ASCII_DTOSTR_BUF_SIZE];
+    g_snprintf(str, sizeof(str), ITEM_ID_FORMAT, OSM_ID(node_chain->node));
+    xmlNewProp(nd_node, BAD_CAST "ref", BAD_CAST str);
+    node_chain = node_chain->next;
+  }
+
+  osm_generate_tags(OSM_TAG(way), way_node);
+
+  return osm_generate_xml_finish(doc);
 }
 
 /* build xml representation for a relation */
 char *osm_generate_xml_relation(item_id_t changeset,
 				relation_t *relation) {
-  return osm_generate_xml(changeset, RELATION, relation);
+  char str[32];
+
+  xmlNodePtr rel_node;
+  xmlDocPtr doc = osm_generate_xml_init(&rel_node, "relation");
+
+  snprintf(str, sizeof(str), ITEM_ID_FORMAT, OSM_ID(relation));
+  xmlNewProp(rel_node, BAD_CAST "id", BAD_CAST str);
+  snprintf(str, sizeof(str), ITEM_ID_FORMAT, OSM_VERSION(relation));
+  xmlNewProp(rel_node, BAD_CAST "version", BAD_CAST str);
+  snprintf(str, sizeof(str), "%u", (unsigned)changeset);
+  xmlNewProp(rel_node, BAD_CAST "changeset", BAD_CAST str);
+
+  member_t *member = relation->member;
+  while(member) {
+    xmlNodePtr m_node = xmlNewChild(rel_node,NULL,BAD_CAST "member", NULL);
+    gchar str[G_ASCII_DTOSTR_BUF_SIZE];
+    g_snprintf(str, sizeof(str), ITEM_ID_FORMAT, OBJECT_ID(member->object));
+
+    switch(member->object.type) {
+    case NODE:
+      xmlNewProp(m_node, BAD_CAST "type", BAD_CAST "node");
+      break;
+
+    case WAY:
+      xmlNewProp(m_node, BAD_CAST "type", BAD_CAST "way");
+      break;
+
+    case RELATION:
+      xmlNewProp(m_node, BAD_CAST "type", BAD_CAST "relation");
+      break;
+
+    default:
+      break;
+    }
+
+    xmlNewProp(m_node, BAD_CAST "ref", BAD_CAST str);
+
+    if(member->role)
+      xmlNewProp(m_node, BAD_CAST "role", BAD_CAST member->role);
+    else
+      xmlNewProp(m_node, BAD_CAST "role", BAD_CAST "");
+
+    member = member->next;
+  }
+  osm_generate_tags(OSM_TAG(relation), rel_node);
+
+  return osm_generate_xml_finish(doc);
 }
 
 /* build xml representation for a changeset */
