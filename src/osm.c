@@ -1279,7 +1279,7 @@ gboolean osm_node_in_other_way(const osm_t *osm, const way_t *way, const node_t 
   return is_other;
 }
 
-static void osm_generate_tags(tag_t *tag, xmlNodePtr node) {
+static void osm_generate_tags(const tag_t *tag, xmlNodePtr node) {
   while(tag) {
     /* skip "created_by" tags as they aren't needed anymore with api 0.6 */
     if(!osm_is_creator_tag(tag)) {
@@ -1438,7 +1438,7 @@ char *osm_generate_xml_changeset(char *comment) {
   /* tags for this changeset */
   tag_t tag_comment = {
     .key = "comment", .value = comment, .next = NULL };
-  tag_t tag_creator = {
+  const tag_t tag_creator = {
     .key = "created_by", .value = PACKAGE " v" VERSION, .next = &tag_comment };
 
   LIBXML_TEST_VERSION;
