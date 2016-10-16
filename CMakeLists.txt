@@ -202,6 +202,12 @@ if (HAVE_LOG2)
 	set_source_files_properties(src/area_edit.c PROPERTIES COMPILE_DEFINITIONS "LOG2=log2")
 endif ()
 
+# there shouldn't be a reason to change the server url
+option(SERVER_EDITABLE "add widget to make API URL editable" OFF)
+if (SERVER_EDITABLE)
+	set_source_files_properties(src/project.c PROPERTIES COMPILE_DEFINITIONS "SERVER_EDITABLE")
+endif ()
+
 add_library(osm2go_lib STATIC
 	${osm2go_SOURCE_FILES}
 )

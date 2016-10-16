@@ -41,9 +41,6 @@
 #error "libxml doesn't support required tree or output"
 #endif
 
-/* there shouldn't be a reason to changes the servers url */
-#undef SERVER_EDITABLE
-
 typedef struct {
   project_t *project;
   settings_t *settings;
