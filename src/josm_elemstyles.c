@@ -21,8 +21,9 @@
   http://josm.openstreetmap.de/svn/trunk/styles/standard/elemstyles.xml
 */
 
-#include "appdata.h"
 #include "josm_elemstyles.h"
+
+#include "appdata.h"
 #include "josm_presets.h"
 #include "map.h"
 #include "misc.h"

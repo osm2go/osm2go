@@ -20,7 +20,10 @@
 #ifndef JOSM_ELEMSTYLES_H
 #define JOSM_ELEMSTYLES_H
 
+#include "osm.h"
+
 #include <glib.h>
+#include <libxml/tree.h>
 
 // Ratio conversions
 

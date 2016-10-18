@@ -85,7 +85,7 @@ iconbar.o: $(srcdir)/info.h $(srcdir)/map_edit.h
 icon.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/icon.h $(srcdir)/misc.h
 info.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/info.h $(srcdir)/josm_presets.h $(srcdir)/list.h
 info.o: $(srcdir)/map.h $(srcdir)/misc.h $(srcdir)/relation_edit.h
-josm_elemstyles.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/josm_elemstyles.h
+josm_elemstyles.o: $(srcdir)/josm_elemstyles.h $(srcdir)/osm.h $(srcdir)/pos.h $(srcdir)/appdata.h $(srcdir)/canvas.h $(srcdir)/undo.h
 josm_elemstyles.o: $(srcdir)/josm_presets.h $(srcdir)/info.h $(srcdir)/map.h $(srcdir)/misc.h $(srcdir)/style.h $(srcdir)/icon.h
 josm_presets.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/icon.h $(srcdir)/josm_presets.h
 josm_presets.o: $(srcdir)/info.h $(srcdir)/misc.h
