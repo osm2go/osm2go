@@ -31,8 +31,9 @@
  * ( Add )( Edit )(Remove)
  */
 
-#include "appdata.h"
 #include "list.h"
+
+#include "appdata.h"
 #include "misc.h"
 
 #include <stdarg.h>

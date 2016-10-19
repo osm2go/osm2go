@@ -89,7 +89,7 @@ josm_elemstyles.o: $(srcdir)/josm_elemstyles.h $(srcdir)/osm.h $(srcdir)/pos.h $
 josm_elemstyles.o: $(srcdir)/josm_presets.h $(srcdir)/info.h $(srcdir)/map.h $(srcdir)/misc.h $(srcdir)/style.h $(srcdir)/icon.h
 josm_presets.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/icon.h $(srcdir)/josm_presets.h
 josm_presets.o: $(srcdir)/info.h $(srcdir)/misc.h
-list.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/list.h $(srcdir)/misc.h
+list.o: $(srcdir)/list.h $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/misc.h
 main.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/about.h $(srcdir)/banner.h $(srcdir)/diff.h
 main.o: $(srcdir)/project.h $(srcdir)/map.h $(srcdir)/settings.h $(srcdir)/gps.h $(srcdir)/iconbar.h $(srcdir)/josm_presets.h $(srcdir)/info.h
 main.o: $(srcdir)/misc.h $(srcdir)/osm_api.h $(srcdir)/relation_edit.h $(srcdir)/scale_popup.h $(srcdir)/statusbar.h $(srcdir)/style.h
