@@ -102,7 +102,7 @@ map_edit.o: $(srcdir)/iconbar.h $(srcdir)/info.h $(srcdir)/map_hl.h $(srcdir)/mi
 map_edit.o: $(srcdir)/josm_elemstyles.h
 map_hl.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/map_hl.h $(srcdir)/map.h $(srcdir)/style.h $(srcdir)/icon.h
 map_hl.o: $(srcdir)/josm_elemstyles.h
-misc.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/misc.h $(srcdir)/settings.h
+misc.o: $(srcdir)/misc.h $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/settings.h
 net_io.o: $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/banner.h $(srcdir)/misc.h $(srcdir)/net_io.h
 net_io.o: $(srcdir)/settings.h
 osm_api.o: $(srcdir)/osm_api.h $(srcdir)/appdata.h $(srcdir)/pos.h $(srcdir)/osm.h $(srcdir)/canvas.h $(srcdir)/undo.h $(srcdir)/project.h $(srcdir)/map.h

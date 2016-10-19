@@ -17,8 +17,9 @@
  * along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "appdata.h"
 #include "misc.h"
+
+#include "appdata.h"
 #include "settings.h"
 
 #ifdef FREMANTLE

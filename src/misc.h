@@ -20,6 +20,8 @@
 #ifndef MISC_H
 #define MISC_H
 
+#include <gtk/gtk.h>
+
 #define MISC_AGAIN_ID_DELETE           (1<<0)
 #define MISC_AGAIN_ID_JOIN_NODES       (1<<1)
 #define MISC_AGAIN_ID_JOIN_WAYS        (1<<2)
