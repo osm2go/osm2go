@@ -20,6 +20,11 @@
 #ifndef INFO_H
 #define INFO_H
 
+#include "appdata.h"
+#include "osm.h"
+
+#include <gtk/gtk.h>
+
 typedef struct {
   appdata_t *appdata;
   GtkWidget *dialog, *list;

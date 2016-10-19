@@ -17,8 +17,9 @@
  * along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "appdata.h"
 #include "info.h"
+
+#include "appdata.h"
 #include "josm_presets.h"
 #include "list.h"
 #include "map.h"
