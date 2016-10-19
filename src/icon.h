@@ -20,6 +20,8 @@
 #ifndef ICON_H
 #define ICON_H
 
+#include <gtk/gtk.h>
+
 typedef struct icon_s {
   GdkPixbuf *buf;
   int use;

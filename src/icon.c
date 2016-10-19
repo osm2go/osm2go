@@ -17,10 +17,12 @@
  * along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <sys/stat.h>
-#include "appdata.h"
 #include "icon.h"
+
+#include "appdata.h"
 #include "misc.h"
+
+#include <sys/stat.h>
 
 static gchar*
 icon_file_exists(const gchar *file) {
