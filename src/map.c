@@ -17,13 +17,14 @@
  * along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "map.h"
+
 #include "appdata.h"
 #include "banner.h"
 #include "diff.h"
 #include "gps.h"
 #include "iconbar.h"
 #include "info.h"
-#include "map.h"
 #include "map_edit.h"
 #include "map_hl.h"
 #include "misc.h"
