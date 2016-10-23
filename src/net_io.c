@@ -17,10 +17,11 @@
  * along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "net_io.h"
+
 #include "appdata.h"
 #include "banner.h"
 #include "misc.h"
-#include "net_io.h"
 
 #include <curl/curl.h>
 #include <curl/easy.h>  /* new for v7 */
