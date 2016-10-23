@@ -21,8 +21,9 @@
  * diff.c - generate and restore changes on the current data set
  */
 
-#include "appdata.h"
 #include "diff.h"
+
+#include "appdata.h"
 #include "misc.h"
 #include "statusbar.h"
 
