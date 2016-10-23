@@ -17,8 +17,9 @@
  * along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "appdata.h"
 #include "map_hl.h"
+
+#include "appdata.h"
 #include "style.h"
 
 /* create a new item for the cursor */
