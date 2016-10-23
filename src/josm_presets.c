@@ -17,9 +17,10 @@
  * along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "josm_presets.h"
+
 #include "appdata.h"
 #include "icon.h"
-#include "josm_presets.h"
 #include "misc.h"
 
 #include <libxml/parser.h>
