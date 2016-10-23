@@ -22,6 +22,7 @@
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "osm-gps-map.h"
 #include "config.h"
 
 #include <fcntl.h>
@@ -39,7 +40,6 @@
 
 #include "converter.h"
 #include "osm-gps-map-types.h"
-#include "osm-gps-map.h"
 #include "misc.h"
 
 #ifdef USE_CAIRO

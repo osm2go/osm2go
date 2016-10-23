@@ -25,16 +25,16 @@
 #ifndef _OSM_GPS_MAP_POINT_H_
 #define _OSM_GPS_MAP_POINT_H_
 
+#include <glib.h>
+
 G_BEGIN_DECLS
 
-typedef struct _OsmGpsMapPoint OsmGpsMapPoint;
-
-struct _OsmGpsMapPoint
+typedef struct _OsmGpsMapPoint
 {
     /* radians */
     float  rlat;
     float  rlon;
-};
+} OsmGpsMapPoint;
 
 G_END_DECLS
 
