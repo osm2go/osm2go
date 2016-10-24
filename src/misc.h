@@ -47,12 +47,12 @@ typedef struct file_chain_s {
 
 struct appdata_s;
 
-void errorf(GtkWidget *parent, const char *fmt, ...);
-void warningf(GtkWidget *parent, const char *fmt, ...);
-void messagef(GtkWidget *parent, char *title, const char *fmt, ...);
+void errorf(GtkWidget *parent, const char *fmt, ...) G_GNUC_PRINTF(2, 3);
+void warningf(GtkWidget *parent, const char *fmt, ...) G_GNUC_PRINTF(2, 3);
+void messagef(GtkWidget *parent, char *title, const char *fmt, ...) G_GNUC_PRINTF(3, 4);
 gboolean yes_no_f(GtkWidget *parent,
 		  struct appdata_s *appdata, gulong again_bit, gint flags,
-		  const char *title, const char *fmt, ...);
+		  const char *title, const char *fmt, ...) G_GNUC_PRINTF(6, 7);
 
 gchar *find_file(const char *n1, const char *n2, const char *n3);
 file_chain_t *file_scan(const char *extension);
