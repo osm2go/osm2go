@@ -26,8 +26,7 @@
 /* ------------------- creating and destroying the canvas ----------------- */
 
 static gint canvas_destroy_event(GtkWidget *widget, gpointer data) {
-  canvas_t *canvas = data;
-  g_free(canvas);
+  g_free(data);
   return FALSE;
 }
 
