@@ -20,7 +20,6 @@ script:
   - tar xf /tmp/cmake.tar -C /tmp
   - export PATH=/tmp/cmake-${CMAKE_VERSION}-Linux-x86_64/bin:${PATH}
   - mkdir build-am build-cm
-  - autoreconf -fi && pushd build-am && ../configure && make && popd
   - pushd build-cm
   - cmake -D ENABLE_TESTS=On .. && make VERBOSE=1 && make test
   - cmake -D SERVER_EDITABLE=On -D PICKER_MENU=On . && make VERBOSE=1 && make test
