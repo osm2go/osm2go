@@ -132,7 +132,7 @@ static void on_area_warning_clicked(GtkButton *button, gpointer data) {
   context_t *context = (context_t*)data;
 
   char *wtext = warn_text(context);
-  warningf(context->dialog, wtext);
+  warningf(context->dialog, "%s", wtext);
   g_free(wtext);
 }
 
