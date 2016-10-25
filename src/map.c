@@ -1202,13 +1202,9 @@ gboolean map_item_is_selected_node(map_t *map, map_item_t *map_item) {
   } else if(map->selected.object.type == WAY) {
     printf("  selected item is a way\n");
 
-    node_chain_t *node_chain = map->selected.object.way->node_chain;
-    while(node_chain) {
-      if(node_chain->node == map_item->object.node) {
-	printf("  requested item is part of selected way\n");
-	return TRUE;
-      }
-      node_chain = node_chain->next;
+    if(osm_node_in_way(map->selected.object.way, map_item->object.node)) {
+      printf("  requested item is part of selected way\n");
+      return TRUE;
     }
     printf("  but it doesn't include the requested node\n");
     return FALSE;

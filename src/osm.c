@@ -1812,13 +1812,7 @@ GSList *osm_node_to_relation(osm_t *osm, const node_t *node,
       case WAY:
 	if(via_way) {
 	  /* ways have to be checked for the nodes they consist of */
-	  node_chain_t *chain = member->object.way->node_chain;
-	  while(chain && !is_member) {
-	    if(chain->node == node)
-	      is_member = TRUE;
-
-	    chain = chain->next;
-	  }
+	  is_member = osm_node_in_way(member->object.way, node);
 	}
 	break;
 
@@ -1925,18 +1919,8 @@ way_chain_t *osm_node_to_way(const osm_t *osm, const node_t *node) {
 
   way_t *way = osm->way;
   while(way) {
-    gboolean is_member = FALSE;
-
-    node_chain_t *node_chain = way->node_chain;
-    while(node_chain) {
-      if(node_chain->node == node)
-	is_member = TRUE;
-
-      node_chain = node_chain->next;
-    }
-
     /* node is a member of this relation, so move it to the member chain */
-    if(is_member) {
+    if(osm_node_in_way(way, node)) {
       *cur_chain = g_new0(way_chain_t, 1);
       (*cur_chain)->way = way;
       cur_chain = &((*cur_chain)->next);
