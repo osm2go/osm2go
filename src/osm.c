@@ -1718,7 +1718,8 @@ way_chain_t *osm_node_delete(osm_t *osm, icon_t **icon,
 	  g_free(*chain);
 	  *chain = next;
 	} else
-	  chain = &((*chain)->next);
+          /* only record that there has been a change */
+          break;
       } else
 	chain = &((*chain)->next);
     }
