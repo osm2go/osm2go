@@ -254,6 +254,36 @@ void map_edit_way_add_cancel(map_t *map) {
   map->action.way = NULL;
 }
 
+/**
+ * @brief merge the two node chains
+ * @param way the way to append to
+ * @param nchain the tail of the new chain
+ * @param reverse if way should be reversed afterwards
+ *
+ * The first node of nchain must be the last one of way. It will be
+ * preserved in nchain, all other nodes will be moded to chain.
+ */
+static void merge_node_chains(way_t *way, node_chain_t *nchain, gboolean reverse)
+{
+  node_chain_t *chain = way->node_chain;
+  g_assert(chain);
+
+  /* search end of way to be extended */
+  while(chain->next)
+    chain = chain->next;
+
+  /* skip first node of new way as its the same as the last one of the */
+  /* way we are attaching it to */
+  chain->next = nchain->next;
+
+  /* terminate new way afer first node */
+  nchain->next = NULL;
+
+  /* and undo reversion of required */
+  if(reverse)
+    osm_way_reverse(way);
+}
+
 void map_edit_way_add_ok(map_t *map) {
   osm_t *osm = map->appdata->osm;
 
@@ -302,16 +332,7 @@ void map_edit_way_add_ok(map_t *map) {
       printf("  need to append\n");
 
     /* search end of way to be extended */
-    node_chain_t *chain = map->action.extending->node_chain;
-    g_assert(chain);
-    while(chain->next) chain = chain->next;
-
-    /* skip first node of new way as its the same as the last one of the */
-    /* way we are attaching it to */
-    chain->next = map->action.way->node_chain->next;
-
-    /* terminate new way afer first node */
-    map->action.way->node_chain->next = NULL;
+    merge_node_chains(map->action.extending, map->action.way->node_chain, reverse);
 
     /* erase and free new way (now only containing the first node anymore) */
     map_item_chain_destroy(&map->action.way->map_item_chain);
@@ -319,11 +340,6 @@ void map_edit_way_add_ok(map_t *map) {
 
     map->action.way = map->action.extending;
     OSM_FLAGS(map->action.way) |= OSM_FLAG_DIRTY;
-
-    /* and undo reversion of required */
-    if(reverse)
-      osm_way_reverse(map->action.way);
-
   } else {
     /* now move the way itself into the main data structure */
     osm_way_attach(map->appdata->osm, map->action.way);
@@ -378,19 +394,10 @@ void map_edit_way_add_ok(map_t *map) {
       reverse = !reverse;
     }
 
-    /* search end of node chain */
-    node_chain_t *chain = map->action.way->node_chain;
-    g_assert(chain);
-    while(chain->next) chain = chain->next;
-
-    /* attach ends_on way to way but omit first node */
-    chain->next = map->action.ends_on->node_chain->next;
-    map->action.ends_on->node_chain->next = NULL;
+    merge_node_chains(map->action.way, map->action.ends_on->node_chain, reverse);
 
     /* erase and free ends_on (now only containing the first node anymore) */
     map_way_delete(map->appdata, map->action.ends_on);
-
-    if(reverse) osm_way_reverse(map->action.way);
   }
 
   /* remove prior version of this way */
