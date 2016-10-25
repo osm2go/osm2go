@@ -232,15 +232,16 @@ void map_edit_way_add_cancel(map_t *map) {
   node_chain_t *chain = map->action.way->node_chain;
   while(chain) {
     node_chain_t *next = chain->next;
+    node_t *node = chain->node;
 
     printf("    node #"ITEM_ID_FORMAT" (used by %d)\n",
-	   OSM_ID(chain->node), chain->node->ways);
+	   OSM_ID(node), node->ways);
 
-    chain->node->ways--;
-    if(!chain->node->ways && (OSM_ID(chain->node) == ID_ILLEGAL)) {
+    node->ways--;
+    if(!node->ways && (OSM_ID(node) == ID_ILLEGAL)) {
       printf("      -> freeing temp node\n");
       osm_node_free(osm->node_hash,
-		    &map->appdata->icon, chain->node);
+		    &map->appdata->icon, node);
     }
     g_free(chain);
     chain = next;
@@ -296,22 +297,23 @@ void map_edit_way_add_ok(map_t *map) {
   /* (their way count will be 0 after removing the way) */
   node_chain_t *chain = map->action.way->node_chain;
   while(chain) {
+    node_t *node = chain->node;
     printf("    node #"ITEM_ID_FORMAT" (used by %d)\n",
-	   OSM_ID(chain->node), chain->node->ways);
+	   OSM_ID(node), node->ways);
 
     /* a node may have been a stand-alone node before, so remove its */
     /* visual representation as its now drawn as part of the way */
     /* (if at all) */
-    if(OSM_ID(chain->node) != ID_ILLEGAL)
-      map_item_chain_destroy(&chain->node->map_item_chain);
+    if(OSM_ID(node) != ID_ILLEGAL)
+      map_item_chain_destroy(&node->map_item_chain);
 
-    map_node_draw(map, chain->node);
+    map_node_draw(map, node);
 
     /* we can be sure that no node gets inserted twice (even if twice in */
     /* the ways chain) because it gets assigned a non-ID_ILLEGAL id when */
     /* being moved to the osm node chain */
-    if(OSM_ID(chain->node) == ID_ILLEGAL)
-      osm_node_attach(map->appdata->osm, chain->node);
+    if(OSM_ID(node) == ID_ILLEGAL)
+      osm_node_attach(map->appdata->osm, node);
 
     chain = chain->next;
   }

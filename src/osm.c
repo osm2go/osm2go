@@ -358,10 +358,11 @@ static void osm_nodes_free(hash_table_t *table, icon_t **icon, node_t *node) {
 
 void osm_node_chain_free(node_chain_t *node_chain) {
   while(node_chain) {
-    g_assert_cmpint(node_chain->node->ways, >, 0);
+    node_t *node = node_chain->node;
+    g_assert_cmpint(node->ways, >, 0);
 
     node_chain_t *next = node_chain->next;
-    node_chain->node->ways--;
+    node->ways--;
     g_free(node_chain);
     node_chain = next;
   }
@@ -2034,17 +2035,18 @@ void osm_way_delete(osm_t *osm, icon_t **icon,
   /* delete all nodes that aren't in other use now */
   node_chain_t **chain = &way->node_chain;
   while(*chain) {
-    (*chain)->node->ways--;
+    node_t *node = (*chain)->node;
+    node->ways--;
     printf("checking node #" ITEM_ID_FORMAT " (still used by %d)\n",
-	   OSM_ID((*chain)->node), (*chain)->node->ways);
+	   OSM_ID(node), node->ways);
 
     /* this node must only be part of this way */
-    if(!(*chain)->node->ways) {
+    if(!node->ways) {
       /* delete this node, but don't let this actually affect the */
       /* associated ways as the only such way is the one we are currently */
       /* deleting */
       way_chain_t *way_chain =
-	osm_node_delete(osm, icon, (*chain)->node, FALSE, FALSE);
+	osm_node_delete(osm, icon, node, FALSE, FALSE);
       g_assert(way_chain);
       while(way_chain) {
 	way_chain_t *way_next = way_chain->next;

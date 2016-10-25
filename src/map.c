@@ -204,15 +204,16 @@ void map_way_select(appdata_t *appdata, way_t *way) {
   while(node_chain) {
     map_item_t item;
     item.object.type = NODE;
-    item.object.node = node_chain->node;
+    node_t *node = node_chain->node;
+    item.object.node = node;
 
     /* draw an arrow between every two nodes */
     if(last) {
       struct { float x, y;} center, diff;
-      center.x = (last->lpos.x + node_chain->node->lpos.x)/2;
-      center.y = (last->lpos.y + node_chain->node->lpos.y)/2;
-      diff.x = node_chain->node->lpos.x - last->lpos.x;
-      diff.y = node_chain->node->lpos.y - last->lpos.y;
+      center.x = (last->lpos.x + node->lpos.x)/2;
+      center.y = (last->lpos.y + node->lpos.y)/2;
+      diff.x = node->lpos.x - last->lpos.x;
+      diff.y = node->lpos.y - last->lpos.y;
 
       /* only draw arrow if there's sufficient space */
       /* TODO: what if there's not enough space anywhere? */
@@ -248,18 +249,18 @@ void map_way_select(appdata_t *appdata, way_t *way) {
       /* create a new map item for every node */
       map_item_t *new_map_item = g_new0(map_item_t, 1);
       new_map_item->object.type = NODE;
-      new_map_item->object.node = node_chain->node;
+      new_map_item->object.node = node;
       new_map_item->highlight = TRUE;
 
-      gint x = node_chain->node->lpos.x;
-      gint y = node_chain->node->lpos.y;
+      gint x = node->lpos.x;
+      gint y = node->lpos.y;
 
       map_hl_circle_new(map, CANVAS_GROUP_NODES_IHL, new_map_item,
 			x, y, map->style->node.radius * map->state->detail,
 			map->style->highlight.node_color);
     }
 
-    last = node_chain->node;
+    last = node;
     node_chain = node_chain->next;
   }
 
@@ -1351,12 +1352,13 @@ static void map_touchnode_update(appdata_t *appdata, gint x, gint y) {
   if(!map->touchnode && map->action.way) {
     node_chain_t *chain = map->action.way->node_chain;
     while(!map->touchnode && chain && chain->next) {
-      gint nx = abs(x - chain->node->lpos.x);
-      gint ny = abs(y - chain->node->lpos.y);
+      node = chain->node;
+      gint nx = abs(x - node->lpos.x);
+      gint ny = abs(y - node->lpos.y);
 
       if((nx < map->style->node.radius) && (ny < map->style->node.radius) &&
 	 (nx*nx + ny*ny < map->style->node.radius * map->style->node.radius))
-	map_hl_touchnode_draw(map, chain->node);
+	map_hl_touchnode_draw(map, node);
 
       chain = chain->next;
     }
