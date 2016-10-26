@@ -261,7 +261,7 @@ void diff_save(const project_t *project, const osm_t *osm) {
   g_free(ndiff);
 }
 
-static item_id_t xml_get_prop_int(xmlNode *node, char *prop, item_id_t def) {
+static item_id_t xml_get_prop_int(xmlNode *node, const char *prop, item_id_t def) {
   xmlChar *str = xmlGetProp(node, BAD_CAST prop);
   item_id_t value = def;
 
