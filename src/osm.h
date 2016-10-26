@@ -261,10 +261,7 @@ relation_t *osm_get_relation_by_id(osm_t *osm, item_id_t id);
 
 gboolean osm_way_min_length(const way_t *way, guint len);
 guint osm_way_number_of_nodes(const way_t *way);
-GSList *osm_node_to_relation(osm_t *osm, const node_t *node,
-				       gboolean via_way);
 GSList *osm_way_to_relation(osm_t *osm, const way_t *way);
-GSList *osm_relation_to_relation(osm_t *osm, const relation_t *relation);
 GSList *osm_object_to_relation(osm_t *osm, object_t *object);
 way_chain_t *osm_node_to_way(const osm_t *osm, const node_t *node);
 

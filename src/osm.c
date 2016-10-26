@@ -1794,7 +1794,7 @@ guint osm_way_number_of_nodes(const way_t *way) {
 }
 
 /* return all relations a node is in */
-GSList *osm_node_to_relation(osm_t *osm, const node_t *node,
+static GSList *osm_node_to_relation(osm_t *osm, const node_t *node,
 				       gboolean via_way) {
   GSList *rel_chain = NULL;
 
@@ -1862,7 +1862,7 @@ GSList *osm_way_to_relation(osm_t *osm, const way_t *way) {
 }
 
 /* return all relations a relation is in */
-GSList *osm_relation_to_relation(osm_t *osm, const relation_t *rel) {
+static GSList *osm_relation_to_relation(osm_t *osm, const relation_t *rel) {
   GSList *rel_chain = NULL;
 
   relation_t *relation = osm->relation;
