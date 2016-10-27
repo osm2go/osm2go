@@ -56,7 +56,7 @@ set(osm2go_SOURCE_FILES
 	src/pos.h
 	src/project.c
 	src/project.h
-	src/relation_edit.c
+	src/relation_edit.cpp
 	src/relation_edit.h
 	src/scale_popup.c
 	src/scale_popup.h

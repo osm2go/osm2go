@@ -29,12 +29,12 @@
 
 /* --------------- relation dialog for an item (node or way) ----------- */
 
-typedef struct {
+struct relitem_context_t {
   object_t *item;
   appdata_t *appdata;
   GtkWidget *dialog, *view;
   GtkListStore *store;
-} relitem_context_t;
+};
 
 enum {
   RELITEM_COL_TYPE = 0,
@@ -44,10 +44,10 @@ enum {
   RELITEM_NUM_COLS
 };
 
-typedef struct role_chain_t {
+struct role_chain_t {
   char *role;
   struct role_chain_t *next;
-} role_chain_t;
+};
 
 static gboolean relation_add_item(GtkWidget *parent,
 			      relation_t *relation, object_t *object) {
@@ -200,7 +200,8 @@ static void relation_remove_item(relation_t *relation, const object_t *object) {
 static gboolean relation_info_dialog(GtkWidget *parent, appdata_t *appdata,
 				     relation_t *relation) {
 
-  object_t object = { .type = RELATION };
+  object_t object;
+  object.type = RELATION;
   object.relation = relation;
   return info_dialog(parent, appdata, &object);
 }
