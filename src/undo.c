@@ -114,7 +114,8 @@ static void undo_state_free(osm_t *osm, undo_state_t *state) {
 
 /* free all undo states, thus forgetting the entire history */
 /* called at program exit or e.g. at project change */
-void undo_free(osm_t *osm, undo_state_t *state) {
+void undo_free(osm_t *osm, undo_t *undo) {
+  undo_state_t *state = undo->state;
   printf("Freeing all UNDO states:\n");
 
   while(state) {

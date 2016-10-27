@@ -1288,7 +1288,7 @@ void cleanup(appdata_t *appdata) {
   project_free(appdata->project);
 
   if(appdata->menu_item_map_undo)
-    undo_free(appdata->osm, appdata->undo.state);
+    undo_free(appdata->osm, &appdata->undo);
 
   menu_cleanup(appdata);
 
