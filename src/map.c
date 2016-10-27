@@ -666,7 +666,7 @@ static void map_frisket_rectangle(canvas_points_t *points,
 
 /* Draw the frisket area which masks off areas it'd be unsafe to edit,
  * plus its inner edge marker line */
-static void map_frisket_draw(map_t *map, bounds_t *bounds) {
+static void map_frisket_draw(map_t *map, const bounds_t *bounds) {
   canvas_points_t *points = canvas_points_new(5);
 
   /* don't draw frisket at all if it's completely transparent */
@@ -2124,7 +2124,7 @@ static canvas_points_t *canvas_points_init(const bounds_t *bounds, const track_p
 }
 
 void map_track_draw_seg(map_t *map, track_seg_t *seg) {
-  bounds_t *bounds = map->appdata->osm->bounds;
+  const bounds_t *bounds = map->appdata->osm->bounds;
 
   /* a track_seg needs at least 2 points to be drawn */
   if (track_is_empty(seg))
@@ -2187,7 +2187,7 @@ void map_track_draw_seg(map_t *map, track_seg_t *seg) {
 /* update the last visible fragment of this segment since a */
 /* gps position may have been added */
 void map_track_update_seg(map_t *map, track_seg_t *seg) {
-  bounds_t *bounds = map->appdata->osm->bounds;
+  const bounds_t *bounds = map->appdata->osm->bounds;
 
   printf("-- APPENDING TO TRACK --\n");
 
@@ -2361,7 +2361,7 @@ static gint map_bg_item_destroy_event(GtkWidget *widget, gpointer data) {
 }
 
 void map_set_bg_image(map_t *map, const char *filename) {
-  bounds_t *bounds = map->appdata->osm->bounds;
+  const bounds_t *bounds = map->appdata->osm->bounds;
 
   map_remove_bg_image(map);
 
