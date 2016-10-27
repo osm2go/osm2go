@@ -20,6 +20,11 @@
 #ifndef RELATION_EDIT_H
 #define RELATION_EDIT_H
 
+#include <gtk/gtk.h>
+
+#include "appdata.h"
+#include "osm.h"
+
 void relation_membership_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object);
 void relation_list(GtkWidget *parent, appdata_t *appdata, object_t *object);
 void relation_show_members(GtkWidget *parent, relation_t *relation);
