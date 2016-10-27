@@ -72,11 +72,11 @@ static void undo_object_free(osm_t *osm, object_t *obj) {
 
     switch(obj->type) {
     case NODE:
-      osm_node_free(osm->node_hash, NULL, obj->node);
+      osm_node_free(osm, NULL, obj->node);
       break;
 
     case WAY:
-      osm_way_free(osm->way_hash, obj->way);
+      osm_way_free(osm, obj->way);
       break;
 
     default:

@@ -316,7 +316,8 @@ gboolean osm_way_ends_with_node(const way_t *way, const node_t *node) {
 
 /* ------------------- node handling ------------------- */
 
-void osm_node_free(hash_table_t *hash_table, icon_t **icon, node_t *node) {
+void osm_node_free(osm_t *osm, icon_t **icon, node_t *node) {
+  hash_table_t *hash_table = osm->node_hash;
   item_id_t id = OSM_ID(node);
 
   if(node->icon_buf)
@@ -346,10 +347,10 @@ void osm_node_free(hash_table_t *hash_table, icon_t **icon, node_t *node) {
   }
 }
 
-static void osm_nodes_free(hash_table_t *table, icon_t **icon, node_t *node) {
+static void osm_nodes_free(osm_t *osm, icon_t **icon, node_t *node) {
   while(node) {
     node_t *next = node->next;
-    osm_node_free(table, icon, node);
+    osm_node_free(osm, icon, node);
     node = next;
   }
 }
@@ -368,7 +369,8 @@ void osm_node_chain_free(node_chain_t *node_chain) {
   }
 }
 
-void osm_way_free(hash_table_t *hash_table, way_t *way) {
+void osm_way_free(osm_t *osm, way_t *way) {
+  hash_table_t *hash_table = osm->way_hash;
   item_id_t id = OSM_ID(way);
 
   //  printf("freeing way #" ITEM_ID_FORMAT "\n", OSM_ID(way));
@@ -398,10 +400,10 @@ void osm_way_free(hash_table_t *hash_table, way_t *way) {
   }
 }
 
-static void osm_ways_free(hash_table_t *hash_table, way_t *way) {
+static void osm_ways_free(osm_t *osm, way_t *way) {
   while(way) {
     way_t *next = way->next;
-    osm_way_free(hash_table, way);
+    osm_way_free(osm, way);
     way = next;
   }
 }
@@ -631,8 +633,8 @@ void osm_free(icon_t **icon, osm_t *osm) {
 
   osm_bounds_free(osm->bounds);
   osm_users_free(osm->user);
-  osm_ways_free(NULL, osm->way);
-  osm_nodes_free(NULL, icon, osm->node);
+  osm_ways_free(osm, osm->way);
+  osm_nodes_free(osm, icon, osm->node);
   osm_relations_free(osm->relation);
   g_free(osm);
 }
@@ -1757,7 +1759,7 @@ way_chain_t *osm_node_delete(osm_t *osm, icon_t **icon,
 	*cnode = (*cnode)->next;
 
 	g_assert(osm);
-	osm_node_free(osm->node_hash, icon, node);
+	osm_node_free(osm, icon, node);
       } else
 	cnode = &((*cnode)->next);
     }
@@ -2079,7 +2081,7 @@ void osm_way_delete(osm_t *osm, icon_t **icon,
 	*cway = (*cway)->next;
 
 	g_assert(osm);
-	osm_way_free(osm->way_hash, way);
+	osm_way_free(osm, way);
       } else
 	cway = &((*cway)->next);
     }

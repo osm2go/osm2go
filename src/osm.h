@@ -220,7 +220,7 @@ void osm_free(struct icon_s **icon, osm_t *osm);
 char *osm_node_get_value(node_t *node, const char *key);
 gboolean osm_node_has_tag(const node_t *node);
 
-void osm_way_free(hash_table_t *hash_table, way_t *way);
+void osm_way_free(osm_t *osm, way_t *way);
 char *osm_way_get_value(way_t *way, const char *key);
 gboolean osm_node_has_value(const node_t* node, const char* str);
 gboolean osm_way_has_value(const way_t* way, const char* str);
@@ -231,7 +231,7 @@ gboolean osm_node_in_other_way(const osm_t *osm, const way_t *way, const node_t 
 
 void osm_node_chain_free(node_chain_t *node_chain);
 gboolean osm_node_chain_diff(const node_chain_t *n1, const node_chain_t *n2);
-void osm_node_free(hash_table_t *hash, struct icon_s **icon, node_t *node);
+void osm_node_free(osm_t *osm, struct icon_s **icon, node_t *node);
 
 gboolean osm_members_diff(const member_t *n1, const member_t *n2);
 void osm_members_free(member_t *member);

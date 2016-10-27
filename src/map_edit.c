@@ -240,7 +240,7 @@ void map_edit_way_add_cancel(map_t *map) {
     node->ways--;
     if(!node->ways && (OSM_ID(node) == ID_ILLEGAL)) {
       printf("      -> freeing temp node\n");
-      osm_node_free(osm->node_hash,
+      osm_node_free(osm,
 		    &map->appdata->icon, node);
     }
     g_free(chain);
@@ -251,7 +251,7 @@ void map_edit_way_add_cancel(map_t *map) {
   /* remove ways visual representation */
   map_item_chain_destroy(&map->action.way->map_item_chain);
 
-  osm_way_free(osm->way_hash, map->action.way);
+  osm_way_free(osm, map->action.way);
   map->action.way = NULL;
 }
 
@@ -338,7 +338,7 @@ void map_edit_way_add_ok(map_t *map) {
 
     /* erase and free new way (now only containing the first node anymore) */
     map_item_chain_destroy(&map->action.way->map_item_chain);
-    osm_way_free(osm->way_hash, map->action.way);
+    osm_way_free(osm, map->action.way);
 
     map->action.way = map->action.extending;
     OSM_FLAGS(map->action.way) |= OSM_FLAG_DIRTY;
