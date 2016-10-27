@@ -666,7 +666,7 @@ static void map_frisket_rectangle(canvas_points_t *points,
 
 /* Draw the frisket area which masks off areas it'd be unsafe to edit,
  * plus its inner edge marker line */
-void map_frisket_draw(map_t *map, bounds_t *bounds) {
+static void map_frisket_draw(map_t *map, bounds_t *bounds) {
   canvas_points_t *points = canvas_points_new(5);
 
   /* don't draw frisket at all if it's completely transparent */
