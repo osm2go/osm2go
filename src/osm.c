@@ -2348,8 +2348,8 @@ tag_t *osm_tags_copy(tag_t *src_tag) {
 }
 
 /* return plain text of type */
-char *osm_object_type_string(object_t *object) {
-  const struct { type_t type; char *name; } types[] = {
+const char *osm_object_type_string(object_t *object) {
+  const struct { type_t type; const char *name; } types[] = {
     { ILLEGAL,     "illegal" },
     { NODE,        "node" },
     { WAY,         "way/area" },
@@ -2468,7 +2468,7 @@ char *osm_object_get_name(object_t *object) {
 }
 
 char *osm_object_string(object_t *object) {
-  char *type_str = osm_object_type_string(object);
+  const char *type_str = osm_object_type_string(object);
 
   if(!object)
     return g_strconcat(type_str, " #<invalid>", NULL);

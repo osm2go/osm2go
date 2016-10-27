@@ -307,7 +307,7 @@ gint osm_relation_members_num(relation_t *relation);
 gchar *relation_get_descriptive_name(relation_t *relation);
 
 gboolean osm_object_is_real(const object_t *object);
-char *osm_object_type_string(object_t *object);
+const char *osm_object_type_string(object_t *object);
 char *osm_object_id_string(object_t *object);
 char *osm_object_string(object_t *object);
 tag_t *osm_object_get_tags(object_t *object);
