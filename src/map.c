@@ -73,14 +73,17 @@ void map_item_chain_destroy(map_item_chain_t **chainP) {
     return;
   }
 
-#ifdef DESTROY_WAIT_FOR_GTK
   map_item_chain_t *chain = *chainP;
   while(chain) {
     map_item_chain_t *next = chain->next;
     canvas_item_destroy(chain->map_item->item);
+#ifndef DESTROY_WAIT_FOR_GTK
+    g_free(chain);
+#endif
     chain = next;
   }
 
+#ifdef DESTROY_WAIT_FOR_GTK
   /* wait until gtks event handling has actually destroyed this item */
   printf("waiting for item destruction ");
   while(gtk_events_pending() || *chainP) {
@@ -93,14 +96,6 @@ void map_item_chain_destroy(map_item_chain_t **chainP) {
   /* called by now and it has set the chain to NULL */
 
 #else
-  map_item_chain_t *chain = *chainP;
-  while(chain) {
-    map_item_chain_t *next = chain->next;
-    canvas_item_destroy(chain->map_item->item);
-
-    g_free(chain);
-    chain = next;
-  }
   *chainP = NULL;
 #endif
 }
