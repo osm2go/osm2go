@@ -25,15 +25,11 @@
 #include "map.h"
 
 #include <glib.h>
+#include <vector>
 
-typedef struct map_highlight_t {
-  canvas_item_t *item;
-  struct map_highlight_t *next;
-} map_highlight_t;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+struct map_highlight_t {
+  std::vector<canvas_item_t *> items;
+};
 
 void map_hl_cursor_draw(map_t *map, gint x, gint y, gboolean is_world, gint radius);
 void map_hl_cursor_clear(map_t *map);
@@ -55,9 +51,5 @@ canvas_item_t *map_hl_polygon_new(map_t *map, canvas_group_t group, map_item_t *
 				   canvas_points_t *points, canvas_color_t color);
 
 void map_hl_segment_draw(map_t *map, gint width, gint x0, gint y0, gint x1, gint y1);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif // MAP_HL_H

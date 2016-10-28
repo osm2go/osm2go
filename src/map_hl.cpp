@@ -22,6 +22,8 @@
 #include "appdata.h"
 #include "style.h"
 
+#include <algorithm>
+
 /* create a new item for the cursor */
 void map_hl_cursor_draw(map_t *map, gint x, gint y, gboolean is_world,
 			gint radius) {
@@ -99,41 +101,41 @@ void map_hl_remove(appdata_t *appdata) {
   printf("removing highlight\n");
 
   map_highlight_t *hl = map->highlight;
-  while(hl) {
-    map_highlight_t *next = hl->next;
-    canvas_item_destroy(hl->item);
-    g_free(hl);
-
-    hl = next;
-  }
-
   map->highlight = NULL;
+  std::for_each(hl->items.begin(), hl->items.end(), canvas_item_destroy);
+
+  delete hl;
 }
+
+struct find_highlighted {
+  const map_item_t * const item;
+  find_highlighted(const map_item_t *t) : item(t) {}
+  bool operator()(canvas_item_t *c);
+};
+
+bool find_highlighted::operator()(canvas_item_t* c)
+{
+  map_item_t *hl_item = static_cast<map_item_t *>(canvas_item_get_user_data(c));
+
+  return hl_item && hl_item->object.type == item->object.type &&
+         hl_item->object.ptr == item->object.ptr;
+}
+
 
 gboolean map_hl_item_is_highlighted(map_t *map, map_item_t *item) {
   map_highlight_t *hl = map->highlight;
-  while(hl) {
-    map_item_t *hl_item = static_cast<map_item_t *>(canvas_item_get_user_data(hl->item));
-
-    if(hl_item) {
-      if((hl_item->object.type == item->object.type) &&
-	 (hl_item->object.ptr == item->object.ptr))
-	return TRUE;
-    }
-
-    hl = hl->next;
-  }
-
-  return FALSE;
+  if(!hl)
+    return FALSE;
+  return std::find_if(hl->items.begin(), hl->items.end(), find_highlighted(item)) !=
+         hl->items.end();
 }
 
 static void hl_add(map_t *map, canvas_item_t *item)
 {
   /* attach highlight object */
-  map_highlight_t **hl = &map->highlight;
-  while(*hl) hl = &((*hl)->next);
-  *hl = g_new0(map_highlight_t, 1);
-  (*hl)->item = item;
+  if(!map->highlight)
+    map->highlight = new map_highlight_t();
+  map->highlight->items.push_back(item);
 }
 
 canvas_item_t *map_hl_circle_new(map_t *map, canvas_group_t group,

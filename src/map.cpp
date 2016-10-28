@@ -319,8 +319,12 @@ void map_relation_select(appdata_t *appdata, relation_t *relation) {
 
   printf("highlighting relation " ITEM_ID_FORMAT "\n", OSM_ID(relation));
 
-  g_assert(!map->highlight);
-  map_highlight_t **hl = &map->highlight;
+  map_highlight_t *hl = map->highlight;
+  if(hl) {
+    g_assert(hl->items.empty());
+  } else {
+    hl = map->highlight = new map_highlight_t();
+  }
 
   map_item_t *map_item = &map->selected;
   map_item->object.type      = RELATION;
@@ -372,9 +376,7 @@ void map_relation_select(appdata_t *appdata, relation_t *relation) {
 
     /* attach item to item chain */
     if(item) {
-      *hl = g_new0(map_highlight_t, 1);
-      (*hl)->item = item;
-      hl = &(*hl)->next;
+      hl->items.push_back(item);
     }
 
     member = member->next;
@@ -825,16 +827,7 @@ static gint map_destroy_event(G_GNUC_UNUSED GtkWidget *widget, gpointer data) {
   style_free(map->style);
 
   /* destroy existing highlight */
-  if(map->highlight) {
-    printf("removing highlight\n");
-
-    map_highlight_t *hl = map->highlight;
-    while(hl) {
-      map_highlight_t *next = hl->next;
-      g_free(hl);
-      hl = next;
-    }
-  }
+  delete map->highlight;
 
   g_free(map);
 
