@@ -541,8 +541,9 @@ member_t *osm_parse_osm_relation_member(osm_t *osm, xmlNode *a_node) {
 
     switch(member->object.type) {
     case ILLEGAL:
+      g_free(member);
       printf("Unable to store illegal type\n");
-      break;
+      return NULL;
 
     case WAY:
       /* search matching way */
