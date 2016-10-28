@@ -2542,15 +2542,38 @@ item_id_t osm_object_get_id(const object_t *object) {
   return object->id;
 }
 
+guint osm_relation_members_num(const relation_t *relation) {
+  guint n, w, r;
+  osm_relation_members_num_by_type(relation, &n, &w, &r);
+  return n + w + r;
+}
 
-gint osm_relation_members_num(relation_t *relation) {
-  gint num = 0;
-  member_t *member = relation->member;
-  while(member) {
-    num++;
-    member = member->next;
+void osm_relation_members_num_by_type(const relation_t* relation,
+                                      guint* nodes, guint* ways, guint* relations) {
+  *nodes = 0;
+  *ways = 0;
+  *relations = 0;
+
+  const member_t *member;
+  for(member = relation->member; member; member = member->next) {
+    switch(member->object.type) {
+    case NODE:
+    case NODE_ID:
+      (*nodes)++;
+      break;
+    case WAY:
+    case WAY_ID:
+      (*ways)++;
+      break;
+    case RELATION:
+    case RELATION_ID:
+      (*relations)++;
+      break;
+    default:
+      g_assert_not_reached();
+      break;
+    }
   }
-  return num;
 }
 
 void osm_object_set_flags(object_t *object, int set, int clr) {

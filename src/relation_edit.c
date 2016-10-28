@@ -825,12 +825,12 @@ static void on_relation_remove(GtkWidget *but, relation_context_t *context) {
 
   printf("remove relation #" ITEM_ID_FORMAT "\n", OSM_ID(sel));
 
-  gint members = osm_relation_members_num(sel);
+  guint members = osm_relation_members_num(sel);
 
   if(members)
     if(!yes_no_f(context->dialog, NULL, 0, 0,
 		 _("Delete non-empty relation?"),
-		 _("This relation still has %d members. "
+		 _("This relation still has %u members. "
 		   "Delete it anyway?"), members))
       return;
 

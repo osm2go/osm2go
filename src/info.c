@@ -424,31 +424,11 @@ static GtkWidget *details_widget(tag_context_t *context, gboolean big) {
   case RELATION: {
     /* relations tell something about their members */
     gint nodes = 0, ways = 0, relations = 0;
-    member_t *member = context->object.relation->member;
-    while(member) {
-      switch(member->object.type) {
-      case NODE:
-      case NODE_ID:
-	nodes++;
-	break;
-      case WAY:
-      case WAY_ID:
-	ways++;
-	break;
-      case RELATION:
-      case RELATION_ID:
-	relations++;
-	break;
-
-      default:
-	break;
-      }
-
-      member = member->next;
-    }
+    osm_relation_members_num_by_type(context->object.relation,
+                                     &nodes, &ways, &relations);
 
     char *str =
-      g_strdup_printf(_("Members: %d nodes, %d ways, %d relations"),
+      g_strdup_printf(_("Members: %u nodes, %u ways, %u relations"),
 		      nodes, ways, relations);
 
     GtkWidget *member_btn = button_new_with_label(str);
