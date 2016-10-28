@@ -127,60 +127,54 @@ gboolean map_hl_item_is_highlighted(map_t *map, map_item_t *item) {
   return FALSE;
 }
 
-canvas_item_t *map_hl_circle_new(map_t *map, canvas_group_t group,
-		 map_item_t *map_item,
-		 gint x, gint y, gint radius, canvas_color_t color) {
-
+static void hl_add(map_t *map, canvas_item_t *item)
+{
   /* attach highlight object */
   map_highlight_t **hl = &map->highlight;
   while(*hl) hl = &((*hl)->next);
   *hl = g_new0(map_highlight_t, 1);
+  (*hl)->item = item;
+}
 
-  map_item->item = (*hl)->item =
+canvas_item_t *map_hl_circle_new(map_t *map, canvas_group_t group,
+		 map_item_t *map_item,
+		 gint x, gint y, gint radius, canvas_color_t color) {
+  map_item->item =
     canvas_circle_new(map->canvas, group, x, y, radius, 0, color, NO_COLOR);
+  hl_add(map, map_item->item);
 
-  canvas_item_set_user_data((*hl)->item, map_item);
+  canvas_item_set_user_data(map_item->item, map_item);
 
-  canvas_item_destroy_connect((*hl)->item,
+  canvas_item_destroy_connect(map_item->item,
 	     G_CALLBACK(map_hl_item_destroy_event), map_item);
 
-  return (*hl)->item;
+  return map_item->item;
 }
 
 canvas_item_t *map_hl_polygon_new(map_t *map, canvas_group_t group, map_item_t *map_item,
 				  canvas_points_t *points, canvas_color_t color) {
-
-  /* attach highlight object */
-  map_highlight_t **hl = &map->highlight;
-  while(*hl) hl = &((*hl)->next);
-  *hl = g_new0(map_highlight_t, 1);
-
-  map_item->item = (*hl)->item =
+  map_item->item =
     canvas_polygon_new(map->canvas, group, points, 0, 0, color);
+  hl_add(map, map_item->item);
 
-  canvas_item_set_user_data((*hl)->item, map_item);
+  canvas_item_set_user_data(map_item->item, map_item);
 
-  canvas_item_destroy_connect((*hl)->item,
+  canvas_item_destroy_connect(map_item->item,
 	     G_CALLBACK(map_hl_item_destroy_event), map_item);
 
-  return (*hl)->item;
+  return map_item->item;
 }
 
 canvas_item_t *map_hl_polyline_new(map_t *map, canvas_group_t group, map_item_t *map_item,
 				   canvas_points_t *points, gint width, canvas_color_t color) {
-
-  /* attach highlight object */
-  map_highlight_t **hl = &map->highlight;
-  while(*hl) hl = &((*hl)->next);
-  *hl = g_new0(map_highlight_t, 1);
-
-  map_item->item = (*hl)->item =
+  map_item->item =
     canvas_polyline_new(map->canvas, group, points, width, color);
+  hl_add(map, map_item->item);
 
-  canvas_item_set_user_data((*hl)->item, map_item);
+  canvas_item_set_user_data(map_item->item, map_item);
 
-  canvas_item_destroy_connect((*hl)->item,
+  canvas_item_destroy_connect(map_item->item,
 	     G_CALLBACK(map_hl_item_destroy_event), map_item);
 
-  return (*hl)->item;
+  return map_item->item;
 }
