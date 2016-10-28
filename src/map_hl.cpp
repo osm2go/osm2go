@@ -113,7 +113,7 @@ void map_hl_remove(appdata_t *appdata) {
 gboolean map_hl_item_is_highlighted(map_t *map, map_item_t *item) {
   map_highlight_t *hl = map->highlight;
   while(hl) {
-    map_item_t *hl_item = canvas_item_get_user_data(hl->item);
+    map_item_t *hl_item = static_cast<map_item_t *>(canvas_item_get_user_data(hl->item));
 
     if(hl_item) {
       if((hl_item->object.type == item->object.type) &&

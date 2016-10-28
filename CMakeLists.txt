@@ -42,7 +42,7 @@ set(osm2go_SOURCE_FILES
 	src/map.h
 	src/map_edit.cpp
 	src/map_edit.h
-	src/map_hl.c
+	src/map_hl.cpp
 	src/map_hl.h
 	src/misc.c
 	src/misc.h
