@@ -480,7 +480,7 @@ static void osm_delete_nodes(osm_upload_context_t *context, gchar *cred) {
     if(OSM_FLAGS(node) & OSM_FLAG_DELETED) {
       printf("deleting node on server\n");
 
-      appendf(&context->log, NULL, _("Delete node #%ld "), OSM_ID(node));
+      appendf(&context->log, NULL, _("Delete node #" ITEM_ID_FORMAT " "), OSM_ID(node));
 
       char *url = g_strdup_printf("%s/node/" ITEM_ID_FORMAT,
 				  project->server, OSM_ID(node));
@@ -547,7 +547,7 @@ static void osm_delete_ways(osm_upload_context_t *context, gchar *cred) {
     if(OSM_FLAGS(way) & OSM_FLAG_DELETED) {
       printf("deleting way on server\n");
 
-      appendf(&context->log, NULL, _("Delete way #%ld "), OSM_ID(way));
+      appendf(&context->log, NULL, _("Delete way #" ITEM_ID_FORMAT " "), OSM_ID(way));
 
       char *url = g_strdup_printf("%s/way/" ITEM_ID_FORMAT,
 				  project->server, OSM_ID(way));
@@ -614,7 +614,7 @@ static void osm_delete_relations(osm_upload_context_t *context, gchar *cred) {
       printf("deleting relation on server\n");
 
       appendf(&context->log, NULL,
-	      _("Delete relation #%ld "), OSM_ID(relation));
+	      _("Delete relation #" ITEM_ID_FORMAT " "), OSM_ID(relation));
 
       char *url = g_strdup_printf("%s/relation/" ITEM_ID_FORMAT,
 				  project->server, OSM_ID(relation));
