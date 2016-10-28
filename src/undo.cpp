@@ -31,6 +31,8 @@
 #include "banner.h"
 #include "map.h"
 
+#include <algorithm>
+
 #define UNDO_ENABLE_CHECK   if(!appdata->menu_item_map_undo) return;
 
 /* the data required for an undo is the undo_state_t. It consists of one */
@@ -261,16 +263,16 @@ static gboolean undo_object_save(const object_t *object,
   }
 }
 
-static void
-undo_append_relation(gpointer data, gpointer user_data)
-{
-  object_t obj;
-  obj.type = RELATION;
-  obj.relation = (relation_t*)data;
-  appdata_t *appdata = (appdata_t*)user_data;
-
-  undo_append_object(appdata, UNDO_MODIFY, &obj);
-}
+struct undo_append_obj_modify {
+  appdata_t * const appdata;
+  undo_append_obj_modify(appdata_t *a) : appdata(a) {}
+  void operator()(relation_t *relation) {
+    object_t obj;
+    obj.type = RELATION;
+    obj.relation = relation;
+    undo_append_object(appdata, UNDO_MODIFY, &obj);
+  }
+};
 
 void undo_append_object(appdata_t *appdata, undo_type_t type,
                         const object_t *object) {
@@ -284,13 +286,12 @@ void undo_append_object(appdata_t *appdata, undo_type_t type,
   /* therefore handle them first and save their state to undo  */
   /* the modifications */
   if(type == UNDO_DELETE) {
-    GSList *rchain =
+    const relation_chain_t &rchain =
       osm_object_to_relation(appdata->osm, object);
 
     /* store relation modification as undo operation by recursing */
     /* into objects */
-    g_slist_foreach(rchain, undo_append_relation, appdata);
-    g_slist_free(rchain);
+    std::for_each(rchain.begin(), rchain.end(), undo_append_obj_modify(appdata));
   }
 
   /* a simple stand-alone node deletion is just a single */

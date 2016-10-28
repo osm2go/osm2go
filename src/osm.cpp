@@ -1725,9 +1725,9 @@ guint osm_way_number_of_nodes(const way_t *way) {
 }
 
 /* return all relations a node is in */
-static GSList *osm_node_to_relation(osm_t *osm, const node_t *node,
+static relation_chain_t osm_node_to_relation(osm_t *osm, const node_t *node,
 				       gboolean via_way) {
-  GSList *rel_chain = NULL;
+  relation_chain_t rel_chain;
 
   relation_t *relation = osm->relation;
   for(; relation; relation = relation->next) {
@@ -1755,15 +1755,15 @@ static GSList *osm_node_to_relation(osm_t *osm, const node_t *node,
 
     /* node is a member of this relation, so move it to the member chain */
     if(is_member)
-      rel_chain = g_slist_prepend(rel_chain, relation);
+      rel_chain.push_back(relation);
   }
 
   return rel_chain;
 }
 
 /* return all relations a way is in */
-GSList *osm_way_to_relation(osm_t *osm, const way_t *way) {
-  GSList *rel_chain = NULL;
+relation_chain_t osm_way_to_relation(osm_t *osm, const way_t *way) {
+  relation_chain_t rel_chain;
 
   relation_t *relation = osm->relation;
   for(; relation; relation = relation->next) {
@@ -1785,15 +1785,16 @@ GSList *osm_way_to_relation(osm_t *osm, const way_t *way) {
 
     /* way is a member of this relation, so move it to the member chain */
     if(is_member)
-      rel_chain = g_slist_prepend(rel_chain, relation);
+      rel_chain.push_back(relation);
   }
 
   return rel_chain;
 }
 
 /* return all relations a relation is in */
-static GSList *osm_relation_to_relation(osm_t *osm, const relation_t *rel) {
-  GSList *rel_chain = NULL;
+static relation_chain_t osm_relation_to_relation(osm_t *osm,
+                                                 const relation_t *rel) {
+  relation_chain_t rel_chain;
 
   relation_t *relation = osm->relation;
   for(; relation; relation = relation->next) {
@@ -1815,14 +1816,14 @@ static GSList *osm_relation_to_relation(osm_t *osm, const relation_t *rel) {
 
     /* way is a member of this relation, so move it to the member chain */
     if(is_member)
-      rel_chain = g_slist_prepend(rel_chain, relation);
+      rel_chain.push_back(relation);
   }
 
   return rel_chain;
 }
 
 /* return all relations an object is in */
-GSList *osm_object_to_relation(osm_t *osm, const object_t *object) {
+relation_chain_t osm_object_to_relation(osm_t *osm, const object_t *object) {
   switch(object->type) {
   case NODE:
     return osm_node_to_relation(osm, object->node, FALSE);
@@ -1834,7 +1835,7 @@ GSList *osm_object_to_relation(osm_t *osm, const object_t *object) {
     return osm_relation_to_relation(osm, object->relation);
 
   default:
-    return NULL;
+    return relation_chain_t();
   }
 }
 
@@ -2124,11 +2125,13 @@ static const char *DS_ROUTE_FORWARD = "forward";
 static const char *DS_ROUTE_REVERSE = "reverse";
 
 struct reverse_roles {
-  way_t *way;
+  way_t * const way;
   guint n_roles_flipped;
+  reverse_roles(way_t *w) : way(w), n_roles_flipped(0) {}
+  void operator()(relation_t *relation);
 };
 
-void reverse_roles_operator(relation_t* relation, struct reverse_roles *context)
+void reverse_roles::operator()(relation_t* relation)
 {
   const char *type = osm_tag_get_by_key(OSM_TAG(relation), "type");
 
@@ -2140,11 +2143,11 @@ void reverse_roles_operator(relation_t* relation, struct reverse_roles *context)
   member_t *member = relation->member;
   for (; member != NULL; member = member->next) {
     if (member->object.type == WAY) {
-      if (member->object.way == context->way)
+      if (member->object.way == way)
         break;
     }
     if (member->object.type == WAY_ID) {
-      if (member->object.id == OSM_ID(context->way))
+      if (member->object.id == OSM_ID(way))
         break;
     }
   }
@@ -2157,12 +2160,12 @@ void reverse_roles_operator(relation_t* relation, struct reverse_roles *context)
     g_free(member->role);
     member->role = g_strdup(DS_ROUTE_REVERSE);
     OSM_FLAGS(relation) |= OSM_FLAG_DIRTY;
-    ++(context->n_roles_flipped);
+    ++n_roles_flipped;
   } else if (strcasecmp(member->role, DS_ROUTE_REVERSE) == 0) {
     g_free(member->role);
     member->role = g_strdup(DS_ROUTE_FORWARD);
     OSM_FLAGS(relation) |= OSM_FLAG_DIRTY;
-    ++(context->n_roles_flipped);
+    ++n_roles_flipped;
   }
 
   // TODO: what about numbered stops? Guess we ignore them; there's no
@@ -2172,14 +2175,11 @@ void reverse_roles_operator(relation_t* relation, struct reverse_roles *context)
 
 guint
 osm_way_reverse_direction_sensitive_roles(osm_t *osm, way_t *way) {
-  GSList *rel_chain = osm_way_to_relation(osm, way);
-  struct reverse_roles context = {
-    .way = way,
-    .n_roles_flipped = 0
-  };
+  const relation_chain_t &rchain = osm_way_to_relation(osm, way);
 
-  g_slist_foreach(rel_chain, (GFunc)reverse_roles_operator, &context);
-  g_slist_free(rel_chain);
+  reverse_roles context(way);
+  std::for_each(rchain.begin(), rchain.end(), context);
+
   return context.n_roles_flipped;
 }
 

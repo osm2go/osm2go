@@ -278,8 +278,6 @@ relation_t *osm_get_relation_by_id(osm_t *osm, item_id_t id);
 
 gboolean osm_way_min_length(const way_t *way, guint len);
 guint osm_way_number_of_nodes(const way_t *way);
-GSList *osm_way_to_relation(osm_t *osm, const way_t *way);
-GSList *osm_object_to_relation(osm_t *osm, const object_t *object);
 
 /* ----------- edit functions ----------- */
 node_t *osm_node_new(osm_t *osm, gint x, gint y);
@@ -333,6 +331,7 @@ gboolean osm_object_is_same(const object_t *obj1, const object_t *obj2);
 #ifdef __cplusplus
 }
 
+typedef std::vector<relation_t *> relation_chain_t;
 
 node_t *osm_parse_osm_way_nd(osm_t *osm, xmlNode *a_node);
 void osm_node_chain_free(node_chain_t &node_chain);
@@ -340,6 +339,8 @@ way_chain_t osm_node_to_way(const osm_t *osm, const node_t *node);
 way_chain_t osm_node_delete(osm_t *osm, node_t *node,
                             bool permanently, bool affect_ways);
 void osm_way_rotate(way_t *way, node_chain_t::iterator nfirst);
+relation_chain_t osm_way_to_relation(osm_t *osm, const way_t *way);
+relation_chain_t osm_object_to_relation(osm_t *osm, const object_t *object);
 
 #endif
 

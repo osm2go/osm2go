@@ -34,12 +34,14 @@
 struct relation_transfer {
   way_t * const dst;
   way_t * const src;
+  relation_transfer(way_t *d, way_t *s) : dst(d), src(s) {}
+  void operator()(relation_t *relation);
 };
 
-void relation_transfer_operator(relation_t* relation, struct relation_transfer *context)
+void relation_transfer::operator()(relation_t* relation)
 {
   printf("way #" ITEM_ID_FORMAT " is part of relation #" ITEM_ID_FORMAT "\n",
-         OSM_ID(context->src), OSM_ID(relation));
+         OSM_ID(src), OSM_ID(relation));
 
   /* make new member of the same relation */
 
@@ -48,15 +50,15 @@ void relation_transfer_operator(relation_t* relation, struct relation_transfer *
   char *role = NULL;
   while(*member) {
     /* save role of way */
-    if(((*member)->object.type == WAY) && ((*member)->object.way == context->src))
+    if(((*member)->object.type == WAY) && ((*member)->object.way == src))
       role = (*member)->role;
     member = &(*member)->next;
   }
 
-  printf("  adding way #" ITEM_ID_FORMAT " to relation\n", OSM_ID(context->dst));
+  printf("  adding way #" ITEM_ID_FORMAT " to relation\n", OSM_ID(dst));
   *member = g_new0(member_t, 1);
   (*member)->object.type = WAY;
-  (*member)->object.way = context->dst;
+  (*member)->object.way = dst;
   (*member)->role = g_strdup(role);
   member = &(*member)->next;
 
@@ -64,14 +66,9 @@ void relation_transfer_operator(relation_t* relation, struct relation_transfer *
 }
 
 static void transfer_relations(osm_t *osm, way_t *dst, way_t *src) {
-
   /* transfer relation memberships from the src way to the dst one */
-  GSList *rchain = osm_way_to_relation(osm, src);
-  struct relation_transfer context = { .dst = dst, .src = src };
-
-  g_slist_foreach(rchain, (GFunc)relation_transfer_operator, &context);
-
-  g_slist_free(rchain);
+  const relation_chain_t &rchain = osm_way_to_relation(osm, src);
+  std::for_each(rchain.begin(), rchain.end(), relation_transfer(dst, src));
 }
 
 /* combine tags from src to dst and combine them in a useful manner */
@@ -648,7 +645,13 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
   }
 }
 
-static void member_merge_operator(relation_t *relation, way_t *other)
+struct member_merge {
+  way_t * const other;
+  member_merge(way_t *o) : other(o) {}
+  void operator()(relation_t *relation);
+};
+
+void member_merge::operator()(relation_t *relation)
 {
   printf("way[1] is part of relation #" ITEM_ID_FORMAT "\n",
          OSM_ID(relation));
@@ -855,11 +858,11 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 	  OSM_TAG(ways2join[1]) = NULL;
 
 	  /* ---- transfer relation membership from way[1] to way[0] ----- */
-	  GSList *rchain =
+          const relation_chain_t &rchain =
 	    osm_way_to_relation(appdata->osm, ways2join[1]);
+          const relation_chain_t::const_iterator itEnd = rchain.end();
 
-          g_slist_foreach(rchain, (GFunc)member_merge_operator, ways2join[0]);
-	  g_slist_free(rchain);
+	  std::for_each(rchain.begin(), rchain.end(), member_merge(ways2join[0]));
 
 	  /* and open dialog to resolve tag collisions if necessary */
 	  if(conflict)

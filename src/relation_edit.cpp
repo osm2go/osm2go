@@ -25,6 +25,7 @@
 #include "map.h"
 #include "misc.h"
 
+#include <algorithm>
 #include <strings.h>
 
 /* --------------- relation dialog for an item (node or way) ----------- */
@@ -850,8 +851,13 @@ static void on_relation_remove(G_GNUC_UNUSED GtkWidget *button, relation_context
   relation_list_selected(context, NULL);
 }
 
-static void relation_list_widget_functor(const relation_t *rel,
-                                         relation_context_t *context)
+struct relation_list_widget_functor {
+  relation_context_t * const context;
+  relation_list_widget_functor(relation_context_t *c) : context(c) {}
+  void operator()(const relation_t *rel);
+};
+
+void relation_list_widget_functor::operator()(const relation_t *rel)
 {
   char *name = relation_get_descriptive_name(rel);
   guint num = osm_relation_members_num(rel);
@@ -891,14 +897,17 @@ static GtkWidget *relation_list_widget(relation_context_t *context) {
   gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(context->store),
                                        RELATION_COL_NAME, GTK_SORT_ASCENDING);
 
+  relation_list_widget_functor fc(context);
+
   if(context->object) {
-    GSList *rchain = osm_object_to_relation(context->appdata->osm, context->object);
-    g_slist_foreach(rchain, (GFunc)relation_list_widget_functor, context);
-    g_slist_free(rchain);
+    const relation_chain_t &rchain =
+                            osm_object_to_relation(context->appdata->osm,
+                                                   context->object);
+    std::for_each(rchain.begin(), rchain.end(), fc);
   } else {
     const relation_t *relation = context->appdata->osm->relation;
     for(; relation; relation = relation->next)
-      relation_list_widget_functor(relation, context);
+      fc(relation);
   }
 
   g_object_unref(context->store);
