@@ -33,6 +33,31 @@
 
 #define UNDO_ENABLE_CHECK   if(!appdata->menu_item_map_undo) return;
 
+/* the data required for an undo is the undo_state_t. It consists of one */
+/* or more operations undo_op_t which are the atomic operations the state */
+/* consist of. E.g. deleting a way causes all nodes it consists of to */
+/* be deleted as well */
+
+/* there is a type saved in the state as well as in every op. e.g. the */
+/* deletion of a node (state type == DELETE) may result in a modification */
+/* of all the ways the node was contained in. This would then be MODIFY */
+/* operatins being part of the DELETE state */
+
+typedef struct undo_op_s {
+  undo_type_t type;   /* the type of this particular database/map operation */
+  object_t *object;
+  item_id_chain_t *id_chain;       /* ref id list, e.g. for nodes of way */
+  struct undo_op_s *next;
+} undo_op_t;
+
+struct undo_state_s {
+  undo_type_t type;   /* what the overall operation was */
+  char *name;         /* the name of the "parent" object */
+  undo_op_t *op;
+
+  struct undo_state_s *next;
+};
+
 /* return plain text of type */
 static const char *undo_type_string(const undo_type_t type) {
   const struct { undo_type_t type; const char *name; } types[] = {
