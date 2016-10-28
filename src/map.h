@@ -61,11 +61,6 @@ typedef enum {
   MAP_ACTION_NUM
 } map_action_t;
 
-typedef struct map_highlight_s {
-  canvas_item_t *item;
-  struct map_highlight_s *next;
-} map_highlight_t;
-
 typedef struct map_item_s {
   object_t object;
   gboolean highlight;
@@ -93,7 +88,7 @@ typedef struct map_s {
 
   gint autosave_handler_id;
 
-  map_highlight_t *highlight;      // list of elements used for highlighting
+  struct map_highlight_s *highlight;      // list of elements used for highlighting
 
   map_item_t selected;             // the currently selected item (node or way)
 
