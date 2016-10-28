@@ -32,6 +32,7 @@
 #include "map.h"
 
 #include <algorithm>
+#include <vector>
 
 #define UNDO_ENABLE_CHECK   if(!appdata->menu_item_map_undo) return;
 
@@ -45,12 +46,15 @@
 /* of all the ways the node was contained in. This would then be MODIFY */
 /* operatins being part of the DELETE state */
 
-typedef struct undo_op_t {
+class undo_op_t {
+public:
+  undo_op_t(undo_type_t t = UNDO_END);
+
   undo_type_t type;   /* the type of this particular database/map operation */
   object_t object;
-  item_id_chain_t *id_chain;       /* ref id list, e.g. for nodes of way */
-  struct undo_op_t *next;
-} undo_op_t;
+  std::vector<item_id_chain_t> id_chain;       /* ref id list, e.g. for nodes of way */
+  undo_op_t *next;
+};
 
 struct undo_state_t {
   undo_type_t type;   /* what the overall operation was */
@@ -59,6 +63,13 @@ struct undo_state_t {
 
   struct undo_state_t *next;
 };
+
+undo_op_t::undo_op_t(undo_type_t t)
+  : type(t)
+  , next(0)
+{
+  memset(&object, 0, sizeof(object));
+}
 
 /* return plain text of type */
 static const char *undo_type_string(const undo_type_t type) {
@@ -75,14 +86,6 @@ static const char *undo_type_string(const undo_type_t type) {
       return types[i].name;
 
   return NULL;
-}
-
-static void undo_id_chain_free(item_id_chain_t *chain) {
-  while(chain) {
-    item_id_chain_t *next = chain->next;
-    g_free(chain);
-    chain = next;
-  }
 }
 
 static void undo_object_free(osm_t *osm, object_t *obj) {
@@ -119,8 +122,7 @@ static void undo_object_free(osm_t *osm, object_t *obj) {
 static void undo_op_free(osm_t *osm, undo_op_t *op) {
   printf("  free op: %s\n", undo_type_string(op->type));
   undo_object_free(osm, &op->object);
-  undo_id_chain_free(op->id_chain);
-  g_free(op);
+  delete op;
 }
 
 static void undo_state_free(osm_t *osm, undo_state_t *state) {
@@ -192,7 +194,6 @@ static void undo_object_copy_base(object_t *dst, const object_t *src) {
 /* create a local copy of the entire object */
 static gboolean undo_object_save(const object_t *object,
                                  undo_op_t *op) {
-  item_id_chain_t **id_chain = &op->id_chain;
   object_t *ob = &op->object;
   ob->type = object->type;
 
@@ -221,15 +222,9 @@ static gboolean undo_object_save(const object_t *object,
     /* the nodes are saved by reference, since they may also be */
     /* deleted and restored and thus their address may change */
     node_chain_t *node_chain = object->way->node_chain;
-    g_assert(id_chain);
     const node_chain_t::const_iterator itEnd = node_chain->end();
-    for(node_chain_t::const_iterator it = node_chain->begin(); it != itEnd; it++) {
-      *id_chain = g_new0(item_id_chain_t, 1);
-      (*id_chain)->type = NODE;
-      (*id_chain)->id = OSM_ID(*it);
-
-      id_chain = &(*id_chain)->next;
-    }
+    for(node_chain_t::const_iterator it = node_chain->begin(); it != itEnd; it++)
+      op->id_chain.push_back(item_id_chain_t(NODE, OSM_ID(*it)));
 
     return TRUE;
     }
@@ -244,11 +239,8 @@ static gboolean undo_object_save(const object_t *object,
     /* save members reference */
     member_t *member = object->relation->member;
     while(member) {
-      *id_chain = g_new0(item_id_chain_t, 1);
-      (*id_chain)->type = member->object.type;
-      (*id_chain)->id = osm_object_get_id(&member->object);
-
-      id_chain = &(*id_chain)->next;
+      item_id_chain_t id(member->object.type, osm_object_get_id(&member->object));
+      op->id_chain.push_back(id);
       member = member->next;
     }
 
@@ -315,14 +307,13 @@ void undo_append_object(appdata_t *appdata, undo_type_t type,
 	 undo_type_string(type), osm_object_string(object));
 
   /* create new operation for main object */
-  op = g_new0(undo_op_t, 1);
-  op->type = type;
+  op = new undo_op_t(type);
   if(undo_object_save(object, op)) {
     /* prepend operation to chain, so that the undo works in reverse order */
     op->next = state->op;
     state->op = op;
   } else {
-    g_free(op);
+    delete op;
     return;
   }
 
@@ -388,7 +379,7 @@ void undo_close_state(appdata_t *appdata) {
 
 /* restore state of an object (or even restore it after deletion) */
 static void undo_operation_object_restore(appdata_t *appdata, object_t *obj,
-					  item_id_chain_t **id_chain) {
+					  std::vector<item_id_chain_t> &id_chain) {
 
   char *msg = osm_object_string(obj);
   printf("UNDO deletion of object %s\n", msg);
@@ -426,8 +417,8 @@ static void undo_operation_object_restore(appdata_t *appdata, object_t *obj,
       osm_way_delete(appdata->osm, orig, TRUE);
     }
 
-    osm_way_restore(appdata->osm, obj->way, *id_chain);
-    *id_chain = NULL;
+    osm_way_restore(appdata->osm, obj->way, id_chain);
+    id_chain.clear();
 
     obj->ptr = NULL;
   } break;
@@ -445,7 +436,7 @@ static void undo_operation(appdata_t *appdata, undo_op_t *op) {
 
   switch(op->type) {
   case UNDO_DELETE:
-    undo_operation_object_restore(appdata, &op->object, &op->id_chain);
+    undo_operation_object_restore(appdata, &op->object, op->id_chain);
     break;
 
   default:

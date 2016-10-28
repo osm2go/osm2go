@@ -108,11 +108,14 @@ typedef enum {
   ILLEGAL=0, NODE, WAY, RELATION, NODE_ID, WAY_ID, RELATION_ID
 } type_t;
 
-typedef struct item_id_chain_t {
-  struct item_id_chain_t *next;
+#ifdef __cplusplus
+struct item_id_chain_t {
+  item_id_chain_t(type_t t, item_id_t i)
+    : type(t), id(i) {}
   type_t type;
   item_id_t id;
-} item_id_chain_t;
+};
+#endif
 
 #ifdef __cplusplus
 typedef std::vector<node_t *> node_chain_t;
@@ -285,7 +288,6 @@ node_t *osm_node_new_pos(osm_t *osm, const pos_t *pos);
 void osm_node_attach(osm_t *osm, node_t *node);
 void osm_node_restore(osm_t *osm, node_t *node);
 void osm_way_delete(osm_t *osm, way_t *way, gboolean perm);
-void osm_way_restore(osm_t *osm, way_t *way, item_id_chain_t *id_chain);
 
 way_t *osm_way_new(void);
 void osm_way_attach(osm_t *osm, way_t *way);
@@ -341,6 +343,7 @@ way_chain_t osm_node_delete(osm_t *osm, node_t *node,
 void osm_way_rotate(way_t *way, node_chain_t::iterator nfirst);
 relation_chain_t osm_way_to_relation(osm_t *osm, const way_t *way);
 relation_chain_t osm_object_to_relation(osm_t *osm, const object_t *object);
+void osm_way_restore(osm_t *osm, way_t *way, const std::vector<item_id_chain_t> &id_chain);
 
 #endif
 

@@ -1604,7 +1604,7 @@ void osm_way_attach(osm_t *osm, way_t *way) {
   *lway = way;
 }
 
-void osm_way_restore(osm_t *osm, way_t *way, item_id_chain_t *id_chain) {
+void osm_way_restore(osm_t *osm, way_t *way, const std::vector<item_id_chain_t> &id_chain) {
   printf("Restoring way\n");
 
   /* attach to end of node list */
@@ -1615,18 +1615,15 @@ void osm_way_restore(osm_t *osm, way_t *way, item_id_chain_t *id_chain) {
   /* restore node memberships by converting ids into real pointers */
   g_assert(!way->node_chain);
   node_chain_t *node_chain = new node_chain_t();
-  while(id_chain) {
-    item_id_chain_t *id_next = id_chain->next;
-    printf("Node " ITEM_ID_FORMAT " is member\n", id_chain->id);
+  const std::vector<item_id_chain_t>::const_iterator itEnd = id_chain.end();
+  for(std::vector<item_id_chain_t>::const_iterator it = id_chain.begin(); it != itEnd; it++) {
+    printf("Node " ITEM_ID_FORMAT " is member\n", it->id);
 
-    node_t *node = osm_get_node_by_id(osm, id_chain->id);
+    node_t *node = osm_get_node_by_id(osm, it->id);
     node_chain->push_back(node);
     node->ways++;
 
     printf("   -> %p\n", node);
-
-    g_free(id_chain);
-    id_chain = id_next;
   }
 
   way->node_chain = node_chain;
