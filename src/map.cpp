@@ -35,14 +35,28 @@
 
 #include <algorithm>
 #include <gdk/gdkkeysyms.h>
+#include <vector>
 
 /* this is a chain of map_items which is attached to all entries */
 /* in the osm tree (node_t, way_t, ...) to be able to get a link */
 /* to the screen representation of a give node/way/etc */
 struct map_item_chain_t {
-  map_item_t *map_item;
-  struct map_item_chain_t *next;
+  std::vector<map_item_t *> map_items;
+  map_item_t *firstItem() const;
+  canvas_item_t *firstCanvasItem() const;
 };
+
+map_item_t *map_item_chain_t::firstItem() const {
+  if(map_items.empty())
+    return 0;
+  return map_items.front();
+}
+
+canvas_item_t *map_item_chain_t::firstCanvasItem() const {
+  if(map_items.empty())
+    return 0;
+  return map_items.front()->item;
+}
 
 #undef DESTROY_WAIT_FOR_GTK
 
@@ -69,21 +83,18 @@ void map_outside_error(appdata_t *appdata) {
 	 _("Items must not be placed outside the working area!"));
 }
 
+static inline void map_item_destroy_canvas_item(map_item_t *m) {
+  canvas_item_destroy(m->item);
+}
+
 void map_item_chain_destroy(map_item_chain_t **chainP) {
   if(!*chainP) {
     printf("nothing to destroy!\n");
     return;
   }
 
-  map_item_chain_t *chain = *chainP;
-  while(chain) {
-    map_item_chain_t *next = chain->next;
-    canvas_item_destroy(chain->map_item->item);
-#ifndef DESTROY_WAIT_FOR_GTK
-    g_free(chain);
-#endif
-    chain = next;
-  }
+  std::for_each((*chainP)->map_items.begin(), (*chainP)->map_items.end(),
+                map_item_destroy_canvas_item);
 
 #ifdef DESTROY_WAIT_FOR_GTK
   /* wait until gtks event handling has actually destroyed this item */
@@ -98,6 +109,7 @@ void map_item_chain_destroy(map_item_chain_t **chainP) {
   /* called by now and it has set the chain to NULL */
 
 #else
+  delete *chainP;
   *chainP = NULL;
 #endif
 }
@@ -114,7 +126,7 @@ static void map_node_select(appdata_t *appdata, node_t *node) {
 
   /* node may not have any visible representation at all */
   if(node->map_item_chain)
-    map_item->item = node->map_item_chain->map_item->item;
+    map_item->item = node->map_item_chain->firstCanvasItem();
   else
     map_item->item = NULL;
 
@@ -268,7 +280,7 @@ void map_way_select(appdata_t *appdata, way_t *way) {
   map_item->object.type      = WAY;
   map_item->object.way       = way;
   map_item->highlight = FALSE;
-  map_item->item      = way->map_item_chain->map_item->item;
+  map_item->item      = way->map_item_chain->firstCanvasItem();
 
   map_statusbar(map, map_item);
   icon_bar_map_item_selected(appdata, map_item, TRUE);
@@ -423,27 +435,24 @@ static gint map_item_destroy_event(G_GNUC_UNUSED GtkWidget *widget, gpointer dat
 
 #ifdef DESTROY_WAIT_FOR_GTK
   /* remove item from nodes/ways map_item_chain */
-  map_item_chain_t **chain = NULL;
+  map_item_chain_t *chain = 0;
   if(map_item->object.type == NODE)
-    chain = &map_item->object.node->map_item_chain;
+    chain = map_item->object.node->map_item_chain;
   else if(map_item->object.type == WAY)
-    chain = &map_item->object.way->map_item_chain;
+    chain = map_item->object.way->map_item_chain;
 
   /* there must be a chain with content, otherwise things are broken */
   g_assert(chain);
-  g_assert(*chain);
 
   /* search current map_item, ... */
-  while(*chain && (*chain)->map_item != map_item)
-    chain = &(*chain)->next;
+  std::vector<map_item_t *>::iterator it = std::find(chain->map_items.begin(),
+                                                     chain->map_items.end(),
+                                                     map_item);
 
-  g_assert(*chain);
+  g_assert(it != chain->map_items.end());
 
   /* ... remove it from chain and free it */
-  map_item_chain_t *tmp = *chain;
-  *chain = (*chain)->next;
-
-  g_free(tmp);
+  chain->map_items.erase(it);
 #endif
 
   g_free(map_item);
@@ -470,10 +479,9 @@ static canvas_item_t *map_node_new(map_t *map, node_t *node, gint radius,
 			   node->zoom_max / (2 * map->state->detail));
 
   /* attach map_item to nodes map_item_chain */
-  map_item_chain_t **chain = &node->map_item_chain;
-  while(*chain) chain = &(*chain)->next;
-  *chain = g_new0(map_item_chain_t, 1);
-  (*chain)->map_item = map_item;
+  if(!node->map_item_chain)
+    node->map_item_chain = new map_item_chain_t();
+  node->map_item_chain->map_items.push_back(map_item);
 
   canvas_item_set_user_data(map_item->item, map_item);
 
@@ -485,7 +493,7 @@ static canvas_item_t *map_node_new(map_t *map, node_t *node, gint radius,
 
 /* in the rare case that a way consists of only one node, it is */
 /* drawn as a circle. This e.g. happens when drawing a new way */
-static map_item_chain_t *map_way_single_new(map_t *map, way_t *way, gint radius,
+static map_item_t *map_way_single_new(map_t *map, way_t *way, gint radius,
 		   gint width, canvas_color_t fill, canvas_color_t border) {
 
   map_item_t *map_item = g_new0(map_item_t, 1);
@@ -497,18 +505,15 @@ static map_item_chain_t *map_way_single_new(map_t *map, way_t *way, gint radius,
 
   // TODO: decide: do we need canvas_item_set_zoom_max() here too?
 
-  map_item_chain_t *chain = g_new0(map_item_chain_t, 1);
-  chain->map_item = map_item;
-
   canvas_item_set_user_data(map_item->item, map_item);
 
   canvas_item_destroy_connect(map_item->item,
           G_CALLBACK(map_item_destroy_event), map_item);
 
-  return chain;
+  return map_item;
 }
 
-static map_item_chain_t *map_way_new(map_t *map, canvas_group_t group,
+static map_item_t *map_way_new(map_t *map, canvas_group_t group,
 	  way_t *way, canvas_points_t *points, gint width,
 	  canvas_color_t color, canvas_color_t fill_color) {
   map_item_t *map_item = g_new0(map_item_t, 1);
@@ -534,15 +539,12 @@ static map_item_chain_t *map_way_new(map_t *map, canvas_group_t group,
     if (way->draw.dashed)
       canvas_item_set_dashed(map_item->item, width, way->draw.dash_length);
 
-  map_item_chain_t *chain = g_new0(map_item_chain_t, 1);
-  chain->map_item = map_item;
-
   canvas_item_set_user_data(map_item->item, map_item);
 
   canvas_item_destroy_connect(map_item->item,
 	      G_CALLBACK(map_item_destroy_event), map_item);
 
-  return chain;
+  return map_item;
 }
 
 void map_show_node(map_t *map, node_t *node) {
@@ -556,35 +558,36 @@ void map_way_draw(map_t *map, way_t *way) {
     return;
 
   /* attach map_item to ways map_item_chain */
-  map_item_chain_t **chain = &way->map_item_chain;
-  while(*chain) chain = &(*chain)->next;
+  if(!way->map_item_chain)
+    way->map_item_chain = new map_item_chain_t();
+  std::vector<map_item_t *> &chain = way->map_item_chain->map_items;
 
   /* allocate space for nodes */
   /* a way needs at least 2 points to be drawn */
   canvas_points_t *points = points_from_node_chain(way);
   if(points == NULL) {
     /* draw a single dot where this single node is */
-    *chain = map_way_single_new(map, way, map->style->node.radius, 0,
-		       map->style->node.color, 0);
+    chain.push_back(map_way_single_new(map, way, map->style->node.radius, 0,
+                                       map->style->node.color, 0));
   } else {
     /* draw way */
     float width = way->draw.width * map->state->detail;
 
     if(way->draw.flags & OSM_DRAW_FLAG_AREA) {
-      *chain = map_way_new(map, CANVAS_GROUP_POLYGONS, way, points,
-		  width, way->draw.color, way->draw.area.color);
+      chain.push_back(map_way_new(map, CANVAS_GROUP_POLYGONS, way, points,
+                                  width, way->draw.color, way->draw.area.color));
     } else {
       if(way->draw.flags & OSM_DRAW_FLAG_BG) {
-	*chain = map_way_new(map, CANVAS_GROUP_WAYS_INT, way, points,
-		    width, way->draw.color, NO_COLOR);
+        chain.push_back(map_way_new(map, CANVAS_GROUP_WAYS_INT, way, points,
+                                    width, way->draw.color, NO_COLOR));
 
-	(*chain)->next = map_way_new(map, CANVAS_GROUP_WAYS_OL, way, points,
-		    way->draw.bg.width * map->state->detail,
-		    way->draw.bg.color, NO_COLOR);
+        chain.push_back(map_way_new(map, CANVAS_GROUP_WAYS_OL, way, points,
+                                    way->draw.bg.width * map->state->detail,
+                                    way->draw.bg.color, NO_COLOR));
 
       } else
-	*chain = map_way_new(map, CANVAS_GROUP_WAYS, way, points,
-		    width, way->draw.color, NO_COLOR);
+        chain.push_back(map_way_new(map, CANVAS_GROUP_WAYS, way, points,
+                                    width, way->draw.color, NO_COLOR));
     }
     canvas_points_free(points);
   }
@@ -773,24 +776,14 @@ void map_free_map_item_chains(appdata_t *appdata) {
   /* free all map_item_chains */
   node_t *node = appdata->osm->node;
   while(node) {
-    map_item_chain_t *chain = node->map_item_chain;
-    while(chain) {
-      map_item_chain_t *next = chain->next;
-      g_free(chain);
-      chain = next;
-    }
+    delete node->map_item_chain;
     node->map_item_chain = NULL;
     node = node->next;
   }
 
   way_t *way = appdata->osm->way;
   while(way) {
-    map_item_chain_t *chain = way->map_item_chain;
-    while(chain) {
-      map_item_chain_t *next = chain->next;
-      g_free(chain);
-      chain = next;
-    }
+    delete way->map_item_chain;
     way->map_item_chain = NULL;
     way = way->next;
   }
@@ -897,7 +890,7 @@ map_item_t *map_real_item_at(map_t *map, gint x, gint y) {
 
   case NODE:
     if(map_item->object.node->map_item_chain)
-      parent = map_item->object.node->map_item_chain->map_item;
+      parent = map_item->object.node->map_item_chain->firstItem();
 
     if(parent)
       printf("  using parent item node #" ITEM_ID_FORMAT "\n",
@@ -906,7 +899,7 @@ map_item_t *map_real_item_at(map_t *map, gint x, gint y) {
 
   case WAY:
     if(map_item->object.way->map_item_chain)
-      parent = map_item->object.way->map_item_chain->map_item;
+      parent = map_item->object.way->map_item_chain->firstItem();
 
     if(parent)
       printf("  using parent item way #" ITEM_ID_FORMAT "\n",
