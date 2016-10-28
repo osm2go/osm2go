@@ -183,7 +183,7 @@ static size_t write_callback(void *ptr, size_t size, size_t nmemb, void *stream)
   return nmemb;
 }
 
-static G_GNUC_PRINTF(3, 4) void appendf(struct log_s *log, char *colname,
+static G_GNUC_PRINTF(3, 4) void appendf(struct log_s *log, const char *colname,
 		    const char *fmt, ...) {
   va_list args;
   va_start( args, fmt );
