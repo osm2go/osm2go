@@ -1192,7 +1192,7 @@ gboolean osm_sanity_check(GtkWidget *parent, const osm_t *osm) {
 
 /* ------------------------- misc access functions -------------- */
 
-tag_t *osm_tag_find(tag_t *tag, const char *key) {
+tag_t *osm_tag_find(tag_t* tag, const char* key) {
   if(!key) return NULL;
 
   while(tag) {
@@ -1205,8 +1205,8 @@ tag_t *osm_tag_find(tag_t *tag, const char *key) {
   return NULL;
 }
 
-char *osm_tag_get_by_key(tag_t *tag, const char *key) {
-  tag_t *t = osm_tag_find(tag, key);
+const char *osm_tag_get_by_key(const tag_t* tag, const char* key) {
+  const tag_t *t = osm_tag_find((tag_t*)tag, key);
 
   if (t)
     return t->value;
@@ -1214,11 +1214,11 @@ char *osm_tag_get_by_key(tag_t *tag, const char *key) {
   return NULL;
 }
 
-char *osm_way_get_value(way_t *way, const char *key) {
+const char *osm_way_get_value(way_t* way, const char* key) {
   return osm_tag_get_by_key(OSM_TAG(way), key);
 }
 
-char *osm_node_get_value(node_t *node, const char *key) {
+const char *osm_node_get_value(node_t *node, const char *key) {
   return osm_tag_get_by_key(OSM_TAG(node), key);
 }
 
@@ -2239,7 +2239,7 @@ osm_way_reverse_direction_sensitive_roles(osm_t *osm, way_t *way) {
 
   for (rel_chain = rel_chain0; rel_chain != NULL; rel_chain = g_slist_next(rel_chain)) {
     relation_t *relation = (relation_t*)rel_chain->data;
-    char *type = osm_tag_get_by_key(OSM_TAG(relation), "type");
+    const char *type = osm_tag_get_by_key(OSM_TAG(relation), "type");
 
     // Route relations; http://wiki.openstreetmap.org/wiki/Relation:route
     if (strcasecmp(type, "route") == 0) {
@@ -2354,7 +2354,7 @@ tag_t *osm_tags_copy(tag_t *src_tag) {
 }
 
 /* return plain text of type */
-const char *osm_object_type_string(object_t *object) {
+const char *osm_object_type_string(const object_t *object) {
   const struct { type_t type; const char *name; } types[] = {
     { ILLEGAL,     "illegal" },
     { NODE,        "node" },
@@ -2385,15 +2385,15 @@ char *osm_object_get_name(object_t *object) {
 
   /* try to figure out _what_ this is */
 
-  char *name = osm_tag_get_by_key(tags, "name");
+  const char *name = osm_tag_get_by_key(tags, "name");
   if(!name) name = osm_tag_get_by_key(tags, "ref");
   if(!name) name = osm_tag_get_by_key(tags, "note");
   if(!name) name = osm_tag_get_by_key(tags, "fix" "me");
   if(!name) name = osm_tag_get_by_key(tags, "sport");
 
   /* search for some kind of "type" */
-  gboolean free_type = FALSE;
-  char *type = osm_tag_get_by_key(tags, "amenity");
+  const char *type = osm_tag_get_by_key(tags, "amenity");
+  gchar *gtype = NULL;
   if(!type) type = osm_tag_get_by_key(tags, "place");
   if(!type) type = osm_tag_get_by_key(tags, "historic");
   if(!type) type = osm_tag_get_by_key(tags, "leisure");
@@ -2408,29 +2408,25 @@ char *osm_object_get_name(object_t *object) {
     type = "building";
 
     if(street && hn) {
-      if(hn) {
-        type = g_strjoin(" ", "building", street, hn, NULL);
-        free_type = TRUE;
-      }
+      if(hn)
+        type = gtype = g_strjoin(" ", "building", street, hn, NULL);
     } else if(hn) {
-      type = g_strconcat("building housenumber ", hn, NULL);
-      free_type = TRUE;
+      type = gtype = g_strconcat("building housenumber ", hn, NULL);
     } else if(!name)
       name = osm_tag_get_by_key(tags, "addr:housename");
   }
   if(!type) type = osm_tag_get_by_key(tags, "emergency");
 
   /* highways are a little bit difficult */
-  char *highway = osm_tag_get_by_key(tags, "highway");
-  if(highway && !free_type) {
+  const char *highway = osm_tag_get_by_key(tags, "highway");
+  if(highway && !gtype) {
     if((!strcmp(highway, "primary")) ||
        (!strcmp(highway, "secondary")) ||
        (!strcmp(highway, "tertiary")) ||
        (!strcmp(highway, "unclassified")) ||
        (!strcmp(highway, "residential")) ||
        (!strcmp(highway, "service"))) {
-      type = g_strconcat(highway, " road", NULL);
-      free_type = TRUE;
+      type = gtype = g_strconcat(highway, " road", NULL);
     }
 
     else if(!strcmp(highway, "pedestrian")) {
@@ -2448,9 +2444,9 @@ char *osm_object_get_name(object_t *object) {
   if(type && name)
     ret = g_strconcat(type, ": \"", name, "\"", NULL);
   else if(type && !name) {
-    if(free_type) {
-      ret = type;
-      free_type = FALSE;
+    if(gtype) {
+      ret = gtype;
+      gtype = NULL;
     } else
       ret = g_strdup(type);
   } else if(name && !type)
@@ -2459,8 +2455,7 @@ char *osm_object_get_name(object_t *object) {
   else
     ret = g_strconcat("unspecified ", osm_object_type_string(object), NULL);
 
-  if(free_type)
-    g_free(type);
+  g_free(gtype);
 
   /* remove underscores from string and replace them by spaces as this is */
   /* usually nicer */
@@ -2500,7 +2495,7 @@ char *osm_object_string(object_t *object) {
   return NULL;
 }
 
-char *osm_object_id_string(object_t *object) {
+gchar *osm_object_id_string(const object_t *object) {
   if(!object) return NULL;
 
   switch(object->type) {

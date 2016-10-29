@@ -576,7 +576,7 @@ static void presets_item_dialog(presets_context_t *context,
     while(widget) {
       /* check if there's a value with this key already */
       tag_t *otag = osm_tag_find(*orig_tag, (char*)widget->key);
-      char *preset = otag ? otag->value : NULL;
+      const char *preset = otag ? otag->value : NULL;
 
       switch(widget->type) {
       case WIDGET_TYPE_SEPARATOR:

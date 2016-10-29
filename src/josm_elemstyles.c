@@ -406,7 +406,7 @@ void josm_elemstyles_colorize_node(const style_t *style, node_t *node) {
     elemstyle_condition_t *cond;
     for (cond = elemstyle->condition; cond; cond = cond->next) {
       if(cond->key) {
-        char *value = osm_node_get_value(node, (char*)cond->key);
+        const char *value = osm_node_get_value(node, (char*)cond->key);
         if(!value || (cond->value && strcasecmp(value, (char*)cond->value) != 0))
           match = FALSE;
       } else if(cond->value) {
@@ -488,7 +488,7 @@ void josm_elemstyles_colorize_way(const style_t *style, way_t *way) {
     elemstyle_condition_t *cond;
     for (cond = elemstyle->condition; cond; cond = cond->next) {
       if(cond->key) {
-        char *value = osm_way_get_value(way, (char*)cond->key);
+        const char *value = osm_way_get_value(way, (char*)cond->key);
         if(!value || (cond->value && strcasecmp(value, (char*)cond->value) != 0))
           match = FALSE;
       } else if(cond->value) {

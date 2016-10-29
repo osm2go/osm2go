@@ -91,7 +91,7 @@ static gboolean relation_add_item(GtkWidget *parent,
 
   gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_ACCEPT);
 
-  char *type = osm_tag_get_by_key(OSM_TAG(relation), "type");
+  const char *type = osm_tag_get_by_key(OSM_TAG(relation), "type");
 
   char *info_str = NULL;
   if(type) info_str = g_strdup_printf(_("In relation of type: %s"), type);
@@ -101,7 +101,7 @@ static gboolean relation_add_item(GtkWidget *parent,
 			      gtk_label_new(info_str));
   g_free(info_str);
 
-  char *name = osm_tag_get_by_key(OSM_TAG(relation), "name");
+  const char *name = osm_tag_get_by_key(OSM_TAG(relation), "name");
   if(name)
     gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox),
 				gtk_label_new(name));
@@ -647,13 +647,11 @@ static GtkWidget *member_list_widget(member_context_t *context) {
   GtkTreeIter iter;
   member_t *member = context->relation->member;
   while(member) {
-    tag_t *tags = osm_object_get_tags(&member->object);
-    char *id = osm_object_id_string(&member->object);
+    const tag_t *tags = osm_object_get_tags(&member->object);
+    gchar *id = osm_object_id_string(&member->object);
 
     /* try to find something descriptive */
-    char *name = NULL;
-    if(tags)
-      name = osm_tag_get_by_key(tags, "name");
+    const char *name = osm_tag_get_by_key(tags, "name");
 
     /* Append a row and fill in some data */
     gtk_list_store_append(context->store, &iter);

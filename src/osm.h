@@ -217,11 +217,11 @@ node_chain_t *osm_parse_osm_way_nd(osm_t *osm, xmlNode *a_node);
 member_t *osm_parse_osm_relation_member(osm_t *osm, xmlNode *a_node);
 void osm_free(struct icon_s **icon, osm_t *osm);
 
-char *osm_node_get_value(node_t *node, const char *key);
+const char *osm_node_get_value(node_t *node, const char *key);
 gboolean osm_node_has_tag(const node_t *node);
 
 void osm_way_free(osm_t *osm, way_t *way);
-char *osm_way_get_value(way_t *way, const char *key);
+const char *osm_way_get_value(way_t *way, const char *key);
 gboolean osm_node_has_value(const node_t* node, const char* str);
 gboolean osm_way_has_value(const way_t* way, const char* str);
 void osm_way_append_node(way_t *way, node_t *node);
@@ -239,8 +239,8 @@ void osm_member_free(member_t *member);
 
 void osm_tag_free(tag_t *tag);
 void osm_tags_free(tag_t *tag);
-tag_t *osm_tag_find(tag_t *tag, const char *key);
-char *osm_tag_get_by_key(tag_t *tag, const char *key);
+tag_t *osm_tag_find(tag_t* tag, const char* key);
+const char *osm_tag_get_by_key(const tag_t *tag, const char *key);
 gboolean osm_is_creator_tag(const tag_t *tag);
 gboolean osm_tag_key_and_value_present(const tag_t *haystack, const tag_t *tag);
 gboolean osm_tag_key_other_value_present(const tag_t *haystack, const tag_t *tag);
@@ -309,8 +309,8 @@ void osm_relation_members_num_by_type(const relation_t *relation,
 gchar *relation_get_descriptive_name(relation_t *relation);
 
 gboolean osm_object_is_real(const object_t *object);
-const char *osm_object_type_string(object_t *object);
-char *osm_object_id_string(object_t *object);
+const char *osm_object_type_string(const object_t *object);
+gchar *osm_object_id_string(const object_t *object);
 char *osm_object_string(object_t *object);
 tag_t *osm_object_get_tags(object_t *object);
 item_id_t osm_object_get_id(const object_t *object);
