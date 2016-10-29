@@ -26,6 +26,8 @@
 #include "misc.h"
 
 #include <algorithm>
+#include <set>
+#include <string>
 #include <strings.h>
 
 /* --------------- relation dialog for an item (node or way) ----------- */
@@ -45,14 +47,17 @@ enum {
   RELITEM_NUM_COLS
 };
 
-struct role_chain_t {
-  char *role;
-  struct role_chain_t *next;
+struct entry_insert_text {
+  GtkWidget * const entry;
+  entry_insert_text(GtkWidget *en) : entry(en) {}
+  void operator()(const std::string &role) {
+    combo_box_append_text(entry, role.c_str());
+  }
 };
 
 static gboolean relation_add_item(GtkWidget *parent,
 			      relation_t *relation, object_t *object) {
-  role_chain_t *chain = NULL, **chainP = &chain;
+  std::set<std::string> roles;
 
   printf("add object of type %d to relation #" ITEM_ID_FORMAT "\n",
 	 object->type, OSM_ID(relation));
@@ -63,23 +68,7 @@ static gboolean relation_add_item(GtkWidget *parent,
   member_t *member = relation->member;
   while(member) {
     if(member->role) {
-      /* check if this role has already been saved */
-      gboolean already_stored = FALSE;
-      role_chain_t *crole = chain;
-      while(crole) {
-	if(strcasecmp(crole->role, member->role) == 0) {
-	  already_stored = TRUE;
-	  break;
-	}
-	crole = crole->next;
-      }
-
-      /* not stored yet: attach it */
-      if(!already_stored) {
-	*chainP = g_new0(role_chain_t, 1);
-	(*chainP)->role = g_strdup(member->role);
-	chainP = &(*chainP)->next;
-      }
+      roles.insert(member->role);
     }
     member = member->next;
   }
@@ -112,21 +101,16 @@ static gboolean relation_add_item(GtkWidget *parent,
   GtkWidget *hbox = gtk_hbox_new(FALSE, 8);
 
 #ifdef FREMANTLE
-  if(!chain)
+  if(roles.empty())
 #endif
     gtk_box_pack_start_defaults(GTK_BOX(hbox), gtk_label_new(_("Role:")));
 
   GtkWidget *entry = NULL;
-  if(chain) {
+  if(!roles.empty()) {
     entry = combo_box_entry_new(_("Role"));
 
     /* fill combo box with presets */
-    while(chain) {
-      role_chain_t *next = chain->next;
-      combo_box_append_text(entry, chain->role);
-      g_free(chain);
-      chain = next;
-    }
+    std::for_each(roles.begin(), roles.end(), entry_insert_text(entry));
   } else
     entry = entry_new();
 
