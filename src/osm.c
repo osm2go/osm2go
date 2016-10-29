@@ -953,8 +953,9 @@ static member_t *process_member(xmlTextReaderPtr reader, osm_t *osm) {
 
     switch(member->object.type) {
     case ILLEGAL:
+      g_free(member);
       printf("Unable to store illegal type\n");
-      break;
+      return NULL;
 
     case WAY:
       /* search matching way */
