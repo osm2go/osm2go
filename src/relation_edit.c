@@ -695,21 +695,22 @@ static GtkWidget *member_list_widget(member_context_t *context) {
 void relation_show_members(GtkWidget *parent, relation_t *relation) {
   member_context_t *mcontext = g_new0(member_context_t, 1);
   mcontext->relation = relation;
+  gchar *nstr = NULL;
 
-  char *str = osm_tag_get_by_key(OSM_TAG(mcontext->relation), "name");
+  const char *str = osm_tag_get_by_key(OSM_TAG(mcontext->relation), "name");
   if(!str) str = osm_tag_get_by_key(OSM_TAG(mcontext->relation), "ref");
   if(!str)
-    str = g_strdup_printf(_("Members of relation #" ITEM_ID_FORMAT),
-			  OSM_ID(mcontext->relation));
+    str = nstr = g_strdup_printf(_("Members of relation #" ITEM_ID_FORMAT),
+                                 OSM_ID(mcontext->relation));
   else
-    str = g_strdup_printf(_("Members of relation \"%s\""), str);
+    str = nstr = g_strdup_printf(_("Members of relation \"%s\""), str);
 
   mcontext->dialog =
     misc_dialog_new(MISC_DIALOG_MEDIUM, str,
 		    GTK_WINDOW(parent),
 		    GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
 		    NULL);
-  g_free(str);
+  g_free(nstr);
 
   gtk_dialog_set_default_response(GTK_DIALOG(mcontext->dialog),
 				  GTK_RESPONSE_CLOSE);
