@@ -848,20 +848,17 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 	    /* make way[0] member of the same relation */
 
 	    /* walk member chain. save role of way[1] if its being found. */
-	    /* end search either at end of chain or if way[0] was foind */
+	    /* end search either at end of chain or if way[0] was found */
 	    /* as it's already a member of that relation */
-	    member_t **member = &relation->member;
-	    char *role = NULL;
-	    while(*member &&
-		  !(((*member)->object.type == WAY) &&
-		    ((*member)->object.way == ways2join[0]))) {
-
+	    member_t **member;
+	    const char *role = NULL;
+	    for(member = &relation->member; *member; member = &(*member)->next) {
 	      /* save role of way[1] */
 	      if(((*member)->object.type == WAY) &&
-		 ((*member)->object.way == ways2join[0]))
+		 ((*member)->object.way == ways2join[0])) {
 		role = (*member)->role;
-
-	      member = &(*member)->next;
+		break;
+	      }
 	    }
 
 	    if(*member)
