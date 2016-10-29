@@ -423,7 +423,7 @@ static GtkWidget *details_widget(tag_context_t *context, gboolean big) {
 
   case RELATION: {
     /* relations tell something about their members */
-    gint nodes = 0, ways = 0, relations = 0;
+    guint nodes = 0, ways = 0, relations = 0;
     osm_relation_members_num_by_type(context->object.relation,
                                      &nodes, &ways, &relations);
 
