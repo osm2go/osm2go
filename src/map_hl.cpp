@@ -117,8 +117,7 @@ bool find_highlighted::operator()(canvas_item_t* c)
 {
   map_item_t *hl_item = static_cast<map_item_t *>(canvas_item_get_user_data(c));
 
-  return hl_item && hl_item->object.type == item->object.type &&
-         hl_item->object.ptr == item->object.ptr;
+  return hl_item && hl_item->object == item->object;
 }
 
 

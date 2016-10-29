@@ -50,15 +50,14 @@ void relation_transfer::operator()(relation_t* relation)
   char *role = NULL;
   while(*member) {
     /* save role of way */
-    if(((*member)->object.type == WAY) && ((*member)->object.way == src))
+    if((*member)->object == src)
       role = (*member)->role;
     member = &(*member)->next;
   }
 
   printf("  adding way #" ITEM_ID_FORMAT " to relation\n", OSM_ID(dst));
   *member = g_new0(member_t, 1);
-  (*member)->object.type = WAY;
-  (*member)->object.way = dst;
+  (*member)->object = dst;
   (*member)->role = g_strdup(role);
   member = &(*member)->next;
 
@@ -748,7 +747,7 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
       while(relation) {
 	member_t *member = relation->member;
 	while(member) {
-	  if(member->object.type == NODE && member->object.node == touchnode) {
+	  if(member->object == touchnode) {
 	    printf("  found node in relation #" ITEM_ID_FORMAT "\n",
 		   OSM_ID(relation));
 
@@ -816,8 +815,7 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 	  /* way[1] gets destroyed and attached to way[0] */
 	  /* so check if way[1] is selected and exchainge ways then */
 	  /* so that way may stay selected */
-	  if((map->selected.object.type == WAY) &&
-	     (map->selected.object.way == ways2join[1])) {
+	  if((map->selected.object == ways2join[1])) {
 	    printf("  swapping ways to keep selected one alive\n");
 	    way_t *tmp = ways2join[1];
 	    ways2join[1] = ways2join[0];

@@ -120,8 +120,7 @@ static void map_node_select(appdata_t *appdata, node_t *node) {
 
   g_assert(!map->highlight);
 
-  map_item->object.type      = NODE;
-  map_item->object.node      = node;
+  map_item->object = node;
   map_item->highlight = FALSE;
 
   /* node may not have any visible representation at all */
@@ -215,8 +214,7 @@ struct draw_selected_way_functor {
 void draw_selected_way_functor::operator()(node_t* node)
 {
   map_item_t item;
-  item.object.type = NODE;
-  item.object.node = node;
+  item.object = node;
 
   /* draw an arrow between every two nodes */
   if(last) {
@@ -232,8 +230,7 @@ void draw_selected_way_functor::operator()(node_t* node)
     if(len > map->style->highlight.arrow_limit * arrow_width) {
       /* create a new map item for every arrow */
       map_item_t *new_map_item = g_new0(map_item_t, 1);
-      new_map_item->object.type = WAY;
-      new_map_item->object.way = way;
+      new_map_item->object = way;
       new_map_item->highlight = TRUE;
 
       len /= arrow_width;
@@ -258,8 +255,7 @@ void draw_selected_way_functor::operator()(node_t* node)
   if(!map_hl_item_is_highlighted(map, &item)) {
     /* create a new map item for every node */
     map_item_t *new_map_item = g_new0(map_item_t, 1);
-    new_map_item->object.type = NODE;
-    new_map_item->object.node = node;
+    new_map_item->object = node;
     new_map_item->highlight = TRUE;
 
     map_hl_circle_new(map, CANVAS_GROUP_NODES_IHL, new_map_item,
@@ -277,8 +273,7 @@ void map_way_select(appdata_t *appdata, way_t *way) {
 
   g_assert(!map->highlight);
 
-  map_item->object.type      = WAY;
-  map_item->object.way       = way;
+  map_item->object = way;
   map_item->highlight = FALSE;
   map_item->item      = way->map_item_chain->firstCanvasItem();
 
@@ -327,8 +322,7 @@ void map_relation_select(appdata_t *appdata, relation_t *relation) {
   }
 
   map_item_t *map_item = &map->selected;
-  map_item->object.type      = RELATION;
-  map_item->object.relation  = relation;
+  map_item->object = relation;
   map_item->highlight = FALSE;
   map_item->item      = NULL;
 
@@ -465,8 +459,7 @@ static canvas_item_t *map_node_new(map_t *map, node_t *node, gint radius,
 		   gint width, canvas_color_t fill, canvas_color_t border) {
 
   map_item_t *map_item = g_new0(map_item_t, 1);
-  map_item->object.type = NODE;
-  map_item->object.node = node;
+  map_item->object = node;
 
   if(!node->icon_buf || !map->style->icon.enable)
     map_item->item = canvas_circle_new(map->canvas, CANVAS_GROUP_NODES,
@@ -499,8 +492,7 @@ static map_item_t *map_way_single_new(map_t *map, way_t *way, gint radius,
 		   gint width, canvas_color_t fill, canvas_color_t border) {
 
   map_item_t *map_item = g_new0(map_item_t, 1);
-  map_item->object.type = WAY;
-  map_item->object.way = way;
+  map_item->object = way;
   map_item->item = canvas_circle_new(map->canvas, CANVAS_GROUP_WAYS,
 	  way->node_chain->front()->lpos.x, way->node_chain->front()->lpos.y,
 				     radius, width, fill, border);
@@ -519,8 +511,7 @@ static map_item_t *map_way_new(map_t *map, canvas_group_t group,
 	  way_t *way, canvas_points_t *points, gint width,
 	  canvas_color_t color, canvas_color_t fill_color) {
   map_item_t *map_item = g_new0(map_item_t, 1);
-  map_item->object.type = WAY;
-  map_item->object.way = way;
+  map_item->object = way;
 
   if(way->draw.flags & OSM_DRAW_FLAG_AREA) {
     if(map->style->area.color & 0xff)
@@ -1452,8 +1443,7 @@ static void map_button_release(map_t *map, gint x, gint y) {
       map_handle_click(map->appdata, map);
 
       if((old_sel.object.type != ILLEGAL) &&
-	 (old_sel.object.type == map->selected.object.type) &&
-	 (old_sel.object.ptr == map->selected.object.ptr)) {
+	 (old_sel.object == map->selected.object)) {
 	printf("re-selected same item of type %d, "
 	       "pushing it to the bottom\n", old_sel.object.type);
 
@@ -2024,8 +2014,7 @@ void node_deleted_from_ways::operator()(way_t *way) {
     map_way_delete(appdata, way);
   } else {
     map_item_t item;
-    item.object.type = WAY;
-    item.object.way = way;
+    item.object = way;
     undo_append_object(appdata, UNDO_MODIFY, &(item.object));
     map_item_redraw(appdata, &item);
   }

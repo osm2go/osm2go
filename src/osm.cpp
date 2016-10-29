@@ -68,6 +68,42 @@ struct hash_table_t {
   hash_item_t *hash[65536];
 };
 
+bool object_t::operator==(const object_t& other) const
+{
+  if (type != other.type)
+    return false;
+
+  switch(type) {
+  case NODE:
+    return node == other.node;
+  case WAY:
+    return way == other.way;
+  case RELATION:
+    return relation == other.relation;
+  case NODE_ID:
+  case WAY_ID:
+  case RELATION_ID:
+    return id == other.id;
+  case ILLEGAL:
+    return true;
+  default:
+    g_assert_not_reached();
+    return false;
+  }
+}
+
+bool object_t::operator==(const node_t *n) const {
+  return type == NODE && node == n;
+}
+
+bool object_t::operator==(const way_t *w) const {
+  return type == WAY && way == w;
+}
+
+bool object_t::operator==(const relation_t *r) const {
+  return type == RELATION && relation == r;
+}
+
 /* ------------------------- user handling --------------------- */
 
 static void osm_users_free(user_t *user) {
@@ -1764,20 +1800,12 @@ relation_chain_t osm_way_to_relation(osm_t *osm, const way_t *way) {
 
   relation_t *relation = osm->relation;
   for(; relation; relation = relation->next) {
-    gboolean is_member = FALSE;
+    bool is_member = false;
 
     member_t *member = relation->member;
     for(; member && !is_member; member = member->next) {
-      switch(member->object.type) {
-      case WAY:
-	/* ways can be check directly */
-	if(member->object.way == way)
-	  is_member = TRUE;
-        break;
-
-      default:
-	break;
-      }
+      /* ways can be check directly */
+      is_member = (member->object == way);
     }
 
     /* way is a member of this relation, so move it to the member chain */
@@ -1795,20 +1823,12 @@ static relation_chain_t osm_relation_to_relation(osm_t *osm,
 
   relation_t *relation = osm->relation;
   for(; relation; relation = relation->next) {
-    gboolean is_member = FALSE;
+    bool is_member = false;
 
     member_t *member = relation->member;
     for(; member && !is_member; member = member->next) {
-      switch(member->object.type) {
-      case RELATION:
-	/* relations can be check directly */
-	if(member->object.relation == rel)
-	  is_member = TRUE;
-        break;
-
-      default:
-	break;
-      }
+      /* relations can be check directly */
+      is_member = (member->object == rel);
     }
 
     /* way is a member of this relation, so move it to the member chain */
@@ -1871,9 +1891,7 @@ void osm_node_remove_from_relation(osm_t *osm, node_t *node) {
   for(; relation; relation = relation->next) {
     member_t **member = &relation->member;
     while(*member) {
-      if(((*member)->object.type == NODE) &&
-	 ((*member)->object.node == node)) {
-
+      if((*member)->object == node) {
 	printf("  from relation #" ITEM_ID_FORMAT "\n", OSM_ID(relation));
 
 	member_t *cur = *member;
@@ -1895,9 +1913,7 @@ void osm_way_remove_from_relation(osm_t *osm, way_t *way) {
   for(; relation; relation = relation->next) {
     member_t **member = &relation->member;
     while(*member) {
-      if(((*member)->object.type == WAY) &&
-	 ((*member)->object.way == way)) {
-
+      if((*member)->object == way) {
 	printf("  from relation #" ITEM_ID_FORMAT "\n", OSM_ID(relation));
 
 	member_t *cur = *member;
@@ -2139,10 +2155,8 @@ void reverse_roles::operator()(relation_t* relation)
   // First find the member corresponding to our way:
   member_t *member = relation->member;
   for (; member != NULL; member = member->next) {
-    if (member->object.type == WAY) {
-      if (member->object.way == way)
+    if (member->object == way)
         break;
-    }
     if (member->object.type == WAY_ID) {
       if (member->object.id == OSM_ID(way))
         break;

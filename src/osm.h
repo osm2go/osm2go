@@ -197,7 +197,7 @@ typedef struct relation_t {
 
 typedef struct hash_table_t hash_table_t;
 
-typedef struct {
+typedef struct object_s {
   type_t type;
   union {
     node_t *node;
@@ -206,6 +206,41 @@ typedef struct {
     item_id_t id;
     void *ptr;
   };
+
+#ifdef __cplusplus
+  inline object_s()
+    : type(ILLEGAL), ptr(0) {}
+  explicit inline object_s(node_t *n)
+    : type(NODE), node(n) { }
+  explicit inline object_s(way_t *w)
+    : type(WAY), way(w) { }
+  explicit inline object_s(relation_t *r)
+    : type(RELATION), relation(r) { }
+
+  inline object_s &operator=(node_t *n)
+  { type = NODE; node = n; return *this; }
+  inline object_s &operator=(way_t *w)
+  { type = WAY; way = w; return *this; }
+  inline object_s &operator=(relation_t *r)
+  { type = RELATION; relation = r; return *this; }
+
+  bool operator==(const object_s &other) const;
+  inline bool operator!=(const object_s &other) const
+  { return !operator==(other); }
+  inline bool operator==(const object_s *other) const
+  { return operator==(*other); }
+  inline bool operator!=(const object_s *other) const
+  { return !operator==(*other); }
+  bool operator==(const node_t *n) const;
+  bool operator!=(const node_t *n) const
+  { return !operator==(n); }
+  bool operator==(const way_t *w) const;
+  bool operator!=(const way_t *w) const
+  { return !operator==(w); }
+  bool operator==(const relation_t *r) const;
+  bool operator!=(const relation_t *r) const
+  { return !operator==(r); }
+#endif
 } object_t;
 
 typedef struct member_t {

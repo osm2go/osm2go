@@ -161,14 +161,7 @@ static void relation_remove_item(relation_t *relation, const object_t *object) {
 
   member_t **member = &relation->member;
   while(*member) {
-    if(((*member)->object.type == object->type) &&
-       (((object->type == NODE) &&
-	 (object->node == (*member)->object.node)) ||
-	((object->type == WAY) &&
-	 (object->way == (*member)->object.way)) ||
-	((object->type == RELATION) &&
-	 (object->relation == (*member)->object.relation)))) {
-
+    if(((*member)->object == object) && osm_object_is_real(object)) {
       member_t *next = (*member)->next;
       osm_member_free(*member);
       *member = next;
@@ -184,10 +177,7 @@ static void relation_remove_item(relation_t *relation, const object_t *object) {
 
 static gboolean relation_info_dialog(GtkWidget *parent, appdata_t *appdata,
 				     relation_t *relation) {
-
-  object_t object;
-  object.type = RELATION;
-  object.relation = relation;
+  object_t object(relation);
   return info_dialog(parent, appdata, &object);
 }
 
@@ -197,15 +187,10 @@ static const char *relitem_get_role_in_relation(const object_t *item, const rela
     switch(member->object.type) {
 
     case NODE:
-      if((item->type == NODE) && (item->node == member->object.node))
-	return member->role;
-      break;
-
     case WAY:
-      if((item->type == WAY) && (item->way == member->object.way))
+      if(*item == member->object)
 	return member->role;
       break;
-
     default:
       break;
     }
@@ -220,12 +205,8 @@ static gboolean relitem_is_in_relation(const object_t *item, const relation_t *r
     switch(member->object.type) {
 
     case NODE:
-      if((item->type == NODE) && (item->node == member->object.node))
-	return TRUE;
-      break;
-
     case WAY:
-      if((item->type == WAY) && (item->way == member->object.way))
+      if(*item == member->object)
 	return TRUE;
       break;
 

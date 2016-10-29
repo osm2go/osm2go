@@ -195,14 +195,13 @@ static void undo_object_copy_base(object_t *dst, const object_t *src) {
 static gboolean undo_object_save(const object_t *object,
                                  undo_op_t *op) {
   object_t *ob = &op->object;
-  ob->type = object->type;
 
   switch(object->type) {
   case NODE:
     /* fields ignored in this copy operation: */
     /* ways, icon_buf, map_item_chain, next */
 
-    ob->node = g_new0(node_t, 1);
+    *ob = g_new0(node_t, 1);
     undo_object_copy_base(ob, object);
 
     /* copy all important parts, omitting icon pointers etc. */
@@ -216,7 +215,7 @@ static gboolean undo_object_save(const object_t *object,
     /* fields ignored in this copy operation: */
     /* next (XXX: incomplete) */
 
-    ob->way = g_new0(way_t, 1);
+    *ob = g_new0(way_t, 1);
     undo_object_copy_base(ob, object);
 
     /* the nodes are saved by reference, since they may also be */
@@ -233,7 +232,7 @@ static gboolean undo_object_save(const object_t *object,
     /* fields ignored in this copy operation: */
     /* next */
 
-    ob->relation = g_new0(relation_t, 1);
+    *ob = g_new0(relation_t, 1);
     undo_object_copy_base(ob, object);
 
     /* save members reference */
@@ -259,9 +258,7 @@ struct undo_append_obj_modify {
   appdata_t * const appdata;
   undo_append_obj_modify(appdata_t *a) : appdata(a) {}
   void operator()(relation_t *relation) {
-    object_t obj;
-    obj.type = RELATION;
-    obj.relation = relation;
+    object_t obj(relation);
     undo_append_object(appdata, UNDO_MODIFY, &obj);
   }
 };
@@ -331,18 +328,12 @@ void undo_append_object(appdata_t *appdata, undo_type_t type,
 }
 
 void undo_append_way(appdata_t *appdata, undo_type_t type, way_t *way) {
-  object_t obj;
-  obj.type = WAY;
-  obj.way = way;
-
+  object_t obj(way);
   undo_append_object(appdata, type, &obj);
 }
 
 void undo_append_node(appdata_t *appdata, undo_type_t type, node_t *node) {
-  object_t obj;
-  obj.type = NODE;
-  obj.node = node;
-
+  object_t obj(node);
   undo_append_object(appdata, type, &obj);
 }
 
