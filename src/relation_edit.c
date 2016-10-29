@@ -64,7 +64,10 @@ static gboolean relation_add_item(GtkWidget *parent,
       gboolean already_stored = FALSE;
       role_chain_t *crole = chain;
       while(crole) {
-	if(strcasecmp(crole->role, member->role) == 0) already_stored = TRUE;
+	if(strcasecmp(crole->role, member->role) == 0) {
+	  already_stored = TRUE;
+	  break;
+	}
 	crole = crole->next;
       }
 
