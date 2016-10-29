@@ -1809,7 +1809,7 @@ static GSList *osm_node_to_relation(osm_t *osm, const node_t *node,
     gboolean is_member = FALSE;
 
     member_t *member = relation->member;
-    for(; member; member = member->next) {
+    for(; member && !is_member; member = member->next) {
       switch(member->object.type) {
       case NODE:
 	/* nodes are checked directly */
@@ -1818,10 +1818,9 @@ static GSList *osm_node_to_relation(osm_t *osm, const node_t *node,
 	break;
 
       case WAY:
-	if(via_way) {
+	if(via_way)
 	  /* ways have to be checked for the nodes they consist of */
 	  is_member = osm_node_in_way(member->object.way, node);
-	}
 	break;
 
       default:
@@ -1846,13 +1845,13 @@ GSList *osm_way_to_relation(osm_t *osm, const way_t *way) {
     gboolean is_member = FALSE;
 
     member_t *member = relation->member;
-    for(; member; member = member->next) {
+    for(; member && !is_member; member = member->next) {
       switch(member->object.type) {
-      case WAY: {
+      case WAY:
 	/* ways can be check directly */
 	if(member->object.way == way)
 	  is_member = TRUE;
-      } break;
+        break;
 
       default:
 	break;
@@ -1876,13 +1875,13 @@ static GSList *osm_relation_to_relation(osm_t *osm, const relation_t *rel) {
     gboolean is_member = FALSE;
 
     member_t *member = relation->member;
-    for(; member; member = member->next) {
+    for(; member && !is_member; member = member->next) {
       switch(member->object.type) {
-      case RELATION: {
+      case RELATION:
 	/* relations can be check directly */
 	if(member->object.relation == rel)
 	  is_member = TRUE;
-      } break;
+        break;
 
       default:
 	break;
