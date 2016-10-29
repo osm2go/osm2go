@@ -309,6 +309,58 @@ void map_way_select(appdata_t *appdata, way_t *way) {
   }
 }
 
+struct relation_select_functor {
+  map_highlight_t &hl;
+  map_t * const map;
+  relation_select_functor(map_highlight_t &h, map_t *m) : hl(h), map(m) {}
+  void operator()(member_t &member);
+};
+
+void relation_select_functor::operator()(member_t& member)
+{
+  canvas_item_t *item = 0;
+
+  switch(member.object.type) {
+  case NODE: {
+    node_t *node = member.object.node;
+    printf("  -> node " ITEM_ID_FORMAT "\n", OSM_ID(node));
+
+    item = canvas_circle_new(map->canvas, CANVAS_GROUP_NODES_HL,
+                             node->lpos.x, node->lpos.y,
+                             map->style->highlight.width + map->style->node.radius,
+                             0, map->style->highlight.color, NO_COLOR);
+    break;
+    }
+  case WAY: {
+    way_t *way = member.object.way;
+    /* a way needs at least 2 points to be drawn */
+    canvas_points_t *points = points_from_node_chain(way);
+    if(points != NULL) {
+      if(way->draw.flags & OSM_DRAW_FLAG_AREA)
+        item = canvas_polygon_new(map->canvas, CANVAS_GROUP_WAYS_HL, points, 0, 0,
+                                  map->style->highlight.color);
+      else
+        item = canvas_polyline_new(map->canvas, CANVAS_GROUP_WAYS_HL, points,
+                                   (way->draw.flags & OSM_DRAW_FLAG_BG) ?
+                                     2 * map->style->highlight.width + way->draw.bg.width :
+                                     2 * map->style->highlight.width + way->draw.width,
+                                   map->style->highlight.color);
+
+      canvas_points_free(points);
+    }
+    break;
+    }
+
+  default:
+    break;
+  }
+
+  /* attach item to item chain */
+  if(item)
+    hl.items.push_back(item);
+}
+
+
 void map_relation_select(appdata_t *appdata, relation_t *relation) {
   map_t *map = appdata->map;
 
@@ -330,51 +382,8 @@ void map_relation_select(appdata_t *appdata, relation_t *relation) {
   icon_bar_map_item_selected(appdata, map_item, TRUE);
 
   /* process all members */
-  member_t *member = relation->member;
-  while(member) {
-    canvas_item_t *item = NULL;
-
-    switch(member->object.type) {
-
-    case NODE: {
-      node_t *node = member->object.node;
-      printf("  -> node " ITEM_ID_FORMAT "\n", OSM_ID(node));
-
-      item = canvas_circle_new(map->canvas, CANVAS_GROUP_NODES_HL,
-			node->lpos.x, node->lpos.y,
-			map->style->highlight.width + map->style->node.radius,
-			0, map->style->highlight.color, NO_COLOR);
-      } break;
-
-    case WAY: {
-      way_t *way = member->object.way;
-      /* a way needs at least 2 points to be drawn */
-      canvas_points_t *points = points_from_node_chain(way);
-      if(points != NULL) {
-	if(way->draw.flags & OSM_DRAW_FLAG_AREA)
-	  item = canvas_polygon_new(map->canvas, CANVAS_GROUP_WAYS_HL, points, 0, 0,
-				    map->style->highlight.color);
-	else
-	  item = canvas_polyline_new(map->canvas, CANVAS_GROUP_WAYS_HL, points,
-			      (way->draw.flags & OSM_DRAW_FLAG_BG)?
-			      2*map->style->highlight.width + way->draw.bg.width:
-			      2*map->style->highlight.width + way->draw.width,
-			      map->style->highlight.color);
-
-	canvas_points_free(points);
-      } } break;
-
-    default:
-      break;
-    }
-
-    /* attach item to item chain */
-    if(item) {
-      hl->items.push_back(item);
-    }
-
-    member = member->next;
-  }
+  relation_select_functor fc(*hl, map);
+  std::for_each(relation->members.begin(), relation->members.end(), fc);
 }
 
 static void map_object_select(appdata_t *appdata, object_t *object) {

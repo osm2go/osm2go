@@ -46,20 +46,14 @@ void relation_transfer::operator()(relation_t* relation)
   /* make new member of the same relation */
 
   /* walk member chain. save role of way if its being found. */
-  member_t **member = &relation->member;
-  char *role = NULL;
-  while(*member) {
-    /* save role of way */
-    if((*member)->object == src)
-      role = (*member)->role;
-    member = &(*member)->next;
-  }
+  std::vector<member_t>::iterator it = relation->find_member_object(object_t(src));
 
   printf("  adding way #" ITEM_ID_FORMAT " to relation\n", OSM_ID(dst));
-  *member = g_new0(member_t, 1);
-  (*member)->object = dst;
-  (*member)->role = g_strdup(role);
-  member = &(*member)->next;
+  member_t member;
+  member.object = dst;
+  if(it != relation->members.end())
+    member.role = g_strdup(it->role);
+  relation->members.push_back(member);
 
   OSM_FLAGS(relation) |= OSM_FLAG_DIRTY;
 }
@@ -645,7 +639,7 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
 }
 
 struct member_merge {
-  way_t * const other;
+  const object_t other;
   member_merge(way_t *o) : other(o) {}
   void operator()(relation_t *relation);
 };
@@ -660,26 +654,17 @@ void member_merge::operator()(relation_t *relation)
   /* walk member chain. save role of way[1] if its being found. */
   /* end search either at end of chain or if way[0] was found */
   /* as it's already a member of that relation */
-  member_t **member;
-  const char *role = NULL;
-  for(member = &relation->member; *member; member = &(*member)->next) {
-    /* save role of way[1] */
-    if(((*member)->object.type == WAY) &&
-       ((*member)->object.way == other)) {
-      role = (*member)->role;
-      break;
-    }
-  }
+  std::vector<member_t>::iterator mit =
+               relation->find_member_object(other);
 
-  if(*member) {
+  if(mit != relation->members.end()) {
     printf("  both ways were members of this relation\n");
   } else {
     printf("  adding way[0] to relation\n");
-    *member = g_new0(member_t, 1);
-    (*member)->object.type = WAY;
-    (*member)->object.way = other;
-    (*member)->role = g_strdup(role);
-    member = &(*member)->next;
+    member_t member;
+    member.object = other;
+    member.role = g_strdup(mit->role);
+    relation->members.push_back(member);
 
     OSM_FLAGS(relation) |= OSM_FLAG_DIRTY;
   }
@@ -745,18 +730,17 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
       /* replace node in relations */
       relation_t *relation = appdata->osm->relation;
       while(relation) {
-	member_t *member = relation->member;
-	while(member) {
-	  if(member->object == touchnode) {
-	    printf("  found node in relation #" ITEM_ID_FORMAT "\n",
-		   OSM_ID(relation));
+        const std::vector<member_t>::iterator itEnd = relation->members.end();
+        std::vector<member_t>::iterator it = relation->members.begin();
 
-	    /* replace by node */
-	    member->object.node = node;
+        while((it = std::find(it, itEnd, object_t(touchnode))) != itEnd) {
+          printf("  found node in relation #" ITEM_ID_FORMAT "\n",
+                 OSM_ID(relation));
 
-	    OSM_FLAGS(relation) |= OSM_FLAG_DIRTY;
-	  }
-	  member = member->next;
+          /* replace by node */
+          it->object.node = node;
+
+          OSM_FLAGS(relation) |= OSM_FLAG_DIRTY;
 	}
 	relation = relation->next;
       }

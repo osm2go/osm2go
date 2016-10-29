@@ -55,6 +55,10 @@ struct entry_insert_text {
   }
 };
 
+static bool has_role(const member_t &member) {
+  return member.role != 0;
+}
+
 static gboolean relation_add_item(GtkWidget *parent,
 			      relation_t *relation, object_t *object) {
   std::set<std::string> roles;
@@ -65,12 +69,11 @@ static gboolean relation_add_item(GtkWidget *parent,
   /* ask the user for the role of the new object in this relation */
 
   /* collect roles first */
-  member_t *member = relation->member;
-  while(member) {
-    if(member->role) {
-      roles.insert(member->role);
-    }
-    member = member->next;
+  const std::vector<member_t>::const_iterator mitEnd = relation->members.end();
+  std::vector<member_t>::const_iterator mit = relation->members.begin();
+  while((mit = std::find_if(mit, mitEnd, has_role)) != mitEnd) {
+    roles.insert(mit->role);
+    mit++;
   }
 
   /* ------------------ role dialog ---------------- */
@@ -140,15 +143,13 @@ static gboolean relation_add_item(GtkWidget *parent,
   gtk_widget_destroy(dialog);
 
   /* search end of member chain */
-  member_t **memberP = &relation->member;
-  while(*memberP) memberP = &(*memberP)->next;
-
   g_assert(osm_object_is_real(object));
 
   /* create new member */
-  *memberP = g_new0(member_t, 1);
-  (*memberP)->object = *object;
-  (*memberP)->role = role;
+  member_t member;
+  member.object = *object;
+  member.role = role;
+  relation->members.push_back(member);
 
   OSM_FLAGS(relation) |= OSM_FLAG_DIRTY;
   return TRUE;
@@ -159,63 +160,43 @@ static void relation_remove_item(relation_t *relation, const object_t *object) {
   printf("remove object of type %d from relation #" ITEM_ID_FORMAT "\n",
 	 object->type, OSM_ID(relation));
 
-  member_t **member = &relation->member;
-  while(*member) {
-    if(((*member)->object == object) && osm_object_is_real(object)) {
-      member_t *next = (*member)->next;
-      osm_member_free(*member);
-      *member = next;
+  g_assert(osm_object_is_real(object));
 
-      OSM_FLAGS(relation) |= OSM_FLAG_DIRTY;
+  std::vector<member_t>::iterator it = relation->find_member_object(*object);
+  g_assert(it != relation->members.end());
 
-      return;
-    } else
-      member = &(*member)->next;
-  }
-  g_assert_not_reached();
+  osm_member_free(*it);
+  relation->members.erase(it);
+
+  OSM_FLAGS(relation) |= OSM_FLAG_DIRTY;
 }
 
 static gboolean relation_info_dialog(GtkWidget *parent, appdata_t *appdata,
 				     relation_t *relation) {
+
   object_t object(relation);
   return info_dialog(parent, appdata, &object);
 }
 
 static const char *relitem_get_role_in_relation(const object_t *item, const relation_t *relation) {
-  const member_t *member = relation->member;
-  while(member) {
-    switch(member->object.type) {
+  if(item->type != WAY && item->type != NODE)
+    return NULL;
 
-    case NODE:
-    case WAY:
-      if(*item == member->object)
-	return member->role;
-      break;
-    default:
-      break;
-    }
-    member = member->next;
-  }
+  const std::vector<member_t>::const_iterator it = relation->find_member_object(*item);
+
+  if(it != relation->members.end())
+    return it->role;
+
   return NULL;
 }
 
 static gboolean relitem_is_in_relation(const object_t *item, const relation_t *relation) {
-  const member_t *member = relation->member;
-  while(member) {
-    switch(member->object.type) {
+  if(item->type != WAY && item->type != NODE)
+    return FALSE;
 
-    case NODE:
-    case WAY:
-      if(*item == member->object)
-	return TRUE;
-      break;
+  const std::vector<member_t>::const_iterator it = relation->find_member_object(*item);
 
-    default:
-      break;
-    }
-    member = member->next;
-  }
-  return FALSE;
+  return (it != relation->members.end());
 }
 
 static void changed(GtkTreeSelection *sel, gpointer user_data) {
@@ -493,9 +474,9 @@ static void relation_list_selected(relation_context_t *context,
 				   relation_t *selected) {
 
   list_button_enable(context->list, LIST_BUTTON_USER0,
-		     (selected != NULL) && (selected->member != NULL));
+		     (selected != NULL) && (!selected->members.empty()));
   list_button_enable(context->list, LIST_BUTTON_USER1,
-		     (selected != NULL) && (selected->member != NULL));
+		     (selected != NULL) && (!selected->members.empty()));
 
   list_button_enable(context->list, LIST_BUTTON_REMOVE, selected != NULL);
   list_button_enable(context->list, LIST_BUTTON_EDIT, selected != NULL);
@@ -548,6 +529,35 @@ member_list_selection_func(G_GNUC_UNUSED GtkTreeSelection *selection, GtkTreeMod
   return FALSE;
 }
 
+struct members_list_functor {
+  GtkListStore * const store;
+  members_list_functor(GtkListStore *s) : store(s) {}
+  void operator()(const member_t &member);
+};
+
+void members_list_functor::operator()(const member_t &member)
+{
+  GtkTreeIter iter;
+
+  const tag_t *tags = osm_object_get_tags(const_cast<object_t*>(&member.object));
+  gchar *id = osm_object_id_string(&member.object);
+
+  /* try to find something descriptive */
+  const char *name = osm_tag_get_by_key(tags, "name");
+
+  /* Append a row and fill in some data */
+  gtk_list_store_append(store, &iter);
+  gtk_list_store_set(store, &iter,
+     MEMBER_COL_TYPE, osm_object_type_string(&member.object),
+     MEMBER_COL_ID,   id,
+     MEMBER_COL_NAME, name,
+     MEMBER_COL_ROLE, member.role,
+     MEMBER_COL_REF_ONLY, member.object.type >= NODE_ID,
+     MEMBER_COL_DATA, &member,
+     -1);
+
+  g_free(id);
+}
 
 static GtkWidget *member_list_widget(member_context_t *context) {
   GtkWidget *vbox = gtk_vbox_new(FALSE,3);
@@ -612,29 +622,8 @@ static GtkWidget *member_list_widget(member_context_t *context) {
   gtk_tree_view_set_model(GTK_TREE_VIEW(context->view),
 			  GTK_TREE_MODEL(context->store));
 
-  GtkTreeIter iter;
-  member_t *member = context->relation->member;
-  while(member) {
-    const tag_t *tags = osm_object_get_tags(&member->object);
-    gchar *id = osm_object_id_string(&member->object);
-
-    /* try to find something descriptive */
-    const char *name = osm_tag_get_by_key(tags, "name");
-
-    /* Append a row and fill in some data */
-    gtk_list_store_append(context->store, &iter);
-    gtk_list_store_set(context->store, &iter,
-       MEMBER_COL_TYPE, osm_object_type_string(&member->object),
-       MEMBER_COL_ID,   id,
-       MEMBER_COL_NAME, name,
-       MEMBER_COL_ROLE, member->role,
-       MEMBER_COL_REF_ONLY, member->object.type >= NODE_ID,
-       MEMBER_COL_DATA, member,
-       -1);
-
-    g_free(id);
-    member = member->next;
-  }
+  std::for_each(context->relation->members.begin(), context->relation->members.end(),
+                members_list_functor(context->store));
 
   g_object_unref(context->store);
 
@@ -733,8 +722,6 @@ static void on_relation_add(G_GNUC_UNUSED GtkWidget *button, relation_context_t 
 
     char *name = relation_get_descriptive_name(relation);
 
-    guint num = osm_relation_members_num(relation);
-
     /* Append a row and fill in some data */
     GtkTreeIter iter;
     gtk_list_store_append(context->store, &iter);
@@ -742,7 +729,7 @@ static void on_relation_add(G_GNUC_UNUSED GtkWidget *button, relation_context_t 
 		       RELATION_COL_TYPE,
 		       osm_tag_get_by_key(OSM_TAG(relation), "type"),
 		       RELATION_COL_NAME, name,
-		       RELATION_COL_MEMBERS, num,
+		       RELATION_COL_MEMBERS, relation->members.size(),
 		       RELATION_COL_DATA, relation,
 		       -1);
 
@@ -780,7 +767,7 @@ static void on_relation_edit(G_GNUC_UNUSED GtkWidget *button, relation_context_t
   gtk_list_store_set(context->store, &iter,
     RELATION_COL_TYPE,    osm_tag_get_by_key(OSM_TAG(sel), "type"),
     RELATION_COL_NAME,    relation_get_descriptive_name(sel),
-    RELATION_COL_MEMBERS, osm_relation_members_num(sel),
+    RELATION_COL_MEMBERS, sel->members.size(),
     -1);
 
   // Order will probably have changed, so refocus
@@ -795,13 +782,11 @@ static void on_relation_remove(G_GNUC_UNUSED GtkWidget *button, relation_context
 
   printf("remove relation #" ITEM_ID_FORMAT "\n", OSM_ID(sel));
 
-  guint members = osm_relation_members_num(sel);
-
-  if(members)
+  if(!sel->members.empty())
     if(!yes_no_f(context->dialog, NULL, 0, 0,
 		 _("Delete non-empty relation?"),
-		 _("This relation still has %u members. "
-		   "Delete it anyway?"), members))
+		 _("This relation still has %zu members. "
+		   "Delete it anyway?"), sel->members.size()))
       return;
 
   /* first remove selected row from list */
@@ -825,7 +810,6 @@ struct relation_list_widget_functor {
 void relation_list_widget_functor::operator()(const relation_t *rel)
 {
   char *name = relation_get_descriptive_name(rel);
-  guint num = osm_relation_members_num(rel);
   GtkTreeIter iter;
 
   /* Append a row and fill in some data */
@@ -834,7 +818,7 @@ void relation_list_widget_functor::operator()(const relation_t *rel)
                      RELATION_COL_TYPE,
                      osm_tag_get_by_key(OSM_TAG(rel), "type"),
                      RELATION_COL_NAME, name,
-                     RELATION_COL_MEMBERS, num,
+                     RELATION_COL_MEMBERS, rel->members.size(),
                      RELATION_COL_DATA, rel,
                      -1);
 }

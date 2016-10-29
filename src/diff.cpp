@@ -111,6 +111,60 @@ static void diff_save_ways(const way_t *way, xmlNodePtr root_node) {
   }
 }
 
+struct diff_save_rel {
+  xmlNodePtr const node_rel;
+  diff_save_rel(xmlNodePtr n) : node_rel(n) {}
+  void operator()(const member_t &member);
+};
+
+void diff_save_rel::operator()(const member_t &member)
+{
+  xmlNodePtr node_member = xmlNewChild(node_rel, NULL,
+                                       BAD_CAST "member", NULL);
+
+  gchar ref[G_ASCII_DTOSTR_BUF_SIZE];
+  switch(member.object.type) {
+  case NODE:
+    xmlNewProp(node_member, BAD_CAST "type", BAD_CAST "node");
+    g_snprintf(ref, sizeof(ref), ITEM_ID_FORMAT, OBJECT_ID(member.object));
+    break;
+  case WAY:
+    xmlNewProp(node_member, BAD_CAST "type", BAD_CAST "way");
+    g_snprintf(ref, sizeof(ref), ITEM_ID_FORMAT, OBJECT_ID(member.object));
+    break;
+  case RELATION:
+    xmlNewProp(node_member, BAD_CAST "type", BAD_CAST "relation");
+    g_snprintf(ref, sizeof(ref), ITEM_ID_FORMAT, OBJECT_ID(member.object));
+    break;
+
+    /* XXX_ID's are used if this is a reference to an item not */
+    /* stored in this xml data set */
+  case NODE_ID:
+    xmlNewProp(node_member, BAD_CAST "type", BAD_CAST "node");
+    g_snprintf(ref, sizeof(ref), ITEM_ID_FORMAT, member.object.id);
+    break;
+  case WAY_ID:
+    xmlNewProp(node_member, BAD_CAST "type", BAD_CAST "way");
+    g_snprintf(ref, sizeof(ref), ITEM_ID_FORMAT, member.object.id);
+    break;
+  case RELATION_ID:
+    xmlNewProp(node_member, BAD_CAST "type", BAD_CAST "relation");
+    g_snprintf(ref, sizeof(ref), ITEM_ID_FORMAT, member.object.id);
+    break;
+
+  default:
+    printf("unexpected member type %d\n", member.object.type);
+    g_assert_not_reached();
+    break;
+  }
+
+  xmlNewProp(node_member, BAD_CAST "ref", BAD_CAST ref);
+
+  if(member.role)
+    xmlNewProp(node_member, BAD_CAST "role", BAD_CAST member.role);
+}
+
+
 static void diff_save_relations(const relation_t *relation, xmlNodePtr root_node) {
 
   /* store all modfied relations */
@@ -124,54 +178,8 @@ static void diff_save_relations(const relation_t *relation, xmlNodePtr root_node
       if(!(OSM_FLAGS(relation) & OSM_FLAG_DELETED)) {
 	/* additional info is only required if the relation */
 	/* hasn't been deleted */
-	member_t *member = relation->member;
-	while(member) {
-	  xmlNodePtr node_member = xmlNewChild(node_rel, NULL,
-					     BAD_CAST "member", NULL);
-
-	  gchar ref[G_ASCII_DTOSTR_BUF_SIZE];
-	  switch(member->object.type) {
-	  case NODE:
-	    xmlNewProp(node_member, BAD_CAST "type", BAD_CAST "node");
-	    g_snprintf(ref, sizeof(ref), ITEM_ID_FORMAT, OBJECT_ID(member->object));
-	    break;
-	  case WAY:
-	    xmlNewProp(node_member, BAD_CAST "type", BAD_CAST "way");
-	    g_snprintf(ref, sizeof(ref), ITEM_ID_FORMAT, OBJECT_ID(member->object));
-	    break;
-	  case RELATION:
-	    xmlNewProp(node_member, BAD_CAST "type", BAD_CAST "relation");
-	    g_snprintf(ref, sizeof(ref), ITEM_ID_FORMAT, OBJECT_ID(member->object));
-	    break;
-
-	    /* XXX_ID's are used if this is a reference to an item not */
-	    /* stored in this xml data set */
-	  case NODE_ID:
-	    xmlNewProp(node_member, BAD_CAST "type", BAD_CAST "node");
-	    g_snprintf(ref, sizeof(ref), ITEM_ID_FORMAT, member->object.id);
-	    break;
-	  case WAY_ID:
-	    xmlNewProp(node_member, BAD_CAST "type", BAD_CAST "way");
-	    g_snprintf(ref, sizeof(ref), ITEM_ID_FORMAT, member->object.id);
-	    break;
-	  case RELATION_ID:
-	    xmlNewProp(node_member, BAD_CAST "type", BAD_CAST "relation");
-	    g_snprintf(ref, sizeof(ref), ITEM_ID_FORMAT, member->object.id);
-	    break;
-
-	  default:
-	    printf("unexpected member type %d\n", member->object.type);
-	    g_assert_not_reached();
-	    break;
-	  }
-
-	  xmlNewProp(node_member, BAD_CAST "ref", BAD_CAST ref);
-
-	  if(member->role)
-	    xmlNewProp(node_member, BAD_CAST "role", BAD_CAST member->role);
-
-	  member = member->next;
-	}
+        std::for_each(relation->members.begin(), relation->members.end(),
+                      diff_save_rel(node_rel));
 	diff_save_tags(OSM_TAG(relation), node_rel);
       }
     }
@@ -556,7 +564,7 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
   case OSM_FLAG_NEW: {
     printf("  Restoring NEW relation\n");
 
-    relation = g_new0(relation_t, 1);
+    relation = new relation_t();
     OSM_ID(relation) = id;
     OSM_VISIBLE(relation) = TRUE;
     OSM_FLAGS(relation) = OSM_FLAG_NEW;
@@ -614,29 +622,27 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
   /* update members */
 
   /* scan for members */
-  member_t *nmember = NULL, **member = &nmember;
+  std::vector<member_t> members;
   xmlNode *member_node = NULL;
   for(member_node = node_rel->children; member_node;
       member_node = member_node->next) {
     if(member_node->type == XML_ELEMENT_NODE) {
       if(strcmp((char*)member_node->name, "member") == 0) {
 	/* attach member to member_chain */
-	*member = osm_parse_osm_relation_member(osm, member_node);
-	if(*member)
-	  member = &((*member)->next);
+	member_t member = osm_parse_osm_relation_member(osm, member_node);
+	if(member.object.type != ILLEGAL)
+          members.push_back(member);
       }
     }
   }
 
-  if(osm_members_diff(relation->member, nmember)) {
+  if(relation->members != members) {
     /* this may be an existing relation, so remove members to */
     /* make space for new ones */
-    osm_members_free(relation->member);
+    relation->members.swap(members);
     was_changed = TRUE;
-    relation->member = nmember;
-  } else {
-    osm_members_free(nmember);
   }
+  osm_members_free(members);
 
   if(!was_changed && (OSM_FLAGS(relation) & OSM_FLAG_DIRTY)) {
     printf("relation " ITEM_ID_FORMAT " has the same members and tags as upstream, discarding diff\n", id);

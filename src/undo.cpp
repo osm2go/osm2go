@@ -195,13 +195,14 @@ static void undo_object_copy_base(object_t *dst, const object_t *src) {
 static gboolean undo_object_save(const object_t *object,
                                  undo_op_t *op) {
   object_t *ob = &op->object;
+  ob->type = object->type;
 
   switch(object->type) {
   case NODE:
     /* fields ignored in this copy operation: */
     /* ways, icon_buf, map_item_chain, next */
 
-    *ob = g_new0(node_t, 1);
+    ob->node = g_new0(node_t, 1);
     undo_object_copy_base(ob, object);
 
     /* copy all important parts, omitting icon pointers etc. */
@@ -215,7 +216,7 @@ static gboolean undo_object_save(const object_t *object,
     /* fields ignored in this copy operation: */
     /* next (XXX: incomplete) */
 
-    *ob = g_new0(way_t, 1);
+    ob->way = g_new0(way_t, 1);
     undo_object_copy_base(ob, object);
 
     /* the nodes are saved by reference, since they may also be */
@@ -232,15 +233,15 @@ static gboolean undo_object_save(const object_t *object,
     /* fields ignored in this copy operation: */
     /* next */
 
-    *ob = g_new0(relation_t, 1);
+    ob->relation = new relation_t();
     undo_object_copy_base(ob, object);
 
     /* save members reference */
-    member_t *member = object->relation->member;
-    while(member) {
+    const std::vector<member_t>::const_iterator mitEnd = object->relation->members.end();
+    for(std::vector<member_t>::const_iterator member = object->relation->members.begin();
+        member != mitEnd; member++) {
       item_id_chain_t id(member->object.type, osm_object_get_id(&member->object));
       op->id_chain.push_back(id);
-      member = member->next;
     }
 
     return TRUE;
