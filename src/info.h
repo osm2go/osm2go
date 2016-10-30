@@ -38,6 +38,6 @@ typedef struct {
 gboolean info_dialog(GtkWidget *parent, appdata_t *appdata,
 		     object_t *object);
 void info_tags_replace(tag_context_t *context);
-gboolean info_tag_key_collision(tag_t *tags, tag_t *tag);
+gboolean info_tag_key_collision(const tag_t *tags, const tag_t *tag);
 
 #endif // INFO_H

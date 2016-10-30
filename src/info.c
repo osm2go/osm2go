@@ -34,7 +34,7 @@ enum {
   TAG_NUM_COLS
 };
 
-gboolean info_tag_key_collision(tag_t *tags, tag_t *tag) {
+gboolean info_tag_key_collision(const tag_t *tags, const tag_t *tag) {
   while(tags) {
     if((tags != tag) && (strcasecmp(tags->key, tag->key) == 0))
       return TRUE;
