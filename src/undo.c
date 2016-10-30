@@ -286,7 +286,8 @@ void undo_append_object(appdata_t *appdata, undo_type_t type,
 
   UNDO_ENABLE_CHECK;
 
-  g_assert(appdata->undo.open);
+  undo_state_t *state = appdata->undo.open;
+  g_assert(state);
 
   /* deleting an object will affect all relations it's part of */
   /* therefore handle them first and save their state to undo  */
@@ -305,7 +306,7 @@ void undo_append_object(appdata_t *appdata, undo_type_t type,
   /* operation on the database/map so only one undo_op is saved */
 
   /* check if this object already is in operaton chain */
-  undo_op_t *op = appdata->undo.open->op;
+  undo_op_t *op = state->op;
   while(op) {
     if(osm_object_is_same(op->object, object)) {
       /* this must be the same operation!! */
@@ -327,8 +328,8 @@ void undo_append_object(appdata_t *appdata, undo_type_t type,
   op->object = undo_object_save(object, &(op->id_chain));
 
   /* prepend operation to chain, so that the undo works in reverse order */
-  op->next = appdata->undo.open->op;
-  appdata->undo.open->op = op;
+  op->next = state->op;
+  state->op = op;
 
   /* if the deleted object is a way, then check if this affects */
   /* a node */
