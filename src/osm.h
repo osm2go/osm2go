@@ -21,6 +21,7 @@
 #define OSM_H
 
 #ifdef __cplusplus
+#include <map>
 #include <vector>
 
 extern "C" {
@@ -273,17 +274,20 @@ typedef struct osm_t {
   user_t *user;
 
   node_t *node;
-  hash_table_t *node_hash;
 
   way_t  *way;
-  hash_table_t *way_hash;
 
-  // hashing relations doesn't yet make much sense as relations are quite rare
   relation_t  *relation;
 
   struct icon_t **icons;
 
   bounds_t rbounds;
+
+#ifdef __cplusplus
+  std::map<item_id_t, node_t *> node_hash;
+  std::map<item_id_t, way_t *> way_hash;
+  // hashing relations doesn't yet make much sense as relations are quite rare
+#endif
 } osm_t;
 
 osm_t *osm_parse(const char *path, const char *filename, struct icon_t **icons);

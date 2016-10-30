@@ -51,23 +51,6 @@
 #error "Tree not enabled in libxml"
 #endif
 
-#define ID2HASH(a) ((unsigned short)(a) ^ (unsigned short)((a)>>16))
-
-/* the current hash table uses 16 bits. each table thus is */
-/* 256 kbytes (2^16 * sizeof(void*)) in size */
-typedef struct hash_item_t {
-  struct hash_item_t *next;
-
-  union {
-    node_t *node;
-    way_t *way;
-  } data;
-} hash_item_t;
-
-struct hash_table_t {
-  hash_item_t *hash[65536];
-};
-
 bool object_t::operator==(const object_t& other) const
 {
   if (type != other.type)
@@ -349,7 +332,6 @@ gboolean osm_way_ends_with_node(const way_t *way, const node_t *node) {
 /* ------------------- node handling ------------------- */
 
 void osm_node_free(osm_t *osm, node_t *node) {
-  hash_table_t *hash_table = osm->node_hash;
   item_id_t id = OSM_ID(node);
 
   if(node->icon_buf)
@@ -363,18 +345,8 @@ void osm_node_free(osm_t *osm, node_t *node) {
   g_free(node);
 
   /* also remove node from hash table */
-  if(id > 0 && hash_table) {
-    // use hash table if present
-    hash_item_t **item = &(hash_table->hash[ID2HASH(id)]);
-    for(; *item; item = &(*item)->next) {
-      if(OSM_ID((*item)->data.node) == id) {
-	hash_item_t *cur = *item;
-	*item = (*item)->next;
-	g_free(cur);
-	return;
-      }
-    }
-  }
+  if(id > 0)
+    osm->node_hash.erase(id);
 }
 
 static void osm_nodes_free(osm_t *osm, node_t *node) {
@@ -397,7 +369,6 @@ void osm_node_chain_free(node_chain_t &node_chain) {
 }
 
 void osm_way_free(osm_t *osm, way_t *way) {
-  hash_table_t *hash_table = osm->way_hash;
   item_id_t id = OSM_ID(way);
 
   //  printf("freeing way #" ITEM_ID_FORMAT "\n", OSM_ID(way));
@@ -412,18 +383,8 @@ void osm_way_free(osm_t *osm, way_t *way) {
   g_free(way);
 
   /* also remove way from hash table */
-  if(id > 0 && hash_table) {
-    // use hash table if present
-    hash_item_t **item = &(hash_table->hash[ID2HASH(id)]);
-    for(; *item; item = &(*item)->next) {
-      if(OSM_ID((*item)->data.way) == id) {
-	hash_item_t *cur = *item;
-	*item = (*item)->next;
-	g_free(cur);
-	return;
-      }
-    }
-  }
+  if(id > 0)
+    osm->way_hash.erase(id);
 }
 
 static void osm_ways_free(osm_t *osm, way_t *way) {
@@ -566,40 +527,14 @@ gchar *relation_get_descriptive_name(const relation_t *relation) {
 
 /* ------------------ osm handling ----------------- */
 
-/* the two hash tables eat over 512kBytes memory and may thus be */
-/* freed at any time. osm2go can work without them (albeit slower) */
-static void hash_table_free(hash_table_t *table) {
-  if(!table) return;
-
-  int i;
-  for(i=0;i<65536;i++) {
-    hash_item_t *item = table->hash[i];
-    while(item) {
-      hash_item_t *next = item->next;
-      g_free(item);
-      item = next;
-    }
-  }
-  g_free(table);
-}
-
-static void osm_hash_tables_free(osm_t *osm) {
-  hash_table_free(osm->node_hash);
-  osm->node_hash = NULL;
-  hash_table_free(osm->way_hash);
-  osm->way_hash = NULL;
-}
-
 void osm_free(osm_t *osm) {
   if(!osm) return;
-
-  osm_hash_tables_free(osm);
 
   osm_users_free(osm->user);
   osm_ways_free(osm, osm->way);
   osm_nodes_free(osm, osm->node);
   osm_relations_free(osm->relation);
-  g_free(osm);
+  delete osm;
 }
 
 /* -------------------------- stream parser ------------------- */
@@ -771,13 +706,7 @@ static node_t *process_node(xmlTextReaderPtr reader, osm_t *osm) {
   pos2lpos(osm->bounds, &node->pos, &node->lpos);
 
   /* append node to end of hash table if present */
-  if(osm->node_hash) {
-    hash_item_t **item = &osm->node_hash->hash[ID2HASH(OSM_ID(node))];
-    while(*item) item = &(*item)->next;
-
-    *item = g_new0(hash_item_t, 1);
-    (*item)->data.node = node;
-  }
+  osm->node_hash[OSM_ID(node)] = node;
 
   /* just an empty element? then return the node as it is */
   if(xmlTextReaderIsEmptyElement(reader))
@@ -837,13 +766,7 @@ static way_t *process_way(xmlTextReaderPtr reader, osm_t *osm) {
   process_base_attributes(&way->base, reader, osm);
 
   /* append way to end of hash table if present */
-  if(osm->way_hash) {
-    hash_item_t **item = &osm->way_hash->hash[ID2HASH(OSM_ID(way))];
-    while(*item) item = &(*item)->next;
-
-    *item = g_new0(hash_item_t, 1);
-    (*item)->data.way = way;
-  }
+  osm->way_hash[OSM_ID(way)] = way;
 
   /* just an empty element? then return the way as it is */
   /* (this should in fact never happen as this would be a way without nodes) */
@@ -984,9 +907,7 @@ static relation_t *process_relation(xmlTextReaderPtr reader, osm_t *osm) {
 
 static osm_t *process_osm(xmlTextReaderPtr reader) {
   /* alloc osm structure */
-  osm_t *osm = g_new0(osm_t, 1);
-  osm->node_hash = g_new0(hash_table_t, 1);
-  osm->way_hash = g_new0(hash_table_t, 1);
+  osm_t *osm = new osm_t();
 
   node_t **node = &osm->node;
   way_t **way = &osm->way;
@@ -1408,15 +1329,10 @@ char *osm_generate_xml_changeset(char *comment) {
 /* the following three functions are eating much CPU power */
 /* as they search the objects lists. Hashing is supposed to help */
 node_t *osm_get_node_by_id(osm_t *osm, item_id_t id) {
-  if(id > 0 && osm->node_hash) {
-    // use hash table if present
-    hash_item_t *item = osm->node_hash->hash[ID2HASH(id)];
-    while(item) {
-      if(OSM_ID(item->data.node) == id)
-	return item->data.node;
-
-      item = item->next;
-    }
+  if(id > 0) {
+    std::map<item_id_t, node_t *>::const_iterator it = osm->node_hash.find(id);
+    if(it != osm->node_hash.end())
+      return it->second;
   }
 
   /* use linear search if no hash tables are present or search in hash table failed */
@@ -1432,15 +1348,10 @@ node_t *osm_get_node_by_id(osm_t *osm, item_id_t id) {
 }
 
 way_t *osm_get_way_by_id(osm_t *osm, item_id_t id) {
-  if(id > 0 && osm->way_hash) {
-    // use hash table if present
-    hash_item_t *item = osm->way_hash->hash[ID2HASH(id)];
-    while(item) {
-      if(OSM_ID(item->data.way) == id)
-	return item->data.way;
-
-      item = item->next;
-    }
+  if(id > 0) {
+    std::map<item_id_t, way_t *>::const_iterator it = osm->way_hash.find(id);
+    if(it != osm->way_hash.end())
+      return it->second;
   }
 
   /* use linear search if no hash tables are present or search on hash table failed */
