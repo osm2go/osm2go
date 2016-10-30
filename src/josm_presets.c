@@ -132,7 +132,7 @@ char *josm_icon_name_adjust(char *name) {
 }
 
 static int josm_type_bit(const char *type, char sep) {
-  struct { int bit; char *str; } types[] = {
+  const struct { int bit; const char *str; } types[] = {
     { PRESETS_TYPE_WAY,       "way"       },
     { PRESETS_TYPE_NODE,      "node"      },
     { PRESETS_TYPE_RELATION,  "relation"  },
