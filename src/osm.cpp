@@ -2302,11 +2302,6 @@ item_id_t osm_object_get_id(const object_t *object) {
   return object->id;
 }
 
-void osm_relation_members_num_by_type(const relation_t* relation,
-                                      guint* nodes, guint* ways, guint* relations) {
-  relation->members_by_type(nodes, ways, relations);
-}
-
 void osm_object_set_flags(object_t *object, int set, int clr) {
   g_assert(osm_object_is_real(object));
   OBJECT_FLAGS(*object) |=  set;

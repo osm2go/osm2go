@@ -131,7 +131,9 @@ static gboolean tag_edit(tag_context_t *context, tag_t *tag) {
   GtkWidget *table = gtk_table_new(2, 2, FALSE);
 
   gtk_table_attach(GTK_TABLE(table), label = gtk_label_new(_("Key:")),
-		   0, 1, 0, 1, 0, 0, 0, 0);
+                   0, 1, 0, 1,
+                   static_cast<GtkAttachOptions>(0),
+                   static_cast<GtkAttachOptions>(0), 0, 0);
   gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
   gtk_table_attach_defaults(GTK_TABLE(table),
 			    key = entry_new(), 1, 2, 0, 1);
@@ -139,7 +141,9 @@ static gboolean tag_edit(tag_context_t *context, tag_t *tag) {
   HILDON_ENTRY_NO_AUTOCAP(key);
 
   gtk_table_attach(GTK_TABLE(table),  label = gtk_label_new(_("Value:")),
-		   0, 1, 1, 2, 0, 0, 0, 0);
+                   0, 1, 1, 2,
+                   static_cast<GtkAttachOptions>(0),
+                   static_cast<GtkAttachOptions>(0), 0, 0);
   gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
   gtk_table_attach_defaults(GTK_TABLE(table),
 		    value = entry_new(), 1, 2, 1, 2);
@@ -425,8 +429,7 @@ static GtkWidget *details_widget(tag_context_t *context, gboolean big) {
   case RELATION: {
     /* relations tell something about their members */
     guint nodes = 0, ways = 0, relations = 0;
-    osm_relation_members_num_by_type(context->object.relation,
-                                     &nodes, &ways, &relations);
+    context->object.relation->members_by_type(&nodes, &ways, &relations);
 
     char *str =
       g_strdup_printf(_("Members: %u nodes, %u ways, %u relations"),
@@ -441,12 +444,13 @@ static GtkWidget *details_widget(tag_context_t *context, gboolean big) {
 
     g_free(str);
     break;
+  }
 
   default:
     printf("ERROR: No node, way or relation\n");
     g_assert_not_reached();
     break;
-  } }
+  }
 
   return table;
 }
