@@ -571,7 +571,7 @@ member_list_selection_func(GtkTreeSelection *selection, GtkTreeModel *model,
   if(gtk_tree_model_get_iter(model, &iter, path)) {
     g_assert_cmpint(gtk_tree_path_get_depth(path), ==, 1);
 
-    member_t *member = NULL;
+    const member_t *member = NULL;
     gtk_tree_model_get(model, &iter, MEMBER_COL_DATA, &member, -1);
     if(member && member->object.type < NODE_ID)
       return TRUE;
