@@ -35,7 +35,7 @@
 #error "Tree not enabled in libxml"
 #endif
 
-typedef enum {
+enum presets_widget_type_t {
   WIDGET_TYPE_LABEL = 0,
   WIDGET_TYPE_SEPARATOR,
   WIDGET_TYPE_SPACE,
@@ -43,9 +43,9 @@ typedef enum {
   WIDGET_TYPE_CHECK,
   WIDGET_TYPE_TEXT,
   WIDGET_TYPE_KEY
-} presets_widget_type_t;
+};
 
-typedef struct presets_widget_t {
+struct presets_widget_t {
   presets_widget_type_t type;
 
   xmlChar *key, *text;
@@ -75,7 +75,7 @@ typedef struct presets_widget_t {
   };
 
   struct presets_widget_t *next;
-} presets_widget_t;
+};
 
 struct presets_item_t {
   int type;
@@ -376,17 +376,20 @@ presets_item_t *josm_presets_load(void) {
 
 static void attach_both(GtkWidget *table, GtkWidget *widget, gint y) {
   gtk_table_attach(GTK_TABLE(table), widget, 0,2,y,y+1,
-		   GTK_EXPAND | GTK_FILL, 0,0,0);
+                   static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),
+                   static_cast<GtkAttachOptions>(0), 0, 0);
 }
 
 static void attach_text(GtkWidget *table, char *text, gint y) {
   gtk_table_attach(GTK_TABLE(table), gtk_label_new(text), 0,1,y,y+1,
-		   GTK_EXPAND | GTK_FILL, 0,0,0);
+                   static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),
+                   static_cast<GtkAttachOptions>(0), 0, 0);
 }
 
 static void attach_right(GtkWidget *table, GtkWidget *widget, gint y) {
   gtk_table_attach(GTK_TABLE(table), widget, 1,2,y,y+1,
-		   GTK_EXPAND | GTK_FILL, 0,0,0);
+                   static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),
+                   static_cast<GtkAttachOptions>(0), 0, 0);
 }
 
 static gboolean store_value(presets_widget_t *widget,
@@ -470,13 +473,13 @@ static gboolean preset_combo_insert_value(GtkWidget *combo, const char *value,
   return (g_strcmp0(preset, value) == 0) ? TRUE : FALSE;
 }
 
-typedef struct {
+struct presets_context_t {
   appdata_t *appdata;
 #ifndef FREMANTLE
   GtkWidget *menu;
 #endif
   tag_context_t *tag_context;
-} presets_context_t;
+};
 
 static void presets_item_dialog(presets_context_t *context,
                                 const presets_item_t *item) {
@@ -565,7 +568,7 @@ static void presets_item_dialog(presets_context_t *context,
 	attach_both(table, gtk_label_new(" "), widget_cnt-widget_skip);
 	break;
 
-      case WIDGET_TYPE_LABEL:
+      case WIDGET_TYPE_LABEL: {
 	attach_both(table, gtk_label_new((char*)widget->text), widget_cnt-widget_skip);
 	break;
 
@@ -611,6 +614,7 @@ static void presets_item_dialog(presets_context_t *context,
 	attach_both(table, gtk_widgets[widget_cnt], widget_cnt-widget_skip);
 #endif
 	break;
+      }
 
       case WIDGET_TYPE_CHECK:
 	{ gboolean def = FALSE;
@@ -703,9 +707,10 @@ static void presets_item_dialog(presets_context_t *context,
       last = &(*last)->next;
 
     while(widget) {
-      tag_t *otag = gtk_widgets[widget_cnt] ? g_object_get_data(G_OBJECT(gtk_widgets[widget_cnt]), "tag") : NULL;
+      tag_t *otag = gtk_widgets[widget_cnt] ?
+                    static_cast<tag_t*>(g_object_get_data(G_OBJECT(gtk_widgets[widget_cnt]), "tag")) : 0;
       switch(widget->type) {
-      case WIDGET_TYPE_COMBO:
+      case WIDGET_TYPE_COMBO: {
 	g_assert(GTK_WIDGET_TYPE(gtk_widgets[widget_cnt]) == combo_box_type());
 
 	const char *text = combo_box_get_active_text(gtk_widgets[widget_cnt]);
@@ -714,6 +719,7 @@ static void presets_item_dialog(presets_context_t *context,
 
 	changed |= store_value(widget, last, text, otag);
 	break;
+      }
 
       case WIDGET_TYPE_TEXT:
 	g_assert(GTK_WIDGET_TYPE(gtk_widgets[widget_cnt]) == entry_type());
@@ -785,10 +791,7 @@ static gboolean preset_is_used(const presets_item_t *item, const presets_context
       is_interactive |= is_widget_interactive(w);
       continue;
     }
-    const tag_t t = {
-      .key = (char*) w->key,
-      .value = (char*) w->key_w.value
-    };
+    const tag_t t((char*) w->key, (char*) w->key_w.value);
     if(osm_tag_key_and_value_present(*(context->tag_context->tag), &t))
       matches_all = TRUE;
     else
@@ -803,7 +806,7 @@ static void
 cb_menu_item(GtkWidget *menu_item, gpointer data) {
   presets_context_t *context = (presets_context_t*)data;
 
-  presets_item_t *item = g_object_get_data(G_OBJECT(menu_item), "item");
+  presets_item_t *item = static_cast<presets_item_t *>(g_object_get_data(G_OBJECT(menu_item), "item"));
   g_assert(item);
 
   presets_item_dialog(context, item);

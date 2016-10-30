@@ -34,7 +34,7 @@ set(osm2go_SOURCE_FILES
 	src/info.h
 	src/josm_elemstyles.c
 	src/josm_elemstyles.h
-	src/josm_presets.c
+	src/josm_presets.cpp
 	src/josm_presets.h
 	src/list.c
 	src/list.h
@@ -213,7 +213,7 @@ if (SERVER_EDITABLE)
 endif ()
 
 if (PICKER_MENU)
-	set_property(SOURCE src/josm_presets.c APPEND PROPERTY COMPILE_DEFINITIONS "PICKER_MENU")
+	set_property(SOURCE src/josm_presets.cpp APPEND PROPERTY COMPILE_DEFINITIONS "PICKER_MENU")
 endif ()
 
 add_library(osm2go_lib STATIC
