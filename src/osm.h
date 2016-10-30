@@ -63,7 +63,6 @@ typedef struct bounds_t {
 } bounds_t;
 
 typedef struct user_t {
-  struct user_t *next;
   int uid;
   char name[];
 } user_t;
@@ -287,6 +286,8 @@ typedef struct osm_t {
   std::map<item_id_t, node_t *> node_hash;
   std::map<item_id_t, way_t *> way_hash;
   // hashing relations doesn't yet make much sense as relations are quite rare
+  std::map<int, user_t *> users;   //< users where uid is given in XML
+  std::vector<user_t *> anonusers; //< users without uid
 #endif
 } osm_t;
 
