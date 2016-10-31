@@ -64,12 +64,6 @@ struct hash_table_s {
   hash_item_t *hash[65536];
 };
 
-/* ------------------------- bounds handling --------------------- */
-
-static void osm_bounds_free(bounds_t *bounds) {
-  g_free(bounds);
-}
-
 /* ------------------------- user handling --------------------- */
 
 static void osm_users_free(user_t *user) {
@@ -634,7 +628,6 @@ void osm_free(osm_t *osm) {
 
   osm_hash_tables_free(osm);
 
-  osm_bounds_free(osm->bounds);
   osm_users_free(osm->user);
   osm_ways_free(osm, osm->way);
   osm_nodes_free(osm, osm->node);
@@ -675,9 +668,9 @@ static gboolean skip_element(xmlTextReaderPtr reader) {
 }
 
 /* parse bounds */
-static bounds_t *process_bounds(xmlTextReaderPtr reader) {
+static gboolean process_bounds(xmlTextReaderPtr reader, bounds_t *bounds) {
   char *prop = NULL;
-  bounds_t *bounds = g_new0(bounds_t, 1);
+  memset(bounds, 0, sizeof(bounds));
 
   bounds->ll_min.lat = bounds->ll_min.lon = NAN;
   bounds->ll_max.lat = bounds->ll_max.lon = NAN;
@@ -708,8 +701,7 @@ static bounds_t *process_bounds(xmlTextReaderPtr reader) {
 	   bounds->ll_min.lat, bounds->ll_min.lon,
 	   bounds->ll_max.lat, bounds->ll_max.lon);
 
-    osm_bounds_free(bounds);
-    return NULL;
+    return FALSE;
   }
 
   /* skip everything below */
@@ -738,7 +730,7 @@ static bounds_t *process_bounds(xmlTextReaderPtr reader) {
   bounds->max.x *= bounds->scale;
   bounds->max.y *= bounds->scale;
 
-  return bounds;
+  return TRUE;
 }
 
 static tag_t *process_tag(xmlTextReaderPtr reader) {
@@ -1081,7 +1073,8 @@ static osm_t *process_osm(xmlTextReaderPtr reader) {
       g_assert_cmpint(xmlTextReaderDepth(reader), ==, 1);
       const char *name = (const char*)xmlTextReaderConstName(reader);
       if(block <= BLOCK_BOUNDS && strcmp(name, "bounds") == 0) {
-	osm->bounds = process_bounds(reader);
+        if(process_bounds(reader, &osm->rbounds))
+          osm->bounds = &osm->rbounds;
 	block = BLOCK_BOUNDS;
       } else if(block <= BLOCK_NODES && strcmp(name, "node") == 0) {
 	*node = process_node(reader, osm);

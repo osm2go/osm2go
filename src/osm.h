@@ -206,6 +206,8 @@ typedef struct osm_s {
   relation_t  *relation;
 
   struct icon_s **icons;
+
+  bounds_t rbounds;
 } osm_t;
 
 #include <libxml/parser.h>
