@@ -22,14 +22,34 @@
 #include "appdata.h"
 #include "misc.h"
 
+#include <algorithm>
+#include <map>
+#include <string>
 #include <sys/stat.h>
 
-struct icon_t {
+struct icon_item {
+  icon_item();
+  icon_item(GdkPixbuf *nbuf);
+
   GdkPixbuf *buf;
   int use;
-  struct icon_t *next;
-  gchar name[];
 };
+
+struct icon_t {
+  std::map<std::string, icon_item> entries;
+};
+
+icon_item::icon_item()
+  : buf(0)
+  , use(0)
+{
+}
+
+icon_item::icon_item(GdkPixbuf *nbuf)
+  : buf(nbuf)
+  , use(1)
+{
+}
 
 static gchar*
 icon_file_exists(const gchar *file) {
@@ -48,15 +68,17 @@ icon_file_exists(const gchar *file) {
 GdkPixbuf *icon_load(icon_t **icon, const char *name) {
   if(!name) return NULL;
 
-  /* check if icon list already contains an icon of that name */
-  while(*icon) {
-    if(strcmp(name, (*icon)->name) == 0) {
-      //      printf("reuse existing icon\n");
-      (*icon)->use++;
-      return (*icon)->buf;
-    }
+  const std::string sname = name;
 
-    icon = &((*icon)->next);
+  if(*icon) {
+    /* check if icon list already contains an icon of that name */
+    const std::map<std::string, icon_item>::iterator it =
+     (*icon)->entries.find(name);
+
+    if(it != (*icon)->entries.end()) {
+      it->second.use++;
+      return it->second.buf;
+    }
   }
 
   gchar *fullname = icon_file_exists(name);
@@ -64,13 +86,10 @@ GdkPixbuf *icon_load(icon_t **icon, const char *name) {
     GdkPixbuf *pix = gdk_pixbuf_new_from_file(fullname, NULL);
     g_free(fullname);
 
+    if(!*icon)
+      *icon = new icon_t();
     //    printf("Successfully loaded icon %s to %p\n", name, pix);
-      size_t nlen = strlen(name) + 1;
-      *icon = static_cast<icon_t*>(g_malloc(sizeof(**icon) + nlen));
-      memcpy((*icon)->name, name, nlen);
-      (*icon)->buf = pix;
-      (*icon)->use = 1;
-      (*icon)->next = NULL;
+    (*icon)->entries[name] = pix;
 
       return pix;
   }
@@ -86,52 +105,55 @@ GtkWidget *icon_widget_load(icon_t **icon, const char *name) {
   return gtk_image_new_from_pixbuf(pix);
 }
 
-static icon_t *icon_destroy(icon_t *icon) {
-  icon_t *next = icon->next;
-
-  if(icon->buf)
-    g_object_unref(icon->buf);
-  g_free(icon);
-
-  return next;
+static void icon_destroy(icon_item &icon) {
+  if(icon.buf)
+    g_object_unref(icon.buf);
 }
+
+static void icon_destroy_pair(std::pair<const std::string, icon_item> &pair) {
+  icon_destroy(pair.second);
+}
+
+struct find_icon_buf {
+  const GdkPixbuf * const buf;
+  find_icon_buf(const GdkPixbuf *b) : buf(b) {}
+  bool operator()(const std::pair<std::string, icon_item> &pair) {
+    return pair.second.buf == buf;
+  }
+};
 
 void icon_free(icon_t **icon, GdkPixbuf *buf) {
   //  printf("request to free icon %p\n", buf);
 
-  while(*icon) {
-    //    printf("   -> %s %p\n", (*icon)->name, (*icon)->buf);
+  /* check if icon list already contains an icon of that name */
+  std::map<std::string, icon_item>::iterator it = std::find_if(
+                                                  (*icon)->entries.begin(),
+                                                  (*icon)->entries.end(),
+                                                  find_icon_buf(buf));
+  if(it == (*icon)->entries.end()) {
+    printf("ERROR: icon to be freed not found\n");
+  } else {
+    it->second.use--;
+    if(!it->second.use) {
+      //  printf("freeing unused icon %s\n", it->first.c_str());
 
-    if(buf == (*icon)->buf) {
-      (*icon)->use--;
-      if(!(*icon)->use) {
-	//	printf("freeing unused icon %s\n", (*icon)->name);
-
-	*icon = icon_destroy(*icon);
-
-      } else {
-	//	printf("keeping icon %s still in use by %d\n",
-	//	       (*icon)->name, (*icon)->use);
-      }
-
-      return;
+      icon_destroy(it->second);
+      (*icon)->entries.erase(it);
     }
-    icon = &((*icon)->next);
   }
-
-  printf("ERROR: icon to be freed not found\n");
 }
 
 void icon_free_all(icon_t **icons) {
-  int cnt = 0;
+  if(!*icons)
+    return;
 
-  icon_t *icon = *icons;
-  while(icon) {
-    cnt++;
-    icon = icon_destroy(icon);
-  }
+  unsigned int cnt = (*icons)->entries.size();
 
-  *icons = NULL;
+  std::for_each((*icons)->entries.begin(), (*icons)->entries.end(),
+                icon_destroy_pair);
+
+  delete *icons;
+  *icons = 0;
 
   printf("freed %d icons\n", cnt);
 }
