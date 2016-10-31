@@ -362,8 +362,7 @@ static void table_attach(GtkWidget *table, GtkWidget *child, int x, int y) {
 static GtkWidget *details_widget(tag_context_t *context, gboolean big) {
   GtkWidget *table = gtk_table_new(big?4:2, 2, FALSE);  // y, x
 
-  user_t *user = OBJECT_USER(context->object);
-  time_t stime = OBJECT_TIME(context->object);
+  const user_t *user = OBJECT_USER(context->object);
   GtkWidget *label;
 
   /* ------------ user ----------------- */
@@ -379,7 +378,7 @@ static GtkWidget *details_widget(tag_context_t *context, gboolean big) {
 
   if(big) table_attach(table, gtk_label_new(_("Date/Time:")), 0, 1);
   struct tm loctime;
-  localtime_r(&stime, &loctime);
+  localtime_r(&OBJECT_TIME(context->object), &loctime);
   char time_str[32];
   strftime(time_str, sizeof(time_str), "%x %X", &loctime);
   label = gtk_label_new(time_str);
