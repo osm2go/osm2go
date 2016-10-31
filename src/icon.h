@@ -22,12 +22,7 @@
 
 #include <gtk/gtk.h>
 
-typedef struct icon_s {
-  GdkPixbuf *buf;
-  int use;
-  struct icon_s *next;
-  gchar name[];
-} icon_t;
+typedef struct icon_s icon_t;
 
 GdkPixbuf *icon_load(icon_t **icon, const char *name);
 void icon_free(icon_t **icons, GdkPixbuf *buf);

@@ -24,6 +24,13 @@
 
 #include <sys/stat.h>
 
+struct icon_s {
+  GdkPixbuf *buf;
+  int use;
+  struct icon_s *next;
+  gchar name[];
+};
+
 static gchar*
 icon_file_exists(const gchar *file) {
   const char *icon_exts[] = { ".gif", ".png", ".jpg", NULL };
