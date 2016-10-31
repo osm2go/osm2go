@@ -26,7 +26,7 @@ set(osm2go_SOURCE_FILES
 	src/diff.cpp
 	src/diff.h
 	src/gps.h
-	src/icon.c
+	src/icon.cpp
 	src/icon.h
 	src/iconbar.c
 	src/iconbar.h

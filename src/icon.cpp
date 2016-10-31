@@ -66,7 +66,7 @@ GdkPixbuf *icon_load(icon_t **icon, const char *name) {
 
     //    printf("Successfully loaded icon %s to %p\n", name, pix);
       size_t nlen = strlen(name) + 1;
-      *icon = g_malloc(sizeof(**icon) + nlen);
+      *icon = static_cast<icon_t*>(g_malloc(sizeof(**icon) + nlen));
       memcpy((*icon)->name, name, nlen);
       (*icon)->buf = pix;
       (*icon)->use = 1;
