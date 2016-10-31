@@ -1278,7 +1278,7 @@ void map_way_delete(appdata_t *appdata, way_t *way) {
   /* and mark it "deleted" in the database */
   osm_way_remove_from_relation(appdata->osm, way);
 
-  osm_way_delete(appdata->osm, &appdata->icon, way, FALSE);
+  osm_way_delete(appdata->osm, way, FALSE);
 }
 
 static void map_handle_click(appdata_t *appdata, map_t *map) {
@@ -2055,7 +2055,7 @@ void map_delete_selected(appdata_t *appdata) {
     /* and mark it "deleted" in the database */
     osm_node_remove_from_relation(appdata->osm, item.object.node);
     way_chain_t *chain = osm_node_delete(appdata->osm,
-			 &appdata->icon, item.object.node, FALSE, TRUE);
+                         item.object.node, FALSE, TRUE);
 
     /* redraw all affected ways */
     while(chain) {

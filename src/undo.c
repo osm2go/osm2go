@@ -97,7 +97,7 @@ static void undo_object_free(osm_t *osm, object_t *obj) {
 
     switch(obj->type) {
     case NODE:
-      osm_node_free(osm, NULL, obj->node);
+      osm_node_free(osm, obj->node);
       break;
 
     case WAY:
@@ -408,7 +408,7 @@ static void undo_operation_object_restore(appdata_t *appdata, object_t *obj,
 
       /* permanently remove the node marked as "deleted" */
       way_chain_t *wchain =
-	osm_node_delete(appdata->osm, &appdata->icon, orig, TRUE, TRUE);
+	osm_node_delete(appdata->osm, orig, TRUE, TRUE);
 
       /* the deleted node must not have been part of any way */
       g_assert(!wchain);
@@ -428,7 +428,7 @@ static void undo_operation_object_restore(appdata_t *appdata, object_t *obj,
       g_assert(OSM_FLAGS(orig) & OSM_FLAG_DELETED);
 
       /* permanently remove the way marked as "deleted" */
-      osm_way_delete(appdata->osm, &appdata->icon, orig, TRUE);
+      osm_way_delete(appdata->osm, orig, TRUE);
     }
 
     osm_way_restore(appdata->osm, obj->way, *id_chain);

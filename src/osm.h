@@ -205,17 +205,18 @@ typedef struct osm_s {
   // hashing relations doesn't yet make much sense as relations are quite rare
   relation_t  *relation;
 
+  struct icon_s **icons;
 } osm_t;
 
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 
-osm_t *osm_parse(const char *path, const char *filename);
+osm_t *osm_parse(const char *path, const char *filename, struct icon_s **icons);
 gboolean osm_sanity_check(GtkWidget *parent, const osm_t *osm);
 tag_t *osm_parse_osm_tag(xmlNode* a_node);
 node_chain_t *osm_parse_osm_way_nd(osm_t *osm, xmlNode *a_node);
 member_t *osm_parse_osm_relation_member(osm_t *osm, xmlNode *a_node);
-void osm_free(struct icon_s **icon, osm_t *osm);
+void osm_free(osm_t *osm);
 
 const char *osm_node_get_value(node_t *node, const char *key);
 gboolean osm_node_has_tag(const node_t *node);
@@ -231,7 +232,7 @@ gboolean osm_node_in_other_way(const osm_t *osm, const way_t *way, const node_t 
 
 void osm_node_chain_free(node_chain_t *node_chain);
 gboolean osm_node_chain_diff(const node_chain_t *n1, const node_chain_t *n2);
-void osm_node_free(osm_t *osm, struct icon_s **icon, node_t *node);
+void osm_node_free(osm_t *osm, node_t *node);
 
 gboolean osm_members_diff(const member_t *n1, const member_t *n2);
 void osm_members_free(member_t *member);
@@ -270,10 +271,9 @@ node_t *osm_node_new(osm_t *osm, gint x, gint y);
 node_t *osm_node_new_pos(osm_t *osm, const pos_t *pos);
 void osm_node_attach(osm_t *osm, node_t *node);
 void osm_node_restore(osm_t *osm, node_t *node);
-way_chain_t *osm_node_delete(osm_t *osm, struct icon_s **icon, node_t *node,
+way_chain_t *osm_node_delete(osm_t *osm, node_t *node,
 			     gboolean permanently, gboolean affect_ways);
-void osm_way_delete(osm_t *osm, struct icon_s **icon, way_t *way,
-		    gboolean perm);
+void osm_way_delete(osm_t *osm, way_t *way, gboolean perm);
 void osm_way_restore(osm_t *osm, way_t *way, item_id_chain_t *id_chain);
 
 way_t *osm_way_new(void);

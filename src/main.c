@@ -172,7 +172,7 @@ cb_menu_download(GtkMenuItem *item, gpointer data) {
     diff_save(appdata->project, appdata->osm);
     map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
 
-    osm_free(&appdata->icon, appdata->osm);
+    osm_free(appdata->osm);
     appdata->osm = NULL;
   }
 
@@ -181,7 +181,8 @@ cb_menu_download(GtkMenuItem *item, gpointer data) {
 		  appdata->project)) {
 
     banner_busy_start(appdata, 1, "Drawing");
-    appdata->osm = osm_parse(appdata->project->path, appdata->project->osm);
+    appdata->osm = osm_parse(appdata->project->path, appdata->project->osm,
+                             &appdata->icon);
     diff_restore(appdata, appdata->project, appdata->osm);
     map_paint(appdata);
     banner_busy_stop(appdata); //"Redrawing"
@@ -276,11 +277,12 @@ cb_menu_undo_changes(GtkMenuItem *item, gpointer data) {
 
   map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
 
-  osm_free(&appdata->icon, appdata->osm);
+  osm_free(appdata->osm);
   appdata->osm = NULL;
 
   diff_remove(appdata->project);
-  appdata->osm = osm_parse(appdata->project->path, appdata->project->osm);
+  appdata->osm = osm_parse(appdata->project->path, appdata->project->osm,
+                 &appdata->icon);
   map_paint(appdata);
 
   banner_show_info(appdata, _("Undo all changes"));
@@ -1266,7 +1268,7 @@ void cleanup(appdata_t *appdata) {
 
   map_remove_bg_image(appdata->map);
 
-  osm_free(&appdata->icon, appdata->osm);
+  osm_free(appdata->osm);
   appdata->osm = NULL;
 
   xmlCleanupParser();

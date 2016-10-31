@@ -318,12 +318,12 @@ gboolean osm_way_ends_with_node(const way_t *way, const node_t *node) {
 
 /* ------------------- node handling ------------------- */
 
-void osm_node_free(osm_t *osm, icon_t **icon, node_t *node) {
+void osm_node_free(osm_t *osm, node_t *node) {
   hash_table_t *hash_table = osm->node_hash;
   item_id_t id = OSM_ID(node);
 
   if(node->icon_buf)
-    icon_free(icon, node->icon_buf);
+    icon_free(osm->icons, node->icon_buf);
 
   /* there must not be anything left in this chain */
   g_assert(!node->map_item_chain);
@@ -349,10 +349,10 @@ void osm_node_free(osm_t *osm, icon_t **icon, node_t *node) {
   }
 }
 
-static void osm_nodes_free(osm_t *osm, icon_t **icon, node_t *node) {
+static void osm_nodes_free(osm_t *osm, node_t *node) {
   while(node) {
     node_t *next = node->next;
-    osm_node_free(osm, icon, node);
+    osm_node_free(osm, node);
     node = next;
   }
 }
@@ -629,7 +629,7 @@ static void osm_hash_tables_free(osm_t *osm) {
   osm->way_hash = NULL;
 }
 
-void osm_free(icon_t **icon, osm_t *osm) {
+void osm_free(osm_t *osm) {
   if(!osm) return;
 
   osm_hash_tables_free(osm);
@@ -637,7 +637,7 @@ void osm_free(icon_t **icon, osm_t *osm) {
   osm_bounds_free(osm->bounds);
   osm_users_free(osm->user);
   osm_ways_free(osm, osm->way);
-  osm_nodes_free(osm, icon, osm->node);
+  osm_nodes_free(osm, osm->node);
   osm_relations_free(osm->relation);
   g_free(osm);
 }
@@ -1149,7 +1149,7 @@ static osm_t *process_file(const char *filename) {
 
 #include <sys/time.h>
 
-osm_t *osm_parse(const char *path, const char *filename) {
+osm_t *osm_parse(const char *path, const char *filename, icon_t **icon) {
 
   struct timeval start;
   gettimeofday(&start, NULL);
@@ -1168,6 +1168,8 @@ osm_t *osm_parse(const char *path, const char *filename) {
 
   struct timeval end;
   gettimeofday(&end, NULL);
+
+  osm->icons = icon;
 
   printf("total parse time: %ldms\n",
 	 (end.tv_usec - start.tv_usec)/1000 +
@@ -1699,7 +1701,7 @@ void osm_way_restore(osm_t *osm, way_t *way, item_id_chain_t *id_chain) {
 }
 
 /* returns pointer to chain of ways affected by this deletion */
-way_chain_t *osm_node_delete(osm_t *osm, icon_t **icon,
+way_chain_t *osm_node_delete(osm_t *osm,
 			     node_t *node, gboolean permanently,
 			     gboolean affect_ways) {
   way_chain_t *way_chain = NULL, **cur_way_chain = &way_chain;
@@ -1763,7 +1765,7 @@ way_chain_t *osm_node_delete(osm_t *osm, icon_t **icon,
 	*cnode = (*cnode)->next;
 
 	g_assert(osm);
-	osm_node_free(osm, icon, node);
+	osm_node_free(osm, node);
       } else
 	cnode = &((*cnode)->next);
     }
@@ -2027,8 +2029,7 @@ void osm_relation_attach(osm_t *osm, relation_t *relation) {
 }
 
 
-void osm_way_delete(osm_t *osm, icon_t **icon,
-		    way_t *way, gboolean permanently) {
+void osm_way_delete(osm_t *osm, way_t *way, gboolean permanently) {
 
   /* new ways aren't stored on the server and are just deleted permanently */
   if(OSM_FLAGS(way) & OSM_FLAG_NEW) {
@@ -2051,7 +2052,7 @@ void osm_way_delete(osm_t *osm, icon_t **icon,
       /* associated ways as the only such way is the one we are currently */
       /* deleting */
       way_chain_t *way_chain =
-	osm_node_delete(osm, icon, node, FALSE, FALSE);
+	osm_node_delete(osm, node, FALSE, FALSE);
       g_assert(way_chain);
       while(way_chain) {
 	way_chain_t *way_next = way_chain->next;

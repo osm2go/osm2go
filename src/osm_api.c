@@ -1034,10 +1034,10 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
       appendf(&context->log, NULL, _("Cleaning up ...\n"));
       diff_save(appdata->project, appdata->osm);
       map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
-      osm_free(&appdata->icon, appdata->osm);
+      osm_free(appdata->osm);
 
       appendf(&context->log, NULL, _("Loading OSM ...\n"));
-      appdata->osm = osm_parse(appdata->project->path, appdata->project->osm);
+      appdata->osm = osm_parse(appdata->project->path, appdata->project->osm, &appdata->icon);
       appendf(&context->log, NULL, _("Applying diff ...\n"));
       diff_restore(appdata, appdata->project, appdata->osm);
       appendf(&context->log, NULL, _("Painting ...\n"));

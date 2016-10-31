@@ -705,13 +705,14 @@ static void on_project_edit(GtkButton *button, gpointer data) {
 	  diff_save(appdata->project, appdata->osm);
 	  map_clear(appdata, MAP_LAYER_ALL);
 
-	  osm_free(&appdata->icon, appdata->osm);
+	  osm_free(appdata->osm);
 	  appdata->osm = NULL;
 	}
 
 	/* and load the (hopefully) new file */
 	appdata->osm = osm_parse(appdata->project->path,
-				 appdata->project->osm);
+                                 appdata->project->osm,
+                                 &appdata->icon);
 	diff_restore(appdata, appdata->project, appdata->osm);
 	map_paint(appdata);
 
@@ -1079,8 +1080,8 @@ static void on_diff_remove_clicked(GtkButton *button, gpointer data) {
 
       /* just reload the map */
       map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
-      osm_free(&appdata->icon, appdata->osm);
-      appdata->osm = osm_parse(appdata->project->path, appdata->project->osm);
+      osm_free(appdata->osm);
+      appdata->osm = osm_parse(appdata->project->path, appdata->project->osm, &appdata->icon);
       map_paint(appdata);
     }
 
@@ -1316,7 +1317,7 @@ gboolean project_open(appdata_t *appdata, const char *name) {
   appdata->project = project;
 
   printf("project_open: loading osm %s\n", project->osm);
-  appdata->osm = osm_parse(project->path, project->osm);
+  appdata->osm = osm_parse(project->path, project->osm, &appdata->icon);
   if(!appdata->osm) {
     printf("OSM parsing failed\n");
     return FALSE;
@@ -1343,7 +1344,7 @@ gboolean project_close(appdata_t *appdata) {
   map_clear(appdata, MAP_LAYER_ALL);
 
   if(appdata->osm) {
-    osm_free(&appdata->icon, appdata->osm);
+    osm_free(appdata->osm);
     appdata->osm = NULL;
   }
 
@@ -1404,7 +1405,7 @@ gboolean project_load(appdata_t *appdata, const char *name) {
     }
 
     if(appdata->osm) {
-      osm_free(&appdata->icon, appdata->osm);
+      osm_free(appdata->osm);
       appdata->osm = NULL;
     }
 
@@ -1433,7 +1434,7 @@ gboolean project_load(appdata_t *appdata, const char *name) {
     }
 
     if(appdata->osm) {
-      osm_free(&appdata->icon, appdata->osm);
+      osm_free(appdata->osm);
       appdata->osm = NULL;
     }
 
@@ -1498,7 +1499,7 @@ gboolean project_load(appdata_t *appdata, const char *name) {
   }
 
   if(appdata->osm) {
-    osm_free(&appdata->icon, appdata->osm);
+    osm_free(appdata->osm);
     appdata->osm = NULL;
   }
 

@@ -240,8 +240,7 @@ void map_edit_way_add_cancel(map_t *map) {
     node->ways--;
     if(!node->ways && (OSM_ID(node) == ID_ILLEGAL)) {
       printf("      -> freeing temp node\n");
-      osm_node_free(osm,
-		    &map->appdata->icon, node);
+      osm_node_free(osm, node);
     }
     g_free(chain);
     chain = next;
@@ -749,7 +748,7 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 
       /* and remove it from the data structures */
       osm_node_remove_from_relation(appdata->osm, touchnode);
-      osm_node_delete(appdata->osm, &appdata->icon, touchnode, FALSE, TRUE);
+      osm_node_delete(appdata->osm, touchnode, FALSE, TRUE);
 
       /* and open dialog to resolve tag collisions if necessary */
       if(conflict)
