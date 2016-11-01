@@ -212,7 +212,7 @@ static elemstyle_icon_t *parse_icon(xmlNode *a_node) {
   return icon;
 }
 
-static elemstyle_t *parse_rule(xmlDocPtr doc, xmlNode *a_node) {
+static elemstyle_t *parse_rule(xmlNode *a_node) {
   xmlNode *cur_node = NULL;
   elemstyle_t *elemstyle = g_new0(elemstyle_t, 1);
   elemstyle_condition_t **lastcond = &elemstyle->condition;
@@ -273,14 +273,14 @@ static elemstyle_t *parse_rule(xmlDocPtr doc, xmlNode *a_node) {
   return elemstyle;
 }
 
-static elemstyle_t *parse_rules(xmlDocPtr doc, xmlNode *a_node) {
+static elemstyle_t *parse_rules(xmlNode *a_node) {
   xmlNode *cur_node = NULL;
   elemstyle_t *elemstyles = NULL, **elemstyle = &elemstyles;
 
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcasecmp((char*)cur_node->name, "rule") == 0) {
-	*elemstyle = parse_rule(doc, cur_node);
+	*elemstyle = parse_rule(cur_node);
 	if(*elemstyle) elemstyle = &((*elemstyle)->next);
       } else
 	printf("found unhandled rules/%s\n", cur_node->name);
@@ -298,7 +298,7 @@ static elemstyle_t *parse_doc(xmlDocPtr doc) {
       cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcasecmp((char*)cur_node->name, "rules") == 0) {
-	elemstyles = parse_rules(doc, cur_node);
+	elemstyles = parse_rules(cur_node);
       } else
 	printf("found unhandled %s\n", cur_node->name);
     }
