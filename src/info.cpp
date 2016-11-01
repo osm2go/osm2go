@@ -368,14 +368,14 @@ static void table_attach(GtkWidget *table, GtkWidget *child, int x, int y) {
 static GtkWidget *details_widget(tag_context_t *context, gboolean big) {
   GtkWidget *table = gtk_table_new(big?4:2, 2, FALSE);  // y, x
 
-  const user_t *user = OBJECT_USER(context->object);
+  const char *user = OBJECT_USER(context->object);
   GtkWidget *label;
 
   /* ------------ user ----------------- */
   if(user) {
     if(big) table_attach(table, gtk_label_new(_("User:")), 0, 0);
 
-    label = gtk_label_new(user->name);
+    label = gtk_label_new(user);
     gtk_label_set_ellipsize(GTK_LABEL(label), PANGO_ELLIPSIZE_END);
     table_attach(table, label, big?1:0, 0);
   }

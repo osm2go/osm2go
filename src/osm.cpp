@@ -89,47 +89,27 @@ bool object_t::operator==(const relation_t *r) const {
 
 /* ------------------------- user handling --------------------- */
 
-static void osm_users_free(osm_t *osm) {
-  const std::map<int, user_t *>::const_iterator itEnd = osm->users.end();
-  for(std::map<int, user_t *>::const_iterator it = osm->users.begin(); it != itEnd; it++)
-    g_free(it->second);
-  osm->users.clear();
-
-  const std::vector<user_t *>::const_iterator vitEnd = osm->anonusers.end();
-  for(std::vector<user_t *>::const_iterator it = osm->anonusers.begin();
-      it != vitEnd; it++)
-    g_free(*it);
-  osm->anonusers.clear();
-}
-
-static user_t *osm_user(osm_t *osm, const char *name, int uid) {
+static const char *osm_user(osm_t *osm, const char *name, int uid) {
   if(!name) return NULL;
 
   /* search through user list */
   if(uid >= 0) {
-    const std::map<int, user_t *>::const_iterator it = osm->users.find(uid);
+    const std::map<int, std::string>::const_iterator it = osm->users.find(uid);
     if(it != osm->users.end())
-      return it->second;
+      return it->second.c_str();
+      
+    osm->users[uid] = name;
+    return osm->users[uid].c_str();
   } else {
     /* match with the name, but only against users without uid */
-    const std::vector<user_t *>::const_iterator itEnd = osm->anonusers.end();
-    for(std::vector<user_t *>::const_iterator it = osm->anonusers.begin();
-        it != itEnd; it++)
-      if(strcasecmp((*it)->name, name) == 0)
-        return *it;
+    const std::vector<std::string>::const_iterator itEnd = osm->anonusers.end();
+    std::vector<std::string>::const_iterator it;
+    for(it = osm->anonusers.begin(); it != itEnd; it++)
+      if(strcasecmp(it->c_str(), name) == 0)
+        return it->c_str();
+    osm->anonusers.push_back(name);
+    return osm->anonusers.back().c_str();
   }
-
-  const size_t nlen = strlen(name) + 1;
-  user_t *newu = (user_t*)g_malloc(sizeof(*newu) + nlen);
-  memcpy(newu->name, name, nlen);
-  newu->uid = uid;
-
-  if(uid >= 0)
-    osm->users[uid] = newu;
-  else
-    osm->anonusers.push_back(newu);
-
-  return newu;
 }
 
 static
@@ -530,7 +510,6 @@ gchar *relation_get_descriptive_name(const relation_t *relation) {
 void osm_free(osm_t *osm) {
   if(!osm) return;
 
-  osm_users_free(osm);
   osm_ways_free(osm, osm->way);
   osm_nodes_free(osm, osm->node);
   osm_relations_free(osm->relation);
