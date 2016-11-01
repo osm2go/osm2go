@@ -670,7 +670,6 @@ static gboolean skip_element(xmlTextReaderPtr reader) {
 /* parse bounds */
 static gboolean process_bounds(xmlTextReaderPtr reader, bounds_t *bounds) {
   char *prop = NULL;
-  memset(bounds, 0, sizeof(bounds));
 
   bounds->ll_min.lat = bounds->ll_min.lon = NAN;
   bounds->ll_max.lat = bounds->ll_max.lon = NAN;
