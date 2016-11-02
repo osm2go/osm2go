@@ -480,7 +480,7 @@ my_log_handler (const gchar * log_domain, GLogLevelFlags log_level, const gchar 
 }
 
 static float
-osm_gps_map_get_scale_at_point(int zoom, float rlat, float rlon)
+osm_gps_map_get_scale_at_point(int zoom, float rlat, G_GNUC_UNUSED float rlon)
 {
     /* world at zoom 1 == 512 pixels */
     return cos(rlat) * M_PI * OSM_EQ_RADIUS / (1<<(7+zoom));
@@ -1240,7 +1240,7 @@ osm_gps_map_print_tracks (OsmGpsMap *map)
 }
 
 static gboolean
-osm_gps_map_purge_cache_check(gpointer key, gpointer value, gpointer user)
+osm_gps_map_purge_cache_check(G_GNUC_UNUSED gpointer key, gpointer value, gpointer user)
 {
    return (((OsmCachedTile*)value)->redraw_cycle != ((OsmGpsMapPrivate*)user)->redraw_cycle);
 }
@@ -1990,7 +1990,7 @@ osm_gps_map_motion_notify (GtkWidget *widget, GdkEventMotion  *event)
 }
 
 static gboolean
-osm_gps_map_configure (GtkWidget *widget, GdkEventConfigure *event)
+osm_gps_map_configure(GtkWidget *widget, G_GNUC_UNUSED GdkEventConfigure *event)
 {
     OsmGpsMapPrivate *priv = OSM_GPS_MAP_PRIVATE(widget);
 
@@ -2470,7 +2470,7 @@ osm_gps_map_source_get_image_format(OsmGpsMapSource_t source)
 
 
 int
-osm_gps_map_source_get_min_zoom(OsmGpsMapSource_t source)
+osm_gps_map_source_get_min_zoom(G_GNUC_UNUSED OsmGpsMapSource_t source)
 {
     return 1;
 }

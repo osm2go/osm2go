@@ -1152,6 +1152,7 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event,
     printf("button press %d %d\n", event->button, event->time);
 
 #ifndef PICKER_MENU
+  (void)widget;
     if (!context->menu) {
       GtkWidget *matches = NULL;
       context->menu = build_menu(context, context->appdata->presets, &matches);
@@ -1209,7 +1210,7 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event,
   return FALSE;
 }
 
-static gint on_button_destroy(GtkWidget *widget, gpointer data) {
+static gint on_button_destroy(G_GNUC_UNUSED GtkWidget *widget, gpointer data) {
   presets_context_t *context = (presets_context_t*)data;
 
 #ifndef FREMANTLE

@@ -34,29 +34,29 @@
 
 #define MARKUP "<span size='xx-small'>%s</span>"
 
-static void on_info_clicked(GtkButton *button, gpointer data) {
+static void on_info_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
 
   info_dialog(GTK_WIDGET(appdata->window), appdata, NULL);
 }
 
-static void on_node_add_clicked(GtkButton *button, gpointer data) {
+static void on_node_add_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
   map_action_set((appdata_t*)data, MAP_ACTION_NODE_ADD);
 }
 
-static void on_way_add_clicked(GtkButton *button, gpointer data) {
+static void on_way_add_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
   map_action_set((appdata_t*)data, MAP_ACTION_WAY_ADD);
 }
 
-static void on_way_node_add_clicked(GtkButton *button, gpointer data) {
+static void on_way_node_add_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
   map_action_set((appdata_t*)data, MAP_ACTION_WAY_NODE_ADD);
 }
 
-static void on_way_reverse_clicked(GtkButton *button, gpointer data) {
+static void on_way_reverse_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
   map_edit_way_reverse((appdata_t*)data);
 }
 
-static void on_way_cut_clicked(GtkButton *button, gpointer data) {
+static void on_way_cut_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
   map_action_set((appdata_t*)data, MAP_ACTION_WAY_CUT);
 }
 
@@ -129,16 +129,16 @@ static void on_relation_add_clicked(GtkButton *button, gpointer data) {
 }
 #endif
 
-static void on_trash_clicked(GtkButton *button, gpointer data) {
+static void on_trash_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
   map_delete_selected((appdata_t*)data);
 }
 
-static void on_ok_clicked(GtkButton *button, gpointer data) {
+static void on_ok_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
   printf("User ok\n");
   map_action_ok((appdata_t*)data);
 }
 
-static void on_cancel_clicked(GtkButton *button, gpointer data) {
+static void on_cancel_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
   printf("User cancel\n");
   map_action_cancel((appdata_t*)data);
 }

@@ -79,7 +79,7 @@ static gboolean mark(GtkWidget *widget, gboolean valid) {
   return valid;
 }
 
-static void callback_modified_lat(GtkWidget *widget, gpointer data ) {
+static void callback_modified_lat(GtkWidget *widget, G_GNUC_UNUSED gpointer data) {
   pos_float_t i = pos_parse_lat((char*)gtk_entry_get_text(GTK_ENTRY(widget)));
   mark(widget, pos_lat_valid(i));
 }
@@ -101,7 +101,7 @@ GtkWidget *pos_lat_entry_new(pos_float_t lat) {
   return widget;
 }
 
-static void callback_modified_lon(GtkWidget *widget, gpointer data ) {
+static void callback_modified_lon(GtkWidget *widget, G_GNUC_UNUSED gpointer data) {
   pos_float_t i = pos_parse_lon((char*)gtk_entry_get_text(GTK_ENTRY(widget)));
   mark(widget, pos_lon_valid(i));
 }

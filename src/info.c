@@ -44,7 +44,7 @@ gboolean info_tag_key_collision(const tag_t *tags, const tag_t *tag) {
   return FALSE;
 }
 
-static void changed(GtkTreeSelection *treeselection, gpointer user_data) {
+static void changed(G_GNUC_UNUSED GtkTreeSelection *treeselection, gpointer user_data) {
   GtkWidget *list = (GtkWidget*)user_data;
 
   GtkTreeModel *model;
@@ -81,7 +81,7 @@ static void update_collisions(GtkListStore *store, tag_t *tags) {
   }
 }
 
-static void on_tag_remove(GtkWidget *but, tag_context_t *context) {
+static void on_tag_remove(G_GNUC_UNUSED GtkWidget *button, tag_context_t *context) {
   GtkTreeModel     *model;
   GtkTreeIter       iter;
 
@@ -161,7 +161,7 @@ static gboolean tag_edit(tag_context_t *context, tag_t *tag) {
   return ret;
 }
 
-static void on_tag_edit(GtkWidget *button, tag_context_t *context) {
+static void on_tag_edit(G_GNUC_UNUSED GtkWidget *button, tag_context_t *context) {
   GtkTreeModel *model;
   GtkTreeIter iter;
   tag_t *tag;
@@ -193,7 +193,7 @@ static void on_tag_edit(GtkWidget *button, tag_context_t *context) {
   }
 }
 
-static void on_tag_last(GtkWidget *button, tag_context_t *context) {
+static void on_tag_last(G_GNUC_UNUSED GtkWidget *button, tag_context_t *context) {
   static const char *type_name[] = { "illegal", "node", "way", "relation" };
 
   if(!*context->tag || yes_no_f(context->dialog,
@@ -220,7 +220,7 @@ static void on_tag_last(GtkWidget *button, tag_context_t *context) {
   }
 }
 
-static void on_tag_add(GtkWidget *button, tag_context_t *context) {
+static void on_tag_add(G_GNUC_UNUSED GtkWidget *button, tag_context_t *context) {
 
   /* search end of tag chain */
   tag_t **tag = context->tag;
@@ -277,7 +277,7 @@ void info_tags_replace(tag_context_t *context) {
   }
 }
 
-static void on_relations(GtkWidget *button, tag_context_t *context) {
+static void on_relations(G_GNUC_UNUSED GtkWidget *button, tag_context_t *context) {
   relation_membership_dialog(context->dialog, context->appdata,
 			     &context->object);
 }
@@ -350,7 +350,7 @@ static GtkWidget *tag_widget(tag_context_t *context) {
   return context->list;
 }
 
-static void on_relation_members(GtkWidget *but, tag_context_t *context) {
+static void on_relation_members(G_GNUC_UNUSED GtkWidget *button, tag_context_t *context) {
   g_assert(context->object.type == RELATION);
   relation_show_members(context->dialog, context->object.relation);
 }

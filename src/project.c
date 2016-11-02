@@ -605,7 +605,7 @@ project_t *project_new(select_context_t *context) {
 // predecs
 static void project_get_status_icon_stock_id(select_context_t *context, project_t *project, gchar **stock_id);
 
-static void on_project_new(GtkButton *button, gpointer data) {
+static void on_project_new(G_GNUC_UNUSED GtkButton *button, gpointer data) {
   select_context_t *context = (select_context_t*)data;
   project_t *project = project_new(context);
   context->project = g_slist_prepend(context->project, project);
@@ -629,7 +629,7 @@ static void on_project_new(GtkButton *button, gpointer data) {
   }
 }
 
-static void on_project_delete(GtkButton *button, gpointer data) {
+static void on_project_delete(G_GNUC_UNUSED GtkButton *button, gpointer data) {
   select_context_t *context = (select_context_t*)data;
   project_t *project = project_get_selected(context->list);
 
@@ -643,7 +643,7 @@ static void on_project_delete(GtkButton *button, gpointer data) {
     printf("unable to delete project\n");
 }
 
-static void on_project_edit(GtkButton *button, gpointer data) {
+static void on_project_edit(G_GNUC_UNUSED GtkButton *button, gpointer data) {
   select_context_t *context = (select_context_t*)data;
   project_t *project = project_get_selected(context->list);
   g_assert(project);
@@ -734,7 +734,7 @@ gboolean project_osm_present(project_t *project) {
 }
 
 static void
-on_project_update_all(GtkButton *button, gpointer data)
+on_project_update_all(G_GNUC_UNUSED GtkButton *button, gpointer data)
 {
   select_context_t *context = (select_context_t*)data;
   GtkTreeIter iter;
@@ -1009,7 +1009,7 @@ project_pos_is_valid(project_t *project) {
 	 !isnan(project->max.lon));
 }
 
-static void on_edit_clicked(GtkButton *button, gpointer data) {
+static void on_edit_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
   project_context_t *context = (project_context_t*)data;
 
   if(diff_present(context->project) || project_active_n_dirty(context))
@@ -1044,7 +1044,7 @@ static void on_edit_clicked(GtkButton *button, gpointer data) {
   }
 }
 
-static void on_download_clicked(GtkButton *button, gpointer data) {
+static void on_download_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
   project_context_t *context = (project_context_t*)data;
 
   printf("download %s\n", context->project->osm);
@@ -1057,7 +1057,7 @@ static void on_download_clicked(GtkButton *button, gpointer data) {
   project_filesize(context);
 }
 
-static void on_diff_remove_clicked(GtkButton *button, gpointer data) {
+static void on_diff_remove_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
   project_context_t *context = (project_context_t*)data;
 
   printf("clicked diff remove\n");
@@ -1545,18 +1545,18 @@ typedef struct wizard_s {
 } wizard_t;
 
 
-static gint on_assistant_destroy(GtkWidget *widget, wizard_t *wizard) {
+static gint on_assistant_destroy(G_GNUC_UNUSED GtkWidget *widget, wizard_t *wizard) {
   printf("destroy callback\n");
   wizard->running = FALSE;
   return FALSE;
 }
 
-static void on_assistant_cancel(GtkWidget *widget, wizard_t *wizard) {
+static void on_assistant_cancel(G_GNUC_UNUSED GtkWidget *widget, wizard_t *wizard) {
   printf("cancel callback\n");
   wizard->running = FALSE;
 }
 
-static void on_assistant_close(GtkWidget *widget, wizard_t *wizard) {
+static void on_assistant_close(G_GNUC_UNUSED GtkWidget *widget, wizard_t *wizard) {
   printf("close callback\n");
   wizard->running = FALSE;
 }
@@ -1582,7 +1582,7 @@ static GtkWidget *wizard_text(const char *text) {
 }
 
 /* ---------------- page 1: intro ----------------- */
-static GtkWidget *wizard_create_intro_page(wizard_page_t *page) {
+static GtkWidget *wizard_create_intro_page(G_GNUC_UNUSED wizard_page_t *page) {
   static const char *text =
     "This wizard will guide you through the setup of a new project.\n\n"
     "An osm2go project covers a certain area of the world as seen "

@@ -117,7 +117,7 @@ void main_ui_enable(appdata_t *appdata) {
 /******************** begin of menu *********************/
 
 static void
-cb_menu_project_open(GtkMenuItem *item, gpointer data) {
+cb_menu_project_open(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
   project_load(appdata, NULL);
   main_ui_enable(appdata);
@@ -125,7 +125,7 @@ cb_menu_project_open(GtkMenuItem *item, gpointer data) {
 
 #ifndef USE_HILDON
 static void
-cb_menu_project_wizard(GtkMenuItem *item, gpointer data) {
+cb_menu_project_wizard(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
   project_wizard(appdata);
 }
@@ -134,21 +134,21 @@ cb_menu_project_wizard(GtkMenuItem *item, gpointer data) {
 void on_window_destroy (GtkWidget *widget, gpointer data);
 
 static void
-cb_menu_about(GtkMenuItem *item, gpointer data) {
+cb_menu_about(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
   about_box(appdata);
 }
 
 #ifndef USE_HILDON
 static void
-cb_menu_quit(GtkMenuItem *item, gpointer data) {
+cb_menu_quit(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
   gtk_widget_destroy(GTK_WIDGET(appdata->window));
 }
 #endif
 
 static void
-cb_menu_upload(GtkMenuItem *item, gpointer data) {
+cb_menu_upload(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
   if(!appdata->osm || !appdata->project) return;
 
@@ -159,7 +159,7 @@ cb_menu_upload(GtkMenuItem *item, gpointer data) {
 }
 
 static void
-cb_menu_download(GtkMenuItem *item, gpointer data) {
+cb_menu_download(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
   if(!appdata->project) return;
 
@@ -192,19 +192,19 @@ cb_menu_download(GtkMenuItem *item, gpointer data) {
 }
 
 static void
-cb_menu_wms_import(GtkMenuItem *item, gpointer data) {
+cb_menu_wms_import(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
   wms_import(appdata);
 }
 
 static void
-cb_menu_wms_clear(GtkMenuItem *item, gpointer data) {
+cb_menu_wms_clear(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
   wms_remove(appdata);
 }
 
 static void
-cb_menu_wms_adjust(GtkMenuItem *item, gpointer data) {
+cb_menu_wms_adjust(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
   map_action_set(appdata, MAP_ACTION_BG_ADJUST);
 }
@@ -212,13 +212,13 @@ cb_menu_wms_adjust(GtkMenuItem *item, gpointer data) {
 /* ----------- hide objects for performance reasons ----------- */
 
 static void
-cb_menu_map_hide_sel(GtkMenuItem *item, gpointer data) {
+cb_menu_map_hide_sel(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
   map_hide_selected(appdata);
 }
 
 static void
-cb_menu_map_show_all(GtkMenuItem *item, gpointer data) {
+cb_menu_map_show_all(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
   map_show_all(appdata);
 }
@@ -235,7 +235,7 @@ cb_menu_map_show_all(GtkMenuItem *item, gpointer data) {
 
 #ifndef FREMANTLE
 static void
-cb_menu_style(GtkMenuItem *item, gpointer data) {
+cb_menu_style(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
 
   style_select(GTK_WIDGET(appdata->window), appdata);
@@ -243,7 +243,7 @@ cb_menu_style(GtkMenuItem *item, gpointer data) {
 #endif
 
 static void
-cb_menu_undo(GtkMenuItem *item, gpointer data) {
+cb_menu_undo(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
 
   undo(appdata);
@@ -253,7 +253,7 @@ cb_menu_undo(GtkMenuItem *item, gpointer data) {
 
 #ifndef USE_HILDON
 static void
-cb_menu_save_changes(GtkMenuItem *item, gpointer data) {
+cb_menu_save_changes(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
 
   diff_save(appdata->project, appdata->osm);
@@ -262,7 +262,7 @@ cb_menu_save_changes(GtkMenuItem *item, gpointer data) {
 #endif
 
 static void
-cb_menu_undo_changes(GtkMenuItem *item, gpointer data) {
+cb_menu_undo_changes(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
 
   // if there is nothing to clean then don't ask
@@ -289,7 +289,7 @@ cb_menu_undo_changes(GtkMenuItem *item, gpointer data) {
 }
 
 static void
-cb_menu_osm_relations(GtkMenuItem *item, appdata_t *appdata) {
+cb_menu_osm_relations(G_GNUC_UNUSED GtkMenuItem *item, appdata_t *appdata) {
   /* list relations of all objects */
   relation_list(GTK_WIDGET(appdata->window), appdata, NULL);
 }
@@ -307,7 +307,7 @@ cb_menu_fullscreen(MENU_CHECK_ITEM *item, gpointer data) {
 #endif
 
 static void
-cb_menu_zoomin(GtkMenuItem *item, appdata_t *appdata) {
+cb_menu_zoomin(G_GNUC_UNUSED GtkMenuItem *item, appdata_t *appdata) {
   if(!appdata || !appdata->map) return;
 
   map_set_zoom(appdata->map, appdata->map->state->zoom*ZOOM_FACTOR_MENU, TRUE);
@@ -315,7 +315,7 @@ cb_menu_zoomin(GtkMenuItem *item, appdata_t *appdata) {
 }
 
 static void
-cb_menu_zoomout(GtkMenuItem *item, appdata_t *appdata) {
+cb_menu_zoomout(G_GNUC_UNUSED GtkMenuItem *item, appdata_t *appdata) {
   if(!appdata || !appdata->map) return;
 
   map_set_zoom(appdata->map, appdata->map->state->zoom/ZOOM_FACTOR_MENU, TRUE);
@@ -324,7 +324,7 @@ cb_menu_zoomout(GtkMenuItem *item, appdata_t *appdata) {
 
 #if defined(FREMANTLE) || (MAEMO_VERSION_MAJOR != 5) || !defined(DETAIL_POPUP)
 static void
-cb_menu_view_detail_inc(GtkMenuItem *item, gpointer data) {
+cb_menu_view_detail_inc(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
 
   printf("detail level increase\n");
@@ -332,7 +332,7 @@ cb_menu_view_detail_inc(GtkMenuItem *item, gpointer data) {
 }
 
 static void
-cb_menu_view_detail_normal(GtkMenuItem *item, gpointer data) {
+cb_menu_view_detail_normal(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
 
   printf("detail level normal\n");
@@ -340,7 +340,7 @@ cb_menu_view_detail_normal(GtkMenuItem *item, gpointer data) {
 }
 
 static void
-cb_menu_view_detail_dec(GtkMenuItem *item, gpointer data) {
+cb_menu_view_detail_dec(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
 
   printf("detail level decrease\n");
@@ -349,7 +349,7 @@ cb_menu_view_detail_dec(GtkMenuItem *item, gpointer data) {
 #endif
 
 static void
-cb_menu_track_import(GtkMenuItem *item, appdata_t *appdata) {
+cb_menu_track_import(G_GNUC_UNUSED GtkMenuItem *item, appdata_t *appdata) {
   g_assert(appdata->settings);
 
   /* open a file selector */
@@ -416,7 +416,7 @@ cb_menu_track_follow_gps(MENU_CHECK_ITEM *item, appdata_t *appdata) {
 
 
 static void
-cb_menu_track_export(GtkMenuItem *item, appdata_t *appdata) {
+cb_menu_track_export(G_GNUC_UNUSED GtkMenuItem *item, appdata_t *appdata) {
   g_assert(appdata->settings);
 
   /* open a file selector */
@@ -480,7 +480,7 @@ cb_menu_track_export(GtkMenuItem *item, appdata_t *appdata) {
 
 
 static void
-cb_menu_track_clear(GtkMenuItem *item, gpointer data) {
+cb_menu_track_clear(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
   track_clear(appdata);
 }
@@ -884,7 +884,7 @@ static void menu_create(appdata_t *appdata) {
 #endif //USE_HILDON
 }
 
-void menu_cleanup(appdata_t *appdata) { }
+void menu_cleanup(G_GNUC_UNUSED appdata_t *appdata) { }
 
 #else // !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
 
@@ -1297,7 +1297,7 @@ void cleanup(appdata_t *appdata) {
   puts("everything is gone");
 }
 
-void on_window_destroy (GtkWidget *widget, gpointer data) {
+void on_window_destroy(G_GNUC_UNUSED GtkWidget *widget, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
 
   puts("main window destroy");
@@ -1306,7 +1306,7 @@ void on_window_destroy (GtkWidget *widget, gpointer data) {
   appdata->window = NULL;
 }
 
-gboolean on_window_key_press(GtkWidget *widget,
+gboolean on_window_key_press(G_GNUC_UNUSED GtkWidget *widget,
 			 GdkEventKey *event, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
   int handled = FALSE;
@@ -1385,7 +1385,7 @@ static GtkWidget *icon_button(appdata_t *appdata, char *icon, GCallback cb,
 #endif
 
 /* handle pending gtk events, but don't let the user actually do something */
-static void gtk_process_blocking(appdata_t *appdata) {
+static void gtk_process_blocking(G_GNUC_UNUSED appdata_t *appdata) {
   while(gtk_events_pending())
     gtk_main_iteration();
 }

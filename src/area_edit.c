@@ -128,7 +128,7 @@ static char *warn_text(context_t *context) {
      );
 }
 
-static void on_area_warning_clicked(GtkButton *button, gpointer data) {
+static void on_area_warning_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
   context_t *context = (context_t*)data;
 
   char *wtext = warn_text(context);
@@ -287,8 +287,8 @@ static void map_update(context_t *context, gboolean forced) {
   context->map.needs_redraw = FALSE;
 }
 
-static gboolean on_map_configure(GtkWidget *widget,
-				 GdkEventConfigure *event,
+static gboolean on_map_configure(G_GNUC_UNUSED GtkWidget *widget,
+				 G_GNUC_UNUSED GdkEventConfigure *event,
 				 context_t *context) {
   map_update(context, FALSE);
   return FALSE;
@@ -321,7 +321,7 @@ static void extent_update(context_t *context) {
   pos_dist_entry_set(context->extent.height, height, context->extent.is_mil);
 }
 
-static void callback_modified_direct(GtkWidget *widget, gpointer data) {
+static void callback_modified_direct(G_GNUC_UNUSED GtkWidget *widget, gpointer data) {
   context_t *context = (context_t*)data;
 
   /* direct is second tab (page 1) */
@@ -343,7 +343,7 @@ static void callback_modified_direct(GtkWidget *widget, gpointer data) {
 #endif
 }
 
-static void callback_modified_extent(GtkWidget *widget, gpointer data) {
+static void callback_modified_extent(G_GNUC_UNUSED GtkWidget *widget, gpointer data) {
   context_t *context = (context_t*)data;
 
   /* extent is third tab (page 2) */
@@ -379,7 +379,7 @@ static void callback_modified_extent(GtkWidget *widget, gpointer data) {
 #endif
 }
 
-static void callback_modified_unit(GtkWidget *widget, gpointer data) {
+static void callback_modified_unit(G_GNUC_UNUSED GtkWidget *widget, gpointer data) {
   context_t *context = (context_t*)data;
 
   /* get current values */
@@ -551,7 +551,8 @@ on_map_button_release_event(GtkWidget *widget,
   return !osm_gps_map_osd_get_state(OSM_GPS_MAP(widget));
 }
 
-static void on_page_switch(GtkNotebook *notebook, GtkNotebookPage *page,
+static void on_page_switch(G_GNUC_UNUSED GtkNotebook *notebook,
+			   G_GNUC_UNUSED GtkNotebookPage *page,
 			   guint page_num, context_t *context) {
 
   /* updating the map while the user manually changes some coordinates */

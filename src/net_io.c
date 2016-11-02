@@ -92,13 +92,13 @@ static const char *http_message(int id) {
   return NULL;
 }
 
-static gint dialog_destroy_event(GtkWidget *widget, gpointer data) {
+static gint dialog_destroy_event(G_GNUC_UNUSED GtkWidget *widget, gpointer data) {
   /* set cancel flag */
   *(gboolean*)data = TRUE;
   return FALSE;
 }
 
-static void on_cancel(GtkWidget *widget, gpointer data) {
+static void on_cancel(G_GNUC_UNUSED GtkWidget *widget, gpointer data) {
   /* set cancel flag */
   *(gboolean*)data = TRUE;
 }
@@ -162,11 +162,13 @@ static void request_free(net_io_request_t *request) {
 #ifdef CURLOPT_XFERINFOFUNCTION
 static int curl_progress_func(void *req,
 			    curl_off_t t, /* dltotal */ curl_off_t d, /* dlnow */
-			    curl_off_t ultotal, curl_off_t ulnow) {
+			    G_GNUC_UNUSED curl_off_t ultotal,
+			    G_GNUC_UNUSED curl_off_t ulnow) {
 #else
 static int curl_progress_func(void *req,
 			    double t, /* dltotal */ double d, /* dlnow */
-			    double ultotal, double ulnow) {
+			    G_GNUC_UNUSED double ultotal,
+			    G_GNUC_UNUSED double ulnow) {
 #endif
   net_io_request_t *request = req;
   request->download_cur = (curl_off_t)d;

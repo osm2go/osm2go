@@ -97,7 +97,7 @@ static void canvas_item_info_dechain(canvas_item_info_t *item_info) {
 
 /* remove item_info from chain as its visual representation */
 /* has been destroyed */
-static gint item_info_destroy(canvas_item_t *canvas_item,
+static gint item_info_destroy(G_GNUC_UNUSED canvas_item_t *canvas_item,
 			      canvas_item_info_t *item_info) {
   //  printf("######## destroy %p\n", item_info);
 

@@ -248,7 +248,7 @@ void list_set_store(GtkWidget *list, GtkListStore *store) {
 
 static void on_row_activated(GtkTreeView *treeview,
 			     GtkTreePath        *path,
-			     GtkTreeViewColumn  *col,
+			     G_GNUC_UNUSED GtkTreeViewColumn  *col,
 			     gpointer            userdata) {
   GtkTreeIter   iter;
   GtkTreeModel *model = gtk_tree_view_get_model(treeview);
@@ -346,7 +346,7 @@ void list_focus_on(GtkWidget *list, GtkTreeIter *iter, gboolean highlight) {
     gtk_tree_selection_select_iter(sel, iter);
 }
 
-static gint on_list_destroy(GtkWidget *list, gpointer data) {
+static gint on_list_destroy(GtkWidget *list, G_GNUC_UNUSED gpointer data) {
   list_priv_t *priv = g_object_get_data(G_OBJECT(list), "priv");
   g_assert(priv);
 

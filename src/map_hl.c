@@ -83,7 +83,7 @@ void map_hl_touchnode_clear(map_t *map) {
 }
 
 /* called whenever a highlight item is to be destroyed */
-gint map_hl_item_destroy_event(GtkWidget *widget, gpointer data) {
+gint map_hl_item_destroy_event(G_GNUC_UNUSED GtkWidget *widget, gpointer data) {
   map_item_t *map_item = (map_item_t*)data;
 
   //  printf("destroying highlight map_item @ %p\n", map_item);

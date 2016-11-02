@@ -553,6 +553,7 @@ static GtkWidget *combo_box_new_with_selector(const gchar *title, GtkWidget *sel
 /* the title is only used on fremantle with the picker widget */
 GtkWidget *combo_box_new(const gchar *title) {
 #ifndef FREMANTLE
+  (void)title;
   return gtk_combo_box_new_text();
 #else
   GtkWidget *selector = hildon_touch_selector_new_text();
@@ -562,6 +563,7 @@ GtkWidget *combo_box_new(const gchar *title) {
 
 GtkWidget *combo_box_entry_new(const gchar *title) {
 #ifndef FREMANTLE
+  (void)title;
   return gtk_combo_box_entry_new_text();
 #else
   GtkWidget *selector = hildon_touch_selector_entry_new_text();

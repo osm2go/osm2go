@@ -33,7 +33,7 @@
 
 #ifdef ENABLE_BROWSER_INTERFACE
 
-static gboolean on_link_clicked(GtkWidget *widget, GdkEventButton *event,
+static gboolean on_link_clicked(GtkWidget *widget, G_GNUC_UNUSED GdkEventButton *event,
 				gpointer user_data) {
 
   const char *str =
@@ -69,7 +69,7 @@ static GtkWidget *link_new(appdata_t *appdata, const char *url) {
 }
 
 #ifdef ENABLE_BROWSER_INTERFACE
-static void on_paypal_button_clicked(GtkButton *button, appdata_t *appdata) {
+static void on_paypal_button_clicked(G_GNUC_UNUSED GtkButton *button, appdata_t *appdata) {
   //  gtk_dialog_response(GTK_DIALOG(context->dialog), GTK_RESPONSE_ACCEPT);
   open_url(appdata,
 	      "https://www.paypal.com/cgi-bin/webscr"
@@ -96,7 +96,7 @@ static GtkWidget *label_xbig(const char *str) {
 }
 
 static void
-on_label_realize(GtkWidget *widget, gpointer user_data)  {
+on_label_realize(GtkWidget *widget, G_GNUC_UNUSED gpointer user_data)  {
   /* get parent size (which is a container) */
   gtk_widget_set_size_request(widget, widget->parent->allocation.width, -1);
 }

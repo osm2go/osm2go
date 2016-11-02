@@ -25,7 +25,7 @@
 
 /* ------------------- creating and destroying the canvas ----------------- */
 
-static gint canvas_destroy_event(GtkWidget *widget, gpointer data) {
+static gint canvas_destroy_event(G_GNUC_UNUSED GtkWidget *widget, gpointer data) {
   g_free(data);
   return FALSE;
 }
@@ -406,7 +406,7 @@ typedef struct {
   gpointer data;
 } weak_t;
 
-static void canvas_item_weak_notify(gpointer data, GObject *invalid) {
+static void canvas_item_weak_notify(gpointer data, G_GNUC_UNUSED GObject *invalid) {
   weak_t *weak = data;
 
   ((void(*)(GtkWidget*, gpointer))weak->c_handler) (NULL, weak->data);

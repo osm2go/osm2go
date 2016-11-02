@@ -53,7 +53,7 @@ pointer_in_window(GtkWidget *widget, gint x_root, gint y_root) {
 
 static gboolean
 on_button_press_event(GtkWidget *widget,
-			  GdkEventButton *event, popup_context_t *context) {
+			  GdkEventButton *event, G_GNUC_UNUSED popup_context_t *context) {
   gboolean in = pointer_in_window(widget, event->x_root, event->y_root);
 
   printf("overlay button press(in = %d)\n", in);
@@ -62,7 +62,7 @@ on_button_press_event(GtkWidget *widget,
 
 static gboolean
 on_button_release_event(GtkWidget *widget,
-			  GdkEventButton *event, popup_context_t *context) {
+			  GdkEventButton *event, G_GNUC_UNUSED popup_context_t *context) {
   gboolean in = pointer_in_window(widget, event->x_root, event->y_root);
 
   printf("overlay button release(in = %d)\n", in);
@@ -82,20 +82,20 @@ shutdown_loop(popup_context_t *context) {
 }
 
 static gint
-run_delete_handler(GtkWindow *window, GdkEventAny *event,
+run_delete_handler(G_GNUC_UNUSED GtkWindow *window, G_GNUC_UNUSED GdkEventAny *event,
 		   popup_context_t *context) {
   shutdown_loop(context);
   return TRUE; /* Do not destroy */
 }
 
 static void
-run_destroy_handler(GtkWindow *window, popup_context_t *context) {
+run_destroy_handler(G_GNUC_UNUSED GtkWindow *window, G_GNUC_UNUSED popup_context_t *context) {
   /* shutdown_loop will be called by run_unmap_handler */
   printf("popup destroyed\n");
 }
 
 static void
-run_unmap_handler(GtkWindow *window, popup_context_t *context) {
+run_unmap_handler(G_GNUC_UNUSED GtkWindow *window, popup_context_t *context) {
   shutdown_loop(context);
 }
 

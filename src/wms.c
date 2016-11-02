@@ -571,7 +571,7 @@ wms_server_changed(GtkTreeSelection *selection, gpointer userdata) {
   }
 }
 
-static void on_server_remove(GtkWidget *but, wms_server_context_t *context) {
+static void on_server_remove(G_GNUC_UNUSED GtkWidget *but, wms_server_context_t *context) {
   GtkTreeSelection *selection;
   GtkTreeModel     *model;
   GtkTreeIter       iter;
@@ -711,7 +711,7 @@ gboolean wms_server_edit(wms_server_context_t *context, gboolean edit_name,
 }
 
 /* user clicked "edit..." button in the wms server list */
-static void on_server_edit(GtkWidget *but, wms_server_context_t *context) {
+static void on_server_edit(G_GNUC_UNUSED GtkWidget *but, wms_server_context_t *context) {
   GtkTreeSelection *selection;
   GtkTreeModel     *model;
   GtkTreeIter       iter;
@@ -727,7 +727,7 @@ static void on_server_edit(GtkWidget *but, wms_server_context_t *context) {
 }
 
 /* user clicked "add..." button in the wms server list */
-static void on_server_add(GtkWidget *but, wms_server_context_t *context) {
+static void on_server_add(G_GNUC_UNUSED GtkWidget *but, wms_server_context_t *context) {
 
   /* attach a new server item to the chain */
   wms_server_t **prev = &context->appdata->settings->wms_server;
@@ -896,7 +896,7 @@ enum {
 /* fremantle finger scrolling, but fortunately the fremantle */
 /* default behaviour already is what we want. */
 static gboolean on_view_clicked(GtkWidget *widget, GdkEventButton *event,
-				gpointer user_data) {
+				G_GNUC_UNUSED gpointer user_data) {
   if(event->window == gtk_tree_view_get_bin_window(GTK_TREE_VIEW(widget))) {
     GtkTreePath *path;
 
@@ -916,7 +916,7 @@ static gboolean on_view_clicked(GtkWidget *widget, GdkEventButton *event,
 }
 #endif
 
-static void changed(GtkTreeSelection *sel, gpointer user_data) {
+static void changed(GtkTreeSelection *sel, G_GNUC_UNUSED gpointer user_data) {
   /* we need to know what changed in order to let the user acknowlege it! */
 
   /* get view from selection ... */
@@ -948,7 +948,7 @@ static void changed(GtkTreeSelection *sel, gpointer user_data) {
 }
 
 static GtkWidget *wms_layer_widget(appdata_t *appdata, wms_layer_t *layer,
-				   GtkWidget *dialog) {
+				   G_GNUC_UNUSED GtkWidget *dialog) {
 
 #ifndef FREMANTLE_PANNABLE_AREA
   GtkWidget *view = gtk_tree_view_new();
