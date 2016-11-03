@@ -1153,8 +1153,6 @@ void wms_import(appdata_t *appdata) {
   } else {
     xmlDoc *doc = NULL;
 
-    LIBXML_TEST_VERSION;
-
     /* parse the file and get the DOM */
     if((doc = xmlReadMemory(cap, strlen(cap), NULL, NULL, 0)) == NULL) {
       xmlErrorPtr errP = xmlGetLastError();

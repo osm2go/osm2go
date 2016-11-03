@@ -1146,8 +1146,6 @@ osm_t *osm_parse(const char *path, const char *filename, icon_t **icon) {
   struct timeval start;
   gettimeofday(&start, NULL);
 
-  LIBXML_TEST_VERSION;
-
   // use stream parser
   osm_t *osm = NULL;
   if(filename[0] == '/')
@@ -1432,8 +1430,6 @@ char *osm_generate_xml_changeset(char *comment) {
     .key = "comment", .value = comment, .next = NULL };
   const tag_t tag_creator = {
     .key = "created_by", .value = PACKAGE " v" VERSION, .next = &tag_comment };
-
-  LIBXML_TEST_VERSION;
 
   xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
   xmlNodePtr root_node = xmlNewNode(NULL, BAD_CAST "osm");

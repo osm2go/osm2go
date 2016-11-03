@@ -319,8 +319,6 @@ elemstyle_t *josm_elemstyles_load(const char *name) {
     return NULL;
   }
 
-  LIBXML_TEST_VERSION;
-
   /* parse the file and get the DOM */
   xmlDoc *doc = NULL;
   if((doc = xmlReadFile(filename, NULL, 0)) == NULL) {

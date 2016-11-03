@@ -239,8 +239,6 @@ void diff_save(const project_t *project, const osm_t *osm) {
    * saving is completed */
   char *ndiff = g_strconcat(project->path, "save.diff", NULL);
 
-  LIBXML_TEST_VERSION;
-
   xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
   xmlNodePtr root_node = xmlNewNode(NULL, BAD_CAST "diff");
   xmlNewProp(root_node, BAD_CAST "name", BAD_CAST project->name);

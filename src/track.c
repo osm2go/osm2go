@@ -218,8 +218,6 @@ static track_t *track_read(const char *filename, gboolean dirty) {
 
   xmlDoc *doc = NULL;
 
-  LIBXML_TEST_VERSION;
-
   /* parse the file and get the DOM */
   if((doc = xmlReadFile(filename, NULL, 0)) == NULL) {
     xmlErrorPtr	errP = xmlGetLastError();
@@ -324,8 +322,6 @@ static void track_save_segs(const track_seg_t *seg, xmlNodePtr node) {
 static void track_write(const char *name, track_t *track) {
   printf("writing track to %s\n", name);
 
-  LIBXML_TEST_VERSION;
-
   xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
   xmlNodePtr root_node = xmlNewNode(NULL, BAD_CAST "gpx");
   xmlNewProp(root_node, BAD_CAST "creator", BAD_CAST PACKAGE " v" VERSION);
@@ -390,8 +386,6 @@ void track_export(appdata_t *appdata, const char *filename) {
 track_t *track_restore(appdata_t *appdata) {
   track_t *track = NULL;
   const project_t *project = appdata->project;
-
-  LIBXML_TEST_VERSION;
 
   /* first try to open a backup which is only present if saving the */
   /* actual diff didn't succeed */

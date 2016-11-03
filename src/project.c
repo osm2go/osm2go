@@ -62,9 +62,6 @@ static gboolean project_edit(appdata_t *appdata, GtkWidget *parent,
 /* ------------ project file io ------------- */
 
 static gboolean project_read(const char *project_file, project_t *project) {
-
-  LIBXML_TEST_VERSION;
-
   xmlDoc *doc = NULL;
   xmlNode *root_element = NULL;
 
@@ -209,8 +206,6 @@ gboolean project_save(GtkWidget *parent, project_t *project) {
       return FALSE;
     }
   }
-
-  LIBXML_TEST_VERSION;
 
   xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
   xmlNodePtr node, root_node = xmlNewNode(NULL, BAD_CAST "proj");

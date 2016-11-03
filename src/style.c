@@ -201,8 +201,6 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t *style) {
  */
 static style_t *style_parse(appdata_t *appdata, const char *fullname,
                             xmlChar **fname, gboolean name_only) {
-  LIBXML_TEST_VERSION;
-
   xmlDoc *doc = xmlReadFile(fullname, NULL, 0);
 
   /* parse the file and get the DOM */

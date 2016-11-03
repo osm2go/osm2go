@@ -1394,6 +1394,8 @@ static void gtk_process_blocking(G_GNUC_UNUSED appdata_t *appdata) {
 int main(int argc, char *argv[]) {
   appdata_t appdata;
 
+  LIBXML_TEST_VERSION;
+
   /* init appdata */
   memset(&appdata, 0, sizeof(appdata));
 

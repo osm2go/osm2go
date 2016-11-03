@@ -375,8 +375,6 @@ presets_item_t *josm_presets_load(void) {
 
   printf("Loading JOSM presets ...\n");
 
-  LIBXML_TEST_VERSION;
-
   gchar *filename = find_file("presets.xml", NULL, NULL);
   if(!filename) return NULL;
 
