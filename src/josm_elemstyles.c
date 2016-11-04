@@ -51,11 +51,11 @@ typedef struct elemstyle_condition_s {
     // XXX should probably ask the windowing system for DPI and
     // work from that instead
 
-inline float scaledn_to_zoom(const float scaledn) {
+float scaledn_to_zoom(const float scaledn) {
   return N810_PX_PER_METRE / scaledn;
 }
 
-inline float zoom_to_scaledn(const float zoom) {
+float zoom_to_scaledn(const float zoom) {
   return N810_PX_PER_METRE / zoom;
 }
 
