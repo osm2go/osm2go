@@ -37,14 +37,14 @@
 #error "Tree not enabled in libxml"
 #endif
 
-typedef struct elemstyle_condition_t {
+struct elemstyle_condition_t {
     xmlChar *key;
     xmlChar *value;
     struct elemstyle_condition_t *next;
-} elemstyle_condition_t;
+};
 
 struct elemstyle_t {
-  struct elemstyle_condition_t *condition;
+  elemstyle_condition_t *condition;
 
   elemstyle_type_t type;
 

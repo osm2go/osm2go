@@ -32,7 +32,7 @@ set(osm2go_SOURCE_FILES
 	src/iconbar.h
 	src/info.cpp
 	src/info.h
-	src/josm_elemstyles.c
+	src/josm_elemstyles.cpp
 	src/josm_elemstyles.h
 	src/josm_presets.cpp
 	src/josm_presets.h
