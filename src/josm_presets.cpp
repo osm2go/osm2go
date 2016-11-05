@@ -23,8 +23,10 @@
 #include "icon.h"
 #include "misc.h"
 
+#include <algorithm>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
+#include <vector>
 
 #ifdef FREMANTLE
 #include <hildon/hildon-picker-button.h>
@@ -73,8 +75,6 @@ struct presets_widget_t {
     } check_w;
 
   };
-
-  struct presets_widget_t *next;
 };
 
 struct presets_item_t {
@@ -82,10 +82,8 @@ struct presets_item_t {
   xmlChar *name, *icon, *link;
   bool is_group;
 
-  union {
-    presets_widget_t *widget;
-    struct presets_item_t *group;
-  };
+  std::vector<presets_widget_t *> widgets;
+  struct presets_item_t *group;
 
   struct presets_item_t *next;
 };
@@ -148,87 +146,86 @@ static int josm_type_parse(xmlChar *xtype) {
 }
 
 /* parse children of a given node for into *widget */
-static presets_widget_t **parse_widgets(xmlNode *a_node,
-					presets_item_t *item,
-					presets_widget_t **widget) {
+static void parse_widgets(xmlNode *a_node, presets_item_t *item) {
   xmlNode *cur_node = NULL;
+  presets_widget_t *widget;
 
   for(cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if(cur_node->type == XML_ELEMENT_NODE) {
 
       if(strcmp((char*)cur_node->name, "label") == 0) {
 
-	/* --------- label widget --------- */
-	*widget = g_new0(presets_widget_t, 1);
-	(*widget)->type = WIDGET_TYPE_LABEL;
-	(*widget)->text = xmlGetProp(cur_node, BAD_CAST "text");
+        /* --------- label widget --------- */
+        widget = g_new0(presets_widget_t, 1);
+        widget->type = WIDGET_TYPE_LABEL;
+        widget->text = xmlGetProp(cur_node, BAD_CAST "text");
 
-	/* special handling of pre-<space/> separators */
-	if(!(*widget)->text || (strcmp((char*)(*widget)->text, " ") == 0)) {
-	  (*widget)->type = WIDGET_TYPE_SEPARATOR;
-	  if((*widget)->text) xmlFree((*widget)->text);
-	  (*widget)->text = NULL;
-	}
+        /* special handling of pre-<space/> separators */
+        if(!widget->text || (strcmp((char*)widget->text, " ") == 0)) {
+          widget->type = WIDGET_TYPE_SEPARATOR;
+          if(widget->text)
+            xmlFree(widget->text);
+          widget->text = NULL;
+        }
 
-	widget = &((*widget)->next);
+        item->widgets.push_back(widget);
 
       }
       else if(strcmp((char*)cur_node->name, "space") == 0) {
 #ifndef USE_HILDON
         // new-style separators
-        *widget = g_new0(presets_widget_t, 1);
-        (*widget)->type = WIDGET_TYPE_SEPARATOR;
-	(*widget)->text = NULL;
-	widget = &((*widget)->next);
+        widget = g_new0(presets_widget_t, 1);
+        widget->type = WIDGET_TYPE_SEPARATOR;
+        widget->text = NULL;
+	item->widgets.push_back(widget);
 #endif
       }
       else if(strcmp((char*)cur_node->name, "text") == 0) {
 
-	/* --------- text widget --------- */
-	*widget = g_new0(presets_widget_t, 1);
-	(*widget)->type = WIDGET_TYPE_TEXT;
-	(*widget)->text = xmlGetProp(cur_node, BAD_CAST "text");
-	(*widget)->key = xmlGetProp(cur_node, BAD_CAST "key");
-	(*widget)->text_w.def = xmlGetProp(cur_node, BAD_CAST "default");
-	widget = &((*widget)->next);
+        /* --------- text widget --------- */
+        widget = g_new0(presets_widget_t, 1);
+        widget->type = WIDGET_TYPE_TEXT;
+        widget->text = xmlGetProp(cur_node, BAD_CAST "text");
+        widget->key = xmlGetProp(cur_node, BAD_CAST "key");
+        widget->text_w.def = xmlGetProp(cur_node, BAD_CAST "default");
+        item->widgets.push_back(widget);
 
       } else if(strcmp((char*)cur_node->name, "combo") == 0) {
 
-	/* --------- combo widget --------- */
-	*widget = g_new0(presets_widget_t, 1);
-	(*widget)->type = WIDGET_TYPE_COMBO;
-	(*widget)->text = xmlGetProp(cur_node, BAD_CAST "text");
-	(*widget)->key = xmlGetProp(cur_node, BAD_CAST "key");
-	(*widget)->combo_w.def = xmlGetProp(cur_node,
-						   BAD_CAST "default");
-	(*widget)->combo_w.values = xmlGetProp(cur_node, BAD_CAST "values");
-	widget = &((*widget)->next);
+        /* --------- combo widget --------- */
+        widget = g_new0(presets_widget_t, 1);
+        widget->type = WIDGET_TYPE_COMBO;
+        widget->text = xmlGetProp(cur_node, BAD_CAST "text");
+        widget->key = xmlGetProp(cur_node, BAD_CAST "key");
+        widget->combo_w.def = xmlGetProp(cur_node, BAD_CAST "default");
+        widget->combo_w.values = xmlGetProp(cur_node, BAD_CAST "values");
+        item->widgets.push_back(widget);
 
       } else if(strcmp((char*)cur_node->name, "key") == 0) {
 
-	/* --------- invisible key widget --------- */
-	*widget = g_new0(presets_widget_t, 1);
-	(*widget)->type = WIDGET_TYPE_KEY;
-	(*widget)->key = xmlGetProp(cur_node, BAD_CAST "key");
-	(*widget)->key_w.value = xmlGetProp(cur_node, BAD_CAST "value");
-	widget = &((*widget)->next);
+        /* --------- invisible key widget --------- */
+        widget = g_new0(presets_widget_t, 1);
+        widget->type = WIDGET_TYPE_KEY;
+        widget->key = xmlGetProp(cur_node, BAD_CAST "key");
+        widget->key_w.value = xmlGetProp(cur_node, BAD_CAST "value");
+        item->widgets.push_back(widget);
 
       } else if(strcmp((char*)cur_node->name, "check") == 0) {
 
-	/* --------- check widget --------- */
-	*widget = g_new0(presets_widget_t, 1);
-	(*widget)->type = WIDGET_TYPE_CHECK;
-	(*widget)->text = xmlGetProp(cur_node, BAD_CAST "text");
-	(*widget)->key = xmlGetProp(cur_node, BAD_CAST "key");
-	(*widget)->check_w.def = xml_get_prop_is(cur_node, "default", "on");
-	widget = &((*widget)->next);
+        /* --------- check widget --------- */
+        widget = g_new0(presets_widget_t, 1);
+        widget->type = WIDGET_TYPE_CHECK;
+        widget->text = xmlGetProp(cur_node, BAD_CAST "text");
+        widget->key = xmlGetProp(cur_node, BAD_CAST "key");
+        widget->check_w.def = xml_get_prop_is(cur_node, "default", "on");
+        item->widgets.push_back(widget);
 
       }
       else if (strcmp((char*)cur_node->name, "optional") == 0) {
         // Could be done as a fold-out box width twisties.
         // Or maybe as a separate dialog for small screens.
         // For now, just recurse and build up our current list.
-        widget = parse_widgets(cur_node, item, widget);
+        parse_widgets(cur_node, item);
       }
 
       else if (strcmp((char*)cur_node->name, "link") == 0) {
@@ -243,11 +240,10 @@ static presets_widget_t **parse_widgets(xmlNode *a_node,
 	printf("found unhandled annotations/item/%s\n", cur_node->name);
     }
   }
-  return widget;
 }
 
 static presets_item_t *parse_item(xmlNode *a_node) {
-  presets_item_t *item = g_new0(presets_item_t, 1);
+  presets_item_t *item = new presets_item_t();
   item->is_group = false;
 
   /* ------ parse items own properties ------ */
@@ -259,15 +255,14 @@ static presets_item_t *parse_item(xmlNode *a_node) {
   item->type =
     josm_type_parse(xmlGetProp(a_node, BAD_CAST "type"));
 
-  presets_widget_t **widget = &item->widget;
-  parse_widgets(a_node, item, widget);
+  parse_widgets(a_node, item);
   return item;
 }
 
 static presets_item_t *parse_group(xmlDocPtr doc, xmlNode *a_node) {
   xmlNode *cur_node = NULL;
 
-  presets_item_t *group = g_new0(presets_item_t, 1);
+  presets_item_t *group = new presets_item_t();
   group->is_group = true;
 
   /* ------ parse groups own properties ------ */
@@ -295,7 +290,7 @@ static presets_item_t *parse_group(xmlDocPtr doc, xmlNode *a_node) {
 	  preset = &((*preset)->next);
 	}
       } else if(strcmp((char*)cur_node->name, "separator") == 0) {
-	*preset = g_new0(presets_item_t, 1);
+	*preset = new presets_item_t();
 	preset = &((*preset)->next);
       } else
 	printf("found unhandled annotations/group/%s\n", cur_node->name);
@@ -320,7 +315,7 @@ static presets_item_t *parse_annotations(xmlDocPtr doc, xmlNode *a_node) {
 	*preset = parse_group(doc, cur_node);
 	if(*preset) preset = &((*preset)->next);
       } else if(strcmp((char*)cur_node->name, "separator") == 0) {
-	*preset = g_new0(presets_item_t, 1);
+	*preset = new presets_item_t();
 	preset = &((*preset)->next);
       } else
 	printf("found unhandled annotations/%s\n", cur_node->name);
@@ -493,24 +488,20 @@ static void presets_item_dialog(presets_context_t *context,
   printf("dialog for item %s\n", item->name);
 
   /* build dialog from items widget list */
-  presets_widget_t *widget = item->widget;
 
   /* count total number of widgets and number of widgets that */
   /* have an interactive gui element. We won't show a dialog */
   /* at all if there's no interactive gui element at all */
-  gint widget_cnt = 0, interactive_widget_cnt = 0;
-  while(widget) {
-    if(is_widget_interactive(widget))
-      interactive_widget_cnt++;
-
-    widget_cnt++;
-    widget = widget->next;
-  }
+  guint widget_cnt = item->widgets.size();
+  std::vector<presets_widget_t *>::const_iterator itEnd = item->widgets.end();
+  bool has_interactive_widget = std::find_if(item->widgets.begin(), itEnd,
+                                             is_widget_interactive) != itEnd;
 
   /* allocate space for required number of gtk widgets */
   GtkWidget **gtk_widgets = (GtkWidget**)g_new0(GtkWidget, widget_cnt);
+  std::vector<presets_widget_t *>::const_iterator it;
 
-  if(interactive_widget_cnt)  {
+  if(has_interactive_widget)  {
     dialog =
       misc_dialog_new(MISC_DIALOG_NOSIZE,
 		      (gchar*)item->name, parent,
@@ -532,33 +523,32 @@ static void presets_item_dialog(presets_context_t *context,
 
     /* special handling for the first label/separators */
     guint widget_skip = 0;  // number of initial widgets to skip
-    widget = item->widget;
-    if(widget && (widget->type == WIDGET_TYPE_LABEL)) {
-      gtk_window_set_title(GTK_WINDOW(dialog), (char*)widget->text);
+    it = item->widgets.begin();
+    if(it != itEnd && ((*it)->type == WIDGET_TYPE_LABEL)) {
+      gtk_window_set_title(GTK_WINDOW(dialog), (char*)(*it)->text);
 
       widget_skip++;   // this widget isn't part of the contents anymore
-      widget = widget->next;
+      it++;
 
       /* skip all following separators (and keys) */
-      while(widget &&
-	    ((widget->type == WIDGET_TYPE_SEPARATOR) ||
-	     (widget->type == WIDGET_TYPE_SPACE) ||
-	     (widget->type == WIDGET_TYPE_KEY))) {
-	widget_skip++;   // this widget isn't part of the contents anymore
-	widget = widget->next;
+      while(it != itEnd &&
+            (((*it)->type == WIDGET_TYPE_SEPARATOR) ||
+             ((*it)->type == WIDGET_TYPE_SPACE) ||
+             ((*it)->type == WIDGET_TYPE_KEY))) {
+        widget_skip++;   // this widget isn't part of the contents anymore
+        it++;
       }
     }
 
     /* create table of required size */
     GtkWidget *table = gtk_table_new(widget_cnt-widget_skip, 2, FALSE);
 
-    widget_cnt = widget_skip;
-    while(widget) {
+    for(widget_cnt = widget_skip; it != itEnd; it++, widget_cnt++) {
       /* check if there's a value with this key already */
-      tag_t *otag = osm_tag_find(*orig_tag, (char*)widget->key);
+      tag_t *otag = osm_tag_find(*orig_tag, (char*)(*it)->key);
       const char *preset = otag ? otag->value : NULL;
 
-      switch(widget->type) {
+      switch((*it)->type) {
       case WIDGET_TYPE_SEPARATOR:
 	attach_both(table, gtk_hseparator_new(), widget_cnt-widget_skip);
 	break;
@@ -569,19 +559,19 @@ static void presets_item_dialog(presets_context_t *context,
 	break;
 
       case WIDGET_TYPE_LABEL: {
-	attach_both(table, gtk_label_new((char*)widget->text), widget_cnt-widget_skip);
+	attach_both(table, gtk_label_new((char*)(*it)->text), widget_cnt-widget_skip);
 	break;
 
       case WIDGET_TYPE_COMBO:
 #ifndef FREMANTLE
-	attach_text(table, (char*)widget->text, widget_cnt-widget_skip);
+	attach_text(table, (char*)(*it)->text, widget_cnt-widget_skip);
 #endif
 
-	if(!preset && widget->combo_w.def)
-	  preset = (char*)widget->combo_w.def;
-	gtk_widgets[widget_cnt] = combo_box_new((char*)widget->text);
+	if(!preset && (*it)->combo_w.def)
+	  preset = (char*)(*it)->combo_w.def;
+	gtk_widgets[widget_cnt] = combo_box_new((char*)(*it)->text);
 	combo_box_append_text(gtk_widgets[widget_cnt], _("<unset>"));
-	const xmlChar *value = widget->combo_w.values;
+	const xmlChar *value = (*it)->combo_w.values;
 	int active = 0;
 
 	/* cut values strings */
@@ -620,10 +610,10 @@ static void presets_item_dialog(presets_context_t *context,
 	{ gboolean def = FALSE;
 	  if(preset) def = ((strcasecmp(preset, "true") == 0) ||
 			    (strcasecmp(preset, "yes") == 0));
-	  else       def = widget->check_w.def;
+	  else       def = (*it)->check_w.def;
 
 	  gtk_widgets[widget_cnt] =
-	    check_button_new_with_label((char*)widget->text);
+	    check_button_new_with_label((char*)(*it)->text);
 	  check_button_set_active(gtk_widgets[widget_cnt], def);
 #ifndef FREMANTLE
 	  attach_right(table, gtk_widgets[widget_cnt], widget_cnt-widget_skip);
@@ -633,10 +623,10 @@ static void presets_item_dialog(presets_context_t *context,
       } break;
 
     case WIDGET_TYPE_TEXT:
-      attach_text(table, (char*)widget->text, widget_cnt-widget_skip);
+      attach_text(table, (char*)(*it)->text, widget_cnt-widget_skip);
 
-      if(!preset && widget->text_w.def)
-        preset = (char*)widget->text_w.def;
+      if(!preset && (*it)->text_w.def)
+        preset = (char*)(*it)->text_w.def;
       gtk_widgets[widget_cnt] = entry_new();
       if(preset)
 	gtk_entry_set_text(GTK_ENTRY(gtk_widgets[widget_cnt]), preset);
@@ -650,9 +640,6 @@ static void presets_item_dialog(presets_context_t *context,
 
       if(gtk_widgets[widget_cnt] && otag)
         g_object_set_data(G_OBJECT(gtk_widgets[widget_cnt]), "tag", otag);
-
-      widget_cnt++;
-      widget = widget->next;
     }
 
 #ifndef USE_HILDON
@@ -700,16 +687,16 @@ static void presets_item_dialog(presets_context_t *context,
   if(ok) {
     /* handle all children of the table */
     bool changed = false;
-    widget = item->widget;
+    it = item->widgets.begin();
     widget_cnt = 0;
     tag_t **last = orig_tag;
     while (*last)
       last = &(*last)->next;
 
-    while(widget) {
+    while(it != itEnd) {
       tag_t *otag = gtk_widgets[widget_cnt] ?
                     static_cast<tag_t*>(g_object_get_data(G_OBJECT(gtk_widgets[widget_cnt]), "tag")) : 0;
-      switch(widget->type) {
+      switch((*it)->type) {
       case WIDGET_TYPE_COMBO: {
 	g_assert(GTK_WIDGET_TYPE(gtk_widgets[widget_cnt]) == combo_box_type());
 
@@ -717,30 +704,30 @@ static void presets_item_dialog(presets_context_t *context,
 	if(!strcmp(text, _("<unset>")))
 	  text = NULL;
 
-	changed |= store_value(widget, last, text, otag);
+	changed |= store_value(*it, last, text, otag);
 	break;
       }
 
       case WIDGET_TYPE_TEXT:
 	g_assert(GTK_WIDGET_TYPE(gtk_widgets[widget_cnt]) == entry_type());
 
-	changed |= store_value(widget, last, gtk_entry_get_text(
+	changed |= store_value(*it, last, gtk_entry_get_text(
 		     GTK_ENTRY(gtk_widgets[widget_cnt])), otag);
 	break;
 
       case WIDGET_TYPE_CHECK:
 	g_assert(GTK_WIDGET_TYPE(gtk_widgets[widget_cnt]) == check_button_type());
 
-	changed |= store_value(widget, last,
+	changed |= store_value(*it, last,
                  check_button_get_active(gtk_widgets[widget_cnt])?"yes":NULL, otag);
 	break;
 
       case WIDGET_TYPE_KEY:
 	g_assert(!gtk_widgets[widget_cnt]);
 	g_assert(!otag);
-	otag = osm_tag_find(*orig_tag, (char*)widget->key);
+	otag = osm_tag_find(*orig_tag, (char*)(*it)->key);
 
-	changed |= store_value(widget, last, (char*)widget->key_w.value, otag);
+	changed |= store_value(*it, last, (char*)(*it)->key_w.value, otag);
 	break;
 
       default:
@@ -751,7 +738,7 @@ static void presets_item_dialog(presets_context_t *context,
         last = &(*last)->next;
 
       widget_cnt++;
-      widget = widget->next;
+      it++;
     }
 
     if(changed) {
@@ -772,33 +759,44 @@ static void presets_item_dialog(presets_context_t *context,
 
   g_free(gtk_widgets);
 
-  if(interactive_widget_cnt)
+  if(has_interactive_widget)
     gtk_widget_destroy(dialog);
 }
 
 /* ------------------- the item list (popup menu) -------------- */
+
+struct used_preset_functor {
+  const presets_context_t * const context;
+  bool is_interactive;
+  bool matches_all;
+  used_preset_functor(const presets_context_t *c) : context(c), is_interactive(false), matches_all(false) {}
+  bool operator()(const presets_widget_t *w);
+};
+
+bool used_preset_functor::operator()(const presets_widget_t* w)
+{
+  if(w->type != WIDGET_TYPE_KEY) {
+    is_interactive |= is_widget_interactive(w);
+    return false;
+  }
+  const tag_t t((char*) w->key, (char*) w->key_w.value);
+  if(!osm_tag_key_and_value_present(*(context->tag_context->tag), &t))
+    return true;
+
+  matches_all = true;
+  return false;
+}
 
 /**
  * @brief check if the currently active object uses this preset and the preset is interactive
  */
 static bool preset_is_used(const presets_item_t *item, const presets_context_t *context)
 {
-  bool matches_all = false;
-  bool is_interactive = false;
-  const presets_widget_t *w = item->widget;
-  for(w = item->widget; w; w = w->next) {
-    if(w->type != WIDGET_TYPE_KEY) {
-      is_interactive |= is_widget_interactive(w);
-      continue;
-    }
-    const tag_t t((char*) w->key, (char*) w->key_w.value);
-    if(osm_tag_key_and_value_present(*(context->tag_context->tag), &t))
-      matches_all = true;
-    else
-      return false;
-  }
+  used_preset_functor fc(context);
+  if(std::find_if(item->widgets.begin(), item->widgets.end(), fc) != item->widgets.end())
+    return false;
 
-  return matches_all && is_interactive;
+  return fc.matches_all && fc.is_interactive;
 }
 
 #ifndef PICKER_MENU
@@ -1075,7 +1073,7 @@ presets_picker(presets_context_t *context, presets_item_t *item, bool scan_for_r
   GtkTreeView *view;
   GtkListStore *store = presets_picker_store(&view);
 
-  bool show_recent = FALSE;
+  bool show_recent = false;
   GdkPixbuf *subicon = icon_load(&context->appdata->icon,
                                  "submenu_arrow");
   for(; item; item = item->next) {
@@ -1246,14 +1244,6 @@ static void free_widget(presets_widget_t *widget) {
   g_free(widget);
 }
 
-static void free_widgets(presets_widget_t *widget) {
-  while(widget) {
-    presets_widget_t *next = widget->next;
-    free_widget(widget);
-    widget = next;
-  }
-}
-
 static void free_items(presets_item_t *item);
 static void free_item(presets_item_t *item) {
   if(item->name) xmlFree(item->name);
@@ -1263,9 +1253,9 @@ static void free_item(presets_item_t *item) {
   if(item->is_group)
     free_items(item->group);
   else
-    free_widgets(item->widget);
+    std::for_each(item->widgets.begin(), item->widgets.end(), free_widget);
 
-  g_free(item);
+  delete item;
 }
 
 static void free_items(presets_item_t *item) {
