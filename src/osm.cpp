@@ -87,6 +87,92 @@ bool object_t::operator==(const relation_t *r) const {
   return type == RELATION && relation == r;
 }
 
+bool object_t::is_real() const {
+  return (type == NODE) ||
+         (type == WAY)  ||
+         (type == RELATION);
+}
+
+/* return plain text of type */
+const char *object_t::type_string() const {
+  static std::map<type_t, const char *> types;
+  if(types.empty()) {
+    types[ILLEGAL] =     "illegal";
+    types[NODE] =        "node";
+    types[WAY] =         "way/area";
+    types[RELATION] =    "relation";
+    types[NODE_ID] =     "node id";
+    types[WAY_ID] =      "way/area id";
+    types[RELATION_ID] = "relation id";
+  }
+
+  const std::map<type_t, const char *>::const_iterator it =
+        types.find(type);
+
+  if(it != types.end())
+    return it->second;
+
+  return NULL;
+}
+
+gchar *object_t::id_string() const {
+  switch(type) {
+  case ILLEGAL:
+    return NULL;
+  case NODE:
+  case WAY:
+  case RELATION:
+    return g_strdup_printf("#" ITEM_ID_FORMAT, OBJECT_ID(*this));
+  case NODE_ID:
+  case WAY_ID:
+  case RELATION_ID:
+    return g_strdup_printf("#" ITEM_ID_FORMAT, id);
+  default:
+    return NULL;
+  }
+}
+
+gchar *object_t::object_string() const {
+  const char *type_str = type_string();
+
+  switch(type) {
+  case ILLEGAL:
+    return g_strconcat(type_str, " #<unspec>", NULL);
+  case NODE:
+  case WAY:
+  case RELATION:
+    g_assert(ptr);
+    return g_strdup_printf("%s #" ITEM_ID_FORMAT, type_str,
+                           OBJECT_ID(*this));
+  case NODE_ID:
+  case WAY_ID:
+  case RELATION_ID:
+    return g_strdup_printf("%s #" ITEM_ID_FORMAT, type_str, id);
+  default:
+    return NULL;
+  }
+}
+
+const tag_t *object_t::get_tags() const {
+  if(!is_real())
+    return NULL;
+  return OBJECT_TAG(*this);
+}
+
+item_id_t object_t::get_id() const {
+  if(type == ILLEGAL)
+    return ID_ILLEGAL;
+  if(is_real())
+    return OBJECT_ID(*this);
+  return id;
+}
+
+void object_t::set_flags(int set, int clr) {
+  g_assert(is_real());
+  OBJECT_FLAGS(*this) |=  set;
+  OBJECT_FLAGS(*this) &= ~clr;
+}
+
 /* ------------------------- user handling --------------------- */
 
 static const char *osm_user(osm_t *osm, const char *name, int uid) {
@@ -2096,35 +2182,14 @@ tag_t *osm_tags_copy(const tag_t *src_tag) {
   return new_tags;
 }
 
-/* return plain text of type */
-const char *osm_object_type_string(const object_t *object) {
-  const struct { type_t type; const char *name; } types[] = {
-    { ILLEGAL,     "illegal" },
-    { NODE,        "node" },
-    { WAY,         "way/area" },
-    { RELATION,    "relation" },
-    { NODE_ID,     "node id" },
-    { WAY_ID,      "way/area id" },
-    { RELATION_ID, "relation id" },
-    { ILLEGAL, NULL }
-  };
-
-  int i;
-  for(i=0;types[i].name;i++)
-    if(object->type == types[i].type)
-      return types[i].name;
-
-  return NULL;
-}
-
 /* try to get an as "speaking" description of the object as possible */
-char *osm_object_get_name(const object_t *object) {
+char *object_t::get_name() const {
   char *ret = NULL;
-  const tag_t *tags = osm_object_get_tags(object);
+  const tag_t *tags = get_tags();
 
   /* worst case: we have no tags at all. return techincal info then */
   if(!tags)
-    return g_strconcat("unspecified ", osm_object_type_string(object), NULL);
+    return g_strconcat("unspecified ", type_string(), NULL);
 
   /* try to figure out _what_ this is */
 
@@ -2194,9 +2259,9 @@ char *osm_object_get_name(const object_t *object) {
       ret = g_strdup(type);
   } else if(name && !type)
     ret = g_strconcat(
-	  osm_object_type_string(object), ": \"", name, "\"", NULL);
+	  type_string(), ": \"", name, "\"", NULL);
   else
-    ret = g_strconcat("unspecified ", osm_object_type_string(object), NULL);
+    ret = g_strconcat("unspecified ", type_string(), NULL);
 
   g_free(gtype);
 
@@ -2211,85 +2276,9 @@ char *osm_object_get_name(const object_t *object) {
   return ret;
 }
 
-char *osm_object_string(const object_t *object) {
-  const char *type_str = osm_object_type_string(object);
-
-  if(!object)
-    return g_strconcat(type_str, " #<invalid>", NULL);
-
-  switch(object->type) {
-  case ILLEGAL:
-    return g_strconcat(type_str, " #<unspec>", NULL);
-    break;
-  case NODE:
-  case WAY:
-  case RELATION:
-    g_assert(object->ptr);
-    return g_strdup_printf("%s #" ITEM_ID_FORMAT, type_str,
-			   OBJECT_ID(*object));
-    break;
-    break;
-  case NODE_ID:
-  case WAY_ID:
-  case RELATION_ID:
-    return g_strdup_printf("%s #" ITEM_ID_FORMAT, type_str, object->id);
-    break;
-  }
-  return NULL;
-}
-
-gchar *osm_object_id_string(const object_t *object) {
-  if(!object) return NULL;
-
-  switch(object->type) {
-  case ILLEGAL:
-    return NULL;
-    break;
-  case NODE:
-  case WAY:
-  case RELATION:
-    return g_strdup_printf("#" ITEM_ID_FORMAT, OBJECT_ID(*object));
-    break;
-  case NODE_ID:
-  case WAY_ID:
-  case RELATION_ID:
-    return g_strdup_printf("#" ITEM_ID_FORMAT, object->id);
-    break;
-  }
-  return NULL;
-}
-
-
-gboolean osm_object_is_real(const object_t *object) {
-  return((object->type == NODE) ||
-	 (object->type == WAY)  ||
-	 (object->type == RELATION));
-}
-
-const tag_t *osm_object_get_tags(const object_t *object) {
-  if(!object) return NULL;
-  if(!osm_object_is_real(object)) return NULL;
-  return OBJECT_TAG(*object);
-}
-
-
-item_id_t osm_object_get_id(const object_t *object) {
-  if(!object) return ID_ILLEGAL;
-
-  if(object->type == ILLEGAL)     return ID_ILLEGAL;
-  if(osm_object_is_real(object))  return OBJECT_ID(*object);
-  return object->id;
-}
-
-void osm_object_set_flags(object_t *object, int set, int clr) {
-  g_assert(osm_object_is_real(object));
-  OBJECT_FLAGS(*object) |=  set;
-  OBJECT_FLAGS(*object) &= ~clr;
-}
-
 gboolean osm_object_is_same(const object_t *obj1, const object_t *obj2) {
-  item_id_t id1 = osm_object_get_id(obj1);
-  item_id_t id2 = osm_object_get_id(obj2);
+  item_id_t id1 = obj1->get_id();
+  item_id_t id2 = obj2->get_id();
 
   if(id1 == ID_ILLEGAL) return FALSE;
   if(id2 == ID_ILLEGAL) return FALSE;

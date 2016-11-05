@@ -501,7 +501,7 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
   //  str = osm_object_string(&context.object);
   //  str[0] =  g_ascii_toupper   (str[0]);
 
-  g_assert(osm_object_is_real(&context.object));
+  g_assert(context.object.is_real());
 
   work_copy = osm_tags_copy(OBJECT_TAG(context.object));
 
@@ -585,7 +585,7 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
   gtk_widget_destroy(context.dialog);
 
   if(ok) {
-    if(osm_object_is_real(&context.object)) {
+    if(context.object.is_real()) {
       osm_tags_free(OBJECT_TAG(context.object));
       OBJECT_TAG(context.object) = work_copy;
     }
@@ -595,7 +595,7 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
     if(!object && context.object.type != RELATION)
       map_item_redraw(appdata, &appdata->map->selected);
 
-    osm_object_set_flags(&context.object, OSM_FLAG_DIRTY, 0);
+    context.object.set_flags(OSM_FLAG_DIRTY, 0);
   } else
     osm_tags_free(work_copy);
 

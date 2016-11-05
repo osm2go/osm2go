@@ -143,7 +143,7 @@ static gboolean relation_add_item(GtkWidget *parent,
   gtk_widget_destroy(dialog);
 
   /* search end of member chain */
-  g_assert(osm_object_is_real(object));
+  g_assert(object->is_real());
 
   /* create new member */
   member_t member;
@@ -160,7 +160,7 @@ static void relation_remove_item(relation_t *relation, const object_t *object) {
   printf("remove object of type %d from relation #" ITEM_ID_FORMAT "\n",
 	 object->type, OSM_ID(relation));
 
-  g_assert(osm_object_is_real(object));
+  g_assert(object->is_real());
 
   std::vector<member_t>::iterator it = relation->find_member_object(*object);
   g_assert(it != relation->members.end());
@@ -539,8 +539,8 @@ void members_list_functor::operator()(const member_t &member)
 {
   GtkTreeIter iter;
 
-  const tag_t *tags = osm_object_get_tags(const_cast<object_t*>(&member.object));
-  gchar *id = osm_object_id_string(&member.object);
+  const tag_t *tags = member.object.get_tags();
+  gchar *id = member.object.id_string();
 
   /* try to find something descriptive */
   const char *name = osm_tag_get_by_key(tags, "name");
@@ -548,7 +548,7 @@ void members_list_functor::operator()(const member_t &member)
   /* Append a row and fill in some data */
   gtk_list_store_append(store, &iter);
   gtk_list_store_set(store, &iter,
-     MEMBER_COL_TYPE, osm_object_type_string(&member.object),
+     MEMBER_COL_TYPE, member.object.type_string(),
      MEMBER_COL_ID,   id,
      MEMBER_COL_NAME, name,
      MEMBER_COL_ROLE, member.role,
@@ -885,7 +885,7 @@ void relation_list(GtkWidget *parent, appdata_t *appdata, object_t *object) {
   if(!object)
     str = _("All relations");
   else {
-    dstr = g_strdup_printf(_("Relations of %s"), osm_object_string(object));
+    dstr = g_strdup_printf(_("Relations of %s"), object->object_string());
     str = dstr;
     context.object = object;
   }

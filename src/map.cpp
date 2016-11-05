@@ -73,7 +73,7 @@ static void map_statusbar(map_t *map, map_item_t *map_item) {
     tag = tag->next;
   }
 
-  char *str = osm_object_get_name(&map_item->object);
+  char *str = map_item->object.get_name();
   statusbar_set(map->appdata, str, collision);
   g_free(str);
 }
@@ -864,7 +864,7 @@ map_item_t *map_item_at(map_t *map, gint x, gint y) {
     printf("  item is highlight\n");
 
   printf("  item is %s #" ITEM_ID_FORMAT "\n",
-	 osm_object_type_string(&map_item->object),
+	 map_item->object.type_string(),
 	 OBJECT_ID(map_item->object));
 
   return map_item;

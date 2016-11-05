@@ -231,6 +231,15 @@ typedef struct object_s {
   bool operator==(const relation_t *r) const;
   bool operator!=(const relation_t *r) const
   { return !operator==(r); }
+
+  bool is_real() const;
+  const char *type_string() const;
+  gchar *id_string() const;
+  gchar *object_string() const;
+  const tag_t *get_tags() const;
+  item_id_t get_id() const;
+  void set_flags(int set, int clr);
+  char *get_name() const;
 #endif
 } object_t;
 
@@ -366,14 +375,6 @@ void osm_relation_delete(osm_t *osm, relation_t *relation,
 			 gboolean permanently);
 gchar *relation_get_descriptive_name(const relation_t *relation);
 
-gboolean osm_object_is_real(const object_t *object);
-const char *osm_object_type_string(const object_t *object);
-gchar *osm_object_id_string(const object_t *object);
-char *osm_object_string(const object_t *object);
-const tag_t *osm_object_get_tags(const object_t *object);
-item_id_t osm_object_get_id(const object_t *object);
-void osm_object_set_flags(object_t *map_item, int set, int clr);
-char *osm_object_get_name(const object_t *object);
 gboolean osm_object_is_same(const object_t *obj1, const object_t *obj2);
 
 #ifdef __cplusplus

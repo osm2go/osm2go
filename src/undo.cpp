@@ -92,7 +92,7 @@ static void undo_object_free(osm_t *osm, object_t *obj) {
   printf("free obj %p\n", obj);
 
   if(obj->ptr) {
-    char *msg = osm_object_string(obj);
+    char *msg = obj->object_string();
     printf("   free object %s\n", msg);
     g_free(msg);
 
@@ -111,12 +111,12 @@ static void undo_object_free(osm_t *osm, object_t *obj) {
 
     default:
       printf("ERROR: unsupported object %s\n",
-	     osm_object_type_string(obj));
+             obj->type_string());
       g_assert_not_reached();
       break;
     }
   } else
-    printf("   free object %s\n", osm_object_type_string(obj));
+    printf("   free object %s\n", obj->type_string());
 }
 
 static void undo_op_free(osm_t *osm, undo_op_t *op) {
@@ -240,7 +240,7 @@ static gboolean undo_object_save(const object_t *object,
     const std::vector<member_t>::const_iterator mitEnd = object->relation->members.end();
     for(std::vector<member_t>::const_iterator member = object->relation->members.begin();
         member != mitEnd; member++) {
-      item_id_chain_t id(member->object.type, osm_object_get_id(&member->object));
+      item_id_chain_t id(member->object.type, member->object.get_id());
       op->id_chain.push_back(id);
     }
 
@@ -249,7 +249,7 @@ static gboolean undo_object_save(const object_t *object,
 
   default:
     printf("unsupported object of type %s\n",
-	   osm_object_type_string(object));
+           object->type_string());
 
     return FALSE;
   }
@@ -295,14 +295,14 @@ void undo_append_object(appdata_t *appdata, undo_type_t type,
       g_assert(op->type == type);
 
       printf("UNDO: object %s already in undo_state: ignoring\n",
-	     osm_object_string(object));
+             object->object_string());
       return;
     }
     op = op->next;
   }
 
   printf("UNDO: saving \"%s\" operation for object %s\n",
-	 undo_type_string(type), osm_object_string(object));
+	 undo_type_string(type), object->object_string());
 
   /* create new operation for main object */
   op = new undo_op_t(type);
@@ -345,14 +345,13 @@ void undo_open_new_state(struct appdata_t *appdata, undo_type_t type,
 
   g_assert(!appdata->undo.open);
 
-  printf("UNDO: open new state for %s\n",
-	 osm_object_string(object));
+  printf("UNDO: open new state for %s\n", object->object_string());
 
   /* create a new undo state */
   appdata->undo.open = undo_append_state(appdata);
   appdata->undo.open->type = type;
 
-  appdata->undo.open->name = osm_object_get_name(object);
+  appdata->undo.open->name = object->get_name();
   printf("   name: %s\n", appdata->undo.open->name);
 }
 
@@ -373,7 +372,7 @@ void undo_close_state(appdata_t *appdata) {
 static void undo_operation_object_restore(appdata_t *appdata, object_t *obj,
 					  std::vector<item_id_chain_t> &id_chain) {
 
-  char *msg = osm_object_string(obj);
+  gchar *msg = obj->object_string();
   printf("UNDO deletion of object %s\n", msg);
   g_free(msg);
 
