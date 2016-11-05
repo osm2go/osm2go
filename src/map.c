@@ -31,6 +31,7 @@
 #include "statusbar.h"
 #include "style.h"
 #include "track.h"
+#include "undo.h"
 
 #include <gdk/gdkkeysyms.h>
 
