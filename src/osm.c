@@ -2363,7 +2363,7 @@ const char *osm_object_type_string(const object_t *object) {
 }
 
 /* try to get an as "speaking" description of the object as possible */
-char *osm_object_get_name(object_t *object) {
+char *osm_object_get_name(const object_t *object) {
   char *ret = NULL;
   const tag_t *tags = osm_object_get_tags(object);
 

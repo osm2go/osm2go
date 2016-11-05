@@ -317,7 +317,7 @@ char *osm_object_string(object_t *object);
 const tag_t *osm_object_get_tags(const object_t *object);
 item_id_t osm_object_get_id(const object_t *object);
 void osm_object_set_flags(object_t *map_item, int set, int clr);
-char *osm_object_get_name(object_t *object);
+char *osm_object_get_name(const object_t *object);
 gboolean osm_object_is_same(const object_t *obj1, const object_t *obj2);
 
 #endif /* OSM_H */
