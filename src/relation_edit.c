@@ -167,7 +167,7 @@ static gboolean relation_add_item(GtkWidget *parent,
   return TRUE;
 }
 
-static void relation_remove_item(relation_t *relation, object_t *object) {
+static void relation_remove_item(relation_t *relation, const object_t *object) {
 
   printf("remove object of type %d from relation #" ITEM_ID_FORMAT "\n",
 	 object->type, OSM_ID(relation));
@@ -203,8 +203,8 @@ static gboolean relation_info_dialog(GtkWidget *parent, appdata_t *appdata,
   return info_dialog(parent, appdata, &object);
 }
 
-static char *relitem_get_role_in_relation(object_t *item, relation_t *relation) {
-  member_t *member = relation->member;
+static const char *relitem_get_role_in_relation(const object_t *item, const relation_t *relation) {
+  const member_t *member = relation->member;
   while(member) {
     switch(member->object.type) {
 
@@ -226,8 +226,8 @@ static char *relitem_get_role_in_relation(object_t *item, relation_t *relation) 
   return NULL;
 }
 
-static gboolean relitem_is_in_relation(object_t *item, relation_t *relation) {
-  member_t *member = relation->member;
+static gboolean relitem_is_in_relation(const object_t *item, const relation_t *relation) {
+  const member_t *member = relation->member;
   while(member) {
     switch(member->object.type) {
 
