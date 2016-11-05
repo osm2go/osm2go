@@ -211,9 +211,9 @@ void icon_bar_map_action_idle(appdata_t *appdata, gboolean idle) {
   gtk_widget_set_sensitive(appdata->iconbar->way_reverse, way_en);
 }
 
-GtkWidget *icon_add(GtkWidget *vbox, appdata_t *appdata,
-		    char *icon_str,
-		    void(*func)(GtkButton*, gpointer)) {
+static GtkWidget *icon_add(GtkWidget *vbox, appdata_t *appdata,
+                           const char *icon_str,
+                           void(*func)(GtkButton*, gpointer)) {
   GtkWidget *but = gtk_button_new();
   GtkWidget *icon = gtk_image_new_from_pixbuf(
 		      icon_load(&appdata->icon, icon_str));
