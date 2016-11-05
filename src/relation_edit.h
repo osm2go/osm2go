@@ -26,10 +26,11 @@
 #include "osm.h"
 
 #ifdef __cplusplus
+void relation_membership_dialog(GtkWidget *parent, appdata_t *appdata, object_t &object);
+
 extern "C" {
 #endif
 
-void relation_membership_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object);
 void relation_list(GtkWidget *parent, appdata_t *appdata, object_t *object);
 void relation_show_members(GtkWidget *parent, relation_t *relation);
 

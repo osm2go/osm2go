@@ -285,7 +285,7 @@ void info_tags_replace(tag_context_t *context) {
 
 static void on_relations(G_GNUC_UNUSED GtkWidget *button, tag_context_t *context) {
   relation_membership_dialog(context->dialog, context->appdata,
-			     &context->object);
+                             context->object);
 }
 
 static GtkWidget *tag_widget(tag_context_t *context) {

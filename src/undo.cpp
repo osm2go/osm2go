@@ -181,23 +181,23 @@ static undo_state_t *undo_append_state(appdata_t *appdata) {
 }
 
 /* copy the base object parts to another object */
-static void undo_object_copy_base(object_t *dst, const object_t *src) {
-  OBJECT_ID(*dst)      = OBJECT_ID(*src);
-  OBJECT_VERSION(*dst) = OBJECT_VERSION(*src);
-  OBJECT_TIME(*dst)    = OBJECT_TIME(*src);
-  OBJECT_USER(*dst)    = OBJECT_USER(*src);
-  OBJECT_FLAGS(*dst)   = OBJECT_FLAGS(*src);
-  OBJECT_VISIBLE(*dst) = OBJECT_VISIBLE(*src);
-  OBJECT_TAG(*dst)     = osm_tags_copy(OBJECT_TAG(*src));
+static void undo_object_copy_base(object_t *dst, const object_t &src) {
+  OBJECT_ID(*dst)      = OBJECT_ID(src);
+  OBJECT_VERSION(*dst) = OBJECT_VERSION(src);
+  OBJECT_TIME(*dst)    = OBJECT_TIME(src);
+  OBJECT_USER(*dst)    = OBJECT_USER(src);
+  OBJECT_FLAGS(*dst)   = OBJECT_FLAGS(src);
+  OBJECT_VISIBLE(*dst) = OBJECT_VISIBLE(src);
+  OBJECT_TAG(*dst)     = osm_tags_copy(OBJECT_TAG(src));
 }
 
 /* create a local copy of the entire object */
-static gboolean undo_object_save(const object_t *object,
+static bool undo_object_save(const object_t &object,
                                  undo_op_t *op) {
   object_t *ob = &op->object;
-  ob->type = object->type;
+  ob->type = object.type;
 
-  switch(object->type) {
+  switch(object.type) {
   case NODE:
     /* fields ignored in this copy operation: */
     /* ways, icon_buf, map_item_chain, next */
@@ -206,11 +206,11 @@ static gboolean undo_object_save(const object_t *object,
     undo_object_copy_base(ob, object);
 
     /* copy all important parts, omitting icon pointers etc. */
-    ob->node->lpos = object->node->lpos;
-    ob->node->pos = object->node->pos;
-    ob->node->zoom_max = object->node->zoom_max;
+    ob->node->lpos = object.node->lpos;
+    ob->node->pos = object.node->pos;
+    ob->node->zoom_max = object.node->zoom_max;
 
-    return TRUE;
+    return true;
 
   case WAY: {
     /* fields ignored in this copy operation: */
@@ -221,12 +221,12 @@ static gboolean undo_object_save(const object_t *object,
 
     /* the nodes are saved by reference, since they may also be */
     /* deleted and restored and thus their address may change */
-    node_chain_t *node_chain = object->way->node_chain;
+    node_chain_t *node_chain = object.way->node_chain;
     const node_chain_t::const_iterator itEnd = node_chain->end();
     for(node_chain_t::const_iterator it = node_chain->begin(); it != itEnd; it++)
       op->id_chain.push_back(item_id_chain_t(NODE, OSM_ID(*it)));
 
-    return TRUE;
+    return true;
     }
 
   case RELATION: {
@@ -237,21 +237,21 @@ static gboolean undo_object_save(const object_t *object,
     undo_object_copy_base(ob, object);
 
     /* save members reference */
-    const std::vector<member_t>::const_iterator mitEnd = object->relation->members.end();
-    for(std::vector<member_t>::const_iterator member = object->relation->members.begin();
+    const std::vector<member_t>::const_iterator mitEnd = object.relation->members.end();
+    for(std::vector<member_t>::const_iterator member = object.relation->members.begin();
         member != mitEnd; member++) {
       item_id_chain_t id(member->object.type, member->object.get_id());
       op->id_chain.push_back(id);
     }
 
-    return TRUE;
+    return true;
     }
 
   default:
     printf("unsupported object of type %s\n",
-           object->type_string());
+           object.type_string());
 
-    return FALSE;
+    return false;
   }
 }
 
@@ -259,13 +259,12 @@ struct undo_append_obj_modify {
   appdata_t * const appdata;
   undo_append_obj_modify(appdata_t *a) : appdata(a) {}
   void operator()(relation_t *relation) {
-    object_t obj(relation);
-    undo_append_object(appdata, UNDO_MODIFY, &obj);
+    undo_append_object(appdata, UNDO_MODIFY, object_t(relation));
   }
 };
 
 void undo_append_object(appdata_t *appdata, undo_type_t type,
-                        const object_t *object) {
+                        const object_t &object) {
 
   UNDO_ENABLE_CHECK;
 
@@ -295,14 +294,14 @@ void undo_append_object(appdata_t *appdata, undo_type_t type,
       g_assert(op->type == type);
 
       printf("UNDO: object %s already in undo_state: ignoring\n",
-             object->object_string());
+             object.object_string());
       return;
     }
     op = op->next;
   }
 
   printf("UNDO: saving \"%s\" operation for object %s\n",
-	 undo_type_string(type), object->object_string());
+	 undo_type_string(type), object.object_string());
 
   /* create new operation for main object */
   op = new undo_op_t(type);
@@ -317,41 +316,39 @@ void undo_append_object(appdata_t *appdata, undo_type_t type,
 
   /* if the deleted object is a way, then check if this affects */
   /* a node */
-  if((type == UNDO_DELETE) && (object->type == WAY)) {
-    node_chain_t *chain = object->way->node_chain;
+  if((type == UNDO_DELETE) && (object.type == WAY)) {
+    node_chain_t *chain = object.way->node_chain;
     const node_chain_t::const_iterator itEnd = chain->end();
     for(node_chain_t::const_iterator it = chain->begin(); it != itEnd; it++) {
       /* this node must only be part of this way */
-      if(!osm_node_in_other_way(appdata->osm, object->way, *it))
+      if(!osm_node_in_other_way(appdata->osm, object.way, *it))
         undo_append_node(appdata, UNDO_DELETE, *it);
     }
   }
 }
 
 void undo_append_way(appdata_t *appdata, undo_type_t type, way_t *way) {
-  object_t obj(way);
-  undo_append_object(appdata, type, &obj);
+  undo_append_object(appdata, type, object_t(way));
 }
 
 void undo_append_node(appdata_t *appdata, undo_type_t type, node_t *node) {
-  object_t obj(node);
-  undo_append_object(appdata, type, &obj);
+  undo_append_object(appdata, type, object_t(node));
 }
 
 void undo_open_new_state(struct appdata_t *appdata, undo_type_t type,
-			 object_t *object) {
+                         object_t &object) {
 
   UNDO_ENABLE_CHECK;
 
   g_assert(!appdata->undo.open);
 
-  printf("UNDO: open new state for %s\n", object->object_string());
+  printf("UNDO: open new state for %s\n", object.object_string());
 
   /* create a new undo state */
   appdata->undo.open = undo_append_state(appdata);
   appdata->undo.open->type = type;
 
-  appdata->undo.open->name = object->get_name();
+  appdata->undo.open->name = object.get_name();
   printf("   name: %s\n", appdata->undo.open->name);
 }
 
@@ -369,18 +366,18 @@ void undo_close_state(appdata_t *appdata) {
 /* --------------------- restoring ---------------------- */
 
 /* restore state of an object (or even restore it after deletion) */
-static void undo_operation_object_restore(appdata_t *appdata, object_t *obj,
+static void undo_operation_object_restore(appdata_t *appdata, object_t &obj,
 					  std::vector<item_id_chain_t> &id_chain) {
 
-  gchar *msg = obj->object_string();
+  gchar *msg = obj.object_string();
   printf("UNDO deletion of object %s\n", msg);
   g_free(msg);
 
-  switch(obj->type) {
+  switch(obj.type) {
   case NODE: {
     /* there must be an "deleted" entry which needs to be */
     /* removed or no entry at all (since a new one has been deleted) */
-    node_t *orig = osm_get_node_by_id(appdata->osm, OBJECT_ID(*obj));
+    node_t *orig = osm_get_node_by_id(appdata->osm, OBJECT_ID(obj));
     if(orig) {
       g_assert(OSM_FLAGS(orig) & OSM_FLAG_DELETED);
 
@@ -392,15 +389,15 @@ static void undo_operation_object_restore(appdata_t *appdata, object_t *obj,
     }
 
     /* then restore old node */
-    osm_node_restore(appdata->osm, obj->node);
+    osm_node_restore(appdata->osm, obj.node);
 
-    obj->ptr = NULL;
+    obj.ptr = NULL;
   } break;
 
   case WAY: {
     /* there must be an "deleted" entry which needs to be */
     /* removed or no entry at all (since a new one has been deleted) */
-    way_t *orig = osm_get_way_by_id(appdata->osm, OBJECT_ID(*obj));
+    way_t *orig = osm_get_way_by_id(appdata->osm, OBJECT_ID(obj));
     if(orig) {
       g_assert(OSM_FLAGS(orig) & OSM_FLAG_DELETED);
 
@@ -408,10 +405,10 @@ static void undo_operation_object_restore(appdata_t *appdata, object_t *obj,
       osm_way_delete(appdata->osm, orig, TRUE);
     }
 
-    osm_way_restore(appdata->osm, obj->way, id_chain);
+    osm_way_restore(appdata->osm, obj.way, id_chain);
     id_chain.clear();
 
-    obj->ptr = NULL;
+    obj.ptr = NULL;
   } break;
 
   default:
@@ -427,7 +424,7 @@ static void undo_operation(appdata_t *appdata, undo_op_t *op) {
 
   switch(op->type) {
   case UNDO_DELETE:
-    undo_operation_object_restore(appdata, &op->object, op->id_chain);
+    undo_operation_object_restore(appdata, op->object, op->id_chain);
     break;
 
   default:

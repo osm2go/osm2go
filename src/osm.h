@@ -375,12 +375,12 @@ void osm_relation_delete(osm_t *osm, relation_t *relation,
 			 gboolean permanently);
 gchar *relation_get_descriptive_name(const relation_t *relation);
 
-gboolean osm_object_is_same(const object_t *obj1, const object_t *obj2);
-
 #ifdef __cplusplus
 }
 
 typedef std::vector<relation_t *> relation_chain_t;
+
+bool osm_object_is_same(const object_t *obj1, const object_t &obj2);
 
 member_t osm_parse_osm_relation_member(osm_t *osm, xmlNode *a_node);
 
@@ -391,7 +391,7 @@ way_chain_t osm_node_delete(osm_t *osm, node_t *node,
                             bool permanently, bool affect_ways);
 void osm_way_rotate(way_t *way, node_chain_t::iterator nfirst);
 relation_chain_t osm_way_to_relation(osm_t *osm, const way_t *way);
-relation_chain_t osm_object_to_relation(osm_t *osm, const object_t *object);
+relation_chain_t osm_object_to_relation(osm_t *osm, const object_t &object);
 void osm_way_restore(osm_t *osm, way_t *way, const std::vector<item_id_chain_t> &id_chain);
 
 void osm_member_free(member_t &member);

@@ -1762,20 +1762,19 @@ struct check_member {
 
 /* return all relations a way is in */
 relation_chain_t osm_way_to_relation(osm_t *osm, const way_t *way) {
-  object_t o(const_cast<way_t *>(way));
-  return  osm_object_to_relation(osm, &o);
+  return  osm_object_to_relation(osm, object_t(const_cast<way_t *>(way)));
 }
 
 /* return all relations an object is in */
-relation_chain_t osm_object_to_relation(osm_t *osm, const object_t *object) {
-  switch(object->type) {
+relation_chain_t osm_object_to_relation(osm_t *osm, const object_t &object) {
+  switch(object.type) {
   case NODE:
-    return osm_node_to_relation(osm, object->node, FALSE);
+    return osm_node_to_relation(osm, object.node, FALSE);
 
   case WAY:
   case RELATION: {
     relation_chain_t rel_chain;
-    check_member fc(*object);
+    check_member fc(object);
 
     relation_t *relation = osm->relation;
     for(; relation; relation = relation->next)
@@ -2276,13 +2275,16 @@ char *object_t::get_name() const {
   return ret;
 }
 
-gboolean osm_object_is_same(const object_t *obj1, const object_t *obj2) {
+bool osm_object_is_same(const object_t *obj1, const object_t &obj2) {
   item_id_t id1 = obj1->get_id();
-  item_id_t id2 = obj2->get_id();
+  item_id_t id2 = obj2.get_id();
 
-  if(id1 == ID_ILLEGAL) return FALSE;
-  if(id2 == ID_ILLEGAL) return FALSE;
-  if(obj1->type != obj2->type) return FALSE;
+  if(id1 == ID_ILLEGAL)
+    return false;
+  if(id2 == ID_ILLEGAL)
+    return false;
+  if(obj1->type != obj2.type)
+    return false;
 
   return(id1 == id2);
 }

@@ -386,16 +386,16 @@ void map_relation_select(appdata_t *appdata, relation_t *relation) {
   std::for_each(relation->members.begin(), relation->members.end(), fc);
 }
 
-static void map_object_select(appdata_t *appdata, object_t *object) {
-  switch(object->type) {
+static void map_object_select(appdata_t *appdata, object_t &object) {
+  switch(object.type) {
   case NODE:
-    map_node_select(appdata, object->node);
+    map_node_select(appdata, object.node);
     break;
   case WAY:
-    map_way_select(appdata, object->way);
+    map_way_select(appdata, object.way);
     break;
   case RELATION:
-    map_relation_select(appdata, object->relation);
+    map_relation_select(appdata, object.relation);
     break;
   default:
     g_assert_not_reached();
@@ -677,7 +677,7 @@ void map_item_redraw(appdata_t *appdata, map_item_t *map_item) {
 
   /* restore selection if there was one */
   if(is_selected)
-    map_object_select(appdata, &item.object);
+    map_object_select(appdata, item.object);
 }
 
 static void map_frisket_rectangle(canvas_points_t *points,
@@ -1267,7 +1267,7 @@ void map_highlight_refresh(appdata_t *appdata) {
     return;
 
   map_item_deselect(appdata);
-  map_object_select(appdata, &old);
+  map_object_select(appdata, old);
 }
 
 void map_way_delete(appdata_t *appdata, way_t *way) {
@@ -2024,7 +2024,7 @@ void node_deleted_from_ways::operator()(way_t *way) {
   } else {
     map_item_t item;
     item.object = way;
-    undo_append_object(appdata, UNDO_MODIFY, &(item.object));
+    undo_append_object(appdata, UNDO_MODIFY, item.object);
     map_item_redraw(appdata, &item);
   }
 }
@@ -2049,14 +2049,14 @@ void map_delete_selected(appdata_t *appdata) {
   /* deleting the selected item de-selects it ... */
   map_item_deselect(appdata);
 
-  undo_open_new_state(appdata, UNDO_DELETE, &item.object);
+  undo_open_new_state(appdata, UNDO_DELETE, item.object);
 
   switch(item.object.type) {
   case NODE: {
     printf("request to delete node #" ITEM_ID_FORMAT "\n",
 	   OBJECT_ID(item.object));
 
-    undo_append_object(appdata, UNDO_DELETE, &item.object);
+    undo_append_object(appdata, UNDO_DELETE, item.object);
 
     /* check if this node is part of a way with two nodes only. */
     /* we cannot delete this as this would also delete the way */

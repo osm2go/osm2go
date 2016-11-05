@@ -33,7 +33,9 @@
 /* --------------- relation dialog for an item (node or way) ----------- */
 
 struct relitem_context_t {
-  object_t *item;
+  relitem_context_t(object_t &o, appdata_t *a);
+
+  object_t &item;
   appdata_t *appdata;
   GtkWidget *dialog, *view;
   GtkListStore *store;
@@ -46,6 +48,15 @@ enum {
   RELITEM_COL_DATA,
   RELITEM_NUM_COLS
 };
+
+relitem_context_t::relitem_context_t(object_t& o, appdata_t *a)
+  : item(o)
+  , appdata(a)
+  , dialog(0)
+  , view(0)
+  , store(0)
+{
+}
 
 struct entry_insert_text {
   GtkWidget * const entry;
@@ -60,11 +71,11 @@ static bool has_role(const member_t &member) {
 }
 
 static gboolean relation_add_item(GtkWidget *parent,
-			      relation_t *relation, object_t *object) {
+			      relation_t *relation, object_t &object) {
   std::set<std::string> roles;
 
   printf("add object of type %d to relation #" ITEM_ID_FORMAT "\n",
-	 object->type, OSM_ID(relation));
+         object.type, OSM_ID(relation));
 
   /* ask the user for the role of the new object in this relation */
 
@@ -143,11 +154,11 @@ static gboolean relation_add_item(GtkWidget *parent,
   gtk_widget_destroy(dialog);
 
   /* search end of member chain */
-  g_assert(object->is_real());
+  g_assert(object.is_real());
 
   /* create new member */
   member_t member;
-  member.object = *object;
+  member.object = object;
   member.role = role;
   relation->members.push_back(member);
 
@@ -155,14 +166,14 @@ static gboolean relation_add_item(GtkWidget *parent,
   return TRUE;
 }
 
-static void relation_remove_item(relation_t *relation, const object_t *object) {
+static void relation_remove_item(relation_t *relation, const object_t &object) {
 
   printf("remove object of type %d from relation #" ITEM_ID_FORMAT "\n",
-	 object->type, OSM_ID(relation));
+	 object.type, OSM_ID(relation));
 
-  g_assert(object->is_real());
+  g_assert(object.is_real());
 
-  std::vector<member_t>::iterator it = relation->find_member_object(*object);
+  std::vector<member_t>::iterator it = relation->find_member_object(object);
   g_assert(it != relation->members.end());
 
   osm_member_free(*it);
@@ -178,11 +189,11 @@ static gboolean relation_info_dialog(GtkWidget *parent, appdata_t *appdata,
   return info_dialog(parent, appdata, &object);
 }
 
-static const char *relitem_get_role_in_relation(const object_t *item, const relation_t *relation) {
-  if(item->type != WAY && item->type != NODE)
+static const char *relitem_get_role_in_relation(const object_t &item, const relation_t *relation) {
+  if(item.type != WAY && item.type != NODE)
     return NULL;
 
-  const std::vector<member_t>::const_iterator it = relation->find_member_object(*item);
+  const std::vector<member_t>::const_iterator it = relation->find_member_object(item);
 
   if(it != relation->members.end())
     return it->role;
@@ -190,11 +201,11 @@ static const char *relitem_get_role_in_relation(const object_t *item, const rela
   return NULL;
 }
 
-static gboolean relitem_is_in_relation(const object_t *item, const relation_t *relation) {
-  if(item->type != WAY && item->type != NODE)
+static gboolean relitem_is_in_relation(const object_t &item, const relation_t *relation) {
+  if(item.type != WAY && item.type != NODE)
     return FALSE;
 
-  const std::vector<member_t>::const_iterator it = relation->find_member_object(*item);
+  const std::vector<member_t>::const_iterator it = relation->find_member_object(item);
 
   return (it != relation->members.end());
 }
@@ -389,27 +400,24 @@ static GtkWidget *relation_item_list_widget(relitem_context_t *context) {
 static void
 on_dialog_destroy(G_GNUC_UNUSED GtkWidget *widget, gpointer user_data ) {
   relitem_context_t *context = (relitem_context_t*)user_data;
-  g_free(context);
+  delete context;
 }
 
 void relation_membership_dialog(GtkWidget *parent,
-			 appdata_t *appdata, object_t *object) {
-  relitem_context_t *context = g_new0(relitem_context_t, 1);
+			 appdata_t *appdata, object_t &object) {
+  relitem_context_t *context = new relitem_context_t(object, appdata);
   map_t *map = appdata->map;
   g_assert(map);
 
-  context->appdata = appdata;
-  context->item = object;
-
   char *str = NULL;
-  switch(object->type) {
+  switch(object.type) {
   case NODE:
     str = g_strdup_printf(_("Relation memberships of node #" ITEM_ID_FORMAT),
-			  OBJECT_ID(*object));
+			  OBJECT_ID(object));
     break;
   case WAY:
     str = g_strdup_printf(_("Relation memberships of way #" ITEM_ID_FORMAT),
-			  OBJECT_ID(*object));
+			  OBJECT_ID(object));
     break;
   default:
     g_assert_not_reached();
@@ -851,7 +859,7 @@ static GtkWidget *relation_list_widget(relation_context_t *context) {
   if(context->object) {
     const relation_chain_t &rchain =
                             osm_object_to_relation(context->appdata->osm,
-                                                   context->object);
+                                                   *(context->object));
     std::for_each(rchain.begin(), rchain.end(), fc);
   } else {
     const relation_t *relation = context->appdata->osm->relation;
