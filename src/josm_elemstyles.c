@@ -402,7 +402,7 @@ void josm_elemstyles_colorize_node(const style_t *style, node_t *node) {
 
     // For rule with conditions, if any condition mismatches->rule mismatches
     elemstyle_condition_t *cond;
-    for (cond = elemstyle->condition; cond; cond = cond->next) {
+    for (cond = elemstyle->condition; cond && match; cond = cond->next) {
       if(cond->key) {
         const char *value = osm_node_get_value(node, (char*)cond->key);
         if(!value || (cond->value && strcasecmp(value, (char*)cond->value) != 0))
