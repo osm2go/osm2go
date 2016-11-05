@@ -156,8 +156,7 @@ static gboolean relation_add_item(GtkWidget *parent,
   member_t **memberP = &relation->member;
   while(*memberP) memberP = &(*memberP)->next;
 
-  g_assert((object->type == NODE)||(object->type == WAY)||
-	   (object->type == RELATION));
+  g_assert(osm_object_is_real(object));
 
   /* create new member */
   *memberP = g_new0(member_t, 1);
