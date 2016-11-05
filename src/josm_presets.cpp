@@ -69,7 +69,7 @@ struct presets_widget_t {
 
     /* single checkbox */
     struct {
-      gboolean def;
+      bool def;
     } check_w;
 
   };
@@ -80,7 +80,7 @@ struct presets_widget_t {
 struct presets_item_t {
   int type;
   xmlChar *name, *icon, *link;
-  gboolean is_group;
+  bool is_group;
 
   union {
     presets_widget_t *widget;
@@ -248,7 +248,7 @@ static presets_widget_t **parse_widgets(xmlNode *a_node,
 
 static presets_item_t *parse_item(xmlNode *a_node) {
   presets_item_t *item = g_new0(presets_item_t, 1);
-  item->is_group = FALSE;
+  item->is_group = false;
 
   /* ------ parse items own properties ------ */
   item->name = xmlGetProp(a_node, BAD_CAST "name");
@@ -268,7 +268,7 @@ static presets_item_t *parse_group(xmlDocPtr doc, xmlNode *a_node) {
   xmlNode *cur_node = NULL;
 
   presets_item_t *group = g_new0(presets_item_t, 1);
-  group->is_group = TRUE;
+  group->is_group = true;
 
   /* ------ parse groups own properties ------ */
   group->name = xmlGetProp(a_node, BAD_CAST "name");
@@ -392,9 +392,9 @@ static void attach_right(GtkWidget *table, GtkWidget *widget, gint y) {
                    static_cast<GtkAttachOptions>(0), 0, 0);
 }
 
-static gboolean store_value(presets_widget_t *widget,
+static bool store_value(presets_widget_t *widget,
                             tag_t **ctag, const char *value, tag_t *otag) {
-  gboolean changed = FALSE;
+  bool changed = false;
   if(value && strlen(value)) {
     const char *chstr;
     tag_t *tag;
@@ -404,7 +404,7 @@ static gboolean store_value(presets_widget_t *widget,
       g_assert(strcasecmp(otag->key, (char*)widget->key) == 0);
       /* only update if the value actually changed */
       if(strcmp(otag->value, value) != 0) {
-        changed = TRUE; /* mark as updated, actual change below */
+        changed = true; /* mark as updated, actual change below */
         chstr = "updated ";
       } else {
         chstr = "kept ";
@@ -415,7 +415,7 @@ static gboolean store_value(presets_widget_t *widget,
       osm_tag_update_key(tag, (char*)widget->key);
       /* value will be updated below */
       *ctag = tag;
-      changed = TRUE;
+      changed = true;
       chstr = "new ";
     }
 
@@ -427,7 +427,7 @@ static gboolean store_value(presets_widget_t *widget,
   } else if (otag) {
     g_free(otag->value);
     otag->value = NULL; /* mark this entry as deleted */
-    changed = TRUE;
+    changed = true;
     printf("removed key = %s\n", widget->key);
   } else
     printf("ignore empty key = %s\n", widget->key);
@@ -452,25 +452,25 @@ static gint table_expose_event(GtkWidget *widget, GdkEventExpose *event,
 }
 #endif
 
-static gboolean is_widget_interactive(const presets_widget_t *w)
+static bool is_widget_interactive(const presets_widget_t *w)
 {
   switch(w->type) {
   case WIDGET_TYPE_LABEL:
   case WIDGET_TYPE_SEPARATOR:
   case WIDGET_TYPE_SPACE:
   case WIDGET_TYPE_KEY:
-    return FALSE;
+    return false;
   default:
-    return TRUE;
+    return true;
   }
 }
 
-static gboolean preset_combo_insert_value(GtkWidget *combo, const char *value,
+static bool preset_combo_insert_value(GtkWidget *combo, const char *value,
                                           const char *preset)
 {
   combo_box_append_text(combo, value);
 
-  return (g_strcmp0(preset, value) == 0) ? TRUE : FALSE;
+  return (g_strcmp0(preset, value) == 0);
 }
 
 struct presets_context_t {
@@ -488,7 +488,7 @@ static void presets_item_dialog(presets_context_t *context,
   tag_t **orig_tag = context->tag_context->tag;
 
   GtkWidget *dialog = NULL;
-  gboolean ok = FALSE;
+  bool ok = false;
 
   printf("dialog for item %s\n", item->name);
 
@@ -692,14 +692,14 @@ static void presets_item_dialog(presets_context_t *context,
 	  (result != GTK_RESPONSE_REJECT));
 
     if(result == GTK_RESPONSE_ACCEPT)
-      ok = TRUE;
+      ok = true;
 
   } else
-    ok = TRUE;
+    ok = true;
 
   if(ok) {
     /* handle all children of the table */
-    gboolean changed = FALSE;
+    bool changed = false;
     widget = item->widget;
     widget_cnt = 0;
     tag_t **last = orig_tag;
@@ -781,10 +781,10 @@ static void presets_item_dialog(presets_context_t *context,
 /**
  * @brief check if the currently active object uses this preset and the preset is interactive
  */
-static gboolean preset_is_used(const presets_item_t *item, const presets_context_t *context)
+static bool preset_is_used(const presets_item_t *item, const presets_context_t *context)
 {
-  gboolean matches_all = FALSE;
-  gboolean is_interactive = FALSE;
+  bool matches_all = false;
+  bool is_interactive = false;
   const presets_widget_t *w = item->widget;
   for(w = item->widget; w; w = w->next) {
     if(w->type != WIDGET_TYPE_KEY) {
@@ -793,9 +793,9 @@ static gboolean preset_is_used(const presets_item_t *item, const presets_context
     }
     const tag_t t((char*) w->key, (char*) w->key_w.value);
     if(osm_tag_key_and_value_present(*(context->tag_context->tag), &t))
-      matches_all = TRUE;
+      matches_all = true;
     else
-      return FALSE;
+      return false;
   }
 
   return matches_all && is_interactive;
@@ -831,9 +831,9 @@ static GtkWidget *create_menuitem(presets_context_t *context, presets_item_t *it
 static GtkWidget *build_menu(presets_context_t *context,
 			     presets_item_t *item, GtkWidget **matches) {
   GtkWidget *menu = gtk_menu_new();
-  gboolean was_separator = FALSE;
+  bool was_separator = false;
   /* avoid showing separators at the top of a menu */
-  gboolean was_item = FALSE;
+  bool was_item = false;
 
   for(; item; item = item->next) {
     /* check if this presets entry is appropriate for the current item */
@@ -844,8 +844,8 @@ static GtkWidget *build_menu(presets_context_t *context,
        * before to prevent to show one as the first entry. */
       if(was_item && was_separator)
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), gtk_separator_menu_item_new());
-      was_item = TRUE;
-      was_separator = FALSE;
+      was_item = true;
+      was_separator = false;
 
       menu_item = create_menuitem(context, item);
 
@@ -873,26 +873,26 @@ static GtkWidget *build_menu(presets_context_t *context,
     } else if(!item->name)
       /* Record that there was a separator. Do not immediately add it here to
        * prevent to show one as last entry. */
-      was_separator = TRUE;
+      was_separator = true;
   }
 
   return menu;
 }
 #else // PICKER_MENU
 
-static gboolean preset_group_is_used(const presets_item_t *item, const presets_context_t *context)
+static bool preset_group_is_used(const presets_item_t *item, const presets_context_t *context)
 {
   g_assert(item->is_group);
   const presets_item_t *child;
   for (child = item->group; child; child = child->next) {
     if(child->is_group) {
       if(preset_group_is_used(child, context))
-        return TRUE;
+        return true;
     } else if(preset_is_used(child, context))
-      return TRUE;
+      return true;
   }
 
-  return FALSE;
+  return false;
 }
 
 enum {
@@ -904,7 +904,7 @@ enum {
   PRESETS_PICKER_NUM_COLS
 };
 
-static GtkWidget *presets_picker(presets_context_t *context, presets_item_t *item, gboolean scan_for_recent);
+static GtkWidget *presets_picker(presets_context_t *context, presets_item_t *item, bool scan_for_recent);
 static GtkWidget *preset_picker_recent(presets_context_t *context);
 
 static void
@@ -947,7 +947,7 @@ on_presets_picker_selected(GtkTreeSelection *selection, gpointer data) {
 
       if(sub_item) {
         /* normal submenu */
-        sub = presets_picker(context, sub_item, FALSE);
+        sub = presets_picker(context, sub_item, false);
       } else {
         /* used presets submenu */
         sub = preset_picker_recent(context);
@@ -1071,11 +1071,11 @@ static GtkWidget *preset_picker_recent(presets_context_t *context) {
 }
 
 static GtkWidget *
-presets_picker(presets_context_t *context, presets_item_t *item, gboolean scan_for_recent) {
+presets_picker(presets_context_t *context, presets_item_t *item, bool scan_for_recent) {
   GtkTreeView *view;
   GtkListStore *store = presets_picker_store(&view);
 
-  gboolean show_recent = FALSE;
+  bool show_recent = FALSE;
   GdkPixbuf *subicon = icon_load(&context->appdata->icon,
                                  "submenu_arrow");
   for(; item; item = item->next) {
@@ -1158,7 +1158,7 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event,
     /* create root picker */
     GtkWidget *hbox = gtk_hbox_new(TRUE, 0);
 
-    GtkWidget *root = presets_picker(context, context->appdata->presets, TRUE);
+    GtkWidget *root = presets_picker(context, context->appdata->presets, true);
     gtk_box_pack_start_defaults(GTK_BOX(hbox), root);
 
     GtkWidget *sub = gtk_label_new(NULL);
