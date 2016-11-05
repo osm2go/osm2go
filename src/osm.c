@@ -2365,7 +2365,7 @@ const char *osm_object_type_string(const object_t *object) {
 /* try to get an as "speaking" description of the object as possible */
 char *osm_object_get_name(object_t *object) {
   char *ret = NULL;
-  tag_t *tags = osm_object_get_tags(object);
+  const tag_t *tags = osm_object_get_tags(object);
 
   /* worst case: we have no tags at all. return techincal info then */
   if(!tags)
@@ -2511,7 +2511,7 @@ gboolean osm_object_is_real(const object_t *object) {
 	 (object->type == RELATION));
 }
 
-tag_t *osm_object_get_tags(object_t *object) {
+const tag_t *osm_object_get_tags(const object_t *object) {
   if(!object) return NULL;
   if(!osm_object_is_real(object)) return NULL;
   return OBJECT_TAG(*object);
