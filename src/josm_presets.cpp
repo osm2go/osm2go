@@ -47,8 +47,12 @@ enum presets_widget_type_t {
   WIDGET_TYPE_KEY
 };
 
-struct presets_widget_t {
-  presets_widget_type_t type;
+class presets_widget_t {
+public:
+  presets_widget_t(presets_widget_type_t t);
+  ~presets_widget_t();
+
+  const presets_widget_type_t type;
 
   xmlChar *key, *text;
 
@@ -75,6 +79,8 @@ struct presets_widget_t {
     } check_w;
 
   };
+
+  bool is_interactive() const;
 };
 
 struct presets_item_t {
@@ -154,18 +160,17 @@ static void parse_widgets(xmlNode *a_node, presets_item_t *item) {
     if(cur_node->type == XML_ELEMENT_NODE) {
 
       if(strcmp((char*)cur_node->name, "label") == 0) {
-
-        /* --------- label widget --------- */
-        widget = g_new0(presets_widget_t, 1);
-        widget->type = WIDGET_TYPE_LABEL;
-        widget->text = xmlGetProp(cur_node, BAD_CAST "text");
+        xmlChar *text = xmlGetProp(cur_node, BAD_CAST "text");
 
         /* special handling of pre-<space/> separators */
-        if(!widget->text || (strcmp((char*)widget->text, " ") == 0)) {
-          widget->type = WIDGET_TYPE_SEPARATOR;
-          if(widget->text)
-            xmlFree(widget->text);
-          widget->text = NULL;
+        if(!text || (strcmp((char*)text, " ") == 0)) {
+          widget = new presets_widget_t(WIDGET_TYPE_SEPARATOR);
+          if(text)
+            xmlFree(text);
+        } else {
+          /* --------- label widget --------- */
+          widget = new presets_widget_t(WIDGET_TYPE_LABEL);
+          widget->text = text;
         }
 
         item->widgets.push_back(widget);
@@ -174,8 +179,7 @@ static void parse_widgets(xmlNode *a_node, presets_item_t *item) {
       else if(strcmp((char*)cur_node->name, "space") == 0) {
 #ifndef USE_HILDON
         // new-style separators
-        widget = g_new0(presets_widget_t, 1);
-        widget->type = WIDGET_TYPE_SEPARATOR;
+        widget = new presets_widget_t(WIDGET_TYPE_SEPARATOR);
         widget->text = NULL;
 	item->widgets.push_back(widget);
 #endif
@@ -183,8 +187,7 @@ static void parse_widgets(xmlNode *a_node, presets_item_t *item) {
       else if(strcmp((char*)cur_node->name, "text") == 0) {
 
         /* --------- text widget --------- */
-        widget = g_new0(presets_widget_t, 1);
-        widget->type = WIDGET_TYPE_TEXT;
+        widget = new presets_widget_t(WIDGET_TYPE_TEXT);
         widget->text = xmlGetProp(cur_node, BAD_CAST "text");
         widget->key = xmlGetProp(cur_node, BAD_CAST "key");
         widget->text_w.def = xmlGetProp(cur_node, BAD_CAST "default");
@@ -193,8 +196,7 @@ static void parse_widgets(xmlNode *a_node, presets_item_t *item) {
       } else if(strcmp((char*)cur_node->name, "combo") == 0) {
 
         /* --------- combo widget --------- */
-        widget = g_new0(presets_widget_t, 1);
-        widget->type = WIDGET_TYPE_COMBO;
+        widget = new presets_widget_t(WIDGET_TYPE_COMBO);
         widget->text = xmlGetProp(cur_node, BAD_CAST "text");
         widget->key = xmlGetProp(cur_node, BAD_CAST "key");
         widget->combo_w.def = xmlGetProp(cur_node, BAD_CAST "default");
@@ -204,8 +206,7 @@ static void parse_widgets(xmlNode *a_node, presets_item_t *item) {
       } else if(strcmp((char*)cur_node->name, "key") == 0) {
 
         /* --------- invisible key widget --------- */
-        widget = g_new0(presets_widget_t, 1);
-        widget->type = WIDGET_TYPE_KEY;
+        widget = new presets_widget_t(WIDGET_TYPE_KEY);
         widget->key = xmlGetProp(cur_node, BAD_CAST "key");
         widget->key_w.value = xmlGetProp(cur_node, BAD_CAST "value");
         item->widgets.push_back(widget);
@@ -213,8 +214,7 @@ static void parse_widgets(xmlNode *a_node, presets_item_t *item) {
       } else if(strcmp((char*)cur_node->name, "check") == 0) {
 
         /* --------- check widget --------- */
-        widget = g_new0(presets_widget_t, 1);
-        widget->type = WIDGET_TYPE_CHECK;
+        widget = new presets_widget_t(WIDGET_TYPE_CHECK);
         widget->text = xmlGetProp(cur_node, BAD_CAST "text");
         widget->key = xmlGetProp(cur_node, BAD_CAST "key");
         widget->check_w.def = xml_get_prop_is(cur_node, "default", "on");
@@ -447,17 +447,8 @@ static gint table_expose_event(GtkWidget *widget, GdkEventExpose *event,
 }
 #endif
 
-static bool is_widget_interactive(const presets_widget_t *w)
-{
-  switch(w->type) {
-  case WIDGET_TYPE_LABEL:
-  case WIDGET_TYPE_SEPARATOR:
-  case WIDGET_TYPE_SPACE:
-  case WIDGET_TYPE_KEY:
-    return false;
-  default:
-    return true;
-  }
+static inline bool is_widget_interactive(const presets_widget_t *w) {
+  return w->is_interactive();
 }
 
 static bool preset_combo_insert_value(GtkWidget *combo, const char *value,
@@ -776,7 +767,7 @@ struct used_preset_functor {
 bool used_preset_functor::operator()(const presets_widget_t* w)
 {
   if(w->type != WIDGET_TYPE_KEY) {
-    is_interactive |= is_widget_interactive(w);
+    is_interactive |= w->is_interactive();
     return false;
   }
   const tag_t t((char*) w->key, (char*) w->key_w.value);
@@ -1219,29 +1210,8 @@ GtkWidget *josm_build_presets_button(appdata_t *appdata,
 
 /* ----------------------- cleaning up --------------------- */
 
-static void free_widget(presets_widget_t *widget) {
-  if(widget->key) xmlFree(widget->key);
-  if(widget->text) xmlFree(widget->text);
-
-  switch(widget->type) {
-  case WIDGET_TYPE_TEXT:
-    if(widget->text_w.def) xmlFree(widget->text_w.def);
-    break;
-
-  case WIDGET_TYPE_COMBO:
-    if(widget->combo_w.def) xmlFree(widget->combo_w.def);
-    if(widget->combo_w.values) xmlFree(widget->combo_w.values);
-    break;
-
-  case WIDGET_TYPE_KEY:
-    if(widget->key_w.value) xmlFree(widget->key_w.value);
-    break;
-
-  default:
-    break;
-  }
-
-  g_free(widget);
+static inline void free_widget(presets_widget_t *widget) {
+  delete widget;
 }
 
 static void free_items(presets_item_t *item);
@@ -1268,6 +1238,58 @@ static void free_items(presets_item_t *item) {
 
 void josm_presets_free(presets_item_t *presets) {
   free_items(presets);
+}
+
+presets_widget_t::presets_widget_t(presets_widget_type_t t)
+  : type(t)
+  , key(0)
+  , text(0)
+{
+  // largest subentry
+  memset(&combo_w, 0, sizeof(combo_w));
+}
+
+presets_widget_t::~presets_widget_t()
+{
+  if(key)
+    xmlFree(key);
+  if(text)
+    xmlFree(text);
+
+  switch(type) {
+  case WIDGET_TYPE_TEXT:
+    if(text_w.def)
+      xmlFree(text_w.def);
+    break;
+
+  case WIDGET_TYPE_COMBO:
+    if(combo_w.def)
+      xmlFree(combo_w.def);
+    if(combo_w.values)
+      xmlFree(combo_w.values);
+    break;
+
+  case WIDGET_TYPE_KEY:
+    if(key_w.value)
+      xmlFree(key_w.value);
+    break;
+
+  default:
+    break;
+  }
+}
+
+bool presets_widget_t::is_interactive() const
+{
+  switch(type) {
+  case WIDGET_TYPE_LABEL:
+  case WIDGET_TYPE_SEPARATOR:
+  case WIDGET_TYPE_SPACE:
+  case WIDGET_TYPE_KEY:
+    return false;
+  default:
+    return true;
+  }
 }
 
 // vim:et:ts=8:sw=2:sts=2:ai
