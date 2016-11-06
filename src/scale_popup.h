@@ -20,6 +20,10 @@
 #ifndef SCALE_POPUP_H
 #define SCALE_POPUP_H
 
+#include "appdata.h"
+
+#include <gtk/gtk.h>
+
 void scale_popup(GtkWidget *button, appdata_t *appdata);
 
 #endif // SCALE_POPUP_H

@@ -20,6 +20,7 @@
 #ifndef STYLE_H
 #define STYLE_H
 
+#include "appdata.h"
 #include "icon.h"
 #include "josm_elemstyles.h"
 

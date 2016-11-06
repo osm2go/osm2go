@@ -27,6 +27,8 @@
 
 #include "config.h"
 
+#include "osm-gps-map-point.h"
+
 #include <glib.h>
 #include <glib-object.h>
 #include <gtk/gtk.h>

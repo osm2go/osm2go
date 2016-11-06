@@ -20,6 +20,10 @@
 #ifndef STATUSBAR_H
 #define STATUSBAR_H
 
+#include "appdata.h"
+
+#include <gtk/gtk.h>
+
 #define STATUSBAR_DEFAULT_BRIEF_TIME 3000
 
 typedef struct statusbar_s {
