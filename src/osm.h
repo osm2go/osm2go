@@ -73,7 +73,11 @@ typedef struct tag_t {
 #endif
 } tag_t;
 
-typedef struct {
+typedef struct base_object_t {
+#ifdef __cplusplus
+  base_object_t();
+#endif
+
   item_id_t id;
   item_id_t version;
   const char *user;
@@ -115,15 +119,15 @@ struct item_id_chain_t {
 
 #ifdef __cplusplus
 typedef std::vector<node_t *> node_chain_t;
-#endif
 
 #define OSM_DRAW_FLAG_AREA  (1<<0)
 #define OSM_DRAW_FLAG_BG    (1<<1)
 
-typedef struct way_t {
-  base_object_t base;
+class way_t: public base_object_t {
+public:
+  way_t();
 
-  struct way_t *next;
+  way_t *next;
 
   /* visual representation from elemstyle */
   struct {
@@ -149,12 +153,19 @@ typedef struct way_t {
   /* a link to the visual representation on screen */
   struct map_item_chain_t *map_item_chain;
 
-#ifdef __cplusplus
-  node_chain_t *node_chain;
+  node_chain_t node_chain;
+  bool contains_node(const node_t *node) const;
+  void append_node(node_t *node);
+  bool ends_with_node(const node_t *node) const;
+  bool is_closed() const;
+  void reverse();
+  void rotate(node_chain_t::iterator nfirst);
+  const node_t *last_node() const;
+  const node_t *first_node() const;
+};
 #else
-  void *node_chain;
+typedef struct way_s way_t;
 #endif
-} way_t;
 
 #ifdef __cplusplus
 typedef std::vector<way_t *> way_chain_t;
@@ -180,7 +191,11 @@ typedef std::vector<way_t *> way_chain_t;
 #define OSM_VISIBLE(a)     (OSM_BASE(a)->visible)
 #define OSM_FLAGS(a)       (OSM_BASE(a)->flags)
 
+#ifdef __cplusplus
+class relation_t;
+#else
 typedef struct relation_t relation_t;
+#endif
 
 /* two of these hash tables are used, one for nodes and one for ways */
 /* currently relations aren't used often enough to justify the use */
@@ -257,21 +272,20 @@ struct member_t {
 };
 #endif
 
-struct relation_t {
 #ifdef __cplusplus
+class relation_t : public base_object_t {
+public:
   relation_t();
-#endif
-  base_object_t base;
 
-  struct relation_t *next;
-#ifdef __cplusplus
+  relation_t *next;
   std::vector<member_t> members;
   std::vector<member_t>::iterator find_member_object(const object_t &o);
   std::vector<member_t>::const_iterator find_member_object(const object_t &o) const;
 
   void members_by_type(guint *nodes, guint *ways, guint *relations) const;
-#endif
+  gchar *descriptive_name() const;
 };
+#endif
 
 typedef struct osm_t {
   bounds_t *bounds;   // original bounds as they appear in the file
@@ -307,9 +321,7 @@ void osm_way_free(osm_t *osm, way_t *way);
 const char *osm_way_get_value(way_t *way, const char *key);
 gboolean osm_node_has_value(const node_t* node, const char* str);
 gboolean osm_way_has_value(const way_t* way, const char* str);
-void osm_way_append_node(way_t *way, node_t *node);
 
-gboolean osm_node_in_way(const way_t *way, const node_t *node);
 gboolean osm_node_in_other_way(const osm_t *osm, const way_t *way, const node_t *node);
 
 void osm_node_free(osm_t *osm, node_t *node);
@@ -337,9 +349,6 @@ node_t *osm_get_node_by_id(osm_t *osm, item_id_t id);
 way_t *osm_get_way_by_id(osm_t *osm, item_id_t id);
 relation_t *osm_get_relation_by_id(osm_t *osm, item_id_t id);
 
-gboolean osm_way_min_length(const way_t *way, guint len);
-guint osm_way_number_of_nodes(const way_t *way);
-
 /* ----------- edit functions ----------- */
 node_t *osm_node_new(osm_t *osm, gint x, gint y);
 node_t *osm_node_new_pos(osm_t *osm, const pos_t *pos);
@@ -353,18 +362,12 @@ void osm_way_attach(osm_t *osm, way_t *way);
 gboolean osm_position_within_bounds(const osm_t *osm, gint x, gint y);
 gboolean osm_position_within_bounds_ll(const pos_t *ll_min, const pos_t *ll_max, const pos_t *pos);
 item_id_t osm_new_way_id(osm_t *osm);
-gboolean osm_way_ends_with_node(const way_t *way, const node_t *node);
 
-void osm_way_reverse(way_t *way);
 guint osm_way_reverse_direction_sensitive_tags(way_t *way);
 guint osm_way_reverse_direction_sensitive_roles(osm_t *osm, way_t *way);
 
 void osm_node_remove_from_relation(osm_t *osm, node_t *node);
 void osm_way_remove_from_relation(osm_t *osm, way_t *way);
-
-const node_t *osm_way_get_last_node(const way_t *way);
-const node_t *osm_way_get_first_node(const way_t *way);
-gboolean osm_way_is_closed(const way_t *way);
 
 tag_t *osm_tags_copy(const tag_t *tag);
 
@@ -373,7 +376,6 @@ void osm_relation_free(relation_t *relation);
 void osm_relation_attach(osm_t *osm, relation_t *relation);
 void osm_relation_delete(osm_t *osm, relation_t *relation,
 			 gboolean permanently);
-gchar *relation_get_descriptive_name(const relation_t *relation);
 
 #ifdef __cplusplus
 }
@@ -389,7 +391,6 @@ void osm_node_chain_free(node_chain_t &node_chain);
 way_chain_t osm_node_to_way(const osm_t *osm, const node_t *node);
 way_chain_t osm_node_delete(osm_t *osm, node_t *node,
                             bool permanently, bool affect_ways);
-void osm_way_rotate(way_t *way, node_chain_t::iterator nfirst);
 relation_chain_t osm_way_to_relation(osm_t *osm, const way_t *way);
 relation_chain_t osm_object_to_relation(osm_t *osm, const object_t &object);
 void osm_way_restore(osm_t *osm, way_t *way, const std::vector<item_id_chain_t> &id_chain);

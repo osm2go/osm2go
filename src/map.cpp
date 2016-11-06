@@ -188,14 +188,14 @@ static canvas_points_t *
 points_from_node_chain(const way_t *way)
 {
   /* a way needs at least 2 points to be drawn */
-  guint nodes = osm_way_number_of_nodes(way);
+  guint nodes = way->node_chain.size();
   if (nodes < 2)
     return NULL;
 
   /* allocate space for nodes */
   canvas_points_t *points = canvas_points_new(nodes);
 
-  std::for_each(way->node_chain->begin(), way->node_chain->end(),
+  std::for_each(way->node_chain.begin(), way->node_chain.end(),
                 set_point_pos(points));
 
   return points;
@@ -286,7 +286,7 @@ void map_way_select(appdata_t *appdata, way_t *way) {
 		      map->style->highlight.width + map_item->object.way->draw.width/2)
     * map->state->detail;
 
-  const node_chain_t &node_chain = *map_item->object.way->node_chain;
+  const node_chain_t &node_chain = map_item->object.way->node_chain;
   std::for_each(node_chain.begin(), node_chain.end(),
                 draw_selected_way_functor(arrow_width, map, way));
 
@@ -503,7 +503,7 @@ static map_item_t *map_way_single_new(map_t *map, way_t *way, gint radius,
   map_item_t *map_item = g_new0(map_item_t, 1);
   map_item->object = way;
   map_item->item = canvas_circle_new(map->canvas, CANVAS_GROUP_WAYS,
-	  way->node_chain->front()->lpos.x, way->node_chain->front()->lpos.y,
+	  way->node_chain.front()->lpos.x, way->node_chain.front()->lpos.y,
 				     radius, width, fill, border);
 
   // TODO: decide: do we need canvas_item_set_zoom_max() here too?
@@ -1208,7 +1208,7 @@ gboolean map_item_is_selected_node(map_t *map, map_item_t *map_item) {
   } else if(map->selected.object.type == WAY) {
     printf("  selected item is a way\n");
 
-    if(osm_node_in_way(map->selected.object.way, map_item->object.node)) {
+    if(map->selected.object.way->contains_node(map_item->object.node)) {
       printf("  requested item is part of selected way\n");
       return TRUE;
     }
@@ -1354,8 +1354,8 @@ static void map_touchnode_update(appdata_t *appdata, gint x, gint y) {
 
   /* during way creation also nodes of the new way */
   /* need to be searched */
-  if(!map->touchnode && map->action.way && map->action.way->node_chain->size() > 1) {
-    const node_chain_t &chain = *map->action.way->node_chain;
+  if(!map->touchnode && map->action.way && map->action.way->node_chain.size() > 1) {
+    const node_chain_t &chain = map->action.way->node_chain;
     const node_chain_t::const_iterator itEnd = chain.end()--;
     for(node_chain_t::const_iterator it = chain.begin();
         !map->touchnode && it != itEnd; it++) {
@@ -2030,7 +2030,7 @@ void node_deleted_from_ways::operator()(way_t *way) {
 }
 
 static bool short_way(const way_t *way) {
-  return !osm_way_min_length(way, 3);
+  return way->node_chain.size() < 3;
 }
 
 /* called from icon "trash" */

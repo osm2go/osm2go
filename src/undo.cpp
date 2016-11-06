@@ -216,14 +216,14 @@ static bool undo_object_save(const object_t &object,
     /* fields ignored in this copy operation: */
     /* next (XXX: incomplete) */
 
-    ob->way = g_new0(way_t, 1);
+    ob->way = new way_t();
     undo_object_copy_base(ob, object);
 
     /* the nodes are saved by reference, since they may also be */
     /* deleted and restored and thus their address may change */
-    node_chain_t *node_chain = object.way->node_chain;
-    const node_chain_t::const_iterator itEnd = node_chain->end();
-    for(node_chain_t::const_iterator it = node_chain->begin(); it != itEnd; it++)
+    const node_chain_t &node_chain = object.way->node_chain;
+    const node_chain_t::const_iterator itEnd = node_chain.end();
+    for(node_chain_t::const_iterator it = node_chain.begin(); it != itEnd; it++)
       op->id_chain.push_back(item_id_chain_t(NODE, OSM_ID(*it)));
 
     return true;
@@ -317,9 +317,9 @@ void undo_append_object(appdata_t *appdata, undo_type_t type,
   /* if the deleted object is a way, then check if this affects */
   /* a node */
   if((type == UNDO_DELETE) && (object.type == WAY)) {
-    node_chain_t *chain = object.way->node_chain;
-    const node_chain_t::const_iterator itEnd = chain->end();
-    for(node_chain_t::const_iterator it = chain->begin(); it != itEnd; it++) {
+    const node_chain_t &chain = object.way->node_chain;
+    const node_chain_t::const_iterator itEnd = chain.end();
+    for(node_chain_t::const_iterator it = chain.begin(); it != itEnd; it++) {
       /* this node must only be part of this way */
       if(!osm_node_in_other_way(appdata->osm, object.way, *it))
         undo_append_node(appdata, UNDO_DELETE, *it);

@@ -440,7 +440,7 @@ static void diff_restore_way(xmlNodePtr node_node, osm_t *osm) {
   case OSM_FLAG_NEW: {
     printf("  Restoring NEW way\n");
 
-    way = g_new0(way_t, 1);
+    way = new way_t();
     OSM_ID(way) = id;
     OSM_VISIBLE(way) = TRUE;
     OSM_FLAGS(way) = OSM_FLAG_NEW;
@@ -503,18 +503,17 @@ static void diff_restore_way(xmlNodePtr node_node, osm_t *osm) {
   /* only replace the original nodes if new nodes have actually been */
   /* found. */
   if(!new_chain.empty()) {
-    if(*(way->node_chain) == new_chain) {
+    if(way->node_chain == new_chain) {
       osm_node_chain_free(new_chain);
       new_chain.clear(); /* indicate that waypoints did not change */
     } else {
       /* way may be an existing way, so remove nodes to */
       /* make space for new ones */
-      if(way->node_chain) {
+      if(!way->node_chain.empty()) {
         printf("  removing existing nodes for diff nodes\n");
-        osm_node_chain_free(*(way->node_chain));
-        *(way->node_chain) = new_chain;
-      } else
-        way->node_chain = new node_chain_t(new_chain);
+        osm_node_chain_free(way->node_chain);
+      }
+      way->node_chain.swap(new_chain);
     }
 
     /* only replace tags if nodes have been found before. if no nodes */

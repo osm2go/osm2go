@@ -405,15 +405,14 @@ static GtkWidget *details_widget(tag_context_t *context, gboolean big) {
   } break;
 
   case WAY: {
-    char *nodes_str = g_strdup_printf(_("%s%u nodes"),
-	      big?"":_("Length: "),
-	      osm_way_number_of_nodes(context->object.way));
+    char *nodes_str = g_strdup_printf(_("%s%zu nodes"),
+             big?"":_("Length: "), context->object.way->node_chain.size());
     label = gtk_label_new(nodes_str);
     if(big) table_attach(table, gtk_label_new(_("Length:")), 0, 2);
     table_attach(table, label, big?1:0, big?2:1);
     g_free(nodes_str);
 
-    char *type_str = g_strconcat(osm_way_is_closed(context->object.way)?
+    char *type_str = g_strconcat(context->object.way->is_closed() ?
 			     "closed way":"open way",
 			     " (",
 	     (context->object.way->draw.flags & OSM_DRAW_FLAG_AREA)?
@@ -517,7 +516,7 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
 			  OBJECT_ID(context.object));
     context.presets_type = PRESETS_TYPE_WAY;
 
-    if(osm_way_is_closed(context.object.way))
+    if(context.object.way->is_closed())
       context.presets_type |= PRESETS_TYPE_CLOSEDWAY;
 
     break;

@@ -350,7 +350,7 @@ static GtkWidget *relation_item_list_widget(relitem_context_t *context) {
   relation_t *relation = context->appdata->osm->relation;
   while(relation) {
     /* try to find something descriptive */
-    gchar *name = relation_get_descriptive_name(relation);
+    gchar *name = relation->descriptive_name();
 
     /* Append a row and fill in some data */
     gtk_list_store_append(context->store, &iter);
@@ -728,7 +728,7 @@ static void on_relation_add(G_GNUC_UNUSED GtkWidget *button, relation_context_t 
 
     /* append a row for the new data */
 
-    char *name = relation_get_descriptive_name(relation);
+    gchar *name = relation->descriptive_name();
 
     /* Append a row and fill in some data */
     GtkTreeIter iter;
@@ -774,7 +774,7 @@ static void on_relation_edit(G_GNUC_UNUSED GtkWidget *button, relation_context_t
   // Found it. Update all visible fields.
   gtk_list_store_set(context->store, &iter,
     RELATION_COL_TYPE,    osm_tag_get_by_key(OSM_TAG(sel), "type"),
-    RELATION_COL_NAME,    relation_get_descriptive_name(sel),
+    RELATION_COL_NAME,    sel->descriptive_name(),
     RELATION_COL_MEMBERS, sel->members.size(),
     -1);
 
@@ -817,7 +817,7 @@ struct relation_list_widget_functor {
 
 void relation_list_widget_functor::operator()(const relation_t *rel)
 {
-  char *name = relation_get_descriptive_name(rel);
+  gchar *name = rel->descriptive_name();
   GtkTreeIter iter;
 
   /* Append a row and fill in some data */

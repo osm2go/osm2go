@@ -488,7 +488,7 @@ void josm_elemstyles_colorize_way(const style_t *style, way_t *way) {
   elemstyle_line_mod_t *line_mod = NULL;
 
   gboolean way_processed = FALSE;
-  gboolean way_is_closed = osm_way_is_closed(way);
+  bool way_is_closed = way->is_closed();
 
   while(elemstyle) {
     //  printf("a %s %s\n", elemstyle->condition.key,
