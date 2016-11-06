@@ -70,16 +70,18 @@ static const char *osm_http_message(int id) {
   return NULL;
 }
 
+struct log_s {
+  GtkTextBuffer *buffer;
+  GtkWidget *view;
+};
+
 typedef struct {
   appdata_t *appdata;
   GtkWidget *dialog;
   osm_t *osm;
   project_t *project;
 
-  struct log_s {
-    GtkTextBuffer *buffer;
-    GtkWidget *view;
-  } log;
+  struct log_s log;
 
   item_id_t changeset;
   char *comment;
@@ -182,7 +184,7 @@ static size_t read_callback(void *ptr, size_t size, size_t nmemb, void *stream) 
 static size_t write_callback(void *ptr, size_t size, size_t nmemb, void *stream) {
   curl_data_t *p = (curl_data_t*)stream;
 
-  p->ptr = g_realloc(p->ptr, p->len + size*nmemb + 1);
+  p->ptr = static_cast<char *>(g_realloc(p->ptr, p->len + size*nmemb + 1));
   if(p->ptr) {
     memcpy(p->ptr+p->len, ptr, size*nmemb);
     p->len += size*nmemb;
@@ -758,23 +760,23 @@ static gboolean cb_focus_in(GtkTextView *view, G_GNUC_UNUSED GdkEventFocus *even
   return FALSE;
 }
 
-static void object_counter(const base_object_t *obj, struct counter *dirty) {
+static void object_counter(const base_object_t *obj, struct osm_dirty_t::counter &dirty) {
   int flags = OSM_FLAGS(obj);
-  dirty->total++;
+  dirty.total++;
   if(flags & OSM_FLAG_DELETED)
-    dirty->deleted++;
+    dirty.deleted++;
   else if(flags & OSM_FLAG_NEW)
-    dirty->added++;
+    dirty.added++;
   else if(flags & OSM_FLAG_DIRTY)
-    dirty->dirty++;
+    dirty.dirty++;
 }
 
-static void table_insert_count(GtkWidget *table, const struct counter *dirty,
+static void table_insert_count(GtkWidget *table, const struct osm_dirty_t::counter &dirty,
                                const int row) {
-  table_attach_int(table, dirty->total,   1, 2, row, row + 1);
-  table_attach_int(table, dirty->added,   2, 3, row, row + 1);
-  table_attach_int(table, dirty->dirty,   3, 4, row, row + 1);
-  table_attach_int(table, dirty->deleted, 4, 5, row, row + 1);
+  table_attach_int(table, dirty.total,   1, 2, row, row + 1);
+  table_attach_int(table, dirty.added,   2, 3, row, row + 1);
+  table_attach_int(table, dirty.dirty,   3, 4, row, row + 1);
+  table_attach_int(table, dirty.deleted, 4, 5, row, row + 1);
 }
 
 void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
@@ -789,7 +791,7 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
 
   const node_t *node = osm->node;
   while(node) {
-    object_counter(OSM_BASE(node), &dirty.nodes);
+    object_counter(OSM_BASE(node), dirty.nodes);
     node = node->next;
   }
   printf("nodes:     new %2d, dirty %2d, deleted %2d\n",
@@ -798,7 +800,7 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   /* count ways */
   const way_t *way = osm->way;
   while(way) {
-    object_counter(OSM_BASE(way), &dirty.ways);
+    object_counter(OSM_BASE(way), dirty.ways);
     way = way->next;
   }
   printf("ways:      new %2d, dirty %2d, deleted %2d\n",
@@ -807,7 +809,7 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   /* count relations */
   const relation_t *relation = osm->relation;
   while(relation) {
-    object_counter(OSM_BASE(relation), &dirty.relations);
+    object_counter(OSM_BASE(relation), dirty.relations);
     relation = relation->next;
   }
   printf("relations: new %2d, dirty %2d, deleted %2d\n",
@@ -830,13 +832,13 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
 
   int row = 1;
   table_attach_label_l(table, _("Nodes:"),         0, 1, row, row + 1);
-  table_insert_count(table, &dirty.nodes, row++);
+  table_insert_count(table, dirty.nodes, row++);
 
   table_attach_label_l(table, _("Ways:"),          0, 1, row, row + 1);
-  table_insert_count(table, &dirty.ways, row++);
+  table_insert_count(table, dirty.ways, row++);
 
   table_attach_label_l(table, _("Relations:"),     0, 1, row, row + 1);
-  table_insert_count(table, &dirty.relations, row++);
+  table_insert_count(table, dirty.relations, row++);
 
   gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, FALSE, FALSE, 0);
 
