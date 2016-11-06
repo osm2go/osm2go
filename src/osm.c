@@ -1887,7 +1887,7 @@ static GSList *osm_relation_to_relation(osm_t *osm, const relation_t *rel) {
 }
 
 /* return all relations an object is in */
-GSList *osm_object_to_relation(osm_t *osm, object_t *object) {
+GSList *osm_object_to_relation(osm_t *osm, const object_t *object) {
   GSList *rel_chain = NULL;
 
   switch(object->type) {
@@ -2456,7 +2456,7 @@ char *osm_object_get_name(const object_t *object) {
   return ret;
 }
 
-char *osm_object_string(object_t *object) {
+char *osm_object_string(const object_t *object) {
   const char *type_str = osm_object_type_string(object);
 
   if(!object)

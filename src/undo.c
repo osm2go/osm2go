@@ -178,7 +178,7 @@ static undo_state_t *undo_append_state(appdata_t *appdata) {
 }
 
 /* copy the base object parts to another object */
-static void undo_object_copy_base(object_t *dst, object_t *src) {
+static void undo_object_copy_base(object_t *dst, const object_t *src) {
   OBJECT_ID(*dst)      = OBJECT_ID(*src);
   OBJECT_VERSION(*dst) = OBJECT_VERSION(*src);
   OBJECT_TIME(*dst)    = OBJECT_TIME(*src);
@@ -189,7 +189,7 @@ static void undo_object_copy_base(object_t *dst, object_t *src) {
 }
 
 /* create a local copy of the entire object */
-static object_t *undo_object_save(object_t *object,
+static object_t *undo_object_save(const object_t *object,
 				  item_id_chain_t **id_chain) {
 
   switch(object->type) {
@@ -282,7 +282,7 @@ undo_append_relation(gpointer data, gpointer user_data)
 }
 
 void undo_append_object(appdata_t *appdata, undo_type_t type,
-			object_t *object) {
+                        const object_t *object) {
 
   UNDO_ENABLE_CHECK;
 
