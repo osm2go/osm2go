@@ -379,7 +379,7 @@ void osm_tag_update_value(tag_t *tag, const char *value)
 bool way_t::ends_with_node(const node_t *node) const {
   /* a deleted way may even not contain any nodes at all */
   /* so ignore it */
-  if(OSM_FLAGS(this) & OSM_FLAG_DELETED)
+  if(flags & OSM_FLAG_DELETED)
     return false;
 
   /* any valid way must have at least two nodes */
@@ -397,7 +397,7 @@ bool way_t::ends_with_node(const node_t *node) const {
 /* ------------------- node handling ------------------- */
 
 void osm_node_free(osm_t *osm, node_t *node) {
-  item_id_t id = OSM_ID(node);
+  item_id_t id = node->id;
 
   if(node->icon_buf)
     icon_free(osm->icons, node->icon_buf);
@@ -405,7 +405,7 @@ void osm_node_free(osm_t *osm, node_t *node) {
   /* there must not be anything left in this chain */
   g_assert(!node->map_item_chain);
 
-  osm_tags_free(OSM_TAG(node));
+  osm_tags_free(node->tag);
 
   delete node;
 
@@ -434,12 +434,12 @@ void osm_node_chain_free(node_chain_t &node_chain) {
 }
 
 void osm_way_free(osm_t *osm, way_t *way) {
-  item_id_t id = OSM_ID(way);
+  item_id_t id = way->id;
 
-  //  printf("freeing way #" ITEM_ID_FORMAT "\n", OSM_ID(way));
+  //  printf("freeing way #" ITEM_ID_FORMAT "\n", way->id);
 
   osm_node_chain_free(way->node_chain);
-  osm_tags_free(OSM_TAG(way));
+  osm_tags_free(way->tag);
 
   /* there must not be anything left in this chain */
   g_assert(!way->map_item_chain);
@@ -491,7 +491,7 @@ void osm_members_free(std::vector<member_t> &members) {
 }
 
 void osm_relation_free(relation_t *relation) {
-  osm_tags_free(OSM_TAG(relation));
+  osm_tags_free(relation->tag);
   osm_members_free(relation->members);
 
   delete relation;
@@ -575,10 +575,10 @@ gchar *relation_t::descriptive_name() const {
   const char *keys[] = { "ref", "name", "description", "note", "fix" "me", NULL};
   unsigned int i;
   for (i = 0; (keys[i] != NULL) && (name == NULL); i++)
-    name = osm_tag_get_by_key(OSM_TAG(this), keys[i]);
+    name = osm_tag_get_by_key(tag, keys[i]);
 
   if(!name)
-    return g_strdup_printf("<ID #" ITEM_ID_FORMAT ">", OSM_ID(this));
+    return g_strdup_printf("<ID #" ITEM_ID_FORMAT ">", id);
   else
     return g_strdup(name);
 }
@@ -713,13 +713,13 @@ static void process_base_attributes(base_object_t *obj, xmlTextReaderPtr reader,
 {
   xmlChar *prop;
   if((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "id"))) {
-    OSM_ID(obj) = strtoll((char*)prop, NULL, 10);
+    obj->id = strtoll((char*)prop, NULL, 10);
     xmlFree(prop);
   }
 
   /* new in api 0.6: */
   if((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "version"))) {
-    OSM_VERSION(obj) = strtoul((char*)prop, NULL, 10);
+    obj->version = strtoul((char*)prop, NULL, 10);
     xmlFree(prop);
   }
 
@@ -735,17 +735,17 @@ static void process_base_attributes(base_object_t *obj, xmlTextReaderPtr reader,
       }
       xmlFree(puid);
     }
-    OSM_USER(obj) = osm_user(osm, (char*)prop, uid);
+    obj->user = osm_user(osm, (char*)prop, uid);
     xmlFree(prop);
   }
 
   if((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "visible"))) {
-    OSM_VISIBLE(obj) = (strcasecmp((char*)prop, "true") == 0);
+    obj->visible = (strcasecmp((char*)prop, "true") == 0);
     xmlFree(prop);
   }
 
   if((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "timestamp"))) {
-    OSM_TIME(obj) = convert_iso8601((char*)prop);
+    obj->time = convert_iso8601((char*)prop);
     xmlFree(prop);
   }
 }
@@ -763,7 +763,7 @@ static node_t *process_node(xmlTextReaderPtr reader, osm_t *osm) {
   pos2lpos(osm->bounds, &node->pos, &node->lpos);
 
   /* append node to end of hash table if present */
-  osm->node_hash[OSM_ID(node)] = node;
+  osm->node_hash[node->id] = node;
 
   /* just an empty element? then return the node as it is */
   if(xmlTextReaderIsEmptyElement(reader))
@@ -773,7 +773,7 @@ static node_t *process_node(xmlTextReaderPtr reader, osm_t *osm) {
   int depth = xmlTextReaderDepth(reader);
 
   /* scan all elements on same level or its children */
-  tag_t **tag = &OSM_TAG(node);
+  tag_t **tag = &node->tag;
   int ret = xmlTextReaderRead(reader);
   while((ret == 1) &&
 	((xmlTextReaderNodeType(reader) != XML_READER_TYPE_END_ELEMENT) ||
@@ -823,7 +823,7 @@ static way_t *process_way(xmlTextReaderPtr reader, osm_t *osm) {
   process_base_attributes(way, reader, osm);
 
   /* append way to end of hash table if present */
-  osm->way_hash[OSM_ID(way)] = way;
+  osm->way_hash[way->id] = way;
 
   /* just an empty element? then return the way as it is */
   /* (this should in fact never happen as this would be a way without nodes) */
@@ -834,7 +834,7 @@ static way_t *process_way(xmlTextReaderPtr reader, osm_t *osm) {
   int depth = xmlTextReaderDepth(reader);
 
   /* scan all elements on same level or its children */
-  tag_t **tag = &OSM_TAG(way);
+  tag_t **tag = &way->tag;
   int ret = xmlTextReaderRead(reader);
   while((ret == 1) &&
 	((xmlTextReaderNodeType(reader) != XML_READER_TYPE_END_ELEMENT) ||
@@ -937,7 +937,7 @@ static relation_t *process_relation(xmlTextReaderPtr reader, osm_t *osm) {
   int depth = xmlTextReaderDepth(reader);
 
   /* scan all elements on same level or its children */
-  tag_t **tag = &OSM_TAG(relation);
+  tag_t **tag = &relation->tag;
   int ret = xmlTextReaderRead(reader);
   while((ret == 1) &&
 	((xmlTextReaderNodeType(reader) != XML_READER_TYPE_END_ELEMENT) ||
@@ -1135,15 +1135,15 @@ const char *osm_tag_get_by_key(const tag_t* tag, const char* key) {
 }
 
 const char *osm_way_get_value(way_t* way, const char* key) {
-  return osm_tag_get_by_key(OSM_TAG(way), key);
+  return osm_tag_get_by_key(way->tag, key);
 }
 
 const char *osm_node_get_value(node_t *node, const char *key) {
-  return osm_tag_get_by_key(OSM_TAG(node), key);
+  return osm_tag_get_by_key(node->tag, key);
 }
 
 gboolean osm_way_has_value(const way_t *way, const char *str) {
-  tag_t *tag = OSM_TAG(way);
+  tag_t *tag = way->tag;
 
   while(tag) {
     if(tag->value && strcasecmp(tag->value, str) == 0)
@@ -1155,7 +1155,7 @@ gboolean osm_way_has_value(const way_t *way, const char *str) {
 }
 
 gboolean osm_node_has_value(const node_t *node, const char *str) {
-  tag_t *tag = OSM_TAG(node);
+  tag_t *tag = node->tag;
 
   while(tag) {
     if(tag->value && strcasecmp(tag->value, str) == 0)
@@ -1167,7 +1167,7 @@ gboolean osm_node_has_value(const node_t *node, const char *str) {
 }
 
 gboolean osm_node_has_tag(const node_t *node) {
-  tag_t *tag = OSM_TAG(node);
+  tag_t *tag = node->tag;
 
   /* created_by tags don't count as real tags */
   if(tag && osm_is_creator_tag(tag))
@@ -1233,16 +1233,16 @@ char *osm_generate_xml_node(item_id_t changeset, const node_t *node) {
   xmlDocPtr doc = osm_generate_xml_init(&xml_node, "node");
 
   /* new nodes don't have an id, but get one after the upload */
-  if(!(OSM_FLAGS(node) & OSM_FLAG_NEW)) {
-    snprintf(str, sizeof(str), ITEM_ID_FORMAT, OSM_ID(node));
+  if(!(node->flags & OSM_FLAG_NEW)) {
+    snprintf(str, sizeof(str), ITEM_ID_FORMAT, node->id);
     xmlNewProp(xml_node, BAD_CAST "id", BAD_CAST str);
   }
-  snprintf(str, sizeof(str), ITEM_ID_FORMAT, OSM_VERSION(node));
+  snprintf(str, sizeof(str), ITEM_ID_FORMAT, node->version);
   xmlNewProp(xml_node, BAD_CAST "version", BAD_CAST str);
   snprintf(str, sizeof(str), "%u", (unsigned)changeset);
   xmlNewProp(xml_node, BAD_CAST "changeset", BAD_CAST str);
   xml_set_prop_pos(xml_node, &node->pos);
-  osm_generate_tags(OSM_TAG(node), xml_node);
+  osm_generate_tags(node->tag, xml_node);
 
   return osm_generate_xml_finish(doc);
 }
@@ -1257,7 +1257,7 @@ void add_xml_node_refs::operator()(const node_t* node)
 {
   xmlNodePtr nd_node = xmlNewChild(way_node, NULL, BAD_CAST "nd", NULL);
   gchar str[G_ASCII_DTOSTR_BUF_SIZE];
-  g_snprintf(str, sizeof(str), ITEM_ID_FORMAT, OSM_ID(node));
+  g_snprintf(str, sizeof(str), ITEM_ID_FORMAT, node->id);
   xmlNewProp(nd_node, BAD_CAST "ref", BAD_CAST str);
 }
 
@@ -1277,15 +1277,15 @@ char *osm_generate_xml_way(item_id_t changeset, const way_t *way) {
   xmlNodePtr xml_node;
   xmlDocPtr doc = osm_generate_xml_init(&xml_node, "way");
 
-  snprintf(str, sizeof(str), ITEM_ID_FORMAT, OSM_ID(way));
+  snprintf(str, sizeof(str), ITEM_ID_FORMAT, way->id);
   xmlNewProp(xml_node, BAD_CAST "id", BAD_CAST str);
-  snprintf(str, sizeof(str), ITEM_ID_FORMAT, OSM_VERSION(way));
+  snprintf(str, sizeof(str), ITEM_ID_FORMAT, way->version);
   xmlNewProp(xml_node, BAD_CAST "version", BAD_CAST str);
   snprintf(str, sizeof(str), "%u", (unsigned)changeset);
   xmlNewProp(xml_node, BAD_CAST "changeset", BAD_CAST str);
 
   osm_write_node_chain(xml_node, way);
-  osm_generate_tags(OSM_TAG(way), xml_node);
+  osm_generate_tags(way->tag, xml_node);
 
   return osm_generate_xml_finish(doc);
 }
@@ -1335,16 +1335,16 @@ char *osm_generate_xml_relation(item_id_t changeset,
   xmlNodePtr xml_node;
   xmlDocPtr doc = osm_generate_xml_init(&xml_node, "relation");
 
-  snprintf(str, sizeof(str), ITEM_ID_FORMAT, OSM_ID(relation));
+  snprintf(str, sizeof(str), ITEM_ID_FORMAT, relation->id);
   xmlNewProp(xml_node, BAD_CAST "id", BAD_CAST str);
-  snprintf(str, sizeof(str), ITEM_ID_FORMAT, OSM_VERSION(relation));
+  snprintf(str, sizeof(str), ITEM_ID_FORMAT, relation->version);
   xmlNewProp(xml_node, BAD_CAST "version", BAD_CAST str);
   snprintf(str, sizeof(str), "%u", (unsigned)changeset);
   xmlNewProp(xml_node, BAD_CAST "changeset", BAD_CAST str);
 
   std::for_each(relation->members.begin(), relation->members.end(),
                 gen_xml_relation_functor(xml_node));
-  osm_generate_tags(OSM_TAG(relation), xml_node);
+  osm_generate_tags(relation->tag, xml_node);
 
   return osm_generate_xml_finish(doc);
 }
@@ -1386,7 +1386,7 @@ node_t *osm_get_node_by_id(osm_t *osm, item_id_t id) {
   /* use linear search if no hash tables are present or search in hash table failed */
   node_t *node = osm->node;
   while(node) {
-    if(OSM_ID(node) == id)
+    if(node->id == id)
       return node;
 
     node = node->next;
@@ -1405,7 +1405,7 @@ way_t *osm_get_way_by_id(osm_t *osm, item_id_t id) {
   /* use linear search if no hash tables are present or search on hash table failed */
   way_t *way = osm->way;
   while(way) {
-    if(OSM_ID(way) == id)
+    if(way->id == id)
       return way;
 
     way = way->next;
@@ -1418,7 +1418,7 @@ relation_t *osm_get_relation_by_id(osm_t *osm, item_id_t id) {
   // use linear search
   relation_t *relation = osm->relation;
   while(relation) {
-    if(OSM_ID(relation) == id)
+    if(relation->id == id)
       return relation;
 
     relation = relation->next;
@@ -1436,7 +1436,7 @@ item_id_t osm_new_way_id(osm_t *osm) {
     gboolean found = FALSE;
     const way_t *way = osm->way;
     while(way && !found) {
-      if(OSM_ID(way) == id)
+      if(way->id == id)
 	found = TRUE;
 
       way = way->next;
@@ -1456,7 +1456,7 @@ item_id_t osm_new_node_id(osm_t *osm) {
     gboolean found = FALSE;
     const node_t *node = osm->node;
     while(node && !found) {
-      if(OSM_ID(node) == id)
+      if(node->id == id)
 	found = TRUE;
 
       node = node->next;
@@ -1476,7 +1476,7 @@ item_id_t osm_new_relation_id(osm_t *osm) {
     gboolean found = FALSE;
     const relation_t *relation = osm->relation;
     while(relation && !found) {
-      if(OSM_ID(relation) == id)
+      if(relation->id == id)
 	found = TRUE;
 
       relation = relation->next;
@@ -1493,11 +1493,11 @@ node_t *osm_node_new(osm_t *osm, gint x, gint y) {
   printf("Creating new node\n");
 
   node_t *node = new node_t();
-  OSM_VERSION(node) = 1;
+  node->version = 1;
   node->lpos.x = x;
   node->lpos.y = y;
-  OSM_VISIBLE(node) = TRUE;
-  OSM_TIME(node) = time(NULL);
+  node->visible = TRUE;
+  node->time = time(NULL);
 
   /* convert screen position back to ll */
   lpos2pos(osm->bounds, &node->lpos, &node->pos);
@@ -1512,10 +1512,10 @@ node_t *osm_node_new_pos(osm_t *osm, const pos_t *pos) {
   printf("Creating new node from lat/lon\n");
 
   node_t *node = new node_t();
-  OSM_VERSION(node) = 1;
+  node->version = 1;
   node->pos = *pos;
-  OSM_VISIBLE(node) = TRUE;
-  OSM_TIME(node) = time(NULL);
+  node->visible = TRUE;
+  node->time = time(NULL);
 
   /* convert ll position to screen */
   pos2lpos(osm->bounds, &node->pos, &node->lpos);
@@ -1530,8 +1530,8 @@ node_t *osm_node_new_pos(osm_t *osm, const pos_t *pos) {
 void osm_node_attach(osm_t *osm, node_t *node) {
   printf("Attaching node\n");
 
-  OSM_ID(node) = osm_new_node_id(osm);
-  OSM_FLAGS(node) = OSM_FLAG_NEW;
+  node->id = osm_new_node_id(osm);
+  node->flags = OSM_FLAG_NEW;
 
   /* attach to end of node list */
   node_t **lnode = &osm->node;
@@ -1552,10 +1552,10 @@ way_t *osm_way_new(void) {
   printf("Creating new way\n");
 
   way_t *way = new way_t();
-  OSM_VERSION(way) = 1;
-  OSM_VISIBLE(way) = TRUE;
-  OSM_FLAGS(way) = OSM_FLAG_NEW;
-  OSM_TIME(way) = time(NULL);
+  way->version = 1;
+  way->visible = TRUE;
+  way->flags = OSM_FLAG_NEW;
+  way->time = time(NULL);
 
   return way;
 }
@@ -1563,8 +1563,8 @@ way_t *osm_way_new(void) {
 void osm_way_attach(osm_t *osm, way_t *way) {
   printf("Attaching way\n");
 
-  OSM_ID(way) = osm_new_way_id(osm);
-  OSM_FLAGS(way) = OSM_FLAG_NEW;
+  way->id = osm_new_way_id(osm);
+  way->flags = OSM_FLAG_NEW;
 
   /* attach to end of way list */
   way_t **lway = &osm->way;
@@ -1612,9 +1612,9 @@ way_chain_t osm_node_delete(osm_t *osm,
   way_chain_t way_chain;
 
   /* new nodes aren't stored on the server and are just deleted permanently */
-  if(OSM_FLAGS(node) & OSM_FLAG_NEW) {
+  if(node->flags & OSM_FLAG_NEW) {
     printf("About to delete NEW node #" ITEM_ID_FORMAT
-	   " -> force permanent delete\n", OSM_ID(node));
+	   " -> force permanent delete\n", node->id);
     permanently = true;
   }
 
@@ -1636,7 +1636,7 @@ way_chain_t osm_node_delete(osm_t *osm,
     }
 
     if(modified) {
-      OSM_FLAGS(way) |= OSM_FLAG_DIRTY;
+      way->flags |= OSM_FLAG_DIRTY;
 
       /* and add the way to the list of affected ways */
       way_chain.push_back(way);
@@ -1650,10 +1650,10 @@ way_chain_t osm_node_delete(osm_t *osm,
     map_item_chain_destroy(&node->map_item_chain);
 
   if(!permanently) {
-    printf("mark node #" ITEM_ID_FORMAT " as deleted\n", OSM_ID(node));
-    OSM_FLAGS(node) |= OSM_FLAG_DELETED;
+    printf("mark node #" ITEM_ID_FORMAT " as deleted\n", node->id);
+    node->flags |= OSM_FLAG_DELETED;
   } else {
-    printf("permanently delete node #" ITEM_ID_FORMAT "\n", OSM_ID(node));
+    printf("permanently delete node #" ITEM_ID_FORMAT "\n", node->id);
 
     /* remove it from the chain */
     node_t **cnode = &osm->node;
@@ -1789,12 +1789,12 @@ void remove_member_functor::operator()(relation_t *relation)
   std::vector<member_t>::iterator it = relation->members.begin();
 
   while((it = std::find(it, itEnd, obj)) != itEnd) {
-    printf("  from relation #" ITEM_ID_FORMAT "\n", OSM_ID(relation));
+    printf("  from relation #" ITEM_ID_FORMAT "\n", relation->id);
 
     osm_member_free(*it);
     it = relation->members.erase(it);
 
-    OSM_FLAGS(relation) |= OSM_FLAG_DIRTY;
+    relation->flags |= OSM_FLAG_DIRTY;
   }
 }
 
@@ -1802,7 +1802,7 @@ void remove_member_functor::operator()(relation_t *relation)
 /* be deleted */
 void osm_node_remove_from_relation(osm_t *osm, node_t *node) {
   relation_t *relation = osm->relation;
-  printf("removing node #" ITEM_ID_FORMAT " from all relations:\n", OSM_ID(node));
+  printf("removing node #" ITEM_ID_FORMAT " from all relations:\n", node->id);
 
   remove_member_functor fc(object_t(node), false);
   for(; relation; relation = relation->next) {
@@ -1813,7 +1813,7 @@ void osm_node_remove_from_relation(osm_t *osm, node_t *node) {
 /* remove the given way from all relations */
 void osm_way_remove_from_relation(osm_t *osm, way_t *way) {
   relation_t *relation = osm->relation;
-  printf("removing way #" ITEM_ID_FORMAT " from all relations:\n", OSM_ID(way));
+  printf("removing way #" ITEM_ID_FORMAT " from all relations:\n", way->id);
 
   remove_member_functor fc(object_t(way), false);
   for(; relation; relation = relation->next) {
@@ -1825,10 +1825,10 @@ relation_t *osm_relation_new(void) {
   printf("Creating new relation\n");
 
   relation_t *relation = new relation_t();
-  OSM_VERSION(relation) = 1;
-  OSM_VISIBLE(relation) = TRUE;
-  OSM_FLAGS(relation) = OSM_FLAG_NEW;
-  OSM_TIME(relation) = time(NULL);
+  relation->version = 1;
+  relation->visible = TRUE;
+  relation->flags = OSM_FLAG_NEW;
+  relation->time = time(NULL);
 
   return relation;
 }
@@ -1836,8 +1836,8 @@ relation_t *osm_relation_new(void) {
 void osm_relation_attach(osm_t *osm, relation_t *relation) {
   printf("Attaching relation\n");
 
-  OSM_ID(relation) = osm_new_relation_id(osm);
-  OSM_FLAGS(relation) = OSM_FLAG_NEW;
+  relation->id = osm_new_relation_id(osm);
+  relation->flags = OSM_FLAG_NEW;
 
   /* attach to end of relation list */
   relation_t **lrelation = &osm->relation;
@@ -1857,7 +1857,7 @@ void osm_unref_way_free::operator()(node_t* node)
   g_assert_cmpint(node->ways, >, 0);
   node->ways--;
   printf("checking node #" ITEM_ID_FORMAT " (still used by %d)\n",
-         OSM_ID(node), node->ways);
+         node->id, node->ways);
 
   /* this node must only be part of this way */
   if(!node->ways) {
@@ -1876,9 +1876,9 @@ void osm_unref_way_free::operator()(node_t* node)
 void osm_way_delete(osm_t *osm, way_t *way, gboolean permanently) {
 
   /* new ways aren't stored on the server and are just deleted permanently */
-  if(OSM_FLAGS(way) & OSM_FLAG_NEW) {
+  if(way->flags & OSM_FLAG_NEW) {
     printf("About to delete NEW way #" ITEM_ID_FORMAT
-	   " -> force permanent delete\n", OSM_ID(way));
+	   " -> force permanent delete\n", way->id);
     permanently = TRUE;
   }
 
@@ -1888,10 +1888,10 @@ void osm_way_delete(osm_t *osm, way_t *way, gboolean permanently) {
   way->node_chain.clear();
 
   if(!permanently) {
-    printf("mark way #" ITEM_ID_FORMAT " as deleted\n", OSM_ID(way));
-    OSM_FLAGS(way) |= OSM_FLAG_DELETED;
+    printf("mark way #" ITEM_ID_FORMAT " as deleted\n", way->id);
+    way->flags |= OSM_FLAG_DELETED;
   } else {
-    printf("permanently delete way #" ITEM_ID_FORMAT "\n", OSM_ID(way));
+    printf("permanently delete way #" ITEM_ID_FORMAT "\n", way->id);
 
     /* remove it from the chain */
     way_t **cway = &osm->way;
@@ -1916,9 +1916,9 @@ void osm_relation_delete(osm_t *osm, relation_t *relation,
 
   /* new relations aren't stored on the server and are just */
   /* deleted permanently */
-  if(OSM_FLAGS(relation) & OSM_FLAG_NEW) {
+  if(relation->flags & OSM_FLAG_NEW) {
     printf("About to delete NEW relation #" ITEM_ID_FORMAT
-	   " -> force permanent delete\n", OSM_ID(relation));
+	   " -> force permanent delete\n", relation->id);
     permanently = TRUE;
   }
 
@@ -1926,11 +1926,11 @@ void osm_relation_delete(osm_t *osm, relation_t *relation,
   /* don't have any reference to the relation they are part of */
 
   if(!permanently) {
-    printf("mark relation #" ITEM_ID_FORMAT " as deleted\n", OSM_ID(relation));
-    OSM_FLAGS(relation) |= OSM_FLAG_DELETED;
+    printf("mark relation #" ITEM_ID_FORMAT " as deleted\n", relation->id);
+    relation->flags |= OSM_FLAG_DELETED;
   } else {
     printf("permanently delete relation #" ITEM_ID_FORMAT "\n",
-	   OSM_ID(relation));
+	   relation->id);
 
     /* remove it from the chain */
     relation_t **crelation = &osm->relation;
@@ -1961,7 +1961,7 @@ static const char *DS_ONEWAY_REV = "-1";
 
 guint
 osm_way_reverse_direction_sensitive_tags (way_t *way) {
-  tag_t *tag = OSM_TAG(way);
+  tag_t *tag = way->tag;
   guint n_tags_altered = 0;
   for (; tag; tag = tag->next) {
     char *lc_key = g_ascii_strdown(tag->key, -1);
@@ -2019,7 +2019,7 @@ osm_way_reverse_direction_sensitive_tags (way_t *way) {
     g_free(lc_key);
   }
   if (n_tags_altered > 0) {
-    OSM_FLAGS(way) |= OSM_FLAG_DIRTY;
+    way->flags |= OSM_FLAG_DIRTY;
   }
   return n_tags_altered;
 }
@@ -2043,7 +2043,7 @@ struct find_way_or_ref {
   object_t way_ref;
   find_way_or_ref(const way_t *w) : way(const_cast<way_t *>(w)) {
     way_ref.type = WAY_ID;
-    way_ref.id = OSM_ID(w);
+    way_ref.id = w->id;
   }
   bool operator()(const member_t &member) {
     return member == way || member == way_ref;
@@ -2052,7 +2052,7 @@ struct find_way_or_ref {
 
 void reverse_roles::operator()(relation_t* relation)
 {
-  const char *type = osm_tag_get_by_key(OSM_TAG(relation), "type");
+  const char *type = osm_tag_get_by_key(relation->tag, "type");
 
   // Route relations; http://wiki.openstreetmap.org/wiki/Relation:route
   if (!type || strcasecmp(type, "route") != 0)
@@ -2070,12 +2070,12 @@ void reverse_roles::operator()(relation_t* relation)
   } else if (strcasecmp(member->role, DS_ROUTE_FORWARD) == 0) {
     g_free(member->role);
     member->role = g_strdup(DS_ROUTE_REVERSE);
-    OSM_FLAGS(relation) |= OSM_FLAG_DIRTY;
+    relation->flags |= OSM_FLAG_DIRTY;
     ++n_roles_flipped;
   } else if (strcasecmp(member->role, DS_ROUTE_REVERSE) == 0) {
     g_free(member->role);
     member->role = g_strdup(DS_ROUTE_FORWARD);
-    OSM_FLAGS(relation) |= OSM_FLAG_DIRTY;
+    relation->flags |= OSM_FLAG_DIRTY;
     ++n_roles_flipped;
   }
 

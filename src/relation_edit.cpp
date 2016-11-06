@@ -75,7 +75,7 @@ static gboolean relation_add_item(GtkWidget *parent,
   std::set<std::string> roles;
 
   printf("add object of type %d to relation #" ITEM_ID_FORMAT "\n",
-         object.type, OSM_ID(relation));
+         object.type, relation->id);
 
   /* ask the user for the role of the new object in this relation */
 
@@ -97,17 +97,17 @@ static gboolean relation_add_item(GtkWidget *parent,
 
   gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_ACCEPT);
 
-  const char *type = osm_tag_get_by_key(OSM_TAG(relation), "type");
+  const char *type = osm_tag_get_by_key(relation->tag, "type");
 
   char *info_str = NULL;
   if(type) info_str = g_strdup_printf(_("In relation of type: %s"), type);
   else     info_str = g_strdup_printf(_("In relation #" ITEM_ID_FORMAT),
-				      OSM_ID(relation));
+				      relation->id);
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox),
 			      gtk_label_new(info_str));
   g_free(info_str);
 
-  const char *name = osm_tag_get_by_key(OSM_TAG(relation), "name");
+  const char *name = osm_tag_get_by_key(relation->tag, "name");
   if(name)
     gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox),
 				gtk_label_new(name));
@@ -162,14 +162,14 @@ static gboolean relation_add_item(GtkWidget *parent,
   member.role = role;
   relation->members.push_back(member);
 
-  OSM_FLAGS(relation) |= OSM_FLAG_DIRTY;
+  relation->flags |= OSM_FLAG_DIRTY;
   return TRUE;
 }
 
 static void relation_remove_item(relation_t *relation, const object_t &object) {
 
   printf("remove object of type %d from relation #" ITEM_ID_FORMAT "\n",
-	 object.type, OSM_ID(relation));
+	 object.type, relation->id);
 
   g_assert(object.is_real());
 
@@ -179,7 +179,7 @@ static void relation_remove_item(relation_t *relation, const object_t &object) {
   osm_member_free(*it);
   relation->members.erase(it);
 
-  OSM_FLAGS(relation) |= OSM_FLAG_DIRTY;
+  relation->flags |= OSM_FLAG_DIRTY;
 }
 
 static gboolean relation_info_dialog(GtkWidget *parent, appdata_t *appdata,
@@ -231,7 +231,7 @@ static void changed(GtkTreeSelection *sel, gpointer user_data) {
     if(!relitem_is_in_relation(context->item, relation) &&
        gtk_tree_selection_iter_is_selected(sel, &iter)) {
 
-      printf("selected: " ITEM_ID_FORMAT "\n", OSM_ID(relation));
+      printf("selected: " ITEM_ID_FORMAT "\n", relation->id);
 
       /* either accept this or unselect again */
       if(relation_add_item(context->dialog, relation, context->item))
@@ -246,7 +246,7 @@ static void changed(GtkTreeSelection *sel, gpointer user_data) {
     } else if(relitem_is_in_relation(context->item, relation) &&
 	      !gtk_tree_selection_iter_is_selected(sel, &iter)) {
 
-      printf("deselected: " ITEM_ID_FORMAT "\n", OSM_ID(relation));
+      printf("deselected: " ITEM_ID_FORMAT "\n", relation->id);
 
       relation_remove_item(relation, context->item);
       gtk_list_store_set(context->store, &iter,
@@ -355,7 +355,7 @@ static GtkWidget *relation_item_list_widget(relitem_context_t *context) {
     /* Append a row and fill in some data */
     gtk_list_store_append(context->store, &iter);
     gtk_list_store_set(context->store, &iter,
-       RELITEM_COL_TYPE, osm_tag_get_by_key(OSM_TAG(relation), "type"),
+       RELITEM_COL_TYPE, osm_tag_get_by_key(relation->tag, "type"),
        RELITEM_COL_ROLE, relitem_get_role_in_relation(context->item, relation),
        RELITEM_COL_NAME, name,
        RELITEM_COL_DATA, relation,
@@ -660,11 +660,11 @@ void relation_show_members(GtkWidget *parent, relation_t *relation) {
   mcontext->relation = relation;
   gchar *nstr = NULL;
 
-  const char *str = osm_tag_get_by_key(OSM_TAG(mcontext->relation), "name");
-  if(!str) str = osm_tag_get_by_key(OSM_TAG(mcontext->relation), "ref");
+  const char *str = osm_tag_get_by_key(mcontext->relation->tag, "name");
+  if(!str) str = osm_tag_get_by_key(mcontext->relation->tag, "ref");
   if(!str)
     str = nstr = g_strdup_printf(_("Members of relation #" ITEM_ID_FORMAT),
-                                 OSM_ID(mcontext->relation));
+                                 mcontext->relation->id);
   else
     str = nstr = g_strdup_printf(_("Members of relation \"%s\""), str);
 
@@ -735,7 +735,7 @@ static void on_relation_add(G_GNUC_UNUSED GtkWidget *button, relation_context_t 
     gtk_list_store_append(context->store, &iter);
     gtk_list_store_set(context->store, &iter,
 		       RELATION_COL_TYPE,
-		       osm_tag_get_by_key(OSM_TAG(relation), "type"),
+		       osm_tag_get_by_key(relation->tag, "type"),
 		       RELATION_COL_NAME, name,
 		       RELATION_COL_MEMBERS, relation->members.size(),
 		       RELATION_COL_DATA, relation,
@@ -750,7 +750,7 @@ static void on_relation_edit(G_GNUC_UNUSED GtkWidget *button, relation_context_t
   relation_t *sel = get_selected_relation(context);
   if(!sel) return;
 
-  printf("edit relation #" ITEM_ID_FORMAT "\n", OSM_ID(sel));
+  printf("edit relation #" ITEM_ID_FORMAT "\n", sel->id);
 
   if (!relation_info_dialog(context->dialog, context->appdata, sel))
     return;
@@ -773,7 +773,7 @@ static void on_relation_edit(G_GNUC_UNUSED GtkWidget *button, relation_context_t
 
   // Found it. Update all visible fields.
   gtk_list_store_set(context->store, &iter,
-    RELATION_COL_TYPE,    osm_tag_get_by_key(OSM_TAG(sel), "type"),
+    RELATION_COL_TYPE,    osm_tag_get_by_key(sel->tag, "type"),
     RELATION_COL_NAME,    sel->descriptive_name(),
     RELATION_COL_MEMBERS, sel->members.size(),
     -1);
@@ -788,7 +788,7 @@ static void on_relation_remove(G_GNUC_UNUSED GtkWidget *button, relation_context
   relation_t *sel = get_selected_relation(context);
   if(!sel) return;
 
-  printf("remove relation #" ITEM_ID_FORMAT "\n", OSM_ID(sel));
+  printf("remove relation #" ITEM_ID_FORMAT "\n", sel->id);
 
   if(!sel->members.empty())
     if(!yes_no_f(context->dialog, NULL, 0, 0,
@@ -824,7 +824,7 @@ void relation_list_widget_functor::operator()(const relation_t *rel)
   gtk_list_store_append(context->store, &iter);
   gtk_list_store_set(context->store, &iter,
                      RELATION_COL_TYPE,
-                     osm_tag_get_by_key(OSM_TAG(rel), "type"),
+                     osm_tag_get_by_key(rel->tag, "type"),
                      RELATION_COL_NAME, name,
                      RELATION_COL_MEMBERS, rel->members.size(),
                      RELATION_COL_DATA, rel,

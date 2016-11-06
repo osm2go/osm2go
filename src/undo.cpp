@@ -224,7 +224,7 @@ static bool undo_object_save(const object_t &object,
     const node_chain_t &node_chain = object.way->node_chain;
     const node_chain_t::const_iterator itEnd = node_chain.end();
     for(node_chain_t::const_iterator it = node_chain.begin(); it != itEnd; it++)
-      op->id_chain.push_back(item_id_chain_t(NODE, OSM_ID(*it)));
+      op->id_chain.push_back(item_id_chain_t(NODE, (*it)->id));
 
     return true;
     }
@@ -379,7 +379,7 @@ static void undo_operation_object_restore(appdata_t *appdata, object_t &obj,
     /* removed or no entry at all (since a new one has been deleted) */
     node_t *orig = osm_get_node_by_id(appdata->osm, OBJECT_ID(obj));
     if(orig) {
-      g_assert(OSM_FLAGS(orig) & OSM_FLAG_DELETED);
+      g_assert(orig->flags & OSM_FLAG_DELETED);
 
       /* permanently remove the node marked as "deleted" */
       const way_chain_t &wchain = osm_node_delete(appdata->osm, orig, true, true);
@@ -399,7 +399,7 @@ static void undo_operation_object_restore(appdata_t *appdata, object_t &obj,
     /* removed or no entry at all (since a new one has been deleted) */
     way_t *orig = osm_get_way_by_id(appdata->osm, OBJECT_ID(obj));
     if(orig) {
-      g_assert(OSM_FLAGS(orig) & OSM_FLAG_DELETED);
+      g_assert(orig->flags & OSM_FLAG_DELETED);
 
       /* permanently remove the way marked as "deleted" */
       osm_way_delete(appdata->osm, orig, TRUE);

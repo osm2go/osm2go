@@ -64,21 +64,21 @@ static void diff_save_state_n_id(int flags, xmlNodePtr node, item_id_t id) {
 static void diff_save_nodes(const node_t *node, xmlNodePtr root_node) {
   /* store all modfied nodes */
   while(node) {
-    if(OSM_FLAGS(node)) {
+    if(node->flags) {
       xmlNodePtr node_node = xmlNewChild(root_node, NULL,
 					 BAD_CAST "node", NULL);
 
-      diff_save_state_n_id(OSM_FLAGS(node), node_node, OSM_ID(node));
+      diff_save_state_n_id(node->flags, node_node, node->id);
 
-      if(!(OSM_FLAGS(node) & OSM_FLAG_DELETED)) {
+      if(!(node->flags & OSM_FLAG_DELETED)) {
 	char str[32];
 
 	/* additional info is only required if the node hasn't been deleted */
         xml_set_prop_pos(node_node, &node->pos);
-	snprintf(str, sizeof(str), "%lu", OSM_TIME(node));
+	snprintf(str, sizeof(str), "%lu", node->time);
 	xmlNewProp(node_node, BAD_CAST "time", BAD_CAST str);
 
-	diff_save_tags(OSM_TAG(node), node_node);
+	diff_save_tags(node->tag, node_node);
       }
     }
      node = node->next;
@@ -89,22 +89,22 @@ static void diff_save_ways(const way_t *way, xmlNodePtr root_node) {
 
   /* store all modfied ways */
   while(way) {
-    if(OSM_FLAGS(way)) {
+    if(way->flags) {
       xmlNodePtr node_way = xmlNewChild(root_node, NULL,
 					 BAD_CAST "way", NULL);
 
-      diff_save_state_n_id(OSM_FLAGS(way), node_way, OSM_ID(way));
+      diff_save_state_n_id(way->flags, node_way, way->id);
 
-      if(OSM_FLAGS(way) & OSM_FLAG_HIDDEN)
+      if(way->flags & OSM_FLAG_HIDDEN)
 	xmlNewProp(node_way, BAD_CAST "hidden", BAD_CAST "true");
 
       /* additional info is only required if the way hasn't been deleted */
       /* and of the dirty or new flags are set. (otherwise e.g. only */
       /* the hidden flag may be set) */
-      if((!(OSM_FLAGS(way) & OSM_FLAG_DELETED)) &&
-	 (OSM_FLAGS(way) & (OSM_FLAG_DIRTY | OSM_FLAG_NEW))) {
+      if((!(way->flags & OSM_FLAG_DELETED)) &&
+	 (way->flags & (OSM_FLAG_DIRTY | OSM_FLAG_NEW))) {
         osm_write_node_chain(node_way, way);
-	diff_save_tags(OSM_TAG(way), node_way);
+	diff_save_tags(way->tag, node_way);
       }
     }
     way = way->next;
@@ -169,18 +169,18 @@ static void diff_save_relations(const relation_t *relation, xmlNodePtr root_node
 
   /* store all modfied relations */
   while(relation) {
-    if(OSM_FLAGS(relation)) {
+    if(relation->flags) {
       xmlNodePtr node_rel = xmlNewChild(root_node, NULL,
 					 BAD_CAST "relation", NULL);
 
-      diff_save_state_n_id(OSM_FLAGS(relation), node_rel, OSM_ID(relation));
+      diff_save_state_n_id(relation->flags, node_rel, relation->id);
 
-      if(!(OSM_FLAGS(relation) & OSM_FLAG_DELETED)) {
+      if(!(relation->flags & OSM_FLAG_DELETED)) {
 	/* additional info is only required if the relation */
 	/* hasn't been deleted */
         std::for_each(relation->members.begin(), relation->members.end(),
                       diff_save_rel(node_rel));
-	diff_save_tags(OSM_TAG(relation), node_rel);
+	diff_save_tags(relation->tag, node_rel);
       }
     }
     relation = relation->next;
@@ -193,7 +193,7 @@ gboolean diff_is_clean(const osm_t *osm, gboolean honor_hidden_flags) {
   /* check if a diff is necessary */
   const node_t *node = osm->node;
   while(node) {
-    if(OSM_FLAGS(node))
+    if(node->flags)
       return FALSE;
     node = node->next;
   }
@@ -201,13 +201,13 @@ gboolean diff_is_clean(const osm_t *osm, gboolean honor_hidden_flags) {
   int flagmask = honor_hidden_flags ? ~0 : ~OSM_FLAG_HIDDEN;
   const way_t *way;
   for(way = osm->way; way; way = way->next) {
-    if(OSM_FLAGS(way) & flagmask)
+    if(way->flags & flagmask)
       return FALSE;
   }
 
   const relation_t *relation = osm->relation;
   while(relation) {
-    if(OSM_FLAGS(relation))
+    if(relation->flags)
       return FALSE;
     relation = relation->next;
   }
@@ -318,7 +318,7 @@ node_compare_changes(const node_t *node, const pos_t *pos, const tag_t *ntags)
   if (node->pos.lat != pos->lat || node->pos.lon != pos->lon)
     return FALSE;
 
-  return !osm_tag_lists_diff(OSM_TAG(node), ntags);
+  return !osm_tag_lists_diff(node->tag, ntags);
 }
 
 static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
@@ -350,11 +350,11 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
     printf("  Restoring NEW node\n");
 
     node = new node_t();
-    OSM_ID(node) = id;
-    OSM_VISIBLE(node) = TRUE;
-    OSM_FLAGS(node) = OSM_FLAG_NEW;
-    OSM_TIME(node) = xml_get_prop_int(node_node, "time", 0);
-    if(!OSM_TIME(node)) OSM_TIME(node) = time(NULL);
+    node->id = id;
+    node->visible = TRUE;
+    node->flags = OSM_FLAG_NEW;
+    node->time = xml_get_prop_int(node_node, "time", 0);
+    if(!node->time) node->time = time(NULL);
 
     /* attach to end of node list */
     node_t **lnode = &osm->node;
@@ -367,7 +367,7 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
     printf("  Restoring DELETE flag\n");
 
     if((node = osm_get_node_by_id(osm, id)))
-      OSM_FLAGS(node) |= OSM_FLAG_DELETED;
+      node->flags |= OSM_FLAG_DELETED;
     else
       printf("  WARNING: no node with that id found\n");
     break;
@@ -376,7 +376,7 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
     printf("  Valid id/position (DIRTY)\n");
 
     if((node = osm_get_node_by_id(osm, id)))
-      OSM_FLAGS(node) |= OSM_FLAG_DIRTY;
+      node->flags |= OSM_FLAG_DIRTY;
     else
       printf("  WARNING: no node with that id found\n");
     break;
@@ -397,18 +397,18 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
   if(state == OSM_FLAG_DIRTY && node_compare_changes(node, &pos, ntags)) {
     printf("node " ITEM_ID_FORMAT " has the same values and position as upstream, discarding diff\n", id);
     osm_tags_free(ntags);
-    OSM_FLAGS(node) &= ~OSM_FLAG_DIRTY;
+    node->flags &= ~OSM_FLAG_DIRTY;
     return;
   }
 
   /* node may be an existing node, so remove tags to */
   /* make space for new ones */
-  if(OSM_TAG(node)) {
+  if(node->tag) {
     printf("  removing existing tags for diff tags\n");
-    osm_tags_free(OSM_TAG(node));
+    osm_tags_free(node->tag);
   }
 
-  OSM_TAG(node) = ntags;
+  node->tag = ntags;
 
   /* update position from diff */
   if(pos_diff) {
@@ -441,11 +441,11 @@ static void diff_restore_way(xmlNodePtr node_node, osm_t *osm) {
     printf("  Restoring NEW way\n");
 
     way = new way_t();
-    OSM_ID(way) = id;
-    OSM_VISIBLE(way) = TRUE;
-    OSM_FLAGS(way) = OSM_FLAG_NEW;
-    OSM_TIME(way) = xml_get_prop_int(node_node, "time", 0);
-    if(!OSM_TIME(way)) OSM_TIME(way) = time(NULL);
+    way->id = id;
+    way->visible = TRUE;
+    way->flags = OSM_FLAG_NEW;
+    way->time = xml_get_prop_int(node_node, "time", 0);
+    if(!way->time) way->time = time(NULL);
 
     /* attach to end of way list */
     way_t **lway = &osm->way;
@@ -458,7 +458,7 @@ static void diff_restore_way(xmlNodePtr node_node, osm_t *osm) {
     printf("  Restoring DELETE flag\n");
 
     if((way = osm_get_way_by_id(osm, id)))
-      OSM_FLAGS(way) |= OSM_FLAG_DELETED;
+      way->flags |= OSM_FLAG_DELETED;
     else
       printf("  WARNING: no way with that id found\n");
     break;
@@ -467,7 +467,7 @@ static void diff_restore_way(xmlNodePtr node_node, osm_t *osm) {
     printf("  Valid id (DIRTY)\n");
 
     if((way = osm_get_way_by_id(osm, id)))
-      OSM_FLAGS(way) |= OSM_FLAG_DIRTY;
+      way->flags |= OSM_FLAG_DIRTY;
     else
       printf("  WARNING: no way with that id found\n");
     break;
@@ -484,7 +484,7 @@ static void diff_restore_way(xmlNodePtr node_node, osm_t *osm) {
 
   /* update node_chain */
   if(hidden)
-    OSM_FLAGS(way) |= OSM_FLAG_HIDDEN;
+    way->flags |= OSM_FLAG_HIDDEN;
 
   /* scan for nodes */
   node_chain_t new_chain;
@@ -521,26 +521,26 @@ static void diff_restore_way(xmlNodePtr node_node, osm_t *osm) {
     /* flag had been set */
 
     tag_t *ntags = xml_scan_tags(node_node->children);
-    if (osm_tag_lists_diff(OSM_TAG(way), ntags)) {
+    if (osm_tag_lists_diff(way->tag, ntags)) {
       /* way may be an existing way, so remove tags to */
       /* make space for new ones */
-      if(OSM_TAG(way)) {
+      if(way->tag) {
         printf("  removing existing tags for diff tags\n");
-        osm_tags_free(OSM_TAG(way));
+        osm_tags_free(way->tag);
       }
 
-      OSM_TAG(way) = ntags;
+      way->tag = ntags;
     } else if (!new_chain.empty()) {
       osm_tags_free(ntags);
     } else {
       printf("way " ITEM_ID_FORMAT " has the same nodes and tags as upstream, discarding diff\n", id);
       osm_tags_free(ntags);
-      OSM_FLAGS(way) &= ~OSM_FLAG_DIRTY;
+      way->flags &= ~OSM_FLAG_DIRTY;
       return;
     }
   } else {
     printf("  no nodes restored, way isn't dirty!\n");
-    OSM_FLAGS(way) &= ~OSM_FLAG_DIRTY;
+    way->flags &= ~OSM_FLAG_DIRTY;
   }
 }
 
@@ -564,11 +564,11 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
     printf("  Restoring NEW relation\n");
 
     relation = new relation_t();
-    OSM_ID(relation) = id;
-    OSM_VISIBLE(relation) = TRUE;
-    OSM_FLAGS(relation) = OSM_FLAG_NEW;
-    OSM_TIME(relation) = xml_get_prop_int(node_rel, "time", 0);
-    if(!OSM_TIME(relation)) OSM_TIME(relation) = time(NULL);
+    relation->id = id;
+    relation->visible = TRUE;
+    relation->flags = OSM_FLAG_NEW;
+    relation->time = xml_get_prop_int(node_rel, "time", 0);
+    if(!relation->time) relation->time = time(NULL);
 
     /* attach to end of relation list */
     relation_t **lrelation = &osm->relation;
@@ -581,7 +581,7 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
     printf("  Restoring DELETE flag\n");
 
     if((relation = osm_get_relation_by_id(osm, id)))
-      OSM_FLAGS(relation) |= OSM_FLAG_DELETED;
+      relation->flags |= OSM_FLAG_DELETED;
     else
       printf("  WARNING: no relation with that id found\n");
     break;
@@ -590,7 +590,7 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
     printf("  Valid id (DIRTY)\n");
 
     if((relation = osm_get_relation_by_id(osm, id)))
-      OSM_FLAGS(relation) |= OSM_FLAG_DIRTY;
+      relation->flags |= OSM_FLAG_DIRTY;
     else
       printf("  WARNING: no relation with that id found\n");
     break;
@@ -607,12 +607,12 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
 
   gboolean was_changed = FALSE;
   tag_t *ntags = xml_scan_tags(node_rel->children);
-  if (osm_tag_lists_diff(OSM_TAG(relation), ntags)) {
+  if (osm_tag_lists_diff(relation->tag, ntags)) {
     /* relation may be an existing relation, so remove tags to */
     /* make space for new ones */
-    osm_tags_free(OSM_TAG(relation));
+    osm_tags_free(relation->tag);
 
-    OSM_TAG(relation) = ntags;
+    relation->tag = ntags;
     was_changed = TRUE;
   } else {
     osm_tags_free(ntags);
@@ -643,9 +643,9 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
   }
   osm_members_free(members);
 
-  if(!was_changed && (OSM_FLAGS(relation) & OSM_FLAG_DIRTY)) {
+  if(!was_changed && (relation->flags & OSM_FLAG_DIRTY)) {
     printf("relation " ITEM_ID_FORMAT " has the same members and tags as upstream, discarding diff\n", id);
-    OSM_FLAGS(relation) &= ~OSM_FLAG_DIRTY;
+    relation->flags &= ~OSM_FLAG_DIRTY;
   }
 }
 
@@ -729,7 +729,7 @@ void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) {
   gboolean something_is_hidden = FALSE;
   const way_t *way = osm->way;
   while(!something_is_hidden && way) {
-    if(OSM_FLAGS(way) & OSM_FLAG_HIDDEN)
+    if(way->flags & OSM_FLAG_HIDDEN)
       something_is_hidden = TRUE;
 
     way = way->next;

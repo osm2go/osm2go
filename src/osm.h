@@ -186,16 +186,6 @@ typedef std::vector<way_t *> way_chain_t;
 #define OBJECT_VISIBLE(a)  (OBJECT_BASE(a)->visible)
 #define OBJECT_FLAGS(a)    (OBJECT_BASE(a)->flags)
 
-/* osm base type access macros */
-#define OSM_BASE(a)        ((base_object_t*)(a))
-#define OSM_ID(a)          (OSM_BASE(a)->id)
-#define OSM_VERSION(a)     (OSM_BASE(a)->version)
-#define OSM_USER(a)        (OSM_BASE(a)->user)
-#define OSM_TIME(a)        (OSM_BASE(a)->time)
-#define OSM_TAG(a)         (OSM_BASE(a)->tag)
-#define OSM_VISIBLE(a)     (OSM_BASE(a)->visible)
-#define OSM_FLAGS(a)       (OSM_BASE(a)->flags)
-
 #ifdef __cplusplus
 class relation_t;
 #else

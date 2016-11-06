@@ -41,21 +41,21 @@ struct relation_transfer {
 void relation_transfer::operator()(relation_t* relation)
 {
   printf("way #" ITEM_ID_FORMAT " is part of relation #" ITEM_ID_FORMAT "\n",
-         OSM_ID(src), OSM_ID(relation));
+         src->id, relation->id);
 
   /* make new member of the same relation */
 
   /* walk member chain. save role of way if its being found. */
   std::vector<member_t>::iterator it = relation->find_member_object(object_t(src));
 
-  printf("  adding way #" ITEM_ID_FORMAT " to relation\n", OSM_ID(dst));
+  printf("  adding way #" ITEM_ID_FORMAT " to relation\n", dst->id);
   member_t member;
   member.object = dst;
   if(it != relation->members.end())
     member.role = g_strdup(it->role);
   relation->members.push_back(member);
 
-  OSM_FLAGS(relation) |= OSM_FLAG_DIRTY;
+  relation->flags |= OSM_FLAG_DIRTY;
 }
 
 static void transfer_relations(osm_t *osm, way_t *dst, way_t *src) {
@@ -101,7 +101,7 @@ static gboolean combine_tags(tag_t **dst, tag_t *src) {
 void map_edit_way_add_begin(map_t *map, way_t *way_sel) {
   if(way_sel)
     printf("previously selected way is #" ITEM_ID_FORMAT "\n",
-		     OSM_ID(way_sel));
+		     way_sel->id);
 
   g_assert(!map->action.way);
   map->action.way = osm_way_new();
@@ -139,7 +139,7 @@ void map_edit_way_add_segment(map_t *map, gint x, gint y) {
     /* use the existing node if one was touched */
     node_t *node = map_hl_touchnode_get_node(map);
     if(node) {
-      printf("  re-using node #" ITEM_ID_FORMAT "\n", OSM_ID(node));
+      printf("  re-using node #" ITEM_ID_FORMAT "\n", node->id);
       map_hl_touchnode_clear(map);
 
       g_assert(map->action.way);
@@ -217,11 +217,11 @@ struct map_unref_ways {
 void map_unref_ways::operator()(node_t* node)
 {
   printf("    node #" ITEM_ID_FORMAT " (used by %d)\n",
-         OSM_ID(node), node->ways);
+         node->id, node->ways);
 
   g_assert_cmpint(node->ways, >, 0);
   node->ways--;
-  if(!node->ways && (OSM_ID(node) == ID_ILLEGAL)) {
+  if(!node->ways && (node->id == ID_ILLEGAL)) {
     printf("      -> freeing temp node\n");
     osm_node_free(osm, node);
   }
@@ -286,12 +286,12 @@ struct map_draw_nodes {
 void map_draw_nodes::operator()(node_t* node)
 {
   printf("    node #" ITEM_ID_FORMAT " (used by %d)\n",
-         OSM_ID(node), node->ways);
+         node->id, node->ways);
 
   /* a node may have been a stand-alone node before, so remove its */
   /* visual representation as its now drawn as part of the way */
   /* (if at all) */
-  if(OSM_ID(node) != ID_ILLEGAL)
+  if(node->id != ID_ILLEGAL)
     map_item_chain_destroy(&node->map_item_chain);
 
   map_node_draw(map, node);
@@ -299,7 +299,7 @@ void map_draw_nodes::operator()(node_t* node)
   /* we can be sure that no node gets inserted twice (even if twice in */
   /* the ways chain) because it gets assigned a non-ID_ILLEGAL id when */
   /* being moved to the osm node chain */
-  if(OSM_ID(node) == ID_ILLEGAL)
+  if(node->id == ID_ILLEGAL)
     osm_node_attach(map->appdata->osm, node);
 }
 
@@ -322,7 +322,7 @@ void map_edit_way_add_ok(map_t *map) {
     node_t *nfirst = map->action.way->node_chain.front();
 
     printf("  request to extend way #" ITEM_ID_FORMAT "\n",
-	   OSM_ID(map->action.extending));
+	   map->action.extending->id);
 
     if(map->action.extending->first_node() == nfirst) {
       printf("  need to prepend\n");
@@ -339,7 +339,7 @@ void map_edit_way_add_ok(map_t *map) {
     osm_way_free(osm, map->action.way);
 
     map->action.way = map->action.extending;
-    OSM_FLAGS(map->action.way) |= OSM_FLAG_DIRTY;
+    map->action.way->flags |= OSM_FLAG_DIRTY;
   } else {
     /* now move the way itself into the main data structure */
     osm_way_attach(map->appdata->osm, map->action.way);
@@ -375,12 +375,12 @@ void map_edit_way_add_ok(map_t *map) {
       map->action.way->reverse();
 
     /* and open dialog to resolve tag collisions if necessary */
-    if(combine_tags(&OSM_TAG(map->action.way), OSM_TAG(map->action.ends_on)))
+    if(combine_tags(&map->action.way->tag, map->action.ends_on->tag))
       messagef(GTK_WIDGET(map->appdata->window), _("Way tag conflict"),
 	       _("The resulting way contains some conflicting tags. "
 		 "Please solve these."));
 
-    OSM_TAG(map->action.ends_on) = NULL;
+    map->action.ends_on->tag = NULL;
 
     /* make way member of all relations ends_on already is */
     transfer_relations(map->appdata->osm, map->action.way, map->action.ends_on);
@@ -461,7 +461,7 @@ void map_edit_way_node_add(map_t *map, gint x, gint y) {
       map_node_draw(map, node);
 
       /* and that the way needs to be uploaded */
-      OSM_FLAGS(way) |= OSM_FLAG_DIRTY;
+      way->flags |= OSM_FLAG_DIRTY;
 
       /* put gui into idle state */
       map_action_set(map->appdata, MAP_ACTION_IDLE);
@@ -549,7 +549,7 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
       }
 
       /* ------------  copy all tags ------------- */
-      OSM_TAG(neww) = osm_tags_copy(OSM_TAG(way));
+      neww->tag = osm_tags_copy(way->tag);
 
       /* ---- transfer relation membership from way to new ----- */
       transfer_relations(map->appdata->osm, neww, way);
@@ -576,7 +576,7 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
       map_item_deselect(map->appdata);
 
       /* remove prior version of this way */
-      printf("remove visible version of way #" ITEM_ID_FORMAT "\n", OSM_ID(way));
+      printf("remove visible version of way #" ITEM_ID_FORMAT "\n", way->id);
       map_item_chain_destroy(&way->map_item_chain);
 
       /* swap chains if the old way is to be destroyed due to a lack */
@@ -606,7 +606,7 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
 	map_way_draw(map, way);
 
 	/* remember that the way needs to be uploaded */
-	OSM_FLAGS(way) |= OSM_FLAG_DIRTY;
+	way->flags |= OSM_FLAG_DIRTY;
       }
 
       if(neww != NULL) {
@@ -636,7 +636,7 @@ struct member_merge {
 void member_merge::operator()(relation_t *relation)
 {
   printf("way[1] is part of relation #" ITEM_ID_FORMAT "\n",
-         OSM_ID(relation));
+         relation->id);
 
   /* make way[0] member of the same relation */
 
@@ -655,7 +655,7 @@ void member_merge::operator()(relation_t *relation)
     member.role = g_strdup(mit->role);
     relation->members.push_back(member);
 
-    OSM_FLAGS(relation) |= OSM_FLAG_DIRTY;
+    relation->flags |= OSM_FLAG_DIRTY;
   }
 }
 
@@ -668,7 +668,7 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
   g_assert(map_item->object.type == NODE);
   node_t *node = map_item->object.node;
 
-  printf("released dragged node #" ITEM_ID_FORMAT "\n", OSM_ID(node));
+  printf("released dragged node #" ITEM_ID_FORMAT "\n", node->id);
   printf("  was at %d %d (%f %f)\n",
 	 node->lpos.x, node->lpos.y,
 	 node->pos.lat, node->pos.lon);
@@ -681,7 +681,7 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
   if(touchnode) {
     map_hl_touchnode_clear(map);
 
-    printf("  dropped onto node #" ITEM_ID_FORMAT "\n", OSM_ID(touchnode));
+    printf("  dropped onto node #" ITEM_ID_FORMAT "\n", touchnode->id);
 
     if(yes_no_f(GTK_WIDGET(appdata->window),
 		appdata, MISC_AGAIN_ID_JOIN_NODES, 0,
@@ -702,7 +702,7 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
         node_chain_t &chain = way->node_chain;
         node_chain_t::iterator it = chain.begin();
         while((it = std::find(it, chain.end(), touchnode)) != chain.end()) {
-          printf("  found node in way #" ITEM_ID_FORMAT "\n", OSM_ID(way));
+          printf("  found node in way #" ITEM_ID_FORMAT "\n", way->id);
 
           /* replace by node */
           *it = node;
@@ -711,7 +711,7 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
           node->ways++;
           touchnode->ways--;
 
-          OSM_FLAGS(way) |= OSM_FLAG_DIRTY;
+          way->flags |= OSM_FLAG_DIRTY;
 	}
 	way = way->next;
       }
@@ -724,18 +724,18 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 
         while((it = std::find(it, itEnd, object_t(touchnode))) != itEnd) {
           printf("  found node in relation #" ITEM_ID_FORMAT "\n",
-                 OSM_ID(relation));
+                 relation->id);
 
           /* replace by node */
           it->object.node = node;
 
-          OSM_FLAGS(relation) |= OSM_FLAG_DIRTY;
+          relation->flags |= OSM_FLAG_DIRTY;
 	}
 	relation = relation->next;
       }
 
-      gboolean conflict = combine_tags(&OSM_TAG(node), OSM_TAG(touchnode));
-      OSM_TAG(touchnode) = NULL;
+      gboolean conflict = combine_tags(&node->tag, touchnode->tag);
+      touchnode->tag = NULL;
 
       /* touchnode must not have any references to ways anymore */
       g_assert_cmpint(touchnode->ways, ==, 0);
@@ -764,7 +764,7 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 	  if(ways2join_cnt < 2)
 	    ways2join[ways2join_cnt] = way;
 
-	  printf("  way #" ITEM_ID_FORMAT " ends with this node\n", OSM_ID(way));
+	  printf("  way #" ITEM_ID_FORMAT " ends with this node\n", way->id);
 	  ways2join_cnt++;
 	}
 	way = way->next;
@@ -783,7 +783,7 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 		      "you dropped it on?"))) {
 
 	  printf("  about to join ways #" ITEM_ID_FORMAT " and #"
-	      ITEM_ID_FORMAT "\n", OSM_ID(ways2join[0]), OSM_ID(ways2join[1]));
+	      ITEM_ID_FORMAT "\n", ways2join[0]->id, ways2join[1]->id);
 
 	  /* way[1] gets destroyed and attached to way[0] */
 	  /* so check if way[1] is selected and exchainge ways then */
@@ -825,8 +825,8 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 
 	  /* ---------- transfer tags from way[1] to way[0] ----------- */
 	  gboolean conflict =
-	    combine_tags(&OSM_TAG(ways2join[0]), OSM_TAG(ways2join[1]));
-	  OSM_TAG(ways2join[1]) = NULL;
+	    combine_tags(&ways2join[0]->tag, ways2join[1]->tag);
+	  ways2join[1]->tag = NULL;
 
 	  /* ---- transfer relation membership from way[1] to way[0] ----- */
           const relation_chain_t &rchain =
@@ -841,7 +841,7 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 		     _("The resulting way contains some conflicting tags. "
 		       "Please solve these."));
 
-	  OSM_FLAGS(ways2join[0]) |= OSM_FLAG_DIRTY;
+	  ways2join[0]->flags |= OSM_FLAG_DIRTY;
 	  map_way_delete(appdata, ways2join[1]);
 	}
       }
@@ -885,7 +885,7 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
   while(way) {
     if(way->contains_node(node)) {
       printf("  node is part of way #" ITEM_ID_FORMAT ", redraw!\n",
-	     OSM_ID(way));
+	     way->id);
 
       /* remove prior version of this way */
       map_item_chain_destroy(&way->map_item_chain);
@@ -899,7 +899,7 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
   }
 
   /* and mark the node as dirty */
-  OSM_FLAGS(node) |= OSM_FLAG_DIRTY;
+  node->flags |= OSM_FLAG_DIRTY;
 
   /* update highlight */
   map_highlight_refresh(appdata);
