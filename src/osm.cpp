@@ -407,7 +407,7 @@ void osm_node_free(osm_t *osm, node_t *node) {
 
   osm_tags_free(OSM_TAG(node));
 
-  g_free(node);
+  delete node;
 
   /* also remove node from hash table */
   if(id > 0)
@@ -753,9 +753,9 @@ static void process_base_attributes(base_object_t *obj, xmlTextReaderPtr reader,
 static node_t *process_node(xmlTextReaderPtr reader, osm_t *osm) {
 
   /* allocate a new node structure */
-  node_t *node = g_new0(node_t, 1);
+  node_t *node = new node_t();
 
-  process_base_attributes(&node->base, reader, osm);
+  process_base_attributes(node, reader, osm);
 
   node->pos.lat = xml_reader_attr_float(reader, "lat");
   node->pos.lon = xml_reader_attr_float(reader, "lon");
@@ -1492,7 +1492,7 @@ item_id_t osm_new_relation_id(osm_t *osm) {
 node_t *osm_node_new(osm_t *osm, gint x, gint y) {
   printf("Creating new node\n");
 
-  node_t *node = g_new0(node_t, 1);
+  node_t *node = new node_t();
   OSM_VERSION(node) = 1;
   node->lpos.x = x;
   node->lpos.y = y;
@@ -1511,7 +1511,7 @@ node_t *osm_node_new(osm_t *osm, gint x, gint y) {
 node_t *osm_node_new_pos(osm_t *osm, const pos_t *pos) {
   printf("Creating new node from lat/lon\n");
 
-  node_t *node = g_new0(node_t, 1);
+  node_t *node = new node_t();
   OSM_VERSION(node) = 1;
   node->pos = *pos;
   OSM_VISIBLE(node) = TRUE;
@@ -2342,6 +2342,18 @@ void member_counter::operator()(const member_t &member)
 void relation_t::members_by_type(guint *nodes, guint *ways, guint *relations) const {
   std::for_each(members.begin(), members.end(),
                 member_counter(nodes, ways, relations));
+}
+
+node_t::node_t()
+  : base_object_t()
+  , next(0)
+  , ways(0)
+  , zoom_max(0.0)
+  , icon_buf(0)
+  , map_item_chain(0)
+{
+  memset(&pos, 0, sizeof(pos));
+  memset(&lpos, 0, sizeof(lpos));
 }
 
 // vim:et:ts=8:sw=2:sts=2:ai

@@ -202,7 +202,7 @@ static bool undo_object_save(const object_t &object,
     /* fields ignored in this copy operation: */
     /* ways, icon_buf, map_item_chain, next */
 
-    ob->node = g_new0(node_t, 1);
+    ob->node = new node_t();
     undo_object_copy_base(ob, object);
 
     /* copy all important parts, omitting icon pointers etc. */

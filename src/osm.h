@@ -87,10 +87,12 @@ typedef struct base_object_t {
   int flags:24;
 } base_object_t;
 
-typedef struct node_t {
-  base_object_t base;
+#ifdef __cplusplus
+class node_t : public base_object_t {
+public:
+  node_t();
 
-  struct node_t *next;
+  node_t *next;
 
   pos_t pos;
   lpos_t lpos;
@@ -102,7 +104,10 @@ typedef struct node_t {
 
   /* a link to the visual representation on screen */
   struct map_item_chain_t *map_item_chain;
-} node_t;
+};
+#else
+typedef struct node_t node_t;
+#endif
 
 typedef enum {
   ILLEGAL=0, NODE, WAY, RELATION, NODE_ID, WAY_ID, RELATION_ID

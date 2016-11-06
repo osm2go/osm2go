@@ -349,7 +349,7 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
   case OSM_FLAG_NEW: {
     printf("  Restoring NEW node\n");
 
-    node = g_new0(node_t, 1);
+    node = new node_t();
     OSM_ID(node) = id;
     OSM_VISIBLE(node) = TRUE;
     OSM_FLAGS(node) = OSM_FLAG_NEW;
