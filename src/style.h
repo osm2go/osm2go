@@ -85,6 +85,10 @@ typedef struct style_t {
 
 } style_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 style_t *style_load(appdata_t *appdata);
 void style_free(style_t *style);
 
@@ -93,6 +97,10 @@ void style_select(GtkWidget *parent, appdata_t *appdata);
 #else
 GtkWidget *style_select_widget(appdata_t *appdata);
 void style_change(appdata_t *appdata, const char *name);
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif // STYLE_H

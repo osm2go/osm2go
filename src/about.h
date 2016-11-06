@@ -22,6 +22,14 @@
 
 #include "appdata.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void about_box(appdata_t *appdata);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // ABOUT_H

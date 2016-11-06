@@ -131,6 +131,10 @@ typedef struct map_t {
 
 } map_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 GtkWidget *map_new(appdata_t *appdata);
 map_state_t *map_state_new(void);
 void map_state_free(map_state_t *state);
@@ -190,5 +194,9 @@ void map_detail_change(map_t *map, float detail);
 void map_detail_increase(map_t *map);
 void map_detail_decrease(map_t *map);
 void map_detail_normal(map_t *map);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // MAP_H

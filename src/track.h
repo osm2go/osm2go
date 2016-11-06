@@ -48,6 +48,10 @@ typedef struct track_t {
   track_seg_t *cur_seg;
 } track_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @brief count a point sequence
  * @param point first point
@@ -85,5 +89,9 @@ track_t *track_import(const char *filename);
 void track_menu_set(appdata_t *appdata);
 
 void track_enable_gps(appdata_t *appdata, gboolean enable);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // TRACK_H

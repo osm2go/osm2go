@@ -25,6 +25,10 @@
 #include <glib.h>
 #include <gtk/gtk.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 gboolean net_io_download_file(GtkWidget *parent, settings_t *settings,
 			      char *url, char *filename, const char *title);
 gboolean net_io_download_mem(GtkWidget *parent, settings_t *settings,
@@ -32,5 +36,9 @@ gboolean net_io_download_mem(GtkWidget *parent, settings_t *settings,
 
 #include <curl/curl.h>
 void net_io_set_proxy(CURL *curl, proxy_t *proxy);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // NET_IO_H

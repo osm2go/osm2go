@@ -210,6 +210,10 @@ typedef struct osm_t {
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 osm_t *osm_parse(const char *path, const char *filename, struct icon_t **icons);
 gboolean osm_sanity_check(GtkWidget *parent, const osm_t *osm);
 tag_t *osm_parse_osm_tag(xmlNode* a_node);
@@ -317,6 +321,10 @@ item_id_t osm_object_get_id(const object_t *object);
 void osm_object_set_flags(object_t *map_item, int set, int clr);
 char *osm_object_get_name(const object_t *object);
 gboolean osm_object_is_same(const object_t *obj1, const object_t *obj2);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OSM_H */
 

@@ -25,6 +25,10 @@
 #include <glib.h>
 #include <libxml/tree.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // Ratio conversions
 
 float scaledn_to_zoom(const float scaledn);
@@ -110,6 +114,10 @@ struct style_t;
 void josm_elemstyles_colorize_node(const struct style_t *style, node_t *node);
 void josm_elemstyles_colorize_way(const struct style_t *style, way_t *way);
 void josm_elemstyles_colorize_world(const struct style_t *style, osm_t *osm);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // JOSM_ELEMSTYLES_H
 

@@ -32,6 +32,10 @@
 #define NAN (0.0/0.0)
 #endif /* !NAN */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void gps_init(appdata_t *appdata);
 void gps_release(appdata_t *appdata);
 gboolean gps_get_pos(appdata_t *appdata, pos_t *pos, float *alt);
@@ -46,5 +50,9 @@ void gps_enable(appdata_t *appdata, gboolean enable);
  * Does nothing if a handler already exists.
  */
 gboolean gps_register_callback(appdata_t *appdata, GtkFunction cb);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // GPS_H

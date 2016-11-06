@@ -24,6 +24,14 @@
 
 #include <gtk/gtk.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void scale_popup(GtkWidget *button, appdata_t *appdata);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // SCALE_POPUP_H

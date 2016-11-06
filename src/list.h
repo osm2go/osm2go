@@ -57,6 +57,10 @@ typedef enum {
 #define LIST_HILDON_WITHOUT_HEADERS TRUE
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 GtkWidget *list_new(gboolean show_headers);
 
 GtkWidget *list_get_view(GtkWidget *list);
@@ -79,5 +83,9 @@ gboolean list_get_selected(GtkWidget *list, GtkTreeModel **model,
 void list_override_changed_event(GtkWidget *list, void(*handler)(GtkTreeSelection*,gpointer), gpointer data);
 void list_scroll(GtkWidget *list, GtkTreeIter *iter);
 void list_view_scroll(GtkTreeView *view, GtkTreeSelection *sel, GtkTreeIter* iter);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // LIST_H

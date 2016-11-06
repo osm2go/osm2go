@@ -24,9 +24,17 @@
 
 typedef struct icon_t icon_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 GdkPixbuf *icon_load(icon_t **icon, const char *name);
 void icon_free(icon_t **icons, GdkPixbuf *buf);
 void icon_free_all(icon_t **icons);
 GtkWidget *icon_widget_load(icon_t **icon, const char *name);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // ICON_H

@@ -31,7 +31,15 @@ typedef struct {
   gboolean valid;
 } dbus_mm_pos_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void dbus_register(dbus_mm_pos_t *appdata);
 gboolean dbus_mm_set_position(osso_context_t *osso_context);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // HDR_DBUS_H

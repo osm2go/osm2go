@@ -31,6 +31,14 @@ typedef struct {
   pos_t *min, *max;    /* positions to work on */
 } area_edit_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 gboolean area_edit(area_edit_t *area);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // AREA_EDIT_H

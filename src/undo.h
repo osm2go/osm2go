@@ -39,6 +39,10 @@ typedef struct {
   undo_state_t *open;    /* pointer to open state (NULL if none) */
 } undo_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct appdata_t;
 void undo_open_new_state(struct appdata_t *ad, undo_type_t typ, object_t *obj);
 void undo_append_object(struct appdata_t *ad, undo_type_t type, const object_t *obj);
@@ -48,5 +52,9 @@ void undo_close_state(struct appdata_t *appdata);
 
 void undo_free(osm_t *osm, undo_t *undo);
 void undo(struct appdata_t *appdata);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // UNDO_H

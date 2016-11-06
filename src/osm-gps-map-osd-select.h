@@ -25,7 +25,15 @@
 #define OSD_SELECT   OSD_CUSTOM
 #define OSD_DRAG     OSD_CUSTOM+1
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void osm_gps_map_osd_select_init(OsmGpsMap *map);
 gboolean osm_gps_map_osd_get_state(OsmGpsMap *map);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -49,11 +49,19 @@ typedef struct project_t {
   gboolean data_dirty;     /* needs to download new data */
 } project_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 gboolean project_exists(settings_t *settings, const char *name, gchar **filename);
 gboolean project_save(GtkWidget *parent, project_t *project);
 gboolean project_load(appdata_t *appdata, const char *name);
 gboolean project_check_demo(GtkWidget *parent, project_t *project);
 
 void project_free(project_t *project);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // PROJECT_H

@@ -21,6 +21,11 @@
  * You should have received a copy of the GNU General Public License along
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#pragma once
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 float
 deg2rad(float deg);
@@ -43,3 +48,7 @@ pixel2lon(  float zoom,
 float
 pixel2lat(  float zoom,
             int pixel_y);
+
+#ifdef __cplusplus
+}
+#endif

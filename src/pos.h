@@ -59,6 +59,10 @@ typedef struct lpos_t {
   gint x, y;
 } lpos_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct bounds_t;
 void pos2lpos(const struct bounds_t *bounds, const pos_t *pos, lpos_t *lpos);
 void pos2lpos_center(const pos_t *pos, lpos_t *lpos);
@@ -90,5 +94,9 @@ pos_float_t pos_parse_dist(char *str, gboolean is_mil);
 void pos_dist_str(char *str, int len, pos_float_t dist, gboolean is_mil);
 void pos_dist_entry_set(GtkWidget *entry, pos_float_t dist, gboolean is_mil);
 pos_float_t pos_dist_get(GtkWidget *widget, gboolean is_mil);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // POS_H

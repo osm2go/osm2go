@@ -50,6 +50,10 @@ typedef struct iconbar_t {
   GtkWidget *ok;
 } iconbar_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 GtkWidget *iconbar_new(appdata_t *appdata);
 void icon_bar_map_item_selected(appdata_t *appdata, map_item_t *map_item,
 				gboolean selected);
@@ -59,6 +63,10 @@ void iconbar_free(iconbar_t *iconbar);
 
 #ifdef FINGER_UI
 void iconbar_register_buttons(appdata_t *appdata, GtkWidget *ok, GtkWidget *cancel);
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif // ICONBAR_H

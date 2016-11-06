@@ -133,6 +133,10 @@ typedef struct canvas_item_info_t {
 
 typedef enum { CANVAS_UNIT_METER = 0, CANVAS_UNIT_PIXEL } canvas_unit_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /***** creating/destroying the canvas ******/
 canvas_t *canvas_new(void);
 GtkWidget *canvas_get_widget(canvas_t *canvas);
@@ -198,6 +202,10 @@ void canvas_item_info_attach_poly(canvas_t *canvas, canvas_group_t group,
 		  gboolean is_polygon, canvas_points_t *points, gint width);
 canvas_item_t *canvas_item_info_get_at(canvas_t *canvas, gint x, gint y);
 void canvas_item_info_push(canvas_t *canvas, canvas_item_t *item);
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif // CANVAS_H

@@ -77,8 +77,16 @@ typedef struct settings_t {
 
 } settings_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 settings_t *settings_load(void);
 void settings_save(settings_t *settings);
 void settings_free(settings_t *settings);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // SETTINGS_H

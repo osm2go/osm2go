@@ -28,6 +28,10 @@ typedef struct wms_server_t {
   struct wms_server_t *next;
 } wms_server_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void wms_import(appdata_t *appdata);
 void wms_load(appdata_t *appdata);
 void wms_remove(appdata_t *appdata);
@@ -35,5 +39,9 @@ wms_server_t *wms_server_get_default(void);
 void wms_servers_free(wms_server_t *wms_server);
 void wms_server_free(wms_server_t *wms_server);
 void wms_remove_file(project_t *project);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // WMS_H

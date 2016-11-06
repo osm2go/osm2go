@@ -50,6 +50,10 @@ typedef struct file_chain_t {
 #define NAN (0.0/0.0)
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct pos_t;
 
 double xml_get_prop_float(xmlNode *node, const char *prop);
@@ -114,5 +118,9 @@ GType combo_box_entry_type(void);
 void open_url(struct appdata_t *appdata, const char *url);
 
 void misc_init(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // MISC_H

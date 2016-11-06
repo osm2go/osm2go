@@ -38,6 +38,10 @@ typedef struct statusbar_t {
 #endif
 } statusbar_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void statusbar_set(appdata_t *appdata, const char *msg, gboolean highlight);
 GtkWidget *statusbar_new(appdata_t *appdata);
 void statusbar_highlight(appdata_t *appdata, gboolean highlight);
@@ -45,6 +49,10 @@ void statusbar_free(statusbar_t *statusbar);
 
 #ifndef USE_HILDON
 void statusbar_brief(appdata_t *appdata, const char *msg, gint timeout);
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif // STATUSBAR_H

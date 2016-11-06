@@ -148,6 +148,14 @@ typedef struct appdata_t {
 
 } appdata_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void main_ui_enable(appdata_t *appdata);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // APPDATA_H
