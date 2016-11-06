@@ -59,7 +59,7 @@ static const struct http_message_s {
   { 0,   NULL }
 };
 
-static char *osm_http_message(int id) {
+static const char *osm_http_message(int id) {
   const struct http_message_s *msg = http_messages;
 
   while(msg->id) {
