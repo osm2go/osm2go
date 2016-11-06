@@ -26,6 +26,7 @@
 
 #include <curl/curl.h>
 #include <curl/easy.h> /* new for v7 */
+#include <map>
 #include <unistd.h>
 
 #ifdef FREMANTLE
@@ -37,35 +38,34 @@
 
 #define NO_EXPECT
 
-static const struct http_message_s {
-  int id;
-  const char *msg;
-} http_messages [] = {
-  { 200, "Ok" },
-  { 203, "No Content" },
-  { 301, "Moved Permenently" },
-  { 302, "Moved Temporarily" },
-  { 400, "Bad Request" },
-  { 401, "Unauthorized" },
-  { 403, "Forbidden" },
-  { 404, "Not Found" },
-  { 405, "Method Not Allowed" },
-  { 409, "Conflict" },
-  { 410, "Gone" },
-  { 412, "Precondition Failed" },
-  { 417, "(Expect rejected)" },
-  { 500, "Internal Server Error" },
-  { 503, "Service Unavailable" },
-  { 0,   NULL }
-};
+static std::map<int, const char *> http_msg_init() {
+  static std::map<int, const char *> http_messages;
+
+  http_messages[200] = "Ok";
+  http_messages[203] = "No Content";
+  http_messages[301] = "Moved Permenently";
+  http_messages[302] = "Moved Temporarily";
+  http_messages[400] = "Bad Request";
+  http_messages[401] = "Unauthorized";
+  http_messages[403] = "Forbidden";
+  http_messages[404] = "Not Found";
+  http_messages[405] = "Method Not Allowed";
+  http_messages[409] = "Conflict";
+  http_messages[410] = "Gone";
+  http_messages[412] = "Precondition Failed";
+  http_messages[417] = "(Expect rejected)";
+  http_messages[500] = "Internal Server Error";
+  http_messages[503] = "Service Unavailable";
+
+  return http_messages;
+}
 
 static const char *osm_http_message(int id) {
-  const struct http_message_s *msg = http_messages;
+  static const std::map<int, const char *> http_messages = http_msg_init();
 
-  while(msg->id) {
-    if(msg->id == id) return _(msg->msg);
-    msg++;
-  }
+  const std::map<int, const char *>::const_iterator it = http_messages.find(id);
+  if(it != http_messages.end())
+    return it->second;
 
   return NULL;
 }
