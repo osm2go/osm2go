@@ -443,7 +443,7 @@ static gboolean osm_delete_item(struct log_s *log, char *xml_str,
 
 typedef struct {
   struct {
-    int total, new, dirty, deleted;
+    int total, added, dirty, deleted;
   } ways, nodes, relations;
 } osm_dirty_t;
 
@@ -766,39 +766,39 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   while(node) {
     dirty.nodes.total++;
     if(OSM_FLAGS(node) & OSM_FLAG_DELETED)     dirty.nodes.deleted++;
-    else if(OSM_FLAGS(node) & OSM_FLAG_NEW)    dirty.nodes.new++;
+    else if(OSM_FLAGS(node) & OSM_FLAG_NEW)    dirty.nodes.added++;
     else if(OSM_FLAGS(node) & OSM_FLAG_DIRTY)  dirty.nodes.dirty++;
 
     node = node->next;
   }
   printf("nodes:     new %2d, dirty %2d, deleted %2d\n",
-	 dirty.nodes.new, dirty.nodes.dirty, dirty.nodes.deleted);
+	 dirty.nodes.added, dirty.nodes.dirty, dirty.nodes.deleted);
 
   /* count ways */
   const way_t *way = osm->way;
   while(way) {
     dirty.ways.total++;
     if(OSM_FLAGS(way) & OSM_FLAG_DELETED)      dirty.ways.deleted++;
-    else if(OSM_FLAGS(way) & OSM_FLAG_NEW)     dirty.ways.new++;
+    else if(OSM_FLAGS(way) & OSM_FLAG_NEW)     dirty.ways.added++;
     else if(OSM_FLAGS(way) & OSM_FLAG_DIRTY)   dirty.ways.dirty++;
 
     way = way->next;
   }
   printf("ways:      new %2d, dirty %2d, deleted %2d\n",
-	 dirty.ways.new, dirty.ways.dirty, dirty.ways.deleted);
+	 dirty.ways.added, dirty.ways.dirty, dirty.ways.deleted);
 
   /* count relations */
   const relation_t *relation = osm->relation;
   while(relation) {
     dirty.relations.total++;
     if(OSM_FLAGS(relation) & OSM_FLAG_DELETED)      dirty.relations.deleted++;
-    else if(OSM_FLAGS(relation) & OSM_FLAG_NEW)     dirty.relations.new++;
+    else if(OSM_FLAGS(relation) & OSM_FLAG_NEW)     dirty.relations.added++;
     else if(OSM_FLAGS(relation) & OSM_FLAG_DIRTY)   dirty.relations.dirty++;
 
     relation = relation->next;
   }
   printf("relations: new %2d, dirty %2d, deleted %2d\n",
-	 dirty.relations.new, dirty.relations.dirty, dirty.relations.deleted);
+	 dirty.relations.added, dirty.relations.dirty, dirty.relations.deleted);
 
 
   GtkWidget *dialog =
@@ -817,19 +817,19 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
 
   table_attach_label_l(table, _("Nodes:"),         0, 1, 1, 2);
   table_attach_int(table, dirty.nodes.total,       1, 2, 1, 2);
-  table_attach_int(table, dirty.nodes.new,         2, 3, 1, 2);
+  table_attach_int(table, dirty.nodes.added,       2, 3, 1, 2);
   table_attach_int(table, dirty.nodes.dirty,       3, 4, 1, 2);
   table_attach_int(table, dirty.nodes.deleted,     4, 5, 1, 2);
 
   table_attach_label_l(table, _("Ways:"),          0, 1, 2, 3);
   table_attach_int(table, dirty.ways.total,        1, 2, 2, 3);
-  table_attach_int(table, dirty.ways.new,          2, 3, 2, 3);
+  table_attach_int(table, dirty.ways.added,        2, 3, 2, 3);
   table_attach_int(table, dirty.ways.dirty,        3, 4, 2, 3);
   table_attach_int(table, dirty.ways.deleted,      4, 5, 2, 3);
 
   table_attach_label_l(table, _("Relations:"),     0, 1, 3, 4);
   table_attach_int(table, dirty.relations.total,   1, 2, 3, 4);
-  table_attach_int(table, dirty.relations.new,     2, 3, 3, 4);
+  table_attach_int(table, dirty.relations.added,   2, 3, 3, 4);
   table_attach_int(table, dirty.relations.dirty,   3, 4, 3, 4);
   table_attach_int(table, dirty.relations.deleted, 4, 5, 3, 4);
 
