@@ -90,10 +90,6 @@ static void undo_object_free(osm_t *osm, object_t *obj) {
     char *msg = osm_object_string(obj);
     printf("   free object %s\n", msg);
     g_free(msg);
-  } else
-    printf("   free object %s\n", osm_object_type_string(obj));
-
-  if(obj->ptr) {
 
     switch(obj->type) {
     case NODE:
@@ -110,7 +106,8 @@ static void undo_object_free(osm_t *osm, object_t *obj) {
       g_assert_not_reached();
       break;
     }
-  }
+  } else
+    printf("   free object %s\n", osm_object_type_string(obj));
 
   g_free(obj);
 }
