@@ -100,6 +100,10 @@ static void undo_object_free(osm_t *osm, object_t *obj) {
       osm_way_free(osm, obj->way);
       break;
 
+    case RELATION:
+      osm_relation_free(obj->relation);
+      break;
+
     default:
       printf("ERROR: unsupported object %s\n",
 	     osm_object_type_string(obj));
