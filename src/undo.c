@@ -45,7 +45,7 @@
 
 typedef struct undo_op_s {
   undo_type_t type;   /* the type of this particular database/map operation */
-  object_t *object;
+  object_t object;
   item_id_chain_t *id_chain;       /* ref id list, e.g. for nodes of way */
   struct undo_op_s *next;
 } undo_op_t;
@@ -108,13 +108,11 @@ static void undo_object_free(osm_t *osm, object_t *obj) {
     }
   } else
     printf("   free object %s\n", osm_object_type_string(obj));
-
-  g_free(obj);
 }
 
 static void undo_op_free(osm_t *osm, undo_op_t *op) {
   printf("  free op: %s\n", undo_type_string(op->type));
-  if(op->object)   undo_object_free(osm, op->object);
+  undo_object_free(osm, &op->object);
   if(op->id_chain) undo_id_chain_free(op->id_chain);
   g_free(op);
 }
@@ -189,7 +187,7 @@ static void undo_object_copy_base(object_t *dst, const object_t *src) {
 static gboolean undo_object_save(const object_t *object,
                                  undo_op_t *op) {
   item_id_chain_t **id_chain = &op->id_chain;
-  object_t *ob = op->object = g_new0(object_t, 1);
+  object_t *ob = &op->object;
   ob->type = object->type;
 
   switch(object->type) {
@@ -252,8 +250,6 @@ static gboolean undo_object_save(const object_t *object,
     }
 
   default:
-    g_free(ob);
-    op->object = NULL;
     printf("unsupported object of type %s\n",
 	   osm_object_type_string(object));
 
@@ -298,7 +294,7 @@ void undo_append_object(appdata_t *appdata, undo_type_t type,
   /* check if this object already is in operaton chain */
   undo_op_t *op = state->op;
   while(op) {
-    if(osm_object_is_same(op->object, object)) {
+    if(osm_object_is_same(&op->object, object)) {
       /* this must be the same operation!! */
       g_assert(op->type == type);
 
@@ -443,7 +439,7 @@ static void undo_operation(appdata_t *appdata, undo_op_t *op) {
 
   switch(op->type) {
   case UNDO_DELETE:
-    undo_operation_object_restore(appdata, op->object, &(op->id_chain));
+    undo_operation_object_restore(appdata, &op->object, &op->id_chain);
     break;
 
   default:
