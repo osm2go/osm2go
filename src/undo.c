@@ -189,14 +189,14 @@ static void undo_object_copy_base(object_t *dst, const object_t *src) {
 }
 
 /* create a local copy of the entire object */
-static object_t *undo_object_save(const object_t *object,
-				  item_id_chain_t **id_chain) {
+static gboolean undo_object_save(const object_t *object,
+                                 undo_op_t *op) {
+  item_id_chain_t **id_chain = &op->id_chain;
+  object_t *ob = op->object = g_new0(object_t, 1);
+  ob->type = object->type;
 
   switch(object->type) {
-  case NODE: {
-    object_t *ob = g_new0(object_t, 1);
-    ob->type = object->type;
-
+  case NODE:
     /* fields ignored in this copy operation: */
     /* ways, icon_buf, map_item_chain, next */
 
@@ -208,13 +208,9 @@ static object_t *undo_object_save(const object_t *object,
     ob->node->pos = object->node->pos;
     ob->node->zoom_max = object->node->zoom_max;
 
-    return ob;
-    } break;
+    return TRUE;
 
   case WAY: {
-    object_t *ob = g_new0(object_t, 1);
-    ob->type = object->type;
-
     /* fields ignored in this copy operation: */
     /* next (XXX: incomplete) */
 
@@ -234,13 +230,10 @@ static object_t *undo_object_save(const object_t *object,
       node_chain = node_chain->next;
     }
 
-    return ob;
-    } break;
+    return TRUE;
+    }
 
   case RELATION: {
-    object_t *ob = g_new0(object_t, 1);
-    ob->type = object->type;
-
     /* fields ignored in this copy operation: */
     /* next */
 
@@ -258,17 +251,17 @@ static object_t *undo_object_save(const object_t *object,
       member = member->next;
     }
 
-    return ob;
-    } break;
+    return TRUE;
+    }
 
   default:
+    g_free(ob);
+    op->object = NULL;
     printf("unsupported object of type %s\n",
 	   osm_object_type_string(object));
 
-    break;
+    return FALSE;
   }
-
-  return NULL;
 }
 
 static void
@@ -325,11 +318,14 @@ void undo_append_object(appdata_t *appdata, undo_type_t type,
   /* create new operation for main object */
   op = g_new0(undo_op_t, 1);
   op->type = type;
-  op->object = undo_object_save(object, &(op->id_chain));
-
-  /* prepend operation to chain, so that the undo works in reverse order */
-  op->next = state->op;
-  state->op = op;
+  if(undo_object_save(object, op)) {
+    /* prepend operation to chain, so that the undo works in reverse order */
+    op->next = state->op;
+    state->op = op;
+  } else {
+    g_free(op);
+    return;
+  }
 
   /* if the deleted object is a way, then check if this affects */
   /* a node */
