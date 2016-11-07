@@ -64,7 +64,7 @@ struct undo_state_t {
   undo_type_t type;   /* what the overall operation was */
   char *name;         /* the name of the "parent" object */
 
-  std::vector<undo_op_t *> ops;
+  std::vector<undo_op_t> ops;
 
   struct undo_state_t *next;
 };
@@ -143,10 +143,9 @@ void undo_op_t::free_data(osm_t *osm) {
 static void undo_state_free(osm_t *osm, undo_state_t *state) {
   printf(" free state: %s\n", undo_type_string(state->type));
 
-  const std::vector<undo_op_t *>::iterator itEnd = state->ops.end();
-  for(std::vector<undo_op_t *>::iterator it = state->ops.begin(); it != itEnd; it++) {
-    (*it)->free_data(osm);
-    delete *it;
+  const std::vector<undo_op_t>::iterator itEnd = state->ops.end();
+  for(std::vector<undo_op_t>::iterator it = state->ops.begin(); it != itEnd; it++) {
+    it->free_data(osm);
   }
 
   delete state;
@@ -205,8 +204,8 @@ static void undo_object_copy_base(object_t *dst, const object_t &src) {
 
 /* create a local copy of the entire object */
 static bool undo_object_save(const object_t &object,
-                                 undo_op_t *op) {
-  object_t *ob = &op->object;
+                             undo_op_t &op) {
+  object_t *ob = &op.object;
   ob->type = object.type;
 
   switch(object.type) {
@@ -236,7 +235,7 @@ static bool undo_object_save(const object_t &object,
     const node_chain_t &node_chain = object.way->node_chain;
     const node_chain_t::const_iterator itEnd = node_chain.end();
     for(node_chain_t::const_iterator it = node_chain.begin(); it != itEnd; it++)
-      op->id_chain.push_back(item_id_chain_t(NODE, (*it)->id));
+      op.id_chain.push_back(item_id_chain_t(NODE, (*it)->id));
 
     return true;
     }
@@ -253,7 +252,7 @@ static bool undo_object_save(const object_t &object,
     for(std::vector<member_t>::const_iterator member = object.relation->members.begin();
         member != mitEnd; member++) {
       item_id_chain_t id(member->object.type, member->object.get_id());
-      op->id_chain.push_back(id);
+      op.id_chain.push_back(id);
     }
 
     return true;
@@ -299,13 +298,13 @@ void undo_append_object(appdata_t *appdata, undo_type_t type,
   /* operation on the database/map so only one undo_op is saved */
 
   /* check if this object already is in operaton chain */
-  const std::vector<undo_op_t *>::iterator itEnd = state->ops.end();
-  for(std::vector<undo_op_t *>::iterator it = state->ops.begin(); it != itEnd; it++) {
-    if(osm_object_is_same(&((*it)->object), object)) {
+  const std::vector<undo_op_t>::iterator itEnd = state->ops.end();
+  for(std::vector<undo_op_t>::iterator it = state->ops.begin(); it != itEnd; it++) {
+    if(osm_object_is_same(&it->object, object)) {
       /* this must be the same operation!! */
-      g_assert((*it)->type == type);
+      g_assert(it->type == type);
 
-      printf("UNDO: object %s already in undo_state: ignoring\n",
+      printf("UNDO: object %s already in undo_stobjectate: ignoring\n",
              object.object_string());
       return;
     }
@@ -315,11 +314,10 @@ void undo_append_object(appdata_t *appdata, undo_type_t type,
 	 undo_type_string(type), object.object_string());
 
   /* create new operation for main object */
-  undo_op_t *op = new undo_op_t(type);
+  undo_op_t op(type);
   if(undo_object_save(object, op)) {
     state->ops.push_back(op);
   } else {
-    delete op;
     return;
   }
 
@@ -428,12 +426,12 @@ static void undo_operation_object_restore(appdata_t *appdata, object_t &obj,
 }
 
 /* undo a single operation */
-static void undo_operation(appdata_t *appdata, undo_op_t *op) {
-  printf("UNDO operation: %s\n", undo_type_string(op->type));
+static void undo_operation(appdata_t *appdata, undo_op_t &op) {
+  printf("UNDO operation: %s\n", undo_type_string(op.type));
 
-  switch(op->type) {
+  switch(op.type) {
   case UNDO_DELETE:
-    undo_operation_object_restore(appdata, op->object, op->id_chain);
+    undo_operation_object_restore(appdata, op.object, op.id_chain);
     break;
 
   default:
@@ -466,8 +464,8 @@ void undo(appdata_t *appdata) {
   g_free(msg);
 
   /* run the operations in reverse order */
-  const std::vector<undo_op_t *>::reverse_iterator itEnd = state->ops.rend();
-  for(std::vector<undo_op_t *>::reverse_iterator it = state->ops.rbegin(); it != itEnd; it++) {
+  const std::vector<undo_op_t>::reverse_iterator itEnd = state->ops.rend();
+  for(std::vector<undo_op_t>::reverse_iterator it = state->ops.rbegin(); it != itEnd; it++) {
     undo_operation(appdata, *it);
   }
 
