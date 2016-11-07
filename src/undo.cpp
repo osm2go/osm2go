@@ -53,22 +53,38 @@ public:
   undo_type_t type;   /* the type of this particular database/map operation */
   object_t object;
   std::vector<item_id_chain_t> id_chain;       /* ref id list, e.g. for nodes of way */
-  undo_op_t *next;
+
+  void free_data(osm_t *osm);
 };
 
 struct undo_state_t {
+  undo_state_t();
+  ~undo_state_t();
+
   undo_type_t type;   /* what the overall operation was */
   char *name;         /* the name of the "parent" object */
-  undo_op_t *op;
+
+  std::vector<undo_op_t *> ops;
 
   struct undo_state_t *next;
 };
 
 undo_op_t::undo_op_t(undo_type_t t)
   : type(t)
-  , next(0)
 {
   memset(&object, 0, sizeof(object));
+}
+
+undo_state_t::undo_state_t()
+  : type(UNDO_END)
+  , name(0)
+  , next(0)
+{
+}
+
+undo_state_t::~undo_state_t()
+{
+  g_free(name);
 }
 
 /* return plain text of type */
@@ -119,25 +135,21 @@ static void undo_object_free(osm_t *osm, object_t *obj) {
     printf("   free object %s\n", obj->type_string());
 }
 
-static void undo_op_free(osm_t *osm, undo_op_t *op) {
-  printf("  free op: %s\n", undo_type_string(op->type));
-  undo_object_free(osm, &op->object);
-  delete op;
+void undo_op_t::free_data(osm_t *osm) {
+  printf("  free op: %s\n", undo_type_string(type));
+  undo_object_free(osm, &object);
 }
 
 static void undo_state_free(osm_t *osm, undo_state_t *state) {
   printf(" free state: %s\n", undo_type_string(state->type));
 
-  g_free(state->name);
-
-  undo_op_t *op = state->op;
-  while(op) {
-    undo_op_t *next = op->next;
-    undo_op_free(osm, op);
-    op = next;
+  const std::vector<undo_op_t *>::iterator itEnd = state->ops.end();
+  for(std::vector<undo_op_t *>::iterator it = state->ops.begin(); it != itEnd; it++) {
+    (*it)->free_data(osm);
+    delete *it;
   }
 
-  g_free(state);
+  delete state;
 }
 
 /* free all undo states, thus forgetting the entire history */
@@ -166,7 +178,7 @@ static undo_state_t *undo_append_state(appdata_t *appdata) {
   }
 
   /* append new entry to chain */
-  new_state = *undo_stateP = g_new0(undo_state_t, 1);
+  new_state = *undo_stateP = new undo_state_t();
 
   /* delete first entry if the chain is too long */
   if(undo_chain_length >= UNDO_QUEUE_LEN) {
@@ -287,28 +299,25 @@ void undo_append_object(appdata_t *appdata, undo_type_t type,
   /* operation on the database/map so only one undo_op is saved */
 
   /* check if this object already is in operaton chain */
-  undo_op_t *op = state->op;
-  while(op) {
-    if(osm_object_is_same(&op->object, object)) {
+  const std::vector<undo_op_t *>::iterator itEnd = state->ops.end();
+  for(std::vector<undo_op_t *>::iterator it = state->ops.begin(); it != itEnd; it++) {
+    if(osm_object_is_same(&((*it)->object), object)) {
       /* this must be the same operation!! */
-      g_assert(op->type == type);
+      g_assert((*it)->type == type);
 
       printf("UNDO: object %s already in undo_state: ignoring\n",
              object.object_string());
       return;
     }
-    op = op->next;
   }
 
   printf("UNDO: saving \"%s\" operation for object %s\n",
 	 undo_type_string(type), object.object_string());
 
   /* create new operation for main object */
-  op = new undo_op_t(type);
+  undo_op_t *op = new undo_op_t(type);
   if(undo_object_save(object, op)) {
-    /* prepend operation to chain, so that the undo works in reverse order */
-    op->next = state->op;
-    state->op = op;
+    state->ops.push_back(op);
   } else {
     delete op;
     return;
@@ -456,13 +465,10 @@ void undo(appdata_t *appdata) {
   banner_show_info(appdata, msg);
   g_free(msg);
 
-  /* since the operations list was built by prepending new */
-  /* entries, just going through the list will run the operations */
-  /* in reverse order. That's exactly what we want! */
-  undo_op_t *op = state->op;
-  while(op) {
-    undo_operation(appdata, op);
-    op = op->next;
+  /* run the operations in reverse order */
+  const std::vector<undo_op_t *>::reverse_iterator itEnd = state->ops.rend();
+  for(std::vector<undo_op_t *>::reverse_iterator it = state->ops.rbegin(); it != itEnd; it++) {
+    undo_operation(appdata, *it);
   }
 
   /* remove this entry from chain */
