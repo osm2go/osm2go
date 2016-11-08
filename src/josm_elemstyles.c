@@ -42,6 +42,22 @@ typedef struct elemstyle_condition_s {
     struct elemstyle_condition_s *next;
 } elemstyle_condition_t;
 
+struct elemstyle_s {
+  struct elemstyle_condition_s *condition;
+
+  elemstyle_type_t type;
+
+  union {
+    elemstyle_line_mod_t *line_mod;
+    elemstyle_line_t *line;
+    elemstyle_area_t *area;
+  };
+
+  elemstyle_icon_t *icon;
+
+  elemstyle_t *next;
+};
+
 // ratio conversions
 
 // Scaling constants. Our "zoom" is a screenpx:canvasunit ratio, and the figure

@@ -99,21 +99,7 @@ typedef struct {
   float zoom_max;   // XXX probably belongs in elemstyle_s
 } elemstyle_icon_t;
 
-typedef struct elemstyle_s {
-  struct elemstyle_condition_s *condition;
-
-  elemstyle_type_t type;
-
-  union {
-    elemstyle_line_mod_t *line_mod;
-    elemstyle_line_t *line;
-    elemstyle_area_t *area;
-  };
-
-  elemstyle_icon_t *icon;
-
-  struct elemstyle_s *next;
-} elemstyle_t;
+typedef struct elemstyle_s elemstyle_t;
 
 elemstyle_t *josm_elemstyles_load(const char *name);
 void josm_elemstyles_free(elemstyle_t *elemstyles);
