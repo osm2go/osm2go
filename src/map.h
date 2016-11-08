@@ -23,6 +23,7 @@
 #include "appdata.h"
 #include "canvas.h"
 #include "osm.h"
+#include "style.h"
 
 #define MAP_LAYER_ALL (0xffff)
 #define MAP_LAYER_OBJECTS_ONLY ((1<<CANVAS_GROUP_POLYGONS) | (1<<CANVAS_GROUP_WAYS_HL) | (1<<CANVAS_GROUP_WAYS_OL) | (1<<CANVAS_GROUP_WAYS) | (1<<CANVAS_GROUP_WAYS_INT) | (1<<CANVAS_GROUP_NODES_HL) | (1<<CANVAS_GROUP_NODES_IHL) | (1<<CANVAS_GROUP_NODES) | (1<<CANVAS_GROUP_WAYS_DIR))
@@ -126,7 +127,7 @@ typedef struct map_s {
                                 // (may be part of a selected way)
   } pen_down;
 
-  struct style_s *style;
+  style_t *style;
 
 } map_t;
 
