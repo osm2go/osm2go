@@ -408,10 +408,10 @@ void josm_elemstyles_colorize_node(const style_t *style, node_t *node) {
   node->zoom_max = style->node.zoom_max;
   elemstyle_t *elemstyle = style->elemstyles;
 
-  gboolean somematch = FALSE;
+  bool somematch = false;
   while(elemstyle) {
     // Rule without conditions matches everything (should it?)
-    gboolean match = elemstyle->condition ? TRUE : FALSE;
+    bool match = (elemstyle->condition != 0);
 
     // For rule with conditions, if any condition mismatches->rule mismatches
     elemstyle_condition_t *cond;
@@ -419,14 +419,14 @@ void josm_elemstyles_colorize_node(const style_t *style, node_t *node) {
       if(cond->key) {
         const char *value = osm_node_get_value(node, (char*)cond->key);
         if(!value || (cond->value && strcasecmp(value, (char*)cond->value) != 0))
-          match = FALSE;
+          match = false;
       } else if(cond->value) {
         if(!osm_node_has_value(node, (char*)cond->value))
-          match = FALSE;
+          match = false;
       }
     }
 
-    somematch = match ? TRUE : somematch;
+    somematch |= match;
 
     if(match && elemstyle->icon) {
       char *name = g_strjoin("/", "styles", style->icon.path_prefix,
@@ -487,24 +487,24 @@ void josm_elemstyles_colorize_way(const style_t *style, way_t *way) {
   /* during the elemstyle search a line_mod may be found. save it here */
   elemstyle_line_mod_t *line_mod = NULL;
 
-  gboolean way_processed = FALSE;
+  bool way_processed = false;
   bool way_is_closed = way->is_closed();
 
   while(elemstyle) {
     //  printf("a %s %s\n", elemstyle->condition.key,
     //                        elemstyle->condition.value);
 
-    gboolean match = elemstyle->condition ? TRUE : FALSE;
+    bool match = (elemstyle->condition != 0);
 
     elemstyle_condition_t *cond;
     for (cond = elemstyle->condition; cond && match; cond = cond->next) {
       if(cond->key) {
         const char *value = osm_way_get_value(way, (char*)cond->key);
         if(!value || (cond->value && strcasecmp(value, (char*)cond->value) != 0))
-          match = FALSE;
+          match = false;
       } else if(cond->value) {
         if(!osm_way_has_value(way, (char*)cond->value))
-          match = FALSE;
+          match = false;
       }
     }
 
@@ -533,7 +533,7 @@ void josm_elemstyles_colorize_way(const style_t *style, way_t *way) {
 	  }
 	  way->draw.dashed = elemstyle->line->dashed;
 	  way->draw.dash_length = elemstyle->line->dash_length;
-	  way_processed = TRUE;
+	  way_processed = true;
 	}
 	break;
 
@@ -563,7 +563,7 @@ void josm_elemstyles_colorize_way(const style_t *style, way_t *way) {
 	  else {
 	    way->draw.zoom_max = style->area.zoom_max;
 	  }
-	  way_processed = TRUE;
+	  way_processed = true;
 	}
 	break;
       }
