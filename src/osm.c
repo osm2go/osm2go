@@ -2324,7 +2324,7 @@ void osm_way_rotate(way_t *way, gint offset) {
   }
 }
 
-tag_t *osm_tags_copy(tag_t *src_tag) {
+tag_t *osm_tags_copy(const tag_t *src_tag) {
   tag_t *new_tags = NULL;
   tag_t **dst_tag = &new_tags;
 

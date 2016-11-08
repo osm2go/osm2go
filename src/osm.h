@@ -298,7 +298,7 @@ const node_t *osm_way_get_first_node(const way_t *way);
 gboolean osm_way_is_closed(const way_t *way);
 void osm_way_rotate(way_t *way, gint offset);
 
-tag_t *osm_tags_copy(tag_t *tag);
+tag_t *osm_tags_copy(const tag_t *tag);
 
 relation_t *osm_relation_new(void);
 void osm_relation_free(relation_t *relation);
