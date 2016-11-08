@@ -584,7 +584,7 @@ member_t *osm_parse_osm_relation_member(osm_t *osm, xmlNode *a_node) {
 }
 
 /* try to find something descriptive */
-gchar *relation_get_descriptive_name(relation_t *relation) {
+gchar *relation_get_descriptive_name(const relation_t *relation) {
   const char *name = NULL;
   const char *keys[] = { "ref", "name", "description", "note", "fix" "me", NULL};
   unsigned int i;
