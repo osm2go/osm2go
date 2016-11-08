@@ -1088,7 +1088,7 @@ static osm_t *process_osm(xmlTextReaderPtr reader) {
 	if(*relation) relation = &(*relation)->next;
 	block = BLOCK_RELATIONS;
       } else {
-	printf("something unknown found\n");
+	printf("something unknown found: %s\n", name);
 	g_assert_not_reached();
 	skip_element(reader);
       }
