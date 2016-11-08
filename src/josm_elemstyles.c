@@ -500,7 +500,7 @@ void josm_elemstyles_colorize_way(const style_t *style, way_t *way) {
     gboolean match = elemstyle->condition ? TRUE : FALSE;
 
     elemstyle_condition_t *cond;
-    for (cond = elemstyle->condition; cond; cond = cond->next) {
+    for (cond = elemstyle->condition; cond && match; cond = cond->next) {
       if(cond->key) {
         const char *value = osm_way_get_value(way, (char*)cond->key);
         if(!value || (cond->value && strcasecmp(value, (char*)cond->value) != 0))
