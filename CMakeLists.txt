@@ -64,7 +64,7 @@ set(osm2go_SOURCE_FILES
 	src/settings.h
 	src/statusbar.c
 	src/statusbar.h
-	src/style.c
+	src/style.cpp
 	src/style.h
 	src/track.c
 	src/track.h
