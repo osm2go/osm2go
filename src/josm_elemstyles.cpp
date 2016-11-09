@@ -29,6 +29,7 @@
 #include "misc.h"
 #include "style.h"
 
+#include <algorithm>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <strings.h>
@@ -55,8 +56,6 @@ struct elemstyle_t {
   };
 
   elemstyle_icon_t *icon;
-
-  elemstyle_t *next;
 };
 
 // ratio conversions
@@ -286,26 +285,27 @@ static elemstyle_t *parse_rule(xmlNode *a_node) {
   return elemstyle;
 }
 
-static elemstyle_t *parse_rules(xmlNode *a_node) {
+static std::vector<elemstyle_t *> parse_rules(xmlNode *a_node) {
   xmlNode *cur_node = NULL;
-  elemstyle_t *elemstyles = NULL, **elemstyle = &elemstyles;
+  std::vector<elemstyle_t *> ret;
 
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcasecmp((char*)cur_node->name, "rule") == 0) {
-	*elemstyle = parse_rule(cur_node);
-	if(*elemstyle) elemstyle = &((*elemstyle)->next);
+        elemstyle_t *elemstyle = parse_rule(cur_node);
+        if(elemstyle)
+          ret.push_back(elemstyle);
       } else
 	printf("found unhandled rules/%s\n", cur_node->name);
     }
   }
-  return elemstyles;
+  return ret;
 }
 
-static elemstyle_t *parse_doc(xmlDocPtr doc) {
+static std::vector<elemstyle_t *> parse_doc(xmlDocPtr doc) {
   /* Get the root element node */
   xmlNode *cur_node = NULL;
-  elemstyle_t *elemstyles = NULL;
+  std::vector<elemstyle_t *> elemstyles;
 
   for(cur_node = xmlDocGetRootElement(doc);
       cur_node; cur_node = cur_node->next) {
@@ -321,15 +321,15 @@ static elemstyle_t *parse_doc(xmlDocPtr doc) {
   return elemstyles;
 }
 
-elemstyle_t *josm_elemstyles_load(const char *name) {
-  elemstyle_t *elemstyles = NULL;
+std::vector<elemstyle_t *> josm_elemstyles_load(const char *name) {
+  std::vector<elemstyle_t *> elemstyles;
 
   printf("Loading JOSM elemstyles ...\n");
 
   gchar *filename = find_file(name, NULL, NULL);
   if(!filename) {
     printf("elemstyle file not found\n");
-    return NULL;
+    return elemstyles;
   }
 
   /* parse the file and get the DOM */
@@ -394,22 +394,22 @@ static void elemstyle_free(elemstyle_t *elemstyle) {
   g_free(elemstyle);
 }
 
-void josm_elemstyles_free(elemstyle_t *elemstyles) {
-  while(elemstyles) {
-    elemstyle_t *next = elemstyles->next;
-    elemstyle_free(elemstyles);
-    elemstyles = next;
-  }
+void josm_elemstyles_free(std::vector<elemstyle_t *> &elemstyles) {
+  std::for_each(elemstyles.begin(), elemstyles.end(), elemstyle_free);
+  elemstyles.clear();
 }
 
 #define WIDTH_SCALE (1.0)
 
 void josm_elemstyles_colorize_node(const style_t *style, node_t *node) {
   node->zoom_max = style->node.zoom_max;
-  elemstyle_t *elemstyle = style->elemstyles;
 
   bool somematch = false;
-  while(elemstyle) {
+
+  const std::vector<elemstyle_t *>::const_iterator itEnd = style->elemstyles.end();
+  for(std::vector<elemstyle_t *>::const_iterator it = style->elemstyles.begin();
+      it != itEnd; it++) {
+    const elemstyle_t * const elemstyle = *it;
     // Rule without conditions matches everything (should it?)
     bool match = (elemstyle->condition != 0);
 
@@ -445,8 +445,6 @@ void josm_elemstyles_colorize_node(const style_t *style, node_t *node) {
         node->zoom_max = elemstyle->icon->zoom_max;
       }
     }
-
-    elemstyle = elemstyle->next;
   }
 
   /* clear icon for node if not matched at least one rule and has an icon attached */
@@ -476,8 +474,6 @@ static void line_mod_apply(gint *width, const elemstyle_width_mod_t *mod) {
 }
 
 void josm_elemstyles_colorize_way(const style_t *style, way_t *way) {
-  elemstyle_t *elemstyle = style->elemstyles;
-
   /* use dark grey/no stroke/not filled for everything unknown */
   way->draw.color = style->way.color;
   way->draw.width = style->way.width;
@@ -490,7 +486,10 @@ void josm_elemstyles_colorize_way(const style_t *style, way_t *way) {
   bool way_processed = false;
   bool way_is_closed = way->is_closed();
 
-  while(elemstyle) {
+  const std::vector<elemstyle_t *>::const_iterator itEnd = style->elemstyles.end();
+  for(std::vector<elemstyle_t *>::const_iterator it = style->elemstyles.begin();
+      it != itEnd; it++) {
+    const elemstyle_t * const elemstyle = *it;
     //  printf("a %s %s\n", elemstyle->condition.key,
     //                        elemstyle->condition.value);
 
@@ -568,7 +567,6 @@ void josm_elemstyles_colorize_way(const style_t *style, way_t *way) {
 	break;
       }
     }
-    elemstyle = elemstyle->next;
   }
 
   /* apply the last line mod entry that has been found during search */

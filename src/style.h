@@ -24,7 +24,14 @@
 #include "icon.h"
 #include "josm_elemstyles.h"
 
-typedef struct style_t {
+#ifdef __cplusplus
+
+#include <vector>
+
+struct style_t {
+  style_t();
+  ~style_t();
+
   icon_t **iconP;  // pointer to global list of icons
   char *name;
 
@@ -81,13 +88,13 @@ typedef struct style_t {
     elemstyle_color_t color;
   } background;
 
-  elemstyle_t *elemstyles;
+  std::vector<elemstyle_t *> elemstyles;
+};
 
-} style_t;
-
-#ifdef __cplusplus
 extern "C" {
 #endif
+
+typedef struct style_t style_t;
 
 style_t *style_load(appdata_t *appdata);
 void style_free(style_t *style);

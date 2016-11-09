@@ -24,6 +24,7 @@
 #include "misc.h"
 #include "settings.h"
 
+#include <cstring>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <strings.h>
@@ -45,8 +46,6 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t *style) {
 
   /* -------------- setup defaults -------------------- */
   /* (the defaults are pretty much the potlatch style) */
-  style->background.color       = 0xffffffff; // white
-
   style->area.border_width      = 2.0;
   style->area.color             = 0x00000060; // 37.5%
   style->area.zoom_max          = 0.1111;     // zoom factor above which an area is visible & selectable
@@ -199,7 +198,7 @@ static style_t *style_parse(appdata_t *appdata, const char *fullname,
       if (cur_node->type == XML_ELEMENT_NODE) {
         if(strcasecmp((char*)cur_node->name, "style") == 0) {
           if(!style) {
-            style = g_new0(style_t, 1);
+            style = new style_t();
             style->name = (char*)xmlGetProp(cur_node, BAD_CAST "name");
             if(name_only)
               break;
@@ -251,16 +250,7 @@ style_t *style_load(appdata_t *appdata) {
 }
 
 void style_free(style_t *style) {
-  if(!style) return;
-
-  printf("freeing style\n");
-
-  if(style->elemstyles)
-    josm_elemstyles_free(style->elemstyles);
-
-  g_free(style->name);
-  g_free(style->icon.path_prefix);
-  g_free(style);
+  delete style;
 }
 
 static char *style_basename(const char *name) {
@@ -419,5 +409,30 @@ void style_select(GtkWidget *parent, appdata_t *appdata) {
   style_change(appdata, ptr);
 }
 #endif
+
+style_t::style_t()
+  : iconP(0)
+  , name(0)
+{
+  memset(&icon, 0, sizeof(icon));
+  memset(&track, 0, sizeof(track));
+  memset(&way, 0, sizeof(way));
+  memset(&area, 0, sizeof(area));
+  memset(&frisket, 0, sizeof(frisket));
+  memset(&node, 0, sizeof(node));
+  memset(&highlight, 0, sizeof(highlight));
+
+  background.color = 0xffffffff; // white
+}
+
+style_t::~style_t()
+{
+  printf("freeing style\n");
+
+  josm_elemstyles_free(elemstyles);
+
+  g_free(name);
+  g_free(icon.path_prefix);
+}
 
 //vim:et:ts=8:sw=2:sts=2:ai
