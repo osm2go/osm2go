@@ -89,7 +89,6 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t *style) {
 
   style->icon.enable            = FALSE;
   style->icon.scale             = 1.0;    // icon size (multiplier)
-  style->icon.path_prefix       = g_strdup("standard");
 
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
@@ -190,6 +189,9 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t *style) {
 	printf("  found unhandled style/%s\n", cur_node->name);
     }
   }
+
+  if(!style->icon.path_prefix)
+    style->icon.path_prefix = g_strdup("standard");
 }
 
 /**
