@@ -1262,20 +1262,15 @@ gboolean osm_node_in_way(const way_t *way, const node_t *node) {
 
 /* return true if node is part of other way than this one */
 gboolean osm_node_in_other_way(const osm_t *osm, const way_t *way, const node_t *node) {
-  gboolean is_other = FALSE;
-  way_chain_t *chain = osm_node_to_way(osm, node);
-
-  while(chain) {
-    way_chain_t *next = chain->next;
-
-    if(chain->way != way)
-      is_other = TRUE;
-
-    g_free(chain);
-    chain = next;
+  const way_t *it = osm->way;
+  for(it = osm->way; it; it = it->next) {
+    if(it == way)
+      continue;
+    if(osm_node_in_way(it, node))
+      return TRUE;
   }
 
-  return is_other;
+  return FALSE;
 }
 
 static void osm_generate_tags(const tag_t *tag, xmlNodePtr node) {
