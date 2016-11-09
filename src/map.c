@@ -2062,7 +2062,7 @@ void map_delete_selected(appdata_t *appdata) {
     while(chain) {
       way_chain_t *next = chain->next;
 
-      if(chain->way != NULL && chain->way->next == NULL) {
+      if(chain->way->next == NULL) {
 	/* this way now only contains one node and thus isn't a valid */
 	/* way anymore. So it'll also get deleted (which in turn may */
 	/* cause other nodes to be deleted as well) */
