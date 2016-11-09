@@ -195,7 +195,7 @@ gboolean diff_is_clean(const osm_t *osm, gboolean honor_hidden_flags) {
   gboolean clean = TRUE;
 
   /* check if a diff is necessary */
-  node_t *node = osm->node;
+  const node_t *node = osm->node;
   while(node && clean) {
     if(OSM_FLAGS(node)) clean = FALSE;
     node = node->next;
@@ -203,14 +203,14 @@ gboolean diff_is_clean(const osm_t *osm, gboolean honor_hidden_flags) {
 
   if(clean) {
     int flagmask = honor_hidden_flags ? ~0 : ~OSM_FLAG_HIDDEN;
-    way_t *way;
+    const way_t *way;
     for(way = osm->way; way && clean; way = way->next) {
       if(OSM_FLAGS(way) & flagmask)
         clean = FALSE;
     }
   }
 
-  relation_t *relation = osm->relation;
+  const relation_t *relation = osm->relation;
   while(relation && clean) {
     if(OSM_FLAGS(relation)) clean = FALSE;
     relation = relation->next;
