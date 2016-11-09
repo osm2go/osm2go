@@ -1515,8 +1515,8 @@ item_id_t osm_new_way_id(osm_t *osm) {
 
   while(TRUE) {
     gboolean found = FALSE;
-    way_t *way = osm->way;
-    while(way) {
+    const way_t *way = osm->way;
+    while(way && !found) {
       if(OSM_ID(way) == id)
 	found = TRUE;
 
@@ -1537,8 +1537,8 @@ item_id_t osm_new_node_id(osm_t *osm) {
 
   while(TRUE) {
     gboolean found = FALSE;
-    node_t *node = osm->node;
-    while(node) {
+    const node_t *node = osm->node;
+    while(node && !found) {
       if(OSM_ID(node) == id)
 	found = TRUE;
 
@@ -1559,8 +1559,8 @@ item_id_t osm_new_relation_id(osm_t *osm) {
 
   while(TRUE) {
     gboolean found = FALSE;
-    relation_t *relation = osm->relation;
-    while(relation) {
+    const relation_t *relation = osm->relation;
+    while(relation && !found) {
       if(OSM_ID(relation) == id)
 	found = TRUE;
 
