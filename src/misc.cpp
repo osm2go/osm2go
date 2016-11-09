@@ -427,7 +427,7 @@ GtkWidget *button_new(void) {
   GtkWidget *button = gtk_button_new();
 #ifdef FREMANTLE
   hildon_gtk_widget_set_theme_size(button,
-           (HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH));
+           static_cast<HildonSizeType>(HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH));
 #endif
   return button;
 }
@@ -436,7 +436,7 @@ GtkWidget *button_new_with_label(const gchar *label) {
   GtkWidget *button = gtk_button_new_with_label(label);
 #ifdef FREMANTLE
   hildon_gtk_widget_set_theme_size(button,
-           (HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH));
+           static_cast<HildonSizeType>(HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH));
 #endif
   return button;
 }
@@ -446,8 +446,8 @@ GtkWidget *check_button_new_with_label(const gchar *label) {
   return gtk_check_button_new_with_label(label);
 #else
   GtkWidget *cbut =
-    hildon_check_button_new(HILDON_SIZE_FINGER_HEIGHT |
-                            HILDON_SIZE_AUTO_WIDTH);
+    hildon_check_button_new(static_cast<HildonSizeType>(HILDON_SIZE_FINGER_HEIGHT |
+                                                        HILDON_SIZE_AUTO_WIDTH));
   gtk_button_set_label(GTK_BUTTON(cbut), label);
   return cbut;
 #endif
@@ -539,7 +539,7 @@ void notebook_append_page(GtkWidget *notebook,
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), TRUE);
     g_object_set_data(G_OBJECT(notebook), "group_master", (gpointer)button);
   } else {
-    GtkWidget *master = g_object_get_data(G_OBJECT(notebook), "group_master");
+    GtkWidget *master = static_cast<GtkWidget *>(g_object_get_data(G_OBJECT(notebook), "group_master"));
     button = gtk_radio_button_new_with_label_from_widget(
 				 GTK_RADIO_BUTTON(master), label);
   }
@@ -552,7 +552,7 @@ void notebook_append_page(GtkWidget *notebook,
 
 #if defined(USE_HILDON) && (MAEMO_VERSION_MAJOR == 5)
   hildon_gtk_widget_set_theme_size(button,
-	   (HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH));
+	   static_cast<HildonSizeType>(HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH));
 #endif
 
   gtk_box_pack_start_defaults(
@@ -571,8 +571,8 @@ void on_value_changed(HildonPickerButton *widget, gpointer  user_data) {
 
 static GtkWidget *combo_box_new_with_selector(const gchar *title, GtkWidget *selector) {
   GtkWidget *button =
-    hildon_picker_button_new(HILDON_SIZE_FINGER_HEIGHT |
-			     HILDON_SIZE_AUTO_WIDTH,
+    hildon_picker_button_new(static_cast<HildonSizeType>(HILDON_SIZE_FINGER_HEIGHT |
+                                                         HILDON_SIZE_AUTO_WIDTH),
 			     HILDON_BUTTON_ARRANGEMENT_VERTICAL);
 
   hildon_button_set_title_alignment(HILDON_BUTTON(button), 0.5, 0.5);

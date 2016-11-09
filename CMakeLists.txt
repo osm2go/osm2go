@@ -44,7 +44,7 @@ set(osm2go_SOURCE_FILES
 	src/map_edit.h
 	src/map_hl.cpp
 	src/map_hl.h
-	src/misc.c
+	src/misc.cpp
 	src/misc.h
 	src/net_io.c
 	src/net_io.h
@@ -201,7 +201,7 @@ include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
-set_property(SOURCE src/misc.c APPEND PROPERTY COMPILE_DEFINITIONS "DATADIR=\"${DATA_DIR}\"")
+set_property(SOURCE src/misc.cpp APPEND PROPERTY COMPILE_DEFINITIONS "DATADIR=\"${DATA_DIR}\"")
 if (HAVE_LOG2)
 	set_property(SOURCE src/area_edit.c APPEND PROPERTY COMPILE_DEFINITIONS "LOG2=log2")
 endif ()
