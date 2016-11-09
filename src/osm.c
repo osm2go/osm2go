@@ -1528,8 +1528,6 @@ item_id_t osm_new_way_id(osm_t *osm) {
 
     id--;
   }
-  g_assert_not_reached();
-  return 0;
 }
 
 item_id_t osm_new_node_id(osm_t *osm) {
@@ -1550,8 +1548,6 @@ item_id_t osm_new_node_id(osm_t *osm) {
 
     id--;
   }
-  g_assert_not_reached();
-  return 0;
 }
 
 item_id_t osm_new_relation_id(osm_t *osm) {
@@ -1572,8 +1568,6 @@ item_id_t osm_new_relation_id(osm_t *osm) {
 
     id--;
   }
-  g_assert_not_reached();
-  return 0;
 }
 
 node_t *osm_node_new(osm_t *osm, gint x, gint y) {
