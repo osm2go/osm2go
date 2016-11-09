@@ -1316,7 +1316,7 @@ osm_generate_xml_finish(xmlDocPtr doc)
 }
 
 /* build xml representation for a node */
-char *osm_generate_xml_node(item_id_t changeset, node_t *node) {
+char *osm_generate_xml_node(item_id_t changeset, const node_t *node) {
   char str[32];
 
   xmlNodePtr xml_node;
@@ -1341,7 +1341,7 @@ char *osm_generate_xml_node(item_id_t changeset, node_t *node) {
 }
 
 /* build xml representation for a way */
-char *osm_generate_xml_way(item_id_t changeset, way_t *way) {
+char *osm_generate_xml_way(item_id_t changeset, const way_t *way) {
   char str[32];
 
   xmlNodePtr xml_node;
@@ -1370,7 +1370,7 @@ char *osm_generate_xml_way(item_id_t changeset, way_t *way) {
 
 /* build xml representation for a relation */
 char *osm_generate_xml_relation(item_id_t changeset,
-				relation_t *relation) {
+				const relation_t *relation) {
   char str[32];
 
   xmlNodePtr xml_node;
