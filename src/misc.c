@@ -38,7 +38,7 @@
 #endif
 #endif
 
-static void vmessagef(GtkWidget *parent, int type, int buttons,
+static void vmessagef(GtkWidget *parent, GtkMessageType type, GtkButtonsType buttons,
 		      char *title, const char *fmt,
 		      va_list args) {
 
