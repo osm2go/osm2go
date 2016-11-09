@@ -17,11 +17,12 @@
  * along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "style.h"
+
 #include "appdata.h"
 #include "map.h"
 #include "misc.h"
 #include "settings.h"
-#include "style.h"
 
 #include <libxml/parser.h>
 #include <libxml/tree.h>
