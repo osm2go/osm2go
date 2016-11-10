@@ -192,31 +192,29 @@ static void diff_save_relations(const relation_t *relation, xmlNodePtr root_node
 
 /* return true if no diff needs to be saved */
 gboolean diff_is_clean(const osm_t *osm, gboolean honor_hidden_flags) {
-  gboolean clean = TRUE;
-
   /* check if a diff is necessary */
   const node_t *node = osm->node;
-  while(node && clean) {
-    if(OSM_FLAGS(node)) clean = FALSE;
+  while(node) {
+    if(OSM_FLAGS(node))
+      return FALSE;
     node = node->next;
   }
 
-  if(clean) {
-    int flagmask = honor_hidden_flags ? ~0 : ~OSM_FLAG_HIDDEN;
-    const way_t *way;
-    for(way = osm->way; way && clean; way = way->next) {
-      if(OSM_FLAGS(way) & flagmask)
-        clean = FALSE;
-    }
+  int flagmask = honor_hidden_flags ? ~0 : ~OSM_FLAG_HIDDEN;
+  const way_t *way;
+  for(way = osm->way; way; way = way->next) {
+    if(OSM_FLAGS(way) & flagmask)
+      return FALSE;
   }
 
   const relation_t *relation = osm->relation;
-  while(relation && clean) {
-    if(OSM_FLAGS(relation)) clean = FALSE;
+  while(relation) {
+    if(OSM_FLAGS(relation))
+      return FALSE;
     relation = relation->next;
   }
 
-  return clean;
+  return TRUE;
 }
 
 void diff_save(const project_t *project, const osm_t *osm) {
