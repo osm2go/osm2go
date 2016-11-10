@@ -173,23 +173,19 @@ gboolean osm_is_creator_tag(const tag_t *tag) {
 }
 
 gboolean osm_tag_key_and_value_present(const tag_t *haystack, const tag_t *tag) {
-  while(haystack) {
+  for(; haystack; haystack = haystack->next) {
     if((strcasecmp(haystack->key, tag->key) == 0) &&
        (strcasecmp(haystack->value, tag->value) == 0))
       return TRUE;
-
-    haystack = haystack->next;
   }
   return FALSE;
 }
 
 gboolean osm_tag_key_other_value_present(const tag_t *haystack, const tag_t *tag) {
-  while(haystack) {
+  for(; haystack; haystack = haystack->next) {
     if((strcasecmp(haystack->key, tag->key) == 0) &&
        (strcasecmp(haystack->value, tag->value) != 0))
       return TRUE;
-
-    haystack = haystack->next;
   }
   return FALSE;
 }
@@ -330,15 +326,13 @@ void osm_node_free(osm_t *osm, node_t *node) {
   if(id > 0 && hash_table) {
     // use hash table if present
     hash_item_t **item = &(hash_table->hash[ID2HASH(id)]);
-    while(*item) {
+    for(; *item; item = &(*item)->next) {
       if(OSM_ID((*item)->data.node) == id) {
 	hash_item_t *cur = *item;
 	*item = (*item)->next;
 	g_free(cur);
 	return;
       }
-
-      item = &(*item)->next;
     }
   }
 }
@@ -383,15 +377,13 @@ void osm_way_free(osm_t *osm, way_t *way) {
   if(id > 0 && hash_table) {
     // use hash table if present
     hash_item_t **item = &(hash_table->hash[ID2HASH(id)]);
-    while(*item) {
+    for(; *item; item = &(*item)->next) {
       if(OSM_ID((*item)->data.way) == id) {
 	hash_item_t *cur = *item;
 	*item = (*item)->next;
 	g_free(cur);
 	return;
       }
-
-      item = &(*item)->next;
     }
   }
 }
@@ -1897,15 +1889,13 @@ way_chain_t *osm_node_to_way(const osm_t *osm, const node_t *node) {
   way_chain_t *chain = NULL, **cur_chain = &chain;
 
   way_t *way = osm->way;
-  while(way) {
+  for(; way; way = way->next) {
     /* node is a member of this relation, so move it to the member chain */
     if(osm_node_in_way(way, node)) {
       *cur_chain = g_new0(way_chain_t, 1);
       (*cur_chain)->way = way;
       cur_chain = &((*cur_chain)->next);
     }
-
-     way = way->next;
   }
 
   return chain;
@@ -1929,7 +1919,7 @@ void osm_node_remove_from_relation(osm_t *osm, node_t *node) {
   relation_t *relation = osm->relation;
   printf("removing node #" ITEM_ID_FORMAT " from all relations:\n", OSM_ID(node));
 
-  while(relation) {
+  for(; relation; relation = relation->next) {
     member_t **member = &relation->member;
     while(*member) {
       if(((*member)->object.type == NODE) &&
@@ -1945,7 +1935,6 @@ void osm_node_remove_from_relation(osm_t *osm, node_t *node) {
       } else
 	member = &(*member)->next;
     }
-    relation = relation->next;
   }
 }
 
@@ -1954,7 +1943,7 @@ void osm_way_remove_from_relation(osm_t *osm, way_t *way) {
   relation_t *relation = osm->relation;
   printf("removing way #" ITEM_ID_FORMAT " from all relations:\n", OSM_ID(way));
 
-  while(relation) {
+  for(; relation; relation = relation->next) {
     member_t **member = &relation->member;
     while(*member) {
       if(((*member)->object.type == WAY) &&
@@ -1970,7 +1959,6 @@ void osm_way_remove_from_relation(osm_t *osm, way_t *way) {
       } else
 	member = &(*member)->next;
     }
-    relation = relation->next;
   }
 }
 
@@ -2140,7 +2128,7 @@ guint
 osm_way_reverse_direction_sensitive_tags (way_t *way) {
   tag_t *tag = OSM_TAG(way);
   guint n_tags_altered = 0;
-  while (tag != NULL) {
+  for (; tag; tag = tag->next) {
     char *lc_key = g_ascii_strdown(tag->key, -1);
 
     if (strcmp(lc_key, "oneway") == 0) {
@@ -2186,7 +2174,6 @@ osm_way_reverse_direction_sensitive_tags (way_t *way) {
     }
 
     g_free(lc_key);
-    tag = tag->next;
   }
   if (n_tags_altered > 0) {
     OSM_FLAGS(way) |= OSM_FLAG_DIRTY;
@@ -2305,14 +2292,13 @@ tag_t *osm_tags_copy(const tag_t *src_tag) {
   tag_t *new_tags = NULL;
   tag_t **dst_tag = &new_tags;
 
-  while(src_tag) {
+  for(; src_tag; src_tag = src_tag->next) {
     if(!osm_is_creator_tag(src_tag)) {
       *dst_tag = g_new0(tag_t, 1);
       (*dst_tag)->key = g_strdup(src_tag->key);
       (*dst_tag)->value = g_strdup(src_tag->value);
       dst_tag = &(*dst_tag)->next;
     }
-    src_tag = src_tag->next;
   }
 
   return new_tags;

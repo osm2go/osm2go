@@ -473,7 +473,7 @@ static void osm_delete_nodes(osm_upload_context_t *context, gchar *cred) {
   node_t *node = context->osm->node;
   project_t *project = context->project;
 
-  while(node) {
+  for(; node; node = node->next) {
     /* make sure gui gets updated */
     while(gtk_events_pending()) gtk_main_iteration();
 
@@ -493,7 +493,6 @@ static void osm_delete_nodes(osm_upload_context_t *context, gchar *cred) {
       }
 
     }
-    node = node->next;
   }
 }
 
@@ -501,7 +500,7 @@ static void osm_upload_nodes(osm_upload_context_t *context, gchar *cred) {
   node_t *node = context->osm->node;
   project_t *project = context->project;
 
-  while(node) {
+  for(; node; node = node->next) {
     /* make sure gui gets updated */
     while(gtk_events_pending()) gtk_main_iteration();
 
@@ -532,7 +531,6 @@ static void osm_upload_nodes(osm_upload_context_t *context, gchar *cred) {
 	g_free(cred);
       }
     }
-    node = node->next;
   }
 }
 
@@ -540,7 +538,7 @@ static void osm_delete_ways(osm_upload_context_t *context, gchar *cred) {
   way_t *way = context->osm->way;
   project_t *project = context->project;
 
-  while(way) {
+  for(; way; way = way->next) {
     /* make sure gui gets updated */
     while(gtk_events_pending()) gtk_main_iteration();
 
@@ -558,7 +556,6 @@ static void osm_delete_ways(osm_upload_context_t *context, gchar *cred) {
 	project->data_dirty = TRUE;
       }
     }
-    way = way->next;
   }
 }
 
@@ -567,7 +564,7 @@ static void osm_upload_ways(osm_upload_context_t *context, gchar *cred) {
   way_t *way = context->osm->way;
   project_t *project = context->project;
 
-  while(way) {
+  for(; way; way = way->next) {
     /* make sure gui gets updated */
     while(gtk_events_pending()) gtk_main_iteration();
 
@@ -598,7 +595,6 @@ static void osm_upload_ways(osm_upload_context_t *context, gchar *cred) {
       }
       g_free(url);
     }
-    way = way->next;
   }
 }
 
@@ -606,7 +602,7 @@ static void osm_delete_relations(osm_upload_context_t *context, gchar *cred) {
   relation_t *relation = context->osm->relation;
   project_t *project = context->project;
 
-  while(relation) {
+  for(; relation; relation = relation->next) {
     /* make sure gui gets updated */
     while(gtk_events_pending()) gtk_main_iteration();
 
@@ -625,7 +621,6 @@ static void osm_delete_relations(osm_upload_context_t *context, gchar *cred) {
 	project->data_dirty = TRUE;
       }
     }
-    relation = relation->next;
   }
 }
 
@@ -634,7 +629,7 @@ static void osm_upload_relations(osm_upload_context_t *context, gchar *cred) {
   relation_t *relation = context->osm->relation;
   project_t *project = context->project;
 
-  while(relation) {
+  for(; relation; relation = relation->next) {
     /* make sure gui gets updated */
     while(gtk_events_pending()) gtk_main_iteration();
 
@@ -666,7 +661,6 @@ static void osm_upload_relations(osm_upload_context_t *context, gchar *cred) {
       }
       g_free(url);
     }
-    relation = relation->next;
   }
 }
 
