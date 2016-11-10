@@ -442,7 +442,7 @@ static gboolean osm_delete_item(struct log_s *log, char *xml_str,
 }
 
 typedef struct {
-  struct {
+  struct counter {
     int total, added, dirty, deleted;
   } ways, nodes, relations;
 } osm_dirty_t;
@@ -752,6 +752,17 @@ static gboolean cb_focus_in(GtkTextView *view, G_GNUC_UNUSED GdkEventFocus *even
   return FALSE;
 }
 
+static void object_counter(const base_object_t *obj, struct counter *dirty) {
+  int flags = OSM_FLAGS(obj);
+  dirty->total++;
+  if(flags & OSM_FLAG_DELETED)
+    dirty->deleted++;
+  else if(flags & OSM_FLAG_NEW)
+    dirty->added++;
+  else if(flags & OSM_FLAG_DIRTY)
+    dirty->dirty++;
+}
+
 void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
 
   printf("starting upload\n");
@@ -764,11 +775,7 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
 
   const node_t *node = osm->node;
   while(node) {
-    dirty.nodes.total++;
-    if(OSM_FLAGS(node) & OSM_FLAG_DELETED)     dirty.nodes.deleted++;
-    else if(OSM_FLAGS(node) & OSM_FLAG_NEW)    dirty.nodes.added++;
-    else if(OSM_FLAGS(node) & OSM_FLAG_DIRTY)  dirty.nodes.dirty++;
-
+    object_counter(OSM_BASE(node), &dirty.nodes);
     node = node->next;
   }
   printf("nodes:     new %2d, dirty %2d, deleted %2d\n",
@@ -777,11 +784,7 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   /* count ways */
   const way_t *way = osm->way;
   while(way) {
-    dirty.ways.total++;
-    if(OSM_FLAGS(way) & OSM_FLAG_DELETED)      dirty.ways.deleted++;
-    else if(OSM_FLAGS(way) & OSM_FLAG_NEW)     dirty.ways.added++;
-    else if(OSM_FLAGS(way) & OSM_FLAG_DIRTY)   dirty.ways.dirty++;
-
+    object_counter(OSM_BASE(way), &dirty.ways);
     way = way->next;
   }
   printf("ways:      new %2d, dirty %2d, deleted %2d\n",
@@ -790,11 +793,7 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   /* count relations */
   const relation_t *relation = osm->relation;
   while(relation) {
-    dirty.relations.total++;
-    if(OSM_FLAGS(relation) & OSM_FLAG_DELETED)      dirty.relations.deleted++;
-    else if(OSM_FLAGS(relation) & OSM_FLAG_NEW)     dirty.relations.added++;
-    else if(OSM_FLAGS(relation) & OSM_FLAG_DIRTY)   dirty.relations.dirty++;
-
+    object_counter(OSM_BASE(relation), &dirty.relations);
     relation = relation->next;
   }
   printf("relations: new %2d, dirty %2d, deleted %2d\n",
