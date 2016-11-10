@@ -528,8 +528,8 @@ static void osm_upload_nodes(osm_upload_context_t *context, gchar *cred) {
 	  OSM_FLAGS(node) &= ~(OSM_FLAG_DIRTY | OSM_FLAG_NEW);
 	  project->data_dirty = TRUE;
 	}
-	g_free(cred);
       }
+      g_free(url);
     }
   }
 }
