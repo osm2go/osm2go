@@ -247,8 +247,8 @@ gchar *find_file(const char *n1, const char *n2, const char *n3) {
 
 /* scan all data directories for the given file extension and */
 /* return a list of files matching this extension */
-file_chain_t *file_scan(const char *extension) {
-  file_chain_t *chain = NULL, **chainP = &chain;
+std::vector<std::string> file_scan(const char *extension) {
+  std::vector<std::string> chain;
 
   const char **path = data_paths;
   char *p = getenv("HOME");
@@ -269,13 +269,12 @@ file_chain_t *file_scan(const char *extension) {
 
 	if(name) {
 	  if(g_str_has_suffix(name, extension)) {
-	    gchar *fullname = g_strconcat(dirname, name, NULL);
-	    if(g_file_test(fullname, G_FILE_TEST_IS_REGULAR)) {
-	      *chainP = g_new0(file_chain_t, 1);
-	      (*chainP)->name = fullname;
-	      chainP = &(*chainP)->next;
-	    } else
-	      g_free(fullname);
+            std::string fullname;
+            fullname.reserve(strlen(dirname) + strlen(name) + 1);
+            fullname = dirname;
+            fullname += name;
+            if(g_file_test(fullname.c_str(), G_FILE_TEST_IS_REGULAR))
+              chain.push_back(fullname);
 	  }
 	}
       } while(name);

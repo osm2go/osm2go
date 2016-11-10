@@ -24,9 +24,11 @@
 #include "misc.h"
 #include "settings.h"
 
+#include <algorithm>
 #include <cstring>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
+#include <string>
 #include <strings.h>
 
 #if !defined(LIBXML_TREE_ENABLED) || !defined(LIBXML_OUTPUT_ENABLED)
@@ -253,103 +255,105 @@ void style_free(style_t *style) {
   delete style;
 }
 
-static char *style_basename(const char *name) {
-  char *retval;
-  const char *slash = strrchr(name, '/');
-
-  if(slash != NULL)
-    retval = g_strdup(slash + 1);
-  else
-    retval = g_strdup(name);
+static std::string style_basename(const std::string &name) {
+  std::string::size_type pos = name.rfind("/");
 
   /* and cut off extension */
-  if(strrchr(retval, '.'))
-    *strrchr(retval, '.') = 0;
+  std::string::size_type extpos = name.rfind(".");
+  if(pos == name.npos)
+    pos = 0;
+  else
+    pos++; // skip also the '/' itself
 
-  return retval;
+  return name.substr(pos, extpos - pos);
+}
+
+struct combo_add_styles {
+  GtkWidget * const cbox;
+  int cnt;
+  int match;
+  appdata_t * const appdata;
+  combo_add_styles(GtkWidget *w, appdata_t *a) : cbox(w), cnt(0), match(-1), appdata(a) {};
+  void operator()(const std::string &filename);
+};
+
+void combo_add_styles::operator()(const std::string &filename)
+{
+  printf("  file: %s\n", filename.c_str());
+
+  style_t *style = style_parse(appdata, filename.c_str(), NULL, TRUE);
+  printf("    name: %s\n", style->name);
+  combo_box_append_text(cbox, style->name);
+
+  const std::string &basename = style_basename(filename);
+  if(strcmp(basename.c_str(), appdata->settings->style) == 0)
+    match = cnt;
+
+  style_free(style);
+
+  cnt++;
 }
 
 GtkWidget *style_select_widget(appdata_t *appdata) {
-  file_chain_t *chain = file_scan(".style");
+  const std::vector<std::string> &chain = file_scan(".style");
 
   /* there must be at least one style, otherwise */
   /* the program wouldn't be running */
-  g_assert(chain);
+  g_assert(!chain.empty());
 
   GtkWidget *cbox = combo_box_new(_("Style"));
 
   /* fill combo box with presets */
-  int cnt = 0, match = -1;
-  while(chain) {
-    file_chain_t *next = chain->next;
+  combo_add_styles cas(cbox, appdata);
+  std::for_each(chain.begin(), chain.end(), cas);
 
-    printf("  file: %s\n", chain->name);
-
-    style_t *style = style_parse(appdata, chain->name, NULL, TRUE);
-    printf("    name: %s\n", style->name);
-    combo_box_append_text(cbox, style->name);
-
-    char *basename = style_basename(chain->name);
-    if(strcmp(basename, appdata->settings->style) == 0) match = cnt;
-    g_free(basename);
-
-    style_free(style);
-
-    cnt++;
-
-    g_free(chain->name);
-    g_free(chain);
-    chain = next;
-  }
-
-  if(match >= 0)
-    combo_box_set_active(cbox, match);
+  if(cas.match >= 0)
+    combo_box_set_active(cbox, cas.match);
 
   return cbox;
 }
 
+struct style_find {
+  appdata_t * const appdata;
+  const char * const name;
+  style_find(appdata_t *a, const char *n) : appdata(a), name(n) {}
+  bool operator()(const std::string &filename);
+};
+
+bool style_find::operator()(const std::string &filename)
+{
+  style_t *style = style_parse(appdata, filename.c_str(), NULL, TRUE);
+
+  bool match = (strcmp(style->name, name) == 0);
+  style_free(style);
+
+  return match;
+}
+
 void style_change(appdata_t *appdata, const char *name) {
-  char *new_style = NULL, *fname = NULL;
+  const std::vector<std::string> &chain = file_scan(".style");
 
-  file_chain_t *chain = file_scan(".style");
+  const std::vector<std::string>::const_iterator it =
+      std::find_if(chain.begin(), chain.end(), style_find(appdata, name));
 
-  while(chain) {
-    file_chain_t *next = chain->next;
-    style_t *style = style_parse(appdata, chain->name, NULL, TRUE);
-
-    if(new_style == NULL && strcmp(style->name, name) == 0) {
-      new_style = style_basename(chain->name);
-      fname = chain->name;
-      chain->name = NULL;
-    }
-
-    style_free(style);
-
-    g_free(chain->name);
-    g_free(chain);
-    chain = next;
-  }
+  g_assert(it != chain.end());
+  const std::string &new_style = style_basename(*it);
 
   /* check if style has really been changed */
   if(appdata->settings->style &&
-     !strcmp(appdata->settings->style, new_style)) {
-    g_free(new_style);
-    g_free(fname);
+     !strcmp(appdata->settings->style, new_style.c_str())) {
     return;
   }
 
-  style_t *nstyle = style_load_fname(appdata, fname);
+  style_t *nstyle = style_load_fname(appdata, it->c_str());
   if (nstyle == NULL) {
     errorf(GTK_WIDGET(appdata->window),
-           _("Error loading style %s"), fname);
-    g_free(new_style);
-    g_free(fname);
+           _("Error loading style %s"), it->c_str());
     return;
   }
-  g_free(fname);
 
   g_free(appdata->settings->style);
-  appdata->settings->style = new_style;
+  appdata->settings->style = g_strdup(new_style.c_str());
 
   map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
   /* let gtk clean up first */

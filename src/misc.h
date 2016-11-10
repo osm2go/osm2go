@@ -32,11 +32,6 @@
 #define MISC_AGAIN_ID_EXPORT_OVERWRITE (1<<6)
 #define MISC_AGAIN_ID_AREA_TOO_BIG     (1<<7)
 
-typedef struct file_chain_t {
-  char *name;
-  struct file_chain_t *next;
-} file_chain_t;
-
 /* these flags prevent you from leaving the dialog with no (or yes) */
 /* if the "dont show me this dialog again" checkbox is selected. This */
 /* makes sure, that you can't permanently switch certain things in, but */
@@ -51,6 +46,12 @@ typedef struct file_chain_t {
 #endif
 
 #ifdef __cplusplus
+
+#include <string>
+#include <vector>
+
+std::vector<std::string> file_scan(const char *extension);
+
 extern "C" {
 #endif
 
@@ -71,7 +72,6 @@ gboolean yes_no_f(GtkWidget *parent,
 		  const char *title, const char *fmt, ...) G_GNUC_PRINTF(6, 7);
 
 gchar *find_file(const char *n1, const char *n2, const char *n3);
-file_chain_t *file_scan(const char *extension);
 
 /* dialog size are specified rather fuzzy */
 #define MISC_DIALOG_NOSIZE  -1
