@@ -1877,26 +1877,19 @@ static GSList *osm_relation_to_relation(osm_t *osm, const relation_t *rel) {
 
 /* return all relations an object is in */
 GSList *osm_object_to_relation(osm_t *osm, const object_t *object) {
-  GSList *rel_chain = NULL;
-
   switch(object->type) {
   case NODE:
-    rel_chain = osm_node_to_relation(osm, object->node, FALSE);
-    break;
+    return osm_node_to_relation(osm, object->node, FALSE);
 
   case WAY:
-    rel_chain = osm_way_to_relation(osm, object->way);
-    break;
+    return osm_way_to_relation(osm, object->way);
 
   case RELATION:
-    rel_chain = osm_relation_to_relation(osm, object->relation);
-    break;
+    return osm_relation_to_relation(osm, object->relation);
 
   default:
-    break;
+    return NULL;
   }
-
-  return rel_chain;
 }
 
 /* return all ways a node is in */
