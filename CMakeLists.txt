@@ -13,7 +13,7 @@ find_package(PkgConfig REQUIRED)
 set(CMAKE_INCLUDE_CURRENT_DIR)
 
 set(osm2go_SOURCE_FILES
-	src/about.c
+	src/about.cpp
 	src/about.h
 	src/appdata.h
 	src/area_edit.c
