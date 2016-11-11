@@ -326,15 +326,15 @@ std::vector<elemstyle_t *> josm_elemstyles_load(const char *name) {
 
   printf("Loading JOSM elemstyles ...\n");
 
-  gchar *filename = find_file(name, NULL, NULL);
-  if(!filename) {
+  const std::string &filename = find_file(name, NULL, NULL);
+  if(filename.empty()) {
     printf("elemstyle file not found\n");
     return elemstyles;
   }
 
   /* parse the file and get the DOM */
   xmlDoc *doc = NULL;
-  if((doc = xmlReadFile(filename, NULL, 0)) == NULL) {
+  if((doc = xmlReadFile(filename.c_str(), NULL, 0)) == NULL) {
     xmlErrorPtr errP = xmlGetLastError();
     printf("elemstyles download failed: "
 	   "XML error while parsing:\n"
@@ -344,7 +344,6 @@ std::vector<elemstyle_t *> josm_elemstyles_load(const char *name) {
     elemstyles = parse_doc(doc);
   }
 
-  g_free(filename);
   return elemstyles;
 }
 

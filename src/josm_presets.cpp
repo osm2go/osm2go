@@ -348,12 +348,13 @@ presets_item_t *josm_presets_load(void) {
 
   printf("Loading JOSM presets ...\n");
 
-  gchar *filename = find_file("presets.xml", NULL, NULL);
-  if(!filename) return NULL;
+  const std::string &filename = find_file("presets.xml", NULL, NULL);
+  if(filename.empty())
+    return NULL;
 
   /* parse the file and get the DOM */
   xmlDoc *doc = NULL;
-  if((doc = xmlReadFile(filename, NULL, 0)) == NULL) {
+  if((doc = xmlReadFile(filename.c_str(), NULL, 0)) == NULL) {
     xmlErrorPtr errP = xmlGetLastError();
     printf("presets download failed: "
 	   "XML error while parsing:\n"
@@ -363,7 +364,6 @@ presets_item_t *josm_presets_load(void) {
     presets = parse_doc(doc);
   }
 
-  g_free(filename);
   return presets;
 }
 

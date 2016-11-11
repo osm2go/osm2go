@@ -223,26 +223,36 @@ static const char *data_paths[] = {
   NULL
 };
 
-gchar *find_file(const char *n1, const char *n2, const char *n3) {
+std::string find_file(const char *n1, const char *n2, const char *n3) {
   const char **path = data_paths;
-  char *p = getenv("HOME");
+  const char *home = getenv("HOME");
+  std::string full_path;
 
   while(*path) {
-    gchar *full_path = NULL;
+    const char *p = *path;
 
-    if(*path[0] == '~')
-      full_path = g_strconcat(p, *path + 1, n1, n2, n3, NULL);
-    else
-      full_path = g_strconcat(*path, n1, n2, n3, NULL);
+    if(p[0] == '~') {
+      full_path = home;
+      p++;
+    } else {
+      full_path.clear();
+    }
 
-    if(g_file_test(full_path, G_FILE_TEST_IS_REGULAR))
+    full_path += p;
+    full_path += n1;
+    if(n2) {
+      full_path += n2;
+      if(n3)
+        full_path += n3;
+    }
+
+    if(g_file_test(full_path.c_str(), G_FILE_TEST_IS_REGULAR))
       return full_path;
 
-    g_free(full_path);
     path++;
   }
 
-  return NULL;
+  return std::string();
 }
 
 /* scan all data directories for the given file extension and */

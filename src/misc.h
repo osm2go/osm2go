@@ -52,6 +52,8 @@
 
 std::vector<std::string> file_scan(const char *extension);
 
+std::string find_file(const char *n1, const char *n2, const char *n3);
+
 extern "C" {
 #endif
 
@@ -70,8 +72,6 @@ void messagef(GtkWidget *parent, const char *title, const char *fmt, ...) G_GNUC
 gboolean yes_no_f(GtkWidget *parent,
 		  struct appdata_t *appdata, gulong again_bit, gint flags,
 		  const char *title, const char *fmt, ...) G_GNUC_PRINTF(6, 7);
-
-gchar *find_file(const char *n1, const char *n2, const char *n3);
 
 /* dialog size are specified rather fuzzy */
 #define MISC_DIALOG_NOSIZE  -1

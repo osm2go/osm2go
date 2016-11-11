@@ -51,18 +51,18 @@ icon_item::icon_item(GdkPixbuf *nbuf)
 {
 }
 
-static gchar*
+static std::string
 icon_file_exists(const gchar *file) {
   const char *icon_exts[] = { ".gif", ".png", ".jpg", NULL };
   gint idx;
 
   for (idx = 0; icon_exts[idx]; idx++) {
-    gchar *fullname = find_file("icons/", file, icon_exts[idx]);
+    const std::string &fullname = find_file("icons/", file, icon_exts[idx]);
 
-    if(fullname)
+    if(!fullname.empty())
       return fullname;
   }
-  return NULL;
+  return std::string();
 }
 
 GdkPixbuf *icon_load(icon_t **icon, const char *name) {
@@ -81,10 +81,9 @@ GdkPixbuf *icon_load(icon_t **icon, const char *name) {
     }
   }
 
-  gchar *fullname = icon_file_exists(name);
-  if(fullname) {
-    GdkPixbuf *pix = gdk_pixbuf_new_from_file(fullname, NULL);
-    g_free(fullname);
+  const std::string &fullname = icon_file_exists(name);
+  if(!fullname.empty()) {
+    GdkPixbuf *pix = gdk_pixbuf_new_from_file(fullname.c_str(), NULL);
 
     if(!*icon)
       *icon = new icon_t();
