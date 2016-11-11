@@ -177,9 +177,9 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t *style) {
  * @param name_only only parse the style name, leave all other fields empty
  * @return a new style pointer
  */
-static style_t *style_parse(appdata_t *appdata, const char *fullname,
+static style_t *style_parse(appdata_t *appdata, const std::string &fullname,
                             xmlChar **fname, gboolean name_only) {
-  xmlDoc *doc = xmlReadFile(fullname, NULL, 0);
+  xmlDoc *doc = xmlReadFile(fullname.c_str(), NULL, 0);
 
   /* parse the file and get the DOM */
   if(doc == NULL) {
@@ -217,7 +217,7 @@ static style_t *style_parse(appdata_t *appdata, const char *fullname,
   }
 }
 
-static style_t *style_load_fname(appdata_t *appdata, const char *filename) {
+static style_t *style_load_fname(appdata_t *appdata, const std::string &filename) {
   xmlChar *fname = NULL;
   style_t *style = style_parse(appdata, filename, &fname, FALSE);
 
@@ -245,7 +245,7 @@ style_t *style_load(appdata_t *appdata) {
 
   printf("  style filename: %s\n", fullname.c_str());
 
-  style_t *style = style_load_fname(appdata, fullname.c_str());
+  style_t *style = style_load_fname(appdata, fullname);
 
   return style;
 }
@@ -280,7 +280,7 @@ void combo_add_styles::operator()(const std::string &filename)
 {
   printf("  file: %s\n", filename.c_str());
 
-  style_t *style = style_parse(appdata, filename.c_str(), NULL, TRUE);
+  style_t *style = style_parse(appdata, filename, NULL, TRUE);
   printf("    name: %s\n", style->name);
   combo_box_append_text(cbox, style->name);
 
@@ -321,7 +321,7 @@ struct style_find {
 
 bool style_find::operator()(const std::string &filename)
 {
-  style_t *style = style_parse(appdata, filename.c_str(), NULL, TRUE);
+  style_t *style = style_parse(appdata, filename, NULL, TRUE);
 
   bool match = (strcmp(style->name, name) == 0);
   style_free(style);
@@ -344,7 +344,7 @@ void style_change(appdata_t *appdata, const char *name) {
     return;
   }
 
-  style_t *nstyle = style_load_fname(appdata, it->c_str());
+  style_t *nstyle = style_load_fname(appdata, *it);
   if (nstyle == NULL) {
     errorf(GTK_WIDGET(appdata->window),
            _("Error loading style %s"), it->c_str());
