@@ -105,15 +105,7 @@ static void diff_save_ways(const way_t *way, xmlNodePtr root_node) {
       /* the hidden flag may be set) */
       if((!(OSM_FLAGS(way) & OSM_FLAG_DELETED)) &&
 	 (OSM_FLAGS(way) & (OSM_FLAG_DIRTY | OSM_FLAG_NEW))) {
-	node_chain_t *node_chain = way->node_chain;
-	while(node_chain) {
-	  xmlNodePtr node_node = xmlNewChild(node_way, NULL,
-					     BAD_CAST "nd", NULL);
-	  gchar id[G_ASCII_DTOSTR_BUF_SIZE];
-	  g_snprintf(id, sizeof(id), ITEM_ID_FORMAT, OSM_ID(node_chain->node));
-	  xmlNewProp(node_node, BAD_CAST "ref", BAD_CAST id);
-	  node_chain = node_chain->next;
-	}
+        osm_write_node_chain(node_way, way);
 	diff_save_tags(OSM_TAG(way), node_way);
       }
     }

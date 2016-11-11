@@ -255,6 +255,7 @@ void osm_tag_update_value(tag_t *tag, const char *value);
 char *osm_generate_xml_changeset(char* comment);
 char *osm_generate_xml_node(item_id_t changeset, const node_t *node);
 char *osm_generate_xml_way(item_id_t changeset, const way_t *way);
+void osm_write_node_chain(xmlNodePtr way_node, const way_t *node_chain);
 char *osm_generate_xml_relation(item_id_t changeset,
                                 const relation_t *relation);
 

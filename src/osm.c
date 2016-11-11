@@ -1327,6 +1327,21 @@ char *osm_generate_xml_node(item_id_t changeset, const node_t *node) {
   return osm_generate_xml_finish(doc);
 }
 
+/**
+ * @brief write the referenced nodes of a way to XML
+ * @param way_node the XML node of the way to append to
+ * @param way the way to walk
+ */
+void osm_write_node_chain(xmlNodePtr way_node, const way_t *way) {
+  const node_chain_t *node_chain;
+  for(node_chain = way->node_chain; node_chain; node_chain = node_chain->next) {
+    xmlNodePtr nd_node = xmlNewChild(way_node, NULL, BAD_CAST "nd", NULL);
+    gchar str[G_ASCII_DTOSTR_BUF_SIZE];
+    g_snprintf(str, sizeof(str), ITEM_ID_FORMAT, OSM_ID(node_chain->node));
+    xmlNewProp(nd_node, BAD_CAST "ref", BAD_CAST str);
+  }
+}
+
 /* build xml representation for a way */
 char *osm_generate_xml_way(item_id_t changeset, const way_t *way) {
   char str[32];
@@ -1341,15 +1356,7 @@ char *osm_generate_xml_way(item_id_t changeset, const way_t *way) {
   snprintf(str, sizeof(str), "%u", (unsigned)changeset);
   xmlNewProp(xml_node, BAD_CAST "changeset", BAD_CAST str);
 
-  node_chain_t *node_chain = way->node_chain;
-  while(node_chain) {
-    xmlNodePtr nd_node = xmlNewChild(xml_node, NULL, BAD_CAST "nd", NULL);
-    gchar str[G_ASCII_DTOSTR_BUF_SIZE];
-    g_snprintf(str, sizeof(str), ITEM_ID_FORMAT, OSM_ID(node_chain->node));
-    xmlNewProp(nd_node, BAD_CAST "ref", BAD_CAST str);
-    node_chain = node_chain->next;
-  }
-
+  osm_write_node_chain(xml_node, way);
   osm_generate_tags(OSM_TAG(way), xml_node);
 
   return osm_generate_xml_finish(doc);
