@@ -893,7 +893,7 @@ static GtkWidget *relation_list_widget(relation_context_t *context) {
     g_slist_foreach(rchain, (GFunc)relation_list_widget_functor, context);
     g_slist_free(rchain);
   } else {
-    relation_t *relation = context->appdata->osm->relation;
+    const relation_t *relation = context->appdata->osm->relation;
     for(; relation; relation = relation->next)
       relation_list_widget_functor(relation, context);
   }
