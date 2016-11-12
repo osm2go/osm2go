@@ -847,6 +847,24 @@ static void on_relation_remove(G_GNUC_UNUSED GtkWidget *button, relation_context
   relation_list_selected(context, NULL);
 }
 
+static void relation_list_widget_functor(const relation_t *rel,
+                                         relation_context_t *context)
+{
+  char *name = relation_get_descriptive_name(rel);
+  guint num = osm_relation_members_num(rel);
+  GtkTreeIter iter;
+
+  /* Append a row and fill in some data */
+  gtk_list_store_append(context->store, &iter);
+  gtk_list_store_set(context->store, &iter,
+                     RELATION_COL_TYPE,
+                     osm_tag_get_by_key(OSM_TAG(rel), "type"),
+                     RELATION_COL_NAME, name,
+                     RELATION_COL_MEMBERS, num,
+                     RELATION_COL_DATA, rel,
+                     -1);
+}
+
 static GtkWidget *relation_list_widget(relation_context_t *context) {
   context->list = list_new(LIST_HILDON_WITH_HEADERS);
 
@@ -870,38 +888,15 @@ static GtkWidget *relation_list_widget(relation_context_t *context) {
   gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(context->store),
                                        RELATION_COL_NAME, GTK_SORT_ASCENDING);
 
-  GtkTreeIter iter;
-  relation_t *relation = NULL;
-  GSList *rchain = NULL;
-
-  if(context->object)
-    rchain = osm_object_to_relation(context->appdata->osm, context->object);
-  else
-    relation = context->appdata->osm->relation;
-
-  while(relation || rchain) {
-    relation_t *rel = relation? relation :
-                      (relation_t*)rchain->data;
-
-    char *name = relation_get_descriptive_name(rel);
-    guint num = osm_relation_members_num(rel);
-
-    /* Append a row and fill in some data */
-    gtk_list_store_append(context->store, &iter);
-    gtk_list_store_set(context->store, &iter,
-		       RELATION_COL_TYPE,
-		       osm_tag_get_by_key(OSM_TAG(rel), "type"),
-		       RELATION_COL_NAME, name,
-		       RELATION_COL_MEMBERS, num,
-		       RELATION_COL_DATA, rel,
-		       -1);
-
-    if(relation) relation = relation->next;
-    if(rchain)   rchain = g_slist_next(rchain);
-  }
-
-  if(rchain)
+  if(context->object) {
+    GSList *rchain = osm_object_to_relation(context->appdata->osm, context->object);
+    g_slist_foreach(rchain, (GFunc)relation_list_widget_functor, context);
     g_slist_free(rchain);
+  } else {
+    relation_t *relation = context->appdata->osm->relation;
+    for(; relation; relation = relation->next)
+      relation_list_widget_functor(relation, context);
+  }
 
   g_object_unref(context->store);
 
