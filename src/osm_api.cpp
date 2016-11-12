@@ -24,6 +24,7 @@
 #include "misc.h"
 #include "net_io.h"
 
+#include <algorithm>
 #include <curl/curl.h>
 #include <curl/easy.h> /* new for v7 */
 #include <map>
@@ -611,71 +612,83 @@ static void osm_upload_ways(osm_upload_context_t *context, gchar *cred) {
   }
 }
 
-static void osm_delete_relations(osm_upload_context_t *context, gchar *cred) {
-  relation_t *relation = context->osm->relation;
+struct osm_delete_relations {
+  osm_upload_context_t * const context;
+  gchar * const cred;
+  osm_delete_relations(osm_upload_context_t *co, gchar *cr) : context(co), cred(cr) {}
+  void operator()(std::pair<item_id_t, relation_t *> pair);
+};
+
+void osm_delete_relations::operator()(std::pair<item_id_t, relation_t *> pair)
+{
+  relation_t * const relation = pair.second;
   project_t *project = context->project;
 
-  for(; relation; relation = relation->next) {
-    /* make sure gui gets updated */
-    while(gtk_events_pending()) gtk_main_iteration();
+  /* make sure gui gets updated */
+  while(gtk_events_pending()) gtk_main_iteration();
 
-    if(!(relation->flags & OSM_FLAG_DELETED))
-      continue;
+  if(!(relation->flags & OSM_FLAG_DELETED))
+    return;
 
-    printf("deleting relation on server\n");
+  printf("deleting relation on server\n");
 
-    appendf(&context->log, NULL,
-            _("Delete relation #" ITEM_ID_FORMAT " "), relation->id);
+  appendf(&context->log, NULL,
+          _("Delete relation #" ITEM_ID_FORMAT " "), relation->id);
 
-    char *url = g_strdup_printf("%s/relation/" ITEM_ID_FORMAT,
-                                project->server, relation->id);
-    char *xml_str = osm_generate_xml_relation(context->changeset, relation);
+  char *url = g_strdup_printf("%s/relation/" ITEM_ID_FORMAT,
+                              project->server, relation->id);
+  char *xml_str = osm_generate_xml_relation(context->changeset, relation);
 
-    if(osm_delete_item(&context->log, xml_str, url, cred, context->proxy)) {
-      relation->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
-      project->data_dirty = TRUE;
-    }
+  if(osm_delete_item(&context->log, xml_str, url, cred, context->proxy)) {
+    relation->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
+    project->data_dirty = TRUE;
   }
 }
 
-static void osm_upload_relations(osm_upload_context_t *context, gchar *cred) {
-  relation_t *relation = context->osm->relation;
+struct osm_upload_relations {
+  osm_upload_context_t * const context;
+  gchar * const cred;
+  osm_upload_relations(osm_upload_context_t *co, gchar *cr) : context(co), cred(cr) {}
+  void operator()(std::pair<item_id_t, relation_t *> pair);
+};
+
+void osm_upload_relations::operator()(std::pair<item_id_t, relation_t *> pair)
+{
+  relation_t * const relation = pair.second;
   project_t *project = context->project;
 
-  for(; relation; relation = relation->next) {
-    /* make sure gui gets updated */
-    while(gtk_events_pending()) gtk_main_iteration();
+  /* make sure gui gets updated */
+  while(gtk_events_pending()) gtk_main_iteration();
 
-    if(!(relation->flags & (OSM_FLAG_DIRTY | OSM_FLAG_NEW)) ||
-       (relation->flags & OSM_FLAG_DELETED))
-      continue;
+  if(!(relation->flags & (OSM_FLAG_DIRTY | OSM_FLAG_NEW)) ||
+     (relation->flags & OSM_FLAG_DELETED))
+    return;
 
-    char *url = NULL;
+  char *url = NULL;
 
-    if(relation->flags & OSM_FLAG_NEW) {
-      url = g_strdup_printf("%s/relation/create", project->server);
-      appendf(&context->log, NULL, _("New relation "));
-    } else {
-      url = g_strdup_printf("%s/relation/" ITEM_ID_FORMAT,
-                            project->server,relation->id);
-      appendf(&context->log, NULL, _("Modified relation #" ITEM_ID_FORMAT " "),
-              relation->id);
-    }
-
-    /* upload this relation */
-    char *xml_str = osm_generate_xml_relation(context->changeset, relation);
-    if(xml_str) {
-      printf("uploading relation %s from address %p\n", url, xml_str);
-
-      if(osm_update_item(&context->log, xml_str, url, cred,
-         (relation->flags & OSM_FLAG_NEW) ? &(relation->id) :
-          &relation->version, context->proxy)) {
-        relation->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_NEW);
-        project->data_dirty = TRUE;
-      }
-    }
-    g_free(url);
+  if(relation->flags & OSM_FLAG_NEW) {
+    url = g_strdup_printf("%s/relation/create", project->server);
+    appendf(&context->log, NULL, _("New relation "));
+  } else {
+    url = g_strdup_printf("%s/relation/" ITEM_ID_FORMAT,
+                          project->server, relation->id);
+    appendf(&context->log, NULL, _("Modified relation #" ITEM_ID_FORMAT " "),
+            relation->id);
   }
+
+  /* upload this relation */
+  char *xml_str = osm_generate_xml_relation(context->changeset, relation);
+  if(xml_str) {
+    printf("uploading relation %s from address %p\n", url, xml_str);
+
+    if(osm_update_item(&context->log, xml_str, url, cred,
+        (relation->flags & OSM_FLAG_NEW) ? &relation->id :
+        &relation->version, context->proxy)) {
+      relation->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_NEW);
+      project->data_dirty = TRUE;
+    }
+  }
+  g_free(url);
 }
 
 static gboolean osm_create_changeset(osm_upload_context_t *context, gchar **cred) {
@@ -760,7 +773,17 @@ static gboolean cb_focus_in(GtkTextView *view, G_GNUC_UNUSED GdkEventFocus *even
   return FALSE;
 }
 
-static void object_counter(const base_object_t *obj, struct osm_dirty_t::counter &dirty) {
+struct object_counter {
+  osm_dirty_t::counter &dirty;
+  object_counter(osm_dirty_t::counter &d) : dirty(d) {}
+  void operator()(const base_object_t *obj);
+  void operator()(std::pair<item_id_t, const base_object_t *> pair) {
+    operator()(pair.second);
+  }
+};
+
+void object_counter::operator()(const base_object_t *obj)
+{
   int flags = obj->flags;
   dirty.total++;
   if(flags & OSM_FLAG_DELETED)
@@ -789,29 +812,27 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   osm_dirty_t dirty;
   memset(&dirty, 0, sizeof(dirty));
 
+  object_counter cnodes(dirty.nodes);
   const node_t *node = osm->node;
   while(node) {
-    object_counter(node, dirty.nodes);
+    cnodes(node);
     node = node->next;
   }
   printf("nodes:     new %2d, dirty %2d, deleted %2d\n",
 	 dirty.nodes.added, dirty.nodes.dirty, dirty.nodes.deleted);
 
   /* count ways */
+  object_counter cways(dirty.ways);
   const way_t *way = osm->way;
   while(way) {
-    object_counter(way, dirty.ways);
+    cways(way);
     way = way->next;
   }
   printf("ways:      new %2d, dirty %2d, deleted %2d\n",
 	 dirty.ways.added, dirty.ways.dirty, dirty.ways.deleted);
 
   /* count relations */
-  const relation_t *relation = osm->relation;
-  while(relation) {
-    object_counter(relation, dirty.relations);
-    relation = relation->next;
-  }
+  std::for_each(osm->relations.begin(), osm->relations.end(), object_counter(dirty.relations));
   printf("relations: new %2d, dirty %2d, deleted %2d\n",
 	 dirty.relations.added, dirty.relations.dirty, dirty.relations.deleted);
 
@@ -992,9 +1013,9 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
     appendf(&context->log, NULL, _("Uploading ways:\n"));
     osm_upload_ways(context, cred);
     appendf(&context->log, NULL, _("Uploading relations:\n"));
-    osm_upload_relations(context, cred);
+    std::for_each(osm->relations.begin(), osm->relations.end(), osm_upload_relations(context, cred));
     appendf(&context->log, NULL, _("Deleting relations:\n"));
-    osm_delete_relations(context, cred);
+    std::for_each(osm->relations.begin(), osm->relations.end(), osm_delete_relations(context, cred));
     appendf(&context->log, NULL, _("Deleting ways:\n"));
     osm_delete_ways(context, cred);
     appendf(&context->log, NULL, _("Deleting nodes:\n"));

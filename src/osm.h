@@ -262,14 +262,19 @@ class relation_t : public base_object_t {
 public:
   relation_t();
 
-  relation_t *next;
   std::vector<member_t> members;
+
   std::vector<member_t>::iterator find_member_object(const object_t &o);
   std::vector<member_t>::const_iterator find_member_object(const object_t &o) const;
 
   void members_by_type(guint *nodes, guint *ways, guint *relations) const;
   gchar *descriptive_name() const;
+
+  void cleanup();
 };
+
+typedef std::vector<relation_t *> relation_chain_t;
+
 #endif
 
 typedef struct osm_t {
@@ -279,8 +284,6 @@ typedef struct osm_t {
 
   way_t  *way;
 
-  relation_t  *relation;
-
   struct icon_t **icons;
 
   bounds_t rbounds;
@@ -288,7 +291,7 @@ typedef struct osm_t {
 #ifdef __cplusplus
   std::map<item_id_t, node_t *> node_hash;
   std::map<item_id_t, way_t *> way_hash;
-  // hashing relations doesn't yet make much sense as relations are quite rare
+  std::map<item_id_t, relation_t *> relations;
   std::map<int, std::string> users;   //< users where uid is given in XML
   std::vector<std::string> anonusers; //< users without uid
 #endif
@@ -357,15 +360,13 @@ void osm_way_remove_from_relation(osm_t *osm, way_t *way);
 tag_t *osm_tags_copy(const tag_t *tag);
 
 relation_t *osm_relation_new(void);
-void osm_relation_free(relation_t *relation);
+void osm_relation_free(osm_t *osm, relation_t *relation);
 void osm_relation_attach(osm_t *osm, relation_t *relation);
 void osm_relation_delete(osm_t *osm, relation_t *relation,
 			 gboolean permanently);
 
 #ifdef __cplusplus
 }
-
-typedef std::vector<relation_t *> relation_chain_t;
 
 bool osm_object_is_same(const object_t *obj1, const object_t &obj2);
 

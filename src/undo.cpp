@@ -122,7 +122,7 @@ static void undo_object_free(osm_t *osm, object_t *obj) {
       break;
 
     case RELATION:
-      osm_relation_free(obj->relation);
+      osm_relation_free(osm, obj->relation);
       break;
 
     default:

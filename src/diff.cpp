@@ -164,29 +164,45 @@ void diff_save_rel::operator()(const member_t &member)
     xmlNewProp(node_member, BAD_CAST "role", BAD_CAST member.role);
 }
 
+struct diff_save_relations {
+  xmlNodePtr const root_node;
+  diff_save_relations(xmlNodePtr r) : root_node(r) {}
+  void operator()(std::pair<item_id_t, relation_t *> pair);
+};
 
-static void diff_save_relations(const relation_t *relation, xmlNodePtr root_node) {
+/* store all modfied relations */
+void diff_save_relations::operator()(std::pair<item_id_t, relation_t *> pair)
+{
+  const relation_t * const relation = pair.second;
+  if(!relation->flags)
+    return;
 
-  /* store all modfied relations */
-  while(relation) {
-    if(relation->flags) {
-      xmlNodePtr node_rel = xmlNewChild(root_node, NULL,
-					 BAD_CAST "relation", NULL);
+  xmlNodePtr node_rel = xmlNewChild(root_node, NULL,
+                                    BAD_CAST "relation", NULL);
 
-      diff_save_state_n_id(relation->flags, node_rel, relation->id);
+  diff_save_state_n_id(relation->flags, node_rel, relation->id);
 
-      if(!(relation->flags & OSM_FLAG_DELETED)) {
-	/* additional info is only required if the relation */
-	/* hasn't been deleted */
-        std::for_each(relation->members.begin(), relation->members.end(),
-                      diff_save_rel(node_rel));
-	diff_save_tags(relation->tag, node_rel);
-      }
-    }
-    relation = relation->next;
-  }
+  if(relation->flags & OSM_FLAG_DELETED)
+    return;
+
+  /* additional info is only required if the relation */
+  /* hasn't been deleted */
+  std::for_each(relation->members.begin(), relation->members.end(),
+                diff_save_rel(node_rel));
+
+  diff_save_tags(relation->tag, node_rel);
 }
 
+struct find_object_by_flags {
+  int flagmask;
+  find_object_by_flags(int f = ~0) : flagmask(f) {}
+  bool operator()(const base_object_t *obj) {
+    return obj->flags & flagmask;
+  }
+  bool operator()(std::pair<item_id_t, base_object_t *> pair) {
+    return pair.second->flags & flagmask;
+  }
+};
 
 /* return true if no diff needs to be saved */
 gboolean diff_is_clean(const osm_t *osm, gboolean honor_hidden_flags) {
@@ -205,14 +221,9 @@ gboolean diff_is_clean(const osm_t *osm, gboolean honor_hidden_flags) {
       return FALSE;
   }
 
-  const relation_t *relation = osm->relation;
-  while(relation) {
-    if(relation->flags)
-      return FALSE;
-    relation = relation->next;
-  }
-
-  return TRUE;
+  std::map<item_id_t, relation_t *>::const_iterator it =
+    std::find_if(osm->relations.begin(), osm->relations.end(), find_object_by_flags());
+  return (it == osm->relations.end()) ? TRUE : FALSE;
 }
 
 void diff_save(const project_t *project, const osm_t *osm) {
@@ -240,7 +251,7 @@ void diff_save(const project_t *project, const osm_t *osm) {
 
   diff_save_nodes(osm->node, root_node);
   diff_save_ways(osm->way, root_node);
-  diff_save_relations(osm->relation, root_node);
+  std::for_each(osm->relations.begin(), osm->relations.end(), diff_save_relations(root_node));
 
   xmlSaveFormatFileEnc(ndiff, doc, "UTF-8", 1);
   xmlFreeDoc(doc);
@@ -560,7 +571,7 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
   /* evaluate properties */
   relation_t *relation = NULL;
   switch(state) {
-  case OSM_FLAG_NEW: {
+  case OSM_FLAG_NEW:
     printf("  Restoring NEW relation\n");
 
     relation = new relation_t();
@@ -571,11 +582,8 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
     if(!relation->time) relation->time = time(NULL);
 
     /* attach to end of relation list */
-    relation_t **lrelation = &osm->relation;
-    while(*lrelation) lrelation = &(*lrelation)->next;
-    *lrelation = relation;
+    osm->relations[id] = relation;
     break;
-  }
 
   case OSM_FLAG_DELETED:
     printf("  Restoring DELETE flag\n");

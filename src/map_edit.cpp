@@ -659,6 +659,42 @@ void member_merge::operator()(relation_t *relation)
   }
 }
 
+struct relation_node_replacer {
+  const node_t * const touchnode;
+  node_t * const node;
+  relation_node_replacer(const node_t *t, node_t *n) : touchnode(t), node(n) {}
+  void operator()(std::pair<item_id_t, relation_t *> pair);
+
+  struct member_replacer {
+    relation_t * const r;
+    const node_t * const touchnode;
+    node_t * const node;
+    member_replacer(relation_t *rel, const node_t *t, node_t *n)
+      : r(rel), touchnode(t), node(n) {}
+    void operator()(member_t &member);
+  };
+};
+
+void relation_node_replacer::operator()(std::pair<item_id_t, relation_t *> pair)
+{
+  relation_t * const r = pair.second;
+  std::for_each(r->members.begin(), r->members.end(),
+                member_replacer(r, touchnode, node));
+}
+
+void relation_node_replacer::member_replacer::operator()(member_t &member)
+{
+  if(member.object != touchnode)
+    return;
+
+  printf("  found node in relation #" ITEM_ID_FORMAT "\n", r->id);
+
+  /* replace by node */
+  member.object.node = node;
+
+  r->flags |= OSM_FLAG_DIRTY;
+}
+
 void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 			  gint ex, gint ey) {
 
@@ -717,22 +753,8 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
       }
 
       /* replace node in relations */
-      relation_t *relation = appdata->osm->relation;
-      while(relation) {
-        const std::vector<member_t>::iterator itEnd = relation->members.end();
-        std::vector<member_t>::iterator it = relation->members.begin();
-
-        while((it = std::find(it, itEnd, object_t(touchnode))) != itEnd) {
-          printf("  found node in relation #" ITEM_ID_FORMAT "\n",
-                 relation->id);
-
-          /* replace by node */
-          it->object.node = node;
-
-          relation->flags |= OSM_FLAG_DIRTY;
-	}
-	relation = relation->next;
-      }
+      std::for_each(appdata->osm->relations.begin(), appdata->osm->relations.end(),
+                    relation_node_replacer(touchnode, node));
 
       gboolean conflict = combine_tags(&node->tag, touchnode->tag);
       touchnode->tag = NULL;

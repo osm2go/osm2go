@@ -487,19 +487,20 @@ void osm_members_free(std::vector<member_t> &members) {
   members.clear();
 }
 
-void osm_relation_free(relation_t *relation) {
-  osm_tags_free(relation->tag);
-  osm_members_free(relation->members);
+void relation_t::cleanup() {
+  osm_tags_free(tag);
+  osm_members_free(members);
+}
 
+void osm_relation_free(osm_t *osm, relation_t *relation) {
+  osm->relations.erase(relation->id);
+  relation->cleanup();
   delete relation;
 }
 
-static void osm_relations_free(relation_t *relation) {
-  while(relation) {
-    relation_t *next = relation->next;
-    osm_relation_free(relation);
-    relation = next;
-  }
+static void osm_relation_free_pair(std::pair<item_id_t, relation_t *> pair) {
+  pair.second->cleanup();
+  delete pair.second;
 }
 
 member_t osm_parse_osm_relation_member(osm_t *osm, xmlNode *a_node) {
@@ -587,7 +588,8 @@ void osm_free(osm_t *osm) {
 
   osm_ways_free(osm, osm->way);
   osm_nodes_free(osm, osm->node);
-  osm_relations_free(osm->relation);
+  std::for_each(osm->relations.begin(), osm->relations.end(),
+                osm_relation_free_pair);
   delete osm;
 }
 
@@ -964,7 +966,6 @@ static osm_t *process_osm(xmlTextReaderPtr reader) {
 
   node_t **node = &osm->node;
   way_t **way = &osm->way;
-  relation_t **relation = &osm->relation;
 
   /* no attributes of interest */
 
@@ -1008,8 +1009,9 @@ static osm_t *process_osm(xmlTextReaderPtr reader) {
 	if(*way) way = &(*way)->next;
 	block = BLOCK_WAYS;
       } else if(block <= BLOCK_RELATIONS && strcmp(name, "relation") == 0) {
-	*relation = process_relation(reader, osm);
-	if(*relation) relation = &(*relation)->next;
+	relation_t *relation = process_relation(reader, osm);
+	if(relation)
+	  osm->relations[relation->id] = relation;
 	block = BLOCK_RELATIONS;
       } else {
 	printf("something unknown found: %s\n", name);
@@ -1413,13 +1415,9 @@ way_t *osm_get_way_by_id(osm_t *osm, item_id_t id) {
 
 relation_t *osm_get_relation_by_id(osm_t *osm, item_id_t id) {
   // use linear search
-  relation_t *relation = osm->relation;
-  while(relation) {
-    if(relation->id == id)
-      return relation;
-
-    relation = relation->next;
-  }
+  const std::map<item_id_t, relation_t *>::iterator it = osm->relations.find(id);
+  if(it != osm->relations.end())
+    return it->second;
 
   return NULL;
 }
@@ -1470,17 +1468,10 @@ item_id_t osm_new_relation_id(osm_t *osm) {
   item_id_t id = -1;
 
   while(TRUE) {
-    gboolean found = FALSE;
-    const relation_t *relation = osm->relation;
-    while(relation && !found) {
-      if(relation->id == id)
-	found = TRUE;
-
-      relation = relation->next;
-    }
-
+    const std::map<item_id_t, relation_t *>::const_iterator it = osm->relations.find(id);
     /* no such id so far -> use it */
-    if(!found) return id;
+    if(it == osm->relations.end())
+      return id;
 
     id--;
   }
@@ -1676,12 +1667,12 @@ static relation_chain_t osm_node_to_relation(osm_t *osm, const node_t *node,
 				       gboolean via_way) {
   relation_chain_t rel_chain;
 
-  relation_t *relation = osm->relation;
-  for(; relation; relation = relation->next) {
+  const std::map<item_id_t, relation_t *>::iterator ritEnd = osm->relations.end();
+  for(std::map<item_id_t, relation_t *>::iterator rit = osm->relations.begin(); rit != ritEnd; rit++) {
     bool is_member = false;
 
-    const std::vector<member_t>::const_iterator mitEnd = relation->members.end();
-    for(std::vector<member_t>::const_iterator member = relation->members.begin();
+    const std::vector<member_t>::const_iterator mitEnd = rit->second->members.end();
+    for(std::vector<member_t>::const_iterator member = rit->second->members.begin();
         !is_member && member != mitEnd; member++) {
       switch(member->object.type) {
       case NODE:
@@ -1702,7 +1693,7 @@ static relation_chain_t osm_node_to_relation(osm_t *osm, const node_t *node,
 
     /* node is a member of this relation, so move it to the member chain */
     if(is_member)
-      rel_chain.push_back(relation);
+      rel_chain.push_back(rit->second);
   }
 
   return rel_chain;
@@ -1711,9 +1702,9 @@ static relation_chain_t osm_node_to_relation(osm_t *osm, const node_t *node,
 struct check_member {
   const object_t object;
   check_member(const object_t &o) : object(o) {}
-  bool operator()(const relation_t *relation) {
-    return std::find(relation->members.begin(), relation->members.end(),
-                     object) != relation->members.end();
+  bool operator()(std::pair<item_id_t, relation_t *> pair) {
+    return std::find(pair.second->members.begin(), pair.second->members.end(),
+                     object) != pair.second->members.end();
   }
 };
 
@@ -1733,11 +1724,11 @@ relation_chain_t osm_object_to_relation(osm_t *osm, const object_t &object) {
     relation_chain_t rel_chain;
     check_member fc(object);
 
-    relation_t *relation = osm->relation;
-    for(; relation; relation = relation->next)
-      if(fc(relation))
-        /* relation is a member of this relation, so move it to the member chain */
-       rel_chain.push_back(relation);
+    const std::map<item_id_t, relation_t *>::iterator ritEnd = osm->relations.end();
+    std::map<item_id_t, relation_t *>::iterator rit = osm->relations.begin();
+    while((rit = std::find_if(rit, ritEnd, fc)) != ritEnd)
+      /* relation is a member of this relation, so move it to the member chain */
+      rel_chain.push_back(rit->second);
 
     return rel_chain;
   }
@@ -1777,11 +1768,12 @@ struct remove_member_functor {
   const object_t obj;
   // the second argument is to distinguish the constructor from operator()
   remove_member_functor(object_t o, bool) : obj(o) {}
-  void operator()(relation_t *relation);
+  void operator()(std::pair<item_id_t, relation_t *> pair);
 };
 
-void remove_member_functor::operator()(relation_t *relation)
+void remove_member_functor::operator()(std::pair<item_id_t, relation_t *> pair)
 {
+  relation_t * const relation = pair.second;
   const std::vector<member_t>::iterator itEnd = relation->members.end();
   std::vector<member_t>::iterator it = relation->members.begin();
 
@@ -1798,24 +1790,18 @@ void remove_member_functor::operator()(relation_t *relation)
 /* remove the given node from all relations. used if the node is to */
 /* be deleted */
 void osm_node_remove_from_relation(osm_t *osm, node_t *node) {
-  relation_t *relation = osm->relation;
   printf("removing node #" ITEM_ID_FORMAT " from all relations:\n", node->id);
 
-  remove_member_functor fc(object_t(node), false);
-  for(; relation; relation = relation->next) {
-    fc(relation);
-  }
+  std::for_each(osm->relations.begin(), osm->relations.end(),
+                remove_member_functor(object_t(node), false));
 }
 
 /* remove the given way from all relations */
 void osm_way_remove_from_relation(osm_t *osm, way_t *way) {
-  relation_t *relation = osm->relation;
   printf("removing way #" ITEM_ID_FORMAT " from all relations:\n", way->id);
 
-  remove_member_functor fc(object_t(way), false);
-  for(; relation; relation = relation->next) {
-    fc(relation);
-  }
+  std::for_each(osm->relations.begin(), osm->relations.end(),
+                remove_member_functor(object_t(way), false));
 }
 
 relation_t *osm_relation_new(void) {
@@ -1837,9 +1823,7 @@ void osm_relation_attach(osm_t *osm, relation_t *relation) {
   relation->flags = OSM_FLAG_NEW;
 
   /* attach to end of relation list */
-  relation_t **lrelation = &osm->relation;
-  while(*lrelation) lrelation = &(*lrelation)->next;
-  *lrelation = relation;
+  osm->relations[relation->id] = relation;
 }
 
 struct osm_unref_way_free {
@@ -1929,20 +1913,7 @@ void osm_relation_delete(osm_t *osm, relation_t *relation,
     printf("permanently delete relation #" ITEM_ID_FORMAT "\n",
 	   relation->id);
 
-    /* remove it from the chain */
-    relation_t **crelation = &osm->relation;
-    int found = 0;
-
-    while(*crelation) {
-      if(*crelation == relation) {
-	found++;
-	*crelation = (*crelation)->next;
-
-	osm_relation_free(relation);
-      } else
-	crelation = &((*crelation)->next);
-    }
-    g_assert_cmpint(found, ==, 1);
+    osm_relation_free(osm, relation);
   }
 }
 
@@ -2288,7 +2259,6 @@ bool member_t::operator==(const member_t &other) const
 
 relation_t::relation_t()
   : base_object_t()
-  , next(0)
 {
 }
 

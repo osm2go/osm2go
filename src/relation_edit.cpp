@@ -288,6 +288,43 @@ static gboolean on_view_clicked(GtkWidget *widget, GdkEventButton *event,
 }
 #endif
 
+struct relation_list_insert_functor {
+  relitem_context_t * const context;
+  GtkTreeSelection * const selection;
+  GtkTreeIter sel_iter;
+  gchar *selname; /* name of sel_iter */
+  relation_list_insert_functor(relitem_context_t *c, GtkTreeSelection *s) : context(c), selection(s), selname(0) {}
+  void operator()(std::pair<item_id_t, relation_t *> pair);
+};
+
+void relation_list_insert_functor::operator()(std::pair<item_id_t, relation_t *> pair)
+{
+  const relation_t * const relation = pair.second;
+  GtkTreeIter iter;
+  /* try to find something descriptive */
+  gchar *name = relation->descriptive_name();
+
+  /* Append a row and fill in some data */
+  gtk_list_store_append(context->store, &iter);
+  gtk_list_store_set(context->store, &iter,
+     RELITEM_COL_TYPE, osm_tag_get_by_key(relation->tag, "type"),
+     RELITEM_COL_ROLE, relitem_get_role_in_relation(context->item, relation),
+     RELITEM_COL_NAME, name,
+     RELITEM_COL_DATA, relation,
+     -1);
+
+  /* select all relations the current object is part of */
+  if(relitem_is_in_relation(context->item, relation)) {
+    gtk_tree_selection_select_iter(selection, &iter);
+    /* check if this element is earlier by name in the list */
+    if(selname == NULL || strcmp(name, selname) < 0) {
+      selname = name;
+      sel_iter = iter;
+    }
+  }
+}
+
+
 static GtkWidget *relation_item_list_widget(relitem_context_t *context) {
 #ifndef FREMANTLE
   context->view = gtk_tree_view_new();
@@ -344,38 +381,13 @@ static GtkWidget *relation_item_list_widget(relitem_context_t *context) {
                                        RELITEM_COL_NAME, GTK_SORT_ASCENDING);
 
   /* build a list of iters of all items that should be selected */
+  relation_list_insert_functor inserter(context, selection);
 
-  GtkTreeIter iter, sel_iter;
-  gchar *selname = NULL; /* name of sel_iter */
-  relation_t *relation = context->appdata->osm->relation;
-  while(relation) {
-    /* try to find something descriptive */
-    gchar *name = relation->descriptive_name();
+  std::for_each(context->appdata->osm->relations.begin(),
+                context->appdata->osm->relations.end(), inserter);
 
-    /* Append a row and fill in some data */
-    gtk_list_store_append(context->store, &iter);
-    gtk_list_store_set(context->store, &iter,
-       RELITEM_COL_TYPE, osm_tag_get_by_key(relation->tag, "type"),
-       RELITEM_COL_ROLE, relitem_get_role_in_relation(context->item, relation),
-       RELITEM_COL_NAME, name,
-       RELITEM_COL_DATA, relation,
-       -1);
-
-    /* select all relations the current object is part of */
-    if(relitem_is_in_relation(context->item, relation)) {
-      gtk_tree_selection_select_iter(selection, &iter);
-      /* check if this element is earlier by name in the list */
-      if(selname == NULL || strcmp(name, selname) < 0) {
-        selname = name;
-        sel_iter = iter;
-      }
-    }
-
-    relation = relation->next;
-  }
-
-  if(selname != NULL)
-    list_view_scroll(GTK_TREE_VIEW(context->view), selection, &sel_iter);
+  if(inserter.selname != NULL)
+    list_view_scroll(GTK_TREE_VIEW(context->view), selection, &inserter.sel_iter);
 
   g_signal_connect(G_OBJECT(selection), "changed",
 		   G_CALLBACK(changed), context);
@@ -722,7 +734,7 @@ static void on_relation_add(G_GNUC_UNUSED GtkWidget *button, relation_context_t 
   relation_t *relation = osm_relation_new();
   if(!relation_info_dialog(context->dialog, context->appdata, relation)) {
     printf("tag edit cancelled\n");
-    osm_relation_free(relation);
+    osm_relation_free(context->appdata->osm, relation);
   } else {
     osm_relation_attach(context->appdata->osm, relation);
 
@@ -813,6 +825,9 @@ struct relation_list_widget_functor {
   relation_context_t * const context;
   relation_list_widget_functor(relation_context_t *c) : context(c) {}
   void operator()(const relation_t *rel);
+  inline void operator()(std::pair<item_id_t, relation_t *> pair) {
+    operator()(pair.second);
+  }
 };
 
 void relation_list_widget_functor::operator()(const relation_t *rel)
@@ -862,9 +877,9 @@ static GtkWidget *relation_list_widget(relation_context_t *context) {
                                                    *(context->object));
     std::for_each(rchain.begin(), rchain.end(), fc);
   } else {
-    const relation_t *relation = context->appdata->osm->relation;
-    for(; relation; relation = relation->next)
-      fc(relation);
+    const std::map<item_id_t, relation_t *> &rchain =
+                                         context->appdata->osm->relations;
+    std::for_each(rchain.begin(), rchain.end(), fc);
   }
 
   g_object_unref(context->store);
