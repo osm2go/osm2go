@@ -554,7 +554,17 @@ void map_show_node(map_t *map, node_t *node) {
 	       map->style->node.color, 0);
 }
 
-void map_way_draw(map_t *map, way_t *way) {
+struct map_way_draw_functor {
+  map_t * const map;
+  map_way_draw_functor(map_t *m) : map(m) {}
+  void operator()(way_t *way);
+  void operator()(std::pair<item_id_t, way_t *> pair) {
+    operator()(pair.second);
+  }
+};
+
+void map_way_draw_functor::operator()(way_t *way)
+{
   /* don't draw a way that's not there anymore */
   if(way->flags & (OSM_FLAG_DELETED | OSM_FLAG_HIDDEN))
     return;
@@ -593,6 +603,11 @@ void map_way_draw(map_t *map, way_t *way) {
     }
     canvas_points_free(points);
   }
+}
+
+void map_way_draw(map_t *map, way_t *way) {
+  map_way_draw_functor m(map);
+  m(way);
 }
 
 void map_node_draw(map_t *map, node_t *node) {
@@ -744,11 +759,7 @@ static void map_draw(map_t *map, osm_t *osm) {
   g_assert(map->canvas);
 
   printf("drawing ways ...\n");
-  way_t *way = osm->way;
-  while(way) {
-    map_way_draw(map, way);
-    way = way->next;
-  }
+  std::for_each(osm->ways.begin(), osm->ways.end(), map_way_draw_functor(map));
 
   printf("drawing single nodes ...\n");
   node_t *node = osm->node;
@@ -771,6 +782,11 @@ void map_state_free(map_state_t *state) {
     g_free(state);
 }
 
+static void free_map_item_chain(std::pair<item_id_t, way_t *> pair) {
+  delete pair.second->map_item_chain;
+  pair.second->map_item_chain = NULL;
+}
+
 void map_free_map_item_chains(appdata_t *appdata) {
   if(!appdata->osm) return;
 
@@ -783,12 +799,8 @@ void map_free_map_item_chains(appdata_t *appdata) {
     node = node->next;
   }
 
-  way_t *way = appdata->osm->way;
-  while(way) {
-    delete way->map_item_chain;
-    way->map_item_chain = NULL;
-    way = way->next;
-  }
+  std::for_each(appdata->osm->ways.begin(), appdata->osm->ways.end(),
+                free_map_item_chain);
 
   if (appdata->track.track) {
     /* remove all segments */
@@ -2016,7 +2028,7 @@ struct node_deleted_from_ways {
 
 /* redraw all affected ways */
 void node_deleted_from_ways::operator()(way_t *way) {
-  if(way->next == NULL) {
+  if(way->node_chain.size() == 1) {
     /* this way now only contains one node and thus isn't a valid */
     /* way anymore. So it'll also get deleted (which in turn may */
     /* cause other nodes to be deleted as well) */
@@ -2408,19 +2420,27 @@ void map_hide_selected(appdata_t *appdata) {
   gtk_widget_set_sensitive(appdata->menu_item_map_show_all, TRUE);
 }
 
+struct map_show_all_functor {
+  map_t * const map;
+  map_show_all_functor(map_t *m) : map(m) {}
+  void operator()(std::pair<item_id_t, way_t *> pair);
+};
+
+void map_show_all_functor::operator()(std::pair<item_id_t, way_t *> pair)
+{
+  way_t * const way = pair.second;
+  if(way->flags & OSM_FLAG_HIDDEN) {
+    way->flags &= ~OSM_FLAG_HIDDEN;
+    map_way_draw(map, way);
+  }
+}
+
 void map_show_all(appdata_t *appdata) {
   map_t *map = appdata->map;
   if(!map) return;
 
-  way_t *way = appdata->osm->way;
-  while(way) {
-    if(way->flags & OSM_FLAG_HIDDEN) {
-      way->flags &= ~OSM_FLAG_HIDDEN;
-      map_way_draw(map, way);
-    }
-
-    way = way->next;
-  }
+  std::for_each(appdata->osm->ways.begin(), appdata->osm->ways.end(),
+                map_show_all_functor(map));
 
   gtk_widget_set_sensitive(appdata->menu_item_map_show_all, FALSE);
 }

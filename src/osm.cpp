@@ -431,29 +431,14 @@ void osm_node_chain_free(node_chain_t &node_chain) {
 }
 
 void osm_way_free(osm_t *osm, way_t *way) {
-  item_id_t id = way->id;
-
-  //  printf("freeing way #" ITEM_ID_FORMAT "\n", way->id);
-
-  osm_node_chain_free(way->node_chain);
-  osm_tags_free(way->tag);
-
-  /* there must not be anything left in this chain */
-  g_assert(!way->map_item_chain);
-
+  osm->ways.erase(way->id);
+  way->cleanup();
   delete way;
-
-  /* also remove way from hash table */
-  if(id > 0)
-    osm->way_hash.erase(id);
 }
 
-static void osm_ways_free(osm_t *osm, way_t *way) {
-  while(way) {
-    way_t *next = way->next;
-    osm_way_free(osm, way);
-    way = next;
-  }
+static void way_free(std::pair<item_id_t, way_t *> pair) {
+  pair.second->cleanup();
+  delete pair.second;
 }
 
 node_t *osm_parse_osm_way_nd(osm_t *osm, xmlNode *a_node) {
@@ -586,7 +571,7 @@ gchar *relation_t::descriptive_name() const {
 void osm_free(osm_t *osm) {
   if(!osm) return;
 
-  osm_ways_free(osm, osm->way);
+  std::for_each(osm->ways.begin(), osm->ways.end(), way_free);
   osm_nodes_free(osm, osm->node);
   std::for_each(osm->relations.begin(), osm->relations.end(),
                 osm_relation_free_pair);
@@ -822,7 +807,7 @@ static way_t *process_way(xmlTextReaderPtr reader, osm_t *osm) {
   process_base_attributes(way, reader, osm);
 
   /* append way to end of hash table if present */
-  osm->way_hash[way->id] = way;
+  osm->ways[way->id] = way;
 
   /* just an empty element? then return the way as it is */
   /* (this should in fact never happen as this would be a way without nodes) */
@@ -965,7 +950,6 @@ static osm_t *process_osm(xmlTextReaderPtr reader) {
   osm_t *osm = new osm_t();
 
   node_t **node = &osm->node;
-  way_t **way = &osm->way;
 
   /* no attributes of interest */
 
@@ -1005,8 +989,9 @@ static osm_t *process_osm(xmlTextReaderPtr reader) {
 	if(*node) node = &(*node)->next;
 	block = BLOCK_NODES;
       } else if(block <= BLOCK_WAYS && strcmp(name, "way") == 0) {
-	*way = process_way(reader, osm);
-	if(*way) way = &(*way)->next;
+        way_t *way = process_way(reader, osm);
+        if(way)
+          osm->ways[way->id] = way;
 	block = BLOCK_WAYS;
       } else if(block <= BLOCK_RELATIONS && strcmp(name, "relation") == 0) {
 	relation_t *relation = process_relation(reader, osm);
@@ -1175,16 +1160,19 @@ gboolean osm_node_has_tag(const node_t *node) {
   return tag != NULL;
 }
 
-/* return true if node is part of other way than this one */
-gboolean osm_node_in_other_way(const osm_t *osm, const way_t *way, const node_t *node) {
-  const way_t *it = osm->way;
-  for(it = osm->way; it; it = it->next) {
-    if(it == way)
-      continue;
-    if(it->contains_node(node))
-      return TRUE;
+struct node_in_other_way {
+  const way_t * const way;
+  const node_t * const node;
+  node_in_other_way(const way_t *w, const node_t *n) : way(w), node(n) {}
+  int operator()(const std::pair<item_id_t, way_t *> &pair) {
+    return (pair.second != way) && pair.second->contains_node(node);
   }
-  return FALSE;
+};
+
+/* return true if node is part of other way than this one */
+bool osm_node_in_other_way(const osm_t *osm, const way_t *way, const node_t *node) {
+  const std::map<item_id_t, way_t *>::const_iterator itEnd = osm->ways.end();
+  return std::find_if(osm->ways.begin(), itEnd, node_in_other_way(way, node)) != itEnd;
 }
 
 static void osm_generate_tags(const tag_t *tag, xmlNodePtr node) {
@@ -1395,20 +1383,9 @@ node_t *osm_get_node_by_id(osm_t *osm, item_id_t id) {
 }
 
 way_t *osm_get_way_by_id(osm_t *osm, item_id_t id) {
-  if(id > 0) {
-    std::map<item_id_t, way_t *>::const_iterator it = osm->way_hash.find(id);
-    if(it != osm->way_hash.end())
-      return it->second;
-  }
-
-  /* use linear search if no hash tables are present or search on hash table failed */
-  way_t *way = osm->way;
-  while(way) {
-    if(way->id == id)
-      return way;
-
-    way = way->next;
-  }
+  std::map<item_id_t, way_t *>::const_iterator it = osm->ways.find(id);
+  if(it != osm->ways.end())
+    return it->second;
 
   return NULL;
 }
@@ -1424,24 +1401,22 @@ relation_t *osm_get_relation_by_id(osm_t *osm, item_id_t id) {
 
 /* ---------- edit functions ------------- */
 
-item_id_t osm_new_way_id(osm_t *osm) {
+template<typename T> item_id_t osm_new_id(const std::map<item_id_t, T *> &map) {
   item_id_t id = -1;
+  const typename std::map<item_id_t, T *>::const_iterator itEnd = map.end();
 
-  while(TRUE) {
-    gboolean found = FALSE;
-    const way_t *way = osm->way;
-    while(way && !found) {
-      if(way->id == id)
-	found = TRUE;
-
-      way = way->next;
-    }
-
+  while(true) {
+    const typename std::map<item_id_t, T *>::const_iterator it = map.find(id);
     /* no such id so far -> use it */
-    if(!found) return id;
+    if(it == itEnd)
+      return id;
 
     id--;
   }
+}
+
+item_id_t osm_new_way_id(osm_t *osm) {
+  return osm_new_id<way_t>(osm->ways);
 }
 
 item_id_t osm_new_node_id(osm_t *osm) {
@@ -1465,16 +1440,7 @@ item_id_t osm_new_node_id(osm_t *osm) {
 }
 
 item_id_t osm_new_relation_id(osm_t *osm) {
-  item_id_t id = -1;
-
-  while(TRUE) {
-    const std::map<item_id_t, relation_t *>::const_iterator it = osm->relations.find(id);
-    /* no such id so far -> use it */
-    if(it == osm->relations.end())
-      return id;
-
-    id--;
-  }
+  return osm_new_id<relation_t>(osm->relations);
 }
 
 node_t *osm_node_new(osm_t *osm, gint x, gint y) {
@@ -1555,9 +1521,7 @@ void osm_way_attach(osm_t *osm, way_t *way) {
   way->flags = OSM_FLAG_NEW;
 
   /* attach to end of way list */
-  way_t **lway = &osm->way;
-  while(*lway) lway = &(*lway)->next;
-  *lway = way;
+  osm->ways[way->id] = way;
 }
 
 struct way_member_ref {
@@ -1581,9 +1545,7 @@ void osm_way_restore(osm_t *osm, way_t *way, const std::vector<item_id_chain_t> 
   printf("Restoring way\n");
 
   /* attach to end of node list */
-  way_t **lway = &osm->way;
-  while(*lway) lway = &(*lway)->next;
-  *lway = way;
+  osm->ways[way->id] = way;
 
   /* restore node memberships by converting ids into real pointers */
   g_assert(way->node_chain.empty());
@@ -1607,17 +1569,18 @@ way_chain_t osm_node_delete(osm_t *osm,
   }
 
   /* first remove node from all ways using it */
-  way_t *way = osm->way;
-  while(way) {
+  const std::map<item_id_t, way_t *>::iterator itEnd = osm->ways.end();
+  for (std::map<item_id_t, way_t *>::iterator it = osm->ways.begin(); it != itEnd; it++) {
+    way_t * const way = it->second;
     node_chain_t &chain = way->node_chain;
     bool modified = false;
 
-    node_chain_t::iterator it = chain.begin();
-    while((it = std::find(it, chain.end(), node)) != chain.end()) {
+    node_chain_t::iterator cit = chain.begin();
+    while((cit = std::find(cit, chain.end(), node)) != chain.end()) {
       /* remove node from chain */
       modified = true;
       if(affect_ways)
-        it = chain.erase(it);
+        cit = chain.erase(cit);
       else
         /* only record that there has been a change */
         break;
@@ -1629,8 +1592,6 @@ way_chain_t osm_node_delete(osm_t *osm,
       /* and add the way to the list of affected ways */
       way_chain.push_back(way);
     }
-
-    way = way->next;
   }
 
   /* remove that nodes map representations */
@@ -1738,18 +1699,23 @@ relation_chain_t osm_object_to_relation(osm_t *osm, const object_t &object) {
   }
 }
 
+struct node_collector {
+  way_chain_t chain;
+  const node_t * const node;
+  node_collector(const node_t *n) : node(n) {}
+  void operator()(std::pair<item_id_t, way_t *> pair) {
+    if(pair.second->contains_node(node))
+      chain.push_back(pair.second);
+  }
+};
+
 /* return all ways a node is in */
 way_chain_t osm_node_to_way(const osm_t *osm, const node_t *node) {
-  way_chain_t chain;
+  node_collector c(node);
 
-  way_t *way = osm->way;
-  for(; way; way = way->next) {
-    /* node is a member of this relation, so move it to the member chain */
-    if(way->contains_node(node))
-      chain.push_back(way);
-  }
+  std::for_each(osm->ways.begin(), osm->ways.end(), c);
 
-  return chain;
+  return c.chain;
 }
 
 gboolean osm_position_within_bounds(const osm_t *osm, gint x, gint y) {
@@ -1875,20 +1841,10 @@ void osm_way_delete(osm_t *osm, way_t *way, gboolean permanently) {
     printf("permanently delete way #" ITEM_ID_FORMAT "\n", way->id);
 
     /* remove it from the chain */
-    way_t **cway = &osm->way;
-    int found = 0;
+    std::map<item_id_t, way_t *>::iterator it = osm->ways.find(way->id);
+    g_assert(it != osm->ways.end());
 
-    while(*cway) {
-      if(*cway == way) {
-	found++;
-	*cway = (*cway)->next;
-
-	g_assert(osm);
-	osm_way_free(osm, way);
-      } else
-	cway = &((*cway)->next);
-    }
-    g_assert_cmpint(found, ==, 1);
+    osm_way_free(osm, it->second);
   }
 }
 
@@ -2220,7 +2176,6 @@ base_object_t::base_object_t()
 
 way_t::way_t()
   : base_object_t()
-  , next(0)
   , map_item_chain(0)
   , node_chain(0)
 {
@@ -2236,6 +2191,16 @@ bool way_t::contains_node(const node_t *node) const
 void way_t::append_node(node_t *node) {
   node_chain.push_back(node);
   node->ways++;
+}
+
+void way_t::cleanup() {
+  //  printf("freeing way #" ITEM_ID_FORMAT "\n", OSM_ID(way));
+
+  osm_node_chain_free(node_chain);
+  osm_tags_free(tag);
+
+  /* there must not be anything left in this chain */
+  g_assert(!map_item_chain);
 }
 
 member_t::member_t(type_t t)

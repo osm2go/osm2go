@@ -472,7 +472,16 @@ static void line_mod_apply(gint *width, const elemstyle_width_mod_t *mod) {
   }
 }
 
-void josm_elemstyles_colorize_way(const style_t *style, way_t *way) {
+struct josm_elemstyles_colorize_way_functor {
+  const style_t * const style;
+  josm_elemstyles_colorize_way_functor(const style_t *s) : style(s) {}
+  void operator()(way_t *way);
+  void operator()(std::pair<item_id_t, way_t *> pair) {
+    operator()(pair.second);
+  }
+};
+
+void josm_elemstyles_colorize_way_functor::operator()(way_t *way) {
   /* use dark grey/no stroke/not filled for everything unknown */
   way->draw.color = style->way.color;
   way->draw.width = style->way.width;
@@ -590,16 +599,18 @@ void josm_elemstyles_colorize_way(const style_t *style, way_t *way) {
   }
 }
 
+void josm_elemstyles_colorize_way(const style_t *style, way_t *way) {
+  josm_elemstyles_colorize_way_functor f(style);
+  f(way);
+}
+
 void josm_elemstyles_colorize_world(const style_t *styles, osm_t *osm) {
 
   printf("preparing colors\n");
 
   /* colorize ways */
-  way_t *way = osm->way;
-  while(way) {
-    josm_elemstyles_colorize_way(styles, way);
-    way = way->next;
-  }
+  std::for_each(osm->ways.begin(), osm->ways.end(),
+      josm_elemstyles_colorize_way_functor(styles));
 
   /* icons */
   node_t *node = osm->node;

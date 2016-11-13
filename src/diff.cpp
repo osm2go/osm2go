@@ -85,29 +85,33 @@ static void diff_save_nodes(const node_t *node, xmlNodePtr root_node) {
   }
 }
 
-static void diff_save_ways(const way_t *way, xmlNodePtr root_node) {
+struct diff_save_ways {
+  xmlNodePtr const root_node;
+  diff_save_ways(xmlNodePtr r) : root_node(r) {}
+  void operator()(std::pair<item_id_t, way_t *> pair);
+};
 
-  /* store all modfied ways */
-  while(way) {
-    if(way->flags) {
-      xmlNodePtr node_way = xmlNewChild(root_node, NULL,
-					 BAD_CAST "way", NULL);
+void diff_save_ways::operator()(std::pair<item_id_t, way_t *> pair)
+{
+  const way_t * const way = pair.second;
+  if(!way->flags)
+    return;
 
-      diff_save_state_n_id(way->flags, node_way, way->id);
+  xmlNodePtr node_way = xmlNewChild(root_node, NULL,
+                                    BAD_CAST "way", NULL);
 
-      if(way->flags & OSM_FLAG_HIDDEN)
-	xmlNewProp(node_way, BAD_CAST "hidden", BAD_CAST "true");
+  diff_save_state_n_id(way->flags, node_way, way->id);
 
-      /* additional info is only required if the way hasn't been deleted */
-      /* and of the dirty or new flags are set. (otherwise e.g. only */
-      /* the hidden flag may be set) */
-      if((!(way->flags & OSM_FLAG_DELETED)) &&
-	 (way->flags & (OSM_FLAG_DIRTY | OSM_FLAG_NEW))) {
-        osm_write_node_chain(node_way, way);
-	diff_save_tags(way->tag, node_way);
-      }
-    }
-    way = way->next;
+  if(way->flags & OSM_FLAG_HIDDEN)
+    xmlNewProp(node_way, BAD_CAST "hidden", BAD_CAST "true");
+
+  /* additional info is only required if the way hasn't been deleted */
+  /* and of the dirty or new flags are set. (otherwise e.g. only */
+  /* the hidden flag may be set) */
+  if((!(way->flags & OSM_FLAG_DELETED)) &&
+     (way->flags & (OSM_FLAG_DIRTY | OSM_FLAG_NEW))) {
+    osm_write_node_chain(node_way, way);
+    diff_save_tags(way->tag, node_way);
   }
 }
 
@@ -215,11 +219,10 @@ gboolean diff_is_clean(const osm_t *osm, gboolean honor_hidden_flags) {
   }
 
   int flagmask = honor_hidden_flags ? ~0 : ~OSM_FLAG_HIDDEN;
-  const way_t *way;
-  for(way = osm->way; way; way = way->next) {
-    if(way->flags & flagmask)
-      return FALSE;
-  }
+  std::map<item_id_t, way_t *>::const_iterator wit =
+    std::find_if(osm->ways.begin(), osm->ways.end(), find_object_by_flags(flagmask));
+  if(wit != osm->ways.end())
+    return FALSE;
 
   std::map<item_id_t, relation_t *>::const_iterator it =
     std::find_if(osm->relations.begin(), osm->relations.end(), find_object_by_flags());
@@ -250,7 +253,7 @@ void diff_save(const project_t *project, const osm_t *osm) {
   xmlDocSetRootElement(doc, root_node);
 
   diff_save_nodes(osm->node, root_node);
-  diff_save_ways(osm->way, root_node);
+  std::for_each(osm->ways.begin(), osm->ways.end(), diff_save_ways(root_node));
   std::for_each(osm->relations.begin(), osm->relations.end(), diff_save_relations(root_node));
 
   xmlSaveFormatFileEnc(ndiff, doc, "UTF-8", 1);
@@ -459,9 +462,7 @@ static void diff_restore_way(xmlNodePtr node_node, osm_t *osm) {
     if(!way->time) way->time = time(NULL);
 
     /* attach to end of way list */
-    way_t **lway = &osm->way;
-    while(*lway) lway = &(*lway)->next;
-    *lway = way;
+    osm->ways[id] = way;
     break;
   }
 
@@ -734,16 +735,10 @@ void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) {
   xmlFreeDoc(doc);
 
   /* check for hidden ways and update menu accordingly */
-  gboolean something_is_hidden = FALSE;
-  const way_t *way = osm->way;
-  while(!something_is_hidden && way) {
-    if(way->flags & OSM_FLAG_HIDDEN)
-      something_is_hidden = TRUE;
+  const std::map<item_id_t, way_t *>::const_iterator it =
+      std::find_if(osm->ways.begin(), osm->ways.end(), find_object_by_flags(OSM_FLAG_HIDDEN));
 
-    way = way->next;
-  }
-
-  if(something_is_hidden) {
+  if(it != osm->ways.end()) {
     printf("hidden flags have been restored, enable show_add menu\n");
 
     statusbar_set(appdata, _("Some objects are hidden"), TRUE);

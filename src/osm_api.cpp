@@ -546,70 +546,82 @@ static void osm_upload_nodes(osm_upload_context_t *context, gchar *cred) {
   }
 }
 
-static void osm_delete_ways(osm_upload_context_t *context, gchar *cred) {
-  way_t *way = context->osm->way;
+struct osm_delete_ways {
+  osm_upload_context_t * const context;
+  gchar * const cred;
+  osm_delete_ways(osm_upload_context_t *co, gchar *cr) : context(co), cred(cr) {}
+  void operator()(std::pair<item_id_t, way_t *> pair);
+};
+
+void osm_delete_ways::operator()(std::pair<item_id_t, way_t *> pair)
+{
+  way_t * const way = pair.second;
+  project_t *project = context->project;
+  /* make sure gui gets updated */
+  while(gtk_events_pending()) gtk_main_iteration();
+
+  if(!(way->flags & OSM_FLAG_DELETED))
+    return;
+
+  printf("deleting way on server\n");
+
+  appendf(&context->log, NULL, _("Delete way #" ITEM_ID_FORMAT " "), way->id);
+
+  char *url = g_strdup_printf("%s/way/" ITEM_ID_FORMAT,
+                                project->server, way->id);
+  char *xml_str = osm_generate_xml_way(context->changeset, way);
+
+  if(osm_delete_item(&context->log, xml_str, url, cred, context->proxy)) {
+    way->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
+    project->data_dirty = TRUE;
+  }
+
+  g_free(url);
+}
+
+struct osm_upload_ways {
+  osm_upload_context_t * const context;
+  gchar * const cred;
+  osm_upload_ways(osm_upload_context_t *co, gchar *cr) : context(co), cred(cr) {}
+  void operator()(std::pair<item_id_t, way_t *> pair);
+};
+
+void osm_upload_ways::operator()(std::pair<item_id_t, way_t *> pair)
+{
+  way_t * const way = pair.second;
   project_t *project = context->project;
 
-  for(; way; way = way->next) {
-    /* make sure gui gets updated */
-    while(gtk_events_pending()) gtk_main_iteration();
+  /* make sure gui gets updated */
+  while(gtk_events_pending()) gtk_main_iteration();
 
-    if(!(way->flags & OSM_FLAG_DELETED))
-      continue;
+  if(!(way->flags & (OSM_FLAG_DIRTY | OSM_FLAG_NEW)) ||
+     (way->flags & OSM_FLAG_DELETED))
+    return;
 
-    printf("deleting way on server\n");
+  char *url = NULL;
 
-    appendf(&context->log, NULL, _("Delete way #" ITEM_ID_FORMAT " "), way->id);
+  if(way->flags & OSM_FLAG_NEW) {
+    url = g_strconcat(project->server, "/way/create", NULL);
+    appendf(&context->log, NULL, _("New way "));
+  } else {
+    url = g_strdup_printf("%s/way/" ITEM_ID_FORMAT,
+                          project->server, way->id);
+    appendf(&context->log, NULL, _("Modified way #" ITEM_ID_FORMAT " "), way->id);
+  }
 
-    char *url = g_strdup_printf("%s/way/" ITEM_ID_FORMAT,
-                                project->server, way->id);
-    char *xml_str = osm_generate_xml_way(context->changeset, way);
+  /* upload this node */
+  char *xml_str = osm_generate_xml_way(context->changeset, way);
+  if(xml_str) {
+    printf("uploading way %s from address %p\n", url, xml_str);
 
-    if(osm_delete_item(&context->log, xml_str, url, cred, context->proxy)) {
-      way->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
+    if(osm_update_item(&context->log, xml_str, url, cred,
+        (way->flags & OSM_FLAG_NEW) ? &way->id : &way->version,
+                       context->proxy)) {
+      way->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_NEW);
       project->data_dirty = TRUE;
     }
   }
-}
-
-
-static void osm_upload_ways(osm_upload_context_t *context, gchar *cred) {
-  way_t *way = context->osm->way;
-  project_t *project = context->project;
-
-  for(; way; way = way->next) {
-    /* make sure gui gets updated */
-    while(gtk_events_pending()) gtk_main_iteration();
-
-    if(!(way->flags & (OSM_FLAG_DIRTY | OSM_FLAG_NEW)) ||
-       (way->flags & OSM_FLAG_DELETED))
-      continue;
-
-    char *url = NULL;
-
-    if(way->flags & OSM_FLAG_NEW) {
-      url = g_strconcat(project->server, "/way/create", NULL);
-      appendf(&context->log, NULL, _("New way "));
-    } else {
-      url = g_strdup_printf("%s/way/" ITEM_ID_FORMAT,
-                            project->server, way->id);
-      appendf(&context->log, NULL, _("Modified way #" ITEM_ID_FORMAT " "), way->id);
-    }
-
-    /* upload this node */
-    char *xml_str = osm_generate_xml_way(context->changeset, way);
-    if(xml_str) {
-      printf("uploading way %s from address %p\n", url, xml_str);
-
-      if(osm_update_item(&context->log, xml_str, url, cred,
-        (way->flags & OSM_FLAG_NEW) ? &(way->id) : &way->version,
-                         context->proxy)) {
-        way->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_NEW);
-        project->data_dirty = TRUE;
-      }
-    }
-    g_free(url);
-  }
+  g_free(url);
 }
 
 struct osm_delete_relations {
@@ -822,12 +834,7 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
 	 dirty.nodes.added, dirty.nodes.dirty, dirty.nodes.deleted);
 
   /* count ways */
-  object_counter cways(dirty.ways);
-  const way_t *way = osm->way;
-  while(way) {
-    cways(way);
-    way = way->next;
-  }
+  std::for_each(osm->ways.begin(), osm->ways.end(), object_counter(dirty.ways));
   printf("ways:      new %2d, dirty %2d, deleted %2d\n",
 	 dirty.ways.added, dirty.ways.dirty, dirty.ways.deleted);
 
@@ -1011,13 +1018,13 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
     appendf(&context->log, NULL, _("Uploading nodes:\n"));
     osm_upload_nodes(context, cred);
     appendf(&context->log, NULL, _("Uploading ways:\n"));
-    osm_upload_ways(context, cred);
+    std::for_each(osm->ways.begin(), osm->ways.end(), osm_upload_ways(context, cred));
     appendf(&context->log, NULL, _("Uploading relations:\n"));
     std::for_each(osm->relations.begin(), osm->relations.end(), osm_upload_relations(context, cred));
     appendf(&context->log, NULL, _("Deleting relations:\n"));
     std::for_each(osm->relations.begin(), osm->relations.end(), osm_delete_relations(context, cred));
     appendf(&context->log, NULL, _("Deleting ways:\n"));
-    osm_delete_ways(context, cred);
+    std::for_each(osm->ways.begin(), osm->ways.end(), osm_delete_ways(context, cred));
     appendf(&context->log, NULL, _("Deleting nodes:\n"));
     osm_delete_nodes(context, cred);
 

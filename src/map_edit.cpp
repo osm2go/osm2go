@@ -733,9 +733,11 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
       node->lpos = touchnode->lpos;
       node->pos = touchnode->pos;
 
-      way_t *way = appdata->osm->way;
-      while(way) {
-        node_chain_t &chain = way->node_chain;
+      const std::map<item_id_t, way_t *>::iterator witEnd = appdata->osm->ways.end();
+      std::map<item_id_t, way_t *>::iterator wit;
+      for (wit = appdata->osm->ways.begin(); wit != witEnd; wit++) {
+        way_t * const way = wit->second;
+	node_chain_t &chain = way->node_chain;
         node_chain_t::iterator it = chain.begin();
         while((it = std::find(it, chain.end(), touchnode)) != chain.end()) {
           printf("  found node in way #" ITEM_ID_FORMAT "\n", way->id);
@@ -749,7 +751,6 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 
           way->flags |= OSM_FLAG_DIRTY;
 	}
-	way = way->next;
       }
 
       /* replace node in relations */
@@ -780,8 +781,8 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
       printf("  checking if node is end of way\n");
       guint ways2join_cnt = 0;
       way_t *ways2join[2] = { NULL, NULL };
-      way = appdata->osm->way;
-      while(way) {
+      for(wit = appdata->osm->ways.begin(); wit != witEnd; wit++) {
+        way_t * const way = wit->second;
 	if(way->ends_with_node(node)) {
 	  if(ways2join_cnt < 2)
 	    ways2join[ways2join_cnt] = way;
@@ -789,7 +790,6 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 	  printf("  way #" ITEM_ID_FORMAT " ends with this node\n", way->id);
 	  ways2join_cnt++;
 	}
-	way = way->next;
       }
 
       if(ways2join_cnt > 2) {
@@ -903,8 +903,9 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
   map_node_draw(map, node);
 
   /* visually update ways, node is part of */
-  way_t *way = osm->way;
-  while(way) {
+  const std::map<item_id_t, way_t *>::iterator itEnd = osm->ways.end();
+  for (std::map<item_id_t, way_t *>::iterator it = osm->ways.begin(); it != itEnd; it++) {
+    way_t * const way = it->second;
     if(way->contains_node(node)) {
       printf("  node is part of way #" ITEM_ID_FORMAT ", redraw!\n",
 	     way->id);
@@ -916,8 +917,6 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
       josm_elemstyles_colorize_way(map->style, way);
       map_way_draw(map, way);
     }
-
-    way = way->next;
   }
 
   /* and mark the node as dirty */

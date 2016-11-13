@@ -132,8 +132,6 @@ class way_t: public base_object_t {
 public:
   way_t();
 
-  way_t *next;
-
   /* visual representation from elemstyle */
   struct {
     guint flags;
@@ -159,6 +157,7 @@ public:
   struct map_item_chain_t *map_item_chain;
 
   node_chain_t node_chain;
+
   bool contains_node(const node_t *node) const;
   void append_node(node_t *node);
   bool ends_with_node(const node_t *node) const;
@@ -167,13 +166,13 @@ public:
   void rotate(node_chain_t::iterator nfirst);
   const node_t *last_node() const;
   const node_t *first_node() const;
+
+  void cleanup();
 };
+
+typedef std::vector<way_t *> way_chain_t;
 #else
 typedef struct way_s way_t;
-#endif
-
-#ifdef __cplusplus
-typedef std::vector<way_t *> way_chain_t;
 #endif
 
 #ifdef __cplusplus
@@ -282,15 +281,13 @@ typedef struct osm_t {
 
   node_t *node;
 
-  way_t  *way;
-
   struct icon_t **icons;
 
   bounds_t rbounds;
 
 #ifdef __cplusplus
   std::map<item_id_t, node_t *> node_hash;
-  std::map<item_id_t, way_t *> way_hash;
+  std::map<item_id_t, way_t *> ways;
   std::map<item_id_t, relation_t *> relations;
   std::map<int, std::string> users;   //< users where uid is given in XML
   std::vector<std::string> anonusers; //< users without uid
@@ -309,8 +306,6 @@ void osm_way_free(osm_t *osm, way_t *way);
 const char *osm_way_get_value(way_t *way, const char *key);
 gboolean osm_node_has_value(const node_t* node, const char* str);
 gboolean osm_way_has_value(const way_t* way, const char* str);
-
-gboolean osm_node_in_other_way(const osm_t *osm, const way_t *way, const node_t *node);
 
 void osm_node_free(osm_t *osm, node_t *node);
 
@@ -383,6 +378,8 @@ void osm_way_restore(osm_t *osm, way_t *way, const std::vector<item_id_chain_t> 
 
 void osm_member_free(member_t &member);
 void osm_members_free(std::vector<member_t> &members);
+
+bool osm_node_in_other_way(const osm_t *osm, const way_t *way, const node_t *node);
 
 #endif
 
