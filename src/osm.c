@@ -1740,7 +1740,6 @@ way_chain_t *osm_node_delete(osm_t *osm,
 	found++;
 	*cnode = (*cnode)->next;
 
-	g_assert(osm);
 	osm_node_free(osm, node);
       } else
 	cnode = &((*cnode)->next);
