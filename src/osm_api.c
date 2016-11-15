@@ -609,24 +609,24 @@ static void osm_delete_relations(osm_upload_context_t *context, gchar *cred) {
     /* make sure gui gets updated */
     while(gtk_events_pending()) gtk_main_iteration();
 
-    if(OSM_FLAGS(relation) & OSM_FLAG_DELETED) {
-      printf("deleting relation on server\n");
+    if(!(OSM_FLAGS(relation) & OSM_FLAG_DELETED))
+      continue;
 
-      appendf(&context->log, NULL,
-	      _("Delete relation #" ITEM_ID_FORMAT " "), OSM_ID(relation));
+    printf("deleting relation on server\n");
 
-      char *url = g_strdup_printf("%s/relation/" ITEM_ID_FORMAT,
-				  project->server, OSM_ID(relation));
-      char *xml_str = osm_generate_xml_relation(context->changeset, relation);
+    appendf(&context->log, NULL,
+            _("Delete relation #" ITEM_ID_FORMAT " "), OSM_ID(relation));
 
-      if(osm_delete_item(&context->log, xml_str, url, cred, context->proxy)) {
-	OSM_FLAGS(relation) &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
-	project->data_dirty = TRUE;
-      }
+    char *url = g_strdup_printf("%s/relation/" ITEM_ID_FORMAT,
+                                project->server, OSM_ID(relation));
+    char *xml_str = osm_generate_xml_relation(context->changeset, relation);
+
+    if(osm_delete_item(&context->log, xml_str, url, cred, context->proxy)) {
+      OSM_FLAGS(relation) &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
+      project->data_dirty = TRUE;
     }
   }
 }
-
 
 static void osm_upload_relations(osm_upload_context_t *context, gchar *cred) {
   relation_t *relation = context->osm->relation;
