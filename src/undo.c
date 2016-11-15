@@ -117,7 +117,7 @@ static void undo_object_free(osm_t *osm, object_t *obj) {
 static void undo_op_free(osm_t *osm, undo_op_t *op) {
   printf("  free op: %s\n", undo_type_string(op->type));
   undo_object_free(osm, &op->object);
-  if(op->id_chain) undo_id_chain_free(op->id_chain);
+  undo_id_chain_free(op->id_chain);
   g_free(op);
 }
 
