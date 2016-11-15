@@ -20,7 +20,9 @@
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 
+#ifndef __USE_XOPEN
 #define __USE_XOPEN
+#endif
 #include <time.h>
 
 #ifndef LIBXML_TREE_ENABLED
