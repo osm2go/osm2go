@@ -761,6 +761,14 @@ static void object_counter(const base_object_t *obj, struct counter *dirty) {
     dirty->dirty++;
 }
 
+static void table_insert_count(GtkWidget *table, const struct counter *dirty,
+                               const int row) {
+  table_attach_int(table, dirty->total,   1, 2, row, row + 1);
+  table_attach_int(table, dirty->added,   2, 3, row, row + 1);
+  table_attach_int(table, dirty->dirty,   3, 4, row, row + 1);
+  table_attach_int(table, dirty->deleted, 4, 5, row, row + 1);
+}
+
 void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
 
   printf("starting upload\n");
@@ -812,23 +820,15 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   table_attach_label_c(table, _("Modified"),       3, 4, 0, 1);
   table_attach_label_c(table, _("Deleted"),        4, 5, 0, 1);
 
-  table_attach_label_l(table, _("Nodes:"),         0, 1, 1, 2);
-  table_attach_int(table, dirty.nodes.total,       1, 2, 1, 2);
-  table_attach_int(table, dirty.nodes.added,       2, 3, 1, 2);
-  table_attach_int(table, dirty.nodes.dirty,       3, 4, 1, 2);
-  table_attach_int(table, dirty.nodes.deleted,     4, 5, 1, 2);
+  int row = 1;
+  table_attach_label_l(table, _("Nodes:"),         0, 1, row, row + 1);
+  table_insert_count(table, &dirty.nodes, row++);
 
-  table_attach_label_l(table, _("Ways:"),          0, 1, 2, 3);
-  table_attach_int(table, dirty.ways.total,        1, 2, 2, 3);
-  table_attach_int(table, dirty.ways.added,        2, 3, 2, 3);
-  table_attach_int(table, dirty.ways.dirty,        3, 4, 2, 3);
-  table_attach_int(table, dirty.ways.deleted,      4, 5, 2, 3);
+  table_attach_label_l(table, _("Ways:"),          0, 1, row, row + 1);
+  table_insert_count(table, &dirty.ways, row++);
 
-  table_attach_label_l(table, _("Relations:"),     0, 1, 3, 4);
-  table_attach_int(table, dirty.relations.total,   1, 2, 3, 4);
-  table_attach_int(table, dirty.relations.added,   2, 3, 3, 4);
-  table_attach_int(table, dirty.relations.dirty,   3, 4, 3, 4);
-  table_attach_int(table, dirty.relations.deleted, 4, 5, 3, 4);
+  table_attach_label_l(table, _("Relations:"),     0, 1, row, row + 1);
+  table_insert_count(table, &dirty.relations, row++);
 
   gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, FALSE, FALSE, 0);
 
