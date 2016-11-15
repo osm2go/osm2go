@@ -453,6 +453,24 @@ void josm_elemstyles_colorize_node(const style_t *style, node_t *node) {
   }
 }
 
+struct josm_elemstyles_colorize_node_functor {
+  const style_t * const styles;
+  josm_elemstyles_colorize_node_functor(const style_t *s) : styles(s) {}
+  void operator()(std::pair<item_id_t, node_t *> pair);
+};
+
+void josm_elemstyles_colorize_node_functor::operator()(std::pair<item_id_t, node_t *> pair) {
+  node_t * const node = pair.second;
+  /* remove all icon references that may still be there from */
+  /* an old style */
+  if(node->icon_buf) {
+    icon_free(styles->iconP, node->icon_buf);
+    node->icon_buf = NULL;
+  }
+
+  josm_elemstyles_colorize_node(styles, node);
+}
+
 static void line_mod_apply(gint *width, const elemstyle_width_mod_t *mod) {
   switch(mod->mod) {
   case ES_MOD_NONE:
@@ -613,18 +631,8 @@ void josm_elemstyles_colorize_world(const style_t *styles, osm_t *osm) {
       josm_elemstyles_colorize_way_functor(styles));
 
   /* icons */
-  node_t *node = osm->node;
-  while(node) {
-    /* remove all icon references that may still be there from */
-    /* an old style */
-    if(node->icon_buf) {
-      icon_free(styles->iconP, node->icon_buf);
-      node->icon_buf = NULL;
-    }
-
-    josm_elemstyles_colorize_node(styles, node);
-    node = node->next;
-  }
+  std::for_each(osm->nodes.begin(), osm->nodes.end(),
+      josm_elemstyles_colorize_node_functor(styles));
 }
 
 // vim:et:ts=8:sw=2:sts=2:ai

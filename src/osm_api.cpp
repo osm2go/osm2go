@@ -480,16 +480,23 @@ static GtkWidget *table_attach_int(GtkWidget *table, int num,
   return label;
 }
 
-static void osm_delete_nodes(osm_upload_context_t *context, gchar *cred) {
-  node_t *node = context->osm->node;
+struct osm_delete_nodes {
+  osm_upload_context_t * const context;
+  gchar * const cred;
+  osm_delete_nodes(osm_upload_context_t *co, gchar *cr) : context(co), cred(cr) {}
+  void operator()(std::pair<item_id_t, node_t *> pair);
+};
+
+void osm_delete_nodes::operator()(std::pair<item_id_t, node_t *> pair)
+{
+  node_t *node = pair.second;
   project_t *project = context->project;
 
-  for(; node; node = node->next) {
     /* make sure gui gets updated */
     while(gtk_events_pending()) gtk_main_iteration();
 
-    if(!(node->flags & OSM_FLAG_DELETED))
-      continue;
+  if(!(node->flags & OSM_FLAG_DELETED))
+      return;
 
     printf("deleting node on server\n");
 
@@ -504,20 +511,26 @@ static void osm_delete_nodes(osm_upload_context_t *context, gchar *cred) {
       node->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
       project->data_dirty = TRUE;
     }
-  }
 }
 
-static void osm_upload_nodes(osm_upload_context_t *context, gchar *cred) {
-  node_t *node = context->osm->node;
+struct osm_upload_nodes {
+  osm_upload_context_t * const context;
+  gchar * const cred;
+  osm_upload_nodes(osm_upload_context_t *co, gchar *cr) : context(co), cred(cr) {}
+  void operator()(std::pair<item_id_t, node_t *> pair);
+};
+
+void osm_upload_nodes::operator()(std::pair<item_id_t, node_t *> pair)
+{
+  node_t * const node = pair.second;
   project_t *project = context->project;
 
-  for(; node; node = node->next) {
     /* make sure gui gets updated */
     while(gtk_events_pending()) gtk_main_iteration();
 
-    if(!(node->flags & (OSM_FLAG_DIRTY | OSM_FLAG_NEW)) ||
-       (node->flags & OSM_FLAG_DELETED))
-      continue;
+  if(!(node->flags & (OSM_FLAG_DIRTY | OSM_FLAG_NEW)) ||
+     (node->flags & OSM_FLAG_DELETED))
+      return;
 
     char *url = NULL;
 
@@ -543,7 +556,6 @@ static void osm_upload_nodes(osm_upload_context_t *context, gchar *cred) {
       }
     }
     g_free(url);
-  }
 }
 
 struct osm_delete_ways {
@@ -824,12 +836,7 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   osm_dirty_t dirty;
   memset(&dirty, 0, sizeof(dirty));
 
-  object_counter cnodes(dirty.nodes);
-  const node_t *node = osm->node;
-  while(node) {
-    cnodes(node);
-    node = node->next;
-  }
+  std::for_each(osm->nodes.begin(), osm->nodes.end(), object_counter(dirty.nodes));
   printf("nodes:     new %2d, dirty %2d, deleted %2d\n",
 	 dirty.nodes.added, dirty.nodes.dirty, dirty.nodes.deleted);
 
@@ -1016,7 +1023,7 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   if(osm_create_changeset(context, &cred)) {
     /* check for dirty entries */
     appendf(&context->log, NULL, _("Uploading nodes:\n"));
-    osm_upload_nodes(context, cred);
+    std::for_each(osm->nodes.begin(), osm->nodes.end(), osm_upload_nodes(context, cred));
     appendf(&context->log, NULL, _("Uploading ways:\n"));
     std::for_each(osm->ways.begin(), osm->ways.end(), osm_upload_ways(context, cred));
     appendf(&context->log, NULL, _("Uploading relations:\n"));
@@ -1026,7 +1033,7 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
     appendf(&context->log, NULL, _("Deleting ways:\n"));
     std::for_each(osm->ways.begin(), osm->ways.end(), osm_delete_ways(context, cred));
     appendf(&context->log, NULL, _("Deleting nodes:\n"));
-    osm_delete_nodes(context, cred);
+    std::for_each(osm->nodes.begin(), osm->nodes.end(), osm_delete_nodes(context, cred));
 
     /* close changeset */
     osm_close_changeset(context, cred);

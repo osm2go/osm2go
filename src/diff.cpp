@@ -61,28 +61,33 @@ static void diff_save_state_n_id(int flags, xmlNodePtr node, item_id_t id) {
   xmlNewProp(node, BAD_CAST "id", BAD_CAST id_str);
 }
 
-static void diff_save_nodes(const node_t *node, xmlNodePtr root_node) {
-  /* store all modfied nodes */
-  while(node) {
-    if(node->flags) {
-      xmlNodePtr node_node = xmlNewChild(root_node, NULL,
-					 BAD_CAST "node", NULL);
+struct diff_save_nodes {
+  xmlNodePtr const root_node;
+  diff_save_nodes(xmlNodePtr r) : root_node(r) {}
+  void operator()(std::pair<item_id_t, node_t *> pair);
+};
 
-      diff_save_state_n_id(node->flags, node_node, node->id);
+void diff_save_nodes::operator()(std::pair<item_id_t, node_t *> pair)
+{
+  const node_t * const node = pair.second;
+  if(!node->flags)
+    return;
 
-      if(!(node->flags & OSM_FLAG_DELETED)) {
-	char str[32];
+  xmlNodePtr node_node = xmlNewChild(root_node, NULL, BAD_CAST "node", NULL);
 
-	/* additional info is only required if the node hasn't been deleted */
-        xml_set_prop_pos(node_node, &node->pos);
-	snprintf(str, sizeof(str), "%lu", node->time);
-	xmlNewProp(node_node, BAD_CAST "time", BAD_CAST str);
+  diff_save_state_n_id(node->flags, node_node, node->id);
 
-	diff_save_tags(node->tag, node_node);
-      }
-    }
-     node = node->next;
-  }
+  if(node->flags & OSM_FLAG_DELETED)
+    return;
+
+  char str[32];
+
+  /* additional info is only required if the node hasn't been deleted */
+  xml_set_prop_pos(node_node, &node->pos);
+  snprintf(str, sizeof(str), "%lu", node->time);
+  xmlNewProp(node_node, BAD_CAST "time", BAD_CAST str);
+
+  diff_save_tags(node->tag, node_node);
 }
 
 struct diff_save_ways {
@@ -200,9 +205,6 @@ void diff_save_relations::operator()(std::pair<item_id_t, relation_t *> pair)
 struct find_object_by_flags {
   int flagmask;
   find_object_by_flags(int f = ~0) : flagmask(f) {}
-  bool operator()(const base_object_t *obj) {
-    return obj->flags & flagmask;
-  }
   bool operator()(std::pair<item_id_t, base_object_t *> pair) {
     return pair.second->flags & flagmask;
   }
@@ -211,12 +213,10 @@ struct find_object_by_flags {
 /* return true if no diff needs to be saved */
 gboolean diff_is_clean(const osm_t *osm, gboolean honor_hidden_flags) {
   /* check if a diff is necessary */
-  const node_t *node = osm->node;
-  while(node) {
-    if(node->flags)
-      return FALSE;
-    node = node->next;
-  }
+  std::map<item_id_t, node_t *>::const_iterator nit =
+    std::find_if(osm->nodes.begin(), osm->nodes.end(), find_object_by_flags());
+  if(nit != osm->nodes.end())
+    return false;
 
   int flagmask = honor_hidden_flags ? ~0 : ~OSM_FLAG_HIDDEN;
   std::map<item_id_t, way_t *>::const_iterator wit =
@@ -252,7 +252,7 @@ void diff_save(const project_t *project, const osm_t *osm) {
   xmlNewProp(root_node, BAD_CAST "name", BAD_CAST project->name);
   xmlDocSetRootElement(doc, root_node);
 
-  diff_save_nodes(osm->node, root_node);
+  std::for_each(osm->nodes.begin(), osm->nodes.end(), diff_save_nodes(root_node));
   std::for_each(osm->ways.begin(), osm->ways.end(), diff_save_ways(root_node));
   std::for_each(osm->relations.begin(), osm->relations.end(), diff_save_relations(root_node));
 
@@ -371,9 +371,7 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
     if(!node->time) node->time = time(NULL);
 
     /* attach to end of node list */
-    node_t **lnode = &osm->node;
-    while(*lnode) lnode = &(*lnode)->next;
-    *lnode = node;
+    osm->nodes[id] = node;
     break;
   }
 

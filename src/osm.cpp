@@ -393,31 +393,30 @@ bool way_t::ends_with_node(const node_t *node) const {
 
 /* ------------------- node handling ------------------- */
 
-void osm_node_free(osm_t *osm, node_t *node) {
-  item_id_t id = node->id;
-
-  if(node->icon_buf)
-    icon_free(osm->icons, node->icon_buf);
+void node_t::cleanup(osm_t *osm) {
+  if(icon_buf)
+    icon_free(osm->icons, icon_buf);
 
   /* there must not be anything left in this chain */
-  g_assert(!node->map_item_chain);
+  g_assert(!map_item_chain);
 
-  osm_tags_free(node->tag);
+  osm_tags_free(tag);
+}
 
+void osm_node_free(osm_t *osm, node_t *node) {
+  osm->nodes.erase(node->id);
+  node->cleanup(osm);
   delete node;
-
-  /* also remove node from hash table */
-  if(id > 0)
-    osm->node_hash.erase(id);
 }
 
-static void osm_nodes_free(osm_t *osm, node_t *node) {
-  while(node) {
-    node_t *next = node->next;
-    osm_node_free(osm, node);
-    node = next;
+struct nodefree {
+  osm_t * const osm;
+  nodefree(osm_t *o) : osm(o) {}
+  void operator()(std::pair<item_id_t, node_t *> pair) {
+    pair.second->cleanup(osm);
+    delete pair.second;
   }
-}
+};
 
 /* ------------------- way handling ------------------- */
 static void osm_unref_node(node_t* node)
@@ -572,7 +571,7 @@ void osm_free(osm_t *osm) {
   if(!osm) return;
 
   std::for_each(osm->ways.begin(), osm->ways.end(), way_free);
-  osm_nodes_free(osm, osm->node);
+  std::for_each(osm->nodes.begin(), osm->nodes.end(), nodefree(osm));
   std::for_each(osm->relations.begin(), osm->relations.end(),
                 osm_relation_free_pair);
   delete osm;
@@ -747,7 +746,7 @@ static node_t *process_node(xmlTextReaderPtr reader, osm_t *osm) {
   pos2lpos(osm->bounds, &node->pos, &node->lpos);
 
   /* append node to end of hash table if present */
-  osm->node_hash[node->id] = node;
+  osm->nodes[node->id] = node;
 
   /* just an empty element? then return the node as it is */
   if(xmlTextReaderIsEmptyElement(reader))
@@ -949,8 +948,6 @@ static osm_t *process_osm(xmlTextReaderPtr reader) {
   /* alloc osm structure */
   osm_t *osm = new osm_t();
 
-  node_t **node = &osm->node;
-
   /* no attributes of interest */
 
   const xmlChar *name = xmlTextReaderConstName(reader);
@@ -985,8 +982,9 @@ static osm_t *process_osm(xmlTextReaderPtr reader) {
           osm->bounds = &osm->rbounds;
 	block = BLOCK_BOUNDS;
       } else if(block <= BLOCK_NODES && strcmp(name, "node") == 0) {
-	*node = process_node(reader, osm);
-	if(*node) node = &(*node)->next;
+        node_t *node = process_node(reader, osm);
+        if(node)
+          osm->nodes[node->id] = node;
 	block = BLOCK_NODES;
       } else if(block <= BLOCK_WAYS && strcmp(name, "way") == 0) {
         way_t *way = process_way(reader, osm);
@@ -1086,7 +1084,7 @@ gboolean osm_sanity_check(GtkWidget *parent, const osm_t *osm) {
 		     "Boundary box missing!"));
     return FALSE;
   }
-  if(!osm->node) {
+  if(osm->nodes.empty()) {
     errorf(parent, _("Invalid data in OSM file:\n"
 		     "No drawable content found!"));
     return FALSE;
@@ -1364,20 +1362,9 @@ char *osm_generate_xml_changeset(char *comment) {
 /* the following three functions are eating much CPU power */
 /* as they search the objects lists. Hashing is supposed to help */
 node_t *osm_get_node_by_id(osm_t *osm, item_id_t id) {
-  if(id > 0) {
-    std::map<item_id_t, node_t *>::const_iterator it = osm->node_hash.find(id);
-    if(it != osm->node_hash.end())
-      return it->second;
-  }
-
-  /* use linear search if no hash tables are present or search in hash table failed */
-  node_t *node = osm->node;
-  while(node) {
-    if(node->id == id)
-      return node;
-
-    node = node->next;
-  }
+  std::map<item_id_t, node_t *>::const_iterator it = osm->nodes.find(id);
+  if(it != osm->nodes.end())
+    return it->second;
 
   return NULL;
 }
@@ -1420,23 +1407,7 @@ item_id_t osm_new_way_id(osm_t *osm) {
 }
 
 item_id_t osm_new_node_id(osm_t *osm) {
-  item_id_t id = -1;
-
-  while(TRUE) {
-    gboolean found = FALSE;
-    const node_t *node = osm->node;
-    while(node && !found) {
-      if(node->id == id)
-	found = TRUE;
-
-      node = node->next;
-    }
-
-    /* no such id so far -> use it */
-    if(!found) return id;
-
-    id--;
-  }
+  return osm_new_id<node_t>(osm->nodes);
 }
 
 item_id_t osm_new_relation_id(osm_t *osm) {
@@ -1488,18 +1459,14 @@ void osm_node_attach(osm_t *osm, node_t *node) {
   node->flags = OSM_FLAG_NEW;
 
   /* attach to end of node list */
-  node_t **lnode = &osm->node;
-  while(*lnode) lnode = &(*lnode)->next;
-  *lnode = node;
+  osm->nodes[node->id] = node;
 }
 
 void osm_node_restore(osm_t *osm, node_t *node) {
   printf("Restoring node\n");
 
   /* attach to end of node list */
-  node_t **lnode = &osm->node;
-  while(*lnode) lnode = &(*lnode)->next;
-  *lnode = node;
+  osm->nodes[node->id] = node;
 }
 
 way_t *osm_way_new(void) {
@@ -1605,19 +1572,10 @@ way_chain_t osm_node_delete(osm_t *osm,
     printf("permanently delete node #" ITEM_ID_FORMAT "\n", node->id);
 
     /* remove it from the chain */
-    node_t **cnode = &osm->node;
-    int found = 0;
+    std::map<item_id_t, node_t *>::iterator it = osm->nodes.find(node->id);
+    g_assert(it != osm->nodes.end());
 
-    while(*cnode) {
-      if(*cnode == node) {
-	found++;
-	*cnode = (*cnode)->next;
-
-	osm_node_free(osm, node);
-      } else
-	cnode = &((*cnode)->next);
-    }
-    g_assert_cmpint(found, ==, 1);
+    osm_node_free(osm, it->second);
   }
 
   return way_chain;
@@ -2278,7 +2236,6 @@ void relation_t::members_by_type(guint *nodes, guint *ways, guint *relations) co
 
 node_t::node_t()
   : base_object_t()
-  , next(0)
   , ways(0)
   , zoom_max(0.0)
   , icon_buf(0)

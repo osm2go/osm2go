@@ -610,7 +610,17 @@ void map_way_draw(map_t *map, way_t *way) {
   m(way);
 }
 
-void map_node_draw(map_t *map, node_t *node) {
+struct map_node_draw_functor {
+  map_t * const map;
+  map_node_draw_functor(map_t *m) : map(m) {}
+  void operator()(node_t *node);
+  void operator()(std::pair<item_id_t, node_t *> pair) {
+    operator()(pair.second);
+  }
+};
+
+void map_node_draw_functor::operator()(node_t *node)
+{
   /* don't draw a node that's not there anymore */
   if(node->flags & OSM_FLAG_DELETED)
     return;
@@ -626,6 +636,11 @@ void map_node_draw(map_t *map, node_t *node) {
     map_node_new(map, node,
 		 map->style->node.radius * map->state->detail, 0,
 		 map->style->node.color, 0);
+}
+
+void map_node_draw(map_t *map, node_t *node) {
+  map_node_draw_functor m(map);
+  m(node);
 }
 
 static void map_item_draw(map_t *map, map_item_t *map_item) {
@@ -762,11 +777,7 @@ static void map_draw(map_t *map, osm_t *osm) {
   std::for_each(osm->ways.begin(), osm->ways.end(), map_way_draw_functor(map));
 
   printf("drawing single nodes ...\n");
-  node_t *node = osm->node;
-  while(node) {
-    map_node_draw(map, node);
-    node = node->next;
-  }
+  std::for_each(osm->nodes.begin(), osm->nodes.end(), map_node_draw_functor(map));
 
   printf("drawing frisket...\n");
   map_frisket_draw(map, osm->bounds);
@@ -782,7 +793,7 @@ void map_state_free(map_state_t *state) {
     g_free(state);
 }
 
-static void free_map_item_chain(std::pair<item_id_t, way_t *> pair) {
+template<typename T> void free_map_item_chain(std::pair<item_id_t, T *> pair) {
   delete pair.second->map_item_chain;
   pair.second->map_item_chain = NULL;
 }
@@ -792,15 +803,11 @@ void map_free_map_item_chains(appdata_t *appdata) {
 
 #ifndef DESTROY_WAIT_FOR_GTK
   /* free all map_item_chains */
-  node_t *node = appdata->osm->node;
-  while(node) {
-    delete node->map_item_chain;
-    node->map_item_chain = NULL;
-    node = node->next;
-  }
+  std::for_each(appdata->osm->nodes.begin(), appdata->osm->nodes.end(),
+                free_map_item_chain<node_t>);
 
   std::for_each(appdata->osm->ways.begin(), appdata->osm->ways.end(),
-                free_map_item_chain);
+                free_map_item_chain<way_t>);
 
   if (appdata->track.track) {
     /* remove all segments */
@@ -1349,8 +1356,10 @@ static void map_touchnode_update(appdata_t *appdata, gint x, gint y) {
 
   /* check if we are close to one of the other nodes */
   canvas_window2world(appdata->map->canvas, x, y, &x, &y);
-  node_t *node = appdata->osm->node;
-  while(!map->touchnode && node) {
+  const std::map<item_id_t, node_t *>::iterator nitEnd = appdata->osm->nodes.end();
+  for(std::map<item_id_t, node_t *>::iterator nit = appdata->osm->nodes.begin();
+      !map->touchnode && nit != nitEnd; nit++) {
+    node_t * const node = nit->second;
     /* don't highlight the dragged node itself and don't highlight */
     /* deleted ones */
     if((node != cur_node) && (!(node->flags & OSM_FLAG_DELETED))) {
@@ -1361,7 +1370,6 @@ static void map_touchnode_update(appdata_t *appdata, gint x, gint y) {
 	 (nx*nx + ny*ny < map->style->node.radius * map->style->node.radius))
 	map_hl_touchnode_draw(map, node);
     }
-    node = node->next;
   }
 
   /* during way creation also nodes of the new way */
@@ -1371,7 +1379,7 @@ static void map_touchnode_update(appdata_t *appdata, gint x, gint y) {
     const node_chain_t::const_iterator itEnd = chain.end()--;
     for(node_chain_t::const_iterator it = chain.begin();
         !map->touchnode && it != itEnd; it++) {
-      node = *it;
+      node_t * const node = *it;
       gint nx = abs(x - node->lpos.x);
       gint ny = abs(y - node->lpos.y);
 

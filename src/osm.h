@@ -56,6 +56,8 @@ typedef gint64 item_id_t;
 /* icon stuff is required since nodes may held a icon reference */
 struct icon_s;
 
+typedef struct osm_t osm_t;
+
 typedef struct bounds_t {
   pos_t ll_min, ll_max;
   lpos_t min, max;
@@ -88,11 +90,11 @@ typedef struct base_object_t {
 } base_object_t;
 
 #ifdef __cplusplus
+
+
 class node_t : public base_object_t {
 public:
   node_t();
-
-  node_t *next;
 
   pos_t pos;
   lpos_t lpos;
@@ -104,6 +106,7 @@ public:
 
   /* a link to the visual representation on screen */
   struct map_item_chain_t *map_item_chain;
+  void cleanup(osm_t *osm);
 };
 #else
 typedef struct node_t node_t;
@@ -276,23 +279,21 @@ typedef std::vector<relation_t *> relation_chain_t;
 
 #endif
 
-typedef struct osm_t {
+struct osm_t {
   bounds_t *bounds;   // original bounds as they appear in the file
-
-  node_t *node;
 
   struct icon_t **icons;
 
   bounds_t rbounds;
 
 #ifdef __cplusplus
-  std::map<item_id_t, node_t *> node_hash;
+  std::map<item_id_t, node_t *> nodes;
   std::map<item_id_t, way_t *> ways;
   std::map<item_id_t, relation_t *> relations;
   std::map<int, std::string> users;   //< users where uid is given in XML
   std::vector<std::string> anonusers; //< users without uid
 #endif
-} osm_t;
+};
 
 osm_t *osm_parse(const char *path, const char *filename, struct icon_t **icons);
 gboolean osm_sanity_check(GtkWidget *parent, const osm_t *osm);
