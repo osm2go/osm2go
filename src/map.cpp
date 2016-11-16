@@ -798,6 +798,19 @@ template<typename T> void free_map_item_chain(std::pair<item_id_t, T *> pair) {
   pair.second->map_item_chain = NULL;
 }
 
+template<bool b> void free_track_item_chain(track_seg_t *seg) {
+  track_item_chain_t *item = seg->item_chain;
+  while(item) {
+    track_item_chain_t *next = item->next;
+    if(b)
+      canvas_item_destroy(item->item);
+    g_free(item);
+    item = next;
+  }
+
+  seg->item_chain = NULL;
+}
+
 void map_free_map_item_chains(appdata_t *appdata) {
   if(!appdata->osm) return;
 
@@ -811,18 +824,9 @@ void map_free_map_item_chains(appdata_t *appdata) {
 
   if (appdata->track.track) {
     /* remove all segments */
-    track_seg_t *seg = appdata->track.track->track_seg;
-    while(seg) {
-      track_item_chain_t *item = seg->item_chain;
-      while(item) {
-        track_item_chain_t *next = item->next;
-        g_free(item);
-        item = next;
-      }
-
-      seg->item_chain = NULL;
-      seg = seg->next;
-    }
+    std::for_each(appdata->track.track->segments.begin(),
+                  appdata->track.track->segments.end(),
+                  free_track_item_chain<false>);
   }
 #endif
 }
@@ -2298,14 +2302,17 @@ void map_track_update_seg(map_t *map, track_seg_t *seg) {
 
 }
 
-void map_track_draw(map_t *map, track_t *track) {
-  track_seg_t *seg = track->track_seg;
-
-  /* draw all segments */
-  while(seg) {
+struct map_track_seg_draw_functor {
+  map_t * const map;
+  map_track_seg_draw_functor(map_t *m) : map(m) {}
+  void operator()(track_seg_t *seg) {
     map_track_draw_seg(map, seg);
-    seg = seg->next;
   }
+};
+
+void map_track_draw(map_t *map, track_t *track) {
+  std::for_each(track->segments.begin(), track->segments.end(),
+                map_track_seg_draw_functor(map));
 }
 
 void map_track_remove(appdata_t *appdata) {
@@ -2316,19 +2323,8 @@ void map_track_remove(appdata_t *appdata) {
   g_assert(track);
 
   /* remove all segments */
-  track_seg_t *seg = track->track_seg;
-  while(seg) {
-    track_item_chain_t *item = seg->item_chain;
-    while(item) {
-      track_item_chain_t *next = item->next;
-      canvas_item_destroy(item->item);
-      g_free(item);
-      item = next;
-    }
-
-    seg->item_chain = NULL;
-    seg = seg->next;
-  }
+  std::for_each(track->segments.begin(), track->segments.end(),
+                free_track_item_chain<true>);
 }
 
 /**

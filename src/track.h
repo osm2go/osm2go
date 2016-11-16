@@ -24,6 +24,9 @@
 #include "pos.h"
 #include "project.h"
 
+#ifdef __cplusplus
+#include <vector>
+
 typedef struct track_point_t {
   struct track_point_t *next;
   pos_t pos;               /* position in lat/lon format */
@@ -38,19 +41,14 @@ typedef struct track_item_chain_t {
 
 typedef struct track_seg_t {
   track_point_t *track_point;
-  struct track_seg_t *next;
   track_item_chain_t *item_chain;
 } track_seg_t;
 
-typedef struct track_t {
-  track_seg_t *track_seg;
-  gboolean dirty;
-  track_seg_t *cur_seg;
-} track_t;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+struct track_t {
+  std::vector<track_seg_t *> segments;
+  bool dirty;
+  bool active; ///< if the last element in segments is currently written to
+};
 
 /**
  * @brief count a point sequence
@@ -59,7 +57,12 @@ extern "C" {
  * @retval 0 point is NULL
  */
 gint track_points_count(const track_point_t *point);
-gboolean track_is_empty(const track_seg_t *seg);
+bool track_is_empty(const track_seg_t *seg);
+
+extern "C" {
+#endif
+
+typedef struct track_t track_t;
 
 /* used internally to save and restore the currently displayed track */
 void track_save(project_t *project, track_t *track);

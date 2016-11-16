@@ -38,6 +38,8 @@
 #error "Tree not enabled in libxml"
 #endif
 
+#include <algorithm>
+
 /* make menu represent the track state */
 void track_menu_set(appdata_t *appdata) {
   if(!appdata->window) return;
@@ -60,8 +62,8 @@ gint track_points_count(const track_point_t *point)
   return points;
 }
 
-gboolean track_is_empty(const track_seg_t *seg) {
-  return (seg->track_point == NULL) ? TRUE : FALSE;
+bool track_is_empty(const track_seg_t *seg) {
+  return (seg->track_point == 0);
 }
 
 static track_point_t *track_parse_trkpt(xmlNode *a_node) {
@@ -102,16 +104,15 @@ static track_point_t *track_parse_trkpt(xmlNode *a_node) {
  * @brief parse a <trkseg>
  * @param a_node the <trkseg> node
  * @param points counter for the created points (will not be reset)
- * @param segs counter for the created segments (will not be reset)
+ * @param segments vector to fill with newly loaded segments
  * @returns the first of the newly created track segments
  *
  * This may create multiple track_seg_t objects.
  */
-static track_seg_t *track_parse_trkseg(xmlNode *a_node, gint *points, gint *segs) {
+static void track_parse_trkseg(xmlNode *a_node, gint *points,
+                               std::vector<track_seg_t *> &segments) {
   xmlNode *cur_node;
   track_point_t **point = NULL;
-  track_seg_t *ret = NULL;
-  track_seg_t **seg = &ret;
 
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
@@ -120,9 +121,9 @@ static track_seg_t *track_parse_trkseg(xmlNode *a_node, gint *points, gint *segs
 	if(cpnt) {
 	  if(!point) {
 	    /* start a new segment */
-	    *seg = g_new0(track_seg_t, 1);
-	    (*segs)++;
-	    point = &((*seg)->track_point);
+            track_seg_t *seg = g_new0(track_seg_t, 1);
+            segments.push_back(seg);
+	    point = &seg->track_point;
 	  }
 	  /* attach point to chain */
 	  *point = cpnt;
@@ -133,7 +134,6 @@ static track_seg_t *track_parse_trkseg(xmlNode *a_node, gint *points, gint *segs
 	  /* close segment if there is one */
 	  if(point) {
 	    printf("ending track segment leaving bounds\n");
-	    seg = &((*seg)->next);
 	    point = NULL;
 	  }
 	}
@@ -142,21 +142,15 @@ static track_seg_t *track_parse_trkseg(xmlNode *a_node, gint *points, gint *segs
 
     }
   }
-  return ret;
 }
 
-static track_t *track_parse_trk(xmlNode *a_node, gint *points, gint *segs, track_t *track) {
+static track_t *track_parse_trk(xmlNode *a_node, gint *points, track_t *track) {
   xmlNode *cur_node;
-  track_seg_t **last = &track->track_seg;
-  while (*last)
-    last = &((*last)->next);
 
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcasecmp((char*)cur_node->name, "trkseg") == 0) {
-        *last = track_parse_trkseg(cur_node, points, segs);
-        while (*last)
-          last = &((*last)->next);
+        track_parse_trkseg(cur_node, points, track->segments);
       } else
 	printf("found unhandled gpx/trk/%s\n", cur_node->name);
 
@@ -165,18 +159,17 @@ static track_t *track_parse_trk(xmlNode *a_node, gint *points, gint *segs, track
   return track;
 }
 
-static track_t *track_parse_gpx(xmlNode *a_node, gint *points, gint *segs) {
+static track_t *track_parse_gpx(xmlNode *a_node, gint *points) {
   track_t *track = NULL;
   *points = 0;
-  *segs = 0;
   xmlNode *cur_node;
 
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcasecmp((char*)cur_node->name, "trk") == 0) {
 	if(!track)
-          track = g_new0(track_t, 1);
-        track_parse_trk(cur_node, points, segs, track);
+          track = new track_t();
+        track_parse_trk(cur_node, points, track);
       } else
 	printf("found unhandled gpx/%s\n", cur_node->name);
     }
@@ -184,7 +177,7 @@ static track_t *track_parse_gpx(xmlNode *a_node, gint *points, gint *segs) {
   return track;
 }
 
-static track_t *track_parse_doc(xmlDocPtr doc, gint *points, gint *segs) {
+static track_t *track_parse_doc(xmlDocPtr doc, gint *points) {
   track_t *track = NULL;
   xmlNode *cur_node;
 
@@ -192,7 +185,7 @@ static track_t *track_parse_doc(xmlDocPtr doc, gint *points, gint *segs) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       /* parse track file ... */
       if(strcasecmp((char*)cur_node->name, "gpx") == 0)
-        track = track_parse_gpx(cur_node, points, segs);
+        track = track_parse_gpx(cur_node, points);
       else
         printf("found unhandled %s\n", cur_node->name);
     }
@@ -214,19 +207,19 @@ static track_t *track_read(const char *filename, gboolean dirty) {
     return NULL;
   }
 
-  gint points, segs;
-  track_t *track = track_parse_doc(doc, &points, &segs);
+  gint points;
+  track_t *track = track_parse_doc(doc, &points);
   xmlFreeDoc(doc);
 
-  if(!track || !track->track_seg) {
-    g_free(track);
+  if(!track || track->segments.empty()) {
+    delete track;
     printf("track was empty/invalid track\n");
     return NULL;
   }
 
   track->dirty = dirty;
   printf("Track is %sdirty.\n", dirty?"":"not ");
-  printf("%d points in %d segments\n", points, segs);
+  printf("%d points in %zu segments\n", points, track->segments.size());
 
   return track;
 }
@@ -264,14 +257,9 @@ void track_clear(appdata_t *appdata) {
 }
 
 void track_delete(track_t *track) {
-  track_seg_t *seg = track->track_seg;
-  while(seg) {
-    track_seg_t *next = seg->next;
-    track_seg_free(seg);
-    seg = next;
-  }
+  std::for_each(track->segments.begin(), track->segments.end(), track_seg_free);
 
-  g_free(track);
+  delete track;
 }
 
 /* ----------------------  saving track --------------------------- */
@@ -300,13 +288,14 @@ static void track_save_points(const track_point_t *point, xmlNodePtr node) {
   }
 }
 
-static void track_save_segs(const track_seg_t *seg, xmlNodePtr node) {
-  while(seg) {
+struct track_save_segs {
+  xmlNodePtr const node;
+  track_save_segs(xmlNodePtr n) : node(n) {}
+  void operator()(const track_seg_t *seg) {
     xmlNodePtr node_seg = xmlNewChild(node, NULL, BAD_CAST "trkseg", NULL);
     track_save_points(seg->track_point, node_seg);
-    seg = seg->next;
   }
-}
+};
 
 /**
  * @brief write the track information to a GPX file
@@ -323,21 +312,22 @@ static void track_write(const char *name, const track_t *track, xmlDoc *doc) {
   printf("writing track to %s\n", name);
 
   xmlNodePtr trk_node;
-  const track_seg_t *it = track->track_seg;
+  std::vector<track_seg_t *>::const_iterator it = track->segments.begin();
+  std::vector<track_seg_t *>::const_iterator itEnd = track->segments.end();
   if(doc) {
     xmlNodePtr cur_node;
     xmlNodePtr root_node = xmlDocGetRootElement(doc);
-    gboolean err = FALSE;
+    bool err = false;
     if (!root_node || root_node->type != XML_ELEMENT_NODE ||
         strcasecmp((char*)root_node->name, "gpx") != 0 ) {
-      err = TRUE;
+      err = true;
     } else {
       cur_node = root_node->children;
       while(cur_node && cur_node->type != XML_ELEMENT_NODE)
         cur_node = cur_node->next;
       if(!cur_node || !cur_node->children ||
          strcasecmp((char*)cur_node->name, "trk") != 0) {
-        err = TRUE;
+        err = true;
       } else {
         trk_node = cur_node;
         /* assume that at most the last segment in the file was modified */
@@ -346,16 +336,16 @@ static void track_write(const char *name, const track_t *track, xmlDoc *doc) {
           if (cur_node->type != XML_ELEMENT_NODE)
             continue;
           // more tracks in the file than loaded, something is wrong
-          if(it == NULL) {
-            err = TRUE;
+          if(it == itEnd) {
+            err = true;
             break;
           }
           /* something else, this track is not written from osm2go */
           if(strcasecmp((char*)cur_node->name, "trkseg") != 0) {
-            err = TRUE;
+            err = true;
             break;
           }
-          it = it->next;
+          it++;
         }
       }
     }
@@ -375,13 +365,13 @@ static void track_write(const char *name, const track_t *track, xmlDoc *doc) {
     xmlNewProp(root_node, BAD_CAST "xmlns", BAD_CAST
                "http://www.topografix.com/GPX/1/0");
     xmlNewProp(root_node, BAD_CAST "creator", BAD_CAST PACKAGE " v" VERSION);
-    it = track->track_seg;
+    it = track->segments.begin();
 
     trk_node = xmlNewChild(root_node, NULL, BAD_CAST "trk", NULL);
     xmlDocSetRootElement(doc, root_node);
   }
 
-  track_save_segs(it, trk_node);
+  std::for_each(it, itEnd, track_save_segs(trk_node));
 
   xmlSaveFormatFileEnc(name, doc, "UTF-8", 1);
   xmlFreeDoc(doc);
@@ -467,12 +457,11 @@ gboolean track_restore(appdata_t *appdata) {
 static void track_end_segment(track_t *track) {
   if(!track) return;
 
-  if(track->cur_seg) {
+  if(track->active) {
     printf("ending a segment\n");
+    track->active = false;
 
     /* todo: check if segment only has 1 point */
-
-    track->cur_seg = NULL;
   }
 }
 
@@ -490,29 +479,28 @@ static gboolean track_append_position(appdata_t *appdata, const pos_t *pos, floa
   /* no track at all? might be due to a "clear track" while running */
   if(!track) {
     printf("restarting after \"clear\"\n");
-    track = appdata->track.track = g_new0(track_t, 1);
+    track = appdata->track.track = new track_t();
   }
 
   track_menu_set(appdata);
 
-  if(!track->cur_seg) {
+  if(!track->active) {
     printf("starting new segment\n");
 
-    track_seg_t **seg = &(track->track_seg);
-    while(*seg) seg = &((*seg)->next);
-
-    *seg = track->cur_seg = g_new0(track_seg_t, 1);
+    track_seg_t *seg = g_new0(track_seg_t, 1);
+    track->segments.push_back(seg);
+    track->active = true;
   } else
     printf("appending to current segment\n");
 
   track_point_t **point;
-  track_point_t *prev = track->cur_seg->track_point;
+  track_point_t *prev = track->segments.back()->track_point;
   if (prev) {
     while(prev->next)
       prev = prev->next;
     point = &(prev->next);
   } else {
-    point = &(track->cur_seg->track_point);
+    point = &track->segments.back()->track_point;
   }
 
   /* don't append if point is the same as last time */
@@ -532,12 +520,12 @@ static gboolean track_append_position(appdata_t *appdata, const pos_t *pos, floa
     if(!prev) {
       /* the segment can now be drawn for the first time */
       printf("initial draw\n");
-      g_assert(!track->cur_seg->item_chain);
-      map_track_draw_seg(appdata->map, track->cur_seg);
+      g_assert(!track->segments.back()->item_chain);
+      map_track_draw_seg(appdata->map, track->segments.back());
     } else {
       /* the segment has to be updated */
-      g_assert(track->cur_seg->item_chain);
-      map_track_update_seg(appdata->map, track->cur_seg);
+      g_assert(track->segments.back()->item_chain);
+      map_track_update_seg(appdata->map, track->segments.back());
     }
   }
 
@@ -616,7 +604,7 @@ static void track_do_enable_gps(appdata_t *appdata) {
   if (!gps_register_callback(appdata, update)) {
     if(!appdata->track.track) {
       printf("GPS: no track yet, starting new one\n");
-      appdata->track.track = g_new0(track_t, 1);
+      appdata->track.track = new track_t();
       appdata->track.track->dirty = FALSE;
     } else
       printf("GPS: extending existing track\n");
