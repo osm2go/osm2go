@@ -2194,55 +2194,64 @@ osm_way_reverse_direction_sensitive_tags (way_t *way) {
 static const char *DS_ROUTE_FORWARD = "forward";
 static const char *DS_ROUTE_REVERSE = "reverse";
 
+struct reverse_roles {
+  way_t *way;
+  guint n_roles_flipped;
+};
+
+void reverse_roles_operator(relation_t* relation, struct reverse_roles *context)
+{
+  const char *type = osm_tag_get_by_key(OSM_TAG(relation), "type");
+
+  // Route relations; http://wiki.openstreetmap.org/wiki/Relation:route
+  if (!type || strcasecmp(type, "route") != 0)
+    return;
+
+  // First find the member corresponding to our way:
+  member_t *member = relation->member;
+  for (; member != NULL; member = member->next) {
+    if (member->object.type == WAY) {
+      if (member->object.way == context->way)
+        break;
+    }
+    if (member->object.type == WAY_ID) {
+      if (member->object.id == OSM_ID(context->way))
+        break;
+    }
+  }
+  g_assert(member);  // osm_way_to_relation() broken?
+
+  // Then flip its role if it's one of the direction-sensitive ones
+  if (member->role == NULL) {
+    printf("null role in route relation -> ignore\n");
+  } else if (strcasecmp(member->role, DS_ROUTE_FORWARD) == 0) {
+    g_free(member->role);
+    member->role = g_strdup(DS_ROUTE_REVERSE);
+    OSM_FLAGS(relation) |= OSM_FLAG_DIRTY;
+    ++(context->n_roles_flipped);
+  } else if (strcasecmp(member->role, DS_ROUTE_REVERSE) == 0) {
+    g_free(member->role);
+    member->role = g_strdup(DS_ROUTE_FORWARD);
+    OSM_FLAGS(relation) |= OSM_FLAG_DIRTY;
+    ++(context->n_roles_flipped);
+  }
+
+  // TODO: what about numbered stops? Guess we ignore them; there's no
+  // consensus about whether they should be placed on the way or to one side
+  // of it.
+}
+
 guint
 osm_way_reverse_direction_sensitive_roles(osm_t *osm, way_t *way) {
-  GSList *rel_chain0, *rel_chain;
-  rel_chain0 = osm_way_to_relation(osm, way);
-  guint n_roles_flipped = 0;
+  GSList *rel_chain = osm_way_to_relation(osm, way);
+  struct reverse_roles context = {
+    .way = way,
+    .n_roles_flipped = 0
+  };
 
-  for (rel_chain = rel_chain0; rel_chain != NULL; rel_chain = g_slist_next(rel_chain)) {
-    relation_t *relation = (relation_t*)rel_chain->data;
-    const char *type = osm_tag_get_by_key(OSM_TAG(relation), "type");
-
-    // Route relations; http://wiki.openstreetmap.org/wiki/Relation:route
-    if (!type || strcasecmp(type, "route") != 0)
-      continue;
-
-    // First find the member corresponding to our way:
-    member_t *member = relation->member;
-    for (; member != NULL; member = member->next) {
-      if (member->object.type == WAY) {
-        if (member->object.way == way)
-          break;
-      }
-      if (member->object.type == WAY_ID) {
-        if (member->object.id == OSM_ID(way))
-          break;
-      }
-    }
-    g_assert(member);  // osm_way_to_relation() broken?
-
-    // Then flip its role if it's one of the direction-sensitive ones
-    if (member->role == NULL) {
-      printf("null role in route relation -> ignore\n");
-    } else if (strcasecmp(member->role, DS_ROUTE_FORWARD) == 0) {
-      g_free(member->role);
-      member->role = g_strdup(DS_ROUTE_REVERSE);
-      OSM_FLAGS(relation) |= OSM_FLAG_DIRTY;
-      ++n_roles_flipped;
-    } else if (strcasecmp(member->role, DS_ROUTE_REVERSE) == 0) {
-      g_free(member->role);
-      member->role = g_strdup(DS_ROUTE_FORWARD);
-      OSM_FLAGS(relation) |= OSM_FLAG_DIRTY;
-      ++n_roles_flipped;
-    }
-
-    // TODO: what about numbered stops? Guess we ignore them; there's no
-    // consensus about whether they should be placed on the way or to one side
-    // of it.
-  }
-  g_slist_free(rel_chain0);
-  return n_roles_flipped;
+  g_slist_foreach(rel_chain, (GFunc)reverse_roles_operator, &context);
+  g_slist_free(rel_chain);
+  return context.n_roles_flipped;
 }
 
 const node_t *osm_way_get_first_node(const way_t *way) {
