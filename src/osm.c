@@ -2205,7 +2205,7 @@ osm_way_reverse_direction_sensitive_roles(osm_t *osm, way_t *way) {
     const char *type = osm_tag_get_by_key(OSM_TAG(relation), "type");
 
     // Route relations; http://wiki.openstreetmap.org/wiki/Relation:route
-    if (strcasecmp(type, "route") != 0)
+    if (!type || strcasecmp(type, "route") != 0)
       continue;
 
     // First find the member corresponding to our way:
