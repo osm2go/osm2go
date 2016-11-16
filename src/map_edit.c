@@ -663,6 +663,41 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
   }
 }
 
+static void member_merge_operator(relation_t *relation, way_t *other)
+{
+  printf("way[1] is part of relation #"ITEM_ID_FORMAT"\n",
+         OSM_ID(relation));
+
+  /* make way[0] member of the same relation */
+
+  /* walk member chain. save role of way[1] if its being found. */
+  /* end search either at end of chain or if way[0] was found */
+  /* as it's already a member of that relation */
+  member_t **member;
+  const char *role = NULL;
+  for(member = &relation->member; *member; member = &(*member)->next) {
+    /* save role of way[1] */
+    if(((*member)->object.type == WAY) &&
+       ((*member)->object.way == other)) {
+      role = (*member)->role;
+      break;
+    }
+  }
+
+  if(*member) {
+    printf("  both ways were members of this relation\n");
+  } else {
+    printf("  adding way[0] to relation\n");
+    *member = g_new0(member_t, 1);
+    (*member)->object.type = WAY;
+    (*member)->object.way = other;
+    if(role) (*member)->role = g_strdup(role);
+    member = &(*member)->next;
+
+    OSM_FLAGS(relation) |= OSM_FLAG_DIRTY;
+  }
+}
+
 void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 			  gint ex, gint ey) {
 
@@ -843,41 +878,7 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 	  GSList *rchain, *rchain0 =
 	    osm_way_to_relation(appdata->osm, ways2join[1]);
 
-	  for(rchain = rchain0; rchain; rchain = g_slist_next(rchain)) {
-	    relation_t *relation = (relation_t*)rchain->data;
-
-	    printf("way[1] is part of relation #"ITEM_ID_FORMAT"\n",
-		   OSM_ID(relation));
-
-	    /* make way[0] member of the same relation */
-
-	    /* walk member chain. save role of way[1] if its being found. */
-	    /* end search either at end of chain or if way[0] was found */
-	    /* as it's already a member of that relation */
-	    member_t **member;
-	    const char *role = NULL;
-	    for(member = &relation->member; *member; member = &(*member)->next) {
-	      /* save role of way[1] */
-	      if(((*member)->object.type == WAY) &&
-		 ((*member)->object.way == ways2join[0])) {
-		role = (*member)->role;
-		break;
-	      }
-	    }
-
-	    if(*member)
-	      printf("  both ways were members of this relation\n");
-	    else {
-	      printf("  adding way[0] to relation\n");
-	      *member = g_new0(member_t, 1);
-	      (*member)->object.type = WAY;
-	      (*member)->object.way = ways2join[0];
-	      if(role) (*member)->role = g_strdup(role);
-	      member = &(*member)->next;
-
-	      OSM_FLAGS(relation) |= OSM_FLAG_DIRTY;
-	    }
-	  }
+          g_slist_foreach(rchain, (GFunc)member_merge_operator, ways2join[0]);
 	  g_slist_free(rchain0);
 
 	  /* and open dialog to resolve tag collisions if necessary */
