@@ -55,7 +55,7 @@ void relation_transfer_operator(relation_t* relation, struct relation_transfer *
   *member = g_new0(member_t, 1);
   (*member)->object.type = WAY;
   (*member)->object.way = context->dst;
-  if(role) (*member)->role = g_strdup(role);
+  (*member)->role = g_strdup(role);
   member = &(*member)->next;
 
   OSM_FLAGS(relation) |= OSM_FLAG_DIRTY;
@@ -691,7 +691,7 @@ static void member_merge_operator(relation_t *relation, way_t *other)
     *member = g_new0(member_t, 1);
     (*member)->object.type = WAY;
     (*member)->object.way = other;
-    if(role) (*member)->role = g_strdup(role);
+    (*member)->role = g_strdup(role);
     member = &(*member)->next;
 
     OSM_FLAGS(relation) |= OSM_FLAG_DIRTY;

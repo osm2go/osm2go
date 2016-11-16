@@ -920,7 +920,7 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   gtk_text_buffer_get_start_iter(buffer, &start);
   gtk_text_buffer_get_end_iter(buffer, &end);
   char *text = gtk_text_buffer_get_text(buffer, &start, &end, FALSE);
-  if(text) context->comment = g_strdup(text);
+  context->comment = g_strdup(text);
 
   gtk_widget_destroy(dialog);
   project_save(GTK_WIDGET(appdata->window), project);
