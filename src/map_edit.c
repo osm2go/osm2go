@@ -29,43 +29,48 @@
 #include "style.h"
 
 /* --------------------- misc local helper functions ---------------- */
+struct relation_transfer {
+  way_t * const dst;
+  way_t * const src;
+};
+
+void relation_transfer_operator(relation_t* relation, struct relation_transfer *context)
+{
+  printf("way #"ITEM_ID_FORMAT" is part of relation #"ITEM_ID_FORMAT"\n",
+         OSM_ID(context->src), OSM_ID(relation));
+
+  /* make new member of the same relation */
+
+  /* walk member chain. save role of way if its being found. */
+  member_t **member = &relation->member;
+  char *role = NULL;
+  while(*member) {
+    /* save role of way */
+    if(((*member)->object.type == WAY) && ((*member)->object.way == context->src))
+      role = (*member)->role;
+    member = &(*member)->next;
+  }
+
+  printf("  adding way #"ITEM_ID_FORMAT" to relation\n", OSM_ID(context->dst));
+  *member = g_new0(member_t, 1);
+  (*member)->object.type = WAY;
+  (*member)->object.way = context->dst;
+  if(role) (*member)->role = g_strdup(role);
+  member = &(*member)->next;
+
+  OSM_FLAGS(relation) |= OSM_FLAG_DIRTY;
+}
 
 static void transfer_relations(osm_t *osm, way_t *dst, way_t *src) {
 
   /* transfer relation memberships from the src way to the dst one */
-  GSList *rchain, *rchain0 = osm_way_to_relation(osm, src);
+  GSList *rchain = osm_way_to_relation(osm, src);
+  struct relation_transfer context = { .dst = dst, .src = src };
 
-  for(rchain = rchain0; rchain; rchain = g_slist_next(rchain)) {
-    relation_t *relation = (relation_t*)rchain->data;
+  g_slist_foreach(rchain, (GFunc)relation_transfer_operator, &context);
 
-    printf("way #"ITEM_ID_FORMAT" is part of relation #"ITEM_ID_FORMAT"\n",
-	   OSM_ID(src), OSM_ID(relation));
-
-    /* make new member of the same relation */
-
-    /* walk member chain. save role of way if its being found. */
-    member_t **member = &relation->member;
-    char *role = NULL;
-    while(*member) {
-      /* save role of way */
-      if(((*member)->object.type == WAY) && ((*member)->object.way == src))
-	role = (*member)->role;
-      member = &(*member)->next;
-    }
-
-    printf("  adding way #"ITEM_ID_FORMAT" to relation\n", OSM_ID(dst));
-    *member = g_new0(member_t, 1);
-    (*member)->object.type = WAY;
-    (*member)->object.way = dst;
-    if(role) (*member)->role = g_strdup(role);
-    member = &(*member)->next;
-
-    OSM_FLAGS(relation) |= OSM_FLAG_DIRTY;
-  }
-
-  g_slist_free(rchain0);
+  g_slist_free(rchain);
 }
-
 
 /* combine tags from src to dst and combine them in a useful manner */
 /* erase all source tags */
