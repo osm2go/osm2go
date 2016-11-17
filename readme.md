@@ -35,7 +35,7 @@ risking to destroy anything.
 
 So you actually have decided to perform an upload. You've changed some 
 ways or nodes. These changes are currently in the project diff file
-and you may actually leave and restart osm2go without leaving those 
+and you may actually leave and restart osm2go without losing those 
 changes. Selecting upload from the menu will first give you a raw overview
 of what will happen. You'll be told how many way and nodes you've changed,
 how many have been deleted and how many have been created newly. Currently
@@ -49,7 +49,7 @@ If everything looks reasonable, then enter your OpenStreetMap account
 data into the username and password fields and click ok. A new window will
 open containing a text buffer. This is the upload log. It will record 
 basic information about your upload and may be especially useful if something
-goes wrong. Lets hope you entered your username and the password correctly.
+goes wrong. Let's hope you entered your username and the password correctly.
 Then the upload should succeed. This usually only takes a few seconds.
 If your upload went fine and you actually changed data on the servers 
 database, osm2go will then re-download the entire project area from the
