@@ -77,11 +77,11 @@ static gboolean project_read(const char *project_file, project_t *project) {
   xmlNode *cur_node = NULL;
   for (cur_node = root_element; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
-      if(strcasecmp((char*)cur_node->name, "proj") == 0) {
+      if(strcmp((char*)cur_node->name, "proj") == 0) {
 	char *str;
 
 	if((str = (char*)xmlGetProp(cur_node, BAD_CAST "dirty"))) {
-	  project->data_dirty = (strcasecmp(str, "true") == 0);
+	  project->data_dirty = (strcmp(str, "true") == 0);
 	  xmlFree(str);
 	} else
 	  project->data_dirty = FALSE;
@@ -91,18 +91,18 @@ static gboolean project_read(const char *project_file, project_t *project) {
 	while(node != NULL) {
 	  if(node->type == XML_ELEMENT_NODE) {
 
-	    if(strcasecmp((char*)node->name, "desc") == 0) {
+	    if(strcmp((char*)node->name, "desc") == 0) {
 	      project->desc = xmlNodeListGetString(doc, node->children, 1);
 	      printf("desc = %s\n", project->desc);
 
-	    } else if(strcasecmp((char*)node->name, "server") == 0) {
+	    } else if(strcmp((char*)node->name, "server") == 0) {
 	      str = (char*)xmlNodeListGetString(doc, node->children, 1);
 	      project->server = g_strdup(str);
 	      printf("server = %s\n", project->server);
 	      xmlFree(str);
 
 	    } else if(project->map_state &&
-		      strcasecmp((char*)node->name, "map") == 0) {
+		      strcmp((char*)node->name, "map") == 0) {
 
 	      if((str = (char*)xmlGetProp(node, BAD_CAST "zoom"))) {
 		project->map_state->zoom = g_ascii_strtod(str, NULL);
@@ -121,7 +121,7 @@ static gboolean project_read(const char *project_file, project_t *project) {
 		xmlFree(str);
 	      }
 
-	    } else if(strcasecmp((char*)node->name, "wms") == 0) {
+	    } else if(strcmp((char*)node->name, "wms") == 0) {
 
 	      if((str = (char*)xmlGetProp(node, BAD_CAST "server"))) {
 		project->wms_server = g_strdup(str);
@@ -140,7 +140,7 @@ static gboolean project_read(const char *project_file, project_t *project) {
 		xmlFree(str);
 	      }
 
-	    } else if(strcasecmp((char*)node->name, "osm") == 0) {
+	    } else if(strcmp((char*)node->name, "osm") == 0) {
 	      str = (char*)xmlNodeListGetString(doc, node->children, 1);
 	      printf("osm = %s\n", str);
 
@@ -158,7 +158,7 @@ static gboolean project_read(const char *project_file, project_t *project) {
 
 	      xmlFree(str);
 
-	    } else if(strcasecmp((char*)node->name, "min") == 0) {
+	    } else if(strcmp((char*)node->name, "min") == 0) {
 	      if((str = (char*)xmlGetProp(node, BAD_CAST "lat"))) {
 		project->min.lat = g_ascii_strtod(str, NULL);
 		xmlFree(str);
@@ -168,7 +168,7 @@ static gboolean project_read(const char *project_file, project_t *project) {
 		xmlFree(str);
 	      }
 
-	    } else if(strcasecmp((char*)node->name, "max") == 0) {
+	    } else if(strcmp((char*)node->name, "max") == 0) {
 	      if((str = (char*)xmlGetProp(node, BAD_CAST "lat"))) {
 		project->max.lat = g_ascii_strtod(str, NULL);
 		xmlFree(str);
