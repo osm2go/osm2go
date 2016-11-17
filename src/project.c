@@ -332,7 +332,7 @@ static GSList *project_scan(appdata_t *appdata) {
       if(project_read(fullname, n))
         projects = g_slist_prepend(projects, n);
       else
-        g_free(n);
+        project_free(n);
       g_free(fullname);
     }
   }
