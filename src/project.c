@@ -319,26 +319,23 @@ static GSList *project_scan(appdata_t *appdata) {
   /* scan for projects */
   GDir *dir = g_dir_open(appdata->settings->base_path, 0, NULL);
   const char *name = NULL;
-  do {
-    if((name = g_dir_read_name(dir))) {
-      gchar *fullname;
-      if(project_exists(appdata->settings, name, &fullname)) {
-	printf("found project %s\n", name);
+  while((name = g_dir_read_name(dir)) != NULL) {
+    gchar *fullname;
+    if(project_exists(appdata->settings, name, &fullname)) {
+      printf("found project %s\n", name);
 
-	/* try to read project and append it to chain */
-	project_t *n = g_new0(project_t, 1);
-	n->name = g_strdup(name);
-	n->path = g_strconcat(
-			  appdata->settings->base_path, name, "/", NULL);
+      /* try to read project and append it to chain */
+      project_t *n = g_new0(project_t, 1);
+      n->name = g_strdup(name);
+      n->path = g_strconcat(appdata->settings->base_path, name, "/", NULL);
 
-	if(project_read(fullname, n))
-	  projects = g_slist_prepend(projects, n);
-	else
-	  g_free(n);
-	g_free(fullname);
-      }
+      if(project_read(fullname, n))
+        projects = g_slist_prepend(projects, n);
+      else
+        g_free(n);
+      g_free(fullname);
     }
-  } while(name);
+  }
 
   g_dir_close(dir);
 
