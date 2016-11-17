@@ -38,12 +38,10 @@ ways or nodes. These changes are currently in the project diff file
 and you may actually leave and restart osm2go without losing those 
 changes. Selecting upload from the menu will first give you a raw overview
 of what will happen. You'll be told how many way and nodes you've changed,
-how many have been deleted and how many have been created newly. Currently
-the "relation" row will always contain zeros as osm2go does not support
-relations yet. But please take a short look at the numbers presented for
-ways and nodes. Do they make sense? Do they e.g. indicate that something is
-to be deleted, but you didn't delete anything? Please don't go ahead then,
-but try to figure out what happened.
+how many have been deleted and how many have been created newly. Please take
+a short look at the numbers presented. Do they make sense? Do they e.g.
+indicate that something is to be deleted, but you didn't delete anything?
+Please don't go ahead then, but try to figure out what happened.
 
 If everything looks reasonable, then enter your OpenStreetMap account
 data into the username and password fields and click ok. A new window will
