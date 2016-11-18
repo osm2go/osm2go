@@ -61,7 +61,8 @@ static gboolean project_edit(appdata_t *appdata, GtkWidget *parent,
 
 /* ------------ project file io ------------- */
 
-static gboolean project_read(const char *project_file, project_t *project) {
+static gboolean project_read(const char *project_file, project_t *project,
+                             const settings_t *settings) {
   xmlDoc *doc = NULL;
 
   /* parse the file and get the DOM */
@@ -93,7 +94,12 @@ static gboolean project_read(const char *project_file, project_t *project) {
 
 	    } else if(strcmp((char*)node->name, "server") == 0) {
 	      str = (char*)xmlNodeListGetString(doc, node->children, 1);
-	      project->server = g_strdup(str);
+              if(g_strcmp0(settings->server, str) == 0) {
+                project->server = settings->server;
+              } else {
+                project->rserver = g_strdup(str);
+                project->server = project->rserver;
+              }
 	      printf("server = %s\n", project->server);
 	      xmlFree(str);
 
@@ -269,7 +275,7 @@ void project_free(project_t *project) {
 
   g_free(project->name);
   xmlFree(project->desc);
-  g_free(project->server);
+  g_free(project->rserver);
 
   g_free(project->wms_server);
   g_free(project->wms_path);
@@ -325,7 +331,7 @@ static GSList *project_scan(appdata_t *appdata) {
       n->name = g_strdup(name);
       n->path = g_strconcat(appdata->settings->base_path, name, "/", NULL);
 
-      if(project_read(fullname, n))
+      if(project_read(fullname, n, appdata->settings))
         projects = g_slist_prepend(projects, n);
       else
         project_free(n);
@@ -663,8 +669,16 @@ static void on_project_edit(G_GNUC_UNUSED GtkButton *button, gpointer data) {
       if(project->desc) cur->desc = xmlStrdup(project->desc);
 
       /* update server */
-      if(cur->server) { free(cur->server); cur->server = NULL; }
-      if(project->server) cur->server = g_strdup(project->server);
+      if(cur->rserver) {
+        g_free(cur->rserver);
+        cur->rserver = NULL;
+      }
+      if(g_strcmp0(project->server, context->settings->server) == 0) {
+        cur->server = context->settings->server;
+      } else {
+        cur->rserver = g_strdup(project->server);
+        cur->server = cur->rserver;
+      }
 
       /* update coordinates */
       if((cur->min.lat != project->min.lat) ||
@@ -1286,7 +1300,7 @@ gboolean project_open(appdata_t *appdata, const char *name) {
     return FALSE;
   }
 
-  if(!project_read(project_file, project)) {
+  if(!project_read(project_file, project, appdata->settings)) {
     printf("error reading project file\n");
     project_free(project);
     g_free(project_file);

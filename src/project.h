@@ -34,7 +34,8 @@ typedef struct project_s {
   char *path;
 
   xmlChar *desc;
-  char *server;
+  const char *server; /**< the server string used, either rserver or settings->server */
+  gchar *rserver;
   char *osm;
 
   char *wms_server;
