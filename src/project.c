@@ -787,16 +787,16 @@ static GtkWidget *project_list_widget(select_context_t *context, gboolean *has_s
       G_TYPE_POINTER);  // data
 
   GtkTreeIter iter, seliter;
-  GSList *cur = context->project;
+  GSList *cur;
   gboolean check_pos;
   pos_t pos;
   *has_sel = FALSE;
 
   check_pos = gps_get_pos(context->appdata, &pos, NULL);
 
-  while(cur) {
+  /* there are too many context variables, so no foreach here */
+  for(cur = context->project; cur; cur = g_slist_next(cur)) {
     project_t *project = (project_t *)cur->data;
-    cur = g_slist_next(cur);
     gchar *status_stock_id = NULL;
     project_get_status_icon_stock_id(context, project, &status_stock_id);
     /* Append a row and fill in some data */
