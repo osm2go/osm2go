@@ -555,12 +555,6 @@ project_t *project_new(select_context_t *context) {
   /* no data downloaded yet */
   project->data_dirty = TRUE;
 
-  /* adjust default server stored in settings if required */
-  if(strstr(context->settings->server, "0.5") != NULL) {
-    strstr(context->settings->server, "0.5")[2] = '6';
-    printf("adjusting server path in settings to 0.6\n");
-  }
-
   /* use global server/access settings */
   project->server   = g_strdup(context->settings->server);
 

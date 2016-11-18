@@ -111,6 +111,12 @@ settings_t *settings_load(void) {
       st++;
     }
 
+    /* adjust default server stored in settings if required */
+    if(strstr(settings->server, "0.5") != NULL) {
+      strstr(settings->server, "0.5")[2] = '6';
+      printf("adjusting server path in settings to 0.6\n");
+    }
+
     /* restore wms server list */
     const gchar *countkey = "/apps/" PACKAGE "/wms/count";
     GConfValue *value = gconf_client_get(client, countkey, NULL);
