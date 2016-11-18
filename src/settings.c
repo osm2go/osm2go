@@ -67,42 +67,6 @@ static store_t store[] = {
 settings_t *settings_load(void) {
   settings_t *settings = g_new0(settings_t,1);
 
-  /* ------ set useful defaults ------- */
-
-  char *p = NULL;
-#ifdef USE_HILDON
-  /* try to use internal memory card on hildon/maemo */
-  p = getenv("INTERNAL_MMC_MOUNTPOINT");
-  if(!p)
-#endif
-    p = getenv("HOME");
-
-  /* if everthing fails use tmp dir */
-  if(!p) p = "/tmp";
-
-  /* build image path in home directory */
-  if(strncmp(p, "/home", 5) == 0)
-    settings->base_path = g_strconcat(p, "/.osm2go/", NULL);
-  else
-    settings->base_path = g_strconcat(p, "/osm2go/", NULL);
-
-  fprintf(stderr, "base_path = %s\n", settings->base_path);
-
-  /* ------------- setup download defaults -------------------- */
-  settings->server = g_strdup("http://api.openstreetmap.org/api/0.6");
-  if((p = getenv("OSM_USER")))
-    settings->username = g_strdup(p);
-  else
-    settings->username = g_strdup(_("<your osm username>"));
-
-  if((p = getenv("OSM_PASS")))
-    settings->password = g_strdup(p);
-  else
-    settings->password = g_strdup(_("<password>"));
-
-  settings->style = g_strdup(DEFAULT_STYLE);
-
-
   /* ------ overwrite with settings from gconf if present ------- */
   GConfClient *client = gconf_client_get_default();
   if(client) {
@@ -229,6 +193,52 @@ settings_t *settings_load(void) {
 
     g_object_unref(client);
   }
+
+  /* ------ set useful defaults ------- */
+
+  char *p;
+  if(!settings->base_path) {
+#ifdef USE_HILDON
+    /* try to use internal memory card on hildon/maemo */
+    p = getenv("INTERNAL_MMC_MOUNTPOINT");
+    if(!p)
+#endif
+      p = getenv("HOME");
+
+    /* if everthing fails use tmp dir */
+    if(!p)
+      p = "/tmp";
+
+    /* build image path in home directory */
+    if(strncmp(p, "/home", 5) == 0)
+      settings->base_path = g_strconcat(p, "/.osm2go/", NULL);
+    else
+      settings->base_path = g_strconcat(p, "/osm2go/", NULL);
+
+    fprintf(stderr, "base_path = %s\n", settings->base_path);
+  }
+
+  if(!settings->server) {
+    /* ------------- setup download defaults -------------------- */
+    settings->server = g_strdup("http://api.openstreetmap.org/api/0.6");
+  }
+
+  if(!settings->username) {
+    if((p = getenv("OSM_USER")))
+      settings->username = g_strdup(p);
+    else
+      settings->username = g_strdup(_("<your osm username>"));
+  }
+
+  if(!settings->password) {
+    if((p = getenv("OSM_PASS")))
+      settings->password = g_strdup(p);
+    else
+      settings->password = g_strdup(_("<password>"));
+  }
+
+  if(!settings->style)
+    settings->style = g_strdup(DEFAULT_STYLE);
 
   return settings;
 }
