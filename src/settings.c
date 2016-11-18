@@ -226,9 +226,9 @@ settings_t *settings_load(void) {
 	}
       }
     }
-  }
 
-  g_object_unref(client);
+    g_object_unref(client);
+  }
 
   return settings;
 }
