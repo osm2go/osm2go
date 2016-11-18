@@ -964,8 +964,6 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
 	  PACKAGE, VERSION);
   appendf(&context->log, NULL, _("User comment: %s\n"), context->comment);
 
-  g_assert(project->server);
-
    /* check if server name contains string "0.5" and adjust it */
   if(strstr(project->server, "0.5") != NULL) {
     strstr(project->server, "0.5")[2] = '6';
