@@ -63,7 +63,6 @@ static gboolean project_edit(appdata_t *appdata, GtkWidget *parent,
 
 static gboolean project_read(const char *project_file, project_t *project) {
   xmlDoc *doc = NULL;
-  xmlNode *root_element = NULL;
 
   /* parse the file and get the DOM */
   if((doc = xmlReadFile(project_file, NULL, 0)) == NULL) {
@@ -71,11 +70,8 @@ static gboolean project_read(const char *project_file, project_t *project) {
     return FALSE;
   }
 
-  /* Get the root element node */
-  root_element = xmlDocGetRootElement(doc);
-
-  xmlNode *cur_node = NULL;
-  for (cur_node = root_element; cur_node; cur_node = cur_node->next) {
+  xmlNode *cur_node;
+  for (cur_node = xmlDocGetRootElement(doc); cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcmp((char*)cur_node->name, "proj") == 0) {
 	char *str;
