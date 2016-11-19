@@ -100,6 +100,7 @@ static track_point_t *track_parse_trkpt(xmlNode *a_node) {
 	xmlFree(str);
       } else if(strcmp((char*)cur_node->name, "time") == 0) {
 	struct tm time = { 0 };
+	time.tm_isdst = -1;
 	xmlChar *str = xmlNodeGetContent(cur_node);
 	char *ptr = strptime((const char*)str, DATE_FORMAT, &time);
 	if(ptr) point->time = mktime(&time);
