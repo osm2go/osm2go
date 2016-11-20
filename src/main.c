@@ -1412,6 +1412,9 @@ int main(int argc, char *argv[]) {
   /* Same for libxml2 */
   xmlInitParser();
 
+  /* whitespace between tags has no meaning in any of the XML files used here */
+  xmlKeepBlanksDefault(0);
+
 #if !GLIB_CHECK_VERSION(2,32,0)
   g_thread_init(NULL);
 #endif
