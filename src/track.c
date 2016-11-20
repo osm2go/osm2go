@@ -322,19 +322,80 @@ static void track_save_segs(const track_seg_t *seg, xmlNodePtr node) {
   }
 }
 
-static void track_write(const char *name, track_t *track) {
+/**
+ * @brief write the track information to a GPX file
+ * @param name the filename to write to
+ * @param track the track data to write
+ * @param doc previous xml
+ *
+ * If doc is given, the last track in doc is updated and all remaining ones
+ * are appended. If doc is NULL all tracks are saved.
+ *
+ * doc is freed.
+ */
+static void track_write(const char *name, track_t *track, xmlDoc *doc) {
   printf("writing track to %s\n", name);
 
-  xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
-  xmlNodePtr root_node = xmlNewNode(NULL, BAD_CAST "gpx");
-  xmlNewProp(root_node, BAD_CAST "xmlns", BAD_CAST
-	     "http://www.topografix.com/GPX/1/0");
-  xmlNewProp(root_node, BAD_CAST "creator", BAD_CAST PACKAGE " v" VERSION);
+  xmlNodePtr trk_node;
+  const track_seg_t *it = track->track_seg;
+  if(doc) {
+    xmlNodePtr cur_node;
+    xmlNodePtr root_node = xmlDocGetRootElement(doc);
+    gboolean err = FALSE;
+    if (!root_node || root_node->type != XML_ELEMENT_NODE ||
+        strcasecmp((char*)root_node->name, "gpx") != 0 ) {
+      err = TRUE;
+    } else {
+      cur_node = root_node->children;
+      while(cur_node && cur_node->type != XML_ELEMENT_NODE)
+        cur_node = cur_node->next;
+      if(!cur_node || !cur_node->children ||
+         strcasecmp((char*)cur_node->name, "trk") != 0) {
+        err = TRUE;
+      } else {
+        trk_node = cur_node;
+        /* assume that at most the last segment in the file was modified */
+        for (cur_node = cur_node->children; cur_node->next; cur_node = cur_node->next) {
+          // skip non-nodes, e.g. if the user inserted a comment
+          if (cur_node->type != XML_ELEMENT_NODE)
+            continue;
+          // more tracks in the file than loaded, something is wrong
+          if(it == NULL) {
+            err = TRUE;
+            break;
+          }
+          /* something else, this track is not written from osm2go */
+          if(strcasecmp((char*)cur_node->name, "trkseg") != 0) {
+            err = TRUE;
+            break;
+          }
+          it = it->next;
+        }
+      }
+    }
+    if(err) {
+      xmlFreeDoc(doc);
+      doc = NULL;
+    } else {
+      /* drop the last entry from XML, it will be rewritten */
+      xmlUnlinkNode(cur_node);
+      xmlFreeNode(cur_node);
+    }
+  }
 
-  xmlNodePtr trk_node = xmlNewChild(root_node, NULL, BAD_CAST "trk", NULL);
-  xmlDocSetRootElement(doc, root_node);
+  if (!doc) {
+    doc = xmlNewDoc(BAD_CAST "1.0");
+    xmlNodePtr root_node = xmlNewNode(NULL, BAD_CAST "gpx");
+    xmlNewProp(root_node, BAD_CAST "xmlns", BAD_CAST
+               "http://www.topografix.com/GPX/1/0");
+    xmlNewProp(root_node, BAD_CAST "creator", BAD_CAST PACKAGE " v" VERSION);
+    it = track->track_seg;
 
-  track_save_segs(track->track_seg, trk_node);
+    trk_node = xmlNewChild(root_node, NULL, BAD_CAST "trk", NULL);
+    xmlDocSetRootElement(doc, root_node);
+  }
+
+  track_save_segs(it, trk_node);
 
   xmlSaveFormatFileEnc(name, doc, "UTF-8", 1);
   xmlFreeDoc(doc);
@@ -363,13 +424,16 @@ void track_save(project_t *project, track_t *track) {
   /* check if there already is such a diff file and make it a backup */
   /* in case new diff saving fails */
   char *backup = g_strconcat(project->path, "backup.trk", NULL);
+  xmlDocPtr doc = NULL;
   if(g_file_test(trk_name, G_FILE_TEST_IS_REGULAR)) {
     printf("backing up existing file \"%s\" to \"%s\"\n", trk_name, backup);
     g_remove(backup);
     g_rename(trk_name, backup);
+    /* parse the old file and get the DOM */
+    doc = xmlReadFile(backup, NULL, 0);
   }
 
-  track_write(trk_name, track);
+  track_write(trk_name, track, doc);
 
   /* if we reach this point writing the new file worked and we */
   /* can delete the backup */
@@ -381,7 +445,7 @@ void track_save(project_t *project, track_t *track) {
 
 void track_export(appdata_t *appdata, const char *filename) {
   g_assert(appdata->track.track);
-  track_write(filename, appdata->track.track);
+  track_write(filename, appdata->track.track, NULL);
 }
 
 /* ----------------------  loading track --------------------------- */
