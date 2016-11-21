@@ -92,8 +92,8 @@ struct presets_item_s {
 
 #ifdef ENABLE_BROWSER_INTERFACE
 static void on_info(GtkWidget *widget, gpointer context) {
-  const presets_item_t *item = (presets_item_t*)g_object_get_data(G_OBJECT(widget), "presets_item");
-  open_url((appdata_t*)context, (char*)item->link);
+  const char *link = (char*)g_object_get_data(G_OBJECT(widget), "link");
+  open_url((appdata_t*)context, link);
 }
 #endif
 
@@ -542,7 +542,7 @@ static void presets_item_dialog(presets_context_t *context,
     if(item->link) {
       GtkWidget *button = gtk_dialog_add_button(GTK_DIALOG(dialog), _
 			("Info"), GTK_RESPONSE_HELP);
-      g_object_set_data(G_OBJECT(button), "presets_item", (gpointer)item);
+      g_object_set_data(G_OBJECT(button), "link", item->link);
       gtk_signal_connect(GTK_OBJECT(button), "clicked",
 			 GTK_SIGNAL_FUNC(on_info), appdata);
     }
