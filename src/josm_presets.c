@@ -1073,15 +1073,7 @@ static GtkWidget *preset_picker_recent(presets_context_t *context) {
   GtkTreeView *view;
   GtkListStore *store = presets_picker_store(&view);
 
-  const presets_item_t *preset;
-
-  /* scan all presets if they are used */
-  for(preset = context->appdata->presets; preset; preset = preset->next) {
-    if(preset->is_group)
-      insert_recent_items(preset->group, context, store);
-    else if(preset_is_used(preset, context))
-      preset_insert_item(preset, &context->appdata->icon, store);
-  }
+  insert_recent_items(context->appdata->presets, context, store);
 
   return presets_picker_embed(view, store, context);
 }
