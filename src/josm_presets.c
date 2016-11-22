@@ -1155,6 +1155,7 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event,
         GtkWidget *menu_item = gtk_menu_item_new_with_label(_("Used presets"));
 
         gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item), matches);
+        gtk_menu_shell_prepend(GTK_MENU_SHELL(context->menu), gtk_separator_menu_item_new());
         gtk_menu_shell_prepend(GTK_MENU_SHELL(context->menu), menu_item);
       }
     }
