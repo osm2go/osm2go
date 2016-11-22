@@ -850,11 +850,10 @@ static GtkWidget *build_menu(presets_context_t *context,
 			     presets_item_t *item, GtkWidget **matches) {
   GtkWidget *menu = gtk_menu_new();
 
-  while(item) {
-    GtkWidget *menu_item;
-
+  for(; item; item = item->next) {
     /* check if this presets entry is appropriate for the current item */
     if(item->type & context->tag_context->presets_type) {
+      GtkWidget *menu_item;
 
       if(item->name) {
 	menu_item = create_menuitem(context, item);
@@ -878,13 +877,11 @@ static GtkWidget *build_menu(presets_context_t *context,
 	    gtk_menu_shell_append(GTK_MENU_SHELL(*matches), used_item);
 	  }
 	}
-      } else
-	menu_item = gtk_separator_menu_item_new();
+      }
 
       gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);
-    }
-
-    item = item->next;
+    } else
+      gtk_menu_shell_append(GTK_MENU_SHELL(menu), gtk_separator_menu_item_new());
   }
 
   return menu;
