@@ -912,7 +912,7 @@ enum {
   PRESETS_PICKER_NUM_COLS
 };
 
-static GtkWidget *presets_picker(presets_context_t *context, presets_item_t *item);
+static GtkWidget *presets_picker(presets_context_t *context, presets_item_t *item, gboolean scan_for_recent);
 static GtkWidget *preset_picker_recent(presets_context_t *context);
 
 static void
@@ -955,7 +955,7 @@ on_presets_picker_selected(GtkTreeSelection *selection, gpointer data) {
 
       if(sub_item) {
         /* normal submenu */
-        sub = presets_picker(context, sub_item);
+        sub = presets_picker(context, sub_item, FALSE);
       } else {
         /* used presets submenu */
         sub = preset_picker_recent(context);
@@ -1078,12 +1078,11 @@ static GtkWidget *preset_picker_recent(presets_context_t *context) {
   return presets_picker_embed(view, store, context);
 }
 
-static GtkWidget
-*presets_picker(presets_context_t *context, presets_item_t *item) {
+static GtkWidget *
+presets_picker(presets_context_t *context, presets_item_t *item, gboolean scan_for_recent) {
   GtkTreeView *view;
   GtkListStore *store = presets_picker_store(&view);
 
-  gboolean scan_for_recent = (item == context->appdata->presets);
   gboolean show_recent = FALSE;
   GdkPixbuf *subicon = icon_load(&context->appdata->icon,
                                  "submenu_arrow");
@@ -1105,13 +1104,11 @@ static GtkWidget
 			 -1);
       if(scan_for_recent) {
         show_recent = preset_group_is_used(item, context);
-        if(show_recent)
-          scan_for_recent = FALSE;
+        scan_for_recent = !show_recent;
       }
     } else if(scan_for_recent) {
       show_recent = preset_is_used(item, context);
-      if(show_recent)
-        scan_for_recent = FALSE;
+      scan_for_recent = !show_recent;
     }
   }
   if(show_recent) {
@@ -1169,7 +1166,7 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event,
     /* create root picker */
     GtkWidget *hbox = gtk_hbox_new(TRUE, 0);
 
-    GtkWidget *root = presets_picker(context, context->appdata->presets);
+    GtkWidget *root = presets_picker(context, context->appdata->presets, TRUE);
     gtk_box_pack_start_defaults(GTK_BOX(hbox), root);
 
     GtkWidget *sub = gtk_label_new(NULL);
