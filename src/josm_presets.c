@@ -849,11 +849,21 @@ static GtkWidget *create_menuitem(presets_context_t *context, presets_item_t *it
 static GtkWidget *build_menu(presets_context_t *context,
 			     presets_item_t *item, GtkWidget **matches) {
   GtkWidget *menu = gtk_menu_new();
+  gboolean was_separator = FALSE;
+  /* avoid showing separators at the top of a menu */
+  gboolean was_item = FALSE;
 
   for(; item; item = item->next) {
     /* check if this presets entry is appropriate for the current item */
     if(item->type & context->tag_context->presets_type) {
       GtkWidget *menu_item;
+
+      /* Show a separator if one was requested, but not if there was no item
+       * before to prevent to show one as the first entry. */
+      if(was_item && was_separator)
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), gtk_separator_menu_item_new());
+      was_item = TRUE;
+      was_separator = FALSE;
 
       if(item->name) {
 	menu_item = create_menuitem(context, item);
@@ -881,7 +891,9 @@ static GtkWidget *build_menu(presets_context_t *context,
 
       gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);
     } else
-      gtk_menu_shell_append(GTK_MENU_SHELL(menu), gtk_separator_menu_item_new());
+      /* Record that there was a separator. Do not immediately add it here to
+       * prevent to show one as last entry. */
+      was_separator = TRUE;
   }
 
   return menu;
