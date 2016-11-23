@@ -584,7 +584,7 @@ gchar *relation_get_descriptive_name(const relation_t *relation) {
     name = osm_tag_get_by_key(OSM_TAG(relation), keys[i]);
 
   if(!name)
-    return g_strdup_printf("<ID #"ITEM_ID_FORMAT">", OSM_ID(relation));
+    return g_strdup_printf("<ID #" ITEM_ID_FORMAT ">", OSM_ID(relation));
   else
     return g_strdup(name);
 }
@@ -1660,7 +1660,7 @@ void osm_way_restore(osm_t *osm, way_t *way, item_id_chain_t *id_chain) {
   node_chain_t **node_chain = &(way->node_chain);
   while(id_chain) {
     item_id_chain_t *id_next = id_chain->next;
-    printf("Node "ITEM_ID_FORMAT" is member\n", id_chain->id);
+    printf("Node " ITEM_ID_FORMAT " is member\n", id_chain->id);
 
     *node_chain = g_new0(node_chain_t, 1);
     (*node_chain)->node = osm_get_node_by_id(osm, id_chain->id);
@@ -2471,12 +2471,12 @@ gchar *osm_object_id_string(const object_t *object) {
   case NODE:
   case WAY:
   case RELATION:
-    return g_strdup_printf("#"ITEM_ID_FORMAT, OBJECT_ID(*object));
+    return g_strdup_printf("#" ITEM_ID_FORMAT, OBJECT_ID(*object));
     break;
   case NODE_ID:
   case WAY_ID:
   case RELATION_ID:
-    return g_strdup_printf("#"ITEM_ID_FORMAT, object->id);
+    return g_strdup_printf("#" ITEM_ID_FORMAT, object->id);
     break;
   }
   return NULL;

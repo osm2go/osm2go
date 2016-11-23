@@ -318,7 +318,7 @@ static gboolean osm_update_item(struct log_s *log, char *xml_str,
 	      response, osm_http_message(response));
     else {
       if(!id) appendf(log, COLOR_OK, _("ok\n"));
-      else    appendf(log, COLOR_OK, _("ok: #"ITEM_ID_FORMAT"\n"), *id);
+      else    appendf(log, COLOR_OK, _("ok: #" ITEM_ID_FORMAT "\n"), *id);
     }
 
     /* if it's neither "ok" (200), nor "internal server error" (500) */
@@ -524,7 +524,7 @@ static void osm_upload_nodes(osm_upload_context_t *context, gchar *cred) {
     } else {
       url = g_strdup_printf("%s/node/" ITEM_ID_FORMAT,
                             project->server, OSM_ID(node));
-      appendf(&context->log, NULL, _("Modified node #"ITEM_ID_FORMAT" "), OSM_ID(node));
+      appendf(&context->log, NULL, _("Modified node #" ITEM_ID_FORMAT " "), OSM_ID(node));
     }
 
     /* upload this node */
@@ -590,7 +590,7 @@ static void osm_upload_ways(osm_upload_context_t *context, gchar *cred) {
     } else {
       url = g_strdup_printf("%s/way/" ITEM_ID_FORMAT,
                             project->server, OSM_ID(way));
-      appendf(&context->log, NULL, _("Modified way #"ITEM_ID_FORMAT" "), OSM_ID(way));
+      appendf(&context->log, NULL, _("Modified way #" ITEM_ID_FORMAT " "), OSM_ID(way));
     }
 
     /* upload this node */
@@ -656,7 +656,7 @@ static void osm_upload_relations(osm_upload_context_t *context, gchar *cred) {
     } else {
       url = g_strdup_printf("%s/relation/" ITEM_ID_FORMAT,
                             project->server,OSM_ID(relation));
-      appendf(&context->log, NULL, _("Modified relation #"ITEM_ID_FORMAT" "),
+      appendf(&context->log, NULL, _("Modified relation #" ITEM_ID_FORMAT " "),
               OSM_ID(relation));
     }
 

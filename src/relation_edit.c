@@ -270,7 +270,7 @@ static void changed(GtkTreeSelection *sel, gpointer user_data) {
     if(!relitem_is_in_relation(context->item, relation) &&
        gtk_tree_selection_iter_is_selected(sel, &iter)) {
 
-      printf("selected: "ITEM_ID_FORMAT"\n", OSM_ID(relation));
+      printf("selected: " ITEM_ID_FORMAT "\n", OSM_ID(relation));
 
       /* either accept this or unselect again */
       if(relation_add_item(context->dialog, relation, context->item))
@@ -285,7 +285,7 @@ static void changed(GtkTreeSelection *sel, gpointer user_data) {
     } else if(relitem_is_in_relation(context->item, relation) &&
 	      !gtk_tree_selection_iter_is_selected(sel, &iter)) {
 
-      printf("deselected: "ITEM_ID_FORMAT"\n", OSM_ID(relation));
+      printf("deselected: " ITEM_ID_FORMAT "\n", OSM_ID(relation));
 
       relation_remove_item(relation, context->item);
       gtk_list_store_set(context->store, &iter,

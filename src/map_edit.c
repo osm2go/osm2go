@@ -36,7 +36,7 @@ struct relation_transfer {
 
 void relation_transfer_operator(relation_t* relation, struct relation_transfer *context)
 {
-  printf("way #"ITEM_ID_FORMAT" is part of relation #"ITEM_ID_FORMAT"\n",
+  printf("way #" ITEM_ID_FORMAT " is part of relation #" ITEM_ID_FORMAT "\n",
          OSM_ID(context->src), OSM_ID(relation));
 
   /* make new member of the same relation */
@@ -51,7 +51,7 @@ void relation_transfer_operator(relation_t* relation, struct relation_transfer *
     member = &(*member)->next;
   }
 
-  printf("  adding way #"ITEM_ID_FORMAT" to relation\n", OSM_ID(context->dst));
+  printf("  adding way #" ITEM_ID_FORMAT " to relation\n", OSM_ID(context->dst));
   *member = g_new0(member_t, 1);
   (*member)->object.type = WAY;
   (*member)->object.way = context->dst;
@@ -107,7 +107,8 @@ static gboolean combine_tags(tag_t **dst, tag_t *src) {
 /* -------------------------- way_add ----------------------- */
 
 void map_edit_way_add_begin(map_t *map, way_t *way_sel) {
-  if(way_sel) printf("previously selected way is #"ITEM_ID_FORMAT"\n",
+  if(way_sel)
+    printf("previously selected way is #" ITEM_ID_FORMAT "\n",
 		     OSM_ID(way_sel));
 
   g_assert(!map->action.way);
@@ -138,7 +139,7 @@ void map_edit_way_add_segment(map_t *map, gint x, gint y) {
     /* use the existing node if one was touched */
     node_t *node = map_hl_touchnode_get_node(map);
     if(node) {
-      printf("  re-using node #"ITEM_ID_FORMAT"\n", OSM_ID(node));
+      printf("  re-using node #" ITEM_ID_FORMAT "\n", OSM_ID(node));
       map_hl_touchnode_clear(map);
 
       g_assert(map->action.way);
@@ -151,11 +152,11 @@ void map_edit_way_add_segment(map_t *map, gint x, gint y) {
 
 	if(!touch_way) {
 	  if(node == osm_way_get_first_node(way_chain->way)) {
-	    printf("  way #"ITEM_ID_FORMAT" starts with this node\n",
+	    printf("  way #" ITEM_ID_FORMAT " starts with this node\n",
 		   OSM_ID(way_chain->way));
 	    touch_way = way_chain->way;
 	  } else if(node == osm_way_get_last_node(way_chain->way)) {
-	    printf("  way #"ITEM_ID_FORMAT" ends with this node\n",
+	    printf("  way #" ITEM_ID_FORMAT " ends with this node\n",
 		   OSM_ID(way_chain->way));
 	    touch_way = way_chain->way;
 	  }
@@ -239,7 +240,7 @@ void map_edit_way_add_cancel(map_t *map) {
     node_chain_t *next = chain->next;
     node_t *node = chain->node;
 
-    printf("    node #"ITEM_ID_FORMAT" (used by %d)\n",
+    printf("    node #" ITEM_ID_FORMAT " (used by %d)\n",
 	   OSM_ID(node), node->ways);
 
     node->ways--;
@@ -302,7 +303,7 @@ void map_edit_way_add_ok(map_t *map) {
   node_chain_t *chain = map->action.way->node_chain;
   while(chain) {
     node_t *node = chain->node;
-    printf("    node #"ITEM_ID_FORMAT" (used by %d)\n",
+    printf("    node #" ITEM_ID_FORMAT " (used by %d)\n",
 	   OSM_ID(node), node->ways);
 
     /* a node may have been a stand-alone node before, so remove its */
@@ -327,7 +328,7 @@ void map_edit_way_add_ok(map_t *map) {
   if(map->action.extending) {
     node_t *nfirst = map->action.way->node_chain->node;
 
-    printf("  request to extend way #"ITEM_ID_FORMAT"\n",
+    printf("  request to extend way #" ITEM_ID_FORMAT "\n",
 	   OSM_ID(map->action.extending));
 
     if(osm_way_get_first_node(map->action.extending) == nfirst) {
@@ -609,7 +610,7 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
       map_item_deselect(map->appdata);
 
       /* remove prior version of this way */
-      printf("remove visible version of way #"ITEM_ID_FORMAT"\n", OSM_ID(way));
+      printf("remove visible version of way #" ITEM_ID_FORMAT "\n", OSM_ID(way));
       map_item_chain_destroy(&way->map_item_chain);
 
       /* swap chains if the old way is to be destroyed due to a lack */
@@ -665,7 +666,7 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
 
 static void member_merge_operator(relation_t *relation, way_t *other)
 {
-  printf("way[1] is part of relation #"ITEM_ID_FORMAT"\n",
+  printf("way[1] is part of relation #" ITEM_ID_FORMAT "\n",
          OSM_ID(relation));
 
   /* make way[0] member of the same relation */
@@ -707,7 +708,7 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
   g_assert(map_item->object.type == NODE);
   node_t *node = map_item->object.node;
 
-  printf("released dragged node #"ITEM_ID_FORMAT"\n", OSM_ID(node));
+  printf("released dragged node #" ITEM_ID_FORMAT "\n", OSM_ID(node));
   printf("  was at %d %d (%f %f)\n",
 	 node->lpos.x, node->lpos.y,
 	 node->pos.lat, node->pos.lon);
@@ -720,7 +721,7 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
   if(touchnode) {
     map_hl_touchnode_clear(map);
 
-    printf("  dropped onto node #"ITEM_ID_FORMAT"\n", OSM_ID(touchnode));
+    printf("  dropped onto node #" ITEM_ID_FORMAT "\n", OSM_ID(touchnode));
 
     if(yes_no_f(GTK_WIDGET(appdata->window),
 		appdata, MISC_AGAIN_ID_JOIN_NODES, 0,
@@ -741,7 +742,7 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 	node_chain_t *chain = way->node_chain;
 	while(chain) {
 	  if(chain->node == touchnode) {
-	    printf("  found node in way #"ITEM_ID_FORMAT"\n", OSM_ID(way));
+	    printf("  found node in way #" ITEM_ID_FORMAT "\n", OSM_ID(way));
 
 	    /* replace by node */
 	    chain->node = node;
@@ -763,7 +764,7 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 	member_t *member = relation->member;
 	while(member) {
 	  if(member->object.type == NODE && member->object.node == touchnode) {
-	    printf("  found node in relation #"ITEM_ID_FORMAT"\n",
+	    printf("  found node in relation #" ITEM_ID_FORMAT "\n",
 		   OSM_ID(relation));
 
 	    /* replace by node */
@@ -806,7 +807,7 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 	  if(ways2join_cnt < 2)
 	    ways2join[ways2join_cnt] = way;
 
-	  printf("  way #"ITEM_ID_FORMAT" ends with this node\n", OSM_ID(way));
+	  printf("  way #" ITEM_ID_FORMAT " ends with this node\n", OSM_ID(way));
 	  ways2join_cnt++;
 	}
 	way = way->next;
@@ -930,7 +931,7 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
   way_t *way = osm->way;
   while(way) {
     if(osm_node_in_way(way, node)) {
-      printf("  node is part of way #"ITEM_ID_FORMAT", redraw!\n",
+      printf("  node is part of way #" ITEM_ID_FORMAT ", redraw!\n",
 	     OSM_ID(way));
 
       /* remove prior version of this way */

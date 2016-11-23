@@ -289,7 +289,7 @@ void map_way_select(appdata_t *appdata, way_t *way) {
 void map_relation_select(appdata_t *appdata, relation_t *relation) {
   map_t *map = appdata->map;
 
-  printf("highlighting relation "ITEM_ID_FORMAT"\n", OSM_ID(relation));
+  printf("highlighting relation " ITEM_ID_FORMAT "\n", OSM_ID(relation));
 
   g_assert(!map->highlight);
   map_highlight_t **hl = &map->highlight;
@@ -312,7 +312,7 @@ void map_relation_select(appdata_t *appdata, relation_t *relation) {
 
     case NODE: {
       node_t *node = member->object.node;
-      printf("  -> node "ITEM_ID_FORMAT"\n", OSM_ID(node));
+      printf("  -> node " ITEM_ID_FORMAT "\n", OSM_ID(node));
 
       item = canvas_circle_new(map->canvas, CANVAS_GROUP_NODES_HL,
 			node->lpos.x, node->lpos.y,
@@ -861,7 +861,7 @@ map_item_t *map_item_at(map_t *map, gint x, gint y) {
   if(map_item->highlight)
     printf("  item is highlight\n");
 
-  printf("  item is %s #"ITEM_ID_FORMAT"\n",
+  printf("  item is %s #" ITEM_ID_FORMAT "\n",
 	 osm_object_type_string(&map_item->object),
 	 OBJECT_ID(map_item->object));
 
