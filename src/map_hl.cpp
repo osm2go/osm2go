@@ -25,7 +25,7 @@
 #include <algorithm>
 
 /* create a new item for the cursor */
-void map_hl_cursor_draw(map_t *map, gint x, gint y, gboolean is_world,
+void map_hl_cursor_draw(map_t *map, gint x, gint y, bool is_world,
 			gint radius) {
   if(map->cursor)
     canvas_item_destroy(map->cursor);
@@ -120,11 +120,10 @@ bool find_highlighted::operator()(canvas_item_t* c)
   return hl_item && hl_item->object == item->object;
 }
 
-
-gboolean map_hl_item_is_highlighted(map_t *map, map_item_t *item) {
+bool map_hl_item_is_highlighted(map_t *map, map_item_t *item) {
   map_highlight_t *hl = map->highlight;
   if(!hl)
-    return FALSE;
+    return false;
   return std::find_if(hl->items.begin(), hl->items.end(), find_highlighted(item)) !=
          hl->items.end();
 }

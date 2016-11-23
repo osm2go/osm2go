@@ -31,7 +31,7 @@ struct map_highlight_t {
   std::vector<canvas_item_t *> items;
 };
 
-void map_hl_cursor_draw(map_t *map, gint x, gint y, gboolean is_world, gint radius);
+void map_hl_cursor_draw(map_t *map, gint x, gint y, bool is_world, gint radius);
 void map_hl_cursor_clear(map_t *map);
 
 void map_hl_touchnode_draw(map_t *map, node_t *node);
@@ -39,7 +39,7 @@ void map_hl_touchnode_clear(map_t *map);
 node_t *map_hl_touchnode_get_node(map_t *map);
 
 void map_hl_remove(appdata_t *appdata);
-gboolean map_hl_item_is_highlighted(map_t *map, map_item_t *item);
+bool map_hl_item_is_highlighted(map_t *map, map_item_t *item);
 
 canvas_item_t *map_hl_circle_new(map_t *map, canvas_group_t group, map_item_t *map_item,
 				 gint x, gint y, gint radius, canvas_color_t color);
