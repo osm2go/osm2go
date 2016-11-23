@@ -799,16 +799,9 @@ template<typename T> void free_map_item_chain(std::pair<item_id_t, T *> pair) {
 }
 
 template<bool b> void free_track_item_chain(track_seg_t *seg) {
-  track_item_chain_t *item = seg->item_chain;
-  while(item) {
-    track_item_chain_t *next = item->next;
-    if(b)
-      canvas_item_destroy(item->item);
-    g_free(item);
-    item = next;
-  }
-
-  seg->item_chain = NULL;
+  if(b)
+    std::for_each(seg->item_chain.begin(), seg->item_chain.end(), canvas_item_destroy);
+  seg->item_chain.clear();
 }
 
 void map_free_map_item_chains(appdata_t *appdata) {
@@ -2161,9 +2154,8 @@ void map_track_draw_seg(map_t *map, track_seg_t *seg) {
     return;
 
   /* nothing should have been drawn by now ... */
-  g_assert(!seg->item_chain);
+  g_assert(seg->item_chain.empty());
 
-  track_item_chain_t **itemP = &seg->item_chain;
   const track_point_t *track_point = seg->track_point;
   while(track_point) {
     lpos_t lpos;
@@ -2205,10 +2197,9 @@ void map_track_draw_seg(map_t *map, track_seg_t *seg) {
     canvas_points_t *points = canvas_points_init(bounds, track_point, visible);
     track_point = tmp;
 
-    *itemP = g_new0(track_item_chain_t, 1);
-    (*itemP)->item = canvas_polyline_new(map->canvas, CANVAS_GROUP_TRACK,
+    canvas_item_t *item = canvas_polyline_new(map->canvas, CANVAS_GROUP_TRACK,
 		 points, map->style->track.width, map->style->track.color);
-    itemP = &(*itemP)->next;
+    seg->item_chain.push_back(item);
 
     canvas_points_free(points);
   }
@@ -2253,15 +2244,10 @@ void map_track_update_seg(map_t *map, track_seg_t *seg) {
     return;
   }
 
-  /* search last element in item chain */
-  track_item_chain_t *item = seg->item_chain;
-  while(item && item->next)
-    item = item->next;
-
   if(second_last_is_visible) {
     /* there must be something already on the screen and there must */
     /* be visible nodes in the chain */
-    g_assert(item);
+    g_assert(!seg->item_chain.empty());
     g_assert(begin);
 
     printf("second_last is visible -> append\n");
@@ -2273,7 +2259,8 @@ void map_track_update_seg(map_t *map, track_seg_t *seg) {
 
     canvas_points_t *points = canvas_points_init(bounds, begin, npoints);
 
-    canvas_item_set_points(item->item, points);
+    canvas_item_t *item = seg->item_chain.back();
+    canvas_item_set_points(item, points);
     canvas_points_free(points);
 
   } else {
@@ -2284,9 +2271,6 @@ void map_track_update_seg(map_t *map, track_seg_t *seg) {
     if(begin->next && !track_pos2lpos(bounds, &begin->next->pos, &lpos))
       begin = begin->next;
 
-    item->next = g_new0(track_item_chain_t, 1);
-    item = item->next;
-
     /* count points to be placed */
     gint npoints = track_points_count(begin);
 
@@ -2294,12 +2278,12 @@ void map_track_update_seg(map_t *map, track_seg_t *seg) {
 
     canvas_points_t *points = canvas_points_init(bounds, begin, npoints);
 
-    item->item = canvas_polyline_new(map->canvas, CANVAS_GROUP_TRACK,
+    canvas_item_t *item = canvas_polyline_new(map->canvas, CANVAS_GROUP_TRACK,
 		 points, map->style->track.width, map->style->track.color);
+    seg->item_chain.push_back(item);
 
     canvas_points_free(points);
   }
-
 }
 
 struct map_track_seg_draw_functor {

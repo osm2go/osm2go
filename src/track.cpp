@@ -121,7 +121,7 @@ static void track_parse_trkseg(xmlNode *a_node, gint *points,
 	if(cpnt) {
 	  if(!point) {
 	    /* start a new segment */
-            track_seg_t *seg = g_new0(track_seg_t, 1);
+            track_seg_t *seg = new track_seg_t();
             segments.push_back(seg);
 	    point = &seg->track_point;
 	  }
@@ -236,7 +236,7 @@ static void track_seg_free(track_seg_t *seg) {
     point = next;
   }
 
-  g_free(seg);
+  delete seg;
 }
 
 /* --------------------------------------------------------------- */
@@ -487,7 +487,7 @@ static gboolean track_append_position(appdata_t *appdata, const pos_t *pos, floa
   if(!track->active) {
     printf("starting new segment\n");
 
-    track_seg_t *seg = g_new0(track_seg_t, 1);
+    track_seg_t *seg = new track_seg_t();
     track->segments.push_back(seg);
     track->active = true;
   } else
@@ -520,11 +520,11 @@ static gboolean track_append_position(appdata_t *appdata, const pos_t *pos, floa
     if(!prev) {
       /* the segment can now be drawn for the first time */
       printf("initial draw\n");
-      g_assert(!track->segments.back()->item_chain);
+      g_assert(track->segments.back()->item_chain.empty());
       map_track_draw_seg(appdata->map, track->segments.back());
     } else {
       /* the segment has to be updated */
-      g_assert(track->segments.back()->item_chain);
+      g_assert(!track->segments.back()->item_chain.empty());
       map_track_update_seg(appdata->map, track->segments.back());
     }
   }

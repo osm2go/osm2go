@@ -34,15 +34,11 @@ typedef struct track_point_t {
   float altitude;
 } track_point_t;
 
-typedef struct track_item_chain_t {
-  canvas_item_t *item;
-  struct track_item_chain_t *next;
-} track_item_chain_t;
-
-typedef struct track_seg_t {
+struct track_seg_t {
+  track_seg_t() : track_point(0) {}
   track_point_t *track_point;
-  track_item_chain_t *item_chain;
-} track_seg_t;
+  std::vector<canvas_item_t *> item_chain;
+};
 
 struct track_t {
   std::vector<track_seg_t *> segments;
