@@ -45,15 +45,15 @@ extern "C" {
 #endif
 
 struct appdata_t;
-void undo_append_way(struct appdata_t *ad, undo_type_t type, way_t *way);
-void undo_append_node(struct appdata_t *ad, undo_type_t type, node_t *node);
-void undo_close_state(struct appdata_t *appdata);
-
 void undo_free(osm_t *osm, undo_t *undo);
 void undo(struct appdata_t *appdata);
 
 #ifdef __cplusplus
 }
+
+void undo_append_way(struct appdata_t *ad, undo_type_t type, way_t *way);
+void undo_append_node(struct appdata_t *ad, undo_type_t type, node_t *node);
+void undo_close_state(struct appdata_t *appdata);
 
 void undo_open_new_state(struct appdata_t *ad, undo_type_t typ, object_t &obj);
 void undo_append_object(struct appdata_t *ad, undo_type_t type, const object_t &obj);
