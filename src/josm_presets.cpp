@@ -83,15 +83,67 @@ public:
   bool is_interactive() const;
 };
 
-struct presets_item_t {
-  int type;
-  xmlChar *name, *icon, *link;
-  bool is_group;
+class presets_item_t {
+public:
+  enum item_type {
+    TY_NONE = 0,
+    TY_WAY = PRESETS_TYPE_WAY,
+    TY_NODE = PRESETS_TYPE_NODE,
+    TY_RELATION = PRESETS_TYPE_RELATION,
+    TY_CLOSED_WAY = PRESETS_TYPE_CLOSEDWAY,
+    TY_ALL = PRESETS_TYPE_ALL,
+    TY_SEPARATOR = (1 << 16),
+    TY_GROUP = (1 << 17)
+  };
+
+protected:
+  presets_item_t(unsigned int t)
+    : type(t) {}
+public:
+  virtual ~presets_item_t();
+
+  const unsigned int type;
 
   std::vector<presets_widget_t *> widgets;
-  struct presets_item_t *group;
+};
 
-  struct presets_item_t *next;
+class presets_item_visible : public presets_item_t {
+public:
+  presets_item_visible(unsigned int t)
+    : presets_item_t(t), name(0), icon(0) {}
+  virtual ~presets_item_visible()
+  { xmlFree(name); xmlFree(icon); }
+
+  xmlChar *name, *icon;
+};
+
+class presets_item : public presets_item_visible {
+public:
+  presets_item(unsigned int t)
+    : presets_item_visible(t), link(0) {}
+  virtual ~presets_item()
+  { xmlFree(link); }
+
+  xmlChar *link;
+};
+
+class presets_item_separator : public presets_item_t {
+public:
+  presets_item_separator() : presets_item_t(TY_SEPARATOR) {}
+};
+
+class presets_item_group : public presets_item_visible {
+public:
+  presets_item_group(const unsigned int types)
+    : presets_item_visible(types | TY_GROUP) {}
+  virtual ~presets_item_group();
+
+  std::vector<presets_item_t *> items;
+};
+
+struct presets_items {
+  ~presets_items();
+  std::vector<presets_item_t *> items;
 };
 
 #ifdef ENABLE_BROWSER_INTERFACE
@@ -133,11 +185,11 @@ static int josm_type_bit(const char *type, char sep) {
 }
 
 /* parse a comma seperated list of types and set their bits */
-static int josm_type_parse(xmlChar *xtype) {
+static presets_item_t::item_type josm_type_parse(xmlChar *xtype) {
   int type_mask = 0;
   const char *type = (const char*)xtype;
 
-  if(!type) return PRESETS_TYPE_ALL;
+  if(!type) return presets_item_t::TY_ALL;
 
   const char *ntype = strchr(type, ',');
   while(ntype) {
@@ -148,11 +200,11 @@ static int josm_type_parse(xmlChar *xtype) {
 
   type_mask |= josm_type_bit(type, '\0');
   xmlFree(xtype);
-  return type_mask;
+  return static_cast<presets_item_t::item_type>(type_mask);
 }
 
 /* parse children of a given node for into *widget */
-static void parse_widgets(xmlNode *a_node, presets_item_t *item) {
+static void parse_widgets(xmlNode *a_node, presets_item *item) {
   xmlNode *cur_node = NULL;
   presets_widget_t *widget;
 
@@ -243,17 +295,13 @@ static void parse_widgets(xmlNode *a_node, presets_item_t *item) {
 }
 
 static presets_item_t *parse_item(xmlNode *a_node) {
-  presets_item_t *item = new presets_item_t();
-  item->is_group = false;
+  presets_item *item = new presets_item(josm_type_parse(xmlGetProp(a_node, BAD_CAST "type")));
 
   /* ------ parse items own properties ------ */
   item->name = xmlGetProp(a_node, BAD_CAST "name");
 
   item->icon = BAD_CAST
     josm_icon_name_adjust((char*)xmlGetProp(a_node, BAD_CAST "icon"));
-
-  item->type =
-    josm_type_parse(xmlGetProp(a_node, BAD_CAST "type"));
 
   parse_widgets(a_node, item);
   return item;
@@ -262,8 +310,33 @@ static presets_item_t *parse_item(xmlNode *a_node) {
 static presets_item_t *parse_group(xmlDocPtr doc, xmlNode *a_node) {
   xmlNode *cur_node = NULL;
 
-  presets_item_t *group = new presets_item_t();
-  group->is_group = true;
+  int type = 0;
+
+  std::vector<presets_item_t *> group_items;
+
+  for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
+    if (cur_node->type == XML_ELEMENT_NODE) {
+      if(strcmp((char*)cur_node->name, "item") == 0) {
+        presets_item_t *preset = parse_item(cur_node);
+        if(preset) {
+          type |= preset->type;
+          group_items.push_back(preset);
+	}
+      } else if(strcmp((char*)cur_node->name, "group") == 0) {
+        presets_item_t *preset = parse_group(doc, cur_node);
+        if(preset) {
+          type |= preset->type;
+          group_items.push_back(preset);
+	}
+      } else if(strcmp((char*)cur_node->name, "separator") == 0) {
+        group_items.push_back(new presets_item_separator());
+      } else
+	printf("found unhandled annotations/group/%s\n", cur_node->name);
+    }
+  }
+
+  presets_item_group *group = new presets_item_group(type);
+  group->items.swap(group_items);
 
   /* ------ parse groups own properties ------ */
   group->name = xmlGetProp(a_node, BAD_CAST "name");
@@ -271,65 +344,34 @@ static presets_item_t *parse_group(xmlDocPtr doc, xmlNode *a_node) {
   group->icon = BAD_CAST
     josm_icon_name_adjust((char*)xmlGetProp(a_node, BAD_CAST "icon"));
 
-  group->type = 0;
-
-  presets_item_t **preset = &group->group;
-
-  for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
-    if (cur_node->type == XML_ELEMENT_NODE) {
-      if(strcmp((char*)cur_node->name, "item") == 0) {
-	*preset = parse_item(cur_node);
-	if(*preset) {
-	  group->type |= (*preset)->type;
-	  preset = &((*preset)->next);
-	}
-      } else if(strcmp((char*)cur_node->name, "group") == 0) {
-	*preset = parse_group(doc, cur_node);
-	if(*preset) {
-	  group->type |= (*preset)->type;
-	  preset = &((*preset)->next);
-	}
-      } else if(strcmp((char*)cur_node->name, "separator") == 0) {
-	*preset = new presets_item_t();
-	preset = &((*preset)->next);
-      } else
-	printf("found unhandled annotations/group/%s\n", cur_node->name);
-    }
-  }
-
-
-
   return group;
 }
 
-static presets_item_t *parse_annotations(xmlDocPtr doc, xmlNode *a_node) {
-  xmlNode *cur_node = NULL;
-  presets_item_t *presets = NULL, **preset = &presets;
+static std::vector<presets_item_t *> parse_annotations(xmlDocPtr doc, xmlNode *a_node) {
+  std::vector<presets_item_t *> presets;
 
-  for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
+  for (xmlNode *cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
+      presets_item_t *preset = 0;
       if(strcmp((char*)cur_node->name, "item") == 0) {
-	*preset = parse_item(cur_node);
-	if(*preset) preset = &((*preset)->next);
+        preset = parse_item(cur_node);
       } else if(strcmp((char*)cur_node->name, "group") == 0) {
-	*preset = parse_group(doc, cur_node);
-	if(*preset) preset = &((*preset)->next);
+        preset = parse_group(doc, cur_node);
       } else if(strcmp((char*)cur_node->name, "separator") == 0) {
-	*preset = new presets_item_t();
-	preset = &((*preset)->next);
+        preset = new presets_item_separator();
       } else
 	printf("found unhandled annotations/%s\n", cur_node->name);
+      if(preset)
+        presets.push_back(preset);
     }
   }
   return presets;
 }
 
-static presets_item_t *parse_doc(xmlDocPtr doc) {
-  /* Get the root element node */
-  xmlNode *cur_node = NULL;
-  presets_item_t *presets = NULL;
+static std::vector<presets_item_t *> parse_doc(xmlDocPtr doc) {
+  std::vector<presets_item_t *> presets;
 
-  for(cur_node = xmlDocGetRootElement(doc);
+  for(xmlNode *cur_node = xmlDocGetRootElement(doc);
       cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcmp((char*)cur_node->name, "annotations") == 0) {
@@ -343,8 +385,8 @@ static presets_item_t *parse_doc(xmlDocPtr doc) {
   return presets;
 }
 
-presets_item_t *josm_presets_load(void) {
-  presets_item_t *presets = NULL;
+struct presets_items *josm_presets_load(void) {
+  struct presets_items *presets = new presets_items();
 
   printf("Loading JOSM presets ...\n");
 
@@ -361,7 +403,7 @@ presets_item_t *josm_presets_load(void) {
 	   "%s\n", errP->message);
   } else {
     printf("ok, parse doc tree\n");
-    presets = parse_doc(doc);
+    presets->items = parse_doc(doc);
   }
 
   return presets;
@@ -468,7 +510,7 @@ struct presets_context_t {
 };
 
 static void presets_item_dialog(presets_context_t *context,
-                                const presets_item_t *item) {
+                                const presets_item *item) {
   appdata_t *appdata = context->appdata;
   GtkWindow *parent = GTK_WINDOW(context->tag_context->dialog);
   tag_t **orig_tag = context->tag_context->tag;
@@ -757,10 +799,11 @@ static void presets_item_dialog(presets_context_t *context,
 /* ------------------- the item list (popup menu) -------------- */
 
 struct used_preset_functor {
-  const presets_context_t * const context;
-  bool is_interactive;
-  bool matches_all;
-  used_preset_functor(const presets_context_t *c) : context(c), is_interactive(false), matches_all(false) {}
+  const tag_context_t * const tag_context;
+  bool &is_interactive;
+  bool &matches_all;
+  used_preset_functor(const tag_context_t *c, bool &i, bool &m)
+    : tag_context(c), is_interactive(i), matches_all(m) {}
   bool operator()(const presets_widget_t *w);
 };
 
@@ -771,7 +814,7 @@ bool used_preset_functor::operator()(const presets_widget_t* w)
     return false;
   }
   const tag_t t((char*) w->key, (char*) w->key_w.value);
-  if(!osm_tag_key_and_value_present(*(context->tag_context->tag), &t))
+  if(!osm_tag_key_and_value_present(*(tag_context->tag), &t))
     return true;
 
   matches_all = true;
@@ -783,11 +826,13 @@ bool used_preset_functor::operator()(const presets_widget_t* w)
  */
 static bool preset_is_used(const presets_item_t *item, const presets_context_t *context)
 {
-  used_preset_functor fc(context);
+  bool is_interactive = false;
+  bool matches_all = false;
+  used_preset_functor fc(context->tag_context, is_interactive, matches_all);
   if(std::find_if(item->widgets.begin(), item->widgets.end(), fc) != item->widgets.end())
     return false;
 
-  return fc.matches_all && fc.is_interactive;
+  return matches_all && is_interactive;
 }
 
 #ifndef PICKER_MENU
@@ -795,13 +840,13 @@ static void
 cb_menu_item(GtkWidget *menu_item, gpointer data) {
   presets_context_t *context = (presets_context_t*)data;
 
-  presets_item_t *item = static_cast<presets_item_t *>(g_object_get_data(G_OBJECT(menu_item), "item"));
+  presets_item *item = static_cast<presets_item *>(g_object_get_data(G_OBJECT(menu_item), "item"));
   g_assert(item);
 
   presets_item_dialog(context, item);
 }
 
-static GtkWidget *create_menuitem(presets_context_t *context, presets_item_t *item)
+static GtkWidget *create_menuitem(presets_context_t *context, const presets_item_visible *item)
 {
   GtkWidget *menu_item;
 
@@ -817,71 +862,90 @@ static GtkWidget *create_menuitem(presets_context_t *context, presets_item_t *it
   return menu_item;
 }
 
+struct build_menu_functor {
+  presets_context_t * const context;
+  GtkWidget * const menu;
+  GtkWidget ** const matches;
+  bool was_separator;
+  bool was_item;
+  build_menu_functor(presets_context_t *c, GtkWidget *m, GtkWidget **a)
+    : context(c), menu(m), matches(a), was_separator(false), was_item(false) {}
+  void operator()(presets_item_t *item);
+};
+
 static GtkWidget *build_menu(presets_context_t *context,
-			     presets_item_t *item, GtkWidget **matches) {
-  GtkWidget *menu = gtk_menu_new();
-  bool was_separator = false;
-  /* avoid showing separators at the top of a menu */
-  bool was_item = false;
+			     std::vector<presets_item_t *> &items, GtkWidget **matches) {
+  build_menu_functor fc(context, gtk_menu_new(), matches);
 
-  for(; item; item = item->next) {
-    /* check if this presets entry is appropriate for the current item */
-    if(item->type & context->tag_context->presets_type && item->name) {
-      GtkWidget *menu_item;
+  std::for_each(items.begin(), items.end(), fc);
 
-      /* Show a separator if one was requested, but not if there was no item
-       * before to prevent to show one as the first entry. */
-      if(was_item && was_separator)
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu), gtk_separator_menu_item_new());
-      was_item = true;
-      was_separator = false;
+  return fc.menu;
+}
 
-      menu_item = create_menuitem(context, item);
+void build_menu_functor::operator()(presets_item_t *item)
+{
+  /* check if this presets entry is appropriate for the current item */
+  if(item->type & context->tag_context->presets_type) {
+    GtkWidget *menu_item;
 
-      if(item->is_group) {
-        gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item),
-                                  build_menu(context, item->group, matches));
-      } else {
-        g_object_set_data(G_OBJECT(menu_item), "item", item);
-        g_signal_connect(menu_item, "activate",
-                         GTK_SIGNAL_FUNC(cb_menu_item), context);
+    /* Show a separator if one was requested, but not if there was no item
+     * before to prevent to show one as the first entry. */
+    if(was_item && was_separator)
+      gtk_menu_shell_append(GTK_MENU_SHELL(menu), gtk_separator_menu_item_new());
+    was_item = true;
+    was_separator = false;
 
-        if(preset_is_used(item, context)) {
-          if(!*matches)
-            *matches = gtk_menu_new();
+    menu_item = create_menuitem(context, static_cast<presets_item_visible *>(item));
 
-          GtkWidget *used_item = create_menuitem(context, item);
+    if(item->type & presets_item_t::TY_GROUP) {
+      gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item),
+                                build_menu(context,
+                                           static_cast<presets_item_group *>(item)->items,
+                                           matches));
+    } else {
+      g_object_set_data(G_OBJECT(menu_item), "item", item);
+      g_signal_connect(menu_item, "activate",
+                       GTK_SIGNAL_FUNC(cb_menu_item), context);
+
+      if(preset_is_used(item, context)) {
+        if(!*matches)
+          *matches = gtk_menu_new();
+
+          GtkWidget *used_item = create_menuitem(context, static_cast<presets_item_visible *>(item));
           g_object_set_data(G_OBJECT(used_item), "item", item);
           g_signal_connect(used_item, "activate",
                            GTK_SIGNAL_FUNC(cb_menu_item), context);
           gtk_menu_shell_append(GTK_MENU_SHELL(*matches), used_item);
-        }
       }
-
-      gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);
-    } else if(!item->name)
-      /* Record that there was a separator. Do not immediately add it here to
-       * prevent to show one as last entry. */
-      was_separator = true;
-  }
-
-  return menu;
+    }
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);
+  } else if(item->type == presets_item_t::TY_SEPARATOR)
+    /* Record that there was a separator. Do not immediately add it here to
+     * prevent to show one as last entry. */
+    was_separator = true;
 }
+
 #else // PICKER_MENU
 
-static bool preset_group_is_used(const presets_item_t *item, const presets_context_t *context)
-{
-  g_assert(item->is_group);
-  const presets_item_t *child;
-  for (child = item->group; child; child = child->next) {
-    if(child->is_group) {
-      if(preset_group_is_used(child, context))
-        return true;
-    } else if(preset_is_used(child, context))
-      return true;
-  }
+struct group_member_used {
+  const presets_context_t * const context;
+  group_member_used(const presets_context_t *c) : context(c) {}
+  bool operator()(const presets_item_t *item);
+};
 
-  return false;
+static bool preset_group_is_used(const presets_item_group *item, const presets_context_t *context)
+{
+  g_assert(item->type & presets_item_t::TY_GROUP);
+  return std::find_if(item->items.begin(), item->items.end(),
+                      group_member_used(context)) != item->items.end();
+}
+
+bool group_member_used::operator()(const presets_item_t *item)
+{
+  if(item->type & presets_item_t::TY_GROUP)
+    return preset_group_is_used(static_cast<const presets_item_group *>(item), context);
+  else
+    return preset_is_used(item, context);
 }
 
 enum {
@@ -893,7 +957,9 @@ enum {
   PRESETS_PICKER_NUM_COLS
 };
 
-static GtkWidget *presets_picker(presets_context_t *context, presets_item_t *item, bool scan_for_recent);
+static GtkWidget *presets_picker(presets_context_t *context,
+                                 const std::vector<presets_item_t *> &items,
+                                 bool scan_for_recent);
 static GtkWidget *preset_picker_recent(presets_context_t *context);
 
 static void
@@ -913,7 +979,8 @@ on_presets_picker_selected(GtkTreeSelection *selection, gpointer data) {
   GtkTreeModel *model;
 
   if (gtk_tree_selection_get_selected (selection, &model, &iter)) {
-    presets_item_t *item = NULL, *sub_item = NULL;
+    presets_item_visible *item = 0;
+    presets_item_group *sub_item = 0;
     gtk_tree_model_get(model, &iter,
 		       PRESETS_PICKER_COL_SUBMENU_PTR, &sub_item,
 		       PRESETS_PICKER_COL_ITEM_PTR, &item,
@@ -936,7 +1003,7 @@ on_presets_picker_selected(GtkTreeSelection *selection, gpointer data) {
 
       if(sub_item) {
         /* normal submenu */
-        sub = presets_picker(context, sub_item, false);
+        sub = presets_picker(context, sub_item->items, false);
       } else {
         /* used presets submenu */
         sub = preset_picker_recent(context);
@@ -1021,7 +1088,7 @@ static GtkWidget *presets_picker_embed(GtkTreeView *view, GtkListStore *store,
   return c;
 }
 
-static GtkTreeIter preset_insert_item(const presets_item_t *item, icon_t **icons,
+static GtkTreeIter preset_insert_item(const presets_item_visible *item, icon_t **icons,
                                       GtkListStore *store) {
   /* icon load can cope with NULL as name (returns NULL then) */
   GdkPixbuf *icon = icon_load(icons, (char*)item->icon);
@@ -1039,59 +1106,86 @@ static GtkTreeIter preset_insert_item(const presets_item_t *item, icon_t **icons
   return iter;
 }
 
-static void insert_recent_items(const presets_item_t *first, presets_context_t *context,
-                                GtkListStore *store) {
-  const presets_item_t *preset;
-  for(preset = first; preset; preset = preset->next) {
-    if(preset->is_group)
-      insert_recent_items(preset->group, context, store);
-    else if(preset_is_used(preset, context))
-      preset_insert_item(preset, &context->appdata->icon, store);
-  }
+struct insert_recent_items {
+  const presets_context_t * const context;
+  GtkListStore * const store;
+  insert_recent_items(const presets_context_t *c, GtkListStore *s) : context(c), store(s) {}
+  void operator()(const presets_item_t *preset);
+};
+
+void insert_recent_items::operator()(const presets_item_t *preset)
+{
+  if(preset->type & presets_item_t::TY_GROUP) {
+    const presets_item_group *gr = static_cast<const presets_item_group *>(preset);
+    std::for_each(gr->items.begin(), gr->items.end(),
+                  insert_recent_items(context, store));
+  } else if(preset_is_used(preset, context))
+    preset_insert_item(static_cast<const presets_item_visible *>(preset),
+                       &context->appdata->icon, store);
 }
 
 static GtkWidget *preset_picker_recent(presets_context_t *context) {
   GtkTreeView *view;
-  GtkListStore *store = presets_picker_store(&view);
+  insert_recent_items fc(context, presets_picker_store(&view));
 
-  insert_recent_items(context->appdata->presets, context, store);
+  const std::vector<presets_item_t *> &items = context->appdata->presets->items;
+  std::for_each(items.begin(), items.end(), fc);
 
-  return presets_picker_embed(view, store, context);
+  return presets_picker_embed(view, fc.store, context);
+}
+
+struct picker_add_functor {
+  presets_context_t * const context;
+  GtkListStore * const store;
+  GdkPixbuf * const subicon;
+  bool &show_recent;
+  bool scan_for_recent;
+  picker_add_functor(presets_context_t *c, GtkListStore *s, GdkPixbuf *i, bool r, bool &w)
+    : context(c), store(s), subicon(i), show_recent(w), scan_for_recent(r) {}
+  void operator()(const presets_item_t *item);
+};
+
+void picker_add_functor::operator()(const presets_item_t* item)
+{
+  /* check if this presets entry is appropriate for the current item */
+  if(!(item->type & context->tag_context->presets_type))
+    return;
+
+  const presets_item_visible * const itemv = static_cast<typeof(itemv)>(item);
+
+  if(!itemv->name)
+    return;
+
+  GtkTreeIter iter = preset_insert_item(itemv, &context->appdata->icon, store);
+
+  /* mark submenues as such */
+  if(item->type & presets_item_t::TY_GROUP) {
+    gtk_list_store_set(store, &iter,
+                       PRESETS_PICKER_COL_SUBMENU_PTR,  item,
+                       PRESETS_PICKER_COL_SUBMENU_ICON, subicon, -1);
+    if(scan_for_recent) {
+      show_recent = preset_group_is_used(static_cast<const presets_item_group *>(itemv), context);
+      scan_for_recent = !show_recent;
+    }
+  } else if(scan_for_recent) {
+    show_recent = preset_is_used(itemv, context);
+    scan_for_recent = !show_recent;
+  }
 }
 
 static GtkWidget *
-presets_picker(presets_context_t *context, presets_item_t *item, bool scan_for_recent) {
+presets_picker(presets_context_t *context, const std::vector<presets_item_t *> &items,
+                bool scan_for_recent) {
   GtkTreeView *view;
   GtkListStore *store = presets_picker_store(&view);
 
   bool show_recent = false;
   GdkPixbuf *subicon = icon_load(&context->appdata->icon,
                                  "submenu_arrow");
-  for(; item; item = item->next) {
-    /* check if this presets entry is appropriate for the current item */
-    if(!(item->type & context->tag_context->presets_type))
-      continue;
+  picker_add_functor fc(context, store, subicon, scan_for_recent, show_recent);
 
-    if(!item->name)
-      continue;
+  std::for_each(items.begin(), items.end(), fc);
 
-    GtkTreeIter iter = preset_insert_item(item, &context->appdata->icon, store);
-
-    /* mark submenues as such */
-    if(item->is_group) {
-      gtk_list_store_set(store, &iter,
-			 PRESETS_PICKER_COL_SUBMENU_PTR,  item->group,
-			 PRESETS_PICKER_COL_SUBMENU_ICON, subicon,
-			 -1);
-      if(scan_for_recent) {
-        show_recent = preset_group_is_used(item, context);
-        scan_for_recent = !show_recent;
-      }
-    } else if(scan_for_recent) {
-      show_recent = preset_is_used(item, context);
-      scan_for_recent = !show_recent;
-    }
-  }
   if(show_recent) {
     GtkTreeIter     iter;
 
@@ -1120,7 +1214,7 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event,
   (void)widget;
     if (!context->menu) {
       GtkWidget *matches = NULL;
-      context->menu = build_menu(context, context->appdata->presets, &matches);
+      context->menu = build_menu(context, context->appdata->presets->items, &matches);
       if(matches) {
         GtkWidget *menu_item = gtk_menu_item_new_with_label(_("Used presets"));
 
@@ -1147,7 +1241,7 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event,
     /* create root picker */
     GtkWidget *hbox = gtk_hbox_new(TRUE, 0);
 
-    GtkWidget *root = presets_picker(context, context->appdata->presets, true);
+    GtkWidget *root = presets_picker(context, context->appdata->presets->items, true);
     gtk_box_pack_start_defaults(GTK_BOX(hbox), root);
 
     GtkWidget *sub = gtk_label_new(NULL);
@@ -1159,9 +1253,9 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event,
     gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox);
 
     gtk_widget_show_all(dialog);
-    presets_item_t *item = NULL;
+    presets_item *item = NULL;
     if(gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT)
-      item = (presets_item_t*)g_object_get_data(G_OBJECT(dialog), "item");
+      item = static_cast<presets_item *>(g_object_get_data(G_OBJECT(dialog), "item"));
 
     gtk_widget_destroy(dialog);
 
@@ -1214,30 +1308,12 @@ static inline void free_widget(presets_widget_t *widget) {
   delete widget;
 }
 
-static void free_items(presets_item_t *item);
 static void free_item(presets_item_t *item) {
-  if(item->name) xmlFree(item->name);
-  if(item->icon) xmlFree(item->icon);
-  if(item->link) xmlFree(item->link);
-
-  if(item->is_group)
-    free_items(item->group);
-  else
-    std::for_each(item->widgets.begin(), item->widgets.end(), free_widget);
-
   delete item;
 }
 
-static void free_items(presets_item_t *item) {
-  while(item) {
-    presets_item_t *next = item->next;
-    free_item(item);
-    item = next;
-  }
-}
-
-void josm_presets_free(presets_item_t *presets) {
-  free_items(presets);
+void josm_presets_free(struct presets_items *presets) {
+  delete presets;
 }
 
 presets_widget_t::presets_widget_t(presets_widget_type_t t)
@@ -1290,6 +1366,21 @@ bool presets_widget_t::is_interactive() const
   default:
     return true;
   }
+}
+
+presets_item_t::~presets_item_t()
+{
+  std::for_each(widgets.begin(), widgets.end(), free_widget);
+}
+
+presets_item_group::~presets_item_group()
+{
+  std::for_each(items.begin(), items.end(), free_item);
+}
+
+presets_items::~presets_items()
+{
+  std::for_each(items.begin(), items.end(), free_item);
 }
 
 // vim:et:ts=8:sw=2:sts=2:ai

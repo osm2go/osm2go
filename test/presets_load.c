@@ -6,11 +6,12 @@
 
 int main(void)
 {
-  presets_item_t *presets;
+  struct presets_items *presets;
 
   xmlInitParser();
 
   presets = josm_presets_load();
+
   if(!presets)
     return -1;
 

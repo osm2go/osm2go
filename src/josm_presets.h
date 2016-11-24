@@ -30,15 +30,15 @@
 #define PRESETS_TYPE_CLOSEDWAY (1<<3)
 #define PRESETS_TYPE_ALL       (0xffff)
 
-typedef struct presets_item_t presets_item_t;
+struct presets_items;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-presets_item_t *josm_presets_load(void);
+struct presets_items *josm_presets_load(void);
 GtkWidget *josm_build_presets_button(appdata_t *appdata, tag_context_t *tag_context);
-void josm_presets_free(presets_item_t *presets);
+void josm_presets_free(struct presets_items *presets);
 char *josm_icon_name_adjust(char *name);
 
 #ifdef __cplusplus

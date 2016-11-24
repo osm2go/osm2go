@@ -89,7 +89,7 @@ typedef struct appdata_t {
   struct project_t *project;
   struct iconbar_t *iconbar;
   struct icon_t *icon;
-  struct presets_item_t *presets;
+  struct presets_items *presets;
 
   /* menu items to be enabled and disabled every now and then */
   struct gps_state_t *gps_state;
