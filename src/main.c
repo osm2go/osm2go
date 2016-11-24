@@ -123,14 +123,6 @@ cb_menu_project_open(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
   main_ui_enable(appdata);
 }
 
-#ifndef USE_HILDON
-static void
-cb_menu_project_wizard(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
-  appdata_t *appdata = (appdata_t*)data;
-  project_wizard(appdata);
-}
-#endif
-
 void on_window_destroy (GtkWidget *widget, gpointer data);
 
 static void
@@ -624,12 +616,6 @@ static void menu_create(appdata_t *appdata) {
   menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_project_open), _("_Open"),
     GTK_STOCK_OPEN, "<OSM2Go-Main>/Project/Open",
-    0, 0, TRUE, FALSE, FALSE
-  );
-
-  menu_append_new_item(
-    appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_project_wizard), _("_Wizard"),
-    GTK_STOCK_NEW, "<OSM2Go-Main>/Project/Wizard",
     0, 0, TRUE, FALSE, FALSE
   );
 #else
