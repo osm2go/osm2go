@@ -22,9 +22,6 @@
 
 #include "info.h"
 
-// set this if _all_ josm icons are in data/presets
-// #define JOSM_PATH_ADJUST
-
 /* the presets type specifies which item type it is */
 /* appropriate for */
 #define PRESETS_TYPE_WAY       (1<<0)

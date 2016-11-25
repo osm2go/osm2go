@@ -116,18 +116,6 @@ char *josm_icon_name_adjust(char *name) {
   if(!strcasecmp(name+strlen(name)-4, ".png"))
     name[strlen(name)-4] = 0;
 
-#ifdef JOSM_PATH_ADJUST
-  if(strncmp(name, "presets/", strlen("presets/")) != 0) {
-    const char *slash = strrchr(name, '/');
-    if(slash) {
-      char *newn = g_strconcat("presets", slash, NULL);
-      xmlFree(name);
-      name = newn;
-
-      printf("icon path adjusted to %s\n", name);
-    }
-  }
-#endif
   return name;
 }
 
