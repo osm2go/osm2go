@@ -134,10 +134,12 @@ public:
 
 class presets_item_group : public presets_item_visible {
 public:
-  presets_item_group(const unsigned int types)
-    : presets_item_visible(types | TY_GROUP) {}
+  presets_item_group(const unsigned int types, presets_item_group *p)
+    : presets_item_visible(types | TY_GROUP), parent(p), widget(0) {}
   virtual ~presets_item_group();
 
+  presets_item_group * const parent;
+  GtkWidget *widget;
   std::vector<presets_item_t *> items;
 };
 
@@ -307,42 +309,37 @@ static presets_item_t *parse_item(xmlNode *a_node) {
   return item;
 }
 
-static presets_item_t *parse_group(xmlDocPtr doc, xmlNode *a_node) {
+static presets_item_t *parse_group(xmlDocPtr doc, xmlNode *a_node, presets_item_group *parent) {
   xmlNode *cur_node = NULL;
 
-  int type = 0;
-
-  std::vector<presets_item_t *> group_items;
-
-  for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
-    if (cur_node->type == XML_ELEMENT_NODE) {
-      if(strcmp((char*)cur_node->name, "item") == 0) {
-        presets_item_t *preset = parse_item(cur_node);
-        if(preset) {
-          type |= preset->type;
-          group_items.push_back(preset);
-	}
-      } else if(strcmp((char*)cur_node->name, "group") == 0) {
-        presets_item_t *preset = parse_group(doc, cur_node);
-        if(preset) {
-          type |= preset->type;
-          group_items.push_back(preset);
-	}
-      } else if(strcmp((char*)cur_node->name, "separator") == 0) {
-        group_items.push_back(new presets_item_separator());
-      } else
-	printf("found unhandled annotations/group/%s\n", cur_node->name);
-    }
-  }
-
-  presets_item_group *group = new presets_item_group(type);
-  group->items.swap(group_items);
+  presets_item_group *group = new presets_item_group(presets_item_t::TY_GROUP, parent);
 
   /* ------ parse groups own properties ------ */
   group->name = xmlGetProp(a_node, BAD_CAST "name");
 
   group->icon = BAD_CAST
     josm_icon_name_adjust((char*)xmlGetProp(a_node, BAD_CAST "icon"));
+
+  for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
+    if (cur_node->type == XML_ELEMENT_NODE) {
+      if(strcmp((char*)cur_node->name, "item") == 0) {
+        presets_item_t *preset = parse_item(cur_node);
+        if(preset) {
+          *const_cast<unsigned int *>(&group->type) |= preset->type;
+          group->items.push_back(preset);
+	}
+      } else if(strcmp((char*)cur_node->name, "group") == 0) {
+        presets_item_t *preset = parse_group(doc, cur_node, group);
+        if(preset) {
+          *const_cast<unsigned int *>(&group->type) |= preset->type;
+          group->items.push_back(preset);
+	}
+      } else if(strcmp((char*)cur_node->name, "separator") == 0) {
+        group->items.push_back(new presets_item_separator());
+      } else
+	printf("found unhandled annotations/group/%s\n", cur_node->name);
+    }
+  }
 
   return group;
 }
@@ -356,7 +353,7 @@ static std::vector<presets_item_t *> parse_annotations(xmlDocPtr doc, xmlNode *a
       if(strcmp((char*)cur_node->name, "item") == 0) {
         preset = parse_item(cur_node);
       } else if(strcmp((char*)cur_node->name, "group") == 0) {
-        preset = parse_group(doc, cur_node);
+        preset = parse_group(doc, cur_node, 0);
       } else if(strcmp((char*)cur_node->name, "separator") == 0) {
         preset = new presets_item_separator();
       } else
@@ -505,6 +502,9 @@ struct presets_context_t {
   appdata_t *appdata;
 #ifndef FREMANTLE
   GtkWidget *menu;
+#endif
+#ifdef PICKER_MENU
+  std::vector<presets_item_group *> submenus;
 #endif
   tag_context_t *tag_context;
 };
@@ -962,6 +962,25 @@ static GtkWidget *presets_picker(presets_context_t *context,
                                  bool scan_for_recent);
 static GtkWidget *preset_picker_recent(presets_context_t *context);
 
+static void remove_sub(presets_item_group *sub_item) {
+  if(sub_item->widget) {
+    gtk_widget_destroy(sub_item->widget);
+    sub_item->widget = 0;
+  }
+}
+
+/**
+ * @brief remove all child pickers
+ */
+static void remove_subs(presets_context_t *context, presets_item_group *sub_item) {
+  std::vector<presets_item_group *> &oldsubs = context->submenus;
+  std::vector<presets_item_group *>::iterator it =
+             std::find(oldsubs.begin(), oldsubs.end(), sub_item);
+  g_assert(it != oldsubs.end());
+  std::for_each(++it, oldsubs.end(), remove_sub);
+  oldsubs.erase(it, oldsubs.end());
+}
+
 static void
 on_presets_picker_selected(GtkTreeSelection *selection, gpointer data) {
   presets_context_t *context = (presets_context_t*)data;
@@ -988,29 +1007,58 @@ on_presets_picker_selected(GtkTreeSelection *selection, gpointer data) {
 
     printf("clicked on %s, submenu = %p\n", item ? (char*)item->name : "''", sub_item);
 
-    GtkWidget *view =
+    GtkWidget * const view =
       GTK_WIDGET(gtk_tree_selection_get_tree_view(selection));
 
     if(sub_item || (!item && !sub_item)) {
       /* check if this already had a submenu */
-      GtkWidget *sub = GTK_WIDGET(g_object_get_data(G_OBJECT(view), "sub"));
-      g_assert(sub);
+      GtkWidget *sub;
+      if(context->submenus.empty()) {
+        // check if "Uses Presets" is shown
+        sub = GTK_WIDGET(g_object_get_data(G_OBJECT(view), "sub"));
+        if(sub) {
+          g_object_set_data(G_OBJECT(view), "sub", 0);
+          gtk_widget_destroy(sub);
+        }
+      }
 
-      gtk_widget_destroy(sub);
+      if(sub_item) {
+        /* normal submenu */
+
+        // the current list of submenus may or may not have common anchestors with this one
+        if(sub_item->widget) {
+         // this item is already visible, so it must be in the list, just drop all childs
+         remove_subs(context, sub_item);
+        } else {
+          // this item is not currently visible
+          if(sub_item->parent) {
+            // the parent item has to be visible, otherwise this could not have been clicked
+            remove_subs(context, sub_item->parent);
+          } else {
+            // this is a top level menu, so everything currently shown can be removed
+            std::for_each(context->submenus.begin(), context->submenus.end(), remove_sub);
+            context->submenus.clear();
+          }
+
+          sub = presets_picker(context, sub_item->items, false);
+          sub_item->widget = sub;
+          g_object_set_data(G_OBJECT(sub), "sub_item", (gpointer)sub_item);
+        }
+        context->submenus.push_back(sub_item);
+      } else {
+        /* used presets submenu */
+        // this is always on top level, so all old submenu entries can be removed
+        std::for_each(context->submenus.begin(), context->submenus.end(), remove_sub);
+        context->submenus.clear();
+        sub = preset_picker_recent(context);
+        g_object_set_data(G_OBJECT(view), "sub", (gpointer)sub);
+      }
 
       /* views parent is a scrolled window whichs parent in turn is the hbox */
       GtkWidget *hbox = view->parent->parent;
 
-      if(sub_item) {
-        /* normal submenu */
-        sub = presets_picker(context, sub_item->items, false);
-      } else {
-        /* used presets submenu */
-        sub = preset_picker_recent(context);
-      }
       gtk_box_pack_start_defaults(GTK_BOX(hbox), sub);
       gtk_widget_show_all(sub);
-      g_object_set_data(G_OBJECT(view), "sub", (gpointer)sub);
     } else {
       /* save item pointer in dialog */
       g_object_set_data(G_OBJECT(gtk_widget_get_toplevel(view)),
@@ -1173,6 +1221,16 @@ void picker_add_functor::operator()(const presets_item_t* item)
   }
 }
 
+/**
+ * @brief create a picker list for preset items
+ * @param context the tag context
+ * @param items the list of presets to show
+ * @param scan_for_recent if a "Used Presets" subentry should be created
+ *
+ * This will create a view with the given items. This is just one column in the
+ * presets view, every submenu will get it's own view created by a call to this
+ * function.
+ */
 static GtkWidget *
 presets_picker(presets_context_t *context, const std::vector<presets_item_t *> &items,
                 bool scan_for_recent) {
@@ -1243,12 +1301,6 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event,
 
     GtkWidget *root = presets_picker(context, context->appdata->presets->items, true);
     gtk_box_pack_start_defaults(GTK_BOX(hbox), root);
-
-    GtkWidget *sub = gtk_label_new(NULL);
-    gtk_box_pack_start_defaults(GTK_BOX(hbox), sub);
-
-    g_object_set_data(G_OBJECT(gtk_bin_get_child(GTK_BIN(root))),
-		      "sub", (gpointer)sub);
 
     gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox);
 
