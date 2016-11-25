@@ -166,7 +166,7 @@ static presets_widget_t **parse_widgets(xmlNode *a_node,
   for(cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if(cur_node->type == XML_ELEMENT_NODE) {
 
-      if(strcasecmp((char*)cur_node->name, "label") == 0) {
+      if(strcmp((char*)cur_node->name, "label") == 0) {
 
 	/* --------- label widget --------- */
 	*widget = g_new0(presets_widget_t, 1);
@@ -183,7 +183,7 @@ static presets_widget_t **parse_widgets(xmlNode *a_node,
 	widget = &((*widget)->next);
 
       }
-      else if(strcasecmp((char*)cur_node->name, "space") == 0) {
+      else if(strcmp((char*)cur_node->name, "space") == 0) {
 #ifndef USE_HILDON
         // new-style separators
         *widget = g_new0(presets_widget_t, 1);
@@ -192,7 +192,7 @@ static presets_widget_t **parse_widgets(xmlNode *a_node,
 	widget = &((*widget)->next);
 #endif
       }
-      else if(strcasecmp((char*)cur_node->name, "text") == 0) {
+      else if(strcmp((char*)cur_node->name, "text") == 0) {
 
 	/* --------- text widget --------- */
 	*widget = g_new0(presets_widget_t, 1);
@@ -202,7 +202,7 @@ static presets_widget_t **parse_widgets(xmlNode *a_node,
 	(*widget)->text_w.def = xmlGetProp(cur_node, BAD_CAST "default");
 	widget = &((*widget)->next);
 
-      } else if(strcasecmp((char*)cur_node->name, "combo") == 0) {
+      } else if(strcmp((char*)cur_node->name, "combo") == 0) {
 
 	/* --------- combo widget --------- */
 	*widget = g_new0(presets_widget_t, 1);
@@ -214,7 +214,7 @@ static presets_widget_t **parse_widgets(xmlNode *a_node,
 	(*widget)->combo_w.values = xmlGetProp(cur_node, BAD_CAST "values");
 	widget = &((*widget)->next);
 
-      } else if(strcasecmp((char*)cur_node->name, "key") == 0) {
+      } else if(strcmp((char*)cur_node->name, "key") == 0) {
 
 	/* --------- invisible key widget --------- */
 	*widget = g_new0(presets_widget_t, 1);
@@ -223,7 +223,7 @@ static presets_widget_t **parse_widgets(xmlNode *a_node,
 	(*widget)->key_w.value = xmlGetProp(cur_node, BAD_CAST "value");
 	widget = &((*widget)->next);
 
-      } else if(strcasecmp((char*)cur_node->name, "check") == 0) {
+      } else if(strcmp((char*)cur_node->name, "check") == 0) {
 
 	/* --------- check widget --------- */
 	*widget = g_new0(presets_widget_t, 1);
@@ -234,14 +234,14 @@ static presets_widget_t **parse_widgets(xmlNode *a_node,
 	widget = &((*widget)->next);
 
       }
-      else if (strcasecmp((char*)cur_node->name, "optional") == 0) {
+      else if (strcmp((char*)cur_node->name, "optional") == 0) {
         // Could be done as a fold-out box width twisties.
         // Or maybe as a separate dialog for small screens.
         // For now, just recurse and build up our current list.
         widget = parse_widgets(cur_node, item, widget);
       }
 
-      else if (strcasecmp((char*)cur_node->name, "link") == 0) {
+      else if (strcmp((char*)cur_node->name, "link") == 0) {
 
 	/* --------- link is not a widget, but a property of item --------- */
 	if(!item->link) {
@@ -292,19 +292,19 @@ static presets_item_t *parse_group(xmlDocPtr doc, xmlNode *a_node) {
 
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
-      if(strcasecmp((char*)cur_node->name, "item") == 0) {
+      if(strcmp((char*)cur_node->name, "item") == 0) {
 	*preset = parse_item(cur_node);
 	if(*preset) {
 	  group->type |= (*preset)->type;
 	  preset = &((*preset)->next);
 	}
-      } else if(strcasecmp((char*)cur_node->name, "group") == 0) {
+      } else if(strcmp((char*)cur_node->name, "group") == 0) {
 	*preset = parse_group(doc, cur_node);
 	if(*preset) {
 	  group->type |= (*preset)->type;
 	  preset = &((*preset)->next);
 	}
-      } else if(strcasecmp((char*)cur_node->name, "separator") == 0) {
+      } else if(strcmp((char*)cur_node->name, "separator") == 0) {
 	*preset = g_new0(presets_item_t, 1);
 	preset = &((*preset)->next);
       } else
@@ -323,13 +323,13 @@ static presets_item_t *parse_annotations(xmlDocPtr doc, xmlNode *a_node) {
 
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
-      if(strcasecmp((char*)cur_node->name, "item") == 0) {
+      if(strcmp((char*)cur_node->name, "item") == 0) {
 	*preset = parse_item(cur_node);
 	if(*preset) preset = &((*preset)->next);
-      } else if(strcasecmp((char*)cur_node->name, "group") == 0) {
+      } else if(strcmp((char*)cur_node->name, "group") == 0) {
 	*preset = parse_group(doc, cur_node);
 	if(*preset) preset = &((*preset)->next);
-      } else if(strcasecmp((char*)cur_node->name, "separator") == 0) {
+      } else if(strcmp((char*)cur_node->name, "separator") == 0) {
 	*preset = g_new0(presets_item_t, 1);
 	preset = &((*preset)->next);
       } else
@@ -347,7 +347,7 @@ static presets_item_t *parse_doc(xmlDocPtr doc) {
   for(cur_node = xmlDocGetRootElement(doc);
       cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
-      if(strcasecmp((char*)cur_node->name, "annotations") == 0) {
+      if(strcmp((char*)cur_node->name, "annotations") == 0) {
 	presets = parse_annotations(doc, cur_node);
       } else
 	printf("found unhandled %s\n", cur_node->name);
