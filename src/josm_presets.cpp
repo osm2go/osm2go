@@ -206,83 +206,79 @@ static presets_item_t::item_type josm_type_parse(xmlChar *xtype) {
 }
 
 /* parse children of a given node for into *widget */
+static presets_widget_t *parse_widget(xmlNode *cur_node) {
+  presets_widget_t *widget = 0;
+
+  if(strcmp((char*)cur_node->name, "label") == 0) {
+    xmlChar *text = xmlGetProp(cur_node, BAD_CAST "text");
+
+    /* special handling of pre-<space/> separators */
+    if(!text || (strcmp((char*)text, " ") == 0)) {
+      widget = new presets_widget_t(WIDGET_TYPE_SEPARATOR);
+      if(text)
+        xmlFree(text);
+    } else {
+      /* --------- label widget --------- */
+      widget = new presets_widget_t(WIDGET_TYPE_LABEL);
+      widget->text = text;
+    }
+
+  } else if(strcmp((char*)cur_node->name, "space") == 0) {
+#ifndef USE_HILDON
+    // new-style separators
+    widget = new presets_widget_t(WIDGET_TYPE_SEPARATOR);
+#endif
+  } else if(strcmp((char*)cur_node->name, "text") == 0) {
+
+    /* --------- text widget --------- */
+    widget = new presets_widget_t(WIDGET_TYPE_TEXT);
+    widget->text = xmlGetProp(cur_node, BAD_CAST "text");
+    widget->key = xmlGetProp(cur_node, BAD_CAST "key");
+    widget->text_w.def = xmlGetProp(cur_node, BAD_CAST "default");
+
+  } else if(strcmp((char*)cur_node->name, "combo") == 0) {
+
+    /* --------- combo widget --------- */
+    widget = new presets_widget_t(WIDGET_TYPE_COMBO);
+    widget->text = xmlGetProp(cur_node, BAD_CAST "text");
+    widget->key = xmlGetProp(cur_node, BAD_CAST "key");
+    widget->combo_w.def = xmlGetProp(cur_node, BAD_CAST "default");
+    widget->combo_w.values = xmlGetProp(cur_node, BAD_CAST "values");
+
+  } else if(strcmp((char*)cur_node->name, "key") == 0) {
+
+    /* --------- invisible key widget --------- */
+    widget = new presets_widget_t(WIDGET_TYPE_KEY);
+    widget->key = xmlGetProp(cur_node, BAD_CAST "key");
+    widget->key_w.value = xmlGetProp(cur_node, BAD_CAST "value");
+
+  } else if(strcmp((char*)cur_node->name, "check") == 0) {
+
+    /* --------- check widget --------- */
+    widget = new presets_widget_t(WIDGET_TYPE_CHECK);
+    widget->text = xmlGetProp(cur_node, BAD_CAST "text");
+    widget->key = xmlGetProp(cur_node, BAD_CAST "key");
+    widget->check_w.def = xml_get_prop_is(cur_node, "default", "on");
+
+  } else
+    printf("found unhandled presets/item/%s\n", cur_node->name);
+
+  return widget;
+}
+
+/* parse children of a given node for into *widget */
 static void parse_widgets(xmlNode *a_node, presets_item *item) {
   xmlNode *cur_node = NULL;
-  presets_widget_t *widget;
+  std::vector<presets_widget_t *> ret;
 
   for(cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if(cur_node->type == XML_ELEMENT_NODE) {
-
-      if(strcmp((char*)cur_node->name, "label") == 0) {
-        xmlChar *text = xmlGetProp(cur_node, BAD_CAST "text");
-
-        /* special handling of pre-<space/> separators */
-        if(!text || (strcmp((char*)text, " ") == 0)) {
-          widget = new presets_widget_t(WIDGET_TYPE_SEPARATOR);
-          if(text)
-            xmlFree(text);
-        } else {
-          /* --------- label widget --------- */
-          widget = new presets_widget_t(WIDGET_TYPE_LABEL);
-          widget->text = text;
-        }
-
-        item->widgets.push_back(widget);
-
-      }
-      else if(strcmp((char*)cur_node->name, "space") == 0) {
-#ifndef USE_HILDON
-        // new-style separators
-        widget = new presets_widget_t(WIDGET_TYPE_SEPARATOR);
-        widget->text = NULL;
-	item->widgets.push_back(widget);
-#endif
-      }
-      else if(strcmp((char*)cur_node->name, "text") == 0) {
-
-        /* --------- text widget --------- */
-        widget = new presets_widget_t(WIDGET_TYPE_TEXT);
-        widget->text = xmlGetProp(cur_node, BAD_CAST "text");
-        widget->key = xmlGetProp(cur_node, BAD_CAST "key");
-        widget->text_w.def = xmlGetProp(cur_node, BAD_CAST "default");
-        item->widgets.push_back(widget);
-
-      } else if(strcmp((char*)cur_node->name, "combo") == 0) {
-
-        /* --------- combo widget --------- */
-        widget = new presets_widget_t(WIDGET_TYPE_COMBO);
-        widget->text = xmlGetProp(cur_node, BAD_CAST "text");
-        widget->key = xmlGetProp(cur_node, BAD_CAST "key");
-        widget->combo_w.def = xmlGetProp(cur_node, BAD_CAST "default");
-        widget->combo_w.values = xmlGetProp(cur_node, BAD_CAST "values");
-        item->widgets.push_back(widget);
-
-      } else if(strcmp((char*)cur_node->name, "key") == 0) {
-
-        /* --------- invisible key widget --------- */
-        widget = new presets_widget_t(WIDGET_TYPE_KEY);
-        widget->key = xmlGetProp(cur_node, BAD_CAST "key");
-        widget->key_w.value = xmlGetProp(cur_node, BAD_CAST "value");
-        item->widgets.push_back(widget);
-
-      } else if(strcmp((char*)cur_node->name, "check") == 0) {
-
-        /* --------- check widget --------- */
-        widget = new presets_widget_t(WIDGET_TYPE_CHECK);
-        widget->text = xmlGetProp(cur_node, BAD_CAST "text");
-        widget->key = xmlGetProp(cur_node, BAD_CAST "key");
-        widget->check_w.def = xml_get_prop_is(cur_node, "default", "on");
-        item->widgets.push_back(widget);
-
-      }
-      else if (strcmp((char*)cur_node->name, "optional") == 0) {
+      if (strcmp((char*)cur_node->name, "optional") == 0) {
         // Could be done as a fold-out box width twisties.
         // Or maybe as a separate dialog for small screens.
         // For now, just recurse and build up our current list.
         parse_widgets(cur_node, item);
-      }
-
-      else if (strcmp((char*)cur_node->name, "link") == 0) {
+      } else if (strcmp((char*)cur_node->name, "link") == 0) {
 
 	/* --------- link is not a widget, but a property of item --------- */
 	if(!item->link) {
@@ -290,8 +286,11 @@ static void parse_widgets(xmlNode *a_node, presets_item *item) {
 	} else
 	  printf("ignoring surplus link\n");
 
-      } else
-	printf("found unhandled presets/item/%s\n", cur_node->name);
+      } else {
+        presets_widget_t *widget = parse_widget(cur_node);
+        if(widget)
+          item->widgets.push_back(widget);
+      }
     }
   }
 }
