@@ -291,7 +291,7 @@ static void parse_widgets(xmlNode *a_node, presets_item *item) {
 	  printf("ignoring surplus link\n");
 
       } else
-	printf("found unhandled annotations/item/%s\n", cur_node->name);
+	printf("found unhandled presets/item/%s\n", cur_node->name);
     }
   }
 }
@@ -337,7 +337,7 @@ static presets_item_t *parse_group(xmlDocPtr doc, xmlNode *a_node, presets_item_
       } else if(strcmp((char*)cur_node->name, "separator") == 0) {
         group->items.push_back(new presets_item_separator());
       } else
-	printf("found unhandled annotations/group/%s\n", cur_node->name);
+	printf("found unhandled presets/group/%s\n", cur_node->name);
     }
   }
 
@@ -357,7 +357,7 @@ static std::vector<presets_item_t *> parse_annotations(xmlDocPtr doc, xmlNode *a
       } else if(strcmp((char*)cur_node->name, "separator") == 0) {
         preset = new presets_item_separator();
       } else
-	printf("found unhandled annotations/%s\n", cur_node->name);
+	printf("found unhandled presets/%s\n", cur_node->name);
       if(preset)
         presets.push_back(preset);
     }
@@ -371,7 +371,7 @@ static std::vector<presets_item_t *> parse_doc(xmlDocPtr doc) {
   for(xmlNode *cur_node = xmlDocGetRootElement(doc);
       cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
-      if(strcmp((char*)cur_node->name, "annotations") == 0) {
+      if(strcmp((char*)cur_node->name, "presets") == 0) {
 	presets = parse_annotations(doc, cur_node);
       } else
 	printf("found unhandled %s\n", cur_node->name);
@@ -387,7 +387,7 @@ struct presets_items *josm_presets_load(void) {
 
   printf("Loading JOSM presets ...\n");
 
-  const std::string &filename = find_file("presets.xml", NULL, NULL);
+  const std::string &filename = find_file("defaultpresets.xml", NULL, NULL);
   if(filename.empty())
     return NULL;
 
