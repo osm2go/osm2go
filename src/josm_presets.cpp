@@ -205,8 +205,12 @@ static presets_item_t::item_type josm_type_parse(xmlChar *xtype) {
   return static_cast<presets_item_t::item_type>(type_mask);
 }
 
+static void parse_widgets(xmlNode *a_node, presets_item *item,
+                          const std::map<std::string, xmlNode *> &chunks);
+
 /* parse children of a given node for into *widget */
-static presets_widget_t *parse_widget(xmlNode *cur_node) {
+static presets_widget_t *parse_widget(xmlNode *cur_node, presets_item *item,
+                                      const std::map<std::string, xmlNode *> &chunks) {
   presets_widget_t *widget = 0;
 
   if(strcmp((char*)cur_node->name, "label") == 0) {
@@ -259,6 +263,20 @@ static presets_widget_t *parse_widget(xmlNode *cur_node) {
     widget->text = xmlGetProp(cur_node, BAD_CAST "text");
     widget->key = xmlGetProp(cur_node, BAD_CAST "key");
     widget->check_w.def = xml_get_prop_is(cur_node, "default", "on");
+  } else if(strcmp((char*)cur_node->name, "reference") == 0) {
+    xmlChar *id = xmlGetProp(cur_node, BAD_CAST "ref");
+    if(!id) {
+      printf("found presets/item/reference without ref\n");
+    } else {
+      const std::map<std::string, xmlNode *>::const_iterator it =
+          chunks.find(std::string(reinterpret_cast<char *>(id)));
+      if(it == chunks.end()) {
+        printf("found presets/item/reference without unresolved ref %s\n", id);
+      } else {
+        parse_widgets(it->second, item, chunks);
+      }
+      xmlFree(id);
+    }
 
   } else
     printf("found unhandled presets/item/%s\n", cur_node->name);
@@ -267,7 +285,8 @@ static presets_widget_t *parse_widget(xmlNode *cur_node) {
 }
 
 /* parse children of a given node for into *widget */
-static void parse_widgets(xmlNode *a_node, presets_item *item) {
+static void parse_widgets(xmlNode *a_node, presets_item *item,
+                          const std::map<std::string, xmlNode *> &chunks) {
   xmlNode *cur_node = NULL;
   std::vector<presets_widget_t *> ret;
 
@@ -277,7 +296,7 @@ static void parse_widgets(xmlNode *a_node, presets_item *item) {
         // Could be done as a fold-out box width twisties.
         // Or maybe as a separate dialog for small screens.
         // For now, just recurse and build up our current list.
-        parse_widgets(cur_node, item);
+        parse_widgets(cur_node, item, chunks);
       } else if (strcmp((char*)cur_node->name, "link") == 0) {
 
 	/* --------- link is not a widget, but a property of item --------- */
@@ -287,7 +306,7 @@ static void parse_widgets(xmlNode *a_node, presets_item *item) {
 	  printf("ignoring surplus link\n");
 
       } else {
-        presets_widget_t *widget = parse_widget(cur_node);
+        presets_widget_t *widget = parse_widget(cur_node, item, chunks);
         if(widget)
           item->widgets.push_back(widget);
       }
@@ -295,7 +314,7 @@ static void parse_widgets(xmlNode *a_node, presets_item *item) {
   }
 }
 
-static presets_item_t *parse_item(xmlNode *a_node) {
+static presets_item_t *parse_item(xmlNode *a_node, const std::map<std::string, xmlNode *> &chunks) {
   presets_item *item = new presets_item(josm_type_parse(xmlGetProp(a_node, BAD_CAST "type")));
 
   /* ------ parse items own properties ------ */
@@ -304,11 +323,12 @@ static presets_item_t *parse_item(xmlNode *a_node) {
   item->icon = BAD_CAST
     josm_icon_name_adjust((char*)xmlGetProp(a_node, BAD_CAST "icon"));
 
-  parse_widgets(a_node, item);
+  parse_widgets(a_node, item, chunks);
   return item;
 }
 
-static presets_item_t *parse_group(xmlDocPtr doc, xmlNode *a_node, presets_item_group *parent) {
+static presets_item_t *parse_group(xmlDocPtr doc, xmlNode *a_node, presets_item_group *parent,
+                                   const std::map<std::string, xmlNode *> &chunks) {
   xmlNode *cur_node = NULL;
 
   presets_item_group *group = new presets_item_group(presets_item_t::TY_GROUP, parent);
@@ -322,13 +342,13 @@ static presets_item_t *parse_group(xmlDocPtr doc, xmlNode *a_node, presets_item_
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcmp((char*)cur_node->name, "item") == 0) {
-        presets_item_t *preset = parse_item(cur_node);
+        presets_item_t *preset = parse_item(cur_node, chunks);
         if(preset) {
           *const_cast<unsigned int *>(&group->type) |= preset->type;
           group->items.push_back(preset);
 	}
       } else if(strcmp((char*)cur_node->name, "group") == 0) {
-        presets_item_t *preset = parse_group(doc, cur_node, group);
+        presets_item_t *preset = parse_group(doc, cur_node, group, chunks);
         if(preset) {
           *const_cast<unsigned int *>(&group->type) |= preset->type;
           group->items.push_back(preset);
@@ -345,14 +365,37 @@ static presets_item_t *parse_group(xmlDocPtr doc, xmlNode *a_node, presets_item_
 
 static std::vector<presets_item_t *> parse_annotations(xmlDocPtr doc, xmlNode *a_node) {
   std::vector<presets_item_t *> presets;
+  std::map<std::string, xmlNode *> chunks;
 
-  for (xmlNode *cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
+  // <chunk> elements are first
+  xmlNode *cur_node;
+  for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
+    if (cur_node->type == XML_ELEMENT_NODE) {
+      if(strcmp((char*)cur_node->name, "chunk") == 0) {
+        xmlChar *xid = xmlGetProp(cur_node, BAD_CAST "id");
+        if(!xid) {
+          printf("ignoring presets/chunk without id\n");
+        } else {
+          std::string id(reinterpret_cast<char *>(xid));
+          xmlFree(xid);
+          if(chunks.find(id) != chunks.end())
+            printf("ignoring presets/chunk duplicate id %s\n", id.c_str());
+          else
+            chunks[id] = cur_node;
+        }
+      } else {
+        break;
+      }
+    }
+  }
+
+  for (; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       presets_item_t *preset = 0;
       if(strcmp((char*)cur_node->name, "item") == 0) {
-        preset = parse_item(cur_node);
+        preset = parse_item(cur_node, chunks);
       } else if(strcmp((char*)cur_node->name, "group") == 0) {
-        preset = parse_group(doc, cur_node, 0);
+        preset = parse_group(doc, cur_node, 0, chunks);
       } else if(strcmp((char*)cur_node->name, "separator") == 0) {
         preset = new presets_item_separator();
       } else
