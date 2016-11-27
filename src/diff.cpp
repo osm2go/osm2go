@@ -49,16 +49,29 @@ static void diff_save_tags(const tag_t *tag, xmlNodePtr node) {
   }
 }
 
-static void diff_save_state_n_id(int flags, xmlNodePtr node, item_id_t id) {
-  if(flags & OSM_FLAG_DELETED)
+/**
+ * @brief save the common OSM object information
+ * @param obj the object to save
+ * @param root_node the XML root node to append to
+ * @param tname the name of the XML node
+ * @return XML node object
+ */
+static xmlNodePtr diff_save_state_n_id(const base_object_t *obj,
+                                       xmlNodePtr root_node,
+                                       const char *tname) {
+  xmlNodePtr node = xmlNewChild(root_node, NULL, BAD_CAST tname, NULL);
+
+  if(obj->flags & OSM_FLAG_DELETED)
     xmlNewProp(node, BAD_CAST "state", BAD_CAST "deleted");
-  else if(flags & OSM_FLAG_NEW)
+  else if(obj->flags & OSM_FLAG_NEW)
     xmlNewProp(node, BAD_CAST "state", BAD_CAST "new");
 
   /* all items need an id */
   gchar id_str[G_ASCII_DTOSTR_BUF_SIZE];
-  g_snprintf(id_str, sizeof(id_str), ITEM_ID_FORMAT, id);
+  g_snprintf(id_str, sizeof(id_str), ITEM_ID_FORMAT, obj->id);
   xmlNewProp(node, BAD_CAST "id", BAD_CAST id_str);
+
+  return node;
 }
 
 struct diff_save_nodes {
@@ -73,9 +86,7 @@ void diff_save_nodes::operator()(std::pair<item_id_t, node_t *> pair)
   if(!node->flags)
     return;
 
-  xmlNodePtr node_node = xmlNewChild(root_node, NULL, BAD_CAST "node", NULL);
-
-  diff_save_state_n_id(node->flags, node_node, node->id);
+  xmlNodePtr node_node = diff_save_state_n_id(node, root_node, "node");
 
   if(node->flags & OSM_FLAG_DELETED)
     return;
@@ -102,10 +113,7 @@ void diff_save_ways::operator()(std::pair<item_id_t, way_t *> pair)
   if(!way->flags)
     return;
 
-  xmlNodePtr node_way = xmlNewChild(root_node, NULL,
-                                    BAD_CAST "way", NULL);
-
-  diff_save_state_n_id(way->flags, node_way, way->id);
+  xmlNodePtr node_way = diff_save_state_n_id(way, root_node, "way");
 
   if(way->flags & OSM_FLAG_HIDDEN)
     xmlNewProp(node_way, BAD_CAST "hidden", BAD_CAST "true");
@@ -186,10 +194,7 @@ void diff_save_relations::operator()(std::pair<item_id_t, relation_t *> pair)
   if(!relation->flags)
     return;
 
-  xmlNodePtr node_rel = xmlNewChild(root_node, NULL,
-                                    BAD_CAST "relation", NULL);
-
-  diff_save_state_n_id(relation->flags, node_rel, relation->id);
+  xmlNodePtr node_rel = diff_save_state_n_id(relation, root_node, "relation");
 
   if(relation->flags & OSM_FLAG_DELETED)
     return;
