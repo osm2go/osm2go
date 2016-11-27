@@ -288,7 +288,7 @@ void osm_tag_update_value(tag_t *tag, const char *value)
 }
 
 gboolean osm_way_ends_with_node(const way_t *way, const node_t *node) {
-  /* and deleted way may even not contain any nodes at all */
+  /* a deleted way may even not contain any nodes at all */
   /* so ignore it */
   if(OSM_FLAGS(way) & OSM_FLAG_DELETED)
     return FALSE;

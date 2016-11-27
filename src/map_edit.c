@@ -150,16 +150,8 @@ void map_edit_way_add_segment(map_t *map, gint x, gint y) {
       while(way_chain) {
 	way_chain_t *next = way_chain->next;
 
-	if(!touch_way) {
-	  if(node == osm_way_get_first_node(way_chain->way)) {
-	    printf("  way #" ITEM_ID_FORMAT " starts with this node\n",
-		   OSM_ID(way_chain->way));
-	    touch_way = way_chain->way;
-	  } else if(node == osm_way_get_last_node(way_chain->way)) {
-	    printf("  way #" ITEM_ID_FORMAT " ends with this node\n",
-		   OSM_ID(way_chain->way));
-	    touch_way = way_chain->way;
-	  }
+        if(!touch_way && osm_way_ends_with_node(way_chain->way, node)) {
+          touch_way = way_chain->way;
 	}
 
 	g_free(way_chain);
@@ -508,8 +500,7 @@ void map_edit_way_cut_highlight(map_t *map, map_item_t *item, gint x, gint y) {
     }
   } else if(map_item_is_selected_node(map, item)) {
     /* cutting a way at its first or last node doesn't make much sense ... */
-    if((osm_way_get_first_node(map->selected.object.way) != item->object.node) &&
-      (osm_way_get_last_node(map->selected.object.way) != item->object.node))
+    if(!osm_way_ends_with_node(map->selected.object.way, item->object.node))
       map_hl_cursor_draw(map, item->object.node->lpos.x, item->object.node->lpos.y,
 			 TRUE, 2*map->style->node.radius);
   }
@@ -535,10 +526,8 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
       /* node must not be first or last node of way */
       g_assert(map->selected.object.type == WAY);
 
-      if((osm_way_get_first_node(map->selected.object.way) !=
-	  item->object.node) &&
-	 (osm_way_get_last_node(map->selected.object.way) !=
-	  item->object.node)) {
+      if(!osm_way_ends_with_node(map->selected.object.way,
+                                 item->object.node)) {
 	way = map->selected.object.way;
 
 	cut_at = 0;
@@ -565,7 +554,7 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
       /* place to cut is adjecent to the begin/end of the way. */
       /* this prevents a cut polygon to be split into two ways */
       g_assert(way->node_chain);
-      if(way->node_chain->node == osm_way_get_last_node(way)) {
+      if(osm_way_is_closed(way)) {
 	printf("CLOSED WAY -> rotate by %d\n", cut_at);
 	osm_way_rotate(way, cut_at);
 	cut_at = 0;
