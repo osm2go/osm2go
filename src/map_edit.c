@@ -28,6 +28,8 @@
 #include "statusbar.h"
 #include "style.h"
 
+#include <glib.h>
+
 /* --------------------- misc local helper functions ---------------- */
 struct relation_transfer {
   way_t * const dst;
@@ -147,16 +149,11 @@ void map_edit_way_add_segment(map_t *map, gint x, gint y) {
       /* check whether this node is first or last one of a different way */
       way_t *touch_way = NULL;
       way_chain_t *way_chain = osm_node_to_way(map->appdata->osm, node);
-      while(way_chain) {
-	way_chain_t *next = way_chain->next;
-
-        if(!touch_way && osm_way_ends_with_node(way_chain->way, node)) {
-          touch_way = way_chain->way;
-	}
-
-	g_free(way_chain);
-	way_chain = next;
-      }
+      way_chain_t *match = g_slist_find_custom(way_chain, node,
+                                               (GCompareFunc)osm_way_ends_with_node);
+      if(match)
+        touch_way = match->data;
+      g_slist_free(way_chain);
 
       /* remeber this way as this may be the last node placed */
       /* and we might want to join this with this other way */

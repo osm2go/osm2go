@@ -2000,6 +2000,22 @@ void map_action_ok(appdata_t *appdata) {
   }
 }
 
+/* redraw all affected ways */
+void node_deleted_from_ways_operator(way_t *way, appdata_t *appdata) {
+  if(way->next == NULL) {
+    /* this way now only contains one node and thus isn't a valid */
+    /* way anymore. So it'll also get deleted (which in turn may */
+    /* cause other nodes to be deleted as well) */
+    map_way_delete(appdata, way);
+  } else {
+    map_item_t item;
+    item.object.type = WAY;
+    item.object.way = way;
+    undo_append_object(appdata, UNDO_MODIFY, &(item.object));
+    map_item_redraw(appdata, &item);
+  }
+}
+
 /* called from icon "trash" */
 void map_delete_selected(appdata_t *appdata) {
   map_t *map = appdata->map;
@@ -2036,7 +2052,7 @@ void map_delete_selected(appdata_t *appdata) {
 	way_chain_t *next = way_chain->next;
 
 	/* avoid counting if not needed */
-	if(!short_way && !osm_way_min_length(way_chain->way, 3))
+	if(!short_way && !osm_way_min_length(way_chain->data, 3))
 	  short_way = TRUE;
 
 	g_free(way_chain);
@@ -2059,26 +2075,8 @@ void map_delete_selected(appdata_t *appdata) {
                          item.object.node, FALSE, TRUE);
 
     /* redraw all affected ways */
-    while(chain) {
-      way_chain_t *next = chain->next;
-
-      if(chain->way->next == NULL) {
-	/* this way now only contains one node and thus isn't a valid */
-	/* way anymore. So it'll also get deleted (which in turn may */
-	/* cause other nodes to be deleted as well) */
-	map_way_delete(appdata, chain->way);
-      } else {
-	map_item_t item;
-	item.object.type = WAY;
-	item.object.way = chain->way;
-	undo_append_object(appdata, UNDO_MODIFY, &(item.object));
-	map_item_redraw(appdata, &item);
-      }
-
-      g_free(chain);
-
-      chain = next;
-    }
+    g_slist_foreach(chain, (GFunc)node_deleted_from_ways_operator, appdata);
+    g_slist_free(chain);
 
     break;
 

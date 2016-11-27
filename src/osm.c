@@ -1680,7 +1680,7 @@ void osm_way_restore(osm_t *osm, way_t *way, item_id_chain_t *id_chain) {
 way_chain_t *osm_node_delete(osm_t *osm,
 			     node_t *node, gboolean permanently,
 			     gboolean affect_ways) {
-  way_chain_t *way_chain = NULL, **cur_way_chain = &way_chain;
+  way_chain_t *way_chain = NULL;
 
   /* new nodes aren't stored on the server and are just deleted permanently */
   if(OSM_FLAGS(node) & OSM_FLAG_NEW) {
@@ -1713,9 +1713,7 @@ way_chain_t *osm_node_delete(osm_t *osm,
       OSM_FLAGS(way) |= OSM_FLAG_DIRTY;
 
       /* and add the way to the list of affected ways */
-      *cur_way_chain = g_new0(way_chain_t, 1);
-      (*cur_way_chain)->way = way;
-      cur_way_chain = &((*cur_way_chain)->next);
+      way_chain = g_slist_prepend(way_chain, way);
     }
 
     way = way->next;
@@ -1892,16 +1890,13 @@ GSList *osm_object_to_relation(osm_t *osm, const object_t *object) {
 
 /* return all ways a node is in */
 way_chain_t *osm_node_to_way(const osm_t *osm, const node_t *node) {
-  way_chain_t *chain = NULL, **cur_chain = &chain;
+  way_chain_t *chain = NULL;
 
   way_t *way = osm->way;
   for(; way; way = way->next) {
     /* node is a member of this relation, so move it to the member chain */
-    if(osm_node_in_way(way, node)) {
-      *cur_chain = g_new0(way_chain_t, 1);
-      (*cur_chain)->way = way;
-      cur_chain = &((*cur_chain)->next);
-    }
+    if(osm_node_in_way(way, node))
+      chain = g_slist_prepend(chain, way);
   }
 
   return chain;
@@ -2015,15 +2010,9 @@ void osm_way_delete(osm_t *osm, way_t *way, gboolean permanently) {
       /* delete this node, but don't let this actually affect the */
       /* associated ways as the only such way is the one we are currently */
       /* deleting */
-      way_chain_t *way_chain =
-	osm_node_delete(osm, node, FALSE, FALSE);
+      way_chain_t *way_chain = osm_node_delete(osm, node, FALSE, FALSE);
       g_assert(way_chain);
-      while(way_chain) {
-	way_chain_t *way_next = way_chain->next;
-	g_assert(way_chain->way == way);
-	g_free(way_chain);
-	way_chain = way_next;
-      }
+      g_slist_free(way_chain);
     }
 
     node_chain_t *cur = (*chain);

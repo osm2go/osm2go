@@ -137,10 +137,7 @@ typedef struct way_s {
   struct map_item_chain_s *map_item_chain;
 } way_t;
 
-typedef struct way_chain {
-  struct way_chain *next;
-  way_t *way;
-} way_chain_t;
+typedef GSList way_chain_t;
 
 /* return a pointer to the "base" object of an object */
 #define OBJECT_BASE(a)     ((base_object_t*)((a).ptr))
