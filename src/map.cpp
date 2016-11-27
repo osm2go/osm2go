@@ -61,7 +61,7 @@ canvas_item_t *map_item_chain_t::firstCanvasItem() const {
 #undef DESTROY_WAIT_FOR_GTK
 
 static void map_statusbar(map_t *map, map_item_t *map_item) {
-  tag_t *tag = OBJECT_TAG(map_item->object);
+  tag_t *tag = map_item->object.obj->tag;
 
   gboolean collision = FALSE;
   tag_t *tags = tag;
@@ -410,12 +410,12 @@ void map_item_deselect(appdata_t *appdata) {
     osm_tags_free(appdata->map->last_node_tags);
 
     appdata->map->last_node_tags =
-      osm_tags_copy(OBJECT_TAG(appdata->map->selected.object));
+      osm_tags_copy(appdata->map->selected.object.obj->tag);
   } else if(appdata->map->selected.object.type == WAY) {
     osm_tags_free(appdata->map->last_way_tags);
 
     appdata->map->last_way_tags =
-      osm_tags_copy(OBJECT_TAG(appdata->map->selected.object));
+      osm_tags_copy(appdata->map->selected.object.obj->tag);
   }
 
   /* remove statusbar message */
@@ -666,7 +666,7 @@ void map_item_redraw(appdata_t *appdata, map_item_t *map_item) {
 
   /* check if the item to be redrawn is the selected one */
   gboolean is_selected = FALSE;
-  if(map_item->object.ptr == appdata->map->selected.object.ptr) {
+  if(map_item->object.obj == appdata->map->selected.object.obj) {
     map_item_deselect(appdata);
     is_selected = TRUE;
   }
@@ -865,7 +865,7 @@ map_item_t *map_item_at(map_t *map, gint x, gint y) {
 
   printf("  item is %s #" ITEM_ID_FORMAT "\n",
 	 map_item->object.type_string(),
-	 OBJECT_ID(map_item->object));
+	 map_item->object.obj->id);
 
   return map_item;
 }
@@ -887,7 +887,7 @@ map_item_t *map_real_item_at(map_t *map, gint x, gint y) {
 
     if(parent)
       printf("  using parent item node #" ITEM_ID_FORMAT "\n",
-	     OBJECT_ID(parent->object));
+	     parent->object.obj->id);
     break;
 
   case WAY:
@@ -896,7 +896,7 @@ map_item_t *map_real_item_at(map_t *map, gint x, gint y) {
 
     if(parent)
       printf("  using parent item way #" ITEM_ID_FORMAT "\n",
-	     OBJECT_ID(parent->object));
+	     parent->object.obj->id);
     break;
 
   default:
@@ -2054,7 +2054,7 @@ void map_delete_selected(appdata_t *appdata) {
   switch(item.object.type) {
   case NODE: {
     printf("request to delete node #" ITEM_ID_FORMAT "\n",
-	   OBJECT_ID(item.object));
+	   item.object.obj->id);
 
     undo_append_object(appdata, UNDO_DELETE, item.object);
 
@@ -2087,7 +2087,7 @@ void map_delete_selected(appdata_t *appdata) {
 
   case WAY:
     printf("request to delete way #" ITEM_ID_FORMAT "\n",
-	   OBJECT_ID(item.object));
+	   item.object.obj->id);
     map_way_delete(appdata, item.object.way);
     break;
 

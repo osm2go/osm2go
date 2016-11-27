@@ -58,11 +58,9 @@ bool object_t::operator==(const object_t& other) const
 
   switch(type) {
   case NODE:
-    return node == other.node;
   case WAY:
-    return way == other.way;
   case RELATION:
-    return relation == other.relation;
+    return obj == other.obj;
   case NODE_ID:
   case WAY_ID:
   case RELATION_ID:
@@ -122,7 +120,7 @@ gchar *object_t::id_string() const {
   case NODE:
   case WAY:
   case RELATION:
-    return g_strdup_printf("#" ITEM_ID_FORMAT, OBJECT_ID(*this));
+    return g_strdup_printf("#" ITEM_ID_FORMAT, obj->id);
   case NODE_ID:
   case WAY_ID:
   case RELATION_ID:
@@ -141,9 +139,8 @@ gchar *object_t::object_string() const {
   case NODE:
   case WAY:
   case RELATION:
-    g_assert(ptr);
-    return g_strdup_printf("%s #" ITEM_ID_FORMAT, type_str,
-                           OBJECT_ID(*this));
+    g_assert(obj);
+    return g_strdup_printf("%s #" ITEM_ID_FORMAT, type_str, obj->id);
   case NODE_ID:
   case WAY_ID:
   case RELATION_ID:
@@ -156,21 +153,21 @@ gchar *object_t::object_string() const {
 const tag_t *object_t::get_tags() const {
   if(!is_real())
     return NULL;
-  return OBJECT_TAG(*this);
+  return obj->tag;
 }
 
 item_id_t object_t::get_id() const {
   if(type == ILLEGAL)
     return ID_ILLEGAL;
   if(is_real())
-    return OBJECT_ID(*this);
+    return obj->id;
   return id;
 }
 
 void object_t::set_flags(int set, int clr) {
   g_assert(is_real());
-  OBJECT_FLAGS(*this) |=  set;
-  OBJECT_FLAGS(*this) &= ~clr;
+  obj->flags |=  set;
+  obj->flags &= ~clr;
 }
 
 /* ------------------------- user handling --------------------- */
@@ -1300,7 +1297,7 @@ void gen_xml_relation_functor::operator()(const member_t &member)
 {
   xmlNodePtr m_node = xmlNewChild(xml_node,NULL,BAD_CAST "member", NULL);
   gchar str[G_ASCII_DTOSTR_BUF_SIZE];
-  g_snprintf(str, sizeof(str), ITEM_ID_FORMAT, OBJECT_ID(member.object));
+  g_snprintf(str, sizeof(str), ITEM_ID_FORMAT, member.object.obj->id);
 
   switch(member.object.type) {
   case NODE:

@@ -923,7 +923,7 @@ void map_edit_way_reverse(appdata_t *appdata) {
   guint n_roles_flipped =
     osm_way_reverse_direction_sensitive_roles(appdata->osm, item.object.way);
 
-  OBJECT_FLAGS(item.object) |= OSM_FLAG_DIRTY;
+  item.object.obj->flags |= OSM_FLAG_DIRTY;
   map_way_select(appdata, item.object.way);
 
   // Flash a message about any side-effects

@@ -368,7 +368,7 @@ static void table_attach(GtkWidget *table, GtkWidget *child, int x, int y) {
 static GtkWidget *details_widget(tag_context_t *context, gboolean big) {
   GtkWidget *table = gtk_table_new(big?4:2, 2, FALSE);  // y, x
 
-  const char *user = OBJECT_USER(context->object);
+  const char *user = context->object.obj->user;
   GtkWidget *label;
 
   /* ------------ user ----------------- */
@@ -384,7 +384,7 @@ static GtkWidget *details_widget(tag_context_t *context, gboolean big) {
 
   if(big) table_attach(table, gtk_label_new(_("Date/Time:")), 0, 1);
   struct tm loctime;
-  localtime_r(&OBJECT_TIME(context->object), &loctime);
+  localtime_r(&context->object.obj->time, &loctime);
   char time_str[32];
   strftime(time_str, sizeof(time_str), "%x %X", &loctime);
   label = gtk_label_new(time_str);
@@ -502,18 +502,18 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
 
   g_assert(context.object.is_real());
 
-  work_copy = osm_tags_copy(OBJECT_TAG(context.object));
+  work_copy = osm_tags_copy(context.object.obj->tag);
 
   switch(context.object.type) {
   case NODE:
     str = g_strdup_printf(_("Node #" ITEM_ID_FORMAT),
-			  OBJECT_ID(context.object));
+			  context.object.obj->id);
     context.presets_type = PRESETS_TYPE_NODE;
     break;
 
   case WAY:
     str = g_strdup_printf(_("Way #" ITEM_ID_FORMAT),
-			  OBJECT_ID(context.object));
+			  context.object.obj->id);
     context.presets_type = PRESETS_TYPE_WAY;
 
     if(context.object.way->is_closed())
@@ -523,7 +523,7 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
 
   case RELATION:
     str = g_strdup_printf(_("Relation #" ITEM_ID_FORMAT),
-			  OBJECT_ID(context.object));
+			  context.object.obj->id);
     context.presets_type = PRESETS_TYPE_RELATION;
     break;
 
@@ -585,8 +585,8 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
 
   if(ok) {
     if(context.object.is_real()) {
-      osm_tags_free(OBJECT_TAG(context.object));
-      OBJECT_TAG(context.object) = work_copy;
+      osm_tags_free(context.object.obj->tag);
+      context.object.obj->tag = work_copy;
     }
 
     /* since nodes being parts of ways but with no tags are invisible, */

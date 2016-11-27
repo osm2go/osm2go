@@ -413,11 +413,11 @@ void relation_membership_dialog(GtkWidget *parent,
   switch(object.type) {
   case NODE:
     str = g_strdup_printf(_("Relation memberships of node #" ITEM_ID_FORMAT),
-			  OBJECT_ID(object));
+			  object.obj->id);
     break;
   case WAY:
     str = g_strdup_printf(_("Relation memberships of way #" ITEM_ID_FORMAT),
-			  OBJECT_ID(object));
+			  object.obj->id);
     break;
   default:
     g_assert_not_reached();

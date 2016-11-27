@@ -176,16 +176,6 @@ typedef struct way_s way_t;
 typedef std::vector<way_t *> way_chain_t;
 #endif
 
-/* return a pointer to the "base" object of an object */
-#define OBJECT_BASE(a)     ((base_object_t*)((a).ptr))
-#define OBJECT_ID(a)       (OBJECT_BASE(a)->id)
-#define OBJECT_VERSION(a)  (OBJECT_BASE(a)->version)
-#define OBJECT_USER(a)     (OBJECT_BASE(a)->user)
-#define OBJECT_TIME(a)     (OBJECT_BASE(a)->time)
-#define OBJECT_TAG(a)      (OBJECT_BASE(a)->tag)
-#define OBJECT_VISIBLE(a)  (OBJECT_BASE(a)->visible)
-#define OBJECT_FLAGS(a)    (OBJECT_BASE(a)->flags)
-
 #ifdef __cplusplus
 class relation_t;
 #else
@@ -205,12 +195,12 @@ typedef struct object_s {
     way_t *way;
     relation_t *relation;
     item_id_t id;
-    void *ptr;
+    base_object_t *obj;
   };
 
 #ifdef __cplusplus
   inline object_s()
-    : type(ILLEGAL), ptr(0) {}
+    : type(ILLEGAL), obj(0) {}
   explicit inline object_s(node_t *n)
     : type(NODE), node(n) { }
   explicit inline object_s(way_t *w)

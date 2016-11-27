@@ -126,15 +126,15 @@ void diff_save_rel::operator()(const member_t &member)
   switch(member.object.type) {
   case NODE:
     xmlNewProp(node_member, BAD_CAST "type", BAD_CAST "node");
-    g_snprintf(ref, sizeof(ref), ITEM_ID_FORMAT, OBJECT_ID(member.object));
+    g_snprintf(ref, sizeof(ref), ITEM_ID_FORMAT, member.object.obj->id);
     break;
   case WAY:
     xmlNewProp(node_member, BAD_CAST "type", BAD_CAST "way");
-    g_snprintf(ref, sizeof(ref), ITEM_ID_FORMAT, OBJECT_ID(member.object));
+    g_snprintf(ref, sizeof(ref), ITEM_ID_FORMAT, member.object.obj->id);
     break;
   case RELATION:
     xmlNewProp(node_member, BAD_CAST "type", BAD_CAST "relation");
-    g_snprintf(ref, sizeof(ref), ITEM_ID_FORMAT, OBJECT_ID(member.object));
+    g_snprintf(ref, sizeof(ref), ITEM_ID_FORMAT, member.object.obj->id);
     break;
 
     /* XXX_ID's are used if this is a reference to an item not */

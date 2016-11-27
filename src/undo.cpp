@@ -91,7 +91,7 @@ static const char *undo_type_string(const undo_type_t type) {
 static void undo_object_free(osm_t *osm, object_t *obj) {
   printf("free obj %p\n", obj);
 
-  if(obj->ptr) {
+  if(obj->obj) {
     char *msg = obj->object_string();
     printf("   free object %s\n", msg);
     g_free(msg);
@@ -182,13 +182,13 @@ static undo_state_t *undo_append_state(appdata_t *appdata) {
 
 /* copy the base object parts to another object */
 static void undo_object_copy_base(object_t *dst, const object_t &src) {
-  OBJECT_ID(*dst)      = OBJECT_ID(src);
-  OBJECT_VERSION(*dst) = OBJECT_VERSION(src);
-  OBJECT_TIME(*dst)    = OBJECT_TIME(src);
-  OBJECT_USER(*dst)    = OBJECT_USER(src);
-  OBJECT_FLAGS(*dst)   = OBJECT_FLAGS(src);
-  OBJECT_VISIBLE(*dst) = OBJECT_VISIBLE(src);
-  OBJECT_TAG(*dst)     = osm_tags_copy(OBJECT_TAG(src));
+  dst->obj->id      = src.obj->id;
+  dst->obj->version = src.obj->version;
+  dst->obj->time    = src.obj->time;
+  dst->obj->user    = src.obj->user;
+  dst->obj->flags   = src.obj->flags;
+  dst->obj->visible = src.obj->visible;
+  dst->obj->tag     = osm_tags_copy(src.obj->tag);
 }
 
 /* create a local copy of the entire object */
@@ -377,7 +377,7 @@ static void undo_operation_object_restore(appdata_t *appdata, object_t &obj,
   case NODE: {
     /* there must be an "deleted" entry which needs to be */
     /* removed or no entry at all (since a new one has been deleted) */
-    node_t *orig = osm_get_node_by_id(appdata->osm, OBJECT_ID(obj));
+    node_t *orig = osm_get_node_by_id(appdata->osm, obj.obj->id);
     if(orig) {
       g_assert(orig->flags & OSM_FLAG_DELETED);
 
@@ -391,13 +391,13 @@ static void undo_operation_object_restore(appdata_t *appdata, object_t &obj,
     /* then restore old node */
     osm_node_restore(appdata->osm, obj.node);
 
-    obj.ptr = NULL;
+    obj.obj = 0;
   } break;
 
   case WAY: {
     /* there must be an "deleted" entry which needs to be */
     /* removed or no entry at all (since a new one has been deleted) */
-    way_t *orig = osm_get_way_by_id(appdata->osm, OBJECT_ID(obj));
+    way_t *orig = osm_get_way_by_id(appdata->osm, obj.obj->id);
     if(orig) {
       g_assert(orig->flags & OSM_FLAG_DELETED);
 
@@ -408,7 +408,7 @@ static void undo_operation_object_restore(appdata_t *appdata, object_t &obj,
     osm_way_restore(appdata->osm, obj.way, id_chain);
     id_chain.clear();
 
-    obj.ptr = NULL;
+    obj.obj = 0;
   } break;
 
   default:
