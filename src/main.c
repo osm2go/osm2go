@@ -1371,7 +1371,7 @@ static GtkWidget *icon_button(appdata_t *appdata, char *icon, GCallback cb,
 #endif
 
 /* handle pending gtk events, but don't let the user actually do something */
-static void gtk_process_blocking(G_GNUC_UNUSED appdata_t *appdata) {
+static void gtk_process_blocking() {
   while(gtk_events_pending())
     gtk_main_iteration();
 }
@@ -1569,7 +1569,7 @@ int main(int argc, char *argv[]) {
 
   /* let gtk do its thing before loading the data, */
   /* so the user sees something */
-  gtk_process_blocking(&appdata);
+  gtk_process_blocking();
   if(!appdata.window) {
     printf("shutdown while starting up (1)\n");
     cleanup(&appdata);
@@ -1587,7 +1587,7 @@ int main(int argc, char *argv[]) {
     track_enable_gps(&appdata, TRUE);
 
   /* again let the ui do its thing */
-  gtk_process_blocking(&appdata);
+  gtk_process_blocking();
   if(!appdata.window) {
     printf("shutdown while starting up (2)\n");
     cleanup(&appdata);
