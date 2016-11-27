@@ -41,11 +41,10 @@
 struct elemstyle_condition_t {
     xmlChar *key;
     xmlChar *value;
-    struct elemstyle_condition_t *next;
 };
 
 struct elemstyle_t {
-  elemstyle_condition_t *condition;
+  std::vector<elemstyle_condition_t> conditions;
 
   elemstyle_type_t type;
 
@@ -227,17 +226,15 @@ static elemstyle_icon_t *parse_icon(xmlNode *a_node) {
 static elemstyle_t *parse_rule(xmlNode *a_node) {
   xmlNode *cur_node = NULL;
   elemstyle_t *elemstyle = g_new0(elemstyle_t, 1);
-  elemstyle_condition_t **lastcond = &elemstyle->condition;
 
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcasecmp((char*)cur_node->name, "condition") == 0) {
         /* ------ parse condition ------ */
-        elemstyle_condition_t *newcond = g_new0(elemstyle_condition_t, 1);
-        newcond->key   = xmlGetProp(cur_node, BAD_CAST "k");
-        newcond->value = xmlGetProp(cur_node, BAD_CAST "v");
-        *lastcond = newcond;
-        lastcond = &newcond->next;
+        elemstyle_condition_t newcond;
+        newcond.key   = xmlGetProp(cur_node, BAD_CAST "k");
+        newcond.value = xmlGetProp(cur_node, BAD_CAST "v");
+        elemstyle->conditions.push_back(newcond);
 	/* todo: add support for "b" (boolean) value */
       } else if(strcasecmp((char*)cur_node->name, "line") == 0) {
 	/* ------ parse line ------ */
@@ -366,15 +363,14 @@ static void free_icon(elemstyle_icon_t *icon) {
   g_free(icon);
 }
 
+static void free_condition(elemstyle_condition_t cond) {
+  xmlFree(cond.key);
+  xmlFree(cond.value);
+}
+
 static void elemstyle_free(elemstyle_t *elemstyle) {
-  elemstyle_condition_t *cond;
-  for (cond = elemstyle->condition; cond;) {
-    if(cond->key)   xmlFree(cond->key);
-    if(cond->value) xmlFree(cond->value);
-    elemstyle_condition_t *prevcond = cond;
-    cond = cond->next;
-    g_free(prevcond);
-  }
+  std::for_each(elemstyle->conditions.begin(), elemstyle->conditions.end(),
+                free_condition);
 
   switch(elemstyle->type) {
   case ES_TYPE_NONE:
@@ -400,50 +396,66 @@ void josm_elemstyles_free(std::vector<elemstyle_t *> &elemstyles) {
 
 #define WIDTH_SCALE (1.0)
 
+struct condition_not_matches_obj {
+  const base_object_t * const obj;
+  condition_not_matches_obj(const base_object_t *o) : obj(o) {}
+  bool operator()(const elemstyle_condition_t &cond);
+};
+
+bool condition_not_matches_obj::operator()(const elemstyle_condition_t &cond) {
+  if(cond.key) {
+    const char *value = obj->get_value((char*)cond.key);
+    if(!value || (cond.value && strcasecmp(value, (char*)cond.value) != 0))
+      return true;
+  } else if(cond.value) {
+    if(!obj->has_value((char*)cond.value))
+      return true;
+  }
+  return false;
+}
+
+struct colorize_node {
+  const style_t * const style;
+  node_t * const node;
+  bool &somematch;
+  colorize_node(const style_t *s, node_t *n, bool &m) : style(s), node(n), somematch(m) {}
+  void operator()(elemstyle_t *elemstyle);
+};
+
+void colorize_node::operator()(elemstyle_t *elemstyle)
+{
+  // Rule without conditions matches everything (should it?)
+  // For rule with conditions, if any condition mismatches->rule mismatches
+  bool match = std::find_if(elemstyle->conditions.begin(),
+                            elemstyle->conditions.end(),
+                            condition_not_matches_obj(node)) == elemstyle->conditions.end();
+
+  somematch |= match;
+
+  if(match && elemstyle->icon) {
+    char *name = g_strjoin("/", "styles", style->icon.path_prefix,
+                           elemstyle->icon->filename, 0);
+
+    /* free old icon if there's one present */
+    if(node->icon_buf) {
+      icon_free(style->iconP, node->icon_buf);
+      node->icon_buf = NULL;
+    }
+
+    node->icon_buf = icon_load(style->iconP, name);
+    g_free(name);
+
+    if (elemstyle->icon->zoom_max > 0)
+      node->zoom_max = elemstyle->icon->zoom_max;
+  }
+}
+
 void josm_elemstyles_colorize_node(const style_t *style, node_t *node) {
   node->zoom_max = style->node.zoom_max;
 
   bool somematch = false;
-
-  const std::vector<elemstyle_t *>::const_iterator itEnd = style->elemstyles.end();
-  for(std::vector<elemstyle_t *>::const_iterator it = style->elemstyles.begin();
-      it != itEnd; it++) {
-    const elemstyle_t * const elemstyle = *it;
-    // Rule without conditions matches everything (should it?)
-    bool match = (elemstyle->condition != 0);
-
-    // For rule with conditions, if any condition mismatches->rule mismatches
-    elemstyle_condition_t *cond;
-    for (cond = elemstyle->condition; cond && match; cond = cond->next) {
-      if(cond->key) {
-        const char *value = node->get_value((char*)cond->key);
-        if(!value || (cond->value && strcasecmp(value, (char*)cond->value) != 0))
-          match = false;
-      } else if(cond->value) {
-        match = node->has_value((char*)cond->value);
-      }
-    }
-
-    somematch |= match;
-
-    if(match && elemstyle->icon) {
-      char *name = g_strjoin("/", "styles", style->icon.path_prefix,
-				   elemstyle->icon->filename, NULL);
-
-      /* free old icon if there's one present */
-      if(node->icon_buf) {
-	icon_free(style->iconP, node->icon_buf);
-	node->icon_buf = NULL;
-      }
-
-      node->icon_buf = icon_load(style->iconP, name);
-      g_free(name);
-
-      if (elemstyle->icon->zoom_max > 0) {
-        node->zoom_max = elemstyle->icon->zoom_max;
-      }
-    }
-  }
+  colorize_node fc(style, node, somematch);
+  std::for_each(style->elemstyles.begin(), style->elemstyles.end(), fc);
 
   /* clear icon for node if not matched at least one rule and has an icon attached */
   if (!somematch && node->icon_buf) {
@@ -496,7 +508,87 @@ struct josm_elemstyles_colorize_way_functor {
   void operator()(std::pair<item_id_t, way_t *> pair) {
     operator()(pair.second);
   }
+
+  struct apply_condition {
+    const style_t * const style;
+    way_t * const way;
+    /* during the elemstyle search a line_mod may be found. save it here */
+    elemstyle_line_mod_t **line_mod;
+    bool way_processed;
+    bool way_is_closed;
+    apply_condition(const style_t *s, way_t *w, elemstyle_line_mod_t **l)
+      : style(s), way(w), line_mod(l), way_processed(false)
+      , way_is_closed(way->is_closed()) {}
+    void operator()(const elemstyle_t *elemstyle);
+  };
 };
+
+void josm_elemstyles_colorize_way_functor::apply_condition::operator()(const elemstyle_t* elemstyle)
+{
+  bool match = std::find_if(elemstyle->conditions.begin(),
+                            elemstyle->conditions.end(),
+                            condition_not_matches_obj(way)) == elemstyle->conditions.end();
+
+  if(!match)
+    return;
+
+  switch(elemstyle->type) {
+  case ES_TYPE_NONE:
+    /* this entry does not contain line or area descriptions and is */
+    /* likely just an icon. ignore this as it doesn't make much sense */
+    /* for a way */
+    break;
+
+  case ES_TYPE_LINE:
+    if(!way_processed) {
+      way->draw.color = elemstyle->line->color;
+      way->draw.width =  WIDTH_SCALE * elemstyle->line->width;
+      if(elemstyle->line->bg.valid) {
+        way->draw.flags |= OSM_DRAW_FLAG_BG;
+        way->draw.bg.color = elemstyle->line->bg.color;
+        way->draw.bg.width =  WIDTH_SCALE * elemstyle->line->bg.width;
+      }
+      if (elemstyle->line->zoom_max > 0)
+        way->draw.zoom_max = elemstyle->line->zoom_max;
+      else
+        way->draw.zoom_max = style->way.zoom_max;
+
+      way->draw.dashed = elemstyle->line->dashed;
+      way->draw.dash_length = elemstyle->line->dash_length;
+      way_processed = true;
+    }
+    break;
+
+  case ES_TYPE_LINE_MOD:
+    /* just save the fact that a line mod was found for later */
+    *line_mod = elemstyle->line_mod;
+    break;
+
+  case ES_TYPE_AREA:
+    if(way_is_closed && !way_processed) {
+      way->draw.flags |= OSM_DRAW_FLAG_AREA;
+      /* comment the following line for grey border around all areas */
+      /* (potlatch style) */
+
+      if(style->area.has_border_color)
+        way->draw.color = style->area.border_color;
+      else
+        way->draw.color = elemstyle->area->color;
+
+      way->draw.width =  WIDTH_SCALE * style->area.border_width;
+      /* apply area alpha */
+      way->draw.area.color =
+      RGBA_COMBINE(elemstyle->area->color, style->area.color);
+      if (elemstyle->area->zoom_max > 0)
+        way->draw.zoom_max = elemstyle->area->zoom_max;
+      else
+        way->draw.zoom_max = style->area.zoom_max;
+
+      way_processed = true;
+    }
+    break;
+  }
+}
 
 void josm_elemstyles_colorize_way_functor::operator()(way_t *way) {
   /* use dark grey/no stroke/not filled for everything unknown */
@@ -507,91 +599,9 @@ void josm_elemstyles_colorize_way_functor::operator()(way_t *way) {
 
   /* during the elemstyle search a line_mod may be found. save it here */
   elemstyle_line_mod_t *line_mod = NULL;
+  apply_condition fc(style, way, &line_mod);
 
-  bool way_processed = false;
-  bool way_is_closed = way->is_closed();
-
-  const std::vector<elemstyle_t *>::const_iterator itEnd = style->elemstyles.end();
-  for(std::vector<elemstyle_t *>::const_iterator it = style->elemstyles.begin();
-      it != itEnd; it++) {
-    const elemstyle_t * const elemstyle = *it;
-    //  printf("a %s %s\n", elemstyle->condition.key,
-    //                        elemstyle->condition.value);
-
-    bool match = (elemstyle->condition != 0);
-
-    elemstyle_condition_t *cond;
-    for (cond = elemstyle->condition; cond && match; cond = cond->next) {
-      if(cond->key) {
-        const char *value = way->get_value((char*)cond->key);
-        if(!value || (cond->value && strcasecmp(value, (char*)cond->value) != 0))
-          match = false;
-      } else if(cond->value) {
-        match = way->has_value((char*)cond->value);
-      }
-    }
-
-    if(match) {
-      switch(elemstyle->type) {
-      case ES_TYPE_NONE:
-	/* this entry does not contain line or area descriptions and is */
-	/* likely just an icon. ignore this as it doesn't make much sense */
-	/* for a way */
-	break;
-
-      case ES_TYPE_LINE:
-	if(!way_processed) {
-	  way->draw.color = elemstyle->line->color;
-	  way->draw.width =  WIDTH_SCALE * elemstyle->line->width;
-	  if(elemstyle->line->bg.valid) {
-	    way->draw.flags |= OSM_DRAW_FLAG_BG;
-	    way->draw.bg.color = elemstyle->line->bg.color;
-	    way->draw.bg.width =  WIDTH_SCALE * elemstyle->line->bg.width;
-	  }
-	  if (elemstyle->line->zoom_max > 0) {
-	    way->draw.zoom_max = elemstyle->line->zoom_max;
-	  }
-	  else {
-	    way->draw.zoom_max = style->way.zoom_max;
-	  }
-	  way->draw.dashed = elemstyle->line->dashed;
-	  way->draw.dash_length = elemstyle->line->dash_length;
-	  way_processed = true;
-	}
-	break;
-
-      case ES_TYPE_LINE_MOD:
-	/* just save the fact that a line mod was found for later */
-	line_mod = elemstyle->line_mod;
-	break;
-
-      case ES_TYPE_AREA:
-	if(way_is_closed && !way_processed) {
-	  way->draw.flags |= OSM_DRAW_FLAG_AREA;
-	  /* comment the following line for grey border around all areas */
-	  /* (potlatch style) */
-
-	  if(style->area.has_border_color)
-	    way->draw.color = style->area.border_color;
-	  else
-	    way->draw.color = elemstyle->area->color;
-
-	  way->draw.width =  WIDTH_SCALE * style->area.border_width;
-	  /* apply area alpha */
-	  way->draw.area.color =
-	    RGBA_COMBINE(elemstyle->area->color, style->area.color);
-	  if (elemstyle->area->zoom_max > 0) {
-	    way->draw.zoom_max = elemstyle->area->zoom_max;
-	  }
-	  else {
-	    way->draw.zoom_max = style->area.zoom_max;
-	  }
-	  way_processed = true;
-	}
-	break;
-      }
-    }
-  }
+  std::for_each(style->elemstyles.begin(), style->elemstyles.end(), fc);
 
   /* apply the last line mod entry that has been found during search */
   if(line_mod) {
