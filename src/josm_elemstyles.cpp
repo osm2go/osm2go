@@ -416,12 +416,11 @@ void josm_elemstyles_colorize_node(const style_t *style, node_t *node) {
     elemstyle_condition_t *cond;
     for (cond = elemstyle->condition; cond && match; cond = cond->next) {
       if(cond->key) {
-        const char *value = osm_node_get_value(node, (char*)cond->key);
+        const char *value = node->get_value((char*)cond->key);
         if(!value || (cond->value && strcasecmp(value, (char*)cond->value) != 0))
           match = false;
       } else if(cond->value) {
-        if(!osm_node_has_value(node, (char*)cond->value))
-          match = false;
+        match = node->has_value((char*)cond->value);
       }
     }
 
@@ -524,12 +523,11 @@ void josm_elemstyles_colorize_way_functor::operator()(way_t *way) {
     elemstyle_condition_t *cond;
     for (cond = elemstyle->condition; cond && match; cond = cond->next) {
       if(cond->key) {
-        const char *value = osm_way_get_value(way, (char*)cond->key);
+        const char *value = way->get_value((char*)cond->key);
         if(!value || (cond->value && strcasecmp(value, (char*)cond->value) != 0))
           match = false;
       } else if(cond->value) {
-        if(!osm_way_has_value(way, (char*)cond->value))
-          match = false;
+        match = way->has_value((char*)cond->value);
       }
     }
 

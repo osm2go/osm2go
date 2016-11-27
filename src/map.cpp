@@ -632,7 +632,7 @@ void map_node_draw_functor::operator()(node_t *node)
 		 map->style->node.fill_color,
 		 map->style->node.color);
 
-  else if(map->style->node.show_untagged || osm_node_has_tag(node))
+  else if(map->style->node.show_untagged || node->has_tag())
     map_node_new(map, node,
 		 map->style->node.radius * map->state->detail, 0,
 		 map->style->node.color, 0);
@@ -1295,9 +1295,9 @@ void map_way_delete(appdata_t *appdata, way_t *way) {
   map_item_chain_destroy(&way->map_item_chain);
 
   /* and mark it "deleted" in the database */
-  osm_way_remove_from_relation(appdata->osm, way);
+  appdata->osm->remove_from_relations(way);
 
-  osm_way_delete(appdata->osm, way, FALSE);
+  appdata->osm->way_delete(way, false);
 }
 
 static void map_handle_click(appdata_t *appdata, map_t *map) {
@@ -1509,11 +1509,11 @@ static void map_button_release(map_t *map, gint x, gint y) {
     canvas_window2world(map->canvas, x, y, &x, &y);
 
     node_t *node = NULL;
-    if(!osm_position_within_bounds(map->appdata->osm, x, y))
+    if(!map->appdata->osm->position_within_bounds(x, y))
       map_outside_error(map->appdata);
     else {
-      node = osm_node_new(map->appdata->osm, x, y);
-      osm_node_attach(map->appdata->osm, node);
+      node = map->appdata->osm->node_new(x, y);
+      map->appdata->osm->node_attach(node);
       map_node_draw(map, node);
     }
     map_action_set(map->appdata, MAP_ACTION_IDLE);
@@ -2004,8 +2004,8 @@ void map_action_ok(appdata_t *appdata) {
                                       &appdata->osm->bounds->ll_max, &pos)) {
       map_outside_error(appdata);
     } else {
-      node = osm_node_new_pos(appdata->osm, &pos);
-      osm_node_attach(appdata->osm, node);
+      node = appdata->osm->node_new(&pos);
+      appdata->osm->node_attach(node);
       map_node_draw(map, node);
     }
     map_action_set(appdata, MAP_ACTION_IDLE);
@@ -2077,7 +2077,7 @@ void map_delete_selected(appdata_t *appdata) {
 
     /* check if this node is part of a way with two nodes only. */
     /* we cannot delete this as this would also delete the way */
-    const way_chain_t &way_chain = osm_node_to_way(appdata->osm, item.object.node);
+    const way_chain_t &way_chain = appdata->osm->node_to_way(item.object.node);
     if(!way_chain.empty()) {
 
       const way_chain_t::const_iterator it =
@@ -2094,8 +2094,8 @@ void map_delete_selected(appdata_t *appdata) {
     }
 
     /* and mark it "deleted" in the database */
-    osm_node_remove_from_relation(appdata->osm, item.object.node);
-    const way_chain_t &chain = osm_node_delete(appdata->osm,
+    appdata->osm->remove_from_relations(item.object.node);
+    const way_chain_t &chain = appdata->osm->node_delete(
                                         item.object.node, false, true);
     std::for_each(chain.begin(), chain.end(), node_deleted_from_ways(appdata));
 

@@ -324,7 +324,6 @@ void relation_list_insert_functor::operator()(std::pair<item_id_t, relation_t *>
   }
 }
 
-
 static GtkWidget *relation_item_list_widget(relitem_context_t *context) {
 #ifndef FREMANTLE
   context->view = gtk_tree_view_new();
@@ -734,9 +733,9 @@ static void on_relation_add(G_GNUC_UNUSED GtkWidget *button, relation_context_t 
   relation_t *relation = osm_relation_new();
   if(!relation_info_dialog(context->dialog, context->appdata, relation)) {
     printf("tag edit cancelled\n");
-    osm_relation_free(context->appdata->osm, relation);
+    context->appdata->osm->relation_free(relation);
   } else {
-    osm_relation_attach(context->appdata->osm, relation);
+    context->appdata->osm->relation_attach(relation);
 
     /* append a row for the new data */
 
@@ -816,7 +815,7 @@ static void on_relation_remove(G_GNUC_UNUSED GtkWidget *button, relation_context
     gtk_list_store_remove(context->store, &iter);
 
   /* then really delete it */
-  osm_relation_delete(context->appdata->osm, sel, FALSE);
+  context->appdata->osm->relation_delete(sel, false);
 
   relation_list_selected(context, NULL);
 }
@@ -873,8 +872,7 @@ static GtkWidget *relation_list_widget(relation_context_t *context) {
 
   if(context->object) {
     const relation_chain_t &rchain =
-                            osm_object_to_relation(context->appdata->osm,
-                                                   *(context->object));
+                            context->appdata->osm->to_relation(*(context->object));
     std::for_each(rchain.begin(), rchain.end(), fc);
   } else {
     const std::map<item_id_t, relation_t *> &rchain =

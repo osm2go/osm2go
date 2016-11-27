@@ -78,6 +78,10 @@ typedef struct tag_t {
 typedef struct base_object_t {
 #ifdef __cplusplus
   base_object_t();
+
+  const char *get_value(const char *key) const;
+  bool has_tag() const;
+  bool has_value(const char* str) const;
 #endif
 
   item_id_t id;
@@ -292,6 +296,31 @@ struct osm_t {
   std::map<item_id_t, relation_t *> relations;
   std::map<int, std::string> users;   //< users where uid is given in XML
   std::vector<std::string> anonusers; //< users without uid
+
+  node_t *node_by_id(item_id_t id);
+  way_t *way_by_id(item_id_t id);
+  relation_t *relation_by_id(item_id_t id);
+
+  node_t *node_new(gint x, gint y);
+  node_t *node_new(const pos_t *pos);
+  void node_attach(node_t *node);
+  void node_restore(node_t *node);
+  void way_delete(way_t *way, bool permanently);
+  void way_attach(way_t *way);
+  void remove_from_relations(node_t *node);
+  void remove_from_relations(way_t *way);
+  void way_restore(way_t *way, const std::vector<item_id_chain_t> &id_chain);
+  void way_free(way_t *way);
+  void node_free(node_t *node);
+  way_chain_t node_to_way(const node_t *node) const;
+  way_chain_t node_delete(node_t *node, bool permanently, bool affect_ways);
+  void relation_free(relation_t *relation);
+  void relation_attach(relation_t *relation);
+  void relation_delete(relation_t *relation, bool permanently);
+  relation_chain_t to_relation(const way_t *way) const;
+  relation_chain_t to_relation(const object_t &object) const;
+
+  bool position_within_bounds(gint x, gint y) const;
 #endif
 };
 
@@ -299,16 +328,6 @@ osm_t *osm_parse(const char *path, const char *filename, struct icon_t **icons);
 gboolean osm_sanity_check(GtkWidget *parent, const osm_t *osm);
 tag_t *osm_parse_osm_tag(xmlNode* a_node);
 void osm_free(osm_t *osm);
-
-const char *osm_node_get_value(node_t *node, const char *key);
-gboolean osm_node_has_tag(const node_t *node);
-
-void osm_way_free(osm_t *osm, way_t *way);
-const char *osm_way_get_value(way_t *way, const char *key);
-gboolean osm_node_has_value(const node_t* node, const char* str);
-gboolean osm_way_has_value(const way_t* way, const char* str);
-
-void osm_node_free(osm_t *osm, node_t *node);
 
 void osm_tag_free(tag_t *tag);
 void osm_tags_free(tag_t *tag);
@@ -329,37 +348,17 @@ void osm_write_node_chain(xmlNodePtr way_node, const way_t *node_chain);
 char *osm_generate_xml_relation(item_id_t changeset,
                                 const relation_t *relation);
 
-node_t *osm_get_node_by_id(osm_t *osm, item_id_t id);
-way_t *osm_get_way_by_id(osm_t *osm, item_id_t id);
-relation_t *osm_get_relation_by_id(osm_t *osm, item_id_t id);
-
 /* ----------- edit functions ----------- */
-node_t *osm_node_new(osm_t *osm, gint x, gint y);
-node_t *osm_node_new_pos(osm_t *osm, const pos_t *pos);
-void osm_node_attach(osm_t *osm, node_t *node);
-void osm_node_restore(osm_t *osm, node_t *node);
-void osm_way_delete(osm_t *osm, way_t *way, gboolean perm);
-
 way_t *osm_way_new(void);
-void osm_way_attach(osm_t *osm, way_t *way);
 
-gboolean osm_position_within_bounds(const osm_t *osm, gint x, gint y);
 gboolean osm_position_within_bounds_ll(const pos_t *ll_min, const pos_t *ll_max, const pos_t *pos);
-item_id_t osm_new_way_id(osm_t *osm);
 
 guint osm_way_reverse_direction_sensitive_tags(way_t *way);
 guint osm_way_reverse_direction_sensitive_roles(osm_t *osm, way_t *way);
 
-void osm_node_remove_from_relation(osm_t *osm, node_t *node);
-void osm_way_remove_from_relation(osm_t *osm, way_t *way);
-
 tag_t *osm_tags_copy(const tag_t *tag);
 
 relation_t *osm_relation_new(void);
-void osm_relation_free(osm_t *osm, relation_t *relation);
-void osm_relation_attach(osm_t *osm, relation_t *relation);
-void osm_relation_delete(osm_t *osm, relation_t *relation,
-			 gboolean permanently);
 
 #ifdef __cplusplus
 }
@@ -370,12 +369,6 @@ member_t osm_parse_osm_relation_member(osm_t *osm, xmlNode *a_node);
 
 node_t *osm_parse_osm_way_nd(osm_t *osm, xmlNode *a_node);
 void osm_node_chain_free(node_chain_t &node_chain);
-way_chain_t osm_node_to_way(const osm_t *osm, const node_t *node);
-way_chain_t osm_node_delete(osm_t *osm, node_t *node,
-                            bool permanently, bool affect_ways);
-relation_chain_t osm_way_to_relation(osm_t *osm, const way_t *way);
-relation_chain_t osm_object_to_relation(osm_t *osm, const object_t &object);
-void osm_way_restore(osm_t *osm, way_t *way, const std::vector<item_id_chain_t> &id_chain);
 
 void osm_member_free(member_t &member);
 void osm_members_free(std::vector<member_t> &members);

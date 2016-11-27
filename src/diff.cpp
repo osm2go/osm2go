@@ -383,7 +383,7 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
   case OSM_FLAG_DELETED:
     printf("  Restoring DELETE flag\n");
 
-    if((node = osm_get_node_by_id(osm, id)))
+    if((node = osm->node_by_id(id)) != 0)
       node->flags |= OSM_FLAG_DELETED;
     else
       printf("  WARNING: no node with that id found\n");
@@ -392,7 +392,7 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
   case OSM_FLAG_DIRTY:
     printf("  Valid id/position (DIRTY)\n");
 
-    if((node = osm_get_node_by_id(osm, id)))
+    if((node = osm->node_by_id(id)) != 0)
       node->flags |= OSM_FLAG_DIRTY;
     else
       printf("  WARNING: no node with that id found\n");
@@ -472,7 +472,7 @@ static void diff_restore_way(xmlNodePtr node_node, osm_t *osm) {
   case OSM_FLAG_DELETED:
     printf("  Restoring DELETE flag\n");
 
-    if((way = osm_get_way_by_id(osm, id)))
+    if((way = osm->way_by_id(id)) != 0)
       way->flags |= OSM_FLAG_DELETED;
     else
       printf("  WARNING: no way with that id found\n");
@@ -481,7 +481,7 @@ static void diff_restore_way(xmlNodePtr node_node, osm_t *osm) {
   case OSM_FLAG_DIRTY:
     printf("  Valid id (DIRTY)\n");
 
-    if((way = osm_get_way_by_id(osm, id)))
+    if((way = osm->way_by_id(id)) != 0)
       way->flags |= OSM_FLAG_DIRTY;
     else
       printf("  WARNING: no way with that id found\n");
@@ -592,7 +592,7 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
   case OSM_FLAG_DELETED:
     printf("  Restoring DELETE flag\n");
 
-    if((relation = osm_get_relation_by_id(osm, id)))
+    if((relation = osm->relation_by_id(id)) != 0)
       relation->flags |= OSM_FLAG_DELETED;
     else
       printf("  WARNING: no relation with that id found\n");
@@ -601,7 +601,7 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
   case OSM_FLAG_DIRTY:
     printf("  Valid id (DIRTY)\n");
 
-    if((relation = osm_get_relation_by_id(osm, id)))
+    if((relation = osm->relation_by_id(id)) != 0)
       relation->flags |= OSM_FLAG_DIRTY;
     else
       printf("  WARNING: no relation with that id found\n");

@@ -114,15 +114,15 @@ static void undo_object_free(osm_t *osm, object_t *obj) {
 
     switch(obj->type) {
     case NODE:
-      osm_node_free(osm, obj->node);
+      osm->node_free(obj->node);
       break;
 
     case WAY:
-      osm_way_free(osm, obj->way);
+      osm->way_free(obj->way);
       break;
 
     case RELATION:
-      osm_relation_free(osm, obj->relation);
+      osm->relation_free(obj->relation);
       break;
 
     default:
@@ -287,7 +287,7 @@ void undo_append_object(appdata_t *appdata, undo_type_t type,
   /* the modifications */
   if(type == UNDO_DELETE) {
     const relation_chain_t &rchain =
-      osm_object_to_relation(appdata->osm, object);
+      appdata->osm->to_relation(object);
 
     /* store relation modification as undo operation by recursing */
     /* into objects */
@@ -384,19 +384,19 @@ static void undo_operation_object_restore(appdata_t *appdata, object_t &obj,
   case NODE: {
     /* there must be an "deleted" entry which needs to be */
     /* removed or no entry at all (since a new one has been deleted) */
-    node_t *orig = osm_get_node_by_id(appdata->osm, obj.obj->id);
+    node_t *orig = appdata->osm->node_by_id(obj.obj->id);
     if(orig) {
       g_assert(orig->flags & OSM_FLAG_DELETED);
 
       /* permanently remove the node marked as "deleted" */
-      const way_chain_t &wchain = osm_node_delete(appdata->osm, orig, true, true);
+      const way_chain_t &wchain = appdata->osm->node_delete(orig, true, true);
 
       /* the deleted node must not have been part of any way */
       g_assert(wchain.empty());
     }
 
     /* then restore old node */
-    osm_node_restore(appdata->osm, obj.node);
+    appdata->osm->node_restore(obj.node);
 
     obj.obj = 0;
   } break;
@@ -404,15 +404,15 @@ static void undo_operation_object_restore(appdata_t *appdata, object_t &obj,
   case WAY: {
     /* there must be an "deleted" entry which needs to be */
     /* removed or no entry at all (since a new one has been deleted) */
-    way_t *orig = osm_get_way_by_id(appdata->osm, obj.obj->id);
+    way_t *orig = appdata->osm->way_by_id(obj.obj->id);
     if(orig) {
       g_assert(orig->flags & OSM_FLAG_DELETED);
 
       /* permanently remove the way marked as "deleted" */
-      osm_way_delete(appdata->osm, orig, TRUE);
+      appdata->osm->way_delete(orig, true);
     }
 
-    osm_way_restore(appdata->osm, obj.way, id_chain);
+    appdata->osm->way_restore(obj.way, id_chain);
     id_chain.clear();
 
     obj.obj = 0;

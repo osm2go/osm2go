@@ -60,7 +60,7 @@ void relation_transfer::operator()(relation_t* relation)
 
 static void transfer_relations(osm_t *osm, way_t *dst, way_t *src) {
   /* transfer relation memberships from the src way to the dst one */
-  const relation_chain_t &rchain = osm_way_to_relation(osm, src);
+  const relation_chain_t &rchain = osm->to_relation(src);
   std::for_each(rchain.begin(), rchain.end(), relation_transfer(dst, src));
 }
 
@@ -146,7 +146,7 @@ void map_edit_way_add_segment(map_t *map, gint x, gint y) {
 
       /* check whether this node is first or last one of a different way */
       way_t *touch_way = NULL;
-      const way_chain_t &way_chain = osm_node_to_way(map->appdata->osm, node);
+      const way_chain_t &way_chain = map->appdata->osm->node_to_way(node);
       const way_chain_t::const_iterator it =
         std::find_if(way_chain.begin(), way_chain.end(), check_first_last_node(node));
       if(it != way_chain.end())
@@ -177,10 +177,10 @@ void map_edit_way_add_segment(map_t *map, gint x, gint y) {
       /* a new node */
       map->action.ends_on = NULL;
 
-      if(!osm_position_within_bounds(map->appdata->osm, x, y))
+      if(!map->appdata->osm->position_within_bounds(x, y))
 	map_outside_error(map->appdata);
       else
-	node = osm_node_new(map->appdata->osm, x, y);
+	node = map->appdata->osm->node_new(x, y);
     }
 
     if(node) {
@@ -223,7 +223,7 @@ void map_unref_ways::operator()(node_t* node)
   node->ways--;
   if(!node->ways && (node->id == ID_ILLEGAL)) {
     printf("      -> freeing temp node\n");
-    osm_node_free(osm, node);
+    osm->node_free(node);
   }
 }
 
@@ -243,7 +243,7 @@ void map_edit_way_add_cancel(map_t *map) {
   /* remove ways visual representation */
   map_item_chain_destroy(&map->action.way->map_item_chain);
 
-  osm_way_free(osm, map->action.way);
+  osm->way_free(map->action.way);
   map->action.way = NULL;
 }
 
@@ -300,7 +300,7 @@ void map_draw_nodes::operator()(node_t* node)
   /* the ways chain) because it gets assigned a non-ID_ILLEGAL id when */
   /* being moved to the osm node chain */
   if(node->id == ID_ILLEGAL)
-    osm_node_attach(map->appdata->osm, node);
+    map->appdata->osm->node_attach(node);
 }
 
 void map_edit_way_add_ok(map_t *map) {
@@ -336,13 +336,13 @@ void map_edit_way_add_ok(map_t *map) {
 
     /* erase and free new way (now only containing the first node anymore) */
     map_item_chain_destroy(&map->action.way->map_item_chain);
-    osm_way_free(osm, map->action.way);
+    osm->way_free(map->action.way);
 
     map->action.way = map->action.extending;
     map->action.way->flags |= OSM_FLAG_DIRTY;
   } else {
     /* now move the way itself into the main data structure */
-    osm_way_attach(map->appdata->osm, map->action.way);
+    map->appdata->osm->way_attach(map->action.way);
   }
 
   /* we might already be working on the "ends_on" way as we may */
@@ -436,8 +436,8 @@ void map_edit_way_node_add(map_t *map, gint x, gint y) {
     gint insert_after = canvas_item_get_segment(item->item, x, y)+1;
     if(insert_after > 0) {
       /* create new node */
-      node_t* node = osm_node_new(map->appdata->osm, x, y);
-      osm_node_attach(map->appdata->osm, node);
+      node_t* node = map->appdata->osm->node_new(x, y);
+      map->appdata->osm->node_attach(node);
 
       /* insert it into ways chain of nodes */
       way_t *way = item->object.way;
@@ -570,7 +570,7 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
       way->node_chain.erase(cut_at, way->node_chain.end());
 
       /* now move the way itself into the main data structure */
-      osm_way_attach(map->appdata->osm, neww);
+      map->appdata->osm->way_attach(neww);
 
       /* clear selection */
       map_item_deselect(map->appdata);
@@ -768,8 +768,8 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
       map_item_chain_destroy(&touchnode->map_item_chain);
 
       /* and remove it from the data structures */
-      osm_node_remove_from_relation(appdata->osm, touchnode);
-      osm_node_delete(appdata->osm, touchnode, false, true);
+      appdata->osm->remove_from_relations(touchnode);
+      appdata->osm->node_delete(touchnode, false, true);
 
       /* and open dialog to resolve tag collisions if necessary */
       if(conflict)
@@ -852,7 +852,7 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 
 	  /* ---- transfer relation membership from way[1] to way[0] ----- */
           const relation_chain_t &rchain =
-	    osm_way_to_relation(appdata->osm, ways2join[1]);
+	    appdata->osm->to_relation(ways2join[1]);
           const relation_chain_t::const_iterator itEnd = rchain.end();
 
 	  std::for_each(rchain.begin(), rchain.end(), member_merge(ways2join[0]));
@@ -879,7 +879,7 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
     /* convert mouse position to canvas (world) position */
     gint x, y;
     canvas_window2world(map->canvas, ex, ey, &x, &y);
-    if(!osm_position_within_bounds(appdata->osm, x, y)) {
+    if(!appdata->osm->position_within_bounds(x, y)) {
       map_outside_error(appdata);
       return;
     }
