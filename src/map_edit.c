@@ -862,11 +862,11 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 	  OSM_TAG(ways2join[1]) = NULL;
 
 	  /* ---- transfer relation membership from way[1] to way[0] ----- */
-	  GSList *rchain, *rchain0 =
+	  GSList *rchain =
 	    osm_way_to_relation(appdata->osm, ways2join[1]);
 
           g_slist_foreach(rchain, (GFunc)member_merge_operator, ways2join[0]);
-	  g_slist_free(rchain0);
+	  g_slist_free(rchain);
 
 	  /* and open dialog to resolve tag collisions if necessary */
 	  if(conflict)

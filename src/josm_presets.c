@@ -833,7 +833,7 @@ static GtkWidget *build_menu(presets_context_t *context,
 
   for(; item; item = item->next) {
     /* check if this presets entry is appropriate for the current item */
-    if(item->type & context->tag_context->presets_type) {
+    if(item->type & context->tag_context->presets_type && item->name) {
       GtkWidget *menu_item;
 
       /* Show a separator if one was requested, but not if there was no item
@@ -843,32 +843,30 @@ static GtkWidget *build_menu(presets_context_t *context,
       was_item = TRUE;
       was_separator = FALSE;
 
-      if(item->name) {
-	menu_item = create_menuitem(context, item);
+      menu_item = create_menuitem(context, item);
 
-	if(item->is_group)
-	  gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item),
-				    build_menu(context, item->group, matches));
-	else {
-	  g_object_set_data(G_OBJECT(menu_item), "item", item);
-	  g_signal_connect(menu_item, "activate",
-			   GTK_SIGNAL_FUNC(cb_menu_item), context);
+      if(item->is_group) {
+        gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item),
+                                  build_menu(context, item->group, matches));
+      } else {
+        g_object_set_data(G_OBJECT(menu_item), "item", item);
+        g_signal_connect(menu_item, "activate",
+                         GTK_SIGNAL_FUNC(cb_menu_item), context);
 
-	  if(preset_is_used(item, context)) {
-	    if(!*matches)
-	      *matches = gtk_menu_new();
+        if(preset_is_used(item, context)) {
+          if(!*matches)
+            *matches = gtk_menu_new();
 
-	    GtkWidget *used_item = create_menuitem(context, item);
-	    g_object_set_data(G_OBJECT(used_item), "item", item);
-	    g_signal_connect(used_item, "activate",
-	                     GTK_SIGNAL_FUNC(cb_menu_item), context);
-	    gtk_menu_shell_append(GTK_MENU_SHELL(*matches), used_item);
-	  }
-	}
+          GtkWidget *used_item = create_menuitem(context, item);
+          g_object_set_data(G_OBJECT(used_item), "item", item);
+          g_signal_connect(used_item, "activate",
+                           GTK_SIGNAL_FUNC(cb_menu_item), context);
+          gtk_menu_shell_append(GTK_MENU_SHELL(*matches), used_item);
+        }
       }
 
       gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);
-    } else
+    } else if(!item->name)
       /* Record that there was a separator. Do not immediately add it here to
        * prevent to show one as last entry. */
       was_separator = TRUE;
