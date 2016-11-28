@@ -444,15 +444,7 @@ static void diff_restore_way(xmlNodePtr node_node, osm_t *osm) {
   int state = xml_get_prop_state(node_node);
 
   /* handle hidden flag */
-  gboolean hidden = FALSE;
-  xmlChar *str = xmlGetProp(node_node, BAD_CAST "hidden");
-  if(str) {
-    if(strcasecmp((char*)str, "true") == 0)
-      hidden = TRUE;
-
-    xmlFree(str);
-  }
-
+  gboolean hidden = xml_get_prop_is(node_node, "hidden", "true");
 
   /* evaluate properties */
   way_t *way = NULL;

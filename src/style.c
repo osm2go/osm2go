@@ -31,21 +31,12 @@
 #error "libxml doesn't support required tree or output"
 #endif
 
-static void xml_get_prop_float(xmlNode *node, const char *prop, float *value) {
-  xmlChar *str = xmlGetProp(node, BAD_CAST prop);
-  if(str) {
-    *value = g_ascii_strtod((gchar*)str, NULL);
-    xmlFree(str);
-  }
-}
-
-static gboolean xml_prop_is(xmlNode *node, const char *prop, const char *str) {
-  xmlChar *prop_str = xmlGetProp(node, BAD_CAST prop);
-  if(!prop_str) return FALSE;
-
-  gboolean match = (strcasecmp((char*)prop_str, str) == 0);
-  xmlFree(prop_str);
-  return match;
+static float parse_scale_max(xmlNodePtr cur_node) {
+  float scale_max = xml_get_prop_float(cur_node, "scale-max");
+  if (!isnan(scale_max))
+    return scaledn_to_zoom(scale_max);
+  else
+    return 0.0f;
 }
 
 static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t *style) {
@@ -99,43 +90,32 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t *style) {
       } else if(strcasecmp((char*)cur_node->name, "node") == 0) {
 	parse_color(cur_node, "color", &style->node.color);
 	parse_color(cur_node, "fill-color", &style->node.fill_color);
-	xml_get_prop_float(cur_node, "radius", &style->node.radius);
-	xml_get_prop_float(cur_node, "border-radius",
-			   &style->node.border_radius);
-        float scale_max = 0;
-	xml_get_prop_float(cur_node, "scale-max", &scale_max);
-	if (scale_max > 0)
-	  style->node.zoom_max = scaledn_to_zoom(scale_max);
-	else
-	  style->node.zoom_max = 0;
+        style->node.radius = xml_get_prop_float(cur_node, "radius");
+        style->node.border_radius = xml_get_prop_float(cur_node, "border-radius");
+        style->node.zoom_max = parse_scale_max(cur_node);
 
 	style->node.show_untagged =
-	  xml_prop_is(cur_node, "show-untagged", "true");
+	  xml_get_prop_is(cur_node, "show-untagged", "true");
 
 	/* ---------- icon ------------------------------------- */
       } else if(strcasecmp((char*)cur_node->name, "icon") == 0) {
-	xml_get_prop_float(cur_node, "scale", &style->icon.scale);
+        style->icon.scale = xml_get_prop_float(cur_node, "scale");
 	char *prefix = (char*)xmlGetProp(cur_node, BAD_CAST "path-prefix");
 	if(prefix) {
 	  g_free(style->icon.path_prefix);
 	  style->icon.path_prefix = prefix;
 	}
-	style->icon.enable = xml_prop_is(cur_node, "enable", "true");
+	style->icon.enable = xml_get_prop_is(cur_node, "enable", "true");
 
 	/* ---------- way ------------------------------------- */
       } else if(strcasecmp((char*)cur_node->name, "way") == 0) {
 	parse_color(cur_node, "color", &style->way.color);
-	xml_get_prop_float(cur_node, "width", &style->way.width);
-	float scale_max = 0;
-	xml_get_prop_float(cur_node, "scale-max", &scale_max);
-	if (scale_max > 0)
-	  style->way.zoom_max = scaledn_to_zoom(scale_max);
-	else
-	  style->way.zoom_max = 0;
+        style->way.width = xml_get_prop_float(cur_node, "width");
+        style->way.zoom_max = parse_scale_max(cur_node);
 
 	/* ---------- frisket --------------------------------- */
       } else if(strcasecmp((char*)cur_node->name, "frisket") == 0) {
-	xml_get_prop_float(cur_node, "mult", &style->frisket.mult);
+        style->frisket.mult = xml_get_prop_float(cur_node, "mult");
 	parse_color(cur_node, "color", &style->frisket.color);
 	style->frisket.border.present = FALSE;
 
@@ -143,8 +123,7 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t *style) {
 	  if(sub_node->type == XML_ELEMENT_NODE) {
 	    if(strcasecmp((char*)sub_node->name, "border") == 0) {
 	      style->frisket.border.present = TRUE;
-	      xml_get_prop_float(sub_node, "width",
-				 &style->frisket.border.width);
+              style->frisket.border.width = xml_get_prop_float(sub_node, "width");
 
 	      parse_color(sub_node, "color", &style->frisket.border.color);
 	    }
@@ -157,27 +136,21 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t *style) {
 	parse_color(cur_node, "node-color", &style->highlight.node_color);
 	parse_color(cur_node, "touch-color", &style->highlight.touch_color);
 	parse_color(cur_node, "arrow-color", &style->highlight.arrow_color);
-	xml_get_prop_float(cur_node, "width", &style->highlight.width);
-	xml_get_prop_float(cur_node, "arrow-limit",
-			   &style->highlight.arrow_limit);
+        style->highlight.width = xml_get_prop_float(cur_node, "width");
+        style->highlight.arrow_limit = xml_get_prop_float(cur_node, "arrow-limit");
 
 	/* ---------- track ------------------------------------ */
       } else if(strcasecmp((char*)cur_node->name, "track") == 0) {
 	parse_color(cur_node, "color", &style->track.color);
 	parse_color(cur_node, "gps-color", &style->track.gps_color);
-	xml_get_prop_float(cur_node, "width", &style->track.width);
+        style->track.width = xml_get_prop_float(cur_node, "width");
 
 	/* ---------- area ------------------------------------- */
       } else if(strcasecmp((char*)cur_node->name, "area") == 0) {
 	style->area.has_border_color =
 	  parse_color(cur_node, "border-color", &style->area.border_color);
-	xml_get_prop_float(cur_node,"border-width", &style->area.border_width);
-	float scale_max = 0;
-	xml_get_prop_float(cur_node, "scale-max", &scale_max);
-	if (scale_max > 0)
-	  style->area.zoom_max = scaledn_to_zoom(scale_max);
-	else
-	  style->area.zoom_max = 0;
+        style->area.border_width = xml_get_prop_float(cur_node,"border-width");
+        style->area.zoom_max = parse_scale_max(cur_node);
 
 	parse_color(cur_node, "color", &style->area.color);
 

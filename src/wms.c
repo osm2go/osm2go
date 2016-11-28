@@ -86,15 +86,6 @@ gboolean xmlTextIs(xmlDocPtr doc, xmlNodePtr list, char *str) {
   return match;
 }
 
-gboolean xmlPropIs(xmlNode *node, char *prop, char *str) {
-  char *prop_str = (char*)xmlGetProp(node, BAD_CAST prop);
-  if(!prop_str) return FALSE;
-
-  gboolean match = (strcmp(prop_str, str) == 0);
-  xmlFree(prop_str);
-  return match;
-}
-
 float xmlGetPropFloat(xmlNode *node, char *prop) {
   char *prop_str = (char*)xmlGetProp(node, BAD_CAST prop);
   if(!prop_str) return NAN;

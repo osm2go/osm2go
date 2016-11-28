@@ -212,11 +212,7 @@ static elemstyle_area_t *parse_area(xmlNode *a_node) {
 static elemstyle_icon_t *parse_icon(xmlNode *a_node) {
   elemstyle_icon_t *icon = g_new0(elemstyle_icon_t, 1);
 
-  xmlChar *annotate = xmlGetProp(a_node, BAD_CAST "annotate");
-  if(annotate) {
-    icon->annotate = (strcasecmp((const char*)annotate, "true")==0);
-    xmlFree(annotate);
-  }
+  icon->annotate = xml_get_prop_is(a_node, "annotate", "true");
 
   icon->filename = (char*)xmlGetProp(a_node, BAD_CAST "src");
   g_assert(icon->filename);

@@ -38,6 +38,29 @@
 #endif
 #endif
 
+#include <glib.h>
+#include <string.h>
+
+float xml_get_prop_float(xmlNode *node, const char *prop) {
+  xmlChar *str = xmlGetProp(node, BAD_CAST prop);
+  float value = NAN;
+  if(str) {
+    value = g_ascii_strtod((gchar*)str, NULL);
+    xmlFree(str);
+  }
+  return value;
+}
+
+gboolean xml_get_prop_is(xmlNode *node, const char *prop, const char *str) {
+  xmlChar *prop_str = xmlGetProp(node, BAD_CAST prop);
+  if(!prop_str) return FALSE;
+
+  gboolean match = (strcasecmp((char*)prop_str, str) == 0);
+  xmlFree(prop_str);
+  return match;
+}
+
+
 static void vmessagef(GtkWidget *parent, GtkMessageType type, GtkButtonsType buttons,
 		      char *title, const char *fmt,
 		      va_list args) {

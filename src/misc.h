@@ -21,6 +21,7 @@
 #define MISC_H
 
 #include <gtk/gtk.h>
+#include <libxml/tree.h>
 
 #define MISC_AGAIN_ID_DELETE           (1<<0)
 #define MISC_AGAIN_ID_JOIN_NODES       (1<<1)
@@ -44,6 +45,13 @@ typedef struct file_chain_s {
 /* able to delete anything again */
 #define MISC_AGAIN_FLAG_DONT_SAVE_NO  (1<<0)
 #define MISC_AGAIN_FLAG_DONT_SAVE_YES (1<<1)
+
+#ifndef NAN
+#define NAN (0.0/0.0)
+#endif
+
+float xml_get_prop_float(xmlNode *node, const char *prop);
+gboolean xml_get_prop_is(xmlNode *node, const char *prop, const char *str);
 
 struct appdata_s;
 

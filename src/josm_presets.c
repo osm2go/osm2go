@@ -99,16 +99,6 @@ static void on_info(GtkWidget *widget, gpointer context) {
 
 /* --------------------- presets.xml parsing ----------------------- */
 
-static gboolean xmlGetPropIs(xmlNode *node, const char *prop, const char *is) {
-  xmlChar *prop_str = xmlGetProp(node, BAD_CAST prop);
-  if(!prop_str) return FALSE;
-
-  gboolean retval = FALSE;
-  retval = (strcasecmp((const char*)prop_str, is) == 0);
-  xmlFree(prop_str);
-  return retval;
-}
-
 char *josm_icon_name_adjust(char *name) {
   if(!name) return NULL;
 
@@ -230,7 +220,7 @@ static presets_widget_t **parse_widgets(xmlNode *a_node,
 	(*widget)->type = WIDGET_TYPE_CHECK;
 	(*widget)->text = xmlGetProp(cur_node, BAD_CAST "text");
 	(*widget)->key = xmlGetProp(cur_node, BAD_CAST "key");
-	(*widget)->check_w.def = xmlGetPropIs(cur_node, "default", "on");
+	(*widget)->check_w.def = xml_get_prop_is(cur_node, "default", "on");
 	widget = &((*widget)->next);
 
       }
