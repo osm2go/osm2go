@@ -5,7 +5,7 @@ compiler:
   - clang
 env:
   global:
-    - CMAKE_VERSION=3.7.0
+    - CMAKE_VERSION=3.7.1
 addons:
   apt:
     packages:
