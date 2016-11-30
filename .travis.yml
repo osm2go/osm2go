@@ -22,4 +22,4 @@ script:
   - mkdir build-am build-cm
   - autoreconf -fi && pushd build-am && ../configure && make && popd
   - pushd build-cm
-  - cmake .. && make VERBOSE=1
+  - cmake -D ENABLE_TESTS=On .. && make VERBOSE=1 && make test
