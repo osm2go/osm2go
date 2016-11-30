@@ -19,3 +19,14 @@ target_link_libraries(track_load_save
 )
 
 add_test(NAME track_load_save COMMAND track_load_save "${CMAKE_CURRENT_SOURCE_DIR}/" "test1" "${CMAKE_CURRENT_BINARY_DIR}/export.gpx")
+
+add_executable(presets_load presets_load.c)
+target_link_libraries(presets_load
+	osm2go_lib
+	${CURL_LIBRARIES}
+	${LIBXML2_LIBRARIES}
+	PkgConfig::GooCanvas
+	${MORE_LIBS}
+)
+
+add_test(NAME presets_load COMMAND presets_load WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../data)
