@@ -6,9 +6,15 @@
 
 int main(int argc, char **argv)
 {
-  presets_item_t * const presets = josm_presets_load();
+  presets_item_t *presets;
+
+  xmlInitParser();
+
+  presets = josm_presets_load();
   if(!presets)
-    return -1;  
+    return -1;
+
   josm_presets_free(presets);
+  xmlCleanupParser();
   return 0;
 }
