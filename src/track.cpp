@@ -429,23 +429,24 @@ gboolean track_restore(appdata_t *appdata) {
 
   /* first try to open a backup which is only present if saving the */
   /* actual diff didn't succeed */
-  gchar *trk_name = g_strconcat(project->path, "backup.trk", NULL);
-  if(g_file_test(trk_name, G_FILE_TEST_EXISTS)) {
+  std::string trk_name = project->path;
+  const std::string::size_type plen = trk_name.size();
+  trk_name += "backup.trk";
+  if(g_file_test(trk_name.c_str(), G_FILE_TEST_EXISTS)) {
     printf("track backup present, loading it instead of real track ...\n");
   } else {
-    g_free(trk_name);
-    trk_name = g_strconcat(project->path, project->name, ".trk", NULL);
+    trk_name.erase(plen, std::string::npos);
+    trk_name += project->name;
+    trk_name += ".trk";
 
-    if(!g_file_test(trk_name, G_FILE_TEST_EXISTS)) {
+    if(!g_file_test(trk_name.c_str(), G_FILE_TEST_EXISTS)) {
       printf("no track present!\n");
-      g_free(trk_name);
       return FALSE;
     }
     printf("track found, loading ...\n");
   }
 
-  appdata->track.track = track_read(trk_name, FALSE);
-  g_free(trk_name);
+  appdata->track.track = track_read(trk_name.c_str(), FALSE);
 
   track_menu_set(appdata);
 
