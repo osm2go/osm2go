@@ -161,12 +161,11 @@ static track_seg_t *track_parse_trkseg(xmlNode *a_node, gint *points, gint *segs
   return ret;
 }
 
-static track_t *track_parse_trk(xmlNode *a_node, gint *points, gint *segs) {
-  track_t *track = g_new0(track_t, 1);
+static track_t *track_parse_trk(xmlNode *a_node, gint *points, gint *segs, track_t *track) {
   xmlNode *cur_node;
-  *points = 0;
-  *segs = 0;
   track_seg_t **last = &track->track_seg;
+  while (*last)
+    last = &((*last)->next);
 
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
@@ -184,15 +183,16 @@ static track_t *track_parse_trk(xmlNode *a_node, gint *points, gint *segs) {
 
 static track_t *track_parse_gpx(xmlNode *a_node, gint *points, gint *segs) {
   track_t *track = NULL;
+  *points = 0;
+  *segs = 0;
   xmlNode *cur_node;
 
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcasecmp((char*)cur_node->name, "trk") == 0) {
 	if(!track)
-	  track = track_parse_trk(cur_node, points, segs);
-	else
-	  printf("ignoring additional track\n");
+          track = g_new0(track_t, 1);
+        track_parse_trk(cur_node, points, segs, track);
       } else
 	printf("found unhandled gpx/%s\n", cur_node->name);
     }
