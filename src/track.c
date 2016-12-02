@@ -333,7 +333,7 @@ static void track_save_segs(const track_seg_t *seg, xmlNodePtr node) {
  *
  * doc is freed.
  */
-static void track_write(const char *name, track_t *track, xmlDoc *doc) {
+static void track_write(const char *name, const track_t *track, xmlDoc *doc) {
   printf("writing track to %s\n", name);
 
   xmlNodePtr trk_node;
@@ -399,8 +399,6 @@ static void track_write(const char *name, track_t *track, xmlDoc *doc) {
 
   xmlSaveFormatFileEnc(name, doc, "UTF-8", 1);
   xmlFreeDoc(doc);
-
-  track->dirty = FALSE;
 }
 
 /* save track in project */
@@ -434,6 +432,7 @@ void track_save(project_t *project, track_t *track) {
   }
 
   track_write(trk_name, track, doc);
+  track->dirty = FALSE;
 
   /* if we reach this point writing the new file worked and we */
   /* can delete the backup */
