@@ -36,8 +36,10 @@
 #include "track.h"
 
 /* make menu represent the track state */
-static void track_menu_set(appdata_t *appdata, gboolean present) {
+void track_menu_set(appdata_t *appdata) {
   if(!appdata->window) return;
+
+  gboolean present = (appdata->track.track != NULL);
 
   /* if a track is present, then it can be cleared or exported */
   gtk_widget_set_sensitive(appdata->track.menu_item_track_clear, present);
@@ -272,8 +274,12 @@ void track_clear(appdata_t *appdata) {
     map_track_remove(appdata);
 
   appdata->track.track = NULL;
-  track_menu_set(appdata, FALSE);
+  track_menu_set(appdata);
 
+  track_delete(track);
+}
+
+void track_delete(track_t *track) {
   track_seg_t *seg = track->track_seg;
   while(seg) {
     track_seg_t *next = seg->next;
@@ -442,15 +448,13 @@ void track_save(project_t *project, track_t *track) {
   g_free(backup);
 }
 
-void track_export(appdata_t *appdata, const char *filename) {
-  g_assert(appdata->track.track);
-  track_write(filename, appdata->track.track, NULL);
+void track_export(const track_t *track, const char *filename) {
+  track_write(filename, track, NULL);
 }
 
 /* ----------------------  loading track --------------------------- */
 
-track_t *track_restore(appdata_t *appdata) {
-  track_t *track = NULL;
+gboolean track_restore(appdata_t *appdata) {
   const project_t *project = appdata->project;
 
   /* first try to open a backup which is only present if saving the */
@@ -465,19 +469,19 @@ track_t *track_restore(appdata_t *appdata) {
     if(!g_file_test(trk_name, G_FILE_TEST_EXISTS)) {
       printf("no track present!\n");
       g_free(trk_name);
-      return NULL;
+      return FALSE;
     }
     printf("track found, loading ...\n");
   }
 
-  track = track_read(trk_name, FALSE);
+  appdata->track.track = track_read(trk_name, FALSE);
   g_free(trk_name);
 
-  track_menu_set(appdata, track != NULL);
+  track_menu_set(appdata);
 
   printf("restored track\n");
 
-  return track;
+  return TRUE;
 }
 
 static void track_end_segment(track_t *track) {
@@ -503,13 +507,13 @@ static void track_end_segment(track_t *track) {
 static gboolean track_append_position(appdata_t *appdata, const pos_t *pos, float alt, const lpos_t *lpos) {
   track_t *track = appdata->track.track;
 
-  track_menu_set(appdata, TRUE);
-
   /* no track at all? might be due to a "clear track" while running */
   if(!track) {
     printf("restarting after \"clear\"\n");
     track = appdata->track.track = g_new0(track_t, 1);
   }
+
+  track_menu_set(appdata);
 
   if(!track->cur_seg) {
     printf("starting new segment\n");
@@ -648,21 +652,10 @@ void track_enable_gps(appdata_t *appdata, gboolean enable) {
   else       track_do_disable_gps(appdata);
 }
 
-track_t *track_import(appdata_t *appdata, const char *name) {
+track_t *track_import(const char *name) {
   printf("import %s\n", name);
 
-  /* remove any existing track */
-  if(appdata->track.track) {
-    track_clear(appdata);
-  }
-
-  track_t *track = track_read(name, TRUE);
-  track_menu_set(appdata, track != NULL);
-
-  if(track)
-    map_track_draw(appdata->map, track);
-
-  return track;
+  return track_read(name, TRUE);
 }
 
 // vim:et:ts=8:sw=2:sts=2:ai

@@ -1,4 +1,3 @@
-#include <appdata.h>
 #include <track.h>
 
 #include <errno.h>
@@ -7,25 +6,17 @@
 
 int main(int argc, char **argv)
 {
-  appdata_t appdata;
-  project_t project;
-
   if(argc != 4)
     return EINVAL;
 
-  memset(&appdata, 0, sizeof(appdata));
-  memset(&project, 0, sizeof(project));
-  appdata.project = &project;
-  project.path = argv[1];
-  project.name = argv[2];
-
-  appdata.track.track = track_restore(&appdata);
-
-  track_export(&appdata, argv[3]);
-
-  track_clear(&appdata);
-
   gchar *fn = g_strconcat(argv[1], argv[2], ".trk", NULL);
+
+  track_t *track = track_import(fn);
+
+  track_export(track, argv[3]);
+
+  track_delete(track);
+
   GMappedFile *ogpx = g_mapped_file_new(fn, FALSE, NULL);
   g_free(fn);
   GMappedFile *ngpx = g_mapped_file_new(argv[3], FALSE, NULL);

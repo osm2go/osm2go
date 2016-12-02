@@ -1460,8 +1460,7 @@ gboolean project_load(appdata_t *appdata, const char *name) {
   if(!appdata->window) goto fail;
 
   track_clear(appdata);
-  appdata->track.track = track_restore(appdata);
-  if(appdata->track.track)
+  if(track_restore(appdata))
     map_track_draw(appdata->map, appdata->track.track);
 
   /* finally load a background if present */

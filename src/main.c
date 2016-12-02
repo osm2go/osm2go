@@ -381,15 +381,22 @@ cb_menu_track_import(G_GNUC_UNUSED GtkMenuItem *item, appdata_t *appdata) {
 
   gtk_widget_show_all (GTK_WIDGET(dialog));
   if (gtk_dialog_run (GTK_DIALOG(dialog)) == GTK_FM_OK) {
-    char *filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+    gchar *filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+
+    /* remove any existing track */
+    if(appdata->track.track)
+      track_clear(appdata);
 
     /* load a track */
-    appdata->track.track = track_import(appdata, filename);
+    appdata->track.track = track_import(filename);
     if(appdata->track.track) {
+      map_track_draw(appdata->map, appdata->track.track);
+
       g_free(appdata->settings->track_path);
       appdata->settings->track_path = g_strdup(filename);
     }
-    g_free (filename);
+    track_menu_set(appdata);
+    g_free(filename);
   }
 
   gtk_widget_destroy (dialog);
@@ -462,7 +469,8 @@ cb_menu_track_export(G_GNUC_UNUSED GtkMenuItem *item, appdata_t *appdata) {
 	g_free(appdata->settings->track_path);
 	appdata->settings->track_path = g_strdup(filename);
 
-	track_export(appdata, filename);
+        g_assert(appdata->track.track);
+        track_export(appdata->track.track, filename);
       }
     }
   }

@@ -59,12 +59,30 @@ gboolean track_is_empty(const track_seg_t *seg);
 
 /* used internally to save and restore the currently displayed track */
 void track_save(project_t *project, track_t *track);
-track_t *track_restore(appdata_t *appdata);
+/**
+ * @brief restore the track of the current project
+ * @param appdata global appdata object
+ * @return if a track was loaded
+ */
+gboolean track_restore(appdata_t *appdata);
+
+/**
+ * @brief free the track
+ * @param track the track instance to remove
+ */
+void track_delete(track_t *track);
 
 /* accessible via the menu */
 void track_clear(appdata_t *appdata);
-void track_export(appdata_t *appdata, const char *filename);
-track_t *track_import(appdata_t *appdata, const char *filename);
+void track_export(const track_t *track, const char *filename);
+track_t *track_import(const char *filename);
+/**
+ * @brief set enable state of "track export" and "track clear" menu entries
+ * @param appdata global appdata object
+ *
+ * The state will be set depending on appdata->track.track presence.
+ */
+void track_menu_set(appdata_t *appdata);
 
 void track_enable_gps(appdata_t *appdata, gboolean enable);
 
