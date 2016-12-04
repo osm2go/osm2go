@@ -159,9 +159,11 @@ void map_delete_selected(appdata_t *appdata);
 
 /* track stuff */
 void map_track_draw(map_t *map, struct track_t *track);
+#ifdef __cplusplus
 struct track_seg_t;
-void map_track_draw_seg(map_t *map, struct track_seg_t *seg);
-void map_track_update_seg(map_t *map, struct track_seg_t *seg);
+void map_track_draw_seg(map_t *map, track_seg_t &seg);
+void map_track_update_seg(map_t *map, track_seg_t &seg);
+#endif
 void map_track_remove(appdata_t *appdata);
 void map_track_pos(appdata_t *appdata, const lpos_t *lpos);
 void map_track_remove_pos(appdata_t *appdata);

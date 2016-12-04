@@ -38,10 +38,12 @@ struct track_seg_t {
   track_seg_t() : track_point(0) {}
   track_point_t *track_point;
   std::vector<canvas_item_t *> item_chain;
+
+  bool is_empty() const;
 };
 
 struct track_t {
-  std::vector<track_seg_t *> segments;
+  std::vector<track_seg_t> segments;
   bool dirty;
   bool active; ///< if the last element in segments is currently written to
 };
@@ -53,7 +55,6 @@ struct track_t {
  * @retval 0 point is NULL
  */
 gint track_points_count(const track_point_t *point);
-bool track_is_empty(const track_seg_t *seg);
 
 extern "C" {
 #endif

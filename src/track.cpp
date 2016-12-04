@@ -62,8 +62,8 @@ gint track_points_count(const track_point_t *point)
   return points;
 }
 
-bool track_is_empty(const track_seg_t *seg) {
-  return (seg->track_point == 0);
+bool track_seg_t::is_empty() const {
+  return (track_point == 0);
 }
 
 static track_point_t *track_parse_trkpt(xmlNode *a_node) {
@@ -110,7 +110,7 @@ static track_point_t *track_parse_trkpt(xmlNode *a_node) {
  * This may create multiple track_seg_t objects.
  */
 static void track_parse_trkseg(xmlNode *a_node, gint *points,
-                               std::vector<track_seg_t *> &segments) {
+                               std::vector<track_seg_t> &segments) {
   xmlNode *cur_node;
   track_point_t **point = NULL;
 
@@ -121,9 +121,9 @@ static void track_parse_trkseg(xmlNode *a_node, gint *points,
 	if(cpnt) {
 	  if(!point) {
 	    /* start a new segment */
-            track_seg_t *seg = new track_seg_t();
+            track_seg_t seg;
             segments.push_back(seg);
-	    point = &seg->track_point;
+	    point = &segments.back().track_point;
 	  }
 	  /* attach point to chain */
 	  *point = cpnt;
@@ -228,15 +228,13 @@ static void track_point_free(track_point_t *point) {
   g_free(point);
 }
 
-static void track_seg_free(track_seg_t *seg) {
-  track_point_t *point = seg->track_point;
+static void track_seg_free(track_seg_t &seg) {
+  track_point_t *point = seg.track_point;
   while(point) {
     track_point_t *next = point->next;
     track_point_free(point);
     point = next;
   }
-
-  delete seg;
 }
 
 /* --------------------------------------------------------------- */
@@ -291,9 +289,9 @@ static void track_save_points(const track_point_t *point, xmlNodePtr node) {
 struct track_save_segs {
   xmlNodePtr const node;
   track_save_segs(xmlNodePtr n) : node(n) {}
-  void operator()(const track_seg_t *seg) {
+  void operator()(const track_seg_t &seg) {
     xmlNodePtr node_seg = xmlNewChild(node, NULL, BAD_CAST "trkseg", NULL);
-    track_save_points(seg->track_point, node_seg);
+    track_save_points(seg.track_point, node_seg);
   }
 };
 
@@ -312,8 +310,8 @@ static void track_write(const char *name, const track_t *track, xmlDoc *doc) {
   printf("writing track to %s\n", name);
 
   xmlNodePtr trk_node;
-  std::vector<track_seg_t *>::const_iterator it = track->segments.begin();
-  std::vector<track_seg_t *>::const_iterator itEnd = track->segments.end();
+  std::vector<track_seg_t>::const_iterator it = track->segments.begin();
+  std::vector<track_seg_t>::const_iterator itEnd = track->segments.end();
   if(doc) {
     xmlNodePtr cur_node;
     xmlNodePtr root_node = xmlDocGetRootElement(doc);
@@ -488,20 +486,20 @@ static gboolean track_append_position(appdata_t *appdata, const pos_t *pos, floa
   if(!track->active) {
     printf("starting new segment\n");
 
-    track_seg_t *seg = new track_seg_t();
+    track_seg_t seg;
     track->segments.push_back(seg);
     track->active = true;
   } else
     printf("appending to current segment\n");
 
   track_point_t **point;
-  track_point_t *prev = track->segments.back()->track_point;
+  track_point_t *prev = track->segments.back().track_point;
   if (prev) {
     while(prev->next)
       prev = prev->next;
     point = &(prev->next);
   } else {
-    point = &track->segments.back()->track_point;
+    point = &track->segments.back().track_point;
   }
 
   /* don't append if point is the same as last time */
@@ -521,11 +519,11 @@ static gboolean track_append_position(appdata_t *appdata, const pos_t *pos, floa
     if(!prev) {
       /* the segment can now be drawn for the first time */
       printf("initial draw\n");
-      g_assert(track->segments.back()->item_chain.empty());
+      g_assert(track->segments.back().item_chain.empty());
       map_track_draw_seg(appdata->map, track->segments.back());
     } else {
       /* the segment has to be updated */
-      g_assert(!track->segments.back()->item_chain.empty());
+      g_assert(!track->segments.back().item_chain.empty());
       map_track_update_seg(appdata->map, track->segments.back());
     }
   }
