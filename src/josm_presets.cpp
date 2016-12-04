@@ -163,6 +163,8 @@ char *josm_icon_name_adjust(char *name) {
   /* the icon loader uses names without extension */
   if(!strcasecmp(name+strlen(name)-4, ".png"))
     name[strlen(name)-4] = 0;
+  else if(!strcasecmp(name+strlen(name)-4, ".svg"))
+    name[strlen(name)-4] = 0;
 
   return name;
 }

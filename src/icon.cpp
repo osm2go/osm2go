@@ -53,7 +53,11 @@ icon_item::icon_item(GdkPixbuf *nbuf)
 
 static std::string
 icon_file_exists(const gchar *file) {
-  const char *icon_exts[] = { ".gif", ".png", ".jpg", NULL };
+  const char *icon_exts[] = {
+#ifdef USE_SVG_ICONS
+                              ".svg",
+#endif
+                              ".gif", ".png", ".jpg", NULL };
   gint idx;
 
   for (idx = 0; icon_exts[idx]; idx++) {

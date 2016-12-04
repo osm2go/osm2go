@@ -170,12 +170,17 @@ if (MAEMO_FOUND)
 	set(ICON " Maemo icon ${ICONNAME}\nXB-Maemo-Icon-26:\n${ICON}")
 
 	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/debian/control.in ${CMAKE_CURRENT_BINARY_DIR}/debian/control @ONLY)
+
+	# SVG icons do not work on my N900
+	set(USE_SVG_ICONS Off)
 else ()
 	find_package(GTK2 REQUIRED)
 
 	add_definitions(-DENABLE_BROWSER_INTERFACE -DMAEMO_VERSION_MAJOR)
 
 	list(APPEND MORE_LIBS ${GTK2_TARGETS})
+
+	set(USE_SVG_ICONS On)
 endif ()
 
 find_library(MATH_LIBRARY m)
@@ -214,6 +219,10 @@ endif ()
 
 if (PICKER_MENU)
 	set_property(SOURCE src/josm_presets.cpp APPEND PROPERTY COMPILE_DEFINITIONS "PICKER_MENU")
+endif ()
+
+if (USE_SVG_ICONS)
+	set_property(SOURCE src/icon.cpp APPEND PROPERTY COMPILE_DEFINITIONS USE_SVG_ICONS)
 endif ()
 
 add_library(osm2go_lib STATIC
