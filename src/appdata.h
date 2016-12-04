@@ -119,7 +119,7 @@ typedef struct appdata_s {
     GtkWidget *menu_item_track_follow_gps;
     struct track_s *track;
     canvas_item_t *gps_item; // the purple circle
-    int warn_cnt;;
+    int warn_cnt;
   } track;
 
 #if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
