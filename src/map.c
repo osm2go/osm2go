@@ -1847,6 +1847,9 @@ void map_clear(appdata_t *appdata, gint group_mask) {
 
   printf("freeing map contents\n");
 
+  if(group_mask == MAP_LAYER_ALL)
+    map_track_remove_pos(appdata);
+
   map_free_map_item_chains(appdata);
 
   /* remove a possibly existing highlight */
