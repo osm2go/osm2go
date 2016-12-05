@@ -17,23 +17,26 @@
  * along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <libxml/parser.h>
-#include <libxml/tree.h>
-
+/* make sure strptime() is defined */
 #ifndef __USE_XOPEN
-#define __USE_XOPEN
+#define _XOPEN_SOURCE 600
 #endif
-#include <time.h>
 
-#ifndef LIBXML_TREE_ENABLED
-#error "Tree not enabled in libxml"
-#endif
+#include "track.h"
 
 #include "appdata.h"
 #include "banner.h"
 #include "gps.h"
 #include "misc.h"
-#include "track.h"
+
+#include <libxml/parser.h>
+#include <libxml/tree.h>
+#include <strings.h>
+#include <time.h>
+
+#ifndef LIBXML_TREE_ENABLED
+#error "Tree not enabled in libxml"
+#endif
 
 /* make menu represent the track state */
 void track_menu_set(appdata_t *appdata) {
