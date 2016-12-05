@@ -40,6 +40,7 @@
 
 #include <glib.h>
 #include <string.h>
+#include <strings.h>
 
 float xml_get_prop_float(xmlNode *node, const char *prop) {
   xmlChar *str = xmlGetProp(node, BAD_CAST prop);

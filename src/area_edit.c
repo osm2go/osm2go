@@ -29,6 +29,7 @@
 #endif
 
 #include <math.h>
+#include <strings.h>
 
 #define TAB_LABEL_MAP    "Map"
 #define TAB_LABEL_DIRECT "Direct"

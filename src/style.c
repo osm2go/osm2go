@@ -26,6 +26,7 @@
 
 #include <libxml/parser.h>
 #include <libxml/tree.h>
+#include <strings.h>
 
 #if !defined(LIBXML_TREE_ENABLED) || !defined(LIBXML_OUTPUT_ENABLED)
 #error "libxml doesn't support required tree or output"

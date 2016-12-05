@@ -30,6 +30,7 @@
 #include <hildon/hildon-picker-button.h>
 #define PICKER_MENU
 #endif
+#include <strings.h>
 
 #ifndef LIBXML_TREE_ENABLED
 #error "Tree not enabled in libxml"

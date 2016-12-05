@@ -26,6 +26,8 @@
 #include "misc.h"
 #include "relation_edit.h"
 
+#include <strings.h>
+
 enum {
   TAG_COL_KEY = 0,
   TAG_COL_VALUE,

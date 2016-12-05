@@ -31,6 +31,7 @@
 
 #include <libxml/parser.h>
 #include <libxml/tree.h>
+#include <strings.h>
 
 #ifndef LIBXML_TREE_ENABLED
 #error "Tree not enabled in libxml"

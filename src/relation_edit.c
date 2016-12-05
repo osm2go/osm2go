@@ -25,6 +25,8 @@
 #include "map.h"
 #include "misc.h"
 
+#include <strings.h>
+
 /* --------------- relation dialog for an item (node or way) ----------- */
 
 typedef struct {
