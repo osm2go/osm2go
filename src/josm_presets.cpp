@@ -120,11 +120,12 @@ public:
 class presets_item : public presets_item_visible {
 public:
   presets_item(unsigned int t)
-    : presets_item_visible(t), link(0) {}
+    : presets_item_visible(t), link(0), addEditName(false) {}
   virtual ~presets_item()
   { xmlFree(link); }
 
   xmlChar *link;
+  bool addEditName;
 };
 
 class presets_item_separator : public presets_item_t {
@@ -324,6 +325,12 @@ static presets_item_t *parse_item(xmlNode *a_node, const std::map<std::string, x
 
   item->icon = BAD_CAST
     josm_icon_name_adjust((char*)xmlGetProp(a_node, BAD_CAST "icon"));
+
+  xmlChar *nl = xmlGetProp(a_node, BAD_CAST "preset_name_label");
+  if(nl) {
+    item->addEditName = (strcmp((char *)nl, "true") == 0);
+    xmlFree(nl);
+  }
 
   parse_widgets(a_node, item, chunks);
   return item;
@@ -601,20 +608,27 @@ static void presets_item_dialog(presets_context_t *context,
     /* special handling for the first label/separators */
     guint widget_skip = 0;  // number of initial widgets to skip
     it = item->widgets.begin();
-    if(it != itEnd && ((*it)->type == WIDGET_TYPE_LABEL)) {
-      gtk_window_set_title(GTK_WINDOW(dialog), (char*)(*it)->text);
+    if(item->addEditName) {
+      gchar *title = g_strdup_printf(_("Edit %s"), item->name);
+      gtk_window_set_title(GTK_WINDOW(dialog), title);
+      g_free(title);
+    } else {
+      // use the first label as title
+      if(it != itEnd && ((*it)->type == WIDGET_TYPE_LABEL)) {
+        gtk_window_set_title(GTK_WINDOW(dialog), (char*)(*it)->text);
 
-      widget_skip++;   // this widget isn't part of the contents anymore
-      it++;
-
-      /* skip all following separators (and keys) */
-      while(it != itEnd &&
-            (((*it)->type == WIDGET_TYPE_SEPARATOR) ||
-             ((*it)->type == WIDGET_TYPE_SPACE) ||
-             ((*it)->type == WIDGET_TYPE_KEY))) {
         widget_skip++;   // this widget isn't part of the contents anymore
         it++;
       }
+    }
+
+    /* skip all following separators (and keys) */
+    while(it != itEnd &&
+          (((*it)->type == WIDGET_TYPE_SEPARATOR) ||
+           ((*it)->type == WIDGET_TYPE_SPACE) ||
+           ((*it)->type == WIDGET_TYPE_KEY))) {
+      widget_skip++;   // this widget isn't part of the contents anymore
+      it++;
     }
 
     /* create table of required size */
