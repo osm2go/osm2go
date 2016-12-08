@@ -721,8 +721,7 @@ static void on_project_edit(G_GNUC_UNUSED GtkButton *button, gpointer data) {
   view_selected(context, project);
 }
 
-
-gboolean project_osm_present(project_t *project) {
+static gboolean project_osm_present(const project_t *project) {
   char *osm_name = g_strconcat(project->path, "/", project->name, ".osm", NULL);
   gboolean is_present = g_file_test(osm_name, G_FILE_TEST_EXISTS);
   g_free(osm_name);
