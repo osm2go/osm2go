@@ -29,7 +29,7 @@
 void diff_save(const project_t *project, const osm_t *osm);
 void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm);
 gboolean diff_present(const project_t *project);
-void diff_remove(project_t *project);
+void diff_remove(const project_t *project);
 gboolean diff_is_clean(const osm_t *osm, gboolean honor_hidden_flags);
 
 #endif // DIFF_H

@@ -767,7 +767,7 @@ gboolean diff_present(const project_t *project) {
   return ret;
 }
 
-void diff_remove(project_t *project) {
+void diff_remove(const project_t *project) {
   gchar *diff_name = diff_filename(project);
   g_remove(diff_name);
   g_free(diff_name);
