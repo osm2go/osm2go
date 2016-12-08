@@ -42,7 +42,7 @@
 #endif
 
 typedef struct {
-  project_t *project;
+  GSList *project;
   settings_t *settings;
   GtkWidget *dialog, *fsize, *diff_stat, *diff_remove;
   GtkWidget *desc, *download;
@@ -925,10 +925,11 @@ static GStatBuf file_info(const char *path, const char *name) {
 static void project_filesize(project_context_t *context) {
   char *str = NULL;
   gchar *gstr = NULL;
+  const project_t * const project = (project_t *)context->project->data;
 
-  printf("Checking size of %s\n", context->project->osm);
+  printf("Checking size of %s\n", project->osm);
 
-  if(!osm_file_exists(context->project->path, context->project->osm)) {
+  if(!osm_file_exists(project->path, project->osm)) {
     GdkColor color;
     gdk_color_parse("red", &color);
     gtk_widget_modify_fg(context->fsize, GTK_STATE_NORMAL, &color);
@@ -941,9 +942,8 @@ static void project_filesize(project_context_t *context) {
   } else {
     gtk_widget_modify_fg(context->fsize, GTK_STATE_NORMAL, NULL);
 
-    if(!context->project->data_dirty) {
-      GStatBuf st = file_info(context->project->path,
-					context->project->osm);
+    if(!project->data_dirty) {
+      GStatBuf st = file_info(project->path, project->osm);
       struct tm loctime;
       localtime_r(&st.st_mtim.tv_sec, &loctime);
       char time_str[32];
@@ -957,7 +957,7 @@ static void project_filesize(project_context_t *context) {
 
     gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog),
 		      GTK_RESPONSE_ACCEPT, !context->is_new ||
-				      !context->project->data_dirty);
+				      !project->data_dirty);
   }
 
   if(str) {
@@ -974,7 +974,7 @@ static gboolean project_active_n_dirty(project_context_t *context) {
 
   if(context->area_edit.appdata->project &&
      !strcmp(context->area_edit.appdata->project->name,
-	     context->project->name)) {
+	     ((project_t *)context->project->data)->name)) {
 
     printf("editing the currently open project\n");
 
@@ -987,7 +987,7 @@ static gboolean project_active_n_dirty(project_context_t *context) {
 void project_diffstat(project_context_t *context) {
   const char *str;
 
-  if(diff_present(context->project) || project_active_n_dirty(context)) {
+  if(diff_present(context->project->data) || project_active_n_dirty(context)) {
     /* this should prevent the user from changing the area */
     str = _("unsaved changes pending");
   } else
@@ -1006,8 +1006,9 @@ project_pos_is_valid(project_t *project) {
 
 static void on_edit_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
   project_context_t *context = (project_context_t*)data;
+  project_t * const project = (project_t *)context->project->data;
 
-  if(diff_present(context->project) || project_active_n_dirty(context))
+  if(diff_present(project) || project_active_n_dirty(context))
     messagef(context->dialog,
 	     _("Pending changes"),
 	     _("You have pending changes in this project.\n\n"
@@ -1018,22 +1019,22 @@ static void on_edit_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
     printf("coordinates changed!!\n");
 
     /* the wms layer isn't usable with new coordinates */
-    wms_remove_file(context->project);
+    wms_remove_file(project);
 
-    pos_lon_label_set(context->minlat, context->project->min.lat);
-    pos_lon_label_set(context->minlon, context->project->min.lon);
-    pos_lon_label_set(context->maxlat, context->project->max.lat);
-    pos_lon_label_set(context->maxlon, context->project->max.lon);
+    pos_lon_label_set(context->minlat, project->min.lat);
+    pos_lon_label_set(context->minlon, project->min.lon);
+    pos_lon_label_set(context->maxlat, project->max.lat);
+    pos_lon_label_set(context->maxlon, project->max.lon);
 
-    gboolean pos_valid = project_pos_is_valid(context->project);
+    gboolean pos_valid = project_pos_is_valid(project);
     gtk_widget_set_sensitive(context->download, pos_valid);
 
     /* (re-) download area */
     if (pos_valid)
     {
       if(osm_download(GTK_WIDGET(context->dialog),
-	      context->area_edit.appdata->settings, context->project))
-         context->project->data_dirty = FALSE;
+	      context->area_edit.appdata->settings, project))
+         project->data_dirty = FALSE;
     }
     project_filesize(context);
   }
@@ -1041,11 +1042,12 @@ static void on_edit_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
 
 static void on_download_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
   project_context_t *context = (project_context_t*)data;
+  project_t * const project = (project_t *)context->project->data;
 
-  printf("download %s\n", context->project->osm);
+  printf("download %s\n", project->osm);
 
-  if(osm_download(context->dialog, context->settings, context->project))
-    context->project->data_dirty = FALSE;
+  if(osm_download(context->dialog, context->settings, project))
+    project->data_dirty = FALSE;
   else
     printf("download failed\n");
 
@@ -1054,6 +1056,7 @@ static void on_download_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) 
 
 static void on_diff_remove_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
   project_context_t *context = (project_context_t*)data;
+  const project_t * const project = (project_t *)context->project->data;
 
   printf("clicked diff remove\n");
 
@@ -1063,13 +1066,13 @@ static void on_diff_remove_clicked(G_GNUC_UNUSED GtkButton *button, gpointer dat
 		"you did not upload yet."))) {
     appdata_t *appdata = context->area_edit.appdata;
 
-    diff_remove(context->project);
+    diff_remove(project);
 
     /* if this is the currently open project, we need to undo */
     /* the map changes as well */
 
     if(appdata->project &&
-       !strcmp(appdata->project->name, context->project->name)) {
+       !strcmp(appdata->project->name, project->name)) {
 
       printf("undo all on current project: delete map changes as well\n");
 
@@ -1115,7 +1118,9 @@ project_edit(appdata_t *appdata, GtkWidget *parent, settings_t *settings,
   /* ------------ project edit dialog ------------- */
 
   project_context_t context = { 0 };
-  context.project = project;
+  GSList l = { 0 };
+  l.data = project;
+  context.project = &l;
   context.area_edit.settings = context.settings = settings;
   context.area_edit.appdata = appdata;
   context.is_new = is_new;
@@ -1244,12 +1249,12 @@ project_edit(appdata_t *appdata, GtkWidget *parent, settings_t *settings,
   /* transfer values from edit dialog into project structure */
 
   /* fetch values from dialog */
-  xmlFree(context.project->desc);
+  xmlFree(project->desc);
   const gchar *ndesc = gtk_entry_get_text(GTK_ENTRY(context.desc));
   if(ndesc && strlen(ndesc))
-    context.project->desc = xmlStrdup(BAD_CAST ndesc);
+    project->desc = xmlStrdup(BAD_CAST ndesc);
   else
-    context.project->desc = NULL;
+    project->desc = NULL;
 
 #ifdef SERVER_EDITABLE
   g_free(context.project->server);
