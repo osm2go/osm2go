@@ -42,7 +42,7 @@
 #endif
 
 typedef struct {
-  GSList *project;
+  project_t *project;
   settings_t *settings;
   GtkWidget *dialog, *fsize, *diff_stat, *diff_remove;
   GtkWidget *desc, *download;
@@ -346,7 +346,7 @@ static GSList *project_scan(appdata_t *appdata) {
 
 typedef struct {
   appdata_t *appdata;
-  GSList *project;
+  GSList *projects;
   GtkWidget *dialog, *list;
   settings_t *settings;
 } select_context_t;
@@ -506,7 +506,7 @@ static gboolean project_delete(select_context_t *context, project_t *project) {
   }
 
   /* de-chain entry from project list */
-  context->project = g_slist_remove(context->project, project);
+  context->projects = g_slist_remove(context->projects, project);
 
   /* free project structure */
   project_free(project);
@@ -596,7 +596,7 @@ static void project_get_status_icon_stock_id(select_context_t *context, project_
 static void on_project_new(G_GNUC_UNUSED GtkButton *button, gpointer data) {
   select_context_t *context = (select_context_t*)data;
   project_t *project = project_new(context);
-  context->project = g_slist_prepend(context->project, project);
+  context->projects = g_slist_prepend(context->projects, project);
   if(project) {
 
     GtkTreeModel *model = list_get_model(context->list);
@@ -802,7 +802,7 @@ static GtkWidget *project_list_widget(select_context_t *context, gboolean *has_s
   check_pos = gps_get_pos(context->appdata, &pos, NULL);
 
   /* there are too many context variables, so no foreach here */
-  for(cur = context->project; cur; cur = g_slist_next(cur)) {
+  for(cur = context->projects; cur; cur = g_slist_next(cur)) {
     project_t *project = (project_t *)cur->data;
     gchar *status_stock_id = NULL;
     project_get_status_icon_stock_id(context, project, &status_stock_id);
@@ -857,7 +857,7 @@ static char *project_select(appdata_t *appdata) {
   select_context_t context = { 0 };
   context.appdata = appdata;
   context.settings = appdata->settings;
-  context.project = project_scan(appdata);
+  context.projects = project_scan(appdata);
 
   /* create project selection dialog */
   context.dialog =
@@ -888,10 +888,10 @@ static char *project_select(appdata_t *appdata) {
 
   /* free all entries */
 #if GLIB_CHECK_VERSION(2,28,0)
-  g_slist_free_full(context.project, project_free_notify);
+  g_slist_free_full(context.projects, project_free_notify);
 #else
-  g_slist_foreach(context.project, project_free_notify, NULL);
-  g_slist_free(context.project);
+  g_slist_foreach(context.projects, project_free_notify, NULL);
+  g_slist_free(context.projects);
 #endif
 
   return name;
@@ -925,7 +925,7 @@ static GStatBuf file_info(const char *path, const char *name) {
 static void project_filesize(project_context_t *context) {
   char *str = NULL;
   gchar *gstr = NULL;
-  const project_t * const project = (project_t *)context->project->data;
+  const project_t * const project = context->project;
 
   printf("Checking size of %s\n", project->osm);
 
@@ -974,7 +974,7 @@ static gboolean project_active_n_dirty(project_context_t *context) {
 
   if(context->area_edit.appdata->project &&
      !strcmp(context->area_edit.appdata->project->name,
-	     ((project_t *)context->project->data)->name)) {
+	     context->project->name)) {
 
     printf("editing the currently open project\n");
 
@@ -987,7 +987,7 @@ static gboolean project_active_n_dirty(project_context_t *context) {
 void project_diffstat(project_context_t *context) {
   const char *str;
 
-  if(diff_present(context->project->data) || project_active_n_dirty(context)) {
+  if(diff_present(context->project) || project_active_n_dirty(context)) {
     /* this should prevent the user from changing the area */
     str = _("unsaved changes pending");
   } else
@@ -1006,7 +1006,7 @@ project_pos_is_valid(project_t *project) {
 
 static void on_edit_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
   project_context_t *context = (project_context_t*)data;
-  project_t * const project = (project_t *)context->project->data;
+  project_t * const project = context->project;
 
   if(diff_present(project) || project_active_n_dirty(context))
     messagef(context->dialog,
@@ -1042,7 +1042,7 @@ static void on_edit_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
 
 static void on_download_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
   project_context_t *context = (project_context_t*)data;
-  project_t * const project = (project_t *)context->project->data;
+  project_t * const project = context->project;
 
   printf("download %s\n", project->osm);
 
@@ -1056,7 +1056,7 @@ static void on_download_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) 
 
 static void on_diff_remove_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
   project_context_t *context = (project_context_t*)data;
-  const project_t * const project = (project_t *)context->project->data;
+  const project_t * const project = context->project;
 
   printf("clicked diff remove\n");
 
@@ -1118,9 +1118,7 @@ project_edit(appdata_t *appdata, GtkWidget *parent, settings_t *settings,
   /* ------------ project edit dialog ------------- */
 
   project_context_t context = { 0 };
-  GSList l = { 0 };
-  l.data = project;
-  context.project = &l;
+  context.project = project;
   context.area_edit.settings = context.settings = settings;
   context.area_edit.appdata = appdata;
   context.is_new = is_new;
