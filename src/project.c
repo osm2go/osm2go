@@ -517,7 +517,7 @@ static gboolean project_delete(select_context_t *context, project_t *project) {
   return TRUE;
 }
 
-project_t *project_new(select_context_t *context) {
+static project_t *project_new(select_context_t *context) {
   printf("creating project with default values\n");
 
   /* --------------  first choose a name for the project --------------- */
