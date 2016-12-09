@@ -360,13 +360,13 @@ enum {
   PROJECT_NUM_COLS
 };
 
-static gboolean osm_file_exists(const char *path, const char *name) {
+static gboolean osm_file_exists(const project_t *project) {
   gboolean exists;
 
-  if(name[0] == '/')
-    exists = g_file_test(name, G_FILE_TEST_IS_REGULAR);
+  if(project->name[0] == '/')
+    exists = g_file_test(project->name, G_FILE_TEST_IS_REGULAR);
   else {
-    char *full = g_strconcat(path, name, NULL);
+    gchar *full = g_strconcat(project->path, project->osm, NULL);
     exists = g_file_test(full, G_FILE_TEST_IS_REGULAR);
     g_free(full);
   }
@@ -377,7 +377,7 @@ static void view_selected(select_context_t *context, project_t *project) {
   /* check if the selected project also has a valid osm file */
   gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog),
       GTK_RESPONSE_ACCEPT,
-      project && osm_file_exists(project->path, project->osm));
+      project && osm_file_exists(project));
 }
 
 static void
@@ -890,14 +890,14 @@ typedef struct stat GStatBuf;
 #endif
 
 /* return file length or -1 on error */
-static GStatBuf file_info(const char *path, const char *name) {
+static GStatBuf file_info(const project_t *project) {
   GStatBuf st;
   int r;
 
-  if (name[0] == '/') {
-    r = g_stat(name, &st);
+  if (project->osm[0] == '/') {
+    r = g_stat(project->osm, &st);
   } else {
-    char *str = g_strconcat(path, name, NULL);
+    char *str = g_strconcat(project->path, project->osm, NULL);
     r = g_stat(str, &st);
     g_free(str);
   }
@@ -915,7 +915,7 @@ static void project_filesize(project_context_t *context) {
 
   printf("Checking size of %s\n", project->osm);
 
-  if(!osm_file_exists(project->path, project->osm)) {
+  if(!osm_file_exists(project)) {
     GdkColor color;
     gdk_color_parse("red", &color);
     gtk_widget_modify_fg(context->fsize, GTK_STATE_NORMAL, &color);
@@ -929,7 +929,7 @@ static void project_filesize(project_context_t *context) {
     gtk_widget_modify_fg(context->fsize, GTK_STATE_NORMAL, NULL);
 
     if(!project->data_dirty) {
-      GStatBuf st = file_info(project->path, project->osm);
+      GStatBuf st = file_info(project);
       struct tm loctime;
       localtime_r(&st.st_mtim.tv_sec, &loctime);
       char time_str[32];
@@ -1221,7 +1221,7 @@ project_edit(appdata_t *appdata, GtkWidget *parent, settings_t *settings,
   if(is_new)
     gtk_dialog_set_response_sensitive(GTK_DIALOG(context.dialog),
 		    GTK_RESPONSE_ACCEPT,
-		    osm_file_exists(project->path, project->name));
+		    osm_file_exists(project));
 
   gtk_widget_show_all(context.dialog);
 
