@@ -34,6 +34,7 @@
 #include <glib/gstdio.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -412,21 +413,6 @@ static project_t *project_get_selected(GtkWidget *list) {
 
 /* ------------------------- create a new project ---------------------- */
 
-/* returns true of str contains one of the characters in chars */
-static gboolean strchrs(char *str, char *chars) {
-  while(*chars) {
-    char *p = str;
-    while(*p) {
-      if(*p == *chars)
-	return TRUE;
-
-      p++;
-    }
-    chars++;
-  }
-  return FALSE;
-}
-
 typedef struct {
   GtkWidget *dialog;
   settings_t *settings;
@@ -435,7 +421,7 @@ typedef struct {
 static void callback_modified_name(GtkWidget *widget, gpointer data) {
   name_callback_context_t *context = (name_callback_context_t*)data;
 
-  char *name = (char*)gtk_entry_get_text(GTK_ENTRY(widget));
+  const gchar *name = gtk_entry_get_text(GTK_ENTRY(widget));
 
   /* name must not contain some special chars */
   gboolean ok = FALSE;
@@ -443,7 +429,7 @@ static void callback_modified_name(GtkWidget *widget, gpointer data) {
   /* check if there's a name */
   if(name && strlen(name) > 0) {
     /* check if it consists of valid characters */
-    if(!strchrs(name, "\\*?()\n\t\r")) {
+    if(strpbrk(name, "\\*?()\n\t\r") == NULL) {
       /* check if such a project already exists */
       if(!project_exists(context->settings, name, NULL))
 	ok = TRUE;
