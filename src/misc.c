@@ -63,7 +63,7 @@ gboolean xml_get_prop_is(xmlNode *node, const char *prop, const char *str) {
 
 
 static void vmessagef(GtkWidget *parent, GtkMessageType type, GtkButtonsType buttons,
-		      char *title, const char *fmt,
+		      const char *title, const char *fmt,
 		      va_list args) {
 
   char *buf = g_strdup_vprintf(fmt, args);
@@ -86,7 +86,7 @@ static void vmessagef(GtkWidget *parent, GtkMessageType type, GtkButtonsType but
   g_free(buf);
 }
 
-void messagef(GtkWidget *parent, char *title, const char *fmt, ...) {
+void messagef(GtkWidget *parent, const char *title, const char *fmt, ...) {
   va_list args;
   va_start( args, fmt );
   vmessagef(parent, GTK_MESSAGE_INFO,

@@ -57,7 +57,7 @@ struct appdata_s;
 
 void errorf(GtkWidget *parent, const char *fmt, ...) G_GNUC_PRINTF(2, 3);
 void warningf(GtkWidget *parent, const char *fmt, ...) G_GNUC_PRINTF(2, 3);
-void messagef(GtkWidget *parent, char *title, const char *fmt, ...) G_GNUC_PRINTF(3, 4);
+void messagef(GtkWidget *parent, const char *title, const char *fmt, ...) G_GNUC_PRINTF(3, 4);
 gboolean yes_no_f(GtkWidget *parent,
 		  struct appdata_s *appdata, gulong again_bit, gint flags,
 		  const char *title, const char *fmt, ...) G_GNUC_PRINTF(6, 7);
