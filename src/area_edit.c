@@ -122,25 +122,19 @@ static gboolean current_tab_is(context_t *context, gint page_num, char *str) {
   return(strcasecmp(name, _(str)) == 0);
 }
 
-static char *warn_text(context_t *context) {
-  double area = selected_area(context);
-
-  return g_strdup_printf(
-     _("The currently selected area is %.02f km² (%.02f mi²) in size. "
-       "This is more than the recommended %.02f km² (%.02f mi²).\n\n"
-       "Continuing may result in a big or failing download and low "
-       "mapping performance in a densly mapped area (e.g. cities)!"),
-     area, area/(KMPMIL*KMPMIL),
-     WARN_OVER, WARN_OVER/(KMPMIL*KMPMIL)
-     );
+static inline const char *warn_text() {
+  return _("The currently selected area is %.02f km² (%.02f mi²) in size. "
+           "This is more than the recommended %.02f km² (%.02f mi²).\n\n"
+           "Continuing may result in a big or failing download and low "
+           "mapping performance in a densly mapped area (e.g. cities)!");
 }
 
 static void on_area_warning_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
   context_t *context = (context_t*)data;
+  double area = selected_area(context);
 
-  char *wtext = warn_text(context);
-  warningf(context->dialog, "%s", wtext);
-  g_free(wtext);
+  warningf(context->dialog, warn_text(), area, area/(KMPMIL*KMPMIL),
+           WARN_OVER, WARN_OVER/(KMPMIL*KMPMIL));
 }
 
 static gboolean area_warning(context_t *context) {
@@ -150,14 +144,12 @@ static gboolean area_warning(context_t *context) {
   double area = selected_area(context);
 
   if(area > WARN_OVER) {
-    char *wtext = warn_text(context);
-
     ret = yes_no_f(context->dialog, context->area->appdata,
 		   MISC_AGAIN_ID_AREA_TOO_BIG, MISC_AGAIN_FLAG_DONT_SAVE_NO,
 		   _("Area size warning!"),
-		   _("%s\n\nDo you really want to continue?"), wtext);
-
-    g_free(wtext);
+		   _("%s\n\nDo you really want to continue?"),
+                   warn_text(), area, area / (KMPMIL * KMPMIL),
+                                WARN_OVER, WARN_OVER/(KMPMIL*KMPMIL));
   }
 
   return ret;
