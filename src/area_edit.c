@@ -93,6 +93,18 @@ static void parse_and_set_lon(GtkWidget *src, pos_float_t *store) {
     *store = i;
 }
 
+/**
+ * @brief calculate the selected area in square kilometers
+ */
+static double selected_area(const context_t *context) {
+  pos_float_t center_lat = (context->max.lat + context->min.lat)/2;
+  double vscale = DEG2RAD(POS_EQ_RADIUS / 1000.0);
+  double hscale = DEG2RAD(cos(DEG2RAD(center_lat)) * POS_EQ_RADIUS / 1000.0);
+
+  return vscale * (context->max.lat - context->min.lat) *
+         hscale * (context->max.lon - context->min.lon);
+}
+
 static gboolean current_tab_is(context_t *context, gint page_num, char *str) {
   GtkWidget *nb = notebook_get_gtk_notebook(context->notebook);
 
@@ -111,13 +123,7 @@ static gboolean current_tab_is(context_t *context, gint page_num, char *str) {
 }
 
 static char *warn_text(context_t *context) {
-  /* compute area size */
-  pos_float_t center_lat = (context->max.lat + context->min.lat)/2;
-  double vscale = DEG2RAD(POS_EQ_RADIUS / 1000.0);
-  double hscale = DEG2RAD(cos(DEG2RAD(center_lat)) * POS_EQ_RADIUS / 1000.0);
-
-  double area = vscale * (context->max.lat - context->min.lat) *
-    hscale * (context->max.lon - context->min.lon);
+  double area = selected_area(context);
 
   return g_strdup_printf(
      _("The currently selected area is %.02f km² (%.02f mi²) in size. "
@@ -141,12 +147,7 @@ static gboolean area_warning(context_t *context) {
   gboolean ret = TRUE;
 
   /* check if area size exceeds recommended values */
-  pos_float_t center_lat = (context->max.lat + context->min.lat)/2;
-  double vscale = DEG2RAD(POS_EQ_RADIUS / 1000.0);
-  double hscale = DEG2RAD(cos(DEG2RAD(center_lat)) * POS_EQ_RADIUS / 1000.0);
-
-  double area = vscale * (context->max.lat - context->min.lat) *
-    hscale * (context->max.lon - context->min.lon);
+  double area = selected_area(context);
 
   if(area > WARN_OVER) {
     char *wtext = warn_text(context);
@@ -190,12 +191,7 @@ static void area_main_update(context_t *context) {
   }
 
   /* check if area size exceeds recommended values */
-  pos_float_t center_lat = (context->max.lat + context->min.lat)/2;
-  double vscale = DEG2RAD(POS_EQ_RADIUS / 1000.0);
-  double hscale = DEG2RAD(cos(DEG2RAD(center_lat)) * POS_EQ_RADIUS / 1000.0);
-
-  double area = vscale * (context->max.lat - context->min.lat) *
-    hscale * (context->max.lon - context->min.lon);
+  double area = selected_area(context);
 
   if(area > WARN_OVER)
     gtk_widget_show(context->warning);
