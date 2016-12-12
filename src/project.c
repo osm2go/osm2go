@@ -576,8 +576,39 @@ static project_t *project_new(select_context_t *context) {
   return project;
 }
 
-// predecs
-static void project_get_status_icon_stock_id(select_context_t *context, project_t *project, gchar **stock_id);
+/**
+ * @brief check if OSM data is present for the given project
+ * @param project the project to check
+ * @return if OSM data file was found
+ */
+static gboolean project_osm_present(const project_t *project) {
+  char *osm_name = g_strconcat(project->path, "/", project->name, ".osm", NULL);
+  gboolean is_present = g_file_test(osm_name, G_FILE_TEST_EXISTS);
+  g_free(osm_name);
+  return is_present;
+}
+
+/**
+ * @brief get icon for the given project
+ * @param current the currently active project or NULL
+ * @param project the project to check
+ * @return the stock identifier
+ */
+static const gchar *
+project_get_status_icon_stock_id(const project_t *current,
+                                 const project_t *project) {
+  /* is this the currently open project? */
+  if(current && !strcmp(current->name, project->name))
+    return GTK_STOCK_OPEN;
+  else if(!project_osm_present(project))
+    return GTK_STOCK_DIALOG_WARNING;
+  else if(diff_present(project))
+    return GTK_STOCK_PROPERTIES;
+  else
+    return GTK_STOCK_FILE;
+
+    // TODO: check for outdatedness too. Which icon to use?
+}
 
 static void on_project_new(G_GNUC_UNUSED GtkButton *button, gpointer data) {
   select_context_t *context = (select_context_t*)data;
@@ -588,8 +619,8 @@ static void on_project_new(G_GNUC_UNUSED GtkButton *button, gpointer data) {
     GtkTreeModel *model = list_get_model(context->list);
 
     GtkTreeIter iter;
-    gchar *status_stock_id = NULL;
-    project_get_status_icon_stock_id(context, project, &status_stock_id);
+    const gchar *status_stock_id = project_get_status_icon_stock_id(
+                                         context->appdata->project, project);
     gtk_list_store_append(GTK_LIST_STORE(model), &iter);
     gtk_list_store_set(GTK_LIST_STORE(model), &iter,
 		       PROJECT_COL_NAME,        project->name,
@@ -632,8 +663,8 @@ static void on_project_edit(G_GNUC_UNUSED GtkButton *button, gpointer data) {
     g_assert(gtk_tree_selection_get_selected(selection, &model, &iter));
 
     //     gtk_tree_model_get(model, &iter, PROJECT_COL_DATA, &project, -1);
-    gchar *status_stock_id = NULL;
-    project_get_status_icon_stock_id(context, project, &status_stock_id);
+    const gchar *status_stock_id = project_get_status_icon_stock_id(
+                                         context->appdata->project, project);
     gtk_list_store_set(GTK_LIST_STORE(model), &iter,
 		       PROJECT_COL_NAME, project->name,
                        PROJECT_COL_STATUS, status_stock_id,
@@ -707,13 +738,6 @@ static void on_project_edit(G_GNUC_UNUSED GtkButton *button, gpointer data) {
   view_selected(context, project);
 }
 
-static gboolean project_osm_present(const project_t *project) {
-  char *osm_name = g_strconcat(project->path, "/", project->name, ".osm", NULL);
-  gboolean is_present = g_file_test(osm_name, G_FILE_TEST_EXISTS);
-  g_free(osm_name);
-  return is_present;
-}
-
 static void
 on_project_update_all(G_GNUC_UNUSED GtkButton *button, gpointer data)
 {
@@ -733,26 +757,6 @@ on_project_update_all(G_GNUC_UNUSED GtkButton *button, gpointer data)
       }
     } while(gtk_tree_model_iter_next(model, &iter));
   }
-}
-
-static void
-project_get_status_icon_stock_id(select_context_t *context,
-				 project_t *project, gchar **stock_id) {
-
-  appdata_t *appdata = context->appdata;
-
-  /* is this the currently open project? */
-  if(appdata->project &&
-     !strcmp(appdata->project->name, project->name))
-    *stock_id = GTK_STOCK_OPEN;
-  else if(!project_osm_present(project))
-    *stock_id = GTK_STOCK_DIALOG_WARNING;
-  else if(diff_present(project))
-    *stock_id = GTK_STOCK_PROPERTIES;
-  else
-    *stock_id = GTK_STOCK_FILE;
-
-    // TODO: check for outdatedness too. Which icon to use?
 }
 
 /**
@@ -790,8 +794,8 @@ static GtkWidget *project_list_widget(select_context_t *context, gboolean *has_s
   /* there are too many context variables, so no foreach here */
   for(cur = context->projects; cur; cur = g_slist_next(cur)) {
     project_t *project = (project_t *)cur->data;
-    gchar *status_stock_id = NULL;
-    project_get_status_icon_stock_id(context, project, &status_stock_id);
+    const gchar *status_stock_id = project_get_status_icon_stock_id(
+                                         context->appdata->project, project);
     /* Append a row and fill in some data */
     gtk_list_store_append(store, &iter);
     gtk_list_store_set(store, &iter,
