@@ -42,20 +42,7 @@ void pos_lat_str(char *str, int len, pos_float_t latitude) {
 }
 
 void pos_lon_str(char *str, int len, pos_float_t longitude) {
-  if(isnan(longitude))
-    strcpy(str, "---");
-  else {
-    snprintf(str, len-1, "%.5f", longitude);
-
-    /* eliminate trailing zeros */
-    if((strchr(str, '.') != NULL) || (strchr(str, ',') != NULL)) {
-      char *p = str+strlen(str)-1;
-      while(*p == '0') *p-- = 0;
-      if((*p == '.')||(*p == ','))
-	*p = 0;
-    }
-  }
-  strcat(str, "°");
+  pos_lat_str(str, len, longitude);
 }
 
 pos_float_t pos_parse_lat(const char *str) {
