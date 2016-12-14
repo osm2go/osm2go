@@ -31,7 +31,7 @@
 /* force usage of gpsd start/stop */
 #define LL_CONTROL_GPSD
 
-typedef struct gps_state_s {
+typedef struct gps_state_t {
   LocationGPSDevice *device;
 #ifdef LL_CONTROL_GPSD
   LocationGPSDControl *control;

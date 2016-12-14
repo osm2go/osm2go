@@ -62,7 +62,7 @@ typedef enum {
   MAP_ACTION_NUM
 } map_action_t;
 
-typedef struct map_item_s {
+typedef struct map_item_t {
   object_t object;
   gboolean highlight;
   canvas_item_t *item;
@@ -71,7 +71,7 @@ typedef struct map_item_s {
 /* this is a chain of map_items which is attached to all entries */
 /* in the osm tree (node_t, way_t, ...) to be able to get a link */
 /* to the screen representation of a give node/way/etc */
-typedef struct map_item_chain_s map_item_chain_t;
+typedef struct map_item_chain_t map_item_chain_t;
 
 typedef struct {
   gint refcount;
@@ -80,7 +80,7 @@ typedef struct {
   struct { gint x,y; } scroll_offset;  // initial scroll offset
 } map_state_t;
 
-typedef struct map_s {
+typedef struct map_t {
   appdata_t *appdata;
 
   canvas_t *canvas;
@@ -89,7 +89,7 @@ typedef struct map_s {
 
   gint autosave_handler_id;
 
-  struct map_highlight_s *highlight;      // list of elements used for highlighting
+  struct map_highlight_t *highlight;      // list of elements used for highlighting
 
   map_item_t selected;             // the currently selected item (node or way)
 
@@ -154,10 +154,10 @@ void map_action_ok(appdata_t *appdata);
 void map_delete_selected(appdata_t *appdata);
 
 /* track stuff */
-void map_track_draw(map_t *map, struct track_s *track);
-struct track_seg_s;
-void map_track_draw_seg(map_t *map, struct track_seg_s *seg);
-void map_track_update_seg(map_t *map, struct track_seg_s *seg);
+void map_track_draw(map_t *map, struct track_t *track);
+struct track_seg_t;
+void map_track_draw_seg(map_t *map, struct track_seg_t *seg);
+void map_track_update_seg(map_t *map, struct track_seg_t *seg);
 void map_track_remove(appdata_t *appdata);
 void map_track_pos(appdata_t *appdata, const lpos_t *lpos);
 void map_track_remove_pos(appdata_t *appdata);

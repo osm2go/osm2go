@@ -52,8 +52,8 @@
 
 /* the current hash table uses 16 bits. each table thus is */
 /* 256 kbytes (2^16 * sizeof(void*)) in size */
-typedef struct hash_item_s {
-  struct hash_item_s *next;
+typedef struct hash_item_t {
+  struct hash_item_t *next;
 
   union {
     node_t *node;
@@ -61,7 +61,7 @@ typedef struct hash_item_s {
   } data;
 } hash_item_t;
 
-struct hash_table_s {
+struct hash_table_t {
   hash_item_t *hash[65536];
 };
 

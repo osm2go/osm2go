@@ -42,21 +42,21 @@ typedef gint64 item_id_t;
 /* icon stuff is required since nodes may held a icon reference */
 struct icon_s;
 
-typedef struct bounds_s {
+typedef struct bounds_t {
   pos_t ll_min, ll_max;
   lpos_t min, max;
   lpos_t center;
   float scale;
 } bounds_t;
 
-typedef struct user_s {
-  struct user_s *next;
+typedef struct user_t {
+  struct user_t *next;
   int uid;
   char name[];
 } user_t;
 
-typedef struct tag_s {
-  struct tag_s *next;
+typedef struct tag_t {
+  struct tag_t *next;
   char *key, *value;
 } tag_t;
 
@@ -70,10 +70,10 @@ typedef struct {
   int flags:24;
 } base_object_t;
 
-typedef struct node_s {
+typedef struct node_t {
   base_object_t base;
 
-  struct node_s *next;
+  struct node_t *next;
 
   pos_t pos;
   lpos_t lpos;
@@ -84,31 +84,31 @@ typedef struct node_s {
   GdkPixbuf *icon_buf;
 
   /* a link to the visual representation on screen */
-  struct map_item_chain_s *map_item_chain;
+  struct map_item_chain_t *map_item_chain;
 } node_t;
 
 typedef enum {
   ILLEGAL=0, NODE, WAY, RELATION, NODE_ID, WAY_ID, RELATION_ID
 } type_t;
 
-typedef struct item_id_chain_s {
-  struct item_id_chain_s *next;
+typedef struct item_id_chain_t {
+  struct item_id_chain_t *next;
   type_t type;
   item_id_t id;
 } item_id_chain_t;
 
-typedef struct node_chain {
-  struct node_chain *next;
+typedef struct node_chain_t {
+  struct node_chain_t *next;
   node_t *node;
 } node_chain_t;
 
 #define OSM_DRAW_FLAG_AREA  (1<<0)
 #define OSM_DRAW_FLAG_BG    (1<<1)
 
-typedef struct way_s {
+typedef struct way_t {
   base_object_t base;
 
-  struct way_s *next;
+  struct way_t *next;
 
   node_chain_t *node_chain;
 
@@ -134,7 +134,7 @@ typedef struct way_s {
   } draw;
 
   /* a link to the visual representation on screen */
-  struct map_item_chain_s *map_item_chain;
+  struct map_item_chain_t *map_item_chain;
 } way_t;
 
 typedef GSList way_chain_t;
@@ -159,18 +159,18 @@ typedef GSList way_chain_t;
 #define OSM_VISIBLE(a)     (OSM_BASE(a)->visible)
 #define OSM_FLAGS(a)       (OSM_BASE(a)->flags)
 
-typedef struct relation_s {
+typedef struct relation_t {
   base_object_t base;
 
-  struct relation_s *next;
-  struct member_s *member;
+  struct relation_t *next;
+  struct member_t *member;
 } relation_t;
 
 /* two of these hash tables are used, one for nodes and one for ways */
 /* currently relations aren't used often enough to justify the use */
 /* of a hash table */
 
-typedef struct hash_table_s hash_table_t;
+typedef struct hash_table_t hash_table_t;
 
 typedef struct {
   type_t type;
@@ -183,13 +183,13 @@ typedef struct {
   };
 } object_t;
 
-typedef struct member_s {
-  struct member_s *next;
+typedef struct member_t {
+  struct member_t *next;
   object_t object;
   char   *role;
 } member_t;
 
-typedef struct osm_s {
+typedef struct osm_t {
   bounds_t *bounds;   // original bounds as they appear in the file
   user_t *user;
 
@@ -202,7 +202,7 @@ typedef struct osm_s {
   // hashing relations doesn't yet make much sense as relations are quite rare
   relation_t  *relation;
 
-  struct icon_s **icons;
+  struct icon_t **icons;
 
   bounds_t rbounds;
 } osm_t;
@@ -210,7 +210,7 @@ typedef struct osm_s {
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 
-osm_t *osm_parse(const char *path, const char *filename, struct icon_s **icons);
+osm_t *osm_parse(const char *path, const char *filename, struct icon_t **icons);
 gboolean osm_sanity_check(GtkWidget *parent, const osm_t *osm);
 tag_t *osm_parse_osm_tag(xmlNode* a_node);
 node_chain_t *osm_parse_osm_way_nd(osm_t *osm, xmlNode *a_node);

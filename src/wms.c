@@ -41,15 +41,15 @@ typedef struct {
   gboolean valid;
 } wms_llbbox_t;
 
-typedef struct wms_layer_s {
+typedef struct wms_layer_t {
   char *title;
   char *name;
   char *srs;
   gboolean epsg4326, selected;
   wms_llbbox_t llbbox;
 
-  struct wms_layer_s *children;
-  struct wms_layer_s *next;
+  struct wms_layer_t *children;
+  struct wms_layer_t *next;
 } wms_layer_t;
 
 typedef struct {

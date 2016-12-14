@@ -67,7 +67,7 @@ struct gps_data_t {
 };
 
 /* setup for direct gpsd based communication */
-typedef struct gps_state_s {
+typedef struct gps_state_t {
   /* when using liblocation, events are generated on position change */
   /* and no seperate timer is required */
   guint handler_id;

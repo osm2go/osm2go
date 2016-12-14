@@ -647,7 +647,7 @@ GType combo_box_entry_type(void) {
 }
 
 /* ---------- simple interface to the systems web browser ---------- */
-void open_url(struct appdata_s *appdata, const char *url)
+void open_url(struct appdata_t *appdata, const char *url)
 {
 #ifdef ENABLE_BROWSER_INTERFACE
 #ifndef USE_HILDON

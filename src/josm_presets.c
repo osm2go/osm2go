@@ -46,7 +46,7 @@ typedef enum {
   WIDGET_TYPE_KEY
 } presets_widget_type_t;
 
-typedef struct presets_widget_s {
+typedef struct presets_widget_t {
   presets_widget_type_t type;
 
   xmlChar *key, *text;
@@ -75,20 +75,20 @@ typedef struct presets_widget_s {
 
   };
 
-  struct presets_widget_s *next;
+  struct presets_widget_t *next;
 } presets_widget_t;
 
-struct presets_item_s {
+struct presets_item_t {
   int type;
   xmlChar *name, *icon, *link;
   gboolean is_group;
 
   union {
     presets_widget_t *widget;
-    struct presets_item_s *group;
+    struct presets_item_t *group;
   };
 
-  struct presets_item_s *next;
+  struct presets_item_t *next;
 };
 
 #ifdef ENABLE_BROWSER_INTERFACE

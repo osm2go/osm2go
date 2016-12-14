@@ -30,7 +30,7 @@
 #define FINGER_UI
 #endif
 
-typedef struct iconbar_s {
+typedef struct iconbar_t {
   GtkWidget *toolbar;
 
 #ifdef FINGER_UI

@@ -45,7 +45,7 @@ typedef struct {
   gboolean use_authentication;
 } proxy_t;
 
-typedef struct settings_s {
+typedef struct settings_t {
 
   /* never changed */
   char *base_path;
@@ -57,7 +57,7 @@ typedef struct settings_s {
   char *server, *username, *password;
 
   /* changed in wms.c */
-  struct wms_server_s *wms_server;
+  struct wms_server_t *wms_server;
 
   /* changed in style.c */
   char *style;

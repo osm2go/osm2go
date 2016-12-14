@@ -66,7 +66,7 @@ typedef struct {
     elemstyle_color_t color;
   } bg;
 
-  float zoom_max;   // XXX probably belongs in elemstyle_s
+  float zoom_max;   // XXX probably belongs in elemstyle_t
 } elemstyle_line_t;
 
 /* attribute modifiers */
@@ -90,26 +90,26 @@ typedef struct {
 
 typedef struct {
   elemstyle_color_t color;
-  float zoom_max;   // XXX probably belongs in elemstyle_s
+  float zoom_max;   // XXX probably belongs in elemstyle_t
 } elemstyle_area_t;
 
 typedef struct {
   gboolean annotate;
   char *filename;
-  float zoom_max;   // XXX probably belongs in elemstyle_s
+  float zoom_max;   // XXX probably belongs in elemstyle_t
 } elemstyle_icon_t;
 
-typedef struct elemstyle_s elemstyle_t;
+typedef struct elemstyle_t elemstyle_t;
 
 elemstyle_t *josm_elemstyles_load(const char *name);
 void josm_elemstyles_free(elemstyle_t *elemstyles);
 gboolean parse_color(xmlNode *a_node, const char *name, elemstyle_color_t *color);
 
-struct style_s;
+struct style_t;
 
-void josm_elemstyles_colorize_node(const struct style_s *style, node_t *node);
-void josm_elemstyles_colorize_way(const struct style_s *style, way_t *way);
-void josm_elemstyles_colorize_world(const struct style_s *style, osm_t *osm);
+void josm_elemstyles_colorize_node(const struct style_t *style, node_t *node);
+void josm_elemstyles_colorize_way(const struct style_t *style, way_t *way);
+void josm_elemstyles_colorize_world(const struct style_t *style, osm_t *osm);
 
 #endif // JOSM_ELEMSTYLES_H
 

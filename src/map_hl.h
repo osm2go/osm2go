@@ -26,9 +26,9 @@
 
 #include <glib.h>
 
-typedef struct map_highlight_s {
+typedef struct map_highlight_t {
   canvas_item_t *item;
-  struct map_highlight_s *next;
+  struct map_highlight_t *next;
 } map_highlight_t;
 
 void map_hl_cursor_draw(map_t *map, gint x, gint y, gboolean is_world, gint radius);

@@ -43,19 +43,19 @@
 /* of all the ways the node was contained in. This would then be MODIFY */
 /* operatins being part of the DELETE state */
 
-typedef struct undo_op_s {
+typedef struct undo_op_t {
   undo_type_t type;   /* the type of this particular database/map operation */
   object_t object;
   item_id_chain_t *id_chain;       /* ref id list, e.g. for nodes of way */
-  struct undo_op_s *next;
+  struct undo_op_t *next;
 } undo_op_t;
 
-struct undo_state_s {
+struct undo_state_t {
   undo_type_t type;   /* what the overall operation was */
   char *name;         /* the name of the "parent" object */
   undo_op_t *op;
 
-  struct undo_state_s *next;
+  struct undo_state_t *next;
 };
 
 /* return plain text of type */
@@ -352,7 +352,7 @@ void undo_append_node(appdata_t *appdata, undo_type_t type, node_t *node) {
   undo_append_object(appdata, type, &obj);
 }
 
-void undo_open_new_state(struct appdata_s *appdata, undo_type_t type,
+void undo_open_new_state(struct appdata_t *appdata, undo_type_t type,
 			 object_t *object) {
 
   UNDO_ENABLE_CHECK;

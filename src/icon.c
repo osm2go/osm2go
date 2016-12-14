@@ -24,10 +24,10 @@
 
 #include <sys/stat.h>
 
-struct icon_s {
+struct icon_t {
   GdkPixbuf *buf;
   int use;
-  struct icon_s *next;
+  struct icon_t *next;
   gchar name[];
 };
 

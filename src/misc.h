@@ -32,9 +32,9 @@
 #define MISC_AGAIN_ID_EXPORT_OVERWRITE (1<<6)
 #define MISC_AGAIN_ID_AREA_TOO_BIG     (1<<7)
 
-typedef struct file_chain_s {
+typedef struct file_chain_t {
   char *name;
-  struct file_chain_s *next;
+  struct file_chain_t *next;
 } file_chain_t;
 
 /* these flags prevent you from leaving the dialog with no (or yes) */
@@ -53,13 +53,13 @@ typedef struct file_chain_s {
 float xml_get_prop_float(xmlNode *node, const char *prop);
 gboolean xml_get_prop_is(xmlNode *node, const char *prop, const char *str);
 
-struct appdata_s;
+struct appdata_t;
 
 void errorf(GtkWidget *parent, const char *fmt, ...) G_GNUC_PRINTF(2, 3);
 void warningf(GtkWidget *parent, const char *fmt, ...) G_GNUC_PRINTF(2, 3);
 void messagef(GtkWidget *parent, const char *title, const char *fmt, ...) G_GNUC_PRINTF(3, 4);
 gboolean yes_no_f(GtkWidget *parent,
-		  struct appdata_s *appdata, gulong again_bit, gint flags,
+		  struct appdata_t *appdata, gulong again_bit, gint flags,
 		  const char *title, const char *fmt, ...) G_GNUC_PRINTF(6, 7);
 
 gchar *find_file(const char *n1, const char *n2, const char *n3);
@@ -73,12 +73,12 @@ file_chain_t *file_scan(const char *extension);
 #define MISC_DIALOG_WIDE     3
 #define MISC_DIALOG_HIGH     4
 
-struct settings_s;
+struct settings_t;
 
 GtkWidget *misc_dialog_new(guint hint, const gchar *title, GtkWindow *parent, ...);
 GtkWidget *misc_scrolled_window_new(gboolean etched_in);
 void misc_scrolled_window_add_with_viewport(GtkWidget *win, GtkWidget *child);
-const char *misc_get_proxy_uri(struct settings_s *settings);
+const char *misc_get_proxy_uri(struct settings_t *settings);
 void misc_table_attach(GtkWidget *table, GtkWidget *widget, int x, int y);
 
 /* unified widgets */
@@ -107,7 +107,7 @@ const char *combo_box_get_active_text(GtkWidget *cbox);
 GType combo_box_type(void);
 GType combo_box_entry_type(void);
 
-void open_url(struct appdata_s *appdata, const char *url);
+void open_url(struct appdata_t *appdata, const char *url);
 
 void misc_init(void);
 

@@ -26,7 +26,7 @@
 
 #define STATUSBAR_DEFAULT_BRIEF_TIME 3000
 
-typedef struct statusbar_s {
+typedef struct statusbar_t {
   GtkWidget *widget;
 #if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
   guint cid;

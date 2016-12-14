@@ -29,7 +29,7 @@
 #include <gtk/gtk.h>
 #include <libxml/parser.h>
 
-typedef struct project_s {
+typedef struct project_t {
   char *name;
   char *path;
 

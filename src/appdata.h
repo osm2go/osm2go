@@ -70,7 +70,7 @@
 #include "dbus.h"
 #endif
 
-typedef struct appdata_s {
+typedef struct appdata_t {
 #ifdef USE_HILDON
   HildonProgram *program;
   HildonWindow *window;
@@ -81,22 +81,22 @@ typedef struct appdata_s {
 #endif
 
   GtkWidget *vbox;
-  struct map_s *map;
+  struct map_t *map;
   osm_t *osm;
 
 #ifdef ZOOM_BUTTONS
   GtkWidget *btn_zoom_in, *btn_zoom_out, *btn_detail_popup;
 #endif
 
-  struct statusbar_s *statusbar;
-  struct settings_s *settings;
-  struct project_s *project;
-  struct iconbar_s *iconbar;
-  struct icon_s *icon;
-  struct presets_item_s *presets;
+  struct statusbar_t *statusbar;
+  struct settings_t *settings;
+  struct project_t *project;
+  struct iconbar_t *iconbar;
+  struct icon_t *icon;
+  struct presets_item_t *presets;
 
   /* menu items to be enabled and disabled every now and then */
-  struct gps_state_s *gps_state;
+  struct gps_state_t *gps_state;
 
 #ifdef USE_HILDON
   dbus_mm_pos_t mmpos;
@@ -117,7 +117,7 @@ typedef struct appdata_s {
     GtkWidget *menu_item_track_clear;
     GtkWidget *menu_item_track_enable_gps;
     GtkWidget *menu_item_track_follow_gps;
-    struct track_s *track;
+    struct track_t *track;
     canvas_item_t *gps_item; // the purple circle
     int warn_cnt;
   } track;

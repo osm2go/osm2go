@@ -30,7 +30,7 @@
 #define PRESETS_TYPE_CLOSEDWAY (1<<3)
 #define PRESETS_TYPE_ALL       (0xffff)
 
-typedef struct presets_item_s presets_item_t;
+typedef struct presets_item_t presets_item_t;
 
 presets_item_t *josm_presets_load(void);
 GtkWidget *josm_build_presets_button(appdata_t *appdata, tag_context_t *tag_context);

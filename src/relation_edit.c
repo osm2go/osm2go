@@ -44,9 +44,9 @@ enum {
   RELITEM_NUM_COLS
 };
 
-typedef struct role_chain_s {
+typedef struct role_chain_t {
   char *role;
-  struct role_chain_s *next;
+  struct role_chain_t *next;
 } role_chain_t;
 
 static gboolean relation_add_item(GtkWidget *parent,

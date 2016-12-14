@@ -50,19 +50,19 @@ typedef double pos_float_t;
 #define RAD2DEG(a)  ((a) * 180.0 / M_PI)
 
 /* global position */
-typedef struct pos {
+typedef struct pos_t {
   pos_float_t lat, lon;
 } pos_t;
 
 /* local position */
-typedef struct lpos {
+typedef struct lpos_t {
   gint x, y;
 } lpos_t;
 
-struct bounds_s;
-void pos2lpos(const struct bounds_s *bounds, const pos_t *pos, lpos_t *lpos);
+struct bounds_t;
+void pos2lpos(const struct bounds_t *bounds, const pos_t *pos, lpos_t *lpos);
 void pos2lpos_center(const pos_t *pos, lpos_t *lpos);
-void lpos2pos(const struct bounds_s *bounds, const lpos_t *lpos, pos_t *pos);
+void lpos2pos(const struct bounds_t *bounds, const lpos_t *lpos, pos_t *pos);
 
 void pos_lat_str(char *str, int len, pos_float_t latitude);
 void pos_lon_str(char *str, int len, pos_float_t longitude);

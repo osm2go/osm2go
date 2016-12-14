@@ -38,9 +38,9 @@
 /* this is a chain of map_items which is attached to all entries */
 /* in the osm tree (node_t, way_t, ...) to be able to get a link */
 /* to the screen representation of a give node/way/etc */
-struct map_item_chain_s {
+struct map_item_chain_t {
   map_item_t *map_item;
-  struct map_item_chain_s *next;
+  struct map_item_chain_t *next;
 };
 
 #undef DESTROY_WAIT_FOR_GTK

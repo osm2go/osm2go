@@ -74,7 +74,7 @@ typedef struct {
 
 #ifdef CANVAS_CUSTOM_ITEM_AT
   struct {
-    struct canvas_item_info_s *first, *last;
+    struct canvas_item_info_t *first, *last;
   } item_info[CANVAS_GROUPS];
 #endif
 
@@ -96,7 +96,7 @@ typedef gulong canvas_color_t;
 #ifdef CANVAS_CUSTOM_ITEM_AT
 typedef enum { CANVAS_ITEM_CIRCLE, CANVAS_ITEM_POLY } canvas_item_type_t;
 
-typedef struct canvas_item_info_s {
+typedef struct canvas_item_info_t {
   canvas_t *canvas;
   canvas_item_type_t type;
 
@@ -125,7 +125,7 @@ typedef struct canvas_item_info_s {
 
   canvas_group_t group;
   canvas_item_t *item;
-  struct canvas_item_info_s *prev, *next;
+  struct canvas_item_info_t *prev, *next;
 } canvas_item_info_t;
 
 #endif // CANVAS_CUSTOM_ITEM_AT

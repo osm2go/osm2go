@@ -24,25 +24,25 @@
 #include "pos.h"
 #include "project.h"
 
-typedef struct track_point_s {
-  struct track_point_s *next;
+typedef struct track_point_t {
+  struct track_point_t *next;
   pos_t pos;               /* position in lat/lon format */
   time_t time;
   float altitude;
 } track_point_t;
 
-typedef struct track_item_chain_s {
+typedef struct track_item_chain_t {
   canvas_item_t *item;
-  struct track_item_chain_s *next;
+  struct track_item_chain_t *next;
 } track_item_chain_t;
 
-typedef struct track_seg_s {
+typedef struct track_seg_t {
   track_point_t *track_point;
-  struct track_seg_s *next;
+  struct track_seg_t *next;
   track_item_chain_t *item_chain;
 } track_seg_t;
 
-typedef struct track_s {
+typedef struct track_t {
   track_seg_t *track_seg;
   gboolean dirty;
   track_seg_t *cur_seg;

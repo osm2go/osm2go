@@ -23,9 +23,9 @@
 #include "appdata.h"
 #include "project.h"
 
-typedef struct wms_server_s {
+typedef struct wms_server_t {
   char *name, *server, *path;
-  struct wms_server_s *next;
+  struct wms_server_t *next;
 } wms_server_t;
 
 void wms_import(appdata_t *appdata);
