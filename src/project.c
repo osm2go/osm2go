@@ -56,14 +56,13 @@ typedef struct {
 } project_context_t;
 
 static gboolean project_edit(appdata_t *appdata, GtkWidget *parent,
-		      settings_t *settings, project_t *project,
-		      gboolean is_new);
+                             project_t *project, gboolean is_new);
 
 
 /* ------------ project file io ------------- */
 
 static gboolean project_read(const char *project_file, project_t *project,
-                             const settings_t *settings) {
+                             const char *defaultserver) {
   xmlDoc *doc = NULL;
 
   /* parse the file and get the DOM */
@@ -95,8 +94,8 @@ static gboolean project_read(const char *project_file, project_t *project,
 
 	    } else if(strcmp((char*)node->name, "server") == 0) {
 	      str = (char*)xmlNodeListGetString(doc, node->children, 1);
-              if(g_strcmp0(settings->server, str) == 0) {
-                project->server = settings->server;
+              if(g_strcmp0(defaultserver, str) == 0) {
+                project->server = defaultserver;
               } else {
                 project->rserver = g_strdup(str);
                 project->server = project->rserver;
@@ -332,7 +331,7 @@ static GSList *project_scan(appdata_t *appdata) {
       n->name = g_strdup(name);
       n->path = g_strconcat(appdata->settings->base_path, name, "/", NULL);
 
-      if(project_read(fullname, n, appdata->settings))
+      if(project_read(fullname, n, appdata->settings->server))
         projects = g_slist_prepend(projects, n);
       else
         project_free(n);
@@ -349,7 +348,6 @@ typedef struct {
   appdata_t *appdata;
   GSList *projects;
   GtkWidget *dialog, *list;
-  settings_t *settings;
 } select_context_t;
 
 enum {
@@ -517,7 +515,7 @@ static project_t *project_new(select_context_t *context) {
   GtkWidget *hbox = gtk_hbox_new(FALSE, 8);
   gtk_box_pack_start_defaults(GTK_BOX(hbox), gtk_label_new(_("Name:")));
 
-  name_callback_context_t name_context = { dialog, context->settings };
+  name_callback_context_t name_context = { dialog, context->appdata->settings };
   GtkWidget *entry = entry_new();
   gtk_box_pack_start_defaults(GTK_BOX(hbox), entry);
   g_signal_connect(G_OBJECT(entry), "changed",
@@ -541,14 +539,14 @@ static project_t *project_new(select_context_t *context) {
 
 
   project->path = g_strconcat(
-             context->settings->base_path, project->name, "/", NULL);
+             context->appdata->settings->base_path, project->name, "/", NULL);
   project->desc = NULL;
 
   /* no data downloaded yet */
   project->data_dirty = TRUE;
 
   /* use global server/access settings */
-  project->server   = g_strdup(context->settings->server);
+  project->server   = g_strdup(context->appdata->settings->server);
 
   /* build project osm file name */
   project->osm = g_strconcat(project->name, ".osm", NULL);
@@ -561,8 +559,7 @@ static project_t *project_new(select_context_t *context) {
     project_delete(context, project);
 
     project = NULL;
-  } else if(!project_edit(context->appdata, context->dialog,
-			  context->settings, project, TRUE)) {
+  } else if(!project_edit(context->appdata, context->dialog, project, TRUE)) {
     printf("new/edit cancelled!!\n");
 
     project_delete(context, project);
@@ -653,8 +650,7 @@ static void on_project_edit(G_GNUC_UNUSED GtkButton *button, gpointer data) {
   project_t *project = project_get_selected(context->list);
   g_assert(project);
 
-  if(project_edit(context->appdata, context->dialog,
-		  context->settings, project, FALSE)) {
+  if(project_edit(context->appdata, context->dialog, project, FALSE)) {
     GtkTreeModel     *model;
     GtkTreeIter       iter;
 
@@ -690,8 +686,8 @@ static void on_project_edit(G_GNUC_UNUSED GtkButton *button, gpointer data) {
         g_free(cur->rserver);
         cur->rserver = NULL;
       }
-      if(g_strcmp0(project->server, context->settings->server) == 0) {
-        cur->server = context->settings->server;
+      if(g_strcmp0(project->server, context->appdata->settings->server) == 0) {
+        cur->server = context->appdata->settings->server;
       } else {
         cur->rserver = g_strdup(project->server);
         cur->server = cur->rserver;
@@ -752,7 +748,7 @@ on_project_update_all(G_GNUC_UNUSED GtkButton *button, gpointer data)
       if(prj && project_osm_present(prj)) {
         printf("found %s to update\n", prj->name);
         if (!osm_download(GTK_WIDGET(context->dialog),
-                     context->settings, prj))
+                     context->appdata->settings, prj))
           break;
       }
     } while(gtk_tree_model_iter_next(model, &iter));
@@ -846,7 +842,6 @@ static char *project_select(appdata_t *appdata) {
 
   select_context_t context = { 0 };
   context.appdata = appdata;
-  context.settings = appdata->settings;
   context.projects = project_scan(appdata);
 
   /* create project selection dialog */
@@ -1098,7 +1093,7 @@ static GtkWidget *gtk_label_left_new(char *str) {
 }
 
 static gboolean
-project_edit(appdata_t *appdata, GtkWidget *parent, settings_t *settings,
+project_edit(appdata_t *appdata, GtkWidget *parent,
 	     project_t *project, gboolean is_new) {
   gboolean ok = FALSE;
 
@@ -1109,7 +1104,7 @@ project_edit(appdata_t *appdata, GtkWidget *parent, settings_t *settings,
 
   project_context_t context = { 0 };
   context.project = project;
-  context.area_edit.settings = context.settings = settings;
+  context.area_edit.settings = context.settings = appdata->settings;
   context.area_edit.appdata = appdata;
   context.is_new = is_new;
   context.area_edit.min = &project->min;
@@ -1292,7 +1287,7 @@ gboolean project_open(appdata_t *appdata, const char *name) {
     return FALSE;
   }
 
-  if(!project_read(project_file, project, appdata->settings)) {
+  if(!project_read(project_file, project, appdata->settings->server)) {
     printf("error reading project file\n");
     project_free(project);
     g_free(project_file);
