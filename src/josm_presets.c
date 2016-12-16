@@ -455,6 +455,7 @@ static gboolean is_widget_interactive(const presets_widget_t *w)
   switch(w->type) {
   case WIDGET_TYPE_LABEL:
   case WIDGET_TYPE_SEPARATOR:
+  case WIDGET_TYPE_SPACE:
   case WIDGET_TYPE_KEY:
     return FALSE;
   default:
