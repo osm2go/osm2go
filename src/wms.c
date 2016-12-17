@@ -1230,11 +1230,13 @@ void wms_import(appdata_t *appdata) {
   }
 
   /* uses epsg4326 if possible */
-  gchar *srs = NULL;
+  gchar *srs;
   if(layer->epsg4326)
     srs = g_strdup("EPSG:4326");
-  else if(layer->srs)
-    srs = g_strdup(layer->srs);
+  else {
+    srs = layer->srs;
+    layer->srs = NULL;
+  }
 
   wms_layer_free(layer);
 
