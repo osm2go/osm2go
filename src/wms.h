@@ -24,7 +24,7 @@
 #include "project.h"
 
 typedef struct wms_server_t {
-  char *name, *server, *path;
+  gchar *name, *server, *path;
   struct wms_server_t *next;
 } wms_server_t;
 

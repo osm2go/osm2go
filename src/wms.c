@@ -42,9 +42,9 @@ typedef struct {
 } wms_llbbox_t;
 
 typedef struct wms_layer_t {
-  char *title;
-  char *name;
-  char *srs;
+  gchar *title;
+  gchar *name;
+  gchar *srs;
   gboolean epsg4326, selected;
   wms_llbbox_t llbbox;
 
@@ -61,7 +61,7 @@ typedef struct {
 } wms_request_t;
 
 typedef struct {
-  char *title;
+  gchar *title;
 } wms_service_t;
 
 typedef struct {
@@ -70,8 +70,8 @@ typedef struct {
 } wms_cap_t;
 
 typedef struct {
-  char *server;
-  char *path;
+  gchar *server;
+  gchar *path;
   gint width, height;
 
   wms_service_t *service;
@@ -79,19 +79,19 @@ typedef struct {
 } wms_t;
 
 gboolean xmlTextIs(xmlDocPtr doc, xmlNodePtr list, char *str) {
-  char *nstr = (char*)xmlNodeListGetString(doc, list, 1);
+  xmlChar *nstr = xmlNodeListGetString(doc, list, 1);
   if(!nstr) return FALSE;
 
-  gboolean match = (strcmp(str, nstr) == 0);
+  gboolean match = (strcmp(str, (char*)nstr) == 0);
   xmlFree(nstr);
   return match;
 }
 
 float xmlGetPropFloat(xmlNode *node, char *prop) {
-  char *prop_str = (char*)xmlGetProp(node, BAD_CAST prop);
+  xmlChar *prop_str = xmlGetProp(node, BAD_CAST prop);
   if(!prop_str) return NAN;
 
-  float retval = g_ascii_strtod(prop_str, NULL);
+  float retval = g_ascii_strtod((gchar*)prop_str, NULL);
   xmlFree(prop_str);
   return retval;
 }
@@ -117,7 +117,6 @@ static gboolean wms_bbox_is_valid(pos_t *min, pos_t *max) {
 static wms_layer_t *wms_cap_parse_layer(xmlDocPtr doc, xmlNode *a_node) {
   wms_layer_t *wms_layer = NULL;
   xmlNode *cur_node = NULL;
-  char *str = NULL;
 
   wms_layer = g_new0(wms_layer_t, 1);
   wms_layer->llbbox.min.lon = wms_layer->llbbox.min.lat = NAN;
@@ -131,16 +130,16 @@ static wms_layer_t *wms_cap_parse_layer(xmlDocPtr doc, xmlNode *a_node) {
 	*children = wms_cap_parse_layer(doc, cur_node);
 	if(*children) children = &((*children)->next);
       } else if(strcasecmp((char*)cur_node->name, "Name") == 0) {
-	str = (char*)xmlNodeListGetString(doc, cur_node->children, 1);
-	wms_layer->name = g_strdup(str);
+	xmlChar *str = xmlNodeListGetString(doc, cur_node->children, 1);
+	wms_layer->name = g_strdup((gchar*)str);
 	xmlFree(str);
       } else if(strcasecmp((char*)cur_node->name, "Title") == 0) {
-	str = (char*)xmlNodeListGetString(doc, cur_node->children, 1);
-	wms_layer->title = g_strdup(str);
+	xmlChar *str = xmlNodeListGetString(doc, cur_node->children, 1);
+	wms_layer->title = g_strdup((gchar*)str);
 	xmlFree(str);
       } else if(strcasecmp((char*)cur_node->name, "SRS") == 0) {
-	str = (char*)xmlNodeListGetString(doc, cur_node->children, 1);
-	wms_layer->srs = g_strdup(str);
+	xmlChar *str = xmlNodeListGetString(doc, cur_node->children, 1);
+	wms_layer->srs = g_strdup((gchar*)str);
 	xmlFree(str);
 
 	printf("SRS = %s\n", wms_layer->srs);
@@ -252,15 +251,14 @@ static wms_cap_t *wms_cap_parse_cap(xmlDocPtr doc, xmlNode *a_node) {
 static wms_service_t *wms_cap_parse_service(xmlDocPtr doc, xmlNode *a_node) {
   wms_service_t *wms_service = NULL;
   xmlNode *cur_node = NULL;
-  char *str = NULL;
 
   wms_service = g_new0(wms_service_t, 1);
 
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcasecmp((char*)cur_node->name, "title") == 0) {
-	str = (char*)xmlNodeListGetString(doc, cur_node->children, 1);
-	wms_service->title = g_strdup(str);
+	xmlChar *str = xmlNodeListGetString(doc, cur_node->children, 1);
+	wms_service->title = g_strdup((gchar *)str);
 	xmlFree(str);
       } else
 	printf("found unhandled WMT_MS_Capabilities/Service/%s\n",
@@ -413,14 +411,14 @@ static gboolean wms_llbbox_fits(project_t *project, wms_llbbox_t *llbbox) {
 }
 
 static void wms_get_child_layers(wms_layer_t *layer,
-	 gint depth, gboolean epsg4326, wms_llbbox_t *llbbox, char *srs,
+	 gint depth, gboolean epsg4326, wms_llbbox_t *llbbox, gchar *srs,
 	 wms_layer_t **c_layer) {
   while(layer) {
 
     /* get a copy of the parents values for the current one ... */
     wms_llbbox_t *local_llbbox = llbbox;
     gboolean local_epsg4326 = epsg4326;
-    char *local_srs = srs?g_strdup(srs):NULL;
+    gchar *local_srs = srs?g_strdup(srs):NULL;
 
     /* ... and overwrite the inherited stuff with better local stuff */
     if(layer->llbbox.valid)                    local_llbbox = &layer->llbbox;
@@ -600,7 +598,7 @@ static void on_server_remove(G_GNUC_UNUSED GtkWidget *but, wms_server_context_t 
 static void callback_modified_name(GtkWidget *widget, gpointer data) {
   wms_server_context_t *context = (wms_server_context_t*)data;
 
-  char *name = (char*)gtk_entry_get_text(GTK_ENTRY(widget));
+  const gchar *name = gtk_entry_get_text(GTK_ENTRY(widget));
 
   /* name must not contain some special chars */
   gboolean ok = TRUE;
@@ -608,7 +606,7 @@ static void callback_modified_name(GtkWidget *widget, gpointer data) {
   /* search all entries except the last (which is the one we are editing) */
   wms_server_t *server = context->appdata->settings->wms_server;
   while(server && server->next) {
-    if(strcasecmp(server->name, name) == 0) ok = FALSE;
+    if(strcasecmp(server->name, (char*)name) == 0) ok = FALSE;
     server = server->next;
   }
 
@@ -1128,9 +1126,9 @@ void wms_import(appdata_t *appdata) {
 
   /* if there's already a question mark, then add further */
   /* parameters using the &, else use the ? */
-  char *append_char = path_ends_with_special?"":(path_contains_qm?"&":"?");
+  const char *append_char = path_ends_with_special?"":(path_contains_qm?"&":"?");
 
-  char *url = g_strdup_printf("%s%s"
+  gchar *url = g_strdup_printf("%s%s"
 			      "%sSERVICE=wms"
 			      //			      "&WMTVER=1.1.1"
 			      "&VERSION=1.1.1"
@@ -1139,7 +1137,7 @@ void wms_import(appdata_t *appdata) {
 
   char *cap = NULL;
   net_io_download_mem(GTK_WIDGET(appdata->window), appdata->settings,
-		      url, &cap);
+		      (char*)url, &cap);
   g_free(url);
 
   /* ----------- parse capabilities -------------- */
@@ -1219,7 +1217,7 @@ void wms_import(appdata_t *appdata) {
 			wms->server, wms->path, append_char);
 
   /* append layers */
-  char *old;
+  gchar *old;
   wms_layer_t *t = layer;
   gint cnt = 0;
   while(t) {
@@ -1233,7 +1231,7 @@ void wms_import(appdata_t *appdata) {
   }
 
   /* uses epsg4326 if possible */
-  char *srs = NULL;
+  gchar *srs = NULL;
   if(layer->epsg4326)
     srs = g_strdup("EPSG:4326");
   else if(layer->srs)
@@ -1253,8 +1251,8 @@ void wms_import(appdata_t *appdata) {
   }
 
   /* and append rest */
-  char minlon[G_ASCII_DTOSTR_BUF_SIZE], minlat[G_ASCII_DTOSTR_BUF_SIZE];
-  char maxlon[G_ASCII_DTOSTR_BUF_SIZE], maxlat[G_ASCII_DTOSTR_BUF_SIZE];
+  gchar minlon[G_ASCII_DTOSTR_BUF_SIZE], minlat[G_ASCII_DTOSTR_BUF_SIZE];
+  gchar maxlon[G_ASCII_DTOSTR_BUF_SIZE], maxlat[G_ASCII_DTOSTR_BUF_SIZE];
 
   /* build strings of min and max lat and lon to be used in url */
   g_ascii_formatd(minlon, sizeof(minlon), LL_FORMAT,
@@ -1286,14 +1284,14 @@ void wms_import(appdata_t *appdata) {
   g_free(old);
 
   const char *exts[] = { "jpg", "jpg", "png", "gif" };
-  char *filename = g_strjoin("/wms.", appdata->project->path,
+  gchar *filename = g_strjoin("/wms.", appdata->project->path,
 				   exts[format], NULL);
 
   /* remove any existing image before */
   wms_remove(appdata);
 
   if(!net_io_download_file(GTK_WIDGET(appdata->window), appdata->settings,
-			   url, filename, NULL)) {
+			   (char*)url, filename, NULL)) {
     g_free(filename);
     g_free(url);
     wms_free(wms);
@@ -1325,14 +1323,14 @@ void wms_load(appdata_t *appdata) {
   int i=0;
 
   while(exts[i][0]) {
-    char *filename = g_strjoin("/wms.", appdata->project->path,
+    gchar *filename = g_strjoin("/wms.", appdata->project->path,
 				     exts[i], NULL);
 
     if(g_file_test(filename, G_FILE_TEST_EXISTS)) {
       appdata->map->bg.offset.x = appdata->project->wms_offset.x;
       appdata->map->bg.offset.y = appdata->project->wms_offset.y;
 
-      map_set_bg_image(appdata->map, filename);
+      map_set_bg_image(appdata->map, (char*)filename);
 
       /* restore image to saved position */
       gint x = appdata->osm->bounds->min.x + appdata->map->bg.offset.x;
@@ -1357,7 +1355,7 @@ void wms_remove_file(project_t *project) {
   int i=0;
 
   while(exts[i][0]) {
-    char *filename =
+    gchar *filename =
       g_strjoin("/wms.", project->path, exts[i], NULL);
 
     if(g_file_test(filename, G_FILE_TEST_EXISTS))
@@ -1383,7 +1381,7 @@ void wms_remove(appdata_t *appdata) {
 }
 
 struct server_preset_s {
-  char *name, *server, *path;
+  const gchar *name, *server, *path;
 } default_servers[] = {
   { "Open Geospatial Consortium Web Services", "http://ows.terrestris.de", "/osm/service?" },
   /* add more servers here ... */

@@ -129,11 +129,11 @@ settings_t *settings_load(void) {
       for(i=0;i<count;i++) {
         /* keep ordering, the longest key must be first */
         gchar *key = g_strdup_printf("/apps/" PACKAGE "/wms/server%d", i);
-	char *server = gconf_client_get_string(client, key, NULL);
+        gchar *server = gconf_client_get_string(client, key, NULL);
         g_sprintf(key, "/apps/" PACKAGE "/wms/name%d", i);
-        char *name = gconf_client_get_string(client, key, NULL);
+        gchar *name = gconf_client_get_string(client, key, NULL);
         g_sprintf(key, "/apps/" PACKAGE "/wms/path%d", i);
-	char *path = gconf_client_get_string(client, key, NULL);
+        gchar *path = gconf_client_get_string(client, key, NULL);
 	g_free(key);
 
 	/* apply valid entry to list */
