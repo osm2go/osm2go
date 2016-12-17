@@ -88,15 +88,6 @@ gboolean xmlTextIs(xmlDocPtr doc, xmlNodePtr list, char *str) {
   return match;
 }
 
-float xmlGetPropFloat(xmlNode *node, char *prop) {
-  xmlChar *prop_str = xmlGetProp(node, BAD_CAST prop);
-  if(!prop_str) return NAN;
-
-  float retval = g_ascii_strtod((gchar*)prop_str, NULL);
-  xmlFree(prop_str);
-  return retval;
-}
-
 static gboolean wms_bbox_is_valid(pos_t *min, pos_t *max) {
   /* all four coordinates are valid? */
   if(isnan(min->lat)||isnan(min->lon)||isnan(max->lat)||isnan(max->lon))
@@ -149,10 +140,10 @@ static wms_layer_t *wms_cap_parse_layer(xmlDocPtr doc, xmlNode *a_node) {
 	  wms_layer->epsg4326 = TRUE;
 
       } else if(strcasecmp((char*)cur_node->name, "LatLonBoundingBox") == 0) {
-	wms_layer->llbbox.min.lat = xmlGetPropFloat(cur_node, "miny");
-	wms_layer->llbbox.min.lon = xmlGetPropFloat(cur_node, "minx");
-	wms_layer->llbbox.max.lat = xmlGetPropFloat(cur_node, "maxy");
-	wms_layer->llbbox.max.lon = xmlGetPropFloat(cur_node, "maxx");
+	wms_layer->llbbox.min.lat = xml_get_prop_float(cur_node, "miny");
+	wms_layer->llbbox.min.lon = xml_get_prop_float(cur_node, "minx");
+	wms_layer->llbbox.max.lat = xml_get_prop_float(cur_node, "maxy");
+	wms_layer->llbbox.max.lon = xml_get_prop_float(cur_node, "maxx");
       } else
 	printf("found unhandled WMT_MS_Capabilities/Capability/Layer/%s\n",
 	       cur_node->name);
