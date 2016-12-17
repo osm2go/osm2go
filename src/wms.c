@@ -25,6 +25,7 @@
 
 #include <libxml/parser.h>
 #include <libxml/tree.h>
+#include <string.h>
 #include <strings.h>
 
 #ifndef LIBXML_TREE_ENABLED
@@ -1318,14 +1319,17 @@ void wms_import(appdata_t *appdata) {
 }
 
 static const char *wms_exts[] = { "png", "gif", "jpg", NULL };
+/* this must be the longest one */
+#define DUMMYEXT wms_exts[0]
 
 /* try to load an existing image into map */
 void wms_load(appdata_t *appdata) {
   int i;
+  gchar *filename = g_strjoin("/wms.", appdata->project->path, DUMMYEXT, NULL);
+  gchar *ext = filename + strlen(filename) - strlen(DUMMYEXT);
 
   for(i = 0; wms_exts[i]; i++) {
-    gchar *filename = g_strjoin("/wms.", appdata->project->path,
-				     wms_exts[i], NULL);
+    memcpy(ext, wms_exts[i], strlen(wms_exts[i]));
 
     if(g_file_test(filename, G_FILE_TEST_EXISTS)) {
       appdata->map->bg.offset.x = appdata->project->wms_offset.x;
@@ -1339,29 +1343,28 @@ void wms_load(appdata_t *appdata) {
       canvas_image_move(appdata->map->bg.item, x, y,
 			appdata->map->bg.scale.x, appdata->map->bg.scale.y);
 
-      g_free(filename);
-
       gtk_widget_set_sensitive(appdata->menu_item_wms_clear, TRUE);
       gtk_widget_set_sensitive(appdata->menu_item_wms_adjust, TRUE);
 
-      return;
+      break;
     }
-    g_free(filename);
   }
+  g_free(filename);
 }
 
 void wms_remove_file(project_t *project) {
   int i;
+  gchar *filename = g_strjoin("/wms.", project->path, DUMMYEXT, NULL);
+  gchar *ext = filename + strlen(filename) - strlen(DUMMYEXT);
 
   for(i = 0; wms_exts[i]; i++) {
-    gchar *filename =
-      g_strjoin("/wms.", project->path, wms_exts[i], NULL);
+    memcpy(ext, wms_exts[i], strlen(wms_exts[i]));
 
     if(g_file_test(filename, G_FILE_TEST_EXISTS))
       g_remove(filename);
-
-    g_free(filename);
   }
+
+  g_free(filename);
 }
 
 void wms_remove(appdata_t *appdata) {
