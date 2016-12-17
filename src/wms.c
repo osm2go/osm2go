@@ -412,14 +412,13 @@ static gboolean wms_llbbox_fits(project_t *project, wms_llbbox_t *llbbox) {
 }
 
 static void wms_get_child_layers(wms_layer_t *layer,
-	 gint depth, gboolean epsg4326, wms_llbbox_t *llbbox, gchar *srs,
+	 gint depth, gboolean epsg4326, wms_llbbox_t *llbbox, const gchar *srs,
 	 wms_layer_t **c_layer) {
   while(layer) {
 
     /* get a copy of the parents values for the current one ... */
     wms_llbbox_t *local_llbbox = llbbox;
     gboolean local_epsg4326 = epsg4326;
-    gchar *local_srs = srs?g_strdup(srs):NULL;
 
     /* ... and overwrite the inherited stuff with better local stuff */
     if(layer->llbbox.valid)                    local_llbbox = &layer->llbbox;
@@ -430,7 +429,7 @@ static void wms_get_child_layers(wms_layer_t *layer,
       *c_layer = g_new0(wms_layer_t, 1);
       (*c_layer)->name     = g_strdup(layer->name);
       (*c_layer)->title    = g_strdup(layer->title);
-      (*c_layer)->srs      = g_strdup(local_srs);
+      (*c_layer)->srs      = g_strdup(srs);
       (*c_layer)->epsg4326 = local_epsg4326;
       (*c_layer)->llbbox   = *local_llbbox;
       c_layer = &((*c_layer)->next);
@@ -438,9 +437,8 @@ static void wms_get_child_layers(wms_layer_t *layer,
 
     wms_get_child_layers(layer->children, depth+1,
 			 local_epsg4326, local_llbbox,
-			 local_srs, c_layer);
+			 srs, c_layer);
 
-    g_free(local_srs);
     layer = layer->next;
   }
 }
