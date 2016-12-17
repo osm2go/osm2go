@@ -79,7 +79,7 @@ typedef struct {
   wms_cap_t cap;
 } wms_t;
 
-gboolean xmlTextIs(xmlDocPtr doc, xmlNodePtr list, char *str) {
+static gboolean xmlTextIs(xmlDocPtr doc, xmlNodePtr list, const char *str) {
   xmlChar *nstr = xmlNodeListGetString(doc, list, 1);
   if(!nstr) return FALSE;
 
@@ -176,11 +176,11 @@ static wms_getmap_t wms_cap_parse_getmap(xmlDocPtr doc, xmlNode *a_node) {
       if(strcasecmp((char*)cur_node->name, "Format") == 0) {
 	if(xmlTextIs(doc, cur_node->children, "image/png"))
 	  wms_getmap.format |= WMS_FORMAT_PNG;
-	if(xmlTextIs(doc, cur_node->children, "image/gif"))
+	else if(xmlTextIs(doc, cur_node->children, "image/gif"))
 	  wms_getmap.format |= WMS_FORMAT_GIF;
-	if(xmlTextIs(doc, cur_node->children, "image/jpg"))
+	else if(xmlTextIs(doc, cur_node->children, "image/jpg"))
 	  wms_getmap.format |= WMS_FORMAT_JPG;
-	if(xmlTextIs(doc, cur_node->children, "image/jpeg"))
+	else if(xmlTextIs(doc, cur_node->children, "image/jpeg"))
 	  wms_getmap.format |= WMS_FORMAT_JPEG;
       } else
 	printf("found unhandled "
