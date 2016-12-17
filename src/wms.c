@@ -58,7 +58,7 @@ typedef struct {
 } wms_getmap_t;
 
 typedef struct {
-  wms_getmap_t *getmap;
+  wms_getmap_t getmap;
 } wms_request_t;
 
 typedef struct {
@@ -67,7 +67,7 @@ typedef struct {
 
 typedef struct {
   wms_layer_t *layer;
-  wms_request_t *request;
+  wms_request_t request;
 } wms_cap_t;
 
 typedef struct {
@@ -75,8 +75,8 @@ typedef struct {
   gchar *path;
   gint width, height;
 
-  wms_service_t *service;
-  wms_cap_t *cap;
+  wms_service_t service;
+  wms_cap_t cap;
 } wms_t;
 
 gboolean xmlTextIs(xmlDocPtr doc, xmlNodePtr list, char *str) {
@@ -176,23 +176,21 @@ static wms_layer_t *wms_cap_parse_layer(xmlDocPtr doc, xmlNode *a_node) {
   return wms_layer;
 }
 
-static wms_getmap_t *wms_cap_parse_getmap(xmlDocPtr doc, xmlNode *a_node) {
-  wms_getmap_t *wms_getmap = NULL;
-  xmlNode *cur_node = NULL;
-
-  wms_getmap = g_new0(wms_getmap_t, 1);
+static wms_getmap_t wms_cap_parse_getmap(xmlDocPtr doc, xmlNode *a_node) {
+  wms_getmap_t wms_getmap = { 0 };
+  xmlNode *cur_node;
 
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcasecmp((char*)cur_node->name, "Format") == 0) {
 	if(xmlTextIs(doc, cur_node->children, "image/png"))
-	  wms_getmap->format |= WMS_FORMAT_PNG;
+	  wms_getmap.format |= WMS_FORMAT_PNG;
 	if(xmlTextIs(doc, cur_node->children, "image/gif"))
-	  wms_getmap->format |= WMS_FORMAT_GIF;
+	  wms_getmap.format |= WMS_FORMAT_GIF;
 	if(xmlTextIs(doc, cur_node->children, "image/jpg"))
-	  wms_getmap->format |= WMS_FORMAT_JPG;
+	  wms_getmap.format |= WMS_FORMAT_JPG;
 	if(xmlTextIs(doc, cur_node->children, "image/jpeg"))
-	  wms_getmap->format |= WMS_FORMAT_JPEG;
+	  wms_getmap.format |= WMS_FORMAT_JPEG;
       } else
 	printf("found unhandled "
 	       "WMT_MS_Capabilities/Capability/Request/GetMap/%s\n",
@@ -201,22 +199,20 @@ static wms_getmap_t *wms_cap_parse_getmap(xmlDocPtr doc, xmlNode *a_node) {
   }
 
   printf("Supported formats: %s%s%s\n",
-	 (wms_getmap->format & WMS_FORMAT_PNG)?"png ":"",
-	 (wms_getmap->format & WMS_FORMAT_GIF)?"gif ":"",
-	 (wms_getmap->format & (WMS_FORMAT_JPG | WMS_FORMAT_JPEG))?"jpg ":"");
+	 (wms_getmap.format & WMS_FORMAT_PNG)?"png ":"",
+	 (wms_getmap.format & WMS_FORMAT_GIF)?"gif ":"",
+	 (wms_getmap.format & (WMS_FORMAT_JPG | WMS_FORMAT_JPEG))?"jpg ":"");
   return wms_getmap;
 }
 
-static wms_request_t *wms_cap_parse_request(xmlDocPtr doc, xmlNode *a_node) {
-  wms_request_t *wms_request = NULL;
-  xmlNode *cur_node = NULL;
-
-  wms_request = g_new0(wms_request_t, 1);
+static wms_request_t wms_cap_parse_request(xmlDocPtr doc, xmlNode *a_node) {
+  wms_request_t wms_request = { { 0 } };
+  xmlNode *cur_node;
 
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcasecmp((char*)cur_node->name, "GetMap") == 0) {
-	wms_request->getmap = wms_cap_parse_getmap(doc, cur_node);
+	wms_request.getmap = wms_cap_parse_getmap(doc, cur_node);
       } else
 	printf("found unhandled WMT_MS_Capabilities/Capability/Request/%s\n",
 	       cur_node->name);
@@ -226,17 +222,17 @@ static wms_request_t *wms_cap_parse_request(xmlDocPtr doc, xmlNode *a_node) {
   return wms_request;
 }
 
-static wms_cap_t *wms_cap_parse_cap(xmlDocPtr doc, xmlNode *a_node) {
-  wms_cap_t *wms_cap = NULL;
-  xmlNode *cur_node = NULL;
+static gboolean wms_cap_parse_cap(xmlDocPtr doc, xmlNode *a_node, wms_cap_t *wms_cap) {
+  xmlNode *cur_node;
+  gboolean has_request = FALSE;
 
-  wms_cap = g_new0(wms_cap_t, 1);
   wms_layer_t **layer = &(wms_cap->layer);
 
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcasecmp((char*)cur_node->name, "Request") == 0) {
 	wms_cap->request = wms_cap_parse_request(doc, cur_node);
+        has_request = TRUE;
       } else if(strcasecmp((char*)cur_node->name, "Layer") == 0) {
 	*layer = wms_cap_parse_layer(doc, cur_node);
 	if(*layer) layer = &((*layer)->next);
@@ -246,14 +242,12 @@ static wms_cap_t *wms_cap_parse_cap(xmlDocPtr doc, xmlNode *a_node) {
     }
   }
 
-  return wms_cap;
+  return has_request && (wms_cap->layer != NULL);
 }
 
-static wms_service_t *wms_cap_parse_service(xmlDocPtr doc, xmlNode *a_node) {
-  wms_service_t *wms_service = NULL;
-  xmlNode *cur_node = NULL;
-
-  wms_service = g_new0(wms_service_t, 1);
+static void wms_cap_parse_service(xmlDocPtr doc, xmlNode *a_node,
+                                            wms_service_t *wms_service) {
+  xmlNode *cur_node;
 
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
@@ -269,51 +263,59 @@ static wms_service_t *wms_cap_parse_service(xmlDocPtr doc, xmlNode *a_node) {
 
   printf("-- Service --\n");
   printf("Title: %s\n", wms_service->title);
-
-  return wms_service;
 }
 
-static void wms_cap_parse(wms_t *wms, xmlDocPtr doc, xmlNode *a_node) {
+static gboolean wms_cap_parse(wms_t *wms, xmlDocPtr doc, xmlNode *a_node) {
   xmlNode *cur_node = NULL;
+  gboolean has_service = FALSE, has_cap = FALSE;
 
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
 
       if(strcasecmp((char*)cur_node->name, "Service") == 0) {
-	if(!wms->service)
-	  wms->service = wms_cap_parse_service(doc, cur_node);
+        if(!has_service) {
+          wms_cap_parse_service(doc, cur_node, &wms->service);
+          has_service = TRUE;
+        }
       } else if(strcasecmp((char*)cur_node->name, "Capability") == 0) {
-	if(!wms->cap)
-	  wms->cap = wms_cap_parse_cap(doc, cur_node);
+        if(!has_cap)
+          has_cap = wms_cap_parse_cap(doc, cur_node, &wms->cap);
       } else
 	printf("found unhandled WMT_MS_Capabilities/%s\n", cur_node->name);
     }
   }
+
+  return has_service && has_cap;
 }
 
 /* parse root element */
-static void wms_cap_parse_root(wms_t *wms, xmlDocPtr doc, xmlNode *a_node) {
+static gboolean wms_cap_parse_root(wms_t *wms, xmlDocPtr doc, xmlNode *a_node) {
   xmlNode *cur_node = NULL;
+  gboolean ret = FALSE;
 
   for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
 
       if(strcasecmp((char*)cur_node->name, "WMT_MS_Capabilities") == 0) {
-	wms_cap_parse(wms, doc, cur_node);
+        ret = wms_cap_parse(wms, doc, cur_node);
       } else
 	printf("found unhandled %s\n", cur_node->name);
     }
   }
+
+  return ret;
 }
 
-static void wms_cap_parse_doc(wms_t *wms, xmlDocPtr doc) {
+static gboolean wms_cap_parse_doc(wms_t *wms, xmlDocPtr doc) {
   /* Get the root element node */
   xmlNode *root_element = xmlDocGetRootElement(doc);
 
-  wms_cap_parse_root(wms, doc, root_element);
+  gboolean ret = wms_cap_parse_root(wms, doc, root_element);
 
   /*free the document */
   xmlFreeDoc(doc);
+
+  return ret;
 }
 
 /* get pixel extent of image display */
@@ -370,31 +372,11 @@ static void wms_layer_free(wms_layer_t *layer) {
   }
 }
 
-static void wms_getmap_free(wms_getmap_t *getmap) {
-  g_free(getmap);
-}
-
-static void wms_request_free(wms_request_t *request) {
-  if(request->getmap) wms_getmap_free(request->getmap);
-  g_free(request);
-}
-
-static void wms_cap_free(wms_cap_t *cap) {
-  wms_layer_free(cap->layer);
-  if(cap->request) wms_request_free(cap->request);
-  g_free(cap);
-}
-
-static void wms_service_free(wms_service_t *service) {
-  g_free(service->title);
-  g_free(service);
-}
-
 static void wms_free(wms_t *wms) {
   g_free(wms->server);
   g_free(wms->path);
-  if(wms->cap)     wms_cap_free(wms->cap);
-  if(wms->service) wms_service_free(wms->service);
+  wms_layer_free(wms->cap.layer);
+  g_free(wms->service.title);
   g_free(wms);
 }
 
@@ -448,7 +430,7 @@ static wms_layer_t *wms_get_requestable_layers(wms_t *wms) {
 
   wms_layer_t *r_layer = NULL, **c_layer = &r_layer;
 
-  wms_layer_t *layer = wms->cap->layer;
+  wms_layer_t *layer = wms->cap.layer;
   while(layer) {
     wms_llbbox_t *llbbox = &layer->llbbox;
     if(llbbox && !llbbox->valid) llbbox = NULL;
@@ -1141,6 +1123,7 @@ void wms_import(appdata_t *appdata) {
 
   /* ----------- parse capabilities -------------- */
 
+  gboolean parse_success = FALSE;
   if(!cap) {
     errorf(GTK_WIDGET(appdata->window),
 	   _("WMS download failed:\n\n"
@@ -1158,7 +1141,7 @@ void wms_import(appdata_t *appdata) {
     } else {
       printf("ok, parse doc tree\n");
 
-      wms_cap_parse_doc(wms, doc);
+      parse_success = wms_cap_parse_doc(wms, doc);
     }
 
     g_free(cap);
@@ -1166,14 +1149,13 @@ void wms_import(appdata_t *appdata) {
 
   /* ------------ basic checks ------------- */
 
-  if(!wms->cap || !wms->service || !wms->cap->layer ||
-     !wms->cap->request || !wms->cap->request->getmap) {
+  if(!parse_success) {
     errorf(GTK_WIDGET(appdata->window), _("Incomplete/unexpected reply!"));
     wms_free(wms);
     return;
   }
 
-  if(!wms->cap->request->getmap->format) {
+  if(!wms->cap.request.getmap.format) {
     errorf(GTK_WIDGET(appdata->window), _("No supported image format found."));
     wms_free(wms);
     return;
@@ -1267,7 +1249,7 @@ void wms_import(appdata_t *appdata) {
 
   /* find preferred supported video format */
   gint format = 0;
-  while(!(wms->cap->request->getmap->format & (1<<format)))
+  while(!(wms->cap.request.getmap.format & (1<<format)))
     format++;
 
   const char *formats[] = { "image/jpg", "image/jpeg",
