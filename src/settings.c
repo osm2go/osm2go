@@ -127,13 +127,12 @@ settings_t *settings_load(void) {
 
       wms_server_t **cur = &settings->wms_server;
       for(i=0;i<count;i++) {
-	gchar *key = g_strdup_printf("/apps/" PACKAGE "/wms/name%d", i);
-	char *name = gconf_client_get_string(client, key, NULL);
-	g_free(key);
-	key = g_strdup_printf("/apps/" PACKAGE "/wms/server%d", i);
+        /* keep ordering, the longest key must be first */
+        gchar *key = g_strdup_printf("/apps/" PACKAGE "/wms/server%d", i);
 	char *server = gconf_client_get_string(client, key, NULL);
-	g_free(key);
-	key = g_strdup_printf("/apps/" PACKAGE "/wms/path%d", i);
+        g_sprintf(key, "/apps/" PACKAGE "/wms/name%d", i);
+        char *name = gconf_client_get_string(client, key, NULL);
+        g_sprintf(key, "/apps/" PACKAGE "/wms/path%d", i);
 	char *path = gconf_client_get_string(client, key, NULL);
 	g_free(key);
 
