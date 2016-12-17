@@ -1317,14 +1317,15 @@ void wms_import(appdata_t *appdata) {
   gtk_widget_set_sensitive(appdata->menu_item_wms_adjust, TRUE);
 }
 
+static const char *wms_exts[] = { "png", "gif", "jpg", NULL };
+
 /* try to load an existing image into map */
 void wms_load(appdata_t *appdata) {
-  const char *exts[] = { "png", "gif", "jpg", "" };
-  int i=0;
+  int i;
 
-  while(exts[i][0]) {
+  for(i = 0; wms_exts[i]; i++) {
     gchar *filename = g_strjoin("/wms.", appdata->project->path,
-				     exts[i], NULL);
+				     wms_exts[i], NULL);
 
     if(g_file_test(filename, G_FILE_TEST_EXISTS)) {
       appdata->map->bg.offset.x = appdata->project->wms_offset.x;
@@ -1346,23 +1347,20 @@ void wms_load(appdata_t *appdata) {
       return;
     }
     g_free(filename);
-    i++;
   }
 }
 
 void wms_remove_file(project_t *project) {
-  const char *exts[] = { "png", "gif", "jpg", "" };
-  int i=0;
+  int i;
 
-  while(exts[i][0]) {
+  for(i = 0; wms_exts[i]; i++) {
     gchar *filename =
-      g_strjoin("/wms.", project->path, exts[i], NULL);
+      g_strjoin("/wms.", project->path, wms_exts[i], NULL);
 
     if(g_file_test(filename, G_FILE_TEST_EXISTS))
       g_remove(filename);
 
     g_free(filename);
-    i++;
   }
 }
 
