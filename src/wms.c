@@ -362,7 +362,7 @@ static void wms_layer_free(wms_layer_t *layer) {
     g_free(layer->name);
     g_free(layer->srs);
 
-    if(layer->children) wms_layer_free(layer->children);
+    wms_layer_free(layer->children);
 
     wms_layer_t *next = layer->next;
     g_free(layer);
@@ -380,7 +380,7 @@ static void wms_request_free(wms_request_t *request) {
 }
 
 static void wms_cap_free(wms_cap_t *cap) {
-  if(cap->layer)   wms_layer_free(cap->layer);
+  wms_layer_free(cap->layer);
   if(cap->request) wms_request_free(cap->request);
   g_free(cap);
 }
