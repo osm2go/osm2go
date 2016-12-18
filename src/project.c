@@ -81,14 +81,14 @@ static gboolean project_read(const char *project_file, project_t *project,
 
 	while(node != NULL) {
 	  if(node->type == XML_ELEMENT_NODE) {
-            char *str;
+            xmlChar *str;
 
 	    if(strcmp((char*)node->name, "desc") == 0) {
 	      project->desc = xmlNodeListGetString(doc, node->children, 1);
 	      printf("desc = %s\n", project->desc);
 
 	    } else if(strcmp((char*)node->name, "server") == 0) {
-	      str = (char*)xmlNodeListGetString(doc, node->children, 1);
+	      str = xmlNodeListGetString(doc, node->children, 1);
               if(g_strcmp0(defaultserver, str) == 0) {
                 project->server = defaultserver;
               } else {
@@ -101,44 +101,44 @@ static gboolean project_read(const char *project_file, project_t *project,
 	    } else if(project->map_state &&
 		      strcmp((char*)node->name, "map") == 0) {
 
-	      if((str = (char*)xmlGetProp(node, BAD_CAST "zoom"))) {
+	      if((str = xmlGetProp(node, BAD_CAST "zoom"))) {
 		project->map_state->zoom = g_ascii_strtod(str, NULL);
 		xmlFree(str);
 	      }
-	      if((str = (char*)xmlGetProp(node, BAD_CAST "detail"))) {
+	      if((str = xmlGetProp(node, BAD_CAST "detail"))) {
 		project->map_state->detail = g_ascii_strtod(str, NULL);
 		xmlFree(str);
 	      }
-	      if((str = (char*)xmlGetProp(node, BAD_CAST "scroll-offset-x"))) {
+	      if((str = xmlGetProp(node, BAD_CAST "scroll-offset-x"))) {
 		project->map_state->scroll_offset.x = strtoul(str, NULL, 10);
 		xmlFree(str);
 	      }
-	      if((str = (char*)xmlGetProp(node, BAD_CAST "scroll-offset-y"))) {
+	      if((str = xmlGetProp(node, BAD_CAST "scroll-offset-y"))) {
 		project->map_state->scroll_offset.y = strtoul(str, NULL, 10);
 		xmlFree(str);
 	      }
 
 	    } else if(strcmp((char*)node->name, "wms") == 0) {
 
-	      if((str = (char*)xmlGetProp(node, BAD_CAST "server"))) {
+	      if((str = xmlGetProp(node, BAD_CAST "server"))) {
 		project->wms_server = g_strdup(str);
 		xmlFree(str);
 	      }
-	      if((str = (char*)xmlGetProp(node, BAD_CAST "path"))) {
+	      if((str = xmlGetProp(node, BAD_CAST "path"))) {
 		project->wms_path = g_strdup(str);
 		xmlFree(str);
 	      }
-	      if((str = (char*)xmlGetProp(node, BAD_CAST "x-offset"))) {
+	      if((str = xmlGetProp(node, BAD_CAST "x-offset"))) {
 		project->wms_offset.x = strtoul(str, NULL, 10);
 		xmlFree(str);
 	      }
-	      if((str = (char*)xmlGetProp(node, BAD_CAST "y-offset"))) {
+	      if((str = xmlGetProp(node, BAD_CAST "y-offset"))) {
 		project->wms_offset.y = strtoul(str, NULL, 10);
 		xmlFree(str);
 	      }
 
 	    } else if(strcmp((char*)node->name, "osm") == 0) {
-	      str = (char*)xmlNodeListGetString(doc, node->children, 1);
+	      str = xmlNodeListGetString(doc, node->children, 1);
 	      printf("osm = %s\n", str);
 
 	      /* make this a relative path if possible */
@@ -156,21 +156,21 @@ static gboolean project_read(const char *project_file, project_t *project,
 	      xmlFree(str);
 
 	    } else if(strcmp((char*)node->name, "min") == 0) {
-	      if((str = (char*)xmlGetProp(node, BAD_CAST "lat"))) {
+	      if((str = xmlGetProp(node, BAD_CAST "lat"))) {
 		project->min.lat = g_ascii_strtod(str, NULL);
 		xmlFree(str);
 	      }
-	      if((str = (char*)xmlGetProp(node, BAD_CAST "lon"))) {
+	      if((str = xmlGetProp(node, BAD_CAST "lon"))) {
 		project->min.lon = g_ascii_strtod(str, NULL);
 		xmlFree(str);
 	      }
 
 	    } else if(strcmp((char*)node->name, "max") == 0) {
-	      if((str = (char*)xmlGetProp(node, BAD_CAST "lat"))) {
+	      if((str = xmlGetProp(node, BAD_CAST "lat"))) {
 		project->max.lat = g_ascii_strtod(str, NULL);
 		xmlFree(str);
 	      }
-	      if((str = (char*)xmlGetProp(node, BAD_CAST "lon"))) {
+	      if((str = xmlGetProp(node, BAD_CAST "lon"))) {
 		project->max.lon = g_ascii_strtod(str, NULL);
 		xmlFree(str);
 	      }
