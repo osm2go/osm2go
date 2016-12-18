@@ -1167,7 +1167,8 @@ project_edit(appdata_t *appdata, GtkWidget *parent,
   gtk_signal_connect(GTK_OBJECT(edit), "clicked",
   		     (GtkSignalFunc)on_edit_clicked, &context);
   gtk_table_attach(GTK_TABLE(table), edit, 4, 5, 1, 3,
-		   GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL,0,0);
+                   static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),
+                   static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),0,0);
 
   gtk_table_set_row_spacing(GTK_TABLE(table), 2, 4);
 
