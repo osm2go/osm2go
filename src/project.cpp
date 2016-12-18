@@ -31,6 +31,7 @@
 #include "track.h"
 #include "wms.h"
 
+#include <algorithm>
 #include <glib/gstdio.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
@@ -289,8 +290,8 @@ gboolean project_exists(settings_t *settings, const char *name, gchar **filename
   return ok;
 }
 
-static GSList *project_scan(appdata_t *appdata) {
-  GSList *projects = NULL;
+static std::vector<project_t *> project_scan(appdata_t *appdata) {
+  std::vector<project_t *> projects;
 
   /* scan for projects */
   GDir *dir = g_dir_open(appdata->settings->base_path, 0, NULL);
@@ -306,7 +307,7 @@ static GSList *project_scan(appdata_t *appdata) {
       n->path = g_strconcat(appdata->settings->base_path, name, "/", NULL);
 
       if(project_read(fullname, n, appdata->settings->server))
-        projects = g_slist_prepend(projects, n);
+        projects.push_back(n);
       else
         project_free(n);
       g_free(fullname);
@@ -320,7 +321,7 @@ static GSList *project_scan(appdata_t *appdata) {
 
 typedef struct {
   appdata_t *appdata;
-  GSList *projects;
+  std::vector<project_t *> projects;
   GtkWidget *dialog, *list;
 } select_context_t;
 
@@ -492,7 +493,8 @@ static gboolean project_delete(select_context_t *context, project_t *project) {
   }
 
   /* de-chain entry from project list */
-  context->projects = g_slist_remove(context->projects, project);
+  context->projects.erase(std::find(context->projects.begin(),
+                                    context->projects.end(), project));
 
   /* free project structure */
   project_free(project);
@@ -613,7 +615,7 @@ static void on_project_new(G_GNUC_UNUSED GtkButton *button, gpointer data) {
   select_context_t *context = (select_context_t*)data;
   project_t *project = project_new(context);
   if(project) {
-    context->projects = g_slist_prepend(context->projects, project);
+    context->projects.push_back(project);
 
     GtkTreeModel *model = list_get_model(context->list);
 
@@ -755,6 +757,41 @@ on_project_update_all(G_GNUC_UNUSED GtkButton *button, gpointer data)
   }
 }
 
+struct project_list_add {
+  GtkListStore * const store;
+  const project_t * const cur_proj;
+  pos_t pos;
+  bool check_pos;
+  GtkTreeIter &seliter;
+  gboolean * const has_sel;
+  project_list_add(GtkListStore *s, appdata_t *a, GtkTreeIter &l, gboolean *h)
+    : store(s), cur_proj(a->project), check_pos(gps_get_pos(a, &pos, 0) == TRUE)
+    , seliter(l), has_sel(h) {}
+  void operator()(const project_t *project);
+};
+
+void project_list_add::operator()(const project_t* project)
+{
+  GtkTreeIter iter;
+  const gchar *status_stock_id = project_get_status_icon_stock_id(
+                                         cur_proj, project);
+  /* Append a row and fill in some data */
+  gtk_list_store_append(store, &iter);
+  gtk_list_store_set(store, &iter,
+                     PROJECT_COL_NAME,        project->name,
+                     PROJECT_COL_STATUS,      status_stock_id,
+                     PROJECT_COL_DESCRIPTION, project->desc,
+                     PROJECT_COL_DATA,        project,
+                     -1);
+
+  /* decide if to select this project because it matches the current position */
+  if(check_pos && osm_position_within_bounds_ll(&project->min, &project->max, &pos)) {
+    seliter = iter;
+    *has_sel = TRUE;
+    check_pos = false;
+  }
+}
+
 /**
  * @brief create a widget to list the projects
  * @param context the context struct
@@ -771,7 +808,6 @@ static GtkWidget *project_list_widget(select_context_t *context, gboolean *has_s
 	   _("Description"), PROJECT_COL_DESCRIPTION, LIST_FLAG_ELLIPSIZE,
 	   NULL);
 
-
   /* build the store */
   GtkListStore *store = gtk_list_store_new(PROJECT_NUM_COLS,
       G_TYPE_STRING,    // name
@@ -779,35 +815,11 @@ static GtkWidget *project_list_widget(select_context_t *context, gboolean *has_s
       G_TYPE_STRING,    // desc
       G_TYPE_POINTER);  // data
 
-  GtkTreeIter iter, seliter;
-  GSList *cur;
-  gboolean check_pos;
-  pos_t pos;
+  GtkTreeIter seliter;
   *has_sel = FALSE;
 
-  check_pos = gps_get_pos(context->appdata, &pos, NULL);
-
-  /* there are too many context variables, so no foreach here */
-  for(cur = context->projects; cur; cur = g_slist_next(cur)) {
-    project_t *project = (project_t *)cur->data;
-    const gchar *status_stock_id = project_get_status_icon_stock_id(
-                                         context->appdata->project, project);
-    /* Append a row and fill in some data */
-    gtk_list_store_append(store, &iter);
-    gtk_list_store_set(store, &iter,
-	       PROJECT_COL_NAME,        project->name,
-               PROJECT_COL_STATUS,      status_stock_id,
-	       PROJECT_COL_DESCRIPTION, project->desc,
-	       PROJECT_COL_DATA,        project,
-	       -1);
-
-    /* decide if to select this project because it matches the current position */
-    if(check_pos && osm_position_within_bounds_ll(&project->min, &project->max, &pos)) {
-      seliter = iter;
-      *has_sel = TRUE;
-      check_pos = FALSE;
-    }
-  }
+  std::for_each(context->projects.begin(), context->projects.end(),
+                project_list_add(store, context->appdata, seliter, has_sel));
 
   list_set_store(context->list, store);
   g_object_unref(store);
@@ -817,8 +829,7 @@ static GtkWidget *project_list_widget(select_context_t *context, gboolean *has_s
 	  G_CALLBACK(on_project_delete), context);
 
   list_set_user_buttons(context->list,
-			LIST_BUTTON_USER0, _("Update all"), on_project_update_all,
-			0);
+                        LIST_BUTTON_USER0, _("Update all"), on_project_update_all, 0);
 
   gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(store),
                                        PROJECT_COL_NAME, GTK_SORT_ASCENDING);
@@ -828,12 +839,6 @@ static GtkWidget *project_list_widget(select_context_t *context, gboolean *has_s
 
   return context->list;
 }
-
-#if !GLIB_CHECK_VERSION(2,28,0)
-static void project_free_notify(gpointer data, G_GNUC_UNUSED gpointer user_data) {
-  project_free((project_t*)data);
-}
-#endif
 
 static char *project_select(appdata_t *appdata) {
   char *name = NULL;
@@ -870,12 +875,7 @@ static char *project_select(appdata_t *appdata) {
   gtk_widget_destroy(context.dialog);
 
   /* free all entries */
-#if GLIB_CHECK_VERSION(2,28,0)
-  g_slist_free_full(context.projects, (GDestroyNotify) project_free);
-#else
-  g_slist_foreach(context.projects, project_free_notify, NULL);
-  g_slist_free(context.projects);
-#endif
+  std::for_each(context.projects.begin(), context.projects.end(), project_free);
 
   return name;
 }
