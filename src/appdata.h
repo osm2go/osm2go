@@ -30,7 +30,6 @@
 #define LOCALEDIR PREFIX "/locale"
 
 #define _(String) gettext(String)
-#define N_(String) (String)
 
 #ifdef USE_HILDON
 #ifdef FREMANTLE
