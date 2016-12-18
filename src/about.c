@@ -138,7 +138,7 @@ static GtkWidget *license_page_new(void) {
   } else
     gtk_label_set_text(GTK_LABEL(label), _("Load error"));
 
-#ifndef USE_PANNABLE_AREA
+#ifndef FREMANTLE_PANNABLE_AREA
   GtkWidget *scrolled_window = gtk_scrolled_window_new(NULL, NULL);
   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window),
   				 GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
@@ -254,7 +254,7 @@ static GtkWidget *authors_page_new(void) {
   author_add(ivbox, "Claudius Henrichs <claudius.h@gmx.de>");
   gtk_box_pack_start(GTK_BOX(vbox), ivbox, TRUE, FALSE, 0);
 
-#ifndef USE_PANNABLE_AREA
+#ifndef FREMANTLE_PANNABLE_AREA
   GtkWidget *scrolled_window = gtk_scrolled_window_new(NULL, NULL);
   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window),
   				 GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);

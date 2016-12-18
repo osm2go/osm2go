@@ -155,6 +155,7 @@ if (MAEMO_FOUND)
 		set(ICONNAME osm2go.48.png)
 		# the data root dir is /opt on fremantle
 		set(DATA_DIR "/opt/${PROJECT_NAME}")
+		add_definitions(-DFREMANTLE -DFREMANTLE_PANNABLE_AREA)
 	endif ()
 
 	message(STATUS "Using application installer icon '${ICONNAME}'")

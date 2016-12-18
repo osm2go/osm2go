@@ -33,10 +33,7 @@
 #define N_(String) (String)
 
 #ifdef USE_HILDON
-#if (MAEMO_VERSION_MAJOR >= 5)
-#define FREMANTLE
-#define FREMANTLE_PANNABLE_AREA
-#define USE_PANNABLE_AREA
+#ifdef FREMANTLE
 #include <hildon/hildon-gtk.h>
 #include <hildon/hildon-pannable-area.h>
 #endif

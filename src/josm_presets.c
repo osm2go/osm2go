@@ -1019,7 +1019,7 @@ static GtkWidget *presets_picker_embed(GtkTreeView *view, GtkListStore *store,
 
   /* put this inside a scrolled view */
   GtkWidget *c;
-#ifndef USE_PANNABLE_AREA
+#ifndef FREMANTLE_PANNABLE_AREA
   c = gtk_scrolled_window_new (NULL, NULL);
   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(c),
 				 GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);

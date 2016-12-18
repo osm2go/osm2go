@@ -23,8 +23,7 @@
 #include <curl/curl.h>
 #include <gdk/gdkkeysyms.h>
 
-#if defined(USE_HILDON) && (MAEMO_VERSION_MAJOR == 5)
-#define FREMANTLE
+#ifdef FREMANTLE
 #include <hildon/hildon-button.h>
 #include <hildon/hildon-check-button.h>
 #include <hildon/hildon-window-stack.h>
