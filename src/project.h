@@ -53,7 +53,7 @@ typedef struct project_t {
 extern "C" {
 #endif
 
-gboolean project_exists(settings_t *settings, const char *name, gchar **filename);
+gboolean project_exists(settings_t *settings, const char *name);
 gboolean project_save(GtkWidget *parent, project_t *project);
 gboolean project_load(appdata_t *appdata, const char *name);
 gboolean project_check_demo(GtkWidget *parent, project_t *project);

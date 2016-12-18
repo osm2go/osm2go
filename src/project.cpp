@@ -32,10 +32,11 @@
 #include "wms.h"
 
 #include <algorithm>
+#include <cstring>
 #include <glib/gstdio.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
-#include <string.h>
+#include <string>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -62,13 +63,20 @@ static gboolean project_edit(appdata_t *appdata, GtkWidget *parent,
 
 /* ------------ project file io ------------- */
 
-static gboolean project_read(const char *project_file, project_t *project,
+static std::string project_filename(const project_t *project) {
+  std::string ret = project->path;
+  ret += project->name;
+  ret += ".proj";
+  return ret;
+}
+
+static gboolean project_read(const std::string &project_file, project_t *project,
                              const char *defaultserver) {
   xmlDoc *doc = NULL;
 
   /* parse the file and get the DOM */
-  if((doc = xmlReadFile(project_file, NULL, 0)) == NULL) {
-    printf("error: could not parse file %s\n", project_file);
+  if((doc = xmlReadFile(project_file.c_str(), NULL, 0)) == NULL) {
+    printf("error: could not parse file %s\n", project_file.c_str());
     return FALSE;
   }
 
@@ -175,10 +183,9 @@ static gboolean project_read(const char *project_file, project_t *project,
 
 gboolean project_save(GtkWidget *parent, project_t *project) {
   char str[32];
-  char *project_file = g_strconcat(project->path, project->name,
-				 ".proj", NULL);
+  const std::string &project_file = project_filename(project);
 
-  printf("saving project to %s\n", project_file);
+  printf("saving project to %s\n", project_file.c_str());
 
   /* check if project path exists */
   if(!g_file_test(project->path, G_FILE_TEST_IS_DIR)) {
@@ -235,10 +242,8 @@ gboolean project_save(GtkWidget *parent, project_t *project) {
   snprintf(str, sizeof(str), "%d", project->wms_offset.y);
   xmlNewProp(node, BAD_CAST "y-offset", BAD_CAST str);
 
-  xmlSaveFormatFileEnc(project_file, doc, "UTF-8", 1);
+  xmlSaveFormatFileEnc(project_file.c_str(), doc, "UTF-8", 1);
   xmlFreeDoc(doc);
-
-  g_free(project_file);
 
   return TRUE;
 }
@@ -269,25 +274,23 @@ void project_free(project_t *project) {
  * @brief check if a project with the given name exists
  * @param settings settings
  * @param name project name
- * @param filename where to store absolute filename if project exists or NULL
+ * @param fullname where to store absolute filename if project exists
  * @returns if project exists
  */
-gboolean project_exists(settings_t *settings, const char *name, gchar **filename) {
-  gboolean ok = FALSE;
-  gchar *fullname = g_strconcat(settings->base_path, name, "/", name, ".proj", NULL);
+static gboolean project_exists(settings_t *settings, const char *name, std::string &fullname) {
+  fullname = settings->base_path;
+  fullname += name;
+  fullname += '/';
+  fullname += name;
+  fullname += ".proj";
 
   /* check for project file */
-  if(g_file_test(fullname, G_FILE_TEST_IS_REGULAR)) {
-    if(filename) {
-      *filename = fullname;
-      fullname = NULL;
-    }
-    ok = TRUE;
-  }
+  return g_file_test(fullname.c_str(), G_FILE_TEST_IS_REGULAR);
+}
 
-  g_free(fullname);
-
-  return ok;
+gboolean project_exists(settings_t *settings, const char *name) {
+  std::string dummy;
+  return project_exists(settings, name, dummy);
 }
 
 static std::vector<project_t *> project_scan(appdata_t *appdata) {
@@ -297,8 +300,8 @@ static std::vector<project_t *> project_scan(appdata_t *appdata) {
   GDir *dir = g_dir_open(appdata->settings->base_path, 0, NULL);
   const gchar *name;
   while((name = g_dir_read_name(dir)) != NULL) {
-    gchar *fullname;
-    if(project_exists(appdata->settings, name, &fullname)) {
+    std::string fullname;
+    if(project_exists(appdata->settings, name, fullname)) {
       printf("found project %s\n", name);
 
       /* try to read project and append it to chain */
@@ -310,7 +313,6 @@ static std::vector<project_t *> project_scan(appdata_t *appdata) {
         projects.push_back(n);
       else
         project_free(n);
-      g_free(fullname);
     }
   }
 
@@ -334,16 +336,13 @@ enum {
 };
 
 static gboolean osm_file_exists(const project_t *project) {
-  gboolean exists;
-
   if(project->name[0] == '/')
-    exists = g_file_test(project->name, G_FILE_TEST_IS_REGULAR);
+    return g_file_test(project->name, G_FILE_TEST_IS_REGULAR);
   else {
-    gchar *full = g_strconcat(project->path, project->osm, NULL);
-    exists = g_file_test(full, G_FILE_TEST_IS_REGULAR);
-    g_free(full);
+    std::string full = project->path;
+    full += project->osm;
+    return g_file_test(full.c_str(), G_FILE_TEST_IS_REGULAR);
   }
-  return exists;
 }
 
 static void view_selected(select_context_t *context, project_t *project) {
@@ -404,7 +403,8 @@ static void callback_modified_name(GtkWidget *widget, gpointer data) {
     /* check if it consists of valid characters */
     if(strpbrk(name, "\\*?()\n\t\r") == NULL) {
       /* check if such a project already exists */
-      if(!project_exists(context->settings, name, NULL))
+      std::string fullname;
+      if(!project_exists(context->settings, name, fullname))
 	ok = TRUE;
     }
   }
@@ -466,10 +466,12 @@ static gboolean project_delete(select_context_t *context, project_t *project) {
   /* remove entire directory from disk */
   GDir *dir = g_dir_open(project->path, 0, NULL);
   const gchar *name;
+  std::string path = project->path;
+  path += '/';
+  std::string fullname;
   while ((name = g_dir_read_name(dir))) {
-    gchar *fullname = g_strconcat(project->path, "/", name, NULL);
-    g_remove(fullname);
-    g_free(fullname);
+    fullname = path + name;
+    g_remove(fullname.c_str());
   }
   g_dir_close(dir);
 
@@ -583,10 +585,11 @@ static project_t *project_new(select_context_t *context) {
  * @return if OSM data file was found
  */
 static gboolean project_osm_present(const project_t *project) {
-  char *osm_name = g_strconcat(project->path, "/", project->name, ".osm", NULL);
-  gboolean is_present = g_file_test(osm_name, G_FILE_TEST_EXISTS);
-  g_free(osm_name);
-  return is_present;
+  std::string osm_name = project->path;
+  osm_name += '/';
+  osm_name += project->name;
+  osm_name += ".osm";
+  return g_file_test(osm_name.c_str(), G_FILE_TEST_EXISTS);
 }
 
 /**
@@ -840,8 +843,8 @@ static GtkWidget *project_list_widget(select_context_t &context, gboolean &has_s
   return context.list;
 }
 
-static char *project_select(appdata_t *appdata) {
-  char *name = NULL;
+static std::string project_select(appdata_t *appdata) {
+  std::string name;
 
   select_context_t context = { 0 };
   context.appdata = appdata;
@@ -870,7 +873,7 @@ static char *project_select(appdata_t *appdata) {
 
   gtk_widget_show_all(context.dialog);
   if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(context.dialog)))
-    name = g_strdup(project_get_selected(context.list)->name);
+    name = project_get_selected(context.list)->name;
 
   gtk_widget_destroy(context.dialog);
 
@@ -894,9 +897,9 @@ static GStatBuf file_info(const project_t *project) {
   if (project->osm[0] == '/') {
     r = g_stat(project->osm, &st);
   } else {
-    char *str = g_strconcat(project->path, project->osm, NULL);
-    r = g_stat(str, &st);
-    g_free(str);
+    std::string str = project->path;
+    str += project->osm;
+    r = g_stat(str.c_str(), &st);
   }
 
   if(r != 0)
@@ -1280,24 +1283,20 @@ static gboolean project_open(appdata_t *appdata, const char *name) {
 		  appdata->settings->base_path, name, "/", NULL);
   project->name = g_strdup(name);
 
-  char *project_file = g_strconcat(project->path, name, ".proj", NULL);
+  const std::string &project_file = project_filename(project);
 
-  printf("project file = %s\n", project_file);
-  if(!g_file_test(project_file, G_FILE_TEST_IS_REGULAR)) {
+  printf("project file = %s\n", project_file.c_str());
+  if(!g_file_test(project_file.c_str(), G_FILE_TEST_IS_REGULAR)) {
     printf("requested project file doesn't exist\n");
     project_free(project);
-    g_free(project_file);
     return FALSE;
   }
 
   if(!project_read(project_file, project, appdata->settings->server)) {
     printf("error reading project file\n");
     project_free(project);
-    g_free(project_file);
     return FALSE;
   }
-
-  g_free(project_file);
 
   /* --------- project structure ok: load its OSM file --------- */
   appdata->project = project;
@@ -1317,24 +1316,24 @@ static gboolean project_open(appdata_t *appdata, const char *name) {
 #define _PROJECT_LOAD_BUF_SIZ 64
 
 gboolean project_load(appdata_t *appdata, const char *name) {
-  char *proj_name = NULL;
+  std::string proj_name;
 
   if(!name) {
     /* make user select a project */
     proj_name = project_select(appdata);
-    if(!proj_name) {
+    if(proj_name.empty()) {
       printf("no project selected\n");
       return FALSE;
     }
   }
   else {
-    proj_name = g_strdup(name);
+    proj_name = name;
   }
 
   char banner_txt[_PROJECT_LOAD_BUF_SIZ];
   memset(banner_txt, 0, _PROJECT_LOAD_BUF_SIZ);
 
-  snprintf(banner_txt, _PROJECT_LOAD_BUF_SIZ, _("Loading %s"), proj_name);
+  snprintf(banner_txt, _PROJECT_LOAD_BUF_SIZ, _("Loading %s"), proj_name.c_str());
   banner_busy_start(appdata, TRUE, banner_txt);
 
   /* close current project */
@@ -1346,7 +1345,7 @@ gboolean project_load(appdata_t *appdata, const char *name) {
   /* open project itself */
   banner_busy_tick();
 
-  if(!project_open(appdata, proj_name)) {
+  if(!project_open(appdata, proj_name.c_str())) {
     printf("error opening requested project\n");
 
     if(appdata->project) {
@@ -1360,18 +1359,15 @@ gboolean project_load(appdata_t *appdata, const char *name) {
     }
 
     snprintf(banner_txt, _PROJECT_LOAD_BUF_SIZ,
-	     _("Error opening %s"), proj_name);
+	     _("Error opening %s"), proj_name.c_str());
     banner_busy_stop(appdata);
     banner_show_info(appdata, banner_txt);
 
-    g_free(proj_name);
     return FALSE;
   }
 
-  if(!appdata->window) {
-    g_free(proj_name);
+  if(!appdata->window)
     return FALSE;
-  }
 
   /* check if OSM data is valid */
   banner_busy_tick();
@@ -1389,11 +1385,10 @@ gboolean project_load(appdata_t *appdata, const char *name) {
     }
 
     snprintf(banner_txt, _PROJECT_LOAD_BUF_SIZ,
-	     _("Error opening %s"), proj_name);
+	     _("Error opening %s"), proj_name.c_str());
     banner_busy_stop(appdata);
     banner_show_info(appdata, banner_txt);
 
-    g_free(proj_name);
     return FALSE;
   }
 
@@ -1429,13 +1424,11 @@ gboolean project_load(appdata_t *appdata, const char *name) {
   banner_busy_stop(appdata);
 
 #if 0
-  snprintf(banner_txt, _PROJECT_LOAD_BUF_SIZ, _("Loaded %s"), proj_name);
+  snprintf(banner_txt, _PROJECT_LOAD_BUF_SIZ, _("Loaded %s"), proj_name.c_str());
   banner_show_info(appdata, banner_txt);
 #endif
 
   statusbar_set(appdata, NULL, 0);
-
-  g_free(proj_name);
 
   return TRUE;
 
@@ -1451,8 +1444,6 @@ gboolean project_load(appdata_t *appdata, const char *name) {
     osm_free(appdata->osm);
     appdata->osm = NULL;
   }
-
-  g_free(proj_name);
 
   return FALSE;
 }
