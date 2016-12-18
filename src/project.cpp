@@ -763,8 +763,8 @@ struct project_list_add {
   pos_t pos;
   bool check_pos;
   GtkTreeIter &seliter;
-  gboolean * const has_sel;
-  project_list_add(GtkListStore *s, appdata_t *a, GtkTreeIter &l, gboolean *h)
+  gboolean &has_sel;
+  project_list_add(GtkListStore *s, appdata_t *a, GtkTreeIter &l, gboolean &h)
     : store(s), cur_proj(a->project), check_pos(gps_get_pos(a, &pos, 0) == TRUE)
     , seliter(l), has_sel(h) {}
   void operator()(const project_t *project);
@@ -787,7 +787,7 @@ void project_list_add::operator()(const project_t* project)
   /* decide if to select this project because it matches the current position */
   if(check_pos && osm_position_within_bounds_ll(&project->min, &project->max, &pos)) {
     seliter = iter;
-    *has_sel = TRUE;
+    has_sel = TRUE;
     check_pos = false;
   }
 }
@@ -797,16 +797,16 @@ void project_list_add::operator()(const project_t* project)
  * @param context the context struct
  * @param has_sel if an item has been selected
  */
-static GtkWidget *project_list_widget(select_context_t *context, gboolean *has_sel) {
-  context->list = list_new(LIST_HILDON_WITHOUT_HEADERS);
+static GtkWidget *project_list_widget(select_context_t &context, gboolean &has_sel) {
+  context.list = list_new(LIST_HILDON_WITHOUT_HEADERS);
 
-  list_override_changed_event(context->list, changed, context);
+  list_override_changed_event(context.list, changed, &context);
 
-  list_set_columns(context->list,
-	   _("Name"), PROJECT_COL_NAME, 0,
-	   _("State"), PROJECT_COL_STATUS, LIST_FLAG_STOCK_ICON,
-	   _("Description"), PROJECT_COL_DESCRIPTION, LIST_FLAG_ELLIPSIZE,
-	   NULL);
+  list_set_columns(context.list,
+                   _("Name"), PROJECT_COL_NAME, 0,
+                   _("State"), PROJECT_COL_STATUS, LIST_FLAG_STOCK_ICON,
+                   _("Description"), PROJECT_COL_DESCRIPTION, LIST_FLAG_ELLIPSIZE,
+                   0);
 
   /* build the store */
   GtkListStore *store = gtk_list_store_new(PROJECT_NUM_COLS,
@@ -816,28 +816,28 @@ static GtkWidget *project_list_widget(select_context_t *context, gboolean *has_s
       G_TYPE_POINTER);  // data
 
   GtkTreeIter seliter;
-  *has_sel = FALSE;
+  has_sel = FALSE;
 
-  std::for_each(context->projects.begin(), context->projects.end(),
-                project_list_add(store, context->appdata, seliter, has_sel));
+  std::for_each(context.projects.begin(), context.projects.end(),
+                project_list_add(store, context.appdata, seliter, has_sel));
 
-  list_set_store(context->list, store);
+  list_set_store(context.list, store);
   g_object_unref(store);
 
-  list_set_static_buttons(context->list, LIST_BTN_NEW | LIST_BTN_WIDE | LIST_BTN_WIDE4,
-	  G_CALLBACK(on_project_new), G_CALLBACK(on_project_edit),
-	  G_CALLBACK(on_project_delete), context);
+  list_set_static_buttons(context.list, LIST_BTN_NEW | LIST_BTN_WIDE | LIST_BTN_WIDE4,
+                          G_CALLBACK(on_project_new), G_CALLBACK(on_project_edit),
+                          G_CALLBACK(on_project_delete), &context);
 
-  list_set_user_buttons(context->list,
+  list_set_user_buttons(context.list,
                         LIST_BUTTON_USER0, _("Update all"), on_project_update_all, 0);
 
   gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(store),
                                        PROJECT_COL_NAME, GTK_SORT_ASCENDING);
 
-  if(*has_sel)
-    list_scroll(context->list, &seliter);
+  if(has_sel)
+    list_scroll(context.list, &seliter);
 
-  return context->list;
+  return context.list;
 }
 
 static char *project_select(appdata_t *appdata) {
@@ -862,7 +862,7 @@ static char *project_select(appdata_t *appdata) {
 
   gboolean has_sel;
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(context.dialog)->vbox),
-			      project_list_widget(&context, &has_sel));
+			      project_list_widget(context, has_sel));
 
   /* don't all user to click ok until something is selected */
   gtk_dialog_set_response_sensitive(GTK_DIALOG(context.dialog),
