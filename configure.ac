@@ -156,7 +156,7 @@ PKG_CHECK_EXISTS(maemo-version, [
   # older versions used 26x26
   if [[ "$MAJOR" == "5" ]]; then
      ICONNAME=osm2go.48.png
-     CFLAGS="$CFLAGS -DFREMANTLE -DFREMANTLE_PANNABLE_AREA"
+     CFLAGS="$CFLAGS -DFREMANTLE -DFREMANTLE_PANNABLE_AREA -DPICKER_MENU"
   else
      ICONNAME=osm2go.26.png
   fi

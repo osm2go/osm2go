@@ -100,6 +100,8 @@ endif ()
 
 set(DATA_DIR "${CMAKE_INSTALL_FULL_DATADIR}/${PROJECT_NAME}")
 
+option(PICKER_MENU "use a picker table for tagging preset selection" OFF)
+
 pkg_search_module(GooCanvas REQUIRED IMPORTED_TARGET goocanvas goocanvas-2.0)
 
 pkg_check_modules(GVFS REQUIRED IMPORTED_TARGET gnome-vfs-module-2.0)
@@ -156,6 +158,7 @@ if (MAEMO_FOUND)
 		# the data root dir is /opt on fremantle
 		set(DATA_DIR "/opt/${PROJECT_NAME}")
 		add_definitions(-DFREMANTLE -DFREMANTLE_PANNABLE_AREA)
+		set(PICKER_MENU On)
 	endif ()
 
 	message(STATUS "Using application installer icon '${ICONNAME}'")
@@ -207,6 +210,10 @@ endif ()
 option(SERVER_EDITABLE "add widget to make API URL editable" OFF)
 if (SERVER_EDITABLE)
 	set_source_files_properties(src/project.c PROPERTIES COMPILE_DEFINITIONS "SERVER_EDITABLE")
+endif ()
+
+if (PICKER_MENU)
+	set_property(SOURCE src/josm_presets.c APPEND PROPERTY COMPILE_DEFINITIONS PICKER_MENU)
 endif ()
 
 add_library(osm2go_lib STATIC

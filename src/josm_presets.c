@@ -28,7 +28,6 @@
 
 #ifdef FREMANTLE
 #include <hildon/hildon-picker-button.h>
-#define PICKER_MENU
 #endif
 #include <strings.h>
 
