@@ -272,8 +272,8 @@ void map_way_select(appdata_t *appdata, way_t *way) {
   canvas_points_t *points = points_from_node_chain(way);
   if(points != NULL) {
     /* create a copy of this map item and mark it as being a highlight */
-    map_item_t *new_map_item = g_new0(map_item_t, 1);
-    memcpy(new_map_item, map_item, sizeof(map_item_t));
+    map_item_t *new_map_item = g_new(map_item_t, 1);
+    *new_map_item = *map_item;
     new_map_item->highlight = TRUE;
 
     map_hl_polyline_new(map, CANVAS_GROUP_WAYS_HL, new_map_item, points,
