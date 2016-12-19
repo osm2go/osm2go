@@ -89,10 +89,10 @@ static gboolean project_read(const char *project_file, project_t *project,
 
 	    } else if(strcmp((char*)node->name, "server") == 0) {
 	      str = xmlNodeListGetString(doc, node->children, 1);
-              if(g_strcmp0(defaultserver, str) == 0) {
+              if(g_strcmp0(defaultserver, (gchar *)str) == 0) {
                 project->server = defaultserver;
               } else {
-                project->rserver = g_strdup(str);
+                project->rserver = g_strdup((gchar *)str);
                 project->server = project->rserver;
               }
 	      printf("server = %s\n", project->server);
@@ -102,38 +102,38 @@ static gboolean project_read(const char *project_file, project_t *project,
 		      strcmp((char*)node->name, "map") == 0) {
 
 	      if((str = xmlGetProp(node, BAD_CAST "zoom"))) {
-		project->map_state->zoom = g_ascii_strtod(str, NULL);
+		project->map_state->zoom = g_ascii_strtod((gchar *)str, NULL);
 		xmlFree(str);
 	      }
 	      if((str = xmlGetProp(node, BAD_CAST "detail"))) {
-		project->map_state->detail = g_ascii_strtod(str, NULL);
+		project->map_state->detail = g_ascii_strtod((gchar *)str, NULL);
 		xmlFree(str);
 	      }
 	      if((str = xmlGetProp(node, BAD_CAST "scroll-offset-x"))) {
-		project->map_state->scroll_offset.x = strtoul(str, NULL, 10);
+		project->map_state->scroll_offset.x = strtoul((char *)str, NULL, 10);
 		xmlFree(str);
 	      }
 	      if((str = xmlGetProp(node, BAD_CAST "scroll-offset-y"))) {
-		project->map_state->scroll_offset.y = strtoul(str, NULL, 10);
+		project->map_state->scroll_offset.y = strtoul((char *)str, NULL, 10);
 		xmlFree(str);
 	      }
 
 	    } else if(strcmp((char*)node->name, "wms") == 0) {
 
 	      if((str = xmlGetProp(node, BAD_CAST "server"))) {
-		project->wms_server = g_strdup(str);
+		project->wms_server = g_strdup((gchar *)str);
 		xmlFree(str);
 	      }
 	      if((str = xmlGetProp(node, BAD_CAST "path"))) {
-		project->wms_path = g_strdup(str);
+		project->wms_path = g_strdup((gchar *)str);
 		xmlFree(str);
 	      }
 	      if((str = xmlGetProp(node, BAD_CAST "x-offset"))) {
-		project->wms_offset.x = strtoul(str, NULL, 10);
+		project->wms_offset.x = strtoul((char *)str, NULL, 10);
 		xmlFree(str);
 	      }
 	      if((str = xmlGetProp(node, BAD_CAST "y-offset"))) {
-		project->wms_offset.y = strtoul(str, NULL, 10);
+		project->wms_offset.y = strtoul((char *)str, NULL, 10);
 		xmlFree(str);
 	      }
 
@@ -145,33 +145,33 @@ static gboolean project_read(const char *project_file, project_t *project,
 	      /* if the project path actually is a prefix of this, */
 	      /* then just remove this prefix */
 	      if((str[0] == '/') &&
-		 (strlen(str) > strlen(project->path)) &&
-		 !strncmp(str, project->path, strlen(project->path))) {
+		 (strlen((char *)str) > strlen(project->path)) &&
+		 !strncmp((char *)str, project->path, strlen(project->path))) {
 
-		project->osm = g_strdup(str + strlen(project->path));
+		project->osm = g_strdup((gchar *)str + strlen(project->path));
 		printf("osm name converted to relative %s\n", project->osm);
 	      } else
-		project->osm = g_strdup(str);
+		project->osm = g_strdup((gchar *)str);
 
 	      xmlFree(str);
 
 	    } else if(strcmp((char*)node->name, "min") == 0) {
 	      if((str = xmlGetProp(node, BAD_CAST "lat"))) {
-		project->min.lat = g_ascii_strtod(str, NULL);
+		project->min.lat = g_ascii_strtod((gchar *)str, NULL);
 		xmlFree(str);
 	      }
 	      if((str = xmlGetProp(node, BAD_CAST "lon"))) {
-		project->min.lon = g_ascii_strtod(str, NULL);
+		project->min.lon = g_ascii_strtod((gchar *)str, NULL);
 		xmlFree(str);
 	      }
 
 	    } else if(strcmp((char*)node->name, "max") == 0) {
 	      if((str = xmlGetProp(node, BAD_CAST "lat"))) {
-		project->max.lat = g_ascii_strtod(str, NULL);
+		project->max.lat = g_ascii_strtod((gchar *)str, NULL);
 		xmlFree(str);
 	      }
 	      if((str = xmlGetProp(node, BAD_CAST "lon"))) {
-		project->max.lon = g_ascii_strtod(str, NULL);
+		project->max.lon = g_ascii_strtod((gchar *)str, NULL);
 		xmlFree(str);
 	      }
 	    }
