@@ -20,6 +20,7 @@
 #include "misc.h"
 
 #include "appdata.h"
+#include "pos.h"
 #include "settings.h"
 
 #ifdef FREMANTLE
@@ -61,6 +62,12 @@ gboolean xml_get_prop_is(xmlNode *node, const char *prop, const char *str) {
   return match;
 }
 
+gboolean xml_get_prop_pos(xmlNode *node, pos_t *pos) {
+  pos->lat = xml_get_prop_float(node, "lat");
+  pos->lon = xml_get_prop_float(node, "lon");
+
+  return (isnan(pos->lat) || isnan(pos->lon)) ? FALSE : TRUE;
+}
 
 static void vmessagef(GtkWidget *parent, GtkMessageType type, GtkButtonsType buttons,
 		      const char *title, const char *fmt,

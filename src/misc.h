@@ -50,8 +50,11 @@ typedef struct file_chain_t {
 #define NAN (0.0/0.0)
 #endif
 
+struct pos_t;
+
 double xml_get_prop_float(xmlNode *node, const char *prop);
 gboolean xml_get_prop_is(xmlNode *node, const char *prop, const char *str);
+gboolean xml_get_prop_pos(xmlNode *node, struct pos_t *pos);
 
 struct appdata_t;
 

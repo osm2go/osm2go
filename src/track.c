@@ -64,30 +64,11 @@ gboolean track_is_empty(const track_seg_t *seg) {
   return (seg->track_point == NULL) ? TRUE : FALSE;
 }
 
-static gboolean track_get_prop_pos(xmlNode *node, pos_t *pos) {
-  xmlChar *str_lat = xmlGetProp(node, BAD_CAST "lat");
-  xmlChar *str_lon = xmlGetProp(node, BAD_CAST "lon");
-
-  if(!str_lon || !str_lat) {
-    if(!str_lon) xmlFree(str_lon);
-    if(!str_lat) xmlFree(str_lat);
-    return FALSE;
-  }
-
-  pos->lat = g_ascii_strtod((const gchar*)str_lat, NULL);
-  pos->lon = g_ascii_strtod((const gchar*)str_lon, NULL);
-
-  xmlFree(str_lon);
-  xmlFree(str_lat);
-
-  return TRUE;
-}
-
 static track_point_t *track_parse_trkpt(xmlNode *a_node) {
   track_point_t *point = g_new0(track_point_t, 1);
 
   /* parse position */
-  if(!track_get_prop_pos(a_node, &point->pos)) {
+  if(!xml_get_prop_pos(a_node, &point->pos)) {
     g_free(point);
     return NULL;
   }

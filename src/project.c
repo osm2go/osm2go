@@ -156,24 +156,9 @@ static gboolean project_read(const char *project_file, project_t *project,
 	      xmlFree(str);
 
 	    } else if(strcmp((char*)node->name, "min") == 0) {
-	      if((str = xmlGetProp(node, BAD_CAST "lat"))) {
-		project->min.lat = g_ascii_strtod((gchar *)str, NULL);
-		xmlFree(str);
-	      }
-	      if((str = xmlGetProp(node, BAD_CAST "lon"))) {
-		project->min.lon = g_ascii_strtod((gchar *)str, NULL);
-		xmlFree(str);
-	      }
-
+              xml_get_prop_pos(node, &project->min);
 	    } else if(strcmp((char*)node->name, "max") == 0) {
-	      if((str = xmlGetProp(node, BAD_CAST "lat"))) {
-		project->max.lat = g_ascii_strtod((gchar *)str, NULL);
-		xmlFree(str);
-	      }
-	      if((str = xmlGetProp(node, BAD_CAST "lon"))) {
-		project->max.lon = g_ascii_strtod((gchar *)str, NULL);
-		xmlFree(str);
-	      }
+              xml_get_prop_pos(node, &project->max);
 	    }
 	  }
 	  node = node->next;

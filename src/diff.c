@@ -279,25 +279,6 @@ static int xml_get_prop_state(xmlNode *node) {
   return OSM_FLAG_DIRTY;
 }
 
-static gboolean xml_get_prop_pos(xmlNode *node, pos_t *pos) {
-  xmlChar *str_lat = xmlGetProp(node, BAD_CAST "lat");
-  xmlChar *str_lon = xmlGetProp(node, BAD_CAST "lon");
-
-  if(!str_lon || !str_lat) {
-    if(!str_lon) xmlFree(str_lon);
-    if(!str_lat) xmlFree(str_lat);
-    return FALSE;
-  }
-
-  pos->lat = g_ascii_strtod((char*)str_lat, NULL);
-  pos->lon = g_ascii_strtod((char*)str_lon, NULL);
-
-  xmlFree(str_lon);
-  xmlFree(str_lat);
-
-  return TRUE;
-}
-
 static tag_t *xml_scan_tags(xmlNodePtr node) {
   /* scan for tags */
   tag_t *first_tag = NULL;
