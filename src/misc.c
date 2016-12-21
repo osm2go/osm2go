@@ -69,6 +69,15 @@ gboolean xml_get_prop_pos(xmlNode *node, pos_t *pos) {
   return (isnan(pos->lat) || isnan(pos->lon)) ? FALSE : TRUE;
 }
 
+void xml_set_prop_pos(xmlNode *node, const pos_t *pos) {
+  char str[G_ASCII_DTOSTR_BUF_SIZE];
+
+  g_ascii_formatd(str, sizeof(str), LL_FORMAT, pos->lat);
+  xmlNewProp(node, BAD_CAST "lat", BAD_CAST str);
+  g_ascii_formatd(str, sizeof(str), LL_FORMAT, pos->lon);
+  xmlNewProp(node, BAD_CAST "lon", BAD_CAST str);
+}
+
 static void vmessagef(GtkWidget *parent, GtkMessageType type, GtkButtonsType buttons,
 		      const char *title, const char *fmt,
 		      va_list args) {

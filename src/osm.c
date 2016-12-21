@@ -1319,10 +1319,7 @@ char *osm_generate_xml_node(item_id_t changeset, const node_t *node) {
   xmlNewProp(xml_node, BAD_CAST "version", BAD_CAST str);
   snprintf(str, sizeof(str), "%u", (unsigned)changeset);
   xmlNewProp(xml_node, BAD_CAST "changeset", BAD_CAST str);
-  g_ascii_formatd(str, sizeof(str), LL_FORMAT, node->pos.lat);
-  xmlNewProp(xml_node, BAD_CAST "lat", BAD_CAST str);
-  g_ascii_formatd(str, sizeof(str), LL_FORMAT, node->pos.lon);
-  xmlNewProp(xml_node, BAD_CAST "lon", BAD_CAST str);
+  xml_set_prop_pos(xml_node, &node->pos);
   osm_generate_tags(OSM_TAG(node), xml_node);
 
   return osm_generate_xml_finish(doc);

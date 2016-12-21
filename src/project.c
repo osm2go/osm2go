@@ -207,16 +207,10 @@ gboolean project_save(GtkWidget *parent, project_t *project) {
   xmlNewChild(root_node, NULL, BAD_CAST "osm", BAD_CAST project->osm);
 
   node = xmlNewChild(root_node, NULL, BAD_CAST "min", NULL);
-  g_ascii_formatd(str, sizeof(str), LL_FORMAT, project->min.lat);
-  xmlNewProp(node, BAD_CAST "lat", BAD_CAST str);
-  g_ascii_formatd(str, sizeof(str), LL_FORMAT, project->min.lon);
-  xmlNewProp(node, BAD_CAST "lon", BAD_CAST str);
+  xml_set_prop_pos(node, &project->min);
 
   node = xmlNewChild(root_node, NULL, BAD_CAST "max", NULL);
-  g_ascii_formatd(str, sizeof(str), LL_FORMAT, project->max.lat);
-  xmlNewProp(node, BAD_CAST "lat", BAD_CAST str);
-  g_ascii_formatd(str, sizeof(str), LL_FORMAT, project->max.lon);
-  xmlNewProp(node, BAD_CAST "lon", BAD_CAST str);
+  xml_set_prop_pos(node, &project->max);
 
   if(project->map_state) {
     node = xmlNewChild(root_node, NULL, BAD_CAST "map", BAD_CAST NULL);

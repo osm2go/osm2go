@@ -55,6 +55,7 @@ struct pos_t;
 double xml_get_prop_float(xmlNode *node, const char *prop);
 gboolean xml_get_prop_is(xmlNode *node, const char *prop, const char *str);
 gboolean xml_get_prop_pos(xmlNode *node, struct pos_t *pos);
+void xml_set_prop_pos(xmlNode *node, const struct pos_t *pos);
 
 struct appdata_t;
 

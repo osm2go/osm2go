@@ -282,11 +282,7 @@ static void track_save_points(const track_point_t *point, xmlNodePtr node) {
 
     xmlNodePtr node_point = xmlNewChild(node, NULL, BAD_CAST "trkpt", NULL);
 
-    g_ascii_formatd(str, sizeof(str), LL_FORMAT, point->pos.lat);
-    xmlNewProp(node_point, BAD_CAST "lat", BAD_CAST str);
-
-    g_ascii_formatd(str, sizeof(str), LL_FORMAT, point->pos.lon);
-    xmlNewProp(node_point, BAD_CAST "lon", BAD_CAST str);
+    xml_set_prop_pos(node_point, &point->pos);
 
     if(!isnan(point->altitude)) {
       g_ascii_formatd(str, sizeof(str), ALT_FORMAT, point->altitude);
