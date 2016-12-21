@@ -660,32 +660,25 @@ static gboolean skip_element(xmlTextReaderPtr reader) {
   return(ret == 1);
 }
 
+static pos_float_t xml_reader_attr_float(xmlTextReaderPtr reader, const char *name) {
+  xmlChar *prop = xmlTextReaderGetAttribute(reader, BAD_CAST name);
+  pos_float_t ret;
+
+  if((prop)) {
+    ret = g_ascii_strtod((gchar *)prop, NULL);
+    xmlFree(prop);
+  } else
+    ret = NAN;
+
+  return ret;  
+}
+
 /* parse bounds */
 static gboolean process_bounds(xmlTextReaderPtr reader, bounds_t *bounds) {
-  char *prop = NULL;
-
-  bounds->ll_min.lat = bounds->ll_min.lon = NAN;
-  bounds->ll_max.lat = bounds->ll_max.lon = NAN;
-
-  if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "minlat"))) {
-    bounds->ll_min.lat = g_ascii_strtod(prop, NULL);
-    xmlFree(prop);
-  }
-
-  if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "maxlat"))) {
-    bounds->ll_max.lat = g_ascii_strtod(prop, NULL);
-    xmlFree(prop);
-  }
-
-  if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "minlon"))) {
-    bounds->ll_min.lon = g_ascii_strtod(prop, NULL);
-    xmlFree(prop);
-  }
-
-  if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "maxlon"))) {
-    bounds->ll_max.lon = g_ascii_strtod(prop, NULL);
-    xmlFree(prop);
-  }
+  bounds->ll_min.lat = xml_reader_attr_float(reader, "minlat");
+  bounds->ll_min.lon = xml_reader_attr_float(reader, "minlon");
+  bounds->ll_max.lat = xml_reader_attr_float(reader, "maxlat");
+  bounds->ll_max.lon = xml_reader_attr_float(reader, "maxlon");
 
   if(isnan(bounds->ll_min.lat) || isnan(bounds->ll_min.lon) ||
      isnan(bounds->ll_max.lat) || isnan(bounds->ll_max.lon)) {
@@ -795,20 +788,11 @@ static node_t *process_node(xmlTextReaderPtr reader, osm_t *osm) {
 
   /* allocate a new node structure */
   node_t *node = g_new0(node_t, 1);
-  node->pos.lat = node->pos.lon = NAN;
 
   process_base_attributes(&node->base, reader, osm);
 
-  xmlChar *prop;
-  if((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "lat"))) {
-    node->pos.lat = g_ascii_strtod((char*)prop, NULL);
-    xmlFree(prop);
-  }
-
-  if((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "lon"))) {
-    node->pos.lon = g_ascii_strtod((char*)prop, NULL);
-    xmlFree(prop);
-  }
+  node->pos.lat = xml_reader_attr_float(reader, "lat");
+  node->pos.lon = xml_reader_attr_float(reader, "lon");
 
   pos2lpos(osm->bounds, &node->pos, &node->lpos);
 
