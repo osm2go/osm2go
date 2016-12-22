@@ -1,32 +1,18 @@
-add_executable(osm_way_length osm_way_length.c)
-target_link_libraries(osm_way_length
-	osm2go_lib
-	${CURL_LIBRARIES}
-	${LIBXML2_LIBRARIES}
-	PkgConfig::GooCanvas
-	${MORE_LIBS}
-)
+function(osm_test BASENAME)
+	add_executable(${BASENAME} ${BASENAME}.c)
+	target_link_libraries(${BASENAME}
+		osm2go_lib
+		${CURL_LIBRARIES}
+		${LIBXML2_LIBRARIES}
+		PkgConfig::GooCanvas
+		${MORE_LIBS}
+	)
 
-add_test(NAME osm_way_length COMMAND osm_way_length)
+	add_test(NAME ${BASENAME}
+			COMMAND ${BASENAME} ${ARGN})
+endfunction()
 
-add_executable(track_load_save track_load_save.c)
-target_link_libraries(track_load_save
-	osm2go_lib
-	${CURL_LIBRARIES}
-	${LIBXML2_LIBRARIES}
-	PkgConfig::GooCanvas
-	${MORE_LIBS}
-)
-
-add_test(NAME track_load_save COMMAND track_load_save "${CMAKE_CURRENT_SOURCE_DIR}/" "test1" "${CMAKE_CURRENT_BINARY_DIR}/export.gpx")
-
-add_executable(presets_load presets_load.c)
-target_link_libraries(presets_load
-	osm2go_lib
-	${CURL_LIBRARIES}
-	${LIBXML2_LIBRARIES}
-	PkgConfig::GooCanvas
-	${MORE_LIBS}
-)
-
-add_test(NAME presets_load COMMAND presets_load WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../data)
+osm_test(osm_way_length)
+osm_test(track_load_save "${CMAKE_CURRENT_SOURCE_DIR}/" "test1" "${CMAKE_CURRENT_BINARY_DIR}/export.gpx")
+osm_test(presets_load)
+set_property(TEST presets_load PROPERTY WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../data)
