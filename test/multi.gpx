@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx xmlns="http://www.topografix.com/GPX/1/0">
+  <trk>
+    <trkseg>
+      <trkpt lat="52.2720694" lon="9.5816714">
+        <time>2014-07-01T16:41:06</time>
+      </trkpt>
+    </trkseg>
+    <trkseg>
+      <trkpt lat="52.2720701" lon="9.5816641">
+        <time>2014-07-01T16:41:07</time>
+      </trkpt>
+      <trkpt lat="52.2720672" lon="9.5816577">
+        <time>2014-07-01T16:41:08</time>
+      </trkpt>
+    </trkseg>
+    <trkseg>
+      <trkpt lat="52.2720637" lon="9.5816435">
+        <time>2014-07-01T16:41:09</time>
+      </trkpt>
+      <trkpt lat="52.2720654" lon="9.5816087">
+        <time>2014-07-01T16:41:10</time>
+      </trkpt>
+      <trkpt lat="52.2720705" lon="9.5815716">
+        <time>2014-07-01T16:41:11</time>
+      </trkpt>
+    </trkseg>
+  </trk>
+  <trk>
+    <trkseg>
+      <trkpt lat="52.2720805" lon="9.5815248">
+        <time>2014-07-01T16:41:12</time>
+      </trkpt>
+      <trkpt lat="52.2720902" lon="9.5814800">
+        <time>2014-07-01T16:41:13</time>
+      </trkpt>
+      <trkpt lat="52.2720980" lon="9.5814367">
+        <time>2014-07-01T16:41:14</time>
+      </trkpt>
+      <trkpt lat="52.2721078" lon="9.5813966">
+        <time>2014-07-01T16:41:15</time>
+      </trkpt>
+      <trkpt lat="52.2721174" lon="9.5813569">
+        <time>2014-07-01T16:41:16</time>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>
