@@ -28,18 +28,14 @@
 #include <vector>
 
 typedef struct track_point_t {
-  struct track_point_t *next;
   pos_t pos;               /* position in lat/lon format */
   time_t time;
   float altitude;
 } track_point_t;
 
 struct track_seg_t {
-  track_seg_t() : track_point(0) {}
-  track_point_t *track_point;
+  std::vector<track_point_t *> track_points;
   std::vector<canvas_item_t *> item_chain;
-
-  bool is_empty() const;
 };
 
 struct track_t {
@@ -47,14 +43,6 @@ struct track_t {
   bool dirty;
   bool active; ///< if the last element in segments is currently written to
 };
-
-/**
- * @brief count a point sequence
- * @param point first point
- * @return how many points are in the given sequence
- * @retval 0 point is NULL
- */
-gint track_points_count(const track_point_t *point);
 
 extern "C" {
 #endif
