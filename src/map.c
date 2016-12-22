@@ -2138,12 +2138,12 @@ void map_track_draw_seg(map_t *map, track_seg_t *seg) {
   g_assert(!seg->item_chain);
 
   track_item_chain_t **itemP = &seg->item_chain;
-  track_point_t *track_point = seg->track_point;
+  const track_point_t *track_point = seg->track_point;
   while(track_point) {
     lpos_t lpos;
 
     /* skip all points not on screen */
-    track_point_t *last = NULL;
+    const track_point_t *last = NULL;
     while(track_point && !track_pos2lpos(bounds, &track_point->pos, &lpos)) {
       last = track_point;
       track_point = track_point->next;
@@ -2152,7 +2152,7 @@ void map_track_draw_seg(map_t *map, track_seg_t *seg) {
     int visible = 0;
 
     /* count nodes that _are_ on screen */
-    track_point_t *tmp = track_point;
+    const track_point_t *tmp = track_point;
     while(tmp && track_pos2lpos(bounds, &tmp->pos, &lpos)) {
       tmp = tmp->next;
       visible++;
