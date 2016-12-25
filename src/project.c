@@ -1214,12 +1214,16 @@ project_edit(appdata_t *appdata, GtkWidget *parent,
     project->desc = NULL;
 
 #ifdef SERVER_EDITABLE
-  g_free(context.project->server);
-  context.project->server = g_strdup(gtk_entry_get_text(
+  g_free(context.project->rserver);
+  context.project->rserver = g_strdup(gtk_entry_get_text(
 				       GTK_ENTRY(context.server)));
-  if(strlen(context.project->server) == 0) {
-    g_free(context.project->server);
-    context.project->server = NULL;
+  if(!context.project->rserver || strlen(context.project->rserver) == 0 ||
+     g_strcmp0(appdata->settings->server, context.project->rserver) == 0) {
+    g_free(context.project->rserver);
+    context.project->rserver = NULL;
+    context.project->server = appdata->settings->server;
+  } else {
+    context.project->server = context.project->rserver;
   }
 #endif
 
