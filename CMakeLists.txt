@@ -201,19 +201,19 @@ include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
-set_source_files_properties(src/misc.c PROPERTIES COMPILE_DEFINITIONS "DATADIR=\"${DATA_DIR}\"")
+set_property(SOURCE src/misc.c APPEND PROPERTY COMPILE_DEFINITIONS "DATADIR=\"${DATA_DIR}\"")
 if (HAVE_LOG2)
-	set_source_files_properties(src/area_edit.c PROPERTIES COMPILE_DEFINITIONS "LOG2=log2")
+	set_property(SOURCE src/area_edit.c APPEND PROPERTY COMPILE_DEFINITIONS "LOG2=log2")
 endif ()
 
 # there shouldn't be a reason to change the server url
 option(SERVER_EDITABLE "add widget to make API URL editable" OFF)
 if (SERVER_EDITABLE)
-	set_source_files_properties(src/project.c PROPERTIES COMPILE_DEFINITIONS "SERVER_EDITABLE")
+	set_property(SOURCE src/project.c APPEND PROPERTY COMPILE_DEFINITIONS "SERVER_EDITABLE")
 endif ()
 
 if (PICKER_MENU)
-	set_property(SOURCE src/josm_presets.c APPEND PROPERTY COMPILE_DEFINITIONS PICKER_MENU)
+	set_property(SOURCE src/josm_presets.c APPEND PROPERTY COMPILE_DEFINITIONS "PICKER_MENU")
 endif ()
 
 add_library(osm2go_lib STATIC
