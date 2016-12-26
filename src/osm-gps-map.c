@@ -49,6 +49,13 @@
 #include <libsoup/soup.h>
 #endif
 
+/* the version check macro is not available in all versions of libsoup */
+#if defined(SOUP_CHECK_VERSION)
+#if SOUP_CHECK_VERSION(2, 42, 0)
+#define USE_SOUP_SESSION_NEW
+#endif
+#endif
+
 #define ENABLE_DEBUG 0
 
 #define EXTRA_BORDER (TILESIZE / 2)
@@ -1465,9 +1472,15 @@ osm_gps_map_init (OsmGpsMap *object)
 
 #ifndef LIBSOUP22
     //Change naumber of concurrent connections option?
+#ifdef USE_SOUP_SESSION_NEW
+    priv->soup_session =
+        soup_session_new_with_options(SOUP_SESSION_USER_AGENT,
+                                      USER_AGENT, NULL);
+#else
     priv->soup_session =
         soup_session_async_new_with_options(SOUP_SESSION_USER_AGENT,
                                             USER_AGENT, NULL);
+#endif
 #else
     /* libsoup-2.2 has no special way to set the user agent, so we */
     /* set it seperately as an extra header field for each reuest */
