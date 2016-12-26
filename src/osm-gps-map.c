@@ -1471,7 +1471,7 @@ osm_gps_map_init (OsmGpsMap *object)
     priv->map_source = -1;
 
 #ifndef LIBSOUP22
-    //Change naumber of concurrent connections option?
+    //Change number of concurrent connections option?
 #ifdef USE_SOUP_SESSION_NEW
     priv->soup_session =
         soup_session_new_with_options(SOUP_SESSION_USER_AGENT,
@@ -1483,7 +1483,7 @@ osm_gps_map_init (OsmGpsMap *object)
 #endif
 #else
     /* libsoup-2.2 has no special way to set the user agent, so we */
-    /* set it seperately as an extra header field for each reuest */
+    /* set it seperately as an extra header field for each request */
     priv->soup_session = soup_session_async_new();
 #endif
     //Hash table which maps tile d/l URIs to SoupMessage requests
