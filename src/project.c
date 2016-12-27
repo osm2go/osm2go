@@ -798,13 +798,11 @@ static GtkWidget *project_list_widget(select_context_t *context, gboolean *has_s
   return context->list;
 }
 
-#if GLIB_CHECK_VERSION(2,28,0)
-static void project_free_notify(gpointer data) {
-#else
-static void project_free_notify(gpointer data, gpointer user_data) {
-#endif
+#if !GLIB_CHECK_VERSION(2,28,0)
+static void project_free_notify(gpointer data, G_GNUC_UNUSED gpointer user_data) {
   project_free((project_t*)data);
 }
+#endif
 
 static char *project_select(appdata_t *appdata) {
   char *name = NULL;
@@ -842,7 +840,7 @@ static char *project_select(appdata_t *appdata) {
 
   /* free all entries */
 #if GLIB_CHECK_VERSION(2,28,0)
-  g_slist_free_full(context.projects, project_free_notify);
+  g_slist_free_full(context.projects, (GDestroyNotify) project_free);
 #else
   g_slist_foreach(context.projects, project_free_notify, NULL);
   g_slist_free(context.projects);
