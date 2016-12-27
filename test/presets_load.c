@@ -4,7 +4,7 @@
 #include <gtk/gtk.h>
 #include <stdlib.h>
 
-int main(int argc, char **argv)
+int main(void)
 {
   presets_item_t *presets;
 
