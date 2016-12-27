@@ -449,7 +449,6 @@ static gboolean project_delete(select_context_t *context, project_t *project) {
   /* remove from view */
   GtkTreeIter iter;
   GtkTreeModel *model = list_get_model(context->list);
-  gboolean deleted = FALSE;
   if(gtk_tree_model_get_iter_first(model, &iter)) {
     do {
       project_t *prj = NULL;
@@ -458,9 +457,9 @@ static gboolean project_delete(select_context_t *context, project_t *project) {
 	printf("found %s to remove\n", prj->name);
 	/* and remove from store */
 	gtk_list_store_remove(GTK_LIST_STORE(model), &iter);
-	deleted = TRUE;
+        break;
       }
-    } while(!deleted && gtk_tree_model_iter_next(model, &iter));
+    } while(gtk_tree_model_iter_next(model, &iter));
   }
 
   /* de-chain entry from project list */
