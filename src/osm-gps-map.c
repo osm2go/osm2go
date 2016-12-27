@@ -1705,7 +1705,7 @@ osm_gps_map_set_property (GObject *object, guint prop_id, const GValue *value, G
             priv->ui_gps_point_outer_radius = g_value_get_int (value);
             break;
         case PROP_MAP_SOURCE: {
-            gint old = priv->map_source;
+            OsmGpsMapSource_t old = priv->map_source;
             priv->map_source = g_value_get_int (value);
             if(old >= OSM_GPS_MAP_SOURCE_NULL &&
                priv->map_source != old &&
