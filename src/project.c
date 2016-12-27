@@ -433,14 +433,12 @@ static gboolean project_delete(select_context_t *context, project_t *project) {
 
   /* remove entire directory from disk */
   GDir *dir = g_dir_open(project->path, 0, NULL);
-  const char *name = NULL;
-  do {
-    if((name = g_dir_read_name(dir))) {
-      char *fullname = g_strjoin("/", project->path, name, NULL);
-      g_remove(fullname);
-      g_free(fullname);
-    }
-  } while(name);
+  const gchar *name;
+  while ((name = g_dir_read_name(dir))) {
+    gchar *fullname = g_strconcat(project->path, "/", name, NULL);
+    g_remove(fullname);
+    g_free(fullname);
+  }
   g_dir_close(dir);
 
   /* remove the projects directory */
