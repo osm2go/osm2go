@@ -160,7 +160,7 @@ gboolean osm_download(GtkWidget *parent, settings_t *settings,
 
 typedef struct {
   char *ptr;
-  int len;
+  size_t len;
 } curl_data_t;
 
 static size_t read_callback(void *ptr, size_t size, size_t nmemb, void *stream) {
