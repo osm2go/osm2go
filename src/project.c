@@ -584,8 +584,8 @@ project_get_status_icon_stock_id(const project_t *current,
 static void on_project_new(G_GNUC_UNUSED GtkButton *button, gpointer data) {
   select_context_t *context = (select_context_t*)data;
   project_t *project = project_new(context);
-  context->projects = g_slist_prepend(context->projects, project);
   if(project) {
+    context->projects = g_slist_prepend(context->projects, project);
 
     GtkTreeModel *model = list_get_model(context->list);
 
