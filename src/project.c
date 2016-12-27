@@ -675,10 +675,8 @@ static void on_project_edit(G_GNUC_UNUSED GtkButton *button, gpointer data) {
 	appdata_t *appdata = context->appdata;
 
 	/* save modified coordinates */
-	cur->min.lat = project->min.lat;
-	cur->max.lat = project->max.lat;
-	cur->min.lon = project->min.lon;
-	cur->max.lon = project->max.lon;
+        cur->min = project->min;
+        cur->max = project->max;
 
 	/* try to do this automatically */
 
