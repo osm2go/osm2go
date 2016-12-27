@@ -79,7 +79,7 @@ file_chain_t *file_scan(const char *extension);
 
 struct settings_t;
 
-GtkWidget *misc_dialog_new(guint hint, const gchar *title, GtkWindow *parent, ...);
+GtkWidget *misc_dialog_new(int hint, const gchar *title, GtkWindow *parent, ...);
 GtkWidget *misc_scrolled_window_new(gboolean etched_in);
 void misc_scrolled_window_add_with_viewport(GtkWidget *win, GtkWidget *child);
 const char *misc_get_proxy_uri(struct settings_t *settings);
