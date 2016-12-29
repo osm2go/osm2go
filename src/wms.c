@@ -374,7 +374,7 @@ static void wms_free(wms_t *wms) {
 /* ---------------------- use ------------------- */
 
 static gboolean wms_llbbox_fits(project_t *project, wms_llbbox_t *llbbox) {
-  if(!llbbox || !llbbox->valid ||
+  if(!llbbox->valid ||
      (project->min.lat < llbbox->min.lat) ||
      (project->min.lon < llbbox->min.lon) ||
      (project->max.lat > llbbox->max.lat) ||
@@ -424,7 +424,8 @@ static wms_layer_t *wms_get_requestable_layers(wms_t *wms) {
   wms_layer_t *layer = wms->cap.layer;
   while(layer) {
     wms_llbbox_t *llbbox = &layer->llbbox;
-    if(llbbox && !llbbox->valid) llbbox = NULL;
+    if(!llbbox->valid)
+      llbbox = NULL;
 
     wms_get_child_layers(layer->children, 1,
 	 layer->epsg4326, llbbox, layer->srs, c_layer);
