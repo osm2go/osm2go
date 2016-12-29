@@ -294,7 +294,7 @@ static GSList *project_scan(appdata_t *appdata) {
 
   /* scan for projects */
   GDir *dir = g_dir_open(appdata->settings->base_path, 0, NULL);
-  const char *name = NULL;
+  const gchar *name;
   while((name = g_dir_read_name(dir)) != NULL) {
     gchar *fullname;
     if(project_exists(appdata->settings, name, &fullname)) {
