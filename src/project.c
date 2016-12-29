@@ -412,6 +412,37 @@ static void callback_modified_name(GtkWidget *widget, gpointer data) {
 				    GTK_RESPONSE_ACCEPT, ok);
 }
 
+static void project_close(appdata_t *appdata) {
+  printf("closing current project\n");
+
+  /* redraw the entire map by destroying all map items and redrawing them */
+  if(appdata->osm)
+    diff_save(appdata->project, appdata->osm);
+
+  /* Save track and turn off the handler callback */
+  track_save(appdata->project, appdata->track.track);
+  track_clear(appdata);
+
+  map_clear(appdata, MAP_LAYER_ALL);
+
+  if(appdata->osm) {
+    osm_free(appdata->osm);
+    appdata->osm = NULL;
+  }
+
+  /* remember in settings that no project is open */
+  if(appdata->settings->project)
+  {
+    g_free(appdata->settings->project);
+    appdata->settings->project = NULL;
+  }
+
+  /* update project file on disk */
+  project_save(GTK_WIDGET(appdata->window), appdata->project);
+
+  project_free(appdata->project);
+  appdata->project = NULL;
+}
 
 static gboolean project_delete(select_context_t *context, project_t *project) {
 
@@ -1278,42 +1309,6 @@ static gboolean project_open(appdata_t *appdata, const char *name) {
   }
 
   printf("parsing ok\n");
-
-  return TRUE;
-}
-
-gboolean project_close(appdata_t *appdata) {
-  if(!appdata->project) return FALSE;
-
-  printf("closing current project\n");
-
-  /* redraw the entire map by destroying all map items and redrawing them */
-  if(appdata->osm)
-    diff_save(appdata->project, appdata->osm);
-
-  /* Save track and turn off the handler callback */
-  track_save(appdata->project, appdata->track.track);
-  track_clear(appdata);
-
-  map_clear(appdata, MAP_LAYER_ALL);
-
-  if(appdata->osm) {
-    osm_free(appdata->osm);
-    appdata->osm = NULL;
-  }
-
-  /* remember in settings that no project is open */
-  if(appdata->settings->project)
-  {
-    g_free(appdata->settings->project);
-    appdata->settings->project = NULL;
-  }
-
-  /* update project file on disk */
-  project_save(GTK_WIDGET(appdata->window), appdata->project);
-
-  project_free(appdata->project);
-  appdata->project = NULL;
 
   return TRUE;
 }
