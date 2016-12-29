@@ -374,8 +374,7 @@ static void wms_free(wms_t *wms) {
 /* ---------------------- use ------------------- */
 
 static gboolean wms_llbbox_fits(project_t *project, wms_llbbox_t *llbbox) {
-  if(!llbbox->valid ||
-     (project->min.lat < llbbox->min.lat) ||
+  if((project->min.lat < llbbox->min.lat) ||
      (project->min.lon < llbbox->min.lon) ||
      (project->max.lat > llbbox->max.lat) ||
      (project->max.lon > llbbox->max.lon))
@@ -956,7 +955,8 @@ static GtkWidget *wms_layer_widget(appdata_t *appdata, wms_layer_t *layer,
 
   GtkTreeIter iter;
   while(layer) {
-    gboolean fits = wms_llbbox_fits(appdata->project, &layer->llbbox);
+    gboolean fits = layer->llbbox.valid &&
+                    wms_llbbox_fits(appdata->project, &layer->llbbox);
 
     /* Append a row and fill in some data */
     gtk_list_store_append(store, &iter);
