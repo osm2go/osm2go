@@ -35,8 +35,11 @@
 #error "libxml doesn't support required tree or output"
 #endif
 
-static gchar *diff_filename(const project_t *project) {
-  return g_strconcat(project->path, project->name, ".diff", NULL);
+static std::string diff_filename(const project_t *project) {
+  std::string ret = project->path;
+  ret += project->name;
+  ret += ".diff";
+  return ret;
 }
 
 static void diff_save_tags(const tag_t *tag, xmlNodePtr node) {
@@ -237,12 +240,11 @@ gboolean diff_is_clean(const osm_t *osm, gboolean honor_hidden_flags) {
 void diff_save(const project_t *project, const osm_t *osm) {
   if(!project || !osm) return;
 
-  gchar *diff_name = diff_filename(project);
+  const std::string &diff_name = diff_filename(project);
 
   if(diff_is_clean(osm, TRUE)) {
     printf("data set is clean, removing diff if present\n");
-    g_remove(diff_name);
-    g_free(diff_name);
+    g_remove(diff_name.c_str());
     return;
   }
 
@@ -266,9 +268,8 @@ void diff_save(const project_t *project, const osm_t *osm) {
 
   /* if we reach this point writing the new file worked and we */
   /* can delete the backup */
-  g_rename(ndiff, diff_name);
+  g_rename(ndiff, diff_name.c_str());
 
-  g_free(diff_name);
   g_free(ndiff);
 }
 
@@ -666,16 +667,15 @@ void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) {
 
   /* first try to open a backup which is only present if saving the */
   /* actual diff didn't succeed */
-  char *diff_name = g_strconcat(project->path, "backup.diff", NULL);
-  if(g_file_test(diff_name, G_FILE_TEST_EXISTS)) {
+  std::string diff_name = project->path;
+  diff_name += "backup.diff";
+  if(g_file_test(diff_name.c_str(), G_FILE_TEST_EXISTS)) {
     printf("diff backup present, loading it instead of real diff ...\n");
   } else {
-    g_free(diff_name);
     diff_name = diff_filename(project);
 
-    if(!g_file_test(diff_name, G_FILE_TEST_EXISTS)) {
+    if(!g_file_test(diff_name.c_str(), G_FILE_TEST_EXISTS)) {
       printf("no diff present!\n");
-      g_free(diff_name);
       return;
     }
     printf("diff found, applying ...\n");
@@ -685,14 +685,11 @@ void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) {
   xmlNode *root_element = NULL;
 
   /* parse the file and get the DOM */
-  if((doc = xmlReadFile(diff_name, NULL, 0)) == NULL) {
+  if((doc = xmlReadFile(diff_name.c_str(), NULL, 0)) == NULL) {
     errorf(GTK_WIDGET(appdata->window),
-	   "Error: could not parse file %s\n", diff_name);
-    g_free(diff_name);
+	   "Error: could not parse file %s\n", diff_name.c_str());
     return;
   }
-
-  g_free(diff_name);
 
   /* Get the root element node */
   root_element = xmlDocGetRootElement(doc);
@@ -750,16 +747,12 @@ void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) {
 }
 
 gboolean diff_present(const project_t *project) {
-  gchar *diff_name = diff_filename(project);
+  const std::string &diff_name = diff_filename(project);
 
-  gboolean ret = g_file_test(diff_name, G_FILE_TEST_EXISTS);
-
-  g_free(diff_name);
-  return ret;
+  return g_file_test(diff_name.c_str(), G_FILE_TEST_EXISTS);
 }
 
 void diff_remove(const project_t *project) {
-  gchar *diff_name = diff_filename(project);
-  g_remove(diff_name);
-  g_free(diff_name);
+  const std::string &diff_name = diff_filename(project);
+  g_remove(diff_name.c_str());
 }
