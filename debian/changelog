@@ -1,3 +1,20 @@
+osm2go (1:0.8.8-maemo1) karmic; urgency=low
+
+  * fix several leaks
+  * sort project list alphabetically
+  * do not generate backup.diff files anymore, create the new diff under a new name and move it over the old when finished
+  * show "Update all" button beneath the other buttons in project list
+  * preselect the project that contains the current GPS position when showing the project list
+  * fix invalid free when showing relation members
+  * fix wrong variable being freed during upload
+  * fix crash if reversing a way that is member of a relation without "type"
+  * avoid writing the whole track XML when saving
+  * use less memory when parsing XML files
+  * fix access to deleted memory of the GPS indicator when switching projects
+  * and the usual bunch of internal cleanups and improvements
+
+ -- Rolf Eike Beer <eike@sf-mail.de>  Sat, 31 Dec 2016 10:57:05 +0100
+
 osm2go (1:0.8.7-maemo1) karmic; urgency=low
 
   * add "Download all" button to project list to simplify mass refresh

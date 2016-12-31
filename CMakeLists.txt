@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.6 FATAL_ERROR)
 
-project(osm2go VERSION 0.8.7 LANGUAGES C)
+project(osm2go VERSION 0.8.8 LANGUAGES C)
 
 include(GNUInstallDirs)
 include(CheckFunctionExists)
