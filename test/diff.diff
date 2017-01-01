@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<diff name="diff">
+  <node state="new" id="-1" lat="52.2693518" lon="9.5760140" time="1483221227"/>
+  <node state="new" id="-2" lat="52.269497" lon="9.5752223" time="1483221228"/>
+  <node id="638499572" lat="52.2694654" lon="9.5752283" time="1444474581">
+    <tag k="highway" v="bus_stop"/>
+    <tag k="name" v="Wennigsen/KGS"/>
+    <tag k="network" v="Großraum-Verkehr Hannover"/>
+    <tag k="ref" v="5791"/>
+    <tag k="testtag" v="true"/>
+  </node>
+  <node id="3398616417" lat="52.2694285" lon="9.5752791" time="1426361439">
+    <tag k="amenity" v="waste_basket"/>
+  </node>
+  <node id="3577031223" lat="52.2694261" lon="9.5752398" time="1433599117"/>
+  <way state="deleted" id="351899455"/>
+</diff>
