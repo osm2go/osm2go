@@ -470,18 +470,21 @@ static void osm_relation_free_pair(std::pair<item_id_t, relation_t *> pair) {
 }
 
 member_t osm_parse_osm_relation_member(osm_t *osm, xmlNode *a_node) {
-  char *prop;
+  xmlChar *prop;
   member_t member;
 
-  if((prop = (char*)xmlGetProp(a_node, BAD_CAST "type"))) {
-    if(strcmp(prop, "way") == 0)           member.object.type = WAY;
-    else if(strcmp(prop, "node") == 0)     member.object.type = NODE;
-    else if(strcmp(prop, "relation") == 0) member.object.type = RELATION;
+  if((prop = xmlGetProp(a_node, BAD_CAST "type"))) {
+    if(strcmp((char*)prop, "way") == 0)
+      member.object.type = WAY;
+    else if(strcmp((char*)prop, "node") == 0)
+      member.object.type = NODE;
+    else if(strcmp((char*)prop, "relation") == 0)
+      member.object.type = RELATION;
     xmlFree(prop);
   }
 
-  if((prop = (char*)xmlGetProp(a_node, BAD_CAST "ref"))) {
-    item_id_t id = strtoll(prop, NULL, 10);
+  if((prop = xmlGetProp(a_node, BAD_CAST "ref"))) {
+    item_id_t id = strtoll((char*)prop, NULL, 10);
 
     switch(member.object.type) {
     case ILLEGAL:
@@ -524,9 +527,9 @@ member_t osm_parse_osm_relation_member(osm_t *osm, xmlNode *a_node) {
     xmlFree(prop);
   }
 
-  if((prop = (char*)xmlGetProp(a_node, BAD_CAST "role"))) {
-    if(strlen(prop) > 0)
-      member.role = g_strdup(prop);
+  if((prop = xmlGetProp(a_node, BAD_CAST "role"))) {
+    if(strlen((char*)prop) > 0)
+      member.role = g_strdup((char*)prop);
     xmlFree(prop);
   }
 
