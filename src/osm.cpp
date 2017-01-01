@@ -538,16 +538,14 @@ member_t osm_parse_osm_relation_member(osm_t *osm, xmlNode *a_node) {
 
 /* try to find something descriptive */
 gchar *relation_t::descriptive_name() const {
-  const char *name = NULL;
   const char *keys[] = { "ref", "name", "description", "note", "fix" "me", NULL};
-  unsigned int i;
-  for (i = 0; (keys[i] != NULL) && (name == NULL); i++)
-    name = osm_tag_get_by_key(tag, keys[i]);
+  for (unsigned int i = 0; keys[i] != NULL; i++) {
+    const char *name = osm_tag_get_by_key(tag, keys[i]);
+    if(name)
+      return g_strdup(name);
+  }
 
-  if(!name)
-    return g_strdup_printf("<ID #" ITEM_ID_FORMAT ">", id);
-  else
-    return g_strdup(name);
+  return g_strdup_printf("<ID #" ITEM_ID_FORMAT ">", id);
 }
 
 /* ------------------ osm handling ----------------- */
