@@ -94,7 +94,18 @@ struct elemstyle_area_t {
 };
 
 struct elemstyle_icon_t {
-  gboolean annotate;
+  elemstyle_icon_t()
+    : annotate(false)
+    , filename(0)
+    , zoom_max(0.0f)
+  {
+  }
+  ~elemstyle_icon_t()
+  {
+    g_free(filename);
+  }
+
+  bool annotate;
   char *filename;
   float zoom_max;   // XXX probably belongs in elemstyle_t
 };
@@ -103,7 +114,6 @@ struct elemstyle_t {
   elemstyle_t()
     : type(ES_TYPE_NONE)
     , line_mod(0)
-    , icon(0)
   {
   }
   ~elemstyle_t();
@@ -118,7 +128,7 @@ struct elemstyle_t {
     elemstyle_area_t *area;
   };
 
-  elemstyle_icon_t *icon;
+  elemstyle_icon_t icon;
 };
 
 // ratio conversions
@@ -271,19 +281,15 @@ static elemstyle_area_t *parse_area(xmlNode *a_node) {
   return area;
 }
 
-static elemstyle_icon_t *parse_icon(xmlNode *a_node) {
-  elemstyle_icon_t *icon = g_new0(elemstyle_icon_t, 1);
+static void parse_icon(xmlNode *a_node, elemstyle_icon_t &icon) {
+  icon.annotate = xml_get_prop_is(a_node, "annotate", "true");
 
-  icon->annotate = xml_get_prop_is(a_node, "annotate", "true");
+  icon.filename = (char*)xmlGetProp(a_node, BAD_CAST "src");
+  g_assert(icon.filename);
 
-  icon->filename = (char*)xmlGetProp(a_node, BAD_CAST "src");
-  g_assert(icon->filename);
+  icon.filename = josm_icon_name_adjust(icon.filename);
 
-  icon->filename = josm_icon_name_adjust(icon->filename);
-
-  icon->zoom_max = 0;
-
-  return icon;
+  icon.zoom_max = 0;
 }
 
 static elemstyle_t *parse_rule(xmlNode *a_node) {
@@ -315,7 +321,7 @@ static elemstyle_t *parse_rule(xmlNode *a_node) {
 	elemstyle->type = ES_TYPE_AREA;
 	elemstyle->area = parse_area(cur_node);
       } else if(strcasecmp((char*)cur_node->name, "icon") == 0) {
-	elemstyle->icon = parse_icon(cur_node);
+	parse_icon(cur_node, elemstyle->icon);
       } else if(strcasecmp((char*)cur_node->name, "scale_min") == 0) {
 	/* scale_min is currently ignored */
       } else if(strcasecmp((char*)cur_node->name, "scale_max") == 0) {
@@ -327,8 +333,8 @@ static elemstyle_t *parse_rule(xmlNode *a_node) {
           parse_scale_max(cur_node, &elemstyle->area->zoom_max);
 	  break;
 	default:
-	  if (elemstyle->icon) {
-            parse_scale_max(cur_node, &elemstyle->icon->zoom_max);
+	  if (elemstyle->icon.filename) {
+            parse_scale_max(cur_node, &elemstyle->icon.zoom_max);
 	  }
 	  else {
 	    printf("scale_max for unhandled elemstyletype=0x02%x\n",
@@ -421,12 +427,7 @@ static void free_area(elemstyle_area_t *area) {
   g_free(area);
 }
 
-static void free_icon(elemstyle_icon_t *icon) {
-  if(icon->filename) xmlFree(icon->filename);
-  g_free(icon);
-}
-
-static void free_condition(elemstyle_condition_t cond) {
+static void free_condition(elemstyle_condition_t &cond) {
   xmlFree(cond.key);
   xmlFree(cond.value);
 }
@@ -478,9 +479,9 @@ void colorize_node::operator()(elemstyle_t *elemstyle)
 
   somematch |= match;
 
-  if(match && elemstyle->icon) {
+  if(match && elemstyle->icon.filename) {
     char *name = g_strjoin("/", "styles", style->icon.path_prefix,
-                           elemstyle->icon->filename, 0);
+                           elemstyle->icon.filename, 0);
 
     /* free old icon if there's one present */
     if(node->icon_buf) {
@@ -491,8 +492,8 @@ void colorize_node::operator()(elemstyle_t *elemstyle)
     node->icon_buf = icon_load(style->iconP, name);
     g_free(name);
 
-    if (elemstyle->icon->zoom_max > 0)
-      node->zoom_max = elemstyle->icon->zoom_max;
+    if (elemstyle->icon.zoom_max > 0)
+      node->zoom_max = elemstyle->icon.zoom_max;
   }
 }
 
@@ -706,9 +707,6 @@ elemstyle_t::~elemstyle_t()
     free_line_mod(line_mod);
     break;
   }
-
-  if(icon)
-    free_icon(icon);
 }
 
 // vim:et:ts=8:sw=2:sts=2:ai
