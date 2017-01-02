@@ -52,7 +52,7 @@ icon_item::icon_item(GdkPixbuf *nbuf)
 }
 
 static std::string
-icon_file_exists(const gchar *file) {
+icon_file_exists(const char *file) {
   const char *icon_exts[] = {
 #ifdef USE_SVG_ICONS
                               ".svg",
