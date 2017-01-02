@@ -58,9 +58,8 @@ icon_file_exists(const gchar *file) {
                               ".svg",
 #endif
                               ".gif", ".png", ".jpg", NULL };
-  gint idx;
 
-  for (idx = 0; icon_exts[idx]; idx++) {
+  for (gint idx = 0; icon_exts[idx]; idx++) {
     const std::string &fullname = find_file("icons/", file, icon_exts[idx]);
 
     if(!fullname.empty())

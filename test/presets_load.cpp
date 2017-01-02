@@ -21,13 +21,12 @@ static std::set<std::string> missingIcons;
 bool check_icon::operator()(const std::string &dir)
 {
   const char *icon_exts[] = { ".svg", ".gif", ".png", ".jpg", NULL };
-  gint idx;
   std::string path = dir + "/icons/" + filename;
 
   if(g_file_test(path.c_str(), G_FILE_TEST_IS_REGULAR) == TRUE)
     return true;
 
-  for (idx = 0; icon_exts[idx]; idx++) {
+  for (gint idx = 0; icon_exts[idx]; idx++) {
     std::string name = path + icon_exts[idx];
 
     if(g_file_test(name.c_str(), G_FILE_TEST_IS_REGULAR) == TRUE)

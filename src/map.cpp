@@ -2136,10 +2136,9 @@ static canvas_points_t *canvas_points_init(const bounds_t *bounds,
                                            std::vector<track_point_t *>::const_iterator point,
                                            const gint count) {
   canvas_points_t *points = canvas_points_new(count);
-  gint i;
   lpos_t lpos;
 
-  for(i = 0; i < count; i++) {
+  for(gint i = 0; i < count; i++) {
     track_pos2lpos(bounds, &(*point)->pos, &lpos);
     canvas_point_set_pos(points, i, &lpos);
     point++;

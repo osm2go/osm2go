@@ -1007,12 +1007,10 @@ static osm_t *process_osm(xmlTextReaderPtr reader) {
 static osm_t *process_file(const char *filename) {
   osm_t *osm = NULL;
   xmlTextReaderPtr reader;
-  int ret;
 
   reader = xmlReaderForFile(filename, NULL, 0);
   if (reader != NULL) {
-    ret = xmlTextReaderRead(reader);
-    if(ret == 1) {
+    if(xmlTextReaderRead(reader) == 1) {
       const char *name = (const char*)xmlTextReaderConstName(reader);
       if(name && strcmp(name, "osm") == 0)
 	osm = process_osm(reader);
@@ -1790,8 +1788,7 @@ osm_way_reverse_direction_sensitive_tags (way_t *way) {
         rtable.push_back(std::pair<std::string, std::string>(":backward", ":forward"));
       }
 
-      unsigned int i;
-      for (i = 0; i < rtable.size(); i++) {
+      for (unsigned int i = 0; i < rtable.size(); i++) {
         if (g_str_has_suffix(lc_key, rtable[i].first.c_str())) {
           /* length of key that will persist */
           size_t plen = strlen(tag->key) - rtable[i].first.size();

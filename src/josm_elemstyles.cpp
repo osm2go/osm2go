@@ -135,9 +135,8 @@ static gboolean parse_gboolean(xmlNode *a_node, const char *name) {
     return FALSE;
   }
   static const char *true_str[]  = { "1", "yes", "true", 0 };
-  int i;
   gboolean ret = FALSE;
-  for (i=0; true_str[i]; ++i) {
+  for (int i = 0; true_str[i]; ++i) {
     if (strcasecmp((const char*)bool_str, true_str[i])==0) {
       ret = TRUE;
       break;

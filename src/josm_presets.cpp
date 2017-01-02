@@ -66,8 +66,7 @@ static int josm_type_bit(const char *type, char sep) {
     { PRESETS_TYPE_CLOSEDWAY, "closedway" },
     { 0,                      NULL        }};
 
-  int i;
-  for(i=0;types[i].bit;i++) {
+  for(int i = 0; types[i].bit; i++) {
     const size_t tlen = strlen(types[i].str);
     if(strncmp(types[i].str, type, tlen) == 0 && type[tlen] == sep)
       return types[i].bit;

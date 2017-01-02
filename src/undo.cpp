@@ -96,8 +96,7 @@ static const char *undo_type_string(const undo_type_t type) {
     { UNDO_END, NULL }
   };
 
-  int i;
-  for(i=0;types[i].name;i++)
+  for(int i = 0; types[i].name; i++)
     if(type == types[i].type)
       return types[i].name;
 
