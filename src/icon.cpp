@@ -71,8 +71,6 @@ icon_file_exists(const gchar *file) {
 GdkPixbuf *icon_load(icon_t **icon, const char *name) {
   if(!name) return NULL;
 
-  const std::string sname = name;
-
   if(*icon) {
     /* check if icon list already contains an icon of that name */
     const std::map<std::string, icon_item>::iterator it =
