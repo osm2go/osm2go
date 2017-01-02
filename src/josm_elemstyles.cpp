@@ -44,6 +44,14 @@ struct elemstyle_condition_t {
 };
 
 struct elemstyle_t {
+  elemstyle_t()
+    : type(ES_TYPE_NONE)
+    , line_mod(0)
+    , icon(0)
+  {
+  }
+  ~elemstyle_t();
+
   std::vector<elemstyle_condition_t> conditions;
 
   elemstyle_type_t type;
@@ -224,7 +232,7 @@ static elemstyle_icon_t *parse_icon(xmlNode *a_node) {
 
 static elemstyle_t *parse_rule(xmlNode *a_node) {
   xmlNode *cur_node = NULL;
-  elemstyle_t *elemstyle = g_new0(elemstyle_t, 1);
+  elemstyle_t *elemstyle = new elemstyle_t();
 
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
@@ -367,25 +375,8 @@ static void free_condition(elemstyle_condition_t cond) {
   xmlFree(cond.value);
 }
 
-static void elemstyle_free(elemstyle_t *elemstyle) {
-  std::for_each(elemstyle->conditions.begin(), elemstyle->conditions.end(),
-                free_condition);
-
-  switch(elemstyle->type) {
-  case ES_TYPE_NONE:
-    break;
-  case ES_TYPE_LINE:
-    free_line(elemstyle->line);
-    break;
-  case ES_TYPE_AREA:
-    free_area(elemstyle->area);
-    break;
-  case ES_TYPE_LINE_MOD:
-    free_line_mod(elemstyle->line_mod);
-    break;
-  }
-  if(elemstyle->icon) free_icon(elemstyle->icon);
-  g_free(elemstyle);
+static inline void elemstyle_free(elemstyle_t *elemstyle) {
+  delete elemstyle;
 }
 
 void josm_elemstyles_free(std::vector<elemstyle_t *> &elemstyles) {
@@ -640,6 +631,28 @@ void josm_elemstyles_colorize_world(const style_t *styles, osm_t *osm) {
   /* icons */
   std::for_each(osm->nodes.begin(), osm->nodes.end(),
       josm_elemstyles_colorize_node_functor(styles));
+}
+
+elemstyle_t::~elemstyle_t()
+{
+  std::for_each(conditions.begin(), conditions.end(), free_condition);
+
+  switch(type) {
+  case ES_TYPE_NONE:
+    break;
+  case ES_TYPE_LINE:
+    free_line(line);
+    break;
+  case ES_TYPE_AREA:
+    free_area(area);
+    break;
+  case ES_TYPE_LINE_MOD:
+    free_line_mod(line_mod);
+    break;
+  }
+
+  if(icon)
+    free_icon(icon);
 }
 
 // vim:et:ts=8:sw=2:sts=2:ai
