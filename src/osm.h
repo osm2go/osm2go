@@ -72,6 +72,8 @@ typedef struct tag_t {
   tag_t(char *k, char *v)
     : next(0), key(k), value(v)
   { }
+
+  bool is_creator_tag() const;
 #endif
 } tag_t;
 
@@ -333,7 +335,6 @@ void osm_tag_free(tag_t *tag);
 void osm_tags_free(tag_t *tag);
 tag_t *osm_tag_find(tag_t* tag, const char* key);
 const char *osm_tag_get_by_key(const tag_t *tag, const char *key);
-gboolean osm_is_creator_tag(const tag_t *tag);
 gboolean osm_tag_key_and_value_present(const tag_t *haystack, const tag_t *tag);
 gboolean osm_tag_key_other_value_present(const tag_t *haystack, const tag_t *tag);
 gboolean osm_tag_lists_diff(const tag_t *t1, const tag_t *t2);

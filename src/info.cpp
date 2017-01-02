@@ -58,7 +58,7 @@ static void changed(G_GNUC_UNUSED GtkTreeSelection *treeselection, gpointer user
     gtk_tree_model_get(model, &iter, TAG_COL_DATA, &tag, -1);
 
     /* you just cannot delete or edit the "created_by" tag */
-    if(!tag || osm_is_creator_tag(tag))
+    if(!tag || tag->is_creator_tag())
       selected = FALSE;
   }
 

@@ -254,12 +254,6 @@ tag_t *osm_parse_osm_tag(xmlNode *a_node) {
   return tag;
 }
 
-gboolean osm_is_creator_tag(const tag_t *tag) {
-  if(strcasecmp(tag->key, "created_by") == 0) return TRUE;
-
-  return FALSE;
-}
-
 gboolean osm_tag_key_and_value_present(const tag_t *haystack, const tag_t *tag) {
   for(; haystack; haystack = haystack->next) {
     if((strcasecmp(haystack->key, tag->key) == 0) &&
@@ -291,13 +285,13 @@ gboolean osm_tag_lists_diff(const tag_t *t1, const tag_t *t2) {
 
   /* first check list length, otherwise deleted tags are hard to detect */
   for(ntag = t1; ntag != NULL; ntag = ntag->next) {
-    if(osm_is_creator_tag(ntag))
+    if(ntag->is_creator_tag())
       t1creator = ntag;
     else
       ncnt++;
   }
   for(ntag = t2; ntag != NULL; ntag = ntag->next) {
-    if(osm_is_creator_tag(ntag))
+    if(ntag->is_creator_tag())
       t2creator = ntag;
     else
       ocnt++;
@@ -1119,7 +1113,7 @@ bool osm_node_in_other_way(const osm_t *osm, const way_t *way, const node_t *nod
 static void osm_generate_tags(const tag_t *tag, xmlNodePtr node) {
   while(tag) {
     /* skip "created_by" tags as they aren't needed anymore with api 0.6 */
-    if(!osm_is_creator_tag(tag)) {
+    if(!tag->is_creator_tag()) {
       xmlNodePtr tag_node = xmlNewChild(node, NULL, BAD_CAST "tag", NULL);
       xmlNewProp(tag_node, BAD_CAST "k", BAD_CAST tag->key);
       xmlNewProp(tag_node, BAD_CAST "v", BAD_CAST tag->value);
@@ -1923,7 +1917,7 @@ tag_t *osm_tags_copy(const tag_t *src_tag) {
   tag_t **dst_tag = &new_tags;
 
   for(; src_tag; src_tag = src_tag->next) {
-    if(!osm_is_creator_tag(src_tag)) {
+    if(!src_tag->is_creator_tag()) {
       *dst_tag = g_new0(tag_t, 1);
       (*dst_tag)->key = g_strdup(src_tag->key);
       (*dst_tag)->value = g_strdup(src_tag->value);
@@ -2042,6 +2036,10 @@ bool osm_object_is_same(const object_t *obj1, const object_t &obj2) {
   return(id1 == id2);
 }
 
+bool tag_t::is_creator_tag() const {
+  return (strcasecmp(key, "created_by") == 0);
+}
+
 base_object_t::base_object_t()
 {
   memset(this, 0, sizeof(*this));
@@ -2057,7 +2055,7 @@ bool base_object_t::has_tag() const
   tag_t *t = tag;
 
   /* created_by tags don't count as real tags */
-  if(t && osm_is_creator_tag(t))
+  if(t && t->is_creator_tag())
     t = t->next;
 
   return t != NULL;

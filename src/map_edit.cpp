@@ -75,13 +75,13 @@ static gboolean combine_tags(tag_t **dst, tag_t *src) {
   while(src) {
     /* check if same key but with different value is present, */
     /* ignoring the created_by tags */
-    if(!osm_is_creator_tag(src) &&
+    if(!src->is_creator_tag() &&
        osm_tag_key_other_value_present(dst_orig, src))
       conflict = TRUE;
 
     /* don't copy "created_by" and "source" tag or tags that already */
     /* exist in identical form */
-    if(osm_is_creator_tag(src) ||
+    if(src->is_creator_tag() ||
        osm_tag_key_and_value_present(dst_orig, src)) {
       tag_t *next = src->next;
       osm_tag_free(src);
