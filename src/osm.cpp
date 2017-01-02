@@ -227,20 +227,22 @@ tag_t *osm_parse_osm_tag(xmlNode *a_node) {
   /* allocate a new tag structure */
   tag_t *tag = g_new0(tag_t, 1);
 
-  char *prop;
-  if((prop = (char*)xmlGetProp(a_node, BAD_CAST "k"))) {
-    if(strlen(prop) > 0) tag->key = g_strdup(prop);
+  xmlChar *prop;
+  if((prop = xmlGetProp(a_node, BAD_CAST "k"))) {
+    if(strlen((char*)prop) > 0)
+      tag->key = g_strdup((gchar*)prop);
     xmlFree(prop);
   }
 
-  if((prop = (char*)xmlGetProp(a_node, BAD_CAST "v"))) {
-    if(strlen(prop) > 0) tag->value = g_strdup(prop);
+  if((prop = xmlGetProp(a_node, BAD_CAST "v"))) {
+    if(strlen((char*)prop) > 0)
+      tag->value = g_strdup((gchar*)prop);
     xmlFree(prop);
   }
 
   if(!tag->key || !tag->value) {
     printf("incomplete tag key/value %s/%s\n", tag->key, tag->value);
-    osm_tags_free(tag);
+    osm_tag_free(tag);
     return NULL;
   }
 
