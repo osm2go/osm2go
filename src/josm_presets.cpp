@@ -365,18 +365,24 @@ static void attach_right(GtkWidget *table, GtkWidget *widget, gint y) {
                    static_cast<GtkAttachOptions>(0), 0, 0);
 }
 
+/**
+ * @brief update the given tag with the newly entered value
+ * @param widget the entry widget description
+ * @param ctag location of the tag: either pointer to already existing tag, or place to store new
+ * @param value the new value
+ */
 static bool store_value(presets_widget_t *widget,
-                            tag_t **ctag, const char *value, tag_t *otag) {
+                            tag_t **ctag, const char *value) {
   bool changed = false;
   if(value && strlen(value)) {
     const char *chstr;
     tag_t *tag;
-    if(otag) {
+    if(*ctag) {
       /* update the previous tag structure */
-      tag = otag;
-      g_assert(strcasecmp(otag->key, (char*)widget->key) == 0);
+      tag = *ctag;
+      g_assert(strcasecmp(tag->key, (char*)widget->key) == 0);
       /* only update if the value actually changed */
-      if(strcmp(otag->value, value) != 0) {
+      if(strcmp(tag->value, value) != 0) {
         changed = true; /* mark as updated, actual change below */
         chstr = "updated ";
       } else {
@@ -397,9 +403,9 @@ static bool store_value(presets_widget_t *widget,
 
     printf("%skey = %s, value = %s\n", chstr,
            widget->key, tag->value);
-  } else if (otag) {
-    g_free(otag->value);
-    otag->value = NULL; /* mark this entry as deleted */
+  } else if (*ctag) {
+    g_free((*ctag)->value);
+    (*ctag)->value = NULL; /* mark this entry as deleted */
     changed = true;
     printf("removed key = %s\n", widget->key);
   } else
@@ -675,6 +681,7 @@ static void presets_item_dialog(presets_context_t *context,
     while(it != itEnd) {
       tag_t *otag = gtk_widgets[widget_cnt] ?
                     static_cast<tag_t*>(g_object_get_data(G_OBJECT(gtk_widgets[widget_cnt]), "tag")) : 0;
+      tag_t **ctag = otag ? &otag : last; // the place to do the change
       switch((*it)->type) {
       case WIDGET_TYPE_COMBO: {
 	g_assert(GTK_WIDGET_TYPE(gtk_widgets[widget_cnt]) == combo_box_type());
@@ -683,22 +690,22 @@ static void presets_item_dialog(presets_context_t *context,
 	if(!strcmp(text, _("<unset>")))
 	  text = NULL;
 
-	changed |= store_value(*it, last, text, otag);
+	changed |= store_value(*it, ctag, text);
 	break;
       }
 
       case WIDGET_TYPE_TEXT:
 	g_assert(GTK_WIDGET_TYPE(gtk_widgets[widget_cnt]) == entry_type());
 
-	changed |= store_value(*it, last, gtk_entry_get_text(
-		     GTK_ENTRY(gtk_widgets[widget_cnt])), otag);
+	changed |= store_value(*it, ctag, gtk_entry_get_text(
+		     GTK_ENTRY(gtk_widgets[widget_cnt])));
 	break;
 
       case WIDGET_TYPE_CHECK:
 	g_assert(GTK_WIDGET_TYPE(gtk_widgets[widget_cnt]) == check_button_type());
 
-	changed |= store_value(*it, last,
-                 check_button_get_active(gtk_widgets[widget_cnt])?"yes":NULL, otag);
+	changed |= store_value(*it, ctag,
+                 check_button_get_active(gtk_widgets[widget_cnt]) ? "yes" : NULL);
 	break;
 
       case WIDGET_TYPE_KEY:
@@ -706,7 +713,7 @@ static void presets_item_dialog(presets_context_t *context,
 	g_assert(!otag);
 	otag = osm_tag_find(*orig_tag, (char*)(*it)->key);
 
-	changed |= store_value(*it, last, (char*)(*it)->key_w.value, otag);
+	changed |= store_value(*it, last, (char*)(*it)->key_w.value);
 	break;
 
       default:
