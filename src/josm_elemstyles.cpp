@@ -392,7 +392,7 @@ std::vector<elemstyle_t *> josm_elemstyles_load(const char *name) {
 
   printf("Loading JOSM elemstyles ...\n");
 
-  const std::string &filename = find_file(name, NULL, NULL);
+  const std::string &filename = find_file(name);
   if(filename.empty()) {
     printf("elemstyle file not found\n");
     return elemstyles;

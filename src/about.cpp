@@ -117,7 +117,7 @@ static GtkWidget *license_page_new(void) {
   GtkWidget *label = label_wrap(NULL);
   GMappedFile *licMap = NULL;
 
-  const std::string &name = find_file("COPYING", NULL, NULL);
+  const std::string &name = find_file("COPYING");
   if(!name.empty()) {
     licMap = g_mapped_file_new(name.c_str(), FALSE, NULL);
   }

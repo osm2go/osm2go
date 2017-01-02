@@ -232,11 +232,11 @@ style_t *style_load(appdata_t *appdata) {
   const char *name = appdata->settings->style;
   printf("Trying to load style %s\n", name);
 
-  std::string fullname = find_file(name, ".style", NULL);
+  std::string fullname = find_file(name, ".style");
 
   if (fullname.empty()) {
     printf("style %s not found, trying %s instead\n", name, DEFAULT_STYLE);
-    fullname = find_file(DEFAULT_STYLE ".style", NULL, NULL);
+    fullname = find_file(DEFAULT_STYLE ".style");
     if (fullname.empty()) {
       printf("  style not found, failed to find fallback style too\n");
       return NULL;

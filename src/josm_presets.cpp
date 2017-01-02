@@ -325,7 +325,7 @@ struct presets_items *josm_presets_load(void) {
 
   printf("Loading JOSM presets ...\n");
 
-  const std::string &filename = find_file("defaultpresets.xml", NULL, NULL);
+  const std::string &filename = find_file("defaultpresets.xml");
   if(filename.empty())
     return NULL;
 

@@ -52,7 +52,7 @@
 
 std::vector<std::string> file_scan(const char *extension);
 
-std::string find_file(const char *n1, const char *n2, const char *n3);
+std::string find_file(const char *n1, const char *n2 = 0, const char *n3 = 0);
 
 extern "C" {
 #endif
