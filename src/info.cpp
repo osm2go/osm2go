@@ -336,20 +336,7 @@ static GtkWidget *tag_widget(tag_context_t *context) {
 
   list_set_store(context->list, context->store);
 
-  GtkTreeIter iter;
-
-  tag_t *tag = *context->tag;
-  while(tag) {
-    /* Append a row and fill in some data */
-    gtk_list_store_append(context->store, &iter);
-    gtk_list_store_set(context->store, &iter,
-	       TAG_COL_KEY, tag->key,
-	       TAG_COL_VALUE, tag->value,
-	       TAG_COL_COLLISION, info_tag_key_collision(*context->tag, tag),
-	       TAG_COL_DATA, tag,
-	       -1);
-    tag = tag->next;
-  }
+  info_tags_replace(context);
 
   g_object_unref(context->store);
 
