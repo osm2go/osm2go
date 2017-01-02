@@ -22,12 +22,13 @@ bool check_icon::operator()(const std::string &dir)
 {
   const char *icon_exts[] = { ".svg", ".gif", ".png", ".jpg", NULL };
   std::string path = dir + "/icons/" + filename;
+  std::string name = path + icon_exts[0];
 
   if(g_file_test(path.c_str(), G_FILE_TEST_IS_REGULAR) == TRUE)
     return true;
 
   for (gint idx = 0; icon_exts[idx]; idx++) {
-    std::string name = path + icon_exts[idx];
+    name = path + icon_exts[idx];
 
     if(g_file_test(name.c_str(), G_FILE_TEST_IS_REGULAR) == TRUE)
       return true;
