@@ -43,6 +43,62 @@ struct elemstyle_condition_t {
     xmlChar *value;
 };
 
+/* from elemstyles.xml:
+ *  line attributes
+ *  - width absolute width in pixel in every zoom level
+ *  - realwidth relative width which will be scaled in meters, integer
+ *  - colour
+ */
+
+struct elemstyle_line_t {
+  gint width;
+  elemstyle_color_t color;
+  gboolean dashed;
+  gint dash_length;  // <= 0 means dash length is based on the width
+
+  struct {
+    gboolean valid;
+    gint width;
+  } real;
+
+  struct {
+    gboolean valid;
+    gint width;
+    elemstyle_color_t color;
+  } bg;
+
+  float zoom_max;   // XXX probably belongs in elemstyle_t
+};
+
+/* attribute modifiers */
+typedef enum {
+  ES_MOD_NONE = 0,  // don't change attribute
+  ES_MOD_ADD,       // add constant value
+  ES_MOD_SUB,       // subtract constant value
+  ES_MOD_PERCENT    // scale by x percent
+} elemstyle_mod_mode_t;
+
+/* a width with modifier */
+struct elemstyle_width_mod_t {
+  elemstyle_mod_mode_t mod;
+  gint width;
+};
+
+struct elemstyle_line_mod_t {
+  elemstyle_width_mod_t line, bg;
+};
+
+struct elemstyle_area_t {
+  elemstyle_color_t color;
+  float zoom_max;   // XXX probably belongs in elemstyle_t
+};
+
+struct elemstyle_icon_t {
+  gboolean annotate;
+  char *filename;
+  float zoom_max;   // XXX probably belongs in elemstyle_t
+};
+
 struct elemstyle_t {
   elemstyle_t()
     : type(ES_TYPE_NONE)

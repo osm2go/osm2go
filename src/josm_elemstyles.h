@@ -33,7 +33,6 @@
 float scaledn_to_zoom(const float scaledn);
 float zoom_to_scaledn(const float zoom);
 
-
 typedef enum {
   ES_TYPE_NONE = 0,
   ES_TYPE_LINE,
@@ -44,63 +43,6 @@ typedef enum {
 #define DEFAULT_DASH_LENGTH 0
 
 typedef gulong elemstyle_color_t;
-
-/* from elemstyles.xml:
- *  line attributes
- *  - width absolute width in pixel in every zoom level
- *  - realwidth relative width which will be scaled in meters, integer
- *  - colour
- */
-
-typedef struct {
-  gint width;
-  elemstyle_color_t color;
-  gboolean dashed;
-  gint dash_length;  // <= 0 means dash length is based on the width
-
-  struct {
-    gboolean valid;
-    gint width;
-  } real;
-
-  struct {
-    gboolean valid;
-    gint width;
-    elemstyle_color_t color;
-  } bg;
-
-  float zoom_max;   // XXX probably belongs in elemstyle_t
-} elemstyle_line_t;
-
-/* attribute modifiers */
-typedef enum {
-  ES_MOD_NONE = 0,  // don't change attribute
-  ES_MOD_ADD,       // add constant value
-  ES_MOD_SUB,       // subtract constant value
-  ES_MOD_PERCENT    // scale by x percent
-} elemstyle_mod_mode_t;
-
-/* a width with modifier */
-typedef struct {
-  elemstyle_mod_mode_t mod;
-  gint width;
-} elemstyle_width_mod_t;
-
-
-typedef struct {
-  elemstyle_width_mod_t line, bg;
-} elemstyle_line_mod_t;
-
-typedef struct {
-  elemstyle_color_t color;
-  float zoom_max;   // XXX probably belongs in elemstyle_t
-} elemstyle_area_t;
-
-typedef struct {
-  gboolean annotate;
-  char *filename;
-  float zoom_max;   // XXX probably belongs in elemstyle_t
-} elemstyle_icon_t;
 
 typedef struct elemstyle_t elemstyle_t;
 
