@@ -24,6 +24,9 @@
 #include "canvas.h"
 #include "osm.h"
 #include "style.h"
+#ifdef __cplusplus
+#include <vector>
+#endif
 
 #define MAP_LAYER_ALL (0xffff)
 #define MAP_LAYER_OBJECTS_ONLY ((1<<CANVAS_GROUP_POLYGONS) | (1<<CANVAS_GROUP_WAYS_HL) | (1<<CANVAS_GROUP_WAYS_OL) | (1<<CANVAS_GROUP_WAYS) | (1<<CANVAS_GROUP_WAYS_INT) | (1<<CANVAS_GROUP_NODES_HL) | (1<<CANVAS_GROUP_NODES_IHL) | (1<<CANVAS_GROUP_NODES) | (1<<CANVAS_GROUP_WAYS_DIR))
@@ -96,9 +99,6 @@ typedef struct map_t {
   canvas_item_t *cursor;           // the cursor visible on the draw layer
   canvas_item_t *touchnode;        // the blue "touch node" on the draw layer
 
-  tag_t *last_node_tags;           // used to "repeat" tagging
-  tag_t *last_way_tags;
-
   /* background image related stuff */
   struct {
     GdkPixbuf *pix;
@@ -129,6 +129,13 @@ typedef struct map_t {
 
   style_t *style;
 
+#ifdef __cplusplus
+  map_t();
+  ~map_t();
+
+  std::vector<tag_t> last_node_tags;           // used to "repeat" tagging
+  std::vector<tag_t> last_way_tags;
+#endif
 } map_t;
 
 #ifdef __cplusplus

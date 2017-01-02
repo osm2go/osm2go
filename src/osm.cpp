@@ -1909,6 +1909,35 @@ void way_t::rotate(node_chain_t::iterator nfirst) {
   std::rotate(node_chain.begin(), nfirst, node_chain.end());
 }
 
+std::vector<tag_t> osm_tags_list_copy(const tag_t *tag) {
+  std::vector<tag_t> new_tags;
+
+  for(const tag_t *src_tag = tag; src_tag; src_tag = src_tag->next) {
+    if(!src_tag->is_creator_tag()) {
+      tag_t dst_tag(g_strdup(src_tag->key), g_strdup(src_tag->value));
+      new_tags.push_back(dst_tag);
+    }
+  }
+
+  return new_tags;
+}
+
+tag_t *osm_tags_list_copy(const std::vector<tag_t> &tags) {
+  const std::vector<tag_t>::const_reverse_iterator ritEnd = tags.rend();
+  tag_t *new_tags = 0;
+
+  for(std::vector<tag_t>::const_reverse_iterator rit = tags.rbegin();
+      rit != ritEnd; rit++) {
+    tag_t *n = g_new0(tag_t, 1);
+    n->key = g_strdup(rit->key);
+    n->value = g_strdup(rit->value);
+    n->next = new_tags;
+    new_tags = n;
+  }
+
+  return new_tags;
+}
+
 tag_t *osm_tags_copy(const tag_t *src_tag) {
   tag_t *new_tags = NULL;
   tag_t **dst_tag = &new_tags;

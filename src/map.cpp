@@ -37,6 +37,30 @@
 #include <gdk/gdkkeysyms.h>
 #include <vector>
 
+map_t::map_t()
+{
+  memset(this, 0, offsetof(map_t, last_node_tags));
+}
+
+static void osm_tag_members_free(tag_t tag) {
+  g_free(tag.key);
+  g_free(tag.value);
+}
+
+map_t::~map_t()
+{
+  /* free buffered tags */
+  std::for_each(last_node_tags.begin(), last_node_tags.end(), osm_tag_members_free);
+  std::for_each(last_way_tags.begin(), last_way_tags.end(), osm_tag_members_free);
+
+  map_state_free(state);
+
+  delete style;
+
+  /* destroy existing highlight */
+  delete highlight;
+}
+
 /* this is a chain of map_items which is attached to all entries */
 /* in the osm tree (node_t, way_t, ...) to be able to get a link */
 /* to the screen representation of a give node/way/etc */
@@ -407,15 +431,17 @@ void map_item_deselect(appdata_t *appdata) {
 
   /* save tags for "last" function in info dialog */
   if(appdata->map->selected.object.type == NODE) {
-    osm_tags_free(appdata->map->last_node_tags);
+    std::vector<tag_t> &v = appdata->map->last_node_tags;
+    std::for_each(v.begin(), v.end(), osm_tag_members_free);
 
     appdata->map->last_node_tags =
-      osm_tags_copy(appdata->map->selected.object.obj->tag);
+      osm_tags_list_copy(appdata->map->selected.object.obj->tag);
   } else if(appdata->map->selected.object.type == WAY) {
-    osm_tags_free(appdata->map->last_way_tags);
+    std::vector<tag_t> &v = appdata->map->last_way_tags;
+    std::for_each(v.begin(), v.end(), osm_tag_members_free);
 
     appdata->map->last_way_tags =
-      osm_tags_copy(appdata->map->selected.object.obj->tag);
+      osm_tags_list_copy(appdata->map->selected.object.obj->tag);
   }
 
   /* remove statusbar message */
@@ -834,20 +860,8 @@ static gint map_destroy_event(G_GNUC_UNUSED GtkWidget *widget, gpointer data) {
 
   map_free_map_item_chains(appdata);
 
-  /* free buffered tags */
-  osm_tags_free(map->last_node_tags);
-  osm_tags_free(map->last_way_tags);
-
-  map_state_free(map->state);
-
-  delete map->style;
-
-  /* destroy existing highlight */
-  delete map->highlight;
-
-  g_free(map);
-
   appdata->map = NULL;
+  delete map;
 
   return FALSE;
 }
@@ -1779,12 +1793,12 @@ static gboolean map_autosave(gpointer data) {
 }
 
 GtkWidget *map_new(appdata_t *appdata) {
-  map_t *map = g_new0(map_t, 1);
+  map_t *map = new map_t();
 
   map->style = style_load(appdata);
   if(!map->style) {
     errorf(NULL, _("Unable to load valid style, terminating."));
-    g_free(map);
+    delete map;
     return NULL;
   }
   appdata->map = map;

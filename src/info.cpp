@@ -213,9 +213,9 @@ static void on_tag_last(G_GNUC_UNUSED GtkWidget *button, tag_context_t *context)
     osm_tags_free(*context->tag);
 
     if(context->object.type == NODE)
-      *context->tag = osm_tags_copy(context->appdata->map->last_node_tags);
+      *context->tag = osm_tags_list_copy(context->appdata->map->last_node_tags);
     else
-      *context->tag = osm_tags_copy(context->appdata->map->last_way_tags);
+      *context->tag = osm_tags_list_copy(context->appdata->map->last_way_tags);
 
     info_tags_replace(context);
 
@@ -324,9 +324,9 @@ static GtkWidget *tag_widget(tag_context_t *context) {
   /* disable if no appropriate "last" tags have been stored or if the */
   /* selected item isn't a node or way */
   if(((context->object.type == NODE) &&
-      (!context->appdata->map->last_node_tags)) ||
+      (context->appdata->map->last_node_tags.empty())) ||
      ((context->object.type == WAY) &&
-      (!context->appdata->map->last_way_tags)) ||
+      (context->appdata->map->last_way_tags.empty())) ||
      ((context->object.type != NODE) && (context->object.type != WAY)))
 	list_button_enable(context->list, LIST_BUTTON_USER0, FALSE);
 

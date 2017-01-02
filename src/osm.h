@@ -376,6 +376,9 @@ void osm_members_free(std::vector<member_t> &members);
 
 bool osm_node_in_other_way(const osm_t *osm, const way_t *way, const node_t *node);
 
+std::vector<tag_t> osm_tags_list_copy(const tag_t *tag);
+tag_t *osm_tags_list_copy(const std::vector<tag_t> &tags);
+
 #endif
 
 #endif /* OSM_H */
