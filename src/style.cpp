@@ -250,10 +250,6 @@ style_t *style_load(appdata_t *appdata) {
   return style;
 }
 
-void style_free(style_t *style) {
-  delete style;
-}
-
 static std::string style_basename(const std::string &name) {
   std::string::size_type pos = name.rfind("/");
 
@@ -288,7 +284,7 @@ void combo_add_styles::operator()(const std::string &filename)
   if(strcmp(basename.c_str(), appdata->settings->style) == 0)
     match = cnt;
 
-  style_free(style);
+  delete style;
 
   cnt++;
 }
@@ -324,7 +320,7 @@ bool style_find::operator()(const std::string &filename)
   style_t *style = style_parse(appdata, filename, NULL, TRUE);
 
   bool match = (strcmp(style->name, name) == 0);
-  style_free(style);
+  delete style;
 
   return match;
 }
@@ -361,7 +357,7 @@ void style_change(appdata_t *appdata, const char *name) {
     gtk_main_iteration();
   }
 
-  style_free(appdata->map->style);
+  delete appdata->map->style;
   appdata->map->style = nstyle;
 
   /* canvas background may have changed */

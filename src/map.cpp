@@ -840,7 +840,7 @@ static gint map_destroy_event(G_GNUC_UNUSED GtkWidget *widget, gpointer data) {
 
   map_state_free(map->state);
 
-  style_free(map->style);
+  delete map->style;
 
   /* destroy existing highlight */
   delete map->highlight;

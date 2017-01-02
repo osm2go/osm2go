@@ -97,7 +97,6 @@ extern "C" {
 typedef struct style_t style_t;
 
 style_t *style_load(appdata_t *appdata);
-void style_free(style_t *style);
 
 #ifndef FREMANTLE
 void style_select(GtkWidget *parent, appdata_t *appdata);
