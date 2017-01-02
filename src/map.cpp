@@ -430,18 +430,20 @@ static void map_object_select(appdata_t *appdata, object_t &object) {
 void map_item_deselect(appdata_t *appdata) {
 
   /* save tags for "last" function in info dialog */
-  if(appdata->map->selected.object.type == NODE) {
-    std::vector<tag_t> &v = appdata->map->last_node_tags;
-    std::for_each(v.begin(), v.end(), osm_tag_members_free);
+  if(appdata->map->selected.object.obj->tag) {
+    std::vector<tag_t> clear;
+    if(appdata->map->selected.object.type == NODE) {
+      clear.swap(appdata->map->last_node_tags);
 
-    appdata->map->last_node_tags =
-      osm_tags_list_copy(appdata->map->selected.object.obj->tag);
-  } else if(appdata->map->selected.object.type == WAY) {
-    std::vector<tag_t> &v = appdata->map->last_way_tags;
-    std::for_each(v.begin(), v.end(), osm_tag_members_free);
+      appdata->map->last_node_tags =
+        osm_tags_list_copy(appdata->map->selected.object.obj->tag);
+    } else if(appdata->map->selected.object.type == WAY) {
+      clear.swap(appdata->map->last_way_tags);
 
-    appdata->map->last_way_tags =
-      osm_tags_list_copy(appdata->map->selected.object.obj->tag);
+      appdata->map->last_way_tags =
+        osm_tags_list_copy(appdata->map->selected.object.obj->tag);
+    }
+    std::for_each(clear.begin(), clear.end(), osm_tag_members_free);
   }
 
   /* remove statusbar message */
