@@ -71,10 +71,11 @@ icon_file_exists(const gchar *file) {
 GdkPixbuf *icon_load(icon_t **icon, const char *name) {
   if(!name) return NULL;
 
+  std::string sname = name;
   if(*icon) {
     /* check if icon list already contains an icon of that name */
     const std::map<std::string, icon_item>::iterator it =
-     (*icon)->entries.find(name);
+     (*icon)->entries.find(sname);
 
     if(it != (*icon)->entries.end()) {
       it->second.use++;
@@ -89,7 +90,7 @@ GdkPixbuf *icon_load(icon_t **icon, const char *name) {
     if(!*icon)
       *icon = new icon_t();
     //    printf("Successfully loaded icon %s to %p\n", name, pix);
-    (*icon)->entries[name] = pix;
+    (*icon)->entries[sname] = pix;
 
       return pix;
   }
