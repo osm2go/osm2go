@@ -1564,9 +1564,9 @@ relation_chain_t osm_t::to_relation(const object_t &object) const {
 }
 
 struct node_collector {
-  way_chain_t chain;
+  way_chain_t &chain;
   const node_t * const node;
-  node_collector(const node_t *n) : node(n) {}
+  node_collector(way_chain_t &c, const node_t *n) : chain(c), node(n) {}
   void operator()(std::pair<item_id_t, way_t *> pair) {
     if(pair.second->contains_node(node))
       chain.push_back(pair.second);
@@ -1575,11 +1575,11 @@ struct node_collector {
 
 /* return all ways a node is in */
 way_chain_t osm_t::node_to_way(const node_t *node) const {
-  node_collector c(node);
+  way_chain_t chain;
 
-  std::for_each(ways.begin(), ways.end(), c);
+  std::for_each(ways.begin(), ways.end(), node_collector(chain, node));
 
-  return c.chain;
+  return chain;
 }
 
 bool osm_t::position_within_bounds(gint x, gint y) const {
