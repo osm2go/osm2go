@@ -194,7 +194,7 @@ static size_t write_callback(void *ptr, size_t size, size_t nmemb, void *stream)
   return nmemb;
 }
 
-static G_GNUC_PRINTF(3, 4) void appendf(struct log_s *log, const char *colname,
+static G_GNUC_PRINTF(3, 4) void appendf(struct log_s &log, const char *colname,
 		    const char *fmt, ...) {
   va_list args;
   va_start( args, fmt );
@@ -205,20 +205,20 @@ static G_GNUC_PRINTF(3, 4) void appendf(struct log_s *log, const char *colname,
 
   GtkTextTag *tag = NULL;
   if(colname)
-    tag = gtk_text_buffer_create_tag(log->buffer, NULL,
+    tag = gtk_text_buffer_create_tag(log.buffer, NULL,
 				     "foreground", colname,
 				     NULL);
 
   GtkTextIter end;
-  gtk_text_buffer_get_end_iter(log->buffer, &end);
+  gtk_text_buffer_get_end_iter(log.buffer, &end);
   if(tag)
-    gtk_text_buffer_insert_with_tags(log->buffer, &end, buf, -1, tag, NULL);
+    gtk_text_buffer_insert_with_tags(log.buffer, &end, buf, -1, tag, NULL);
   else
-    gtk_text_buffer_insert(log->buffer, &end, buf, -1);
+    gtk_text_buffer_insert(log.buffer, &end, buf, -1);
 
   g_free(buf);
 
-  gtk_text_view_scroll_to_iter(GTK_TEXT_VIEW(log->view),
+  gtk_text_view_scroll_to_iter(GTK_TEXT_VIEW(log.view),
 			       &end, 0.0, FALSE, 0, 0);
 
   while(gtk_events_pending())
@@ -227,9 +227,8 @@ static G_GNUC_PRINTF(3, 4) void appendf(struct log_s *log, const char *colname,
 
 #define MAX_TRY 5
 
-static gboolean osm_update_item(struct log_s *log, char *xml_str,
-				char *url, char *user, item_id_t *id,
-				proxy_t *proxy) {
+static gboolean osm_update_item(osm_upload_context_t &context, char *xml_str,
+                                char *url, char *user, item_id_t *id) {
   int retry = MAX_TRY;
   char buffer[CURL_ERROR_SIZE];
 
@@ -238,6 +237,8 @@ static gboolean osm_update_item(struct log_s *log, char *xml_str,
 
   curl_data_t read_data;
   curl_data_t write_data;
+
+  struct log_s &log = context.log;
 
   while(retry >= 0) {
 
@@ -294,7 +295,7 @@ static gboolean osm_update_item(struct log_s *log, char *xml_str,
     /* set user name and password for the authentication */
     curl_easy_setopt(curl, CURLOPT_USERPWD, user);
 
-    net_io_set_proxy(curl, proxy);
+    net_io_set_proxy(curl, context.proxy);
 
     /* Now run off and do what you've been told! */
     res = curl_easy_perform(curl);
@@ -343,8 +344,8 @@ static gboolean osm_update_item(struct log_s *log, char *xml_str,
   return FALSE;
 }
 
-static gboolean osm_delete_item(struct log_s *log, char *xml_str,
-				char *url, char *user, proxy_t *proxy) {
+static gboolean osm_delete_item(osm_upload_context_t &context, char *xml_str,
+                                char *url, char *user) {
   int retry = MAX_TRY;
   char buffer[CURL_ERROR_SIZE];
 
@@ -354,6 +355,7 @@ static gboolean osm_delete_item(struct log_s *log, char *xml_str,
   /* delete has a payload since api 0.6 */
   curl_data_t read_data;
   curl_data_t write_data;
+  struct log_s &log = context.log;
 
   while(retry >= 0) {
 
@@ -411,7 +413,7 @@ static gboolean osm_delete_item(struct log_s *log, char *xml_str,
     /* set user name and password for the authentication */
     curl_easy_setopt(curl, CURLOPT_USERPWD, user);
 
-    net_io_set_proxy(curl, proxy);
+    net_io_set_proxy(curl, context.proxy);
 
     /* Now run off and do what you've been told! */
     res = curl_easy_perform(curl);
@@ -481,16 +483,16 @@ static GtkWidget *table_attach_int(GtkWidget *table, int num,
 }
 
 struct osm_delete_nodes {
-  osm_upload_context_t * const context;
+  osm_upload_context_t &context;
   gchar * const cred;
-  osm_delete_nodes(osm_upload_context_t *co, gchar *cr) : context(co), cred(cr) {}
+  osm_delete_nodes(osm_upload_context_t &co, gchar *cr) : context(co), cred(cr) {}
   void operator()(std::pair<item_id_t, node_t *> pair);
 };
 
 void osm_delete_nodes::operator()(std::pair<item_id_t, node_t *> pair)
 {
   node_t *node = pair.second;
-  project_t *project = context->project;
+  project_t *project = context.project;
 
     /* make sure gui gets updated */
     while(gtk_events_pending()) gtk_main_iteration();
@@ -500,30 +502,30 @@ void osm_delete_nodes::operator()(std::pair<item_id_t, node_t *> pair)
 
     printf("deleting node on server\n");
 
-    appendf(&context->log, NULL, _("Delete node #" ITEM_ID_FORMAT " "), node->id);
+    appendf(context.log, NULL, _("Delete node #" ITEM_ID_FORMAT " "), node->id);
 
     char *url = g_strdup_printf("%s/node/" ITEM_ID_FORMAT,
                                 project->server, node->id);
 
-    char *xml_str = osm_generate_xml_node(context->changeset, node);
+    char *xml_str = osm_generate_xml_node(context.changeset, node);
 
-    if(osm_delete_item(&context->log, xml_str, url, cred, context->proxy)) {
+    if(osm_delete_item(context, xml_str, url, cred)) {
       node->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
       project->data_dirty = TRUE;
     }
 }
 
 struct osm_upload_nodes {
-  osm_upload_context_t * const context;
+  osm_upload_context_t &context;
   gchar * const cred;
-  osm_upload_nodes(osm_upload_context_t *co, gchar *cr) : context(co), cred(cr) {}
+  osm_upload_nodes(osm_upload_context_t &co, gchar *cr) : context(co), cred(cr) {}
   void operator()(std::pair<item_id_t, node_t *> pair);
 };
 
 void osm_upload_nodes::operator()(std::pair<item_id_t, node_t *> pair)
 {
   node_t * const node = pair.second;
-  project_t *project = context->project;
+  project_t *project = context.project;
 
     /* make sure gui gets updated */
     while(gtk_events_pending()) gtk_main_iteration();
@@ -536,21 +538,20 @@ void osm_upload_nodes::operator()(std::pair<item_id_t, node_t *> pair)
 
     if(node->flags & OSM_FLAG_NEW) {
       url = g_strconcat(project->server, "/node/create", NULL);
-      appendf(&context->log, NULL, _("New node "));
+      appendf(context.log, NULL, _("New node "));
     } else {
       url = g_strdup_printf("%s/node/" ITEM_ID_FORMAT,
                             project->server, node->id);
-      appendf(&context->log, NULL, _("Modified node #" ITEM_ID_FORMAT " "), node->id);
+      appendf(context.log, NULL, _("Modified node #" ITEM_ID_FORMAT " "), node->id);
     }
 
     /* upload this node */
-    char *xml_str = osm_generate_xml_node(context->changeset, node);
+    char *xml_str = osm_generate_xml_node(context.changeset, node);
     if(xml_str) {
       printf("uploading node %s from address %p\n", url, xml_str);
 
-      if(osm_update_item(&context->log, xml_str, url, cred,
-         (node->flags & OSM_FLAG_NEW) ? &(node->id) : &node->version,
-                         context->proxy)) {
+      if(osm_update_item(context, xml_str, url, cred,
+         (node->flags & OSM_FLAG_NEW) ? &(node->id) : &node->version)) {
         node->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_NEW);
         project->data_dirty = TRUE;
       }
@@ -559,16 +560,16 @@ void osm_upload_nodes::operator()(std::pair<item_id_t, node_t *> pair)
 }
 
 struct osm_delete_ways {
-  osm_upload_context_t * const context;
+  osm_upload_context_t &context;
   gchar * const cred;
-  osm_delete_ways(osm_upload_context_t *co, gchar *cr) : context(co), cred(cr) {}
+  osm_delete_ways(osm_upload_context_t &co, gchar *cr) : context(co), cred(cr) {}
   void operator()(std::pair<item_id_t, way_t *> pair);
 };
 
 void osm_delete_ways::operator()(std::pair<item_id_t, way_t *> pair)
 {
   way_t * const way = pair.second;
-  project_t *project = context->project;
+  project_t *project = context.project;
   /* make sure gui gets updated */
   while(gtk_events_pending()) gtk_main_iteration();
 
@@ -577,13 +578,13 @@ void osm_delete_ways::operator()(std::pair<item_id_t, way_t *> pair)
 
   printf("deleting way on server\n");
 
-  appendf(&context->log, NULL, _("Delete way #" ITEM_ID_FORMAT " "), way->id);
+  appendf(context.log, NULL, _("Delete way #" ITEM_ID_FORMAT " "), way->id);
 
   char *url = g_strdup_printf("%s/way/" ITEM_ID_FORMAT,
                                 project->server, way->id);
-  char *xml_str = osm_generate_xml_way(context->changeset, way);
+  char *xml_str = osm_generate_xml_way(context.changeset, way);
 
-  if(osm_delete_item(&context->log, xml_str, url, cred, context->proxy)) {
+  if(osm_delete_item(context, xml_str, url, cred)) {
     way->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
     project->data_dirty = TRUE;
   }
@@ -592,16 +593,16 @@ void osm_delete_ways::operator()(std::pair<item_id_t, way_t *> pair)
 }
 
 struct osm_upload_ways {
-  osm_upload_context_t * const context;
+  osm_upload_context_t &context;
   gchar * const cred;
-  osm_upload_ways(osm_upload_context_t *co, gchar *cr) : context(co), cred(cr) {}
+  osm_upload_ways(osm_upload_context_t &co, gchar *cr) : context(co), cred(cr) {}
   void operator()(std::pair<item_id_t, way_t *> pair);
 };
 
 void osm_upload_ways::operator()(std::pair<item_id_t, way_t *> pair)
 {
   way_t * const way = pair.second;
-  project_t *project = context->project;
+  project_t *project = context.project;
 
   /* make sure gui gets updated */
   while(gtk_events_pending()) gtk_main_iteration();
@@ -614,21 +615,20 @@ void osm_upload_ways::operator()(std::pair<item_id_t, way_t *> pair)
 
   if(way->flags & OSM_FLAG_NEW) {
     url = g_strconcat(project->server, "/way/create", NULL);
-    appendf(&context->log, NULL, _("New way "));
+    appendf(context.log, NULL, _("New way "));
   } else {
     url = g_strdup_printf("%s/way/" ITEM_ID_FORMAT,
                           project->server, way->id);
-    appendf(&context->log, NULL, _("Modified way #" ITEM_ID_FORMAT " "), way->id);
+    appendf(context.log, NULL, _("Modified way #" ITEM_ID_FORMAT " "), way->id);
   }
 
   /* upload this node */
-  char *xml_str = osm_generate_xml_way(context->changeset, way);
+  char *xml_str = osm_generate_xml_way(context.changeset, way);
   if(xml_str) {
     printf("uploading way %s from address %p\n", url, xml_str);
 
-    if(osm_update_item(&context->log, xml_str, url, cred,
-        (way->flags & OSM_FLAG_NEW) ? &way->id : &way->version,
-                       context->proxy)) {
+    if(osm_update_item(context, xml_str, url, cred,
+        (way->flags & OSM_FLAG_NEW) ? &way->id : &way->version)) {
       way->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_NEW);
       project->data_dirty = TRUE;
     }
@@ -637,16 +637,16 @@ void osm_upload_ways::operator()(std::pair<item_id_t, way_t *> pair)
 }
 
 struct osm_delete_relations {
-  osm_upload_context_t * const context;
+  osm_upload_context_t &context;
   gchar * const cred;
-  osm_delete_relations(osm_upload_context_t *co, gchar *cr) : context(co), cred(cr) {}
+  osm_delete_relations(osm_upload_context_t &co, gchar *cr) : context(co), cred(cr) {}
   void operator()(std::pair<item_id_t, relation_t *> pair);
 };
 
 void osm_delete_relations::operator()(std::pair<item_id_t, relation_t *> pair)
 {
   relation_t * const relation = pair.second;
-  project_t *project = context->project;
+  project_t *project = context.project;
 
   /* make sure gui gets updated */
   while(gtk_events_pending()) gtk_main_iteration();
@@ -656,30 +656,30 @@ void osm_delete_relations::operator()(std::pair<item_id_t, relation_t *> pair)
 
   printf("deleting relation on server\n");
 
-  appendf(&context->log, NULL,
+  appendf(context.log, NULL,
           _("Delete relation #" ITEM_ID_FORMAT " "), relation->id);
 
   char *url = g_strdup_printf("%s/relation/" ITEM_ID_FORMAT,
                               project->server, relation->id);
-  char *xml_str = osm_generate_xml_relation(context->changeset, relation);
+  char *xml_str = osm_generate_xml_relation(context.changeset, relation);
 
-  if(osm_delete_item(&context->log, xml_str, url, cred, context->proxy)) {
+  if(osm_delete_item(context, xml_str, url, cred)) {
     relation->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
     project->data_dirty = TRUE;
   }
 }
 
 struct osm_upload_relations {
-  osm_upload_context_t * const context;
+  osm_upload_context_t &context;
   gchar * const cred;
-  osm_upload_relations(osm_upload_context_t *co, gchar *cr) : context(co), cred(cr) {}
+  osm_upload_relations(osm_upload_context_t &co, gchar *cr) : context(co), cred(cr) {}
   void operator()(std::pair<item_id_t, relation_t *> pair);
 };
 
 void osm_upload_relations::operator()(std::pair<item_id_t, relation_t *> pair)
 {
   relation_t * const relation = pair.second;
-  project_t *project = context->project;
+  project_t *project = context.project;
 
   /* make sure gui gets updated */
   while(gtk_events_pending()) gtk_main_iteration();
@@ -692,22 +692,21 @@ void osm_upload_relations::operator()(std::pair<item_id_t, relation_t *> pair)
 
   if(relation->flags & OSM_FLAG_NEW) {
     url = g_strdup_printf("%s/relation/create", project->server);
-    appendf(&context->log, NULL, _("New relation "));
+    appendf(context.log, NULL, _("New relation "));
   } else {
     url = g_strdup_printf("%s/relation/" ITEM_ID_FORMAT,
                           project->server, relation->id);
-    appendf(&context->log, NULL, _("Modified relation #" ITEM_ID_FORMAT " "),
+    appendf(context.log, NULL, _("Modified relation #" ITEM_ID_FORMAT " "),
             relation->id);
   }
 
   /* upload this relation */
-  char *xml_str = osm_generate_xml_relation(context->changeset, relation);
+  char *xml_str = osm_generate_xml_relation(context.changeset, relation);
   if(xml_str) {
     printf("uploading relation %s from address %p\n", url, xml_str);
 
-    if(osm_update_item(&context->log, xml_str, url, cred,
-        (relation->flags & OSM_FLAG_NEW) ? &relation->id :
-        &relation->version, context->proxy)) {
+    if(osm_update_item(context, xml_str, url, cred,
+        (relation->flags & OSM_FLAG_NEW) ? &relation->id : &relation->version)) {
       relation->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_NEW);
       project->data_dirty = TRUE;
     }
@@ -715,28 +714,27 @@ void osm_upload_relations::operator()(std::pair<item_id_t, relation_t *> pair)
   g_free(url);
 }
 
-static gboolean osm_create_changeset(osm_upload_context_t *context, gchar **cred) {
+static gboolean osm_create_changeset(osm_upload_context_t &context, gchar **cred) {
   gboolean result = FALSE;
-  context->changeset = ILLEGAL;
-  project_t *project = context->project;
+  context.changeset = ILLEGAL;
+  project_t *project = context.project;
 
   /* make sure gui gets updated */
   while(gtk_events_pending()) gtk_main_iteration();
 
   char *url = g_strdup_printf("%s/changeset/create", project->server);
-  appendf(&context->log, NULL, _("Create changeset "));
+  appendf(context.log, NULL, _("Create changeset "));
 
   /* create changeset request */
-  char *xml_str = osm_generate_xml_changeset(context->comment);
+  char *xml_str = osm_generate_xml_changeset(context.comment);
   if(xml_str) {
     printf("creating changeset %s from address %p\n", url, xml_str);
 
-    *cred = g_strjoin(":", context->appdata->settings->username,
-                      context->appdata->settings->password, NULL);
+    *cred = g_strjoin(":", context.appdata->settings->username,
+                      context.appdata->settings->password, NULL);
 
-    if(osm_update_item(&context->log, xml_str, url, *cred,
-		       &context->changeset, context->proxy)) {
-      printf("got changeset id " ITEM_ID_FORMAT "\n", context->changeset);
+    if(osm_update_item(context, xml_str, url, *cred, &context.changeset)) {
+      printf("got changeset id " ITEM_ID_FORMAT "\n", context.changeset);
       result = TRUE;
     } else {
       g_free(*cred);
@@ -747,20 +745,20 @@ static gboolean osm_create_changeset(osm_upload_context_t *context, gchar **cred
   return result;
 }
 
-static gboolean osm_close_changeset(osm_upload_context_t *context, gchar *cred) {
+static gboolean osm_close_changeset(osm_upload_context_t &context, gchar *cred) {
   gboolean result = FALSE;
-  project_t *project = context->project;
+  project_t *project = context.project;
 
-  g_assert(context->changeset != ILLEGAL);
+  g_assert(context.changeset != ILLEGAL);
 
   /* make sure gui gets updated */
   while(gtk_events_pending()) gtk_main_iteration();
 
   char *url = g_strdup_printf("%s/changeset/" ITEM_ID_FORMAT "/close",
-			      project->server, context->changeset);
-  appendf(&context->log, NULL, _("Close changeset "));
+			      project->server, context.changeset);
+  appendf(context.log, NULL, _("Close changeset "));
 
-  if(osm_update_item(&context->log, NULL, url, cred, NULL, context->proxy))
+  if(osm_update_item(context, NULL, url, cred, NULL))
     result = TRUE;
 
   g_free(cred);
@@ -951,31 +949,32 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
     g_strdup(gtk_entry_get_text(GTK_ENTRY(pentry)));
 
   /* osm upload itself also has a gui */
-  osm_upload_context_t *context = g_new0(osm_upload_context_t, 1);
-  context->appdata = appdata;
-  context->osm = osm;
-  context->project = project;
+  osm_upload_context_t context;
+  memset(&context, 0, sizeof(context));
+  context.appdata = appdata;
+  context.osm = osm;
+  context.project = project;
 
   /* add proxy settings if required */
   if(appdata->settings)
-    context->proxy = appdata->settings->proxy;
+    context.proxy = appdata->settings->proxy;
 
   /* fetch comment from dialog */
   GtkTextIter start, end;
   gtk_text_buffer_get_start_iter(buffer, &start);
   gtk_text_buffer_get_end_iter(buffer, &end);
   char *text = gtk_text_buffer_get_text(buffer, &start, &end, FALSE);
-  context->comment = g_strdup(text);
+  context.comment = g_strdup(text);
 
   gtk_widget_destroy(dialog);
   project_save(GTK_WIDGET(appdata->window), project);
 
-  context->dialog =
+  context.dialog =
     misc_dialog_new(MISC_DIALOG_LARGE,_("Uploading"),
 	  GTK_WINDOW(appdata->window),
 	  GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE, NULL);
 
-  gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog),
+  gtk_dialog_set_response_sensitive(GTK_DIALOG(context.dialog),
 				    GTK_RESPONSE_CLOSE, FALSE);
 
   /* ------- main ui element is this text view --------------- */
@@ -984,20 +983,20 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window),
   				 GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
 
-  context->log.buffer = gtk_text_buffer_new(NULL);
+  context.log.buffer = gtk_text_buffer_new(NULL);
 
-  context->log.view = gtk_text_view_new_with_buffer(context->log.buffer);
-  gtk_text_view_set_editable(GTK_TEXT_VIEW(context->log.view), FALSE);
-  gtk_text_view_set_cursor_visible(GTK_TEXT_VIEW(context->log.view), FALSE);
-  gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(context->log.view), GTK_WRAP_WORD);
+  context.log.view = gtk_text_view_new_with_buffer(context.log.buffer);
+  gtk_text_view_set_editable(GTK_TEXT_VIEW(context.log.view), FALSE);
+  gtk_text_view_set_cursor_visible(GTK_TEXT_VIEW(context.log.view), FALSE);
+  gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(context.log.view), GTK_WRAP_WORD);
 
-  gtk_container_add(GTK_CONTAINER(scrolled_window), context->log.view);
+  gtk_container_add(GTK_CONTAINER(scrolled_window), context.log.view);
   gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scrolled_window),
 				      GTK_SHADOW_IN);
 
-  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(context->dialog)->vbox),
+  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(context.dialog)->vbox),
 			       scrolled_window);
-  gtk_widget_show_all(context->dialog);
+  gtk_widget_show_all(context.dialog);
 
   /* server url should not end with a slash */
   if(project->rserver && project->rserver[strlen(project->rserver)-1] == '/') {
@@ -1005,56 +1004,56 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
     project->rserver[strlen(project->rserver)-1] = 0;
   }
 
-  appendf(&context->log, NULL, _("Log generated by %s v%s using API 0.6\n"),
+  appendf(context.log, NULL, _("Log generated by %s v%s using API 0.6\n"),
 	  PACKAGE, VERSION);
-  appendf(&context->log, NULL, _("User comment: %s\n"), context->comment);
+  appendf(context.log, NULL, _("User comment: %s\n"), context.comment);
 
    /* check if server name contains string "0.5" and adjust it */
   if(project->rserver && strstr(project->rserver, "0.5") != NULL) {
     strstr(project->rserver, "0.5")[2] = '6';
 
-    appendf(&context->log, NULL, _("Adjusting server name to v0.6\n"));
+    appendf(context.log, NULL, _("Adjusting server name to v0.6\n"));
   }
 
-  appendf(&context->log, NULL, _("Uploading to %s\n"), project->server);
+  appendf(context.log, NULL, _("Uploading to %s\n"), project->server);
 
   /* create a new changeset */
   gchar *cred;
   if(osm_create_changeset(context, &cred)) {
     /* check for dirty entries */
-    appendf(&context->log, NULL, _("Uploading nodes:\n"));
+    appendf(context.log, NULL, _("Uploading nodes:\n"));
     std::for_each(osm->nodes.begin(), osm->nodes.end(), osm_upload_nodes(context, cred));
-    appendf(&context->log, NULL, _("Uploading ways:\n"));
+    appendf(context.log, NULL, _("Uploading ways:\n"));
     std::for_each(osm->ways.begin(), osm->ways.end(), osm_upload_ways(context, cred));
-    appendf(&context->log, NULL, _("Uploading relations:\n"));
+    appendf(context.log, NULL, _("Uploading relations:\n"));
     std::for_each(osm->relations.begin(), osm->relations.end(), osm_upload_relations(context, cred));
-    appendf(&context->log, NULL, _("Deleting relations:\n"));
+    appendf(context.log, NULL, _("Deleting relations:\n"));
     std::for_each(osm->relations.begin(), osm->relations.end(), osm_delete_relations(context, cred));
-    appendf(&context->log, NULL, _("Deleting ways:\n"));
+    appendf(context.log, NULL, _("Deleting ways:\n"));
     std::for_each(osm->ways.begin(), osm->ways.end(), osm_delete_ways(context, cred));
-    appendf(&context->log, NULL, _("Deleting nodes:\n"));
+    appendf(context.log, NULL, _("Deleting nodes:\n"));
     std::for_each(osm->nodes.begin(), osm->nodes.end(), osm_delete_nodes(context, cred));
 
     /* close changeset */
     osm_close_changeset(context, cred);
   }
 
-  appendf(&context->log, NULL, _("Upload done.\n"));
+  appendf(context.log, NULL, _("Upload done.\n"));
 
   gboolean reload_map = FALSE;
   if(project->data_dirty) {
-    appendf(&context->log, NULL, _("Server data has been modified.\n"));
-    appendf(&context->log, NULL, _("Downloading updated osm data ...\n"));
+    appendf(context.log, NULL, _("Server data has been modified.\n"));
+    appendf(context.log, NULL, _("Downloading updated osm data ...\n"));
 
-    if(osm_download(context->dialog, appdata->settings, project)) {
-      appendf(&context->log, NULL, _("Download successful!\n"));
-      appendf(&context->log, NULL, _("The map will be reloaded.\n"));
+    if(osm_download(context.dialog, appdata->settings, project)) {
+      appendf(context.log, NULL, _("Download successful!\n"));
+      appendf(context.log, NULL, _("The map will be reloaded.\n"));
       project->data_dirty = FALSE;
       reload_map = TRUE;
     } else
-      appendf(&context->log, NULL, _("Download failed!\n"));
+      appendf(context.log, NULL, _("Download failed!\n"));
 
-    project_save(context->dialog, project);
+    project_save(context.dialog, project);
 
     if(reload_map) {
       /* this kind of rather brute force reload is useful as the moment */
@@ -1062,39 +1061,38 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
       /* we basically restart the entire map with fresh data from the server */
       /* and the diff will hopefully be empty (if the upload was successful) */
 
-      appendf(&context->log, NULL, _("Reloading map ...\n"));
+      appendf(context.log, NULL, _("Reloading map ...\n"));
 
       if(!diff_is_clean(appdata->osm, FALSE)) {
-	appendf(&context->log, COLOR_ERR, _("*** DIFF IS NOT CLEAN ***\n"));
-	appendf(&context->log, COLOR_ERR, _("Something went wrong during upload,\n"));
-	appendf(&context->log, COLOR_ERR, _("proceed with care!\n"));
+	appendf(context.log, COLOR_ERR, _("*** DIFF IS NOT CLEAN ***\n"));
+	appendf(context.log, COLOR_ERR, _("Something went wrong during upload,\n"));
+	appendf(context.log, COLOR_ERR, _("proceed with care!\n"));
       }
 
       /* redraw the entire map by destroying all map items and redrawing them */
-      appendf(&context->log, NULL, _("Cleaning up ...\n"));
+      appendf(context.log, NULL, _("Cleaning up ...\n"));
       diff_save(appdata->project, appdata->osm);
       map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
       osm_free(appdata->osm);
 
-      appendf(&context->log, NULL, _("Loading OSM ...\n"));
+      appendf(context.log, NULL, _("Loading OSM ...\n"));
       appdata->osm = osm_parse(appdata->project->path, appdata->project->osm, &appdata->icon);
-      appendf(&context->log, NULL, _("Applying diff ...\n"));
+      appendf(context.log, NULL, _("Applying diff ...\n"));
       diff_restore(appdata, appdata->project, appdata->osm);
-      appendf(&context->log, NULL, _("Painting ...\n"));
+      appendf(context.log, NULL, _("Painting ...\n"));
       map_paint(appdata);
-      appendf(&context->log, NULL, _("Done!\n"));
+      appendf(context.log, NULL, _("Done!\n"));
     }
   }
 
   /* tell the user that he can stop waiting ... */
-  appendf(&context->log, NULL, _("Process finished.\n"));
+  appendf(context.log, NULL, _("Process finished.\n"));
 
-  gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog),
+  gtk_dialog_set_response_sensitive(GTK_DIALOG(context.dialog),
 				    GTK_RESPONSE_CLOSE, TRUE);
 
-  gtk_dialog_run(GTK_DIALOG(context->dialog));
-  gtk_widget_destroy(context->dialog);
+  gtk_dialog_run(GTK_DIALOG(context.dialog));
+  gtk_widget_destroy(context.dialog);
 
-  g_free(context->comment);
-  g_free(context);
+  g_free(context.comment);
 }
