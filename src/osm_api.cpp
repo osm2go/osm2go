@@ -40,7 +40,7 @@
 #define NO_EXPECT
 
 static std::map<int, const char *> http_msg_init() {
-  static std::map<int, const char *> http_messages;
+  std::map<int, const char *> http_messages;
 
   http_messages[200] = "Ok";
   http_messages[203] = "No Content";
