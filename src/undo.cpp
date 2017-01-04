@@ -273,6 +273,14 @@ struct undo_append_obj_modify {
   }
 };
 
+struct find_undo_obj {
+  const object_t &object;
+  find_undo_obj(const object_t &o) : object(o) {}
+  bool operator()(const undo_op_t &u) {
+    return u.object == object;
+  }
+};
+
 void undo_append_object(appdata_t *appdata, undo_type_t type,
                         const object_t &object) {
 
@@ -296,17 +304,12 @@ void undo_append_object(appdata_t *appdata, undo_type_t type,
   /* a simple stand-alone node deletion is just a single */
   /* operation on the database/map so only one undo_op is saved */
 
-  /* check if this object already is in operaton chain */
-  const std::vector<undo_op_t>::iterator itEnd = state->ops.end();
-  for(std::vector<undo_op_t>::iterator it = state->ops.begin(); it != itEnd; it++) {
-    if(osm_object_is_same(&it->object, object)) {
-      /* this must be the same operation!! */
-      g_assert(it->type == type);
-
-      printf("UNDO: object %s already in undo_stobjectate: ignoring\n",
-             object.object_string());
-      return;
-    }
+  /* check if this object already is in operation chain */
+  if(std::find_if(state->ops.begin(), state->ops.end(), find_undo_obj(object)) !=
+     state->ops.end()) {
+    printf("UNDO: object %s already in undo_state: ignoring\n",
+           object.object_string());
+    return;
   }
 
   printf("UNDO: saving \"%s\" operation for object %s\n",

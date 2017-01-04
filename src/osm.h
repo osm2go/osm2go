@@ -364,8 +364,6 @@ relation_t *osm_relation_new(void);
 #ifdef __cplusplus
 }
 
-bool osm_object_is_same(const object_t *obj1, const object_t &obj2);
-
 member_t osm_parse_osm_relation_member(osm_t *osm, xmlNode *a_node);
 
 node_t *osm_parse_osm_way_nd(osm_t *osm, xmlNode *a_node);

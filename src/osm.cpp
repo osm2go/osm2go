@@ -2048,20 +2048,6 @@ char *object_t::get_name() const {
   return ret;
 }
 
-bool osm_object_is_same(const object_t *obj1, const object_t &obj2) {
-  item_id_t id1 = obj1->get_id();
-  item_id_t id2 = obj2.get_id();
-
-  if(id1 == ID_ILLEGAL)
-    return false;
-  if(id2 == ID_ILLEGAL)
-    return false;
-  if(obj1->type != obj2.type)
-    return false;
-
-  return(id1 == id2);
-}
-
 bool tag_t::is_creator_tag() const {
   return (strcasecmp(key, "created_by") == 0);
 }
