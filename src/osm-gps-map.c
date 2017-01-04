@@ -1517,7 +1517,7 @@ osm_gps_map_setup(OsmGpsMapPrivate *priv) {
 
     //user can specify a map source ID, or a repo URI as the map source
     uri = osm_gps_map_source_get_repo_uri(OSM_GPS_MAP_SOURCE_NULL);
-    if ( (priv->map_source == 0) || (strcmp(priv->repo_uri, uri) == 0) ) {
+    if ( (priv->map_source == 0) || (g_strcmp0(priv->repo_uri, uri) == 0) ) {
         g_debug("Using null source");
         priv->map_source = OSM_GPS_MAP_SOURCE_NULL;
 
