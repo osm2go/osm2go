@@ -281,6 +281,15 @@ struct find_undo_obj {
   }
 };
 
+struct find_node_of_this_way {
+  const osm_t * const osm;
+  const way_t * const way;
+  find_node_of_this_way(const osm_t *o, const way_t *w) : osm(o), way(w) {}
+  bool operator()(const node_t *node) {
+    return !osm_node_in_other_way(osm, way, node);
+  }
+};
+
 void undo_append_object(appdata_t *appdata, undo_type_t type,
                         const object_t &object) {
 
@@ -326,12 +335,13 @@ void undo_append_object(appdata_t *appdata, undo_type_t type,
   /* if the deleted object is a way, then check if this affects */
   /* a node */
   if((type == UNDO_DELETE) && (object.type == WAY)) {
-    const node_chain_t &chain = object.way->node_chain;
-    const node_chain_t::const_iterator itEnd = chain.end();
-    for(node_chain_t::const_iterator it = chain.begin(); it != itEnd; it++) {
-      /* this node must only be part of this way */
-      if(!osm_node_in_other_way(appdata->osm, object.way, *it))
-        undo_append_node(appdata, UNDO_DELETE, *it);
+    const node_chain_t::const_iterator itEnd = object.way->node_chain.end();
+    node_chain_t::const_iterator it = object.way->node_chain.begin();
+    /* this node must only be part of this way */
+    while((it = std::find_if(it, itEnd,
+           find_node_of_this_way(appdata->osm, object.way))) != itEnd) {
+      undo_append_node(appdata, UNDO_DELETE, *it);
+      it++;
     }
   }
 }
