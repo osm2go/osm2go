@@ -948,23 +948,23 @@ void map_edit_way_reverse(appdata_t *appdata) {
   map_way_select(appdata, item.object.way);
 
   // Flash a message about any side-effects
-  char *msg = NULL;
+  gchar *msg = 0;
   if (n_tags_flipped && !n_roles_flipped) {
-    msg = g_strdup_printf(ngettext("%d tag updated", "%d tags updated",
+    msg = g_strdup_printf(ngettext("%u tag updated", "%u tags updated",
                                    n_tags_flipped),
                           n_tags_flipped);
   }
   else if (!n_tags_flipped && n_roles_flipped) {
-    msg = g_strdup_printf(ngettext("%d relation updated",
-                                   "%d relations updated",
+    msg = g_strdup_printf(ngettext("%u relation updated",
+                                   "%u relations updated",
                                    n_roles_flipped),
                           n_roles_flipped);
   }
   else if (n_tags_flipped && n_roles_flipped) {
-    char *msg1 = g_strdup_printf(ngettext("%d tag", "%d tags",
+    gchar *msg1 = g_strdup_printf(ngettext("%u tag", "%u tags",
                                           n_tags_flipped),
                                  n_tags_flipped);
-    char *msg2 = g_strdup_printf(ngettext("%d relation", "%d relations",
+    gchar *msg2 = g_strdup_printf(ngettext("%u relation", "%u relations",
                                           n_roles_flipped),
                                  n_roles_flipped);
     msg = g_strdup_printf(_("%s & %s updated"), msg1, msg2);
