@@ -175,6 +175,8 @@ public:
   void rotate(node_chain_t::iterator nfirst);
   const node_t *last_node() const;
   const node_t *first_node() const;
+  unsigned int reverse_direction_sensitive_tags();
+  unsigned int reverse_direction_sensitive_roles(osm_t *osm);
 
   void cleanup();
 };
@@ -353,9 +355,6 @@ char *osm_generate_xml_relation(item_id_t changeset,
 way_t *osm_way_new(void);
 
 gboolean osm_position_within_bounds_ll(const pos_t *ll_min, const pos_t *ll_max, const pos_t *pos);
-
-guint osm_way_reverse_direction_sensitive_tags(way_t *way);
-guint osm_way_reverse_direction_sensitive_roles(osm_t *osm, way_t *way);
 
 tag_t *osm_tags_copy(const tag_t *tag);
 

@@ -1748,36 +1748,35 @@ static const char *DS_ONEWAY_REV = "-1";
 /* Reverse direction-sensitive tags like "oneway". Marks the way as dirty if
  * anything is changed, and returns the number of flipped tags. */
 
-guint
-osm_way_reverse_direction_sensitive_tags (way_t *way) {
-  tag_t *tag = way->tag;
-  guint n_tags_altered = 0;
-  for (; tag; tag = tag->next) {
-    char *lc_key = g_ascii_strdown(tag->key, -1);
+unsigned int
+way_t::reverse_direction_sensitive_tags() {
+  unsigned int n_tags_altered = 0;
+  for (tag_t *etag = tag; etag; etag = etag->next) {
+    char *lc_key = g_ascii_strdown(etag->key, -1);
 
     if (strcmp(lc_key, "oneway") == 0) {
-      char *lc_value = g_ascii_strdown(tag->value, -1);
+      char *lc_value = g_ascii_strdown(etag->value, -1);
       // oneway={yes/true/1/-1} is unusual.
       // Favour "yes" and "-1".
       if ((strcmp(lc_value, DS_ONEWAY_FWD) == 0) ||
           (strcmp(lc_value, "true") == 0) ||
           (strcmp(lc_value, "1") == 0)) {
-        osm_tag_update_value(tag, DS_ONEWAY_REV);
+        osm_tag_update_value(etag, DS_ONEWAY_REV);
         n_tags_altered++;
       }
       else if (strcmp(lc_value, DS_ONEWAY_REV) == 0) {
-        osm_tag_update_value(tag, DS_ONEWAY_FWD);
+        osm_tag_update_value(etag, DS_ONEWAY_FWD);
         n_tags_altered++;
       }
       else {
-        printf("warning: unknown tag: %s=%s\n", tag->key, tag->value);
+        printf("warning: unknown tag: %s=%s\n", etag->key, etag->value);
       }
       g_free(lc_value);
     } else if (strcmp(lc_key, "sidewalk") == 0) {
-      if (strcasecmp(tag->value, "right") == 0)
-        osm_tag_update_value(tag, "left");
-      else if (strcasecmp(tag->value, "left") == 0)
-        osm_tag_update_value(tag, "right");
+      if (strcasecmp(etag->value, "right") == 0)
+        osm_tag_update_value(etag, "left");
+      else if (strcasecmp(etag->value, "left") == 0)
+        osm_tag_update_value(etag, "right");
     } else {
       // suffixes
       static std::vector<std::pair<std::string, std::string> > rtable;
@@ -1791,10 +1790,10 @@ osm_way_reverse_direction_sensitive_tags (way_t *way) {
       for (unsigned int i = 0; i < rtable.size(); i++) {
         if (g_str_has_suffix(lc_key, rtable[i].first.c_str())) {
           /* length of key that will persist */
-          size_t plen = strlen(tag->key) - rtable[i].first.size();
+          size_t plen = strlen(etag->key) - rtable[i].first.size();
           /* add length of new suffix */
-          tag->key = (char*)g_realloc(tag->key, plen + 1 + rtable[i].second.size());
-          char *lastcolon = tag->key + plen;
+          etag->key = (char*)g_realloc(etag->key, plen + 1 + rtable[i].second.size());
+          char *lastcolon = etag->key + plen;
           g_assert(*lastcolon == ':');
           /* replace suffix */
           strcpy(lastcolon, rtable[i].second.c_str());
@@ -1807,7 +1806,7 @@ osm_way_reverse_direction_sensitive_tags (way_t *way) {
     g_free(lc_key);
   }
   if (n_tags_altered > 0) {
-    way->flags |= OSM_FLAG_DIRTY;
+    flags |= OSM_FLAG_DIRTY;
   }
   return n_tags_altered;
 }
@@ -1821,7 +1820,7 @@ static const char *DS_ROUTE_REVERSE = "reverse";
 
 struct reverse_roles {
   way_t * const way;
-  guint n_roles_flipped;
+  unsigned int n_roles_flipped;
   reverse_roles(way_t *w) : way(w), n_roles_flipped(0) {}
   void operator()(relation_t *relation);
 };
@@ -1872,11 +1871,11 @@ void reverse_roles::operator()(relation_t* relation)
   // of it.
 }
 
-guint
-osm_way_reverse_direction_sensitive_roles(osm_t *osm, way_t *way) {
-  const relation_chain_t &rchain = osm->to_relation(way);
+unsigned int
+way_t::reverse_direction_sensitive_roles(osm_t *osm) {
+  const relation_chain_t &rchain = osm->to_relation(this);
 
-  reverse_roles context(way);
+  reverse_roles context(this);
   std::for_each(rchain.begin(), rchain.end(), context);
 
   return context.n_roles_flipped;
