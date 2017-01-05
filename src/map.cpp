@@ -34,6 +34,7 @@
 #include "undo.h"
 
 #include <algorithm>
+#include <cstddef>
 #include <gdk/gdkkeysyms.h>
 #include <vector>
 
