@@ -1279,9 +1279,7 @@ static gboolean project_open(appdata_t *appdata, const char *name) {
   project->map_state->refcount++;
 
   /* build project path */
-  project->path = g_strconcat(
-		  appdata->settings->base_path, name, "/", NULL);
-  project->name = g_strdup(name);
+  project->path = g_strconcat(appdata->settings->base_path, name, "/", NULL);
 
   const std::string &project_file = project_filename(project);
 
@@ -1313,8 +1311,6 @@ static gboolean project_open(appdata_t *appdata, const char *name) {
   return TRUE;
 }
 
-#define _PROJECT_LOAD_BUF_SIZ 64
-
 gboolean project_load(appdata_t *appdata, const char *name) {
   std::string proj_name;
 
@@ -1330,10 +1326,8 @@ gboolean project_load(appdata_t *appdata, const char *name) {
     proj_name = name;
   }
 
-  char banner_txt[_PROJECT_LOAD_BUF_SIZ];
-  memset(banner_txt, 0, _PROJECT_LOAD_BUF_SIZ);
-
-  snprintf(banner_txt, _PROJECT_LOAD_BUF_SIZ, _("Loading %s"), proj_name.c_str());
+  char banner_txt[64];
+  snprintf(banner_txt, sizeof(banner_txt), _("Loading %s"), proj_name.c_str());
   banner_busy_start(appdata, TRUE, banner_txt);
 
   /* close current project */
@@ -1358,7 +1352,7 @@ gboolean project_load(appdata_t *appdata, const char *name) {
       appdata->osm = NULL;
     }
 
-    snprintf(banner_txt, _PROJECT_LOAD_BUF_SIZ,
+    snprintf(banner_txt, sizeof(banner_txt),
 	     _("Error opening %s"), proj_name.c_str());
     banner_busy_stop(appdata);
     banner_show_info(appdata, banner_txt);
@@ -1384,7 +1378,7 @@ gboolean project_load(appdata_t *appdata, const char *name) {
       appdata->osm = NULL;
     }
 
-    snprintf(banner_txt, _PROJECT_LOAD_BUF_SIZ,
+    snprintf(banner_txt, sizeof(banner_txt),
 	     _("Error opening %s"), proj_name.c_str());
     banner_busy_stop(appdata);
     banner_show_info(appdata, banner_txt);
@@ -1424,7 +1418,7 @@ gboolean project_load(appdata_t *appdata, const char *name) {
   banner_busy_stop(appdata);
 
 #if 0
-  snprintf(banner_txt, _PROJECT_LOAD_BUF_SIZ, _("Loaded %s"), proj_name.c_str());
+  snprintf(banner_txt, sizeof(banner_txt), _("Loaded %s"), proj_name.c_str());
   banner_show_info(appdata, banner_txt);
 #endif
 
