@@ -695,6 +695,33 @@ void relation_node_replacer::member_replacer::operator()(member_t &member)
   r->flags |= OSM_FLAG_DIRTY;
 }
 
+struct join_nodes {
+  node_t * const node;
+  node_t * const touchnode;
+  join_nodes(node_t *n, node_t *t) : node(n), touchnode(t) {}
+  void operator()(const std::pair<item_id_t, way_t *> &p);
+};
+
+void join_nodes::operator()(const std::pair<item_id_t, way_t *> &p)
+{
+  way_t * const way = p.second;
+  node_chain_t &chain = way->node_chain;
+  node_chain_t::iterator it = chain.begin();
+  const node_chain_t::iterator itEnd = chain.end();
+  while((it = std::find(it, itEnd, touchnode)) != itEnd) {
+    printf("  found node in way #" ITEM_ID_FORMAT "\n", way->id);
+
+    /* replace by node */
+    *it = node;
+
+    /* and adjust way references of both nodes */
+    node->ways++;
+    touchnode->ways--;
+
+    way->flags |= OSM_FLAG_DIRTY;
+  }
+}
+
 void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 			  gint ex, gint ey) {
 
@@ -734,24 +761,7 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
       node->pos = touchnode->pos;
 
       const std::map<item_id_t, way_t *>::iterator witEnd = appdata->osm->ways.end();
-      std::map<item_id_t, way_t *>::iterator wit;
-      for (wit = appdata->osm->ways.begin(); wit != witEnd; wit++) {
-        way_t * const way = wit->second;
-	node_chain_t &chain = way->node_chain;
-        node_chain_t::iterator it = chain.begin();
-        while((it = std::find(it, chain.end(), touchnode)) != chain.end()) {
-          printf("  found node in way #" ITEM_ID_FORMAT "\n", way->id);
-
-          /* replace by node */
-          *it = node;
-
-          /* and adjust way references of both nodes */
-          node->ways++;
-          touchnode->ways--;
-
-          way->flags |= OSM_FLAG_DIRTY;
-	}
-      }
+      std::for_each(appdata->osm->ways.begin(), witEnd, join_nodes(node, touchnode));
 
       /* replace node in relations */
       std::for_each(appdata->osm->relations.begin(), appdata->osm->relations.end(),
@@ -781,6 +791,7 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
       printf("  checking if node is end of way\n");
       guint ways2join_cnt = 0;
       way_t *ways2join[2] = { NULL, NULL };
+      std::map<item_id_t, way_t *>::iterator wit;
       for(wit = appdata->osm->ways.begin(); wit != witEnd; wit++) {
         way_t * const way = wit->second;
 	if(way->ends_with_node(node)) {
