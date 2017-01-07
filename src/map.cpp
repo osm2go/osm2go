@@ -1345,12 +1345,40 @@ static void map_handle_click(appdata_t *appdata, map_t *map) {
   }
 }
 
+struct hl_nodes {
+  const node_t * const cur_node;
+  const gint x, y;
+  map_t * const map;
+  hl_nodes(const node_t *c, gint px, gint py, map_t *m)
+    : cur_node(c), x(px), y(py), map(m) {}
+  void operator()(const std::pair<item_id_t, node_t *> &p);
+  void operator()(node_t *node);
+};
+
+void hl_nodes::operator()(const std::pair<item_id_t, node_t *> &p)
+{
+  node_t * const node = p.second;
+
+  if((node != cur_node) && (!(node->flags & OSM_FLAG_DELETED)))
+    operator()(node);
+}
+
+void hl_nodes::operator()(node_t* node)
+{
+  gint nx = abs(x - node->lpos.x);
+  gint ny = abs(y - node->lpos.y);
+
+  if((nx < map->style->node.radius) && (ny < map->style->node.radius) &&
+     (nx*nx + ny*ny < map->style->node.radius * map->style->node.radius))
+    map_hl_touchnode_draw(map, node);
+}
+
 static void map_touchnode_update(appdata_t *appdata, gint x, gint y) {
   map_t *map = appdata->map;
 
   map_hl_touchnode_clear(map);
 
-  node_t *cur_node = NULL;
+  const node_t *cur_node = NULL;
 
   /* the "current node" which is the one we are working on and which */
   /* should not be highlighted depends on the action */
@@ -1367,40 +1395,16 @@ static void map_touchnode_update(appdata_t *appdata, gint x, gint y) {
     break;
   }
 
-
   /* check if we are close to one of the other nodes */
   canvas_window2world(appdata->map->canvas, x, y, &x, &y);
-  const std::map<item_id_t, node_t *>::iterator nitEnd = appdata->osm->nodes.end();
-  for(std::map<item_id_t, node_t *>::iterator nit = appdata->osm->nodes.begin();
-      !map->touchnode && nit != nitEnd; nit++) {
-    node_t * const node = nit->second;
-    /* don't highlight the dragged node itself and don't highlight */
-    /* deleted ones */
-    if((node != cur_node) && (!(node->flags & OSM_FLAG_DELETED))) {
-      gint nx = abs(x - node->lpos.x);
-      gint ny = abs(y - node->lpos.y);
-
-      if((nx < map->style->node.radius) && (ny < map->style->node.radius) &&
-	 (nx*nx + ny*ny < map->style->node.radius * map->style->node.radius))
-	map_hl_touchnode_draw(map, node);
-    }
-  }
+  hl_nodes fc(cur_node, x, y, map);
+  std::for_each(appdata->osm->nodes.begin(), appdata->osm->nodes.end(), fc);
 
   /* during way creation also nodes of the new way */
   /* need to be searched */
   if(!map->touchnode && map->action.way && map->action.way->node_chain.size() > 1) {
     const node_chain_t &chain = map->action.way->node_chain;
-    const node_chain_t::const_iterator itEnd = chain.end()--;
-    for(node_chain_t::const_iterator it = chain.begin();
-        !map->touchnode && it != itEnd; it++) {
-      node_t * const node = *it;
-      gint nx = abs(x - node->lpos.x);
-      gint ny = abs(y - node->lpos.y);
-
-      if((nx < map->style->node.radius) && (ny < map->style->node.radius) &&
-	 (nx*nx + ny*ny < map->style->node.radius * map->style->node.radius))
-	map_hl_touchnode_draw(map, node);
-    }
+    std::for_each(chain.begin(), chain.end() - 1, fc);
   }
 }
 
