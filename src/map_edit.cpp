@@ -745,6 +745,28 @@ void redraw_way::operator()(const std::pair<item_id_t, way_t *> &p)
   map_way_draw(map, way);
 }
 
+struct find_way_ends {
+  unsigned int &ways2join_cnt;
+  const node_t * const node;
+  way_t ** const ways2join;
+  find_way_ends(unsigned int &w, const node_t *n, way_t **j)
+    : ways2join_cnt(w), node(n), ways2join(j) {}
+  void operator()(const std::pair<item_id_t, way_t *> &p);
+};
+
+void find_way_ends::operator()(const std::pair<item_id_t, way_t *>& p)
+{
+  way_t * const way = p.second;
+  if(!way->ends_with_node(node))
+    return;
+
+  if(ways2join_cnt < 2)
+    ways2join[ways2join_cnt] = way;
+
+  printf("  way #" ITEM_ID_FORMAT " ends with this node\n", way->id);
+  ways2join_cnt++;
+}
+
 void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 			  gint ex, gint ey) {
 
@@ -812,19 +834,10 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 
       /* check whether this will also join two ways */
       printf("  checking if node is end of way\n");
-      guint ways2join_cnt = 0;
+      unsigned int ways2join_cnt = 0;
       way_t *ways2join[2] = { NULL, NULL };
-      std::map<item_id_t, way_t *>::iterator wit;
-      for(wit = appdata->osm->ways.begin(); wit != witEnd; wit++) {
-        way_t * const way = wit->second;
-	if(way->ends_with_node(node)) {
-	  if(ways2join_cnt < 2)
-	    ways2join[ways2join_cnt] = way;
-
-	  printf("  way #" ITEM_ID_FORMAT " ends with this node\n", way->id);
-	  ways2join_cnt++;
-	}
-      }
+      std::for_each(appdata->osm->ways.begin(), witEnd,
+                    find_way_ends(ways2join_cnt, node, ways2join));
 
       if(ways2join_cnt > 2) {
 	messagef(GTK_WIDGET(appdata->window), _("Too many ways to join"),
