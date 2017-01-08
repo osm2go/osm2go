@@ -722,6 +722,29 @@ void join_nodes::operator()(const std::pair<item_id_t, way_t *> &p)
   }
 }
 
+struct redraw_way {
+  node_t * const node;
+  map_t * const map;
+  redraw_way(node_t *n, map_t *m) : node(n), map(m) {}
+  void operator()(const std::pair<item_id_t, way_t *> &p);
+};
+
+void redraw_way::operator()(const std::pair<item_id_t, way_t *> &p)
+{
+  way_t * const way = p.second;
+  if(!way->contains_node(node))
+    return;
+
+  printf("  node is part of way #" ITEM_ID_FORMAT ", redraw!\n", way->id);
+
+  /* remove prior version of this way */
+  map_item_chain_destroy(&way->map_item_chain);
+
+  /* draw current way */
+  josm_elemstyles_colorize_way(map->style, way);
+  map_way_draw(map, way);
+}
+
 void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 			  gint ex, gint ey) {
 
@@ -914,21 +937,7 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
   map_node_draw(map, node);
 
   /* visually update ways, node is part of */
-  const std::map<item_id_t, way_t *>::iterator itEnd = osm->ways.end();
-  for (std::map<item_id_t, way_t *>::iterator it = osm->ways.begin(); it != itEnd; it++) {
-    way_t * const way = it->second;
-    if(way->contains_node(node)) {
-      printf("  node is part of way #" ITEM_ID_FORMAT ", redraw!\n",
-	     way->id);
-
-      /* remove prior version of this way */
-      map_item_chain_destroy(&way->map_item_chain);
-
-      /* draw current way */
-      josm_elemstyles_colorize_way(map->style, way);
-      map_way_draw(map, way);
-    }
-  }
+  std::for_each(osm->ways.begin(), osm->ways.end(), redraw_way(node, map));
 
   /* and mark the node as dirty */
   node->flags |= OSM_FLAG_DIRTY;
