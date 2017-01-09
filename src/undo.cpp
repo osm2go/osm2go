@@ -139,13 +139,18 @@ void undo_op_t::free_data(osm_t *osm) {
   undo_object_free(osm, &object);
 }
 
+struct free_op_data {
+  osm_t * const osm;
+  free_op_data(osm_t *o) : osm(o) {}
+  void operator()(undo_op_t &u) {
+    u.free_data(osm);
+  }
+};
+
 static void undo_state_free(osm_t *osm, undo_state_t *state) {
   printf(" free state: %s\n", undo_type_string(state->type));
 
-  const std::vector<undo_op_t>::iterator itEnd = state->ops.end();
-  for(std::vector<undo_op_t>::iterator it = state->ops.begin(); it != itEnd; it++) {
-    it->free_data(osm);
-  }
+  std::for_each(state->ops.begin(), state->ops.end(), free_op_data(osm));
 
   delete state;
 }
