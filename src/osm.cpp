@@ -172,24 +172,33 @@ void object_t::set_flags(int set, int clr) {
 
 /* ------------------------- user handling --------------------- */
 
+struct cmp_user {
+  const char * const uname;
+  cmp_user(const char *u) : uname(u) {}
+  bool operator()(const std::string &s) {
+    return (strcasecmp(s.c_str(), uname) == 0);
+  }
+};
+
 static const char *osm_user(osm_t *osm, const char *name, int uid) {
-  if(!name) return NULL;
+  if(!name)
+    return 0;
 
   /* search through user list */
   if(uid >= 0) {
     const std::map<int, std::string>::const_iterator it = osm->users.find(uid);
     if(it != osm->users.end())
       return it->second.c_str();
-      
+
     osm->users[uid] = name;
     return osm->users[uid].c_str();
   } else {
     /* match with the name, but only against users without uid */
     const std::vector<std::string>::const_iterator itEnd = osm->anonusers.end();
-    std::vector<std::string>::const_iterator it;
-    for(it = osm->anonusers.begin(); it != itEnd; it++)
-      if(strcasecmp(it->c_str(), name) == 0)
-        return it->c_str();
+    std::vector<std::string>::const_iterator it = osm->anonusers.begin();
+    it = std::find_if(it, itEnd, cmp_user(name));
+    if(it != itEnd)
+      return it->c_str();
     osm->anonusers.push_back(name);
     return osm->anonusers.back().c_str();
   }
