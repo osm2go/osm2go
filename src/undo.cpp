@@ -206,6 +206,17 @@ static void undo_object_copy_base(object_t *dst, const object_t &src) {
   dst->obj->tag     = osm_tags_copy(src.obj->tag);
 }
 
+struct object_append {
+  std::vector<item_id_chain_t> &id_chain;
+  object_append(std::vector<item_id_chain_t> &c) : id_chain(c) {}
+  void operator()(const node_t *node) {
+    id_chain.push_back(item_id_chain_t(NODE, node->id));
+  }
+  void operator()(const member_t &member) {
+    id_chain.push_back(item_id_chain_t(member.object.type, member.object.get_id()));
+  }
+};
+
 /* create a local copy of the entire object */
 static bool undo_object_save(const object_t &object,
                              undo_op_t &op) {
@@ -237,9 +248,7 @@ static bool undo_object_save(const object_t &object,
     /* the nodes are saved by reference, since they may also be */
     /* deleted and restored and thus their address may change */
     const node_chain_t &node_chain = object.way->node_chain;
-    const node_chain_t::const_iterator itEnd = node_chain.end();
-    for(node_chain_t::const_iterator it = node_chain.begin(); it != itEnd; it++)
-      op.id_chain.push_back(item_id_chain_t(NODE, (*it)->id));
+    std::for_each(node_chain.begin(), node_chain.end(), object_append(op.id_chain));
 
     return true;
     }
@@ -252,12 +261,8 @@ static bool undo_object_save(const object_t &object,
     undo_object_copy_base(ob, object);
 
     /* save members reference */
-    const std::vector<member_t>::const_iterator mitEnd = object.relation->members.end();
-    for(std::vector<member_t>::const_iterator member = object.relation->members.begin();
-        member != mitEnd; member++) {
-      item_id_chain_t id(member->object.type, member->object.get_id());
-      op.id_chain.push_back(id);
-    }
+    const std::vector<member_t> &chain = object.relation->members;
+    std::for_each(chain.begin(), chain.end(), object_append(op.id_chain));
 
     return true;
     }
