@@ -448,7 +448,14 @@ static void undo_operation_object_restore(appdata_t *appdata, object_t &obj,
 }
 
 /* undo a single operation */
-static void undo_operation(appdata_t *appdata, undo_op_t &op) {
+struct undo_operation {
+  appdata_t * const appdata;
+  undo_operation(appdata_t *a) : appdata(a) {}
+  void operator()(undo_op_t &op);
+};
+
+void undo_operation::operator()(undo_op_t& op)
+{
   printf("UNDO operation: %s\n", undo_type_string(op.type));
 
   switch(op.type) {
@@ -486,10 +493,7 @@ void undo(appdata_t *appdata) {
   g_free(msg);
 
   /* run the operations in reverse order */
-  const std::vector<undo_op_t>::reverse_iterator itEnd = state->ops.rend();
-  for(std::vector<undo_op_t>::reverse_iterator it = state->ops.rbegin(); it != itEnd; it++) {
-    undo_operation(appdata, *it);
-  }
+  std::for_each(state->ops.rbegin(), state->ops.rend(), undo_operation(appdata));
 
   /* remove this entry from chain */
   undo_state_t **stateP = &appdata->undo.state;
