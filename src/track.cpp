@@ -231,12 +231,6 @@ void track_clear(appdata_t *appdata) {
   appdata->track.track = NULL;
   track_menu_set(appdata);
 
-  track_delete(track);
-}
-
-void track_delete(track_t *track) {
-  std::for_each(track->segments.begin(), track->segments.end(), track_seg_free);
-
   delete track;
 }
 
@@ -601,6 +595,11 @@ track_t *track_import(const char *name) {
   printf("import %s\n", name);
 
   return track_read(name, TRUE);
+}
+
+track_t::~track_t()
+{
+  std::for_each(segments.begin(), segments.end(), track_seg_free);
 }
 
 // vim:et:ts=8:sw=2:sts=2:ai

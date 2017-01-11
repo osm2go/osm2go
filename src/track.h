@@ -39,6 +39,7 @@ struct track_seg_t {
 };
 
 struct track_t {
+  ~track_t();
   std::vector<track_seg_t> segments;
   bool dirty;
   bool active; ///< if the last element in segments is currently written to
@@ -57,12 +58,6 @@ void track_save(project_t *project, track_t *track);
  * @return if a track was loaded
  */
 gboolean track_restore(appdata_t *appdata);
-
-/**
- * @brief free the track
- * @param track the track instance to remove
- */
-void track_delete(track_t *track);
 
 /* accessible via the menu */
 void track_clear(appdata_t *appdata);

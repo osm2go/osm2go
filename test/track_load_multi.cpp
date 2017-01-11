@@ -25,7 +25,7 @@ int main(int argc, char **argv)
 
   g_assert_cmpint(track->segments.size(), ==, 4);
 
-  track_delete(track);
+  delete track;
 
   g_assert_cmpint(points, ==, 11);
 

@@ -1,24 +1,26 @@
 #include <track.h>
 
-#include <errno.h>
+#include <cerrno>
+#include <cstdlib>
 #include <gtk/gtk.h>
-#include <stdlib.h>
+#include <string>
 
 int main(int argc, char **argv)
 {
   if(argc != 4)
     return EINVAL;
 
-  gchar *fn = g_strconcat(argv[1], argv[2], ".trk", NULL);
+  std::string fn = argv[1];
+  fn += argv[2];
+  fn += ".trk";
 
-  track_t *track = track_import(fn);
+  track_t *track = track_import(fn.c_str());
 
   track_export(track, argv[3]);
 
-  track_delete(track);
+  delete track;
 
-  GMappedFile *ogpx = g_mapped_file_new(fn, FALSE, NULL);
-  g_free(fn);
+  GMappedFile *ogpx = g_mapped_file_new(fn.c_str(), FALSE, NULL);
   GMappedFile *ngpx = g_mapped_file_new(argv[3], FALSE, NULL);
 
   g_assert(ogpx != NULL);
