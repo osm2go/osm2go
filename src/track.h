@@ -27,11 +27,13 @@
 #ifdef __cplusplus
 #include <vector>
 
-typedef struct track_point_t {
+struct track_point_t {
+  track_point_t();
+  track_point_t(const pos_t &p, float alt = 0.0f, time_t t = 0);
   pos_t pos;               /* position in lat/lon format */
   time_t time;
   float altitude;
-} track_point_t;
+};
 
 struct track_seg_t {
   std::vector<track_point_t *> track_points;

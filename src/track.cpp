@@ -52,11 +52,11 @@ void track_menu_set(appdata_t *appdata) {
 }
 
 static track_point_t *track_parse_trkpt(xmlNode *a_node) {
-  track_point_t *point = g_new0(track_point_t, 1);
+  track_point_t *point = new track_point_t();
 
   /* parse position */
   if(!xml_get_prop_pos(a_node, &point->pos)) {
-    g_free(point);
+    delete point;
     return NULL;
   }
 
@@ -208,8 +208,8 @@ static track_t *track_read(const char *filename, gboolean dirty) {
   return track;
 }
 
-static void track_point_free(track_point_t *point) {
-  g_free(point);
+static inline void track_point_free(track_point_t *point) {
+  delete point;
 }
 
 static void track_seg_free(track_seg_t &seg) {
@@ -481,10 +481,7 @@ static gboolean track_append_position(appdata_t *appdata, const pos_t *pos, floa
     ret = FALSE;
   } else {
     ret = TRUE;
-    track_point_t *point = g_new0(track_point_t, 1);
-    point->altitude = alt;
-    point->time = time(NULL);
-    point->pos = *pos;
+    track_point_t *point = new track_point_t(*pos, alt, time(NULL));
     track->dirty = TRUE;
     points.push_back(point);
 
@@ -595,6 +592,21 @@ track_t *track_import(const char *name) {
   printf("import %s\n", name);
 
   return track_read(name, TRUE);
+}
+
+track_point_t::track_point_t()
+  : time(0)
+  , altitude(NAN)
+{
+  pos.lat = NAN;
+  pos.lon = NAN;
+}
+
+track_point_t::track_point_t(const pos_t &p, float alt, time_t t)
+  : pos(p)
+  , time(t)
+  , altitude(alt)
+{
 }
 
 track_t::~track_t()
