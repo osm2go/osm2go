@@ -30,11 +30,11 @@
 #include "map.h"
 #include "misc.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <strings.h>
-#include <math.h>
 
 #include <algorithm>
 #ifndef __USE_XOPEN
