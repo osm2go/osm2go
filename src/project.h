@@ -30,7 +30,12 @@
 #include <libxml/parser.h>
 
 typedef struct project_t {
-  char *name;
+#ifdef __cplusplus
+  project_t(const gchar *n);
+  ~project_t();
+#endif
+
+  char * const name;
   char *path;
 
   xmlChar *desc;

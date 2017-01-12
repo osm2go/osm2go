@@ -22,9 +22,8 @@ int main(int argc, char **argv)
   g_assert_cmpuint(1, ==, osm->ways.size());
   g_assert_cmpuint(3, ==, osm->relations.size());
 
-  project_t project;
-  project.path = argv[3];
-  project.name = argv[4];
+  project_t project(argv[4]);
+  project.path = g_strdup(argv[3]);
   diff_restore(0, &project, osm);
 
   g_assert_cmpuint(8, ==, osm->nodes.size());
@@ -65,4 +64,9 @@ int main(int argc, char **argv)
   osm_free(osm);
 
   return 0;
+}
+
+void main_ui_enable(appdata_t *appdata)
+{
+  abort();
 }

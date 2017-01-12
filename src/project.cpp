@@ -251,21 +251,7 @@ gboolean project_save(GtkWidget *parent, project_t *project) {
 /* ------------ freeing projects --------------------- */
 
 void project_free(project_t *project) {
-  if(!project) return;
-
-  g_free(project->name);
-  xmlFree(project->desc);
-  g_free(project->rserver);
-
-  g_free(project->wms_server);
-  g_free(project->wms_path);
-
-  g_free(project->path);
-  g_free(project->osm);
-
-  map_state_free(project->map_state);
-
-  g_free(project);
+  delete project;
 }
 
 /* ------------ project selection dialog ------------- */
@@ -305,14 +291,13 @@ static std::vector<project_t *> project_scan(appdata_t *appdata) {
       printf("found project %s\n", name);
 
       /* try to read project and append it to chain */
-      project_t *n = g_new0(project_t, 1);
-      n->name = g_strdup(name);
+      project_t *n = new project_t(name);
       n->path = g_strconcat(appdata->settings->base_path, name, "/", NULL);
 
       if(project_read(fullname, n, appdata->settings->server))
         projects.push_back(n);
       else
-        project_free(n);
+        delete n;
     }
   }
 
@@ -441,7 +426,7 @@ static void project_close(appdata_t *appdata) {
   /* update project file on disk */
   project_save(GTK_WIDGET(appdata->window), appdata->project);
 
-  project_free(appdata->project);
+  delete appdata->project;
   appdata->project = NULL;
 }
 
@@ -499,7 +484,7 @@ static gboolean project_delete(select_context_t *context, project_t *project) {
                                     context->projects.end(), project));
 
   /* free project structure */
-  project_free(project);
+  delete project;
 
   /* disable ok button button */
   view_selected(context, NULL);
@@ -539,10 +524,8 @@ static project_t *project_new(select_context_t *context) {
     return NULL;
   }
 
-  project_t *project = g_new0(project_t, 1);
-  project->name = g_strdup(gtk_entry_get_text(GTK_ENTRY(entry)));
+  project_t *project = new project_t(gtk_entry_get_text(GTK_ENTRY(entry)));
   gtk_widget_destroy(dialog);
-
 
   project->path = g_strconcat(
              context->appdata->settings->base_path, project->name, "/", NULL);
@@ -1264,7 +1247,7 @@ project_edit(appdata_t *appdata, GtkWidget *parent,
 }
 
 static gboolean project_open(appdata_t *appdata, const char *name) {
-  project_t *project = g_new0(project_t, 1);
+  project_t *project = new project_t(name);
 
   /* link to map state if a map already exists */
   if(appdata->map) {
@@ -1280,20 +1263,19 @@ static gboolean project_open(appdata_t *appdata, const char *name) {
 
   /* build project path */
   project->path = g_strconcat(appdata->settings->base_path, name, "/", NULL);
-  project->name = g_strdup(name);
 
   const std::string &project_file = project_filename(project);
 
   printf("project file = %s\n", project_file.c_str());
   if(!g_file_test(project_file.c_str(), G_FILE_TEST_IS_REGULAR)) {
     printf("requested project file doesn't exist\n");
-    project_free(project);
+    delete project;
     return FALSE;
   }
 
   if(!project_read(project_file, project, appdata->settings->server)) {
     printf("error reading project file\n");
-    project_free(project);
+    delete project;
     return FALSE;
   }
 
@@ -1344,7 +1326,7 @@ gboolean project_load(appdata_t *appdata, const char *name) {
     printf("error opening requested project\n");
 
     if(appdata->project) {
-      project_free(appdata->project);
+      delete appdata->project;
       appdata->project = NULL;
     }
 
@@ -1370,7 +1352,7 @@ gboolean project_load(appdata_t *appdata, const char *name) {
     printf("project/osm sanity checks failed, unloading project\n");
 
     if(appdata->project) {
-      project_free(appdata->project);
+      delete appdata->project;
       appdata->project = NULL;
     }
 
@@ -1431,7 +1413,7 @@ gboolean project_load(appdata_t *appdata, const char *name) {
   printf("project loading interrupted by user\n");
 
   if(appdata->project) {
-    project_free(appdata->project);
+    delete appdata->project;
     appdata->project = NULL;
   }
 
@@ -1441,4 +1423,36 @@ gboolean project_load(appdata_t *appdata, const char *name) {
   }
 
   return FALSE;
+}
+
+project_t::project_t(const gchar *n)
+  : name(g_strdup(n))
+  , path(0)
+  , desc(0)
+  , server(0)
+  , rserver(0)
+  , osm(0)
+  , wms_server(0)
+  , wms_path(0)
+  , map_state(0)
+  , data_dirty(FALSE)
+{
+  memset(&wms_offset, 0, sizeof(wms_offset));
+  memset(&min, 0, sizeof(min));
+  memset(&max, 0, sizeof(max));
+}
+
+project_t::~project_t()
+{
+  g_free(name);
+  xmlFree(desc);
+  g_free(rserver);
+
+  g_free(wms_server);
+  g_free(wms_path);
+
+  g_free(path);
+  g_free(osm);
+
+  map_state_free(map_state);
 }
