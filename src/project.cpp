@@ -1280,6 +1280,7 @@ static gboolean project_open(appdata_t *appdata, const char *name) {
 
   /* build project path */
   project->path = g_strconcat(appdata->settings->base_path, name, "/", NULL);
+  project->name = g_strdup(name);
 
   const std::string &project_file = project_filename(project);
 
