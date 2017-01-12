@@ -17,6 +17,8 @@ int main(int argc, char **argv)
   if(argc != 2)
     return EINVAL;
 
+  xmlInitParser();
+
   track_t *track = track_import(argv[1]);
 
   gint points = 0;
@@ -28,6 +30,8 @@ int main(int argc, char **argv)
   delete track;
 
   g_assert_cmpint(points, ==, 11);
+
+  xmlCleanupParser();
 
   return 0;
 }

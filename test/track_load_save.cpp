@@ -14,6 +14,8 @@ int main(int argc, char **argv)
   fn += argv[2];
   fn += ".trk";
 
+  xmlInitParser();
+
   track_t *track = track_import(fn.c_str());
 
   track_export(track, argv[3]);
@@ -39,6 +41,8 @@ int main(int argc, char **argv)
   g_mapped_file_free(ogpx);
   g_mapped_file_free(ngpx);
 #endif
+
+  xmlCleanupParser();
 
   return 0;
 }
