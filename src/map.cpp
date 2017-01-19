@@ -2154,13 +2154,13 @@ static gboolean track_pos2lpos(const bounds_t *bounds, const pos_t *pos, lpos_t 
  * @return point array
  */
 static canvas_points_t *canvas_points_init(const bounds_t *bounds,
-                                           std::vector<track_point_t *>::const_iterator point,
+                                           std::vector<track_point_t>::const_iterator point,
                                            const gint count) {
   canvas_points_t *points = canvas_points_new(count);
   lpos_t lpos;
 
   for(gint i = 0; i < count; i++) {
-    track_pos2lpos(bounds, &(*point)->pos, &lpos);
+    track_pos2lpos(bounds, &point->pos, &lpos);
     canvas_point_set_pos(points, i, &lpos);
     point++;
   }
@@ -2178,14 +2178,14 @@ void map_track_draw_seg(map_t *map, track_seg_t &seg) {
   /* nothing should have been drawn by now ... */
   g_assert(seg.item_chain.empty());
 
-  const std::vector<track_point_t *>::const_iterator itEnd = seg.track_points.end();
-  std::vector<track_point_t *>::const_iterator it = seg.track_points.begin();
+  const std::vector<track_point_t>::const_iterator itEnd = seg.track_points.end();
+  std::vector<track_point_t>::const_iterator it = seg.track_points.begin();
   while(it != itEnd) {
     lpos_t lpos;
 
     /* skip all points not on screen */
-    std::vector<track_point_t *>::const_iterator last = itEnd;
-    while(it != itEnd && !track_pos2lpos(bounds, &(*it)->pos, &lpos)) {
+    std::vector<track_point_t>::const_iterator last = itEnd;
+    while(it != itEnd && !track_pos2lpos(bounds, &it->pos, &lpos)) {
       last = it;
       it++;
     }
@@ -2193,8 +2193,8 @@ void map_track_draw_seg(map_t *map, track_seg_t &seg) {
     int visible = 0;
 
     /* count nodes that _are_ on screen */
-    std::vector<track_point_t *>::const_iterator tmp = it;
-    while(tmp != itEnd && track_pos2lpos(bounds, &(*tmp)->pos, &lpos)) {
+    std::vector<track_point_t>::const_iterator tmp = it;
+    while(tmp != itEnd && track_pos2lpos(bounds, &tmp->pos, &lpos)) {
       tmp++;
       visible++;
     }
@@ -2240,17 +2240,17 @@ void map_track_update_seg(map_t *map, track_seg_t &seg) {
   /* is the case */
 
   /* search last point */
-  const std::vector<track_point_t *>::const_iterator itEnd = seg.track_points.end();
-  std::vector<track_point_t *>::const_iterator begin = seg.track_points.begin(),
+  const std::vector<track_point_t>::const_iterator itEnd = seg.track_points.end();
+  std::vector<track_point_t>::const_iterator begin = seg.track_points.begin(),
                                                second_last = seg.track_points.begin();
   lpos_t lpos;
   while(itEnd - second_last > 2) {
-    if(!track_pos2lpos(bounds, &(*second_last)->pos, &lpos))
+    if(!track_pos2lpos(bounds, &second_last->pos, &lpos))
       begin = second_last;
 
     second_last++;
   }
-  std::vector<track_point_t *>::const_iterator last = second_last + 1;
+  std::vector<track_point_t>::const_iterator last = second_last + 1;
 
   /* since we are updating an existing track, it sure has at least two */
   /* points, second_last must be valid and its "next" (last) also */
@@ -2259,9 +2259,9 @@ void map_track_update_seg(map_t *map, track_seg_t &seg) {
 
   /* check if the last and second_last points are visible */
   gboolean last_is_visible =
-    track_pos2lpos(bounds, &(*last)->pos, &lpos);
+    track_pos2lpos(bounds, &last->pos, &lpos);
   gboolean second_last_is_visible =
-    track_pos2lpos(bounds, &(*second_last)->pos, &lpos);
+    track_pos2lpos(bounds, &second_last->pos, &lpos);
 
   /* if both are invisible, then nothing has changed on screen */
   if(!last_is_visible && !second_last_is_visible) {
@@ -2293,7 +2293,7 @@ void map_track_update_seg(map_t *map, track_seg_t &seg) {
 
     /* the search for the "begin" ends with the second_last item */
     /* verify the last one also */
-    if(begin != itEnd && !track_pos2lpos(bounds, &(*(begin + 1))->pos, &lpos))
+    if(begin != itEnd && !track_pos2lpos(bounds, &(begin + 1)->pos, &lpos))
       begin++;
 
     /* count points to be placed */

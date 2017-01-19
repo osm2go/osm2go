@@ -51,16 +51,11 @@ void track_menu_set(appdata_t *appdata) {
   gtk_widget_set_sensitive(appdata->track.menu_item_track_export, present);
 }
 
-static track_point_t *track_parse_trkpt(xmlNode *a_node) {
-  track_point_t *point = new track_point_t();
-
+static bool track_parse_trkpt(xmlNode *a_node, track_point_t &point) {
   /* parse position */
-  if(!xml_get_prop_pos(a_node, &point->pos)) {
-    delete point;
-    return NULL;
-  }
+  if(!xml_get_prop_pos(a_node, &point.pos))
+    return false;
 
-  point->altitude = NAN;
   /* scan for children */
   xmlNode *cur_node;
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
@@ -69,20 +64,20 @@ static track_point_t *track_parse_trkpt(xmlNode *a_node) {
       /* elevation (altitude) */
       if(strcmp((char*)cur_node->name, "ele") == 0) {
 	xmlChar *str = xmlNodeGetContent(cur_node);
-	point->altitude = g_ascii_strtod((const gchar*)str, NULL);
+	point.altitude = g_ascii_strtod((const gchar*)str, NULL);
 	xmlFree(str);
       } else if(strcmp((char*)cur_node->name, "time") == 0) {
 	struct tm time = { 0 };
 	time.tm_isdst = -1;
 	xmlChar *str = xmlNodeGetContent(cur_node);
-	char *ptr = strptime((const char*)str, DATE_FORMAT, &time);
-	if(ptr) point->time = mktime(&time);
+        if(strptime((const char*)str, DATE_FORMAT, &time))
+          point.time = mktime(&time);
 	xmlFree(str);
       }
     }
   }
 
-  return point;
+  return true;
 }
 
 /**
@@ -102,8 +97,8 @@ static void track_parse_trkseg(xmlNode *a_node, gint *points,
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcasecmp((char*)cur_node->name, "trkpt") == 0) {
-	track_point_t *cpnt = track_parse_trkpt(cur_node);
-	if(cpnt) {
+	track_point_t cpnt;
+	if(track_parse_trkpt(cur_node, cpnt)) {
 	  if(!active) {
 	    /* start a new segment */
             track_seg_t seg;
@@ -208,15 +203,6 @@ static track_t *track_read(const char *filename, gboolean dirty) {
   return track;
 }
 
-static inline void track_point_free(track_point_t *point) {
-  delete point;
-}
-
-static void track_seg_free(track_seg_t &seg) {
-  std::for_each(seg.track_points.begin(), seg.track_points.end(),
-                track_point_free);
-}
-
 /* --------------------------------------------------------------- */
 
 void track_clear(appdata_t *appdata) {
@@ -243,7 +229,7 @@ struct track_save_segs {
   struct save_point {
     xmlNodePtr const node;
     save_point(xmlNodePtr n) : node(n) {}
-    void operator()(const track_point_t *point);
+    void operator()(const track_point_t &point);
   };
 
   void operator()(const track_seg_t &seg) {
@@ -253,22 +239,22 @@ struct track_save_segs {
   }
 };
 
-void track_save_segs::save_point::operator()(const track_point_t* point)
+void track_save_segs::save_point::operator()(const track_point_t &point)
 {
   char str[G_ASCII_DTOSTR_BUF_SIZE];
 
   xmlNodePtr node_point = xmlNewChild(node, NULL, BAD_CAST "trkpt", NULL);
 
-  xml_set_prop_pos(node_point, &point->pos);
+  xml_set_prop_pos(node_point, &point.pos);
 
-  if(!isnan(point->altitude)) {
-    g_ascii_formatd(str, sizeof(str), ALT_FORMAT, point->altitude);
+  if(!isnan(point.altitude)) {
+    g_ascii_formatd(str, sizeof(str), ALT_FORMAT, point.altitude);
     xmlNewTextChild(node_point, NULL, BAD_CAST "ele", BAD_CAST str);
   }
 
-  if(point->time) {
+  if(point.time) {
     struct tm loctime;
-    localtime_r(&point->time, &loctime);
+    localtime_r(&point.time, &loctime);
     strftime(str, sizeof(str), DATE_FORMAT, &loctime);
     xmlNewTextChild(node_point, NULL, BAD_CAST "time", BAD_CAST str);
   }
@@ -471,19 +457,18 @@ static gboolean track_append_position(appdata_t *appdata, const pos_t *pos, floa
   } else
     printf("appending to current segment\n");
 
-  std::vector<track_point_t *> &points = track->segments.back().track_points;
+  std::vector<track_point_t> &points = track->segments.back().track_points;
 
   /* don't append if point is the same as last time */
   gboolean ret;
-  if(!points.empty() && points.back()->pos.lat == pos->lat &&
-                        points.back()->pos.lon == pos->lon) {
+  if(!points.empty() && points.back().pos.lat == pos->lat &&
+                        points.back().pos.lon == pos->lon) {
     printf("same value as last point -> ignore\n");
     ret = FALSE;
   } else {
     ret = TRUE;
-    track_point_t *point = new track_point_t(*pos, alt, time(NULL));
     track->dirty = TRUE;
-    points.push_back(point);
+    points.push_back(track_point_t(*pos, alt, time(NULL)));
 
     if(points.size() == 1) {
       /* the segment can now be drawn for the first time */
@@ -607,11 +592,6 @@ track_point_t::track_point_t(const pos_t &p, float alt, time_t t)
   , time(t)
   , altitude(alt)
 {
-}
-
-track_t::~track_t()
-{
-  std::for_each(segments.begin(), segments.end(), track_seg_free);
 }
 
 // vim:et:ts=8:sw=2:sts=2:ai

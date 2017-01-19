@@ -36,12 +36,11 @@ struct track_point_t {
 };
 
 struct track_seg_t {
-  std::vector<track_point_t *> track_points;
+  std::vector<track_point_t> track_points;
   std::vector<canvas_item_t *> item_chain;
 };
 
 struct track_t {
-  ~track_t();
   std::vector<track_seg_t> segments;
   bool dirty;
   bool active; ///< if the last element in segments is currently written to
