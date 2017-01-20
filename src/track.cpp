@@ -29,8 +29,10 @@
 #include "gps.h"
 #include "misc.h"
 
+#include <cstring>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
+#include <map>
 #include <strings.h>
 #include <time.h>
 
@@ -39,6 +41,57 @@
 #endif
 
 #include <algorithm>
+
+class TrackSax {
+  xmlSAXHandler handler;
+  bool active_seg;
+  track_point_t *curPoint;
+
+  enum State {
+    DocStart,
+    TagGpx,
+    TagTrk,
+    TagTrkSeg,
+    TagTrkPt,
+    TagTime,
+    TagEle
+  };
+
+  State state;
+
+  // custom find to avoid memory allocations for std::string
+  struct tag_find {
+    const char * const name;
+    tag_find(const xmlChar *n) : name(reinterpret_cast<const char *>(n)) {}
+    bool operator()(const std::pair<const char *, std::pair<State, State> > &p) {
+      return (strcmp(p.first, name) == 0);
+    }
+  };
+
+public:
+  TrackSax();
+
+  bool parse(const char *filename);
+
+  track_t *track;
+  std::vector<track_point_t>::size_type points;  ///< total points
+
+private:
+  std::map<const char *, std::pair<State, State> > tags;
+
+  void characters(const char *ch, int len);
+  static void cb_characters(void *ts, const xmlChar *ch, int len) {
+    static_cast<TrackSax *>(ts)->characters(reinterpret_cast<const char *>(ch), len);
+  }
+  void startElement(const xmlChar *name, const xmlChar **attrs);
+  static void cb_startElement(void *ts, const xmlChar *name, const xmlChar **attrs) {
+    static_cast<TrackSax *>(ts)->startElement(name, attrs);
+  }
+  void endElement(const xmlChar *name);
+  static void cb_endElement(void *ts, const xmlChar *name) {
+    static_cast<TrackSax *>(ts)->endElement(name);
+  }
+};
 
 /* make menu represent the track state */
 void track_menu_set(appdata_t *appdata) {
@@ -51,156 +104,22 @@ void track_menu_set(appdata_t *appdata) {
   gtk_widget_set_sensitive(appdata->track.menu_item_track_export, present);
 }
 
-static bool track_parse_trkpt(xmlNode *a_node, track_point_t &point) {
-  /* parse position */
-  if(!xml_get_prop_pos(a_node, &point.pos))
-    return false;
-
-  /* scan for children */
-  xmlNode *cur_node;
-  for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
-    if (cur_node->type == XML_ELEMENT_NODE) {
-
-      /* elevation (altitude) */
-      if(strcmp((char*)cur_node->name, "ele") == 0) {
-	xmlChar *str = xmlNodeGetContent(cur_node);
-	point.altitude = g_ascii_strtod((const gchar*)str, NULL);
-	xmlFree(str);
-      } else if(strcmp((char*)cur_node->name, "time") == 0) {
-	struct tm time = { 0 };
-	time.tm_isdst = -1;
-	xmlChar *str = xmlNodeGetContent(cur_node);
-        if(strptime((const char*)str, DATE_FORMAT, &time))
-          point.time = mktime(&time);
-	xmlFree(str);
-      }
-    }
-  }
-
-  return true;
-}
-
-/**
- * @brief parse a <trkseg>
- * @param a_node the <trkseg> node
- * @param points counter for the created points (will not be reset)
- * @param segments vector to fill with newly loaded segments
- * @returns the first of the newly created track segments
- *
- * This may create multiple track_seg_t objects.
- */
-static void track_parse_trkseg(xmlNode *a_node, gint *points,
-                               std::vector<track_seg_t> &segments) {
-  xmlNode *cur_node;
-  bool active = false;
-
-  for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
-    if (cur_node->type == XML_ELEMENT_NODE) {
-      if(strcasecmp((char*)cur_node->name, "trkpt") == 0) {
-	track_point_t cpnt;
-	if(track_parse_trkpt(cur_node, cpnt)) {
-	  if(!active) {
-	    /* start a new segment */
-            track_seg_t seg;
-            segments.push_back(seg);
-	    active = true;
-	  }
-	  /* attach point to chain */
-	  segments.back().track_points.push_back(cpnt);
-	  (*points)++;
-	} else {
-	  /* end segment if point could not be parsed and start a new one */
-	  /* close segment if there is one */
-	  if(active) {
-	    printf("ending track segment leaving bounds\n");
-	    active = false;
-	  }
-	}
-      } else
-	printf("found unhandled gpx/trk/trkseg/%s\n", cur_node->name);
-
-    }
-  }
-}
-
-static track_t *track_parse_trk(xmlNode *a_node, gint *points, track_t *track) {
-  xmlNode *cur_node;
-
-  for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
-    if (cur_node->type == XML_ELEMENT_NODE) {
-      if(strcasecmp((char*)cur_node->name, "trkseg") == 0) {
-        track_parse_trkseg(cur_node, points, track->segments);
-      } else
-	printf("found unhandled gpx/trk/%s\n", cur_node->name);
-
-    }
-  }
-  return track;
-}
-
-static track_t *track_parse_gpx(xmlNode *a_node, gint *points) {
-  track_t *track = NULL;
-  *points = 0;
-  xmlNode *cur_node;
-
-  for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
-    if (cur_node->type == XML_ELEMENT_NODE) {
-      if(strcasecmp((char*)cur_node->name, "trk") == 0) {
-	if(!track)
-          track = new track_t();
-        track_parse_trk(cur_node, points, track);
-      } else
-	printf("found unhandled gpx/%s\n", cur_node->name);
-    }
-  }
-  return track;
-}
-
-static track_t *track_parse_doc(xmlDocPtr doc, gint *points) {
-  track_t *track = NULL;
-  xmlNode *cur_node;
-
-  for (cur_node = xmlDocGetRootElement(doc); cur_node; cur_node = cur_node->next) {
-    if (cur_node->type == XML_ELEMENT_NODE) {
-      /* parse track file ... */
-      if(strcasecmp((char*)cur_node->name, "gpx") == 0)
-        track = track_parse_gpx(cur_node, points);
-      else
-        printf("found unhandled %s\n", cur_node->name);
-    }
-  }
-
-  return track;
-}
-
 static track_t *track_read(const char *filename, gboolean dirty) {
   printf("============================================================\n");
   printf("loading track %s\n", filename);
 
-  xmlDoc *doc = NULL;
-
-  /* parse the file and get the DOM */
-  if((doc = xmlReadFile(filename, NULL, 0)) == NULL) {
-    xmlErrorPtr	errP = xmlGetLastError();
-    errorf(NULL, "While parsing \"%s\":\n\n%s", filename, errP->message);
-    return NULL;
-  }
-
-  gint points;
-  track_t *track = track_parse_doc(doc, &points);
-  xmlFreeDoc(doc);
-
-  if(!track || track->segments.empty()) {
-    delete track;
+  TrackSax sx;
+  if(!sx.parse(filename)) {
+    delete sx.track;
     printf("track was empty/invalid track\n");
-    return NULL;
+    return 0;
   }
 
-  track->dirty = dirty;
+  sx.track->dirty = dirty;
   printf("Track is %sdirty.\n", dirty?"":"not ");
-  printf("%d points in %zu segments\n", points, track->segments.size());
+  printf("%zu points in %zu segments\n", sx.points, sx.track->segments.size());
 
-  return track;
+  return sx.track;
 }
 
 /* --------------------------------------------------------------- */
@@ -592,6 +511,122 @@ track_point_t::track_point_t(const pos_t &p, float alt, time_t t)
   , time(t)
   , altitude(alt)
 {
+}
+
+TrackSax::TrackSax()
+  : active_seg(false)
+  , curPoint(0)
+  , state(DocStart)
+  , track(0)
+  , points(0)
+{
+  memset(&handler, 0, sizeof(handler));
+  handler.characters = cb_characters;
+  handler.startElement = cb_startElement;
+  handler.endElement = cb_endElement;
+
+  tags["gpx"] = std::pair<State, State>(DocStart, TagGpx);
+  tags["trk"] = std::pair<State, State>(TagGpx, TagTrk);
+  tags["trkseg"] = std::pair<State, State>(TagTrk, TagTrkSeg);
+  tags["trkpt"] = std::pair<State, State>(TagTrkSeg, TagTrkPt);
+  tags["time"] = std::pair<State, State>(TagTrkPt, TagTime);
+  tags["ele"] = std::pair<State, State>(TagTrkPt, TagEle);
+}
+
+bool TrackSax::parse(const char *filename)
+{
+  if (xmlSAXUserParseFile(&handler, this, filename) != 0)
+    return false;
+
+  return track && !track->segments.empty();
+}
+
+void TrackSax::characters(const char *ch, int len)
+{
+  std::string buf;
+
+  switch(state) {
+  case TagEle:
+    buf.assign(ch, len);
+    curPoint->altitude = g_ascii_strtod(buf.c_str(), 0);
+    break;
+  case TagTime: {
+    buf.assign(ch, len);
+    struct tm time = { 0 };
+    time.tm_isdst = -1;
+    if(strptime(buf.c_str(), DATE_FORMAT, &time) != 0)
+      curPoint->time = mktime(&time);
+    break;
+  }
+  default:
+    for(int pos = 0; pos < len; pos++)
+      if(!isspace(ch[pos])) {
+        printf("unhandled character data: %*.*s state %i\n", len, len, ch, state);
+        break;
+      }
+  }
+}
+
+void TrackSax::startElement(const xmlChar *name, const xmlChar **attrs)
+{
+  std::map<const char *, std::pair<State, State> >::const_iterator it =
+          std::find_if(tags.begin(), tags.end(), tag_find(name));
+
+  if(it == tags.end()) {
+    fprintf(stderr, "found unhandled element %s\n", name);
+    return;
+  }
+
+  if(state != it->second.first) {
+    fprintf(stderr, "found element %s in state %i, but expected %i\n",
+            name, state, it->second.first);
+    return;
+  }
+
+  state = it->second.second;
+
+  switch(state){
+  case TagTrk:
+    if(!track)
+      track = new track_t();
+    break;
+  case TagTrkSeg:
+    track->segments.push_back(track_seg_t());
+    break;
+  case TagTrkPt: {
+    track->segments.back().track_points.push_back(track_point_t());
+    points++;
+    curPoint = &track->segments.back().track_points.back();
+    for(unsigned int i = 0; attrs[i]; i += 2) {
+      if(strcmp(reinterpret_cast<const char *>(attrs[i]), "lat") == 0)
+        curPoint->pos.lat = g_ascii_strtod((gchar*)(attrs[i + 1]), NULL);
+      else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "lon") == 0)
+        curPoint->pos.lon = g_ascii_strtod((gchar*)(attrs[i + 1]), NULL);
+    }
+  }
+  default:
+    break;
+  }
+}
+
+void TrackSax::endElement(const xmlChar *name)
+{
+  std::map<const char *, std::pair<State, State> >::const_iterator it =
+          std::find_if(tags.begin(), tags.end(), tag_find(name));
+
+  g_assert(it != tags.end());
+  g_assert(state == it->second.second);
+
+  switch(state){
+  case TagTrkSeg:
+    // drop empty segments
+    if(track->segments.back().track_points.empty())
+     track->segments.pop_back();
+    break;
+  default:
+    break;
+  }
+  state = it->second.first;
 }
 
 // vim:et:ts=8:sw=2:sts=2:ai
