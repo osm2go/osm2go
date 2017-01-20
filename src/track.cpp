@@ -618,11 +618,25 @@ void TrackSax::endElement(const xmlChar *name)
   g_assert(state == it->second.second);
 
   switch(state){
-  case TagTrkSeg:
+  case TagTrkSeg: {
     // drop empty segments
-    if(track->segments.back().track_points.empty())
-     track->segments.pop_back();
+    std::vector<track_point_t> &last = track->segments.back().track_points;
+    if(last.empty()) {
+      track->segments.pop_back();
+    } else {
+      // this vector will never be appended to again, so shrink it to the size
+      // that is actually needed
+#if __cplusplus >= 201103L
+      last.shrink_to_fit();
+#else
+      std::vector<track_point_t> tmp;
+      tmp.resize(last.size());
+      tmp = last;
+      tmp.swap(last);
+#endif
+    }
     break;
+  }
   default:
     break;
   }
