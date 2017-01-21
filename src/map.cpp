@@ -819,7 +819,7 @@ void map_state_free(map_state_t *state) {
   if(state->refcount > 1)
     state->refcount--;
   else
-    g_free(state);
+    delete state;
 }
 
 template<typename T> void free_map_item_chain(std::pair<item_id_t, T *> pair) {
@@ -1764,22 +1764,6 @@ gboolean map_key_press_event(appdata_t *appdata, GdkEventKey *event) {
   return FALSE;
 }
 
-void map_state_reset(map_state_t *state) {
-  if(!state) return;
-
-  state->zoom = 0.25;
-  state->detail = 1.0;
-
-  state->scroll_offset.x = 0;
-  state->scroll_offset.y = 0;
-}
-
-map_state_t *map_state_new(void) {
-  map_state_t *state = g_new0(map_state_t, 1);
-  map_state_reset(state);
-  return state;
-}
-
 static gboolean map_autosave(gpointer data) {
   map_t *map = (map_t*)data;
 
@@ -1813,12 +1797,12 @@ GtkWidget *map_new(appdata_t *appdata) {
   if(appdata->project && appdata->project->map_state) {
     printf("Using projects map state\n");
     map->state = appdata->project->map_state;
+    map->state->refcount++;
   } else {
     printf("Creating new map state\n");
-    map->state = map_state_new();
+    map->state = new map_state_t();
   }
 
-  map->state->refcount++;
 
   map->pen_down.at.x = -1;
   map->pen_down.at.y = -1;
@@ -2491,6 +2475,20 @@ void map_detail_normal(map_t *map) {
   banner_busy_start(map->appdata, 1, _("Restoring default detail level"));
   map_detail_change(map, 1.0);
   banner_busy_stop(map->appdata);
+}
+
+map_state_t::map_state_t()
+  : refcount(1)
+{
+  reset();
+}
+
+void map_state_t::reset() {
+  zoom = 0.25;
+  detail = 1.0;
+
+  scroll_offset.x = 0;
+  scroll_offset.y = 0;
 }
 
 // vim:et:ts=8:sw=2:sts=2:ai

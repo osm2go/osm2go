@@ -1253,13 +1253,13 @@ static gboolean project_open(appdata_t *appdata, const char *name) {
   if(appdata->map) {
     printf("Project: Using map state\n");
     project->map_state = appdata->map->state;
+    project->map_state->reset();
+    project->map_state->refcount++;
   } else {
     printf("Project: Creating new map_state\n");
-    project->map_state = map_state_new();
+    project->map_state = new map_state_t();
   }
 
-  map_state_reset(project->map_state);
-  project->map_state->refcount++;
 
   /* build project path */
   project->path = g_strconcat(appdata->settings->base_path, name, "/", NULL);

@@ -76,7 +76,13 @@ typedef struct map_item_t {
 /* to the screen representation of a give node/way/etc */
 typedef struct map_item_chain_t map_item_chain_t;
 
-typedef struct {
+typedef struct map_state_t {
+#ifdef __cplusplus
+  map_state_t();
+
+  void reset();
+#endif
+
   gint refcount;
   float zoom;                          // zoom level (1.0 = 1m/pixel
   float detail;                        // deatil level (1.0 = normal)
@@ -143,9 +149,7 @@ extern "C" {
 #endif
 
 GtkWidget *map_new(appdata_t *appdata);
-map_state_t *map_state_new(void);
 void map_state_free(map_state_t *state);
-void map_state_reset(map_state_t *state);
 void map_init(appdata_t *appdata);
 gboolean map_key_press_event(appdata_t *appdata, GdkEventKey *event);
 void map_item_set_flags(map_item_t *map_item, int set, int clr);
