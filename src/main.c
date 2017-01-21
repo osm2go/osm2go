@@ -383,8 +383,7 @@ cb_menu_track_import(G_GNUC_UNUSED GtkMenuItem *item, appdata_t *appdata) {
     gchar *filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
 
     /* remove any existing track */
-    if(appdata->track.track)
-      track_clear(appdata);
+    track_clear(appdata);
 
     /* load a track */
     appdata->track.track = track_import(filename);
@@ -477,15 +476,11 @@ cb_menu_track_export(G_GNUC_UNUSED GtkMenuItem *item, appdata_t *appdata) {
   gtk_widget_destroy (dialog);
 }
 
-
 static void
 cb_menu_track_clear(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
   track_clear(appdata);
 }
-
-
-
 
 /*
  *  Platform-specific UI tweaks.
