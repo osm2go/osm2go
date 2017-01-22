@@ -1055,7 +1055,8 @@ osm_t *osm_parse(const char *path, const char *filename, icon_t **icon) {
   struct timeval end;
   gettimeofday(&end, NULL);
 
-  osm->icons = icon;
+  if(osm)
+    osm->icons = icon;
 
   printf("total parse time: %ldms\n",
 	 (end.tv_usec - start.tv_usec)/1000 +
