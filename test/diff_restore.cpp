@@ -8,11 +8,17 @@
 
 int main(int argc, char **argv)
 {
-  if(argc != 5)
+  if(argc != 3)
     return EINVAL;
 
   struct icon_t *icons = 0;
-  osm_t *osm = osm_parse(argv[1], argv[2], &icons);
+  std::string osm_path = argv[1];
+  g_assert(osm_path[osm_path.size() - 1] == '/');
+  osm_path += argv[2];
+  osm_path += "/";
+  osm_path += argv[2];
+  osm_path += ".osm";
+  osm_t *osm = osm_parse("", osm_path.c_str(), &icons);
   if(!osm) {
     std::cerr << "cannot open " << argv[1] << argv[2] << ": " << strerror(errno) << std::endl;
     return 1;
@@ -22,8 +28,7 @@ int main(int argc, char **argv)
   g_assert_cmpuint(1, ==, osm->ways.size());
   g_assert_cmpuint(3, ==, osm->relations.size());
 
-  project_t project(argv[4]);
-  project.path = g_strdup(argv[3]);
+  project_t project(argv[2], argv[1]);
   diff_restore(0, &project, osm);
 
   g_assert_cmpuint(8, ==, osm->nodes.size());

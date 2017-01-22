@@ -31,12 +31,12 @@
 
 typedef struct project_t {
 #ifdef __cplusplus
-  project_t(const gchar *n);
+  project_t(const gchar *n, const char *base_path);
   ~project_t();
 #endif
 
-  char * const name;
-  char *path;
+  const char * const name;
+  const char * const path;
 
   xmlChar *desc;
   const char *server; /**< the server string used, either rserver or settings->server */

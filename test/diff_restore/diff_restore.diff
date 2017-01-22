@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<diff name="diff">
+<diff name="diff_restore">
   <node state="new" id="-1" lat="52.2693518" lon="9.5760140" time="1483221227"/>
   <node state="new" id="-2" lat="52.269497" lon="9.5752223" time="1483221228"/>
   <node id="638499572" lat="52.2694654" lon="9.5752283" time="1444474581">

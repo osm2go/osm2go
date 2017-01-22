@@ -291,8 +291,7 @@ static std::vector<project_t *> project_scan(appdata_t *appdata) {
       printf("found project %s\n", name);
 
       /* try to read project and append it to chain */
-      project_t *n = new project_t(name);
-      n->path = g_strconcat(appdata->settings->base_path, name, "/", NULL);
+      project_t *n = new project_t(name, appdata->settings->base_path);
 
       if(project_read(fullname, n, appdata->settings->server))
         projects.push_back(n);
@@ -524,12 +523,9 @@ static project_t *project_new(select_context_t *context) {
     return NULL;
   }
 
-  project_t *project = new project_t(gtk_entry_get_text(GTK_ENTRY(entry)));
+  project_t *project = new project_t(gtk_entry_get_text(GTK_ENTRY(entry)),
+                                     context->appdata->settings->base_path);
   gtk_widget_destroy(dialog);
-
-  project->path = g_strconcat(
-             context->appdata->settings->base_path, project->name, "/", NULL);
-  project->desc = NULL;
 
   /* no data downloaded yet */
   project->data_dirty = TRUE;
@@ -1247,7 +1243,7 @@ project_edit(appdata_t *appdata, GtkWidget *parent,
 }
 
 static gboolean project_open(appdata_t *appdata, const char *name) {
-  project_t *project = new project_t(name);
+  project_t *project = new project_t(name, appdata->settings->base_path);
 
   /* link to map state if a map already exists */
   if(appdata->map) {
@@ -1259,10 +1255,6 @@ static gboolean project_open(appdata_t *appdata, const char *name) {
     printf("Project: Creating new map_state\n");
     project->map_state = new map_state_t();
   }
-
-
-  /* build project path */
-  project->path = g_strconcat(appdata->settings->base_path, name, "/", NULL);
 
   const std::string &project_file = project_filename(project);
 
@@ -1425,9 +1417,9 @@ gboolean project_load(appdata_t *appdata, const char *name) {
   return FALSE;
 }
 
-project_t::project_t(const gchar *n)
+project_t::project_t(const gchar *n, const char *base_path)
   : name(g_strdup(n))
-  , path(0)
+  , path(g_strconcat(base_path, name, "/", 0))
   , desc(0)
   , server(0)
   , rserver(0)
@@ -1444,14 +1436,14 @@ project_t::project_t(const gchar *n)
 
 project_t::~project_t()
 {
-  g_free(name);
+  g_free(const_cast<gchar *>(name));
   xmlFree(desc);
   g_free(rserver);
 
   g_free(wms_server);
   g_free(wms_path);
 
-  g_free(path);
+  g_free(const_cast<gchar *>(path));
   g_free(osm);
 
   map_state_free(map_state);
