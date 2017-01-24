@@ -34,14 +34,11 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <ctime>
 #include <strings.h>
 
 #include <algorithm>
-#ifndef __USE_XOPEN
-#define __USE_XOPEN
-#endif
 #include <string>
-#include <time.h>
 #include <utility>
 
 #include <libxml/parser.h>

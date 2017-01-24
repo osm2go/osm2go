@@ -39,8 +39,8 @@
 #endif
 #endif
 
+#include <cstring>
 #include <glib.h>
-#include <string.h>
 #include <strings.h>
 
 double xml_get_prop_float(xmlNode *node, const char *prop) {

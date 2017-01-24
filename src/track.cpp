@@ -30,11 +30,11 @@
 #include "misc.h"
 
 #include <cstring>
+#include <ctime>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <map>
 #include <strings.h>
-#include <time.h>
 
 #ifndef LIBXML_TREE_ENABLED
 #error "Tree not enabled in libxml"
