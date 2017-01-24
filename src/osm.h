@@ -36,10 +36,6 @@ extern "C" {
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 
-#ifdef __cplusplus
-#include <vector>
-#endif
-
 #define OSM_FLAG_DIRTY    (1<<0)
 #define OSM_FLAG_DELETED  (1<<1)
 #define OSM_FLAG_NEW      (1<<2)
