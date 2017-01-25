@@ -227,7 +227,7 @@ static G_GNUC_PRINTF(3, 4) void appendf(struct log_s &log, const char *colname,
 
 #define MAX_TRY 5
 
-static gboolean osm_update_item(osm_upload_context_t &context, char *xml_str,
+static gboolean osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
                                 char *url, char *user, item_id_t *id) {
   int retry = MAX_TRY;
   char buffer[CURL_ERROR_SIZE];
@@ -235,8 +235,10 @@ static gboolean osm_update_item(osm_upload_context_t &context, char *xml_str,
   CURL *curl;
   CURLcode res;
 
-  curl_data_t read_data;
+  curl_data_t read_data, read_data_init;
   curl_data_t write_data;
+  read_data_init.ptr = reinterpret_cast<char *>(xml_str);
+  read_data_init.len = read_data_init.ptr ? strlen(read_data_init.ptr) : 0;
 
   struct log_s &log = context.log;
 
@@ -252,8 +254,7 @@ static gboolean osm_update_item(osm_upload_context_t &context, char *xml_str,
       return FALSE;
     }
 
-    read_data.ptr = xml_str;
-    read_data.len = xml_str?strlen(xml_str):0;
+    read_data = read_data_init;
     write_data.ptr = NULL;
     write_data.len = 0;
 
@@ -344,7 +345,7 @@ static gboolean osm_update_item(osm_upload_context_t &context, char *xml_str,
   return FALSE;
 }
 
-static gboolean osm_delete_item(osm_upload_context_t &context, char *xml_str,
+static gboolean osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
                                 char *url, char *user) {
   int retry = MAX_TRY;
   char buffer[CURL_ERROR_SIZE];
@@ -353,8 +354,10 @@ static gboolean osm_delete_item(osm_upload_context_t &context, char *xml_str,
   CURLcode res;
 
   /* delete has a payload since api 0.6 */
-  curl_data_t read_data;
+  curl_data_t read_data, read_data_init;
   curl_data_t write_data;
+  read_data_init.ptr = reinterpret_cast<char *>(xml_str);
+  read_data_init.len = read_data_init.ptr ? strlen(read_data_init.ptr) : 0;
   struct log_s &log = context.log;
 
   while(retry >= 0) {
@@ -369,8 +372,7 @@ static gboolean osm_delete_item(osm_upload_context_t &context, char *xml_str,
       return FALSE;
     }
 
-    read_data.ptr = xml_str;
-    read_data.len = xml_str?strlen(xml_str):0;
+    read_data = read_data_init;
     write_data.ptr = NULL;
     write_data.len = 0;
 
@@ -507,7 +509,7 @@ void osm_delete_nodes::operator()(std::pair<item_id_t, node_t *> pair)
     char *url = g_strdup_printf("%s/node/" ITEM_ID_FORMAT,
                                 project->server, node->id);
 
-    char *xml_str = osm_generate_xml_node(context.changeset, node);
+    xmlChar *xml_str = node->generate_xml(context.changeset);
 
     if(osm_delete_item(context, xml_str, url, cred)) {
       node->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
@@ -546,7 +548,7 @@ void osm_upload_nodes::operator()(std::pair<item_id_t, node_t *> pair)
     }
 
     /* upload this node */
-    char *xml_str = osm_generate_xml_node(context.changeset, node);
+    xmlChar *xml_str = node->generate_xml(context.changeset);
     if(xml_str) {
       printf("uploading node %s from address %p\n", url, xml_str);
 
@@ -582,7 +584,7 @@ void osm_delete_ways::operator()(std::pair<item_id_t, way_t *> pair)
 
   char *url = g_strdup_printf("%s/way/" ITEM_ID_FORMAT,
                                 project->server, way->id);
-  char *xml_str = osm_generate_xml_way(context.changeset, way);
+  xmlChar *xml_str = way->generate_xml(context.changeset);
 
   if(osm_delete_item(context, xml_str, url, cred)) {
     way->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
@@ -623,7 +625,7 @@ void osm_upload_ways::operator()(std::pair<item_id_t, way_t *> pair)
   }
 
   /* upload this node */
-  char *xml_str = osm_generate_xml_way(context.changeset, way);
+  xmlChar *xml_str = way->generate_xml(context.changeset);
   if(xml_str) {
     printf("uploading way %s from address %p\n", url, xml_str);
 
@@ -661,7 +663,7 @@ void osm_delete_relations::operator()(std::pair<item_id_t, relation_t *> pair)
 
   char *url = g_strdup_printf("%s/relation/" ITEM_ID_FORMAT,
                               project->server, relation->id);
-  char *xml_str = osm_generate_xml_relation(context.changeset, relation);
+  xmlChar *xml_str = relation->generate_xml(context.changeset);
 
   if(osm_delete_item(context, xml_str, url, cred)) {
     relation->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
@@ -701,7 +703,7 @@ void osm_upload_relations::operator()(std::pair<item_id_t, relation_t *> pair)
   }
 
   /* upload this relation */
-  char *xml_str = osm_generate_xml_relation(context.changeset, relation);
+  xmlChar *xml_str = relation->generate_xml(context.changeset);
   if(xml_str) {
     printf("uploading relation %s from address %p\n", url, xml_str);
 
@@ -714,8 +716,8 @@ void osm_upload_relations::operator()(std::pair<item_id_t, relation_t *> pair)
   g_free(url);
 }
 
-static gboolean osm_create_changeset(osm_upload_context_t &context, gchar **cred) {
-  gboolean result = FALSE;
+static bool osm_create_changeset(osm_upload_context_t &context, gchar **cred) {
+  bool result = false;
   context.changeset = ILLEGAL;
   project_t *project = context.project;
 
@@ -726,7 +728,7 @@ static gboolean osm_create_changeset(osm_upload_context_t &context, gchar **cred
   appendf(context.log, NULL, _("Create changeset "));
 
   /* create changeset request */
-  char *xml_str = osm_generate_xml_changeset(context.comment);
+  xmlChar *xml_str = osm_generate_xml_changeset(context.comment);
   if(xml_str) {
     printf("creating changeset %s from address %p\n", url, xml_str);
 
@@ -735,7 +737,7 @@ static gboolean osm_create_changeset(osm_upload_context_t &context, gchar **cred
 
     if(osm_update_item(context, xml_str, url, *cred, &context.changeset)) {
       printf("got changeset id " ITEM_ID_FORMAT "\n", context.changeset);
-      result = TRUE;
+      result = true;
     } else {
       g_free(*cred);
     }

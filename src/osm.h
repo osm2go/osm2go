@@ -108,6 +108,9 @@ public:
 
   /* a link to the visual representation on screen */
   struct map_item_chain_t *map_item_chain;
+
+  xmlChar *generate_xml(item_id_t changeset);
+
   void cleanup(osm_t *osm);
 };
 #else
@@ -173,6 +176,7 @@ public:
   const node_t *first_node() const;
   unsigned int reverse_direction_sensitive_tags();
   unsigned int reverse_direction_sensitive_roles(osm_t *osm);
+  xmlChar *generate_xml(item_id_t changeset);
 
   void cleanup();
 };
@@ -275,6 +279,7 @@ public:
 
   void members_by_type(guint *nodes, guint *ways, guint *relations) const;
   gchar *descriptive_name() const;
+  xmlChar *generate_xml(item_id_t changeset);
 
   void cleanup();
 };
@@ -340,12 +345,8 @@ gboolean osm_tag_update(tag_t *tag, const char *key, const char *value);
 void osm_tag_update_key(tag_t *tag, const char *key);
 void osm_tag_update_value(tag_t *tag, const char *value);
 
-char *osm_generate_xml_changeset(char* comment);
-char *osm_generate_xml_node(item_id_t changeset, const node_t *node);
-char *osm_generate_xml_way(item_id_t changeset, const way_t *way);
+xmlChar *osm_generate_xml_changeset(const char* comment);
 void osm_write_node_chain(xmlNodePtr way_node, const way_t *node_chain);
-char *osm_generate_xml_relation(item_id_t changeset,
-                                const relation_t *relation);
 
 /* ----------- edit functions ----------- */
 way_t *osm_way_new(void);

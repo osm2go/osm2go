@@ -1139,37 +1139,36 @@ osm_generate_xml_init(xmlNodePtr *node, const char *node_name)
   return doc;
 }
 
-static char *
+static xmlChar *
 osm_generate_xml_finish(xmlDocPtr doc)
 {
-  xmlChar *result = NULL;
+  xmlChar *result = 0;
   int len = 0;
 
   xmlDocDumpFormatMemoryEnc(doc, &result, &len, "UTF-8", 1);
   xmlFreeDoc(doc);
 
-  return (char*)result;
-
+  return result;
 }
 
 /* build xml representation for a node */
-char *osm_generate_xml_node(item_id_t changeset, const node_t *node) {
+xmlChar *node_t::generate_xml(item_id_t changeset) {
   char str[32];
 
   xmlNodePtr xml_node;
   xmlDocPtr doc = osm_generate_xml_init(&xml_node, "node");
 
   /* new nodes don't have an id, but get one after the upload */
-  if(!(node->flags & OSM_FLAG_NEW)) {
-    snprintf(str, sizeof(str), ITEM_ID_FORMAT, node->id);
+  if(!(flags & OSM_FLAG_NEW)) {
+    snprintf(str, sizeof(str), ITEM_ID_FORMAT, id);
     xmlNewProp(xml_node, BAD_CAST "id", BAD_CAST str);
   }
-  snprintf(str, sizeof(str), ITEM_ID_FORMAT, node->version);
+  snprintf(str, sizeof(str), ITEM_ID_FORMAT, version);
   xmlNewProp(xml_node, BAD_CAST "version", BAD_CAST str);
   snprintf(str, sizeof(str), "%u", (unsigned)changeset);
   xmlNewProp(xml_node, BAD_CAST "changeset", BAD_CAST str);
-  xml_set_prop_pos(xml_node, &node->pos);
-  osm_generate_tags(node->tag, xml_node);
+  xml_set_prop_pos(xml_node, &pos);
+  osm_generate_tags(tag, xml_node);
 
   return osm_generate_xml_finish(doc);
 }
@@ -1198,21 +1197,21 @@ void osm_write_node_chain(xmlNodePtr way_node, const way_t *way) {
 }
 
 /* build xml representation for a way */
-char *osm_generate_xml_way(item_id_t changeset, const way_t *way) {
+xmlChar *way_t::generate_xml(item_id_t changeset) {
   char str[32];
 
   xmlNodePtr xml_node;
   xmlDocPtr doc = osm_generate_xml_init(&xml_node, "way");
 
-  snprintf(str, sizeof(str), ITEM_ID_FORMAT, way->id);
+  snprintf(str, sizeof(str), ITEM_ID_FORMAT, id);
   xmlNewProp(xml_node, BAD_CAST "id", BAD_CAST str);
-  snprintf(str, sizeof(str), ITEM_ID_FORMAT, way->version);
+  snprintf(str, sizeof(str), ITEM_ID_FORMAT, version);
   xmlNewProp(xml_node, BAD_CAST "version", BAD_CAST str);
   snprintf(str, sizeof(str), "%u", (unsigned)changeset);
   xmlNewProp(xml_node, BAD_CAST "changeset", BAD_CAST str);
 
-  osm_write_node_chain(xml_node, way);
-  osm_generate_tags(way->tag, xml_node);
+  osm_write_node_chain(xml_node, this);
+  osm_generate_tags(tag, xml_node);
 
   return osm_generate_xml_finish(doc);
 }
@@ -1255,34 +1254,32 @@ void gen_xml_relation_functor::operator()(const member_t &member)
 }
 
 /* build xml representation for a relation */
-char *osm_generate_xml_relation(item_id_t changeset,
-				const relation_t *relation) {
+xmlChar *relation_t::generate_xml(item_id_t changeset) {
   char str[32];
 
   xmlNodePtr xml_node;
   xmlDocPtr doc = osm_generate_xml_init(&xml_node, "relation");
 
-  snprintf(str, sizeof(str), ITEM_ID_FORMAT, relation->id);
+  snprintf(str, sizeof(str), ITEM_ID_FORMAT, id);
   xmlNewProp(xml_node, BAD_CAST "id", BAD_CAST str);
-  snprintf(str, sizeof(str), ITEM_ID_FORMAT, relation->version);
+  snprintf(str, sizeof(str), ITEM_ID_FORMAT, version);
   xmlNewProp(xml_node, BAD_CAST "version", BAD_CAST str);
   snprintf(str, sizeof(str), "%u", (unsigned)changeset);
   xmlNewProp(xml_node, BAD_CAST "changeset", BAD_CAST str);
 
-  std::for_each(relation->members.begin(), relation->members.end(),
-                gen_xml_relation_functor(xml_node));
-  osm_generate_tags(relation->tag, xml_node);
+  std::for_each(members.begin(), members.end(), gen_xml_relation_functor(xml_node));
+  osm_generate_tags(tag, xml_node);
 
   return osm_generate_xml_finish(doc);
 }
 
 /* build xml representation for a changeset */
-char *osm_generate_xml_changeset(char *comment) {
+xmlChar *osm_generate_xml_changeset(const char *comment) {
   xmlChar *result = NULL;
   int len = 0;
 
   /* tags for this changeset */
-  tag_t tag_comment(const_cast<char*>("comment"), comment);
+  tag_t tag_comment(const_cast<char*>("comment"), const_cast<char *>(comment));
   tag_t tag_creator(const_cast<char*>("created_by"),
                     const_cast<char*>(PACKAGE " v" VERSION));
   tag_creator.next = &tag_comment;
@@ -1297,7 +1294,7 @@ char *osm_generate_xml_changeset(char *comment) {
   xmlDocDumpFormatMemoryEnc(doc, &result, &len, "UTF-8", 1);
   xmlFreeDoc(doc);
 
-  return (char*)result;
+  return result;
 }
 
 /* ---------- edit functions ------------- */
