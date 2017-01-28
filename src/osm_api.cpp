@@ -515,6 +515,8 @@ void osm_delete_nodes::operator()(std::pair<item_id_t, node_t *> pair)
       node->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
       project->data_dirty = TRUE;
     }
+    xmlFree(xml_str);
+    g_free(url);
 }
 
 struct osm_upload_nodes {
@@ -557,6 +559,7 @@ void osm_upload_nodes::operator()(std::pair<item_id_t, node_t *> pair)
         node->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_NEW);
         project->data_dirty = TRUE;
       }
+      xmlFree(xml_str);
     }
     g_free(url);
 }
@@ -591,6 +594,7 @@ void osm_delete_ways::operator()(std::pair<item_id_t, way_t *> pair)
     project->data_dirty = TRUE;
   }
 
+  xmlFree(xml_str);
   g_free(url);
 }
 
@@ -634,6 +638,7 @@ void osm_upload_ways::operator()(std::pair<item_id_t, way_t *> pair)
       way->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_NEW);
       project->data_dirty = TRUE;
     }
+    xmlFree(xml_str);
   }
   g_free(url);
 }
@@ -669,6 +674,9 @@ void osm_delete_relations::operator()(std::pair<item_id_t, relation_t *> pair)
     relation->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
     project->data_dirty = TRUE;
   }
+
+  xmlFree(xml_str);
+  g_free(url);
 }
 
 struct osm_upload_relations {
@@ -712,6 +720,7 @@ void osm_upload_relations::operator()(std::pair<item_id_t, relation_t *> pair)
       relation->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_NEW);
       project->data_dirty = TRUE;
     }
+    xmlFree(xml_str);
   }
   g_free(url);
 }
@@ -741,6 +750,7 @@ static bool osm_create_changeset(osm_upload_context_t &context, gchar **cred) {
     } else {
       g_free(*cred);
     }
+    xmlFree(xml_str);
   }
   g_free(url);
 
