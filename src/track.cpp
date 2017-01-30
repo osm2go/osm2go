@@ -104,7 +104,7 @@ void track_menu_set(appdata_t *appdata) {
   gtk_widget_set_sensitive(appdata->track.menu_item_track_export, present);
 }
 
-static track_t *track_read(const char *filename, gboolean dirty) {
+static track_t *track_read(const char *filename, bool dirty) {
   printf("============================================================\n");
   printf("loading track %s\n", filename);
 
@@ -328,7 +328,7 @@ gboolean track_restore(appdata_t *appdata) {
     printf("track found, loading ...\n");
   }
 
-  appdata->track.track = track_read(trk_name.c_str(), FALSE);
+  appdata->track.track = track_read(trk_name.c_str(), false);
 
   track_menu_set(appdata);
 
@@ -495,7 +495,7 @@ void track_enable_gps(appdata_t *appdata, gboolean enable) {
 track_t *track_import(const char *name) {
   printf("import %s\n", name);
 
-  return track_read(name, TRUE);
+  return track_read(name, true);
 }
 
 track_point_t::track_point_t()
