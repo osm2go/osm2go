@@ -492,10 +492,10 @@ void track_enable_gps(appdata_t *appdata, gboolean enable) {
   else       track_do_disable_gps(appdata);
 }
 
-track_t *track_import(const char *name) {
-  printf("import %s\n", name);
+track_t *track_import(const char *filename) {
+  printf("import %s\n", filename);
 
-  return track_read(name, true);
+  return track_read(filename, true);
 }
 
 track_point_t::track_point_t()
