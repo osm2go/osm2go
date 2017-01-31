@@ -90,8 +90,8 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t *style) {
 
 	/* ---------- node ------------------------------------- */
       } else if(strcasecmp((char*)cur_node->name, "node") == 0) {
-	parse_color(cur_node, "color", &style->node.color);
-	parse_color(cur_node, "fill-color", &style->node.fill_color);
+	parse_color(cur_node, "color", style->node.color);
+	parse_color(cur_node, "fill-color", style->node.fill_color);
         style->node.radius = xml_get_prop_float(cur_node, "radius");
         style->node.border_radius = xml_get_prop_float(cur_node, "border-radius");
         style->node.zoom_max = parse_scale_max(cur_node);
@@ -111,14 +111,14 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t *style) {
 
 	/* ---------- way ------------------------------------- */
       } else if(strcasecmp((char*)cur_node->name, "way") == 0) {
-	parse_color(cur_node, "color", &style->way.color);
+	parse_color(cur_node, "color", style->way.color);
         style->way.width = xml_get_prop_float(cur_node, "width");
         style->way.zoom_max = parse_scale_max(cur_node);
 
 	/* ---------- frisket --------------------------------- */
       } else if(strcasecmp((char*)cur_node->name, "frisket") == 0) {
         style->frisket.mult = xml_get_prop_float(cur_node, "mult");
-	parse_color(cur_node, "color", &style->frisket.color);
+	parse_color(cur_node, "color", style->frisket.color);
 	style->frisket.border.present = FALSE;
 
 	for(sub_node = cur_node->children; sub_node; sub_node=sub_node->next) {
@@ -127,38 +127,38 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t *style) {
 	      style->frisket.border.present = TRUE;
               style->frisket.border.width = xml_get_prop_float(sub_node, "width");
 
-	      parse_color(sub_node, "color", &style->frisket.border.color);
+	      parse_color(sub_node, "color", style->frisket.border.color);
 	    }
 	  }
 	}
 
 	/* ---------- highlight ------------------------------- */
       } else if(strcasecmp((char*)cur_node->name, "highlight") == 0) {
-	parse_color(cur_node, "color", &style->highlight.color);
-	parse_color(cur_node, "node-color", &style->highlight.node_color);
-	parse_color(cur_node, "touch-color", &style->highlight.touch_color);
-	parse_color(cur_node, "arrow-color", &style->highlight.arrow_color);
+	parse_color(cur_node, "color", style->highlight.color);
+	parse_color(cur_node, "node-color", style->highlight.node_color);
+	parse_color(cur_node, "touch-color", style->highlight.touch_color);
+	parse_color(cur_node, "arrow-color", style->highlight.arrow_color);
         style->highlight.width = xml_get_prop_float(cur_node, "width");
         style->highlight.arrow_limit = xml_get_prop_float(cur_node, "arrow-limit");
 
 	/* ---------- track ------------------------------------ */
       } else if(strcasecmp((char*)cur_node->name, "track") == 0) {
-	parse_color(cur_node, "color", &style->track.color);
-	parse_color(cur_node, "gps-color", &style->track.gps_color);
+	parse_color(cur_node, "color", style->track.color);
+	parse_color(cur_node, "gps-color", style->track.gps_color);
         style->track.width = xml_get_prop_float(cur_node, "width");
 
 	/* ---------- area ------------------------------------- */
       } else if(strcasecmp((char*)cur_node->name, "area") == 0) {
 	style->area.has_border_color =
-	  parse_color(cur_node, "border-color", &style->area.border_color);
+	  parse_color(cur_node, "border-color", style->area.border_color);
         style->area.border_width = xml_get_prop_float(cur_node,"border-width");
         style->area.zoom_max = parse_scale_max(cur_node);
 
-	parse_color(cur_node, "color", &style->area.color);
+	parse_color(cur_node, "color", style->area.color);
 
 	/* ---------- background ------------------------------- */
       } else if(strcasecmp((char*)cur_node->name, "background") == 0) {
-	parse_color(cur_node, "color", &style->background.color);
+	parse_color(cur_node, "color", style->background.color);
 
       } else
 	printf("  found unhandled style/%s\n", cur_node->name);

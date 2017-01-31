@@ -151,10 +151,10 @@ float zoom_to_scaledn(const float zoom) {
 
 /* --------------------- elemstyles.xml parsing ----------------------- */
 
-gboolean parse_color(xmlNode *a_node, const char *name,
-		     elemstyle_color_t *color) {
+bool parse_color(xmlNode *a_node, const char *name,
+		     elemstyle_color_t &color) {
   xmlChar *color_str = xmlGetProp(a_node, BAD_CAST name);
-  gboolean ret = FALSE;
+  bool ret = false;
 
   if(color_str) {
     /* if the color name contains a # it's a hex representation */
@@ -163,19 +163,19 @@ gboolean parse_color(xmlNode *a_node, const char *name,
     if(*color_str == '#' && strlen((const char*)color_str) == 9) {
       char *err;
 
-      *color = strtoul((const char*)color_str + 1, &err, 16);
+      color = strtoul((const char*)color_str + 1, &err, 16);
 
-      ret = (*err == '\0') ? TRUE : FALSE;
+      ret = (*err == '\0') ? true : false;
     } else {
       GdkColor gdk_color;
       if(gdk_color_parse((const gchar*)color_str, &gdk_color)) {
-        *color =
+        color =
 	  ((gdk_color.red   << 16) & 0xff000000) |
 	  ((gdk_color.green <<  8) & 0xff0000) |
 	  ((gdk_color.blue       ) & 0xff00) |
 	  (0xff);
 
-        ret = TRUE;
+        ret = true;
       }
     }
     xmlFree(color_str);
@@ -224,7 +224,7 @@ static elemstyle_line_t *parse_line(xmlNode *a_node) {
   elemstyle_line_t *line = g_new0(elemstyle_line_t, 1);
 
   /* these have to be present */
-  g_assert(parse_color(a_node, "colour", &line->color));
+  g_assert(parse_color(a_node, "colour", line->color));
   g_assert(parse_gint(a_node, "width", &line->width));
 
   line->real.valid =
@@ -232,7 +232,7 @@ static elemstyle_line_t *parse_line(xmlNode *a_node) {
 
   line->bg.valid =
     parse_gint(a_node, "width_bg", &line->bg.width) &&
-    parse_color(a_node, "colour_bg", &line->bg.color);
+    parse_color(a_node, "colour_bg", line->bg.color);
 
   line->dashed = parse_gboolean(a_node, "dashed");
   if (!parse_gint(a_node, "dash_length", &line->dash_length)) {
@@ -277,7 +277,7 @@ static elemstyle_area_t *parse_area(xmlNode *a_node) {
   elemstyle_area_t *area = g_new0(elemstyle_area_t, 1);
 
   /* these have to be present */
-  g_assert(parse_color(a_node, "colour", &area->color));
+  g_assert(parse_color(a_node, "colour", area->color));
   return area;
 }
 
