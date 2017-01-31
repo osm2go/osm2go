@@ -42,7 +42,7 @@ typedef enum {
 
 #define DEFAULT_DASH_LENGTH 0
 
-typedef gulong elemstyle_color_t;
+typedef guint elemstyle_color_t;
 
 typedef struct elemstyle_t elemstyle_t;
 
