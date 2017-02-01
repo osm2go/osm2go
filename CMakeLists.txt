@@ -34,8 +34,10 @@ set(osm2go_SOURCE_FILES
 	src/info.h
 	src/josm_elemstyles.cpp
 	src/josm_elemstyles.h
+	src/josm_elemstyles_p.h
 	src/josm_presets.cpp
 	src/josm_presets.h
+	src/josm_presets_p.h
 	src/list.c
 	src/list.h
 	src/map.cpp
