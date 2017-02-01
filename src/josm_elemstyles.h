@@ -45,7 +45,7 @@ typedef enum {
 
 typedef guint elemstyle_color_t;
 
-typedef struct elemstyle_t elemstyle_t;
+struct elemstyle_t;
 
 std::vector<elemstyle_t *> josm_elemstyles_load(const char *name);
 void josm_elemstyles_free(std::vector<elemstyle_t *> &elemstyles);
