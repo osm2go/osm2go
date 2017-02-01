@@ -39,6 +39,7 @@
 #endif
 
 struct elemstyle_condition_t {
+    elemstyle_condition_t(xmlChar *k, xmlChar *v) : key(k), value(v) {}
     xmlChar *key;
     xmlChar *value;
 };
@@ -300,9 +301,8 @@ static elemstyle_t *parse_rule(xmlNode *a_node) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcasecmp((char*)cur_node->name, "condition") == 0) {
         /* ------ parse condition ------ */
-        elemstyle_condition_t newcond;
-        newcond.key   = xmlGetProp(cur_node, BAD_CAST "k");
-        newcond.value = xmlGetProp(cur_node, BAD_CAST "v");
+        elemstyle_condition_t newcond(xmlGetProp(cur_node, BAD_CAST "k"),
+                                      xmlGetProp(cur_node, BAD_CAST "v"));
         elemstyle->conditions.push_back(newcond);
 	/* todo: add support for "b" (boolean) value */
       } else if(strcasecmp((char*)cur_node->name, "line") == 0) {
