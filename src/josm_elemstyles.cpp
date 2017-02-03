@@ -33,11 +33,63 @@
 #include <algorithm>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
+#include <map>
 #include <strings.h>
 
 #ifndef LIBXML_TREE_ENABLED
 #error "Tree not enabled in libxml"
 #endif
+
+class StyleSax {
+  xmlSAXHandler handler;
+
+  enum State {
+    DocStart,
+    TagRules,
+    TagRule,
+    TagCondition,
+    TagLine,
+    TagLineMod,
+    TagArea,
+    TagIcon,
+    TagScaleMin,
+    TagScaleMax
+  };
+
+  State state;
+
+  // custom find to avoid memory allocations for std::string
+  struct tag_find {
+    const char * const name;
+    tag_find(const xmlChar *n) : name(reinterpret_cast<const char *>(n)) {}
+    bool operator()(const std::pair<const char *, std::pair<State, State> > &p) {
+      return (strcmp(p.first, name) == 0);
+    }
+  };
+
+public:
+  StyleSax();
+
+  bool parse(const std::string &filename);
+
+  std::vector<elemstyle_t *> styles;
+
+private:
+  std::map<const char *, std::pair<State, State> > tags;
+
+  void characters(const char *ch, int len);
+  static void cb_characters(void *ts, const xmlChar *ch, int len) {
+    static_cast<StyleSax *>(ts)->characters(reinterpret_cast<const char *>(ch), len);
+  }
+  void startElement(const xmlChar *name, const xmlChar **attrs);
+  static void cb_startElement(void *ts, const xmlChar *name, const xmlChar **attrs) {
+    static_cast<StyleSax *>(ts)->startElement(name, attrs);
+  }
+  void endElement(const xmlChar *name);
+  static void cb_endElement(void *ts, const xmlChar *name) {
+    static_cast<StyleSax *>(ts)->endElement(name);
+  }
+};
 
 // ratio conversions
 
@@ -59,63 +111,58 @@ float zoom_to_scaledn(const float zoom) {
 
 /* --------------------- elemstyles.xml parsing ----------------------- */
 
+static bool parse_color(const xmlChar *color_str, elemstyle_color_t &color) {
+  bool ret = false;
+
+  /* if the color name contains a # it's a hex representation */
+  /* we parse this directly since gdk_color_parse doesn't cope */
+  /* with the alpha channel that may be present */
+  if(*color_str == '#' && strlen((const char*)color_str) == 9) {
+    char *err;
+
+    color = strtoul((const char*)color_str + 1, &err, 16);
+
+    ret = (*err == '\0') ? true : false;
+  } else {
+    GdkColor gdk_color;
+    if(gdk_color_parse((const gchar*)color_str, &gdk_color)) {
+      color =
+            ((gdk_color.red   << 16) & 0xff000000) |
+            ((gdk_color.green <<  8) & 0xff0000) |
+            ((gdk_color.blue       ) & 0xff00) |
+             (0xff);
+
+      ret = true;
+    }
+  }
+
+  return ret;
+}
+
 bool parse_color(xmlNode *a_node, const char *name,
 		     elemstyle_color_t &color) {
   xmlChar *color_str = xmlGetProp(a_node, BAD_CAST name);
   bool ret = false;
 
   if(color_str) {
-    /* if the color name contains a # it's a hex representation */
-    /* we parse this directly since gdk_color_parse doesn't cope */
-    /* with the alpha channel that may be present */
-    if(*color_str == '#' && strlen((const char*)color_str) == 9) {
-      char *err;
-
-      color = strtoul((const char*)color_str + 1, &err, 16);
-
-      ret = (*err == '\0') ? true : false;
-    } else {
-      GdkColor gdk_color;
-      if(gdk_color_parse((const gchar*)color_str, &gdk_color)) {
-        color =
-	  ((gdk_color.red   << 16) & 0xff000000) |
-	  ((gdk_color.green <<  8) & 0xff0000) |
-	  ((gdk_color.blue       ) & 0xff00) |
-	  (0xff);
-
-        ret = true;
-      }
-    }
+    ret = parse_color(color_str, color);
     xmlFree(color_str);
   }
   return ret;
 }
 
-static gboolean parse_gint(xmlNode *a_node, const char *name, gint *val) {
-  xmlChar *num_str = xmlGetProp(a_node, BAD_CAST name);
-  if(num_str) {
-    *val = strtoul((const char*)num_str, NULL, 10);
-    xmlFree(num_str);
-    return TRUE;
+static double parse_scale(const char *val_str, int len) {
+  char buf[G_ASCII_DTOSTR_BUF_SIZE];
+  if(G_UNLIKELY(static_cast<unsigned int>(len) >= sizeof(buf))) {
+    return 0.0;
+  } else {
+    memcpy(buf, val_str, len);
+    buf[len] = '\0';
+    return scaledn_to_zoom(strtod(buf, 0));
   }
-  return FALSE;
 }
 
-static gboolean parse_scale_max(xmlNode *a_node, float *val) {
-  xmlChar *val_str = xmlNodeGetContent(a_node);
-  if (val_str) {
-    *val = scaledn_to_zoom(strtod((char *)val_str, NULL));
-    xmlFree(val_str);
-    return TRUE;
-  }
-  return FALSE;
-}
-
-static gboolean parse_gboolean(xmlNode *a_node, const char *name) {
-  xmlChar *bool_str = xmlGetProp(a_node, BAD_CAST name);
-  if (!bool_str) {
-    return FALSE;
-  }
+static gboolean parse_gboolean(const xmlChar *bool_str) {
   static const char *true_str[]  = { "1", "yes", "true", 0 };
   gboolean ret = FALSE;
   for (int i = 0; true_str[i]; ++i) {
@@ -124,200 +171,239 @@ static gboolean parse_gboolean(xmlNode *a_node, const char *name) {
       break;
     }
   }
-  xmlFree(bool_str);
   return ret;
 }
 
-static elemstyle_line_t *parse_line(xmlNode *a_node) {
-  elemstyle_line_t *line = g_new0(elemstyle_line_t, 1);
+StyleSax::StyleSax()
+  : state(DocStart)
+{
+  memset(&handler, 0, sizeof(handler));
+  handler.characters = cb_characters;
+  handler.startElement = cb_startElement;
+  handler.endElement = cb_endElement;
 
-  /* these have to be present */
-  g_assert(parse_color(a_node, "colour", line->color));
-  g_assert(parse_gint(a_node, "width", &line->width));
+  tags["rules"] = std::pair<State, State>(DocStart, TagRules);
+  tags["rule"] = std::pair<State, State>(TagRules, TagRule);
+  tags["condition"] = std::pair<State, State>(TagRule, TagCondition);
+  tags["line"] = std::pair<State, State>(TagRule, TagLine);
+  tags["linemod"] = std::pair<State, State>(TagRule, TagLineMod);
+  tags["area"] = std::pair<State, State>(TagRule, TagArea);
+  tags["icon"] = std::pair<State, State>(TagRule, TagIcon);
+  tags["scale_min"] = std::pair<State, State>(TagRule, TagScaleMin);
+  tags["scale_max"] = std::pair<State, State>(TagRule, TagScaleMax);
+}
 
-  line->real.valid =
-    parse_gint(a_node, "realwidth", &line->real.width);
+bool StyleSax::parse(const std::string &filename)
+{
+  if (xmlSAXUserParseFile(&handler, this, filename.c_str()) != 0)
+    return false;
 
-  line->bg.valid =
-    parse_gint(a_node, "width_bg", &line->bg.width) &&
-    parse_color(a_node, "colour_bg", line->bg.color);
+  return !styles.empty();
+}
 
-  line->dashed = parse_gboolean(a_node, "dashed");
-  if (!parse_gint(a_node, "dash_length", &line->dash_length)) {
-    line->dash_length = DEFAULT_DASH_LENGTH;
+void StyleSax::characters(const char *ch, int len)
+{
+  std::string buf;
+
+  switch(state) {
+  case TagScaleMin:
+    // currently ignored, only check syntax
+    (void)parse_scale(ch, len);
+    break;
+  case TagScaleMax: {
+    elemstyle_t * const elemstyle = styles.back();
+    switch (elemstyle->type) {
+    case ES_TYPE_LINE:
+      elemstyle->line->zoom_max = parse_scale(ch, len);
+      break;
+    case ES_TYPE_AREA:
+      elemstyle->area->zoom_max = parse_scale(ch, len);
+      break;
+    default:
+      if (G_LIKELY(elemstyle->icon.filename))
+        elemstyle->icon.zoom_max = parse_scale(ch, len);
+      else
+        printf("scale_max for unhandled elemstyletype=0x%02x, rule %zu\n",
+               elemstyle->type, styles.size());
+      break;
+    }
+    break;
   }
-
-  return line;
+  default:
+    for(int pos = 0; pos < len; pos++)
+      if(!isspace(ch[pos])) {
+        printf("unhandled character data: %*.*s state %i\n", len, len, ch, state);
+        break;
+      }
+  }
 }
 
 /* parse "+123", "-123" and "123%" */
-static void parse_width_mod(xmlNode *a_node, const char *name,
-			    elemstyle_width_mod_t *value) {
-  char *mod_str = (char*)xmlGetProp(a_node, BAD_CAST name);
-  if(!mod_str)
-    return;
+static void parse_width_mod(const char *mod_str, elemstyle_width_mod_t &value) {
   if(strlen(mod_str) > 0) {
     if(mod_str[0] == '+') {
-      value->mod = ES_MOD_ADD;
-      value->width = strtoul(mod_str+1, NULL, 10);
+      value.mod = ES_MOD_ADD;
+      value.width = strtoul(mod_str+1, NULL, 10);
     } else if(mod_str[0] == '-') {
-      value->mod = ES_MOD_SUB;
-      value->width = strtoul(mod_str+1, NULL, 10);
+      value.mod = ES_MOD_SUB;
+      value.width = strtoul(mod_str+1, NULL, 10);
     } else if(mod_str[strlen(mod_str)-1] == '%') {
-      value->mod = ES_MOD_PERCENT;
-      value->width = strtoul(mod_str, NULL, 10);
+      value.mod = ES_MOD_PERCENT;
+      value.width = strtoul(mod_str, NULL, 10);
     } else
       printf("warning: unable to parse modifier %s\n", mod_str);
   }
-  xmlFree(mod_str);
 }
 
-static elemstyle_line_mod_t *parse_line_mod(xmlNode *a_node) {
-  elemstyle_line_mod_t *line_mod = g_new0(elemstyle_line_mod_t, 1);
+void StyleSax::startElement(const xmlChar *name, const xmlChar **attrs)
+{
+  std::map<const char *, std::pair<State, State> >::const_iterator it =
+          std::find_if(tags.begin(), tags.end(), tag_find(name));
 
-  parse_width_mod(a_node, "width", &line_mod->line);
-  parse_width_mod(a_node, "width_bg", &line_mod->bg);
+  if(it == tags.end()) {
+    fprintf(stderr, "found unhandled element %s\n", name);
+    return;
+  }
 
-  return line_mod;
-}
+  if(state != it->second.first) {
+    fprintf(stderr, "found element %s in state %i, but expected %i\n",
+            name, state, it->second.first);
+    return;
+  }
 
-static elemstyle_area_t *parse_area(xmlNode *a_node) {
-  elemstyle_area_t *area = g_new0(elemstyle_area_t, 1);
+  state = it->second.second;
 
-  /* these have to be present */
-  g_assert(parse_color(a_node, "colour", area->color));
-  return area;
-}
+  elemstyle_t * const elemstyle = styles.empty() ? 0 : styles.back();
 
-static void parse_icon(xmlNode *a_node, elemstyle_icon_t &icon) {
-  icon.annotate = xml_get_prop_is(a_node, "annotate", "true");
+  switch(state){
+  case TagRule:
+    styles.push_back(new elemstyle_t());
+    break;
+  case TagCondition: {
+    xmlChar *k = 0, *v = 0;
+    for(unsigned int i = 0; attrs[i]; i += 2) {
+      if(strcmp(reinterpret_cast<const char *>(attrs[i]), "k") == 0)
+        k = xmlStrdup(attrs[i + 1]);
+      else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "v") == 0)
+        v = xmlStrdup(attrs[i + 1]);
+    }
+    if(k || v)
+      styles.back()->conditions.push_back(elemstyle_condition_t(k, v));
+    /* todo: add support for "b" (boolean) value */
+    break;
+  }
+  case TagLine: {
+    g_assert(elemstyle->type == ES_TYPE_NONE);
+    elemstyle->type = ES_TYPE_LINE;
 
-  icon.filename = (char*)xmlGetProp(a_node, BAD_CAST "src");
-  g_assert(icon.filename);
+    bool hasBgWidth = false, hasBgColor = false;
+    /* these have to be present */
+    bool hasColor = false, hasWidth = false;
+    elemstyle_line_t *line = elemstyle->line = g_new0(elemstyle_line_t, 1);
+    line->dash_length = DEFAULT_DASH_LENGTH;
 
-  icon.filename = josm_icon_name_adjust(icon.filename);
-
-  icon.zoom_max = 0;
-}
-
-static elemstyle_t *parse_rule(xmlNode *a_node) {
-  xmlNode *cur_node = NULL;
-  elemstyle_t *elemstyle = new elemstyle_t();
-
-  for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
-    if (cur_node->type == XML_ELEMENT_NODE) {
-      if(strcasecmp((char*)cur_node->name, "condition") == 0) {
-        /* ------ parse condition ------ */
-        elemstyle_condition_t newcond(xmlGetProp(cur_node, BAD_CAST "k"),
-                                      xmlGetProp(cur_node, BAD_CAST "v"));
-        elemstyle->conditions.push_back(newcond);
-	/* todo: add support for "b" (boolean) value */
-      } else if(strcasecmp((char*)cur_node->name, "line") == 0) {
-	/* ------ parse line ------ */
-	g_assert(elemstyle->type == ES_TYPE_NONE);
-	elemstyle->type = ES_TYPE_LINE;
-	elemstyle->line = parse_line(cur_node);
-      } else if(strcasecmp((char*)cur_node->name, "linemod") == 0) {
-	/* ------ parse linemod ------ */
-	g_assert(elemstyle->type == ES_TYPE_NONE);
-	elemstyle->type = ES_TYPE_LINE_MOD;
-	elemstyle->line_mod = parse_line_mod(cur_node);
-      } else if(strcasecmp((char*)cur_node->name, "area") == 0) {
-	/* ------ parse area ------ */
-	g_assert(elemstyle->type == ES_TYPE_NONE);
-	elemstyle->type = ES_TYPE_AREA;
-	elemstyle->area = parse_area(cur_node);
-      } else if(strcasecmp((char*)cur_node->name, "icon") == 0) {
-	parse_icon(cur_node, elemstyle->icon);
-      } else if(strcasecmp((char*)cur_node->name, "scale_min") == 0) {
-	/* scale_min is currently ignored */
-      } else if(strcasecmp((char*)cur_node->name, "scale_max") == 0) {
-	switch (elemstyle->type) {
-	case ES_TYPE_LINE:
-          parse_scale_max(cur_node, &elemstyle->line->zoom_max);
-	  break;
-	case ES_TYPE_AREA:
-          parse_scale_max(cur_node, &elemstyle->area->zoom_max);
-	  break;
-	default:
-	  if (elemstyle->icon.filename) {
-            parse_scale_max(cur_node, &elemstyle->icon.zoom_max);
-	  }
-	  else {
-	    printf("scale_max for unhandled elemstyletype=0x02%x\n",
-		   elemstyle->type);
-	  }
-	  break;
-	}
-      } else {
-	printf("found unhandled rules/rule/%s\n", cur_node->name);
+    for(unsigned int i = 0; attrs[i]; i += 2) {
+      if(strcmp(reinterpret_cast<const char *>(attrs[i]), "colour") == 0) {
+        hasColor = parse_color(attrs[i + 1], line->color);
+      } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "width") == 0) {
+        line->width = strtoul(reinterpret_cast<const char*>(attrs[i + 1]), NULL, 10);
+        hasWidth = true;
+      } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "realwidth") == 0) {
+        line->real.width = strtoul(reinterpret_cast<const char*>(attrs[i + 1]), NULL, 10);
+        line->real.valid = true;
+      } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "width_bg") == 0) {
+        line->bg.width = strtoul(reinterpret_cast<const char*>(attrs[i + 1]), NULL, 10);
+        hasBgWidth = true;
+      } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "colour_bg") == 0) {
+        line->bg.color = strtoul(reinterpret_cast<const char*>(attrs[i + 1]), NULL, 10);
+        hasBgColor = true;
+      } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "dashed") == 0) {
+        line->dashed = parse_gboolean(attrs[i + 1]);
+      } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "dash_length") == 0) {
+        line->dash_length = strtoul(reinterpret_cast<const char*>(attrs[i + 1]), NULL, 10);
       }
     }
-  }
 
-  return elemstyle;
+    line->bg.valid = hasBgColor && hasBgWidth;
+
+    g_assert(hasColor);
+    g_assert(hasWidth);
+
+    break;
+  }
+  case TagLineMod: {
+    g_assert(elemstyle->type == ES_TYPE_NONE);
+    elemstyle->type = ES_TYPE_LINE_MOD;
+
+    elemstyle_line_mod_t *line_mod = elemstyle->line_mod = g_new0(elemstyle_line_mod_t, 1);
+
+    for(unsigned int i = 0; attrs[i]; i += 2) {
+      if(strcmp(reinterpret_cast<const char *>(attrs[i]), "width") == 0)
+        parse_width_mod(reinterpret_cast<const char *>(attrs[i + 1]), line_mod->line);
+      else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "width_bg") == 0)
+        parse_width_mod(reinterpret_cast<const char *>(attrs[i + 1]), line_mod->bg);
+    }
+    break;
+  }
+  case TagArea: {
+    g_assert(elemstyle->type == ES_TYPE_NONE);
+    elemstyle->type = ES_TYPE_AREA;
+    elemstyle->area = g_new0(elemstyle_area_t, 1);
+
+    bool hasColor = false;
+    for(unsigned int i = 0; attrs[i]; i += 2) {
+      if(strcmp(reinterpret_cast<const char *>(attrs[i]), "colour") == 0)
+        hasColor = parse_color(attrs[i + 1], elemstyle->area->color);
+    }
+
+    /* this has to be present */
+    g_assert(hasColor);
+    break;
+  }
+  case TagIcon:
+    for(unsigned int i = 0; attrs[i]; i += 2) {
+      if(strcmp(reinterpret_cast<const char *>(attrs[i]), "annotate") == 0)
+        elemstyle->icon.annotate = strcmp(reinterpret_cast<const char *>(attrs[i + 1]), "true");
+      else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "src") == 0)
+        elemstyle->icon.filename = josm_icon_name_adjust(reinterpret_cast<char *>(xmlStrdup(attrs[i + 1])));
+    }
+
+    g_assert(elemstyle->icon.filename);
+
+    break;
+  default:
+    break;
+  }
 }
 
-static std::vector<elemstyle_t *> parse_rules(xmlNode *a_node) {
-  xmlNode *cur_node = NULL;
-  std::vector<elemstyle_t *> ret;
+void StyleSax::endElement(const xmlChar *name)
+{
+  std::map<const char *, std::pair<State, State> >::const_iterator it =
+          std::find_if(tags.begin(), tags.end(), tag_find(name));
 
-  for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
-    if (cur_node->type == XML_ELEMENT_NODE) {
-      if(strcasecmp((char*)cur_node->name, "rule") == 0) {
-        elemstyle_t *elemstyle = parse_rule(cur_node);
-        if(elemstyle)
-          ret.push_back(elemstyle);
-      } else
-	printf("found unhandled rules/%s\n", cur_node->name);
-    }
-  }
-  return ret;
-}
+  g_assert(it != tags.end());
+  g_assert(state == it->second.second);
 
-static std::vector<elemstyle_t *> parse_doc(xmlDocPtr doc) {
-  /* Get the root element node */
-  xmlNode *cur_node = NULL;
-  std::vector<elemstyle_t *> elemstyles;
+  if(state == TagRule && styles.back()->conditions.empty())
+    printf("Rule %zu has no conditions\n", styles.size());
 
-  for(cur_node = xmlDocGetRootElement(doc);
-      cur_node; cur_node = cur_node->next) {
-    if (cur_node->type == XML_ELEMENT_NODE) {
-      if(strcasecmp((char*)cur_node->name, "rules") == 0) {
-	elemstyles = parse_rules(cur_node);
-      } else
-	printf("found unhandled %s\n", cur_node->name);
-    }
-  }
-
-  xmlFreeDoc(doc);
-  return elemstyles;
+  state = it->second.first;
 }
 
 std::vector<elemstyle_t *> josm_elemstyles_load(const char *name) {
-  std::vector<elemstyle_t *> elemstyles;
-
   printf("Loading JOSM elemstyles ...\n");
 
   const std::string &filename = find_file(name);
   if(filename.empty()) {
     printf("elemstyle file not found\n");
-    return elemstyles;
+    return std::vector<elemstyle_t *>();
   }
 
-  /* parse the file and get the DOM */
-  xmlDoc *doc = NULL;
-  if((doc = xmlReadFile(filename.c_str(), NULL, 0)) == NULL) {
-    xmlErrorPtr errP = xmlGetLastError();
-    printf("elemstyles download failed: "
-	   "XML error while parsing:\n"
-	   "%s\n", errP->message);
-  } else {
-    printf("ok, parse doc tree\n");
-    elemstyles = parse_doc(doc);
-  }
+  StyleSax sx;
+  if(!sx.parse(filename))
+    fprintf(stderr, "error parsing elemstyles\n");
 
-  return elemstyles;
+  return sx.styles;
 }
 
 /* ----------------------- cleaning up --------------------- */
