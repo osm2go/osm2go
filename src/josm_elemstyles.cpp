@@ -565,6 +565,12 @@ struct josm_elemstyles_colorize_way_functor {
 
 void josm_elemstyles_colorize_way_functor::apply_condition::operator()(const elemstyle_t* elemstyle)
 {
+  /* this entry does not contain line or area descriptions and is */
+  /* likely just an icon. ignore this as it doesn't make much sense */
+  /* for a way */
+  if(elemstyle->type == ES_TYPE_NONE)
+    return;
+
   bool match = std::find_if(elemstyle->conditions.begin(),
                             elemstyle->conditions.end(),
                             condition_not_matches_obj(way)) == elemstyle->conditions.end();
@@ -574,9 +580,8 @@ void josm_elemstyles_colorize_way_functor::apply_condition::operator()(const ele
 
   switch(elemstyle->type) {
   case ES_TYPE_NONE:
-    /* this entry does not contain line or area descriptions and is */
-    /* likely just an icon. ignore this as it doesn't make much sense */
-    /* for a way */
+    // already handled above
+    g_assert_not_reached();
     break;
 
   case ES_TYPE_LINE:
