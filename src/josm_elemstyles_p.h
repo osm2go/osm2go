@@ -21,6 +21,11 @@
 #define JOSM_ELEMSTYLES_P_H
 
 #include "josm_elemstyles.h"
+#if __cplusplus >= 201103L
+#include <cstdint>
+#else
+#include <stdint.h>
+#endif
 
 struct elemstyle_condition_t {
     elemstyle_condition_t(xmlChar *k, xmlChar *v) : key(k), value(v) {}
@@ -65,13 +70,15 @@ typedef enum {
 
 /* a width with modifier */
 struct elemstyle_width_mod_t {
-  elemstyle_mod_mode_t mod;
-  gint width;
-};
+  elemstyle_mod_mode_t mod:8;
+  int8_t width;
+} __attribute__ ((packed));
 
 struct elemstyle_line_mod_t {
   elemstyle_width_mod_t line, bg;
-};
+} __attribute__ ((packed));
+
+G_STATIC_ASSERT(sizeof(elemstyle_line_mod_t) == 4);
 
 struct elemstyle_area_t {
   elemstyle_color_t color;
@@ -98,7 +105,7 @@ struct elemstyle_icon_t {
 struct elemstyle_t {
   elemstyle_t()
     : type(ES_TYPE_NONE)
-    , line_mod(0)
+    , line(0)
   {
   }
   ~elemstyle_t();
@@ -108,7 +115,7 @@ struct elemstyle_t {
   elemstyle_type_t type;
 
   union {
-    elemstyle_line_mod_t *line_mod;
+    elemstyle_line_mod_t line_mod;
     elemstyle_line_t *line;
     elemstyle_area_t *area;
   };

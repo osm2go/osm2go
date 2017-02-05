@@ -335,13 +335,13 @@ void StyleSax::startElement(const xmlChar *name, const xmlChar **attrs)
     g_assert(elemstyle->type == ES_TYPE_NONE);
     elemstyle->type = ES_TYPE_LINE_MOD;
 
-    elemstyle_line_mod_t *line_mod = elemstyle->line_mod = g_new0(elemstyle_line_mod_t, 1);
+    elemstyle_line_mod_t &line_mod = elemstyle->line_mod;
 
     for(unsigned int i = 0; attrs[i]; i += 2) {
       if(strcmp(reinterpret_cast<const char *>(attrs[i]), "width") == 0)
-        parse_width_mod(reinterpret_cast<const char *>(attrs[i + 1]), line_mod->line);
+        parse_width_mod(reinterpret_cast<const char *>(attrs[i + 1]), line_mod.line);
       else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "width_bg") == 0)
-        parse_width_mod(reinterpret_cast<const char *>(attrs[i + 1]), line_mod->bg);
+        parse_width_mod(reinterpret_cast<const char *>(attrs[i + 1]), line_mod.bg);
     }
     break;
   }
@@ -410,10 +410,6 @@ std::vector<elemstyle_t *> josm_elemstyles_load(const char *name) {
 
 static void free_line(elemstyle_line_t *line) {
   g_free(line);
-}
-
-static void free_line_mod(elemstyle_line_mod_t *line_mod) {
-  g_free(line_mod);
 }
 
 static void free_area(elemstyle_area_t *area) {
@@ -553,10 +549,10 @@ struct josm_elemstyles_colorize_way_functor {
     const style_t * const style;
     way_t * const way;
     /* during the elemstyle search a line_mod may be found. save it here */
-    elemstyle_line_mod_t **line_mod;
+    const elemstyle_line_mod_t **line_mod;
     bool way_processed;
     bool way_is_closed;
-    apply_condition(const style_t *s, way_t *w, elemstyle_line_mod_t **l)
+    apply_condition(const style_t *s, way_t *w, const elemstyle_line_mod_t **l)
       : style(s), way(w), line_mod(l), way_processed(false)
       , way_is_closed(way->is_closed()) {}
     void operator()(const elemstyle_t *elemstyle);
@@ -606,7 +602,7 @@ void josm_elemstyles_colorize_way_functor::apply_condition::operator()(const ele
 
   case ES_TYPE_LINE_MOD:
     /* just save the fact that a line mod was found for later */
-    *line_mod = elemstyle->line_mod;
+    *line_mod = &elemstyle->line_mod;
     break;
 
   case ES_TYPE_AREA:
@@ -643,7 +639,7 @@ void josm_elemstyles_colorize_way_functor::operator()(way_t *way) {
   way->draw.zoom_max = 0;   // draw at all zoom levels
 
   /* during the elemstyle search a line_mod may be found. save it here */
-  elemstyle_line_mod_t *line_mod = NULL;
+  const elemstyle_line_mod_t *line_mod = 0;
   apply_condition fc(style, way, &line_mod);
 
   std::for_each(style->elemstyles.begin(), style->elemstyles.end(), fc);
@@ -702,7 +698,6 @@ elemstyle_t::~elemstyle_t()
     free_area(area);
     break;
   case ES_TYPE_LINE_MOD:
-    free_line_mod(line_mod);
     break;
   }
 }
