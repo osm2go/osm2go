@@ -56,8 +56,6 @@ struct elemstyle_line_t {
     gint width;
     elemstyle_color_t color;
   } bg;
-
-  float zoom_max;   // XXX probably belongs in elemstyle_t
 };
 
 /* attribute modifiers */
@@ -82,14 +80,12 @@ G_STATIC_ASSERT(sizeof(elemstyle_line_mod_t) == 4);
 
 struct elemstyle_area_t {
   elemstyle_color_t color;
-  float zoom_max;   // XXX probably belongs in elemstyle_t
 };
 
 struct elemstyle_icon_t {
   elemstyle_icon_t()
     : annotate(false)
     , filename(0)
-    , zoom_max(0.0f)
   {
   }
   ~elemstyle_icon_t()
@@ -99,13 +95,13 @@ struct elemstyle_icon_t {
 
   bool annotate;
   char *filename;
-  float zoom_max;   // XXX probably belongs in elemstyle_t
 };
 
 struct elemstyle_t {
   elemstyle_t()
     : type(ES_TYPE_NONE)
     , line(0)
+    , zoom_max(0.0f)
   {
   }
   ~elemstyle_t();
@@ -120,6 +116,7 @@ struct elemstyle_t {
     elemstyle_area_t *area;
   };
 
+  float zoom_max;
   elemstyle_icon_t icon;
 };
 

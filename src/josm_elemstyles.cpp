@@ -210,25 +210,9 @@ void StyleSax::characters(const char *ch, int len)
     // currently ignored, only check syntax
     (void)parse_scale(ch, len);
     break;
-  case TagScaleMax: {
-    elemstyle_t * const elemstyle = styles.back();
-    switch (elemstyle->type) {
-    case ES_TYPE_LINE:
-      elemstyle->line->zoom_max = parse_scale(ch, len);
-      break;
-    case ES_TYPE_AREA:
-      elemstyle->area->zoom_max = parse_scale(ch, len);
-      break;
-    default:
-      if (G_LIKELY(elemstyle->icon.filename))
-        elemstyle->icon.zoom_max = parse_scale(ch, len);
-      else
-        printf("scale_max for unhandled elemstyletype=0x%02x, rule %zu\n",
-               elemstyle->type, styles.size());
-      break;
-    }
+  case TagScaleMax:
+    styles.back()->zoom_max = parse_scale(ch, len);
     break;
-  }
   default:
     for(int pos = 0; pos < len; pos++)
       if(!isspace(ch[pos])) {
@@ -481,8 +465,8 @@ void colorize_node::operator()(elemstyle_t *elemstyle)
     node->icon_buf = icon_load(style->iconP, name);
     g_free(name);
 
-    if (elemstyle->icon.zoom_max > 0)
-      node->zoom_max = elemstyle->icon.zoom_max;
+    if (elemstyle->zoom_max > 0)
+      node->zoom_max = elemstyle->zoom_max;
   }
 }
 
@@ -589,8 +573,8 @@ void josm_elemstyles_colorize_way_functor::apply_condition::operator()(const ele
         way->draw.bg.color = elemstyle->line->bg.color;
         way->draw.bg.width =  WIDTH_SCALE * elemstyle->line->bg.width;
       }
-      if (elemstyle->line->zoom_max > 0)
-        way->draw.zoom_max = elemstyle->line->zoom_max;
+      if (elemstyle->zoom_max > 0)
+        way->draw.zoom_max = elemstyle->zoom_max;
       else
         way->draw.zoom_max = style->way.zoom_max;
 
@@ -620,8 +604,8 @@ void josm_elemstyles_colorize_way_functor::apply_condition::operator()(const ele
       /* apply area alpha */
       way->draw.area.color =
       RGBA_COMBINE(elemstyle->area->color, style->area.color);
-      if (elemstyle->area->zoom_max > 0)
-        way->draw.zoom_max = elemstyle->area->zoom_max;
+      if (elemstyle->zoom_max > 0)
+        way->draw.zoom_max = elemstyle->zoom_max;
       else
         way->draw.zoom_max = style->area.zoom_max;
 
