@@ -113,7 +113,7 @@ struct elemstyle_t {
   union {
     elemstyle_line_mod_t line_mod;
     elemstyle_line_t *line;
-    elemstyle_area_t *area;
+    elemstyle_area_t area;
   };
 
   float zoom_max;

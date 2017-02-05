@@ -332,12 +332,11 @@ void StyleSax::startElement(const xmlChar *name, const xmlChar **attrs)
   case TagArea: {
     g_assert(elemstyle->type == ES_TYPE_NONE);
     elemstyle->type = ES_TYPE_AREA;
-    elemstyle->area = g_new0(elemstyle_area_t, 1);
 
     bool hasColor = false;
     for(unsigned int i = 0; attrs[i]; i += 2) {
       if(strcmp(reinterpret_cast<const char *>(attrs[i]), "colour") == 0)
-        hasColor = parse_color(attrs[i + 1], elemstyle->area->color);
+        hasColor = parse_color(attrs[i + 1], elemstyle->area.color);
     }
 
     /* this has to be present */
@@ -394,10 +393,6 @@ std::vector<elemstyle_t *> josm_elemstyles_load(const char *name) {
 
 static void free_line(elemstyle_line_t *line) {
   g_free(line);
-}
-
-static void free_area(elemstyle_area_t *area) {
-  g_free(area);
 }
 
 static void free_condition(elemstyle_condition_t &cond) {
@@ -598,12 +593,12 @@ void josm_elemstyles_colorize_way_functor::apply_condition::operator()(const ele
       if(style->area.has_border_color)
         way->draw.color = style->area.border_color;
       else
-        way->draw.color = elemstyle->area->color;
+        way->draw.color = elemstyle->area.color;
 
       way->draw.width =  WIDTH_SCALE * style->area.border_width;
       /* apply area alpha */
       way->draw.area.color =
-      RGBA_COMBINE(elemstyle->area->color, style->area.color);
+      RGBA_COMBINE(elemstyle->area.color, style->area.color);
       if (elemstyle->zoom_max > 0)
         way->draw.zoom_max = elemstyle->zoom_max;
       else
@@ -679,7 +674,6 @@ elemstyle_t::~elemstyle_t()
     free_line(line);
     break;
   case ES_TYPE_AREA:
-    free_area(area);
     break;
   case ES_TYPE_LINE_MOD:
     break;
