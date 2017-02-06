@@ -7,7 +7,7 @@
     <condition k="bridge" v="yes"/>
     <linemod width_bg="+2"/>
   </rule>
-    
+
   <rule>
     <condition k="highway" v="motorway"/>
     <line width="3" colour="#809BC0" width_bg="6" colour_bg="#606060"/>
@@ -98,7 +98,7 @@
     <condition k="leisure"/>
     <area colour="#8CD6B5"/>
   </rule>
-  
+
   <rule>
     <condition k="amenity"/>
     <area colour="#ADCEB5"/>
@@ -118,7 +118,7 @@
     <condition k="historic"/>
     <area colour="#F7F7DE"/>
   </rule>
-  
+
 <!-- ruins is always a value of a historic key -->
 <!-- ruins                   -                       -       0xF7F7DE -->
 

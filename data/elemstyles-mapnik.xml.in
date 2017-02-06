@@ -17,7 +17,7 @@ Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
     <condition k="tunnel" v="yes"/>
     <linemod width_bg="+2" width="-1"/>
   </rule>
-  
+
   <!-- Boundaries -->
   <rule>
     <condition k="boundary"/>
@@ -29,7 +29,7 @@ Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
     Karlsruhe schema address interpolation:
     http://wiki.openstreetmap.org/wiki/Proposed_features/House_numbers/Karlsruhe_Schema
   -->
-  
+
   <rule>
     <condition k="addr:housename"/>
     <icon src="housename.png"/>
@@ -88,7 +88,7 @@ Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
 
   <!--
     Waterways.
-  --> 
+  -->
 
   <rule>
     <condition k="waterway" v="riverbank"/>
@@ -148,18 +148,18 @@ Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
   </rule>
 
   <!--
-  
-    Areas 
+
+    Areas
 
   -->
 
   <!--
-  
+
     Buildings.
-  
+
     This is first for stylistic reasons. If it's a building area, then no
     matter what it's also tagged as, it'll be drawn in salmon pink.
-  
+
   -->
   <rule>
     <condition k="building"/>
@@ -693,14 +693,14 @@ Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
     <scale_min>1</scale_min>
     <scale_max>15000</scale_max>
   </rule>
-  
+
   <rule>
     <condition k="railway" v="station"/>
     <icon src="station.png"/>
     <scale_min>1</scale_min>
     <scale_max>30000</scale_max>
   </rule>
-  
+
   <rule>
     <condition k="railway" v="tram_stop"/>
     <icon src="station_small.png"/>
@@ -714,7 +714,7 @@ Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
     <scale_min>1</scale_min>
     <scale_max>20000</scale_max>
   </rule>
-  
+
   <rule>
     <condition k="railway" v="level_crossing"/>
     <icon src="level_crossing.png"/>
@@ -730,7 +730,7 @@ Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
   </rule>
 
   <!-- Religious buildings -->
-  
+
   <rule><!-- generic -->
     <condition k="amenity" v="place_of_worship"/>
     <icon src="place_of_worship3.p.16.png"/>
@@ -751,7 +751,7 @@ Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
     <scale_min>1</scale_min>
     <scale_max>10000</scale_max>
   </rule>
-  
+
   <rule>
     <condition k="religion" v="muslim"/>
     <icon src="islamic3.p.16.png"/>
@@ -781,7 +781,7 @@ Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
     <scale_min>1</scale_min>
     <scale_max>10000</scale_max>
   </rule>
-  
+
   <!-- Natural features -->
 
   <rule>
@@ -958,7 +958,7 @@ Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
     Footways, tracks, cycleways etc. Visible and editable at higher zooms.
     Typically either not for motor vehicles, or not sufaced to the same
     standard as the highways above.
-  --> 
+  -->
 
   <rule>
     <condition k="highway" v="footway"/>
@@ -1009,6 +1009,4 @@ Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
     <scale_max>12500</scale_max>
   </rule>
 
-
 </rules>
-
