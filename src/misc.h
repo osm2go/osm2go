@@ -70,7 +70,7 @@ void errorf(GtkWidget *parent, const char *fmt, ...) G_GNUC_PRINTF(2, 3);
 void warningf(GtkWidget *parent, const char *fmt, ...) G_GNUC_PRINTF(2, 3);
 void messagef(GtkWidget *parent, const char *title, const char *fmt, ...) G_GNUC_PRINTF(3, 4);
 gboolean yes_no_f(GtkWidget *parent,
-		  struct appdata_t *appdata, gulong again_bit, gint flags,
+		  struct appdata_t *appdata, guint again_bit, gint flags,
 		  const char *title, const char *fmt, ...) G_GNUC_PRINTF(6, 7);
 
 /* dialog size are specified rather fuzzy */

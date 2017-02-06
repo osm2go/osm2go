@@ -102,8 +102,8 @@ typedef struct appdata_t {
 
   /* flags used to prevent re-appearence of dialogs */
   struct {
-    gulong not_again;     /* bit is set if dialog is not to be displayed again */
-    gulong reply;         /* reply to be assumed if "not_again" bit is set */
+    guint not_again;     /* bit is set if dialog is not to be displayed again */
+    guint reply;         /* reply to be assumed if "not_again" bit is set */
   } dialog_again;
 
   struct {

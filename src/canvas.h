@@ -80,7 +80,7 @@ typedef struct {
 
 } canvas_t;
 
-typedef gulong canvas_color_t;
+typedef guint canvas_color_t;
 
 #define CANVAS_COLOR(r,g,b,a) ((((guint) (r) & 0xff) << 24)   \
 			       | (((guint) (g) & 0xff) << 16)	\

@@ -47,6 +47,8 @@
 #include "track.h"
 #include "wms.h"
 
+#include <stdint.h>
+
 /* disable/enable main screen control dependant on presence of open project */
 void main_ui_enable(appdata_t *appdata) {
   gboolean project_valid = (appdata->project != NULL);
@@ -886,7 +888,7 @@ typedef struct {
   const char *label, *value;
   gboolean enabled;
   gboolean (*toggle)(appdata_t *appdata);
-  gulong offset;
+  ptrdiff_t offset;
   GtkSignalFunc activate_cb;
 } menu_entry_t;
 

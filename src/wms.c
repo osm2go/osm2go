@@ -54,7 +54,7 @@ typedef struct wms_layer_t {
 } wms_layer_t;
 
 typedef struct {
-  gulong format;
+  guint format;
 } wms_getmap_t;
 
 typedef struct {

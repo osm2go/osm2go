@@ -143,7 +143,7 @@ public:
   /* visual representation from elemstyle */
   struct {
     guint flags;
-    gulong color;
+    guint color;
     gint width;
     float zoom_max;
     gboolean dashed;
@@ -151,12 +151,12 @@ public:
 
     union {
       struct {
-	gulong color;
+	guint color;
 	gint width;
       } bg;
 
       struct {
-	gulong color;
+	guint color;
       } area;
     };
   } draw;

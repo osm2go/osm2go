@@ -150,7 +150,7 @@ static void on_toggled(GtkWidget *button, gpointer data) {
 				      RESPONSE_YES, !active);
 }
 
-gboolean yes_no_f(GtkWidget *parent, appdata_t *appdata, gulong again_bit,
+gboolean yes_no_f(GtkWidget *parent, appdata_t *appdata, guint again_bit,
 		  gint flags, const char *title, const char *fmt, ...) {
 
   if(appdata && again_bit && (appdata->dialog_again.not_again & again_bit))
