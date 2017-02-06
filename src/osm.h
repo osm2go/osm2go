@@ -142,12 +142,12 @@ public:
 
   /* visual representation from elemstyle */
   struct {
-    guint flags;
     guint color;
-    gint width;
     float zoom_max;
-    gboolean dashed;
-    guint dash_length;
+    guint flags : 8;
+    gint width : 8;
+    gboolean dashed: 8;
+    guint dash_length: 8;
 
     union {
       struct {

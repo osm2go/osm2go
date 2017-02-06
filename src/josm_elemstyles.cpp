@@ -497,22 +497,20 @@ void josm_elemstyles_colorize_node_functor::operator()(std::pair<item_id_t, node
   josm_elemstyles_colorize_node(styles, node);
 }
 
-static void line_mod_apply(gint *width, const elemstyle_width_mod_t *mod) {
+static int line_mod_apply(gint width, const elemstyle_width_mod_t *mod) {
   switch(mod->mod) {
   case ES_MOD_NONE:
-    break;
+  default:
+    return width;
 
   case ES_MOD_ADD:
-    *width += mod->width;
-    break;
+    return width + mod->width;
 
   case ES_MOD_SUB:
-    *width -= mod->width;
-    break;
+    return width - mod->width;
 
   case ES_MOD_PERCENT:
-    *width = 100 * *width / mod->width;
-    break;
+    return 100 * width / mod->width;
   }
 }
 
@@ -627,7 +625,7 @@ void josm_elemstyles_colorize_way_functor::operator()(way_t *way) {
   if(line_mod) {
     printf("applying last matching line mod to way #" ITEM_ID_FORMAT "\n",
 	   way->id);
-    line_mod_apply(&way->draw.width, &line_mod->line);
+    way->draw.width = line_mod_apply(way->draw.width, &line_mod->line);
 
     /* special case: the way does not have a background, but it is to */
     /* be modified */
@@ -641,7 +639,7 @@ void josm_elemstyles_colorize_way_functor::operator()(way_t *way) {
       way->draw.bg.width =  way->draw.width;
     }
 
-    line_mod_apply(&way->draw.bg.width, &line_mod->bg);
+    way->draw.bg.width = line_mod_apply(way->draw.bg.width, &line_mod->bg);
   }
 }
 
