@@ -480,7 +480,7 @@ member_t osm_parse_osm_relation_member(osm_t *osm, xmlNode *a_node) {
       member.object.type = WAY;
     else if(strcmp((char*)prop, "node") == 0)
       member.object.type = NODE;
-    else if(strcmp((char*)prop, "relation") == 0)
+    else if(G_LIKELY(strcmp((char*)prop, "relation") == 0))
       member.object.type = RELATION;
     xmlFree(prop);
   }
@@ -614,8 +614,8 @@ static gboolean process_bounds(xmlTextReaderPtr reader, bounds_t *bounds) {
   bounds->ll_max.lat = xml_reader_attr_float(reader, "maxlat");
   bounds->ll_max.lon = xml_reader_attr_float(reader, "maxlon");
 
-  if(isnan(bounds->ll_min.lat) || isnan(bounds->ll_min.lon) ||
-     isnan(bounds->ll_max.lat) || isnan(bounds->ll_max.lon)) {
+  if(G_UNLIKELY(isnan(bounds->ll_min.lat) || isnan(bounds->ll_min.lon) ||
+                isnan(bounds->ll_max.lat) || isnan(bounds->ll_max.lon))) {
     errorf(NULL, "Invalid coordinate in bounds (%f/%f/%f/%f)",
 	   bounds->ll_min.lat, bounds->ll_min.lon,
 	   bounds->ll_max.lat, bounds->ll_max.lon);
@@ -657,17 +657,17 @@ static tag_t *process_tag(xmlTextReaderPtr reader) {
   tag_t *tag = g_new0(tag_t, 1);
 
   char *prop;
-  if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "k"))) {
+  if(G_LIKELY(prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "k"))) {
     if(strlen(prop) > 0) tag->key = g_strdup(prop);
     xmlFree(prop);
   }
 
-  if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "v"))) {
+  if(G_LIKELY(prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "v"))) {
     if(strlen(prop) > 0) tag->value = g_strdup(prop);
     xmlFree(prop);
   }
 
-  if(!tag->key || !tag->value) {
+  if(G_UNLIKELY(!tag->key || !tag->value)) {
     printf("incomplete tag key/value %s/%s\n", tag->key, tag->value);
     osm_tags_free(tag);
     tag = NULL;
@@ -680,24 +680,24 @@ static tag_t *process_tag(xmlTextReaderPtr reader) {
 static void process_base_attributes(base_object_t *obj, xmlTextReaderPtr reader, osm_t *osm)
 {
   xmlChar *prop;
-  if((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "id"))) {
+  if(G_LIKELY(prop = xmlTextReaderGetAttribute(reader, BAD_CAST "id"))) {
     obj->id = strtoll((char*)prop, NULL, 10);
     xmlFree(prop);
   }
 
   /* new in api 0.6: */
-  if((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "version"))) {
+  if(G_LIKELY(prop = xmlTextReaderGetAttribute(reader, BAD_CAST "version"))) {
     obj->version = strtoul((char*)prop, NULL, 10);
     xmlFree(prop);
   }
 
-  if((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "user"))) {
+  if(G_LIKELY(prop = xmlTextReaderGetAttribute(reader, BAD_CAST "user"))) {
     int uid = -1;
     xmlChar *puid = xmlTextReaderGetAttribute(reader, BAD_CAST "uid");
-    if(puid) {
+    if(G_LIKELY(puid)) {
       char *endp;
       uid = strtol((char*)puid, &endp, 10);
-      if(*endp) {
+      if(G_UNLIKELY(*endp)) {
         printf("WARNING: cannot parse uid '%s' for user '%s'\n", puid, prop);
         uid = -1;
       }
@@ -712,7 +712,7 @@ static void process_base_attributes(base_object_t *obj, xmlTextReaderPtr reader,
     xmlFree(prop);
   }
 
-  if((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "timestamp"))) {
+  if(G_LIKELY(prop = xmlTextReaderGetAttribute(reader, BAD_CAST "timestamp"))) {
     obj->time = convert_iso8601((char*)prop);
     xmlFree(prop);
   }
@@ -976,7 +976,7 @@ static osm_t *process_osm(xmlTextReaderPtr reader) {
         if(way)
           osm->ways[way->id] = way;
 	block = BLOCK_WAYS;
-      } else if(block <= BLOCK_RELATIONS && strcmp(name, "relation") == 0) {
+      } else if(G_LIKELY(block <= BLOCK_RELATIONS && strcmp(name, "relation") == 0)) {
 	relation_t *relation = process_relation(reader, osm);
 	if(relation)
 	  osm->relations[relation->id] = relation;
@@ -1015,10 +1015,10 @@ static osm_t *process_file(const char *filename) {
   xmlTextReaderPtr reader;
 
   reader = xmlReaderForFile(filename, NULL, 0);
-  if (reader != NULL) {
-    if(xmlTextReaderRead(reader) == 1) {
+  if (G_LIKELY(reader != NULL)) {
+    if(G_LIKELY(xmlTextReaderRead(reader) == 1)) {
       const char *name = (const char*)xmlTextReaderConstName(reader);
-      if(name && strcmp(name, "osm") == 0)
+      if(G_LIKELY(name && strcmp(name, "osm") == 0))
 	osm = process_osm(reader);
     } else
       printf("file empty\n");
@@ -1063,12 +1063,12 @@ osm_t *osm_parse(const char *path, const char *filename, icon_t **icon) {
 }
 
 gboolean osm_sanity_check(GtkWidget *parent, const osm_t *osm) {
-  if(!osm->bounds) {
+  if(G_UNLIKELY(!osm->bounds)) {
     errorf(parent, _("Invalid data in OSM file:\n"
 		     "Boundary box missing!"));
     return FALSE;
   }
-  if(osm->nodes.empty()) {
+  if(G_UNLIKELY(osm->nodes.empty())) {
     errorf(parent, _("Invalid data in OSM file:\n"
 		     "No drawable content found!"));
     return FALSE;
@@ -1118,7 +1118,7 @@ bool osm_node_in_other_way(const osm_t *osm, const way_t *way, const node_t *nod
 static void osm_generate_tags(const tag_t *tag, xmlNodePtr node) {
   while(tag) {
     /* skip "created_by" tags as they aren't needed anymore with api 0.6 */
-    if(!tag->is_creator_tag()) {
+    if(G_LIKELY(!tag->is_creator_tag())) {
       xmlNodePtr tag_node = xmlNewChild(node, NULL, BAD_CAST "tag", NULL);
       xmlNewProp(tag_node, BAD_CAST "k", BAD_CAST tag->key);
       xmlNewProp(tag_node, BAD_CAST "v", BAD_CAST tag->value);

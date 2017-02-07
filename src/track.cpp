@@ -109,7 +109,7 @@ static track_t *track_read(const char *filename, bool dirty) {
   printf("loading track %s\n", filename);
 
   TrackSax sx;
-  if(!sx.parse(filename)) {
+  if(G_UNLIKELY(!sx.parse(filename))) {
     delete sx.track;
     printf("track was empty/invalid track\n");
     return 0;
@@ -130,7 +130,7 @@ void track_clear(appdata_t *appdata) {
 
   printf("clearing track\n");
 
-  if(appdata && appdata->map)
+  if(G_LIKELY(appdata && appdata->map))
     map_track_remove(appdata);
 
   appdata->track.track = NULL;
@@ -171,7 +171,7 @@ void track_save_segs::save_point::operator()(const track_point_t &point)
     xmlNewTextChild(node_point, NULL, BAD_CAST "ele", BAD_CAST str);
   }
 
-  if(point.time) {
+  if(G_LIKELY(point.time)) {
     struct tm loctime;
     localtime_r(&point.time, &loctime);
     strftime(str, sizeof(str), DATE_FORMAT, &loctime);
@@ -200,15 +200,15 @@ static void track_write(const char *name, const track_t *track, xmlDoc *doc) {
     xmlNodePtr cur_node;
     xmlNodePtr root_node = xmlDocGetRootElement(doc);
     bool err = false;
-    if (!root_node || root_node->type != XML_ELEMENT_NODE ||
-        strcasecmp((char*)root_node->name, "gpx") != 0 ) {
+    if (G_UNLIKELY(!root_node || root_node->type != XML_ELEMENT_NODE ||
+                   strcasecmp((char*)root_node->name, "gpx") != 0)) {
       err = true;
     } else {
       cur_node = root_node->children;
       while(cur_node && cur_node->type != XML_ELEMENT_NODE)
         cur_node = cur_node->next;
-      if(!cur_node || !cur_node->children ||
-         strcasecmp((char*)cur_node->name, "trk") != 0) {
+      if(G_UNLIKELY(!cur_node || !cur_node->children ||
+                    strcasecmp((char*)cur_node->name, "trk") != 0)) {
         err = true;
       } else {
         trk_node = cur_node;
@@ -218,12 +218,12 @@ static void track_write(const char *name, const track_t *track, xmlDoc *doc) {
           if (cur_node->type != XML_ELEMENT_NODE)
             continue;
           // more tracks in the file than loaded, something is wrong
-          if(it == itEnd) {
+          if(G_UNLIKELY(it == itEnd)) {
             err = true;
             break;
           }
           /* something else, this track is not written from osm2go */
-          if(strcasecmp((char*)cur_node->name, "trkseg") != 0) {
+          if(G_UNLIKELY(strcasecmp((char*)cur_node->name, "trkseg") != 0)) {
             err = true;
             break;
           }
@@ -231,7 +231,7 @@ static void track_write(const char *name, const track_t *track, xmlDoc *doc) {
         }
       }
     }
-    if(err) {
+    if(G_UNLIKELY(err)) {
       xmlFreeDoc(doc);
       doc = NULL;
     } else {
@@ -314,7 +314,7 @@ gboolean track_restore(appdata_t *appdata) {
   std::string trk_name = project->path;
   const std::string::size_type plen = trk_name.size();
   trk_name += "backup.trk";
-  if(g_file_test(trk_name.c_str(), G_FILE_TEST_EXISTS)) {
+  if(G_UNLIKELY(g_file_test(trk_name.c_str(), G_FILE_TEST_EXISTS))) {
     printf("track backup present, loading it instead of real track ...\n");
   } else {
     trk_name.erase(plen, std::string::npos);
@@ -360,14 +360,14 @@ static gboolean track_append_position(appdata_t *appdata, const pos_t *pos, floa
   track_t *track = appdata->track.track;
 
   /* no track at all? might be due to a "clear track" while running */
-  if(!track) {
+  if(G_UNLIKELY(!track)) {
     printf("restarting after \"clear\"\n");
     track = appdata->track.track = new track_t();
   }
 
   track_menu_set(appdata);
 
-  if(!track->active) {
+  if(G_UNLIKELY(!track->active)) {
     printf("starting new segment\n");
 
     track_seg_t seg;
@@ -380,8 +380,8 @@ static gboolean track_append_position(appdata_t *appdata, const pos_t *pos, floa
 
   /* don't append if point is the same as last time */
   gboolean ret;
-  if(!points.empty() && points.back().pos.lat == pos->lat &&
-                        points.back().pos.lon == pos->lon) {
+  if(G_UNLIKELY(!points.empty() && points.back().pos.lat == pos->lat &&
+                                   points.back().pos.lon == pos->lon)) {
     printf("same value as last point -> ignore\n");
     ret = FALSE;
   } else {
@@ -389,7 +389,7 @@ static gboolean track_append_position(appdata_t *appdata, const pos_t *pos, floa
     track->dirty = TRUE;
     points.push_back(track_point_t(*pos, alt, time(NULL)));
 
-    if(points.size() == 1) {
+    if(G_UNLIKELY(points.size() == 1)) {
       /* the segment can now be drawn for the first time */
       printf("initial draw\n");
       g_assert(track->segments.back().item_chain.empty());
@@ -433,11 +433,11 @@ static gboolean update(gpointer data) {
 
   /* ignore updates while no valid osm file is loaded, e.g. when switching */
   /* projects */
-  if(!appdata->osm)
+  if(G_UNLIKELY(!appdata->osm))
     return TRUE;
 
   /* the map is only gone of the main screen is being closed */
-  if(!appdata->map) {
+  if(G_UNLIKELY(!appdata->map)) {
     printf("map has gone while tracking was active, stopping tracker\n");
 
     gps_register_callback(appdata, NULL);
@@ -554,13 +554,13 @@ void TrackSax::characters(const char *ch, int len)
     buf.assign(ch, len);
     struct tm time = { 0 };
     time.tm_isdst = -1;
-    if(strptime(buf.c_str(), DATE_FORMAT, &time) != 0)
+    if(G_LIKELY(strptime(buf.c_str(), DATE_FORMAT, &time) != 0))
       curPoint->time = mktime(&time);
     break;
   }
   default:
     for(int pos = 0; pos < len; pos++)
-      if(!isspace(ch[pos])) {
+      if(G_UNLIKELY(!isspace(ch[pos]))) {
         printf("unhandled character data: %*.*s state %i\n", len, len, ch, state);
         break;
       }
@@ -572,12 +572,12 @@ void TrackSax::startElement(const xmlChar *name, const xmlChar **attrs)
   std::map<const char *, std::pair<State, State> >::const_iterator it =
           std::find_if(tags.begin(), tags.end(), tag_find(name));
 
-  if(it == tags.end()) {
+  if(G_UNLIKELY(it == tags.end())) {
     fprintf(stderr, "found unhandled element %s\n", name);
     return;
   }
 
-  if(state != it->second.first) {
+  if(G_UNLIKELY(state != it->second.first)) {
     fprintf(stderr, "found element %s in state %i, but expected %i\n",
             name, state, it->second.first);
     return;

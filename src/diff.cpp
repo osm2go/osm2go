@@ -292,7 +292,7 @@ static int xml_get_prop_state(xmlNode *node) {
     if(strcmp((char*)str, "new") == 0) {
       xmlFree(str);
       return OSM_FLAG_NEW;
-    } else if(strcmp((char*)str, "deleted") == 0) {
+    } else if(G_LIKELY(strcmp((char*)str, "deleted") == 0)) {
       xmlFree(str);
       return OSM_FLAG_DELETED;
     } else {
@@ -312,7 +312,7 @@ static tag_t *xml_scan_tags(xmlNodePtr node) {
 
   while(node) {
     if(node->type == XML_ELEMENT_NODE) {
-      if(strcmp((char*)node->name, "tag") == 0) {
+      if(G_LIKELY(strcmp((char*)node->name, "tag") == 0)) {
 	/* attach tag to node/way */
 	*tag = osm_parse_osm_tag(node);
 	if(*tag) tag = &((*tag)->next);
@@ -346,7 +346,7 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
 
   /* read properties */
   item_id_t id = xml_get_prop_int(node_node, "id", ID_ILLEGAL);
-  if(id == ID_ILLEGAL) {
+  if(G_UNLIKELY(id == ID_ILLEGAL)) {
     printf("\n  Node entry missing id\n");
     return;
   }
@@ -357,7 +357,7 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
   pos_t pos;
   gboolean pos_diff = xml_get_prop_pos(node_node, &pos);
 
-  if(!(state & OSM_FLAG_DELETED) && !pos_diff) {
+  if(G_UNLIKELY(!(state & OSM_FLAG_DELETED) && !pos_diff)) {
     printf("  Node not deleted, but no valid position\n");
     return;
   }
@@ -405,7 +405,7 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
     break;
   }
 
-  if(!node) {
+  if(G_UNLIKELY(!node)) {
     printf("  no valid node\n");
     return;
   }
@@ -440,7 +440,7 @@ static void diff_restore_way(xmlNodePtr node_node, osm_t *osm) {
   printf("Restoring way");
 
   item_id_t id = xml_get_prop_int(node_node, "id", ID_ILLEGAL);
-  if(id == ID_ILLEGAL) {
+  if(G_UNLIKELY(id == ID_ILLEGAL)) {
     printf("\n  entry missing id\n");
     return;
   }
@@ -507,7 +507,7 @@ static void diff_restore_way(xmlNodePtr node_node, osm_t *osm) {
   xmlNode *nd_node = NULL;
   for(nd_node = node_node->children; nd_node; nd_node = nd_node->next) {
     if(nd_node->type == XML_ELEMENT_NODE) {
-      if(strcmp((char*)nd_node->name, "nd") == 0) {
+      if(G_LIKELY(strcmp((char*)nd_node->name, "nd") == 0)) {
 	/* attach node to node_chain */
 	node_t *tmp = osm_parse_osm_way_nd(osm, nd_node);
 	if(tmp)
@@ -564,7 +564,7 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
   printf("Restoring relation");
 
   item_id_t id = xml_get_prop_int(node_rel, "id", ID_ILLEGAL);
-  if(id == ID_ILLEGAL) {
+  if(G_UNLIKELY(id == ID_ILLEGAL)) {
     printf("\n  entry missing id\n");
     return;
   }
@@ -613,7 +613,7 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
     return;
   }
 
-  if(!relation) {
+  if(G_UNLIKELY(!relation)) {
     printf("  no valid relation\n");
     return;
   }
@@ -639,7 +639,7 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
   for(member_node = node_rel->children; member_node;
       member_node = member_node->next) {
     if(member_node->type == XML_ELEMENT_NODE) {
-      if(strcmp((char*)member_node->name, "member") == 0) {
+      if(G_LIKELY(strcmp((char*)member_node->name, "member") == 0)) {
 	/* attach member to member_chain */
 	member_t member = osm_parse_osm_relation_member(osm, member_node);
 	if(member.object.type != ILLEGAL)
@@ -669,7 +669,7 @@ void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) {
   /* actual diff didn't succeed */
   std::string diff_name = project->path;
   diff_name += "backup.diff";
-  if(g_file_test(diff_name.c_str(), G_FILE_TEST_EXISTS)) {
+  if(G_UNLIKELY(g_file_test(diff_name.c_str(), G_FILE_TEST_EXISTS))) {
     printf("diff backup present, loading it instead of real diff ...\n");
   } else {
     diff_name = diff_filename(project);
@@ -685,7 +685,7 @@ void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) {
   xmlNode *root_element = NULL;
 
   /* parse the file and get the DOM */
-  if((doc = xmlReadFile(diff_name.c_str(), NULL, 0)) == NULL) {
+  if(G_UNLIKELY((doc = xmlReadFile(diff_name.c_str(), NULL, 0)) == NULL)) {
     errorf(GTK_WIDGET(appdata->window),
 	   "Error: could not parse file %s\n", diff_name.c_str());
     return;
@@ -702,7 +702,7 @@ void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) {
 	if(str) {
 	  const char *cstr = (const char*)str;
 	  printf("diff for project %s\n", cstr);
-	  if(strcmp(project->name, cstr) != 0) {
+	  if(G_UNLIKELY(strcmp(project->name, cstr) != 0)) {
 	    messagef(GTK_WIDGET(appdata->window), _("Warning"),
 		     "Diff name (%s) does not match project name (%s)",
 		     cstr, project->name);
@@ -720,7 +720,7 @@ void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) {
 	    else if(strcmp((char*)node_node->name, "way") == 0)
 	      diff_restore_way(node_node, osm);
 
-	    else if(strcmp((char*)node_node->name, "relation") == 0)
+	    else if(G_LIKELY(strcmp((char*)node_node->name, "relation") == 0))
 	      diff_restore_relation(node_node, osm);
 
 	    else
