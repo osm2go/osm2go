@@ -43,20 +43,23 @@ struct elemstyle_condition_t {
 struct elemstyle_line_t {
   gint width;
   elemstyle_color_t color;
-  gboolean dashed;
-  gint dash_length;  // <= 0 means dash length is based on the width
+  gboolean dashed: 8;
+  gint dash_length: 24;  // <= 0 means dash length is based on the width
 
   struct {
-    gboolean valid;
-    gint width;
+    gboolean valid : 8;
+    gint width : 24;
   } real;
 
   struct {
-    gboolean valid;
-    gint width;
+    gboolean valid: 8;
+    gint width : 24;
     elemstyle_color_t color;
   } bg;
 };
+
+G_STATIC_ASSERT(sizeof(elemstyle_line_t) == 6*4);
+G_STATIC_ASSERT(sizeof(reinterpret_cast<elemstyle_line_t *>(0)->bg) == 8);
 
 /* attribute modifiers */
 typedef enum {
