@@ -25,6 +25,7 @@
 #include "settings.h"
 
 #include <algorithm>
+#include <cmath>
 #include <cstring>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
@@ -37,7 +38,7 @@
 
 static float parse_scale_max(xmlNodePtr cur_node) {
   float scale_max = xml_get_prop_float(cur_node, "scale-max");
-  if (!isnan(scale_max))
+  if (!std::isnan(scale_max))
     return scaledn_to_zoom(scale_max);
   else
     return 0.0f;

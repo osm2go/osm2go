@@ -614,8 +614,8 @@ static gboolean process_bounds(xmlTextReaderPtr reader, bounds_t *bounds) {
   bounds->ll_max.lat = xml_reader_attr_float(reader, "maxlat");
   bounds->ll_max.lon = xml_reader_attr_float(reader, "maxlon");
 
-  if(G_UNLIKELY(isnan(bounds->ll_min.lat) || isnan(bounds->ll_min.lon) ||
-                isnan(bounds->ll_max.lat) || isnan(bounds->ll_max.lon))) {
+  if(G_UNLIKELY(std::isnan(bounds->ll_min.lat) || std::isnan(bounds->ll_min.lon) ||
+                std::isnan(bounds->ll_max.lat) || std::isnan(bounds->ll_max.lon))) {
     errorf(NULL, "Invalid coordinate in bounds (%f/%f/%f/%f)",
 	   bounds->ll_min.lat, bounds->ll_min.lon,
 	   bounds->ll_max.lat, bounds->ll_max.lon);

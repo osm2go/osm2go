@@ -32,6 +32,7 @@
 #include "wms.h"
 
 #include <algorithm>
+#include <cmath>
 #include <cstring>
 #include <glib/gstdio.h>
 #include <libxml/parser.h>
@@ -963,10 +964,10 @@ void project_diffstat(project_context_t *context) {
 
 static gboolean
 project_pos_is_valid(project_t *project) {
-  return(!isnan(project->min.lat) &&
-	 !isnan(project->min.lon) &&
-	 !isnan(project->max.lat) &&
-	 !isnan(project->max.lon));
+  return (!std::isnan(project->min.lat) &&
+          !std::isnan(project->min.lon) &&
+          !std::isnan(project->max.lat) &&
+          !std::isnan(project->max.lon));
 }
 
 static void on_edit_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {

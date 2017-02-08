@@ -25,6 +25,7 @@
 
 #include <libxml/parser.h>
 #include <libxml/tree.h>
+#include <math.h>
 #include <string.h>
 #include <strings.h>
 

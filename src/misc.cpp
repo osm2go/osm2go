@@ -39,6 +39,7 @@
 #endif
 #endif
 
+#include <cmath>
 #include <cstring>
 #include <glib.h>
 #include <strings.h>
@@ -66,7 +67,7 @@ gboolean xml_get_prop_pos(xmlNode *node, pos_t *pos) {
   pos->lat = xml_get_prop_float(node, "lat");
   pos->lon = xml_get_prop_float(node, "lon");
 
-  return (isnan(pos->lat) || isnan(pos->lon)) ? FALSE : TRUE;
+  return (std::isnan(pos->lat) || std::isnan(pos->lon)) ? FALSE : TRUE;
 }
 
 void xml_set_prop_pos(xmlNode *node, const pos_t *pos) {

@@ -17,10 +17,11 @@
  * along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <ctype.h>
-
 #include "appdata.h"
 #include "misc.h"
+
+#include <ctype.h>
+#include <math.h>
 
 #define TAG_STATE  GTK_STATE_PRELIGHT
 

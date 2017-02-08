@@ -29,6 +29,7 @@
 #include "gps.h"
 #include "misc.h"
 
+#include <cmath>
 #include <cstring>
 #include <ctime>
 #include <libxml/parser.h>
@@ -166,7 +167,7 @@ void track_save_segs::save_point::operator()(const track_point_t &point)
 
   xml_set_prop_pos(node_point, &point.pos);
 
-  if(!isnan(point.altitude)) {
+  if(!std::isnan(point.altitude)) {
     g_ascii_formatd(str, sizeof(str), ALT_FORMAT, point.altitude);
     xmlNewTextChild(node_point, NULL, BAD_CAST "ele", BAD_CAST str);
   }
