@@ -300,7 +300,7 @@ static gint canvas_item_info_get_segment(canvas_item_info_t *item,
     if((m >= 0.0) && (m <= 1.0)) {
 
       float n;
-      if(fabs(BX-AX) > fabs(BY-AY))
+      if(abs(BX-AX) > abs(BY-AY))
 	n = fabs(sqrt(len2) * (AY+m*(BY-AY)-CY)/(BX-AX));
       else
 	n = fabs(sqrt(len2) * -(AX+m*(BX-AX)-CX)/(BY-AY));
