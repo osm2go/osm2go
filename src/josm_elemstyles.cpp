@@ -411,23 +411,24 @@ void josm_elemstyles_free(std::vector<elemstyle_t *> &elemstyles) {
 
 #define WIDTH_SCALE (1.0)
 
-struct condition_not_matches_obj {
-  const base_object_t * const obj;
-  condition_not_matches_obj(const base_object_t *o) : obj(o) {}
-  bool operator()(const elemstyle_condition_t &cond);
-};
-
-bool condition_not_matches_obj::operator()(const elemstyle_condition_t &cond) {
-  if(cond.key) {
-    const char *value = obj->get_value((char*)cond.key);
-    if(!value || (cond.value && strcasecmp(value, (char*)cond.value) != 0))
-      return true;
-  } else if(cond.value) {
-    if(!obj->has_value((char*)cond.value))
-      return true;
+bool elemstyle_condition_t::matches(const base_object_t &obj) const {
+  if(key) {
+    const char *v = obj.get_value(reinterpret_cast<const char *>(key));
+    if(!v || (value && strcasecmp(v, reinterpret_cast<const char *>(value)) != 0))
+      return false;
+  } else if(value) {
+    return obj.has_value(reinterpret_cast<const char *>(value));
   }
-  return false;
+  return true;
 }
+
+struct condition_not_matches_obj {
+  const base_object_t &obj;
+  condition_not_matches_obj(const base_object_t *o) : obj(*o) {}
+  bool operator()(const elemstyle_condition_t &cond) {
+    return !cond.matches(obj);
+  }
+};
 
 struct colorize_node {
   const style_t * const style;

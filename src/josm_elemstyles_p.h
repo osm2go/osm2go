@@ -31,6 +31,8 @@ struct elemstyle_condition_t {
     elemstyle_condition_t(xmlChar *k, xmlChar *v) : key(k), value(v) {}
     xmlChar *key;
     xmlChar *value;
+
+    bool matches(const base_object_t &obj) const;
 };
 
 /* from elemstyles.xml:
