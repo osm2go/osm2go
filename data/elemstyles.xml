@@ -2191,7 +2191,7 @@ Using both area and line attributes for the same key/value pair doesn't work!
 <!--restrictions tags -->
 
 	<rule>
-		<condition k="motorcycle" v="no" />
+		<condition k="motorcycle" b="no" />
 		<icon src="vehicle/restrictions/motorbike.png" />
 		<scale_min>1</scale_min>
 		<scale_max>50000</scale_max>

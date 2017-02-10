@@ -9,12 +9,12 @@ Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
 
   <!-- Bridge/Tunnel -->
   <rule>
-    <condition k="bridge" v="yes"/>
+    <condition k="bridge" b="yes"/>
     <linemod width_bg="+4" width="+1"/>
   </rule>
 
   <rule>
-    <condition k="tunnel" v="yes"/>
+    <condition k="tunnel" b="yes"/>
     <linemod width_bg="+2" width="-1"/>
   </rule>
 

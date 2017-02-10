@@ -28,9 +28,14 @@
 #endif
 
 struct elemstyle_condition_t {
-    elemstyle_condition_t(xmlChar *k, xmlChar *v) : key(k), value(v) {}
+    elemstyle_condition_t(xmlChar *k, xmlChar *v) : key(k), value(v), isBool(false) {}
+
     xmlChar *key;
-    xmlChar *value;
+    union {
+      xmlChar *value;
+      bool boolValue;
+    };
+    bool isBool;
 
     bool matches(const base_object_t &obj) const;
 };
@@ -45,7 +50,7 @@ struct elemstyle_condition_t {
 struct elemstyle_line_t {
   gint width;
   elemstyle_color_t color;
-  gboolean dashed: 8;
+  bool dashed: 8;
   gint dash_length: 24;  // <= 0 means dash length is based on the width
 
   struct {

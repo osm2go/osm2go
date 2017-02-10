@@ -162,12 +162,14 @@ static double parse_scale(const char *val_str, int len) {
   }
 }
 
-static gboolean parse_gboolean(const xmlChar *bool_str) {
-  static const char *true_str[]  = { "1", "yes", "true", 0 };
-  gboolean ret = FALSE;
-  for (int i = 0; true_str[i]; ++i) {
-    if (strcasecmp((const char*)bool_str, true_str[i])==0) {
-      ret = TRUE;
+static const char *true_values[] = { "1", "yes", "true", 0 };
+static const char *false_values[] = { "0", "no", "false", 0 };
+
+static bool parse_gboolean(const char *bool_str, const char **value_strings) {
+  gboolean ret = false;
+  for (int i = 0; value_strings[i]; ++i) {
+    if (strcasecmp(bool_str, value_strings[i]) == 0) {
+      ret = true;
       break;
     }
   }
@@ -264,16 +266,23 @@ void StyleSax::startElement(const xmlChar *name, const xmlChar **attrs)
     styles.push_back(new elemstyle_t());
     break;
   case TagCondition: {
-    xmlChar *k = 0, *v = 0;
+    xmlChar *k = 0, *v = 0, *b = 0;
     for(unsigned int i = 0; attrs[i]; i += 2) {
       if(strcmp(reinterpret_cast<const char *>(attrs[i]), "k") == 0)
         k = xmlStrdup(attrs[i + 1]);
       else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "v") == 0)
         v = xmlStrdup(attrs[i + 1]);
+      else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "b") == 0)
+        b = xmlStrdup(attrs[i + 1]);
     }
     if(k || v)
       styles.back()->conditions.push_back(elemstyle_condition_t(k, v));
-    /* todo: add support for "b" (boolean) value */
+    if(k && b) {
+      g_assert(v == 0);
+      elemstyle_condition_t &cond = styles.back()->conditions.back();
+      cond.isBool = true;
+      cond.boolValue = parse_gboolean(reinterpret_cast<const char *>(b), true_values);
+    }
     break;
   }
   case TagLine: {
@@ -302,7 +311,7 @@ void StyleSax::startElement(const xmlChar *name, const xmlChar **attrs)
         line->bg.color = strtoul(reinterpret_cast<const char*>(attrs[i + 1]), NULL, 10);
         hasBgColor = true;
       } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "dashed") == 0) {
-        line->dashed = parse_gboolean(attrs[i + 1]);
+        line->dashed = parse_gboolean(reinterpret_cast<const char *>(attrs[i + 1]), true_values);
       } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "dash_length") == 0) {
         line->dash_length = strtoul(reinterpret_cast<const char*>(attrs[i + 1]), NULL, 10);
       }
@@ -397,7 +406,8 @@ static void free_line(elemstyle_line_t *line) {
 
 static void free_condition(elemstyle_condition_t &cond) {
   xmlFree(cond.key);
-  xmlFree(cond.value);
+  if(!cond.isBool)
+    xmlFree(cond.value);
 }
 
 static inline void elemstyle_free(elemstyle_t *elemstyle) {
@@ -414,9 +424,18 @@ void josm_elemstyles_free(std::vector<elemstyle_t *> &elemstyles) {
 bool elemstyle_condition_t::matches(const base_object_t &obj) const {
   if(key) {
     const char *v = obj.get_value(reinterpret_cast<const char *>(key));
-    if(!v || (value && strcasecmp(v, reinterpret_cast<const char *>(value)) != 0))
-      return false;
-  } else if(value) {
+    if(isBool) {
+      if(v) {
+         const char **value_strings = boolValue ? true_values : false_values;
+         return parse_gboolean(v, value_strings);
+      } else {
+        return !boolValue;
+      }
+    } else {
+      if(!v || (value && strcasecmp(v, reinterpret_cast<const char *>(value)) != 0))
+        return false;
+    }
+  } else if(!isBool && value) {
     return obj.has_value(reinterpret_cast<const char *>(value));
   }
   return true;
@@ -572,7 +591,7 @@ void josm_elemstyles_colorize_way_functor::apply_condition::operator()(const ele
       else
         way->draw.zoom_max = style->way.zoom_max;
 
-      way->draw.dashed = elemstyle->line->dashed;
+      way->draw.dashed = elemstyle->line->dashed ? TRUE : FALSE;
       way->draw.dash_length = elemstyle->line->dash_length;
       way_processed = true;
     }
