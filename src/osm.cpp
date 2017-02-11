@@ -1172,8 +1172,8 @@ void add_xml_node_refs::operator()(const node_t* node)
  * @param way_node the XML node of the way to append to
  * @param way the way to walk
  */
-void osm_write_node_chain(xmlNodePtr way_node, const way_t *way) {
-  std::for_each(way->node_chain.begin(), way->node_chain.end(), add_xml_node_refs(way_node));
+void way_t::write_node_chain(xmlNodePtr way_node) const {
+  std::for_each(node_chain.begin(), node_chain.end(), add_xml_node_refs(way_node));
 }
 
 /* build xml representation for a way */
@@ -1190,7 +1190,7 @@ xmlChar *way_t::generate_xml(item_id_t changeset) {
   snprintf(str, sizeof(str), "%u", (unsigned)changeset);
   xmlNewProp(xml_node, BAD_CAST "changeset", BAD_CAST str);
 
-  osm_write_node_chain(xml_node, this);
+  write_node_chain(xml_node);
   osm_generate_tags(tag, xml_node);
 
   return osm_generate_xml_finish(doc);

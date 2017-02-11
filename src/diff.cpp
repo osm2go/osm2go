@@ -126,7 +126,7 @@ void diff_save_ways::operator()(std::pair<item_id_t, way_t *> pair)
   /* the hidden flag may be set) */
   if((!(way->flags & OSM_FLAG_DELETED)) &&
      (way->flags & (OSM_FLAG_DIRTY | OSM_FLAG_NEW))) {
-    osm_write_node_chain(node_way, way);
+    way->write_node_chain(node_way);
     diff_save_tags(way->tag, node_way);
   }
 }

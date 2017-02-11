@@ -209,6 +209,7 @@ public:
   unsigned int reverse_direction_sensitive_tags();
   unsigned int reverse_direction_sensitive_roles(osm_t *osm);
   xmlChar *generate_xml(item_id_t changeset);
+  void write_node_chain(xmlNodePtr way_node) const;
 
   void cleanup();
 };
@@ -373,7 +374,6 @@ gboolean osm_tag_key_other_value_present(const tag_t *haystack, const tag_t *tag
 gboolean osm_tag_lists_diff(const tag_t *t1, const tag_t *t2);
 
 xmlChar *osm_generate_xml_changeset(const char* comment);
-void osm_write_node_chain(xmlNodePtr way_node, const way_t *node_chain);
 
 /* ----------- edit functions ----------- */
 way_t *osm_way_new(void);
