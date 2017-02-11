@@ -390,7 +390,7 @@ static bool store_value(presets_widget_t *widget,
     } else {
       /* no old entry, create a new one */
       tag = g_new0(tag_t, 1);
-      osm_tag_update_key(tag, (char*)widget->key);
+      tag->update_key(reinterpret_cast<char *>(widget->key));
       /* value will be updated below */
       *ctag = tag;
       changed = true;
@@ -398,7 +398,7 @@ static bool store_value(presets_widget_t *widget,
     }
 
     if(changed)
-      osm_tag_update_value(tag, value);
+      tag->update_value(value);
 
     printf("%skey = %s, value = %s\n", chstr,
            widget->key, tag->value);

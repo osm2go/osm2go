@@ -159,8 +159,8 @@ static gboolean tag_edit(tag_context_t *context, tag_t *tag) {
 
   gboolean ret = FALSE;
   if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog))) {
-    ret = osm_tag_update(tag, gtk_entry_get_text(GTK_ENTRY(key)),
-                         gtk_entry_get_text(GTK_ENTRY(value)));
+    ret = tag->update(gtk_entry_get_text(GTK_ENTRY(key)),
+                      gtk_entry_get_text(GTK_ENTRY(value)));
   }
 
   gtk_widget_destroy(dialog);

@@ -326,53 +326,32 @@ gboolean osm_tag_lists_diff(const tag_t *t1, const tag_t *t2) {
   return FALSE;
 }
 
-/**
- * @brief update the key and value of a tag
- * @param tag the tag struct to update
- * @param key the new key
- * @param value the new value
- * @return if tag was actually changed
- *
- * This will update the key and value, but will avoid memory allocations
- * in case key or value have not changed.
- *
- * This would be a no-op:
- * \code
- * osm_tag_update(tag, tag->key, tag->value);
- * \endcode
- */
-gboolean osm_tag_update(tag_t *tag, const char *key, const char *value)
+bool tag_t::update(const char *nkey, const char *nvalue)
 {
-  gboolean ret = FALSE;
-  if(strcmp(tag->key, key) != 0) {
-    osm_tag_update_key(tag, key);
-    ret = TRUE;
+  bool ret = false;
+  if(strcmp(key, nkey) != 0) {
+    update_key(nkey);
+    ret = true;
   }
-  if(strcmp(tag->value, value) != 0) {
-    osm_tag_update_value(tag, value);
-    ret = TRUE;
+  if(strcmp(value, nvalue) != 0) {
+    update_value(nvalue);
+    ret = true;
   }
   return ret;
 }
 
-/**
- * @brief replace the key of a tag
- */
-void osm_tag_update_key(tag_t *tag, const char *key)
+void tag_t::update_key(const char *nkey)
 {
-  const size_t nlen = strlen(key) + 1;
-  tag->key = (char*)g_realloc(tag->key, nlen);
-  memcpy(tag->key, key, nlen);
+  const size_t nlen = strlen(nkey) + 1;
+  key = static_cast<char *>(g_realloc(key, nlen));
+  memcpy(key, nkey, nlen);
 }
 
-/**
- * @brief replace the value of a tag
- */
-void osm_tag_update_value(tag_t *tag, const char *value)
+void tag_t::update_value(const char *nvalue)
 {
-  const size_t nlen = strlen(value) + 1;
-  tag->value = (char*)g_realloc(tag->value, nlen);
-  memcpy(tag->value, value, nlen);
+  const size_t nlen = strlen(nvalue) + 1;
+  value = static_cast<char *>(g_realloc(value, nlen));
+  memcpy(value, nvalue, nlen);
 }
 
 /* ------------------- node handling ------------------- */
@@ -1766,11 +1745,11 @@ way_t::reverse_direction_sensitive_tags() {
       if ((strcmp(lc_value, DS_ONEWAY_FWD) == 0) ||
           (strcmp(lc_value, "true") == 0) ||
           (strcmp(lc_value, "1") == 0)) {
-        osm_tag_update_value(etag, DS_ONEWAY_REV);
+        etag->update_value(DS_ONEWAY_REV);
         n_tags_altered++;
       }
       else if (strcmp(lc_value, DS_ONEWAY_REV) == 0) {
-        osm_tag_update_value(etag, DS_ONEWAY_FWD);
+        etag->update_value(DS_ONEWAY_FWD);
         n_tags_altered++;
       }
       else {
@@ -1779,9 +1758,9 @@ way_t::reverse_direction_sensitive_tags() {
       g_free(lc_value);
     } else if (strcmp(lc_key, "sidewalk") == 0) {
       if (strcasecmp(etag->value, "right") == 0)
-        osm_tag_update_value(etag, "left");
+        etag->update_value("left");
       else if (strcasecmp(etag->value, "left") == 0)
-        osm_tag_update_value(etag, "right");
+        etag->update_value("right");
     } else {
       // suffixes
       static std::vector<std::pair<std::string, std::string> > rtable;

@@ -76,6 +76,32 @@ typedef struct tag_t {
   inline const tag_t *find(const char *key) const
   { return const_cast<tag_t *>(this)->find(key); }
   const char *get_by_key(const char *key) const;
+
+  /**
+   * @brief replace the key
+   */
+  void update_key(const char *nkey);
+  /**
+   * @brief replace the value
+   */
+  void update_value(const char *nvalue);
+
+  /**
+   * @brief update the key and value
+   * @param key the new key
+   * @param value the new value
+   * @return if tag was actually changed
+   *
+   * This will update the key and value, but will avoid memory allocations
+   * in case key or value have not changed.
+   *
+   * This would be a no-op:
+   * \code
+   * tag->update(tag->key, tag->value);
+   * \endcode
+   */
+  bool update(const char *nkey, const char *nvalue);
+
 #endif
 } tag_t;
 
@@ -345,9 +371,6 @@ void osm_tags_free(tag_t *tag);
 gboolean osm_tag_key_and_value_present(const tag_t *haystack, const tag_t *tag);
 gboolean osm_tag_key_other_value_present(const tag_t *haystack, const tag_t *tag);
 gboolean osm_tag_lists_diff(const tag_t *t1, const tag_t *t2);
-gboolean osm_tag_update(tag_t *tag, const char *key, const char *value);
-void osm_tag_update_key(tag_t *tag, const char *key);
-void osm_tag_update_value(tag_t *tag, const char *value);
 
 xmlChar *osm_generate_xml_changeset(const char* comment);
 void osm_write_node_chain(xmlNodePtr way_node, const way_t *node_chain);
