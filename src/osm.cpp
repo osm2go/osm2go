@@ -542,7 +542,7 @@ member_t osm_parse_osm_relation_member(osm_t *osm, xmlNode *a_node) {
 gchar *relation_t::descriptive_name() const {
   const char *keys[] = { "ref", "name", "description", "note", "fix" "me", NULL};
   for (unsigned int i = 0; keys[i] != NULL; i++) {
-    const char *name = osm_tag_get_by_key(tag, keys[i]);
+    const char *name = tag->get_by_key(keys[i]);
     if(name)
       return g_strdup(name);
   }
@@ -1092,8 +1092,8 @@ tag_t *tag_t::find(const char* key) {
   return NULL;
 }
 
-const char *osm_tag_get_by_key(const tag_t* tag, const char* key) {
-  const tag_t *t = tag->find(key);
+const char *tag_t::get_by_key(const char* key) const {
+  const tag_t *t = find(key);
 
   if (t)
     return t->value;
@@ -1844,7 +1844,7 @@ struct find_way_or_ref {
 
 void reverse_roles::operator()(relation_t* relation)
 {
-  const char *type = osm_tag_get_by_key(relation->tag, "type");
+  const char *type = relation->tag->get_by_key("type");
 
   // Route relations; http://wiki.openstreetmap.org/wiki/Relation:route
   if (!type || strcasecmp(type, "route") != 0)
@@ -1969,26 +1969,26 @@ char *object_t::get_name() const {
 
   /* try to figure out _what_ this is */
 
-  const char *name = osm_tag_get_by_key(tags, "name");
-  if(!name) name = osm_tag_get_by_key(tags, "ref");
-  if(!name) name = osm_tag_get_by_key(tags, "note");
-  if(!name) name = osm_tag_get_by_key(tags, "fix" "me");
-  if(!name) name = osm_tag_get_by_key(tags, "sport");
+  const char *name = tags->get_by_key("name");
+  if(!name) name = tags->get_by_key("ref");
+  if(!name) name = tags->get_by_key("note");
+  if(!name) name = tags->get_by_key("fix" "me");
+  if(!name) name = tags->get_by_key("sport");
 
   /* search for some kind of "type" */
-  const char *type = osm_tag_get_by_key(tags, "amenity");
+  const char *type = tags->get_by_key("amenity");
   gchar *gtype = NULL;
-  if(!type) type = osm_tag_get_by_key(tags, "place");
-  if(!type) type = osm_tag_get_by_key(tags, "historic");
-  if(!type) type = osm_tag_get_by_key(tags, "leisure");
-  if(!type) type = osm_tag_get_by_key(tags, "tourism");
-  if(!type) type = osm_tag_get_by_key(tags, "landuse");
-  if(!type) type = osm_tag_get_by_key(tags, "waterway");
-  if(!type) type = osm_tag_get_by_key(tags, "railway");
-  if(!type) type = osm_tag_get_by_key(tags, "natural");
-  if(!type && osm_tag_get_by_key(tags, "building")) {
-    const char *street = osm_tag_get_by_key(tags, "addr:street");
-    const char *hn = osm_tag_get_by_key(tags, "addr:housenumber");
+  if(!type) type = tags->get_by_key("place");
+  if(!type) type = tags->get_by_key("historic");
+  if(!type) type = tags->get_by_key("leisure");
+  if(!type) type = tags->get_by_key("tourism");
+  if(!type) type = tags->get_by_key("landuse");
+  if(!type) type = tags->get_by_key("waterway");
+  if(!type) type = tags->get_by_key("railway");
+  if(!type) type = tags->get_by_key("natural");
+  if(!type && tags->get_by_key("building")) {
+    const char *street = tags->get_by_key("addr:street");
+    const char *hn = tags->get_by_key("addr:housenumber");
     type = "building";
 
     if(street && hn) {
@@ -1997,12 +1997,12 @@ char *object_t::get_name() const {
     } else if(hn) {
       type = gtype = g_strconcat("building housenumber ", hn, NULL);
     } else if(!name)
-      name = osm_tag_get_by_key(tags, "addr:housename");
+      name = tags->get_by_key("addr:housename");
   }
-  if(!type) type = osm_tag_get_by_key(tags, "emergency");
+  if(!type) type = tags->get_by_key("emergency");
 
   /* highways are a little bit difficult */
-  const char *highway = osm_tag_get_by_key(tags, "highway");
+  const char *highway = tags->get_by_key("highway");
   if(highway && !gtype) {
     if((!strcmp(highway, "primary")) ||
        (!strcmp(highway, "secondary")) ||
@@ -2063,7 +2063,7 @@ base_object_t::base_object_t()
 
 const char* base_object_t::get_value(const char* key) const
 {
-  return osm_tag_get_by_key(tag, key);
+  return tag->get_by_key(key);
 }
 
 bool base_object_t::has_tag() const

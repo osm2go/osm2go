@@ -75,6 +75,7 @@ typedef struct tag_t {
   { return find(reinterpret_cast<const xmlChar *>(key)); }
   inline const tag_t *find(const char *key) const
   { return const_cast<tag_t *>(this)->find(key); }
+  const char *get_by_key(const char *key) const;
 #endif
 } tag_t;
 
@@ -341,7 +342,6 @@ void osm_free(osm_t *osm);
 
 void osm_tag_free(tag_t *tag);
 void osm_tags_free(tag_t *tag);
-const char *osm_tag_get_by_key(const tag_t *tag, const char *key);
 gboolean osm_tag_key_and_value_present(const tag_t *haystack, const tag_t *tag);
 gboolean osm_tag_key_other_value_present(const tag_t *haystack, const tag_t *tag);
 gboolean osm_tag_lists_diff(const tag_t *t1, const tag_t *t2);
