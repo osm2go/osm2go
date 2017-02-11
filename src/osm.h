@@ -70,6 +70,11 @@ typedef struct tag_t {
   { }
 
   bool is_creator_tag() const;
+  tag_t *find(const char *key);
+  inline tag_t *find(const xmlChar *key)
+  { return find(reinterpret_cast<const xmlChar *>(key)); }
+  inline const tag_t *find(const char *key) const
+  { return const_cast<tag_t *>(this)->find(key); }
 #endif
 } tag_t;
 
@@ -293,9 +298,9 @@ struct osm_t {
 
   struct icon_t **icons;
 
+#ifdef __cplusplus
   bounds_t rbounds;
 
-#ifdef __cplusplus
   std::map<item_id_t, node_t *> nodes;
   std::map<item_id_t, way_t *> ways;
   std::map<item_id_t, relation_t *> relations;
@@ -336,7 +341,6 @@ void osm_free(osm_t *osm);
 
 void osm_tag_free(tag_t *tag);
 void osm_tags_free(tag_t *tag);
-tag_t *osm_tag_find(tag_t* tag, const char* key);
 const char *osm_tag_get_by_key(const tag_t *tag, const char *key);
 gboolean osm_tag_key_and_value_present(const tag_t *haystack, const tag_t *tag);
 gboolean osm_tag_key_other_value_present(const tag_t *haystack, const tag_t *tag);

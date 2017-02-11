@@ -529,7 +529,7 @@ static void presets_item_dialog(presets_context_t *context,
 
     for(widget_cnt = widget_skip; it != itEnd; it++, widget_cnt++) {
       /* check if there's a value with this key already */
-      tag_t *otag = osm_tag_find(*orig_tag, (char*)(*it)->key);
+      tag_t *otag = (*orig_tag)->find((*it)->key);
       const char *preset = otag ? otag->value : NULL;
 
       switch((*it)->type) {
@@ -710,7 +710,7 @@ static void presets_item_dialog(presets_context_t *context,
       case WIDGET_TYPE_KEY:
 	g_assert(!gtk_widgets[widget_cnt]);
 	g_assert(!otag);
-	otag = osm_tag_find(*orig_tag, (char*)(*it)->key);
+	otag = (*orig_tag)->find((*it)->key);
 
 	changed |= store_value(*it, last, (char*)(*it)->key_w.value);
 	break;

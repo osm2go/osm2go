@@ -1078,9 +1078,10 @@ gboolean osm_sanity_check(GtkWidget *parent, const osm_t *osm) {
 
 /* ------------------------- misc access functions -------------- */
 
-tag_t *osm_tag_find(tag_t* tag, const char* key) {
+tag_t *tag_t::find(const char* key) {
   if(!key) return NULL;
 
+  tag_t *tag = this;
   while(tag) {
     if(strcasecmp(tag->key, key) == 0)
       return tag;
@@ -1092,7 +1093,7 @@ tag_t *osm_tag_find(tag_t* tag, const char* key) {
 }
 
 const char *osm_tag_get_by_key(const tag_t* tag, const char* key) {
-  const tag_t *t = osm_tag_find(const_cast<tag_t*>(tag), key);
+  const tag_t *t = tag->find(key);
 
   if (t)
     return t->value;
