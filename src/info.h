@@ -21,18 +21,8 @@
 #define INFO_H
 
 #include "appdata.h"
-#include "osm.h"
 
 #include <gtk/gtk.h>
-
-typedef struct {
-  appdata_t *appdata;
-  GtkWidget *dialog, *list;
-  GtkListStore *store;
-  object_t object;
-  tag_t **tag;
-  int presets_type;
-} tag_context_t;
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,11 +30,23 @@ extern "C" {
 
 gboolean info_dialog(GtkWidget *parent, appdata_t *appdata,
 		     object_t *object);
+#ifdef __cplusplus
+}
+
+#include "osm.h"
+
+struct tag_context_t {
+  appdata_t *appdata;
+  GtkWidget *dialog, *list;
+  GtkListStore *store;
+  object_t object;
+  tag_t **tag;
+  int presets_type;
+};
+
 void info_tags_replace(tag_context_t *context);
 gboolean info_tag_key_collision(const tag_t *tags, const tag_t *tag);
 
-#ifdef __cplusplus
-}
 #endif
 
 #endif // INFO_H

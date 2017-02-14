@@ -37,12 +37,13 @@ extern "C" {
 #endif
 
 struct presets_items *josm_presets_load(void);
-GtkWidget *josm_build_presets_button(appdata_t *appdata, tag_context_t *tag_context);
 void josm_presets_free(struct presets_items *presets);
 char *josm_icon_name_adjust(char *name);
 
 #ifdef __cplusplus
 }
+
+GtkWidget *josm_build_presets_button(appdata_t *appdata, tag_context_t *tag_context);
 #endif
 
 #endif // JOSM_PRESETS_H
