@@ -289,30 +289,43 @@ static unsigned int count_tags(const tag_t *first, const tag_t **creator) {
   return ret;
 }
 
-bool base_object_t::tag_lists_diff(const tag_t *t2) const {
-  const tag_t *t1creator = NULL, *t2creator = NULL;
+static inline bool is_creator_tag(const tag_t *tag) {
+  return tag->is_creator_tag();
+}
+
+struct tag_diff_functor {
+  const tag_t * const needle;
+  tag_diff_functor(const tag_t *n) : needle(n) {}
+  bool operator()(const tag_t *tag);
+};
+
+bool tag_diff_functor::operator()(const tag_t* tag)
+{
+  return (strcmp(needle->key, tag->key) == 0) &&
+         (strcmp(needle->value, tag->value) != 0);
+}
+
+bool base_object_t::tag_lists_diff(const std::vector<tag_t *> &t2) const {
+  const tag_t *t1creator = 0;
   /* first check list length, otherwise deleted tags are hard to detect */
   unsigned int ocnt = count_tags(tag, &t1creator);
-  unsigned int ncnt = count_tags(t2, &t2creator);
+  const std::vector<tag_t *>::const_iterator t2cit = std::find_if(t2.begin(), t2.end(), is_creator_tag);
+  if(t2cit != t2.end())
+    ocnt++;
 
-  if (ncnt != ocnt)
+  if (t2.size() != ocnt)
     return true;
 
   for (const tag_t *ntag = tag; ntag != NULL; ntag = ntag->next) {
     if (ntag == t1creator)
       continue;
 
-    const tag_t *otag;
-    for (otag = t2; otag != NULL; otag = otag->next) {
-      if(otag == t2creator)
-        continue;
-
-      if (strcmp(otag->key, ntag->key) == 0) {
-        if (strcmp(otag->value, ntag->value) != 0)
-          return true;
-        break;
-      }
-    }
+    if(std::find_if(t2.begin(), t2cit, tag_diff_functor(ntag)) !=
+       t2.end())
+      return true;
+    if(std::find_if(t2cit + 1, t2.end(), tag_diff_functor(ntag)) !=
+       t2.end())
+      return true;
   }
 
   return false;
@@ -2063,6 +2076,20 @@ way_t::way_t()
   , node_chain(0)
 {
   memset(&draw, 0, sizeof(draw));
+}
+
+void base_object_t::replace_tags(std::vector<tag_t *> &ntags)
+{
+  osm_tags_free(tag);
+  if(ntags.empty()) {
+    tag = 0;
+    return;
+  }
+  tag = ntags.front();
+  tag_t *t = tag;
+  const std::vector<tag_t *>::const_iterator itEnd = ntags.end() - 1;
+  for(std::vector<tag_t *>::const_iterator it = ntags.begin(); it != itEnd; it++)
+    (*it)->next = *(it + 1);
 }
 
 bool way_t::contains_node(const node_t *node) const

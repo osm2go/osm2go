@@ -118,7 +118,16 @@ typedef struct base_object_t {
    * @param t2 second list
    * @return if the lists differ
    */
-  bool tag_lists_diff(const tag_t *t2) const;
+  bool tag_lists_diff(const std::vector<tag_t *> &t2) const;
+
+  /**
+   * replace the current tags with the given ones
+   * @param ntags array of new tags
+   *
+   * The old values will be freed, this object takes ownership of the values
+   * in ntags.
+   */
+  void replace_tags(std::vector<tag_t *> &ntags);
 #endif
 
   item_id_t id;
