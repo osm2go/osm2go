@@ -711,8 +711,10 @@ static void presets_item_dialog(presets_context_t *context,
 	g_assert(!gtk_widgets[widget_cnt]);
 	g_assert(!otag);
 	otag = (*orig_tag)->find((*it)->key);
+        if(otag)
+          ctag = &otag;
 
-	changed |= store_value(*it, last, (char*)(*it)->key_w.value);
+	changed |= store_value(*it, ctag, (char*)(*it)->key_w.value);
 	break;
 
       default:
