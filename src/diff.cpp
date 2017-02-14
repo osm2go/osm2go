@@ -338,7 +338,7 @@ node_compare_changes(const node_t *node, const pos_t *pos, const tag_t *ntags)
   if (node->pos.lat != pos->lat || node->pos.lon != pos->lon)
     return FALSE;
 
-  return !osm_tag_lists_diff(node->tag, ntags);
+  return !node->tag_lists_diff(ntags);
 }
 
 static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
@@ -537,7 +537,7 @@ static void diff_restore_way(xmlNodePtr node_node, osm_t *osm) {
     /* flag had been set */
 
     tag_t *ntags = xml_scan_tags(node_node->children);
-    if (osm_tag_lists_diff(way->tag, ntags)) {
+    if (way->tag_lists_diff(ntags)) {
       /* way may be an existing way, so remove tags to */
       /* make space for new ones */
       if(way->tag) {
@@ -620,7 +620,7 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
 
   gboolean was_changed = FALSE;
   tag_t *ntags = xml_scan_tags(node_rel->children);
-  if (osm_tag_lists_diff(relation->tag, ntags)) {
+  if (relation->tag_lists_diff(ntags)) {
     /* relation may be an existing relation, so remove tags to */
     /* make space for new ones */
     osm_tags_free(relation->tag);

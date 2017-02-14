@@ -278,35 +278,27 @@ gboolean osm_tag_key_other_value_present(const tag_t *haystack, const tag_t *tag
   return FALSE;
 }
 
-/**
- * @brief compare 2 tag lists
- * @param t1 first list
- * @param t2 second list
- * @return if the lists differ
- */
-gboolean osm_tag_lists_diff(const tag_t *t1, const tag_t *t2) {
-  unsigned int ocnt = 0, ncnt = 0;
-  const tag_t *ntag;
-  const tag_t *t1creator = NULL, *t2creator = NULL;
+static unsigned int count_tags(const tag_t *first, const tag_t **creator) {
+  unsigned int ret = 0;
+  for(const tag_t *ntag = first; ntag != 0; ntag = ntag->next) {
+    if(ntag->is_creator_tag())
+      *creator = ntag;
+    else
+      ret++;
+  }
+  return ret;
+}
 
+bool base_object_t::tag_lists_diff(const tag_t *t2) const {
+  const tag_t *t1creator = NULL, *t2creator = NULL;
   /* first check list length, otherwise deleted tags are hard to detect */
-  for(ntag = t1; ntag != NULL; ntag = ntag->next) {
-    if(ntag->is_creator_tag())
-      t1creator = ntag;
-    else
-      ncnt++;
-  }
-  for(ntag = t2; ntag != NULL; ntag = ntag->next) {
-    if(ntag->is_creator_tag())
-      t2creator = ntag;
-    else
-      ocnt++;
-  }
+  unsigned int ocnt = count_tags(tag, &t1creator);
+  unsigned int ncnt = count_tags(t2, &t2creator);
 
   if (ncnt != ocnt)
-    return TRUE;
+    return true;
 
-  for (ntag = t1; ntag != NULL; ntag = ntag->next) {
+  for (const tag_t *ntag = tag; ntag != NULL; ntag = ntag->next) {
     if (ntag == t1creator)
       continue;
 
@@ -317,13 +309,13 @@ gboolean osm_tag_lists_diff(const tag_t *t1, const tag_t *t2) {
 
       if (strcmp(otag->key, ntag->key) == 0) {
         if (strcmp(otag->value, ntag->value) != 0)
-          return TRUE;
+          return true;
         break;
       }
     }
   }
 
-  return FALSE;
+  return false;
 }
 
 bool tag_t::update(const char *nkey, const char *nvalue)

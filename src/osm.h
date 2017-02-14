@@ -112,6 +112,13 @@ typedef struct base_object_t {
   const char *get_value(const char *key) const;
   bool has_tag() const;
   bool has_value(const char* str) const;
+
+  /**
+   * @brief compare given tag list to the one of this object
+   * @param t2 second list
+   * @return if the lists differ
+   */
+  bool tag_lists_diff(const tag_t *t2) const;
 #endif
 
   item_id_t id;
@@ -371,7 +378,6 @@ void osm_tag_free(tag_t *tag);
 void osm_tags_free(tag_t *tag);
 gboolean osm_tag_key_and_value_present(const tag_t *haystack, const tag_t *tag);
 gboolean osm_tag_key_other_value_present(const tag_t *haystack, const tag_t *tag);
-gboolean osm_tag_lists_diff(const tag_t *t1, const tag_t *t2);
 
 xmlChar *osm_generate_xml_changeset(const char* comment);
 
