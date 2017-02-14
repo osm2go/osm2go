@@ -73,13 +73,7 @@ static gboolean combine_tags(tag_t **dst, tag_t *src) {
   /* ---------- transfer tags from way[1] to way[0] ----------- */
   while(*dst) dst = &((*dst)->next);  /* find end of target tag list */
   while(src) {
-    /* check if same key but with different value is present, */
-    /* ignoring the created_by tags */
-    if(!src->is_creator_tag() &&
-       osm_tag_key_other_value_present(dst_orig, src))
-      conflict = TRUE;
-
-    /* don't copy "created_by" and "source" tag or tags that already */
+    /* don't copy "created_by" tag or tags that already */
     /* exist in identical form */
     if(src->is_creator_tag() ||
        osm_tag_key_and_value_present(dst_orig, src)) {
@@ -87,6 +81,9 @@ static gboolean combine_tags(tag_t **dst, tag_t *src) {
       osm_tag_free(src);
       src = next;
     } else {
+      /* check if same key but with different value is present */
+      if(!conflict)
+        conflict = osm_tag_key_other_value_present(dst_orig, src);
       *dst = src;
       src = src->next;
       dst = &((*dst)->next);
