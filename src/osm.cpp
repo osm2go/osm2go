@@ -269,13 +269,14 @@ gboolean osm_tag_key_and_value_present(const tag_t *haystack, const tag_t *tag) 
   return FALSE;
 }
 
-gboolean osm_tag_key_other_value_present(const tag_t *haystack, const tag_t *tag) {
+bool base_object_t::tag_key_other_value_present(const tag_t *t) const {
+  const tag_t *haystack = tag;
   for(; haystack; haystack = haystack->next) {
-    if((strcasecmp(haystack->key, tag->key) == 0) &&
-       (strcasecmp(haystack->value, tag->value) != 0))
-      return TRUE;
+    if((strcasecmp(haystack->key, t->key) == 0) &&
+       (strcasecmp(haystack->value, t->value) != 0))
+      return true;
   }
-  return FALSE;
+  return false;
 }
 
 static unsigned int count_tags(const tag_t *first, const tag_t **creator) {

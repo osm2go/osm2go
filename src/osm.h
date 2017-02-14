@@ -128,6 +128,11 @@ typedef struct base_object_t {
    * in ntags.
    */
   void replace_tags(std::vector<tag_t *> &ntags);
+
+  /**
+   * @brief check if the given tag exists in this object with a different value
+   */
+  bool tag_key_other_value_present(const tag_t *t) const;
 #endif
 
   item_id_t id;
@@ -386,7 +391,6 @@ void osm_free(osm_t *osm);
 void osm_tag_free(tag_t *tag);
 void osm_tags_free(tag_t *tag);
 gboolean osm_tag_key_and_value_present(const tag_t *haystack, const tag_t *tag);
-gboolean osm_tag_key_other_value_present(const tag_t *haystack, const tag_t *tag);
 
 xmlChar *osm_generate_xml_changeset(const char* comment);
 

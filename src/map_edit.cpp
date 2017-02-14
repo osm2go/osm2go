@@ -86,7 +86,7 @@ static bool combine_tags(base_object_t *obj, base_object_t *sobj) {
     } else {
       /* check if same key but with different value is present */
       if(!conflict)
-        conflict = (osm_tag_key_other_value_present(dst_orig, src) == TRUE);
+        conflict = obj->tag_key_other_value_present(src);
       *dst = src;
       src = src->next;
       dst = &((*dst)->next);
