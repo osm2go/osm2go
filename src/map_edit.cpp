@@ -66,9 +66,12 @@ static void transfer_relations(osm_t *osm, way_t *dst, way_t *src) {
 
 /* combine tags from src to dst and combine them in a useful manner */
 /* erase all source tags */
-static gboolean combine_tags(tag_t **dst, tag_t *src) {
-  gboolean conflict = FALSE;
+static bool combine_tags(base_object_t *obj, base_object_t *sobj) {
+  bool conflict = false;
+  tag_t **dst = &obj->tag;
   tag_t *dst_orig = *dst;
+  tag_t *src = sobj->tag;
+  sobj->tag = 0;
 
   /* ---------- transfer tags from way[1] to way[0] ----------- */
   while(*dst) dst = &((*dst)->next);  /* find end of target tag list */
@@ -83,7 +86,7 @@ static gboolean combine_tags(tag_t **dst, tag_t *src) {
     } else {
       /* check if same key but with different value is present */
       if(!conflict)
-        conflict = osm_tag_key_other_value_present(dst_orig, src);
+        conflict = (osm_tag_key_other_value_present(dst_orig, src) == TRUE);
       *dst = src;
       src = src->next;
       dst = &((*dst)->next);
@@ -372,12 +375,10 @@ void map_edit_way_add_ok(map_t *map) {
       map->action.way->reverse();
 
     /* and open dialog to resolve tag collisions if necessary */
-    if(combine_tags(&map->action.way->tag, map->action.ends_on->tag))
+    if(combine_tags(map->action.way, map->action.ends_on))
       messagef(GTK_WIDGET(map->appdata->window), _("Way tag conflict"),
 	       _("The resulting way contains some conflicting tags. "
 		 "Please solve these."));
-
-    map->action.ends_on->tag = NULL;
 
     /* make way member of all relations ends_on already is */
     transfer_relations(map->appdata->osm, map->action.way, map->action.ends_on);
@@ -809,8 +810,7 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
       std::for_each(appdata->osm->relations.begin(), appdata->osm->relations.end(),
                     relation_node_replacer(touchnode, node));
 
-      gboolean conflict = combine_tags(&node->tag, touchnode->tag);
-      touchnode->tag = NULL;
+      bool conflict = combine_tags(node, touchnode);
 
       /* touchnode must not have any references to ways anymore */
       g_assert_cmpint(touchnode->ways, ==, 0);
@@ -890,9 +890,7 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 	  /* transfer tags from touchnode to node */
 
 	  /* ---------- transfer tags from way[1] to way[0] ----------- */
-	  gboolean conflict =
-	    combine_tags(&ways2join[0]->tag, ways2join[1]->tag);
-	  ways2join[1]->tag = NULL;
+	  bool conflict = combine_tags(ways2join[0], ways2join[1]);
 
 	  /* ---- transfer relation membership from way[1] to way[0] ----- */
           const relation_chain_t &rchain =
