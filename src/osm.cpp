@@ -551,10 +551,8 @@ void osm_free(osm_t *osm) {
 
 #include <libxml/xmlreader.h>
 
-static gint my_strcmp(const xmlChar *a, const xmlChar *b) {
-  if(!a && !b) return 0;
+static inline gint __attribute__((nonnull(2))) my_strcmp(const xmlChar *a, const xmlChar *b) {
   if(!a) return -1;
-  if(!b) return +1;
   return strcmp((char*)a,(char*)b);
 }
 
