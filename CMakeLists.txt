@@ -202,12 +202,6 @@ set(CMAKE_REQUIRED_INCLUDES math.h)
 check_function_exists(log2 HAVE_LOG2)
 cmake_pop_check_state()
 
-include_directories(
-	${CURL_INCLUDE_DIRS}
-	${LIBXML2_INCLUDE_DIR}
-	src
-)
-
 set_property(SOURCE src/misc.cpp APPEND PROPERTY COMPILE_DEFINITIONS "DATADIR=\"${DATA_DIR}\"")
 if (HAVE_LOG2)
 	set_property(SOURCE src/area_edit.c APPEND PROPERTY COMPILE_DEFINITIONS "LOG2=log2")
@@ -240,6 +234,13 @@ target_link_libraries(osm2go_lib
 		${CURL_LIBRARIES}
 		${LIBXML2_LIBRARIES}
 		PkgConfig::GooCanvas
+)
+
+target_include_directories(osm2go_lib
+	PUBLIC
+		${CURL_INCLUDE_DIRS}
+		${LIBXML2_INCLUDE_DIR}
+		src
 )
 
 add_executable(osm2go
