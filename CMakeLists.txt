@@ -10,7 +10,7 @@ find_package(CURL REQUIRED)
 find_package(LibXml2 REQUIRED)
 find_package(PkgConfig REQUIRED)
 
-set(CMAKE_INCLUDE_CURRENT_DIR)
+set(CMAKE_INCLUDE_CURRENT_DIR TRUE)
 
 set(osm2go_SOURCE_FILES
 	src/about.cpp
@@ -205,7 +205,7 @@ cmake_pop_check_state()
 include_directories(
 	${CURL_INCLUDE_DIRS}
 	${LIBXML2_INCLUDE_DIR}
-	${CMAKE_CURRENT_SOURCE_DIR}/src
+	src
 )
 
 set_property(SOURCE src/misc.cpp APPEND PROPERTY COMPILE_DEFINITIONS "DATADIR=\"${DATA_DIR}\"")
