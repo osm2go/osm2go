@@ -1099,10 +1099,10 @@ bool osm_node_in_other_way(const osm_t *osm, const way_t *way, const node_t *nod
   return std::find_if(osm->ways.begin(), itEnd, node_in_other_way(way, node)) != itEnd;
 }
 
-static void osm_generate_tags(const tag_t *tag, xmlNodePtr node) {
+static void osm_generate_tags(const tag_t *tag, xmlNodePtr node, bool keep_created = false) {
   while(tag) {
     /* skip "created_by" tags as they aren't needed anymore with api 0.6 */
-    if(G_LIKELY(!tag->is_creator_tag())) {
+    if(G_LIKELY(keep_created || !tag->is_creator_tag())) {
       xmlNodePtr tag_node = xmlNewChild(node, NULL, BAD_CAST "tag", NULL);
       xmlNewProp(tag_node, BAD_CAST "k", BAD_CAST tag->key);
       xmlNewProp(tag_node, BAD_CAST "v", BAD_CAST tag->value);
@@ -1273,7 +1273,7 @@ xmlChar *osm_generate_xml_changeset(const char *comment) {
   xmlDocSetRootElement(doc, root_node);
 
   xmlNodePtr cs_node = xmlNewChild(root_node, NULL, BAD_CAST "changeset", NULL);
-  osm_generate_tags(&tag_creator, cs_node);
+  osm_generate_tags(&tag_creator, cs_node, true);
 
   xmlDocDumpFormatMemoryEnc(doc, &result, &len, "UTF-8", 1);
   xmlFreeDoc(doc);
