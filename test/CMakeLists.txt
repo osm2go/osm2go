@@ -6,10 +6,6 @@ function(osm_test BASENAME)
 	endif ()
 	target_link_libraries(${BASENAME}
 		osm2go_lib
-		${CURL_LIBRARIES}
-		${LIBXML2_LIBRARIES}
-		PkgConfig::GooCanvas
-		${MORE_LIBS}
 	)
 
 	add_test(NAME ${BASENAME}

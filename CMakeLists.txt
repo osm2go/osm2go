@@ -92,7 +92,7 @@ if (SOUP_FOUND)
 		src/osm-gps-map-osd-select.c
 		src/osm-gps-map-osd-select.h
 	)
-	list(APPEND MORE_LIBS PkgConfig::SOUP)
+	list(APPEND MORE_LIBS PRIVATE PkgConfig::SOUP)
 	if (SOUP_VERSION VERSION_LESS 2.4)
 		set_property(SOURCE src/osm-gps-map.c APPEND PROPERTY COMPILE_DEFINITIONS LIBSOUP22)
 	endif ()
@@ -116,7 +116,7 @@ if (MAEMO_FOUND)
 	pkg_check_modules(Osso REQUIRED IMPORTED_TARGET libosso)
 	pkg_check_modules(Hildon_FM2 REQUIRED IMPORTED_TARGET hildon-fm-2)
 
-	list(APPEND MORE_LIBS
+	list(APPEND MORE_LIBS PUBLIC
 			PkgConfig::Hildon
 			PkgConfig::Osso
 			PkgConfig::Hildon_FM2
@@ -130,7 +130,7 @@ if (MAEMO_FOUND)
 	else ()
 		pkg_check_modules(libLocation IMPORTED_TARGET liblocation)
 		if (libLocation_FOUND)
-			list(APPEND MORE_LIBS PkgConfig::libLocation)
+			list(APPEND MORE_LIBS PRIVATE PkgConfig::libLocation)
 			list(REMOVE_ITEM osm2go_SOURCE_FILES src/gps.c)
 			list(APPEND osm2go_SOURCE_FILES src/gps_liblocation.c)
 		else ()
@@ -180,7 +180,7 @@ else ()
 
 	add_definitions(-DENABLE_BROWSER_INTERFACE -DMAEMO_VERSION_MAJOR)
 
-	list(APPEND MORE_LIBS ${GTK2_TARGETS})
+	list(APPEND MORE_LIBS PUBLIC ${GTK2_TARGETS})
 
 	set(USE_SVG_ICONS On)
 endif ()
@@ -232,12 +232,14 @@ add_library(osm2go_lib STATIC
 )
 
 target_link_libraries(osm2go_lib
-	${CURL_LIBRARIES}
-	${LIBXML2_LIBRARIES}
-	PkgConfig::GooCanvas
-	PkgConfig::GVFS
 	${MORE_LIBS}
-	${MATH_LIBRARY}
+	PRIVATE
+		PkgConfig::GVFS
+		${MATH_LIBRARY}
+	PUBLIC
+		${CURL_LIBRARIES}
+		${LIBXML2_LIBRARIES}
+		PkgConfig::GooCanvas
 )
 
 add_executable(osm2go
@@ -246,10 +248,6 @@ add_executable(osm2go
 
 target_link_libraries(osm2go
 	osm2go_lib
-	${CURL_LIBRARIES}
-	${LIBXML2_LIBRARIES}
-	PkgConfig::GooCanvas
-	${MORE_LIBS}
 )
 
 if (MAEMO_FOUND)
