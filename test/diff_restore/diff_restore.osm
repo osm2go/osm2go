@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <osm version='0.6' upload='true' generator='JOSM'>
-  <bounds minlat='52.2693704' minlon='9.5751616' maxlat='52.2695017' maxlon='9.5753467' origin='CGImap 0.5.8 (28389 thorn-01.openstreetmap.org)' />
+  <bounds minlat='52.2692786' minlon='9.5750497' maxlat='52.2695463' maxlon='9.5755' origin='CGImap 0.5.8 (2829 thorn-01.openstreetmap.org)' />
   <node id='638499572' timestamp='2015-10-10T10:56:21Z' uid='53064' user='Dakon' visible='true' version='12' changeset='34546949' lat='52.2694654' lon='9.5752283'>
     <tag k='highway' v='bus_stop' />
     <tag k='name' v='Wennigsen/KGS' />
@@ -10,10 +10,28 @@
   <node id='3398616417' timestamp='2015-03-14T19:30:39Z' uid='406374' user='lytron' visible='true' version='1' changeset='29478939' lat='52.2694285' lon='9.5752791'>
     <tag k='amenity' v='waste_basket' />
   </node>
+  <node id='3577031221' timestamp='2015-06-06T13:58:36Z' uid='53064' user='Dakon' visible='true' version='1' changeset='31769882' lat='52.2693139' lon='9.5754634' />
   <node id='3577031223' timestamp='2015-06-06T13:58:37Z' uid='53064' user='Dakon' visible='true' version='1' changeset='31769882' lat='52.2694261' lon='9.5752398' />
   <node id='3577031224' timestamp='2015-06-06T13:58:37Z' uid='53064' user='Dakon' visible='true' version='1' changeset='31769882' lat='52.2694345' lon='9.5752694' />
+  <node id='3577031225' timestamp='2015-06-06T13:58:37Z' uid='53064' user='Dakon' visible='true' version='1' changeset='31769882' lat='52.2694678' lon='9.5753695' />
   <node id='3577031226' timestamp='2015-06-06T13:58:37Z' uid='53064' user='Dakon' visible='true' version='1' changeset='31769882' lat='52.2694887' lon='9.5751927' />
   <node id='3577031227' timestamp='2015-06-06T13:58:37Z' uid='53064' user='Dakon' visible='true' version='1' changeset='31769882' lat='52.269497' lon='9.5752223' />
+  <node id='3577031228' timestamp='2015-06-06T13:58:37Z' uid='53064' user='Dakon' visible='true' version='1' changeset='31769882' lat='52.2695229' lon='9.5752494' />
+  <node id='3577031229' timestamp='2015-06-06T13:58:37Z' uid='53064' user='Dakon' visible='true' version='1' changeset='31769882' lat='52.2697044' lon='9.57518' />
+  <way id='351899452' timestamp='2015-06-06T13:58:37Z' uid='53064' user='Dakon' visible='true' version='1' changeset='31769882'>
+    <nd ref='3577031225' />
+    <nd ref='3577031221' />
+    <tag k='public_transport' v='platform' />
+    <tag k='tactile_paving' v='yes' />
+    <tag k='wheelchair' v='yes' />
+  </way>
+  <way id='351899453' timestamp='2015-06-06T13:58:37Z' uid='53064' user='Dakon' visible='true' version='1' changeset='31769882'>
+    <nd ref='3577031229' />
+    <nd ref='3577031228' />
+    <tag k='public_transport' v='platform' />
+    <tag k='tactile_paving' v='yes' />
+    <tag k='wheelchair' v='yes' />
+  </way>
   <way id='351899455' timestamp='2015-06-06T13:58:37Z' uid='53064' user='Dakon' visible='true' version='1' changeset='31769882'>
     <nd ref='3577031227' />
     <nd ref='3577031226' />

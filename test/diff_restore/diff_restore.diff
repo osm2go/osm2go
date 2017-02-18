@@ -13,5 +13,12 @@
     <tag k="amenity" v="waste_basket"/>
   </node>
   <node id="3577031223" lat="52.2694261" lon="9.5752398" time="1433599117"/>
+  <way id='351899452'>
+    <nd ref='3577031225' />
+    <nd ref='3577031221' />
+    <tag k='public_transport' v='platform' />
+    <tag k='tactile_paving' v='yes' />
+    <tag k='source' v='survey' />
+  </way>
   <way state="deleted" id="351899455"/>
 </diff>

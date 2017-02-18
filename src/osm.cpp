@@ -294,17 +294,13 @@ static inline bool is_creator_tag(const tag_t *tag) {
   return tag->is_creator_tag();
 }
 
-struct tag_diff_functor {
-  const tag_t * const needle;
-  tag_diff_functor(const tag_t *n) : needle(n) {}
-  bool operator()(const tag_t *tag);
+struct tag_find_functor {
+  const char * const needle;
+  tag_find_functor(const char *n) : needle(n) {}
+  bool operator()(const tag_t *tag) {
+    return (strcmp(needle, tag->key) == 0);
+  }
 };
-
-bool tag_diff_functor::operator()(const tag_t* tag)
-{
-  return (strcmp(needle->key, tag->key) == 0) &&
-         (strcmp(needle->value, tag->value) != 0);
-}
 
 bool base_object_t::tag_lists_diff(const std::vector<tag_t *> &t2) const {
   const tag_t *t1creator = 0;
@@ -321,11 +317,17 @@ bool base_object_t::tag_lists_diff(const std::vector<tag_t *> &t2) const {
     if (ntag == t1creator)
       continue;
 
-    if(std::find_if(t2.begin(), t2cit, tag_diff_functor(ntag)) !=
-       t2.end())
+    const std::vector<tag_t *>::const_iterator t2end = t2.end();
+    std::vector<tag_t *>::const_iterator it = std::find_if(t2.begin(), t2cit,
+                                                           tag_find_functor(ntag->key));
+    if(it == t2end && t2cit != t2end)
+      it = std::find_if(t2cit + 1, t2end, tag_find_functor(ntag->key));
+
+    // key not found
+    if(it == t2end)
       return true;
-    if(std::find_if(t2cit + 1, t2.end(), tag_diff_functor(ntag)) !=
-       t2.end())
+    // different value
+    if(strcmp(ntag->value, (*it)->value) != 0)
       return true;
   }
 

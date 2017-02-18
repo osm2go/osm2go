@@ -24,15 +24,15 @@ int main(int argc, char **argv)
     return 1;
   }
 
-  g_assert_cmpuint(6, ==, osm->nodes.size());
-  g_assert_cmpuint(1, ==, osm->ways.size());
+  g_assert_cmpuint(10, ==, osm->nodes.size());
+  g_assert_cmpuint(3, ==, osm->ways.size());
   g_assert_cmpuint(3, ==, osm->relations.size());
 
   project_t project(argv[2], argv[1]);
   diff_restore(0, &project, osm);
 
-  g_assert_cmpuint(8, ==, osm->nodes.size());
-  g_assert_cmpuint(1, ==, osm->ways.size());
+  g_assert_cmpuint(12, ==, osm->nodes.size());
+  g_assert_cmpuint(3, ==, osm->ways.size());
   g_assert_cmpuint(3, ==, osm->relations.size());
 
   // new tag added in diff
@@ -65,6 +65,12 @@ int main(int argc, char **argv)
   g_assert((n27->flags & OSM_FLAG_DIRTY) == 0);
   g_assert_cmpfloat(nn2->pos.lat, ==, n27->pos.lat);
   g_assert_cmpfloat(nn2->pos.lon, ==, n27->pos.lon);
+  // the upstream version has "wheelchair", we have "source"
+  // our modification must survive
+  const way_t * const w452 = osm->ways[351899452];
+  g_assert(w452 != NULL);
+  g_assert(w452->get_value("source") != NULL);
+  g_assert(w452->get_value("wheelchair") == NULL);
 
   osm_free(osm);
 
