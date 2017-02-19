@@ -105,7 +105,7 @@ static double selected_area(const context_t *context) {
          hscale * (context->max.lon - context->min.lon);
 }
 
-static gboolean current_tab_is(context_t *context, gint page_num, char *str) {
+static gboolean current_tab_is(context_t *context, gint page_num, const char *str) {
   GtkWidget *nb = notebook_get_gtk_notebook(context->notebook);
 
   if(page_num < 0)
