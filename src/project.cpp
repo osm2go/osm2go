@@ -88,7 +88,7 @@ struct select_context_t {
   GtkWidget *dialog, *list;
 };
 
-static gboolean project_edit(select_context_t *scontext,
+static bool project_edit(select_context_t *scontext,
                              project_t *project, gboolean is_new);
 
 /* ------------ project file io ------------- */
@@ -453,7 +453,7 @@ static void project_close(appdata_t *appdata) {
   appdata->project = NULL;
 }
 
-static gboolean project_delete(select_context_t *context, project_t *project) {
+static bool project_delete(select_context_t *context, project_t *project) {
 
   printf("deleting project \"%s\"\n", project->name);
 
@@ -466,7 +466,7 @@ static gboolean project_delete(select_context_t *context, project_t *project) {
 		 _("The project you are about to delete is the one "
 		   "you are currently working on!\n\n"
 		   "Do you want to delete it anyway?")))
-      return FALSE;
+      return false;
 
     project_close(context->appdata);
   }
@@ -512,7 +512,7 @@ static gboolean project_delete(select_context_t *context, project_t *project) {
   /* disable ok button button */
   view_selected(context, NULL);
 
-  return TRUE;
+  return true;
 }
 
 static project_t *project_new(select_context_t *context) {
@@ -957,9 +957,10 @@ static void project_filesize(project_context_t *context) {
 
 /* a project may currently be open. "unsaved changes" then also */
 /* means that the user may have unsaved changes */
-static gboolean project_active_n_dirty(project_context_t *context) {
+static bool project_active_n_dirty(project_context_t *context) {
 
-  if(!context->area_edit.appdata->osm) return FALSE;
+  if(!context->area_edit.appdata->osm)
+    return false;
 
   if(context->area_edit.appdata->project &&
      !strcmp(context->area_edit.appdata->project->name,
@@ -967,10 +968,10 @@ static gboolean project_active_n_dirty(project_context_t *context) {
 
     printf("editing the currently open project\n");
 
-    return(!diff_is_clean(context->area_edit.appdata->osm, TRUE));
+    return !diff_is_clean(context->area_edit.appdata->osm, TRUE);
   }
 
-  return FALSE;
+  return false;
 }
 
 void project_diffstat(project_context_t *context) {
@@ -1114,14 +1115,13 @@ static GtkWidget *gtk_label_left_new(char *str) {
   return label;
 }
 
-static gboolean
+static bool
 project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
-  gboolean ok = FALSE;
   appdata_t *appdata = scontext->appdata;
   GtkWidget *parent = scontext->dialog;
 
   if(project_check_demo(parent, project))
-    return ok;
+    return false;
 
   /* ------------ project edit dialog ------------- */
 
@@ -1246,7 +1246,7 @@ project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
   /* the return value may actually be != ACCEPT, but only if the editor */
   /* is run for a new project which is completely removed afterwards if */
   /* cancel has been selected */
-  ok = (GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(context.dialog)));
+  bool ok = (GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(context.dialog)));
 
   /* transfer values from edit dialog into project structure */
 
@@ -1280,7 +1280,7 @@ project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
   return ok;
 }
 
-static gboolean project_open(appdata_t *appdata, const char *name) {
+static bool project_open(appdata_t *appdata, const char *name) {
   project_t *project = new project_t(name, appdata->settings->base_path);
 
   /* link to map state if a map already exists */
@@ -1300,13 +1300,13 @@ static gboolean project_open(appdata_t *appdata, const char *name) {
   if(!g_file_test(project_file.c_str(), G_FILE_TEST_IS_REGULAR)) {
     printf("requested project file doesn't exist\n");
     delete project;
-    return FALSE;
+    return false;
   }
 
   if(!project_read(project_file, project, appdata->settings->server)) {
     printf("error reading project file\n");
     delete project;
-    return FALSE;
+    return false;
   }
 
   /* --------- project structure ok: load its OSM file --------- */
@@ -1316,12 +1316,12 @@ static gboolean project_open(appdata_t *appdata, const char *name) {
   appdata->osm = osm_parse(project->path, project->osm, &appdata->icon);
   if(!appdata->osm) {
     printf("OSM parsing failed\n");
-    return FALSE;
+    return false;
   }
 
   printf("parsing ok\n");
 
-  return TRUE;
+  return true;
 }
 
 gboolean project_load(appdata_t *appdata, const char *name) {
