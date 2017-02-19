@@ -28,7 +28,7 @@
 #include "osm-gps-map-osd-select.h"
 #endif
 
-#include <math.h>
+#include <cmath>
 #include <strings.h>
 
 #define TAB_LABEL_MAP    "Map"
@@ -81,16 +81,16 @@ typedef struct {
 #endif
 } context_t;
 
-static void parse_and_set_lat(GtkWidget *src, pos_float_t *store) {
+static void parse_and_set_lat(GtkWidget *src, pos_float_t &store) {
   pos_float_t i = pos_parse_lat((char*)gtk_entry_get_text(GTK_ENTRY(src)));
   if(pos_lat_valid(i))
-    *store = i;
+    store = i;
 }
 
-static void parse_and_set_lon(GtkWidget *src, pos_float_t *store) {
+static void parse_and_set_lon(GtkWidget *src, pos_float_t &store) {
   pos_float_t i = pos_parse_lon((char*)gtk_entry_get_text(GTK_ENTRY(src)));
   if(pos_lon_valid(i))
-    *store = i;
+    store = i;
 }
 
 /**
@@ -105,14 +105,15 @@ static double selected_area(const context_t *context) {
          hscale * (context->max.lon - context->min.lon);
 }
 
-static gboolean current_tab_is(context_t *context, gint page_num, const char *str) {
+static bool current_tab_is(context_t *context, gint page_num, const char *str) {
   GtkWidget *nb = notebook_get_gtk_notebook(context->notebook);
 
   if(page_num < 0)
     page_num =
       gtk_notebook_get_current_page(GTK_NOTEBOOK(nb));
 
-  if(page_num < 0) return FALSE;
+  if(page_num < 0)
+    return false;
 
   GtkWidget *w =
     gtk_notebook_get_nth_page(GTK_NOTEBOOK(nb), page_num);
@@ -130,7 +131,7 @@ static inline const char *warn_text() {
 }
 
 static void on_area_warning_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
-  context_t *context = (context_t*)data;
+  context_t *context = static_cast<context_t *>(data);
   double area = selected_area(context);
 
   warningf(context->dialog, warn_text(), area, area/(KMPMIL*KMPMIL),
@@ -318,10 +319,10 @@ static void callback_modified_direct(G_GNUC_UNUSED GtkWidget *widget, gpointer d
     return;
 
   /* parse the fields from the direct entry pad */
-  parse_and_set_lat(context->direct.minlat, &context->min.lat);
-  parse_and_set_lon(context->direct.minlon, &context->min.lon);
-  parse_and_set_lat(context->direct.maxlat, &context->max.lat);
-  parse_and_set_lon(context->direct.maxlon, &context->max.lon);
+  parse_and_set_lat(context->direct.minlat, context->min.lat);
+  parse_and_set_lon(context->direct.minlon, context->min.lon);
+  parse_and_set_lat(context->direct.maxlat, context->max.lat);
+  parse_and_set_lon(context->direct.maxlon, context->max.lon);
 
   area_main_update(context);
 
@@ -333,7 +334,7 @@ static void callback_modified_direct(G_GNUC_UNUSED GtkWidget *widget, gpointer d
 }
 
 static void callback_modified_extent(G_GNUC_UNUSED GtkWidget *widget, gpointer data) {
-  context_t *context = (context_t*)data;
+  context_t *context = static_cast<context_t *>(data);
 
   /* extent is third tab (page 2) */
   if(!current_tab_is(context, -1, TAB_LABEL_EXTENT))
@@ -369,7 +370,7 @@ static void callback_modified_extent(G_GNUC_UNUSED GtkWidget *widget, gpointer d
 }
 
 static void callback_modified_unit(G_GNUC_UNUSED GtkWidget *widget, gpointer data) {
-  context_t *context = (context_t*)data;
+  context_t *context = static_cast<context_t *>(data);
 
   /* get current values */
   double height = pos_dist_get(context->extent.height, context->extent.is_mil);
@@ -553,7 +554,7 @@ static void on_page_switch(G_GNUC_UNUSED GtkNotebook *notebook,
 }
 
 static gboolean map_gps_update(gpointer data) {
-  context_t *context = (context_t*)data;
+  context_t *context = static_cast<context_t *>(data);
 
   gboolean gps_on =
     context->area->appdata->settings &&
@@ -575,7 +576,7 @@ static gboolean map_gps_update(gpointer data) {
 
 #endif
 
-gboolean area_edit(area_edit_t *area) {
+bool area_edit(area_edit_t *area) {
   GtkWidget *vbox;
   GdkColor color;
   gdk_color_parse("red", &color);
@@ -611,12 +612,12 @@ gboolean area_edit(area_edit_t *area) {
   /* ------------- fetch from map ------------------------ */
 
   context.map.needs_redraw = FALSE;
-  context.map.widget = g_object_new(OSM_TYPE_GPS_MAP,
+  context.map.widget = GTK_WIDGET(g_object_new(OSM_TYPE_GPS_MAP,
  	        "map-source", OSM_GPS_MAP_SOURCE_OPENSTREETMAP,
 		"proxy-uri", misc_get_proxy_uri(area->settings),
 		"auto-center", FALSE,
 	        "tile-cache", NULL,
-		 NULL);
+		 NULL));
 
   osm_gps_map_osd_select_init(OSM_GPS_MAP(context.map.widget));
 
@@ -719,7 +720,8 @@ gboolean area_edit(area_edit_t *area) {
   combo_box_set_active(context.extent.mil_km, 1); // km
 
   gtk_table_attach(GTK_TABLE(table), context.extent.mil_km, 2, 3, 1, 3,
-		   0, 0, 0, 0);
+		   static_cast<GtkAttachOptions>(0), static_cast<GtkAttachOptions>(0),
+		   0, 0);
 
   /* setup this page */
   extent_update(&context);
@@ -780,17 +782,17 @@ gboolean area_edit(area_edit_t *area) {
 
   area_main_update(&context);
 
-  gboolean leave = FALSE, ok = FALSE;
+  bool leave = false, ok = false;
   do {
     int response = gtk_dialog_run(GTK_DIALOG(context.dialog));
 
     if(GTK_RESPONSE_ACCEPT == response) {
       if(area_warning(&context)) {
-	leave = TRUE;
-	ok = TRUE;
+	leave = true;
+	ok = true;
       }
     } else if(response != GTK_RESPONSE_HELP)
-      leave = TRUE;
+      leave = true;
   } while(!leave);
 
   if(ok) {

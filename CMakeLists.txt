@@ -16,7 +16,7 @@ set(osm2go_SOURCE_FILES
 	src/about.cpp
 	src/about.h
 	src/appdata.h
-	src/area_edit.c
+	src/area_edit.cpp
 	src/area_edit.h
 	src/banner.c
 	src/banner.h
