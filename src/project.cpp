@@ -45,7 +45,7 @@
 #error "libxml doesn't support required tree or output"
 #endif
 
-typedef struct {
+struct project_context_t {
   project_t *project;
   settings_t *settings;
   GtkWidget *dialog, *fsize, *diff_stat, *diff_remove;
@@ -56,7 +56,7 @@ typedef struct {
   GtkWidget *server;
 #endif
   area_edit_t area_edit;
-} project_context_t;
+};
 
 static gboolean project_edit(appdata_t *appdata, GtkWidget *parent,
                              project_t *project, gboolean is_new);
