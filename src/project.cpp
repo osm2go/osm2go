@@ -869,9 +869,8 @@ static std::string project_select(appdata_t *appdata) {
 typedef struct stat GStatBuf;
 #endif
 
-/* return file length or -1 on error */
-static GStatBuf file_info(const project_t *project) {
-  GStatBuf st;
+/* return file length or false on error */
+static bool file_info(const project_t *project, GStatBuf &st) {
   int r;
 
   if (project->osm[0] == '/') {
@@ -882,10 +881,7 @@ static GStatBuf file_info(const project_t *project) {
     r = g_stat(str.c_str(), &st);
   }
 
-  if(r != 0)
-    memset(&st, 0, sizeof(st));
-
-  return st;
+  return (r == 0);
 }
 
 static void project_filesize(project_context_t *context) {
@@ -909,15 +905,19 @@ static void project_filesize(project_context_t *context) {
     gtk_widget_modify_fg(context->fsize, GTK_STATE_NORMAL, NULL);
 
     if(!project->data_dirty) {
-      GStatBuf st = file_info(project);
-      struct tm loctime;
-      localtime_r(&st.st_mtim.tv_sec, &loctime);
-      char time_str[32];
-      strftime(time_str, sizeof(time_str), "%x %X", &loctime);
+      GStatBuf st;
+      if (file_info(project, st)) {
+        struct tm loctime;
+        localtime_r(&st.st_mtim.tv_sec, &loctime);
+        char time_str[32];
+        strftime(time_str, sizeof(time_str), "%x %X", &loctime);
 
-      gstr = g_strdup_printf(_("%" G_GOFFSET_FORMAT " bytes present\nfrom %s"),
-			    (goffset)st.st_size, time_str);
-      str = gstr;
+        gstr = g_strdup_printf(_("%" G_GOFFSET_FORMAT " bytes present\nfrom %s"),
+                               (goffset)st.st_size, time_str);
+        str = gstr;
+      } else {
+        str = _("Error testing data file");
+      }
     } else
       str = _("Outdated, please download!");
 
