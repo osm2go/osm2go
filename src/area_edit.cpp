@@ -29,6 +29,7 @@
 #include "osm-gps-map-osd-select.h"
 #endif
 
+#include <algorithm>
 #include <cmath>
 #include <strings.h>
 
@@ -218,6 +219,23 @@ static GSList *pos_append(GSList *list, pos_float_t lat, pos_float_t lon) {
   return pos_append_rad(list, DEG2RAD(lat), DEG2RAD(lon));
 }
 
+struct add_bounds {
+  OsmGpsMap * const map;
+  add_bounds(OsmGpsMap *m) : map(m) {}
+  void operator()(const pos_bounds &b);
+};
+
+void add_bounds::operator()(const pos_bounds &b)
+{
+  GSList *box = pos_append(NULL, b.min.lat, b.min.lon);
+  box = pos_append(box, b.max.lat, b.min.lon);
+  box = pos_append(box, b.max.lat, b.max.lon);
+  box = pos_append(box, b.min.lat, b.max.lon);
+  box = pos_append(box, b.min.lat, b.min.lon);
+
+  osm_gps_map_add_bounds(map, box);
+}
+
 /* the contents of the map tab have been changed */
 static void map_update(context_t *context, gboolean forced) {
 
@@ -282,6 +300,10 @@ static void map_update(context_t *context, gboolean forced) {
       osm_gps_map_add_track(OSM_GPS_MAP(context->map.widget), box);
     }
   }
+
+  // show all other bounds
+  std::for_each(context->area->other_bounds.begin(), context->area->other_bounds.end(),
+                add_bounds(OSM_GPS_MAP(context->map.widget)));
 
   context->map.needs_redraw = FALSE;
 }

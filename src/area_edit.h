@@ -23,11 +23,21 @@
 #include "appdata.h"
 #include "pos.h"
 
+#include <vector>
+
+struct pos_bounds {
+  pos_bounds(const pos_t &mi, const pos_t &ma)
+    : min(mi), max(ma) {}
+  pos_t min;
+  pos_t max;
+};
+
 struct area_edit_t {
   explicit area_edit_t(appdata_t *a, pos_t *mi, pos_t *ma);
   appdata_t *appdata;
   GtkWidget *parent;   /* parent widget to be placed upon */
   pos_t *min, *max;    /* positions to work on */
+  std::vector<pos_bounds> other_bounds;   ///< bounds of all other valid projects
 };
 
 bool area_edit(area_edit_t &area);

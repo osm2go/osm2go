@@ -57,6 +57,7 @@ struct project_context_t {
   GtkWidget *server;
 #endif
   area_edit_t area_edit;
+  const std::vector<project_t *> *projects;
 };
 
 project_context_t::project_context_t(appdata_t* a, project_t *p, gboolean n)
@@ -77,12 +78,18 @@ project_context_t::project_context_t(appdata_t* a, project_t *p, gboolean n)
   , server(0)
 #endif
   , area_edit(a, &project->min, &project->max)
+  , projects(NULL)
 {
 }
 
-static gboolean project_edit(appdata_t *appdata, GtkWidget *parent,
-                             project_t *project, gboolean is_new);
+struct select_context_t {
+  appdata_t *appdata;
+  std::vector<project_t *> projects;
+  GtkWidget *dialog, *list;
+};
 
+static gboolean project_edit(select_context_t *scontext,
+                             project_t *project, gboolean is_new);
 
 /* ------------ project file io ------------- */
 
@@ -328,12 +335,6 @@ static std::vector<project_t *> project_scan(appdata_t *appdata) {
   return projects;
 }
 
-typedef struct {
-  appdata_t *appdata;
-  std::vector<project_t *> projects;
-  GtkWidget *dialog, *list;
-} select_context_t;
-
 enum {
   PROJECT_COL_NAME = 0,
   PROJECT_COL_STATUS,
@@ -567,7 +568,7 @@ static project_t *project_new(select_context_t *context) {
     project_delete(context, project);
 
     project = NULL;
-  } else if(!project_edit(context->appdata, context->dialog, project, TRUE)) {
+  } else if(!project_edit(context, project, TRUE)) {
     printf("new/edit cancelled!!\n");
 
     project_delete(context, project);
@@ -659,7 +660,7 @@ static void on_project_edit(G_GNUC_UNUSED GtkButton *button, gpointer data) {
   project_t *project = project_get_selected(context->list);
   g_assert(project);
 
-  if(project_edit(context->appdata, context->dialog, project, FALSE)) {
+  if(project_edit(context, project, FALSE)) {
     GtkTreeModel     *model;
     GtkTreeIter       iter;
 
@@ -992,6 +993,21 @@ project_pos_is_valid(project_t *project) {
           !std::isnan(project->max.lon));
 }
 
+struct projects_to_bounds {
+  std::vector<pos_bounds> &pbounds;
+  projects_to_bounds(std::vector<pos_bounds> &b) : pbounds(b) {}
+  void operator()(const project_t *project);
+};
+
+void projects_to_bounds::operator()(const project_t* project)
+{
+  if (isnan(project->min.lat) || isnan(project->min.lon) ||
+      isnan(project->min.lat) || isnan(project->min.lon))
+    return;
+
+  pbounds.push_back(pos_bounds(project->min, project->max));
+}
+
 static void on_edit_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
   project_context_t *context = (project_context_t*)data;
   project_t * const project = context->project;
@@ -1002,6 +1018,9 @@ static void on_edit_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
 	     _("You have pending changes in this project.\n\n"
 	       "Changing the area may cause pending changes to be "
 	       "lost if they are outside the updated area."));
+
+  std::for_each(context->projects->begin(), context->projects->end(),
+                projects_to_bounds(context->area_edit.other_bounds));
 
   if(area_edit(context->area_edit)) {
     printf("coordinates changed!!\n");
@@ -1096,9 +1115,10 @@ static GtkWidget *gtk_label_left_new(char *str) {
 }
 
 static gboolean
-project_edit(appdata_t *appdata, GtkWidget *parent,
-	     project_t *project, gboolean is_new) {
+project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
   gboolean ok = FALSE;
+  appdata_t *appdata = scontext->appdata;
+  GtkWidget *parent = scontext->dialog;
 
   if(project_check_demo(parent, project))
     return ok;
@@ -1106,6 +1126,7 @@ project_edit(appdata_t *appdata, GtkWidget *parent,
   /* ------------ project edit dialog ------------- */
 
   project_context_t context(appdata, project, is_new);
+  context.projects = &scontext->projects;
 
   /* cancel is enabled for "new" projects only */
   if(is_new) {

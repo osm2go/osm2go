@@ -142,6 +142,7 @@ struct _OsmGpsMapPrivate
 
     //additional images or tracks added to the map
     GSList *tracks;
+    GSList *bounds;
     GSList *images;
 
     //Used for storing the joined tiles
@@ -520,6 +521,29 @@ osm_gps_map_free_tracks (OsmGpsMap *map)
         }
         g_slist_free(priv->tracks);
         priv->tracks = NULL;
+    }
+}
+
+/* clears the bounds and all resources */
+static void
+osm_gps_map_free_bounds(OsmGpsMap *map)
+{
+    OsmGpsMapPrivate *priv = map->priv;
+    if (priv->bounds)
+    {
+        GSList* tmp = priv->bounds;
+        while (tmp != NULL)
+        {
+#if GLIB_CHECK_VERSION(2,28,0)
+            g_slist_free_full(tmp->data, (GDestroyNotify) g_free);
+#else
+            g_slist_foreach(tmp->data, (GFunc) g_free, NULL);
+            g_slist_free(tmp->data);
+#endif
+            tmp = g_slist_next(tmp);
+        }
+        g_slist_free(priv->bounds);
+        priv->bounds = NULL;
     }
 }
 
@@ -1149,14 +1173,15 @@ osm_gps_map_fill_tiles_pixel (OsmGpsMap *map)
 }
 
 static void
-osm_gps_map_print_track (OsmGpsMap *map, GSList *trackpoint_list)
+osm_gps_map_print_track(OsmGpsMap *map, GSList *trackpoint_list,
+                        unsigned short r, unsigned short g, unsigned short b,
+                        int lw)
 {
     OsmGpsMapPrivate *priv = map->priv;
 
     GSList *list;
     int x,y;
     int min_x = 0,min_y = 0,max_x = 0,max_y = 0;
-    int lw = priv->ui_gps_track_width;
     int map_x0, map_y0;
 #ifdef USE_CAIRO
     cairo_t *cr;
@@ -1169,14 +1194,14 @@ osm_gps_map_print_track (OsmGpsMap *map, GSList *trackpoint_list)
 #ifdef USE_CAIRO
     cr = gdk_cairo_create(priv->pixmap);
     cairo_set_line_width (cr, lw);
-    cairo_set_source_rgba (cr, 60000.0/65535.0, 0.0, 0.0, 0.6);
+    cairo_set_source_rgba (cr, r/65535.0, g/65535.0, b/65535.0, 0.6);
     cairo_set_line_cap (cr, CAIRO_LINE_CAP_ROUND);
     cairo_set_line_join (cr, CAIRO_LINE_JOIN_ROUND);
 #else
     gc = gdk_gc_new(priv->pixmap);
-    color.green = 0;
-    color.blue = 0;
-    color.red = 60000;
+    color.green = b;
+    color.blue = g;
+    color.red = r;
     gdk_gc_set_rgb_fg_color(gc, &color);
     gdk_gc_set_line_attributes(gc, lw, GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_ROUND);
 #endif
@@ -1234,18 +1259,38 @@ static void
 osm_gps_map_print_tracks (OsmGpsMap *map)
 {
     OsmGpsMapPrivate *priv = map->priv;
+    const unsigned short r = 60000;
+    const unsigned short g = 0;
+    const unsigned short b = 0;
 
     if (priv->show_trip_history)
-        osm_gps_map_print_track (map, priv->trip_history);
+        osm_gps_map_print_track(map, priv->trip_history, r, g, b, priv->ui_gps_track_width);
 
     if (priv->tracks)
     {
         GSList* tmp = priv->tracks;
         while (tmp != NULL)
         {
-            osm_gps_map_print_track (map, tmp->data);
+            osm_gps_map_print_track(map, tmp->data, r, g, b, priv->ui_gps_track_width);
             tmp = g_slist_next(tmp);
         }
+    }
+}
+
+/* Prints the bound rectangles */
+static void
+osm_gps_map_print_bounds(OsmGpsMap *map)
+{
+    OsmGpsMapPrivate *priv = map->priv;
+    const unsigned short r = 0x64 * 256;
+    const unsigned short g = 0x7d * 256;
+    const unsigned short b = 0xab * 256;
+
+    GSList* tmp = priv->bounds;
+    while (tmp != NULL)
+    {
+        osm_gps_map_print_track(map, tmp->data, r, g, b, priv->ui_gps_track_width / 2);
+        tmp = g_slist_next(tmp);
     }
 }
 
@@ -1318,6 +1363,7 @@ osm_gps_map_map_redraw (OsmGpsMap *map)
 
     osm_gps_map_fill_tiles_pixel(map);
 
+    osm_gps_map_print_bounds(map);
     osm_gps_map_print_tracks(map);
     osm_gps_map_draw_gps_point(map);
     osm_gps_map_print_images(map);
@@ -1460,6 +1506,7 @@ osm_gps_map_init (OsmGpsMap *object)
 #endif
 
     priv->tracks = NULL;
+    priv->bounds = NULL;
     priv->images = NULL;
 
     priv->drag_counter = 0;
@@ -1629,6 +1676,7 @@ osm_gps_map_finalize (GObject *object)
 
     osm_gps_map_free_trip(map);
     osm_gps_map_free_tracks(map);
+    osm_gps_map_free_bounds(map);
 
     G_OBJECT_CLASS (osm_gps_map_parent_class)->finalize (object);
 }
@@ -2663,6 +2711,20 @@ osm_gps_map_add_track (OsmGpsMap *map, GSList *track)
 
     if (track) {
         priv->tracks = g_slist_append(priv->tracks, track);
+        osm_gps_map_map_redraw_idle(map);
+    }
+}
+
+void
+osm_gps_map_add_bounds(OsmGpsMap *map, GSList *bounds)
+{
+    OsmGpsMapPrivate *priv;
+
+    g_return_if_fail (OSM_IS_GPS_MAP (map));
+    priv = map->priv;
+
+    if (bounds) {
+        priv->bounds = g_slist_append(priv->bounds, bounds);
         osm_gps_map_map_redraw_idle(map);
     }
 }
