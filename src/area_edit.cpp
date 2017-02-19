@@ -806,10 +806,8 @@ bool area_edit(area_edit_t &area) {
 
   if(ok) {
     /* copy modified values back to given storage */
-    area.min->lat = context.min.lat;
-    area.min->lon = context.min.lon;
-    area.max->lat = context.max.lat;
-    area.max->lon = context.max.lon;
+    *area.min = context.min;
+    *area.max = context.max;
   }
 
 #ifdef ENABLE_OSM_GPS_MAP
