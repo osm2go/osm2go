@@ -469,7 +469,7 @@ void colorize_node::operator()(elemstyle_t *elemstyle)
 
   if(match && elemstyle->icon.filename) {
     char *name = g_strjoin("/", "styles", style->icon.path_prefix,
-                           elemstyle->icon.filename, 0);
+                           elemstyle->icon.filename, NULL);
 
     /* free old icon if there's one present */
     if(node->icon_buf) {

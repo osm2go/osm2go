@@ -1436,7 +1436,7 @@ gboolean project_load(appdata_t *appdata, const char *name) {
 
 project_t::project_t(const gchar *n, const char *base_path)
   : name(g_strdup(n))
-  , path(g_strconcat(base_path, name, "/", 0))
+  , path(g_strconcat(base_path, name, "/", NULL))
   , desc(0)
   , server(0)
   , rserver(0)
