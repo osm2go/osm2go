@@ -585,22 +585,22 @@ static gboolean map_gps_update(gpointer data) {
 
 #endif
 
-bool area_edit(area_edit_t *area) {
+bool area_edit(area_edit_t &area) {
   GtkWidget *vbox;
   GdkColor color;
   gdk_color_parse("red", &color);
 
   context_t context;
   memset(&context, 0, sizeof(context));
-  context.area = area;
-  context.min.lat = area->min->lat;
-  context.min.lon = area->min->lon;
-  context.max.lat = area->max->lat;
-  context.max.lon = area->max->lon;
+  context.area = &area;
+  context.min.lat = area.min->lat;
+  context.min.lon = area.min->lon;
+  context.max.lat = area.max->lat;
+  context.max.lon = area.max->lon;
 
   context.dialog =
     misc_dialog_new(MISC_DIALOG_HIGH, _("Area editor"),
-	  GTK_WINDOW(area->parent),
+	  GTK_WINDOW(area.parent),
 	  GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
           GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
           NULL);
@@ -623,7 +623,7 @@ bool area_edit(area_edit_t *area) {
   context.map.needs_redraw = FALSE;
   context.map.widget = GTK_WIDGET(g_object_new(OSM_TYPE_GPS_MAP,
  	        "map-source", OSM_GPS_MAP_SOURCE_OPENSTREETMAP,
-		"proxy-uri", misc_get_proxy_uri(area->appdata->settings),
+		"proxy-uri", misc_get_proxy_uri(area.appdata->settings),
 		"auto-center", FALSE,
 	        "tile-cache", NULL,
 		 NULL));
@@ -661,7 +661,7 @@ bool area_edit(area_edit_t *area) {
   context.direct.maxlat = pos_lat_entry_new(0.0);
   misc_table_attach(table, context.direct.maxlat, 2, 0);
 
-  context.direct.minlon = pos_lon_entry_new(area->min->lon);
+  context.direct.minlon = pos_lon_entry_new(area.min->lon);
   misc_table_attach(table, context.direct.minlon, 0, 1);
   label = gtk_label_new(_("to"));
   misc_table_attach(table,  label, 1, 1);
@@ -806,10 +806,10 @@ bool area_edit(area_edit_t *area) {
 
   if(ok) {
     /* copy modified values back to given storage */
-    area->min->lat = context.min.lat;
-    area->min->lon = context.min.lon;
-    area->max->lat = context.max.lat;
-    area->max->lon = context.max.lon;
+    area.min->lat = context.min.lat;
+    area.min->lon = context.min.lon;
+    area.max->lat = context.max.lat;
+    area.max->lon = context.max.lon;
   }
 
 #ifdef ENABLE_OSM_GPS_MAP

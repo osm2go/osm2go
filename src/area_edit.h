@@ -30,6 +30,6 @@ struct area_edit_t {
   pos_t *min, *max;    /* positions to work on */
 };
 
-bool area_edit(area_edit_t *area);
+bool area_edit(area_edit_t &area);
 
 #endif // AREA_EDIT_H

@@ -1003,7 +1003,7 @@ static void on_edit_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
 	       "Changing the area may cause pending changes to be "
 	       "lost if they are outside the updated area."));
 
-  if(area_edit(&context->area_edit)) {
+  if(area_edit(context->area_edit)) {
     printf("coordinates changed!!\n");
 
     /* the wms layer isn't usable with new coordinates */
