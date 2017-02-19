@@ -93,14 +93,14 @@ static std::string project_filename(const project_t *project) {
   return ret;
 }
 
-static gboolean project_read(const std::string &project_file, project_t *project,
+static bool project_read(const std::string &project_file, project_t *project,
                              const char *defaultserver) {
-  xmlDoc *doc = NULL;
+  xmlDoc *doc = xmlReadFile(project_file.c_str(), NULL, 0);
 
   /* parse the file and get the DOM */
-  if((doc = xmlReadFile(project_file.c_str(), NULL, 0)) == NULL) {
+  if(doc == NULL) {
     printf("error: could not parse file %s\n", project_file.c_str());
-    return FALSE;
+    return false;
   }
 
   xmlNode *cur_node;
@@ -201,7 +201,7 @@ static gboolean project_read(const std::string &project_file, project_t *project
 
   xmlFreeDoc(doc);
 
-  return TRUE;
+  return true;
 }
 
 gboolean project_save(GtkWidget *parent, project_t *project) {
