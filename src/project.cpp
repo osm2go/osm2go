@@ -46,6 +46,7 @@
 #endif
 
 struct project_context_t {
+  explicit project_context_t(appdata_t *a, project_t *p, gboolean n);
   project_t *project;
   settings_t *settings;
   GtkWidget *dialog, *fsize, *diff_stat, *diff_remove;
@@ -57,6 +58,27 @@ struct project_context_t {
 #endif
   area_edit_t area_edit;
 };
+
+project_context_t::project_context_t(appdata_t* a, project_t *p, gboolean n)
+  : project(p)
+  , settings(a->settings)
+  , dialog(0)
+  , fsize(0)
+  , diff_stat(0)
+  , diff_remove(0)
+  , desc(0)
+  , download(0)
+  , minlat(0)
+  , minlon(0)
+  , maxlat(0)
+  , maxlon(0)
+  , is_new(n)
+#ifdef SERVER_EDITABLE
+  , server(0)
+#endif
+  , area_edit(a, &project->min, &project->max)
+{
+}
 
 static gboolean project_edit(appdata_t *appdata, GtkWidget *parent,
                              project_t *project, gboolean is_new);
@@ -1083,13 +1105,7 @@ project_edit(appdata_t *appdata, GtkWidget *parent,
 
   /* ------------ project edit dialog ------------- */
 
-  project_context_t context = { 0 };
-  context.project = project;
-  context.area_edit.settings = context.settings = appdata->settings;
-  context.area_edit.appdata = appdata;
-  context.is_new = is_new;
-  context.area_edit.min = &project->min;
-  context.area_edit.max = &project->max;
+  project_context_t context(appdata, project, is_new);
 
   /* cancel is enabled for "new" projects only */
   if(is_new) {

@@ -22,6 +22,7 @@
 #include "appdata.h"
 #include "gps.h"
 #include "misc.h"
+#include "settings.h"
 
 #ifdef ENABLE_OSM_GPS_MAP
 #include "osm-gps-map.h"
@@ -80,6 +81,14 @@ typedef struct {
   } map;
 #endif
 } context_t;
+
+area_edit_t::area_edit_t(appdata_t *a, pos_t *mi, pos_t *ma)
+  : appdata(a)
+  , parent(0)
+  , min(mi)
+  , max(ma)
+{
+}
 
 static void parse_and_set_lat(GtkWidget *src, pos_float_t &store) {
   pos_float_t i = pos_parse_lat((char*)gtk_entry_get_text(GTK_ENTRY(src)));
@@ -614,7 +623,7 @@ bool area_edit(area_edit_t *area) {
   context.map.needs_redraw = FALSE;
   context.map.widget = GTK_WIDGET(g_object_new(OSM_TYPE_GPS_MAP,
  	        "map-source", OSM_GPS_MAP_SOURCE_OPENSTREETMAP,
-		"proxy-uri", misc_get_proxy_uri(area->settings),
+		"proxy-uri", misc_get_proxy_uri(area->appdata->settings),
 		"auto-center", FALSE,
 	        "tile-cache", NULL,
 		 NULL));

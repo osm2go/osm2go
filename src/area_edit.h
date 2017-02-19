@@ -22,14 +22,13 @@
 
 #include "appdata.h"
 #include "pos.h"
-#include "settings.h"
 
-typedef struct {
+struct area_edit_t {
+  explicit area_edit_t(appdata_t *a, pos_t *mi, pos_t *ma);
   appdata_t *appdata;
   GtkWidget *parent;   /* parent widget to be placed upon */
-  settings_t *settings;
   pos_t *min, *max;    /* positions to work on */
-} area_edit_t;
+};
 
 bool area_edit(area_edit_t *area);
 
