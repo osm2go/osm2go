@@ -147,10 +147,16 @@ gchar *object_t::object_string() const {
   }
 }
 
-const tag_t *object_t::get_tags() const {
+const char *object_t::get_tag_value(const char *key) const {
   if(!is_real())
     return NULL;
-  return obj->tag;
+  return obj->tag->get_by_key(key);
+}
+
+bool object_t::has_tags() const {
+  if(!is_real())
+    return false;
+  return obj->tag != NULL;
 }
 
 item_id_t object_t::get_id() const {
@@ -1946,13 +1952,13 @@ tag_t *osm_tags_copy(const tag_t *src_tag) {
 /* try to get an as "speaking" description of the object as possible */
 char *object_t::get_name() const {
   char *ret = NULL;
-  const tag_t *tags = get_tags();
 
   /* worst case: we have no tags at all. return techincal info then */
-  if(!tags)
+  if(!has_tags())
     return g_strconcat("unspecified ", type_string(), NULL);
 
   /* try to figure out _what_ this is */
+  const tag_t *tags = obj->tag;
 
   const char *name = tags->get_by_key("name");
   if(!name) name = tags->get_by_key("ref");

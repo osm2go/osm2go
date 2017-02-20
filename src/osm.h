@@ -300,7 +300,8 @@ typedef struct object_s {
   const char *type_string() const;
   gchar *id_string() const;
   gchar *object_string() const;
-  const tag_t *get_tags() const;
+  const char *get_tag_value(const char *key) const;
+  bool has_tags() const;
   item_id_t get_id() const;
   void set_flags(int set, int clr);
   char *get_name() const;

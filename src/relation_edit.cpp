@@ -558,11 +558,10 @@ void members_list_functor::operator()(const member_t &member)
 {
   GtkTreeIter iter;
 
-  const tag_t *tags = member.object.get_tags();
   gchar *id = member.object.id_string();
 
   /* try to find something descriptive */
-  const char *name = tags->get_by_key("name");
+  const char *name = member.object.get_tag_value("name");
 
   /* Append a row and fill in some data */
   gtk_list_store_append(store, &iter);
