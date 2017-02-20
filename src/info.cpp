@@ -235,10 +235,6 @@ static void on_tag_add(G_GNUC_UNUSED GtkWidget *button, tag_context_t *context) 
 
   /* create and append a new tag */
   *tag = g_new0(tag_t, 1);
-  if(!*tag) {
-    errorf(GTK_WIDGET(context->appdata->window), _("Out of memory"));
-    return;
-  }
 
   /* fill with some empty strings */
   (*tag)->key = g_strdup("");
