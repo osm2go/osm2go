@@ -314,7 +314,6 @@ struct member_t {
   object_t object;
   char   *role;
 
-  operator bool() const;
   bool operator==(const member_t &other) const;
   inline bool operator==(const object_t &other) const
   { return object == other; }

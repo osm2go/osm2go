@@ -817,14 +817,22 @@ static way_t *process_way(xmlTextReaderPtr reader, osm_t *osm) {
   return way;
 }
 
-static member_t process_member(xmlTextReaderPtr reader, osm_t *osm) {
+static bool process_member(xmlTextReaderPtr reader, osm_t *osm, std::vector<member_t> &members) {
   char *prop;
   member_t member;
 
   if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "type"))) {
-    if(strcmp(prop, "way") == 0)           member.object.type = WAY;
-    else if(strcmp(prop, "node") == 0)     member.object.type = NODE;
-    else if(strcmp(prop, "relation") == 0) member.object.type = RELATION;
+    if(strcmp(prop, "way") == 0)
+      member.object.type = WAY;
+    else if(strcmp(prop, "node") == 0)
+      member.object.type = NODE;
+    else if(strcmp(prop, "relation") == 0)
+      member.object.type = RELATION;
+    else {
+      printf("Unable to store illegal type '%s'\n", prop);
+      xmlFree(prop);
+      return false;
+    }
     xmlFree(prop);
   }
 
@@ -832,10 +840,6 @@ static member_t process_member(xmlTextReaderPtr reader, osm_t *osm) {
     item_id_t id = strtoll(prop, NULL, 10);
 
     switch(member.object.type) {
-    case ILLEGAL:
-      printf("Unable to store illegal type\n");
-      return member;
-
     case WAY:
       /* search matching way */
       member.object.way = osm->way_by_id(id);
@@ -867,6 +871,8 @@ static member_t process_member(xmlTextReaderPtr reader, osm_t *osm) {
     case NODE_ID:
     case RELATION_ID:
       break;
+    default:
+      g_assert_not_reached();
     }
 
     xmlFree(prop);
@@ -877,7 +883,8 @@ static member_t process_member(xmlTextReaderPtr reader, osm_t *osm) {
     xmlFree(prop);
   }
 
-  return member;
+  members.push_back(member);
+  return true;
 }
 
 static relation_t *process_relation(xmlTextReaderPtr reader, osm_t *osm) {
@@ -905,9 +912,7 @@ static relation_t *process_relation(xmlTextReaderPtr reader, osm_t *osm) {
     if(xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT) {
       const char *subname = (const char*)xmlTextReaderConstName(reader);
       if(strcmp(subname, "member") == 0) {
-        member_t member = process_member(reader, osm);
-        if(member)
-          relation->members.push_back(member);
+        process_member(reader, osm, relation->members);
       } else if(strcmp(subname, "tag") == 0) {
 	*tag = process_tag(reader);
 	if(*tag) tag = &(*tag)->next;
@@ -2136,11 +2141,6 @@ member_t::member_t(type_t t)
   : role(0)
 {
   object.type = t;
-}
-
-member_t::operator bool() const
-{
-  return object.type != ILLEGAL;
 }
 
 bool member_t::operator==(const member_t &other) const
