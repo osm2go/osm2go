@@ -160,18 +160,18 @@ cb_menu_download(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
     return;
 
   /* if we have valid osm data loaded: save state first */
-  if(appdata->osm) {
-    /* redraw the entire map by destroying all map items and redrawing them */
+  if(appdata->osm)
     diff_save(appdata->project, appdata->osm);
-    map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
-
-    osm_free(appdata->osm);
-    appdata->osm = NULL;
-  }
 
   // download
   if(osm_download(GTK_WIDGET(appdata->window), appdata->settings,
 		  appdata->project)) {
+    if(appdata->osm) {
+      /* redraw the entire map by destroying all map items and redrawing them */
+      map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
+
+      osm_free(appdata->osm);
+    }
 
     banner_busy_start(appdata, 1, "Drawing");
     appdata->osm = osm_parse(appdata->project->path, appdata->project->osm,
