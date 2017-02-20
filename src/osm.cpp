@@ -1960,26 +1960,23 @@ char *object_t::get_name() const {
   /* try to figure out _what_ this is */
   const tag_t *tags = obj->tag;
 
-  const char *name = tags->get_by_key("name");
-  if(!name) name = tags->get_by_key("ref");
-  if(!name) name = tags->get_by_key("note");
-  if(!name) name = tags->get_by_key("fix" "me");
-  if(!name) name = tags->get_by_key("sport");
+  const char *name_tags[] = { "name", "ref", "note", "fix" "me", "sport", 0 };
+  const char *name = 0;
+  for(unsigned int i = 0; !name && name_tags[i]; i++)
+    name = obj->get_value(name_tags[i]);
 
   /* search for some kind of "type" */
-  const char *type = tags->get_by_key("amenity");
+  const char *type_tags[] = { "amenity", "place", "historic", "leisure",
+                              "tourism", "landuse", "waterway", "railway",
+                              "natural", 0 };
+  const char *type = 0;
   gchar *gtype = NULL;
-  if(!type) type = tags->get_by_key("place");
-  if(!type) type = tags->get_by_key("historic");
-  if(!type) type = tags->get_by_key("leisure");
-  if(!type) type = tags->get_by_key("tourism");
-  if(!type) type = tags->get_by_key("landuse");
-  if(!type) type = tags->get_by_key("waterway");
-  if(!type) type = tags->get_by_key("railway");
-  if(!type) type = tags->get_by_key("natural");
+  for(unsigned int i = 0; !type && type_tags[i]; i++)
+    type = obj->get_value(type_tags[i]);
+
   if(!type && tags->get_by_key("building")) {
     const char *street = tags->get_by_key("addr:street");
-    const char *hn = tags->get_by_key("addr:housenumber");
+    const char *hn = obj->get_value("addr:housenumber");
     type = "building";
 
     if(street && hn) {
