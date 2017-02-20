@@ -97,7 +97,7 @@ static gboolean relation_add_item(GtkWidget *parent,
 
   gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_ACCEPT);
 
-  const char *type = relation->tag->get_by_key("type");
+  const char *type = relation->get_value("type");
 
   char *info_str = NULL;
   if(type) info_str = g_strdup_printf(_("In relation of type: %s"), type);
@@ -107,7 +107,7 @@ static gboolean relation_add_item(GtkWidget *parent,
 			      gtk_label_new(info_str));
   g_free(info_str);
 
-  const char *name = relation->tag->get_by_key("name");
+  const char *name = relation->get_value("name");
   if(name)
     gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox),
 				gtk_label_new(name));
@@ -307,7 +307,7 @@ void relation_list_insert_functor::operator()(std::pair<item_id_t, relation_t *>
   /* Append a row and fill in some data */
   gtk_list_store_append(context->store, &iter);
   gtk_list_store_set(context->store, &iter,
-     RELITEM_COL_TYPE, relation->tag->get_by_key("type"),
+     RELITEM_COL_TYPE, relation->get_value("type"),
      RELITEM_COL_ROLE, relitem_get_role_in_relation(context->item, relation),
      RELITEM_COL_NAME, name,
      RELITEM_COL_DATA, relation,
@@ -670,9 +670,9 @@ void relation_show_members(GtkWidget *parent, relation_t *relation) {
   mcontext->relation = relation;
   gchar *nstr = NULL;
 
-  const char *str = mcontext->relation->tag->get_by_key("name");
+  const char *str = mcontext->relation->get_value("name");
   if(!str)
-    str = mcontext->relation->tag->get_by_key("ref");
+    str = mcontext->relation->get_value("ref");
   if(!str)
     str = nstr = g_strdup_printf(_("Members of relation #" ITEM_ID_FORMAT),
                                  mcontext->relation->id);
@@ -746,7 +746,7 @@ static void on_relation_add(G_GNUC_UNUSED GtkWidget *button, relation_context_t 
     gtk_list_store_append(context->store, &iter);
     gtk_list_store_set(context->store, &iter,
 		       RELATION_COL_TYPE,
-		       relation->tag->get_by_key("type"),
+		       relation->get_value("type"),
 		       RELATION_COL_NAME, name,
 		       RELATION_COL_MEMBERS, relation->members.size(),
 		       RELATION_COL_DATA, relation,
@@ -784,7 +784,7 @@ static void on_relation_edit(G_GNUC_UNUSED GtkWidget *button, relation_context_t
 
   // Found it. Update all visible fields.
   gtk_list_store_set(context->store, &iter,
-    RELATION_COL_TYPE,    sel->tag->get_by_key("type"),
+    RELATION_COL_TYPE,    sel->get_value("type"),
     RELATION_COL_NAME,    sel->descriptive_name(),
     RELATION_COL_MEMBERS, sel->members.size(),
     -1);
@@ -838,7 +838,7 @@ void relation_list_widget_functor::operator()(const relation_t *rel)
   gtk_list_store_append(context->store, &iter);
   gtk_list_store_set(context->store, &iter,
                      RELATION_COL_TYPE,
-                     rel->tag->get_by_key("type"),
+                     rel->get_value("type"),
                      RELATION_COL_NAME, name,
                      RELATION_COL_MEMBERS, rel->members.size(),
                      RELATION_COL_DATA, rel,

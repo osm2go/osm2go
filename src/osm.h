@@ -75,7 +75,6 @@ typedef struct tag_t {
   { return find(reinterpret_cast<const char *>(key)); }
   inline const tag_t *find(const char *key) const
   { return const_cast<tag_t *>(this)->find(key); }
-  const char *get_by_key(const char *key) const;
 
   /**
    * @brief replace the key

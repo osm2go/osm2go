@@ -150,7 +150,7 @@ gchar *object_t::object_string() const {
 const char *object_t::get_tag_value(const char *key) const {
   if(!is_real())
     return NULL;
-  return obj->tag->get_by_key(key);
+  return obj->get_value(key);
 }
 
 bool object_t::has_tags() const {
@@ -535,7 +535,7 @@ member_t osm_parse_osm_relation_member(osm_t *osm, xmlNode *a_node) {
 gchar *relation_t::descriptive_name() const {
   const char *keys[] = { "ref", "name", "description", "note", "fix" "me", NULL};
   for (unsigned int i = 0; keys[i] != NULL; i++) {
-    const char *name = tag->get_by_key(keys[i]);
+    const char *name = get_value(keys[i]);
     if(name)
       return g_strdup(name);
   }
@@ -1079,15 +1079,6 @@ tag_t *tag_t::find(const char* key) {
 
     tag = tag->next;
   }
-
-  return NULL;
-}
-
-const char *tag_t::get_by_key(const char* key) const {
-  const tag_t *t = find(key);
-
-  if (t)
-    return t->value;
 
   return NULL;
 }
@@ -1835,7 +1826,7 @@ struct find_way_or_ref {
 
 void reverse_roles::operator()(relation_t* relation)
 {
-  const char *type = relation->tag->get_by_key("type");
+  const char *type = relation->get_value("type");
 
   // Route relations; http://wiki.openstreetmap.org/wiki/Relation:route
   if (!type || strcasecmp(type, "route") != 0)
@@ -1974,8 +1965,8 @@ char *object_t::get_name() const {
   for(unsigned int i = 0; !type && type_tags[i]; i++)
     type = obj->get_value(type_tags[i]);
 
-  if(!type && tags->get_by_key("building")) {
-    const char *street = tags->get_by_key("addr:street");
+  if(!type && obj->get_value("building")) {
+    const char *street = obj->get_value("addr:street");
     const char *hn = obj->get_value("addr:housenumber");
     type = "building";
 
@@ -1985,12 +1976,12 @@ char *object_t::get_name() const {
     } else if(hn) {
       type = gtype = g_strconcat("building housenumber ", hn, NULL);
     } else if(!name)
-      name = tags->get_by_key("addr:housename");
+      name = obj->get_value("addr:housename");
   }
-  if(!type) type = tags->get_by_key("emergency");
+  if(!type) type = obj->get_value("emergency");
 
   /* highways are a little bit difficult */
-  const char *highway = tags->get_by_key("highway");
+  const char *highway = obj->get_value("highway");
   if(highway && !gtype) {
     if((!strcmp(highway, "primary")) ||
        (!strcmp(highway, "secondary")) ||
@@ -2051,7 +2042,12 @@ base_object_t::base_object_t()
 
 const char* base_object_t::get_value(const char* key) const
 {
-  return tag->get_by_key(key);
+  const tag_t *t = tag->find(key);
+
+  if (t)
+    return t->value;
+
+  return NULL;
 }
 
 bool base_object_t::has_tag() const
