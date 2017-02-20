@@ -1954,8 +1954,6 @@ char *object_t::get_name() const {
     return g_strconcat("unspecified ", type_string(), NULL);
 
   /* try to figure out _what_ this is */
-  const tag_t *tags = obj->tag;
-
   const char *name_tags[] = { "name", "ref", "note", "fix" "me", "sport", 0 };
   const char *name = 0;
   for(unsigned int i = 0; !name && name_tags[i]; i++)
