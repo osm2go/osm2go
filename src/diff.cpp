@@ -42,14 +42,21 @@ static std::string diff_filename(const project_t *project) {
   return ret;
 }
 
-static void diff_save_tags(const tag_t *tag, xmlNodePtr node) {
-  while(tag) {
+struct diff_save_tags_functor {
+  xmlNodePtr const node;
+  diff_save_tags_functor(xmlNodePtr n) : node(n) {}
+  void operator()(const tag_t *tag) {
     xmlNodePtr tag_node = xmlNewChild(node, NULL,
-				      BAD_CAST "tag", NULL);
+                                      BAD_CAST "tag", NULL);
     xmlNewProp(tag_node, BAD_CAST "k", BAD_CAST tag->key);
     xmlNewProp(tag_node, BAD_CAST "v", BAD_CAST tag->value);
-    tag = tag->next;
   }
+};
+
+static void diff_save_tags(const base_object_t *obj, xmlNodePtr node) {
+  diff_save_tags_functor fc(node);
+  for(const tag_t *tag = obj->tag; tag; tag = tag->next)
+    fc(tag);
 }
 
 /**
@@ -101,7 +108,7 @@ void diff_save_nodes::operator()(std::pair<item_id_t, node_t *> pair)
   snprintf(str, sizeof(str), "%lu", node->time);
   xmlNewProp(node_node, BAD_CAST "time", BAD_CAST str);
 
-  diff_save_tags(node->tag, node_node);
+  diff_save_tags(node, node_node);
 }
 
 struct diff_save_ways {
@@ -127,7 +134,7 @@ void diff_save_ways::operator()(std::pair<item_id_t, way_t *> pair)
   if((!(way->flags & OSM_FLAG_DELETED)) &&
      (way->flags & (OSM_FLAG_DIRTY | OSM_FLAG_NEW))) {
     way->write_node_chain(node_way);
-    diff_save_tags(way->tag, node_way);
+    diff_save_tags(way, node_way);
   }
 }
 
@@ -207,7 +214,7 @@ void diff_save_relations::operator()(std::pair<item_id_t, relation_t *> pair)
   std::for_each(relation->members.begin(), relation->members.end(),
                 diff_save_rel(node_rel));
 
-  diff_save_tags(relation->tag, node_rel);
+  diff_save_tags(relation, node_rel);
 }
 
 struct find_object_by_flags {
