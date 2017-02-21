@@ -70,11 +70,6 @@ typedef struct tag_t {
   { }
 
   bool is_creator_tag() const;
-  tag_t *find(const char *key);
-  inline tag_t *find(const xmlChar *key)
-  { return find(reinterpret_cast<const char *>(key)); }
-  inline const tag_t *find(const char *key) const
-  { return const_cast<tag_t *>(this)->find(key); }
 
   /**
    * @brief replace the key

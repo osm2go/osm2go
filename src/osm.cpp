@@ -1087,20 +1087,6 @@ gboolean osm_sanity_check(GtkWidget *parent, const osm_t *osm) {
 
 /* ------------------------- misc access functions -------------- */
 
-tag_t *tag_t::find(const char* key) {
-  if(!key) return NULL;
-
-  tag_t *tag = this;
-  while(tag) {
-    if(strcasecmp(tag->key, key) == 0)
-      return tag;
-
-    tag = tag->next;
-  }
-
-  return NULL;
-}
-
 struct node_in_other_way {
   const way_t * const way;
   const node_t * const node;
@@ -2055,12 +2041,18 @@ base_object_t::base_object_t()
   memset(this, 0, sizeof(*this));
 }
 
-const char* base_object_t::get_value(const char* key) const
+const char* base_object_t::get_value(const char *key) const
 {
-  const tag_t *t = tag->find(key);
+  if(!key)
+    return NULL;
 
-  if (t)
-    return t->value;
+  const tag_t *tg = tag;
+  while(tg) {
+    if(strcasecmp(tg->key, key) == 0)
+      return tg->value;
+
+    tg = tg->next;
+  }
 
   return NULL;
 }
