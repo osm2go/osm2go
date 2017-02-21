@@ -132,6 +132,11 @@ typedef struct base_object_t {
    * @brief check if the given tag exists in this object with a different value
    */
   bool tag_key_other_value_present(const tag_t *t) const;
+
+  /**
+   * @brief create a copy of the tag list
+   */
+  std::vector<tag_t *> copy_tags() const;
 #endif
 
   item_id_t id;
@@ -405,6 +410,8 @@ relation_t *osm_relation_new(void);
 #ifdef __cplusplus
 }
 
+bool osm_tag_key_and_value_present(const std::vector<tag_t *> &haystack, const tag_t *tag);
+
 member_t osm_parse_osm_relation_member(osm_t *osm, xmlNode *a_node);
 
 node_t *osm_parse_osm_way_nd(osm_t *osm, xmlNode *a_node);
@@ -416,7 +423,7 @@ void osm_members_free(std::vector<member_t> &members);
 bool osm_node_in_other_way(const osm_t *osm, const way_t *way, const node_t *node);
 
 std::vector<tag_t> osm_tags_list_copy(const tag_t *tag);
-tag_t *osm_tags_list_copy(const std::vector<tag_t> &tags);
+std::vector<tag_t *> osm_tags_list_copy(const std::vector<tag_t> &tags);
 
 #endif
 

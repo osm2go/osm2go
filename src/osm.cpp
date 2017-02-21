@@ -275,6 +275,19 @@ gboolean osm_tag_key_and_value_present(const tag_t *haystack, const tag_t *tag) 
   return FALSE;
 }
 
+struct tag_match_functor {
+  const tag_t * const other;
+  tag_match_functor(const tag_t *o) : other(o) {}
+  bool operator()(const tag_t *tag) {
+    return (strcasecmp(other->key, tag->key) == 0) &&
+           (strcasecmp(other->value, tag->value) == 0);
+  }
+};
+
+bool osm_tag_key_and_value_present(const std::vector<tag_t *> &haystack, const tag_t *tag) {
+  return std::find_if(haystack.begin(), haystack.end(), tag_match_functor(tag)) != haystack.end();
+}
+
 bool base_object_t::tag_key_other_value_present(const tag_t *t) const {
   const tag_t *haystack = tag;
   for(; haystack; haystack = haystack->next) {
@@ -1913,17 +1926,16 @@ std::vector<tag_t> osm_tags_list_copy(const tag_t *tag) {
   return new_tags;
 }
 
-tag_t *osm_tags_list_copy(const std::vector<tag_t> &tags) {
-  const std::vector<tag_t>::const_reverse_iterator ritEnd = tags.rend();
-  tag_t *new_tags = 0;
+std::vector<tag_t *> osm_tags_list_copy(const std::vector<tag_t> &tags) {
+  const std::vector<tag_t>::const_iterator itEnd = tags.end();
+  std::vector<tag_t *> new_tags;
 
-  for(std::vector<tag_t>::const_reverse_iterator rit = tags.rbegin();
-      rit != ritEnd; rit++) {
+  for(std::vector<tag_t>::const_iterator it = tags.begin();
+      it != itEnd; it++) {
     tag_t *n = g_new0(tag_t, 1);
-    n->key = g_strdup(rit->key);
-    n->value = g_strdup(rit->value);
-    n->next = new_tags;
-    new_tags = n;
+    n->key = g_strdup(it->key);
+    n->value = g_strdup(it->value);
+    new_tags.push_back(n);
   }
 
   return new_tags;
@@ -2093,6 +2105,21 @@ void base_object_t::replace_tags(std::vector<tag_t *> &ntags)
   const std::vector<tag_t *>::const_iterator itEnd = ntags.end() - 1;
   for(std::vector<tag_t *>::const_iterator it = ntags.begin(); it != itEnd; it++)
     (*it)->next = *(it + 1);
+}
+
+std::vector<tag_t *> base_object_t::copy_tags() const {
+  std::vector<tag_t *> new_tags;
+
+  for(const tag_t *src_tag = tag; src_tag; src_tag = src_tag->next) {
+    if(!src_tag->is_creator_tag()) {
+      tag_t *dst_tag = g_new0(tag_t, 1);
+      dst_tag->key = g_strdup(src_tag->key);
+      dst_tag->value = g_strdup(src_tag->value);
+      new_tags.push_back(dst_tag);
+    }
+  }
+
+  return new_tags;
 }
 
 bool way_t::contains_node(const node_t *node) const

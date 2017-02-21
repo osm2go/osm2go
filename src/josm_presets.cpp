@@ -367,16 +367,17 @@ static void attach_right(GtkWidget *table, GtkWidget *widget, gint y) {
 /**
  * @brief update the given tag with the newly entered value
  * @param widget the entry widget description
- * @param ctag location of the tag: either pointer to already existing tag, or place to store new
+ * @param tags all tags of the object
+ * @param ctag iterator of the tag to edit, tags.end() in case it does not yet exist
  * @param value the new value
  */
-static bool store_value(presets_widget_t *widget,
-                            tag_t **ctag, const char *value) {
+static bool store_value(presets_widget_t *widget, std::vector<tag_t *> &tags,
+                            std::vector<tag_t *>::iterator &ctag, const char *value) {
   bool changed = false;
   if(value && strlen(value)) {
     const char *chstr;
     tag_t *tag;
-    if(*ctag) {
+    if(ctag != tags.end()) {
       /* update the previous tag structure */
       tag = *ctag;
       g_assert(strcasecmp(tag->key, (char*)widget->key) == 0);
@@ -392,7 +393,7 @@ static bool store_value(presets_widget_t *widget,
       tag = g_new0(tag_t, 1);
       tag->update_key(reinterpret_cast<char *>(widget->key));
       /* value will be updated below */
-      *ctag = tag;
+      tags.push_back(tag);
       changed = true;
       chstr = "new ";
     }
@@ -402,9 +403,9 @@ static bool store_value(presets_widget_t *widget,
 
     printf("%skey = %s, value = %s\n", chstr,
            widget->key, tag->value);
-  } else if (*ctag) {
-    g_free((*ctag)->value);
-    (*ctag)->value = NULL; /* mark this entry as deleted */
+  } else if (ctag != tags.end()) {
+    osm_tag_free(*ctag);
+    tags.erase(ctag);
     changed = true;
     printf("removed key = %s\n", widget->key);
   } else
@@ -453,11 +454,18 @@ struct presets_context_t {
   tag_context_t *tag_context;
 };
 
+struct find_tag_functor {
+  const char * const key;
+  find_tag_functor(const xmlChar *k) : key(reinterpret_cast<const char *>(k)) {}
+  bool operator()(const tag_t *tag) {
+    return strcasecmp(tag->key, key) == 0;
+  }
+};
+
 static void presets_item_dialog(presets_context_t *context,
                                 const presets_item *item) {
   appdata_t *appdata = context->appdata;
   GtkWindow *parent = GTK_WINDOW(context->tag_context->dialog);
-  tag_t **orig_tag = context->tag_context->tag;
 
   GtkWidget *dialog = NULL;
   bool ok = false;
@@ -529,7 +537,12 @@ static void presets_item_dialog(presets_context_t *context,
 
     for(widget_cnt = widget_skip; it != itEnd; it++, widget_cnt++) {
       /* check if there's a value with this key already */
-      tag_t *otag = (*orig_tag)->find((*it)->key);
+      std::vector<tag_t *>::const_iterator otagIt = (*it)->key ?
+                                                    std::find_if(context->tag_context->tags.begin(),
+                                                                 context->tag_context->tags.end(),
+                                                                 find_tag_functor((*it)->key)) :
+                                                    context->tag_context->tags.end();
+      tag_t *otag = otagIt != context->tag_context->tags.end() ? *otagIt : 0;
       const char *preset = otag ? otag->value : NULL;
 
       switch((*it)->type) {
@@ -673,14 +686,14 @@ static void presets_item_dialog(presets_context_t *context,
     bool changed = false;
     it = item->widgets.begin();
     widget_cnt = 0;
-    tag_t **last = orig_tag;
-    while (*last)
-      last = &(*last)->next;
 
+    std::vector<tag_t *> &tags = context->tag_context->tags;
     while(it != itEnd) {
       tag_t *otag = gtk_widgets[widget_cnt] ?
                     static_cast<tag_t*>(g_object_get_data(G_OBJECT(gtk_widgets[widget_cnt]), "tag")) : 0;
-      tag_t **ctag = otag ? &otag : last; // the place to do the change
+      std::vector<tag_t *>::iterator ctag = otag ?
+                                            std::find(tags.begin(), tags.end(), otag) :
+                                            tags.end(); // the place to do the change
       switch((*it)->type) {
       case WIDGET_TYPE_COMBO: {
 	g_assert(GTK_WIDGET_TYPE(gtk_widgets[widget_cnt]) == combo_box_type());
@@ -689,59 +702,42 @@ static void presets_item_dialog(presets_context_t *context,
 	if(!strcmp(text, _("<unset>")))
 	  text = NULL;
 
-	changed |= store_value(*it, ctag, text);
+	changed |= store_value(*it, tags, ctag, text);
 	break;
       }
 
       case WIDGET_TYPE_TEXT:
 	g_assert(GTK_WIDGET_TYPE(gtk_widgets[widget_cnt]) == entry_type());
 
-	changed |= store_value(*it, ctag, gtk_entry_get_text(
+	changed |= store_value(*it, tags, ctag, gtk_entry_get_text(
 		     GTK_ENTRY(gtk_widgets[widget_cnt])));
 	break;
 
       case WIDGET_TYPE_CHECK:
 	g_assert(GTK_WIDGET_TYPE(gtk_widgets[widget_cnt]) == check_button_type());
 
-	changed |= store_value(*it, ctag,
+	changed |= store_value(*it, tags, ctag,
                  check_button_get_active(gtk_widgets[widget_cnt]) ? "yes" : NULL);
 	break;
 
       case WIDGET_TYPE_KEY:
 	g_assert(!gtk_widgets[widget_cnt]);
 	g_assert(!otag);
-	otag = (*orig_tag)->find((*it)->key);
-        if(otag)
-          ctag = &otag;
+        ctag = std::find_if(tags.begin(), tags.end(), find_tag_functor((*it)->key));
 
-	changed |= store_value(*it, ctag, (char*)(*it)->key_w.value);
+        changed |= store_value(*it, tags, ctag, reinterpret_cast<const char*>((*it)->key_w.value));
 	break;
 
       default:
 	break;
       }
 
-      if(*last)
-        last = &(*last)->next;
-
       widget_cnt++;
       it++;
     }
 
-    if(changed) {
-      tag_t **last = orig_tag;
-      while (*last) {
-        tag_t *tmp = *last;
-        /* marked as deleted by store_value() */
-        if(tmp->value == NULL) {
-          *last = tmp->next;
-          g_free(tmp);
-        } else {
-          last = &tmp->next;
-        }
-      }
+    if(changed)
       info_tags_replace(context->tag_context);
-    }
   }
 
   g_free(gtk_widgets);
@@ -768,7 +764,7 @@ bool used_preset_functor::operator()(const presets_widget_t* w)
     return false;
   }
   const tag_t t((char*) w->key, (char*) w->key_w.value);
-  if(!osm_tag_key_and_value_present(*(tag_context->tag), &t))
+  if(!osm_tag_key_and_value_present(tag_context->tags, &t))
     return true;
 
   matches_all = true;

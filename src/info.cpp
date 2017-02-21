@@ -26,6 +26,7 @@
 #include "misc.h"
 #include "relation_edit.h"
 
+#include <algorithm>
 #include <strings.h>
 
 enum {
@@ -36,14 +37,16 @@ enum {
   TAG_NUM_COLS
 };
 
-gboolean info_tag_key_collision(const tag_t *tags, const tag_t *tag) {
-  while(tags) {
-    if((tags != tag) && (strcasecmp(tags->key, tag->key) == 0))
-      return TRUE;
-
-    tags = tags->next;
+struct collision_functor {
+  const tag_t * const tag;
+  collision_functor(const tag_t *t) : tag(t) { }
+  bool operator()(const tag_t *t) {
+    return (t != tag) && (strcasecmp(t->key, tag->key) == 0);
   }
-  return FALSE;
+};
+
+gboolean info_tag_key_collision(const std::vector<tag_t *> &tags, const tag_t *tag) {
+  return std::find_if(tags.begin(), tags.end(), collision_functor(tag)) != tags.end() ? TRUE : FALSE;
 }
 
 static void changed(G_GNUC_UNUSED GtkTreeSelection *treeselection, gpointer user_data) {
@@ -67,7 +70,7 @@ static void changed(G_GNUC_UNUSED GtkTreeSelection *treeselection, gpointer user
 }
 
 
-static void update_collisions(GtkListStore *store, tag_t *tags) {
+static void update_collisions(GtkListStore *store, const std::vector<tag_t *> &tags) {
   GtkTreeIter iter;
   tag_t *tag = NULL;
 
@@ -96,9 +99,7 @@ static void on_tag_remove(G_GNUC_UNUSED GtkWidget *button, tag_context_t *contex
 
     /* de-chain */
     printf("de-chaining tag %s/%s\n", tag->key, tag->value);
-    tag_t **prev = context->tag;
-    while(*prev != tag) prev = &((*prev)->next);
-    *prev = tag->next;
+    context->tags.erase(std::find(context->tags.begin(), context->tags.end(), tag));
 
     /* free tag itself */
     osm_tag_free(tag);
@@ -106,7 +107,7 @@ static void on_tag_remove(G_GNUC_UNUSED GtkWidget *button, tag_context_t *contex
     /* and remove from store */
     gtk_list_store_remove(GTK_LIST_STORE(model), &iter);
 
-    update_collisions(context->store, *context->tag);
+    update_collisions(context->store, context->tags);
   }
 }
 
@@ -195,14 +196,14 @@ static void on_tag_edit(G_GNUC_UNUSED GtkWidget *button, tag_context_t *context)
 		       -1);
 
     /* update collisions for all entries */
-    update_collisions(context->store, *context->tag);
+    update_collisions(context->store, context->tags);
   }
 }
 
 static void on_tag_last(G_GNUC_UNUSED GtkWidget *button, tag_context_t *context) {
   static const char *type_name[] = { "illegal", "node", "way", "relation" };
 
-  if(!*context->tag || yes_no_f(context->dialog,
+  if(context->tags.empty() || yes_no_f(context->dialog,
 	      context->appdata, MISC_AGAIN_ID_OVERWRITE_TAGS, 0,
 	      _("Overwrite tags?"),
 	      _("This will overwrite all tags of this %s with the "
@@ -210,12 +211,12 @@ static void on_tag_last(G_GNUC_UNUSED GtkWidget *button, tag_context_t *context)
 		"Do you really want this?"),
 	      type_name[context->object.type], type_name[context->object.type])) {
 
-    osm_tags_free(*context->tag);
+    std::for_each(context->tags.begin(), context->tags.end(), osm_tag_free);
 
     if(context->object.type == NODE)
-      *context->tag = osm_tags_list_copy(context->appdata->map->last_node_tags);
+      context->tags = osm_tags_list_copy(context->appdata->map->last_node_tags);
     else
-      *context->tag = osm_tags_list_copy(context->appdata->map->last_way_tags);
+      context->tags = osm_tags_list_copy(context->appdata->map->last_way_tags);
 
     info_tags_replace(context);
 
@@ -239,42 +240,41 @@ static GtkTreeIter store_append(GtkListStore *store, tag_t *tag, gboolean collis
 }
 
 static void on_tag_add(G_GNUC_UNUSED GtkWidget *button, tag_context_t *context) {
-
-  /* search end of tag chain */
-  tag_t **tag = context->tag;
-  while(*tag)
-    tag = &(*tag)->next;
-
   /* create and append a new tag */
-  *tag = g_new0(tag_t, 1);
+  tag_t *tag = g_new0(tag_t, 1);
 
   /* fill with some empty strings */
-  (*tag)->key = g_strdup("");
-  (*tag)->value = g_strdup("");
+  tag->key = g_strdup("");
+  tag->value = g_strdup("");
 
-  if(!tag_edit(context, *tag)) {
+  if(!tag_edit(context, tag)) {
     printf("cancelled\n");
-    osm_tag_free(*tag);
-    *tag = NULL;
+    osm_tag_free(tag);
   } else {
+    context->tags.push_back(tag);
     /* append a row for the new data */
-    GtkTreeIter iter = store_append(context->store, *tag, FALSE);
+    GtkTreeIter iter = store_append(context->store, tag, FALSE);
 
     gtk_tree_selection_select_iter(
        list_get_selection(context->list), &iter);
 
-    update_collisions(context->store, *context->tag);
+    update_collisions(context->store, context->tags);
   }
 }
+
+struct tag_replace_functor {
+  GtkListStore * const store;
+  const std::vector<tag_t *> &tags;
+  tag_replace_functor(tag_context_t *c) : store(c->store), tags(c->tags) {}
+  void operator()(tag_t *tag) {
+    store_append(store, tag, info_tag_key_collision(tags, tag));
+  }
+};
 
 void info_tags_replace(tag_context_t *context) {
   gtk_list_store_clear(context->store);
 
-  tag_t *tag = *context->tag;
-  while(tag) {
-    store_append(context->store, tag, info_tag_key_collision(*context->tag, tag));
-    tag = tag->next;
-  }
+  std::for_each(context->tags.begin(), context->tags.end(), tag_replace_functor(context));
 }
 
 static void on_relations(G_GNUC_UNUSED GtkWidget *button, tag_context_t *context) {
@@ -461,12 +461,8 @@ static void info_more(tag_context_t *context) {
 /* given */
 gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
 
-  tag_context_t context = { 0 };
+  tag_context_t context(appdata);
   char *str = NULL;
-  tag_t *work_copy = NULL;
-
-  context.appdata = appdata;
-  context.tag = &work_copy;
 
   /* use implicit selection if not explicitely given */
   if(!object) {
@@ -483,7 +479,7 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
 
   g_assert(context.object.is_real());
 
-  work_copy = osm_tags_copy(context.object.obj->tag);
+  context.tags = context.object.obj->copy_tags();
 
   switch(context.object.type) {
   case NODE:
@@ -565,10 +561,8 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
   gtk_widget_destroy(context.dialog);
 
   if(ok) {
-    if(context.object.is_real()) {
-      osm_tags_free(context.object.obj->tag);
-      context.object.obj->tag = work_copy;
-    }
+    if(context.object.is_real())
+      context.object.obj->replace_tags(context.tags);
 
     /* since nodes being parts of ways but with no tags are invisible, */
     /* the result of editing them may have changed their visibility */
@@ -577,7 +571,16 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
 
     context.object.set_flags(OSM_FLAG_DIRTY, 0);
   } else
-    osm_tags_free(work_copy);
+    std::for_each(context.tags.begin(), context.tags.end(), osm_tag_free);
 
   return ok;
+}
+
+tag_context_t::tag_context_t(appdata_t *a)
+  : appdata(a)
+  , dialog(0)
+  , list(0)
+  , store(0)
+  , presets_type(0)
+{
 }

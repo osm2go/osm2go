@@ -25,6 +25,8 @@
 #include <gtk/gtk.h>
 
 #ifdef __cplusplus
+#include <vector>
+
 extern "C" {
 #endif
 
@@ -40,12 +42,14 @@ struct tag_context_t {
   GtkWidget *dialog, *list;
   GtkListStore *store;
   object_t object;
-  tag_t **tag;
   int presets_type;
+  std::vector<tag_t *> tags;
+
+  tag_context_t(appdata_t *a);
 };
 
 void info_tags_replace(tag_context_t *context);
-gboolean info_tag_key_collision(const tag_t *tags, const tag_t *tag);
+gboolean info_tag_key_collision(const std::vector<tag_t *> &tags, const tag_t *tag);
 
 #endif
 
