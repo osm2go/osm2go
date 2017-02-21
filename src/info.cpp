@@ -226,6 +226,18 @@ static void on_tag_last(G_GNUC_UNUSED GtkWidget *button, tag_context_t *context)
   }
 }
 
+static GtkTreeIter store_append(GtkListStore *store, tag_t *tag, gboolean collision) {
+  GtkTreeIter iter;
+  gtk_list_store_append(store, &iter);
+  gtk_list_store_set(store, &iter,
+                     TAG_COL_KEY, tag->key,
+                     TAG_COL_VALUE, tag->value,
+                     TAG_COL_COLLISION, collision,
+                     TAG_COL_DATA, tag,
+                     -1);
+  return iter;
+}
+
 static void on_tag_add(G_GNUC_UNUSED GtkWidget *button, tag_context_t *context) {
 
   /* search end of tag chain */
@@ -246,14 +258,7 @@ static void on_tag_add(G_GNUC_UNUSED GtkWidget *button, tag_context_t *context) 
     *tag = NULL;
   } else {
     /* append a row for the new data */
-    GtkTreeIter iter;
-    gtk_list_store_append(context->store, &iter);
-    gtk_list_store_set(context->store, &iter,
-		       TAG_COL_KEY, (*tag)->key,
-		       TAG_COL_VALUE, (*tag)->value,
-		       TAG_COL_COLLISION, FALSE,
-		       TAG_COL_DATA, *tag,
-		       -1);
+    GtkTreeIter iter = store_append(context->store, *tag, FALSE);
 
     gtk_tree_selection_select_iter(
        list_get_selection(context->list), &iter);
@@ -265,16 +270,9 @@ static void on_tag_add(G_GNUC_UNUSED GtkWidget *button, tag_context_t *context) 
 void info_tags_replace(tag_context_t *context) {
   gtk_list_store_clear(context->store);
 
-  GtkTreeIter iter;
   tag_t *tag = *context->tag;
   while(tag) {
-    gtk_list_store_append(context->store, &iter);
-    gtk_list_store_set(context->store, &iter,
-	       TAG_COL_KEY, tag->key,
-	       TAG_COL_VALUE, tag->value,
-	       TAG_COL_COLLISION, info_tag_key_collision(*context->tag, tag),
-	       TAG_COL_DATA, tag,
-	       -1);
+    store_append(context->store, tag, info_tag_key_collision(*context->tag, tag));
     tag = tag->next;
   }
 }
