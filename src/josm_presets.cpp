@@ -737,7 +737,7 @@ static void presets_item_dialog(presets_context_t *context,
     }
 
     if(changed)
-      info_tags_replace(context->tag_context);
+      context->tag_context->info_tags_replace();
   }
 
   g_free(gtk_widgets);

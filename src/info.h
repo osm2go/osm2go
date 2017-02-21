@@ -37,18 +37,20 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata,
 
 #include "osm.h"
 
-struct tag_context_t {
-  appdata_t *appdata;
+class tag_context_t {
+public:
+  explicit tag_context_t(appdata_t *a);
+
+  appdata_t * const appdata;
   GtkWidget *dialog, *list;
   GtkListStore *store;
   object_t object;
   int presets_type;
   std::vector<tag_t *> tags;
 
-  tag_context_t(appdata_t *a);
+  void info_tags_replace();
 };
 
-void info_tags_replace(tag_context_t *context);
 gboolean info_tag_key_collision(const std::vector<tag_t *> &tags, const tag_t *tag);
 
 #endif

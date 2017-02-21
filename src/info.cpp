@@ -218,7 +218,7 @@ static void on_tag_last(G_GNUC_UNUSED GtkWidget *button, tag_context_t *context)
     else
       context->tags = osm_tags_list_copy(context->appdata->map->last_way_tags);
 
-    info_tags_replace(context);
+    context->info_tags_replace();
 
     // Adding those tags above will usually make the first of the newly
     // added tags selected. Enable edit/remove buttons now.
@@ -265,16 +265,16 @@ static void on_tag_add(G_GNUC_UNUSED GtkWidget *button, tag_context_t *context) 
 struct tag_replace_functor {
   GtkListStore * const store;
   const std::vector<tag_t *> &tags;
-  tag_replace_functor(tag_context_t *c) : store(c->store), tags(c->tags) {}
+  tag_replace_functor(GtkListStore *s, const std::vector<tag_t *> &t) : store(s), tags(t) {}
   void operator()(tag_t *tag) {
     store_append(store, tag, info_tag_key_collision(tags, tag));
   }
 };
 
-void info_tags_replace(tag_context_t *context) {
-  gtk_list_store_clear(context->store);
+void tag_context_t::info_tags_replace() {
+  gtk_list_store_clear(store);
 
-  std::for_each(context->tags.begin(), context->tags.end(), tag_replace_functor(context));
+  std::for_each(tags.begin(), tags.end(), tag_replace_functor(store, tags));
 }
 
 static void on_relations(G_GNUC_UNUSED GtkWidget *button, tag_context_t *context) {
@@ -330,7 +330,7 @@ static GtkWidget *tag_widget(tag_context_t *context) {
 
   list_set_store(context->list, context->store);
 
-  info_tags_replace(context);
+  context->info_tags_replace();
 
   g_object_unref(context->store);
 
