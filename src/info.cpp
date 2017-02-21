@@ -118,7 +118,7 @@ static void on_tag_remove(G_GNUC_UNUSED GtkWidget *button, tag_context_t *contex
  * @return if the tag was actually modified
  * @retval FALSE the tag is the same as before
  */
-static gboolean tag_edit(tag_context_t *context, tag_t *tag) {
+static bool tag_edit(tag_context_t *context, tag_t *tag) {
   GtkWidget *dialog = misc_dialog_new(MISC_DIALOG_SMALL, _("Edit Tag"),
 			  GTK_WINDOW(context->dialog),
 			  GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
@@ -158,7 +158,7 @@ static gboolean tag_edit(tag_context_t *context, tag_t *tag) {
 
   gtk_widget_show_all(dialog);
 
-  gboolean ret = FALSE;
+  bool ret = false;
   if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog))) {
     ret = tag->update(gtk_entry_get_text(GTK_ENTRY(key)),
                       gtk_entry_get_text(GTK_ENTRY(value)));
