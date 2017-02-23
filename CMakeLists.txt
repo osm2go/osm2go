@@ -174,7 +174,7 @@ if (MAEMO_FOUND)
 	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/debian/control.in ${CMAKE_CURRENT_BINARY_DIR}/debian/control @ONLY)
 
 	# SVG icons do not work on my N900
-	set(USE_SVG_ICONS Off)
+	set(USE_SVG_ICONS_DEFAULT Off)
 else ()
 	find_package(GTK2 REQUIRED)
 
@@ -182,7 +182,7 @@ else ()
 
 	list(APPEND MORE_LIBS PUBLIC ${GTK2_TARGETS})
 
-	set(USE_SVG_ICONS On)
+	set(USE_SVG_ICONS_DEFAULT On)
 endif ()
 
 find_library(MATH_LIBRARY m)
@@ -217,6 +217,7 @@ if (PICKER_MENU)
 	set_property(SOURCE src/josm_presets.cpp APPEND PROPERTY COMPILE_DEFINITIONS "PICKER_MENU")
 endif ()
 
+option(USE_SVG_ICONS "Use SVG icons without converting them to PNG at build time" ${USE_SVG_ICONS_DEFAULT})
 if (USE_SVG_ICONS)
 	set_property(SOURCE src/icon.cpp APPEND PROPERTY COMPILE_DEFINITIONS USE_SVG_ICONS)
 endif ()
