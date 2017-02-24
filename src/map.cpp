@@ -2128,12 +2128,12 @@ void map_delete_selected(appdata_t *appdata) {
 
 /* ----------------------- track related stuff ----------------------- */
 
-static gboolean track_pos2lpos(const bounds_t *bounds, const pos_t *pos, lpos_t *lpos) {
-  pos2lpos(bounds, pos, lpos);
+static bool track_pos2lpos(const bounds_t *bounds, const pos_t &pos, lpos_t &lpos) {
+  pos2lpos(bounds, &pos, &lpos);
 
   /* check if point is within bounds */
-  return ((lpos->x >= bounds->min.x) && (lpos->x <= bounds->max.x) &&
-	  (lpos->y >= bounds->min.y) && (lpos->y <= bounds->max.y));
+  return ((lpos.x >= bounds->min.x) && (lpos.x <= bounds->max.x) &&
+          (lpos.y >= bounds->min.y) && (lpos.y <= bounds->max.y));
 }
 
 /**
@@ -2150,7 +2150,7 @@ static canvas_points_t *canvas_points_init(const bounds_t *bounds,
   lpos_t lpos;
 
   for(gint i = 0; i < count; i++) {
-    track_pos2lpos(bounds, &point->pos, &lpos);
+    track_pos2lpos(bounds, point->pos, lpos);
     canvas_point_set_pos(points, i, &lpos);
     point++;
   }
@@ -2175,7 +2175,7 @@ void map_track_draw_seg(map_t *map, track_seg_t &seg) {
 
     /* skip all points not on screen */
     std::vector<track_point_t>::const_iterator last = itEnd;
-    while(it != itEnd && !track_pos2lpos(bounds, &it->pos, &lpos)) {
+    while(it != itEnd && !track_pos2lpos(bounds, it->pos, lpos)) {
       last = it;
       it++;
     }
@@ -2184,7 +2184,7 @@ void map_track_draw_seg(map_t *map, track_seg_t &seg) {
 
     /* count nodes that _are_ on screen */
     std::vector<track_point_t>::const_iterator tmp = it;
-    while(tmp != itEnd && track_pos2lpos(bounds, &tmp->pos, &lpos)) {
+    while(tmp != itEnd && track_pos2lpos(bounds, tmp->pos, lpos)) {
       tmp++;
       visible++;
     }
@@ -2235,7 +2235,7 @@ void map_track_update_seg(map_t *map, track_seg_t &seg) {
                                                second_last = seg.track_points.begin();
   lpos_t lpos;
   while(itEnd - second_last > 2) {
-    if(!track_pos2lpos(bounds, &second_last->pos, &lpos))
+    if(!track_pos2lpos(bounds, second_last->pos, lpos))
       begin = second_last;
 
     second_last++;
@@ -2248,10 +2248,8 @@ void map_track_update_seg(map_t *map, track_seg_t &seg) {
   g_assert(last != itEnd);
 
   /* check if the last and second_last points are visible */
-  gboolean last_is_visible =
-    track_pos2lpos(bounds, &last->pos, &lpos);
-  gboolean second_last_is_visible =
-    track_pos2lpos(bounds, &second_last->pos, &lpos);
+  bool last_is_visible = track_pos2lpos(bounds, last->pos, lpos);
+  bool second_last_is_visible = track_pos2lpos(bounds, second_last->pos, lpos);
 
   /* if both are invisible, then nothing has changed on screen */
   if(!last_is_visible && !second_last_is_visible) {
@@ -2283,7 +2281,7 @@ void map_track_update_seg(map_t *map, track_seg_t &seg) {
 
     /* the search for the "begin" ends with the second_last item */
     /* verify the last one also */
-    if(begin != itEnd && !track_pos2lpos(bounds, &(begin + 1)->pos, &lpos))
+    if(begin != itEnd && !track_pos2lpos(bounds, (begin + 1)->pos, lpos))
       begin++;
 
     /* count points to be placed */
