@@ -384,6 +384,12 @@ struct osm_t {
 
 osm_t *osm_parse(const char *path, const char *filename, struct icon_t **icons);
 gboolean osm_sanity_check(GtkWidget *parent, const osm_t *osm);
+/**
+ * @brief parse the XML node for tag values
+ * @param a_node the XML node to parse
+ * @returns a new tag structure on success
+ * @retval NULL the XML was invalid
+ */
 tag_t *osm_parse_osm_tag(xmlNode* a_node);
 void osm_free(osm_t *osm);
 

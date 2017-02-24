@@ -235,33 +235,41 @@ void osm_tags_free(tag_t *tag) {
   }
 }
 
+/**
+ * @brief fill tag_t from XML values
+ * @param tag the tag structure to fill
+ * @param k the key found in XML
+ * @param v the value found in XML
+ * @return if k and v were not empty
+ *
+ * k and v will be freed.
+ */
+static tag_t *tag_from_xml(xmlChar *k, xmlChar *v) {
+  tag_t *ret = NULL;
+  if(G_LIKELY(k && v && strlen(reinterpret_cast<char *>(k)) > 0 &&
+                        strlen(reinterpret_cast<char *>(v)) > 0)) {
+    ret = g_new0(tag_t, 1);
+    ret->key = g_strdup((gchar*)k);
+    ret->value = g_strdup((gchar*)v);
+  } else {
+    printf("incomplete tag key/value %s/%s\n", k, v);
+  }
+
+  xmlFree(k);
+  xmlFree(v);
+
+  return ret;
+}
+
 tag_t *osm_parse_osm_tag(xmlNode *a_node) {
-  /* allocate a new tag structure */
-  tag_t *tag = g_new0(tag_t, 1);
-
-  xmlChar *prop;
-  if((prop = xmlGetProp(a_node, BAD_CAST "k"))) {
-    if(strlen((char*)prop) > 0)
-      tag->key = g_strdup((gchar*)prop);
-    xmlFree(prop);
+  tag_t *tag = tag_from_xml(xmlGetProp(a_node, BAD_CAST "k"),
+                            xmlGetProp(a_node, BAD_CAST "v"));
+  if(tag) {
+    const xmlNode *cur_node = NULL;
+    for (cur_node = a_node->children; cur_node; cur_node = cur_node->next)
+      if (cur_node->type == XML_ELEMENT_NODE)
+        printf("found unhandled osm/node/tag/%s\n", cur_node->name);
   }
-
-  if((prop = xmlGetProp(a_node, BAD_CAST "v"))) {
-    if(strlen((char*)prop) > 0)
-      tag->value = g_strdup((gchar*)prop);
-    xmlFree(prop);
-  }
-
-  if(!tag->key || !tag->value) {
-    printf("incomplete tag key/value %s/%s\n", tag->key, tag->value);
-    osm_tag_free(tag);
-    return NULL;
-  }
-
-  const xmlNode *cur_node = NULL;
-  for (cur_node = a_node->children; cur_node; cur_node = cur_node->next)
-    if (cur_node->type == XML_ELEMENT_NODE)
-      printf("found unhandled osm/node/tag/%s\n", cur_node->name);
 
   return tag;
 }
@@ -657,27 +665,11 @@ static gboolean process_bounds(xmlTextReaderPtr reader, bounds_t *bounds) {
 }
 
 static tag_t *process_tag(xmlTextReaderPtr reader) {
-  /* allocate a new tag structure */
-  tag_t *tag = g_new0(tag_t, 1);
+  tag_t *tag = tag_from_xml(xmlTextReaderGetAttribute(reader, BAD_CAST "k"),
+                            xmlTextReaderGetAttribute(reader, BAD_CAST "v"));
+  if(tag)
+    skip_element(reader);
 
-  char *prop;
-  if(G_LIKELY(prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "k"))) {
-    if(strlen(prop) > 0) tag->key = g_strdup(prop);
-    xmlFree(prop);
-  }
-
-  if(G_LIKELY(prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "v"))) {
-    if(strlen(prop) > 0) tag->value = g_strdup(prop);
-    xmlFree(prop);
-  }
-
-  if(G_UNLIKELY(!tag->key || !tag->value)) {
-    printf("incomplete tag key/value %s/%s\n", tag->key, tag->value);
-    osm_tags_free(tag);
-    tag = NULL;
-  }
-
-  skip_element(reader);
   return tag;
 }
 
