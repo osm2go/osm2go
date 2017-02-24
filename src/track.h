@@ -41,6 +41,8 @@ struct track_seg_t {
 };
 
 struct track_t {
+  track_t();
+
   std::vector<track_seg_t> segments;
   bool dirty;
   bool active; ///< if the last element in segments is currently written to

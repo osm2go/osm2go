@@ -291,7 +291,7 @@ void track_save(project_t *project, track_t *track) {
   }
 
   track_write(trk_name, track, doc);
-  track->dirty = FALSE;
+  track->dirty = false;
 
   /* if we reach this point writing the new file worked and we */
   /* can delete the backup */
@@ -387,7 +387,7 @@ static gboolean track_append_position(appdata_t *appdata, const pos_t *pos, floa
     ret = FALSE;
   } else {
     ret = TRUE;
-    track->dirty = TRUE;
+    track->dirty = true;
     points.push_back(track_point_t(*pos, alt, time(NULL)));
 
     if(G_UNLIKELY(points.size() == 1)) {
@@ -478,7 +478,6 @@ static void track_do_enable_gps(appdata_t *appdata) {
     if(!appdata->track.track) {
       printf("GPS: no track yet, starting new one\n");
       appdata->track.track = new track_t();
-      appdata->track.track->dirty = FALSE;
     } else
       printf("GPS: extending existing track\n");
   }
@@ -642,6 +641,12 @@ void TrackSax::endElement(const xmlChar *name)
     break;
   }
   state = it->second.first;
+}
+
+track_t::track_t()
+  : dirty(false)
+  , active(false)
+{
 }
 
 // vim:et:ts=8:sw=2:sts=2:ai
