@@ -2231,25 +2231,12 @@ void map_track_update_seg(map_t *map, track_seg_t &seg) {
 
   /* search last point */
   const std::vector<track_point_t>::const_iterator itEnd = seg.track_points.end();
-  std::vector<track_point_t>::const_iterator begin = seg.track_points.begin(),
-                                               second_last = seg.track_points.begin();
+  std::vector<track_point_t>::const_iterator begin = itEnd - 2, // start of track to draw
+                                             last = itEnd - 1;
   lpos_t lpos;
-  while(itEnd - second_last > 2) {
-    if(!track_pos2lpos(bounds, second_last->pos, lpos))
-      begin = second_last;
-
-    second_last++;
-  }
-  std::vector<track_point_t>::const_iterator last = second_last + 1;
-
-  /* since we are updating an existing track, it sure has at least two */
-  /* points, second_last must be valid and its "next" (last) also */
-  g_assert(second_last != itEnd);
-  g_assert(last != itEnd);
-
   /* check if the last and second_last points are visible */
   bool last_is_visible = track_pos2lpos(bounds, last->pos, lpos);
-  bool second_last_is_visible = track_pos2lpos(bounds, second_last->pos, lpos);
+  bool second_last_is_visible = track_pos2lpos(bounds, begin->pos, lpos);
 
   /* if both are invisible, then nothing has changed on screen */
   if(!last_is_visible && !second_last_is_visible) {
@@ -2257,11 +2244,25 @@ void map_track_update_seg(map_t *map, track_seg_t &seg) {
     return;
   }
 
+  const std::vector<track_point_t>::const_iterator itBegin = seg.track_points.begin();
+  if(second_last_is_visible) {
+    for(begin--; begin > itBegin; begin--) {
+      // if this position is not visible start drawing here to get a
+      // track entering the screen the correct way
+      if(!track_pos2lpos(bounds, begin->pos, lpos))
+        break;
+    }
+  }
+
+  /* since we are updating an existing track, it sure has at least two */
+  /* points, second_last must be valid and its "next" (last) also */
+  g_assert(begin != itEnd);
+  g_assert(last != itEnd);
+
   if(second_last_is_visible) {
     /* there must be something already on the screen and there must */
     /* be visible nodes in the chain */
     g_assert(!seg.item_chain.empty());
-    g_assert(begin != itEnd);
 
     printf("second_last is visible -> append\n");
 
@@ -2281,7 +2282,7 @@ void map_track_update_seg(map_t *map, track_seg_t &seg) {
 
     /* the search for the "begin" ends with the second_last item */
     /* verify the last one also */
-    if(begin != itEnd && !track_pos2lpos(bounds, (begin + 1)->pos, lpos))
+    if(!track_pos2lpos(bounds, (begin + 1)->pos, lpos))
       begin++;
 
     /* count points to be placed */
