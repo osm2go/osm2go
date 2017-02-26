@@ -21,13 +21,14 @@
 #define PROJECT_H
 
 #include "appdata.h"
-#include "map.h"
 #include "pos.h"
 #include "settings.h"
 
 #include <glib.h>
 #include <gtk/gtk.h>
 #include <libxml/parser.h>
+
+struct map_state_t;
 
 typedef struct project_t {
 #ifdef __cplusplus
@@ -47,7 +48,7 @@ typedef struct project_t {
   char *wms_path;
   struct { gint x, y; } wms_offset;
 
-  map_state_t *map_state;
+  struct map_state_t *map_state;
 
   pos_t min, max;
 

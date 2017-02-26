@@ -27,6 +27,7 @@
 #include "appdata.h"
 #include "banner.h"
 #include "gps.h"
+#include "map.h"
 #include "misc.h"
 
 #include <cmath>

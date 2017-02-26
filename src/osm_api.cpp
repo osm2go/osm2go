@@ -21,6 +21,7 @@
 
 #include "appdata.h"
 #include "diff.h"
+#include "map.h"
 #include "misc.h"
 #include "net_io.h"
 

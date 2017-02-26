@@ -25,6 +25,7 @@
 #include "diff.h"
 #include "gps.h"
 #include "list.h"
+#include "map.h"
 #include "misc.h"
 #include "osm_api.h"
 #include "statusbar.h"
