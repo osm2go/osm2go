@@ -2280,10 +2280,7 @@ void map_track_update_seg(map_t *map, track_seg_t &seg) {
   } else {
     printf("second last is invisible -> start new screen segment\n");
 
-    /* the search for the "begin" ends with the second_last item */
-    /* verify the last one also */
-    if(!track_pos2lpos(bounds, (begin + 1)->pos, lpos))
-      begin++;
+    g_assert(begin + 1 == last);
 
     /* count points to be placed */
     gint npoints = itEnd - begin;
