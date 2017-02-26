@@ -2189,6 +2189,11 @@ void map_track_draw_seg(map_t *map, track_seg_t &seg) {
       visible++;
     }
 
+    /* the last element is still on screen, so save the number of elements in
+     * the point list to avoid recalculation on update */
+    if(tmp == itEnd)
+      map->elements_drawn = visible;
+
     /* actually start drawing with the last position that was offscreen */
     /* so the track nicely enters the viewing area */
     if(last != itEnd) {
@@ -2231,37 +2236,36 @@ void map_track_update_seg(map_t *map, track_seg_t &seg) {
 
   /* search last point */
   const std::vector<track_point_t>::const_iterator itEnd = seg.track_points.end();
-  std::vector<track_point_t>::const_iterator begin = itEnd - 2, // start of track to draw
-                                             last = itEnd - 1;
+  std::vector<track_point_t>::const_iterator last = itEnd - 1;
   lpos_t lpos;
   /* check if the last and second_last points are visible */
-  bool last_is_visible = track_pos2lpos(bounds, last->pos, lpos);
-  bool second_last_is_visible = track_pos2lpos(bounds, begin->pos, lpos);
+  const bool last_is_visible = track_pos2lpos(bounds, last->pos, lpos);
+  const bool second_last_is_visible = (map->elements_drawn > 0);
 
   /* if both are invisible, then nothing has changed on screen */
   if(!last_is_visible && !second_last_is_visible) {
     printf("second_last and last entry are invisible -> doing nothing\n");
+    map->elements_drawn = 0;
     return;
   }
+printf("last visible %zu\n", map->elements_drawn);
 
-  const std::vector<track_point_t>::const_iterator itBegin = seg.track_points.begin();
-  if(second_last_is_visible) {
-    for(begin--; begin > itBegin; begin--) {
-      // if this position is not visible start drawing here to get a
-      // track entering the screen the correct way
-      if(!track_pos2lpos(bounds, begin->pos, lpos))
-        break;
-    }
-  }
+  const std::vector<track_point_t>::const_iterator begin = // start of track to draw
+                                                   second_last_is_visible
+                                                   ? itEnd - map->elements_drawn - 1
+                                                   : itEnd - 2;
 
   /* since we are updating an existing track, it sure has at least two */
   /* points, second_last must be valid and its "next" (last) also */
   g_assert(begin != itEnd);
   g_assert(last != itEnd);
+  g_assert_cmpfloat(itEnd - begin, <=, seg.track_points.size());
 
   /* count points to be placed */
-  gint npoints = itEnd - begin;
+  const size_t npoints = itEnd - begin;
   canvas_points_t *points = canvas_points_init(bounds, begin, npoints);
+
+  map->elements_drawn = last_is_visible ? npoints : 0;
 
   if(second_last_is_visible) {
     /* there must be something already on the screen and there must */
@@ -2274,6 +2278,7 @@ void map_track_update_seg(map_t *map, track_seg_t &seg) {
     canvas_item_set_points(item, points);
   } else {
     g_assert(begin + 1 == last);
+    g_assert(last_is_visible);
 
     printf("second last is invisible -> start new screen segment with %d points\n", npoints);
 

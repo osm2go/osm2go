@@ -136,6 +136,8 @@ typedef struct map_t {
   style_t *style;
 
 #ifdef __cplusplus
+  size_t elements_drawn;	///< number of elements drawn in last segment
+
   map_t();
   ~map_t();
 
