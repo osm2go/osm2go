@@ -2259,42 +2259,29 @@ void map_track_update_seg(map_t *map, track_seg_t &seg) {
   g_assert(begin != itEnd);
   g_assert(last != itEnd);
 
+  /* count points to be placed */
+  gint npoints = itEnd - begin;
+  canvas_points_t *points = canvas_points_init(bounds, begin, npoints);
+
   if(second_last_is_visible) {
     /* there must be something already on the screen and there must */
     /* be visible nodes in the chain */
     g_assert(!seg.item_chain.empty());
 
-    printf("second_last is visible -> append\n");
-
-    /* count points to be placed */
-    gint npoints = itEnd - begin;
-
-    printf("updating last segment to %d points\n", npoints);
-
-    canvas_points_t *points = canvas_points_init(bounds, begin, npoints);
+    printf("second_last is visible -> updating last segment to %d points\n", npoints);
 
     canvas_item_t *item = seg.item_chain.back();
     canvas_item_set_points(item, points);
-    canvas_points_free(points);
-
   } else {
-    printf("second last is invisible -> start new screen segment\n");
-
     g_assert(begin + 1 == last);
 
-    /* count points to be placed */
-    gint npoints = itEnd - begin;
-
-    printf("attaching new segment with %d points\n", npoints);
-
-    canvas_points_t *points = canvas_points_init(bounds, begin, npoints);
+    printf("second last is invisible -> start new screen segment with %d points\n", npoints);
 
     canvas_item_t *item = canvas_polyline_new(map->canvas, CANVAS_GROUP_TRACK,
 		 points, map->style->track.width, map->style->track.color);
     seg.item_chain.push_back(item);
-
-    canvas_points_free(points);
   }
+  canvas_points_free(points);
 }
 
 struct map_track_seg_draw_functor {
