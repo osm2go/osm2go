@@ -2272,7 +2272,7 @@ printf("last visible %zu\n", map->elements_drawn);
     /* be visible nodes in the chain */
     g_assert(!seg.item_chain.empty());
 
-    printf("second_last is visible -> updating last segment to %d points\n", npoints);
+    printf("second_last is visible -> updating last segment to %zu points\n", npoints);
 
     canvas_item_t *item = seg.item_chain.back();
     canvas_item_set_points(item, points);
@@ -2280,7 +2280,7 @@ printf("last visible %zu\n", map->elements_drawn);
     g_assert(begin + 1 == last);
     g_assert(last_is_visible);
 
-    printf("second last is invisible -> start new screen segment with %d points\n", npoints);
+    printf("second last is invisible -> start new screen segment with %zu points\n", npoints);
 
     canvas_item_t *item = canvas_polyline_new(map->canvas, CANVAS_GROUP_TRACK,
 		 points, map->style->track.width, map->style->track.color);
