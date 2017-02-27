@@ -227,7 +227,7 @@ void osm_tag_free(tag_t *tag) {
   g_free(tag);
 }
 
-void osm_tags_free(tag_t *tag) {
+static void osm_tags_free(tag_t *tag) {
   while(tag) {
     tag_t *next = tag->next;
     osm_tag_free(tag);
