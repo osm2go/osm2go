@@ -156,7 +156,7 @@ const char *object_t::get_tag_value(const char *key) const {
 bool object_t::has_tags() const {
   if(!is_real())
     return false;
-  return obj->tag != NULL;
+  return obj->has_tag();
 }
 
 item_id_t object_t::get_id() const {
