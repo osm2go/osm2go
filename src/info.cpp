@@ -69,8 +69,8 @@ static void changed(G_GNUC_UNUSED GtkTreeSelection *treeselection, gpointer user
   list_button_enable(GTK_WIDGET(list), LIST_BUTTON_EDIT, selected);
 }
 
-
-static void update_collisions(GtkListStore *store, const std::vector<tag_t *> &tags) {
+void tag_context_t::update_collisions()
+{
   GtkTreeIter iter;
   tag_t *tag = NULL;
 
@@ -107,7 +107,7 @@ static void on_tag_remove(G_GNUC_UNUSED GtkWidget *button, tag_context_t *contex
     /* and remove from store */
     gtk_list_store_remove(GTK_LIST_STORE(model), &iter);
 
-    update_collisions(context->store, context->tags);
+    context->update_collisions();
   }
 }
 
@@ -196,7 +196,7 @@ static void on_tag_edit(G_GNUC_UNUSED GtkWidget *button, tag_context_t *context)
 		       -1);
 
     /* update collisions for all entries */
-    update_collisions(context->store, context->tags);
+    context->update_collisions();
   }
 }
 
@@ -258,7 +258,7 @@ static void on_tag_add(G_GNUC_UNUSED GtkWidget *button, tag_context_t *context) 
     gtk_tree_selection_select_iter(
        list_get_selection(context->list), &iter);
 
-    update_collisions(context->store, context->tags);
+    context->update_collisions();
   }
 }
 

@@ -49,6 +49,7 @@ public:
   std::vector<tag_t *> tags;
 
   void info_tags_replace();
+  void update_collisions();
 };
 
 gboolean info_tag_key_collision(const std::vector<tag_t *> &tags, const tag_t *tag);
