@@ -61,195 +61,25 @@ typedef struct bounds_t {
   float scale;
 } bounds_t;
 
-typedef struct tag_t {
-  struct tag_t *next;
-  char *key, *value;
+struct base_object_t;
 #ifdef __cplusplus
-  tag_t(char *k, char *v)
-    : next(0), key(k), value(v)
-  { }
-
-  bool is_creator_tag() const;
-
-  /**
-   * @brief replace the key
-   */
-  void update_key(const char *nkey);
-  /**
-   * @brief replace the value
-   */
-  void update_value(const char *nvalue);
-
-  /**
-   * @brief update the key and value
-   * @param key the new key
-   * @param value the new value
-   * @return if tag was actually changed
-   *
-   * This will update the key and value, but will avoid memory allocations
-   * in case key or value have not changed.
-   *
-   * This would be a no-op:
-   * \code
-   * tag->update(tag->key, tag->value);
-   * \endcode
-   */
-  bool update(const char *nkey, const char *nvalue);
-
-#endif
-} tag_t;
-
-typedef struct base_object_t {
-#ifdef __cplusplus
-  base_object_t();
-
-  const char *get_value(const char *key) const;
-  bool has_tag() const;
-  bool has_value(const char* str) const;
-
-  /**
-   * @brief compare given tag list to the one of this object
-   * @param t2 second list
-   * @return if the lists differ
-   */
-  bool tag_lists_diff(const std::vector<tag_t *> &t2) const;
-
-  /**
-   * replace the current tags with the given ones
-   * @param ntags array of new tags
-   *
-   * The old values will be freed, this object takes ownership of the values
-   * in ntags.
-   */
-  void replace_tags(std::vector<tag_t *> &ntags);
-
-  /**
-   * @brief check if the given tag exists in this object with a different value
-   */
-  bool tag_key_other_value_present(const tag_t *t) const;
-
-  /**
-   * @brief create a copy of the tag list
-   */
-  std::vector<tag_t *> copy_tags() const;
-#endif
-
-  item_id_t id;
-  item_id_t version;
-  const char *user;
-  tag_t *tag;
-  time_t time;
-  gboolean visible:8;
-  int flags:24;
-} base_object_t;
-
-#ifdef __cplusplus
-
-
-class node_t : public base_object_t {
-public:
-  node_t();
-
-  pos_t pos;
-  lpos_t lpos;
-  int ways;
-  float zoom_max;
-
-  /* icon */
-  GdkPixbuf *icon_buf;
-
-  /* a link to the visual representation on screen */
-  struct map_item_chain_t *map_item_chain;
-
-  xmlChar *generate_xml(item_id_t changeset);
-
-  void cleanup(osm_t *osm);
-};
+struct item_id_chain_t;
+class node_t;
+class relation_t;
+class way_t;
+struct tag_t;
+typedef std::vector<relation_t *> relation_chain_t;
+typedef std::vector<way_t *> way_chain_t;
 #else
-typedef struct node_t node_t;
+typedef struct base_object_t base_object_t;
+typedef struct node_s node_t;
+typedef struct relation_s relation_t;
+typedef struct way_s way_t;
 #endif
 
 typedef enum {
   ILLEGAL=0, NODE, WAY, RELATION, NODE_ID, WAY_ID, RELATION_ID
 } type_t;
-
-#ifdef __cplusplus
-struct item_id_chain_t {
-  item_id_chain_t(type_t t, item_id_t i)
-    : type(t), id(i) {}
-  type_t type;
-  item_id_t id;
-};
-#endif
-
-#ifdef __cplusplus
-typedef std::vector<node_t *> node_chain_t;
-
-#define OSM_DRAW_FLAG_AREA  (1<<0)
-#define OSM_DRAW_FLAG_BG    (1<<1)
-
-class way_t: public base_object_t {
-public:
-  way_t();
-
-  /* visual representation from elemstyle */
-  struct {
-    guint color;
-    float zoom_max;
-    guint flags : 8;
-    gint width : 8;
-    gboolean dashed: 8;
-    guint dash_length: 8;
-
-    union {
-      struct {
-	guint color;
-	gint width;
-      } bg;
-
-      struct {
-	guint color;
-      } area;
-    };
-  } draw;
-
-  /* a link to the visual representation on screen */
-  struct map_item_chain_t *map_item_chain;
-
-  node_chain_t node_chain;
-
-  bool contains_node(const node_t *node) const;
-  void append_node(node_t *node);
-  bool ends_with_node(const node_t *node) const;
-  bool is_closed() const;
-  void reverse();
-  void rotate(node_chain_t::iterator nfirst);
-  const node_t *last_node() const;
-  const node_t *first_node() const;
-  unsigned int reverse_direction_sensitive_tags();
-  unsigned int reverse_direction_sensitive_roles(osm_t *osm);
-  xmlChar *generate_xml(item_id_t changeset);
-  void write_node_chain(xmlNodePtr way_node) const;
-
-  void cleanup();
-};
-
-typedef std::vector<way_t *> way_chain_t;
-#else
-typedef struct way_s way_t;
-#endif
-
-#ifdef __cplusplus
-class relation_t;
-#else
-typedef struct relation_t relation_t;
-#endif
-
-/* two of these hash tables are used, one for nodes and one for ways */
-/* currently relations aren't used often enough to justify the use */
-/* of a hash table */
-
-typedef struct hash_table_t hash_table_t;
 
 typedef struct object_s {
   type_t type;
@@ -307,40 +137,6 @@ typedef struct object_s {
 #endif
 } object_t;
 
-#ifdef __cplusplus
-struct member_t {
-  member_t(type_t t = ILLEGAL);
-
-  object_t object;
-  char   *role;
-
-  bool operator==(const member_t &other) const;
-  inline bool operator==(const object_t &other) const
-  { return object == other; }
-};
-#endif
-
-#ifdef __cplusplus
-class relation_t : public base_object_t {
-public:
-  relation_t();
-
-  std::vector<member_t> members;
-
-  std::vector<member_t>::iterator find_member_object(const object_t &o);
-  std::vector<member_t>::const_iterator find_member_object(const object_t &o) const;
-
-  void members_by_type(guint *nodes, guint *ways, guint *relations) const;
-  gchar *descriptive_name() const;
-  xmlChar *generate_xml(item_id_t changeset);
-
-  void cleanup();
-};
-
-typedef std::vector<relation_t *> relation_chain_t;
-
-#endif
-
 struct osm_t {
   bounds_t *bounds;   // original bounds as they appear in the file
 
@@ -384,6 +180,197 @@ struct osm_t {
 
 osm_t *osm_parse(const char *path, const char *filename, struct icon_t **icons);
 gboolean osm_sanity_check(GtkWidget *parent, const osm_t *osm);
+void osm_free(osm_t *osm);
+
+xmlChar *osm_generate_xml_changeset(const char* comment);
+
+gboolean osm_position_within_bounds_ll(const pos_t *ll_min, const pos_t *ll_max, const pos_t *pos);
+
+#ifdef __cplusplus
+}
+
+struct tag_t {
+  struct tag_t *next;
+  char *key, *value;
+  tag_t(char *k, char *v)
+    : next(0), key(k), value(v)
+  { }
+
+  bool is_creator_tag() const;
+
+  /**
+   * @brief replace the key
+   */
+  void update_key(const char *nkey);
+  /**
+   * @brief replace the value
+   */
+  void update_value(const char *nvalue);
+
+  /**
+   * @brief update the key and value
+   * @param key the new key
+   * @param value the new value
+   * @return if tag was actually changed
+   *
+   * This will update the key and value, but will avoid memory allocations
+   * in case key or value have not changed.
+   *
+   * This would be a no-op:
+   * \code
+   * tag->update(tag->key, tag->value);
+   * \endcode
+   */
+  bool update(const char *nkey, const char *nvalue);
+};
+
+struct base_object_t {
+  base_object_t();
+
+  const char *get_value(const char *key) const;
+  bool has_tag() const;
+  bool has_value(const char* str) const;
+
+  /**
+   * @brief compare given tag list to the one of this object
+   * @param t2 second list
+   * @return if the lists differ
+   */
+  bool tag_lists_diff(const std::vector<tag_t *> &t2) const;
+
+  /**
+   * replace the current tags with the given ones
+   * @param ntags array of new tags
+   *
+   * The old values will be freed, this object takes ownership of the values
+   * in ntags.
+   */
+  void replace_tags(std::vector<tag_t *> &ntags);
+
+  /**
+   * @brief check if the given tag exists in this object with a different value
+   */
+  bool tag_key_other_value_present(const tag_t *t) const;
+
+  /**
+   * @brief create a copy of the tag list
+   */
+  std::vector<tag_t *> copy_tags() const;
+
+  item_id_t id;
+  item_id_t version;
+  const char *user;
+  tag_t *tag;
+  time_t time;
+  gboolean visible:8;
+  int flags:24;
+};
+
+class node_t : public base_object_t {
+public:
+  node_t();
+
+  pos_t pos;
+  lpos_t lpos;
+  int ways;
+  float zoom_max;
+
+  /* icon */
+  GdkPixbuf *icon_buf;
+
+  /* a link to the visual representation on screen */
+  struct map_item_chain_t *map_item_chain;
+
+  xmlChar *generate_xml(item_id_t changeset);
+
+  void cleanup(osm_t *osm);
+};
+
+struct item_id_chain_t {
+  item_id_chain_t(type_t t, item_id_t i)
+    : type(t), id(i) {}
+  type_t type;
+  item_id_t id;
+};
+
+typedef std::vector<node_t *> node_chain_t;
+
+#define OSM_DRAW_FLAG_AREA  (1<<0)
+#define OSM_DRAW_FLAG_BG    (1<<1)
+
+class way_t: public base_object_t {
+public:
+  way_t();
+
+  /* visual representation from elemstyle */
+  struct {
+    guint color;
+    float zoom_max;
+    guint flags : 8;
+    gint width : 8;
+    gboolean dashed: 8;
+    guint dash_length: 8;
+
+    union {
+      struct {
+	guint color;
+	gint width;
+      } bg;
+
+      struct {
+	guint color;
+      } area;
+    };
+  } draw;
+
+  /* a link to the visual representation on screen */
+  struct map_item_chain_t *map_item_chain;
+
+  node_chain_t node_chain;
+
+  bool contains_node(const node_t *node) const;
+  void append_node(node_t *node);
+  bool ends_with_node(const node_t *node) const;
+  bool is_closed() const;
+  void reverse();
+  void rotate(node_chain_t::iterator nfirst);
+  const node_t *last_node() const;
+  const node_t *first_node() const;
+  unsigned int reverse_direction_sensitive_tags();
+  unsigned int reverse_direction_sensitive_roles(osm_t *osm);
+  xmlChar *generate_xml(item_id_t changeset);
+  void write_node_chain(xmlNodePtr way_node) const;
+
+  void cleanup();
+};
+
+struct member_t {
+  member_t(type_t t = ILLEGAL);
+
+  object_t object;
+  char   *role;
+
+  bool operator==(const member_t &other) const;
+  inline bool operator==(const object_t &other) const
+  { return object == other; }
+};
+
+class relation_t : public base_object_t {
+public:
+  relation_t();
+
+  std::vector<member_t> members;
+
+  std::vector<member_t>::iterator find_member_object(const object_t &o);
+  std::vector<member_t>::const_iterator find_member_object(const object_t &o) const;
+
+  void members_by_type(guint *nodes, guint *ways, guint *relations) const;
+  gchar *descriptive_name() const;
+  xmlChar *generate_xml(item_id_t changeset);
+
+  void cleanup();
+};
+
 /**
  * @brief parse the XML node for tag values
  * @param a_node the XML node to parse
@@ -391,24 +378,6 @@ gboolean osm_sanity_check(GtkWidget *parent, const osm_t *osm);
  * @retval NULL the XML was invalid
  */
 tag_t *osm_parse_osm_tag(xmlNode* a_node);
-void osm_free(osm_t *osm);
-
-void osm_tag_free(tag_t *tag);
-gboolean osm_tag_key_and_value_present(const tag_t *haystack, const tag_t *tag);
-
-xmlChar *osm_generate_xml_changeset(const char* comment);
-
-/* ----------- edit functions ----------- */
-way_t *osm_way_new(void);
-
-gboolean osm_position_within_bounds_ll(const pos_t *ll_min, const pos_t *ll_max, const pos_t *pos);
-
-tag_t *osm_tags_copy(const tag_t *tag);
-
-relation_t *osm_relation_new(void);
-
-#ifdef __cplusplus
-}
 
 bool osm_tag_key_and_value_present(const std::vector<tag_t *> &haystack, const tag_t *tag);
 
@@ -421,7 +390,14 @@ void osm_member_free(member_t &member);
 void osm_members_free(std::vector<member_t> &members);
 
 bool osm_node_in_other_way(const osm_t *osm, const way_t *way, const node_t *node);
+void osm_tag_free(tag_t *tag);
+gboolean osm_tag_key_and_value_present(const tag_t *haystack, const tag_t *tag);
 
+/* ----------- edit functions ----------- */
+way_t *osm_way_new(void);
+relation_t *osm_relation_new(void);
+
+tag_t *osm_tags_copy(const tag_t *tag);
 std::vector<tag_t> osm_tags_list_copy(const tag_t *tag);
 std::vector<tag_t *> osm_tags_list_copy(const std::vector<tag_t> &tags);
 
