@@ -437,7 +437,7 @@ static void map_object_select(appdata_t *appdata, object_t &object) {
 void map_item_deselect(appdata_t *appdata) {
 
   /* save tags for "last" function in info dialog */
-  if(appdata->map->selected.object.obj && appdata->map->selected.object.obj->has_tag()) {
+  if(appdata->map->selected.object.is_real() && appdata->map->selected.object.obj->has_tag()) {
     std::vector<tag_t> clear;
     if(appdata->map->selected.object.type == NODE) {
       clear.swap(appdata->map->last_node_tags);
