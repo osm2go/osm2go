@@ -2060,15 +2060,6 @@ bool base_object_t::has_tag() const
   return t != NULL;
 }
 
-bool base_object_t::has_value(const char* str) const
-{
-  for(const tag_t *t = tag; t; t = t->next) {
-    if(t->value && strcasecmp(t->value, str) == 0)
-      return true;
-  }
-  return false;
-}
-
 way_t::way_t()
   : base_object_t()
   , map_item_chain(0)

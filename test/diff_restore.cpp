@@ -40,7 +40,7 @@ int main(int argc, char **argv)
   g_assert(n72 != 0);
   g_assert((n72->flags & OSM_FLAG_DIRTY) != 0);
   g_assert(n72->get_value("testtag") != 0);
-  g_assert(n72->has_value("true"));
+  g_assert(strcmp(n72->get_value("testtag"), "true") == 0);
   // in diff, but the same as in .osm
   const node_t * const n23 = osm->nodes[3577031223];
   g_assert(n23 != 0);

@@ -59,7 +59,7 @@
   </rule>
 
   <rule>
-    <condition v="footway"/>
+    <condition k="highway" v="footway"/>
     <line width="3" colour="#FF6644"/>
   </rule>
 

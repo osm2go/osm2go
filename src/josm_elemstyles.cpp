@@ -275,9 +275,9 @@ void StyleSax::startElement(const xmlChar *name, const xmlChar **attrs)
       else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "b") == 0)
         b = xmlStrdup(attrs[i + 1]);
     }
-    if(k || v)
-      styles.back()->conditions.push_back(elemstyle_condition_t(k, v));
-    if(k && b) {
+    g_assert(k);
+    styles.back()->conditions.push_back(elemstyle_condition_t(k, v));
+    if(b) {
       g_assert(v == 0);
       elemstyle_condition_t &cond = styles.back()->conditions.back();
       cond.isBool = true;
@@ -435,8 +435,6 @@ bool elemstyle_condition_t::matches(const base_object_t &obj) const {
       if(!v || (value && strcasecmp(v, reinterpret_cast<const char *>(value)) != 0))
         return false;
     }
-  } else if(!isBool && value) {
-    return obj.has_value(reinterpret_cast<const char *>(value));
   }
   return true;
 }

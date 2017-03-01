@@ -229,7 +229,6 @@ struct base_object_t {
 
   const char *get_value(const char *key) const;
   bool has_tag() const;
-  bool has_value(const char* str) const;
 
   /**
    * @brief compare given tag list to the one of this object
