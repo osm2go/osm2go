@@ -372,42 +372,41 @@ static void attach_right(GtkWidget *table, GtkWidget *widget, gint y) {
  * @param value the new value
  */
 static bool store_value(presets_widget_t *widget, std::vector<tag_t *> &tags,
-                            std::vector<tag_t *>::iterator &ctag, const char *value) {
+                        std::vector<tag_t *>::iterator ctag, const char *value) {
   bool changed = false;
   if(value && strlen(value)) {
     const char *chstr;
-    tag_t *tag;
     if(ctag != tags.end()) {
       /* update the previous tag structure */
-      tag = *ctag;
-      g_assert(strcasecmp(tag->key, (char*)widget->key) == 0);
+      g_assert(strcasecmp((*ctag)->key, (char*)widget->key) == 0);
       /* only update if the value actually changed */
-      if(strcmp(tag->value, value) != 0) {
+      if(strcmp((*ctag)->value, value) != 0) {
         changed = true; /* mark as updated, actual change below */
-        chstr = "updated ";
+        chstr = "updated";
       } else {
-        chstr = "kept ";
+        chstr = "kept";
       }
     } else {
       /* no old entry, create a new one */
-      tag = g_new0(tag_t, 1);
+      tag_t *tag = g_new0(tag_t, 1);
       tag->update_key(reinterpret_cast<char *>(widget->key));
       /* value will be updated below */
       tags.push_back(tag);
+      ctag = tags.end() - 1;
       changed = true;
-      chstr = "new ";
+      chstr = "new";
     }
 
     if(changed)
-      tag->update_value(value);
+      (*ctag)->update_value(value);
 
-    printf("%skey = %s, value = %s\n", chstr,
-           widget->key, tag->value);
+    printf("%s key = %s, value = %s\n", chstr,
+           widget->key, (*ctag)->value);
   } else if (ctag != tags.end()) {
-    osm_tag_free(*ctag);
+    printf("removed key = %s, value = %s\n", widget->key, (*ctag)->value);
     tags.erase(ctag);
+    osm_tag_free(*ctag);
     changed = true;
-    printf("removed key = %s\n", widget->key);
   } else
     printf("ignore empty key = %s\n", widget->key);
 
@@ -688,52 +687,52 @@ static void presets_item_dialog(presets_context_t *context,
     widget_cnt = 0;
 
     std::vector<tag_t *> &tags = context->tag_context->tags;
-    while(it != itEnd) {
+    for(; it != itEnd; it++, widget_cnt++) {
       tag_t *otag = gtk_widgets[widget_cnt] ?
                     static_cast<tag_t*>(g_object_get_data(G_OBJECT(gtk_widgets[widget_cnt]), "tag")) : 0;
+      const std::vector<tag_t *>::iterator itEnd = tags.end();
       std::vector<tag_t *>::iterator ctag = otag ?
-                                            std::find(tags.begin(), tags.end(), otag) :
-                                            tags.end(); // the place to do the change
+                                            std::find(tags.begin(), itEnd, otag) :
+                                            itEnd; // the place to do the change
+      const char *text;
+      g_assert(!otag == (ctag == itEnd));
+
       switch((*it)->type) {
       case WIDGET_TYPE_COMBO: {
 	g_assert(GTK_WIDGET_TYPE(gtk_widgets[widget_cnt]) == combo_box_type());
 
-	const char *text = combo_box_get_active_text(gtk_widgets[widget_cnt]);
+        text = combo_box_get_active_text(gtk_widgets[widget_cnt]);
 	if(!strcmp(text, _("<unset>")))
 	  text = NULL;
 
-	changed |= store_value(*it, tags, ctag, text);
 	break;
       }
 
       case WIDGET_TYPE_TEXT:
 	g_assert(GTK_WIDGET_TYPE(gtk_widgets[widget_cnt]) == entry_type());
 
-	changed |= store_value(*it, tags, ctag, gtk_entry_get_text(
-		     GTK_ENTRY(gtk_widgets[widget_cnt])));
+        text = gtk_entry_get_text(GTK_ENTRY(gtk_widgets[widget_cnt]));
 	break;
 
       case WIDGET_TYPE_CHECK:
 	g_assert(GTK_WIDGET_TYPE(gtk_widgets[widget_cnt]) == check_button_type());
 
-	changed |= store_value(*it, tags, ctag,
-                 check_button_get_active(gtk_widgets[widget_cnt]) ? "yes" : NULL);
+        text = check_button_get_active(gtk_widgets[widget_cnt]) ? "yes" : NULL;
 	break;
 
       case WIDGET_TYPE_KEY:
 	g_assert(!gtk_widgets[widget_cnt]);
-	g_assert(!otag);
-        ctag = std::find_if(tags.begin(), tags.end(), find_tag_functor((*it)->key));
+        g_assert(ctag == itEnd);
+        ctag = std::find_if(tags.begin(), itEnd, find_tag_functor((*it)->key));
 
-        changed |= store_value(*it, tags, ctag, reinterpret_cast<const char*>((*it)->key_w.value));
+        text = reinterpret_cast<const char*>((*it)->key_w.value);
 	break;
 
       default:
-	break;
+        continue;
       }
 
-      widget_cnt++;
-      it++;
+      changed |= store_value(*it, tags, ctag, text);
     }
 
     if(changed)
