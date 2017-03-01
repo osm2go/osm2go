@@ -11,6 +11,8 @@ int main(int argc, char **argv)
   if(argc != 3)
     return EINVAL;
 
+  xmlInitParser();
+
   struct icon_t *icons = 0;
   std::string osm_path = argv[1];
   g_assert(osm_path[osm_path.size() - 1] == '/');
@@ -73,6 +75,8 @@ int main(int argc, char **argv)
   g_assert(w452->get_value("wheelchair") == NULL);
 
   osm_free(osm);
+
+  xmlCleanupParser();
 
   return 0;
 }
