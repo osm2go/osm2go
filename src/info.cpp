@@ -45,7 +45,11 @@ struct collision_functor {
   }
 };
 
-gboolean info_tag_key_collision(const std::vector<tag_t *> &tags, const tag_t *tag) {
+bool info_tag_key_collision(const std::vector<const tag_t *> &tags, const tag_t *tag) {
+  return std::find_if(tags.begin(), tags.end(), collision_functor(tag)) != tags.end();
+}
+
+static gboolean info_tag_key_collision(const std::vector<tag_t *> &tags, const tag_t *tag) {
   return std::find_if(tags.begin(), tags.end(), collision_functor(tag)) != tags.end() ? TRUE : FALSE;
 }
 
@@ -479,7 +483,7 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
 
   g_assert(context.object.is_real());
 
-  context.tags = context.object.obj->copy_tags();
+  context.tags = context.object.obj->tags.asPointerVector();
 
   switch(context.object.type) {
   case NODE:

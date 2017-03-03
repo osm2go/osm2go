@@ -55,8 +55,7 @@ struct diff_save_tags_functor {
 
 static void diff_save_tags(const base_object_t *obj, xmlNodePtr node) {
   diff_save_tags_functor fc(node);
-  for(const tag_t *tag = obj->tag; tag; tag = tag->next)
-    fc(tag);
+  obj->tags.for_each(fc);
 }
 
 /**

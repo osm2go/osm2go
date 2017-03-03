@@ -690,12 +690,12 @@ static void presets_item_dialog(presets_context_t *context,
     for(; it != itEnd; it++, widget_cnt++) {
       tag_t *otag = gtk_widgets[widget_cnt] ?
                     static_cast<tag_t*>(g_object_get_data(G_OBJECT(gtk_widgets[widget_cnt]), "tag")) : 0;
-      const std::vector<tag_t *>::iterator itEnd = tags.end();
+      const std::vector<tag_t *>::iterator citEnd = tags.end();
       std::vector<tag_t *>::iterator ctag = otag ?
-                                            std::find(tags.begin(), itEnd, otag) :
-                                            itEnd; // the place to do the change
+                                            std::find(tags.begin(), citEnd, otag) :
+                                            citEnd; // the place to do the change
       const char *text;
-      g_assert(!otag == (ctag == itEnd));
+      g_assert(!otag == (ctag == citEnd));
 
       switch((*it)->type) {
       case WIDGET_TYPE_COMBO: {
@@ -722,8 +722,8 @@ static void presets_item_dialog(presets_context_t *context,
 
       case WIDGET_TYPE_KEY:
 	g_assert(!gtk_widgets[widget_cnt]);
-        g_assert(ctag == itEnd);
-        ctag = std::find_if(tags.begin(), itEnd, find_tag_functor((*it)->key));
+        g_assert(ctag == citEnd);
+        ctag = std::find_if(tags.begin(), citEnd, find_tag_functor((*it)->key));
 
         text = reinterpret_cast<const char*>((*it)->key_w.value);
 	break;

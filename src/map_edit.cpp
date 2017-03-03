@@ -64,38 +64,6 @@ static void transfer_relations(osm_t *osm, way_t *dst, way_t *src) {
   std::for_each(rchain.begin(), rchain.end(), relation_transfer(dst, src));
 }
 
-/* combine tags from src to dst and combine them in a useful manner */
-/* erase all source tags */
-static bool combine_tags(base_object_t *obj, base_object_t *sobj) {
-  bool conflict = false;
-  tag_t **dst = &obj->tag;
-  tag_t *dst_orig = *dst;
-  tag_t *src = sobj->tag;
-  sobj->tag = 0;
-
-  /* ---------- transfer tags from way[1] to way[0] ----------- */
-  while(*dst) dst = &((*dst)->next);  /* find end of target tag list */
-  while(src) {
-    /* don't copy "created_by" tag or tags that already */
-    /* exist in identical form */
-    if(src->is_creator_tag() ||
-       osm_tag_key_and_value_present(dst_orig, src)) {
-      tag_t *next = src->next;
-      osm_tag_free(src);
-      src = next;
-    } else {
-      /* check if same key but with different value is present */
-      if(!conflict)
-        conflict = obj->tag_key_other_value_present(src);
-      *dst = src;
-      src = src->next;
-      dst = &((*dst)->next);
-      *dst = NULL;
-    }
-  }
-  return conflict;
-}
-
 /* -------------------------- way_add ----------------------- */
 
 void map_edit_way_add_begin(map_t *map, way_t *way_sel) {
@@ -375,7 +343,7 @@ void map_edit_way_add_ok(map_t *map) {
       map->action.way->reverse();
 
     /* and open dialog to resolve tag collisions if necessary */
-    if(combine_tags(map->action.way, map->action.ends_on))
+    if(map->action.way->tags.merge(map->action.ends_on->tags))
       messagef(GTK_WIDGET(map->appdata->window), _("Way tag conflict"),
 	       _("The resulting way contains some conflicting tags. "
 		 "Please solve these."));
@@ -547,7 +515,7 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
       }
 
       /* ------------  copy all tags ------------- */
-      neww->tag = osm_tags_copy(way->tag);
+      neww->tags.copy(way->tags);
 
       /* ---- transfer relation membership from way to new ----- */
       transfer_relations(map->appdata->osm, neww, way);
@@ -810,7 +778,7 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
       std::for_each(appdata->osm->relations.begin(), appdata->osm->relations.end(),
                     relation_node_replacer(touchnode, node));
 
-      bool conflict = combine_tags(node, touchnode);
+      bool conflict = node->tags.merge(touchnode->tags);
 
       /* touchnode must not have any references to ways anymore */
       g_assert_cmpint(touchnode->ways, ==, 0);
@@ -890,12 +858,11 @@ void map_edit_node_move(appdata_t *appdata, map_item_t *map_item,
 	  /* transfer tags from touchnode to node */
 
 	  /* ---------- transfer tags from way[1] to way[0] ----------- */
-	  bool conflict = combine_tags(ways2join[0], ways2join[1]);
+	  bool conflict = ways2join[0]->tags.merge(ways2join[1]->tags);
 
 	  /* ---- transfer relation membership from way[1] to way[0] ----- */
           const relation_chain_t &rchain =
 	    appdata->osm->to_relation(ways2join[1]);
-          const relation_chain_t::const_iterator itEnd = rchain.end();
 
 	  std::for_each(rchain.begin(), rchain.end(), member_merge(ways2join[0]));
 

@@ -48,7 +48,7 @@
 #error "Tree not enabled in libxml"
 #endif
 
-bool object_t::operator==(const object_t& other) const
+bool object_t::operator==(const object_t &other) const
 {
   if (type != other.type)
     return false;
@@ -227,14 +227,6 @@ void osm_tag_free(tag_t *tag) {
   g_free(tag);
 }
 
-static void osm_tags_free(tag_t *tag) {
-  while(tag) {
-    tag_t *next = tag->next;
-    osm_tag_free(tag);
-    tag = next;
-  }
-}
-
 /**
  * @brief fill tag_t from XML values
  * @param tag the tag structure to fill
@@ -274,15 +266,6 @@ tag_t *osm_parse_osm_tag(xmlNode *a_node) {
   return tag;
 }
 
-gboolean osm_tag_key_and_value_present(const tag_t *haystack, const tag_t *tag) {
-  for(; haystack; haystack = haystack->next) {
-    if((strcasecmp(haystack->key, tag->key) == 0) &&
-       (strcasecmp(haystack->value, tag->value) == 0))
-      return TRUE;
-  }
-  return FALSE;
-}
-
 struct tag_match_functor {
   const tag_t * const other;
   tag_match_functor(const tag_t *o) : other(o) {}
@@ -296,26 +279,57 @@ bool osm_tag_key_and_value_present(const std::vector<tag_t *> &haystack, const t
   return std::find_if(haystack.begin(), haystack.end(), tag_match_functor(tag)) != haystack.end();
 }
 
-bool base_object_t::tag_key_other_value_present(const tag_t *t) const {
-  const tag_t *haystack = tag;
-  for(; haystack; haystack = haystack->next) {
-    if((strcasecmp(haystack->key, t->key) == 0) &&
-       (strcasecmp(haystack->value, t->value) != 0))
-      return true;
+struct tag_other_value_functor {
+  const tag_t * const other;
+  tag_other_value_functor(const tag_t *o) : other(o) {}
+  bool operator()(const tag_t *tag) {
+    return ((strcasecmp(tag->key, other->key) == 0) &&
+            (strcasecmp(tag->value, other->value) != 0));
   }
-  return false;
+};
+
+bool tag_list_t::merge(tag_list_t &other)
+{
+  bool conflict = false;
+  tag_t **dst = &contents;
+  tag_t *src = other.contents;
+  other.contents = 0;
+
+  /* ---------- transfer tags from way[1] to way[0] ----------- */
+  while(*dst)
+    dst = &((*dst)->next);  /* find end of target tag list */
+
+  while(src) {
+    /* don't copy "created_by" tag or tags that already */
+    /* exist in identical form */
+    if(src->is_creator_tag() || find_if(tag_match_functor(src))) {
+      tag_t *next = src->next;
+      osm_tag_free(src);
+      src = next;
+    } else {
+      /* check if same key but with different value is present */
+      if(!conflict)
+        conflict = !!find_if(tag_other_value_functor(src));
+      *dst = src;
+      src = src->next;
+      dst = &((*dst)->next);
+      *dst = NULL;
+    }
+  }
+  return conflict;
 }
 
-static unsigned int count_tags(const tag_t *first, const tag_t **creator) {
-  unsigned int ret = 0;
-  for(const tag_t *ntag = first; ntag != 0; ntag = ntag->next) {
-    if(ntag->is_creator_tag())
-      *creator = ntag;
+struct count_tags {
+  unsigned int &count;
+  const tag_t **creator;
+  count_tags(unsigned int &c, const tag_t **r) : count(c), creator(r) {}
+  void operator()(const tag_t *tag) {
+    if(tag->is_creator_tag())
+      *creator = tag;
     else
-      ret++;
+      count++;
   }
-  return ret;
-}
+};
 
 static inline bool is_creator_tag(const tag_t *tag) {
   return tag->is_creator_tag();
@@ -329,10 +343,11 @@ struct tag_find_functor {
   }
 };
 
-bool base_object_t::tag_lists_diff(const std::vector<tag_t *> &t2) const {
+bool tag_list_t::operator!=(const std::vector<tag_t *> &t2) const {
   const tag_t *t1creator = 0;
   /* first check list length, otherwise deleted tags are hard to detect */
-  unsigned int ocnt = count_tags(tag, &t1creator);
+  unsigned int ocnt = 0;
+  for_each(count_tags(ocnt, &t1creator));
   const std::vector<tag_t *>::const_iterator t2cit = std::find_if(t2.begin(), t2.end(), is_creator_tag);
   if(t2cit != t2.end())
     ocnt++;
@@ -340,7 +355,7 @@ bool base_object_t::tag_lists_diff(const std::vector<tag_t *> &t2) const {
   if (t2.size() != ocnt)
     return true;
 
-  for (const tag_t *ntag = tag; ntag != NULL; ntag = ntag->next) {
+  for (const tag_t *ntag = contents; ntag; ntag = ntag->next) {
     if (ntag == t1creator)
       continue;
 
@@ -398,7 +413,7 @@ void node_t::cleanup(osm_t *osm) {
   /* there must not be anything left in this chain */
   g_assert(!map_item_chain);
 
-  osm_tags_free(tag);
+  tags.clear();
 }
 
 void osm_t::node_free(node_t *node) {
@@ -470,7 +485,7 @@ void osm_members_free(std::vector<member_t> &members) {
 }
 
 void relation_t::cleanup() {
-  osm_tags_free(tag);
+  tags.clear();
   osm_members_free(members);
 }
 
@@ -664,13 +679,13 @@ static gboolean process_bounds(xmlTextReaderPtr reader, bounds_t *bounds) {
   return TRUE;
 }
 
-static tag_t *process_tag(xmlTextReaderPtr reader) {
+static void process_tag(xmlTextReaderPtr reader, std::vector<tag_t *> &tags) {
   tag_t *tag = tag_from_xml(xmlTextReaderGetAttribute(reader, BAD_CAST "k"),
                             xmlTextReaderGetAttribute(reader, BAD_CAST "v"));
-  if(tag)
+  if(tag) {
     skip_element(reader);
-
-  return tag;
+    tags.push_back(tag);
+  }
 }
 
 static void process_base_attributes(base_object_t *obj, xmlTextReaderPtr reader, osm_t *osm)
@@ -737,7 +752,7 @@ static node_t *process_node(xmlTextReaderPtr reader, osm_t *osm) {
   int depth = xmlTextReaderDepth(reader);
 
   /* scan all elements on same level or its children */
-  tag_t **tag = &node->tag;
+  std::vector<tag_t *> tags;
   int ret = xmlTextReaderRead(reader);
   while((ret == 1) &&
 	((xmlTextReaderNodeType(reader) != XML_READER_TYPE_END_ELEMENT) ||
@@ -746,14 +761,14 @@ static node_t *process_node(xmlTextReaderPtr reader, osm_t *osm) {
     if(xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT) {
       const char *subname = (const char*)xmlTextReaderConstName(reader);
       if(strcmp(subname, "tag") == 0) {
-	*tag = process_tag(reader);
-	if(*tag) tag = &(*tag)->next;
+        process_tag(reader, tags);
       } else
 	skip_element(reader);
     }
 
     ret = xmlTextReaderRead(reader);
   }
+  node->replace_tags(tags);
 
   return node;
 }
@@ -798,7 +813,7 @@ static way_t *process_way(xmlTextReaderPtr reader, osm_t *osm) {
   int depth = xmlTextReaderDepth(reader);
 
   /* scan all elements on same level or its children */
-  tag_t **tag = &way->tag;
+  std::vector<tag_t *> tags;
   int ret = xmlTextReaderRead(reader);
   while((ret == 1) &&
 	((xmlTextReaderNodeType(reader) != XML_READER_TYPE_END_ELEMENT) ||
@@ -811,13 +826,13 @@ static way_t *process_way(xmlTextReaderPtr reader, osm_t *osm) {
         if(n)
           way->node_chain.push_back(n);
       } else if(strcmp(subname, "tag") == 0) {
-	*tag = process_tag(reader);
-	if(*tag) tag = &(*tag)->next;
+        process_tag(reader, tags);
       } else
 	skip_element(reader);
     }
     ret = xmlTextReaderRead(reader);
   }
+  way->replace_tags(tags);
 
   return way;
 }
@@ -908,7 +923,7 @@ static relation_t *process_relation(xmlTextReaderPtr reader, osm_t *osm) {
   int depth = xmlTextReaderDepth(reader);
 
   /* scan all elements on same level or its children */
-  tag_t **tag = &relation->tag;
+  std::vector<tag_t *> tags;
   int ret = xmlTextReaderRead(reader);
   while((ret == 1) &&
 	((xmlTextReaderNodeType(reader) != XML_READER_TYPE_END_ELEMENT) ||
@@ -919,13 +934,13 @@ static relation_t *process_relation(xmlTextReaderPtr reader, osm_t *osm) {
       if(strcmp(subname, "member") == 0) {
         process_member(reader, osm, relation->members);
       } else if(strcmp(subname, "tag") == 0) {
-	*tag = process_tag(reader);
-	if(*tag) tag = &(*tag)->next;
+        process_tag(reader, tags);
       } else
 	skip_element(reader);
     }
     ret = xmlTextReaderRead(reader);
   }
+  relation->replace_tags(tags);
 
   return relation;
 }
@@ -1094,17 +1109,19 @@ bool osm_node_in_other_way(const osm_t *osm, const way_t *way, const node_t *nod
   return std::find_if(osm->ways.begin(), itEnd, node_in_other_way(way, node)) != itEnd;
 }
 
-static void osm_generate_tags(const tag_t *tag, xmlNodePtr node, bool keep_created = false) {
-  while(tag) {
+struct tag_to_xml {
+  xmlNodePtr const node;
+  const bool keep_created;
+  tag_to_xml(xmlNodePtr n, bool k = false) : node(n), keep_created(k) {}
+  void operator()(const tag_t *tag) {
     /* skip "created_by" tags as they aren't needed anymore with api 0.6 */
     if(G_LIKELY(keep_created || !tag->is_creator_tag())) {
       xmlNodePtr tag_node = xmlNewChild(node, NULL, BAD_CAST "tag", NULL);
       xmlNewProp(tag_node, BAD_CAST "k", BAD_CAST tag->key);
       xmlNewProp(tag_node, BAD_CAST "v", BAD_CAST tag->value);
     }
-    tag = tag->next;
   }
-}
+};
 
 static xmlDocPtr
 osm_generate_xml_init(xmlNodePtr *node, const char *node_name)
@@ -1147,7 +1164,7 @@ xmlChar *node_t::generate_xml(item_id_t changeset) {
   snprintf(str, sizeof(str), "%u", (unsigned)changeset);
   xmlNewProp(xml_node, BAD_CAST "changeset", BAD_CAST str);
   xml_set_prop_pos(xml_node, &pos);
-  osm_generate_tags(tag, xml_node);
+  tags.for_each(tag_to_xml(xml_node));
 
   return osm_generate_xml_finish(doc);
 }
@@ -1190,7 +1207,7 @@ xmlChar *way_t::generate_xml(item_id_t changeset) {
   xmlNewProp(xml_node, BAD_CAST "changeset", BAD_CAST str);
 
   write_node_chain(xml_node);
-  osm_generate_tags(tag, xml_node);
+  tags.for_each(tag_to_xml(xml_node));
 
   return osm_generate_xml_finish(doc);
 }
@@ -1247,7 +1264,7 @@ xmlChar *relation_t::generate_xml(item_id_t changeset) {
   xmlNewProp(xml_node, BAD_CAST "changeset", BAD_CAST str);
 
   std::for_each(members.begin(), members.end(), gen_xml_relation_functor(xml_node));
-  osm_generate_tags(tag, xml_node);
+  tags.for_each(tag_to_xml(xml_node));
 
   return osm_generate_xml_finish(doc);
 }
@@ -1261,14 +1278,16 @@ xmlChar *osm_generate_xml_changeset(const char *comment) {
   tag_t tag_comment(const_cast<char*>("comment"), const_cast<char *>(comment));
   tag_t tag_creator(const_cast<char*>("created_by"),
                     const_cast<char*>(PACKAGE " v" VERSION));
-  tag_creator.next = &tag_comment;
 
   xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
   xmlNodePtr root_node = xmlNewNode(NULL, BAD_CAST "osm");
   xmlDocSetRootElement(doc, root_node);
 
   xmlNodePtr cs_node = xmlNewChild(root_node, NULL, BAD_CAST "changeset", NULL);
-  osm_generate_tags(&tag_creator, cs_node, true);
+
+  tag_to_xml fc(cs_node, true);
+  fc(&tag_creator);
+  fc(&tag_comment);
 
   xmlDocDumpFormatMemoryEnc(doc, &result, &len, "UTF-8", 1);
   xmlFreeDoc(doc);
@@ -1731,66 +1750,75 @@ static const char *DS_ONEWAY_REV = "-1";
 /* Reverse direction-sensitive tags like "oneway". Marks the way as dirty if
  * anything is changed, and returns the number of flipped tags. */
 
+struct reverse_direction_sensitive_tags_functor {
+  unsigned int &n_tags_altered;
+  reverse_direction_sensitive_tags_functor(unsigned int &c) : n_tags_altered(c) {}
+  void operator()(tag_t *etag);
+};
+
+void reverse_direction_sensitive_tags_functor::operator()(tag_t* etag)
+{
+  char *lc_key = g_ascii_strdown(etag->key, -1);
+
+  if (strcmp(lc_key, "oneway") == 0) {
+    char *lc_value = g_ascii_strdown(etag->value, -1);
+    // oneway={yes/true/1/-1} is unusual.
+    // Favour "yes" and "-1".
+    if ((strcmp(lc_value, DS_ONEWAY_FWD) == 0) ||
+        (strcmp(lc_value, "true") == 0) ||
+        (strcmp(lc_value, "1") == 0)) {
+      etag->update_value(DS_ONEWAY_REV);
+      n_tags_altered++;
+    } else if (strcmp(lc_value, DS_ONEWAY_REV) == 0) {
+      etag->update_value(DS_ONEWAY_FWD);
+      n_tags_altered++;
+    } else {
+      printf("warning: unknown tag: %s=%s\n", etag->key, etag->value);
+    }
+    g_free(lc_value);
+  } else if (strcmp(lc_key, "sidewalk") == 0) {
+    if (strcasecmp(etag->value, "right") == 0)
+      etag->update_value("left");
+    else if (strcasecmp(etag->value, "left") == 0)
+      etag->update_value("right");
+  } else {
+    // suffixes
+    static std::vector<std::pair<std::string, std::string> > rtable;
+    if(rtable.empty()) {
+      rtable.push_back(std::pair<std::string, std::string>(":left", ":right"));
+      rtable.push_back(std::pair<std::string, std::string>(":right", ":left"));
+      rtable.push_back(std::pair<std::string, std::string>(":forward", ":backward"));
+      rtable.push_back(std::pair<std::string, std::string>(":backward", ":forward"));
+    }
+
+    for (unsigned int i = 0; i < rtable.size(); i++) {
+      if (g_str_has_suffix(lc_key, rtable[i].first.c_str())) {
+        /* length of key that will persist */
+        size_t plen = strlen(etag->key) - rtable[i].first.size();
+        /* add length of new suffix */
+        etag->key = (char*)g_realloc(etag->key, plen + 1 + rtable[i].second.size());
+        char *lastcolon = etag->key + plen;
+        g_assert(*lastcolon == ':');
+        /* replace suffix */
+        strcpy(lastcolon, rtable[i].second.c_str());
+        n_tags_altered++;
+        break;
+      }
+    }
+  }
+
+  g_free(lc_key);
+}
+
 unsigned int
 way_t::reverse_direction_sensitive_tags() {
   unsigned int n_tags_altered = 0;
-  for (tag_t *etag = tag; etag; etag = etag->next) {
-    char *lc_key = g_ascii_strdown(etag->key, -1);
 
-    if (strcmp(lc_key, "oneway") == 0) {
-      char *lc_value = g_ascii_strdown(etag->value, -1);
-      // oneway={yes/true/1/-1} is unusual.
-      // Favour "yes" and "-1".
-      if ((strcmp(lc_value, DS_ONEWAY_FWD) == 0) ||
-          (strcmp(lc_value, "true") == 0) ||
-          (strcmp(lc_value, "1") == 0)) {
-        etag->update_value(DS_ONEWAY_REV);
-        n_tags_altered++;
-      }
-      else if (strcmp(lc_value, DS_ONEWAY_REV) == 0) {
-        etag->update_value(DS_ONEWAY_FWD);
-        n_tags_altered++;
-      }
-      else {
-        printf("warning: unknown tag: %s=%s\n", etag->key, etag->value);
-      }
-      g_free(lc_value);
-    } else if (strcmp(lc_key, "sidewalk") == 0) {
-      if (strcasecmp(etag->value, "right") == 0)
-        etag->update_value("left");
-      else if (strcasecmp(etag->value, "left") == 0)
-        etag->update_value("right");
-    } else {
-      // suffixes
-      static std::vector<std::pair<std::string, std::string> > rtable;
-      if(rtable.empty()) {
-        rtable.push_back(std::pair<std::string, std::string>(":left", ":right"));
-        rtable.push_back(std::pair<std::string, std::string>(":right", ":left"));
-        rtable.push_back(std::pair<std::string, std::string>(":forward", ":backward"));
-        rtable.push_back(std::pair<std::string, std::string>(":backward", ":forward"));
-      }
+  tags.for_each(reverse_direction_sensitive_tags_functor(n_tags_altered));
 
-      for (unsigned int i = 0; i < rtable.size(); i++) {
-        if (g_str_has_suffix(lc_key, rtable[i].first.c_str())) {
-          /* length of key that will persist */
-          size_t plen = strlen(etag->key) - rtable[i].first.size();
-          /* add length of new suffix */
-          etag->key = (char*)g_realloc(etag->key, plen + 1 + rtable[i].second.size());
-          char *lastcolon = etag->key + plen;
-          g_assert(*lastcolon == ':');
-          /* replace suffix */
-          strcpy(lastcolon, rtable[i].second.c_str());
-          n_tags_altered++;
-          break;
-        }
-      }
-    }
-
-    g_free(lc_key);
-  }
-  if (n_tags_altered > 0) {
+  if (n_tags_altered > 0)
     flags |= OSM_FLAG_DIRTY;
-  }
+
   return n_tags_altered;
 }
 
@@ -1891,10 +1919,11 @@ void way_t::rotate(node_chain_t::iterator nfirst) {
   std::rotate(node_chain.begin(), nfirst, node_chain.end());
 }
 
-std::vector<tag_t> osm_tags_list_copy(const tag_t *tag) {
+std::vector<tag_t> tag_list_t::asVector() const
+{
   std::vector<tag_t> new_tags;
 
-  for(const tag_t *src_tag = tag; src_tag; src_tag = src_tag->next) {
+  for(const tag_t *src_tag = contents; src_tag; src_tag = src_tag->next) {
     if(!src_tag->is_creator_tag()) {
       tag_t dst_tag(g_strdup(src_tag->key), g_strdup(src_tag->value));
       new_tags.push_back(dst_tag);
@@ -1902,6 +1931,29 @@ std::vector<tag_t> osm_tags_list_copy(const tag_t *tag) {
   }
 
   return new_tags;
+}
+
+struct tag_vector_functor {
+  std::vector<tag_t *> &tags;
+  tag_vector_functor(std::vector<tag_t *> &t) : tags(t) {}
+  void operator()(const tag_t &otag) {
+    tag_t *tag = g_new0(tag_t, 1);
+    tag->key = otag.key;
+    tag->value = otag.value;
+    tags.push_back(tag);
+  }
+};
+
+std::vector<tag_t *> tag_list_t::asPointerVector() const
+{
+  const std::vector<tag_t> &ntags = asVector();
+  std::vector<tag_t *> ret;
+
+  ret.reserve(ntags.size());
+
+  std::for_each(ntags.begin(), ntags.end(), tag_vector_functor(ret));
+
+  return ret;
 }
 
 std::vector<tag_t *> osm_tags_list_copy(const std::vector<tag_t> &tags) {
@@ -1919,20 +1971,18 @@ std::vector<tag_t *> osm_tags_list_copy(const std::vector<tag_t> &tags) {
   return new_tags;
 }
 
-tag_t *osm_tags_copy(const tag_t *src_tag) {
-  tag_t *new_tags = NULL;
-  tag_t **dst_tag = &new_tags;
+void tag_list_t::copy(const tag_list_t &other)
+{
+  tag_t **dst_tag = &contents;
 
-  for(; src_tag; src_tag = src_tag->next) {
-    if(!src_tag->is_creator_tag()) {
+  for(const tag_t *src_tag = other.contents; src_tag; src_tag = src_tag->next) {
+    if(G_LIKELY(!src_tag->is_creator_tag())) {
       *dst_tag = g_new0(tag_t, 1);
       (*dst_tag)->key = g_strdup(src_tag->key);
       (*dst_tag)->value = g_strdup(src_tag->value);
       dst_tag = &(*dst_tag)->next;
     }
   }
-
-  return new_tags;
 }
 
 /* try to get an as "speaking" description of the object as possible */
@@ -2028,37 +2078,87 @@ bool tag_t::is_creator_tag() const {
   return (strcasecmp(key, "created_by") == 0);
 }
 
+tag_list_t::tag_list_t()
+  : contents(0)
+{
+}
+
+bool tag_list_t::empty() const
+{
+  return !contents;
+}
+
+bool tag_list_t::hasRealTags() const
+{
+  tag_t *t = contents;
+
+  /* created_by tags don't count as real tags */
+  while(t && t->is_creator_tag())
+    t = t->next;
+
+  return !!t;
+}
+
+struct key_match_functor {
+  const char * const key;
+  key_match_functor(const char *k) : key(k) {}
+  bool operator()(const tag_t *tag) {
+    return (strcasecmp(key, tag->key) == 0);
+  }
+};
+
+const char* tag_list_t::get_value(const char *key) const
+{
+  const tag_t *tag = find_if(key_match_functor(key));
+  if(tag)
+    return tag->value;
+
+  return NULL;
+}
+
+tag_list_t::operator std::vector<const tag_t *>() const
+{
+  std::vector<const tag_t *> tags;
+  for(const tag_t *t = contents; t; t = t->next)
+    tags.push_back(t);
+  return tags;
+}
+
+void tag_list_t::clear()
+{
+  tag_t *tag = contents;
+  while(tag) {
+    tag_t *next = tag->next;
+    osm_tag_free(tag);
+    tag = next;
+  }
+  contents = 0;
+}
+
+void tag_list_t::replace(std::vector<tag_t *> &ntags)
+{
+  clear();
+  if(ntags.empty())
+    return;
+  contents = ntags.front();
+  tag_t *t = contents;
+  const std::vector<tag_t *>::const_iterator itEnd = ntags.end() - 1;
+  for(std::vector<tag_t *>::const_iterator it = ntags.begin(); it != itEnd; it++)
+    (*it)->next = *(it + 1);
+}
+
 base_object_t::base_object_t()
 {
   memset(this, 0, sizeof(*this));
 }
 
-const char* base_object_t::get_value(const char *key) const
-{
-  if(!key)
-    return NULL;
-
-  const tag_t *tg = tag;
-  while(tg) {
-    if(strcasecmp(tg->key, key) == 0)
-      return tg->value;
-
-    tg = tg->next;
+struct value_match_functor {
+  const char * const value;
+  value_match_functor(const char *v) : value(v) {}
+  bool operator()(const tag_t *tag) {
+    return tag->value && (strcasecmp(tag->value, value) == 0);
   }
-
-  return NULL;
-}
-
-bool base_object_t::has_tag() const
-{
-  tag_t *t = tag;
-
-  /* created_by tags don't count as real tags */
-  if(t && t->is_creator_tag())
-    t = t->next;
-
-  return t != NULL;
-}
+};
 
 way_t::way_t()
   : base_object_t()
@@ -2066,35 +2166,6 @@ way_t::way_t()
   , node_chain(0)
 {
   memset(&draw, 0, sizeof(draw));
-}
-
-void base_object_t::replace_tags(std::vector<tag_t *> &ntags)
-{
-  osm_tags_free(tag);
-  if(ntags.empty()) {
-    tag = 0;
-    return;
-  }
-  tag = ntags.front();
-  tag_t *t = tag;
-  const std::vector<tag_t *>::const_iterator itEnd = ntags.end() - 1;
-  for(std::vector<tag_t *>::const_iterator it = ntags.begin(); it != itEnd; it++)
-    (*it)->next = *(it + 1);
-}
-
-std::vector<tag_t *> base_object_t::copy_tags() const {
-  std::vector<tag_t *> new_tags;
-
-  for(const tag_t *src_tag = tag; src_tag; src_tag = src_tag->next) {
-    if(!src_tag->is_creator_tag()) {
-      tag_t *dst_tag = g_new0(tag_t, 1);
-      dst_tag->key = g_strdup(src_tag->key);
-      dst_tag->value = g_strdup(src_tag->value);
-      new_tags.push_back(dst_tag);
-    }
-  }
-
-  return new_tags;
 }
 
 bool way_t::contains_node(const node_t *node) const
@@ -2131,7 +2202,7 @@ void way_t::cleanup() {
   //  printf("freeing way #" ITEM_ID_FORMAT "\n", OSM_ID(way));
 
   osm_node_chain_free(node_chain);
-  osm_tags_free(tag);
+  tags.clear();
 
   /* there must not be anything left in this chain */
   g_assert(!map_item_chain);

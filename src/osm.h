@@ -224,42 +224,106 @@ struct tag_t {
   bool update(const char *nkey, const char *nvalue);
 };
 
+class tag_list_t {
+public:
+  tag_list_t();
+
+  /**
+   * @brief check if any tags are present
+   */
+  bool empty() const;
+
+  /**
+   * @brief check if any tag that is not "created_by" is present
+   */
+  bool hasRealTags() const;
+
+  const char *get_value(const char *key) const;
+
+  template<typename _Predicate>
+  const tag_t *find_if(_Predicate pred) const {
+    for(const tag_t *t = contents; t; t = t->next)
+      if(pred(t))
+        return t;
+    return 0;
+  }
+
+  template<typename _Predicate>
+  void for_each(_Predicate pred) const {
+    for(tag_t *t = contents; t; t = t->next)
+      pred(t);
+  }
+
+  operator std::vector<const tag_t *>() const;
+
+  /**
+   * @brief remove all elements and free their memory
+   */
+  void clear();
+
+  /**
+   * @brief copy the contained tags
+   * The memory in the tags will be duplicated, the caller must take care
+   * of it's release.
+   */
+  std::vector<tag_t> asVector() const;
+
+  /**
+   * @brief copy the contained tags
+   * The caller own the memory.
+   */
+  std::vector<tag_t *> asPointerVector() const;
+
+  void copy(const tag_list_t &other);
+
+  /**
+   * @brief replace the current tags with the given ones
+   * @param ntags array of new tags
+   *
+   * The old values will be freed, this object takes ownership of the values
+   * in ntags.
+   */
+  void replace(std::vector<tag_t *> &ntags);
+
+  /**
+   * @brief combine tags from both lists in a useful manner
+   * @return if there were any tag collisions
+   *
+   * other will be empty afterwards.
+   */
+  bool merge(tag_list_t &other);
+
+  bool operator!=(const std::vector<tag_t *> &t2) const;
+
+private:
+  tag_t *contents;
+};
+
+G_STATIC_ASSERT(sizeof(tag_list_t) == sizeof(tag_t *));
+
 struct base_object_t {
   base_object_t();
 
-  const char *get_value(const char *key) const;
-  bool has_tag() const;
+  inline const char *get_value(const char *key) const
+  { return tags.get_value(key); }
+  inline bool has_tag() const
+  { return tags.hasRealTags(); }
 
   /**
    * @brief compare given tag list to the one of this object
    * @param t2 second list
    * @return if the lists differ
    */
-  bool tag_lists_diff(const std::vector<tag_t *> &t2) const;
+  inline bool tag_lists_diff(const std::vector<tag_t *> &t2) const
+  { return tags != t2; }
 
-  /**
-   * replace the current tags with the given ones
-   * @param ntags array of new tags
-   *
-   * The old values will be freed, this object takes ownership of the values
-   * in ntags.
-   */
-  void replace_tags(std::vector<tag_t *> &ntags);
-
-  /**
-   * @brief check if the given tag exists in this object with a different value
-   */
-  bool tag_key_other_value_present(const tag_t *t) const;
-
-  /**
-   * @brief create a copy of the tag list
-   */
-  std::vector<tag_t *> copy_tags() const;
+  inline void replace_tags(std::vector<tag_t *> &ntags)
+  { tags.replace(ntags); }
 
   item_id_t id;
   item_id_t version;
   const char *user;
-  tag_t *tag;
+  tag_list_t tags;
   time_t time;
   gboolean visible:8;
   int flags:24;
@@ -390,14 +454,11 @@ void osm_members_free(std::vector<member_t> &members);
 
 bool osm_node_in_other_way(const osm_t *osm, const way_t *way, const node_t *node);
 void osm_tag_free(tag_t *tag);
-gboolean osm_tag_key_and_value_present(const tag_t *haystack, const tag_t *tag);
 
 /* ----------- edit functions ----------- */
 way_t *osm_way_new(void);
 relation_t *osm_relation_new(void);
 
-tag_t *osm_tags_copy(const tag_t *tag);
-std::vector<tag_t> osm_tags_list_copy(const tag_t *tag);
 std::vector<tag_t *> osm_tags_list_copy(const std::vector<tag_t> &tags);
 
 #endif

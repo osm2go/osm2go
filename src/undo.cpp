@@ -203,7 +203,7 @@ static void undo_object_copy_base(object_t *dst, const object_t &src) {
   dst->obj->user    = src.obj->user;
   dst->obj->flags   = src.obj->flags;
   dst->obj->visible = src.obj->visible;
-  dst->obj->tag     = osm_tags_copy(src.obj->tag);
+  dst->obj->tags.copy(src.obj->tags);
 }
 
 struct object_append {

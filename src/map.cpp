@@ -86,20 +86,17 @@ canvas_item_t *map_item_chain_t::firstCanvasItem() const {
 #undef DESTROY_WAIT_FOR_GTK
 
 struct self_collision_functor {
-  const std::vector<tag_t *> &tags;
-  self_collision_functor(const std::vector<tag_t *> &t) : tags(t) {}
+  const std::vector<const tag_t *> &tags;
+  self_collision_functor(const std::vector<const tag_t *> &t) : tags(t) {}
   bool operator()(const tag_t *tag) {
     return info_tag_key_collision(tags, tag) == TRUE;
   }
 };
 
 static void map_statusbar(map_t *map, map_item_t *map_item) {
-  tag_t *tag = map_item->object.obj->tag;
 
   gboolean collision = FALSE;
-  std::vector<tag_t *> tags;
-  for(tag_t *t = tag; t; t = t->next)
-    tags.push_back(t);
+  const std::vector<const tag_t *> &tags = map_item->object.obj->tags;
 
   collision = std::find_if(tags.begin(), tags.end(), self_collision_functor(tags)) !=
               tags.end();
@@ -442,13 +439,11 @@ void map_item_deselect(appdata_t *appdata) {
     if(appdata->map->selected.object.type == NODE) {
       clear.swap(appdata->map->last_node_tags);
 
-      appdata->map->last_node_tags =
-        osm_tags_list_copy(appdata->map->selected.object.obj->tag);
+      appdata->map->last_node_tags = appdata->map->selected.object.obj->tags.asVector();
     } else if(appdata->map->selected.object.type == WAY) {
       clear.swap(appdata->map->last_way_tags);
 
-      appdata->map->last_way_tags =
-        osm_tags_list_copy(appdata->map->selected.object.obj->tag);
+      appdata->map->last_way_tags = appdata->map->selected.object.obj->tags.asVector();
     }
     std::for_each(clear.begin(), clear.end(), osm_tag_members_free);
   }
