@@ -404,8 +404,9 @@ static bool store_value(presets_widget_t *widget, std::vector<tag_t *> &tags,
            widget->key, (*ctag)->value);
   } else if (ctag != tags.end()) {
     printf("removed key = %s, value = %s\n", widget->key, (*ctag)->value);
+    tag_t *tag = *ctag;
     tags.erase(ctag);
-    osm_tag_free(*ctag);
+    osm_tag_free(tag);
     changed = true;
   } else
     printf("ignore empty key = %s\n", widget->key);
