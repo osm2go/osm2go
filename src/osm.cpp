@@ -1298,29 +1298,16 @@ xmlChar *osm_generate_xml_changeset(const char *comment) {
 /* ---------- edit functions ------------- */
 
 template<typename T> item_id_t osm_new_id(const std::map<item_id_t, T *> &map) {
-  item_id_t id = -1;
-  const typename std::map<item_id_t, T *>::const_iterator itEnd = map.end();
+  if(map.empty())
+    return -1;
 
-  while(true) {
-    const typename std::map<item_id_t, T *>::const_iterator it = map.find(id);
-    /* no such id so far -> use it */
-    if(it == itEnd)
-      return id;
-
-    id--;
-  }
-}
-
-static item_id_t osm_new_way_id(const osm_t *osm) {
-  return osm_new_id<way_t>(osm->ways);
-}
-
-static item_id_t osm_new_node_id(const osm_t *osm) {
-  return osm_new_id<node_t>(osm->nodes);
-}
-
-static item_id_t osm_new_relation_id(const osm_t *osm) {
-  return osm_new_id<relation_t>(osm->relations);
+  // map is sorted, so use one less the first id in the container if it is negative,
+  // or -1 if it is positive
+  const typename std::map<item_id_t, T *>::const_iterator it = map.begin();
+  if(it->first >= 0)
+    return -1;
+  else
+    return it->first - 1;
 }
 
 node_t *osm_t::node_new(gint x, gint y) {
@@ -1364,17 +1351,15 @@ node_t *osm_t::node_new(const pos_t *pos) {
 void osm_t::node_attach(node_t *node) {
   printf("Attaching node\n");
 
-  node->id = osm_new_node_id(this);
+  node->id = osm_new_id(nodes);
   node->flags = OSM_FLAG_NEW;
 
-  /* attach to end of node list */
   nodes[node->id] = node;
 }
 
 void osm_t::node_restore(node_t *node) {
   printf("Restoring node\n");
 
-  /* attach to end of node list */
   nodes[node->id] = node;
 }
 
@@ -1393,10 +1378,9 @@ way_t *osm_way_new(void) {
 void osm_t::way_attach(way_t *way) {
   printf("Attaching way\n");
 
-  way->id = osm_new_way_id(this);
+  way->id = osm_new_id(ways);
   way->flags = OSM_FLAG_NEW;
 
-  /* attach to end of way list */
   ways[way->id] = way;
 }
 
@@ -1420,7 +1404,6 @@ void way_member_ref::operator()(const item_id_chain_t &member) {
 void osm_t::way_restore(way_t *way, const std::vector<item_id_chain_t> &id_chain) {
   printf("Restoring way\n");
 
-  /* attach to end of node list */
   ways[way->id] = way;
 
   /* restore node memberships by converting ids into real pointers */
@@ -1653,10 +1636,9 @@ relation_t *osm_relation_new(void) {
 void osm_t::relation_attach(relation_t *relation) {
   printf("Attaching relation\n");
 
-  relation->id = osm_new_relation_id(this);
+  relation->id = osm_new_id(relations);
   relation->flags = OSM_FLAG_NEW;
 
-  /* attach to end of relation list */
   relations[relation->id] = relation;
 }
 
