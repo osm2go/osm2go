@@ -410,7 +410,8 @@ public:
 };
 
 struct member_t {
-  member_t(type_t t = ILLEGAL);
+  explicit member_t(type_t t);
+  explicit member_t(const object_t &o, char *r = 0);
 
   object_t object;
   char   *role;

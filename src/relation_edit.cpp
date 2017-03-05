@@ -157,10 +157,7 @@ static gboolean relation_add_item(GtkWidget *parent,
   g_assert(object.is_real());
 
   /* create new member */
-  member_t member;
-  member.object = object;
-  member.role = role;
-  relation->members.push_back(member);
+  relation->members.push_back(member_t(object, role));
 
   relation->flags |= OSM_FLAG_DIRTY;
   return TRUE;

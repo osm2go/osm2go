@@ -502,7 +502,7 @@ static void osm_relation_free_pair(std::pair<item_id_t, relation_t *> pair) {
 
 member_t osm_parse_osm_relation_member(osm_t *osm, xmlNode *a_node) {
   xmlChar *prop;
-  member_t member;
+  member_t member(ILLEGAL);
 
   if((prop = xmlGetProp(a_node, BAD_CAST "type"))) {
     if(strcmp((char*)prop, "way") == 0)
@@ -834,7 +834,7 @@ static way_t *process_way(xmlTextReaderPtr reader, osm_t *osm) {
 
 static bool process_member(xmlTextReaderPtr reader, osm_t *osm, std::vector<member_t> &members) {
   char *prop;
-  member_t member;
+  member_t member(ILLEGAL);
 
   if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "type"))) {
     if(strcmp(prop, "way") == 0)
@@ -2160,6 +2160,12 @@ member_t::member_t(type_t t)
   : role(0)
 {
   object.type = t;
+}
+
+member_t::member_t(const object_t &o, char *r)
+  : role(r)
+  , object(o)
+{
 }
 
 bool member_t::operator==(const member_t &other) const

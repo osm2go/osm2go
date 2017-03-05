@@ -49,7 +49,8 @@ void relation_transfer::operator()(relation_t* relation)
   std::vector<member_t>::iterator it = relation->find_member_object(object_t(src));
 
   printf("  adding way #" ITEM_ID_FORMAT " to relation\n", dst->id);
-  member_t member;
+  object_t o(dst);
+  member_t member(o);
   member.object = dst;
   if(it != relation->members.end())
     member.role = g_strdup(it->role);
@@ -616,8 +617,7 @@ void member_merge::operator()(relation_t *relation)
     printf("  both ways were members of this relation\n");
   } else {
     printf("  adding way[0] to relation\n");
-    member_t member;
-    member.object = other;
+    member_t member(other);
     member.role = g_strdup(mit->role);
     relation->members.push_back(member);
 
