@@ -72,7 +72,7 @@ void map_edit_way_add_begin(map_t *map, way_t *way_sel) {
 		     way_sel->id);
 
   g_assert(!map->action.way);
-  map->action.way = osm_way_new();
+  map->action.way = new way_t(1);
   map->action.extending = NULL;
 }
 
@@ -148,7 +148,7 @@ void map_edit_way_add_segment(map_t *map, gint x, gint y) {
       if(!map->appdata->osm->position_within_bounds(x, y))
 	map_outside_error(map->appdata);
       else
-	node = map->appdata->osm->node_new(x, y);
+	node = map->appdata->osm->node_new(lpos_t(x, y));
     }
 
     if(node) {
@@ -402,7 +402,7 @@ void map_edit_way_node_add(map_t *map, gint x, gint y) {
     gint insert_after = canvas_item_get_segment(item->item, x, y)+1;
     if(insert_after > 0) {
       /* create new node */
-      node_t* node = map->appdata->osm->node_new(x, y);
+      node_t* node = map->appdata->osm->node_new(lpos_t(x, y));
       map->appdata->osm->node_attach(node);
 
       /* insert it into ways chain of nodes */
@@ -503,7 +503,7 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
 
     if(way) {
       /* create a duplicate of the currently selected way */
-      way_t *neww = osm_way_new();
+      way_t *neww = new way_t(1);
 
       /* if this is a closed way, reorder (rotate) it, so the */
       /* place to cut is adjecent to the begin/end of the way. */

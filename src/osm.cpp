@@ -1292,13 +1292,13 @@ xmlChar *osm_generate_xml_changeset(const char *comment) {
 
 /* ---------- edit functions ------------- */
 
-template<typename T> item_id_t osm_new_id(const std::map<item_id_t, T *> &map) {
+template<typename T, typename U> U osm_new_id(const std::map<U, T *> &map) {
   if(map.empty())
     return -1;
 
   // map is sorted, so use one less the first id in the container if it is negative,
   // or -1 if it is positive
-  const typename std::map<item_id_t, T *>::const_iterator it = map.begin();
+  const typename std::map<U, T *>::const_iterator it = map.begin();
   if(it->first >= 0)
     return -1;
   else
@@ -1307,46 +1307,28 @@ template<typename T> item_id_t osm_new_id(const std::map<item_id_t, T *> &map) {
 
 template<typename T> item_id_t osm_attach(std::map<item_id_t, T *> &map, T *obj) {
   obj->id = osm_new_id(map);
-  obj->flags = OSM_FLAG_NEW;
-
   map[obj->id] = obj;
 }
 
-node_t *osm_t::node_new(gint x, gint y) {
-  printf("Creating new node\n");
-
-  node_t *node = new node_t();
-  node->version = 1;
-  node->lpos.x = x;
-  node->lpos.y = y;
-  node->time = time(NULL);
-
+node_t *osm_t::node_new(const lpos_t &lpos) {
   /* convert screen position back to ll */
-  lpos2pos(bounds, &node->lpos, &node->pos);
+  pos_t pos;
+  lpos2pos(bounds, &lpos, &pos);
 
-  printf("  new at %d %d (%f %f)\n",
-	 node->lpos.x, node->lpos.y, node->pos.lat, node->pos.lon);
+  printf("Creating new node at %d %d (%f %f)\n", lpos.x, lpos.y, pos.lat, pos.lon);
 
-  return node;
+  return new node_t(1, lpos, pos);
 }
 
-node_t *osm_t::node_new(const pos_t *pos) {
-  printf("Creating new node from lat/lon\n");
-
-  node_t *node = new node_t();
-  node->version = 1;
-  node->pos = *pos;
-  node->time = time(NULL);
-
+node_t *osm_t::node_new(const pos_t &pos) {
   /* convert ll position to screen */
-  pos2lpos(bounds, &node->pos, &node->lpos);
+  lpos_t lpos;
+  pos2lpos(bounds, &pos, &lpos);
 
-  printf("  new at %d %d (%f %f)\n",
-	 node->lpos.x, node->lpos.y, node->pos.lat, node->pos.lon);
+  printf("Creating new node from lat/lon at %d %d (%f %f)\n", lpos.x, lpos.y, pos.lat, pos.lon);
 
-  return node;
+  return new node_t(1, lpos, pos);
 }
-
 
 void osm_t::node_attach(node_t *node) {
   printf("Attaching node\n");
@@ -1358,17 +1340,6 @@ void osm_t::node_restore(node_t *node) {
   printf("Restoring node\n");
 
   nodes[node->id] = node;
-}
-
-way_t *osm_way_new(void) {
-  printf("Creating new way\n");
-
-  way_t *way = new way_t();
-  way->version = 1;
-  way->flags = OSM_FLAG_NEW;
-  way->time = time(NULL);
-
-  return way;
 }
 
 void osm_t::way_attach(way_t *way) {
@@ -1612,17 +1583,6 @@ void osm_t::remove_from_relations(way_t *way) {
 
   std::for_each(relations.begin(), relations.end(),
                 remove_member_functor(object_t(way), false));
-}
-
-relation_t *osm_relation_new(void) {
-  printf("Creating new relation\n");
-
-  relation_t *relation = new relation_t();
-  relation->version = 1;
-  relation->flags = OSM_FLAG_NEW;
-  relation->time = time(NULL);
-
-  return relation;
 }
 
 void osm_t::relation_attach(relation_t *relation) {
@@ -2123,6 +2083,15 @@ base_object_t::base_object_t()
   memset(this, 0, sizeof(*this));
 }
 
+base_object_t::base_object_t(item_id_t ver)
+  : id(0)
+  , version(ver)
+  , user(0)
+  , time(version == 1 ? ::time(NULL) : 0)
+  , flags(version == 1 ? OSM_FLAG_NEW : 0)
+{
+}
+
 struct value_match_functor {
   const char * const value;
   value_match_functor(const char *v) : value(v) {}
@@ -2133,6 +2102,14 @@ struct value_match_functor {
 
 way_t::way_t()
   : base_object_t()
+  , map_item_chain(0)
+  , node_chain(0)
+{
+  memset(&draw, 0, sizeof(draw));
+}
+
+way_t::way_t(item_id_t ver)
+  : base_object_t(ver)
   , map_item_chain(0)
   , node_chain(0)
 {
@@ -2198,6 +2175,11 @@ relation_t::relation_t()
 {
 }
 
+relation_t::relation_t(item_id_t ver)
+  : base_object_t(ver)
+{
+}
+
 struct find_member_object_functor {
   const object_t &object;
   find_member_object_functor(const object_t &o) : object(o) {}
@@ -2256,6 +2238,17 @@ node_t::node_t()
 {
   memset(&pos, 0, sizeof(pos));
   memset(&lpos, 0, sizeof(lpos));
+}
+
+node_t::node_t(item_id_t ver, const lpos_t &lp, const pos_t &p)
+  : base_object_t(ver)
+  , lpos(lp)
+  , pos(p)
+  , ways(0)
+  , zoom_max(0.0)
+  , icon_buf(0)
+  , map_item_chain(0)
+{
 }
 
 template<typename T> T *osm_find_by_id(const std::map<item_id_t, T *> &map, item_id_t id) {

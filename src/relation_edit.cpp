@@ -730,10 +730,11 @@ static void on_relation_select(GtkWidget *but, relation_context_t *context) {
 static void on_relation_add(G_GNUC_UNUSED GtkWidget *button, relation_context_t *context) {
   /* create a new relation */
 
-  relation_t *relation = osm_relation_new();
+  relation_t *relation = new relation_t(1);
   if(!relation_info_dialog(context->dialog, context->appdata, relation)) {
     printf("tag edit cancelled\n");
-    context->appdata->osm->relation_free(relation);
+    relation->cleanup();
+    delete relation;
   } else {
     context->appdata->osm->relation_attach(relation);
 

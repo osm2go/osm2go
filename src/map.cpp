@@ -1534,7 +1534,7 @@ static void map_button_release(map_t *map, gint x, gint y) {
     if(!map->appdata->osm->position_within_bounds(x, y))
       map_outside_error(map->appdata);
     else {
-      node = map->appdata->osm->node_new(x, y);
+      node = map->appdata->osm->node_new(lpos_t(x, y));
       map->appdata->osm->node_attach(node);
       map_node_draw(map, node);
     }
@@ -2010,7 +2010,7 @@ void map_action_ok(appdata_t *appdata) {
                                       &appdata->osm->bounds->ll_max, &pos)) {
       map_outside_error(appdata);
     } else {
-      node = appdata->osm->node_new(&pos);
+      node = appdata->osm->node_new(pos);
       appdata->osm->node_attach(node);
       map_node_draw(map, node);
     }

@@ -155,8 +155,8 @@ struct osm_t {
   way_t *way_by_id(item_id_t id);
   relation_t *relation_by_id(item_id_t id);
 
-  node_t *node_new(gint x, gint y);
-  node_t *node_new(const pos_t *pos);
+  node_t *node_new(const lpos_t &pos);
+  node_t *node_new(const pos_t &pos);
   void node_attach(node_t *node);
   void node_restore(node_t *node);
   void way_delete(way_t *way, bool permanently);
@@ -302,7 +302,8 @@ private:
 G_STATIC_ASSERT(sizeof(tag_list_t) == sizeof(tag_t *));
 
 struct base_object_t {
-  base_object_t();
+  explicit base_object_t();
+  explicit base_object_t(item_id_t ver);
 
   inline const char *get_value(const char *key) const
   { return tags.get_value(key); }
@@ -330,7 +331,8 @@ struct base_object_t {
 
 class node_t : public base_object_t {
 public:
-  node_t();
+  explicit node_t();
+  explicit node_t(item_id_t ver, const lpos_t &lp, const pos_t &p);
 
   pos_t pos;
   lpos_t lpos;
@@ -362,7 +364,8 @@ typedef std::vector<node_t *> node_chain_t;
 
 class way_t: public base_object_t {
 public:
-  way_t();
+  explicit way_t();
+  explicit way_t(item_id_t ver);
 
   /* visual representation from elemstyle */
   struct {
@@ -419,7 +422,8 @@ struct member_t {
 
 class relation_t : public base_object_t {
 public:
-  relation_t();
+  explicit relation_t();
+  explicit relation_t(item_id_t ver);
 
   std::vector<member_t> members;
 
@@ -455,9 +459,6 @@ bool osm_node_in_other_way(const osm_t *osm, const way_t *way, const node_t *nod
 void osm_tag_free(tag_t *tag);
 
 /* ----------- edit functions ----------- */
-way_t *osm_way_new(void);
-relation_t *osm_relation_new(void);
-
 std::vector<tag_t *> osm_tags_list_copy(const std::vector<tag_t> &tags);
 
 #endif

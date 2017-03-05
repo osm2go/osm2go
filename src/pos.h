@@ -56,6 +56,11 @@ typedef struct pos_t {
 
 /* local position */
 typedef struct lpos_t {
+#ifdef __cplusplus
+  lpos_t() {}
+  lpos_t(gint px, gint py)
+    : x(px) , y(py) {}
+#endif
   gint x, y;
 } lpos_t;
 
