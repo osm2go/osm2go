@@ -1305,6 +1305,13 @@ template<typename T> item_id_t osm_new_id(const std::map<item_id_t, T *> &map) {
     return it->first - 1;
 }
 
+template<typename T> item_id_t osm_attach(std::map<item_id_t, T *> &map, T *obj) {
+  obj->id = osm_new_id(map);
+  obj->flags = OSM_FLAG_NEW;
+
+  map[obj->id] = obj;
+}
+
 node_t *osm_t::node_new(gint x, gint y) {
   printf("Creating new node\n");
 
@@ -1344,10 +1351,7 @@ node_t *osm_t::node_new(const pos_t *pos) {
 void osm_t::node_attach(node_t *node) {
   printf("Attaching node\n");
 
-  node->id = osm_new_id(nodes);
-  node->flags = OSM_FLAG_NEW;
-
-  nodes[node->id] = node;
+  osm_attach(nodes, node);
 }
 
 void osm_t::node_restore(node_t *node) {
@@ -1370,10 +1374,7 @@ way_t *osm_way_new(void) {
 void osm_t::way_attach(way_t *way) {
   printf("Attaching way\n");
 
-  way->id = osm_new_id(ways);
-  way->flags = OSM_FLAG_NEW;
-
-  ways[way->id] = way;
+  osm_attach(ways, way);
 }
 
 struct way_member_ref {
@@ -1627,10 +1628,7 @@ relation_t *osm_relation_new(void) {
 void osm_t::relation_attach(relation_t *relation) {
   printf("Attaching relation\n");
 
-  relation->id = osm_new_id(relations);
-  relation->flags = OSM_FLAG_NEW;
-
-  relations[relation->id] = relation;
+  osm_attach(relations, relation);
 }
 
 struct osm_unref_way_free {
