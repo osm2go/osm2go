@@ -325,8 +325,7 @@ struct base_object_t {
   const char *user;
   tag_list_t tags;
   time_t time;
-  gboolean visible:8;
-  int flags:24;
+  int flags;
 };
 
 class node_t : public base_object_t {

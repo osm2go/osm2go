@@ -718,11 +718,6 @@ static void process_base_attributes(base_object_t *obj, xmlTextReaderPtr reader,
     xmlFree(prop);
   }
 
-  if((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "visible"))) {
-    obj->visible = (strcasecmp((char*)prop, "true") == 0);
-    xmlFree(prop);
-  }
-
   if(G_LIKELY(prop = xmlTextReaderGetAttribute(reader, BAD_CAST "timestamp"))) {
     obj->time = convert_iso8601((char*)prop);
     xmlFree(prop);
@@ -1317,7 +1312,6 @@ node_t *osm_t::node_new(gint x, gint y) {
   node->version = 1;
   node->lpos.x = x;
   node->lpos.y = y;
-  node->visible = TRUE;
   node->time = time(NULL);
 
   /* convert screen position back to ll */
@@ -1335,7 +1329,6 @@ node_t *osm_t::node_new(const pos_t *pos) {
   node_t *node = new node_t();
   node->version = 1;
   node->pos = *pos;
-  node->visible = TRUE;
   node->time = time(NULL);
 
   /* convert ll position to screen */
@@ -1368,7 +1361,6 @@ way_t *osm_way_new(void) {
 
   way_t *way = new way_t();
   way->version = 1;
-  way->visible = TRUE;
   way->flags = OSM_FLAG_NEW;
   way->time = time(NULL);
 
@@ -1626,7 +1618,6 @@ relation_t *osm_relation_new(void) {
 
   relation_t *relation = new relation_t();
   relation->version = 1;
-  relation->visible = TRUE;
   relation->flags = OSM_FLAG_NEW;
   relation->time = time(NULL);
 

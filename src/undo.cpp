@@ -202,7 +202,6 @@ static void undo_object_copy_base(object_t *dst, const object_t &src) {
   dst->obj->time    = src.obj->time;
   dst->obj->user    = src.obj->user;
   dst->obj->flags   = src.obj->flags;
-  dst->obj->visible = src.obj->visible;
   dst->obj->tags.copy(src.obj->tags);
 }
 

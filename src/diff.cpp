@@ -376,7 +376,6 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
 
     node = new node_t();
     node->id = id;
-    node->visible = TRUE;
     node->flags = OSM_FLAG_NEW;
     node->time = xml_get_prop_int(node_node, "time", 0);
     if(!node->time) node->time = time(NULL);
@@ -458,7 +457,6 @@ static void diff_restore_way(xmlNodePtr node_node, osm_t *osm) {
 
     way = new way_t();
     way->id = id;
-    way->visible = TRUE;
     way->flags = OSM_FLAG_NEW;
     way->time = xml_get_prop_int(node_node, "time", 0);
     if(!way->time) way->time = time(NULL);
@@ -571,7 +569,6 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
 
     relation = new relation_t();
     relation->id = id;
-    relation->visible = TRUE;
     relation->flags = OSM_FLAG_NEW;
     relation->time = xml_get_prop_int(node_rel, "time", 0);
     if(!relation->time) relation->time = time(NULL);
