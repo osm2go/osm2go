@@ -1305,7 +1305,7 @@ template<typename T, typename U> U osm_new_id(const std::map<U, T *> &map) {
     return it->first - 1;
 }
 
-template<typename T> item_id_t osm_attach(std::map<item_id_t, T *> &map, T *obj) {
+template<typename T> void osm_attach(std::map<item_id_t, T *> &map, T *obj) {
   obj->id = osm_new_id(map);
   map[obj->id] = obj;
 }

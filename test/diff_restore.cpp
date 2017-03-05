@@ -44,7 +44,7 @@ int main(int argc, char **argv)
   g_assert(n72->get_value("testtag") != 0);
   g_assert(strcmp(n72->get_value("testtag"), "true") == 0);
   // in diff, but the same as in .osm
-  const node_t * const n23 = osm->nodes[3577031223];
+  const node_t * const n23 = osm->nodes[3577031223LL];
   g_assert(n23 != 0);
   g_assert((n23->flags & OSM_FLAG_DIRTY) == 0);
   // deleted in diff
@@ -62,7 +62,7 @@ int main(int argc, char **argv)
   g_assert_cmpfloat(nn2->pos.lat, ==, 52.269497);
   g_assert_cmpfloat(nn2->pos.lon, ==, 9.5752223);
   // which is this one
-  const node_t * const n27 = osm->nodes[3577031227];
+  const node_t * const n27 = osm->nodes[3577031227LL];
   g_assert(n27 != 0);
   g_assert((n27->flags & OSM_FLAG_DIRTY) == 0);
   g_assert_cmpfloat(nn2->pos.lat, ==, n27->pos.lat);
