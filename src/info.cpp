@@ -38,18 +38,18 @@ enum {
 };
 
 struct collision_functor {
-  const tag_t * const tag;
-  collision_functor(const tag_t *t) : tag(t) { }
+  const tag_t &tag;
+  collision_functor(const tag_t &t) : tag(t) { }
   bool operator()(const tag_t *t) {
-    return (t != tag) && (strcasecmp(t->key, tag->key) == 0);
+    return (t != &tag) && (strcasecmp(t->key, tag.key) == 0);
   }
 };
 
-bool info_tag_key_collision(const std::vector<const tag_t *> &tags, const tag_t *tag) {
+bool info_tag_key_collision(const std::vector<const tag_t *> &tags, const tag_t &tag) {
   return std::find_if(tags.begin(), tags.end(), collision_functor(tag)) != tags.end();
 }
 
-static gboolean info_tag_key_collision(const std::vector<tag_t *> &tags, const tag_t *tag) {
+static gboolean info_tag_key_collision(const std::vector<tag_t *> &tags, const tag_t &tag) {
   return std::find_if(tags.begin(), tags.end(), collision_functor(tag)) != tags.end() ? TRUE : FALSE;
 }
 
@@ -84,7 +84,7 @@ void tag_context_t::update_collisions()
       gtk_tree_model_get(GTK_TREE_MODEL(store), &iter, TAG_COL_DATA, &tag, -1);
       g_assert(tag);
       gtk_list_store_set(store, &iter,
-         TAG_COL_COLLISION, info_tag_key_collision(tags, tag), -1);
+         TAG_COL_COLLISION, info_tag_key_collision(tags, *tag), -1);
 
     } while(gtk_tree_model_iter_next(GTK_TREE_MODEL(store), &iter));
   }
@@ -122,7 +122,7 @@ static void on_tag_remove(G_GNUC_UNUSED GtkWidget *button, tag_context_t *contex
  * @return if the tag was actually modified
  * @retval FALSE the tag is the same as before
  */
-static bool tag_edit(tag_context_t *context, tag_t *tag) {
+static bool tag_edit(tag_context_t *context, tag_t &tag) {
   GtkWidget *dialog = misc_dialog_new(MISC_DIALOG_SMALL, _("Edit Tag"),
 			  GTK_WINDOW(context->dialog),
 			  GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
@@ -155,8 +155,8 @@ static bool tag_edit(tag_context_t *context, tag_t *tag) {
   gtk_entry_set_activates_default(GTK_ENTRY(value), TRUE);
   HILDON_ENTRY_NO_AUTOCAP(value);
 
-  gtk_entry_set_text(GTK_ENTRY(key), tag->key);
-  gtk_entry_set_text(GTK_ENTRY(value), tag->value);
+  gtk_entry_set_text(GTK_ENTRY(key), tag.key);
+  gtk_entry_set_text(GTK_ENTRY(value), tag.value);
 
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), table);
 
@@ -164,8 +164,8 @@ static bool tag_edit(tag_context_t *context, tag_t *tag) {
 
   bool ret = false;
   if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog))) {
-    ret = tag->update(gtk_entry_get_text(GTK_ENTRY(key)),
-                      gtk_entry_get_text(GTK_ENTRY(value)));
+    ret = tag.update(gtk_entry_get_text(GTK_ENTRY(key)),
+                     gtk_entry_get_text(GTK_ENTRY(value)));
   }
 
   gtk_widget_destroy(dialog);
@@ -191,7 +191,7 @@ static void on_tag_edit(G_GNUC_UNUSED GtkWidget *button, tag_context_t *context)
   gtk_tree_model_get(model, &iter, TAG_COL_DATA, &tag, -1);
   printf("got %s/%s\n", tag->key, tag->value);
 
-  if(tag_edit(context, tag)) {
+  if(tag_edit(context, *tag)) {
     printf("setting %s/%s\n", tag->key, tag->value);
 
     gtk_list_store_set(context->store, &iter,
@@ -231,14 +231,14 @@ static void on_tag_last(G_GNUC_UNUSED GtkWidget *button, tag_context_t *context)
   }
 }
 
-static GtkTreeIter store_append(GtkListStore *store, tag_t *tag, gboolean collision) {
+static GtkTreeIter store_append(GtkListStore *store, tag_t &tag, gboolean collision) {
   GtkTreeIter iter;
   gtk_list_store_append(store, &iter);
   gtk_list_store_set(store, &iter,
-                     TAG_COL_KEY, tag->key,
-                     TAG_COL_VALUE, tag->value,
+                     TAG_COL_KEY, tag.key,
+                     TAG_COL_VALUE, tag.value,
                      TAG_COL_COLLISION, collision,
-                     TAG_COL_DATA, tag,
+                     TAG_COL_DATA, &tag,
                      -1);
   return iter;
 }
@@ -251,13 +251,13 @@ static void on_tag_add(G_GNUC_UNUSED GtkWidget *button, tag_context_t *context) 
   tag->key = g_strdup("");
   tag->value = g_strdup("");
 
-  if(!tag_edit(context, tag)) {
+  if(!tag_edit(context, *tag)) {
     printf("cancelled\n");
     osm_tag_free(tag);
   } else {
     context->tags.push_back(tag);
     /* append a row for the new data */
-    GtkTreeIter iter = store_append(context->store, tag, FALSE);
+    GtkTreeIter iter = store_append(context->store, *tag, FALSE);
 
     gtk_tree_selection_select_iter(
        list_get_selection(context->list), &iter);
@@ -271,7 +271,7 @@ struct tag_replace_functor {
   const std::vector<tag_t *> &tags;
   tag_replace_functor(GtkListStore *s, const std::vector<tag_t *> &t) : store(s), tags(t) {}
   void operator()(tag_t *tag) {
-    store_append(store, tag, info_tag_key_collision(tags, tag));
+    store_append(store, *tag, info_tag_key_collision(tags, *tag));
   }
 };
 

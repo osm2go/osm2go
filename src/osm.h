@@ -446,7 +446,7 @@ public:
  */
 tag_t *osm_parse_osm_tag(xmlNode* a_node);
 
-bool osm_tag_key_and_value_present(const std::vector<tag_t *> &haystack, const tag_t *tag);
+bool osm_tag_key_and_value_present(const std::vector<tag_t *> &haystack, const tag_t &tag);
 
 member_t osm_parse_osm_relation_member(osm_t *osm, xmlNode *a_node);
 

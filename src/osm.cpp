@@ -267,15 +267,15 @@ tag_t *osm_parse_osm_tag(xmlNode *a_node) {
 }
 
 struct tag_match_functor {
-  const tag_t * const other;
-  tag_match_functor(const tag_t *o) : other(o) {}
+  const tag_t &other;
+  tag_match_functor(const tag_t &o) : other(o) {}
   bool operator()(const tag_t *tag) {
-    return (strcasecmp(other->key, tag->key) == 0) &&
-           (strcasecmp(other->value, tag->value) == 0);
+    return (strcasecmp(other.key, tag->key) == 0) &&
+           (strcasecmp(other.value, tag->value) == 0);
   }
 };
 
-bool osm_tag_key_and_value_present(const std::vector<tag_t *> &haystack, const tag_t *tag) {
+bool osm_tag_key_and_value_present(const std::vector<tag_t *> &haystack, const tag_t &tag) {
   return std::find_if(haystack.begin(), haystack.end(), tag_match_functor(tag)) != haystack.end();
 }
 
@@ -302,7 +302,7 @@ bool tag_list_t::merge(tag_list_t &other)
   while(src) {
     /* don't copy "created_by" tag or tags that already */
     /* exist in identical form */
-    if(src->is_creator_tag() || find_if(tag_match_functor(src))) {
+    if(src->is_creator_tag() || find_if(tag_match_functor(*src))) {
       tag_t *next = src->next;
       osm_tag_free(src);
       src = next;

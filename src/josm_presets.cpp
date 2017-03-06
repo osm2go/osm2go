@@ -764,7 +764,7 @@ bool used_preset_functor::operator()(const presets_widget_t* w)
     return false;
   }
   const tag_t t((char*) w->key, (char*) w->key_w.value);
-  if(!osm_tag_key_and_value_present(tag_context->tags, &t))
+  if(!osm_tag_key_and_value_present(tag_context->tags, t))
     return true;
 
   matches_all = true;

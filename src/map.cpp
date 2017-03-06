@@ -89,7 +89,7 @@ struct self_collision_functor {
   const std::vector<const tag_t *> &tags;
   self_collision_functor(const std::vector<const tag_t *> &t) : tags(t) {}
   bool operator()(const tag_t *tag) {
-    return info_tag_key_collision(tags, tag) == TRUE;
+    return info_tag_key_collision(tags, *tag) == TRUE;
   }
 };
 
