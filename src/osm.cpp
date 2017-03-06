@@ -602,14 +602,14 @@ static inline gint __attribute__((nonnull(2))) my_strcmp(const xmlChar *a, const
 
 /* skip current element incl. everything below (mainly for testing) */
 /* returns FALSE if something failed */
-static gboolean skip_element(xmlTextReaderPtr reader) {
+static void skip_element(xmlTextReaderPtr reader) {
   g_assert(xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT);
   const xmlChar *name = xmlTextReaderConstName(reader);
   g_assert(name);
   int depth = xmlTextReaderDepth(reader);
 
   if(xmlTextReaderIsEmptyElement(reader))
-    return TRUE;
+    return;
 
   int ret = xmlTextReaderRead(reader);
   while((ret == 1) &&
@@ -618,7 +618,6 @@ static gboolean skip_element(xmlTextReaderPtr reader) {
 	 (my_strcmp(xmlTextReaderConstName(reader), name) != 0))) {
     ret = xmlTextReaderRead(reader);
   }
-  return(ret == 1);
 }
 
 static pos_float_t xml_reader_attr_float(xmlTextReaderPtr reader, const char *name) {
