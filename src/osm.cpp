@@ -1611,11 +1611,8 @@ void osm_unref_way_free::operator()(node_t* node)
     /* associated ways as the only such way is the one we are currently */
     /* deleting */
     const way_chain_t &way_chain = osm->node_delete(node, false, false);
-    g_assert(!way_chain.empty());
-    /* no need in end caching here, there should only be one item in the list */
-    for(way_chain_t::const_iterator it = way_chain.begin(); it != way_chain.end(); it++) {
-      g_assert(*it == way);
-    }
+    g_assert(way_chain.size() == 1);
+    g_assert(way_chain.front() == way);
   }
 }
 
