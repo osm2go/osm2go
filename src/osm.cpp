@@ -2047,14 +2047,6 @@ const char* tag_list_t::get_value(const char *key) const
   return NULL;
 }
 
-tag_list_t::operator std::vector<const tag_t *>() const
-{
-  std::vector<const tag_t *> tags;
-  for(const tag_t *t = contents; t; t = t->next)
-    tags.push_back(t);
-  return tags;
-}
-
 void tag_list_t::clear()
 {
   tag_t *tag = contents;

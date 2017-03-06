@@ -52,7 +52,7 @@ public:
   void update_collisions();
 };
 
-bool info_tag_key_collision(const std::vector<const tag_t *> &tags, const tag_t &tag);
+bool info_tag_key_collision(const tag_list_t &tags, const tag_t &tag);
 
 #endif
 

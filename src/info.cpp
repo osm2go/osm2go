@@ -45,8 +45,8 @@ struct collision_functor {
   }
 };
 
-bool info_tag_key_collision(const std::vector<const tag_t *> &tags, const tag_t &tag) {
-  return std::find_if(tags.begin(), tags.end(), collision_functor(tag)) != tags.end();
+bool info_tag_key_collision(const tag_list_t &tags, const tag_t &tag) {
+  return !!tags.find_if(collision_functor(tag));
 }
 
 static gboolean info_tag_key_collision(const std::vector<tag_t *> &tags, const tag_t &tag) {

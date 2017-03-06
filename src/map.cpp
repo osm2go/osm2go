@@ -86,8 +86,8 @@ canvas_item_t *map_item_chain_t::firstCanvasItem() const {
 #undef DESTROY_WAIT_FOR_GTK
 
 struct self_collision_functor {
-  const std::vector<const tag_t *> &tags;
-  self_collision_functor(const std::vector<const tag_t *> &t) : tags(t) {}
+  const tag_list_t &tags;
+  self_collision_functor(const tag_list_t &t) : tags(t) {}
   bool operator()(const tag_t *tag) {
     return info_tag_key_collision(tags, *tag) == TRUE;
   }
@@ -95,11 +95,10 @@ struct self_collision_functor {
 
 static void map_statusbar(map_t *map, map_item_t *map_item) {
 
-  gboolean collision = FALSE;
-  const std::vector<const tag_t *> &tags = map_item->object.obj->tags;
+  gboolean collision;
+  const tag_list_t &tags = map_item->object.obj->tags;
 
-  collision = std::find_if(tags.begin(), tags.end(), self_collision_functor(tags)) !=
-              tags.end();
+  collision = tags.find_if(self_collision_functor(tags)) != NULL ? TRUE : FALSE;
 
   char *str = map_item->object.get_name();
   statusbar_set(map->appdata, str, collision);

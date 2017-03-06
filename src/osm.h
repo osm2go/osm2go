@@ -254,8 +254,6 @@ public:
       pred(t);
   }
 
-  operator std::vector<const tag_t *>() const;
-
   /**
    * @brief remove all elements and free their memory
    */
