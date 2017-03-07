@@ -1418,7 +1418,7 @@
             <key key="amenity" value="grit_bin" />
         </item> <!-- Grit Bin -->
         <separator/>
-        <item name="Mountain Pass" icon="styles/standard/misc/landmark/mountain_pass.svg" type="node" preset_name_label="true">
+        <item name="Mountain Pass" icon="presets/landmark/mountain_pass.svg" type="node" preset_name_label="true">
             <link href="http://wiki.openstreetmap.org/wiki/Key:mountain_pass"
                   cs.href="http://wiki.openstreetmap.org/wiki/Cs:Key:mountain_pass"
                   de.href="http://wiki.openstreetmap.org/wiki/DE:Key:mountain_pass"
@@ -1935,7 +1935,7 @@
             <reference ref="water_access" />
         </item> <!-- Canal -->
         <separator/>
-        <item name="Spring" icon="styles/standard/misc/landmark/spring.svg" type="node,closedway" preset_name_label="true">
+        <item name="Spring" icon="presets/landmark/spring.svg" type="node,closedway" preset_name_label="true">
             <link href="http://wiki.openstreetmap.org/wiki/Tag:natural=spring"
                   cs.href="http://wiki.openstreetmap.org/wiki/Cs:Tag:natural=spring"
                   de.href="http://wiki.openstreetmap.org/wiki/DE:Tag:natural=spring"
@@ -2046,7 +2046,7 @@
             <key key="landuse" value="reservoir" />
             <text key="name" text="Name" />
         </item> <!-- Reservoir -->
-        <item name="Covered Reservoir" icon="presets/reservoir_covered.png" type="node,closedway,relation" preset_name_label="true">
+        <item name="Covered Reservoir" icon="presets/landmark/reservoir_covered.svg" type="node,closedway,relation" preset_name_label="true">
             <link href="http://wiki.openstreetmap.org/wiki/Tag:man_made=reservoir_covered"
                   cs.href="http://wiki.openstreetmap.org/wiki/Cs:Tag:man_made=reservoir_covered"
                   de.href="http://wiki.openstreetmap.org/wiki/DE:Tag:man_made=reservoir_covered"
@@ -5136,7 +5136,7 @@
             <check key="fireplace" text="Fireplace" />
             <combo key="shelter_type" text="Type of shelter" values="basic_hut,lean_to,picnic_shelter,public_transport,weather_shelter,wildlife_hide" values_context="shelter" values_searchable="true" />
         </item> <!-- Shelter -->
-        <item name="Hunting Stand" icon="presets/hunting_stand.png" type="node" preset_name_label="true">
+        <item name="Hunting Stand" icon="presets/landmark/hunting_stand.svg" type="node" preset_name_label="true">
             <link href="http://wiki.openstreetmap.org/wiki/Tag:amenity=hunting_stand"
                   de.href="http://wiki.openstreetmap.org/wiki/DE:Tag:amenity=hunting_stand"
                   it.href="http://wiki.openstreetmap.org/wiki/IT:Tag:amenity=hunting_stand"
@@ -5749,7 +5749,7 @@
                 <text key="addr:flats" text="Flat numbers" />
             </optional>
         </item> <!-- Entrance -->
-        <item name="Tower" icon="styles/standard/misc/landmark/tower.png" type="node,closedway" preset_name_label="true">
+        <item name="Tower" icon="presets/landmark/tower.svg" type="node,closedway" preset_name_label="true">
             <link href="http://wiki.openstreetmap.org/wiki/Tag:man_made=tower"
                   cs.href="http://wiki.openstreetmap.org/wiki/Cs:Tag:man_made=tower"
                   de.href="http://wiki.openstreetmap.org/wiki/DE:Tag:man_made=tower"
@@ -5776,7 +5776,7 @@
             <key key="man_made" value="flagpole" />
         </item> <!-- Flagpole -->
         <separator/>
-        <item name="Works" icon="styles/standard/misc/landmark/works.png" type="node,closedway" preset_name_label="true">
+        <item name="Works" icon="presets/landmark/works.svg" type="node,closedway" preset_name_label="true">
             <link href="http://wiki.openstreetmap.org/wiki/Tag:man_made=works"
                   cs.href="http://wiki.openstreetmap.org/wiki/Cs:Tag:man_made=works"
                   de.href="http://wiki.openstreetmap.org/wiki/DE:Tag:man_made=works"
@@ -5788,7 +5788,7 @@
             <key key="man_made" value="works" />
             <text key="name" text="Name" />
         </item> <!-- Works -->
-        <item name="Chimney" icon="presets/chimney.png" type="node,closedway" preset_name_label="true">
+        <item name="Chimney" icon="presets/landmark/chimney.svg" type="node,closedway" preset_name_label="true">
             <link href="http://wiki.openstreetmap.org/wiki/Tag:man_made=chimney"
                   cs.href="http://wiki.openstreetmap.org/wiki/Cs:Tag:man_made=chimney"
                   de.href="http://wiki.openstreetmap.org/wiki/DE:Tag:man_made=chimney"
@@ -5798,7 +5798,7 @@
             <reference ref="name_operator" />
             <text key="height" text="Height (meters)" />
         </item> <!-- Chimney -->
-        <item name="Windmill" icon="styles/standard/misc/landmark/windmill.png" type="node,closedway" preset_name_label="true">
+        <item name="Windmill" icon="presets/landmark/windmill.svg" type="node,closedway" preset_name_label="true">
             <link href="http://wiki.openstreetmap.org/wiki/Tag:man_made=windmill"
                   cs.href="http://wiki.openstreetmap.org/wiki/Cs:Tag:man_made=windmill"
                   de.href="http://wiki.openstreetmap.org/wiki/DE:Tag:man_made=windmill"
@@ -5811,7 +5811,7 @@
             <key key="man_made" value="windmill" />
             <text key="name" text="Name" />
         </item> <!-- Windmill -->
-        <item name="Gasometer" icon="presets/gasometer.png" type="node,closedway" preset_name_label="true">
+        <item name="Gasometer" icon="presets/landmark/gasometer.svg" type="node,closedway" preset_name_label="true">
             <link href="http://wiki.openstreetmap.org/wiki/Tag:man_made=gasometer"
                   cs.href="http://wiki.openstreetmap.org/wiki/Cs:Tag:man_made=gasometer"
                   de.href="http://wiki.openstreetmap.org/wiki/DE:Tag:man_made=gasometer" />
@@ -5823,7 +5823,7 @@
                 <text key="height" text="Height (meters)" length="7" />
             </optional>
         </item> <!-- Gasometer -->
-        <item name="Storage Tank" icon="presets/storage_tank.png" type="node,closedway">
+        <item name="Storage Tank" icon="presets/landmark/storage_tank.svg" type="node,closedway">
             <link href="http://wiki.openstreetmap.org/wiki/Tag:man_made=storage_tank"
                   cs.href="http://wiki.openstreetmap.org/wiki/Cs:Tag:man_made=storage_tank"
                   de.href="http://wiki.openstreetmap.org/wiki/DE:Tag:man_made=storage_tank"
@@ -5836,7 +5836,7 @@
                 <text key="height" text="Height (meters)" length="7" />
             </optional>
         </item> <!-- Storage Tank -->
-        <item name="Bunker Silo" icon="styles/standard/bunker_silo.svg" type="node,closedway" preset_name_label="true">
+        <item name="Bunker Silo" icon="presets/landmark/bunker_silo.svg" type="node,closedway" preset_name_label="true">
             <link href="http://wiki.openstreetmap.org/wiki/Tag:man_made=bunker_silo"
                   cs.href="http://wiki.openstreetmap.org/wiki/Cs:Tag:man_made=bunker_silo"
                   de.href="http://wiki.openstreetmap.org/wiki/DE:Tag:man_made=bunker_silo"
@@ -5847,7 +5847,7 @@
                 <reference ref="name_operator" />
             </optional>
         </item> <!-- Bunker Silo -->
-        <item name="Crane" icon="presets/crane.png" type="node,closedway" preset_name_label="true">
+        <item name="Crane" icon="presets/landmark/crane.svg" type="node,closedway" preset_name_label="true">
             <link href="http://wiki.openstreetmap.org/wiki/Tag:man_made=crane"
                   cs.href="http://wiki.openstreetmap.org/wiki/Cs:Tag:man_made=crane"
                   de.href="http://wiki.openstreetmap.org/wiki/DE:Tag:man_made=crane"
@@ -5875,7 +5875,7 @@
             <check key="headframe" text="Visible Headframe" />
             <check key="disused" text="Disused" />
         </item> <!-- Mineshaft -->
-        <item name="Adit" icon="presets/adit.png" type="node" preset_name_label="true">
+        <item name="Adit" icon="presets/landmark/adit.svg" type="node" preset_name_label="true">
             <link href="http://wiki.openstreetmap.org/wiki/Tag:man_made=adit"
                   cs.href="http://wiki.openstreetmap.org/wiki/Cs:Tag:man_made=adit"
                   de.href="http://wiki.openstreetmap.org/wiki/DE:Tag:man_made=adit"
@@ -5935,7 +5935,7 @@
             <reference ref="operator_substance" />
         </item> <!-- Pipeline Valve -->
         <separator/>
-        <item name="Water Tower" icon="styles/standard/misc/landmark/water_tower.svg" type="node,closedway" preset_name_label="true">
+        <item name="Water Tower" icon="presets/landmark/water_tower.svg" type="node,closedway" preset_name_label="true">
             <link href="http://wiki.openstreetmap.org/wiki/Tag:man_made=water_tower"
                   cs.href="http://wiki.openstreetmap.org/wiki/Cs:Tag:man_made=water_tower"
                   de.href="http://wiki.openstreetmap.org/wiki/DE:Tag:man_made=water_tower"
@@ -5950,7 +5950,7 @@
                 <text key="height" text="Height (meters)" length="7" />
             </optional>
         </item> <!-- Water Tower -->
-        <item name="Water Works" icon="presets/water_works.png" type="node,closedway" preset_name_label="true">
+        <item name="Water Works" icon="presets/landmark/water_works.svg" type="node,closedway" preset_name_label="true">
             <link href="http://wiki.openstreetmap.org/wiki/Tag:man_made=water_works"
                   cs.href="http://wiki.openstreetmap.org/wiki/Cs:Tag:man_made=water_works"
                   de.href="http://wiki.openstreetmap.org/wiki/DE:Tag:man_made=water_works"
@@ -5962,7 +5962,7 @@
             <key key="man_made" value="water_works" />
             <reference ref="name_operator" />
         </item> <!-- Water Works -->
-        <item name="Wastewater Treatment Plant" icon="presets/wastewater_plant.png" type="node,closedway" preset_name_label="true">
+        <item name="Wastewater Treatment Plant" icon="presets/landmark/wastewater_plant.svg" type="node,closedway" preset_name_label="true">
             <link href="http://wiki.openstreetmap.org/wiki/Tag:man_made=wastewater_plant"
                   cs.href="http://wiki.openstreetmap.org/wiki/Cs:Tag:man_made=wastewater_plant"
                   de.href="http://wiki.openstreetmap.org/wiki/DE:Tag:man_made=wastewater_plant"
@@ -5976,7 +5976,7 @@
             <key key="man_made" value="wastewater_plant" />
             <text key="name" text="Name" />
         </item> <!-- Wastewater Treatment Plant -->
-        <item name="Watermill" icon="styles/standard/misc/landmark/watermill.png" type="node,closedway" preset_name_label="true">
+        <item name="Watermill" icon="presets/landmark/watermill.svg" type="node,closedway" preset_name_label="true">
             <link href="http://wiki.openstreetmap.org/wiki/Tag:man_made=watermill"
                   cs.href="http://wiki.openstreetmap.org/wiki/Cs:Tag:man_made=watermill"
                   de.href="http://wiki.openstreetmap.org/wiki/DE:Tag:man_made=watermill"
@@ -6004,7 +6004,7 @@
             <key key="amenity" value="fountain" />
             <text key="name" text="Name" />
         </item> <!-- Fountain -->
-        <item name="Water Well" icon="presets/water_well.png" type="node,closedway" preset_name_label="true">
+        <item name="Water Well" icon="presets/landmark/water_well.svg" type="node,closedway" preset_name_label="true">
             <link href="http://wiki.openstreetmap.org/wiki/Tag:man_made=water_well"
                   cs.href="http://wiki.openstreetmap.org/wiki/Cs:Tag:man_made=water_well"
                   de.href="http://wiki.openstreetmap.org/wiki/DE:Tag:man_made=water_well"
@@ -6019,7 +6019,7 @@
             <text key="name" text="Name" />
         </item> <!-- Water Well -->
         <separator/>
-        <item name="Lighthouse" icon="styles/standard/misc/landmark/lighthouse.png" type="node,closedway" preset_name_label="true">
+        <item name="Lighthouse" icon="presets/landmark/lighthouse.svg" type="node,closedway" preset_name_label="true">
             <link href="http://wiki.openstreetmap.org/wiki/Tag:man_made=lighthouse"
                   cs.href="http://wiki.openstreetmap.org/wiki/Cs:Tag:man_made=lighthouse"
                   de.href="http://wiki.openstreetmap.org/wiki/DE:Tag:man_made=lighthouse"
@@ -6030,7 +6030,7 @@
             <key key="man_made" value="lighthouse" />
             <text key="name" text="Name" />
         </item> <!-- Lighthouse -->
-        <item name="Beacon" icon="styles/standard/misc/landmark/beacon.png" type="node,closedway" preset_name_label="true">
+        <item name="Beacon" icon="presets/landmark/beacon.svg" type="node,closedway" preset_name_label="true">
             <link href="http://wiki.openstreetmap.org/wiki/Tag:man_made=beacon"
                   pt_BR.href="http://wiki.openstreetmap.org/wiki/Pt-br:Tag:man_made=beacon"
                   ru.href="http://wiki.openstreetmap.org/wiki/RU:Tag:man_made=beacon" />
@@ -6085,7 +6085,7 @@
                 <check key="display:digital" text="Digital" />
             </checkgroup>
         </item> <!-- Monitoring Station -->
-        <item name="Survey Point" icon="styles/standard/misc/landmark/survey_point.png" type="node" preset_name_label="true">
+        <item name="Survey Point" icon="presets/landmark/survey_point.svg" type="node" preset_name_label="true">
             <link href="http://wiki.openstreetmap.org/wiki/Tag:man_made=survey_point"
                   cs.href="http://wiki.openstreetmap.org/wiki/Cs:Tag:man_made=survey_point"
                   de.href="http://wiki.openstreetmap.org/wiki/DE:Tag:man_made=survey_point"
@@ -6192,7 +6192,7 @@
             <space />
             <key key="military" value="barracks" />
         </item>
-        <item name="Bunker" icon="styles/standard/misc/landmark/bunker.png" type="node,closedway" preset_name_label="true">
+        <item name="Bunker" icon="presets/landmark/bunker.svg" type="node,closedway" preset_name_label="true">
             <link href="http://wiki.openstreetmap.org/wiki/Tag:military=bunker"
                   cs.href="http://wiki.openstreetmap.org/wiki/Cs:Tag:military=bunker"
                   de.href="http://wiki.openstreetmap.org/wiki/DE:Tag:military=bunker"
@@ -6777,7 +6777,7 @@
             <text key="start_date" text="Start date" />
             <text key="inscription" text="Inscription" />
         </item> <!-- Wayside Shrine -->
-        <item name="Boundary Stone" icon="styles/standard/historic/boundary_stone.png" type="node,closedway" preset_name_label="true">
+        <item name="Boundary Stone" icon="presets/landmark/boundary_stone.svg" type="node,closedway" preset_name_label="true">
             <link href="http://wiki.openstreetmap.org/wiki/Tag:historic=boundary_stone"
                   de.href="http://wiki.openstreetmap.org/wiki/DE:Tag:historic=boundary_stone"
                   fr.href="http://wiki.openstreetmap.org/wiki/FR:Tag:historic=boundary_stone"
@@ -8044,7 +8044,7 @@
         <reference ref="link_contact_address" />
     </item>
   </group> <!-- Offices -->
-  <group name="Geography" icon="presets/peak.svg">
+  <group name="Geography" icon="presets/landmark/peak.svg">
     <group name="Boundaries" icon="presets/boundaries.png">
         <item name="Administrative" icon="presets/boundaries.png" type="way,closedway,relation" preset_name_label="true">
             <link href="http://wiki.openstreetmap.org/wiki/Tag:boundary=administrative"
@@ -8282,8 +8282,8 @@
             <reference ref="name_wikipedia" />
         </item> <!-- Locality -->
     </group> <!-- Places -->
-    <group name="Geography" icon="presets/peak.svg">
-        <item name="Peak" icon="presets/peak.svg" type="node" preset_name_label="true">
+    <group name="Geography" icon="presets/landmark/peak.svg">
+        <item name="Peak" icon="presets/landmark/peak.svg" type="node" preset_name_label="true">
             <link href="http://wiki.openstreetmap.org/wiki/Tag:natural=peak"
                   cs.href="http://wiki.openstreetmap.org/wiki/Cs:Tag:natural=peak"
                   de.href="http://wiki.openstreetmap.org/wiki/DE:Tag:natural=peak"
@@ -8298,7 +8298,7 @@
             <reference ref="name_wikipedia" />
             <text key="ele" text="Elevation" />
         </item> <!-- Peak -->
-        <item name="Saddle" icon="presets/saddle.svg" type="node" preset_name_label="true">
+        <item name="Saddle" icon="presets/landmark/saddle.svg" type="node" preset_name_label="true">
             <link href="http://wiki.openstreetmap.org/wiki/Tag:natural=saddle"
                   cs.href="http://wiki.openstreetmap.org/wiki/Cs:Tag:natural=saddle"
                   de.href="http://wiki.openstreetmap.org/wiki/DE:Tag:natural=saddle"
@@ -8312,7 +8312,7 @@
             <reference ref="name_wikipedia" />
             <text key="ele" text="Elevation" />
         </item> <!-- Saddle -->
-        <item name="Glacier" icon="presets/glacier.png" type="closedway,relation" preset_name_label="true">
+        <item name="Glacier" icon="presets/landmark/glacier.svg" type="closedway,relation" preset_name_label="true">
             <link href="http://wiki.openstreetmap.org/wiki/Tag:natural=glacier"
                   cs.href="http://wiki.openstreetmap.org/wiki/Cs:Tag:natural=glacier"
                   de.href="http://wiki.openstreetmap.org/wiki/DE:Tag:natural=glacier"
@@ -8326,7 +8326,7 @@
             <reference ref="name_wikipedia" />
             <text key="ele" text="Elevation" />
         </item> <!-- Glacier -->
-        <item name="Volcano" icon="presets/volcano.png" type="node" preset_name_label="true">
+        <item name="Volcano" icon="presets/landmark/volcano.svg" type="node" preset_name_label="true">
             <link href="http://wiki.openstreetmap.org/wiki/Tag:natural=volcano"
                   cs.href="http://wiki.openstreetmap.org/wiki/Cs:Tag:natural=volcano"
                   de.href="http://wiki.openstreetmap.org/wiki/DE:Tag:natural=volcano"
@@ -8344,7 +8344,7 @@
                 <combo key="volcano:type" text="Type" values="stratovolcano,shield,scoria" />
             </optional>
         </item> <!-- Volcano -->
-        <item name="Ridge" icon="presets/ridge.svg" type="way,relation" preset_name_label="true">
+        <item name="Ridge" icon="presets/landmark/ridge.svg" type="way,relation" preset_name_label="true">
             <link href="http://wiki.openstreetmap.org/wiki/Tag:natural=ridge"
                   cs.href="http://wiki.openstreetmap.org/wiki/Cs:Tag:natural=ridge"
                   de.href="http://wiki.openstreetmap.org/wiki/DE:Tag:natural=ridge"
@@ -8358,7 +8358,7 @@
             <reference ref="name_wikipedia" />
             <text key="ele" text="Elevation" />
         </item> <!-- Ridge -->
-        <item name="Valley" icon="presets/valley.svg" type="way,relation" preset_name_label="true">
+        <item name="Valley" icon="presets/landmark/valley.svg" type="way,relation" preset_name_label="true">
             <link href="http://wiki.openstreetmap.org/wiki/Tag:natural=valley"
                   cs.href="http://wiki.openstreetmap.org/wiki/Cs:Tag:natural=valley"
                   es.href="http://wiki.openstreetmap.org/wiki/ES:Tag:natural=valley"
@@ -8383,7 +8383,7 @@
             <text key="name" text="Name" />
             <text key="height" text="Height (meters)" />
         </item> <!-- Cliff -->
-        <item name="Cave Entrance" icon="presets/cave_entrance.png" type="node,closedway,relation" preset_name_label="true">
+        <item name="Cave Entrance" icon="presets/landmark/cave_entrance.svg" type="node,closedway,relation" preset_name_label="true">
             <link href="http://wiki.openstreetmap.org/wiki/Tag:natural=cave_entrance"
                   cs.href="http://wiki.openstreetmap.org/wiki/Cs:Tag:natural=cave_entrance"
                   de.href="http://wiki.openstreetmap.org/wiki/DE:Tag:natural=cave_entrance"
@@ -8422,8 +8422,8 @@
             <reference ref="name_wikipedia" />
         </item> <!-- Islet -->
     </group> <!-- Geography -->
-    <group name="Nature" icon="styles/standard/misc/landmark/trees.png">
-        <item name="Tree" icon="styles/standard/misc/landmark/trees.png" type="node" preset_name_label="true">
+    <group name="Nature" icon="presets/landmark/trees.svg">
+        <item name="Tree" icon="presets/landmark/trees.svg" type="node" preset_name_label="true">
             <link href="http://wiki.openstreetmap.org/wiki/Tag:natural=tree"
                   cs.href="http://wiki.openstreetmap.org/wiki/Cs:Tag:natural=tree"
                   de.href="http://wiki.openstreetmap.org/wiki/DE:Tag:natural=tree"
@@ -8448,7 +8448,7 @@
                 <reference ref="leaf" />
             </optional>
         </item> <!-- Tree -->
-        <item name="Tree Row" icon="styles/standard/misc/landmark/tree_row.svg" type="way" preset_name_label="true">
+        <item name="Tree Row" icon="presets/landmark/tree_row.svg" type="way" preset_name_label="true">
             <link href="http://wiki.openstreetmap.org/wiki/Tag:natural=tree_row"
                   cs.href="http://wiki.openstreetmap.org/wiki/Cs:Tag:natural=tree_row"
                   de.href="http://wiki.openstreetmap.org/wiki/DE:Tag:natural=tree_row"
@@ -8467,7 +8467,7 @@
                 <reference ref="leaf" />
             </optional>
         </item> <!-- Tree Row -->
-        <item name="Wood" icon="styles/standard/misc/landmark/forest.svg" type="closedway,relation" preset_name_label="true">
+        <item name="Wood" icon="presets/landmark/forest.svg" type="closedway,relation" preset_name_label="true">
             <link href="http://wiki.openstreetmap.org/wiki/Tag:natural=wood"
                   cs.href="http://wiki.openstreetmap.org/wiki/Cs:Tag:natural=wood"
                   de.href="http://wiki.openstreetmap.org/wiki/DE:Tag:natural=wood"
@@ -8482,7 +8482,7 @@
             <text key="name" text="Name" />
             <reference ref="leaf" />
         </item> <!-- Wood -->
-        <item name="Forest" icon="styles/standard/misc/landmark/forest.svg" type="closedway,relation" preset_name_label="true">
+        <item name="Forest" icon="presets/landmark/forest.svg" type="closedway,relation" preset_name_label="true">
             <link href="http://wiki.openstreetmap.org/wiki/Tag:landuse=forest"
                   cs.href="http://wiki.openstreetmap.org/wiki/Cs:Tag:landuse=forest"
                   de.href="http://wiki.openstreetmap.org/wiki/DE:Tag:landuse=forest"
@@ -8497,7 +8497,7 @@
             <text key="name" text="Name" />
             <reference ref="leaf" />
         </item> <!-- Forest -->
-        <item name="Cutline" icon="styles/standard/misc/landmark/cutline.svg" type="way" preset_name_label="true">
+        <item name="Cutline" icon="presets/landmark/cutline.svg" type="way" preset_name_label="true">
             <link href="http://wiki.openstreetmap.org/wiki/Tag:man_made=cutline"
                   cs.href="http://wiki.openstreetmap.org/wiki/Cs:Tag:man_made=cutline"
                   de.href="http://wiki.openstreetmap.org/wiki/DE:Tag:man_made=cutline"
@@ -8844,7 +8844,7 @@
             <text key="name" text="Name" />
         </item> <!-- Recreation Ground -->
         <separator/>
-        <item name="Residential Area" icon="styles/standard/misc/landmark/building.png" type="closedway,relation" preset_name_label="true">
+        <item name="Residential Area" icon="presets/landmark/building.svg" type="closedway,relation" preset_name_label="true">
             <link href="http://wiki.openstreetmap.org/wiki/Tag:landuse=residential"
                   cs.href="http://wiki.openstreetmap.org/wiki/Cs:Tag:landuse=residential"
                   de.href="http://wiki.openstreetmap.org/wiki/DE:Tag:landuse=residential"
@@ -9022,7 +9022,7 @@
             <key key="landuse" value="landfill" />
             <text key="name" text="Name" />
         </item> <!-- Landfill -->
-        <item name="Quarry" icon="presets/mine.png" type="closedway,relation" preset_name_label="true">
+        <item name="Quarry" icon="presets/landmark/mine.svg" type="closedway,relation" preset_name_label="true">
             <link href="http://wiki.openstreetmap.org/wiki/Tag:landuse=quarry"
                   cs.href="http://wiki.openstreetmap.org/wiki/Cs:Tag:landuse=quarry"
                   de.href="http://wiki.openstreetmap.org/wiki/DE:Tag:landuse=quarry"
