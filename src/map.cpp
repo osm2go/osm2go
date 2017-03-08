@@ -1545,7 +1545,7 @@ static void map_button_release(map_t *map, gint x, gint y) {
       map_node_select(map->appdata, node);
 
       /* let the user specify some tags for the new node */
-      info_dialog(GTK_WIDGET(map->appdata->window), map->appdata, NULL);
+      info_dialog(GTK_WIDGET(map->appdata->window), map->appdata);
     }
     break;
   }
@@ -1715,7 +1715,7 @@ gboolean map_key_press_event(appdata_t *appdata, GdkEventKey *event) {
 	map_action_ok(appdata);
       /* otherwise if info is enabled call that */
       else if(GTK_WIDGET_FLAGS(appdata->iconbar->info) & GTK_SENSITIVE)
-	info_dialog(GTK_WIDGET(appdata->window), appdata, NULL);
+	info_dialog(GTK_WIDGET(appdata->window), appdata);
       break;
 
     case GDK_Escape:   // same as HILDON_HARDKEY_ESC
@@ -2021,7 +2021,7 @@ void map_action_ok(appdata_t *appdata) {
       map_node_select(appdata, node);
 
       /* let the user specify some tags for the new node */
-      info_dialog(GTK_WIDGET(appdata->window), appdata, NULL);
+      info_dialog(GTK_WIDGET(appdata->window), appdata);
     }
     }
 

@@ -167,10 +167,9 @@ item_id_t object_t::get_id() const {
   return id;
 }
 
-void object_t::set_flags(int set, int clr) {
+void object_t::set_flags(int set) {
   g_assert(is_real());
   obj->flags |=  set;
-  obj->flags &= ~clr;
 }
 
 /* ------------------------- user handling --------------------- */

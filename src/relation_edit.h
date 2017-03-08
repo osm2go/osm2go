@@ -32,7 +32,7 @@ extern "C" {
 #endif
 
 void relation_list(GtkWidget *parent, appdata_t *appdata, object_t *object);
-void relation_show_members(GtkWidget *parent, relation_t *relation);
+void relation_show_members(GtkWidget *parent, const relation_t *relation);
 
 #ifdef __cplusplus
 }

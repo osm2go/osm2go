@@ -341,7 +341,7 @@ static GtkWidget *tag_widget(tag_context_t *context) {
   return context->list;
 }
 
-static void on_relation_members(G_GNUC_UNUSED GtkWidget *button, tag_context_t *context) {
+static void on_relation_members(G_GNUC_UNUSED GtkWidget *button, const tag_context_t *context) {
   g_assert(context->object.type == RELATION);
   relation_show_members(context->dialog, context->object.relation);
 }
@@ -350,10 +350,10 @@ static void table_attach(GtkWidget *table, GtkWidget *child, int x, int y) {
   gtk_table_attach_defaults(GTK_TABLE(table), child, x, x+1, y, y+1);
 }
 
-static GtkWidget *details_widget(tag_context_t *context, gboolean big) {
+static GtkWidget *details_widget(const tag_context_t &context, bool big) {
   GtkWidget *table = gtk_table_new(big?4:2, 2, FALSE);  // y, x
 
-  const char *user = context->object.obj->user;
+  const char *user = context.object.obj->user;
   GtkWidget *label;
 
   /* ------------ user ----------------- */
@@ -369,21 +369,21 @@ static GtkWidget *details_widget(tag_context_t *context, gboolean big) {
 
   if(big) table_attach(table, gtk_label_new(_("Date/Time:")), 0, 1);
   struct tm loctime;
-  localtime_r(&context->object.obj->time, &loctime);
+  localtime_r(&context.object.obj->time, &loctime);
   char time_str[32];
   strftime(time_str, sizeof(time_str), "%x %X", &loctime);
   label = gtk_label_new(time_str);
   table_attach(table, label, 1, big?1:0);
 
   /* ------------ coordinate (only for nodes) ----------------- */
-  switch(context->object.type) {
+  switch(context.object.type) {
   case NODE: {
     char pos_str[32];
-    pos_lat_str(pos_str, sizeof(pos_str), context->object.node->pos.lat);
+    pos_lat_str(pos_str, sizeof(pos_str), context.object.node->pos.lat);
     label = gtk_label_new(pos_str);
     if(big) table_attach(table, gtk_label_new(_("Latitude:")), 0, 2);
     table_attach(table, label, big?1:0, big?2:1);
-    pos_lat_str(pos_str, sizeof(pos_str), context->object.node->pos.lon);
+    pos_lat_str(pos_str, sizeof(pos_str), context.object.node->pos.lon);
     label = gtk_label_new(pos_str);
     if(big) table_attach(table, gtk_label_new(_("Longitude:")), 0, 3);
     table_attach(table, label, 1, big?3:1);
@@ -391,16 +391,16 @@ static GtkWidget *details_widget(tag_context_t *context, gboolean big) {
 
   case WAY: {
     char *nodes_str = g_strdup_printf(_("%s%zu nodes"),
-             big?"":_("Length: "), context->object.way->node_chain.size());
+             big?"":_("Length: "), context.object.way->node_chain.size());
     label = gtk_label_new(nodes_str);
     if(big) table_attach(table, gtk_label_new(_("Length:")), 0, 2);
     table_attach(table, label, big?1:0, big?2:1);
     g_free(nodes_str);
 
-    char *type_str = g_strconcat(context->object.way->is_closed() ?
+    char *type_str = g_strconcat(context.object.way->is_closed() ?
 			     "closed way":"open way",
 			     " (",
-	     (context->object.way->draw.flags & OSM_DRAW_FLAG_AREA)?
+	     (context.object.way->draw.flags & OSM_DRAW_FLAG_AREA)?
 			       "area":"line",
 			     ")", NULL);
 
@@ -413,7 +413,7 @@ static GtkWidget *details_widget(tag_context_t *context, gboolean big) {
   case RELATION: {
     /* relations tell something about their members */
     guint nodes = 0, ways = 0, relations = 0;
-    context->object.relation->members_by_type(&nodes, &ways, &relations);
+    context.object.relation->members_by_type(&nodes, &ways, &relations);
 
     char *str =
       g_strdup_printf(_("Members: %u nodes, %u ways, %u relations"),
@@ -421,7 +421,8 @@ static GtkWidget *details_widget(tag_context_t *context, gboolean big) {
 
     GtkWidget *member_btn = button_new_with_label(str);
     gtk_signal_connect(GTK_OBJECT(member_btn), "clicked",
-		       GTK_SIGNAL_FUNC(on_relation_members), context);
+                       GTK_SIGNAL_FUNC(on_relation_members),
+                       const_cast<tag_context_t *>(&context));
 
     gtk_table_attach_defaults(GTK_TABLE(table), member_btn, 0, 2,
 			      big?2:1, big?4:2);
@@ -442,10 +443,10 @@ static GtkWidget *details_widget(tag_context_t *context, gboolean big) {
 #ifdef FREMANTLE
 /* put additional infos into a seperate dialog for fremantle as */
 /* screen space is sparse there */
-static void info_more(tag_context_t *context) {
+static void info_more(const tag_context_t &context) {
   GtkWidget *dialog =
     misc_dialog_new(MISC_DIALOG_SMALL, _("Object details"),
-		    GTK_WINDOW(context->dialog),
+		    GTK_WINDOW(context.dialog),
 		    GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
 		    NULL);
 
@@ -453,7 +454,7 @@ static void info_more(tag_context_t *context) {
 				  GTK_RESPONSE_CANCEL);
 
   gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
-		     details_widget(context, TRUE),
+		     details_widget(context, true),
 		     FALSE, FALSE, 0);
   gtk_widget_show_all(dialog);
   gtk_dialog_run(GTK_DIALOG(dialog));
@@ -463,27 +464,24 @@ static void info_more(tag_context_t *context) {
 
 /* edit tags of currently selected node or way or of the relation */
 /* given */
-gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
+void info_dialog(GtkWidget *parent, appdata_t *appdata) {
+  bool ret = info_dialog(parent, appdata, appdata->map->selected.object);
 
-  tag_context_t context(appdata);
-  char *str = NULL;
+  /* since nodes being parts of ways but with no tags are invisible, */
+  /* the result of editing them may have changed their visibility */
+  if(ret && appdata->map->selected.object.type != RELATION)
+    map_item_redraw(appdata, &appdata->map->selected);
+}
+
+/* edit tags of currently selected node or way or of the relation */
+/* given */
+bool info_dialog(GtkWidget *parent, appdata_t *appdata, object_t &object) {
+
+  g_assert(object.is_real());
 
   /* use implicit selection if not explicitely given */
-  if(!object) {
-    g_assert((appdata->map->selected.object.type == NODE) ||
-	     (appdata->map->selected.object.type == WAY) ||
-	     (appdata->map->selected.object.type == RELATION));
-
-    context.object = appdata->map->selected.object;
-  } else
-    context.object = *object;
-
-  //  str = osm_object_string(&context.object);
-  //  str[0] =  g_ascii_toupper   (str[0]);
-
-  g_assert(context.object.is_real());
-
-  context.tags = context.object.obj->tags.asPointerVector();
+  tag_context_t context(appdata, object);
+  char *str = NULL;
 
   switch(context.object.type) {
   case NODE:
@@ -529,7 +527,7 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
 #ifndef FREMANTLE
   /* -------- details box --------- */
   gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context.dialog)->vbox),
-		     details_widget(&context, FALSE),
+		     details_widget(context, false),
 		     FALSE, FALSE, 0);
 #endif
 
@@ -541,22 +539,22 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
   /* ----------------------------------- */
 
   gtk_widget_show_all(context.dialog);
-  gboolean ok = FALSE, quit = FALSE;
+  bool ok = false, quit = false;
 
   do {
     switch(gtk_dialog_run(GTK_DIALOG(context.dialog))) {
     case GTK_RESPONSE_ACCEPT:
-      quit = TRUE;
-      ok = TRUE;
+      quit = true;
+      ok = true;
       break;
 #ifdef FREMANTLE
     case GTK_RESPONSE_HELP:
-      info_more(&context);
+      info_more(context);
       break;
 #endif
 
     default:
-      quit = TRUE;
+      quit = true;
       break;
     }
 
@@ -565,26 +563,22 @@ gboolean info_dialog(GtkWidget *parent, appdata_t *appdata, object_t *object) {
   gtk_widget_destroy(context.dialog);
 
   if(ok) {
-    if(context.object.is_real())
-      context.object.obj->replace_tags(context.tags);
+    context.object.obj->tags.replace(context.tags);
 
-    /* since nodes being parts of ways but with no tags are invisible, */
-    /* the result of editing them may have changed their visibility */
-    if(!object && context.object.type != RELATION)
-      map_item_redraw(appdata, &appdata->map->selected);
-
-    context.object.set_flags(OSM_FLAG_DIRTY, 0);
+    context.object.set_flags(OSM_FLAG_DIRTY);
   } else
     std::for_each(context.tags.begin(), context.tags.end(), osm_tag_free);
 
   return ok;
 }
 
-tag_context_t::tag_context_t(appdata_t *a)
+tag_context_t::tag_context_t(appdata_t *a, const object_t &o)
   : appdata(a)
   , dialog(0)
   , list(0)
   , store(0)
+  , object(o)
   , presets_type(0)
+  , tags(object.obj->tags.asPointerVector())
 {
 }

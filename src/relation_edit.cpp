@@ -181,9 +181,8 @@ static void relation_remove_item(relation_t *relation, const object_t &object) {
 
 static gboolean relation_info_dialog(GtkWidget *parent, appdata_t *appdata,
 				     relation_t *relation) {
-
   object_t object(relation);
-  return info_dialog(parent, appdata, &object);
+  return info_dialog(parent, appdata, object);
 }
 
 static const char *relitem_get_role_in_relation(const object_t &item, const relation_t *relation) {
@@ -511,11 +510,12 @@ relation_list_changed(GtkTreeSelection *selection, gpointer userdata) {
   }
 }
 
-typedef struct {
-  relation_t *relation;
-  GtkWidget *dialog, *view;
-  GtkListStore *store;
-} member_context_t;
+struct member_context_t {
+  member_context_t(const relation_t *r, GtkWidget *d)
+    : relation(r), dialog(d) {}
+  const relation_t * const relation;
+  GtkWidget * const dialog;
+};
 
 enum {
   MEMBER_COL_TYPE = 0,
@@ -574,19 +574,20 @@ void members_list_functor::operator()(const member_t &member)
   g_free(id);
 }
 
-static GtkWidget *member_list_widget(member_context_t *context) {
+static GtkWidget *member_list_widget(member_context_t &context) {
   GtkWidget *vbox = gtk_vbox_new(FALSE,3);
+  GtkWidget * const view =
 
 #ifndef FREMANTLE_PANNABLE_AREA
-  context->view = gtk_tree_view_new();
+        gtk_tree_view_new();
 #else
-  context->view = hildon_gtk_tree_view_new(HILDON_UI_MODE_EDIT);
+        hildon_gtk_tree_view_new(HILDON_UI_MODE_EDIT);
 #endif
 
   gtk_tree_selection_set_select_function(
-	 gtk_tree_view_get_selection(GTK_TREE_VIEW(context->view)),
+	 gtk_tree_view_get_selection(GTK_TREE_VIEW(view)),
 	 member_list_selection_func,
-	 context, NULL);
+	 &context, NULL);
 
   /* --- "type" column --- */
   GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
@@ -596,7 +597,7 @@ static GtkWidget *member_list_widget(member_context_t *context) {
 		     "text", MEMBER_COL_TYPE,
 		     "foreground-set", MEMBER_COL_REF_ONLY,  NULL);
   gtk_tree_view_column_set_sort_column_id(column, MEMBER_COL_TYPE);
-  gtk_tree_view_insert_column(GTK_TREE_VIEW(context->view), column, -1);
+  gtk_tree_view_insert_column(GTK_TREE_VIEW(view), column, -1);
 
   /* --- "id" column --- */
   renderer = gtk_cell_renderer_text_new();
@@ -605,7 +606,7 @@ static GtkWidget *member_list_widget(member_context_t *context) {
 		     "text", MEMBER_COL_ID,
 		     "foreground-set", MEMBER_COL_REF_ONLY,  NULL);
   gtk_tree_view_column_set_sort_column_id(column, MEMBER_COL_ID);
-  gtk_tree_view_insert_column(GTK_TREE_VIEW(context->view), column, -1);
+  gtk_tree_view_insert_column(GTK_TREE_VIEW(view), column, -1);
 
 
   /* --- "Name" column --- */
@@ -617,7 +618,7 @@ static GtkWidget *member_list_widget(member_context_t *context) {
 		     "foreground-set", MEMBER_COL_REF_ONLY,  NULL);
   gtk_tree_view_column_set_expand(column, TRUE);
   gtk_tree_view_column_set_sort_column_id(column, MEMBER_COL_NAME);
-  gtk_tree_view_insert_column(GTK_TREE_VIEW(context->view), column, -1);
+  gtk_tree_view_insert_column(GTK_TREE_VIEW(view), column, -1);
 
   /* --- "role" column --- */
   renderer = gtk_cell_renderer_text_new();
@@ -626,21 +627,21 @@ static GtkWidget *member_list_widget(member_context_t *context) {
 		     "text", MEMBER_COL_ROLE,
 		     "foreground-set", MEMBER_COL_REF_ONLY,  NULL);
   gtk_tree_view_column_set_sort_column_id(column, MEMBER_COL_ROLE);
-  gtk_tree_view_insert_column(GTK_TREE_VIEW(context->view), column, -1);
+  gtk_tree_view_insert_column(GTK_TREE_VIEW(view), column, -1);
 
 
   /* build and fill the store */
-  context->store = gtk_list_store_new(MEMBER_NUM_COLS,
+  GtkListStore * const store = gtk_list_store_new(MEMBER_NUM_COLS,
  	      G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING,
 	      G_TYPE_BOOLEAN, G_TYPE_POINTER);
 
-  gtk_tree_view_set_model(GTK_TREE_VIEW(context->view),
-			  GTK_TREE_MODEL(context->store));
+  gtk_tree_view_set_model(GTK_TREE_VIEW(view),
+			  GTK_TREE_MODEL(store));
 
-  std::for_each(context->relation->members.begin(), context->relation->members.end(),
-                members_list_functor(context->store));
+  std::for_each(context.relation->members.begin(), context.relation->members.end(),
+                members_list_functor(store));
 
-  g_object_unref(context->store);
+  g_object_unref(store);
 
 #ifndef FREMANTLE_PANNABLE_AREA
   /* put it into a scrolled window */
@@ -649,53 +650,49 @@ static GtkWidget *member_list_widget(member_context_t *context) {
 				 GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
   gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scrolled_window),
 				      GTK_SHADOW_ETCHED_IN);
-  gtk_container_add(GTK_CONTAINER(scrolled_window), context->view);
+  gtk_container_add(GTK_CONTAINER(scrolled_window), view);
 
   gtk_box_pack_start_defaults(GTK_BOX(vbox), scrolled_window);
 #else
   /* put view into a pannable area */
   GtkWidget *pannable_area = hildon_pannable_area_new();
-  gtk_container_add(GTK_CONTAINER(pannable_area), context->view);
+  gtk_container_add(GTK_CONTAINER(pannable_area), view);
   gtk_box_pack_start_defaults(GTK_BOX(vbox), pannable_area);
 #endif
 
   return vbox;
 }
 
-void relation_show_members(GtkWidget *parent, relation_t *relation) {
-  member_context_t *mcontext = g_new0(member_context_t, 1);
-  mcontext->relation = relation;
+void relation_show_members(GtkWidget *parent, const relation_t *relation) {
   gchar *nstr = NULL;
 
-  const char *str = mcontext->relation->get_value("name");
+  const char *str = relation->get_value("name");
   if(!str)
-    str = mcontext->relation->get_value("ref");
+    str = relation->get_value("ref");
   if(!str)
     str = nstr = g_strdup_printf(_("Members of relation #" ITEM_ID_FORMAT),
-                                 mcontext->relation->id);
+                                 relation->id);
   else
     str = nstr = g_strdup_printf(_("Members of relation \"%s\""), str);
 
-  mcontext->dialog =
+  member_context_t mcontext(relation,
     misc_dialog_new(MISC_DIALOG_MEDIUM, str,
 		    GTK_WINDOW(parent),
 		    GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
-		    NULL);
+		    NULL));
   g_free(nstr);
 
-  gtk_dialog_set_default_response(GTK_DIALOG(mcontext->dialog),
+  gtk_dialog_set_default_response(GTK_DIALOG(mcontext.dialog),
 				  GTK_RESPONSE_CLOSE);
 
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(mcontext->dialog)->vbox),
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(mcontext.dialog)->vbox),
       		     member_list_widget(mcontext), TRUE, TRUE, 0);
 
   /* ----------------------------------- */
 
-  gtk_widget_show_all(mcontext->dialog);
-  gtk_dialog_run(GTK_DIALOG(mcontext->dialog));
-  gtk_widget_destroy(mcontext->dialog);
-
-  g_free(mcontext);
+  gtk_widget_show_all(mcontext.dialog);
+  gtk_dialog_run(GTK_DIALOG(mcontext.dialog));
+  gtk_widget_destroy(mcontext.dialog);
 }
 
 /* user clicked "members" button in relation list */

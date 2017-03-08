@@ -379,7 +379,7 @@ void map_edit_way_add_ok(map_t *map) {
   map->action.way = NULL;
 
   /* let the user specify some tags for the new way */
-  info_dialog(GTK_WIDGET(map->appdata->window), map->appdata, NULL);
+  info_dialog(GTK_WIDGET(map->appdata->window), map->appdata);
 }
 
 /* -------------------------- way_node_add ----------------------- */

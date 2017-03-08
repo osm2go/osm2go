@@ -37,7 +37,7 @@
 static void on_info_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
 
-  info_dialog(GTK_WIDGET(appdata->window), appdata, NULL);
+  info_dialog(GTK_WIDGET(appdata->window), appdata);
 }
 
 static void on_node_add_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {

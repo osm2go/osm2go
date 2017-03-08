@@ -20,26 +20,26 @@
 #ifndef INFO_H
 #define INFO_H
 
-#include "appdata.h"
-
 #include <gtk/gtk.h>
 
 #ifdef __cplusplus
-#include <vector>
-
 extern "C" {
 #endif
 
-gboolean info_dialog(GtkWidget *parent, appdata_t *appdata,
-		     object_t *object);
+struct appdata_t;
+
+void info_dialog(GtkWidget *parent, struct appdata_t *appdata);
+
 #ifdef __cplusplus
 }
 
 #include "osm.h"
 
+#include <vector>
+
 class tag_context_t {
 public:
-  explicit tag_context_t(appdata_t *a);
+  explicit tag_context_t(appdata_t *a, const object_t &o);
 
   appdata_t * const appdata;
   GtkWidget *dialog, *list;
@@ -53,6 +53,7 @@ public:
 };
 
 bool info_tag_key_collision(const tag_list_t &tags, const tag_t &tag);
+bool info_dialog(GtkWidget *parent, appdata_t *appdata, object_t &object);
 
 #endif
 
