@@ -128,7 +128,6 @@ typedef struct object_s {
   bool is_real() const;
   const char *type_string() const;
   gchar *id_string() const;
-  gchar *object_string() const;
   const char *get_tag_value(const char *key) const;
   bool has_tags() const;
   item_id_t get_id() const;

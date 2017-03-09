@@ -127,26 +127,6 @@ gchar *object_t::id_string() const {
   }
 }
 
-gchar *object_t::object_string() const {
-  const char *type_str = type_string();
-
-  switch(type) {
-  case ILLEGAL:
-    return g_strconcat(type_str, " #<unspec>", NULL);
-  case NODE:
-  case WAY:
-  case RELATION:
-    g_assert(obj);
-    return g_strdup_printf("%s #" ITEM_ID_FORMAT, type_str, obj->id);
-  case NODE_ID:
-  case WAY_ID:
-  case RELATION_ID:
-    return g_strdup_printf("%s #" ITEM_ID_FORMAT, type_str, id);
-  default:
-    return NULL;
-  }
-}
-
 const char *object_t::get_tag_value(const char *key) const {
   if(!is_real())
     return NULL;
