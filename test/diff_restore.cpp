@@ -30,6 +30,8 @@ int main(int argc, char **argv)
   g_assert_cmpuint(3, ==, osm->ways.size());
   g_assert_cmpuint(3, ==, osm->relations.size());
 
+  g_assert(diff_is_clean(osm, true));
+
   project_t project(argv[2], argv[1]);
   diff_restore(0, &project, osm);
 
@@ -73,6 +75,8 @@ int main(int argc, char **argv)
   g_assert(w452 != NULL);
   g_assert(w452->get_value("source") != NULL);
   g_assert(w452->get_value("wheelchair") == NULL);
+
+  g_assert(!diff_is_clean(osm, true));
 
   osm_free(osm);
 
