@@ -343,7 +343,7 @@ node_compare_changes(const node_t *node, const pos_t *pos, const std::vector<tag
   if (node->pos.lat != pos->lat || node->pos.lon != pos->lon)
     return FALSE;
 
-  return !node->tag_lists_diff(ntags);
+  return node->tags == ntags;
 }
 
 static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
@@ -423,7 +423,7 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
     return;
   }
 
-  node->replace_tags(ntags);
+  node->tags.replace(ntags);
 
   /* update position from diff */
   if(pos_diff) {
@@ -533,8 +533,8 @@ static void diff_restore_way(xmlNodePtr node_node, osm_t *osm) {
     /* flag had been set */
 
     std::vector<tag_t *> ntags = xml_scan_tags(node_node->children);
-    if (way->tag_lists_diff(ntags)) {
-      way->replace_tags(ntags);
+    if (way->tags != ntags) {
+      way->tags.replace(ntags);
     } else {
       std::for_each(ntags.begin(), ntags.end(), osm_tag_free);
       if (new_chain.empty()) {
@@ -607,8 +607,8 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
 
   bool was_changed = false;
   std::vector<tag_t *> ntags = xml_scan_tags(node_rel->children);
-  if (relation->tag_lists_diff(ntags)) {
-    relation->replace_tags(ntags);
+  if(relation->tags != ntags) {
+    relation->tags.replace(ntags);
     was_changed = true;
   } else {
     std::for_each(ntags.begin(), ntags.end(), osm_tag_free);

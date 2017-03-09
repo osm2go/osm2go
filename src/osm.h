@@ -290,6 +290,8 @@ public:
    */
   bool merge(tag_list_t &other);
 
+  inline bool operator==(const std::vector<tag_t *> &t2) const
+  { return !operator!=(t2); }
   bool operator!=(const std::vector<tag_t *> &t2) const;
 
 private:
@@ -301,22 +303,6 @@ G_STATIC_ASSERT(sizeof(tag_list_t) == sizeof(tag_t *));
 struct base_object_t {
   explicit base_object_t();
   explicit base_object_t(item_id_t ver);
-
-  inline const char *get_value(const char *key) const
-  { return tags.get_value(key); }
-  inline bool has_tag() const
-  { return tags.hasRealTags(); }
-
-  /**
-   * @brief compare given tag list to the one of this object
-   * @param t2 second list
-   * @return if the lists differ
-   */
-  inline bool tag_lists_diff(const std::vector<tag_t *> &t2) const
-  { return tags != t2; }
-
-  inline void replace_tags(std::vector<tag_t *> &ntags)
-  { tags.replace(ntags); }
 
   item_id_t id;
   item_id_t version;

@@ -130,13 +130,13 @@ gchar *object_t::id_string() const {
 const char *object_t::get_tag_value(const char *key) const {
   if(!is_real())
     return NULL;
-  return obj->get_value(key);
+  return obj->tags.get_value(key);
 }
 
 bool object_t::has_tags() const {
   if(!is_real())
     return false;
-  return obj->has_tag();
+  return obj->tags.hasRealTags();
 }
 
 item_id_t object_t::get_id() const {
@@ -550,7 +550,7 @@ member_t osm_parse_osm_relation_member(osm_t *osm, xmlNode *a_node) {
 gchar *relation_t::descriptive_name() const {
   const char *keys[] = { "ref", "name", "description", "note", "fix" "me", NULL};
   for (unsigned int i = 0; keys[i] != NULL; i++) {
-    const char *name = get_value(keys[i]);
+    const char *name = tags.get_value(keys[i]);
     if(name)
       return g_strdup(name);
   }
@@ -741,7 +741,7 @@ static node_t *process_node(xmlTextReaderPtr reader, osm_t *osm) {
 
     ret = xmlTextReaderRead(reader);
   }
-  node->replace_tags(tags);
+  node->tags.replace(tags);
 
   return node;
 }
@@ -805,7 +805,7 @@ static way_t *process_way(xmlTextReaderPtr reader, osm_t *osm) {
     }
     ret = xmlTextReaderRead(reader);
   }
-  way->replace_tags(tags);
+  way->tags.replace(tags);
 
   return way;
 }
@@ -913,7 +913,7 @@ static relation_t *process_relation(xmlTextReaderPtr reader, osm_t *osm) {
     }
     ret = xmlTextReaderRead(reader);
   }
-  relation->replace_tags(tags);
+  relation->tags.replace(tags);
 
   return relation;
 }
@@ -1756,7 +1756,7 @@ struct find_way_or_ref {
 
 void reverse_roles::operator()(relation_t* relation)
 {
-  const char *type = relation->get_value("type");
+  const char *type = relation->tags.get_value("type");
 
   // Route relations; http://wiki.openstreetmap.org/wiki/Relation:route
   if (!type || strcasecmp(type, "route") != 0)
@@ -1903,7 +1903,7 @@ std::string object_t::get_name() const {
   const char *name_tags[] = { "name", "ref", "note", "fix" "me", "sport", 0 };
   const char *name = 0;
   for(unsigned int i = 0; !name && name_tags[i]; i++)
-    name = obj->get_value(name_tags[i]);
+    name = obj->tags.get_value(name_tags[i]);
 
   /* search for some kind of "type" */
   const char *type_tags[] = { "amenity", "place", "historic", "leisure",
@@ -1911,11 +1911,11 @@ std::string object_t::get_name() const {
                               "natural", 0 };
   const char *type = 0;
   for(unsigned int i = 0; !type && type_tags[i]; i++)
-    type = obj->get_value(type_tags[i]);
+    type = obj->tags.get_value(type_tags[i]);
 
-  if(!type && obj->get_value("building")) {
-    const char *street = obj->get_value("addr:street");
-    const char *hn = obj->get_value("addr:housenumber");
+  if(!type && obj->tags.get_value("building")) {
+    const char *street = obj->tags.get_value("addr:street");
+    const char *hn = obj->tags.get_value("addr:housenumber");
 
     if(hn) {
       if(street) {
@@ -1929,14 +1929,14 @@ std::string object_t::get_name() const {
     } else {
       type = "building";
       if(!name)
-        name = obj->get_value("addr:housename");
+        name = obj->tags.get_value("addr:housename");
     }
   }
   if(!type && ret.empty())
-    type = obj->get_value("emergency");
+    type = obj->tags.get_value("emergency");
 
   /* highways are a little bit difficult */
-  const char *highway = obj->get_value("highway");
+  const char *highway = obj->tags.get_value("highway");
   if(highway && ret.empty()) {
     if((!strcmp(highway, "primary")) ||
        (!strcmp(highway, "secondary")) ||

@@ -43,8 +43,8 @@ int main(int argc, char **argv)
   const node_t * const n72 = osm->nodes[638499572];
   g_assert(n72 != 0);
   g_assert((n72->flags & OSM_FLAG_DIRTY) != 0);
-  g_assert(n72->get_value("testtag") != 0);
-  g_assert(strcmp(n72->get_value("testtag"), "true") == 0);
+  g_assert(n72->tags.get_value("testtag") != 0);
+  g_assert(strcmp(n72->tags.get_value("testtag"), "true") == 0);
   // in diff, but the same as in .osm
   const node_t * const n23 = osm->nodes[3577031223LL];
   g_assert(n23 != 0);
@@ -73,8 +73,8 @@ int main(int argc, char **argv)
   // our modification must survive
   const way_t * const w452 = osm->ways[351899452];
   g_assert(w452 != NULL);
-  g_assert(w452->get_value("source") != NULL);
-  g_assert(w452->get_value("wheelchair") == NULL);
+  g_assert(w452->tags.get_value("source") != NULL);
+  g_assert(w452->tags.get_value("wheelchair") == NULL);
 
   g_assert(!diff_is_clean(osm, true));
 

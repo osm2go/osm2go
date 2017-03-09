@@ -432,7 +432,7 @@ static void map_object_select(appdata_t *appdata, object_t &object) {
 void map_item_deselect(appdata_t *appdata) {
 
   /* save tags for "last" function in info dialog */
-  if(appdata->map->selected.object.is_real() && appdata->map->selected.object.obj->has_tag()) {
+  if(appdata->map->selected.object.is_real() && appdata->map->selected.object.obj->tags.hasRealTags()) {
     std::vector<tag_t> clear;
     if(appdata->map->selected.object.type == NODE) {
       clear.swap(appdata->map->last_node_tags);
@@ -660,7 +660,7 @@ void map_node_draw_functor::operator()(node_t *node)
 		 map->style->node.fill_color,
 		 map->style->node.color);
 
-  else if(map->style->node.show_untagged || node->has_tag())
+  else if(map->style->node.show_untagged || node->tags.hasRealTags())
     map_node_new(map, node,
 		 map->style->node.radius * map->state->detail, 0,
 		 map->style->node.color, 0);
