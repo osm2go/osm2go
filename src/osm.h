@@ -132,7 +132,7 @@ typedef struct object_s {
   bool has_tags() const;
   item_id_t get_id() const;
   void set_flags(int set);
-  char *get_name() const;
+  std::string get_name() const;
 #endif
 } object_t;
 

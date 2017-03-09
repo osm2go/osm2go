@@ -1892,8 +1892,8 @@ void tag_list_t::copy(const tag_list_t &other)
 }
 
 /* try to get an as "speaking" description of the object as possible */
-char *object_t::get_name() const {
-  char *ret = NULL;
+std::string object_t::get_name() const {
+  std::string ret;
 
   /* worst case: we have no tags at all. return techincal info then */
   if(!has_tags())
@@ -1910,35 +1910,43 @@ char *object_t::get_name() const {
                               "tourism", "landuse", "waterway", "railway",
                               "natural", 0 };
   const char *type = 0;
-  gchar *gtype = NULL;
   for(unsigned int i = 0; !type && type_tags[i]; i++)
     type = obj->get_value(type_tags[i]);
 
   if(!type && obj->get_value("building")) {
     const char *street = obj->get_value("addr:street");
     const char *hn = obj->get_value("addr:housenumber");
-    type = "building";
 
-    if(street && hn) {
-      if(hn)
-        type = gtype = g_strjoin(" ", "building", street, hn, NULL);
-    } else if(hn) {
-      type = gtype = g_strconcat("building housenumber ", hn, NULL);
-    } else if(!name)
-      name = obj->get_value("addr:housename");
+    if(hn) {
+      if(street) {
+        ret = "building ";
+        ret += street;
+        ret +=' ';
+      } else {
+        ret = "building housenumber ";
+      }
+      ret += hn;
+    } else {
+      type = "building";
+      if(!name)
+        name = obj->get_value("addr:housename");
+    }
   }
-  if(!type) type = obj->get_value("emergency");
+  if(!type && ret.empty())
+    type = obj->get_value("emergency");
 
   /* highways are a little bit difficult */
   const char *highway = obj->get_value("highway");
-  if(highway && !gtype) {
+  if(highway && ret.empty()) {
     if((!strcmp(highway, "primary")) ||
        (!strcmp(highway, "secondary")) ||
        (!strcmp(highway, "tertiary")) ||
        (!strcmp(highway, "unclassified")) ||
        (!strcmp(highway, "residential")) ||
        (!strcmp(highway, "service"))) {
-      type = gtype = g_strconcat(highway, " road", NULL);
+      ret = highway;
+      ret += " road";
+      type = 0;
     }
 
     else if(!strcmp(highway, "pedestrian")) {
@@ -1953,29 +1961,25 @@ char *object_t::get_name() const {
       type = highway;
   }
 
-  if(type && name)
-    ret = g_strconcat(type, ": \"", name, "\"", NULL);
-  else if(type && !name) {
-    if(gtype) {
-      ret = gtype;
-      gtype = NULL;
-    } else
-      ret = g_strdup(type);
-  } else if(name && !type)
-    ret = g_strconcat(
-	  type_string(), ": \"", name, "\"", NULL);
-  else
-    ret = g_strconcat("unspecified ", type_string(), NULL);
+  if(type) {
+    g_assert(ret.empty());
+    ret = type;
+  }
 
-  g_free(gtype);
+  if(name) {
+    if(ret.empty())
+      ret = type_string();
+    ret += ": \"";
+    ret += name;
+    ret += '"';
+  } else if(ret.empty()) {
+    ret = "unspecified ";
+    ret += type_string();
+  }
 
   /* remove underscores from string and replace them by spaces as this is */
   /* usually nicer */
-  char *p = strchr(ret, '_');
-  while(p) {
-    *p = ' ';
-    p = strchr(p + 1, '_');
-  }
+  std::replace(ret.begin(), ret.end(), '_', ' ');
 
   return ret;
 }

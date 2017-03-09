@@ -100,9 +100,8 @@ static void map_statusbar(map_t *map, map_item_t *map_item) {
 
   collision = tags.find_if(self_collision_functor(tags)) != NULL ? TRUE : FALSE;
 
-  char *str = map_item->object.get_name();
-  statusbar_set(map->appdata, str, collision);
-  g_free(str);
+  const std::string &str = map_item->object.get_name();
+  statusbar_set(map->appdata, str.c_str(), collision);
 }
 
 void map_outside_error(appdata_t *appdata) {
