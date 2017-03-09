@@ -31,7 +31,7 @@ void relation_membership_dialog(GtkWidget *parent, appdata_t *appdata, object_t 
 extern "C" {
 #endif
 
-void relation_list(GtkWidget *parent, appdata_t *appdata, object_t *object);
+void relation_list(GtkWidget *parent, appdata_t *appdata);
 void relation_show_members(GtkWidget *parent, const relation_t *relation);
 
 #ifdef __cplusplus

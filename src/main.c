@@ -284,7 +284,7 @@ cb_menu_undo_changes(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
 static void
 cb_menu_osm_relations(G_GNUC_UNUSED GtkMenuItem *item, appdata_t *appdata) {
   /* list relations of all objects */
-  relation_list(GTK_WIDGET(appdata->window), appdata, NULL);
+  relation_list(GTK_WIDGET(appdata->window), appdata);
 }
 
 #if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)

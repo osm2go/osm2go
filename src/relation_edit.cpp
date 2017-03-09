@@ -892,27 +892,15 @@ static GtkWidget *relation_list_widget(relation_context_t *context) {
 }
 
 /* a global view on all relations */
-void relation_list(GtkWidget *parent, appdata_t *appdata, object_t *object) {
+void relation_list(GtkWidget *parent, appdata_t *appdata) {
   relation_context_t context = { 0 };
   context.appdata = appdata;
 
-  char *str;
-  gchar *dstr = NULL;
-  if(!object)
-    str = _("All relations");
-  else {
-    dstr = g_strdup_printf(_("Relations of %s"), object->object_string());
-    str = dstr;
-    context.object = object;
-  }
-
   context.dialog =
-    misc_dialog_new(MISC_DIALOG_LARGE, str,
+    misc_dialog_new(MISC_DIALOG_LARGE, _("All relations"),
 		    GTK_WINDOW(parent),
 		    GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
 		    NULL);
-
-  g_free(dstr);
 
   gtk_dialog_set_default_response(GTK_DIALOG(context.dialog),
 				  GTK_RESPONSE_CLOSE);
