@@ -22,9 +22,6 @@
 
 #include "osm.h"
 
-/* remember the last X operations for undo */
-#define UNDO_QUEUE_LEN  4
-
 typedef enum {
   UNDO_DELETE = 0,
   UNDO_CREATE,
@@ -33,11 +30,7 @@ typedef enum {
 
 } undo_type_t;
 
-typedef struct undo_state_t undo_state_t;
-
 typedef struct {
-  undo_state_t *state;   /* pointer to first state in chain */
-  undo_state_t *open;    /* pointer to open state (NULL if none) */
 } undo_t;
 
 #ifdef __cplusplus
@@ -45,18 +38,18 @@ extern "C" {
 #endif
 
 struct appdata_t;
-void undo_free(osm_t *osm, undo_t *undo);
-void undo(struct appdata_t *appdata);
+static inline void undo_free(G_GNUC_UNUSED osm_t *osm, G_GNUC_UNUSED undo_t *undo) {}
+static inline void undo(G_GNUC_UNUSED struct appdata_t *appdata) {}
 
 #ifdef __cplusplus
 }
 
-void undo_append_way(struct appdata_t *ad, undo_type_t type, way_t *way);
-void undo_append_node(struct appdata_t *ad, undo_type_t type, node_t *node);
-void undo_close_state(struct appdata_t *appdata);
+static inline void undo_append_way(struct appdata_t *, undo_type_t, way_t *) {}
+static inline void undo_append_node(struct appdata_t *, undo_type_t, node_t *) {}
+static inline void undo_close_state(struct appdata_t *) {}
 
-void undo_open_new_state(struct appdata_t *ad, undo_type_t typ, object_t &obj);
-void undo_append_object(struct appdata_t *ad, undo_type_t type, const object_t &obj);
+static inline void undo_open_new_state(struct appdata_t *, undo_type_t, object_t &) {}
+static inline void undo_append_object(struct appdata_t *, undo_type_t, const object_t &) {}
 #endif
 
 #endif // UNDO_H
