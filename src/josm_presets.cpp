@@ -58,18 +58,25 @@ char *josm_icon_name_adjust(char *name) {
   return name;
 }
 
-static int josm_type_bit(const char *type, char sep) {
-  const struct { int bit; const char *str; } types[] = {
-    { PRESETS_TYPE_WAY,       "way"       },
-    { PRESETS_TYPE_NODE,      "node"      },
-    { PRESETS_TYPE_RELATION,  "relation"  },
-    { PRESETS_TYPE_CLOSEDWAY, "closedway" },
-    { 0,                      NULL        }};
+static std::map<int, std::string> type_map_init() {
+  std::map<int, std::string> ret;
 
-  for(int i = 0; types[i].bit; i++) {
-    const size_t tlen = strlen(types[i].str);
-    if(strncmp(types[i].str, type, tlen) == 0 && type[tlen] == sep)
-      return types[i].bit;
+  ret[PRESETS_TYPE_WAY] = "way";
+  ret[PRESETS_TYPE_NODE] = "node";
+  ret[PRESETS_TYPE_RELATION] = "relation";
+  ret[PRESETS_TYPE_CLOSEDWAY] = "closedway";
+
+  return ret;
+}
+
+static int josm_type_bit(const char *type, char sep) {
+  static const std::map<int, std::string> types = type_map_init();
+  static const std::map<int, std::string>::const_iterator itEnd = types.end();
+
+  for(std::map<int, std::string>::const_iterator it = types.begin(); it != itEnd; it++) {
+    const size_t tlen = it->second.size();
+    if(strncmp(it->second.c_str(), type, tlen) == 0 && type[tlen] == sep)
+      return it->first;
   }
 
   printf("WARNING: unexpected type %s\n", type);
