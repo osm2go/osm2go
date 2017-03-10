@@ -114,12 +114,12 @@ void banner_busy_start(appdata_t *appdata, gboolean grab, const char *text) {
 
 void banner_show_info(appdata_t *appdata, const char *text) {
   banner_clear(appdata);
-  statusbar_brief(appdata, text, 0);
+  statusbar_brief(appdata->statusbar, text, 0);
 }
 
 void banner_busy_start(appdata_t *appdata, gboolean grab, const char *text) {
   banner_clear(appdata);
-  statusbar_brief(appdata, text, -1);
+  statusbar_brief(appdata->statusbar, text, -1);
   appdata->banner_is_grabby = grab;
   if (appdata->banner_is_grabby) {
     GtkWidget *win;
@@ -130,7 +130,7 @@ void banner_busy_start(appdata_t *appdata, gboolean grab, const char *text) {
 }
 
 void banner_clear(appdata_t *appdata) {
-  statusbar_brief(appdata, NULL, 0);
+  statusbar_brief(appdata->statusbar, NULL, 0);
   if (appdata->banner_is_grabby) {
     GtkWidget *win;
     win = GTK_WIDGET(appdata->window);

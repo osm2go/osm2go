@@ -20,8 +20,6 @@
 #ifndef STATUSBAR_H
 #define STATUSBAR_H
 
-#include "appdata.h"
-
 #include <gtk/gtk.h>
 
 #define STATUSBAR_DEFAULT_BRIEF_TIME 3000
@@ -42,13 +40,13 @@ typedef struct statusbar_t {
 extern "C" {
 #endif
 
-void statusbar_set(appdata_t *appdata, const char *msg, gboolean highlight);
-GtkWidget *statusbar_new(appdata_t *appdata);
-void statusbar_highlight(appdata_t *appdata, gboolean highlight);
+void statusbar_set(statusbar_t *statusbar, const char *msg, gboolean highlight);
+statusbar_t *statusbar_new(void);
+void statusbar_highlight(statusbar_t *statusbar, gboolean highlight);
 void statusbar_free(statusbar_t *statusbar);
 
 #ifndef USE_HILDON
-void statusbar_brief(appdata_t *appdata, const char *msg, gint timeout);
+void statusbar_brief(statusbar_t *statusbar, const char *msg, gint timeout);
 #endif
 
 #ifdef __cplusplus

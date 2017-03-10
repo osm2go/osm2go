@@ -112,7 +112,7 @@ void main_ui_enable(appdata_t *appdata) {
 #endif
 
   if(!project_valid)
-    statusbar_set(appdata, _("Please load or create a project"), FALSE);
+    statusbar_set(appdata->statusbar, _("Please load or create a project"), FALSE);
 }
 
 /******************** begin of menu *********************/
@@ -1496,7 +1496,8 @@ int main(int argc, char *argv[]) {
   /* fremantle has seperate zoom/details buttons on the right screen side */
 #if !defined(FREMANTLE) && (defined(ZOOM_BUTTONS) || defined(DETAIL_POPUP))
   GtkWidget *zhbox = gtk_hbox_new(FALSE, 0);
-  gtk_box_pack_start_defaults(GTK_BOX(zhbox), statusbar_new(&appdata));
+  appdata.statusbar = statusbar_new();
+  gtk_box_pack_start_defaults(GTK_BOX(zhbox), appdata.statusbar->widget);
 #endif
 
 #if !defined(FREMANTLE) && defined(DETAIL_POPUP)
@@ -1530,7 +1531,8 @@ int main(int argc, char *argv[]) {
 #if !defined(FREMANTLE) && (defined(ZOOM_BUTTONS) || defined(DETAIL_POPUP))
   gtk_box_pack_start(GTK_BOX(vbox), zhbox, FALSE, FALSE, 0);
 #else
-  gtk_box_pack_start(GTK_BOX(vbox), statusbar_new(&appdata), FALSE, FALSE, 0);
+  appdata.statusbar = statusbar_new();
+  gtk_box_pack_start(GTK_BOX(vbox), appdata.statusbar->widget, FALSE, FALSE, 0);
 #endif
 
 #ifndef PORTRAIT

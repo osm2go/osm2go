@@ -101,7 +101,7 @@ static void map_statusbar(map_t *map, map_item_t *map_item) {
   collision = tags.find_if(self_collision_functor(tags)) != NULL ? TRUE : FALSE;
 
   const std::string &str = map_item->object.get_name();
-  statusbar_set(map->appdata, str.c_str(), collision);
+  statusbar_set(map->appdata->statusbar, str.c_str(), collision);
 }
 
 void map_outside_error(appdata_t *appdata) {
@@ -447,7 +447,7 @@ void map_item_deselect(appdata_t *appdata) {
   }
 
   /* remove statusbar message */
-  statusbar_set(appdata, NULL, FALSE);
+  statusbar_set(appdata->statusbar, NULL, FALSE);
 
   /* disable/enable icons in icon bar */
   icon_bar_map_item_selected(appdata, NULL, FALSE);
@@ -1947,7 +1947,7 @@ void map_action_set(appdata_t *appdata, map_action_t action) {
 
   g_assert_cmpint(MAP_ACTION_NUM, ==, sizeof(str_state)/sizeof(char*));
 
-  statusbar_set(appdata, str_state[action], FALSE);
+  statusbar_set(appdata->statusbar, str_state[action], FALSE);
 }
 
 

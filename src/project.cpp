@@ -1436,7 +1436,7 @@ gboolean project_load(appdata_t *appdata, const char *name) {
   banner_show_info(appdata, banner_txt);
 #endif
 
-  statusbar_set(appdata, NULL, 0);
+  statusbar_set(appdata->statusbar, NULL, 0);
 
   return TRUE;
 

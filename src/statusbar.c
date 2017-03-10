@@ -17,12 +17,11 @@
  * along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "appdata.h"
 #include "statusbar.h"
 
 #if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
-void statusbar_highlight(appdata_t *appdata, gboolean highlight) {
-  GtkStatusbar *bar = (GtkStatusbar*)appdata->statusbar->widget;
+void statusbar_highlight(statusbar_t *statusbar, gboolean highlight) {
+  GtkStatusbar *bar = GTK_STATUSBAR(statusbar->widget);
 
   if(highlight) {
     GdkColor color;
@@ -36,21 +35,21 @@ void statusbar_highlight(appdata_t *appdata, gboolean highlight) {
 }
 
 // Set the persistent message, replacing anything currently there.
-void statusbar_set(appdata_t *appdata, const char *msg, gboolean highlight) {
-  statusbar_highlight(appdata, highlight);
+void statusbar_set(statusbar_t *statusbar, const char *msg, gboolean highlight) {
+  statusbar_highlight(statusbar, highlight);
 
   printf("statusbar_set: %s\n", msg);
 
-  if (appdata->statusbar->mid) {
-    gtk_statusbar_remove(GTK_STATUSBAR(appdata->statusbar->widget),
-                         appdata->statusbar->cid, appdata->statusbar->mid);
-    appdata->statusbar->mid = 0;
+  if (statusbar->mid) {
+    gtk_statusbar_remove(GTK_STATUSBAR(statusbar->widget),
+                         statusbar->cid, statusbar->mid);
+    statusbar->mid = 0;
   }
 
   if (msg) {
-    guint mid = gtk_statusbar_push(GTK_STATUSBAR(appdata->statusbar->widget),
-                                   appdata->statusbar->cid, msg);
-    appdata->statusbar->mid = mid;
+    guint mid = gtk_statusbar_push(GTK_STATUSBAR(statusbar->widget),
+                                   statusbar->cid, msg);
+    statusbar->mid = mid;
   }
 }
 
@@ -58,13 +57,12 @@ void statusbar_set(appdata_t *appdata, const char *msg, gboolean highlight) {
 // Clear any brief message currently set, dropping back to the persistent one.
 
 static gboolean statusbar_brief_clear(gpointer data) {
-  appdata_t *appdata = (appdata_t *)data;
-  if (appdata->statusbar->brief_mid) {
-    gtk_statusbar_remove(GTK_STATUSBAR(appdata->statusbar->widget),
-                         appdata->statusbar->cid,
-                         appdata->statusbar->brief_mid);
-    appdata->statusbar->brief_mid = 0;
-    statusbar_highlight(appdata, FALSE);
+  statusbar_t *statusbar = (statusbar_t *)data;
+  if (statusbar->brief_mid) {
+    gtk_statusbar_remove(GTK_STATUSBAR(statusbar->widget),
+                         statusbar->cid, statusbar->brief_mid);
+    statusbar->brief_mid = 0;
+    statusbar_highlight(statusbar, FALSE);
   }
   return FALSE;
 }
@@ -77,81 +75,81 @@ static gboolean statusbar_brief_clear(gpointer data) {
 // If timeout is negative, don't establish a handler. You'll have to clear it
 // yourself later. If it's zero, use the default.
 
-void statusbar_brief(appdata_t *appdata, const char *msg, gint timeout) {
+void statusbar_brief(statusbar_t *statusbar, const char *msg, gint timeout) {
   printf("statusbar_brief: %s\n", msg);
-  if (appdata->statusbar->brief_handler_id) {
-    gtk_timeout_remove(appdata->statusbar->brief_handler_id);
-    appdata->statusbar->brief_handler_id = 0;
+  if (statusbar->brief_handler_id) {
+    gtk_timeout_remove(statusbar->brief_handler_id);
+    statusbar->brief_handler_id = 0;
   }
-  statusbar_brief_clear(appdata);
+  statusbar_brief_clear(statusbar);
   guint mid = 0;
   if (msg) {
-    statusbar_highlight(appdata, TRUE);
-    mid = gtk_statusbar_push(GTK_STATUSBAR(appdata->statusbar->widget),
-                                 appdata->statusbar->cid, msg);
+    statusbar_highlight(statusbar, TRUE);
+    mid = gtk_statusbar_push(GTK_STATUSBAR(statusbar->widget),
+                                 statusbar->cid, msg);
     if (mid) {
-      appdata->statusbar->brief_mid = mid;
+      statusbar->brief_mid = mid;
     }
   }
   if (mid && (timeout >= 0)) {
     if (timeout == 0) {
       timeout = STATUSBAR_DEFAULT_BRIEF_TIME;
     }
-    appdata->statusbar->brief_handler_id
-      = gtk_timeout_add(timeout, statusbar_brief_clear, appdata);
+    statusbar->brief_handler_id
+      = gtk_timeout_add(timeout, statusbar_brief_clear, statusbar);
   }
 }
 #endif
 
-GtkWidget *statusbar_new(appdata_t *appdata) {
-  appdata->statusbar = (statusbar_t*)g_new0(statusbar_t, 1);
+statusbar_t *statusbar_new(void) {
+  statusbar_t *statusbar = (statusbar_t*)g_new0(statusbar_t, 1);
 
-  appdata->statusbar->widget = gtk_statusbar_new();
+  statusbar->widget = gtk_statusbar_new();
 
 #ifdef USE_HILDON
   /* why the heck does hildon show this by default? It's useless!! */
-  g_object_set(appdata->statusbar->widget,
+  g_object_set(statusbar->widget,
 	       "has-resize-grip", FALSE,
 	       NULL );
 #endif
 
-  appdata->statusbar->cid = gtk_statusbar_get_context_id(
-		GTK_STATUSBAR(appdata->statusbar->widget), "Msg");
+  statusbar->cid = gtk_statusbar_get_context_id(
+		GTK_STATUSBAR(statusbar->widget), "Msg");
 
-  return appdata->statusbar->widget;
+  return statusbar;
 }
 
 #else
-void statusbar_highlight(appdata_t *appdata, gboolean highlight) {
+void statusbar_highlight(statusbar_t *statusbar, gboolean highlight) {
   if(highlight) {
     GdkColor color;
     gdk_color_parse("red", &color);
-    gtk_widget_modify_fg(appdata->statusbar->widget, GTK_STATE_NORMAL, &color);
-    gtk_widget_modify_text(appdata->statusbar->widget, GTK_STATE_NORMAL, &color);
+    gtk_widget_modify_fg(statusbar->widget, GTK_STATE_NORMAL, &color);
+    gtk_widget_modify_text(statusbar->widget, GTK_STATE_NORMAL, &color);
   } else {
-    gtk_widget_modify_fg(appdata->statusbar->widget, GTK_STATE_NORMAL, NULL);
-    gtk_widget_modify_text(appdata->statusbar->widget, GTK_STATE_NORMAL, NULL);
+    gtk_widget_modify_fg(statusbar->widget, GTK_STATE_NORMAL, NULL);
+    gtk_widget_modify_text(statusbar->widget, GTK_STATE_NORMAL, NULL);
   }
 }
 
 
 // Set the persistent message, replacing anything currently there.
-void statusbar_set(appdata_t *appdata, const char *msg, gboolean highlight) {
-  statusbar_highlight(appdata, highlight);
+void statusbar_set(statusbar_t *statusbar, const char *msg, gboolean highlight) {
+  statusbar_highlight(statusbar, highlight);
 
   printf("statusbar_set: %s\n", msg);
 
   if(!msg)
-    gtk_label_set_text(GTK_LABEL(appdata->statusbar->widget), msg);
+    gtk_label_set_text(GTK_LABEL(statusbar->widget), msg);
   else
-    gtk_label_set_text(GTK_LABEL(appdata->statusbar->widget), msg);
+    gtk_label_set_text(GTK_LABEL(statusbar->widget), msg);
 }
 
-GtkWidget *statusbar_new(appdata_t *appdata) {
-  appdata->statusbar = (statusbar_t*)g_new0(statusbar_t, 1);
+statusbar_t *statusbar_new(void) {
+  statusbar_t *statusbar = (statusbar_t*)g_new0(statusbar_t, 1);
 
-  appdata->statusbar->widget = gtk_label_new(NULL);
-  return appdata->statusbar->widget;
+  statusbar->widget = gtk_label_new(NULL);
+  return statusbar;
 }
 
 #endif
