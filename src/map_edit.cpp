@@ -137,7 +137,7 @@ void map_edit_way_add_segment(map_t *map, gint x, gint y) {
 	    map->action.extending = NULL;
 	  else
 	    /* there are immediately enough nodes for a valid way */
-	    icon_bar_map_cancel_ok(map->appdata, TRUE, TRUE);
+	    icon_bar_map_cancel_ok(map->appdata->iconbar, TRUE, TRUE);
 	}
       }
 
@@ -163,7 +163,7 @@ void map_edit_way_add_segment(map_t *map, gint x, gint y) {
         break;
       case 2:
         /* two nodes are enough for a valid way */
-        icon_bar_map_cancel_ok(map->appdata, TRUE, TRUE);
+        icon_bar_map_cancel_ok(map->appdata->iconbar, TRUE, TRUE);
         break;
       }
 

@@ -1903,7 +1903,7 @@ void map_action_set(appdata_t *appdata, map_action_t action) {
   g_assert_cmpint(MAP_ACTION_NUM, ==, sizeof(ok_state)/sizeof(gboolean));
   g_assert_cmpint(action, <, sizeof(ok_state)/sizeof(gboolean));
 
-  icon_bar_map_cancel_ok(appdata, cancel_state[action], ok_state[action]);
+  icon_bar_map_cancel_ok(appdata->iconbar, cancel_state[action], ok_state[action]);
 
   switch(action) {
   case MAP_ACTION_BG_ADJUST:

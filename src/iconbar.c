@@ -68,10 +68,9 @@ static GtkWidget *menu_add(GtkWidget *menu, appdata_t *appdata,
   GtkWidget *item = gtk_image_menu_item_new_with_label(menu_str);
 
   gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item),
-		icon_widget_load(&appdata->icon, icon_str));
+                                icon_widget_load(&appdata->icon, icon_str));
 
-  if(func)
-    gtk_signal_connect(GTK_OBJECT(item), "activate",
+  gtk_signal_connect(GTK_OBJECT(item), "activate",
 		       (GtkSignalFunc)func, appdata);
 
   gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
@@ -144,9 +143,8 @@ static void on_cancel_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
 }
 
 /* enable/disable ok and cancel button */
-void icon_bar_map_cancel_ok(appdata_t *appdata,
+void icon_bar_map_cancel_ok(iconbar_t *iconbar,
               gboolean cancel, gboolean ok) {
-  iconbar_t *iconbar = appdata->iconbar;
   gtk_widget_set_sensitive(iconbar->ok, ok);
   gtk_widget_set_sensitive(iconbar->cancel, cancel);
 }
@@ -367,7 +365,7 @@ GtkWidget *iconbar_new(appdata_t *appdata) {
   icon_bar_map_item_selected(appdata, NULL, FALSE);
 
 #ifndef FINGER_UI
-  icon_bar_map_cancel_ok(appdata, FALSE, FALSE);
+  icon_bar_map_cancel_ok(appdata->iconbar, FALSE, FALSE);
 #endif
 
   return box;
@@ -391,6 +389,6 @@ void iconbar_register_buttons(appdata_t *appdata, GtkWidget *ok, GtkWidget *canc
   gtk_signal_connect(GTK_OBJECT(cancel), "clicked",
 		     (GtkSignalFunc)on_cancel_clicked, appdata);
 
-  icon_bar_map_cancel_ok(appdata, FALSE, FALSE);
+  icon_bar_map_cancel_ok(appdata->iconbar, FALSE, FALSE);
 }
 #endif

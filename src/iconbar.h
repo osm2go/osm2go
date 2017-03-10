@@ -57,7 +57,7 @@ extern "C" {
 GtkWidget *iconbar_new(appdata_t *appdata);
 void icon_bar_map_item_selected(appdata_t *appdata, map_item_t *map_item,
 				gboolean selected);
-void icon_bar_map_cancel_ok(appdata_t *appdata, gboolean cancel, gboolean ok);
+void icon_bar_map_cancel_ok(iconbar_t *iconbar, gboolean cancel, gboolean ok);
 void icon_bar_map_action_idle(appdata_t *appdata, gboolean idle);
 void iconbar_free(iconbar_t *iconbar);
 
