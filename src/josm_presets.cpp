@@ -44,6 +44,8 @@ static void on_info(GtkWidget *widget, gpointer context) {
 }
 #endif
 
+typedef std::map<std::string, xmlNode *> ChunkMap;
+
 /* --------------------- presets.xml parsing ----------------------- */
 
 char *josm_icon_name_adjust(char *name) {
@@ -103,11 +105,11 @@ static presets_item_t::item_type josm_type_parse(xmlChar *xtype) {
 }
 
 static void parse_widgets(xmlNode *a_node, presets_item *item,
-                          const std::map<std::string, xmlNode *> &chunks);
+                          const ChunkMap &chunks);
 
 /* parse children of a given node for into *widget */
 static presets_widget_t *parse_widget(xmlNode *cur_node, presets_item *item,
-                                      const std::map<std::string, xmlNode *> &chunks) {
+                                      const ChunkMap &chunks) {
   presets_widget_t *widget = 0;
 
   if(strcmp((char*)cur_node->name, "label") == 0) {
@@ -165,7 +167,7 @@ static presets_widget_t *parse_widget(xmlNode *cur_node, presets_item *item,
     if(!id) {
       printf("found presets/item/reference without ref\n");
     } else {
-      const std::map<std::string, xmlNode *>::const_iterator it =
+      const ChunkMap::const_iterator it =
           chunks.find(std::string(reinterpret_cast<char *>(id)));
       if(it == chunks.end()) {
         printf("found presets/item/reference without unresolved ref %s\n", id);
@@ -183,7 +185,7 @@ static presets_widget_t *parse_widget(xmlNode *cur_node, presets_item *item,
 
 /* parse children of a given node for into *widget */
 static void parse_widgets(xmlNode *a_node, presets_item *item,
-                          const std::map<std::string, xmlNode *> &chunks) {
+                          const ChunkMap &chunks) {
   xmlNode *cur_node = NULL;
   std::vector<presets_widget_t *> ret;
 
@@ -211,7 +213,7 @@ static void parse_widgets(xmlNode *a_node, presets_item *item,
   }
 }
 
-static presets_item_t *parse_item(xmlNode *a_node, const std::map<std::string, xmlNode *> &chunks) {
+static presets_item_t *parse_item(xmlNode *a_node, const ChunkMap &chunks) {
   presets_item *item = new presets_item(josm_type_parse(xmlGetProp(a_node, BAD_CAST "type")));
 
   /* ------ parse items own properties ------ */
@@ -231,7 +233,7 @@ static presets_item_t *parse_item(xmlNode *a_node, const std::map<std::string, x
 }
 
 static presets_item_t *parse_group(xmlDocPtr doc, xmlNode *a_node, presets_item_group *parent,
-                                   const std::map<std::string, xmlNode *> &chunks) {
+                                   const ChunkMap &chunks) {
   xmlNode *cur_node = NULL;
 
   presets_item_group *group = new presets_item_group(presets_item_t::TY_GROUP, parent);
@@ -267,7 +269,7 @@ static presets_item_t *parse_group(xmlDocPtr doc, xmlNode *a_node, presets_item_
 }
 
 static void parse_annotations(xmlDocPtr doc, xmlNode *a_node, struct presets_items &presets) {
-  std::map<std::string, xmlNode *> chunks;
+  ChunkMap chunks;
 
   // <chunk> elements are first
   xmlNode *cur_node;
