@@ -670,13 +670,12 @@ void relation_show_members(GtkWidget *parent, const relation_t *relation) {
   if(!str)
     str = relation->tags.get_value("ref");
   if(!str)
-    str = nstr = g_strdup_printf(_("Members of relation #" ITEM_ID_FORMAT),
-                                 relation->id);
+    nstr = g_strdup_printf(_("Members of relation #" ITEM_ID_FORMAT), relation->id);
   else
-    str = nstr = g_strdup_printf(_("Members of relation \"%s\""), str);
+    nstr = g_strdup_printf(_("Members of relation \"%s\""), str);
 
   member_context_t mcontext(relation,
-    misc_dialog_new(MISC_DIALOG_MEDIUM, str,
+    misc_dialog_new(MISC_DIALOG_MEDIUM, nstr,
 		    GTK_WINDOW(parent),
 		    GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
 		    NULL));
