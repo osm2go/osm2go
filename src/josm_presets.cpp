@@ -796,7 +796,7 @@ cb_menu_item(GtkWidget *menu_item, gpointer data) {
   presets_item_dialog(context, item);
 }
 
-static GtkWidget *create_menuitem(presets_context_t *context, const presets_item_visible *item)
+static GtkWidget *create_menuitem(icon_t **icons, const presets_item_visible *item)
 {
   GtkWidget *menu_item;
 
@@ -805,8 +805,7 @@ static GtkWidget *create_menuitem(presets_context_t *context, const presets_item
   else {
     menu_item = gtk_image_menu_item_new_with_label((gchar*)item->name);
     gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(menu_item),
-                                  icon_widget_load(&context->appdata->icon,
-                                                   (char*)item->icon));
+                                  icon_widget_load(icons, (char*)item->icon));
   }
 
   return menu_item;
@@ -845,7 +844,8 @@ void build_menu_functor::operator()(presets_item_t *item)
     was_item = true;
     was_separator = false;
 
-    menu_item = create_menuitem(context, static_cast<presets_item_visible *>(item));
+    menu_item = create_menuitem(&context->appdata->icon,
+                                static_cast<presets_item_visible *>(item));
 
     if(item->type & presets_item_t::TY_GROUP) {
       gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item),
@@ -861,7 +861,8 @@ void build_menu_functor::operator()(presets_item_t *item)
         if(!*matches)
           *matches = gtk_menu_new();
 
-          GtkWidget *used_item = create_menuitem(context, static_cast<presets_item_visible *>(item));
+          GtkWidget *used_item = create_menuitem(&context->appdata->icon,
+                                                 static_cast<presets_item_visible *>(item));
           g_object_set_data(G_OBJECT(used_item), "item", item);
           g_signal_connect(used_item, "activate",
                            GTK_SIGNAL_FUNC(cb_menu_item), context);
@@ -878,24 +879,25 @@ void build_menu_functor::operator()(presets_item_t *item)
 #else // PICKER_MENU
 
 struct group_member_used {
-  const presets_context_t * const context;
-  group_member_used(const presets_context_t *c) : context(c) {}
+  const std::vector<tag_t *> &tags;
+  group_member_used(  const std::vector<tag_t *> &t) : tags(t) {}
   bool operator()(const presets_item_t *item);
 };
 
-static bool preset_group_is_used(const presets_item_group *item, const presets_context_t *context)
+static bool preset_group_is_used(const presets_item_group *item,
+                                 const std::vector<tag_t *> &tags)
 {
   g_assert(item->type & presets_item_t::TY_GROUP);
   return std::find_if(item->items.begin(), item->items.end(),
-                      group_member_used(context)) != item->items.end();
+                      group_member_used(tags)) != item->items.end();
 }
 
 bool group_member_used::operator()(const presets_item_t *item)
 {
   if(item->type & presets_item_t::TY_GROUP)
-    return preset_group_is_used(static_cast<const presets_item_group *>(item), context);
+    return preset_group_is_used(static_cast<const presets_item_group *>(item), tags);
   else
-    return preset_is_used(item, context->tag_context->tags);
+    return preset_is_used(item, tags);
 }
 
 enum {
@@ -922,8 +924,8 @@ static void remove_sub(presets_item_group *sub_item) {
 /**
  * @brief remove all child pickers
  */
-static void remove_subs(presets_context_t *context, presets_item_group *sub_item) {
-  std::vector<presets_item_group *> &oldsubs = context->submenus;
+static void remove_subs(std::vector<presets_item_group *> &oldsubs,
+                        presets_item_group *sub_item) {
   std::vector<presets_item_group *>::iterator it =
              std::find(oldsubs.begin(), oldsubs.end(), sub_item);
   g_assert(it != oldsubs.end());
@@ -978,12 +980,12 @@ on_presets_picker_selected(GtkTreeSelection *selection, gpointer data) {
         // the current list of submenus may or may not have common anchestors with this one
         if(sub_item->widget) {
          // this item is already visible, so it must be in the list, just drop all childs
-         remove_subs(context, sub_item);
+         remove_subs(context->submenus, sub_item);
         } else {
           // this item is not currently visible
           if(sub_item->parent) {
             // the parent item has to be visible, otherwise this could not have been clicked
-            remove_subs(context, sub_item->parent);
+            remove_subs(context->submenus, sub_item->parent);
           } else {
             // this is a top level menu, so everything currently shown can be removed
             std::for_each(context->submenus.begin(), context->submenus.end(), remove_sub);
@@ -1162,7 +1164,8 @@ void picker_add_functor::operator()(const presets_item_t* item)
                        PRESETS_PICKER_COL_SUBMENU_PTR,  item,
                        PRESETS_PICKER_COL_SUBMENU_ICON, subicon, -1);
     if(scan_for_recent) {
-      show_recent = preset_group_is_used(static_cast<const presets_item_group *>(itemv), context);
+      show_recent = preset_group_is_used(static_cast<const presets_item_group *>(itemv),
+                                         context->tag_context->tags);
       scan_for_recent = !show_recent;
     }
   } else if(scan_for_recent) {
