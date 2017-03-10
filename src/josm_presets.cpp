@@ -259,8 +259,7 @@ static presets_item_t *parse_group(xmlDocPtr doc, xmlNode *a_node, presets_item_
   return group;
 }
 
-static std::vector<presets_item_t *> parse_annotations(xmlDocPtr doc, xmlNode *a_node) {
-  std::vector<presets_item_t *> presets;
+static void parse_annotations(xmlDocPtr doc, xmlNode *a_node, struct presets_items &presets) {
   std::map<std::string, xmlNode *> chunks;
 
   // <chunk> elements are first
@@ -297,27 +296,9 @@ static std::vector<presets_item_t *> parse_annotations(xmlDocPtr doc, xmlNode *a
       } else
 	printf("found unhandled presets/%s\n", cur_node->name);
       if(preset)
-        presets.push_back(preset);
+        presets.items.push_back(preset);
     }
   }
-  return presets;
-}
-
-static std::vector<presets_item_t *> parse_doc(xmlDocPtr doc) {
-  std::vector<presets_item_t *> presets;
-
-  for(xmlNode *cur_node = xmlDocGetRootElement(doc);
-      cur_node; cur_node = cur_node->next) {
-    if (cur_node->type == XML_ELEMENT_NODE) {
-      if(strcmp((char*)cur_node->name, "presets") == 0) {
-	presets = parse_annotations(doc, cur_node);
-      } else
-	printf("found unhandled %s\n", cur_node->name);
-    }
-  }
-
-  xmlFreeDoc(doc);
-  return presets;
 }
 
 struct presets_items *josm_presets_load(void) {
@@ -338,7 +319,17 @@ struct presets_items *josm_presets_load(void) {
 	   "%s\n", errP->message);
   } else {
     printf("ok, parse doc tree\n");
-    presets->items = parse_doc(doc);
+    for(xmlNode *cur_node = xmlDocGetRootElement(doc);
+        cur_node; cur_node = cur_node->next) {
+      if(cur_node->type == XML_ELEMENT_NODE) {
+        if(G_LIKELY(strcmp((char*)cur_node->name, "presets") == 0))
+          parse_annotations(doc, cur_node, *presets);
+        else
+          printf("found unhandled %s\n", cur_node->name);
+      }
+    }
+
+    xmlFreeDoc(doc);
   }
 
   return presets;
