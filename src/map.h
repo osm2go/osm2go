@@ -96,7 +96,7 @@ typedef struct map_t {
 
   map_state_t *state;
 
-  gint autosave_handler_id;
+  guint autosave_handler_id;
 
   struct map_highlight_t *highlight;      // list of elements used for highlighting
 

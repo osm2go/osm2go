@@ -856,7 +856,7 @@ static gint map_destroy_event(G_GNUC_UNUSED GtkWidget *widget, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
   map_t *map = appdata->map;
 
-  gtk_timeout_remove(map->autosave_handler_id);
+  g_source_remove(map->autosave_handler_id);
 
   printf("destroying entire map\n");
 
@@ -1820,7 +1820,7 @@ GtkWidget *map_new(appdata_t *appdata) {
 			| GDK_POINTER_MOTION_HINT_MASK);
 
   /* autosave happens every two minutes */
-  map->autosave_handler_id = gtk_timeout_add(120*1000, map_autosave, map);
+  map->autosave_handler_id = g_timeout_add_seconds(120, map_autosave, map);
 
   gtk_signal_connect(GTK_OBJECT(canvas_widget),
      "button_press_event", G_CALLBACK(map_button_event), appdata);

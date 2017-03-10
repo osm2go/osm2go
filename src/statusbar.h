@@ -22,7 +22,7 @@
 
 #include <gtk/gtk.h>
 
-#define STATUSBAR_DEFAULT_BRIEF_TIME 3000
+#define STATUSBAR_DEFAULT_BRIEF_TIME 3
 
 typedef struct statusbar_t {
   GtkWidget *widget;

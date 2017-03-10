@@ -78,7 +78,7 @@ static gboolean statusbar_brief_clear(gpointer data) {
 void statusbar_brief(statusbar_t *statusbar, const char *msg, gint timeout) {
   printf("statusbar_brief: %s\n", msg);
   if (statusbar->brief_handler_id) {
-    gtk_timeout_remove(statusbar->brief_handler_id);
+    g_source_remove(statusbar->brief_handler_id);
     statusbar->brief_handler_id = 0;
   }
   statusbar_brief_clear(statusbar);
@@ -96,7 +96,7 @@ void statusbar_brief(statusbar_t *statusbar, const char *msg, gint timeout) {
       timeout = STATUSBAR_DEFAULT_BRIEF_TIME;
     }
     statusbar->brief_handler_id
-      = gtk_timeout_add(timeout, statusbar_brief_clear, statusbar);
+      = g_timeout_add_seconds(timeout, statusbar_brief_clear, statusbar);
   }
 }
 #endif
