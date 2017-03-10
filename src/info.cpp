@@ -122,9 +122,9 @@ static void on_tag_remove(G_GNUC_UNUSED GtkWidget *button, tag_context_t *contex
  * @return if the tag was actually modified
  * @retval FALSE the tag is the same as before
  */
-static bool tag_edit(tag_context_t *context, tag_t &tag) {
+static bool tag_edit(GtkWindow *window, tag_t &tag) {
   GtkWidget *dialog = misc_dialog_new(MISC_DIALOG_SMALL, _("Edit Tag"),
-			  GTK_WINDOW(context->dialog),
+			  window,
 			  GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
 			  GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
 			  NULL);
@@ -191,7 +191,7 @@ static void on_tag_edit(G_GNUC_UNUSED GtkWidget *button, tag_context_t *context)
   gtk_tree_model_get(model, &iter, TAG_COL_DATA, &tag, -1);
   printf("got %s/%s\n", tag->key, tag->value);
 
-  if(tag_edit(context, *tag)) {
+  if(tag_edit(GTK_WINDOW(context->dialog), *tag)) {
     printf("setting %s/%s\n", tag->key, tag->value);
 
     gtk_list_store_set(context->store, &iter,
@@ -251,7 +251,7 @@ static void on_tag_add(G_GNUC_UNUSED GtkWidget *button, tag_context_t *context) 
   tag->key = g_strdup("");
   tag->value = g_strdup("");
 
-  if(!tag_edit(context, *tag)) {
+  if(!tag_edit(GTK_WINDOW(context->dialog), *tag)) {
     printf("cancelled\n");
     osm_tag_free(tag);
   } else {

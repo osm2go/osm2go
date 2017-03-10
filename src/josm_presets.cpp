@@ -749,11 +749,11 @@ static void presets_item_dialog(presets_context_t *context,
 /* ------------------- the item list (popup menu) -------------- */
 
 struct used_preset_functor {
-  const tag_context_t * const tag_context;
+  const std::vector<tag_t *> &tags;
   bool &is_interactive;
   bool &matches_all;
-  used_preset_functor(const tag_context_t *c, bool &i, bool &m)
-    : tag_context(c), is_interactive(i), matches_all(m) {}
+  used_preset_functor(const std::vector<tag_t *> &t, bool &i, bool &m)
+    : tags(t), is_interactive(i), matches_all(m) {}
   bool operator()(const presets_widget_t *w);
 };
 
@@ -764,7 +764,7 @@ bool used_preset_functor::operator()(const presets_widget_t* w)
     return false;
   }
   const tag_t t((char*) w->key, (char*) w->key_w.value);
-  if(!osm_tag_key_and_value_present(tag_context->tags, t))
+  if(!osm_tag_key_and_value_present(tags, t))
     return true;
 
   matches_all = true;
@@ -774,11 +774,11 @@ bool used_preset_functor::operator()(const presets_widget_t* w)
 /**
  * @brief check if the currently active object uses this preset and the preset is interactive
  */
-static bool preset_is_used(const presets_item_t *item, const presets_context_t *context)
+static bool preset_is_used(const presets_item_t *item, const std::vector<tag_t *> &tags)
 {
   bool is_interactive = false;
   bool matches_all = false;
-  used_preset_functor fc(context->tag_context, is_interactive, matches_all);
+  used_preset_functor fc(tags, is_interactive, matches_all);
   if(std::find_if(item->widgets.begin(), item->widgets.end(), fc) != item->widgets.end())
     return false;
 
@@ -857,7 +857,7 @@ void build_menu_functor::operator()(presets_item_t *item)
       g_signal_connect(menu_item, "activate",
                        GTK_SIGNAL_FUNC(cb_menu_item), context);
 
-      if(preset_is_used(item, context)) {
+      if(preset_is_used(item, context->tag_context->tags)) {
         if(!*matches)
           *matches = gtk_menu_new();
 
@@ -895,7 +895,7 @@ bool group_member_used::operator()(const presets_item_t *item)
   if(item->type & presets_item_t::TY_GROUP)
     return preset_group_is_used(static_cast<const presets_item_group *>(item), context);
   else
-    return preset_is_used(item, context);
+    return preset_is_used(item, context->tag_context->tags);
 }
 
 enum {
@@ -1117,7 +1117,7 @@ void insert_recent_items::operator()(const presets_item_t *preset)
     const presets_item_group *gr = static_cast<const presets_item_group *>(preset);
     std::for_each(gr->items.begin(), gr->items.end(),
                   insert_recent_items(context, store));
-  } else if(preset_is_used(preset, context))
+  } else if(preset_is_used(preset, context->tag_context->tags))
     preset_insert_item(static_cast<const presets_item_visible *>(preset),
                        &context->appdata->icon, store);
 }
@@ -1166,7 +1166,7 @@ void picker_add_functor::operator()(const presets_item_t* item)
       scan_for_recent = !show_recent;
     }
   } else if(scan_for_recent) {
-    show_recent = preset_is_used(itemv, context);
+    show_recent = preset_is_used(itemv, context->tag_context->tags);
     scan_for_recent = !show_recent;
   }
 }
