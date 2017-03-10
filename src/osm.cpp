@@ -110,21 +110,29 @@ const char *object_t::type_string() const {
   return NULL;
 }
 
-gchar *object_t::id_string() const {
+std::string object_t::id_string() const {
+  // long enough for every int64
+  char buf[32] = { 0 };
+
   switch(type) {
   case ILLEGAL:
-    return NULL;
+    break;
   case NODE:
   case WAY:
   case RELATION:
-    return g_strdup_printf("#" ITEM_ID_FORMAT, obj->id);
+    snprintf(buf, sizeof(buf), ITEM_ID_FORMAT, obj->id);
+    break;
   case NODE_ID:
   case WAY_ID:
   case RELATION_ID:
-    return g_strdup_printf("#" ITEM_ID_FORMAT, id);
+    snprintf(buf, sizeof(buf), ITEM_ID_FORMAT, id);
+    break;
   default:
-    return NULL;
+    g_assert_not_reached();
+    break;
   }
+
+  return buf;
 }
 
 const char *object_t::get_tag_value(const char *key) const {

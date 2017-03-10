@@ -555,7 +555,7 @@ void members_list_functor::operator()(const member_t &member)
 {
   GtkTreeIter iter;
 
-  gchar *id = member.object.id_string();
+  const std::string &id = member.object.id_string();
 
   /* try to find something descriptive */
   const char *name = member.object.get_tag_value("name");
@@ -564,14 +564,12 @@ void members_list_functor::operator()(const member_t &member)
   gtk_list_store_append(store, &iter);
   gtk_list_store_set(store, &iter,
      MEMBER_COL_TYPE, member.object.type_string(),
-     MEMBER_COL_ID,   id,
+     MEMBER_COL_ID,   id.c_str(),
      MEMBER_COL_NAME, name,
      MEMBER_COL_ROLE, member.role,
      MEMBER_COL_REF_ONLY, member.object.type >= NODE_ID,
      MEMBER_COL_DATA, &member,
      -1);
-
-  g_free(id);
 }
 
 static GtkWidget *member_list_widget(member_context_t &context) {
