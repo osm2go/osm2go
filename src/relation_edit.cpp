@@ -456,12 +456,16 @@ void relation_membership_dialog(GtkWidget *parent,
 
 /* -------------------- global relation list ----------------- */
 
-typedef struct {
-  appdata_t *appdata;
-  GtkWidget *dialog, *list, *show_btn;
+struct relation_context_t {
+  relation_context_t(appdata_t *a, GtkWidget *d)
+    : appdata(a), dialog(d) {}
+
+  appdata_t * const appdata;
+  GtkWidget * const dialog;
+  GtkWidget *list, *show_btn;
   GtkListStore *store;
   object_t *object;     /* object this list relates to, NULL if global */
-} relation_context_t;
+};
 
 enum {
   RELATION_COL_TYPE = 0,
@@ -485,28 +489,28 @@ static relation_t *get_selected_relation(relation_context_t *context) {
   return NULL;
 }
 
-static void relation_list_selected(relation_context_t *context,
+static void relation_list_selected(GtkWidget *list,
 				   relation_t *selected) {
 
-  list_button_enable(context->list, LIST_BUTTON_USER0,
+  list_button_enable(list, LIST_BUTTON_USER0,
 		     (selected != NULL) && (!selected->members.empty()));
-  list_button_enable(context->list, LIST_BUTTON_USER1,
+  list_button_enable(list, LIST_BUTTON_USER1,
 		     (selected != NULL) && (!selected->members.empty()));
 
-  list_button_enable(context->list, LIST_BUTTON_REMOVE, selected != NULL);
-  list_button_enable(context->list, LIST_BUTTON_EDIT, selected != NULL);
+  list_button_enable(list, LIST_BUTTON_REMOVE, selected != NULL);
+  list_button_enable(list, LIST_BUTTON_EDIT, selected != NULL);
 }
 
 static void
 relation_list_changed(GtkTreeSelection *selection, gpointer userdata) {
-  relation_context_t *context = (relation_context_t*)userdata;
+  GtkWidget *list = static_cast<GtkWidget *>(userdata);
   GtkTreeModel *model = NULL;
   GtkTreeIter iter;
 
   if(gtk_tree_selection_get_selected(selection, &model, &iter)) {
     relation_t *relation = NULL;
     gtk_tree_model_get(model, &iter, RELATION_COL_DATA, &relation, -1);
-    relation_list_selected(context, relation);
+    relation_list_selected(list, relation);
   }
 }
 
@@ -810,12 +814,12 @@ static void on_relation_remove(G_GNUC_UNUSED GtkWidget *button, relation_context
   /* then really delete it */
   context->appdata->osm->relation_delete(sel, false);
 
-  relation_list_selected(context, NULL);
+  relation_list_selected(context->list, NULL);
 }
 
 struct relation_list_widget_functor {
-  relation_context_t * const context;
-  relation_list_widget_functor(relation_context_t *c) : context(c) {}
+  GtkListStore * const store;
+  relation_list_widget_functor(GtkListStore *s) : store(s) {}
   void operator()(const relation_t *rel);
   inline void operator()(std::pair<item_id_t, relation_t *> pair) {
     operator()(pair.second);
@@ -828,8 +832,8 @@ void relation_list_widget_functor::operator()(const relation_t *rel)
   GtkTreeIter iter;
 
   /* Append a row and fill in some data */
-  gtk_list_store_append(context->store, &iter);
-  gtk_list_store_set(context->store, &iter,
+  gtk_list_store_append(store, &iter);
+  gtk_list_store_set(store, &iter,
                      RELATION_COL_TYPE,
                      rel->tags.get_value("type"),
                      RELATION_COL_NAME, name.c_str(),
@@ -838,73 +842,70 @@ void relation_list_widget_functor::operator()(const relation_t *rel)
                      -1);
 }
 
-static GtkWidget *relation_list_widget(relation_context_t *context) {
-  context->list = list_new(LIST_HILDON_WITH_HEADERS);
+static GtkWidget *relation_list_widget(relation_context_t &context) {
+  context.list = list_new(LIST_HILDON_WITH_HEADERS);
 
-  list_override_changed_event(context->list, relation_list_changed, context);
+  list_override_changed_event(context.list, relation_list_changed, context.list);
 
-  list_set_columns(context->list,
+  list_set_columns(context.list,
 		   _("Name"),    RELATION_COL_NAME, LIST_FLAG_ELLIPSIZE,
 		   _("Type"),    RELATION_COL_TYPE, 0,
 		   _("Members"), RELATION_COL_MEMBERS, 0,
 		   NULL);
 
   /* build and fill the store */
-  context->store = gtk_list_store_new(RELATION_NUM_COLS,
+  context.store = gtk_list_store_new(RELATION_NUM_COLS,
 		G_TYPE_STRING, G_TYPE_STRING, G_TYPE_UINT,
 	        G_TYPE_POINTER);
 
-  list_set_store(context->list, context->store);
+  list_set_store(context.list, context.store);
 
   // Sorting by ref/name by default is useful for places with lots of numbered
   // bus routes. Especially for small screens.
-  gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(context->store),
+  gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(context.store),
                                        RELATION_COL_NAME, GTK_SORT_ASCENDING);
 
-  relation_list_widget_functor fc(context);
+  relation_list_widget_functor fc(context.store);
 
-  if(context->object) {
+  if(context.object) {
     const relation_chain_t &rchain =
-                            context->appdata->osm->to_relation(*(context->object));
+                            context.appdata->osm->to_relation(*(context.object));
     std::for_each(rchain.begin(), rchain.end(), fc);
   } else {
     const std::map<item_id_t, relation_t *> &rchain =
-                                         context->appdata->osm->relations;
+                                         context.appdata->osm->relations;
     std::for_each(rchain.begin(), rchain.end(), fc);
   }
 
-  g_object_unref(context->store);
+  g_object_unref(context.store);
 
-  list_set_static_buttons(context->list, LIST_BTN_NEW | LIST_BTN_WIDE,
+  list_set_static_buttons(context.list, LIST_BTN_NEW | LIST_BTN_WIDE,
 	  G_CALLBACK(on_relation_add), G_CALLBACK(on_relation_edit),
-	  G_CALLBACK(on_relation_remove), context);
+	  G_CALLBACK(on_relation_remove), &context);
 
-  list_set_user_buttons(context->list,
+  list_set_user_buttons(context.list,
 	LIST_BUTTON_USER0, _("Members"), G_CALLBACK(on_relation_members),
 	LIST_BUTTON_USER1, _("Select"),  G_CALLBACK(on_relation_select),
 	0);
 
-  relation_list_selected(context, NULL);
+  relation_list_selected(context.list, NULL);
 
-  return context->list;
+  return context.list;
 }
 
 /* a global view on all relations */
 void relation_list(GtkWidget *parent, appdata_t *appdata) {
-  relation_context_t context = { 0 };
-  context.appdata = appdata;
-
-  context.dialog =
-    misc_dialog_new(MISC_DIALOG_LARGE, _("All relations"),
-		    GTK_WINDOW(parent),
-		    GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
-		    NULL);
+  relation_context_t context(appdata,
+                     misc_dialog_new(MISC_DIALOG_LARGE, _("All relations"),
+                                     GTK_WINDOW(parent),
+                                     GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
+                                     NULL));
 
   gtk_dialog_set_default_response(GTK_DIALOG(context.dialog),
 				  GTK_RESPONSE_CLOSE);
 
   gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context.dialog)->vbox),
-                     relation_list_widget(&context), TRUE, TRUE, 0);
+                     relation_list_widget(context), TRUE, TRUE, 0);
 
   /* ----------------------------------- */
 
