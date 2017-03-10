@@ -555,15 +555,17 @@ member_t osm_parse_osm_relation_member(osm_t *osm, xmlNode *a_node) {
 }
 
 /* try to find something descriptive */
-gchar *relation_t::descriptive_name() const {
+std::string relation_t::descriptive_name() const {
   const char *keys[] = { "ref", "name", "description", "note", "fix" "me", NULL};
   for (unsigned int i = 0; keys[i] != NULL; i++) {
     const char *name = tags.get_value(keys[i]);
     if(name)
-      return g_strdup(name);
+      return name;
   }
 
-  return g_strdup_printf("<ID #" ITEM_ID_FORMAT ">", id);
+  char buf[32];
+  snprintf(buf, sizeof(buf), "<ID #" ITEM_ID_FORMAT ">", id);
+  return buf;
 }
 
 /* ------------------ osm handling ----------------- */

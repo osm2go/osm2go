@@ -288,8 +288,8 @@ struct relation_list_insert_functor {
   relitem_context_t * const context;
   GtkTreeSelection * const selection;
   GtkTreeIter sel_iter;
-  gchar *selname; /* name of sel_iter */
-  relation_list_insert_functor(relitem_context_t *c, GtkTreeSelection *s) : context(c), selection(s), selname(0) {}
+  std::string selname; /* name of sel_iter */
+  relation_list_insert_functor(relitem_context_t *c, GtkTreeSelection *s) : context(c), selection(s) {}
   void operator()(std::pair<item_id_t, relation_t *> pair);
 };
 
@@ -298,14 +298,14 @@ void relation_list_insert_functor::operator()(std::pair<item_id_t, relation_t *>
   const relation_t * const relation = pair.second;
   GtkTreeIter iter;
   /* try to find something descriptive */
-  gchar *name = relation->descriptive_name();
+  std::string name = relation->descriptive_name();
 
   /* Append a row and fill in some data */
   gtk_list_store_append(context->store, &iter);
   gtk_list_store_set(context->store, &iter,
      RELITEM_COL_TYPE, relation->tags.get_value("type"),
      RELITEM_COL_ROLE, relitem_get_role_in_relation(context->item, relation),
-     RELITEM_COL_NAME, name,
+     RELITEM_COL_NAME, name.c_str(),
      RELITEM_COL_DATA, relation,
      -1);
 
@@ -313,8 +313,8 @@ void relation_list_insert_functor::operator()(std::pair<item_id_t, relation_t *>
   if(relitem_is_in_relation(context->item, relation)) {
     gtk_tree_selection_select_iter(selection, &iter);
     /* check if this element is earlier by name in the list */
-    if(selname == NULL || strcmp(name, selname) < 0) {
-      selname = name;
+    if(selname.empty() || strcmp(name.c_str(), selname.c_str()) < 0) {
+      selname.swap(name);
       sel_iter = iter;
     }
   }
@@ -381,7 +381,7 @@ static GtkWidget *relation_item_list_widget(relitem_context_t *context) {
   std::for_each(context->appdata->osm->relations.begin(),
                 context->appdata->osm->relations.end(), inserter);
 
-  if(inserter.selname != NULL)
+  if(!inserter.selname.empty())
     list_view_scroll(GTK_TREE_VIEW(context->view), selection, &inserter.sel_iter);
 
   g_signal_connect(G_OBJECT(selection), "changed",
@@ -731,7 +731,7 @@ static void on_relation_add(G_GNUC_UNUSED GtkWidget *button, relation_context_t 
 
     /* append a row for the new data */
 
-    gchar *name = relation->descriptive_name();
+    const std::string &name = relation->descriptive_name();
 
     /* Append a row and fill in some data */
     GtkTreeIter iter;
@@ -739,7 +739,7 @@ static void on_relation_add(G_GNUC_UNUSED GtkWidget *button, relation_context_t 
     gtk_list_store_set(context->store, &iter,
 		       RELATION_COL_TYPE,
 		       relation->tags.get_value("type"),
-		       RELATION_COL_NAME, name,
+		       RELATION_COL_NAME, name.c_str(),
 		       RELATION_COL_MEMBERS, relation->members.size(),
 		       RELATION_COL_DATA, relation,
 		       -1);
@@ -774,10 +774,11 @@ static void on_relation_edit(G_GNUC_UNUSED GtkWidget *button, relation_context_t
   if (!valid)
     return;
 
+  const std::string &name = sel->descriptive_name();
   // Found it. Update all visible fields.
   gtk_list_store_set(context->store, &iter,
     RELATION_COL_TYPE,    sel->tags.get_value("type"),
-    RELATION_COL_NAME,    sel->descriptive_name(),
+    RELATION_COL_NAME,    name.c_str(),
     RELATION_COL_MEMBERS, sel->members.size(),
     -1);
 
@@ -823,7 +824,7 @@ struct relation_list_widget_functor {
 
 void relation_list_widget_functor::operator()(const relation_t *rel)
 {
-  gchar *name = rel->descriptive_name();
+  const std::string &name = rel->descriptive_name();
   GtkTreeIter iter;
 
   /* Append a row and fill in some data */
@@ -831,7 +832,7 @@ void relation_list_widget_functor::operator()(const relation_t *rel)
   gtk_list_store_set(context->store, &iter,
                      RELATION_COL_TYPE,
                      rel->tags.get_value("type"),
-                     RELATION_COL_NAME, name,
+                     RELATION_COL_NAME, name.c_str(),
                      RELATION_COL_MEMBERS, rel->members.size(),
                      RELATION_COL_DATA, rel,
                      -1);

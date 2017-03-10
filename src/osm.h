@@ -415,7 +415,7 @@ public:
   std::vector<member_t>::const_iterator find_member_object(const object_t &o) const;
 
   void members_by_type(guint *nodes, guint *ways, guint *relations) const;
-  gchar *descriptive_name() const;
+  std::string descriptive_name() const;
   xmlChar *generate_xml(item_id_t changeset);
 
   void cleanup();
