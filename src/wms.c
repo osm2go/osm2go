@@ -451,12 +451,12 @@ typedef struct {
   GtkWidget *server_label, *path_label;
 } wms_server_context_t;
 
-static wms_server_t *get_selection(wms_server_context_t *context) {
+static wms_server_t *get_selection(GtkWidget *list) {
   GtkTreeSelection *selection;
   GtkTreeModel     *model;
   GtkTreeIter       iter;
 
-  selection = list_get_selection(context->list);
+  selection = list_get_selection(list);
   if(gtk_tree_selection_get_selected(selection, &model, &iter)) {
     wms_server_t *wms_server;
     gtk_tree_model_get(model, &iter, WMS_SERVER_COL_DATA, &wms_server, -1);
@@ -570,7 +570,7 @@ static void on_server_remove(G_GNUC_UNUSED GtkWidget *but, wms_server_context_t 
 }
 
 static void callback_modified_name(GtkWidget *widget, gpointer data) {
-  wms_server_context_t *context = (wms_server_context_t*)data;
+  settings_t *settings = (settings_t*)data;
 
   const gchar *name = gtk_entry_get_text(GTK_ENTRY(widget));
 
@@ -578,7 +578,7 @@ static void callback_modified_name(GtkWidget *widget, gpointer data) {
   gboolean ok = TRUE;
 
   /* search all entries except the last (which is the one we are editing) */
-  wms_server_t *server = context->appdata->settings->wms_server;
+  wms_server_t *server = settings->wms_server;
   while(server && server->next) {
     if(strcasecmp(server->name, (char*)name) == 0) ok = FALSE;
     server = server->next;
@@ -618,7 +618,7 @@ gboolean wms_server_edit(wms_server_context_t *context, gboolean edit_name,
   HILDON_ENTRY_NO_AUTOCAP(name);
   gtk_widget_set_sensitive(GTK_WIDGET(name), edit_name);
   g_signal_connect(G_OBJECT(name), "changed",
-		   G_CALLBACK(callback_modified_name), context);
+		   G_CALLBACK(callback_modified_name), context->appdata->settings);
 
   gtk_table_attach(GTK_TABLE(table),
 		   label = gtk_label_new(_("Server:")), 0, 1, 1, 2,
@@ -779,11 +779,11 @@ static GtkWidget *wms_server_widget(wms_server_context_t *context) {
 static gboolean wms_server_dialog(appdata_t *appdata, wms_t *wms) {
   gboolean ok = FALSE;
 
-  wms_server_context_t *context = g_new0(wms_server_context_t, 1);
-  context->appdata = appdata;
-  context->wms = wms;
+  wms_server_context_t context = { 0 };
+  context.appdata = appdata;
+  context.wms = wms;
 
-  context->dialog =
+  context.dialog =
     misc_dialog_new(MISC_DIALOG_MEDIUM, _("WMS Server Selection"),
 		    GTK_WINDOW(appdata->window),
 		    GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
@@ -791,10 +791,10 @@ static gboolean wms_server_dialog(appdata_t *appdata, wms_t *wms) {
 		    NULL);
 
   /* server selection box */
-  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(context->dialog)->vbox),
-			      wms_server_widget(context));
+  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(context.dialog)->vbox),
+			      wms_server_widget(&context));
 
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context->dialog)->vbox),
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context.dialog)->vbox),
 		     gtk_hseparator_new(), FALSE, FALSE, 0);
 
   GtkWidget *label;
@@ -804,33 +804,33 @@ static gboolean wms_server_dialog(appdata_t *appdata, wms_t *wms) {
   label = gtk_label_new(_("Server:"));
   gtk_misc_set_alignment(GTK_MISC(label), 0.f, 0.5f);
   gtk_table_attach(GTK_TABLE(table),  label, 0, 1, 0, 1, GTK_FILL, 0,0,0);
-  context->server_label = gtk_label_new(NULL);
-  gtk_label_set_ellipsize(GTK_LABEL(context->server_label),
+  context.server_label = gtk_label_new(NULL);
+  gtk_label_set_ellipsize(GTK_LABEL(context.server_label),
 			  PANGO_ELLIPSIZE_MIDDLE);
-  gtk_misc_set_alignment(GTK_MISC(context->server_label), 0.f, 0.5f);
-  gtk_table_attach_defaults(GTK_TABLE(table), context->server_label,
+  gtk_misc_set_alignment(GTK_MISC(context.server_label), 0.f, 0.5f);
+  gtk_table_attach_defaults(GTK_TABLE(table), context.server_label,
 			    1, 2, 0, 1);
 
   label = gtk_label_new(_("Path:"));
   gtk_misc_set_alignment(GTK_MISC(label), 0.f, 0.5f);
   gtk_table_attach(GTK_TABLE(table),  label, 0, 1, 1, 2, GTK_FILL, 0,0,0);
-  context->path_label = gtk_label_new(NULL);
-  gtk_label_set_ellipsize(GTK_LABEL(context->path_label),
+  context.path_label = gtk_label_new(NULL);
+  gtk_label_set_ellipsize(GTK_LABEL(context.path_label),
 			  PANGO_ELLIPSIZE_MIDDLE);
-  gtk_misc_set_alignment(GTK_MISC(context->path_label), 0.f, 0.5f);
-  gtk_table_attach_defaults(GTK_TABLE(table), context->path_label,
+  gtk_misc_set_alignment(GTK_MISC(context.path_label), 0.f, 0.5f);
+  gtk_table_attach_defaults(GTK_TABLE(table), context.path_label,
 			    1, 2, 1, 2);
 
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context->dialog)->vbox),
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context.dialog)->vbox),
 		     table, FALSE, FALSE, 0);
 
 
-  wms_server_selected(context, NULL);
+  wms_server_selected(&context, NULL);
 
-  gtk_widget_show_all(context->dialog);
+  gtk_widget_show_all(context.dialog);
 
-  if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(context->dialog))) {
-    wms_server_t *server = get_selection(context);
+  if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(context.dialog))) {
+    wms_server_t *server = get_selection(context.list);
     if(server) {
       /* fetch parameters from selected entry */
       printf("WMS: using %s\n", server->name);
@@ -846,9 +846,8 @@ static gboolean wms_server_dialog(appdata_t *appdata, wms_t *wms) {
     }
   }
 
-  gtk_widget_destroy(context->dialog);
+  gtk_widget_destroy(context.dialog);
 
-  g_free(context);
   return ok;
 }
 
