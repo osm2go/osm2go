@@ -223,11 +223,7 @@ static presets_item_t *parse_item(xmlNode *a_node, const ChunkMap &chunks) {
 
   item->icon = josm_icon_name_adjust(xmlGetProp(a_node, BAD_CAST "icon"));
 
-  xmlChar *nl = xmlGetProp(a_node, BAD_CAST "preset_name_label");
-  if(nl) {
-    item->addEditName = (strcmp((char *)nl, "true") == 0);
-    xmlFree(nl);
-  }
+  item->addEditName = xml_get_prop_is(a_node, "preset_name_label", "true");
 
   parse_widgets(a_node, item, chunks);
   return item;
