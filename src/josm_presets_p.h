@@ -38,39 +38,70 @@ enum presets_widget_type_t {
 };
 
 class presets_widget_t {
+protected:
+  presets_widget_t(presets_widget_type_t t, xmlChar *key = 0, xmlChar *text = 0);
 public:
-  presets_widget_t(presets_widget_type_t t);
-  ~presets_widget_t();
+  virtual ~presets_widget_t();
 
   const presets_widget_type_t type;
 
-  xmlChar *key, *text;
-
-  union {
-    /* a tag with an arbitrary text value */
-    struct {
-      xmlChar *def;
-    } text_w;
-
-    /* a combo box with pre-defined values */
-    struct {
-      xmlChar *def;
-      xmlChar *values;
-    } combo_w;
-
-    /* a key is just a static key */
-    struct {
-      xmlChar *value;
-    } key_w;
-
-    /* single checkbox */
-    struct {
-      bool def;
-    } check_w;
-
-  };
+  xmlChar * const key;
+  xmlChar * const text;
 
   bool is_interactive() const;
+};
+
+/**
+ * @brief a tag with an arbitrary text value
+ */
+class presets_widget_text : public presets_widget_t {
+public:
+  presets_widget_text(xmlChar *key, xmlChar *text, xmlChar *deflt);
+  virtual ~presets_widget_text();
+
+  xmlChar * const def;
+};
+
+class presets_widget_separator : public presets_widget_t {
+public:
+  explicit presets_widget_separator()
+    : presets_widget_t(WIDGET_TYPE_SEPARATOR) {}
+};
+
+class presets_widget_label : public presets_widget_t {
+public:
+  explicit presets_widget_label(xmlChar *text)
+    : presets_widget_t(WIDGET_TYPE_LABEL, 0, text) {}
+};
+
+/**
+ * @brief a combo box with pre-defined values
+ */
+class presets_widget_combo : public presets_widget_t {
+public:
+  presets_widget_combo(xmlChar *key, xmlChar *text, xmlChar *deflt, xmlChar *vals);
+  virtual ~presets_widget_combo();
+
+  xmlChar * const def;
+  xmlChar * const values;
+};
+
+/**
+ * @brief a key is just a static key
+ */
+class presets_widget_key : public presets_widget_t {
+public:
+  presets_widget_key(xmlChar *key, xmlChar *val);
+  virtual ~presets_widget_key();
+
+  xmlChar * const value;
+};
+
+class presets_widget_checkbox : public presets_widget_t {
+public:
+  presets_widget_checkbox(xmlChar *key, xmlChar *text, bool deflt);
+
+  const bool def;
 };
 
 class presets_item_t {

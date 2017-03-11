@@ -119,51 +119,46 @@ static presets_widget_t *parse_widget(xmlNode *cur_node, presets_item *item,
 
     /* special handling of pre-<space/> separators */
     if(!text || (strcmp((char*)text, " ") == 0)) {
-      widget = new presets_widget_t(WIDGET_TYPE_SEPARATOR);
+      widget = new presets_widget_separator();
       if(text)
         xmlFree(text);
     } else {
       /* --------- label widget --------- */
-      widget = new presets_widget_t(WIDGET_TYPE_LABEL);
-      widget->text = text;
+      widget = new presets_widget_label(text);
     }
 
   } else if(strcmp((char*)cur_node->name, "space") == 0) {
 #ifndef USE_HILDON
     // new-style separators
-    widget = new presets_widget_t(WIDGET_TYPE_SEPARATOR);
+    widget = new presets_widget_separator();
 #endif
   } else if(strcmp((char*)cur_node->name, "text") == 0) {
 
     /* --------- text widget --------- */
-    widget = new presets_widget_t(WIDGET_TYPE_TEXT);
-    widget->text = xmlGetProp(cur_node, BAD_CAST "text");
-    widget->key = xmlGetProp(cur_node, BAD_CAST "key");
-    widget->text_w.def = xmlGetProp(cur_node, BAD_CAST "default");
-
+    widget = new presets_widget_text(
+                     xmlGetProp(cur_node, BAD_CAST "key"),
+                     xmlGetProp(cur_node, BAD_CAST "text"),
+                     xmlGetProp(cur_node, BAD_CAST "default"));
   } else if(strcmp((char*)cur_node->name, "combo") == 0) {
-
     /* --------- combo widget --------- */
-    widget = new presets_widget_t(WIDGET_TYPE_COMBO);
-    widget->text = xmlGetProp(cur_node, BAD_CAST "text");
-    widget->key = xmlGetProp(cur_node, BAD_CAST "key");
-    widget->combo_w.def = xmlGetProp(cur_node, BAD_CAST "default");
-    widget->combo_w.values = xmlGetProp(cur_node, BAD_CAST "values");
-
+    widget = new presets_widget_combo(
+                     xmlGetProp(cur_node, BAD_CAST "key"),
+                     xmlGetProp(cur_node, BAD_CAST "text"),
+                     xmlGetProp(cur_node, BAD_CAST "default"),
+                     xmlGetProp(cur_node, BAD_CAST "values"));
   } else if(strcmp((char*)cur_node->name, "key") == 0) {
 
     /* --------- invisible key widget --------- */
-    widget = new presets_widget_t(WIDGET_TYPE_KEY);
-    widget->key = xmlGetProp(cur_node, BAD_CAST "key");
-    widget->key_w.value = xmlGetProp(cur_node, BAD_CAST "value");
-
+    widget = new presets_widget_key(
+                     xmlGetProp(cur_node, BAD_CAST "key"),
+                     xmlGetProp(cur_node, BAD_CAST "value"));
   } else if(strcmp((char*)cur_node->name, "check") == 0) {
 
     /* --------- check widget --------- */
-    widget = new presets_widget_t(WIDGET_TYPE_CHECK);
-    widget->text = xmlGetProp(cur_node, BAD_CAST "text");
-    widget->key = xmlGetProp(cur_node, BAD_CAST "key");
-    widget->check_w.def = xml_get_prop_is(cur_node, "default", "on");
+    widget = new presets_widget_checkbox(
+                     xmlGetProp(cur_node, BAD_CAST "key"),
+                     xmlGetProp(cur_node, BAD_CAST "text"),
+                     xml_get_prop_is(cur_node, "default", "on"));
   } else if(strcmp((char*)cur_node->name, "reference") == 0) {
     xmlChar *id = xmlGetProp(cur_node, BAD_CAST "ref");
     if(!id) {
@@ -560,11 +555,11 @@ static void presets_item_dialog(presets_context_t *context,
 	attach_text(table, (char*)(*it)->text, widget_cnt-widget_skip);
 #endif
 
-	if(!preset && (*it)->combo_w.def)
-	  preset = (char*)(*it)->combo_w.def;
+        if(!preset)
+          preset = reinterpret_cast<const char *>(static_cast<presets_widget_combo *>(*it)->def);
 	gtk_widgets[widget_cnt] = combo_box_new((char*)(*it)->text);
 	combo_box_append_text(gtk_widgets[widget_cnt], _("<unset>"));
-	const xmlChar *value = (*it)->combo_w.values;
+	const xmlChar *value = static_cast<presets_widget_combo *>(*it)->values;
 	int active = 0;
 
 	/* cut values strings */
@@ -603,7 +598,8 @@ static void presets_item_dialog(presets_context_t *context,
 	{ gboolean def = FALSE;
 	  if(preset) def = ((strcasecmp(preset, "true") == 0) ||
 			    (strcasecmp(preset, "yes") == 0));
-	  else       def = (*it)->check_w.def;
+        else
+          def = static_cast<presets_widget_checkbox *>(*it)->def;
 
 	  gtk_widgets[widget_cnt] =
 	    check_button_new_with_label((char*)(*it)->text);
@@ -618,8 +614,8 @@ static void presets_item_dialog(presets_context_t *context,
     case WIDGET_TYPE_TEXT:
       attach_text(table, (char*)(*it)->text, widget_cnt-widget_skip);
 
-      if(!preset && (*it)->text_w.def)
-        preset = (char*)(*it)->text_w.def;
+      if(!preset)
+        preset = reinterpret_cast<const char *>(static_cast<presets_widget_text *>(*it)->def);
       gtk_widgets[widget_cnt] = entry_new();
       if(preset)
 	gtk_entry_set_text(GTK_ENTRY(gtk_widgets[widget_cnt]), preset);
@@ -722,7 +718,7 @@ static void presets_item_dialog(presets_context_t *context,
         g_assert(ctag == citEnd);
         ctag = std::find_if(tags.begin(), citEnd, find_tag_functor((*it)->key));
 
-        text = reinterpret_cast<const char*>((*it)->key_w.value);
+        text = reinterpret_cast<const char *>(static_cast<presets_widget_key *>(*it)->value);
 	break;
 
       default:
@@ -759,7 +755,8 @@ bool used_preset_functor::operator()(const presets_widget_t* w)
     is_interactive |= w->is_interactive();
     return false;
   }
-  const tag_t t((char*) w->key, (char*) w->key_w.value);
+  const tag_t t(reinterpret_cast<char *>(w->key),
+                reinterpret_cast<char *>(static_cast<const presets_widget_key *>(w)->value));
   if(!osm_tag_key_and_value_present(tags, t))
     return true;
 
@@ -1317,43 +1314,17 @@ void josm_presets_free(struct presets_items *presets) {
   delete presets;
 }
 
-presets_widget_t::presets_widget_t(presets_widget_type_t t)
+presets_widget_t::presets_widget_t(presets_widget_type_t t, xmlChar *key, xmlChar *text)
   : type(t)
-  , key(0)
-  , text(0)
+  , key(key)
+  , text(text)
 {
-  // largest subentry
-  memset(&combo_w, 0, sizeof(combo_w));
 }
 
 presets_widget_t::~presets_widget_t()
 {
-  if(key)
-    xmlFree(key);
-  if(text)
-    xmlFree(text);
-
-  switch(type) {
-  case WIDGET_TYPE_TEXT:
-    if(text_w.def)
-      xmlFree(text_w.def);
-    break;
-
-  case WIDGET_TYPE_COMBO:
-    if(combo_w.def)
-      xmlFree(combo_w.def);
-    if(combo_w.values)
-      xmlFree(combo_w.values);
-    break;
-
-  case WIDGET_TYPE_KEY:
-    if(key_w.value)
-      xmlFree(key_w.value);
-    break;
-
-  default:
-    break;
-  }
+  xmlFree(key);
+  xmlFree(text);
 }
 
 bool presets_widget_t::is_interactive() const
@@ -1367,6 +1338,47 @@ bool presets_widget_t::is_interactive() const
   default:
     return true;
   }
+}
+
+presets_widget_text::presets_widget_text(xmlChar *key, xmlChar *text, xmlChar *deflt)
+  : presets_widget_t(WIDGET_TYPE_TEXT, key, text)
+  , def(deflt)
+{
+}
+
+presets_widget_text::~presets_widget_text()
+{
+  xmlFree(def);
+}
+
+presets_widget_combo::presets_widget_combo(xmlChar* key, xmlChar* text, xmlChar* deflt, xmlChar* vals)
+  : presets_widget_t(WIDGET_TYPE_COMBO, key, text)
+  , def(deflt)
+  , values(vals)
+{
+}
+
+presets_widget_combo::~presets_widget_combo()
+{
+  xmlFree(def);
+  xmlFree(values);
+}
+
+presets_widget_key::presets_widget_key(xmlChar* key, xmlChar* val)
+  : presets_widget_t(WIDGET_TYPE_KEY, key)
+  , value(val)
+{
+}
+
+presets_widget_key::~presets_widget_key()
+{
+  xmlFree(value);
+}
+
+presets_widget_checkbox::presets_widget_checkbox(xmlChar* key, xmlChar* text, bool deflt)
+  : presets_widget_t(WIDGET_TYPE_CHECK, key, text)
+  , def(deflt)
+{
 }
 
 presets_item_t::~presets_item_t()
