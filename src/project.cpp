@@ -425,10 +425,6 @@ static void callback_modified_name(GtkWidget *widget, gpointer data) {
 static void project_close(appdata_t *appdata) {
   printf("closing current project\n");
 
-  /* redraw the entire map by destroying all map items and redrawing them */
-  if(appdata->osm)
-    diff_save(appdata->project, appdata->osm);
-
   /* Save track and turn off the handler callback */
   track_save(appdata->project, appdata->track.track);
   track_clear(appdata);
@@ -436,6 +432,7 @@ static void project_close(appdata_t *appdata) {
   map_clear(appdata, MAP_LAYER_ALL);
 
   if(appdata->osm) {
+    diff_save(appdata->project, appdata->osm);
     osm_free(appdata->osm);
     appdata->osm = NULL;
   }
