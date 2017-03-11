@@ -100,11 +100,11 @@ struct elemstyle_icon_t {
   }
   ~elemstyle_icon_t()
   {
-    g_free(filename);
+    xmlFree(filename);
   }
 
   bool annotate;
-  char *filename;
+  xmlChar *filename;
 };
 
 struct elemstyle_t {

@@ -357,7 +357,7 @@ void StyleSax::startElement(const xmlChar *name, const xmlChar **attrs)
       if(strcmp(reinterpret_cast<const char *>(attrs[i]), "annotate") == 0)
         elemstyle->icon.annotate = strcmp(reinterpret_cast<const char *>(attrs[i + 1]), "true");
       else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "src") == 0)
-        elemstyle->icon.filename = josm_icon_name_adjust(reinterpret_cast<char *>(xmlStrdup(attrs[i + 1])));
+        elemstyle->icon.filename = josm_icon_name_adjust(xmlStrdup(attrs[i + 1]));
     }
 
     g_assert(elemstyle->icon.filename);

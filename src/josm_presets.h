@@ -22,6 +22,8 @@
 
 #include "info.h"
 
+#include <libxml/xmlstring.h> /* for xmlChar */
+
 /* the presets type specifies which item type it is */
 /* appropriate for */
 #define PRESETS_TYPE_WAY       (1<<0)
@@ -38,7 +40,7 @@ extern "C" {
 
 struct presets_items *josm_presets_load(void);
 void josm_presets_free(struct presets_items *presets);
-char *josm_icon_name_adjust(char *name);
+xmlChar *josm_icon_name_adjust(xmlChar *xname);
 
 #ifdef __cplusplus
 }

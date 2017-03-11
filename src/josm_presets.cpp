@@ -48,8 +48,10 @@ typedef std::map<std::string, xmlNode *> ChunkMap;
 
 /* --------------------- presets.xml parsing ----------------------- */
 
-char *josm_icon_name_adjust(char *name) {
-  if(!name) return NULL;
+xmlChar *josm_icon_name_adjust(xmlChar *xname) {
+  if(!xname) return NULL;
+
+  char *name = reinterpret_cast<char *>(xname);
 
   /* the icon loader uses names without extension */
   if(!strcasecmp(name+strlen(name)-4, ".png"))
@@ -57,7 +59,7 @@ char *josm_icon_name_adjust(char *name) {
   else if(!strcasecmp(name+strlen(name)-4, ".svg"))
     name[strlen(name)-4] = 0;
 
-  return name;
+  return xname;
 }
 
 static std::map<int, std::string> type_map_init() {
@@ -219,8 +221,7 @@ static presets_item_t *parse_item(xmlNode *a_node, const ChunkMap &chunks) {
   /* ------ parse items own properties ------ */
   item->name = xmlGetProp(a_node, BAD_CAST "name");
 
-  item->icon = BAD_CAST
-    josm_icon_name_adjust((char*)xmlGetProp(a_node, BAD_CAST "icon"));
+  item->icon = josm_icon_name_adjust(xmlGetProp(a_node, BAD_CAST "icon"));
 
   xmlChar *nl = xmlGetProp(a_node, BAD_CAST "preset_name_label");
   if(nl) {
@@ -241,8 +242,7 @@ static presets_item_t *parse_group(xmlDocPtr doc, xmlNode *a_node, presets_item_
   /* ------ parse groups own properties ------ */
   group->name = xmlGetProp(a_node, BAD_CAST "name");
 
-  group->icon = BAD_CAST
-    josm_icon_name_adjust((char*)xmlGetProp(a_node, BAD_CAST "icon"));
+  group->icon = josm_icon_name_adjust(xmlGetProp(a_node, BAD_CAST "icon"));
 
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
