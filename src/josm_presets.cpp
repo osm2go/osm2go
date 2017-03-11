@@ -474,7 +474,7 @@ static void presets_item_dialog(presets_context_t *context,
                                              is_widget_interactive) != itEnd;
 
   /* allocate space for required number of gtk widgets */
-  GtkWidget **gtk_widgets = (GtkWidget**)g_new0(GtkWidget, widget_cnt);
+  std::vector<GtkWidget *> gtk_widgets(widget_cnt, 0);
   std::vector<presets_widget_t *>::const_iterator it;
 
   if(has_interactive_widget)  {
@@ -731,8 +731,6 @@ static void presets_item_dialog(presets_context_t *context,
     if(changed)
       context->tag_context->info_tags_replace();
   }
-
-  g_free(gtk_widgets);
 
   if(has_interactive_widget)
     gtk_widget_destroy(dialog);
