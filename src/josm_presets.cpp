@@ -141,11 +141,20 @@ static presets_widget_t *parse_widget(xmlNode *cur_node, presets_item *item,
                      xmlGetProp(cur_node, BAD_CAST "default"));
   } else if(strcmp((char*)cur_node->name, "combo") == 0) {
     /* --------- combo widget --------- */
-    widget = new presets_widget_combo(
-                     xmlGetProp(cur_node, BAD_CAST "key"),
-                     xmlGetProp(cur_node, BAD_CAST "text"),
-                     xmlGetProp(cur_node, BAD_CAST "default"),
-                     xmlGetProp(cur_node, BAD_CAST "values"));
+    presets_widget_combo *combo = new presets_widget_combo(
+                                  xmlGetProp(cur_node, BAD_CAST "key"),
+                                  xmlGetProp(cur_node, BAD_CAST "text"),
+                                  xmlGetProp(cur_node, BAD_CAST "default"),
+                                  xmlGetProp(cur_node, BAD_CAST "values"));
+    widget = combo;
+    xmlChar *del = xmlGetProp(cur_node, BAD_CAST "delimiter");
+    if(del) {
+      if(G_UNLIKELY(strlen(reinterpret_cast<char *>(del)) != 1))
+        printf("found presets/item/combo with invalid separator '%s'\n", del);
+      else
+        combo->delimiter = *del;
+      xmlFree(del);
+    }
   } else if(strcmp((char*)cur_node->name, "key") == 0) {
 
     /* --------- invisible key widget --------- */
@@ -1289,6 +1298,7 @@ presets_widget_combo::presets_widget_combo(xmlChar* key, xmlChar* text, xmlChar*
   : presets_widget_t(WIDGET_TYPE_COMBO, key, text)
   , def(deflt)
   , values(vals)
+  , delimiter(',')
 {
 }
 
@@ -1314,7 +1324,7 @@ GtkWidget *presets_widget_combo::attach(GtkTable *table, int row, const char *pr
   if(values) {
     const char *c, *p = reinterpret_cast<const char *>(values);
     int count = 1;
-    while((c = strchr(p, ','))) {
+    while((c = strchr(p, delimiter))) {
       /* maximum length of an OSM value, shouldn't be reached anyway. */
       char cur[256];
       g_strlcpy(cur, p, sizeof(cur));

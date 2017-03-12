@@ -94,6 +94,7 @@ public:
 
   xmlChar * const def;
   xmlChar * const values;
+  char delimiter;
 
   virtual GtkWidget *attach(GtkTable *table, int row, const char *preset) const;
   virtual const char *getValue(GtkWidget *widget) const;

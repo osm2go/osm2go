@@ -46,7 +46,7 @@ __&lt;combo&gt;__            |                               | supported |
                    | text_context                  | ignored   |
                    | values                        | supported |
                    | values_sort                   | ignored   |
-                   | delimiter                     | ignored   |
+                   | delimiter                     | supported |
                    | default                       | supported |
                    | match                         | ignored   | matches always work like "keyvalue"
                    | display_values                | ignored   |
