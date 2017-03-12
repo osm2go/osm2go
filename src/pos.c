@@ -32,7 +32,7 @@ void pos_lat_str(char *str, int len, pos_float_t latitude) {
     snprintf(str, len-1, "%.5f", latitude);
 
     /* eliminate trailing zeros */
-    if((strchr(str, '.') != NULL) || (strchr(str, ',') != NULL)) {
+    if(strpbrk(str, ".,") != NULL) {
       char *p = str+strlen(str)-1;
       while(*p == '0') *p-- = 0;
       if((*p == '.')||(*p == ','))
