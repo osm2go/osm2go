@@ -285,11 +285,11 @@ static gboolean on_view_clicked(GtkWidget *widget, GdkEventButton *event,
 #endif
 
 struct relation_list_insert_functor {
-  relitem_context_t * const context;
+  relitem_context_t &context;
   GtkTreeSelection * const selection;
   GtkTreeIter sel_iter;
   std::string selname; /* name of sel_iter */
-  relation_list_insert_functor(relitem_context_t *c, GtkTreeSelection *s) : context(c), selection(s) {}
+  relation_list_insert_functor(relitem_context_t &c, GtkTreeSelection *s) : context(c), selection(s) {}
   void operator()(std::pair<item_id_t, relation_t *> pair);
 };
 
@@ -301,16 +301,16 @@ void relation_list_insert_functor::operator()(std::pair<item_id_t, relation_t *>
   std::string name = relation->descriptive_name();
 
   /* Append a row and fill in some data */
-  gtk_list_store_append(context->store, &iter);
-  gtk_list_store_set(context->store, &iter,
+  gtk_list_store_append(context.store, &iter);
+  gtk_list_store_set(context.store, &iter,
      RELITEM_COL_TYPE, relation->tags.get_value("type"),
-     RELITEM_COL_ROLE, relitem_get_role_in_relation(context->item, relation),
+     RELITEM_COL_ROLE, relitem_get_role_in_relation(context.item, relation),
      RELITEM_COL_NAME, name.c_str(),
      RELITEM_COL_DATA, relation,
      -1);
 
   /* select all relations the current object is part of */
-  if(relitem_is_in_relation(context->item, relation)) {
+  if(relitem_is_in_relation(context.item, relation)) {
     gtk_tree_selection_select_iter(selection, &iter);
     /* check if this element is earlier by name in the list */
     if(selname.empty() || strcmp(name.c_str(), selname.c_str()) < 0) {
@@ -320,27 +320,27 @@ void relation_list_insert_functor::operator()(std::pair<item_id_t, relation_t *>
   }
 }
 
-static GtkWidget *relation_item_list_widget(relitem_context_t *context) {
+static GtkWidget *relation_item_list_widget(relitem_context_t &context) {
 #ifndef FREMANTLE
-  context->view = gtk_tree_view_new();
+  context.view = gtk_tree_view_new();
 #else
-  context->view = hildon_gtk_tree_view_new(HILDON_UI_MODE_EDIT);
+  context.view = hildon_gtk_tree_view_new(HILDON_UI_MODE_EDIT);
 #endif
 
 #ifdef USE_HILDON
   /* hildon hides these by default */
-  gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(context->view), TRUE);
+  gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(context.view), TRUE);
 #endif
 
   /* change list mode to "multiple" */
   GtkTreeSelection *selection =
-    gtk_tree_view_get_selection(GTK_TREE_VIEW(context->view));
+    gtk_tree_view_get_selection(GTK_TREE_VIEW(context.view));
   gtk_tree_selection_set_mode(selection, GTK_SELECTION_MULTIPLE);
 
 #ifndef FREMANTLE
   /* catch views button-press event for our custom handling */
-  g_signal_connect(context->view, "button-press-event",
-		   G_CALLBACK(on_view_clicked), context);
+  g_signal_connect(context.view, "button-press-event",
+		   G_CALLBACK(on_view_clicked), &context);
 #endif
 
   /* --- "Name" column --- */
@@ -349,43 +349,43 @@ static GtkWidget *relation_item_list_widget(relitem_context_t *context) {
   GtkTreeViewColumn *column = gtk_tree_view_column_new_with_attributes(
        "Name", renderer, "text", RELITEM_COL_NAME, NULL);
   gtk_tree_view_column_set_expand(column, TRUE);
-  gtk_tree_view_insert_column(GTK_TREE_VIEW(context->view), column, -1);
+  gtk_tree_view_insert_column(GTK_TREE_VIEW(context.view), column, -1);
 
   /* --- "Type" column --- */
   renderer = gtk_cell_renderer_text_new();
-  gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(context->view),
+  gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(context.view),
       -1, "Type", renderer, "text", RELITEM_COL_TYPE, NULL);
 
   /* --- "Role" column --- */
   renderer = gtk_cell_renderer_text_new();
-  gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(context->view),
+  gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(context.view),
       -1, "Role", renderer, "text", RELITEM_COL_ROLE, NULL);
 
   /* build and fill the store */
-  context->store = gtk_list_store_new(RELITEM_NUM_COLS,
+  context.store = gtk_list_store_new(RELITEM_NUM_COLS,
 		G_TYPE_STRING, G_TYPE_STRING,
 	        G_TYPE_STRING, G_TYPE_POINTER);
 
-  gtk_tree_view_set_model(GTK_TREE_VIEW(context->view),
-			  GTK_TREE_MODEL(context->store));
-  g_object_unref(context->store);
+  gtk_tree_view_set_model(GTK_TREE_VIEW(context.view),
+			  GTK_TREE_MODEL(context.store));
+  g_object_unref(context.store);
 
   // Debatable whether to sort by the "selected" or the "Name" column by
   // default. Both are be useful, in different ways.
-  gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(context->store),
+  gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(context.store),
                                        RELITEM_COL_NAME, GTK_SORT_ASCENDING);
 
   /* build a list of iters of all items that should be selected */
   relation_list_insert_functor inserter(context, selection);
 
-  std::for_each(context->appdata->osm->relations.begin(),
-                context->appdata->osm->relations.end(), inserter);
+  std::for_each(context.appdata->osm->relations.begin(),
+                context.appdata->osm->relations.end(), inserter);
 
   if(!inserter.selname.empty())
-    list_view_scroll(GTK_TREE_VIEW(context->view), selection, &inserter.sel_iter);
+    list_view_scroll(GTK_TREE_VIEW(context.view), selection, &inserter.sel_iter);
 
   g_signal_connect(G_OBJECT(selection), "changed",
-		   G_CALLBACK(changed), context);
+		   G_CALLBACK(changed), &context);
 
 #ifndef FREMANTLE_PANNABLE_AREA
   /* put view into a scrolled window */
@@ -394,25 +394,19 @@ static GtkWidget *relation_item_list_widget(relitem_context_t *context) {
 				 GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
   gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scrolled_window),
 				      GTK_SHADOW_ETCHED_IN);
-  gtk_container_add(GTK_CONTAINER(scrolled_window), context->view);
+  gtk_container_add(GTK_CONTAINER(scrolled_window), context.view);
   return scrolled_window;
 #else
   /* put view into a pannable area */
   GtkWidget *pannable_area = hildon_pannable_area_new();
-  gtk_container_add(GTK_CONTAINER(pannable_area), context->view);
+  gtk_container_add(GTK_CONTAINER(pannable_area), context.view);
   return pannable_area;
 #endif
 }
 
-static void
-on_dialog_destroy(G_GNUC_UNUSED GtkWidget *widget, gpointer user_data ) {
-  relitem_context_t *context = (relitem_context_t*)user_data;
-  delete context;
-}
-
 void relation_membership_dialog(GtkWidget *parent,
 			 appdata_t *appdata, object_t &object) {
-  relitem_context_t *context = new relitem_context_t(object, appdata);
+  relitem_context_t context(object, appdata);
   map_t *map = appdata->map;
   g_assert(map);
 
@@ -431,27 +425,24 @@ void relation_membership_dialog(GtkWidget *parent,
     break;
   }
 
-  context->dialog =
+  context.dialog =
     misc_dialog_new(MISC_DIALOG_LARGE, str,
 		    GTK_WINDOW(parent),
 		    GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
 		    NULL);
   g_free(str);
 
-  gtk_signal_connect(GTK_OBJECT(context->dialog), "destroy",
-	     (GtkSignalFunc)on_dialog_destroy, context);
-
-  gtk_dialog_set_default_response(GTK_DIALOG(context->dialog),
+  gtk_dialog_set_default_response(GTK_DIALOG(context.dialog),
 				  GTK_RESPONSE_CLOSE);
 
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context->dialog)->vbox),
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context.dialog)->vbox),
   		     relation_item_list_widget(context), TRUE, TRUE, 0);
 
   /* ----------------------------------- */
 
-  gtk_widget_show_all(context->dialog);
-  gtk_dialog_run(GTK_DIALOG(context->dialog));
-  gtk_widget_destroy(context->dialog);
+  gtk_widget_show_all(context.dialog);
+  gtk_dialog_run(GTK_DIALOG(context.dialog));
+  gtk_widget_destroy(context.dialog);
 }
 
 /* -------------------- global relation list ----------------- */
