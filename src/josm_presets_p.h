@@ -49,6 +49,8 @@ public:
   xmlChar * const text;
 
   bool is_interactive() const;
+
+  virtual GtkWidget *attach(GtkTable *table, int row, const char *preset) const;
 };
 
 /**
@@ -60,18 +62,24 @@ public:
   virtual ~presets_widget_text();
 
   xmlChar * const def;
+
+  virtual GtkWidget *attach(GtkTable *table, int row, const char *preset) const;
 };
 
 class presets_widget_separator : public presets_widget_t {
 public:
   explicit presets_widget_separator()
     : presets_widget_t(WIDGET_TYPE_SEPARATOR) {}
+
+  virtual GtkWidget *attach(GtkTable *table, int row, const char *preset) const;
 };
 
 class presets_widget_label : public presets_widget_t {
 public:
   explicit presets_widget_label(xmlChar *text)
     : presets_widget_t(WIDGET_TYPE_LABEL, 0, text) {}
+
+  virtual GtkWidget *attach(GtkTable *table, int row, const char *preset) const;
 };
 
 /**
@@ -84,6 +92,8 @@ public:
 
   xmlChar * const def;
   xmlChar * const values;
+
+  virtual GtkWidget *attach(GtkTable *table, int row, const char *preset) const;
 };
 
 /**
@@ -102,6 +112,8 @@ public:
   presets_widget_checkbox(xmlChar *key, xmlChar *text, bool deflt);
 
   const bool def;
+
+  virtual GtkWidget *attach(GtkTable *table, int row, const char *preset) const;
 };
 
 class presets_item_t {

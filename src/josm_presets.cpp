@@ -337,20 +337,20 @@ struct presets_items *josm_presets_load(void) {
 
 /* --------------------- the items dialog -------------------- */
 
-static void attach_both(GtkWidget *table, GtkWidget *widget, gint y) {
-  gtk_table_attach(GTK_TABLE(table), widget, 0,2,y,y+1,
+static void attach_both(GtkTable *table, GtkWidget *widget, gint y) {
+  gtk_table_attach(table, widget, 0, 2, y, y + 1,
                    static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),
                    static_cast<GtkAttachOptions>(0), 0, 0);
 }
 
-static void attach_text(GtkWidget *table, char *text, gint y) {
-  gtk_table_attach(GTK_TABLE(table), gtk_label_new(text), 0,1,y,y+1,
+static void attach_text(GtkTable *table, const char *text, gint y) {
+  gtk_table_attach(table, gtk_label_new(text), 0, 1, y, y + 1,
                    static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),
                    static_cast<GtkAttachOptions>(0), 0, 0);
 }
 
-static void attach_right(GtkWidget *table, GtkWidget *widget, gint y) {
-  gtk_table_attach(GTK_TABLE(table), widget, 1,2,y,y+1,
+static void attach_right(GtkTable *table, GtkWidget *widget, gint y) {
+  gtk_table_attach(table, widget, 1, 2, y, y + 1,
                    static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),
                    static_cast<GtkAttachOptions>(0), 0, 0);
 }
@@ -536,96 +536,7 @@ static void presets_item_dialog(presets_context_t *context,
       tag_t *otag = otagIt != context->tag_context->tags.end() ? *otagIt : 0;
       const char *preset = otag ? otag->value : NULL;
 
-      switch((*it)->type) {
-      case WIDGET_TYPE_SEPARATOR:
-	attach_both(table, gtk_hseparator_new(), widget_cnt-widget_skip);
-	break;
-
-      case WIDGET_TYPE_SPACE:
-	/* space is just an empty label until we find something better */
-	attach_both(table, gtk_label_new(" "), widget_cnt-widget_skip);
-	break;
-
-      case WIDGET_TYPE_LABEL: {
-	attach_both(table, gtk_label_new((char*)(*it)->text), widget_cnt-widget_skip);
-	break;
-
-      case WIDGET_TYPE_COMBO:
-#ifndef FREMANTLE
-	attach_text(table, (char*)(*it)->text, widget_cnt-widget_skip);
-#endif
-
-        if(!preset)
-          preset = reinterpret_cast<const char *>(static_cast<presets_widget_combo *>(*it)->def);
-	gtk_widgets[widget_cnt] = combo_box_new((char*)(*it)->text);
-	combo_box_append_text(gtk_widgets[widget_cnt], _("<unset>"));
-	const xmlChar *value = static_cast<presets_widget_combo *>(*it)->values;
-	int active = 0;
-
-	/* cut values strings */
-	if(value) {
-	  const char *c, *p = (char*)value;
-	  int count = 1;
-	  while((c = strchr(p, ','))) {
-	    /* maximum length of an OSM value, shouldn't be reached anyway. */
-	    char cur[256];
-	    g_strlcpy(cur, p, sizeof(cur));
-	    if(c - p < sizeof(cur))
-	      cur[c - p] = '\0';
-	    if (preset_combo_insert_value(gtk_widgets[widget_cnt], cur, preset)) {
-	      active = count;
-	      preset = NULL;
-	    }
-
-	    count++;
-	    p = c + 1;
-	  }
-	  /* attach remaining string as last value */
-	  if (preset_combo_insert_value(gtk_widgets[widget_cnt], p, preset))
-	    active = count;
-	}
-
-	combo_box_set_active(gtk_widgets[widget_cnt], active);
-#ifndef FREMANTLE
-	attach_right(table, gtk_widgets[widget_cnt], widget_cnt-widget_skip);
-#else
-	attach_both(table, gtk_widgets[widget_cnt], widget_cnt-widget_skip);
-#endif
-	break;
-      }
-
-      case WIDGET_TYPE_CHECK:
-	{ gboolean def = FALSE;
-	  if(preset) def = ((strcasecmp(preset, "true") == 0) ||
-			    (strcasecmp(preset, "yes") == 0));
-        else
-          def = static_cast<presets_widget_checkbox *>(*it)->def;
-
-	  gtk_widgets[widget_cnt] =
-	    check_button_new_with_label((char*)(*it)->text);
-	  check_button_set_active(gtk_widgets[widget_cnt], def);
-#ifndef FREMANTLE
-	  attach_right(table, gtk_widgets[widget_cnt], widget_cnt-widget_skip);
-#else
-	  attach_both(table, gtk_widgets[widget_cnt], widget_cnt-widget_skip);
-#endif
-      } break;
-
-    case WIDGET_TYPE_TEXT:
-      attach_text(table, (char*)(*it)->text, widget_cnt-widget_skip);
-
-      if(!preset)
-        preset = reinterpret_cast<const char *>(static_cast<presets_widget_text *>(*it)->def);
-      gtk_widgets[widget_cnt] = entry_new();
-      if(preset)
-	gtk_entry_set_text(GTK_ENTRY(gtk_widgets[widget_cnt]), preset);
-
-      attach_right(table, gtk_widgets[widget_cnt], widget_cnt-widget_skip);
-      break;
-
-      default:
-	break;
-      }
+      gtk_widgets[widget_cnt] = (*it)->attach(GTK_TABLE(table), widget_cnt - widget_skip, preset);
 
       if(gtk_widgets[widget_cnt] && otag)
         g_object_set_data(G_OBJECT(gtk_widgets[widget_cnt]), "tag", otag);
@@ -1338,6 +1249,11 @@ bool presets_widget_t::is_interactive() const
   }
 }
 
+GtkWidget *presets_widget_t::attach(GtkTable *, int, const char *) const
+{
+  return 0;
+}
+
 presets_widget_text::presets_widget_text(xmlChar *key, xmlChar *text, xmlChar *deflt)
   : presets_widget_t(WIDGET_TYPE_TEXT, key, text)
   , def(deflt)
@@ -1347,6 +1263,33 @@ presets_widget_text::presets_widget_text(xmlChar *key, xmlChar *text, xmlChar *d
 presets_widget_text::~presets_widget_text()
 {
   xmlFree(def);
+}
+
+GtkWidget *presets_widget_text::attach(GtkTable *table, int row, const char *preset) const
+{
+  attach_text(table, reinterpret_cast<const char *>(text), row);
+
+  if(!preset)
+    preset = reinterpret_cast<const char *>(def);
+  GtkWidget *ret = entry_new();
+  if(preset)
+    gtk_entry_set_text(GTK_ENTRY(ret), preset);
+
+  attach_right(table, ret, row);
+
+  return ret;
+}
+
+GtkWidget *presets_widget_separator::attach(GtkTable *table, int row, const char *preset) const
+{
+  attach_both(table, gtk_hseparator_new(), row);
+  return 0;
+}
+
+GtkWidget *presets_widget_label::attach(GtkTable *table, int row, const char *preset) const
+{
+  attach_both(table, gtk_label_new(reinterpret_cast<const char *>(text)), row);
+  return 0;
 }
 
 presets_widget_combo::presets_widget_combo(xmlChar* key, xmlChar* text, xmlChar* deflt, xmlChar* vals)
@@ -1360,6 +1303,51 @@ presets_widget_combo::~presets_widget_combo()
 {
   xmlFree(def);
   xmlFree(values);
+}
+
+GtkWidget *presets_widget_combo::attach(GtkTable *table, int row, const char *preset) const
+{
+#ifndef FREMANTLE
+  attach_text(table, reinterpret_cast<const char *>(text), row);
+#endif
+
+  if(!preset)
+    preset = reinterpret_cast<const char *>(def);
+  GtkWidget *ret = combo_box_new(reinterpret_cast<const char *>(text));
+  combo_box_append_text(ret, _("<unset>"));
+  int active = 0;
+
+  /* cut values strings */
+  if(values) {
+    const char *c, *p = reinterpret_cast<const char *>(values);
+    int count = 1;
+    while((c = strchr(p, ','))) {
+      /* maximum length of an OSM value, shouldn't be reached anyway. */
+      char cur[256];
+      g_strlcpy(cur, p, sizeof(cur));
+      if(c - p < sizeof(cur))
+        cur[c - p] = '\0';
+      if (preset_combo_insert_value(ret, cur, preset)) {
+        active = count;
+        preset = 0;
+      }
+
+      count++;
+      p = c + 1;
+    }
+    /* attach remaining string as last value */
+    if (preset_combo_insert_value(ret, p, preset))
+      active = count;
+  }
+
+  combo_box_set_active(ret, active);
+#ifndef FREMANTLE
+  attach_right(table, ret, row);
+#else
+  attach_both(table, ret, row);
+#endif
+
+  return ret;
 }
 
 presets_widget_key::presets_widget_key(xmlChar* key, xmlChar* val)
@@ -1377,6 +1365,26 @@ presets_widget_checkbox::presets_widget_checkbox(xmlChar* key, xmlChar* text, bo
   : presets_widget_t(WIDGET_TYPE_CHECK, key, text)
   , def(deflt)
 {
+}
+
+GtkWidget *presets_widget_checkbox::attach(GtkTable *table, int row, const char *preset) const
+{
+  gboolean deflt = FALSE;
+  if(preset)
+    deflt = ((strcasecmp(preset, "true") == 0) ||
+           (strcasecmp(preset, "yes") == 0));
+  else
+    deflt = def;
+
+  GtkWidget *ret = check_button_new_with_label(reinterpret_cast<const char *>(text));
+  check_button_set_active(ret, deflt);
+#ifndef FREMANTLE
+  attach_right(table, ret, row);
+#else
+  attach_both(table, ret, row);
+#endif
+
+  return ret;
 }
 
 presets_item_t::~presets_item_t()
