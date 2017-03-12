@@ -85,7 +85,7 @@ __&lt;check&gt;__            |                               | supported |
                    | key                           | supported | required
                    | text                          | supported |
                    | text_context                  | ignored   |
-                   | value_on                      | ignored   |
+                   | value_on                      | supported |
                    | value_off                     | ignored   | 
                    | disable_off                   | ignored   |
                    | default                       | supported | only checked for "on" or not

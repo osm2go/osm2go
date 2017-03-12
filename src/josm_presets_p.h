@@ -115,8 +115,10 @@ public:
 class presets_widget_checkbox : public presets_widget_t {
 public:
   presets_widget_checkbox(xmlChar *key, xmlChar *text, bool deflt);
+  ~presets_widget_checkbox();
 
   const bool def;
+  xmlChar *value_on;
 
   virtual GtkWidget *attach(GtkTable *table, int row, const char *preset) const;
   virtual const char *getValue(GtkWidget *widget) const;

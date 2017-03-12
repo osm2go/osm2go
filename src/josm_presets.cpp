@@ -162,12 +162,14 @@ static presets_widget_t *parse_widget(xmlNode *cur_node, presets_item *item,
                      xmlGetProp(cur_node, BAD_CAST "key"),
                      xmlGetProp(cur_node, BAD_CAST "value"));
   } else if(strcmp((char*)cur_node->name, "check") == 0) {
-
     /* --------- check widget --------- */
-    widget = new presets_widget_checkbox(
-                     xmlGetProp(cur_node, BAD_CAST "key"),
-                     xmlGetProp(cur_node, BAD_CAST "text"),
-                     xml_get_prop_is(cur_node, "default", "on"));
+    presets_widget_checkbox *check =
+                    new presets_widget_checkbox(
+                               xmlGetProp(cur_node, BAD_CAST "key"),
+                               xmlGetProp(cur_node, BAD_CAST "text"),
+                               xml_get_prop_is(cur_node, "default", "on"));
+    widget = check;
+    check->value_on = xmlGetProp(cur_node, BAD_CAST "value_on");
   } else if(strcmp((char*)cur_node->name, "reference") == 0) {
     xmlChar *id = xmlGetProp(cur_node, BAD_CAST "ref");
     if(!id) {
@@ -1384,16 +1386,25 @@ const char *presets_widget_key::getValue(GtkWidget* widget) const
 presets_widget_checkbox::presets_widget_checkbox(xmlChar* key, xmlChar* text, bool deflt)
   : presets_widget_t(WIDGET_TYPE_CHECK, key, text)
   , def(deflt)
+  , value_on(0)
 {
+}
+
+presets_widget_checkbox::~presets_widget_checkbox()
+{
+  xmlFree(value_on);
 }
 
 GtkWidget *presets_widget_checkbox::attach(GtkTable *table, int row, const char *preset) const
 {
   gboolean deflt = FALSE;
-  if(preset)
-    deflt = ((strcasecmp(preset, "true") == 0) ||
-           (strcasecmp(preset, "yes") == 0));
-  else
+  if(preset) {
+    if(value_on)
+      deflt = (strcmp(preset, reinterpret_cast<char *>(value_on)) == 0);
+    else
+      deflt = ((strcasecmp(preset, "true") == 0) ||
+               (strcasecmp(preset, "yes") == 0));
+  } else
     deflt = def;
 
   GtkWidget *ret = check_button_new_with_label(reinterpret_cast<const char *>(text));
@@ -1411,7 +1422,8 @@ const char *presets_widget_checkbox::getValue(GtkWidget* widget) const
 {
   g_assert(GTK_WIDGET_TYPE(widget) == check_button_type());
 
-  return check_button_get_active(widget) ? "yes" : 0;
+  return check_button_get_active(widget) ?
+         (value_on ? reinterpret_cast<char *>(value_on) : "yes") : 0;
 }
 
 presets_item_t::~presets_item_t()
