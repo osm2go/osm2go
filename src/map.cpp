@@ -2247,17 +2247,25 @@ void map_track_update_seg(map_t *map, track_seg_t &seg) {
                                                    ? itEnd - map->elements_drawn - 1
                                                    : itEnd - 2;
 
-  /* since we are updating an existing track, it sure has at least two */
-  /* points, second_last must be valid and its "next" (last) also */
+  /* since we are updating an existing track, it sure has at least two
+   * points, second_last must be valid and its "next" (last) also */
   g_assert(begin != itEnd);
   g_assert(last != itEnd);
   g_assert_cmpfloat(itEnd - begin, <=, seg.track_points.size());
 
   /* count points to be placed */
   const size_t npoints = itEnd - begin;
-  canvas_points_t *points = canvas_points_init(bounds, begin, npoints);
-
   map->elements_drawn = last_is_visible ? npoints : 0;
+
+  lpos_t lpos2;
+  track_pos2lpos(bounds, (last - 1)->pos, lpos2);
+  /* if both items appear on the screen in the same position (e.g. because they are
+   * close to each other and a low zoom level) don't redraw as nothing would change
+   * visually. */
+  if(lpos == lpos2)
+    return;
+
+  canvas_points_t *points = canvas_points_init(bounds, begin, npoints);
 
   if(second_last_is_visible) {
     /* there must be something already on the screen and there must */

@@ -60,6 +60,8 @@ typedef struct lpos_t {
   lpos_t() {}
   lpos_t(gint px, gint py)
     : x(px) , y(py) {}
+  bool operator==(const lpos_t &other)
+  { return x == other.x && y == other.y; }
 #endif
   gint x, y;
 } lpos_t;
