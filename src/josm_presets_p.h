@@ -51,6 +51,7 @@ public:
   bool is_interactive() const;
 
   virtual GtkWidget *attach(GtkTable *table, int row, const char *preset) const;
+  virtual const char *getValue(GtkWidget *widget) const;
 };
 
 /**
@@ -64,6 +65,7 @@ public:
   xmlChar * const def;
 
   virtual GtkWidget *attach(GtkTable *table, int row, const char *preset) const;
+  virtual const char *getValue(GtkWidget *widget) const;
 };
 
 class presets_widget_separator : public presets_widget_t {
@@ -94,6 +96,7 @@ public:
   xmlChar * const values;
 
   virtual GtkWidget *attach(GtkTable *table, int row, const char *preset) const;
+  virtual const char *getValue(GtkWidget *widget) const;
 };
 
 /**
@@ -105,6 +108,7 @@ public:
   virtual ~presets_widget_key();
 
   xmlChar * const value;
+  virtual const char *getValue(GtkWidget *widget) const;
 };
 
 class presets_widget_checkbox : public presets_widget_t {
@@ -114,6 +118,7 @@ public:
   const bool def;
 
   virtual GtkWidget *attach(GtkTable *table, int row, const char *preset) const;
+  virtual const char *getValue(GtkWidget *widget) const;
 };
 
 class presets_item_t {

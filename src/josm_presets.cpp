@@ -602,35 +602,15 @@ static void presets_item_dialog(presets_context_t *context,
       g_assert(!otag == (ctag == citEnd));
 
       switch((*it)->type) {
-      case WIDGET_TYPE_COMBO: {
-	g_assert(GTK_WIDGET_TYPE(gtk_widgets[widget_cnt]) == combo_box_type());
-
-        text = combo_box_get_active_text(gtk_widgets[widget_cnt]);
-	if(!strcmp(text, _("<unset>")))
-	  text = NULL;
-
-	break;
-      }
-
-      case WIDGET_TYPE_TEXT:
-	g_assert(GTK_WIDGET_TYPE(gtk_widgets[widget_cnt]) == entry_type());
-
-        text = gtk_entry_get_text(GTK_ENTRY(gtk_widgets[widget_cnt]));
-	break;
-
-      case WIDGET_TYPE_CHECK:
-	g_assert(GTK_WIDGET_TYPE(gtk_widgets[widget_cnt]) == check_button_type());
-
-        text = check_button_get_active(gtk_widgets[widget_cnt]) ? "yes" : NULL;
-	break;
-
       case WIDGET_TYPE_KEY:
-	g_assert(!gtk_widgets[widget_cnt]);
         g_assert(ctag == citEnd);
         ctag = std::find_if(tags.begin(), citEnd, find_tag_functor((*it)->key));
-
-        text = reinterpret_cast<const char *>(static_cast<presets_widget_key *>(*it)->value);
-	break;
+        // fallthrough
+      case WIDGET_TYPE_CHECK:
+      case WIDGET_TYPE_COMBO:
+      case WIDGET_TYPE_TEXT:
+        text = (*it)->getValue(gtk_widgets[widget_cnt]);
+        break;
 
       default:
         continue;
@@ -1254,6 +1234,12 @@ GtkWidget *presets_widget_t::attach(GtkTable *, int, const char *) const
   return 0;
 }
 
+const char *presets_widget_t::getValue(GtkWidget *) const
+{
+  g_assert_not_reached();
+  return 0;
+}
+
 presets_widget_text::presets_widget_text(xmlChar *key, xmlChar *text, xmlChar *deflt)
   : presets_widget_t(WIDGET_TYPE_TEXT, key, text)
   , def(deflt)
@@ -1278,6 +1264,13 @@ GtkWidget *presets_widget_text::attach(GtkTable *table, int row, const char *pre
   attach_right(table, ret, row);
 
   return ret;
+}
+
+const char *presets_widget_text::getValue(GtkWidget *widget) const
+{
+  g_assert(GTK_WIDGET_TYPE(widget) == entry_type());
+
+  return gtk_entry_get_text(GTK_ENTRY(widget));
 }
 
 GtkWidget *presets_widget_separator::attach(GtkTable *table, int row, const char *preset) const
@@ -1350,6 +1343,17 @@ GtkWidget *presets_widget_combo::attach(GtkTable *table, int row, const char *pr
   return ret;
 }
 
+const char *presets_widget_combo::getValue(GtkWidget* widget) const
+{
+  g_assert(GTK_WIDGET_TYPE(widget) == combo_box_type());
+
+  const char *text = combo_box_get_active_text(widget);
+  if(!strcmp(text, _("<unset>")))
+    text = 0;
+
+  return text;
+}
+
 presets_widget_key::presets_widget_key(xmlChar* key, xmlChar* val)
   : presets_widget_t(WIDGET_TYPE_KEY, key)
   , value(val)
@@ -1359,6 +1363,12 @@ presets_widget_key::presets_widget_key(xmlChar* key, xmlChar* val)
 presets_widget_key::~presets_widget_key()
 {
   xmlFree(value);
+}
+
+const char *presets_widget_key::getValue(GtkWidget* widget) const
+{
+  g_assert(!widget);
+  return reinterpret_cast<const char *>(value);
 }
 
 presets_widget_checkbox::presets_widget_checkbox(xmlChar* key, xmlChar* text, bool deflt)
@@ -1385,6 +1395,13 @@ GtkWidget *presets_widget_checkbox::attach(GtkTable *table, int row, const char 
 #endif
 
   return ret;
+}
+
+const char *presets_widget_checkbox::getValue(GtkWidget* widget) const
+{
+  g_assert(GTK_WIDGET_TYPE(widget) == check_button_type());
+
+  return check_button_get_active(widget) ? "yes" : 0;
 }
 
 presets_item_t::~presets_item_t()
