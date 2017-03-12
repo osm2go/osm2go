@@ -464,7 +464,6 @@ struct relation_context_t {
   GtkWidget * const dialog;
   GtkWidget *list, *show_btn;
   GtkListStore *store;
-  object_t *object;     /* object this list relates to, NULL if global */
 };
 
 enum {
@@ -867,15 +866,9 @@ static GtkWidget *relation_list_widget(relation_context_t &context) {
 
   relation_list_widget_functor fc(context.store);
 
-  if(context.object) {
-    const relation_chain_t &rchain =
-                            context.appdata->osm->to_relation(*(context.object));
-    std::for_each(rchain.begin(), rchain.end(), fc);
-  } else {
-    const std::map<item_id_t, relation_t *> &rchain =
-                                         context.appdata->osm->relations;
-    std::for_each(rchain.begin(), rchain.end(), fc);
-  }
+  const std::map<item_id_t, relation_t *> &rchain =
+                                       context.appdata->osm->relations;
+  std::for_each(rchain.begin(), rchain.end(), fc);
 
   g_object_unref(context.store);
 
