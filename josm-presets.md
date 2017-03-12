@@ -91,7 +91,7 @@ __&lt;check&gt;__            |                               | supported |
                    | default                       | supported | only checked for "on" or not
                    | match                         | ignored   | matches always work like "keyvalue"
 __&lt;label&gt;__            |                               | supported |
-                   | text                          | supported | if empty, works as space
+                   | text                          | supported | required
 __&lt;space/&gt;__          |                               | supported | ignored on Hildon
 __&lt;optional&gt;__         |                               | ignored | the contained items are parsed as if they were on the same level
                    | text                          | ignored   |

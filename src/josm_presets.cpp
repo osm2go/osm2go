@@ -115,17 +115,13 @@ static presets_widget_t *parse_widget(xmlNode *cur_node, presets_item *item,
   presets_widget_t *widget = 0;
 
   if(strcmp((char*)cur_node->name, "label") == 0) {
+    /* --------- label widget --------- */
     xmlChar *text = xmlGetProp(cur_node, BAD_CAST "text");
 
-    /* special handling of pre-<space/> separators */
-    if(!text || (strcmp((char*)text, " ") == 0)) {
-      widget = new presets_widget_separator();
-      if(text)
-        xmlFree(text);
-    } else {
-      /* --------- label widget --------- */
+    if(G_UNLIKELY(!text))
+      printf("found presets/item/label without text\n");
+    else
       widget = new presets_widget_label(text);
-    }
 
   } else if(strcmp((char*)cur_node->name, "space") == 0) {
 #ifndef USE_HILDON
