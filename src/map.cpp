@@ -2241,7 +2241,6 @@ void map_track_update_seg(map_t *map, track_seg_t &seg) {
     map->elements_drawn = 0;
     return;
   }
-printf("last visible %zu\n", map->elements_drawn);
 
   const std::vector<track_point_t>::const_iterator begin = // start of track to draw
                                                    second_last_is_visible
