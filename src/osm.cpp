@@ -471,6 +471,11 @@ void osm_members_free(std::vector<member_t> &members) {
   members.clear();
 }
 
+bool relation_t::is_multipolygon() const {
+  const char *tp = tags.get_value("type");
+  return tp && (strcmp(tp, "multipolygon") == 0);
+}
+
 void relation_t::cleanup() {
   tags.clear();
   osm_members_free(members);

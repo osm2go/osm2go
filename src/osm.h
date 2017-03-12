@@ -418,6 +418,8 @@ public:
   std::string descriptive_name() const;
   xmlChar *generate_xml(item_id_t changeset);
 
+  bool is_multipolygon() const;
+
   void cleanup();
 };
 

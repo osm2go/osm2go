@@ -69,6 +69,7 @@ static std::map<int, std::string> type_map_init() {
   ret[PRESETS_TYPE_NODE] = "node";
   ret[PRESETS_TYPE_RELATION] = "relation";
   ret[PRESETS_TYPE_CLOSEDWAY] = "closedway";
+  ret[PRESETS_TYPE_MULTIPOLYGON] = "multipolygon";
 
   return ret;
 }

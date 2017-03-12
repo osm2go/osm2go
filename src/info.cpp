@@ -504,6 +504,9 @@ bool info_dialog(GtkWidget *parent, appdata_t *appdata, object_t &object) {
     str = g_strdup_printf(_("Relation #" ITEM_ID_FORMAT),
 			  context.object.obj->id);
     context.presets_type = PRESETS_TYPE_RELATION;
+
+    if(context.object.relation->is_multipolygon())
+      context.presets_type |= PRESETS_TYPE_MULTIPOLYGON;
     break;
 
   default:
