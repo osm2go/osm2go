@@ -173,8 +173,8 @@ static presets_widget_t *parse_widget(xmlNode *cur_node, presets_item *item,
     } else {
       const ChunkMap::const_iterator it =
           chunks.find(std::string(reinterpret_cast<char *>(id)));
-      if(it == chunks.end()) {
-        printf("found presets/item/reference without unresolved ref %s\n", id);
+      if(G_UNLIKELY(it == chunks.end())) {
+        printf("found presets/item/reference with unresolved ref %s\n", id);
       } else {
         parse_widgets(it->second, item, chunks);
       }
