@@ -27,22 +27,13 @@ typedef enum {
   UNDO_CREATE,
   UNDO_MODIFY,
   UNDO_END = -1
-
 } undo_type_t;
 
-typedef struct {
-} undo_t;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+struct undo_t;
 
 struct appdata_t;
-static inline void undo_free(G_GNUC_UNUSED osm_t *osm, G_GNUC_UNUSED undo_t *undo) {}
-static inline void undo(G_GNUC_UNUSED struct appdata_t *appdata) {}
-
-#ifdef __cplusplus
-}
+static inline void undo_free(osm_t *, undo_t *) {}
+static inline void undo(struct appdata_t *) {}
 
 static inline void undo_append_way(struct appdata_t *, undo_type_t, way_t *) {}
 static inline void undo_append_node(struct appdata_t *, undo_type_t, node_t *) {}
@@ -50,6 +41,5 @@ static inline void undo_close_state(struct appdata_t *) {}
 
 static inline void undo_open_new_state(struct appdata_t *, undo_type_t, object_t &) {}
 static inline void undo_append_object(struct appdata_t *, undo_type_t, const object_t &) {}
-#endif
 
 #endif // UNDO_H

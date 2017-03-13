@@ -60,7 +60,6 @@
 #include "osm.h"
 
 #include "canvas.h"
-#include "undo.h"
 
 #ifdef USE_HILDON
 #include "dbus.h"
@@ -126,7 +125,6 @@ typedef struct appdata_t {
 
   GtkWidget *submenu_map;
   GtkWidget *menu_item_map_upload;
-  GtkWidget *menu_item_map_undo;
   GtkWidget *menu_item_map_save_changes;
   GtkWidget *menu_item_map_undo_changes;
   GtkWidget *menu_item_map_relations;
@@ -143,8 +141,6 @@ typedef struct appdata_t {
   GtkWidget *app_menu_view, *app_menu_wms, *app_menu_track;
   GtkWidget *app_menu_map;
 #endif
-
-  undo_t undo;
 
 } appdata_t;
 

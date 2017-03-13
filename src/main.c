@@ -96,8 +96,6 @@ void main_ui_enable(appdata_t *appdata) {
   /* disable all menu entries related to map */
   gtk_widget_set_sensitive(appdata->submenu_map, project_valid);
   gtk_widget_set_sensitive(appdata->menu_item_map_upload, osm_valid);
-  if(appdata->menu_item_map_undo)
-    gtk_widget_set_sensitive(appdata->menu_item_map_undo, osm_valid);
   if(appdata->menu_item_map_save_changes)
     gtk_widget_set_sensitive(appdata->menu_item_map_save_changes, osm_valid);
   gtk_widget_set_sensitive(appdata->menu_item_map_undo_changes, osm_valid);
@@ -237,15 +235,6 @@ cb_menu_style(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
   style_select(GTK_WIDGET(appdata->window), appdata);
 }
 #endif
-
-static void
-cb_menu_undo(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
-  appdata_t *appdata = (appdata_t*)data;
-
-  undo(appdata);
-
-  // the banner will be displayed from within undo with more details
-}
 
 #ifndef USE_HILDON
 static void
@@ -732,15 +721,6 @@ static void menu_create(appdata_t *appdata) {
   );
 
   gtk_menu_shell_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
-
-  if(getenv("OSM2GO_UNDO_TEST")) {
-    appdata->menu_item_map_undo = menu_append_new_item(
-	       appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_undo), _("_Undo"),
-	       GTK_STOCK_UNDO, "<OSM2Go-Main>/Map/Undo",
-	       GDK_z, GDK_CONTROL_MASK, TRUE, FALSE, FALSE
-	       );
-  } else
-    printf("set environment variable OSM2GO_UNDO_TEST to enable undo framework tests\n");
 
 #ifndef USE_HILDON
   appdata->menu_item_map_save_changes = menu_append_new_item(
@@ -1281,9 +1261,6 @@ void cleanup(appdata_t *appdata) {
   iconbar_free(appdata->iconbar);
 
   project_free(appdata->project);
-
-  if(appdata->menu_item_map_undo)
-    undo_free(appdata->osm, &appdata->undo);
 
   menu_cleanup(appdata);
 
