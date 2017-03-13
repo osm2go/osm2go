@@ -72,21 +72,18 @@ void main_ui_enable(appdata_t *appdata) {
     gtk_window_set_title(GTK_WINDOW(appdata->window), "");
 #else
   char *str = NULL;
+  const char *cstr = "OSM2go";
 #ifdef USE_HILDON
   if(project_valid)
-    str = g_markup_printf_escaped("<b>%s</b> - OSM2Go",
+    cstr = str = g_markup_printf_escaped("<b>%s</b> - OSM2Go",
 				  appdata->project->name);
-  else
-    str = g_markup_printf_escaped("OSM2Go");
 
-  hildon_window_set_markup(HILDON_WINDOW(appdata->window), str);
+  hildon_window_set_markup(HILDON_WINDOW(appdata->window), cstr);
 #else
   if(project_valid)
-    str = g_strconcat(appdata->project->name, " - OSM2Go", NULL);
-  else
-    str = g_strdup("OSM2Go");
+    cstr = str = g_strconcat(appdata->project->name, " - OSM2Go", NULL);
 
-  gtk_window_set_title(GTK_WINDOW(appdata->window), str);
+  gtk_window_set_title(GTK_WINDOW(appdata->window), cstr);
 #endif
   g_free(str);
 #endif
@@ -385,7 +382,8 @@ cb_menu_track_import(G_GNUC_UNUSED GtkMenuItem *item, appdata_t *appdata) {
       map_track_draw(appdata->map, appdata->track.track);
 
       g_free(appdata->settings->track_path);
-      appdata->settings->track_path = g_strdup(filename);
+      appdata->settings->track_path = filename;
+      filename = NULL;
     }
     track_menu_set(appdata);
     g_free(filename);
