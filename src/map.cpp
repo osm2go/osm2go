@@ -156,7 +156,7 @@ static void map_node_select(appdata_t *appdata, node_t *node) {
     map_item->item = NULL;
 
   map_statusbar(map, map_item);
-  icon_bar_map_item_selected(appdata, map_item, TRUE);
+  icon_bar_map_item_selected(appdata->iconbar, map_item, TRUE);
 
   /* highlight node */
   gint x = map_item->object.node->lpos.x, y = map_item->object.node->lpos.y;
@@ -304,7 +304,7 @@ void map_way_select(appdata_t *appdata, way_t *way) {
   map_item->item      = way->map_item_chain->firstCanvasItem();
 
   map_statusbar(map, map_item);
-  icon_bar_map_item_selected(appdata, map_item, TRUE);
+  icon_bar_map_item_selected(appdata->iconbar, map_item, TRUE);
   gtk_widget_set_sensitive(appdata->menu_item_map_hide_sel, TRUE);
 
   gint arrow_width = ((map_item->object.way->draw.flags & OSM_DRAW_FLAG_BG)?
@@ -405,7 +405,7 @@ void map_relation_select(appdata_t *appdata, relation_t *relation) {
   map_item->item      = NULL;
 
   map_statusbar(map, map_item);
-  icon_bar_map_item_selected(appdata, map_item, TRUE);
+  icon_bar_map_item_selected(appdata->iconbar, map_item, TRUE);
 
   /* process all members */
   relation_select_functor fc(*hl, map);
@@ -450,7 +450,7 @@ void map_item_deselect(appdata_t *appdata) {
   statusbar_set(appdata->statusbar, NULL, FALSE);
 
   /* disable/enable icons in icon bar */
-  icon_bar_map_item_selected(appdata, NULL, FALSE);
+  icon_bar_map_item_selected(appdata->iconbar, NULL, FALSE);
   gtk_widget_set_sensitive(appdata->menu_item_map_hide_sel, FALSE);
 
   /* remove highlight */
@@ -1932,7 +1932,8 @@ void map_action_set(appdata_t *appdata, map_action_t action) {
     break;
   }
 
-  icon_bar_map_action_idle(appdata, action == MAP_ACTION_IDLE);
+  icon_bar_map_action_idle(appdata->iconbar, action == MAP_ACTION_IDLE ? TRUE : FALSE,
+                           appdata->map->selected.object.type == WAY ? TRUE : FALSE);
   gtk_widget_set_sensitive(appdata->menu_item_wms_adjust,
 			   action == MAP_ACTION_IDLE);
 

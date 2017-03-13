@@ -80,14 +80,14 @@ static GtkWidget *menu_add(GtkWidget *menu, appdata_t *appdata,
 
 static gint on_way_button_press(GtkWidget *button, GdkEventButton *event,
 				gpointer data) {
-  appdata_t *appdata = (appdata_t*)data;
+  iconbar_t *iconbar = (iconbar_t*)data;
 
   if(event->type == GDK_BUTTON_PRESS) {
     //  map_action_set((appdata_t*)data, MAP_ACTION_WAY_ADD);
     printf("way clicked\n");
 
     /* draw a popup menu */
-    gtk_menu_popup(GTK_MENU(appdata->iconbar->menu), NULL, NULL, NULL, NULL,
+    gtk_menu_popup(GTK_MENU(iconbar->menu), NULL, NULL, NULL, NULL,
 		   event->button, event->time);
     return TRUE;
   }
@@ -149,10 +149,8 @@ void icon_bar_map_cancel_ok(iconbar_t *iconbar,
   gtk_widget_set_sensitive(iconbar->cancel, cancel);
 }
 
-void icon_bar_map_item_selected(appdata_t *appdata,
+void icon_bar_map_item_selected(iconbar_t *iconbar,
 		map_item_t *map_item, gboolean selected) {
-  iconbar_t *iconbar = appdata->iconbar;
-
   /* one can't remove relations by clicking this while they are */
   /* selected. May change in the future */
   if(selected && (!map_item || map_item->object.type != RELATION))
@@ -173,24 +171,22 @@ void icon_bar_map_item_selected(appdata_t *appdata,
   gtk_widget_set_sensitive(iconbar->way_reverse, way_en);
 }
 
-/* if a user action is on progress, then disable all buttons that */
-/* cause an action to take place or interfere with the action */
-void icon_bar_map_action_idle(appdata_t *appdata, gboolean idle) {
+void icon_bar_map_action_idle(iconbar_t *iconbar, gboolean idle, gboolean way_en) {
   gint i;
 
   /* icons that are enabled in idle mode */
   GtkWidget *action_idle_widgets[] = {
-    appdata->iconbar->node_add,
-    appdata->iconbar->way_add,
+    iconbar->node_add,
+    iconbar->way_add,
     NULL
   };
 
   /* icons that are disabled in idle mode */
   GtkWidget *action_disable_widgets[] = {
-    appdata->iconbar->trash,
-    appdata->iconbar->info,
+    iconbar->trash,
+    iconbar->info,
 #ifdef MAIN_GUI_RELATION
-    appdata->iconbar->relation_add,
+    iconbar->relation_add,
 #endif
     NULL
   };
@@ -201,12 +197,9 @@ void icon_bar_map_action_idle(appdata_t *appdata, gboolean idle) {
   for(i=0;action_disable_widgets[i];i++)
     gtk_widget_set_sensitive(action_disable_widgets[i], FALSE);
 
-  /* special handling for icons that depend on further state */
-  gboolean way_en = (idle && (appdata->map->selected.object.type == WAY)) ?
-                    TRUE : FALSE;
-  gtk_widget_set_sensitive(appdata->iconbar->way_node_add, way_en);
-  gtk_widget_set_sensitive(appdata->iconbar->way_cut, way_en);
-  gtk_widget_set_sensitive(appdata->iconbar->way_reverse, way_en);
+  gtk_widget_set_sensitive(iconbar->way_node_add, idle && way_en);
+  gtk_widget_set_sensitive(iconbar->way_cut, idle && way_en);
+  gtk_widget_set_sensitive(iconbar->way_reverse, idle && way_en);
 }
 
 static GtkWidget *icon_add(GtkWidget *vbox, appdata_t *appdata,
@@ -240,9 +233,8 @@ static GtkWidget *tool_add(GtkWidget *toolbar, appdata_t *appdata,
   gtk_widget_set_tooltip_text(item, tooltip_str);
 #endif
 
-  if(func)
-    gtk_signal_connect(GTK_OBJECT(item), "clicked",
-		       (GtkSignalFunc)func, appdata);
+  gtk_signal_connect(GTK_OBJECT(item), "clicked",
+                     (GtkSignalFunc)func, appdata);
 
   gtk_toolbar_insert(GTK_TOOLBAR(toolbar), GTK_TOOL_ITEM(item), -1);
 
@@ -316,7 +308,7 @@ GtkWidget *iconbar_new(appdata_t *appdata) {
   gtk_widget_add_events(way, GDK_BUTTON_PRESS_MASK);
   gtk_signal_connect(GTK_OBJECT(gtk_bin_get_child(GTK_BIN(way))),
 		     "button-press-event",
-		     (GtkSignalFunc)on_way_button_press, appdata);
+		     (GtkSignalFunc)on_way_button_press, appdata->iconbar);
 
 #else
   iconbar->way_add = tool_add(iconbar->toolbar, appdata,
@@ -362,7 +354,7 @@ GtkWidget *iconbar_new(appdata_t *appdata) {
 
   /* --------------------------------------------------------- */
 
-  icon_bar_map_item_selected(appdata, NULL, FALSE);
+  icon_bar_map_item_selected(appdata->iconbar, NULL, FALSE);
 
 #ifndef FINGER_UI
   icon_bar_map_cancel_ok(appdata->iconbar, FALSE, FALSE);

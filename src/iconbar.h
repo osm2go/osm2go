@@ -55,10 +55,19 @@ extern "C" {
 #endif
 
 GtkWidget *iconbar_new(appdata_t *appdata);
-void icon_bar_map_item_selected(appdata_t *appdata, map_item_t *map_item,
+void icon_bar_map_item_selected(iconbar_t *iconbar, map_item_t *map_item,
 				gboolean selected);
 void icon_bar_map_cancel_ok(iconbar_t *iconbar, gboolean cancel, gboolean ok);
-void icon_bar_map_action_idle(appdata_t *appdata, gboolean idle);
+/**
+ * @brief set enable state of edit buttons
+ * @param iconbar the iconbar to operate on
+ * @param idle if an operation is currently active
+ * @param way_en if the operations affecting ways should be enabled
+ *
+ * If a user action is in progress, then disable all buttons that
+ * cause an action to take place or interfere with the action.
+ */
+void icon_bar_map_action_idle(iconbar_t *iconbar, gboolean idle, gboolean way_en);
 void iconbar_free(iconbar_t *iconbar);
 
 #ifdef FINGER_UI
