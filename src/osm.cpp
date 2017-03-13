@@ -2149,8 +2149,8 @@ member_t::member_t(type_t t)
 }
 
 member_t::member_t(const object_t &o, char *r)
-  : role(r)
-  , object(o)
+  : object(o)
+  , role(r)
 {
 }
 
