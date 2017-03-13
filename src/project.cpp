@@ -47,7 +47,7 @@
 #endif
 
 struct project_context_t {
-  explicit project_context_t(appdata_t *a, project_t *p, gboolean n);
+  explicit project_context_t(appdata_t *a, project_t *p, gboolean n, const std::vector<project_t *> &j);
   project_t *project;
   settings_t *settings;
   GtkWidget *dialog, *fsize, *diff_stat, *diff_remove;
@@ -58,12 +58,13 @@ struct project_context_t {
   GtkWidget *server;
 #endif
   area_edit_t area_edit;
-  const std::vector<project_t *> *projects;
+  const std::vector<project_t *> &projects;
 
   bool active_n_dirty() const;
 };
 
-project_context_t::project_context_t(appdata_t* a, project_t *p, gboolean n)
+project_context_t::project_context_t(appdata_t* a, project_t *p, gboolean n,
+                                     const std::vector<project_t *> &j)
   : project(p)
   , settings(a->settings)
   , dialog(0)
@@ -81,7 +82,7 @@ project_context_t::project_context_t(appdata_t* a, project_t *p, gboolean n)
   , server(0)
 #endif
   , area_edit(a, &project->min, &project->max)
-  , projects(NULL)
+  , projects(j)
 {
 }
 
@@ -1020,7 +1021,7 @@ static void on_edit_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
 	       "Changing the area may cause pending changes to be "
 	       "lost if they are outside the updated area."));
 
-  std::for_each(context->projects->begin(), context->projects->end(),
+  std::for_each(context->projects.begin(), context->projects.end(),
                 projects_to_bounds(context->area_edit.other_bounds));
 
   if(area_edit(context->area_edit)) {
@@ -1125,8 +1126,7 @@ project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
 
   /* ------------ project edit dialog ------------- */
 
-  project_context_t context(appdata, project, is_new);
-  context.projects = &scontext->projects;
+  project_context_t context(appdata, project, is_new, scontext->projects);
 
   /* cancel is enabled for "new" projects only */
   if(is_new) {
