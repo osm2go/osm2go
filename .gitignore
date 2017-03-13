@@ -1,10 +1,14 @@
-*.o
+# CMake build system
 Makefile
-aclocal.m4
-autom4te.cache
-config.log
-config.status
-configure
+CMakeCache.txt
+CMakeFiles/*
+
+# generated files
 data/elemstyles-mapnik.xml
+osm2go
+libosm2go_lib.a
 debian/control
-src/osm2go
+
+# KDevelop project
+osm2go.kdev4
+.kdev4
