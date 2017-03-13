@@ -87,9 +87,13 @@ project_context_t::project_context_t(appdata_t* a, project_t *p, gboolean n,
 }
 
 struct select_context_t {
-  appdata_t *appdata;
+  select_context_t(appdata_t *a, GtkWidget *dial);
+  ~select_context_t();
+
+  appdata_t * const appdata;
   std::vector<project_t *> projects;
-  GtkWidget *dialog, *list;
+  GtkWidget * const dialog;
+  GtkWidget *list;
 };
 
 static bool project_edit(select_context_t *scontext,
@@ -313,21 +317,21 @@ gboolean project_exists(settings_t *settings, const char *name) {
   return project_exists(settings, name, dummy);
 }
 
-static std::vector<project_t *> project_scan(appdata_t *appdata) {
+static std::vector<project_t *> project_scan(settings_t *settings) {
   std::vector<project_t *> projects;
 
   /* scan for projects */
-  GDir *dir = g_dir_open(appdata->settings->base_path, 0, NULL);
+  GDir *dir = g_dir_open(settings->base_path, 0, NULL);
   const gchar *name;
   while((name = g_dir_read_name(dir)) != NULL) {
     std::string fullname;
-    if(project_exists(appdata->settings, name, fullname)) {
+    if(project_exists(settings, name, fullname)) {
       printf("found project %s\n", name);
 
       /* try to read project and append it to chain */
-      project_t *n = new project_t(name, appdata->settings->base_path);
+      project_t *n = new project_t(name, settings->base_path);
 
-      if(project_read(fullname, n, appdata->settings->server))
+      if(project_read(fullname, n, settings->server))
         projects.push_back(n);
       else
         delete n;
@@ -357,9 +361,9 @@ static gboolean osm_file_exists(const project_t *project) {
   }
 }
 
-static void view_selected(select_context_t *context, project_t *project) {
+static void view_selected(GtkWidget *dialog, project_t *project) {
   /* check if the selected project also has a valid osm file */
-  gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog),
+  gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog),
       GTK_RESPONSE_ACCEPT,
       project && osm_file_exists(project));
 }
@@ -376,14 +380,20 @@ changed(GtkTreeSelection *selection, gpointer userdata) {
     project_t *project = NULL;
     gtk_tree_model_get(model, &iter, PROJECT_COL_DATA, &project, -1);
 
-    view_selected(context, project);
+    view_selected(context->dialog, project);
   }
 
   list_button_enable(GTK_WIDGET(context->list), LIST_BUTTON_REMOVE, sel);
   list_button_enable(GTK_WIDGET(context->list), LIST_BUTTON_EDIT, sel);
 }
 
-/* get the currently selected project in the list, NULL if none */
+/**
+ * @brief get the currently selected project in the list
+ * @param list the project list widget
+ * @returns the project belonging to the currently selected entry
+ *
+ * This assumes there is a selection and a project associated to it.
+ */
 static project_t *project_get_selected(GtkWidget *list) {
   project_t *project = NULL;
   GtkTreeModel     *model;
@@ -392,6 +402,7 @@ static project_t *project_get_selected(GtkWidget *list) {
   g_assert(list_get_selected(list, &model, &iter));
   gtk_tree_model_get(model, &iter, PROJECT_COL_DATA, &project, -1);
 
+  g_assert(project);
   return project;
 }
 
@@ -511,7 +522,7 @@ static bool project_delete(select_context_t *context, project_t *project) {
   delete project;
 
   /* disable ok button button */
-  view_selected(context, NULL);
+  view_selected(context->dialog, NULL);
 
   return true;
 }
@@ -578,7 +589,7 @@ static project_t *project_new(select_context_t *context) {
   }
 
   /* enable/disable edit/remove buttons */
-  view_selected(context, project);
+  view_selected(context->dialog, project);
 
   return project;
 }
@@ -659,7 +670,6 @@ static void on_project_delete(G_GNUC_UNUSED GtkButton *button, gpointer data) {
 static void on_project_edit(G_GNUC_UNUSED GtkButton *button, gpointer data) {
   select_context_t *context = (select_context_t*)data;
   project_t *project = project_get_selected(context->list);
-  g_assert(project);
 
   if(project_edit(context, project, FALSE)) {
     GtkTreeModel     *model;
@@ -740,7 +750,7 @@ static void on_project_edit(G_GNUC_UNUSED GtkButton *button, gpointer data) {
   }
 
   /* enable/disable edit/remove buttons */
-  view_selected(context, project);
+  view_selected(context->dialog, project);
 }
 
 static void
@@ -850,17 +860,12 @@ static GtkWidget *project_list_widget(select_context_t &context, gboolean &has_s
 static std::string project_select(appdata_t *appdata) {
   std::string name;
 
-  select_context_t context = { 0 };
-  context.appdata = appdata;
-  context.projects = project_scan(appdata);
-
-  /* create project selection dialog */
-  context.dialog =
-    misc_dialog_new(MISC_DIALOG_MEDIUM,_("Project selection"),
-	  GTK_WINDOW(appdata->window),
-	  GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
-          GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
-          NULL);
+  select_context_t context(appdata,
+                    misc_dialog_new(MISC_DIALOG_MEDIUM,_("Project selection"),
+                                    GTK_WINDOW(appdata->window),
+                                    GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
+                                    GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
+                                    NULL));
 
   /* under fremantle the dialog does not have an "Open" button */
   /* as it's closed when a project is being selected */
@@ -878,11 +883,6 @@ static std::string project_select(appdata_t *appdata) {
   gtk_widget_show_all(context.dialog);
   if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(context.dialog)))
     name = project_get_selected(context.list)->name;
-
-  gtk_widget_destroy(context.dialog);
-
-  /* free all entries */
-  std::for_each(context.projects.begin(), context.projects.end(), project_free);
 
   return name;
 }
@@ -1485,4 +1485,19 @@ project_t::~project_t()
   g_free(osm);
 
   map_state_free(map_state);
+}
+
+select_context_t::select_context_t(appdata_t* a, GtkWidget *dial)
+  : appdata(a)
+  , projects(project_scan(appdata->settings))
+  , dialog(dial)
+  , list(0)
+{
+}
+
+select_context_t::~select_context_t()
+{
+  std::for_each(projects.begin(), projects.end(), project_free);
+
+  gtk_widget_destroy(dialog);
 }
