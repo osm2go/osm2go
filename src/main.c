@@ -159,6 +159,8 @@ cb_menu_download(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
   if(project_check_demo(GTK_WIDGET(appdata->window), appdata->project))
     return;
 
+  map_set_autosave(appdata->map, FALSE);
+
   /* if we have valid osm data loaded: save state first */
   if(appdata->osm)
     diff_save(appdata->project, appdata->osm);
@@ -181,6 +183,7 @@ cb_menu_download(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
     banner_busy_stop(appdata); //"Redrawing"
   }
 
+  map_set_autosave(appdata->map, TRUE);
   main_ui_enable(appdata);
 }
 

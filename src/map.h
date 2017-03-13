@@ -210,6 +210,8 @@ void map_detail_increase(map_t *map);
 void map_detail_decrease(map_t *map);
 void map_detail_normal(map_t *map);
 
+void map_set_autosave(map_t *map, gboolean enable);
+
 #ifdef __cplusplus
 }
 #endif
