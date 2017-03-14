@@ -50,9 +50,6 @@
 #define HILDON_ENTRY_NO_AUTOCAP(a)
 #endif
 
-#define ZOOM_BUTTONS
-#define DETAIL_POPUP
-
 #include <gtk/gtk.h>
 #include <glib/gstdio.h>
 
@@ -79,9 +76,7 @@ typedef struct appdata_t {
   struct map_t *map;
   osm_t *osm;
 
-#ifdef ZOOM_BUTTONS
   GtkWidget *btn_zoom_in, *btn_zoom_out, *btn_detail_popup;
-#endif
 
   struct statusbar_t *statusbar;
   struct settings_t *settings;

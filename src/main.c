@@ -101,10 +101,8 @@ void main_ui_enable(appdata_t *appdata) {
   gtk_widget_set_sensitive(appdata->submenu_view, osm_valid);
   gtk_widget_set_sensitive(appdata->submenu_wms, osm_valid);
 
-#ifdef ZOOM_BUTTONS
   gtk_widget_set_sensitive(appdata->btn_zoom_in, osm_valid);
   gtk_widget_set_sensitive(appdata->btn_zoom_out, osm_valid);
-#endif
 
   if(!project_valid)
     statusbar_set(appdata->statusbar, _("Please load or create a project"), FALSE);
@@ -304,7 +302,7 @@ cb_menu_zoomout(G_GNUC_UNUSED GtkMenuItem *item, appdata_t *appdata) {
   printf("zoom is now %f\n", appdata->map->state->zoom);
 }
 
-#if defined(FREMANTLE) || (MAEMO_VERSION_MAJOR != 5) || !defined(DETAIL_POPUP)
+#if defined(FREMANTLE) || (MAEMO_VERSION_MAJOR != 5)
 static void
 cb_menu_view_detail_inc(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
@@ -640,7 +638,7 @@ static void menu_create(appdata_t *appdata) {
   );
 #endif
 
-#if !defined(ZOOM_BUTTONS) || !defined(USE_HILDON)
+#if !defined(USE_HILDON)
   menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_zoomin), _("Zoom _in"),
     GTK_STOCK_ZOOM_IN, "<OSM2Go-Main>/View/ZoomIn",
@@ -1070,18 +1068,8 @@ void on_submenu_track_clicked(GtkButton *button, appdata_t *appdata) {
 
 /* -- the view submenu -- */
 static const menu_entry_t submenu_view_entries[] = {
-#ifndef ZOOM_BUTTONS
-  SIMPLE_ENTRY("Zoom in",         cb_menu_zoomin),
-  SIMPLE_ENTRY("Zoom out",        cb_menu_zoomout),
-#endif
   /* --- */
   SIMPLE_ENTRY("Style",           NULL),
-  /* --- */
-#ifndef DETAIL_POPUP
-  SIMPLE_ENTRY("Normal details",  cb_menu_view_detail_normal),
-  SIMPLE_ENTRY("More details",    cb_menu_view_detail_inc),
-  SIMPLE_ENTRY("Less details",    cb_menu_view_detail_dec),
-#endif
   /* --- */
   DISABLED_ENTRY("Hide selected", cb_menu_map_hide_sel, menu_item_map_hide_sel),
   DISABLED_ENTRY("Show all",      cb_menu_map_show_all, menu_item_map_show_all),
@@ -1472,13 +1460,11 @@ int main(int argc, char *argv[]) {
   gtk_box_pack_start(GTK_BOX(vbox), map, TRUE, TRUE, 0);
 
   /* fremantle has seperate zoom/details buttons on the right screen side */
-#if !defined(FREMANTLE) && (defined(ZOOM_BUTTONS) || defined(DETAIL_POPUP))
+#ifndef FREMANTLE
   GtkWidget *zhbox = gtk_hbox_new(FALSE, 0);
   appdata.statusbar = statusbar_new();
   gtk_box_pack_start_defaults(GTK_BOX(zhbox), appdata.statusbar->widget);
-#endif
 
-#if !defined(FREMANTLE) && defined(DETAIL_POPUP)
   /* ---- detail popup ---- */
   appdata.btn_detail_popup = gtk_button_new();
   gtk_button_set_image(GTK_BUTTON(appdata.btn_detail_popup),
@@ -1486,9 +1472,7 @@ int main(int argc, char *argv[]) {
   g_signal_connect(appdata.btn_detail_popup, "clicked",
 		   G_CALLBACK(scale_popup), &appdata);
   gtk_box_pack_start(GTK_BOX(zhbox), appdata.btn_detail_popup, FALSE, FALSE, 0);
-#endif
 
-#if !defined(FREMANTLE) && defined(ZOOM_BUTTONS)
   /* ---- add zoom out button right of statusbar ---- */
   appdata.btn_zoom_out = gtk_button_new();
   gtk_button_set_image(GTK_BUTTON(appdata.btn_zoom_out),
@@ -1504,9 +1488,7 @@ int main(int argc, char *argv[]) {
   g_signal_connect(appdata.btn_zoom_in, "clicked",
 		   G_CALLBACK(cb_menu_zoomin), &appdata);
   gtk_box_pack_start(GTK_BOX(zhbox), appdata.btn_zoom_in, FALSE, FALSE, 0);
-#endif
 
-#if !defined(FREMANTLE) && (defined(ZOOM_BUTTONS) || defined(DETAIL_POPUP))
   gtk_box_pack_start(GTK_BOX(vbox), zhbox, FALSE, FALSE, 0);
 #else
   appdata.statusbar = statusbar_new();
