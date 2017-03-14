@@ -256,13 +256,17 @@ static void on_tag_add(G_GNUC_UNUSED GtkWidget *button, tag_context_t *context) 
     osm_tag_free(tag);
   } else {
     context->tags.push_back(tag);
+    // check if the new key introduced a collision
+    gboolean collision = std::find_if(context->tags.begin(), context->tags.end(),
+                                      collision_functor(*tag)) != context->tags.end() ? TRUE : FALSE;
     /* append a row for the new data */
-    GtkTreeIter iter = store_append(context->store, *tag, FALSE);
+    GtkTreeIter iter = store_append(context->store, *tag, collision);
 
     gtk_tree_selection_select_iter(
        list_get_selection(context->list), &iter);
 
-    context->update_collisions();
+    if(collision)
+      context->update_collisions();
   }
 }
 
