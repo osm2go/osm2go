@@ -60,8 +60,6 @@ set(osm2go_SOURCE_FILES
 	src/project.h
 	src/relation_edit.cpp
 	src/relation_edit.h
-	src/scale_popup.c
-	src/scale_popup.h
 	src/settings.c
 	src/settings.h
 	src/statusbar.c
@@ -107,6 +105,7 @@ pkg_search_module(GooCanvas REQUIRED IMPORTED_TARGET goocanvas goocanvas-2.0)
 
 pkg_check_modules(GVFS REQUIRED IMPORTED_TARGET gnome-vfs-module-2.0)
 
+set(FREMANTLE Off)
 pkg_check_modules(MAEMO maemo-version)
 if (MAEMO_FOUND)
 	string(REGEX REPLACE "^([0-9]+)\\..*" "\\1" MAEMO_VERSION_MAJOR "${MAEMO_VERSION}")
@@ -158,8 +157,9 @@ if (MAEMO_FOUND)
 		set(ICONNAME osm2go.48.png)
 		# the data root dir is /opt on fremantle
 		set(DATA_DIR "/opt/${PROJECT_NAME}")
-		add_definitions(-DFREMANTLE -DFREMANTLE_PANNABLE_AREA)
+		add_definitions(-DFREMANTLE_PANNABLE_AREA)
 		set(PICKER_MENU On)
+		set(FREMANTLE On)
 	endif ()
 
 	message(STATUS "Using application installer icon '${ICONNAME}'")
@@ -182,6 +182,15 @@ else ()
 	list(APPEND MORE_LIBS PUBLIC ${GTK2_TARGETS})
 
 	set(USE_SVG_ICONS_DEFAULT On)
+endif ()
+
+if (FREMANTLE)
+	add_definitions(-DFREMANTLE)
+else ()
+	list(APPEND osm2go_SOURCE_FILES
+		src/scale_popup.c
+		src/scale_popup.h
+	)
 endif ()
 
 find_library(MATH_LIBRARY m)

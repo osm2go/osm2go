@@ -29,6 +29,8 @@
 #include <hildon/hildon-window-stack.h>
 #include <gdk/gdkx.h>
 #include <X11/Xatom.h>
+#else
+#include "scale_popup.h"
 #endif
 
 #include "appdata.h"
@@ -41,7 +43,6 @@
 #include "misc.h"
 #include "osm_api.h"
 #include "relation_edit.h"
-#include "scale_popup.h"
 #include "statusbar.h"
 #include "style.h"
 #include "track.h"
