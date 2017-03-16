@@ -20,15 +20,15 @@
 #ifndef SCALE_POPUP_H
 #define SCALE_POPUP_H
 
-#include "appdata.h"
-
 #include <gtk/gtk.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void scale_popup(GtkWidget *button, appdata_t *appdata);
+struct map_t;
+
+void scale_popup(GtkWidget *button, float lin, GtkWindow *awindow, struct map_t *map);
 
 #ifdef __cplusplus
 }

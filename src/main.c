@@ -303,6 +303,19 @@ cb_menu_zoomout(G_GNUC_UNUSED GtkMenuItem *item, appdata_t *appdata) {
   printf("zoom is now %f\n", appdata->map->state->zoom);
 }
 
+#ifndef FREMANTLE
+static void
+cb_scale_popup(GtkWidget *button, appdata_t *appdata) {
+  if(!appdata->project || !appdata->project->map_state)
+    return;
+
+  float lin =
+    -rint(log(appdata->project->map_state->detail)/log(MAP_DETAIL_STEP));
+
+  scale_popup(button, lin, GTK_WINDOW(appdata->window), appdata->map);
+}
+#endif
+
 #if defined(FREMANTLE) || (MAEMO_VERSION_MAJOR != 5)
 static void
 cb_menu_view_detail_inc(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
@@ -1471,7 +1484,7 @@ int main(int argc, char *argv[]) {
   gtk_button_set_image(GTK_BUTTON(appdata.btn_detail_popup),
 	gtk_image_new_from_stock(GTK_STOCK_EDIT, GTK_ICON_SIZE_MENU));
   g_signal_connect(appdata.btn_detail_popup, "clicked",
-		   G_CALLBACK(scale_popup), &appdata);
+		   G_CALLBACK(cb_scale_popup), &appdata);
   gtk_box_pack_start(GTK_BOX(zhbox), appdata.btn_detail_popup, FALSE, FALSE, 0);
 
   /* ---- add zoom out button right of statusbar ---- */

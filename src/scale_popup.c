@@ -18,9 +18,7 @@
  */
 
 
-#include "appdata.h"
 #include "map.h"
-#include "project.h"
 
 #ifndef USE_HILDON
 #define HEIGHT 100
@@ -101,14 +99,7 @@ on_value_changed(GtkAdjustment *adjustment,  map_t *map) {
 				      -gtk_adjustment_get_value(adjustment)));
 }
 
-void scale_popup(GtkWidget *button, appdata_t *appdata) {
-
-  if(!appdata->project || !appdata->project->map_state)
-    return;
-
-  float lin =
-    -rint(log(appdata->project->map_state->detail)/log(MAP_DETAIL_STEP));
-
+void scale_popup(GtkWidget *button, float lin, GtkWindow *awindow, map_t *map) {
   GtkWidget *window = gtk_window_new(GTK_WINDOW_POPUP);
   gtk_widget_realize(window);
   gtk_window_set_default_size(GTK_WINDOW(window),
@@ -116,8 +107,7 @@ void scale_popup(GtkWidget *button, appdata_t *appdata) {
   gtk_window_resize(GTK_WINDOW(window),
 		    button->allocation.width, HEIGHT);
   //  gtk_window_set_resizable(GTK_WINDOW(window), FALSE);
-  gtk_window_set_transient_for(GTK_WINDOW(window),
-			       GTK_WINDOW(appdata->window));
+  gtk_window_set_transient_for(GTK_WINDOW(window), awindow);
   gtk_window_set_keep_above(GTK_WINDOW(window), TRUE);
   gtk_window_set_destroy_with_parent(GTK_WINDOW(window), TRUE);
   gtk_window_set_gravity(GTK_WINDOW(window), GDK_GRAVITY_STATIC);
@@ -163,7 +153,7 @@ void scale_popup(GtkWidget *button, appdata_t *appdata) {
   gtk_scale_set_digits(GTK_SCALE(scale), 0);
   gtk_scale_set_draw_value(GTK_SCALE(scale), FALSE);
   g_signal_connect(G_OBJECT(adjustment), "value-changed",
-		   G_CALLBACK(on_value_changed), appdata->map);
+                   G_CALLBACK(on_value_changed), map);
   gtk_box_pack_start_defaults(GTK_BOX(hbox), scale);
   gtk_container_add(GTK_CONTAINER(frame), hbox);
   gtk_container_add(GTK_CONTAINER(window), frame);
