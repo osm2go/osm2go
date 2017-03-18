@@ -24,10 +24,10 @@
 #include "net_io.h"
 #include "wms.h"
 
+#include <cmath>
+#include <cstring>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
-#include <math.h>
-#include <string.h>
 #include <strings.h>
 
 #ifndef LIBXML_TREE_ENABLED
@@ -39,12 +39,12 @@
 #define WMS_FORMAT_PNG  (1<<2)
 #define WMS_FORMAT_GIF  (1<<3)
 
-typedef struct {
+struct wms_llbbox_t {
   pos_t min, max;
   gboolean valid;
-} wms_llbbox_t;
+};
 
-typedef struct wms_layer_t {
+struct wms_layer_t {
   gchar *title;
   gchar *name;
   gchar *srs;
@@ -53,33 +53,43 @@ typedef struct wms_layer_t {
 
   struct wms_layer_t *children;
   struct wms_layer_t *next;
-} wms_layer_t;
+};
 
-typedef struct {
+struct wms_getmap_t {
+  wms_getmap_t()
+    : format(0) {}
   guint format;
-} wms_getmap_t;
+};
 
-typedef struct {
+struct wms_request_t {
   wms_getmap_t getmap;
-} wms_request_t;
+};
 
-typedef struct {
+struct wms_service_t {
+  wms_service_t()
+    : title(0) {}
   gchar *title;
-} wms_service_t;
+};
 
-typedef struct {
+struct wms_cap_t {
+  wms_cap_t()
+    : layer(0) {}
   wms_layer_t *layer;
   wms_request_t request;
-} wms_cap_t;
+};
 
-typedef struct {
+struct wms_t {
+  wms_t(gchar *s, char *p)
+    : server(g_strdup(s)), path(g_strdup(p)), width(0), height(0) {}
+  ~wms_t();
+
   gchar *server;
   gchar *path;
   gint width, height;
 
   wms_service_t service;
   wms_cap_t cap;
-} wms_t;
+};
 
 static gboolean xmlTextIs(xmlDocPtr doc, xmlNodePtr list, const char *str) {
   xmlChar *nstr = xmlNodeListGetString(doc, list, 1);
@@ -170,7 +180,7 @@ static wms_layer_t *wms_cap_parse_layer(xmlDocPtr doc, xmlNode *a_node) {
 }
 
 static wms_getmap_t wms_cap_parse_getmap(xmlDocPtr doc, xmlNode *a_node) {
-  wms_getmap_t wms_getmap = { 0 };
+  wms_getmap_t wms_getmap;
   xmlNode *cur_node;
 
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
@@ -199,7 +209,7 @@ static wms_getmap_t wms_cap_parse_getmap(xmlDocPtr doc, xmlNode *a_node) {
 }
 
 static wms_request_t wms_cap_parse_request(xmlDocPtr doc, xmlNode *a_node) {
-  wms_request_t wms_request = { { 0 } };
+  wms_request_t wms_request;
   xmlNode *cur_node;
 
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
@@ -215,9 +225,9 @@ static wms_request_t wms_cap_parse_request(xmlDocPtr doc, xmlNode *a_node) {
   return wms_request;
 }
 
-static gboolean wms_cap_parse_cap(xmlDocPtr doc, xmlNode *a_node, wms_cap_t *wms_cap) {
+static bool wms_cap_parse_cap(xmlDocPtr doc, xmlNode *a_node, wms_cap_t *wms_cap) {
   xmlNode *cur_node;
-  gboolean has_request = FALSE;
+  bool has_request = false;
 
   wms_layer_t **layer = &(wms_cap->layer);
 
@@ -225,7 +235,7 @@ static gboolean wms_cap_parse_cap(xmlDocPtr doc, xmlNode *a_node, wms_cap_t *wms
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcasecmp((char*)cur_node->name, "Request") == 0) {
 	wms_cap->request = wms_cap_parse_request(doc, cur_node);
-        has_request = TRUE;
+        has_request = true;
       } else if(strcasecmp((char*)cur_node->name, "Layer") == 0) {
 	*layer = wms_cap_parse_layer(doc, cur_node);
 	if(*layer) layer = &((*layer)->next);
@@ -258,9 +268,9 @@ static void wms_cap_parse_service(xmlDocPtr doc, xmlNode *a_node,
   printf("Title: %s\n", wms_service->title);
 }
 
-static gboolean wms_cap_parse(wms_t *wms, xmlDocPtr doc, xmlNode *a_node) {
+static bool wms_cap_parse(wms_t *wms, xmlDocPtr doc, xmlNode *a_node) {
   xmlNode *cur_node = NULL;
-  gboolean has_service = FALSE, has_cap = FALSE;
+  bool has_service = false, has_cap = false;
 
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
@@ -268,7 +278,7 @@ static gboolean wms_cap_parse(wms_t *wms, xmlDocPtr doc, xmlNode *a_node) {
       if(strcasecmp((char*)cur_node->name, "Service") == 0) {
         if(!has_service) {
           wms_cap_parse_service(doc, cur_node, &wms->service);
-          has_service = TRUE;
+          has_service = true;
         }
       } else if(strcasecmp((char*)cur_node->name, "Capability") == 0) {
         if(!has_cap)
@@ -282,9 +292,9 @@ static gboolean wms_cap_parse(wms_t *wms, xmlDocPtr doc, xmlNode *a_node) {
 }
 
 /* parse root element */
-static gboolean wms_cap_parse_root(wms_t *wms, xmlDocPtr doc, xmlNode *a_node) {
+static bool wms_cap_parse_root(wms_t *wms, xmlDocPtr doc, xmlNode *a_node) {
   xmlNode *cur_node = NULL;
-  gboolean ret = FALSE;
+  bool ret = FALSE;
 
   for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
@@ -299,11 +309,11 @@ static gboolean wms_cap_parse_root(wms_t *wms, xmlDocPtr doc, xmlNode *a_node) {
   return ret;
 }
 
-static gboolean wms_cap_parse_doc(wms_t *wms, xmlDocPtr doc) {
+static bool wms_cap_parse_doc(wms_t *wms, xmlDocPtr doc) {
   /* Get the root element node */
   xmlNode *root_element = xmlDocGetRootElement(doc);
 
-  gboolean ret = wms_cap_parse_root(wms, doc, root_element);
+  bool ret = wms_cap_parse_root(wms, doc, root_element);
 
   /*free the document */
   xmlFreeDoc(doc);
@@ -365,12 +375,11 @@ static void wms_layer_free(wms_layer_t *layer) {
   }
 }
 
-static void wms_free(wms_t *wms) {
-  g_free(wms->server);
-  g_free(wms->path);
-  wms_layer_free(wms->cap.layer);
-  g_free(wms->service.title);
-  g_free(wms);
+wms_t::~wms_t() {
+  g_free(server);
+  g_free(path);
+  wms_layer_free(cap.layer);
+  g_free(service.title);
 }
 
 /* ---------------------- use ------------------- */
@@ -443,13 +452,15 @@ enum {
   WMS_SERVER_NUM_COLS
 };
 
-typedef struct {
-  appdata_t *appdata;
-  wms_t *wms;
-  GtkWidget *dialog, *list;
+struct wms_server_context_t {
+  wms_server_context_t(appdata_t *a, wms_t *w, GtkWidget *d)
+    : appdata(a), wms(w), dialog(d), list(0), store(0), server_label(0), path_label(0) {}
+  appdata_t * const appdata;
+  wms_t * const wms;
+  GtkWidget * const dialog, *list;
   GtkListStore *store;
   GtkWidget *server_label, *path_label;
-} wms_server_context_t;
+};
 
 static wms_server_t *get_selection(GtkWidget *list) {
   GtkTreeSelection *selection;
@@ -528,7 +539,7 @@ static void wms_server_selected(wms_server_context_t *context,
 
 static void
 wms_server_changed(GtkTreeSelection *selection, gpointer userdata) {
-  wms_server_context_t *context = (wms_server_context_t*)userdata;
+  wms_server_context_t *context = static_cast<wms_server_context_t *>(userdata);
 
   GtkTreeModel *model = NULL;
   GtkTreeIter iter;
@@ -610,7 +621,7 @@ gboolean wms_server_edit(wms_server_context_t *context, gboolean edit_name,
 
   gtk_table_attach(GTK_TABLE(table),
 		   label = gtk_label_new(_("Name:")), 0, 1, 0, 1,
-		   GTK_FILL, 0, 0, 0);
+		   GTK_FILL, static_cast<GtkAttachOptions>(0), 0, 0);
   gtk_misc_set_alignment(GTK_MISC(label), 0.f, 0.5f);
   gtk_table_attach_defaults(GTK_TABLE(table),
 		    name = entry_new(), 1, 2, 0, 1);
@@ -622,7 +633,7 @@ gboolean wms_server_edit(wms_server_context_t *context, gboolean edit_name,
 
   gtk_table_attach(GTK_TABLE(table),
 		   label = gtk_label_new(_("Server:")), 0, 1, 1, 2,
-		   GTK_FILL, 0, 0, 0);
+		   GTK_FILL, static_cast<GtkAttachOptions>(0), 0, 0);
   gtk_misc_set_alignment(GTK_MISC(label), 0.f, 0.5f);
   gtk_table_attach_defaults(GTK_TABLE(table),
 		    server = entry_new(), 1, 2, 1, 2);
@@ -631,7 +642,7 @@ gboolean wms_server_edit(wms_server_context_t *context, gboolean edit_name,
 
   gtk_table_attach(GTK_TABLE(table),
 		   label = gtk_label_new(_("Path:")), 0, 1, 2, 3,
-		   GTK_FILL, 0, 0, 0);
+		   GTK_FILL, static_cast<GtkAttachOptions>(0), 0, 0);
   gtk_misc_set_alignment(GTK_MISC(label), 0.f, 0.5f);
   gtk_table_attach_defaults(GTK_TABLE(table),
 		    path = entry_new(), 1, 2, 2, 3);
@@ -779,16 +790,12 @@ static GtkWidget *wms_server_widget(wms_server_context_t *context) {
 static gboolean wms_server_dialog(appdata_t *appdata, wms_t *wms) {
   gboolean ok = FALSE;
 
-  wms_server_context_t context = { 0 };
-  context.appdata = appdata;
-  context.wms = wms;
-
-  context.dialog =
+  wms_server_context_t context(appdata, wms,
     misc_dialog_new(MISC_DIALOG_MEDIUM, _("WMS Server Selection"),
 		    GTK_WINDOW(appdata->window),
 		    GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
 		    GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-		    NULL);
+		    NULL));
 
   /* server selection box */
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(context.dialog)->vbox),
@@ -803,7 +810,8 @@ static gboolean wms_server_dialog(appdata_t *appdata, wms_t *wms) {
 
   label = gtk_label_new(_("Server:"));
   gtk_misc_set_alignment(GTK_MISC(label), 0.f, 0.5f);
-  gtk_table_attach(GTK_TABLE(table),  label, 0, 1, 0, 1, GTK_FILL, 0,0,0);
+  gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1, GTK_FILL,
+                   static_cast<GtkAttachOptions>(0), 0, 0);
   context.server_label = gtk_label_new(NULL);
   gtk_label_set_ellipsize(GTK_LABEL(context.server_label),
 			  PANGO_ELLIPSIZE_MIDDLE);
@@ -813,7 +821,8 @@ static gboolean wms_server_dialog(appdata_t *appdata, wms_t *wms) {
 
   label = gtk_label_new(_("Path:"));
   gtk_misc_set_alignment(GTK_MISC(label), 0.f, 0.5f);
-  gtk_table_attach(GTK_TABLE(table),  label, 0, 1, 1, 2, GTK_FILL, 0,0,0);
+  gtk_table_attach(GTK_TABLE(table), label, 0, 1, 1, 2, GTK_FILL,
+                   static_cast<GtkAttachOptions>(0), 0, 0);
   context.path_label = gtk_label_new(NULL);
   gtk_label_set_ellipsize(GTK_LABEL(context.path_label),
 			  PANGO_ELLIPSIZE_MIDDLE);
@@ -823,7 +832,6 @@ static gboolean wms_server_dialog(appdata_t *appdata, wms_t *wms) {
 
   gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context.dialog)->vbox),
 		     table, FALSE, FALSE, 0);
-
 
   wms_server_selected(&context, NULL);
 
@@ -1057,9 +1065,7 @@ void wms_import(appdata_t *appdata) {
   if(appdata->map->action.type == MAP_ACTION_BG_ADJUST)
     map_action_cancel(appdata);
 
-  wms_t *wms = g_new0(wms_t,1);
-  wms->server = g_strdup(appdata->project->wms_server);
-  wms->path   = g_strdup(appdata->project->wms_path);
+  wms_t wms(appdata->project->wms_server, appdata->project->wms_path);
 
   /* reset any background adjustments in the project ... */
   appdata->project->wms_offset.x = 0;
@@ -1070,29 +1076,27 @@ void wms_import(appdata_t *appdata) {
   appdata->map->bg.offset.y = 0;
 
   /* get server from dialog */
-  if(!wms_server_dialog(appdata, wms)) {
-    wms_free(wms);
+  if(!wms_server_dialog(appdata, &wms))
     return;
-  }
 
   /* ------------- copy values back into project ---------------- */
   if(!appdata->project->wms_server ||
-     strcmp(appdata->project->wms_server, wms->server) != 0) {
+     strcmp(appdata->project->wms_server, wms.server) != 0) {
     g_free(appdata->project->wms_server);
-    appdata->project->wms_server = g_strdup(wms->server);
+    appdata->project->wms_server = g_strdup(wms.server);
   }
 
   if(!appdata->project->wms_path ||
-     strcmp(appdata->project->wms_path, wms->path) != 0) {
+     strcmp(appdata->project->wms_path, wms.path) != 0) {
     g_free(appdata->project->wms_path);
-    appdata->project->wms_path = g_strdup(wms->path);
+    appdata->project->wms_path = g_strdup(wms.path);
   }
 
   /* ----------- request capabilities -------------- */
-  gboolean path_contains_qm = (strchr(wms->path, '?') != NULL);
-  gboolean path_ends_with_special =
-    (wms->path[strlen(wms->path)-1] == '?') ||
-    (wms->path[strlen(wms->path)-1] == '&');
+  bool path_contains_qm = (strchr(wms.path, '?') != NULL);
+  bool path_ends_with_special =
+    (wms.path[strlen(wms.path)-1] == '?') ||
+    (wms.path[strlen(wms.path)-1] == '&');
 
   /* if there's already a question mark, then add further */
   /* parameters using the &, else use the ? */
@@ -1103,7 +1107,7 @@ void wms_import(appdata_t *appdata) {
 			      //			      "&WMTVER=1.1.1"
 			      "&VERSION=1.1.1"
 			      "&REQUEST=GetCapabilities",
-			      wms->server, wms->path, append_char);
+			      wms.server, wms.path, append_char);
 
   char *cap = NULL;
   net_io_download_mem(GTK_WIDGET(appdata->window), appdata->settings,
@@ -1112,7 +1116,7 @@ void wms_import(appdata_t *appdata) {
 
   /* ----------- parse capabilities -------------- */
 
-  gboolean parse_success = FALSE;
+  bool parse_success = false;
   if(!cap) {
     errorf(GTK_WIDGET(appdata->window),
 	   _("WMS download failed:\n\n"
@@ -1130,7 +1134,7 @@ void wms_import(appdata_t *appdata) {
     } else {
       printf("ok, parse doc tree\n");
 
-      parse_success = wms_cap_parse_doc(wms, doc);
+      parse_success = wms_cap_parse_doc(&wms, doc);
     }
 
     g_free(cap);
@@ -1140,19 +1144,17 @@ void wms_import(appdata_t *appdata) {
 
   if(!parse_success) {
     errorf(GTK_WIDGET(appdata->window), _("Incomplete/unexpected reply!"));
-    wms_free(wms);
     return;
   }
 
-  if(!wms->cap.request.getmap.format) {
+  if(!wms.cap.request.getmap.format) {
     errorf(GTK_WIDGET(appdata->window), _("No supported image format found."));
-    wms_free(wms);
     return;
   }
 
   /* ---------- evaluate layers ----------- */
 
-  wms_layer_t *layer = wms_get_requestable_layers(wms);
+  wms_layer_t *layer = wms_get_requestable_layers(&wms);
   gboolean at_least_one_ok = wms_one_layer_is_usable(appdata->project, layer);
 
   if(!at_least_one_ok) {
@@ -1161,21 +1163,19 @@ void wms_import(appdata_t *appdata) {
 	     "(epsg4326 and LatLonBoundingBox are mandatory for osm2go)"));
 #if 0
     wms_layer_free(layer);
-    wms_free(wms);
     return;
 #endif
   }
 
   if(!wms_layer_dialog(appdata, layer)) {
     wms_layer_free(layer);
-    wms_free(wms);
     return;
   }
 
   /* --------- build getmap request ----------- */
 
   /* get required image size */
-  wms_setup_extent(appdata->project, wms);
+  wms_setup_extent(appdata->project, &wms);
 
   /* start building url */
   url = g_strdup_printf("%s%s"
@@ -1184,7 +1184,7 @@ void wms_import(appdata_t *appdata) {
 			"&VERSION=1.1.1"
 			"&REQUEST=GetMap"
 			"&LAYERS=",
-			wms->server, wms->path, append_char);
+			wms.server, wms.path, append_char);
 
   /* append layers */
   gchar *old;
@@ -1238,7 +1238,7 @@ void wms_import(appdata_t *appdata) {
 
   /* find preferred supported video format */
   gint format = 0;
-  while(!(wms->cap.request.getmap.format & (1<<format)))
+  while(!(wms.cap.request.getmap.format & (1<<format)))
     format++;
 
   const char *formats[] = { "image/jpg", "image/jpeg",
@@ -1250,8 +1250,8 @@ void wms_import(appdata_t *appdata) {
   url = g_strdup_printf("%s&SRS=%s&BBOX=%s,%s,%s,%s"
 			"&WIDTH=%d&HEIGHT=%d&FORMAT=%s"
 			"&reaspect=false", url, srs,
-			minlon, minlat, maxlon, maxlat, wms->width,
-			wms->height, formats[format]);
+			minlon, minlat, maxlon, maxlat, wms.width,
+			wms.height, formats[format]);
   g_free(srs);
   g_free(old);
 
@@ -1266,7 +1266,6 @@ void wms_import(appdata_t *appdata) {
 			   (char*)url, filename, NULL)) {
     g_free(filename);
     g_free(url);
-    wms_free(wms);
     return;
   }
 
@@ -1281,9 +1280,6 @@ void wms_import(appdata_t *appdata) {
 
   g_free(filename);
   g_free(url);
-
-  /* --------- free wms structure -----------------*/
-  wms_free(wms);
 
   gtk_widget_set_sensitive(appdata->menu_item_wms_clear, TRUE);
   gtk_widget_set_sensitive(appdata->menu_item_wms_adjust, TRUE);

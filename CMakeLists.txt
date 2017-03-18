@@ -69,7 +69,7 @@ set(osm2go_SOURCE_FILES
 	src/track.cpp
 	src/track.h
 	src/undo.h
-	src/wms.c
+	src/wms.cpp
 	src/wms.h
 )
 
