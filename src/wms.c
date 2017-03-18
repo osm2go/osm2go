@@ -1062,12 +1062,8 @@ void wms_import(appdata_t *appdata) {
   wms->path   = g_strdup(appdata->project->wms_path);
 
   /* reset any background adjustments in the project ... */
-  if((appdata->project->wms_offset.x != 0)||
-     (appdata->project->wms_offset.y != 0)) {
-
-    appdata->project->wms_offset.x = 0;
-    appdata->project->wms_offset.y = 0;
-  }
+  appdata->project->wms_offset.x = 0;
+  appdata->project->wms_offset.y = 0;
 
   /* ... as well as in the map */
   appdata->map->bg.offset.x = 0;
