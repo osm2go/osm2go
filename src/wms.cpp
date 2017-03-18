@@ -24,11 +24,13 @@
 #include "net_io.h"
 #include "wms.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <strings.h>
+#include <vector>
 
 #ifndef LIBXML_TREE_ENABLED
 #error "Tree not enabled in libxml"
@@ -45,13 +47,15 @@ struct wms_llbbox_t {
 };
 
 struct wms_layer_t {
+  typedef std::vector<wms_layer_t *> list;
+
   gchar *title;
   gchar *name;
   gchar *srs;
   gboolean epsg4326, selected;
   wms_llbbox_t llbbox;
 
-  struct wms_layer_t *children;
+  list children;
   struct wms_layer_t *next;
 };
 
@@ -91,6 +95,13 @@ struct wms_t {
   wms_cap_t cap;
 };
 
+static void wms_server_free(wms_server_t *wms_server) {
+  g_free(wms_server->name);
+  g_free(wms_server->server);
+  g_free(wms_server->path);
+  g_free(wms_server);
+}
+
 static gboolean xmlTextIs(xmlDocPtr doc, xmlNodePtr list, const char *str) {
   xmlChar *nstr = xmlNodeListGetString(doc, list, 1);
   if(!nstr) return FALSE;
@@ -122,17 +133,16 @@ static wms_layer_t *wms_cap_parse_layer(xmlDocPtr doc, xmlNode *a_node) {
   wms_layer_t *wms_layer = NULL;
   xmlNode *cur_node = NULL;
 
-  wms_layer = g_new0(wms_layer_t, 1);
+  wms_layer = new wms_layer_t();
   wms_layer->llbbox.min.lon = wms_layer->llbbox.min.lat = NAN;
   wms_layer->llbbox.max.lon = wms_layer->llbbox.max.lat = NAN;
-
-  wms_layer_t **children = &(wms_layer->children);
 
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcasecmp((char*)cur_node->name, "Layer") == 0) {
-	*children = wms_cap_parse_layer(doc, cur_node);
-	if(*children) children = &((*children)->next);
+        wms_layer_t *children = wms_cap_parse_layer(doc, cur_node);
+        if(children)
+          wms_layer->children.push_back(children);
       } else if(strcasecmp((char*)cur_node->name, "Name") == 0) {
 	xmlChar *str = xmlNodeListGetString(doc, cur_node->children, 1);
 	wms_layer->name = g_strdup((gchar*)str);
@@ -360,17 +370,23 @@ void wms_setup_extent(project_t *project, wms_t *wms) {
 
 /* --------------- freeing stuff ------------------- */
 
-static void wms_layer_free(wms_layer_t *layer) {
+static void wms_layer_free(wms_layer_t *layer);
+
+static void wms_layers_free(wms_layer_t::list &layers) {
+  std::for_each(layers.begin(), layers.end(), wms_layer_free);
+}
+
+void wms_layer_free(wms_layer_t *layer) {
   while(layer) {
 
     g_free(layer->title);
     g_free(layer->name);
     g_free(layer->srs);
 
-    wms_layer_free(layer->children);
+    wms_layers_free(layer->children);
 
     wms_layer_t *next = layer->next;
-    g_free(layer);
+    delete layer;
     layer = next;
   }
 }
@@ -392,13 +408,14 @@ static gboolean wms_llbbox_fits(project_t *project, wms_llbbox_t *llbbox) {
   return TRUE;
 }
 
-static void wms_get_child_layers(wms_layer_t *layer,
-	 gint depth, gboolean epsg4326, wms_llbbox_t *llbbox, const gchar *srs,
+static void wms_get_child_layers(const wms_layer_t::list &layers,
+	 gint depth, gboolean epsg4326, const wms_llbbox_t *llbbox, const gchar *srs,
 	 wms_layer_t **c_layer) {
-  while(layer) {
-
+  const wms_layer_t::list::const_iterator itEnd = layers.end();
+  for(wms_layer_t::list::const_iterator it = layers.begin(); it != itEnd; it++) {
+    const wms_layer_t * const layer = *it;
     /* get a copy of the parents values for the current one ... */
-    wms_llbbox_t *local_llbbox = llbbox;
+    const wms_llbbox_t *local_llbbox = llbbox;
     gboolean local_epsg4326 = epsg4326;
 
     /* ... and overwrite the inherited stuff with better local stuff */
@@ -419,8 +436,6 @@ static void wms_get_child_layers(wms_layer_t *layer,
     wms_get_child_layers(layer->children, depth+1,
 			 local_epsg4326, local_llbbox,
 			 srs, c_layer);
-
-    layer = layer->next;
   }
 }
 
@@ -1341,13 +1356,6 @@ wms_server_t *wms_server_get_default(void) {
   }
 
   return server;
-}
-
-void wms_server_free(wms_server_t *wms_server) {
-  g_free(wms_server->name);
-  g_free(wms_server->server);
-  g_free(wms_server->path);
-  g_free(wms_server);
 }
 
 void wms_servers_free(wms_server_t *wms_server) {
