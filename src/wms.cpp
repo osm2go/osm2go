@@ -1039,12 +1039,7 @@ static gboolean wms_layer_dialog(appdata_t *appdata, wms_layer_t *layer) {
 
 static gboolean wms_one_layer_is_usable(project_t *project,
 					wms_layer_t *layer) {
-  gboolean ok = FALSE;
-
   while(layer) {
-   if(layer->name && layer->epsg4326 && layer->llbbox.valid)
-     ok = TRUE;
-
     printf("----- Layer \"%s\" -----\n", layer->title);
     printf("Name: %s\n", layer->name);
     printf("epsg4326: %s\n", layer->epsg4326?"yes":"no");
@@ -1058,10 +1053,13 @@ static gboolean wms_one_layer_is_usable(project_t *project,
     } else
       printf("llbbox: none/invalid\n");
 
+   if(layer->name && layer->epsg4326 && layer->llbbox.valid)
+     return TRUE;
+
     layer = layer->next;
   }
 
-  return ok;
+  return FALSE;
 }
 
 void wms_import(appdata_t *appdata) {
