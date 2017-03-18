@@ -79,12 +79,12 @@ struct wms_cap_t {
 };
 
 struct wms_t {
-  wms_t(gchar *s, char *p)
-    : server(g_strdup(s)), path(g_strdup(p)), width(0), height(0) {}
+  wms_t(const gchar *s, const char *p)
+    : server(s ? s : std::string()), path(p ? p : std::string()), width(0), height(0) {}
   ~wms_t();
 
-  gchar *server;
-  gchar *path;
+  std::string server;
+  std::string path;
   gint width, height;
 
   wms_service_t service;
@@ -376,8 +376,6 @@ static void wms_layer_free(wms_layer_t *layer) {
 }
 
 wms_t::~wms_t() {
-  g_free(server);
-  g_free(path);
   wms_layer_free(cap.layer);
   g_free(service.title);
 }
@@ -480,7 +478,7 @@ static wms_server_t *get_selection(GtkWidget *list) {
 static void wms_server_selected(wms_server_context_t *context,
 				wms_server_t *selected) {
 
-  if(!selected && context->wms->server && context->wms->path) {
+  if(!selected && !context->wms->server.empty() && !context->wms->path.empty()) {
     /* if the projects settings match a list entry, then select this */
 
     GtkTreeSelection *selection = list_get_selection(context->list);
@@ -497,8 +495,8 @@ static void wms_server_selected(wms_server_context_t *context,
 			 WMS_SERVER_COL_DATA, &server, -1);
       g_assert(server);
 
-      if((strcmp(server->server, context->wms->server) == 0) &&
-	 (strcmp(server->path, context->wms->path) == 0)) {
+      if(context->wms->server == server->server &&
+         context->wms->path == server->path) {
 	gtk_tree_selection_select_iter(selection, &iter);
 	selected = server;
       }
@@ -520,17 +518,17 @@ static void wms_server_selected(wms_server_context_t *context,
     gtk_label_set_text(GTK_LABEL(context->path_label), selected->path);
   } else {
     gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog),
-	      GTK_RESPONSE_ACCEPT, context->wms->server && context->wms->path);
+	      GTK_RESPONSE_ACCEPT, !context->wms->server.empty() && !context->wms->path.empty());
 
-    if(context->wms->server)
+    if(!context->wms->server.empty())
       gtk_label_set_text(GTK_LABEL(context->server_label),
-			 context->wms->server);
+			 context->wms->server.c_str());
     else
       gtk_label_set_text(GTK_LABEL(context->server_label),
 			 "");
-    if(context->wms->path)
+    if(!context->wms->path.empty())
       gtk_label_set_text(GTK_LABEL(context->path_label),
-			 context->wms->path);
+			 context->wms->path.c_str());
     else
       gtk_label_set_text(GTK_LABEL(context->path_label),
 			 "");
@@ -842,15 +840,12 @@ static gboolean wms_server_dialog(appdata_t *appdata, wms_t *wms) {
     if(server) {
       /* fetch parameters from selected entry */
       printf("WMS: using %s\n", server->name);
-      g_free(wms->server);
-      wms->server = g_strdup(server->server);
-      g_free(wms->path);
-      wms->path = g_strdup(server->path);
+      wms->server = server->server;
+      wms->path = server->path;
       ok = TRUE;
     } else {
-      if(wms->server && wms->path)
+      if(!wms->server.empty() && !wms->path.empty())
 	ok = TRUE;
-
     }
   }
 
@@ -1081,38 +1076,37 @@ void wms_import(appdata_t *appdata) {
 
   /* ------------- copy values back into project ---------------- */
   if(!appdata->project->wms_server ||
-     strcmp(appdata->project->wms_server, wms.server) != 0) {
+     wms.server != appdata->project->wms_server) {
     g_free(appdata->project->wms_server);
-    appdata->project->wms_server = g_strdup(wms.server);
+    appdata->project->wms_server = g_strdup(wms.server.c_str());
   }
 
   if(!appdata->project->wms_path ||
-     strcmp(appdata->project->wms_path, wms.path) != 0) {
+     wms.path != appdata->project->wms_path) {
     g_free(appdata->project->wms_path);
-    appdata->project->wms_path = g_strdup(wms.path);
+    appdata->project->wms_path = g_strdup(wms.path.c_str());
   }
 
   /* ----------- request capabilities -------------- */
-  bool path_contains_qm = (strchr(wms.path, '?') != NULL);
+  bool path_contains_qm = wms.path.find('?') != wms.path.npos;
   bool path_ends_with_special =
-    (wms.path[strlen(wms.path)-1] == '?') ||
-    (wms.path[strlen(wms.path)-1] == '&');
+    (wms.path[wms.path.size()- 1] == '?') ||
+    (wms.path[wms.path.size() - 1] == '&');
 
   /* if there's already a question mark, then add further */
   /* parameters using the &, else use the ? */
   const char *append_char = path_ends_with_special?"":(path_contains_qm?"&":"?");
 
-  gchar *url = g_strdup_printf("%s%s"
-			      "%sSERVICE=wms"
-			      //			      "&WMTVER=1.1.1"
-			      "&VERSION=1.1.1"
-			      "&REQUEST=GetCapabilities",
-			      wms.server, wms.path, append_char);
+  std::string url;
+  url.resize(256); // make enough room that most URLs will need no reallocation
+  url = wms.server + wms.path + append_char +
+                                 "SERVICE=wms"
+                                 "&VERSION=1.1.1"
+                                 "&REQUEST=GetCapabilities";
 
   char *cap = NULL;
   net_io_download_mem(GTK_WIDGET(appdata->window), appdata->settings,
-		      (char*)url, &cap);
-  g_free(url);
+		      url.c_str(), &cap);
 
   /* ----------- parse capabilities -------------- */
 
@@ -1178,49 +1172,36 @@ void wms_import(appdata_t *appdata) {
   wms_setup_extent(appdata->project, &wms);
 
   /* start building url */
-  url = g_strdup_printf("%s%s"
-			"%sSERVICE=wms"
-			//			"&WMTVER=1.1.1"
-			"&VERSION=1.1.1"
-			"&REQUEST=GetMap"
-			"&LAYERS=",
-			wms.server, wms.path, append_char);
+  url.erase(url.size() - strlen("GetCapabilities"));
+  url += "GetMap&LAYERS=";
 
   /* append layers */
-  gchar *old;
   wms_layer_t *t = layer;
   gint cnt = 0;
   while(t) {
     if(t->selected) {
-      old = url;
-      url = g_strconcat(url, (!cnt)?"":",", t->name, NULL);
-      g_free(old);
+      if(cnt)
+        url += ',';
+      url += t->name;
       cnt++;
     }
     t = t->next;
   }
 
   /* uses epsg4326 if possible */
-  gchar *srs;
+  const char *srs;
   if(layer->epsg4326)
-    srs = g_strdup("EPSG:4326");
-  else {
+    srs = "EPSG:4326";
+  else
     srs = layer->srs;
-    layer->srs = NULL;
-  }
 
   wms_layer_free(layer);
 
   /* append styles entry */
-  old = url;
-  url = g_strconcat(url, "&STYLES=", NULL);
-  g_free(old);
+  url += "&STYLES=";
 
-  while(--cnt) {
-    old = url;
-    url = g_strconcat(url, ",", NULL);
-    g_free(old);
-  }
+  if(cnt > 1)
+    url += std::string(cnt - 1, ',');
 
   /* and append rest */
   gchar minlon[G_ASCII_DTOSTR_BUF_SIZE], minlat[G_ASCII_DTOSTR_BUF_SIZE];
@@ -1243,43 +1224,33 @@ void wms_import(appdata_t *appdata) {
 
   const char *formats[] = { "image/jpg", "image/jpeg",
 			    "image/png", "image/gif" };
+  char buf[64];
+  sprintf(buf, "&WIDTH=%d&HEIGHT=%d&FORMAT=", wms.width, wms.height);
 
   /* build complete url */
-  old = url;
-
-  url = g_strdup_printf("%s&SRS=%s&BBOX=%s,%s,%s,%s"
-			"&WIDTH=%d&HEIGHT=%d&FORMAT=%s"
-			"&reaspect=false", url, srs,
-			minlon, minlat, maxlon, maxlat, wms.width,
-			wms.height, formats[format]);
-  g_free(srs);
-  g_free(old);
+  const char *parts[] = { "&SRS=", srs, "&BBOX=", minlon, ",", minlat, ",",
+                          maxlon, ",", maxlat, buf, formats[format], 0 };
+  for(int i = 0; parts[i]; i++)
+    url += parts[i];
 
   const char *exts[] = { "jpg", "jpg", "png", "gif" };
-  gchar *filename = g_strjoin("/wms.", appdata->project->path,
-				   exts[format], NULL);
+  const std::string filename = std::string(appdata->project->path) + "wms." +
+                               exts[format] + "&reaspect=false";
 
   /* remove any existing image before */
   wms_remove(appdata);
 
   if(!net_io_download_file(GTK_WIDGET(appdata->window), appdata->settings,
-			   (char*)url, filename, NULL)) {
-    g_free(filename);
-    g_free(url);
+                           url.c_str(), filename.c_str(), NULL))
     return;
-  }
 
   /* there should be a matching file on disk now */
-  map_set_bg_image(appdata->map, filename);
+  map_set_bg_image(appdata->map, filename.c_str());
 
   gint x = appdata->osm->bounds->min.x + appdata->map->bg.offset.x;
   gint y = appdata->osm->bounds->min.y + appdata->map->bg.offset.y;
   canvas_image_move(appdata->map->bg.item, x, y,
 		    appdata->map->bg.scale.x, appdata->map->bg.scale.y);
-
-
-  g_free(filename);
-  g_free(url);
 
   gtk_widget_set_sensitive(appdata->menu_item_wms_clear, TRUE);
   gtk_widget_set_sensitive(appdata->menu_item_wms_adjust, TRUE);
