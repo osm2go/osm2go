@@ -419,9 +419,11 @@ static gboolean track_append_position(appdata_t *appdata, const pos_t *pos, floa
 }
 
 static void track_do_disable_gps(appdata_t *appdata) {
-  gps_enable(appdata, FALSE);
+  if(appdata->settings)
+    appdata->settings->enable_gps = FALSE;
+  gps_enable(appdata->gps_state, FALSE);
 
-  gps_register_callback(appdata, NULL);
+  gps_register_callback(appdata->gps_state, NULL, NULL);
 
   /* stopping the GPS removes the marker ... */
   map_track_remove_pos(appdata);
@@ -442,7 +444,7 @@ static gboolean update(gpointer data) {
   if(G_UNLIKELY(!appdata->map)) {
     printf("map has gone while tracking was active, stopping tracker\n");
 
-    gps_register_callback(appdata, NULL);
+    gps_register_callback(appdata->gps_state, NULL, NULL);
 
     return FALSE;
   }
@@ -455,7 +457,7 @@ static gboolean update(gpointer data) {
 
   pos_t pos;
   float alt;
-  if(gps_get_pos(appdata, &pos, &alt)) {
+  if(gps_get_pos(appdata->gps_state, &pos, &alt)) {
     printf("valid position %.6f/%.6f alt %.2f\n", pos.lat, pos.lon, alt);
     lpos_t lpos;
     pos2lpos(appdata->osm->bounds, &pos, &lpos);
@@ -472,10 +474,12 @@ static gboolean update(gpointer data) {
 }
 
 static void track_do_enable_gps(appdata_t *appdata) {
-  gps_enable(appdata, TRUE);
+  if(appdata->settings)
+    appdata->settings->enable_gps = TRUE;
+  gps_enable(appdata->gps_state, TRUE);
   appdata->track.warn_cnt = 1;
 
-  if (!gps_register_callback(appdata, update)) {
+  if (!gps_register_callback(appdata->gps_state, update, appdata)) {
     if(!appdata->track.track) {
       printf("GPS: no track yet, starting new one\n");
       appdata->track.track = new track_t();

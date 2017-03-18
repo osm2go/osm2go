@@ -19,7 +19,6 @@
 
 #include "gps.h"
 
-#include "appdata.h"
 #include "settings.h"
 
 #include <stdio.h>
@@ -31,7 +30,7 @@
 /* force usage of gpsd start/stop */
 #define LL_CONTROL_GPSD
 
-typedef struct gps_state_t {
+struct gps_state_t {
   LocationGPSDevice *device;
 #ifdef LL_CONTROL_GPSD
   LocationGPSDControl *control;
@@ -40,19 +39,18 @@ typedef struct gps_state_t {
   guint idd_changed;
 
   gboolean fix, fix3d;
+  gboolean enabled;
   pos_t pos;
   float altitude;
 
   /* callback called on gps change event */
   GtkFunction cb;
   gpointer data;
-} gps_state_t;
+};
 
-gboolean gps_get_pos(appdata_t *appdata, pos_t *pos, float *alt) {
-  if(!appdata->settings || !appdata->settings->enable_gps)
+gboolean gps_get_pos(gps_state_t *gps_state, pos_t *pos, float *alt) {
+  if(!gps_state->enabled)
     return FALSE;
-
-  gps_state_t *gps_state = appdata->gps_state;
 
   if(!gps_state->fix)
     return FALSE;
@@ -88,8 +86,8 @@ location_changed(LocationGPSDevice *device, gps_state_t *gps_state) {
       gps_state->cb = NULL;
 }
 
-void gps_init(appdata_t *appdata) {
-  gps_state_t *gps_state = appdata->gps_state = g_new0(gps_state_t, 1);
+gps_state_t *gps_init(G_GNUC_UNUSED struct appdata_t *appdata) {
+  gps_state_t *gps_state = g_new0(gps_state_t, 1);
 
   printf("GPS init: Using liblocation\n");
 
@@ -106,11 +104,11 @@ void gps_init(appdata_t *appdata) {
 #ifdef LL_CONTROL_GPSD
   gps_state->control = location_gpsd_control_get_default();
 #endif
+
+  return gps_state;
 }
 
-void gps_release(appdata_t *appdata) {
-  gps_state_t *gps_state = appdata->gps_state;
-
+void gps_release(gps_state_t *gps_state) {
   if(!gps_state->device) return;
 
 #ifdef LL_CONTROL_GPSD
@@ -120,7 +118,7 @@ void gps_release(appdata_t *appdata) {
 #endif
      ) {
     printf("Having control over GPSD and its running, stopping it\n");
-    if(appdata->gps_state->gps_is_on)
+    if(gps_state->gps_is_on)
       location_gpsd_control_stop(gps_state->control);
   }
 #endif
@@ -128,40 +126,34 @@ void gps_release(appdata_t *appdata) {
   /* Disconnect signal */
   g_signal_handler_disconnect(gps_state->device, gps_state->idd_changed);
 
-  g_free(appdata->gps_state);
-  appdata->gps_state = NULL;
+  g_free(gps_state);
 }
 
-void gps_enable(appdata_t *appdata, gboolean enable) {
-  if(appdata->settings) {
-    gps_state_t *gps_state = appdata->gps_state;
-
-    /* for location update callbacks */
-    gps_state->data = appdata;
-    if(enable != appdata->gps_state->gps_is_on) {
-      if(gps_state->device && gps_state->control
+void gps_enable(gps_state_t *gps_state, gboolean enable) {
+  if(enable != gps_state->gps_is_on) {
+    if(gps_state->device && gps_state->control
 #if MAEMO_VERSION_MAJOR < 5
-	 && gps_state->control->can_control
+       && gps_state->control->can_control
 #endif
-	 ) {
-	if(enable) {
-	  printf("starting gpsd\n");
-	  location_gpsd_control_start(gps_state->control);
-	} else {
-	  printf("stopping gpsd\n");
-	  location_gpsd_control_stop(gps_state->control);
-	}
-	appdata->gps_state->gps_is_on = enable;
+       ) {
+      if(enable) {
+        printf("starting gpsd\n");
+        location_gpsd_control_start(gps_state->control);
+      } else {
+        printf("stopping gpsd\n");
+        location_gpsd_control_stop(gps_state->control);
       }
+      gps_state->gps_is_on = enable;
     }
-
-    appdata->settings->enable_gps = enable;
   }
+  gps_state->enabled = enable;
 }
 
-gboolean gps_register_callback(appdata_t *appdata, GtkFunction cb) {
-  gboolean ret = (appdata->gps_state->cb != NULL) ? TRUE : FALSE;
-  if(!ret)
-    appdata->gps_state->cb = cb;
+gboolean gps_register_callback(struct gps_state_t *gps_state, GtkFunction cb, gpointer context) {
+  gboolean ret = (gps_state->cb != NULL) ? TRUE : FALSE;
+  if(!ret) {
+    gps_state->data = context;
+    gps_state->cb = cb;
+  }
   return ret;
 }

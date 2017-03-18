@@ -2000,7 +2000,7 @@ void map_action_ok(appdata_t *appdata) {
   case MAP_ACTION_NODE_ADD:
     {
     pos_t pos;
-    if(!gps_get_pos(appdata, &pos, NULL))
+    if(!gps_get_pos(appdata->gps_state, &pos, 0))
       break;
 
     node_t *node = NULL;

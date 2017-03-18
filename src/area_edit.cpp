@@ -255,7 +255,7 @@ static void map_update(context_t *context, gboolean forced) {
     /* no coordinates given: display around the current GPS position if available */
     pos_t pos;
     int zoom = 12;
-    if(!gps_get_pos(context->area->appdata, &pos, NULL)) {
+    if(!gps_get_pos(context->area->appdata->gps_state, &pos, NULL)) {
       /* no GPS position available: display the entire world */
       pos.lat = 0.0;
       pos.lon = 0.0;
@@ -593,7 +593,7 @@ static gboolean map_gps_update(gpointer data) {
 
   pos_t pos = { NAN, NAN };
   gboolean gps_fix = gps_on &&
-    gps_get_pos(context->area->appdata, &pos, NULL);
+    gps_get_pos(context->area->appdata->gps_state, &pos, NULL);
 
   if(gps_fix) {
     g_object_set(context->map.widget, "gps-track-highlight-radius", 0, NULL);

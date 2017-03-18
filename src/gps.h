@@ -23,7 +23,6 @@
 #ifndef GPS_H
 #define GPS_H
 
-#include "appdata.h"
 #include "pos.h"
 
 #include <gtk/gtk.h>
@@ -36,20 +35,24 @@
 extern "C" {
 #endif
 
-void gps_init(appdata_t *appdata);
-void gps_release(appdata_t *appdata);
-gboolean gps_get_pos(appdata_t *appdata, pos_t *pos, float *alt);
-void gps_enable(appdata_t *appdata, gboolean enable);
+typedef struct gps_state_t gps_state_t;
+struct appdata_t;
+
+gps_state_t *gps_init(struct appdata_t *appdata);
+void gps_release(gps_state_t *gps_state);
+gboolean gps_get_pos(gps_state_t *gps_state, pos_t *pos, float *alt);
+void gps_enable(gps_state_t *gps_state, gboolean enable);
 
 /**
  * @brief register or clear the GPS callback
- * @param appdata the global information structure
+ * @param gps_state the GPS context struct as returned by gps_init;
  * @param cb the new callback function, set to NULL to unregister
+ * @param context a context pointer passed to cb
  * @return if there was a previous handler
  *
  * Does nothing if a handler already exists.
  */
-gboolean gps_register_callback(appdata_t *appdata, GtkFunction cb);
+gboolean gps_register_callback(struct gps_state_t *gps_state, GtkFunction cb, gpointer context);
 
 #ifdef __cplusplus
 }
