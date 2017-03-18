@@ -893,13 +893,11 @@ typedef struct {
 
 static gboolean enable_gps_get_toggle(appdata_t *appdata) {
   if(!appdata)           return FALSE;
-  if(!appdata->settings) return FALSE;
   return appdata->settings->enable_gps;
 }
 
 static gboolean follow_gps_get_toggle(appdata_t *appdata) {
   if(!appdata)           return FALSE;
-  if(!appdata->settings) return FALSE;
   return appdata->settings->follow_gps;
 }
 
@@ -1172,9 +1170,8 @@ static void menu_create(appdata_t *appdata) {
   g_object_ref(appdata->app_menu_track);
 
   /* enable/disable some entries according to settings */
-  if(appdata && appdata->settings)
-    gtk_widget_set_sensitive(appdata->track.menu_item_track_follow_gps,
-			     appdata->settings->enable_gps);
+  gtk_widget_set_sensitive(appdata->track.menu_item_track_follow_gps,
+                           appdata->settings->enable_gps);
 
   hildon_window_set_app_menu(HILDON_WINDOW(appdata->window), menu);
 }
@@ -1393,6 +1390,9 @@ int main(int argc, char *argv[]) {
 
   misc_init();
 
+  /* user specific init */
+  appdata.settings = settings_load();
+
   appdata.gps_state = gps_init(&appdata);
 
 #ifdef USE_HILDON
@@ -1438,9 +1438,6 @@ int main(int argc, char *argv[]) {
  		   G_CALLBACK(on_window_key_press), &appdata);
   g_signal_connect(G_OBJECT(appdata.window), "destroy",
 		   G_CALLBACK(on_window_destroy), &appdata);
-
-  /* user specific init */
-  appdata.settings = settings_load();
 
   appdata.vbox = gtk_vbox_new(FALSE,0);
 

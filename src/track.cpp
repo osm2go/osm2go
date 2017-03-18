@@ -403,7 +403,7 @@ static gboolean track_append_position(appdata_t *appdata, const pos_t *pos, floa
     }
   }
 
-  if(appdata->settings && appdata->settings->follow_gps) {
+  if(appdata->settings->follow_gps) {
     if(!map_scroll_to_if_offscreen(appdata->map, lpos)) {
       if(!--appdata->track.warn_cnt) {
 	/* warn user once a minute that the current gps */
@@ -419,8 +419,7 @@ static gboolean track_append_position(appdata_t *appdata, const pos_t *pos, floa
 }
 
 static void track_do_disable_gps(appdata_t *appdata) {
-  if(appdata->settings)
-    appdata->settings->enable_gps = FALSE;
+  appdata->settings->enable_gps = FALSE;
   gps_enable(appdata->gps_state, FALSE);
 
   gps_register_callback(appdata->gps_state, NULL, NULL);
@@ -449,7 +448,7 @@ static gboolean update(gpointer data) {
     return FALSE;
   }
 
-  if(!appdata->settings || !appdata->settings->enable_gps) {
+  if(!appdata->settings->enable_gps) {
     // Turn myself off gracefully.
     track_do_disable_gps(appdata);
     return FALSE;
@@ -474,8 +473,7 @@ static gboolean update(gpointer data) {
 }
 
 static void track_do_enable_gps(appdata_t *appdata) {
-  if(appdata->settings)
-    appdata->settings->enable_gps = TRUE;
+  appdata->settings->enable_gps = TRUE;
   gps_enable(appdata->gps_state, TRUE);
   appdata->track.warn_cnt = 1;
 

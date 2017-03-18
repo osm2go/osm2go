@@ -396,8 +396,8 @@ const char *misc_get_proxy_uri(settings_t *settings) {
   }
 
   /* otherwise try settings */
-  if(!settings || !settings->proxy ||
-     !settings->proxy->host) return NULL;
+  if(!settings->proxy || !settings->proxy->host)
+    return NULL;
 
   const char *protocol = strncmp(settings->proxy->host, "http://", 7) ? "" :
 			 strncmp(settings->proxy->host, "https://", 8) ? "" :

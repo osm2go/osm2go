@@ -969,8 +969,7 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   context.project = project;
 
   /* add proxy settings if required */
-  if(appdata->settings)
-    context.proxy = appdata->settings->proxy;
+  context.proxy = appdata->settings->proxy;
 
   /* fetch comment from dialog */
   GtkTextIter start, end;

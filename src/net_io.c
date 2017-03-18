@@ -405,7 +405,7 @@ gboolean net_io_download_file(GtkWidget *parent, settings_t *settings,
   request->type = NET_IO_DL_FILE;
   request->url = g_strdup(url);
   request->filename = g_strdup(filename);
-  if(settings && settings->proxy)
+  if(settings->proxy)
     request->proxy = settings->proxy;
 
   gboolean result = net_io_do(parent, request, title);
@@ -436,7 +436,7 @@ gboolean net_io_download_mem(GtkWidget *parent, settings_t *settings,
   printf("net_io: download %s to memory\n", url);
   request->type = NET_IO_DL_MEM;
   request->url = g_strdup(url);
-  if(settings && settings->proxy)
+  if(settings->proxy)
     request->proxy = settings->proxy;
 
   gboolean result = net_io_do(parent, request, NULL);
