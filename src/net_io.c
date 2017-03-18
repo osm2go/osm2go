@@ -398,7 +398,7 @@ static gboolean net_io_do(GtkWidget *parent, net_io_request_t *request,
 }
 
 gboolean net_io_download_file(GtkWidget *parent, settings_t *settings,
-			      char *url, char *filename, const char *title) {
+                              const char *url, const char *filename, const char *title) {
   net_io_request_t *request = g_new0(net_io_request_t, 1);
 
   printf("net_io: download %s to file %s\n", url, filename);
@@ -430,7 +430,7 @@ gboolean net_io_download_file(GtkWidget *parent, settings_t *settings,
 
 
 gboolean net_io_download_mem(GtkWidget *parent, settings_t *settings,
-			     char *url, char **mem) {
+                             const char *url, char **mem) {
   net_io_request_t *request = g_new0(net_io_request_t, 1);
 
   printf("net_io: download %s to memory\n", url);

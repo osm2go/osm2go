@@ -30,9 +30,9 @@ extern "C" {
 #endif
 
 gboolean net_io_download_file(GtkWidget *parent, settings_t *settings,
-			      char *url, char *filename, const char *title);
+                              const char *url, const char *filename, const char *title);
 gboolean net_io_download_mem(GtkWidget *parent, settings_t *settings,
-			     char *url, char **mem);
+                             const char *url, char **mem);
 
 #include <curl/curl.h>
 void net_io_set_proxy(CURL *curl, proxy_t *proxy);
