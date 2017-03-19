@@ -52,11 +52,14 @@ struct wms_layer_t {
   gchar *title;
   gchar *name;
   gchar *srs;
-  gboolean epsg4326, selected;
+  bool epsg4326;
   wms_llbbox_t llbbox;
 
   list children;
-  struct wms_layer_t *next;
+
+  bool is_usable() const {
+    return name && epsg4326 && llbbox.valid;
+  }
 };
 
 struct wms_getmap_t {
@@ -76,9 +79,7 @@ struct wms_service_t {
 };
 
 struct wms_cap_t {
-  wms_cap_t()
-    : layer(0) {}
-  wms_layer_t *layer;
+  wms_layer_t::list layers;
   wms_request_t request;
 };
 
@@ -239,23 +240,22 @@ static bool wms_cap_parse_cap(xmlDocPtr doc, xmlNode *a_node, wms_cap_t *wms_cap
   xmlNode *cur_node;
   bool has_request = false;
 
-  wms_layer_t **layer = &(wms_cap->layer);
-
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcasecmp((char*)cur_node->name, "Request") == 0) {
 	wms_cap->request = wms_cap_parse_request(doc, cur_node);
         has_request = true;
       } else if(strcasecmp((char*)cur_node->name, "Layer") == 0) {
-	*layer = wms_cap_parse_layer(doc, cur_node);
-	if(*layer) layer = &((*layer)->next);
+        wms_layer_t *layer = wms_cap_parse_layer(doc, cur_node);
+        if(layer)
+          wms_cap->layers.push_back(layer);
       } else
 	printf("found unhandled WMT_MS_Capabilities/Capability/%s\n",
 	       cur_node->name);
     }
   }
 
-  return has_request && (wms_cap->layer != NULL);
+  return has_request && !wms_cap->layers.empty();
 }
 
 static void wms_cap_parse_service(xmlDocPtr doc, xmlNode *a_node,
@@ -377,28 +377,23 @@ static void wms_layers_free(wms_layer_t::list &layers) {
 }
 
 void wms_layer_free(wms_layer_t *layer) {
-  while(layer) {
+  g_free(layer->title);
+  g_free(layer->name);
+  g_free(layer->srs);
 
-    g_free(layer->title);
-    g_free(layer->name);
-    g_free(layer->srs);
+  wms_layers_free(layer->children);
 
-    wms_layers_free(layer->children);
-
-    wms_layer_t *next = layer->next;
-    delete layer;
-    layer = next;
-  }
+  delete layer;
 }
 
 wms_t::~wms_t() {
-  wms_layer_free(cap.layer);
+  wms_layers_free(cap.layers);
   g_free(service.title);
 }
 
 /* ---------------------- use ------------------- */
 
-static gboolean wms_llbbox_fits(project_t *project, wms_llbbox_t *llbbox) {
+static gboolean wms_llbbox_fits(const project_t *project, const wms_llbbox_t *llbbox) {
   if((project->min.lat < llbbox->min.lat) ||
      (project->min.lon < llbbox->min.lon) ||
      (project->max.lat > llbbox->max.lat) ||
@@ -409,54 +404,53 @@ static gboolean wms_llbbox_fits(project_t *project, wms_llbbox_t *llbbox) {
 }
 
 static void wms_get_child_layers(const wms_layer_t::list &layers,
-	 gint depth, gboolean epsg4326, const wms_llbbox_t *llbbox, const gchar *srs,
-	 wms_layer_t **c_layer) {
+	 gint depth, bool epsg4326, const wms_llbbox_t *llbbox, const gchar *srs,
+         wms_layer_t::list &clayers) {
   const wms_layer_t::list::const_iterator itEnd = layers.end();
   for(wms_layer_t::list::const_iterator it = layers.begin(); it != itEnd; it++) {
     const wms_layer_t * const layer = *it;
     /* get a copy of the parents values for the current one ... */
     const wms_llbbox_t *local_llbbox = llbbox;
-    gboolean local_epsg4326 = epsg4326;
+    bool local_epsg4326 = epsg4326;
 
     /* ... and overwrite the inherited stuff with better local stuff */
     if(layer->llbbox.valid)                    local_llbbox = &layer->llbbox;
-    if(layer->epsg4326)                        local_epsg4326 = TRUE;
+    local_epsg4326 |= layer->epsg4326;
 
     /* only named layers with useful bounding box are added to the list */
     if(local_llbbox && layer->name) {
-      *c_layer = g_new0(wms_layer_t, 1);
-      (*c_layer)->name     = g_strdup(layer->name);
-      (*c_layer)->title    = g_strdup(layer->title);
-      (*c_layer)->srs      = g_strdup(srs);
-      (*c_layer)->epsg4326 = local_epsg4326;
-      (*c_layer)->llbbox   = *local_llbbox;
-      c_layer = &((*c_layer)->next);
+      wms_layer_t *c_layer = new wms_layer_t();
+      c_layer->name     = g_strdup(layer->name);
+      c_layer->title    = g_strdup(layer->title);
+      c_layer->srs      = g_strdup(srs);
+      c_layer->epsg4326 = local_epsg4326;
+      c_layer->llbbox   = *local_llbbox;
+      clayers.push_back(c_layer);
     }
 
-    wms_get_child_layers(layer->children, depth+1,
-			 local_epsg4326, local_llbbox,
-			 srs, c_layer);
+    wms_get_child_layers(layer->children, depth + 1,
+                         local_epsg4326, local_llbbox, srs, clayers);
   }
 }
 
-static wms_layer_t *wms_get_requestable_layers(wms_t *wms) {
+static wms_layer_t::list wms_get_requestable_layers(const wms_t *wms) {
   printf("\nSearching for usable layers\n");
 
-  wms_layer_t *r_layer = NULL, **c_layer = &r_layer;
+  wms_layer_t::list c_layer;
 
-  wms_layer_t *layer = wms->cap.layer;
-  while(layer) {
-    wms_llbbox_t *llbbox = &layer->llbbox;
+  const wms_layer_t::list &layer = wms->cap.layers;
+  const wms_layer_t::list::const_iterator itEnd = wms->cap.layers.end();
+  for(wms_layer_t::list::const_iterator it = wms->cap.layers.begin(); it != itEnd; it++) {
+    const wms_layer_t * const layer = *it;
+    const wms_llbbox_t *llbbox = &layer->llbbox;
     if(!llbbox->valid)
       llbbox = NULL;
 
     wms_get_child_layers(layer->children, 1,
-	 layer->epsg4326, llbbox, layer->srs, c_layer);
-
-    layer = layer->next;
+                         layer->epsg4326, llbbox, layer->srs, c_layer);
   }
 
-  return r_layer;
+  return c_layer;
 }
 
 enum {
@@ -502,8 +496,8 @@ static void wms_server_selected(wms_server_context_t *context,
     wms_server_t *server = NULL;
     GtkTreeIter iter;
 
-    gboolean valid =
-      gtk_tree_model_get_iter_first(GTK_TREE_MODEL(context->store), &iter);
+    bool valid =
+      (gtk_tree_model_get_iter_first(GTK_TREE_MODEL(context->store), &iter) != TRUE);
 
     while(valid && !selected) {
       gtk_tree_model_get(GTK_TREE_MODEL(context->store), &iter,
@@ -516,7 +510,7 @@ static void wms_server_selected(wms_server_context_t *context,
 	selected = server;
       }
 
-      valid = gtk_tree_model_iter_next(GTK_TREE_MODEL(context->store), &iter);
+      valid = (gtk_tree_model_iter_next(GTK_TREE_MODEL(context->store), &iter) != TRUE);
     }
   }
 
@@ -903,8 +897,16 @@ static gboolean on_view_clicked(GtkWidget *widget, GdkEventButton *event,
 }
 #endif
 
-static void changed(GtkTreeSelection *sel, G_GNUC_UNUSED gpointer user_data) {
+struct selected_context {
+  appdata_t * const appdata;
+  wms_layer_t::list selected;
+  selected_context(appdata_t *a) : appdata(a) {}
+  void operator()(const wms_layer_t *layer);
+};
+
+static void changed(GtkTreeSelection *sel, gpointer user_data) {
   /* we need to know what changed in order to let the user acknowlege it! */
+  wms_layer_t::list * const selected = static_cast<wms_layer_t::list *>(user_data);
 
   /* get view from selection ... */
   GtkTreeView *view = gtk_tree_selection_get_tree_view(sel);
@@ -917,24 +919,26 @@ static void changed(GtkTreeSelection *sel, G_GNUC_UNUSED gpointer user_data) {
   /* walk the entire store */
   GtkTreeIter iter;
   gboolean one = FALSE, ok = gtk_tree_model_get_iter_first(model, &iter);
+  selected->clear();
   while(ok) {
     wms_layer_t *layer = NULL;
 
     gtk_tree_model_get(model, &iter, LAYER_COL_DATA, &layer, -1);
     g_assert(layer);
 
-    layer->selected = gtk_tree_selection_iter_is_selected(sel, &iter);
-    if(layer->selected) one = TRUE;
+    if(gtk_tree_selection_iter_is_selected(sel, &iter) == TRUE)
+      selected->push_back(layer);
 
     ok = gtk_tree_model_iter_next(model, &iter);
   }
 
   GtkWidget *dialog = gtk_widget_get_toplevel(GTK_WIDGET(view));
   gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog),
-				    GTK_RESPONSE_ACCEPT, one);
+                                    GTK_RESPONSE_ACCEPT,
+                                    selected->empty() ? FALSE : TRUE);
 }
 
-static GtkWidget *wms_layer_widget(appdata_t *appdata, wms_layer_t *layer,
+static GtkWidget *wms_layer_widget(selected_context *context, const wms_layer_t::list &layers,
 				   G_GNUC_UNUSED GtkWidget *dialog) {
 
 #ifndef FREMANTLE_PANNABLE_AREA
@@ -973,9 +977,11 @@ static GtkWidget *wms_layer_widget(appdata_t *appdata, wms_layer_t *layer,
   gtk_tree_view_set_model(GTK_TREE_VIEW(view), GTK_TREE_MODEL(store));
 
   GtkTreeIter iter;
-  while(layer) {
+  const wms_layer_t::list::const_iterator itEnd = layers.end();
+  for(wms_layer_t::list::const_iterator it = layers.begin(); it != itEnd; it++) {
+    const wms_layer_t * const layer = *it;
     gboolean fits = layer->llbbox.valid &&
-                    wms_llbbox_fits(appdata->project, &layer->llbbox);
+                    wms_llbbox_fits(context->appdata->project, &layer->llbbox);
 
     /* Append a row and fill in some data */
     gtk_list_store_append(store, &iter);
@@ -984,12 +990,11 @@ static GtkWidget *wms_layer_widget(appdata_t *appdata, wms_layer_t *layer,
 	       LAYER_COL_FITS, fits,
 	       LAYER_COL_DATA, layer,
 	       -1);
-    layer = layer->next;
   }
 
   g_object_unref(store);
 
-  g_signal_connect(G_OBJECT(selection), "changed", G_CALLBACK(changed), layer);
+  g_signal_connect(G_OBJECT(selection), "changed", G_CALLBACK(changed), &context->selected);
 
 #ifndef FREMANTLE_PANNABLE_AREA
   /* put it into a scrolled window */
@@ -1009,12 +1014,12 @@ static GtkWidget *wms_layer_widget(appdata_t *appdata, wms_layer_t *layer,
 }
 
 
-static gboolean wms_layer_dialog(appdata_t *appdata, wms_layer_t *layer) {
+static gboolean wms_layer_dialog(selected_context *ctx, const wms_layer_t::list &layer) {
   gboolean ok = FALSE;
 
   GtkWidget *dialog =
     misc_dialog_new(MISC_DIALOG_LARGE, _("WMS layer selection"),
-		    GTK_WINDOW(appdata->window),
+		    GTK_WINDOW(ctx->appdata->window),
 		    GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
 		    GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
 		    NULL);
@@ -1024,7 +1029,7 @@ static gboolean wms_layer_dialog(appdata_t *appdata, wms_layer_t *layer) {
 
   /* layer list */
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox),
-		      wms_layer_widget(appdata, layer, dialog));
+		      wms_layer_widget(ctx, layer, dialog));
 
 
   gtk_widget_show_all(dialog);
@@ -1037,29 +1042,8 @@ static gboolean wms_layer_dialog(appdata_t *appdata, wms_layer_t *layer) {
   return ok;
 }
 
-static gboolean wms_one_layer_is_usable(project_t *project,
-					wms_layer_t *layer) {
-  while(layer) {
-    printf("----- Layer \"%s\" -----\n", layer->title);
-    printf("Name: %s\n", layer->name);
-    printf("epsg4326: %s\n", layer->epsg4326?"yes":"no");
-    if(layer->llbbox.valid) {
-      printf("llbbox: %f/%f %f/%f\n",
-	     layer->llbbox.min.lat, layer->llbbox.min.lon,
-	     layer->llbbox.max.lat, layer->llbbox.max.lon);
-
-      printf("llbbox fits project: %s\n",
-	     wms_llbbox_fits(project, &layer->llbbox)?"yes":"no");
-    } else
-      printf("llbbox: none/invalid\n");
-
-   if(layer->name && layer->epsg4326 && layer->llbbox.valid)
-     return TRUE;
-
-    layer = layer->next;
-  }
-
-  return FALSE;
+static bool layer_is_usable(const wms_layer_t *layer) {
+  return layer->is_usable();
 }
 
 void wms_import(appdata_t *appdata) {
@@ -1161,21 +1145,24 @@ void wms_import(appdata_t *appdata) {
 
   /* ---------- evaluate layers ----------- */
 
-  wms_layer_t *layer = wms_get_requestable_layers(&wms);
-  gboolean at_least_one_ok = wms_one_layer_is_usable(appdata->project, layer);
+  wms_layer_t::list layers = wms_get_requestable_layers(&wms);
+  bool at_least_one_ok = std::find_if(layers.begin(), layers.end(), layer_is_usable) !=
+                         layers.end();
 
   if(!at_least_one_ok) {
     errorf(GTK_WIDGET(appdata->window),
 	   _("Server provides no data in the required format!\n\n"
 	     "(epsg4326 and LatLonBoundingBox are mandatory for osm2go)"));
 #if 0
-    wms_layer_free(layer);
+    wms_layers_free(layers);
     return;
 #endif
   }
 
-  if(!wms_layer_dialog(appdata, layer)) {
-    wms_layer_free(layer);
+  selected_context ctx(appdata);
+
+  if(!wms_layer_dialog(&ctx, layers)) {
+    wms_layers_free(layers);
     return;
   }
 
@@ -1189,32 +1176,30 @@ void wms_import(appdata_t *appdata) {
   url += "GetMap&LAYERS=";
 
   /* append layers */
-  wms_layer_t *t = layer;
-  gint cnt = 0;
-  while(t) {
-    if(t->selected) {
-      if(cnt)
-        url += ',';
-      url += t->name;
-      cnt++;
+  const wms_layer_t::list::const_iterator selEnd = ctx.selected.end();
+  wms_layer_t::list::const_iterator selIt = ctx.selected.begin();
+  if(selIt != selEnd) {
+    url += (*selIt)->name;
+    for(++selIt; selIt != selEnd; selIt++) {
+      url += ',';
+      url += (*selIt)->name;
     }
-    t = t->next;
   }
 
   /* uses epsg4326 if possible */
   const char *srs;
-  if(layer->epsg4326)
+  if(layers.front()->epsg4326)
     srs = "EPSG:4326";
   else
-    srs = layer->srs;
+    srs = layers.front()->srs;
 
-  wms_layer_free(layer);
+  wms_layers_free(layers);
 
   /* append styles entry */
   url += "&STYLES=";
 
-  if(cnt > 1)
-    url += std::string(cnt - 1, ',');
+  if(ctx.selected.size() > 1)
+    url += std::string(ctx.selected.size() - 1, ',');
 
   /* and append rest */
   gchar minlon[G_ASCII_DTOSTR_BUF_SIZE], minlat[G_ASCII_DTOSTR_BUF_SIZE];
