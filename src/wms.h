@@ -20,8 +20,7 @@
 #ifndef WMS_H
 #define WMS_H
 
-#include "appdata.h"
-#include "project.h"
+#include <glib.h>
 
 typedef struct wms_server_t {
   gchar *name, *server, *path;
@@ -32,15 +31,21 @@ typedef struct wms_server_t {
 extern "C" {
 #endif
 
-void wms_import(appdata_t *appdata);
-void wms_load(appdata_t *appdata);
-void wms_remove(appdata_t *appdata);
+struct appdata_t;
+
+void wms_import(struct appdata_t *appdata);
+void wms_load(struct appdata_t *appdata);
+void wms_remove(struct appdata_t *appdata);
 wms_server_t *wms_server_get_default(void);
 void wms_servers_free(wms_server_t *wms_server);
-void wms_remove_file(project_t *project);
 
 #ifdef __cplusplus
 }
+
+struct project_t;
+
+void wms_remove_file(project_t *project);
+
 #endif
 
 #endif // WMS_H

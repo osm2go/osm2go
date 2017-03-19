@@ -20,17 +20,21 @@
 #ifndef OSM_API_H
 #define OSM_API_H
 
-#include "appdata.h"
 #include "osm.h"
-#include "project.h"
+
+#include <gtk/gtk.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-gboolean osm_download(GtkWidget *parent, settings_t *settings,
-		      project_t *project);
-void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project);
+struct appdata_t;
+struct project_t;
+struct settings_t;
+
+gboolean osm_download(GtkWidget *parent, struct settings_t *settings,
+                      struct project_t *project);
+void osm_upload(struct appdata_t *appdata, osm_t *osm, struct project_t *project);
 
 #ifdef __cplusplus
 }

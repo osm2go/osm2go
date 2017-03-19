@@ -20,6 +20,7 @@
 #include "settings.h"
 
 #include "appdata.h"
+#include "project.h"
 #include "wms.h"
 
 #include <gconf/gconf.h>
