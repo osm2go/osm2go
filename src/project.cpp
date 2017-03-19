@@ -738,9 +738,7 @@ static void on_project_edit(G_GNUC_UNUSED GtkButton *button, gpointer data) {
 	}
 
 	/* and load the (hopefully) new file */
-	appdata->osm = osm_parse(appdata->project->path,
-                                 appdata->project->osm,
-                                 &appdata->icon);
+        appdata->osm = project_parse_osm(appdata->project, &appdata->icon);
 	diff_restore(appdata, appdata->project, appdata->osm);
 	map_paint(appdata);
 
@@ -1088,7 +1086,7 @@ static void on_diff_remove_clicked(G_GNUC_UNUSED GtkButton *button, gpointer dat
       /* just reload the map */
       map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
       osm_free(appdata->osm);
-      appdata->osm = osm_parse(appdata->project->path, appdata->project->osm, &appdata->icon);
+      appdata->osm = project_parse_osm(appdata->project, &appdata->icon);
       map_paint(appdata);
     }
 
@@ -1313,7 +1311,7 @@ static bool project_open(appdata_t *appdata, const char *name) {
   appdata->project = project;
 
   printf("project_open: loading osm %s\n", project->osm);
-  appdata->osm = osm_parse(project->path, project->osm, &appdata->icon);
+  appdata->osm = project_parse_osm(project, &appdata->icon);
   if(!appdata->osm) {
     printf("OSM parsing failed\n");
     return false;
@@ -1453,6 +1451,10 @@ gboolean project_load(appdata_t *appdata, const char *name) {
   }
 
   return FALSE;
+}
+
+osm_t *project_parse_osm(const project_t *project, struct icon_t **icons) {
+  return osm_parse(project->path, project->osm, icons);
 }
 
 project_t::project_t(const gchar *n, const char *base_path)

@@ -170,8 +170,7 @@ cb_menu_download(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
     }
 
     banner_busy_start(appdata, 1, "Drawing");
-    appdata->osm = osm_parse(appdata->project->path, appdata->project->osm,
-                             &appdata->icon);
+    appdata->osm = project_parse_osm(appdata->project, &appdata->icon);
     diff_restore(appdata, appdata->project, appdata->osm);
     map_paint(appdata);
     banner_busy_stop(appdata); //"Redrawing"
@@ -262,8 +261,7 @@ cb_menu_undo_changes(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
   appdata->osm = NULL;
 
   diff_remove(appdata->project);
-  appdata->osm = osm_parse(appdata->project->path, appdata->project->osm,
-                 &appdata->icon);
+  appdata->osm = project_parse_osm(appdata->project, &appdata->icon);
   map_paint(appdata);
 
   banner_show_info(appdata, _("Undo all changes"));

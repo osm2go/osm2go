@@ -1088,7 +1088,7 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
       osm_free(appdata->osm);
 
       appendf(context.log, NULL, _("Loading OSM ...\n"));
-      appdata->osm = osm_parse(appdata->project->path, appdata->project->osm, &appdata->icon);
+      appdata->osm = project_parse_osm(appdata->project, &appdata->icon);
       appendf(context.log, NULL, _("Applying diff ...\n"));
       diff_restore(appdata, appdata->project, appdata->osm);
       appendf(context.log, NULL, _("Painting ...\n"));

@@ -66,6 +66,8 @@ gboolean project_check_demo(GtkWidget *parent, project_t *project);
 
 void project_free(project_t *project);
 
+osm_t *project_parse_osm(const project_t *project, struct icon_t **icons);
+
 #ifdef __cplusplus
 }
 #endif
