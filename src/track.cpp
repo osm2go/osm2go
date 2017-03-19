@@ -271,11 +271,10 @@ void track_save(project_t *project, track_t *track) {
     return;
   }
 
-  gchar *trk_name = g_strconcat(project->path.c_str(), project->name, ".trk", NULL);
+  const std::string trk_name = project->path + project->name + ".trk";
 
   if(!track) {
-    g_remove(trk_name);
-    g_free(trk_name);
+    g_remove(trk_name.c_str());
     return;
   }
 
@@ -283,22 +282,20 @@ void track_save(project_t *project, track_t *track) {
   /* in case new diff saving fails */
   const std::string backup = project->path + "backup.trk";
   xmlDocPtr doc = NULL;
-  if(g_file_test(trk_name, G_FILE_TEST_IS_REGULAR)) {
-    printf("backing up existing file \"%s\" to \"%s\"\n", trk_name, backup.c_str());
+  if(g_file_test(trk_name.c_str(), G_FILE_TEST_IS_REGULAR)) {
+    printf("backing up existing file \"%s\" to \"%s\"\n", trk_name.c_str(), backup.c_str());
     g_remove(backup.c_str());
-    g_rename(trk_name, backup.c_str());
+    g_rename(trk_name.c_str(), backup.c_str());
     /* parse the old file and get the DOM */
     doc = xmlReadFile(backup.c_str(), NULL, 0);
   }
 
-  track_write(trk_name, track, doc);
+  track_write(trk_name.c_str(), track, doc);
   track->dirty = false;
 
   /* if we reach this point writing the new file worked and we */
   /* can delete the backup */
   g_remove(backup.c_str());
-
-  g_free(trk_name);
 }
 
 void track_export(const track_t *track, const char *filename) {

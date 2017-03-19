@@ -68,7 +68,7 @@ void main_ui_enable(appdata_t *appdata) {
   /* ---- set project name as window title ----- */
 #if defined(USE_HILDON) && MAEMO_VERSION_MAJOR < 5
   if(project_valid)
-    gtk_window_set_title(GTK_WINDOW(appdata->window), appdata->project->name);
+    gtk_window_set_title(GTK_WINDOW(appdata->window), project_name(appdata->project));
   else
     gtk_window_set_title(GTK_WINDOW(appdata->window), "");
 #else
@@ -77,12 +77,12 @@ void main_ui_enable(appdata_t *appdata) {
 #ifdef USE_HILDON
   if(project_valid)
     cstr = str = g_markup_printf_escaped("<b>%s</b> - OSM2Go",
-				  appdata->project->name);
+				  project_name(appdata->project));
 
   hildon_window_set_markup(HILDON_WINDOW(appdata->window), cstr);
 #else
   if(project_valid)
-    cstr = str = g_strconcat(appdata->project->name, " - OSM2Go", NULL);
+    cstr = str = g_strconcat(project_name(appdata->project), " - OSM2Go", NULL);
 
   gtk_window_set_title(GTK_WINDOW(appdata->window), cstr);
 #endif

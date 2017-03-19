@@ -32,11 +32,9 @@ struct map_state_t;
 
 typedef struct project_t {
 #ifdef __cplusplus
-  project_t(const gchar *n, const char *base_path);
+  project_t(const char *n, const char *base_path);
   ~project_t();
 #endif
-
-  const char * const name;
 
   xmlChar *desc;
   const char *server; /**< the server string used, either rserver or settings->server */
@@ -53,6 +51,7 @@ typedef struct project_t {
 
   gboolean data_dirty;     /* needs to download new data */
 #ifdef __cplusplus
+  const std::string name;
   const std::string path;
 #endif
 } project_t;
@@ -69,6 +68,10 @@ gboolean project_check_demo(GtkWidget *parent, project_t *project);
 void project_free(project_t *project);
 
 osm_t *project_parse_osm(const project_t *project, struct icon_t **icons);
+/**
+ * @brief return project->name.c_str()
+ */
+const char *project_name(const project_t *project);
 
 #ifdef __cplusplus
 }

@@ -262,7 +262,7 @@ void diff_save(const project_t *project, const osm_t *osm) {
 
   xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
   xmlNodePtr root_node = xmlNewNode(NULL, BAD_CAST "diff");
-  xmlNewProp(root_node, BAD_CAST "name", BAD_CAST project->name);
+  xmlNewProp(root_node, BAD_CAST "name", BAD_CAST project->name.c_str());
   xmlDocSetRootElement(doc, root_node);
 
   std::for_each(osm->nodes.begin(), osm->nodes.end(), diff_save_nodes(root_node));
@@ -683,10 +683,10 @@ void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) {
 	if(str) {
 	  const char *cstr = (const char*)str;
 	  printf("diff for project %s\n", cstr);
-	  if(G_UNLIKELY(strcmp(project->name, cstr) != 0)) {
+	  if(G_UNLIKELY(project->name != cstr)) {
 	    messagef(GTK_WIDGET(appdata->window), _("Warning"),
 		     "Diff name (%s) does not match project name (%s)",
-		     cstr, project->name);
+		     cstr, project->name.c_str());
 	  }
 	  xmlFree(str);
 	}

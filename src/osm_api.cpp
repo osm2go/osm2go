@@ -139,7 +139,7 @@ gboolean osm_download(GtkWidget *parent, settings_t *settings,
   g_remove(update.c_str());
 
   gboolean result = net_io_download_file(parent, settings, url, update.c_str(),
-                                         project->name);
+                                         project->name.c_str());
   g_free(url);
 
   /* if there's a new file use this from now on */

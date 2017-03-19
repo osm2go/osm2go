@@ -102,10 +102,7 @@ static bool project_edit(select_context_t *scontext,
 /* ------------ project file io ------------- */
 
 static std::string project_filename(const project_t *project) {
-  std::string ret = project->path;
-  ret += project->name;
-  ret += ".proj";
-  return ret;
+  return project->path + project->name + ".proj";
 }
 
 static bool project_read(const std::string &project_file, project_t *project,
@@ -237,7 +234,7 @@ gboolean project_save(GtkWidget *parent, project_t *project) {
 
   xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
   xmlNodePtr node, root_node = xmlNewNode(NULL, BAD_CAST "proj");
-  xmlNewProp(root_node, BAD_CAST "name", BAD_CAST project->name);
+  xmlNewProp(root_node, BAD_CAST "name", BAD_CAST project->name.c_str());
   if(project->data_dirty)
     xmlNewProp(root_node, BAD_CAST "dirty", BAD_CAST "true");
 
@@ -353,7 +350,7 @@ enum {
 
 static gboolean osm_file_exists(const project_t *project) {
   if(project->name[0] == '/')
-    return g_file_test(project->name, G_FILE_TEST_IS_REGULAR);
+    return g_file_test(project->name.c_str(), G_FILE_TEST_IS_REGULAR);
   else {
     const std::string full = project->path + project->osm;
     return g_file_test(full.c_str(), G_FILE_TEST_IS_REGULAR);
@@ -466,11 +463,11 @@ static void project_close(appdata_t *appdata) {
 
 static bool project_delete(select_context_t *context, project_t *project) {
 
-  printf("deleting project \"%s\"\n", project->name);
+  printf("deleting project \"%s\"\n", project->name.c_str());
 
   /* check if we are to delete the currently open project */
   if(context->appdata->project &&
-     !strcmp(context->appdata->project->name, project->name)) {
+     context->appdata->project->name == project->name) {
 
     if(!yes_no_f(context->dialog, NULL, 0, 0,
 		 _("Delete current project?"),
@@ -486,7 +483,7 @@ static bool project_delete(select_context_t *context, project_t *project) {
   GDir *dir = g_dir_open(project->path.c_str(), 0, NULL);
   const gchar *name;
   std::string fullname;
-  fullname.resize(project->path.size() + strlen(project->name) + 8); // long enough for all usual project filenames
+  fullname.resize(project->path.size() + project->name.size() + 8); // long enough for all usual project filenames
   while ((name = g_dir_read_name(dir))) {
     fullname = project->path + name;
     g_remove(fullname.c_str());
@@ -504,7 +501,7 @@ static bool project_delete(select_context_t *context, project_t *project) {
       project_t *prj = NULL;
       gtk_tree_model_get(model, &iter, PROJECT_COL_DATA, &prj, -1);
       if(prj && (prj == project)) {
-	printf("found %s to remove\n", prj->name);
+	printf("found %s to remove\n", prj->name.c_str());
 	/* and remove from store */
 	gtk_list_store_remove(GTK_LIST_STORE(model), &iter);
         break;
@@ -568,7 +565,7 @@ static project_t *project_new(select_context_t *context) {
   project->server   = g_strdup(context->appdata->settings->server);
 
   /* build project osm file name */
-  project->osm = g_strconcat(project->name, ".osm", NULL);
+  project->osm = g_strconcat(project->name.c_str(), ".osm", NULL);
 
   project->min.lat = NAN;  project->min.lon = NAN;
   project->max.lat = NAN;  project->max.lon = NAN;
@@ -615,7 +612,7 @@ static const gchar *
 project_get_status_icon_stock_id(const project_t *current,
                                  const project_t *project) {
   /* is this the currently open project? */
-  if(current && !strcmp(current->name, project->name))
+  if(current && current->name == project->name)
     return GTK_STOCK_OPEN;
   else if(!project_osm_present(project))
     return GTK_STOCK_DIALOG_WARNING;
@@ -640,7 +637,7 @@ static void on_project_new(G_GNUC_UNUSED GtkButton *button, gpointer data) {
                                          context->appdata->project, project);
     gtk_list_store_append(GTK_LIST_STORE(model), &iter);
     gtk_list_store_set(GTK_LIST_STORE(model), &iter,
-		       PROJECT_COL_NAME,        project->name,
+		       PROJECT_COL_NAME,        project->name.c_str(),
 		       PROJECT_COL_STATUS,      status_stock_id,
 		       PROJECT_COL_DESCRIPTION, project->desc,
 		       PROJECT_COL_DATA,        project,
@@ -657,7 +654,7 @@ static void on_project_delete(G_GNUC_UNUSED GtkButton *button, gpointer data) {
 
   gboolean r = yes_no_f(context->dialog, NULL, 0, 0, _("Delete project?"),
                         _("Do you really want to delete the "
-                          "project \"%s\"?"), project->name);
+                          "project \"%s\"?"), project->name.c_str());
   if (!r)
     return;
 
@@ -681,7 +678,7 @@ static void on_project_edit(G_GNUC_UNUSED GtkButton *button, gpointer data) {
     const gchar *status_stock_id = project_get_status_icon_stock_id(
                                          context->appdata->project, project);
     gtk_list_store_set(GTK_LIST_STORE(model), &iter,
-		       PROJECT_COL_NAME, project->name,
+		       PROJECT_COL_NAME, project->name.c_str(),
                        PROJECT_COL_STATUS, status_stock_id,
 		       PROJECT_COL_DESCRIPTION, project->desc,
 		       -1);
@@ -689,7 +686,7 @@ static void on_project_edit(G_GNUC_UNUSED GtkButton *button, gpointer data) {
 
     /* check if we have actually editing the currently open project */
     if(context->appdata->project &&
-       !strcmp(context->appdata->project->name, project->name)) {
+       context->appdata->project->name == project->name) {
       project_t *cur = context->appdata->project;
 
       printf("edited project was actually the active one!\n");
@@ -761,7 +758,7 @@ on_project_update_all(G_GNUC_UNUSED GtkButton *button, gpointer data)
       gtk_tree_model_get(model, &iter, PROJECT_COL_DATA, &prj, -1);
       /* if the project was already downloaded do it again */
       if(prj && project_osm_present(prj)) {
-        printf("found %s to update\n", prj->name);
+        printf("found %s to update\n", prj->name.c_str());
         if (!osm_download(GTK_WIDGET(context->dialog),
                      context->appdata->settings, prj))
           break;
@@ -791,7 +788,7 @@ void project_list_add::operator()(const project_t* project)
   /* Append a row and fill in some data */
   gtk_list_store_append(store, &iter);
   gtk_list_store_set(store, &iter,
-                     PROJECT_COL_NAME,        project->name,
+                     PROJECT_COL_NAME,        project->name.c_str(),
                      PROJECT_COL_STATUS,      status_stock_id,
                      PROJECT_COL_DESCRIPTION, project->desc,
                      PROJECT_COL_DATA,        project,
@@ -960,8 +957,7 @@ bool project_context_t::active_n_dirty() const {
     return false;
 
   if(area_edit.appdata->project &&
-     !strcmp(area_edit.appdata->project->name,
-	     project->name)) {
+     area_edit.appdata->project->name == project->name) {
 
     printf("editing the currently open project\n");
 
@@ -1076,8 +1072,7 @@ static void on_diff_remove_clicked(G_GNUC_UNUSED GtkButton *button, gpointer dat
     /* if this is the currently open project, we need to undo */
     /* the map changes as well */
 
-    if(appdata->project &&
-       !strcmp(appdata->project->name, project->name)) {
+    if(appdata->project && appdata->project->name == project->name) {
 
       printf("undo all on current project: delete map changes as well\n");
 
@@ -1126,7 +1121,7 @@ project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
 
   /* cancel is enabled for "new" projects only */
   if(is_new) {
-    char *str = g_strdup_printf(_("New project - %s"), project->name);
+    char *str = g_strdup_printf(_("New project - %s"), project->name.c_str());
 
     context.area_edit.parent =
       context.dialog = misc_dialog_new(MISC_DIALOG_WIDE, str,
@@ -1135,7 +1130,7 @@ project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
 				GTK_STOCK_OK, GTK_RESPONSE_ACCEPT, NULL);
     g_free(str);
   } else {
-    char *str = g_strdup_printf(_("Edit project - %s"), project->name);
+    char *str = g_strdup_printf(_("Edit project - %s"), project->name.c_str());
 
     context.area_edit.parent =
       context.dialog = misc_dialog_new(MISC_DIALOG_WIDE, str,
@@ -1422,7 +1417,7 @@ gboolean project_load(appdata_t *appdata, const char *name) {
 
   /* save the name of the project for the perferences */
   g_free(appdata->settings->project);
-  appdata->settings->project = g_strdup(appdata->project->name);
+  appdata->settings->project = g_strdup(appdata->project->name.c_str());
 
   banner_busy_stop(appdata);
 
@@ -1455,9 +1450,12 @@ osm_t *project_parse_osm(const project_t *project, struct icon_t **icons) {
   return osm_parse(project->path, project->osm, icons);
 }
 
-project_t::project_t(const gchar *n, const char *base_path)
-  : name(g_strdup(n))
-  , desc(0)
+const char *project_name(const project_t *project) {
+  return project->name.c_str();
+}
+
+project_t::project_t(const char *n, const char *base_path)
+  : desc(0)
   , server(0)
   , rserver(0)
   , osm(0)
@@ -1465,6 +1463,7 @@ project_t::project_t(const gchar *n, const char *base_path)
   , wms_path(0)
   , map_state(0)
   , data_dirty(FALSE)
+  , name(n)
   , path(std::string(base_path) +  name + '/')
 {
   memset(&wms_offset, 0, sizeof(wms_offset));
@@ -1474,7 +1473,6 @@ project_t::project_t(const gchar *n, const char *base_path)
 
 project_t::~project_t()
 {
-  g_free(const_cast<gchar *>(name));
   xmlFree(desc);
   g_free(rserver);
 
