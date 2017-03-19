@@ -25,6 +25,7 @@
 
 #include "appdata.h"
 #include "misc.h"
+#include "project.h"
 #include "statusbar.h"
 
 #include <algorithm>

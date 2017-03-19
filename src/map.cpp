@@ -28,6 +28,7 @@
 #include "map_edit.h"
 #include "map_hl.h"
 #include "misc.h"
+#include "project.h"
 #include "statusbar.h"
 #include "style.h"
 #include "track.h"

@@ -1,8 +1,10 @@
 #include <diff.h>
 #include <osm.h>
+#include <project.h>
 
 #include <cerrno>
 #include <cstdlib>
+#include <cstring>
 #include <gtk/gtk.h>
 #include <iostream>
 
