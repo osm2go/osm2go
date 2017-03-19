@@ -37,7 +37,6 @@ typedef struct project_t {
 #endif
 
   const char *server; /**< the server string used, either rserver or settings->server */
-  gchar *rserver;
 
   char *wms_server;
   char *wms_path;
@@ -53,6 +52,7 @@ typedef struct project_t {
   const std::string path;
   std::string desc;
   std::string osm;
+  std::string rserver;
 #endif
 } project_t;
 

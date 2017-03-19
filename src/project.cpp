@@ -137,8 +137,8 @@ static bool project_read(const std::string &project_file, project_t *project,
               if(g_strcmp0(defaultserver, (gchar *)str) == 0) {
                 project->server = defaultserver;
               } else {
-                project->rserver = g_strdup((gchar *)str);
-                project->server = project->rserver;
+                project->rserver = reinterpret_cast<char *>(str);
+                project->server = project->rserver.c_str();
               }
 	      printf("server = %s\n", project->server);
 	      xmlFree(str);
@@ -698,15 +698,12 @@ static void on_project_edit(G_GNUC_UNUSED GtkButton *button, gpointer data) {
       cur->desc = project->desc;
 
       /* update server */
-      if(cur->rserver) {
-        g_free(cur->rserver);
-        cur->rserver = NULL;
-      }
       if(g_strcmp0(project->server, context->appdata->settings->server) == 0) {
         cur->server = context->appdata->settings->server;
+	cur->rserver.clear();
       } else {
-        cur->rserver = g_strdup(project->server);
-        cur->server = cur->rserver;
+        cur->rserver = project->server;
+        cur->server = cur->rserver.c_str();
       }
 
       /* update coordinates */
@@ -1248,16 +1245,13 @@ project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
     project->desc.clear();
 
 #ifdef SERVER_EDITABLE
-  g_free(context.project->rserver);
-  context.project->rserver = g_strdup(gtk_entry_get_text(
-				       GTK_ENTRY(context.server)));
-  if(!context.project->rserver || strlen(context.project->rserver) == 0 ||
-     g_strcmp0(appdata->settings->server, context.project->rserver) == 0) {
-    g_free(context.project->rserver);
-    context.project->rserver = NULL;
+  context.project->rserver = gtk_entry_get_text(GTK_ENTRY(context.server));
+  if(context.project->rserver.empty() ||
+     context.project->rserver == appdata->settings->server) {
+    context.project->rserver.clear();
     context.project->server = appdata->settings->server;
   } else {
-    context.project->server = context.project->rserver;
+    context.project->server = context.project->rserver.c_str();
   }
 #endif
 
@@ -1454,7 +1448,6 @@ const char *project_name(const project_t *project) {
 
 project_t::project_t(const char *n, const char *base_path)
   : server(0)
-  , rserver(0)
   , wms_server(0)
   , wms_path(0)
   , map_state(0)
@@ -1469,8 +1462,6 @@ project_t::project_t(const char *n, const char *base_path)
 
 project_t::~project_t()
 {
-  g_free(rserver);
-
   g_free(wms_server);
   g_free(wms_path);
 
