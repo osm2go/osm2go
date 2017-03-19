@@ -17,12 +17,13 @@
  * along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "wms.h"
+
 #include "appdata.h"
 #include "list.h"
 #include "map.h"
 #include "misc.h"
 #include "net_io.h"
-#include "wms.h"
 
 #include <algorithm>
 #include <cmath>
