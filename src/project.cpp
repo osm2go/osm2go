@@ -563,7 +563,7 @@ static project_t *project_new(select_context_t *context) {
   project->data_dirty = true;
 
   /* use global server/access settings */
-  project->server   = g_strdup(context->appdata->settings->server);
+  project->server = context->appdata->settings->server;
 
   /* build project osm file name */
   project->osm = project->name + ".osm";
