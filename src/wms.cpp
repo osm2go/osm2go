@@ -598,7 +598,10 @@ static void callback_modified_name(GtkWidget *widget, gpointer data) {
   /* search all entries except the last (which is the one we are editing) */
   wms_server_t *server = settings->wms_server;
   while(server && server->next) {
-    if(strcasecmp(server->name, (char*)name) == 0) ok = FALSE;
+    if(strcasecmp(server->name, (char*)name) == 0) {
+      ok = FALSE;
+      break;
+    }
     server = server->next;
   }
 
