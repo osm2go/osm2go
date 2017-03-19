@@ -147,7 +147,7 @@ gboolean osm_download(GtkWidget *parent, settings_t *settings,
     printf("download ok, replacing previous file\n");
 
     if(project->osm[0] == '/') {
-      g_rename(update.c_str(), project->osm);
+      g_rename(update.c_str(), project->osm.c_str());
     } else {
       const std::string fname = project->path + project->osm;
       g_rename(update.c_str(), fname.c_str());

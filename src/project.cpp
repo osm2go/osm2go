@@ -193,10 +193,10 @@ static bool project_read(const std::string &project_file, project_t *project,
 		 (strlen((char *)str) > project->path.size()) &&
 		 !strncmp((char *)str, project->path.c_str(), project->path.size())) {
 
-		project->osm = g_strdup((gchar *)str + project->path.size());
-		printf("osm name converted to relative %s\n", project->osm);
+		project->osm = reinterpret_cast<char *>(str + project->path.size());
+		printf("osm name converted to relative %s\n", project->osm.c_str());
 	      } else
-		project->osm = g_strdup((gchar *)str);
+		project->osm = reinterpret_cast<char *>(str);
 
 	      xmlFree(str);
 
@@ -248,7 +248,7 @@ gboolean project_save(GtkWidget *parent, project_t *project) {
   if(!project->desc.empty())
     xmlNewChild(root_node, NULL, BAD_CAST "desc", BAD_CAST project->desc.c_str());
 
-  xmlNewChild(root_node, NULL, BAD_CAST "osm", BAD_CAST project->osm);
+  xmlNewChild(root_node, NULL, BAD_CAST "osm", BAD_CAST project->osm.c_str());
 
   node = xmlNewChild(root_node, NULL, BAD_CAST "min", NULL);
   xml_set_prop_pos(node, &project->min);
@@ -566,7 +566,7 @@ static project_t *project_new(select_context_t *context) {
   project->server   = g_strdup(context->appdata->settings->server);
 
   /* build project osm file name */
-  project->osm = g_strconcat(project->name.c_str(), ".osm", NULL);
+  project->osm = project->name + ".osm";
 
   project->min.lat = NAN;  project->min.lon = NAN;
   project->max.lat = NAN;  project->max.lon = NAN;
@@ -891,10 +891,9 @@ static bool file_info(const project_t *project, GStatBuf &st) {
   int r;
 
   if (project->osm[0] == '/') {
-    r = g_stat(project->osm, &st);
+    r = g_stat(project->osm.c_str(), &st);
   } else {
-    std::string str = project->path;
-    str += project->osm;
+    const std::string str = project->path + project->osm;
     r = g_stat(str.c_str(), &st);
   }
 
@@ -906,7 +905,7 @@ static void project_filesize(project_context_t *context) {
   gchar *gstr = NULL;
   const project_t * const project = context->project;
 
-  printf("Checking size of %s\n", project->osm);
+  printf("Checking size of %s\n", project->osm.c_str());
 
   if(!osm_file_exists(project)) {
     GdkColor color;
@@ -1045,7 +1044,7 @@ static void on_download_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) 
   project_context_t *context = (project_context_t*)data;
   project_t * const project = context->project;
 
-  printf("download %s\n", project->osm);
+  printf("download %s\n", project->osm.c_str());
 
   if(osm_download(context->dialog, context->settings, project))
     project->data_dirty = FALSE;
@@ -1302,7 +1301,7 @@ static bool project_open(appdata_t *appdata, const char *name) {
   /* --------- project structure ok: load its OSM file --------- */
   appdata->project = project;
 
-  printf("project_open: loading osm %s\n", project->osm);
+  printf("project_open: loading osm %s\n", project->osm.c_str());
   appdata->osm = project_parse_osm(project, &appdata->icon);
   if(!appdata->osm) {
     printf("OSM parsing failed\n");
@@ -1456,7 +1455,6 @@ const char *project_name(const project_t *project) {
 project_t::project_t(const char *n, const char *base_path)
   : server(0)
   , rserver(0)
-  , osm(0)
   , wms_server(0)
   , wms_path(0)
   , map_state(0)
@@ -1475,8 +1473,6 @@ project_t::~project_t()
 
   g_free(wms_server);
   g_free(wms_path);
-
-  g_free(osm);
 
   map_state_free(map_state);
 }

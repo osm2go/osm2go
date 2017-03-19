@@ -422,7 +422,7 @@ public:
   void cleanup();
 };
 
-osm_t *osm_parse(const std::string &path, const char *filename, struct icon_t **icons);
+osm_t *osm_parse(const std::string &path, const std::string &filename, struct icon_t **icons);
 /**
  * @brief parse the XML node for tag values
  * @param a_node the XML node to parse
