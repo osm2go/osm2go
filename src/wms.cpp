@@ -1264,17 +1264,19 @@ static const char *wms_exts[] = { "png", "gif", "jpg", NULL };
 /* try to load an existing image into map */
 void wms_load(appdata_t *appdata) {
   int i;
-  gchar *filename = g_strjoin("/wms.", appdata->project->path, DUMMYEXT, NULL);
-  gchar *ext = filename + strlen(filename) - strlen(DUMMYEXT);
+  std::string filename = appdata->project->path + "/wms.";
+  filename.resize(filename.size() + strlen(DUMMYEXT));
+  const std::string::size_type extpos = filename.size();
 
   for(i = 0; wms_exts[i]; i++) {
-    memcpy(ext, wms_exts[i], strlen(wms_exts[i]));
+    filename.erase(extpos);
+    filename += wms_exts[i];
 
-    if(g_file_test(filename, G_FILE_TEST_EXISTS)) {
+    if(g_file_test(filename.c_str(), G_FILE_TEST_EXISTS)) {
       appdata->map->bg.offset.x = appdata->project->wms_offset.x;
       appdata->map->bg.offset.y = appdata->project->wms_offset.y;
 
-      map_set_bg_image(appdata->map, (char*)filename);
+      map_set_bg_image(appdata->map, filename.c_str());
 
       /* restore image to saved position */
       gint x = appdata->osm->bounds->min.x + appdata->map->bg.offset.x;
@@ -1288,22 +1290,21 @@ void wms_load(appdata_t *appdata) {
       break;
     }
   }
-  g_free(filename);
 }
 
 void wms_remove_file(project_t *project) {
   int i;
-  gchar *filename = g_strjoin("/wms.", project->path, DUMMYEXT, NULL);
-  gchar *ext = filename + strlen(filename) - strlen(DUMMYEXT);
+  std::string filename = project->path + "/wms.";
+  filename.resize(filename.size() + strlen(DUMMYEXT));
+  const std::string::size_type extpos = filename.size();
 
   for(i = 0; wms_exts[i]; i++) {
-    memcpy(ext, wms_exts[i], strlen(wms_exts[i]));
+    filename.erase(extpos);
+    filename += wms_exts[i];
 
-    if(g_file_test(filename, G_FILE_TEST_EXISTS))
-      g_remove(filename);
+    if(g_file_test(filename.c_str(), G_FILE_TEST_EXISTS))
+      g_remove(filename.c_str());
   }
-
-  g_free(filename);
 }
 
 void wms_remove(appdata_t *appdata) {

@@ -258,7 +258,7 @@ void diff_save(const project_t *project, const osm_t *osm) {
 
   /* write the diff to a new file so the original one needs intact until
    * saving is completed */
-  char *ndiff = g_strconcat(project->path, "save.diff", NULL);
+  const std::string ndiff = project->path + "save.diff";
 
   xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
   xmlNodePtr root_node = xmlNewNode(NULL, BAD_CAST "diff");
@@ -269,14 +269,12 @@ void diff_save(const project_t *project, const osm_t *osm) {
   std::for_each(osm->ways.begin(), osm->ways.end(), diff_save_ways(root_node));
   std::for_each(osm->relations.begin(), osm->relations.end(), diff_save_relations(root_node));
 
-  xmlSaveFormatFileEnc(ndiff, doc, "UTF-8", 1);
+  xmlSaveFormatFileEnc(ndiff.c_str(), doc, "UTF-8", 1);
   xmlFreeDoc(doc);
 
   /* if we reach this point writing the new file worked and we */
   /* can delete the backup */
-  g_rename(ndiff, diff_name.c_str());
-
-  g_free(ndiff);
+  g_rename(ndiff.c_str(), diff_name.c_str());
 }
 
 static item_id_t xml_get_prop_int(xmlNode *node, const char *prop, item_id_t def) {

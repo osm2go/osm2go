@@ -177,7 +177,6 @@ struct osm_t {
 #endif
 };
 
-osm_t *osm_parse(const char *path, const char *filename, struct icon_t **icons);
 gboolean osm_sanity_check(GtkWidget *parent, const osm_t *osm);
 void osm_free(osm_t *osm);
 
@@ -423,6 +422,7 @@ public:
   void cleanup();
 };
 
+osm_t *osm_parse(const std::string &path, const char *filename, struct icon_t **icons);
 /**
  * @brief parse the XML node for tag values
  * @param a_node the XML node to parse

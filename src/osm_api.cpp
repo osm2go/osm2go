@@ -135,29 +135,26 @@ gboolean osm_download(GtkWidget *parent, settings_t *settings,
 
   /* Download the new file to a new name. If something goes wrong then the
    * old file will still be in place to be opened. */
-  gchar *update = g_strconcat(project->path, "update.osm", NULL);
-  g_remove(update);
+  const std::string update = project->path + "update.osm";
+  g_remove(update.c_str());
 
-  gboolean result = net_io_download_file(parent, settings, url, update,
+  gboolean result = net_io_download_file(parent, settings, url, update.c_str(),
                                          project->name);
   g_free(url);
 
   /* if there's a new file use this from now on */
-  if(result && g_file_test(update, G_FILE_TEST_IS_REGULAR)) {
+  if(result && g_file_test(update.c_str(), G_FILE_TEST_IS_REGULAR)) {
     printf("download ok, replacing previous file\n");
 
     if(project->osm[0] == '/') {
-      g_rename(update, project->osm);
+      g_rename(update.c_str(), project->osm);
     } else {
-      gchar *fname = g_strconcat(project->path, project->osm, NULL);
-      g_rename(update, fname);
-      g_free(fname);
+      const std::string fname = project->path + project->osm;
+      g_rename(update.c_str(), fname.c_str());
     }
 
     result = TRUE;
   }
-
-  g_free(update);
 
   return result;
 }

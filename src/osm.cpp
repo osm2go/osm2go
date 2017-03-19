@@ -1038,7 +1038,7 @@ static osm_t *process_file(const char *filename) {
 
 #include <sys/time.h>
 
-osm_t *osm_parse(const char *path, const char *filename, icon_t **icon) {
+osm_t *osm_parse(const std::string &path, const char *filename, icon_t **icon) {
 
   struct timeval start;
   gettimeofday(&start, NULL);
@@ -1048,9 +1048,8 @@ osm_t *osm_parse(const char *path, const char *filename, icon_t **icon) {
   if(filename[0] == '/')
     osm = process_file(filename);
   else {
-    char *full = g_strconcat(path, filename, NULL);
-    osm = process_file(full);
-    g_free(full);
+    const std::string full = path + filename;
+    osm = process_file(full.c_str());
   }
 
   struct timeval end;

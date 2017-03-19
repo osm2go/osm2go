@@ -192,10 +192,10 @@ static bool project_read(const std::string &project_file, project_t *project,
 	      /* if the project path actually is a prefix of this, */
 	      /* then just remove this prefix */
 	      if((str[0] == '/') &&
-		 (strlen((char *)str) > strlen(project->path)) &&
-		 !strncmp((char *)str, project->path, strlen(project->path))) {
+		 (strlen((char *)str) > project->path.size()) &&
+		 !strncmp((char *)str, project->path.c_str(), project->path.size())) {
 
-		project->osm = g_strdup((gchar *)str + strlen(project->path));
+		project->osm = g_strdup((gchar *)str + project->path.size());
 		printf("osm name converted to relative %s\n", project->osm);
 	      } else
 		project->osm = g_strdup((gchar *)str);
@@ -226,11 +226,11 @@ gboolean project_save(GtkWidget *parent, project_t *project) {
   printf("saving project to %s\n", project_file.c_str());
 
   /* check if project path exists */
-  if(!g_file_test(project->path, G_FILE_TEST_IS_DIR)) {
+  if(!g_file_test(project->path.c_str(), G_FILE_TEST_IS_DIR)) {
     /* make sure project base path exists */
-    if(g_mkdir_with_parents(project->path, S_IRWXU) != 0) {
+    if(g_mkdir_with_parents(project->path.c_str(), S_IRWXU) != 0) {
       errorf(GTK_WIDGET(parent),
-	     _("Unable to create project path %s"), project->path);
+	     _("Unable to create project path %s"), project->path.c_str());
       return FALSE;
     }
   }
@@ -355,8 +355,7 @@ static gboolean osm_file_exists(const project_t *project) {
   if(project->name[0] == '/')
     return g_file_test(project->name, G_FILE_TEST_IS_REGULAR);
   else {
-    std::string full = project->path;
-    full += project->osm;
+    const std::string full = project->path + project->osm;
     return g_file_test(full.c_str(), G_FILE_TEST_IS_REGULAR);
   }
 }
@@ -484,19 +483,18 @@ static bool project_delete(select_context_t *context, project_t *project) {
   }
 
   /* remove entire directory from disk */
-  GDir *dir = g_dir_open(project->path, 0, NULL);
+  GDir *dir = g_dir_open(project->path.c_str(), 0, NULL);
   const gchar *name;
-  std::string path = project->path;
-  path += '/';
   std::string fullname;
+  fullname.resize(project->path.size() + strlen(project->name) + 8); // long enough for all usual project filenames
   while ((name = g_dir_read_name(dir))) {
-    fullname = path + name;
+    fullname = project->path + name;
     g_remove(fullname.c_str());
   }
   g_dir_close(dir);
 
   /* remove the projects directory */
-  g_remove(project->path);
+  g_remove(project->path.c_str());
 
   /* remove from view */
   GtkTreeIter iter;
@@ -1459,7 +1457,6 @@ osm_t *project_parse_osm(const project_t *project, struct icon_t **icons) {
 
 project_t::project_t(const gchar *n, const char *base_path)
   : name(g_strdup(n))
-  , path(g_strconcat(base_path, name, "/", NULL))
   , desc(0)
   , server(0)
   , rserver(0)
@@ -1468,6 +1465,7 @@ project_t::project_t(const gchar *n, const char *base_path)
   , wms_path(0)
   , map_state(0)
   , data_dirty(FALSE)
+  , path(std::string(base_path) +  name + '/')
 {
   memset(&wms_offset, 0, sizeof(wms_offset));
   memset(&min, 0, sizeof(min));
@@ -1483,7 +1481,6 @@ project_t::~project_t()
   g_free(wms_server);
   g_free(wms_path);
 
-  g_free(const_cast<gchar *>(path));
   g_free(osm);
 
   map_state_free(map_state);

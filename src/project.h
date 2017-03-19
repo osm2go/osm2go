@@ -37,7 +37,6 @@ typedef struct project_t {
 #endif
 
   const char * const name;
-  const char * const path;
 
   xmlChar *desc;
   const char *server; /**< the server string used, either rserver or settings->server */
@@ -53,6 +52,9 @@ typedef struct project_t {
   pos_t min, max;
 
   gboolean data_dirty;     /* needs to download new data */
+#ifdef __cplusplus
+  const std::string path;
+#endif
 } project_t;
 
 #ifdef __cplusplus
