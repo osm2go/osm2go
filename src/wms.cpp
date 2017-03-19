@@ -72,12 +72,6 @@ struct wms_request_t {
   wms_getmap_t getmap;
 };
 
-struct wms_service_t {
-  wms_service_t()
-    : title(0) {}
-  gchar *title;
-};
-
 struct wms_cap_t {
   wms_layer_t::list layers;
   wms_request_t request;
@@ -92,7 +86,6 @@ struct wms_t {
   std::string path;
   gint width, height;
 
-  wms_service_t service;
   wms_cap_t cap;
 };
 
@@ -258,26 +251,6 @@ static bool wms_cap_parse_cap(xmlDocPtr doc, xmlNode *a_node, wms_cap_t *wms_cap
   return has_request && !wms_cap->layers.empty();
 }
 
-static void wms_cap_parse_service(xmlDocPtr doc, xmlNode *a_node,
-                                            wms_service_t *wms_service) {
-  xmlNode *cur_node;
-
-  for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
-    if (cur_node->type == XML_ELEMENT_NODE) {
-      if(strcasecmp((char*)cur_node->name, "title") == 0) {
-	xmlChar *str = xmlNodeListGetString(doc, cur_node->children, 1);
-	wms_service->title = g_strdup((gchar *)str);
-	xmlFree(str);
-      } else
-	printf("found unhandled WMT_MS_Capabilities/Service/%s\n",
-	       cur_node->name);
-    }
-  }
-
-  printf("-- Service --\n");
-  printf("Title: %s\n", wms_service->title);
-}
-
 static bool wms_cap_parse(wms_t *wms, xmlDocPtr doc, xmlNode *a_node) {
   xmlNode *cur_node = NULL;
   bool has_service = false, has_cap = false;
@@ -286,10 +259,7 @@ static bool wms_cap_parse(wms_t *wms, xmlDocPtr doc, xmlNode *a_node) {
     if (cur_node->type == XML_ELEMENT_NODE) {
 
       if(strcasecmp((char*)cur_node->name, "Service") == 0) {
-        if(!has_service) {
-          wms_cap_parse_service(doc, cur_node, &wms->service);
-          has_service = true;
-        }
+        has_service = true;
       } else if(strcasecmp((char*)cur_node->name, "Capability") == 0) {
         if(!has_cap)
           has_cap = wms_cap_parse_cap(doc, cur_node, &wms->cap);
@@ -388,7 +358,6 @@ void wms_layer_free(wms_layer_t *layer) {
 
 wms_t::~wms_t() {
   wms_layers_free(cap.layers);
-  g_free(service.title);
 }
 
 /* ---------------------- use ------------------- */
