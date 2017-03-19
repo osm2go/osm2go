@@ -524,7 +524,7 @@ void osm_delete_nodes::operator()(std::pair<item_id_t, node_t *> pair)
 
     if(osm_delete_item(context, xml_str, url, cred)) {
       node->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
-      project->data_dirty = TRUE;
+      project->data_dirty = true;
     }
     xmlFree(xml_str);
     g_free(url);
@@ -568,7 +568,7 @@ void osm_upload_nodes::operator()(std::pair<item_id_t, node_t *> pair)
       if(osm_update_item(context, xml_str, url, cred,
          (node->flags & OSM_FLAG_NEW) ? &(node->id) : &node->version)) {
         node->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_NEW);
-        project->data_dirty = TRUE;
+        project->data_dirty = true;
       }
       xmlFree(xml_str);
     }
@@ -602,7 +602,7 @@ void osm_delete_ways::operator()(std::pair<item_id_t, way_t *> pair)
 
   if(osm_delete_item(context, xml_str, url, cred)) {
     way->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
-    project->data_dirty = TRUE;
+    project->data_dirty = true;
   }
 
   xmlFree(xml_str);
@@ -647,7 +647,7 @@ void osm_upload_ways::operator()(std::pair<item_id_t, way_t *> pair)
     if(osm_update_item(context, xml_str, url, cred,
         (way->flags & OSM_FLAG_NEW) ? &way->id : &way->version)) {
       way->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_NEW);
-      project->data_dirty = TRUE;
+      project->data_dirty = true;
     }
     xmlFree(xml_str);
   }
@@ -683,7 +683,7 @@ void osm_delete_relations::operator()(std::pair<item_id_t, relation_t *> pair)
 
   if(osm_delete_item(context, xml_str, url, cred)) {
     relation->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
-    project->data_dirty = TRUE;
+    project->data_dirty = true;
   }
 
   xmlFree(xml_str);
@@ -729,7 +729,7 @@ void osm_upload_relations::operator()(std::pair<item_id_t, relation_t *> pair)
     if(osm_update_item(context, xml_str, url, cred,
         (relation->flags & OSM_FLAG_NEW) ? &relation->id : &relation->version)) {
       relation->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_NEW);
-      project->data_dirty = TRUE;
+      project->data_dirty = true;
     }
     xmlFree(xml_str);
   }
@@ -1066,7 +1066,7 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
     if(osm_download(context.dialog, appdata->settings, project)) {
       appendf(context.log, NULL, _("Download successful!\n"));
       appendf(context.log, NULL, _("The map will be reloaded.\n"));
-      project->data_dirty = FALSE;
+      project->data_dirty = false;
       reload_map = TRUE;
     } else
       appendf(context.log, NULL, _("Download failed!\n"));

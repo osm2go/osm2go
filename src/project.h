@@ -46,8 +46,9 @@ typedef struct project_t {
 
   pos_t min, max;
 
-  gboolean data_dirty;     /* needs to download new data */
 #ifdef __cplusplus
+  bool data_dirty;     /* needs to download new data */
+
   const std::string name;
   const std::string path;
   std::string desc;

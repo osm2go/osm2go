@@ -119,7 +119,7 @@ static bool project_read(const std::string &project_file, project_t *project,
   for (cur_node = xmlDocGetRootElement(doc); cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcmp((char*)cur_node->name, "proj") == 0) {
-        project->data_dirty = xml_get_prop_is(cur_node, "dirty", "true");
+        project->data_dirty = xml_get_prop_is(cur_node, "dirty", "true") == TRUE;
 
 	xmlNode *node = cur_node->children;
 
@@ -560,7 +560,7 @@ static project_t *project_new(select_context_t *context) {
   gtk_widget_destroy(dialog);
 
   /* no data downloaded yet */
-  project->data_dirty = TRUE;
+  project->data_dirty = true;
 
   /* use global server/access settings */
   project->server   = g_strdup(context->appdata->settings->server);
@@ -936,7 +936,7 @@ static void project_filesize(project_context_t *context) {
 
     gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog),
 		      GTK_RESPONSE_ACCEPT, !context->is_new ||
-				      !project->data_dirty);
+				      project->data_dirty ? FALSE : TRUE);
   }
 
   if(str) {
@@ -1031,7 +1031,7 @@ static void on_edit_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
     {
       if(osm_download(GTK_WIDGET(context->dialog),
 	      context->area_edit.appdata->settings, project))
-         project->data_dirty = FALSE;
+         project->data_dirty = false;
     }
     project_filesize(context);
   }
@@ -1044,7 +1044,7 @@ static void on_download_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) 
   printf("download %s\n", project->osm.c_str());
 
   if(osm_download(context->dialog, context->settings, project))
-    project->data_dirty = FALSE;
+    project->data_dirty = false;
   else
     printf("download failed\n");
 
@@ -1451,7 +1451,7 @@ project_t::project_t(const char *n, const char *base_path)
   , wms_server(0)
   , wms_path(0)
   , map_state(0)
-  , data_dirty(FALSE)
+  , data_dirty(false)
   , name(n)
   , path(std::string(base_path) +  name + '/')
 {
