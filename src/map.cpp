@@ -306,7 +306,7 @@ void map_way_select(appdata_t *appdata, way_t *way) {
 
   map_statusbar(map, map_item);
   icon_bar_map_item_selected(appdata->iconbar, map_item, TRUE);
-  gtk_widget_set_sensitive(appdata->menu_item_map_hide_sel, TRUE);
+  gtk_widget_set_sensitive(appdata->menuitems[MENU_ITEM_MAP_HIDE_SEL], TRUE);
 
   gint arrow_width = ((map_item->object.way->draw.flags & OSM_DRAW_FLAG_BG)?
 		      map->style->highlight.width + map_item->object.way->draw.bg.width/2:
@@ -452,7 +452,7 @@ void map_item_deselect(appdata_t *appdata) {
 
   /* disable/enable icons in icon bar */
   icon_bar_map_item_selected(appdata->iconbar, NULL, FALSE);
-  gtk_widget_set_sensitive(appdata->menu_item_map_hide_sel, FALSE);
+  gtk_widget_set_sensitive(appdata->menuitems[MENU_ITEM_MAP_HIDE_SEL], FALSE);
 
   /* remove highlight */
   map_hl_remove(appdata);
@@ -1935,7 +1935,7 @@ void map_action_set(appdata_t *appdata, map_action_t action) {
 
   icon_bar_map_action_idle(appdata->iconbar, action == MAP_ACTION_IDLE ? TRUE : FALSE,
                            appdata->map->selected.object.type == WAY ? TRUE : FALSE);
-  gtk_widget_set_sensitive(appdata->menu_item_wms_adjust,
+  gtk_widget_set_sensitive(appdata->menuitems[MENU_ITEM_WMS_ADJUST],
 			   action == MAP_ACTION_IDLE);
 
   const char *str_state[] = {
@@ -2410,7 +2410,7 @@ void map_hide_selected(appdata_t *appdata) {
   way->flags |= OSM_FLAG_HIDDEN;
   map_item_chain_destroy(&way->map_item_chain);
 
-  gtk_widget_set_sensitive(appdata->menu_item_map_show_all, TRUE);
+  gtk_widget_set_sensitive(appdata->menuitems[MENU_ITEM_MAP_SHOW_ALL], TRUE);
 }
 
 struct map_show_all_functor {
@@ -2435,7 +2435,7 @@ void map_show_all(appdata_t *appdata) {
   std::for_each(appdata->osm->ways.begin(), appdata->osm->ways.end(),
                 map_show_all_functor(map));
 
-  gtk_widget_set_sensitive(appdata->menu_item_map_show_all, FALSE);
+  gtk_widget_set_sensitive(appdata->menuitems[MENU_ITEM_MAP_SHOW_ALL], FALSE);
 }
 
 void map_detail_change(map_t *map, float detail) {

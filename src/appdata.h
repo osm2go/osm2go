@@ -62,6 +62,26 @@
 #include "dbus.h"
 #endif
 
+enum menu_items {
+  MENU_ITEM_MAP_HIDE_SEL,
+  MENU_ITEM_MAP_SHOW_ALL,
+  MENU_ITEM_WMS_CLEAR,
+  MENU_ITEM_WMS_ADJUST,
+  MENU_ITEM_TRACK_EXPORT,
+  MENU_ITEM_TRACK_CLEAR,
+  MENU_ITEM_TRACK_ENABLE_GPS,
+  MENU_ITEM_TRACK_FOLLOW_GPS,
+  SUBMENU_VIEW,
+  SUBMENU_MAP,
+  MENU_ITEM_MAP_RELATIONS,
+  SUBMENU_WMS,
+  SUBMENU_TRACK,
+  MENU_ITEM_TRACK_IMPORT,
+  MENU_ITEM_MAP_UPLOAD,
+  MENU_ITEM_MAP_UNDO_CHANGES,
+  MENU_ITEMS_COUNT
+};
+
 typedef struct appdata_t {
 #ifdef USE_HILDON
   HildonProgram *program;
@@ -100,13 +120,9 @@ typedef struct appdata_t {
     guint reply;         /* reply to be assumed if "not_again" bit is set */
   } dialog_again;
 
+  GtkWidget *menuitems[MENU_ITEMS_COUNT];
+
   struct {
-    GtkWidget *submenu_track;
-    GtkWidget *menu_item_track_import;
-    GtkWidget *menu_item_track_export;
-    GtkWidget *menu_item_track_clear;
-    GtkWidget *menu_item_track_enable_gps;
-    GtkWidget *menu_item_track_follow_gps;
     struct track_t *track;
     canvas_item_t *gps_item; // the purple circle
     int warn_cnt;
@@ -116,20 +132,7 @@ typedef struct appdata_t {
   GtkWidget *menu_item_view_fullscreen;
 #endif
 
-  GtkWidget *submenu_view;
-
-  GtkWidget *submenu_map;
-  GtkWidget *menu_item_map_upload;
   GtkWidget *menu_item_map_save_changes;
-  GtkWidget *menu_item_map_undo_changes;
-  GtkWidget *menu_item_map_relations;
-
-  GtkWidget *submenu_wms;
-  GtkWidget *menu_item_wms_clear;
-  GtkWidget *menu_item_wms_adjust;
-
-  GtkWidget *menu_item_map_hide_sel;
-  GtkWidget *menu_item_map_show_all;
 
 #if defined(USE_HILDON) && (MAEMO_VERSION_MAJOR == 5)
   /* submenues are seperate menues under fremantle */

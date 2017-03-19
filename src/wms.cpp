@@ -1218,8 +1218,8 @@ void wms_import(appdata_t *appdata) {
   canvas_image_move(appdata->map->bg.item, x, y,
 		    appdata->map->bg.scale.x, appdata->map->bg.scale.y);
 
-  gtk_widget_set_sensitive(appdata->menu_item_wms_clear, TRUE);
-  gtk_widget_set_sensitive(appdata->menu_item_wms_adjust, TRUE);
+  gtk_widget_set_sensitive(appdata->menuitems[MENU_ITEM_WMS_CLEAR], TRUE);
+  gtk_widget_set_sensitive(appdata->menuitems[MENU_ITEM_WMS_ADJUST], TRUE);
 }
 
 static const char *wms_exts[] = { "png", "gif", "jpg", NULL };
@@ -1249,8 +1249,8 @@ void wms_load(appdata_t *appdata) {
       canvas_image_move(appdata->map->bg.item, x, y,
 			appdata->map->bg.scale.x, appdata->map->bg.scale.y);
 
-      gtk_widget_set_sensitive(appdata->menu_item_wms_clear, TRUE);
-      gtk_widget_set_sensitive(appdata->menu_item_wms_adjust, TRUE);
+      gtk_widget_set_sensitive(appdata->menuitems[MENU_ITEM_WMS_CLEAR], TRUE);
+      gtk_widget_set_sensitive(appdata->menuitems[MENU_ITEM_WMS_ADJUST], TRUE);
 
       break;
     }
@@ -1278,8 +1278,8 @@ void wms_remove(appdata_t *appdata) {
   if(appdata->map->action.type == MAP_ACTION_BG_ADJUST)
     map_action_cancel(appdata);
 
-  gtk_widget_set_sensitive(appdata->menu_item_wms_clear, FALSE);
-  gtk_widget_set_sensitive(appdata->menu_item_wms_adjust, FALSE);
+  gtk_widget_set_sensitive(appdata->menuitems[MENU_ITEM_WMS_CLEAR], FALSE);
+  gtk_widget_set_sensitive(appdata->menuitems[MENU_ITEM_WMS_ADJUST], FALSE);
 
   map_remove_bg_image(appdata->map);
 

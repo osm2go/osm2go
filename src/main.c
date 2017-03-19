@@ -93,15 +93,15 @@ void main_ui_enable(appdata_t *appdata) {
   if(appdata->iconbar && appdata->iconbar->toolbar)
     gtk_widget_set_sensitive(appdata->iconbar->toolbar, osm_valid);
   /* disable all menu entries related to map */
-  gtk_widget_set_sensitive(appdata->submenu_map, project_valid);
-  gtk_widget_set_sensitive(appdata->menu_item_map_upload, osm_valid);
+  gtk_widget_set_sensitive(appdata->menuitems[SUBMENU_MAP], project_valid);
+  gtk_widget_set_sensitive(appdata->menuitems[MENU_ITEM_MAP_UPLOAD], osm_valid);
   if(appdata->menu_item_map_save_changes)
     gtk_widget_set_sensitive(appdata->menu_item_map_save_changes, osm_valid);
-  gtk_widget_set_sensitive(appdata->menu_item_map_undo_changes, osm_valid);
-  gtk_widget_set_sensitive(appdata->menu_item_map_relations, osm_valid);
-  gtk_widget_set_sensitive(appdata->track.submenu_track, osm_valid);
-  gtk_widget_set_sensitive(appdata->submenu_view, osm_valid);
-  gtk_widget_set_sensitive(appdata->submenu_wms, osm_valid);
+  gtk_widget_set_sensitive(appdata->menuitems[MENU_ITEM_MAP_UNDO_CHANGES], osm_valid);
+  gtk_widget_set_sensitive(appdata->menuitems[MENU_ITEM_MAP_RELATIONS], osm_valid);
+  gtk_widget_set_sensitive(appdata->menuitems[SUBMENU_TRACK], osm_valid);
+  gtk_widget_set_sensitive(appdata->menuitems[SUBMENU_VIEW], osm_valid);
+  gtk_widget_set_sensitive(appdata->menuitems[SUBMENU_WMS], osm_valid);
 
   gtk_widget_set_sensitive(appdata->btn_zoom_in, osm_valid);
   gtk_widget_set_sensitive(appdata->btn_zoom_out, osm_valid);
@@ -637,7 +637,7 @@ static void menu_create(appdata_t *appdata) {
   gtk_menu_shell_append(GTK_MENU_SHELL(menu), gtk_separator_menu_item_new());
 #endif
 
-  appdata->submenu_view = item = gtk_menu_item_new_with_mnemonic( _("_View") );
+  appdata->menuitems[SUBMENU_VIEW] = item = gtk_menu_item_new_with_mnemonic( _("_View") );
   gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
   submenu = gtk_menu_new();
   gtk_menu_set_accel_group(GTK_MENU(submenu), accel_grp);
@@ -687,19 +687,19 @@ static void menu_create(appdata_t *appdata) {
 
   gtk_menu_shell_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
 
-  appdata->menu_item_map_hide_sel = menu_append_new_item(
+  appdata->menuitems[MENU_ITEM_MAP_HIDE_SEL] = item = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_map_hide_sel), _("_Hide selected"),
     GTK_STOCK_REMOVE, "<OSM2Go-Main>/View/HideSelected",
     0, 0, TRUE, FALSE, FALSE
   );
-  gtk_widget_set_sensitive(appdata->menu_item_map_hide_sel, FALSE);
+  gtk_widget_set_sensitive(item, FALSE);
 
-  appdata->menu_item_map_show_all = menu_append_new_item(
+  appdata->menuitems[MENU_ITEM_MAP_HIDE_SEL] = item = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_map_show_all), _("_Show all"),
     GTK_STOCK_ADD, "<OSM2Go-Main>/View/ShowAll",
     0, 0, TRUE, FALSE, FALSE
   );
-  gtk_widget_set_sensitive(appdata->menu_item_map_show_all, FALSE);
+  gtk_widget_set_sensitive(item, FALSE);
 
   gtk_menu_shell_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
 
@@ -711,13 +711,13 @@ static void menu_create(appdata_t *appdata) {
 
   /* -------------------- map submenu -------------------- */
 
-  appdata->submenu_map = item = gtk_menu_item_new_with_mnemonic( _("_Map") );
+  appdata->menuitems[SUBMENU_MAP] = item = gtk_menu_item_new_with_mnemonic( _("_Map") );
   gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
   submenu = gtk_menu_new();
   gtk_menu_set_accel_group(GTK_MENU(submenu), accel_grp);
   gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), submenu);
 
-  appdata->menu_item_map_upload = menu_append_new_item(
+  appdata->menuitems[MENU_ITEM_MAP_UPLOAD] = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_upload), _("_Upload"),
     "upload.16", "<OSM2Go-Main>/Map/Upload",
     GDK_u, GDK_SHIFT_MASK|GDK_CONTROL_MASK, TRUE, FALSE, FALSE
@@ -739,14 +739,14 @@ static void menu_create(appdata_t *appdata) {
   );
 #endif
 
-  appdata->menu_item_map_undo_changes = menu_append_new_item(
+  appdata->menuitems[MENU_ITEM_MAP_UNDO_CHANGES] = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_undo_changes), _("Undo _all"),
     GTK_STOCK_DELETE, "<OSM2Go-Main>/Map/UndoAll",
     0, 0, TRUE, FALSE, FALSE
   );
 
   gtk_menu_shell_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
-  appdata->menu_item_map_relations = menu_append_new_item(
+  appdata->menuitems[MENU_ITEM_MAP_RELATIONS] = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_osm_relations), _("_Relations"),
     NULL, "<OSM2Go-Main>/Map/Relations",
     GDK_r, GDK_SHIFT_MASK|GDK_CONTROL_MASK, TRUE, FALSE, FALSE
@@ -754,7 +754,7 @@ static void menu_create(appdata_t *appdata) {
 
   /* -------------------- wms submenu -------------------- */
 
-  appdata->submenu_wms = item = gtk_menu_item_new_with_mnemonic( _("_WMS") );
+  appdata->menuitems[SUBMENU_WMS] = item = gtk_menu_item_new_with_mnemonic( _("_WMS") );
   gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
   submenu = gtk_menu_new();
   gtk_menu_set_accel_group(GTK_MENU(submenu), accel_grp);
@@ -766,56 +766,56 @@ static void menu_create(appdata_t *appdata) {
     0, 0, TRUE, FALSE, FALSE
   );
 
-  appdata->menu_item_wms_clear = menu_append_new_item(
+  appdata->menuitems[MENU_ITEM_WMS_CLEAR] = item = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_wms_clear), _("_Clear"),
     GTK_STOCK_CLEAR, "<OSM2Go-Main>/WMS/Clear",
     0, 0, TRUE, FALSE, FALSE
   );
-  gtk_widget_set_sensitive(appdata->menu_item_wms_clear, FALSE);
+  gtk_widget_set_sensitive(item, FALSE);
 
-  appdata->menu_item_wms_adjust = menu_append_new_item(
+  appdata->menuitems[MENU_ITEM_WMS_ADJUST] = item = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_wms_adjust), _("_Adjust"),
     NULL, "<OSM2Go-Main>/WMS/Adjust",
     0, 0, TRUE, FALSE, FALSE
   );
-  gtk_widget_set_sensitive(appdata->menu_item_wms_adjust, FALSE);
+  gtk_widget_set_sensitive(item, FALSE);
 
   /* -------------------- track submenu -------------------- */
 
-  appdata->track.submenu_track = item =
+  appdata->menuitems[SUBMENU_TRACK] = item =
     gtk_menu_item_new_with_mnemonic(_("_Track"));
   gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
   submenu = gtk_menu_new();
   gtk_menu_set_accel_group(GTK_MENU(submenu), accel_grp);
   gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), submenu);
 
-  appdata->track.menu_item_track_import = menu_append_new_item(
+  appdata->menuitems[MENU_ITEM_TRACK_IMPORT] = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_track_import), _("_Import"),
     NULL, "<OSM2Go-Main>/Track/Import",
     0, 0, TRUE, FALSE, FALSE
   );
 
-  appdata->track.menu_item_track_export = menu_append_new_item(
+  appdata->menuitems[MENU_ITEM_TRACK_EXPORT] = item = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_track_export), _("_Export"),
     NULL, "<OSM2Go-Main>/Track/Export",
     0, 0, FALSE, FALSE, FALSE
   );
 
-  appdata->track.menu_item_track_clear = menu_append_new_item(
+  appdata->menuitems[MENU_ITEM_TRACK_CLEAR] = item = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_track_clear), _("_Clear"),
     GTK_STOCK_CLEAR, "<OSM2Go-Main>/Track/Clear",
     0, 0, FALSE, FALSE, FALSE
   );
 
 
-  appdata->track.menu_item_track_enable_gps = menu_append_new_item(
+  appdata->menuitems[MENU_ITEM_TRACK_ENABLE_GPS] = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_track_enable_gps),_("_GPS enable"),
     NULL, "<OSM2Go-Main>/Track/GPS",
     GDK_g, GDK_CONTROL_MASK|GDK_SHIFT_MASK, TRUE, TRUE,
     appdata->settings->enable_gps
   );
 
-  appdata->track.menu_item_track_follow_gps = menu_append_new_item(
+  appdata->menuitems[MENU_ITEM_TRACK_FOLLOW_GPS] = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_track_follow_gps), _("GPS follow"),
     NULL, "<OSM2Go-Main>/Track/Follow",
     0, 0, appdata->settings->enable_gps, TRUE,
@@ -880,7 +880,7 @@ typedef struct {
   const char *label, *value;
   gboolean enabled;
   gboolean (*toggle)(appdata_t *appdata);
-  ptrdiff_t offset;
+  int menuindex;
   GtkSignalFunc activate_cb;
 } menu_entry_t;
 
@@ -929,9 +929,9 @@ static GtkWidget *app_menu_create(appdata_t *appdata,
     hildon_button_set_title_alignment(HILDON_BUTTON(button), 0.5, 0.5);
     hildon_button_set_value_alignment(HILDON_BUTTON(button), 0.5, 0.5);
 
-    /* offset to GtkWidget pointer was given -> store pointer */
-    if(menu_entries->offset)
-      *(GtkWidget**)(((void*)appdata)+menu_entries->offset) = button;
+    /* index to GtkWidget pointer array was given -> store pointer */
+    if(menu_entries->menuindex >= 0)
+      appdata->menuitems[menu_entries->menuindex] = button;
 
     gtk_widget_set_sensitive(button, menu_entries->enabled);
 
@@ -1011,9 +1011,9 @@ static GtkWidget *app_submenu_create(appdata_t *appdata,
       }
     }
 
-    /* offset to GtkWidget pointer was given -> store pointer */
-    if(menu_entries->offset)
-      *(GtkWidget**)(((void*)appdata)+menu_entries->offset) = button;
+    /* index to GtkWidget pointer array was given -> store pointer */
+    if(menu_entries->menuindex >= 0)
+      appdata->menuitems[menu_entries->menuindex] = button;
 
     gtk_widget_set_sensitive(button, menu_entries->enabled);
 
@@ -1066,24 +1066,23 @@ void on_submenu_track_clicked(GtkButton *button, appdata_t *appdata) {
   submenu_popup(appdata, appdata->app_menu_track);
 }
 
-#define APP_OFFSET(a)  offsetof(appdata_t, a)
-#define SIMPLE_ENTRY(a,b)     { a, NULL, TRUE,   NULL, 0, G_CALLBACK(b) }
-#define ENABLED_ENTRY(a,b,c)  { a, NULL, TRUE,  NULL, APP_OFFSET(c), G_CALLBACK(b) }
-#define DISABLED_ENTRY(a,b,c) { a, NULL, FALSE,  NULL, APP_OFFSET(c), G_CALLBACK(b) }
-#define TOGGLE_ENTRY(a,b,c)   { a, NULL, TRUE, c, 0, G_CALLBACK(b) }
+#define SIMPLE_ENTRY(a,b)     { a, NULL, TRUE,  NULL, -1, G_CALLBACK(b) }
+#define ENABLED_ENTRY(a,b,c)  { a, NULL, TRUE,  NULL,  c, G_CALLBACK(b) }
+#define DISABLED_ENTRY(a,b,c) { a, NULL, FALSE, NULL,  c, G_CALLBACK(b) }
+#define TOGGLE_ENTRY(a,b,c)   { a, NULL, TRUE,     c, -1, G_CALLBACK(b) }
 #define DISABLED_TOGGLE_ENTRY(a,b,c,d)  \
-                              { a, NULL, FALSE, c, APP_OFFSET(d), G_CALLBACK(b) }
+                              { a, NULL, FALSE,    c,  d, G_CALLBACK(b) }
 #define ENABLED_TOGGLE_ENTRY(a,b,c,d) \
-                              { a, NULL, TRUE, c, APP_OFFSET(d), G_CALLBACK(b) }
-#define LAST_ENTRY            { NULL, NULL, FALSE, NULL, 0, NULL }
+                              { a, NULL, TRUE,     c,  d, G_CALLBACK(b) }
+#define LAST_ENTRY            { NULL, NULL, FALSE, NULL, -1, NULL }
 
 /* -- the view submenu -- */
 static const menu_entry_t submenu_view_entries[] = {
   /* --- */
   SIMPLE_ENTRY("Style",           NULL),
   /* --- */
-  DISABLED_ENTRY("Hide selected", cb_menu_map_hide_sel, menu_item_map_hide_sel),
-  DISABLED_ENTRY("Show all",      cb_menu_map_show_all, menu_item_map_show_all),
+  DISABLED_ENTRY("Hide selected", cb_menu_map_hide_sel, MENU_ITEM_MAP_HIDE_SEL),
+  DISABLED_ENTRY("Show all",      cb_menu_map_show_all, MENU_ITEM_MAP_SHOW_ALL),
 
   LAST_ENTRY
 };
@@ -1095,10 +1094,9 @@ static const submenu_t submenu_view = {
 
 /* -- the map submenu -- */
 static const menu_entry_t submenu_map_entries[] = {
-  ENABLED_ENTRY("Upload",                cb_menu_upload, menu_item_map_upload),
-  SIMPLE_ENTRY("Download",               cb_menu_download),
-  ENABLED_ENTRY("Undo all",              cb_menu_undo_changes,
-		menu_item_map_undo_changes),
+  ENABLED_ENTRY("Upload",      cb_menu_upload, MENU_ITEM_MAP_UPLOAD),
+  SIMPLE_ENTRY("Download",     cb_menu_download),
+  ENABLED_ENTRY("Undo all",    cb_menu_undo_changes, MENU_ITEM_MAP_UNDO_CHANGES),
 
   LAST_ENTRY
 };
@@ -1111,8 +1109,8 @@ static const submenu_t submenu_map = {
 /* -- the wms submenu -- */
 static const menu_entry_t submenu_wms_entries[] = {
   SIMPLE_ENTRY("Import",   cb_menu_wms_import),
-  DISABLED_ENTRY("Clear",  cb_menu_wms_clear, menu_item_wms_clear),
-  DISABLED_ENTRY("Adjust", cb_menu_wms_adjust, menu_item_wms_adjust),
+  DISABLED_ENTRY("Clear",  cb_menu_wms_clear, MENU_ITEM_WMS_CLEAR),
+  DISABLED_ENTRY("Adjust", cb_menu_wms_adjust, MENU_ITEM_WMS_ADJUST),
 
   LAST_ENTRY
 };
@@ -1124,13 +1122,13 @@ static const submenu_t submenu_wms = {
 
 /* -- the track submenu -- */
 static const menu_entry_t submenu_track_entries[] = {
-  ENABLED_ENTRY("Import",  cb_menu_track_import, track.menu_item_track_import),
-  DISABLED_ENTRY("Export", cb_menu_track_export, track.menu_item_track_export),
-  DISABLED_ENTRY("Clear",  cb_menu_track_clear, track.menu_item_track_clear),
+  ENABLED_ENTRY("Import",  cb_menu_track_import, MENU_ITEM_TRACK_IMPORT),
+  DISABLED_ENTRY("Export", cb_menu_track_export, MENU_ITEM_TRACK_EXPORT),
+  DISABLED_ENTRY("Clear",  cb_menu_track_clear, MENU_ITEM_TRACK_CLEAR),
   ENABLED_TOGGLE_ENTRY("GPS enable", cb_menu_track_enable_gps,
-		enable_gps_get_toggle, track.menu_item_track_enable_gps),
+		enable_gps_get_toggle, MENU_ITEM_TRACK_ENABLE_GPS),
   DISABLED_TOGGLE_ENTRY("GPS follow", cb_menu_track_follow_gps,
-		follow_gps_get_toggle, track.menu_item_track_follow_gps),
+		follow_gps_get_toggle, MENU_ITEM_TRACK_FOLLOW_GPS),
 
   LAST_ENTRY
 };
@@ -1145,11 +1143,11 @@ static const submenu_t submenu_track = {
 static const menu_entry_t main_menu[] = {
   SIMPLE_ENTRY("About",   cb_menu_about),
   SIMPLE_ENTRY("Project", cb_menu_project_open),
-  ENABLED_ENTRY("View",   on_submenu_view_clicked,  submenu_view),
-  ENABLED_ENTRY("OSM",    on_submenu_map_clicked,   submenu_map),
-  ENABLED_ENTRY("Relations", cb_menu_osm_relations, menu_item_map_relations),
-  ENABLED_ENTRY("WMS",    on_submenu_wms_clicked,   submenu_wms),
-  ENABLED_ENTRY("Track",  on_submenu_track_clicked, track.submenu_track),
+  ENABLED_ENTRY("View",   on_submenu_view_clicked,  SUBMENU_VIEW),
+  ENABLED_ENTRY("OSM",    on_submenu_map_clicked,   SUBMENU_MAP),
+  ENABLED_ENTRY("Relations", cb_menu_osm_relations, MENU_ITEM_MAP_RELATIONS),
+  ENABLED_ENTRY("WMS",    on_submenu_wms_clicked,   SUBMENU_WMS),
+  ENABLED_ENTRY("Track",  on_submenu_track_clicked, SUBMENU_TRACK),
 
   LAST_ENTRY
 };
@@ -1169,7 +1167,7 @@ static void menu_create(appdata_t *appdata) {
   g_object_ref(appdata->app_menu_track);
 
   /* enable/disable some entries according to settings */
-  gtk_widget_set_sensitive(appdata->track.menu_item_track_follow_gps,
+  gtk_widget_set_sensitive(appdata->menuitems[MENU_ITEM_TRACK_FOLLOW_GPS],
                            appdata->settings->enable_gps);
 
   hildon_window_set_app_menu(HILDON_WINDOW(appdata->window), menu);

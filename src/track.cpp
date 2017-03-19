@@ -103,8 +103,8 @@ void track_menu_set(appdata_t *appdata) {
   gboolean present = (appdata->track.track != NULL);
 
   /* if a track is present, then it can be cleared or exported */
-  gtk_widget_set_sensitive(appdata->track.menu_item_track_clear, present);
-  gtk_widget_set_sensitive(appdata->track.menu_item_track_export, present);
+  gtk_widget_set_sensitive(appdata->menuitems[MENU_ITEM_TRACK_CLEAR], present);
+  gtk_widget_set_sensitive(appdata->menuitems[MENU_ITEM_TRACK_EXPORT], present);
 }
 
 static track_t *track_read(const char *filename, bool dirty) {
@@ -486,7 +486,7 @@ static void track_do_enable_gps(appdata_t *appdata) {
 void track_enable_gps(appdata_t *appdata, gboolean enable) {
   printf("request to %sable gps\n", enable?"en":"dis");
 
-  gtk_widget_set_sensitive(appdata->track.menu_item_track_follow_gps, enable);
+  gtk_widget_set_sensitive(appdata->menuitems[MENU_ITEM_TRACK_FOLLOW_GPS], enable);
 
   if(enable) track_do_enable_gps(appdata);
   else       track_do_disable_gps(appdata);
