@@ -36,7 +36,6 @@ typedef struct project_t {
   ~project_t();
 #endif
 
-  xmlChar *desc;
   const char *server; /**< the server string used, either rserver or settings->server */
   gchar *rserver;
   char *osm;
@@ -53,6 +52,7 @@ typedef struct project_t {
 #ifdef __cplusplus
   const std::string name;
   const std::string path;
+  std::string desc;
 #endif
 } project_t;
 

@@ -128,9 +128,10 @@ static bool project_read(const std::string &project_file, project_t *project,
             xmlChar *str;
 
 	    if(strcmp((char*)node->name, "desc") == 0) {
-	      project->desc = xmlNodeListGetString(doc, node->children, 1);
-	      printf("desc = %s\n", project->desc);
-
+              xmlChar *desc = xmlNodeListGetString(doc, node->children, 1);
+              project->desc = reinterpret_cast<char *>(desc);
+              printf("desc = %s\n", desc);
+              xmlFree(desc);
 	    } else if(strcmp((char*)node->name, "server") == 0) {
 	      str = xmlNodeListGetString(doc, node->children, 1);
               if(g_strcmp0(defaultserver, (gchar *)str) == 0) {
@@ -244,8 +245,8 @@ gboolean project_save(GtkWidget *parent, project_t *project) {
     xmlNewChild(root_node, NULL, BAD_CAST "server",
 		BAD_CAST project->server);
 
-  if(project->desc)
-    xmlNewChild(root_node, NULL, BAD_CAST "desc", project->desc);
+  if(!project->desc.empty())
+    xmlNewChild(root_node, NULL, BAD_CAST "desc", BAD_CAST project->desc.c_str());
 
   xmlNewChild(root_node, NULL, BAD_CAST "osm", BAD_CAST project->osm);
 
@@ -639,7 +640,7 @@ static void on_project_new(G_GNUC_UNUSED GtkButton *button, gpointer data) {
     gtk_list_store_set(GTK_LIST_STORE(model), &iter,
 		       PROJECT_COL_NAME,        project->name.c_str(),
 		       PROJECT_COL_STATUS,      status_stock_id,
-		       PROJECT_COL_DESCRIPTION, project->desc,
+		       PROJECT_COL_DESCRIPTION, project->desc.c_str(),
 		       PROJECT_COL_DATA,        project,
 		       -1);
 
@@ -680,7 +681,7 @@ static void on_project_edit(G_GNUC_UNUSED GtkButton *button, gpointer data) {
     gtk_list_store_set(GTK_LIST_STORE(model), &iter,
 		       PROJECT_COL_NAME, project->name.c_str(),
                        PROJECT_COL_STATUS, status_stock_id,
-		       PROJECT_COL_DESCRIPTION, project->desc,
+		       PROJECT_COL_DESCRIPTION, project->desc.c_str(),
 		       -1);
 
 
@@ -694,8 +695,7 @@ static void on_project_edit(G_GNUC_UNUSED GtkButton *button, gpointer data) {
       /* update the currently active project also */
 
       /* update description */
-      if(cur->desc) { free(cur->desc); cur->desc = NULL; }
-      if(project->desc) cur->desc = xmlStrdup(project->desc);
+      cur->desc = project->desc;
 
       /* update server */
       if(cur->rserver) {
@@ -790,7 +790,7 @@ void project_list_add::operator()(const project_t* project)
   gtk_list_store_set(store, &iter,
                      PROJECT_COL_NAME,        project->name.c_str(),
                      PROJECT_COL_STATUS,      status_stock_id,
-                     PROJECT_COL_DESCRIPTION, project->desc,
+                     PROJECT_COL_DESCRIPTION, project->desc.c_str(),
                      PROJECT_COL_DATA,        project,
                      -1);
 
@@ -1151,8 +1151,8 @@ project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
   gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 0, 1);
   context.desc = entry_new();
   gtk_entry_set_activates_default(GTK_ENTRY(context.desc), TRUE);
-  if(project->desc)
-    gtk_entry_set_text(GTK_ENTRY(context.desc), (gchar*)project->desc);
+  if(!project->desc.empty())
+    gtk_entry_set_text(GTK_ENTRY(context.desc), project->desc.c_str());
   gtk_table_attach_defaults(GTK_TABLE(table),  context.desc, 1, 5, 0, 1);
   gtk_table_set_row_spacing(GTK_TABLE(table), 0, 4);
 
@@ -1242,12 +1242,11 @@ project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
   /* transfer values from edit dialog into project structure */
 
   /* fetch values from dialog */
-  xmlFree(project->desc);
   const gchar *ndesc = gtk_entry_get_text(GTK_ENTRY(context.desc));
   if(ndesc && strlen(ndesc))
-    project->desc = xmlStrdup(BAD_CAST ndesc);
+    project->desc = ndesc;
   else
-    project->desc = NULL;
+    project->desc.clear();
 
 #ifdef SERVER_EDITABLE
   g_free(context.project->rserver);
@@ -1455,8 +1454,7 @@ const char *project_name(const project_t *project) {
 }
 
 project_t::project_t(const char *n, const char *base_path)
-  : desc(0)
-  , server(0)
+  : server(0)
   , rserver(0)
   , osm(0)
   , wms_server(0)
@@ -1473,7 +1471,6 @@ project_t::project_t(const char *n, const char *base_path)
 
 project_t::~project_t()
 {
-  xmlFree(desc);
   g_free(rserver);
 
   g_free(wms_server);
