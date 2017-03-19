@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cerrno>
 #include <gtk/gtk.h>
+#include <libxml/parser.h>
 
 struct point_count {
   gint &points;

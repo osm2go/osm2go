@@ -22,7 +22,6 @@
 
 #include "canvas.h"
 #include "pos.h"
-#include "project.h"
 
 #ifdef __cplusplus
 #include <vector>
@@ -51,19 +50,21 @@ struct track_t {
 extern "C" {
 #endif
 
+struct appdata_t;
+struct project_t;
 typedef struct track_t track_t;
 
 /* used internally to save and restore the currently displayed track */
-void track_save(project_t *project, track_t *track);
+void track_save(struct project_t *project, track_t *track);
 /**
  * @brief restore the track of the current project
  * @param appdata global appdata object
  * @return if a track was loaded
  */
-gboolean track_restore(appdata_t *appdata);
+gboolean track_restore(struct appdata_t *appdata);
 
 /* accessible via the menu */
-void track_clear(appdata_t *appdata);
+void track_clear(struct appdata_t *appdata);
 void track_export(const track_t *track, const char *filename);
 track_t *track_import(const char *filename);
 /**

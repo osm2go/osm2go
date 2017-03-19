@@ -2,7 +2,9 @@
 
 #include <cerrno>
 #include <cstdlib>
+#include <cstring>
 #include <gtk/gtk.h>
+#include <libxml/parser.h>
 #include <string>
 
 int main(int argc, char **argv)

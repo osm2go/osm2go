@@ -29,6 +29,7 @@
 #include "gps.h"
 #include "map.h"
 #include "misc.h"
+#include "project.h"
 
 #include <cmath>
 #include <cstring>
