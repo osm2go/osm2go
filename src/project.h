@@ -38,8 +38,6 @@ typedef struct project_t {
 
   const char *server; /**< the server string used, either rserver or settings->server */
 
-  char *wms_server;
-  char *wms_path;
   struct { gint x, y; } wms_offset;
 
   struct map_state_t *map_state;
@@ -54,6 +52,9 @@ typedef struct project_t {
   std::string desc;
   std::string osm;
   std::string rserver;
+
+  std::string wms_server;
+  std::string wms_path;
 #endif
 } project_t;
 

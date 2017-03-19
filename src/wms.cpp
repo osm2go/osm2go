@@ -84,8 +84,8 @@ struct wms_cap_t {
 };
 
 struct wms_t {
-  wms_t(const gchar *s, const char *p)
-    : server(s ? s : std::string()), path(p ? p : std::string()), width(0), height(0) {}
+  wms_t(const std::string &s, const std::string &p)
+    : server(s), path(p), width(0), height(0) {}
   ~wms_t();
 
   std::string server;
@@ -1075,17 +1075,11 @@ void wms_import(appdata_t *appdata) {
     return;
 
   /* ------------- copy values back into project ---------------- */
-  if(!appdata->project->wms_server ||
-     wms.server != appdata->project->wms_server) {
-    g_free(appdata->project->wms_server);
-    appdata->project->wms_server = g_strdup(wms.server.c_str());
-  }
+  if(wms.server != appdata->project->wms_server)
+    appdata->project->wms_server = wms.server;
 
-  if(!appdata->project->wms_path ||
-     wms.path != appdata->project->wms_path) {
-    g_free(appdata->project->wms_path);
-    appdata->project->wms_path = g_strdup(wms.path.c_str());
-  }
+  if(wms.path != appdata->project->wms_path)
+    appdata->project->wms_path = wms.path;
 
   /* ----------- request capabilities -------------- */
   bool path_contains_qm = wms.path.find('?') != wms.path.npos;

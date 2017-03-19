@@ -166,11 +166,11 @@ static bool project_read(const std::string &project_file, project_t *project,
 	    } else if(strcmp((char*)node->name, "wms") == 0) {
 
 	      if((str = xmlGetProp(node, BAD_CAST "server"))) {
-		project->wms_server = g_strdup((gchar *)str);
+		project->wms_server = reinterpret_cast<char *>(str);
 		xmlFree(str);
 	      }
 	      if((str = xmlGetProp(node, BAD_CAST "path"))) {
-		project->wms_path = g_strdup((gchar *)str);
+		project->wms_path = reinterpret_cast<char *>(str);
 		xmlFree(str);
 	      }
 	      if((str = xmlGetProp(node, BAD_CAST "x-offset"))) {
@@ -269,10 +269,10 @@ gboolean project_save(GtkWidget *parent, project_t *project) {
   }
 
   node = xmlNewChild(root_node, NULL, BAD_CAST "wms", NULL);
-  if(project->wms_server)
-    xmlNewProp(node, BAD_CAST "server", BAD_CAST project->wms_server);
-  if(project->wms_path)
-    xmlNewProp(node, BAD_CAST "path", BAD_CAST project->wms_path);
+  if(!project->wms_server.empty())
+    xmlNewProp(node, BAD_CAST "server", BAD_CAST project->wms_server.c_str());
+  if(!project->wms_path.empty())
+    xmlNewProp(node, BAD_CAST "path", BAD_CAST project->wms_path.c_str());
   snprintf(str, sizeof(str), "%d", project->wms_offset.x);
   xmlNewProp(node, BAD_CAST "x-offset", BAD_CAST str);
   snprintf(str, sizeof(str), "%d", project->wms_offset.y);
@@ -1448,8 +1448,6 @@ const char *project_name(const project_t *project) {
 
 project_t::project_t(const char *n, const char *base_path)
   : server(0)
-  , wms_server(0)
-  , wms_path(0)
   , map_state(0)
   , data_dirty(false)
   , name(n)
@@ -1462,9 +1460,6 @@ project_t::project_t(const char *n, const char *base_path)
 
 project_t::~project_t()
 {
-  g_free(wms_server);
-  g_free(wms_path);
-
   map_state_free(map_state);
 }
 
