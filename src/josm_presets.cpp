@@ -1281,13 +1281,13 @@ const char *presets_widget_text::getValue(GtkWidget *widget) const
   return gtk_entry_get_text(GTK_ENTRY(widget));
 }
 
-GtkWidget *presets_widget_separator::attach(GtkTable *table, int row, const char *preset) const
+GtkWidget *presets_widget_separator::attach(GtkTable *table, int row, const char *) const
 {
   attach_both(table, gtk_hseparator_new(), row);
   return 0;
 }
 
-GtkWidget *presets_widget_label::attach(GtkTable *table, int row, const char *preset) const
+GtkWidget *presets_widget_label::attach(GtkTable *table, int row, const char *) const
 {
   attach_both(table, gtk_label_new(reinterpret_cast<const char *>(text)), row);
   return 0;

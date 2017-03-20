@@ -73,7 +73,7 @@ public:
   explicit presets_widget_separator()
     : presets_widget_t(WIDGET_TYPE_SEPARATOR) {}
 
-  virtual GtkWidget *attach(GtkTable *table, int row, const char *preset) const;
+  virtual GtkWidget *attach(GtkTable *table, int row, const char *) const;
 };
 
 class presets_widget_label : public presets_widget_t {
@@ -81,7 +81,7 @@ public:
   explicit presets_widget_label(xmlChar *text)
     : presets_widget_t(WIDGET_TYPE_LABEL, 0, text) {}
 
-  virtual GtkWidget *attach(GtkTable *table, int row, const char *preset) const;
+  virtual GtkWidget *attach(GtkTable *table, int row, const char *) const;
 };
 
 /**
