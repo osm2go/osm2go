@@ -92,13 +92,14 @@ int main(int argc, char **argv)
 
   std::for_each(presets->items.begin(), presets->items.end(), checkItem);
 
+  josm_presets_free(presets);
+  xmlCleanupParser();
+
   if(!missingIcons.empty()) {
     std::cerr << missingIcons.size() << " icons missing" << std::endl;
     std::for_each(missingIcons.begin(), missingIcons.end(), err);
+    return 1;
   }
-
-  josm_presets_free(presets);
-  xmlCleanupParser();
 
   return 0;
 }
