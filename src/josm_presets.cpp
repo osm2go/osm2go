@@ -1316,10 +1316,6 @@ presets_widget_combo::~presets_widget_combo()
 
 GtkWidget *presets_widget_combo::attach(GtkTable *table, int row, const char *preset) const
 {
-#ifndef FREMANTLE
-  attach_text(table, reinterpret_cast<const char *>(text), row);
-#endif
-
   if(!preset)
     preset = reinterpret_cast<const char *>(def);
   GtkWidget *ret = combo_box_new(reinterpret_cast<const char *>(text));
@@ -1340,6 +1336,7 @@ GtkWidget *presets_widget_combo::attach(GtkTable *table, int row, const char *pr
 
   combo_box_set_active(ret, active);
 #ifndef FREMANTLE
+  attach_text(table, reinterpret_cast<const char *>(text), row);
   attach_right(table, ret, row);
 #else
   attach_both(table, ret, row);
