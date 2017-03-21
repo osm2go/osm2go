@@ -89,15 +89,18 @@ public:
  */
 class presets_widget_combo : public presets_widget_t {
 public:
-  presets_widget_combo(xmlChar *key, xmlChar *text, xmlChar *deflt, xmlChar *vals);
+  presets_widget_combo(xmlChar *key, xmlChar *text, xmlChar *deflt,
+                       std::vector<std::string> &vals, std::vector<std::string> &dvals);
   virtual ~presets_widget_combo();
 
   xmlChar * const def;
-  xmlChar * const values;
-  char delimiter;
+  const std::vector<std::string> values;
+  const std::vector<std::string> display_values;
 
   virtual GtkWidget *attach(GtkTable *table, int row, const char *preset) const;
   virtual const char *getValue(GtkWidget *widget) const;
+
+  static std::vector<std::string> split_string(const xmlChar *str, char delimiter);
 };
 
 /**

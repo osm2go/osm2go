@@ -49,7 +49,7 @@ __&nbsp;__                   | values_sort                   | ignored   |
 __&nbsp;__                   | delimiter                     | supported |
 __&nbsp;__                   | default                       | supported |
 __&nbsp;__                   | match                         | ignored   | matches always work like "keyvalue"
-__&nbsp;__                   | display_values                | ignored   |
+__&nbsp;__                   | display_values                | supported |
 __&nbsp;__                   | short_descriptions            | ignored   |
 __&nbsp;__                   | values_context                | ignored   |
 __&nbsp;__                   | editable                      | ignored   | always treated as "false"

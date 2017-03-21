@@ -138,20 +138,30 @@ static presets_widget_t *parse_widget(xmlNode *cur_node, presets_item *item,
                      xmlGetProp(cur_node, BAD_CAST "default"));
   } else if(strcmp((char*)cur_node->name, "combo") == 0) {
     /* --------- combo widget --------- */
-    presets_widget_combo *combo = new presets_widget_combo(
-                                  xmlGetProp(cur_node, BAD_CAST "key"),
-                                  xmlGetProp(cur_node, BAD_CAST "text"),
-                                  xmlGetProp(cur_node, BAD_CAST "default"),
-                                  xmlGetProp(cur_node, BAD_CAST "values"));
-    widget = combo;
     xmlChar *del = xmlGetProp(cur_node, BAD_CAST "delimiter");
+    char delimiter = ',';
     if(del) {
       if(G_UNLIKELY(strlen(reinterpret_cast<char *>(del)) != 1))
         printf("found presets/item/combo with invalid separator '%s'\n", del);
       else
-        combo->delimiter = *del;
+        delimiter = *del;
       xmlFree(del);
     }
+
+    xmlChar *values = xmlGetProp(cur_node, BAD_CAST "values");
+    xmlChar *display_values = xmlGetProp(cur_node, BAD_CAST "display_values");
+    std::vector<std::string> v = presets_widget_combo::split_string(values, delimiter);
+    std::vector<std::string> dv = presets_widget_combo::split_string(display_values, delimiter);
+    xmlFree(values);
+    xmlFree(display_values);
+    if(dv.size() != v.size())
+      dv.clear();
+
+    widget = new presets_widget_combo(
+                                  xmlGetProp(cur_node, BAD_CAST "key"),
+                                  xmlGetProp(cur_node, BAD_CAST "text"),
+                                  xmlGetProp(cur_node, BAD_CAST "default"),
+                                  v, dv);
   } else if(strcmp((char*)cur_node->name, "key") == 0) {
 
     /* --------- invisible key widget --------- */
@@ -432,14 +442,6 @@ static gint table_expose_event(GtkWidget *widget, GdkEventExpose *event,
 
 static inline bool is_widget_interactive(const presets_widget_t *w) {
   return w->is_interactive();
-}
-
-static bool preset_combo_insert_value(GtkWidget *combo, const char *value,
-                                          const char *preset)
-{
-  combo_box_append_text(combo, value);
-
-  return (g_strcmp0(preset, value) == 0);
 }
 
 struct presets_context_t {
@@ -1293,18 +1295,23 @@ GtkWidget *presets_widget_label::attach(GtkTable *table, int row, const char *) 
   return 0;
 }
 
-presets_widget_combo::presets_widget_combo(xmlChar* key, xmlChar* text, xmlChar* deflt, xmlChar* vals)
+presets_widget_combo::presets_widget_combo(xmlChar *key, xmlChar *text, xmlChar *deflt,
+                                           std::vector<std::string> &vals, std::vector<std::string> &dvals)
   : presets_widget_t(WIDGET_TYPE_COMBO, key, text)
   , def(deflt)
+#if __cplusplus >= 201103L
+  , values(std::move(vals))
+  , display_values(std::move(dvals))
+#else
   , values(vals)
-  , delimiter(',')
+  , display_values(dvals)
+#endif
 {
 }
 
 presets_widget_combo::~presets_widget_combo()
 {
   xmlFree(def);
-  xmlFree(values);
 }
 
 GtkWidget *presets_widget_combo::attach(GtkTable *table, int row, const char *preset) const
@@ -1319,27 +1326,16 @@ GtkWidget *presets_widget_combo::attach(GtkTable *table, int row, const char *pr
   combo_box_append_text(ret, _("<unset>"));
   int active = 0;
 
-  /* cut values strings */
-  if(values) {
-    const char *c, *p = reinterpret_cast<const char *>(values);
-    int count = 1;
-    while((c = strchr(p, delimiter))) {
-      /* maximum length of an OSM value, shouldn't be reached anyway. */
-      char cur[256];
-      g_strlcpy(cur, p, sizeof(cur));
-      if(c - p < sizeof(cur))
-        cur[c - p] = '\0';
-      if (preset_combo_insert_value(ret, cur, preset)) {
-        active = count;
-        preset = 0;
-      }
+  const std::vector<std::string> &d = display_values.empty() ? values : display_values;
 
-      count++;
-      p = c + 1;
+  for(std::vector<std::string>::size_type count = 0; count < d.size(); count++) {
+    const std::string &value = d[count];
+    combo_box_append_text(ret, value.c_str());
+
+    if(preset && values[count] == preset) {
+      active = count + 1;
+      preset = 0;
     }
-    /* attach remaining string as last value */
-    if (preset_combo_insert_value(ret, p, preset))
-      active = count;
   }
 
   combo_box_set_active(ret, active);
@@ -1357,10 +1353,50 @@ const char *presets_widget_combo::getValue(GtkWidget* widget) const
   g_assert(GTK_WIDGET_TYPE(widget) == combo_box_type());
 
   const char *text = combo_box_get_active_text(widget);
-  if(!strcmp(text, _("<unset>")))
-    text = 0;
 
-  return text;
+  if(!strcmp(text, _("<unset>")))
+    return 0;
+
+  if(display_values.empty())
+    return text;
+
+  // map back from display string to value string
+  const std::vector<std::string>::const_iterator it = std::find(display_values.begin(),
+                                                                display_values.end(),
+                                                                text);
+  g_assert(it != display_values.end());
+
+  // get the value corresponding to the displayed string
+  return values[it - display_values.begin()].c_str();
+}
+
+std::vector<std::string> presets_widget_combo::split_string(const xmlChar *str, const char delimiter)
+{
+  std::vector<std::string> ret;
+
+  if(!str)
+    return ret;
+
+  const char *c, *p = reinterpret_cast<const char *>(str);
+  while((c = strchr(p, delimiter))) {
+    ret.push_back(std::string(p, c - p));
+    p = c + 1;
+  }
+  /* attach remaining string as last value */
+  ret.push_back(p);
+
+  // this vector will never be appended to again, so shrink it to the size
+  // that is actually needed
+#if __cplusplus >= 201103L
+  ret.shrink_to_fit();
+#else
+  typeof(ret) tmp;
+  tmp.resize(ret.size());
+  tmp = ret;
+  tmp.swap(ret);
+#endif
+
+  return ret;
 }
 
 presets_widget_key::presets_widget_key(xmlChar* key, xmlChar* val)
