@@ -1384,14 +1384,7 @@ std::vector<std::string> presets_widget_combo::split_string(const xmlChar *str, 
 
   // this vector will never be appended to again, so shrink it to the size
   // that is actually needed
-#if __cplusplus >= 201103L
-  ret.shrink_to_fit();
-#else
-  typeof(ret) tmp;
-  tmp.resize(ret.size());
-  tmp = ret;
-  tmp.swap(ret);
-#endif
+  shrink_to_fit(ret);
 
   return ret;
 }

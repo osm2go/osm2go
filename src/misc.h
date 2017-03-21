@@ -54,6 +54,17 @@ std::vector<std::string> file_scan(const char *extension);
 
 std::string find_file(const char *n1, const char *n2 = 0, const char *n3 = 0);
 
+template<typename T> void shrink_to_fit(T &v) {
+#if __cplusplus >= 201103L
+  v.shrink_to_fit();
+#else
+  T tmp;
+  tmp.resize(v.size());
+  tmp = v;
+  tmp.swap(v);
+#endif
+}
+
 extern "C" {
 #endif
 

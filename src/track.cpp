@@ -626,14 +626,7 @@ void TrackSax::endElement(const xmlChar *name)
     } else {
       // this vector will never be appended to again, so shrink it to the size
       // that is actually needed
-#if __cplusplus >= 201103L
-      last.shrink_to_fit();
-#else
-      std::vector<track_point_t> tmp;
-      tmp.resize(last.size());
-      tmp = last;
-      tmp.swap(last);
-#endif
+      shrink_to_fit(last);
     }
     break;
   }
