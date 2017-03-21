@@ -11,7 +11,7 @@ Note: this is loosely based on what [JOSM claims](https://josm.openstreetmap.de/
 
 Element            | Attributes                    | Support   | Notes
 -------------------|-------------------------------|-----------|----------------------------------------------------------------
-__&lt;presets&gt;__          |                               | required   |
+__&lt;presets&gt;__          |                               | supported | required
 __&lt;!-- comment --&gt;__   |                               | ignored   |
 __&lt;group&gt;__            |                               | supported |
 __&nbsp;__                   | name                          | supported | required
@@ -24,7 +24,7 @@ __&nbsp;__                   | icon                          | supported |
 __&nbsp;__                   | type                          | supported |
 __&nbsp;__                   | name_template                 | ignored   |
 __&nbsp;__                   | preset_name_label             | supported |
-__&lt;chunk&gt;__            |                               | supported | 
+__&lt;chunk&gt;__            |                               | supported |
 __&nbsp;__                   | id                            | supported | required
 __&lt;reference&gt;__        |                               | supported |
 __&nbsp;__                   | ref                           | supported | required
@@ -57,7 +57,7 @@ __&nbsp;__                   | use_last_as_default           | ignored   |
 __&nbsp;__                   | values_searchable             | ignored   |
 __&nbsp;__                   | length                        | ignored   |
 __&nbsp;__                   | values_no_i18n                | ignored   |
-__&lt;multiselect&gt;__      |                               | ignored |
+__&lt;multiselect&gt;__      |                               | ignored   |
 __&nbsp;__                   | key                           | ignored   |
 __&nbsp;__                   | text                          | ignored   |
 __&nbsp;__                   | text_context                  | ignored   |
@@ -75,7 +75,7 @@ __&nbsp;__                   | values_searchable             | ignored   |
 __&nbsp;__                   | length                        | ignored   |
 __&nbsp;__                   | values_no_i18n                | ignored   |
 __&nbsp;__                   | rows                          | ignored   |
-__&lt;list_entry&gt;__       |                               | ignored |
+__&lt;list_entry&gt;__       |                               | ignored   |
 __&nbsp;__                   | value                         | ignored   |
 __&nbsp;__                   | display_value                 | ignored   |
 __&nbsp;__                   | short_description             | ignored   |
@@ -93,15 +93,15 @@ __&nbsp;__                   | default                       | supported | only 
 __&nbsp;__                   | match                         | ignored   | matches always work like "keyvalue"
 __&lt;label&gt;__            |                               | supported |
 __&nbsp;__                   | text                          | supported | required
-__&lt;space/&gt;__          |                               | supported | ignored on Hildon
-__&lt;optional&gt;__         |                               | ignored | the contained items are parsed as if they were on the same level
+__&lt;space/&gt;__           |                               | supported | ignored on Hildon
+__&lt;optional&gt;__         |                               | ignored   | the contained items are parsed as if they were on the same level
 __&nbsp;__                   | text                          | ignored   |
 __&lt;separator/&gt;__       |                               | supported |
 __&lt;item_separator/&gt;__  |                               | ignored   |
 __&lt;link&gt;__             |                               | supported |
 __&nbsp;__                   | href                          | supported |
 __&lt;roles&gt;__            |                               | ignored   |
-__&lt;role&gt;__             |                               | ignored  |
+__&lt;role&gt;__             |                               | ignored   |
 __&nbsp;__                   | key                           | ignored   | required
 __&nbsp;__                   | text                          | ignored   |
 __&nbsp;__                   | text_context                  | ignored   |
