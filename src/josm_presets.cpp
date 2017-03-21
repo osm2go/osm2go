@@ -858,7 +858,7 @@ on_presets_picker_selected(GtkTreeSelection *selection, gpointer data) {
       /* check if this already had a submenu */
       GtkWidget *sub;
       if(context->submenus.empty()) {
-        // check if "Uses Presets" is shown
+        // check if "Used Presets" is shown
         sub = GTK_WIDGET(g_object_get_data(G_OBJECT(view), "sub"));
         if(sub) {
           g_object_set_data(G_OBJECT(view), "sub", 0);
