@@ -330,11 +330,8 @@ void wms_setup_extent(project_t *project, wms_t *wms) {
   lmax.x *= scale;
   lmax.y *= scale;
 
-  wms->width = lmax.x - lmin.x;
-  wms->height = lmax.y - lmin.y;
-
-  if(wms->width > 2048)  wms->width = 2048;
-  if(wms->height > 2048) wms->height = 2048;
+  wms->width = std::min(lmax.x - lmin.x, 2048);
+  wms->height = std::min(lmax.y - lmin.y, 2048);
 
   printf("WMS: required image size = %dx%d\n",
 	 wms->width, wms->height);
