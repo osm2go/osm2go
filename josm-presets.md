@@ -75,9 +75,9 @@ __&nbsp;__                   | values_searchable             | ignored   |
 __&nbsp;__                   | length                        | ignored   |
 __&nbsp;__                   | values_no_i18n                | ignored   |
 __&nbsp;__                   | rows                          | ignored   |
-__&lt;list_entry&gt;__       |                               | ignored   |
-__&nbsp;__                   | value                         | ignored   |
-__&nbsp;__                   | display_value                 | ignored   |
+__&lt;list_entry&gt;__       |                               | supported |
+__&nbsp;__                   | value                         | supported | required
+__&nbsp;__                   | display_value                 | supported |
 __&nbsp;__                   | short_description             | ignored   |
 __&nbsp;__                   | icon                          | ignored   |
 __&nbsp;__                   | icon_size                     | ignored   |

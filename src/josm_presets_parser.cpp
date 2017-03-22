@@ -126,24 +126,44 @@ static presets_widget_t *parse_widget(xmlNode *cur_node, presets_item *item,
                      xmlGetProp(cur_node, BAD_CAST "default"));
   } else if(strcmp((char*)cur_node->name, "combo") == 0) {
     /* --------- combo widget --------- */
-    xmlChar *del = xmlGetProp(cur_node, BAD_CAST "delimiter");
-    char delimiter = ',';
-    if(del) {
-      if(G_UNLIKELY(strlen(reinterpret_cast<char *>(del)) != 1))
-        printf("found presets/item/combo with invalid separator '%s'\n", del);
-      else
-        delimiter = *del;
-      xmlFree(del);
-    }
+    std::vector<std::string> v, dv;
+    if(cur_node->children) {
+      bool hasDV = false;
+      for(xmlNode *child = cur_node->children; child; child = child->next) {
+        if(child->type == XML_ELEMENT_NODE && strcmp(reinterpret_cast<const char *>(child->name), "list_entry") == 0) {
+          xmlChar *value = xmlGetProp(child, BAD_CAST "value");
+          g_assert(value);
+          v.push_back(reinterpret_cast<char *>(value));
+          xmlFree(value);
 
-    xmlChar *values = xmlGetProp(cur_node, BAD_CAST "values");
-    xmlChar *display_values = xmlGetProp(cur_node, BAD_CAST "display_values");
-    std::vector<std::string> v = presets_widget_combo::split_string(values, delimiter);
-    std::vector<std::string> dv = presets_widget_combo::split_string(display_values, delimiter);
-    xmlFree(values);
-    xmlFree(display_values);
-    if(dv.size() != v.size())
-      dv.clear();
+          xmlChar *display_value = xmlGetProp(child, BAD_CAST "display_value");
+          dv.push_back(display_value ? reinterpret_cast<char *>(display_value) : v.back());
+          hasDV |= !!display_value;
+          xmlFree(display_value);
+        }
+      }
+      if(!hasDV)
+        dv.clear();
+    } else {
+      xmlChar *del = xmlGetProp(cur_node, BAD_CAST "delimiter");
+      char delimiter = ',';
+      if(del) {
+        if(G_UNLIKELY(strlen(reinterpret_cast<char *>(del)) != 1))
+          printf("found presets/item/combo with invalid separator '%s'\n", del);
+        else
+          delimiter = *del;
+        xmlFree(del);
+      }
+
+      xmlChar *values = xmlGetProp(cur_node, BAD_CAST "values");
+      xmlChar *display_values = xmlGetProp(cur_node, BAD_CAST "display_values");
+      v = presets_widget_combo::split_string(values, delimiter);
+      dv = presets_widget_combo::split_string(display_values, delimiter);
+      xmlFree(values);
+      xmlFree(display_values);
+      if(dv.size() != v.size())
+        dv.clear();
+    }
 
     widget = new presets_widget_combo(
                                   xmlGetProp(cur_node, BAD_CAST "key"),
