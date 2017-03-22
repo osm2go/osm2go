@@ -586,6 +586,7 @@ on_presets_picker_selected(GtkTreeSelection *selection, gpointer data) {
       }
 
       /* views parent is a scrolled window whichs parent in turn is the hbox */
+      g_assert(view->parent);
       GtkWidget *hbox = view->parent->parent;
 
       gtk_box_pack_start_defaults(GTK_BOX(hbox), sub);
