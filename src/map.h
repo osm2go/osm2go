@@ -90,11 +90,11 @@ typedef struct map_state_t {
 } map_state_t;
 
 typedef struct map_t {
-  appdata_t *appdata;
+  appdata_t * const appdata;
 
-  canvas_t *canvas;
+  canvas_t * const canvas;
 
-  map_state_t *state;
+  map_state_t * const state;
 
   guint autosave_handler_id;
 
@@ -116,10 +116,8 @@ typedef struct map_t {
   struct {
     map_action_t type;            // current action type in progress
 
-    struct {                       // action related variables/states
-      way_t *way;
-      way_t *extending, *ends_on;  // ways touched by first and last node
-    };
+    way_t *way;
+    way_t *extending, *ends_on;   // ways touched by first and last node
   } action;
 
   /* variables required for pen/mouse handling */
@@ -138,7 +136,7 @@ typedef struct map_t {
 #ifdef __cplusplus
   size_t elements_drawn;	///< number of elements drawn in last segment
 
-  map_t();
+  explicit map_t(appdata_t *a, style_t *s);
   ~map_t();
 
   std::vector<tag_t> last_node_tags;           // used to "repeat" tagging

@@ -246,9 +246,7 @@ style_t *style_load(appdata_t *appdata) {
 
   printf("  style filename: %s\n", fullname.c_str());
 
-  style_t *style = style_load_fname(appdata, fullname);
-
-  return style;
+  return style_load_fname(appdata, fullname);
 }
 
 static std::string style_basename(const std::string &name) {

@@ -39,9 +39,31 @@
 #include <gdk/gdkkeysyms.h>
 #include <vector>
 
-map_t::map_t()
+map_t::map_t(appdata_t *a, style_t *s)
+  : appdata(a)
+  , canvas(canvas_new())
+  , state(appdata->project && appdata->project->map_state ? appdata->project->map_state : new map_state_t())
+  , autosave_handler_id(0)
+  , highlight(0)
+  , cursor(0)
+  , touchnode(0)
+  , style(s)
+  , elements_drawn(0)
 {
-  memset(this, 0, offsetof(map_t, last_node_tags));
+  memset(&selected, 0, sizeof(selected));
+  memset(&bg, 0, sizeof(bg));
+  memset(&action, 0, sizeof(action));
+  memset(&pen_down, 0, sizeof(pen_down));
+  pen_down.at.x = -1;
+  pen_down.at.y = -1;
+  action.type = MAP_ACTION_IDLE;
+
+  if(appdata->project && appdata->project->map_state) {
+    printf("Using projects map state\n");
+    state->refcount++;
+  } else {
+    printf("Creating new map state\n");
+  }
 }
 
 static void osm_tag_members_free(tag_t tag) {
@@ -1784,32 +1806,14 @@ static gboolean map_autosave(gpointer data) {
 }
 
 GtkWidget *map_new(appdata_t *appdata) {
-  map_t *map = new map_t();
-
-  map->style = style_load(appdata);
-  if(!map->style) {
+  style_t *s = style_load(appdata);
+  if(!s) {
     errorf(NULL, _("Unable to load valid style, terminating."));
-    delete map;
     return NULL;
   }
+
+  map_t *map = new map_t(appdata, s);
   appdata->map = map;
-
-  if(appdata->project && appdata->project->map_state) {
-    printf("Using projects map state\n");
-    map->state = appdata->project->map_state;
-    map->state->refcount++;
-  } else {
-    printf("Creating new map state\n");
-    map->state = new map_state_t();
-  }
-
-
-  map->pen_down.at.x = -1;
-  map->pen_down.at.y = -1;
-  map->appdata = appdata;
-  map->action.type = MAP_ACTION_IDLE;
-
-  map->canvas = canvas_new();
 
   GtkWidget *canvas_widget = canvas_get_widget(map->canvas);
 
