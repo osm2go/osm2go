@@ -21,6 +21,7 @@
 
 #include "settings.h"
 
+#include <glib.h>
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
@@ -44,16 +45,16 @@ struct gps_state_t {
   float altitude;
 
   /* callback called on gps change event */
-  GtkFunction cb;
-  gpointer data;
+  GpsCallback cb;
+  void *data;
 };
 
-gboolean gps_get_pos(gps_state_t *gps_state, pos_t *pos, float *alt) {
+int gps_get_pos(gps_state_t *gps_state, pos_t *pos, float *alt) {
   if(!gps_state->enabled)
-    return FALSE;
+    return 0;
 
   if(!gps_state->fix)
-    return FALSE;
+    return 0;
 
   if(pos) {
     *pos = gps_state->pos;
@@ -62,7 +63,7 @@ gboolean gps_get_pos(gps_state_t *gps_state, pos_t *pos, float *alt) {
   if(alt)
     *alt = gps_state->altitude;
 
-  return TRUE;
+  return 1;
 }
 
 static void
@@ -149,8 +150,8 @@ void gps_enable(gps_state_t *gps_state, gboolean enable) {
   gps_state->enabled = enable;
 }
 
-gboolean gps_register_callback(struct gps_state_t *gps_state, GtkFunction cb, gpointer context) {
-  gboolean ret = (gps_state->cb != NULL) ? TRUE : FALSE;
+int gps_register_callback(struct gps_state_t *gps_state, GpsCallback cb, void *context) {
+  int ret = (gps_state->cb != NULL) ? 1 : 0;
   if(!ret) {
     gps_state->data = context;
     gps_state->cb = cb;

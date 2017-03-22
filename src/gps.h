@@ -25,8 +25,6 @@
 
 #include "pos.h"
 
-#include <gtk/gtk.h>
-
 #ifndef NAN
 #define NAN (0.0/0.0)
 #endif /* !NAN */
@@ -40,8 +38,10 @@ struct appdata_t;
 
 gps_state_t *gps_init(struct appdata_t *appdata);
 void gps_release(gps_state_t *gps_state);
-gboolean gps_get_pos(gps_state_t *gps_state, pos_t *pos, float *alt);
+int gps_get_pos(gps_state_t *gps_state, pos_t *pos, float *alt);
 void gps_enable(gps_state_t *gps_state, gboolean enable);
+
+typedef int (*GpsCallback)(void *context);
 
 /**
  * @brief register or clear the GPS callback
@@ -52,7 +52,7 @@ void gps_enable(gps_state_t *gps_state, gboolean enable);
  *
  * Does nothing if a handler already exists.
  */
-gboolean gps_register_callback(struct gps_state_t *gps_state, GtkFunction cb, gpointer context);
+int gps_register_callback(struct gps_state_t *gps_state, GpsCallback cb, void *context);
 
 #ifdef __cplusplus
 }

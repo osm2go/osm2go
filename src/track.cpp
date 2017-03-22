@@ -428,13 +428,13 @@ static void track_do_disable_gps(appdata_t *appdata) {
   track_end_segment(appdata->track.track);
 }
 
-static gboolean update(gpointer data) {
-  appdata_t *appdata = (appdata_t*)data;
+static int update(void *data) {
+  appdata_t *appdata = static_cast<appdata_t *>(data);
 
   /* ignore updates while no valid osm file is loaded, e.g. when switching */
   /* projects */
   if(G_UNLIKELY(!appdata->osm))
-    return TRUE;
+    return 1;
 
   /* the map is only gone of the main screen is being closed */
   if(G_UNLIKELY(!appdata->map)) {
@@ -442,13 +442,13 @@ static gboolean update(gpointer data) {
 
     gps_register_callback(appdata->gps_state, NULL, NULL);
 
-    return FALSE;
+    return 0;
   }
 
   if(!appdata->settings->enable_gps) {
     // Turn myself off gracefully.
     track_do_disable_gps(appdata);
-    return FALSE;
+    return 0;
   }
 
   pos_t pos;
@@ -466,7 +466,7 @@ static gboolean update(gpointer data) {
     map_track_remove_pos(appdata);
   }
 
-  return TRUE;
+  return 1;
 }
 
 static void track_do_enable_gps(appdata_t *appdata) {

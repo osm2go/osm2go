@@ -22,6 +22,7 @@
 #include "appdata.h"
 #include "settings.h"
 
+#include <gtk/gtk.h>
 #include <libgnomevfs/gnome-vfs-inet-connection.h>
 #include <math.h>
 #include <stdio.h>
@@ -71,6 +72,8 @@ struct gps_state_t {
   /* when using liblocation, events are generated on position change */
   /* and no seperate timer is required */
   guint handler_id;
+  GpsCallback cb;
+  void *cb_context;
 
 #ifdef ENABLE_GPSBT
   gpsbt_t context;
@@ -92,7 +95,7 @@ struct gps_state_t {
 #define GPSD_HOST "127.0.0.1"
 #define GPSD_PORT 2947
 
-gboolean gps_get_pos(gps_state_t *gps_state, pos_t *pos, float *alt) {
+int gps_get_pos(gps_state_t *gps_state, pos_t *pos, float *alt) {
   pos_t tmp;
   if(!pos) pos = &tmp;
   pos->lat = NAN;
@@ -109,7 +112,7 @@ gboolean gps_get_pos(gps_state_t *gps_state, pos_t *pos, float *alt) {
 
   g_mutex_unlock(gps_state->mutex);
 
-  return(!isnan(pos->lat));
+  return isnan(pos->lat) ? 0 : 1;
 }
 
 static int gps_connect(gps_state_t *gps_state) {
@@ -341,17 +344,27 @@ void gps_release(gps_state_t *gps_state) {
   g_free(gps_state);
 }
 
-gboolean gps_register_callback(gps_state_t *gps_state, GtkFunction cb, gpointer context) {
+static gboolean gps_callback(gpointer data) {
+  gps_state_t * const state = (gps_state_t *)data;
+
+  return state->cb(state->cb_context) ? TRUE : FALSE;
+}
+
+int gps_register_callback(gps_state_t *gps_state, GtkFunction cb, gpointer context) {
   if(gps_state->handler_id) {
     if(cb == NULL) {
       g_source_remove(gps_state->handler_id);
       gps_state->handler_id = 0;
+      gps_state->cb = 0;
+      gps_state->cb_context = 0;
     }
-    return TRUE;
+    return 0;
   } else {
     if(cb != NULL) {
-      gps_state->handler_id = g_timeout_add_seconds(1, cb, context);
+      gps_state->cb = cb;
+      gps_state->cb_context = context;
+      gps_state->handler_id = g_timeout_add_seconds(1, gps_callback, gps_state);
     }
-    return FALSE;
+    return 1;
   }
 }
