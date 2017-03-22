@@ -38,6 +38,7 @@ set(osm2go_SOURCE_FILES
 	src/josm_presets.cpp
 	src/josm_presets.h
 	src/josm_presets_p.h
+	src/josm_presets_parser.cpp
 	src/list.c
 	src/list.h
 	src/map.cpp

@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <cerrno>
 #include <iostream>
+#include <libxml/parser.h>
 #include <set>
 #include <string>
 

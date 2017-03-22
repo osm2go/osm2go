@@ -23,8 +23,8 @@
 #include "josm_presets.h"
 
 #include <gtk/gtk.h>
-#include <libxml/parser.h>
-#include <libxml/tree.h>
+#include <libxml/xmlstring.h> /* for xmlChar */
+#include <string>
 #include <vector>
 
 enum presets_widget_type_t {
@@ -155,8 +155,7 @@ class presets_item_visible : public presets_item_t {
 public:
   presets_item_visible(unsigned int t)
     : presets_item_t(t), name(0), icon(0) {}
-  virtual ~presets_item_visible()
-  { xmlFree(name); xmlFree(icon); }
+  virtual ~presets_item_visible();
 
   xmlChar *name, *icon;
 };
@@ -165,8 +164,7 @@ class presets_item : public presets_item_visible {
 public:
   presets_item(unsigned int t)
     : presets_item_visible(t), link(0), addEditName(false) {}
-  virtual ~presets_item()
-  { xmlFree(link); }
+  virtual ~presets_item();
 
   xmlChar *link;
   bool addEditName;
