@@ -447,11 +447,19 @@ struct condition_not_matches_obj {
   }
 };
 
+static void node_icon_unref(style_t *style, node_t *node) {
+  std::map<item_id_t, GdkPixbuf *>::iterator it = style->node_icons.find(node->id);
+  if(it != style->node_icons.end()) {
+    icon_free(style->iconP, it->second);
+    style->node_icons.erase(it);
+  }
+}
+
 struct colorize_node {
-  const style_t * const style;
+  style_t * const style;
   node_t * const node;
   bool &somematch;
-  colorize_node(const style_t *s, node_t *n, bool &m) : style(s), node(n), somematch(m) {}
+  colorize_node(style_t *s, node_t *n, bool &m) : style(s), node(n), somematch(m) {}
   void operator()(elemstyle_t *elemstyle);
 };
 
@@ -470,20 +478,20 @@ void colorize_node::operator()(elemstyle_t *elemstyle)
                            elemstyle->icon.filename, NULL);
 
     /* free old icon if there's one present */
-    if(node->icon_buf) {
-      icon_free(style->iconP, node->icon_buf);
-      node->icon_buf = NULL;
-    }
+    node_icon_unref(style, node);
 
-    node->icon_buf = icon_load(style->iconP, name);
+    GdkPixbuf *buf = icon_load(style->iconP, name);
     g_free(name);
+
+    if(buf)
+      style->node_icons[node->id] = buf;
 
     if (elemstyle->zoom_max > 0)
       node->zoom_max = elemstyle->zoom_max;
   }
 }
 
-void josm_elemstyles_colorize_node(const style_t *style, node_t *node) {
+void josm_elemstyles_colorize_node(style_t *style, node_t *node) {
   node->zoom_max = style->node.zoom_max;
 
   bool somematch = false;
@@ -491,15 +499,13 @@ void josm_elemstyles_colorize_node(const style_t *style, node_t *node) {
   std::for_each(style->elemstyles.begin(), style->elemstyles.end(), fc);
 
   /* clear icon for node if not matched at least one rule and has an icon attached */
-  if (!somematch && node->icon_buf) {
-    icon_free(style->iconP, node->icon_buf);
-    node->icon_buf = NULL;
-  }
+  if(!somematch)
+    node_icon_unref(style, node);
 }
 
 struct josm_elemstyles_colorize_node_functor {
-  const style_t * const styles;
-  josm_elemstyles_colorize_node_functor(const style_t *s) : styles(s) {}
+  style_t * const style;
+  josm_elemstyles_colorize_node_functor(style_t *s) : style(s) {}
   void operator()(std::pair<item_id_t, node_t *> pair);
 };
 
@@ -507,12 +513,9 @@ void josm_elemstyles_colorize_node_functor::operator()(std::pair<item_id_t, node
   node_t * const node = pair.second;
   /* remove all icon references that may still be there from */
   /* an old style */
-  if(node->icon_buf) {
-    icon_free(styles->iconP, node->icon_buf);
-    node->icon_buf = NULL;
-  }
+  node_icon_unref(style, node);
 
-  josm_elemstyles_colorize_node(styles, node);
+  josm_elemstyles_colorize_node(style, node);
 }
 
 static int line_mod_apply(gint width, const elemstyle_width_mod_t *mod) {
@@ -666,7 +669,7 @@ void josm_elemstyles_colorize_way(const style_t *style, way_t *way) {
   f(way);
 }
 
-void josm_elemstyles_colorize_world(const style_t *styles, osm_t *osm) {
+void josm_elemstyles_colorize_world(style_t *styles, osm_t *osm) {
 
   printf("preparing colors\n");
 

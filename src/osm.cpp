@@ -393,19 +393,12 @@ void tag_t::update_value(const char *nvalue)
 
 /* ------------------- node handling ------------------- */
 
-void node_t::cleanup(osm_t *osm) {
-  if(icon_buf)
-    icon_free(osm->icons, icon_buf);
-
-  /* there must not be anything left in this chain */
-  g_assert(!map_item_chain);
-
-  tags.clear();
-}
-
 void osm_t::node_free(node_t *node) {
   nodes.erase(node->id);
-  node->cleanup(this);
+
+  /* there must not be anything left in this chain */
+  g_assert(!node->map_item_chain);
+
   delete node;
 }
 
@@ -413,7 +406,6 @@ struct nodefree {
   osm_t * const osm;
   nodefree(osm_t *o) : osm(o) {}
   void operator()(std::pair<item_id_t, node_t *> pair) {
-    pair.second->cleanup(osm);
     delete pair.second;
   }
 };
@@ -2220,7 +2212,6 @@ node_t::node_t()
   : base_object_t()
   , ways(0)
   , zoom_max(0.0)
-  , icon_buf(0)
   , map_item_chain(0)
 {
   memset(&pos, 0, sizeof(pos));
@@ -2233,7 +2224,6 @@ node_t::node_t(item_id_t ver, const lpos_t &lp, const pos_t &p)
   , lpos(lp)
   , ways(0)
   , zoom_max(0.0)
-  , icon_buf(0)
   , map_item_chain(0)
 {
 }

@@ -190,9 +190,10 @@ static void map_node_select(appdata_t *appdata, node_t *node) {
   new_map_item->highlight = TRUE;
 
   float radius = 0;
-  if(node->icon_buf && map->style->icon.enable) {
-    gint w = gdk_pixbuf_get_width(map_item->object.node->icon_buf);
-    gint h = gdk_pixbuf_get_height(map_item->object.node->icon_buf);
+  std::map<item_id_t, GdkPixbuf *>::iterator it = map->style->node_icons.find(node->id);
+  if(it != map->style->node_icons.end() && map->style->icon.enable) {
+    gint w = gdk_pixbuf_get_width(it->second);
+    gint h = gdk_pixbuf_get_height(it->second);
 
     /* icons are technically square, so a radius slightly bigger */
     /* than sqrt(2)*MAX(w,h) should fit nicely */
@@ -521,12 +522,14 @@ static canvas_item_t *map_node_new(map_t *map, node_t *node, gint radius,
   map_item_t *map_item = g_new0(map_item_t, 1);
   map_item->object = node;
 
-  if(!node->icon_buf || !map->style->icon.enable)
+  const std::map<item_id_t, GdkPixbuf *>::const_iterator it = map->style->node_icons.find(node->id);
+
+  if(it == map->style->node_icons.end() || !map->style->icon.enable)
     map_item->item = canvas_circle_new(map->canvas, CANVAS_GROUP_NODES,
        node->lpos.x, node->lpos.y, radius, width, fill, border);
   else
     map_item->item = canvas_image_new(map->canvas, CANVAS_GROUP_NODES,
-      node->icon_buf, node->lpos.x, node->lpos.y,
+      it->second, node->lpos.x, node->lpos.y,
 		      map->state->detail * map->style->icon.scale,
 		      map->state->detail * map->style->icon.scale);
 

@@ -32,7 +32,6 @@ extern "C" {
 
 #include <math.h>
 #include <glib.h>
-#include <gtk/gtk.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 
@@ -329,15 +328,10 @@ public:
   int ways;
   float zoom_max;
 
-  /* icon */
-  GdkPixbuf *icon_buf;
-
   /* a link to the visual representation on screen */
   struct map_item_chain_t *map_item_chain;
 
   xmlChar *generate_xml(item_id_t changeset);
-
-  void cleanup(osm_t *osm);
 };
 
 struct item_id_chain_t {

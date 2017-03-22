@@ -423,11 +423,21 @@ style_t::style_t()
   background.color = 0xffffffff; // white
 }
 
+struct unref_icon {
+  icon_t ** const icons;
+  unref_icon(icon_t **i) : icons(i) {}
+  void operator()(const std::pair<item_id_t, GdkPixbuf *> &pair) {
+    icon_free(icons, pair.second);
+  }
+};
+
 style_t::~style_t()
 {
   printf("freeing style\n");
 
   josm_elemstyles_free(elemstyles);
+
+  std::for_each(node_icons.begin(), node_icons.end(), unref_icon(iconP));
 
   g_free(name);
   g_free(icon.path_prefix);

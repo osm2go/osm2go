@@ -28,6 +28,8 @@
 
 #include <vector>
 
+class node_t;
+
 struct style_t {
   style_t();
   ~style_t();
@@ -89,6 +91,8 @@ struct style_t {
   } background;
 
   std::vector<elemstyle_t *> elemstyles;
+
+  std::map<item_id_t, GdkPixbuf *> node_icons;
 };
 
 extern "C" {
