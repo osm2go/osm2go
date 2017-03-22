@@ -1065,18 +1065,14 @@ osm_t *osm_parse(const std::string &path, const std::string &filename, icon_t **
   return osm;
 }
 
-gboolean osm_sanity_check(GtkWidget *parent, const osm_t *osm) {
-  if(G_UNLIKELY(!osm->bounds)) {
-    errorf(parent, _("Invalid data in OSM file:\n"
-		     "Boundary box missing!"));
-    return FALSE;
-  }
-  if(G_UNLIKELY(osm->nodes.empty())) {
-    errorf(parent, _("Invalid data in OSM file:\n"
-		     "No drawable content found!"));
-    return FALSE;
-  }
-  return TRUE;
+const char *osm_t::sanity_check() const {
+  if(G_UNLIKELY(!bounds))
+    return _("Invalid data in OSM file:\nBoundary box missing!");
+
+  if(G_UNLIKELY(nodes.empty()))
+    return _("Invalid data in OSM file:\nNo drawable content found!");
+
+  return NULL;
 }
 
 /* ------------------------- misc access functions -------------- */

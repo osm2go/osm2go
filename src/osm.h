@@ -174,10 +174,18 @@ struct osm_t {
   relation_chain_t to_relation(const object_t &object) const;
 
   bool position_within_bounds(gint x, gint y) const;
+
+  /**
+   * @brief check if object is in sane state
+   * @returns error string or NULL
+   * @retval NULL object is sane
+   *
+   * The error string is a static one and must not be freed by the caller.
+   */
+  const char *sanity_check() const;
 #endif
 };
 
-gboolean osm_sanity_check(GtkWidget *parent, const osm_t *osm);
 void osm_free(osm_t *osm);
 
 xmlChar *osm_generate_xml_changeset(const char* comment);

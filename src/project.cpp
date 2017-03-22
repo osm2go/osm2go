@@ -1361,7 +1361,9 @@ gboolean project_load(appdata_t *appdata, const char *name) {
 
   /* check if OSM data is valid */
   banner_busy_tick();
-  if(!osm_sanity_check(GTK_WIDGET(appdata->window), appdata->osm)) {
+  const char *errmsg = appdata->osm->sanity_check();
+  if(errmsg) {
+    errorf(GTK_WIDGET(appdata->window), "%s", errmsg);
     printf("project/osm sanity checks failed, unloading project\n");
 
     if(appdata->project) {
