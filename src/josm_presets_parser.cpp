@@ -210,7 +210,6 @@ static presets_widget_t *parse_widget(xmlNode *cur_node, presets_item *item,
 static void parse_widgets(xmlNode *a_node, presets_item *item,
                           const ChunkMap &chunks) {
   xmlNode *cur_node = NULL;
-  std::vector<presets_widget_t *> ret;
 
   for(cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if(cur_node->type == XML_ELEMENT_NODE) {
