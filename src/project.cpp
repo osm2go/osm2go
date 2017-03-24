@@ -440,7 +440,7 @@ static void project_close(appdata_t *appdata) {
   track_save(appdata->project, appdata->track.track);
   track_clear(appdata);
 
-  map_clear(appdata, MAP_LAYER_ALL);
+  map_clear(appdata->map, MAP_LAYER_ALL);
 
   if(appdata->osm) {
     diff_save(appdata->project, appdata->osm);
@@ -723,7 +723,7 @@ static void on_project_edit(G_GNUC_UNUSED GtkButton *button, gpointer data) {
 	if(appdata->osm) {
 	  /* redraw the entire map by destroying all map items  */
 	  diff_save(appdata->project, appdata->osm);
-	  map_clear(appdata, MAP_LAYER_ALL);
+	  map_clear(appdata->map, MAP_LAYER_ALL);
 
 	  osm_free(appdata->osm);
 	  appdata->osm = NULL;
@@ -732,7 +732,7 @@ static void on_project_edit(G_GNUC_UNUSED GtkButton *button, gpointer data) {
 	/* and load the (hopefully) new file */
         appdata->osm = project_parse_osm(appdata->project, &appdata->icon);
 	diff_restore(appdata, appdata->project, appdata->osm);
-	map_paint(appdata);
+	map_paint(appdata->map);
 
 	main_ui_enable(appdata);
       }
@@ -1073,10 +1073,10 @@ static void on_diff_remove_clicked(G_GNUC_UNUSED GtkButton *button, gpointer dat
       printf("undo all on current project: delete map changes as well\n");
 
       /* just reload the map */
-      map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
+      map_clear(appdata->map, MAP_LAYER_OBJECTS_ONLY);
       osm_free(appdata->osm);
       appdata->osm = project_parse_osm(appdata->project, &appdata->icon);
-      map_paint(appdata);
+      map_paint(appdata->map);
     }
 
     /* update button/label state */
@@ -1394,7 +1394,7 @@ gboolean project_load(appdata_t *appdata, const char *name) {
   banner_busy_tick();
   if(!appdata->window) goto fail;
 
-  map_init(appdata);
+  map_init(appdata->map);
 
   /* restore a track */
   banner_busy_tick();

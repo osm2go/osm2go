@@ -1026,7 +1026,7 @@ void wms_import(appdata_t *appdata) {
 
   /* this cancels any wms adjustment in progress */
   if(appdata->map->action.type == MAP_ACTION_BG_ADJUST)
-    map_action_cancel(appdata);
+    map_action_cancel(appdata->map);
 
   wms_t wms(appdata->project->wms_server, appdata->project->wms_path);
 
@@ -1273,7 +1273,7 @@ void wms_remove(appdata_t *appdata) {
 
   /* this cancels any wms adjustment in progress */
   if(appdata->map->action.type == MAP_ACTION_BG_ADJUST)
-    map_action_cancel(appdata);
+    map_action_cancel(appdata->map);
 
   gtk_widget_set_sensitive(appdata->menuitems[MENU_ITEM_WMS_CLEAR], FALSE);
   gtk_widget_set_sensitive(appdata->menuitems[MENU_ITEM_WMS_ADJUST], FALSE);

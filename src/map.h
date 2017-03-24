@@ -150,23 +150,23 @@ extern "C" {
 
 GtkWidget *map_new(appdata_t *appdata);
 void map_state_free(map_state_t *state);
-void map_init(appdata_t *appdata);
-gboolean map_key_press_event(appdata_t *appdata, GdkEventKey *event);
+void map_init(map_t *map);
+gboolean map_key_press_event(map_t *map, GdkEventKey *event);
 void map_item_set_flags(map_item_t *map_item, int set, int clr);
 void map_show_node(map_t *map, node_t *node);
 void map_cmenu_show(map_t *map);
-void map_highlight_refresh(appdata_t *appdata);
+void map_highlight_refresh(map_t *map);
 
-void map_item_redraw(appdata_t *appdata, map_item_t *map_item);
+void map_item_redraw(map_t *map, map_item_t *map_item);
 
-void map_clear(appdata_t *appdata, gint layer_mask);
-void map_paint(appdata_t *appdata);
+void map_clear(map_t *map, gint layer_mask);
+void map_paint(map_t *map);
 
-void map_action_set(appdata_t *appdata, map_action_t action);
-void map_action_cancel(appdata_t *appdata);
-void map_action_ok(appdata_t *appdata);
+void map_action_set(map_t *map, map_action_t action);
+void map_action_cancel(map_t *map);
+void map_action_ok(map_t *map);
 
-void map_delete_selected(appdata_t *appdata);
+void map_delete_selected(map_t *map);
 
 /* track stuff */
 void map_track_draw(map_t *map, struct track_t *track);
@@ -176,15 +176,15 @@ void map_track_draw_seg(map_t *map, track_seg_t &seg);
 void map_track_update_seg(map_t *map, track_seg_t &seg);
 #endif
 void map_track_remove(appdata_t *appdata);
-void map_track_pos(appdata_t *appdata, const lpos_t *lpos);
+void map_track_pos(map_t *map, const lpos_t *lpos);
 void map_track_remove_pos(appdata_t *appdata);
 
 /* background stuff */
 void map_set_bg_image(map_t *map, const char *filename);
 void map_remove_bg_image(map_t *map);
 
-void map_hide_selected(appdata_t *appdata);
-void map_show_all(appdata_t *appdata);
+void map_hide_selected(map_t *map);
+void map_show_all(map_t *map);
 
 void map_set_zoom(map_t *map, double zoom, gboolean update_scroll_offsets);
 gboolean map_scroll_to_if_offscreen(map_t *map, const lpos_t *lpos);
@@ -195,13 +195,13 @@ gboolean map_item_is_selected_way(map_t *map, map_item_t *map_item);
 void map_item_chain_destroy(map_item_chain_t **chainP);
 map_item_t *map_item_at(map_t *map, gint x, gint y);
 map_item_t *map_real_item_at(map_t *map, gint x, gint y);
-void map_item_deselect(appdata_t *appdata);
-void map_way_delete(appdata_t *appdata, way_t *way);
+void map_item_deselect(map_t *map);
+void map_way_delete(map_t *map, way_t *way);
 void map_way_draw(map_t *map, way_t *way);
-void map_way_select(appdata_t *appdata, way_t *way);
+void map_way_select(map_t *map, way_t *way);
 void map_outside_error(appdata_t *appdata);
 void map_node_draw(map_t *map, node_t *node);
-void map_relation_select(appdata_t *appdata, relation_t *relation);
+void map_relation_select(map_t *map, relation_t *relation);
 
 void map_detail_change(map_t *map, float detail);
 void map_detail_increase(map_t *map);

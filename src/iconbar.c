@@ -41,23 +41,23 @@ static void on_info_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
 }
 
 static void on_node_add_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
-  map_action_set((appdata_t*)data, MAP_ACTION_NODE_ADD);
+  map_action_set((map_t*)data, MAP_ACTION_NODE_ADD);
 }
 
 static void on_way_add_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
-  map_action_set((appdata_t*)data, MAP_ACTION_WAY_ADD);
+  map_action_set((map_t*)data, MAP_ACTION_WAY_ADD);
 }
 
 static void on_way_node_add_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
-  map_action_set((appdata_t*)data, MAP_ACTION_WAY_NODE_ADD);
+  map_action_set((map_t*)data, MAP_ACTION_WAY_NODE_ADD);
 }
 
 static void on_way_reverse_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
-  map_edit_way_reverse((appdata_t*)data);
+  map_edit_way_reverse((map_t*)data);
 }
 
 static void on_way_cut_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
-  map_action_set((appdata_t*)data, MAP_ACTION_WAY_CUT);
+  map_action_set((map_t*)data, MAP_ACTION_WAY_CUT);
 }
 
 #ifdef FINGER_UI
@@ -71,7 +71,7 @@ static GtkWidget *menu_add(GtkWidget *menu, appdata_t *appdata,
                                 icon_widget_load(&appdata->icon, icon_str));
 
   gtk_signal_connect(GTK_OBJECT(item), "activate",
-		       (GtkSignalFunc)func, appdata);
+		       (GtkSignalFunc)func, appdata->map);
 
   gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
@@ -129,17 +129,17 @@ static void on_relation_add_clicked(GtkButton *button, gpointer data) {
 #endif
 
 static void on_trash_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
-  map_delete_selected((appdata_t*)data);
+  map_delete_selected((map_t*)data);
 }
 
 static void on_ok_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
   printf("User ok\n");
-  map_action_ok((appdata_t*)data);
+  map_action_ok((map_t*)data);
 }
 
 static void on_cancel_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
   printf("User cancel\n");
-  map_action_cancel((appdata_t*)data);
+  map_action_cancel((map_t*)data);
 }
 
 /* enable/disable ok and cancel button */
@@ -210,7 +210,7 @@ static GtkWidget *icon_add(GtkWidget *vbox, appdata_t *appdata,
 		      icon_load(&appdata->icon, icon_str));
   gtk_button_set_image(GTK_BUTTON(but), icon);
   gtk_signal_connect(GTK_OBJECT(but), "clicked",
-		     (GtkSignalFunc)func, appdata);
+		     (GtkSignalFunc)func, appdata->map);
 
   gtk_box_pack_start(GTK_BOX(vbox), but, FALSE, FALSE, 0);
   return but;
@@ -218,7 +218,7 @@ static GtkWidget *icon_add(GtkWidget *vbox, appdata_t *appdata,
 
 static GtkWidget *tool_add(GtkWidget *toolbar, appdata_t *appdata,
 			   char *icon_str, char *tooltip_str,
-			   void(*func)(GtkButton*, gpointer)) {
+                           void(*func)(GtkButton*, gpointer), gpointer context) {
   GtkWidget *item =
     GTK_WIDGET(gtk_tool_button_new(
 	   icon_widget_load(&appdata->icon, icon_str), NULL));
@@ -234,7 +234,7 @@ static GtkWidget *tool_add(GtkWidget *toolbar, appdata_t *appdata,
 #endif
 
   gtk_signal_connect(GTK_OBJECT(item), "clicked",
-                     (GtkSignalFunc)func, appdata);
+                     (GtkSignalFunc)func, context);
 
   gtk_toolbar_insert(GTK_TOOLBAR(toolbar), GTK_TOOL_ITEM(item), -1);
 
@@ -263,21 +263,21 @@ GtkWidget *iconbar_new(appdata_t *appdata) {
 
   /* -------------------------------------------------------- */
   iconbar->trash = tool_add(iconbar->toolbar, appdata,
-      TOOL_ICON("trash"), _("Delete"), on_trash_clicked);
+      TOOL_ICON("trash"), _("Delete"), on_trash_clicked, appdata->map);
 
   /* -------------------------------------------------------- */
   gtk_toolbar_insert(GTK_TOOLBAR(iconbar->toolbar),
 		     gtk_separator_tool_item_new(),-1);
 
   iconbar->info = tool_add(iconbar->toolbar, appdata,
-      TOOL_ICON("info"), _("Properties"), on_info_clicked);
+      TOOL_ICON("info"), _("Properties"), on_info_clicked, appdata);
 
   /* -------------------------------------------------------- */
   gtk_toolbar_insert(GTK_TOOLBAR(iconbar->toolbar),
 		     gtk_separator_tool_item_new(),-1);
 
   iconbar->node_add = tool_add(iconbar->toolbar, appdata,
-       TOOL_ICON("node_add"), _("New node"), on_node_add_clicked);
+       TOOL_ICON("node_add"), _("New node"), on_node_add_clicked, appdata->map);
 
   /* -------------------------------------------------------- */
   gtk_toolbar_insert(GTK_TOOLBAR(iconbar->toolbar),
@@ -312,14 +312,14 @@ GtkWidget *iconbar_new(appdata_t *appdata) {
 
 #else
   iconbar->way_add = tool_add(iconbar->toolbar, appdata,
-        TOOL_ICON("way_add"), _("Add way"), on_way_add_clicked);
+        TOOL_ICON("way_add"), _("Add way"), on_way_add_clicked, appdata->map);
   iconbar->way_node_add = tool_add(iconbar->toolbar, appdata,
 	TOOL_ICON("way_node_add"), _("Add node"),
-				   on_way_node_add_clicked);
+				   on_way_node_add_clicked, appdata->map);
   iconbar->way_cut = tool_add(iconbar->toolbar, appdata,
-        TOOL_ICON("way_cut"), _("Split way"), on_way_cut_clicked);
+        TOOL_ICON("way_cut"), _("Split way"), on_way_cut_clicked, appdata->map);
   iconbar->way_reverse = tool_add(iconbar->toolbar, appdata,
-        TOOL_ICON("way_reverse"), _("Reverse way"), on_way_reverse_clicked);
+        TOOL_ICON("way_reverse"), _("Reverse way"), on_way_reverse_clicked, appdata->map);
 #endif
 
 #ifdef MAIN_GUI_RELATION
@@ -331,7 +331,7 @@ GtkWidget *iconbar_new(appdata_t *appdata) {
 
   iconbar->relation_add = tool_add(iconbar->toolbar, appdata,
       TOOL_ICON("relation_add"), _("Edit item's relations"),
-      on_relation_add_clicked);
+      on_relation_add_clicked, appdata);
 #endif
 
   gtk_box_pack_start(GTK_BOX(box), iconbar->toolbar, TRUE, TRUE, 0);
@@ -376,10 +376,10 @@ void iconbar_register_buttons(appdata_t *appdata, GtkWidget *ok, GtkWidget *canc
 
   appdata->iconbar->ok = ok;
   gtk_signal_connect(GTK_OBJECT(ok), "clicked",
-		     (GtkSignalFunc)on_ok_clicked, appdata);
+		     (GtkSignalFunc)on_ok_clicked, appdata->map);
   appdata->iconbar->cancel = cancel;
   gtk_signal_connect(GTK_OBJECT(cancel), "clicked",
-		     (GtkSignalFunc)on_cancel_clicked, appdata);
+		     (GtkSignalFunc)on_cancel_clicked, appdata->map);
 
   icon_bar_map_cancel_ok(appdata->iconbar, FALSE, FALSE);
 }

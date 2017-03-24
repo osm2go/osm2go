@@ -64,7 +64,7 @@ void main_ui_enable(appdata_t *appdata) {
   /* cancel any action in progress */
   g_assert(appdata->iconbar->cancel);
   if(GTK_WIDGET_FLAGS(appdata->iconbar->cancel) & GTK_SENSITIVE)
-    map_action_cancel(appdata);
+    map_action_cancel(appdata->map);
 
   /* ---- set project name as window title ----- */
 #if defined(USE_HILDON) && MAEMO_VERSION_MAJOR < 5
@@ -165,7 +165,7 @@ cb_menu_download(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
 		  appdata->project)) {
     if(appdata->osm) {
       /* redraw the entire map by destroying all map items and redrawing them */
-      map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
+      map_clear(appdata->map, MAP_LAYER_OBJECTS_ONLY);
 
       osm_free(appdata->osm);
     }
@@ -173,7 +173,7 @@ cb_menu_download(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
     banner_busy_start(appdata, 1, "Drawing");
     appdata->osm = project_parse_osm(appdata->project, &appdata->icon);
     diff_restore(appdata, appdata->project, appdata->osm);
-    map_paint(appdata);
+    map_paint(appdata->map);
     banner_busy_stop(appdata); //"Redrawing"
   }
 
@@ -196,7 +196,7 @@ cb_menu_wms_clear(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
 static void
 cb_menu_wms_adjust(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
-  map_action_set(appdata, MAP_ACTION_BG_ADJUST);
+  map_action_set(appdata->map, MAP_ACTION_BG_ADJUST);
 }
 
 /* ----------- hide objects for performance reasons ----------- */
@@ -204,13 +204,13 @@ cb_menu_wms_adjust(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
 static void
 cb_menu_map_hide_sel(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
-  map_hide_selected(appdata);
+  map_hide_selected(appdata->map);
 }
 
 static void
 cb_menu_map_show_all(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
-  map_show_all(appdata);
+  map_show_all(appdata->map);
 }
 
 /* ---------------------------------------------------------- */
@@ -256,14 +256,14 @@ cb_menu_undo_changes(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
 		 "uploaded yet? This cannot be undone.")))
     return;
 
-  map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
+  map_clear(appdata->map, MAP_LAYER_OBJECTS_ONLY);
 
   osm_free(appdata->osm);
   appdata->osm = NULL;
 
   diff_remove(appdata->project);
   appdata->osm = project_parse_osm(appdata->project, &appdata->icon);
-  map_paint(appdata);
+  map_paint(appdata->map);
 
   banner_show_info(appdata, _("Undo all changes"));
 }
@@ -1305,7 +1305,7 @@ gboolean on_window_key_press(G_GNUC_UNUSED GtkWidget *widget,
 
   /* forward unprocessed key presses to map */
   if(!handled && appdata->project && appdata->osm)
-    handled = map_key_press_event(appdata, event);
+    handled = map_key_press_event(appdata->map, event);
 
   return handled;
 }

@@ -696,10 +696,10 @@ static void on_relation_members(G_GNUC_UNUSED GtkWidget *button, relation_contex
 /* user clicked "select" button in relation list */
 static void on_relation_select(GtkWidget *but, relation_context_t *context) {
   relation_t *sel = get_selected_relation(context);
-  map_item_deselect(context->appdata);
+  map_item_deselect(context->appdata->map);
 
   if(sel) {
-    map_relation_select(context->appdata, sel);
+    map_relation_select(context->appdata->map, sel);
 
     /* tell dialog to close as we want to see the selected relation */
 

@@ -163,8 +163,7 @@ void map_item_chain_destroy(map_item_chain_t **chainP) {
 #endif
 }
 
-static void map_node_select(appdata_t *appdata, node_t *node) {
-  map_t *map = appdata->map;
+static void map_node_select(map_t *map, node_t *node) {
   map_item_t *map_item = &map->selected;
 
   g_assert(!map->highlight);
@@ -179,7 +178,7 @@ static void map_node_select(appdata_t *appdata, node_t *node) {
     map_item->item = NULL;
 
   map_statusbar(map, map_item);
-  icon_bar_map_item_selected(appdata->iconbar, map_item, TRUE);
+  icon_bar_map_item_selected(map->appdata->iconbar, map_item, TRUE);
 
   /* highlight node */
   gint x = map_item->object.node->lpos.x, y = map_item->object.node->lpos.y;
@@ -317,8 +316,7 @@ void draw_selected_way_functor::operator()(node_t* node)
   last = node;
 }
 
-void map_way_select(appdata_t *appdata, way_t *way) {
-  map_t *map = appdata->map;
+void map_way_select(map_t *map, way_t *way) {
   map_item_t *map_item = &map->selected;
 
   g_assert(!map->highlight);
@@ -328,8 +326,8 @@ void map_way_select(appdata_t *appdata, way_t *way) {
   map_item->item      = way->map_item_chain->firstCanvasItem();
 
   map_statusbar(map, map_item);
-  icon_bar_map_item_selected(appdata->iconbar, map_item, TRUE);
-  gtk_widget_set_sensitive(appdata->menuitems[MENU_ITEM_MAP_HIDE_SEL], TRUE);
+  icon_bar_map_item_selected(map->appdata->iconbar, map_item, TRUE);
+  gtk_widget_set_sensitive(map->appdata->menuitems[MENU_ITEM_MAP_HIDE_SEL], TRUE);
 
   gint arrow_width = ((map_item->object.way->draw.flags & OSM_DRAW_FLAG_BG)?
 		      map->style->highlight.width + map_item->object.way->draw.bg.width/2:
@@ -411,9 +409,7 @@ void relation_select_functor::operator()(member_t& member)
 }
 
 
-void map_relation_select(appdata_t *appdata, relation_t *relation) {
-  map_t *map = appdata->map;
-
+void map_relation_select(map_t *map, relation_t *relation) {
   printf("highlighting relation " ITEM_ID_FORMAT "\n", relation->id);
 
   map_highlight_t *hl = map->highlight;
@@ -429,23 +425,23 @@ void map_relation_select(appdata_t *appdata, relation_t *relation) {
   map_item->item      = NULL;
 
   map_statusbar(map, map_item);
-  icon_bar_map_item_selected(appdata->iconbar, map_item, TRUE);
+  icon_bar_map_item_selected(map->appdata->iconbar, map_item, TRUE);
 
   /* process all members */
   relation_select_functor fc(*hl, map);
   std::for_each(relation->members.begin(), relation->members.end(), fc);
 }
 
-static void map_object_select(appdata_t *appdata, object_t &object) {
+static void map_object_select(map_t *map, object_t &object) {
   switch(object.type) {
   case NODE:
-    map_node_select(appdata, object.node);
+    map_node_select(map, object.node);
     break;
   case WAY:
-    map_way_select(appdata, object.way);
+    map_way_select(map, object.way);
     break;
   case RELATION:
-    map_relation_select(appdata, object.relation);
+    map_relation_select(map, object.relation);
     break;
   default:
     g_assert_not_reached();
@@ -453,35 +449,35 @@ static void map_object_select(appdata_t *appdata, object_t &object) {
   }
 }
 
-void map_item_deselect(appdata_t *appdata) {
+void map_item_deselect(map_t *map) {
 
   /* save tags for "last" function in info dialog */
-  if(appdata->map->selected.object.is_real() && appdata->map->selected.object.obj->tags.hasRealTags()) {
+  if(map->selected.object.is_real() && map->selected.object.obj->tags.hasRealTags()) {
     std::vector<tag_t> clear;
-    if(appdata->map->selected.object.type == NODE) {
-      clear.swap(appdata->map->last_node_tags);
+    if(map->selected.object.type == NODE) {
+      clear.swap(map->last_node_tags);
 
-      appdata->map->last_node_tags = appdata->map->selected.object.obj->tags.asVector();
-    } else if(appdata->map->selected.object.type == WAY) {
-      clear.swap(appdata->map->last_way_tags);
+      map->last_node_tags = map->selected.object.obj->tags.asVector();
+    } else if(map->selected.object.type == WAY) {
+      clear.swap(map->last_way_tags);
 
-      appdata->map->last_way_tags = appdata->map->selected.object.obj->tags.asVector();
+      map->last_way_tags = map->selected.object.obj->tags.asVector();
     }
     std::for_each(clear.begin(), clear.end(), osm_tag_members_free);
   }
 
   /* remove statusbar message */
-  statusbar_set(appdata->statusbar, NULL, FALSE);
+  statusbar_set(map->appdata->statusbar, NULL, FALSE);
 
   /* disable/enable icons in icon bar */
-  icon_bar_map_item_selected(appdata->iconbar, NULL, FALSE);
-  gtk_widget_set_sensitive(appdata->menuitems[MENU_ITEM_MAP_HIDE_SEL], FALSE);
+  icon_bar_map_item_selected(map->appdata->iconbar, NULL, FALSE);
+  gtk_widget_set_sensitive(map->appdata->menuitems[MENU_ITEM_MAP_HIDE_SEL], FALSE);
 
   /* remove highlight */
-  map_hl_remove(appdata);
+  map_hl_remove(map);
 
   /* forget about selection */
-  appdata->map->selected.object.type = ILLEGAL;
+  map->selected.object.type = ILLEGAL;
 }
 
 /* called whenever a map item is to be destroyed */
@@ -740,7 +736,7 @@ static void map_item_init(style_t *style, map_item_t *map_item) {
   }
 }
 
-void map_item_redraw(appdata_t *appdata, map_item_t *map_item) {
+void map_item_redraw(map_t *map, map_item_t *map_item) {
   map_item_t item = *map_item;
 
   /* a relation cannot be redraws as it doesn't have a visual */
@@ -750,18 +746,18 @@ void map_item_redraw(appdata_t *appdata, map_item_t *map_item) {
 
   /* check if the item to be redrawn is the selected one */
   gboolean is_selected = FALSE;
-  if(map_item->object.obj == appdata->map->selected.object.obj) {
-    map_item_deselect(appdata);
+  if(map_item->object.obj == map->selected.object.obj) {
+    map_item_deselect(map);
     is_selected = TRUE;
   }
 
   map_item_remove(&item);
-  map_item_init(appdata->map->style, &item);
-  map_item_draw(appdata->map, &item);
+  map_item_init(map->style, &item);
+  map_item_draw(map, &item);
 
   /* restore selection if there was one */
   if(is_selected)
-    map_object_select(appdata, item.object);
+    map_object_select(map, item.object);
 }
 
 static void map_frisket_rectangle(canvas_points_t *points,
@@ -824,8 +820,9 @@ static void map_frisket_draw(map_t *map, const bounds_t *bounds) {
   canvas_points_free(points);
 }
 
-static void map_draw(map_t *map, osm_t *osm) {
+static void map_draw(map_t *map) {
   g_assert(map->canvas);
+  osm_t * const osm = map->appdata->osm;
 
   printf("drawing ways ...\n");
   std::for_each(osm->ways.begin(), osm->ways.end(), map_way_draw_functor(map));
@@ -858,7 +855,7 @@ template<bool b> void free_track_item_chain(track_seg_t &seg) {
   seg.item_chain.clear();
 }
 
-void map_free_map_item_chains(appdata_t *appdata) {
+static void map_free_map_item_chains(appdata_t *appdata) {
   if(!appdata->osm) return;
 
 #ifndef DESTROY_WAIT_FOR_GTK
@@ -879,8 +876,8 @@ void map_free_map_item_chains(appdata_t *appdata) {
 }
 
 static gint map_destroy_event(G_GNUC_UNUSED GtkWidget *widget, gpointer data) {
-  appdata_t *appdata = (appdata_t*)data;
-  map_t *map = appdata->map;
+  map_t *map = static_cast<map_t *>(data);
+  appdata_t *appdata = map->appdata;
 
   map_set_autosave(map, FALSE);
 
@@ -1124,7 +1121,7 @@ void map_deselect_if_zoom_below_zoom_max(map_t *map) {
                map->selected.object.way->draw.zoom_max);
         if (map->state->zoom < map->selected.object.way->draw.zoom_max) {
             printf("  deselecting way!\n");
-            map_item_deselect(map->appdata);
+            map_item_deselect(map);
         }
     }
     else if (map->selected.object.type == NODE) {
@@ -1132,7 +1129,7 @@ void map_deselect_if_zoom_below_zoom_max(map_t *map) {
                map->selected.object.node->zoom_max);
         if (map->state->zoom < map->selected.object.node->zoom_max) {
             printf("  deselecting node!\n");
-            map_item_deselect(map->appdata);
+            map_item_deselect(map);
         }
     }
 }
@@ -1179,16 +1176,15 @@ void map_set_zoom(map_t *map, double zoom,
 static gboolean map_scroll_event(G_GNUC_UNUSED GtkWidget *widget, GdkEventScroll *event,
 				 gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
+  map_t *map = appdata->map;
 
   if(!appdata->osm) return FALSE;
 
-  if(event->type == GDK_SCROLL && appdata->map && appdata->map->state) {
+  if(event->type == GDK_SCROLL && map && map->state) {
     if(event->direction)
-      map_set_zoom(appdata->map,
-		   appdata->map->state->zoom / ZOOM_FACTOR_WHEEL, TRUE);
+      map_set_zoom(map, map->state->zoom / ZOOM_FACTOR_WHEEL, TRUE);
     else
-      map_set_zoom(appdata->map,
-		   appdata->map->state->zoom * ZOOM_FACTOR_WHEEL, TRUE);
+      map_set_zoom(map, map->state->zoom * ZOOM_FACTOR_WHEEL, TRUE);
   }
 
   return TRUE;
@@ -1316,33 +1312,32 @@ gboolean map_item_is_selected_way(map_t *map, map_item_t *map_item) {
 }
 
 
-void map_highlight_refresh(appdata_t *appdata) {
-  map_t *map = appdata->map;
+void map_highlight_refresh(map_t *map) {
   object_t old = map->selected.object;
 
   printf("type to refresh is %d\n", old.type);
   if(old.type == ILLEGAL)
     return;
 
-  map_item_deselect(appdata);
-  map_object_select(appdata, old);
+  map_item_deselect(map);
+  map_object_select(map, old);
 }
 
-void map_way_delete(appdata_t *appdata, way_t *way) {
+void map_way_delete(map_t *map, way_t *way) {
   printf("deleting way #" ITEM_ID_FORMAT " from map and osm\n", way->id);
 
-  undo_append_way(appdata, UNDO_DELETE, way);
+  undo_append_way(map->appdata, UNDO_DELETE, way);
 
   /* remove it visually from the screen */
   map_item_chain_destroy(&way->map_item_chain);
 
   /* and mark it "deleted" in the database */
-  appdata->osm->remove_from_relations(way);
+  map->appdata->osm->remove_from_relations(way);
 
-  appdata->osm->way_delete(way, false);
+  map->appdata->osm->way_delete(way, false);
 }
 
-static void map_handle_click(appdata_t *appdata, map_t *map) {
+static void map_handle_click(map_t *map) {
 
   /* problem: on_item may be the highlight itself! So store it! */
   map_item_t map_item;
@@ -1350,17 +1345,17 @@ static void map_handle_click(appdata_t *appdata, map_t *map) {
   else                      map_item.object.type = ILLEGAL;
 
   /* if we aready have something selected, then de-select it */
-  map_item_deselect(appdata);
+  map_item_deselect(map);
 
   /* select the clicked item (if there was one) */
   if(map_item.object.type != ILLEGAL) {
     switch(map_item.object.type) {
     case NODE:
-      map_node_select(appdata, map_item.object.node);
+      map_node_select(map, map_item.object.node);
       break;
 
     case WAY:
-      map_way_select(appdata, map_item.object.way);
+      map_way_select(map, map_item.object.way);
       break;
 
     default:
@@ -1398,9 +1393,7 @@ void hl_nodes::operator()(node_t* node)
     map_hl_touchnode_draw(map, node);
 }
 
-static void map_touchnode_update(appdata_t *appdata, gint x, gint y) {
-  map_t *map = appdata->map;
-
+static void map_touchnode_update(map_t *map, gint x, gint y) {
   map_hl_touchnode_clear(map);
 
   const node_t *cur_node = NULL;
@@ -1421,9 +1414,9 @@ static void map_touchnode_update(appdata_t *appdata, gint x, gint y) {
   }
 
   /* check if we are close to one of the other nodes */
-  canvas_window2world(appdata->map->canvas, x, y, &x, &y);
+  canvas_window2world(map->canvas, x, y, &x, &y);
   hl_nodes fc(cur_node, x, y, map);
-  std::for_each(appdata->osm->nodes.begin(), appdata->osm->nodes.end(), fc);
+  std::for_each(map->appdata->osm->nodes.begin(), map->appdata->osm->nodes.end(), fc);
 
   /* during way creation also nodes of the new way */
   /* need to be searched */
@@ -1470,7 +1463,7 @@ static void map_button_press(map_t *map, gint x, gint y) {
 
   case MAP_ACTION_WAY_ADD:
     map_hl_cursor_draw(map, x, y, false, map->style->node.radius);
-    map_touchnode_update(map->appdata, x, y);
+    map_touchnode_update(map, x, y);
     break;
 
   default:
@@ -1512,7 +1505,7 @@ static void map_button_release(map_t *map, gint x, gint y) {
       printf("left button released after click\n");
 
       map_item_t old_sel = map->selected;
-      map_handle_click(map->appdata, map);
+      map_handle_click(map);
 
       if((old_sel.object.type != ILLEGAL) &&
 	 (old_sel.object == map->selected.object)) {
@@ -1528,7 +1521,7 @@ static void map_button_release(map_t *map, gint x, gint y) {
 	  map->pen_down.on_item =
 	    map_real_item_at(map, map->pen_down.at.x, map->pen_down.at.y);
 
-	  map_handle_click(map->appdata, map);
+	  map_handle_click(map);
 	}
       }
     } else {
@@ -1542,7 +1535,7 @@ static void map_button_release(map_t *map, gint x, gint y) {
 	map_hl_cursor_clear(map);
 
 	/* now actually move the node */
-	map_edit_node_move(map->appdata, map->pen_down.on_item, x, y);
+        map_edit_node_move(map, map->pen_down.on_item, x, y);
       }
     }
     break;
@@ -1562,12 +1555,12 @@ static void map_button_release(map_t *map, gint x, gint y) {
       map->appdata->osm->node_attach(node);
       map_node_draw(map, node);
     }
-    map_action_set(map->appdata, MAP_ACTION_IDLE);
+    map_action_set(map, MAP_ACTION_IDLE);
 
-    map_item_deselect(map->appdata);
+    map_item_deselect(map);
 
     if(node) {
-      map_node_select(map->appdata, node);
+      map_node_select(map, node);
 
       /* let the user specify some tags for the new node */
       info_dialog(GTK_WIDGET(map->appdata->window), map->appdata);
@@ -1603,10 +1596,9 @@ static void map_button_release(map_t *map, gint x, gint y) {
 
 static gboolean map_button_event(G_GNUC_UNUSED GtkWidget *widget, GdkEventButton *event,
 				       gpointer data) {
-  appdata_t *appdata = (appdata_t*)data;
-  map_t *map = appdata->map;
+  map_t *map = static_cast<map_t *>(data);
 
-  if(!appdata->osm) return FALSE;
+  if(!map->appdata->osm) return FALSE;
 
   if(event->button == 1) {
     gint x = event->x, y = event->y;
@@ -1623,12 +1615,11 @@ static gboolean map_button_event(G_GNUC_UNUSED GtkWidget *widget, GdkEventButton
 
 static gboolean map_motion_notify_event(G_GNUC_UNUSED GtkWidget *widget,
                              GdkEventMotion *event, gpointer data) {
-  appdata_t *appdata = (appdata_t*)data;
-  map_t *map = appdata->map;
+  map_t *map = static_cast<map_t *>(data);
   gint x, y;
   GdkModifierType state;
 
-  if(!appdata->osm) return FALSE;
+  if(!map->appdata->osm) return FALSE;
 
 #if 0 // def USE_HILDON
   /* reduce update frequency on hildon to keep screen update fluid */
@@ -1670,7 +1661,7 @@ static gboolean map_motion_notify_event(G_GNUC_UNUSED GtkWidget *widget,
 	map_do_scroll(map, x, y);
       else {
 	map_hl_cursor_draw(map, x, y, false, map->style->node.radius);
-	map_touchnode_update(appdata, x, y);
+	map_touchnode_update(map, x, y);
       }
     }
     break;
@@ -1681,7 +1672,7 @@ static gboolean map_motion_notify_event(G_GNUC_UNUSED GtkWidget *widget,
 
   case MAP_ACTION_WAY_ADD:
     map_hl_cursor_draw(map, x, y, false, map->style->node.radius);
-    map_touchnode_update(appdata, x, y);
+    map_touchnode_update(map, x, y);
     break;
 
   case MAP_ACTION_WAY_NODE_ADD: {
@@ -1706,12 +1697,12 @@ static gboolean map_motion_notify_event(G_GNUC_UNUSED GtkWidget *widget,
   return FALSE;  /* forward to further processing */
 }
 
-gboolean map_key_press_event(appdata_t *appdata, GdkEventKey *event) {
+gboolean map_key_press_event(map_t *map, GdkEventKey *event) {
 
-  if(!appdata->osm) return FALSE;
+  if(!map->appdata->osm) return FALSE;
 
   /* map needs to be there to handle buttons */
-  if(!appdata->map->canvas)
+  if(!map->canvas)
     return FALSE;
 
   if(event->type == GDK_KEY_PRESS) {
@@ -1719,40 +1710,40 @@ gboolean map_key_press_event(appdata_t *appdata, GdkEventKey *event) {
     switch(event->keyval) {
 
     case GDK_Left:
-      map_do_scroll_step(appdata->map, -50, 0);
+      map_do_scroll_step(map, -50, 0);
       break;
 
     case GDK_Right:
-      map_do_scroll_step(appdata->map, +50, 0);
+      map_do_scroll_step(map, +50, 0);
       break;
 
     case GDK_Up:
-      map_do_scroll_step(appdata->map, 0, -50);
+      map_do_scroll_step(map, 0, -50);
       break;
 
     case GDK_Down:
-      map_do_scroll_step(appdata->map, 0, +50);
+      map_do_scroll_step(map, 0, +50);
       break;
 
     case GDK_Return:   // same as HILDON_HARDKEY_SELECT
       /* if the ok button is enabled, call its function */
-      if(GTK_WIDGET_FLAGS(appdata->iconbar->ok) & GTK_SENSITIVE)
-	map_action_ok(appdata);
+      if(GTK_WIDGET_FLAGS(map->appdata->iconbar->ok) & GTK_SENSITIVE)
+        map_action_ok(map);
       /* otherwise if info is enabled call that */
-      else if(GTK_WIDGET_FLAGS(appdata->iconbar->info) & GTK_SENSITIVE)
-	info_dialog(GTK_WIDGET(appdata->window), appdata);
+      else if(GTK_WIDGET_FLAGS(map->appdata->iconbar->info) & GTK_SENSITIVE)
+        info_dialog(GTK_WIDGET(map->appdata->window), map->appdata);
       break;
 
     case GDK_Escape:   // same as HILDON_HARDKEY_ESC
       /* if the cancel button is enabled, call its function */
-      if(GTK_WIDGET_FLAGS(appdata->iconbar->cancel) & GTK_SENSITIVE)
-	map_action_cancel(appdata);
+      if(GTK_WIDGET_FLAGS(map->appdata->iconbar->cancel) & GTK_SENSITIVE)
+        map_action_cancel(map);
       break;
 
     case GDK_Delete:
       /* if the delete button is enabled, call its function */
-      if(GTK_WIDGET_FLAGS(appdata->iconbar->trash) & GTK_SENSITIVE)
-	map_delete_selected(appdata);
+      if(GTK_WIDGET_FLAGS(map->appdata->iconbar->trash) & GTK_SENSITIVE)
+        map_delete_selected(map);
       break;
 
 #ifdef USE_HILDON
@@ -1761,9 +1752,9 @@ gboolean map_key_press_event(appdata_t *appdata, GdkEventKey *event) {
     case '+':
     case GDK_KP_Add:
 #endif
-      zoom = appdata->map->state->zoom;
+      zoom = map->state->zoom;
       zoom *= ZOOM_FACTOR_BUTTON;
-      map_set_zoom(appdata->map, zoom, TRUE);
+      map_set_zoom(map, zoom, TRUE);
       printf("zoom is now %f (1:%d)\n", zoom, (int)zoom_to_scaledn(zoom));
       return TRUE;
       break;
@@ -1774,9 +1765,9 @@ gboolean map_key_press_event(appdata_t *appdata, GdkEventKey *event) {
     case '-':
     case GDK_KP_Subtract:
 #endif
-      zoom = appdata->map->state->zoom;
+      zoom = map->state->zoom;
       zoom /= ZOOM_FACTOR_BUTTON;
-      map_set_zoom(appdata->map, zoom, TRUE);
+      map_set_zoom(map, zoom, TRUE);
       printf("zoom is now %f (1:%d)\n", zoom, (int)zoom_to_scaledn(zoom));
       return TRUE;
       break;
@@ -1831,38 +1822,38 @@ GtkWidget *map_new(appdata_t *appdata) {
   map_set_autosave(map, TRUE);
 
   gtk_signal_connect(GTK_OBJECT(canvas_widget),
-     "button_press_event", G_CALLBACK(map_button_event), appdata);
+     "button_press_event", G_CALLBACK(map_button_event), map);
   gtk_signal_connect(GTK_OBJECT(canvas_widget),
-     "button_release_event", G_CALLBACK(map_button_event), appdata);
+     "button_release_event", G_CALLBACK(map_button_event), map);
   gtk_signal_connect(GTK_OBJECT(canvas_widget),
-     "motion_notify_event", G_CALLBACK(map_motion_notify_event), appdata);
+     "motion_notify_event", G_CALLBACK(map_motion_notify_event), map);
   gtk_signal_connect(GTK_OBJECT(canvas_widget),
      "scroll_event", G_CALLBACK(map_scroll_event), appdata);
 
   gtk_signal_connect(GTK_OBJECT(canvas_widget),
-     "destroy", G_CALLBACK(map_destroy_event), appdata);
+     "destroy", G_CALLBACK(map_destroy_event), map);
 
   return canvas_widget;
 }
 
-void map_init(appdata_t *appdata) {
-  map_t *map = appdata->map;
+void map_init(map_t *map) {
+  osm_t * const osm = map->appdata->osm;
 
   /* update canvas background color */
   canvas_set_background(map->canvas, map->style->background.color);
 
   /* set initial zoom */
   map_set_zoom(map, map->state->zoom, FALSE);
-  josm_elemstyles_colorize_world(map->style, appdata->osm);
+  josm_elemstyles_colorize_world(map->style, osm);
 
-  map_draw(map, appdata->osm);
+  map_draw(map);
 
-  float mult = appdata->map->style->frisket.mult;
+  float mult = map->style->frisket.mult;
   canvas_set_bounds(map->canvas,
-		    mult*appdata->osm->bounds->min.x,
-		    mult*appdata->osm->bounds->min.y,
-		    mult*appdata->osm->bounds->max.x,
-		    mult*appdata->osm->bounds->max.y);
+                    mult * osm->bounds->min.x,
+                    mult * osm->bounds->min.y,
+                    mult * osm->bounds->max.x,
+                    mult * osm->bounds->max.y);
 
   printf("restore scroll position %d/%d\n",
 	 map->state->scroll_offset.x, map->state->scroll_offset.y);
@@ -1874,34 +1865,30 @@ void map_init(appdata_t *appdata) {
 }
 
 
-void map_clear(appdata_t *appdata, gint group_mask) {
-  map_t *map = appdata->map;
-
+void map_clear(map_t *map, gint group_mask) {
   printf("freeing map contents\n");
 
   if(group_mask == MAP_LAYER_ALL)
-    map_track_remove_pos(appdata);
+    map_track_remove_pos(map->appdata);
 
-  map_free_map_item_chains(appdata);
+  map_free_map_item_chains(map->appdata);
 
   /* remove a possibly existing highlight */
-  map_item_deselect(appdata);
+  map_item_deselect(map);
 
   canvas_erase(map->canvas, group_mask);
 }
 
-void map_paint(appdata_t *appdata) {
-  map_t *map = appdata->map;
-
-  josm_elemstyles_colorize_world(map->style, appdata->osm);
-  map_draw(map, appdata->osm);
+void map_paint(map_t *map) {
+  josm_elemstyles_colorize_world(map->style, map->appdata->osm);
+  map_draw(map);
 }
 
 /* called from several icons like e.g. "node_add" */
-void map_action_set(appdata_t *appdata, map_action_t action) {
+void map_action_set(map_t *map, map_action_t action) {
   printf("map action set to %d\n", action);
 
-  appdata->map->action.type = action;
+  map->action.type = action;
 
   /* enable/disable ok/cancel buttons */
   // MAP_ACTION_IDLE=0, NODE_ADD, BG_ADJUST, WAY_ADD, WAY_NODE_ADD, WAY_CUT
@@ -1911,12 +1898,12 @@ void map_action_set(appdata_t *appdata, map_action_t action) {
   g_assert_cmpint(MAP_ACTION_NUM, ==, sizeof(ok_state)/sizeof(gboolean));
   g_assert_cmpint(action, <, sizeof(ok_state)/sizeof(gboolean));
 
-  icon_bar_map_cancel_ok(appdata->iconbar, cancel_state[action], ok_state[action]);
+  icon_bar_map_cancel_ok(map->appdata->iconbar, cancel_state[action], ok_state[action]);
 
   switch(action) {
   case MAP_ACTION_BG_ADJUST:
     /* an existing selection only causes confusion ... */
-    map_item_deselect(appdata);
+    map_item_deselect(map);
     break;
 
   case MAP_ACTION_WAY_ADD: {
@@ -1924,25 +1911,25 @@ void map_action_set(appdata_t *appdata, map_action_t action) {
 
     /* remember if there was a way selected */
     way_t *way_sel = NULL;
-    if(appdata->map->selected.object.type == WAY)
-      way_sel = appdata->map->selected.object.way;
+    if(map->selected.object.type == WAY)
+      way_sel = map->selected.object.way;
 
-    map_item_deselect(appdata);
-    map_edit_way_add_begin(appdata->map, way_sel);
+    map_item_deselect(map);
+    map_edit_way_add_begin(map, way_sel);
     break;
   }
 
   case MAP_ACTION_NODE_ADD:
-    map_item_deselect(appdata);
+    map_item_deselect(map);
     break;
 
   default:
     break;
   }
 
-  icon_bar_map_action_idle(appdata->iconbar, action == MAP_ACTION_IDLE ? TRUE : FALSE,
-                           appdata->map->selected.object.type == WAY ? TRUE : FALSE);
-  gtk_widget_set_sensitive(appdata->menuitems[MENU_ITEM_WMS_ADJUST],
+  icon_bar_map_action_idle(map->appdata->iconbar, action == MAP_ACTION_IDLE ? TRUE : FALSE,
+                           map->selected.object.type == WAY ? TRUE : FALSE);
+  gtk_widget_set_sensitive(map->appdata->menuitems[MENU_ITEM_WMS_ADJUST],
 			   action == MAP_ACTION_IDLE);
 
   const char *str_state[] = {
@@ -1956,13 +1943,11 @@ void map_action_set(appdata_t *appdata, map_action_t action) {
 
   g_assert_cmpint(MAP_ACTION_NUM, ==, sizeof(str_state)/sizeof(char*));
 
-  statusbar_set(appdata->statusbar, str_state[action], FALSE);
+  statusbar_set(map->appdata->statusbar, str_state[action], FALSE);
 }
 
 
-void map_action_cancel(appdata_t *appdata) {
-  map_t *map = appdata->map;
-
+void map_action_cancel(map_t *map) {
   switch(map->action.type) {
   case MAP_ACTION_WAY_ADD:
     map_edit_way_add_cancel(map);
@@ -1970,11 +1955,11 @@ void map_action_cancel(appdata_t *appdata) {
 
   case MAP_ACTION_BG_ADJUST: {
     /* undo all changes to bg_offset */
-    map->bg.offset.x = appdata->project->wms_offset.x;
-    map->bg.offset.y = appdata->project->wms_offset.y;
+    map->bg.offset.x = map->appdata->project->wms_offset.x;
+    map->bg.offset.y = map->appdata->project->wms_offset.y;
 
-    gint x = appdata->osm->bounds->min.x + map->bg.offset.x;
-    gint y = appdata->osm->bounds->min.y + map->bg.offset.y;
+    gint x = map->appdata->osm->bounds->min.x + map->bg.offset.x;
+    gint y = map->appdata->osm->bounds->min.y + map->bg.offset.y;
     canvas_image_move(map->bg.item, x, y, map->bg.scale.x, map->bg.scale.y);
     break;
   }
@@ -1983,16 +1968,14 @@ void map_action_cancel(appdata_t *appdata) {
     break;
   }
 
-  map_action_set(appdata, MAP_ACTION_IDLE);
+  map_action_set(map, MAP_ACTION_IDLE);
 }
 
-void map_action_ok(appdata_t *appdata) {
-  map_t *map = appdata->map;
-
+void map_action_ok(map_t *map) {
   /* reset action now as this erases the statusbar and some */
   /* of the actions may set it */
   map_action_t type = map->action.type;
-  map_action_set(appdata, MAP_ACTION_IDLE);
+  map_action_set(map, MAP_ACTION_IDLE);
 
   switch(type) {
   case MAP_ACTION_WAY_ADD:
@@ -2001,35 +1984,36 @@ void map_action_ok(appdata_t *appdata) {
 
   case MAP_ACTION_BG_ADJUST:
     /* save changes to bg_offset in project */
-    appdata->project->wms_offset.x = map->bg.offset.x;
-    appdata->project->wms_offset.y = map->bg.offset.y;
+    map->appdata->project->wms_offset.x = map->bg.offset.x;
+    map->appdata->project->wms_offset.y = map->bg.offset.y;
     break;
 
   case MAP_ACTION_NODE_ADD:
     {
     pos_t pos;
-    if(!gps_get_pos(appdata->gps_state, &pos, 0))
+    if(!gps_get_pos(map->appdata->gps_state, &pos, 0))
       break;
 
     node_t *node = NULL;
+    osm_t * const osm = map->appdata->osm;
 
-    if(!osm_position_within_bounds_ll(&appdata->osm->bounds->ll_min,
-                                      &appdata->osm->bounds->ll_max, &pos)) {
-      map_outside_error(appdata);
+    if(!osm_position_within_bounds_ll(&osm->bounds->ll_min,
+                                      &osm->bounds->ll_max, &pos)) {
+      map_outside_error(map->appdata);
     } else {
-      node = appdata->osm->node_new(pos);
-      appdata->osm->node_attach(node);
+      node = osm->node_new(pos);
+      osm->node_attach(node);
       map_node_draw(map, node);
     }
-    map_action_set(appdata, MAP_ACTION_IDLE);
+    map_action_set(map, MAP_ACTION_IDLE);
 
-    map_item_deselect(appdata);
+    map_item_deselect(map);
 
     if(node) {
-      map_node_select(appdata, node);
+      map_node_select(map, node);
 
       /* let the user specify some tags for the new node */
-      info_dialog(GTK_WIDGET(appdata->window), appdata);
+      info_dialog(GTK_WIDGET(map->appdata->window), map->appdata);
     }
     }
 
@@ -2039,8 +2023,8 @@ void map_action_ok(appdata_t *appdata) {
 }
 
 struct node_deleted_from_ways {
-  appdata_t * const appdata;
-  node_deleted_from_ways(appdata_t *a) : appdata(a) { }
+  map_t * const map;
+  node_deleted_from_ways(map_t *m) : map(m) { }
   void operator()(way_t *way);
 };
 
@@ -2050,12 +2034,12 @@ void node_deleted_from_ways::operator()(way_t *way) {
     /* this way now only contains one node and thus isn't a valid */
     /* way anymore. So it'll also get deleted (which in turn may */
     /* cause other nodes to be deleted as well) */
-    map_way_delete(appdata, way);
+    map_way_delete(map, way);
   } else {
     map_item_t item;
     item.object = way;
-    undo_append_object(appdata, UNDO_MODIFY, item.object);
-    map_item_redraw(appdata, &item);
+    undo_append_object(map->appdata, UNDO_MODIFY, item.object);
+    map_item_redraw(map, &item);
   }
 }
 
@@ -2064,11 +2048,9 @@ static bool short_way(const way_t *way) {
 }
 
 /* called from icon "trash" */
-void map_delete_selected(appdata_t *appdata) {
-  map_t *map = appdata->map;
-
-  if(!yes_no_f(GTK_WIDGET(appdata->window),
-	       appdata, MISC_AGAIN_ID_DELETE, MISC_AGAIN_FLAG_DONT_SAVE_NO,
+void map_delete_selected(map_t *map) {
+  if(!yes_no_f(GTK_WIDGET(map->appdata->window),
+	       map->appdata, MISC_AGAIN_ID_DELETE, MISC_AGAIN_FLAG_DONT_SAVE_NO,
 	       _("Delete selected object?"),
 	       _("Do you really want to delete the selected object?")))
     return;
@@ -2077,27 +2059,27 @@ void map_delete_selected(appdata_t *appdata) {
   map_item_t item = map->selected;
 
   /* deleting the selected item de-selects it ... */
-  map_item_deselect(appdata);
+  map_item_deselect(map);
 
-  undo_open_new_state(appdata, UNDO_DELETE, item.object);
+  undo_open_new_state(map->appdata, UNDO_DELETE, item.object);
 
   switch(item.object.type) {
   case NODE: {
     printf("request to delete node #" ITEM_ID_FORMAT "\n",
 	   item.object.obj->id);
 
-    undo_append_object(appdata, UNDO_DELETE, item.object);
+    undo_append_object(map->appdata, UNDO_DELETE, item.object);
 
     /* check if this node is part of a way with two nodes only. */
     /* we cannot delete this as this would also delete the way */
-    const way_chain_t &way_chain = appdata->osm->node_to_way(item.object.node);
+    const way_chain_t &way_chain = map->appdata->osm->node_to_way(item.object.node);
     if(!way_chain.empty()) {
 
       const way_chain_t::const_iterator it =
           std::find_if(way_chain.begin(), way_chain.end(), short_way);
 
       if(it != way_chain.end()) {
-	if(!yes_no_f(GTK_WIDGET(appdata->window), NULL, 0, 0,
+	if(!yes_no_f(GTK_WIDGET(map->appdata->window), NULL, 0, 0,
 		     _("Delete node in short way(s)?"),
 		     _("Deleting this node will also delete one or more ways "
 		       "since they'll contain only one node afterwards. "
@@ -2107,10 +2089,10 @@ void map_delete_selected(appdata_t *appdata) {
     }
 
     /* and mark it "deleted" in the database */
-    appdata->osm->remove_from_relations(item.object.node);
-    const way_chain_t &chain = appdata->osm->node_delete(
+    map->appdata->osm->remove_from_relations(item.object.node);
+    const way_chain_t &chain = map->appdata->osm->node_delete(
                                         item.object.node, false, true);
-    std::for_each(chain.begin(), chain.end(), node_deleted_from_ways(appdata));
+    std::for_each(chain.begin(), chain.end(), node_deleted_from_ways(map));
 
     break;
   }
@@ -2118,14 +2100,14 @@ void map_delete_selected(appdata_t *appdata) {
   case WAY:
     printf("request to delete way #" ITEM_ID_FORMAT "\n",
 	   item.object.obj->id);
-    map_way_delete(appdata, item.object.way);
+    map_way_delete(map, item.object.way);
     break;
 
   default:
     g_assert_not_reached();
     break;
   }
-  undo_close_state(appdata);
+  undo_close_state(map->appdata);
 }
 
 /* ----------------------- track related stuff ----------------------- */
@@ -2326,21 +2308,20 @@ void map_track_remove(appdata_t *appdata) {
 /**
  * @brief show the marker item for the current GPS position
  */
-void map_track_pos(appdata_t *appdata, const lpos_t *lpos) {
+void map_track_pos(map_t *map, const lpos_t *lpos) {
   /* remove the old item */
-  map_track_remove_pos(appdata);
+  map_track_remove_pos(map->appdata);
 
-  float radius = appdata->map->style->track.width / 2.0;
-  gdouble zoom = canvas_get_zoom(appdata->map->canvas);
+  float radius = map->style->track.width / 2.0;
+  gdouble zoom = canvas_get_zoom(map->canvas);
   if(zoom < GPS_RADIUS_LIMIT) {
     radius *= GPS_RADIUS_LIMIT;
     radius /= zoom;
   }
 
-  appdata->track.gps_item =
-    canvas_circle_new(appdata->map->canvas, CANVAS_GROUP_GPS,
-                      lpos->x, lpos->y, radius, 0,
-                      appdata->map->style->track.gps_color, NO_COLOR);
+  map->appdata->track.gps_item =
+    canvas_circle_new(map->canvas, CANVAS_GROUP_GPS, lpos->x, lpos->y,
+                      radius, 0, map->style->track.gps_color, NO_COLOR);
 }
 
 /**
@@ -2401,8 +2382,7 @@ void map_set_bg_image(map_t *map, const char *filename) {
 
 /* -------- hide and show objects (for performance reasons) ------- */
 
-void map_hide_selected(appdata_t *appdata) {
-  map_t *map = appdata->map;
+void map_hide_selected(map_t *map) {
   if(!map) return;
 
   if(map->selected.object.type != WAY) {
@@ -2413,11 +2393,11 @@ void map_hide_selected(appdata_t *appdata) {
   way_t *way = map->selected.object.way;
   printf("hiding way #" ITEM_ID_FORMAT "\n", way->id);
 
-  map_item_deselect(appdata);
+  map_item_deselect(map);
   way->flags |= OSM_FLAG_HIDDEN;
   map_item_chain_destroy(&way->map_item_chain);
 
-  gtk_widget_set_sensitive(appdata->menuitems[MENU_ITEM_MAP_SHOW_ALL], TRUE);
+  gtk_widget_set_sensitive(map->appdata->menuitems[MENU_ITEM_MAP_SHOW_ALL], TRUE);
 }
 
 struct map_show_all_functor {
@@ -2435,14 +2415,13 @@ void map_show_all_functor::operator()(std::pair<item_id_t, way_t *> pair)
   }
 }
 
-void map_show_all(appdata_t *appdata) {
-  map_t *map = appdata->map;
+void map_show_all(map_t *map) {
   if(!map) return;
 
-  std::for_each(appdata->osm->ways.begin(), appdata->osm->ways.end(),
+  std::for_each(map->appdata->osm->ways.begin(), map->appdata->osm->ways.end(),
                 map_show_all_functor(map));
 
-  gtk_widget_set_sensitive(appdata->menuitems[MENU_ITEM_MAP_SHOW_ALL], FALSE);
+  gtk_widget_set_sensitive(map->appdata->menuitems[MENU_ITEM_MAP_SHOW_ALL], FALSE);
 }
 
 void map_detail_change(map_t *map, float detail) {
@@ -2450,13 +2429,13 @@ void map_detail_change(map_t *map, float detail) {
 
   /* deselecting anything allows us not to care about automatic deselection */
   /* as well as items becoming invisible by the detail change */
-  map_item_deselect(appdata);
+  map_item_deselect(map);
 
   map->state->detail = detail;
   printf("changing detail factor to %f\n", map->state->detail);
 
-  map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
-  map_paint(appdata);
+  map_clear(map, MAP_LAYER_OBJECTS_ONLY);
+  map_paint(map);
 }
 
 void map_detail_increase(map_t *map) {

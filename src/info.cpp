@@ -474,7 +474,7 @@ void info_dialog(GtkWidget *parent, appdata_t *appdata) {
   /* since nodes being parts of ways but with no tags are invisible, */
   /* the result of editing them may have changed their visibility */
   if(ret && appdata->map->selected.object.type != RELATION)
-    map_item_redraw(appdata, &appdata->map->selected);
+    map_item_redraw(appdata->map, &appdata->map->selected);
 }
 
 /* edit tags of currently selected node or way or of the relation */

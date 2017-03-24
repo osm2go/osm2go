@@ -93,9 +93,7 @@ gint map_hl_item_destroy_event(G_GNUC_UNUSED GtkWidget *widget, gpointer data) {
   return FALSE;
 }
 
-void map_hl_remove(appdata_t *appdata) {
-  map_t *map = appdata->map;
-
+void map_hl_remove(map_t *map) {
   if(!map->highlight) return;
 
   printf("removing highlight\n");

@@ -349,7 +349,7 @@ void style_change(appdata_t *appdata, const char *name) {
   g_free(appdata->settings->style);
   appdata->settings->style = g_strdup(new_style.c_str());
 
-  map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
+  map_clear(appdata->map, MAP_LAYER_OBJECTS_ONLY);
   /* let gtk clean up first */
   while(gtk_events_pending()) {
     putchar('.');
@@ -363,7 +363,7 @@ void style_change(appdata_t *appdata, const char *name) {
   canvas_set_background(appdata->map->canvas,
 			appdata->map->style->background.color);
 
-  map_paint(appdata);
+  map_paint(appdata->map);
 }
 
 #ifndef FREMANTLE

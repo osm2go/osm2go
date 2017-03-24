@@ -458,7 +458,7 @@ static int update(void *data) {
     lpos_t lpos;
     pos2lpos(appdata->osm->bounds, &pos, &lpos);
     if(track_append_position(appdata, &pos, alt, &lpos))
-      map_track_pos(appdata, &lpos);
+      map_track_pos(appdata->map, &lpos);
   } else {
     printf("no valid position\n");
     /* end segment */

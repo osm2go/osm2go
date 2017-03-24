@@ -1092,7 +1092,7 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
       /* redraw the entire map by destroying all map items and redrawing them */
       appendf(context.log, NULL, _("Cleaning up ...\n"));
       diff_save(appdata->project, appdata->osm);
-      map_clear(appdata, MAP_LAYER_OBJECTS_ONLY);
+      map_clear(appdata->map, MAP_LAYER_OBJECTS_ONLY);
       osm_free(appdata->osm);
 
       appendf(context.log, NULL, _("Loading OSM ...\n"));
@@ -1100,7 +1100,7 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
       appendf(context.log, NULL, _("Applying diff ...\n"));
       diff_restore(appdata, appdata->project, appdata->osm);
       appendf(context.log, NULL, _("Painting ...\n"));
-      map_paint(appdata);
+      map_paint(appdata->map);
       appendf(context.log, NULL, _("Done!\n"));
     }
   }
