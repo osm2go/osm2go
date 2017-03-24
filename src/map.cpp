@@ -2293,9 +2293,7 @@ void map_track_draw(map_t *map, track_t *track) {
                 map_track_seg_draw_functor(map));
 }
 
-void map_track_remove(appdata_t *appdata) {
-  track_t *track = appdata->track.track;
-
+void map_track_remove(track_t *track) {
   printf("removing track\n");
 
   g_assert(track);
