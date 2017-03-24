@@ -24,8 +24,6 @@
 #include "osm.h"
 
 #ifdef __cplusplus
-extern "C" {
-#endif
 
 void map_edit_way_add_begin(map_t *map, way_t *way_sel);
 void map_edit_way_add_segment(map_t *map, gint x, gint y);
@@ -40,6 +38,9 @@ void map_edit_way_cut_highlight(map_t *map, map_item_t *item, gint x, gint y);
 void map_edit_way_cut(map_t *map, gint x, gint y);
 
 void map_edit_node_move(map_t *map, map_item_t *map_item, gint ex, gint ey);
+
+extern "C" {
+#endif
 
 void map_edit_way_reverse(map_t *map);
 
