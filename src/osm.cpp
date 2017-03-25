@@ -1355,6 +1355,39 @@ void osm_t::way_restore(way_t *way, const std::vector<item_id_chain_t> &id_chain
   printf("done\n");
 }
 
+struct node_chain_delete_functor {
+  const node_t * const node;
+  way_chain_t &way_chain;
+  const bool affect_ways;
+  node_chain_delete_functor(const node_t *n, way_chain_t &w, bool a) : node(n), way_chain(w), affect_ways(a) {}
+  void operator()(std::pair<item_id_t, way_t *> p);
+};
+
+void node_chain_delete_functor::operator()(std::pair<item_id_t, way_t *> p)
+{
+  way_t * const way = p.second;
+  node_chain_t &chain = way->node_chain;
+  bool modified = false;
+
+  node_chain_t::iterator cit = chain.begin();
+  while((cit = std::find(cit, chain.end(), node)) != chain.end()) {
+    /* remove node from chain */
+    modified = true;
+    if(affect_ways)
+      cit = chain.erase(cit);
+    else
+      /* only record that there has been a change */
+      break;
+  }
+
+  if(modified) {
+    way->flags |= OSM_FLAG_DIRTY;
+
+    /* and add the way to the list of affected ways */
+    way_chain.push_back(way);
+  }
+}
+
 /* returns pointer to chain of ways affected by this deletion */
 way_chain_t osm_t::node_delete(node_t *node, bool permanently,
 			    bool affect_ways) {
@@ -1368,30 +1401,8 @@ way_chain_t osm_t::node_delete(node_t *node, bool permanently,
   }
 
   /* first remove node from all ways using it */
-  const std::map<item_id_t, way_t *>::iterator itEnd = ways.end();
-  for (std::map<item_id_t, way_t *>::iterator it = ways.begin(); it != itEnd; it++) {
-    way_t * const way = it->second;
-    node_chain_t &chain = way->node_chain;
-    bool modified = false;
-
-    node_chain_t::iterator cit = chain.begin();
-    while((cit = std::find(cit, chain.end(), node)) != chain.end()) {
-      /* remove node from chain */
-      modified = true;
-      if(affect_ways)
-        cit = chain.erase(cit);
-      else
-        /* only record that there has been a change */
-        break;
-    }
-
-    if(modified) {
-      way->flags |= OSM_FLAG_DIRTY;
-
-      /* and add the way to the list of affected ways */
-      way_chain.push_back(way);
-    }
-  }
+  std::for_each(ways.begin(), ways.end(),
+                node_chain_delete_functor(node, way_chain, affect_ways));
 
   /* remove that nodes map representations */
   if(node->map_item_chain)
@@ -1413,39 +1424,54 @@ way_chain_t osm_t::node_delete(node_t *node, bool permanently,
   return way_chain;
 }
 
+struct find_member_object_functor_to_rel {
+  const node_t * const node;
+  bool via_way;
+  find_member_object_functor_to_rel(const node_t *n, bool v) : node(n), via_way(v) {}
+  bool operator()(const member_t &member);
+};
+
+bool find_member_object_functor_to_rel::operator()(const member_t& member)
+{
+  switch(member.object.type) {
+  case NODE:
+    /* nodes are checked directly */
+    return member.object.node == node;
+  case WAY:
+    if(via_way)
+      /* ways have to be checked for the nodes they consist of */
+      return member.object.way->contains_node(node);
+    break;
+  default:
+    break;
+  }
+
+  return false;
+}
+
+struct node_to_relation_functor {
+  find_member_object_functor_to_rel fc;
+  relation_chain_t &rel_chain;
+  node_to_relation_functor(relation_chain_t &r, const node_t *n, bool v) : rel_chain(r), fc(n, v) {}
+  void operator()(const std::pair<item_id_t, relation_t *> &pair);
+};
+
+void node_to_relation_functor::operator()(const std::pair<item_id_t, relation_t *> &pair)
+{
+  const std::vector<member_t> &members = pair.second->members;
+  const std::vector<member_t>::const_iterator mitEnd = members.end();
+  /* node is a member of this relation, so move it to the member chain */
+  if(std::find_if(members.begin(), mitEnd, fc) != mitEnd)
+    rel_chain.push_back(pair.second);
+}
+
 /* return all relations a node is in */
 static relation_chain_t osm_node_to_relation(const osm_t *osm, const node_t *node,
-				       gboolean via_way) {
+				       bool via_way) {
   relation_chain_t rel_chain;
 
-  const std::map<item_id_t, relation_t *>::const_iterator ritEnd = osm->relations.end();
-  for(std::map<item_id_t, relation_t *>::const_iterator rit = osm->relations.begin(); rit != ritEnd; rit++) {
-    bool is_member = false;
-
-    const std::vector<member_t>::const_iterator mitEnd = rit->second->members.end();
-    for(std::vector<member_t>::const_iterator member = rit->second->members.begin();
-        !is_member && member != mitEnd; member++) {
-      switch(member->object.type) {
-      case NODE:
-	/* nodes are checked directly */
-	is_member = member->object.node == node;
-	break;
-
-      case WAY:
-	if(via_way)
-	  /* ways have to be checked for the nodes they consist of */
-	  is_member = member->object.way->contains_node(node) == TRUE;
-	break;
-
-      default:
-	break;
-      }
-    }
-
-    /* node is a member of this relation, so move it to the member chain */
-    if(is_member)
-      rel_chain.push_back(rit->second);
-  }
+  std::for_each(osm->relations.begin(), osm->relations.end(),
+                node_to_relation_functor(rel_chain, node, via_way));
 
   return rel_chain;
 }
@@ -1861,17 +1887,24 @@ std::vector<tag_t *> tag_list_t::asPointerVector() const
   return ret;
 }
 
+struct tags_list_copy_functor {
+  std::vector<tag_t *> &new_tags;
+  tags_list_copy_functor(std::vector<tag_t *> &n) : new_tags(n) {}
+  void operator()(const tag_t &tag);
+};
+
+void tags_list_copy_functor::operator()(const tag_t &tag)
+{
+  tag_t *n = g_new0(tag_t, 1);
+  n->key = g_strdup(tag.key);
+  n->value = g_strdup(tag.value);
+  new_tags.push_back(n);
+}
+
 std::vector<tag_t *> osm_tags_list_copy(const std::vector<tag_t> &tags) {
-  const std::vector<tag_t>::const_iterator itEnd = tags.end();
   std::vector<tag_t *> new_tags;
 
-  for(std::vector<tag_t>::const_iterator it = tags.begin();
-      it != itEnd; it++) {
-    tag_t *n = g_new0(tag_t, 1);
-    n->key = g_strdup(it->key);
-    n->value = g_strdup(it->value);
-    new_tags.push_back(n);
-  }
+  std::for_each(tags.begin(), tags.end(), tags_list_copy_functor(new_tags));
 
   return new_tags;
 }

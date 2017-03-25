@@ -371,54 +371,59 @@ static gboolean wms_llbbox_fits(const project_t *project, const wms_llbbox_t *ll
   return TRUE;
 }
 
-static void wms_get_child_layers(const wms_layer_t::list &layers,
-	 gint depth, bool epsg4326, const wms_llbbox_t *llbbox, const gchar *srs,
-         wms_layer_t::list &clayers) {
-  const wms_layer_t::list::const_iterator itEnd = layers.end();
-  for(wms_layer_t::list::const_iterator it = layers.begin(); it != itEnd; it++) {
-    const wms_layer_t * const layer = *it;
-    /* get a copy of the parents values for the current one ... */
-    const wms_llbbox_t *local_llbbox = llbbox;
-    bool local_epsg4326 = epsg4326;
+struct child_layer_functor {
+  gint depth;
+  bool epsg4326;
+  const wms_llbbox_t * const llbbox;
+  const gchar * const srs;
+  wms_layer_t::list &clayers;
+  child_layer_functor(gint d, bool e, const wms_llbbox_t *x, const gchar *s,
+                      wms_layer_t::list &c)
+    : depth(d), epsg4326(e), llbbox(x), srs(s), clayers(c) {}
+  void operator()(const wms_layer_t *layer);
+};
 
-    /* ... and overwrite the inherited stuff with better local stuff */
-    if(layer->llbbox.valid)                    local_llbbox = &layer->llbbox;
-    local_epsg4326 |= layer->epsg4326;
+void child_layer_functor::operator()(const wms_layer_t *layer)
+{
+  /* get a copy of the parents values for the current one ... */
+  const wms_llbbox_t *local_llbbox = llbbox;
+  bool local_epsg4326 = epsg4326;
 
-    /* only named layers with useful bounding box are added to the list */
-    if(local_llbbox && layer->name) {
-      wms_layer_t *c_layer = new wms_layer_t();
-      c_layer->name     = g_strdup(layer->name);
-      c_layer->title    = g_strdup(layer->title);
-      c_layer->srs      = g_strdup(srs);
-      c_layer->epsg4326 = local_epsg4326;
-      c_layer->llbbox   = *local_llbbox;
-      clayers.push_back(c_layer);
-    }
+  /* ... and overwrite the inherited stuff with better local stuff */
+  if(layer->llbbox.valid)                    local_llbbox = &layer->llbbox;
+  local_epsg4326 |= layer->epsg4326;
 
-    wms_get_child_layers(layer->children, depth + 1,
-                         local_epsg4326, local_llbbox, srs, clayers);
+  /* only named layers with useful bounding box are added to the list */
+  if(local_llbbox && layer->name) {
+    wms_layer_t *c_layer = new wms_layer_t();
+    c_layer->name     = g_strdup(layer->name);
+    c_layer->title    = g_strdup(layer->title);
+    c_layer->srs      = g_strdup(srs);
+    c_layer->epsg4326 = local_epsg4326;
+    c_layer->llbbox   = *local_llbbox;
+    clayers.push_back(c_layer);
   }
+
+  std::for_each(layer->children.begin(), layer->children.end(),
+                child_layer_functor(depth + 1, local_epsg4326,
+                                    local_llbbox, srs, clayers));
 }
 
-static wms_layer_t::list wms_get_requestable_layers(const wms_t *wms) {
-  printf("\nSearching for usable layers\n");
+struct requestable_layers_functor {
+  wms_layer_t::list &c_layer;
+  requestable_layers_functor(wms_layer_t::list &c) : c_layer(c) {}
+  void operator()(const wms_layer_t *layer);
+};
 
-  wms_layer_t::list c_layer;
+void requestable_layers_functor::operator()(const wms_layer_t* layer)
+{
+  const wms_llbbox_t *llbbox = &layer->llbbox;
+  if(!llbbox->valid)
+    llbbox = NULL;
 
-  const wms_layer_t::list &layer = wms->cap.layers;
-  const wms_layer_t::list::const_iterator itEnd = wms->cap.layers.end();
-  for(wms_layer_t::list::const_iterator it = wms->cap.layers.begin(); it != itEnd; it++) {
-    const wms_layer_t * const layer = *it;
-    const wms_llbbox_t *llbbox = &layer->llbbox;
-    if(!llbbox->valid)
-      llbbox = NULL;
-
-    wms_get_child_layers(layer->children, 1,
-                         layer->epsg4326, llbbox, layer->srs, c_layer);
-  }
-
-  return c_layer;
+  std::for_each(layer->children.begin(), layer->children.end(),
+                child_layer_functor(1, layer->epsg4326, llbbox, layer->srs,
+                                    c_layer));
 }
 
 enum {
@@ -909,6 +914,27 @@ static void changed(GtkTreeSelection *sel, gpointer user_data) {
                                     selected->empty() ? FALSE : TRUE);
 }
 
+struct fitting_layers_functor {
+  GtkListStore * const store;
+  const project_t * const project;
+  fitting_layers_functor(GtkListStore *s, const project_t *p) : store(s), project(p) {}
+  void operator()(const wms_layer_t *layer);
+};
+
+void fitting_layers_functor::operator()(const wms_layer_t *layer)
+{
+  GtkTreeIter iter;
+  gboolean fits = layer->llbbox.valid && wms_llbbox_fits(project, &layer->llbbox);
+
+  /* Append a row and fill in some data */
+  gtk_list_store_append(store, &iter);
+  gtk_list_store_set(store, &iter,
+                     LAYER_COL_TITLE, layer->title,
+                     LAYER_COL_FITS, fits,
+                     LAYER_COL_DATA, layer,
+                     -1);
+}
+
 static GtkWidget *wms_layer_widget(selected_context *context, const wms_layer_t::list &layers,
 				   G_GNUC_UNUSED GtkWidget *dialog) {
 
@@ -947,21 +973,8 @@ static GtkWidget *wms_layer_widget(selected_context *context, const wms_layer_t:
 
   gtk_tree_view_set_model(GTK_TREE_VIEW(view), GTK_TREE_MODEL(store));
 
-  GtkTreeIter iter;
-  const wms_layer_t::list::const_iterator itEnd = layers.end();
-  for(wms_layer_t::list::const_iterator it = layers.begin(); it != itEnd; it++) {
-    const wms_layer_t * const layer = *it;
-    gboolean fits = layer->llbbox.valid &&
-                    wms_llbbox_fits(context->appdata->project, &layer->llbbox);
-
-    /* Append a row and fill in some data */
-    gtk_list_store_append(store, &iter);
-    gtk_list_store_set(store, &iter,
-	       LAYER_COL_TITLE, layer->title,
-	       LAYER_COL_FITS, fits,
-	       LAYER_COL_DATA, layer,
-	       -1);
-  }
+  std::for_each(layers.begin(), layers.end(),
+                fitting_layers_functor(store, context->appdata->project));
 
   g_object_unref(store);
 
@@ -1109,8 +1122,12 @@ void wms_import(appdata_t *appdata) {
   }
 
   /* ---------- evaluate layers ----------- */
+  printf("\nSearching for usable layers\n");
 
-  wms_layer_t::list layers = wms_get_requestable_layers(&wms);
+  wms_layer_t::list layers;
+  requestable_layers_functor fc(layers);
+
+  std::for_each(wms.cap.layers.begin(), wms.cap.layers.end(), fc);
   bool at_least_one_ok = std::find_if(layers.begin(), layers.end(), layer_is_usable) !=
                          layers.end();
 
