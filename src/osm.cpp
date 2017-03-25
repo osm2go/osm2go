@@ -402,13 +402,10 @@ void osm_t::node_free(node_t *node) {
   delete node;
 }
 
-struct nodefree {
-  osm_t * const osm;
-  nodefree(osm_t *o) : osm(o) {}
-  void operator()(std::pair<item_id_t, node_t *> pair) {
-    delete pair.second;
-  }
-};
+static inline void nodefree(std::pair<item_id_t, node_t *> pair) {
+  pair.second->tags.clear();
+  delete pair.second;
+}
 
 /* ------------------- way handling ------------------- */
 static void osm_unref_node(node_t* node)
@@ -571,7 +568,7 @@ void osm_free(osm_t *osm) {
   if(!osm) return;
 
   std::for_each(osm->ways.begin(), osm->ways.end(), way_free);
-  std::for_each(osm->nodes.begin(), osm->nodes.end(), nodefree(osm));
+  std::for_each(osm->nodes.begin(), osm->nodes.end(), nodefree);
   std::for_each(osm->relations.begin(), osm->relations.end(),
                 osm_relation_free_pair);
   delete osm;
