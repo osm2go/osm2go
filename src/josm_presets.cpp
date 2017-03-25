@@ -43,22 +43,23 @@ static void on_info(GtkWidget *widget, gpointer context) {
 
 /* --------------------- the items dialog -------------------- */
 
-static void attach_both(GtkTable *table, GtkWidget *widget, guint y) {
+static void attach_both(GtkTable *table, GtkWidget *widget, guint &y) {
   gtk_table_attach(table, widget, 0, 2, y, y + 1,
                    static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),
                    static_cast<GtkAttachOptions>(0), 0, 0);
+  y++;
 }
 
-static void attach_text(GtkTable *table, const char *text, guint y) {
-  gtk_table_attach(table, gtk_label_new(text), 0, 1, y, y + 1,
-                   static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),
-                   static_cast<GtkAttachOptions>(0), 0, 0);
-}
-
-static void attach_right(GtkTable *table, GtkWidget *widget, guint y) {
+static void attach_right(GtkTable *table, const char *text, GtkWidget *widget, guint &y) {
+  if(text) {
+    gtk_table_attach(table, gtk_label_new(text), 0, 1, y, y + 1,
+                     static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),
+                     static_cast<GtkAttachOptions>(0), 0, 0);
+  }
   gtk_table_attach(table, widget, 1, 2, y, y + 1,
                    static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),
                    static_cast<GtkAttachOptions>(0), 0, 0);
+  y++;
 }
 
 /**
@@ -176,10 +177,8 @@ void add_widget_functor::operator()(const presets_widget_t *w)
 
   GtkWidget *widget = w->attach(GTK_TABLE(table), row, preset);
 
-  if(widget) {
+  if(widget)
     gtk_widgets[w] = HintPair(widget, otag);
-    row++;
-  }
 }
 
 static void presets_item_dialog(presets_context_t *context,
@@ -893,7 +892,7 @@ GtkWidget *josm_build_presets_button(appdata_t *appdata,
   return but;
 }
 
-GtkWidget *presets_widget_t::attach(GtkTable *, guint, const char *) const
+GtkWidget *presets_widget_t::attach(GtkTable *, guint &, const char *) const
 {
   return 0;
 }
@@ -904,17 +903,15 @@ const char *presets_widget_t::getValue(GtkWidget *) const
   return 0;
 }
 
-GtkWidget *presets_widget_text::attach(GtkTable *table, guint row, const char *preset) const
+GtkWidget *presets_widget_text::attach(GtkTable *table, guint &row, const char *preset) const
 {
-  attach_text(table, reinterpret_cast<const char *>(text), row);
-
   if(!preset)
     preset = reinterpret_cast<const char *>(def);
   GtkWidget *ret = entry_new();
   if(preset)
     gtk_entry_set_text(GTK_ENTRY(ret), preset);
 
-  attach_right(table, ret, row);
+  attach_right(table, reinterpret_cast<const char *>(text), ret, row);
 
   return ret;
 }
@@ -926,19 +923,19 @@ const char *presets_widget_text::getValue(GtkWidget *widget) const
   return gtk_entry_get_text(GTK_ENTRY(widget));
 }
 
-GtkWidget *presets_widget_separator::attach(GtkTable *table, guint row, const char *) const
+GtkWidget *presets_widget_separator::attach(GtkTable *table, guint &row, const char *) const
 {
   attach_both(table, gtk_hseparator_new(), row);
   return 0;
 }
 
-GtkWidget *presets_widget_label::attach(GtkTable *table, guint row, const char *) const
+GtkWidget *presets_widget_label::attach(GtkTable *table, guint &row, const char *) const
 {
   attach_both(table, gtk_label_new(reinterpret_cast<const char *>(text)), row);
   return 0;
 }
 
-GtkWidget *presets_widget_combo::attach(GtkTable *table, guint row, const char *preset) const
+GtkWidget *presets_widget_combo::attach(GtkTable *table, guint &row, const char *preset) const
 {
   if(!preset)
     preset = reinterpret_cast<const char *>(def);
@@ -960,8 +957,7 @@ GtkWidget *presets_widget_combo::attach(GtkTable *table, guint row, const char *
 
   combo_box_set_active(ret, active);
 #ifndef FREMANTLE
-  attach_text(table, reinterpret_cast<const char *>(text), row);
-  attach_right(table, ret, row);
+  attach_right(table, reinterpret_cast<const char *>(text), ret, row);
 #else
   attach_both(table, ret, row);
 #endif
@@ -997,7 +993,7 @@ const char *presets_widget_key::getValue(GtkWidget* widget) const
   return reinterpret_cast<const char *>(value);
 }
 
-GtkWidget *presets_widget_checkbox::attach(GtkTable *table, guint row, const char *preset) const
+GtkWidget *presets_widget_checkbox::attach(GtkTable *table, guint &row, const char *preset) const
 {
   gboolean deflt = FALSE;
   if(preset) {
@@ -1012,7 +1008,7 @@ GtkWidget *presets_widget_checkbox::attach(GtkTable *table, guint row, const cha
   GtkWidget *ret = check_button_new_with_label(reinterpret_cast<const char *>(text));
   check_button_set_active(ret, deflt);
 #ifndef FREMANTLE
-  attach_right(table, ret, row);
+  attach_right(table, 0, ret, row);
 #else
   attach_both(table, ret, row);
 #endif

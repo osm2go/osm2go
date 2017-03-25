@@ -50,7 +50,7 @@ public:
 
   bool is_interactive() const;
 
-  virtual GtkWidget *attach(GtkTable *table, guint row, const char *preset) const;
+  virtual GtkWidget *attach(GtkTable *table, guint &row, const char *preset) const;
   virtual const char *getValue(GtkWidget *widget) const;
 };
 
@@ -64,7 +64,7 @@ public:
 
   xmlChar * const def;
 
-  virtual GtkWidget *attach(GtkTable *table, guint row, const char *preset) const;
+  virtual GtkWidget *attach(GtkTable *table, guint &row, const char *preset) const;
   virtual const char *getValue(GtkWidget *widget) const;
 };
 
@@ -73,7 +73,7 @@ public:
   explicit presets_widget_separator()
     : presets_widget_t(WIDGET_TYPE_SEPARATOR) {}
 
-  virtual GtkWidget *attach(GtkTable *table, guint row, const char *) const;
+  virtual GtkWidget *attach(GtkTable *table, guint &row, const char *) const;
 };
 
 class presets_widget_label : public presets_widget_t {
@@ -81,7 +81,7 @@ public:
   explicit presets_widget_label(xmlChar *text)
     : presets_widget_t(WIDGET_TYPE_LABEL, 0, text) {}
 
-  virtual GtkWidget *attach(GtkTable *table, guint row, const char *) const;
+  virtual GtkWidget *attach(GtkTable *table, guint &row, const char *) const;
 };
 
 /**
@@ -97,7 +97,7 @@ public:
   const std::vector<std::string> values;
   const std::vector<std::string> display_values;
 
-  virtual GtkWidget *attach(GtkTable *table, guint row, const char *preset) const;
+  virtual GtkWidget *attach(GtkTable *table, guint &row, const char *preset) const;
   virtual const char *getValue(GtkWidget *widget) const;
 
   static std::vector<std::string> split_string(const xmlChar *str, char delimiter);
@@ -123,7 +123,7 @@ public:
   const bool def;
   xmlChar *value_on;
 
-  virtual GtkWidget *attach(GtkTable *table, guint row, const char *preset) const;
+  virtual GtkWidget *attach(GtkTable *table, guint &row, const char *preset) const;
   virtual const char *getValue(GtkWidget *widget) const;
 };
 
