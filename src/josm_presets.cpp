@@ -151,6 +151,37 @@ struct find_tag_functor {
   }
 };
 
+typedef std::pair<GtkWidget *, tag_t *> HintPair;
+
+struct add_widget_functor {
+  guint &row;
+  tag_context_t * const tag_context;
+  std::map<const presets_widget_t *, HintPair> &gtk_widgets;
+  GtkWidget * const table;
+  add_widget_functor(std::map<const presets_widget_t *, HintPair> &g, tag_context_t *c, GtkWidget *t, guint &r)
+    : row(r), gtk_widgets(g), tag_context(c), table(t) {}
+  void operator()(const presets_widget_t *w);
+};
+
+void add_widget_functor::operator()(const presets_widget_t *w)
+{
+  /* check if there's a value with this key already */
+  std::vector<tag_t *>::const_iterator otagIt = w->key ?
+                                                std::find_if(tag_context->tags.begin(),
+                                                             tag_context->tags.end(),
+                                                             find_tag_functor(w->key)) :
+                                                tag_context->tags.end();
+  tag_t *otag = otagIt != tag_context->tags.end() ? *otagIt : 0;
+  const char *preset = otag ? otag->value : 0;
+
+  GtkWidget *widget = w->attach(GTK_TABLE(table), row, preset);
+
+  if(widget) {
+    gtk_widgets[w] = HintPair(widget, otag);
+    row++;
+  }
+}
+
 static void presets_item_dialog(presets_context_t *context,
                                 const presets_item *item) {
   appdata_t *appdata = context->appdata;
@@ -170,7 +201,6 @@ static void presets_item_dialog(presets_context_t *context,
                                                                     is_widget_interactive);
   bool has_interactive_widget = (it != itEnd);
 
-  typedef std::pair<GtkWidget *, tag_t *> HintPair;
   std::map<const presets_widget_t *, HintPair> gtk_widgets;
 
   if(has_interactive_widget)  {
@@ -211,21 +241,9 @@ static void presets_item_dialog(presets_context_t *context,
     /* create table of required size */
     GtkWidget *table = gtk_table_new(item->widgets.size() - (it - item->widgets.begin()), 2, FALSE);
 
-    for(int row = 0; it != itEnd; it++, row++) {
-      /* check if there's a value with this key already */
-      std::vector<tag_t *>::const_iterator otagIt = (*it)->key ?
-                                                    std::find_if(context->tag_context->tags.begin(),
-                                                                 context->tag_context->tags.end(),
-                                                                 find_tag_functor((*it)->key)) :
-                                                    context->tag_context->tags.end();
-      tag_t *otag = otagIt != context->tag_context->tags.end() ? *otagIt : 0;
-      const char *preset = otag ? otag->value : NULL;
-
-      GtkWidget *widget = (*it)->attach(GTK_TABLE(table), row, preset);
-
-      if(widget)
-        gtk_widgets[*it] = HintPair(widget, otag);
-    }
+    guint row = 0;
+    add_widget_functor fc(gtk_widgets, context->tag_context, table, row);
+    std::for_each(it, itEnd, fc);
 
 #ifndef USE_HILDON
     /* add widget to dialog */
