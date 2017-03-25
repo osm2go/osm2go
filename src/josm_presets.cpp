@@ -613,6 +613,8 @@ on_presets_picker_selected(GtkTreeSelection *selection, gpointer data) {
       /* and request closing of menu */
       gtk_dialog_response(GTK_DIALOG(gtk_widget_get_toplevel(view)),
 			  GTK_RESPONSE_ACCEPT);
+
+      context->submenus.clear();
     }
   }
 }
@@ -816,7 +818,8 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event,
     printf("button press %d %d\n", event->button, event->time);
 
 #ifndef PICKER_MENU
-  (void)widget;
+    (void)widget;
+
     if (!context->menu) {
       GtkWidget *matches = NULL;
       context->menu = build_menu(context, context->appdata->presets->items, &matches);
@@ -833,6 +836,7 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event,
     gtk_menu_popup(GTK_MENU(context->menu), NULL, NULL, NULL, NULL,
 		   event->button, event->time);
 #else
+    g_assert(context->submenus.empty());
     /* popup our special picker like menu */
     GtkWidget *dialog =
       gtk_dialog_new_with_buttons(_("Presets"),
