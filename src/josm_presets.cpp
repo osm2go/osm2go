@@ -27,6 +27,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <map>
 
 #ifdef FREMANTLE
 #include <hildon/hildon-picker-button.h>
@@ -162,17 +163,15 @@ static void presets_item_dialog(presets_context_t *context,
 
   /* build dialog from items widget list */
 
-  /* count total number of widgets and number of widgets that */
-  /* have an interactive gui element. We won't show a dialog */
-  /* at all if there's no interactive gui element at all */
-  guint widget_cnt = item->widgets.size();
-  std::vector<presets_widget_t *>::const_iterator itEnd = item->widgets.end();
-  bool has_interactive_widget = std::find_if(item->widgets.begin(), itEnd,
-                                             is_widget_interactive) != itEnd;
+  /* check for widgets that have an interactive gui element. We won't show a
+   * dialog if there's no interactive gui element at all */
+  const std::vector<presets_widget_t *>::const_iterator itEnd = item->widgets.end();
+  std::vector<presets_widget_t *>::const_iterator it = std::find_if(item->widgets.begin(), itEnd,
+                                                                    is_widget_interactive);
+  bool has_interactive_widget = (it != itEnd);
 
-  /* allocate space for required number of gtk widgets */
-  std::vector<GtkWidget *> gtk_widgets(widget_cnt, 0);
-  std::vector<presets_widget_t *>::const_iterator it;
+  typedef std::pair<GtkWidget *, tag_t *> HintPair;
+  std::map<const presets_widget_t *, HintPair> gtk_widgets;
 
   if(has_interactive_widget)  {
     dialog =
@@ -193,37 +192,26 @@ static void presets_item_dialog(presets_context_t *context,
 			 GTK_SIGNAL_FUNC(on_info), appdata);
     }
 #endif
-
     /* special handling for the first label/separators */
-    guint widget_skip = 0;  // number of initial widgets to skip
-    it = item->widgets.begin();
     if(item->addEditName) {
       gchar *title = g_strdup_printf(_("Edit %s"), item->name);
       gtk_window_set_title(GTK_WINDOW(dialog), title);
       g_free(title);
     } else {
       // use the first label as title
-      if(it != itEnd && ((*it)->type == WIDGET_TYPE_LABEL)) {
-        gtk_window_set_title(GTK_WINDOW(dialog), (char*)(*it)->text);
-
-        widget_skip++;   // this widget isn't part of the contents anymore
-        it++;
-      }
+      const presets_widget_t * const w = item->widgets.front();
+      if(w->type == WIDGET_TYPE_LABEL)
+        gtk_window_set_title(GTK_WINDOW(dialog), reinterpret_cast<char *>(w->text));
     }
 
-    /* skip all following separators (and keys) */
-    while(it != itEnd &&
-          (((*it)->type == WIDGET_TYPE_SEPARATOR) ||
-           ((*it)->type == WIDGET_TYPE_SPACE) ||
-           ((*it)->type == WIDGET_TYPE_KEY))) {
-      widget_skip++;   // this widget isn't part of the contents anymore
-      it++;
-    }
+    /* skip all following non-interactive widgets: use the first one that
+     * was found to be interactive above. */
+    g_assert((*it)->is_interactive());
 
     /* create table of required size */
-    GtkWidget *table = gtk_table_new(widget_cnt-widget_skip, 2, FALSE);
+    GtkWidget *table = gtk_table_new(item->widgets.size() - (it - item->widgets.begin()), 2, FALSE);
 
-    for(widget_cnt = widget_skip; it != itEnd; it++, widget_cnt++) {
+    for(int row = 0; it != itEnd; it++, row++) {
       /* check if there's a value with this key already */
       std::vector<tag_t *>::const_iterator otagIt = (*it)->key ?
                                                     std::find_if(context->tag_context->tags.begin(),
@@ -233,10 +221,10 @@ static void presets_item_dialog(presets_context_t *context,
       tag_t *otag = otagIt != context->tag_context->tags.end() ? *otagIt : 0;
       const char *preset = otag ? otag->value : NULL;
 
-      gtk_widgets[widget_cnt] = (*it)->attach(GTK_TABLE(table), widget_cnt - widget_skip, preset);
+      GtkWidget *widget = (*it)->attach(GTK_TABLE(table), row, preset);
 
-      if(gtk_widgets[widget_cnt] && otag)
-        g_object_set_data(G_OBJECT(gtk_widgets[widget_cnt]), "tag", otag);
+      if(widget)
+        gtk_widgets[*it] = HintPair(widget, otag);
     }
 
 #ifndef USE_HILDON
@@ -284,13 +272,13 @@ static void presets_item_dialog(presets_context_t *context,
   if(ok) {
     /* handle all children of the table */
     bool changed = false;
-    it = item->widgets.begin();
-    widget_cnt = 0;
+    const std::map<const presets_widget_t *, HintPair>::const_iterator hintEnd = gtk_widgets.end();
 
     std::vector<tag_t *> &tags = context->tag_context->tags;
-    for(; it != itEnd; it++, widget_cnt++) {
-      tag_t *otag = gtk_widgets[widget_cnt] ?
-                    static_cast<tag_t*>(g_object_get_data(G_OBJECT(gtk_widgets[widget_cnt]), "tag")) : 0;
+    for(it = item->widgets.begin(); it != itEnd; it++) {
+      const std::map<const presets_widget_t *, HintPair>::const_iterator hint = gtk_widgets.find(*it);
+      const HintPair &pair = hint != hintEnd ? hint->second : HintPair(0, 0);
+      tag_t *otag = pair.second;
       const std::vector<tag_t *>::iterator citEnd = tags.end();
       std::vector<tag_t *>::iterator ctag = otag ?
                                             std::find(tags.begin(), citEnd, otag) :
@@ -306,7 +294,7 @@ static void presets_item_dialog(presets_context_t *context,
       case WIDGET_TYPE_CHECK:
       case WIDGET_TYPE_COMBO:
       case WIDGET_TYPE_TEXT:
-        text = (*it)->getValue(gtk_widgets[widget_cnt]);
+        text = (*it)->getValue(pair.first);
         break;
 
       default:
