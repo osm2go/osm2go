@@ -134,14 +134,23 @@ static inline bool is_widget_interactive(const presets_widget_t *w) {
 }
 
 struct presets_context_t {
-  appdata_t *appdata;
+  explicit presets_context_t(appdata_t *a, tag_context_t *t)
+    : appdata(a)
+#ifndef FREMANTLE
+    , menu(0)
+#endif
+    , tag_context(t)
+  {
+  }
+
+  appdata_t * const appdata;
 #ifndef FREMANTLE
   GtkWidget *menu;
 #endif
 #ifdef PICKER_MENU
   std::vector<presets_item_group *> submenus;
 #endif
-  tag_context_t *tag_context;
+  tag_context_t * const tag_context;
 };
 
 struct find_tag_functor {
@@ -869,16 +878,14 @@ static gint on_button_destroy(G_GNUC_UNUSED GtkWidget *widget, gpointer data) {
     gtk_widget_destroy(context->menu);
 #endif
 
-  g_free(context);
+  delete context;
 
   return FALSE;
 }
 
 GtkWidget *josm_build_presets_button(appdata_t *appdata,
 			       tag_context_t *tag_context) {
-  presets_context_t *context = g_new0(presets_context_t, 1);
-  context->appdata = appdata;
-  context->tag_context = tag_context;
+  presets_context_t *context = new presets_context_t(appdata, tag_context);
 
   GtkWidget *but = button_new_with_label(_("Presets"));
   gtk_widget_set_events(but, GDK_EXPOSURE_MASK);
