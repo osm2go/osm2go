@@ -24,6 +24,7 @@
 
 #include <gtk/gtk.h>
 #include <libxml/xmlstring.h> /* for xmlChar */
+#include <map>
 #include <string>
 #include <vector>
 
@@ -34,7 +35,8 @@ enum presets_widget_type_t {
   WIDGET_TYPE_COMBO,
   WIDGET_TYPE_CHECK,
   WIDGET_TYPE_TEXT,
-  WIDGET_TYPE_KEY
+  WIDGET_TYPE_KEY,
+  WIDGET_TYPE_REFERENCE
 };
 
 class presets_widget_t {
@@ -48,10 +50,11 @@ public:
   xmlChar * const key;
   xmlChar * const text;
 
-  bool is_interactive() const;
+  virtual bool is_interactive() const;
 
   virtual GtkWidget *attach(GtkTable *table, guint &row, const char *preset) const;
   virtual const char *getValue(GtkWidget *widget) const;
+  virtual guint rows() const = 0;
 };
 
 /**
@@ -66,6 +69,9 @@ public:
 
   virtual GtkWidget *attach(GtkTable *table, guint &row, const char *preset) const;
   virtual const char *getValue(GtkWidget *widget) const;
+  virtual guint rows() const {
+    return 1;
+  }
 };
 
 class presets_widget_separator : public presets_widget_t {
@@ -74,6 +80,9 @@ public:
     : presets_widget_t(WIDGET_TYPE_SEPARATOR) {}
 
   virtual GtkWidget *attach(GtkTable *table, guint &row, const char *) const;
+  virtual guint rows() const {
+    return 1;
+  }
 };
 
 class presets_widget_label : public presets_widget_t {
@@ -82,6 +91,9 @@ public:
     : presets_widget_t(WIDGET_TYPE_LABEL, 0, text) {}
 
   virtual GtkWidget *attach(GtkTable *table, guint &row, const char *) const;
+  virtual guint rows() const {
+    return 1;
+  }
 };
 
 /**
@@ -99,6 +111,9 @@ public:
 
   virtual GtkWidget *attach(GtkTable *table, guint &row, const char *preset) const;
   virtual const char *getValue(GtkWidget *widget) const;
+  virtual guint rows() const {
+    return 1;
+  }
 
   static std::vector<std::string> split_string(const xmlChar *str, char delimiter);
 };
@@ -113,6 +128,9 @@ public:
 
   xmlChar * const value;
   virtual const char *getValue(GtkWidget *widget) const;
+  virtual guint rows() const {
+    return 0;
+  }
 };
 
 class presets_widget_checkbox : public presets_widget_t {
@@ -125,6 +143,22 @@ public:
 
   virtual GtkWidget *attach(GtkTable *table, guint &row, const char *preset) const;
   virtual const char *getValue(GtkWidget *widget) const;
+  virtual guint rows() const {
+    return 1;
+  }
+};
+
+class presets_item;
+
+class presets_widget_reference : public presets_widget_t {
+public:
+  presets_widget_reference(presets_item *i)
+    : presets_widget_t(WIDGET_TYPE_REFERENCE), item(i) {}
+
+  presets_item const *item;
+
+  virtual bool is_interactive() const;
+  virtual guint rows() const;
 };
 
 class presets_item_t {
@@ -186,9 +220,20 @@ public:
   std::vector<presets_item_t *> items;
 };
 
+typedef std::map<std::string, presets_item *> ChunkMap;
+
 struct presets_items {
   ~presets_items();
   std::vector<presets_item_t *> items;
+  ChunkMap chunks;
 };
+
+static inline bool is_widget_interactive(const presets_widget_t *w) {
+  return w->is_interactive();
+}
+
+static inline guint widget_rows(guint init, const presets_widget_t *w) {
+  return init + w->rows();
+}
 
 #endif // JOSM_PRESETS_P_H

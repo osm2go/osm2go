@@ -28,6 +28,7 @@
 #include <algorithm>
 #include <cstring>
 #include <map>
+#include <numeric>
 
 #ifdef FREMANTLE
 #include <hildon/hildon-picker-button.h>
@@ -129,10 +130,6 @@ static gint table_expose_event(GtkWidget *widget, GdkEventExpose *event,
 }
 #endif
 
-static inline bool is_widget_interactive(const presets_widget_t *w) {
-  return w->is_interactive();
-}
-
 struct presets_context_t {
   explicit presets_context_t(appdata_t *a, tag_context_t *t)
     : appdata(a)
@@ -175,6 +172,13 @@ struct add_widget_functor {
 
 void add_widget_functor::operator()(const presets_widget_t *w)
 {
+  if(w->type == WIDGET_TYPE_REFERENCE) {
+    const presets_widget_reference * const r = static_cast<const presets_widget_reference *>(w);
+    add_widget_functor fc(gtk_widgets, tag_context, table, row);
+    std::for_each(r->item->widgets.begin(), r->item->widgets.end(), fc);
+    return;
+  }
+
   /* check if there's a value with this key already */
   std::vector<tag_t *>::const_iterator otagIt = w->key ?
                                                 std::find_if(tag_context->tags.begin(),
@@ -247,7 +251,7 @@ static void presets_item_dialog(presets_context_t *context,
     g_assert((*it)->is_interactive());
 
     /* create table of required size */
-    GtkWidget *table = gtk_table_new(item->widgets.size() - (it - item->widgets.begin()), 2, FALSE);
+    GtkWidget *table = gtk_table_new(std::accumulate(it, item->widgets.end(), 0, widget_rows), 2, FALSE);
 
     guint row = 0;
     add_widget_functor fc(gtk_widgets, context->tag_context, table, row);

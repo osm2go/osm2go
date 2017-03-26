@@ -25,14 +25,12 @@
 #include <cstring>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
-#include <map>
+#include <numeric>
 #include <strings.h>
 
 #ifndef LIBXML_TREE_ENABLED
 #error "Tree not enabled in libxml"
 #endif
-
-typedef std::map<std::string, xmlNode *> ChunkMap;
 
 /* --------------------- presets.xml parsing ----------------------- */
 
@@ -192,14 +190,12 @@ static presets_widget_t *parse_widget(xmlNode *cur_node, presets_item *item,
     } else {
       const ChunkMap::const_iterator it =
           chunks.find(std::string(reinterpret_cast<char *>(id)));
-      if(G_UNLIKELY(it == chunks.end())) {
+      if(G_UNLIKELY(it == chunks.end()))
         printf("found presets/item/reference with unresolved ref %s\n", id);
-      } else {
-        parse_widgets(it->second, item, chunks);
-      }
+      else
+        widget = new presets_widget_reference(it->second);
       xmlFree(id);
     }
-
   } else
     printf("found unhandled presets/item/%s\n", cur_node->name);
 
@@ -285,8 +281,6 @@ static presets_item_t *parse_group(xmlDocPtr doc, xmlNode *a_node, presets_item_
 }
 
 static void parse_annotations(xmlDocPtr doc, xmlNode *a_node, struct presets_items &presets) {
-  ChunkMap chunks;
-
   // <chunk> elements are first
   xmlNode *cur_node;
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
@@ -298,10 +292,13 @@ static void parse_annotations(xmlDocPtr doc, xmlNode *a_node, struct presets_ite
         } else {
           std::string id(reinterpret_cast<char *>(xid));
           xmlFree(xid);
-          if(chunks.find(id) != chunks.end())
+          if(presets.chunks.find(id) != presets.chunks.end()) {
             printf("ignoring presets/chunk duplicate id %s\n", id.c_str());
-          else
-            chunks[id] = cur_node;
+          } else {
+            presets_item *item = new presets_item(presets_item_t::TY_ALL);
+            parse_widgets(cur_node, item, presets.chunks);
+            presets.chunks[id] = item;
+          }
         }
       } else {
         break;
@@ -313,9 +310,9 @@ static void parse_annotations(xmlDocPtr doc, xmlNode *a_node, struct presets_ite
     if (cur_node->type == XML_ELEMENT_NODE) {
       presets_item_t *preset = 0;
       if(strcmp((char*)cur_node->name, "item") == 0) {
-        preset = parse_item(cur_node, chunks);
+        preset = parse_item(cur_node, presets.chunks);
       } else if(strcmp((char*)cur_node->name, "group") == 0) {
-        preset = parse_group(doc, cur_node, 0, chunks);
+        preset = parse_group(doc, cur_node, 0, presets.chunks);
       } else if(strcmp((char*)cur_node->name, "separator") == 0) {
         preset = new presets_item_separator();
       } else
@@ -368,6 +365,10 @@ static inline void free_widget(presets_widget_t *widget) {
 
 static void free_item(presets_item_t *item) {
   delete item;
+}
+
+static inline void free_item_pair(const std::pair<std::string, presets_item *> &pair) {
+  delete pair.second;
 }
 
 void josm_presets_free(struct presets_items *presets) {
@@ -475,6 +476,17 @@ presets_widget_checkbox::~presets_widget_checkbox()
   xmlFree(value_on);
 }
 
+bool presets_widget_reference::is_interactive() const
+{
+  return std::find_if(item->widgets.begin(), item->widgets.end(), is_widget_interactive) !=
+         item->widgets.end();
+}
+
+guint presets_widget_reference::rows() const
+{
+  return std::accumulate(item->widgets.begin(), item->widgets.end(), 0, widget_rows);
+}
+
 presets_item_t::~presets_item_t()
 {
   std::for_each(widgets.begin(), widgets.end(), free_widget);
@@ -499,6 +511,7 @@ presets_item_group::~presets_item_group()
 presets_items::~presets_items()
 {
   std::for_each(items.begin(), items.end(), free_item);
+  std::for_each(chunks.begin(), chunks.end(), free_item_pair);
 }
 
 // vim:et:ts=8:sw=2:sts=2:ai
