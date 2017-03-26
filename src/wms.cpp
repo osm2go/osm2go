@@ -44,23 +44,35 @@
 #define WMS_FORMAT_GIF  (1<<3)
 
 struct wms_llbbox_t {
+  wms_llbbox_t() : valid(FALSE) {}
   pos_t min, max;
   gboolean valid;
 };
 
 struct wms_layer_t {
+  explicit wms_layer_t(const std::string &t = std::string(),
+                       const std::string &n = std::string(),
+                       const std::string &s = std::string(),
+                       bool epsg = false,
+                       const wms_llbbox_t &x = wms_llbbox_t())
+    : title(t), name(n), srs(s), epsg4326(epsg), llbbox(x) {}
+  ~wms_layer_t();
+
   typedef std::vector<wms_layer_t *> list;
 
-  gchar *title;
-  gchar *name;
-  gchar *srs;
+  std::string title;
+  std::string name;
+  std::string srs;
   bool epsg4326;
   wms_llbbox_t llbbox;
 
   list children;
 
   bool is_usable() const {
-    return name && epsg4326 && llbbox.valid;
+    return !name.empty() && epsg4326 && llbbox.valid;
+  }
+  static const char *EPSG4326() {
+    return "EPSG:4326";
   }
 };
 
@@ -141,22 +153,20 @@ static wms_layer_t *wms_cap_parse_layer(xmlDocPtr doc, xmlNode *a_node) {
           wms_layer->children.push_back(children);
       } else if(strcasecmp((char*)cur_node->name, "Name") == 0) {
 	xmlChar *str = xmlNodeListGetString(doc, cur_node->children, 1);
-	wms_layer->name = g_strdup((gchar*)str);
+	wms_layer->name = reinterpret_cast<char *>(str);
 	xmlFree(str);
       } else if(strcasecmp((char*)cur_node->name, "Title") == 0) {
 	xmlChar *str = xmlNodeListGetString(doc, cur_node->children, 1);
-	wms_layer->title = g_strdup((gchar*)str);
+	wms_layer->title = reinterpret_cast<char *>(str);
 	xmlFree(str);
       } else if(strcasecmp((char*)cur_node->name, "SRS") == 0) {
 	xmlChar *str = xmlNodeListGetString(doc, cur_node->children, 1);
-	wms_layer->srs = g_strdup((gchar*)str);
+        if(strcmp(reinterpret_cast<char *>(str), wms_layer_t::EPSG4326()) == 0)
+          wms_layer->epsg4326 = true;
+        else
+          wms_layer->srs = reinterpret_cast<char *>(str);
+        printf("SRS = %s\n", str);
 	xmlFree(str);
-
-	printf("SRS = %s\n", wms_layer->srs);
-
-	if(strcmp(wms_layer->srs, "EPSG:4326") == 0)
-	  wms_layer->epsg4326 = TRUE;
-
       } else if(strcasecmp((char*)cur_node->name, "LatLonBoundingBox") == 0) {
 	wms_layer->llbbox.min.lat = xml_get_prop_float(cur_node, "miny");
 	wms_layer->llbbox.min.lon = xml_get_prop_float(cur_node, "minx");
@@ -172,8 +182,8 @@ static wms_layer_t *wms_cap_parse_layer(xmlDocPtr doc, xmlNode *a_node) {
 					      &wms_layer->llbbox.max);
 
   printf("------------------- Layer: %s ---------------------------\n",
-	 wms_layer->title);
-  printf("Name: %s\n", wms_layer->name);
+	 wms_layer->title.c_str());
+  printf("Name: %s\n", wms_layer->name.c_str());
   printf("EPSG-4326: %s\n", wms_layer->epsg4326?"yes":"no");
   if(wms_layer->llbbox.valid)
     printf("LatLonBBox: %f/%f %f/%f\n",
@@ -339,20 +349,16 @@ void wms_setup_extent(project_t *project, wms_t *wms) {
 
 /* --------------- freeing stuff ------------------- */
 
-static void wms_layer_free(wms_layer_t *layer);
+static void wms_layer_free(wms_layer_t *layer) {
+  delete layer;
+}
 
 static void wms_layers_free(wms_layer_t::list &layers) {
   std::for_each(layers.begin(), layers.end(), wms_layer_free);
 }
 
-void wms_layer_free(wms_layer_t *layer) {
-  g_free(layer->title);
-  g_free(layer->name);
-  g_free(layer->srs);
-
-  wms_layers_free(layer->children);
-
-  delete layer;
+wms_layer_t::~wms_layer_t() {
+  wms_layers_free(children);
 }
 
 wms_t::~wms_t() {
@@ -375,9 +381,9 @@ struct child_layer_functor {
   gint depth;
   bool epsg4326;
   const wms_llbbox_t * const llbbox;
-  const gchar * const srs;
+  const std::string &srs;
   wms_layer_t::list &clayers;
-  child_layer_functor(gint d, bool e, const wms_llbbox_t *x, const gchar *s,
+  child_layer_functor(gint d, bool e, const wms_llbbox_t *x, const std::string &s,
                       wms_layer_t::list &c)
     : depth(d), epsg4326(e), llbbox(x), srs(s), clayers(c) {}
   void operator()(const wms_layer_t *layer);
@@ -394,13 +400,10 @@ void child_layer_functor::operator()(const wms_layer_t *layer)
   local_epsg4326 |= layer->epsg4326;
 
   /* only named layers with useful bounding box are added to the list */
-  if(local_llbbox && layer->name) {
-    wms_layer_t *c_layer = new wms_layer_t();
-    c_layer->name     = g_strdup(layer->name);
-    c_layer->title    = g_strdup(layer->title);
-    c_layer->srs      = g_strdup(srs);
-    c_layer->epsg4326 = local_epsg4326;
-    c_layer->llbbox   = *local_llbbox;
+  if(local_llbbox && !layer->name.empty()) {
+    wms_layer_t *c_layer = new wms_layer_t(layer->title, layer->name,
+                                           local_epsg4326 ? std::string() : srs,
+                                           local_epsg4326, *local_llbbox);
     clayers.push_back(c_layer);
   }
 
@@ -929,7 +932,7 @@ void fitting_layers_functor::operator()(const wms_layer_t *layer)
   /* Append a row and fill in some data */
   gtk_list_store_append(store, &iter);
   gtk_list_store_set(store, &iter,
-                     LAYER_COL_TITLE, layer->title,
+                     LAYER_COL_TITLE, layer->title.c_str(),
                      LAYER_COL_FITS, fits,
                      LAYER_COL_DATA, layer,
                      -1);
@@ -1169,11 +1172,13 @@ void wms_import(appdata_t *appdata) {
   }
 
   /* uses epsg4326 if possible */
-  const char *srs;
-  if(layers.front()->epsg4326)
-    srs = "EPSG:4326";
-  else
-    srs = layers.front()->srs;
+#if __cplusplus >= 201103L
+  const std::string srss = std::move(layers.front()->srs);
+#else
+  std::string srss;
+  srss.swap(layers.front()->srs);
+#endif
+  const char *srs = srss.empty() ? wms_layer_t::EPSG4326() : srss.c_str();
 
   wms_layers_free(layers);
 
