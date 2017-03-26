@@ -154,7 +154,7 @@ static void on_toggled(GtkWidget *button, gpointer data) {
 gboolean yes_no_f(GtkWidget *parent, appdata_t *appdata, guint again_bit,
 		  gint flags, const char *title, const char *fmt, ...) {
 
-  if(appdata && again_bit && (appdata->dialog_again.not_again & again_bit))
+  if(again_bit && (appdata->dialog_again.not_again & again_bit))
     return((appdata->dialog_again.reply & again_bit) != 0);
 
   va_list args;
@@ -178,7 +178,7 @@ gboolean yes_no_f(GtkWidget *parent, appdata_t *appdata, guint again_bit,
 #endif
 
   GtkWidget *cbut = NULL;
-  if(appdata && again_bit) {
+  if(again_bit) {
 #ifdef FREMANTLE
     /* make sure there's some space before the checkbox */
     gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox),

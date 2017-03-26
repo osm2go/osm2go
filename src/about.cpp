@@ -46,26 +46,25 @@ static gboolean on_link_clicked(GtkWidget *widget, G_GNUC_UNUSED GdkEventButton 
 
 static GtkWidget *link_new(appdata_t *appdata, const char *url) {
 #ifdef ENABLE_BROWSER_INTERFACE
-  if(appdata) {
-    GtkWidget *label = gtk_label_new(NULL);
-    char *str = g_strconcat("<span color=\"" LINK_COLOR
-				"\"><u>", url, "</u></span>", NULL);
-    gtk_label_set_markup(GTK_LABEL(label), str);
-    g_free(str);
+  GtkWidget *label = gtk_label_new(NULL);
+  char *str = g_strconcat("<span color=\"" LINK_COLOR "\"><u>", url,
+                          "</u></span>", NULL);
+  gtk_label_set_markup(GTK_LABEL(label), str);
+  g_free(str);
 
-    GtkWidget *eventbox = gtk_event_box_new();
-    gtk_container_add(GTK_CONTAINER(eventbox), label);
+  GtkWidget *eventbox = gtk_event_box_new();
+  gtk_container_add(GTK_CONTAINER(eventbox), label);
 
-    g_signal_connect(eventbox, "button-press-event",
-		     G_CALLBACK(on_link_clicked), appdata);
-    return eventbox;
-  }
-#endif
+  g_signal_connect(eventbox, "button-press-event",
+                   G_CALLBACK(on_link_clicked), appdata);
+  return eventbox;
+#else
   GtkWidget *label = gtk_label_new(NULL);
   char *str = g_strconcat("<span color=\"" LINK_COLOR "\">", url, "</span>", NULL);
   gtk_label_set_markup(GTK_LABEL(label), str);
   g_free(str);
   return label;
+#endif
 }
 
 #ifdef ENABLE_BROWSER_INTERFACE

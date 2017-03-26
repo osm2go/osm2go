@@ -133,7 +133,7 @@ void track_clear(appdata_t *appdata) {
 
   printf("clearing track\n");
 
-  if(G_LIKELY(appdata && appdata->map))
+  if(G_LIKELY(appdata->map))
     map_track_remove(track);
 
   appdata->track.track = NULL;

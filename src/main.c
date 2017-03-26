@@ -288,7 +288,7 @@ cb_menu_fullscreen(MENU_CHECK_ITEM *item, gpointer data) {
 
 static void
 cb_menu_zoomin(G_GNUC_UNUSED GtkMenuItem *item, appdata_t *appdata) {
-  if(!appdata || !appdata->map) return;
+  if(!appdata->map) return;
 
   map_set_zoom(appdata->map, appdata->map->state->zoom*ZOOM_FACTOR_MENU, TRUE);
   printf("zoom is now %f\n", appdata->map->state->zoom);
@@ -296,7 +296,7 @@ cb_menu_zoomin(G_GNUC_UNUSED GtkMenuItem *item, appdata_t *appdata) {
 
 static void
 cb_menu_zoomout(G_GNUC_UNUSED GtkMenuItem *item, appdata_t *appdata) {
-  if(!appdata || !appdata->map) return;
+  if(!appdata->map) return;
 
   map_set_zoom(appdata->map, appdata->map->state->zoom/ZOOM_FACTOR_MENU, TRUE);
   printf("zoom is now %f\n", appdata->map->state->zoom);
@@ -891,12 +891,10 @@ typedef struct {
 } submenu_t;
 
 static gboolean enable_gps_get_toggle(appdata_t *appdata) {
-  if(!appdata)           return FALSE;
   return appdata->settings->enable_gps;
 }
 
 static gboolean follow_gps_get_toggle(appdata_t *appdata) {
-  if(!appdata)           return FALSE;
   return appdata->settings->follow_gps;
 }
 
