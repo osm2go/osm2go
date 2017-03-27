@@ -87,7 +87,7 @@ int main(int argc, char **argv)
   return 0;
 }
 
-void main_ui_enable(appdata_t *appdata)
+void main_ui_enable(appdata_t *)
 {
   abort();
 }
