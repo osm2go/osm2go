@@ -550,7 +550,8 @@ void TrackSax::characters(const char *ch, int len)
     break;
   case TagTime: {
     buf.assign(ch, len);
-    struct tm time = { 0 };
+    struct tm time;
+    memset(&time, 0, sizeof(time));
     time.tm_isdst = -1;
     if(G_LIKELY(strptime(buf.c_str(), DATE_FORMAT, &time) != 0))
       curPoint->time = mktime(&time);
