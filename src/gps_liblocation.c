@@ -95,7 +95,7 @@ gps_state_t *gps_init(G_GNUC_UNUSED struct appdata_t *appdata) {
   gps_state->device = g_object_new(LOCATION_TYPE_GPS_DEVICE, NULL);
   if(!gps_state->device) {
     printf("Unable to connect to liblocation\n");
-    return;
+    return gps_state;
   }
 
   gps_state->idd_changed =
