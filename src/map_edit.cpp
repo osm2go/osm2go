@@ -510,7 +510,7 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
       /* place to cut is adjecent to the begin/end of the way. */
       /* this prevents a cut polygon to be split into two ways */
       if(way->is_closed()) {
-	printf("CLOSED WAY -> rotate by %ld\n", cut_at - way->node_chain.begin());
+	printf("CLOSED WAY -> rotate by %zi\n", cut_at - way->node_chain.begin());
 	way->rotate(cut_at);
 	cut_at = way->node_chain.begin();
       }
@@ -522,7 +522,7 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
       transfer_relations(map->appdata->osm, neww, way);
 
       /* move parts of node_chain to the new way */
-      printf("  moving everthing after segment %ld to new way\n",
+      printf("  moving everthing after segment %zi to new way\n",
              cut_at - way->node_chain.begin());
 
       /* attach remaining nodes to new way */
