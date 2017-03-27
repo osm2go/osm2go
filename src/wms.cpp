@@ -897,7 +897,7 @@ static void changed(GtkTreeSelection *sel, gpointer user_data) {
 
   /* walk the entire store */
   GtkTreeIter iter;
-  gboolean one = FALSE, ok = gtk_tree_model_get_iter_first(model, &iter);
+  gboolean ok = gtk_tree_model_get_iter_first(model, &iter);
   selected->clear();
   while(ok) {
     wms_layer_t *layer = NULL;

@@ -2075,7 +2075,6 @@ void tag_list_t::replace(std::vector<tag_t *> &ntags)
   if(ntags.empty())
     return;
   contents = ntags.front();
-  tag_t *t = contents;
   const std::vector<tag_t *>::const_iterator itEnd = ntags.end() - 1;
   for(std::vector<tag_t *>::const_iterator it = ntags.begin(); it != itEnd; it++)
     (*it)->next = *(it + 1);

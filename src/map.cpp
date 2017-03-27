@@ -2423,8 +2423,6 @@ void map_show_all(map_t *map) {
 }
 
 void map_detail_change(map_t *map, float detail) {
-  appdata_t *appdata = map->appdata;
-
   /* deselecting anything allows us not to care about automatic deselection */
   /* as well as items becoming invisible by the detail change */
   map_item_deselect(map);
