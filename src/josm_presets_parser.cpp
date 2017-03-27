@@ -97,8 +97,7 @@ static void parse_widgets(xmlNode *a_node, presets_item *item,
                           const ChunkMap &chunks);
 
 /* parse children of a given node for into *widget */
-static presets_widget_t *parse_widget(xmlNode *cur_node, presets_item *item,
-                                      const ChunkMap &chunks) {
+static presets_widget_t *parse_widget(xmlNode *cur_node, const ChunkMap &chunks) {
   presets_widget_t *widget = 0;
 
   if(strcmp((char*)cur_node->name, "label") == 0) {
@@ -223,7 +222,7 @@ static void parse_widgets(xmlNode *a_node, presets_item *item,
 	  printf("ignoring surplus link\n");
 
       } else {
-        presets_widget_t *widget = parse_widget(cur_node, item, chunks);
+        presets_widget_t *widget = parse_widget(cur_node, chunks);
         if(widget)
           item->widgets.push_back(widget);
       }
