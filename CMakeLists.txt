@@ -10,6 +10,9 @@ find_package(CURL REQUIRED)
 find_package(LibXml2 REQUIRED)
 find_package(PkgConfig REQUIRED)
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
+
 set(CMAKE_INCLUDE_CURRENT_DIR TRUE)
 
 set(osm2go_SOURCE_FILES
