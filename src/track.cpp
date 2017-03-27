@@ -47,7 +47,6 @@
 
 class TrackSax {
   xmlSAXHandler handler;
-  bool active_seg;
   track_point_t *curPoint;
 
   enum State {
@@ -514,8 +513,7 @@ track_point_t::track_point_t(const pos_t &p, float alt, time_t t)
 }
 
 TrackSax::TrackSax()
-  : active_seg(false)
-  , curPoint(0)
+  : curPoint(0)
   , state(DocStart)
   , track(0)
   , points(0)
