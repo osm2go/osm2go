@@ -1711,7 +1711,7 @@ osm_gps_map_set_property (GObject *object, guint prop_id, const GValue *value, G
                 g_debug("Setting proxy server: %s", priv->proxy_uri);
 
 #ifndef LIBSOUP22
-                GValue val = {0};
+                GValue val = G_VALUE_INIT;
 
                 SoupURI* uri = soup_uri_new(priv->proxy_uri);
                 g_value_init(&val, SOUP_TYPE_URI);
