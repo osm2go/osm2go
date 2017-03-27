@@ -45,7 +45,7 @@ void josm_presets_free(struct presets_items *presets);
 }
 
 struct appdata_t;
-struct tag_context_t;
+class tag_context_t;
 
 xmlChar *josm_icon_name_adjust(xmlChar *xname);
 
