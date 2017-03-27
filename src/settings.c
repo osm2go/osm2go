@@ -293,13 +293,12 @@ void settings_save(settings_t *settings) {
   wms_server_t *cur = settings->wms_server;
   int count = 0;
   while(cur) {
-    char *key = g_strdup_printf("/apps/" PACKAGE "/wms/name%d", count);
-    gconf_client_set_string(client, key, cur->name, NULL);
-    g_free(key);
-    key = g_strdup_printf("/apps/" PACKAGE "/wms/server%d", count);
+    /* keep ordering, the longest key must be first */
+    gchar *key = g_strdup_printf("/apps/" PACKAGE "/wms/server%d", count);
     gconf_client_set_string(client, key, cur->server, NULL);
-    g_free(key);
-    key = g_strdup_printf("/apps/" PACKAGE "/wms/path%d", count);
+    g_sprintf(key, "/apps/" PACKAGE "/wms/name%d", count);
+    gconf_client_set_string(client, key, cur->name, NULL);
+    g_sprintf(key, "/apps/" PACKAGE "/wms/path%d", count);
     gconf_client_set_string(client, key, cur->path, NULL);
     g_free(key);
 
