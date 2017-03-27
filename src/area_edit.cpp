@@ -417,7 +417,7 @@ static void callback_modified_unit(G_GNUC_UNUSED GtkWidget *widget, gpointer dat
 }
 
 #ifdef HAS_MAEMO_MAPPER
-static void callback_fetch_mm_clicked(GtkButton *button, gpointer data) {
+static void callback_fetch_mm_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
   context_t *context = (context_t*)data;
 
   if(!dbus_mm_set_position(context->area->appdata->osso_context)) {

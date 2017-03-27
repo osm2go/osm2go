@@ -78,8 +78,8 @@ static GtkWidget *menu_add(GtkWidget *menu, appdata_t *appdata,
   return item;
 }
 
-static gint on_way_button_press(GtkWidget *button, GdkEventButton *event,
-				gpointer data) {
+static gint on_way_button_press(G_GNUC_UNUSED GtkWidget *button,
+                                GdkEventButton *event, gpointer data) {
   iconbar_t *iconbar = (iconbar_t*)data;
 
   if(event->type == GDK_BUTTON_PRESS) {

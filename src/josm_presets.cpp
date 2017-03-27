@@ -114,7 +114,7 @@ static bool store_value(presets_widget_t *widget, std::vector<tag_t *> &tags,
 }
 
 #ifdef USE_HILDON
-static gint table_expose_event(GtkWidget *widget, GdkEventExpose *event,
+static gint table_expose_event(GtkWidget *widget, G_GNUC_UNUSED GdkEventExpose *event,
 			 gboolean *first) {
 
   if(*first) {

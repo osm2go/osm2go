@@ -32,7 +32,7 @@
 #include <dbus/dbus-glib.h>
 
 static DBusHandlerResult
-signal_filter(DBusConnection *connection, DBusMessage *message, void *user_data) {
+signal_filter(G_GNUC_UNUSED DBusConnection *connection, DBusMessage *message, void *user_data) {
   /* User data is the place to store the received position */
   dbus_mm_pos_t *mmpos = user_data;
 

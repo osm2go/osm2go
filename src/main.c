@@ -870,10 +870,9 @@ void menu_cleanup(G_GNUC_UNUSED appdata_t *appdata) { }
 
 #else // !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
 
-void submenu_entry(appdata_t *appdata, HildonAppMenu *menu,
-		   const char *label, const char *value,
-		   GtkSignalFunc activate_cb) {
-
+void submenu_entry(G_GNUC_UNUSED appdata_t *appdata, G_GNUC_UNUSED HildonAppMenu *menu,
+                   G_GNUC_UNUSED const char *label, G_GNUC_UNUSED const char *value,
+                   G_GNUC_UNUSED GtkSignalFunc activate_cb) {
 }
 
 typedef struct {
@@ -943,8 +942,8 @@ static GtkWidget *app_menu_create(appdata_t *appdata,
 
 #define COLUMNS  2
 
-void on_submenu_entry_clicked(GtkButton *button, GtkWidget *menu) {
-
+void on_submenu_entry_clicked(G_GNUC_UNUSED GtkButton *button, GtkWidget *menu)
+{
   /* force closing of submenu dialog */
   gtk_dialog_response(GTK_DIALOG(menu), GTK_RESPONSE_NONE);
   gtk_widget_hide(menu);
@@ -1048,19 +1047,23 @@ static void submenu_cleanup(GtkWidget *menu) {
 }
 
 /* the view submenu */
-void on_submenu_view_clicked(GtkButton *button, appdata_t *appdata) {
+void on_submenu_view_clicked(G_GNUC_UNUSED GtkButton *button, appdata_t *appdata)
+{
   submenu_popup(appdata, appdata->app_menu_view);
 }
 
-void on_submenu_map_clicked(GtkButton *button, appdata_t *appdata) {
+void on_submenu_map_clicked(G_GNUC_UNUSED GtkButton *button, appdata_t *appdata)
+{
   submenu_popup(appdata, appdata->app_menu_map);
 }
 
-void on_submenu_wms_clicked(GtkButton *button, appdata_t *appdata) {
+void on_submenu_wms_clicked(G_GNUC_UNUSED GtkButton *button, appdata_t *appdata)
+{
   submenu_popup(appdata, appdata->app_menu_wms);
 }
 
-void on_submenu_track_clicked(GtkButton *button, appdata_t *appdata) {
+void on_submenu_track_clicked(G_GNUC_UNUSED GtkButton *button, appdata_t *appdata)
+{
   submenu_popup(appdata, appdata->app_menu_track);
 }
 
@@ -1311,7 +1314,7 @@ gboolean on_window_key_press(G_GNUC_UNUSED GtkWidget *widget,
 #if (MAEMO_VERSION_MAJOR == 5) && !defined(__i386__)
 /* get access to zoom buttons */
 static void
-on_window_realize(GtkWidget *widget, appdata_t *appdata) {
+on_window_realize(GtkWidget *widget, G_GNUC_UNUSED gpointer dummy) {
   if (widget->window) {
     unsigned char value = 1;
     Atom hildon_zoom_key_atom =
@@ -1415,7 +1418,7 @@ int main(int argc, char *argv[]) {
   /* at runtime with cygwin x */
 #if (MAEMO_VERSION_MAJOR == 5) && !defined(__i386__)
   g_signal_connect(G_OBJECT(appdata.window), "realize",
-		   G_CALLBACK(on_window_realize), &appdata);
+		   G_CALLBACK(on_window_realize), NULL);
 #endif // MAEMO_VERSION_MAJOR
 
 #else
