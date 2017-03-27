@@ -1452,7 +1452,7 @@ bool find_member_object_functor_to_rel::operator()(const member_t& member)
 struct node_to_relation_functor {
   find_member_object_functor_to_rel fc;
   relation_chain_t &rel_chain;
-  node_to_relation_functor(relation_chain_t &r, const node_t *n, bool v) : rel_chain(r), fc(n, v) {}
+  node_to_relation_functor(relation_chain_t &r, const node_t *n, bool v) : fc(n, v), rel_chain(r) {}
   void operator()(const std::pair<item_id_t, relation_t *> &pair);
 };
 

@@ -166,7 +166,7 @@ struct add_widget_functor {
   std::map<const presets_widget_t *, HintPair> &gtk_widgets;
   GtkWidget * const table;
   add_widget_functor(std::map<const presets_widget_t *, HintPair> &g, tag_context_t *c, GtkWidget *t, guint &r)
-    : row(r), gtk_widgets(g), tag_context(c), table(t) {}
+    : row(r), tag_context(c), gtk_widgets(g), table(t) {}
   void operator()(const presets_widget_t *w);
 };
 
