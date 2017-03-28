@@ -443,7 +443,7 @@ bool elemstyle_condition_t::matches(const base_object_t &obj) const {
          const char **value_strings = boolValue ? true_values : false_values;
          return parse_gboolean(v, value_strings);
       } else {
-        return !boolValue;
+        return false;
       }
     } else {
       if(!v || (value && strcasecmp(v, reinterpret_cast<const char *>(value)) != 0))
