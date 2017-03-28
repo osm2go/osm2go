@@ -534,7 +534,7 @@ static void diff_restore_way(xmlNodePtr node_node, osm_t *osm) {
     std::vector<tag_t *> ntags = xml_scan_tags(node_node->children);
     if (way->tags != ntags) {
       way->tags.replace(ntags);
-    } else {
+    } else if (!ntags.empty()) {
       std::for_each(ntags.begin(), ntags.end(), osm_tag_free);
       if (new_chain.empty()) {
         printf("way " ITEM_ID_FORMAT " has the same nodes and tags as upstream, discarding diff\n", id);
