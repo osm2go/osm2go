@@ -588,8 +588,9 @@ static map_item_t *map_way_new(map_t *map, canvas_group_t group,
 
   /* a ways outline itself is never dashed */
   if (group != CANVAS_GROUP_WAYS_OL)
-    if (way->draw.dashed)
-      canvas_item_set_dashed(map_item->item, width, way->draw.dash_length);
+    if (way->draw.dash_length_on > 0)
+      canvas_item_set_dashed(map_item->item, width,
+                             way->draw.dash_length_on, way->draw.dash_length_off);
 
   canvas_item_set_user_data(map_item->item, map_item);
 

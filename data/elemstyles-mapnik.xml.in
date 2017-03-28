@@ -21,7 +21,7 @@ Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
   <!-- Boundaries -->
   <rule>
     <condition k="boundary"/>
-    <line colour="#d1aacb" colour_bg="path-outline#ffffff" width_bg="2" width="2" dashed="true" dash_length="6" />
+    <line colour="#d1aacb" colour_bg="path-outline#ffffff" width_bg="2" width="2" dashed="6" />
     <scale_max>60000</scale_max>
   </rule>
 
@@ -44,7 +44,7 @@ Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
   </rule>
   <rule>
     <condition k="addr:interpolation" />
-    <line width="2" width_bg="2" colour="#707070" colour_bg="__BG_COL__" dash_length="2" dashed="true" />
+    <line width="2" width_bg="2" colour="#707070" colour_bg="__BG_COL__" dashed="2" />
     <scale_min>1</scale_min>
     <scale_max>6000</scale_max>
   </rule>
@@ -80,7 +80,7 @@ Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
 
   <rule>
     <condition k="railway"/><!-- catchall linear -->
-    <line width="4" width_bg="6" dashed="true" dash_length="4" colour="#eeeeee" colour_bg="#999999"/>
+    <line width="4" width_bg="6" dashed="4" colour="#eeeeee" colour_bg="#999999"/>
     <scale_min>1</scale_min>
     <scale_max>150000</scale_max>
   </rule>
@@ -962,49 +962,49 @@ Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
 
   <rule>
     <condition k="highway" v="footway"/>
-    <line colour="#f98072" colour_bg="path-outline#ffffff" dashed="true" dash_length="4" width="2" width_bg="3"/>
+    <line colour="#f98072" colour_bg="path-outline#ffffff" dashed="4" width="2" width_bg="3"/>
     <scale_min>1</scale_min>
     <scale_max>10000</scale_max>
   </rule>
 
   <rule>
     <condition k="highway" v="steps"/>
-    <line colour="#f98072" colour_bg="path-outline#ffffff" dashed="true" dash_length="2" width="4" width_bg="5"/>
+    <line colour="#f98072" colour_bg="path-outline#ffffff" dashed="2" width="4" width_bg="5"/>
     <scale_min>1</scale_min>
     <scale_max>10000</scale_max>
   </rule>
 
   <rule>
     <condition k="highway" v="cycleway"/>
-    <line colour="#5050fe" colour_bg="path-outline#ffffff" dashed="true" width="2" dash_length="4" width_bg="3"/>
+    <line colour="#5050fe" colour_bg="path-outline#ffffff" dashed="4" width="2" width_bg="3"/>
     <scale_min>1</scale_min>
     <scale_max>12500</scale_max>
   </rule>
 
   <rule>
     <condition k="highway" v="bridleway"/>
-    <line colour="#008000" colour_bg="path-outline#ffffff" dashed="true" width="2" dash_length="4" width_bg="3"/>
+    <line colour="#008000" colour_bg="path-outline#ffffff" dashed="4" width="2" width_bg="3"/>
     <scale_min>1</scale_min>
     <scale_max>12500</scale_max>
   </rule>
 
   <rule>
     <condition k="highway" v="byway"/>
-    <line colour="#f8eecc" colour_bg="path-outline#ffffff" dashed="true" width="2" dash_length="4" width_bg="3"/>
+    <line colour="#f8eecc" colour_bg="path-outline#ffffff" dashed="4" width="2" width_bg="3"/>
     <scale_min>1</scale_min>
     <scale_max>12500</scale_max>
   </rule>
 
   <rule>
     <condition k="highway" v="track"/>
-    <line colour="#996600" colour_bg="path-outline#ffffff" dashed="true" width="2" dash_length="4" width_bg="3"/>
+    <line colour="#996600" colour_bg="path-outline#ffffff" dashed="4" width="2" width_bg="3"/>
     <scale_min>1</scale_min>
     <scale_max>12500</scale_max>
   </rule>
 
   <rule>
     <condition k="highway" v="path"/>
-    <line colour="#cc7733" colour_bg="path-outline#ffffff" dashed="true" width="2" dash_length="4" width_bg="3"/>
+    <line colour="#cc7733" colour_bg="path-outline#ffffff" dashed="4" width="2" width_bg="3"/>
     <scale_min>1</scale_min>
     <scale_max>12500</scale_max>
   </rule>

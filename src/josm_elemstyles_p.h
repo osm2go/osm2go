@@ -50,8 +50,8 @@ struct elemstyle_condition_t {
 struct elemstyle_line_t {
   gint width;
   elemstyle_color_t color;
-  bool dashed: 8;
-  gint dash_length: 24;  // <= 0 means dash length is based on the width
+  guint dash_length_on: 16;
+  guint dash_length_off: 16;
 
   struct {
     gboolean valid : 8;

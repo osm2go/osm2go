@@ -372,17 +372,13 @@ void canvas_item_set_zoom_max(canvas_item_t *item, float zoom_max) {
 }
 
 void canvas_item_set_dashed(canvas_item_t *item,
-			    gint line_width, gint dash_length) {
+                            gint line_width, guint dash_length_on,
+                            guint dash_length_off) {
   GooCanvasLineDash *dash;
-  if (dash_length <= 0) {
-    dash_length = line_width + 1;
-  }
-  gfloat off_len = dash_length;
-  gfloat on_len = dash_length;
+  gfloat off_len = dash_length_off;
+  gfloat on_len = dash_length_on;
   guint cap = CAIRO_LINE_CAP_BUTT;
-  if (dash_length > line_width) {
-    off_len += ((gfloat)line_width)/2;
-    on_len -= ((gfloat)line_width)/2;
+  if ((gint)dash_length_on > line_width) {
     cap = CAIRO_LINE_CAP_ROUND;
   }
   dash = goo_canvas_line_dash_new(2, on_len, off_len, 0);

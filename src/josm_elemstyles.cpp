@@ -166,14 +166,10 @@ static const char *true_values[] = { "1", "yes", "true", 0 };
 static const char *false_values[] = { "0", "no", "false", 0 };
 
 static bool parse_gboolean(const char *bool_str, const char **value_strings) {
-  gboolean ret = false;
-  for (int i = 0; value_strings[i]; ++i) {
-    if (strcasecmp(bool_str, value_strings[i]) == 0) {
-      ret = true;
-      break;
-    }
-  }
-  return ret;
+  for (int i = 0; value_strings[i]; ++i)
+    if (strcasecmp(bool_str, value_strings[i]) == 0)
+      return true;
+  return false;
 }
 
 StyleSax::StyleSax()
@@ -293,7 +289,6 @@ void StyleSax::startElement(const xmlChar *name, const xmlChar **attrs)
     /* these have to be present */
     bool hasColor = false, hasWidth = false;
     elemstyle_line_t *line = elemstyle->line = g_new0(elemstyle_line_t, 1);
-    line->dash_length = DEFAULT_DASH_LENGTH;
 
     for(unsigned int i = 0; attrs[i]; i += 2) {
       if(strcmp(reinterpret_cast<const char *>(attrs[i]), "colour") == 0) {
@@ -311,9 +306,26 @@ void StyleSax::startElement(const xmlChar *name, const xmlChar **attrs)
         line->bg.color = strtoul(reinterpret_cast<const char*>(attrs[i + 1]), NULL, 10);
         hasBgColor = true;
       } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "dashed") == 0) {
-        line->dashed = parse_gboolean(reinterpret_cast<const char *>(attrs[i + 1]), true_values);
-      } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "dash_length") == 0) {
-        line->dash_length = strtoul(reinterpret_cast<const char*>(attrs[i + 1]), NULL, 10);
+        const char * const dval = reinterpret_cast<const char *>(attrs[i + 1]);
+        if(parse_gboolean(dval, true_values)) {
+          line->dash_length_on = DEFAULT_DASH_LENGTH;
+          line->dash_length_off = DEFAULT_DASH_LENGTH;
+        } else if (parse_gboolean(dval, false_values)) {
+          line->dash_length_on = 0;
+          line->dash_length_off = 0;
+        } else {
+          char *end;
+          line->dash_length_on = strtoul(dval, &end, 10);
+          if(*end == ',')
+            line->dash_length_off = strtoul(end + 1, &end, 10);
+          else
+            line->dash_length_on = line->dash_length_off;
+          if(G_UNLIKELY(*end != '\0')) {
+            printf("WARNING: invalid value '%s' for dashed\n", dval);
+            line->dash_length_on = 0;
+            line->dash_length_off = 0;
+          }
+        }
       }
     }
 
@@ -592,8 +604,8 @@ void josm_elemstyles_colorize_way_functor::apply_condition::operator()(const ele
       else
         way->draw.zoom_max = style->way.zoom_max;
 
-      way->draw.dashed = elemstyle->line->dashed ? TRUE : FALSE;
-      way->draw.dash_length = elemstyle->line->dash_length;
+      way->draw.dash_length_on = elemstyle->line->dash_length_on;
+      way->draw.dash_length_off = elemstyle->line->dash_length_off;
       way_processed = true;
     }
     break;

@@ -182,7 +182,7 @@ void canvas_item_set_pos(canvas_item_t *item, lpos_t *lpos);
 void canvas_item_set_radius(canvas_item_t *item, gint radius);
 void canvas_item_set_points(canvas_item_t *item, canvas_points_t *points);
 void canvas_item_set_zoom_max(canvas_item_t *item, float zoom_max);
-void canvas_item_set_dashed(canvas_item_t *item, gint line_width, gint dash_length);
+void canvas_item_set_dashed(canvas_item_t *item, gint line_width, guint dash_length_on, guint dash_length_off);
 void canvas_item_to_bottom(canvas_item_t *item);
 void canvas_item_set_user_data(canvas_item_t *item, void *data);
 void *canvas_item_get_user_data(canvas_item_t *item);

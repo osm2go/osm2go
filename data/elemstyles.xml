@@ -6,6 +6,8 @@ a little help:
 		- width absolute width in pixel in every zoom level
 		- realwidth relative width which will be scaled in meters, integer
 		- colour
+		- dashed x - dashed line, length of dashes / spaces in x pixels
+		- dashed x,y - dashed line, x length of dashes / spaces in y pixels
 4. area attributes
 		- colour
 5. icon attributes
@@ -42,7 +44,7 @@ Using both area and line attributes for the same key/value pair doesn't work!
 
 	<rule>
 		<condition k="addr:interpolation"/>
-		<line width="1" realwidth="1" dashed="true" dash_length="2" colour="#1c86ee"/>
+		<line width="1" realwidth="1" dashed="15,4" colour="#1c86ee"/>
 		<scale_min>1</scale_min>
 		<scale_max>5000</scale_max>
 	</rule>
@@ -134,7 +136,7 @@ Using both area and line attributes for the same key/value pair doesn't work!
 
 	<rule>
 		<condition k="highway" v="living_street"/>
-		<line width="1" realwidth="3" colour="#c0c0c0" width_bg="1" colour_bg="#00ff00" dashed="true" dash_length="3"/>
+		<line width="1" realwidth="3" colour="#c0c0c0" width_bg="1" colour_bg="#00ff00" dashed="9"/>
 		<scale_min>1</scale_min>
 		<scale_max>40000</scale_max>
 	</rule>
@@ -169,7 +171,7 @@ Using both area and line attributes for the same key/value pair doesn't work!
 
 	<rule>
 		<condition k="highway" v="path"/>
-		<line width="1" colour="#00ff00" dashed="true" dash_length="4"/>
+		<line width="1" colour="#00ff00" dashed="true"/>
 		<scale_min>1</scale_min>
 		<scale_max>12500</scale_max>
 	</rule>
@@ -184,7 +186,7 @@ Using both area and line attributes for the same key/value pair doesn't work!
 
 	<rule>
 		<condition k="highway" v="steps"/>
-		<line width="1" realwidth="1" dashed="true" dash_length="1" colour="#00ff00"/>
+		<line width="1" realwidth="1" dashed="2" colour="#00ff00"/>
 		<scale_min>1</scale_min>
 		<scale_max>10000</scale_max>
 	</rule>

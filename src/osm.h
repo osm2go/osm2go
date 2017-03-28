@@ -353,12 +353,12 @@ public:
 
   /* visual representation from elemstyle */
   struct {
-    guint color;
     float zoom_max;
+    guint color;
     guint flags : 8;
     gint width : 8;
-    gboolean dashed: 8;
-    guint dash_length: 8;
+    guint dash_length_on: 8;
+    guint dash_length_off: 8;
 
     union {
       struct {
