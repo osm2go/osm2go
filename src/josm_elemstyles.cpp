@@ -262,14 +262,16 @@ void StyleSax::startElement(const xmlChar *name, const xmlChar **attrs)
     styles.push_back(new elemstyle_t());
     break;
   case TagCondition: {
-    xmlChar *k = 0, *v = 0, *b = 0;
+    xmlChar *k = 0, *v = 0;
+    const xmlChar *b = 0;
+
     for(unsigned int i = 0; attrs[i]; i += 2) {
       if(strcmp(reinterpret_cast<const char *>(attrs[i]), "k") == 0)
         k = xmlStrdup(attrs[i + 1]);
       else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "v") == 0)
         v = xmlStrdup(attrs[i + 1]);
       else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "b") == 0)
-        b = xmlStrdup(attrs[i + 1]);
+        b = attrs[i + 1];
     }
     g_assert(k);
     styles.back()->conditions.push_back(elemstyle_condition_t(k, v));
