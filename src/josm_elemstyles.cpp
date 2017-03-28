@@ -403,13 +403,13 @@ std::vector<elemstyle_t *> josm_elemstyles_load(const char *name) {
   printf("Loading JOSM elemstyles ...\n");
 
   const std::string &filename = find_file(name);
-  if(filename.empty()) {
+  if(G_UNLIKELY(filename.empty())) {
     printf("elemstyle file not found\n");
     return std::vector<elemstyle_t *>();
   }
 
   StyleSax sx;
-  if(!sx.parse(filename))
+  if(G_UNLIKELY(!sx.parse(filename)))
     fprintf(stderr, "error parsing elemstyles\n");
 
   return sx.styles;

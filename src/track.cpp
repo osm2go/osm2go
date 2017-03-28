@@ -533,7 +533,7 @@ TrackSax::TrackSax()
 
 bool TrackSax::parse(const char *filename)
 {
-  if (xmlSAXUserParseFile(&handler, this, filename) != 0)
+  if(G_UNLIKELY(xmlSAXUserParseFile(&handler, this, filename) != 0))
     return false;
 
   return track && !track->segments.empty();

@@ -328,12 +328,12 @@ struct presets_items *josm_presets_load(void) {
   printf("Loading JOSM presets ...\n");
 
   const std::string &filename = find_file("defaultpresets.xml");
-  if(filename.empty())
+  if(G_UNLIKELY(filename.empty()))
     return NULL;
 
   /* parse the file and get the DOM */
   xmlDoc *doc = NULL;
-  if((doc = xmlReadFile(filename.c_str(), NULL, 0)) == NULL) {
+  if(G_UNLIKELY((doc = xmlReadFile(filename.c_str(), NULL, 0)) == NULL)) {
     xmlErrorPtr errP = xmlGetLastError();
     printf("presets download failed: "
 	   "XML error while parsing:\n"
