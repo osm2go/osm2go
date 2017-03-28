@@ -390,8 +390,11 @@ void StyleSax::endElement(const xmlChar *name)
   g_assert(it != tags.end());
   g_assert(state == it->second.second);
 
-  if(state == TagRule && styles.back()->conditions.empty())
+  if(G_UNLIKELY(state == TagRule && styles.back()->conditions.empty())) {
     printf("Rule %zu has no conditions\n", styles.size());
+    delete styles.back();
+    styles.pop_back();
+  }
 
   state = it->second.first;
 }
@@ -479,8 +482,7 @@ struct colorize_node {
 
 void colorize_node::operator()(elemstyle_t *elemstyle)
 {
-  // Rule without conditions matches everything (should it?)
-  // For rule with conditions, if any condition mismatches->rule mismatches
+  // if any condition mismatches->rule mismatches
   bool match = std::find_if(elemstyle->conditions.begin(),
                             elemstyle->conditions.end(),
                             condition_not_matches_obj(node)) == elemstyle->conditions.end();
