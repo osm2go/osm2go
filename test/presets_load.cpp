@@ -89,6 +89,7 @@ int main(int argc, char **argv)
     return 1;
   }
 
+  std::cout << presets->chunks.size() << " chunks found" << std::endl;
   std::cout << presets->items.size() << " top level items found" << std::endl;
 
   std::for_each(presets->items.begin(), presets->items.end(), checkItem);
