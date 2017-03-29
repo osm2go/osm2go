@@ -42,11 +42,72 @@ static void err(const std::string &filename)
   std::cerr << filename << std::endl;
 }
 
+struct counter {
+  unsigned int &groups;
+  unsigned int &items;
+  unsigned int &separators;
+  unsigned int &combos;
+  unsigned int &combo_entries;
+  unsigned int &labels;
+  unsigned int &keys;
+  unsigned int &checks;
+  unsigned int &refs;
+  counter(unsigned int &gr, unsigned int &it, unsigned int &sep, unsigned int &c,
+          unsigned int &ce, unsigned int &lb, unsigned int &ky,  unsigned int &chk,
+          unsigned int &ref)
+    : groups(gr), items(it), separators(sep), combos(c), combo_entries(ce),
+      labels(lb), keys(ky), checks(chk), refs(ref) {}
+  void operator()(const presets_item_t *p);
+  void operator()(const presets_widget_t *w);
+  void operator()(const ChunkMap::value_type &p) {
+    operator()(p.second);
+  }
+};
+
+void counter::operator()(const presets_item_t *p)
+{
+  if(p->type & presets_item_t::TY_GROUP) {
+    const presets_item_group * const gr = static_cast<const presets_item_group *>(p);
+    std::for_each(gr->items.begin(), gr->items.end(), *this);
+    groups++;
+    return;
+  } else if (p->type == presets_item_t::TY_SEPARATOR) {
+    separators++;
+  } else {
+    items++;
+    std::for_each(p->widgets.begin(), p->widgets.end(), *this);
+  }
+}
+
+void counter::operator()(const presets_widget_t *w)
+{
+  switch(w->type) {
+  case WIDGET_TYPE_LABEL:
+    labels++;
+    break;
+  case WIDGET_TYPE_SEPARATOR:
+  case WIDGET_TYPE_SPACE:
+  case WIDGET_TYPE_TEXT:
+    break;
+  case WIDGET_TYPE_COMBO:
+    combos++;
+    combo_entries += static_cast<const presets_widget_combo *>(w)->values.size();
+    break;
+  case WIDGET_TYPE_CHECK:
+    checks++;
+    break;
+  case WIDGET_TYPE_KEY:
+    keys++;
+    break;
+  case WIDGET_TYPE_REFERENCE:
+    refs++;
+    break;
+  }
+}
+
 /**
  * @brief check icons of the given item
  * @param item the item to check
- * @returns if a missing icon was detected
- * @retval false all icons below this nodes were found (if any)
  */
 static void checkItem(const presets_item_t *item)
 {
@@ -89,8 +150,32 @@ int main(int argc, char **argv)
     return 1;
   }
 
-  std::cout << presets->chunks.size() << " chunks found" << std::endl;
-  std::cout << presets->items.size() << " top level items found" << std::endl;
+  unsigned int groups = 0;
+  unsigned int items = 0;
+  unsigned int separators = 0;
+  unsigned int combos = 0;
+  unsigned int combo_entries = 0;
+  unsigned int labels = 0;
+  unsigned int keys = 0;
+  unsigned int checks = 0;
+  unsigned int refs = 0;
+  counter cnt(groups, items, separators, combos, combo_entries, labels, keys, checks, refs);
+
+  std::for_each(presets->items.begin(), presets->items.end(), cnt);
+  std::for_each(presets->chunks.begin(), presets->chunks.end(), cnt);
+
+  std::cout
+    << "chunks found: " << presets->chunks.size() << std::endl
+    << "top level items found: " << presets->items.size() << std::endl
+    << "groups: " << groups << std::endl
+    << "items: " << items << std::endl
+    << "separators: " << separators << std::endl
+    << "combos: " << combos << std::endl
+    << "combo_entries: " << combo_entries << std::endl
+    << "labels: " << labels << std::endl
+    << "keys: " << keys << std::endl
+    << "checks: " << checks << std::endl
+    << "refs: " << refs << std::endl;
 
   std::for_each(presets->items.begin(), presets->items.end(), checkItem);
 
