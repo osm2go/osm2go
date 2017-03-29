@@ -961,7 +961,8 @@ GtkWidget *presets_widget_combo::attach(GtkTable *table, guint &row, const char 
   const std::vector<std::string> &d = display_values.empty() ? values : display_values;
 
   for(std::vector<std::string>::size_type count = 0; count < d.size(); count++) {
-    const std::string &value = d[count];
+    const std::string &value = d[count].empty() ? values[count] : d[count];
+
     combo_box_append_text(ret, value.c_str());
 
     if(preset && values[count] == preset) {

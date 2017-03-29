@@ -134,8 +134,8 @@ static presets_widget_t *parse_widget(xmlNode *cur_node, const ChunkMap &chunks)
           xmlFree(value);
 
           xmlChar *display_value = xmlGetProp(child, BAD_CAST "display_value");
-          dv.push_back(display_value ? reinterpret_cast<char *>(display_value) : v.back());
-          hasDV |= !!display_value;
+          dv.push_back(display_value ? reinterpret_cast<char *>(display_value) : std::string());
+          hasDV |= !dv.back().empty();
           xmlFree(display_value);
         }
       }
