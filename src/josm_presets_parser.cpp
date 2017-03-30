@@ -175,13 +175,11 @@ static presets_widget_t *parse_widget(xmlNode *cur_node, const ChunkMap &chunks)
                      xmlGetProp(cur_node, BAD_CAST "value"));
   } else if(strcmp((char*)cur_node->name, "check") == 0) {
     /* --------- check widget --------- */
-    presets_widget_checkbox *check =
-                    new presets_widget_checkbox(
+    widget = new presets_widget_checkbox(
                                xmlGetProp(cur_node, BAD_CAST "key"),
                                xmlGetProp(cur_node, BAD_CAST "text"),
-                               xml_get_prop_is(cur_node, "default", "on"));
-    widget = check;
-    check->value_on = xmlGetProp(cur_node, BAD_CAST "value_on");
+                               xml_get_prop_is(cur_node, "default", "on"),
+                               xmlGetProp(cur_node, BAD_CAST "value_on"));
   } else if(strcmp((char*)cur_node->name, "reference") == 0) {
     xmlChar *id = xmlGetProp(cur_node, BAD_CAST "ref");
     if(!id) {
@@ -231,14 +229,10 @@ static void parse_widgets(xmlNode *a_node, presets_item *item,
 }
 
 static presets_item_t *parse_item(xmlNode *a_node, const ChunkMap &chunks) {
-  presets_item *item = new presets_item(josm_type_parse(xmlGetProp(a_node, BAD_CAST "type")));
-
-  /* ------ parse items own properties ------ */
-  item->name = xmlGetProp(a_node, BAD_CAST "name");
-
-  item->icon = josm_icon_name_adjust(xmlGetProp(a_node, BAD_CAST "icon"));
-
-  item->addEditName = xml_get_prop_is(a_node, "preset_name_label", "true");
+  presets_item *item = new presets_item(josm_type_parse(xmlGetProp(a_node, BAD_CAST "type")),
+                                        xmlGetProp(a_node, BAD_CAST "name"),
+                                        josm_icon_name_adjust(xmlGetProp(a_node, BAD_CAST "icon")),
+                                        xml_get_prop_is(a_node, "preset_name_label", "true"));
 
   parse_widgets(a_node, item, chunks);
   return item;
@@ -246,16 +240,13 @@ static presets_item_t *parse_item(xmlNode *a_node, const ChunkMap &chunks) {
 
 static presets_item_t *parse_group(xmlDocPtr doc, xmlNode *a_node, presets_item_group *parent,
                                    const ChunkMap &chunks) {
-  xmlNode *cur_node = NULL;
-
-  presets_item_group *group = new presets_item_group(presets_item_t::TY_GROUP, parent);
-
+  presets_item_group *group = new presets_item_group(presets_item_t::TY_GROUP,
+                                                     parent,
+                                                     xmlGetProp(a_node, BAD_CAST "name"),
+                                                     josm_icon_name_adjust(xmlGetProp(a_node, BAD_CAST "icon")));
   /* ------ parse groups own properties ------ */
-  group->name = xmlGetProp(a_node, BAD_CAST "name");
 
-  group->icon = josm_icon_name_adjust(xmlGetProp(a_node, BAD_CAST "icon"));
-
-  for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
+  for (xmlNode *cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcmp((char*)cur_node->name, "item") == 0) {
         presets_item_t *preset = parse_item(cur_node, chunks);
@@ -463,10 +454,10 @@ presets_widget_key::~presets_widget_key()
   xmlFree(value);
 }
 
-presets_widget_checkbox::presets_widget_checkbox(xmlChar* key, xmlChar* text, bool deflt)
+presets_widget_checkbox::presets_widget_checkbox(xmlChar* key, xmlChar* text, bool deflt, xmlChar *von)
   : presets_widget_t(WIDGET_TYPE_CHECK, key, text)
   , def(deflt)
-  , value_on(0)
+  , value_on(von)
 {
 }
 
@@ -500,6 +491,13 @@ presets_item_visible::~presets_item_visible()
 presets_item::~presets_item()
 {
   xmlFree(link);
+}
+
+presets_item_group::presets_item_group(const unsigned int types, presets_item_group *p,
+                                       xmlChar *n, xmlChar *ic)
+  : presets_item_visible(types | TY_GROUP, n, ic), parent(p), widget(0)
+{
+  g_assert(p == 0 || ((p->type & TY_GROUP) != 0));
 }
 
 presets_item_group::~presets_item_group()

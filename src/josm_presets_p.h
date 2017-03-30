@@ -135,7 +135,7 @@ public:
 
 class presets_widget_checkbox : public presets_widget_t {
 public:
-  presets_widget_checkbox(xmlChar *key, xmlChar *text, bool deflt);
+  presets_widget_checkbox(xmlChar *key, xmlChar *text, bool deflt, xmlChar *von = 0);
   ~presets_widget_checkbox();
 
   const bool def;
@@ -187,8 +187,8 @@ public:
 
 class presets_item_visible : public presets_item_t {
 public:
-  presets_item_visible(unsigned int t)
-    : presets_item_t(t), name(0), icon(0) {}
+  presets_item_visible(unsigned int t, xmlChar *n = 0, xmlChar *ic = 0)
+    : presets_item_t(t), name(n), icon(ic) {}
   virtual ~presets_item_visible();
 
   xmlChar *name, *icon;
@@ -196,8 +196,8 @@ public:
 
 class presets_item : public presets_item_visible {
 public:
-  presets_item(unsigned int t)
-    : presets_item_visible(t), link(0), addEditName(false) {}
+  presets_item(unsigned int t,  xmlChar *n = 0, xmlChar *ic = 0, bool edname = false)
+    : presets_item_visible(t, n, ic), link(0), addEditName(edname) {}
   virtual ~presets_item();
 
   xmlChar *link;
@@ -211,8 +211,8 @@ public:
 
 class presets_item_group : public presets_item_visible {
 public:
-  presets_item_group(const unsigned int types, presets_item_group *p)
-    : presets_item_visible(types | TY_GROUP), parent(p), widget(0) {}
+  presets_item_group(const unsigned int types, presets_item_group *p,
+                     xmlChar *n = 0, xmlChar *ic = 0);
   virtual ~presets_item_group();
 
   presets_item_group * const parent;
