@@ -59,9 +59,6 @@ struct counter {
       labels(lb), keys(ky), checks(chk), refs(ref) {}
   void operator()(const presets_item_t *p);
   void operator()(const presets_widget_t *w);
-  void operator()(const ChunkMap::value_type &p) {
-    operator()(p.second);
-  }
 };
 
 void counter::operator()(const presets_item_t *p)

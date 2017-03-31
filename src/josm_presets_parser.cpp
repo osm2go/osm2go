@@ -32,6 +32,8 @@
 #error "Tree not enabled in libxml"
 #endif
 
+typedef std::map<std::string, presets_item *> ChunkMap;
+
 /* --------------------- presets.xml parsing ----------------------- */
 
 xmlChar *josm_icon_name_adjust(xmlChar *xname) {
@@ -284,7 +286,17 @@ static presets_item_t *parse_group(xmlDocPtr doc, xmlNode *a_node, presets_item_
   return group;
 }
 
+struct move_chunks_functor {
+  std::vector<presets_item_t *> &chunks;
+  move_chunks_functor(std::vector<presets_item_t *> &c) : chunks(c) {}
+  void operator()(const ChunkMap::value_type &p) {
+    chunks.push_back(p.second);
+  }
+};
+
 static void parse_annotations(xmlDocPtr doc, xmlNode *a_node, struct presets_items &presets) {
+  ChunkMap chunks;
+
   // <chunk> elements are first
   xmlNode *cur_node;
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
@@ -296,12 +308,12 @@ static void parse_annotations(xmlDocPtr doc, xmlNode *a_node, struct presets_ite
         } else {
           std::string id(reinterpret_cast<char *>(xid));
           xmlFree(xid);
-          if(presets.chunks.find(id) != presets.chunks.end()) {
+          if(chunks.find(id) != chunks.end()) {
             printf("ignoring presets/chunk duplicate id %s\n", id.c_str());
           } else {
             presets_item *item = new presets_item(presets_item_t::TY_ALL);
-            parse_widgets(cur_node, item, presets.chunks);
-            presets.chunks[id] = item;
+            parse_widgets(cur_node, item, chunks);
+            chunks[id] = item;
           }
         }
       } else {
@@ -314,9 +326,9 @@ static void parse_annotations(xmlDocPtr doc, xmlNode *a_node, struct presets_ite
     if (cur_node->type == XML_ELEMENT_NODE) {
       presets_item_t *preset = 0;
       if(strcmp((char*)cur_node->name, "item") == 0) {
-        preset = parse_item(cur_node, presets.chunks);
+        preset = parse_item(cur_node, chunks);
       } else if(strcmp((char*)cur_node->name, "group") == 0) {
-        preset = parse_group(doc, cur_node, 0, presets.chunks);
+        preset = parse_group(doc, cur_node, 0, chunks);
       } else if(strcmp((char*)cur_node->name, "separator") == 0) {
         preset = new presets_item_separator();
       } else
@@ -325,6 +337,10 @@ static void parse_annotations(xmlDocPtr doc, xmlNode *a_node, struct presets_ite
         presets.items.push_back(preset);
     }
   }
+
+  // now move all chunks to the presets list
+  presets.chunks.reserve(presets.chunks.size() + chunks.size());
+  std::for_each(chunks.begin(), chunks.end(), move_chunks_functor(presets.chunks));
 }
 
 struct presets_items *josm_presets_load(void) {
@@ -369,10 +385,6 @@ static inline void free_widget(presets_widget_t *widget) {
 
 static void free_item(presets_item_t *item) {
   delete item;
-}
-
-static inline void free_item_pair(const std::pair<std::string, presets_item *> &pair) {
-  delete pair.second;
 }
 
 void josm_presets_free(struct presets_items *presets) {
@@ -551,7 +563,7 @@ presets_item_group::~presets_item_group()
 presets_items::~presets_items()
 {
   std::for_each(items.begin(), items.end(), free_item);
-  std::for_each(chunks.begin(), chunks.end(), free_item_pair);
+  std::for_each(chunks.begin(), chunks.end(), free_item);
 }
 
 // vim:et:ts=8:sw=2:sts=2:ai

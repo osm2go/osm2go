@@ -267,12 +267,10 @@ public:
   std::vector<presets_item_t *> items;
 };
 
-typedef std::map<std::string, presets_item *> ChunkMap;
-
 struct presets_items {
   ~presets_items();
   std::vector<presets_item_t *> items;
-  ChunkMap chunks;
+  std::vector<presets_item_t *> chunks;
 };
 
 static inline bool is_widget_interactive(const presets_widget_t *w) {
