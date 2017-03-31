@@ -2172,7 +2172,11 @@ bool member_t::operator==(const member_t &other) const
   if(object != other.object)
     return false;
 
-  return strcmp(role, other.role) == 0;
+  // check if any of them is 0, strcmp() does not like that
+  if(!!role ^ !!other.role)
+    return false;
+
+  return !role || strcmp(role, other.role) == 0;
 }
 
 relation_t::relation_t()
