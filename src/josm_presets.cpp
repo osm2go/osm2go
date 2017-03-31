@@ -71,7 +71,7 @@ static void attach_right(GtkTable *table, const char *text, GtkWidget *widget, g
  * @param ctag iterator of the tag to edit, tags.end() in case it does not yet exist
  * @param value the new value
  */
-static bool store_value(presets_widget_t *widget, std::vector<tag_t *> &tags,
+static bool store_value(const presets_widget_t *widget, std::vector<tag_t *> &tags,
                         std::vector<tag_t *>::iterator ctag, const char *value) {
   bool changed = false;
   if(value && strlen(value)) {
@@ -175,8 +175,7 @@ void add_widget_functor::operator()(const presets_widget_t *w)
 {
   if(w->type == WIDGET_TYPE_REFERENCE) {
     const presets_widget_reference * const r = static_cast<const presets_widget_reference *>(w);
-    add_widget_functor fc(gtk_widgets, tag_context, table, row);
-    std::for_each(r->item->widgets.begin(), r->item->widgets.end(), fc);
+    std::for_each(r->item->widgets.begin(), r->item->widgets.end(), *this);
     return;
   }
 
@@ -193,6 +192,53 @@ void add_widget_functor::operator()(const presets_widget_t *w)
 
   if(widget)
     gtk_widgets[w] = HintPair(widget, otag);
+}
+
+struct get_widget_functor {
+  bool &changed;
+  std::vector<tag_t *> &tags;
+  const std::map<const presets_widget_t *, HintPair> &gtk_widgets;
+  const std::map<const presets_widget_t *, HintPair>::const_iterator hintEnd;
+  get_widget_functor(bool &c, std::vector<tag_t *> &t,
+                     const std::map<const presets_widget_t *, HintPair> &g)
+    : changed(c), tags(t), gtk_widgets(g), hintEnd(g.end()) {}
+  void operator()(const presets_widget_t *w);
+};
+
+void get_widget_functor::operator()(const presets_widget_t* w)
+{
+  const std::map<const presets_widget_t *, HintPair>::const_iterator hint = gtk_widgets.find(w);
+  const HintPair &pair = hint != hintEnd ? hint->second : HintPair(0, 0);
+  tag_t *otag = pair.second;
+  const std::vector<tag_t *>::iterator citEnd = tags.end();
+  std::vector<tag_t *>::iterator ctag = otag ?
+                                        std::find(tags.begin(), citEnd, otag) :
+                                        citEnd; // the place to do the change
+  const char *text;
+  g_assert(!otag == (ctag == citEnd));
+
+  switch(w->type) {
+  case WIDGET_TYPE_KEY:
+    g_assert(ctag == citEnd);
+    ctag = std::find_if(tags.begin(), citEnd, find_tag_functor(w->key));
+    // fallthrough
+  case WIDGET_TYPE_CHECK:
+  case WIDGET_TYPE_COMBO:
+  case WIDGET_TYPE_TEXT:
+    text = w->getValue(pair.first);
+    break;
+
+  case WIDGET_TYPE_REFERENCE: {
+    const presets_widget_reference * const r = static_cast<const presets_widget_reference *>(w);
+    std::for_each(r->item->widgets.begin(), r->item->widgets.end(), *this);
+    return;
+  }
+
+  default:
+    return;
+  }
+
+  changed |= store_value(w, tags, ctag, text);
 }
 
 static void presets_item_dialog(presets_context_t *context,
@@ -303,37 +349,9 @@ static void presets_item_dialog(presets_context_t *context,
   if(ok) {
     /* handle all children of the table */
     bool changed = false;
-    const std::map<const presets_widget_t *, HintPair>::const_iterator hintEnd = gtk_widgets.end();
 
-    std::vector<tag_t *> &tags = context->tag_context->tags;
-    for(it = item->widgets.begin(); it != itEnd; it++) {
-      const std::map<const presets_widget_t *, HintPair>::const_iterator hint = gtk_widgets.find(*it);
-      const HintPair &pair = hint != hintEnd ? hint->second : HintPair(0, 0);
-      tag_t *otag = pair.second;
-      const std::vector<tag_t *>::iterator citEnd = tags.end();
-      std::vector<tag_t *>::iterator ctag = otag ?
-                                            std::find(tags.begin(), citEnd, otag) :
-                                            citEnd; // the place to do the change
-      const char *text;
-      g_assert(!otag == (ctag == citEnd));
-
-      switch((*it)->type) {
-      case WIDGET_TYPE_KEY:
-        g_assert(ctag == citEnd);
-        ctag = std::find_if(tags.begin(), citEnd, find_tag_functor((*it)->key));
-        // fallthrough
-      case WIDGET_TYPE_CHECK:
-      case WIDGET_TYPE_COMBO:
-      case WIDGET_TYPE_TEXT:
-        text = (*it)->getValue(pair.first);
-        break;
-
-      default:
-        continue;
-      }
-
-      changed |= store_value(*it, tags, ctag, text);
-    }
+    get_widget_functor fc(changed, context->tag_context->tags, gtk_widgets);
+    std::for_each(item->widgets.begin(), itEnd, fc);
 
     if(changed)
       context->tag_context->info_tags_replace();
