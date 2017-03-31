@@ -30,11 +30,11 @@ __&lt;reference&gt;__        |                               | supported |
 __&nbsp;__                   | ref                           | supported | required
 __&lt;key&gt;__              |                               | supported |
 __&nbsp;__                   | value                         | supported | required
-__&nbsp;__                   | match                         | ignored   | matches always work like "keyvalue"
+__&nbsp;__                   | match                         | supported |
 __&lt;text&gt;__             |                               | supported |
 __&nbsp;__                   | key                           | supported | required
 __&nbsp;__                   | text                          | supported |
-__&nbsp;__                   | match                         | ignored   | matches always work like "keyvalue"
+__&nbsp;__                   | match                         | supported | "keyvalue" and "keyvalue!" behave like "key" and "key!"
 __&nbsp;__                   | default                       | supported |
 __&nbsp;__                   | use_last_as_default           | ignored   |
 __&nbsp;__                   | auto_increment                | ignored   |
@@ -48,7 +48,7 @@ __&nbsp;__                   | values                        | supported |
 __&nbsp;__                   | values_sort                   | ignored   |
 __&nbsp;__                   | delimiter                     | supported |
 __&nbsp;__                   | default                       | supported |
-__&nbsp;__                   | match                         | ignored   | matches always work like "keyvalue"
+__&nbsp;__                   | match                         | supported |
 __&nbsp;__                   | display_values                | supported |
 __&nbsp;__                   | short_descriptions            | ignored   |
 __&nbsp;__                   | values_context                | ignored   |
@@ -90,7 +90,7 @@ __&nbsp;__                   | value_on                      | supported |
 __&nbsp;__                   | value_off                     | ignored   |
 __&nbsp;__                   | disable_off                   | ignored   |
 __&nbsp;__                   | default                       | supported | only checked for "on" or not
-__&nbsp;__                   | match                         | ignored   | matches always work like "keyvalue"
+__&nbsp;__                   | match                         | supported |
 __&lt;label&gt;__            |                               | supported |
 __&nbsp;__                   | text                          | supported | required
 __&lt;space/&gt;__           |                               | supported | ignored on Hildon

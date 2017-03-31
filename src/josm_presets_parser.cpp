@@ -93,6 +93,17 @@ static presets_item_t::item_type josm_type_parse(xmlChar *xtype) {
   return static_cast<presets_item_t::item_type>(type_mask);
 }
 
+// custom find to avoid memory allocations for std::string
+template<typename T>
+struct str_map_find {
+  const char * const name;
+  str_map_find(const typename T::key_type n)
+    : name(reinterpret_cast<const char *>(n)) {}
+  bool operator()(const typename T::value_type &p) {
+    return (strcmp(reinterpret_cast<const char *>(p.first), name) == 0);
+  }
+};
+
 static void parse_widgets(xmlNode *a_node, presets_item *item,
                           const ChunkMap &chunks);
 
@@ -120,7 +131,8 @@ static presets_widget_t *parse_widget(xmlNode *cur_node, const ChunkMap &chunks)
     widget = new presets_widget_text(
                      xmlGetProp(cur_node, BAD_CAST "key"),
                      xmlGetProp(cur_node, BAD_CAST "text"),
-                     xmlGetProp(cur_node, BAD_CAST "default"));
+                     xmlGetProp(cur_node, BAD_CAST "default"),
+		     xmlGetProp(cur_node, BAD_CAST "match"));
   } else if(strcmp((char*)cur_node->name, "combo") == 0) {
     /* --------- combo widget --------- */
     std::vector<std::string> v, dv;
@@ -166,13 +178,15 @@ static presets_widget_t *parse_widget(xmlNode *cur_node, const ChunkMap &chunks)
                                   xmlGetProp(cur_node, BAD_CAST "key"),
                                   xmlGetProp(cur_node, BAD_CAST "text"),
                                   xmlGetProp(cur_node, BAD_CAST "default"),
+                                  xmlGetProp(cur_node, BAD_CAST "match"),
                                   v, dv);
   } else if(strcmp((char*)cur_node->name, "key") == 0) {
 
     /* --------- invisible key widget --------- */
     widget = new presets_widget_key(
                      xmlGetProp(cur_node, BAD_CAST "key"),
-                     xmlGetProp(cur_node, BAD_CAST "value"));
+                     xmlGetProp(cur_node, BAD_CAST "value"),
+                     xmlGetProp(cur_node, BAD_CAST "match"));
   } else if(strcmp((char*)cur_node->name, "check") == 0) {
     /* --------- check widget --------- */
     widget = new presets_widget_checkbox(
@@ -365,10 +379,36 @@ void josm_presets_free(struct presets_items *presets) {
   delete presets;
 }
 
-presets_widget_t::presets_widget_t(presets_widget_type_t t, xmlChar *key, xmlChar *text)
+presets_widget_t::Match presets_widget_t::parseMatch(xmlChar *matchstring, Match def)
+{
+  typedef std::map<const xmlChar *, Match> VMap;
+  static VMap matches;
+  if(G_UNLIKELY(matches.empty())) {
+    matches[BAD_CAST "none"] = MatchIgnore;
+    matches[BAD_CAST "key"] = MatchKey;
+    matches[BAD_CAST "key!"] = MatchKey_Force;
+    matches[BAD_CAST "keyvalue"] = MatchKeyValue;
+    matches[BAD_CAST "keyvalue!"] = MatchKeyValue_Force;
+  }
+  const VMap::const_iterator itEnd = matches.end();
+  const VMap::const_iterator it = !matchstring ? itEnd : std::find_if(
+#if __cplusplus >= 201103L
+                                               matches.cbegin(),
+#else
+                                               VMap::const_iterator(matches.begin()),
+#endif
+                                               itEnd, str_map_find<VMap>(matchstring));
+
+  xmlFree(matchstring);
+
+  return (it == itEnd) ? def : it->second;
+}
+
+presets_widget_t::presets_widget_t(presets_widget_type_t t, Match m, xmlChar *key, xmlChar *text)
   : type(t)
   , key(key)
   , text(text)
+  , match(m)
 {
 }
 
@@ -391,8 +431,9 @@ bool presets_widget_t::is_interactive() const
   }
 }
 
-presets_widget_text::presets_widget_text(xmlChar *key, xmlChar *text, xmlChar *deflt)
-  : presets_widget_t(WIDGET_TYPE_TEXT, key, text)
+presets_widget_text::presets_widget_text(xmlChar *key, xmlChar *text,
+                                         xmlChar *deflt, xmlChar *matches)
+  : presets_widget_t(WIDGET_TYPE_TEXT, parseMatch(matches), key, text)
   , def(deflt)
 {
 }
@@ -402,9 +443,10 @@ presets_widget_text::~presets_widget_text()
   xmlFree(def);
 }
 
-presets_widget_combo::presets_widget_combo(xmlChar *key, xmlChar *text, xmlChar *deflt,
+presets_widget_combo::presets_widget_combo(xmlChar *key, xmlChar *text,
+                                           xmlChar *deflt, xmlChar *matches,
                                            std::vector<std::string> &vals, std::vector<std::string> &dvals)
-  : presets_widget_t(WIDGET_TYPE_COMBO, key, text)
+  : presets_widget_t(WIDGET_TYPE_COMBO, parseMatch(matches), key, text)
   , def(deflt)
 #if __cplusplus >= 201103L
   , values(std::move(vals))
@@ -443,8 +485,8 @@ std::vector<std::string> presets_widget_combo::split_string(const xmlChar *str, 
   return ret;
 }
 
-presets_widget_key::presets_widget_key(xmlChar* key, xmlChar* val)
-  : presets_widget_t(WIDGET_TYPE_KEY, key)
+presets_widget_key::presets_widget_key(xmlChar* key, xmlChar* val, xmlChar *matches)
+  : presets_widget_t(WIDGET_TYPE_KEY, parseMatch(matches, MatchKeyValue_Force), key)
   , value(val)
 {
 }
@@ -454,8 +496,9 @@ presets_widget_key::~presets_widget_key()
   xmlFree(value);
 }
 
-presets_widget_checkbox::presets_widget_checkbox(xmlChar* key, xmlChar* text, bool deflt, xmlChar *von)
-  : presets_widget_t(WIDGET_TYPE_CHECK, key, text)
+presets_widget_checkbox::presets_widget_checkbox(xmlChar* key, xmlChar* text,
+                                                 bool deflt, xmlChar *matches, xmlChar *von)
+  : presets_widget_t(WIDGET_TYPE_CHECK, parseMatch(matches), key, text)
   , def(deflt)
   , value_on(von)
 {

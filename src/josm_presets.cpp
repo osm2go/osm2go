@@ -24,6 +24,7 @@
 #include "icon.h"
 #include "info.h"
 #include "misc.h"
+#include "osm.h"
 
 #include <algorithm>
 #include <cstring>
@@ -344,42 +345,40 @@ static void presets_item_dialog(presets_context_t *context,
 
 /* ------------------- the item list (popup menu) -------------- */
 
+/**
+ * @brief find the first widget that gives a negative match
+ */
 struct used_preset_functor {
   const std::vector<tag_t *> &tags;
   bool &is_interactive;
-  bool &matches_all;
+  bool &hasPositive;   ///< set if a positive match is found at all
   used_preset_functor(const std::vector<tag_t *> &t, bool &i, bool &m)
-    : tags(t), is_interactive(i), matches_all(m) {}
+    : tags(t), is_interactive(i), hasPositive(m) {}
   bool operator()(const presets_widget_t *w);
 };
 
 bool used_preset_functor::operator()(const presets_widget_t* w)
 {
-  if(w->type != WIDGET_TYPE_KEY) {
-    is_interactive |= w->is_interactive();
-    return false;
-  }
-  const tag_t t(reinterpret_cast<char *>(w->key),
-                reinterpret_cast<char *>(static_cast<const presets_widget_key *>(w)->value));
-  if(!osm_tag_key_and_value_present(tags, t))
-    return true;
+  is_interactive |= w->is_interactive();
 
-  matches_all = true;
-  return false;
+  int ret = w->matches(tags);
+  hasPositive |= (ret > 0);
+
+  return (ret < 0);
 }
 
 /**
  * @brief check if the currently active object uses this preset and the preset is interactive
  */
-static bool preset_is_used(const presets_item_t *item, const std::vector<tag_t *> &tags)
+bool presets_item_t::matches(const std::vector<tag_t *> &tags) const
 {
   bool is_interactive = false;
-  bool matches_all = false;
-  used_preset_functor fc(tags, is_interactive, matches_all);
-  if(std::find_if(item->widgets.begin(), item->widgets.end(), fc) != item->widgets.end())
+  bool hasPositive = false;
+  used_preset_functor fc(tags, is_interactive, hasPositive);
+  if(std::find_if(widgets.begin(), widgets.end(), fc) != widgets.end())
     return false;
 
-  return matches_all && is_interactive;
+  return hasPositive && is_interactive;
 }
 
 #ifndef PICKER_MENU
@@ -454,7 +453,7 @@ void build_menu_functor::operator()(presets_item_t *item)
       g_signal_connect(menu_item, "activate",
                        GTK_SIGNAL_FUNC(cb_menu_item), context);
 
-      if(preset_is_used(item, context->tag_context->tags)) {
+      if(item->matches(context->tag_context->tags)) {
         if(!*matches)
           *matches = gtk_menu_new();
 
@@ -494,7 +493,7 @@ bool group_member_used::operator()(const presets_item_t *item)
   if(item->type & presets_item_t::TY_GROUP)
     return preset_group_is_used(static_cast<const presets_item_group *>(item), tags);
   else
-    return preset_is_used(item, tags);
+    return item->matches(tags);
 }
 
 enum {
@@ -719,7 +718,7 @@ void insert_recent_items::operator()(const presets_item_t *preset)
     const presets_item_group *gr = static_cast<const presets_item_group *>(preset);
     std::for_each(gr->items.begin(), gr->items.end(),
                   insert_recent_items(context, store));
-  } else if(preset_is_used(preset, context->tag_context->tags))
+  } else if(preset->matches(context->tag_context->tags))
     preset_insert_item(static_cast<const presets_item_visible *>(preset),
                        &context->appdata->icon, store);
 }
@@ -745,7 +744,7 @@ struct picker_add_functor {
   void operator()(const presets_item_t *item);
 };
 
-void picker_add_functor::operator()(const presets_item_t* item)
+void picker_add_functor::operator()(const presets_item_t *item)
 {
   /* check if this presets entry is appropriate for the current item */
   if(!(item->type & context->tag_context->presets_type))
@@ -769,7 +768,7 @@ void picker_add_functor::operator()(const presets_item_t* item)
       scan_for_recent = !show_recent;
     }
   } else if(scan_for_recent) {
-    show_recent = preset_is_used(itemv, context->tag_context->tags);
+    show_recent = itemv->matches(context->tag_context->tags);
     scan_for_recent = !show_recent;
   }
 }
@@ -918,6 +917,35 @@ const char *presets_widget_t::getValue(GtkWidget *) const
   return 0;
 }
 
+int presets_widget_t::matches(const std::vector<tag_t *> &tags) const
+{
+  if(match == MatchIgnore)
+    return 0;
+
+  const std::vector<tag_t *>::const_iterator itEnd = tags.end();
+  const std::vector<tag_t *>::const_iterator it = std::find_if(tags.begin(),
+                                                               itEnd,
+                                                               find_tag_functor(key));
+
+  if(it == itEnd) {
+    switch(match) {
+    case MatchKey:
+    case MatchKeyValue:
+      return 0;
+    default:
+      return -1;
+    }
+  }
+
+  if(match == MatchKey || match == MatchKey_Force)
+    return 1;
+
+  if(matchValue((*it)->value))
+    return 1;
+
+  return match == MatchKeyValue_Force ? -1 : 0;
+}
+
 GtkWidget *presets_widget_text::attach(GtkTable *table, guint &row, const char *preset) const
 {
   if(!preset)
@@ -948,6 +976,11 @@ GtkWidget *presets_widget_label::attach(GtkTable *table, guint &row, const char 
 {
   attach_both(table, gtk_label_new(reinterpret_cast<const char *>(text)), row);
   return 0;
+}
+
+bool presets_widget_combo::matchValue(const char *val) const
+{
+  return std::find(values.begin(), values.end(), val) != values.end();
 }
 
 GtkWidget *presets_widget_combo::attach(GtkTable *table, guint &row, const char *preset) const
@@ -1003,22 +1036,32 @@ const char *presets_widget_combo::getValue(GtkWidget* widget) const
   return values[it - display_values.begin()].c_str();
 }
 
-const char *presets_widget_key::getValue(GtkWidget* widget) const
+bool presets_widget_key::matchValue(const char *val) const
+{
+  return (strcmp(reinterpret_cast<char *>(value), val) == 0);
+}
+
+const char *presets_widget_key::getValue(GtkWidget *widget) const
 {
   g_assert(!widget);
   return reinterpret_cast<const char *>(value);
 }
 
+bool presets_widget_checkbox::matchValue(const char *val) const
+{
+  if(value_on)
+    return (strcmp(val, reinterpret_cast<char *>(value_on)) == 0);
+
+  return ((strcasecmp(val, "true") == 0) ||
+          (strcasecmp(val, "yes") == 0));
+}
+
 GtkWidget *presets_widget_checkbox::attach(GtkTable *table, guint &row, const char *preset) const
 {
   gboolean deflt = FALSE;
-  if(preset) {
-    if(value_on)
-      deflt = (strcmp(preset, reinterpret_cast<char *>(value_on)) == 0);
-    else
-      deflt = ((strcasecmp(preset, "true") == 0) ||
-               (strcasecmp(preset, "yes") == 0));
-  } else
+  if(preset)
+    deflt = matchValue(preset) ? TRUE : FALSE;
+  else
     deflt = def;
 
   GtkWidget *ret = check_button_new_with_label(reinterpret_cast<const char *>(text));

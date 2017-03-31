@@ -1,0 +1,231 @@
+#include <josm_presets.h>
+#include <josm_presets_p.h>
+#include <osm.h>
+
+#include <algorithm>
+#include <cstdlib>
+#include <cerrno>
+#include <glib.h>
+#include <iostream>
+#include <string>
+
+#define TESTTAG(a, b) static tag_t tag_##a##_##b(const_cast<char *>(#a), const_cast<char *>(#b))
+
+TESTTAG(testkey, other);
+TESTTAG(testkey, testtext);
+TESTTAG(neutral, neutral);
+
+#if __cplusplus >= 201103L
+# define VECTOR_ONE(a) std::vector<tag_t *>{ const_cast<tag_t *>(&a) }
+#else
+# define VECTOR_ONE(a) std::vector<tag_t *>(1, const_cast<tag_t *>(&(a)))
+#endif
+
+static bool checkTextMatch()
+{
+  presets_widget_text w_0(xmlStrdup(BAD_CAST tag_testkey_testtext.key),
+                          xmlStrdup(BAD_CAST tag_testkey_testtext.value),
+                          0, 0);
+
+  g_assert_cmpint(w_0.matches(VECTOR_ONE(tag_testkey_other)), ==, 0);
+  g_assert_cmpint(w_0.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 0);
+  g_assert_cmpint(w_0.matches(std::vector<tag_t *>()), ==, 0);
+
+  presets_widget_text w_ign(xmlStrdup(BAD_CAST tag_testkey_testtext.key),
+                            xmlStrdup(BAD_CAST tag_testkey_testtext.value),
+                            0, xmlStrdup(BAD_CAST "none"));
+
+  g_assert_cmpint(w_ign.matches(VECTOR_ONE(tag_testkey_other)), ==, 0);
+  g_assert_cmpint(w_ign.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 0);
+  g_assert_cmpint(w_ign.matches(std::vector<tag_t *>()), ==, 0);
+
+  presets_widget_text w_bad(xmlStrdup(BAD_CAST tag_testkey_testtext.key),
+                            xmlStrdup(BAD_CAST tag_testkey_testtext.value),
+                            0, xmlStrdup(BAD_CAST "nonsense"));
+
+  g_assert_cmpint(w_bad.matches(VECTOR_ONE(tag_testkey_other)), ==, 0);
+  g_assert_cmpint(w_bad.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 0);
+  g_assert_cmpint(w_bad.matches(std::vector<tag_t *>()), ==, 0);
+
+  presets_widget_text w_key(xmlStrdup(BAD_CAST tag_testkey_testtext.key),
+                            xmlStrdup(BAD_CAST tag_testkey_testtext.value),
+                            0, xmlStrdup(BAD_CAST "key"));
+
+  g_assert_cmpint(w_key.matches(VECTOR_ONE(tag_testkey_other)), ==, 1);
+  g_assert_cmpint(w_key.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 1);
+  g_assert_cmpint(w_key.matches(std::vector<tag_t *>()), ==, 0);
+
+  presets_widget_text w_keyf(xmlStrdup(BAD_CAST tag_testkey_testtext.key),
+                             xmlStrdup(BAD_CAST tag_testkey_testtext.value),
+                             0, xmlStrdup(BAD_CAST "key!"));
+
+  g_assert_cmpint(w_keyf.matches(VECTOR_ONE(tag_testkey_other)), ==, 1);
+  g_assert_cmpint(w_keyf.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 1);
+  g_assert_cmpint(w_keyf.matches(std::vector<tag_t *>()), ==, -1);
+
+  presets_widget_text w_kv(xmlStrdup(BAD_CAST tag_testkey_testtext.key),
+                           xmlStrdup(BAD_CAST tag_testkey_testtext.value),
+                           0, xmlStrdup(BAD_CAST "keyvalue"));
+
+  g_assert_cmpint(w_kv.matches(VECTOR_ONE(tag_testkey_other)), ==, 1);
+  g_assert_cmpint(w_kv.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 1);
+  g_assert_cmpint(w_kv.matches(std::vector<tag_t *>()), ==, 0);
+
+  presets_widget_text w_kvf(xmlStrdup(BAD_CAST tag_testkey_testtext.key),
+                            xmlStrdup(BAD_CAST tag_testkey_testtext.value),
+                            0, xmlStrdup(BAD_CAST "keyvalue!"));
+
+  g_assert_cmpint(w_kvf.matches(VECTOR_ONE(tag_testkey_other)), ==, 1);
+  g_assert_cmpint(w_kvf.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 1);
+  g_assert_cmpint(w_kvf.matches(std::vector<tag_t *>()), ==, -1);
+
+  return true;
+}
+
+static bool checkComboMatch()
+{
+  std::vector<std::string> values;
+  values.push_back("nonmatch");
+  values.push_back("");
+  values.push_back(tag_testkey_testtext.value);
+  values.push_back("another nonmatch");
+  std::vector<std::string> empty_vector;
+  const std::vector<std::string> backup = values;
+
+  presets_widget_combo w_0(xmlStrdup(BAD_CAST tag_testkey_testtext.key),
+                           xmlStrdup(BAD_CAST "visual text"),
+                           xmlStrdup(BAD_CAST values.front().c_str()),
+                           0, values, empty_vector);
+
+  g_assert_cmpint(w_0.matches(VECTOR_ONE(tag_testkey_other)), ==, 0);
+  g_assert_cmpint(w_0.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 0);
+  g_assert_cmpint(w_0.matches(std::vector<tag_t *>()), ==, 0);
+
+  values = backup;
+  presets_widget_combo w_ign(xmlStrdup(BAD_CAST tag_testkey_testtext.key),
+                             xmlStrdup(BAD_CAST "visual text"),
+                             xmlStrdup(BAD_CAST values.front().c_str()),
+                             xmlStrdup(BAD_CAST "none"), values, empty_vector);
+
+  g_assert_cmpint(w_ign.matches(VECTOR_ONE(tag_testkey_other)), ==, 0);
+  g_assert_cmpint(w_ign.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 0);
+  g_assert_cmpint(w_ign.matches(std::vector<tag_t *>()), ==, 0);
+
+  values = backup;
+  presets_widget_combo w_bad(xmlStrdup(BAD_CAST tag_testkey_testtext.key),
+                             xmlStrdup(BAD_CAST "visual text"),
+                             xmlStrdup(BAD_CAST values.front().c_str()),
+                             xmlStrdup(BAD_CAST "nonsense"), values, empty_vector);
+
+  g_assert_cmpint(w_bad.matches(VECTOR_ONE(tag_testkey_other)), ==, 0);
+  g_assert_cmpint(w_bad.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 0);
+  g_assert_cmpint(w_bad.matches(std::vector<tag_t *>()), ==, 0);
+
+  values = backup;
+  presets_widget_combo w_key(xmlStrdup(BAD_CAST tag_testkey_testtext.key),
+                             xmlStrdup(BAD_CAST "visual text"),
+                             xmlStrdup(BAD_CAST values.front().c_str()),
+                             xmlStrdup(BAD_CAST "key"), values, empty_vector);
+
+  g_assert_cmpint(w_key.matches(VECTOR_ONE(tag_testkey_other)), ==, 1);
+  g_assert_cmpint(w_key.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 1);
+  g_assert_cmpint(w_key.matches(std::vector<tag_t *>()), ==, 0);
+
+  values = backup;
+  presets_widget_combo w_keyf(xmlStrdup(BAD_CAST tag_testkey_testtext.key),
+                              xmlStrdup(BAD_CAST "visual text"),
+                              xmlStrdup(BAD_CAST values.front().c_str()),
+                              xmlStrdup(BAD_CAST "key!"), values, empty_vector);
+
+  g_assert_cmpint(w_keyf.matches(VECTOR_ONE(tag_testkey_other)), ==, 1);
+  g_assert_cmpint(w_keyf.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 1);
+  g_assert_cmpint(w_keyf.matches(std::vector<tag_t *>()), ==, -1);
+
+  values = backup;
+  presets_widget_combo w_kv(xmlStrdup(BAD_CAST tag_testkey_testtext.key),
+                            xmlStrdup(BAD_CAST "visual text"),
+                            xmlStrdup(BAD_CAST values.front().c_str()),
+                            xmlStrdup(BAD_CAST "keyvalue"), values, empty_vector);
+
+  g_assert_cmpint(w_kv.matches(VECTOR_ONE(tag_testkey_other)), ==, 0);
+  g_assert_cmpint(w_kv.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 1);
+  g_assert_cmpint(w_kv.matches(std::vector<tag_t *>()), ==, 0);
+
+  values = backup;
+  presets_widget_combo w_kvf(xmlStrdup(BAD_CAST tag_testkey_testtext.key),
+                             xmlStrdup(BAD_CAST "visual text"),
+                             xmlStrdup(BAD_CAST values.front().c_str()),
+                             xmlStrdup(BAD_CAST "keyvalue!"), values, empty_vector);
+
+  g_assert_cmpint(w_kvf.matches(VECTOR_ONE(tag_testkey_other)), ==, -1);
+  g_assert_cmpint(w_kvf.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 1);
+  g_assert_cmpint(w_kvf.matches(std::vector<tag_t *>()), ==, -1);
+
+  return true;
+}
+
+static bool check_combined()
+{
+  presets_item item(presets_item_t::TY_ALL);
+
+  std::vector<tag_t *> tags = VECTOR_ONE(tag_neutral_neutral);
+  tags.push_back(const_cast<tag_t *>(&tag_testkey_testtext));
+
+  // one that is ignored
+  item.widgets.push_back(new presets_widget_text(xmlStrdup(BAD_CAST "different"),
+                                                 xmlStrdup(BAD_CAST "different"),
+                                                 0, xmlStrdup(BAD_CAST "none")));
+
+  g_assert(item.matches(tags) == false);
+
+  // another one that reports neutral
+  item.widgets.push_back(new presets_widget_text(xmlStrdup(BAD_CAST "different"),
+                                                 xmlStrdup(BAD_CAST "different"),
+                                                 0, xmlStrdup(BAD_CAST "key")));
+
+  g_assert(item.matches(tags) == false);
+
+  // one that matches on key
+  item.widgets.push_back(new presets_widget_text(xmlStrdup(BAD_CAST tag_testkey_testtext.key),
+                                                 xmlStrdup(BAD_CAST "different"),
+                                                 0, xmlStrdup(BAD_CAST "key")));
+
+  g_assert(item.matches(tags) == true);
+
+  // one that matches on key+value
+  item.widgets.push_back(new presets_widget_key(xmlStrdup(BAD_CAST tag_testkey_testtext.key),
+                                                xmlStrdup(BAD_CAST tag_testkey_testtext.value),
+                                                xmlStrdup(BAD_CAST "keyvalue")));
+
+  g_assert(item.matches(tags) == true);
+
+  // key matches, value not, still neutral
+  item.widgets.push_back(new presets_widget_key(xmlStrdup(BAD_CAST tag_testkey_other.key),
+                                                xmlStrdup(BAD_CAST tag_testkey_other.value),
+                                                xmlStrdup(BAD_CAST "keyvalue")));
+
+  g_assert(item.matches(tags) == true);
+
+  // key matches, value not, fail
+  item.widgets.push_back(new presets_widget_key(xmlStrdup(BAD_CAST tag_testkey_other.key),
+                                                xmlStrdup(BAD_CAST tag_testkey_other.value),
+                                                xmlStrdup(BAD_CAST "keyvalue!")));
+
+  g_assert(item.matches(tags) == false);
+
+  return true;
+}
+
+int main()
+{
+  if(!checkTextMatch())
+    return 1;
+
+  if(!checkComboMatch())
+    return 1;
+
+  if(!check_combined())
+    return 1;
+
+  return 0;
+}

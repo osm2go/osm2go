@@ -39,9 +39,36 @@ enum presets_widget_type_t {
   WIDGET_TYPE_REFERENCE
 };
 
+struct tag_t;
+
 class presets_widget_t {
+public:
+  enum Match {
+    MatchIgnore,          ///< "none"
+    MatchKey,             ///< "key"
+    MatchKey_Force,       ///< "key!"
+    MatchKeyValue,        ///< "keyvalue"
+    MatchKeyValue_Force   ///< "keyvalue!"
+  };
+
+  /**
+   * @brief parse the match specification
+   * @param matchstring the matchstring from the presets file, may be nullptr
+   * @param def default value returned if matchstring is empty or cannot be parsed
+   *
+   * matchstring will be free'd.
+   */
+  static Match parseMatch(xmlChar *matchstring, Match def = MatchIgnore);
 protected:
-  presets_widget_t(presets_widget_type_t t, xmlChar *key = 0, xmlChar *text = 0);
+  presets_widget_t(presets_widget_type_t t, Match m, xmlChar *key = 0, xmlChar *text = 0);
+
+  /**
+   * @brief check if the tag value matches this item
+   */
+  virtual bool matchValue(G_GNUC_UNUSED const char *val) const {
+    return true;
+  }
+
 public:
   virtual ~presets_widget_t();
 
@@ -49,20 +76,31 @@ public:
 
   xmlChar * const key;
   xmlChar * const text;
+  const Match match;
 
   virtual bool is_interactive() const;
 
   virtual GtkWidget *attach(GtkTable *table, guint &row, const char *preset) const;
   virtual const char *getValue(GtkWidget *widget) const;
   virtual guint rows() const = 0;
+
+  /**
+   * @brief checks if this widget matches the given tags
+   * @param tags the tags of the object
+   * @retval -1 negative match
+   * @retval 0 no match, but continue searching
+   * @retval 1 positive match
+   */
+  int matches(const std::vector<tag_t *> &tags) const;
 };
 
 /**
  * @brief a tag with an arbitrary text value
  */
 class presets_widget_text : public presets_widget_t {
+  // no matchValue as it doesn't make sense to match on the value
 public:
-  presets_widget_text(xmlChar *key, xmlChar *text, xmlChar *deflt);
+  presets_widget_text(xmlChar *key, xmlChar *text, xmlChar *deflt, xmlChar *matches);
   virtual ~presets_widget_text();
 
   xmlChar * const def;
@@ -77,7 +115,7 @@ public:
 class presets_widget_separator : public presets_widget_t {
 public:
   explicit presets_widget_separator()
-    : presets_widget_t(WIDGET_TYPE_SEPARATOR) {}
+    : presets_widget_t(WIDGET_TYPE_SEPARATOR, MatchIgnore) {}
 
   virtual GtkWidget *attach(GtkTable *table, guint &row, const char *) const;
   virtual guint rows() const {
@@ -88,7 +126,7 @@ public:
 class presets_widget_label : public presets_widget_t {
 public:
   explicit presets_widget_label(xmlChar *text)
-    : presets_widget_t(WIDGET_TYPE_LABEL, 0, text) {}
+    : presets_widget_t(WIDGET_TYPE_LABEL, MatchIgnore, 0, text) {}
 
   virtual GtkWidget *attach(GtkTable *table, guint &row, const char *) const;
   virtual guint rows() const {
@@ -100,8 +138,10 @@ public:
  * @brief a combo box with pre-defined values
  */
 class presets_widget_combo : public presets_widget_t {
+protected:
+  virtual bool matchValue(const char *val) const;
 public:
-  presets_widget_combo(xmlChar *key, xmlChar *text, xmlChar *deflt,
+  presets_widget_combo(xmlChar *key, xmlChar *text, xmlChar *deflt, xmlChar *matches,
                        std::vector<std::string> &vals, std::vector<std::string> &dvals);
   virtual ~presets_widget_combo();
 
@@ -122,8 +162,10 @@ public:
  * @brief a key is just a static key
  */
 class presets_widget_key : public presets_widget_t {
+protected:
+  virtual bool matchValue(const char *val) const;
 public:
-  presets_widget_key(xmlChar *key, xmlChar *val);
+  presets_widget_key(xmlChar *key, xmlChar *val, xmlChar *matches);
   virtual ~presets_widget_key();
 
   xmlChar * const value;
@@ -134,8 +176,11 @@ public:
 };
 
 class presets_widget_checkbox : public presets_widget_t {
+protected:
+  virtual bool matchValue(const char *val) const;
 public:
-  presets_widget_checkbox(xmlChar *key, xmlChar *text, bool deflt, xmlChar *von = 0);
+  presets_widget_checkbox(xmlChar *key, xmlChar *text, bool deflt,
+                          xmlChar *matches, xmlChar *von = 0);
   ~presets_widget_checkbox();
 
   const bool def;
@@ -153,7 +198,7 @@ class presets_item;
 class presets_widget_reference : public presets_widget_t {
 public:
   presets_widget_reference(presets_item *i)
-    : presets_widget_t(WIDGET_TYPE_REFERENCE), item(i) {}
+    : presets_widget_t(WIDGET_TYPE_REFERENCE, MatchIgnore), item(i) {}
 
   presets_item const *item;
 
@@ -183,6 +228,8 @@ public:
   const unsigned int type;
 
   std::vector<presets_widget_t *> widgets;
+
+  bool matches(const std::vector<tag_t *> &tags) const;
 };
 
 class presets_item_visible : public presets_item_t {

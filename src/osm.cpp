@@ -263,10 +263,6 @@ struct tag_match_functor {
   }
 };
 
-bool osm_tag_key_and_value_present(const std::vector<tag_t *> &haystack, const tag_t &tag) {
-  return std::find_if(haystack.begin(), haystack.end(), tag_match_functor(tag)) != haystack.end();
-}
-
 struct tag_other_value_functor {
   const tag_t * const other;
   tag_other_value_functor(const tag_t *o) : other(o) {}
