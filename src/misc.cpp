@@ -682,12 +682,14 @@ void open_url(struct appdata_t *appdata, const char *url)
 #ifdef ENABLE_BROWSER_INTERFACE
 #ifndef USE_HILDON
   gtk_show_uri(NULL, url, GDK_CURRENT_TIME, NULL);
+  (void)appdata;
 #else
   osso_rpc_run_with_defaults(appdata->osso_context, "osso_browser",
                              OSSO_BROWSER_OPEN_NEW_WINDOW_REQ, NULL,
                              DBUS_TYPE_STRING, url,
                              DBUS_TYPE_BOOLEAN, FALSE, DBUS_TYPE_INVALID);
 #endif
+#else
   (void)appdata;
   (void)url;
 #endif
