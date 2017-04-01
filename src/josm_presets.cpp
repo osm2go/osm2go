@@ -578,7 +578,7 @@ on_presets_picker_selected(GtkTreeSelection *selection, gpointer data) {
 
     if(sub_item || (!item && !sub_item)) {
       /* check if this already had a submenu */
-      GtkWidget *sub;
+      GtkWidget *sub = 0;
       if(context->submenus.empty()) {
         // check if "Used Presets" is shown
         sub = GTK_WIDGET(g_object_get_data(G_OBJECT(view), "sub"));
@@ -621,6 +621,7 @@ on_presets_picker_selected(GtkTreeSelection *selection, gpointer data) {
       }
 
       /* views parent is a scrolled window whichs parent in turn is the hbox */
+      g_assert(sub);
       g_assert(view->parent);
       GtkWidget *hbox = view->parent->parent;
 
