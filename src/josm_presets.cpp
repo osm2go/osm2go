@@ -563,80 +563,82 @@ on_presets_picker_selected(GtkTreeSelection *selection, gpointer data) {
   GtkTreeIter   iter;
   GtkTreeModel *model;
 
-  if (gtk_tree_selection_get_selected (selection, &model, &iter)) {
-    presets_item_visible *item = 0;
-    presets_item_group *sub_item = 0;
-    gtk_tree_model_get(model, &iter,
-		       PRESETS_PICKER_COL_SUBMENU_PTR, &sub_item,
-		       PRESETS_PICKER_COL_ITEM_PTR, &item,
-		       -1);
+  if(!gtk_tree_selection_get_selected(selection, &model, &iter))
+    return;
 
-    printf("clicked on %s, submenu = %p\n", item ? (char*)item->name : "''", sub_item);
+  presets_item_visible *item = 0;
+  presets_item_group *sub_item = 0;
+  gtk_tree_model_get(model, &iter,
+                     PRESETS_PICKER_COL_SUBMENU_PTR, &sub_item,
+                     PRESETS_PICKER_COL_ITEM_PTR, &item,
+                     -1);
 
-    GtkWidget * const view =
-      GTK_WIDGET(gtk_tree_selection_get_tree_view(selection));
+  printf("clicked on %s, submenu = %p (%s)\n",
+         item ? (char*)item->name : "''",
+         sub_item, sub_item ? sub_item->name : (BAD_CAST ""));
 
-    if(sub_item || (!item && !sub_item)) {
-      /* check if this already had a submenu */
-      GtkWidget *sub = 0;
-      if(context->submenus.empty()) {
-        // check if "Used Presets" is shown
-        sub = GTK_WIDGET(g_object_get_data(G_OBJECT(view), "sub"));
-        if(sub) {
-          g_object_set_data(G_OBJECT(view), "sub", 0);
-          gtk_widget_destroy(sub);
-        }
+  GtkWidget * const view = GTK_WIDGET(gtk_tree_selection_get_tree_view(selection));
+
+  if(item && !(item->type & presets_item_t::TY_GROUP)) {
+    /* save item pointer in dialog */
+    g_object_set_data(G_OBJECT(gtk_widget_get_toplevel(view)),
+                      "item", (gpointer)item);
+
+    /* and request closing of menu */
+    gtk_dialog_response(GTK_DIALOG(gtk_widget_get_toplevel(view)),
+                        GTK_RESPONSE_ACCEPT);
+
+    context->submenus.clear();
+  } else {
+    /* check if this already had a submenu */
+    GtkWidget *sub = 0;
+    if(context->submenus.empty()) {
+      // check if "Used Presets" is shown
+      sub = GTK_WIDGET(g_object_get_data(G_OBJECT(view), "sub"));
+      if(sub) {
+        g_object_set_data(G_OBJECT(view), "sub", 0);
+        gtk_widget_destroy(sub);
       }
-
-      if(sub_item) {
-        /* normal submenu */
-
-        // the current list of submenus may or may not have common anchestors with this one
-        if(sub_item->widget) {
-          // this item is already visible, so it must be in the list, just drop all childs
-          remove_subs(context->submenus, sub_item);
-        } else {
-          // this item is not currently visible
-          if(sub_item->parent) {
-            // the parent item has to be visible, otherwise this could not have been clicked
-            remove_subs(context->submenus, sub_item->parent);
-          } else {
-            // this is a top level menu, so everything currently shown can be removed
-            std::for_each(context->submenus.begin(), context->submenus.end(), remove_sub);
-            context->submenus.clear();
-          }
-
-          sub = presets_picker(context, sub_item->items, false);
-          sub_item->widget = sub;
-        }
-        context->submenus.push_back(sub_item);
-      } else {
-        /* used presets submenu */
-        // this is always on top level, so all old submenu entries can be removed
-        std::for_each(context->submenus.begin(), context->submenus.end(), remove_sub);
-        context->submenus.clear();
-        sub = preset_picker_recent(context);
-        g_object_set_data(G_OBJECT(view), "sub", (gpointer)sub);
-      }
-
-      /* views parent is a scrolled window whichs parent in turn is the hbox */
-      g_assert(sub);
-      g_assert(view->parent);
-      GtkWidget *hbox = view->parent->parent;
-
-      gtk_box_pack_start_defaults(GTK_BOX(hbox), sub);
-      gtk_widget_show_all(sub);
-    } else {
-      /* save item pointer in dialog */
-      g_object_set_data(G_OBJECT(gtk_widget_get_toplevel(view)),
-			"item", (gpointer)item);
-
-      /* and request closing of menu */
-      gtk_dialog_response(GTK_DIALOG(gtk_widget_get_toplevel(view)),
-			  GTK_RESPONSE_ACCEPT);
-
-      context->submenus.clear();
     }
+
+    if(sub_item) {
+      /* normal submenu */
+
+      // the current list of submenus may or may not have common anchestors with this one
+      if(sub_item->widget) {
+        // this item is already visible, so it must be in the list, just drop all childs
+        remove_subs(context->submenus, sub_item);
+      } else {
+        // this item is not currently visible
+        if(sub_item->parent) {
+          // the parent item has to be visible, otherwise this could not have been clicked
+          remove_subs(context->submenus, sub_item->parent);
+        } else {
+          // this is a top level menu, so everything currently shown can be removed
+          std::for_each(context->submenus.begin(), context->submenus.end(), remove_sub);
+          context->submenus.clear();
+        }
+
+        sub = presets_picker(context, sub_item->items, false);
+        sub_item->widget = sub;
+      }
+      context->submenus.push_back(sub_item);
+    } else {
+      /* used presets submenu */
+      // this is always on top level, so all old submenu entries can be removed
+      std::for_each(context->submenus.begin(), context->submenus.end(), remove_sub);
+      context->submenus.clear();
+      sub = preset_picker_recent(context);
+      g_object_set_data(G_OBJECT(view), "sub", (gpointer)sub);
+    }
+
+    /* views parent is a scrolled window whichs parent in turn is the hbox */
+    g_assert(sub);
+    g_assert(view->parent);
+    GtkWidget *hbox = view->parent->parent;
+
+    gtk_box_pack_start_defaults(GTK_BOX(hbox), sub);
+    gtk_widget_show_all(sub);
   }
 }
 
