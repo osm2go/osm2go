@@ -593,8 +593,8 @@ on_presets_picker_selected(GtkTreeSelection *selection, gpointer data) {
 
         // the current list of submenus may or may not have common anchestors with this one
         if(sub_item->widget) {
-         // this item is already visible, so it must be in the list, just drop all childs
-         remove_subs(context->submenus, sub_item);
+          // this item is already visible, so it must be in the list, just drop all childs
+          remove_subs(context->submenus, sub_item);
         } else {
           // this item is not currently visible
           if(sub_item->parent) {
@@ -608,7 +608,6 @@ on_presets_picker_selected(GtkTreeSelection *selection, gpointer data) {
 
           sub = presets_picker(context, sub_item->items, false);
           sub_item->widget = sub;
-          g_object_set_data(G_OBJECT(sub), "sub_item", (gpointer)sub_item);
         }
         context->submenus.push_back(sub_item);
       } else {
