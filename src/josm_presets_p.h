@@ -142,12 +142,12 @@ protected:
   virtual bool matchValue(const char *val) const;
 public:
   presets_widget_combo(xmlChar *key, xmlChar *text, xmlChar *deflt, xmlChar *matches,
-                       std::vector<std::string> &vals, std::vector<std::string> &dvals);
+                       std::vector<std::string> vals, std::vector<std::string> dvals);
   virtual ~presets_widget_combo();
 
   xmlChar * const def;
-  const std::vector<std::string> values;
-  const std::vector<std::string> display_values;
+  std::vector<std::string> values;
+  std::vector<std::string> display_values;
 
   virtual GtkWidget *attach(GtkTable *table, guint &row, const char *preset) const;
   virtual const char *getValue(GtkWidget *widget) const;
