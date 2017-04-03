@@ -50,9 +50,9 @@
 #include <string>
 #include <vector>
 
-std::vector<std::string> file_scan(const char *extension);
+extern const char *data_paths[];
 
-std::string find_file(const char *n1, const char *n2 = 0, const char *n3 = 0);
+std::string find_file(const std::string &n);
 
 template<typename T> void shrink_to_fit(T &v) {
 #if __cplusplus >= 201103L

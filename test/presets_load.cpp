@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <cerrno>
+#include <cstring>
 #include <iostream>
 #include <libxml/parser.h>
 #include <set>
@@ -22,17 +23,18 @@ static std::set<std::string> missingIcons;
 bool check_icon::operator()(const std::string &dir)
 {
   const char *icon_exts[] = { ".svg", ".gif", ".png", ".jpg", NULL };
-  std::string path = dir + "/icons/" + filename;
-  std::string name = path + icon_exts[0];
+  std::string name = dir + "/icons/" + filename + icon_exts[0];
+  name.erase(name.size() - strlen(icon_exts[0]));
 
-  if(g_file_test(path.c_str(), G_FILE_TEST_IS_REGULAR) == TRUE)
+  if(g_file_test(name.c_str(), G_FILE_TEST_IS_REGULAR) == TRUE)
     return true;
 
-  for (gint idx = 0; icon_exts[idx]; idx++) {
-    name = path + icon_exts[idx];
+  for (const char **ic = icon_exts; *ic; ic++) {
+    name += *ic;
 
     if(g_file_test(name.c_str(), G_FILE_TEST_IS_REGULAR) == TRUE)
       return true;
+    name.erase(name.size() - strlen(*ic));
   }
   return false;
 }
@@ -132,6 +134,7 @@ int main(int argc, char **argv)
 
   xmlInitParser();
 
+  basedirs.reserve(argc - 1);
   for(int i = 1; i < argc; i++)
     basedirs.push_back(argv[i]);
 

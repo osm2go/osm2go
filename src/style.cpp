@@ -233,12 +233,12 @@ style_t *style_load(appdata_t *appdata) {
   const char *name = appdata->settings->style;
   printf("Trying to load style %s\n", name);
 
-  std::string fullname = find_file(name, ".style");
+  std::string fullname = find_file(std::string(name) + ".style");
 
-  if (fullname.empty()) {
+  if (G_UNLIKELY(fullname.empty())) {
     printf("style %s not found, trying %s instead\n", name, DEFAULT_STYLE);
     fullname = find_file(DEFAULT_STYLE ".style");
-    if (fullname.empty()) {
+    if (G_UNLIKELY(fullname.empty())) {
       printf("  style not found, failed to find fallback style too\n");
       return NULL;
     }
@@ -288,8 +288,51 @@ void combo_add_styles::operator()(const std::string &filename)
   cnt++;
 }
 
+/* scan all data directories for the given file extension and */
+/* return a list of files matching this extension */
+static std::vector<std::string> style_scan() {
+  std::vector<std::string> chain;
+  const char *extension = ".style";
+
+  char *p = getenv("HOME");
+  std::string fullname;
+
+  const size_t elen = strlen(extension);
+
+  for(const char **path = data_paths; *path; path++) {
+    GDir *dir = NULL;
+
+    /* scan for projects */
+    const char *dirname = *path;
+
+    if(*path[0] == '~')
+      dirname = g_strjoin(p, *path + 1, NULL);
+
+    if((dir = g_dir_open(dirname, 0, NULL))) {
+      const char *name;
+      while ((name = g_dir_read_name(dir)) != NULL) {
+        const size_t nlen = strlen(name);
+        if(nlen > elen && strcmp(name + nlen - elen, extension) == 0) {
+          fullname.reserve(strlen(dirname) + nlen + 1);
+          fullname = dirname;
+          fullname += name;
+          if(g_file_test(fullname.c_str(), G_FILE_TEST_IS_REGULAR))
+            chain.push_back(fullname);
+        }
+      }
+
+      g_dir_close(dir);
+    }
+
+    if(*path[0] == '~')
+      g_free((char*)dirname);
+  }
+
+  return chain;
+}
+
 GtkWidget *style_select_widget(appdata_t *appdata) {
-  const std::vector<std::string> &chain = file_scan(".style");
+  const std::vector<std::string> &chain = style_scan();
 
   /* there must be at least one style, otherwise */
   /* the program wouldn't be running */
@@ -325,7 +368,7 @@ bool style_find::operator()(const std::string &filename)
 }
 
 void style_change(appdata_t *appdata, const char *name) {
-  const std::vector<std::string> &chain = file_scan(".style");
+  const std::vector<std::string> &chain = style_scan();
 
   const std::vector<std::string>::const_iterator it =
       std::find_if(chain.begin(), chain.end(), style_find(appdata, name));

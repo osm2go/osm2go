@@ -217,7 +217,7 @@ gboolean yes_no_f(GtkWidget *parent, appdata_t *appdata, guint again_bit,
 }
 
 /* all entries must contain a trailing '/' ! */
-static const char *data_paths[] = {
+const char *data_paths[] = {
   "~/." PACKAGE "/",           // in home directory
   DATADIR "/",                 // final installation path
 #ifdef USE_HILDON
@@ -228,12 +228,12 @@ static const char *data_paths[] = {
   NULL
 };
 
-std::string find_file(const char *n1, const char *n2, const char *n3) {
-  const char **path = data_paths;
+std::string find_file(const std::string &n) {
   const char *home = getenv("HOME");
   std::string full_path;
+  full_path.reserve(n.size() + strlen(home) + strlen(data_paths[0]));
 
-  while(*path) {
+  for(const char **path = data_paths; *path; path++) {
     const char *p = *path;
 
     if(p[0] == '~') {
@@ -243,69 +243,14 @@ std::string find_file(const char *n1, const char *n2, const char *n3) {
       full_path.clear();
     }
 
-    full_path += p;
-    full_path += n1;
-    if(n2) {
-      full_path += n2;
-      if(n3)
-        full_path += n3;
-    }
+    full_path += p + n;
 
     if(g_file_test(full_path.c_str(), G_FILE_TEST_IS_REGULAR))
       return full_path;
-
-    path++;
   }
 
   return std::string();
 }
-
-/* scan all data directories for the given file extension and */
-/* return a list of files matching this extension */
-std::vector<std::string> file_scan(const char *extension) {
-  std::vector<std::string> chain;
-
-  const char **path = data_paths;
-  char *p = getenv("HOME");
-
-  while(*path) {
-    GDir *dir = NULL;
-
-    /* scan for projects */
-    const char *dirname = *path;
-
-    if(*path[0] == '~')
-      dirname = g_strjoin(p, *path + 1, NULL);
-
-    if((dir = g_dir_open(dirname, 0, NULL))) {
-      const char *name = NULL;
-      do {
-	name = g_dir_read_name(dir);
-
-	if(name) {
-	  if(g_str_has_suffix(name, extension)) {
-            std::string fullname;
-            fullname.reserve(strlen(dirname) + strlen(name) + 1);
-            fullname = dirname;
-            fullname += name;
-            if(g_file_test(fullname.c_str(), G_FILE_TEST_IS_REGULAR))
-              chain.push_back(fullname);
-	  }
-	}
-      } while(name);
-
-      g_dir_close(dir);
-    }
-
-    if(*path[0] == '~')
-      g_free((char*)dirname);
-
-    path++;
-  }
-
-  return chain;
-}
-
 
 #ifdef USE_HILDON
 static const gint dialog_sizes[][2] = {
