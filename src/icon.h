@@ -35,6 +35,11 @@ GtkWidget *icon_widget_load(icon_t **icon, const char *name);
 
 #ifdef __cplusplus
 }
+
+#include <string>
+
+GdkPixbuf *icon_load(icon_t **icon, const std::string &sname);
+
 #endif
 
 #endif // ICON_H

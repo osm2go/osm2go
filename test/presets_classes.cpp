@@ -23,57 +23,57 @@ TESTTAG(neutral, neutral);
 
 static bool checkTextMatch()
 {
-  presets_widget_text w_0(xmlStrdup(BAD_CAST tag_testkey_testtext.key),
-                          xmlStrdup(BAD_CAST tag_testkey_testtext.value),
-                          0, 0);
+  presets_widget_text w_0(tag_testkey_testtext.key,
+                          tag_testkey_testtext.value,
+                          std::string(), 0);
 
   g_assert_cmpint(w_0.matches(VECTOR_ONE(tag_testkey_other)), ==, 0);
   g_assert_cmpint(w_0.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 0);
   g_assert_cmpint(w_0.matches(std::vector<tag_t *>()), ==, 0);
 
-  presets_widget_text w_ign(xmlStrdup(BAD_CAST tag_testkey_testtext.key),
-                            xmlStrdup(BAD_CAST tag_testkey_testtext.value),
-                            0, xmlStrdup(BAD_CAST "none"));
+  presets_widget_text w_ign(tag_testkey_testtext.key,
+                            tag_testkey_testtext.value,
+                            std::string(), "none");
 
   g_assert_cmpint(w_ign.matches(VECTOR_ONE(tag_testkey_other)), ==, 0);
   g_assert_cmpint(w_ign.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 0);
   g_assert_cmpint(w_ign.matches(std::vector<tag_t *>()), ==, 0);
 
-  presets_widget_text w_bad(xmlStrdup(BAD_CAST tag_testkey_testtext.key),
-                            xmlStrdup(BAD_CAST tag_testkey_testtext.value),
-                            0, xmlStrdup(BAD_CAST "nonsense"));
+  presets_widget_text w_bad(tag_testkey_testtext.key,
+                            tag_testkey_testtext.value,
+                            std::string(), "nonsense");
 
   g_assert_cmpint(w_bad.matches(VECTOR_ONE(tag_testkey_other)), ==, 0);
   g_assert_cmpint(w_bad.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 0);
   g_assert_cmpint(w_bad.matches(std::vector<tag_t *>()), ==, 0);
 
-  presets_widget_text w_key(xmlStrdup(BAD_CAST tag_testkey_testtext.key),
-                            xmlStrdup(BAD_CAST tag_testkey_testtext.value),
-                            0, xmlStrdup(BAD_CAST "key"));
+  presets_widget_text w_key(tag_testkey_testtext.key,
+                            tag_testkey_testtext.value,
+                            std::string(), "key");
 
   g_assert_cmpint(w_key.matches(VECTOR_ONE(tag_testkey_other)), ==, 1);
   g_assert_cmpint(w_key.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 1);
   g_assert_cmpint(w_key.matches(std::vector<tag_t *>()), ==, 0);
 
-  presets_widget_text w_keyf(xmlStrdup(BAD_CAST tag_testkey_testtext.key),
-                             xmlStrdup(BAD_CAST tag_testkey_testtext.value),
-                             0, xmlStrdup(BAD_CAST "key!"));
+  presets_widget_text w_keyf(tag_testkey_testtext.key,
+                             tag_testkey_testtext.value,
+                             std::string(), "key!");
 
   g_assert_cmpint(w_keyf.matches(VECTOR_ONE(tag_testkey_other)), ==, 1);
   g_assert_cmpint(w_keyf.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 1);
   g_assert_cmpint(w_keyf.matches(std::vector<tag_t *>()), ==, -1);
 
-  presets_widget_text w_kv(xmlStrdup(BAD_CAST tag_testkey_testtext.key),
-                           xmlStrdup(BAD_CAST tag_testkey_testtext.value),
-                           0, xmlStrdup(BAD_CAST "keyvalue"));
+  presets_widget_text w_kv(tag_testkey_testtext.key,
+                           tag_testkey_testtext.value,
+                           std::string(), "keyvalue");
 
   g_assert_cmpint(w_kv.matches(VECTOR_ONE(tag_testkey_other)), ==, 1);
   g_assert_cmpint(w_kv.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 1);
   g_assert_cmpint(w_kv.matches(std::vector<tag_t *>()), ==, 0);
 
-  presets_widget_text w_kvf(xmlStrdup(BAD_CAST tag_testkey_testtext.key),
-                            xmlStrdup(BAD_CAST tag_testkey_testtext.value),
-                            0, xmlStrdup(BAD_CAST "keyvalue!"));
+  presets_widget_text w_kvf(tag_testkey_testtext.key,
+                            tag_testkey_testtext.value,
+                            std::string(), "keyvalue!");
 
   g_assert_cmpint(w_kvf.matches(VECTOR_ONE(tag_testkey_other)), ==, 1);
   g_assert_cmpint(w_kvf.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 1);
@@ -92,9 +92,9 @@ static bool checkComboMatch()
   std::vector<std::string> empty_vector;
   const std::vector<std::string> backup = values;
 
-  presets_widget_combo w_0(xmlStrdup(BAD_CAST tag_testkey_testtext.key),
-                           xmlStrdup(BAD_CAST "visual text"),
-                           xmlStrdup(BAD_CAST values.front().c_str()),
+  presets_widget_combo w_0(tag_testkey_testtext.key,
+                           "visual text",
+                           values.front(),
                            0, values, empty_vector);
 
   g_assert_cmpint(w_0.matches(VECTOR_ONE(tag_testkey_other)), ==, 0);
@@ -102,60 +102,60 @@ static bool checkComboMatch()
   g_assert_cmpint(w_0.matches(std::vector<tag_t *>()), ==, 0);
 
   values = backup;
-  presets_widget_combo w_ign(xmlStrdup(BAD_CAST tag_testkey_testtext.key),
-                             xmlStrdup(BAD_CAST "visual text"),
-                             xmlStrdup(BAD_CAST values.front().c_str()),
-                             xmlStrdup(BAD_CAST "none"), values, empty_vector);
+  presets_widget_combo w_ign(tag_testkey_testtext.key,
+                             "visual text",
+                             values.front(),
+                             "none", values, empty_vector);
 
   g_assert_cmpint(w_ign.matches(VECTOR_ONE(tag_testkey_other)), ==, 0);
   g_assert_cmpint(w_ign.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 0);
   g_assert_cmpint(w_ign.matches(std::vector<tag_t *>()), ==, 0);
 
   values = backup;
-  presets_widget_combo w_bad(xmlStrdup(BAD_CAST tag_testkey_testtext.key),
-                             xmlStrdup(BAD_CAST "visual text"),
-                             xmlStrdup(BAD_CAST values.front().c_str()),
-                             xmlStrdup(BAD_CAST "nonsense"), values, empty_vector);
+  presets_widget_combo w_bad(tag_testkey_testtext.key,
+                             "visual text",
+                             values.front(),
+                             "nonsense", values, empty_vector);
 
   g_assert_cmpint(w_bad.matches(VECTOR_ONE(tag_testkey_other)), ==, 0);
   g_assert_cmpint(w_bad.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 0);
   g_assert_cmpint(w_bad.matches(std::vector<tag_t *>()), ==, 0);
 
   values = backup;
-  presets_widget_combo w_key(xmlStrdup(BAD_CAST tag_testkey_testtext.key),
-                             xmlStrdup(BAD_CAST "visual text"),
-                             xmlStrdup(BAD_CAST values.front().c_str()),
-                             xmlStrdup(BAD_CAST "key"), values, empty_vector);
+  presets_widget_combo w_key(tag_testkey_testtext.key,
+                             "visual text",
+                             values.front(),
+                             "key", values, empty_vector);
 
   g_assert_cmpint(w_key.matches(VECTOR_ONE(tag_testkey_other)), ==, 1);
   g_assert_cmpint(w_key.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 1);
   g_assert_cmpint(w_key.matches(std::vector<tag_t *>()), ==, 0);
 
   values = backup;
-  presets_widget_combo w_keyf(xmlStrdup(BAD_CAST tag_testkey_testtext.key),
-                              xmlStrdup(BAD_CAST "visual text"),
-                              xmlStrdup(BAD_CAST values.front().c_str()),
-                              xmlStrdup(BAD_CAST "key!"), values, empty_vector);
+  presets_widget_combo w_keyf(tag_testkey_testtext.key,
+                              "visual text",
+                              values.front(),
+                              "key!", values, empty_vector);
 
   g_assert_cmpint(w_keyf.matches(VECTOR_ONE(tag_testkey_other)), ==, 1);
   g_assert_cmpint(w_keyf.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 1);
   g_assert_cmpint(w_keyf.matches(std::vector<tag_t *>()), ==, -1);
 
   values = backup;
-  presets_widget_combo w_kv(xmlStrdup(BAD_CAST tag_testkey_testtext.key),
-                            xmlStrdup(BAD_CAST "visual text"),
-                            xmlStrdup(BAD_CAST values.front().c_str()),
-                            xmlStrdup(BAD_CAST "keyvalue"), values, empty_vector);
+  presets_widget_combo w_kv(tag_testkey_testtext.key,
+                            "visual text",
+                            values.front(),
+                            "keyvalue", values, empty_vector);
 
   g_assert_cmpint(w_kv.matches(VECTOR_ONE(tag_testkey_other)), ==, 0);
   g_assert_cmpint(w_kv.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 1);
   g_assert_cmpint(w_kv.matches(std::vector<tag_t *>()), ==, 0);
 
   values = backup;
-  presets_widget_combo w_kvf(xmlStrdup(BAD_CAST tag_testkey_testtext.key),
-                             xmlStrdup(BAD_CAST "visual text"),
-                             xmlStrdup(BAD_CAST values.front().c_str()),
-                             xmlStrdup(BAD_CAST "keyvalue!"), values, empty_vector);
+  presets_widget_combo w_kvf(tag_testkey_testtext.key,
+                             "visual text",
+                             values.front(),
+                             "keyvalue!", values, empty_vector);
 
   g_assert_cmpint(w_kvf.matches(VECTOR_ONE(tag_testkey_other)), ==, -1);
   g_assert_cmpint(w_kvf.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 1);
@@ -172,44 +172,44 @@ static bool check_combined()
   tags.push_back(const_cast<tag_t *>(&tag_testkey_testtext));
 
   // one that is ignored
-  item.widgets.push_back(new presets_widget_text(xmlStrdup(BAD_CAST "different"),
-                                                 xmlStrdup(BAD_CAST "different"),
-                                                 0, xmlStrdup(BAD_CAST "none")));
+  item.widgets.push_back(new presets_widget_text("different",
+                                                 "different",
+                                                 std::string(), "none"));
 
   g_assert(item.matches(tags) == false);
 
   // another one that reports neutral
-  item.widgets.push_back(new presets_widget_text(xmlStrdup(BAD_CAST "different"),
-                                                 xmlStrdup(BAD_CAST "different"),
-                                                 0, xmlStrdup(BAD_CAST "key")));
+  item.widgets.push_back(new presets_widget_text("different",
+                                                 "different",
+                                                 std::string(), "key"));
 
   g_assert(item.matches(tags) == false);
 
   // one that matches on key
-  item.widgets.push_back(new presets_widget_text(xmlStrdup(BAD_CAST tag_testkey_testtext.key),
-                                                 xmlStrdup(BAD_CAST "different"),
-                                                 0, xmlStrdup(BAD_CAST "key")));
+  item.widgets.push_back(new presets_widget_text(tag_testkey_testtext.key,
+                                                 "different",
+                                                 std::string(), "key"));
 
   g_assert(item.matches(tags) == true);
 
   // one that matches on key+value
-  item.widgets.push_back(new presets_widget_key(xmlStrdup(BAD_CAST tag_testkey_testtext.key),
-                                                xmlStrdup(BAD_CAST tag_testkey_testtext.value),
-                                                xmlStrdup(BAD_CAST "keyvalue")));
+  item.widgets.push_back(new presets_widget_key(tag_testkey_testtext.key,
+                                                tag_testkey_testtext.value,
+                                                "keyvalue"));
 
   g_assert(item.matches(tags) == true);
 
   // key matches, value not, still neutral
-  item.widgets.push_back(new presets_widget_key(xmlStrdup(BAD_CAST tag_testkey_other.key),
-                                                xmlStrdup(BAD_CAST tag_testkey_other.value),
-                                                xmlStrdup(BAD_CAST "keyvalue")));
+  item.widgets.push_back(new presets_widget_key(tag_testkey_other.key,
+                                                tag_testkey_other.value,
+                                                "keyvalue"));
 
   g_assert(item.matches(tags) == true);
 
   // key matches, value not, fail
-  item.widgets.push_back(new presets_widget_key(xmlStrdup(BAD_CAST tag_testkey_other.key),
-                                                xmlStrdup(BAD_CAST tag_testkey_other.value),
-                                                xmlStrdup(BAD_CAST "keyvalue!")));
+  item.widgets.push_back(new presets_widget_key(tag_testkey_other.key,
+                                                tag_testkey_other.value,
+                                                "keyvalue!"));
 
   g_assert(item.matches(tags) == false);
 

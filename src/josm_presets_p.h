@@ -23,7 +23,6 @@
 #include "josm_presets.h"
 
 #include <gtk/gtk.h>
-#include <libxml/xmlstring.h> /* for xmlChar */
 #include <map>
 #include <string>
 #include <vector>
@@ -55,12 +54,11 @@ public:
    * @brief parse the match specification
    * @param matchstring the matchstring from the presets file, may be nullptr
    * @param def default value returned if matchstring is empty or cannot be parsed
-   *
-   * matchstring will be free'd.
    */
-  static Match parseMatch(xmlChar *matchstring, Match def = MatchIgnore);
+  static Match parseMatch(const char *matchstring, Match def = MatchIgnore);
 protected:
-  presets_widget_t(presets_widget_type_t t, Match m, xmlChar *key = 0, xmlChar *text = 0);
+  presets_widget_t(presets_widget_type_t t, Match m, const std::string &key = std::string(),
+                   const std::string &text = std::string());
 
   /**
    * @brief check if the tag value matches this item
@@ -70,12 +68,12 @@ protected:
   }
 
 public:
-  virtual ~presets_widget_t();
+  virtual ~presets_widget_t() {};
 
   const presets_widget_type_t type;
 
-  xmlChar * const key;
-  xmlChar * const text;
+  const std::string key;
+  const std::string text;
   const Match match;
 
   virtual bool is_interactive() const;
@@ -100,10 +98,10 @@ public:
 class presets_widget_text : public presets_widget_t {
   // no matchValue as it doesn't make sense to match on the value
 public:
-  presets_widget_text(xmlChar *key, xmlChar *text, xmlChar *deflt, xmlChar *matches);
-  virtual ~presets_widget_text();
+  presets_widget_text(const std::string &key, const std::string &text,
+                      const std::string &deflt, const char *matches);
 
-  xmlChar * const def;
+  const std::string def;
 
   virtual GtkWidget *attach(GtkTable *table, guint &row, const char *preset) const;
   virtual const char *getValue(GtkWidget *widget) const;
@@ -125,8 +123,8 @@ public:
 
 class presets_widget_label : public presets_widget_t {
 public:
-  explicit presets_widget_label(xmlChar *text)
-    : presets_widget_t(WIDGET_TYPE_LABEL, MatchIgnore, 0, text) {}
+  explicit presets_widget_label(const std::string &text)
+    : presets_widget_t(WIDGET_TYPE_LABEL, MatchIgnore, std::string(), text) {}
 
   virtual GtkWidget *attach(GtkTable *table, guint &row, const char *) const;
   virtual guint rows() const {
@@ -141,11 +139,11 @@ class presets_widget_combo : public presets_widget_t {
 protected:
   virtual bool matchValue(const char *val) const;
 public:
-  presets_widget_combo(xmlChar *key, xmlChar *text, xmlChar *deflt, xmlChar *matches,
+  presets_widget_combo(const std::string &key, const std::string &text,
+                       const std::string &deflt, const char *matches,
                        std::vector<std::string> vals, std::vector<std::string> dvals);
-  virtual ~presets_widget_combo();
 
-  xmlChar * const def;
+  const std::string def;
   std::vector<std::string> values;
   std::vector<std::string> display_values;
 
@@ -155,7 +153,7 @@ public:
     return 1;
   }
 
-  static std::vector<std::string> split_string(const xmlChar *str, char delimiter);
+  static std::vector<std::string> split_string(const char *str, char delimiter);
 };
 
 /**
@@ -165,10 +163,9 @@ class presets_widget_key : public presets_widget_t {
 protected:
   virtual bool matchValue(const char *val) const;
 public:
-  presets_widget_key(xmlChar *key, xmlChar *val, xmlChar *matches);
-  virtual ~presets_widget_key();
+  presets_widget_key(const std::string &key, const std::string &val, const char *matches);
 
-  xmlChar * const value;
+  const std::string value;
   virtual const char *getValue(GtkWidget *widget) const;
   virtual guint rows() const {
     return 0;
@@ -179,12 +176,11 @@ class presets_widget_checkbox : public presets_widget_t {
 protected:
   virtual bool matchValue(const char *val) const;
 public:
-  presets_widget_checkbox(xmlChar *key, xmlChar *text, bool deflt,
-                          xmlChar *matches, xmlChar *von = 0);
-  ~presets_widget_checkbox();
+  presets_widget_checkbox(const std::string &key, const std::string &text, bool deflt,
+                          const char *matches, const std::string &von = std::string());
 
   const bool def;
-  xmlChar *value_on;
+  std::string value_on;
 
   virtual GtkWidget *attach(GtkTable *table, guint &row, const char *preset) const;
   virtual const char *getValue(GtkWidget *widget) const;
@@ -234,20 +230,20 @@ public:
 
 class presets_item_visible : public presets_item_t {
 public:
-  presets_item_visible(unsigned int t, xmlChar *n = 0, xmlChar *ic = 0)
+  presets_item_visible(unsigned int t, const std::string &n = std::string(),
+                       const std::string &ic = std::string())
     : presets_item_t(t), name(n), icon(ic) {}
-  virtual ~presets_item_visible();
 
-  xmlChar *name, *icon;
+  std::string name, icon;
 };
 
 class presets_item : public presets_item_visible {
 public:
-  presets_item(unsigned int t,  xmlChar *n = 0, xmlChar *ic = 0, bool edname = false)
-    : presets_item_visible(t, n, ic), link(0), addEditName(edname) {}
-  virtual ~presets_item();
+  presets_item(unsigned int t, const std::string &n = std::string(),
+               const std::string &ic = std::string(), bool edname = false)
+    : presets_item_visible(t, n, ic), addEditName(edname) {}
 
-  xmlChar *link;
+  std::string link;
   bool addEditName;
 };
 
@@ -259,7 +255,8 @@ public:
 class presets_item_group : public presets_item_visible {
 public:
   presets_item_group(const unsigned int types, presets_item_group *p,
-                     xmlChar *n = 0, xmlChar *ic = 0);
+                     const std::string &n = std::string(),
+                     const std::string &ic = std::string());
   virtual ~presets_item_group();
 
   presets_item_group * const parent;

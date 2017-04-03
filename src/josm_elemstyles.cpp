@@ -371,10 +371,10 @@ void StyleSax::startElement(const xmlChar *name, const xmlChar **attrs)
       if(strcmp(reinterpret_cast<const char *>(attrs[i]), "annotate") == 0)
         elemstyle->icon.annotate = strcmp(reinterpret_cast<const char *>(attrs[i + 1]), "true");
       else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "src") == 0)
-        elemstyle->icon.filename = josm_icon_name_adjust(xmlStrdup(attrs[i + 1]));
+        elemstyle->icon.filename = josm_icon_name_adjust(reinterpret_cast<const char *>(attrs[i + 1]));
     }
 
-    g_assert(elemstyle->icon.filename);
+    g_assert(!elemstyle->icon.filename.empty());
 
     break;
   default:
@@ -488,15 +488,18 @@ void colorize_node::operator()(elemstyle_t *elemstyle)
 
   somematch |= match;
 
-  if(match && elemstyle->icon.filename) {
-    char *name = g_strjoin("/", "styles", style->icon.path_prefix,
-                           elemstyle->icon.filename, NULL);
+  if(match && !elemstyle->icon.filename.empty()) {
+    std::string name = "styles/";
+    name += style->icon.path_prefix;
+    // the final size is now known, avoid too big allocations
+    name.reserve(name.size() + 1 + elemstyle->icon.filename.size());
+    name += '/';
+    name += elemstyle->icon.filename;
 
     /* free old icon if there's one present */
     node_icon_unref(style, node);
 
     GdkPixbuf *buf = icon_load(style->iconP, name);
-    g_free(name);
 
     if(buf)
       style->node_icons[node->id] = buf;

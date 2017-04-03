@@ -95,16 +95,11 @@ struct elemstyle_area_t {
 struct elemstyle_icon_t {
   elemstyle_icon_t()
     : annotate(false)
-    , filename(0)
   {
-  }
-  ~elemstyle_icon_t()
-  {
-    xmlFree(filename);
   }
 
   bool annotate;
-  xmlChar *filename;
+  std::string filename;
 };
 
 struct elemstyle_t {

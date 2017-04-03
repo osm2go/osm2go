@@ -78,7 +78,7 @@ static bool store_value(const presets_widget_t *widget, std::vector<tag_t *> &ta
     const char *chstr;
     if(ctag != tags.end()) {
       /* update the previous tag structure */
-      g_assert(strcasecmp((*ctag)->key, (char*)widget->key) == 0);
+      g_assert(strcasecmp((*ctag)->key, widget->key.c_str()) == 0);
       /* only update if the value actually changed */
       if(strcmp((*ctag)->value, value) != 0) {
         changed = true; /* mark as updated, actual change below */
@@ -89,7 +89,7 @@ static bool store_value(const presets_widget_t *widget, std::vector<tag_t *> &ta
     } else {
       /* no old entry, create a new one */
       tag_t *tag = g_new0(tag_t, 1);
-      tag->update_key(reinterpret_cast<char *>(widget->key));
+      tag->update_key(widget->key.c_str());
       /* value will be updated below */
       tags.push_back(tag);
       ctag = tags.end() - 1;
@@ -101,15 +101,15 @@ static bool store_value(const presets_widget_t *widget, std::vector<tag_t *> &ta
       (*ctag)->update_value(value);
 
     printf("%s key = %s, value = %s\n", chstr,
-           widget->key, (*ctag)->value);
+           widget->key.c_str(), (*ctag)->value);
   } else if (ctag != tags.end()) {
-    printf("removed key = %s, value = %s\n", widget->key, (*ctag)->value);
+    printf("removed key = %s, value = %s\n", widget->key.c_str(), (*ctag)->value);
     tag_t *tag = *ctag;
     tags.erase(ctag);
     osm_tag_free(tag);
     changed = true;
   } else
-    printf("ignore empty key = %s\n", widget->key);
+    printf("ignore empty key = %s\n", widget->key.c_str());
 
   return changed;
 }
@@ -152,10 +152,10 @@ struct presets_context_t {
 };
 
 struct find_tag_functor {
-  const char * const key;
-  find_tag_functor(const xmlChar *k) : key(reinterpret_cast<const char *>(k)) {}
+  const std::string &key;
+  find_tag_functor(const std::string &k) : key(k) {}
   bool operator()(const tag_t *tag) {
-    return strcasecmp(tag->key, key) == 0;
+    return strcasecmp(tag->key, key.c_str()) == 0;
   }
 };
 
@@ -180,7 +180,7 @@ void add_widget_functor::operator()(const presets_widget_t *w)
   }
 
   /* check if there's a value with this key already */
-  std::vector<tag_t *>::const_iterator otagIt = w->key ?
+  std::vector<tag_t *>::const_iterator otagIt = !w->key.empty() ?
                                                 std::find_if(tag_context->tags.begin(),
                                                              tag_context->tags.end(),
                                                              find_tag_functor(w->key)) :
@@ -249,7 +249,7 @@ static void presets_item_dialog(presets_context_t *context,
   GtkWidget *dialog = NULL;
   bool ok = false;
 
-  printf("dialog for item %s\n", item->name);
+  printf("dialog for item %s\n", item->name.c_str());
 
   /* build dialog from items widget list */
 
@@ -265,7 +265,7 @@ static void presets_item_dialog(presets_context_t *context,
   if(has_interactive_widget)  {
     dialog =
       misc_dialog_new(MISC_DIALOG_NOSIZE,
-		      (gchar*)item->name, parent,
+                      item->name.c_str(), parent,
 		      GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
 		      GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
 		      NULL);
@@ -273,24 +273,24 @@ static void presets_item_dialog(presets_context_t *context,
 #ifdef ENABLE_BROWSER_INTERFACE
     /* if a web link has been provided for this item install */
     /* a button for this */
-    if(item->link) {
+    if(!item->link.empty()) {
       GtkWidget *button = gtk_dialog_add_button(GTK_DIALOG(dialog), _
 			("Info"), GTK_RESPONSE_HELP);
-      g_object_set_data(G_OBJECT(button), "link", item->link);
+      g_object_set_data(G_OBJECT(button), "link", const_cast<char *>(item->link.c_str()));
       gtk_signal_connect(GTK_OBJECT(button), "clicked",
 			 GTK_SIGNAL_FUNC(on_info), appdata);
     }
 #endif
     /* special handling for the first label/separators */
     if(item->addEditName) {
-      gchar *title = g_strdup_printf(_("Edit %s"), item->name);
+      gchar *title = g_strdup_printf(_("Edit %s"), item->name.c_str());
       gtk_window_set_title(GTK_WINDOW(dialog), title);
       g_free(title);
     } else {
       // use the first label as title
       const presets_widget_t * const w = item->widgets.front();
       if(w->type == WIDGET_TYPE_LABEL)
-        gtk_window_set_title(GTK_WINDOW(dialog), reinterpret_cast<char *>(w->text));
+        gtk_window_set_title(GTK_WINDOW(dialog), w->text.c_str());
     }
 
     /* skip all following non-interactive widgets: use the first one that
@@ -414,12 +414,12 @@ static GtkWidget *create_menuitem(icon_t **icons, const presets_item_visible *it
 {
   GtkWidget *menu_item;
 
-  if(!item->icon)
-    menu_item = gtk_menu_item_new_with_label((gchar*)item->name);
+  if(item->icon.empty())
+    menu_item = gtk_menu_item_new_with_label(item->name.c_str());
   else {
-    menu_item = gtk_image_menu_item_new_with_label((gchar*)item->name);
+    menu_item = gtk_image_menu_item_new_with_label(item->name.c_str());
     gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(menu_item),
-                                  icon_widget_load(icons, (char*)item->icon));
+                                  icon_widget_load(icons, item->icon.c_str()));
   }
 
   return menu_item;
@@ -574,8 +574,8 @@ on_presets_picker_selected(GtkTreeSelection *selection, gpointer data) {
                      -1);
 
   printf("clicked on %s, submenu = %p (%s)\n",
-         item ? (char*)item->name : "''",
-         sub_item, sub_item ? sub_item->name : (BAD_CAST ""));
+         item ? item->name.c_str() : "''",
+         sub_item, sub_item ? sub_item->name.c_str() : "");
 
   GtkWidget * const view = GTK_WIDGET(gtk_tree_selection_get_tree_view(selection));
 
@@ -709,8 +709,8 @@ static GtkWidget *presets_picker_embed(GtkTreeView *view, GtkListStore *store,
 
 static GtkTreeIter preset_insert_item(const presets_item_visible *item, icon_t **icons,
                                       GtkListStore *store) {
-  /* icon load can cope with NULL as name (returns NULL then) */
-  GdkPixbuf *icon = icon_load(icons, (char*)item->icon);
+  /* icon load can cope with empty string as name (returns NULL then) */
+  GdkPixbuf *icon = icon_load(icons, item->icon);
 
   /* Append a row and fill in some data */
   GtkTreeIter iter;
@@ -718,7 +718,7 @@ static GtkTreeIter preset_insert_item(const presets_item_visible *item, icon_t *
 
   gtk_list_store_set(store, &iter,
 		     PRESETS_PICKER_COL_ICON, icon,
-		     PRESETS_PICKER_COL_NAME, item->name,
+		     PRESETS_PICKER_COL_NAME, item->name.c_str(),
 		     PRESETS_PICKER_COL_ITEM_PTR, item,
 		     -1);
 
@@ -772,7 +772,7 @@ void picker_add_functor::operator()(const presets_item_t *item)
 
   const presets_item_visible * const itemv = static_cast<typeof(itemv)>(item);
 
-  if(!itemv->name)
+  if(itemv->name.empty())
     return;
 
   GtkTreeIter iter = preset_insert_item(itemv, &context->appdata->icon, store);
@@ -969,12 +969,12 @@ int presets_widget_t::matches(const std::vector<tag_t *> &tags) const
 GtkWidget *presets_widget_text::attach(GtkTable *table, guint &row, const char *preset) const
 {
   if(!preset)
-    preset = reinterpret_cast<const char *>(def);
+    preset = def.c_str();
   GtkWidget *ret = entry_new();
   if(preset)
     gtk_entry_set_text(GTK_ENTRY(ret), preset);
 
-  attach_right(table, reinterpret_cast<const char *>(text), ret, row);
+  attach_right(table, text.c_str(), ret, row);
 
   return ret;
 }
@@ -994,7 +994,7 @@ GtkWidget *presets_widget_separator::attach(GtkTable *table, guint &row, const c
 
 GtkWidget *presets_widget_label::attach(GtkTable *table, guint &row, const char *) const
 {
-  attach_both(table, gtk_label_new(reinterpret_cast<const char *>(text)), row);
+  attach_both(table, gtk_label_new(text.c_str()), row);
   return 0;
 }
 
@@ -1006,8 +1006,8 @@ bool presets_widget_combo::matchValue(const char *val) const
 GtkWidget *presets_widget_combo::attach(GtkTable *table, guint &row, const char *preset) const
 {
   if(!preset)
-    preset = reinterpret_cast<const char *>(def);
-  GtkWidget *ret = combo_box_new(reinterpret_cast<const char *>(text));
+    preset = def.c_str();
+  GtkWidget *ret = combo_box_new(text.c_str());
   combo_box_append_text(ret, _("<unset>"));
   int active = 0;
 
@@ -1026,7 +1026,7 @@ GtkWidget *presets_widget_combo::attach(GtkTable *table, guint &row, const char 
 
   combo_box_set_active(ret, active);
 #ifndef FREMANTLE
-  attach_right(table, reinterpret_cast<const char *>(text), ret, row);
+  attach_right(table, text.c_str(), ret, row);
 #else
   attach_both(table, ret, row);
 #endif
@@ -1058,19 +1058,19 @@ const char *presets_widget_combo::getValue(GtkWidget* widget) const
 
 bool presets_widget_key::matchValue(const char *val) const
 {
-  return (strcmp(reinterpret_cast<char *>(value), val) == 0);
+  return (value == val);
 }
 
 const char *presets_widget_key::getValue(GtkWidget *widget) const
 {
   g_assert(!widget);
-  return reinterpret_cast<const char *>(value);
+  return value.c_str();
 }
 
 bool presets_widget_checkbox::matchValue(const char *val) const
 {
-  if(value_on)
-    return (strcmp(val, reinterpret_cast<char *>(value_on)) == 0);
+  if(!value_on.empty())
+    return (value_on == val);
 
   return ((strcasecmp(val, "true") == 0) ||
           (strcasecmp(val, "yes") == 0));
@@ -1084,7 +1084,7 @@ GtkWidget *presets_widget_checkbox::attach(GtkTable *table, guint &row, const ch
   else
     deflt = def;
 
-  GtkWidget *ret = check_button_new_with_label(reinterpret_cast<const char *>(text));
+  GtkWidget *ret = check_button_new_with_label(text.c_str());
   check_button_set_active(ret, deflt);
 #ifndef FREMANTLE
   attach_right(table, 0, ret, row);
@@ -1095,12 +1095,12 @@ GtkWidget *presets_widget_checkbox::attach(GtkTable *table, guint &row, const ch
   return ret;
 }
 
-const char *presets_widget_checkbox::getValue(GtkWidget* widget) const
+const char *presets_widget_checkbox::getValue(GtkWidget *widget) const
 {
   g_assert(GTK_WIDGET_TYPE(widget) == check_button_type());
 
   return check_button_get_active(widget) ?
-         (value_on ? reinterpret_cast<char *>(value_on) : "yes") : 0;
+         (value_on.empty() ? "yes" : value_on.c_str()) : 0;
 }
 
 // vim:et:ts=8:sw=2:sts=2:ai

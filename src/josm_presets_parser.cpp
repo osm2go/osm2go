@@ -37,18 +37,24 @@ typedef std::map<std::string, presets_item *> ChunkMap;
 
 /* --------------------- presets.xml parsing ----------------------- */
 
-xmlChar *josm_icon_name_adjust(xmlChar *xname) {
-  if(!xname) return NULL;
+std::string josm_icon_name_adjust(const char *name) {
+  std::string ret;
 
-  char *name = reinterpret_cast<char *>(xname);
+  if(!name)
+    return ret;
 
-  /* the icon loader uses names without extension */
-  if(!strcasecmp(name+strlen(name)-4, ".png"))
-    name[strlen(name)-4] = 0;
-  else if(!strcasecmp(name+strlen(name)-4, ".svg"))
-    name[strlen(name)-4] = 0;
+  size_t len = strlen(name);
 
-  return xname;
+  if(G_LIKELY(len > 4)) {
+    const char * const ext = name + len - 4;
+    /* the icon loader uses names without extension */
+    if(strcasecmp(ext, ".png") == 0 || strcasecmp(ext, ".svg") == 0)
+      len -= 4;
+  }
+
+  ret.assign(name, len);
+
+  return ret;
 }
 
 static std::map<int, std::string> type_map_init() {
@@ -78,10 +84,8 @@ static int josm_type_bit(const char *type, char sep) {
 }
 
 /* parse a comma seperated list of types and set their bits */
-static presets_item_t::item_type josm_type_parse(const xmlChar *xtype) {
+static presets_item_t::item_type josm_type_parse(const char *type) {
   int type_mask = 0;
-  const char *type = (const char*)xtype;
-
   if(!type) return presets_item_t::TY_ALL;
 
   const char *ntype = strchr(type, ',');
@@ -99,10 +103,10 @@ static presets_item_t::item_type josm_type_parse(const xmlChar *xtype) {
 template<typename T>
 struct str_map_find {
   const char * const name;
-  str_map_find(const typename T::key_type n)
-    : name(reinterpret_cast<const char *>(n)) {}
+  str_map_find(const char * n)
+    : name(n) {}
   bool operator()(const typename T::value_type &p) {
-    return (strcmp(reinterpret_cast<const char *>(p.first), name) == 0);
+    return (strcmp(p.first, name) == 0);
   }
 };
 
@@ -163,9 +167,10 @@ private:
   static void cb_characters(void *ts, const xmlChar *ch, int len) {
     static_cast<PresetSax *>(ts)->characters(reinterpret_cast<const char *>(ch), len);
   }
-  void startElement(const xmlChar *name, const xmlChar **attrs);
+  void startElement(const char *name, const char **attrs);
   static void cb_startElement(void *ts, const xmlChar *name, const xmlChar **attrs) {
-    static_cast<PresetSax *>(ts)->startElement(name, attrs);
+    static_cast<PresetSax *>(ts)->startElement(reinterpret_cast<const char *>(name),
+                                               reinterpret_cast<const char **>(attrs));
   }
   void endElement(const xmlChar *name);
   static void cb_endElement(void *ts, const xmlChar *name) {
@@ -265,9 +270,9 @@ void PresetSax::characters(const char *ch, int len)
  *
  * If the attribute is present but the string is empty a nullptr is returned.
  */
-static const xmlChar *findAttribute(const xmlChar **attrs, const char *name) {
+static const char *findAttribute(const char **attrs, const char *name) {
   for(unsigned int i = 0; attrs[i]; i += 2)
-    if(strcmp(reinterpret_cast<const char *>(attrs[i]), name) == 0) {
+    if(strcmp(attrs[i], name) == 0) {
       if(*(attrs[i + 1]) == '\0')
         return 0;
       return attrs[i + 1];
@@ -276,13 +281,13 @@ static const xmlChar *findAttribute(const xmlChar **attrs, const char *name) {
   return 0;
 }
 
-#define NULL_OR_VAL(a) (a ? xmlStrdup(a) : 0)
+#define NULL_OR_VAL(a) (a ? a : std::string())
 
-void PresetSax::startElement(const xmlChar *name, const xmlChar **attrs)
+void PresetSax::startElement(const char *name, const char **attrs)
 {
   const StateMap &tags = preset_state_map();
   StateMap::const_iterator it = std::find_if(tags.begin(), tags.end(),
-                                             str_map_find<StateMap>(reinterpret_cast<const char *>(name)));
+                                             str_map_find<StateMap>(name));
   if(it == tags.end()) {
     printf("found unhandled ");
     dumpState();
@@ -323,7 +328,7 @@ void PresetSax::startElement(const xmlChar *name, const xmlChar **attrs)
   case TagPresets:
     break;
   case TagChunk: {
-    const xmlChar *id = findAttribute(attrs, "id");
+    const char *id = findAttribute(attrs, "id");
     presets_item *item = new presets_item(presets_item_t::TY_ALL, NULL_OR_VAL(id));
     items.push(item);
     break;
@@ -332,11 +337,11 @@ void PresetSax::startElement(const xmlChar *name, const xmlChar **attrs)
     presets_item_group *group = new presets_item_group(0,
                                 items.empty() ? 0 : static_cast<presets_item_group *>(items.top()));
     for(unsigned int i = 0; attrs[i]; i += 2) {
-      if(strcmp(reinterpret_cast<const char *>(attrs[i]), "name") == 0) {
-        group->name = xmlStrdup(attrs[i + 1]);
-      } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "icon") == 0 &&
-                strlen(reinterpret_cast<const char *>(attrs[i + 1])) > 0) {
-        group->icon = josm_icon_name_adjust(xmlStrdup(attrs[i + 1]));
+      if(strcmp(attrs[i], "name") == 0) {
+        group->name = attrs[i + 1];
+      } else if(strcmp(attrs[i], "icon") == 0 &&
+                strlen(attrs[i + 1]) > 0) {
+        group->icon = josm_icon_name_adjust(attrs[i + 1]);
       }
     }
     if(items.empty())
@@ -355,23 +360,23 @@ void PresetSax::startElement(const xmlChar *name, const xmlChar **attrs)
     break;
   }
   case TagItem: {
-    const xmlChar *tp = 0;
-    const xmlChar *n = 0;
-    const xmlChar *ic = 0;
+    const char *tp = 0;
+    const char *n = 0;
+    std::string ic;
     bool addEditName = false;
     for(unsigned int i = 0; attrs[i]; i += 2) {
-      if(strcmp(reinterpret_cast<const char *>(attrs[i]), "name") == 0) {
+      if(strcmp(attrs[i], "name") == 0) {
         n = attrs[i + 1];
-      } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "type") == 0) {
+      } else if(strcmp(attrs[i], "type") == 0) {
         tp = attrs[i + 1];
-      } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "icon") == 0) {
-        ic = attrs[i + 1];
-      } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "preset_name_label") == 0) {
-        addEditName = (strcmp(reinterpret_cast<const char *>(attrs[i + 1]), "true") == 0);
+      } else if(strcmp(attrs[i], "icon") == 0) {
+        ic = josm_icon_name_adjust(attrs[i + 1]);
+      } else if(strcmp(attrs[i], "preset_name_label") == 0) {
+        addEditName = (strcmp(attrs[i + 1], "true") == 0);
       }
     }
     presets_item *item = new presets_item(josm_type_parse(tp), NULL_OR_VAL(n),
-                                          josm_icon_name_adjust(NULL_OR_VAL(ic)),
+                                          ic,
                                           addEditName);
     g_assert((items.top()->type & presets_item_t::TY_GROUP) != 0);
     static_cast<presets_item_group *>(items.top())->items.push_back(item);
@@ -379,13 +384,12 @@ void PresetSax::startElement(const xmlChar *name, const xmlChar **attrs)
     break;
   }
   case TagReference: {
-    const xmlChar *id = findAttribute(attrs, "ref");
+    const char *id = findAttribute(attrs, "ref");
     presets_item *ref = 0;
     if(!id) {
       printf("found presets/item/reference without ref\n");
     } else {
-      const ChunkMap::const_iterator it =
-          chunks.find(std::string(reinterpret_cast<const char *>(id)));
+      const ChunkMap::const_iterator it = chunks.find(id);
       if(G_UNLIKELY(it == chunks.end()))
         printf("found presets/item/reference with unresolved ref %s\n", id);
       else
@@ -395,7 +399,7 @@ void PresetSax::startElement(const xmlChar *name, const xmlChar **attrs)
     break;
   }
   case TagLabel: {
-    const xmlChar *text = findAttribute(attrs, "text");
+    const char *text = findAttribute(attrs, "text");
     widgets.push(new presets_widget_label(NULL_OR_VAL(text)));
     // do not push to items, will be done in endElement()
     break;
@@ -407,104 +411,104 @@ void PresetSax::startElement(const xmlChar *name, const xmlChar **attrs)
 #endif
     break;
   case TagText: {
-    const xmlChar *key = 0;
-    const xmlChar *text = 0;
-    const xmlChar *def = 0;
-    const xmlChar *match = 0;
+    const char *key = 0;
+    const char *text = 0;
+    const char *def = 0;
+    const char *match = 0;
     for(unsigned int i = 0; attrs[i]; i += 2) {
-      if(strcmp(reinterpret_cast<const char *>(attrs[i]), "key") == 0) {
+      if(strcmp(attrs[i], "key") == 0) {
         key = attrs[i + 1];
-      } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "text") == 0) {
+      } else if(strcmp(attrs[i], "text") == 0) {
         text = attrs[i + 1];
-      } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "default") == 0) {
+      } else if(strcmp(attrs[i], "default") == 0) {
         def = attrs[i + 1];
-      } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "match") == 0) {
+      } else if(strcmp(attrs[i], "match") == 0) {
         match = attrs[i + 1];
       }
     }
     widget = new presets_widget_text(NULL_OR_VAL(key), NULL_OR_VAL(text),
-                                     NULL_OR_VAL(def), NULL_OR_VAL(match));
+                                     NULL_OR_VAL(def), match);
     break;
   }
   case TagKey: {
-    const xmlChar *key = 0;
-    const xmlChar *value = 0;
-    const xmlChar *match = 0;
+    const char *key = 0;
+    const char *value = 0;
+    const char *match = 0;
     for(unsigned int i = 0; attrs[i]; i += 2) {
-      if(strcmp(reinterpret_cast<const char *>(attrs[i]), "key") == 0) {
+      if(strcmp(attrs[i], "key") == 0) {
         key = attrs[i + 1];
-      } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "value") == 0) {
+      } else if(strcmp(attrs[i], "value") == 0) {
         value = attrs[i + 1];
-      } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "match") == 0) {
+      } else if(strcmp(attrs[i], "match") == 0) {
         match = attrs[i + 1];
       }
     }
     widget = new presets_widget_key(NULL_OR_VAL(key), NULL_OR_VAL(value),
-                                    NULL_OR_VAL(match));
+                                    match);
     break;
   }
   case TagCheck: {
-    const xmlChar *von = 0;
-    const xmlChar *key = 0;
-    const xmlChar *txt = 0;
-    const xmlChar *match = 0;
+    const char *von = 0;
+    const char *key = 0;
+    const char *txt = 0;
+    const char *match = 0;
     bool on = false;
     for(unsigned int i = 0; attrs[i]; i += 2) {
-      if(strcmp(reinterpret_cast<const char *>(attrs[i]), "value_on") == 0) {
+      if(strcmp(attrs[i], "value_on") == 0) {
         von = attrs[i + 1];
-      } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "key") == 0) {
+      } else if(strcmp(attrs[i], "key") == 0) {
         key = attrs[i + 1];
-      } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "text") == 0) {
+      } else if(strcmp(attrs[i], "text") == 0) {
         txt = attrs[i + 1];
-      } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "default") == 0) {
-        on = (strcmp(reinterpret_cast<const char *>(attrs[i + 1]), "on") == 0);
-      } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "match") == 0) {
+      } else if(strcmp(attrs[i], "default") == 0) {
+        on = (strcmp(attrs[i + 1], "on") == 0);
+      } else if(strcmp(attrs[i], "match") == 0) {
         match = attrs[i + 1];
       }
     }
     widget = new presets_widget_checkbox(NULL_OR_VAL(key), NULL_OR_VAL(txt), on,
-                                         NULL_OR_VAL(match), NULL_OR_VAL(von));
+                                         match, NULL_OR_VAL(von));
     break;
   }
   case TagLink: {
     g_assert(!items.empty());
     g_assert((items.top()->type & (presets_item_t::TY_GROUP | presets_item_t::TY_SEPARATOR)) == 0);
     presets_item * const item = static_cast<presets_item *>(items.top());
-    const xmlChar *href = findAttribute(attrs, "href");
+    const char *href = findAttribute(attrs, "href");
     if(G_UNLIKELY(href == 0)) {
       printf("ignoring link without href\n");
     } else {
-      if(G_LIKELY(!item->link))
-       item->link = NULL_OR_VAL(href);
+      if(G_LIKELY(item->link.empty()))
+       item->link = href;
       else
         printf("ignoring surplus link\n");
     }
     break;
   }
   case TagCombo: {
-    const xmlChar *key = 0;
-    const xmlChar *txt = 0;
-    const xmlChar *def = 0;
-    const xmlChar *match = 0;
-    const xmlChar *values = 0;
-    const xmlChar *display_values = 0;
+    const char *key = 0;
+    const char *txt = 0;
+    const char *def = 0;
+    const char *match = 0;
+    const char *values = 0;
+    const char *display_values = 0;
     char delimiter = ',';
 
     for(unsigned int i = 0; attrs[i]; i += 2) {
-      if(strcmp(reinterpret_cast<const char *>(attrs[i]), "default") == 0) {
+      if(strcmp(attrs[i], "default") == 0) {
         def = attrs[i + 1];
-      } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "key") == 0) {
+      } else if(strcmp(attrs[i], "key") == 0) {
         key = attrs[i + 1];
-      } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "text") == 0) {
+      } else if(strcmp(attrs[i], "text") == 0) {
         txt = attrs[i + 1];
-      } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "values") == 0) {
+      } else if(strcmp(attrs[i], "values") == 0) {
         values = attrs[i + 1];
-      } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "display_values") == 0) {
+      } else if(strcmp(attrs[i], "display_values") == 0) {
         display_values = attrs[i + 1];
-      } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "match") == 0) {
+      } else if(strcmp(attrs[i], "match") == 0) {
         match = attrs[i + 1];
-      } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "delimiter") == 0) {
-        if(G_UNLIKELY(strlen(reinterpret_cast<const char *>(attrs[i + 1])) != 1))
+      } else if(strcmp(attrs[i], "delimiter") == 0) {
+        if(G_UNLIKELY(strlen(attrs[i + 1]) != 1))
           printf("found invalid delimiter '%s'\n", attrs[i + 1]);
         else
           delimiter = *(attrs[i + 1]);
@@ -516,7 +520,7 @@ void PresetSax::startElement(const xmlChar *name, const xmlChar **attrs)
       display_values = 0;
     }
     widget = new presets_widget_combo(NULL_OR_VAL(key), NULL_OR_VAL(txt),
-                                      NULL_OR_VAL(def), NULL_OR_VAL(match),
+                                      NULL_OR_VAL(def), match,
                                       presets_widget_combo::split_string(values, delimiter),
                                       presets_widget_combo::split_string(display_values, delimiter));
     break;
@@ -527,12 +531,12 @@ void PresetSax::startElement(const xmlChar *name, const xmlChar **attrs)
     g_assert_cmpuint(widgets.top()->type, ==, WIDGET_TYPE_COMBO);
     presets_widget_combo * const combo = static_cast<presets_widget_combo *>(widgets.top());
 
-    const xmlChar *value = 0;
-    const xmlChar *dvalue = 0;
+    const char *value = 0;
+    const char *dvalue = 0;
     for(unsigned int i = 0; attrs[i]; i += 2) {
-      if(strcmp(reinterpret_cast<const char *>(attrs[i]), "display_value") == 0) {
+      if(strcmp(attrs[i], "display_value") == 0) {
         dvalue = attrs[i + 1];
-      } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "value") == 0) {
+      } else if(strcmp(attrs[i], "value") == 0) {
         value = attrs[i + 1];
       }
     }
@@ -540,9 +544,9 @@ void PresetSax::startElement(const xmlChar *name, const xmlChar **attrs)
     if(G_UNLIKELY(!value)) {
       printf("ignoring list_entry without value\n");
     } else {
-      combo->values.push_back(reinterpret_cast<const char *>(value));
+      combo->values.push_back(value);
       if(dvalue && *dvalue)
-        combo->display_values.push_back(reinterpret_cast<const char *>(dvalue));
+        combo->display_values.push_back(dvalue);
       else
         combo->display_values.push_back(std::string());
     }
@@ -618,13 +622,13 @@ void PresetSax::endElement(const xmlChar *name)
     presets_item * const chunk = static_cast<presets_item *>(items.top());
     g_assert_cmpuint(chunk->type, ==, presets_item_t::TY_ALL);
     items.pop();
-    if(G_UNLIKELY(chunk->name == 0)) {
+    if(G_UNLIKELY(chunk->name.empty())) {
       printf("ignoring presets/chunk without id\n");
       delete chunk;
       return;
     }
 
-    std::string id = reinterpret_cast<char *>(chunk->name);
+    const std::string &id = chunk->name;
 
     if(chunks.find(id) != chunks.end()) {
       printf("ignoring presets/chunk duplicate id %s\n", id.c_str());
@@ -653,7 +657,7 @@ void PresetSax::endElement(const xmlChar *name)
     g_assert(!widgets.empty());
     presets_widget_label * const label = static_cast<presets_widget_label *>(widgets.top());
     widgets.pop();
-    if(G_UNLIKELY(label->text == 0)) {
+    if(G_UNLIKELY(label->text.empty())) {
       printf("found presets/item/label without text\n");
       delete label;
     } else {
@@ -723,16 +727,16 @@ void josm_presets_free(struct presets_items *presets) {
   delete presets;
 }
 
-presets_widget_t::Match presets_widget_t::parseMatch(xmlChar *matchstring, Match def)
+presets_widget_t::Match presets_widget_t::parseMatch(const char *matchstring, Match def)
 {
-  typedef std::map<const xmlChar *, Match> VMap;
+  typedef std::map<const char *, Match> VMap;
   static VMap matches;
   if(G_UNLIKELY(matches.empty())) {
-    matches[BAD_CAST "none"] = MatchIgnore;
-    matches[BAD_CAST "key"] = MatchKey;
-    matches[BAD_CAST "key!"] = MatchKey_Force;
-    matches[BAD_CAST "keyvalue"] = MatchKeyValue;
-    matches[BAD_CAST "keyvalue!"] = MatchKeyValue_Force;
+    matches["none"] = MatchIgnore;
+    matches["key"] = MatchKey;
+    matches["key!"] = MatchKey_Force;
+    matches["keyvalue"] = MatchKeyValue;
+    matches["keyvalue!"] = MatchKeyValue_Force;
   }
   const VMap::const_iterator itEnd = matches.end();
   const VMap::const_iterator it = !matchstring ? itEnd : std::find_if(
@@ -743,23 +747,15 @@ presets_widget_t::Match presets_widget_t::parseMatch(xmlChar *matchstring, Match
 #endif
                                                itEnd, str_map_find<VMap>(matchstring));
 
-  xmlFree(matchstring);
-
   return (it == itEnd) ? def : it->second;
 }
 
-presets_widget_t::presets_widget_t(presets_widget_type_t t, Match m, xmlChar *key, xmlChar *text)
+presets_widget_t::presets_widget_t(presets_widget_type_t t, Match m, const std::string &key, const std::string &text)
   : type(t)
   , key(key)
   , text(text)
   , match(m)
 {
-}
-
-presets_widget_t::~presets_widget_t()
-{
-  xmlFree(key);
-  xmlFree(text);
 }
 
 bool presets_widget_t::is_interactive() const
@@ -775,20 +771,15 @@ bool presets_widget_t::is_interactive() const
   }
 }
 
-presets_widget_text::presets_widget_text(xmlChar *key, xmlChar *text,
-                                         xmlChar *deflt, xmlChar *matches)
+presets_widget_text::presets_widget_text(const std::string &key, const std::string &text,
+                                         const std::string &deflt, const char *matches)
   : presets_widget_t(WIDGET_TYPE_TEXT, parseMatch(matches), key, text)
   , def(deflt)
 {
 }
 
-presets_widget_text::~presets_widget_text()
-{
-  xmlFree(def);
-}
-
-presets_widget_combo::presets_widget_combo(xmlChar *key, xmlChar *text,
-                                           xmlChar *deflt, xmlChar *matches,
+presets_widget_combo::presets_widget_combo(const std::string &key, const std::string &text,
+                                           const std::string &deflt, const char *matches,
                                            std::vector<std::string> vals, std::vector<std::string> dvals)
   : presets_widget_t(WIDGET_TYPE_COMBO, parseMatch(matches), key, text)
   , def(deflt)
@@ -797,19 +788,14 @@ presets_widget_combo::presets_widget_combo(xmlChar *key, xmlChar *text,
 {
 }
 
-presets_widget_combo::~presets_widget_combo()
-{
-  xmlFree(def);
-}
-
-std::vector<std::string> presets_widget_combo::split_string(const xmlChar *str, const char delimiter)
+std::vector<std::string> presets_widget_combo::split_string(const char *str, const char delimiter)
 {
   std::vector<std::string> ret;
 
   if(!str)
     return ret;
 
-  const char *c, *p = reinterpret_cast<const char *>(str);
+  const char *c, *p = str;
   while((c = strchr(p, delimiter))) {
     ret.push_back(std::string(p, c - p));
     p = c + 1;
@@ -824,28 +810,19 @@ std::vector<std::string> presets_widget_combo::split_string(const xmlChar *str, 
   return ret;
 }
 
-presets_widget_key::presets_widget_key(xmlChar* key, xmlChar* val, xmlChar *matches)
+presets_widget_key::presets_widget_key(const std::string &key, const std::string &val,
+                                       const char *matches)
   : presets_widget_t(WIDGET_TYPE_KEY, parseMatch(matches, MatchKeyValue_Force), key)
   , value(val)
 {
 }
 
-presets_widget_key::~presets_widget_key()
-{
-  xmlFree(value);
-}
-
-presets_widget_checkbox::presets_widget_checkbox(xmlChar* key, xmlChar* text,
-                                                 bool deflt, xmlChar *matches, xmlChar *von)
+presets_widget_checkbox::presets_widget_checkbox(const std::string &key, const std::string &text,
+                                                 bool deflt, const char *matches, const std::string &von)
   : presets_widget_t(WIDGET_TYPE_CHECK, parseMatch(matches), key, text)
   , def(deflt)
   , value_on(von)
 {
-}
-
-presets_widget_checkbox::~presets_widget_checkbox()
-{
-  xmlFree(value_on);
 }
 
 bool presets_widget_reference::is_interactive() const
@@ -864,19 +841,8 @@ presets_item_t::~presets_item_t()
   std::for_each(widgets.begin(), widgets.end(), free_widget);
 }
 
-presets_item_visible::~presets_item_visible()
-{
-  xmlFree(name);
-  xmlFree(icon);
-}
-
-presets_item::~presets_item()
-{
-  xmlFree(link);
-}
-
 presets_item_group::presets_item_group(const unsigned int types, presets_item_group *p,
-                                       xmlChar *n, xmlChar *ic)
+                                       const std::string &n, const std::string &ic)
   : presets_item_visible(types | TY_GROUP, n, ic), parent(p), widget(0)
 {
   g_assert(p == 0 || ((p->type & TY_GROUP) != 0));

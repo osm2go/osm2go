@@ -114,12 +114,11 @@ static void checkItem(const presets_item_t *item)
   if(!vis)
     return;
 
-  if(vis->icon) {
-    const std::string filename(reinterpret_cast<const char *>(vis->icon));
+  if(!vis->icon.empty()) {
     const std::vector<std::string>::const_iterator it = std::find_if(
-                      basedirs.begin(), basedirs.end(), check_icon(filename));
+                      basedirs.begin(), basedirs.end(), check_icon(vis->icon));
     if(it == basedirs.end())
-      missingIcons.insert(filename);
+      missingIcons.insert(vis->icon);
   }
 
   const presets_item_group * const group = dynamic_cast<const presets_item_group *>(vis);
