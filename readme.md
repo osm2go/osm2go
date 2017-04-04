@@ -67,3 +67,14 @@ Getting started
 Getting started with osm2go is not dangerous since osm2go works offline 
 most of the time and does not touch any data stored in the OpenStreetMap
 database unless being asked to do so.
+
+Additional presets
+------------------
+
+In addition to the item presets shipped with OSM2go, which are in turned
+derived from the JOSM ones, a user can add local presets. These presets must
+be stored in the directory ~/.local/share/osm2go/presets. For a ZIP file
+named foo.zip a new directory "foo" should be created inside the presets
+directory. Within that directory the ZIP file should be extracted. OSM2go
+will automatically detect the new presets on next startup and add them below
+the builtin presets in the presets picker.
