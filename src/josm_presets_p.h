@@ -234,7 +234,7 @@ public:
                        const std::string &ic = std::string())
     : presets_item_t(t), name(n), icon(ic) {}
 
-  std::string name, icon;
+  const std::string name, icon;
 };
 
 class presets_item : public presets_item_visible {

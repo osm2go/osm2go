@@ -167,6 +167,7 @@ public:
   presets_items &presets;
   const std::string &basepath;
   ChunkMap chunks;
+  const std::vector<std::string> &langs;
 
 private:
 
@@ -183,6 +184,27 @@ private:
   static void cb_endElement(void *ts, const xmlChar *name) {
     static_cast<PresetSax *>(ts)->endElement(name);
   }
+
+  /**
+   * @brief find attribute with the given name
+   * @param attrs the attribute list to search
+   * @param name the key to look for
+   * @param useLang if localized keys should be preferred
+   * @returns the attribute string if present
+   *
+   * If the attribute is present but the string is empty a nullptr is returned.
+   */
+  const char *findAttribute(const char **attrs, const char *name, bool useLang = true) const;
+
+  typedef std::map<const char *, const char *> AttrMap;
+  /**
+   * @brief find the attributes with the given names
+   * @param attrs the attribute list to search
+   * @param names the keys to look for
+   * @param langflags if localized keys should be preferred (bitwise positions of entries in names)
+   * @returns the found keys
+   */
+  AttrMap findAttributes(const char **attrs, const char **names, unsigned int langflags = 0) const;
 };
 
 const PresetSax::StateMap &PresetSax::preset_state_map() {
@@ -243,9 +265,35 @@ void PresetSax::dumpState() const
   }
 }
 
+/**
+ * @brief get the user language strings from environment
+ */
+const std::vector<std::string> &userLangs()
+{
+  static std::vector<std::string> lcodes;
+  if(lcodes.empty()) {
+    const char *lcm = getenv("LC_MESSAGES");
+    if(!lcm)
+      lcm = getenv("LANG");
+    if(lcm && *lcm) {
+      std::string lc = lcm;
+      std::string::size_type d = lc.find('.');
+      if(d != lc.npos)
+        lc.erase(d);
+      lcodes.push_back(lc + '.');
+      d = lc.find('_');
+      if(d != lc.npos)
+        lcodes.push_back(lc.substr(0, d) + '.');
+    }
+  }
+
+  return lcodes;
+}
+
 PresetSax::PresetSax(presets_items &p, const std::string &b)
   : presets(p)
   , basepath(b)
+  , langs(userLangs())
 {
   memset(&handler, 0, sizeof(handler));
   handler.characters = cb_characters;
@@ -272,24 +320,77 @@ void PresetSax::characters(const char *ch, int len)
     }
 }
 
-/**
- * @brief find attribute with the given name
- * @returns the attribute string if present
- *
- * If the attribute is present but the string is empty a nullptr is returned.
- */
-static const char *findAttribute(const char **attrs, const char *name) {
-  for(unsigned int i = 0; attrs[i]; i += 2)
-    if(strcmp(attrs[i], name) == 0) {
-      if(*(attrs[i + 1]) == '\0')
-        return 0;
-      return attrs[i + 1];
+const char *PresetSax::findAttribute(const char **attrs, const char *name, bool useLang) const {
+  // If the entire key matches name this is the non-localized (i.e. fallback)
+  // key. Continue search to find a localized text, if no other is found return
+  // the defaut one.
+  const char *c = 0;
+
+  for(unsigned int i = 0; attrs[i]; i += 2) {
+    // Check if the given attribute begins with one of the preferred language
+    // codes. If yes, skip over the language code and check this one.
+    const char *a = attrs[i];
+    for(std::vector<std::string>::size_type j = 0; (j < langs.size()) && useLang; j++) {
+      if(strncmp(a, langs[j].c_str(), langs[j].size()) == 0) {
+        a += langs[j].size();
+        break;
+      }
     }
 
-  return 0;
+    if(strcmp(a, name) == 0) {
+      const char *ret;
+      if(*(attrs[i + 1]) == '\0')
+        ret = 0;
+      else
+        ret = attrs[i + 1];
+      if(a != attrs[i])
+        return ret;
+      c = ret;
+    }
+  }
+
+  return c;
+}
+
+PresetSax::AttrMap PresetSax::findAttributes(const char **attrs, const char **names, unsigned int langflags) const
+{
+  AttrMap ret;
+
+  for(unsigned int i = 0; attrs[i]; i += 2) {
+    // Check if the given attribute begins with one of the preferred language
+    // codes. If yes, skip over the language code and check this one.
+    const char *a = attrs[i];
+    bool isLoc = false;
+    for(std::vector<std::string>::size_type j = 0; (j < langs.size()); j++) {
+      if(strncmp(a, langs[j].c_str(), langs[j].size()) == 0) {
+        a += langs[j].size();
+        isLoc = true;
+        break;
+      }
+    }
+
+    for(unsigned int j = 0; names[j]; j++) {
+      if(strcmp(a, names[j]) == 0) {
+        // if this is localized and no localization was permitted: skip
+        if(isLoc && !(langflags & (1 << j)))
+          continue;
+
+        if(*(attrs[i + 1]) != '\0') {
+          // if this is localized: store, if not, store only if nothing in map right now
+          if(isLoc || !ret[names[j]])
+            ret[names[j]] = attrs[i + 1];
+        }
+      }
+    }
+  }
+
+  return ret;
+
 }
 
 #define NULL_OR_VAL(a) (a ? a : std::string())
+#define NULL_OR_MAP_STR(it) (it != itEnd ? it->second : std::string())
+#define NULL_OR_MAP_VAL(it) (it != itEnd ? it->second : 0)
 
 void PresetSax::startElement(const char *name, const char **attrs)
 {
@@ -336,22 +437,27 @@ void PresetSax::startElement(const char *name, const char **attrs)
   case TagPresets:
     break;
   case TagChunk: {
-    const char *id = findAttribute(attrs, "id");
+    const char *id = findAttribute(attrs, "id", false);
     presets_item *item = new presets_item(presets_item_t::TY_ALL, NULL_OR_VAL(id));
     items.push(item);
     break;
   }
   case TagGroup: {
+    const char *names[] = { "name", "icon", NULL };
+    const AttrMap &a = findAttributes(attrs, names, 1);
+
+    const AttrMap::const_iterator itEnd = a.end();
+    const std::string &name = NULL_OR_MAP_STR(a.find("name"));
+    const AttrMap::const_iterator icit = a.find("icon");
+
+    std::string ic;
+    if(icit != itEnd)
+      ic = josm_icon_name_adjust(icit->second, basepath);
+
     presets_item_group *group = new presets_item_group(0,
-                                items.empty() ? 0 : static_cast<presets_item_group *>(items.top()));
-    for(unsigned int i = 0; attrs[i]; i += 2) {
-      if(strcmp(attrs[i], "name") == 0) {
-        group->name = attrs[i + 1];
-      } else if(strcmp(attrs[i], "icon") == 0 &&
-                strlen(attrs[i + 1]) > 0) {
-        group->icon = josm_icon_name_adjust(attrs[i + 1], basepath);
-      }
-    }
+                                items.empty() ? 0 : static_cast<presets_item_group *>(items.top()),
+                                name, ic);
+
     if(items.empty())
       presets.items.push_back(group);
     else
@@ -362,29 +468,28 @@ void PresetSax::startElement(const char *name, const char **attrs)
   case TagSeparator: {
     g_assert(!items.empty());
     g_assert(items.top()->type & presets_item_t::TY_GROUP);
-    presets_item_separator * sep = new presets_item_separator();
+    presets_item_separator *sep = new presets_item_separator();
     static_cast<presets_item_group *>(items.top())->items.push_back(sep);
     items.push(sep);
     break;
   }
   case TagItem: {
-    const char *tp = 0;
-    const char *n = 0;
+    const char *names[] = { "name", "type", "icon", "preset_name_label", NULL };
+    const AttrMap &a = findAttributes(attrs, names, 1);
+
+    const AttrMap::const_iterator itEnd = a.end();
+    AttrMap::const_iterator it = a.find("preset_name_label");
+    bool addEditName = it != itEnd && (strcmp(it->second, "true") == 0);
+
+    it = a.find("icon");
     std::string ic;
-    bool addEditName = false;
-    for(unsigned int i = 0; attrs[i]; i += 2) {
-      if(strcmp(attrs[i], "name") == 0) {
-        n = attrs[i + 1];
-      } else if(strcmp(attrs[i], "type") == 0) {
-        tp = attrs[i + 1];
-      } else if(strcmp(attrs[i], "icon") == 0) {
-        ic = josm_icon_name_adjust(attrs[i + 1], basepath);
-      } else if(strcmp(attrs[i], "preset_name_label") == 0) {
-        addEditName = (strcmp(attrs[i + 1], "true") == 0);
-      }
-    }
-    presets_item *item = new presets_item(josm_type_parse(tp), NULL_OR_VAL(n),
-                                          ic,
+    if(it != itEnd)
+      ic = josm_icon_name_adjust(it->second, basepath);
+
+    const char *tp = NULL_OR_MAP_VAL(a.find("type"));
+    const std::string &n = NULL_OR_MAP_STR(a.find("name"));
+
+    presets_item *item = new presets_item(josm_type_parse(tp), n, ic,
                                           addEditName);
     g_assert((items.top()->type & presets_item_t::TY_GROUP) != 0);
     static_cast<presets_item_group *>(items.top())->items.push_back(item);
@@ -392,7 +497,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
     break;
   }
   case TagReference: {
-    const char *id = findAttribute(attrs, "ref");
+    const char *id = findAttribute(attrs, "ref", false);
     presets_item *ref = 0;
     if(!id) {
       printf("found presets/item/reference without ref\n");
@@ -419,23 +524,16 @@ void PresetSax::startElement(const char *name, const char **attrs)
 #endif
     break;
   case TagText: {
-    const char *key = 0;
-    const char *text = 0;
-    const char *def = 0;
-    const char *match = 0;
-    for(unsigned int i = 0; attrs[i]; i += 2) {
-      if(strcmp(attrs[i], "key") == 0) {
-        key = attrs[i + 1];
-      } else if(strcmp(attrs[i], "text") == 0) {
-        text = attrs[i + 1];
-      } else if(strcmp(attrs[i], "default") == 0) {
-        def = attrs[i + 1];
-      } else if(strcmp(attrs[i], "match") == 0) {
-        match = attrs[i + 1];
-      }
-    }
-    widget = new presets_widget_text(NULL_OR_VAL(key), NULL_OR_VAL(text),
-                                     NULL_OR_VAL(def), match);
+    const char *names[] = { "key", "text", "default", "match", NULL };
+    const AttrMap &a = findAttributes(attrs, names, 2);
+    const AttrMap::const_iterator itEnd = a.end();
+
+    const std::string &key = NULL_OR_MAP_STR(a.find("key"));
+    const std::string &text = NULL_OR_MAP_STR(a.find("text"));
+    const std::string &def = NULL_OR_MAP_STR(a.find("default"));
+    const char *match = NULL_OR_MAP_VAL(a.find("match"));
+
+    widget = new presets_widget_text(key, text, def, match);
     break;
   }
   case TagKey: {
@@ -456,26 +554,18 @@ void PresetSax::startElement(const char *name, const char **attrs)
     break;
   }
   case TagCheck: {
-    const char *von = 0;
-    const char *key = 0;
-    const char *txt = 0;
-    const char *match = 0;
-    bool on = false;
-    for(unsigned int i = 0; attrs[i]; i += 2) {
-      if(strcmp(attrs[i], "value_on") == 0) {
-        von = attrs[i + 1];
-      } else if(strcmp(attrs[i], "key") == 0) {
-        key = attrs[i + 1];
-      } else if(strcmp(attrs[i], "text") == 0) {
-        txt = attrs[i + 1];
-      } else if(strcmp(attrs[i], "default") == 0) {
-        on = (strcmp(attrs[i + 1], "on") == 0);
-      } else if(strcmp(attrs[i], "match") == 0) {
-        match = attrs[i + 1];
-      }
-    }
-    widget = new presets_widget_checkbox(NULL_OR_VAL(key), NULL_OR_VAL(txt), on,
-                                         match, NULL_OR_VAL(von));
+    const char *names[] = { "key", "text", "value_on", "match", "default", NULL };
+    const AttrMap &a = findAttributes(attrs, names, 2);
+    const AttrMap::const_iterator itEnd = a.end();
+
+    const std::string &key = NULL_OR_MAP_STR(a.find("key"));
+    const std::string &text = NULL_OR_MAP_STR(a.find("text"));
+    const std::string &von = NULL_OR_MAP_STR(a.find("value_on"));
+    const char *match = NULL_OR_MAP_VAL(a.find("match"));
+
+    bool on = NULL_OR_MAP_STR(a.find("default")) == "on";
+
+    widget = new presets_widget_checkbox(key, text, on, match, von);
     break;
   }
   case TagLink: {
@@ -494,41 +584,31 @@ void PresetSax::startElement(const char *name, const char **attrs)
     break;
   }
   case TagCombo: {
-    const char *key = 0;
-    const char *txt = 0;
-    const char *def = 0;
-    const char *match = 0;
-    const char *values = 0;
-    const char *display_values = 0;
-    char delimiter = ',';
+    const char *names[] = { "key", "text", "display_values", "match", "default", "delimiter", "values", NULL };
+    const AttrMap &a = findAttributes(attrs, names, 6);
+    const AttrMap::const_iterator itEnd = a.end();
 
-    for(unsigned int i = 0; attrs[i]; i += 2) {
-      if(strcmp(attrs[i], "default") == 0) {
-        def = attrs[i + 1];
-      } else if(strcmp(attrs[i], "key") == 0) {
-        key = attrs[i + 1];
-      } else if(strcmp(attrs[i], "text") == 0) {
-        txt = attrs[i + 1];
-      } else if(strcmp(attrs[i], "values") == 0) {
-        values = attrs[i + 1];
-      } else if(strcmp(attrs[i], "display_values") == 0) {
-        display_values = attrs[i + 1];
-      } else if(strcmp(attrs[i], "match") == 0) {
-        match = attrs[i + 1];
-      } else if(strcmp(attrs[i], "delimiter") == 0) {
-        if(G_UNLIKELY(strlen(attrs[i + 1]) != 1))
-          printf("found invalid delimiter '%s'\n", attrs[i + 1]);
-        else
-          delimiter = *(attrs[i + 1]);
-      }
+    const std::string &key = NULL_OR_MAP_STR(a.find("key"));
+    const std::string &text = NULL_OR_MAP_STR(a.find("text"));
+    const std::string &def = NULL_OR_MAP_STR(a.find("default"));
+    const char *match = NULL_OR_MAP_VAL(a.find("match"));
+    const char *display_values= NULL_OR_MAP_VAL(a.find("display_values"));
+    const char *values = NULL_OR_MAP_VAL(a.find("values"));
+    const char *del = NULL_OR_MAP_VAL(a.find("delimiter"));
+
+    char delimiter = ',';
+    if(del) {
+      if(G_UNLIKELY(strlen(del) != 1))
+        printf("found invalid delimiter '%s'\n", del);
+      else
+        delimiter = *del;
     }
 
     if(G_UNLIKELY(!values && display_values)) {
       printf("found display_values but not values\n");
       display_values = 0;
     }
-    widget = new presets_widget_combo(NULL_OR_VAL(key), NULL_OR_VAL(txt),
-                                      NULL_OR_VAL(def), match,
+    widget = new presets_widget_combo(key, text, def, match,
                                       presets_widget_combo::split_string(values, delimiter),
                                       presets_widget_combo::split_string(display_values, delimiter));
     break;
@@ -539,24 +619,17 @@ void PresetSax::startElement(const char *name, const char **attrs)
     g_assert_cmpuint(widgets.top()->type, ==, WIDGET_TYPE_COMBO);
     presets_widget_combo * const combo = static_cast<presets_widget_combo *>(widgets.top());
 
-    const char *value = 0;
-    const char *dvalue = 0;
-    for(unsigned int i = 0; attrs[i]; i += 2) {
-      if(strcmp(attrs[i], "display_value") == 0) {
-        dvalue = attrs[i + 1];
-      } else if(strcmp(attrs[i], "value") == 0) {
-        value = attrs[i + 1];
-      }
-    }
+    const char *names[] = { "display_value", "value", NULL };
+    const AttrMap &a = findAttributes(attrs, names, 3);
+    const AttrMap::const_iterator itEnd = a.end();
+
+    const char *value = NULL_OR_MAP_VAL(a.find("value"));
 
     if(G_UNLIKELY(!value)) {
       printf("ignoring list_entry without value\n");
     } else {
       combo->values.push_back(value);
-      if(dvalue && *dvalue)
-        combo->display_values.push_back(dvalue);
-      else
-        combo->display_values.push_back(std::string());
+      combo->display_values.push_back(NULL_OR_MAP_STR(a.find("display_value")));
     }
     break;
   }
