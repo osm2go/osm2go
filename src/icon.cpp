@@ -59,6 +59,14 @@ icon_file_exists(const std::string &file) {
 #endif
                               ".gif", ".png", ".jpg", NULL };
 
+  // absolute filenames are not mangled
+  if(file[0] == '/') {
+    if(g_file_test(file.c_str(), G_FILE_TEST_IS_REGULAR))
+      return file;
+    else
+      return std::string();
+  }
+
   std::string iname = "icons/" + file + icon_exts[0];
   iname.erase(iname.size() - strlen(icon_exts[0]));
 

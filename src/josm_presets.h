@@ -49,7 +49,7 @@ void josm_presets_free(struct presets_items *presets);
 struct appdata_t;
 class tag_context_t;
 
-std::string josm_icon_name_adjust(const char *xname);
+std::string josm_icon_name_adjust(const char *xname, const std::string &basepath = std::string());
 
 GtkWidget *josm_build_presets_button(appdata_t *appdata, tag_context_t *tag_context);
 #endif

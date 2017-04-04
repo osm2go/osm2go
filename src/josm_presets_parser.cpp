@@ -37,11 +37,17 @@ typedef std::map<std::string, presets_item *> ChunkMap;
 
 /* --------------------- presets.xml parsing ----------------------- */
 
-std::string josm_icon_name_adjust(const char *name) {
+std::string josm_icon_name_adjust(const char *name, const std::string &basepath) {
   std::string ret;
 
   if(!name)
     return ret;
+
+  if(!basepath.empty()) {
+    ret = basepath + name;
+    if(g_file_test(ret.c_str(), G_FILE_TEST_IS_REGULAR))
+      return ret;
+  }
 
   size_t len = strlen(name);
 
@@ -154,11 +160,12 @@ class PresetSax {
   void dumpState() const;
 
 public:
-  explicit PresetSax(presets_items &p);
+  explicit PresetSax(presets_items &p, const std::string &b);
 
   bool parse(const std::string &filename);
 
   presets_items &presets;
+  const std::string &basepath;
   ChunkMap chunks;
 
 private:
@@ -236,8 +243,9 @@ void PresetSax::dumpState() const
   }
 }
 
-PresetSax::PresetSax(presets_items &p)
+PresetSax::PresetSax(presets_items &p, const std::string &b)
   : presets(p)
+  , basepath(b)
 {
   memset(&handler, 0, sizeof(handler));
   handler.characters = cb_characters;
@@ -341,7 +349,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
         group->name = attrs[i + 1];
       } else if(strcmp(attrs[i], "icon") == 0 &&
                 strlen(attrs[i + 1]) > 0) {
-        group->icon = josm_icon_name_adjust(attrs[i + 1]);
+        group->icon = josm_icon_name_adjust(attrs[i + 1], basepath);
       }
     }
     if(items.empty())
@@ -370,7 +378,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
       } else if(strcmp(attrs[i], "type") == 0) {
         tp = attrs[i + 1];
       } else if(strcmp(attrs[i], "icon") == 0) {
-        ic = josm_icon_name_adjust(attrs[i + 1]);
+        ic = josm_icon_name_adjust(attrs[i + 1], basepath);
       } else if(strcmp(attrs[i], "preset_name_label") == 0) {
         addEditName = (strcmp(attrs[i + 1], "true") == 0);
       }
@@ -691,24 +699,49 @@ struct move_chunks_functor {
   }
 };
 
+bool presets_items::addFile(const std::string &filename, const std::string &basepath)
+{
+  PresetSax p(*this, basepath);
+  if(!p.parse(filename))
+    return false;
+
+  // now move all chunks to the presets list
+  chunks.reserve(chunks.size() + p.chunks.size());
+  std::for_each(p.chunks.begin(), p.chunks.end(), move_chunks_functor(chunks));
+
+  return true;
+}
+
 struct presets_items *josm_presets_load(void) {
   printf("Loading JOSM presets ...\n");
 
-  const std::string &filename = find_file("defaultpresets.xml");
-  if(G_UNLIKELY(filename.empty()))
-    return NULL;
-
   struct presets_items *presets = new presets_items();
 
-  PresetSax p(*presets);
-  if(!p.parse(filename)) {
+  const std::string &filename = find_file("defaultpresets.xml");
+  if(G_LIKELY(!filename.empty()))
+    presets->addFile(filename, std::string());
+
+  std::string dirname = getenv("HOME");
+  dirname += "/.local/share/osm2go/presets/";
+  GDir *dir = g_dir_open(dirname.c_str(), 0, NULL);
+
+  if(dir != NULL) {
+    const gchar *name;
+    std::string xmlname;
+    while ((name = g_dir_read_name(dir)) != NULL) {
+      const std::string dn = dirname + name + '/';
+      xmlname = dn + name + ".xml";
+      if(g_file_test(xmlname.c_str(), G_FILE_TEST_IS_REGULAR))
+        presets->addFile(xmlname, dn);
+    }
+
+    g_dir_close(dir);
+  }
+
+  if(G_UNLIKELY(presets->items.empty())) {
     delete presets;
     return 0;
   }
-
-  // now move all chunks to the presets list
-  presets->chunks.reserve(presets->chunks.size() + p.chunks.size());
-  std::for_each(p.chunks.begin(), p.chunks.end(), move_chunks_functor(presets->chunks));
 
   return presets;
 }

@@ -22,6 +22,9 @@ static std::set<std::string> missingIcons;
 
 bool check_icon::operator()(const std::string &dir)
 {
+  if(filename[0] == '/')
+    return (g_file_test(filename.c_str(), G_FILE_TEST_IS_REGULAR) == TRUE);
+
   const char *icon_exts[] = { ".svg", ".gif", ".png", ".jpg", NULL };
   std::string name = dir + "/icons/" + filename + icon_exts[0];
   name.erase(name.size() - strlen(icon_exts[0]));
