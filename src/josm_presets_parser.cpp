@@ -721,6 +721,7 @@ struct presets_items *josm_presets_load(void) {
   if(G_LIKELY(!filename.empty()))
     presets->addFile(filename, std::string());
 
+  // check for user presets
   std::string dirname = getenv("HOME");
   dirname += "/.local/share/osm2go/presets/";
   GDir *dir = g_dir_open(dirname.c_str(), 0, NULL);
@@ -730,9 +731,17 @@ struct presets_items *josm_presets_load(void) {
     std::string xmlname;
     while ((name = g_dir_read_name(dir)) != NULL) {
       const std::string dn = dirname + name + '/';
-      xmlname = dn + name + ".xml";
-      if(g_file_test(xmlname.c_str(), G_FILE_TEST_IS_REGULAR))
-        presets->addFile(xmlname, dn);
+      GDir *pdir = g_dir_open(dn.c_str(), 0, NULL);
+      if(pdir != NULL) {
+        // find first XML file inside those directories
+        const gchar *fname;
+        while ((fname = g_dir_read_name(pdir)) != NULL) {
+          if(g_str_has_suffix(fname, ".xml")) {
+            presets->addFile(dn + fname, dn);
+            break;
+          }
+        }
+      }
     }
 
     g_dir_close(dir);
