@@ -587,8 +587,6 @@ on_presets_picker_selected(GtkTreeSelection *selection, gpointer data) {
     /* and request closing of menu */
     gtk_dialog_response(GTK_DIALOG(gtk_widget_get_toplevel(view)),
                         GTK_RESPONSE_ACCEPT);
-
-    context->submenus.clear();
   } else {
     /* check if this already had a submenu */
     GtkWidget *sub = 0;
@@ -831,6 +829,10 @@ presets_picker(presets_context_t *context, const std::vector<presets_item_t *> &
 
   return presets_picker_embed(view, store, context);
 }
+
+static inline void remove_sub_reference(presets_item_group *sub_item) {
+  sub_item->widget = 0;
+}
 #endif
 
 static gint button_press(GtkWidget *widget, GdkEventButton *event,
@@ -884,6 +886,10 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event,
       item = static_cast<presets_item *>(g_object_get_data(G_OBJECT(dialog), "item"));
 
     gtk_widget_destroy(dialog);
+
+    // remove all references to the already destroyed widgets
+    std::for_each(context->submenus.begin(), context->submenus.end(), remove_sub_reference);
+    context->submenus.clear();
 
     if(item)
       presets_item_dialog(context, item);
