@@ -393,8 +393,11 @@ bool presets_item_t::matches(const std::vector<tag_t *> &tags) const
   bool is_interactive = false;
   bool hasPositive = false;
   used_preset_functor fc(tags, is_interactive, hasPositive);
-  if(std::find_if(widgets.begin(), widgets.end(), fc) != widgets.end())
-    return false;
+  if(isItem()) {
+    const presets_item * const item = static_cast<const presets_item *>(this);
+    if(std::find_if(item->widgets.begin(), item->widgets.end(), fc) != item->widgets.end())
+      return false;
+  }
 
   return hasPositive && is_interactive;
 }
@@ -410,7 +413,7 @@ cb_menu_item(GtkWidget *menu_item, gpointer data) {
   presets_item_dialog(context, item);
 }
 
-static GtkWidget *create_menuitem(icon_t **icons, const presets_item_visible *item)
+static GtkWidget *create_menuitem(icon_t **icons, const presets_item_named *item)
 {
   GtkWidget *menu_item;
 
@@ -459,7 +462,7 @@ void build_menu_functor::operator()(presets_item_t *item)
     was_separator = false;
 
     menu_item = create_menuitem(&context->appdata->icon,
-                                static_cast<presets_item_visible *>(item));
+                                static_cast<presets_item_named *>(item));
 
     if(item->type & presets_item_t::TY_GROUP) {
       gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item),
@@ -476,7 +479,7 @@ void build_menu_functor::operator()(presets_item_t *item)
           *matches = gtk_menu_new();
 
           GtkWidget *used_item = create_menuitem(&context->appdata->icon,
-                                                 static_cast<presets_item_visible *>(item));
+                                                 static_cast<presets_item_named *>(item));
           g_object_set_data(G_OBJECT(used_item), "item", item);
           g_signal_connect(used_item, "activate",
                            GTK_SIGNAL_FUNC(cb_menu_item), context);
@@ -566,7 +569,7 @@ on_presets_picker_selected(GtkTreeSelection *selection, gpointer data) {
   if(!gtk_tree_selection_get_selected(selection, &model, &iter))
     return;
 
-  presets_item_visible *item = 0;
+  presets_item_named *item = 0;
   presets_item_group *sub_item = 0;
   gtk_tree_model_get(model, &iter,
                      PRESETS_PICKER_COL_SUBMENU_PTR, &sub_item,
@@ -705,7 +708,7 @@ static GtkWidget *presets_picker_embed(GtkTreeView *view, GtkListStore *store,
   return c;
 }
 
-static GtkTreeIter preset_insert_item(const presets_item_visible *item, icon_t **icons,
+static GtkTreeIter preset_insert_item(const presets_item_named *item, icon_t **icons,
                                       GtkListStore *store) {
   /* icon load can cope with empty string as name (returns NULL then) */
   GdkPixbuf *icon = icon_load(icons, item->icon);
@@ -737,7 +740,7 @@ void insert_recent_items::operator()(const presets_item_t *preset)
     std::for_each(gr->items.begin(), gr->items.end(),
                   insert_recent_items(context, store));
   } else if(preset->matches(context->tag_context->tags))
-    preset_insert_item(static_cast<const presets_item_visible *>(preset),
+    preset_insert_item(static_cast<const presets_item_named *>(preset),
                        &context->appdata->icon, store);
 }
 
@@ -768,7 +771,7 @@ void picker_add_functor::operator()(const presets_item_t *item)
   if(!(item->type & context->tag_context->presets_type))
     return;
 
-  const presets_item_visible * const itemv = static_cast<typeof(itemv)>(item);
+  const presets_item_named * const itemv = static_cast<typeof(itemv)>(item);
 
   if(itemv->name.empty())
     return;

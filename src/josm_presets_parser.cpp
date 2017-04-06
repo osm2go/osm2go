@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008 Till Harbaum <till@harbaum.org>.
+ * Copyright (C) 2017 Rolf Eike Beer <eike@sf-mail.de>
  *
  * This file is part of OSM2Go.
  *
@@ -143,6 +143,9 @@ class PresetSax {
   std::vector<State> state;
   std::stack<presets_item_t *> items; // the current item stack (i.e. menu layout)
   std::stack<presets_widget_t *> widgets; // the current widget stack (i.e. dialog layout)
+  presets_items &presets;
+  const std::string &basepath;
+  const std::vector<std::string> &langs;
 
   // this maps the XML tag name to the target state and the list of allowed source states
   typedef std::multimap<const char *, std::pair<State, const std::vector<State> > > StateMap;
@@ -164,13 +167,9 @@ public:
 
   bool parse(const std::string &filename);
 
-  presets_items &presets;
-  const std::string &basepath;
   ChunkMap chunks;
-  const std::vector<std::string> &langs;
 
 private:
-
   void characters(const char *ch, int len);
   static void cb_characters(void *ts, const xmlChar *ch, int len) {
     static_cast<PresetSax *>(ts)->characters(reinterpret_cast<const char *>(ch), len);
@@ -500,12 +499,16 @@ void PresetSax::startElement(const char *name, const char **attrs)
     const char *id = findAttribute(attrs, "ref", false);
     presets_item *ref = 0;
     if(!id) {
-      printf("found presets/item/reference without ref\n");
+      printf("found ");
+      dumpState();
+      printf("reference without ref\n");
     } else {
       const ChunkMap::const_iterator it = chunks.find(id);
-      if(G_UNLIKELY(it == chunks.end()))
-        printf("found presets/item/reference with unresolved ref %s\n", id);
-      else
+      if(G_UNLIKELY(it == chunks.end())) {
+        printf("found ");
+        dumpState();
+        printf("reference with unresolved ref %s\n", id);
+      } else
         ref = it->second;
     }
     widgets.push(new presets_widget_reference(ref));
@@ -570,7 +573,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
   }
   case TagLink: {
     g_assert(!items.empty());
-    g_assert((items.top()->type & (presets_item_t::TY_GROUP | presets_item_t::TY_SEPARATOR)) == 0);
+    g_assert(items.top()->isItem());
     presets_item * const item = static_cast<presets_item *>(items.top());
     const char *href = findAttribute(attrs, "href");
     if(G_UNLIKELY(href == 0)) {
@@ -638,8 +641,9 @@ void PresetSax::startElement(const char *name, const char **attrs)
   state.push_back(it->second.first);
   if(widget != 0) {
     g_assert(!items.empty());
+    g_assert(items.top()->isItem());
     widgets.push(widget);
-    items.top()->widgets.push_back(widget);
+    static_cast<presets_item *>(items.top())->widgets.push_back(widget);
   }
 }
 
@@ -670,15 +674,22 @@ void PresetSax::endElement(const xmlChar *name)
   case TagItem: {
     g_assert_cmpint(0, ==, widgets.size());
     g_assert(!items.empty());
-    const presets_item_t * const item = items.top();
-    g_assert((item->type & presets_item_t::TY_GROUP) == 0);
+    presets_item_t * const item = items.top();
+    g_assert(item->isItem());
     items.pop();
-    // update the group type
-    g_assert(!items.empty());
-    presets_item_t * const group = items.top();
-    g_assert((group->type & presets_item_t::TY_GROUP) != 0);
-    *const_cast<unsigned int *>(&group->type) |= item->type;
-    break;
+    if(G_UNLIKELY(static_cast<presets_item *>(item)->name.empty())) {
+      printf("found ");
+      dumpState();
+      printf("item without name\n");
+      delete item;
+    } else {
+      // update the group type
+      g_assert(!items.empty());
+      presets_item_t * const group = items.top();
+      g_assert((group->type & presets_item_t::TY_GROUP) != 0);
+      *const_cast<unsigned int *>(&group->type) |= item->type;
+      break;
+    }
   }
   case TagSeparator:
     g_assert(!items.empty());
@@ -723,6 +734,7 @@ void PresetSax::endElement(const xmlChar *name)
   }
   case TagReference: {
     g_assert(!items.empty());
+    g_assert(items.top()->isItem());
     g_assert(!widgets.empty());
     presets_widget_reference * const ref = static_cast<presets_widget_reference *>(widgets.top());
     widgets.pop();
@@ -730,7 +742,7 @@ void PresetSax::endElement(const xmlChar *name)
     if(G_UNLIKELY(ref->item == 0))
       delete ref;
     else
-      items.top()->widgets.push_back(ref);
+      static_cast<presets_item *>(items.top())->widgets.push_back(ref);
     break;
   }
   case TagLabel: {
@@ -739,10 +751,12 @@ void PresetSax::endElement(const xmlChar *name)
     presets_widget_label * const label = static_cast<presets_widget_label *>(widgets.top());
     widgets.pop();
     if(G_UNLIKELY(label->text.empty())) {
-      printf("found presets/item/label without text\n");
+      printf("found ");
+      dumpState();
+      printf("label without text\n");
       delete label;
     } else {
-      items.top()->widgets.push_back(label);
+      static_cast<presets_item *>(items.top())->widgets.push_back(label);
     }
     break;
   }
@@ -951,14 +965,14 @@ guint presets_widget_reference::rows() const
   return std::accumulate(item->widgets.begin(), item->widgets.end(), 0, widget_rows);
 }
 
-presets_item_t::~presets_item_t()
+presets_item::~presets_item()
 {
   std::for_each(widgets.begin(), widgets.end(), free_widget);
 }
 
 presets_item_group::presets_item_group(const unsigned int types, presets_item_group *p,
                                        const std::string &n, const std::string &ic)
-  : presets_item_visible(types | TY_GROUP, n, ic), parent(p), widget(0)
+  : presets_item_named(types | TY_GROUP, n, ic), parent(p), widget(0)
 {
   g_assert(p == 0 || ((p->type & TY_GROUP) != 0));
 }

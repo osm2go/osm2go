@@ -193,10 +193,10 @@ class presets_item;
 
 class presets_widget_reference : public presets_widget_t {
 public:
-  presets_widget_reference(presets_item *i)
+  explicit presets_widget_reference(presets_item *i)
     : presets_widget_t(WIDGET_TYPE_REFERENCE, MatchIgnore), item(i) {}
 
-  presets_item const *item;
+  presets_item * const item;
 
   virtual bool is_interactive() const;
   virtual guint rows() const;
@@ -216,32 +216,41 @@ public:
   };
 
 protected:
-  presets_item_t(unsigned int t)
+  explicit presets_item_t(unsigned int t)
     : type(t) {}
 public:
-  virtual ~presets_item_t();
+  virtual ~presets_item_t() {}
+
+  virtual bool isItem() const {
+    return false;
+  }
 
   const unsigned int type;
-
-  std::vector<presets_widget_t *> widgets;
 
   bool matches(const std::vector<tag_t *> &tags) const;
 };
 
-class presets_item_visible : public presets_item_t {
+class presets_item_named : public presets_item_t {
 public:
-  presets_item_visible(unsigned int t, const std::string &n = std::string(),
+  explicit presets_item_named(unsigned int t, const std::string &n = std::string(),
                        const std::string &ic = std::string())
     : presets_item_t(t), name(n), icon(ic) {}
 
   const std::string name, icon;
 };
 
-class presets_item : public presets_item_visible {
+class presets_item : public presets_item_named {
 public:
-  presets_item(unsigned int t, const std::string &n = std::string(),
+  explicit presets_item(unsigned int t, const std::string &n = std::string(),
                const std::string &ic = std::string(), bool edname = false)
-    : presets_item_visible(t, n, ic), addEditName(edname) {}
+    : presets_item_named(t, n, ic), addEditName(edname) {}
+  virtual ~presets_item();
+
+  std::vector<presets_widget_t *> widgets;
+
+  virtual bool isItem() const {
+    return true;
+  }
 
   std::string link;
   bool addEditName;
@@ -249,10 +258,10 @@ public:
 
 class presets_item_separator : public presets_item_t {
 public:
-  presets_item_separator() : presets_item_t(TY_SEPARATOR) {}
+  explicit presets_item_separator() : presets_item_t(TY_SEPARATOR) {}
 };
 
-class presets_item_group : public presets_item_visible {
+class presets_item_group : public presets_item_named {
 public:
   presets_item_group(const unsigned int types, presets_item_group *p,
                      const std::string &n = std::string(),

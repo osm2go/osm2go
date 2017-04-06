@@ -59,9 +59,9 @@ struct counter {
   unsigned int &refs;
   counter(unsigned int &gr, unsigned int &it, unsigned int &sep, unsigned int &c,
           unsigned int &ce, unsigned int &lb, unsigned int &ky,  unsigned int &chk,
-          unsigned int &ref)
+          unsigned int &rf)
     : groups(gr), items(it), separators(sep), combos(c), combo_entries(ce),
-      labels(lb), keys(ky), checks(chk), refs(ref) {}
+      labels(lb), keys(ky), checks(chk), refs(rf) {}
   void operator()(const presets_item_t *p);
   void operator()(const presets_widget_t *w);
 };
@@ -76,8 +76,10 @@ void counter::operator()(const presets_item_t *p)
   } else if (p->type == presets_item_t::TY_SEPARATOR) {
     separators++;
   } else {
+    g_assert(p->isItem());
     items++;
-    std::for_each(p->widgets.begin(), p->widgets.end(), *this);
+    const presets_item * const item = static_cast<const presets_item *>(p);
+    std::for_each(item->widgets.begin(), item->widgets.end(), *this);
   }
 }
 
@@ -113,7 +115,7 @@ void counter::operator()(const presets_widget_t *w)
  */
 static void checkItem(const presets_item_t *item)
 {
-  const presets_item_visible * const vis = dynamic_cast<const presets_item_visible *>(item);
+  const presets_item_named * const vis = dynamic_cast<const presets_item_named *>(item);
   if(!vis)
     return;
 
@@ -177,7 +179,7 @@ int main(int argc, char **argv)
     << "labels: " << labels << std::endl
     << "keys: " << keys << std::endl
     << "checks: " << checks << std::endl
-    << "refs: " << refs << std::endl;
+    << "references: " << refs << std::endl;
 
   std::for_each(presets->items.begin(), presets->items.end(), checkItem);
 
