@@ -63,8 +63,8 @@ canvas_t *canvas_new(void) {
     canvas->group[group] = goo_canvas_group_new(root, NULL);
 
 
-  gtk_signal_connect(GTK_OBJECT(canvas->widget),
-		     "destroy", G_CALLBACK(canvas_destroy_event), canvas);
+  g_signal_connect(GTK_OBJECT(canvas->widget), "destroy",
+                   G_CALLBACK(canvas_destroy_event), canvas);
 
   return canvas;
 }

@@ -424,9 +424,9 @@ static GtkWidget *details_widget(const tag_context_t &context, bool big) {
 		      nodes, ways, relations);
 
     GtkWidget *member_btn = button_new_with_label(str);
-    gtk_signal_connect(GTK_OBJECT(member_btn), "clicked",
-                       GTK_SIGNAL_FUNC(on_relation_members),
-                       const_cast<tag_context_t *>(&context));
+    g_signal_connect(GTK_OBJECT(member_btn), "clicked",
+                     G_CALLBACK(on_relation_members),
+                     const_cast<tag_context_t *>(&context));
 
     gtk_table_attach_defaults(GTK_TABLE(table), member_btn, 0, 2,
 			      big?2:1, big?4:2);

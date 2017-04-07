@@ -93,8 +93,8 @@ void list_set_user_buttons(GtkWidget *list, ...) {
       gtk_table_attach_defaults(GTK_TABLE(priv->table), priv->button.widget[id],
 		3+id-LIST_BUTTON_USER0, 3+id-LIST_BUTTON_USER0+1, 0, 1);
 
-    gtk_signal_connect(GTK_OBJECT(priv->button.widget[id]), "clicked",
-		       GTK_SIGNAL_FUNC(cb), priv->button.data);
+    g_signal_connect(GTK_OBJECT(priv->button.widget[id]), "clicked",
+                     G_CALLBACK(cb), priv->button.data);
 
     id = va_arg(ap, list_button_t);
   }
@@ -168,7 +168,7 @@ static GtkWidget *list_button_get(GtkWidget *list, list_button_t id) {
 void list_button_connect(GtkWidget *list, list_button_t id,
 			 GCallback cb, gpointer data) {
   GtkWidget *but = list_button_get(list, id);
-  gtk_signal_connect(GTK_OBJECT(but), "clicked", GTK_SIGNAL_FUNC(cb), data);
+  g_signal_connect(GTK_OBJECT(but), "clicked", G_CALLBACK(cb), data);
 }
 
 /* put a custom widget into one of the button slots */
@@ -283,8 +283,8 @@ void list_set_static_buttons(GtkWidget *list, int flags,
       gtk_button_new_with_mnemonic(_((flags&LIST_BTN_NEW)?"_New":"_Add"));
     gtk_table_attach_defaults(GTK_TABLE(priv->table),
 			      priv->button.widget[0], 0, 1, 0, 1);
-    gtk_signal_connect(GTK_OBJECT(priv->button.widget[0]), "clicked",
-		       GTK_SIGNAL_FUNC(cb_new), data);
+    g_signal_connect(GTK_OBJECT(priv->button.widget[0]), "clicked",
+                     G_CALLBACK(cb_new), data);
     gtk_widget_set_sensitive(priv->button.widget[0], TRUE);
   }
 
@@ -296,8 +296,8 @@ void list_set_static_buttons(GtkWidget *list, int flags,
     priv->button.widget[1] = gtk_button_new_with_mnemonic(_("_Edit"));
     gtk_table_attach_defaults(GTK_TABLE(priv->table),
 			      priv->button.widget[1], 1, 2, 0, 1);
-    gtk_signal_connect(GTK_OBJECT(priv->button.widget[1]), "clicked",
-		       GTK_SIGNAL_FUNC(cb_edit), data);
+    g_signal_connect(GTK_OBJECT(priv->button.widget[1]), "clicked",
+                     G_CALLBACK(cb_edit), data);
 #endif
     gtk_widget_set_sensitive(priv->button.widget[1], FALSE);
   }
@@ -310,8 +310,8 @@ void list_set_static_buttons(GtkWidget *list, int flags,
     priv->button.widget[2] = button_new_with_label(_("Remove"));
     gtk_table_attach_defaults(GTK_TABLE(priv->table),
 			      priv->button.widget[2], 2, 3, 0, 1);
-    gtk_signal_connect(GTK_OBJECT(priv->button.widget[2]), "clicked",
-		       GTK_SIGNAL_FUNC(cb_remove), data);
+    g_signal_connect(GTK_OBJECT(priv->button.widget[2]), "clicked",
+                     G_CALLBACK(cb_remove), data);
 #endif
     gtk_widget_set_sensitive(priv->button.widget[2], FALSE);
   }

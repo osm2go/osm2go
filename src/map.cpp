@@ -1822,16 +1822,16 @@ GtkWidget *map_new(appdata_t *appdata) {
   /* autosave happens every two minutes */
   map_set_autosave(map, TRUE);
 
-  gtk_signal_connect(GTK_OBJECT(canvas_widget),
+  g_signal_connect(GTK_OBJECT(canvas_widget),
      "button_press_event", G_CALLBACK(map_button_event), map);
-  gtk_signal_connect(GTK_OBJECT(canvas_widget),
+  g_signal_connect(GTK_OBJECT(canvas_widget),
      "button_release_event", G_CALLBACK(map_button_event), map);
-  gtk_signal_connect(GTK_OBJECT(canvas_widget),
+  g_signal_connect(GTK_OBJECT(canvas_widget),
      "motion_notify_event", G_CALLBACK(map_motion_notify_event), map);
-  gtk_signal_connect(GTK_OBJECT(canvas_widget),
+  g_signal_connect(GTK_OBJECT(canvas_widget),
      "scroll_event", G_CALLBACK(map_scroll_event), appdata);
 
-  gtk_signal_connect(GTK_OBJECT(canvas_widget),
+  g_signal_connect(GTK_OBJECT(canvas_widget),
      "destroy", G_CALLBACK(map_destroy_event), map);
 
   return canvas_widget;

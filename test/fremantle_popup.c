@@ -61,8 +61,8 @@ init_list(GtkWidget *list) {
   gtk_menu_append(menu, menu_item);
   hildon_gtk_widget_set_theme_size(menu_item, 
    (HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH));
-  gtk_signal_connect(GTK_OBJECT(menu_item), "activate", 
-		     GTK_SIGNAL_FUNC(on_menu_activated), list);
+  g_signal_connect(GTK_OBJECT(menu_item), "activate", 
+                   G_CALLBACK(on_menu_activated), list);
   gtk_widget_show_all(GTK_WIDGET(menu));
   
   gtk_widget_tap_and_hold_setup(list, GTK_WIDGET(menu), NULL, 0);
@@ -127,8 +127,8 @@ main (int argc, char **argv) {
    /* add a button to open a seperate dialog doing the same thing */
   /* the main screen does */
   GtkWidget *button = gtk_button_new_with_label("Open Dialog");
-  gtk_signal_connect(GTK_OBJECT(button), "clicked", 
-		     GTK_SIGNAL_FUNC(on_button_clicked), window);
+  g_signal_connect(GTK_OBJECT(button), "clicked", 
+                   G_CALLBACK(on_button_clicked), window);
   gtk_box_pack_start(GTK_BOX(vbox), button, FALSE, FALSE, 5);
 
 

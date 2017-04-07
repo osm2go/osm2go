@@ -277,8 +277,8 @@ static void presets_item_dialog(presets_context_t *context,
       GtkWidget *button = gtk_dialog_add_button(GTK_DIALOG(dialog), _
 			("Info"), GTK_RESPONSE_HELP);
       g_object_set_data(G_OBJECT(button), "link", const_cast<char *>(item->link.c_str()));
-      gtk_signal_connect(GTK_OBJECT(button), "clicked",
-			 GTK_SIGNAL_FUNC(on_info), appdata);
+      g_signal_connect(GTK_OBJECT(button), "clicked",
+                       G_CALLBACK(on_info), appdata);
     }
 #endif
     /* special handling for the first label/separators */
@@ -324,8 +324,8 @@ static void presets_item_dialog(presets_context_t *context,
 #endif
 
     gboolean first = TRUE;
-    gtk_signal_connect(GTK_OBJECT(table), "expose_event",
-		       G_CALLBACK(table_expose_event), &first);
+    g_signal_connect(GTK_OBJECT(table), "expose_event",
+                     G_CALLBACK(table_expose_event), &first);
 
     gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), scroll_win);
 #endif
@@ -926,11 +926,11 @@ GtkWidget *josm_build_presets_button(appdata_t *appdata,
   GtkWidget *but = button_new_with_label(_("Presets"));
   gtk_widget_set_events(but, GDK_EXPOSURE_MASK);
   gtk_widget_add_events(but, GDK_BUTTON_PRESS_MASK);
-  gtk_signal_connect(GTK_OBJECT(but), "button-press-event",
-		     (GtkSignalFunc)button_press, context);
+  g_signal_connect(GTK_OBJECT(but), "button-press-event",
+                   G_CALLBACK(button_press), context);
 
-  gtk_signal_connect(GTK_OBJECT(but), "destroy",
-		     (GtkSignalFunc)on_button_destroy, context);
+  g_signal_connect(GTK_OBJECT(but), "destroy",
+                   G_CALLBACK(on_button_destroy), context);
 
   return but;
 }

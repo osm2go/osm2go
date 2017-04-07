@@ -506,8 +506,8 @@ void notebook_append_page(GtkWidget *notebook,
   gtk_toggle_button_set_mode(GTK_TOGGLE_BUTTON(button), FALSE);
   g_object_set_data(G_OBJECT(button), "page", (gpointer)page_num);
 
-  gtk_signal_connect(GTK_OBJECT(button), "clicked",
-	   GTK_SIGNAL_FUNC(on_notebook_button_clicked), notebook);
+  g_signal_connect(GTK_OBJECT(button), "clicked",
+                   G_CALLBACK(on_notebook_button_clicked), notebook);
 
 #if defined(USE_HILDON) && (MAEMO_VERSION_MAJOR == 5)
   hildon_gtk_widget_set_theme_size(button,
