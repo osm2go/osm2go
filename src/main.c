@@ -322,6 +322,7 @@ cb_menu_view_detail_inc(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
   map_detail_increase(appdata->map);
 }
 
+#if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
 static void
 cb_menu_view_detail_normal(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
@@ -329,6 +330,7 @@ cb_menu_view_detail_normal(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
   printf("detail level normal\n");
   map_detail_normal(appdata->map);
 }
+#endif
 
 static void
 cb_menu_view_detail_dec(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
