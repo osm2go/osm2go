@@ -998,8 +998,7 @@ void projects_to_bounds::operator()(const project_t* project)
   pbounds.push_back(pos_bounds(project->min, project->max));
 }
 
-static void on_edit_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
-  project_context_t *context = (project_context_t*)data;
+static void on_edit_clicked(project_context_t *context) {
   project_t * const project = context->project;
 
   if(diff_present(project) || context->active_n_dirty())
@@ -1037,8 +1036,7 @@ static void on_edit_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
   }
 }
 
-static void on_download_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
-  project_context_t *context = (project_context_t*)data;
+static void on_download_clicked(project_context_t *context) {
   project_t * const project = context->project;
 
   printf("download %s\n", project->osm.c_str());
@@ -1051,8 +1049,7 @@ static void on_download_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) 
   project_filesize(context);
 }
 
-static void on_diff_remove_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
-  project_context_t *context = (project_context_t*)data;
+static void on_diff_remove_clicked(project_context_t *context) {
   const project_t * const project = context->project;
 
   printf("clicked diff remove\n");
@@ -1171,8 +1168,8 @@ project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
   gtk_table_attach_defaults(GTK_TABLE(table), context.maxlon, 3, 4, 2, 3);
 
   GtkWidget *edit = button_new_with_label(_("Edit"));
-  g_signal_connect(GTK_OBJECT(edit), "clicked",
-                   G_CALLBACK(on_edit_clicked), &context);
+  g_signal_connect_swapped(GTK_OBJECT(edit), "clicked",
+                           G_CALLBACK(on_edit_clicked), &context);
   gtk_table_attach(GTK_TABLE(table), edit, 4, 5, 1, 3,
                    static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),
                    static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),0,0);
@@ -1197,8 +1194,8 @@ project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
   project_filesize(&context);
   gtk_table_attach_defaults(GTK_TABLE(table), context.fsize, 1, 4, 4, 5);
   context.download = button_new_with_label(_("Download"));
-  g_signal_connect(GTK_OBJECT(context.download), "clicked",
-                   G_CALLBACK(on_download_clicked), &context);
+  g_signal_connect_swapped(GTK_OBJECT(context.download), "clicked",
+                           G_CALLBACK(on_download_clicked), &context);
   gtk_widget_set_sensitive(context.download, project_pos_is_valid(project));
 
   gtk_table_attach_defaults(GTK_TABLE(table), context.download, 4, 5, 4, 5);
@@ -1213,8 +1210,8 @@ project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
   context.diff_remove = button_new_with_label(_("Undo all"));
   if(!diff_present(project) && !context.active_n_dirty())
     gtk_widget_set_sensitive(context.diff_remove,  FALSE);
-  g_signal_connect(GTK_OBJECT(context.diff_remove), "clicked",
-                   G_CALLBACK(on_diff_remove_clicked), &context);
+  g_signal_connect_swapped(GTK_OBJECT(context.diff_remove), "clicked",
+                           G_CALLBACK(on_diff_remove_clicked), &context);
   gtk_table_attach_defaults(GTK_TABLE(table), context.diff_remove, 4, 5, 5, 6);
 
   /* ---------------------------------------------------------------- */

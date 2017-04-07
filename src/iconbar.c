@@ -34,44 +34,43 @@
 
 #define MARKUP "<span size='xx-small'>%s</span>"
 
-static void on_info_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
+static void on_info_clicked(gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
-
   info_dialog(GTK_WIDGET(appdata->window), appdata);
 }
 
-static void on_node_add_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
+static void on_node_add_clicked(gpointer data) {
   map_action_set((map_t*)data, MAP_ACTION_NODE_ADD);
 }
 
-static void on_way_add_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
+static void on_way_add_clicked(gpointer data) {
   map_action_set((map_t*)data, MAP_ACTION_WAY_ADD);
 }
 
-static void on_way_node_add_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
+static void on_way_node_add_clicked(gpointer data) {
   map_action_set((map_t*)data, MAP_ACTION_WAY_NODE_ADD);
 }
 
-static void on_way_reverse_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
+static void on_way_reverse_clicked(gpointer data) {
   map_edit_way_reverse((map_t*)data);
 }
 
-static void on_way_cut_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
+static void on_way_cut_clicked(gpointer data) {
   map_action_set((map_t*)data, MAP_ACTION_WAY_CUT);
 }
 
 #ifdef FINGER_UI
 static GtkWidget *menu_add(GtkWidget *menu, appdata_t *appdata,
 			   char *icon_str, char *menu_str,
-			   void(*func)(GtkButton*, gpointer)) {
+			   void(*func)(gpointer)) {
 
   GtkWidget *item = gtk_image_menu_item_new_with_label(menu_str);
 
   gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item),
                                 icon_widget_load(&appdata->icon, icon_str));
 
-  g_signal_connect(GTK_OBJECT(item), "activate",
-                   G_CALLBACK(func), appdata->map);
+  g_signal_connect_swapped(GTK_OBJECT(item), "activate",
+                           G_CALLBACK(func), appdata->map);
 
   gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
@@ -117,7 +116,7 @@ static GtkWidget *popup_menu_create(appdata_t *appdata) {
 #endif
 
 #ifdef MAIN_GUI_RELATION
-static void on_relation_add_clicked(GtkButton *button, gpointer data) {
+static void on_relation_add_clicked(gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
 
   g_assert((appdata->map->selected.object.type == NODE) ||
@@ -127,20 +126,6 @@ static void on_relation_add_clicked(GtkButton *button, gpointer data) {
 		      &appdata->map->selected.object);
 }
 #endif
-
-static void on_trash_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
-  map_delete_selected((map_t*)data);
-}
-
-static void on_ok_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
-  printf("User ok\n");
-  map_action_ok((map_t*)data);
-}
-
-static void on_cancel_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
-  printf("User cancel\n");
-  map_action_cancel((map_t*)data);
-}
 
 /* enable/disable ok and cancel button */
 void icon_bar_map_cancel_ok(iconbar_t *iconbar,
@@ -205,12 +190,12 @@ void icon_bar_map_action_idle(iconbar_t *iconbar, gboolean idle, gboolean way_en
 #ifndef FINGER_UI
 static GtkWidget *icon_add(GtkWidget *vbox, appdata_t *appdata,
                            const char *icon_str,
-                           void(*func)(GtkButton*, gpointer)) {
+                           void(*func)(map_t *)) {
   GtkWidget *but = gtk_button_new();
   GtkWidget *icon = gtk_image_new_from_pixbuf(
 		      icon_load(&appdata->icon, icon_str));
   gtk_button_set_image(GTK_BUTTON(but), icon);
-  g_signal_connect(GTK_OBJECT(but), "clicked", G_CALLBACK(func), appdata->map);
+  g_signal_connect_swapped(GTK_OBJECT(but), "clicked", G_CALLBACK(func), appdata->map);
 
   gtk_box_pack_start(GTK_BOX(vbox), but, FALSE, FALSE, 0);
   return but;
@@ -219,7 +204,7 @@ static GtkWidget *icon_add(GtkWidget *vbox, appdata_t *appdata,
 
 static GtkWidget *tool_add(GtkWidget *toolbar, appdata_t *appdata,
 			   char *icon_str, char *tooltip_str,
-                           void(*func)(GtkButton*, gpointer), gpointer context) {
+                           void(*func)(gpointer), gpointer context) {
   GtkWidget *item =
     GTK_WIDGET(gtk_tool_button_new(
 	   icon_widget_load(&appdata->icon, icon_str), NULL));
@@ -234,7 +219,7 @@ static GtkWidget *tool_add(GtkWidget *toolbar, appdata_t *appdata,
   gtk_widget_set_tooltip_text(item, tooltip_str);
 #endif
 
-  g_signal_connect(GTK_OBJECT(item), "clicked", G_CALLBACK(func), context);
+  g_signal_connect_swapped(GTK_OBJECT(item), "clicked", G_CALLBACK(func), context);
 
   gtk_toolbar_insert(GTK_TOOLBAR(toolbar), GTK_TOOL_ITEM(item), -1);
 
@@ -263,7 +248,7 @@ GtkWidget *iconbar_new(appdata_t *appdata) {
 
   /* -------------------------------------------------------- */
   iconbar->trash = tool_add(iconbar->toolbar, appdata,
-      TOOL_ICON("trash"), _("Delete"), on_trash_clicked, appdata->map);
+      TOOL_ICON("trash"), _("Delete"), (void(*)(void*))map_delete_selected, appdata->map);
 
   /* -------------------------------------------------------- */
   gtk_toolbar_insert(GTK_TOOLBAR(iconbar->toolbar),
@@ -347,8 +332,8 @@ GtkWidget *iconbar_new(appdata_t *appdata) {
   gtk_widget_set_size_request(GTK_WIDGET(hbox), -1, 32);
 #endif
 
-  iconbar->ok = icon_add(hbox, appdata, TOOL_ICON("ok"), on_ok_clicked);
-  iconbar->cancel = icon_add(hbox, appdata, TOOL_ICON("cancel"), on_cancel_clicked);
+  iconbar->ok = icon_add(hbox, appdata, TOOL_ICON("ok"), map_action_ok);
+  iconbar->cancel = icon_add(hbox, appdata, TOOL_ICON("cancel"), map_action_cancel);
   gtk_box_pack_end(GTK_BOX(box), hbox, FALSE, FALSE, 0);
 #endif
 
@@ -375,11 +360,11 @@ void iconbar_register_buttons(appdata_t *appdata, GtkWidget *ok, GtkWidget *canc
   g_assert(appdata->iconbar);
 
   appdata->iconbar->ok = ok;
-  g_signal_connect(GTK_OBJECT(ok), "clicked",
-                   G_CALLBACK(on_ok_clicked), appdata->map);
+  g_signal_connect_swapped(GTK_OBJECT(ok), "clicked",
+                           G_CALLBACK(map_action_ok), appdata->map);
   appdata->iconbar->cancel = cancel;
-  g_signal_connect(GTK_OBJECT(cancel), "clicked",
-                   G_CALLBACK(on_cancel_clicked), appdata->map);
+  g_signal_connect_swapped(GTK_OBJECT(cancel), "clicked",
+                           G_CALLBACK(map_action_cancel), appdata->map);
 
   icon_bar_map_cancel_ok(appdata->iconbar, FALSE, FALSE);
 }

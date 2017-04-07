@@ -905,7 +905,7 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event,
   return FALSE;
 }
 
-static gint on_button_destroy(G_GNUC_UNUSED GtkWidget *widget, gpointer data) {
+static gint on_button_destroy(gpointer data) {
   presets_context_t *context = (presets_context_t*)data;
 
 #ifndef FREMANTLE
@@ -929,8 +929,8 @@ GtkWidget *josm_build_presets_button(appdata_t *appdata,
   g_signal_connect(GTK_OBJECT(but), "button-press-event",
                    G_CALLBACK(button_press), context);
 
-  g_signal_connect(GTK_OBJECT(but), "destroy",
-                   G_CALLBACK(on_button_destroy), context);
+  g_signal_connect_swapped(GTK_OBJECT(but), "destroy",
+                           G_CALLBACK(on_button_destroy), context);
 
   return but;
 }

@@ -119,8 +119,6 @@ cb_menu_project_open(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
   main_ui_enable(appdata);
 }
 
-void on_window_destroy (GtkWidget *widget, gpointer data);
-
 static void
 cb_menu_about(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
@@ -942,7 +940,7 @@ static GtkWidget *app_menu_create(appdata_t *appdata,
 
 #define COLUMNS  2
 
-void on_submenu_entry_clicked(G_GNUC_UNUSED GtkButton *button, GtkWidget *menu)
+static void on_submenu_entry_clicked(GtkWidget *menu)
 {
   /* force closing of submenu dialog */
   gtk_dialog_response(GTK_DIALOG(menu), GTK_RESPONSE_NONE);
@@ -982,8 +980,8 @@ static GtkWidget *app_submenu_create(appdata_t *appdata,
 	     HILDON_BUTTON_ARRANGEMENT_VERTICAL,
 	     _(menu_entries->label), _(menu_entries->value));
 
-	g_signal_connect(button, "clicked",
-			 G_CALLBACK(on_submenu_entry_clicked), dialog);
+        g_signal_connect_swapped(button, "clicked",
+                                 G_CALLBACK(on_submenu_entry_clicked), dialog);
 
 	g_signal_connect(button, "clicked",
 			 menu_entries->activate_cb, appdata);
@@ -998,8 +996,8 @@ static GtkWidget *app_submenu_create(appdata_t *appdata,
 	hildon_check_button_set_active(HILDON_CHECK_BUTTON(button),
 				       menu_entries->toggle(appdata));
 
-	g_signal_connect(button, "clicked",
-			 G_CALLBACK(on_submenu_entry_clicked), dialog);
+        g_signal_connect_swapped(button, "clicked",
+                                 G_CALLBACK(on_submenu_entry_clicked), dialog);
 
 	g_signal_connect(button, "toggled",
 			 menu_entries->activate_cb, appdata);
@@ -1262,16 +1260,14 @@ void cleanup(appdata_t *appdata) {
   puts("everything is gone");
 }
 
-void on_window_destroy(G_GNUC_UNUSED GtkWidget *widget, gpointer data) {
-  appdata_t *appdata = (appdata_t*)data;
-
+static void on_window_destroy(appdata_t *appdata) {
   puts("main window destroy");
 
   gtk_main_quit();
   appdata->window = NULL;
 }
 
-gboolean on_window_key_press(G_GNUC_UNUSED GtkWidget *widget,
+static gboolean on_window_key_press(G_GNUC_UNUSED GtkWidget *widget,
 			 GdkEventKey *event, gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
   int handled = FALSE;
@@ -1434,8 +1430,8 @@ int main(int argc, char *argv[]) {
 
   g_signal_connect(G_OBJECT(appdata.window), "key_press_event",
  		   G_CALLBACK(on_window_key_press), &appdata);
-  g_signal_connect(G_OBJECT(appdata.window), "destroy",
-		   G_CALLBACK(on_window_destroy), &appdata);
+  g_signal_connect_swapped(G_OBJECT(appdata.window), "destroy",
+                           G_CALLBACK(on_window_destroy), &appdata);
 
   appdata.vbox = gtk_vbox_new(FALSE,0);
 

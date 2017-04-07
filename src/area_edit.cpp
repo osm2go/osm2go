@@ -140,8 +140,7 @@ static inline const char *warn_text() {
            "mapping performance in a densly mapped area (e.g. cities)!");
 }
 
-static void on_area_warning_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
-  context_t *context = static_cast<context_t *>(data);
+static void on_area_warning_clicked(context_t *context) {
   double area = selected_area(context);
 
   warningf(context->dialog, warn_text(), area, area/(KMPMIL*KMPMIL),
@@ -342,9 +341,7 @@ static void extent_update(context_t *context) {
   pos_dist_entry_set(context->extent.height, height, context->extent.is_mil);
 }
 
-static void callback_modified_direct(G_GNUC_UNUSED GtkWidget *widget, gpointer data) {
-  context_t *context = (context_t*)data;
-
+static void callback_modified_direct(context_t *context) {
   /* direct is second tab (page 1) */
   if(!current_tab_is(context, -1, TAB_LABEL_DIRECT))
     return;
@@ -364,9 +361,7 @@ static void callback_modified_direct(G_GNUC_UNUSED GtkWidget *widget, gpointer d
 #endif
 }
 
-static void callback_modified_extent(G_GNUC_UNUSED GtkWidget *widget, gpointer data) {
-  context_t *context = static_cast<context_t *>(data);
-
+static void callback_modified_extent(context_t *context) {
   /* extent is third tab (page 2) */
   if(!current_tab_is(context, -1, TAB_LABEL_EXTENT))
     return;
@@ -400,9 +395,7 @@ static void callback_modified_extent(G_GNUC_UNUSED GtkWidget *widget, gpointer d
 #endif
 }
 
-static void callback_modified_unit(G_GNUC_UNUSED GtkWidget *widget, gpointer data) {
-  context_t *context = static_cast<context_t *>(data);
-
+static void callback_modified_unit(context_t *context) {
   /* get current values */
   double height = pos_dist_get(context->extent.height, context->extent.is_mil);
   double width  = pos_dist_get(context->extent.width, context->extent.is_mil);
@@ -417,9 +410,7 @@ static void callback_modified_unit(G_GNUC_UNUSED GtkWidget *widget, gpointer dat
 }
 
 #ifdef HAS_MAEMO_MAPPER
-static void callback_fetch_mm_clicked(G_GNUC_UNUSED GtkButton *button, gpointer data) {
-  context_t *context = (context_t*)data;
-
+static void callback_fetch_mm_clicked(context_t *context) {
   if(!dbus_mm_set_position(context->area->appdata->osso_context)) {
     errorf(context->dialog,
 	   _("Unable to communicate with Maemo Mapper. "
@@ -634,8 +625,8 @@ bool area_edit(area_edit_t &area) {
   gtk_button_set_image(GTK_BUTTON(context.warning),
 		       gtk_image_new_from_stock(GTK_STOCK_DIALOG_WARNING,
 						GTK_ICON_SIZE_BUTTON));
-  g_signal_connect(context.warning, "clicked",
-  		   G_CALLBACK(on_area_warning_clicked), &context);
+  g_signal_connect_swapped(context.warning, "clicked",
+                           G_CALLBACK(on_area_warning_clicked), &context);
 
   context.notebook = notebook_new();
 
@@ -693,15 +684,14 @@ bool area_edit(area_edit_t &area) {
   /* setup this page */
   direct_update(&context);
 
-  g_signal_connect(G_OBJECT(context.direct.minlat), "changed",
-		   G_CALLBACK(callback_modified_direct), &context);
-  g_signal_connect(G_OBJECT(context.direct.minlon), "changed",
-		   G_CALLBACK(callback_modified_direct), &context);
-  g_signal_connect(G_OBJECT(context.direct.maxlat), "changed",
-		   G_CALLBACK(callback_modified_direct), &context);
-  g_signal_connect(G_OBJECT(context.direct.maxlon), "changed",
-		   G_CALLBACK(callback_modified_direct), &context);
-
+  g_signal_connect_swapped(G_OBJECT(context.direct.minlat), "changed",
+                           G_CALLBACK(callback_modified_direct), &context);
+  g_signal_connect_swapped(G_OBJECT(context.direct.minlon), "changed",
+                           G_CALLBACK(callback_modified_direct), &context);
+  g_signal_connect_swapped(G_OBJECT(context.direct.maxlat), "changed",
+                           G_CALLBACK(callback_modified_direct), &context);
+  g_signal_connect_swapped(G_OBJECT(context.direct.maxlon), "changed",
+                           G_CALLBACK(callback_modified_direct), &context);
 
   /* --- hint --- */
   label = gtk_label_new(_("(recommended min/max diff <0.03 degrees)"));
@@ -758,16 +748,16 @@ bool area_edit(area_edit_t &area) {
   extent_update(&context);
 
   /* connect signals after inital update to avoid confusion */
-  g_signal_connect(G_OBJECT(context.extent.lat), "changed",
-		   G_CALLBACK(callback_modified_extent), &context);
-  g_signal_connect(G_OBJECT(context.extent.lon), "changed",
-		   G_CALLBACK(callback_modified_extent), &context);
-  g_signal_connect(G_OBJECT(context.extent.width), "changed",
-		   G_CALLBACK(callback_modified_extent), &context);
-  g_signal_connect(G_OBJECT(context.extent.height), "changed",
-		   G_CALLBACK(callback_modified_extent), &context);
-  g_signal_connect(G_OBJECT(context.extent.mil_km), "changed",
-		   G_CALLBACK(callback_modified_unit), &context);
+  g_signal_connect_swapped(G_OBJECT(context.extent.lat), "changed",
+                           G_CALLBACK(callback_modified_extent), &context);
+  g_signal_connect_swapped(G_OBJECT(context.extent.lon), "changed",
+                           G_CALLBACK(callback_modified_extent), &context);
+  g_signal_connect_swapped(G_OBJECT(context.extent.width), "changed",
+                           G_CALLBACK(callback_modified_extent), &context);
+  g_signal_connect_swapped(G_OBJECT(context.extent.height), "changed",
+                           G_CALLBACK(callback_modified_extent), &context);
+  g_signal_connect_swapped(G_OBJECT(context.extent.mil_km), "changed",
+                           G_CALLBACK(callback_modified_unit), &context);
 
   /* --- hint --- */
   label = gtk_label_new(_("(recommended width/height < 2km/1.25mi)"));
@@ -789,8 +779,8 @@ bool area_edit(area_edit_t &area) {
     button_new_with_label(_("Get from Maemo Mapper"));
   gtk_box_pack_start(GTK_BOX(vbox), context.mmapper.fetch, FALSE, FALSE, 0);
 
-  g_signal_connect(G_OBJECT(context.mmapper.fetch), "clicked",
-		   G_CALLBACK(callback_fetch_mm_clicked), &context);
+  g_signal_connect_swapped(G_OBJECT(context.mmapper.fetch), "clicked",
+                           G_CALLBACK(callback_fetch_mm_clicked), &context);
 
   /* --- hint --- */
   label = gtk_label_new(_("(recommended MM zoom level < 7)"));

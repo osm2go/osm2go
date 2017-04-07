@@ -68,8 +68,7 @@ static GtkWidget *link_new(appdata_t *appdata, const char *url) {
 }
 
 #ifdef ENABLE_BROWSER_INTERFACE
-static void on_paypal_button_clicked(G_GNUC_UNUSED GtkButton *button, appdata_t *appdata) {
-  //  gtk_dialog_response(GTK_DIALOG(context->dialog), GTK_RESPONSE_ACCEPT);
+static void on_paypal_button_clicked(appdata_t *appdata) {
   open_url(appdata,
 	      "https://www.paypal.com/cgi-bin/webscr"
 	      "?cmd=_s-xclick&hosted_button_id=7400558");
@@ -295,8 +294,8 @@ static GtkWidget *donate_page_new(appdata_t *appdata) {
 #endif
 		       );
   gtk_button_set_relief(GTK_BUTTON(button), GTK_RELIEF_NONE);
-  g_signal_connect(button, "clicked",
-		   G_CALLBACK(on_paypal_button_clicked), appdata);
+  g_signal_connect_swapped(button, "clicked",
+                           G_CALLBACK(on_paypal_button_clicked), appdata);
   gtk_box_pack_start(GTK_BOX(ihbox), button, TRUE, FALSE, 0);
   gtk_box_pack_start_defaults(GTK_BOX(vbox), ihbox);
 #endif

@@ -92,15 +92,15 @@ static const char *http_message(int id) {
   return NULL;
 }
 
-static gint dialog_destroy_event(G_GNUC_UNUSED GtkWidget *widget, gpointer data) {
+static gint dialog_destroy_event(gboolean *data) {
   /* set cancel flag */
-  *(gboolean*)data = TRUE;
+  *data = TRUE;
   return FALSE;
 }
 
-static void on_cancel(G_GNUC_UNUSED GtkWidget *widget, gpointer data) {
+static void on_cancel(gboolean *data) {
   /* set cancel flag */
-  *(gboolean*)data = TRUE;
+  *data = TRUE;
 }
 
 /* create the dialog box shown while worker is running */
@@ -128,12 +128,12 @@ static GtkWidget *busy_dialog(GtkWidget *parent, GtkProgressBar **pbar,
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), GTK_WIDGET(*pbar));
 
   GtkWidget *button = button_new_with_label(_("Cancel"));
-  g_signal_connect(GTK_OBJECT(button), "clicked",
-                   G_CALLBACK(on_cancel), (gpointer)cancel_ind);
+  g_signal_connect_swapped(GTK_OBJECT(button), "clicked",
+                           G_CALLBACK(on_cancel), cancel_ind);
   gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->action_area), button);
 
-  g_signal_connect(GTK_OBJECT(dialog), "destroy",
-                   G_CALLBACK(dialog_destroy_event), (gpointer)cancel_ind);
+  g_signal_connect_swapped(GTK_OBJECT(dialog), "destroy",
+                           G_CALLBACK(dialog_destroy_event), cancel_ind);
 
   gtk_widget_show_all(dialog);
 
