@@ -828,6 +828,7 @@ struct presets_items *josm_presets_load(void) {
             break;
           }
         }
+        g_dir_close(pdir);
       }
     }
 
