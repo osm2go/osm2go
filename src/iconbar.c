@@ -202,6 +202,7 @@ void icon_bar_map_action_idle(iconbar_t *iconbar, gboolean idle, gboolean way_en
   gtk_widget_set_sensitive(iconbar->way_reverse, idle && way_en);
 }
 
+#ifndef FINGER_UI
 static GtkWidget *icon_add(GtkWidget *vbox, appdata_t *appdata,
                            const char *icon_str,
                            void(*func)(GtkButton*, gpointer)) {
@@ -214,6 +215,7 @@ static GtkWidget *icon_add(GtkWidget *vbox, appdata_t *appdata,
   gtk_box_pack_start(GTK_BOX(vbox), but, FALSE, FALSE, 0);
   return but;
 }
+#endif
 
 static GtkWidget *tool_add(GtkWidget *toolbar, appdata_t *appdata,
 			   char *icon_str, char *tooltip_str,
