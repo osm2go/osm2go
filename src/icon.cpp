@@ -88,7 +88,7 @@ GdkPixbuf *icon_load(icon_t **icon, const char *name) {
   return icon_load(icon, std::string(name));
 }
 
-GdkPixbuf *icon_load(icon_t **icon, const std::string &sname) {
+GdkPixbuf *icon_load(icon_t **icon, const std::string &sname, int limit) {
   if(sname.empty())
     return 0;
 
@@ -105,7 +105,7 @@ GdkPixbuf *icon_load(icon_t **icon, const std::string &sname) {
 
   const std::string &fullname = icon_file_exists(sname);
   if(!fullname.empty()) {
-    GdkPixbuf *pix = gdk_pixbuf_new_from_file(fullname.c_str(), NULL);
+    GdkPixbuf *pix = gdk_pixbuf_new_from_file_at_size(fullname.c_str(), limit, limit, NULL);
 
     if(!*icon)
       *icon = new icon_t();
@@ -122,6 +122,14 @@ GdkPixbuf *icon_load(icon_t **icon, const std::string &sname) {
 GtkWidget *icon_widget_load(icon_t **icon, const char *name) {
   GdkPixbuf *pix = icon_load(icon, name);
   if(!pix) return NULL;
+
+  return gtk_image_new_from_pixbuf(pix);
+}
+
+GtkWidget *icon_widget_load(icon_t **icon, const std::string &name, int limit) {
+  GdkPixbuf *pix = icon_load(icon, name, limit);
+  if(!pix)
+    return NULL;
 
   return gtk_image_new_from_pixbuf(pix);
 }

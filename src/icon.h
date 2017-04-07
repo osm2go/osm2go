@@ -38,7 +38,19 @@ GtkWidget *icon_widget_load(icon_t **icon, const char *name);
 
 #include <string>
 
-GdkPixbuf *icon_load(icon_t **icon, const std::string &sname);
+/**
+ * @brief load an icon from disk, limited to given dimensions
+ * @param icon the global icon cache
+ * @param sname the name of the icon
+ * @param limit the maximum dimensions of the image
+ * @return the scaled pixbuf
+ *
+ * The image is only scaled down to the given dimensions, not enlarged.
+ * The limit is only applied if the icon is not already cached.
+ */
+GdkPixbuf *icon_load(icon_t **icon, const std::string &sname, int limit = -1);
+
+GtkWidget *icon_widget_load(icon_t **icon, const std::string &name, int limit);
 
 #endif
 

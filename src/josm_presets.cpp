@@ -421,8 +421,9 @@ static GtkWidget *create_menuitem(icon_t **icons, const presets_item_named *item
     menu_item = gtk_menu_item_new_with_label(item->name.c_str());
   else {
     menu_item = gtk_image_menu_item_new_with_label(item->name.c_str());
+
     gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(menu_item),
-                                  icon_widget_load(icons, item->icon.c_str()));
+                                  icon_widget_load(icons, item->icon, 16));
   }
 
   return menu_item;
@@ -711,7 +712,7 @@ static GtkWidget *presets_picker_embed(GtkTreeView *view, GtkListStore *store,
 static GtkTreeIter preset_insert_item(const presets_item_named *item, icon_t **icons,
                                       GtkListStore *store) {
   /* icon load can cope with empty string as name (returns NULL then) */
-  GdkPixbuf *icon = icon_load(icons, item->icon);
+  GdkPixbuf *icon = icon_load(icons, item->icon, 16);
 
   /* Append a row and fill in some data */
   GtkTreeIter iter;
