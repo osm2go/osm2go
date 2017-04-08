@@ -64,7 +64,6 @@ extern "C" {
 
 gboolean project_exists(settings_t *settings, const char *name);
 gboolean project_save(GtkWidget *parent, project_t *project);
-gboolean project_load(appdata_t *appdata, const char *name);
 gboolean project_check_demo(GtkWidget *parent, project_t *project);
 
 void project_free(project_t *project);
@@ -77,6 +76,11 @@ const char *project_name(const project_t *project);
 
 #ifdef __cplusplus
 }
+
+#include <string>
+
+bool project_load(appdata_t *appdata, const std::string &name);
+std::string project_select(appdata_t *appdata);
 #endif
 
 #endif // PROJECT_H

@@ -115,7 +115,9 @@ void main_ui_enable(appdata_t *appdata) {
 static void
 cb_menu_project_open(GtkMenuItem *, gpointer data) {
   appdata_t *appdata = static_cast<appdata_t *>(data);
-  project_load(appdata, NULL);
+  const std::string &proj_name = project_select(appdata);
+  if(!proj_name.empty())
+    project_load(appdata, proj_name);
   main_ui_enable(appdata);
 }
 

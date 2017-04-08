@@ -847,7 +847,7 @@ static GtkWidget *project_list_widget(select_context_t &context, gboolean &has_s
   return context.list;
 }
 
-static std::string project_select(appdata_t *appdata) {
+std::string project_select(appdata_t *appdata) {
   std::string name;
 
   select_context_t context(appdata,
@@ -1304,23 +1304,9 @@ static bool project_open(appdata_t *appdata, const char *name) {
   return true;
 }
 
-gboolean project_load(appdata_t *appdata, const char *name) {
-  std::string proj_name;
-
-  if(!name) {
-    /* make user select a project */
-    proj_name = project_select(appdata);
-    if(proj_name.empty()) {
-      printf("no project selected\n");
-      return FALSE;
-    }
-  }
-  else {
-    proj_name = name;
-  }
-
+bool project_load(appdata_t *appdata, const std::string &name) {
   char banner_txt[64];
-  snprintf(banner_txt, sizeof(banner_txt), _("Loading %s"), proj_name.c_str());
+  snprintf(banner_txt, sizeof(banner_txt), _("Loading %s"), name.c_str());
   banner_busy_start(appdata, TRUE, banner_txt);
 
   /* close current project */
@@ -1332,7 +1318,7 @@ gboolean project_load(appdata_t *appdata, const char *name) {
   /* open project itself */
   banner_busy_tick();
 
-  if(!project_open(appdata, proj_name.c_str())) {
+  if(!project_open(appdata, name.c_str())) {
     printf("error opening requested project\n");
 
     if(appdata->project) {
@@ -1346,15 +1332,15 @@ gboolean project_load(appdata_t *appdata, const char *name) {
     }
 
     snprintf(banner_txt, sizeof(banner_txt),
-	     _("Error opening %s"), proj_name.c_str());
+	     _("Error opening %s"), name.c_str());
     banner_busy_stop(appdata);
     banner_show_info(appdata, banner_txt);
 
-    return FALSE;
+    return false;
   }
 
   if(!appdata->window)
-    return FALSE;
+    return false;
 
   /* check if OSM data is valid */
   banner_busy_tick();
@@ -1374,11 +1360,11 @@ gboolean project_load(appdata_t *appdata, const char *name) {
     }
 
     snprintf(banner_txt, sizeof(banner_txt),
-	     _("Error opening %s"), proj_name.c_str());
+	     _("Error opening %s"), name.c_str());
     banner_busy_stop(appdata);
     banner_show_info(appdata, banner_txt);
 
-    return FALSE;
+    return false;
   }
 
   /* load diff possibly preset */
@@ -1413,13 +1399,13 @@ gboolean project_load(appdata_t *appdata, const char *name) {
   banner_busy_stop(appdata);
 
 #if 0
-  snprintf(banner_txt, sizeof(banner_txt), _("Loaded %s"), proj_name.c_str());
+  snprintf(banner_txt, sizeof(banner_txt), _("Loaded %s"), name.c_str());
   banner_show_info(appdata, banner_txt);
 #endif
 
   statusbar_set(appdata->statusbar, NULL, 0);
 
-  return TRUE;
+  return true;
 
  fail:
   printf("project loading interrupted by user\n");
@@ -1434,7 +1420,7 @@ gboolean project_load(appdata_t *appdata, const char *name) {
     appdata->osm = NULL;
   }
 
-  return FALSE;
+  return false;
 }
 
 osm_t *project_parse_osm(const project_t *project, struct icon_t **icons) {
