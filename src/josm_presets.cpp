@@ -1136,8 +1136,12 @@ GtkWidget *presets_widget_link::attach(GtkTable *table, guint &row, const char *
   GtkWidget *button = button_new_with_label(label);
   g_free(label);
   g_object_set_data(G_OBJECT(button), "presets_context", context);
-  gtk_button_set_image(GTK_BUTTON(button),
-                       icon_widget_load(&context->appdata->icon, item->icon, 16));
+  GtkWidget *img = icon_widget_load(&context->appdata->icon, item->icon, 16);
+  if(img) {
+    gtk_button_set_image(GTK_BUTTON(button), img);
+    // make sure the image is always shown, Hildon seems to hide it by default
+    gtk_widget_show(img);
+  }
   g_signal_connect(GTK_OBJECT(button), "clicked", G_CALLBACK(item_link_clicked), item);
   attach_both(table, button, row);
   return 0;
