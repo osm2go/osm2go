@@ -843,10 +843,7 @@ void PresetSax::endElement(const xmlChar *name)
     g_assert(!widgets.empty());
     presets_widget_reference * const ref = static_cast<presets_widget_reference *>(widgets.top());
     widgets.pop();
-    if(it->second.first == TagReference)
-      g_assert_cmpuint(ref->type, ==, WIDGET_TYPE_REFERENCE);
-    else
-      g_assert_cmpuint(ref->type, ==, WIDGET_TYPE_LINK);
+    g_assert_cmpuint(ref->type, ==, WIDGET_TYPE_REFERENCE);
     if(G_UNLIKELY(ref->item == 0))
       delete ref;
     else
