@@ -36,6 +36,8 @@ struct icon_item {
 };
 
 struct icon_t {
+  ~icon_t();
+
   std::map<std::string, icon_item> entries;
 };
 
@@ -159,7 +161,7 @@ void icon_free(icon_t **icon, GdkPixbuf *buf) {
                                                   (*icon)->entries.begin(),
                                                   (*icon)->entries.end(),
                                                   find_icon_buf(buf));
-  if(it == (*icon)->entries.end()) {
+  if(G_UNLIKELY(it == (*icon)->entries.end())) {
     printf("ERROR: icon to be freed not found\n");
   } else {
     it->second.use--;
@@ -172,17 +174,12 @@ void icon_free(icon_t **icon, GdkPixbuf *buf) {
   }
 }
 
-void icon_free_all(icon_t **icons) {
-  if(!*icons)
-    return;
-
-  unsigned int cnt = (*icons)->entries.size();
-
-  std::for_each((*icons)->entries.begin(), (*icons)->entries.end(),
+icon_t::~icon_t()
+{
+  std::for_each(entries.begin(), entries.end(),
                 icon_destroy_pair);
+}
 
-  delete *icons;
-  *icons = 0;
-
-  printf("freed %d icons\n", cnt);
+void icon_free_all(icon_t *icons) {
+  delete icons;
 }

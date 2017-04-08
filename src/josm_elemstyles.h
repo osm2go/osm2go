@@ -20,8 +20,6 @@
 #ifndef JOSM_ELEMSTYLES_H
 #define JOSM_ELEMSTYLES_H
 
-#ifdef __cplusplus
-
 #include "osm.h"
 
 #include <glib.h>
@@ -56,8 +54,6 @@ struct style_t;
 void josm_elemstyles_colorize_node(style_t *style, node_t *node);
 void josm_elemstyles_colorize_way(const style_t *style, way_t *way);
 void josm_elemstyles_colorize_world(style_t *style, osm_t *osm);
-
-#endif
 
 #endif // JOSM_ELEMSTYLES_H
 

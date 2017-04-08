@@ -110,8 +110,8 @@ static bool api_adjust(std::string &rserver) {
   return false;
 }
 
-gboolean osm_download(GtkWidget *parent, settings_t *settings,
-		      project_t *project) {
+bool osm_download(GtkWidget *parent, settings_t *settings, project_t *project)
+{
   printf("download osm ...\n");
 
   g_assert(project->server);
@@ -153,8 +153,8 @@ gboolean osm_download(GtkWidget *parent, settings_t *settings,
   const std::string update = project->path + "update.osm";
   g_remove(update.c_str());
 
-  gboolean result = net_io_download_file(parent, settings, url, update.c_str(),
-                                         project->name.c_str());
+  bool result = net_io_download_file(parent, settings, url, update.c_str(),
+                                         project->name.c_str()) == TRUE;
   g_free(url);
 
   /* if there's a new file use this from now on */
@@ -1093,7 +1093,7 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
       appendf(context.log, NULL, _("Cleaning up ...\n"));
       diff_save(appdata->project, appdata->osm);
       map_clear(appdata->map, MAP_LAYER_OBJECTS_ONLY);
-      osm_free(appdata->osm);
+      delete appdata->osm;
 
       appendf(context.log, NULL, _("Loading OSM ...\n"));
       appdata->osm = project_parse_osm(appdata->project, &appdata->icon);

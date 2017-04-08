@@ -21,7 +21,6 @@
 #define ICONBAR_H
 
 #include "appdata.h"
-#include "map.h"
 
 #include <glib.h>
 #include <gtk/gtk.h>
@@ -54,8 +53,10 @@ typedef struct iconbar_t {
 extern "C" {
 #endif
 
+struct map_item_t;
+
 GtkWidget *iconbar_new(appdata_t *appdata);
-void icon_bar_map_item_selected(iconbar_t *iconbar, map_item_t *map_item,
+void icon_bar_map_item_selected(iconbar_t *iconbar, struct map_item_t *map_item,
 				gboolean selected);
 void icon_bar_map_cancel_ok(iconbar_t *iconbar, gboolean cancel, gboolean ok);
 /**

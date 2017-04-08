@@ -80,7 +80,7 @@ int main(int argc, char **argv)
 
   g_assert(!diff_is_clean(osm, true));
 
-  osm_free(osm);
+  delete osm;
 
   xmlCleanupParser();
 

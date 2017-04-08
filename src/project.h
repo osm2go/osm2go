@@ -20,21 +20,22 @@
 #ifndef PROJECT_H
 #define PROJECT_H
 
+#include "settings.h"
+
+#ifdef __cplusplus
 #include "appdata.h"
 #include "pos.h"
-#include "settings.h"
 
 #include <glib.h>
 #include <gtk/gtk.h>
 #include <libxml/parser.h>
+#include <string>
 
 struct map_state_t;
 
-typedef struct project_t {
-#ifdef __cplusplus
+struct project_t {
   project_t(const char *n, const char *base_path);
   ~project_t();
-#endif
 
   const char *server; /**< the server string used, either rserver or settings->server */
 
@@ -44,7 +45,6 @@ typedef struct project_t {
 
   pos_t min, max;
 
-#ifdef __cplusplus
   bool data_dirty;     /* needs to download new data */
 
   const std::string name;
@@ -55,29 +55,24 @@ typedef struct project_t {
 
   std::string wms_server;
   std::string wms_path;
-#endif
-} project_t;
+};
 
-#ifdef __cplusplus
 extern "C" {
 #endif
 
 gboolean project_exists(settings_t *settings, const char *name);
-gboolean project_save(GtkWidget *parent, project_t *project);
-gboolean project_check_demo(GtkWidget *parent, project_t *project);
 
-void project_free(project_t *project);
+#ifdef __cplusplus
+}
+
+bool project_save(GtkWidget *parent, project_t *project);
+bool project_check_demo(GtkWidget *parent, project_t *project);
 
 osm_t *project_parse_osm(const project_t *project, struct icon_t **icons);
 /**
  * @brief return project->name.c_str()
  */
 const char *project_name(const project_t *project);
-
-#ifdef __cplusplus
-}
-
-#include <string>
 
 bool project_load(appdata_t *appdata, const std::string &name);
 std::string project_select(appdata_t *appdata);

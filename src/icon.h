@@ -30,7 +30,6 @@ extern "C" {
 
 GdkPixbuf *icon_load(icon_t **icon, const char *name);
 void icon_free(icon_t **icons, GdkPixbuf *buf);
-void icon_free_all(icon_t **icons);
 GtkWidget *icon_widget_load(icon_t **icon, const char *name);
 
 #ifdef __cplusplus
@@ -51,6 +50,8 @@ GtkWidget *icon_widget_load(icon_t **icon, const char *name);
 GdkPixbuf *icon_load(icon_t **icon, const std::string &sname, int limit = -1);
 
 GtkWidget *icon_widget_load(icon_t **icon, const std::string &name, int limit);
+
+void icon_free_all(icon_t *icons);
 
 #endif
 

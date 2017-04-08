@@ -23,7 +23,6 @@
 #include "canvas.h"
 #include "pos.h"
 
-#ifdef __cplusplus
 #include <vector>
 
 struct track_point_t {
@@ -46,9 +45,6 @@ struct track_t {
   bool dirty;
   bool active; ///< if the last element in segments is currently written to
 };
-
-extern "C" {
-#endif
 
 struct appdata_t;
 struct project_t;
@@ -76,9 +72,5 @@ track_t *track_import(const char *filename);
 void track_menu_set(appdata_t *appdata);
 
 void track_enable_gps(appdata_t *appdata, gboolean enable);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif // TRACK_H

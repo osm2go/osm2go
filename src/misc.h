@@ -65,15 +65,15 @@ template<typename T> void shrink_to_fit(T &v) {
 #endif
 }
 
-extern "C" {
-#endif
-
 struct pos_t;
 
 double xml_get_prop_float(xmlNode *node, const char *prop);
 gboolean xml_get_prop_is(xmlNode *node, const char *prop, const char *str);
 gboolean xml_get_prop_pos(xmlNode *node, struct pos_t *pos);
 void xml_set_prop_pos(xmlNode *node, const struct pos_t *pos);
+
+extern "C" {
+#endif
 
 struct appdata_t;
 
@@ -107,6 +107,9 @@ GType entry_type(void);
 GtkWidget *button_new(void);
 GtkWidget *button_new_with_label(const gchar *label);
 
+#ifdef __cplusplus
+}
+
 GtkWidget *check_button_new_with_label(const gchar *label);
 void check_button_set_active(GtkWidget *button, gboolean active);
 gboolean check_button_get_active(GtkWidget *button);
@@ -130,8 +133,6 @@ void open_url(struct appdata_t *appdata, const char *url);
 
 void misc_init(void);
 
-#ifdef __cplusplus
-}
 #endif
 
 #endif // MISC_H

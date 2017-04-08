@@ -217,7 +217,7 @@ static bool project_read(const std::string &project_file, project_t *project,
   return true;
 }
 
-gboolean project_save(GtkWidget *parent, project_t *project) {
+bool project_save(GtkWidget *parent, project_t *project) {
   char str[32];
   const std::string &project_file = project_filename(project);
 
@@ -229,7 +229,7 @@ gboolean project_save(GtkWidget *parent, project_t *project) {
     if(g_mkdir_with_parents(project->path.c_str(), S_IRWXU) != 0) {
       errorf(GTK_WIDGET(parent),
 	     _("Unable to create project path %s"), project->path.c_str());
-      return FALSE;
+      return false;
     }
   }
 
@@ -281,13 +281,7 @@ gboolean project_save(GtkWidget *parent, project_t *project) {
   xmlSaveFormatFileEnc(project_file.c_str(), doc, "UTF-8", 1);
   xmlFreeDoc(doc);
 
-  return TRUE;
-}
-
-/* ------------ freeing projects --------------------- */
-
-void project_free(project_t *project) {
-  delete project;
+  return true;
 }
 
 /* ------------ project selection dialog ------------- */
@@ -444,7 +438,7 @@ static void project_close(appdata_t *appdata) {
 
   if(appdata->osm) {
     diff_save(appdata->project, appdata->osm);
-    osm_free(appdata->osm);
+    delete appdata->osm;
     appdata->osm = NULL;
   }
 
@@ -725,7 +719,7 @@ static void on_project_edit(G_GNUC_UNUSED GtkButton *button, gpointer data) {
 	  diff_save(appdata->project, appdata->osm);
 	  map_clear(appdata->map, MAP_LAYER_ALL);
 
-	  osm_free(appdata->osm);
+	  delete appdata->osm;
 	  appdata->osm = NULL;
 	}
 
@@ -1071,7 +1065,7 @@ static void on_diff_remove_clicked(project_context_t *context) {
 
       /* just reload the map */
       map_clear(appdata->map, MAP_LAYER_OBJECTS_ONLY);
-      osm_free(appdata->osm);
+      delete appdata->osm;
       appdata->osm = project_parse_osm(appdata->project, &appdata->icon);
       map_paint(appdata->map);
     }
@@ -1082,7 +1076,7 @@ static void on_diff_remove_clicked(project_context_t *context) {
   }
 }
 
-gboolean project_check_demo(GtkWidget *parent, project_t *project) {
+bool project_check_demo(GtkWidget *parent, project_t *project) {
   if(!project->server)
     messagef(parent, "Demo project",
 	     "This is a preinstalled demo project. This means that the "
@@ -1327,7 +1321,7 @@ bool project_load(appdata_t *appdata, const std::string &name) {
     }
 
     if(appdata->osm) {
-      osm_free(appdata->osm);
+      delete appdata->osm;
       appdata->osm = NULL;
     }
 
@@ -1355,7 +1349,7 @@ bool project_load(appdata_t *appdata, const std::string &name) {
     }
 
     if(appdata->osm) {
-      osm_free(appdata->osm);
+      delete appdata->osm;
       appdata->osm = NULL;
     }
 
@@ -1416,7 +1410,7 @@ bool project_load(appdata_t *appdata, const std::string &name) {
   }
 
   if(appdata->osm) {
-    osm_free(appdata->osm);
+    delete appdata->osm;
     appdata->osm = NULL;
   }
 
@@ -1454,6 +1448,10 @@ select_context_t::select_context_t(appdata_t* a, GtkWidget *dial)
   , dialog(dial)
   , list(0)
 {
+}
+
+static inline void project_free(project_t *project) {
+  delete project;
 }
 
 select_context_t::~select_context_t()

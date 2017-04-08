@@ -20,24 +20,14 @@
 #ifndef DIFF_H
 #define DIFF_H
 
-#include "osm.h"
-
-#include <glib.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
+struct appdata_t;
 struct project_t;
+struct osm_t;
 
-void diff_save(const struct project_t *project, const osm_t *osm);
-void diff_restore(struct appdata_t *appdata, struct project_t *project, osm_t *osm);
-gboolean diff_present(const struct project_t *project);
-void diff_remove(const struct project_t *project);
-gboolean diff_is_clean(const osm_t *osm, gboolean honor_hidden_flags);
-
-#ifdef __cplusplus
-}
-#endif
+void diff_save(const project_t *project, const osm_t *osm);
+void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm);
+bool diff_present(const project_t *project);
+void diff_remove(const project_t *project);
+bool diff_is_clean(const osm_t *osm, bool honor_hidden_flags);
 
 #endif // DIFF_H

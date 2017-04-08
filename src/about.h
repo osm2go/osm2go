@@ -20,16 +20,8 @@
 #ifndef ABOUT_H
 #define ABOUT_H
 
-#include "appdata.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+struct appdata_t;
 
 void about_box(appdata_t *appdata);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif // ABOUT_H

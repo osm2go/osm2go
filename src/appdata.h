@@ -53,10 +53,8 @@
 #include <gtk/gtk.h>
 #include <glib/gstdio.h>
 
-#include "pos.h"
-#include "osm.h"
-
 #include "canvas.h"
+#include "osm.h"
 
 #ifdef USE_HILDON
 #include "dbus.h"
@@ -147,13 +145,9 @@ typedef struct appdata_t {
 } appdata_t;
 
 #ifdef __cplusplus
-extern "C" {
-#endif
 
 void main_ui_enable(appdata_t *appdata);
 
-#ifdef __cplusplus
-}
 #endif
 
 #endif // APPDATA_H

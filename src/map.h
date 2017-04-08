@@ -23,7 +23,6 @@
 #include "appdata.h"
 #include "canvas.h"
 #include "osm.h"
-#include "style.h"
 #ifdef __cplusplus
 #include <vector>
 #endif
@@ -71,25 +70,24 @@ typedef struct map_item_t {
   canvas_item_t *item;
 } map_item_t;
 
+#ifdef __cplusplus
 /* this is a chain of map_items which is attached to all entries */
 /* in the osm tree (node_t, way_t, ...) to be able to get a link */
 /* to the screen representation of a give node/way/etc */
-typedef struct map_item_chain_t map_item_chain_t;
+struct map_item_chain_t;
 
-typedef struct map_state_t {
-#ifdef __cplusplus
+struct map_state_t {
   map_state_t();
 
   void reset();
-#endif
 
   gint refcount;
   float zoom;                          // zoom level (1.0 = 1m/pixel
   float detail;                        // deatil level (1.0 = normal)
   struct { gint x,y; } scroll_offset;  // initial scroll offset
-} map_state_t;
+};
 
-typedef struct map_t {
+struct map_t {
   appdata_t * const appdata;
 
   canvas_t * const canvas;
@@ -131,33 +129,32 @@ typedef struct map_t {
                                 // (may be part of a selected way)
   } pen_down;
 
-  style_t *style;
+  struct style_t *style;
 
-#ifdef __cplusplus
   size_t elements_drawn;	///< number of elements drawn in last segment
 
-  explicit map_t(appdata_t *a, style_t *s);
+  explicit map_t(appdata_t *a, struct style_t *s);
   ~map_t();
 
   std::vector<tag_t> last_node_tags;           // used to "repeat" tagging
   std::vector<tag_t> last_way_tags;
-#endif
-} map_t;
+};
 
-#ifdef __cplusplus
+void map_item_redraw(map_t *map, map_item_t *map_item);
+
 extern "C" {
 #endif
+
+typedef struct map_state_t map_state_t;
+typedef struct map_t map_t;
 
 GtkWidget *map_new(appdata_t *appdata);
 void map_state_free(map_state_t *state);
 void map_init(map_t *map);
 gboolean map_key_press_event(map_t *map, GdkEventKey *event);
-void map_item_set_flags(map_item_t *map_item, int set, int clr);
 void map_show_node(map_t *map, node_t *node);
 void map_cmenu_show(map_t *map);
 void map_highlight_refresh(map_t *map);
-
-void map_item_redraw(map_t *map, map_item_t *map_item);
 
 void map_clear(map_t *map, gint layer_mask);
 void map_paint(map_t *map);
@@ -192,7 +189,6 @@ gboolean map_scroll_to_if_offscreen(map_t *map, const lpos_t *lpos);
 /* various functions required by map_edit */
 gboolean map_item_is_selected_node(map_t *map, map_item_t *map_item);
 gboolean map_item_is_selected_way(map_t *map, map_item_t *map_item);
-void map_item_chain_destroy(map_item_chain_t **chainP);
 map_item_t *map_item_at(map_t *map, gint x, gint y);
 map_item_t *map_real_item_at(map_t *map, gint x, gint y);
 void map_item_deselect(map_t *map);
@@ -208,10 +204,11 @@ void map_detail_increase(map_t *map);
 void map_detail_decrease(map_t *map);
 void map_detail_normal(map_t *map);
 
-void map_set_autosave(map_t *map, gboolean enable);
-
 #ifdef __cplusplus
 }
+void map_item_chain_destroy(map_item_chain_t **chainP);
+
+void map_set_autosave(map_t *map, bool enable);
 #endif
 
 #endif // MAP_H

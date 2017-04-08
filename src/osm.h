@@ -80,7 +80,7 @@ typedef enum {
   ILLEGAL=0, NODE, WAY, RELATION, NODE_ID, WAY_ID, RELATION_ID
 } type_t;
 
-typedef struct object_s {
+typedef struct object_t {
   type_t type;
   union {
     node_t *node;
@@ -91,28 +91,28 @@ typedef struct object_s {
   };
 
 #ifdef __cplusplus
-  inline object_s()
+  inline object_t()
     : type(ILLEGAL), obj(0) {}
-  explicit inline object_s(node_t *n)
+  explicit inline object_t(node_t *n)
     : type(NODE), node(n) { }
-  explicit inline object_s(way_t *w)
+  explicit inline object_t(way_t *w)
     : type(WAY), way(w) { }
-  explicit inline object_s(relation_t *r)
+  explicit inline object_t(relation_t *r)
     : type(RELATION), relation(r) { }
 
-  inline object_s &operator=(node_t *n)
+  inline object_t &operator=(node_t *n)
   { type = NODE; node = n; return *this; }
-  inline object_s &operator=(way_t *w)
+  inline object_t &operator=(way_t *w)
   { type = WAY; way = w; return *this; }
-  inline object_s &operator=(relation_t *r)
+  inline object_t &operator=(relation_t *r)
   { type = RELATION; relation = r; return *this; }
 
-  bool operator==(const object_s &other) const;
-  inline bool operator!=(const object_s &other) const
+  bool operator==(const object_t &other) const;
+  inline bool operator!=(const object_t &other) const
   { return !operator==(other); }
-  inline bool operator==(const object_s *other) const
+  inline bool operator==(const object_t *other) const
   { return operator==(*other); }
-  inline bool operator!=(const object_s *other) const
+  inline bool operator!=(const object_t *other) const
   { return !operator==(*other); }
   bool operator==(const node_t *n) const;
   bool operator!=(const node_t *n) const
@@ -135,12 +135,17 @@ typedef struct object_s {
 #endif
 } object_t;
 
+#ifdef __cplusplus
+}
+
 struct osm_t {
+#ifdef __cplusplus
+  ~osm_t();
+
   bounds_t *bounds;   // original bounds as they appear in the file
 
   struct icon_t **icons;
 
-#ifdef __cplusplus
   bounds_t rbounds;
 
   std::map<item_id_t, node_t *> nodes;
@@ -185,14 +190,10 @@ struct osm_t {
 #endif
 };
 
-void osm_free(osm_t *osm);
-
 xmlChar *osm_generate_xml_changeset(const char* comment);
 
-gboolean osm_position_within_bounds_ll(const pos_t *ll_min, const pos_t *ll_max, const pos_t *pos);
+bool osm_position_within_bounds_ll(const pos_t *ll_min, const pos_t *ll_max, const pos_t *pos);
 
-#ifdef __cplusplus
-}
 
 struct tag_t {
   struct tag_t *next;

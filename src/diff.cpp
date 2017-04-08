@@ -226,7 +226,7 @@ struct find_object_by_flags {
 };
 
 /* return true if no diff needs to be saved */
-gboolean diff_is_clean(const osm_t *osm, gboolean honor_hidden_flags) {
+bool diff_is_clean(const osm_t *osm, bool honor_hidden_flags) {
   /* check if a diff is necessary */
   std::map<item_id_t, node_t *>::const_iterator nit =
     std::find_if(osm->nodes.begin(), osm->nodes.end(), find_object_by_flags());
@@ -237,11 +237,11 @@ gboolean diff_is_clean(const osm_t *osm, gboolean honor_hidden_flags) {
   std::map<item_id_t, way_t *>::const_iterator wit =
     std::find_if(osm->ways.begin(), osm->ways.end(), find_object_by_flags(flagmask));
   if(wit != osm->ways.end())
-    return FALSE;
+    return false;
 
   std::map<item_id_t, relation_t *>::const_iterator it =
     std::find_if(osm->relations.begin(), osm->relations.end(), find_object_by_flags());
-  return (it == osm->relations.end()) ? TRUE : FALSE;
+  return (it == osm->relations.end()) ? true : false;
 }
 
 void diff_save(const project_t *project, const osm_t *osm) {
@@ -728,10 +728,10 @@ void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) {
   }
 }
 
-gboolean diff_present(const project_t *project) {
+bool diff_present(const project_t *project) {
   const std::string &diff_name = diff_filename(project);
 
-  return g_file_test(diff_name.c_str(), G_FILE_TEST_EXISTS);
+  return g_file_test(diff_name.c_str(), G_FILE_TEST_EXISTS) == TRUE;
 }
 
 void diff_remove(const project_t *project) {

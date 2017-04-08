@@ -42,7 +42,9 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, gint ex, gint ey);
 extern "C" {
 #endif
 
-void map_edit_way_reverse(map_t *map);
+struct map_t;
+
+void map_edit_way_reverse(struct map_t *map);
 
 #ifdef __cplusplus
 }

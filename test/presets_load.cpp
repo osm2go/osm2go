@@ -189,7 +189,7 @@ int main(int argc, char **argv)
 
   std::for_each(presets->items.begin(), presets->items.end(), checkItem);
 
-  josm_presets_free(presets);
+  delete presets;
   xmlCleanupParser();
 
   if(!missingIcons.empty()) {

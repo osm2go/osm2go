@@ -559,18 +559,6 @@ std::string relation_t::descriptive_name() const {
   return buf;
 }
 
-/* ------------------ osm handling ----------------- */
-
-void osm_free(osm_t *osm) {
-  if(!osm) return;
-
-  std::for_each(osm->ways.begin(), osm->ways.end(), way_free);
-  std::for_each(osm->nodes.begin(), osm->nodes.end(), nodefree);
-  std::for_each(osm->relations.begin(), osm->relations.end(),
-                osm_relation_free_pair);
-  delete osm;
-}
-
 /* -------------------------- stream parser ------------------- */
 
 #include <libxml/xmlreader.h>
@@ -1539,10 +1527,12 @@ bool osm_t::position_within_bounds(gint x, gint y) const {
   return true;
 }
 
-gboolean osm_position_within_bounds_ll(const pos_t *ll_min, const pos_t *ll_max, const pos_t *pos) {
-  if((pos->lat < ll_min->lat) || (pos->lat > ll_max->lat)) return FALSE;
-  if((pos->lon < ll_min->lon) || (pos->lon > ll_max->lon)) return FALSE;
-  return TRUE;
+bool osm_position_within_bounds_ll(const pos_t *ll_min, const pos_t *ll_max, const pos_t *pos) {
+  if((pos->lat < ll_min->lat) || (pos->lat > ll_max->lat))
+    return false;
+  if((pos->lon < ll_min->lon) || (pos->lon > ll_max->lon))
+    return false;
+  return true;
 }
 
 struct remove_member_functor {
@@ -2264,6 +2254,14 @@ template<typename T> T *osm_find_by_id(const std::map<item_id_t, T *> &map, item
     return it->second;
 
   return 0;
+}
+
+osm_t::~osm_t()
+{
+  std::for_each(ways.begin(), ways.end(), ::way_free);
+  std::for_each(nodes.begin(), nodes.end(), nodefree);
+  std::for_each(relations.begin(), relations.end(),
+                osm_relation_free_pair);
 }
 
 node_t *osm_t::node_by_id(item_id_t id) {

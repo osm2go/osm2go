@@ -21,7 +21,7 @@
 #define JOSM_PRESETS_H
 
 #include <gtk/gtk.h>
-#include <libxml/xmlstring.h> /* for xmlChar */
+#include <string>
 
 /* the presets type specifies which item type it is */
 /* appropriate for */
@@ -34,17 +34,8 @@
 
 struct presets_items;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 struct presets_items *josm_presets_load(void);
 void josm_presets_free(struct presets_items *presets);
-
-#ifdef __cplusplus
-}
-
-#include <string>
 
 struct appdata_t;
 class tag_context_t;
@@ -52,6 +43,5 @@ class tag_context_t;
 std::string josm_icon_name_adjust(const char *xname, const std::string &basepath = std::string());
 
 GtkWidget *josm_build_presets_button(appdata_t *appdata, tag_context_t *tag_context);
-#endif
 
 #endif // JOSM_PRESETS_H

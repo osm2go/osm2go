@@ -40,6 +40,7 @@
 #include "gps.h"
 #include "iconbar.h"
 #include "josm_presets.h"
+#include "map.h"
 #include "misc.h"
 #include "osm_api.h"
 #include "project.h"
@@ -154,7 +155,7 @@ cb_menu_download(GtkMenuItem *, gpointer data) {
   if(project_check_demo(GTK_WIDGET(appdata->window), appdata->project))
     return;
 
-  map_set_autosave(appdata->map, FALSE);
+  map_set_autosave(appdata->map, false);
 
   /* if we have valid osm data loaded: save state first */
   if(appdata->osm)
@@ -167,7 +168,7 @@ cb_menu_download(GtkMenuItem *, gpointer data) {
       /* redraw the entire map by destroying all map items and redrawing them */
       map_clear(appdata->map, MAP_LAYER_OBJECTS_ONLY);
 
-      osm_free(appdata->osm);
+      delete appdata->osm;
     }
 
     banner_busy_start(appdata, 1, "Drawing");
@@ -177,7 +178,7 @@ cb_menu_download(GtkMenuItem *, gpointer data) {
     banner_busy_stop(appdata); //"Redrawing"
   }
 
-  map_set_autosave(appdata->map, TRUE);
+  map_set_autosave(appdata->map, true);
   main_ui_enable(appdata);
 }
 
@@ -258,7 +259,7 @@ cb_menu_undo_changes(GtkMenuItem *, gpointer data) {
 
   map_clear(appdata->map, MAP_LAYER_OBJECTS_ONLY);
 
-  osm_free(appdata->osm);
+  delete appdata->osm;
   appdata->osm = NULL;
 
   diff_remove(appdata->project);
@@ -1237,7 +1238,7 @@ appdata_t::~appdata_t() {
 
   map_remove_bg_image(map);
 
-  osm_free(osm);
+  delete osm;
   osm = NULL;
 
   xmlCleanupParser();
@@ -1246,7 +1247,7 @@ appdata_t::~appdata_t() {
 
   josm_presets_free(presets);
 
-  icon_free_all(&icon);
+  icon_free_all(icon);
 
   gps_release(gps_state);
 
@@ -1256,7 +1257,7 @@ appdata_t::~appdata_t() {
 
   iconbar_free(iconbar);
 
-  project_free(project);
+  delete project;
 
   menu_cleanup(*this);
 

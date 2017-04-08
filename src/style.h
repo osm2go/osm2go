@@ -24,8 +24,6 @@
 #include "icon.h"
 #include "josm_elemstyles.h"
 
-#ifdef __cplusplus
-
 #include <vector>
 
 class node_t;
@@ -95,11 +93,6 @@ struct style_t {
   std::map<item_id_t, GdkPixbuf *> node_icons;
 };
 
-extern "C" {
-#endif
-
-typedef struct style_t style_t;
-
 style_t *style_load(appdata_t *appdata);
 
 #ifndef FREMANTLE
@@ -107,10 +100,6 @@ void style_select(GtkWidget *parent, appdata_t *appdata);
 #else
 GtkWidget *style_select_widget(appdata_t *appdata);
 void style_change(appdata_t *appdata, const char *name);
-#endif
-
-#ifdef __cplusplus
-}
 #endif
 
 #endif // STYLE_H
