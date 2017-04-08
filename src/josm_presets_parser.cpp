@@ -126,6 +126,7 @@ class PresetSax {
     TagItem,
     TagChunk,
     TagReference,
+    TagPresetLink,
     TagKey,
     TagText,
     TagCombo,
@@ -160,6 +161,8 @@ class PresetSax {
     }
   };
 
+  bool resolvePresetLink(presets_widget_link* link, const std::string &id);
+
   void dumpState() const;
 
 public:
@@ -169,7 +172,18 @@ public:
 
   ChunkMap chunks;
 
+  typedef std::vector<std::pair<presets_widget_link *, std::string> > LLinks;
+
+  ChunkMap itemsNames;
+  LLinks laterLinks; ///< unresolved preset_link references
+
 private:
+  struct find_link_ref {
+    PresetSax &px;
+    find_link_ref(PresetSax &p) : px(p) {}
+    void operator()(LLinks::value_type &l);
+  };
+
   void characters(const char *ch, int len);
   static void cb_characters(void *ts, const xmlChar *ch, int len) {
     static_cast<PresetSax *>(ts)->characters(reinterpret_cast<const char *>(ch), len);
@@ -233,6 +247,7 @@ const PresetSax::StateMap &PresetSax::preset_state_map() {
     map.insert(StateMap::value_type("separator", StateMap::mapped_type(TagSeparator, VECTOR_ONE(TagGroup))));
 
     map.insert(StateMap::value_type("reference", StateMap::mapped_type(TagReference, item_chunks)));
+    map.insert(StateMap::value_type("preset_link", StateMap::mapped_type(TagPresetLink, item_chunks)));
     map.insert(StateMap::value_type("key", StateMap::mapped_type(TagKey, item_chunks)));
     map.insert(StateMap::value_type("text", StateMap::mapped_type(TagText, item_chunks)));
     map.insert(StateMap::value_type("combo", StateMap::mapped_type(TagCombo, item_chunks)));
@@ -302,12 +317,72 @@ PresetSax::PresetSax(presets_items &p, const std::string &b)
   state.push_back(DocStart);
 }
 
+struct find_link_parent {
+  const presets_widget_link *link;
+  find_link_parent(const presets_widget_link *l) : link(l) {}
+  bool operator()(presets_item_t *t);
+  bool operator()(const ChunkMap::value_type &p) {
+    return operator()(p.second);
+  }
+};
+
+bool find_link_parent::operator()(presets_item_t *t)
+{
+  if(t->type & presets_item_t::TY_GROUP) {
+    const presets_item_group * const gr = static_cast<presets_item_group *>(t);
+    return std::find_if(gr->items.begin(), gr->items.end(), *this) != gr->items.end();
+  }
+
+  if(!t->isItem())
+    return false;
+
+  presets_item * const item = static_cast<presets_item *>(t);
+  const std::vector<presets_widget_t *>::iterator it = std::find(item->widgets.begin(),
+                                                                 item->widgets.end(),
+                                                                 link);
+  if(it == item->widgets.end())
+    return false;
+  item->widgets.erase(it);
+  delete link;
+  link = 0;
+
+  return true;
+}
+
+void PresetSax::find_link_ref::operator()(PresetSax::LLinks::value_type &l)
+{
+  if(G_UNLIKELY(!px.resolvePresetLink(l.first, l.second))) {
+    printf("found preset_link with unmatched preset_name '%s'\n", l.second.c_str());
+    find_link_parent fc(l.first);
+    std::vector<presets_item_t *>::const_iterator it =
+        std::find_if(px.presets.items.begin(), px.presets.items.end(), fc);
+    if(it == px.presets.items.end()) {
+      const ChunkMap::const_iterator cit =
+          std::find_if(px.chunks.begin(), px.chunks.end(), fc);
+      g_assert(cit != px.chunks.end());
+    }
+  }
+}
+
 bool PresetSax::parse(const std::string &filename)
 {
   if (xmlSAXUserParseFile(&handler, this, filename.c_str()) != 0)
     return false;
 
+  std::for_each(laterLinks.begin(), laterLinks.end(), find_link_ref(*this));
+
   return state.size() == 1;
+}
+
+bool PresetSax::resolvePresetLink(presets_widget_link *link, const std::string &id)
+{
+  const ChunkMap::const_iterator it = itemsNames.find(id);
+  // these references may also target items that will only be added later
+  if(it == itemsNames.end())
+    return false;
+
+  link->item = it->second;
+  return true;
 }
 
 void PresetSax::characters(const char *ch, int len)
@@ -493,6 +568,39 @@ void PresetSax::startElement(const char *name, const char **attrs)
     g_assert((items.top()->type & presets_item_t::TY_GROUP) != 0);
     static_cast<presets_item_group *>(items.top())->items.push_back(item);
     items.push(item);
+    if(G_LIKELY(!n.empty())) {
+      // search again: the key must be the unlocalized name here
+      itemsNames[findAttribute(attrs, "name", false)] = item;
+    } else {
+      printf("found ");
+      dumpState();
+      printf("preset_link without preset_name\n");
+    }
+    break;
+  }
+  case TagPresetLink: {
+    const char *id = findAttribute(attrs, "preset_name", false);
+    presets_widget_link *link = new presets_widget_link();
+    g_assert(!items.empty());
+    g_assert(items.top()->isItem());
+    presets_item *item = static_cast<presets_item *>(items.top());
+
+    // make sure not to insert it as a stale link in case the item is invalid,
+    // as that would be deleted on it's end tag and a stale reference would remain
+    // in laterLinks
+    if(G_LIKELY(!item->name.empty())) {
+      if(!id) {
+        printf("found ");
+        dumpState();
+        printf("preset_link without preset_name\n");
+      } else {
+        if(!resolvePresetLink(link, id))
+        // these references may also target items that will only be added later
+          laterLinks.push_back(LLinks::value_type(link, id));
+      }
+      item->widgets.push_back(link);
+    }
+    widgets.push(link);
     break;
   }
   case TagReference: {
@@ -678,9 +786,6 @@ void PresetSax::endElement(const xmlChar *name)
     g_assert(item->isItem());
     items.pop();
     if(G_UNLIKELY(static_cast<presets_item *>(item)->name.empty())) {
-      printf("found ");
-      dumpState();
-      printf("item without name\n");
       delete item;
     } else {
       // update the group type
@@ -738,7 +843,10 @@ void PresetSax::endElement(const xmlChar *name)
     g_assert(!widgets.empty());
     presets_widget_reference * const ref = static_cast<presets_widget_reference *>(widgets.top());
     widgets.pop();
-    g_assert_cmpuint(ref->type, ==, WIDGET_TYPE_REFERENCE);
+    if(it->second.first == TagReference)
+      g_assert_cmpuint(ref->type, ==, WIDGET_TYPE_REFERENCE);
+    else
+      g_assert_cmpuint(ref->type, ==, WIDGET_TYPE_LINK);
     if(G_UNLIKELY(ref->item == 0))
       delete ref;
     else
@@ -771,6 +879,7 @@ void PresetSax::endElement(const xmlChar *name)
   case TagKey:
   case TagCheck:
   case TagCombo:
+  case TagPresetLink:
     g_assert(!items.empty());
     g_assert(!widgets.empty());
     widgets.pop();

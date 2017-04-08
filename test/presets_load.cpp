@@ -57,11 +57,12 @@ struct counter {
   unsigned int &keys;
   unsigned int &checks;
   unsigned int &refs;
+  unsigned int &plinks;
   counter(unsigned int &gr, unsigned int &it, unsigned int &sep, unsigned int &c,
           unsigned int &ce, unsigned int &lb, unsigned int &ky,  unsigned int &chk,
-          unsigned int &rf)
+          unsigned int &rf, unsigned int &pl)
     : groups(gr), items(it), separators(sep), combos(c), combo_entries(ce),
-      labels(lb), keys(ky), checks(chk), refs(rf) {}
+      labels(lb), keys(ky), checks(chk), refs(rf), plinks(pl) {}
   void operator()(const presets_item_t *p);
   void operator()(const presets_widget_t *w);
 };
@@ -105,6 +106,9 @@ void counter::operator()(const presets_widget_t *w)
     break;
   case WIDGET_TYPE_REFERENCE:
     refs++;
+    break;
+  case WIDGET_TYPE_LINK:
+    plinks++;
     break;
   }
 }
@@ -163,7 +167,8 @@ int main(int argc, char **argv)
   unsigned int keys = 0;
   unsigned int checks = 0;
   unsigned int refs = 0;
-  counter cnt(groups, items, separators, combos, combo_entries, labels, keys, checks, refs);
+  unsigned int plinks = 0;
+  counter cnt(groups, items, separators, combos, combo_entries, labels, keys, checks, refs, plinks);
 
   std::for_each(presets->items.begin(), presets->items.end(), cnt);
   std::for_each(presets->chunks.begin(), presets->chunks.end(), cnt);
@@ -179,7 +184,8 @@ int main(int argc, char **argv)
     << "labels: " << labels << std::endl
     << "keys: " << keys << std::endl
     << "checks: " << checks << std::endl
-    << "references: " << refs << std::endl;
+    << "references: " << refs << std::endl
+    << "preset_links: " << plinks << std::endl;
 
   std::for_each(presets->items.begin(), presets->items.end(), checkItem);
 

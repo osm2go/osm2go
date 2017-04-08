@@ -163,11 +163,11 @@ typedef std::pair<GtkWidget *, tag_t *> HintPair;
 
 struct add_widget_functor {
   guint &row;
-  tag_context_t * const tag_context;
+  presets_context_t * const context;
   std::map<const presets_widget_t *, HintPair> &gtk_widgets;
   GtkWidget * const table;
-  add_widget_functor(std::map<const presets_widget_t *, HintPair> &g, tag_context_t *c, GtkWidget *t, guint &r)
-    : row(r), tag_context(c), gtk_widgets(g), table(t) {}
+  add_widget_functor(std::map<const presets_widget_t *, HintPair> &g, presets_context_t *c, GtkWidget *t, guint &r)
+    : row(r), context(c), gtk_widgets(g), table(t) {}
   void operator()(const presets_widget_t *w);
 };
 
@@ -179,6 +179,7 @@ void add_widget_functor::operator()(const presets_widget_t *w)
     return;
   }
 
+  tag_context_t * const tag_context = context->tag_context;
   /* check if there's a value with this key already */
   std::vector<tag_t *>::const_iterator otagIt = !w->key.empty() ?
                                                 std::find_if(tag_context->tags.begin(),
@@ -188,7 +189,7 @@ void add_widget_functor::operator()(const presets_widget_t *w)
   tag_t *otag = otagIt != tag_context->tags.end() ? *otagIt : 0;
   const char *preset = otag ? otag->value : 0;
 
-  GtkWidget *widget = w->attach(GTK_TABLE(table), row, preset);
+  GtkWidget *widget = w->attach(GTK_TABLE(table), row, preset, context);
 
   if(widget)
     gtk_widgets[w] = HintPair(widget, otag);
@@ -301,7 +302,7 @@ static void presets_item_dialog(presets_context_t *context,
     GtkWidget *table = gtk_table_new(std::accumulate(it, item->widgets.end(), 0, widget_rows), 2, FALSE);
 
     guint row = 0;
-    add_widget_functor fc(gtk_widgets, context->tag_context, table, row);
+    add_widget_functor fc(gtk_widgets, context, table, row);
     std::for_each(it, itEnd, fc);
 
 #ifndef USE_HILDON
@@ -936,7 +937,8 @@ GtkWidget *josm_build_presets_button(appdata_t *appdata,
   return but;
 }
 
-GtkWidget *presets_widget_t::attach(GtkTable *, guint &, const char *) const
+GtkWidget *presets_widget_t::attach(GtkTable *, guint &, const char *,
+                                    presets_context_t *) const
 {
   return 0;
 }
@@ -976,7 +978,8 @@ int presets_widget_t::matches(const std::vector<tag_t *> &tags) const
   return match == MatchKeyValue_Force ? -1 : 0;
 }
 
-GtkWidget *presets_widget_text::attach(GtkTable *table, guint &row, const char *preset) const
+GtkWidget *presets_widget_text::attach(GtkTable *table, guint &row, const char *preset,
+                                       presets_context_t *) const
 {
   if(!preset)
     preset = def.c_str();
@@ -996,13 +999,15 @@ const char *presets_widget_text::getValue(GtkWidget *widget) const
   return gtk_entry_get_text(GTK_ENTRY(widget));
 }
 
-GtkWidget *presets_widget_separator::attach(GtkTable *table, guint &row, const char *) const
+GtkWidget *presets_widget_separator::attach(GtkTable *table, guint &row, const char *,
+                                            presets_context_t *) const
 {
   attach_both(table, gtk_hseparator_new(), row);
   return 0;
 }
 
-GtkWidget *presets_widget_label::attach(GtkTable *table, guint &row, const char *) const
+GtkWidget *presets_widget_label::attach(GtkTable *table, guint &row, const char *,
+                                        presets_context_t *) const
 {
   attach_both(table, gtk_label_new(text.c_str()), row);
   return 0;
@@ -1013,7 +1018,8 @@ bool presets_widget_combo::matchValue(const char *val) const
   return std::find(values.begin(), values.end(), val) != values.end();
 }
 
-GtkWidget *presets_widget_combo::attach(GtkTable *table, guint &row, const char *preset) const
+GtkWidget *presets_widget_combo::attach(GtkTable *table, guint &row, const char *preset,
+                                        presets_context_t *) const
 {
   if(!preset)
     preset = def.c_str();
@@ -1086,7 +1092,8 @@ bool presets_widget_checkbox::matchValue(const char *val) const
           (strcasecmp(val, "yes") == 0));
 }
 
-GtkWidget *presets_widget_checkbox::attach(GtkTable *table, guint &row, const char *preset) const
+GtkWidget *presets_widget_checkbox::attach(GtkTable *table, guint &row, const char *preset,
+                                           presets_context_t *) const
 {
   gboolean deflt = FALSE;
   if(preset)
@@ -1111,6 +1118,29 @@ const char *presets_widget_checkbox::getValue(GtkWidget *widget) const
 
   return check_button_get_active(widget) ?
          (value_on.empty() ? "yes" : value_on.c_str()) : 0;
+}
+
+static void item_link_clicked(GtkButton *button, gpointer data) {
+  presets_item * const item = static_cast<presets_item *>(data);
+  presets_context_t * const context = static_cast<presets_context_t *>(
+                                          g_object_get_data(G_OBJECT(button),
+                                                            "presets_context"));
+
+  presets_item_dialog(context, item);
+}
+
+GtkWidget *presets_widget_link::attach(GtkTable *table, guint &row, const char *,
+                                       presets_context_t *context) const
+{
+  gchar *label = g_strdup_printf(_("[Preset] %s"), item->name.c_str());
+  GtkWidget *button = button_new_with_label(label);
+  g_free(label);
+  g_object_set_data(G_OBJECT(button), "presets_context", context);
+  gtk_button_set_image(GTK_BUTTON(button),
+                       icon_widget_load(&context->appdata->icon, item->icon, 16));
+  g_signal_connect(GTK_OBJECT(button), "clicked", G_CALLBACK(item_link_clicked), item);
+  attach_both(table, button, row);
+  return 0;
 }
 
 // vim:et:ts=8:sw=2:sts=2:ai

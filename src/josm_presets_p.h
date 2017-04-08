@@ -35,9 +35,11 @@ enum presets_widget_type_t {
   WIDGET_TYPE_CHECK,
   WIDGET_TYPE_TEXT,
   WIDGET_TYPE_KEY,
+  WIDGET_TYPE_LINK,
   WIDGET_TYPE_REFERENCE
 };
 
+struct presets_context_t;
 struct tag_t;
 
 class presets_widget_t {
@@ -78,7 +80,8 @@ public:
 
   virtual bool is_interactive() const;
 
-  virtual GtkWidget *attach(GtkTable *table, guint &row, const char *preset) const;
+  virtual GtkWidget *attach(GtkTable *table, guint &row, const char *preset,
+                            presets_context_t *context) const;
   virtual const char *getValue(GtkWidget *widget) const;
   virtual guint rows() const = 0;
 
@@ -103,7 +106,8 @@ public:
 
   const std::string def;
 
-  virtual GtkWidget *attach(GtkTable *table, guint &row, const char *preset) const;
+  virtual GtkWidget *attach(GtkTable *table, guint &row, const char *preset,
+                            presets_context_t *) const;
   virtual const char *getValue(GtkWidget *widget) const;
   virtual guint rows() const {
     return 1;
@@ -115,7 +119,8 @@ public:
   explicit presets_widget_separator()
     : presets_widget_t(WIDGET_TYPE_SEPARATOR, MatchIgnore) {}
 
-  virtual GtkWidget *attach(GtkTable *table, guint &row, const char *) const;
+  virtual GtkWidget *attach(GtkTable *table, guint &row, const char *,
+                            presets_context_t *) const;
   virtual guint rows() const {
     return 1;
   }
@@ -126,7 +131,8 @@ public:
   explicit presets_widget_label(const std::string &text)
     : presets_widget_t(WIDGET_TYPE_LABEL, MatchIgnore, std::string(), text) {}
 
-  virtual GtkWidget *attach(GtkTable *table, guint &row, const char *) const;
+  virtual GtkWidget *attach(GtkTable *table, guint &row, const char *,
+                            presets_context_t *) const;
   virtual guint rows() const {
     return 1;
   }
@@ -147,7 +153,8 @@ public:
   std::vector<std::string> values;
   std::vector<std::string> display_values;
 
-  virtual GtkWidget *attach(GtkTable *table, guint &row, const char *preset) const;
+  virtual GtkWidget *attach(GtkTable *table, guint &row, const char *preset,
+                            presets_context_t *) const;
   virtual const char *getValue(GtkWidget *widget) const;
   virtual guint rows() const {
     return 1;
@@ -182,7 +189,8 @@ public:
   const bool def;
   std::string value_on;
 
-  virtual GtkWidget *attach(GtkTable *table, guint &row, const char *preset) const;
+  virtual GtkWidget *attach(GtkTable *table, guint &row, const char *preset,
+                            presets_context_t *) const;
   virtual const char *getValue(GtkWidget *widget) const;
   virtual guint rows() const {
     return 1;
@@ -200,6 +208,23 @@ public:
 
   virtual bool is_interactive() const;
   virtual guint rows() const;
+};
+
+class presets_widget_link : public presets_widget_t {
+public:
+  explicit presets_widget_link()
+    : presets_widget_t(WIDGET_TYPE_LINK, MatchIgnore), item(0) {}
+
+  presets_item *item;
+
+  virtual bool is_interactive() const {
+    return false;
+  }
+  virtual GtkWidget *attach(GtkTable *table, guint &row, const char *preset,
+                            presets_context_t *context) const;
+  virtual guint rows() const {
+    return 1;
+  }
 };
 
 class presets_item_t {
