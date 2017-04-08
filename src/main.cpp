@@ -113,29 +113,29 @@ void main_ui_enable(appdata_t *appdata) {
 /******************** begin of menu *********************/
 
 static void
-cb_menu_project_open(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
-  appdata_t *appdata = (appdata_t*)data;
+cb_menu_project_open(GtkMenuItem *, gpointer data) {
+  appdata_t *appdata = static_cast<appdata_t *>(data);
   project_load(appdata, NULL);
   main_ui_enable(appdata);
 }
 
 static void
-cb_menu_about(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
-  appdata_t *appdata = (appdata_t*)data;
+cb_menu_about(GtkMenuItem *, gpointer data) {
+  appdata_t *appdata = static_cast<appdata_t *>(data);
   about_box(appdata);
 }
 
 #ifndef USE_HILDON
 static void
-cb_menu_quit(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
-  appdata_t *appdata = (appdata_t*)data;
+cb_menu_quit(GtkMenuItem *, gpointer data) {
+  appdata_t *appdata = static_cast<appdata_t *>(data);
   gtk_widget_destroy(GTK_WIDGET(appdata->window));
 }
 #endif
 
 static void
-cb_menu_upload(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
-  appdata_t *appdata = (appdata_t*)data;
+cb_menu_upload(GtkMenuItem *, gpointer data) {
+  appdata_t *appdata = static_cast<appdata_t *>(data);
   if(!appdata->osm || !appdata->project) return;
 
   if(project_check_demo(GTK_WIDGET(appdata->window), appdata->project))
@@ -145,8 +145,8 @@ cb_menu_upload(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
 }
 
 static void
-cb_menu_download(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
-  appdata_t *appdata = (appdata_t*)data;
+cb_menu_download(GtkMenuItem *, gpointer data) {
+  appdata_t *appdata = static_cast<appdata_t *>(data);
   if(!appdata->project) return;
 
   if(project_check_demo(GTK_WIDGET(appdata->window), appdata->project))
@@ -180,34 +180,34 @@ cb_menu_download(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
 }
 
 static void
-cb_menu_wms_import(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
-  appdata_t *appdata = (appdata_t*)data;
+cb_menu_wms_import(GtkMenuItem *, gpointer data) {
+  appdata_t *appdata = static_cast<appdata_t *>(data);
   wms_import(appdata);
 }
 
 static void
-cb_menu_wms_clear(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
-  appdata_t *appdata = (appdata_t*)data;
+cb_menu_wms_clear(GtkMenuItem *, gpointer data) {
+  appdata_t *appdata = static_cast<appdata_t *>(data);
   wms_remove(appdata);
 }
 
 static void
-cb_menu_wms_adjust(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
-  appdata_t *appdata = (appdata_t*)data;
+cb_menu_wms_adjust(GtkMenuItem *, gpointer data) {
+  appdata_t *appdata = static_cast<appdata_t *>(data);
   map_action_set(appdata->map, MAP_ACTION_BG_ADJUST);
 }
 
 /* ----------- hide objects for performance reasons ----------- */
 
 static void
-cb_menu_map_hide_sel(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
-  appdata_t *appdata = (appdata_t*)data;
+cb_menu_map_hide_sel(GtkMenuItem *, gpointer data) {
+  appdata_t *appdata = static_cast<appdata_t *>(data);
   map_hide_selected(appdata->map);
 }
 
 static void
-cb_menu_map_show_all(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
-  appdata_t *appdata = (appdata_t*)data;
+cb_menu_map_show_all(GtkMenuItem *, gpointer data) {
+  appdata_t *appdata = static_cast<appdata_t *>(data);
   map_show_all(appdata->map);
 }
 
@@ -223,8 +223,8 @@ cb_menu_map_show_all(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
 
 #ifndef FREMANTLE
 static void
-cb_menu_style(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
-  appdata_t *appdata = (appdata_t*)data;
+cb_menu_style(GtkMenuItem *, gpointer data) {
+  appdata_t *appdata = static_cast<appdata_t *>(data);
 
   style_select(GTK_WIDGET(appdata->window), appdata);
 }
@@ -232,8 +232,8 @@ cb_menu_style(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
 
 #ifndef USE_HILDON
 static void
-cb_menu_save_changes(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
-  appdata_t *appdata = (appdata_t*)data;
+cb_menu_save_changes(GtkMenuItem *, gpointer data) {
+  appdata_t *appdata = static_cast<appdata_t *>(data);
 
   diff_save(appdata->project, appdata->osm);
   banner_show_info(appdata, _("Saved local changes"));
@@ -241,8 +241,8 @@ cb_menu_save_changes(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
 #endif
 
 static void
-cb_menu_undo_changes(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
-  appdata_t *appdata = (appdata_t*)data;
+cb_menu_undo_changes(GtkMenuItem *, gpointer data) {
+  appdata_t *appdata = static_cast<appdata_t *>(data);
 
   // if there is nothing to clean then don't ask
   if (!diff_present(appdata->project) && diff_is_clean(appdata->osm, TRUE))
@@ -267,7 +267,7 @@ cb_menu_undo_changes(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
 }
 
 static void
-cb_menu_osm_relations(G_GNUC_UNUSED GtkMenuItem *item, appdata_t *appdata) {
+cb_menu_osm_relations(GtkMenuItem *, appdata_t *appdata) {
   /* list relations of all objects */
   relation_list(GTK_WIDGET(appdata->window), appdata);
 }
@@ -275,7 +275,7 @@ cb_menu_osm_relations(G_GNUC_UNUSED GtkMenuItem *item, appdata_t *appdata) {
 #if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
 static void
 cb_menu_fullscreen(MENU_CHECK_ITEM *item, gpointer data) {
-  appdata_t *appdata = (appdata_t *)data;
+  appdata_t *appdata = static_cast<appdata_t *>(data);
 
   if(MENU_CHECK_ITEM_ACTIVE(item))
     gtk_window_fullscreen(GTK_WINDOW(appdata->window));
@@ -285,7 +285,7 @@ cb_menu_fullscreen(MENU_CHECK_ITEM *item, gpointer data) {
 #endif
 
 static void
-cb_menu_zoomin(G_GNUC_UNUSED GtkMenuItem *item, appdata_t *appdata) {
+cb_menu_zoomin(GtkMenuItem *, appdata_t *appdata) {
   if(!appdata->map) return;
 
   map_set_zoom(appdata->map, appdata->map->state->zoom*ZOOM_FACTOR_MENU, TRUE);
@@ -293,7 +293,7 @@ cb_menu_zoomin(G_GNUC_UNUSED GtkMenuItem *item, appdata_t *appdata) {
 }
 
 static void
-cb_menu_zoomout(G_GNUC_UNUSED GtkMenuItem *item, appdata_t *appdata) {
+cb_menu_zoomout(GtkMenuItem *, appdata_t *appdata) {
   if(!appdata->map) return;
 
   map_set_zoom(appdata->map, appdata->map->state->zoom/ZOOM_FACTOR_MENU, TRUE);
@@ -315,8 +315,8 @@ cb_scale_popup(GtkWidget *button, appdata_t *appdata) {
 
 #if defined(FREMANTLE) || (MAEMO_VERSION_MAJOR != 5)
 static void
-cb_menu_view_detail_inc(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
-  appdata_t *appdata = (appdata_t*)data;
+cb_menu_view_detail_inc(GtkMenuItem *, gpointer data) {
+  appdata_t *appdata = static_cast<appdata_t *>(data);
 
   printf("detail level increase\n");
   map_detail_increase(appdata->map);
@@ -324,8 +324,8 @@ cb_menu_view_detail_inc(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
 
 #if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
 static void
-cb_menu_view_detail_normal(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
-  appdata_t *appdata = (appdata_t*)data;
+cb_menu_view_detail_normal(GtkMenuItem *, gpointer data) {
+  appdata_t *appdata = static_cast<appdata_t *>(data);
 
   printf("detail level normal\n");
   map_detail_normal(appdata->map);
@@ -333,8 +333,8 @@ cb_menu_view_detail_normal(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
 #endif
 
 static void
-cb_menu_view_detail_dec(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
-  appdata_t *appdata = (appdata_t*)data;
+cb_menu_view_detail_dec(GtkMenuItem *, gpointer data) {
+  appdata_t *appdata = static_cast<appdata_t *>(data);
 
   printf("detail level decrease\n");
   map_detail_decrease(appdata->map);
@@ -342,7 +342,7 @@ cb_menu_view_detail_dec(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
 #endif
 
 static void
-cb_menu_track_import(G_GNUC_UNUSED GtkMenuItem *item, appdata_t *appdata) {
+cb_menu_track_import(GtkMenuItem *, appdata_t *appdata) {
   g_assert(appdata->settings);
 
   /* open a file selector */
@@ -416,7 +416,7 @@ cb_menu_track_follow_gps(MENU_CHECK_ITEM *item, appdata_t *appdata) {
 
 
 static void
-cb_menu_track_export(G_GNUC_UNUSED GtkMenuItem *item, appdata_t *appdata) {
+cb_menu_track_export(GtkMenuItem *, appdata_t *appdata) {
   g_assert(appdata->settings);
 
   /* open a file selector */
@@ -480,8 +480,8 @@ cb_menu_track_export(G_GNUC_UNUSED GtkMenuItem *item, appdata_t *appdata) {
 }
 
 static void
-cb_menu_track_clear(G_GNUC_UNUSED GtkMenuItem *item, gpointer data) {
-  appdata_t *appdata = (appdata_t*)data;
+cb_menu_track_clear(GtkMenuItem *, gpointer data) {
+  appdata_t *appdata = static_cast<appdata_t *>(data);
   track_clear(appdata);
 }
 
@@ -528,7 +528,7 @@ menu_append_new_item(appdata_t *appdata,
                      guint accel_key,      // from gdk/gdkkeysyms.h
                      GdkModifierType accel_mods, // e.g. GDK_CONTROL_MASK
 		     gboolean enabled,
-                     gboolean is_check, gboolean check_status)
+                     bool is_check, gboolean check_status)
 {
   GtkWidget *item = NULL;
   GtkWidget *image = NULL;
@@ -621,13 +621,13 @@ static void menu_create(appdata_t *appdata) {
   menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_project_open), _("_Open"),
     GTK_STOCK_OPEN, "<OSM2Go-Main>/Project/Open",
-    0, 0, TRUE, FALSE, FALSE
+    0, static_cast<GdkModifierType>(0), TRUE, false, FALSE
   );
 #else
   menu_append_new_item(
     appdata, menu, GTK_SIGNAL_FUNC(cb_menu_project_open), _("_Project"),
     GTK_STOCK_OPEN, "<OSM2Go-Main>/Project",
-    0, 0, TRUE, FALSE, FALSE
+    0, static_cast<GdkModifierType>(0), TRUE, false, FALSE
   );
 #endif
 
@@ -647,7 +647,7 @@ static void menu_create(appdata_t *appdata) {
   appdata->menu_item_view_fullscreen = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_fullscreen), _("_Fullscreen"),
     GTK_STOCK_FULLSCREEN, "<OSM2Go-Main>/View/Fullscreen",
-    0, 0, TRUE, TRUE, FALSE
+    0, static_cast<GdkModifierType>(0), TRUE, true, FALSE
   );
 #endif
 
@@ -655,13 +655,13 @@ static void menu_create(appdata_t *appdata) {
   menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_zoomin), _("Zoom _in"),
     GTK_STOCK_ZOOM_IN, "<OSM2Go-Main>/View/ZoomIn",
-    GDK_comma, GDK_CONTROL_MASK, TRUE, FALSE, FALSE
+    GDK_comma, GDK_CONTROL_MASK, TRUE, false, FALSE
   );
 
   menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_zoomout), _("Zoom _out"),
     GTK_STOCK_ZOOM_OUT, "<OSM2Go-Main>/View/ZoomOut",
-    GDK_period, GDK_CONTROL_MASK, TRUE, FALSE, FALSE
+    GDK_period, GDK_CONTROL_MASK, TRUE, false, FALSE
   );
 #endif
 
@@ -670,19 +670,19 @@ static void menu_create(appdata_t *appdata) {
   menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_view_detail_inc), _("More details"),
     NULL, "<OSM2Go-Main>/View/DetailInc",
-    GDK_period, GDK_MOD1_MASK, TRUE, FALSE, FALSE
+    GDK_period, GDK_MOD1_MASK, TRUE, false, FALSE
   );
 
   menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_view_detail_normal), _("Normal details"),
     NULL, "<OSM2Go-Main>/View/DetailNormal",
-    0, 0, TRUE, FALSE, FALSE
+    0, static_cast<GdkModifierType>(0), TRUE, false, FALSE
   );
 
   menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_view_detail_dec), _("Less details"),
     NULL, "<OSM2Go-Main>/View/DetailDec",
-    GDK_comma, GDK_MOD1_MASK, TRUE, FALSE, FALSE
+    GDK_comma, GDK_MOD1_MASK, TRUE, false, FALSE
   );
 
   gtk_menu_shell_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
@@ -690,14 +690,14 @@ static void menu_create(appdata_t *appdata) {
   appdata->menuitems[MENU_ITEM_MAP_HIDE_SEL] = item = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_map_hide_sel), _("_Hide selected"),
     GTK_STOCK_REMOVE, "<OSM2Go-Main>/View/HideSelected",
-    0, 0, TRUE, FALSE, FALSE
+    0, static_cast<GdkModifierType>(0), TRUE, false, FALSE
   );
   gtk_widget_set_sensitive(item, FALSE);
 
   appdata->menuitems[MENU_ITEM_MAP_HIDE_SEL] = item = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_map_show_all), _("_Show all"),
     GTK_STOCK_ADD, "<OSM2Go-Main>/View/ShowAll",
-    0, 0, TRUE, FALSE, FALSE
+    0, static_cast<GdkModifierType>(0), TRUE, false, FALSE
   );
   gtk_widget_set_sensitive(item, FALSE);
 
@@ -706,7 +706,7 @@ static void menu_create(appdata_t *appdata) {
   menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_style), _("St_yle"),
     GTK_STOCK_SELECT_COLOR, "<OSM2Go-Main>/View/Style",
-    0, 0, TRUE, FALSE, FALSE
+    0, static_cast<GdkModifierType>(0), TRUE, false, FALSE
   );
 
   /* -------------------- map submenu -------------------- */
@@ -720,13 +720,13 @@ static void menu_create(appdata_t *appdata) {
   appdata->menuitems[MENU_ITEM_MAP_UPLOAD] = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_upload), _("_Upload"),
     "upload.16", "<OSM2Go-Main>/Map/Upload",
-    GDK_u, GDK_SHIFT_MASK|GDK_CONTROL_MASK, TRUE, FALSE, FALSE
+    GDK_u, static_cast<GdkModifierType>(GDK_SHIFT_MASK|GDK_CONTROL_MASK), TRUE, false, FALSE
   );
 
   menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_download), _("_Download"),
     "download.16", "<OSM2Go-Main>/Map/Download",
-    GDK_d, GDK_SHIFT_MASK|GDK_CONTROL_MASK, TRUE, FALSE, FALSE
+    GDK_d, static_cast<GdkModifierType>(GDK_SHIFT_MASK|GDK_CONTROL_MASK), TRUE, false, FALSE
   );
 
   gtk_menu_shell_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
@@ -735,21 +735,21 @@ static void menu_create(appdata_t *appdata) {
   appdata->menu_item_map_save_changes = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_save_changes), _("_Save local changes"),
     GTK_STOCK_SAVE, "<OSM2Go-Main>/Map/SaveChanges",
-    GDK_s, GDK_SHIFT_MASK|GDK_CONTROL_MASK, TRUE, FALSE, FALSE
+    GDK_s, static_cast<GdkModifierType>(GDK_SHIFT_MASK|GDK_CONTROL_MASK), TRUE, false, FALSE
   );
 #endif
 
   appdata->menuitems[MENU_ITEM_MAP_UNDO_CHANGES] = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_undo_changes), _("Undo _all"),
     GTK_STOCK_DELETE, "<OSM2Go-Main>/Map/UndoAll",
-    0, 0, TRUE, FALSE, FALSE
+    0, static_cast<GdkModifierType>(0), TRUE, false, FALSE
   );
 
   gtk_menu_shell_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
   appdata->menuitems[MENU_ITEM_MAP_RELATIONS] = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_osm_relations), _("_Relations"),
     NULL, "<OSM2Go-Main>/Map/Relations",
-    GDK_r, GDK_SHIFT_MASK|GDK_CONTROL_MASK, TRUE, FALSE, FALSE
+    GDK_r, static_cast<GdkModifierType>(GDK_SHIFT_MASK|GDK_CONTROL_MASK), TRUE, false, FALSE
   );
 
   /* -------------------- wms submenu -------------------- */
@@ -763,20 +763,20 @@ static void menu_create(appdata_t *appdata) {
   menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_wms_import), _("_Import"),
     GTK_STOCK_INDEX, "<OSM2Go-Main>/WMS/Import",
-    0, 0, TRUE, FALSE, FALSE
+    0, static_cast<GdkModifierType>(0), TRUE, false, FALSE
   );
 
   appdata->menuitems[MENU_ITEM_WMS_CLEAR] = item = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_wms_clear), _("_Clear"),
     GTK_STOCK_CLEAR, "<OSM2Go-Main>/WMS/Clear",
-    0, 0, TRUE, FALSE, FALSE
+    0, static_cast<GdkModifierType>(0), TRUE, false, FALSE
   );
   gtk_widget_set_sensitive(item, FALSE);
 
   appdata->menuitems[MENU_ITEM_WMS_ADJUST] = item = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_wms_adjust), _("_Adjust"),
     NULL, "<OSM2Go-Main>/WMS/Adjust",
-    0, 0, TRUE, FALSE, FALSE
+    0, static_cast<GdkModifierType>(0), TRUE, false, FALSE
   );
   gtk_widget_set_sensitive(item, FALSE);
 
@@ -792,33 +792,33 @@ static void menu_create(appdata_t *appdata) {
   appdata->menuitems[MENU_ITEM_TRACK_IMPORT] = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_track_import), _("_Import"),
     NULL, "<OSM2Go-Main>/Track/Import",
-    0, 0, TRUE, FALSE, FALSE
+    0, static_cast<GdkModifierType>(0), TRUE, false, FALSE
   );
 
   appdata->menuitems[MENU_ITEM_TRACK_EXPORT] = item = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_track_export), _("_Export"),
     NULL, "<OSM2Go-Main>/Track/Export",
-    0, 0, FALSE, FALSE, FALSE
+    0, static_cast<GdkModifierType>(0), FALSE, false, FALSE
   );
 
   appdata->menuitems[MENU_ITEM_TRACK_CLEAR] = item = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_track_clear), _("_Clear"),
     GTK_STOCK_CLEAR, "<OSM2Go-Main>/Track/Clear",
-    0, 0, FALSE, FALSE, FALSE
+    0, static_cast<GdkModifierType>(0), FALSE, false, FALSE
   );
 
 
   appdata->menuitems[MENU_ITEM_TRACK_ENABLE_GPS] = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_track_enable_gps),_("_GPS enable"),
     NULL, "<OSM2Go-Main>/Track/GPS",
-    GDK_g, GDK_CONTROL_MASK|GDK_SHIFT_MASK, TRUE, TRUE,
+    GDK_g, static_cast<GdkModifierType>(GDK_CONTROL_MASK|GDK_SHIFT_MASK), TRUE, true,
     appdata->settings->enable_gps
   );
 
   appdata->menuitems[MENU_ITEM_TRACK_FOLLOW_GPS] = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_track_follow_gps), _("GPS follow"),
     NULL, "<OSM2Go-Main>/Track/Follow",
-    0, 0, appdata->settings->enable_gps, TRUE,
+    0, static_cast<GdkModifierType>(0), appdata->settings->enable_gps, true,
     appdata->settings->follow_gps
   );
 
@@ -830,14 +830,14 @@ static void menu_create(appdata_t *appdata) {
   menu_append_new_item(
     appdata, about_quit_items_menu, GTK_SIGNAL_FUNC(cb_menu_about), _("_About"),
     GTK_STOCK_ABOUT, "<OSM2Go-Main>/About",
-    0, 0, TRUE, FALSE, FALSE
+    0, static_cast<GdkModifierType>(0), TRUE, false, FALSE
   );
 
 #ifndef USE_HILDON
   menu_append_new_item(
     appdata, about_quit_items_menu, GTK_SIGNAL_FUNC(cb_menu_quit), _("_Quit"),
     GTK_STOCK_QUIT, "<OSM2Go-Main>/Quit",
-    0, 0, TRUE, FALSE, FALSE
+    0, static_cast<GdkModifierType>(0), TRUE, false, FALSE
   );
 #endif
 
@@ -866,7 +866,7 @@ static void menu_create(appdata_t *appdata) {
 #endif //USE_HILDON
 }
 
-void menu_cleanup(G_GNUC_UNUSED appdata_t *appdata) { }
+void menu_cleanup(appdata_t &) { }
 
 #else // !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
 
@@ -875,19 +875,19 @@ void submenu_entry(G_GNUC_UNUSED appdata_t *appdata, G_GNUC_UNUSED HildonAppMenu
                    G_GNUC_UNUSED GtkSignalFunc activate_cb) {
 }
 
-typedef struct {
+struct menu_entry_t {
   const char *label, *value;
   gboolean enabled;
   gboolean (*toggle)(appdata_t *appdata);
   int menuindex;
   GtkSignalFunc activate_cb;
-} menu_entry_t;
+};
 
-typedef struct {
+struct submenu_t {
   const char *title;
   const menu_entry_t *menu;
   int len;
-} submenu_t;
+};
 
 static gboolean enable_gps_get_toggle(appdata_t *appdata) {
   return appdata->settings->enable_gps;
@@ -907,7 +907,7 @@ static GtkWidget *app_menu_create(appdata_t *appdata,
 
     if(!menu_entries->toggle) {
       button = hildon_button_new_with_text(
-	    HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH,
+                  static_cast<HildonSizeType>(HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH),
 	    HILDON_BUTTON_ARRANGEMENT_VERTICAL,
 	    _(menu_entries->label), _(menu_entries->value));
       g_signal_connect_after(button, "clicked",
@@ -978,7 +978,7 @@ static GtkWidget *app_submenu_create(appdata_t *appdata,
     } else {
       if(!menu_entries->toggle) {
 	button = hildon_button_new_with_text(
-	     HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH,
+             static_cast<HildonSizeType>(HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH),
 	     HILDON_BUTTON_ARRANGEMENT_VERTICAL,
 	     _(menu_entries->label), _(menu_entries->value));
 
@@ -1174,11 +1174,11 @@ static void menu_create(appdata_t *appdata) {
   hildon_window_set_app_menu(HILDON_WINDOW(appdata->window), menu);
 }
 
-void menu_cleanup(appdata_t *appdata) {
-  submenu_cleanup(appdata->app_menu_view);
-  submenu_cleanup(appdata->app_menu_map);
-  submenu_cleanup(appdata->app_menu_wms);
-  submenu_cleanup(appdata->app_menu_track);
+void menu_cleanup(appdata_t &appdata) {
+  submenu_cleanup(appdata.app_menu_view);
+  submenu_cleanup(appdata.app_menu_map);
+  submenu_cleanup(appdata.app_menu_wms);
+  submenu_cleanup(appdata.app_menu_track);
 }
 #endif
 
@@ -1193,31 +1193,30 @@ static void menu_accels_load(appdata_t *appdata) {
   gtk_accel_map_load(accels_file);
   g_free(accels_file);
 }
-
-static void menu_accels_save(appdata_t *appdata) {
-  char *accels_file = g_strconcat(appdata->settings->base_path, ACCELS_FILE,
-                                      NULL);
-  gtk_accel_map_save(accels_file);
-  g_free(accels_file);
-}
-
 #endif
 
+appdata_t::appdata_t()
+{
+  memset(this, 0, sizeof(*this));
+}
 
-void cleanup(appdata_t *appdata) {
+appdata_t::~appdata_t() {
   printf("cleaning up ...\n");
 
 #ifdef UISPECIFIC_MENU_HAS_ACCELS
-  menu_accels_save(appdata);
+  char *accels_file = g_strconcat(settings->base_path, ACCELS_FILE,
+                                      NULL);
+  gtk_accel_map_save(accels_file);
+  g_free(accels_file);
 #endif
 
-  settings_save(appdata->settings);
+  settings_save(settings);
 
 #ifdef USE_HILDON
-  if(appdata->osso_context)
-    osso_deinitialize(appdata->osso_context);
+  if(osso_context)
+    osso_deinitialize(osso_context);
 
-  appdata->program = NULL;
+  program = NULL;
 #endif
 
   printf("waiting for gtk to shut down ");
@@ -1231,33 +1230,33 @@ void cleanup(appdata_t *appdata) {
   printf(" ok\n");
 
   /* save project file */
-  if(appdata->project)
-    project_save(GTK_WIDGET(appdata->window), appdata->project);
+  if(project)
+    project_save(GTK_WIDGET(window), project);
 
-  map_remove_bg_image(appdata->map);
+  map_remove_bg_image(map);
 
-  osm_free(appdata->osm);
-  appdata->osm = NULL;
+  osm_free(osm);
+  osm = NULL;
 
   xmlCleanupParser();
 
   curl_global_cleanup();
 
-  josm_presets_free(appdata->presets);
+  josm_presets_free(presets);
 
-  icon_free_all(&appdata->icon);
+  icon_free_all(&icon);
 
-  gps_release(appdata->gps_state);
+  gps_release(gps_state);
 
-  settings_free(appdata->settings);
+  settings_free(settings);
 
-  statusbar_free(appdata->statusbar);
+  statusbar_free(statusbar);
 
-  iconbar_free(appdata->iconbar);
+  iconbar_free(iconbar);
 
-  project_free(appdata->project);
+  project_free(project);
 
-  menu_cleanup(appdata);
+  menu_cleanup(*this);
 
   puts("everything is gone");
 }
@@ -1269,9 +1268,7 @@ static void on_window_destroy(appdata_t *appdata) {
   appdata->window = NULL;
 }
 
-static gboolean on_window_key_press(G_GNUC_UNUSED GtkWidget *widget,
-			 GdkEventKey *event, gpointer data) {
-  appdata_t *appdata = (appdata_t*)data;
+static gboolean on_window_key_press(GtkWidget *, GdkEventKey *event, appdata_t *appdata) {
   int handled = FALSE;
 
   //  printf("key event with keyval %x\n", event->keyval);
@@ -1329,7 +1326,7 @@ on_window_realize(GtkWidget *widget, G_GNUC_UNUSED gpointer dummy) {
 #endif
 
 #ifdef FREMANTLE
-static GtkWidget *icon_button(appdata_t *appdata, char *icon, GCallback cb,
+static GtkWidget *icon_button(appdata_t *appdata, const char *icon, GCallback cb,
 			      GtkWidget *box) {
   /* add zoom-in button */
   GtkWidget *but = gtk_button_new();
@@ -1337,7 +1334,7 @@ static GtkWidget *icon_button(appdata_t *appdata, char *icon, GCallback cb,
 		       icon_widget_load(&appdata->icon, icon));
   //  gtk_button_set_relief(GTK_BUTTON(but), GTK_RELIEF_NONE);
   hildon_gtk_widget_set_theme_size(but,
-  		(HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH));
+            static_cast<HildonSizeType>(HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH));
 
   if(cb)
     g_signal_connect(but, "clicked", G_CALLBACK(cb), appdata);
@@ -1358,9 +1355,6 @@ int main(int argc, char *argv[]) {
   appdata_t appdata;
 
   LIBXML_TEST_VERSION;
-
-  /* init appdata */
-  memset(&appdata, 0, sizeof(appdata));
 
   printf("Using locale for %s in %s\n", PACKAGE, LOCALEDIR);
 
@@ -1393,7 +1387,7 @@ int main(int argc, char *argv[]) {
 
 #ifdef USE_HILDON
   printf("Installing osso context for \"org.harbaum." PACKAGE "\"\n");
-  appdata.osso_context = osso_initialize("org.harbaum."PACKAGE,
+  appdata.osso_context = osso_initialize("org.harbaum." PACKAGE,
 					 VERSION, TRUE, NULL);
   if(appdata.osso_context == NULL)
     fprintf(stderr, "error initiating osso context\n");
@@ -1459,10 +1453,8 @@ int main(int argc, char *argv[]) {
 
   /* generate main map view */
   GtkWidget *map = map_new(&appdata);
-  if(!map) {
-    cleanup(&appdata);
+  if(!map)
     return -1;
-  }
 
   gtk_box_pack_start(GTK_BOX(vbox), map, TRUE, TRUE, 0);
 
@@ -1545,7 +1537,6 @@ int main(int argc, char *argv[]) {
   gtk_process_blocking();
   if(!appdata.window) {
     printf("shutdown while starting up (1)\n");
-    cleanup(&appdata);
     return -1;
   }
 
@@ -1563,7 +1554,6 @@ int main(int argc, char *argv[]) {
   gtk_process_blocking();
   if(!appdata.window) {
     printf("shutdown while starting up (2)\n");
-    cleanup(&appdata);
     return -1;
   }
 
@@ -1595,8 +1585,6 @@ int main(int argc, char *argv[]) {
 
   /* save a diff if there are dirty entries */
   diff_save(appdata.project, appdata.osm);
-
-  cleanup(&appdata);
 
   return 0;
 }

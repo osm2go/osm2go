@@ -140,6 +140,10 @@ typedef struct appdata_t {
   GtkWidget *app_menu_map;
 #endif
 
+#ifdef __cplusplus
+  appdata_t();
+  ~appdata_t();
+#endif
 } appdata_t;
 
 #ifdef __cplusplus

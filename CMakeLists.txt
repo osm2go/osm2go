@@ -257,7 +257,7 @@ target_include_directories(osm2go_lib
 )
 
 add_executable(osm2go
-	src/main.c
+	src/main.cpp
 )
 
 target_link_libraries(osm2go
