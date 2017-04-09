@@ -22,8 +22,6 @@
 #include <libosso.h>
 #include <dbus/dbus-glib-lowlevel.h>
 
-#include "appdata.h"
-
 #define MM_DBUS_SERVICE "com.gnuite.maemo_mapper"
 #define MM_DBUS_PATH "/com/gnuite/maemo_mapper"
 #define MM_DBUS_INTERFACE "com.gnuite.maemo_mapper"

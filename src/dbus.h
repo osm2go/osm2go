@@ -35,7 +35,7 @@ typedef struct {
 extern "C" {
 #endif
 
-void dbus_register(dbus_mm_pos_t *appdata);
+void dbus_register(dbus_mm_pos_t *mmpos);
 gboolean dbus_mm_set_position(osso_context_t *osso_context);
 
 #ifdef __cplusplus
