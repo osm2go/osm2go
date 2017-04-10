@@ -29,6 +29,8 @@
 #include <algorithm>
 #include <strings.h>
 
+#include <osm2go_cpp.h>
+
 enum {
   TAG_COL_KEY = 0,
   TAG_COL_VALUE,
@@ -76,7 +78,7 @@ static void changed(G_GNUC_UNUSED GtkTreeSelection *treeselection, gpointer user
 void tag_context_t::update_collisions()
 {
   GtkTreeIter iter;
-  tag_t *tag = NULL;
+  tag_t *tag = O2G_NULLPTR;
 
   /* walk the entire store to get all values */
   if(gtk_tree_model_get_iter_first(GTK_TREE_MODEL(store), &iter)) {
@@ -127,7 +129,7 @@ static bool tag_edit(GtkWindow *window, tag_t &tag) {
 			  window,
 			  GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
 			  GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-			  NULL);
+			  O2G_NULLPTR);
 
   gtk_dialog_set_default_response(GTK_DIALOG(dialog),
 				  GTK_RESPONSE_ACCEPT);
@@ -314,7 +316,7 @@ static GtkWidget *tag_widget(tag_context_t *context) {
 	   LIST_FLAG_ELLIPSIZE|LIST_FLAG_CAN_HIGHLIGHT, TAG_COL_COLLISION,
       _("Value"), TAG_COL_VALUE,
 	   LIST_FLAG_ELLIPSIZE,
-      NULL);
+      O2G_NULLPTR);
 
   GtkWidget *presets = josm_build_presets_button(context->appdata, context);
   if(presets) {
@@ -406,7 +408,7 @@ static GtkWidget *details_widget(const tag_context_t &context, bool big) {
 			     " (",
 	     (context.object.way->draw.flags & OSM_DRAW_FLAG_AREA)?
 			       "area":"line",
-			     ")", NULL);
+			     ")", O2G_NULLPTR);
 
     label = gtk_label_new(type_str);
     if(big) table_attach(table, gtk_label_new(_("Type:")), 0, 3);
@@ -452,7 +454,7 @@ static void info_more(const tag_context_t &context) {
     misc_dialog_new(MISC_DIALOG_SMALL, _("Object details"),
 		    GTK_WINDOW(context.dialog),
 		    GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-		    NULL);
+		    O2G_NULLPTR);
 
   gtk_dialog_set_default_response(GTK_DIALOG(dialog),
 				  GTK_RESPONSE_CANCEL);
@@ -485,7 +487,7 @@ bool info_dialog(GtkWidget *parent, appdata_t *appdata, object_t &object) {
 
   /* use implicit selection if not explicitely given */
   tag_context_t context(appdata, object);
-  char *str = NULL;
+  char *str = O2G_NULLPTR;
 
   switch(context.object.type) {
   case NODE:
@@ -525,7 +527,7 @@ bool info_dialog(GtkWidget *parent, appdata_t *appdata, object_t &object) {
 #endif
 	  GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
 	  GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-	  NULL);
+	  O2G_NULLPTR);
   g_free(str);
 
   gtk_dialog_set_default_response(GTK_DIALOG(context.dialog),
@@ -581,9 +583,9 @@ bool info_dialog(GtkWidget *parent, appdata_t *appdata, object_t &object) {
 
 tag_context_t::tag_context_t(appdata_t *a, const object_t &o)
   : appdata(a)
-  , dialog(0)
-  , list(0)
-  , store(0)
+  , dialog(O2G_NULLPTR)
+  , list(O2G_NULLPTR)
+  , store(O2G_NULLPTR)
   , object(o)
   , presets_type(0)
   , tags(object.obj->tags.asPointerVector())

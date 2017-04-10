@@ -34,6 +34,8 @@
 #include "track.h"
 #include "undo.h"
 
+#include <osm2go_cpp.h>
+
 #include <algorithm>
 #include <cstddef>
 #include <gdk/gdkkeysyms.h>
@@ -44,9 +46,9 @@ map_t::map_t(appdata_t *a, style_t *s)
   , canvas(canvas_new())
   , state(appdata->project && appdata->project->map_state ? appdata->project->map_state : new map_state_t())
   , autosave_handler_id(0)
-  , highlight(0)
-  , cursor(0)
-  , touchnode(0)
+  , highlight(O2G_NULLPTR)
+  , cursor(O2G_NULLPTR)
+  , touchnode(O2G_NULLPTR)
   , style(s)
   , elements_drawn(0)
 {
@@ -96,13 +98,13 @@ struct map_item_chain_t {
 
 map_item_t *map_item_chain_t::firstItem() const {
   if(map_items.empty())
-    return 0;
+    return O2G_NULLPTR;
   return map_items.front();
 }
 
 canvas_item_t *map_item_chain_t::firstCanvasItem() const {
   if(map_items.empty())
-    return 0;
+    return O2G_NULLPTR;
   return map_items.front()->item;
 }
 
@@ -121,7 +123,7 @@ static void map_statusbar(map_t *map, map_item_t *map_item) {
   gboolean collision;
   const tag_list_t &tags = map_item->object.obj->tags;
 
-  collision = tags.find_if(self_collision_functor(tags)) != NULL ? TRUE : FALSE;
+  collision = tags.find_if(self_collision_functor(tags)) != O2G_NULLPTR ? TRUE : FALSE;
 
   const std::string &str = map_item->object.get_name();
   statusbar_set(map->appdata->statusbar, str.c_str(), collision);
@@ -155,11 +157,11 @@ void map_item_chain_destroy(map_item_chain_t **chainP) {
   printf(" ok\n");
 
   /* the callback routine connected to this item should have been */
-  /* called by now and it has set the chain to NULL */
+  /* called by now and it has set the chain to O2G_NULLPTR */
 
 #else
   delete *chainP;
-  *chainP = NULL;
+  *chainP = O2G_NULLPTR;
 #endif
 }
 
@@ -175,7 +177,7 @@ static void map_node_select(map_t *map, node_t *node) {
   if(node->map_item_chain)
     map_item->item = node->map_item_chain->firstCanvasItem();
   else
-    map_item->item = NULL;
+    map_item->item = O2G_NULLPTR;
 
   map_statusbar(map, map_item);
   icon_bar_map_item_selected(map->appdata->iconbar, map_item, TRUE);
@@ -231,7 +233,7 @@ struct set_point_pos {
  * @brief create a canvas point array for a way
  * @param way the way to convert
  * @return canvas node array if at least 2 nodes were present
- * @retval NULL the way has less than 2 ways
+ * @retval O2G_NULLPTR the way has less than 2 ways
  */
 static canvas_points_t *
 points_from_node_chain(const way_t *way)
@@ -239,7 +241,7 @@ points_from_node_chain(const way_t *way)
   /* a way needs at least 2 points to be drawn */
   guint nodes = way->node_chain.size();
   if (nodes < 2)
-    return NULL;
+    return O2G_NULLPTR;
 
   /* allocate space for nodes */
   canvas_points_t *points = canvas_points_new(nodes);
@@ -256,7 +258,7 @@ struct draw_selected_way_functor {
   map_t * const map;
   way_t * const way;
   draw_selected_way_functor(gint a, map_t *m, way_t *w)
-    : last(0), arrow_width(a), map(m), way(w) {}
+    : last(O2G_NULLPTR), arrow_width(a), map(m), way(w) {}
   void operator()(node_t *node);
 };
 
@@ -341,7 +343,7 @@ void map_way_select(map_t *map, way_t *way) {
   /* a way needs at least 2 points to be drawn */
   g_assert(map_item->object.way == way);
   canvas_points_t *points = points_from_node_chain(way);
-  if(points != NULL) {
+  if(points != O2G_NULLPTR) {
     /* create a copy of this map item and mark it as being a highlight */
     map_item_t *new_map_item = g_new(map_item_t, 1);
     *new_map_item = *map_item;
@@ -366,7 +368,7 @@ struct relation_select_functor {
 
 void relation_select_functor::operator()(member_t& member)
 {
-  canvas_item_t *item = 0;
+  canvas_item_t *item = O2G_NULLPTR;
 
   switch(member.object.type) {
   case NODE: {
@@ -383,7 +385,7 @@ void relation_select_functor::operator()(member_t& member)
     way_t *way = member.object.way;
     /* a way needs at least 2 points to be drawn */
     canvas_points_t *points = points_from_node_chain(way);
-    if(points != NULL) {
+    if(points != O2G_NULLPTR) {
       if(way->draw.flags & OSM_DRAW_FLAG_AREA)
         item = canvas_polygon_new(map->canvas, CANVAS_GROUP_WAYS_HL, points, 0, 0,
                                   map->style->highlight.color);
@@ -422,7 +424,7 @@ void map_relation_select(map_t *map, relation_t *relation) {
   map_item_t *map_item = &map->selected;
   map_item->object = relation;
   map_item->highlight = FALSE;
-  map_item->item      = NULL;
+  map_item->item      = O2G_NULLPTR;
 
   map_statusbar(map, map_item);
   icon_bar_map_item_selected(map->appdata->iconbar, map_item, TRUE);
@@ -467,10 +469,10 @@ void map_item_deselect(map_t *map) {
   }
 
   /* remove statusbar message */
-  statusbar_set(map->appdata->statusbar, NULL, FALSE);
+  statusbar_set(map->appdata->statusbar, O2G_NULLPTR, FALSE);
 
   /* disable/enable icons in icon bar */
-  icon_bar_map_item_selected(map->appdata->iconbar, NULL, FALSE);
+  icon_bar_map_item_selected(map->appdata->iconbar, O2G_NULLPTR, FALSE);
   gtk_widget_set_sensitive(map->appdata->menuitems[MENU_ITEM_MAP_HIDE_SEL], FALSE);
 
   /* remove highlight */
@@ -488,7 +490,7 @@ static gint map_item_destroy_event(G_GNUC_UNUSED GtkWidget *widget, gpointer dat
 
 #ifdef DESTROY_WAIT_FOR_GTK
   /* remove item from nodes/ways map_item_chain */
-  map_item_chain_t *chain = 0;
+  map_item_chain_t *chain = O2G_NULLPTR;
   if(map_item->object.type == NODE)
     chain = map_item->object.node->map_item_chain;
   else if(map_item->object.type == WAY)
@@ -628,7 +630,7 @@ void map_way_draw_functor::operator()(way_t *way)
   /* allocate space for nodes */
   /* a way needs at least 2 points to be drawn */
   canvas_points_t *points = points_from_node_chain(way);
-  if(points == NULL) {
+  if(points == O2G_NULLPTR) {
     /* draw a single dot where this single node is */
     chain.push_back(map_way_single_new(map, way, map->style->node.radius, 0,
                                        map->style->node.color, 0));
@@ -708,7 +710,7 @@ static void map_item_draw(map_t *map, map_item_t *map_item) {
 }
 
 static void map_item_remove(map_item_t *map_item) {
-  map_item_chain_t **chainP = NULL;
+  map_item_chain_t **chainP = O2G_NULLPTR;
 
   switch(map_item->object.type) {
   case NODE:
@@ -847,7 +849,7 @@ void map_state_free(map_state_t *state) {
 
 template<typename T> void free_map_item_chain(std::pair<item_id_t, T *> pair) {
   delete pair.second->map_item_chain;
-  pair.second->map_item_chain = NULL;
+  pair.second->map_item_chain = O2G_NULLPTR;
 }
 
 template<bool b> void free_track_item_chain(track_seg_t &seg) {
@@ -886,7 +888,7 @@ static gint map_destroy_event(G_GNUC_UNUSED GtkWidget *widget, gpointer data) {
 
   map_free_map_item_chains(appdata);
 
-  appdata->map = NULL;
+  appdata->map = O2G_NULLPTR;
   delete map;
 
   return FALSE;
@@ -904,7 +906,7 @@ map_item_t *map_item_at(map_t *map, gint x, gint y) {
 
   if(!item) {
     printf("  there's no item\n");
-    return NULL;
+    return O2G_NULLPTR;
   }
 
   printf("  there's an item (%p)\n", item);
@@ -913,7 +915,7 @@ map_item_t *map_item_at(map_t *map, gint x, gint y) {
 
   if(!map_item) {
     printf("  item has no user data!\n");
-    return NULL;
+    return O2G_NULLPTR;
   }
 
   if(map_item->highlight)
@@ -934,7 +936,7 @@ map_item_t *map_real_item_at(map_t *map, gint x, gint y) {
   if(!map_item || !map_item->highlight) return map_item;
 
   /* get the item (parent) this item is the highlight of */
-  map_item_t *parent = NULL;
+  map_item_t *parent = O2G_NULLPTR;
   switch(map_item->object.type) {
 
   case NODE:
@@ -1397,7 +1399,7 @@ void hl_nodes::operator()(node_t* node)
 static void map_touchnode_update(map_t *map, gint x, gint y) {
   map_hl_touchnode_clear(map);
 
-  const node_t *cur_node = NULL;
+  const node_t *cur_node = O2G_NULLPTR;
 
   /* the "current node" which is the one we are working on and which */
   /* should not be highlighted depends on the action */
@@ -1548,7 +1550,7 @@ static void map_button_release(map_t *map, gint x, gint y) {
     /* convert mouse position to canvas (world) position */
     canvas_window2world(map->canvas, x, y, &x, &y);
 
-    node_t *node = NULL;
+    node_t *node = O2G_NULLPTR;
     if(!map->appdata->osm->position_within_bounds(x, y))
       map_outside_error(map->appdata);
     else {
@@ -1803,8 +1805,8 @@ static gboolean map_autosave(gpointer data) {
 GtkWidget *map_new(appdata_t *appdata) {
   style_t *s = style_load(appdata);
   if(!s) {
-    errorf(NULL, _("Unable to load valid style, terminating."));
-    return NULL;
+    errorf(O2G_NULLPTR, _("Unable to load valid style, terminating."));
+    return O2G_NULLPTR;
   }
 
   map_t *map = new map_t(appdata, s);
@@ -1911,7 +1913,7 @@ void map_action_set(map_t *map, map_action_t action) {
     printf("starting new way\n");
 
     /* remember if there was a way selected */
-    way_t *way_sel = NULL;
+    way_t *way_sel = O2G_NULLPTR;
     if(map->selected.object.type == WAY)
       way_sel = map->selected.object.way;
 
@@ -1934,7 +1936,7 @@ void map_action_set(map_t *map, map_action_t action) {
 			   action == MAP_ACTION_IDLE);
 
   const char *str_state[] = {
-    NULL,
+    O2G_NULLPTR,
     _("Place a node"),
     _("Adjust background image position"),
     _("Place first node of new way"),
@@ -1992,10 +1994,10 @@ void map_action_ok(map_t *map) {
   case MAP_ACTION_NODE_ADD:
     {
     pos_t pos;
-    if(!gps_get_pos(map->appdata->gps_state, &pos, 0))
+    if(!gps_get_pos(map->appdata->gps_state, &pos, O2G_NULLPTR))
       break;
 
-    node_t *node = NULL;
+    node_t *node = O2G_NULLPTR;
     osm_t * const osm = map->appdata->osm;
 
     if(!osm_position_within_bounds_ll(&osm->bounds->ll_min,
@@ -2080,7 +2082,7 @@ void map_delete_selected(map_t *map) {
           std::find_if(way_chain.begin(), way_chain.end(), short_way);
 
       if(it != way_chain.end()) {
-	if(!yes_no_f(GTK_WIDGET(map->appdata->window), NULL, 0, 0,
+	if(!yes_no_f(GTK_WIDGET(map->appdata->window), O2G_NULLPTR, 0, 0,
 		     _("Delete node in short way(s)?"),
 		     _("Deleting this node will also delete one or more ways "
 		       "since they'll contain only one node afterwards. "
@@ -2329,7 +2331,7 @@ void map_track_pos(map_t *map, const lpos_t *lpos) {
 void map_track_remove_pos(appdata_t *appdata) {
   if(appdata->track.gps_item) {
     canvas_item_destroy(appdata->track.gps_item);
-    appdata->track.gps_item = NULL;
+    appdata->track.gps_item = O2G_NULLPTR;
   }
 }
 
@@ -2340,7 +2342,7 @@ void map_remove_bg_image(map_t *map) {
 
   if(map->bg.item) {
     canvas_item_destroy(map->bg.item);
-    map->bg.item = NULL;
+    map->bg.item = O2G_NULLPTR;
   }
 }
 
@@ -2349,11 +2351,11 @@ static gint map_bg_item_destroy_event(G_GNUC_UNUSED GtkWidget *widget, gpointer 
 
   /* destroying background item */
 
-  map->bg.item = NULL;
+  map->bg.item = O2G_NULLPTR;
   if(map->bg.pix) {
     printf("destroying background item\n");
     g_object_unref(map->bg.pix);
-    map->bg.pix = NULL;
+    map->bg.pix = O2G_NULLPTR;
   }
   return FALSE;
 }
@@ -2363,7 +2365,7 @@ void map_set_bg_image(map_t *map, const char *filename) {
 
   map_remove_bg_image(map);
 
-  map->bg.pix = gdk_pixbuf_new_from_file(filename, NULL);
+  map->bg.pix = gdk_pixbuf_new_from_file(filename, O2G_NULLPTR);
 
   /* calculate required scale factor */
   map->bg.scale.x = (float)(bounds->max.x - bounds->min.x)/

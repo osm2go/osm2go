@@ -1,10 +1,11 @@
-cmake_minimum_required(VERSION 3.6 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
 
 project(osm2go VERSION 0.9.3 LANGUAGES C CXX)
 
-include(GNUInstallDirs)
 include(CheckFunctionExists)
 include(CMakePushCheckState)
+include(GNUInstallDirs)
+include(WriteCompilerDetectionHeader)
 
 find_package(CURL REQUIRED)
 find_package(LibXml2 REQUIRED)
@@ -12,8 +13,26 @@ find_package(PkgConfig REQUIRED)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
+set(CMAKE_CXX_STANDARD 11)
 
 set(CMAKE_INCLUDE_CURRENT_DIR TRUE)
+
+# The epilog defines O2G_NULLPTR as NULL instead of 0 on unsupported compilers
+# (i.e. N900 gcc 4.2) to make the function sentinel detection working again and
+# avoid all the misleading compiler warnings generated otherwise.
+write_compiler_detection_header(
+		FILE "${CMAKE_CURRENT_BINARY_DIR}/osm2go_cpp.h"
+		PREFIX "O2G"
+		COMPILERS GNU Clang
+		FEATURES cxx_nullptr cxx_override
+		ALLOW_UNKNOWN_COMPILER_VERSIONS ALLOW_UNKNOWN_COMPILERS
+		EPILOG
+"#if !(defined(O2G_COMPILER_CXX_NULLPTR) && O2G_COMPILER_CXX_NULLPTR)
+#  undef O2G_NULLPTR
+#  define O2G_NULLPTR NULL
+#endif
+"
+)
 
 set(osm2go_SOURCE_FILES
 	src/about.cpp
@@ -75,6 +94,7 @@ set(osm2go_SOURCE_FILES
 	src/undo.h
 	src/wms.cpp
 	src/wms.h
+	${CMAKE_CURRENT_BINARY_DIR}/osm2go_cpp.h
 )
 
 pkg_search_module(SOUP IMPORTED_TARGET libsoup-2.4 libsoup-2.2)
@@ -251,6 +271,7 @@ target_link_libraries(osm2go_lib
 
 target_include_directories(osm2go_lib
 	PUBLIC
+		${CMAKE_CURRENT_BINARY_DIR}
 		${CURL_INCLUDE_DIRS}
 		${LIBXML2_INCLUDE_DIR}
 		src

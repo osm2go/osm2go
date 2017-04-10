@@ -47,6 +47,8 @@
 
 #ifdef __cplusplus
 
+#include <osm2go_cpp.h>
+
 #include <string>
 #include <vector>
 

@@ -37,6 +37,8 @@
 #include <hildon/hildon-text-view.h>
 #endif
 
+#include <osm2go_cpp.h>
+
 #define COLOR_ERR  "red"
 #define COLOR_OK   "darkgreen"
 
@@ -71,7 +73,7 @@ static const char *osm_http_message(int id) {
   if(it != http_messages.end())
     return it->second;
 
-  return NULL;
+  return O2G_NULLPTR;
 }
 
 struct log_s {
@@ -146,7 +148,7 @@ bool osm_download(GtkWidget *parent, settings_t *settings, project_t *project)
 
   gchar *url = g_strconcat(project->server, "/map?bbox=",
 		     minlon, ",", minlat,
-		",", maxlon, ",", maxlat, NULL);
+		",", maxlon, ",", maxlat, O2G_NULLPTR);
 
   /* Download the new file to a new name. If something goes wrong then the
    * old file will still be in place to be opened. */
@@ -216,16 +218,16 @@ static G_GNUC_PRINTF(3, 4) void appendf(struct log_s &log, const char *colname,
 
   printf("%s", buf);
 
-  GtkTextTag *tag = NULL;
+  GtkTextTag *tag = O2G_NULLPTR;
   if(colname)
-    tag = gtk_text_buffer_create_tag(log.buffer, NULL,
+    tag = gtk_text_buffer_create_tag(log.buffer, O2G_NULLPTR,
 				     "foreground", colname,
-				     NULL);
+				     O2G_NULLPTR);
 
   GtkTextIter end;
   gtk_text_buffer_get_end_iter(log.buffer, &end);
   if(tag)
-    gtk_text_buffer_insert_with_tags(log.buffer, &end, buf, -1, tag, NULL);
+    gtk_text_buffer_insert_with_tags(log.buffer, &end, buf, -1, tag, O2G_NULLPTR);
   else
     gtk_text_buffer_insert(log.buffer, &end, buf, -1);
 
@@ -258,17 +260,17 @@ static gboolean osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
   while(retry >= 0) {
 
     if(retry != MAX_TRY)
-      appendf(log, NULL, _("Retry %d/%d "), MAX_TRY-retry, MAX_TRY-1);
+      appendf(log, O2G_NULLPTR, _("Retry %d/%d "), MAX_TRY-retry, MAX_TRY-1);
 
     /* get a curl handle */
     curl = curl_easy_init();
     if(!curl) {
-      appendf(log, NULL, _("CURL init error\n"));
+      appendf(log, O2G_NULLPTR, _("CURL init error\n"));
       return FALSE;
     }
 
     read_data = read_data_init;
-    write_data.ptr = NULL;
+    write_data.ptr = O2G_NULLPTR;
     write_data.len = 0;
 
     /* we want to use our own read/write functions */
@@ -299,7 +301,7 @@ static gboolean osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
     curl_easy_setopt(curl, CURLOPT_USERAGENT, PACKAGE "-libcurl/" VERSION);
 
 #ifdef NO_EXPECT
-    struct curl_slist *slist = NULL;
+    struct curl_slist *slist = O2G_NULLPTR;
     slist = curl_slist_append(slist, "Expect:");
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, slist);
 #endif
@@ -326,7 +328,7 @@ static gboolean osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
     /* this will return the id on a successful create */
     if(id && (res == 0) && (response == 200)) {
       printf("request to parse successful reply as an id\n");
-      *id = strtoul(write_data.ptr, NULL, 10);
+      *id = strtoul(write_data.ptr, O2G_NULLPTR, 10);
     }
 
     if(res != 0)
@@ -342,7 +344,7 @@ static gboolean osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
     /* if it's neither "ok" (200), nor "internal server error" (500) */
     /* then write the message to the log */
     if((response != 200) && (response != 500) && write_data.ptr) {
-      appendf(log, NULL, _("Server reply: "));
+      appendf(log, O2G_NULLPTR, _("Server reply: "));
       appendf(log, COLOR_ERR, _("%s\n"), write_data.ptr);
     }
 
@@ -376,17 +378,17 @@ static gboolean osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
   while(retry >= 0) {
 
     if(retry != MAX_TRY)
-      appendf(log, NULL, _("Retry %d/%d "), MAX_TRY-retry, MAX_TRY-1);
+      appendf(log, O2G_NULLPTR, _("Retry %d/%d "), MAX_TRY-retry, MAX_TRY-1);
 
     /* get a curl handle */
     curl = curl_easy_init();
     if(!curl) {
-      appendf(log, NULL, _("CURL init error\n"));
+      appendf(log, O2G_NULLPTR, _("CURL init error\n"));
       return FALSE;
     }
 
     read_data = read_data_init;
-    write_data.ptr = NULL;
+    write_data.ptr = O2G_NULLPTR;
     write_data.len = 0;
 
     /* we want to use our own read/write functions */
@@ -418,7 +420,7 @@ static gboolean osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
     curl_easy_setopt(curl, CURLOPT_USERAGENT, PACKAGE "-libcurl/" VERSION);
 
 #ifdef NO_EXPECT
-    struct curl_slist *slist = NULL;
+    struct curl_slist *slist = O2G_NULLPTR;
     slist = curl_slist_append(slist, "Expect:");
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, slist);
 #endif
@@ -453,7 +455,7 @@ static gboolean osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
     /* if it's neither "ok" (200), nor "internal server error" (500) */
     /* then write the message to the log */
     if((response != 200) && (response != 500) && write_data.ptr) {
-      appendf(log, NULL, _("Server reply: "));
+      appendf(log, O2G_NULLPTR, _("Server reply: "));
       appendf(log, COLOR_ERR, _("%s\n"), write_data.ptr);
     }
 
@@ -517,7 +519,7 @@ void osm_delete_nodes::operator()(std::pair<item_id_t, node_t *> pair)
 
     printf("deleting node on server\n");
 
-    appendf(context.log, NULL, _("Delete node #" ITEM_ID_FORMAT " "), node->id);
+    appendf(context.log, O2G_NULLPTR, _("Delete node #" ITEM_ID_FORMAT " "), node->id);
 
     char *url = g_strdup_printf("%s/node/" ITEM_ID_FORMAT,
                                 project->server, node->id);
@@ -551,15 +553,15 @@ void osm_upload_nodes::operator()(std::pair<item_id_t, node_t *> pair)
      (node->flags & OSM_FLAG_DELETED))
       return;
 
-    char *url = NULL;
+    char *url = O2G_NULLPTR;
 
     if(node->flags & OSM_FLAG_NEW) {
-      url = g_strconcat(project->server, "/node/create", NULL);
-      appendf(context.log, NULL, _("New node "));
+      url = g_strconcat(project->server, "/node/create", O2G_NULLPTR);
+      appendf(context.log, O2G_NULLPTR, _("New node "));
     } else {
       url = g_strdup_printf("%s/node/" ITEM_ID_FORMAT,
                             project->server, node->id);
-      appendf(context.log, NULL, _("Modified node #" ITEM_ID_FORMAT " "), node->id);
+      appendf(context.log, O2G_NULLPTR, _("Modified node #" ITEM_ID_FORMAT " "), node->id);
     }
 
     /* upload this node */
@@ -596,7 +598,7 @@ void osm_delete_ways::operator()(std::pair<item_id_t, way_t *> pair)
 
   printf("deleting way on server\n");
 
-  appendf(context.log, NULL, _("Delete way #" ITEM_ID_FORMAT " "), way->id);
+  appendf(context.log, O2G_NULLPTR, _("Delete way #" ITEM_ID_FORMAT " "), way->id);
 
   char *url = g_strdup_printf("%s/way/" ITEM_ID_FORMAT,
                                 project->server, way->id);
@@ -630,15 +632,15 @@ void osm_upload_ways::operator()(std::pair<item_id_t, way_t *> pair)
      (way->flags & OSM_FLAG_DELETED))
     return;
 
-  char *url = NULL;
+  char *url = O2G_NULLPTR;
 
   if(way->flags & OSM_FLAG_NEW) {
-    url = g_strconcat(project->server, "/way/create", NULL);
-    appendf(context.log, NULL, _("New way "));
+    url = g_strconcat(project->server, "/way/create", O2G_NULLPTR);
+    appendf(context.log, O2G_NULLPTR, _("New way "));
   } else {
     url = g_strdup_printf("%s/way/" ITEM_ID_FORMAT,
                           project->server, way->id);
-    appendf(context.log, NULL, _("Modified way #" ITEM_ID_FORMAT " "), way->id);
+    appendf(context.log, O2G_NULLPTR, _("Modified way #" ITEM_ID_FORMAT " "), way->id);
   }
 
   /* upload this node */
@@ -676,7 +678,7 @@ void osm_delete_relations::operator()(std::pair<item_id_t, relation_t *> pair)
 
   printf("deleting relation on server\n");
 
-  appendf(context.log, NULL,
+  appendf(context.log, O2G_NULLPTR,
           _("Delete relation #" ITEM_ID_FORMAT " "), relation->id);
 
   char *url = g_strdup_printf("%s/relation/" ITEM_ID_FORMAT,
@@ -711,15 +713,15 @@ void osm_upload_relations::operator()(std::pair<item_id_t, relation_t *> pair)
      (relation->flags & OSM_FLAG_DELETED))
     return;
 
-  char *url = NULL;
+  char *url = O2G_NULLPTR;
 
   if(relation->flags & OSM_FLAG_NEW) {
     url = g_strdup_printf("%s/relation/create", project->server);
-    appendf(context.log, NULL, _("New relation "));
+    appendf(context.log, O2G_NULLPTR, _("New relation "));
   } else {
     url = g_strdup_printf("%s/relation/" ITEM_ID_FORMAT,
                           project->server, relation->id);
-    appendf(context.log, NULL, _("Modified relation #" ITEM_ID_FORMAT " "),
+    appendf(context.log, O2G_NULLPTR, _("Modified relation #" ITEM_ID_FORMAT " "),
             relation->id);
   }
 
@@ -747,7 +749,7 @@ static bool osm_create_changeset(osm_upload_context_t &context, gchar **cred) {
   while(gtk_events_pending()) gtk_main_iteration();
 
   char *url = g_strdup_printf("%s/changeset/create", project->server);
-  appendf(context.log, NULL, _("Create changeset "));
+  appendf(context.log, O2G_NULLPTR, _("Create changeset "));
 
   /* create changeset request */
   xmlChar *xml_str = osm_generate_xml_changeset(context.comment);
@@ -755,7 +757,7 @@ static bool osm_create_changeset(osm_upload_context_t &context, gchar **cred) {
     printf("creating changeset %s from address %p\n", url, xml_str);
 
     *cred = g_strjoin(":", context.appdata->settings->username,
-                      context.appdata->settings->password, NULL);
+                      context.appdata->settings->password, O2G_NULLPTR);
 
     if(osm_update_item(context, xml_str, url, *cred, &context.changeset)) {
       printf("got changeset id " ITEM_ID_FORMAT "\n", context.changeset);
@@ -781,9 +783,9 @@ static gboolean osm_close_changeset(osm_upload_context_t &context, gchar *cred) 
 
   char *url = g_strdup_printf("%s/changeset/" ITEM_ID_FORMAT "/close",
 			      project->server, context.changeset);
-  appendf(context.log, NULL, _("Close changeset "));
+  appendf(context.log, O2G_NULLPTR, _("Close changeset "));
 
-  if(osm_update_item(context, NULL, url, cred, NULL))
+  if(osm_update_item(context, O2G_NULLPTR, url, cred, O2G_NULLPTR))
     result = TRUE;
 
   g_free(cred);
@@ -879,7 +881,7 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
 		    GTK_WINDOW(appdata->window),
 		    GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
 		    GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-		    NULL);
+		    O2G_NULLPTR);
 
   GtkWidget *table = gtk_table_new(4, 5, TRUE);
 
@@ -923,7 +925,7 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
 
   GtkWidget *scrolled_win = misc_scrolled_window_new(TRUE);
 
-  GtkTextBuffer *buffer = gtk_text_buffer_new(NULL);
+  GtkTextBuffer *buffer = gtk_text_buffer_new(O2G_NULLPTR);
   gtk_text_buffer_set_text(buffer, _("Please add a comment"), -1);
 
   /* disable ok button until user edited the comment */
@@ -996,18 +998,18 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   context.dialog =
     misc_dialog_new(MISC_DIALOG_LARGE,_("Uploading"),
 	  GTK_WINDOW(appdata->window),
-	  GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE, NULL);
+	  GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE, O2G_NULLPTR);
 
   gtk_dialog_set_response_sensitive(GTK_DIALOG(context.dialog),
 				    GTK_RESPONSE_CLOSE, FALSE);
 
   /* ------- main ui element is this text view --------------- */
 
-  GtkWidget *scrolled_window = gtk_scrolled_window_new(NULL, NULL);
+  GtkWidget *scrolled_window = gtk_scrolled_window_new(O2G_NULLPTR, O2G_NULLPTR);
   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window),
   				 GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
 
-  context.log.buffer = gtk_text_buffer_new(NULL);
+  context.log.buffer = gtk_text_buffer_new(O2G_NULLPTR);
 
   context.log.view = gtk_text_view_new_with_buffer(context.log.buffer);
   gtk_text_view_set_editable(GTK_TEXT_VIEW(context.log.view), FALSE);
@@ -1028,50 +1030,50 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
     project->rserver.erase(project->rserver.size() - 1);
   }
 
-  appendf(context.log, NULL, _("Log generated by %s v%s using API 0.6\n"),
+  appendf(context.log, O2G_NULLPTR, _("Log generated by %s v%s using API 0.6\n"),
 	  PACKAGE, VERSION);
-  appendf(context.log, NULL, _("User comment: %s\n"), context.comment);
+  appendf(context.log, O2G_NULLPTR, _("User comment: %s\n"), context.comment);
 
   if(api_adjust(project->rserver))
-    appendf(context.log, NULL, _("Adjusting server name to v0.6\n"));
+    appendf(context.log, O2G_NULLPTR, _("Adjusting server name to v0.6\n"));
 
-  appendf(context.log, NULL, _("Uploading to %s\n"), project->server);
+  appendf(context.log, O2G_NULLPTR, _("Uploading to %s\n"), project->server);
 
   /* create a new changeset */
   gchar *cred;
   if(osm_create_changeset(context, &cred)) {
     /* check for dirty entries */
-    appendf(context.log, NULL, _("Uploading nodes:\n"));
+    appendf(context.log, O2G_NULLPTR, _("Uploading nodes:\n"));
     std::for_each(osm->nodes.begin(), osm->nodes.end(), osm_upload_nodes(context, cred));
-    appendf(context.log, NULL, _("Uploading ways:\n"));
+    appendf(context.log, O2G_NULLPTR, _("Uploading ways:\n"));
     std::for_each(osm->ways.begin(), osm->ways.end(), osm_upload_ways(context, cred));
-    appendf(context.log, NULL, _("Uploading relations:\n"));
+    appendf(context.log, O2G_NULLPTR, _("Uploading relations:\n"));
     std::for_each(osm->relations.begin(), osm->relations.end(), osm_upload_relations(context, cred));
-    appendf(context.log, NULL, _("Deleting relations:\n"));
+    appendf(context.log, O2G_NULLPTR, _("Deleting relations:\n"));
     std::for_each(osm->relations.begin(), osm->relations.end(), osm_delete_relations(context, cred));
-    appendf(context.log, NULL, _("Deleting ways:\n"));
+    appendf(context.log, O2G_NULLPTR, _("Deleting ways:\n"));
     std::for_each(osm->ways.begin(), osm->ways.end(), osm_delete_ways(context, cred));
-    appendf(context.log, NULL, _("Deleting nodes:\n"));
+    appendf(context.log, O2G_NULLPTR, _("Deleting nodes:\n"));
     std::for_each(osm->nodes.begin(), osm->nodes.end(), osm_delete_nodes(context, cred));
 
     /* close changeset */
     osm_close_changeset(context, cred);
   }
 
-  appendf(context.log, NULL, _("Upload done.\n"));
+  appendf(context.log, O2G_NULLPTR, _("Upload done.\n"));
 
   gboolean reload_map = FALSE;
   if(project->data_dirty) {
-    appendf(context.log, NULL, _("Server data has been modified.\n"));
-    appendf(context.log, NULL, _("Downloading updated osm data ...\n"));
+    appendf(context.log, O2G_NULLPTR, _("Server data has been modified.\n"));
+    appendf(context.log, O2G_NULLPTR, _("Downloading updated osm data ...\n"));
 
     if(osm_download(context.dialog, appdata->settings, project)) {
-      appendf(context.log, NULL, _("Download successful!\n"));
-      appendf(context.log, NULL, _("The map will be reloaded.\n"));
+      appendf(context.log, O2G_NULLPTR, _("Download successful!\n"));
+      appendf(context.log, O2G_NULLPTR, _("The map will be reloaded.\n"));
       project->data_dirty = false;
       reload_map = TRUE;
     } else
-      appendf(context.log, NULL, _("Download failed!\n"));
+      appendf(context.log, O2G_NULLPTR, _("Download failed!\n"));
 
     project_save(context.dialog, project);
 
@@ -1081,7 +1083,7 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
       /* we basically restart the entire map with fresh data from the server */
       /* and the diff will hopefully be empty (if the upload was successful) */
 
-      appendf(context.log, NULL, _("Reloading map ...\n"));
+      appendf(context.log, O2G_NULLPTR, _("Reloading map ...\n"));
 
       if(!diff_is_clean(appdata->osm, FALSE)) {
 	appendf(context.log, COLOR_ERR, _("*** DIFF IS NOT CLEAN ***\n"));
@@ -1090,23 +1092,23 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
       }
 
       /* redraw the entire map by destroying all map items and redrawing them */
-      appendf(context.log, NULL, _("Cleaning up ...\n"));
+      appendf(context.log, O2G_NULLPTR, _("Cleaning up ...\n"));
       diff_save(appdata->project, appdata->osm);
       map_clear(appdata->map, MAP_LAYER_OBJECTS_ONLY);
       delete appdata->osm;
 
-      appendf(context.log, NULL, _("Loading OSM ...\n"));
+      appendf(context.log, O2G_NULLPTR, _("Loading OSM ...\n"));
       appdata->osm = project_parse_osm(appdata->project, &appdata->icon);
-      appendf(context.log, NULL, _("Applying diff ...\n"));
+      appendf(context.log, O2G_NULLPTR, _("Applying diff ...\n"));
       diff_restore(appdata, appdata->project, appdata->osm);
-      appendf(context.log, NULL, _("Painting ...\n"));
+      appendf(context.log, O2G_NULLPTR, _("Painting ...\n"));
       map_paint(appdata->map);
-      appendf(context.log, NULL, _("Done!\n"));
+      appendf(context.log, O2G_NULLPTR, _("Done!\n"));
     }
   }
 
   /* tell the user that he can stop waiting ... */
-  appendf(context.log, NULL, _("Process finished.\n"));
+  appendf(context.log, O2G_NULLPTR, _("Process finished.\n"));
 
   gtk_dialog_set_response_sensitive(GTK_DIALOG(context.dialog),
 				    GTK_RESPONSE_CLOSE, TRUE);

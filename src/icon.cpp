@@ -27,6 +27,8 @@
 #include <string>
 #include <sys/stat.h>
 
+#include <osm2go_cpp.h>
+
 struct icon_item {
   icon_item();
   icon_item(GdkPixbuf *nbuf);
@@ -42,7 +44,7 @@ struct icon_t {
 };
 
 icon_item::icon_item()
-  : buf(0)
+  : buf(O2G_NULLPTR)
   , use(0)
 {
 }
@@ -59,7 +61,7 @@ icon_file_exists(const std::string &file) {
 #ifdef USE_SVG_ICONS
                               ".svg",
 #endif
-                              ".gif", ".png", ".jpg", NULL };
+                              ".gif", ".png", ".jpg", O2G_NULLPTR };
 
   // absolute filenames are not mangled
   if(file[0] == '/') {
@@ -85,14 +87,14 @@ icon_file_exists(const std::string &file) {
 
 GdkPixbuf *icon_load(icon_t **icon, const char *name) {
   if(!name || !*name)
-    return 0;
+    return O2G_NULLPTR;
 
   return icon_load(icon, std::string(name));
 }
 
 GdkPixbuf *icon_load(icon_t **icon, const std::string &sname, int limit) {
   if(sname.empty())
-    return 0;
+    return O2G_NULLPTR;
 
   if(*icon) {
     /* check if icon list already contains an icon of that name */
@@ -107,7 +109,7 @@ GdkPixbuf *icon_load(icon_t **icon, const std::string &sname, int limit) {
 
   const std::string &fullname = icon_file_exists(sname);
   if(!fullname.empty()) {
-    GdkPixbuf *pix = gdk_pixbuf_new_from_file_at_size(fullname.c_str(), limit, limit, NULL);
+    GdkPixbuf *pix = gdk_pixbuf_new_from_file_at_size(fullname.c_str(), limit, limit, O2G_NULLPTR);
 
     if(!*icon)
       *icon = new icon_t();
@@ -118,12 +120,12 @@ GdkPixbuf *icon_load(icon_t **icon, const std::string &sname, int limit) {
   }
 
   printf("Icon %s not found\n", sname.c_str());
-  return NULL;
+  return O2G_NULLPTR;
 }
 
 GtkWidget *icon_widget_load(icon_t **icon, const char *name) {
   GdkPixbuf *pix = icon_load(icon, name);
-  if(!pix) return NULL;
+  if(!pix) return O2G_NULLPTR;
 
   return gtk_image_new_from_pixbuf(pix);
 }
@@ -131,7 +133,7 @@ GtkWidget *icon_widget_load(icon_t **icon, const char *name) {
 GtkWidget *icon_widget_load(icon_t **icon, const std::string &name, int limit) {
   GdkPixbuf *pix = icon_load(icon, name, limit);
   if(!pix)
-    return NULL;
+    return O2G_NULLPTR;
 
   return gtk_image_new_from_pixbuf(pix);
 }

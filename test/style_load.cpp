@@ -1,6 +1,8 @@
 #include <josm_elemstyles.h>
 #include <josm_elemstyles_p.h>
 
+#include <osm2go_cpp.h>
+
 #include <algorithm>
 #include <cstdlib>
 #include <iostream>
@@ -41,12 +43,12 @@ int main(int argc, char **argv)
 
   char *endp;
   unsigned long rules = strtoul(argv[2], &endp, 10);
-  if (endp == 0 || *endp != 0) {
+  if (endp == O2G_NULLPTR || *endp != 0) {
     usage(argv[0]);
     return 1;
   }
   unsigned long conditions = strtoul(argv[3], &endp, 10);
-  if (endp == 0 || *endp != 0) {
+  if (endp == O2G_NULLPTR || *endp != 0) {
     usage(argv[0]);
     return 1;
   }

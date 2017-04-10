@@ -31,6 +31,8 @@
 
 #include <gtk/gtk.h>
 
+#include <osm2go_cpp.h>
+
 #ifdef ENABLE_BROWSER_INTERFACE
 
 static gboolean on_link_clicked(GtkWidget *widget, G_GNUC_UNUSED GdkEventButton *event,
@@ -46,9 +48,9 @@ static gboolean on_link_clicked(GtkWidget *widget, G_GNUC_UNUSED GdkEventButton 
 
 static GtkWidget *link_new(appdata_t *appdata, const char *url) {
 #ifdef ENABLE_BROWSER_INTERFACE
-  GtkWidget *label = gtk_label_new(NULL);
+  GtkWidget *label = gtk_label_new(O2G_NULLPTR);
   char *str = g_strconcat("<span color=\"" LINK_COLOR "\"><u>", url,
-                          "</u></span>", NULL);
+                          "</u></span>", O2G_NULLPTR);
   gtk_label_set_markup(GTK_LABEL(label), str);
   g_free(str);
 
@@ -59,8 +61,8 @@ static GtkWidget *link_new(appdata_t *appdata, const char *url) {
                    G_CALLBACK(on_link_clicked), appdata);
   return eventbox;
 #else
-  GtkWidget *label = gtk_label_new(NULL);
-  char *str = g_strconcat("<span color=\"" LINK_COLOR "\">", url, "</span>", NULL);
+  GtkWidget *label = gtk_label_new(O2G_NULLPTR);
+  char *str = g_strconcat("<span color=\"" LINK_COLOR "\">", url, "</span>", O2G_NULLPTR);
   gtk_label_set_markup(GTK_LABEL(label), str);
   g_free(str);
   return label;
@@ -76,7 +78,7 @@ static void on_paypal_button_clicked(appdata_t *appdata) {
 #endif
 
 static GtkWidget *label_big(const char *str) {
-  GtkWidget *label = gtk_label_new(NULL);
+  GtkWidget *label = gtk_label_new(O2G_NULLPTR);
   char *markup =
     g_markup_printf_escaped("<span size='x-large'>%s</span>", str);
   gtk_label_set_markup(GTK_LABEL(label), markup);
@@ -85,7 +87,7 @@ static GtkWidget *label_big(const char *str) {
 }
 
 static GtkWidget *label_xbig(const char *str) {
-  GtkWidget *label = gtk_label_new(NULL);
+  GtkWidget *label = gtk_label_new(O2G_NULLPTR);
   char *markup =
     g_markup_printf_escaped("<span size='xx-large'>%s</span>", str);
   gtk_label_set_markup(GTK_LABEL(label), markup);
@@ -106,18 +108,18 @@ static GtkWidget *label_wrap(const char *str) {
   gtk_label_set_line_wrap(GTK_LABEL(label), TRUE);
 
   g_signal_connect(G_OBJECT(label), "realize",
-		   G_CALLBACK(on_label_realize), NULL);
+		   G_CALLBACK(on_label_realize), O2G_NULLPTR);
 
   return label;
 }
 
 static GtkWidget *license_page_new(void) {
-  GtkWidget *label = label_wrap(NULL);
-  GMappedFile *licMap = NULL;
+  GtkWidget *label = label_wrap(O2G_NULLPTR);
+  GMappedFile *licMap = O2G_NULLPTR;
 
   const std::string &name = find_file("COPYING");
   if(!name.empty()) {
-    licMap = g_mapped_file_new(name.c_str(), FALSE, NULL);
+    licMap = g_mapped_file_new(name.c_str(), FALSE, O2G_NULLPTR);
   }
 
   if(licMap) {
@@ -136,7 +138,7 @@ static GtkWidget *license_page_new(void) {
     gtk_label_set_text(GTK_LABEL(label), _("Load error"));
 
 #ifndef FREMANTLE_PANNABLE_AREA
-  GtkWidget *scrolled_window = gtk_scrolled_window_new(NULL, NULL);
+  GtkWidget *scrolled_window = gtk_scrolled_window_new(O2G_NULLPTR, O2G_NULLPTR);
   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window),
   				 GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
   gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(scrolled_window),
@@ -252,7 +254,7 @@ static GtkWidget *authors_page_new(void) {
   gtk_box_pack_start(GTK_BOX(vbox), ivbox, TRUE, FALSE, 0);
 
 #ifndef FREMANTLE_PANNABLE_AREA
-  GtkWidget *scrolled_window = gtk_scrolled_window_new(NULL, NULL);
+  GtkWidget *scrolled_window = gtk_scrolled_window_new(O2G_NULLPTR, O2G_NULLPTR);
   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window),
   				 GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
   gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(scrolled_window),
@@ -277,7 +279,7 @@ static GtkWidget *donate_page_new(appdata_t *appdata) {
 		   "donate via paypal to")));
 
   gtk_box_pack_start_defaults(GTK_BOX(vbox),
-			      link_new(NULL, "till@harbaum.org"));
+			      link_new(O2G_NULLPTR, "till@harbaum.org"));
 
 #ifdef ENABLE_BROWSER_INTERFACE
   gtk_box_pack_start_defaults(GTK_BOX(vbox),
@@ -330,7 +332,7 @@ static GtkWidget *bugs_page_new(appdata_t *appdata) {
 void about_box(appdata_t *appdata) {
   GtkWidget *dialog = gtk_dialog_new_with_buttons(_("About OSM2Go"),
 	  GTK_WINDOW(appdata->window), GTK_DIALOG_MODAL,
-          GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE, NULL);
+          GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE, O2G_NULLPTR);
 
 #ifdef USE_HILDON
   gtk_window_set_default_size(GTK_WINDOW(dialog), 640, 480);

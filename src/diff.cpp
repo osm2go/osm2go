@@ -32,6 +32,8 @@
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 
+#include <osm2go_cpp.h>
+
 #if !defined(LIBXML_TREE_ENABLED) || !defined(LIBXML_OUTPUT_ENABLED)
 #error "libxml doesn't support required tree or output"
 #endif
@@ -47,8 +49,8 @@ struct diff_save_tags_functor {
   xmlNodePtr const node;
   diff_save_tags_functor(xmlNodePtr n) : node(n) {}
   void operator()(const tag_t *tag) {
-    xmlNodePtr tag_node = xmlNewChild(node, NULL,
-                                      BAD_CAST "tag", NULL);
+    xmlNodePtr tag_node = xmlNewChild(node, O2G_NULLPTR,
+                                      BAD_CAST "tag", O2G_NULLPTR);
     xmlNewProp(tag_node, BAD_CAST "k", BAD_CAST tag->key);
     xmlNewProp(tag_node, BAD_CAST "v", BAD_CAST tag->value);
   }
@@ -69,7 +71,7 @@ static void diff_save_tags(const base_object_t *obj, xmlNodePtr node) {
 static xmlNodePtr diff_save_state_n_id(const base_object_t *obj,
                                        xmlNodePtr root_node,
                                        const char *tname) {
-  xmlNodePtr node = xmlNewChild(root_node, NULL, BAD_CAST tname, NULL);
+  xmlNodePtr node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST tname, O2G_NULLPTR);
 
   if(obj->flags & OSM_FLAG_DELETED)
     xmlNewProp(node, BAD_CAST "state", BAD_CAST "deleted");
@@ -146,8 +148,8 @@ struct diff_save_rel {
 
 void diff_save_rel::operator()(const member_t &member)
 {
-  xmlNodePtr node_member = xmlNewChild(node_rel, NULL,
-                                       BAD_CAST "member", NULL);
+  xmlNodePtr node_member = xmlNewChild(node_rel, O2G_NULLPTR,
+                                       BAD_CAST "member", O2G_NULLPTR);
 
   gchar ref[G_ASCII_DTOSTR_BUF_SIZE];
   switch(member.object.type) {
@@ -262,7 +264,7 @@ void diff_save(const project_t *project, const osm_t *osm) {
   const std::string ndiff = project->path + "save.diff";
 
   xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
-  xmlNodePtr root_node = xmlNewNode(NULL, BAD_CAST "diff");
+  xmlNodePtr root_node = xmlNewNode(O2G_NULLPTR, BAD_CAST "diff");
   xmlNewProp(root_node, BAD_CAST "name", BAD_CAST project->name.c_str());
   xmlDocSetRootElement(doc, root_node);
 
@@ -283,7 +285,7 @@ static item_id_t xml_get_prop_int(xmlNode *node, const char *prop, item_id_t def
   item_id_t value = def;
 
   if(str) {
-    value = strtoll((char*)str, NULL, 10);
+    value = strtoll((char*)str, O2G_NULLPTR, 10);
     xmlFree(str);
   }
 
@@ -367,7 +369,7 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
   }
 
   /* evaluate properties */
-  node_t *node = NULL;
+  node_t *node = O2G_NULLPTR;
 
   switch(state) {
   case OSM_FLAG_NEW: {
@@ -377,7 +379,7 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
     node->id = id;
     node->flags = OSM_FLAG_NEW;
     node->time = xml_get_prop_int(node_node, "time", 0);
-    if(!node->time) node->time = time(NULL);
+    if(!node->time) node->time = time(O2G_NULLPTR);
 
     /* attach to end of node list */
     osm->nodes[id] = node;
@@ -387,7 +389,7 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
   case OSM_FLAG_DELETED:
     printf("  Restoring DELETE flag\n");
 
-    if((node = osm->node_by_id(id)) != 0)
+    if((node = osm->node_by_id(id)) != O2G_NULLPTR)
       node->flags |= OSM_FLAG_DELETED;
     else
       printf("  WARNING: no node with that id found\n");
@@ -396,7 +398,7 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
   case OSM_FLAG_DIRTY:
     printf("  Valid id/position (DIRTY)\n");
 
-    if((node = osm->node_by_id(id)) != 0)
+    if((node = osm->node_by_id(id)) != O2G_NULLPTR)
       node->flags |= OSM_FLAG_DIRTY;
     else
       printf("  WARNING: no node with that id found\n");
@@ -449,7 +451,7 @@ static void diff_restore_way(xmlNodePtr node_node, osm_t *osm) {
   gboolean hidden = xml_get_prop_is(node_node, "hidden", "true");
 
   /* evaluate properties */
-  way_t *way = NULL;
+  way_t *way = O2G_NULLPTR;
   switch(state) {
   case OSM_FLAG_NEW: {
     printf("  Restoring NEW way\n");
@@ -458,7 +460,7 @@ static void diff_restore_way(xmlNodePtr node_node, osm_t *osm) {
     way->id = id;
     way->flags = OSM_FLAG_NEW;
     way->time = xml_get_prop_int(node_node, "time", 0);
-    if(!way->time) way->time = time(NULL);
+    if(!way->time) way->time = time(O2G_NULLPTR);
 
     /* attach to end of way list */
     osm->ways[id] = way;
@@ -468,7 +470,7 @@ static void diff_restore_way(xmlNodePtr node_node, osm_t *osm) {
   case OSM_FLAG_DELETED:
     printf("  Restoring DELETE flag\n");
 
-    if((way = osm->way_by_id(id)) != 0)
+    if((way = osm->way_by_id(id)) != O2G_NULLPTR)
       way->flags |= OSM_FLAG_DELETED;
     else
       printf("  WARNING: no way with that id found\n");
@@ -477,7 +479,7 @@ static void diff_restore_way(xmlNodePtr node_node, osm_t *osm) {
   case OSM_FLAG_DIRTY:
     printf("  Valid id (DIRTY)\n");
 
-    if((way = osm->way_by_id(id)) != 0)
+    if((way = osm->way_by_id(id)) != O2G_NULLPTR)
       way->flags |= OSM_FLAG_DIRTY;
     else
       printf("  WARNING: no way with that id found\n");
@@ -499,7 +501,7 @@ static void diff_restore_way(xmlNodePtr node_node, osm_t *osm) {
 
   /* scan for nodes */
   node_chain_t new_chain;
-  xmlNode *nd_node = NULL;
+  xmlNode *nd_node = O2G_NULLPTR;
   for(nd_node = node_node->children; nd_node; nd_node = nd_node->next) {
     if(nd_node->type == XML_ELEMENT_NODE) {
       if(G_LIKELY(strcmp((char*)nd_node->name, "nd") == 0)) {
@@ -561,7 +563,7 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
   int state = xml_get_prop_state(node_rel);
 
   /* evaluate properties */
-  relation_t *relation = NULL;
+  relation_t *relation = O2G_NULLPTR;
   switch(state) {
   case OSM_FLAG_NEW:
     printf("  Restoring NEW relation\n");
@@ -570,7 +572,7 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
     relation->id = id;
     relation->flags = OSM_FLAG_NEW;
     relation->time = xml_get_prop_int(node_rel, "time", 0);
-    if(!relation->time) relation->time = time(NULL);
+    if(!relation->time) relation->time = time(O2G_NULLPTR);
 
     /* attach to end of relation list */
     osm->relations[id] = relation;
@@ -579,7 +581,7 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
   case OSM_FLAG_DELETED:
     printf("  Restoring DELETE flag\n");
 
-    if((relation = osm->relation_by_id(id)) != 0)
+    if((relation = osm->relation_by_id(id)) != O2G_NULLPTR)
       relation->flags |= OSM_FLAG_DELETED;
     else
       printf("  WARNING: no relation with that id found\n");
@@ -588,7 +590,7 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
   case OSM_FLAG_DIRTY:
     printf("  Valid id (DIRTY)\n");
 
-    if((relation = osm->relation_by_id(id)) != 0)
+    if((relation = osm->relation_by_id(id)) != O2G_NULLPTR)
       relation->flags |= OSM_FLAG_DIRTY;
     else
       printf("  WARNING: no relation with that id found\n");
@@ -617,7 +619,7 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
 
   /* scan for members */
   std::vector<member_t> members;
-  xmlNode *member_node = NULL;
+  xmlNode *member_node = O2G_NULLPTR;
   for(member_node = node_rel->children; member_node;
       member_node = member_node->next) {
     if(member_node->type == XML_ELEMENT_NODE) {
@@ -663,11 +665,11 @@ void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) {
     printf("diff found, applying ...\n");
   }
 
-  xmlDoc *doc = NULL;
-  xmlNode *root_element = NULL;
+  xmlDoc *doc = O2G_NULLPTR;
+  xmlNode *root_element = O2G_NULLPTR;
 
   /* parse the file and get the DOM */
-  if(G_UNLIKELY((doc = xmlReadFile(diff_name.c_str(), NULL, 0)) == NULL)) {
+  if(G_UNLIKELY((doc = xmlReadFile(diff_name.c_str(), O2G_NULLPTR, 0)) == O2G_NULLPTR)) {
     errorf(GTK_WIDGET(appdata->window),
 	   "Error: could not parse file %s\n", diff_name.c_str());
     return;
@@ -676,7 +678,7 @@ void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) {
   /* Get the root element node */
   root_element = xmlDocGetRootElement(doc);
 
-  xmlNode *cur_node = NULL;
+  xmlNode *cur_node = O2G_NULLPTR;
   for (cur_node = root_element; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcmp((char*)cur_node->name, "diff") == 0) {

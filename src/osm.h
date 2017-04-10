@@ -28,6 +28,7 @@
 extern "C" {
 #endif
 
+#include <osm2go_cpp.h>
 #include "pos.h"
 
 #include <math.h>
@@ -92,7 +93,7 @@ typedef struct object_t {
 
 #ifdef __cplusplus
   inline object_t()
-    : type(ILLEGAL), obj(0) {}
+    : type(ILLEGAL), obj(O2G_NULLPTR) {}
   explicit inline object_t(node_t *n)
     : type(NODE), node(n) { }
   explicit inline object_t(way_t *w)
@@ -199,7 +200,7 @@ struct tag_t {
   struct tag_t *next;
   char *key, *value;
   tag_t(char *k, char *v)
-    : next(0), key(k), value(v)
+    : next(O2G_NULLPTR), key(k), value(v)
   { }
 
   bool is_creator_tag() const;
@@ -251,7 +252,7 @@ public:
     for(const tag_t *t = contents; t; t = t->next)
       if(pred(t))
         return t;
-    return 0;
+    return O2G_NULLPTR;
   }
 
   template<typename _Predicate>
@@ -396,7 +397,7 @@ public:
 
 struct member_t {
   explicit member_t(type_t t);
-  explicit member_t(const object_t &o, char *r = 0);
+  explicit member_t(const object_t &o, char *r = O2G_NULLPTR);
 
   object_t object;
   char   *role;

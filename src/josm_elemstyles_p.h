@@ -21,6 +21,7 @@
 #define JOSM_ELEMSTYLES_P_H
 
 #include "josm_elemstyles.h"
+#include <osm2go_cpp.h>
 #if __cplusplus >= 201103L
 #include <cstdint>
 #else
@@ -105,7 +106,7 @@ struct elemstyle_icon_t {
 struct elemstyle_t {
   elemstyle_t()
     : type(ES_TYPE_NONE)
-    , line(0)
+    , line(O2G_NULLPTR)
     , zoom_max(0.0f)
   {
   }

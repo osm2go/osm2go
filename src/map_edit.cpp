@@ -30,6 +30,8 @@
 
 #include <algorithm>
 
+#include <osm2go_cpp.h>
+
 /* --------------------- misc local helper functions ---------------- */
 struct relation_transfer {
   way_t * const dst;
@@ -74,7 +76,7 @@ void map_edit_way_add_begin(map_t *map, way_t *way_sel) {
 
   g_assert(!map->action.way);
   map->action.way = new way_t(1);
-  map->action.extending = NULL;
+  map->action.extending = O2G_NULLPTR;
 }
 
 struct check_first_last_node {
@@ -114,7 +116,7 @@ void map_edit_way_add_segment(map_t *map, gint x, gint y) {
       g_assert(map->action.way);
 
       /* check whether this node is first or last one of a different way */
-      way_t *touch_way = NULL;
+      way_t *touch_way = O2G_NULLPTR;
       const way_chain_t &way_chain = map->appdata->osm->node_to_way(node);
       const way_chain_t::const_iterator it =
         std::find_if(way_chain.begin(), way_chain.end(), check_first_last_node(node));
@@ -134,7 +136,7 @@ void map_edit_way_add_segment(map_t *map, gint x, gint y) {
 	       map->appdata, MISC_AGAIN_ID_EXTEND_WAY, 0,
 	       _("Extend way?"),
 	       _("Do you want to extend the way present at this location?")))
-	    map->action.extending = NULL;
+	    map->action.extending = O2G_NULLPTR;
 	  else
 	    /* there are immediately enough nodes for a valid way */
 	    icon_bar_map_cancel_ok(map->appdata->iconbar, TRUE, TRUE);
@@ -144,7 +146,7 @@ void map_edit_way_add_segment(map_t *map, gint x, gint y) {
     } else {
       /* the current way doesn't end on another way if we are just placing */
       /* a new node */
-      map->action.ends_on = NULL;
+      map->action.ends_on = O2G_NULLPTR;
 
       if(!map->appdata->osm->position_within_bounds(x, y))
 	map_outside_error(map->appdata);
@@ -213,7 +215,7 @@ void map_edit_way_add_cancel(map_t *map) {
   map_item_chain_destroy(&map->action.way->map_item_chain);
 
   osm->way_free(map->action.way);
-  map->action.way = NULL;
+  map->action.way = O2G_NULLPTR;
 }
 
 /**
@@ -318,7 +320,7 @@ void map_edit_way_add_ok(map_t *map) {
   /* be extending it. Joining the same way doesn't make sense. */
   if(map->action.ends_on && (map->action.ends_on == map->action.way)) {
     printf("  the new way ends on itself -> don't join itself\n");
-    map->action.ends_on = NULL;
+    map->action.ends_on = O2G_NULLPTR;
   }
 
   if(map->action.ends_on)
@@ -326,7 +328,7 @@ void map_edit_way_add_ok(map_t *map) {
 		 map->appdata, MISC_AGAIN_ID_EXTEND_WAY_END, 0,
 		 _("Join way?"),
 		 _("Do you want to join the way present at this location?")))
-      map->action.ends_on = NULL;
+      map->action.ends_on = O2G_NULLPTR;
 
   if(map->action.ends_on) {
     printf("  this new way ends on another way\n");
@@ -376,7 +378,7 @@ void map_edit_way_add_ok(map_t *map) {
 
   map_way_select(map, map->action.way);
 
-  map->action.way = NULL;
+  map->action.way = O2G_NULLPTR;
 
   /* let the user specify some tags for the new way */
   info_dialog(GTK_WIDGET(map->appdata->window), map->appdata);
@@ -478,7 +480,7 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
     canvas_window2world(map->canvas, x, y, &x, &y);
 
     node_chain_t::iterator cut_at;
-    way_t *way = NULL;
+    way_t *way = O2G_NULLPTR;
     if(cut_at_node) {
       printf("  cut at node\n");
 
@@ -552,11 +554,11 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
 	printf("swapping ways to avoid destruction of original way\n");
 	way->node_chain.swap(neww->node_chain);
         map_way_delete(map, neww);
-	neww = NULL;
+	neww = O2G_NULLPTR;
       } else if(neww->node_chain.size() < 2) {
 	printf("new way has less than 2 nodes, deleting it\n");
         map_way_delete(map, neww);
-	neww = NULL;
+	neww = O2G_NULLPTR;
       }
 
       /* the way may still only consist of a single node. */
@@ -564,7 +566,7 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
       if(way->node_chain.size() < 2) {
 	printf("original way has less than 2 nodes left, deleting it\n");
 	map_way_delete(map, way);
-	item = NULL;
+	item = O2G_NULLPTR;
       } else {
         printf("original way still has %zu nodes\n", way->node_chain.size());
 
@@ -576,7 +578,7 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
 	way->flags |= OSM_FLAG_DIRTY;
       }
 
-      if(neww != NULL) {
+      if(neww != O2G_NULLPTR) {
 	/* colorize the new way before drawing */
 	josm_elemstyles_colorize_way(map->style, neww);
 	map_way_draw(map, neww);
@@ -797,7 +799,7 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, gint ex, gint ey) {
       /* check whether this will also join two ways */
       printf("  checking if node is end of way\n");
       unsigned int ways2join_cnt = 0;
-      way_t *ways2join[2] = { NULL, NULL };
+      way_t *ways2join[2] = { O2G_NULLPTR, O2G_NULLPTR };
       std::for_each(osm->ways.begin(), witEnd,
                     find_way_ends(ways2join_cnt, node, ways2join));
 
@@ -939,7 +941,7 @@ void map_edit_way_reverse(map_t *map) {
   map_way_select(map, item.object.way);
 
   // Flash a message about any side-effects
-  gchar *msg = 0;
+  gchar *msg = O2G_NULLPTR;
   if (n_tags_flipped && !n_roles_flipped) {
     msg = g_strdup_printf(ngettext("%u tag updated", "%u tags updated",
                                    n_tags_flipped),

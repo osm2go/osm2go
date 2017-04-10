@@ -344,7 +344,7 @@ bool find_link_parent::operator()(presets_item_t *t)
     return false;
   item->widgets.erase(it);
   delete link;
-  link = 0;
+  link = O2G_NULLPTR;
 
   return true;
 }
@@ -398,7 +398,7 @@ const char *PresetSax::findAttribute(const char **attrs, const char *name, bool 
   // If the entire key matches name this is the non-localized (i.e. fallback)
   // key. Continue search to find a localized text, if no other is found return
   // the defaut one.
-  const char *c = 0;
+  const char *c = O2G_NULLPTR;
 
   for(unsigned int i = 0; attrs[i]; i += 2) {
     // Check if the given attribute begins with one of the preferred language
@@ -414,7 +414,7 @@ const char *PresetSax::findAttribute(const char **attrs, const char *name, bool 
     if(strcmp(a, name) == 0) {
       const char *ret;
       if(*(attrs[i + 1]) == '\0')
-        ret = 0;
+        ret = O2G_NULLPTR;
       else
         ret = attrs[i + 1];
       if(a != attrs[i])
@@ -459,12 +459,11 @@ PresetSax::AttrMap PresetSax::findAttributes(const char **attrs, const char **na
   }
 
   return ret;
-
 }
 
 #define NULL_OR_VAL(a) (a ? a : std::string())
 #define NULL_OR_MAP_STR(it) (it != itEnd ? it->second : std::string())
-#define NULL_OR_MAP_VAL(it) (it != itEnd ? it->second : 0)
+#define NULL_OR_MAP_VAL(it) (it != itEnd ? it->second : O2G_NULLPTR)
 
 void PresetSax::startElement(const char *name, const char **attrs)
 {
@@ -499,7 +498,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
     return;
   }
 
-  presets_widget_t *widget = 0;
+  presets_widget_t *widget = O2G_NULLPTR;
 
   switch(it->second.first) {
   case IntermediateTag:
@@ -517,7 +516,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
     break;
   }
   case TagGroup: {
-    const char *names[] = { "name", "icon", NULL };
+    const char *names[] = { "name", "icon", O2G_NULLPTR };
     const AttrMap &a = findAttributes(attrs, names, 1);
 
     const AttrMap::const_iterator itEnd = a.end();
@@ -529,7 +528,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
       ic = josm_icon_name_adjust(icit->second, basepath);
 
     presets_item_group *group = new presets_item_group(0,
-                                items.empty() ? 0 : static_cast<presets_item_group *>(items.top()),
+                                items.empty() ? O2G_NULLPTR : static_cast<presets_item_group *>(items.top()),
                                 name, ic);
 
     if(items.empty())
@@ -548,7 +547,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
     break;
   }
   case TagItem: {
-    const char *names[] = { "name", "type", "icon", "preset_name_label", NULL };
+    const char *names[] = { "name", "type", "icon", "preset_name_label", O2G_NULLPTR };
     const AttrMap &a = findAttributes(attrs, names, 1);
 
     const AttrMap::const_iterator itEnd = a.end();
@@ -605,7 +604,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
   }
   case TagReference: {
     const char *id = findAttribute(attrs, "ref", false);
-    presets_item *ref = 0;
+    presets_item *ref = O2G_NULLPTR;
     if(!id) {
       printf("found ");
       dumpState();
@@ -635,7 +634,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
 #endif
     break;
   case TagText: {
-    const char *names[] = { "key", "text", "default", "match", NULL };
+    const char *names[] = { "key", "text", "default", "match", O2G_NULLPTR };
     const AttrMap &a = findAttributes(attrs, names, 2);
     const AttrMap::const_iterator itEnd = a.end();
 
@@ -648,9 +647,9 @@ void PresetSax::startElement(const char *name, const char **attrs)
     break;
   }
   case TagKey: {
-    const char *key = 0;
-    const char *value = 0;
-    const char *match = 0;
+    const char *key = O2G_NULLPTR;
+    const char *value = O2G_NULLPTR;
+    const char *match = O2G_NULLPTR;
     for(unsigned int i = 0; attrs[i]; i += 2) {
       if(strcmp(attrs[i], "key") == 0) {
         key = attrs[i + 1];
@@ -665,7 +664,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
     break;
   }
   case TagCheck: {
-    const char *names[] = { "key", "text", "value_on", "match", "default", NULL };
+    const char *names[] = { "key", "text", "value_on", "match", "default", O2G_NULLPTR };
     const AttrMap &a = findAttributes(attrs, names, 2);
     const AttrMap::const_iterator itEnd = a.end();
 
@@ -684,7 +683,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
     g_assert(items.top()->isItem());
     presets_item * const item = static_cast<presets_item *>(items.top());
     const char *href = findAttribute(attrs, "href");
-    if(G_UNLIKELY(href == 0)) {
+    if(G_UNLIKELY(href == O2G_NULLPTR)) {
       printf("ignoring link without href\n");
     } else {
       if(G_LIKELY(item->link.empty()))
@@ -695,7 +694,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
     break;
   }
   case TagCombo: {
-    const char *names[] = { "key", "text", "display_values", "match", "default", "delimiter", "values", NULL };
+    const char *names[] = { "key", "text", "display_values", "match", "default", "delimiter", "values", O2G_NULLPTR };
     const AttrMap &a = findAttributes(attrs, names, 6);
     const AttrMap::const_iterator itEnd = a.end();
 
@@ -717,7 +716,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
 
     if(G_UNLIKELY(!values && display_values)) {
       printf("found display_values but not values\n");
-      display_values = 0;
+      display_values = O2G_NULLPTR;
     }
     widget = new presets_widget_combo(key, text, def, match,
                                       presets_widget_combo::split_string(values, delimiter),
@@ -730,7 +729,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
     g_assert_cmpuint(widgets.top()->type, ==, WIDGET_TYPE_COMBO);
     presets_widget_combo * const combo = static_cast<presets_widget_combo *>(widgets.top());
 
-    const char *names[] = { "display_value", "value", NULL };
+    const char *names[] = { "display_value", "value", O2G_NULLPTR };
     const AttrMap &a = findAttributes(attrs, names, 3);
     const AttrMap::const_iterator itEnd = a.end();
 
@@ -747,7 +746,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
   }
 
   state.push_back(it->second.first);
-  if(widget != 0) {
+  if(widget != O2G_NULLPTR) {
     g_assert(!items.empty());
     g_assert(items.top()->isItem());
     widgets.push(widget);
@@ -844,7 +843,7 @@ void PresetSax::endElement(const xmlChar *name)
     presets_widget_reference * const ref = static_cast<presets_widget_reference *>(widgets.top());
     widgets.pop();
     g_assert_cmpuint(ref->type, ==, WIDGET_TYPE_REFERENCE);
-    if(G_UNLIKELY(ref->item == 0))
+    if(G_UNLIKELY(ref->item == O2G_NULLPTR))
       delete ref;
     else
       static_cast<presets_item *>(items.top())->widgets.push_back(ref);
@@ -917,18 +916,18 @@ struct presets_items *josm_presets_load(void) {
   // check for user presets
   std::string dirname = getenv("HOME");
   dirname += "/.local/share/osm2go/presets/";
-  GDir *dir = g_dir_open(dirname.c_str(), 0, NULL);
+  GDir *dir = g_dir_open(dirname.c_str(), 0, O2G_NULLPTR);
 
-  if(dir != NULL) {
+  if(dir != O2G_NULLPTR) {
     const gchar *name;
     std::string xmlname;
-    while ((name = g_dir_read_name(dir)) != NULL) {
+    while ((name = g_dir_read_name(dir)) != O2G_NULLPTR) {
       const std::string dn = dirname + name + '/';
-      GDir *pdir = g_dir_open(dn.c_str(), 0, NULL);
-      if(pdir != NULL) {
+      GDir *pdir = g_dir_open(dn.c_str(), 0, O2G_NULLPTR);
+      if(pdir != O2G_NULLPTR) {
         // find first XML file inside those directories
         const gchar *fname;
-        while ((fname = g_dir_read_name(pdir)) != NULL) {
+        while ((fname = g_dir_read_name(pdir)) != O2G_NULLPTR) {
           if(g_str_has_suffix(fname, ".xml")) {
             presets->addFile(dn + fname, dn);
             break;
@@ -943,7 +942,7 @@ struct presets_items *josm_presets_load(void) {
 
   if(G_UNLIKELY(presets->items.empty())) {
     delete presets;
-    return 0;
+    return O2G_NULLPTR;
   }
 
   return presets;
@@ -1079,9 +1078,9 @@ presets_item::~presets_item()
 
 presets_item_group::presets_item_group(const unsigned int types, presets_item_group *p,
                                        const std::string &n, const std::string &ic)
-  : presets_item_named(types | TY_GROUP, n, ic), parent(p), widget(0)
+  : presets_item_named(types | TY_GROUP, n, ic), parent(p), widget(O2G_NULLPTR)
 {
-  g_assert(p == 0 || ((p->type & TY_GROUP) != 0));
+  g_assert(p == O2G_NULLPTR || ((p->type & TY_GROUP) != 0));
 }
 
 presets_item_group::~presets_item_group()

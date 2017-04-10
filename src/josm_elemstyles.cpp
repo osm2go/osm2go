@@ -36,6 +36,8 @@
 #include <map>
 #include <strings.h>
 
+#include <osm2go_cpp.h>
+
 #ifndef LIBXML_TREE_ENABLED
 #error "Tree not enabled in libxml"
 #endif
@@ -159,12 +161,12 @@ static double parse_scale(const char *val_str, int len) {
   } else {
     memcpy(buf, val_str, len);
     buf[len] = '\0';
-    return scaledn_to_zoom(strtod(buf, 0));
+    return scaledn_to_zoom(strtod(buf, O2G_NULLPTR));
   }
 }
 
-static const char *true_values[] = { "1", "yes", "true", 0 };
-static const char *false_values[] = { "0", "no", "false", 0 };
+static const char *true_values[] = { "1", "yes", "true", O2G_NULLPTR };
+static const char *false_values[] = { "0", "no", "false", O2G_NULLPTR };
 
 static bool parse_gboolean(const char *bool_str, const char **value_strings) {
   for (int i = 0; value_strings[i]; ++i)
@@ -226,13 +228,13 @@ static void parse_width_mod(const char *mod_str, elemstyle_width_mod_t &value) {
   if(strlen(mod_str) > 0) {
     if(mod_str[0] == '+') {
       value.mod = ES_MOD_ADD;
-      value.width = strtoul(mod_str+1, NULL, 10);
+      value.width = strtoul(mod_str+1, O2G_NULLPTR, 10);
     } else if(mod_str[0] == '-') {
       value.mod = ES_MOD_SUB;
-      value.width = strtoul(mod_str+1, NULL, 10);
+      value.width = strtoul(mod_str+1, O2G_NULLPTR, 10);
     } else if(mod_str[strlen(mod_str)-1] == '%') {
       value.mod = ES_MOD_PERCENT;
-      value.width = strtoul(mod_str, NULL, 10);
+      value.width = strtoul(mod_str, O2G_NULLPTR, 10);
     } else
       printf("warning: unable to parse modifier %s\n", mod_str);
   }
@@ -255,15 +257,15 @@ void StyleSax::startElement(const xmlChar *name, const xmlChar **attrs)
 
   state = it->second.second;
 
-  elemstyle_t * const elemstyle = styles.empty() ? 0 : styles.back();
+  elemstyle_t * const elemstyle = styles.empty() ? O2G_NULLPTR : styles.back();
 
   switch(state){
   case TagRule:
     styles.push_back(new elemstyle_t());
     break;
   case TagCondition: {
-    xmlChar *k = 0, *v = 0;
-    const xmlChar *b = 0;
+    xmlChar *k = O2G_NULLPTR, *v = O2G_NULLPTR;
+    const xmlChar *b = O2G_NULLPTR;
 
     for(unsigned int i = 0; attrs[i]; i += 2) {
       if(strcmp(reinterpret_cast<const char *>(attrs[i]), "k") == 0)
@@ -273,10 +275,10 @@ void StyleSax::startElement(const xmlChar *name, const xmlChar **attrs)
       else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "b") == 0)
         b = attrs[i + 1];
     }
-    g_assert(k);
+    g_assert(k != O2G_NULLPTR);
     styles.back()->conditions.push_back(elemstyle_condition_t(k, v));
     if(b) {
-      g_assert(v == 0);
+      g_assert(v == O2G_NULLPTR);
       elemstyle_condition_t &cond = styles.back()->conditions.back();
       cond.isBool = true;
       cond.boolValue = parse_gboolean(reinterpret_cast<const char *>(b), true_values);
@@ -296,16 +298,16 @@ void StyleSax::startElement(const xmlChar *name, const xmlChar **attrs)
       if(strcmp(reinterpret_cast<const char *>(attrs[i]), "colour") == 0) {
         hasColor = parse_color(attrs[i + 1], line->color);
       } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "width") == 0) {
-        line->width = strtoul(reinterpret_cast<const char*>(attrs[i + 1]), NULL, 10);
+        line->width = strtoul(reinterpret_cast<const char*>(attrs[i + 1]), O2G_NULLPTR, 10);
         hasWidth = true;
       } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "realwidth") == 0) {
-        line->real.width = strtoul(reinterpret_cast<const char*>(attrs[i + 1]), NULL, 10);
+        line->real.width = strtoul(reinterpret_cast<const char*>(attrs[i + 1]), O2G_NULLPTR, 10);
         line->real.valid = true;
       } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "width_bg") == 0) {
-        line->bg.width = strtoul(reinterpret_cast<const char*>(attrs[i + 1]), NULL, 10);
+        line->bg.width = strtoul(reinterpret_cast<const char*>(attrs[i + 1]), O2G_NULLPTR, 10);
         hasBgWidth = true;
       } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "colour_bg") == 0) {
-        line->bg.color = strtoul(reinterpret_cast<const char*>(attrs[i + 1]), NULL, 10);
+        line->bg.color = strtoul(reinterpret_cast<const char*>(attrs[i + 1]), O2G_NULLPTR, 10);
         hasBgColor = true;
       } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "dashed") == 0) {
         const char * const dval = reinterpret_cast<const char *>(attrs[i + 1]);
@@ -655,7 +657,7 @@ void josm_elemstyles_colorize_way_functor::operator()(way_t *way) {
   way->draw.zoom_max = 0;   // draw at all zoom levels
 
   /* during the elemstyle search a line_mod may be found. save it here */
-  const elemstyle_line_mod_t *line_mod = 0;
+  const elemstyle_line_mod_t *line_mod = O2G_NULLPTR;
   apply_condition fc(style, way, &line_mod);
 
   std::for_each(style->elemstyles.begin(), style->elemstyles.end(), fc);

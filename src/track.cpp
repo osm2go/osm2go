@@ -45,6 +45,8 @@
 
 #include <algorithm>
 
+#include <osm2go_cpp.h>
+
 class TrackSax {
   xmlSAXHandler handler;
   track_point_t *curPoint;
@@ -99,7 +101,7 @@ private:
 void track_menu_set(appdata_t *appdata) {
   if(!appdata->window) return;
 
-  gboolean present = (appdata->track.track != NULL);
+  gboolean present = (appdata->track.track != O2G_NULLPTR);
 
   /* if a track is present, then it can be cleared or exported */
   gtk_widget_set_sensitive(appdata->menuitems[MENU_ITEM_TRACK_CLEAR], present);
@@ -114,7 +116,7 @@ static track_t *track_read(const char *filename, bool dirty) {
   if(G_UNLIKELY(!sx.parse(filename))) {
     delete sx.track;
     printf("track was empty/invalid track\n");
-    return 0;
+    return O2G_NULLPTR;
   }
 
   sx.track->dirty = dirty;
@@ -135,7 +137,7 @@ void track_clear(appdata_t *appdata) {
   if(G_LIKELY(appdata->map))
     map_track_remove(track);
 
-  appdata->track.track = NULL;
+  appdata->track.track = O2G_NULLPTR;
   track_menu_set(appdata);
 
   delete track;
@@ -154,7 +156,7 @@ struct track_save_segs {
   };
 
   void operator()(const track_seg_t &seg) {
-    xmlNodePtr node_seg = xmlNewChild(node, NULL, BAD_CAST "trkseg", NULL);
+    xmlNodePtr node_seg = xmlNewChild(node, O2G_NULLPTR, BAD_CAST "trkseg", O2G_NULLPTR);
     std::for_each(seg.track_points.begin(), seg.track_points.end(),
                   save_point(node_seg));
   }
@@ -164,20 +166,20 @@ void track_save_segs::save_point::operator()(const track_point_t &point)
 {
   char str[G_ASCII_DTOSTR_BUF_SIZE];
 
-  xmlNodePtr node_point = xmlNewChild(node, NULL, BAD_CAST "trkpt", NULL);
+  xmlNodePtr node_point = xmlNewChild(node, O2G_NULLPTR, BAD_CAST "trkpt", O2G_NULLPTR);
 
   xml_set_prop_pos(node_point, &point.pos);
 
   if(!std::isnan(point.altitude)) {
     g_ascii_formatd(str, sizeof(str), ALT_FORMAT, point.altitude);
-    xmlNewTextChild(node_point, NULL, BAD_CAST "ele", BAD_CAST str);
+    xmlNewTextChild(node_point, O2G_NULLPTR, BAD_CAST "ele", BAD_CAST str);
   }
 
   if(G_LIKELY(point.time)) {
     struct tm loctime;
     localtime_r(&point.time, &loctime);
     strftime(str, sizeof(str), DATE_FORMAT, &loctime);
-    xmlNewTextChild(node_point, NULL, BAD_CAST "time", BAD_CAST str);
+    xmlNewTextChild(node_point, O2G_NULLPTR, BAD_CAST "time", BAD_CAST str);
   }
 }
 
@@ -188,7 +190,7 @@ void track_save_segs::save_point::operator()(const track_point_t &point)
  * @param doc previous xml
  *
  * If doc is given, the last track in doc is updated and all remaining ones
- * are appended. If doc is NULL all tracks are saved.
+ * are appended. If doc is O2G_NULLPTR all tracks are saved.
  *
  * doc is freed.
  */
@@ -235,7 +237,7 @@ static void track_write(const char *name, const track_t *track, xmlDoc *doc) {
     }
     if(G_UNLIKELY(err)) {
       xmlFreeDoc(doc);
-      doc = NULL;
+      doc = O2G_NULLPTR;
     } else {
       /* drop the last entry from XML, it will be rewritten */
       xmlUnlinkNode(cur_node);
@@ -245,13 +247,13 @@ static void track_write(const char *name, const track_t *track, xmlDoc *doc) {
 
   if (!doc) {
     doc = xmlNewDoc(BAD_CAST "1.0");
-    xmlNodePtr root_node = xmlNewNode(NULL, BAD_CAST "gpx");
+    xmlNodePtr root_node = xmlNewNode(O2G_NULLPTR, BAD_CAST "gpx");
     xmlNewProp(root_node, BAD_CAST "xmlns", BAD_CAST
                "http://www.topografix.com/GPX/1/0");
     xmlNewProp(root_node, BAD_CAST "creator", BAD_CAST PACKAGE " v" VERSION);
     it = track->segments.begin();
 
-    trk_node = xmlNewChild(root_node, NULL, BAD_CAST "trk", NULL);
+    trk_node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "trk", O2G_NULLPTR);
     xmlDocSetRootElement(doc, root_node);
   }
 
@@ -281,13 +283,13 @@ void track_save(project_t *project, track_t *track) {
   /* check if there already is such a diff file and make it a backup */
   /* in case new diff saving fails */
   const std::string backup = project->path + "backup.trk";
-  xmlDocPtr doc = NULL;
+  xmlDocPtr doc = O2G_NULLPTR;
   if(g_file_test(trk_name.c_str(), G_FILE_TEST_IS_REGULAR)) {
     printf("backing up existing file \"%s\" to \"%s\"\n", trk_name.c_str(), backup.c_str());
     g_remove(backup.c_str());
     g_rename(trk_name.c_str(), backup.c_str());
     /* parse the old file and get the DOM */
-    doc = xmlReadFile(backup.c_str(), NULL, 0);
+    doc = xmlReadFile(backup.c_str(), O2G_NULLPTR, 0);
   }
 
   track_write(trk_name.c_str(), track, doc);
@@ -299,7 +301,7 @@ void track_save(project_t *project, track_t *track) {
 }
 
 void track_export(const track_t *track, const char *filename) {
-  track_write(filename, track, NULL);
+  track_write(filename, track, O2G_NULLPTR);
 }
 
 /* ----------------------  loading track --------------------------- */
@@ -385,7 +387,7 @@ static gboolean track_append_position(appdata_t *appdata, const pos_t *pos, floa
   } else {
     ret = TRUE;
     track->dirty = true;
-    points.push_back(track_point_t(*pos, alt, time(NULL)));
+    points.push_back(track_point_t(*pos, alt, time(O2G_NULLPTR)));
 
     if(G_UNLIKELY(points.size() == 1)) {
       /* the segment can now be drawn for the first time */
@@ -418,7 +420,7 @@ static void track_do_disable_gps(appdata_t *appdata) {
   appdata->settings->enable_gps = FALSE;
   gps_enable(appdata->gps_state, FALSE);
 
-  gps_register_callback(appdata->gps_state, NULL, NULL);
+  gps_register_callback(appdata->gps_state, O2G_NULLPTR, O2G_NULLPTR);
 
   /* stopping the GPS removes the marker ... */
   map_track_remove_pos(appdata);
@@ -439,7 +441,7 @@ static int update(void *data) {
   if(G_UNLIKELY(!appdata->map)) {
     printf("map has gone while tracking was active, stopping tracker\n");
 
-    gps_register_callback(appdata->gps_state, NULL, NULL);
+    gps_register_callback(appdata->gps_state, O2G_NULLPTR, O2G_NULLPTR);
 
     return 0;
   }
@@ -513,9 +515,9 @@ track_point_t::track_point_t(const pos_t &p, float alt, time_t t)
 }
 
 TrackSax::TrackSax()
-  : curPoint(0)
+  : curPoint(O2G_NULLPTR)
   , state(DocStart)
-  , track(0)
+  , track(O2G_NULLPTR)
   , points(0)
 {
   memset(&handler, 0, sizeof(handler));
@@ -546,14 +548,14 @@ void TrackSax::characters(const char *ch, int len)
   switch(state) {
   case TagEle:
     buf.assign(ch, len);
-    curPoint->altitude = g_ascii_strtod(buf.c_str(), 0);
+    curPoint->altitude = g_ascii_strtod(buf.c_str(), O2G_NULLPTR);
     break;
   case TagTime: {
     buf.assign(ch, len);
     struct tm time;
     memset(&time, 0, sizeof(time));
     time.tm_isdst = -1;
-    if(G_LIKELY(strptime(buf.c_str(), DATE_FORMAT, &time) != 0))
+    if(G_LIKELY(strptime(buf.c_str(), DATE_FORMAT, &time) != O2G_NULLPTR))
       curPoint->time = mktime(&time);
     break;
   }
@@ -598,9 +600,9 @@ void TrackSax::startElement(const xmlChar *name, const xmlChar **attrs)
     curPoint = &track->segments.back().track_points.back();
     for(unsigned int i = 0; attrs[i]; i += 2) {
       if(strcmp(reinterpret_cast<const char *>(attrs[i]), "lat") == 0)
-        curPoint->pos.lat = g_ascii_strtod((gchar*)(attrs[i + 1]), NULL);
+        curPoint->pos.lat = g_ascii_strtod((gchar*)(attrs[i + 1]), O2G_NULLPTR);
       else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "lon") == 0)
-        curPoint->pos.lon = g_ascii_strtod((gchar*)(attrs[i + 1]), NULL);
+        curPoint->pos.lon = g_ascii_strtod((gchar*)(attrs[i + 1]), O2G_NULLPTR);
     }
   }
   default:

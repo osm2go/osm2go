@@ -25,7 +25,7 @@ static bool checkTextMatch()
 {
   presets_widget_text w_0(tag_testkey_testtext.key,
                           tag_testkey_testtext.value,
-                          std::string(), 0);
+                          std::string(), O2G_NULLPTR);
 
   g_assert_cmpint(w_0.matches(VECTOR_ONE(tag_testkey_other)), ==, 0);
   g_assert_cmpint(w_0.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 0);
@@ -95,7 +95,7 @@ static bool checkComboMatch()
   presets_widget_combo w_0(tag_testkey_testtext.key,
                            "visual text",
                            values.front(),
-                           0, values, empty_vector);
+                           O2G_NULLPTR, values, empty_vector);
 
   g_assert_cmpint(w_0.matches(VECTOR_ONE(tag_testkey_other)), ==, 0);
   g_assert_cmpint(w_0.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 0);

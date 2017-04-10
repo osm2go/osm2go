@@ -42,6 +42,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include <osm2go_cpp.h>
+
 #if !defined(LIBXML_TREE_ENABLED) || !defined(LIBXML_OUTPUT_ENABLED)
 #error "libxml doesn't support required tree or output"
 #endif
@@ -67,19 +69,19 @@ project_context_t::project_context_t(appdata_t* a, project_t *p, gboolean n,
                                      const std::vector<project_t *> &j)
   : project(p)
   , settings(a->settings)
-  , dialog(0)
-  , fsize(0)
-  , diff_stat(0)
-  , diff_remove(0)
-  , desc(0)
-  , download(0)
-  , minlat(0)
-  , minlon(0)
-  , maxlat(0)
-  , maxlon(0)
+  , dialog(O2G_NULLPTR)
+  , fsize(O2G_NULLPTR)
+  , diff_stat(O2G_NULLPTR)
+  , diff_remove(O2G_NULLPTR)
+  , desc(O2G_NULLPTR)
+  , download(O2G_NULLPTR)
+  , minlat(O2G_NULLPTR)
+  , minlon(O2G_NULLPTR)
+  , maxlat(O2G_NULLPTR)
+  , maxlon(O2G_NULLPTR)
   , is_new(n)
 #ifdef SERVER_EDITABLE
-  , server(0)
+  , server(O2G_NULLPTR)
 #endif
   , area_edit(a, &project->min, &project->max)
   , projects(j)
@@ -107,10 +109,10 @@ static std::string project_filename(const project_t *project) {
 
 static bool project_read(const std::string &project_file, project_t *project,
                              const char *defaultserver) {
-  xmlDoc *doc = xmlReadFile(project_file.c_str(), NULL, 0);
+  xmlDoc *doc = xmlReadFile(project_file.c_str(), O2G_NULLPTR, 0);
 
   /* parse the file and get the DOM */
-  if(doc == NULL) {
+  if(doc == O2G_NULLPTR) {
     printf("error: could not parse file %s\n", project_file.c_str());
     return false;
   }
@@ -123,7 +125,7 @@ static bool project_read(const std::string &project_file, project_t *project,
 
 	xmlNode *node = cur_node->children;
 
-	while(node != NULL) {
+	while(node != O2G_NULLPTR) {
 	  if(node->type == XML_ELEMENT_NODE) {
             xmlChar *str;
 
@@ -147,19 +149,19 @@ static bool project_read(const std::string &project_file, project_t *project,
 		      strcmp((char*)node->name, "map") == 0) {
 
 	      if((str = xmlGetProp(node, BAD_CAST "zoom"))) {
-		project->map_state->zoom = g_ascii_strtod((gchar *)str, NULL);
+		project->map_state->zoom = g_ascii_strtod((gchar *)str, O2G_NULLPTR);
 		xmlFree(str);
 	      }
 	      if((str = xmlGetProp(node, BAD_CAST "detail"))) {
-		project->map_state->detail = g_ascii_strtod((gchar *)str, NULL);
+		project->map_state->detail = g_ascii_strtod((gchar *)str, O2G_NULLPTR);
 		xmlFree(str);
 	      }
 	      if((str = xmlGetProp(node, BAD_CAST "scroll-offset-x"))) {
-		project->map_state->scroll_offset.x = strtoul((char *)str, NULL, 10);
+		project->map_state->scroll_offset.x = strtoul((char *)str, O2G_NULLPTR, 10);
 		xmlFree(str);
 	      }
 	      if((str = xmlGetProp(node, BAD_CAST "scroll-offset-y"))) {
-		project->map_state->scroll_offset.y = strtoul((char *)str, NULL, 10);
+		project->map_state->scroll_offset.y = strtoul((char *)str, O2G_NULLPTR, 10);
 		xmlFree(str);
 	      }
 
@@ -174,11 +176,11 @@ static bool project_read(const std::string &project_file, project_t *project,
 		xmlFree(str);
 	      }
 	      if((str = xmlGetProp(node, BAD_CAST "x-offset"))) {
-		project->wms_offset.x = strtoul((char *)str, NULL, 10);
+		project->wms_offset.x = strtoul((char *)str, O2G_NULLPTR, 10);
 		xmlFree(str);
 	      }
 	      if((str = xmlGetProp(node, BAD_CAST "y-offset"))) {
-		project->wms_offset.y = strtoul((char *)str, NULL, 10);
+		project->wms_offset.y = strtoul((char *)str, O2G_NULLPTR, 10);
 		xmlFree(str);
 	      }
 
@@ -234,7 +236,7 @@ bool project_save(GtkWidget *parent, project_t *project) {
   }
 
   xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
-  xmlNodePtr node, root_node = xmlNewNode(NULL, BAD_CAST "proj");
+  xmlNodePtr node, root_node = xmlNewNode(O2G_NULLPTR, BAD_CAST "proj");
   xmlNewProp(root_node, BAD_CAST "name", BAD_CAST project->name.c_str());
   if(project->data_dirty)
     xmlNewProp(root_node, BAD_CAST "dirty", BAD_CAST "true");
@@ -242,22 +244,22 @@ bool project_save(GtkWidget *parent, project_t *project) {
   xmlDocSetRootElement(doc, root_node);
 
   if(project->server)
-    xmlNewChild(root_node, NULL, BAD_CAST "server",
+    xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "server",
 		BAD_CAST project->server);
 
   if(!project->desc.empty())
-    xmlNewChild(root_node, NULL, BAD_CAST "desc", BAD_CAST project->desc.c_str());
+    xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "desc", BAD_CAST project->desc.c_str());
 
-  xmlNewChild(root_node, NULL, BAD_CAST "osm", BAD_CAST project->osm.c_str());
+  xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "osm", BAD_CAST project->osm.c_str());
 
-  node = xmlNewChild(root_node, NULL, BAD_CAST "min", NULL);
+  node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "min", O2G_NULLPTR);
   xml_set_prop_pos(node, &project->min);
 
-  node = xmlNewChild(root_node, NULL, BAD_CAST "max", NULL);
+  node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "max", O2G_NULLPTR);
   xml_set_prop_pos(node, &project->max);
 
   if(project->map_state) {
-    node = xmlNewChild(root_node, NULL, BAD_CAST "map", BAD_CAST NULL);
+    node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "map", BAD_CAST O2G_NULLPTR);
     g_ascii_formatd(str, sizeof(str), "%.04f", project->map_state->zoom);
     xmlNewProp(node, BAD_CAST "zoom", BAD_CAST str);
     g_ascii_formatd(str, sizeof(str), "%.04f", project->map_state->detail);
@@ -268,7 +270,7 @@ bool project_save(GtkWidget *parent, project_t *project) {
     xmlNewProp(node, BAD_CAST "scroll-offset-y", BAD_CAST str);
   }
 
-  node = xmlNewChild(root_node, NULL, BAD_CAST "wms", NULL);
+  node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "wms", O2G_NULLPTR);
   if(!project->wms_server.empty())
     xmlNewProp(node, BAD_CAST "server", BAD_CAST project->wms_server.c_str());
   if(!project->wms_path.empty())
@@ -313,9 +315,9 @@ static std::vector<project_t *> project_scan(settings_t *settings) {
   std::vector<project_t *> projects;
 
   /* scan for projects */
-  GDir *dir = g_dir_open(settings->base_path, 0, NULL);
+  GDir *dir = g_dir_open(settings->base_path, 0, O2G_NULLPTR);
   const gchar *name;
-  while((name = g_dir_read_name(dir)) != NULL) {
+  while((name = g_dir_read_name(dir)) != O2G_NULLPTR) {
     std::string fullname;
     if(project_exists(settings, name, fullname)) {
       printf("found project %s\n", name);
@@ -363,12 +365,12 @@ static void
 changed(GtkTreeSelection *selection, gpointer userdata) {
   select_context_t *context = (select_context_t*)userdata;
 
-  GtkTreeModel *model = NULL;
+  GtkTreeModel *model = O2G_NULLPTR;
   GtkTreeIter iter;
 
   gboolean sel = gtk_tree_selection_get_selected(selection, &model, &iter);
   if(sel) {
-    project_t *project = NULL;
+    project_t *project = O2G_NULLPTR;
     gtk_tree_model_get(model, &iter, PROJECT_COL_DATA, &project, -1);
 
     view_selected(context->dialog, project);
@@ -386,7 +388,7 @@ changed(GtkTreeSelection *selection, gpointer userdata) {
  * This assumes there is a selection and a project associated to it.
  */
 static project_t *project_get_selected(GtkWidget *list) {
-  project_t *project = NULL;
+  project_t *project = O2G_NULLPTR;
   GtkTreeModel     *model;
   GtkTreeIter       iter;
 
@@ -415,7 +417,7 @@ static void callback_modified_name(GtkWidget *widget, gpointer data) {
   /* check if there's a name */
   if(name && strlen(name) > 0) {
     /* check if it consists of valid characters */
-    if(strpbrk(name, "\\*?()\n\t\r") == NULL) {
+    if(strpbrk(name, "\\*?()\n\t\r") == O2G_NULLPTR) {
       /* check if such a project already exists */
       std::string fullname;
       if(!project_exists(context->settings, name, fullname))
@@ -439,21 +441,21 @@ static void project_close(appdata_t *appdata) {
   if(appdata->osm) {
     diff_save(appdata->project, appdata->osm);
     delete appdata->osm;
-    appdata->osm = NULL;
+    appdata->osm = O2G_NULLPTR;
   }
 
   /* remember in settings that no project is open */
   if(appdata->settings->project)
   {
     g_free(appdata->settings->project);
-    appdata->settings->project = NULL;
+    appdata->settings->project = O2G_NULLPTR;
   }
 
   /* update project file on disk */
   project_save(GTK_WIDGET(appdata->window), appdata->project);
 
   delete appdata->project;
-  appdata->project = NULL;
+  appdata->project = O2G_NULLPTR;
 }
 
 static bool project_delete(select_context_t *context, project_t *project) {
@@ -464,7 +466,7 @@ static bool project_delete(select_context_t *context, project_t *project) {
   if(context->appdata->project &&
      context->appdata->project->name == project->name) {
 
-    if(!yes_no_f(context->dialog, NULL, 0, 0,
+    if(!yes_no_f(context->dialog, O2G_NULLPTR, 0, 0,
 		 _("Delete current project?"),
 		 _("The project you are about to delete is the one "
 		   "you are currently working on!\n\n"
@@ -475,7 +477,7 @@ static bool project_delete(select_context_t *context, project_t *project) {
   }
 
   /* remove entire directory from disk */
-  GDir *dir = g_dir_open(project->path.c_str(), 0, NULL);
+  GDir *dir = g_dir_open(project->path.c_str(), 0, O2G_NULLPTR);
   const gchar *name;
   std::string fullname;
   fullname.resize(project->path.size() + project->name.size() + 8); // long enough for all usual project filenames
@@ -493,7 +495,7 @@ static bool project_delete(select_context_t *context, project_t *project) {
   GtkTreeModel *model = list_get_model(context->list);
   if(gtk_tree_model_get_iter_first(model, &iter)) {
     do {
-      project_t *prj = NULL;
+      project_t *prj = O2G_NULLPTR;
       gtk_tree_model_get(model, &iter, PROJECT_COL_DATA, &prj, -1);
       if(prj && (prj == project)) {
 	printf("found %s to remove\n", prj->name.c_str());
@@ -512,7 +514,7 @@ static bool project_delete(select_context_t *context, project_t *project) {
   delete project;
 
   /* disable ok button button */
-  view_selected(context->dialog, NULL);
+  view_selected(context->dialog, O2G_NULLPTR);
 
   return true;
 }
@@ -526,7 +528,7 @@ static project_t *project_new(select_context_t *context) {
 		    GTK_WINDOW(context->dialog),
 		    GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
 		    GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-		    NULL);
+		    O2G_NULLPTR);
 
   GtkWidget *hbox = gtk_hbox_new(FALSE, 8);
   gtk_box_pack_start_defaults(GTK_BOX(hbox), gtk_label_new(_("Name:")));
@@ -546,7 +548,7 @@ static project_t *project_new(select_context_t *context) {
   gtk_widget_show_all(dialog);
   if(GTK_RESPONSE_ACCEPT != gtk_dialog_run(GTK_DIALOG(dialog))) {
     gtk_widget_destroy(dialog);
-    return NULL;
+    return O2G_NULLPTR;
   }
 
   project_t *project = new project_t(gtk_entry_get_text(GTK_ENTRY(entry)),
@@ -569,13 +571,13 @@ static project_t *project_new(select_context_t *context) {
   if(!project_save(context->dialog, project)) {
     project_delete(context, project);
 
-    project = NULL;
+    project = O2G_NULLPTR;
   } else if(!project_edit(context, project, TRUE)) {
     printf("new/edit cancelled!!\n");
 
     project_delete(context, project);
 
-    project = NULL;
+    project = O2G_NULLPTR;
   }
 
   /* enable/disable edit/remove buttons */
@@ -599,7 +601,7 @@ static gboolean project_osm_present(const project_t *project) {
 
 /**
  * @brief get icon for the given project
- * @param current the currently active project or NULL
+ * @param current the currently active project or O2G_NULLPTR
  * @param project the project to check
  * @return the stock identifier
  */
@@ -647,7 +649,7 @@ static void on_project_delete(G_GNUC_UNUSED GtkButton *button, gpointer data) {
   select_context_t *context = (select_context_t*)data;
   project_t *project = project_get_selected(context->list);
 
-  gboolean r = yes_no_f(context->dialog, NULL, 0, 0, _("Delete project?"),
+  gboolean r = yes_no_f(context->dialog, O2G_NULLPTR, 0, 0, _("Delete project?"),
                         _("Do you really want to delete the "
                           "project \"%s\"?"), project->name.c_str());
   if (!r)
@@ -720,7 +722,7 @@ static void on_project_edit(G_GNUC_UNUSED GtkButton *button, gpointer data) {
 	  map_clear(appdata->map, MAP_LAYER_ALL);
 
 	  delete appdata->osm;
-	  appdata->osm = NULL;
+	  appdata->osm = O2G_NULLPTR;
 	}
 
 	/* and load the (hopefully) new file */
@@ -745,7 +747,7 @@ on_project_update_all(G_GNUC_UNUSED GtkButton *button, gpointer data)
   GtkTreeModel *model = list_get_model(context->list);
   if(gtk_tree_model_get_iter_first(model, &iter)) {
     do {
-      project_t *prj = NULL;
+      project_t *prj = O2G_NULLPTR;
       gtk_tree_model_get(model, &iter, PROJECT_COL_DATA, &prj, -1);
       /* if the project was already downloaded do it again */
       if(prj && project_osm_present(prj)) {
@@ -766,7 +768,7 @@ struct project_list_add {
   GtkTreeIter &seliter;
   gboolean &has_sel;
   project_list_add(GtkListStore *s, appdata_t *a, GtkTreeIter &l, gboolean &h)
-    : store(s), cur_proj(a->project), check_pos(!!gps_get_pos(a->gps_state, &pos, 0))
+    : store(s), cur_proj(a->project), check_pos(!!gps_get_pos(a->gps_state, &pos, O2G_NULLPTR))
     , seliter(l), has_sel(h) {}
   void operator()(const project_t *project);
 };
@@ -849,7 +851,7 @@ std::string project_select(appdata_t *appdata) {
                                     GTK_WINDOW(appdata->window),
                                     GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                     GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
-                                    NULL));
+                                    O2G_NULLPTR));
 
   /* under fremantle the dialog does not have an "Open" button */
   /* as it's closed when a project is being selected */
@@ -892,8 +894,8 @@ static bool file_info(const project_t *project, GStatBuf &st) {
 }
 
 static void project_filesize(project_context_t *context) {
-  char *str = NULL;
-  gchar *gstr = NULL;
+  char *str = O2G_NULLPTR;
+  gchar *gstr = O2G_NULLPTR;
   const project_t * const project = context->project;
 
   printf("Checking size of %s\n", project->osm.c_str());
@@ -909,7 +911,7 @@ static void project_filesize(project_context_t *context) {
 				      GTK_RESPONSE_ACCEPT, !context->is_new);
 
   } else {
-    gtk_widget_modify_fg(context->fsize, GTK_STATE_NORMAL, NULL);
+    gtk_widget_modify_fg(context->fsize, GTK_STATE_NORMAL, O2G_NULLPTR);
 
     if(!project->data_dirty) {
       GStatBuf st;
@@ -1048,7 +1050,7 @@ static void on_diff_remove_clicked(project_context_t *context) {
 
   printf("clicked diff remove\n");
 
-  if(yes_no_f(context->dialog, NULL, 0, 0, _("Discard changes?"),
+  if(yes_no_f(context->dialog, O2G_NULLPTR, 0, 0, _("Discard changes?"),
 	      _("Do you really want to discard your changes? This will "
 		"permanently undo all changes you have made so far and which "
 		"you did not upload yet."))) {
@@ -1114,7 +1116,7 @@ project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
       context.dialog = misc_dialog_new(MISC_DIALOG_WIDE, str,
 				GTK_WINDOW(parent),
 				GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
-				GTK_STOCK_OK, GTK_RESPONSE_ACCEPT, NULL);
+				GTK_STOCK_OK, GTK_RESPONSE_ACCEPT, O2G_NULLPTR);
     g_free(str);
   } else {
     char *str = g_strdup_printf(_("Edit project - %s"), project->name.c_str());
@@ -1122,7 +1124,7 @@ project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
     context.area_edit.parent =
       context.dialog = misc_dialog_new(MISC_DIALOG_WIDE, str,
 				GTK_WINDOW(parent),
-				GTK_STOCK_CLOSE, GTK_RESPONSE_ACCEPT, NULL);
+				GTK_STOCK_CLOSE, GTK_RESPONSE_ACCEPT, O2G_NULLPTR);
     g_free(str);
   }
 
@@ -1317,12 +1319,12 @@ bool project_load(appdata_t *appdata, const std::string &name) {
 
     if(appdata->project) {
       delete appdata->project;
-      appdata->project = NULL;
+      appdata->project = O2G_NULLPTR;
     }
 
     if(appdata->osm) {
       delete appdata->osm;
-      appdata->osm = NULL;
+      appdata->osm = O2G_NULLPTR;
     }
 
     snprintf(banner_txt, sizeof(banner_txt),
@@ -1345,12 +1347,12 @@ bool project_load(appdata_t *appdata, const std::string &name) {
 
     if(appdata->project) {
       delete appdata->project;
-      appdata->project = NULL;
+      appdata->project = O2G_NULLPTR;
     }
 
     if(appdata->osm) {
       delete appdata->osm;
-      appdata->osm = NULL;
+      appdata->osm = O2G_NULLPTR;
     }
 
     snprintf(banner_txt, sizeof(banner_txt),
@@ -1397,7 +1399,7 @@ bool project_load(appdata_t *appdata, const std::string &name) {
   banner_show_info(appdata, banner_txt);
 #endif
 
-  statusbar_set(appdata->statusbar, NULL, 0);
+  statusbar_set(appdata->statusbar, O2G_NULLPTR, 0);
 
   return true;
 
@@ -1406,12 +1408,12 @@ bool project_load(appdata_t *appdata, const std::string &name) {
 
   if(appdata->project) {
     delete appdata->project;
-    appdata->project = NULL;
+    appdata->project = O2G_NULLPTR;
   }
 
   if(appdata->osm) {
     delete appdata->osm;
-    appdata->osm = NULL;
+    appdata->osm = O2G_NULLPTR;
   }
 
   return false;
@@ -1426,8 +1428,8 @@ const char *project_name(const project_t *project) {
 }
 
 project_t::project_t(const char *n, const char *base_path)
-  : server(0)
-  , map_state(0)
+  : server(O2G_NULLPTR)
+  , map_state(O2G_NULLPTR)
   , data_dirty(false)
   , name(n)
   , path(std::string(base_path) +  name + '/')
@@ -1446,7 +1448,7 @@ select_context_t::select_context_t(appdata_t* a, GtkWidget *dial)
   : appdata(a)
   , projects(project_scan(appdata->settings))
   , dialog(dial)
-  , list(0)
+  , list(O2G_NULLPTR)
 {
 }
 

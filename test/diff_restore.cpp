@@ -2,6 +2,8 @@
 #include <osm.h>
 #include <project.h>
 
+#include <osm2go_cpp.h>
+
 #include <cerrno>
 #include <cstdlib>
 #include <cstring>
@@ -15,7 +17,7 @@ int main(int argc, char **argv)
 
   xmlInitParser();
 
-  struct icon_t *icons = 0;
+  struct icon_t *icons = O2G_NULLPTR;
   std::string osm_path = argv[1];
   g_assert(osm_path[osm_path.size() - 1] == '/');
   osm_path += argv[2];
@@ -35,7 +37,7 @@ int main(int argc, char **argv)
   g_assert(diff_is_clean(osm, true));
 
   project_t project(argv[2], argv[1]);
-  diff_restore(0, &project, osm);
+  diff_restore(O2G_NULLPTR, &project, osm);
 
   g_assert_cmpuint(12, ==, osm->nodes.size());
   g_assert_cmpuint(3, ==, osm->ways.size());
@@ -43,31 +45,30 @@ int main(int argc, char **argv)
 
   // new tag added in diff
   const node_t * const n72 = osm->nodes[638499572];
-  g_assert(n72 != 0);
+  g_assert(n72 != O2G_NULLPTR);
   g_assert((n72->flags & OSM_FLAG_DIRTY) != 0);
-  g_assert(n72->tags.get_value("testtag") != 0);
-  g_assert(strcmp(n72->tags.get_value("testtag"), "true") == 0);
+  g_assert(n72->tags.get_value("testtag") != O2G_NULLPTR);
   // in diff, but the same as in .osm
   const node_t * const n23 = osm->nodes[3577031223LL];
-  g_assert(n23 != 0);
+  g_assert(n23 != O2G_NULLPTR);
   g_assert((n23->flags & OSM_FLAG_DIRTY) == 0);
   // deleted in diff
   const way_t * const w = osm->ways[351899455];
-  g_assert(w != 0);
+  g_assert(w != O2G_NULLPTR);
   g_assert((w->flags & OSM_FLAG_DELETED) != 0);
   // added in diff
   const node_t * const nn1 = osm->nodes[-1];
-  g_assert(nn1 != 0);
+  g_assert(nn1 != O2G_NULLPTR);
   g_assert_cmpfloat(nn1->pos.lat, ==, 52.2693518);
   g_assert_cmpfloat(nn1->pos.lon, ==, 9.5760140);
   // added in diff, same position as existing node
   const node_t * const nn2 = osm->nodes[-2];
-  g_assert(nn2 != 0);
+  g_assert(nn2 != O2G_NULLPTR);
   g_assert_cmpfloat(nn2->pos.lat, ==, 52.269497);
   g_assert_cmpfloat(nn2->pos.lon, ==, 9.5752223);
   // which is this one
   const node_t * const n27 = osm->nodes[3577031227LL];
-  g_assert(n27 != 0);
+  g_assert(n27 != O2G_NULLPTR);
   g_assert((n27->flags & OSM_FLAG_DIRTY) == 0);
   g_assert_cmpfloat(nn2->pos.lat, ==, n27->pos.lat);
   g_assert_cmpfloat(nn2->pos.lon, ==, n27->pos.lon);

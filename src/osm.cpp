@@ -44,6 +44,8 @@
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 
+#include <osm2go_cpp.h>
+
 #ifndef LIBXML_TREE_ENABLED
 #error "Tree not enabled in libxml"
 #endif
@@ -107,7 +109,7 @@ const char *object_t::type_string() const {
   if(it != types.end())
     return it->second;
 
-  return NULL;
+  return O2G_NULLPTR;
 }
 
 std::string object_t::id_string() const {
@@ -137,7 +139,7 @@ std::string object_t::id_string() const {
 
 const char *object_t::get_tag_value(const char *key) const {
   if(!is_real())
-    return NULL;
+    return O2G_NULLPTR;
   return obj->tags.get_value(key);
 }
 
@@ -172,7 +174,7 @@ struct cmp_user {
 
 static const char *osm_user(osm_t *osm, const char *name, int uid) {
   if(!name)
-    return 0;
+    return O2G_NULLPTR;
 
   /* search through user list */
   if(uid >= 0) {
@@ -225,7 +227,7 @@ void osm_tag_free(tag_t *tag) {
  * k and v will be freed.
  */
 static tag_t *tag_from_xml(xmlChar *k, xmlChar *v) {
-  tag_t *ret = NULL;
+  tag_t *ret = O2G_NULLPTR;
   if(G_LIKELY(k && v && strlen(reinterpret_cast<char *>(k)) > 0 &&
                         strlen(reinterpret_cast<char *>(v)) > 0)) {
     ret = g_new0(tag_t, 1);
@@ -245,7 +247,7 @@ tag_t *osm_parse_osm_tag(xmlNode *a_node) {
   tag_t *tag = tag_from_xml(xmlGetProp(a_node, BAD_CAST "k"),
                             xmlGetProp(a_node, BAD_CAST "v"));
   if(tag) {
-    const xmlNode *cur_node = NULL;
+    const xmlNode *cur_node = O2G_NULLPTR;
     for (cur_node = a_node->children; cur_node; cur_node = cur_node->next)
       if (cur_node->type == XML_ELEMENT_NODE)
         printf("found unhandled osm/node/tag/%s\n", cur_node->name);
@@ -277,7 +279,7 @@ bool tag_list_t::merge(tag_list_t &other)
   bool conflict = false;
   tag_t **dst = &contents;
   tag_t *src = other.contents;
-  other.contents = 0;
+  other.contents = O2G_NULLPTR;
 
   /* ---------- transfer tags from way[1] to way[0] ----------- */
   while(*dst)
@@ -297,9 +299,10 @@ bool tag_list_t::merge(tag_list_t &other)
       *dst = src;
       src = src->next;
       dst = &((*dst)->next);
-      *dst = NULL;
+      *dst = O2G_NULLPTR;
     }
   }
+
   return conflict;
 }
 
@@ -328,7 +331,7 @@ struct tag_find_functor {
 };
 
 bool tag_list_t::operator!=(const std::vector<tag_t *> &t2) const {
-  const tag_t *t1creator = 0;
+  const tag_t *t1creator = O2G_NULLPTR;
   /* first check list length, otherwise deleted tags are hard to detect */
   unsigned int ocnt = 0;
   for_each(count_tags(ocnt, &t1creator));
@@ -428,10 +431,10 @@ static void way_free(std::pair<item_id_t, way_t *> pair) {
 
 node_t *osm_parse_osm_way_nd(osm_t *osm, xmlNode *a_node) {
   xmlChar *prop;
-  node_t *node = NULL;
+  node_t *node = O2G_NULLPTR;
 
   if((prop = xmlGetProp(a_node, BAD_CAST "ref"))) {
-    item_id_t id = strtoll((char*)prop, NULL, 10);
+    item_id_t id = strtoll((char*)prop, O2G_NULLPTR, 10);
 
     /* search matching node */
     node = osm->node_by_id(id);
@@ -493,7 +496,7 @@ member_t osm_parse_osm_relation_member(osm_t *osm, xmlNode *a_node) {
   }
 
   if((prop = xmlGetProp(a_node, BAD_CAST "ref"))) {
-    item_id_t id = strtoll((char*)prop, NULL, 10);
+    item_id_t id = strtoll((char*)prop, O2G_NULLPTR, 10);
 
     switch(member.object.type) {
     case ILLEGAL:
@@ -547,8 +550,8 @@ member_t osm_parse_osm_relation_member(osm_t *osm, xmlNode *a_node) {
 
 /* try to find something descriptive */
 std::string relation_t::descriptive_name() const {
-  const char *keys[] = { "ref", "name", "description", "note", "fix" "me", NULL};
-  for (unsigned int i = 0; keys[i] != NULL; i++) {
+  const char *keys[] = { "ref", "name", "description", "note", "fix" "me", O2G_NULLPTR};
+  for (unsigned int i = 0; keys[i] != O2G_NULLPTR; i++) {
     const char *name = tags.get_value(keys[i]);
     if(name)
       return name;
@@ -593,7 +596,7 @@ static pos_float_t xml_reader_attr_float(xmlTextReaderPtr reader, const char *na
   pos_float_t ret;
 
   if((prop)) {
-    ret = g_ascii_strtod((gchar *)prop, NULL);
+    ret = g_ascii_strtod((gchar *)prop, O2G_NULLPTR);
     xmlFree(prop);
   } else
     ret = NAN;
@@ -610,7 +613,7 @@ static gboolean process_bounds(xmlTextReaderPtr reader, bounds_t *bounds) {
 
   if(G_UNLIKELY(std::isnan(bounds->ll_min.lat) || std::isnan(bounds->ll_min.lon) ||
                 std::isnan(bounds->ll_max.lat) || std::isnan(bounds->ll_max.lon))) {
-    errorf(NULL, "Invalid coordinate in bounds (%f/%f/%f/%f)",
+    errorf(O2G_NULLPTR, "Invalid coordinate in bounds (%f/%f/%f/%f)",
 	   bounds->ll_min.lat, bounds->ll_min.lon,
 	   bounds->ll_max.lat, bounds->ll_max.lon);
 
@@ -659,13 +662,13 @@ static void process_base_attributes(base_object_t *obj, xmlTextReaderPtr reader,
 {
   xmlChar *prop;
   if(G_LIKELY(prop = xmlTextReaderGetAttribute(reader, BAD_CAST "id"))) {
-    obj->id = strtoll((char*)prop, NULL, 10);
+    obj->id = strtoll((char*)prop, O2G_NULLPTR, 10);
     xmlFree(prop);
   }
 
   /* new in api 0.6: */
   if(G_LIKELY(prop = xmlTextReaderGetAttribute(reader, BAD_CAST "version"))) {
-    obj->version = strtoul((char*)prop, NULL, 10);
+    obj->version = strtoul((char*)prop, O2G_NULLPTR, 10);
     xmlFree(prop);
   }
 
@@ -739,7 +742,7 @@ static node_t *process_nd(xmlTextReaderPtr reader, osm_t *osm) {
   xmlChar *prop;
 
   if((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "ref"))) {
-    item_id_t id = strtoll((char*)prop, NULL, 10);
+    item_id_t id = strtoll((char*)prop, O2G_NULLPTR, 10);
     /* search matching node */
     node_t *node = osm->node_by_id(id);
     if(!node)
@@ -754,7 +757,7 @@ static node_t *process_nd(xmlTextReaderPtr reader, osm_t *osm) {
   }
 
   skip_element(reader);
-  return NULL;
+  return O2G_NULLPTR;
 }
 
 static way_t *process_way(xmlTextReaderPtr reader, osm_t *osm) {
@@ -819,7 +822,7 @@ static bool process_member(xmlTextReaderPtr reader, osm_t *osm, std::vector<memb
   }
 
   if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "ref"))) {
-    item_id_t id = strtoll(prop, NULL, 10);
+    item_id_t id = strtoll(prop, O2G_NULLPTR, 10);
 
     switch(member.object.type) {
     case WAY:
@@ -985,15 +988,15 @@ static osm_t *process_osm(xmlTextReaderPtr reader) {
   }
 
   g_assert_not_reached();
-  return NULL;
+  return O2G_NULLPTR;
 }
 
 static osm_t *process_file(const char *filename) {
-  osm_t *osm = NULL;
+  osm_t *osm = O2G_NULLPTR;
   xmlTextReaderPtr reader;
 
-  reader = xmlReaderForFile(filename, NULL, 0);
-  if (G_LIKELY(reader != NULL)) {
+  reader = xmlReaderForFile(filename, O2G_NULLPTR, 0);
+  if (G_LIKELY(reader != O2G_NULLPTR)) {
     if(G_LIKELY(xmlTextReaderRead(reader) == 1)) {
       const char *name = (const char*)xmlTextReaderConstName(reader);
       if(G_LIKELY(name && strcmp(name, "osm") == 0))
@@ -1015,10 +1018,10 @@ static osm_t *process_file(const char *filename) {
 osm_t *osm_parse(const std::string &path, const std::string &filename, icon_t **icon) {
 
   struct timeval start;
-  gettimeofday(&start, NULL);
+  gettimeofday(&start, O2G_NULLPTR);
 
   // use stream parser
-  osm_t *osm = NULL;
+  osm_t *osm = O2G_NULLPTR;
   if(filename[0] == '/')
     osm = process_file(filename.c_str());
   else {
@@ -1027,7 +1030,7 @@ osm_t *osm_parse(const std::string &path, const std::string &filename, icon_t **
   }
 
   struct timeval end;
-  gettimeofday(&end, NULL);
+  gettimeofday(&end, O2G_NULLPTR);
 
   if(osm)
     osm->icons = icon;
@@ -1046,7 +1049,7 @@ const char *osm_t::sanity_check() const {
   if(G_UNLIKELY(nodes.empty()))
     return _("Invalid data in OSM file:\nNo drawable content found!");
 
-  return NULL;
+  return O2G_NULLPTR;
 }
 
 /* ------------------------- misc access functions -------------- */
@@ -1073,7 +1076,7 @@ struct tag_to_xml {
   void operator()(const tag_t *tag) {
     /* skip "created_by" tags as they aren't needed anymore with api 0.6 */
     if(G_LIKELY(keep_created || !tag->is_creator_tag())) {
-      xmlNodePtr tag_node = xmlNewChild(node, NULL, BAD_CAST "tag", NULL);
+      xmlNodePtr tag_node = xmlNewChild(node, O2G_NULLPTR, BAD_CAST "tag", O2G_NULLPTR);
       xmlNewProp(tag_node, BAD_CAST "k", BAD_CAST tag->key);
       xmlNewProp(tag_node, BAD_CAST "v", BAD_CAST tag->value);
     }
@@ -1084,10 +1087,10 @@ static xmlDocPtr
 osm_generate_xml_init(xmlNodePtr *node, const char *node_name)
 {
   xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
-  xmlNodePtr root_node = xmlNewNode(NULL, BAD_CAST "osm");
+  xmlNodePtr root_node = xmlNewNode(O2G_NULLPTR, BAD_CAST "osm");
   xmlDocSetRootElement(doc, root_node);
 
-  *node = xmlNewChild(root_node, NULL, BAD_CAST node_name, NULL);
+  *node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST node_name, O2G_NULLPTR);
 
   return doc;
 }
@@ -1095,7 +1098,7 @@ osm_generate_xml_init(xmlNodePtr *node, const char *node_name)
 static xmlChar *
 osm_generate_xml_finish(xmlDocPtr doc)
 {
-  xmlChar *result = 0;
+  xmlChar *result = O2G_NULLPTR;
   int len = 0;
 
   xmlDocDumpFormatMemoryEnc(doc, &result, &len, "UTF-8", 1);
@@ -1134,7 +1137,7 @@ struct add_xml_node_refs {
 
 void add_xml_node_refs::operator()(const node_t* node)
 {
-  xmlNodePtr nd_node = xmlNewChild(way_node, NULL, BAD_CAST "nd", NULL);
+  xmlNodePtr nd_node = xmlNewChild(way_node, O2G_NULLPTR, BAD_CAST "nd", O2G_NULLPTR);
   gchar str[G_ASCII_DTOSTR_BUF_SIZE];
   g_snprintf(str, sizeof(str), ITEM_ID_FORMAT, node->id);
   xmlNewProp(nd_node, BAD_CAST "ref", BAD_CAST str);
@@ -1177,7 +1180,7 @@ struct gen_xml_relation_functor {
 
 void gen_xml_relation_functor::operator()(const member_t &member)
 {
-  xmlNodePtr m_node = xmlNewChild(xml_node,NULL,BAD_CAST "member", NULL);
+  xmlNodePtr m_node = xmlNewChild(xml_node,O2G_NULLPTR,BAD_CAST "member", O2G_NULLPTR);
   gchar str[G_ASCII_DTOSTR_BUF_SIZE];
   g_snprintf(str, sizeof(str), ITEM_ID_FORMAT, member.object.obj->id);
 
@@ -1228,7 +1231,7 @@ xmlChar *relation_t::generate_xml(item_id_t changeset) {
 
 /* build xml representation for a changeset */
 xmlChar *osm_generate_xml_changeset(const char *comment) {
-  xmlChar *result = NULL;
+  xmlChar *result = O2G_NULLPTR;
   int len = 0;
 
   /* tags for this changeset */
@@ -1237,10 +1240,10 @@ xmlChar *osm_generate_xml_changeset(const char *comment) {
                     const_cast<char*>(PACKAGE " v" VERSION));
 
   xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
-  xmlNodePtr root_node = xmlNewNode(NULL, BAD_CAST "osm");
+  xmlNodePtr root_node = xmlNewNode(O2G_NULLPTR, BAD_CAST "osm");
   xmlDocSetRootElement(doc, root_node);
 
-  xmlNodePtr cs_node = xmlNewChild(root_node, NULL, BAD_CAST "changeset", NULL);
+  xmlNodePtr cs_node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "changeset", O2G_NULLPTR);
 
   tag_to_xml fc(cs_node, true);
   fc(&tag_creator);
@@ -1781,7 +1784,7 @@ void reverse_roles::operator()(relation_t* relation)
   g_assert(member != relation->members.end());  // osm_way_to_relation() broken?
 
   // Then flip its role if it's one of the direction-sensitive ones
-  if (member->role == NULL) {
+  if (member->role == O2G_NULLPTR) {
     printf("null role in route relation -> ignore\n");
   } else if (strcasecmp(member->role, DS_ROUTE_FORWARD) == 0) {
     g_free(member->role);
@@ -1812,14 +1815,14 @@ way_t::reverse_direction_sensitive_roles(osm_t *osm) {
 
 const node_t *way_t::first_node() const {
   if(node_chain.empty())
-    return 0;
+    return O2G_NULLPTR;
 
   return node_chain.front();
 }
 
 const node_t *way_t::last_node() const {
   if(node_chain.empty())
-    return 0;
+    return O2G_NULLPTR;
 
   return node_chain.back();
 }
@@ -1916,19 +1919,20 @@ std::string object_t::get_name() const {
 
   /* worst case: we have no tags at all. return techincal info then */
   if(!has_tags())
-    return g_strconcat("unspecified ", type_string(), NULL);
+    return g_strconcat("unspecified ", type_string(), O2G_NULLPTR);
 
   /* try to figure out _what_ this is */
-  const char *name_tags[] = { "name", "ref", "note", "fix" "me", "sport", 0 };
-  const char *name = 0;
+  const char *name_tags[] = { "name", "ref", "note", "fix" "me", "sport", O2G_NULLPTR };
+  const char *name = O2G_NULLPTR;
   for(unsigned int i = 0; !name && name_tags[i]; i++)
     name = obj->tags.get_value(name_tags[i]);
 
   /* search for some kind of "type" */
   const char *type_tags[] = { "amenity", "place", "historic", "leisure",
                               "tourism", "landuse", "waterway", "railway",
-                              "natural", 0 };
-  const char *type = 0;
+                              "natural", O2G_NULLPTR };
+  const char *type = O2G_NULLPTR;
+
   for(unsigned int i = 0; !type && type_tags[i]; i++)
     type = obj->tags.get_value(type_tags[i]);
 
@@ -1965,7 +1969,7 @@ std::string object_t::get_name() const {
        (!strcmp(highway, "service"))) {
       ret = highway;
       ret += " road";
-      type = 0;
+      type = O2G_NULLPTR;
     }
 
     else if(!strcmp(highway, "pedestrian")) {
@@ -2008,7 +2012,7 @@ bool tag_t::is_creator_tag() const {
 }
 
 tag_list_t::tag_list_t()
-  : contents(0)
+  : contents(O2G_NULLPTR)
 {
 }
 
@@ -2042,7 +2046,7 @@ const char* tag_list_t::get_value(const char *key) const
   if(tag)
     return tag->value;
 
-  return NULL;
+  return O2G_NULLPTR;
 }
 
 void tag_list_t::clear()
@@ -2053,7 +2057,7 @@ void tag_list_t::clear()
     osm_tag_free(tag);
     tag = next;
   }
-  contents = 0;
+  contents = O2G_NULLPTR;
 }
 
 void tag_list_t::replace(std::vector<tag_t *> &ntags)
@@ -2075,8 +2079,8 @@ base_object_t::base_object_t()
 base_object_t::base_object_t(item_id_t ver)
   : id(0)
   , version(ver)
-  , user(0)
-  , time(version == 1 ? ::time(NULL) : 0)
+  , user(O2G_NULLPTR)
+  , time(version == 1 ? ::time(O2G_NULLPTR) : 0)
   , flags(version == 1 ? OSM_FLAG_NEW : 0)
 {
 }
@@ -2091,7 +2095,7 @@ struct value_match_functor {
 
 way_t::way_t()
   : base_object_t()
-  , map_item_chain(0)
+  , map_item_chain(O2G_NULLPTR)
   , node_chain(0)
 {
   memset(&draw, 0, sizeof(draw));
@@ -2099,7 +2103,7 @@ way_t::way_t()
 
 way_t::way_t(item_id_t ver)
   : base_object_t(ver)
-  , map_item_chain(0)
+  , map_item_chain(O2G_NULLPTR)
   , node_chain(0)
 {
   memset(&draw, 0, sizeof(draw));
@@ -2146,7 +2150,7 @@ void way_t::cleanup() {
 }
 
 member_t::member_t(type_t t)
-  : role(0)
+  : role(O2G_NULLPTR)
 {
   object.type = t;
 }
@@ -2232,7 +2236,7 @@ node_t::node_t()
   : base_object_t()
   , ways(0)
   , zoom_max(0.0)
-  , map_item_chain(0)
+  , map_item_chain(O2G_NULLPTR)
 {
   memset(&pos, 0, sizeof(pos));
   memset(&lpos, 0, sizeof(lpos));
@@ -2244,7 +2248,7 @@ node_t::node_t(item_id_t ver, const lpos_t &lp, const pos_t &p)
   , lpos(lp)
   , ways(0)
   , zoom_max(0.0)
-  , map_item_chain(0)
+  , map_item_chain(O2G_NULLPTR)
 {
 }
 
@@ -2253,7 +2257,7 @@ template<typename T> T *osm_find_by_id(const std::map<item_id_t, T *> &map, item
   if(it != map.end())
     return it->second;
 
-  return 0;
+  return O2G_NULLPTR;
 }
 
 osm_t::~osm_t()

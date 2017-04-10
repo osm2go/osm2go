@@ -32,6 +32,8 @@
 #include <string>
 #include <strings.h>
 
+#include <osm2go_cpp.h>
+
 #if !defined(LIBXML_TREE_ENABLED) || !defined(LIBXML_OUTPUT_ENABLED)
 #error "libxml doesn't support required tree or output"
 #endif
@@ -45,7 +47,7 @@ static float parse_scale_max(xmlNodePtr cur_node) {
 }
 
 static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t *style) {
-  xmlNode *cur_node = NULL, *sub_node = NULL;
+  xmlNode *cur_node = O2G_NULLPTR, *sub_node = O2G_NULLPTR;
 
   /* -------------- setup defaults -------------------- */
   /* (the defaults are pretty much the potlatch style) */
@@ -86,7 +88,7 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t *style) {
 
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
-      if(fname != NULL && strcasecmp((char*)cur_node->name, "elemstyles") == 0) {
+      if(fname != O2G_NULLPTR && strcasecmp((char*)cur_node->name, "elemstyles") == 0) {
 	*fname = xmlGetProp(cur_node, BAD_CAST "filename");
 
 	/* ---------- node ------------------------------------- */
@@ -174,27 +176,27 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t *style) {
  * @brief parse a style definition file
  * @param appdata the global information structure
  * @param fullname absolute path of the file to read
- * @param fname location to store name of the object style XML file or NULL
+ * @param fname location to store name of the object style XML file or O2G_NULLPTR
  * @param name_only only parse the style name, leave all other fields empty
  * @return a new style pointer
  */
 static style_t *style_parse(appdata_t *appdata, const std::string &fullname,
                             xmlChar **fname, gboolean name_only) {
-  xmlDoc *doc = xmlReadFile(fullname.c_str(), NULL, 0);
+  xmlDoc *doc = xmlReadFile(fullname.c_str(), O2G_NULLPTR, 0);
 
   /* parse the file and get the DOM */
-  if(doc == NULL) {
+  if(doc == O2G_NULLPTR) {
     xmlErrorPtr errP = xmlGetLastError();
     errorf(GTK_WIDGET(appdata->window),
 	   _("Style parsing failed:\n\n"
 	     "XML error while parsing style file\n"
 	     "%s"), errP->message);
 
-    return NULL;
+    return O2G_NULLPTR;
   } else {
     /* Get the root element node */
-    xmlNode *cur_node = NULL;
-    style_t *style = NULL;
+    xmlNode *cur_node = O2G_NULLPTR;
+    style_t *style = O2G_NULLPTR;
 
     for(cur_node = xmlDocGetRootElement(doc);
         cur_node; cur_node = cur_node->next) {
@@ -219,7 +221,7 @@ static style_t *style_parse(appdata_t *appdata, const std::string &fullname,
 }
 
 static style_t *style_load_fname(appdata_t *appdata, const std::string &filename) {
-  xmlChar *fname = NULL;
+  xmlChar *fname = O2G_NULLPTR;
   style_t *style = style_parse(appdata, filename, &fname, FALSE);
 
   printf("  elemstyle filename: %s\n", fname);
@@ -240,7 +242,7 @@ style_t *style_load(appdata_t *appdata) {
     fullname = find_file(DEFAULT_STYLE ".style");
     if (G_UNLIKELY(fullname.empty())) {
       printf("  style not found, failed to find fallback style too\n");
-      return NULL;
+      return O2G_NULLPTR;
     }
   }
 
@@ -275,7 +277,7 @@ void combo_add_styles::operator()(const std::string &filename)
 {
   printf("  file: %s\n", filename.c_str());
 
-  style_t *style = style_parse(appdata, filename, NULL, TRUE);
+  style_t *style = style_parse(appdata, filename, O2G_NULLPTR, TRUE);
   printf("    name: %s\n", style->name);
   combo_box_append_text(cbox, style->name);
 
@@ -300,17 +302,17 @@ static std::vector<std::string> style_scan() {
   const size_t elen = strlen(extension);
 
   for(const char **path = data_paths; *path; path++) {
-    GDir *dir = NULL;
+    GDir *dir = O2G_NULLPTR;
 
     /* scan for projects */
     const char *dirname = *path;
 
     if(*path[0] == '~')
-      dirname = g_strjoin(p, *path + 1, NULL);
+      dirname = g_strjoin(p, *path + 1, O2G_NULLPTR);
 
-    if((dir = g_dir_open(dirname, 0, NULL))) {
+    if((dir = g_dir_open(dirname, 0, O2G_NULLPTR))) {
       const char *name;
-      while ((name = g_dir_read_name(dir)) != NULL) {
+      while ((name = g_dir_read_name(dir)) != O2G_NULLPTR) {
         const size_t nlen = strlen(name);
         if(nlen > elen && strcmp(name + nlen - elen, extension) == 0) {
           fullname.reserve(strlen(dirname) + nlen + 1);
@@ -359,7 +361,7 @@ struct style_find {
 
 bool style_find::operator()(const std::string &filename)
 {
-  style_t *style = style_parse(appdata, filename, NULL, TRUE);
+  style_t *style = style_parse(appdata, filename, O2G_NULLPTR, TRUE);
 
   bool match = (strcmp(style->name, name) == 0);
   delete style;
@@ -383,7 +385,7 @@ void style_change(appdata_t *appdata, const char *name) {
   }
 
   style_t *nstyle = style_load_fname(appdata, *it);
-  if (nstyle == NULL) {
+  if (nstyle == O2G_NULLPTR) {
     errorf(GTK_WIDGET(appdata->window),
            _("Error loading style %s"), it->c_str());
     return;
@@ -422,7 +424,7 @@ void style_select(GtkWidget *parent, appdata_t *appdata) {
 		    GTK_WINDOW(parent),
 		    GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
 		    GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-		    NULL);
+		    O2G_NULLPTR);
 
   gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_ACCEPT);
 
@@ -452,8 +454,8 @@ void style_select(GtkWidget *parent, appdata_t *appdata) {
 #endif
 
 style_t::style_t()
-  : iconP(0)
-  , name(0)
+  : iconP(O2G_NULLPTR)
+  , name(O2G_NULLPTR)
 {
   memset(&icon, 0, sizeof(icon));
   memset(&track, 0, sizeof(track));

@@ -138,8 +138,8 @@ static gboolean wms_bbox_is_valid(pos_t *min, pos_t *max) {
 }
 
 static wms_layer_t *wms_cap_parse_layer(xmlDocPtr doc, xmlNode *a_node) {
-  wms_layer_t *wms_layer = NULL;
-  xmlNode *cur_node = NULL;
+  wms_layer_t *wms_layer = O2G_NULLPTR;
+  xmlNode *cur_node = O2G_NULLPTR;
 
   wms_layer = new wms_layer_t();
   wms_layer->llbbox.min.lon = wms_layer->llbbox.min.lat = NAN;
@@ -264,7 +264,7 @@ static bool wms_cap_parse_cap(xmlDocPtr doc, xmlNode *a_node, wms_cap_t *wms_cap
 }
 
 static bool wms_cap_parse(wms_t *wms, xmlDocPtr doc, xmlNode *a_node) {
-  xmlNode *cur_node = NULL;
+  xmlNode *cur_node = O2G_NULLPTR;
   bool has_service = false, has_cap = false;
 
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
@@ -285,7 +285,7 @@ static bool wms_cap_parse(wms_t *wms, xmlDocPtr doc, xmlNode *a_node) {
 
 /* parse root element */
 static bool wms_cap_parse_root(wms_t *wms, xmlDocPtr doc, xmlNode *a_node) {
-  xmlNode *cur_node = NULL;
+  xmlNode *cur_node = O2G_NULLPTR;
   bool ret = FALSE;
 
   for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
@@ -422,7 +422,7 @@ void requestable_layers_functor::operator()(const wms_layer_t* layer)
 {
   const wms_llbbox_t *llbbox = &layer->llbbox;
   if(!llbbox->valid)
-    llbbox = NULL;
+    llbbox = O2G_NULLPTR;
 
   std::for_each(layer->children.begin(), layer->children.end(),
                 child_layer_functor(1, layer->epsg4326, llbbox, layer->srs,
@@ -437,7 +437,8 @@ enum {
 
 struct wms_server_context_t {
   wms_server_context_t(appdata_t *a, wms_t *w, GtkWidget *d)
-    : appdata(a), wms(w), dialog(d), list(0), store(0), server_label(0), path_label(0) {}
+    : appdata(a), wms(w), dialog(d), list(O2G_NULLPTR), store(O2G_NULLPTR)
+    , server_label(O2G_NULLPTR), path_label(O2G_NULLPTR) {}
   appdata_t * const appdata;
   wms_t * const wms;
   GtkWidget * const dialog, *list;
@@ -457,7 +458,7 @@ static wms_server_t *get_selection(GtkWidget *list) {
     return(wms_server);
   }
 
-  return NULL;
+  return O2G_NULLPTR;
 }
 
 static void wms_server_selected(wms_server_context_t *context,
@@ -469,7 +470,7 @@ static void wms_server_selected(wms_server_context_t *context,
     GtkTreeSelection *selection = list_get_selection(context->list);
 
     /* walk the entire store to get all values */
-    wms_server_t *server = NULL;
+    wms_server_t *server = O2G_NULLPTR;
     GtkTreeIter iter;
 
     bool valid =
@@ -490,8 +491,8 @@ static void wms_server_selected(wms_server_context_t *context,
     }
   }
 
-  list_button_enable(context->list, LIST_BUTTON_REMOVE, selected != NULL);
-  list_button_enable(context->list, LIST_BUTTON_EDIT, selected != NULL);
+  list_button_enable(context->list, LIST_BUTTON_REMOVE, selected != O2G_NULLPTR);
+  list_button_enable(context->list, LIST_BUTTON_EDIT, selected != O2G_NULLPTR);
 
   /* user can click ok if a entry is selected or if both fields are */
   /* otherwise valid */
@@ -524,11 +525,11 @@ static void
 wms_server_changed(GtkTreeSelection *selection, gpointer userdata) {
   wms_server_context_t *context = static_cast<wms_server_context_t *>(userdata);
 
-  GtkTreeModel *model = NULL;
+  GtkTreeModel *model = O2G_NULLPTR;
   GtkTreeIter iter;
 
   if(gtk_tree_selection_get_selected(selection, &model, &iter)) {
-    wms_server_t *wms_server = NULL;
+    wms_server_t *wms_server = O2G_NULLPTR;
 
     gtk_tree_model_get(model, &iter, WMS_SERVER_COL_DATA, &wms_server, -1);
     wms_server_selected(context, wms_server);
@@ -542,7 +543,7 @@ static void on_server_remove(G_GNUC_UNUSED GtkWidget *but, wms_server_context_t 
 
   selection = list_get_selection(context->list);
   if(gtk_tree_selection_get_selected(selection, &model, &iter)) {
-    wms_server_t *server = NULL;
+    wms_server_t *server = O2G_NULLPTR;
     gtk_tree_model_get(model, &iter, WMS_SERVER_COL_DATA, &server, -1);
 
     g_assert(server);
@@ -560,7 +561,7 @@ static void on_server_remove(G_GNUC_UNUSED GtkWidget *but, wms_server_context_t 
     gtk_list_store_remove(GTK_LIST_STORE(model), &iter);
   }
 
-  wms_server_selected(context, NULL);
+  wms_server_selected(context, O2G_NULLPTR);
 }
 
 static void callback_modified_name(GtkWidget *widget, gpointer data) {
@@ -597,7 +598,7 @@ gboolean wms_server_edit(wms_server_context_t *context, gboolean edit_name,
 		    GTK_WINDOW(context->dialog),
 		    GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
 		    GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-		    NULL);
+		    O2G_NULLPTR);
 
   gtk_dialog_set_default_response(GTK_DIALOG(dialog),
 				  GTK_RESPONSE_ACCEPT);
@@ -685,7 +686,7 @@ static void on_server_edit(G_GNUC_UNUSED GtkWidget *but, wms_server_context_t *c
 
   selection = list_get_selection(context->list);
   if(gtk_tree_selection_get_selected(selection, &model, &iter)) {
-    wms_server_t *server = NULL;
+    wms_server_t *server = O2G_NULLPTR;
     gtk_tree_model_get(model, &iter, WMS_SERVER_COL_DATA, &server, -1);
     g_assert(server);
 
@@ -722,7 +723,7 @@ static void on_server_add(G_GNUC_UNUSED GtkWidget *but, wms_server_context_t *co
     printf("user clicked cancel\n");
 
     wms_server_free(*prev);
-    *prev = NULL;
+    *prev = O2G_NULLPTR;
 
     gtk_list_store_remove(GTK_LIST_STORE(model), &iter);
   } else
@@ -743,7 +744,7 @@ static GtkWidget *wms_server_widget(wms_server_context_t *context) {
 
   list_set_columns(context->list,
 		   _("Name"), WMS_SERVER_COL_NAME, LIST_FLAG_ELLIPSIZE,
-		   NULL);
+		   O2G_NULLPTR);
 
   /* build and fill the store */
   context->store = gtk_list_store_new(WMS_SERVER_NUM_COLS,
@@ -781,7 +782,7 @@ static gboolean wms_server_dialog(appdata_t *appdata, wms_t *wms) {
 		    GTK_WINDOW(appdata->window),
 		    GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
 		    GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-		    NULL));
+		    O2G_NULLPTR));
 
   /* server selection box */
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(context.dialog)->vbox),
@@ -798,7 +799,7 @@ static gboolean wms_server_dialog(appdata_t *appdata, wms_t *wms) {
   gtk_misc_set_alignment(GTK_MISC(label), 0.f, 0.5f);
   gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1, GTK_FILL,
                    static_cast<GtkAttachOptions>(0), 0, 0);
-  context.server_label = gtk_label_new(NULL);
+  context.server_label = gtk_label_new(O2G_NULLPTR);
   gtk_label_set_ellipsize(GTK_LABEL(context.server_label),
 			  PANGO_ELLIPSIZE_MIDDLE);
   gtk_misc_set_alignment(GTK_MISC(context.server_label), 0.f, 0.5f);
@@ -809,7 +810,7 @@ static gboolean wms_server_dialog(appdata_t *appdata, wms_t *wms) {
   gtk_misc_set_alignment(GTK_MISC(label), 0.f, 0.5f);
   gtk_table_attach(GTK_TABLE(table), label, 0, 1, 1, 2, GTK_FILL,
                    static_cast<GtkAttachOptions>(0), 0, 0);
-  context.path_label = gtk_label_new(NULL);
+  context.path_label = gtk_label_new(O2G_NULLPTR);
   gtk_label_set_ellipsize(GTK_LABEL(context.path_label),
 			  PANGO_ELLIPSIZE_MIDDLE);
   gtk_misc_set_alignment(GTK_MISC(context.path_label), 0.f, 0.5f);
@@ -819,7 +820,7 @@ static gboolean wms_server_dialog(appdata_t *appdata, wms_t *wms) {
   gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context.dialog)->vbox),
 		     table, FALSE, FALSE, 0);
 
-  wms_server_selected(&context, NULL);
+  wms_server_selected(&context, O2G_NULLPTR);
 
   gtk_widget_show_all(context.dialog);
 
@@ -861,7 +862,7 @@ static gboolean on_view_clicked(GtkWidget *widget, GdkEventButton *event,
     GtkTreePath *path;
 
     if(gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget),
-		     event->x, event->y, &path, NULL, NULL, NULL)) {
+		     event->x, event->y, &path, O2G_NULLPTR, O2G_NULLPTR, O2G_NULLPTR)) {
       GtkTreeSelection *sel =
 	gtk_tree_view_get_selection(GTK_TREE_VIEW(widget));
 
@@ -900,7 +901,7 @@ static void changed(GtkTreeSelection *sel, gpointer user_data) {
   gboolean ok = gtk_tree_model_get_iter_first(model, &iter);
   selected->clear();
   while(ok) {
-    wms_layer_t *layer = NULL;
+    wms_layer_t *layer = O2G_NULLPTR;
 
     gtk_tree_model_get(model, &iter, LAYER_COL_DATA, &layer, -1);
     g_assert(layer);
@@ -955,7 +956,7 @@ static GtkWidget *wms_layer_widget(selected_context *context, const wms_layer_t:
 #ifndef FREMANTLE
   /* catch views button-press event for our custom handling */
   g_signal_connect(view, "button-press-event",
-		   G_CALLBACK(on_view_clicked), NULL);
+		   G_CALLBACK(on_view_clicked), O2G_NULLPTR);
 #endif
 
   /* build the store */
@@ -964,12 +965,12 @@ static GtkWidget *wms_layer_widget(selected_context *context, const wms_layer_t:
 
   /* --- "Title" column --- */
   GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
-  g_object_set(renderer, "ellipsize", PANGO_ELLIPSIZE_END, NULL );
+  g_object_set(renderer, "ellipsize", PANGO_ELLIPSIZE_END, O2G_NULLPTR );
   GtkTreeViewColumn *column = gtk_tree_view_column_new_with_attributes(
 		 _("Title"), renderer,
 		 "text", LAYER_COL_TITLE,
 		 "sensitive", LAYER_COL_FITS,
-		 NULL);
+		 O2G_NULLPTR);
 
   gtk_tree_view_column_set_expand(column, TRUE);
   gtk_tree_view_insert_column(GTK_TREE_VIEW(view), column, -1);
@@ -985,7 +986,7 @@ static GtkWidget *wms_layer_widget(selected_context *context, const wms_layer_t:
 
 #ifndef FREMANTLE_PANNABLE_AREA
   /* put it into a scrolled window */
-  GtkWidget *scrolled_window = gtk_scrolled_window_new(NULL, NULL);
+  GtkWidget *scrolled_window = gtk_scrolled_window_new(O2G_NULLPTR, O2G_NULLPTR);
   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window),
 				 GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
   gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scrolled_window),
@@ -1009,7 +1010,7 @@ static gboolean wms_layer_dialog(selected_context *ctx, const wms_layer_t::list 
 		    GTK_WINDOW(ctx->appdata->window),
 		    GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
 		    GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-		    NULL);
+		    O2G_NULLPTR);
 
   gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog),
 				    GTK_RESPONSE_ACCEPT, FALSE);
@@ -1082,7 +1083,7 @@ void wms_import(appdata_t *appdata) {
                                  "&VERSION=1.1.1"
                                  "&REQUEST=GetCapabilities";
 
-  char *cap = NULL;
+  char *cap = O2G_NULLPTR;
   net_io_download_mem(GTK_WIDGET(appdata->window), appdata->settings,
 		      url.c_str(), &cap);
 
@@ -1094,10 +1095,10 @@ void wms_import(appdata_t *appdata) {
 	   _("WMS download failed:\n\n"
 	     "GetCapabilities failed"));
   } else {
-    xmlDoc *doc = NULL;
+    xmlDoc *doc = O2G_NULLPTR;
 
     /* parse the file and get the DOM */
-    if((doc = xmlReadMemory(cap, strlen(cap), NULL, NULL, 0)) == NULL) {
+    if((doc = xmlReadMemory(cap, strlen(cap), O2G_NULLPTR, O2G_NULLPTR, 0)) == O2G_NULLPTR) {
       xmlErrorPtr errP = xmlGetLastError();
       errorf(GTK_WIDGET(appdata->window),
 	     _("WMS download failed:\n\n"
@@ -1214,7 +1215,7 @@ void wms_import(appdata_t *appdata) {
 
   /* build complete url */
   const char *parts[] = { "&SRS=", srs, "&BBOX=", minlon, ",", minlat, ",",
-                          maxlon, ",", maxlat, buf, formats[format], 0 };
+                          maxlon, ",", maxlat, buf, formats[format], O2G_NULLPTR };
   for(int i = 0; parts[i]; i++)
     url += parts[i];
 
@@ -1226,7 +1227,7 @@ void wms_import(appdata_t *appdata) {
   wms_remove(appdata);
 
   if(!net_io_download_file(GTK_WIDGET(appdata->window), appdata->settings,
-                           url.c_str(), filename.c_str(), NULL))
+                           url.c_str(), filename.c_str(), O2G_NULLPTR))
     return;
 
   /* there should be a matching file on disk now */
@@ -1241,7 +1242,7 @@ void wms_import(appdata_t *appdata) {
   gtk_widget_set_sensitive(appdata->menuitems[MENU_ITEM_WMS_ADJUST], TRUE);
 }
 
-static const char *wms_exts[] = { "png", "gif", "jpg", NULL };
+static const char *wms_exts[] = { "png", "gif", "jpg", O2G_NULLPTR };
 /* this must be the longest one */
 #define DUMMYEXT wms_exts[0]
 
@@ -1310,11 +1311,11 @@ struct server_preset_s {
 } default_servers[] = {
   { "Open Geospatial Consortium Web Services", "http://ows.terrestris.de", "/osm/service?" },
   /* add more servers here ... */
-  { NULL, NULL, NULL }
+  { O2G_NULLPTR, O2G_NULLPTR, O2G_NULLPTR }
 };
 
 wms_server_t *wms_server_get_default(void) {
-  wms_server_t *server = NULL, **cur = &server;
+  wms_server_t *server = O2G_NULLPTR, **cur = &server;
   struct server_preset_s *preset = default_servers;
 
   while(preset->name) {

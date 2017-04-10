@@ -1,6 +1,8 @@
 #include <josm_presets.h>
 #include <josm_presets_p.h>
 
+#include <osm2go_cpp.h>
+
 #include <algorithm>
 #include <cstdlib>
 #include <cerrno>
@@ -25,7 +27,7 @@ bool check_icon::operator()(const std::string &dir)
   if(filename[0] == '/')
     return (g_file_test(filename.c_str(), G_FILE_TEST_IS_REGULAR) == TRUE);
 
-  const char *icon_exts[] = { ".svg", ".gif", ".png", ".jpg", NULL };
+  const char *icon_exts[] = { ".svg", ".gif", ".png", ".jpg", O2G_NULLPTR };
   std::string name = dir + "/icons/" + filename + icon_exts[0];
   name.erase(name.size() - strlen(icon_exts[0]));
 

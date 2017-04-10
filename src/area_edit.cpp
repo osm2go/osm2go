@@ -29,6 +29,8 @@
 #include "osm-gps-map-osd-select.h"
 #endif
 
+#include <osm2go_cpp.h>
+
 #include <algorithm>
 #include <cmath>
 #include <strings.h>
@@ -85,7 +87,7 @@ typedef struct {
 
 area_edit_t::area_edit_t(appdata_t *a, pos_t *mi, pos_t *ma)
   : appdata(a)
-  , parent(0)
+  , parent(O2G_NULLPTR)
   , min(mi)
   , max(ma)
 {
@@ -226,7 +228,7 @@ struct add_bounds {
 
 void add_bounds::operator()(const pos_bounds &b)
 {
-  GSList *box = pos_append(NULL, b.min.lat, b.min.lon);
+  GSList *box = pos_append(O2G_NULLPTR, b.min.lat, b.min.lon);
   box = pos_append(box, b.max.lat, b.min.lon);
   box = pos_append(box, b.max.lat, b.max.lon);
   box = pos_append(box, b.min.lat, b.max.lon);
@@ -254,7 +256,7 @@ static void map_update(context_t *context, gboolean forced) {
     /* no coordinates given: display around the current GPS position if available */
     pos_t pos;
     int zoom = 12;
-    if(!gps_get_pos(context->area->appdata->gps_state, &pos, NULL)) {
+    if(!gps_get_pos(context->area->appdata->gps_state, &pos, O2G_NULLPTR)) {
       /* no GPS position available: display the entire world */
       pos.lat = 0.0;
       pos.lon = 0.0;
@@ -290,7 +292,7 @@ static void map_update(context_t *context, gboolean forced) {
 
     if(context->max.lat > context->min.lat &&
        context->max.lon > context->min.lon) {
-      GSList *box = pos_append(NULL, context->min.lat, context->min.lon);
+      GSList *box = pos_append(O2G_NULLPTR, context->min.lat, context->min.lon);
       box = pos_append(box, context->max.lat, context->min.lon);
       box = pos_append(box, context->max.lat, context->max.lon);
       box = pos_append(box, context->min.lat, context->max.lon);
@@ -498,7 +500,7 @@ on_map_motion_notify_event(GtkWidget *widget,
     OsmGpsMapPoint start = context->map.start, end;
     osm_gps_map_convert_screen_to_geographic(map, (gint)event->x, (gint)event->y, &end);
 
-    GSList *box = pos_append_rad(NULL, start.rlat, start.rlon);
+    GSList *box = pos_append_rad(O2G_NULLPTR, start.rlat, start.rlon);
     box = pos_append_rad(box, end.rlat,   start.rlon);
     box = pos_append_rad(box, end.rlat,   end.rlon);
     box = pos_append_rad(box, start.rlat, end.rlon);
@@ -524,7 +526,7 @@ on_map_button_release_event(GtkWidget *widget,
     OsmGpsMapPoint start = context->map.start, end;
     osm_gps_map_convert_screen_to_geographic(map, (gint)event->x, (gint)event->y, &end);
 
-    GSList *box = pos_append_rad(NULL, start.rlat, start.rlon);
+    GSList *box = pos_append_rad(O2G_NULLPTR, start.rlat, start.rlon);
     box = pos_append_rad(box, end.rlat,   start.rlon);
     box = pos_append_rad(box, end.rlat,   end.rlon);
     box = pos_append_rad(box, start.rlat, end.rlon);
@@ -584,10 +586,10 @@ static gboolean map_gps_update(gpointer data) {
 
   pos_t pos = { NAN, NAN };
   gboolean gps_fix = gps_on &&
-    gps_get_pos(context->area->appdata->gps_state, &pos, NULL);
+    gps_get_pos(context->area->appdata->gps_state, &pos, O2G_NULLPTR);
 
   if(gps_fix) {
-    g_object_set(context->map.widget, "gps-track-highlight-radius", 0, NULL);
+    g_object_set(context->map.widget, "gps-track-highlight-radius", 0, O2G_NULLPTR);
     osm_gps_map_gps_add(OSM_GPS_MAP(context->map.widget),
 			 pos.lat, pos.lon, NAN);
   } else
@@ -616,7 +618,7 @@ bool area_edit(area_edit_t &area) {
 	  GTK_WINDOW(area.parent),
 	  GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
           GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-          NULL);
+          O2G_NULLPTR);
 
   context.warning =
     gtk_dialog_add_button(GTK_DIALOG(context.dialog), _("Warning"),
@@ -638,8 +640,8 @@ bool area_edit(area_edit_t &area) {
  	        "map-source", OSM_GPS_MAP_SOURCE_OPENSTREETMAP,
 		"proxy-uri", misc_get_proxy_uri(area.appdata->settings),
 		"auto-center", FALSE,
-	        "tile-cache", NULL,
-		 NULL));
+	        "tile-cache", O2G_NULLPTR,
+		 O2G_NULLPTR));
 
   osm_gps_map_osd_select_init(OSM_GPS_MAP(context.map.widget));
 
@@ -698,7 +700,7 @@ bool area_edit(area_edit_t &area) {
   gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 3, 2, 3);
 
   /* error label */
-  context.direct.error = gtk_label_new(NULL);
+  context.direct.error = gtk_label_new(O2G_NULLPTR);
   gtk_widget_modify_fg(context.direct.error, GTK_STATE_NORMAL, &color);
   gtk_table_attach_defaults(GTK_TABLE(table), context.direct.error, 0, 3, 3, 4);
 
@@ -764,7 +766,7 @@ bool area_edit(area_edit_t &area) {
   gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 3, 3, 4);
 
   /* error label */
-  context.extent.error = gtk_label_new(NULL);
+  context.extent.error = gtk_label_new(O2G_NULLPTR);
   gtk_widget_modify_fg(context.extent.error, GTK_STATE_NORMAL, &color);
   gtk_table_attach_defaults(GTK_TABLE(table), context.extent.error, 0, 3, 4, 5);
 

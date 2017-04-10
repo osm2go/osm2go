@@ -44,11 +44,13 @@
 #include <glib.h>
 #include <strings.h>
 
+#include <osm2go_cpp.h>
+
 double xml_get_prop_float(xmlNode *node, const char *prop) {
   xmlChar *str = xmlGetProp(node, BAD_CAST prop);
   double value = NAN;
   if(str) {
-    value = g_ascii_strtod((gchar*)str, NULL);
+    value = g_ascii_strtod((gchar*)str, O2G_NULLPTR);
     xmlFree(str);
   }
   return value;
@@ -181,7 +183,7 @@ gboolean yes_no_f(GtkWidget *parent, appdata_t *appdata, guint again_bit,
     hildon_note_new_confirmation(GTK_WINDOW(parent), buf);
 #endif
 
-  GtkWidget *cbut = NULL;
+  GtkWidget *cbut = O2G_NULLPTR;
   if(again_bit) {
 #ifdef FREMANTLE
     /* make sure there's some space before the checkbox */
@@ -225,7 +227,7 @@ const char *data_paths[] = {
   "/media/mmc2/" PACKAGE "/",  // path to internal memory card
 #endif
   "./data/", "../data/",       // local paths for testing
-  NULL
+  O2G_NULLPTR
 };
 
 std::string find_file(const std::string &n) {
@@ -318,7 +320,7 @@ void misc_scrolled_window_add_with_viewport(GtkWidget *win, GtkWidget *child) {
 #else
 /* create a scrolled window */
 GtkWidget *misc_scrolled_window_new(gboolean etched_in) {
-  GtkWidget *scrolled_window = gtk_scrolled_window_new(NULL, NULL);
+  GtkWidget *scrolled_window = gtk_scrolled_window_new(O2G_NULLPTR, O2G_NULLPTR);
   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window),
   				 GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
   if(etched_in)
@@ -346,7 +348,7 @@ const char *misc_get_proxy_uri(settings_t *settings) {
 
   /* otherwise try settings */
   if(!settings->proxy || !settings->proxy->host)
-    return NULL;
+    return O2G_NULLPTR;
 
   const char *protocol = strncmp(settings->proxy->host, "http://", 7) ? "" :
 			 strncmp(settings->proxy->host, "https://", 8) ? "" :
@@ -490,11 +492,11 @@ void notebook_append_page(GtkWidget *notebook,
     GTK_NOTEBOOK(g_object_get_data(G_OBJECT(notebook), "notebook"));
 
   gint page_num = gtk_notebook_append_page(nb, page, gtk_label_new(label));
-  GtkWidget *button = NULL;
+  GtkWidget *button = O2G_NULLPTR;
 
   /* select button for page 0 by default */
   if(!page_num) {
-    button = gtk_radio_button_new_with_label(NULL, label);
+    button = gtk_radio_button_new_with_label(O2G_NULLPTR, label);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), TRUE);
     g_object_set_data(G_OBJECT(notebook), "group_master", (gpointer)button);
   } else {
@@ -538,7 +540,7 @@ static GtkWidget *combo_box_new_with_selector(const gchar *title, GtkWidget *sel
   hildon_button_set_value_alignment(HILDON_BUTTON(button), 0.5, 0.5);
 
   /* allow button to emit "changed" signal */
-  g_signal_connect(button, "value-changed", G_CALLBACK(on_value_changed), NULL);
+  g_signal_connect(button, "value-changed", G_CALLBACK(on_value_changed), O2G_NULLPTR);
 
   hildon_button_set_title(HILDON_BUTTON (button), title);
 
@@ -626,11 +628,11 @@ void open_url(struct appdata_t *appdata, const char *url)
 {
 #ifdef ENABLE_BROWSER_INTERFACE
 #ifndef USE_HILDON
-  gtk_show_uri(NULL, url, GDK_CURRENT_TIME, NULL);
+  gtk_show_uri(O2G_NULLPTR, url, GDK_CURRENT_TIME, O2G_NULLPTR);
   (void)appdata;
 #else
   osso_rpc_run_with_defaults(appdata->osso_context, "osso_browser",
-                             OSSO_BROWSER_OPEN_NEW_WINDOW_REQ, NULL,
+                             OSSO_BROWSER_OPEN_NEW_WINDOW_REQ, O2G_NULLPTR,
                              DBUS_TYPE_STRING, url,
                              DBUS_TYPE_BOOLEAN, FALSE, DBUS_TYPE_INVALID);
 #endif
@@ -643,7 +645,7 @@ void open_url(struct appdata_t *appdata, const char *url)
 void misc_init(void) {
 #ifdef FREMANTLE
   g_signal_new ("changed", HILDON_TYPE_PICKER_BUTTON,
-		G_SIGNAL_RUN_FIRST, 0, NULL, NULL,
+		G_SIGNAL_RUN_FIRST, 0, O2G_NULLPTR, O2G_NULLPTR,
 		g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 #endif
 }

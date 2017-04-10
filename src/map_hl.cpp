@@ -24,6 +24,8 @@
 
 #include <algorithm>
 
+#include <osm2go_cpp.h>
+
 /* create a new item for the cursor */
 void map_hl_cursor_draw(map_t *map, gint x, gint y, bool is_world,
 			gint radius) {
@@ -54,7 +56,7 @@ void map_hl_segment_draw(map_t *map, gint width,
 void map_hl_cursor_clear(map_t *map) {
   if(map->cursor) {
     canvas_item_destroy(map->cursor);
-    map->cursor = NULL;
+    map->cursor = O2G_NULLPTR;
   }
 }
 
@@ -73,14 +75,14 @@ void map_hl_touchnode_draw(map_t *map, node_t *node) {
 }
 
 node_t *map_hl_touchnode_get_node(map_t *map) {
-  if(!map->touchnode) return NULL;
+  if(!map->touchnode) return O2G_NULLPTR;
   return (node_t*)canvas_item_get_user_data(map->touchnode);
 }
 
 void map_hl_touchnode_clear(map_t *map) {
   if(map->touchnode) {
     canvas_item_destroy(map->touchnode);
-    map->touchnode = NULL;
+    map->touchnode = O2G_NULLPTR;
   }
 }
 
@@ -99,7 +101,7 @@ void map_hl_remove(map_t *map) {
   printf("removing highlight\n");
 
   map_highlight_t *hl = map->highlight;
-  map->highlight = NULL;
+  map->highlight = O2G_NULLPTR;
   std::for_each(hl->items.begin(), hl->items.end(), canvas_item_destroy);
 
   delete hl;

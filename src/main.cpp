@@ -54,8 +54,8 @@
 
 /* disable/enable main screen control dependant on presence of open project */
 void main_ui_enable(appdata_t *appdata) {
-  gboolean project_valid = (appdata->project != NULL);
-  gboolean osm_valid = (appdata->osm != NULL);
+  gboolean project_valid = (appdata->project != O2G_NULLPTR);
+  gboolean osm_valid = (appdata->osm != O2G_NULLPTR);
 
   if(!appdata->window) {
     printf("main_ui_enable: main window gone\n");
@@ -74,7 +74,7 @@ void main_ui_enable(appdata_t *appdata) {
   else
     gtk_window_set_title(GTK_WINDOW(appdata->window), "");
 #else
-  char *str = NULL;
+  char *str = O2G_NULLPTR;
   const char *cstr = "OSM2go";
 #ifdef USE_HILDON
   if(project_valid)
@@ -84,7 +84,7 @@ void main_ui_enable(appdata_t *appdata) {
   hildon_window_set_markup(HILDON_WINDOW(appdata->window), cstr);
 #else
   if(project_valid)
-    cstr = str = g_strconcat(project_name(appdata->project), " - OSM2Go", NULL);
+    cstr = str = g_strconcat(project_name(appdata->project), " - OSM2Go", O2G_NULLPTR);
 
   gtk_window_set_title(GTK_WINDOW(appdata->window), cstr);
 #endif
@@ -251,7 +251,7 @@ cb_menu_undo_changes(GtkMenuItem *, gpointer data) {
   if (!diff_present(appdata->project) && diff_is_clean(appdata->osm, TRUE))
     return;
 
-  if(!yes_no_f(GTK_WIDGET(appdata->window), NULL, 0, 0,
+  if(!yes_no_f(GTK_WIDGET(appdata->window), O2G_NULLPTR, 0, 0,
 	       _("Undo all changes?"),
 	       _("Throw away all the changes you've not "
 		 "uploaded yet? This cannot be undone.")))
@@ -260,7 +260,7 @@ cb_menu_undo_changes(GtkMenuItem *, gpointer data) {
   map_clear(appdata->map, MAP_LAYER_OBJECTS_ONLY);
 
   delete appdata->osm;
-  appdata->osm = NULL;
+  appdata->osm = O2G_NULLPTR;
 
   diff_remove(appdata->project);
   appdata->osm = project_parse_osm(appdata->project, &appdata->icon);
@@ -360,7 +360,7 @@ cb_menu_track_import(GtkMenuItem *, appdata_t *appdata) {
 			GTK_FILE_CHOOSER_ACTION_OPEN,
 			GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
 			GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
-			NULL);
+			O2G_NULLPTR);
 #endif
 
   if(appdata->settings->track_path) {
@@ -397,7 +397,7 @@ cb_menu_track_import(GtkMenuItem *, appdata_t *appdata) {
 
       g_free(appdata->settings->track_path);
       appdata->settings->track_path = filename;
-      filename = NULL;
+      filename = O2G_NULLPTR;
     }
     track_menu_set(appdata);
     g_free(filename);
@@ -434,7 +434,7 @@ cb_menu_track_export(GtkMenuItem *, appdata_t *appdata) {
 				       GTK_FILE_CHOOSER_ACTION_SAVE,
 				       GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
 				       GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT,
-				       NULL);
+				       O2G_NULLPTR);
 #endif
 
   printf("set filename <%s>\n", appdata->settings->track_path);
@@ -533,12 +533,12 @@ menu_append_new_item(appdata_t *appdata,
 		     gboolean enabled,
                      bool is_check, gboolean check_status)
 {
-  GtkWidget *item = NULL;
-  GtkWidget *image = NULL;
+  GtkWidget *item = O2G_NULLPTR;
+  GtkWidget *image = O2G_NULLPTR;
 
   gboolean stock_item_known = FALSE;
   GtkStockItem stock_item;
-  if (icon_name != NULL) {
+  if (icon_name != O2G_NULLPTR) {
     stock_item_known = gtk_stock_lookup(icon_name, &stock_item);
   }
 
@@ -573,7 +573,7 @@ menu_append_new_item(appdata_t *appdata,
 #ifdef UISPECIFIC_MENU_HAS_ACCELS
   // Accelerators
   // Default
-  if (accel_path != NULL) {
+  if (accel_path != O2G_NULLPTR) {
     accel_path = g_intern_static_string(accel_path);
     gtk_menu_item_set_accel_path(GTK_MENU_ITEM(item), accel_path);
     if (accel_key != 0) {
@@ -672,19 +672,19 @@ static void menu_create(appdata_t *appdata) {
 
   menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_view_detail_inc), _("More details"),
-    NULL, "<OSM2Go-Main>/View/DetailInc",
+    O2G_NULLPTR, "<OSM2Go-Main>/View/DetailInc",
     GDK_period, GDK_MOD1_MASK, TRUE, false, FALSE
   );
 
   menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_view_detail_normal), _("Normal details"),
-    NULL, "<OSM2Go-Main>/View/DetailNormal",
+    O2G_NULLPTR, "<OSM2Go-Main>/View/DetailNormal",
     0, static_cast<GdkModifierType>(0), TRUE, false, FALSE
   );
 
   menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_view_detail_dec), _("Less details"),
-    NULL, "<OSM2Go-Main>/View/DetailDec",
+    O2G_NULLPTR, "<OSM2Go-Main>/View/DetailDec",
     GDK_comma, GDK_MOD1_MASK, TRUE, false, FALSE
   );
 
@@ -751,7 +751,7 @@ static void menu_create(appdata_t *appdata) {
   gtk_menu_shell_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
   appdata->menuitems[MENU_ITEM_MAP_RELATIONS] = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_osm_relations), _("_Relations"),
-    NULL, "<OSM2Go-Main>/Map/Relations",
+    O2G_NULLPTR, "<OSM2Go-Main>/Map/Relations",
     GDK_r, static_cast<GdkModifierType>(GDK_SHIFT_MASK|GDK_CONTROL_MASK), TRUE, false, FALSE
   );
 
@@ -778,7 +778,7 @@ static void menu_create(appdata_t *appdata) {
 
   appdata->menuitems[MENU_ITEM_WMS_ADJUST] = item = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_wms_adjust), _("_Adjust"),
-    NULL, "<OSM2Go-Main>/WMS/Adjust",
+    O2G_NULLPTR, "<OSM2Go-Main>/WMS/Adjust",
     0, static_cast<GdkModifierType>(0), TRUE, false, FALSE
   );
   gtk_widget_set_sensitive(item, FALSE);
@@ -794,13 +794,13 @@ static void menu_create(appdata_t *appdata) {
 
   appdata->menuitems[MENU_ITEM_TRACK_IMPORT] = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_track_import), _("_Import"),
-    NULL, "<OSM2Go-Main>/Track/Import",
+    O2G_NULLPTR, "<OSM2Go-Main>/Track/Import",
     0, static_cast<GdkModifierType>(0), TRUE, false, FALSE
   );
 
   appdata->menuitems[MENU_ITEM_TRACK_EXPORT] = item = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_track_export), _("_Export"),
-    NULL, "<OSM2Go-Main>/Track/Export",
+    O2G_NULLPTR, "<OSM2Go-Main>/Track/Export",
     0, static_cast<GdkModifierType>(0), FALSE, false, FALSE
   );
 
@@ -813,14 +813,14 @@ static void menu_create(appdata_t *appdata) {
 
   appdata->menuitems[MENU_ITEM_TRACK_ENABLE_GPS] = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_track_enable_gps),_("_GPS enable"),
-    NULL, "<OSM2Go-Main>/Track/GPS",
+    O2G_NULLPTR, "<OSM2Go-Main>/Track/GPS",
     GDK_g, static_cast<GdkModifierType>(GDK_CONTROL_MASK|GDK_SHIFT_MASK), TRUE, true,
     appdata->settings->enable_gps
   );
 
   appdata->menuitems[MENU_ITEM_TRACK_FOLLOW_GPS] = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_track_follow_gps), _("GPS follow"),
-    NULL, "<OSM2Go-Main>/Track/Follow",
+    O2G_NULLPTR, "<OSM2Go-Main>/Track/Follow",
     0, static_cast<GdkModifierType>(0), appdata->settings->enable_gps, true,
     appdata->settings->follow_gps
   );
@@ -906,7 +906,7 @@ static GtkWidget *app_menu_create(appdata_t *appdata,
   HildonAppMenu *menu = HILDON_APP_MENU(hildon_app_menu_new());
 
   while(menu_entries->label) {
-    GtkWidget *button = NULL;
+    GtkWidget *button = O2G_NULLPTR;
 
     if(!menu_entries->toggle) {
       button = hildon_button_new_with_text(
@@ -962,7 +962,7 @@ static GtkWidget *app_submenu_create(appdata_t *appdata,
 
   /* create a oridinary dialog box */
   GtkWidget *dialog = misc_dialog_new(MISC_DIALOG_SMALL, _(submenu->title),
-				      GTK_WINDOW(appdata->window), NULL);
+				      GTK_WINDOW(appdata->window), O2G_NULLPTR);
 
   gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
 
@@ -971,7 +971,7 @@ static GtkWidget *app_submenu_create(appdata_t *appdata,
 
   const menu_entry_t *menu_entries = submenu->menu;
   while(menu_entries->label) {
-    GtkWidget *button = NULL;
+    GtkWidget *button = O2G_NULLPTR;
 
     /* the "Style" menu entry is very special */
     /* and is being handled seperately */
@@ -1070,20 +1070,20 @@ void on_submenu_track_clicked(G_GNUC_UNUSED GtkButton *button, appdata_t *appdat
   submenu_popup(appdata, appdata->app_menu_track);
 }
 
-#define SIMPLE_ENTRY(a,b)     { a, NULL, TRUE,  NULL, -1, G_CALLBACK(b) }
-#define ENABLED_ENTRY(a,b,c)  { a, NULL, TRUE,  NULL,  c, G_CALLBACK(b) }
-#define DISABLED_ENTRY(a,b,c) { a, NULL, FALSE, NULL,  c, G_CALLBACK(b) }
-#define TOGGLE_ENTRY(a,b,c)   { a, NULL, TRUE,     c, -1, G_CALLBACK(b) }
+#define SIMPLE_ENTRY(a,b)     { a, O2G_NULLPTR, TRUE,  O2G_NULLPTR, -1, G_CALLBACK(b) }
+#define ENABLED_ENTRY(a,b,c)  { a, O2G_NULLPTR, TRUE,  O2G_NULLPTR,  c, G_CALLBACK(b) }
+#define DISABLED_ENTRY(a,b,c) { a, O2G_NULLPTR, FALSE, O2G_NULLPTR,  c, G_CALLBACK(b) }
+#define TOGGLE_ENTRY(a,b,c)   { a, O2G_NULLPTR, TRUE,            c, -1, G_CALLBACK(b) }
 #define DISABLED_TOGGLE_ENTRY(a,b,c,d)  \
-                              { a, NULL, FALSE,    c,  d, G_CALLBACK(b) }
+                              { a, O2G_NULLPTR, FALSE,           c,  d, G_CALLBACK(b) }
 #define ENABLED_TOGGLE_ENTRY(a,b,c,d) \
-                              { a, NULL, TRUE,     c,  d, G_CALLBACK(b) }
-#define LAST_ENTRY            { NULL, NULL, FALSE, NULL, -1, NULL }
+                              { a, O2G_NULLPTR, TRUE,            c,  d, G_CALLBACK(b) }
+#define LAST_ENTRY            { O2G_NULLPTR, O2G_NULLPTR, FALSE, O2G_NULLPTR, -1, O2G_NULLPTR }
 
 /* -- the view submenu -- */
 static const menu_entry_t submenu_view_entries[] = {
   /* --- */
-  SIMPLE_ENTRY("Style",           NULL),
+  SIMPLE_ENTRY("Style",           O2G_NULLPTR),
   /* --- */
   DISABLED_ENTRY("Hide selected", cb_menu_map_hide_sel, MENU_ITEM_MAP_HIDE_SEL),
   DISABLED_ENTRY("Show all",      cb_menu_map_show_all, MENU_ITEM_MAP_SHOW_ALL),
@@ -1192,7 +1192,7 @@ void menu_cleanup(appdata_t &appdata) {
 
 static void menu_accels_load(appdata_t *appdata) {
   char *accels_file = g_strconcat(appdata->settings->base_path, ACCELS_FILE,
-                                      NULL);
+                                      O2G_NULLPTR);
   gtk_accel_map_load(accels_file);
   g_free(accels_file);
 }
@@ -1208,7 +1208,7 @@ appdata_t::~appdata_t() {
 
 #ifdef UISPECIFIC_MENU_HAS_ACCELS
   char *accels_file = g_strconcat(settings->base_path, ACCELS_FILE,
-                                      NULL);
+                                      O2G_NULLPTR);
   gtk_accel_map_save(accels_file);
   g_free(accels_file);
 #endif
@@ -1219,7 +1219,7 @@ appdata_t::~appdata_t() {
   if(osso_context)
     osso_deinitialize(osso_context);
 
-  program = NULL;
+  program = O2G_NULLPTR;
 #endif
 
   printf("waiting for gtk to shut down ");
@@ -1239,7 +1239,7 @@ appdata_t::~appdata_t() {
   map_remove_bg_image(map);
 
   delete osm;
-  osm = NULL;
+  osm = O2G_NULLPTR;
 
   xmlCleanupParser();
 
@@ -1268,7 +1268,7 @@ static void on_window_destroy(appdata_t *appdata) {
   puts("main window destroy");
 
   gtk_main_quit();
-  appdata->window = NULL;
+  appdata->window = O2G_NULLPTR;
 }
 
 static gboolean on_window_key_press(GtkWidget *, GdkEventKey *event, appdata_t *appdata) {
@@ -1376,7 +1376,7 @@ int main(int argc, char *argv[]) {
   xmlKeepBlanksDefault(0);
 
 #if !GLIB_CHECK_VERSION(2,32,0)
-  g_thread_init(NULL);
+  g_thread_init(O2G_NULLPTR);
 #endif
 
   gtk_init (&argc, &argv);
@@ -1391,8 +1391,8 @@ int main(int argc, char *argv[]) {
 #ifdef USE_HILDON
   printf("Installing osso context for \"org.harbaum." PACKAGE "\"\n");
   appdata.osso_context = osso_initialize("org.harbaum." PACKAGE,
-					 VERSION, TRUE, NULL);
-  if(appdata.osso_context == NULL)
+					 VERSION, TRUE, O2G_NULLPTR);
+  if(appdata.osso_context == O2G_NULLPTR)
     fprintf(stderr, "error initiating osso context\n");
 
   dbus_register(&appdata.mmpos);
@@ -1413,7 +1413,7 @@ int main(int argc, char *argv[]) {
   /* at runtime with cygwin x */
 #if (MAEMO_VERSION_MAJOR == 5) && !defined(__i386__)
   g_signal_connect(G_OBJECT(appdata.window), "realize",
-		   G_CALLBACK(on_window_realize), NULL);
+		   G_CALLBACK(on_window_realize), O2G_NULLPTR);
 #endif // MAEMO_VERSION_MAJOR
 
 #else
@@ -1519,8 +1519,8 @@ int main(int argc, char *argv[]) {
   gtk_box_pack_start(GTK_BOX(vbox), ivbox, TRUE, FALSE, 0);
 
   ivbox = gtk_vbox_new(FALSE, 0);
-  GtkWidget *ok = icon_button(&appdata, "ok_thumb", NULL, ivbox);
-  GtkWidget *cancel = icon_button(&appdata, "cancel_thumb", NULL, ivbox);
+  GtkWidget *ok = icon_button(&appdata, "ok_thumb", O2G_NULLPTR, ivbox);
+  GtkWidget *cancel = icon_button(&appdata, "cancel_thumb", O2G_NULLPTR, ivbox);
   iconbar_register_buttons(&appdata, ok, cancel);
   gtk_box_pack_start(GTK_BOX(vbox), ivbox, FALSE, FALSE, 0);
 

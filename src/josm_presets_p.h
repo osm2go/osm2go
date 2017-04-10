@@ -27,6 +27,8 @@
 #include <string>
 #include <vector>
 
+#include <osm2go_cpp.h>
+
 enum presets_widget_type_t {
   WIDGET_TYPE_LABEL = 0,
   WIDGET_TYPE_SEPARATOR,
@@ -107,9 +109,9 @@ public:
   const std::string def;
 
   virtual GtkWidget *attach(GtkTable *table, guint &row, const char *preset,
-                            presets_context_t *) const;
-  virtual const char *getValue(GtkWidget *widget) const;
-  virtual guint rows() const {
+                            presets_context_t *) const O2G_OVERRIDE;
+  virtual const char *getValue(GtkWidget *widget) const O2G_OVERRIDE;
+  virtual guint rows() const O2G_OVERRIDE {
     return 1;
   }
 };
@@ -120,8 +122,8 @@ public:
     : presets_widget_t(WIDGET_TYPE_SEPARATOR, MatchIgnore) {}
 
   virtual GtkWidget *attach(GtkTable *table, guint &row, const char *,
-                            presets_context_t *) const;
-  virtual guint rows() const {
+                            presets_context_t *) const O2G_OVERRIDE;
+  virtual guint rows() const O2G_OVERRIDE {
     return 1;
   }
 };
@@ -132,8 +134,8 @@ public:
     : presets_widget_t(WIDGET_TYPE_LABEL, MatchIgnore, std::string(), text) {}
 
   virtual GtkWidget *attach(GtkTable *table, guint &row, const char *,
-                            presets_context_t *) const;
-  virtual guint rows() const {
+                            presets_context_t *) const O2G_OVERRIDE;
+  virtual guint rows() const O2G_OVERRIDE {
     return 1;
   }
 };
@@ -143,7 +145,7 @@ public:
  */
 class presets_widget_combo : public presets_widget_t {
 protected:
-  virtual bool matchValue(const char *val) const;
+  virtual bool matchValue(const char *val) const O2G_OVERRIDE;
 public:
   presets_widget_combo(const std::string &key, const std::string &text,
                        const std::string &deflt, const char *matches,
@@ -154,9 +156,9 @@ public:
   std::vector<std::string> display_values;
 
   virtual GtkWidget *attach(GtkTable *table, guint &row, const char *preset,
-                            presets_context_t *) const;
-  virtual const char *getValue(GtkWidget *widget) const;
-  virtual guint rows() const {
+                            presets_context_t *) const O2G_OVERRIDE;
+  virtual const char *getValue(GtkWidget *widget) const O2G_OVERRIDE;
+  virtual guint rows() const O2G_OVERRIDE {
     return 1;
   }
 
@@ -168,20 +170,20 @@ public:
  */
 class presets_widget_key : public presets_widget_t {
 protected:
-  virtual bool matchValue(const char *val) const;
+  virtual bool matchValue(const char *val) const O2G_OVERRIDE;
 public:
   presets_widget_key(const std::string &key, const std::string &val, const char *matches);
 
   const std::string value;
-  virtual const char *getValue(GtkWidget *widget) const;
-  virtual guint rows() const {
+  virtual const char *getValue(GtkWidget *widget) const O2G_OVERRIDE;
+  virtual guint rows() const O2G_OVERRIDE {
     return 0;
   }
 };
 
 class presets_widget_checkbox : public presets_widget_t {
 protected:
-  virtual bool matchValue(const char *val) const;
+  virtual bool matchValue(const char *val) const O2G_OVERRIDE;
 public:
   presets_widget_checkbox(const std::string &key, const std::string &text, bool deflt,
                           const char *matches, const std::string &von = std::string());
@@ -190,9 +192,9 @@ public:
   std::string value_on;
 
   virtual GtkWidget *attach(GtkTable *table, guint &row, const char *preset,
-                            presets_context_t *) const;
-  virtual const char *getValue(GtkWidget *widget) const;
-  virtual guint rows() const {
+                            presets_context_t *) const O2G_OVERRIDE;
+  virtual const char *getValue(GtkWidget *widget) const O2G_OVERRIDE;
+  virtual guint rows() const O2G_OVERRIDE {
     return 1;
   }
 };
@@ -206,23 +208,23 @@ public:
 
   presets_item * const item;
 
-  virtual bool is_interactive() const;
-  virtual guint rows() const;
+  virtual bool is_interactive() const O2G_OVERRIDE;
+  virtual guint rows() const O2G_OVERRIDE;
 };
 
 class presets_widget_link : public presets_widget_t {
 public:
   explicit presets_widget_link()
-    : presets_widget_t(WIDGET_TYPE_LINK, MatchIgnore), item(0) {}
+    : presets_widget_t(WIDGET_TYPE_LINK, MatchIgnore), item(O2G_NULLPTR) {}
 
   presets_item *item;
 
-  virtual bool is_interactive() const {
+  virtual bool is_interactive() const O2G_OVERRIDE {
     return false;
   }
   virtual GtkWidget *attach(GtkTable *table, guint &row, const char *preset,
-                            presets_context_t *context) const;
-  virtual guint rows() const {
+                            presets_context_t *context) const O2G_OVERRIDE;
+  virtual guint rows() const O2G_OVERRIDE {
     return 1;
   }
 };
@@ -273,7 +275,7 @@ public:
 
   std::vector<presets_widget_t *> widgets;
 
-  virtual bool isItem() const {
+  virtual bool isItem() const O2G_OVERRIDE {
     return true;
   }
 
