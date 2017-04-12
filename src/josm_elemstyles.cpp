@@ -323,7 +323,7 @@ void StyleSax::startElement(const xmlChar *name, const xmlChar **attrs)
           if(*end == ',')
             line->dash_length_off = strtoul(end + 1, &end, 10);
           else
-            line->dash_length_on = line->dash_length_off;
+            line->dash_length_off = line->dash_length_on;
           if(G_UNLIKELY(*end != '\0')) {
             printf("WARNING: invalid value '%s' for dashed\n", dval);
             line->dash_length_on = 0;
