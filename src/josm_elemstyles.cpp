@@ -298,14 +298,17 @@ void StyleSax::startElement(const xmlChar *name, const xmlChar **attrs)
       if(strcmp(reinterpret_cast<const char *>(attrs[i]), "colour") == 0) {
         hasColor = parse_color(attrs[i + 1], line->color);
       } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "width") == 0) {
-        line->width = strtoul(reinterpret_cast<const char*>(attrs[i + 1]), O2G_NULLPTR, 10);
-        hasWidth = true;
+        char *endch;
+        line->width = strtoul(reinterpret_cast<const char*>(attrs[i + 1]), &endch, 10);
+        hasWidth = (*endch == '\0');
       } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "realwidth") == 0) {
-        line->real.width = strtoul(reinterpret_cast<const char*>(attrs[i + 1]), O2G_NULLPTR, 10);
-        line->real.valid = true;
+        char *endch;
+        line->real.width = strtoul(reinterpret_cast<const char*>(attrs[i + 1]), &endch, 10);
+        line->real.valid = (*endch == '\0');
       } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "width_bg") == 0) {
-        line->bg.width = strtoul(reinterpret_cast<const char*>(attrs[i + 1]), O2G_NULLPTR, 10);
-        hasBgWidth = true;
+        char *endch;
+        line->bg.width = strtoul(reinterpret_cast<const char*>(attrs[i + 1]), &endch, 10);
+        line->bg.width = (*endch == '\0');
       } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "colour_bg") == 0) {
         hasBgColor = parse_color(attrs[i + 1], line->bg.color);
       } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "dashed") == 0) {
