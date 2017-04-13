@@ -42,6 +42,8 @@
 #error "Tree not enabled in libxml"
 #endif
 
+typedef std::map<std::string, unsigned int> ColorMap;
+
 class StyleSax {
   xmlSAXHandler handler;
 
@@ -79,6 +81,7 @@ public:
   std::vector<elemstyle_t *> styles;
 
 private:
+  ColorMap colors;
 
   void characters(const char *ch, int len);
   static void cb_characters(void *ts, const xmlChar *ch, int len) {
@@ -114,28 +117,56 @@ float zoom_to_scaledn(const float zoom) {
 
 /* --------------------- elemstyles.xml parsing ----------------------- */
 
-static bool parse_color(const xmlChar *color_str, elemstyle_color_t &color) {
+static bool parse_color(const xmlChar *color_str, elemstyle_color_t &color, ColorMap &colors) {
   bool ret = false;
+
+  const char * const col = reinterpret_cast<const char *>(color_str);
 
   /* if the color name contains a # it's a hex representation */
   /* we parse this directly since gdk_color_parse doesn't cope */
   /* with the alpha channel that may be present */
-  if(*color_str == '#' && strlen((const char*)color_str) == 9) {
-    char *err;
+  const char * const hash = strchr(col, '#');
+  std::string colname;
+  if(hash) {
+    if (strlen(hash + 1) == 8) {
+      char *err;
 
-    color = strtoul((const char*)color_str + 1, &err, 16);
+      color = strtoul(hash + 1, &err, 16);
 
-    ret = (*err == '\0') ? true : false;
+      ret = (*err == '\0') ? true : false;
+    } else {
+      GdkColor gdk_color;
+      if(gdk_color_parse(hash, &gdk_color)) {
+        color =
+              ((gdk_color.red   << 16) & 0xff000000) |
+              ((gdk_color.green <<  8) & 0xff0000) |
+              ((gdk_color.blue       ) & 0xff00) |
+               (0xff);
+
+        ret = true;
+      }
+    }
+    if(hash != col)
+      colname.assign(col, hash - col);
   } else {
-    GdkColor gdk_color;
-    if(gdk_color_parse((const gchar*)color_str, &gdk_color)) {
-      color =
-            ((gdk_color.red   << 16) & 0xff000000) |
-            ((gdk_color.green <<  8) & 0xff0000) |
-            ((gdk_color.blue       ) & 0xff00) |
-             (0xff);
+    colname = col;
+  }
 
-      ret = true;
+  if(!colname.empty()) {
+    const ColorMap::const_iterator it = colors.find(colname);
+    if(it == colors.end()) {
+      if(G_UNLIKELY(!hash)) {
+        printf("found invalid colour name reference '%s'\n", col);
+      } else {
+        colors[colname] = color;
+      }
+    } else {
+      if(hash == col) {
+        color = it->second;
+        ret = TRUE;
+      } else if(hash)
+        // check that the colors are the same if the key is specified multiple times
+        g_assert_cmpuint(it->second, ==, color);
     }
   }
 
@@ -148,7 +179,8 @@ bool parse_color(xmlNode *a_node, const char *name,
   bool ret = false;
 
   if(color_str) {
-    ret = parse_color(color_str, color);
+    ColorMap dummy;
+    ret = parse_color(color_str, color, dummy);
     xmlFree(color_str);
   }
   return ret;
@@ -296,7 +328,7 @@ void StyleSax::startElement(const xmlChar *name, const xmlChar **attrs)
 
     for(unsigned int i = 0; attrs[i]; i += 2) {
       if(strcmp(reinterpret_cast<const char *>(attrs[i]), "colour") == 0) {
-        hasColor = parse_color(attrs[i + 1], line->color);
+        hasColor = parse_color(attrs[i + 1], line->color, colors);
       } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "width") == 0) {
         char *endch;
         line->width = strtoul(reinterpret_cast<const char*>(attrs[i + 1]), &endch, 10);
@@ -310,7 +342,7 @@ void StyleSax::startElement(const xmlChar *name, const xmlChar **attrs)
         line->bg.width = strtoul(reinterpret_cast<const char*>(attrs[i + 1]), &endch, 10);
         line->bg.width = (*endch == '\0');
       } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "colour_bg") == 0) {
-        hasBgColor = parse_color(attrs[i + 1], line->bg.color);
+        hasBgColor = parse_color(attrs[i + 1], line->bg.color, colors);
       } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "dashed") == 0) {
         const char * const dval = reinterpret_cast<const char *>(attrs[i + 1]);
         if(parse_gboolean(dval, true_values)) {
@@ -349,7 +381,11 @@ void StyleSax::startElement(const xmlChar *name, const xmlChar **attrs)
     elemstyle_line_mod_t &line_mod = elemstyle->line_mod;
 
     for(unsigned int i = 0; attrs[i]; i += 2) {
-      if(strcmp(reinterpret_cast<const char *>(attrs[i]), "width") == 0)
+      if(strcmp(reinterpret_cast<const char *>(attrs[i]), "colour") == 0) {
+        elemstyle_color_t col;
+        if(parse_color(attrs[i + 1], col, colors))
+          line_mod.color = col;
+      } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "width") == 0)
         parse_width_mod(reinterpret_cast<const char *>(attrs[i + 1]), line_mod.line);
       else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "width_bg") == 0)
         parse_width_mod(reinterpret_cast<const char *>(attrs[i + 1]), line_mod.bg);
@@ -361,9 +397,9 @@ void StyleSax::startElement(const xmlChar *name, const xmlChar **attrs)
     elemstyle->type = ES_TYPE_AREA;
 
     bool hasColor = false;
-    for(unsigned int i = 0; attrs[i]; i += 2) {
+    for(unsigned int i = 0; attrs[i] && !hasColor; i += 2) {
       if(strcmp(reinterpret_cast<const char *>(attrs[i]), "colour") == 0)
-        hasColor = parse_color(attrs[i + 1], elemstyle->area.color);
+        hasColor = parse_color(attrs[i + 1], elemstyle->area.color, colors);
     }
 
     /* this has to be present */
@@ -540,7 +576,7 @@ void josm_elemstyles_colorize_node_functor::operator()(std::pair<item_id_t, node
   josm_elemstyles_colorize_node(style, node);
 }
 
-static int line_mod_apply(gint width, const elemstyle_width_mod_t *mod) {
+static int line_mod_apply_width(gint width, const elemstyle_width_mod_t *mod) {
   switch(mod->mod) {
   case ES_MOD_NONE:
   default:
@@ -668,7 +704,7 @@ void josm_elemstyles_colorize_way_functor::operator()(way_t *way) {
   if(line_mod) {
     printf("applying last matching line mod to way #" ITEM_ID_FORMAT "\n",
 	   way->id);
-    way->draw.width = line_mod_apply(way->draw.width, &line_mod->line);
+    way->draw.width = line_mod_apply_width(way->draw.width, &line_mod->line);
 
     /* special case: the way does not have a background, but it is to */
     /* be modified */
@@ -682,7 +718,9 @@ void josm_elemstyles_colorize_way_functor::operator()(way_t *way) {
       way->draw.bg.width =  way->draw.width;
     }
 
-    way->draw.bg.width = line_mod_apply(way->draw.bg.width, &line_mod->bg);
+    way->draw.bg.width = line_mod_apply_width(way->draw.bg.width, &line_mod->bg);
+    if(line_mod->color != 0)
+      way->draw.color = line_mod->color;
   }
 }
 

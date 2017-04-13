@@ -1,23 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
-a little help:
+A little help:
 1. every rule starts with <rule> and ends with </rule>
 2. every rule needs a condition
+	-k for the key (required)
+	-v for the value as a string
+	-b for the values yes / no (boolean, will also understand true, 1 and false, 0 respectively)
+	Both -v and -b are optional (but recommended). If both are ommitted, the rule will apply to all
+	tags with the given key.
 3. line attributes
-		- width absolute width in pixel in every zoom level
-		- realwidth relative width which will be scaled in meters, integer
-		- colour
-		- dashed x - dashed line, length of dashes / spaces in x pixels
-		- dashed x,y - dashed line, x length of dashes / spaces in y pixels
-4. area attributes
-		- colour
-5. icon attributes
-		- icon path to icon , relative from where this file is
+	- width absolute width in pixel in every zoom level
+	- realwidth relative width which will be scaled in meters, integer
+	- colour
+	- dashed x - dashed line, length of dashes / spaces in x pixels
+	- dashed x,y - dashed line, x length of dashes / spaces in y pixels
+4. linemod attributes
+	- width can be specified relative to modified way:
+	 +x - <x> pixels are added to way size
+	 -x - <x> pixels are subtracted from way size
+	 x% - the size is <x> percent of modified way
+	 If the size is <= 1 the minimum size of 1 is used.
+5. area attributes
+	- colour
+6. icon attributes
+	- icon (path to icon)
+	 - relative to the icon path
 
 Using both area and line attributes for the same key/value pair doesn't work!
+
+The colours can consist of the two components - name and hex code (e.g. water#0000ff).
+If both are given, the color name is introduced in preferences with that value. If only
+code is given (e.g. #0000ff), it is used directly. If only name is given, either user
+modified preferences or previous value is used. The 6 hex digit color code can also
+be appended by a hex value of the alpha channel (thus having 8 hex digits instead of 6).
 -->
 
 <rules>
-  <!--
+	<rule>
+		<condition k="bridge" b="yes"/>
+		<linemod mode="over" width="+4" colour="bridge#00008080" dashed="false"/>
+	</rule>
+	<rule>
+		<condition k="bridge" v="viaduct"/>
+		<linemod mode="over" width="+4" colour="bridge#00008080" dashed="false"/>
+	</rule>
+	<rule>
+		<condition k="bridge" v="aqueduct"/>
+		<linemod mode="over" width="+4" colour="bridge" dashed="false"/>
+	</rule>
+	<rule>
+		<condition k="bridge" v="movable"/>
+		<linemod mode="over" width="+4" colour="bridge#00008080" dashed="false"/>
+	</rule>
+	<rule>
+		<condition k="bridge" v="cantilever"/>
+		<linemod mode="over" width="+4" colour="bridge#00008080" dashed="false"/>
+	</rule>
+	<rule>
+		<condition k="bridge" v="covered"/>
+		<linemod mode="over" width="+4" colour="bridge#00008080" dashed="false"/>
+	</rule>
+	<rule>
+		<condition k="bridge" v="low_water_crossing"/>
+		<linemod mode="over" width="+4" colour="bridge#00008080" dashed="false"/>
+	</rule>
+	<rule>
+		<condition k="bridge" v="trestle"/>
+		<linemod mode="over" width="+4" colour="bridge#00008080" dashed="false"/>
+	</rule>
+	<rule>
+		<condition k="bridge" v="swing"/>
+		<linemod mode="over" width="+4" colour="bridge#00008080" dashed="false"/>
+	</rule>
+
+<!--restrictions tags -->
+<!--the restrictions rules should be placed before the path rule! -->
+
+	<rule>
+		<condition k="access" b="no"/>
+		<linemod mode="under" width="+2" colour="no#ff8080" dashed="2"/>
+		<icon src="vehicle/restriction/access.png" priority="-100"/>
+	</rule>
+	<rule>
+		<condition k="access" v="permissive"/>
+		<linemod mode="under" width="+2" colour="permissive#80ff80" dashed="2"/>
+		<icon annotate="true" src="misc/no_icon.png" priority="-100"/>
+	</rule>
+	<rule>
+		<condition k="access" v="private"/>
+		<linemod mode="under" width="+2" colour="private#ff8080" dashed="2"/>
+		<icon annotate="true" src="misc/no_icon.png" priority="-100"/>
+	</rule>
+	<rule>
+		<condition k="access" v="destination"/>
+		<linemod mode="under" width="+2" colour="destination#8080ff" dashed="2"/>
+		<icon annotate="true" src="misc/no_icon.png" priority="-100"/>
+	</rule>
+	<rule>
+		<condition k="bicycle" b="no"/>
+		<icon src="vehicle/restriction/bicycle.png" priority="-100"/>
+	</rule>
+ <!--
     Karlsruhe schema address interpolation:
     http://wiki.openstreetmap.org/wiki/Proposed_features/House_numbers/Karlsruhe_Schema
   -->
@@ -226,6 +309,13 @@ Using both area and line attributes for the same key/value pair doesn't work!
 		<scale_max>50000</scale_max>
 	</rule>
 
+	<rule>
+		<condition k="barrier" v="bollard" />
+		<icon annotate="true" src="vehicle/restrictions/bollard.png" />
+		<line width="3" colour="barrier#F0F050" dashed="3,9"/>
+		<scale_min>1</scale_min>
+		<scale_max>50000</scale_max>
+	</rule>
 	<rule>
 		<condition k="highway" v="gate" />
 		<icon annotate="true" src="vehicle/gate.png" />
@@ -2383,13 +2473,6 @@ Using both area and line attributes for the same key/value pair doesn't work!
 		<icon annotate="true" src="misc/proposed.png" />
 		<scale_min>1</scale_min>
 		<scale_max>50000</scale_max>
-	</rule>
-
-	<rule>
-		<condition k="barrier" v="bollard" />
-		<icon annotate="true" src="vehicle/restrictions/bollard.png" />
-		<scale_min>1</scale_min>
-		<scale_max>5000</scale_max>
 	</rule>
 	<rule>
 		<condition k="building" v="yes"/>

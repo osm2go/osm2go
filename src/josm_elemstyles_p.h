@@ -21,12 +21,15 @@
 #define JOSM_ELEMSTYLES_P_H
 
 #include "josm_elemstyles.h"
-#include <osm2go_cpp.h>
+
+#include <cstring>
 #if __cplusplus >= 201103L
 #include <cstdint>
 #else
 #include <stdint.h>
 #endif
+
+#include <osm2go_cpp.h>
 
 struct elemstyle_condition_t {
     elemstyle_condition_t(xmlChar *k, xmlChar *v) : key(k), value(v), isBool(false) {}
@@ -85,9 +88,10 @@ struct elemstyle_width_mod_t {
 
 struct elemstyle_line_mod_t {
   elemstyle_width_mod_t line, bg;
+  elemstyle_color_t color;
 } __attribute__ ((packed));
 
-G_STATIC_ASSERT(sizeof(elemstyle_line_mod_t) == 4);
+G_STATIC_ASSERT(sizeof(elemstyle_line_mod_t) == 4 + sizeof(elemstyle_color_t));
 
 struct elemstyle_area_t {
   elemstyle_color_t color;
@@ -106,9 +110,9 @@ struct elemstyle_icon_t {
 struct elemstyle_t {
   elemstyle_t()
     : type(ES_TYPE_NONE)
-    , line(O2G_NULLPTR)
     , zoom_max(0.0f)
   {
+    memset(&line_mod, 0, sizeof(line_mod));
   }
   ~elemstyle_t();
 
@@ -125,5 +129,8 @@ struct elemstyle_t {
   float zoom_max;
   elemstyle_icon_t icon;
 };
+
+G_STATIC_ASSERT(sizeof(elemstyle_line_mod_t) >= sizeof(elemstyle_line_t*));
+G_STATIC_ASSERT(sizeof(elemstyle_line_mod_t) >= sizeof(elemstyle_area_t));
 
 #endif // JOSM_ELEMSTYLES_P_H
