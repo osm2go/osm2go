@@ -376,7 +376,8 @@ static gboolean track_append_position(appdata_t *appdata, const pos_t *pos, floa
   } else
     printf("appending to current segment\n");
 
-  std::vector<track_point_t> &points = track->segments.back().track_points;
+  track_seg_t &seg = track->segments.back();
+  std::vector<track_point_t> &points = seg.track_points;
 
   /* don't append if point is the same as last time */
   gboolean ret;
@@ -392,12 +393,12 @@ static gboolean track_append_position(appdata_t *appdata, const pos_t *pos, floa
     if(G_UNLIKELY(points.size() == 1)) {
       /* the segment can now be drawn for the first time */
       printf("initial draw\n");
-      g_assert(track->segments.back().item_chain.empty());
-      map_track_draw_seg(appdata->map, track->segments.back());
+      g_assert(seg.item_chain.empty());
+      map_track_draw_seg(appdata->map, seg);
     } else {
       /* the segment has to be updated */
-      g_assert(!track->segments.back().item_chain.empty());
-      map_track_update_seg(appdata->map, track->segments.back());
+      g_assert(!seg.item_chain.empty());
+      map_track_update_seg(appdata->map, seg);
     }
   }
 
