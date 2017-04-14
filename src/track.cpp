@@ -390,14 +390,13 @@ static gboolean track_append_position(appdata_t *appdata, const pos_t *pos, floa
     track->dirty = true;
     points.push_back(track_point_t(*pos, alt, time(O2G_NULLPTR)));
 
-    if(G_UNLIKELY(points.size() == 1)) {
+    if(seg.item_chain.empty()) {
       /* the segment can now be drawn for the first time */
       printf("initial draw\n");
       g_assert(seg.item_chain.empty());
       map_track_draw_seg(appdata->map, seg);
     } else {
       /* the segment has to be updated */
-      g_assert(!seg.item_chain.empty());
       map_track_update_seg(appdata->map, seg);
     }
   }
