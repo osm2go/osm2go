@@ -340,7 +340,7 @@ void StyleSax::startElement(const xmlChar *name, const xmlChar **attrs)
       } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "width_bg") == 0) {
         char *endch;
         line->bg.width = strtoul(reinterpret_cast<const char*>(attrs[i + 1]), &endch, 10);
-        line->bg.width = (*endch == '\0');
+        hasBgWidth = (*endch == '\0');
       } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "colour_bg") == 0) {
         hasBgColor = parse_color(attrs[i + 1], line->bg.color, colors);
       } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "dashed") == 0) {
