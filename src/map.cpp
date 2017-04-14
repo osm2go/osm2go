@@ -2167,6 +2167,12 @@ void map_track_draw_seg(map_t *map, track_seg_t &seg) {
       it++;
     }
 
+    if(it == itEnd) {
+      // the segment ends in a segment that is not on screen
+      map->elements_drawn = 0;
+      return;
+    }
+
     int visible = 0;
 
     /* count nodes that _are_ on screen */
