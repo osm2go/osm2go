@@ -358,6 +358,20 @@ static void presets_item_dialog(presets_context_t *context,
 
     if(changed)
       context->tag_context->info_tags_replace();
+
+    std::vector<presets_item_t *> &lru = appdata->presets->lru;
+    std::vector<presets_item_t *>::iterator it = std::find(lru.begin(),
+                                                           lru.end(), item);
+    // if it is already the first item in the list nothing is to do
+    if(it == lru.end()) {
+      // drop the oldest ones if too many
+      if(lru.size() >= LRU_MAX)
+        lru.resize(LRU_MAX - 1);
+      lru.insert(lru.begin(), const_cast<presets_item *>(item));
+    } else if(it != lru.begin()) {
+      // move to front
+      std::rotate(lru.begin(), it, it + 1);
+    }
   }
 
   if(has_interactive_widget)
@@ -478,7 +492,7 @@ void build_menu_functor::operator()(presets_item_t *item)
       g_signal_connect(menu_item, "activate",
                        GTK_SIGNAL_FUNC(cb_menu_item), context);
 
-      if(item->matches(context->tag_context->tags)) {
+      if(matches && item->matches(context->tag_context->tags)) {
         if(!*matches)
           *matches = gtk_menu_new();
 
@@ -534,6 +548,7 @@ static GtkWidget *presets_picker(presets_context_t *context,
                                  const std::vector<presets_item_t *> &items,
                                  bool scan_for_recent);
 static GtkWidget *preset_picker_recent(presets_context_t *context);
+static GtkWidget *preset_picker_lru(presets_context_t *context);
 
 static void remove_sub(presets_item_group *sub_item) {
   if(sub_item->widget) {
@@ -575,13 +590,14 @@ on_presets_picker_selected(GtkTreeSelection *selection, gpointer data) {
 
   presets_item_named *item = O2G_NULLPTR;
   presets_item_group *sub_item = O2G_NULLPTR;
+  const char *text = O2G_NULLPTR;
   gtk_tree_model_get(model, &iter,
                      PRESETS_PICKER_COL_SUBMENU_PTR, &sub_item,
                      PRESETS_PICKER_COL_ITEM_PTR, &item,
+                     PRESETS_PICKER_COL_NAME, &text,
                      -1);
 
-  printf("clicked on %s, submenu = %p (%s)\n",
-         item ? item->name.c_str() : "''",
+  printf("clicked on %s, submenu = %p (%s)\n", text,
          sub_item, sub_item ? sub_item->name.c_str() : "");
 
   GtkWidget * const view = GTK_WIDGET(gtk_tree_selection_get_tree_view(selection));
@@ -598,7 +614,7 @@ on_presets_picker_selected(GtkTreeSelection *selection, gpointer data) {
     /* check if this already had a submenu */
     GtkWidget *sub = O2G_NULLPTR;
     if(context->submenus.empty()) {
-      // check if "Used Presets" is shown
+      // check if dynamic submenu is shown
       sub = GTK_WIDGET(g_object_get_data(G_OBJECT(view), "sub"));
       if(sub) {
         g_object_set_data(G_OBJECT(view), "sub", O2G_NULLPTR);
@@ -629,12 +645,16 @@ on_presets_picker_selected(GtkTreeSelection *selection, gpointer data) {
       }
       context->submenus.push_back(sub_item);
     } else {
-      /* used presets submenu */
+      // dynamic submenu
       // this is always on top level, so all old submenu entries can be removed
       std::for_each(context->submenus.begin(), context->submenus.end(), remove_sub);
       context->submenus.clear();
-      sub = preset_picker_recent(context);
-      g_object_set_data(G_OBJECT(view), "sub", (gpointer)sub);
+      if (strcmp(text, _("Used presets")) == 0)
+        sub = preset_picker_recent(context);
+      else
+        sub = preset_picker_lru(context);
+
+      g_object_set_data(G_OBJECT(view), "sub", sub);
     }
 
     /* views parent is a scrolled window whichs parent in turn is the hbox */
@@ -730,6 +750,7 @@ static GtkTreeIter preset_insert_item(const presets_item_named *item, icon_t **i
   return iter;
 }
 
+template<bool b>
 struct insert_recent_items {
   const presets_context_t * const context;
   GtkListStore * const store;
@@ -737,7 +758,10 @@ struct insert_recent_items {
   void operator()(const presets_item_t *preset);
 };
 
-void insert_recent_items::operator()(const presets_item_t *preset)
+/**
+ * @brief match those members that are used in the preset or a group containing such an item
+ */
+template<> void insert_recent_items<false>::operator()(const presets_item_t *preset)
 {
   if(preset->type & presets_item_t::TY_GROUP) {
     const presets_item_group *gr = static_cast<const presets_item_group *>(preset);
@@ -748,12 +772,30 @@ void insert_recent_items::operator()(const presets_item_t *preset)
                        &context->appdata->icon, store);
 }
 
+/**
+ * @brief match any member in the list that has a matching type
+ */
+template<> void insert_recent_items<true>::operator()(const presets_item_t *preset)
+{
+  if(preset->type & context->tag_context->presets_type)
+    preset_insert_item(static_cast<const presets_item_named *>(preset),
+                       &context->appdata->icon, store);
+}
+
 static GtkWidget *preset_picker_recent(presets_context_t *context) {
   GtkTreeView *view;
-  insert_recent_items fc(context, presets_picker_store(&view));
+  insert_recent_items<false> fc(context, presets_picker_store(&view));
 
-  const std::vector<presets_item_t *> &items = context->appdata->presets->items;
-  std::for_each(items.begin(), items.end(), fc);
+  std::for_each(context->appdata->presets->items.begin(), context->appdata->presets->items.end(), fc);
+
+  return presets_picker_embed(view, fc.store, context);
+}
+
+static GtkWidget *preset_picker_lru(presets_context_t *context) {
+  GtkTreeView *view;
+  insert_recent_items<true> fc(context, presets_picker_store(&view));
+
+  std::for_each(context->appdata->presets->lru.begin(), context->appdata->presets->lru.end(), fc);
 
   return presets_picker_embed(view, fc.store, context);
 }
@@ -798,6 +840,14 @@ void picker_add_functor::operator()(const presets_item_t *item)
   }
 }
 
+struct matching_type_functor {
+  const unsigned int type; ///< the type to match
+  matching_type_functor(unsigned int t) : type(t) {}
+  bool operator()(const presets_item_t *item) {
+    return item->type & type;
+  }
+};
+
 /**
  * @brief create a picker list for preset items
  * @param context the tag context
@@ -810,17 +860,30 @@ void picker_add_functor::operator()(const presets_item_t *item)
  */
 static GtkWidget *
 presets_picker(presets_context_t *context, const std::vector<presets_item_t *> &items,
-                bool scan_for_recent) {
+                bool top_level) {
   GtkTreeView *view;
   GtkListStore *store = presets_picker_store(&view);
 
   bool show_recent = false;
   GdkPixbuf *subicon = icon_load(&context->appdata->icon,
                                  "submenu_arrow");
-  picker_add_functor fc(context, store, subicon, scan_for_recent, show_recent);
+  picker_add_functor fc(context, store, subicon, top_level, show_recent);
 
   std::for_each(items.begin(), items.end(), fc);
+  const std::vector<presets_item_t *> &lru = context->appdata->presets->lru;
 
+  if(top_level &&
+     std::find_if(lru.begin(), lru.end(),
+                  matching_type_functor(context->tag_context->presets_type)) != lru.end()) {
+    GtkTreeIter     iter;
+
+    /* Append a row and fill in some data */
+    gtk_list_store_prepend(store, &iter);
+    gtk_list_store_set(store, &iter,
+                       PRESETS_PICKER_COL_NAME, _("Last used presets"),
+                       PRESETS_PICKER_COL_SUBMENU_ICON, subicon,
+		       -1);
+  }
   if(show_recent) {
     GtkTreeIter     iter;
 
@@ -855,6 +918,15 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event,
     if (!context->menu) {
       GtkWidget *matches = O2G_NULLPTR;
       context->menu = build_menu(context, context->appdata->presets->items, &matches);
+      if(!context->appdata->presets->lru.empty()) {
+        // This will not update the menu while the dialog is open. Not worth the effort.
+        GtkWidget *menu_item = gtk_menu_item_new_with_label(_("Last used presets"));
+        GtkWidget *lrumenu = build_menu(context, context->appdata->presets->lru, NULL);
+
+        gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item), lrumenu);
+        gtk_menu_shell_prepend(GTK_MENU_SHELL(context->menu), gtk_separator_menu_item_new());
+        gtk_menu_shell_prepend(GTK_MENU_SHELL(context->menu), menu_item);
+      }
       if(matches) {
         GtkWidget *menu_item = gtk_menu_item_new_with_label(_("Used presets"));
 

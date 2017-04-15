@@ -1088,6 +1088,11 @@ presets_item_group::~presets_item_group()
   std::for_each(items.begin(), items.end(), free_item);
 }
 
+presets_items::presets_items()
+{
+  lru.reserve(LRU_MAX);
+}
+
 presets_items::~presets_items()
 {
   std::for_each(items.begin(), items.end(), free_item);

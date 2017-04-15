@@ -300,10 +300,14 @@ public:
   std::vector<presets_item_t *> items;
 };
 
+#define LRU_MAX 10	///< how many items we want in presets_items::lru at most
+
 struct presets_items {
+  presets_items();
   ~presets_items();
   std::vector<presets_item_t *> items;
   std::vector<presets_item_t *> chunks;
+  std::vector<presets_item_t *> lru;
 
   bool addFile(const std::string &filename, const std::string &basepath);
 };
