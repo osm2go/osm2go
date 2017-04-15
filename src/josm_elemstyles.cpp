@@ -586,7 +586,7 @@ static int line_mod_apply_width(gint width, const elemstyle_width_mod_t *mod) {
     return width + mod->width;
 
   case ES_MOD_SUB:
-    return width - mod->width;
+    return std::max(width - mod->width, 1);
 
   case ES_MOD_PERCENT:
     return 100 * width / mod->width;
