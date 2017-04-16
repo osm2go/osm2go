@@ -909,76 +909,76 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event,
 			 gpointer data) {
   presets_context_t *context = (presets_context_t*)data;
 
-  if(event->type == GDK_BUTTON_PRESS) {
-    printf("button press %d %d\n", event->button, event->time);
+  if(event->type != GDK_BUTTON_PRESS)
+    return FALSE;
+
+  printf("button press %d %d\n", event->button, event->time);
 
 #ifndef PICKER_MENU
-    (void)widget;
+  (void)widget;
 
-    if (!context->menu) {
-      GtkWidget *matches = O2G_NULLPTR;
-      context->menu = build_menu(context, context->appdata->presets->items, &matches);
-      if(!context->appdata->presets->lru.empty()) {
-        // This will not update the menu while the dialog is open. Not worth the effort.
-        GtkWidget *menu_item = gtk_menu_item_new_with_label(_("Last used presets"));
-        GtkWidget *lrumenu = build_menu(context, context->appdata->presets->lru, NULL);
+  if (!context->menu) {
+    GtkWidget *matches = O2G_NULLPTR;
+    context->menu = build_menu(context, context->appdata->presets->items, &matches);
+    if(!context->appdata->presets->lru.empty()) {
+      // This will not update the menu while the dialog is open. Not worth the effort.
+      GtkWidget *menu_item = gtk_menu_item_new_with_label(_("Last used presets"));
+      GtkWidget *lrumenu = build_menu(context, context->appdata->presets->lru, NULL);
 
-        gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item), lrumenu);
-        gtk_menu_shell_prepend(GTK_MENU_SHELL(context->menu), gtk_separator_menu_item_new());
-        gtk_menu_shell_prepend(GTK_MENU_SHELL(context->menu), menu_item);
-      }
-      if(matches) {
-        GtkWidget *menu_item = gtk_menu_item_new_with_label(_("Used presets"));
-
-        gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item), matches);
-        gtk_menu_shell_prepend(GTK_MENU_SHELL(context->menu), gtk_separator_menu_item_new());
-        gtk_menu_shell_prepend(GTK_MENU_SHELL(context->menu), menu_item);
-      }
+      gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item), lrumenu);
+      gtk_menu_shell_prepend(GTK_MENU_SHELL(context->menu), gtk_separator_menu_item_new());
+      gtk_menu_shell_prepend(GTK_MENU_SHELL(context->menu), menu_item);
     }
-    gtk_widget_show_all( GTK_WIDGET(context->menu) );
+    if(matches) {
+      GtkWidget *menu_item = gtk_menu_item_new_with_label(_("Used presets"));
 
-    gtk_menu_popup(GTK_MENU(context->menu), O2G_NULLPTR, O2G_NULLPTR, O2G_NULLPTR, O2G_NULLPTR,
-		   event->button, event->time);
+      gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item), matches);
+      gtk_menu_shell_prepend(GTK_MENU_SHELL(context->menu), gtk_separator_menu_item_new());
+      gtk_menu_shell_prepend(GTK_MENU_SHELL(context->menu), menu_item);
+    }
+  }
+  gtk_widget_show_all( GTK_WIDGET(context->menu) );
+
+  gtk_menu_popup(GTK_MENU(context->menu), O2G_NULLPTR, O2G_NULLPTR, O2G_NULLPTR, O2G_NULLPTR,
+                 event->button, event->time);
 #else
-    g_assert(context->submenus.empty());
-    /* popup our special picker like menu */
-    GtkWidget *dialog =
+  g_assert(context->submenus.empty());
+  /* popup our special picker like menu */
+  GtkWidget *dialog =
       gtk_dialog_new_with_buttons(_("Presets"),
 		  GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(widget))),
 				  GTK_DIALOG_MODAL,
           GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
 	  O2G_NULLPTR);
 
-    gtk_window_set_default_size(GTK_WINDOW(dialog), 400, 480);
+  gtk_window_set_default_size(GTK_WINDOW(dialog), 400, 480);
 
-    /* create root picker */
-    GtkWidget *hbox = gtk_hbox_new(TRUE, 0);
+  /* create root picker */
+  GtkWidget *hbox = gtk_hbox_new(TRUE, 0);
 
-    GtkWidget *root = presets_picker(context, context->appdata->presets->items, true);
-    gtk_box_pack_start_defaults(GTK_BOX(hbox), root);
+  GtkWidget *root = presets_picker(context, context->appdata->presets->items, true);
+  gtk_box_pack_start_defaults(GTK_BOX(hbox), root);
 
-    gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox);
+  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox);
 
-    gtk_widget_show_all(dialog);
-    presets_item *item = O2G_NULLPTR;
-    if(gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT)
-      item = static_cast<presets_item *>(g_object_get_data(G_OBJECT(dialog), "item"));
+  gtk_widget_show_all(dialog);
+  presets_item *item = O2G_NULLPTR;
+  if(gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT)
+    item = static_cast<presets_item *>(g_object_get_data(G_OBJECT(dialog), "item"));
 
-    gtk_widget_destroy(dialog);
+  gtk_widget_destroy(dialog);
 
-    // remove all references to the already destroyed widgets
-    std::for_each(context->submenus.begin(), context->submenus.end(), remove_sub_reference);
-    context->submenus.clear();
+  // remove all references to the already destroyed widgets
+  std::for_each(context->submenus.begin(), context->submenus.end(), remove_sub_reference);
+  context->submenus.clear();
 
-    if(item)
-      presets_item_dialog(context, item);
+  if(item)
+    presets_item_dialog(context, item);
 #endif
 
-    /* Tell calling code that we have handled this event; the buck
-     * stops here. */
-    return TRUE;
-  }
-  return FALSE;
+  /* Tell calling code that we have handled this event; the buck
+   * stops here. */
+  return TRUE;
 }
 
 static gint on_button_destroy(gpointer data) {
