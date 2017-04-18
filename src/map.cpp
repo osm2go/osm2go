@@ -68,17 +68,8 @@ map_t::map_t(appdata_t *a, style_t *s)
   }
 }
 
-static void osm_tag_members_free(tag_t tag) {
-  g_free(tag.key);
-  g_free(tag.value);
-}
-
 map_t::~map_t()
 {
-  /* free buffered tags */
-  std::for_each(last_node_tags.begin(), last_node_tags.end(), osm_tag_members_free);
-  std::for_each(last_way_tags.begin(), last_way_tags.end(), osm_tag_members_free);
-
   map_state_free(state);
 
   delete style;
@@ -455,17 +446,10 @@ void map_item_deselect(map_t *map) {
 
   /* save tags for "last" function in info dialog */
   if(map->selected.object.is_real() && map->selected.object.obj->tags.hasRealTags()) {
-    std::vector<tag_t> clear;
-    if(map->selected.object.type == NODE) {
-      clear.swap(map->last_node_tags);
-
+    if(map->selected.object.type == NODE)
       map->last_node_tags = map->selected.object.obj->tags.asVector();
-    } else if(map->selected.object.type == WAY) {
-      clear.swap(map->last_way_tags);
-
+    else if(map->selected.object.type == WAY)
       map->last_way_tags = map->selected.object.obj->tags.asVector();
-    }
-    std::for_each(clear.begin(), clear.end(), osm_tag_members_free);
   }
 
   /* remove statusbar message */

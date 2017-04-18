@@ -255,6 +255,17 @@ struct tag_t {
   bool update(const char *nkey, const char *nvalue);
 };
 
+/**
+ * @brief a std::string version of tag_t for easy use as temporary storage
+ */
+struct stag_t {
+  stag_t(const std::string &k, const std::string &v)
+    : key(k), value(v) { }
+
+  std::string key;
+  std::string value;
+};
+
 class tag_list_t {
 public:
   tag_list_t();
@@ -295,7 +306,7 @@ public:
    * The memory in the tags will be duplicated, the caller must take care
    * of it's release.
    */
-  std::vector<tag_t> asVector() const;
+  std::vector<stag_t> asVector() const;
 
   /**
    * @brief copy the contained tags
@@ -446,7 +457,7 @@ void osm_members_free(std::vector<member_t> &members);
 void osm_tag_free(tag_t *tag);
 
 /* ----------- edit functions ----------- */
-std::vector<tag_t *> osm_tags_list_copy(const std::vector<tag_t> &tags);
+std::vector<tag_t *> osm_tags_list_copy(const std::vector<stag_t> &tags);
 
 #endif
 

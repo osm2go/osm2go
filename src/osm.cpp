@@ -1825,15 +1825,13 @@ void way_t::rotate(node_chain_t::iterator nfirst) {
   std::rotate(node_chain.begin(), nfirst, node_chain.end());
 }
 
-std::vector<tag_t> tag_list_t::asVector() const
+std::vector<stag_t> tag_list_t::asVector() const
 {
-  std::vector<tag_t> new_tags;
+  std::vector<stag_t> new_tags;
 
   for(const tag_t *src_tag = contents; src_tag; src_tag = src_tag->next) {
-    if(!src_tag->is_creator_tag()) {
-      tag_t dst_tag(g_strdup(src_tag->key), g_strdup(src_tag->value));
-      new_tags.push_back(dst_tag);
-    }
+    if(G_LIKELY(!src_tag->is_creator_tag()))
+      new_tags.push_back(stag_t(src_tag->key, src_tag->value));
   }
 
   return new_tags;
@@ -1843,6 +1841,9 @@ struct tag_vector_functor {
   std::vector<tag_t *> &tags;
   tag_vector_functor(std::vector<tag_t *> &t) : tags(t) {}
   void operator()(const tag_t &otag) {
+    if(G_UNLIKELY(otag.is_creator_tag()))
+      return;
+
     tag_t *tag = g_new0(tag_t, 1);
     tag->key = otag.key;
     tag->value = otag.value;
@@ -1852,12 +1853,11 @@ struct tag_vector_functor {
 
 std::vector<tag_t *> tag_list_t::asPointerVector() const
 {
-  const std::vector<tag_t> &ntags = asVector();
   std::vector<tag_t *> ret;
+  tag_vector_functor fc(ret);
 
-  ret.reserve(ntags.size());
-
-  std::for_each(ntags.begin(), ntags.end(), tag_vector_functor(ret));
+  for(const tag_t *src_tag = contents; src_tag; src_tag = src_tag->next)
+    fc(*src_tag);
 
   return ret;
 }
@@ -1865,18 +1865,18 @@ std::vector<tag_t *> tag_list_t::asPointerVector() const
 struct tags_list_copy_functor {
   std::vector<tag_t *> &new_tags;
   tags_list_copy_functor(std::vector<tag_t *> &n) : new_tags(n) {}
-  void operator()(const tag_t &tag);
+  void operator()(const stag_t &tag);
 };
 
-void tags_list_copy_functor::operator()(const tag_t &tag)
+void tags_list_copy_functor::operator()(const stag_t &tag)
 {
   tag_t *n = g_new0(tag_t, 1);
-  n->key = g_strdup(tag.key);
-  n->value = g_strdup(tag.value);
+  n->key = g_strdup(tag.key.c_str());
+  n->value = g_strdup(tag.value.c_str());
   new_tags.push_back(n);
 }
 
-std::vector<tag_t *> osm_tags_list_copy(const std::vector<tag_t> &tags) {
+std::vector<tag_t *> osm_tags_list_copy(const std::vector<stag_t> &tags) {
   std::vector<tag_t *> new_tags;
 
   std::for_each(tags.begin(), tags.end(), tags_list_copy_functor(new_tags));
