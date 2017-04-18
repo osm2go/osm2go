@@ -78,13 +78,13 @@ void main_ui_enable(appdata_t *appdata) {
   const char *cstr = "OSM2go";
 #ifdef USE_HILDON
   if(project_valid)
-    cstr = str = g_markup_printf_escaped("<b>%s</b> - OSM2Go",
+    cstr = str = g_markup_printf_escaped(_("<b>%s</b> - OSM2Go"),
                                          appdata->project->name.c_str());
 
   hildon_window_set_markup(HILDON_WINDOW(appdata->window), cstr);
 #else
   if(project_valid)
-    cstr = str = g_strconcat(appdata->project->name.c_str(), " - OSM2Go", O2G_NULLPTR);
+    cstr = str = g_strdup_printf(_("%s - OSM2Go"), appdata->project->name.c_str());
 
   gtk_window_set_title(GTK_WINDOW(appdata->window), cstr);
 #endif
