@@ -1054,21 +1054,6 @@ const char *osm_t::sanity_check() const {
 
 /* ------------------------- misc access functions -------------- */
 
-struct node_in_other_way {
-  const way_t * const way;
-  const node_t * const node;
-  node_in_other_way(const way_t *w, const node_t *n) : way(w), node(n) {}
-  int operator()(const std::pair<item_id_t, way_t *> &pair) {
-    return (pair.second != way) && pair.second->contains_node(node);
-  }
-};
-
-/* return true if node is part of other way than this one */
-bool osm_node_in_other_way(const osm_t *osm, const way_t *way, const node_t *node) {
-  const std::map<item_id_t, way_t *>::const_iterator itEnd = osm->ways.end();
-  return std::find_if(osm->ways.begin(), itEnd, node_in_other_way(way, node)) != itEnd;
-}
-
 struct tag_to_xml {
   xmlNodePtr const node;
   const bool keep_created;

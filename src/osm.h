@@ -443,7 +443,6 @@ void osm_node_chain_free(node_chain_t &node_chain);
 void osm_member_free(member_t &member);
 void osm_members_free(std::vector<member_t> &members);
 
-bool osm_node_in_other_way(const osm_t *osm, const way_t *way, const node_t *node);
 void osm_tag_free(tag_t *tag);
 
 /* ----------- edit functions ----------- */
