@@ -24,7 +24,7 @@ int main(int argc, char **argv)
   osm_path += "/";
   osm_path += argv[2];
   osm_path += ".osm";
-  osm_t *osm = osm_parse(std::string(), osm_path.c_str(), &icons);
+  osm_t *osm = osm_t::parse(std::string(), osm_path.c_str(), &icons);
   if(!osm) {
     std::cerr << "cannot open " << argv[1] << argv[2] << ": " << strerror(errno) << std::endl;
     return 1;

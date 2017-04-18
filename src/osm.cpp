@@ -243,7 +243,7 @@ static tag_t *tag_from_xml(xmlChar *k, xmlChar *v) {
   return ret;
 }
 
-tag_t *osm_parse_osm_tag(xmlNode *a_node) {
+tag_t *osm_t::parse_tag(xmlNode *a_node) {
   tag_t *tag = tag_from_xml(xmlGetProp(a_node, BAD_CAST "k"),
                             xmlGetProp(a_node, BAD_CAST "v"));
   if(tag) {
@@ -429,7 +429,7 @@ static void way_free(std::pair<item_id_t, way_t *> pair) {
   delete pair.second;
 }
 
-node_t *osm_parse_osm_way_nd(osm_t *osm, xmlNode *a_node) {
+node_t *osm_t::parse_way_nd(xmlNode *a_node) const {
   xmlChar *prop;
   node_t *node = O2G_NULLPTR;
 
@@ -437,7 +437,7 @@ node_t *osm_parse_osm_way_nd(osm_t *osm, xmlNode *a_node) {
     item_id_t id = strtoll((char*)prop, O2G_NULLPTR, 10);
 
     /* search matching node */
-    node = osm->node_by_id(id);
+    node = node_by_id(id);
     if(!node)
       printf("Node id " ITEM_ID_FORMAT " not found\n", id);
     else
@@ -481,7 +481,7 @@ static void osm_relation_free_pair(std::pair<item_id_t, relation_t *> pair) {
   delete pair.second;
 }
 
-member_t osm_parse_osm_relation_member(osm_t *osm, xmlNode *a_node) {
+member_t osm_t::parse_relation_member(xmlNode *a_node) {
   xmlChar *prop;
   member_t member(ILLEGAL);
 
@@ -505,7 +505,7 @@ member_t osm_parse_osm_relation_member(osm_t *osm, xmlNode *a_node) {
 
     case WAY:
       /* search matching way */
-      member.object.way = osm->way_by_id(id);
+      member.object.way = way_by_id(id);
       if(!member.object.way) {
 	member.object.type = WAY_ID;
 	member.object.id = id;
@@ -514,7 +514,7 @@ member_t osm_parse_osm_relation_member(osm_t *osm, xmlNode *a_node) {
 
     case NODE:
       /* search matching node */
-      member.object.node = osm->node_by_id(id);
+      member.object.node = node_by_id(id);
       if(!member.object.node) {
 	member.object.type = NODE_ID;
 	member.object.id = id;
@@ -523,7 +523,7 @@ member_t osm_parse_osm_relation_member(osm_t *osm, xmlNode *a_node) {
 
     case RELATION:
       /* search matching relation */
-      member.object.relation = osm->relation_by_id(id);
+      member.object.relation = relation_by_id(id);
       if(!member.object.relation) {
 	member.object.type = NODE_ID;
 	member.object.id = id;
@@ -1015,7 +1015,7 @@ static osm_t *process_file(const char *filename) {
 
 #include <sys/time.h>
 
-osm_t *osm_parse(const std::string &path, const std::string &filename, icon_t **icon) {
+osm_t *osm_t::parse(const std::string &path, const std::string &filename, icon_t **icon) {
 
   struct timeval start;
   gettimeofday(&start, O2G_NULLPTR);
@@ -2268,15 +2268,15 @@ osm_t::~osm_t()
                 osm_relation_free_pair);
 }
 
-node_t *osm_t::node_by_id(item_id_t id) {
+node_t *osm_t::node_by_id(item_id_t id) const {
   return osm_find_by_id<node_t>(nodes, id);
 }
 
-way_t *osm_t::way_by_id(item_id_t id) {
+way_t *osm_t::way_by_id(item_id_t id) const {
   return osm_find_by_id<way_t>(ways, id);
 }
 
-relation_t *osm_t::relation_by_id(item_id_t id) {
+relation_t *osm_t::relation_by_id(item_id_t id) const {
   return osm_find_by_id<relation_t>(relations, id);
 }
 

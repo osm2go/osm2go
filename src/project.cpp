@@ -1420,7 +1420,7 @@ bool project_load(appdata_t *appdata, const std::string &name) {
 }
 
 osm_t *project_parse_osm(const project_t *project, struct icon_t **icons) {
-  return osm_parse(project->path, project->osm, icons);
+  return osm_t::parse(project->path, project->osm, icons);
 }
 
 const char *project_name(const project_t *project) {

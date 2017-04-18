@@ -139,8 +139,19 @@ typedef struct object_t {
 #ifdef __cplusplus
 }
 
+struct member_t {
+  explicit member_t(type_t t);
+  explicit member_t(const object_t &o, char *r = O2G_NULLPTR);
+
+  object_t object;
+  char   *role;
+
+  bool operator==(const member_t &other) const;
+  inline bool operator==(const object_t &other) const
+  { return object == other; }
+};
+
 struct osm_t {
-#ifdef __cplusplus
   ~osm_t();
 
   bounds_t *bounds;   // original bounds as they appear in the file
@@ -155,9 +166,9 @@ struct osm_t {
   std::map<int, std::string> users;   //< users where uid is given in XML
   std::vector<std::string> anonusers; //< users without uid
 
-  node_t *node_by_id(item_id_t id);
-  way_t *way_by_id(item_id_t id);
-  relation_t *relation_by_id(item_id_t id);
+  node_t *node_by_id(item_id_t id) const;
+  way_t *way_by_id(item_id_t id) const;
+  relation_t *relation_by_id(item_id_t id) const;
 
   node_t *node_new(const lpos_t &pos);
   node_t *node_new(const pos_t &pos);
@@ -188,7 +199,20 @@ struct osm_t {
    * The error string is a static one and must not be freed by the caller.
    */
   const char *sanity_check() const;
-#endif
+
+  /**
+   * @brief parse the XML node for tag values
+   * @param a_node the XML node to parse
+   * @returns a new tag structure on success
+   * @retval NULL the XML was invalid
+   */
+  static tag_t *parse_tag(xmlNode* a_node);
+
+  member_t parse_relation_member(xmlNode *a_node);
+
+  node_t *parse_way_nd(xmlNode *a_node) const;
+
+  static osm_t *parse(const std::string &path, const std::string &filename, struct icon_t **icons);
 };
 
 xmlChar *osm_generate_xml_changeset(const char* comment);
@@ -395,18 +419,6 @@ public:
   void cleanup();
 };
 
-struct member_t {
-  explicit member_t(type_t t);
-  explicit member_t(const object_t &o, char *r = O2G_NULLPTR);
-
-  object_t object;
-  char   *role;
-
-  bool operator==(const member_t &other) const;
-  inline bool operator==(const object_t &other) const
-  { return object == other; }
-};
-
 class relation_t : public base_object_t {
 public:
   explicit relation_t();
@@ -426,18 +438,6 @@ public:
   void cleanup();
 };
 
-osm_t *osm_parse(const std::string &path, const std::string &filename, struct icon_t **icons);
-/**
- * @brief parse the XML node for tag values
- * @param a_node the XML node to parse
- * @returns a new tag structure on success
- * @retval NULL the XML was invalid
- */
-tag_t *osm_parse_osm_tag(xmlNode* a_node);
-
-member_t osm_parse_osm_relation_member(osm_t *osm, xmlNode *a_node);
-
-node_t *osm_parse_osm_way_nd(osm_t *osm, xmlNode *a_node);
 void osm_node_chain_free(node_chain_t &node_chain);
 
 void osm_member_free(member_t &member);

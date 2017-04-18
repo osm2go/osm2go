@@ -319,7 +319,7 @@ static std::vector<tag_t *> xml_scan_tags(xmlNodePtr node) {
   while(node) {
     if(node->type == XML_ELEMENT_NODE) {
       if(G_LIKELY(strcmp((char*)node->name, "tag") == 0)) {
-        tag_t *tag = osm_parse_osm_tag(node);
+        tag_t *tag = osm_t::parse_tag(node);
         if(tag)
           ret.push_back(tag);
       }
@@ -506,7 +506,7 @@ static void diff_restore_way(xmlNodePtr node_node, osm_t *osm) {
     if(nd_node->type == XML_ELEMENT_NODE) {
       if(G_LIKELY(strcmp((char*)nd_node->name, "nd") == 0)) {
 	/* attach node to node_chain */
-	node_t *tmp = osm_parse_osm_way_nd(osm, nd_node);
+	node_t *tmp = osm->parse_way_nd(nd_node);
 	if(tmp)
 	  new_chain.push_back(tmp);
       }
@@ -625,7 +625,7 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
     if(member_node->type == XML_ELEMENT_NODE) {
       if(G_LIKELY(strcmp((char*)member_node->name, "member") == 0)) {
 	/* attach member to member_chain */
-	member_t member = osm_parse_osm_relation_member(osm, member_node);
+	member_t member = osm->parse_relation_member(member_node);
 	if(member.object.type != ILLEGAL)
           members.push_back(member);
       }
