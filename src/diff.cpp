@@ -516,18 +516,12 @@ static void diff_restore_way(xmlNodePtr node_node, osm_t *osm) {
   /* only replace the original nodes if new nodes have actually been */
   /* found. */
   if(!new_chain.empty()) {
-    if(way->node_chain == new_chain) {
-      osm_node_chain_free(new_chain);
-      new_chain.clear(); /* indicate that waypoints did not change */
-    } else {
-      /* way may be an existing way, so remove nodes to */
-      /* make space for new ones */
-      if(!way->node_chain.empty()) {
-        printf("  removing existing nodes for diff nodes\n");
-        osm_node_chain_free(way->node_chain);
-      }
-      way->node_chain.swap(new_chain);
-    }
+    bool sameChain = (way->node_chain == new_chain);
+    // it doesn't matter which chain is kept if they are the same, so just
+    // always swap as that keeps the code simpler
+    way->node_chain.swap(new_chain);
+    osm_node_chain_free(new_chain);
+    new_chain.clear();
 
     /* only replace tags if nodes have been found before. if no nodes */
     /* were found this wasn't a dirty entry but e.g. only the hidden */
@@ -538,7 +532,7 @@ static void diff_restore_way(xmlNodePtr node_node, osm_t *osm) {
       way->tags.replace(ntags);
     } else if (!ntags.empty()) {
       std::for_each(ntags.begin(), ntags.end(), osm_tag_free);
-      if (new_chain.empty()) {
+      if (sameChain) {
         printf("way " ITEM_ID_FORMAT " has the same nodes and tags as upstream, discarding diff\n", id);
         way->flags &= ~OSM_FLAG_DIRTY;
       }
