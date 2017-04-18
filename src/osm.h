@@ -216,8 +216,8 @@ struct tag_t {
 
   /**
    * @brief update the key and value
-   * @param key the new key
-   * @param value the new value
+   * @param nkey the new key
+   * @param nvalue the new value
    * @return if tag was actually changed
    *
    * This will update the key and value, but will avoid memory allocations

@@ -119,10 +119,10 @@ static void on_tag_remove(G_GNUC_UNUSED GtkWidget *button, tag_context_t *contex
 
 /**
  * @brief request user input for the given tag
- * @param context edit context
+ * @param window the parent window
  * @param tag the tag to change
  * @return if the tag was actually modified
- * @retval FALSE the tag is the same as before
+ * @retval false the tag is the same as before
  */
 static bool tag_edit(GtkWindow *window, tag_t &tag) {
   GtkWidget *dialog = misc_dialog_new(MISC_DIALOG_SMALL, _("Edit Tag"),
