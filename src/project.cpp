@@ -1423,10 +1423,6 @@ osm_t *project_parse_osm(const project_t *project, struct icon_t **icons) {
   return osm_t::parse(project->path, project->osm, icons);
 }
 
-const char *project_name(const project_t *project) {
-  return project->name.c_str();
-}
-
 project_t::project_t(const char *n, const char *base_path)
   : server(O2G_NULLPTR)
   , map_state(O2G_NULLPTR)
