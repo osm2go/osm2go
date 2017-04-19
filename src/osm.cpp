@@ -1165,8 +1165,6 @@ struct gen_xml_relation_functor {
 void gen_xml_relation_functor::operator()(const member_t &member)
 {
   xmlNodePtr m_node = xmlNewChild(xml_node,O2G_NULLPTR,BAD_CAST "member", O2G_NULLPTR);
-  gchar str[G_ASCII_DTOSTR_BUF_SIZE];
-  g_snprintf(str, sizeof(str), ITEM_ID_FORMAT, member.object.obj->id);
 
   switch(member.object.type) {
   case NODE:
@@ -1185,7 +1183,7 @@ void gen_xml_relation_functor::operator()(const member_t &member)
     break;
   }
 
-  xmlNewProp(m_node, BAD_CAST "ref", BAD_CAST str);
+  xmlNewProp(m_node, BAD_CAST "ref", BAD_CAST member.object.id_string().c_str());
 
   if(member.role)
     xmlNewProp(m_node, BAD_CAST "role", BAD_CAST member.role);
