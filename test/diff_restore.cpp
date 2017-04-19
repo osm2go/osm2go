@@ -30,6 +30,17 @@ int main(int argc, char **argv)
     return 1;
   }
 
+  const relation_t * const r255 = osm->relations[296255];
+  g_assert(r255 != NULL);
+  g_assert_cmpuint(r255->flags & OSM_FLAG_DIRTY, ==, 0);
+  g_assert_cmpuint(r255->members.size(), ==, 165);
+  const node_t * const n72 = osm->nodes[638499572];
+  const object_t r255m572(const_cast<node_t *>(n72));
+  std::vector<member_t>::const_iterator r255it = r255->find_member_object(r255m572);
+  g_assert(r255it != r255->members.end());
+  g_assert(r255it->role != 0);
+  g_assert(strcmp(r255it->role, "stop") == 0);
+
   g_assert_cmpuint(10, ==, osm->nodes.size());
   g_assert_cmpuint(3, ==, osm->ways.size());
   g_assert_cmpuint(3, ==, osm->relations.size());
@@ -44,7 +55,6 @@ int main(int argc, char **argv)
   g_assert_cmpuint(3, ==, osm->relations.size());
 
   // new tag added in diff
-  const node_t * const n72 = osm->nodes[638499572];
   g_assert(n72 != O2G_NULLPTR);
   g_assert((n72->flags & OSM_FLAG_DIRTY) != 0);
   g_assert(n72->tags.get_value("testtag") != O2G_NULLPTR);
@@ -78,6 +88,16 @@ int main(int argc, char **argv)
   g_assert(w452 != NULL);
   g_assert(w452->tags.get_value("source") != NULL);
   g_assert(w452->tags.get_value("wheelchair") == NULL);
+  g_assert_cmpuint(r255->flags & OSM_FLAG_DIRTY, ==, OSM_FLAG_DIRTY);
+  g_assert_cmpuint(r255->members.size(), ==, 164);
+  r255it = r255->find_member_object(r255m572);
+  g_assert(r255it != r255->members.end());
+  g_assert(r255it->role != 0);
+  g_assert(strcmp(r255it->role, "forward_stop") == 0);
+
+  xmlChar *rel_str = r255->generate_xml(42);
+  printf("%s\n", rel_str);
+  xmlFree(rel_str);
 
   g_assert(!diff_is_clean(osm, true));
 
