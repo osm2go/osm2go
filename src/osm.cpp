@@ -1093,7 +1093,7 @@ osm_generate_xml_finish(xmlDocPtr doc)
 }
 
 /* build xml representation for a node */
-xmlChar *node_t::generate_xml(item_id_t changeset) {
+xmlChar *node_t::generate_xml(item_id_t changeset) const {
   char str[32];
 
   xmlNodePtr xml_node;
@@ -1138,7 +1138,7 @@ void way_t::write_node_chain(xmlNodePtr way_node) const {
 }
 
 /* build xml representation for a way */
-xmlChar *way_t::generate_xml(item_id_t changeset) {
+xmlChar *way_t::generate_xml(item_id_t changeset) const {
   char str[32];
 
   xmlNodePtr xml_node;
@@ -1195,7 +1195,7 @@ void gen_xml_relation_functor::operator()(const member_t &member)
 }
 
 /* build xml representation for a relation */
-xmlChar *relation_t::generate_xml(item_id_t changeset) {
+xmlChar *relation_t::generate_xml(item_id_t changeset) const {
   char str[32];
 
   xmlNodePtr xml_node;

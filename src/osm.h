@@ -357,7 +357,7 @@ public:
   /* a link to the visual representation on screen */
   struct map_item_chain_t *map_item_chain;
 
-  xmlChar *generate_xml(item_id_t changeset);
+  xmlChar *generate_xml(item_id_t changeset) const;
 };
 
 struct item_id_chain_t {
@@ -413,7 +413,7 @@ public:
   const node_t *first_node() const;
   unsigned int reverse_direction_sensitive_tags();
   unsigned int reverse_direction_sensitive_roles(osm_t *osm);
-  xmlChar *generate_xml(item_id_t changeset);
+  xmlChar *generate_xml(item_id_t changeset) const;
   void write_node_chain(xmlNodePtr way_node) const;
 
   void cleanup();
@@ -431,7 +431,7 @@ public:
 
   void members_by_type(guint *nodes, guint *ways, guint *relations) const;
   std::string descriptive_name() const;
-  xmlChar *generate_xml(item_id_t changeset);
+  xmlChar *generate_xml(item_id_t changeset) const;
 
   bool is_multipolygon() const;
 
