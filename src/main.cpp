@@ -1073,7 +1073,6 @@ void on_submenu_track_clicked(G_GNUC_UNUSED GtkButton *button, appdata_t *appdat
 #define SIMPLE_ENTRY(a,b)     { a, O2G_NULLPTR, TRUE,  O2G_NULLPTR, -1, G_CALLBACK(b) }
 #define ENABLED_ENTRY(a,b,c)  { a, O2G_NULLPTR, TRUE,  O2G_NULLPTR,  c, G_CALLBACK(b) }
 #define DISABLED_ENTRY(a,b,c) { a, O2G_NULLPTR, FALSE, O2G_NULLPTR,  c, G_CALLBACK(b) }
-#define TOGGLE_ENTRY(a,b,c)   { a, O2G_NULLPTR, TRUE,            c, -1, G_CALLBACK(b) }
 #define DISABLED_TOGGLE_ENTRY(a,b,c,d)  \
                               { a, O2G_NULLPTR, FALSE,           c,  d, G_CALLBACK(b) }
 #define ENABLED_TOGGLE_ENTRY(a,b,c,d) \
