@@ -207,15 +207,14 @@ static void on_tag_edit(G_GNUC_UNUSED GtkWidget *button, tag_context_t *context)
 }
 
 static void on_tag_last(G_GNUC_UNUSED GtkWidget *button, tag_context_t *context) {
-  static const char *type_name[] = { "illegal", "node", "way", "relation" };
-
   if(context->tags.empty() || yes_no_f(context->dialog,
 	      context->appdata, MISC_AGAIN_ID_OVERWRITE_TAGS, 0,
 	      _("Overwrite tags?"),
 	      _("This will overwrite all tags of this %s with the "
 		"ones from the %s selected last.\n\n"
 		"Do you really want this?"),
-	      type_name[context->object.type], type_name[context->object.type])) {
+                                       context->object.type_string(),
+                                       context->object.type_string())) {
 
     std::for_each(context->tags.begin(), context->tags.end(), osm_tag_free);
 
