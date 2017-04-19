@@ -1131,7 +1131,6 @@ void add_xml_node_refs::operator()(const node_t* node)
 /**
  * @brief write the referenced nodes of a way to XML
  * @param way_node the XML node of the way to append to
- * @param way the way to walk
  */
 void way_t::write_node_chain(xmlNodePtr way_node) const {
   std::for_each(node_chain.begin(), node_chain.end(), add_xml_node_refs(way_node));
