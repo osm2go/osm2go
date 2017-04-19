@@ -600,10 +600,6 @@ static void menu_create(appdata_t *appdata) {
   GtkWidget *menu, *item, *submenu;
   GtkWidget *about_quit_items_menu;
 
-  if (g_module_supported()) {
-    printf("*** can use GModule: consider using GtkUIManager / GtkBuilder\n");
-  }
-
   menu = uispecific_main_menu_new();
   about_quit_items_menu = menu;
 
