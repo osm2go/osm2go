@@ -873,13 +873,8 @@ void menu_cleanup(appdata_t &) { }
 
 #else // !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
 
-void submenu_entry(G_GNUC_UNUSED appdata_t *appdata, G_GNUC_UNUSED HildonAppMenu *menu,
-                   G_GNUC_UNUSED const char *label, G_GNUC_UNUSED const char *value,
-                   G_GNUC_UNUSED GtkSignalFunc activate_cb) {
-}
-
 struct menu_entry_t {
-  const char *label, *value;
+  const char *label;
   gboolean enabled;
   gboolean (*toggle)(appdata_t *appdata);
   int menuindex;
@@ -912,7 +907,7 @@ static GtkWidget *app_menu_create(appdata_t *appdata,
       button = hildon_button_new_with_text(
                   static_cast<HildonSizeType>(HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH),
 	    HILDON_BUTTON_ARRANGEMENT_VERTICAL,
-	    _(menu_entries->label), _(menu_entries->value));
+	    _(menu_entries->label), O2G_NULLPTR);
       g_signal_connect_after(button, "clicked",
 			     menu_entries->activate_cb, appdata);
     } else {
@@ -983,7 +978,7 @@ static GtkWidget *app_submenu_create(appdata_t *appdata,
 	button = hildon_button_new_with_text(
              static_cast<HildonSizeType>(HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH),
 	     HILDON_BUTTON_ARRANGEMENT_VERTICAL,
-	     _(menu_entries->label), _(menu_entries->value));
+	     _(menu_entries->label), O2G_NULLPTR);
 
         g_signal_connect_swapped(button, "clicked",
                                  G_CALLBACK(on_submenu_entry_clicked), dialog);
@@ -1071,14 +1066,14 @@ void on_submenu_track_clicked(G_GNUC_UNUSED GtkButton *button, appdata_t *appdat
   submenu_popup(appdata, appdata->app_menu_track);
 }
 
-#define SIMPLE_ENTRY(a,b)     { a, O2G_NULLPTR, TRUE,  O2G_NULLPTR, -1, G_CALLBACK(b) }
-#define ENABLED_ENTRY(a,b,c)  { a, O2G_NULLPTR, TRUE,  O2G_NULLPTR,  c, G_CALLBACK(b) }
-#define DISABLED_ENTRY(a,b,c) { a, O2G_NULLPTR, FALSE, O2G_NULLPTR,  c, G_CALLBACK(b) }
+#define SIMPLE_ENTRY(a,b)     { a, TRUE,  O2G_NULLPTR, -1, G_CALLBACK(b) }
+#define ENABLED_ENTRY(a,b,c)  { a, TRUE,  O2G_NULLPTR,  c, G_CALLBACK(b) }
+#define DISABLED_ENTRY(a,b,c) { a, FALSE, O2G_NULLPTR,  c, G_CALLBACK(b) }
 #define DISABLED_TOGGLE_ENTRY(a,b,c,d)  \
-                              { a, O2G_NULLPTR, FALSE,           c,  d, G_CALLBACK(b) }
+                              { a, FALSE,           c,  d, G_CALLBACK(b) }
 #define ENABLED_TOGGLE_ENTRY(a,b,c,d) \
-                              { a, O2G_NULLPTR, TRUE,            c,  d, G_CALLBACK(b) }
-#define LAST_ENTRY            { O2G_NULLPTR, O2G_NULLPTR, FALSE, O2G_NULLPTR, -1, O2G_NULLPTR }
+                              { a, TRUE,            c,  d, G_CALLBACK(b) }
+#define LAST_ENTRY            { O2G_NULLPTR, FALSE, O2G_NULLPTR, -1, O2G_NULLPTR }
 
 /* -- the view submenu -- */
 static const menu_entry_t submenu_view_entries[] = {
