@@ -1028,6 +1028,7 @@ static GtkWidget *app_submenu_create(appdata_t *appdata,
 
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), table);
 
+  g_object_ref(dialog);
   return dialog;
 }
 
@@ -1161,13 +1162,9 @@ static void menu_create(appdata_t *appdata) {
   /* build menu/submenus */
   menu = HILDON_APP_MENU(app_menu_create(appdata, main_menu));
   appdata->app_menu_wms   = app_submenu_create(appdata, &submenu_wms);
-  g_object_ref(appdata->app_menu_wms);
   appdata->app_menu_map   = app_submenu_create(appdata, &submenu_map);
-  g_object_ref(appdata->app_menu_map);
   appdata->app_menu_view  = app_submenu_create(appdata, &submenu_view);
-  g_object_ref(appdata->app_menu_view);
   appdata->app_menu_track = app_submenu_create(appdata, &submenu_track);
-  g_object_ref(appdata->app_menu_track);
 
   /* enable/disable some entries according to settings */
   gtk_widget_set_sensitive(appdata->menuitems[MENU_ITEM_TRACK_FOLLOW_GPS],
