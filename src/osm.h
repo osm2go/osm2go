@@ -92,8 +92,8 @@ typedef struct object_t {
   };
 
 #ifdef __cplusplus
-  inline object_t()
-    : type(ILLEGAL), obj(O2G_NULLPTR) {}
+  explicit inline object_t(type_t t = ILLEGAL)
+    : type(t), obj(O2G_NULLPTR) {}
   explicit inline object_t(node_t *n)
     : type(NODE), node(n) { }
   explicit inline object_t(way_t *w)
