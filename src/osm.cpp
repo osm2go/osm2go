@@ -1166,23 +1166,26 @@ void gen_xml_relation_functor::operator()(const member_t &member)
 {
   xmlNodePtr m_node = xmlNewChild(xml_node,O2G_NULLPTR,BAD_CAST "member", O2G_NULLPTR);
 
+  const char *typestr;
   switch(member.object.type) {
   case NODE:
-    xmlNewProp(m_node, BAD_CAST "type", BAD_CAST "node");
+  case NODE_ID:
+    typestr = "node";
     break;
-
   case WAY:
-    xmlNewProp(m_node, BAD_CAST "type", BAD_CAST "way");
+  case WAY_ID:
+    typestr = "way";
     break;
-
   case RELATION:
-    xmlNewProp(m_node, BAD_CAST "type", BAD_CAST "relation");
+  case RELATION_ID:
+    typestr = "relation";
     break;
-
   default:
-    break;
+    g_assert_not_reached();
+    return;
   }
 
+  xmlNewProp(m_node, BAD_CAST "type", BAD_CAST typestr);
   xmlNewProp(m_node, BAD_CAST "ref", BAD_CAST member.object.id_string().c_str());
 
   if(member.role)
