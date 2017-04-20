@@ -114,8 +114,7 @@ void main_ui_enable(appdata_t *appdata) {
 /******************** begin of menu *********************/
 
 static void
-cb_menu_project_open(GtkMenuItem *, gpointer data) {
-  appdata_t *appdata = static_cast<appdata_t *>(data);
+cb_menu_project_open(GtkMenuItem *, appdata_t *appdata) {
   const std::string &proj_name = project_select(appdata);
   if(!proj_name.empty())
     project_load(appdata, proj_name);
@@ -123,22 +122,19 @@ cb_menu_project_open(GtkMenuItem *, gpointer data) {
 }
 
 static void
-cb_menu_about(GtkMenuItem *, gpointer data) {
-  appdata_t *appdata = static_cast<appdata_t *>(data);
+cb_menu_about(GtkMenuItem *, appdata_t *appdata) {
   about_box(appdata);
 }
 
 #ifndef USE_HILDON
 static void
-cb_menu_quit(GtkMenuItem *, gpointer data) {
-  appdata_t *appdata = static_cast<appdata_t *>(data);
+cb_menu_quit(GtkMenuItem *, appdata_t *appdata) {
   gtk_widget_destroy(GTK_WIDGET(appdata->window));
 }
 #endif
 
 static void
-cb_menu_upload(GtkMenuItem *, gpointer data) {
-  appdata_t *appdata = static_cast<appdata_t *>(data);
+cb_menu_upload(GtkMenuItem *, appdata_t *appdata) {
   if(!appdata->osm || !appdata->project) return;
 
   if(project_check_demo(GTK_WIDGET(appdata->window), appdata->project))
@@ -148,8 +144,7 @@ cb_menu_upload(GtkMenuItem *, gpointer data) {
 }
 
 static void
-cb_menu_download(GtkMenuItem *, gpointer data) {
-  appdata_t *appdata = static_cast<appdata_t *>(data);
+cb_menu_download(GtkMenuItem *, appdata_t *appdata) {
   if(!appdata->project) return;
 
   if(project_check_demo(GTK_WIDGET(appdata->window), appdata->project))
@@ -183,34 +178,29 @@ cb_menu_download(GtkMenuItem *, gpointer data) {
 }
 
 static void
-cb_menu_wms_import(GtkMenuItem *, gpointer data) {
-  appdata_t *appdata = static_cast<appdata_t *>(data);
+cb_menu_wms_import(GtkMenuItem *, appdata_t *appdata) {
   wms_import(appdata);
 }
 
 static void
-cb_menu_wms_clear(GtkMenuItem *, gpointer data) {
-  appdata_t *appdata = static_cast<appdata_t *>(data);
+cb_menu_wms_clear(GtkMenuItem *, appdata_t *appdata) {
   wms_remove(appdata);
 }
 
 static void
-cb_menu_wms_adjust(GtkMenuItem *, gpointer data) {
-  appdata_t *appdata = static_cast<appdata_t *>(data);
+cb_menu_wms_adjust(GtkMenuItem *, appdata_t *appdata) {
   map_action_set(appdata->map, MAP_ACTION_BG_ADJUST);
 }
 
 /* ----------- hide objects for performance reasons ----------- */
 
 static void
-cb_menu_map_hide_sel(GtkMenuItem *, gpointer data) {
-  appdata_t *appdata = static_cast<appdata_t *>(data);
+cb_menu_map_hide_sel(GtkMenuItem *, appdata_t *appdata) {
   map_hide_selected(appdata->map);
 }
 
 static void
-cb_menu_map_show_all(GtkMenuItem *, gpointer data) {
-  appdata_t *appdata = static_cast<appdata_t *>(data);
+cb_menu_map_show_all(GtkMenuItem *, appdata_t *appdata) {
   map_show_all(appdata->map);
 }
 
@@ -226,27 +216,21 @@ cb_menu_map_show_all(GtkMenuItem *, gpointer data) {
 
 #ifndef FREMANTLE
 static void
-cb_menu_style(GtkMenuItem *, gpointer data) {
-  appdata_t *appdata = static_cast<appdata_t *>(data);
-
+cb_menu_style(GtkMenuItem *, appdata_t *appdata) {
   style_select(GTK_WIDGET(appdata->window), appdata);
 }
 #endif
 
 #ifndef USE_HILDON
 static void
-cb_menu_save_changes(GtkMenuItem *, gpointer data) {
-  appdata_t *appdata = static_cast<appdata_t *>(data);
-
+cb_menu_save_changes(GtkMenuItem *, appdata_t *appdata) {
   diff_save(appdata->project, appdata->osm);
   banner_show_info(appdata, _("Saved local changes"));
 }
 #endif
 
 static void
-cb_menu_undo_changes(GtkMenuItem *, gpointer data) {
-  appdata_t *appdata = static_cast<appdata_t *>(data);
-
+cb_menu_undo_changes(GtkMenuItem *, appdata_t *appdata) {
   // if there is nothing to clean then don't ask
   if (!diff_present(appdata->project) && diff_is_clean(appdata->osm, TRUE))
     return;
@@ -277,9 +261,7 @@ cb_menu_osm_relations(GtkMenuItem *, appdata_t *appdata) {
 
 #if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
 static void
-cb_menu_fullscreen(MENU_CHECK_ITEM *item, gpointer data) {
-  appdata_t *appdata = static_cast<appdata_t *>(data);
-
+cb_menu_fullscreen(MENU_CHECK_ITEM *item, appdata_t *appdata) {
   if(MENU_CHECK_ITEM_ACTIVE(item))
     gtk_window_fullscreen(GTK_WINDOW(appdata->window));
   else
@@ -318,27 +300,21 @@ cb_scale_popup(GtkWidget *button, appdata_t *appdata) {
 
 #if defined(FREMANTLE) || (MAEMO_VERSION_MAJOR != 5)
 static void
-cb_menu_view_detail_inc(GtkMenuItem *, gpointer data) {
-  appdata_t *appdata = static_cast<appdata_t *>(data);
-
+cb_menu_view_detail_inc(GtkMenuItem *, appdata_t *appdata) {
   printf("detail level increase\n");
   map_detail_increase(appdata->map);
 }
 
 #if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
 static void
-cb_menu_view_detail_normal(GtkMenuItem *, gpointer data) {
-  appdata_t *appdata = static_cast<appdata_t *>(data);
-
+cb_menu_view_detail_normal(GtkMenuItem *, appdata_t *appdata) {
   printf("detail level normal\n");
   map_detail_normal(appdata->map);
 }
 #endif
 
 static void
-cb_menu_view_detail_dec(GtkMenuItem *, gpointer data) {
-  appdata_t *appdata = static_cast<appdata_t *>(data);
-
+cb_menu_view_detail_dec(GtkMenuItem *, appdata_t *appdata) {
   printf("detail level decrease\n");
   map_detail_decrease(appdata->map);
 }
@@ -483,8 +459,7 @@ cb_menu_track_export(GtkMenuItem *, appdata_t *appdata) {
 }
 
 static void
-cb_menu_track_clear(GtkMenuItem *, gpointer data) {
-  appdata_t *appdata = static_cast<appdata_t *>(data);
+cb_menu_track_clear(GtkMenuItem *, appdata_t *appdata) {
   track_clear(appdata);
 }
 
