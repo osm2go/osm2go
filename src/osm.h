@@ -312,7 +312,7 @@ public:
    * @brief copy the contained tags
    * The caller own the memory.
    */
-  std::vector<tag_t *> asPointerVector() const;
+  std::vector<stag_t *> asPointerVector() const;
 
   void copy(const tag_list_t &other);
 
@@ -324,6 +324,8 @@ public:
    * in ntags.
    */
   void replace(std::vector<tag_t *> &ntags);
+
+  void replace(const std::vector<stag_t *> &ntags);
 
   /**
    * @brief combine tags from both lists in a useful manner
@@ -457,7 +459,7 @@ void osm_members_free(std::vector<member_t> &members);
 void osm_tag_free(tag_t *tag);
 
 /* ----------- edit functions ----------- */
-std::vector<tag_t *> osm_tags_list_copy(const std::vector<stag_t> &tags);
+std::vector<stag_t *> osm_tags_list_copy(const std::vector<stag_t> &tags);
 
 #endif
 

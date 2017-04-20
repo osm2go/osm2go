@@ -42,6 +42,7 @@ enum presets_widget_type_t {
 };
 
 struct presets_context_t;
+struct stag_t;
 struct tag_t;
 
 class presets_widget_t {
@@ -94,7 +95,7 @@ public:
    * @retval 0 no match, but continue searching
    * @retval 1 positive match
    */
-  int matches(const std::vector<tag_t *> &tags) const;
+  int matches(const std::vector<stag_t *> &tags) const;
 };
 
 /**
@@ -254,7 +255,7 @@ public:
 
   const unsigned int type;
 
-  bool matches(const std::vector<tag_t *> &tags) const;
+  bool matches(const std::vector<stag_t *> &tags) const;
 };
 
 class presets_item_named : public presets_item_t {

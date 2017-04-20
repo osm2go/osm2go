@@ -1838,22 +1838,19 @@ std::vector<stag_t> tag_list_t::asVector() const
 }
 
 struct tag_vector_functor {
-  std::vector<tag_t *> &tags;
-  tag_vector_functor(std::vector<tag_t *> &t) : tags(t) {}
+  std::vector<stag_t *> &tags;
+  tag_vector_functor(std::vector<stag_t *> &t) : tags(t) {}
   void operator()(const tag_t &otag) {
     if(G_UNLIKELY(otag.is_creator_tag()))
       return;
 
-    tag_t *tag = g_new0(tag_t, 1);
-    tag->key = otag.key;
-    tag->value = otag.value;
-    tags.push_back(tag);
+    tags.push_back(new stag_t(otag.key, otag.value));
   }
 };
 
-std::vector<tag_t *> tag_list_t::asPointerVector() const
+std::vector<stag_t *> tag_list_t::asPointerVector() const
 {
-  std::vector<tag_t *> ret;
+  std::vector<stag_t *> ret;
   tag_vector_functor fc(ret);
 
   for(const tag_t *src_tag = contents; src_tag; src_tag = src_tag->next)
@@ -1863,21 +1860,15 @@ std::vector<tag_t *> tag_list_t::asPointerVector() const
 }
 
 struct tags_list_copy_functor {
-  std::vector<tag_t *> &new_tags;
-  tags_list_copy_functor(std::vector<tag_t *> &n) : new_tags(n) {}
-  void operator()(const stag_t &tag);
+  std::vector<stag_t *> &new_tags;
+  tags_list_copy_functor(std::vector<stag_t *> &n) : new_tags(n) {}
+  void operator()(const stag_t &tag) {
+    new_tags.push_back(new stag_t(tag));
+  }
 };
 
-void tags_list_copy_functor::operator()(const stag_t &tag)
-{
-  tag_t *n = g_new0(tag_t, 1);
-  n->key = g_strdup(tag.key.c_str());
-  n->value = g_strdup(tag.value.c_str());
-  new_tags.push_back(n);
-}
-
-std::vector<tag_t *> osm_tags_list_copy(const std::vector<stag_t> &tags) {
-  std::vector<tag_t *> new_tags;
+std::vector<stag_t *> osm_tags_list_copy(const std::vector<stag_t> &tags) {
+  std::vector<stag_t *> new_tags;
 
   std::for_each(tags.begin(), tags.end(), tags_list_copy_functor(new_tags));
 
@@ -2054,6 +2045,24 @@ void tag_list_t::replace(std::vector<tag_t *> &ntags)
   const std::vector<tag_t *>::const_iterator itEnd = ntags.end() - 1;
   for(std::vector<tag_t *>::const_iterator it = ntags.begin(); it != itEnd; it++)
     (*it)->next = *(it + 1);
+}
+
+void tag_list_t::replace(const std::vector<stag_t *> &ntags)
+{
+  clear();
+  if(ntags.empty())
+    return;
+  const std::vector<stag_t *>::const_reverse_iterator itEnd = ntags.rend();
+  tag_t *n = O2G_NULLPTR;
+  for(std::vector<stag_t *>::const_reverse_iterator it = ntags.rbegin(); it != itEnd; it++) {
+    tag_t *t = g_new0(tag_t, 1);
+    t->key = g_strdup((*it)->key.c_str());
+    t->value = g_strdup((*it)->value.c_str());
+    t->next = n;
+    n = t;
+  }
+
+  contents = n;
 }
 
 base_object_t::base_object_t()

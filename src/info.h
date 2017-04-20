@@ -40,13 +40,14 @@ void info_dialog(GtkWidget *parent, struct appdata_t *appdata);
 class tag_context_t {
 public:
   explicit tag_context_t(appdata_t *a, const object_t &o);
+  ~tag_context_t();
 
   appdata_t * const appdata;
   GtkWidget *dialog, *list;
   GtkListStore *store;
   object_t object;
   int presets_type;
-  std::vector<tag_t *> tags;
+  std::vector<stag_t *> tags;
 
   void info_tags_replace();
   void update_collisions();

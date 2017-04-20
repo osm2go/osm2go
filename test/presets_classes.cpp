@@ -9,16 +9,16 @@
 #include <iostream>
 #include <string>
 
-#define TESTTAG(a, b) static tag_t tag_##a##_##b(const_cast<char *>(#a), const_cast<char *>(#b))
+#define TESTTAG(a, b) static stag_t tag_##a##_##b(#a, #b)
 
 TESTTAG(testkey, other);
 TESTTAG(testkey, testtext);
 TESTTAG(neutral, neutral);
 
 #if __cplusplus >= 201103L
-# define VECTOR_ONE(a) std::vector<tag_t *>{ const_cast<tag_t *>(&a) }
+# define VECTOR_ONE(a) std::vector<stag_t *>{ const_cast<stag_t *>(&a) }
 #else
-# define VECTOR_ONE(a) std::vector<tag_t *>(1, const_cast<tag_t *>(&(a)))
+# define VECTOR_ONE(a) std::vector<stag_t *>(1, const_cast<stag_t *>(&(a)))
 #endif
 
 static bool checkTextMatch()
@@ -29,7 +29,7 @@ static bool checkTextMatch()
 
   g_assert_cmpint(w_0.matches(VECTOR_ONE(tag_testkey_other)), ==, 0);
   g_assert_cmpint(w_0.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 0);
-  g_assert_cmpint(w_0.matches(std::vector<tag_t *>()), ==, 0);
+  g_assert_cmpint(w_0.matches(std::vector<stag_t *>()), ==, 0);
 
   presets_widget_text w_ign(tag_testkey_testtext.key,
                             tag_testkey_testtext.value,
@@ -37,7 +37,7 @@ static bool checkTextMatch()
 
   g_assert_cmpint(w_ign.matches(VECTOR_ONE(tag_testkey_other)), ==, 0);
   g_assert_cmpint(w_ign.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 0);
-  g_assert_cmpint(w_ign.matches(std::vector<tag_t *>()), ==, 0);
+  g_assert_cmpint(w_ign.matches(std::vector<stag_t *>()), ==, 0);
 
   presets_widget_text w_bad(tag_testkey_testtext.key,
                             tag_testkey_testtext.value,
@@ -45,7 +45,7 @@ static bool checkTextMatch()
 
   g_assert_cmpint(w_bad.matches(VECTOR_ONE(tag_testkey_other)), ==, 0);
   g_assert_cmpint(w_bad.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 0);
-  g_assert_cmpint(w_bad.matches(std::vector<tag_t *>()), ==, 0);
+  g_assert_cmpint(w_bad.matches(std::vector<stag_t *>()), ==, 0);
 
   presets_widget_text w_key(tag_testkey_testtext.key,
                             tag_testkey_testtext.value,
@@ -53,7 +53,7 @@ static bool checkTextMatch()
 
   g_assert_cmpint(w_key.matches(VECTOR_ONE(tag_testkey_other)), ==, 1);
   g_assert_cmpint(w_key.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 1);
-  g_assert_cmpint(w_key.matches(std::vector<tag_t *>()), ==, 0);
+  g_assert_cmpint(w_key.matches(std::vector<stag_t *>()), ==, 0);
 
   presets_widget_text w_keyf(tag_testkey_testtext.key,
                              tag_testkey_testtext.value,
@@ -61,7 +61,7 @@ static bool checkTextMatch()
 
   g_assert_cmpint(w_keyf.matches(VECTOR_ONE(tag_testkey_other)), ==, 1);
   g_assert_cmpint(w_keyf.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 1);
-  g_assert_cmpint(w_keyf.matches(std::vector<tag_t *>()), ==, -1);
+  g_assert_cmpint(w_keyf.matches(std::vector<stag_t *>()), ==, -1);
 
   presets_widget_text w_kv(tag_testkey_testtext.key,
                            tag_testkey_testtext.value,
@@ -69,7 +69,7 @@ static bool checkTextMatch()
 
   g_assert_cmpint(w_kv.matches(VECTOR_ONE(tag_testkey_other)), ==, 1);
   g_assert_cmpint(w_kv.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 1);
-  g_assert_cmpint(w_kv.matches(std::vector<tag_t *>()), ==, 0);
+  g_assert_cmpint(w_kv.matches(std::vector<stag_t *>()), ==, 0);
 
   presets_widget_text w_kvf(tag_testkey_testtext.key,
                             tag_testkey_testtext.value,
@@ -77,7 +77,7 @@ static bool checkTextMatch()
 
   g_assert_cmpint(w_kvf.matches(VECTOR_ONE(tag_testkey_other)), ==, 1);
   g_assert_cmpint(w_kvf.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 1);
-  g_assert_cmpint(w_kvf.matches(std::vector<tag_t *>()), ==, -1);
+  g_assert_cmpint(w_kvf.matches(std::vector<stag_t *>()), ==, -1);
 
   return true;
 }
@@ -99,7 +99,7 @@ static bool checkComboMatch()
 
   g_assert_cmpint(w_0.matches(VECTOR_ONE(tag_testkey_other)), ==, 0);
   g_assert_cmpint(w_0.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 0);
-  g_assert_cmpint(w_0.matches(std::vector<tag_t *>()), ==, 0);
+  g_assert_cmpint(w_0.matches(std::vector<stag_t *>()), ==, 0);
 
   values = backup;
   presets_widget_combo w_ign(tag_testkey_testtext.key,
@@ -109,7 +109,7 @@ static bool checkComboMatch()
 
   g_assert_cmpint(w_ign.matches(VECTOR_ONE(tag_testkey_other)), ==, 0);
   g_assert_cmpint(w_ign.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 0);
-  g_assert_cmpint(w_ign.matches(std::vector<tag_t *>()), ==, 0);
+  g_assert_cmpint(w_ign.matches(std::vector<stag_t *>()), ==, 0);
 
   values = backup;
   presets_widget_combo w_bad(tag_testkey_testtext.key,
@@ -119,7 +119,7 @@ static bool checkComboMatch()
 
   g_assert_cmpint(w_bad.matches(VECTOR_ONE(tag_testkey_other)), ==, 0);
   g_assert_cmpint(w_bad.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 0);
-  g_assert_cmpint(w_bad.matches(std::vector<tag_t *>()), ==, 0);
+  g_assert_cmpint(w_bad.matches(std::vector<stag_t *>()), ==, 0);
 
   values = backup;
   presets_widget_combo w_key(tag_testkey_testtext.key,
@@ -129,7 +129,7 @@ static bool checkComboMatch()
 
   g_assert_cmpint(w_key.matches(VECTOR_ONE(tag_testkey_other)), ==, 1);
   g_assert_cmpint(w_key.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 1);
-  g_assert_cmpint(w_key.matches(std::vector<tag_t *>()), ==, 0);
+  g_assert_cmpint(w_key.matches(std::vector<stag_t *>()), ==, 0);
 
   values = backup;
   presets_widget_combo w_keyf(tag_testkey_testtext.key,
@@ -139,7 +139,7 @@ static bool checkComboMatch()
 
   g_assert_cmpint(w_keyf.matches(VECTOR_ONE(tag_testkey_other)), ==, 1);
   g_assert_cmpint(w_keyf.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 1);
-  g_assert_cmpint(w_keyf.matches(std::vector<tag_t *>()), ==, -1);
+  g_assert_cmpint(w_keyf.matches(std::vector<stag_t *>()), ==, -1);
 
   values = backup;
   presets_widget_combo w_kv(tag_testkey_testtext.key,
@@ -149,7 +149,7 @@ static bool checkComboMatch()
 
   g_assert_cmpint(w_kv.matches(VECTOR_ONE(tag_testkey_other)), ==, 0);
   g_assert_cmpint(w_kv.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 1);
-  g_assert_cmpint(w_kv.matches(std::vector<tag_t *>()), ==, 0);
+  g_assert_cmpint(w_kv.matches(std::vector<stag_t *>()), ==, 0);
 
   values = backup;
   presets_widget_combo w_kvf(tag_testkey_testtext.key,
@@ -159,7 +159,7 @@ static bool checkComboMatch()
 
   g_assert_cmpint(w_kvf.matches(VECTOR_ONE(tag_testkey_other)), ==, -1);
   g_assert_cmpint(w_kvf.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 1);
-  g_assert_cmpint(w_kvf.matches(std::vector<tag_t *>()), ==, -1);
+  g_assert_cmpint(w_kvf.matches(std::vector<stag_t *>()), ==, -1);
 
   return true;
 }
@@ -168,8 +168,8 @@ static bool check_combined()
 {
   presets_item item(presets_item_t::TY_ALL);
 
-  std::vector<tag_t *> tags = VECTOR_ONE(tag_neutral_neutral);
-  tags.push_back(const_cast<tag_t *>(&tag_testkey_testtext));
+  std::vector<stag_t *> tags = VECTOR_ONE(tag_neutral_neutral);
+  tags.push_back(const_cast<stag_t *>(&tag_testkey_testtext));
 
   // one that is ignored
   item.widgets.push_back(new presets_widget_text("different",
