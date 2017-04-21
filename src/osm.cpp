@@ -367,7 +367,9 @@ bool tag_t::update(const char *nkey, const char *nvalue)
 {
   bool ret = false;
   if(strcmp(key, nkey) != 0) {
-    update_key(nkey);
+    const size_t nlen = strlen(nkey) + 1;
+    key = static_cast<char *>(g_realloc(key, nlen));
+    memcpy(key, nkey, nlen);
     ret = true;
   }
   if(strcmp(value, nvalue) != 0) {
@@ -375,13 +377,6 @@ bool tag_t::update(const char *nkey, const char *nvalue)
     ret = true;
   }
   return ret;
-}
-
-void tag_t::update_key(const char *nkey)
-{
-  const size_t nlen = strlen(nkey) + 1;
-  key = static_cast<char *>(g_realloc(key, nlen));
-  memcpy(key, nkey, nlen);
 }
 
 void tag_t::update_value(const char *nvalue)

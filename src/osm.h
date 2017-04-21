@@ -231,10 +231,6 @@ struct tag_t {
   bool is_creator_tag() const;
 
   /**
-   * @brief replace the key
-   */
-  void update_key(const char *nkey);
-  /**
    * @brief replace the value
    */
   void update_value(const char *nvalue);
