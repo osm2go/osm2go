@@ -261,28 +261,47 @@ static GtkTreeIter store_append(GtkListStore *store, stag_t &tag, gboolean colli
   return iter;
 }
 
-static void on_tag_add(G_GNUC_UNUSED GtkWidget *button, tag_context_t *context) {
-  /* create and append a new tag */
-  stag_t tag = stag_t(std::string(), std::string());
+struct stag_identity_functor {
+  const stag_t &tag;
+  stag_identity_functor(const stag_t &t) : tag(t) { }
+  bool operator()(const stag_t *t) {
+    return tag == t;
+  }
+};
 
-  /* fill with some empty strings */
+static void on_tag_add(G_GNUC_UNUSED GtkWidget *button, tag_context_t *context) {
+  stag_t tag = stag_t(std::string(), std::string());
 
   if(!tag_edit(GTK_WINDOW(context->dialog), tag)) {
     printf("cancelled\n");
-  } else {
-    context->tags.push_back(new stag_t(tag));
-    // check if the new key introduced a collision
-    gboolean collision = std::find_if(context->tags.begin(), context->tags.end(),
-                                      stag_collision_functor(tag)) != context->tags.end() ? TRUE : FALSE;
-    /* append a row for the new data */
-    GtkTreeIter iter = store_append(context->store, *context->tags.back(), collision);
-
-    gtk_tree_selection_select_iter(
-       list_get_selection(context->list), &iter);
-
-    if(collision)
-      context->update_collisions();
+    return;
   }
+
+  std::vector<stag_t *> &tags = context->tags;
+  const std::vector<stag_t *>::const_iterator itEnd = tags.end();
+  std::vector<stag_t *>::const_iterator it = tags.begin();
+  it = std::find_if(it, itEnd, stag_identity_functor(tag));
+  if(G_UNLIKELY(it != itEnd)) {
+    // the very same tag is already in the list, just select the old one
+    GtkTreeIter iter;
+    gtk_tree_model_iter_nth_child(GTK_TREE_MODEL(context->store), &iter,
+                                  O2G_NULLPTR, it - tags.begin());
+    gtk_tree_selection_select_iter(list_get_selection(context->list), &iter);
+    return;
+  }
+
+  tags.push_back(new stag_t(tag));
+  // check if the new key introduced a collision
+  it = tags.begin();
+  gboolean collision = std::find_if(it, itEnd,
+                                    stag_collision_functor(tag)) != itEnd ? TRUE : FALSE;
+  /* append a row for the new data */
+  GtkTreeIter iter = store_append(context->store, *tags.back(), collision);
+
+  gtk_tree_selection_select_iter(list_get_selection(context->list), &iter);
+
+  if(collision)
+    context->update_collisions();
 }
 
 struct tag_replace_functor {

@@ -266,6 +266,12 @@ struct stag_t {
   std::string value;
 
   bool is_creator_tag() const;
+  bool operator==(const stag_t &other) const {
+    return key == other.key && value == other.value;
+  }
+  inline bool operator==(const stag_t *other) const {
+    return operator==(*other);
+  }
 };
 
 class tag_list_t {
