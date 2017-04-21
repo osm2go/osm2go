@@ -507,8 +507,11 @@ static bool project_delete(select_context_t *context, project_t *project) {
   }
 
   /* de-chain entry from project list */
-  context->projects.erase(std::find(context->projects.begin(),
-                                    context->projects.end(), project));
+  const std::vector<project_t *>::iterator itEnd = context->projects.end();
+  std::vector<project_t *>::iterator it = std::find(context->projects.begin(),
+                                                    itEnd, project);
+  if(it != itEnd)
+    context->projects.erase(it);
 
   /* free project structure */
   delete project;
