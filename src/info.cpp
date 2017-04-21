@@ -47,20 +47,29 @@ struct collision_functor {
   }
 };
 
-struct stag_collision_functor {
-  const stag_t &tag;
-  stag_collision_functor(const stag_t &t) : tag(t) { }
-  bool operator()(const stag_t *t) {
-    return (t != &tag) && (strcasecmp(t->key.c_str(), tag.key.c_str()) == 0);
-  }
-};
-
 bool info_tag_key_collision(const tag_list_t &tags, const tag_t &tag) {
   return !!tags.find_if(collision_functor(tag));
 }
 
-static gboolean info_tag_key_collision(const std::vector<stag_t *> &tags, const stag_t &tag) {
-  return std::find_if(tags.begin(), tags.end(), stag_collision_functor(tag)) != tags.end() ? TRUE : FALSE;
+struct stag_collision_functor {
+  const stag_t *tag;
+  stag_collision_functor(const stag_t *t) : tag(t) { }
+  bool operator()(const stag_t *t) {
+    return (strcasecmp(t->key.c_str(), tag->key.c_str()) == 0);
+  }
+};
+
+static gboolean info_tag_key_collision(const std::vector<stag_t *> &tags, const stag_t *tag) {
+  const std::vector<stag_t *>::const_iterator itEnd = tags.end();
+  stag_collision_functor fc(tag);
+  const std::vector<stag_t *>::const_iterator it = std::find_if(tags.begin(), itEnd, fc);
+  if(it == itEnd)
+    return FALSE;
+  // check if this is the original tag itself
+  if(*it != tag)
+    return TRUE;
+  // it is, so search in the remaining items again
+  return std::find_if(it + 1, itEnd, fc) != itEnd ? TRUE : FALSE;
 }
 
 static void changed(G_GNUC_UNUSED GtkTreeSelection *treeselection, gpointer user_data) {
@@ -94,7 +103,7 @@ void tag_context_t::update_collisions()
       gtk_tree_model_get(GTK_TREE_MODEL(store), &iter, TAG_COL_DATA, &tag, -1);
       g_assert(tag);
       gtk_list_store_set(store, &iter,
-         TAG_COL_COLLISION, info_tag_key_collision(tags, *tag), -1);
+         TAG_COL_COLLISION, info_tag_key_collision(tags, tag), -1);
 
     } while(gtk_tree_model_iter_next(GTK_TREE_MODEL(store), &iter));
   }
@@ -249,14 +258,14 @@ static void on_tag_last(G_GNUC_UNUSED GtkWidget *button, tag_context_t *context)
   }
 }
 
-static GtkTreeIter store_append(GtkListStore *store, stag_t &tag, gboolean collision) {
+static GtkTreeIter store_append(GtkListStore *store, stag_t *tag, gboolean collision) {
   GtkTreeIter iter;
   gtk_list_store_append(store, &iter);
   gtk_list_store_set(store, &iter,
-                     TAG_COL_KEY, tag.key.c_str(),
-                     TAG_COL_VALUE, tag.value.c_str(),
+                     TAG_COL_KEY, tag->key.c_str(),
+                     TAG_COL_VALUE, tag->value.c_str(),
                      TAG_COL_COLLISION, collision,
-                     TAG_COL_DATA, &tag,
+                     TAG_COL_DATA, tag,
                      -1);
   return iter;
 }
@@ -290,13 +299,12 @@ static void on_tag_add(G_GNUC_UNUSED GtkWidget *button, tag_context_t *context) 
     return;
   }
 
-  tags.push_back(new stag_t(tag));
+  stag_t * const ntag = new stag_t(tag);
   // check if the new key introduced a collision
-  it = tags.begin();
-  gboolean collision = std::find_if(it, itEnd,
-                                    stag_collision_functor(tag)) != itEnd ? TRUE : FALSE;
+  gboolean collision = info_tag_key_collision(tags, tags.back());
+  tags.push_back(ntag);
   /* append a row for the new data */
-  GtkTreeIter iter = store_append(context->store, *tags.back(), collision);
+  GtkTreeIter iter = store_append(context->store, ntag, collision);
 
   gtk_tree_selection_select_iter(list_get_selection(context->list), &iter);
 
@@ -309,7 +317,7 @@ struct tag_replace_functor {
   const std::vector<stag_t *> &tags;
   tag_replace_functor(GtkListStore *s, const std::vector<stag_t *> &t) : store(s), tags(t) {}
   void operator()(stag_t *tag) {
-    store_append(store, *tag, info_tag_key_collision(tags, *tag));
+    store_append(store, tag, info_tag_key_collision(tags, tag));
   }
 };
 
