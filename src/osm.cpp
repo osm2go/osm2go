@@ -219,10 +219,10 @@ void osm_tag_free(tag_t *tag) {
 
 /**
  * @brief fill tag_t from XML values
- * @param tag the tag structure to fill
  * @param k the key found in XML
  * @param v the value found in XML
- * @return if k and v were not empty
+ * @return the new tag structure
+ * @retval O2G_NULLPTR if k and v were not empty
  *
  * k and v will be freed.
  */
