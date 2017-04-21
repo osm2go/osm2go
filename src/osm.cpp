@@ -1895,7 +1895,7 @@ std::string object_t::get_name() const {
 
   /* worst case: we have no tags at all. return techincal info then */
   if(!has_tags())
-    return g_strconcat("unspecified ", type_string(), O2G_NULLPTR);
+    return std::string("unspecified ") + type_string();
 
   /* try to figure out _what_ this is */
   const char *name_tags[] = { "name", "ref", "note", "fix" "me", "sport", O2G_NULLPTR };
