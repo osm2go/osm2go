@@ -219,6 +219,7 @@ xmlChar *osm_generate_xml_changeset(const char* comment);
 
 bool osm_position_within_bounds_ll(const pos_t *ll_min, const pos_t *ll_max, const pos_t *pos);
 
+struct stag_t;
 
 struct tag_t {
   struct tag_t *next;
@@ -261,6 +262,8 @@ struct tag_t {
 struct stag_t {
   stag_t(const std::string &k, const std::string &v)
     : key(k), value(v) { }
+  stag_t(const tag_t &tag)
+    : key(tag.key), value(tag.value) { }
 
   std::string key;
   std::string value;

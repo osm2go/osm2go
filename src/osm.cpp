@@ -1837,21 +1837,22 @@ std::vector<stag_t> tag_list_t::asVector() const
   return new_tags;
 }
 
+template<typename T, bool drop_creator>
 struct tag_vector_functor {
   std::vector<stag_t *> &tags;
   tag_vector_functor(std::vector<stag_t *> &t) : tags(t) {}
-  void operator()(const tag_t &otag) {
-    if(G_UNLIKELY(otag.is_creator_tag()))
+  void operator()(const T &otag) {
+    if(G_UNLIKELY(drop_creator && otag.is_creator_tag()))
       return;
 
-    tags.push_back(new stag_t(otag.key, otag.value));
+    tags.push_back(new stag_t(otag));
   }
 };
 
 std::vector<stag_t *> tag_list_t::asPointerVector() const
 {
   std::vector<stag_t *> ret;
-  tag_vector_functor fc(ret);
+  tag_vector_functor<tag_t, true> fc(ret);
 
   for(const tag_t *src_tag = contents; src_tag; src_tag = src_tag->next)
     fc(*src_tag);
@@ -1859,18 +1860,10 @@ std::vector<stag_t *> tag_list_t::asPointerVector() const
   return ret;
 }
 
-struct tags_list_copy_functor {
-  std::vector<stag_t *> &new_tags;
-  tags_list_copy_functor(std::vector<stag_t *> &n) : new_tags(n) {}
-  void operator()(const stag_t &tag) {
-    new_tags.push_back(new stag_t(tag));
-  }
-};
-
 std::vector<stag_t *> osm_tags_list_copy(const std::vector<stag_t> &tags) {
   std::vector<stag_t *> new_tags;
 
-  std::for_each(tags.begin(), tags.end(), tags_list_copy_functor(new_tags));
+  std::for_each(tags.begin(), tags.end(), tag_vector_functor<stag_t, false>(new_tags));
 
   return new_tags;
 }
