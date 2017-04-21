@@ -498,7 +498,7 @@ static gint map_item_destroy_event(G_GNUC_UNUSED GtkWidget *widget, gpointer dat
   return FALSE;
 }
 
-static canvas_item_t *map_node_new(map_t *map, node_t *node, gint radius,
+static void map_node_new(map_t *map, node_t *node, gint radius,
 		   gint width, canvas_color_t fill, canvas_color_t border) {
 
   map_item_t *map_item = g_new0(map_item_t, 1);
@@ -527,8 +527,6 @@ static canvas_item_t *map_node_new(map_t *map, node_t *node, gint radius,
 
   canvas_item_destroy_connect(map_item->item,
           G_CALLBACK(map_item_destroy_event), map_item);
-
-  return map_item->item;
 }
 
 /* in the rare case that a way consists of only one node, it is */
