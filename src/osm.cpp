@@ -1983,6 +1983,10 @@ std::string object_t::get_name() const {
   return ret;
 }
 
+bool stag_t::is_creator_tag() const {
+  return (strcasecmp(key.c_str(), "created_by") == 0);
+}
+
 bool tag_t::is_creator_tag() const {
   return (strcasecmp(key, "created_by") == 0);
 }

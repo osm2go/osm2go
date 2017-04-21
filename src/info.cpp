@@ -71,7 +71,7 @@ static void changed(G_GNUC_UNUSED GtkTreeSelection *treeselection, gpointer user
   gboolean selected = list_get_selected(list, &model, &iter);
 
   if(selected) {
-    tag_t *tag;
+    stag_t *tag;
     gtk_tree_model_get(model, &iter, TAG_COL_DATA, &tag, -1);
 
     /* you just cannot delete or edit the "created_by" tag */
@@ -86,11 +86,11 @@ static void changed(G_GNUC_UNUSED GtkTreeSelection *treeselection, gpointer user
 void tag_context_t::update_collisions()
 {
   GtkTreeIter iter;
-  stag_t *tag = O2G_NULLPTR;
 
   /* walk the entire store to get all values */
   if(gtk_tree_model_get_iter_first(GTK_TREE_MODEL(store), &iter)) {
     do {
+      stag_t *tag = O2G_NULLPTR;
       gtk_tree_model_get(GTK_TREE_MODEL(store), &iter, TAG_COL_DATA, &tag, -1);
       g_assert(tag);
       gtk_list_store_set(store, &iter,

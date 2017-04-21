@@ -264,6 +264,8 @@ struct stag_t {
 
   std::string key;
   std::string value;
+
+  bool is_creator_tag() const;
 };
 
 class tag_list_t {
