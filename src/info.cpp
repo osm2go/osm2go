@@ -588,8 +588,10 @@ bool info_dialog(GtkWidget *parent, appdata_t *appdata, object_t &object) {
     context.object.obj->tags.replace(context.tags);
 
     context.object.set_flags(OSM_FLAG_DIRTY);
-  } else
+  } else {
     std::for_each(context.tags.begin(), context.tags.end(), stag_delete);
+    context.tags.clear();
+  }
 
   return ok;
 }
