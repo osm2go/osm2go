@@ -25,11 +25,6 @@
 
 /* ------------------- creating and destroying the canvas ----------------- */
 
-static gint canvas_destroy_event(G_GNUC_UNUSED GtkWidget *widget, gpointer data) {
-  g_free(data);
-  return FALSE;
-}
-
 /* create a new canvas */
 canvas_t *canvas_new(void) {
   canvas_t *canvas = g_new0(canvas_t, 1);
@@ -63,8 +58,8 @@ canvas_t *canvas_new(void) {
     canvas->group[group] = goo_canvas_group_new(root, NULL);
 
 
-  g_signal_connect(GTK_OBJECT(canvas->widget), "destroy",
-                   G_CALLBACK(canvas_destroy_event), canvas);
+  g_signal_connect_swapped(GTK_OBJECT(canvas->widget), "destroy",
+                           G_CALLBACK(g_free), canvas);
 
   return canvas;
 }
