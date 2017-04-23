@@ -37,8 +37,6 @@
 
 #include "appdata.h"
 
-#ifdef CANVAS_CUSTOM_ITEM_AT
-
 /* The fuzziness allows to specify how far besides an object a user may */
 /* click so it's still considered a click onto that object. This can */
 /* be given in meters _and_ in pixels. Both values will be added to */
@@ -396,5 +394,3 @@ canvas_item_t *canvas_item_info_get_at(canvas_t *canvas, gint x, gint y) {
 
   return NULL;
 }
-
-#endif // CANVAS_CUSTOM_ITEM_AT
