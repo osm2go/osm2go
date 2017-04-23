@@ -125,7 +125,7 @@ set(DATA_DIR "${CMAKE_INSTALL_FULL_DATADIR}/${PROJECT_NAME}")
 
 option(PICKER_MENU "use a picker table for tagging preset selection" OFF)
 
-pkg_search_module(GooCanvas REQUIRED IMPORTED_TARGET goocanvas goocanvas-2.0)
+pkg_search_module(GooCanvas REQUIRED IMPORTED_TARGET goocanvas)
 
 pkg_check_modules(GVFS REQUIRED IMPORTED_TARGET gnome-vfs-module-2.0)
 
