@@ -70,8 +70,8 @@ settings_t *settings_load(void) {
 
   /* ------ overwrite with settings from gconf if present ------- */
   GConfClient *client = gconf_client_get_default();
-  if(client) {
 
+  if(G_LIKELY(client != O2G_NULLPTR)) {
     /* restore everything listed in the store table */
     store_t *st = store;
     while(st->key) {
@@ -203,7 +203,7 @@ settings_t *settings_load(void) {
   /* ------ set useful defaults ------- */
 
   char *p;
-  if(!settings->base_path) {
+  if(G_UNLIKELY(settings->base_path == O2G_NULLPTR)) {
 #ifdef USE_HILDON
     /* try to use internal memory card on hildon/maemo */
     p = getenv("INTERNAL_MMC_MOUNTPOINT");
@@ -224,7 +224,7 @@ settings_t *settings_load(void) {
     fprintf(stderr, "base_path = %s\n", settings->base_path);
   }
 
-  if(!settings->server) {
+  if(G_UNLIKELY(settings->server == O2G_NULLPTR)) {
     /* ------------- setup download defaults -------------------- */
     settings->server = g_strdup("http://api.openstreetmap.org/api/0.6");
   }
@@ -243,7 +243,7 @@ settings_t *settings_load(void) {
       settings->password = g_strdup(_("<password>"));
   }
 
-  if(!settings->style)
+  if(G_UNLIKELY(settings->style == O2G_NULLPTR))
     settings->style = g_strdup(DEFAULT_STYLE);
 
   return settings;
