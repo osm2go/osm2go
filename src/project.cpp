@@ -296,6 +296,8 @@ bool project_save(GtkWidget *parent, project_t *project) {
  * @returns if project exists
  */
 static gboolean project_exists(settings_t *settings, const char *name, std::string &fullname) {
+  if(G_UNLIKELY(settings->base_path == O2G_NULLPTR))
+    return FALSE;
   fullname = settings->base_path;
   fullname += name;
   fullname += '/';
