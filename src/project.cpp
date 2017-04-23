@@ -933,9 +933,9 @@ static void project_filesize(project_context_t *context) {
     } else
       str = _("Outdated, please download!");
 
+    gboolean en = (!context->is_new || !project->data_dirty) ? TRUE : FALSE;
     gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog),
-		      GTK_RESPONSE_ACCEPT, !context->is_new ||
-				      project->data_dirty ? FALSE : TRUE);
+                                      GTK_RESPONSE_ACCEPT, en);
   }
 
   if(str) {
