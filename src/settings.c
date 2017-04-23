@@ -113,7 +113,7 @@ settings_t *settings_load(void) {
     }
 
     /* adjust default server stored in settings if required */
-    if(strstr(settings->server, "0.5") != NULL) {
+    if(G_UNLIKELY(settings->server && strstr(settings->server, "0.5") != NULL)) {
       strstr(settings->server, "0.5")[2] = '6';
       printf("adjusting server path in settings to 0.6\n");
     }
