@@ -214,7 +214,7 @@ time_t convert_iso8601(const char *str) {
 void osm_tag_free(tag_t *tag) {
   g_free(tag->key);
   g_free(tag->value);
-  g_free(tag);
+  delete tag;
 }
 
 /**
@@ -228,11 +228,12 @@ void osm_tag_free(tag_t *tag) {
  */
 static tag_t *tag_from_xml(xmlChar *k, xmlChar *v) {
   tag_t *ret = O2G_NULLPTR;
-  if(G_LIKELY(k && v && strlen(reinterpret_cast<char *>(k)) > 0 &&
-                        strlen(reinterpret_cast<char *>(v)) > 0)) {
-    ret = g_new0(tag_t, 1);
-    ret->key = g_strdup((gchar*)k);
-    ret->value = g_strdup((gchar*)v);
+  const char *key = reinterpret_cast<char *>(k);
+  const char *value = reinterpret_cast<char *>(v);
+
+  if(G_LIKELY(key && value && strlen(key) > 0 &&
+                              strlen(value) > 0)) {
+    ret = new tag_t(g_strdup(key), g_strdup(value));
   } else {
     printf("incomplete tag key/value %s/%s\n", k, v);
   }
@@ -1869,9 +1870,7 @@ void tag_list_t::copy(const tag_list_t &other)
 
   for(const tag_t *src_tag = other.contents; src_tag; src_tag = src_tag->next) {
     if(G_LIKELY(!src_tag->is_creator_tag())) {
-      *dst_tag = g_new0(tag_t, 1);
-      (*dst_tag)->key = g_strdup(src_tag->key);
-      (*dst_tag)->value = g_strdup(src_tag->value);
+      *dst_tag = new tag_t(g_strdup(src_tag->key), g_strdup(src_tag->value));
       dst_tag = &(*dst_tag)->next;
     }
   }
