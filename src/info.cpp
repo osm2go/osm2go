@@ -39,18 +39,6 @@ enum {
   TAG_NUM_COLS
 };
 
-struct collision_functor {
-  const tag_t &tag;
-  collision_functor(const tag_t &t) : tag(t) { }
-  bool operator()(const tag_t *t) {
-    return (t != &tag) && (strcasecmp(t->key, tag.key) == 0);
-  }
-};
-
-bool info_tag_key_collision(const tag_list_t &tags, const tag_t &tag) {
-  return !!tags.find_if(collision_functor(tag));
-}
-
 struct stag_collision_functor {
   const stag_t *tag;
   stag_collision_functor(const stag_t *t) : tag(t) { }

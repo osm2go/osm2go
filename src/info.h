@@ -53,7 +53,6 @@ public:
   void update_collisions();
 };
 
-bool info_tag_key_collision(const tag_list_t &tags, const tag_t &tag);
 bool info_dialog(GtkWidget *parent, appdata_t *appdata, object_t &object);
 
 #endif
