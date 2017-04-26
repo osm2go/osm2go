@@ -21,6 +21,7 @@
 #define OSM_H
 
 #ifdef __cplusplus
+#include <algorithm>
 #include <map>
 #include <string>
 #include <vector>
@@ -222,11 +223,11 @@ bool osm_position_within_bounds_ll(const pos_t *ll_min, const pos_t *ll_max, con
 struct stag_t;
 
 struct tag_t {
-  struct tag_t *next;
   char *key, *value;
   tag_t(char *k, char *v)
-    : next(O2G_NULLPTR), key(k), value(v)
+    : key(k), value(v)
   { }
+  tag_t(const stag_t &other);
 
   bool is_creator_tag() const;
 
@@ -259,7 +260,9 @@ struct stag_t {
   stag_t(const std::string &k, const std::string &v)
     : key(k), value(v) { }
   stag_t(const tag_t &tag)
-    : key(tag.key), value(tag.value) { }
+    : key(tag.key), value(tag.value) {}
+  stag_t(const tag_t *tag)
+    : key(tag->key), value(tag->value) {}
 
   std::string key;
   std::string value;
@@ -291,16 +294,25 @@ public:
 
   template<typename _Predicate>
   const tag_t *find_if(_Predicate pred) const {
-    for(const tag_t *t = contents; t; t = t->next)
-      if(pred(t))
-        return t;
+    if(!contents)
+      return O2G_NULLPTR;
+    const std::vector<tag_t *>::const_iterator itEnd = contents->end();
+    const std::vector<tag_t *>::const_iterator it = std::find_if(
+#if __cplusplus >= 201103L
+                                                                 contents->cbegin(),
+#else
+                                                                 std::vector<tag_t *>::const_iterator(contents->begin()),
+#endif
+                                                                 itEnd, pred);
+    if(it != itEnd)
+      return *it;
     return O2G_NULLPTR;
   }
 
   template<typename _Predicate>
   void for_each(_Predicate pred) const {
-    for(tag_t *t = contents; t; t = t->next)
-      pred(t);
+    if(contents)
+      std::for_each(contents->begin(), contents->end(), pred);
   }
 
   /**
@@ -347,7 +359,9 @@ public:
   bool operator!=(const std::vector<tag_t *> &t2) const;
 
 private:
-  tag_t *contents;
+  // do not directly use a vector here as many objects do not have
+  // any tags and that would waste too much memory
+  std::vector<tag_t *> *contents;
 };
 
 G_STATIC_ASSERT(sizeof(tag_list_t) == sizeof(tag_t *));
