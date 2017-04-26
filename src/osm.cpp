@@ -2046,9 +2046,7 @@ void tag_list_t::replace(const std::vector<stag_t *> &ntags)
   const std::vector<stag_t *>::const_reverse_iterator itEnd = ntags.rend();
   tag_t *n = O2G_NULLPTR;
   for(std::vector<stag_t *>::const_reverse_iterator it = ntags.rbegin(); it != itEnd; it++) {
-    tag_t *t = g_new0(tag_t, 1);
-    t->key = g_strdup((*it)->key.c_str());
-    t->value = g_strdup((*it)->value.c_str());
+    tag_t *t = new tag_t(g_strdup((*it)->key.c_str()), g_strdup((*it)->value.c_str()));
     t->next = n;
     n = t;
   }
