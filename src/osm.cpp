@@ -296,7 +296,7 @@ bool tag_list_t::merge(tag_list_t &other)
     tag_t *src = *srcIt;
     /* don't copy "created_by" tag or tags that already */
     /* exist in identical form */
-    if(src->is_creator_tag() || find_if(tag_match_functor(*src))) {
+    if(src->is_creator_tag() || contains(tag_match_functor(*src))) {
       osm_tag_free(src);
     } else {
       /* check if same key but with different value is present */
@@ -2033,10 +2033,18 @@ struct key_match_functor {
 
 const char* tag_list_t::get_value(const char *key) const
 {
-  const tag_t *tag = find_if(key_match_functor(key));
-  if(tag)
-    return tag->value;
-
+  if(!contents)
+    return O2G_NULLPTR;
+  const std::vector<tag_t *>::const_iterator itEnd = contents->end();
+  const std::vector<tag_t *>::const_iterator it = std::find_if(
+#if __cplusplus >= 201103L
+                                                               contents->cbegin(),
+#else
+                                                               std::vector<tag_t *>::const_iterator(contents->begin()),
+#endif
+                                                               itEnd, key_match_functor(key));
+  if(it != itEnd)
+    return (*it)->value;
   return O2G_NULLPTR;
 }
 

@@ -293,20 +293,17 @@ public:
   const char *get_value(const char *key) const;
 
   template<typename _Predicate>
-  const tag_t *find_if(_Predicate pred) const {
+  bool contains(_Predicate pred) const {
     if(!contents)
-      return O2G_NULLPTR;
+      return false;
     const std::vector<tag_t *>::const_iterator itEnd = contents->end();
-    const std::vector<tag_t *>::const_iterator it = std::find_if(
+    return itEnd != std::find_if(
 #if __cplusplus >= 201103L
-                                                                 contents->cbegin(),
+                                 contents->cbegin(),
 #else
-                                                                 std::vector<tag_t *>::const_iterator(contents->begin()),
+                                 std::vector<tag_t *>::const_iterator(contents->begin()),
 #endif
-                                                                 itEnd, pred);
-    if(it != itEnd)
-      return *it;
-    return O2G_NULLPTR;
+                                 itEnd, pred);
   }
 
   template<typename _Predicate>

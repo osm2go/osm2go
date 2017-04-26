@@ -45,8 +45,8 @@ int main()
   ntags.push_back(new tag_t(g_strdup("b"), g_strdup("bb")));
 
   tags.replace(ntags);
-  ntags.clear();
 
+  g_assert(ntags.empty());
   g_assert(tags.get_value("a") != O2G_NULLPTR);
   g_assert(strcmp(tags.get_value("a"), "aa") == 0);
   g_assert(tags.get_value("b") != O2G_NULLPTR);
@@ -93,8 +93,8 @@ int main()
   g_assert(tags.get_value("b") != O2G_NULLPTR);
   g_assert(strcmp(tags.get_value("b"), "B") == 0);
   g_assert_cmpuint(tags.asVector().size(), ==, 4);
-  g_assert(tags.find_if(find_aa) != O2G_NULLPTR);
-  g_assert(tags.find_if(find_bb) != O2G_NULLPTR);
+  g_assert(tags.contains(find_aa));
+  g_assert(tags.contains(find_bb));
 
   std::for_each(nstags.begin(), nstags.end(), delete_stag);
   std::for_each(lowerTags.begin(), lowerTags.end(), delete_stag);

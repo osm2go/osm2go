@@ -113,16 +113,14 @@ struct self_collision_functor {
   const tag_list_t &tags;
   self_collision_functor(const tag_list_t &t) : tags(t) {}
   bool operator()(const tag_t *tag) {
-    return tags.find_if(collision_functor(tag)) != O2G_NULLPTR;
+    return tags.contains(collision_functor(tag));
   }
 };
 
 static void map_statusbar(map_t *map, map_item_t *map_item) {
-
-  gboolean collision;
   const tag_list_t &tags = map_item->object.obj->tags;
 
-  collision = tags.find_if(self_collision_functor(tags)) != O2G_NULLPTR ? TRUE : FALSE;
+  gboolean collision = tags.contains(self_collision_functor(tags)) ? TRUE : FALSE;
 
   const std::string &str = map_item->object.get_name();
   statusbar_set(map->appdata->statusbar, str.c_str(), collision);
