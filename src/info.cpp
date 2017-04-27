@@ -289,7 +289,7 @@ static void on_tag_add(G_GNUC_UNUSED GtkWidget *button, tag_context_t *context) 
 
   stag_t * const ntag = new stag_t(tag);
   // check if the new key introduced a collision
-  gboolean collision = info_tag_key_collision(tags, tags.back());
+  gboolean collision = info_tag_key_collision(tags, ntag);
   tags.push_back(ntag);
   /* append a row for the new data */
   GtkTreeIter iter = store_append(context->store, ntag, collision);
