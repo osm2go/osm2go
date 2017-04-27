@@ -335,14 +335,14 @@ static std::vector<tag_t *> xml_scan_tags(xmlNodePtr node) {
  * @param pos new position
  * @param ntags new tags
  * @return if changes are redundant
- * @retval TRUE the changes are the same as the upstream node
- * @retval FALSE local changes are real
+ * @retval true the changes are the same as the upstream node
+ * @retval false local changes are real
  */
-static gboolean
+static bool
 node_compare_changes(const node_t *node, const pos_t *pos, const std::vector<tag_t *> &ntags)
 {
   if (node->pos.lat != pos->lat || node->pos.lon != pos->lon)
-    return FALSE;
+    return false;
 
   return node->tags == ntags;
 }
