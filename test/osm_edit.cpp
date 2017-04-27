@@ -25,6 +25,19 @@ static bool find_bb(const tag_t *t)
 int main()
 {
   tag_list_t tags;
+  std::vector<tag_t *> ntags;
+
+  // compare empty lists
+  g_assert(tags == ntags);
+  g_assert(!(tags != ntags));
+
+  // a list with only created_by must still be considered empty
+  tag_t cr_by(const_cast<char *>("created_by"), const_cast<char *>("test"));
+  g_assert(cr_by.is_creator_tag());
+  ntags.push_back(&cr_by);
+  g_assert(tags == ntags);
+  g_assert(!(tags != ntags));
+  ntags.clear();
 
   // check replacing the tag list from stag_t
   std::vector<stag_t *> nstags;
@@ -40,7 +53,6 @@ int main()
   g_assert(strcmp(tags.get_value("b"), "B") == 0);
 
   // check replacing the tag list from tag_t
-  std::vector<tag_t *> ntags;
   ntags.push_back(new tag_t(g_strdup("a"), g_strdup("aa")));
   ntags.push_back(new tag_t(g_strdup("b"), g_strdup("bb")));
 

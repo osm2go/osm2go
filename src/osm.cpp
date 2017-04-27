@@ -317,18 +317,22 @@ struct tag_find_functor {
 };
 
 bool tag_list_t::operator!=(const std::vector<tag_t *> &t2) const {
-  if(empty() != t2.empty())
-    return true;
-
-  if(empty())
+  if(empty() && t2.empty())
     return false;
+
+  // Special case for an empty list as contents is not set in this case and
+  // must not be dereferenced. Check if t2 only consists of a creator tag, in
+  // which case both lists would still be considered the same, or not. Not
+  // further checks need to be done for the end result.
+  const std::vector<tag_t *>::const_iterator t2cit = std::find_if(t2.begin(), t2.end(), is_creator_tag);
+  if(empty())
+    return (t2cit != t2.end() && t2.size() != 1);
 
   /* first check list length, otherwise deleted tags are hard to detect */
   std::vector<tag_t *>::size_type ocnt = contents->size();
   std::vector<tag_t *>::const_iterator t1it = contents->begin();
   const std::vector<tag_t *>::const_iterator t1End = contents->end();
   const std::vector<tag_t *>::const_iterator t1cit = std::find_if(t1it, t1End, is_creator_tag);
-  const std::vector<tag_t *>::const_iterator t2cit = std::find_if(t2.begin(), t2.end(), is_creator_tag);
   if(t2cit != t2.end())
     ocnt++;
 
