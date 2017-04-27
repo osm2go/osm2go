@@ -1856,7 +1856,7 @@ std::vector<stag_t *> tag_list_t::asPointerVector() const
   if(G_LIKELY(!empty())) {
     ret.reserve(contents->size());
 
-    std::for_each(contents->begin(), contents->end(), tag_vector_copy_functor<tag_t, stag_t, true>(ret));
+    std::for_each(contents->begin(), contents->end(), tag_vector_copy_functor<tag_t, stag_t, false>(ret));
   }
 
   return ret;
