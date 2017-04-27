@@ -426,10 +426,10 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
   }
 }
 
-static void diff_restore_way(xmlNodePtr node_node, osm_t *osm) {
+static void diff_restore_way(xmlNodePtr node_way, osm_t *osm) {
   printf("Restoring way");
 
-  item_id_t id = xml_get_prop_int(node_node, "id", ID_ILLEGAL);
+  item_id_t id = xml_get_prop_int(node_way, "id", ID_ILLEGAL);
   if(G_UNLIKELY(id == ID_ILLEGAL)) {
     printf("\n  entry missing id\n");
     return;
@@ -437,7 +437,7 @@ static void diff_restore_way(xmlNodePtr node_node, osm_t *osm) {
 
   printf(" " ITEM_ID_FORMAT "\n", id);
 
-  int state = xml_get_prop_state(node_node);
+  int state = xml_get_prop_state(node_way);
 
   /* evaluate properties */
   way_t *way = O2G_NULLPTR;
@@ -482,14 +482,14 @@ static void diff_restore_way(xmlNodePtr node_node, osm_t *osm) {
   g_assert(way != O2G_NULLPTR);
 
   /* handle hidden flag */
-  if(xml_get_prop_is(node_node, "hidden", "true"))
+  if(xml_get_prop_is(node_way, "hidden", "true"))
     way->flags |= OSM_FLAG_HIDDEN;
 
   /* update node_chain */
   /* scan for nodes */
   node_chain_t new_chain;
   xmlNode *nd_node = O2G_NULLPTR;
-  for(nd_node = node_node->children; nd_node; nd_node = nd_node->next) {
+  for(nd_node = node_way->children; nd_node; nd_node = nd_node->next) {
     if(nd_node->type == XML_ELEMENT_NODE) {
       if(G_LIKELY(strcmp((char*)nd_node->name, "nd") == 0)) {
 	/* attach node to node_chain */
@@ -514,7 +514,7 @@ static void diff_restore_way(xmlNodePtr node_node, osm_t *osm) {
     /* were found this wasn't a dirty entry but e.g. only the hidden */
     /* flag had been set */
 
-    std::vector<tag_t *> ntags = xml_scan_tags(node_node->children);
+    std::vector<tag_t *> ntags = xml_scan_tags(node_way->children);
     if (way->tags != ntags) {
       way->tags.replace(ntags);
     } else if (!ntags.empty()) {
