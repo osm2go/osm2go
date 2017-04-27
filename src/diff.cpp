@@ -510,10 +510,6 @@ static void diff_restore_way(xmlNodePtr node_way, osm_t *osm) {
     osm_node_chain_free(new_chain);
     new_chain.clear();
 
-    /* only replace tags if nodes have been found before. if no nodes */
-    /* were found this wasn't a dirty entry but e.g. only the hidden */
-    /* flag had been set */
-
     std::vector<tag_t *> ntags = xml_scan_tags(node_way->children);
     if (way->tags != ntags) {
       way->tags.replace(ntags);
@@ -525,6 +521,9 @@ static void diff_restore_way(xmlNodePtr node_way, osm_t *osm) {
       }
     }
   } else {
+    /* only replace tags if nodes have been found before. if no nodes */
+    /* were found this wasn't a dirty entry but e.g. only the hidden */
+    /* flag had been set */
     printf("  no nodes restored, way isn't dirty!\n");
     way->flags &= ~OSM_FLAG_DIRTY;
   }
