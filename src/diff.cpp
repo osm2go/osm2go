@@ -439,9 +439,6 @@ static void diff_restore_way(xmlNodePtr node_node, osm_t *osm) {
 
   int state = xml_get_prop_state(node_node);
 
-  /* handle hidden flag */
-  gboolean hidden = xml_get_prop_is(node_node, "hidden", "true");
-
   /* evaluate properties */
   way_t *way = O2G_NULLPTR;
   switch(state) {
@@ -484,10 +481,11 @@ static void diff_restore_way(xmlNodePtr node_node, osm_t *osm) {
 
   g_assert(way != O2G_NULLPTR);
 
-  /* update node_chain */
-  if(hidden)
+  /* handle hidden flag */
+  if(xml_get_prop_is(node_node, "hidden", "true"))
     way->flags |= OSM_FLAG_HIDDEN;
 
+  /* update node_chain */
   /* scan for nodes */
   node_chain_t new_chain;
   xmlNode *nd_node = O2G_NULLPTR;
