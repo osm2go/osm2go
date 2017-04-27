@@ -389,31 +389,31 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
   case OSM_FLAG_DELETED:
     printf("  Restoring DELETE flag\n");
 
-    if((node = osm->node_by_id(id)) != O2G_NULLPTR)
+    if(G_LIKELY((node = osm->node_by_id(id)) != O2G_NULLPTR)) {
       node->flags |= OSM_FLAG_DELETED;
-    else
+      break;
+    } else {
       printf("  WARNING: no node with that id found\n");
-    break;
+      return;
+    }
 
   case OSM_FLAG_DIRTY:
     printf("  Valid id/position (DIRTY)\n");
 
-    if((node = osm->node_by_id(id)) != O2G_NULLPTR)
+    if(G_LIKELY((node = osm->node_by_id(id)) != O2G_NULLPTR)) {
       node->flags |= OSM_FLAG_DIRTY;
-    else
+      break;
+    } else {
       printf("  WARNING: no node with that id found\n");
-    break;
+      return;
+    }
 
   default:
-    printf("  Illegal node entry\n");
+    printf("  Illegal state entry %u\n", state);
     return;
-    break;
   }
 
-  if(G_UNLIKELY(!node)) {
-    printf("  no valid node\n");
-    return;
-  }
+  g_assert(node != O2G_NULLPTR);
 
   std::vector<tag_t *> ntags = xml_scan_tags(node_node->children);
   /* check if the same changes have been done upstream */
@@ -470,30 +470,31 @@ static void diff_restore_way(xmlNodePtr node_node, osm_t *osm) {
   case OSM_FLAG_DELETED:
     printf("  Restoring DELETE flag\n");
 
-    if((way = osm->way_by_id(id)) != O2G_NULLPTR)
+    if(G_LIKELY((way = osm->way_by_id(id)) != O2G_NULLPTR)) {
       way->flags |= OSM_FLAG_DELETED;
-    else
+      break;
+    } else {
       printf("  WARNING: no way with that id found\n");
-    break;
+      return;
+    }
 
   case OSM_FLAG_DIRTY:
     printf("  Valid id (DIRTY)\n");
 
-    if((way = osm->way_by_id(id)) != O2G_NULLPTR)
+    if(G_LIKELY((way = osm->way_by_id(id)) != O2G_NULLPTR)) {
       way->flags |= OSM_FLAG_DIRTY;
-    else
+      break;
+    } else {
       printf("  WARNING: no way with that id found\n");
-    break;
+      return;
+    }
 
   default:
-    printf("  Illegal way entry\n");
+    printf("  Illegal state entry %u\n", state);
     return;
   }
 
-  if(!way) {
-    printf("  no valid way\n");
-    return;
-  }
+  g_assert(way != O2G_NULLPTR);
 
   /* update node_chain */
   if(hidden)
@@ -575,30 +576,31 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
   case OSM_FLAG_DELETED:
     printf("  Restoring DELETE flag\n");
 
-    if((relation = osm->relation_by_id(id)) != O2G_NULLPTR)
+    if(G_LIKELY((relation = osm->relation_by_id(id)) != O2G_NULLPTR)) {
       relation->flags |= OSM_FLAG_DELETED;
-    else
+      break;
+    } else {
       printf("  WARNING: no relation with that id found\n");
-    break;
+      return;
+    }
 
   case OSM_FLAG_DIRTY:
     printf("  Valid id (DIRTY)\n");
 
-    if((relation = osm->relation_by_id(id)) != O2G_NULLPTR)
+    if(G_LIKELY((relation = osm->relation_by_id(id)) != O2G_NULLPTR)) {
       relation->flags |= OSM_FLAG_DIRTY;
-    else
+      break;
+    } else {
       printf("  WARNING: no relation with that id found\n");
-    break;
+      return;
+    }
 
   default:
-    printf("  Illegal relation entry\n");
+    printf("  Illegal state entry %u\n", state);
     return;
   }
 
-  if(G_UNLIKELY(!relation)) {
-    printf("  no valid relation\n");
-    return;
-  }
+  g_assert(relation != O2G_NULLPTR);
 
   bool was_changed = false;
   std::vector<tag_t *> ntags = xml_scan_tags(node_rel->children);
