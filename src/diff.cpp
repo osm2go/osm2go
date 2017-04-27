@@ -383,7 +383,7 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
 
     if(G_LIKELY((node = osm->node_by_id(id)) != O2G_NULLPTR)) {
       node->flags |= OSM_FLAG_DELETED;
-      break;
+      return;
     } else {
       printf("  WARNING: no node with that id found\n");
       return;
@@ -460,7 +460,7 @@ static void diff_restore_way(xmlNodePtr node_node, osm_t *osm) {
 
     if(G_LIKELY((way = osm->way_by_id(id)) != O2G_NULLPTR)) {
       way->flags |= OSM_FLAG_DELETED;
-      break;
+      return;
     } else {
       printf("  WARNING: no way with that id found\n");
       return;
@@ -562,7 +562,7 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
 
     if(G_LIKELY((relation = osm->relation_by_id(id)) != O2G_NULLPTR)) {
       relation->flags |= OSM_FLAG_DELETED;
-      break;
+      return;
     } else {
       printf("  WARNING: no relation with that id found\n");
       return;
