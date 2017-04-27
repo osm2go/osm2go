@@ -2078,8 +2078,8 @@ base_object_t::base_object_t()
   memset(this, 0, sizeof(*this));
 }
 
-base_object_t::base_object_t(item_id_t ver)
-  : id(0)
+base_object_t::base_object_t(item_id_t ver, item_id_t i)
+  : id(i)
   , version(ver)
   , user(O2G_NULLPTR)
   , time(0)
@@ -2103,8 +2103,8 @@ way_t::way_t()
   memset(&draw, 0, sizeof(draw));
 }
 
-way_t::way_t(item_id_t ver)
-  : base_object_t(ver)
+way_t::way_t(item_id_t ver, item_id_t i)
+  : base_object_t(ver, i)
   , map_item_chain(O2G_NULLPTR)
   , node_chain(0)
 {
@@ -2180,8 +2180,8 @@ relation_t::relation_t()
 {
 }
 
-relation_t::relation_t(item_id_t ver)
-  : base_object_t(ver)
+relation_t::relation_t(item_id_t ver, item_id_t i)
+  : base_object_t(ver, i)
 {
 }
 
@@ -2244,8 +2244,8 @@ node_t::node_t()
   memset(&lpos, 0, sizeof(lpos));
 }
 
-node_t::node_t(item_id_t ver, const lpos_t &lp, const pos_t &p)
-  : base_object_t(ver)
+node_t::node_t(item_id_t ver, const lpos_t &lp, const pos_t &p, item_id_t i)
+  : base_object_t(ver, i)
   , pos(p)
   , lpos(lp)
   , ways(0)

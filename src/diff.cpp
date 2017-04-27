@@ -371,9 +371,7 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
   case OSM_FLAG_NEW: {
     printf("  Restoring NEW node\n");
 
-    node = new node_t();
-    node->id = id;
-    node->flags = OSM_FLAG_NEW;
+    node = new node_t(1, lpos_t(), pos, id);
 
     /* attach to end of node list */
     osm->nodes[id] = node;
@@ -450,9 +448,7 @@ static void diff_restore_way(xmlNodePtr node_node, osm_t *osm) {
   case OSM_FLAG_NEW: {
     printf("  Restoring NEW way\n");
 
-    way = new way_t();
-    way->id = id;
-    way->flags = OSM_FLAG_NEW;
+    way = new way_t(1, id);
 
     /* attach to end of way list */
     osm->ways[id] = way;
@@ -555,9 +551,7 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
   case OSM_FLAG_NEW:
     printf("  Restoring NEW relation\n");
 
-    relation = new relation_t();
-    relation->id = id;
-    relation->flags = OSM_FLAG_NEW;
+    relation = new relation_t(1, id);
 
     /* attach to end of relation list */
     osm->relations[id] = relation;

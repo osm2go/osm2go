@@ -365,7 +365,7 @@ G_STATIC_ASSERT(sizeof(tag_list_t) == sizeof(tag_t *));
 
 struct base_object_t {
   explicit base_object_t();
-  explicit base_object_t(item_id_t ver);
+  explicit base_object_t(item_id_t ver, item_id_t i = 0);
 
   item_id_t id;
   item_id_t version;
@@ -378,7 +378,7 @@ struct base_object_t {
 class node_t : public base_object_t {
 public:
   explicit node_t();
-  explicit node_t(item_id_t ver, const lpos_t &lp, const pos_t &p);
+  explicit node_t(item_id_t ver, const lpos_t &lp, const pos_t &p, item_id_t i = 0);
 
   pos_t pos;
   lpos_t lpos;
@@ -406,7 +406,7 @@ typedef std::vector<node_t *> node_chain_t;
 class way_t: public base_object_t {
 public:
   explicit way_t();
-  explicit way_t(item_id_t ver);
+  explicit way_t(item_id_t ver, item_id_t i = 0);
 
   /* visual representation from elemstyle */
   struct {
@@ -453,7 +453,7 @@ public:
 class relation_t : public base_object_t {
 public:
   explicit relation_t();
-  explicit relation_t(item_id_t ver);
+  explicit relation_t(item_id_t ver, item_id_t i = 0);
 
   std::vector<member_t> members;
 
