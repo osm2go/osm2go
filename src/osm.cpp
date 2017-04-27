@@ -2082,7 +2082,7 @@ base_object_t::base_object_t(item_id_t ver)
   : id(0)
   , version(ver)
   , user(O2G_NULLPTR)
-  , time(version == 1 ? ::time(O2G_NULLPTR) : 0)
+  , time(0)
   , flags(version == 1 ? OSM_FLAG_NEW : 0)
 {
 }

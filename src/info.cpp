@@ -402,11 +402,15 @@ static GtkWidget *details_widget(const tag_context_t &context, bool big) {
   /* ------------ time ----------------- */
 
   if(big) table_attach(table, gtk_label_new(_("Date/Time:")), 0, 1);
-  struct tm loctime;
-  localtime_r(&context.object.obj->time, &loctime);
-  char time_str[32];
-  strftime(time_str, sizeof(time_str), "%x %X", &loctime);
-  label = gtk_label_new(time_str);
+  if(context.object.obj->time > 0) {
+    struct tm loctime;
+    localtime_r(&context.object.obj->time, &loctime);
+    char time_str[32];
+    strftime(time_str, sizeof(time_str), "%x %X", &loctime);
+    label = gtk_label_new(time_str);
+  } else {
+    label = gtk_label_new(_("Not yet uploaded"));
+  }
   table_attach(table, label, 1, big?1:0);
 
   /* ------------ coordinate (only for nodes) ----------------- */

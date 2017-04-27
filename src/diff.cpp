@@ -103,12 +103,8 @@ void diff_save_nodes::operator()(std::pair<item_id_t, node_t *> pair)
   if(node->flags & OSM_FLAG_DELETED)
     return;
 
-  char str[32];
-
   /* additional info is only required if the node hasn't been deleted */
   xml_set_prop_pos(node_node, &node->pos);
-  snprintf(str, sizeof(str), "%lu", node->time);
-  xmlNewProp(node_node, BAD_CAST "time", BAD_CAST str);
 
   diff_save_tags(node, node_node);
 }
@@ -378,8 +374,6 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
     node = new node_t();
     node->id = id;
     node->flags = OSM_FLAG_NEW;
-    node->time = xml_get_prop_int(node_node, "time", 0);
-    if(!node->time) node->time = time(O2G_NULLPTR);
 
     /* attach to end of node list */
     osm->nodes[id] = node;
@@ -459,8 +453,6 @@ static void diff_restore_way(xmlNodePtr node_node, osm_t *osm) {
     way = new way_t();
     way->id = id;
     way->flags = OSM_FLAG_NEW;
-    way->time = xml_get_prop_int(node_node, "time", 0);
-    if(!way->time) way->time = time(O2G_NULLPTR);
 
     /* attach to end of way list */
     osm->ways[id] = way;
@@ -566,8 +558,6 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
     relation = new relation_t();
     relation->id = id;
     relation->flags = OSM_FLAG_NEW;
-    relation->time = xml_get_prop_int(node_rel, "time", 0);
-    if(!relation->time) relation->time = time(O2G_NULLPTR);
 
     /* attach to end of relation list */
     osm->relations[id] = relation;
