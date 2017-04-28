@@ -351,6 +351,11 @@ public:
   { return !operator!=(t2); }
   bool operator!=(const std::vector<tag_t> &t2) const;
 
+  /**
+   * @brief check if 2 tags with the same key exist
+   */
+  bool hasTagCollisions() const;
+
 private:
   // do not directly use a vector here as many objects do not have
   // any tags and that would waste too much memory

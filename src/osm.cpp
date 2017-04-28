@@ -362,6 +362,28 @@ bool tag_list_t::operator!=(const std::vector<tag_t> &t2) const {
   return false;
 }
 
+struct collision_functor {
+  const tag_t &tag;
+  collision_functor(const tag_t &t) : tag(t) { }
+  bool operator()(const tag_t &t) {
+    return (strcasecmp(t.key, tag.key) == 0);
+  }
+};
+
+bool tag_list_t::hasTagCollisions() const
+{
+  if(empty())
+    return false;
+
+  const std::vector<tag_t>::const_iterator itEnd = contents->end();
+  for(std::vector<tag_t>::const_iterator it = contents->begin();
+      it + 1 != itEnd; it++) {
+    if (std::find_if(it + 1, itEnd, collision_functor(*it)) != itEnd)
+      return true;
+  }
+  return false;
+}
+
 bool tag_t::update(const char *nkey, const char *nvalue)
 {
   bool ret = false;

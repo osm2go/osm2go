@@ -51,6 +51,7 @@ int main()
   g_assert(strcmp(tags.get_value("a"), "A") == 0);
   g_assert(tags.get_value("b") != O2G_NULLPTR);
   g_assert(strcmp(tags.get_value("b"), "B") == 0);
+  g_assert(!tags.hasTagCollisions());
 
   // check replacing the tag list from tag_t
   ntags.push_back(tag_t(g_strdup("a"), g_strdup("aa")));
@@ -63,6 +64,7 @@ int main()
   g_assert(strcmp(tags.get_value("a"), "aa") == 0);
   g_assert(tags.get_value("b") != O2G_NULLPTR);
   g_assert(strcmp(tags.get_value("b"), "bb") == 0);
+  g_assert(!tags.hasTagCollisions());
 
   std::vector<stag_t *> lowerTags = tags.asPointerVector();
 
@@ -74,6 +76,7 @@ int main()
   g_assert(strcmp(tags.get_value("a"), "A") == 0);
   g_assert(tags.get_value("b") != O2G_NULLPTR);
   g_assert(strcmp(tags.get_value("b"), "B") == 0);
+  g_assert(!tags.hasTagCollisions());
 
   tag_list_t tags2;
   tags2.replace(nstags);
@@ -81,6 +84,7 @@ int main()
   // merging the same things shouldn't change anything
   bool collision = tags.merge(tags2);
   g_assert(!collision);
+  g_assert(!tags.hasTagCollisions());
 
   g_assert(tags.get_value("a") != O2G_NULLPTR);
   g_assert(strcmp(tags.get_value("a"), "A") == 0);
@@ -100,6 +104,7 @@ int main()
 
   collision = tags.merge(tags2);
   g_assert(collision);
+  g_assert(tags.hasTagCollisions());
   g_assert(tags.get_value("a") != O2G_NULLPTR);
   g_assert(strcmp(tags.get_value("a"), "A") == 0);
   g_assert(tags.get_value("b") != O2G_NULLPTR);
