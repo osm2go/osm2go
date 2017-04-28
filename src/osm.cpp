@@ -187,8 +187,8 @@ static const char *osm_user(osm_t *osm, const char *name, int uid) {
   } else {
     /* match with the name, but only against users without uid */
     const std::vector<std::string>::const_iterator itEnd = osm->anonusers.end();
-    std::vector<std::string>::const_iterator it = osm->anonusers.begin();
-    it = std::find_if(it, itEnd, cmp_user(name));
+    std::vector<std::string>::const_iterator it = std::find_if(cbegin(osm->anonusers),
+                                                               itEnd, cmp_user(name));
     if(it != itEnd)
       return it->c_str();
     osm->anonusers.push_back(name);

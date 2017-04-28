@@ -276,8 +276,8 @@ static void on_tag_add(G_GNUC_UNUSED GtkWidget *button, tag_context_t *context) 
 
   std::vector<stag_t *> &tags = context->tags;
   const std::vector<stag_t *>::const_iterator itEnd = tags.end();
-  std::vector<stag_t *>::const_iterator it = tags.begin();
-  it = std::find_if(it, itEnd, stag_identity_functor(tag));
+  std::vector<stag_t *>::const_iterator it = std::find_if(cbegin(tags), itEnd,
+                                                          stag_identity_functor(tag));
   if(G_UNLIKELY(it != itEnd)) {
     // the very same tag is already in the list, just select the old one
     GtkTreeIter iter;
