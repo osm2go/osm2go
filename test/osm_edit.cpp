@@ -12,20 +12,20 @@ static void delete_stag(stag_t *s)
   delete s;
 }
 
-static bool find_aa(const tag_t *t)
+static bool find_aa(const tag_t &t)
 {
-  return strcmp(t->value, "aa") == 0;
+  return strcmp(t.value, "aa") == 0;
 }
 
-static bool find_bb(const tag_t *t)
+static bool find_bb(const tag_t &t)
 {
-  return strcmp(t->value, "bb") == 0;
+  return strcmp(t.value, "bb") == 0;
 }
 
 int main()
 {
   tag_list_t tags;
-  std::vector<tag_t *> ntags;
+  std::vector<tag_t> ntags;
 
   // compare empty lists
   g_assert(tags == ntags);
@@ -34,7 +34,7 @@ int main()
   // a list with only created_by must still be considered empty
   tag_t cr_by(const_cast<char *>("created_by"), const_cast<char *>("test"));
   g_assert(cr_by.is_creator_tag());
-  ntags.push_back(&cr_by);
+  ntags.push_back(cr_by);
   g_assert(tags == ntags);
   g_assert(!(tags != ntags));
   ntags.clear();
@@ -53,8 +53,8 @@ int main()
   g_assert(strcmp(tags.get_value("b"), "B") == 0);
 
   // check replacing the tag list from tag_t
-  ntags.push_back(new tag_t(g_strdup("a"), g_strdup("aa")));
-  ntags.push_back(new tag_t(g_strdup("b"), g_strdup("bb")));
+  ntags.push_back(tag_t(g_strdup("a"), g_strdup("aa")));
+  ntags.push_back(tag_t(g_strdup("b"), g_strdup("bb")));
 
   tags.replace(ntags);
 

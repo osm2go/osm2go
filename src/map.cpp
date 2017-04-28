@@ -102,17 +102,17 @@ canvas_item_t *map_item_chain_t::firstCanvasItem() const {
 #undef DESTROY_WAIT_FOR_GTK
 
 struct collision_functor {
-  const tag_t * const tag;
-  collision_functor(const tag_t *t) : tag(t) { }
-  bool operator()(const tag_t *t) {
-    return (t != tag) && (strcasecmp(t->key, tag->key) == 0);
+  const tag_t &tag;
+  collision_functor(const tag_t &t) : tag(t) { }
+  bool operator()(const tag_t &t) {
+    return (&t != &tag) && (strcasecmp(t.key, tag.key) == 0);
   }
 };
 
 struct self_collision_functor {
   const tag_list_t &tags;
   self_collision_functor(const tag_list_t &t) : tags(t) {}
-  bool operator()(const tag_t *tag) {
+  bool operator()(const tag_t &tag) {
     return tags.contains(collision_functor(tag));
   }
 };

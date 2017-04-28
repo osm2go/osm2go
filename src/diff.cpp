@@ -48,11 +48,11 @@ static std::string diff_filename(const project_t *project) {
 struct diff_save_tags_functor {
   xmlNodePtr const node;
   diff_save_tags_functor(xmlNodePtr n) : node(n) {}
-  void operator()(const tag_t *tag) {
+  void operator()(const tag_t &tag) {
     xmlNodePtr tag_node = xmlNewChild(node, O2G_NULLPTR,
                                       BAD_CAST "tag", O2G_NULLPTR);
-    xmlNewProp(tag_node, BAD_CAST "k", BAD_CAST tag->key);
-    xmlNewProp(tag_node, BAD_CAST "v", BAD_CAST tag->value);
+    xmlNewProp(tag_node, BAD_CAST "k", BAD_CAST tag.key);
+    xmlNewProp(tag_node, BAD_CAST "v", BAD_CAST tag.value);
   }
 };
 
@@ -308,17 +308,14 @@ static int xml_get_prop_state(xmlNode *node) {
   return OSM_FLAG_DIRTY;
 }
 
-static std::vector<tag_t *> xml_scan_tags(xmlNodePtr node) {
+static std::vector<tag_t> xml_scan_tags(xmlNodePtr node) {
   /* scan for tags */
-  std::vector<tag_t *> ret;
+  std::vector<tag_t> ret;
 
   while(node) {
     if(node->type == XML_ELEMENT_NODE) {
-      if(G_LIKELY(strcmp((char*)node->name, "tag") == 0)) {
-        tag_t *tag = osm_t::parse_tag(node);
-        if(tag)
-          ret.push_back(tag);
-      }
+      if(G_LIKELY(strcmp((char*)node->name, "tag") == 0))
+        osm_t::parse_tag(node, ret);
     }
     node = node->next;
   }
@@ -393,7 +390,7 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
 
   g_assert(node != O2G_NULLPTR);
 
-  std::vector<tag_t *> ntags = xml_scan_tags(node_node->children);
+  std::vector<tag_t> ntags = xml_scan_tags(node_node->children);
   /* check if the same changes have been done upstream */
   if(state == OSM_FLAG_DIRTY && !pos_diff && node->tags == ntags) {
     printf("node " ITEM_ID_FORMAT " has the same values and position as upstream, discarding diff\n", id);
@@ -493,7 +490,7 @@ static void diff_restore_way(xmlNodePtr node_way, osm_t *osm) {
     osm_node_chain_free(new_chain);
     new_chain.clear();
 
-    std::vector<tag_t *> ntags = xml_scan_tags(node_way->children);
+    std::vector<tag_t> ntags = xml_scan_tags(node_way->children);
     if (way->tags != ntags) {
       way->tags.replace(ntags);
     } else if (!ntags.empty()) {
@@ -567,7 +564,7 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
   g_assert(relation != O2G_NULLPTR);
 
   bool was_changed = false;
-  std::vector<tag_t *> ntags = xml_scan_tags(node_rel->children);
+  std::vector<tag_t> ntags = xml_scan_tags(node_rel->children);
   if(relation->tags != ntags) {
     relation->tags.replace(ntags);
     was_changed = true;

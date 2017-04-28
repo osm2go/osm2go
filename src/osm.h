@@ -206,10 +206,10 @@ struct osm_t {
   /**
    * @brief parse the XML node for tag values
    * @param a_node the XML node to parse
-   * @returns a new tag structure on success
-   * @retval NULL the XML was invalid
+   * @param tags the tag vector the new node is added to
+   * @returns if a new tag was added
    */
-  static tag_t *parse_tag(xmlNode* a_node);
+  static bool parse_tag(xmlNode* a_node, std::vector<tag_t> &tags);
 
   member_t parse_relation_member(xmlNode *a_node);
 
@@ -298,7 +298,7 @@ public:
   bool contains(_Predicate pred) const {
     if(!contents)
       return false;
-    const std::vector<tag_t *>::const_iterator itEnd = contents->end();
+    const std::vector<tag_t>::const_iterator itEnd = contents->end();
     return itEnd != std::find_if(cbegin(*contents), itEnd, pred);
   }
 
@@ -335,7 +335,7 @@ public:
    * The old values will be freed, this object takes ownership of the values
    * in ntags.
    */
-  void replace(std::vector<tag_t *> &ntags);
+  void replace(std::vector<tag_t> &ntags);
 
   void replace(const std::vector<stag_t *> &ntags);
 
@@ -347,14 +347,14 @@ public:
    */
   bool merge(tag_list_t &other);
 
-  inline bool operator==(const std::vector<tag_t *> &t2) const
+  inline bool operator==(const std::vector<tag_t> &t2) const
   { return !operator!=(t2); }
-  bool operator!=(const std::vector<tag_t *> &t2) const;
+  bool operator!=(const std::vector<tag_t> &t2) const;
 
 private:
   // do not directly use a vector here as many objects do not have
   // any tags and that would waste too much memory
-  std::vector<tag_t *> *contents;
+  std::vector<tag_t> *contents;
 };
 
 G_STATIC_ASSERT(sizeof(tag_list_t) == sizeof(tag_t *));
@@ -470,7 +470,7 @@ void osm_node_chain_free(node_chain_t &node_chain);
 void osm_member_free(member_t &member);
 void osm_members_free(std::vector<member_t> &members);
 
-void osm_tag_free(tag_t *tag);
+void osm_tag_free(tag_t &tag);
 
 /* ----------- edit functions ----------- */
 std::vector<stag_t *> osm_tags_list_copy(const std::vector<stag_t> &tags);

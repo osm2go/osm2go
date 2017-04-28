@@ -12,7 +12,7 @@ struct tag_counter {
   unsigned int &tags;
   unsigned int &tag_objs;
   tag_counter(unsigned int &t, unsigned int &o) : tags(t), tag_objs(o) {}
-  void operator()(const tag_t *) {
+  void operator()(const tag_t &) {
     tags++;
   }
   void operator()(const std::pair<item_id_t, T *> &pair) {
