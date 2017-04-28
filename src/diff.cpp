@@ -357,7 +357,7 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
 
   int state = xml_get_prop_state(node_node);
   pos_t pos;
-  gboolean pos_diff = xml_get_prop_pos(node_node, &pos);
+  bool pos_diff = xml_get_prop_pos(node_node, &pos);
 
   if(G_UNLIKELY(!(state & OSM_FLAG_DELETED) && !pos_diff)) {
     printf("  Node not deleted, but no valid position\n");

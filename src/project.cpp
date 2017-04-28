@@ -121,7 +121,7 @@ static bool project_read(const std::string &project_file, project_t *project,
   for (cur_node = xmlDocGetRootElement(doc); cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcmp((char*)cur_node->name, "proj") == 0) {
-        project->data_dirty = xml_get_prop_is(cur_node, "dirty", "true") == TRUE;
+        project->data_dirty = xml_get_prop_is(cur_node, "dirty", "true");
 
 	xmlNode *node = cur_node->children;
 

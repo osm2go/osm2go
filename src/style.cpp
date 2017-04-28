@@ -100,7 +100,7 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t *style) {
         style->node.zoom_max = parse_scale_max(cur_node);
 
 	style->node.show_untagged =
-	  xml_get_prop_is(cur_node, "show-untagged", "true");
+	  xml_get_prop_is(cur_node, "show-untagged", "true") ? TRUE : FALSE;
 
 	/* ---------- icon ------------------------------------- */
       } else if(strcasecmp((char*)cur_node->name, "icon") == 0) {
@@ -110,7 +110,7 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t *style) {
 	  g_free(style->icon.path_prefix);
 	  style->icon.path_prefix = prefix;
 	}
-	style->icon.enable = xml_get_prop_is(cur_node, "enable", "true");
+	style->icon.enable = xml_get_prop_is(cur_node, "enable", "true") ? TRUE : FALSE;
 
 	/* ---------- way ------------------------------------- */
       } else if(strcasecmp((char*)cur_node->name, "way") == 0) {

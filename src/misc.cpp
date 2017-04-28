@@ -56,20 +56,21 @@ double xml_get_prop_float(xmlNode *node, const char *prop) {
   return value;
 }
 
-gboolean xml_get_prop_is(xmlNode *node, const char *prop, const char *str) {
+bool xml_get_prop_is(xmlNode *node, const char *prop, const char *str) {
   xmlChar *prop_str = xmlGetProp(node, BAD_CAST prop);
-  if(!prop_str) return FALSE;
+  if(!prop_str)
+    return false;
 
-  gboolean match = (strcasecmp((char*)prop_str, str) == 0);
+  bool match = (strcasecmp((char*)prop_str, str) == 0);
   xmlFree(prop_str);
   return match;
 }
 
-gboolean xml_get_prop_pos(xmlNode *node, pos_t *pos) {
+bool xml_get_prop_pos(xmlNode *node, pos_t *pos) {
   pos->lat = xml_get_prop_float(node, "lat");
   pos->lon = xml_get_prop_float(node, "lon");
 
-  return (std::isnan(pos->lat) || std::isnan(pos->lon)) ? FALSE : TRUE;
+  return !std::isnan(pos->lat) && !std::isnan(pos->lon);
 }
 
 void xml_set_prop_pos(xmlNode *node, const pos_t *pos) {
