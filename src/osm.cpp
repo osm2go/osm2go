@@ -2031,12 +2031,7 @@ const char* tag_list_t::get_value(const char *key) const
   if(!contents)
     return O2G_NULLPTR;
   const std::vector<tag_t *>::const_iterator itEnd = contents->end();
-  const std::vector<tag_t *>::const_iterator it = std::find_if(
-#if __cplusplus >= 201103L
-                                                               contents->cbegin(),
-#else
-                                                               std::vector<tag_t *>::const_iterator(contents->begin()),
-#endif
+  const std::vector<tag_t *>::const_iterator it = std::find_if(cbegin(*contents),
                                                                itEnd, key_match_functor(key));
   if(it != itEnd)
     return (*it)->value;

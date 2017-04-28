@@ -974,12 +974,7 @@ presets_widget_t::Match presets_widget_t::parseMatch(const char *matchstring, Ma
     matches["keyvalue!"] = MatchKeyValue_Force;
   }
   const VMap::const_iterator itEnd = matches.end();
-  const VMap::const_iterator it = !matchstring ? itEnd : std::find_if(
-#if __cplusplus >= 201103L
-                                               matches.cbegin(),
-#else
-                                               VMap::const_iterator(matches.begin()),
-#endif
+  const VMap::const_iterator it = !matchstring ? itEnd : std::find_if(cbegin(matches),
                                                itEnd, str_map_find<VMap>(matchstring));
 
   return (it == itEnd) ? def : it->second;

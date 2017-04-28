@@ -67,6 +67,14 @@ template<typename T> void shrink_to_fit(T &v) {
 #endif
 }
 
+template<typename T> typename T::const_iterator cbegin(const T &c) {
+#if __cplusplus >= 201103L
+  return c.cbegin();
+#else
+  return typename T::const_iterator(c.begin());
+#endif
+}
+
 struct pos_t;
 
 double xml_get_prop_float(xmlNode *node, const char *prop);

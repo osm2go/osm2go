@@ -21,6 +21,8 @@
 #define OSM_H
 
 #ifdef __cplusplus
+#include "misc.h"
+
 #include <algorithm>
 #include <map>
 #include <string>
@@ -297,13 +299,7 @@ public:
     if(!contents)
       return false;
     const std::vector<tag_t *>::const_iterator itEnd = contents->end();
-    return itEnd != std::find_if(
-#if __cplusplus >= 201103L
-                                 contents->cbegin(),
-#else
-                                 std::vector<tag_t *>::const_iterator(contents->begin()),
-#endif
-                                 itEnd, pred);
+    return itEnd != std::find_if(cbegin(*contents), itEnd, pred);
   }
 
   template<typename _Predicate>
