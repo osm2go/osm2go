@@ -325,24 +325,6 @@ static std::vector<tag_t *> xml_scan_tags(xmlNodePtr node) {
   return ret;
 }
 
-/*
- * @brief check if all local modifications of a node are already in the upstream node
- * @param node upstream node
- * @param pos new position
- * @param ntags new tags
- * @return if changes are redundant
- * @retval true the changes are the same as the upstream node
- * @retval false local changes are real
- */
-static bool
-node_compare_changes(const node_t *node, const pos_t *pos, const std::vector<tag_t *> &ntags)
-{
-  if (node->pos.lat != pos->lat || node->pos.lon != pos->lon)
-    return false;
-
-  return node->tags == ntags;
-}
-
 static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
   printf("Restoring node");
 
@@ -394,6 +376,10 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
 
     if(G_LIKELY((node = osm->node_by_id(id)) != O2G_NULLPTR)) {
       node->flags |= OSM_FLAG_DIRTY;
+      if (node->pos == pos)
+        pos_diff = false;
+      else
+        node->pos = pos;
       break;
     } else {
       printf("  WARNING: no node with that id found\n");
@@ -409,7 +395,7 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
 
   std::vector<tag_t *> ntags = xml_scan_tags(node_node->children);
   /* check if the same changes have been done upstream */
-  if(state == OSM_FLAG_DIRTY && node_compare_changes(node, &pos, ntags)) {
+  if(state == OSM_FLAG_DIRTY && !pos_diff && node->tags == ntags) {
     printf("node " ITEM_ID_FORMAT " has the same values and position as upstream, discarding diff\n", id);
     std::for_each(ntags.begin(), ntags.end(), osm_tag_free);
     node->flags &= ~OSM_FLAG_DIRTY;
@@ -418,12 +404,9 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
 
   node->tags.replace(ntags);
 
-  /* update position from diff */
-  if(pos_diff) {
-    node->pos = pos;
-
+  /* update screen position, the absolute position has already been changed */
+  if(pos_diff)
     pos2lpos(osm->bounds, &node->pos, &node->lpos);
-  }
 }
 
 static void diff_restore_way(xmlNodePtr node_way, osm_t *osm) {
