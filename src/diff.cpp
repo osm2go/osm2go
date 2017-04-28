@@ -607,7 +607,8 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
 }
 
 void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) {
-  if(!project || !osm) return;
+  if(!osm)
+    return;
 
   /* first try to open a backup which is only present if saving the */
   /* actual diff didn't succeed */

@@ -727,7 +727,6 @@ static void on_project_edit(G_GNUC_UNUSED GtkButton *button, gpointer data) {
 	  map_clear(appdata->map, MAP_LAYER_ALL);
 
 	  delete appdata->osm;
-	  appdata->osm = O2G_NULLPTR;
 	}
 
 	/* and load the (hopefully) new file */
@@ -1319,18 +1318,14 @@ bool project_load(appdata_t *appdata, const std::string &name) {
   /* open project itself */
   banner_busy_tick();
 
-  if(!project_open(appdata, name.c_str())) {
+  if(G_UNLIKELY(!project_open(appdata, name.c_str()))) {
     printf("error opening requested project\n");
 
-    if(appdata->project) {
-      delete appdata->project;
-      appdata->project = O2G_NULLPTR;
-    }
+    delete appdata->project;
+    appdata->project = O2G_NULLPTR;
 
-    if(appdata->osm) {
-      delete appdata->osm;
-      appdata->osm = O2G_NULLPTR;
-    }
+    delete appdata->osm;
+    appdata->osm = O2G_NULLPTR;
 
     snprintf(banner_txt, sizeof(banner_txt),
 	     _("Error opening %s"), name.c_str());
@@ -1346,19 +1341,15 @@ bool project_load(appdata_t *appdata, const std::string &name) {
   /* check if OSM data is valid */
   banner_busy_tick();
   const char *errmsg = appdata->osm->sanity_check();
-  if(errmsg) {
+  if(G_UNLIKELY(errmsg != O2G_NULLPTR)) {
     errorf(GTK_WIDGET(appdata->window), "%s", errmsg);
     printf("project/osm sanity checks failed, unloading project\n");
 
-    if(appdata->project) {
-      delete appdata->project;
-      appdata->project = O2G_NULLPTR;
-    }
+    delete appdata->project;
+    appdata->project = O2G_NULLPTR;
 
-    if(appdata->osm) {
-      delete appdata->osm;
-      appdata->osm = O2G_NULLPTR;
-    }
+    delete appdata->osm;
+    appdata->osm = O2G_NULLPTR;
 
     snprintf(banner_txt, sizeof(banner_txt),
 	     _("Error opening %s"), name.c_str());

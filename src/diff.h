@@ -25,7 +25,7 @@ struct project_t;
 struct osm_t;
 
 void diff_save(const project_t *project, const osm_t *osm);
-void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm);
+void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) __attribute__((nonnull(2)));
 bool diff_present(const project_t *project);
 void diff_remove(const project_t *project);
 bool diff_is_clean(const osm_t *osm, bool honor_hidden_flags);
