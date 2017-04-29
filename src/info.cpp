@@ -89,7 +89,7 @@ void tag_context_t::update_collisions()
     do {
       stag_t *tag = O2G_NULLPTR;
       gtk_tree_model_get(GTK_TREE_MODEL(store), &iter, TAG_COL_DATA, &tag, -1);
-      g_assert(tag);
+      g_assert_nonnull(tag);
       gtk_list_store_set(store, &iter,
          TAG_COL_COLLISION, info_tag_key_collision(tags, tag), -1);
 
@@ -103,10 +103,10 @@ static void on_tag_remove(G_GNUC_UNUSED GtkWidget *button, tag_context_t *contex
 
   GtkTreeSelection *selection = list_get_selection(context->list);
   if(gtk_tree_selection_get_selected(selection, &model, &iter)) {
-    stag_t *tag;
+    stag_t *tag = O2G_NULLPTR;
     gtk_tree_model_get(model, &iter, TAG_COL_DATA, &tag, -1);
 
-    g_assert(tag);
+    g_assert_nonnull(tag);
 
     /* de-chain */
     printf("de-chaining tag %s/%s\n", tag->key.c_str(), tag->value.c_str());
@@ -515,7 +515,7 @@ void info_dialog(GtkWidget *parent, appdata_t *appdata) {
 /* given */
 bool info_dialog(GtkWidget *parent, appdata_t *appdata, object_t &object) {
 
-  g_assert(object.is_real());
+  g_assert_true(object.is_real());
 
   /* use implicit selection if not explicitely given */
   tag_context_t context(appdata, object);

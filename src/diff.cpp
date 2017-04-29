@@ -377,7 +377,7 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
     return;
   }
 
-  g_assert(node != O2G_NULLPTR);
+  g_assert_nonnull(node);
 
   std::vector<tag_t> ntags = xml_scan_tags(node_node->children);
   /* check if the same changes have been done upstream */
@@ -448,7 +448,7 @@ static void diff_restore_way(xmlNodePtr node_way, osm_t *osm) {
     return;
   }
 
-  g_assert(way != O2G_NULLPTR);
+  g_assert_nonnull(way);
 
   /* handle hidden flag */
   if(xml_get_prop_is(node_way, "hidden", "true"))
@@ -550,7 +550,7 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
     return;
   }
 
-  g_assert(relation != O2G_NULLPTR);
+  g_assert_nonnull(relation);
 
   bool was_changed = false;
   std::vector<tag_t> ntags = xml_scan_tags(node_rel->children);

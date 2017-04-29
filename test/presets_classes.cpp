@@ -1,5 +1,6 @@
 #include <josm_presets.h>
 #include <josm_presets_p.h>
+#include <misc.h>
 #include <osm.h>
 
 #include <algorithm>
@@ -176,42 +177,42 @@ static bool check_combined()
                                                  "different",
                                                  std::string(), "none"));
 
-  g_assert(item.matches(tags) == false);
+  g_assert_false(item.matches(tags));
 
   // another one that reports neutral
   item.widgets.push_back(new presets_widget_text("different",
                                                  "different",
                                                  std::string(), "key"));
 
-  g_assert(item.matches(tags) == false);
+  g_assert_false(item.matches(tags));
 
   // one that matches on key
   item.widgets.push_back(new presets_widget_text(tag_testkey_testtext.key,
                                                  "different",
                                                  std::string(), "key"));
 
-  g_assert(item.matches(tags) == true);
+  g_assert_true(item.matches(tags));
 
   // one that matches on key+value
   item.widgets.push_back(new presets_widget_key(tag_testkey_testtext.key,
                                                 tag_testkey_testtext.value,
                                                 "keyvalue"));
 
-  g_assert(item.matches(tags) == true);
+  g_assert_true(item.matches(tags));
 
   // key matches, value not, still neutral
   item.widgets.push_back(new presets_widget_key(tag_testkey_other.key,
                                                 tag_testkey_other.value,
                                                 "keyvalue"));
 
-  g_assert(item.matches(tags) == true);
+  g_assert_true(item.matches(tags));
 
   // key matches, value not, fail
   item.widgets.push_back(new presets_widget_key(tag_testkey_other.key,
                                                 tag_testkey_other.value,
                                                 "keyvalue!"));
 
-  g_assert(item.matches(tags) == false);
+  g_assert_false(item.matches(tags));
 
   return true;
 }

@@ -156,7 +156,7 @@ static gboolean relation_add_item(GtkWidget *parent,
   gtk_widget_destroy(dialog);
 
   /* search end of member chain */
-  g_assert(object.is_real());
+  g_assert_true(object.is_real());
 
   /* create new member */
   relation->members.push_back(member_t(object, role));
@@ -170,7 +170,7 @@ static void relation_remove_item(relation_t *relation, const object_t &object) {
   printf("remove object of type %d from relation #" ITEM_ID_FORMAT "\n",
 	 object.type, relation->id);
 
-  g_assert(object.is_real());
+  g_assert_true(object.is_real());
 
   std::vector<member_t>::iterator it = relation->find_member_object(object);
   g_assert(it != relation->members.end());
@@ -224,7 +224,7 @@ static void changed(GtkTreeSelection *sel, gpointer user_data) {
     relation_t *relation = O2G_NULLPTR;
     gtk_tree_model_get(GTK_TREE_MODEL(context->store), &iter,
 		       RELITEM_COL_DATA, &relation, -1);
-    g_assert(relation);
+    g_assert_nonnull(relation);
 
     if(!relitem_is_in_relation(context->item, relation) &&
        gtk_tree_selection_iter_is_selected(sel, &iter)) {
@@ -410,7 +410,7 @@ void relation_membership_dialog(GtkWidget *parent,
 			 appdata_t *appdata, object_t &object) {
   relitem_context_t context(object, appdata);
   map_t *map = appdata->map;
-  g_assert(map);
+  g_assert_nonnull(map);
 
   char *str = O2G_NULLPTR;
   switch(object.type) {
@@ -705,7 +705,7 @@ static void on_relation_select(GtkWidget *but, relation_context_t *context) {
     /* tell dialog to close as we want to see the selected relation */
 
     GtkWidget *toplevel = gtk_widget_get_toplevel(GTK_WIDGET(but));
-    g_assert(GTK_IS_DIALOG(toplevel));
+    g_assert_true(GTK_IS_DIALOG(toplevel));
 
     /* emit a "response" signal so we might close the dialog */
     gtk_dialog_response(GTK_DIALOG(toplevel), GTK_RESPONSE_CLOSE);

@@ -1,5 +1,6 @@
 #include <track.h>
 
+#include <misc.h>
 #include <osm2go_cpp.h>
 
 #include <cerrno>
@@ -29,8 +30,8 @@ int main(int argc, char **argv)
   GMappedFile *ogpx = g_mapped_file_new(fn.c_str(), FALSE, O2G_NULLPTR);
   GMappedFile *ngpx = g_mapped_file_new(argv[3], FALSE, O2G_NULLPTR);
 
-  g_assert(ogpx != O2G_NULLPTR);
-  g_assert(ngpx != O2G_NULLPTR);
+  g_assert_nonnull(ogpx);
+  g_assert_nonnull(ngpx);
   g_assert_cmpuint(g_mapped_file_get_length(ogpx), ==,
                    g_mapped_file_get_length(ngpx));
 

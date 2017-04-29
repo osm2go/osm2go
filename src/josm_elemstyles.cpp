@@ -307,10 +307,10 @@ void StyleSax::startElement(const xmlChar *name, const xmlChar **attrs)
       else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "b") == 0)
         b = attrs[i + 1];
     }
-    g_assert(k != O2G_NULLPTR);
+    g_assert_nonnull(k);
     styles.back()->conditions.push_back(elemstyle_condition_t(k, v));
     if(b) {
-      g_assert(v == O2G_NULLPTR);
+      g_assert_null(v);
       elemstyle_condition_t &cond = styles.back()->conditions.back();
       cond.isBool = true;
       cond.boolValue = parse_gboolean(reinterpret_cast<const char *>(b), true_values);
@@ -369,8 +369,8 @@ void StyleSax::startElement(const xmlChar *name, const xmlChar **attrs)
 
     line->bg.valid = hasBgColor && hasBgWidth;
 
-    g_assert(hasColor);
-    g_assert(hasWidth);
+    g_assert_true(hasColor);
+    g_assert_true(hasWidth);
 
     break;
   }
@@ -403,7 +403,7 @@ void StyleSax::startElement(const xmlChar *name, const xmlChar **attrs)
     }
 
     /* this has to be present */
-    g_assert(hasColor);
+    g_assert_true(hasColor);
     break;
   }
   case TagIcon:
@@ -414,7 +414,7 @@ void StyleSax::startElement(const xmlChar *name, const xmlChar **attrs)
         elemstyle->icon.filename = josm_icon_name_adjust(reinterpret_cast<const char *>(attrs[i + 1]));
     }
 
-    g_assert(!elemstyle->icon.filename.empty());
+    g_assert_false(elemstyle->icon.filename.empty());
 
     break;
   default:

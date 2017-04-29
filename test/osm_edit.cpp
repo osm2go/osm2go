@@ -1,5 +1,6 @@
 #include <osm.h>
 
+#include <misc.h>
 #include <osm2go_cpp.h>
 
 #include <algorithm>
@@ -33,7 +34,7 @@ int main()
 
   // a list with only created_by must still be considered empty
   tag_t cr_by(const_cast<char *>("created_by"), const_cast<char *>("test"));
-  g_assert(cr_by.is_creator_tag());
+  g_assert_true(cr_by.is_creator_tag());
   ntags.push_back(cr_by);
   g_assert(tags == ntags);
   g_assert(!(tags != ntags));
@@ -47,11 +48,11 @@ int main()
   tags.replace(nstags);
 
   g_assert_cmpuint(nstags.size(), ==, 2);
-  g_assert(tags.get_value("a") != O2G_NULLPTR);
-  g_assert(strcmp(tags.get_value("a"), "A") == 0);
-  g_assert(tags.get_value("b") != O2G_NULLPTR);
-  g_assert(strcmp(tags.get_value("b"), "B") == 0);
-  g_assert(!tags.hasTagCollisions());
+  g_assert_nonnull(tags.get_value("a"));
+  g_assert_cmpint(strcmp(tags.get_value("a"), "A"), ==, 0);
+  g_assert_nonnull(tags.get_value("b"));
+  g_assert_cmpint(strcmp(tags.get_value("b"), "B"), ==, 0);
+  g_assert_false(tags.hasTagCollisions());
 
   // check replacing the tag list from tag_t
   ntags.push_back(tag_t(g_strdup("a"), g_strdup("aa")));
@@ -59,12 +60,12 @@ int main()
 
   tags.replace(ntags);
 
-  g_assert(ntags.empty());
-  g_assert(tags.get_value("a") != O2G_NULLPTR);
-  g_assert(strcmp(tags.get_value("a"), "aa") == 0);
-  g_assert(tags.get_value("b") != O2G_NULLPTR);
-  g_assert(strcmp(tags.get_value("b"), "bb") == 0);
-  g_assert(!tags.hasTagCollisions());
+  g_assert_true(ntags.empty());
+  g_assert_nonnull(tags.get_value("a"));
+  g_assert_cmpint(strcmp(tags.get_value("a"), "aa"), ==, 0);
+  g_assert_nonnull(tags.get_value("b"));
+  g_assert_cmpint(strcmp(tags.get_value("b"), "bb"), ==, 0);
+  g_assert_false(tags.hasTagCollisions());
 
   std::vector<stag_t *> lowerTags = tags.asPointerVector();
 
@@ -72,46 +73,46 @@ int main()
   tags.replace(nstags);
 
   g_assert_cmpuint(nstags.size(), ==, 2);
-  g_assert(tags.get_value("a") != O2G_NULLPTR);
-  g_assert(strcmp(tags.get_value("a"), "A") == 0);
-  g_assert(tags.get_value("b") != O2G_NULLPTR);
-  g_assert(strcmp(tags.get_value("b"), "B") == 0);
-  g_assert(!tags.hasTagCollisions());
+  g_assert_nonnull(tags.get_value("a"));
+  g_assert_cmpint(strcmp(tags.get_value("a"), "A"), ==, 0);
+  g_assert_nonnull(tags.get_value("b"));
+  g_assert_cmpint(strcmp(tags.get_value("b"), "B"), ==, 0);
+  g_assert_false(tags.hasTagCollisions());
 
   tag_list_t tags2;
   tags2.replace(nstags);
 
   // merging the same things shouldn't change anything
   bool collision = tags.merge(tags2);
-  g_assert(!collision);
-  g_assert(!tags.hasTagCollisions());
+  g_assert_false(collision);
+  g_assert_false(tags.hasTagCollisions());
 
-  g_assert(tags.get_value("a") != O2G_NULLPTR);
-  g_assert(strcmp(tags.get_value("a"), "A") == 0);
-  g_assert(tags.get_value("b") != O2G_NULLPTR);
-  g_assert(strcmp(tags.get_value("b"), "B") == 0);
+  g_assert_nonnull(tags.get_value("a"));
+  g_assert_cmpint(strcmp(tags.get_value("a"), "A"), ==, 0);
+  g_assert_nonnull(tags.get_value("b"));
+  g_assert_cmpint(strcmp(tags.get_value("b"), "B"), ==, 0);
 
-  g_assert(tags2.get_value("a") == O2G_NULLPTR);
-  g_assert(tags2.get_value("b") == O2G_NULLPTR);
+  g_assert_null(tags2.get_value("a"));
+  g_assert_null(tags2.get_value("b"));
 
   tags2.replace(lowerTags);
   g_assert_cmpuint(tags2.asVector().size(), ==, 2);
-  g_assert(!lowerTags.empty());
-  g_assert(tags2.get_value("a") != O2G_NULLPTR);
-  g_assert(strcmp(tags2.get_value("a"), "aa") == 0);
-  g_assert(tags2.get_value("b") != O2G_NULLPTR);
-  g_assert(strcmp(tags2.get_value("b"), "bb") == 0);
+  g_assert_false(lowerTags.empty());
+  g_assert_nonnull(tags2.get_value("a"));
+  g_assert_cmpint(strcmp(tags2.get_value("a"), "aa"), ==, 0);
+  g_assert_nonnull(tags2.get_value("b"));
+  g_assert_cmpint(strcmp(tags2.get_value("b"), "bb"), ==, 0);
 
   collision = tags.merge(tags2);
-  g_assert(collision);
-  g_assert(tags.hasTagCollisions());
-  g_assert(tags.get_value("a") != O2G_NULLPTR);
-  g_assert(strcmp(tags.get_value("a"), "A") == 0);
-  g_assert(tags.get_value("b") != O2G_NULLPTR);
-  g_assert(strcmp(tags.get_value("b"), "B") == 0);
+  g_assert_true(collision);
+  g_assert_true(tags.hasTagCollisions());
+  g_assert_nonnull(tags.get_value("a"));
+  g_assert_cmpint(strcmp(tags.get_value("a"), "A"), ==, 0);
+  g_assert_nonnull(tags.get_value("b"));
+  g_assert_cmpint(strcmp(tags.get_value("b"), "B"), ==, 0);
   g_assert_cmpuint(tags.asVector().size(), ==, 4);
-  g_assert(tags.contains(find_aa));
-  g_assert(tags.contains(find_bb));
+  g_assert_true(tags.contains(find_aa));
+  g_assert_true(tags.contains(find_bb));
 
   std::for_each(nstags.begin(), nstags.end(), delete_stag);
   std::for_each(lowerTags.begin(), lowerTags.end(), delete_stag);

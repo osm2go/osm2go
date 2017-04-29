@@ -394,10 +394,10 @@ static project_t *project_get_selected(GtkWidget *list) {
   GtkTreeModel     *model;
   GtkTreeIter       iter;
 
-  g_assert(list_get_selected(list, &model, &iter));
+  g_assert_true(list_get_selected(list, &model, &iter));
   gtk_tree_model_get(model, &iter, PROJECT_COL_DATA, &project, -1);
 
-  g_assert(project);
+  g_assert_nonnull(project);
   return project;
 }
 
@@ -674,7 +674,7 @@ static void on_project_edit(G_GNUC_UNUSED GtkButton *button, gpointer data) {
 
     /* description etc. may have changed, so update list */
     GtkTreeSelection *selection = list_get_selection(context->list);
-    g_assert(gtk_tree_selection_get_selected(selection, &model, &iter));
+    g_assert_true(gtk_tree_selection_get_selected(selection, &model, &iter));
 
     //     gtk_tree_model_get(model, &iter, PROJECT_COL_DATA, &project, -1);
     const gchar *status_stock_id = project_get_status_icon_stock_id(

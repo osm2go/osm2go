@@ -74,7 +74,7 @@ void map_edit_way_add_begin(map_t *map, way_t *way_sel) {
     printf("previously selected way is #" ITEM_ID_FORMAT "\n",
 		     way_sel->id);
 
-  g_assert(!map->action.way);
+  g_assert_null(map->action.way);
   map->action.way = new way_t(1);
   map->action.extending = O2G_NULLPTR;
 }
@@ -113,7 +113,7 @@ void map_edit_way_add_segment(map_t *map, gint x, gint y) {
       printf("  re-using node #" ITEM_ID_FORMAT "\n", node->id);
       map_hl_touchnode_clear(map);
 
-      g_assert(map->action.way);
+      g_assert_nonnull(map->action.way);
 
       /* check whether this node is first or last one of a different way */
       way_t *touch_way = O2G_NULLPTR;
@@ -155,7 +155,7 @@ void map_edit_way_add_segment(map_t *map, gint x, gint y) {
     }
 
     if(node) {
-      g_assert(map->action.way);
+      g_assert_nonnull(map->action.way);
       map->action.way->append_node(node);
 
       switch(map->action.way->node_chain.size()) {
@@ -200,10 +200,10 @@ void map_unref_ways::operator()(node_t* node)
 
 void map_edit_way_add_cancel(map_t *map) {
   osm_t *osm = map->appdata->osm;
-  g_assert(osm);
+  g_assert_nonnull(osm);
 
   printf("  removing temporary way\n");
-  g_assert(map->action.way);
+  g_assert_nonnull(map->action.way);
 
   /* remove all nodes that have been created for this way */
   /* (their way count will be 0 after removing the way) */
@@ -277,8 +277,8 @@ void map_draw_nodes::operator()(node_t* node)
 void map_edit_way_add_ok(map_t *map) {
   osm_t *osm = map->appdata->osm;
 
-  g_assert(osm);
-  g_assert(map->action.way);
+  g_assert_nonnull(osm);
+  g_assert_nonnull(map->action.way);
 
   /* transfer all nodes that have been created for this way */
   /* into the node chain */

@@ -80,7 +80,7 @@ static bool store_value(const presets_widget_t *widget, std::vector<stag_t *> &t
     const char *chstr;
     if(ctag != tags.end()) {
       /* update the previous tag structure */
-      g_assert(strcasecmp((*ctag)->key.c_str(), widget->key.c_str()) == 0);
+      g_assert_cmpint(strcasecmp((*ctag)->key.c_str(), widget->key.c_str()), ==, 0);
       /* only update if the value actually changed */
       if((*ctag)->value != value) {
         changed = true; /* mark as updated, actual change below */
@@ -297,7 +297,7 @@ static void presets_item_dialog(presets_context_t *context,
 
     /* skip all following non-interactive widgets: use the first one that
      * was found to be interactive above. */
-    g_assert((*it)->is_interactive());
+    g_assert_true((*it)->is_interactive());
 
     /* create table of required size */
     GtkWidget *table = gtk_table_new(std::accumulate(it, item->widgets.end(), 0, widget_rows), 2, FALSE);
@@ -424,7 +424,7 @@ cb_menu_item(GtkWidget *menu_item, gpointer data) {
   presets_context_t *context = (presets_context_t*)data;
 
   presets_item *item = static_cast<presets_item *>(g_object_get_data(G_OBJECT(menu_item), "item"));
-  g_assert(item);
+  g_assert_nonnull(item);
 
   presets_item_dialog(context, item);
 }
@@ -657,8 +657,8 @@ on_presets_picker_selected(GtkTreeSelection *selection, gpointer data) {
     }
 
     /* views parent is a scrolled window whichs parent in turn is the hbox */
-    g_assert(sub);
-    g_assert(view->parent);
+    g_assert_nonnull(sub);
+    g_assert_nonnull(view->parent);
     GtkWidget *hbox = view->parent->parent;
 
     gtk_box_pack_start_defaults(GTK_BOX(hbox), sub);
@@ -941,7 +941,7 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event,
   gtk_menu_popup(GTK_MENU(context->menu), O2G_NULLPTR, O2G_NULLPTR, O2G_NULLPTR, O2G_NULLPTR,
                  event->button, event->time);
 #else
-  g_assert(context->submenus.empty());
+  g_assert_true(context->submenus.empty());
   /* popup our special picker like menu */
   GtkWidget *dialog =
       gtk_dialog_new_with_buttons(_("Presets"),
@@ -1152,7 +1152,7 @@ bool presets_widget_key::matchValue(const char *val) const
 
 const char *presets_widget_key::getValue(GtkWidget *widget) const
 {
-  g_assert(!widget);
+  g_assert_null(widget);
   return value.c_str();
 }
 

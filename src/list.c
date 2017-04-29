@@ -59,7 +59,7 @@ typedef struct {
 
 GtkWidget *list_get_view(GtkWidget *list) {
   list_priv_t *priv = g_object_get_data(G_OBJECT(list), "priv");
-  g_assert(priv);
+  g_assert_nonnull(priv);
   return priv->view;
 }
 
@@ -67,7 +67,7 @@ GtkWidget *list_get_view(GtkWidget *list) {
 /* add, edit and remove */
 void list_set_user_buttons(GtkWidget *list, ...) {
   list_priv_t *priv = g_object_get_data(G_OBJECT(list), "priv");
-  g_assert(priv);
+  g_assert_nonnull(priv);
 
   va_list ap;
 
@@ -104,7 +104,7 @@ void list_set_user_buttons(GtkWidget *list, ...) {
 
 void list_set_columns(GtkWidget *list, ...) {
   list_priv_t *priv = g_object_get_data(G_OBJECT(list), "priv");
-  g_assert(priv);
+  g_assert_nonnull(priv);
   va_list ap;
 
   va_start(ap, list);
@@ -160,7 +160,7 @@ void list_set_columns(GtkWidget *list, ...) {
 
 static GtkWidget *list_button_get(GtkWidget *list, list_button_t id) {
   list_priv_t *priv = g_object_get_data(G_OBJECT(list), "priv");
-  g_assert(priv);
+  g_assert_nonnull(priv);
 
   return priv->button.widget[id];
 }
@@ -175,7 +175,7 @@ void list_button_connect(GtkWidget *list, list_button_t id,
 void list_set_custom_user_button(GtkWidget *list, list_button_t id,
 				 GtkWidget *widget) {
   list_priv_t *priv = g_object_get_data(G_OBJECT(list), "priv");
-  g_assert(priv);
+  g_assert_nonnull(priv);
   g_assert_cmpint(id, >=, 3);
   g_assert_cmpint(id, <,  6);
 
@@ -194,7 +194,7 @@ void list_set_custom_user_button(GtkWidget *list, list_button_t id,
 
 GtkTreeSelection *list_get_selection(GtkWidget *list) {
   list_priv_t *priv = g_object_get_data(G_OBJECT(list), "priv");
-  g_assert(priv);
+  g_assert_nonnull(priv);
 
   GtkTreeSelection *sel =
     gtk_tree_view_get_selection(GTK_TREE_VIEW(priv->view));
@@ -208,7 +208,7 @@ gboolean list_get_selected(GtkWidget *list, GtkTreeModel **model,
 			   GtkTreeIter *iter) {
   gboolean retval = FALSE;
   list_priv_t *priv = g_object_get_data(G_OBJECT(list), "priv");
-  g_assert(priv);
+  g_assert_nonnull(priv);
 
 #if 1
   // this copes with multiple selections ...
@@ -241,7 +241,7 @@ void list_button_enable(GtkWidget *list, list_button_t id, gboolean enable) {
 
 void list_set_store(GtkWidget *list, GtkListStore *store) {
   list_priv_t *priv = g_object_get_data(G_OBJECT(list), "priv");
-  g_assert(priv);
+  g_assert_nonnull(priv);
 
   gtk_tree_view_set_model(GTK_TREE_VIEW(priv->view), GTK_TREE_MODEL(store));
 }
@@ -257,10 +257,10 @@ static void on_row_activated(GtkTreeView *treeview,
 
   if(gtk_tree_model_get_iter(model, &iter, path)) {
     list_priv_t *priv = g_object_get_data(G_OBJECT(userdata), "priv");
-    g_assert(priv);
+    g_assert_nonnull(priv);
 
     GtkWidget *toplevel = gtk_widget_get_toplevel(GTK_WIDGET(treeview));
-    g_assert(GTK_IS_DIALOG(toplevel));
+    g_assert_true(GTK_IS_DIALOG(toplevel));
 
     /* emit a "response accept" signal so we might close the */
     /* dialog */
@@ -272,7 +272,7 @@ void list_set_static_buttons(GtkWidget *list, int flags,
 			     GCallback cb_new, GCallback cb_edit,
 			     GCallback cb_remove, gpointer data) {
   list_priv_t *priv = g_object_get_data(G_OBJECT(list), "priv");
-  g_assert(priv);
+  g_assert_nonnull(priv);
 
   priv->button.data = data;
   priv->button.flags = flags;
@@ -327,7 +327,7 @@ GtkTreeModel *list_get_model(GtkWidget *list) {
 
 void list_focus_on(GtkWidget *list, GtkTreeIter *iter, gboolean highlight) {
   list_priv_t *priv = g_object_get_data(G_OBJECT(list), "priv");
-  g_assert(priv);
+  g_assert_nonnull(priv);
   GtkTreeModel *model = gtk_tree_view_get_model(GTK_TREE_VIEW(priv->view));
 
   // Handle de/reselection
@@ -348,7 +348,7 @@ void list_focus_on(GtkWidget *list, GtkTreeIter *iter, gboolean highlight) {
 
 static gint on_list_destroy(GtkWidget *list, G_GNUC_UNUSED gpointer data) {
   list_priv_t *priv = g_object_get_data(G_OBJECT(list), "priv");
-  g_assert(priv);
+  g_assert_nonnull(priv);
 
   g_free(priv);
 
@@ -452,7 +452,7 @@ GtkWidget *list_new(gboolean show_headers)
 void list_override_changed_event(GtkWidget *list,
       void(*handler)(GtkTreeSelection*,gpointer), gpointer data) {
   list_priv_t *priv = g_object_get_data(G_OBJECT(list), "priv");
-  g_assert(priv);
+  g_assert_nonnull(priv);
 
   priv->change.func = handler;
   priv->change.data = data;
@@ -460,7 +460,7 @@ void list_override_changed_event(GtkWidget *list,
 
 void list_scroll(GtkWidget* list, GtkTreeIter* iter) {
   list_priv_t *priv = g_object_get_data(G_OBJECT(list), "priv");
-  g_assert(priv);
+  g_assert_nonnull(priv);
 
   list_view_scroll(GTK_TREE_VIEW(priv->view), list_get_selection(list), iter);
 }

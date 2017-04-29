@@ -149,7 +149,7 @@ void map_item_chain_destroy(map_item_chain_t **chainP) {
 static void map_node_select(map_t *map, node_t *node) {
   map_item_t *map_item = &map->selected;
 
-  g_assert(!map->highlight);
+  g_assert_null(map->highlight);
 
   map_item->object = node;
   map_item->highlight = FALSE;
@@ -302,7 +302,7 @@ void draw_selected_way_functor::operator()(node_t* node)
 void map_way_select(map_t *map, way_t *way) {
   map_item_t *map_item = &map->selected;
 
-  g_assert(!map->highlight);
+  g_assert_null(map->highlight);
 
   map_item->object = way;
   map_item->highlight = FALSE;
@@ -397,7 +397,7 @@ void map_relation_select(map_t *map, relation_t *relation) {
 
   map_highlight_t *hl = map->highlight;
   if(hl) {
-    g_assert(hl->items.empty());
+    g_assert_true(hl->items.empty());
   } else {
     hl = map->highlight = new map_highlight_t();
   }
@@ -471,7 +471,7 @@ static gint map_item_destroy_event(G_GNUC_UNUSED GtkWidget *widget, gpointer dat
     chain = map_item->object.way->map_item_chain;
 
   /* there must be a chain with content, otherwise things are broken */
-  g_assert(chain);
+  g_assert_nonnull(chain);
 
   /* search current map_item, ... */
   std::vector<map_item_t *>::iterator it = std::find(chain->map_items.begin(),
@@ -796,7 +796,7 @@ static void map_frisket_draw(map_t *map, const bounds_t *bounds) {
 }
 
 static void map_draw(map_t *map) {
-  g_assert(map->canvas);
+  g_assert_nonnull(map->canvas);
   osm_t * const osm = map->appdata->osm;
 
   printf("drawing ways ...\n");
@@ -1379,7 +1379,7 @@ static void map_touchnode_update(map_t *map, gint x, gint y) {
 
     /* in idle mode the dragged node is not highlighted */
   case MAP_ACTION_IDLE:
-    g_assert(map->pen_down.on_item);
+    g_assert_nonnull(map->pen_down.on_item);
     g_assert(map->pen_down.on_item->object.type == NODE);
     cur_node = map->pen_down.on_item->object.node;
     break;
@@ -1448,9 +1448,9 @@ static void map_button_press(map_t *map, gint x, gint y) {
 
 /* move the background image (wms data) during wms adjustment */
 static void map_bg_adjust(map_t *map, gint x, gint y) {
-  g_assert(map->appdata);
-  g_assert(map->appdata->osm);
-  g_assert(map->appdata->osm->bounds);
+  g_assert_nonnull(map->appdata);
+  g_assert_nonnull(map->appdata->osm);
+  g_assert_nonnull(map->appdata->osm->bounds);
 
   x += map->appdata->osm->bounds->min.x + map->bg.offset.x -
     map->pen_down.at.x;
@@ -2125,7 +2125,7 @@ void map_track_draw_seg(map_t *map, track_seg_t &seg) {
     return;
 
   /* nothing should have been drawn by now ... */
-  g_assert(seg.item_chain.empty());
+  g_assert_true(seg.item_chain.empty());
 
   const std::vector<track_point_t>::const_iterator itEnd = seg.track_points.end();
   std::vector<track_point_t>::const_iterator it = seg.track_points.begin();
@@ -2242,7 +2242,7 @@ void map_track_update_seg(map_t *map, track_seg_t &seg) {
   if(second_last_is_visible) {
     /* there must be something already on the screen and there must */
     /* be visible nodes in the chain */
-    g_assert(!seg.item_chain.empty());
+    g_assert_false(seg.item_chain.empty());
 
     printf("second_last is visible -> updating last segment to %zu points\n", npoints);
 
@@ -2250,7 +2250,7 @@ void map_track_update_seg(map_t *map, track_seg_t &seg) {
     canvas_item_set_points(item, points);
   } else {
     g_assert(begin + 1 == last);
-    g_assert(last_is_visible);
+    g_assert_true(last_is_visible);
 
     printf("second last is invisible -> start new screen segment with %zu points\n", npoints);
 
@@ -2277,7 +2277,7 @@ void map_track_draw(map_t *map, track_t *track) {
 void map_track_remove(track_t *track) {
   printf("removing track\n");
 
-  g_assert(track);
+  g_assert_nonnull(track);
 
   /* remove all segments */
   std::for_each(track->segments.begin(), track->segments.end(),

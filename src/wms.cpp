@@ -479,7 +479,7 @@ static void wms_server_selected(wms_server_context_t *context,
     while(valid && !selected) {
       gtk_tree_model_get(GTK_TREE_MODEL(context->store), &iter,
 			 WMS_SERVER_COL_DATA, &server, -1);
-      g_assert(server);
+      g_assert_nonnull(server);
 
       if(context->wms->server == server->server &&
          context->wms->path == server->path) {
@@ -546,7 +546,7 @@ static void on_server_remove(G_GNUC_UNUSED GtkWidget *but, wms_server_context_t 
     wms_server_t *server = O2G_NULLPTR;
     gtk_tree_model_get(model, &iter, WMS_SERVER_COL_DATA, &server, -1);
 
-    g_assert(server);
+    g_assert_nonnull(server);
 
     /* de-chain */
     printf("de-chaining server %s\n", server->name);
@@ -688,7 +688,7 @@ static void on_server_edit(G_GNUC_UNUSED GtkWidget *but, wms_server_context_t *c
   if(gtk_tree_selection_get_selected(selection, &model, &iter)) {
     wms_server_t *server = O2G_NULLPTR;
     gtk_tree_model_get(model, &iter, WMS_SERVER_COL_DATA, &server, -1);
-    g_assert(server);
+    g_assert_nonnull(server);
 
     wms_server_edit(context, FALSE, server);
   }
@@ -890,11 +890,11 @@ static void changed(GtkTreeSelection *sel, gpointer user_data) {
 
   /* get view from selection ... */
   GtkTreeView *view = gtk_tree_selection_get_tree_view(sel);
-  g_assert(view);
+  g_assert_nonnull(view);
 
   /* ... and get model from view */
   GtkTreeModel *model = gtk_tree_view_get_model(view);
-  g_assert(model);
+  g_assert_nonnull(model);
 
   /* walk the entire store */
   GtkTreeIter iter;
@@ -904,7 +904,7 @@ static void changed(GtkTreeSelection *sel, gpointer user_data) {
     wms_layer_t *layer = O2G_NULLPTR;
 
     gtk_tree_model_get(model, &iter, LAYER_COL_DATA, &layer, -1);
-    g_assert(layer);
+    g_assert_nonnull(layer);
 
     if(gtk_tree_selection_iter_is_selected(sel, &iter) == TRUE)
       selected->push_back(layer);

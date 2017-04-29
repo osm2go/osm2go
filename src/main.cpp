@@ -63,7 +63,7 @@ void main_ui_enable(appdata_t *appdata) {
   }
 
   /* cancel any action in progress */
-  g_assert(appdata->iconbar->cancel);
+  g_assert_nonnull(appdata->iconbar->cancel);
   if(GTK_WIDGET_FLAGS(appdata->iconbar->cancel) & GTK_SENSITIVE)
     map_action_cancel(appdata->map);
 
@@ -322,7 +322,7 @@ cb_menu_view_detail_dec(GtkMenuItem *, appdata_t *appdata) {
 
 static void
 cb_menu_track_import(GtkMenuItem *, appdata_t *appdata) {
-  g_assert(appdata->settings);
+  g_assert_nonnull(appdata->settings);
 
   /* open a file selector */
   GtkWidget *dialog;
@@ -396,7 +396,7 @@ cb_menu_track_follow_gps(MENU_CHECK_ITEM *item, appdata_t *appdata) {
 
 static void
 cb_menu_track_export(GtkMenuItem *, appdata_t *appdata) {
-  g_assert(appdata->settings);
+  g_assert_nonnull(appdata->settings);
 
   /* open a file selector */
   GtkWidget *dialog;
@@ -449,7 +449,7 @@ cb_menu_track_export(GtkMenuItem *, appdata_t *appdata) {
 	g_free(appdata->settings->track_path);
 	appdata->settings->track_path = g_strdup(filename);
 
-        g_assert(appdata->track.track);
+        g_assert_nonnull(appdata->track.track);
         track_export(appdata->track.track, filename);
       }
     }

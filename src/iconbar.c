@@ -23,6 +23,7 @@
 #include "icon.h"
 #include "info.h"
 #include "map_edit.h"
+#include "misc.h"
 
 #ifdef FINGER_UI
 #define TOOL_ICON(a)  a "_thumb"
@@ -357,7 +358,7 @@ void iconbar_free(iconbar_t *iconbar) {
 /* fremantle. technically they are still part of the iconbar and thus */
 /* are registered there */
 void iconbar_register_buttons(appdata_t *appdata, GtkWidget *ok, GtkWidget *cancel) {
-  g_assert(appdata->iconbar);
+  g_assert_nonnull(appdata->iconbar);
 
   appdata->iconbar->ok = ok;
   g_signal_connect_swapped(GTK_OBJECT(ok), "clicked",

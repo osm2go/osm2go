@@ -36,6 +36,7 @@
 #include "canvas.h"
 
 #include "appdata.h"
+#include "misc.h"
 
 /* The fuzziness allows to specify how far besides an object a user may */
 /* click so it's still considered a click onto that object. This can */
@@ -61,7 +62,7 @@ static void canvas_item_info_dechain(canvas_item_info_t *item_info) {
   while(*itemP && *itemP != item_info)
     itemP = &(*itemP)->next;
 
-  g_assert(*itemP);
+  g_assert_nonnull(*itemP);
 
   /* check if we are removing the last entry in the list and */
   /* adjust last pointer if yes */
@@ -108,7 +109,7 @@ static gint item_info_destroy(G_GNUC_UNUSED canvas_item_t *canvas_item,
 static void canvas_item_prepend(canvas_t *canvas, canvas_group_t group,
 			canvas_item_t *canvas_item, canvas_item_info_t *item) {
   if(!canvas->item_info[group].first) {
-    g_assert(!canvas->item_info[group].last);
+    g_assert_null(canvas->item_info[group].last);
     canvas->item_info[group].last = item;
   } else
     canvas->item_info[group].first->prev = item;
@@ -128,7 +129,7 @@ static void canvas_item_prepend(canvas_t *canvas, canvas_group_t group,
 static void canvas_item_append(canvas_t *canvas, canvas_group_t group,
 	       canvas_item_t *canvas_item, canvas_item_info_t *item) {
   if(!canvas->item_info[group].last) {
-    g_assert(!canvas->item_info[group].first);
+    g_assert_null(canvas->item_info[group].first);
     canvas->item_info[group].first = item;
   } else
     canvas->item_info[group].last->next = item;
@@ -163,7 +164,7 @@ static canvas_item_info_t *canvas_item_get_info(canvas_t *canvas,
 
 void canvas_item_info_push(canvas_t *canvas, canvas_item_t *item) {
   canvas_item_info_t *item_info = canvas_item_get_info(canvas, item);
-  g_assert(item_info);
+  g_assert_nonnull(item_info);
 
   printf("pushing item_info %p to background\n", item_info);
 

@@ -338,7 +338,7 @@ GtkWidget *style_select_widget(appdata_t *appdata) {
 
   /* there must be at least one style, otherwise */
   /* the program wouldn't be running */
-  g_assert(!chain.empty());
+  g_assert_false(chain.empty());
 
   GtkWidget *cbox = combo_box_new(_("Style"));
 

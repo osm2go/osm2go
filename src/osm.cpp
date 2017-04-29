@@ -158,7 +158,7 @@ item_id_t object_t::get_id() const {
 }
 
 void object_t::set_flags(int set) {
-  g_assert(is_real());
+  g_assert_true(is_real());
   obj->flags |=  set;
 }
 
@@ -413,7 +413,7 @@ void osm_t::node_free(node_t *node) {
   nodes.erase(node->id);
 
   /* there must not be anything left in this chain */
-  g_assert(!node->map_item_chain);
+  g_assert_null(node->map_item_chain);
 
   delete node;
 }
@@ -592,7 +592,7 @@ static inline gint __attribute__((nonnull(2))) my_strcmp(const xmlChar *a, const
 static void skip_element(xmlTextReaderPtr reader) {
   g_assert(xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT);
   const xmlChar *name = xmlTextReaderConstName(reader);
-  g_assert(name);
+  g_assert_nonnull(name);
   int depth = xmlTextReaderDepth(reader);
 
   if(xmlTextReaderIsEmptyElement(reader))
@@ -930,7 +930,7 @@ static osm_t *process_osm(xmlTextReaderPtr reader) {
   /* no attributes of interest */
 
   const xmlChar *name = xmlTextReaderConstName(reader);
-  g_assert(name);
+  g_assert_nonnull(name);
 
   /* read next node */
   int num_elems = 0;
@@ -1334,7 +1334,7 @@ void osm_t::way_restore(way_t *way, const std::vector<item_id_chain_t> &id_chain
   ways[way->id] = way;
 
   /* restore node memberships by converting ids into real pointers */
-  g_assert(way->node_chain.empty());
+  g_assert_true(way->node_chain.empty());
   way_member_ref fc(this, way->node_chain);
   std::for_each(id_chain.begin(), id_chain.end(), fc);
 
@@ -1602,7 +1602,7 @@ void osm_unref_way_free::operator()(node_t* node)
     /* associated ways as the only such way is the one we are currently */
     /* deleting */
     const way_chain_t &way_chain = osm->node_delete(node, false, false);
-    g_assert(way_chain.size() == 1);
+    g_assert_cmpuint(way_chain.size(), ==, 1);
     g_assert(way_chain.front() == way);
   }
 }
@@ -1912,7 +1912,7 @@ std::vector<stag_t *> osm_tags_list_copy(const std::vector<stag_t> &tags) {
 
 void tag_list_t::copy(const tag_list_t &other)
 {
-  g_assert(!contents);
+  g_assert_null(contents);
 
   if(other.empty())
     return;
@@ -1995,7 +1995,7 @@ std::string object_t::get_name() const {
   }
 
   if(type) {
-    g_assert(ret.empty());
+    g_assert_true(ret.empty());
     ret = type;
   }
 
@@ -2165,7 +2165,7 @@ bool way_t::ends_with_node(const node_t *node) const
     return false;
 
   /* any valid way must have at least two nodes */
-  g_assert(!node_chain.empty());
+  g_assert_true(node_chain.empty());
 
   if(node_chain.front() == node)
     return true;
@@ -2183,7 +2183,7 @@ void way_t::cleanup() {
   tags.clear();
 
   /* there must not be anything left in this chain */
-  g_assert(!map_item_chain);
+  g_assert_null(map_item_chain);
 }
 
 member_t::member_t(type_t t)

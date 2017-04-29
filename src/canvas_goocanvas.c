@@ -22,6 +22,7 @@
 #endif
 
 #include "appdata.h"
+#include "misc.h"
 
 /* ------------------- creating and destroying the canvas ----------------- */
 
@@ -334,7 +335,7 @@ void canvas_item_to_bottom(canvas_item_t *item) {
     g_object_get_data(G_OBJECT(goo_canvas_item_get_canvas(item)),
 		      "canvas-pointer");
 
-  g_assert(canvas);
+  g_assert_nonnull(canvas);
   canvas_item_info_push(canvas, item);
 #endif
 }
@@ -469,7 +470,7 @@ void canvas_item_get_segment_pos(canvas_item_t *item, gint seg,
   canvas_points_t *points = NULL;
   g_object_get(G_OBJECT(item), "points", &points, NULL);
 
-  g_assert(points);
+  g_assert_nonnull(points);
   g_assert_cmpint(seg, <, points->num_points-1);
 
   *x0 = points->coords[2 * seg + 0];

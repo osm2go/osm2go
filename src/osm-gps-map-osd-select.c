@@ -19,6 +19,7 @@
 
 #include "appdata.h"
 #include "config.h"
+#include "misc.h"
 
 #include <stdlib.h>  // abs
 #include <math.h>    // M_PI/cos()
@@ -77,7 +78,7 @@ static void
 osd_render_toggle(osm_gps_map_osd_t *osd) {
     osd_priv_t *priv = (osd_priv_t*)osd->priv;
 
-    g_assert(priv->select_toggle.surface);
+    g_assert_nonnull(priv->select_toggle.surface);
 
     /* first fill with transparency */
     cairo_t *cr = cairo_create(priv->select_toggle.surface);
@@ -150,7 +151,7 @@ static void
 osd_render_zoom(osm_gps_map_osd_t *osd) {
     osd_priv_t *priv = (osd_priv_t*)osd->priv;
 
-    g_assert(priv->zoom.surface);
+    g_assert_nonnull(priv->zoom.surface);
 
     /* first fill with transparency */
     cairo_t *cr = cairo_create(priv->zoom.surface);
