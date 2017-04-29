@@ -61,16 +61,20 @@ static void diff_save_tags(const base_object_t *obj, xmlNodePtr node) {
   obj->tags.for_each(fc);
 }
 
-/**
- * @brief save the common OSM object information
- * @param obj the object to save
- * @param root_node the XML root node to append to
- * @param tname the name of the XML node
- * @return XML node object
- */
-static xmlNodePtr diff_save_state_n_id(const base_object_t *obj,
-                                       xmlNodePtr root_node,
-                                       const char *tname) {
+struct diff_save_objects {
+  xmlNodePtr const root_node;
+  diff_save_objects(xmlNodePtr r) : root_node(r) {}
+  /**
+   * @brief save the common OSM object information
+   * @param obj the object to save
+   * @param tname the name of the XML node
+   * @return XML node object
+   */
+  xmlNodePtr diff_save_state_n_id(const base_object_t *obj, const char *tname);
+};
+
+xmlNodePtr diff_save_objects::diff_save_state_n_id(const base_object_t *obj,
+                                                   const char *tname) {
   xmlNodePtr node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST tname, O2G_NULLPTR);
 
   if(obj->flags & OSM_FLAG_DELETED)
@@ -86,19 +90,18 @@ static xmlNodePtr diff_save_state_n_id(const base_object_t *obj,
   return node;
 }
 
-struct diff_save_nodes {
-  xmlNodePtr const root_node;
-  diff_save_nodes(xmlNodePtr r) : root_node(r) {}
-  void operator()(std::pair<item_id_t, node_t *> pair);
+struct diff_save_nodes : diff_save_objects {
+  diff_save_nodes(xmlNodePtr r) : diff_save_objects(r) { }
+  void operator()(const std::pair<item_id_t, node_t *> pair);
 };
 
-void diff_save_nodes::operator()(std::pair<item_id_t, node_t *> pair)
+void diff_save_nodes::operator()(const std::pair<item_id_t, node_t *> pair)
 {
   const node_t * const node = pair.second;
   if(!node->flags)
     return;
 
-  xmlNodePtr node_node = diff_save_state_n_id(node, root_node, "node");
+  xmlNodePtr node_node = diff_save_state_n_id(node, "node");
 
   if(node->flags & OSM_FLAG_DELETED)
     return;
@@ -109,19 +112,18 @@ void diff_save_nodes::operator()(std::pair<item_id_t, node_t *> pair)
   diff_save_tags(node, node_node);
 }
 
-struct diff_save_ways {
-  xmlNodePtr const root_node;
-  diff_save_ways(xmlNodePtr r) : root_node(r) {}
-  void operator()(std::pair<item_id_t, way_t *> pair);
+struct diff_save_ways : diff_save_objects {
+  diff_save_ways(xmlNodePtr r) : diff_save_objects(r) { }
+  void operator()(const std::pair<item_id_t, way_t *> pair);
 };
 
-void diff_save_ways::operator()(std::pair<item_id_t, way_t *> pair)
+void diff_save_ways::operator()(const std::pair<item_id_t, way_t *> pair)
 {
   const way_t * const way = pair.second;
   if(!way->flags)
     return;
 
-  xmlNodePtr node_way = diff_save_state_n_id(way, root_node, "way");
+  xmlNodePtr node_way = diff_save_state_n_id(way, "way");
 
   if(way->flags & OSM_FLAG_HIDDEN)
     xmlNewProp(node_way, BAD_CAST "hidden", BAD_CAST "true");
@@ -189,20 +191,19 @@ void diff_save_rel::operator()(const member_t &member)
     xmlNewProp(node_member, BAD_CAST "role", BAD_CAST member.role);
 }
 
-struct diff_save_relations {
-  xmlNodePtr const root_node;
-  diff_save_relations(xmlNodePtr r) : root_node(r) {}
-  void operator()(std::pair<item_id_t, relation_t *> pair);
+struct diff_save_relations : diff_save_objects {
+  diff_save_relations(xmlNodePtr r) : diff_save_objects(r) { }
+  void operator()(const std::pair<item_id_t, relation_t *> pair);
 };
 
 /* store all modfied relations */
-void diff_save_relations::operator()(std::pair<item_id_t, relation_t *> pair)
+void diff_save_relations::operator()(const std::pair<item_id_t, relation_t *> pair)
 {
   const relation_t * const relation = pair.second;
   if(!relation->flags)
     return;
 
-  xmlNodePtr node_rel = diff_save_state_n_id(relation, root_node, "relation");
+  xmlNodePtr node_rel = diff_save_state_n_id(relation, "relation");
 
   if(relation->flags & OSM_FLAG_DELETED)
     return;
