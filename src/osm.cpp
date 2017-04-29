@@ -150,7 +150,7 @@ bool object_t::has_tags() const {
 }
 
 item_id_t object_t::get_id() const {
-  if(type == ILLEGAL)
+  if(G_UNLIKELY(type == ILLEGAL))
     return ID_ILLEGAL;
   if(is_real())
     return obj->id;

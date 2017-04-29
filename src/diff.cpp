@@ -149,42 +149,30 @@ void diff_save_rel::operator()(const member_t &member)
   xmlNodePtr node_member = xmlNewChild(node_rel, O2G_NULLPTR,
                                        BAD_CAST "member", O2G_NULLPTR);
 
-  gchar ref[G_ASCII_DTOSTR_BUF_SIZE];
+  const char *tp;
   switch(member.object.type) {
   case NODE:
-    xmlNewProp(node_member, BAD_CAST "type", BAD_CAST "node");
-    g_snprintf(ref, sizeof(ref), ITEM_ID_FORMAT, member.object.obj->id);
+  case NODE_ID:
+    tp = "node";
     break;
   case WAY:
-    xmlNewProp(node_member, BAD_CAST "type", BAD_CAST "way");
-    g_snprintf(ref, sizeof(ref), ITEM_ID_FORMAT, member.object.obj->id);
+  case WAY_ID:
+    tp = "way";
     break;
   case RELATION:
-    xmlNewProp(node_member, BAD_CAST "type", BAD_CAST "relation");
-    g_snprintf(ref, sizeof(ref), ITEM_ID_FORMAT, member.object.obj->id);
-    break;
-
-    /* XXX_ID's are used if this is a reference to an item not */
-    /* stored in this xml data set */
-  case NODE_ID:
-    xmlNewProp(node_member, BAD_CAST "type", BAD_CAST "node");
-    g_snprintf(ref, sizeof(ref), ITEM_ID_FORMAT, member.object.id);
-    break;
-  case WAY_ID:
-    xmlNewProp(node_member, BAD_CAST "type", BAD_CAST "way");
-    g_snprintf(ref, sizeof(ref), ITEM_ID_FORMAT, member.object.id);
-    break;
   case RELATION_ID:
-    xmlNewProp(node_member, BAD_CAST "type", BAD_CAST "relation");
-    g_snprintf(ref, sizeof(ref), ITEM_ID_FORMAT, member.object.id);
+    tp = "relation";
     break;
 
   default:
     printf("unexpected member type %d\n", member.object.type);
     g_assert_not_reached();
-    break;
+    return;
   }
+  xmlNewProp(node_member, BAD_CAST "type", BAD_CAST tp);
 
+  gchar ref[G_ASCII_DTOSTR_BUF_SIZE];
+  g_snprintf(ref, sizeof(ref), ITEM_ID_FORMAT, member.object.get_id());
   xmlNewProp(node_member, BAD_CAST "ref", BAD_CAST ref);
 
   if(member.role)
