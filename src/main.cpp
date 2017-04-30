@@ -852,12 +852,6 @@ struct menu_entry_t {
   GtkSignalFunc activate_cb;
 };
 
-struct submenu_t {
-  const char *title;
-  const menu_entry_t *menu;
-  int len;
-};
-
 static gboolean enable_gps_get_toggle(appdata_t *appdata) {
   return appdata->settings->enable_gps;
 }
@@ -924,19 +918,18 @@ static void on_submenu_entry_clicked(GtkWidget *menu)
 
 /* use standard dialog boxes for fremantle submenues */
 static GtkWidget *app_submenu_create(appdata_t *appdata,
-				     const submenu_t *submenu) {
-
+                                     const char *title, const menu_entry_t *menu,
+                                     const guint rows) {
   /* create a oridinary dialog box */
-  GtkWidget *dialog = misc_dialog_new(MISC_DIALOG_SMALL, _(submenu->title),
+  GtkWidget *dialog = misc_dialog_new(MISC_DIALOG_SMALL, title,
 				      GTK_WINDOW(appdata->window), O2G_NULLPTR);
 
   gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
 
-  GtkWidget *table = gtk_table_new(submenu->len/COLUMNS, COLUMNS, TRUE);
-  int x = 0, y = 0;
+  GtkWidget *table = gtk_table_new(rows / COLUMNS, COLUMNS, TRUE);
 
-  const menu_entry_t *menu_entries = submenu->menu;
-  while(menu_entries->label) {
+  for(guint idx = 0; idx < rows; idx++) {
+    const menu_entry_t *menu_entries = menu + idx;
     GtkWidget *button = O2G_NULLPTR;
 
     /* the "Style" menu entry is very special */
@@ -983,12 +976,8 @@ static GtkWidget *app_submenu_create(appdata_t *appdata,
 
     gtk_widget_set_sensitive(button, menu_entries->enabled);
 
+    const guint x = idx % COLUMNS, y = idx / COLUMNS;
     gtk_table_attach_defaults(GTK_TABLE(table),  button, x, x+1, y, y+1);
-
-    x++;
-    if(x == COLUMNS) { x = 0; y++; }
-
-    menu_entries++;
   }
 
 
@@ -1046,69 +1035,6 @@ void on_submenu_track_clicked(G_GNUC_UNUSED GtkButton *button, appdata_t *appdat
                               { a, TRUE,            c,  d, G_CALLBACK(b) }
 #define LAST_ENTRY            { O2G_NULLPTR, FALSE, O2G_NULLPTR, -1, O2G_NULLPTR }
 
-/* -- the view submenu -- */
-static const menu_entry_t submenu_view_entries[] = {
-  /* --- */
-  SIMPLE_ENTRY("Style",           O2G_NULLPTR),
-  /* --- */
-  DISABLED_ENTRY("Hide selected", cb_menu_map_hide_sel, MENU_ITEM_MAP_HIDE_SEL),
-  DISABLED_ENTRY("Show all",      cb_menu_map_show_all, MENU_ITEM_MAP_SHOW_ALL),
-
-  LAST_ENTRY
-};
-
-static const submenu_t submenu_view = {
-  "View", submenu_view_entries,
-  sizeof(submenu_view_entries)/sizeof(menu_entry_t)-1
-};
-
-/* -- the map submenu -- */
-static const menu_entry_t submenu_map_entries[] = {
-  ENABLED_ENTRY("Upload",      cb_menu_upload, MENU_ITEM_MAP_UPLOAD),
-  SIMPLE_ENTRY("Download",     cb_menu_download),
-  ENABLED_ENTRY("Undo all",    cb_menu_undo_changes, MENU_ITEM_MAP_UNDO_CHANGES),
-
-  LAST_ENTRY
-};
-
-static const submenu_t submenu_map = {
-  "OSM", submenu_map_entries,
-  sizeof(submenu_map_entries)/sizeof(menu_entry_t)-1
-};
-
-/* -- the wms submenu -- */
-static const menu_entry_t submenu_wms_entries[] = {
-  SIMPLE_ENTRY("Import",   cb_menu_wms_import),
-  DISABLED_ENTRY("Clear",  cb_menu_wms_clear, MENU_ITEM_WMS_CLEAR),
-  DISABLED_ENTRY("Adjust", cb_menu_wms_adjust, MENU_ITEM_WMS_ADJUST),
-
-  LAST_ENTRY
-};
-
-static const submenu_t submenu_wms = {
-  "WMS", submenu_wms_entries,
-  sizeof(submenu_wms_entries)/sizeof(menu_entry_t)-1
-};
-
-/* -- the track submenu -- */
-static const menu_entry_t submenu_track_entries[] = {
-  ENABLED_ENTRY("Import",  cb_menu_track_import, MENU_ITEM_TRACK_IMPORT),
-  DISABLED_ENTRY("Export", cb_menu_track_export, MENU_ITEM_TRACK_EXPORT),
-  DISABLED_ENTRY("Clear",  cb_menu_track_clear, MENU_ITEM_TRACK_CLEAR),
-  ENABLED_TOGGLE_ENTRY("GPS enable", cb_menu_track_enable_gps,
-		enable_gps_get_toggle, MENU_ITEM_TRACK_ENABLE_GPS),
-  DISABLED_TOGGLE_ENTRY("GPS follow", cb_menu_track_follow_gps,
-		follow_gps_get_toggle, MENU_ITEM_TRACK_FOLLOW_GPS),
-
-  LAST_ENTRY
-};
-
-static const submenu_t submenu_track = {
-  "Track", submenu_track_entries,
-  sizeof(submenu_track_entries)/sizeof(menu_entry_t)-1
-};
-
-
 /* -- the applications main menu -- */
 static const menu_entry_t main_menu[] = {
   SIMPLE_ENTRY("About",   cb_menu_about),
@@ -1123,14 +1049,52 @@ static const menu_entry_t main_menu[] = {
 };
 
 static void menu_create(appdata_t *appdata) {
+  /* -- the view submenu -- */
+  const menu_entry_t submenu_view_entries[] = {
+    /* --- */
+    SIMPLE_ENTRY("Style",           O2G_NULLPTR),
+    /* --- */
+    DISABLED_ENTRY("Hide selected", cb_menu_map_hide_sel, MENU_ITEM_MAP_HIDE_SEL),
+    DISABLED_ENTRY("Show all",      cb_menu_map_show_all, MENU_ITEM_MAP_SHOW_ALL),
+  };
+
+  /* -- the map submenu -- */
+  const menu_entry_t submenu_map_entries[] = {
+    ENABLED_ENTRY("Upload",      cb_menu_upload, MENU_ITEM_MAP_UPLOAD),
+    SIMPLE_ENTRY("Download",     cb_menu_download),
+    ENABLED_ENTRY("Undo all",    cb_menu_undo_changes, MENU_ITEM_MAP_UNDO_CHANGES),
+  };
+
+  /* -- the wms submenu -- */
+  const menu_entry_t submenu_wms_entries[] = {
+    SIMPLE_ENTRY("Import",   cb_menu_wms_import),
+    DISABLED_ENTRY("Clear",  cb_menu_wms_clear, MENU_ITEM_WMS_CLEAR),
+    DISABLED_ENTRY("Adjust", cb_menu_wms_adjust, MENU_ITEM_WMS_ADJUST),
+  };
+
+  /* -- the track submenu -- */
+  const menu_entry_t submenu_track_entries[] = {
+    ENABLED_ENTRY("Import",  cb_menu_track_import, MENU_ITEM_TRACK_IMPORT),
+    DISABLED_ENTRY("Export", cb_menu_track_export, MENU_ITEM_TRACK_EXPORT),
+    DISABLED_ENTRY("Clear",  cb_menu_track_clear, MENU_ITEM_TRACK_CLEAR),
+    ENABLED_TOGGLE_ENTRY("GPS enable", cb_menu_track_enable_gps,
+                         enable_gps_get_toggle, MENU_ITEM_TRACK_ENABLE_GPS),
+    DISABLED_TOGGLE_ENTRY("GPS follow", cb_menu_track_follow_gps,
+                          follow_gps_get_toggle, MENU_ITEM_TRACK_FOLLOW_GPS),
+  };
+
   HildonAppMenu *menu = HILDON_APP_MENU(hildon_app_menu_new());
 
   /* build menu/submenus */
   menu = HILDON_APP_MENU(app_menu_create(appdata, main_menu));
-  appdata->app_menu_wms   = app_submenu_create(appdata, &submenu_wms);
-  appdata->app_menu_map   = app_submenu_create(appdata, &submenu_map);
-  appdata->app_menu_view  = app_submenu_create(appdata, &submenu_view);
-  appdata->app_menu_track = app_submenu_create(appdata, &submenu_track);
+  appdata->app_menu_wms   = app_submenu_create(appdata, _("WMS"),   submenu_wms_entries,
+                                               sizeof(submenu_wms_entries) / sizeof(submenu_wms_entries[0]));
+  appdata->app_menu_map   = app_submenu_create(appdata, _("OSM"),   submenu_map_entries,
+                                               sizeof(submenu_map_entries) / sizeof(submenu_map_entries[0]));
+  appdata->app_menu_view  = app_submenu_create(appdata, _("View"),  submenu_view_entries,
+                                               sizeof(submenu_view_entries) / sizeof(submenu_view_entries[0]));
+  appdata->app_menu_track = app_submenu_create(appdata, _("Track"), submenu_track_entries,
+                                               sizeof(submenu_track_entries) / sizeof(submenu_track_entries[0]));
 
   /* enable/disable some entries according to settings */
   gtk_widget_set_sensitive(appdata->menuitems[MENU_ITEM_TRACK_FOLLOW_GPS],
