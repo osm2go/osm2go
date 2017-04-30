@@ -1,9 +1,5 @@
 function(osm_test BASENAME)
-	if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${BASENAME}.cpp")
-		add_executable(${BASENAME} ${BASENAME}.cpp)
-	else ()
-		add_executable(${BASENAME} ${BASENAME}.c)
-	endif ()
+	add_executable(${BASENAME} ${BASENAME}.cpp)
 	target_link_libraries(${BASENAME}
 		osm2go_lib
 	)
