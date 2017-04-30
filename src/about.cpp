@@ -35,7 +35,7 @@
 
 #ifdef ENABLE_BROWSER_INTERFACE
 
-static gboolean on_link_clicked(GtkWidget *widget, G_GNUC_UNUSED GdkEventButton *event,
+static gboolean on_link_clicked(GtkWidget *widget, GdkEventButton *,
 				gpointer user_data) {
 
   const char *str =
@@ -96,7 +96,7 @@ static GtkWidget *label_xbig(const char *str) {
 }
 
 static void
-on_label_realize(GtkWidget *widget, G_GNUC_UNUSED gpointer user_data)  {
+on_label_realize(GtkWidget *widget, gpointer)  {
   /* get parent size (which is a container) */
   gtk_widget_set_size_request(widget, widget->parent->allocation.width, -1);
 }

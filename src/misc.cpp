@@ -310,7 +310,7 @@ GtkWidget *misc_dialog_new(int hint, const gchar *title,
 #if defined(USE_HILDON) && (MAEMO_VERSION_MAJOR == 5)
 #include <hildon/hildon-pannable-area.h>
 /* create a pannable area */
-GtkWidget *misc_scrolled_window_new(G_GNUC_UNUSED gboolean etched_in) {
+GtkWidget *misc_scrolled_window_new(gboolean) {
   return hildon_pannable_area_new();
 }
 
@@ -527,7 +527,7 @@ void notebook_append_page(GtkWidget *notebook,
 }
 
 #ifdef FREMANTLE
-void on_value_changed(HildonPickerButton *widget, G_GNUC_UNUSED gpointer user_data) {
+void on_value_changed(HildonPickerButton *widget, gpointer) {
   g_signal_emit_by_name(widget, "changed");
 }
 

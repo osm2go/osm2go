@@ -265,8 +265,7 @@ static void changed(GtkTreeSelection *sel, gpointer user_data) {
 /* require the control key to be pressed). This interferes with */
 /* fremantle finger scrolling, but fortunately the fremantle */
 /* default behaviour already is what we want. */
-static gboolean on_view_clicked(GtkWidget *widget, GdkEventButton *event,
-				G_GNUC_UNUSED gpointer user_data) {
+static gboolean on_view_clicked(GtkWidget *widget, GdkEventButton *event, gpointer) {
   if(event->window == gtk_tree_view_get_bin_window(GTK_TREE_VIEW(widget))) {
     GtkTreePath *path;
 
@@ -524,9 +523,8 @@ enum {
 };
 
 static gboolean
-member_list_selection_func(G_GNUC_UNUSED GtkTreeSelection *selection, GtkTreeModel *model,
-		     GtkTreePath *path, G_GNUC_UNUSED gboolean path_currently_selected,
-		     G_GNUC_UNUSED gpointer userdata) {
+member_list_selection_func(GtkTreeSelection *, GtkTreeModel *model,
+                           GtkTreePath *path, gboolean, gpointer) {
   GtkTreeIter iter;
 
   if(gtk_tree_model_get_iter(model, &iter, path)) {
@@ -688,7 +686,7 @@ void relation_show_members(GtkWidget *parent, const relation_t *relation) {
 }
 
 /* user clicked "members" button in relation list */
-static void on_relation_members(G_GNUC_UNUSED GtkWidget *button, relation_context_t *context) {
+static void on_relation_members(GtkWidget *, relation_context_t *context) {
   relation_t *sel = get_selected_relation(context);
 
   if(sel) relation_show_members(context->dialog, sel);
@@ -713,7 +711,7 @@ static void on_relation_select(GtkWidget *but, relation_context_t *context) {
 }
 
 
-static void on_relation_add(G_GNUC_UNUSED GtkWidget *button, relation_context_t *context) {
+static void on_relation_add(GtkWidget *, relation_context_t *context) {
   /* create a new relation */
 
   relation_t *relation = new relation_t(1);
@@ -744,7 +742,7 @@ static void on_relation_add(G_GNUC_UNUSED GtkWidget *button, relation_context_t 
 }
 
 /* user clicked "edit..." button in relation list */
-static void on_relation_edit(G_GNUC_UNUSED GtkWidget *button, relation_context_t *context) {
+static void on_relation_edit(GtkWidget *, relation_context_t *context) {
   relation_t *sel = get_selected_relation(context);
   if(!sel) return;
 
@@ -783,7 +781,7 @@ static void on_relation_edit(G_GNUC_UNUSED GtkWidget *button, relation_context_t
 
 
 /* remove the selected relation */
-static void on_relation_remove(G_GNUC_UNUSED GtkWidget *button, relation_context_t *context) {
+static void on_relation_remove(GtkWidget *, relation_context_t *context) {
   relation_t *sel = get_selected_relation(context);
   if(!sel) return;
 

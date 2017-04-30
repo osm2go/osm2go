@@ -60,7 +60,7 @@ static gboolean info_tag_key_collision(const std::vector<stag_t *> &tags, const 
   return std::find_if(it + 1, itEnd, fc) != itEnd ? TRUE : FALSE;
 }
 
-static void changed(G_GNUC_UNUSED GtkTreeSelection *treeselection, gpointer user_data) {
+static void changed(GtkTreeSelection *, gpointer user_data) {
   GtkWidget *list = (GtkWidget*)user_data;
 
   GtkTreeModel *model;
@@ -97,7 +97,7 @@ void tag_context_t::update_collisions()
   }
 }
 
-static void on_tag_remove(G_GNUC_UNUSED GtkWidget *button, tag_context_t *context) {
+static void on_tag_remove(GtkWidget *, tag_context_t *context) {
   GtkTreeModel     *model;
   GtkTreeIter       iter;
 
@@ -184,7 +184,7 @@ static bool tag_edit(GtkWindow *window, stag_t &tag) {
   return ret;
 }
 
-static void on_tag_edit(G_GNUC_UNUSED GtkWidget *button, tag_context_t *context) {
+static void on_tag_edit(GtkWidget *, tag_context_t *context) {
   GtkTreeModel *model;
   GtkTreeIter iter;
 
@@ -220,7 +220,7 @@ static inline void stag_delete(stag_t *t) {
   delete t;
 }
 
-static void on_tag_last(G_GNUC_UNUSED GtkWidget *button, tag_context_t *context) {
+static void on_tag_last(GtkWidget *, tag_context_t *context) {
   if(context->tags.empty() || yes_no_f(context->dialog,
 	      context->appdata, MISC_AGAIN_ID_OVERWRITE_TAGS, 0,
 	      _("Overwrite tags?"),
@@ -266,7 +266,7 @@ struct stag_identity_functor {
   }
 };
 
-static void on_tag_add(G_GNUC_UNUSED GtkWidget *button, tag_context_t *context) {
+static void on_tag_add(GtkWidget *, tag_context_t *context) {
   stag_t tag = stag_t(std::string(), std::string());
 
   if(!tag_edit(GTK_WINDOW(context->dialog), tag)) {
@@ -315,7 +315,7 @@ void tag_context_t::info_tags_replace() {
   std::for_each(tags.begin(), tags.end(), tag_replace_functor(store, tags));
 }
 
-static void on_relations(G_GNUC_UNUSED GtkWidget *button, tag_context_t *context) {
+static void on_relations(GtkWidget *, tag_context_t *context) {
   relation_membership_dialog(context->dialog, context->appdata,
                              context->object);
 }
@@ -375,7 +375,7 @@ static GtkWidget *tag_widget(tag_context_t *context) {
   return context->list;
 }
 
-static void on_relation_members(G_GNUC_UNUSED GtkWidget *button, const tag_context_t *context) {
+static void on_relation_members(GtkWidget *, const tag_context_t *context) {
   g_assert(context->object.type == RELATION);
   relation_show_members(context->dialog, context->object.relation);
 }

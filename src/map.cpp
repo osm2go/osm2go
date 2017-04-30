@@ -457,7 +457,7 @@ void map_item_deselect(map_t *map) {
 }
 
 /* called whenever a map item is to be destroyed */
-static gint map_item_destroy_event(G_GNUC_UNUSED GtkWidget *widget, gpointer data) {
+static gint map_item_destroy_event(GtkWidget *, gpointer data) {
   map_item_t *map_item = (map_item_t*)data;
 
   //  printf("destroying map_item @ %p\n", map_item);
@@ -850,7 +850,7 @@ static void map_free_map_item_chains(appdata_t *appdata) {
 #endif
 }
 
-static gint map_destroy_event(G_GNUC_UNUSED GtkWidget *widget, gpointer data) {
+static gint map_destroy_event(GtkWidget *, gpointer data) {
   map_t *map = static_cast<map_t *>(data);
   appdata_t *appdata = map->appdata;
 
@@ -1148,7 +1148,7 @@ void map_set_zoom(map_t *map, double zoom,
   }
 }
 
-static gboolean map_scroll_event(G_GNUC_UNUSED GtkWidget *widget, GdkEventScroll *event,
+static gboolean map_scroll_event(GtkWidget *, GdkEventScroll *event,
 				 gpointer data) {
   appdata_t *appdata = (appdata_t*)data;
   map_t *map = appdata->map;
@@ -1569,7 +1569,7 @@ static void map_button_release(map_t *map, gint x, gint y) {
   }
 }
 
-static gboolean map_button_event(G_GNUC_UNUSED GtkWidget *widget, GdkEventButton *event,
+static gboolean map_button_event(GtkWidget *, GdkEventButton *event,
 				       gpointer data) {
   map_t *map = static_cast<map_t *>(data);
 
@@ -1588,7 +1588,7 @@ static gboolean map_button_event(G_GNUC_UNUSED GtkWidget *widget, GdkEventButton
   return FALSE;  /* forward to further processing */
 }
 
-static gboolean map_motion_notify_event(G_GNUC_UNUSED GtkWidget *widget,
+static gboolean map_motion_notify_event(GtkWidget *,
                              GdkEventMotion *event, gpointer data) {
   map_t *map = static_cast<map_t *>(data);
   gint x, y;
@@ -2324,7 +2324,7 @@ void map_remove_bg_image(map_t *map) {
   }
 }
 
-static gint map_bg_item_destroy_event(G_GNUC_UNUSED GtkWidget *widget, gpointer data) {
+static gint map_bg_item_destroy_event(GtkWidget *, gpointer data) {
   map_t *map = (map_t*)data;
 
   /* destroying background item */

@@ -311,8 +311,7 @@ static void map_update(context_t *context, gboolean forced) {
   context->map.needs_redraw = FALSE;
 }
 
-static gboolean on_map_configure(G_GNUC_UNUSED GtkWidget *widget,
-				 G_GNUC_UNUSED GdkEventConfigure *event,
+static gboolean on_map_configure(GtkWidget *, GdkEventConfigure *,
 				 context_t *context) {
   map_update(context, FALSE);
   return FALSE;
@@ -567,8 +566,7 @@ on_map_button_release_event(GtkWidget *widget,
   return !osm_gps_map_osd_get_state(OSM_GPS_MAP(widget));
 }
 
-static void on_page_switch(G_GNUC_UNUSED GtkNotebook *notebook,
-			   G_GNUC_UNUSED GtkNotebookPage *page,
+static void on_page_switch(GtkNotebook *, GtkNotebookPage *,
 			   guint page_num, context_t *context) {
 
   /* updating the map while the user manually changes some coordinates */

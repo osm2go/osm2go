@@ -626,7 +626,7 @@ project_get_status_icon_stock_id(const project_t *current,
     // TODO: check for outdatedness too. Which icon to use?
 }
 
-static void on_project_new(G_GNUC_UNUSED GtkButton *button, gpointer data) {
+static void on_project_new(GtkButton *, gpointer data) {
   select_context_t *context = (select_context_t*)data;
   project_t *project = project_new(context);
   if(project) {
@@ -650,7 +650,7 @@ static void on_project_new(G_GNUC_UNUSED GtkButton *button, gpointer data) {
   }
 }
 
-static void on_project_delete(G_GNUC_UNUSED GtkButton *button, gpointer data) {
+static void on_project_delete(GtkButton *, gpointer data) {
   select_context_t *context = (select_context_t*)data;
   project_t *project = project_get_selected(context->list);
 
@@ -664,7 +664,7 @@ static void on_project_delete(G_GNUC_UNUSED GtkButton *button, gpointer data) {
     printf("unable to delete project\n");
 }
 
-static void on_project_edit(G_GNUC_UNUSED GtkButton *button, gpointer data) {
+static void on_project_edit(GtkButton *, gpointer data) {
   select_context_t *context = (select_context_t*)data;
   project_t *project = project_get_selected(context->list);
 
@@ -744,7 +744,7 @@ static void on_project_edit(G_GNUC_UNUSED GtkButton *button, gpointer data) {
 }
 
 static void
-on_project_update_all(G_GNUC_UNUSED GtkButton *button, gpointer data)
+on_project_update_all(GtkButton *, gpointer data)
 {
   select_context_t *context = (select_context_t*)data;
   GtkTreeIter iter;

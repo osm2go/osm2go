@@ -1220,7 +1220,7 @@ static gboolean on_window_key_press(GtkWidget *, GdkEventKey *event, appdata_t *
 #if (MAEMO_VERSION_MAJOR == 5) && !defined(__i386__)
 /* get access to zoom buttons */
 static void
-on_window_realize(GtkWidget *widget, G_GNUC_UNUSED gpointer dummy) {
+on_window_realize(GtkWidget *widget, gpointer) {
   if (widget->window) {
     unsigned char value = 1;
     Atom hildon_zoom_key_atom =

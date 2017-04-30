@@ -804,7 +804,7 @@ static void callback_buffer_modified(GtkTextBuffer *buffer, GtkDialog *dialog) {
 				    text && strlen(text));
 }
 
-static gboolean cb_focus_in(GtkTextView *view, G_GNUC_UNUSED GdkEventFocus *event,
+static gboolean cb_focus_in(GtkTextView *view, GdkEventFocus *,
 			     GtkTextBuffer *buffer) {
 
   gboolean first_click =

@@ -536,7 +536,7 @@ wms_server_changed(GtkTreeSelection *selection, gpointer userdata) {
   }
 }
 
-static void on_server_remove(G_GNUC_UNUSED GtkWidget *but, wms_server_context_t *context) {
+static void on_server_remove(GtkWidget *, wms_server_context_t *context) {
   GtkTreeSelection *selection;
   GtkTreeModel     *model;
   GtkTreeIter       iter;
@@ -679,7 +679,7 @@ gboolean wms_server_edit(wms_server_context_t *context, gboolean edit_name,
 }
 
 /* user clicked "edit..." button in the wms server list */
-static void on_server_edit(G_GNUC_UNUSED GtkWidget *but, wms_server_context_t *context) {
+static void on_server_edit(GtkWidget *, wms_server_context_t *context) {
   GtkTreeSelection *selection;
   GtkTreeModel     *model;
   GtkTreeIter       iter;
@@ -695,7 +695,7 @@ static void on_server_edit(G_GNUC_UNUSED GtkWidget *but, wms_server_context_t *c
 }
 
 /* user clicked "add..." button in the wms server list */
-static void on_server_add(G_GNUC_UNUSED GtkWidget *but, wms_server_context_t *context) {
+static void on_server_add(GtkWidget *, wms_server_context_t *context) {
 
   /* attach a new server item to the chain */
   wms_server_t **prev = &context->appdata->settings->wms_server;
@@ -856,8 +856,7 @@ enum {
 /* require the control key to be pressed). This interferes with */
 /* fremantle finger scrolling, but fortunately the fremantle */
 /* default behaviour already is what we want. */
-static gboolean on_view_clicked(GtkWidget *widget, GdkEventButton *event,
-				G_GNUC_UNUSED gpointer user_data) {
+static gboolean on_view_clicked(GtkWidget *widget, GdkEventButton *event, gpointer) {
   if(event->window == gtk_tree_view_get_bin_window(GTK_TREE_VIEW(widget))) {
     GtkTreePath *path;
 
@@ -940,7 +939,7 @@ void fitting_layers_functor::operator()(const wms_layer_t *layer)
 }
 
 static GtkWidget *wms_layer_widget(selected_context *context, const wms_layer_t::list &layers,
-				   G_GNUC_UNUSED GtkWidget *dialog) {
+                                   GtkWidget *) {
 
 #ifndef FREMANTLE_PANNABLE_AREA
   GtkWidget *view = gtk_tree_view_new();
