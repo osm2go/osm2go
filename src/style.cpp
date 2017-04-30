@@ -267,9 +267,9 @@ static std::string style_basename(const std::string &name) {
 struct combo_add_styles {
   GtkWidget * const cbox;
   int cnt;
-  int match;
+  int &match;
   appdata_t * const appdata;
-  combo_add_styles(GtkWidget *w, appdata_t *a) : cbox(w), cnt(0), match(-1), appdata(a) {};
+  combo_add_styles(GtkWidget *w, appdata_t *a, int &m) : cbox(w), cnt(0), match(m), appdata(a) {};
   void operator()(const std::string &filename);
 };
 
@@ -343,7 +343,8 @@ GtkWidget *style_select_widget(appdata_t *appdata) {
   GtkWidget *cbox = combo_box_new(_("Style"));
 
   /* fill combo box with presets */
-  combo_add_styles cas(cbox, appdata);
+  int match = -1;
+  combo_add_styles cas(cbox, appdata, match);
   std::for_each(chain.begin(), chain.end(), cas);
 
   if(cas.match >= 0)
