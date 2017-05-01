@@ -325,17 +325,24 @@ bool tag_list_t::operator!=(const std::vector<tag_t> &t2) const {
   // must not be dereferenced. Check if t2 only consists of a creator tag, in
   // which case both lists would still be considered the same, or not. Not
   // further checks need to be done for the end result.
-  const std::vector<tag_t>::const_iterator t2cit = std::find_if(t2.begin(), t2.end(), is_creator_tag);
+  const std::vector<tag_t>::const_iterator t2start = t2.begin();
+  const std::vector<tag_t>::const_iterator t2End = t2.end();
+  bool t2HasCreator = (std::find_if(t2start, t2End, is_creator_tag) != t2End);
   if(empty())
-    return (t2cit != t2.end() && t2.size() != 1);
+    return (t2HasCreator && t2.size() != 1);
 
   /* first check list length, otherwise deleted tags are hard to detect */
   std::vector<tag_t>::size_type ocnt = contents->size();
   std::vector<tag_t>::const_iterator t1it = contents->begin();
   const std::vector<tag_t>::const_iterator t1End = contents->end();
   const std::vector<tag_t>::const_iterator t1cit = std::find_if(t1it, t1End, is_creator_tag);
-  if(t2cit != t2.end())
+
+  if(t2HasCreator)
     ocnt++;
+
+  // ocnt can't become negative here as it was checked before that contents is not empty
+  if(t1cit != t1End)
+    ocnt--;
 
   if (t2.size() != ocnt)
     return true;
@@ -345,14 +352,11 @@ bool tag_list_t::operator!=(const std::vector<tag_t> &t2) const {
       continue;
     const tag_t &ntag = *t1it;
 
-    const std::vector<tag_t>::const_iterator t2end = t2.end();
-    std::vector<tag_t>::const_iterator it = std::find_if(t2.begin(), t2cit,
-                                                         tag_find_functor(ntag.key));
-    if(it == t2end && t2cit != t2end)
-      it = std::find_if(t2cit + 1, t2end, tag_find_functor(ntag.key));
+    const std::vector<tag_t>::const_iterator it = std::find_if(t2start, t2End,
+                                                               tag_find_functor(ntag.key));
 
     // key not found
-    if(it == t2end)
+    if(it == t2End)
       return true;
     // different value
     if(strcmp(ntag.value, it->value) != 0)

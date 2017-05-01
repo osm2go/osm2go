@@ -23,6 +23,19 @@ static bool find_bb(const tag_t &t)
   return strcmp(t.value, "bb") == 0;
 }
 
+static std::vector<tag_t> ab_with_creator(void)
+{
+  std::vector<tag_t> ntags;
+
+  tag_t cr_by(g_strdup("created_by"), g_strdup("test"));
+  g_assert_true(cr_by.is_creator_tag());
+  ntags.push_back(cr_by);
+  ntags.push_back(tag_t(g_strdup("a"), g_strdup("aa")));
+  ntags.push_back(tag_t(g_strdup("b"), g_strdup("bb")));
+
+  return ntags;
+}
+
 int main()
 {
   tag_list_t tags;
@@ -114,6 +127,17 @@ int main()
   g_assert_true(tags.contains(find_aa));
   g_assert_true(tags.contains(find_bb));
 
+  // check identity with permutations
+  ntags = ab_with_creator();
+  tags.replace(ntags);
+  ntags = ab_with_creator();
+  g_assert(tags == ntags);
+  std::rotate(ntags.begin(), ntags.begin() + 1, ntags.end());
+  g_assert(tags == ntags);
+  std::rotate(ntags.begin(), ntags.begin() + 1, ntags.end());
+  g_assert(tags == ntags);
+
+  std::for_each(ntags.begin(), ntags.end(), osm_tag_free);
   std::for_each(nstags.begin(), nstags.end(), delete_stag);
   std::for_each(lowerTags.begin(), lowerTags.end(), delete_stag);
   tags.clear();
