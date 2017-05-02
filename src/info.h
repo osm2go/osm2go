@@ -51,8 +51,7 @@ public:
   osm_t::TagMap tags;
 
   void info_tags_replace();
-  void update_collisions();
-  osm_t::TagMap::iterator findTag(const std::string &key, const std::string &value);
+  void update_collisions(const std::string &k);
 };
 
 bool info_dialog(GtkWidget *parent, appdata_t *appdata, object_t &object);
