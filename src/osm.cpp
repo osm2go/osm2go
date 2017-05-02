@@ -157,11 +157,6 @@ item_id_t object_t::get_id() const {
   return id;
 }
 
-void object_t::set_flags(int set) {
-  g_assert_true(is_real());
-  obj->flags |=  set;
-}
-
 /* ------------------------- user handling --------------------- */
 
 struct cmp_user {
@@ -360,6 +355,67 @@ bool tag_list_t::operator!=(const std::vector<tag_t> &t2) const {
       return true;
     // different value
     if(strcmp(ntag.value, it->value) != 0)
+      return true;
+  }
+
+  return false;
+}
+
+static inline bool is_creator_stag(const stag_t *stag) {
+  return stag->is_creator_tag();
+}
+
+struct stag_find_functor {
+  const char * const needle;
+  stag_find_functor(const char *n) : needle(n) {}
+  bool operator()(const stag_t *tag) {
+    return (tag->key == needle);
+  }
+};
+
+bool tag_list_t::operator!=(const std::vector<stag_t *> &t2) const {
+  if(empty() && t2.empty())
+    return false;
+
+  // Special case for an empty list as contents is not set in this case and
+  // must not be dereferenced. Check if t2 only consists of a creator tag, in
+  // which case both lists would still be considered the same, or not. Not
+  // further checks need to be done for the end result.
+  const std::vector<stag_t *>::const_iterator t2start = t2.begin();
+  const std::vector<stag_t *>::const_iterator t2End = t2.end();
+  bool t2HasCreator = (std::find_if(t2start, t2End, is_creator_stag) != t2End);
+  if(empty())
+    return (t2HasCreator && t2.size() != 1);
+
+  /* first check list length, otherwise deleted tags are hard to detect */
+  std::vector<tag_t>::size_type ocnt = contents->size();
+  std::vector<tag_t>::const_iterator t1it = contents->begin();
+  const std::vector<tag_t>::const_iterator t1End = contents->end();
+  const std::vector<tag_t>::const_iterator t1cit = std::find_if(t1it, t1End, is_creator_tag);
+
+  if(t2HasCreator)
+    ocnt++;
+
+  // ocnt can't become negative here as it was checked before that contents is not empty
+  if(t1cit != t1End)
+    ocnt--;
+
+  if (t2.size() != ocnt)
+    return true;
+
+  for (; t1it != t1End; t1it++) {
+    if (t1it == t1cit)
+      continue;
+    const tag_t &ntag = *t1it;
+
+    std::vector<stag_t *>::const_iterator it = std::find_if(t2start, t2End,
+                                                         stag_find_functor(ntag.key));
+
+    // key not found
+    if(it == t2End)
+      return true;
+    // different value
+    if((*it)->value != ntag.value)
       return true;
   }
 
@@ -2124,6 +2180,16 @@ base_object_t::base_object_t(item_id_t ver, item_id_t i)
   , time(0)
   , flags(version == 1 ? OSM_FLAG_NEW : 0)
 {
+}
+
+void base_object_t::updateTags(const std::vector<stag_t *> &ntags)
+{
+  if (tags == ntags)
+    return;
+
+  tags.replace(ntags);
+
+  flags |= OSM_FLAG_DIRTY;
 }
 
 struct value_match_functor {

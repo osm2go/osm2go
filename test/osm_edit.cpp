@@ -36,8 +36,7 @@ static std::vector<tag_t> ab_with_creator(void)
   return ntags;
 }
 
-int main()
-{
+static void test_taglist() {
   tag_list_t tags;
   std::vector<tag_t> ntags;
 
@@ -141,6 +140,69 @@ int main()
   std::for_each(nstags.begin(), nstags.end(), delete_stag);
   std::for_each(lowerTags.begin(), lowerTags.end(), delete_stag);
   tags.clear();
+}
+
+static void test_replace() {
+  node_t node;
+
+  g_assert_true(node.tags.empty());
+
+  std::vector<stag_t *> nstags;
+  node.updateTags(nstags);
+  g_assert_cmpuint(node.flags, ==, 0);
+  g_assert_true(node.tags.empty());
+
+  stag_t cr_by("created_by", "test");
+  g_assert_true(cr_by.is_creator_tag());
+  nstags.push_back(&cr_by);
+  node.updateTags(nstags);
+  g_assert(node.flags == 0);
+  g_assert_true(node.tags.empty());
+
+  node.tags.replace(nstags);
+  g_assert_cmpuint(node.flags, ==, 0);
+  g_assert_true(node.tags.empty());
+
+  stag_t aA("a", "A");
+  nstags.push_back(&aA);
+
+  node.updateTags(nstags);
+  g_assert_cmpuint(node.flags, ==, OSM_FLAG_DIRTY);
+  g_assert_false(node.tags.empty());
+  g_assert(node.tags == nstags);
+
+  node.flags = 0;
+
+  node.updateTags(nstags);
+  g_assert_cmpuint(node.flags, ==, 0);
+  g_assert_false(node.tags.empty());
+  g_assert(node.tags == nstags);
+
+  node.tags.clear();
+  g_assert_true(node.tags.empty());
+
+  // use the other replace() variant that is also used by diff_restore(),
+  // which can also insert created_by tags
+  std::vector<tag_t> ntags;
+  ntags.push_back(tag_t(g_strdup("created_by"), g_strdup("foo")));
+  ntags.push_back(tag_t(g_strdup("a"), g_strdup("A")));
+  node.tags.replace(ntags);
+
+  g_assert_cmpuint(node.flags, ==, 0);
+  g_assert_false(node.tags.empty());
+  g_assert(node.tags == nstags);
+
+  // updating with the same "real" tag shouldn't change anything
+  node.updateTags(nstags);
+  g_assert_cmpuint(node.flags, ==, 0);
+  g_assert_false(node.tags.empty());
+  g_assert(node.tags == nstags);
+}
+
+int main()
+{
+  test_taglist();
+  test_replace();
 
   return 0;
 }

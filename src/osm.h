@@ -134,7 +134,6 @@ typedef struct object_t {
   const char *get_tag_value(const char *key) const;
   bool has_tags() const;
   item_id_t get_id() const;
-  void set_flags(int set);
   std::string get_name() const;
 #endif
 } object_t;
@@ -350,6 +349,9 @@ public:
   inline bool operator==(const std::vector<tag_t> &t2) const
   { return !operator!=(t2); }
   bool operator!=(const std::vector<tag_t> &t2) const;
+  inline bool operator==(const std::vector<stag_t *> &t2) const
+  { return !operator!=(t2); }
+  bool operator!=(const std::vector<stag_t *> &t2) const;
 
   /**
    * @brief check if 2 tags with the same key exist
@@ -374,6 +376,15 @@ struct base_object_t {
   tag_list_t tags;
   time_t time;
   unsigned int flags;
+
+  /**
+   * @brief replace the tags and set dirty flag if they were actually different
+   * @param ntags the new tags
+   *
+   * "created_by" tags are ignored when considering if the list needs to be
+   * changed or not.
+   */
+  void updateTags(const std::vector<stag_t *> &ntags);
 };
 
 class node_t : public base_object_t {

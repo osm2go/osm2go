@@ -604,9 +604,7 @@ bool info_dialog(GtkWidget *parent, appdata_t *appdata, object_t &object) {
   gtk_widget_destroy(context.dialog);
 
   if(ok) {
-    context.object.obj->tags.replace(context.tags);
-
-    context.object.set_flags(OSM_FLAG_DIRTY);
+    context.object.obj->updateTags(context.tags);
   } else {
     std::for_each(context.tags.begin(), context.tags.end(), stag_delete);
     context.tags.clear();
