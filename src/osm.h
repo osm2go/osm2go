@@ -373,7 +373,7 @@ struct base_object_t {
   const char *user;
   tag_list_t tags;
   time_t time;
-  int flags;
+  unsigned int flags;
 };
 
 class node_t : public base_object_t {
