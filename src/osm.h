@@ -232,6 +232,8 @@ struct tag_t {
 
   bool is_creator_tag() const;
 
+  static bool is_creator_tag(const char *key);
+
   /**
    * @brief replace the value
    */

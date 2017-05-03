@@ -68,11 +68,12 @@ static void changed(GtkTreeSelection *, gpointer user_data) {
   gboolean selected = list_get_selected(list, &model, &iter);
 
   if(selected) {
-    stag_t *tag;
-    gtk_tree_model_get(model, &iter, TAG_COL_DATA, &tag, -1);
+    const gchar *key = O2G_NULLPTR;
+    gtk_tree_model_get(model, &iter, TAG_COL_KEY, &key, -1);
 
+    g_assert_nonnull(key);
     /* you just cannot delete or edit the "created_by" tag */
-    if(!tag || tag->is_creator_tag())
+    if(tag_t::is_creator_tag(key))
       selected = FALSE;
   }
 

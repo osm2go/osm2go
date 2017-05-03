@@ -2078,7 +2078,7 @@ std::string object_t::get_name() const {
 }
 
 bool stag_t::is_creator_tag() const {
-  return (strcasecmp(key.c_str(), "created_by") == 0);
+  return tag_t::is_creator_tag(key.c_str());
 }
 
 tag_t::tag_t(const stag_t &other)
@@ -2087,6 +2087,11 @@ tag_t::tag_t(const stag_t &other)
 }
 
 bool tag_t::is_creator_tag() const {
+  return is_creator_tag(key);
+}
+
+bool tag_t::is_creator_tag(const char* key)
+{
   return (strcasecmp(key, "created_by") == 0);
 }
 
