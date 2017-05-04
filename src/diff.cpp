@@ -297,9 +297,9 @@ static int xml_get_prop_state(xmlNode *node) {
   return OSM_FLAG_DIRTY;
 }
 
-static std::vector<tag_t> xml_scan_tags(xmlNodePtr node) {
+static osm_t::TagMap xml_scan_tags(xmlNodePtr node) {
   /* scan for tags */
-  std::vector<tag_t> ret;
+  osm_t::TagMap  ret;
 
   while(node) {
     if(node->type == XML_ELEMENT_NODE) {
@@ -379,11 +379,10 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
 
   g_assert_nonnull(node);
 
-  std::vector<tag_t> ntags = xml_scan_tags(node_node->children);
+  osm_t::TagMap ntags = xml_scan_tags(node_node->children);
   /* check if the same changes have been done upstream */
   if(state == OSM_FLAG_DIRTY && !pos_diff && node->tags == ntags) {
     printf("node " ITEM_ID_FORMAT " has the same values and position as upstream, discarding diff\n", id);
-    std::for_each(ntags.begin(), ntags.end(), osm_tag_free);
     node->flags &= ~OSM_FLAG_DIRTY;
     return;
   }
@@ -479,11 +478,10 @@ static void diff_restore_way(xmlNodePtr node_way, osm_t *osm) {
     osm_node_chain_free(new_chain);
     new_chain.clear();
 
-    std::vector<tag_t> ntags = xml_scan_tags(node_way->children);
+    osm_t::TagMap ntags = xml_scan_tags(node_way->children);
     if (way->tags != ntags) {
       way->tags.replace(ntags);
     } else if (!ntags.empty()) {
-      std::for_each(ntags.begin(), ntags.end(), osm_tag_free);
       if (sameChain) {
         printf("way " ITEM_ID_FORMAT " has the same nodes and tags as upstream, discarding diff\n", id);
         way->flags &= ~OSM_FLAG_DIRTY;
@@ -553,12 +551,10 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
   g_assert_nonnull(relation);
 
   bool was_changed = false;
-  std::vector<tag_t> ntags = xml_scan_tags(node_rel->children);
+  osm_t::TagMap ntags = xml_scan_tags(node_rel->children);
   if(relation->tags != ntags) {
     relation->tags.replace(ntags);
     was_changed = true;
-  } else {
-    std::for_each(ntags.begin(), ntags.end(), osm_tag_free);
   }
 
   /* update members */

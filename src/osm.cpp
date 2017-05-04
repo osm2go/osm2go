@@ -240,17 +240,46 @@ static bool tag_from_xml(xmlChar *k, xmlChar *v, std::vector<tag_t> &tags) {
   return ret;
 }
 
-bool osm_t::parse_tag(xmlNode *a_node, std::vector<tag_t> &tags) {
-  if (!tag_from_xml(xmlGetProp(a_node, BAD_CAST "k"),
-                    xmlGetProp(a_node, BAD_CAST "v"), tags))
+bool osm_t::parse_tag(xmlNode *a_node, TagMap &tags) {
+  xmlChar *key = xmlGetProp(a_node, BAD_CAST "k");
+  xmlChar *value = xmlGetProp(a_node, BAD_CAST "v");
+
+  if(G_UNLIKELY(!key || !value || strlen(reinterpret_cast<char *>(key)) == 0 ||
+                                  strlen(reinterpret_cast<char *>(value)) == 0)) {
+    xmlFree(key);
+    xmlFree(value);
+    return false;
+  }
+
+  std::string k = reinterpret_cast<char *>(key);
+  std::string v = reinterpret_cast<char *>(value);
+
+  xmlFree(key);
+  xmlFree(value);
+
+  if(G_UNLIKELY(findTag(tags, k, v) != tags.end()))
     return false;
 
-  const xmlNode *cur_node = O2G_NULLPTR;
-  for (cur_node = a_node->children; cur_node; cur_node = cur_node->next)
-    if (cur_node->type == XML_ELEMENT_NODE)
-      printf("found unhandled osm/node/tag/%s\n", cur_node->name);
+  tags.insert(TagMap::value_type(k, v));
 
   return true;
+}
+
+struct map_value_match_functor {
+  const std::string &value;
+  map_value_match_functor(const std::string &v) : value(v) {}
+  bool operator()(const osm_t::TagMap::value_type &pair) {
+    return pair.second == value;
+  }
+};
+
+osm_t::TagMap::iterator osm_t::findTag(TagMap &map, const std::string &key, const std::string &value)
+{
+  std::pair<osm_t::TagMap::iterator, osm_t::TagMap::iterator> matches = map.equal_range(key);
+  if(matches.first == matches.second)
+    return map.end();
+  osm_t::TagMap::iterator it = std::find_if(matches.first, matches.second, map_value_match_functor(value));
+  return it == matches.second ? map.end() : it;
 }
 
 struct tag_match_functor {
@@ -416,6 +445,58 @@ bool tag_list_t::operator!=(const std::vector<stag_t *> &t2) const {
       return true;
     // different value
     if((*it)->value != ntag.value)
+      return true;
+  }
+
+  return false;
+}
+
+bool tag_list_t::operator!=(const osm_t::TagMap &t2) const {
+  if(empty() && t2.empty())
+    return false;
+
+  // Special case for an empty list as contents is not set in this case and
+  // must not be dereferenced. Check if t2 only consists of a creator tag, in
+  // which case both lists would still be considered the same, or not. Not
+  // further checks need to be done for the end result.
+  const osm_t::TagMap::const_iterator t2End = t2.end();
+  bool t2HasCreator = (t2.find("created_by") != t2End);
+  if(empty())
+    return (t2HasCreator && t2.size() != 1);
+
+  /* first check list length, otherwise deleted tags are hard to detect */
+  std::vector<tag_t>::size_type ocnt = contents->size();
+  std::vector<tag_t>::const_iterator t1it = contents->begin();
+  const std::vector<tag_t>::const_iterator t1End = contents->end();
+  const std::vector<tag_t>::const_iterator t1cit = std::find_if(t1it, t1End, is_creator_tag);
+
+  if(t2HasCreator)
+    ocnt++;
+
+  // ocnt can't become negative here as it was checked before that contents is not empty
+  if(t1cit != t1End)
+    ocnt--;
+
+  if (t2.size() != ocnt)
+    return true;
+
+  for (; t1it != t1End; t1it++) {
+    if (t1it == t1cit)
+      continue;
+    const tag_t &ntag = *t1it;
+
+    std::pair<osm_t::TagMap::const_iterator, osm_t::TagMap::const_iterator> its = t2.equal_range(ntag.key);
+
+    // key not found
+    if(its.first == its.second)
+      return true;
+    // different value
+    // check different values
+    for(; its.first != its.second; its.first++)
+      if(its.first->second == ntag.value)
+        break;
+    // none of the values matched
+    if(its.first == its.second)
       return true;
   }
 
@@ -2161,6 +2242,26 @@ void tag_list_t::replace(std::vector<tag_t> &ntags)
   contents->reserve(ntags.size());
   contents->swap(ntags);
 #endif
+}
+
+struct tag_fill_functor {
+  std::vector<tag_t> &tags;
+  tag_fill_functor(std::vector<tag_t> &t) : tags(t) {}
+  void operator()(const osm_t::TagMap::value_type &p) {
+    tags.push_back(tag_t(g_strdup(p.first.c_str()), g_strdup(p.second.c_str())));
+  }
+};
+
+void tag_list_t::replace(const osm_t::TagMap &ntags)
+{
+  clear();
+  if(ntags.empty()) {
+    contents = 0;
+    return;
+  }
+  contents = new std::vector<tag_t>();
+  contents->reserve(ntags.size());
+  std::for_each(ntags.begin(), ntags.end(), tag_fill_functor(*contents));
 }
 
 void tag_list_t::replace(const std::vector<stag_t *> &ntags)

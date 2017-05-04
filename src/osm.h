@@ -154,6 +154,8 @@ struct member_t {
 };
 
 struct osm_t {
+  typedef std::multimap<std::string, std::string> TagMap;
+
   ~osm_t();
 
   bounds_t *bounds;   // original bounds as they appear in the file
@@ -208,13 +210,15 @@ struct osm_t {
    * @param tags the tag vector the new node is added to
    * @returns if a new tag was added
    */
-  static bool parse_tag(xmlNode* a_node, std::vector<tag_t> &tags);
+  static bool parse_tag(xmlNode* a_node, TagMap &tags);
 
   member_t parse_relation_member(xmlNode *a_node);
 
   node_t *parse_way_nd(xmlNode *a_node) const;
 
   static osm_t *parse(const std::string &path, const std::string &filename, struct icon_t **icons);
+
+  static TagMap::iterator findTag(TagMap &map, const std::string &k, const std::string &v);
 };
 
 xmlChar *osm_generate_xml_changeset(const char* comment);
@@ -338,6 +342,12 @@ public:
    */
   void replace(std::vector<tag_t> &ntags);
 
+  /**
+   * @brief replace the current tags with the given ones
+   * @param ntags new tags
+   */
+  void replace(const osm_t::TagMap &ntags);
+
   void replace(const std::vector<stag_t *> &ntags);
 
   /**
@@ -354,6 +364,9 @@ public:
   inline bool operator==(const std::vector<stag_t *> &t2) const
   { return !operator!=(t2); }
   bool operator!=(const std::vector<stag_t *> &t2) const;
+  inline bool operator==(const osm_t::TagMap &t2) const
+  { return !operator!=(t2); }
+  bool operator!=(const osm_t::TagMap &t2) const;
 
   /**
    * @brief check if 2 tags with the same key exist

@@ -190,6 +190,7 @@
     <tag k='name' v='Bus 382: Springe/Bahnhof =&gt; Wennigsen/Bahnhof' />
     <tag k='network' v='Großraum-Verkehr Hannover' />
     <tag k='operator' v='RegioBus Hannover GmbH' />
+    <tag k='operator' v='RegioBus Hannover GmbH' />
     <tag k='ref' v='382' />
     <tag k='route' v='bus' />
     <tag k='to' v='Wennigsen/Bahnhof' />
