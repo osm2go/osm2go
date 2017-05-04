@@ -177,6 +177,25 @@ static bool tag_edit(GtkWindow *window, std::string &k, std::string &v) {
   return ret;
 }
 
+static void select_item(const std::string &k, const std::string &v, tag_context_t *context) {
+  GtkTreeIter iter;
+  gtk_tree_model_get_iter_first(GTK_TREE_MODEL(context->store), &iter);
+  // just a linear search as there is not match between the tagmap order and the
+  // store order
+  do {
+    const gchar *key = O2G_NULLPTR, *value = O2G_NULLPTR;
+    gtk_tree_model_get(GTK_TREE_MODEL(context->store), &iter,
+                       TAG_COL_KEY, &key,
+                       TAG_COL_VALUE, &value, -1);
+    g_assert_nonnull(key);
+    g_assert_nonnull(value);
+    if(k == key && v == value) {
+      gtk_tree_selection_select_iter(list_get_selection(context->list), &iter);
+      return;
+    }
+  } while(gtk_tree_model_iter_next(GTK_TREE_MODEL(context->store), &iter));
+}
+
 static void on_tag_edit(GtkWidget *, tag_context_t *context) {
   GtkTreeModel *model;
   GtkTreeIter iter;
@@ -199,27 +218,60 @@ static void on_tag_edit(GtkWidget *, tag_context_t *context) {
   std::string k = kc, v = vc;
 
   if(tag_edit(GTK_WINDOW(context->dialog), k, v)) {
+    if(k == kc && v == vc)
+      return;
+
     printf("setting %s/%s\n", k.c_str(), v.c_str());
+
+    const std::pair<osm_t::TagMap::iterator, osm_t::TagMap::iterator> matches = context->tags.equal_range(k);
+    g_assert(matches.first != matches.second);
+    osm_t::TagMap::iterator it = std::find_if(matches.first, matches.second, value_match_functor(vc));
+    g_assert(it != matches.second);
+
+    if(it->first == k) {
+      // only value was changed
+      // collision flags only need to be updated if there is more than one entry with that key
+      osm_t::TagMap::iterator i = matches.first;
+      if(G_UNLIKELY(++i != matches.second)) {
+        // check if the entry is now equal to another entry
+        i = std::find_if(matches.first, matches.second, value_match_functor(v));
+
+        if(i != matches.second) {
+          // the item is now a duplicate, so it can be removed
+          gtk_list_store_remove(GTK_LIST_STORE(model), &iter);
+          context->tags.erase(it);
+
+          select_item(k, v, context);
+          context->update_collisions(k);
+          return;
+        }
+        // if the collisions persist no update has to be done as there already was a collision before
+      }
+      it->second = v;
+    } else {
+      context->tags.erase(it);
+      it = osm_t::findTag(context->tags, k, v);
+      if(G_UNLIKELY(it != context->tags.end())) {
+        // this tag is now duplicate, drop it and select the other one
+        k = kc; // cache it as the object will be removed from store
+        gtk_list_store_remove(GTK_LIST_STORE(model), &iter);
+
+        select_item(k, v, context);
+        // update collision marker for the old entry
+        context->update_collisions(k);
+        return;
+      } else {
+        context->tags.insert(osm_t::TagMap::value_type(k, v));
+
+        /* update collisions for all entries */
+        context->update_collisions(std::string());
+      }
+    }
 
     gtk_list_store_set(context->store, &iter,
                        TAG_COL_KEY, k.c_str(),
                        TAG_COL_VALUE, v.c_str(),
-		       -1);
-
-    osm_t::TagMap::iterator it = osm_t::findTag(context->tags, k, v);
-    g_assert(it != context->tags.end());
-
-    if(it->first == k) {
-      // only value was changed
-      it->second = v;
-      context->update_collisions(k);
-    } else {
-      context->tags.erase(it);
-      context->tags.insert(osm_t::TagMap::value_type(k, v));
-
-      /* update collisions for all entries */
-      context->update_collisions(std::string());
-    }
+                       -1);
   }
 }
 
@@ -269,23 +321,8 @@ static void on_tag_add(GtkWidget *, tag_context_t *context) {
 
   osm_t::TagMap::iterator it = osm_t::findTag(context->tags, k, v);
   if(G_UNLIKELY(it != context->tags.end())) {
-    // the very same tag is already in the list, just select the old one
-    GtkTreeIter iter;
-    gtk_tree_model_get_iter_first(GTK_TREE_MODEL(context->store), &iter);
-    // just a linear search as there is not match between the tagmap order and the
-    // store order
-    do {
-      const gchar *key = O2G_NULLPTR, *value = O2G_NULLPTR;
-      gtk_tree_model_get(GTK_TREE_MODEL(context->store), &iter,
-                         TAG_COL_KEY, &key,
-                         TAG_COL_VALUE, &value, -1);
-      g_assert_nonnull(key);
-      g_assert_nonnull(value);
-      if(k == key && v == value) {
-        gtk_tree_selection_select_iter(list_get_selection(context->list), &iter);
-        return;
-      }
-    } while(gtk_tree_model_iter_next(GTK_TREE_MODEL(context->store), &iter));
+    select_item(k, v, context);
+    return;
   }
 
   // check if the new key introduced a collision
