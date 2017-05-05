@@ -286,6 +286,7 @@ struct stag_t {
 class tag_list_t {
 public:
   tag_list_t();
+  ~tag_list_t();
 
   /**
    * @brief check if any tags are present

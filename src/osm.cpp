@@ -560,7 +560,6 @@ void osm_t::node_free(node_t *node) {
 }
 
 static inline void nodefree(std::pair<item_id_t, node_t *> pair) {
-  pair.second->tags.clear();
   delete pair.second;
 }
 
@@ -2179,6 +2178,11 @@ bool tag_t::is_creator_tag(const char* key)
 tag_list_t::tag_list_t()
   : contents(O2G_NULLPTR)
 {
+}
+
+tag_list_t::~tag_list_t()
+{
+  clear();
 }
 
 bool tag_list_t::empty() const
