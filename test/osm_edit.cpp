@@ -36,6 +36,14 @@ static std::vector<tag_t> ab_with_creator(void)
   return ntags;
 }
 
+static bool rtrue(const tag_t &) {
+  return true;
+}
+
+static void nevercalled(const tag_t &) {
+  g_assert_not_reached();
+}
+
 static void test_taglist() {
   tag_list_t tags;
   std::vector<tag_t> ntags;
@@ -140,6 +148,32 @@ static void test_taglist() {
   std::for_each(nstags.begin(), nstags.end(), delete_stag);
   std::for_each(lowerTags.begin(), lowerTags.end(), delete_stag);
   tags.clear();
+
+  // check that all these methods work on empty objects, both newly created and cleared ones
+  g_assert_true(tags.empty());
+  g_assert_false(tags.hasRealTags());
+  g_assert_null(tags.get_value("foo"));
+  g_assert_false(tags.contains(rtrue));
+  tags.for_each(nevercalled);
+  g_assert_true(tags.asVector().empty());
+  g_assert_true(tags.asPointerVector().empty());
+  g_assert(tags == std::vector<tag_t>());
+  g_assert(tags == std::vector<stag_t *>());
+  g_assert(tags == osm_t::TagMap());
+  tags.clear();
+
+  tag_list_t virgin;
+  g_assert_true(virgin.empty());
+  g_assert_false(virgin.hasRealTags());
+  g_assert_null(virgin.get_value("foo"));
+  g_assert_false(virgin.contains(rtrue));
+  virgin.for_each(nevercalled);
+  g_assert_true(virgin.asVector().empty());
+  g_assert_true(virgin.asPointerVector().empty());
+  g_assert(virgin == std::vector<tag_t>());
+  g_assert(virgin == std::vector<stag_t *>());
+  g_assert(virgin == osm_t::TagMap());
+  virgin.clear();
 }
 
 static void test_replace() {
