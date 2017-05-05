@@ -125,7 +125,7 @@ struct map_t {
     map_item_t *on_item;
     struct { gint x,y; } at;    // point mouse button was last pressed
     struct { gint x,y; } so;    // initial scroll offset
-    gboolean on_selected_node;  // the currently clicked node
+    bool on_selected_node;      // the currently clicked node
                                 // (may be part of a selected way)
   } pen_down;
 
@@ -186,8 +186,15 @@ void map_show_all(map_t *map);
 void map_set_zoom(map_t *map, double zoom, gboolean update_scroll_offsets);
 gboolean map_scroll_to_if_offscreen(map_t *map, const lpos_t *lpos);
 
+void map_detail_change(map_t *map, float detail);
+void map_detail_increase(map_t *map);
+void map_detail_decrease(map_t *map);
+void map_detail_normal(map_t *map);
+
+#ifdef __cplusplus
+}
 /* various functions required by map_edit */
-gboolean map_item_is_selected_node(map_t *map, map_item_t *map_item);
+bool map_item_is_selected_node(map_t *map, map_item_t *map_item);
 gboolean map_item_is_selected_way(map_t *map, map_item_t *map_item);
 map_item_t *map_item_at(map_t *map, gint x, gint y);
 map_item_t *map_real_item_at(map_t *map, gint x, gint y);
@@ -199,13 +206,6 @@ void map_outside_error(appdata_t *appdata);
 void map_node_draw(map_t *map, node_t *node);
 void map_relation_select(map_t *map, relation_t *relation);
 
-void map_detail_change(map_t *map, float detail);
-void map_detail_increase(map_t *map);
-void map_detail_decrease(map_t *map);
-void map_detail_normal(map_t *map);
-
-#ifdef __cplusplus
-}
 void map_item_chain_destroy(map_item_chain_t **chainP);
 
 void map_set_autosave(map_t *map, bool enable);

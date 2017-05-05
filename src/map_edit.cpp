@@ -472,128 +472,130 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
 
   /* check if we are still hovering above the selected way */
   map_item_t *item = map_item_at(map, x, y);
-  if(item && (map_item_is_selected_way(map, item) ||
-	      map_item_is_selected_node(map, item))) {
-    gboolean cut_at_node = map_item_is_selected_node(map, item);
+  bool cut_at_node = map_item_is_selected_node(map, item);
 
-    /* convert mouse position to canvas (world) position */
-    canvas_window2world(map->canvas, x, y, &x, &y);
+  if(!map_item_is_selected_way(map, item) && !cut_at_node)
+    return;
 
-    node_chain_t::iterator cut_at;
-    way_t *way = O2G_NULLPTR;
-    if(cut_at_node) {
-      printf("  cut at node\n");
+  /* convert mouse position to canvas (world) position */
+  canvas_window2world(map->canvas, x, y, &x, &y);
 
-      /* node must not be first or last node of way */
-      g_assert(map->selected.object.type == WAY);
+  node_chain_t::iterator cut_at;
+  way_t *way = O2G_NULLPTR;
+  if(cut_at_node) {
+    printf("  cut at node\n");
 
-      if(!map->selected.object.way->ends_with_node(item->object.node)) {
-	way = map->selected.object.way;
+    /* node must not be first or last node of way */
+    g_assert(map->selected.object.type == WAY);
 
-        cut_at = std::find(way->node_chain.begin(), way->node_chain.end(),
-                           item->object.node);
-      } else
-	printf("  won't cut as it's last or first node\n");
+    if(!map->selected.object.way->ends_with_node(item->object.node)) {
+      way = map->selected.object.way;
 
+      cut_at = std::find(way->node_chain.begin(), way->node_chain.end(),
+                         item->object.node);
     } else {
-      printf("  cut at segment\n");
-      gint c = canvas_item_get_segment(item->item, x, y);
-      if(c >= 0) {
-        way = item->object.way;
-        cut_at = way->node_chain.begin() + c;
-      }
+      printf("  won't cut as it's last or first node\n");
+      return;
     }
 
-    if(way) {
-      /* create a duplicate of the currently selected way */
-      way_t *neww = new way_t(1);
-
-      /* if this is a closed way, reorder (rotate) it, so the */
-      /* place to cut is adjecent to the begin/end of the way. */
-      /* this prevents a cut polygon to be split into two ways */
-      if(way->is_closed()) {
-	printf("CLOSED WAY -> rotate by %zi\n", cut_at - way->node_chain.begin());
-	way->rotate(cut_at);
-	cut_at = way->node_chain.begin();
-      }
-
-      /* ------------  copy all tags ------------- */
-      neww->tags.copy(way->tags);
-
-      /* ---- transfer relation membership from way to new ----- */
-      transfer_relations(map->appdata->osm, neww, way);
-
-      /* move parts of node_chain to the new way */
-      printf("  moving everthing after segment %zi to new way\n",
-             cut_at - way->node_chain.begin());
-
-      /* attach remaining nodes to new way */
-      neww->node_chain.insert(neww->node_chain.end(), cut_at, way->node_chain.end());
-
-      /* if we cut at a node, this node is now part of both ways. so */
-      /* keep it in the old way. */
-      if(cut_at_node)
-        cut_at++;
-
-      /* terminate remainig chain on old way */
-      way->node_chain.erase(cut_at, way->node_chain.end());
-
-      /* now move the way itself into the main data structure */
-      map->appdata->osm->way_attach(neww);
-
-      /* clear selection */
-      map_item_deselect(map);
-
-      /* remove prior version of this way */
-      printf("remove visible version of way #" ITEM_ID_FORMAT "\n", way->id);
-      map_item_chain_destroy(&way->map_item_chain);
-
-      /* swap chains if the old way is to be destroyed due to a lack */
-      /* of nodes */
-      if(way->node_chain.size() < 2) {
-	printf("swapping ways to avoid destruction of original way\n");
-	way->node_chain.swap(neww->node_chain);
-        map_way_delete(map, neww);
-	neww = O2G_NULLPTR;
-      } else if(neww->node_chain.size() < 2) {
-	printf("new way has less than 2 nodes, deleting it\n");
-        map_way_delete(map, neww);
-	neww = O2G_NULLPTR;
-      }
-
-      /* the way may still only consist of a single node. */
-      /* remove it then */
-      if(way->node_chain.size() < 2) {
-	printf("original way has less than 2 nodes left, deleting it\n");
-	map_way_delete(map, way);
-	item = O2G_NULLPTR;
-      } else {
-        printf("original way still has %zu nodes\n", way->node_chain.size());
-
-	/* draw the updated old way */
-	josm_elemstyles_colorize_way(map->style, way);
-	map_way_draw(map, way);
-
-	/* remember that the way needs to be uploaded */
-	way->flags |= OSM_FLAG_DIRTY;
-      }
-
-      if(neww != O2G_NULLPTR) {
-	/* colorize the new way before drawing */
-	josm_elemstyles_colorize_way(map->style, neww);
-	map_way_draw(map, neww);
-      }
-
-      /* put gui into idle state */
-      map_action_set(map, MAP_ACTION_IDLE);
-
-      /* and redo selection if way still exists */
-      if(item)
-        map_way_select(map, way);
-      else if(neww)
-        map_way_select(map, neww);
-    }
+  } else {
+    printf("  cut at segment\n");
+    gint c = canvas_item_get_segment(item->item, x, y);
+    if(c < 0)
+      return;
+    way = item->object.way;
+    cut_at = way->node_chain.begin() + c;
   }
+
+  g_assert_nonnull(way);
+
+  /* create a duplicate of the currently selected way */
+  way_t *neww = new way_t(1);
+
+  /* if this is a closed way, reorder (rotate) it, so the */
+  /* place to cut is adjecent to the begin/end of the way. */
+  /* this prevents a cut polygon to be split into two ways */
+  if(way->is_closed()) {
+    printf("CLOSED WAY -> rotate by %zi\n", cut_at - way->node_chain.begin());
+    way->rotate(cut_at);
+    cut_at = way->node_chain.begin();
+  }
+
+  /* ------------  copy all tags ------------- */
+  neww->tags.copy(way->tags);
+
+  /* ---- transfer relation membership from way to new ----- */
+  transfer_relations(map->appdata->osm, neww, way);
+
+  /* move parts of node_chain to the new way */
+  printf("  moving everthing after segment %zi to new way\n",
+         cut_at - way->node_chain.begin());
+
+  /* attach remaining nodes to new way */
+  neww->node_chain.insert(neww->node_chain.end(), cut_at, way->node_chain.end());
+
+  /* if we cut at a node, this node is now part of both ways. so */
+  /* keep it in the old way. */
+  if(cut_at_node)
+    cut_at++;
+
+  /* terminate remainig chain on old way */
+  way->node_chain.erase(cut_at, way->node_chain.end());
+
+  /* now move the way itself into the main data structure */
+  map->appdata->osm->way_attach(neww);
+
+  /* clear selection */
+  map_item_deselect(map);
+
+  /* remove prior version of this way */
+  printf("remove visible version of way #" ITEM_ID_FORMAT "\n", way->id);
+  map_item_chain_destroy(&way->map_item_chain);
+
+  /* swap chains if the old way is to be destroyed due to a lack */
+  /* of nodes */
+  if(way->node_chain.size() < 2) {
+    printf("swapping ways to avoid destruction of original way\n");
+    way->node_chain.swap(neww->node_chain);
+    map_way_delete(map, neww);
+    neww = O2G_NULLPTR;
+  } else if(neww->node_chain.size() < 2) {
+    printf("new way has less than 2 nodes, deleting it\n");
+    map_way_delete(map, neww);
+    neww = O2G_NULLPTR;
+  }
+
+  /* the way may still only consist of a single node. */
+  /* remove it then */
+  if(way->node_chain.size() < 2) {
+    printf("original way has less than 2 nodes left, deleting it\n");
+    map_way_delete(map, way);
+    item = O2G_NULLPTR;
+  } else {
+    printf("original way still has %zu nodes\n", way->node_chain.size());
+
+    /* draw the updated old way */
+    josm_elemstyles_colorize_way(map->style, way);
+    map_way_draw(map, way);
+
+    /* remember that the way needs to be uploaded */
+    way->flags |= OSM_FLAG_DIRTY;
+  }
+
+  if(neww != O2G_NULLPTR) {
+    /* colorize the new way before drawing */
+    josm_elemstyles_colorize_way(map->style, neww);
+    map_way_draw(map, neww);
+  }
+
+  /* put gui into idle state */
+  map_action_set(map, MAP_ACTION_IDLE);
+
+  /* and redo selection if way still exists */
+  if(item)
+    map_way_select(map, way);
+  else if(neww)
+    map_way_select(map, neww);
 }
 
 struct member_merge {

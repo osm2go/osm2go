@@ -1205,23 +1205,23 @@ static void map_do_scroll_step(map_t *map, gint x, gint y) {
 		    &map->state->scroll_offset.y);
 }
 
-gboolean map_item_is_selected_node(map_t *map, map_item_t *map_item) {
+bool map_item_is_selected_node(map_t *map, map_item_t *map_item) {
   printf("check if item is a selected node\n");
 
   if(!map_item) {
     printf("  no item requested\n");
-    return FALSE;
+    return false;
   }
 
   if(map->selected.object.type == ILLEGAL) {
     printf("  nothing is selected\n");
-    return FALSE;
+    return false;
   }
 
   /* clicked the highlight directly */
   if(map_item->object.type != NODE) {
     printf("  didn't click node\n");
-    return FALSE;
+    return false;
   }
 
   if(map->selected.object.type == NODE) {
@@ -1229,24 +1229,24 @@ gboolean map_item_is_selected_node(map_t *map, map_item_t *map_item) {
 
     if(map_item->object.node == map->selected.object.node) {
       printf("  requested item is a selected node\n");
-      return TRUE;
+      return true;
     }
     printf("  but it's not the requested one\n");
-    return FALSE;
+    return false;
 
   } else if(map->selected.object.type == WAY) {
     printf("  selected item is a way\n");
 
     if(map->selected.object.way->contains_node(map_item->object.node)) {
       printf("  requested item is part of selected way\n");
-      return TRUE;
+      return true;
     }
     printf("  but it doesn't include the requested node\n");
-    return FALSE;
+    return false;
 
   } else {
     printf("  selected item is unknown\n");
-    return FALSE;
+    return false;
   }
 }
 
@@ -1416,10 +1416,7 @@ static void map_button_press(map_t *map, gint x, gint y) {
 
   /* check if the clicked item is a highlighted node as the user */
   /* might want to drag that */
-  map->pen_down.on_selected_node = FALSE;
-  if(map->pen_down.on_item)
-    map->pen_down.on_selected_node =
-      map_item_is_selected_node(map, map->pen_down.on_item);
+  map->pen_down.on_selected_node = map_item_is_selected_node(map, map->pen_down.on_item);
 
   /* button press */
   switch(map->action.type) {
