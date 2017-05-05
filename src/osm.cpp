@@ -390,67 +390,6 @@ bool tag_list_t::operator!=(const std::vector<tag_t> &t2) const {
   return false;
 }
 
-static inline bool is_creator_stag(const stag_t *stag) {
-  return stag->is_creator_tag();
-}
-
-struct stag_find_functor {
-  const char * const needle;
-  stag_find_functor(const char *n) : needle(n) {}
-  bool operator()(const stag_t *tag) {
-    return (tag->key == needle);
-  }
-};
-
-bool tag_list_t::operator!=(const std::vector<stag_t *> &t2) const {
-  if(empty() && t2.empty())
-    return false;
-
-  // Special case for an empty list as contents is not set in this case and
-  // must not be dereferenced. Check if t2 only consists of a creator tag, in
-  // which case both lists would still be considered the same, or not. Not
-  // further checks need to be done for the end result.
-  const std::vector<stag_t *>::const_iterator t2start = t2.begin();
-  const std::vector<stag_t *>::const_iterator t2End = t2.end();
-  bool t2HasCreator = (std::find_if(t2start, t2End, is_creator_stag) != t2End);
-  if(empty())
-    return (t2HasCreator && t2.size() != 1);
-
-  /* first check list length, otherwise deleted tags are hard to detect */
-  std::vector<tag_t>::size_type ocnt = contents->size();
-  std::vector<tag_t>::const_iterator t1it = contents->begin();
-  const std::vector<tag_t>::const_iterator t1End = contents->end();
-  const std::vector<tag_t>::const_iterator t1cit = std::find_if(t1it, t1End, is_creator_tag);
-
-  if(t2HasCreator)
-    ocnt++;
-
-  // ocnt can't become negative here as it was checked before that contents is not empty
-  if(t1cit != t1End)
-    ocnt--;
-
-  if (t2.size() != ocnt)
-    return true;
-
-  for (; t1it != t1End; t1it++) {
-    if (t1it == t1cit)
-      continue;
-    const tag_t &ntag = *t1it;
-
-    std::vector<stag_t *>::const_iterator it = std::find_if(t2start, t2End,
-                                                         stag_find_functor(ntag.key));
-
-    // key not found
-    if(it == t2End)
-      return true;
-    // different value
-    if((*it)->value != ntag.value)
-      return true;
-  }
-
-  return false;
-}
-
 bool tag_list_t::operator!=(const osm_t::TagMap &t2) const {
   if(empty() && t2.empty())
     return false;
@@ -490,7 +429,6 @@ bool tag_list_t::operator!=(const osm_t::TagMap &t2) const {
     // key not found
     if(its.first == its.second)
       return true;
-    // different value
     // check different values
     for(; its.first != its.second; its.first++)
       if(its.first->second == ntag.value)
@@ -1978,77 +1916,31 @@ void way_t::rotate(node_chain_t::iterator nfirst) {
   std::rotate(node_chain.begin(), nfirst, node_chain.end());
 }
 
-struct tag_vector_functor {
-  std::vector<stag_t> &tags;
-  tag_vector_functor(std::vector<stag_t> &t) : tags(t) {}
+struct tag_map_functor {
+  osm_t::TagMap &tags;
+  tag_map_functor(osm_t::TagMap &t) : tags(t) {}
   void operator()(const tag_t &otag) {
-    tags.push_back(stag_t(otag.key, otag.value));
+    tags.insert(osm_t::TagMap::value_type(otag.key, otag.value));
   }
 };
 
-std::vector<stag_t> tag_list_t::asVector() const
+osm_t::TagMap tag_list_t::asMap() const
 {
-  std::vector<stag_t> new_tags;
+  osm_t::TagMap new_tags;
 
-  if(G_LIKELY(!empty())) {
-    new_tags.reserve(contents->size());
-
-    std::for_each(contents->begin(), contents->end(), tag_vector_functor(new_tags));
-  }
+  if(!empty())
+    std::for_each(contents->begin(), contents->end(), tag_map_functor(new_tags));
 
   return new_tags;
 }
 
-template<typename T, typename U, bool drop_creator>
 struct tag_vector_copy_functor {
-  std::vector<U *> &tags;
-  tag_vector_copy_functor(std::vector<U *> &t) : tags(t) {}
-  void operator()(const T &otag) {
-    if(G_UNLIKELY(drop_creator && otag.is_creator_tag()))
-      return;
-
-    tags.push_back(new U(otag));
-  }
-  inline void operator()(const T *otag) {
-    operator()(*otag);
-  }
-};
-
-template<typename T, bool drop_creator>
-struct tag_vector_copy_functor<T, tag_t, drop_creator> {
   std::vector<tag_t> &tags;
   tag_vector_copy_functor(std::vector<tag_t> &t) : tags(t) {}
-  void operator()(const T &otag) {
-    if(G_UNLIKELY(drop_creator && otag.is_creator_tag()))
-      return;
-
-    tags.push_back(tag_t(otag));
-  }
-  inline void operator()(const T *otag) {
-    operator()(*otag);
+  void operator()(const tag_t &otag) {
+    tags.push_back(tag_t(g_strdup(otag.key), g_strdup(otag.value)));
   }
 };
-
-std::vector<stag_t *> tag_list_t::asPointerVector() const
-{
-  std::vector<stag_t *> ret;
-  if(G_LIKELY(!empty())) {
-    ret.reserve(contents->size());
-
-    std::for_each(contents->begin(), contents->end(), tag_vector_copy_functor<tag_t, stag_t, false>(ret));
-  }
-
-  return ret;
-}
-
-std::vector<stag_t *> osm_tags_list_copy(const std::vector<stag_t> &tags) {
-  std::vector<stag_t *> new_tags;
-  new_tags.reserve(tags.size());
-
-  std::for_each(tags.begin(), tags.end(), tag_vector_copy_functor<stag_t, stag_t, false>(new_tags));
-
-  return new_tags;
-}
 
 void tag_list_t::copy(const tag_list_t &other)
 {
@@ -2060,7 +1952,7 @@ void tag_list_t::copy(const tag_list_t &other)
   contents = new typeof(*contents);
   contents->reserve(other.contents->size());
 
-  std::for_each(contents->begin(), contents->end(), tag_vector_copy_functor<tag_t, tag_t, false>(*contents));
+  std::for_each(contents->begin(), contents->end(), tag_vector_copy_functor(*contents));
 }
 
 /* try to get an as "speaking" description of the object as possible */
@@ -2157,15 +2049,6 @@ std::string object_t::get_name() const {
   return ret;
 }
 
-bool stag_t::is_creator_tag() const {
-  return tag_t::is_creator_tag(key.c_str());
-}
-
-tag_t::tag_t(const stag_t &other)
-  : key(g_strdup(other.key.c_str())), value(g_strdup(other.value.c_str()))
-{
-}
-
 bool tag_t::is_creator_tag() const {
   return is_creator_tag(key);
 }
@@ -2252,6 +2135,9 @@ struct tag_fill_functor {
   std::vector<tag_t> &tags;
   tag_fill_functor(std::vector<tag_t> &t) : tags(t) {}
   void operator()(const osm_t::TagMap::value_type &p) {
+    if(G_UNLIKELY(tag_t::is_creator_tag(p.first.c_str())))
+      return;
+
     tags.push_back(tag_t(g_strdup(p.first.c_str()), g_strdup(p.second.c_str())));
   }
 };
@@ -2268,16 +2154,6 @@ void tag_list_t::replace(const osm_t::TagMap &ntags)
   std::for_each(ntags.begin(), ntags.end(), tag_fill_functor(*contents));
 }
 
-void tag_list_t::replace(const std::vector<stag_t *> &ntags)
-{
-  clear();
-  if(ntags.empty())
-    return;
-  contents = new std::vector<tag_t>();
-  contents->reserve(ntags.size());
-  std::for_each(ntags.begin(), ntags.end(), tag_vector_copy_functor<stag_t, tag_t, true>(*contents));
-}
-
 base_object_t::base_object_t()
 {
   memset(this, 0, sizeof(*this));
@@ -2292,7 +2168,7 @@ base_object_t::base_object_t(item_id_t ver, item_id_t i)
 {
 }
 
-void base_object_t::updateTags(const std::vector<stag_t *> &ntags)
+void base_object_t::updateTags(const osm_t::TagMap &ntags)
 {
   if (tags == ntags)
     return;

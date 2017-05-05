@@ -8,11 +8,6 @@
 #include <cstring>
 #include <iostream>
 
-static void delete_stag(stag_t *s)
-{
-  delete s;
-}
-
 static bool find_aa(const tag_t &t)
 {
   return strcmp(t.value, "aa") == 0;
@@ -60,10 +55,10 @@ static void test_taglist() {
   g_assert(!(tags != ntags));
   ntags.clear();
 
-  // check replacing the tag list from stag_t
-  std::vector<stag_t *> nstags;
-  nstags.push_back(new stag_t("a", "A"));
-  nstags.push_back(new stag_t("b", "B"));
+  // check replacing the tag list from osm_t::TagMap::value_type
+  osm_t::TagMap nstags;
+  nstags.insert(osm_t::TagMap::value_type("a", "A"));
+  nstags.insert(osm_t::TagMap::value_type("b", "B"));
 
   tags.replace(nstags);
 
@@ -87,7 +82,7 @@ static void test_taglist() {
   g_assert_cmpint(strcmp(tags.get_value("b"), "bb"), ==, 0);
   g_assert_false(tags.hasTagCollisions());
 
-  std::vector<stag_t *> lowerTags = tags.asPointerVector();
+  osm_t::TagMap lowerTags = tags.asMap();
 
   // replace again
   tags.replace(nstags);
@@ -116,7 +111,7 @@ static void test_taglist() {
   g_assert_null(tags2.get_value("b"));
 
   tags2.replace(lowerTags);
-  g_assert_cmpuint(tags2.asVector().size(), ==, 2);
+  g_assert_cmpuint(tags2.asMap().size(), ==, 2);
   g_assert_false(lowerTags.empty());
   g_assert_nonnull(tags2.get_value("a"));
   g_assert_cmpint(strcmp(tags2.get_value("a"), "aa"), ==, 0);
@@ -130,7 +125,7 @@ static void test_taglist() {
   g_assert_cmpint(strcmp(tags.get_value("a"), "A"), ==, 0);
   g_assert_nonnull(tags.get_value("b"));
   g_assert_cmpint(strcmp(tags.get_value("b"), "B"), ==, 0);
-  g_assert_cmpuint(tags.asVector().size(), ==, 4);
+  g_assert_cmpuint(tags.asMap().size(), ==, 4);
   g_assert_true(tags.contains(find_aa));
   g_assert_true(tags.contains(find_bb));
 
@@ -145,8 +140,6 @@ static void test_taglist() {
   g_assert(tags == ntags);
 
   std::for_each(ntags.begin(), ntags.end(), osm_tag_free);
-  std::for_each(nstags.begin(), nstags.end(), delete_stag);
-  std::for_each(lowerTags.begin(), lowerTags.end(), delete_stag);
   tags.clear();
 
   // check that all these methods work on empty objects, both newly created and cleared ones
@@ -155,10 +148,8 @@ static void test_taglist() {
   g_assert_null(tags.get_value("foo"));
   g_assert_false(tags.contains(rtrue));
   tags.for_each(nevercalled);
-  g_assert_true(tags.asVector().empty());
-  g_assert_true(tags.asPointerVector().empty());
+  g_assert_true(tags.asMap().empty());
   g_assert(tags == std::vector<tag_t>());
-  g_assert(tags == std::vector<stag_t *>());
   g_assert(tags == osm_t::TagMap());
   tags.clear();
 
@@ -168,10 +159,8 @@ static void test_taglist() {
   g_assert_null(virgin.get_value("foo"));
   g_assert_false(virgin.contains(rtrue));
   virgin.for_each(nevercalled);
-  g_assert_true(virgin.asVector().empty());
-  g_assert_true(virgin.asPointerVector().empty());
+  g_assert_true(virgin.asMap().empty());
   g_assert(virgin == std::vector<tag_t>());
-  g_assert(virgin == std::vector<stag_t *>());
   g_assert(virgin == osm_t::TagMap());
   virgin.clear();
 }
@@ -181,14 +170,14 @@ static void test_replace() {
 
   g_assert_true(node.tags.empty());
 
-  std::vector<stag_t *> nstags;
+  osm_t::TagMap nstags;
   node.updateTags(nstags);
   g_assert_cmpuint(node.flags, ==, 0);
   g_assert_true(node.tags.empty());
 
-  stag_t cr_by("created_by", "test");
-  g_assert_true(cr_by.is_creator_tag());
-  nstags.push_back(&cr_by);
+  osm_t::TagMap::value_type cr_by("created_by", "test");
+  g_assert_true(tag_t::is_creator_tag(cr_by.first.c_str()));
+  nstags.insert(cr_by);
   node.updateTags(nstags);
   g_assert(node.flags == 0);
   g_assert_true(node.tags.empty());
@@ -197,8 +186,8 @@ static void test_replace() {
   g_assert_cmpuint(node.flags, ==, 0);
   g_assert_true(node.tags.empty());
 
-  stag_t aA("a", "A");
-  nstags.push_back(&aA);
+  osm_t::TagMap::value_type aA("a", "A");
+  nstags.insert(aA);
 
   node.updateTags(nstags);
   g_assert_cmpuint(node.flags, ==, OSM_FLAG_DIRTY);

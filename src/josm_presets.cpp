@@ -73,41 +73,24 @@ static void attach_right(GtkTable *table, const char *text, GtkWidget *widget, g
  * @param ctag iterator of the tag to edit, tags.end() in case it does not yet exist
  * @param value the new value
  */
-static bool store_value(const presets_widget_t *widget, std::vector<stag_t *> &tags,
-                        std::vector<stag_t *>::iterator ctag, const char *value) {
+static bool store_value(const presets_widget_t *widget, osm_t::TagMap &tags,
+                        const char *value) {
   bool changed = false;
+  osm_t::TagMap::iterator ctag = tags.find(widget->key);
   if(value && strlen(value)) {
-    const char *chstr;
     if(ctag != tags.end()) {
-      /* update the previous tag structure */
-      g_assert_cmpint(strcasecmp((*ctag)->key.c_str(), widget->key.c_str()), ==, 0);
       /* only update if the value actually changed */
-      if((*ctag)->value != value) {
-        changed = true; /* mark as updated, actual change below */
-        chstr = "updated";
-      } else {
-        chstr = "kept";
+      if(ctag->second != value) {
+        ctag->second = value;
+        changed = true;
       }
     } else {
-      /* no old entry, create a new one */
-      stag_t *tag = new stag_t(widget->key, std::string());
-      /* value will be updated below */
-      tags.push_back(tag);
-      ctag = tags.end() - 1;
+      tags.insert(osm_t::TagMap::value_type(widget->key, value));
       changed = true;
-      chstr = "new";
     }
-
-    if(changed)
-      (*ctag)->value = value;
-
-    printf("%s key = %s, value = %s\n", chstr,
-           widget->key.c_str(), (*ctag)->value.c_str());
   } else if (ctag != tags.end()) {
-    printf("removed key = %s, value = %s\n", widget->key.c_str(), (*ctag)->value.c_str());
-    stag_t *tag = *ctag;
+    printf("removed key = %s, value = %s\n", widget->key.c_str(), ctag->second.c_str());
     tags.erase(ctag);
-    delete tag;
     changed = true;
   } else
     printf("ignore empty key = %s\n", widget->key.c_str());
@@ -152,22 +135,12 @@ struct presets_context_t {
   tag_context_t * const tag_context;
 };
 
-struct find_tag_functor {
-  const std::string &key;
-  find_tag_functor(const std::string &k) : key(k) {}
-  bool operator()(const stag_t *tag) {
-    return strcasecmp(tag->key.c_str(), key.c_str()) == 0;
-  }
-};
-
-typedef std::pair<GtkWidget *, stag_t *> HintPair;
-
 struct add_widget_functor {
   guint &row;
   presets_context_t * const context;
-  std::map<const presets_widget_t *, HintPair> &gtk_widgets;
+  std::map<const presets_widget_t *, GtkWidget *> &gtk_widgets;
   GtkWidget * const table;
-  add_widget_functor(std::map<const presets_widget_t *, HintPair> &g, presets_context_t *c, GtkWidget *t, guint &r)
+  add_widget_functor(std::map<const presets_widget_t *, GtkWidget *> &g, presets_context_t *c, GtkWidget *t, guint &r)
     : row(r), context(c), gtk_widgets(g), table(t) {}
   void operator()(const presets_widget_t *w);
 };
@@ -180,54 +153,42 @@ void add_widget_functor::operator()(const presets_widget_t *w)
     return;
   }
 
-  tag_context_t * const tag_context = context->tag_context;
+  const osm_t::TagMap &tags = context->tag_context->tags;
   /* check if there's a value with this key already */
-  std::vector<stag_t *>::const_iterator otagIt = !w->key.empty() ?
-                                                 std::find_if(tag_context->tags.begin(),
-                                                              tag_context->tags.end(),
-                                                              find_tag_functor(w->key)) :
-                                                 tag_context->tags.end();
-  stag_t *otag = otagIt != tag_context->tags.end() ? *otagIt : O2G_NULLPTR;
-  const char *preset = otag ? otag->value.c_str() : O2G_NULLPTR;
+  const osm_t::TagMap::const_iterator otagIt = !w->key.empty() ?
+                                                 tags.find(w->key) :
+                                                 tags.end();
+  const char *preset = otagIt != tags.end() ? otagIt->second.c_str() : O2G_NULLPTR;
 
   GtkWidget *widget = w->attach(GTK_TABLE(table), row, preset, context);
 
   if(widget)
-    gtk_widgets[w] = HintPair(widget, otag);
+    gtk_widgets[w] = widget;
 }
 
 struct get_widget_functor {
   bool &changed;
-  std::vector<stag_t *> &tags;
-  const std::map<const presets_widget_t *, HintPair> &gtk_widgets;
-  const std::map<const presets_widget_t *, HintPair>::const_iterator hintEnd;
-  get_widget_functor(bool &c, std::vector<stag_t *> &t,
-                     const std::map<const presets_widget_t *, HintPair> &g)
+  osm_t::TagMap &tags;
+  const std::map<const presets_widget_t *, GtkWidget *> &gtk_widgets;
+  const std::map<const presets_widget_t *, GtkWidget *>::const_iterator hintEnd;
+  get_widget_functor(bool &c, osm_t::TagMap &t,
+                     const std::map<const presets_widget_t *, GtkWidget *> &g)
     : changed(c), tags(t), gtk_widgets(g), hintEnd(g.end()) {}
   void operator()(const presets_widget_t *w);
 };
 
 void get_widget_functor::operator()(const presets_widget_t* w)
 {
-  const std::map<const presets_widget_t *, HintPair>::const_iterator hint = gtk_widgets.find(w);
-  const HintPair &pair = hint != hintEnd ? hint->second : HintPair(O2G_NULLPTR, O2G_NULLPTR);
-  stag_t *otag = pair.second;
-  const std::vector<stag_t *>::iterator citEnd = tags.end();
-  std::vector<stag_t *>::iterator ctag = otag ?
-                                         std::find(tags.begin(), citEnd, otag) :
-                                         citEnd; // the place to do the change
+  const std::map<const presets_widget_t *, GtkWidget *>::const_iterator hint = gtk_widgets.find(w);
+  GtkWidget *widget = hint != hintEnd ? hint->second : O2G_NULLPTR;
   const char *text;
-  g_assert(!otag == (ctag == citEnd));
 
   switch(w->type) {
   case WIDGET_TYPE_KEY:
-    g_assert(ctag == citEnd);
-    ctag = std::find_if(tags.begin(), citEnd, find_tag_functor(w->key));
-    // fallthrough
   case WIDGET_TYPE_CHECK:
   case WIDGET_TYPE_COMBO:
   case WIDGET_TYPE_TEXT:
-    text = w->getValue(pair.first);
+    text = w->getValue(widget);
     break;
 
   case WIDGET_TYPE_REFERENCE: {
@@ -240,7 +201,7 @@ void get_widget_functor::operator()(const presets_widget_t* w)
     return;
   }
 
-  changed |= store_value(w, tags, ctag, text);
+  changed |= store_value(w, tags, text);
 }
 
 static void presets_item_dialog(presets_context_t *context,
@@ -262,7 +223,7 @@ static void presets_item_dialog(presets_context_t *context,
                                                                     is_widget_interactive);
   bool has_interactive_widget = (it != itEnd);
 
-  std::map<const presets_widget_t *, HintPair> gtk_widgets;
+  std::map<const presets_widget_t *, GtkWidget *> gtk_widgets;
 
   if(has_interactive_widget)  {
     dialog =
@@ -383,10 +344,10 @@ static void presets_item_dialog(presets_context_t *context,
  * @brief find the first widget that gives a negative match
  */
 struct used_preset_functor {
-  const std::vector<stag_t *> &tags;
+  const osm_t::TagMap &tags;
   bool &is_interactive;
   bool &hasPositive;   ///< set if a positive match is found at all
-  used_preset_functor(const std::vector<stag_t *> &t, bool &i, bool &m)
+  used_preset_functor(const osm_t::TagMap &t, bool &i, bool &m)
     : tags(t), is_interactive(i), hasPositive(m) {}
   bool operator()(const presets_widget_t *w);
 };
@@ -404,7 +365,7 @@ bool used_preset_functor::operator()(const presets_widget_t* w)
 /**
  * @brief check if the currently active object uses this preset and the preset is interactive
  */
-bool presets_item_t::matches(const std::vector<stag_t *> &tags) const
+bool presets_item_t::matches(const osm_t::TagMap &tags) const
 {
   bool is_interactive = false;
   bool hasPositive = false;
@@ -513,13 +474,13 @@ void build_menu_functor::operator()(presets_item_t *item)
 #else // PICKER_MENU
 
 struct group_member_used {
-  const std::vector<stag_t *> &tags;
-  group_member_used(  const std::vector<stag_t *> &t) : tags(t) {}
+  const osm_t::TagMap &tags;
+  group_member_used(const osm_t::TagMap &t) : tags(t) {}
   bool operator()(const presets_item_t *item);
 };
 
 static bool preset_group_is_used(const presets_item_group *item,
-                                 const std::vector<stag_t *> &tags)
+                                 const osm_t::TagMap &tags)
 {
   g_assert(item->type & presets_item_t::TY_GROUP);
   return std::find_if(item->items.begin(), item->items.end(),
@@ -1022,15 +983,13 @@ const char *presets_widget_t::getValue(GtkWidget *) const
   return O2G_NULLPTR;
 }
 
-int presets_widget_t::matches(const std::vector<stag_t *> &tags) const
+int presets_widget_t::matches(const osm_t::TagMap &tags) const
 {
   if(match == MatchIgnore)
     return 0;
 
-  const std::vector<stag_t *>::const_iterator itEnd = tags.end();
-  const std::vector<stag_t *>::const_iterator it = std::find_if(tags.begin(),
-                                                                itEnd,
-                                                                find_tag_functor(key));
+  const osm_t::TagMap::const_iterator itEnd = tags.end();
+  const osm_t::TagMap::const_iterator it = tags.find(key);
 
   if(it == itEnd) {
     switch(match) {
@@ -1045,7 +1004,7 @@ int presets_widget_t::matches(const std::vector<stag_t *> &tags) const
   if(match == MatchKey || match == MatchKey_Force)
     return 1;
 
-  if(matchValue((*it)->value.c_str()))
+  if(matchValue(it->second.c_str()))
     return 1;
 
   return match == MatchKeyValue_Force ? -1 : 0;

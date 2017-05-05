@@ -35,30 +35,8 @@ enum {
   TAG_COL_KEY = 0,
   TAG_COL_VALUE,
   TAG_COL_COLLISION,
-  TAG_COL_DATA,
   TAG_NUM_COLS
 };
-
-struct stag_collision_functor {
-  const stag_t *tag;
-  stag_collision_functor(const stag_t *t) : tag(t) { }
-  bool operator()(const stag_t *t) {
-    return (strcasecmp(t->key.c_str(), tag->key.c_str()) == 0);
-  }
-};
-
-static gboolean info_tag_key_collision(const std::vector<stag_t *> &tags, const stag_t *tag) {
-  const std::vector<stag_t *>::const_iterator itEnd = tags.end();
-  stag_collision_functor fc(tag);
-  const std::vector<stag_t *>::const_iterator it = std::find_if(tags.begin(), itEnd, fc);
-  if(it == itEnd)
-    return FALSE;
-  // check if this is the original tag itself
-  if(*it != tag)
-    return TRUE;
-  // it is, so search in the remaining items again
-  return std::find_if(it + 1, itEnd, fc) != itEnd ? TRUE : FALSE;
-}
 
 static void changed(GtkTreeSelection *, gpointer user_data) {
   GtkWidget *list = (GtkWidget*)user_data;
@@ -88,14 +66,31 @@ void tag_context_t::update_collisions()
   /* walk the entire store to get all values */
   if(gtk_tree_model_get_iter_first(GTK_TREE_MODEL(store), &iter)) {
     do {
-      stag_t *tag = O2G_NULLPTR;
-      gtk_tree_model_get(GTK_TREE_MODEL(store), &iter, TAG_COL_DATA, &tag, -1);
-      g_assert_nonnull(tag);
+      const gchar *key = O2G_NULLPTR;
+      gtk_tree_model_get(GTK_TREE_MODEL(store), &iter, TAG_COL_KEY, &key, -1);
+      g_assert_nonnull(key);
       gtk_list_store_set(store, &iter,
-         TAG_COL_COLLISION, info_tag_key_collision(tags, tag), -1);
+         TAG_COL_COLLISION, (tags.count(key) > 1) ? TRUE : FALSE, -1);
 
     } while(gtk_tree_model_iter_next(GTK_TREE_MODEL(store), &iter));
   }
+}
+
+struct value_match_functor {
+  const std::string &value;
+  value_match_functor(const std::string &v) : value(v) {}
+  bool operator()(const osm_t::TagMap::value_type &pair) {
+    return pair.second == value;
+  }
+};
+
+osm_t::TagMap::iterator tag_context_t::findTag(const std::string &key, const std::string &value)
+{
+  std::pair<osm_t::TagMap::iterator, osm_t::TagMap::iterator> matches = tags.equal_range(key);
+  if(matches.first == matches.second)
+    return tags.end();
+  osm_t::TagMap::iterator it = std::find_if(matches.first, matches.second, value_match_functor(value));
+  return it == matches.second ? tags.end() : it;
 }
 
 static void on_tag_remove(GtkWidget *, tag_context_t *context) {
@@ -104,22 +99,26 @@ static void on_tag_remove(GtkWidget *, tag_context_t *context) {
 
   GtkTreeSelection *selection = list_get_selection(context->list);
   if(gtk_tree_selection_get_selected(selection, &model, &iter)) {
-    stag_t *tag = O2G_NULLPTR;
-    gtk_tree_model_get(model, &iter, TAG_COL_DATA, &tag, -1);
+    const gchar *kc = O2G_NULLPTR, *vc = O2G_NULLPTR;
+    gtk_tree_model_get(model, &iter, TAG_COL_KEY, &kc, TAG_COL_VALUE, &vc, -1);
 
-    g_assert_nonnull(tag);
+    g_assert_nonnull(kc);
+    g_assert_nonnull(vc);
 
     /* de-chain */
-    printf("de-chaining tag %s/%s\n", tag->key.c_str(), tag->value.c_str());
-    context->tags.erase(std::find(context->tags.begin(), context->tags.end(), tag));
+    printf("de-chaining tag %s/%s\n", kc, vc);
+    const std::string k = kc;
+    osm_t::TagMap::iterator it = context->findTag(k, vc);
+    g_assert(it != context->tags.end());
 
-    /* free tag itself */
-    delete tag;
+    context->tags.erase(it);
 
     /* and remove from store */
     gtk_list_store_remove(GTK_LIST_STORE(model), &iter);
 
-    context->update_collisions();
+    // no collision was there if this was the only instance of the key
+    if(G_UNLIKELY(context->tags.count(k) > 0))
+      context->update_collisions();
   }
 }
 
@@ -130,7 +129,7 @@ static void on_tag_remove(GtkWidget *, tag_context_t *context) {
  * @return if the tag was actually modified
  * @retval false the tag is the same as before
  */
-static bool tag_edit(GtkWindow *window, stag_t &tag) {
+static bool tag_edit(GtkWindow *window, std::string &k, std::string &v) {
   GtkWidget *dialog = misc_dialog_new(MISC_DIALOG_SMALL, _("Edit Tag"),
 			  window,
 			  GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
@@ -163,8 +162,8 @@ static bool tag_edit(GtkWindow *window, stag_t &tag) {
   gtk_entry_set_activates_default(GTK_ENTRY(value), TRUE);
   HILDON_ENTRY_NO_AUTOCAP(value);
 
-  gtk_entry_set_text(GTK_ENTRY(key), tag.key.c_str());
-  gtk_entry_set_text(GTK_ENTRY(value), tag.value.c_str());
+  gtk_entry_set_text(GTK_ENTRY(key), k.c_str());
+  gtk_entry_set_text(GTK_ENTRY(value), v.c_str());
 
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), table);
 
@@ -174,10 +173,10 @@ static bool tag_edit(GtkWindow *window, stag_t &tag) {
   if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog))) {
     const gchar *nk = gtk_entry_get_text(GTK_ENTRY(key));
     const gchar *nv = gtk_entry_get_text(GTK_ENTRY(value));
-    ret = tag.key != nk || tag.value != nv;
+    ret = k != nk || v != nv;
     if(ret) {
-      tag.key = nk;
-      tag.value = nv;
+      k = nk;
+      v = nv;
     }
   }
 
@@ -200,25 +199,33 @@ static void on_tag_edit(GtkWidget *, tag_context_t *context) {
     return;
   }
 
-  stag_t *tag;
-  gtk_tree_model_get(model, &iter, TAG_COL_DATA, &tag, -1);
-  printf("got %s/%s\n", tag->key.c_str(), tag->value.c_str());
+  char *kc, *vc;
+  gtk_tree_model_get(model, &iter, TAG_COL_KEY, &kc, TAG_COL_VALUE, &vc, -1);
+  printf("got %s/%s\n", kc, vc);
 
-  if(tag_edit(GTK_WINDOW(context->dialog), *tag)) {
-    printf("setting %s/%s\n", tag->key.c_str(), tag->value.c_str());
+  std::string k = kc, v = vc;
+
+  if(tag_edit(GTK_WINDOW(context->dialog), k, v)) {
+    printf("setting %s/%s\n", k.c_str(), v.c_str());
 
     gtk_list_store_set(context->store, &iter,
-		       TAG_COL_KEY, tag->key.c_str(),
-		       TAG_COL_VALUE, tag->value.c_str(),
+                       TAG_COL_KEY, k.c_str(),
+                       TAG_COL_VALUE, v.c_str(),
 		       -1);
 
+    osm_t::TagMap::iterator it = context->findTag(k, v);
+    g_assert(it != context->tags.end());
+
+    if(it->first == k) {
+      // only value was changed
+      it->second = v;
+    } else {
+      context->tags.erase(it);
+      context->tags.insert(osm_t::TagMap::value_type(k, v));
+    }
     /* update collisions for all entries */
     context->update_collisions();
   }
-}
-
-static inline void stag_delete(stag_t *t) {
-  delete t;
 }
 
 static void on_tag_last(GtkWidget *, tag_context_t *context) {
@@ -231,12 +238,10 @@ static void on_tag_last(GtkWidget *, tag_context_t *context) {
                                        context->object.type_string(),
                                        context->object.type_string())) {
 
-    std::for_each(context->tags.begin(), context->tags.end(), stag_delete);
-
     if(context->object.type == NODE)
-      context->tags = osm_tags_list_copy(context->appdata->map->last_node_tags);
+      context->tags = context->appdata->map->last_node_tags;
     else
-      context->tags = osm_tags_list_copy(context->appdata->map->last_way_tags);
+      context->tags = context->appdata->map->last_way_tags;
 
     context->info_tags_replace();
 
@@ -247,53 +252,52 @@ static void on_tag_last(GtkWidget *, tag_context_t *context) {
   }
 }
 
-static GtkTreeIter store_append(GtkListStore *store, stag_t *tag, gboolean collision) {
+static GtkTreeIter store_append(GtkListStore *store, const std::string &key,
+                                const std::string &value, bool collision) {
   GtkTreeIter iter;
   gtk_list_store_append(store, &iter);
   gtk_list_store_set(store, &iter,
-                     TAG_COL_KEY, tag->key.c_str(),
-                     TAG_COL_VALUE, tag->value.c_str(),
-                     TAG_COL_COLLISION, collision,
-                     TAG_COL_DATA, tag,
+                     TAG_COL_KEY, key.c_str(),
+                     TAG_COL_VALUE, value.c_str(),
+                     TAG_COL_COLLISION, collision ? TRUE : FALSE,
                      -1);
   return iter;
 }
 
-struct stag_identity_functor {
-  const stag_t &tag;
-  stag_identity_functor(const stag_t &t) : tag(t) { }
-  bool operator()(const stag_t *t) {
-    return tag == t;
-  }
-};
-
 static void on_tag_add(GtkWidget *, tag_context_t *context) {
-  stag_t tag = stag_t(std::string(), std::string());
+  std::string k, v;
 
-  if(!tag_edit(GTK_WINDOW(context->dialog), tag)) {
+  if(!tag_edit(GTK_WINDOW(context->dialog), k, v)) {
     printf("cancelled\n");
     return;
   }
 
-  std::vector<stag_t *> &tags = context->tags;
-  const std::vector<stag_t *>::const_iterator itEnd = tags.end();
-  std::vector<stag_t *>::const_iterator it = std::find_if(cbegin(tags), itEnd,
-                                                          stag_identity_functor(tag));
-  if(G_UNLIKELY(it != itEnd)) {
+  osm_t::TagMap::iterator it = context->findTag(k, v);
+  if(G_UNLIKELY(it != context->tags.end())) {
     // the very same tag is already in the list, just select the old one
     GtkTreeIter iter;
-    gtk_tree_model_iter_nth_child(GTK_TREE_MODEL(context->store), &iter,
-                                  O2G_NULLPTR, it - tags.begin());
-    gtk_tree_selection_select_iter(list_get_selection(context->list), &iter);
-    return;
+    gtk_tree_model_get_iter_first(GTK_TREE_MODEL(context->store), &iter);
+    // just a linear search as there is not match between the tagmap order and the
+    // store order
+    do {
+      const gchar *key = O2G_NULLPTR, *value = O2G_NULLPTR;
+      gtk_tree_model_get(GTK_TREE_MODEL(context->store), &iter,
+                         TAG_COL_KEY, &key,
+                         TAG_COL_VALUE, &value, -1);
+      g_assert_nonnull(key);
+      g_assert_nonnull(value);
+      if(k == key && v == value) {
+        gtk_tree_selection_select_iter(list_get_selection(context->list), &iter);
+        return;
+      }
+    } while(gtk_tree_model_iter_next(GTK_TREE_MODEL(context->store), &iter));
   }
 
-  stag_t * const ntag = new stag_t(tag);
   // check if the new key introduced a collision
-  gboolean collision = info_tag_key_collision(tags, ntag);
-  tags.push_back(ntag);
+  bool collision = context->tags.count(k) > 0;
+  context->tags.insert(osm_t::TagMap::value_type(k, v));
   /* append a row for the new data */
-  GtkTreeIter iter = store_append(context->store, ntag, collision);
+  GtkTreeIter iter = store_append(context->store, k, v, collision);
 
   gtk_tree_selection_select_iter(list_get_selection(context->list), &iter);
 
@@ -303,10 +307,10 @@ static void on_tag_add(GtkWidget *, tag_context_t *context) {
 
 struct tag_replace_functor {
   GtkListStore * const store;
-  const std::vector<stag_t *> &tags;
-  tag_replace_functor(GtkListStore *s, const std::vector<stag_t *> &t) : store(s), tags(t) {}
-  void operator()(stag_t *tag) {
-    store_append(store, tag, info_tag_key_collision(tags, tag));
+  const osm_t::TagMap &tags;
+  tag_replace_functor(GtkListStore *s, const osm_t::TagMap &t) : store(s), tags(t) {}
+  void operator()(const osm_t::TagMap::value_type &pair) {
+    store_append(store, pair.first, pair.second, tags.count(pair.first) > 1);
   }
 };
 
@@ -604,12 +608,8 @@ bool info_dialog(GtkWidget *parent, appdata_t *appdata, object_t &object) {
 
   gtk_widget_destroy(context.dialog);
 
-  if(ok) {
+  if(ok)
     context.object.obj->updateTags(context.tags);
-  } else {
-    std::for_each(context.tags.begin(), context.tags.end(), stag_delete);
-    context.tags.clear();
-  }
 
   return ok;
 }
@@ -621,11 +621,10 @@ tag_context_t::tag_context_t(appdata_t *a, const object_t &o)
   , store(O2G_NULLPTR)
   , object(o)
   , presets_type(0)
-  , tags(object.obj->tags.asPointerVector())
+  , tags(object.obj->tags.asMap())
 {
 }
 
 tag_context_t::~tag_context_t()
 {
-  std::for_each(tags.begin(), tags.end(), stag_delete);
 }

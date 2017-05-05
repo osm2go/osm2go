@@ -35,6 +35,7 @@ void info_dialog(GtkWidget *parent, struct appdata_t *appdata);
 
 #include "osm.h"
 
+#include <string>
 #include <vector>
 
 class tag_context_t {
@@ -47,10 +48,11 @@ public:
   GtkListStore *store;
   object_t object;
   int presets_type;
-  std::vector<stag_t *> tags;
+  osm_t::TagMap tags;
 
   void info_tags_replace();
   void update_collisions();
+  osm_t::TagMap::iterator findTag(const std::string &key, const std::string &value);
 };
 
 bool info_dialog(GtkWidget *parent, appdata_t *appdata, object_t &object);

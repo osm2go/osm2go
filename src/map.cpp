@@ -437,9 +437,9 @@ void map_item_deselect(map_t *map) {
   /* save tags for "last" function in info dialog */
   if(map->selected.object.is_real() && map->selected.object.obj->tags.hasRealTags()) {
     if(map->selected.object.type == NODE)
-      map->last_node_tags = map->selected.object.obj->tags.asVector();
+      map->last_node_tags = map->selected.object.obj->tags.asMap();
     else if(map->selected.object.type == WAY)
-      map->last_way_tags = map->selected.object.obj->tags.asVector();
+      map->last_way_tags = map->selected.object.obj->tags.asMap();
   }
 
   /* remove statusbar message */

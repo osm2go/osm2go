@@ -136,8 +136,8 @@ struct map_t {
   explicit map_t(appdata_t *a, struct style_t *s);
   ~map_t();
 
-  std::vector<stag_t> last_node_tags;           // used to "repeat" tagging
-  std::vector<stag_t> last_way_tags;
+  osm_t::TagMap last_node_tags;           // used to "repeat" tagging
+  osm_t::TagMap last_way_tags;
 };
 
 void map_item_redraw(map_t *map, map_item_t *map_item);

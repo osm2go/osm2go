@@ -225,14 +225,11 @@ xmlChar *osm_generate_xml_changeset(const char* comment);
 
 bool osm_position_within_bounds_ll(const pos_t *ll_min, const pos_t *ll_max, const pos_t *pos);
 
-struct stag_t;
-
 struct tag_t {
   char *key, *value;
   tag_t(char *k, char *v)
     : key(k), value(v)
   { }
-  tag_t(const stag_t &other);
 
   bool is_creator_tag() const;
 
@@ -258,29 +255,6 @@ struct tag_t {
    * \endcode
    */
   bool update(const char *nkey, const char *nvalue);
-};
-
-/**
- * @brief a std::string version of tag_t for easy use as temporary storage
- */
-struct stag_t {
-  stag_t(const std::string &k, const std::string &v)
-    : key(k), value(v) { }
-  stag_t(const tag_t &tag)
-    : key(tag.key), value(tag.value) {}
-  stag_t(const tag_t *tag)
-    : key(tag->key), value(tag->value) {}
-
-  std::string key;
-  std::string value;
-
-  bool is_creator_tag() const;
-  bool operator==(const stag_t &other) const {
-    return key == other.key && value == other.value;
-  }
-  inline bool operator==(const stag_t *other) const {
-    return operator==(*other);
-  }
 };
 
 class tag_list_t {
@@ -321,16 +295,8 @@ public:
 
   /**
    * @brief copy the contained tags
-   * The memory in the tags will be duplicated, the caller must take care
-   * of it's release.
    */
-  std::vector<stag_t> asVector() const;
-
-  /**
-   * @brief copy the contained tags
-   * The caller own the memory.
-   */
-  std::vector<stag_t *> asPointerVector() const;
+  osm_t::TagMap asMap() const;
 
   void copy(const tag_list_t &other);
 
@@ -349,8 +315,6 @@ public:
    */
   void replace(const osm_t::TagMap &ntags);
 
-  void replace(const std::vector<stag_t *> &ntags);
-
   /**
    * @brief combine tags from both lists in a useful manner
    * @return if there were any tag collisions
@@ -362,9 +326,6 @@ public:
   inline bool operator==(const std::vector<tag_t> &t2) const
   { return !operator!=(t2); }
   bool operator!=(const std::vector<tag_t> &t2) const;
-  inline bool operator==(const std::vector<stag_t *> &t2) const
-  { return !operator!=(t2); }
-  bool operator!=(const std::vector<stag_t *> &t2) const;
   inline bool operator==(const osm_t::TagMap &t2) const
   { return !operator!=(t2); }
   bool operator!=(const osm_t::TagMap &t2) const;
@@ -400,7 +361,7 @@ struct base_object_t {
    * "created_by" tags are ignored when considering if the list needs to be
    * changed or not.
    */
-  void updateTags(const std::vector<stag_t *> &ntags);
+  void updateTags(const osm_t::TagMap &ntags);
 };
 
 class node_t : public base_object_t {
@@ -503,9 +464,6 @@ void osm_member_free(member_t &member);
 void osm_members_free(std::vector<member_t> &members);
 
 void osm_tag_free(tag_t &tag);
-
-/* ----------- edit functions ----------- */
-std::vector<stag_t *> osm_tags_list_copy(const std::vector<stag_t> &tags);
 
 #endif
 

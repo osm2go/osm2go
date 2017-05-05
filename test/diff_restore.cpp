@@ -35,9 +35,9 @@ int main(int argc, char **argv)
   g_assert_nonnull(r255);
   g_assert_cmpuint(r255->flags & OSM_FLAG_DIRTY, ==, 0);
   g_assert_cmpuint(r255->members.size(), ==, 165);
-  g_assert_cmpuint(r255->tags.asVector().size(), ==, 8);
+  g_assert_cmpuint(r255->tags.asMap().size(), ==, 8);
   const node_t * const n72 = osm->nodes[638499572];
-  g_assert_cmpuint(n72->tags.asVector().size(), ==, 4);
+  g_assert_cmpuint(n72->tags.asMap().size(), ==, 4);
   const object_t r255m572(const_cast<node_t *>(n72));
   std::vector<member_t>::const_iterator r255it = r255->find_member_object(r255m572);
   g_assert(r255it != r255->members.end());
@@ -61,7 +61,7 @@ int main(int argc, char **argv)
   g_assert_nonnull(n72);
   g_assert((n72->flags & OSM_FLAG_DIRTY) != 0);
   g_assert_nonnull(n72->tags.get_value("testtag"));
-  g_assert_cmpuint(n72->tags.asVector().size(), ==, 5);
+  g_assert_cmpuint(n72->tags.asMap().size(), ==, 5);
   // in diff, but the same as in .osm
   const node_t * const n23 = osm->nodes[3577031223LL];
   g_assert_nonnull(n23);
@@ -95,14 +95,14 @@ int main(int argc, char **argv)
   g_assert_nonnull(w452);
   g_assert_nonnull(w452->tags.get_value("source"));
   g_assert_null(w452->tags.get_value("wheelchair"));
-  g_assert_cmpuint(w452->tags.asVector().size(), ==, 3);
+  g_assert_cmpuint(w452->tags.asMap().size(), ==, 3);
   g_assert_cmpuint(r255->flags & OSM_FLAG_DIRTY, ==, OSM_FLAG_DIRTY);
   g_assert_cmpuint(r255->members.size(), ==, 164);
   r255it = r255->find_member_object(r255m572);
   g_assert(r255it != r255->members.end());
   g_assert(r255it->role != 0);
   g_assert_cmpint(strcmp(r255it->role, "forward_stop"), ==, 0);
-  g_assert_cmpuint(r255->tags.asVector().size(), ==, 8);
+  g_assert_cmpuint(r255->tags.asMap().size(), ==, 8);
 
   xmlChar *rel_str = r255->generate_xml(42);
   printf("%s\n", rel_str);
