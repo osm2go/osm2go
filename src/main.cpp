@@ -263,7 +263,7 @@ cb_menu_zoomin(appdata_t *appdata) {
 }
 
 static void
-cb_menu_zoomout(GtkMenuItem *, appdata_t *appdata) {
+cb_menu_zoomout(appdata_t *appdata) {
   if(!appdata->map) return;
 
   map_set_zoom(appdata->map, appdata->map->state->zoom/ZOOM_FACTOR_MENU, TRUE);
