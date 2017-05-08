@@ -428,6 +428,15 @@ public:
   bool ends_with_node(const node_t *node) const;
   bool is_closed() const;
   void reverse();
+
+  /**
+   * @brief split the way into 2
+   * @param osm parent osm object
+   * @param cut_at position to split at
+   * @param cut_at_node if split should happen between or at nde
+   */
+  way_t *split(osm_t *osm, node_chain_t::iterator cut_at, bool cut_at_node);
+  void transfer_relations(osm_t *osm, const way_t *from);
   void rotate(node_chain_t::iterator nfirst);
   const node_t *last_node() const;
   const node_t *first_node() const;

@@ -719,8 +719,8 @@ static gboolean process_bounds(xmlTextReaderPtr reader, bounds_t *bounds) {
 
   /* calculate map zone which will be used as a reference for all */
   /* drawing/projection later on */
-  pos_t center = { (bounds->ll_max.lat + bounds->ll_min.lat)/2,
-		   (bounds->ll_max.lon + bounds->ll_min.lon)/2 };
+  pos_t center((bounds->ll_max.lat + bounds->ll_min.lat)/2,
+               (bounds->ll_max.lon + bounds->ll_min.lon)/2);
 
   pos2lpos_center(&center, &bounds->center);
 
@@ -1909,6 +1909,68 @@ bool way_t::is_closed() const {
   return node_chain.front() == node_chain.back();
 }
 
+way_t * way_t::split(osm_t *osm, node_chain_t::iterator cut_at, bool cut_at_node)
+{
+  /* create a duplicate of the currently selected way */
+  way_t *neww = new way_t(1);
+
+  /* ------------  copy all tags ------------- */
+  neww->tags.copy(tags);
+
+  /* ---- transfer relation membership from way to new ----- */
+  neww->transfer_relations(osm, this);
+
+  /* attach remaining nodes to new way */
+  neww->node_chain.insert(neww->node_chain.end(), cut_at, node_chain.end());
+
+  /* if we cut at a node, this node is now part of both ways. so */
+  /* keep it in the old way. */
+  if(cut_at_node)
+    cut_at++;
+
+  /* terminate remainig chain on old way */
+  node_chain.erase(cut_at, node_chain.end());
+
+  /* now move the way itself into the main data structure */
+  osm->way_attach(neww);
+
+  return neww;
+}
+
+struct relation_transfer {
+  way_t * const dst;
+  const way_t * const src;
+  relation_transfer(way_t *d, const way_t *s) : dst(d), src(s) {}
+  void operator()(relation_t *relation);
+};
+
+void relation_transfer::operator()(relation_t* relation)
+{
+  printf("way #" ITEM_ID_FORMAT " is part of relation #" ITEM_ID_FORMAT "\n",
+         src->id, relation->id);
+
+  /* make new member of the same relation */
+
+  /* walk member chain. save role of way if its being found. */
+  std::vector<member_t>::iterator it = relation->find_member_object(object_t(const_cast<way_t *>(src)));
+
+  printf("  adding way #" ITEM_ID_FORMAT " to relation\n", dst->id);
+  object_t o(dst);
+  member_t member(o);
+  member.object = dst;
+  if(it != relation->members.end())
+    member.role = g_strdup(it->role);
+  relation->members.push_back(member);
+
+  relation->flags |= OSM_FLAG_DIRTY;
+}
+
+void way_t::transfer_relations(osm_t *osm, const way_t *from) {
+  /* transfer relation memberships from the src way to the dst one */
+  const relation_chain_t &rchain = osm->to_relation(from);
+  std::for_each(rchain.begin(), rchain.end(), relation_transfer(this, from));
+}
+
 void way_t::rotate(node_chain_t::iterator nfirst) {
   if(nfirst == node_chain.begin())
     return;
@@ -1938,6 +2000,9 @@ struct tag_vector_copy_functor {
   std::vector<tag_t> &tags;
   tag_vector_copy_functor(std::vector<tag_t> &t) : tags(t) {}
   void operator()(const tag_t &otag) {
+    if(G_UNLIKELY(otag.is_creator_tag()))
+      return;
+
     tags.push_back(tag_t(g_strdup(otag.key), g_strdup(otag.value)));
   }
 };
@@ -1952,7 +2017,7 @@ void tag_list_t::copy(const tag_list_t &other)
   contents = new typeof(*contents);
   contents->reserve(other.contents->size());
 
-  std::for_each(contents->begin(), contents->end(), tag_vector_copy_functor(*contents));
+  std::for_each(other.contents->begin(), other.contents->end(), tag_vector_copy_functor(*contents));
 }
 
 /* try to get an as "speaking" description of the object as possible */

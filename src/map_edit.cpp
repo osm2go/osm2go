@@ -32,41 +32,6 @@
 
 #include <osm2go_cpp.h>
 
-/* --------------------- misc local helper functions ---------------- */
-struct relation_transfer {
-  way_t * const dst;
-  way_t * const src;
-  relation_transfer(way_t *d, way_t *s) : dst(d), src(s) {}
-  void operator()(relation_t *relation);
-};
-
-void relation_transfer::operator()(relation_t* relation)
-{
-  printf("way #" ITEM_ID_FORMAT " is part of relation #" ITEM_ID_FORMAT "\n",
-         src->id, relation->id);
-
-  /* make new member of the same relation */
-
-  /* walk member chain. save role of way if its being found. */
-  std::vector<member_t>::iterator it = relation->find_member_object(object_t(src));
-
-  printf("  adding way #" ITEM_ID_FORMAT " to relation\n", dst->id);
-  object_t o(dst);
-  member_t member(o);
-  member.object = dst;
-  if(it != relation->members.end())
-    member.role = g_strdup(it->role);
-  relation->members.push_back(member);
-
-  relation->flags |= OSM_FLAG_DIRTY;
-}
-
-static void transfer_relations(osm_t *osm, way_t *dst, way_t *src) {
-  /* transfer relation memberships from the src way to the dst one */
-  const relation_chain_t &rchain = osm->to_relation(src);
-  std::for_each(rchain.begin(), rchain.end(), relation_transfer(dst, src));
-}
-
 /* -------------------------- way_add ----------------------- */
 
 void map_edit_way_add_begin(map_t *map, way_t *way_sel) {
@@ -352,7 +317,7 @@ void map_edit_way_add_ok(map_t *map) {
 		 "Please solve these."));
 
     /* make way member of all relations ends_on already is */
-    transfer_relations(map->appdata->osm, map->action.way, map->action.ends_on);
+    map->action.way->transfer_relations(map->appdata->osm, map->action.ends_on);
 
     /* check if we have to reverse (again?) to match the way order */
     if(map->action.way->is_closed()) {
@@ -509,11 +474,8 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
 
   g_assert_nonnull(way);
 
-  /* create a duplicate of the currently selected way */
-  way_t *neww = new way_t(1);
-
   /* if this is a closed way, reorder (rotate) it, so the */
-  /* place to cut is adjecent to the begin/end of the way. */
+  /* place to cut is adjacent to the begin/end of the way. */
   /* this prevents a cut polygon to be split into two ways */
   if(way->is_closed()) {
     printf("CLOSED WAY -> rotate by %zi\n", cut_at - way->node_chain.begin());
@@ -521,29 +483,12 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
     cut_at = way->node_chain.begin();
   }
 
-  /* ------------  copy all tags ------------- */
-  neww->tags.copy(way->tags);
-
-  /* ---- transfer relation membership from way to new ----- */
-  transfer_relations(map->appdata->osm, neww, way);
-
   /* move parts of node_chain to the new way */
   printf("  moving everthing after segment %zi to new way\n",
          cut_at - way->node_chain.begin());
 
-  /* attach remaining nodes to new way */
-  neww->node_chain.insert(neww->node_chain.end(), cut_at, way->node_chain.end());
-
-  /* if we cut at a node, this node is now part of both ways. so */
-  /* keep it in the old way. */
-  if(cut_at_node)
-    cut_at++;
-
-  /* terminate remainig chain on old way */
-  way->node_chain.erase(cut_at, way->node_chain.end());
-
-  /* now move the way itself into the main data structure */
-  map->appdata->osm->way_attach(neww);
+  /* create a duplicate of the currently selected way */
+  way_t *neww = way->split(map->appdata->osm, cut_at, cut_at_node);
 
   /* clear selection */
   map_item_deselect(map);

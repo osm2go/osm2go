@@ -222,10 +222,50 @@ static void test_replace() {
   g_assert(node.tags == nstags);
 }
 
+static void test_split()
+{
+  osm_t o;
+  way_t * const v = new way_t();
+  way_t * const w = new way_t();
+
+  std::vector<tag_t> otags;
+  otags.push_back(tag_t(g_strdup("a"), g_strdup("b")));
+  otags.push_back(tag_t(g_strdup("b"), g_strdup("c")));
+  otags.push_back(tag_t(g_strdup("created_by"), g_strdup("test")));
+  otags.push_back(tag_t(g_strdup("d"), g_strdup("e")));
+  otags.push_back(tag_t(g_strdup("f"), g_strdup("g")));
+  const size_t ocnt = otags.size();
+
+  w->tags.replace(otags);
+  v->tags.replace(w->tags.asMap());
+
+  o.way_attach(v);
+  o.way_attach(w);
+
+  for(int i = 0; i < 4; i++) {
+    node_t *n = new node_t(3, lpos_t(), pos_t(52.25 + i / 0.001, 9.58 + i / 0.001), 1234500 + i);
+    o.node_attach(n);
+    v->node_chain.push_back(n);
+    w->node_chain.push_back(n);
+    n->ways += 2;
+  }
+
+  g_assert_cmpuint(o.ways.size(), ==, 2);
+  way_t *neww = w->split(&o, w->node_chain.begin() + 2, false);
+  g_assert_cmpuint(o.ways.size(), ==, 3);
+
+  g_assert_cmpuint(w->node_chain.size(), ==, 2);
+  g_assert_cmpuint(neww->node_chain.size(), ==, 2);
+  g_assert(neww->tags == w->tags.asMap());
+  g_assert(neww->tags == v->tags.asMap());
+  g_assert_cmpuint(neww->tags.asMap().size(), ==, ocnt - 1);
+}
+
 int main()
 {
   test_taglist();
   test_replace();
+  test_split();
 
   return 0;
 }

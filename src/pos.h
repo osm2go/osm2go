@@ -53,6 +53,8 @@ typedef double pos_float_t;
 typedef struct pos_t {
   pos_float_t lat, lon;
 #ifdef __cplusplus
+  inline pos_t() {}
+  inline pos_t(pos_float_t a, pos_float_t o) : lat(a), lon(o) {}
   bool operator==(const pos_t &other)
   { return lat == other.lat && lon == other.lon; }
 #endif

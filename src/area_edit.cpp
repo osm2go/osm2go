@@ -584,7 +584,7 @@ static gboolean map_gps_update(gpointer data) {
     context->area->appdata->settings &&
     context->area->appdata->settings->enable_gps;
 
-  pos_t pos = { NAN, NAN };
+  pos_t pos(NAN, NAN);
   gboolean gps_fix = gps_on &&
     gps_get_pos(context->area->appdata->gps_state, &pos, O2G_NULLPTR);
 
