@@ -49,9 +49,10 @@ static void changed(GtkTreeSelection *, gpointer user_data) {
     const gchar *key = O2G_NULLPTR;
     gtk_tree_model_get(model, &iter, TAG_COL_KEY, &key, -1);
 
-    g_assert_nonnull(key);
+    // WARNING: for whatever reason, key CAN be NULL on N900
+
     /* you just cannot delete or edit the "created_by" tag */
-    if(tag_t::is_creator_tag(key))
+    if(key && tag_t::is_creator_tag(key))
       selected = FALSE;
   }
 
