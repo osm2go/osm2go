@@ -19,21 +19,27 @@
 
 #include "statusbar.h"
 
+static void statusbar_highlight(statusbar_t *statusbar, gboolean highlight) {
+  GtkWidget * const w =
 #if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
-void statusbar_highlight(statusbar_t *statusbar, gboolean highlight) {
-  GtkStatusbar *bar = GTK_STATUSBAR(statusbar->widget);
-
+      GTK_STATUSBAR(statusbar->widget)->label;
+#else
+      statusbar->widget;
+#endif
+  GdkColor *col;
+  GdkColor color;
   if(highlight) {
-    GdkColor color;
-    gdk_color_parse("red", &color);
-    gtk_widget_modify_fg(bar->label, GTK_STATE_NORMAL, &color);
-    gtk_widget_modify_text(bar->label, GTK_STATE_NORMAL, &color);
+    gdk_color_parse("#ff0000", &color);
+    col = &color;
   } else {
-    gtk_widget_modify_fg(bar->label, GTK_STATE_NORMAL, NULL);
-    gtk_widget_modify_text(bar->label, GTK_STATE_NORMAL, NULL);
+    col = NULL;
   }
+
+  gtk_widget_modify_fg(w, GTK_STATE_NORMAL, col);
+  gtk_widget_modify_text(w, GTK_STATE_NORMAL, col);
 }
 
+#if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
 // Set the persistent message, replacing anything currently there.
 void statusbar_set(statusbar_t *statusbar, const char *msg, gboolean highlight) {
   statusbar_highlight(statusbar, highlight);
@@ -120,18 +126,6 @@ statusbar_t *statusbar_new(void) {
 }
 
 #else
-void statusbar_highlight(statusbar_t *statusbar, gboolean highlight) {
-  if(highlight) {
-    GdkColor color;
-    gdk_color_parse("red", &color);
-    gtk_widget_modify_fg(statusbar->widget, GTK_STATE_NORMAL, &color);
-    gtk_widget_modify_text(statusbar->widget, GTK_STATE_NORMAL, &color);
-  } else {
-    gtk_widget_modify_fg(statusbar->widget, GTK_STATE_NORMAL, NULL);
-    gtk_widget_modify_text(statusbar->widget, GTK_STATE_NORMAL, NULL);
-  }
-}
-
 
 // Set the persistent message, replacing anything currently there.
 void statusbar_set(statusbar_t *statusbar, const char *msg, gboolean highlight) {

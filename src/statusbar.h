@@ -42,7 +42,6 @@ extern "C" {
 
 void statusbar_set(statusbar_t *statusbar, const char *msg, gboolean highlight);
 statusbar_t *statusbar_new(void);
-void statusbar_highlight(statusbar_t *statusbar, gboolean highlight);
 void statusbar_free(statusbar_t *statusbar);
 
 #ifndef USE_HILDON
