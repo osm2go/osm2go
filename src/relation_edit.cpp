@@ -711,7 +711,7 @@ static void on_relation_select(GtkWidget *but, relation_context_t *context) {
 }
 
 
-static void on_relation_add(GtkWidget *, relation_context_t *context) {
+static void on_relation_add(relation_context_t *context) {
   /* create a new relation */
 
   relation_t *relation = new relation_t(1);

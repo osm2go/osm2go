@@ -283,8 +283,8 @@ void list_set_static_buttons(GtkWidget *list, int flags,
       gtk_button_new_with_mnemonic(_((flags&LIST_BTN_NEW)?"_New":"_Add"));
     gtk_table_attach_defaults(GTK_TABLE(priv->table),
 			      priv->button.widget[0], 0, 1, 0, 1);
-    g_signal_connect(GTK_OBJECT(priv->button.widget[0]), "clicked",
-                     G_CALLBACK(cb_new), data);
+    g_signal_connect_swapped(GTK_OBJECT(priv->button.widget[0]), "clicked",
+                                        G_CALLBACK(cb_new), data);
     gtk_widget_set_sensitive(priv->button.widget[0], TRUE);
   }
 

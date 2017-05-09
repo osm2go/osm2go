@@ -695,7 +695,7 @@ static void on_server_edit(GtkWidget *, wms_server_context_t *context) {
 }
 
 /* user clicked "add..." button in the wms server list */
-static void on_server_add(GtkWidget *, wms_server_context_t *context) {
+static void on_server_add(wms_server_context_t *context) {
 
   /* attach a new server item to the chain */
   wms_server_t **prev = &context->appdata->settings->wms_server;

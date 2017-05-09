@@ -73,6 +73,16 @@ void list_set_custom_user_button(GtkWidget *list, list_button_t id,
 GtkTreeSelection *list_get_selection(GtkWidget *list);
 void list_button_enable(GtkWidget *list, list_button_t id, gboolean enable);
 void list_set_store(GtkWidget *list, GtkListStore *store);
+
+/**
+ * @brief register the standard buttons and their callbacks
+ * @param list the list widget
+ * @param flags list creation flags
+ * @param cb_new the callback on the leftmost button, WARNING: swapped arguments
+ * @param cb_edit callback for the middle button, normal argument order
+ * @param cb_remove callback for the rightmost button, normal argument order
+ * @param data context pointer passed to the callbacks
+ */
 void list_set_static_buttons(GtkWidget *list, int flags,
 GCallback cb_new, GCallback cb_edit, GCallback cb_remove,
 	     gpointer data);

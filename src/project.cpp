@@ -626,8 +626,7 @@ project_get_status_icon_stock_id(const project_t *current,
     // TODO: check for outdatedness too. Which icon to use?
 }
 
-static void on_project_new(GtkButton *, gpointer data) {
-  select_context_t *context = (select_context_t*)data;
+static void on_project_new(select_context_t *context) {
   project_t *project = project_new(context);
   if(project) {
     context->projects.push_back(project);

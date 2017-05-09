@@ -312,7 +312,7 @@ static GtkTreeIter store_append(GtkListStore *store, const std::string &key,
   return iter;
 }
 
-static void on_tag_add(GtkWidget *, tag_context_t *context) {
+static void on_tag_add(tag_context_t *context) {
   std::string k, v;
 
   if(!tag_edit(GTK_WINDOW(context->dialog), k, v)) {
