@@ -93,8 +93,8 @@ void list_set_user_buttons(GtkWidget *list, ...) {
       gtk_table_attach_defaults(GTK_TABLE(priv->table), priv->button.widget[id],
 		3+id-LIST_BUTTON_USER0, 3+id-LIST_BUTTON_USER0+1, 0, 1);
 
-    g_signal_connect(GTK_OBJECT(priv->button.widget[id]), "clicked",
-                     G_CALLBACK(cb), priv->button.data);
+    g_signal_connect_swapped(GTK_OBJECT(priv->button.widget[id]), "clicked",
+                             G_CALLBACK(cb), priv->button.data);
 
     id = va_arg(ap, list_button_t);
   }

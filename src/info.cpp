@@ -276,7 +276,7 @@ static void on_tag_edit(GtkWidget *, tag_context_t *context) {
   }
 }
 
-static void on_tag_last(GtkWidget *, tag_context_t *context) {
+static void on_tag_last(tag_context_t *context) {
   if(context->tags.empty() || yes_no_f(context->dialog,
 	      context->appdata, MISC_AGAIN_ID_OVERWRITE_TAGS, 0,
 	      _("Overwrite tags?"),
@@ -353,7 +353,7 @@ void tag_context_t::info_tags_replace() {
   std::for_each(tags.begin(), tags.end(), tag_replace_functor(store, tags));
 }
 
-static void on_relations(GtkWidget *, tag_context_t *context) {
+static void on_relations(tag_context_t *context) {
   relation_membership_dialog(context->dialog, context->appdata,
                              context->object);
 }

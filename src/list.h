@@ -64,6 +64,18 @@ extern "C" {
 GtkWidget *list_new(gboolean show_headers);
 
 GtkWidget *list_get_view(GtkWidget *list);
+/**
+ * @brief set up additional buttons
+ * @param list the list widget
+ *
+ * The additional parameters come in triplets:
+ *  - the button id
+ *  - the label for the button
+ *  - the callback (WARNING: swapped arguments)
+ *
+ * The context pointer passed to the callbacks is the same as set in
+ * list_set_static_buttons(), which must be called before.
+ */
 void list_set_user_buttons(GtkWidget *list, ...);
 void list_set_columns(GtkWidget *list, ...);
 void list_set_custom_user_button(GtkWidget *list, list_button_t id,

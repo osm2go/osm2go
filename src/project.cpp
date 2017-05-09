@@ -743,9 +743,8 @@ static void on_project_edit(GtkButton *, gpointer data) {
 }
 
 static void
-on_project_update_all(GtkButton *, gpointer data)
+on_project_update_all(select_context_t *context)
 {
-  select_context_t *context = (select_context_t*)data;
   GtkTreeIter iter;
   GtkTreeModel *model = list_get_model(context->list);
   if(gtk_tree_model_get_iter_first(model, &iter)) {

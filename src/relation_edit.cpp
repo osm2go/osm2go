@@ -686,14 +686,14 @@ void relation_show_members(GtkWidget *parent, const relation_t *relation) {
 }
 
 /* user clicked "members" button in relation list */
-static void on_relation_members(GtkWidget *, relation_context_t *context) {
+static void on_relation_members(relation_context_t *context) {
   relation_t *sel = get_selected_relation(context);
 
   if(sel) relation_show_members(context->dialog, sel);
 }
 
 /* user clicked "select" button in relation list */
-static void on_relation_select(GtkWidget *but, relation_context_t *context) {
+static void on_relation_select(relation_context_t *context, GtkWidget *but) {
   relation_t *sel = get_selected_relation(context);
   map_item_deselect(context->appdata->map);
 
@@ -867,9 +867,9 @@ static GtkWidget *relation_list_widget(relation_context_t &context) {
 	  G_CALLBACK(on_relation_remove), &context);
 
   list_set_user_buttons(context.list,
-	LIST_BUTTON_USER0, _("Members"), G_CALLBACK(on_relation_members),
-	LIST_BUTTON_USER1, _("Select"),  G_CALLBACK(on_relation_select),
-	0);
+                        LIST_BUTTON_USER0, _("Members"), on_relation_members,
+                        LIST_BUTTON_USER1, _("Select"),  on_relation_select,
+                        O2G_NULLPTR);
 
   relation_list_selected(context.list, O2G_NULLPTR);
 
