@@ -165,12 +165,6 @@ static GtkWidget *list_button_get(GtkWidget *list, list_button_t id) {
   return priv->button.widget[id];
 }
 
-void list_button_connect(GtkWidget *list, list_button_t id,
-			 GCallback cb, gpointer data) {
-  GtkWidget *but = list_button_get(list, id);
-  g_signal_connect(GTK_OBJECT(but), "clicked", G_CALLBACK(cb), data);
-}
-
 /* put a custom widget into one of the button slots */
 void list_set_custom_user_button(GtkWidget *list, list_button_t id,
 				 GtkWidget *widget) {
