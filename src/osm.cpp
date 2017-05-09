@@ -353,7 +353,7 @@ bool tag_list_t::operator!=(const std::vector<tag_t> &t2) const {
   const std::vector<tag_t>::const_iterator t2End = t2.end();
   bool t2HasCreator = (std::find_if(t2start, t2End, is_creator_tag) != t2End);
   if(empty())
-    return (t2HasCreator && t2.size() != 1);
+    return t2HasCreator ? (t2.size() != 1) : !t2.empty();
 
   /* first check list length, otherwise deleted tags are hard to detect */
   std::vector<tag_t>::size_type ocnt = contents->size();
@@ -401,7 +401,7 @@ bool tag_list_t::operator!=(const osm_t::TagMap &t2) const {
   const osm_t::TagMap::const_iterator t2End = t2.end();
   bool t2HasCreator = (t2.find("created_by") != t2End);
   if(empty())
-    return (t2HasCreator && t2.size() != 1);
+    return t2HasCreator ? (t2.size() != 1) : !t2.empty();
 
   /* first check list length, otherwise deleted tags are hard to detect */
   std::vector<tag_t>::size_type ocnt = contents->size();

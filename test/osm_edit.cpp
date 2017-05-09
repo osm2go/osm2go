@@ -140,6 +140,7 @@ static void test_taglist() {
   g_assert(tags == ntags);
 
   std::for_each(ntags.begin(), ntags.end(), osm_tag_free);
+  ntags.clear();
   tags.clear();
 
   // check that all these methods work on empty objects, both newly created and cleared ones
@@ -163,6 +164,13 @@ static void test_taglist() {
   g_assert(virgin == std::vector<tag_t>());
   g_assert(virgin == osm_t::TagMap());
   virgin.clear();
+
+  ntags.push_back(tag_t(g_strdup("one"), g_strdup("1")));
+  g_assert(tags != ntags);
+  tags.replace(ntags);
+  ntags.push_back(tag_t(g_strdup("one"), g_strdup("1")));
+  g_assert(tags == ntags);
+  g_assert(virgin != tags.asMap());
 }
 
 static void test_replace() {
