@@ -276,28 +276,34 @@ static void on_tag_edit(GtkWidget *, tag_context_t *context) {
   }
 }
 
+static bool replace_with_last(const tag_context_t *context) {
+  if(context->tags.empty())
+    return true;
+
+  const char *ts = context->object.type_string();
+  return TRUE == yes_no_f(context->dialog,
+                          context->appdata, MISC_AGAIN_ID_OVERWRITE_TAGS, 0,
+                          _("Overwrite tags?"),
+                          _("This will overwrite all tags of this %s with the "
+                            "ones from the %s selected last.\n\n"
+                            "Do you really want this?"), ts, ts);
+}
+
 static void on_tag_last(tag_context_t *context) {
-  if(context->tags.empty() || yes_no_f(context->dialog,
-	      context->appdata, MISC_AGAIN_ID_OVERWRITE_TAGS, 0,
-	      _("Overwrite tags?"),
-	      _("This will overwrite all tags of this %s with the "
-		"ones from the %s selected last.\n\n"
-		"Do you really want this?"),
-                                       context->object.type_string(),
-                                       context->object.type_string())) {
+  if(!replace_with_last(context))
+    return;
 
-    if(context->object.type == NODE)
-      context->tags = context->appdata->map->last_node_tags;
-    else
-      context->tags = context->appdata->map->last_way_tags;
+  if(context->object.type == NODE)
+    context->tags = context->appdata->map->last_node_tags;
+  else
+    context->tags = context->appdata->map->last_way_tags;
 
-    context->info_tags_replace();
+  context->info_tags_replace();
 
-    // Adding those tags above will usually make the first of the newly
-    // added tags selected. Enable edit/remove buttons now.
-    GtkTreeSelection *sel = list_get_selection(context->list);
-    changed(sel, context->list);
-  }
+  // Adding those tags above will usually make the first of the newly
+  // added tags selected. Enable edit/remove buttons now.
+  GtkTreeSelection *sel = list_get_selection(context->list);
+  changed(sel, context->list);
 }
 
 static GtkTreeIter store_append(GtkListStore *store, const std::string &key,
