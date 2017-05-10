@@ -217,6 +217,7 @@ static void on_tag_edit(GtkWidget *, tag_context_t *context) {
   printf("got %s/%s\n", kc, vc);
 
   std::string k = kc, v = vc;
+  const std::string oldk = k;
 
   if(tag_edit(GTK_WINDOW(context->dialog), k, v)) {
     if(k == kc && v == vc)
@@ -224,7 +225,7 @@ static void on_tag_edit(GtkWidget *, tag_context_t *context) {
 
     printf("setting %s/%s\n", k.c_str(), v.c_str());
 
-    const std::pair<osm_t::TagMap::iterator, osm_t::TagMap::iterator> matches = context->tags.equal_range(k);
+    const std::pair<osm_t::TagMap::iterator, osm_t::TagMap::iterator> matches = context->tags.equal_range(oldk);
     g_assert(matches.first != matches.second);
     osm_t::TagMap::iterator it = std::find_if(matches.first, matches.second, value_match_functor(vc));
     g_assert(it != matches.second);
@@ -254,12 +255,11 @@ static void on_tag_edit(GtkWidget *, tag_context_t *context) {
       it = osm_t::findTag(context->tags, k, v);
       if(G_UNLIKELY(it != context->tags.end())) {
         // this tag is now duplicate, drop it and select the other one
-        k = kc; // cache it as the object will be removed from store
         gtk_list_store_remove(GTK_LIST_STORE(model), &iter);
 
         select_item(k, v, context);
         // update collision marker for the old entry
-        context->update_collisions(k);
+        context->update_collisions(oldk);
         return;
       } else {
         context->tags.insert(osm_t::TagMap::value_type(k, v));
