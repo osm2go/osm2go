@@ -158,11 +158,10 @@ static void on_toggled(GtkWidget *button, gpointer data) {
 				      RESPONSE_YES, !active);
 }
 
-gboolean yes_no_f(GtkWidget *parent, appdata_t *appdata, guint again_bit,
-		  gint flags, const char *title, const char *fmt, ...) {
-
+bool yes_no_f(GtkWidget *parent, appdata_t *appdata, guint again_bit,
+              gint flags, const char *title, const char *fmt, ...) {
   if(again_bit && (appdata->dialog_again.not_again & again_bit))
-    return((appdata->dialog_again.reply & again_bit) != 0);
+    return ((appdata->dialog_again.reply & again_bit) != 0);
 
   va_list args;
   va_start( args, fmt );
@@ -203,7 +202,7 @@ gboolean yes_no_f(GtkWidget *parent, appdata_t *appdata, guint again_bit,
     gtk_widget_show_all(dialog);
   }
 
-  gboolean yes = (gtk_dialog_run(GTK_DIALOG(dialog)) == RESPONSE_YES);
+  bool yes = (gtk_dialog_run(GTK_DIALOG(dialog)) == RESPONSE_YES);
 
   if(cbut && gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cbut))) {
     /* the user doesn't want to see this dialog again */

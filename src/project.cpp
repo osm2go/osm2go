@@ -653,10 +653,9 @@ static void on_project_delete(GtkButton *, gpointer data) {
   select_context_t *context = (select_context_t*)data;
   project_t *project = project_get_selected(context->list);
 
-  gboolean r = yes_no_f(context->dialog, O2G_NULLPTR, 0, 0, _("Delete project?"),
-                        _("Do you really want to delete the "
-                          "project \"%s\"?"), project->name.c_str());
-  if (!r)
+  if(!yes_no_f(context->dialog, O2G_NULLPTR, 0, 0, _("Delete project?"),
+               _("Do you really want to delete the project \"%s\"?"),
+               project->name.c_str()))
     return;
 
   if(!project_delete(context, project))
