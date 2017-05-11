@@ -35,35 +35,30 @@
 
 #define MARKUP "<span size='xx-small'>%s</span>"
 
-static void on_info_clicked(gpointer data) {
-  appdata_t *appdata = (appdata_t*)data;
+static void on_info_clicked(appdata_t *appdata) {
   info_dialog(GTK_WIDGET(appdata->window), appdata);
 }
 
-static void on_node_add_clicked(gpointer data) {
-  map_action_set((map_t*)data, MAP_ACTION_NODE_ADD);
+static void on_node_add_clicked(map_t *map) {
+  map_action_set(map, MAP_ACTION_NODE_ADD);
 }
 
-static void on_way_add_clicked(gpointer data) {
-  map_action_set((map_t*)data, MAP_ACTION_WAY_ADD);
+static void on_way_add_clicked(map_t *map) {
+  map_action_set(map, MAP_ACTION_WAY_ADD);
 }
 
-static void on_way_node_add_clicked(gpointer data) {
-  map_action_set((map_t*)data, MAP_ACTION_WAY_NODE_ADD);
+static void on_way_node_add_clicked(map_t *map) {
+  map_action_set(map, MAP_ACTION_WAY_NODE_ADD);
 }
 
-static void on_way_reverse_clicked(gpointer data) {
-  map_edit_way_reverse((map_t*)data);
-}
-
-static void on_way_cut_clicked(gpointer data) {
-  map_action_set((map_t*)data, MAP_ACTION_WAY_CUT);
+static void on_way_cut_clicked(map_t *map) {
+  map_action_set(map, MAP_ACTION_WAY_CUT);
 }
 
 #ifdef FINGER_UI
 static GtkWidget *menu_add(GtkWidget *menu, appdata_t *appdata,
-			   char *icon_str, char *menu_str,
-			   void(*func)(gpointer)) {
+                           const char *icon_str, const char *menu_str,
+                           GCallback func) {
 
   GtkWidget *item = gtk_image_menu_item_new_with_label(menu_str);
 
@@ -71,7 +66,7 @@ static GtkWidget *menu_add(GtkWidget *menu, appdata_t *appdata,
                                 icon_widget_load(&appdata->icon, icon_str));
 
   g_signal_connect_swapped(GTK_OBJECT(item), "activate",
-                           G_CALLBACK(func), appdata->map);
+                           func, appdata->map);
 
   gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
@@ -79,9 +74,7 @@ static GtkWidget *menu_add(GtkWidget *menu, appdata_t *appdata,
 }
 
 static gint on_way_button_press(G_GNUC_UNUSED GtkWidget *button,
-                                GdkEventButton *event, gpointer data) {
-  iconbar_t *iconbar = (iconbar_t*)data;
-
+                                GdkEventButton *event, iconbar_t *iconbar) {
   if(event->type == GDK_BUTTON_PRESS) {
     //  map_action_set((appdata_t*)data, MAP_ACTION_WAY_ADD);
     printf("way clicked\n");
@@ -99,16 +92,16 @@ static GtkWidget *popup_menu_create(appdata_t *appdata) {
 
   appdata->iconbar->way_add =
     menu_add(menu, appdata, MENU_ICON("way_add"),
-	     _("Add new way"), on_way_add_clicked);
+             _("Add new way"), G_CALLBACK(on_way_add_clicked));
   appdata->iconbar->way_node_add =
     menu_add(menu, appdata, MENU_ICON("way_node_add"),
-	     _("Add new node to way"), on_way_node_add_clicked);
+             _("Add new node to way"), G_CALLBACK(on_way_node_add_clicked));
   appdata->iconbar->way_cut =
     menu_add(menu, appdata, MENU_ICON("way_cut"),
-	     _("Split way"), on_way_cut_clicked);
+             _("Split way"), G_CALLBACK(on_way_cut_clicked));
   appdata->iconbar->way_reverse =
     menu_add(menu, appdata, MENU_ICON("way_reverse"),
-	     _("Reverse way"), on_way_reverse_clicked);
+             _("Reverse way"), G_CALLBACK(map_edit_way_reverse));
 
   gtk_widget_show_all(menu);
 
@@ -117,9 +110,7 @@ static GtkWidget *popup_menu_create(appdata_t *appdata) {
 #endif
 
 #ifdef MAIN_GUI_RELATION
-static void on_relation_add_clicked(gpointer data) {
-  appdata_t *appdata = (appdata_t*)data;
-
+static void on_relation_add_clicked(appdata_t *appdata) {
   g_assert((appdata->map->selected.object.type == NODE) ||
 	   (appdata->map->selected.object.type == WAY));
 
@@ -205,7 +196,7 @@ static GtkWidget *icon_add(GtkWidget *vbox, appdata_t *appdata,
 
 static GtkWidget *tool_add(GtkWidget *toolbar, appdata_t *appdata,
 			   char *icon_str, char *tooltip_str,
-                           void(*func)(gpointer), gpointer context) {
+                           GCallback func, gpointer context) {
   GtkWidget *item =
     GTK_WIDGET(gtk_tool_button_new(
 	   icon_widget_load(&appdata->icon, icon_str), NULL));
@@ -220,7 +211,7 @@ static GtkWidget *tool_add(GtkWidget *toolbar, appdata_t *appdata,
   gtk_widget_set_tooltip_text(item, tooltip_str);
 #endif
 
-  g_signal_connect_swapped(GTK_OBJECT(item), "clicked", G_CALLBACK(func), context);
+  g_signal_connect_swapped(GTK_OBJECT(item), "clicked", func, context);
 
   gtk_toolbar_insert(GTK_TOOLBAR(toolbar), GTK_TOOL_ITEM(item), -1);
 
@@ -249,21 +240,21 @@ GtkWidget *iconbar_new(appdata_t *appdata) {
 
   /* -------------------------------------------------------- */
   iconbar->trash = tool_add(iconbar->toolbar, appdata,
-      TOOL_ICON("trash"), _("Delete"), (void(*)(void*))map_delete_selected, appdata->map);
+      TOOL_ICON("trash"), _("Delete"), G_CALLBACK(map_delete_selected), appdata->map);
 
   /* -------------------------------------------------------- */
   gtk_toolbar_insert(GTK_TOOLBAR(iconbar->toolbar),
 		     gtk_separator_tool_item_new(),-1);
 
   iconbar->info = tool_add(iconbar->toolbar, appdata,
-      TOOL_ICON("info"), _("Properties"), on_info_clicked, appdata);
+      TOOL_ICON("info"), _("Properties"), G_CALLBACK(on_info_clicked), appdata);
 
   /* -------------------------------------------------------- */
   gtk_toolbar_insert(GTK_TOOLBAR(iconbar->toolbar),
 		     gtk_separator_tool_item_new(),-1);
 
   iconbar->node_add = tool_add(iconbar->toolbar, appdata,
-       TOOL_ICON("node_add"), _("New node"), on_node_add_clicked, appdata->map);
+       TOOL_ICON("node_add"), _("New node"), G_CALLBACK(on_node_add_clicked), appdata->map);
 
   /* -------------------------------------------------------- */
   gtk_toolbar_insert(GTK_TOOLBAR(iconbar->toolbar),
@@ -298,14 +289,14 @@ GtkWidget *iconbar_new(appdata_t *appdata) {
 
 #else
   iconbar->way_add = tool_add(iconbar->toolbar, appdata,
-        TOOL_ICON("way_add"), _("Add way"), on_way_add_clicked, appdata->map);
+        TOOL_ICON("way_add"), _("Add way"), G_CALLBACK(on_way_add_clicked), appdata->map);
   iconbar->way_node_add = tool_add(iconbar->toolbar, appdata,
 	TOOL_ICON("way_node_add"), _("Add node"),
-				   on_way_node_add_clicked, appdata->map);
+                                   G_CALLBACK(on_way_node_add_clicked), appdata->map);
   iconbar->way_cut = tool_add(iconbar->toolbar, appdata,
-        TOOL_ICON("way_cut"), _("Split way"), on_way_cut_clicked, appdata->map);
+        TOOL_ICON("way_cut"), _("Split way"), G_CALLBACK(on_way_cut_clicked), appdata->map);
   iconbar->way_reverse = tool_add(iconbar->toolbar, appdata,
-        TOOL_ICON("way_reverse"), _("Reverse way"), on_way_reverse_clicked, appdata->map);
+        TOOL_ICON("way_reverse"), _("Reverse way"), G_CALLBACK(map_edit_way_reverse), appdata->map);
 #endif
 
 #ifdef MAIN_GUI_RELATION
@@ -317,7 +308,7 @@ GtkWidget *iconbar_new(appdata_t *appdata) {
 
   iconbar->relation_add = tool_add(iconbar->toolbar, appdata,
       TOOL_ICON("relation_add"), _("Edit item's relations"),
-      on_relation_add_clicked, appdata);
+      G_CALLBACK(on_relation_add_clicked), appdata);
 #endif
 
   gtk_box_pack_start(GTK_BOX(box), iconbar->toolbar, TRUE, TRUE, 0);
