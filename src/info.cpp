@@ -276,8 +276,13 @@ static void on_tag_edit(GtkWidget *, tag_context_t *context) {
   }
 }
 
-static bool replace_with_last(const tag_context_t *context) {
+static bool replace_with_last(const tag_context_t *context, const osm_t::TagMap &ntags) {
+  // if the new object has no tags replacing is always permitted
   if(context->tags.empty())
+    return true;
+
+  // if all tags of the object are part of the new tag list no information will be lost
+  if(osm_t::tagSubset(context->tags, ntags))
     return true;
 
   const char *ts = context->object.type_string();
@@ -290,13 +295,14 @@ static bool replace_with_last(const tag_context_t *context) {
 }
 
 static void on_tag_last(tag_context_t *context) {
-  if(!replace_with_last(context))
+  const osm_t::TagMap &ntags = context->object.type == NODE ?
+                               context->appdata->map->last_node_tags :
+                               context->appdata->map->last_way_tags;
+
+  if(!replace_with_last(context, ntags))
     return;
 
-  if(context->object.type == NODE)
-    context->tags = context->appdata->map->last_node_tags;
-  else
-    context->tags = context->appdata->map->last_way_tags;
+  context->tags = ntags;
 
   context->info_tags_replace();
 

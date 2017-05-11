@@ -60,6 +60,20 @@ static void test_taglist() {
   nstags.insert(osm_t::TagMap::value_type("a", "A"));
   nstags.insert(osm_t::TagMap::value_type("b", "B"));
 
+  // check self intersection
+  g_assert_true(osm_t::tagSubset(nstags, nstags));
+  // real subsets
+  osm_t::TagMap tmpTags;
+  tmpTags.insert(osm_t::TagMap::value_type("a", "A"));
+  g_assert_true(osm_t::tagSubset(tmpTags, nstags));
+  tmpTags.clear();
+  tmpTags.insert(osm_t::TagMap::value_type("b", "B"));
+  g_assert_true(osm_t::tagSubset(tmpTags, nstags));
+  // non-intersecting
+  tmpTags.insert(osm_t::TagMap::value_type("c", "C"));
+  g_assert_false(osm_t::tagSubset(tmpTags, nstags));
+  g_assert_false(osm_t::tagSubset(nstags, tmpTags));
+
   tags.replace(nstags);
 
   g_assert_cmpuint(nstags.size(), ==, 2);
@@ -117,6 +131,8 @@ static void test_taglist() {
   g_assert_cmpint(strcmp(tags2.get_value("a"), "aa"), ==, 0);
   g_assert_nonnull(tags2.get_value("b"));
   g_assert_cmpint(strcmp(tags2.get_value("b"), "bb"), ==, 0);
+  g_assert_false(osm_t::tagSubset(tags2.asMap(), tags.asMap()));
+  g_assert_false(osm_t::tagSubset(tags.asMap(), tags2.asMap()));
 
   collision = tags.merge(tags2);
   g_assert_true(collision);

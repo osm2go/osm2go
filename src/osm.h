@@ -219,6 +219,16 @@ struct osm_t {
   static osm_t *parse(const std::string &path, const std::string &filename, struct icon_t **icons);
 
   static TagMap::iterator findTag(TagMap &map, const std::string &k, const std::string &v);
+  static inline TagMap::const_iterator findTag(const TagMap &map, const std::string &k, const std::string &v) {
+    return findTag(const_cast<TagMap &>(map), k, v);
+  }
+  /**
+   * @brief check if a TagMap contains the other
+   * @param sub the smaller map
+   * @param super the containing map
+   * @returns if all elements from sub are in super
+   */
+  static bool tagSubset(const TagMap &sub, const TagMap &super);
 };
 
 xmlChar *osm_generate_xml_changeset(const char* comment);

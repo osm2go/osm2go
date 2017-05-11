@@ -282,6 +282,16 @@ osm_t::TagMap::iterator osm_t::findTag(TagMap &map, const std::string &key, cons
   return it == matches.second ? map.end() : it;
 }
 
+bool osm_t::tagSubset(const TagMap &sub, const TagMap &super)
+{
+  const TagMap::const_iterator superEnd = super.end();
+  const TagMap::const_iterator itEnd = sub.end();
+  for(TagMap::const_iterator it = sub.begin(); it != itEnd; it++)
+    if(osm_t::findTag(super, it->first, it->second) == superEnd)
+      return false;
+  return true;
+}
+
 struct tag_match_functor {
   const tag_t &other;
   const bool same_values;
