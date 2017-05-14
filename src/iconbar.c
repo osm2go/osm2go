@@ -155,23 +155,21 @@ void icon_bar_map_action_idle(iconbar_t *iconbar, gboolean idle, gboolean way_en
   GtkWidget *action_idle_widgets[] = {
     iconbar->node_add,
     iconbar->way_add,
-    NULL
   };
 
   /* icons that are disabled in idle mode */
   GtkWidget *action_disable_widgets[] = {
-    iconbar->trash,
-    iconbar->info,
 #ifdef MAIN_GUI_RELATION
     iconbar->relation_add,
 #endif
-    NULL
+    iconbar->trash,
+    iconbar->info
   };
 
-  for(i=0;action_idle_widgets[i];i++)
+  for(i = sizeof(action_idle_widgets) / sizeof(*action_idle_widgets) - 1; i >= 0; i--)
     gtk_widget_set_sensitive(action_idle_widgets[i], idle);
 
-  for(i=0;action_disable_widgets[i];i++)
+  for(i = sizeof(action_disable_widgets) / sizeof(*action_disable_widgets) - 1; i >= 0; i--)
     gtk_widget_set_sensitive(action_disable_widgets[i], FALSE);
 
   gtk_widget_set_sensitive(iconbar->way_node_add, idle && way_en);
