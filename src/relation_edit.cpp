@@ -823,8 +823,7 @@ void relation_list_widget_functor::operator()(const relation_t *rel)
   /* Append a row and fill in some data */
   gtk_list_store_append(store, &iter);
   gtk_list_store_set(store, &iter,
-                     RELATION_COL_TYPE,
-                     rel->tags.get_value("type"),
+                     RELATION_COL_TYPE, rel->tags.get_value("type"),
                      RELATION_COL_NAME, name.c_str(),
                      RELATION_COL_MEMBERS, rel->members.size(),
                      RELATION_COL_DATA, rel,
@@ -837,10 +836,10 @@ static GtkWidget *relation_list_widget(relation_context_t &context) {
   list_override_changed_event(context.list, relation_list_changed, context.list);
 
   list_set_columns(context.list,
-		   _("Name"),    RELATION_COL_NAME, LIST_FLAG_ELLIPSIZE,
-		   _("Type"),    RELATION_COL_TYPE, 0,
-		   _("Members"), RELATION_COL_MEMBERS, 0,
-		   O2G_NULLPTR);
+                   _("Type"),    0,
+                   _("Name"),    LIST_FLAG_ELLIPSIZE,
+                   _("Members"), 0,
+                   O2G_NULLPTR);
 
   /* build and fill the store */
   context.store = gtk_list_store_new(RELATION_NUM_COLS,

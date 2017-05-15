@@ -390,10 +390,8 @@ static GtkWidget *tag_widget(tag_context_t *context) {
 
   /* setup both columns */
   list_set_columns(context->list,
-      _("Key"),   TAG_COL_KEY,
-	   LIST_FLAG_ELLIPSIZE|LIST_FLAG_CAN_HIGHLIGHT, TAG_COL_COLLISION,
-      _("Value"), TAG_COL_VALUE,
-	   LIST_FLAG_ELLIPSIZE,
+      _("Key"),   LIST_FLAG_ELLIPSIZE|LIST_FLAG_CAN_HIGHLIGHT, TAG_COL_COLLISION,
+      _("Value"), LIST_FLAG_ELLIPSIZE,
       O2G_NULLPTR);
 
   GtkWidget *presets = josm_build_presets_button(context->appdata, context);

@@ -108,10 +108,11 @@ void list_set_columns(GtkWidget *list, ...) {
   g_assert_nonnull(priv);
   va_list ap;
 
+  int key = 0;
   va_start(ap, list);
   char *name = va_arg(ap, char*);
   while(name) {
-    int hlkey = -1, key = va_arg(ap, int);
+    int hlkey = -1;
     int flags = va_arg(ap, int);
 
     if(flags & LIST_FLAG_CAN_HIGHLIGHT)
@@ -154,6 +155,7 @@ void list_set_columns(GtkWidget *list, ...) {
     gtk_tree_view_insert_column(GTK_TREE_VIEW(priv->view), column, -1);
 
     name = va_arg(ap, char*);
+    key++;
   }
 
   va_end(ap);

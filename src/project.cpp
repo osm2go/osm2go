@@ -807,9 +807,9 @@ static GtkWidget *project_list_widget(select_context_t &context, gboolean &has_s
   list_override_changed_event(context.list, changed, &context);
 
   list_set_columns(context.list,
-                   _("Name"), PROJECT_COL_NAME, 0,
-                   _("State"), PROJECT_COL_STATUS, LIST_FLAG_STOCK_ICON,
-                   _("Description"), PROJECT_COL_DESCRIPTION, LIST_FLAG_ELLIPSIZE,
+                   _("Name"), 0,
+                   _("State"), LIST_FLAG_STOCK_ICON,
+                   _("Description"), LIST_FLAG_ELLIPSIZE,
                    0);
 
   /* build the store */

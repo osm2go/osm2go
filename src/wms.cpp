@@ -743,7 +743,7 @@ static GtkWidget *wms_server_widget(wms_server_context_t *context) {
   list_override_changed_event(context->list, wms_server_changed, context);
 
   list_set_columns(context->list,
-		   _("Name"), WMS_SERVER_COL_NAME, LIST_FLAG_ELLIPSIZE,
+		   _("Name"), LIST_FLAG_ELLIPSIZE,
 		   O2G_NULLPTR);
 
   /* build and fill the store */
