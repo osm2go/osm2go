@@ -65,11 +65,12 @@ GtkWidget *list_get_view(GtkWidget *list) {
 
 /* a list supports up to three user defined buttons besides */
 /* add, edit and remove */
-void list_set_user_buttons(GtkWidget *list, ...) {
+void list_set_user_buttons(GtkWidget *list,
+                           const char *label0, GCallback cb0,
+                           const char *label1, GCallback cb1,
+                           const char *label2, GCallback cb2) {
   list_priv_t *priv = g_object_get_data(G_OBJECT(list), "priv");
   g_assert_nonnull(priv);
-
-  va_list ap;
 
   /* make space for user buttons */
   if(!(priv->button.flags & LIST_BTN_WIDE))
@@ -79,11 +80,15 @@ void list_set_user_buttons(GtkWidget *list, ...) {
   else
     gtk_table_resize(GTK_TABLE(priv->table), 1, 4);
 
-  va_start(ap, list);
-  list_button_t id = va_arg(ap, list_button_t);
-  while(id) {
-    char *label = va_arg(ap, char*);
-    GCallback cb = va_arg(ap, GCallback);
+  const char *labels[] = { label0, label1, label2 };
+  GCallback cbs[] = { cb0, cb1, cb2 };
+
+  list_button_t id;
+  for(id = LIST_BUTTON_USER0; id <= LIST_BUTTON_USER2; id++) {
+    const char *label = labels[id - LIST_BUTTON_USER0];
+    if(!label)
+      continue;
+    GCallback cb = cbs[id - LIST_BUTTON_USER0];
 
     priv->button.widget[id] = button_new_with_label(label);
     if(!(priv->button.flags & LIST_BTN_WIDE))
@@ -95,11 +100,7 @@ void list_set_user_buttons(GtkWidget *list, ...) {
 
     g_signal_connect_swapped(GTK_OBJECT(priv->button.widget[id]), "clicked",
                              G_CALLBACK(cb), priv->button.data);
-
-    id = va_arg(ap, list_button_t);
   }
-
-  va_end(ap);
 }
 
 void list_set_columns(GtkWidget *list, ...) {

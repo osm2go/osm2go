@@ -67,16 +67,22 @@ GtkWidget *list_get_view(GtkWidget *list);
 /**
  * @brief set up additional buttons
  * @param list the list widget
+ * @param label0 the label for LIST_BUTTON_USER0
+ * @param cb0 the callback for LIST_BUTTON_USER0
+ * @param label1 the label for LIST_BUTTON_USER1
+ * @param cb1 the callback for LIST_BUTTON_USER1
+ * @param label2 the label for LIST_BUTTON_USER2
+ * @param cb2 the callback for LIST_BUTTON_USER2
  *
- * The additional parameters come in triplets:
- *  - the button id
- *  - the label for the button
- *  - the callback (WARNING: swapped arguments)
+ * Any unused button should have label and cb set to null pointer.s
  *
  * The context pointer passed to the callbacks is the same as set in
  * list_set_static_buttons(), which must be called before.
  */
-void list_set_user_buttons(GtkWidget *list, ...);
+void list_set_user_buttons(GtkWidget *list,
+                           const char *label0, GCallback cb0,
+                           const char *label1, GCallback cb1,
+                           const char *label2, GCallback cb2);
 void list_set_columns(GtkWidget *list, ...);
 void list_set_custom_user_button(GtkWidget *list, list_button_t id,
 				 GtkWidget *widget);

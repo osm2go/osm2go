@@ -379,9 +379,9 @@ static GtkWidget *tag_widget(tag_context_t *context) {
   list_override_changed_event(context->list, changed, context->list);
 
   list_set_user_buttons(context->list,
-			LIST_BUTTON_USER0, _("Last"),      on_tag_last,
-			LIST_BUTTON_USER2, _("Relations"), on_relations,
-			0);
+                        _("Last"),      GCallback(on_tag_last),
+                        O2G_NULLPTR,    O2G_NULLPTR,
+                        _("Relations"), GCallback(on_relations));
 
   /* "relations of a relation" is something we can't handle correctly */
   /* at the moment */

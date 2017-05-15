@@ -867,9 +867,9 @@ static GtkWidget *relation_list_widget(relation_context_t &context) {
 	  G_CALLBACK(on_relation_remove), &context);
 
   list_set_user_buttons(context.list,
-                        LIST_BUTTON_USER0, _("Members"), on_relation_members,
-                        LIST_BUTTON_USER1, _("Select"),  on_relation_select,
-                        O2G_NULLPTR);
+                        _("Members"), GCallback(on_relation_members),
+                        _("Select"),  GCallback(on_relation_select),
+                        O2G_NULLPTR,  O2G_NULLPTR);
 
   relation_list_selected(context.list, O2G_NULLPTR);
 

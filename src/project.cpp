@@ -833,7 +833,9 @@ static GtkWidget *project_list_widget(select_context_t &context, gboolean &has_s
                           G_CALLBACK(on_project_delete), &context);
 
   list_set_user_buttons(context.list,
-                        LIST_BUTTON_USER0, _("Update all"), on_project_update_all, 0);
+                        _("Update all"), GCallback(on_project_update_all),
+                        O2G_NULLPTR, O2G_NULLPTR,
+                        O2G_NULLPTR, O2G_NULLPTR);
 
   gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(store),
                                        PROJECT_COL_NAME, GTK_SORT_ASCENDING);
