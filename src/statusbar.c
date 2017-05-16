@@ -133,10 +133,7 @@ void statusbar_set(statusbar_t *statusbar, const char *msg, gboolean highlight) 
 
   printf("statusbar_set: %s\n", msg);
 
-  if(!msg)
-    gtk_label_set_text(GTK_LABEL(statusbar->widget), msg);
-  else
-    gtk_label_set_text(GTK_LABEL(statusbar->widget), msg);
+  gtk_label_set_text(GTK_LABEL(statusbar->widget), msg);
 }
 
 statusbar_t *statusbar_new(void) {
