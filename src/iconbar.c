@@ -76,7 +76,6 @@ static GtkWidget *menu_add(GtkWidget *menu, appdata_t *appdata,
 static gint on_way_button_press(G_GNUC_UNUSED GtkWidget *button,
                                 GdkEventButton *event, iconbar_t *iconbar) {
   if(event->type == GDK_BUTTON_PRESS) {
-    //  map_action_set((appdata_t*)data, MAP_ACTION_WAY_ADD);
     printf("way clicked\n");
 
     /* draw a popup menu */
