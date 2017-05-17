@@ -107,7 +107,7 @@ static void map_statusbar(map_t *map, map_item_t *map_item) {
   gboolean collision = tags.hasTagCollisions() ? TRUE : FALSE;
 
   const std::string &str = map_item->object.get_name();
-  statusbar_set(map->appdata->statusbar, str.c_str(), collision);
+  map->appdata->statusbar->set(str.c_str(), collision);
 }
 
 void map_outside_error(appdata_t *appdata) {
@@ -443,7 +443,7 @@ void map_item_deselect(map_t *map) {
   }
 
   /* remove statusbar message */
-  statusbar_set(map->appdata->statusbar, O2G_NULLPTR, FALSE);
+  map->appdata->statusbar->set(O2G_NULLPTR, FALSE);
 
   /* disable/enable icons in icon bar */
   icon_bar_map_item_selected(map->appdata->iconbar, O2G_NULLPTR, FALSE);
@@ -1915,7 +1915,7 @@ void map_action_set(map_t *map, map_action_t action) {
 
   g_assert_cmpint(MAP_ACTION_NUM, ==, sizeof(str_state)/sizeof(char*));
 
-  statusbar_set(map->appdata->statusbar, str_state[action], FALSE);
+  map->appdata->statusbar->set(str_state[action], FALSE);
 }
 
 

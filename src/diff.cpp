@@ -668,7 +668,7 @@ void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) {
   if(it != osm->ways.end()) {
     printf("hidden flags have been restored, enable show_add menu\n");
 
-    statusbar_set(appdata->statusbar, _("Some objects are hidden"), TRUE);
+    appdata->statusbar->set(_("Some objects are hidden"), TRUE);
     gtk_widget_set_sensitive(appdata->menuitems[MENU_ITEM_MAP_SHOW_ALL], TRUE);
   }
 }

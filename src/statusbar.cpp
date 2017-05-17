@@ -43,22 +43,19 @@ static void statusbar_highlight(statusbar_t *statusbar, gboolean highlight) {
 
 #if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
 // Set the persistent message, replacing anything currently there.
-void statusbar_set(statusbar_t *statusbar, const char *msg, gboolean highlight) {
-  statusbar_highlight(statusbar, highlight);
+void statusbar_t::set(const char *msg, gboolean highlight) {
+  statusbar_highlight(this, highlight);
 
   printf("statusbar_set: %s\n", msg);
 
-  if (statusbar->mid) {
-    gtk_statusbar_remove(GTK_STATUSBAR(statusbar->widget),
-                         statusbar->cid, statusbar->mid);
-    statusbar->mid = 0;
+  if (mid) {
+    gtk_statusbar_remove(GTK_STATUSBAR(widget),
+                         cid, mid);
+    mid = 0;
   }
 
-  if (msg) {
-    guint mid = gtk_statusbar_push(GTK_STATUSBAR(statusbar->widget),
-                                   statusbar->cid, msg);
-    statusbar->mid = mid;
-  }
+  if (msg)
+    mid = gtk_statusbar_push(GTK_STATUSBAR(widget), cid, msg);
 }
 
 #ifndef USE_HILDON
@@ -112,12 +109,12 @@ void statusbar_brief(statusbar_t *statusbar, const char *msg, gint timeout) {
 #else
 
 // Set the persistent message, replacing anything currently there.
-void statusbar_set(statusbar_t *statusbar, const char *msg, gboolean highlight) {
-  statusbar_highlight(statusbar, highlight);
+void statusbar_t::set(const char *msg, gboolean highlight) {
+  statusbar_highlight(this, highlight);
 
   printf("statusbar_set: %s\n", msg);
 
-  gtk_label_set_text(GTK_LABEL(statusbar->widget), msg);
+  gtk_label_set_text(GTK_LABEL(widget), msg);
 }
 
 #endif

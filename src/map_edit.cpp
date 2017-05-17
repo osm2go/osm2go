@@ -126,7 +126,7 @@ void map_edit_way_add_segment(map_t *map, gint x, gint y) {
       switch(map->action.way->node_chain.size()) {
       case 1:
         /* replace "place first node..." message */
-        statusbar_set(map->appdata->statusbar, _("Place next node of way"), FALSE);
+        map->appdata->statusbar->set(_("Place next node of way"), FALSE);
         break;
       case 2:
         /* two nodes are enough for a valid way */

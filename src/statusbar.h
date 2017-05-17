@@ -37,14 +37,14 @@ typedef struct statusbar_t {
   guint brief_handler_id;
   guint brief_mid;
 #endif
+
+  void set(const char *msg, gboolean highlight);
 #endif
 } statusbar_t;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-void statusbar_set(statusbar_t *statusbar, const char *msg, gboolean highlight);
 
 #ifndef USE_HILDON
 void statusbar_brief(statusbar_t *statusbar, const char *msg, gint timeout);

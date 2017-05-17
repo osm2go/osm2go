@@ -108,7 +108,7 @@ void main_ui_enable(appdata_t *appdata) {
   gtk_widget_set_sensitive(appdata->btn_zoom_out, osm_valid);
 
   if(!project_valid)
-    statusbar_set(appdata->statusbar, _("Please load or create a project"), FALSE);
+    appdata->statusbar->set(_("Please load or create a project"), FALSE);
 }
 
 /******************** begin of menu *********************/
