@@ -85,7 +85,7 @@ set(osm2go_SOURCE_FILES
 	src/relation_edit.h
 	src/settings.c
 	src/settings.h
-	src/statusbar.c
+	src/statusbar.cpp
 	src/statusbar.h
 	src/style.cpp
 	src/style.h

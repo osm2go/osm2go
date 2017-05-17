@@ -19,6 +19,8 @@
 
 #include "statusbar.h"
 
+#include "osm2go_cpp.h"
+
 static void statusbar_highlight(statusbar_t *statusbar, gboolean highlight) {
   GtkWidget * const w =
 #if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
@@ -32,7 +34,7 @@ static void statusbar_highlight(statusbar_t *statusbar, gboolean highlight) {
     gdk_color_parse("#ff0000", &color);
     col = &color;
   } else {
-    col = NULL;
+    col = O2G_NULLPTR;
   }
 
   gtk_widget_modify_fg(w, GTK_STATE_NORMAL, col);
