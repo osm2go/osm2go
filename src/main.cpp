@@ -1161,7 +1161,7 @@ appdata_t::~appdata_t() {
 
   settings_free(settings);
 
-  statusbar_free(statusbar);
+  delete statusbar;
 
   iconbar_free(iconbar);
 
@@ -1370,9 +1370,9 @@ int main(int argc, char *argv[]) {
   gtk_box_pack_start(GTK_BOX(vbox), map, TRUE, TRUE, 0);
 
   /* fremantle has seperate zoom/details buttons on the right screen side */
+  appdata.statusbar = new statusbar_t();
 #ifndef FREMANTLE
   GtkWidget *zhbox = gtk_hbox_new(FALSE, 0);
-  appdata.statusbar = statusbar_new();
   gtk_box_pack_start_defaults(GTK_BOX(zhbox), appdata.statusbar->widget);
 
   /* ---- detail popup ---- */
@@ -1401,7 +1401,6 @@ int main(int argc, char *argv[]) {
 
   gtk_box_pack_start(GTK_BOX(vbox), zhbox, FALSE, FALSE, 0);
 #else
-  appdata.statusbar = statusbar_new();
   gtk_box_pack_start(GTK_BOX(vbox), appdata.statusbar->widget, FALSE, FALSE, 0);
 #endif
 

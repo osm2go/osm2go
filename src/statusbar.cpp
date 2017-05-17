@@ -109,24 +109,6 @@ void statusbar_brief(statusbar_t *statusbar, const char *msg, gint timeout) {
 }
 #endif
 
-statusbar_t *statusbar_new(void) {
-  statusbar_t *statusbar = (statusbar_t*)g_new0(statusbar_t, 1);
-
-  statusbar->widget = gtk_statusbar_new();
-
-#ifdef USE_HILDON
-  /* why the heck does hildon show this by default? It's useless!! */
-  g_object_set(statusbar->widget,
-	       "has-resize-grip", FALSE,
-	       NULL );
-#endif
-
-  statusbar->cid = gtk_statusbar_get_context_id(
-		GTK_STATUSBAR(statusbar->widget), "Msg");
-
-  return statusbar;
-}
-
 #else
 
 // Set the persistent message, replacing anything currently there.
@@ -138,17 +120,25 @@ void statusbar_set(statusbar_t *statusbar, const char *msg, gboolean highlight) 
   gtk_label_set_text(GTK_LABEL(statusbar->widget), msg);
 }
 
-statusbar_t *statusbar_new(void) {
-  statusbar_t *statusbar = (statusbar_t*)g_new0(statusbar_t, 1);
-
-  statusbar->widget = gtk_label_new(NULL);
-  return statusbar;
-}
-
 #endif
 
-void statusbar_free(statusbar_t *statusbar) {
-  g_free(statusbar);
+statusbar_t::statusbar_t()
+#if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
+  : widget(gtk_statusbar_new())
+  , cid(gtk_statusbar_get_context_id(GTK_STATUSBAR(widget), "Msg"))
+  , mid(0)
+#else
+  : widget(gtk_label_new(O2G_NULLPTR))
+#endif
+#ifndef USE_HILDON
+  , brief_handler_id(0)
+  , brief_mid(0)
+#endif
+{
+#ifdef USE_HILDON
+  /* why the heck does hildon show this by default? It's useless!! */
+  g_object_set(widget, "has-resize-grip", FALSE, O2G_NULLPTR);
+#endif
 }
 
 // vim:et:ts=8:sw=2:sts=2:ai
