@@ -77,23 +77,38 @@ static const char *osm_http_message(int id) {
 }
 
 struct log_s {
+  log_s()
+    : buffer(O2G_NULLPTR), view(O2G_NULLPTR) {}
+
   GtkTextBuffer *buffer;
   GtkWidget *view;
 };
 
-typedef struct {
-  appdata_t *appdata;
+struct osm_upload_context_t {
+  osm_upload_context_t(appdata_t *a, osm_t *o, project_t *p)
+    : appdata(a)
+    , dialog(O2G_NULLPTR)
+    , osm(o)
+    , project(p)
+    , urlbasestr(p->server)
+    , changeset(0)
+    , comment(O2G_NULLPTR)
+    , proxy(appdata->settings->proxy)
+  {}
+
+  appdata_t * const appdata;
   GtkWidget *dialog;
-  osm_t *osm;
-  project_t *project;
+  osm_t * const osm;
+  project_t * const project;
+  const std::string urlbasestr;
 
   struct log_s log;
 
   item_id_t changeset;
   char *comment;
 
-  proxy_t *proxy;
-} osm_upload_context_t;
+  proxy_t * const proxy;
+};
 
 /**
  * @brief adjust an API 0.5 url to 0.6
@@ -110,6 +125,15 @@ static bool api_adjust(std::string &rserver) {
   }
 
   return false;
+}
+
+static std::string urlbase(const project_t *project) {
+  std::string url = project->server;
+  if(strncmp(url.c_str(), "http://", 7) == 0 && strstr(curl_version(), "OpenSSL/1") != O2G_NULLPTR) {
+    printf("dynamically switching download to HTTPS\n");
+    url.insert(4, "s");
+  }
+  return url;
 }
 
 bool osm_download(GtkWidget *parent, settings_t *settings, project_t *project)
@@ -146,18 +170,17 @@ bool osm_download(GtkWidget *parent, settings_t *settings, project_t *project)
   g_ascii_formatd(maxlon, sizeof(maxlon), LL_FORMAT, project->max.lon);
   g_ascii_formatd(maxlat, sizeof(maxlat), LL_FORMAT, project->max.lat);
 
-  gchar *url = g_strconcat(project->server, "/map?bbox=",
-		     minlon, ",", minlat,
-		",", maxlon, ",", maxlat, O2G_NULLPTR);
+  const std::string url = urlbase(project) + "/map?bbox=" +
+                          minlon + "," + minlat + "," +
+                          maxlon +  "," +  maxlat;
 
   /* Download the new file to a new name. If something goes wrong then the
    * old file will still be in place to be opened. */
   const std::string update = project->path + "update.osm";
   g_remove(update.c_str());
 
-  bool result = net_io_download_file(parent, settings, url, update.c_str(),
+  bool result = net_io_download_file(parent, settings, url.c_str(), update.c_str(),
                                          project->name.c_str()) == TRUE;
-  g_free(url);
 
   /* if there's a new file use this from now on */
   if(result && g_file_test(update.c_str(), G_FILE_TEST_IS_REGULAR)) {
@@ -242,8 +265,8 @@ static G_GNUC_PRINTF(3, 4) void appendf(struct log_s &log, const char *colname,
 
 #define MAX_TRY 5
 
-static gboolean osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
-                                char *url, char *user, item_id_t *id) {
+static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
+                            const char *url, char *user, item_id_t *id) {
   int retry = MAX_TRY;
   char buffer[CURL_ERROR_SIZE];
 
@@ -266,7 +289,7 @@ static gboolean osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
     curl = curl_easy_init();
     if(!curl) {
       appendf(log, O2G_NULLPTR, _("CURL init error\n"));
-      return FALSE;
+      return false;
     }
 
     read_data = read_data_init;
@@ -357,7 +380,7 @@ static gboolean osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
     retry--;
   }
 
-  return FALSE;
+  return false;
 }
 
 static gboolean osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
@@ -528,7 +551,7 @@ void osm_delete_nodes::operator()(std::pair<item_id_t, node_t *> pair)
     appendf(context.log, O2G_NULLPTR, _("Delete node #" ITEM_ID_FORMAT " "), node->id);
 
     char *url = g_strdup_printf("%s/node/" ITEM_ID_FORMAT,
-                                project->server, node->id);
+                                context.urlbasestr.c_str(), node->id);
 
     xmlChar *xml_str = node->generate_xml(context.changeset);
 
@@ -562,11 +585,11 @@ void osm_upload_nodes::operator()(std::pair<item_id_t, node_t *> pair)
     char *url = O2G_NULLPTR;
 
     if(node->flags & OSM_FLAG_NEW) {
-      url = g_strconcat(project->server, "/node/create", O2G_NULLPTR);
+      url = g_strconcat(context.urlbasestr.c_str(), "/node/create", O2G_NULLPTR);
       appendf(context.log, O2G_NULLPTR, _("New node "));
     } else {
       url = g_strdup_printf("%s/node/" ITEM_ID_FORMAT,
-                            project->server, node->id);
+                            context.urlbasestr.c_str(), node->id);
       appendf(context.log, O2G_NULLPTR, _("Modified node #" ITEM_ID_FORMAT " "), node->id);
     }
 
@@ -607,7 +630,7 @@ void osm_delete_ways::operator()(std::pair<item_id_t, way_t *> pair)
   appendf(context.log, O2G_NULLPTR, _("Delete way #" ITEM_ID_FORMAT " "), way->id);
 
   char *url = g_strdup_printf("%s/way/" ITEM_ID_FORMAT,
-                                project->server, way->id);
+                                context.urlbasestr.c_str(), way->id);
   xmlChar *xml_str = way->generate_xml(context.changeset);
 
   if(osm_delete_item(context, xml_str, url, cred)) {
@@ -641,11 +664,11 @@ void osm_upload_ways::operator()(std::pair<item_id_t, way_t *> pair)
   char *url = O2G_NULLPTR;
 
   if(way->flags & OSM_FLAG_NEW) {
-    url = g_strconcat(project->server, "/way/create", O2G_NULLPTR);
+    url = g_strconcat(context.urlbasestr.c_str(), "/way/create", O2G_NULLPTR);
     appendf(context.log, O2G_NULLPTR, _("New way "));
   } else {
     url = g_strdup_printf("%s/way/" ITEM_ID_FORMAT,
-                          project->server, way->id);
+                          context.urlbasestr.c_str(), way->id);
     appendf(context.log, O2G_NULLPTR, _("Modified way #" ITEM_ID_FORMAT " "), way->id);
   }
 
@@ -688,7 +711,7 @@ void osm_delete_relations::operator()(std::pair<item_id_t, relation_t *> pair)
           _("Delete relation #" ITEM_ID_FORMAT " "), relation->id);
 
   char *url = g_strdup_printf("%s/relation/" ITEM_ID_FORMAT,
-                              project->server, relation->id);
+                              context.urlbasestr.c_str(), relation->id);
   xmlChar *xml_str = relation->generate_xml(context.changeset);
 
   if(osm_delete_item(context, xml_str, url, cred)) {
@@ -722,11 +745,11 @@ void osm_upload_relations::operator()(std::pair<item_id_t, relation_t *> pair)
   char *url = O2G_NULLPTR;
 
   if(relation->flags & OSM_FLAG_NEW) {
-    url = g_strdup_printf("%s/relation/create", project->server);
+    url = g_strdup_printf("%s/relation/create", context.urlbasestr.c_str());
     appendf(context.log, O2G_NULLPTR, _("New relation "));
   } else {
     url = g_strdup_printf("%s/relation/" ITEM_ID_FORMAT,
-                          project->server, relation->id);
+                          context.urlbasestr.c_str(), relation->id);
     appendf(context.log, O2G_NULLPTR, _("Modified relation #" ITEM_ID_FORMAT " "),
             relation->id);
   }
@@ -749,23 +772,22 @@ void osm_upload_relations::operator()(std::pair<item_id_t, relation_t *> pair)
 static bool osm_create_changeset(osm_upload_context_t &context, gchar **cred) {
   bool result = false;
   context.changeset = ILLEGAL;
-  project_t *project = context.project;
 
   /* make sure gui gets updated */
   while(gtk_events_pending()) gtk_main_iteration();
 
-  char *url = g_strdup_printf("%s/changeset/create", project->server);
+  const std::string url = context.urlbasestr + "/changeset/create";
   appendf(context.log, O2G_NULLPTR, _("Create changeset "));
 
   /* create changeset request */
   xmlChar *xml_str = osm_generate_xml_changeset(context.comment);
   if(xml_str) {
-    printf("creating changeset %s from address %p\n", url, xml_str);
+    printf("creating changeset %s from address %p\n", url.c_str(), xml_str);
 
     *cred = g_strjoin(":", context.appdata->settings->username,
                       context.appdata->settings->password, O2G_NULLPTR);
 
-    if(osm_update_item(context, xml_str, url, *cred, &context.changeset)) {
+    if(osm_update_item(context, xml_str, url.c_str(), *cred, &context.changeset)) {
       printf("got changeset id " ITEM_ID_FORMAT "\n", context.changeset);
       result = true;
     } else {
@@ -773,14 +795,12 @@ static bool osm_create_changeset(osm_upload_context_t &context, gchar **cred) {
     }
     xmlFree(xml_str);
   }
-  g_free(url);
 
   return result;
 }
 
-static gboolean osm_close_changeset(osm_upload_context_t &context, gchar *cred) {
-  gboolean result = FALSE;
-  project_t *project = context.project;
+static bool osm_close_changeset(osm_upload_context_t &context, gchar *cred) {
+  bool result = false;
 
   g_assert(context.changeset != ILLEGAL);
 
@@ -788,11 +808,10 @@ static gboolean osm_close_changeset(osm_upload_context_t &context, gchar *cred) 
   while(gtk_events_pending()) gtk_main_iteration();
 
   char *url = g_strdup_printf("%s/changeset/" ITEM_ID_FORMAT "/close",
-			      project->server, context.changeset);
+                              context.urlbasestr.c_str(), context.changeset);
   appendf(context.log, O2G_NULLPTR, _("Close changeset "));
 
-  if(osm_update_item(context, O2G_NULLPTR, url, cred, O2G_NULLPTR))
-    result = TRUE;
+  result = osm_update_item(context, O2G_NULLPTR, url, cred, O2G_NULLPTR);
 
   g_free(cred);
   g_free(url);
@@ -982,14 +1001,7 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
     g_strdup(gtk_entry_get_text(GTK_ENTRY(pentry)));
 
   /* osm upload itself also has a gui */
-  osm_upload_context_t context;
-  memset(&context, 0, sizeof(context));
-  context.appdata = appdata;
-  context.osm = osm;
-  context.project = project;
-
-  /* add proxy settings if required */
-  context.proxy = appdata->settings->proxy;
+  osm_upload_context_t context(appdata, osm, project);
 
   /* fetch comment from dialog */
   GtkTextIter start, end;
