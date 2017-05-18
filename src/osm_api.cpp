@@ -430,6 +430,12 @@ static gboolean osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
     /* set user name and password for the authentication */
     curl_easy_setopt(curl, CURLOPT_USERPWD, user);
 
+#ifndef CURL_SSLVERSION_MAX_DEFAULT
+#define CURL_SSLVERSION_MAX_DEFAULT 0
+#endif
+    curl_easy_setopt(curl, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1 |
+                     CURL_SSLVERSION_MAX_DEFAULT);
+
     net_io_set_proxy(curl, context.proxy);
 
     /* Now run off and do what you've been told! */

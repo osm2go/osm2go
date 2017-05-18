@@ -291,6 +291,12 @@ static void *worker_thread(void *ptr) {
 
       curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &request->response);
 
+#ifndef CURL_SSLVERSION_MAX_DEFAULT
+#define CURL_SSLVERSION_MAX_DEFAULT 0
+#endif
+     curl_easy_setopt(curl, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1 |
+                      CURL_SSLVERSION_MAX_DEFAULT);
+
 #if 0
       /* try to read "Error" */
       struct curl_slist *slist = NULL;
