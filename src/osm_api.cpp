@@ -575,37 +575,37 @@ void osm_upload_nodes::operator()(std::pair<item_id_t, node_t *> pair)
   node_t * const node = pair.second;
   project_t *project = context.project;
 
-    /* make sure gui gets updated */
-    while(gtk_events_pending()) gtk_main_iteration();
+  /* make sure gui gets updated */
+  while(gtk_events_pending()) gtk_main_iteration();
 
   if(!(node->flags & (OSM_FLAG_DIRTY | OSM_FLAG_NEW)) ||
      (node->flags & OSM_FLAG_DELETED))
-      return;
+    return;
 
-    char *url = O2G_NULLPTR;
+  char *url = O2G_NULLPTR;
 
-    if(node->flags & OSM_FLAG_NEW) {
-      url = g_strconcat(context.urlbasestr.c_str(), "/node/create", O2G_NULLPTR);
-      appendf(context.log, O2G_NULLPTR, _("New node "));
-    } else {
-      url = g_strdup_printf("%s/node/" ITEM_ID_FORMAT,
-                            context.urlbasestr.c_str(), node->id);
-      appendf(context.log, O2G_NULLPTR, _("Modified node #" ITEM_ID_FORMAT " "), node->id);
+  if(node->flags & OSM_FLAG_NEW) {
+    url = g_strconcat(context.urlbasestr.c_str(), "/node/create", O2G_NULLPTR);
+    appendf(context.log, O2G_NULLPTR, _("New node "));
+  } else {
+    url = g_strdup_printf("%s/node/" ITEM_ID_FORMAT,
+                          context.urlbasestr.c_str(), node->id);
+    appendf(context.log, O2G_NULLPTR, _("Modified node #" ITEM_ID_FORMAT " "), node->id);
+  }
+
+  /* upload this node */
+  xmlChar *xml_str = node->generate_xml(context.changeset);
+  if(xml_str) {
+    printf("uploading node %s from address %p\n", url, xml_str);
+
+    if(osm_update_item(context, xml_str, url, cred,
+        (node->flags & OSM_FLAG_NEW) ? &node->id : &node->version)) {
+      node->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_NEW);
+      project->data_dirty = true;
     }
-
-    /* upload this node */
-    xmlChar *xml_str = node->generate_xml(context.changeset);
-    if(xml_str) {
-      printf("uploading node %s from address %p\n", url, xml_str);
-
-      if(osm_update_item(context, xml_str, url, cred,
-         (node->flags & OSM_FLAG_NEW) ? &(node->id) : &node->version)) {
-        node->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_NEW);
-        project->data_dirty = true;
-      }
-      xmlFree(xml_str);
-    }
-    g_free(url);
+    xmlFree(xml_str);
+  }
+  g_free(url);
 }
 
 struct osm_delete_ways {
