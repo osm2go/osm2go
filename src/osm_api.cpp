@@ -108,6 +108,7 @@ struct osm_upload_context_t {
   char *comment;
 
   proxy_t * const proxy;
+  std::string credentials;
 };
 
 /**
@@ -266,7 +267,7 @@ static G_GNUC_PRINTF(3, 4) void appendf(struct log_s &log, const char *colname,
 #define MAX_TRY 5
 
 static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
-                            const char *url, char *user, item_id_t *id) {
+                            const char *url, item_id_t *id) {
   int retry = MAX_TRY;
   char buffer[CURL_ERROR_SIZE];
 
@@ -332,7 +333,7 @@ static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
     curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, buffer);
 
     /* set user name and password for the authentication */
-    curl_easy_setopt(curl, CURLOPT_USERPWD, user);
+    curl_easy_setopt(curl, CURLOPT_USERPWD, context.credentials.c_str());
 
     net_io_set_proxy(curl, context.proxy);
 
@@ -384,7 +385,7 @@ static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
 }
 
 static gboolean osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
-                                char *url, char *user) {
+                                const char *url) {
   int retry = MAX_TRY;
   char buffer[CURL_ERROR_SIZE];
 
@@ -451,7 +452,7 @@ static gboolean osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
     curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, buffer);
 
     /* set user name and password for the authentication */
-    curl_easy_setopt(curl, CURLOPT_USERPWD, user);
+    curl_easy_setopt(curl, CURLOPT_USERPWD, context.credentials.c_str());
 
 #ifndef CURL_SSLVERSION_MAX_DEFAULT
 #define CURL_SSLVERSION_MAX_DEFAULT 0
@@ -530,8 +531,7 @@ static GtkWidget *table_attach_int(GtkWidget *table, int num,
 
 struct osm_delete_nodes {
   osm_upload_context_t &context;
-  gchar * const cred;
-  osm_delete_nodes(osm_upload_context_t &co, gchar *cr) : context(co), cred(cr) {}
+  osm_delete_nodes(osm_upload_context_t &co) : context(co) {}
   void operator()(std::pair<item_id_t, node_t *> pair);
 };
 
@@ -555,7 +555,7 @@ void osm_delete_nodes::operator()(std::pair<item_id_t, node_t *> pair)
 
     xmlChar *xml_str = node->generate_xml(context.changeset);
 
-    if(osm_delete_item(context, xml_str, url, cred)) {
+    if(osm_delete_item(context, xml_str, url)) {
       node->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
       project->data_dirty = true;
     }
@@ -565,8 +565,7 @@ void osm_delete_nodes::operator()(std::pair<item_id_t, node_t *> pair)
 
 struct osm_upload_nodes {
   osm_upload_context_t &context;
-  gchar * const cred;
-  osm_upload_nodes(osm_upload_context_t &co, gchar *cr) : context(co), cred(cr) {}
+  osm_upload_nodes(osm_upload_context_t &co) : context(co) {}
   void operator()(std::pair<item_id_t, node_t *> pair);
 };
 
@@ -598,8 +597,8 @@ void osm_upload_nodes::operator()(std::pair<item_id_t, node_t *> pair)
   if(xml_str) {
     printf("uploading node %s from address %p\n", url, xml_str);
 
-    if(osm_update_item(context, xml_str, url, cred,
-        (node->flags & OSM_FLAG_NEW) ? &node->id : &node->version)) {
+    if(osm_update_item(context, xml_str, url,
+       (node->flags & OSM_FLAG_NEW) ? &(node->id) : &node->version)) {
       node->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_NEW);
       project->data_dirty = true;
     }
@@ -610,8 +609,7 @@ void osm_upload_nodes::operator()(std::pair<item_id_t, node_t *> pair)
 
 struct osm_delete_ways {
   osm_upload_context_t &context;
-  gchar * const cred;
-  osm_delete_ways(osm_upload_context_t &co, gchar *cr) : context(co), cred(cr) {}
+  osm_delete_ways(osm_upload_context_t &co) : context(co) {}
   void operator()(std::pair<item_id_t, way_t *> pair);
 };
 
@@ -633,7 +631,7 @@ void osm_delete_ways::operator()(std::pair<item_id_t, way_t *> pair)
                                 context.urlbasestr.c_str(), way->id);
   xmlChar *xml_str = way->generate_xml(context.changeset);
 
-  if(osm_delete_item(context, xml_str, url, cred)) {
+  if(osm_delete_item(context, xml_str, url)) {
     way->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
     project->data_dirty = true;
   }
@@ -644,8 +642,7 @@ void osm_delete_ways::operator()(std::pair<item_id_t, way_t *> pair)
 
 struct osm_upload_ways {
   osm_upload_context_t &context;
-  gchar * const cred;
-  osm_upload_ways(osm_upload_context_t &co, gchar *cr) : context(co), cred(cr) {}
+  osm_upload_ways(osm_upload_context_t &co) : context(co) {}
   void operator()(std::pair<item_id_t, way_t *> pair);
 };
 
@@ -677,7 +674,7 @@ void osm_upload_ways::operator()(std::pair<item_id_t, way_t *> pair)
   if(xml_str) {
     printf("uploading way %s from address %p\n", url, xml_str);
 
-    if(osm_update_item(context, xml_str, url, cred,
+    if(osm_update_item(context, xml_str, url,
         (way->flags & OSM_FLAG_NEW) ? &way->id : &way->version)) {
       way->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_NEW);
       project->data_dirty = true;
@@ -689,8 +686,7 @@ void osm_upload_ways::operator()(std::pair<item_id_t, way_t *> pair)
 
 struct osm_delete_relations {
   osm_upload_context_t &context;
-  gchar * const cred;
-  osm_delete_relations(osm_upload_context_t &co, gchar *cr) : context(co), cred(cr) {}
+  osm_delete_relations(osm_upload_context_t &co) : context(co) {}
   void operator()(std::pair<item_id_t, relation_t *> pair);
 };
 
@@ -714,7 +710,7 @@ void osm_delete_relations::operator()(std::pair<item_id_t, relation_t *> pair)
                               context.urlbasestr.c_str(), relation->id);
   xmlChar *xml_str = relation->generate_xml(context.changeset);
 
-  if(osm_delete_item(context, xml_str, url, cred)) {
+  if(osm_delete_item(context, xml_str, url)) {
     relation->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
     project->data_dirty = true;
   }
@@ -725,8 +721,7 @@ void osm_delete_relations::operator()(std::pair<item_id_t, relation_t *> pair)
 
 struct osm_upload_relations {
   osm_upload_context_t &context;
-  gchar * const cred;
-  osm_upload_relations(osm_upload_context_t &co, gchar *cr) : context(co), cred(cr) {}
+  osm_upload_relations(osm_upload_context_t &co) : context(co) {}
   void operator()(std::pair<item_id_t, relation_t *> pair);
 };
 
@@ -759,7 +754,7 @@ void osm_upload_relations::operator()(std::pair<item_id_t, relation_t *> pair)
   if(xml_str) {
     printf("uploading relation %s from address %p\n", url, xml_str);
 
-    if(osm_update_item(context, xml_str, url, cred,
+    if(osm_update_item(context, xml_str, url,
         (relation->flags & OSM_FLAG_NEW) ? &relation->id : &relation->version)) {
       relation->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_NEW);
       project->data_dirty = true;
@@ -769,7 +764,7 @@ void osm_upload_relations::operator()(std::pair<item_id_t, relation_t *> pair)
   g_free(url);
 }
 
-static bool osm_create_changeset(osm_upload_context_t &context, gchar **cred) {
+static bool osm_create_changeset(osm_upload_context_t &context) {
   bool result = false;
   context.changeset = ILLEGAL;
 
@@ -784,14 +779,12 @@ static bool osm_create_changeset(osm_upload_context_t &context, gchar **cred) {
   if(xml_str) {
     printf("creating changeset %s from address %p\n", url.c_str(), xml_str);
 
-    *cred = g_strjoin(":", context.appdata->settings->username,
-                      context.appdata->settings->password, O2G_NULLPTR);
+    context.credentials = context.appdata->settings->username + std::string(":") +
+                          context.appdata->settings->password;
 
-    if(osm_update_item(context, xml_str, url.c_str(), *cred, &context.changeset)) {
+    if(osm_update_item(context, xml_str, url.c_str(), &context.changeset)) {
       printf("got changeset id " ITEM_ID_FORMAT "\n", context.changeset);
       result = true;
-    } else {
-      g_free(*cred);
     }
     xmlFree(xml_str);
   }
@@ -799,7 +792,7 @@ static bool osm_create_changeset(osm_upload_context_t &context, gchar **cred) {
   return result;
 }
 
-static bool osm_close_changeset(osm_upload_context_t &context, gchar *cred) {
+static bool osm_close_changeset(osm_upload_context_t &context) {
   bool result = false;
 
   g_assert(context.changeset != ILLEGAL);
@@ -811,9 +804,8 @@ static bool osm_close_changeset(osm_upload_context_t &context, gchar *cred) {
                               context.urlbasestr.c_str(), context.changeset);
   appendf(context.log, O2G_NULLPTR, _("Close changeset "));
 
-  result = osm_update_item(context, O2G_NULLPTR, url, cred, O2G_NULLPTR);
+  result = osm_update_item(context, O2G_NULLPTR, url, O2G_NULLPTR);
 
-  g_free(cred);
   g_free(url);
 
   return result;
@@ -1058,24 +1050,23 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   appendf(context.log, O2G_NULLPTR, _("Uploading to %s\n"), project->server);
 
   /* create a new changeset */
-  gchar *cred;
-  if(osm_create_changeset(context, &cred)) {
+  if(osm_create_changeset(context)) {
     /* check for dirty entries */
     appendf(context.log, O2G_NULLPTR, _("Uploading nodes:\n"));
-    std::for_each(osm->nodes.begin(), osm->nodes.end(), osm_upload_nodes(context, cred));
+    std::for_each(osm->nodes.begin(), osm->nodes.end(), osm_upload_nodes(context));
     appendf(context.log, O2G_NULLPTR, _("Uploading ways:\n"));
-    std::for_each(osm->ways.begin(), osm->ways.end(), osm_upload_ways(context, cred));
+    std::for_each(osm->ways.begin(), osm->ways.end(), osm_upload_ways(context));
     appendf(context.log, O2G_NULLPTR, _("Uploading relations:\n"));
-    std::for_each(osm->relations.begin(), osm->relations.end(), osm_upload_relations(context, cred));
+    std::for_each(osm->relations.begin(), osm->relations.end(), osm_upload_relations(context));
     appendf(context.log, O2G_NULLPTR, _("Deleting relations:\n"));
-    std::for_each(osm->relations.begin(), osm->relations.end(), osm_delete_relations(context, cred));
+    std::for_each(osm->relations.begin(), osm->relations.end(), osm_delete_relations(context));
     appendf(context.log, O2G_NULLPTR, _("Deleting ways:\n"));
-    std::for_each(osm->ways.begin(), osm->ways.end(), osm_delete_ways(context, cred));
+    std::for_each(osm->ways.begin(), osm->ways.end(), osm_delete_ways(context));
     appendf(context.log, O2G_NULLPTR, _("Deleting nodes:\n"));
-    std::for_each(osm->nodes.begin(), osm->nodes.end(), osm_delete_nodes(context, cred));
+    std::for_each(osm->nodes.begin(), osm->nodes.end(), osm_delete_nodes(context));
 
     /* close changeset */
-    osm_close_changeset(context, cred);
+    osm_close_changeset(context);
   }
 
   appendf(context.log, O2G_NULLPTR, _("Upload done.\n"));
