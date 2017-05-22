@@ -196,21 +196,15 @@ void lpos2pos(const bounds_t *bounds, const lpos_t *lpos, pos_t *pos) {
 #endif
 }
 
-void pos_dist_str(char *str, int len, pos_float_t dist, gboolean is_mil) {
-  if(isnan(dist))
-    strcpy(str, "---");
-  else {
+void pos_dist_entry_set(GtkWidget *entry, pos_float_t dist, gboolean is_mil) {
+  char str[32] = "---";
+  if(!isnan(dist)) {
     /* is this to be displayed as miles? */
     if(is_mil) dist /= KMPMIL;  // kilometer per mile
 
-    snprintf(str, len, "%.4f", dist);
+    snprintf(str, sizeof(str), "%.4f", dist);
     remove_trailing_zeroes(str);
   }
-}
-
-void pos_dist_entry_set(GtkWidget *entry, pos_float_t dist, gboolean is_mil) {
-  char str[32];
-  pos_dist_str(str, sizeof(str), dist, is_mil);
   gtk_entry_set_text(GTK_ENTRY(entry), str);
 }
 
