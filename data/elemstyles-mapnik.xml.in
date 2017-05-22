@@ -78,6 +78,20 @@ Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
     <scale_max>14000</scale_max>
   </rule>
 
+	<rule>
+		<condition k="railway" v="platform"/>
+		<area colour="#a6a6a6" colour_bg="#a6a6a6"/>
+		<scale_min>1</scale_min>
+		<scale_max>50000</scale_max>
+	</rule>
+
+	<rule>
+		<condition k="railway" v="platform"/>
+		<line width="2" colour="#a6a6a6"/>
+		<scale_min>1</scale_min>
+		<scale_max>50000</scale_max>
+	</rule>
+
   <rule>
     <condition k="railway"/><!-- catchall linear -->
     <line width="4" width_bg="6" dashed="4" colour="#eeeeee" colour_bg="#999999"/>
@@ -665,13 +679,6 @@ Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
   </rule>
 
   <rule>
-    <condition k="highway" v="bus_stop"/>
-    <icon src="bus_stop.p.12.png"/>
-    <scale_min>1</scale_min>
-    <scale_max>10000</scale_max>
-  </rule>
-
-  <rule>
     <condition k="amenity" v="fuel"/>
     <icon src="fuel.p.16.png"/>
     <scale_min>1</scale_min>
@@ -684,6 +691,81 @@ Andrew Chadwick, /andrewc at piffle org/, 2008-12-07
     <scale_min>1</scale_min>
     <scale_max>25000</scale_max>
   </rule>
+
+  <!-- Public transport -->
+
+  <rule>
+    <condition k="highway" v="bus_stop"/>
+    <icon src="bus_stop.p.12.png"/>
+    <scale_min>1</scale_min>
+    <scale_max>10000</scale_max>
+  </rule>
+
+	<rule>
+		<condition k="public_transport" v="platform"/>
+		<condition k="train" v="yes"/>
+		<icon annotate="true" src="transport/railway_station.png"  priority="10" />
+		<area colour="#a6a6a6" colour_bg="#a6a6a6" closed="true" />
+	</rule>
+
+	<rule>
+		<condition k="public_transport" v="platform"/>
+		<condition k="train" v="yes"/>
+		<icon annotate="true" src="transport/railway_station.png"  priority="10" />
+		<line width="1" realwidth="1" colour="#a6a6a6" dashed="9" dashedcolour="livingdashed#00ff00"/>
+	</rule>
+
+	<rule>
+		<condition k="public_transport" v="platform"/>
+		<condition k="tram" v="yes"/>
+		<icon annotate="true" src="transport/railway_station.png"  priority="8" />
+		<area colour="#a6a6a6" colour_bg="#a6a6a6" closed="true" />
+	</rule>
+
+	<rule>
+		<condition k="public_transport" v="platform"/>
+		<condition k="tram" v="yes"/>
+		<icon annotate="true" src="transport/railway_station.png"  priority="8" />
+		<line width="1" realwidth="1" colour="#a6a6a6" dashed="9" dashedcolour="livingdashed#00ff00"/>
+	</rule>
+
+	<rule>
+		<condition k="public_transport" v="platform"/>
+		<condition k="bus" v="yes"/>
+		<icon annotate="true" src="transport/bus_small.png"  priority="4" />
+		<area colour="#a6a6a6" colour_bg="#a6a6a6" closed="true" />
+	</rule>
+
+	<rule>
+		<condition k="public_transport" v="platform"/>
+		<condition k="bus" v="yes"/>
+		<icon annotate="true" src="transport/bus_small.png"  priority="4" />
+		<line width="1" realwidth="1" colour="#a6a6a6" dashed="9" dashedcolour="livingdashed#00ff00"/>
+	</rule>
+
+	<rule>
+		<condition k="public_transport" v="platform"/>
+		<icon annotate="true" src="transport/bus_small.png" priority="-10"/>
+		<area colour="#a6a6a6" colour_bg="#a6a6a6" closed="true" />
+	</rule>
+
+	<rule>
+		<condition k="public_transport" v="platform"/>
+		<icon annotate="true" src="transport/bus_small.png" priority="-10"/>
+		<line width="1" realwidth="1" colour="#a6a6a6" dashed="9" dashedcolour="livingdashed#00ff00"/>
+	</rule>
+
+	<rule>
+		<condition k="highway" v="platform"/>
+		<icon annotate="true" src="misc/deprecated.png"/>
+		<area colour="#a6a6a6" colour_bg="#a6a6a6" closed="true"/>
+	</rule>
+
+	<rule>
+		<condition k="highway" v="platform"/>
+		<icon annotate="true" src="misc/deprecated.png"/>
+		<line width="2" colour="#a6a6a6"/>
+	</rule>
 
   <!-- Rail -->
 
