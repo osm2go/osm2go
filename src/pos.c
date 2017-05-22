@@ -25,19 +25,23 @@
 
 #define TAG_STATE  GTK_STATE_PRELIGHT
 
+static void remove_trailing_zeroes(char *str) {
+  char *delim = strpbrk(str, ".,");
+  if(delim == NULL)
+    return;
+  char *p = delim + strlen(delim) - 1;
+  while(*p == '0')
+    *p-- = '\0';
+  if((*p == '.') || (*p == ','))
+    *p = '\0';
+}
+
 void pos_lat_str(char *str, int len, pos_float_t latitude) {
   if(isnan(latitude))
     strcpy(str, "---");
   else {
     snprintf(str, len-1, "%.5f", latitude);
-
-    /* eliminate trailing zeros */
-    if(strpbrk(str, ".,") != NULL) {
-      char *p = str+strlen(str)-1;
-      while(*p == '0') *p-- = 0;
-      if((*p == '.')||(*p == ','))
-	*p = 0;
-    }
+    remove_trailing_zeroes(str);
   }
   strcat(str, "°");
 }
@@ -200,13 +204,7 @@ void pos_dist_str(char *str, int len, pos_float_t dist, gboolean is_mil) {
     if(is_mil) dist /= KMPMIL;  // kilometer per mile
 
     snprintf(str, len, "%.4f", dist);
-    /* eliminate trailing zeros */
-    if((strchr(str, '.') != NULL) || (strchr(str, ',') != NULL)) {
-      char *p = str+strlen(str)-1;
-      while(*p == '0') *p-- = 0;
-      if((*p == '.')||(*p == ','))
-	*p = 0;
-    }
+    remove_trailing_zeroes(str);
   }
 }
 
