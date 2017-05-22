@@ -103,7 +103,6 @@ pos_float_t pos_lon_get(GtkWidget *widget);
 gboolean pos_lat_valid(pos_float_t lat);
 gboolean pos_lon_valid(pos_float_t lon);
 
-pos_float_t pos_parse_dist(char *str, gboolean is_mil);
 void pos_dist_entry_set(GtkWidget *entry, pos_float_t dist, gboolean is_mil);
 pos_float_t pos_dist_get(GtkWidget *widget, gboolean is_mil);
 
