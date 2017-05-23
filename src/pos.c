@@ -36,7 +36,7 @@ static void remove_trailing_zeroes(char *str) {
     *p = '\0';
 }
 
-void pos_lat_str(char *str, int len, pos_float_t latitude) {
+void pos_lat_str(char *str, size_t len, pos_float_t latitude) {
   if(isnan(latitude))
     strcpy(str, "---");
   else {
@@ -46,7 +46,7 @@ void pos_lat_str(char *str, int len, pos_float_t latitude) {
   strcat(str, "°");
 }
 
-void pos_lon_str(char *str, int len, pos_float_t longitude) {
+void pos_lon_str(char *str, size_t len, pos_float_t longitude) {
   pos_lat_str(str, len, longitude);
 }
 

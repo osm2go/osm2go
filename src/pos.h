@@ -81,8 +81,8 @@ void pos2lpos(const struct bounds_t *bounds, const pos_t *pos, lpos_t *lpos);
 void pos2lpos_center(const pos_t *pos, lpos_t *lpos);
 void lpos2pos(const struct bounds_t *bounds, const lpos_t *lpos, pos_t *pos);
 
-void pos_lat_str(char *str, int len, pos_float_t latitude);
-void pos_lon_str(char *str, int len, pos_float_t longitude);
+void pos_lat_str(char *str, size_t len, pos_float_t latitude);
+void pos_lon_str(char *str, size_t len, pos_float_t longitude);
 
 pos_float_t pos_parse_lat(const char *str);
 pos_float_t pos_parse_lon(const char *str);
