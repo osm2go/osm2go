@@ -209,6 +209,6 @@ void pos_dist_entry_set(GtkWidget *entry, pos_float_t dist, gboolean is_mil) {
 }
 
 pos_float_t pos_dist_get(GtkWidget *widget, gboolean is_mil) {
-  char *p = (char*)gtk_entry_get_text(GTK_ENTRY(widget));
+  const gchar *p = gtk_entry_get_text(GTK_ENTRY(widget));
   return g_strtod(p, NULL) * (is_mil?KMPMIL:1.0);
 }
