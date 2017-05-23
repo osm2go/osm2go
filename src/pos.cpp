@@ -20,14 +20,16 @@
 #include "appdata.h"
 #include "misc.h"
 
+#include <osm2go_cpp.h>
+
 #include <ctype.h>
-#include <math.h>
+#include <cmath>
 
 #define TAG_STATE  GTK_STATE_PRELIGHT
 
 static void remove_trailing_zeroes(char *str) {
   char *delim = strpbrk(str, ".,");
-  if(delim == NULL)
+  if(delim == O2G_NULLPTR)
     return;
   char *p = delim + strlen(delim) - 1;
   while(*p == '0')
@@ -51,24 +53,23 @@ void pos_lon_str(char *str, size_t len, pos_float_t longitude) {
 }
 
 pos_float_t pos_parse_lat(const char *str) {
-  return g_strtod(str, NULL);
+  return g_strtod(str, O2G_NULLPTR);
 }
 
 pos_float_t pos_parse_lon(const char *str) {
-  return g_strtod(str, NULL);
+  return g_strtod(str, O2G_NULLPTR);
 }
 
-gboolean pos_lat_valid(pos_float_t lat) {
+bool pos_lat_valid(pos_float_t lat) {
   return(!isnan(lat) && (lat >= -90.0) && (lat <= 90.0));
 }
 
-gboolean pos_lon_valid(pos_float_t lon) {
+bool pos_lon_valid(pos_float_t lon) {
   return(!isnan(lon) && (lon >= -180.0) && (lon <= 180.0));
 }
 
-static gboolean mark(GtkWidget *widget, gboolean valid) {
+static void mark(GtkWidget *widget, bool valid) {
   gtk_widget_set_state(widget, valid?GTK_STATE_NORMAL:TAG_STATE);
-  return valid;
 }
 
 static void callback_modified_lat(GtkWidget *widget, G_GNUC_UNUSED gpointer data) {
@@ -88,7 +89,7 @@ GtkWidget *pos_lat_entry_new(pos_float_t lat) {
   gtk_entry_set_text(GTK_ENTRY(widget), str);
 
   g_signal_connect(G_OBJECT(widget), "changed",
-                   G_CALLBACK(callback_modified_lat), NULL);
+                   G_CALLBACK(callback_modified_lat), O2G_NULLPTR);
 
   return widget;
 }
@@ -110,7 +111,7 @@ GtkWidget *pos_lon_entry_new(pos_float_t lon) {
   gtk_entry_set_text(GTK_ENTRY(widget), str);
 
   g_signal_connect(G_OBJECT(widget), "changed",
-                   G_CALLBACK(callback_modified_lon), NULL);
+                   G_CALLBACK(callback_modified_lon), O2G_NULLPTR);
 
   return widget;
 }
@@ -163,11 +164,7 @@ void pos_lon_label_set(GtkWidget *label, pos_float_t lon) {
 
 void pos2lpos(const bounds_t *bounds, const pos_t *pos, lpos_t *lpos) {
   lpos->x = POS_EQ_RADIUS * DEG2RAD(pos->lon);
-#ifdef USE_FLOAT
-  lpos->y = POS_EQ_RADIUS * logf(tanf(M_PI/4 + DEG2RAD(pos->lat)/2));
-#else
   lpos->y = POS_EQ_RADIUS * log(tan(M_PI/4 + DEG2RAD(pos->lat)/2));
-#endif
   lpos->x = ( lpos->x - bounds->center.x) * bounds->scale;
   lpos->y = (-lpos->y + bounds->center.y) * bounds->scale;
 }
@@ -175,11 +172,7 @@ void pos2lpos(const bounds_t *bounds, const pos_t *pos, lpos_t *lpos) {
 /* the maps center is special as it isn't offset (by itself) */
 void pos2lpos_center(const pos_t *pos, lpos_t *lpos) {
   lpos->x = POS_EQ_RADIUS * DEG2RAD(pos->lon);
-#ifdef USE_FLOAT
-  lpos->y = POS_EQ_RADIUS * logf(tanf(M_PI/4 + DEG2RAD(pos->lat)/2));
-#else
   lpos->y = POS_EQ_RADIUS * log(tan(M_PI/4 + DEG2RAD(pos->lat)/2));
-#endif
 }
 
 void lpos2pos(const bounds_t *bounds, const lpos_t *lpos, pos_t *pos) {
@@ -189,14 +182,10 @@ void lpos2pos(const bounds_t *bounds, const lpos_t *lpos, pos_t *pos) {
   tmp.y = (-tmp.y/bounds->scale) + bounds->center.y;
 
   pos->lon = RAD2DEG(tmp.x / POS_EQ_RADIUS);
-#ifdef USE_FLOAT
-  pos->lat = RAD2DEG(2 * atanf(expf(tmp.y/POS_EQ_RADIUS)) - M_PI/2);
-#else
   pos->lat = RAD2DEG(2 * atan(exp(tmp.y/POS_EQ_RADIUS)) - M_PI/2);
-#endif
 }
 
-void pos_dist_entry_set(GtkWidget *entry, pos_float_t dist, gboolean is_mil) {
+void pos_dist_entry_set(GtkWidget *entry, pos_float_t dist, bool is_mil) {
   char str[32] = "---";
   if(!isnan(dist)) {
     /* is this to be displayed as miles? */
@@ -208,7 +197,7 @@ void pos_dist_entry_set(GtkWidget *entry, pos_float_t dist, gboolean is_mil) {
   gtk_entry_set_text(GTK_ENTRY(entry), str);
 }
 
-pos_float_t pos_dist_get(GtkWidget *widget, gboolean is_mil) {
+pos_float_t pos_dist_get(GtkWidget *widget, bool is_mil) {
   const gchar *p = gtk_entry_get_text(GTK_ENTRY(widget));
-  return g_strtod(p, NULL) * (is_mil?KMPMIL:1.0);
+  return g_strtod(p, O2G_NULLPTR) * (is_mil?KMPMIL:1.0);
 }

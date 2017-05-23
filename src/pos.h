@@ -73,13 +73,11 @@ typedef struct lpos_t {
 } lpos_t;
 
 #ifdef __cplusplus
-extern "C" {
-#endif
 
 struct bounds_t;
-void pos2lpos(const struct bounds_t *bounds, const pos_t *pos, lpos_t *lpos);
+void pos2lpos(const bounds_t *bounds, const pos_t *pos, lpos_t *lpos);
 void pos2lpos_center(const pos_t *pos, lpos_t *lpos);
-void lpos2pos(const struct bounds_t *bounds, const lpos_t *lpos, pos_t *pos);
+void lpos2pos(const bounds_t *bounds, const lpos_t *lpos, pos_t *pos);
 
 void pos_lat_str(char *str, size_t len, pos_float_t latitude);
 void pos_lon_str(char *str, size_t len, pos_float_t longitude);
@@ -100,14 +98,12 @@ void pos_lon_label_set(GtkWidget *label, pos_float_t lon);
 pos_float_t pos_lat_get(GtkWidget *widget);
 pos_float_t pos_lon_get(GtkWidget *widget);
 
-gboolean pos_lat_valid(pos_float_t lat);
-gboolean pos_lon_valid(pos_float_t lon);
+bool pos_lat_valid(pos_float_t lat);
+bool pos_lon_valid(pos_float_t lon);
 
-void pos_dist_entry_set(GtkWidget *entry, pos_float_t dist, gboolean is_mil);
-pos_float_t pos_dist_get(GtkWidget *widget, gboolean is_mil);
+void pos_dist_entry_set(GtkWidget *entry, pos_float_t dist, bool is_mil);
+pos_float_t pos_dist_get(GtkWidget *widget, bool is_mil);
 
-#ifdef __cplusplus
-}
 #endif
 
 #endif // POS_H
