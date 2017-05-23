@@ -470,7 +470,7 @@ static GtkWidget *details_widget(const tag_context_t &context, bool big) {
     label = gtk_label_new(pos_str);
     if(big) table_attach(table, gtk_label_new(_("Latitude:")), 0, 2);
     table_attach(table, label, big?1:0, big?2:1);
-    pos_lat_str(pos_str, sizeof(pos_str), context.object.node->pos.lon);
+    pos_lon_str(pos_str, sizeof(pos_str), context.object.node->pos.lon);
     label = gtk_label_new(pos_str);
     if(big) table_attach(table, gtk_label_new(_("Longitude:")), 0, 3);
     table_attach(table, label, 1, big?3:1);
