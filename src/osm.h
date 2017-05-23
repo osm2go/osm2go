@@ -20,24 +20,24 @@
 #ifndef OSM_H
 #define OSM_H
 
-#ifdef __cplusplus
 #include "misc.h"
+#include "pos.h"
 
+#ifdef __cplusplus
 #include <algorithm>
 #include <map>
 #include <string>
 #include <vector>
 
-extern "C" {
-#endif
-
 #include <osm2go_cpp.h>
-#include "pos.h"
 
 #include <math.h>
 #include <glib.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
+
+extern "C" {
+#endif
 
 #define OSM_FLAG_DIRTY    (1<<0)
 #define OSM_FLAG_DELETED  (1<<1)

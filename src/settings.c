@@ -26,6 +26,8 @@
 #include <gconf/gconf.h>
 #include <gconf/gconf-client.h>
 
+#include <osm2go_cpp.h>
+
 #define PROXY_KEY  "/system/http_proxy/"
 
 enum {

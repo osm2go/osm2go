@@ -24,6 +24,7 @@
 #include "list.h"
 #include "map.h"
 #include "misc.h"
+#include "pos.h"
 #include "relation_edit.h"
 
 #include <algorithm>

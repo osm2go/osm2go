@@ -29,6 +29,7 @@
 #include "icon.h"
 #include "map.h"
 #include "misc.h"
+#include "pos.h"
 
 #include <cmath>
 #include <cstdio>
