@@ -2297,7 +2297,7 @@ bool way_t::ends_with_node(const node_t *node) const
     return false;
 
   /* any valid way must have at least two nodes */
-  g_assert_true(node_chain.empty());
+  g_assert_false(node_chain.empty());
 
   if(node_chain.front() == node)
     return true;
