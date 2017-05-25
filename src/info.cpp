@@ -108,6 +108,10 @@ static void on_tag_remove(GtkWidget *, tag_context_t *context) {
 
     context->tags.erase(it);
 
+    GtkTreeIter n = iter;
+    // select the next entry if it exists
+    if(gtk_tree_model_iter_next(model, &n))
+      gtk_tree_selection_select_iter(selection, &n);
     /* and remove from store */
     gtk_list_store_remove(GTK_LIST_STORE(model), &iter);
 
