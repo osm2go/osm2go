@@ -199,9 +199,9 @@ static const char *relitem_get_role_in_relation(const object_t &item, const rela
   return O2G_NULLPTR;
 }
 
-static gboolean relitem_is_in_relation(const object_t &item, const relation_t *relation) {
+static bool relitem_is_in_relation(const object_t &item, const relation_t *relation) {
   if(item.type != WAY && item.type != NODE)
-    return FALSE;
+    return false;
 
   const std::vector<member_t>::const_iterator it = relation->find_member_object(item);
 
