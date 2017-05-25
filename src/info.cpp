@@ -124,7 +124,8 @@ static void on_tag_remove(GtkWidget *, tag_context_t *context) {
 /**
  * @brief request user input for the given tag
  * @param window the parent window
- * @param tag the tag to change
+ * @param k the key
+ * @param v the value
  * @return if the tag was actually modified
  * @retval false the tag is the same as before
  */
