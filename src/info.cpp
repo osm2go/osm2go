@@ -389,11 +389,6 @@ static GtkWidget *tag_widget(tag_context_t *context) {
                         O2G_NULLPTR,    O2G_NULLPTR,
                         _("Relations"), GCallback(on_relations));
 
-  /* "relations of a relation" is something we can't handle correctly */
-  /* at the moment */
-  if(context->object.type == RELATION)
-    list_button_enable(context->list, LIST_BUTTON_USER2, FALSE);
-
   /* setup both columns */
   list_set_columns(context->list,
       _("Key"),   LIST_FLAG_ELLIPSIZE|LIST_FLAG_CAN_HIGHLIGHT, TAG_COL_COLLISION,

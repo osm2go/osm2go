@@ -188,7 +188,7 @@ static gboolean relation_info_dialog(GtkWidget *parent, appdata_t *appdata,
 }
 
 static const char *relitem_get_role_in_relation(const object_t &item, const relation_t *relation) {
-  if(item.type != WAY && item.type != NODE)
+  if(!item.is_real())
     return O2G_NULLPTR;
 
   const std::vector<member_t>::const_iterator it = relation->find_member_object(item);
@@ -200,7 +200,7 @@ static const char *relitem_get_role_in_relation(const object_t &item, const rela
 }
 
 static bool relitem_is_in_relation(const object_t &item, const relation_t *relation) {
-  if(item.type != WAY && item.type != NODE)
+  if(!item.is_real())
     return false;
 
   const std::vector<member_t>::const_iterator it = relation->find_member_object(item);
@@ -422,7 +422,8 @@ void relation_membership_dialog(GtkWidget *parent,
 			  object.obj->id);
     break;
   default:
-    g_assert_not_reached();
+    str = g_strdup_printf(_("Relation memberships of relation #" ITEM_ID_FORMAT),
+			  object.obj->id);
     break;
   }
 
