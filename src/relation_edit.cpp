@@ -224,12 +224,12 @@ static void changed(GtkTreeSelection *sel, gpointer user_data) {
       printf("selected: " ITEM_ID_FORMAT "\n", relation->id);
 
       /* either accept this or unselect again */
-      if(relation_add_item(context->dialog, relation, context->item))
+      if(relation_add_item(context->dialog, relation, context->item)) {
+        // the item is now the last one in the chain
+        const member_t &member = relation->members.back();
 	gtk_list_store_set(context->store, &iter,
-	   RELITEM_COL_ROLE,
-	   relitem_get_role_in_relation(context->item, relation),
-			   -1);
-      else
+                           RELITEM_COL_ROLE, member.role, -1);
+      } else
 	gtk_tree_selection_unselect_iter(sel, &iter);
 
       done = TRUE;
