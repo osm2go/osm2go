@@ -199,15 +199,6 @@ static const char *relitem_get_role_in_relation(const object_t &item, const rela
   return O2G_NULLPTR;
 }
 
-static bool relitem_is_in_relation(const object_t &item, const relation_t *relation) {
-  if(!item.is_real())
-    return false;
-
-  const std::vector<member_t>::const_iterator it = relation->find_member_object(item);
-
-  return (it != relation->members.end());
-}
-
 static void changed(GtkTreeSelection *sel, gpointer user_data) {
   relitem_context_t *context = (relitem_context_t*)user_data;
 
@@ -226,9 +217,10 @@ static void changed(GtkTreeSelection *sel, gpointer user_data) {
 		       RELITEM_COL_DATA, &relation, -1);
     g_assert_nonnull(relation);
 
-    if(!relitem_is_in_relation(context->item, relation) &&
-       gtk_tree_selection_iter_is_selected(sel, &iter)) {
+    const std::vector<member_t>::const_iterator itEnd = relation->members.end();
+    const std::vector<member_t>::const_iterator it = relation->find_member_object(context->item);
 
+    if(it == itEnd && gtk_tree_selection_iter_is_selected(sel, &iter)) {
       printf("selected: " ITEM_ID_FORMAT "\n", relation->id);
 
       /* either accept this or unselect again */
@@ -241,9 +233,7 @@ static void changed(GtkTreeSelection *sel, gpointer user_data) {
 	gtk_tree_selection_unselect_iter(sel, &iter);
 
       done = TRUE;
-    } else if(relitem_is_in_relation(context->item, relation) &&
-	      !gtk_tree_selection_iter_is_selected(sel, &iter)) {
-
+    } else if(it != itEnd && !gtk_tree_selection_iter_is_selected(sel, &iter)) {
       printf("deselected: " ITEM_ID_FORMAT "\n", relation->id);
 
       relation_remove_item(relation, context->item);
@@ -311,7 +301,9 @@ void relation_list_insert_functor::operator()(std::pair<item_id_t, relation_t *>
      -1);
 
   /* select all relations the current object is part of */
-  if(relitem_is_in_relation(context.item, relation)) {
+  const std::vector<member_t>::const_iterator it = relation->find_member_object(context.item);
+
+  if(it != relation->members.end()) {
     gtk_tree_selection_select_iter(selection, &iter);
     /* check if this element is earlier by name in the list */
     if(selname.empty() || strcmp(name.c_str(), selname.c_str()) < 0) {
