@@ -187,18 +187,6 @@ static gboolean relation_info_dialog(GtkWidget *parent, appdata_t *appdata,
   return info_dialog(parent, appdata, object);
 }
 
-static const char *relitem_get_role_in_relation(const object_t &item, const relation_t *relation) {
-  if(!item.is_real())
-    return O2G_NULLPTR;
-
-  const std::vector<member_t>::const_iterator it = relation->find_member_object(item);
-
-  if(it != relation->members.end())
-    return it->role;
-
-  return O2G_NULLPTR;
-}
-
 static void changed(GtkTreeSelection *sel, gpointer user_data) {
   relitem_context_t *context = (relitem_context_t*)user_data;
 
@@ -291,19 +279,21 @@ void relation_list_insert_functor::operator()(std::pair<item_id_t, relation_t *>
   /* try to find something descriptive */
   std::string name = relation->descriptive_name();
 
+  const std::vector<member_t>::const_iterator it = relation->find_member_object(context.item);
+  const bool isMember = it != relation->members.end();
+
   /* Append a row and fill in some data */
   gtk_list_store_append(context.store, &iter);
   gtk_list_store_set(context.store, &iter,
      RELITEM_COL_TYPE, relation->tags.get_value("type"),
-     RELITEM_COL_ROLE, relitem_get_role_in_relation(context.item, relation),
+     RELITEM_COL_ROLE, isMember ? it->role : O2G_NULLPTR,
      RELITEM_COL_NAME, name.c_str(),
      RELITEM_COL_DATA, relation,
      -1);
 
   /* select all relations the current object is part of */
-  const std::vector<member_t>::const_iterator it = relation->find_member_object(context.item);
 
-  if(it != relation->members.end()) {
+  if(isMember) {
     gtk_tree_selection_select_iter(selection, &iter);
     /* check if this element is earlier by name in the list */
     if(selname.empty() || strcmp(name.c_str(), selname.c_str()) < 0) {
