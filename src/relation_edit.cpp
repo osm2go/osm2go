@@ -403,10 +403,12 @@ void relation_membership_dialog(GtkWidget *parent,
     str = g_strdup_printf(_("Relation memberships of way #" ITEM_ID_FORMAT),
 			  object.obj->id);
     break;
-  default:
+  case RELATION:
     str = g_strdup_printf(_("Relation memberships of relation #" ITEM_ID_FORMAT),
 			  object.obj->id);
     break;
+  default:
+    g_assert_not_reached();
   }
 
   context.dialog =
