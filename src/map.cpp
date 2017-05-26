@@ -714,7 +714,7 @@ static void map_item_init(style_t *style, map_item_t *map_item) {
 void map_item_redraw(map_t *map, map_item_t *map_item) {
   map_item_t item = *map_item;
 
-  /* a relation cannot be redraws as it doesn't have a visual */
+  /* a relation cannot be redrawn as it doesn't have a visual */
   /* representation */
   if(map_item->object.type == RELATION)
     return;
