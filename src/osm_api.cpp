@@ -85,7 +85,7 @@ struct log_s {
 };
 
 struct osm_upload_context_t {
-  osm_upload_context_t(appdata_t *a, osm_t *o, project_t *p, const char *c)
+  osm_upload_context_t(appdata_t *a, osm_t *o, project_t *p, const char *c, const char *s)
     : appdata(a)
     , dialog(O2G_NULLPTR)
     , osm(o)
@@ -94,6 +94,7 @@ struct osm_upload_context_t {
     , changeset(0)
     , proxy(appdata->settings->proxy)
     , comment(c)
+    , src(s ? s : std::string())
   {}
 
   appdata_t * const appdata;
@@ -109,6 +110,7 @@ struct osm_upload_context_t {
   proxy_t * const proxy;
   std::string comment;
   std::string credentials;
+  const std::string src;
 };
 
 /**
@@ -775,7 +777,7 @@ static bool osm_create_changeset(osm_upload_context_t &context) {
   appendf(context.log, O2G_NULLPTR, _("Create changeset "));
 
   /* create changeset request */
-  xmlChar *xml_str = osm_generate_xml_changeset(context.comment.c_str());
+  xmlChar *xml_str = osm_generate_xml_changeset(context.comment, context.src);
   if(xml_str) {
     printf("creating changeset %s from address %p\n", url.c_str(), xml_str);
 
@@ -940,6 +942,12 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   gtk_table_attach_defaults(GTK_TABLE(table),  pentry, 1, 2, 1, 2);
   gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, FALSE, FALSE, 0);
 
+  table_attach_label_l(table, _("Source:"), 0, 1, 2, 3);
+  GtkWidget *sentry = entry_new();
+  HILDON_ENTRY_NO_AUTOCAP(sentry);
+  gtk_table_attach_defaults(GTK_TABLE(table),  sentry, 1, 2, 2, 3);
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, FALSE, FALSE, 0);
+
   GtkWidget *scrolled_win = misc_scrolled_window_new(TRUE);
 
   GtkTextBuffer *buffer = gtk_text_buffer_new(O2G_NULLPTR);
@@ -967,7 +975,6 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   g_object_set_data(G_OBJECT(view), "first_click", GINT_TO_POINTER(TRUE));
   g_signal_connect(G_OBJECT(view), "focus-in-event",
 		   G_CALLBACK(cb_focus_in), buffer);
-
 
   gtk_container_add(GTK_CONTAINER(scrolled_win), view);
 
@@ -998,7 +1005,8 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   gtk_text_buffer_get_end_iter(buffer, &end);
   char *text = gtk_text_buffer_get_text(buffer, &start, &end, FALSE);
 
-  osm_upload_context_t context(appdata, osm, project, text);
+  osm_upload_context_t context(appdata, osm, project, text,
+                               gtk_entry_get_text(GTK_ENTRY(sentry)));
 
   gtk_widget_destroy(dialog);
   project_save(GTK_WIDGET(appdata->window), project);

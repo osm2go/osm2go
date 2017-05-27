@@ -231,7 +231,7 @@ struct osm_t {
   static bool tagSubset(const TagMap &sub, const TagMap &super);
 };
 
-xmlChar *osm_generate_xml_changeset(const char* comment);
+xmlChar *osm_generate_xml_changeset(const std::string &comment, const std::string &src);
 
 bool osm_position_within_bounds_ll(const pos_t *ll_min, const pos_t *ll_max, const pos_t *pos);
 
