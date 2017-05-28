@@ -503,11 +503,12 @@ static gboolean osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
   return FALSE;
 }
 
-typedef struct {
+struct osm_dirty_t {
+  GtkWidget *dialog;
   struct counter {
     int total, added, dirty, deleted;
   } ways, nodes, relations;
-} osm_dirty_t;
+};
 
 static GtkWidget *table_attach_label_c(GtkWidget *table, char *str,
 				       int x1, int x2, int y1, int y2) {
@@ -870,6 +871,48 @@ static void table_insert_count(GtkWidget *table, const struct osm_dirty_t::count
   table_attach_int(table, dirty.deleted, 4, 5, row, row + 1);
 }
 
+static void details_table(GtkWidget *dialog, const osm_dirty_t &dirty) {
+  GtkWidget *table = gtk_table_new(4, 5, TRUE);
+
+  table_attach_label_c(table, _("Total"),          1, 2, 0, 1);
+  table_attach_label_c(table, _("New"),            2, 3, 0, 1);
+  table_attach_label_c(table, _("Modified"),       3, 4, 0, 1);
+  table_attach_label_c(table, _("Deleted"),        4, 5, 0, 1);
+
+  int row = 1;
+  table_attach_label_l(table, _("Nodes:"),         0, 1, row, row + 1);
+  table_insert_count(table, dirty.nodes, row++);
+
+  table_attach_label_l(table, _("Ways:"),          0, 1, row, row + 1);
+  table_insert_count(table, dirty.ways, row++);
+
+  table_attach_label_l(table, _("Relations:"),     0, 1, row, row + 1);
+  table_insert_count(table, dirty.relations, row++);
+
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
+                     table, FALSE, FALSE, 0);
+}
+
+#ifdef FREMANTLE
+/* put additional infos into a seperate dialog for fremantle as */
+/* screen space is sparse there */
+static void info_more(const osm_dirty_t &context) {
+  GtkWidget *dialog =
+    misc_dialog_new(MISC_DIALOG_SMALL, _("Changeset details"),
+		    GTK_WINDOW(context.dialog),
+		    GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+		    O2G_NULLPTR);
+
+  gtk_dialog_set_default_response(GTK_DIALOG(dialog),
+				  GTK_RESPONSE_CANCEL);
+
+  details_table(dialog, context);
+  gtk_widget_show_all(dialog);
+  gtk_dialog_run(GTK_DIALOG(dialog));
+  gtk_widget_destroy(dialog);
+}
+#endif
+
 void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
 
   printf("starting upload\n");
@@ -898,37 +941,26 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   GtkWidget *dialog =
     misc_dialog_new(MISC_DIALOG_MEDIUM, _("Upload to OSM"),
 		    GTK_WINDOW(appdata->window),
+#ifdef FREMANTLE
+                    _("More"), GTK_RESPONSE_HELP,
+#endif
 		    GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
 		    GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
 		    O2G_NULLPTR);
+  dirty.dialog = dialog;
 
-  GtkWidget *table = gtk_table_new(4, 5, TRUE);
-
-  table_attach_label_c(table, _("Total"),          1, 2, 0, 1);
-  table_attach_label_c(table, _("New"),            2, 3, 0, 1);
-  table_attach_label_c(table, _("Modified"),       3, 4, 0, 1);
-  table_attach_label_c(table, _("Deleted"),        4, 5, 0, 1);
-
-  int row = 1;
-  table_attach_label_l(table, _("Nodes:"),         0, 1, row, row + 1);
-  table_insert_count(table, dirty.nodes, row++);
-
-  table_attach_label_l(table, _("Ways:"),          0, 1, row, row + 1);
-  table_insert_count(table, dirty.ways, row++);
-
-  table_attach_label_l(table, _("Relations:"),     0, 1, row, row + 1);
-  table_insert_count(table, dirty.relations, row++);
-
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, FALSE, FALSE, 0);
+#ifndef FREMANTLE
+  details_table(dialog, dirty);
 
   /* ------------------------------------------------------ */
 
   gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
 		     gtk_hseparator_new(), FALSE, FALSE, 0);
+#endif
 
   /* ------- add username and password entries ------------ */
 
-  table = gtk_table_new(2, 2, FALSE);
+  GtkWidget *table = gtk_table_new(2, 2, FALSE);
   table_attach_label_l(table, _("Username:"), 0, 1, 0, 1);
   GtkWidget *uentry = entry_new();
   HILDON_ENTRY_NO_AUTOCAP(uentry);
@@ -982,10 +1014,22 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   			      scrolled_win);
   gtk_widget_show_all(dialog);
 
-  if(GTK_RESPONSE_ACCEPT != gtk_dialog_run(GTK_DIALOG(dialog))) {
-    printf("upload cancelled\n");
-    gtk_widget_destroy(dialog);
-    return;
+  bool done = false;
+  while(!done) {
+    switch(gtk_dialog_run(GTK_DIALOG(dialog))) {
+#ifdef FREMANTLE
+    case GTK_RESPONSE_HELP:
+      info_more(dirty);
+      break;
+#endif
+    case GTK_RESPONSE_ACCEPT:
+      done = true;
+      break;
+    default:
+      printf("upload cancelled\n");
+      gtk_widget_destroy(dialog);
+      return;
+    }
   }
 
   printf("clicked ok\n");
