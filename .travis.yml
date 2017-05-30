@@ -14,6 +14,7 @@ addons:
     - libsoup2.4-dev
     - libgtk2.0-dev
     - libgnomevfs2-dev
+    - lcov
 script:
   # install a working version from upstream, the Ubuntu version is too old
   - wget -O /tmp/cmake.tar --no-check-certificate https://cmake.org/files/v$(echo ${CMAKE_VERSION} | sed 's/\.[0-9]*$//')/cmake-${CMAKE_VERSION}-Linux-x86_64.tar.gz
@@ -21,5 +22,10 @@ script:
   - export PATH=/tmp/cmake-${CMAKE_VERSION}-Linux-x86_64/bin:${PATH}
   - mkdir build
   - pushd build
-  - cmake -D ENABLE_TESTS=On .. && make VERBOSE=1 && make test
+  - CFLAGS="-O0 -fprofile-arcs -ftest-coverage" CXXFLAGS="-O0 -fprofile-arcs -ftest-coverage" cmake -D CMAKE_BUILD_TYPE=Debug -D ENABLE_TESTS=On .. && make VERBOSE=1 && make test
   - cmake -D SERVER_EDITABLE=On -D PICKER_MENU=On . && make VERBOSE=1 && make test
+after_success:
+  - lcov --directory ${TRAVIS_BUILD_DIR}/build --capture --output-file coverage.info # capture coverage info
+  - lcov --remove coverage.info '/usr/*' --output-file coverage.info # filter out system
+  - lcov --list coverage.info #debug info
+  - bash <(curl -s https://codecov.io/bash)
