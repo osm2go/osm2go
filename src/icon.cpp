@@ -111,12 +111,14 @@ GdkPixbuf *icon_load(icon_t **icon, const std::string &sname, int limit) {
   if(!fullname.empty()) {
     GdkPixbuf *pix = gdk_pixbuf_new_from_file_at_size(fullname.c_str(), limit, limit, O2G_NULLPTR);
 
-    if(!*icon)
-      *icon = new icon_t();
-    //    printf("Successfully loaded icon %s to %p\n", name, pix);
-    (*icon)->entries[sname] = pix;
+    if(G_LIKELY(pix)) {
+      if(G_UNLIKELY(!*icon))
+        *icon = new icon_t();
+      //    printf("Successfully loaded icon %s to %p\n", name, pix);
+      (*icon)->entries[sname] = pix;
+    }
 
-      return pix;
+    return pix;
   }
 
   printf("Icon %s not found\n", sname.c_str());
