@@ -521,32 +521,34 @@ struct colorize_node {
 
 void colorize_node::operator()(elemstyle_t *elemstyle)
 {
+  if(elemstyle->icon.filename.empty())
+    return;
+
   // if any condition mismatches->rule mismatches
-  bool match = std::find_if(elemstyle->conditions.begin(),
-                            elemstyle->conditions.end(),
-                            condition_not_matches_obj(node)) == elemstyle->conditions.end();
+  if(std::find_if(elemstyle->conditions.begin(),
+                  elemstyle->conditions.end(),
+                  condition_not_matches_obj(node)) != elemstyle->conditions.end())
+    return;
 
-  somematch |= match;
+  somematch = true;
 
-  if(match && !elemstyle->icon.filename.empty()) {
-    std::string name = "styles/";
-    name += style->icon.path_prefix;
-    // the final size is now known, avoid too big allocations
-    name.reserve(name.size() + 1 + elemstyle->icon.filename.size());
-    name += '/';
-    name += elemstyle->icon.filename;
+  std::string name = "styles/";
+  name += style->icon.path_prefix;
+  // the final size is now known, avoid too big allocations
+  name.reserve(name.size() + 1 + elemstyle->icon.filename.size());
+  name += '/';
+  name += elemstyle->icon.filename;
 
-    /* free old icon if there's one present */
-    node_icon_unref(style, node);
+  /* free old icon if there's one present */
+  node_icon_unref(style, node);
 
-    GdkPixbuf *buf = icon_load(style->iconP, name);
+  GdkPixbuf *buf = icon_load(style->iconP, name);
 
-    if(buf)
-      style->node_icons[node->id] = buf;
+  if(buf)
+    style->node_icons[node->id] = buf;
 
-    if (elemstyle->zoom_max > 0)
-      node->zoom_max = elemstyle->zoom_max;
-  }
+  if (elemstyle->zoom_max > 0)
+    node->zoom_max = elemstyle->zoom_max;
 }
 
 void josm_elemstyles_colorize_node(style_t *style, node_t *node) {
