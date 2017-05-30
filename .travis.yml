@@ -19,7 +19,7 @@ script:
   - wget -O /tmp/cmake.tar --no-check-certificate https://cmake.org/files/v$(echo ${CMAKE_VERSION} | sed 's/\.[0-9]*$//')/cmake-${CMAKE_VERSION}-Linux-x86_64.tar.gz
   - tar xf /tmp/cmake.tar -C /tmp
   - export PATH=/tmp/cmake-${CMAKE_VERSION}-Linux-x86_64/bin:${PATH}
-  - mkdir build-am build-cm
-  - pushd build-cm
+  - mkdir build
+  - pushd build
   - cmake -D ENABLE_TESTS=On .. && make VERBOSE=1 && make test
   - cmake -D SERVER_EDITABLE=On -D PICKER_MENU=On . && make VERBOSE=1 && make test
