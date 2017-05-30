@@ -625,11 +625,9 @@ void josm_elemstyles_colorize_way_functor::apply_condition::operator()(const ele
   if(elemstyle->type == ES_TYPE_NONE)
     return;
 
-  bool match = std::find_if(elemstyle->conditions.begin(),
-                            elemstyle->conditions.end(),
-                            condition_not_matches_obj(way)) == elemstyle->conditions.end();
-
-  if(!match)
+  if(std::find_if(elemstyle->conditions.begin(),
+                  elemstyle->conditions.end(),
+                  condition_not_matches_obj(way)) != elemstyle->conditions.end())
     return;
 
   switch(elemstyle->type) {
