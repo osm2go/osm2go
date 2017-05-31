@@ -1,6 +1,8 @@
 #include <josm_elemstyles.h>
 #include <josm_elemstyles_p.h>
 
+#include <icon.h>
+
 #include <osm2go_cpp.h>
 
 #include <algorithm>
@@ -29,14 +31,39 @@ static void show_rule_count(const std::pair<elemstyle_type_t, unsigned int> &p)
 
 static void usage(const char *bin)
 {
-  std::cerr << "Usage: " << bin << " style.xml #rules #conditions" << std::endl;
+  std::cerr << "Usage: " << bin << " style.xml #rules #conditions path_prefix" << std::endl;
+}
+
+static const char *path_prefix;
+static bool error = false;
+
+static void icon_check(const elemstyle_t *item)
+{
+  if(item->icon.filename.empty())
+    return;
+
+  std::string name = "styles/";
+  name += path_prefix;
+  // the final size is now known, avoid too big allocations
+  name.reserve(name.size() + 1 + item->icon.filename.size());
+  name += '/';
+  name += item->icon.filename;
+
+  icon_t *iconP = O2G_NULLPTR;
+  GdkPixbuf *buf = icon_load(&iconP, name);
+  if(!buf) {
+    std::cout << "icon missing: " << item->icon.filename << std::endl;
+    if(strcmp(path_prefix, "standard") == 0)
+      error = true;
+  } else {
+    icon_free(&iconP, buf);
+  }
+  icon_free_all(iconP);
 }
 
 int main(int argc, char **argv)
 {
-  bool error = false;
-
-  if (argc != 4) {
+  if (argc != 5) {
     usage(argv[0]);
     return 1;
   }
@@ -52,6 +79,12 @@ int main(int argc, char **argv)
     usage(argv[0]);
     return 1;
   }
+
+  path_prefix = argv[4];
+
+#if !GLIB_CHECK_VERSION(2,36,0)
+  g_type_init();
+#endif
 
   xmlInitParser();
 
@@ -75,6 +108,8 @@ int main(int argc, char **argv)
     std::cerr << "too many rule types found" << std::endl;
     error = true;
   }
+
+  std::for_each(styles.begin(), styles.end(), icon_check);
 
   std::for_each(counter.ruletypes.begin(), counter.ruletypes.end(), show_rule_count);
 
