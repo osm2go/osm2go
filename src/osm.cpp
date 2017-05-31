@@ -706,7 +706,7 @@ static pos_float_t xml_reader_attr_float(xmlTextReaderPtr reader, const char *na
   } else
     ret = NAN;
 
-  return ret;  
+  return ret;
 }
 
 /* parse bounds */

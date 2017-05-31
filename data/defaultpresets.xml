@@ -1359,7 +1359,7 @@
             <check key="button_operated" text="Button operated" />
             <check key="traffic_signals:sound" text="Sound signals" />
         </item> <!-- Pedestrian Crossing -->
-        <group name="Traffic Calming" icon="presets/vehicle/choker.svg"> 
+        <group name="Traffic Calming" icon="presets/vehicle/choker.svg">
             <item name="Bump" icon="presets/vehicle/bump.svg" type="node,way" preset_name_label="true">
                 <link href="http://wiki.openstreetmap.org/wiki/Key:traffic_calming"
                   cs.href="http://wiki.openstreetmap.org/wiki/Cs:Key:traffic_calming"
@@ -5955,7 +5955,7 @@
             <optional>
                 <check key="lit" text="Lit" />
             </optional>
-        </item> <!-- Billboard -->   
+        </item> <!-- Billboard -->
     </group> <!-- Facilities -->
   </group>  <!-- Facilities -->
   <group name="Sports" icon="presets/sport/soccer.svg">
