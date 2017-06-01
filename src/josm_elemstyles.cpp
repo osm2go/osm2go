@@ -200,7 +200,7 @@ static double parse_scale(const char *val_str, int len) {
 static const char *true_values[] = { "1", "yes", "true", O2G_NULLPTR };
 static const char *false_values[] = { "0", "no", "false", O2G_NULLPTR };
 
-static bool parse_gboolean(const char *bool_str, const char **value_strings) {
+static bool parse_boolean(const char *bool_str, const char **value_strings) {
   for (int i = 0; value_strings[i]; ++i)
     if (strcasecmp(bool_str, value_strings[i]) == 0)
       return true;
@@ -313,7 +313,7 @@ void StyleSax::startElement(const xmlChar *name, const xmlChar **attrs)
       g_assert_null(v);
       elemstyle_condition_t &cond = styles.back()->conditions.back();
       cond.isBool = true;
-      cond.boolValue = parse_gboolean(reinterpret_cast<const char *>(b), true_values);
+      cond.boolValue = parse_boolean(reinterpret_cast<const char *>(b), true_values);
     }
     break;
   }
@@ -345,10 +345,10 @@ void StyleSax::startElement(const xmlChar *name, const xmlChar **attrs)
         hasBgColor = parse_color(attrs[i + 1], line->bg.color, colors);
       } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "dashed") == 0) {
         const char * const dval = reinterpret_cast<const char *>(attrs[i + 1]);
-        if(parse_gboolean(dval, true_values)) {
+        if(parse_boolean(dval, true_values)) {
           line->dash_length_on = DEFAULT_DASH_LENGTH;
           line->dash_length_off = DEFAULT_DASH_LENGTH;
-        } else if (parse_gboolean(dval, false_values)) {
+        } else if (parse_boolean(dval, false_values)) {
           line->dash_length_on = 0;
           line->dash_length_off = 0;
         } else {
@@ -483,7 +483,7 @@ bool elemstyle_condition_t::matches(const base_object_t &obj) const {
     if(isBool) {
       if(v) {
          const char **value_strings = boolValue ? true_values : false_values;
-         return parse_gboolean(v, value_strings);
+         return parse_boolean(v, value_strings);
       } else {
         return false;
       }
