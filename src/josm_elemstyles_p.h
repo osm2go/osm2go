@@ -32,27 +32,27 @@
 #include <osm2go_cpp.h>
 
 struct elemstyle_condition_t {
-    elemstyle_condition_t(xmlChar *k, xmlChar *v)
-      : key(k), value(v), isBool(false) {}
-    elemstyle_condition_t(xmlChar *k, bool b)
-      : key(k), boolValue(b), isBool(true) {}
+    elemstyle_condition_t(const char *k, const char *v)
+      : key(strdup(k)), value(v ? strdup(v) : O2G_NULLPTR), isBool(false) {}
+    elemstyle_condition_t(const char *k, bool b)
+      : key(strdup(k)), boolValue(b), isBool(true) {}
     elemstyle_condition_t &operator=(const elemstyle_condition_t &other)
     {
       memcpy(this, &other, sizeof(*this));
       return *this;
     }
 
-    xmlChar * const key;
+    char * const key;
 #if __cplusplus < 201103L
     // a special version of the union, as the old compiler chokes
     // on the constness in the constructor
     union {
-      xmlChar *value;
+      char *value;
       bool boolValue;
     };
 #else
     union {
-      xmlChar * const value;
+      char * const value;
       const bool boolValue;
     };
 #endif

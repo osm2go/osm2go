@@ -87,9 +87,9 @@ private:
   static void cb_characters(void *ts, const xmlChar *ch, int len) {
     static_cast<StyleSax *>(ts)->characters(reinterpret_cast<const char *>(ch), len);
   }
-  void startElement(const xmlChar *name, const xmlChar **attrs);
+  void startElement(const xmlChar *name, const char **attrs);
   static void cb_startElement(void *ts, const xmlChar *name, const xmlChar **attrs) {
-    static_cast<StyleSax *>(ts)->startElement(name, attrs);
+    static_cast<StyleSax *>(ts)->startElement(name, reinterpret_cast<const char **>(attrs));
   }
   void endElement(const xmlChar *name);
   static void cb_endElement(void *ts, const xmlChar *name) {
@@ -117,10 +117,8 @@ float zoom_to_scaledn(const float zoom) {
 
 /* --------------------- elemstyles.xml parsing ----------------------- */
 
-static bool parse_color(const xmlChar *color_str, elemstyle_color_t &color, ColorMap &colors) {
+static bool parse_color(const char *col, elemstyle_color_t &color, ColorMap &colors) {
   bool ret = false;
-
-  const char * const col = reinterpret_cast<const char *>(color_str);
 
   /* if the color name contains a # it's a hex representation */
   /* we parse this directly since gdk_color_parse doesn't cope */
@@ -180,7 +178,7 @@ bool parse_color(xmlNode *a_node, const char *name,
 
   if(color_str) {
     ColorMap dummy;
-    ret = parse_color(color_str, color, dummy);
+    ret = parse_color(reinterpret_cast<char *>(color_str), color, dummy);
     xmlFree(color_str);
   }
   return ret;
@@ -272,7 +270,7 @@ static void parse_width_mod(const char *mod_str, elemstyle_width_mod_t &value) {
   }
 }
 
-void StyleSax::startElement(const xmlChar *name, const xmlChar **attrs)
+void StyleSax::startElement(const xmlChar *name, const char **attrs)
 {
   StateMap::const_iterator it = std::find_if(tags.begin(), tags.end(), tag_find(name));
 
@@ -296,20 +294,20 @@ void StyleSax::startElement(const xmlChar *name, const xmlChar **attrs)
     styles.push_back(new elemstyle_t());
     break;
   case TagCondition: {
-    xmlChar *k = O2G_NULLPTR, *v = O2G_NULLPTR;
-    const xmlChar *b = O2G_NULLPTR;
+    const char *k = O2G_NULLPTR, *v = O2G_NULLPTR;
+    const char *b = O2G_NULLPTR;
 
     for(unsigned int i = 0; attrs[i]; i += 2) {
-      if(strcmp(reinterpret_cast<const char *>(attrs[i]), "k") == 0)
-        k = xmlStrdup(attrs[i + 1]);
-      else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "v") == 0)
-        v = xmlStrdup(attrs[i + 1]);
-      else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "b") == 0)
+      if(strcmp(attrs[i], "k") == 0)
+        k = attrs[i + 1];
+      else if(strcmp(attrs[i], "v") == 0)
+        v = attrs[i + 1];
+      else if(strcmp(attrs[i], "b") == 0)
         b = attrs[i + 1];
     }
     g_assert_nonnull(k);
     elemstyle_condition_t cond = !b ? elemstyle_condition_t(k, v) :
-                                 elemstyle_condition_t(k, parse_boolean(reinterpret_cast<const char *>(b), true_values));
+                                 elemstyle_condition_t(k, parse_boolean(b, true_values));
     styles.back()->conditions.push_back(cond);
     break;
   }
@@ -323,24 +321,24 @@ void StyleSax::startElement(const xmlChar *name, const xmlChar **attrs)
     elemstyle_line_t *line = elemstyle->line = g_new0(elemstyle_line_t, 1);
 
     for(unsigned int i = 0; attrs[i]; i += 2) {
-      if(strcmp(reinterpret_cast<const char *>(attrs[i]), "colour") == 0) {
+      if(strcmp(attrs[i], "colour") == 0) {
         hasColor = parse_color(attrs[i + 1], line->color, colors);
-      } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "width") == 0) {
+      } else if(strcmp(attrs[i], "width") == 0) {
         char *endch;
-        line->width = strtoul(reinterpret_cast<const char*>(attrs[i + 1]), &endch, 10);
+        line->width = strtoul(attrs[i + 1], &endch, 10);
         hasWidth = (*endch == '\0');
-      } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "realwidth") == 0) {
+      } else if(strcmp(attrs[i], "realwidth") == 0) {
         char *endch;
-        line->real.width = strtoul(reinterpret_cast<const char*>(attrs[i + 1]), &endch, 10);
+        line->real.width = strtoul(attrs[i + 1], &endch, 10);
         line->real.valid = (*endch == '\0');
-      } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "width_bg") == 0) {
+      } else if(strcmp(attrs[i], "width_bg") == 0) {
         char *endch;
-        line->bg.width = strtoul(reinterpret_cast<const char*>(attrs[i + 1]), &endch, 10);
+        line->bg.width = strtoul(attrs[i + 1], &endch, 10);
         hasBgWidth = (*endch == '\0');
-      } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "colour_bg") == 0) {
+      } else if(strcmp(attrs[i], "colour_bg") == 0) {
         hasBgColor = parse_color(attrs[i + 1], line->bg.color, colors);
-      } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "dashed") == 0) {
-        const char * const dval = reinterpret_cast<const char *>(attrs[i + 1]);
+      } else if(strcmp(attrs[i], "dashed") == 0) {
+        const char * const dval = attrs[i + 1];
         if(parse_boolean(dval, true_values)) {
           line->dash_length_on = DEFAULT_DASH_LENGTH;
           line->dash_length_off = DEFAULT_DASH_LENGTH;
@@ -377,14 +375,14 @@ void StyleSax::startElement(const xmlChar *name, const xmlChar **attrs)
     elemstyle_line_mod_t &line_mod = elemstyle->line_mod;
 
     for(unsigned int i = 0; attrs[i]; i += 2) {
-      if(strcmp(reinterpret_cast<const char *>(attrs[i]), "colour") == 0) {
+      if(strcmp(attrs[i], "colour") == 0) {
         elemstyle_color_t col;
         if(parse_color(attrs[i + 1], col, colors))
           line_mod.color = col;
-      } else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "width") == 0)
-        parse_width_mod(reinterpret_cast<const char *>(attrs[i + 1]), line_mod.line);
-      else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "width_bg") == 0)
-        parse_width_mod(reinterpret_cast<const char *>(attrs[i + 1]), line_mod.bg);
+      } else if(strcmp(attrs[i], "width") == 0)
+        parse_width_mod(attrs[i + 1], line_mod.line);
+      else if(strcmp(attrs[i], "width_bg") == 0)
+        parse_width_mod(attrs[i + 1], line_mod.bg);
     }
     break;
   }
@@ -394,7 +392,7 @@ void StyleSax::startElement(const xmlChar *name, const xmlChar **attrs)
 
     bool hasColor = false;
     for(unsigned int i = 0; attrs[i] && !hasColor; i += 2) {
-      if(strcmp(reinterpret_cast<const char *>(attrs[i]), "colour") == 0)
+      if(strcmp(attrs[i], "colour") == 0)
         hasColor = parse_color(attrs[i + 1], elemstyle->area.color, colors);
     }
 
@@ -404,10 +402,10 @@ void StyleSax::startElement(const xmlChar *name, const xmlChar **attrs)
   }
   case TagIcon:
     for(unsigned int i = 0; attrs[i]; i += 2) {
-      if(strcmp(reinterpret_cast<const char *>(attrs[i]), "annotate") == 0)
-        elemstyle->icon.annotate = strcmp(reinterpret_cast<const char *>(attrs[i + 1]), "true");
-      else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "src") == 0)
-        elemstyle->icon.filename = josm_icon_name_adjust(reinterpret_cast<const char *>(attrs[i + 1]));
+      if(strcmp(attrs[i], "annotate") == 0)
+        elemstyle->icon.annotate = strcmp(attrs[i + 1], "true");
+      else if(strcmp(attrs[i], "src") == 0)
+        elemstyle->icon.filename = josm_icon_name_adjust(attrs[i + 1]);
     }
 
     g_assert_false(elemstyle->icon.filename.empty());
