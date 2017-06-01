@@ -105,10 +105,10 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t *style) {
 	/* ---------- icon ------------------------------------- */
       } else if(strcasecmp((char*)cur_node->name, "icon") == 0) {
         style->icon.scale = xml_get_prop_float(cur_node, "scale");
-	char *prefix = (char*)xmlGetProp(cur_node, BAD_CAST "path-prefix");
+        xmlChar *prefix = xmlGetProp(cur_node, BAD_CAST "path-prefix");
 	if(prefix) {
-	  g_free(style->icon.path_prefix);
-	  style->icon.path_prefix = prefix;
+          xmlFree(BAD_CAST style->icon.path_prefix);
+          style->icon.path_prefix = reinterpret_cast<char *>(prefix);
 	}
 	style->icon.enable = xml_get_prop_is(cur_node, "enable", "true") ? TRUE : FALSE;
 
@@ -485,7 +485,7 @@ style_t::~style_t()
   std::for_each(node_icons.begin(), node_icons.end(), unref_icon(iconP));
 
   g_free(name);
-  g_free(icon.path_prefix);
+  xmlFree(BAD_CAST icon.path_prefix);
 }
 
 //vim:et:ts=8:sw=2:sts=2:ai
