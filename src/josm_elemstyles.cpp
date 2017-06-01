@@ -308,13 +308,9 @@ void StyleSax::startElement(const xmlChar *name, const xmlChar **attrs)
         b = attrs[i + 1];
     }
     g_assert_nonnull(k);
-    styles.back()->conditions.push_back(elemstyle_condition_t(k, v));
-    if(b) {
-      g_assert_null(v);
-      elemstyle_condition_t &cond = styles.back()->conditions.back();
-      cond.isBool = true;
-      cond.boolValue = parse_boolean(reinterpret_cast<const char *>(b), true_values);
-    }
+    elemstyle_condition_t cond = !b ? elemstyle_condition_t(k, v) :
+                                 elemstyle_condition_t(k, parse_boolean(reinterpret_cast<const char *>(b), true_values));
+    styles.back()->conditions.push_back(cond);
     break;
   }
   case TagLine: {
