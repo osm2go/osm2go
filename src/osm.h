@@ -249,22 +249,6 @@ struct tag_t {
    * @brief replace the value
    */
   void update_value(const char *nvalue);
-
-  /**
-   * @brief update the key and value
-   * @param nkey the new key
-   * @param nvalue the new value
-   * @return if tag was actually changed
-   *
-   * This will update the key and value, but will avoid memory allocations
-   * in case key or value have not changed.
-   *
-   * This would be a no-op:
-   * \code
-   * tag->update(tag->key, tag->value);
-   * \endcode
-   */
-  bool update(const char *nkey, const char *nvalue);
 };
 
 class tag_list_t {

@@ -474,22 +474,6 @@ bool tag_list_t::hasTagCollisions() const
   return false;
 }
 
-bool tag_t::update(const char *nkey, const char *nvalue)
-{
-  bool ret = false;
-  if(strcmp(key, nkey) != 0) {
-    const size_t nlen = strlen(nkey) + 1;
-    key = static_cast<char *>(g_realloc(key, nlen));
-    memcpy(key, nkey, nlen);
-    ret = true;
-  }
-  if(strcmp(value, nvalue) != 0) {
-    update_value(nvalue);
-    ret = true;
-  }
-  return ret;
-}
-
 void tag_t::update_value(const char *nvalue)
 {
   const size_t nlen = strlen(nvalue) + 1;
