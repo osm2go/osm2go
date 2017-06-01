@@ -168,8 +168,7 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t *style) {
     }
   }
 
-  if(!style->icon.path_prefix)
-    style->icon.path_prefix = g_strdup("standard");
+  g_assert(style->icon.path_prefix || !style->icon.enable);
 }
 
 /**

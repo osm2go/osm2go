@@ -526,6 +526,7 @@ void colorize_node::operator()(elemstyle_t *elemstyle)
 
   somematch = true;
 
+  g_assert_nonnull(style->icon.path_prefix);
   std::string name = "styles/";
   name += style->icon.path_prefix;
   // the final size is now known, avoid too big allocations
@@ -549,8 +550,10 @@ void josm_elemstyles_colorize_node(style_t *style, node_t *node) {
   node->zoom_max = style->node.zoom_max;
 
   bool somematch = false;
-  colorize_node fc(style, node, somematch);
-  std::for_each(style->elemstyles.begin(), style->elemstyles.end(), fc);
+  if(style->icon.enable) {
+    colorize_node fc(style, node, somematch);
+    std::for_each(style->elemstyles.begin(), style->elemstyles.end(), fc);
+  }
 
   /* clear icon for node if not matched at least one rule and has an icon attached */
   if(!somematch)

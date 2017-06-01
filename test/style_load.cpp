@@ -31,7 +31,7 @@ static void show_rule_count(const std::pair<elemstyle_type_t, unsigned int> &p)
 
 static void usage(const char *bin)
 {
-  std::cerr << "Usage: " << bin << " style.xml #rules #conditions path_prefix" << std::endl;
+  std::cerr << "Usage: " << bin << " style.xml #rules #conditions [path_prefix]" << std::endl;
 }
 
 static const char *path_prefix;
@@ -63,7 +63,7 @@ static void icon_check(const elemstyle_t *item)
 
 int main(int argc, char **argv)
 {
-  if (argc != 5) {
+  if (argc < 4 || argc > 5) {
     usage(argv[0]);
     return 1;
   }
@@ -80,7 +80,8 @@ int main(int argc, char **argv)
     return 1;
   }
 
-  path_prefix = argv[4];
+  if(argc == 5)
+    path_prefix = argv[4];
 
 #if !GLIB_CHECK_VERSION(2,36,0)
   g_type_init();

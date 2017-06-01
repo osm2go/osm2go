@@ -24,7 +24,7 @@ add_test(NAME style_load_mapnik
 		COMMAND style_load "elemstyles-mapnik.xml" 140 146 "mapnik"
 		WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
 add_test(NAME style_load_potlatch
-		COMMAND style_load "elemstyles-potlatch.xml" 27 27 "standard"
+		COMMAND style_load "elemstyles-potlatch.xml" 27 27
 		WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
 add_executable(osm_load osm_load.cpp)
