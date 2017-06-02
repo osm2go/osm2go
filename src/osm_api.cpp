@@ -121,7 +121,7 @@ struct osm_upload_context_t {
 static bool api_adjust(std::string &rserver) {
   if(!rserver.empty()) {
     std::string::size_type pos = rserver.find("0.5");
-    if(pos != rserver.npos) {
+    if(pos != std::string::npos) {
       rserver[pos + 2] = '6';
       return true;
     }

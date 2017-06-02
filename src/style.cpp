@@ -255,7 +255,7 @@ static std::string style_basename(const std::string &name) {
 
   /* and cut off extension */
   std::string::size_type extpos = name.rfind(".");
-  if(pos == name.npos)
+  if(pos == std::string::npos)
     pos = 0;
   else
     pos++; // skip also the '/' itself

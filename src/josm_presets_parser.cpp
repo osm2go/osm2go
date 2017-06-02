@@ -292,11 +292,11 @@ const std::vector<std::string> &userLangs()
     if(lcm && *lcm) {
       std::string lc = lcm;
       std::string::size_type d = lc.find('.');
-      if(d != lc.npos)
+      if(d != std::string::npos)
         lc.erase(d);
       lcodes.push_back(lc + '.');
       d = lc.find('_');
-      if(d != lc.npos)
+      if(d != std::string::npos)
         lcodes.push_back(lc.substr(0, d) + '.');
     }
   }

@@ -1066,7 +1066,7 @@ void wms_import(appdata_t *appdata) {
     appdata->project->wms_path = wms.path;
 
   /* ----------- request capabilities -------------- */
-  bool path_contains_qm = wms.path.find('?') != wms.path.npos;
+  bool path_contains_qm = wms.path.find('?') != std::string::npos;
   bool path_ends_with_special =
     (wms.path[wms.path.size()- 1] == '?') ||
     (wms.path[wms.path.size() - 1] == '&');
