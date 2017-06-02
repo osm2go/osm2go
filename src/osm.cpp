@@ -747,18 +747,18 @@ static void process_tag(xmlTextReaderPtr reader, std::vector<tag_t> &tags) {
 static void process_base_attributes(base_object_t *obj, xmlTextReaderPtr reader, osm_t *osm)
 {
   xmlChar *prop;
-  if(G_LIKELY(prop = xmlTextReaderGetAttribute(reader, BAD_CAST "id"))) {
+  if(G_LIKELY((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "id")))) {
     obj->id = strtoll((char*)prop, O2G_NULLPTR, 10);
     xmlFree(prop);
   }
 
   /* new in api 0.6: */
-  if(G_LIKELY(prop = xmlTextReaderGetAttribute(reader, BAD_CAST "version"))) {
+  if(G_LIKELY((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "version")))) {
     obj->version = strtoul((char*)prop, O2G_NULLPTR, 10);
     xmlFree(prop);
   }
 
-  if(G_LIKELY(prop = xmlTextReaderGetAttribute(reader, BAD_CAST "user"))) {
+  if(G_LIKELY((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "user")))) {
     int uid = -1;
     xmlChar *puid = xmlTextReaderGetAttribute(reader, BAD_CAST "uid");
     if(G_LIKELY(puid)) {
@@ -774,7 +774,7 @@ static void process_base_attributes(base_object_t *obj, xmlTextReaderPtr reader,
     xmlFree(prop);
   }
 
-  if(G_LIKELY(prop = xmlTextReaderGetAttribute(reader, BAD_CAST "timestamp"))) {
+  if(G_LIKELY((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "timestamp")))) {
     obj->time = convert_iso8601((char*)prop);
     xmlFree(prop);
   }
