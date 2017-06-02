@@ -231,6 +231,13 @@ const char *data_paths[] = {
 };
 
 std::string find_file(const std::string &n) {
+  g_assert_false(n.empty());
+  if(G_UNLIKELY(n[0] == '/')) {
+    if(g_file_test(n.c_str(), G_FILE_TEST_IS_REGULAR))
+      return n;
+    return std::string();
+  }
+
   const char *home = getenv("HOME");
   std::string full_path;
   full_path.reserve(n.size() + strlen(home) + strlen(data_paths[0]));

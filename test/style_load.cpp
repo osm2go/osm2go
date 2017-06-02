@@ -42,6 +42,7 @@ static void icon_check(const elemstyle_t *item)
   if(item->icon.filename.empty())
     return;
 
+  g_assert_nonnull(path_prefix);
   std::string name = "styles/";
   name += path_prefix;
   // the final size is now known, avoid too big allocations
