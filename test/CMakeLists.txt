@@ -25,6 +25,13 @@ add_test(NAME style_load_mapnik
 		WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
 add_test(NAME style_load_potlatch
 		COMMAND style_load "${CMAKE_CURRENT_SOURCE_DIR}/../data/elemstyles-potlatch.xml" 27 27)
+add_test(NAME style_load_test1
+		COMMAND style_load "${CMAKE_CURRENT_SOURCE_DIR}/test1.xml" 5 5 "standard"
+		WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
 add_executable(osm_load osm_load.cpp)
 target_link_libraries(osm_load osm2go_lib)
+
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/test1.style.in" "${CMAKE_CURRENT_BINARY_DIR}/test1.style" @ONLY)
+osm_test(style_apply "${CMAKE_CURRENT_BINARY_DIR}/test1")
+set_property(TEST style_apply PROPERTY WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})

@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<style name="Test1">
+	<elemstyles filename="@CMAKE_CURRENT_SOURCE_DIR@/test1.xml"/>
+	<node radius="3" border-radius="1" fill-color="#00cc99" color="#004433" scale-max="10000"/>
+	<way width="3" color="#999999" scale-max="40000"/>
+	<area border-width="1" border-color="#cccccc" color="#00000066" scale-max="20000"/>
+	<icon enable="true" scale="0.80" path-prefix="standard"/>
+</style>

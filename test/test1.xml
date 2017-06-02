@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rules>
+	<rule>
+		<condition k="bridge" b="yes"/>
+		<linemod mode="over" width="+4" colour="bridge#00008080" dashed="false"/>
+	</rule>
+<!--restrictions tags -->
+<!--the restrictions rules should be placed before the path rule! -->
+	<rule>
+		<condition k="access" b="no"/>
+		<linemod mode="under" width="+2" colour="no#ff8080" dashed="2"/>
+		<icon src="vehicle/restriction/access.png" priority="-100"/>
+	</rule>
+	<rule>
+		<condition k="addr:housenumber"/>
+		<icon src="misc/housenumber.png"/>
+		<scale_min>1</scale_min>
+		<scale_max>5000</scale_max>
+	</rule>
+	<rule>
+		<condition k="highway" v="residential"/>
+		<line width="2" realwidth="5" colour="#c0c0c0"/>
+		<scale_min>1</scale_min>
+		<scale_max>40000</scale_max>
+	</rule>
+	<rule>
+		<condition k="highway" v="platform"/>
+		<icon annotate="true" src="misc/deprecated.png"/>
+		<area colour="highway_platform#c0c0c0" closed="true"/>
+	</rule>
+</rules>
