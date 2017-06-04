@@ -180,12 +180,11 @@ static size_t mem_write(void *ptr, size_t size, size_t nmemb,
 			void *stream) {
   curl_mem_t *p = (curl_mem_t*)stream;
 
-  p->ptr = g_realloc(p->ptr, p->len + size*nmemb + 1);
-  if(p->ptr) {
-    memcpy(p->ptr+p->len, ptr, size*nmemb);
-    p->len += size*nmemb;
-    p->ptr[p->len] = 0;
-  }
+  size_t nlen = p->len + size * nmemb;
+  p->ptr = g_realloc(p->ptr, nlen + 1);
+  memcpy(p->ptr + p->len, ptr, size * nmemb);
+  p->len = nlen;
+  p->ptr[nlen] = '\0';
   return nmemb;
 }
 
