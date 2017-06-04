@@ -51,7 +51,7 @@ static const struct {
 
 typedef struct {
   char *ptr;
-  int len;
+  size_t len;
 } curl_mem_t;
 
 typedef enum { NET_IO_DL_FILE, NET_IO_DL_MEM, NET_IO_DELETE } net_io_type_t;
@@ -436,7 +436,7 @@ gboolean net_io_download_file(GtkWidget *parent, settings_t *settings,
 
 
 gboolean net_io_download_mem(GtkWidget *parent, settings_t *settings,
-                             const char *url, char **mem) {
+                             const char *url, char **mem, size_t *len) {
   net_io_request_t *request = g_new0(net_io_request_t, 1);
 
   printf("net_io: download %s to memory\n", url);
@@ -447,8 +447,9 @@ gboolean net_io_download_mem(GtkWidget *parent, settings_t *settings,
 
   gboolean result = net_io_do(parent, request, NULL);
   if(result) {
-    printf("ptr = %p, len = %d\n", request->mem.ptr, request->mem.len);
+    printf("ptr = %p, len = %zu\n", request->mem.ptr, request->mem.len);
     *mem = request->mem.ptr;
+    *len = request->mem.len;
   }
 
   request_free(request);

@@ -1081,8 +1081,9 @@ void wms_import(appdata_t *appdata) {
                                  "&REQUEST=GetCapabilities";
 
   char *cap = O2G_NULLPTR;
+  size_t caplen;
   net_io_download_mem(GTK_WIDGET(appdata->window), appdata->settings,
-		      url.c_str(), &cap);
+		      url.c_str(), &cap, &caplen);
 
   /* ----------- parse capabilities -------------- */
 
@@ -1095,7 +1096,7 @@ void wms_import(appdata_t *appdata) {
     xmlDoc *doc = O2G_NULLPTR;
 
     /* parse the file and get the DOM */
-    if((doc = xmlReadMemory(cap, strlen(cap), O2G_NULLPTR, O2G_NULLPTR, 0)) == O2G_NULLPTR) {
+    if((doc = xmlReadMemory(cap, caplen, O2G_NULLPTR, O2G_NULLPTR, 0)) == O2G_NULLPTR) {
       xmlErrorPtr errP = xmlGetLastError();
       errorf(GTK_WIDGET(appdata->window),
 	     _("WMS download failed:\n\n"
