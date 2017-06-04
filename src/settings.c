@@ -165,8 +165,6 @@ settings_t *settings_load(void) {
       /* get basic settings */
       proxy->host = gconf_client_get_string(client, PROXY_KEY "host", NULL);
       proxy->port = gconf_client_get_int(client, PROXY_KEY "port", NULL);
-      proxy->ignore_hosts =
-	gconf_client_get_string(client, PROXY_KEY "ignore_hosts", NULL);
 
       /* check for authentication */
       proxy->use_authentication =
@@ -332,7 +330,6 @@ void settings_free(settings_t *settings) {
     proxy_t *proxy = settings->proxy;
 
     g_free(proxy->host);
-    g_free(proxy->ignore_hosts);
     g_free(proxy->authentication_user);
     g_free(proxy->authentication_password);
 

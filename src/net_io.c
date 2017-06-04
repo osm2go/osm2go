@@ -190,9 +190,6 @@ static size_t mem_write(void *ptr, size_t size, size_t nmemb,
 
 void net_io_set_proxy(CURL *curl, proxy_t *proxy) {
   if(proxy) {
-    if(proxy->ignore_hosts)
-      printf("WARNING: Pproxy \"ignore_hosts\" unsupported!\n");
-
     printf("net_io: using proxy %s:%d\n", proxy->host, proxy->port);
 
     curl_easy_setopt(curl, CURLOPT_PROXY, proxy->host);

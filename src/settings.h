@@ -40,7 +40,6 @@
 typedef struct {
   char *authentication_password, *authentication_user;
   char *host;
-  char *ignore_hosts;
   gint port;
   gboolean use_authentication;
 } proxy_t;
