@@ -1066,14 +1066,12 @@ void wms_import(appdata_t *appdata) {
     appdata->project->wms_path = wms.path;
 
   /* ----------- request capabilities -------------- */
-  bool path_contains_qm = wms.path.find('?') != std::string::npos;
-  bool path_ends_with_special =
-    (wms.path[wms.path.size()- 1] == '?') ||
-    (wms.path[wms.path.size() - 1] == '&');
-
+  /* nothing has to be done if the last character of path is already a valid URL delimiter */
+  const char lastCh = wms.path[wms.path.size() - 1];
+  const char *append_char = (lastCh == '?' || lastCh == '&') ? "" :
   /* if there's already a question mark, then add further */
   /* parameters using the &, else use the ? */
-  const char *append_char = path_ends_with_special?"":(path_contains_qm?"&":"?");
+                            (wms.path.find('?') != std::string::npos ? "&" : "?");
 
   std::string url;
   url.resize(256); // make enough room that most URLs will need no reallocation
@@ -1157,8 +1155,8 @@ void wms_import(appdata_t *appdata) {
   wms_setup_extent(appdata->project, &wms);
 
   /* start building url */
-  url.erase(url.size() - strlen("GetCapabilities"));
-  url += "GetMap&LAYERS=";
+  url.erase(url.size() - strlen("Capabilities")); // Keep "Get"
+  url += "Map&LAYERS="; // reuse "Get" from "GetCapabilities"
 
   /* append layers */
   const wms_layer_t::list::const_iterator selEnd = ctx.selected.end();
