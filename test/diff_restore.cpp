@@ -15,7 +15,7 @@ static void verify_diff(osm_t *osm)
 {
   g_assert_cmpuint(12, ==, osm->nodes.size());
   g_assert_cmpuint(3, ==, osm->ways.size());
-  g_assert_cmpuint(3, ==, osm->relations.size());
+  g_assert_cmpuint(4, ==, osm->relations.size());
 
   // new tag added in diff
   const node_t * const n72 = osm->nodes[638499572];
@@ -78,6 +78,10 @@ static void verify_diff(osm_t *osm)
   g_assert_cmpint(strcmp(r255it->role, "forward_stop"), ==, 0);
   g_assert_cmpuint(r255->tags.asMap().size(), ==, 8);
 
+  const relation_t * const r853 = osm->relations[5827853];
+  g_assert_nonnull(r853);
+  g_assert_cmpuint(r853->flags & OSM_FLAG_DIRTY, ==, OSM_FLAG_DIRTY);
+
   g_assert_false(diff_is_clean(osm, true));
 }
 
@@ -118,7 +122,7 @@ int main(int argc, char **argv)
 
   g_assert_cmpuint(10, ==, osm->nodes.size());
   g_assert_cmpuint(3, ==, osm->ways.size());
-  g_assert_cmpuint(3, ==, osm->relations.size());
+  g_assert_cmpuint(4, ==, osm->relations.size());
 
   g_assert_true(diff_is_clean(osm, true));
 
