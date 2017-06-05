@@ -21,6 +21,13 @@
     <tag k='tactile_paving' v='yes' />
     <tag k='source' v='survey' />
   </way>
+  <way id='351899453' timestamp='2015-06-06T13:58:37Z' uid='53064' user='Dakon' visible='true' version='1' changeset='31769882'>
+    <nd ref='3577031229' />
+    <nd ref='3577031228' />
+    <tag k='public_transport' v='platform' />
+    <tag k='tactile_paving' v='yes' />
+    <tag k='wheelchair' v='yes' />
+  </way>
   <way state="deleted" id="351899455"/>
   <relation id="66316" state="deleted"/>
   <relation id="296255">
