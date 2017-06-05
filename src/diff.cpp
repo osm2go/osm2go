@@ -341,7 +341,6 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
 
     node = new node_t(1, lpos_t(), pos, id);
 
-    /* attach to end of node list */
     osm->nodes[id] = node;
     break;
   }
@@ -415,7 +414,6 @@ static void diff_restore_way(xmlNodePtr node_way, osm_t *osm) {
 
     way = new way_t(1, id);
 
-    /* attach to end of way list */
     osm->ways[id] = way;
     break;
   }
@@ -517,7 +515,6 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
 
     relation = new relation_t(1, id);
 
-    /* attach to end of relation list */
     osm->relations[id] = relation;
     break;
 
