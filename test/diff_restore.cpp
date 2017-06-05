@@ -145,6 +145,15 @@ int main(int argc, char **argv)
     diff_restore(O2G_NULLPTR, &sproject, osm);
 
     diff_save(&sproject, osm);
+    bpath += argv[2];
+    std::string bdiff = bpath;
+    bpath += '/';
+    bpath += argv[2];
+    bpath += '.';
+    bpath += "diff";
+
+    bdiff += "/backup.diff";
+    rename(bpath.c_str(), bdiff.c_str());
 
     delete osm;
     osm = osm_t::parse(std::string(), osm_path.c_str(), &icons);
@@ -154,12 +163,7 @@ int main(int argc, char **argv)
 
     verify_diff(osm);
 
-    bpath += argv[2];
-    bpath += '/';
-    bpath += argv[2];
-    bpath += '.';
-    bpath += "diff";
-    unlink(bpath.c_str());
+    unlink(bdiff.c_str());
     bpath.erase(bpath.rfind('/'));
     rmdir(bpath.c_str());
     bpath.erase(bpath.rfind('/'));
