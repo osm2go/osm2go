@@ -26,9 +26,12 @@ static void verify_diff(osm_t *osm)
   // in diff, but the same as in .osm
   const node_t * const n23 = osm->nodes[3577031223LL];
   g_assert_nonnull(n23);
-  g_assert((n23->flags & OSM_FLAG_DIRTY) == 0);
+  g_assert_cmpuint((n23->flags & OSM_FLAG_DIRTY), ==, 0);
   g_assert_true(n23->tags.empty());
   // deleted in diff
+  const node_t * const n26 = osm->nodes[3577031226LL];
+  g_assert_nonnull(n26);
+  g_assert_cmpuint(n26->flags, ==, OSM_FLAG_DELETED);
   const way_t * const w = osm->ways[351899455];
   g_assert_nonnull(w);
   g_assert((w->flags & OSM_FLAG_DELETED) != 0);
@@ -57,7 +60,14 @@ static void verify_diff(osm_t *osm)
   g_assert_nonnull(w452->tags.get_value("source"));
   g_assert_null(w452->tags.get_value("wheelchair"));
   g_assert_cmpuint(w452->tags.asMap().size(), ==, 3);
+  const way_t * const w453 = osm->ways[351899453];
+  g_assert_nonnull(w453);
+  g_assert_cmpuint(w453->flags, ==, 0);
+  const relation_t * const r66316 = osm->relations[66316];
+  g_assert_nonnull(r66316);
+  g_assert_cmpuint(r66316->flags, ==, OSM_FLAG_DELETED);
   const relation_t * const r255 = osm->relations[296255];
+  g_assert_nonnull(r255);
   g_assert_cmpuint(r255->flags & OSM_FLAG_DIRTY, ==, OSM_FLAG_DIRTY);
   g_assert_cmpuint(r255->members.size(), ==, 164);
   const object_t r255m572(const_cast<node_t *>(n72));
@@ -67,10 +77,6 @@ static void verify_diff(osm_t *osm)
   g_assert(r255it->role != 0);
   g_assert_cmpint(strcmp(r255it->role, "forward_stop"), ==, 0);
   g_assert_cmpuint(r255->tags.asMap().size(), ==, 8);
-
-  xmlChar *rel_str = r255->generate_xml(42);
-  printf("%s\n", rel_str);
-  xmlFree(rel_str);
 
   g_assert_false(diff_is_clean(osm, true));
 }
@@ -120,6 +126,10 @@ int main(int argc, char **argv)
   diff_restore(O2G_NULLPTR, &project, osm);
 
   verify_diff(osm);
+
+  xmlChar *rel_str = r255->generate_xml(42);
+  printf("%s\n", rel_str);
+  xmlFree(rel_str);
 
   char tmpdir[] = "/tmp/osm2go-diff_restore-XXXXXX";
 

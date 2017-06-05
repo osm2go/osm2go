@@ -13,6 +13,7 @@
     <tag k="amenity" v="waste_basket"/>
   </node>
   <node id="3577031223" lat="52.2694261" lon="9.5752398" time="1433599117"/>
+  <node id="3577031226" state="deleted"/>
   <way id='351899452'>
     <nd ref='3577031225' />
     <nd ref='3577031221' />
@@ -21,6 +22,7 @@
     <tag k='source' v='survey' />
   </way>
   <way state="deleted" id="351899455"/>
+  <relation id="66316" state="deleted"/>
   <relation id="296255">
     <member type='node' ref='321799480' role='stop' />
     <member type='node' ref='325247862' role='forward_stop' />
