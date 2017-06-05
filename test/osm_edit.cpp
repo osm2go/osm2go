@@ -136,6 +136,16 @@ static void test_taglist() {
 
   collision = tags.merge(tags2);
   g_assert_true(collision);
+  // moving something back and forth shouldn't change anything
+  collision = tags2.merge(tags);
+  g_assert_false(collision);
+  collision = tags.merge(tags2);
+  g_assert_false(collision);
+  // tags2 is now empty, merging shouldn't change anything
+  g_assert_true(tags2.empty());
+  collision = tags.merge(tags2);
+  g_assert_false(collision);
+
   g_assert_true(tags.hasTagCollisions());
   g_assert_nonnull(tags.get_value("a"));
   g_assert_cmpint(strcmp(tags.get_value("a"), "A"), ==, 0);
@@ -285,11 +295,40 @@ static void test_split()
   g_assert_cmpuint(neww->tags.asMap().size(), ==, ocnt - 1);
 }
 
+static void test_changeset()
+{
+  const char message[] = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                         "<osm>\n"
+                         "  <changeset>\n"
+                         "    <tag k=\"created_by\" v=\"osm2go v0.9.5\"/>\n"
+                         "    <tag k=\"comment\" v=\"&lt;&amp;&gt;\"/>\n"
+                         "  </changeset>\n"
+                         "</osm>\n";
+  const char message_src[] = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                             "<osm>\n"
+                             "  <changeset>\n"
+                             "    <tag k=\"created_by\" v=\"osm2go v0.9.5\"/>\n"
+                             "    <tag k=\"comment\" v=\"testcase comment\"/>\n"
+                             "    <tag k=\"source\" v=\"survey\"/>\n"
+                             "  </changeset>\n"
+                             "</osm>\n";
+  xmlChar *cs = osm_generate_xml_changeset("<&>", std::string());
+
+  g_assert_cmpint(memcmp(cs, message, strlen(message)), ==, 0);
+  xmlFree(cs);
+
+  cs = osm_generate_xml_changeset("testcase comment", "survey");
+
+  g_assert_cmpint(memcmp(cs, message_src, strlen(message_src)), ==, 0);
+  xmlFree(cs);
+}
+
 int main()
 {
   test_taglist();
   test_replace();
   test_split();
+  test_changeset();
 
   return 0;
 }
