@@ -142,6 +142,8 @@ int main(int argc, char **argv)
     bpath.erase(bpath.rfind('/') + 1);
     project_t sproject(argv[2], bpath.c_str());
 
+    diff_restore(O2G_NULLPTR, &sproject, osm);
+
     diff_save(&sproject, osm);
 
     delete osm;
