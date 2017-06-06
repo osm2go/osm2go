@@ -786,6 +786,7 @@ void PresetSax::endElement(const xmlChar *name)
     items.pop();
     if(G_UNLIKELY(static_cast<presets_item *>(item)->name.empty())) {
       delete item;
+      break;
     } else {
       // update the group type
       g_assert_false(items.empty());
