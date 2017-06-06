@@ -323,12 +323,74 @@ static void test_changeset()
   xmlFree(cs);
 }
 
+static void test_reverse()
+{
+  osm_t o;
+  o.rbounds.ll_min.lat = 52.2692786;
+  o.rbounds.ll_min.lon = 9.5750497;
+  o.rbounds.ll_max.lat = 52.2695463;
+  o.rbounds.ll_max.lon = 9.5755;
+
+  pos_t center((o.rbounds.ll_max.lat + o.rbounds.ll_min.lat) / 2,
+               (o.rbounds.ll_max.lon + o.rbounds.ll_min.lon) / 2);
+
+  pos2lpos_center(&center, &o.rbounds.center);
+  o.rbounds.scale = cos(DEG2RAD(center.lat));
+
+  o.bounds = &o.rbounds;
+
+  lpos_t l(10, 20);
+  node_t *n1 = o.node_new(l);
+  o.node_attach(n1);
+  l.y = 40;
+  node_t *n2 = o.node_new(l);
+  o.node_attach(n2);
+  way_t *w = new way_t(1);
+  w->append_node(n1);
+  w->append_node(n2);
+
+  osm_t::TagMap tags;
+  tags.insert(osm_t::TagMap::value_type("highway", "residential"));
+  tags.insert(osm_t::TagMap::value_type("foo:forward", "yes"));
+  tags.insert(osm_t::TagMap::value_type("foo:backward", "2"));
+  tags.insert(osm_t::TagMap::value_type("bar:left", "3"));
+  tags.insert(osm_t::TagMap::value_type("bar:right", "4"));
+  tags.insert(osm_t::TagMap::value_type("oneway", "-1"));
+
+  g_assert(w->node_chain.front() == n1);
+  g_assert(w->node_chain.back() == n2);
+  g_assert_cmpuint(w->flags, ==, OSM_FLAG_NEW);
+
+  w->flags = 0;
+
+  w->tags.replace(tags);
+  w->reverse();
+  unsigned int r = w->reverse_direction_sensitive_tags();
+
+  g_assert_cmpuint(r, ==, 5);
+  g_assert_cmpuint(w->flags, ==, OSM_FLAG_DIRTY);
+  g_assert(w->node_chain.front() == n2);
+  g_assert(w->node_chain.back() == n1);
+  g_assert(w->tags != tags);
+
+  osm_t::TagMap rtags;
+  rtags.insert(osm_t::TagMap::value_type("highway", "residential"));
+  rtags.insert(osm_t::TagMap::value_type("foo:backward", "yes"));
+  rtags.insert(osm_t::TagMap::value_type("foo:forward", "2"));
+  rtags.insert(osm_t::TagMap::value_type("bar:right", "3"));
+  rtags.insert(osm_t::TagMap::value_type("bar:left", "4"));
+  rtags.insert(osm_t::TagMap::value_type("oneway", "yes"));
+
+  g_assert(w->tags == rtags);
+}
+
 int main()
 {
   test_taglist();
   test_replace();
   test_split();
   test_changeset();
+  test_reverse();
 
   return 0;
 }
