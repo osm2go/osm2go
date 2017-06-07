@@ -197,6 +197,8 @@ static void test_taglist() {
   ntags.push_back(tag_t(g_strdup("one"), g_strdup("1")));
   g_assert(tags == ntags);
   g_assert(virgin != tags.asMap());
+
+  std::for_each(ntags.begin(), ntags.end(), osm_tag_free);
 }
 
 static void test_replace() {
@@ -348,6 +350,7 @@ static void test_reverse()
   way_t *w = new way_t(1);
   w->append_node(n1);
   w->append_node(n2);
+  o.way_attach(w);
 
   osm_t::TagMap tags;
   tags.insert(osm_t::TagMap::value_type("highway", "residential"));
