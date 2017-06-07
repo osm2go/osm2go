@@ -12,3 +12,6 @@ debian/control
 # KDevelop project
 osm2go.kdev4
 .kdev4
+
+# CTest script
+my_osm2go*.cmake
