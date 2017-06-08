@@ -49,10 +49,6 @@ canvas_t::canvas_t()
                            G_CALLBACK(canvas_delete), this);
 }
 
-GtkWidget *canvas_get_widget(canvas_t *canvas) {
-  return canvas->widget;
-}
-
 /* ------------------------ accessing the canvas ---------------------- */
 
 void canvas_set_background(canvas_t *canvas, canvas_color_t bg_color) {

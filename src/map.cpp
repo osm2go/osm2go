@@ -1780,7 +1780,7 @@ GtkWidget *map_new(appdata_t *appdata) {
   map_t *map = new map_t(appdata, s);
   appdata->map = map;
 
-  GtkWidget *canvas_widget = canvas_get_widget(map->canvas);
+  GtkWidget *canvas_widget = map->canvas->widget;
 
   gtk_widget_set_events(canvas_widget,
                           GDK_BUTTON_PRESS_MASK
