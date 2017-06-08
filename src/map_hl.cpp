@@ -86,15 +86,6 @@ void map_hl_touchnode_clear(map_t *map) {
   }
 }
 
-/* called whenever a highlight item is to be destroyed */
-gint map_hl_item_destroy_event(GtkWidget *, gpointer data) {
-  map_item_t *map_item = (map_item_t*)data;
-
-  //  printf("destroying highlight map_item @ %p\n", map_item);
-  g_free(map_item);
-  return FALSE;
-}
-
 void map_hl_remove(map_t *map) {
   if(!map->highlight) return;
 
@@ -145,8 +136,7 @@ canvas_item_t *map_hl_circle_new(map_t *map, canvas_group_t group,
 
   canvas_item_set_user_data(map_item->item, map_item);
 
-  canvas_item_destroy_connect(map_item->item,
-	     G_CALLBACK(map_hl_item_destroy_event), map_item);
+  canvas_item_destroy_connect(map_item->item, g_free, map_item);
 
   return map_item->item;
 }
@@ -159,8 +149,7 @@ canvas_item_t *map_hl_polygon_new(map_t *map, canvas_group_t group, map_item_t *
 
   canvas_item_set_user_data(map_item->item, map_item);
 
-  canvas_item_destroy_connect(map_item->item,
-	     G_CALLBACK(map_hl_item_destroy_event), map_item);
+  canvas_item_destroy_connect(map_item->item, g_free, map_item);
 
   return map_item->item;
 }
@@ -173,8 +162,7 @@ canvas_item_t *map_hl_polyline_new(map_t *map, canvas_group_t group, map_item_t 
 
   canvas_item_set_user_data(map_item->item, map_item);
 
-  canvas_item_destroy_connect(map_item->item,
-	     G_CALLBACK(map_hl_item_destroy_event), map_item);
+  canvas_item_destroy_connect(map_item->item, g_free, map_item);
 
   return map_item->item;
 }

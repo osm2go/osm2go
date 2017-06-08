@@ -457,7 +457,7 @@ void map_item_deselect(map_t *map) {
 }
 
 /* called whenever a map item is to be destroyed */
-static gint map_item_destroy_event(GtkWidget *, gpointer data) {
+static void map_item_destroy_event(gpointer data) {
   map_item_t *map_item = (map_item_t*)data;
 
   //  printf("destroying map_item @ %p\n", map_item);
@@ -485,7 +485,6 @@ static gint map_item_destroy_event(GtkWidget *, gpointer data) {
 #endif
 
   g_free(map_item);
-  return FALSE;
 }
 
 static void map_node_new(map_t *map, node_t *node, gint radius,
@@ -516,7 +515,7 @@ static void map_node_new(map_t *map, node_t *node, gint radius,
   canvas_item_set_user_data(map_item->item, map_item);
 
   canvas_item_destroy_connect(map_item->item,
-          G_CALLBACK(map_item_destroy_event), map_item);
+                              map_item_destroy_event, map_item);
 }
 
 /* in the rare case that a way consists of only one node, it is */
@@ -535,7 +534,7 @@ static map_item_t *map_way_single_new(map_t *map, way_t *way, gint radius,
   canvas_item_set_user_data(map_item->item, map_item);
 
   canvas_item_destroy_connect(map_item->item,
-          G_CALLBACK(map_item_destroy_event), map_item);
+                              map_item_destroy_event, map_item);
 
   return map_item;
 }
@@ -569,7 +568,7 @@ static map_item_t *map_way_new(map_t *map, canvas_group_t group,
   canvas_item_set_user_data(map_item->item, map_item);
 
   canvas_item_destroy_connect(map_item->item,
-	      G_CALLBACK(map_item_destroy_event), map_item);
+                              map_item_destroy_event, map_item);
 
   return map_item;
 }
@@ -2321,8 +2320,8 @@ void map_remove_bg_image(map_t *map) {
   }
 }
 
-static gint map_bg_item_destroy_event(GtkWidget *, gpointer data) {
-  map_t *map = (map_t*)data;
+static void map_bg_item_destroy_event(gpointer data) {
+  map_t *map = static_cast<map_t *>(data);
 
   /* destroying background item */
 
@@ -2332,7 +2331,6 @@ static gint map_bg_item_destroy_event(GtkWidget *, gpointer data) {
     g_object_unref(map->bg.pix);
     map->bg.pix = O2G_NULLPTR;
   }
-  return FALSE;
 }
 
 void map_set_bg_image(map_t *map, const char *filename) {
@@ -2352,7 +2350,7 @@ void map_set_bg_image(map_t *map, const char *filename) {
 	  bounds->min.x, bounds->min.y, map->bg.scale.x, map->bg.scale.y);
 
   canvas_item_destroy_connect(map->bg.item,
-          G_CALLBACK(map_bg_item_destroy_event), map);
+                              map_bg_item_destroy_event, map);
 }
 
 

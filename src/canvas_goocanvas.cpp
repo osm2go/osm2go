@@ -57,8 +57,7 @@ GtkWidget *canvas_get_widget(canvas_t *canvas) {
 
 void canvas_set_background(canvas_t *canvas, canvas_color_t bg_color) {
   g_object_set(G_OBJECT(canvas->widget),
-	       "background-color-rgb", bg_color >> 8,
-               O2G_NULLPTR);
+               "background-color-rgb", bg_color >> 8, O2G_NULLPTR);
 }
 
 void canvas_set_antialias(canvas_t *canvas, gboolean antialias) {
@@ -339,28 +338,30 @@ void *canvas_item_get_user_data(canvas_item_t *item) {
   return g_object_get_data(G_OBJECT(item), "user data");
 }
 
-struct weak_t {
-  weak_t(GCallback cb, gpointer d)
+class weak_t {
+public:
+  weak_t(void(*cb)(gpointer), gpointer d)
     : c_handler(cb)
     , data(d)
   {}
+  ~weak_t()
+  {
+    c_handler(data);
+  }
 
-  const GCallback c_handler;
+private:
+  void(* const c_handler)(gpointer);
   gpointer const data;
 };
 
 static void canvas_item_weak_notify(gpointer data, GObject *) {
-  weak_t *weak = static_cast<weak_t *>(data);
-
-  ((void(*)(GtkWidget*, gpointer))weak->c_handler) (O2G_NULLPTR, weak->data);
-  delete weak;
+  delete static_cast<weak_t *>(data);
 }
 
-void canvas_item_destroy_connect(canvas_item_t *item,
-				 GCallback c_handler, gpointer data) {
-  weak_t *weak = new weak_t(c_handler, data);
-
-  g_object_weak_ref(G_OBJECT(item), canvas_item_weak_notify, weak);
+void canvas_item_destroy_connect(canvas_item_t *item, void(*c_handler)(gpointer),
+                                 gpointer data) {
+  g_object_weak_ref(G_OBJECT(item), canvas_item_weak_notify,
+                    new weak_t(c_handler, data));
 }
 
 void canvas_image_move(canvas_item_t *item, gint x, gint y,

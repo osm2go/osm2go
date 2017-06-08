@@ -170,8 +170,7 @@ void canvas_item_set_dashed(canvas_item_t *item, gint line_width, guint dash_len
 void canvas_item_to_bottom(canvas_item_t *item);
 void canvas_item_set_user_data(canvas_item_t *item, void *data);
 void *canvas_item_get_user_data(canvas_item_t *item);
-void canvas_item_destroy_connect(canvas_item_t *item,
-				 GCallback c_handler, gpointer data);
+void canvas_item_destroy_connect(canvas_item_t *item, void(*c_handler)(gpointer), gpointer data);
 void canvas_image_move(canvas_item_t *item, gint x, gint y,
 		       float hscale, float vscale);
 gint canvas_item_get_segment(canvas_item_t *item, gint x, gint y);

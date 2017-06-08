@@ -96,14 +96,11 @@ static void canvas_item_info_dechain(canvas_item_info_t *item_info) {
 
 /* remove item_info from chain as its visual representation */
 /* has been destroyed */
-static gint item_info_destroy(G_GNUC_UNUSED canvas_item_t *canvas_item,
-			      canvas_item_info_t *item_info) {
-  //  printf("######## destroy %p\n", item_info);
+static void item_info_destroy(gpointer data) {
+  canvas_item_info_t *item_info = data;
 
   canvas_item_info_dechain(item_info);
   canvas_item_info_free(item_info);
-
-  return FALSE;
 }
 
 static void canvas_item_prepend(canvas_t *canvas, canvas_group_t group,
@@ -116,8 +113,7 @@ static void canvas_item_prepend(canvas_t *canvas, canvas_group_t group,
 
   /* attach destroy event handler if it hasn't already been attached */
   if(!item->item)
-    canvas_item_destroy_connect(canvas_item,
-				(GCallback)item_info_destroy, item);
+    canvas_item_destroy_connect(canvas_item, item_info_destroy, item);
 
   item->group = group;
   item->next = canvas->item_info[group].first;
@@ -136,8 +132,7 @@ static void canvas_item_append(canvas_t *canvas, canvas_group_t group,
 
   /* attach destroy event handler if it hasn't already been attached */
   if(!item->item)
-    canvas_item_destroy_connect(canvas_item,
-				(GCallback)item_info_destroy, item);
+    canvas_item_destroy_connect(canvas_item, item_info_destroy, item);
 
   item->group = group;
   item->prev = canvas->item_info[group].last;
