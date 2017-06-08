@@ -64,14 +64,16 @@ typedef enum {
 typedef GooCanvasItem canvas_item_t;
 typedef GooCanvasPoints canvas_points_t;
 
-typedef struct {
-  GtkWidget *widget;
+typedef struct canvas_t {
+  GtkWidget * const widget;
   GooCanvasItem *group[CANVAS_GROUPS];
 
   struct {
     struct canvas_item_info_t *first, *last;
   } item_info[CANVAS_GROUPS];
-
+#ifdef __cplusplus
+  canvas_t();
+#endif
 } canvas_t;
 
 typedef guint canvas_color_t;
@@ -121,7 +123,6 @@ extern "C" {
 #endif
 
 /***** creating/destroying the canvas ******/
-canvas_t *canvas_new(void);
 GtkWidget *canvas_get_widget(canvas_t *canvas);
 
 /****** manipulating the canvas ******/

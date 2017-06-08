@@ -21,32 +21,32 @@
 
 #include "misc.h"
 
+#include <osm2go_cpp.h>
+
 /* ------------------- creating and destroying the canvas ----------------- */
 
+static void canvas_delete(canvas_t *canvas) {
+  delete canvas;
+}
+
 /* create a new canvas */
-canvas_t *canvas_new(void) {
-  canvas_t *canvas = g_new0(canvas_t, 1);
+canvas_t::canvas_t()
+  : widget(goo_canvas_new())
+{
+  g_object_set_data(G_OBJECT(widget), "canvas-pointer", this);
 
-  canvas->widget = goo_canvas_new();
+  g_object_set(G_OBJECT(widget), "anchor", GTK_ANCHOR_CENTER, O2G_NULLPTR);
 
-  g_object_set_data(G_OBJECT(canvas->widget), "canvas-pointer", canvas);
-
-  g_object_set(G_OBJECT(canvas->widget),
-	       "anchor", GTK_ANCHOR_CENTER,
-	       NULL);
-
-  GooCanvasItem *root = goo_canvas_get_root_item(GOO_CANVAS(canvas->widget));
+  GooCanvasItem *root = goo_canvas_get_root_item(GOO_CANVAS(widget));
 
   /* create the groups */
-  canvas_group_t group;
-  for(group = 0; group < CANVAS_GROUPS; group++)
-    canvas->group[group] = goo_canvas_group_new(root, NULL);
+  int gr;
+  for(gr = 0; gr < CANVAS_GROUPS; gr++)
+    group[gr] = goo_canvas_group_new(root, O2G_NULLPTR);
 
 
-  g_signal_connect_swapped(GTK_OBJECT(canvas->widget), "destroy",
-                           G_CALLBACK(g_free), canvas);
-
-  return canvas;
+  g_signal_connect_swapped(GTK_OBJECT(widget), "destroy",
+                           G_CALLBACK(canvas_delete), this);
 }
 
 GtkWidget *canvas_get_widget(canvas_t *canvas) {
@@ -58,13 +58,13 @@ GtkWidget *canvas_get_widget(canvas_t *canvas) {
 void canvas_set_background(canvas_t *canvas, canvas_color_t bg_color) {
   g_object_set(G_OBJECT(canvas->widget),
 	       "background-color-rgb", bg_color >> 8,
-	       NULL);
+               O2G_NULLPTR);
 }
 
 void canvas_set_antialias(canvas_t *canvas, gboolean antialias) {
   GooCanvasItem *root = goo_canvas_get_root_item(GOO_CANVAS(canvas->widget));
   g_object_set(G_OBJECT(root), "antialias",
-	       antialias?CAIRO_ANTIALIAS_DEFAULT:CAIRO_ANTIALIAS_NONE, NULL);
+               antialias ? CAIRO_ANTIALIAS_DEFAULT : CAIRO_ANTIALIAS_NONE, O2G_NULLPTR);
 }
 
 void canvas_window2world(canvas_t *canvas,
@@ -156,7 +156,7 @@ void canvas_set_bounds(canvas_t *canvas, gint minx, gint miny,
 /* ------------------- creating and destroying objects ---------------- */
 
 void canvas_erase(canvas_t *canvas, gint group_mask) {
-  canvas_group_t group;
+  int group;
   for(group=0;group<CANVAS_GROUPS;group++) {
 
     if(group_mask & (1<<group)) {
@@ -180,7 +180,7 @@ canvas_item_t *canvas_circle_new(canvas_t *canvas, canvas_group_t group,
 			   "line-width", (double)border,
 			   "stroke-color-rgba", border_col,
 			   "fill-color-rgba", fill_col,
-			   NULL);
+                           O2G_NULLPTR);
 
   if(CANVAS_SELECTABLE & (1<<group))
     canvas_item_info_attach_circle(canvas, group, item, x, y, radius + border);
@@ -219,7 +219,7 @@ canvas_item_t *canvas_polyline_new(canvas_t *canvas, canvas_group_t group,
 			    "stroke-color-rgba", color,
 			    "line-join", CAIRO_LINE_JOIN_ROUND,
 			    "line-cap", CAIRO_LINE_CAP_ROUND,
-			    NULL);
+                            O2G_NULLPTR);
 
   if(CANVAS_SELECTABLE & (1<<group))
     canvas_item_info_attach_poly(canvas, group, item, FALSE, points, width);
@@ -238,7 +238,7 @@ canvas_item_t *canvas_polygon_new(canvas_t *canvas, canvas_group_t group,
 			    "fill-color-rgba", fill,
 			    "line-join", CAIRO_LINE_JOIN_ROUND,
 			    "line-cap", CAIRO_LINE_CAP_ROUND,
-			    NULL);
+                            O2G_NULLPTR);
 
   if(CANVAS_SELECTABLE & (1<<group))
     canvas_item_info_attach_poly(canvas, group, item, TRUE, points, width);
@@ -252,7 +252,7 @@ canvas_item_t *canvas_image_new(canvas_t *canvas, canvas_group_t group,
 
   canvas_item_t *item = goo_canvas_image_new(canvas->group[group], pix,
 			                     x/hscale - gdk_pixbuf_get_width(pix)/2,
-			                     y/vscale - gdk_pixbuf_get_height(pix)/2, NULL);
+                                             y/vscale - gdk_pixbuf_get_height(pix)/2, O2G_NULLPTR);
   goo_canvas_item_scale(item, hscale, vscale);
 
   if(CANVAS_SELECTABLE & (1<<group)) {
@@ -270,30 +270,30 @@ void canvas_item_destroy(canvas_item_t *item) {
 /* ------------------------ accessing items ---------------------- */
 
 void canvas_item_set_points(canvas_item_t *item, canvas_points_t *points) {
-  g_object_set(G_OBJECT(item), "points", points, NULL);
+  g_object_set(G_OBJECT(item), "points", points, O2G_NULLPTR);
 }
 
 void canvas_item_set_pos(canvas_item_t *item, lpos_t *lpos) {
   g_object_set(G_OBJECT(item),
 	       "center-x", (gdouble)lpos->x,
 	       "center-y", (gdouble)lpos->y,
-	       NULL);
+               O2G_NULLPTR);
 }
 
 void canvas_item_set_radius(canvas_item_t *item, gint radius) {
   g_object_set(G_OBJECT(item),
 	       "radius-x", (gdouble)radius,
 	       "radius-y", (gdouble)radius,
-	       NULL);
+               O2G_NULLPTR);
 }
 
 void canvas_item_to_bottom(canvas_item_t *item) {
 
 
-  goo_canvas_item_lower(item, NULL);
+  goo_canvas_item_lower(item, O2G_NULLPTR);
   canvas_t *canvas =
-    g_object_get_data(G_OBJECT(goo_canvas_item_get_canvas(item)),
-		      "canvas-pointer");
+    static_cast<canvas_t *>(g_object_get_data(G_OBJECT(goo_canvas_item_get_canvas(item)),
+                                              "canvas-pointer"));
 
   g_assert_nonnull(canvas);
   canvas_item_info_push(canvas, item);
@@ -310,7 +310,7 @@ void canvas_item_set_zoom_max(canvas_item_t *item, float zoom_max) {
   g_object_set(G_OBJECT(item),
                "visibility", vis,
                "visibility-threshold", vis_thres,
-               NULL);
+               O2G_NULLPTR);
 }
 
 void canvas_item_set_dashed(canvas_item_t *item,
@@ -327,7 +327,7 @@ void canvas_item_set_dashed(canvas_item_t *item,
   g_object_set(G_OBJECT(item),
                "line-dash", dash,
                "line-cap", cap,
-               NULL);
+               O2G_NULLPTR);
   goo_canvas_line_dash_unref(dash);
 }
 
@@ -339,23 +339,26 @@ void *canvas_item_get_user_data(canvas_item_t *item) {
   return g_object_get_data(G_OBJECT(item), "user data");
 }
 
-typedef struct {
-  GCallback c_handler;
-  gpointer data;
-} weak_t;
+struct weak_t {
+  weak_t(GCallback cb, gpointer d)
+    : c_handler(cb)
+    , data(d)
+  {}
 
-static void canvas_item_weak_notify(gpointer data, G_GNUC_UNUSED GObject *invalid) {
-  weak_t *weak = data;
+  const GCallback c_handler;
+  gpointer const data;
+};
 
-  ((void(*)(GtkWidget*, gpointer))weak->c_handler) (NULL, weak->data);
-  g_free(weak);
+static void canvas_item_weak_notify(gpointer data, GObject *) {
+  weak_t *weak = static_cast<weak_t *>(data);
+
+  ((void(*)(GtkWidget*, gpointer))weak->c_handler) (O2G_NULLPTR, weak->data);
+  delete weak;
 }
 
 void canvas_item_destroy_connect(canvas_item_t *item,
 				 GCallback c_handler, gpointer data) {
-  weak_t *weak = g_new(weak_t,1);
-  weak->data = data;
-  weak->c_handler = c_handler;
+  weak_t *weak = new weak_t(c_handler, data);
 
   g_object_weak_ref(G_OBJECT(item), canvas_item_weak_notify, weak);
 }
@@ -366,19 +369,19 @@ void canvas_image_move(canvas_item_t *item, gint x, gint y,
   g_object_set(G_OBJECT(item),
 	       "x", (gdouble)x / hscale,
 	       "y", (gdouble)y / vscale,
-	       NULL);
+               O2G_NULLPTR);
 }
 
 /* get the polygon/polyway segment a certain coordinate is over */
 gint canvas_item_get_segment(canvas_item_t *item, gint x, gint y) {
 
-  canvas_points_t *points = NULL;
+  canvas_points_t *points = O2G_NULLPTR;
   double line_width = 0;
 
   g_object_get(G_OBJECT(item),
 	       "points", &points,
 	       "line-width", &line_width,
-	       NULL);
+               O2G_NULLPTR);
 
   if(!points) return -1;
 
@@ -426,8 +429,8 @@ void canvas_item_get_segment_pos(canvas_item_t *item, gint seg,
 				 gint *x0, gint *y0, gint *x1, gint *y1) {
   printf("get segment %d of item %p\n", seg, item);
 
-  canvas_points_t *points = NULL;
-  g_object_get(G_OBJECT(item), "points", &points, NULL);
+  canvas_points_t *points = O2G_NULLPTR;
+  g_object_get(G_OBJECT(item), "points", &points, O2G_NULLPTR);
 
   g_assert_nonnull(points);
   g_assert_cmpint(seg, <, points->num_points-1);

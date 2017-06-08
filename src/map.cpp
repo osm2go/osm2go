@@ -43,7 +43,7 @@
 
 map_t::map_t(appdata_t *a, style_t *s)
   : appdata(a)
-  , canvas(canvas_new())
+  , canvas(new canvas_t())
   , state(appdata->project && appdata->project->map_state ? appdata->project->map_state : new map_state_t())
   , autosave_handler_id(0)
   , highlight(O2G_NULLPTR)
