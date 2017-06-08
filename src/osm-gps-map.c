@@ -1518,7 +1518,7 @@ osm_gps_map_init (OsmGpsMap *object)
     priv->uri_format = 0;
     priv->the_google = FALSE;
 
-    priv->map_source = -1;
+    priv->map_source = OSM_GPS_MAP_SOURCE_NULL;
 
 #ifndef LIBSOUP22
     //Change number of concurrent connections option?
@@ -1568,7 +1568,7 @@ osm_gps_map_setup(OsmGpsMapPrivate *priv) {
 
     //user can specify a map source ID, or a repo URI as the map source
     uri = osm_gps_map_source_get_repo_uri(OSM_GPS_MAP_SOURCE_NULL);
-    if ( (priv->map_source == 0) || (g_strcmp0(priv->repo_uri, uri) == 0) ) {
+    if ( (priv->map_source == OSM_GPS_MAP_SOURCE_NULL) || (g_strcmp0(priv->repo_uri, uri) == 0) ) {
         g_debug("Using null source");
         priv->map_source = OSM_GPS_MAP_SOURCE_NULL;
 
@@ -1760,14 +1760,13 @@ osm_gps_map_set_property (GObject *object, guint prop_id, const GValue *value, G
             priv->ui_gps_point_outer_radius = g_value_get_int (value);
             break;
         case PROP_MAP_SOURCE: {
-            OsmGpsMapSource_t old = priv->map_source;
-            priv->map_source = g_value_get_int (value);
-            if(old >= OSM_GPS_MAP_SOURCE_NULL &&
-               priv->map_source != old &&
-               priv->map_source >= OSM_GPS_MAP_SOURCE_NULL &&
-               priv->map_source <= OSM_GPS_MAP_SOURCE_LAST) {
+            int nsource = g_value_get_int(value);
+            if(nsource != ((int)priv->map_source) &&
+               nsource >= OSM_GPS_MAP_SOURCE_NULL &&
+               nsource <= OSM_GPS_MAP_SOURCE_LAST) {
 
                 /* we now have to switch the entire map */
+                priv->map_source = nsource;
 
                 /* flush the ram cache */
                 g_hash_table_remove_all(priv->tile_cache);
