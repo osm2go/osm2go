@@ -32,7 +32,7 @@
 
 /* -------- all sizes are in meters ---------- */
 #define MAP_COLOR_NONE   0x0
-#define NO_COLOR         CANVAS_COLOR(0x00,0x00,0x00,0x00)
+#define NO_COLOR         0 /* black */
 
 #define RGBA_COMBINE(a,b) (((a)&~0xff) | ((b)&0xff))
 

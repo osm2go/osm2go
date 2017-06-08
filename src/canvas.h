@@ -82,13 +82,6 @@ typedef struct {
 
 typedef guint canvas_color_t;
 
-#define CANVAS_COLOR(r,g,b,a) ((((guint) (r) & 0xff) << 24)   \
-			       | (((guint) (g) & 0xff) << 16)	\
-			       | (((guint) (b) & 0xff) << 8)	\
-			       | ((guint) (a) & 0xff))
-
-
-
 #else
 #error "No canvas type defined!"
 #endif
