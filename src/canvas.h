@@ -48,11 +48,7 @@ typedef enum {
 /* only objects in the "selectable" groups are returned by item_at */
 /* (the fuzzy search of custom_item_at makes it possible to ignore the */
 /* selection layer) */
-#ifdef CANVAS_CUSTOM_ITEM_AT
 #define CANVAS_HIGHLIGHTS   (1<<CANVAS_GROUP_NODES_IHL)
-#else
-#define CANVAS_HIGHLIGHTS   ((1<<CANVAS_GROUP_NODES_IHL) | (1<<CANVAS_GROUP_WAYS_HL) | (1<<CANVAS_GROUP_NODES_HL))
-#endif
 
 #define CANVAS_SELECTABLE   ((1<<CANVAS_GROUP_POLYGONS) | (1<<CANVAS_GROUP_WAYS) | (1<<CANVAS_GROUP_WAYS_OL) | (1<<CANVAS_GROUP_WAYS_INT) | (1<<CANVAS_GROUP_NODES) | CANVAS_HIGHLIGHTS)
 
@@ -72,11 +68,9 @@ typedef struct {
   GtkWidget *widget;
   GooCanvasItem *group[CANVAS_GROUPS];
 
-#ifdef CANVAS_CUSTOM_ITEM_AT
   struct {
     struct canvas_item_info_t *first, *last;
   } item_info[CANVAS_GROUPS];
-#endif
 
 } canvas_t;
 
@@ -86,7 +80,6 @@ typedef guint canvas_color_t;
 #error "No canvas type defined!"
 #endif
 
-#ifdef CANVAS_CUSTOM_ITEM_AT
 typedef enum { CANVAS_ITEM_CIRCLE, CANVAS_ITEM_POLY } canvas_item_type_t;
 
 typedef struct canvas_item_info_t {
@@ -120,9 +113,6 @@ typedef struct canvas_item_info_t {
   canvas_item_t *item;
   struct canvas_item_info_t *prev, *next;
 } canvas_item_info_t;
-
-#endif // CANVAS_CUSTOM_ITEM_AT
-
 
 typedef enum { CANVAS_UNIT_METER = 0, CANVAS_UNIT_PIXEL } canvas_unit_t;
 
@@ -187,7 +177,6 @@ gint canvas_item_get_segment(canvas_item_t *item, gint x, gint y);
 void canvas_item_get_segment_pos(canvas_item_t *item, gint seg,
 				 gint *x0, gint *y0, gint *x1, gint *y1);
 
-#ifdef CANVAS_CUSTOM_ITEM_AT
 void canvas_item_info_attach_circle(canvas_t *canvas, canvas_group_t group,
 			    canvas_item_t *item, gint x, gint y, gint r);
 void canvas_item_info_attach_poly(canvas_t *canvas, canvas_group_t group,
@@ -195,7 +184,6 @@ void canvas_item_info_attach_poly(canvas_t *canvas, canvas_group_t group,
 		  gboolean is_polygon, canvas_points_t *points, gint width);
 canvas_item_t *canvas_item_info_get_at(canvas_t *canvas, gint x, gint y);
 void canvas_item_info_push(canvas_t *canvas, canvas_item_t *item);
-#endif
 
 #ifdef __cplusplus
 }

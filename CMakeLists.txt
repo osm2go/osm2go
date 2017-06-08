@@ -219,7 +219,7 @@ endif ()
 
 find_library(MATH_LIBRARY m)
 
-add_definitions(-DUSE_GOOCANVAS -DCANVAS_CUSTOM_ITEM_AT)
+add_definitions(-DUSE_GOOCANVAS)
 add_definitions("-DPACKAGE=\"${PROJECT_NAME}\"" "-DPREFIX=\"${CMAKE_INSTALL_PREFIX}\"" "-DVERSION=\"${PROJECT_VERSION}\"")
 
 if (libLocation_FOUND)

@@ -78,35 +78,7 @@ void canvas_window2world(canvas_t *canvas,
 }
 
 canvas_item_t *canvas_get_item_at(canvas_t *canvas, gint x, gint y) {
-#ifdef CANVAS_CUSTOM_ITEM_AT
   return canvas_item_info_get_at(canvas, x, y);
-#else
-  GList *list =
-    goo_canvas_get_items_at(GOO_CANVAS(canvas->widget), x, y, TRUE);
-
-  GList *litem = g_list_first(list);
-  while(litem) {
-    canvas_item_t *item = (canvas_item_t*)litem->data;
-
-    /* only return objects that have a "user data" attached */
-    if(g_object_get_data(G_OBJECT(item), "user data")) {
-      /* check if this is in one of the "selectable" groups */
-      canvas_item_t *parent = goo_canvas_item_get_parent(item);
-      canvas_group_t group;
-      for(group=0;group<CANVAS_GROUPS;group++) {
-	if((CANVAS_SELECTABLE & (1<<group)) &&
-	   (canvas->group[group] == parent)) {
-	  g_list_free(list);
-	  return item;
-	}
-      }
-    }
-    litem = g_list_next(litem);
-  }
-
-  g_list_free(list);
-  return NULL;
-#endif
 }
 
 void canvas_set_zoom(canvas_t *canvas, gdouble zoom) {
@@ -213,10 +185,8 @@ canvas_item_t *canvas_circle_new(canvas_t *canvas, canvas_group_t group,
 			   "fill-color-rgba", fill_col,
 			   NULL);
 
-#ifdef CANVAS_CUSTOM_ITEM_AT
   if(CANVAS_SELECTABLE & (1<<group))
     canvas_item_info_attach_circle(canvas, group, item, x, y, radius + border);
-#endif
 
   return item;
 }
@@ -254,10 +224,8 @@ canvas_item_t *canvas_polyline_new(canvas_t *canvas, canvas_group_t group,
 			    "line-cap", CAIRO_LINE_CAP_ROUND,
 			    NULL);
 
-#ifdef CANVAS_CUSTOM_ITEM_AT
   if(CANVAS_SELECTABLE & (1<<group))
     canvas_item_info_attach_poly(canvas, group, item, FALSE, points, width);
-#endif
 
   return item;
 }
@@ -275,10 +243,8 @@ canvas_item_t *canvas_polygon_new(canvas_t *canvas, canvas_group_t group,
 			    "line-cap", CAIRO_LINE_CAP_ROUND,
 			    NULL);
 
-#ifdef CANVAS_CUSTOM_ITEM_AT
   if(CANVAS_SELECTABLE & (1<<group))
     canvas_item_info_attach_poly(canvas, group, item, TRUE, points, width);
-#endif
 
   return item;
 }
@@ -292,12 +258,10 @@ canvas_item_t *canvas_image_new(canvas_t *canvas, canvas_group_t group,
 			                     y/vscale - gdk_pixbuf_get_height(pix)/2, NULL);
   goo_canvas_item_scale(item, hscale, vscale);
 
-#ifdef CANVAS_CUSTOM_ITEM_AT
   if(CANVAS_SELECTABLE & (1<<group)) {
     gint radius = 0.75 * hscale * MAX(gdk_pixbuf_get_width(pix), gdk_pixbuf_get_height(pix)); /* hscale and vscale are the same */
     canvas_item_info_attach_circle(canvas, group, item, x, y, radius);
   }
-#endif
 
   return item;
 }
@@ -330,14 +294,12 @@ void canvas_item_to_bottom(canvas_item_t *item) {
 
 
   goo_canvas_item_lower(item, NULL);
-#ifdef CANVAS_CUSTOM_ITEM_AT
   canvas_t *canvas =
     g_object_get_data(G_OBJECT(goo_canvas_item_get_canvas(item)),
 		      "canvas-pointer");
 
   g_assert_nonnull(canvas);
   canvas_item_info_push(canvas, item);
-#endif
 }
 
 void canvas_item_set_zoom_max(canvas_item_t *item, float zoom_max) {
