@@ -17,7 +17,8 @@
  * along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "appdata.h"
+#include "canvas.h"
+
 #include "misc.h"
 
 /* ------------------- creating and destroying the canvas ----------------- */
