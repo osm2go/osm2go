@@ -85,7 +85,7 @@ location_changed(LocationGPSDevice *device, gps_state_t *gps_state) {
       gps_state->cb = NULL;
 }
 
-gps_state_t *gps_init(G_GNUC_UNUSED struct appdata_t *appdata) {
+gps_state_t *gps_init() {
   gps_state_t *gps_state = g_new0(gps_state_t, 1);
 
   printf("GPS init: Using liblocation\n");

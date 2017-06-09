@@ -1294,7 +1294,7 @@ int main(int argc, char *argv[]) {
   /* user specific init */
   appdata.settings = settings_load();
 
-  appdata.gps_state = gps_init(&appdata);
+  appdata.gps_state = gps_init();
 
 #ifdef USE_HILDON
   printf("Installing osso context for \"org.harbaum." PACKAGE "\"\n");

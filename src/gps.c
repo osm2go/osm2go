@@ -19,13 +19,11 @@
 
 #include "gps.h"
 
-#include "appdata.h"
-#include "settings.h"
-
 #include <gtk/gtk.h>
 #include <libgnomevfs/gnome-vfs-inet-connection.h>
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #ifdef ENABLE_GPSBT
@@ -83,6 +81,8 @@ struct gps_state_t {
   GMutex *mutex;
   GnomeVFSInetConnection *iconn;
   GnomeVFSSocket *socket;
+
+  gboolean enable;
 
   struct gps_data_t gpsdata;
 
@@ -241,23 +241,23 @@ static void gps_unpack(char *buf, struct gps_data_t *gpsdata) {
   }
 }
 
-void gps_enable(G_GNUC_UNUSED gps_state_t *gps_state, G_GNUC_UNUSED gboolean enable) {
+void gps_enable(gps_state_t *gps_state, gboolean enable) {
+  gps_state->enable = enable;
 }
 
 gpointer gps_thread(gpointer data) {
   GnomeVFSFileSize bytes_read;
   char str[512];
-  appdata_t *appdata = (appdata_t*)data;
 
   const char *msg = "o\r\n";   /* pos request */
 
-  gps_state_t * const gps_state = appdata->gps_state;
+  gps_state_t * const gps_state = data;
   gps_state->gpsdata.set = 0;
 
   gboolean connected = FALSE;
 
   while(1) {
-    if(appdata->settings->enable_gps) {
+    if(gps_state->enable) {
       if(!connected) {
 	printf("trying to connect\n");
 
@@ -307,7 +307,7 @@ gpointer gps_thread(gpointer data) {
   return NULL;
 }
 
-gps_state_t *gps_init(appdata_t *appdata) {
+gps_state_t *gps_init() {
   gps_state_t *gps_state = g_new0(gps_state_t, 1);
 
   printf("GPS init: Using gpsd\n");
@@ -317,11 +317,11 @@ gps_state_t *gps_init(appdata_t *appdata) {
   gps_state->mutex = &gps_state->rmutex;
   g_mutex_init(gps_state->mutex);
   gps_state->thread_p =
-    g_thread_try_new("gps", gps_thread, appdata, NULL);
+    g_thread_try_new("gps", gps_thread, gps_state, NULL);
 #else
   gps_state->mutex = g_mutex_new();
   gps_state->thread_p =
-    g_thread_create(gps_thread, appdata, FALSE, NULL);
+    g_thread_create(gps_thread, gps_state, FALSE, NULL);
 #endif
 
   return gps_state;

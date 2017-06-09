@@ -30,9 +30,8 @@ extern "C" {
 #endif
 
 typedef struct gps_state_t gps_state_t;
-struct appdata_t;
 
-gps_state_t *gps_init(struct appdata_t *appdata);
+gps_state_t *gps_init();
 void gps_release(gps_state_t *gps_state);
 int gps_get_pos(gps_state_t *gps_state, pos_t *pos, float *alt) __attribute__((nonnull(1,2)));
 void gps_enable(gps_state_t *gps_state, gboolean enable);
