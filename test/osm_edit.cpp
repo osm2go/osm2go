@@ -389,11 +389,15 @@ static void test_reverse()
 
 int main()
 {
+  xmlInitParser();
+
   test_taglist();
   test_replace();
   test_split();
   test_changeset();
   test_reverse();
+
+  xmlCleanupParser();
 
   return 0;
 }
