@@ -21,6 +21,8 @@
 
 #include "misc.h"
 
+#include <cstring>
+
 #include <osm2go_cpp.h>
 
 /* ------------------- creating and destroying the canvas ----------------- */
@@ -33,6 +35,8 @@ static void canvas_delete(canvas_t *canvas) {
 canvas_t::canvas_t()
   : widget(goo_canvas_new())
 {
+  memset(item_info, 0, sizeof(item_info));
+
   g_object_set_data(G_OBJECT(widget), "canvas-pointer", this);
 
   g_object_set(G_OBJECT(widget), "anchor", GTK_ANCHOR_CENTER, O2G_NULLPTR);
