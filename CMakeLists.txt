@@ -127,8 +127,6 @@ option(PICKER_MENU "use a picker table for tagging preset selection" OFF)
 
 pkg_search_module(GooCanvas REQUIRED IMPORTED_TARGET goocanvas)
 
-pkg_check_modules(GVFS REQUIRED IMPORTED_TARGET gnome-vfs-module-2.0)
-
 set(FREMANTLE Off)
 pkg_check_modules(MAEMO maemo-version)
 if (MAEMO_FOUND)
@@ -153,8 +151,6 @@ if (MAEMO_FOUND)
 		pkg_check_modules(libLocation IMPORTED_TARGET liblocation)
 		if (libLocation_FOUND)
 			list(APPEND MORE_LIBS PRIVATE PkgConfig::libLocation)
-			list(REMOVE_ITEM osm2go_SOURCE_FILES src/gps.c)
-			list(APPEND osm2go_SOURCE_FILES src/gps_liblocation.c)
 		else ()
 			message(WARNING "No liblocation nor gpsbt found, disabling gps auto start!")
 		endif ()
@@ -225,7 +221,9 @@ add_definitions("-DPACKAGE=\"${PROJECT_NAME}\"" "-DPREFIX=\"${CMAKE_INSTALL_PREF
 if (libLocation_FOUND)
 	list(APPEND osm2go_SOURCE_FILES src/gps_liblocation.c)
 else ()
+	pkg_check_modules(GVFS REQUIRED IMPORTED_TARGET gnome-vfs-module-2.0)
 	list(APPEND osm2go_SOURCE_FILES src/gps.c)
+	list(APPEND MORE_LIBS PRIVATE PkgConfig::GVFS)
 endif ()
 
 cmake_push_check_state(RESET)
@@ -261,7 +259,6 @@ add_library(osm2go_lib STATIC
 target_link_libraries(osm2go_lib
 	${MORE_LIBS}
 	PRIVATE
-		PkgConfig::GVFS
 		${MATH_LIBRARY}
 	PUBLIC
 		${CURL_LIBRARIES}
