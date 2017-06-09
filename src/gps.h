@@ -25,10 +25,6 @@
 
 #include "pos.h"
 
-#ifndef NAN
-#define NAN (0.0/0.0)
-#endif /* !NAN */
-
 #ifdef __cplusplus
 extern "C" {
 #endif
