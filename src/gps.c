@@ -96,8 +96,6 @@ struct gps_state_t {
 #define GPSD_PORT 2947
 
 int gps_get_pos(gps_state_t *gps_state, pos_t *pos, float *alt) {
-  pos_t tmp;
-  if(!pos) pos = &tmp;
   pos->lat = NAN;
 
   g_mutex_lock(gps_state->mutex);

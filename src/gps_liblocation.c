@@ -56,9 +56,7 @@ int gps_get_pos(gps_state_t *gps_state, pos_t *pos, float *alt) {
   if(!gps_state->fix)
     return 0;
 
-  if(pos) {
-    *pos = gps_state->pos;
-  }
+  *pos = gps_state->pos;
 
   if(alt)
     *alt = gps_state->altitude;

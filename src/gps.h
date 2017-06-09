@@ -38,7 +38,7 @@ struct appdata_t;
 
 gps_state_t *gps_init(struct appdata_t *appdata);
 void gps_release(gps_state_t *gps_state);
-int gps_get_pos(gps_state_t *gps_state, pos_t *pos, float *alt);
+int gps_get_pos(gps_state_t *gps_state, pos_t *pos, float *alt) __attribute__((nonnull(1,2)));
 void gps_enable(gps_state_t *gps_state, gboolean enable);
 
 typedef int (*GpsCallback)(void *context);
