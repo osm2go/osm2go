@@ -6,6 +6,7 @@ compiler:
 env:
   global:
     - CMAKE_VERSION=3.8.2
+    - OSM2GO_BUILD_DIR=/tmp/osm2go-cdash
 addons:
   apt:
     packages:
@@ -21,12 +22,12 @@ script:
   - wget -O /tmp/cmake.tar --no-check-certificate https://cmake.org/files/v$(echo ${CMAKE_VERSION} | sed 's/\.[0-9]*$//')/cmake-${CMAKE_VERSION}-Linux-x86_64.tar.gz
   - tar xf /tmp/cmake.tar -C /tmp
   - export PATH=/tmp/cmake-${CMAKE_VERSION}-Linux-x86_64/bin:${PATH}
-  - echo -e "set(OSM2GO_BUILD_DIR \"/tmp/osm2go-cdash\")\nset(dashboard_model \"Continuous\")\nset(CTEST_SITE travis-ci.org)\nset(CTEST_BUILD_NAME \"CI ${CC} default\")\ninclude($(pwd)/ctest_osm2go.cmake)" > my_osm2go.cmake
+  - echo -e "set(OSM2GO_BUILD_DIR \"${OSM2GO_BUILD_DIR}\")\nset(dashboard_model \"Continuous\")\nset(CTEST_SITE travis-ci.org)\nset(CTEST_BUILD_NAME \"CI ${CC} default\")\ninclude($(pwd)/ctest_osm2go.cmake)" > my_osm2go.cmake
   - CFLAGS="-O0 -fprofile-arcs -ftest-coverage" CXXFLAGS="-O0 -fprofile-arcs -ftest-coverage" ctest -V -S my_osm2go.cmake || true
-  - echo -e "set(OSM2GO_BUILD_DIR \"/tmp/osm2go-cdash\")\nset(dashboard_model \"Continuous\")\nset(CTEST_SITE travis-ci.org)\nset(CTEST_BUILD_NAME \"CI ${CC} picker\")\ninclude($(pwd)/ctest_osm2go.cmake)" > my_osm2go.cmake
+  - echo -e "set(OSM2GO_BUILD_DIR \"${OSM2GO_BUILD_DIR}\")\nset(dashboard_model \"Continuous\")\nset(CTEST_SITE travis-ci.org)\nset(CTEST_BUILD_NAME \"CI ${CC} picker\")\ninclude($(pwd)/ctest_osm2go.cmake)" > my_osm2go.cmake
   - CFLAGS="-O0 -fprofile-arcs -ftest-coverage" CXXFLAGS="-O0 -fprofile-arcs -ftest-coverage" ctest -V -S my_osm2go.cmake -D "CONF_OPTIONS=-DSERVER_EDITABLE=On;-DPICKER_MENU=On" || true
 after_success:
-  - lcov --directory ${TRAVIS_BUILD_DIR}/build --capture --output-file coverage.info # capture coverage info
+  - lcov --directory ${OSM2GO_BUILD_DIR} --capture --output-file coverage.info # capture coverage info
   - lcov --remove coverage.info '/usr/*' --output-file coverage.info # filter out system
   - lcov --list coverage.info #debug info
   - bash <(curl -s https://codecov.io/bash)
