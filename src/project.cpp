@@ -1443,13 +1443,9 @@ select_context_t::select_context_t(appdata_t* a, GtkWidget *dial)
 {
 }
 
-static inline void project_free(project_t *project) {
-  delete project;
-}
-
 select_context_t::~select_context_t()
 {
-  std::for_each(projects.begin(), projects.end(), project_free);
+  std::for_each(projects.begin(), projects.end(), default_delete<project_t>());
 
   gtk_widget_destroy(dialog);
 }

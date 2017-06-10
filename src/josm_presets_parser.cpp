@@ -951,14 +951,6 @@ struct presets_items *josm_presets_load(void) {
 
 /* ----------------------- cleaning up --------------------- */
 
-static inline void free_widget(presets_widget_t *widget) {
-  delete widget;
-}
-
-static void free_item(presets_item_t *item) {
-  delete item;
-}
-
 void josm_presets_free(struct presets_items *presets) {
   delete presets;
 }
@@ -1069,7 +1061,7 @@ guint presets_widget_reference::rows() const
 
 presets_item::~presets_item()
 {
-  std::for_each(widgets.begin(), widgets.end(), free_widget);
+  std::for_each(widgets.begin(), widgets.end(), default_delete<presets_widget_t>());
 }
 
 presets_item_group::presets_item_group(const unsigned int types, presets_item_group *p,
@@ -1081,7 +1073,7 @@ presets_item_group::presets_item_group(const unsigned int types, presets_item_gr
 
 presets_item_group::~presets_item_group()
 {
-  std::for_each(items.begin(), items.end(), free_item);
+  std::for_each(items.begin(), items.end(), default_delete<presets_item_t>());
 }
 
 presets_items::presets_items()
@@ -1091,8 +1083,8 @@ presets_items::presets_items()
 
 presets_items::~presets_items()
 {
-  std::for_each(items.begin(), items.end(), free_item);
-  std::for_each(chunks.begin(), chunks.end(), free_item);
+  std::for_each(items.begin(), items.end(), default_delete<presets_item_t>());
+  std::for_each(chunks.begin(), chunks.end(), default_delete<presets_item_t>());
 }
 
 // vim:et:ts=8:sw=2:sts=2:ai

@@ -49,6 +49,9 @@
 
 #include <osm2go_cpp.h>
 
+#if __cplusplus >= 201103L
+#include <memory>
+#endif
 #include <string>
 #include <vector>
 
@@ -76,6 +79,17 @@ template<typename T> typename T::const_iterator cbegin(const T &c) {
   return typename T::const_iterator(c.begin());
 #endif
 }
+
+#if __cplusplus >= 201103L
+using std::default_delete;
+#else
+template<typename T>
+struct default_delete {
+  void operator()(T *p) {
+    delete p;
+  }
+};
+#endif
 
 struct pos_t;
 

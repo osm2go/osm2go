@@ -460,12 +460,8 @@ static void free_condition(elemstyle_condition_t &cond) {
     xmlFree(cond.value);
 }
 
-static inline void elemstyle_free(elemstyle_t *elemstyle) {
-  delete elemstyle;
-}
-
 void josm_elemstyles_free(std::vector<elemstyle_t *> &elemstyles) {
-  std::for_each(elemstyles.begin(), elemstyles.end(), elemstyle_free);
+  std::for_each(elemstyles.begin(), elemstyles.end(), default_delete<elemstyle_t>());
   elemstyles.clear();
 }
 
