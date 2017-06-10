@@ -103,7 +103,6 @@ typedef struct appdata_t {
   struct icon_t *icon;
   struct presets_items *presets;
 
-  /* menu items to be enabled and disabled every now and then */
   struct gps_state_t *gps_state;
 
 #ifdef USE_HILDON
