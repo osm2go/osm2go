@@ -21,12 +21,14 @@
 
 #include "settings.h"
 
+#include <cmath>
+#include <cstdio>
+#include <cstring>
 #include <glib.h>
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
 #include <location/location-gps-device.h>
 #include <location/location-gpsd-control.h>
+
+#include <osm2go_cpp.h>
 
 /* force usage of gpsd start/stop */
 #define LL_CONTROL_GPSD
@@ -82,7 +84,7 @@ location_changed(LocationGPSDevice *device, gps_state_t *gps_state) {
 
   if(gps_state->cb)
     if(!gps_state->cb(gps_state->data))
-      gps_state->cb = NULL;
+      gps_state->cb = O2G_NULLPTR;
 }
 
 gps_state_t *gps_init() {
@@ -90,7 +92,7 @@ gps_state_t *gps_init() {
 
   printf("GPS init: Using liblocation\n");
 
-  gps_state->device = g_object_new(LOCATION_TYPE_GPS_DEVICE, NULL);
+  gps_state->device = static_cast<LocationGPSDevice *>(g_object_new(LOCATION_TYPE_GPS_DEVICE, O2G_NULLPTR));
   if(!gps_state->device) {
     printf("Unable to connect to liblocation\n");
     return gps_state;
@@ -149,7 +151,7 @@ void gps_enable(gps_state_t *gps_state, gboolean enable) {
 }
 
 int gps_register_callback(struct gps_state_t *gps_state, GpsCallback cb, void *context) {
-  int ret = (gps_state->cb != NULL) ? 1 : 0;
+  int ret = (gps_state->cb != O2G_NULLPTR) ? 1 : 0;
   if(!ret) {
     gps_state->data = context;
     gps_state->cb = cb;

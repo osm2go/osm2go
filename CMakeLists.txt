@@ -219,10 +219,10 @@ add_definitions(-DUSE_GOOCANVAS)
 add_definitions("-DPACKAGE=\"${PROJECT_NAME}\"" "-DPREFIX=\"${CMAKE_INSTALL_PREFIX}\"" "-DVERSION=\"${PROJECT_VERSION}\"")
 
 if (libLocation_FOUND)
-	list(APPEND osm2go_SOURCE_FILES src/gps_liblocation.c)
+	list(APPEND osm2go_SOURCE_FILES src/gps_liblocation.cpp)
 else ()
 	pkg_check_modules(GVFS REQUIRED IMPORTED_TARGET gnome-vfs-module-2.0)
-	list(APPEND osm2go_SOURCE_FILES src/gps.c)
+	list(APPEND osm2go_SOURCE_FILES src/gps.cpp)
 	list(APPEND MORE_LIBS PRIVATE PkgConfig::GVFS)
 endif ()
 
