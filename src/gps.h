@@ -25,32 +25,36 @@
 
 #include "pos.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-typedef struct gps_state_t gps_state_t;
-
-gps_state_t *gps_init();
-void gps_release(gps_state_t *gps_state);
-int gps_get_pos(gps_state_t *gps_state, pos_t *pos, float *alt) __attribute__((nonnull(1,2)));
-void gps_enable(gps_state_t *gps_state, gboolean enable);
+#include <osm2go_cpp.h>
 
 typedef int (*GpsCallback)(void *context);
 
-/**
- * @brief register or clear the GPS callback
- * @param gps_state the GPS context struct as returned by gps_init;
- * @param cb the new callback function, set to NULL to unregister
- * @param context a context pointer passed to cb
- * @return if there was a previous handler
- *
- * Does nothing if a handler already exists.
- */
-int gps_register_callback(struct gps_state_t *gps_state, GpsCallback cb, void *context);
+class gps_state_t {
+protected:
+  GpsCallback callback;
+  void *cb_context;
 
-#ifdef __cplusplus
-}
-#endif
+  gps_state_t()
+    : callback(O2G_NULLPTR)
+    , cb_context(O2G_NULLPTR)
+  {
+  }
+public:
+  virtual ~gps_state_t() {}
+
+  virtual bool get_pos(pos_t &pos, float *alt = O2G_NULLPTR) = 0;
+  virtual void setEnable(bool en) = 0;
+  /**
+   * @brief register or clear the GPS callback
+   * @param cb the new callback function, set to NULL to unregister
+   * @param context a context pointer passed to cb
+   * @return if there was a previous handler
+   *
+   * Does nothing if a handler already exists.
+   */
+  virtual bool registerCallback(GpsCallback cb, void *context) = 0;
+
+  static gps_state_t *create();
+};
 
 #endif // GPS_H

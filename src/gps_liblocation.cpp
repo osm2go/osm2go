@@ -33,128 +33,143 @@
 /* force usage of gpsd start/stop */
 #define LL_CONTROL_GPSD
 
-struct gps_state_t {
-  LocationGPSDevice *device;
+class gps_liblocation_state_t : public gps_state_t {
+public:
+  gps_liblocation_state_t();
+  virtual ~gps_liblocation_state_t();
+
+  virtual bool get_pos(pos_t &pos, float *alt = O2G_NULLPTR) O2G_OVERRIDE;
+  virtual void setEnable(bool) O2G_OVERRIDE;
+  virtual bool registerCallback(GpsCallback cb, void *context) O2G_OVERRIDE;
+
+  void updateCallback();
+
+  LocationGPSDevice * const device;
 #ifdef LL_CONTROL_GPSD
-  LocationGPSDControl *control;
-  gboolean gps_is_on;
+  LocationGPSDControl * const control;
+  bool gps_is_on;
 #endif
   guint idd_changed;
 
-  gboolean fix, fix3d;
-  gboolean enabled;
+  bool fix;
+  bool enabled;
   pos_t pos;
   float altitude;
-
-  /* callback called on gps change event */
-  GpsCallback cb;
-  void *data;
 };
 
-int gps_get_pos(gps_state_t *gps_state, pos_t *pos, float *alt) {
-  if(!gps_state->enabled)
-    return 0;
+bool gps_liblocation_state_t::get_pos(pos_t &pos, float* alt)
+{
+  if(!enabled)
+    return false;
 
-  if(!gps_state->fix)
-    return 0;
+  if(!fix)
+    return false;
 
-  *pos = gps_state->pos;
+  pos = this->pos;
 
   if(alt)
-    *alt = gps_state->altitude;
+    *alt = altitude;
 
-  return 1;
+  return true;
 }
 
+
 static void
-location_changed(LocationGPSDevice *device, gps_state_t *gps_state) {
+location_changed(gps_liblocation_state_t *gps_state) {
+  gps_state->updateCallback();
+}
 
-  gps_state->fix =
-    (device->fix->fields & LOCATION_GPS_DEVICE_LATLONG_SET);
+void gps_liblocation_state_t::updateCallback()
+{
+  fix = (device->fix->fields & LOCATION_GPS_DEVICE_LATLONG_SET);
 
-  if(gps_state->fix) {
-    gps_state->pos.lat = device->fix->latitude;
-    gps_state->pos.lon = device->fix->longitude;
+  if(fix) {
+    pos.lat = device->fix->latitude;
+    pos.lon = device->fix->longitude;
   }
 
   if(device->fix->fields & LOCATION_GPS_DEVICE_ALTITUDE_SET)
-    gps_state->altitude = device->fix->altitude;
+    altitude = device->fix->altitude;
   else
-    gps_state->altitude = NAN;
+    altitude = NAN;
 
-  if(gps_state->cb)
-    if(!gps_state->cb(gps_state->data))
-      gps_state->cb = O2G_NULLPTR;
+  if(callback)
+    if(!callback(cb_context))
+      callback = O2G_NULLPTR;
 }
 
-gps_state_t *gps_init() {
-  gps_state_t *gps_state = g_new0(gps_state_t, 1);
+gps_state_t *gps_state_t::create() {
+  return new gps_liblocation_state_t();
+}
 
+gps_liblocation_state_t::gps_liblocation_state_t()
+  : device(static_cast<LocationGPSDevice *>(g_object_new(LOCATION_TYPE_GPS_DEVICE, O2G_NULLPTR)))
+#ifdef LL_CONTROL_GPSD
+  , control(location_gpsd_control_get_default())
+  , gps_is_on(false)
+#endif
+  , fix(false)
+  , enabled(false)
+{
   printf("GPS init: Using liblocation\n");
 
-  gps_state->device = static_cast<LocationGPSDevice *>(g_object_new(LOCATION_TYPE_GPS_DEVICE, O2G_NULLPTR));
-  if(!gps_state->device) {
+  if(!device) {
     printf("Unable to connect to liblocation\n");
-    return gps_state;
+    return;
   }
 
-  gps_state->idd_changed =
-    g_signal_connect(gps_state->device, "changed",
-		     G_CALLBACK(location_changed), gps_state);
-
-#ifdef LL_CONTROL_GPSD
-  gps_state->control = location_gpsd_control_get_default();
-#endif
-
-  return gps_state;
+  idd_changed = g_signal_connect_swapped(device, "changed",
+                                         G_CALLBACK(location_changed), this);
 }
 
-void gps_release(gps_state_t *gps_state) {
-  if(!gps_state->device) return;
+gps_liblocation_state_t::~gps_liblocation_state_t()
+{
+  if(!device)
+    return;
 
 #ifdef LL_CONTROL_GPSD
-  if(gps_state->control
+  if(control
 #if MAEMO_VERSION_MAJOR < 5
-     && gps_state->control->can_control
+     && control->can_control
 #endif
      ) {
     printf("Having control over GPSD and its running, stopping it\n");
-    if(gps_state->gps_is_on)
-      location_gpsd_control_stop(gps_state->control);
+    if(gps_is_on)
+      location_gpsd_control_stop(control);
   }
 #endif
 
   /* Disconnect signal */
-  g_signal_handler_disconnect(gps_state->device, gps_state->idd_changed);
-
-  g_free(gps_state);
+  g_signal_handler_disconnect(device, idd_changed);
 }
 
-void gps_enable(gps_state_t *gps_state, gboolean enable) {
-  if(enable != gps_state->gps_is_on) {
-    if(gps_state->device && gps_state->control
+void gps_liblocation_state_t::setEnable(bool en)
+{
+  if(en != gps_is_on) {
+    if(device && control
 #if MAEMO_VERSION_MAJOR < 5
-       && gps_state->control->can_control
+       && control->can_control
 #endif
        ) {
-      if(enable) {
+      if(en) {
         printf("starting gpsd\n");
-        location_gpsd_control_start(gps_state->control);
+        location_gpsd_control_start(control);
       } else {
         printf("stopping gpsd\n");
-        location_gpsd_control_stop(gps_state->control);
+        location_gpsd_control_stop(control);
       }
-      gps_state->gps_is_on = enable;
+      gps_is_on = en;
     }
   }
-  gps_state->enabled = enable;
+  enabled = en;
 }
 
-int gps_register_callback(struct gps_state_t *gps_state, GpsCallback cb, void *context) {
-  int ret = (gps_state->cb != O2G_NULLPTR) ? 1 : 0;
+bool gps_liblocation_state_t::registerCallback(GpsCallback cb, void* context)
+{
+  bool ret = (callback != O2G_NULLPTR);
   if(!ret) {
-    gps_state->data = context;
-    gps_state->cb = cb;
+    cb_context = context;
+    callback = cb;
   }
   return ret;
 }

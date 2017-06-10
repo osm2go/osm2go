@@ -1157,7 +1157,7 @@ appdata_t::~appdata_t() {
 
   icon_free_all(icon);
 
-  gps_release(gps_state);
+  delete gps_state;
 
   settings_free(settings);
 
@@ -1294,7 +1294,7 @@ int main(int argc, char *argv[]) {
   /* user specific init */
   appdata.settings = settings_load();
 
-  appdata.gps_state = gps_init();
+  appdata.gps_state = gps_state_t::create();
 
 #ifdef USE_HILDON
   printf("Installing osso context for \"org.harbaum." PACKAGE "\"\n");

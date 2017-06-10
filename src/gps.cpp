@@ -68,23 +68,34 @@ struct gps_data_t {
 };
 
 /* setup for direct gpsd based communication */
-struct gps_state_t {
+class gpsd_state_t : public gps_state_t {
+public:
+  gpsd_state_t();
+  ~gpsd_state_t();
+
+  virtual bool get_pos(pos_t &pos, float *alt = O2G_NULLPTR) O2G_OVERRIDE;
+  virtual void setEnable(bool en) O2G_OVERRIDE;
+  virtual bool registerCallback(GpsCallback cb, void *context) O2G_OVERRIDE;
+
+  bool runCallback()
+  {
+    return callback(cb_context);
+  }
+
   /* when using liblocation, events are generated on position change */
   /* and no seperate timer is required */
   guint handler_id;
-  GpsCallback cb;
-  void *cb_context;
 
 #ifdef ENABLE_GPSBT
   gpsbt_t context;
 #endif
 
   GThread* thread_p;
-  GMutex *mutex;
+  GMutex * const mutex;
   GnomeVFSInetConnection *iconn;
   GnomeVFSSocket *socket;
 
-  gboolean enable;
+  bool enable;
 
   struct gps_data_t gpsdata;
 
@@ -97,25 +108,26 @@ struct gps_state_t {
 #define GPSD_HOST "127.0.0.1"
 #define GPSD_PORT 2947
 
-int gps_get_pos(gps_state_t *gps_state, pos_t *pos, float *alt) {
-  pos->lat = NAN;
+bool gpsd_state_t::get_pos(pos_t &pos, float* alt)
+{
+  pos.lat = NAN;
 
-  g_mutex_lock(gps_state->mutex);
-  if(gps_state->gpsdata.set & STATUS_SET) {
-    if(gps_state->gpsdata.status != STATUS_NO_FIX) {
-      if(gps_state->gpsdata.set & LATLON_SET)
-	*pos = gps_state->gpsdata.fix.pos;
-      if(alt && gps_state->gpsdata.set & ALTITUDE_SET)
-	*alt = gps_state->gpsdata.fix.alt;
+  g_mutex_lock(mutex);
+  if(gpsdata.set & STATUS_SET) {
+    if(gpsdata.status != STATUS_NO_FIX) {
+      if(gpsdata.set & LATLON_SET)
+        pos = gpsdata.fix.pos;
+      if(alt && gpsdata.set & ALTITUDE_SET)
+        *alt = gpsdata.fix.alt;
     }
   }
 
-  g_mutex_unlock(gps_state->mutex);
+  g_mutex_unlock(mutex);
 
-  return isnan(pos->lat) ? 0 : 1;
+  return !isnan(pos.lat);
 }
 
-static int gps_connect(gps_state_t *gps_state) {
+static int gps_connect(gpsd_state_t *gps_state) {
   GnomeVFSResult vfs_result;
 #ifdef ENABLE_GPSBT
   char errstr[256] = "";
@@ -243,8 +255,9 @@ static void gps_unpack(char *buf, struct gps_data_t *gpsdata) {
   }
 }
 
-void gps_enable(gps_state_t *gps_state, gboolean enable) {
-  gps_state->enable = enable;
+void gpsd_state_t::setEnable(bool en)
+{
+  enable = en;
 }
 
 gpointer gps_thread(gpointer data) {
@@ -253,7 +266,7 @@ gpointer gps_thread(gpointer data) {
 
   const char *msg = "o\r\n";   /* pos request */
 
-  gps_state_t * const gps_state = static_cast<gps_state_t *>(data);
+  gpsd_state_t * const gps_state = static_cast<gpsd_state_t *>(data);
   gps_state->gpsdata.set = 0;
 
   bool connected = false;
@@ -309,61 +322,67 @@ gpointer gps_thread(gpointer data) {
   return O2G_NULLPTR;
 }
 
-gps_state_t *gps_init() {
-  gps_state_t *gps_state = g_new0(gps_state_t, 1);
+gps_state_t *gps_state_t::create() {
+  return new gpsd_state_t();
+}
 
+gpsd_state_t::gpsd_state_t()
+  : handler_id(0)
+#if GLIB_CHECK_VERSION(2,32,0)
+  , mutex(&rmutex)
+#else
+  , mutex(g_mutex_new())
+#endif
+{
   printf("GPS init: Using gpsd\n");
+
+  memset(&gpsdata, 0, sizeof(gpsdata));
 
   /* start a new thread to listen to gpsd */
 #if GLIB_CHECK_VERSION(2,32,0)
-  gps_state->mutex = &gps_state->rmutex;
-  g_mutex_init(gps_state->mutex);
-  gps_state->thread_p =
-    g_thread_try_new("gps", gps_thread, gps_state, O2G_NULLPTR);
+  g_mutex_init(mutex);
+  thread_p = g_thread_try_new("gps", gps_thread, this, O2G_NULLPTR);
 #else
-  gps_state->mutex = g_mutex_new();
-  gps_state->thread_p =
-    g_thread_create(gps_thread, gps_state, FALSE, O2G_NULLPTR);
+  thread_p = g_thread_create(gps_thread, this, FALSE, O2G_NULLPTR);
 #endif
-
-  return gps_state;
 }
 
-void gps_release(gps_state_t *gps_state) {
-  gps_register_callback(gps_state, O2G_NULLPTR, O2G_NULLPTR);
+gpsd_state_t::~gpsd_state_t()
+{
+  registerCallback(O2G_NULLPTR, O2G_NULLPTR);
 #ifdef ENABLE_GPSBT
-  gpsbt_stop(&gps_state->context);
+  gpsbt_stop(&context);
 #endif
 #if GLIB_CHECK_VERSION(2,32,0)
-  g_mutex_clear(gps_state->mutex);
-  if (gps_state->thread_p)
-    g_thread_unref(gps_state->thread_p);
+  g_mutex_clear(mutex);
+  if(thread_p)
+    g_thread_unref(thread_p);
 #else
-  g_mutex_free(gps_state->mutex);
+  g_mutex_free(mutex);
 #endif
-  g_free(gps_state);
 }
 
 static gboolean gps_callback(gpointer data) {
-  gps_state_t * const state = (gps_state_t *)data;
+  gpsd_state_t * const state = static_cast<gpsd_state_t *>(data);
 
-  return state->cb(state->cb_context) ? TRUE : FALSE;
+  return state->runCallback() ? TRUE : FALSE;
 }
 
-int gps_register_callback(gps_state_t *gps_state, GtkFunction cb, gpointer context) {
-  if(gps_state->handler_id) {
+bool gpsd_state_t::registerCallback(GpsCallback cb, void* context)
+{
+  if(handler_id) {
     if(cb == O2G_NULLPTR) {
-      g_source_remove(gps_state->handler_id);
-      gps_state->handler_id = 0;
-      gps_state->cb = O2G_NULLPTR;
-      gps_state->cb_context = O2G_NULLPTR;
+      g_source_remove(handler_id);
+      handler_id = 0;
+      callback = O2G_NULLPTR;
+      cb_context = O2G_NULLPTR;
     }
     return 0;
   } else {
     if(cb != O2G_NULLPTR) {
-      gps_state->cb = cb;
-      gps_state->cb_context = context;
-      gps_state->handler_id = g_timeout_add_seconds(1, gps_callback, gps_state);
+      callback = cb;
+      cb_context = context;
+      handler_id = g_timeout_add_seconds(1, gps_callback, this);
     }
     return 1;
   }

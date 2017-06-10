@@ -80,6 +80,10 @@ enum menu_items {
   MENU_ITEMS_COUNT
 };
 
+#ifdef __cplusplus
+class gps_state_t;
+#endif
+
 typedef struct appdata_t {
 #ifdef USE_HILDON
   HildonProgram *program;
@@ -102,8 +106,6 @@ typedef struct appdata_t {
   struct iconbar_t *iconbar;
   struct icon_t *icon;
   struct presets_items *presets;
-
-  struct gps_state_t *gps_state;
 
 #ifdef USE_HILDON
   dbus_mm_pos_t mmpos;
@@ -138,6 +140,8 @@ typedef struct appdata_t {
 #endif
 
 #ifdef __cplusplus
+  gps_state_t *gps_state;
+
   appdata_t();
   ~appdata_t();
 #endif
