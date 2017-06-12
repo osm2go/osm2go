@@ -34,9 +34,9 @@ float zoom_to_scaledn(const float zoom);
 
 typedef enum {
   ES_TYPE_NONE = 0,
-  ES_TYPE_LINE,
-  ES_TYPE_AREA,
-  ES_TYPE_LINE_MOD
+  ES_TYPE_AREA = 1,
+  ES_TYPE_LINE = 2, ///< must not be combined with ES_TYPE_LINE_MOD
+  ES_TYPE_LINE_MOD = 4 ///< must not be combined with ES_TYPE_LINE
 } elemstyle_type_t;
 
 #define DEFAULT_DASH_LENGTH 0

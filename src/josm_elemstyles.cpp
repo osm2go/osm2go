@@ -312,8 +312,8 @@ void StyleSax::startElement(const xmlChar *name, const char **attrs)
     break;
   }
   case TagLine: {
-    g_assert(elemstyle->type == ES_TYPE_NONE);
-    elemstyle->type = ES_TYPE_LINE;
+    g_assert_cmpuint(elemstyle->type & (ES_TYPE_LINE | ES_TYPE_LINE_MOD), ==, 0);
+    elemstyle->type |= ES_TYPE_LINE;
 
     bool hasBgWidth = false, hasBgColor = false;
     /* these have to be present */
@@ -369,8 +369,8 @@ void StyleSax::startElement(const xmlChar *name, const char **attrs)
     break;
   }
   case TagLineMod: {
-    g_assert(elemstyle->type == ES_TYPE_NONE);
-    elemstyle->type = ES_TYPE_LINE_MOD;
+    g_assert_cmpuint(elemstyle->type & (ES_TYPE_LINE | ES_TYPE_LINE_MOD), ==, 0);
+    elemstyle->type |= ES_TYPE_LINE_MOD;
 
     elemstyle_line_mod_t &line_mod = elemstyle->line_mod;
 
@@ -387,8 +387,8 @@ void StyleSax::startElement(const xmlChar *name, const char **attrs)
     break;
   }
   case TagArea: {
-    g_assert(elemstyle->type == ES_TYPE_NONE);
-    elemstyle->type = ES_TYPE_AREA;
+    g_assert_cmpuint(elemstyle->type & ES_TYPE_AREA, ==, 0);
+    elemstyle->type |= ES_TYPE_AREA;
 
     bool hasColor = false;
     for(unsigned int i = 0; attrs[i] && !hasColor; i += 2) {
@@ -449,10 +449,6 @@ std::vector<elemstyle_t *> josm_elemstyles_load(const char *name) {
 }
 
 /* ----------------------- cleaning up --------------------- */
-
-static void free_line(elemstyle_line_t *line) {
-  g_free(line);
-}
 
 static void free_condition(elemstyle_condition_t &cond) {
   xmlFree(cond.key);
@@ -623,60 +619,50 @@ void josm_elemstyles_colorize_way_functor::apply_condition::operator()(const ele
                   condition_not_matches_obj(way)) != elemstyle->conditions.end())
     return;
 
-  switch(elemstyle->type) {
-  case ES_TYPE_NONE:
-    // already handled above
-    g_assert_not_reached();
-    break;
-
-  case ES_TYPE_LINE:
-    if(!way_processed) {
-      way->draw.color = elemstyle->line->color;
-      way->draw.width =  WIDTH_SCALE * elemstyle->line->width;
-      if(elemstyle->line->bg.valid) {
-        way->draw.flags |= OSM_DRAW_FLAG_BG;
-        way->draw.bg.color = elemstyle->line->bg.color;
-        way->draw.bg.width =  WIDTH_SCALE * elemstyle->line->bg.width;
-      }
-      if (elemstyle->zoom_max > 0)
-        way->draw.zoom_max = elemstyle->zoom_max;
-      else
-        way->draw.zoom_max = style->way.zoom_max;
-
-      way->draw.dash_length_on = elemstyle->line->dash_length_on;
-      way->draw.dash_length_off = elemstyle->line->dash_length_off;
-      way_processed = true;
-    }
-    break;
-
-  case ES_TYPE_LINE_MOD:
+  if(elemstyle->type & ES_TYPE_LINE_MOD) {
     /* just save the fact that a line mod was found for later */
     *line_mod = &elemstyle->line_mod;
-    break;
+  }
 
-  case ES_TYPE_AREA:
-    if(way_is_closed && !way_processed) {
-      way->draw.flags |= OSM_DRAW_FLAG_AREA;
-      /* comment the following line for grey border around all areas */
-      /* (potlatch style) */
+  if(way_processed)
+    return;
 
-      if(style->area.has_border_color)
-        way->draw.color = style->area.border_color;
-      else
-        way->draw.color = elemstyle->area.color;
-
-      way->draw.width =  WIDTH_SCALE * style->area.border_width;
-      /* apply area alpha */
-      way->draw.area.color =
-      RGBA_COMBINE(elemstyle->area.color, style->area.color);
-      if (elemstyle->zoom_max > 0)
-        way->draw.zoom_max = elemstyle->zoom_max;
-      else
-        way->draw.zoom_max = style->area.zoom_max;
-
-      way_processed = true;
+  if(elemstyle->type & ES_TYPE_LINE) {
+    way->draw.color = elemstyle->line->color;
+    way->draw.width =  WIDTH_SCALE * elemstyle->line->width;
+    if(elemstyle->line->bg.valid) {
+      way->draw.flags |= OSM_DRAW_FLAG_BG;
+      way->draw.bg.color = elemstyle->line->bg.color;
+      way->draw.bg.width =  WIDTH_SCALE * elemstyle->line->bg.width;
     }
-    break;
+    if (elemstyle->zoom_max > 0)
+      way->draw.zoom_max = elemstyle->zoom_max;
+    else
+      way->draw.zoom_max = style->way.zoom_max;
+
+    way->draw.dash_length_on = elemstyle->line->dash_length_on;
+    way->draw.dash_length_off = elemstyle->line->dash_length_off;
+    way_processed = true;
+  } else if(way_is_closed && elemstyle->type & ES_TYPE_AREA) {
+    way->draw.flags |= OSM_DRAW_FLAG_AREA;
+    /* comment the following line for grey border around all areas */
+    /* (potlatch style) */
+
+    if(style->area.has_border_color)
+      way->draw.color = style->area.border_color;
+    else
+      way->draw.color = elemstyle->area.color;
+
+    way->draw.width =  WIDTH_SCALE * style->area.border_width;
+    /* apply area alpha */
+    way->draw.area.color =
+    RGBA_COMBINE(elemstyle->area.color, style->area.color);
+    if (elemstyle->zoom_max > 0)
+      way->draw.zoom_max = elemstyle->zoom_max;
+    else
+      way->draw.zoom_max = style->area.zoom_max;
+
+    way_processed = true;
   }
 }
 
@@ -739,17 +725,8 @@ elemstyle_t::~elemstyle_t()
 {
   std::for_each(conditions.begin(), conditions.end(), free_condition);
 
-  switch(type) {
-  case ES_TYPE_NONE:
-    break;
-  case ES_TYPE_LINE:
-    free_line(line);
-    break;
-  case ES_TYPE_AREA:
-    break;
-  case ES_TYPE_LINE_MOD:
-    break;
-  }
+  if(type & ES_TYPE_LINE)
+    g_free(line);
 }
 
 // vim:et:ts=8:sw=2:sts=2:ai

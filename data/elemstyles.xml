@@ -26,7 +26,7 @@ A little help:
 	- icon (path to icon)
 	 - relative to the icon path
 
-Using both area and line attributes for the same key/value pair doesn't work!
+Using both area and line attributes for the same key/value pair does work.
 
 The colours can consist of the two components - name and hex code (e.g. water#0000ff).
 If both are given, the color name is introduced in preferences with that value. If only
@@ -397,11 +397,6 @@ be appended by a hex value of the alpha channel (thus having 8 hex digits instea
 		<condition k="highway" v="platform"/>
 		<icon annotate="true" src="misc/deprecated.png"/>
 		<line width="2" colour="highway_platform#c0c0c0"/>
-	</rule>
-
-	<rule>
-		<condition k="highway" v="platform"/>
-		<icon annotate="true" src="misc/deprecated.png"/>
 		<area colour="highway_platform#c0c0c0" closed="true"/>
 	</rule>
 
@@ -713,13 +708,6 @@ be appended by a hex value of the alpha channel (thus having 8 hex digits instea
 		<condition k="railway" v="platform"/>
 		<icon annotate="true" src="misc/deprecated.png"/>
 		<line width="2" colour="rail#404040"/>
-		<scale_min>1</scale_min>
-		<scale_max>50000</scale_max>
-	</rule>
-
-	<rule>
-		<condition k="railway" v="platform"/>
-		<icon annotate="true" src="misc/deprecated.png"/>
 		<area colour="rail#404040" closed="true"/>
 		<scale_min>1</scale_min>
 		<scale_max>50000</scale_max>
@@ -2559,12 +2547,6 @@ be appended by a hex value of the alpha channel (thus having 8 hex digits instea
 		<condition k="train" v="yes"/>
 		<icon annotate="true" src="transport/railway_station.png"  priority="10" />
 		<line width="1" realwidth="1" colour="service#809bc0" dashed="9" dashedcolour="livingdashed#00ff00"/>
-	</rule>
-
-	<rule>
-		<condition k="public_transport" v="platform"/>
-		<condition k="train" v="yes"/>
-		<icon annotate="true" src="transport/railway_station.png"  priority="10" />
 		<area colour="service#809bc0" closed="true" />
 	</rule>
 
@@ -2573,13 +2555,7 @@ be appended by a hex value of the alpha channel (thus having 8 hex digits instea
 		<condition k="tram" v="yes"/>
 		<icon annotate="true" src="transport/railway_station.png"  priority="8" />
 		<line width="1" realwidth="1" colour="service#809bc0" dashed="9" dashedcolour="livingdashed#00ff00"/>
-	</rule>
-
-	<rule>
-		<condition k="public_transport" v="platform"/>
-		<condition k="tram" v="yes"/>
-		<icon annotate="true" src="transport/railway_station.png"  priority="8" />
-		<line width="1" realwidth="1" colour="service#809bc0" dashed="9" dashedcolour="livingdashed#00ff00"/>
+		<area colour="service#809bc0" closed="true" />
 	</rule>
 
 	<rule>
@@ -2587,12 +2563,6 @@ be appended by a hex value of the alpha channel (thus having 8 hex digits instea
 		<condition k="ferry" v="yes"/>
 		<icon annotate="true" src="nautical/ferry.png"  priority="7" />
 		<line width="1" realwidth="1" colour="service#809bc0" dashed="9" dashedcolour="livingdashed#00ff00"/>
-	</rule>
-
-	<rule>
-		<condition k="public_transport" v="platform"/>
-		<condition k="ferry" v="yes"/>
-		<icon annotate="true" src="nautical/ferry.png"  priority="7" />
 		<area colour="service#809bc0" closed="true" />
 	</rule>
 
@@ -2601,12 +2571,6 @@ be appended by a hex value of the alpha channel (thus having 8 hex digits instea
 		<condition k="aerial" v="yes"/>
 		<icon annotate="true" src="transport/aerialway/station.png"  priority="6" />
 		<line width="1" realwidth="1" colour="service#809bc0" dashed="9" dashedcolour="livingdashed#00ff00"/>
-	</rule>
-
-	<rule>
-		<condition k="public_transport" v="platform"/>
-		<condition k="aerial" v="yes"/>
-		<icon annotate="true" src="transport/aerialway/station.png"  priority="6" />
 		<area colour="service#809bc0" closed="true" />
 	</rule>
 
@@ -2615,12 +2579,6 @@ be appended by a hex value of the alpha channel (thus having 8 hex digits instea
 		<condition k="bus" v="yes"/>
 		<icon annotate="true" src="transport/bus_small.png"  priority="4" />
 		<line width="1" realwidth="1" colour="service#809bc0" dashed="9" dashedcolour="livingdashed#00ff00"/>
-	</rule>
-
-	<rule>
-		<condition k="public_transport" v="platform"/>
-		<condition k="bus" v="yes"/>
-		<icon annotate="true" src="transport/bus_small.png"  priority="4" />
 		<area colour="service#809bc0" closed="true" />
 	</rule>
 
@@ -2628,11 +2586,6 @@ be appended by a hex value of the alpha channel (thus having 8 hex digits instea
 		<condition k="public_transport" v="platform"/>
 		<icon annotate="true" src="transport/bus_small.png" priority="-10"/>
 		<line width="1" realwidth="1" colour="service#809bc0" dashed="9" dashedcolour="livingdashed#00ff00"/>
-	</rule>
-
-	<rule>
-		<condition k="public_transport" v="platform"/>
-		<icon annotate="true" src="transport/bus_small.png" priority="-10"/>
 		<area colour="service#809bc0" closed="true" />
 	</rule>
 

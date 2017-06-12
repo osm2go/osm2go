@@ -18,9 +18,20 @@ static struct counter {
   std::vector<elemstyle_condition_t>::size_type conditions;
 } counter;
 
+static std::vector<elemstyle_type_t> types;
+
 static void checkItem(const elemstyle_t *item)
 {
-  counter.ruletypes[item->type]++;
+  if(G_UNLIKELY(types.empty())) {
+    types.push_back(ES_TYPE_NONE);
+    types.push_back(ES_TYPE_AREA);
+    types.push_back(ES_TYPE_LINE);
+    types.push_back(ES_TYPE_LINE_MOD);
+  }
+
+  for(std::vector<elemstyle_type_t>::size_type i = 0; i < types.size(); i++)
+    if(item->type & types[i])
+      counter.ruletypes[types[i]]++;
   counter.conditions += item->conditions.size();
 }
 

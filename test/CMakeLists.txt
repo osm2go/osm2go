@@ -18,10 +18,10 @@ set_property(TEST presets_load PROPERTY WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE
 osm_test(track_load_multi "${CMAKE_CURRENT_SOURCE_DIR}/multi.gpx")
 osm_test(diff_restore "${CMAKE_CURRENT_SOURCE_DIR}/" "diff_restore")
 
-osm_test(style_load "elemstyles.xml" 355 370 "standard")
+osm_test(style_load "elemstyles.xml" 347 357 "standard")
 set_property(TEST style_load PROPERTY WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 add_test(NAME style_load_mapnik
-		COMMAND style_load "elemstyles-mapnik.xml" 140 146 "mapnik"
+		COMMAND style_load "elemstyles-mapnik.xml" 134 137 "mapnik"
 		WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
 add_test(NAME style_load_potlatch
 		COMMAND style_load "${CMAKE_CURRENT_SOURCE_DIR}/../data/elemstyles-potlatch.xml" 27 27)

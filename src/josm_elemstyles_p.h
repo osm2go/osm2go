@@ -135,13 +135,13 @@ struct elemstyle_t {
 
   std::vector<elemstyle_condition_t> conditions;
 
-  elemstyle_type_t type;
+  unsigned int type; ///< combination of elemstyle_type_t
 
   union {
     elemstyle_line_mod_t line_mod;
     elemstyle_line_t *line;
-    elemstyle_area_t area;
   };
+  elemstyle_area_t area;
 
   float zoom_max;
   elemstyle_icon_t icon;
