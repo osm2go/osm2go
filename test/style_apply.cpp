@@ -88,13 +88,42 @@ int main(int argc, char **argv)
   tags.insert(osm_t::TagMap::value_type("addr:housenumber", "42"));
   node->tags.replace(tags);
 
-  josm_elemstyles_colorize_node(style, node);
+  josm_elemstyles_colorize_world(style, &osm);
 
   g_assert_false(style->node_icons.empty());
   g_assert_nonnull(style->node_icons[node->id]);
   g_assert_nonnull(*(style->iconP));
   g_assert(oldicon != style->node_icons[node->id]);
   g_assert_cmpfloat(oldzoom * 1.9, <, node->zoom_max);
+
+  way_t *way = new way_t(1);
+  osm.way_attach(way);
+
+  josm_elemstyles_colorize_world(style, &osm);
+  // default values for all ways set in test1.style
+  way_t w0;
+  w0.draw.width = 3;
+  w0.draw.color = 0x999999ff;
+  g_assert_cmpint(memcmp(&(way->draw), &(w0.draw), sizeof(w0.draw)), ==, 0);
+
+  // apply a way style
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("bridge", "yes"));
+  way->tags.replace(tags);
+  josm_elemstyles_colorize_way(style, way);
+  g_assert_cmpint(memcmp(&(way->draw), &(w0.draw), sizeof(w0.draw)), !=, 0);
+  g_assert_cmpuint(way->draw.color, ==, 0x00008080);
+  g_assert_cmpint(way->draw.width, ==, 7);
+
+  // 2 colliding linemods
+  // only the last one should be used
+  tags.insert(osm_t::TagMap::value_type("bridge", "yes"));
+  tags.insert(osm_t::TagMap::value_type("access", "no"));
+  way->tags.replace(tags);
+  josm_elemstyles_colorize_way(style, way);
+  g_assert_cmpint(memcmp(&(way->draw), &(w0.draw), sizeof(w0.draw)), !=, 0);
+  g_assert_cmpuint(way->draw.color, ==, 0xff8080ff);
+  g_assert_cmpint(way->draw.width, ==, 5);
 
   delete style;
 
