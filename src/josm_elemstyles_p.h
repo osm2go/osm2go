@@ -111,6 +111,7 @@ struct elemstyle_line_mod_t {
 G_STATIC_ASSERT(sizeof(elemstyle_line_mod_t) == 4 + sizeof(elemstyle_color_t));
 
 struct elemstyle_area_t {
+  elemstyle_area_t() : color (0) {}
   elemstyle_color_t color;
 };
 
