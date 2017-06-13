@@ -489,7 +489,7 @@ struct condition_not_matches_obj {
   }
 };
 
-static void node_icon_unref(style_t *style, node_t *node) {
+static void node_icon_unref(style_t *style, const node_t *node) {
   std::map<item_id_t, GdkPixbuf *>::iterator it = style->node_icons.find(node->id);
   if(it != style->node_icons.end()) {
     icon_free(style->iconP, it->second);
