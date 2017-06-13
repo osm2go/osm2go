@@ -502,10 +502,10 @@ struct colorize_node {
   node_t * const node;
   bool &somematch;
   colorize_node(style_t *s, node_t *n, bool &m) : style(s), node(n), somematch(m) {}
-  void operator()(elemstyle_t *elemstyle);
+  void operator()(const elemstyle_t *elemstyle);
 };
 
-void colorize_node::operator()(elemstyle_t *elemstyle)
+void colorize_node::operator()(const elemstyle_t *elemstyle)
 {
   if(elemstyle->icon.filename.empty())
     return;
