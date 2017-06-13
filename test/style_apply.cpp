@@ -106,7 +106,7 @@ int main(int argc, char **argv)
   w0.draw.color = 0x999999ff;
   g_assert_cmpint(memcmp(&(way->draw), &(w0.draw), sizeof(w0.draw)), ==, 0);
 
-  // apply a way style
+  // apply a way style (linemod)
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("bridge", "yes"));
   way->tags.replace(tags);
@@ -124,6 +124,24 @@ int main(int argc, char **argv)
   g_assert_cmpint(memcmp(&(way->draw), &(w0.draw), sizeof(w0.draw)), !=, 0);
   g_assert_cmpuint(way->draw.color, ==, 0xff8080ff);
   g_assert_cmpint(way->draw.width, ==, 5);
+
+  // apply way style (line)
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("highway", "residential"));
+  way->tags.replace(tags);
+  josm_elemstyles_colorize_way(style, way);
+  g_assert_cmpint(memcmp(&(way->draw), &(w0.draw), sizeof(w0.draw)), !=, 0);
+  g_assert_cmpuint(way->draw.color, ==, 0xc0c0c0ff);
+  g_assert_cmpint(way->draw.width, ==, 2);
+
+  // apply way style (line, area style not matching)
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("highway", "platform"));
+  way->tags.replace(tags);
+  josm_elemstyles_colorize_way(style, way);
+  g_assert_cmpint(memcmp(&(way->draw), &(w0.draw), sizeof(w0.draw)), !=, 0);
+  g_assert_cmpuint(way->draw.color, ==, 0x809bc0ff);
+  g_assert_cmpint(way->draw.width, ==, 1);
 
   delete style;
 
