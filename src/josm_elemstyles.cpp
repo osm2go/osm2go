@@ -526,10 +526,13 @@ void colorize_node::operator()(const elemstyle_t *elemstyle)
   name += '/';
   name += elemstyle->icon.filename;
 
-  /* free old icon if there's one present */
-  node_icon_unref(style, node);
-
   GdkPixbuf *buf = icon_load(style->iconP, name);
+
+  /* Free old icon if there's one present, but only after loading (not
+   * assigning!) the new one. In case the old and new icon are the same
+   * this ensures it still is in the icon cache if this is the only user,
+   * avoiding needless image processing. */
+  node_icon_unref(style, node);
 
   if(buf)
     style->node_icons[node->id] = buf;
