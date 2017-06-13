@@ -318,7 +318,7 @@ void StyleSax::startElement(const xmlChar *name, const char **attrs)
     bool hasBgWidth = false, hasBgColor = false;
     /* these have to be present */
     bool hasColor = false, hasWidth = false;
-    elemstyle_line_t *line = elemstyle->line = g_new0(elemstyle_line_t, 1);
+    elemstyle_line_t *line = elemstyle->line = new elemstyle_line_t();
 
     for(unsigned int i = 0; attrs[i]; i += 2) {
       if(strcmp(attrs[i], "colour") == 0) {
@@ -726,7 +726,7 @@ elemstyle_t::~elemstyle_t()
   std::for_each(conditions.begin(), conditions.end(), free_condition);
 
   if(type & ES_TYPE_LINE)
-    g_free(line);
+    delete line;
 }
 
 // vim:et:ts=8:sw=2:sts=2:ai

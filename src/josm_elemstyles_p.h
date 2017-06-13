@@ -69,6 +69,10 @@ struct elemstyle_condition_t {
  */
 
 struct elemstyle_line_t {
+  elemstyle_line_t() {
+    memset(this, 0, sizeof(*this));
+  }
+
   gint width;
   elemstyle_color_t color;
   guint dash_length_on: 16;
