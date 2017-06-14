@@ -1479,7 +1479,6 @@ way_chain_t osm_t::node_delete(node_t *node, bool permanently,
   } else {
     printf("permanently delete node #" ITEM_ID_FORMAT "\n", node->id);
 
-    /* remove it from the chain */
     std::map<item_id_t, node_t *>::iterator it = nodes.find(node->id);
     g_assert(it != nodes.end());
 
@@ -1706,7 +1705,6 @@ void osm_t::way_delete(way_t *way, bool permanently) {
   } else {
     printf("permanently delete way #" ITEM_ID_FORMAT "\n", way->id);
 
-    /* remove it from the chain */
     std::map<item_id_t, way_t *>::iterator it = ways.find(way->id);
     g_assert(it != ways.end());
 
