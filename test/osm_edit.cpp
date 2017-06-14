@@ -387,6 +387,63 @@ static void test_reverse()
   g_assert(w->tags == rtags);
 }
 
+static void test_way_delete()
+{
+  osm_t o;
+  o.rbounds.ll_min.lat = 52.2692786;
+  o.rbounds.ll_min.lon = 9.5750497;
+  o.rbounds.ll_max.lat = 52.2695463;
+  o.rbounds.ll_max.lon = 9.5755;
+
+  pos_t center((o.rbounds.ll_max.lat + o.rbounds.ll_min.lat) / 2,
+               (o.rbounds.ll_max.lon + o.rbounds.ll_min.lon) / 2);
+
+  pos2lpos_center(&center, &o.rbounds.center);
+  o.rbounds.scale = cos(DEG2RAD(center.lat));
+
+  o.bounds = &o.rbounds;
+
+  // delete a simple way
+  lpos_t l(10, 20);
+  node_t *n1 = o.node_new(l);
+  o.node_attach(n1);
+  l.y = 40;
+  node_t *n2 = o.node_new(l);
+  o.node_attach(n2);
+  way_t *w = new way_t(1);
+  w->append_node(n1);
+  w->append_node(n2);
+  o.way_attach(w);
+
+  o.way_delete(w, true);
+
+  g_assert_cmpuint(o.nodes.size(), ==, 0);
+  g_assert_cmpuint(o.ways.size(), ==, 0);
+
+  // delete a closed way
+  n1 = o.node_new(l);
+  o.node_attach(n1);
+  l.y = 20;
+  n2 = o.node_new(l);
+  o.node_attach(n2);
+  w = new way_t(1);
+  w->append_node(n1);
+  w->append_node(n2);
+  o.way_attach(w);
+  l.x = 20;
+  n2 = o.node_new(l);
+  o.node_attach(n2);
+  w->append_node(n2);
+  g_assert_false(w->is_closed());
+  w->append_node(n1);
+  g_assert_true(w->is_closed());
+
+  o.way_delete(w, false);
+
+  g_assert_cmpuint(o.nodes.size(), ==, 0);
+  g_assert_cmpuint(o.ways.size(), ==, 0);
+}
+
 int main()
 {
   xmlInitParser();
@@ -396,6 +453,7 @@ int main()
   test_split();
   test_changeset();
   test_reverse();
+  test_way_delete();
 
   xmlCleanupParser();
 
