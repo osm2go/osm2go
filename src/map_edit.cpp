@@ -192,7 +192,7 @@ void map_edit_way_add_cancel(map_t *map) {
  * The first node of nchain must be the last one of way. It will be
  * preserved in nchain, all other nodes will be moded to chain.
  */
-static void merge_node_chains(way_t *way, node_chain_t *nchain, gboolean reverse)
+static void merge_node_chains(way_t *way, node_chain_t *nchain, bool reverse)
 {
   node_chain_t &chain = way->node_chain;
 
@@ -253,7 +253,7 @@ void map_edit_way_add_ok(map_t *map) {
   std::for_each(chain.begin(), chain.end(), map_draw_nodes(map));
 
   /* attach to existing way if the user requested so */
-  gboolean reverse = FALSE;
+  bool reverse = false;
   if(map->action.extending) {
     node_t *nfirst = map->action.way->node_chain.front();
 
@@ -263,7 +263,7 @@ void map_edit_way_add_ok(map_t *map) {
     if(map->action.extending->first_node() == nfirst) {
       printf("  need to prepend\n");
       map->action.extending->reverse();
-      reverse = TRUE;
+      reverse = true;
     } else
       printf("  need to append\n");
 
