@@ -38,39 +38,39 @@ be appended by a hex value of the alpha channel (thus having 8 hex digits instea
 <rules>
 	<rule>
 		<condition k="bridge" b="yes"/>
-		<linemod mode="over" width="+4" colour="bridge#00008080" dashed="false"/>
+		<linemod mode="over" width_bg="+4" colour_bg="bridge#00008080" dashed="false"/>
 	</rule>
 	<rule>
 		<condition k="bridge" v="viaduct"/>
-		<linemod mode="over" width="+4" colour="bridge#00008080" dashed="false"/>
+		<linemod mode="over" width_bg="+4" colour_bg="bridge#00008080" dashed="false"/>
 	</rule>
 	<rule>
 		<condition k="bridge" v="aqueduct"/>
-		<linemod mode="over" width="+4" colour="bridge" dashed="false"/>
+		<linemod mode="over" width_bg="+4" colour_bg="bridge" dashed="false"/>
 	</rule>
 	<rule>
 		<condition k="bridge" v="movable"/>
-		<linemod mode="over" width="+4" colour="bridge#00008080" dashed="false"/>
+		<linemod mode="over" width_bg="+4" colour_bg="bridge#00008080" dashed="false"/>
 	</rule>
 	<rule>
 		<condition k="bridge" v="cantilever"/>
-		<linemod mode="over" width="+4" colour="bridge#00008080" dashed="false"/>
+		<linemod mode="over" width_bg="+4" colour_bg="bridge#00008080" dashed="false"/>
 	</rule>
 	<rule>
 		<condition k="bridge" v="covered"/>
-		<linemod mode="over" width="+4" colour="bridge#00008080" dashed="false"/>
+		<linemod mode="over" width_bg="+4" colour_bg="bridge#00008080" dashed="false"/>
 	</rule>
 	<rule>
 		<condition k="bridge" v="low_water_crossing"/>
-		<linemod mode="over" width="+4" colour="bridge#00008080" dashed="false"/>
+		<linemod mode="over" width_bg="+4" colour_bg="bridge#00008080" dashed="false"/>
 	</rule>
 	<rule>
 		<condition k="bridge" v="trestle"/>
-		<linemod mode="over" width="+4" colour="bridge#00008080" dashed="false"/>
+		<linemod mode="over" width_bg="+4" colour_bg="bridge#00008080" dashed="false"/>
 	</rule>
 	<rule>
 		<condition k="bridge" v="swing"/>
-		<linemod mode="over" width="+4" colour="bridge#00008080" dashed="false"/>
+		<linemod mode="over" width_bg="+4" colour_bg="bridge#00008080" dashed="false"/>
 	</rule>
 
 <!--restrictions tags -->
