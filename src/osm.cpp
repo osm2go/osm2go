@@ -1669,10 +1669,10 @@ struct osm_unref_way_free {
 
 void osm_unref_way_free::operator()(node_t* node)
 {
-  g_assert_cmpint(node->ways, >, 0);
-  node->ways--;
   printf("checking node #" ITEM_ID_FORMAT " (still used by %d)\n",
          node->id, node->ways);
+  g_assert_cmpint(node->ways, >, 0);
+  node->ways--;
 
   /* this node must only be part of this way */
   if(!node->ways) {
