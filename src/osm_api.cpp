@@ -1104,18 +1104,30 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   /* create a new changeset */
   if(osm_create_changeset(context)) {
     /* check for dirty entries */
-    appendf(context.log, O2G_NULLPTR, _("Uploading nodes:\n"));
-    std::for_each(osm->nodes.begin(), osm->nodes.end(), osm_upload_nodes(context));
-    appendf(context.log, O2G_NULLPTR, _("Uploading ways:\n"));
-    std::for_each(osm->ways.begin(), osm->ways.end(), osm_upload_ways(context));
-    appendf(context.log, O2G_NULLPTR, _("Uploading relations:\n"));
-    std::for_each(osm->relations.begin(), osm->relations.end(), osm_upload_relations(context));
-    appendf(context.log, O2G_NULLPTR, _("Deleting relations:\n"));
-    std::for_each(osm->relations.begin(), osm->relations.end(), osm_delete_relations(context));
-    appendf(context.log, O2G_NULLPTR, _("Deleting ways:\n"));
-    std::for_each(osm->ways.begin(), osm->ways.end(), osm_delete_ways(context));
-    appendf(context.log, O2G_NULLPTR, _("Deleting nodes:\n"));
-    std::for_each(osm->nodes.begin(), osm->nodes.end(), osm_delete_nodes(context));
+    if(dirty.nodes.added + dirty.nodes.dirty > 0) {
+      appendf(context.log, O2G_NULLPTR, _("Uploading nodes:\n"));
+      std::for_each(osm->nodes.begin(), osm->nodes.end(), osm_upload_nodes(context));
+    }
+    if(dirty.ways.added + dirty.ways.dirty > 0) {
+      appendf(context.log, O2G_NULLPTR, _("Uploading ways:\n"));
+      std::for_each(osm->ways.begin(), osm->ways.end(), osm_upload_ways(context));
+    }
+    if(dirty.relations.added + dirty.relations.dirty > 0) {
+      appendf(context.log, O2G_NULLPTR, _("Uploading relations:\n"));
+      std::for_each(osm->relations.begin(), osm->relations.end(), osm_upload_relations(context));
+    }
+    if(dirty.relations.deleted > 0) {
+      appendf(context.log, O2G_NULLPTR, _("Deleting relations:\n"));
+      std::for_each(osm->relations.begin(), osm->relations.end(), osm_delete_relations(context));
+    }
+    if(dirty.ways.deleted > 0) {
+      appendf(context.log, O2G_NULLPTR, _("Deleting ways:\n"));
+      std::for_each(osm->ways.begin(), osm->ways.end(), osm_delete_ways(context));
+    }
+    if(dirty.nodes.deleted > 0) {
+      appendf(context.log, O2G_NULLPTR, _("Deleting nodes:\n"));
+      std::for_each(osm->nodes.begin(), osm->nodes.end(), osm_delete_nodes(context));
+    }
 
     /* close changeset */
     osm_close_changeset(context);
