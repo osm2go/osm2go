@@ -202,7 +202,7 @@ static void merge_node_chains(way_t *way, node_chain_t &nchain, bool reverse)
 
     /* skip first node of new way as its the same as the last one of the */
     /* way we are attaching it to */
-    chain.insert(chain.end(), nchain.begin()++, nchain.end());
+    chain.insert(chain.end(), ++nchain.begin(), nchain.end());
 
     /* terminate new way afer first node */
     nchain.resize(1);
