@@ -504,6 +504,9 @@ static gboolean osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
 }
 
 struct osm_dirty_t {
+  osm_dirty_t()
+  { memset(this, 0, sizeof(*this)); }
+
   GtkWidget *dialog;
   struct counter {
     int total, added, dirty, deleted;
@@ -921,7 +924,6 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
 
   /* count nodes */
   osm_dirty_t dirty;
-  memset(&dirty, 0, sizeof(dirty));
 
   std::for_each(osm->nodes.begin(), osm->nodes.end(), object_counter(dirty.nodes));
   printf("nodes:     new %2d, dirty %2d, deleted %2d\n",
