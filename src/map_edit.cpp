@@ -192,20 +192,20 @@ void map_edit_way_add_cancel(map_t *map) {
  * The first node of nchain must be the last one of way. It will be
  * preserved in nchain, all other nodes will be moded to chain.
  */
-static void merge_node_chains(way_t *way, node_chain_t *nchain, bool reverse)
+static void merge_node_chains(way_t *way, node_chain_t &nchain, bool reverse)
 {
   node_chain_t &chain = way->node_chain;
 
-  if(nchain->size() > 1) {
+  if(nchain.size() > 1) {
     /* make enough room for all nodes */
-    chain.reserve(chain.size() + nchain->size() - 1);
+    chain.reserve(chain.size() + nchain.size() - 1);
 
     /* skip first node of new way as its the same as the last one of the */
     /* way we are attaching it to */
-    chain.insert(chain.end(), nchain->begin()++, nchain->end());
+    chain.insert(chain.end(), nchain.begin()++, nchain.end());
 
     /* terminate new way afer first node */
-    nchain->resize(1);
+    nchain.resize(1);
   }
 
   /* and undo reversion of required */
@@ -268,7 +268,7 @@ void map_edit_way_add_ok(map_t *map) {
       printf("  need to append\n");
 
     /* search end of way to be extended */
-    merge_node_chains(map->action.extending, &map->action.way->node_chain, reverse);
+    merge_node_chains(map->action.extending, map->action.way->node_chain, reverse);
 
     /* erase and free new way (now only containing the first node anymore) */
     map_item_chain_destroy(&map->action.way->map_item_chain);
@@ -329,7 +329,7 @@ void map_edit_way_add_ok(map_t *map) {
       reverse = !reverse;
     }
 
-    merge_node_chains(map->action.way, &map->action.ends_on->node_chain, reverse);
+    merge_node_chains(map->action.way, map->action.ends_on->node_chain, reverse);
 
     /* erase and free ends_on (now only containing the first node anymore) */
     map_way_delete(map, map->action.ends_on);
