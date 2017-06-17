@@ -35,3 +35,10 @@ target_link_libraries(osm_load osm2go_lib)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/test1.style.in" "${CMAKE_CURRENT_BINARY_DIR}/test1.style" @ONLY)
 osm_test(style_apply "${CMAKE_CURRENT_BINARY_DIR}/test1")
 set_property(TEST style_apply PROPERTY WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
+find_program(DPKG_PARSECHANGELOG NAMES dpkg-parsechangelog)
+if (DPKG_PARSECHANGELOG)
+	add_test(NAME parsechangelog COMMAND ${DPKG_PARSECHANGELOG}
+			WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+	set_property(TEST parsechangelog PROPERTY FAIL_REGULAR_EXPRESSION ": warning:")
+endif ()
