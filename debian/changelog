@@ -1,3 +1,9 @@
+osm2go (1:0.9.7-maemo1) karmic; urgency=low
+
+  * do not show deleted relations in relation list (broken forever)
+
+ -- Rolf Eike Beer <eike@sf-mail.de>  Sat, 17 Jun 2017 13:24:48 +0200
+
 osm2go (1:0.9.6-maemo1) karmic; urgency=low
 
   * fix invalid way being created when extending way, possibly leading to crashes (broken in 0.9.0)

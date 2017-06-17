@@ -275,6 +275,10 @@ struct relation_list_insert_functor {
 void relation_list_insert_functor::operator()(std::pair<item_id_t, relation_t *> pair)
 {
   const relation_t * const relation = pair.second;
+
+  if(relation->flags & OSM_FLAG_DELETED)
+    return;
+
   GtkTreeIter iter;
   /* try to find something descriptive */
   std::string name = relation->descriptive_name();
