@@ -2038,11 +2038,11 @@ void map_delete_selected(map_t *map) {
 
   undo_open_new_state(map->appdata, UNDO_DELETE, item.object);
 
+  printf("request to delete %s #" ITEM_ID_FORMAT "\n",
+         objtype, item.object.obj->id);
+
   switch(item.object.type) {
   case NODE: {
-    printf("request to delete node #" ITEM_ID_FORMAT "\n",
-	   item.object.obj->id);
-
     undo_append_object(map->appdata, UNDO_DELETE, item.object);
 
     /* check if this node is part of a way with two nodes only. */
@@ -2073,9 +2073,11 @@ void map_delete_selected(map_t *map) {
   }
 
   case WAY:
-    printf("request to delete way #" ITEM_ID_FORMAT "\n",
-	   item.object.obj->id);
     map_way_delete(map, item.object.way);
+    break;
+
+  case RELATION:
+    map->appdata->osm->relation_delete(item.object.relation, false);
     break;
 
   default:

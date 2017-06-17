@@ -127,12 +127,7 @@ void icon_bar_map_cancel_ok(iconbar_t *iconbar,
 
 void icon_bar_map_item_selected(iconbar_t *iconbar,
 		map_item_t *map_item, gboolean selected) {
-  /* one can't remove relations by clicking this while they are */
-  /* selected. May change in the future */
-  if(selected && (!map_item || map_item->object.type != RELATION))
-    gtk_widget_set_sensitive(iconbar->trash, TRUE);
-  else
-    gtk_widget_set_sensitive(iconbar->trash, FALSE);
+  gtk_widget_set_sensitive(iconbar->trash, selected);
 
   gtk_widget_set_sensitive(iconbar->info, map_item && selected);
 

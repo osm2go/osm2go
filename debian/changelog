@@ -1,6 +1,7 @@
 osm2go (1:0.9.7-maemo1) karmic; urgency=low
 
   * do not show deleted relations in relation list (broken forever)
+  * allow to delete selected relation from map view
 
  -- Rolf Eike Beer <eike@sf-mail.de>  Sat, 17 Jun 2017 13:24:48 +0200
 
