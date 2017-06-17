@@ -2020,14 +2020,18 @@ static bool short_way(const way_t *way) {
 
 /* called from icon "trash" */
 void map_delete_selected(map_t *map) {
-  if(!yes_no_f(GTK_WIDGET(map->appdata->window),
-	       map->appdata, MISC_AGAIN_ID_DELETE, MISC_AGAIN_FLAG_DONT_SAVE_NO,
-	       _("Delete selected object?"),
-	       _("Do you really want to delete the selected object?")))
-    return;
-
   /* work on local copy since de-selecting destroys the selection */
   map_item_t item = map->selected;
+
+  const char *objtype = item.object.type_string();
+  gchar *msgtitle = g_strdup_printf(_("Delete selected %s?"), objtype);
+  bool yn = yes_no_f(GTK_WIDGET(map->appdata->window),
+                     map->appdata, MISC_AGAIN_ID_DELETE, MISC_AGAIN_FLAG_DONT_SAVE_NO,
+                     msgtitle,
+                     _("Do you really want to delete the selected %s?"), objtype);
+  g_free(msgtitle);
+  if(!yn)
+    return;
 
   /* deleting the selected item de-selects it ... */
   map_item_deselect(map);
