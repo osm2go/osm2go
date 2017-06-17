@@ -56,8 +56,7 @@ extern "C" {
 struct map_item_t;
 
 GtkWidget *iconbar_new(appdata_t *appdata);
-void icon_bar_map_item_selected(iconbar_t *iconbar, struct map_item_t *map_item,
-				gboolean selected);
+void icon_bar_map_item_selected(iconbar_t *iconbar, struct map_item_t *map_item);
 void icon_bar_map_cancel_ok(iconbar_t *iconbar, gboolean cancel, gboolean ok);
 /**
  * @brief set enable state of edit buttons

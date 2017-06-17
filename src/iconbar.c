@@ -126,16 +126,17 @@ void icon_bar_map_cancel_ok(iconbar_t *iconbar,
 }
 
 void icon_bar_map_item_selected(iconbar_t *iconbar,
-		map_item_t *map_item, gboolean selected) {
+		map_item_t *map_item) {
+  gboolean selected = map_item ? TRUE : FALSE;
   gtk_widget_set_sensitive(iconbar->trash, selected);
 
-  gtk_widget_set_sensitive(iconbar->info, map_item && selected);
+  gtk_widget_set_sensitive(iconbar->info, selected);
 
 #ifdef MAIN_GUI_RELATION
-  gtk_widget_set_sensitive(iconbar->relation_add, map_item && selected);
+  gtk_widget_set_sensitive(iconbar->relation_add, selected);
 #endif
 
-  gboolean way_en = (selected && map_item && map_item->object.type == WAY) ?
+  gboolean way_en = (selected && map_item->object.type == WAY) ?
                     TRUE : FALSE;
   gtk_widget_set_sensitive(iconbar->way_node_add, way_en);
   gtk_widget_set_sensitive(iconbar->way_cut, way_en);
@@ -323,10 +324,10 @@ GtkWidget *iconbar_new(appdata_t *appdata) {
 
   /* --------------------------------------------------------- */
 
-  icon_bar_map_item_selected(appdata->iconbar, NULL, FALSE);
+  icon_bar_map_item_selected(iconbar, NULL);
 
 #ifndef FINGER_UI
-  icon_bar_map_cancel_ok(appdata->iconbar, FALSE, FALSE);
+  icon_bar_map_cancel_ok(iconbar, FALSE, FALSE);
 #endif
 
   return box;

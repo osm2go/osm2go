@@ -161,7 +161,7 @@ static void map_node_select(map_t *map, node_t *node) {
     map_item->item = O2G_NULLPTR;
 
   map_statusbar(map, map_item);
-  icon_bar_map_item_selected(map->appdata->iconbar, map_item, TRUE);
+  icon_bar_map_item_selected(map->appdata->iconbar, map_item);
 
   /* highlight node */
   gint x = map_item->object.node->lpos.x, y = map_item->object.node->lpos.y;
@@ -309,7 +309,7 @@ void map_way_select(map_t *map, way_t *way) {
   map_item->item      = way->map_item_chain->firstCanvasItem();
 
   map_statusbar(map, map_item);
-  icon_bar_map_item_selected(map->appdata->iconbar, map_item, TRUE);
+  icon_bar_map_item_selected(map->appdata->iconbar, map_item);
   gtk_widget_set_sensitive(map->appdata->menuitems[MENU_ITEM_MAP_HIDE_SEL], TRUE);
 
   gint arrow_width = ((map_item->object.way->draw.flags & OSM_DRAW_FLAG_BG)?
@@ -408,7 +408,7 @@ void map_relation_select(map_t *map, relation_t *relation) {
   map_item->item      = O2G_NULLPTR;
 
   map_statusbar(map, map_item);
-  icon_bar_map_item_selected(map->appdata->iconbar, map_item, TRUE);
+  icon_bar_map_item_selected(map->appdata->iconbar, map_item);
 
   /* process all members */
   relation_select_functor fc(*hl, map);
@@ -446,7 +446,7 @@ void map_item_deselect(map_t *map) {
   map->appdata->statusbar->set(O2G_NULLPTR, FALSE);
 
   /* disable/enable icons in icon bar */
-  icon_bar_map_item_selected(map->appdata->iconbar, O2G_NULLPTR, FALSE);
+  icon_bar_map_item_selected(map->appdata->iconbar, O2G_NULLPTR);
   gtk_widget_set_sensitive(map->appdata->menuitems[MENU_ITEM_MAP_HIDE_SEL], FALSE);
 
   /* remove highlight */
