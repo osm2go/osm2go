@@ -504,13 +504,41 @@ static gboolean osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
 }
 
 struct osm_dirty_t {
-  osm_dirty_t()
-  { memset(this, 0, sizeof(*this)); }
+  osm_dirty_t(const osm_t *osm)
+    : dialog(O2G_NULLPTR)
+    , nodes(osm->nodes)
+    , ways(osm->ways)
+    , relations(osm->relations)
+  {
+  }
 
   GtkWidget *dialog;
-  struct counter {
-    int total, added, dirty, deleted;
-  } ways, nodes, relations;
+  template<typename T>
+  class counter {
+    struct object_counter {
+      counter<T> &dirty;
+      object_counter(counter<T> &d) : dirty(d) {}
+      void operator()(std::pair<item_id_t, const T *> pair);
+    };
+  public:
+    counter(const std::map<item_id_t, T *> &map)
+      : total(map.size())
+      , added(0)
+      , dirty(0)
+      , deleted(0)
+    {
+      std::for_each(map.begin(), map.end(), object_counter(*this));
+    }
+
+    const unsigned int total;
+    unsigned int added, dirty, deleted;
+
+    void table_insert_count(GtkWidget *table, const int row) const;
+  };
+
+  counter<node_t> nodes;
+  counter<way_t> ways;
+  counter<relation_t> relations;
 };
 
 static GtkWidget *table_attach_label_c(GtkWidget *table, char *str,
@@ -845,19 +873,11 @@ static gboolean cb_focus_in(GtkTextView *view, GdkEventFocus *,
   return FALSE;
 }
 
-struct object_counter {
-  osm_dirty_t::counter &dirty;
-  object_counter(osm_dirty_t::counter &d) : dirty(d) {}
-  void operator()(const base_object_t *obj);
-  void operator()(std::pair<item_id_t, const base_object_t *> pair) {
-    operator()(pair.second);
-  }
-};
-
-void object_counter::operator()(const base_object_t *obj)
+template<typename T>
+void osm_dirty_t::counter<T>::object_counter::operator()(std::pair<item_id_t, const T *> pair)
 {
+  const T * const obj = pair.second;
   int flags = obj->flags;
-  dirty.total++;
   if(flags & OSM_FLAG_DELETED)
     dirty.deleted++;
   else if(flags & OSM_FLAG_NEW)
@@ -866,12 +886,12 @@ void object_counter::operator()(const base_object_t *obj)
     dirty.dirty++;
 }
 
-static void table_insert_count(GtkWidget *table, const struct osm_dirty_t::counter &dirty,
-                               const int row) {
-  table_attach_int(table, dirty.total,   1, 2, row, row + 1);
-  table_attach_int(table, dirty.added,   2, 3, row, row + 1);
-  table_attach_int(table, dirty.dirty,   3, 4, row, row + 1);
-  table_attach_int(table, dirty.deleted, 4, 5, row, row + 1);
+template<typename T>
+void osm_dirty_t::counter<T>::table_insert_count(GtkWidget *table, const int row) const {
+  table_attach_int(table, total,   1, 2, row, row + 1);
+  table_attach_int(table, added,   2, 3, row, row + 1);
+  table_attach_int(table, dirty,   3, 4, row, row + 1);
+  table_attach_int(table, deleted, 4, 5, row, row + 1);
 }
 
 static void details_table(GtkWidget *dialog, const osm_dirty_t &dirty) {
@@ -884,13 +904,13 @@ static void details_table(GtkWidget *dialog, const osm_dirty_t &dirty) {
 
   int row = 1;
   table_attach_label_l(table, _("Nodes:"),         0, 1, row, row + 1);
-  table_insert_count(table, dirty.nodes, row++);
+  dirty.nodes.table_insert_count(table, row++);
 
   table_attach_label_l(table, _("Ways:"),          0, 1, row, row + 1);
-  table_insert_count(table, dirty.ways, row++);
+  dirty.ways.table_insert_count(table, row++);
 
   table_attach_label_l(table, _("Relations:"),     0, 1, row, row + 1);
-  table_insert_count(table, dirty.relations, row++);
+  dirty.relations.table_insert_count(table, row++);
 
   gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
                      table, FALSE, FALSE, 0);
@@ -922,20 +942,13 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
 
   /* upload config and confirmation dialog */
 
-  /* count nodes */
-  osm_dirty_t dirty;
+  /* count objects */
+  osm_dirty_t dirty(osm);
 
-  std::for_each(osm->nodes.begin(), osm->nodes.end(), object_counter(dirty.nodes));
   printf("nodes:     new %2d, dirty %2d, deleted %2d\n",
 	 dirty.nodes.added, dirty.nodes.dirty, dirty.nodes.deleted);
-
-  /* count ways */
-  std::for_each(osm->ways.begin(), osm->ways.end(), object_counter(dirty.ways));
   printf("ways:      new %2d, dirty %2d, deleted %2d\n",
 	 dirty.ways.added, dirty.ways.dirty, dirty.ways.deleted);
-
-  /* count relations */
-  std::for_each(osm->relations.begin(), osm->relations.end(), object_counter(dirty.relations));
   printf("relations: new %2d, dirty %2d, deleted %2d\n",
 	 dirty.relations.added, dirty.relations.dirty, dirty.relations.deleted);
 
