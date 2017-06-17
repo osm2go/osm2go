@@ -1,3 +1,14 @@
+osm2go (1:0.9.6-maemo1) karmic; urgency=low
+
+  * fix invalid way being created when extending way, possibly leading to crashes (broken in 0.9.0)
+  * fix corrupted local object ids when after upload when the API returns 64 bit ids (broken forever)
+  * add all missing icons for the JOSM style from upstream
+  * improve handling of WMS server replies
+  * skip some steps during upload when it is clear that it would not do anything (e.g. no deletions)
+  * the usual internal refactorings
+
+ -- Rolf Eike Beer <eike@sf-mail.de>  Sat, 17 Jun 2017 13:24:48 +0200
+
 osm2go (1:0.9.5-maemo1) karmic; urgency=low
 
   * fix crash and invalid XML when uploading partially downloaded relation (broken forever)
