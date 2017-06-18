@@ -1624,7 +1624,7 @@ struct remove_member_functor {
 void remove_member_functor::operator()(std::pair<item_id_t, relation_t *> pair)
 {
   relation_t * const relation = pair.second;
-  const std::vector<member_t>::iterator itEnd = relation->members.end();
+  std::vector<member_t>::iterator itEnd = relation->members.end();
   std::vector<member_t>::iterator it = relation->members.begin();
 
   while((it = std::find(it, itEnd, obj)) != itEnd) {
@@ -1632,6 +1632,8 @@ void remove_member_functor::operator()(std::pair<item_id_t, relation_t *> pair)
 
     osm_member_free(*it);
     it = relation->members.erase(it);
+    // refresh end iterator as the vector was modified
+    itEnd = relation->members.end();
 
     relation->flags |= OSM_FLAG_DIRTY;
   }

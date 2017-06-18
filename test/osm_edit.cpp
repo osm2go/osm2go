@@ -444,6 +444,54 @@ static void test_way_delete()
   g_assert_cmpuint(o.ways.size(), ==, 0);
 }
 
+static void test_member_delete()
+{
+  osm_t o;
+  o.rbounds.ll_min.lat = 52.2692786;
+  o.rbounds.ll_min.lon = 9.5750497;
+  o.rbounds.ll_max.lat = 52.2695463;
+  o.rbounds.ll_max.lon = 9.5755;
+
+  pos_t center((o.rbounds.ll_max.lat + o.rbounds.ll_min.lat) / 2,
+               (o.rbounds.ll_max.lon + o.rbounds.ll_min.lon) / 2);
+
+  pos2lpos_center(&center, &o.rbounds.center);
+  o.rbounds.scale = cos(DEG2RAD(center.lat));
+
+  o.bounds = &o.rbounds;
+
+  // a way with 3 points
+  lpos_t l(10, 20);
+  node_t *n1 = o.node_new(l);
+  o.node_attach(n1);
+  l.y = 40;
+  node_t *n2 = o.node_new(l);
+  o.node_attach(n2);
+  way_t *w = new way_t(1);
+  w->append_node(n1);
+  w->append_node(n2);
+  o.way_attach(w);
+
+  l.x = 20;
+  n2 = o.node_new(l);
+  o.node_attach(n2);
+  w->append_node(n2);
+
+  // a relation containing both the way as well as the node
+  relation_t * const r = new relation_t(1);
+  r->members.push_back(member_t(object_t(w), O2G_NULLPTR));
+  r->members.push_back(member_t(object_t(n2), O2G_NULLPTR));
+  o.relation_attach(r);
+
+  // now delete the node that is member of both other objects
+  o.remove_from_relations(n2);
+  o.node_delete(n2, false, true);
+
+  g_assert_cmpuint(o.nodes.size(), ==, 2);
+  g_assert_cmpuint(o.ways.size(), ==, 1);
+  g_assert_cmpuint(o.relations.size(), ==, 1);
+}
+
 int main()
 {
   xmlInitParser();
@@ -454,6 +502,7 @@ int main()
   test_changeset();
   test_reverse();
   test_way_delete();
+  test_member_delete();
 
   xmlCleanupParser();
 
