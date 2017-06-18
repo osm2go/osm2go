@@ -806,6 +806,9 @@ struct relation_list_widget_functor {
 
 void relation_list_widget_functor::operator()(const relation_t *rel)
 {
+  if(rel->flags & OSM_FLAG_DELETED)
+    return;
+
   const std::string &name = rel->descriptive_name();
   GtkTreeIter iter;
 
