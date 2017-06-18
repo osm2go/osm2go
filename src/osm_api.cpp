@@ -563,36 +563,42 @@ static GtkWidget *table_attach_int(GtkWidget *table, int num,
   return label;
 }
 
-struct osm_delete_nodes {
+struct osm_delete_objects {
   osm_upload_context_t &context;
-  osm_delete_nodes(osm_upload_context_t &co) : context(co) {}
-  void operator()(node_t *node);
+  const char * const objname;
+  const std::string urlbase;
+  /**
+   * @brief create the delete functor object
+   * @param co the upload context instance
+   * @param oname the object name string AS USED BY THE OSM API
+   */
+  osm_delete_objects(osm_upload_context_t &co, const char *oname)
+    : context(co), objname(oname), urlbase(context.urlbasestr + '/' + oname + '/') {}
+  void operator()(base_object_t *obj);
 };
 
-void osm_delete_nodes::operator()(node_t *node)
+void osm_delete_objects::operator()(base_object_t *obj)
 {
-  project_t *project = context.project;
+  /* make sure gui gets updated */
+  while(gtk_events_pending()) gtk_main_iteration();
 
-    /* make sure gui gets updated */
-    while(gtk_events_pending()) gtk_main_iteration();
+  g_assert(obj->flags & OSM_FLAG_DELETED);
 
-  g_assert(node->flags & OSM_FLAG_DELETED);
+  printf("deleting %s " ITEM_ID_FORMAT " on server\n", objname, obj->id);
 
-    printf("deleting node on server\n");
+  appendf(context.log, O2G_NULLPTR, _("Delete %s #" ITEM_ID_FORMAT " "), objname, obj->id);
 
-    appendf(context.log, O2G_NULLPTR, _("Delete node #" ITEM_ID_FORMAT " "), node->id);
+  char *url = g_strdup_printf("%s" ITEM_ID_FORMAT,
+                              urlbase.c_str(), obj->id);
 
-    char *url = g_strdup_printf("%s/node/" ITEM_ID_FORMAT,
-                                context.urlbasestr.c_str(), node->id);
+  xmlChar *xml_str = obj->generate_xml(context.changeset);
 
-    xmlChar *xml_str = node->generate_xml(context.changeset);
-
-    if(osm_delete_item(context, xml_str, url)) {
-      node->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
-      project->data_dirty = true;
-    }
-    xmlFree(xml_str);
-    g_free(url);
+  if(osm_delete_item(context, xml_str, url)) {
+    obj->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
+    context.project->data_dirty = true;
+  }
+  xmlFree(xml_str);
+  g_free(url);
 }
 
 struct osm_upload_nodes {
@@ -636,37 +642,6 @@ void osm_upload_nodes::operator()(node_t *node)
   g_free(url);
 }
 
-struct osm_delete_ways {
-  osm_upload_context_t &context;
-  osm_delete_ways(osm_upload_context_t &co) : context(co) {}
-  void operator()(way_t *way);
-};
-
-void osm_delete_ways::operator()(way_t *way)
-{
-  project_t *project = context.project;
-  /* make sure gui gets updated */
-  while(gtk_events_pending()) gtk_main_iteration();
-
-  g_assert(way->flags & OSM_FLAG_DELETED);
-
-  printf("deleting way on server\n");
-
-  appendf(context.log, O2G_NULLPTR, _("Delete way #" ITEM_ID_FORMAT " "), way->id);
-
-  char *url = g_strdup_printf("%s/way/" ITEM_ID_FORMAT,
-                                context.urlbasestr.c_str(), way->id);
-  xmlChar *xml_str = way->generate_xml(context.changeset);
-
-  if(osm_delete_item(context, xml_str, url)) {
-    way->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
-    project->data_dirty = true;
-  }
-
-  xmlFree(xml_str);
-  g_free(url);
-}
-
 struct osm_upload_ways {
   osm_upload_context_t &context;
   osm_upload_ways(osm_upload_context_t &co) : context(co) {}
@@ -705,39 +680,6 @@ void osm_upload_ways::operator()(way_t *way)
     }
     xmlFree(xml_str);
   }
-  g_free(url);
-}
-
-struct osm_delete_relations {
-  osm_upload_context_t &context;
-  osm_delete_relations(osm_upload_context_t &co) : context(co) {}
-  void operator()(relation_t *relation);
-};
-
-void osm_delete_relations::operator()(relation_t *relation)
-{
-  project_t *project = context.project;
-
-  /* make sure gui gets updated */
-  while(gtk_events_pending()) gtk_main_iteration();
-
-  g_assert(relation->flags & OSM_FLAG_DELETED);
-
-  printf("deleting relation on server\n");
-
-  appendf(context.log, O2G_NULLPTR,
-          _("Delete relation #" ITEM_ID_FORMAT " "), relation->id);
-
-  char *url = g_strdup_printf("%s/relation/" ITEM_ID_FORMAT,
-                              context.urlbasestr.c_str(), relation->id);
-  xmlChar *xml_str = relation->generate_xml(context.changeset);
-
-  if(osm_delete_item(context, xml_str, url)) {
-    relation->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
-    project->data_dirty = true;
-  }
-
-  xmlFree(xml_str);
   g_free(url);
 }
 
@@ -1118,15 +1060,15 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
     }
     if(!dirty.relations.deleted.empty()) {
       appendf(context.log, O2G_NULLPTR, _("Deleting relations:\n"));
-      std::for_each(dirty.relations.deleted.begin(), dirty.relations.deleted.end(), osm_delete_relations(context));
+      std::for_each(dirty.relations.deleted.begin(), dirty.relations.deleted.end(), osm_delete_objects(context, "relation"));
     }
     if(!dirty.ways.deleted.empty()) {
       appendf(context.log, O2G_NULLPTR, _("Deleting ways:\n"));
-      std::for_each(dirty.ways.deleted.begin(), dirty.ways.deleted.end(), osm_delete_ways(context));
+      std::for_each(dirty.ways.deleted.begin(), dirty.ways.deleted.end(), osm_delete_objects(context, "way"));
     }
     if(!dirty.nodes.deleted.empty()) {
       appendf(context.log, O2G_NULLPTR, _("Deleting nodes:\n"));
-      std::for_each(dirty.nodes.deleted.begin(), dirty.nodes.deleted.end(), osm_delete_nodes(context));
+      std::for_each(dirty.nodes.deleted.begin(), dirty.nodes.deleted.end(), osm_delete_objects(context, "node"));
     }
 
     /* close changeset */

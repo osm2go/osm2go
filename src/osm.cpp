@@ -2220,11 +2220,6 @@ void tag_list_t::replace(const osm_t::TagMap &ntags)
   std::for_each(ntags.begin(), ntags.end(), tag_fill_functor(*contents));
 }
 
-base_object_t::base_object_t()
-{
-  memset(this, 0, sizeof(*this));
-}
-
 base_object_t::base_object_t(item_id_t ver, item_id_t i)
   : id(i)
   , version(ver)

@@ -64,8 +64,8 @@ typedef struct bounds_t {
   float scale;
 } bounds_t;
 
-struct base_object_t;
 #ifdef __cplusplus
+class base_object_t;
 struct item_id_chain_t;
 class node_t;
 class relation_t;
@@ -74,6 +74,7 @@ struct tag_t;
 typedef std::vector<relation_t *> relation_chain_t;
 typedef std::vector<way_t *> way_chain_t;
 #else
+struct base_object_t;
 typedef struct base_object_t base_object_t;
 typedef struct node_s node_t;
 typedef struct relation_s relation_t;
@@ -337,9 +338,9 @@ private:
 
 G_STATIC_ASSERT(sizeof(tag_list_t) == sizeof(tag_t *));
 
-struct base_object_t {
-  explicit base_object_t();
-  explicit base_object_t(item_id_t ver, item_id_t i = 0);
+class base_object_t {
+public:
+  explicit base_object_t(item_id_t ver = 0, item_id_t i = 0);
 
   item_id_t id;
   item_id_t version;
@@ -356,12 +357,15 @@ struct base_object_t {
    * changed or not.
    */
   void updateTags(const osm_t::TagMap &ntags);
+
+  virtual xmlChar *generate_xml(item_id_t changeset) const = 0;
 };
 
 class node_t : public base_object_t {
 public:
   explicit node_t();
   explicit node_t(item_id_t ver, const lpos_t &lp, const pos_t &p, item_id_t i = 0);
+  virtual ~node_t() {}
 
   pos_t pos;
   lpos_t lpos;
@@ -371,7 +375,7 @@ public:
   /* a link to the visual representation on screen */
   struct map_item_chain_t *map_item_chain;
 
-  xmlChar *generate_xml(item_id_t changeset) const;
+  xmlChar *generate_xml(item_id_t changeset) const O2G_OVERRIDE;
 };
 
 struct item_id_chain_t {
@@ -390,6 +394,7 @@ class way_t: public base_object_t {
 public:
   explicit way_t();
   explicit way_t(item_id_t ver, item_id_t i = 0);
+  virtual ~way_t() {}
 
   /* visual representation from elemstyle */
   struct {
@@ -436,7 +441,7 @@ public:
   const node_t *first_node() const;
   unsigned int reverse_direction_sensitive_tags();
   unsigned int reverse_direction_sensitive_roles(osm_t *osm);
-  xmlChar *generate_xml(item_id_t changeset) const;
+  xmlChar *generate_xml(item_id_t changeset) const O2G_OVERRIDE;
   void write_node_chain(xmlNodePtr way_node) const;
 
   void cleanup();
@@ -446,6 +451,7 @@ class relation_t : public base_object_t {
 public:
   explicit relation_t();
   explicit relation_t(item_id_t ver, item_id_t i = 0);
+  virtual ~relation_t() {}
 
   std::vector<member_t> members;
 
@@ -454,7 +460,7 @@ public:
 
   void members_by_type(guint *nodes, guint *ways, guint *relations) const;
   std::string descriptive_name() const;
-  xmlChar *generate_xml(item_id_t changeset) const;
+  xmlChar *generate_xml(item_id_t changeset) const O2G_OVERRIDE;
 
   bool is_multipolygon() const;
 
