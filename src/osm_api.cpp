@@ -504,7 +504,7 @@ static gboolean osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
 }
 
 struct osm_dirty_t {
-  osm_dirty_t(const osm_t *osm)
+  osm_dirty_t(osm_t *osm)
     : dialog(O2G_NULLPTR)
     , nodes(osm->nodes)
     , ways(osm->ways)
@@ -518,20 +518,20 @@ struct osm_dirty_t {
     struct object_counter {
       counter<T> &dirty;
       object_counter(counter<T> &d) : dirty(d) {}
-      void operator()(std::pair<item_id_t, const T *> pair);
+      void operator()(std::pair<item_id_t, T *> pair);
     };
   public:
     counter(const std::map<item_id_t, T *> &map)
       : total(map.size())
       , added(0)
       , dirty(0)
-      , deleted(0)
     {
       std::for_each(map.begin(), map.end(), object_counter(*this));
     }
-
     const unsigned int total;
-    unsigned int added, dirty, deleted;
+    unsigned int added, dirty;
+    std::vector<T *> modified;
+    std::vector<T *> deleted;
 
     void table_insert_count(GtkWidget *table, const int row) const;
   };
@@ -566,19 +566,17 @@ static GtkWidget *table_attach_int(GtkWidget *table, int num,
 struct osm_delete_nodes {
   osm_upload_context_t &context;
   osm_delete_nodes(osm_upload_context_t &co) : context(co) {}
-  void operator()(std::pair<item_id_t, node_t *> pair);
+  void operator()(node_t *node);
 };
 
-void osm_delete_nodes::operator()(std::pair<item_id_t, node_t *> pair)
+void osm_delete_nodes::operator()(node_t *node)
 {
-  node_t *node = pair.second;
   project_t *project = context.project;
 
     /* make sure gui gets updated */
     while(gtk_events_pending()) gtk_main_iteration();
 
-  if(!(node->flags & OSM_FLAG_DELETED))
-      return;
+  g_assert(node->flags & OSM_FLAG_DELETED);
 
     printf("deleting node on server\n");
 
@@ -600,20 +598,17 @@ void osm_delete_nodes::operator()(std::pair<item_id_t, node_t *> pair)
 struct osm_upload_nodes {
   osm_upload_context_t &context;
   osm_upload_nodes(osm_upload_context_t &co) : context(co) {}
-  void operator()(std::pair<item_id_t, node_t *> pair);
+  void operator()(node_t *node);
 };
 
-void osm_upload_nodes::operator()(std::pair<item_id_t, node_t *> pair)
+void osm_upload_nodes::operator()(node_t *node)
 {
-  node_t * const node = pair.second;
   project_t *project = context.project;
 
   /* make sure gui gets updated */
   while(gtk_events_pending()) gtk_main_iteration();
 
-  if(!(node->flags & (OSM_FLAG_DIRTY | OSM_FLAG_NEW)) ||
-     (node->flags & OSM_FLAG_DELETED))
-    return;
+  g_assert(node->flags & (OSM_FLAG_DIRTY | OSM_FLAG_NEW));
 
   char *url = O2G_NULLPTR;
 
@@ -644,18 +639,16 @@ void osm_upload_nodes::operator()(std::pair<item_id_t, node_t *> pair)
 struct osm_delete_ways {
   osm_upload_context_t &context;
   osm_delete_ways(osm_upload_context_t &co) : context(co) {}
-  void operator()(std::pair<item_id_t, way_t *> pair);
+  void operator()(way_t *way);
 };
 
-void osm_delete_ways::operator()(std::pair<item_id_t, way_t *> pair)
+void osm_delete_ways::operator()(way_t *way)
 {
-  way_t * const way = pair.second;
   project_t *project = context.project;
   /* make sure gui gets updated */
   while(gtk_events_pending()) gtk_main_iteration();
 
-  if(!(way->flags & OSM_FLAG_DELETED))
-    return;
+  g_assert(way->flags & OSM_FLAG_DELETED);
 
   printf("deleting way on server\n");
 
@@ -677,20 +670,17 @@ void osm_delete_ways::operator()(std::pair<item_id_t, way_t *> pair)
 struct osm_upload_ways {
   osm_upload_context_t &context;
   osm_upload_ways(osm_upload_context_t &co) : context(co) {}
-  void operator()(std::pair<item_id_t, way_t *> pair);
+  void operator()(way_t *way);
 };
 
-void osm_upload_ways::operator()(std::pair<item_id_t, way_t *> pair)
+void osm_upload_ways::operator()(way_t *way)
 {
-  way_t * const way = pair.second;
   project_t *project = context.project;
 
   /* make sure gui gets updated */
   while(gtk_events_pending()) gtk_main_iteration();
 
-  if(!(way->flags & (OSM_FLAG_DIRTY | OSM_FLAG_NEW)) ||
-     (way->flags & OSM_FLAG_DELETED))
-    return;
+  g_assert(way->flags & (OSM_FLAG_DIRTY | OSM_FLAG_NEW));
 
   char *url = O2G_NULLPTR;
 
@@ -721,19 +711,17 @@ void osm_upload_ways::operator()(std::pair<item_id_t, way_t *> pair)
 struct osm_delete_relations {
   osm_upload_context_t &context;
   osm_delete_relations(osm_upload_context_t &co) : context(co) {}
-  void operator()(std::pair<item_id_t, relation_t *> pair);
+  void operator()(relation_t *relation);
 };
 
-void osm_delete_relations::operator()(std::pair<item_id_t, relation_t *> pair)
+void osm_delete_relations::operator()(relation_t *relation)
 {
-  relation_t * const relation = pair.second;
   project_t *project = context.project;
 
   /* make sure gui gets updated */
   while(gtk_events_pending()) gtk_main_iteration();
 
-  if(!(relation->flags & OSM_FLAG_DELETED))
-    return;
+  g_assert(relation->flags & OSM_FLAG_DELETED);
 
   printf("deleting relation on server\n");
 
@@ -756,20 +744,17 @@ void osm_delete_relations::operator()(std::pair<item_id_t, relation_t *> pair)
 struct osm_upload_relations {
   osm_upload_context_t &context;
   osm_upload_relations(osm_upload_context_t &co) : context(co) {}
-  void operator()(std::pair<item_id_t, relation_t *> pair);
+  void operator()(relation_t *relation);
 };
 
-void osm_upload_relations::operator()(std::pair<item_id_t, relation_t *> pair)
+void osm_upload_relations::operator()(relation_t *relation)
 {
-  relation_t * const relation = pair.second;
   project_t *project = context.project;
 
   /* make sure gui gets updated */
   while(gtk_events_pending()) gtk_main_iteration();
 
-  if(!(relation->flags & (OSM_FLAG_DIRTY | OSM_FLAG_NEW)) ||
-     (relation->flags & OSM_FLAG_DELETED))
-    return;
+  g_assert(relation->flags & (OSM_FLAG_DIRTY | OSM_FLAG_NEW));
 
   char *url = O2G_NULLPTR;
 
@@ -874,16 +859,19 @@ static gboolean cb_focus_in(GtkTextView *view, GdkEventFocus *,
 }
 
 template<typename T>
-void osm_dirty_t::counter<T>::object_counter::operator()(std::pair<item_id_t, const T *> pair)
+void osm_dirty_t::counter<T>::object_counter::operator()(std::pair<item_id_t, T *> pair)
 {
-  const T * const obj = pair.second;
+  T * const obj = pair.second;
   int flags = obj->flags;
-  if(flags & OSM_FLAG_DELETED)
-    dirty.deleted++;
-  else if(flags & OSM_FLAG_NEW)
+  if(flags & OSM_FLAG_DELETED) {
+    dirty.deleted.push_back(obj);
+  } else if(flags & OSM_FLAG_NEW) {
     dirty.added++;
-  else if(flags & OSM_FLAG_DIRTY)
+    dirty.modified.push_back(obj);
+  } else if(flags & OSM_FLAG_DIRTY) {
     dirty.dirty++;
+    dirty.modified.push_back(obj);
+  }
 }
 
 template<typename T>
@@ -891,7 +879,7 @@ void osm_dirty_t::counter<T>::table_insert_count(GtkWidget *table, const int row
   table_attach_int(table, total,   1, 2, row, row + 1);
   table_attach_int(table, added,   2, 3, row, row + 1);
   table_attach_int(table, dirty,   3, 4, row, row + 1);
-  table_attach_int(table, deleted, 4, 5, row, row + 1);
+  table_attach_int(table, deleted.size(), 4, 5, row, row + 1);
 }
 
 static void details_table(GtkWidget *dialog, const osm_dirty_t &dirty) {
@@ -945,13 +933,12 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   /* count objects */
   osm_dirty_t dirty(osm);
 
-  printf("nodes:     new %2d, dirty %2d, deleted %2d\n",
-	 dirty.nodes.added, dirty.nodes.dirty, dirty.nodes.deleted);
-  printf("ways:      new %2d, dirty %2d, deleted %2d\n",
-	 dirty.ways.added, dirty.ways.dirty, dirty.ways.deleted);
-  printf("relations: new %2d, dirty %2d, deleted %2d\n",
-	 dirty.relations.added, dirty.relations.dirty, dirty.relations.deleted);
-
+  printf("nodes:     new %2u, dirty %2u, deleted %2zu\n",
+         dirty.nodes.added, dirty.nodes.dirty, dirty.nodes.deleted.size());
+  printf("ways:      new %2u, dirty %2u, deleted %2zu\n",
+         dirty.ways.added, dirty.ways.dirty, dirty.ways.deleted.size());
+  printf("relations: new %2u, dirty %2u, deleted %2zu\n",
+         dirty.relations.added, dirty.relations.dirty, dirty.relations.deleted.size());
 
   GtkWidget *dialog =
     misc_dialog_new(MISC_DIALOG_MEDIUM, _("Upload to OSM"),
@@ -1117,29 +1104,29 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   /* create a new changeset */
   if(osm_create_changeset(context)) {
     /* check for dirty entries */
-    if(dirty.nodes.added + dirty.nodes.dirty > 0) {
+    if(!dirty.nodes.modified.empty()) {
       appendf(context.log, O2G_NULLPTR, _("Uploading nodes:\n"));
-      std::for_each(osm->nodes.begin(), osm->nodes.end(), osm_upload_nodes(context));
+      std::for_each(dirty.nodes.modified.begin(), dirty.nodes.modified.end(), osm_upload_nodes(context));
     }
-    if(dirty.ways.added + dirty.ways.dirty > 0) {
+    if(!dirty.ways.modified.empty()) {
       appendf(context.log, O2G_NULLPTR, _("Uploading ways:\n"));
-      std::for_each(osm->ways.begin(), osm->ways.end(), osm_upload_ways(context));
+      std::for_each(dirty.ways.modified.begin(), dirty.ways.modified.end(), osm_upload_ways(context));
     }
-    if(dirty.relations.added + dirty.relations.dirty > 0) {
+    if(!dirty.relations.modified.empty()) {
       appendf(context.log, O2G_NULLPTR, _("Uploading relations:\n"));
-      std::for_each(osm->relations.begin(), osm->relations.end(), osm_upload_relations(context));
+      std::for_each(dirty.relations.modified.begin(), dirty.relations.modified.end(), osm_upload_relations(context));
     }
-    if(dirty.relations.deleted > 0) {
+    if(!dirty.relations.deleted.empty()) {
       appendf(context.log, O2G_NULLPTR, _("Deleting relations:\n"));
-      std::for_each(osm->relations.begin(), osm->relations.end(), osm_delete_relations(context));
+      std::for_each(dirty.relations.deleted.begin(), dirty.relations.deleted.end(), osm_delete_relations(context));
     }
-    if(dirty.ways.deleted > 0) {
+    if(!dirty.ways.deleted.empty()) {
       appendf(context.log, O2G_NULLPTR, _("Deleting ways:\n"));
-      std::for_each(osm->ways.begin(), osm->ways.end(), osm_delete_ways(context));
+      std::for_each(dirty.ways.deleted.begin(), dirty.ways.deleted.end(), osm_delete_ways(context));
     }
-    if(dirty.nodes.deleted > 0) {
+    if(!dirty.nodes.deleted.empty()) {
       appendf(context.log, O2G_NULLPTR, _("Deleting nodes:\n"));
-      std::for_each(osm->nodes.begin(), osm->nodes.end(), osm_delete_nodes(context));
+      std::for_each(dirty.nodes.deleted.begin(), dirty.nodes.deleted.end(), osm_delete_nodes(context));
     }
 
     /* close changeset */
