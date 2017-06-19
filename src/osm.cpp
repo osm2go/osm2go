@@ -544,6 +544,47 @@ void relation_t::cleanup() {
   osm_members_free(members);
 }
 
+struct gen_xml_relation_functor {
+  xmlNodePtr const xml_node;
+  gen_xml_relation_functor(xmlNodePtr n) : xml_node(n) {}
+  void operator()(const member_t &member);
+};
+
+void gen_xml_relation_functor::operator()(const member_t &member)
+{
+  xmlNodePtr m_node = xmlNewChild(xml_node,O2G_NULLPTR,BAD_CAST "member", O2G_NULLPTR);
+
+  const char *typestr;
+  switch(member.object.type) {
+  case NODE:
+  case NODE_ID:
+    typestr = node_t::api_string();
+    break;
+  case WAY:
+  case WAY_ID:
+    typestr = way_t::api_string();
+    break;
+  case RELATION:
+  case RELATION_ID:
+    typestr = relation_t::api_string();
+    break;
+  default:
+    g_assert_not_reached();
+    return;
+  }
+
+  xmlNewProp(m_node, BAD_CAST "type", BAD_CAST typestr);
+  xmlNewProp(m_node, BAD_CAST "ref", BAD_CAST member.object.id_string().c_str());
+
+  if(member.role)
+    xmlNewProp(m_node, BAD_CAST "role", BAD_CAST member.role);
+}
+
+void relation_t::generate_member_xml(xmlNodePtr xml_node) const
+{
+  std::for_each(members.begin(), members.end(), gen_xml_relation_functor(xml_node));
+}
+
 void osm_t::relation_free(relation_t *relation) {
   relations.erase(relation->id);
   relation->cleanup();
@@ -1139,36 +1180,14 @@ struct tag_to_xml {
   }
 };
 
-static xmlDocPtr
-osm_generate_xml_init(xmlNodePtr *node, const char *node_name)
+xmlChar *base_object_t::generate_xml(item_id_t changeset) const
 {
+  char str[32];
   xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
   xmlNodePtr root_node = xmlNewNode(O2G_NULLPTR, BAD_CAST "osm");
   xmlDocSetRootElement(doc, root_node);
 
-  *node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST node_name, O2G_NULLPTR);
-
-  return doc;
-}
-
-static xmlChar *
-osm_generate_xml_finish(xmlDocPtr doc)
-{
-  xmlChar *result = O2G_NULLPTR;
-  int len = 0;
-
-  xmlDocDumpFormatMemoryEnc(doc, &result, &len, "UTF-8", 1);
-  xmlFreeDoc(doc);
-
-  return result;
-}
-
-/* build xml representation for a node */
-xmlChar *node_t::generate_xml(item_id_t changeset) const {
-  char str[32];
-
-  xmlNodePtr xml_node;
-  xmlDocPtr doc = osm_generate_xml_init(&xml_node, apiString());
+  xmlNodePtr xml_node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST apiString(), O2G_NULLPTR);
 
   /* new nodes don't have an id, but get one after the upload */
   if(!(flags & OSM_FLAG_NEW)) {
@@ -1179,10 +1198,25 @@ xmlChar *node_t::generate_xml(item_id_t changeset) const {
   xmlNewProp(xml_node, BAD_CAST "version", BAD_CAST str);
   snprintf(str, sizeof(str), "%u", (unsigned)changeset);
   xmlNewProp(xml_node, BAD_CAST "changeset", BAD_CAST str);
-  xml_set_prop_pos(xml_node, &pos);
+
+  // save the information specific to the given object type
+  generate_xml_custom(xml_node);
+
+  // save tags
   tags.for_each(tag_to_xml(xml_node));
 
-  return osm_generate_xml_finish(doc);
+  xmlChar *result = O2G_NULLPTR;
+  int len = 0;
+
+  xmlDocDumpFormatMemoryEnc(doc, &result, &len, "UTF-8", 1);
+  xmlFreeDoc(doc);
+
+  return result;
+}
+
+/* build xml representation for a node */
+void node_t::generate_xml_custom(xmlNodePtr xml_node) const {
+  xml_set_prop_pos(xml_node, &pos);
 }
 
 struct add_xml_node_refs {
@@ -1203,87 +1237,6 @@ void add_xml_node_refs::operator()(const node_t* node)
  */
 void way_t::write_node_chain(xmlNodePtr way_node) const {
   std::for_each(node_chain.begin(), node_chain.end(), add_xml_node_refs(way_node));
-}
-
-/* build xml representation for a way */
-xmlChar *way_t::generate_xml(item_id_t changeset) const {
-  char str[32];
-
-  xmlNodePtr xml_node;
-  xmlDocPtr doc = osm_generate_xml_init(&xml_node, apiString());
-
-  snprintf(str, sizeof(str), ITEM_ID_FORMAT, id);
-  xmlNewProp(xml_node, BAD_CAST "id", BAD_CAST str);
-  snprintf(str, sizeof(str), ITEM_ID_FORMAT, version);
-  xmlNewProp(xml_node, BAD_CAST "version", BAD_CAST str);
-  snprintf(str, sizeof(str), "%u", (unsigned)changeset);
-  xmlNewProp(xml_node, BAD_CAST "changeset", BAD_CAST str);
-
-  write_node_chain(xml_node);
-  tags.for_each(tag_to_xml(xml_node));
-
-  return osm_generate_xml_finish(doc);
-}
-
-struct gen_xml_relation_functor {
-  xmlNodePtr const xml_node;
-  gen_xml_relation_functor(xmlNodePtr n) : xml_node(n) {}
-  void operator()(const member_t &member);
-};
-
-void gen_xml_relation_functor::operator()(const member_t &member)
-{
-  xmlNodePtr m_node = xmlNewChild(xml_node,O2G_NULLPTR,BAD_CAST "member", O2G_NULLPTR);
-
-  const char *typestr;
-  switch(member.object.type) {
-  case NODE:
-  case NODE_ID:
-    typestr = node_t::api_string();
-    break;
-  case WAY:
-  case WAY_ID:
-    typestr = way_t::api_string();
-    break;
-  case RELATION:
-  case RELATION_ID:
-    typestr = relation_t::api_string();
-    break;
-  default:
-    g_assert_not_reached();
-    return;
-  }
-
-  xmlNewProp(m_node, BAD_CAST "type", BAD_CAST typestr);
-  xmlNewProp(m_node, BAD_CAST "ref", BAD_CAST member.object.id_string().c_str());
-
-  if(member.role)
-    xmlNewProp(m_node, BAD_CAST "role", BAD_CAST member.role);
-}
-
-/* build xml representation for a relation */
-xmlChar *relation_t::generate_xml(item_id_t changeset) const {
-  char str[32];
-
-  xmlNodePtr xml_node;
-  xmlDocPtr doc = osm_generate_xml_init(&xml_node, apiString());
-
-  snprintf(str, sizeof(str), ITEM_ID_FORMAT, id);
-  xmlNewProp(xml_node, BAD_CAST "id", BAD_CAST str);
-  snprintf(str, sizeof(str), ITEM_ID_FORMAT, version);
-  xmlNewProp(xml_node, BAD_CAST "version", BAD_CAST str);
-  snprintf(str, sizeof(str), "%u", (unsigned)changeset);
-  xmlNewProp(xml_node, BAD_CAST "changeset", BAD_CAST str);
-
-  generate_member_xml(xml_node);
-  tags.for_each(tag_to_xml(xml_node));
-
-  return osm_generate_xml_finish(doc);
-}
-
-void relation_t::generate_member_xml(xmlNodePtr xml_node) const
-{
-  std::for_each(members.begin(), members.end(), gen_xml_relation_functor(xml_node));
 }
 
 /* build xml representation for a changeset */

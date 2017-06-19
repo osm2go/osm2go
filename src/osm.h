@@ -358,7 +358,7 @@ public:
    */
   void updateTags(const osm_t::TagMap &ntags);
 
-  virtual xmlChar *generate_xml(item_id_t changeset) const = 0;
+  xmlChar *generate_xml(item_id_t changeset) const;
 
   /**
    * @brief get the API string for this object type
@@ -367,6 +367,8 @@ public:
   virtual const char *apiString() const = 0;
 
   std::string id_string() const;
+protected:
+  virtual void generate_xml_custom(xmlNodePtr xml_node) const = 0;
 };
 
 class node_t : public base_object_t {
@@ -383,13 +385,14 @@ public:
   /* a link to the visual representation on screen */
   struct map_item_chain_t *map_item_chain;
 
-  xmlChar *generate_xml(item_id_t changeset) const O2G_OVERRIDE;
   const char *apiString() const O2G_OVERRIDE {
     return api_string();
   }
   static const char *api_string() {
     return "node";
   }
+protected:
+  virtual void generate_xml_custom(xmlNodePtr xml_node) const O2G_OVERRIDE;
 };
 
 struct item_id_chain_t {
@@ -455,7 +458,6 @@ public:
   const node_t *first_node() const;
   unsigned int reverse_direction_sensitive_tags();
   unsigned int reverse_direction_sensitive_roles(osm_t *osm);
-  xmlChar *generate_xml(item_id_t changeset) const O2G_OVERRIDE;
   void write_node_chain(xmlNodePtr way_node) const;
 
   void cleanup();
@@ -465,6 +467,10 @@ public:
   }
   static const char *api_string() {
     return "way";
+  }
+protected:
+  virtual void generate_xml_custom(xmlNodePtr xml_node) const O2G_OVERRIDE {
+    write_node_chain(xml_node);
   }
 };
 
@@ -481,7 +487,6 @@ public:
 
   void members_by_type(guint *nodes, guint *ways, guint *relations) const;
   std::string descriptive_name() const;
-  xmlChar *generate_xml(item_id_t changeset) const O2G_OVERRIDE;
   void generate_member_xml(xmlNodePtr xml_node) const;
 
   bool is_multipolygon() const;
@@ -493,6 +498,10 @@ public:
   }
   static const char *api_string() {
     return "relation";
+  }
+protected:
+  virtual void generate_xml_custom(xmlNodePtr xml_node) const O2G_OVERRIDE {
+    generate_member_xml(xml_node);
   }
 };
 
