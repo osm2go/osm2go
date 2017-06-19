@@ -83,9 +83,7 @@ xmlNodePtr diff_save_objects::diff_save_state_n_id(const base_object_t *obj,
     xmlNewProp(node, BAD_CAST "state", BAD_CAST "new");
 
   /* all items need an id */
-  gchar id_str[G_ASCII_DTOSTR_BUF_SIZE];
-  g_snprintf(id_str, sizeof(id_str), ITEM_ID_FORMAT, obj->id);
-  xmlNewProp(node, BAD_CAST "id", BAD_CAST id_str);
+  xmlNewProp(node, BAD_CAST "id", BAD_CAST obj->id_string().c_str());
 
   return node;
 }

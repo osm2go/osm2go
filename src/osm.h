@@ -365,6 +365,8 @@ public:
    * @return the string used for this kind of object in the OSM API
    */
   virtual const char *apiString() const = 0;
+
+  std::string id_string() const;
 };
 
 class node_t : public base_object_t {

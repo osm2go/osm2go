@@ -588,17 +588,15 @@ void osm_delete_objects::operator()(base_object_t *obj)
 
   appendf(context.log, O2G_NULLPTR, _("Delete %s #" ITEM_ID_FORMAT " "), objname, obj->id);
 
-  char *url = g_strdup_printf("%s" ITEM_ID_FORMAT,
-                              urlbase.c_str(), obj->id);
+  const std::string &url = urlbase + obj->id_string();
 
   xmlChar *xml_str = obj->generate_xml(context.changeset);
 
-  if(osm_delete_item(context, xml_str, url)) {
+  if(osm_delete_item(context, xml_str, url.c_str())) {
     obj->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
     context.project->data_dirty = true;
   }
   xmlFree(xml_str);
-  g_free(url);
 }
 
 struct osm_upload_nodes {

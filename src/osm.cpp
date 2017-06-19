@@ -1194,9 +1194,7 @@ struct add_xml_node_refs {
 void add_xml_node_refs::operator()(const node_t* node)
 {
   xmlNodePtr nd_node = xmlNewChild(way_node, O2G_NULLPTR, BAD_CAST "nd", O2G_NULLPTR);
-  gchar str[G_ASCII_DTOSTR_BUF_SIZE];
-  g_snprintf(str, sizeof(str), ITEM_ID_FORMAT, node->id);
-  xmlNewProp(nd_node, BAD_CAST "ref", BAD_CAST str);
+  xmlNewProp(nd_node, BAD_CAST "ref", BAD_CAST node->id_string().c_str());
 }
 
 /**
@@ -2227,6 +2225,15 @@ void base_object_t::updateTags(const osm_t::TagMap &ntags)
   flags |= OSM_FLAG_DIRTY;
 }
 
+std::string base_object_t::id_string() const {
+  // long enough for every int64
+  char buf[32] = { 0 };
+
+  snprintf(buf, sizeof(buf), ITEM_ID_FORMAT, id);
+
+  return buf;
+}
+
 struct value_match_functor {
   const char * const value;
   value_match_functor(const char *v) : value(v) {}
@@ -2282,8 +2289,6 @@ bool way_t::ends_with_node(const node_t *node) const
 }
 
 void way_t::cleanup() {
-  //  printf("freeing way #" ITEM_ID_FORMAT "\n", OSM_ID(way));
-
   osm_node_chain_free(node_chain);
   tags.clear();
 
