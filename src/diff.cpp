@@ -101,7 +101,7 @@ void diff_save_nodes::operator()(const std::pair<item_id_t, node_t *> pair)
   if(!node->flags)
     return;
 
-  xmlNodePtr node_node = diff_save_state_n_id(node, "node");
+  xmlNodePtr node_node = diff_save_state_n_id(node, node_t::api_string());
 
   if(node->flags & OSM_FLAG_DELETED)
     return;
@@ -123,7 +123,7 @@ void diff_save_ways::operator()(const std::pair<item_id_t, way_t *> pair)
   if(!way->flags)
     return;
 
-  xmlNodePtr node_way = diff_save_state_n_id(way, "way");
+  xmlNodePtr node_way = diff_save_state_n_id(way, way_t::api_string());
 
   if(way->flags & OSM_FLAG_HIDDEN)
     xmlNewProp(node_way, BAD_CAST "hidden", BAD_CAST "true");
@@ -153,15 +153,15 @@ void diff_save_rel::operator()(const member_t &member)
   switch(member.object.type) {
   case NODE:
   case NODE_ID:
-    tp = "node";
+    tp = node_t::api_string();
     break;
   case WAY:
   case WAY_ID:
-    tp = "way";
+    tp = way_t::api_string();
     break;
   case RELATION:
   case RELATION_ID:
-    tp = "relation";
+    tp = relation_t::api_string();
     break;
 
   default:
@@ -191,7 +191,7 @@ void diff_save_relations::operator()(const std::pair<item_id_t, relation_t *> pa
   if(!relation->flags)
     return;
 
-  xmlNodePtr node_rel = diff_save_state_n_id(relation, "relation");
+  xmlNodePtr node_rel = diff_save_state_n_id(relation, relation_t::api_string());
 
   if(relation->flags & OSM_FLAG_DELETED)
     return;
@@ -638,13 +638,13 @@ void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) {
 	while(node_node) {
 	  if(node_node->type == XML_ELEMENT_NODE) {
 
-	    if(strcmp((char*)node_node->name, "node") == 0)
+	    if(strcmp((char*)node_node->name, node_t::api_string()) == 0)
 	      diff_restore_node(node_node, osm);
 
-	    else if(strcmp((char*)node_node->name, "way") == 0)
+	    else if(strcmp((char*)node_node->name, way_t::api_string()) == 0)
 	      diff_restore_way(node_node, osm);
 
-	    else if(G_LIKELY(strcmp((char*)node_node->name, "relation") == 0))
+	    else if(G_LIKELY(strcmp((char*)node_node->name, relation_t::api_string()) == 0))
 	      diff_restore_relation(node_node, osm);
 
 	    else

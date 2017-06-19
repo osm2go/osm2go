@@ -575,11 +575,11 @@ member_t osm_t::parse_relation_member(xmlNode *a_node) {
   member_t member(ILLEGAL);
 
   if((prop = xmlGetProp(a_node, BAD_CAST "type"))) {
-    if(strcmp((char*)prop, "way") == 0)
+    if(strcmp((char*)prop, way_t::api_string()) == 0)
       member.object.type = WAY;
-    else if(strcmp((char*)prop, "node") == 0)
+    else if(strcmp((char*)prop, node_t::api_string()) == 0)
       member.object.type = NODE;
-    else if(G_LIKELY(strcmp((char*)prop, "relation") == 0))
+    else if(G_LIKELY(strcmp((char*)prop, relation_t::api_string()) == 0))
       member.object.type = RELATION;
     xmlFree(prop);
   }
@@ -893,11 +893,11 @@ static bool process_member(xmlTextReaderPtr reader, osm_t *osm, std::vector<memb
   member_t member(ILLEGAL);
 
   if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "type"))) {
-    if(strcmp(prop, "way") == 0)
+    if(strcmp(prop, way_t::api_string()) == 0)
       member.object.type = WAY;
-    else if(strcmp(prop, "node") == 0)
+    else if(strcmp(prop, node_t::api_string()) == 0)
       member.object.type = NODE;
-    else if(strcmp(prop, "relation") == 0)
+    else if(G_LIKELY(strcmp(prop, relation_t::api_string()) == 0))
       member.object.type = RELATION;
     else {
       printf("Unable to store illegal type '%s'\n", prop);
@@ -1033,17 +1033,17 @@ static osm_t *process_osm(xmlTextReaderPtr reader) {
         if(process_bounds(reader, &osm->rbounds))
           osm->bounds = &osm->rbounds;
 	block = BLOCK_BOUNDS;
-      } else if(block <= BLOCK_NODES && strcmp(name, "node") == 0) {
+      } else if(block <= BLOCK_NODES && strcmp(name, node_t::api_string()) == 0) {
         node_t *node = process_node(reader, osm);
         if(node)
           osm->nodes[node->id] = node;
 	block = BLOCK_NODES;
-      } else if(block <= BLOCK_WAYS && strcmp(name, "way") == 0) {
+      } else if(block <= BLOCK_WAYS && strcmp(name, way_t::api_string()) == 0) {
         way_t *way = process_way(reader, osm);
         if(way)
           osm->ways[way->id] = way;
 	block = BLOCK_WAYS;
-      } else if(G_LIKELY(block <= BLOCK_RELATIONS && strcmp(name, "relation") == 0)) {
+      } else if(G_LIKELY(block <= BLOCK_RELATIONS && strcmp(name, relation_t::api_string()) == 0)) {
 	relation_t *relation = process_relation(reader, osm);
 	if(relation)
 	  osm->relations[relation->id] = relation;
@@ -1183,7 +1183,7 @@ xmlChar *node_t::generate_xml(item_id_t changeset) const {
   char str[32];
 
   xmlNodePtr xml_node;
-  xmlDocPtr doc = osm_generate_xml_init(&xml_node, "node");
+  xmlDocPtr doc = osm_generate_xml_init(&xml_node, apiString());
 
   /* new nodes don't have an id, but get one after the upload */
   if(!(flags & OSM_FLAG_NEW)) {
@@ -1227,7 +1227,7 @@ xmlChar *way_t::generate_xml(item_id_t changeset) const {
   char str[32];
 
   xmlNodePtr xml_node;
-  xmlDocPtr doc = osm_generate_xml_init(&xml_node, "way");
+  xmlDocPtr doc = osm_generate_xml_init(&xml_node, apiString());
 
   snprintf(str, sizeof(str), ITEM_ID_FORMAT, id);
   xmlNewProp(xml_node, BAD_CAST "id", BAD_CAST str);
@@ -1256,15 +1256,15 @@ void gen_xml_relation_functor::operator()(const member_t &member)
   switch(member.object.type) {
   case NODE:
   case NODE_ID:
-    typestr = "node";
+    typestr = node_t::api_string();
     break;
   case WAY:
   case WAY_ID:
-    typestr = "way";
+    typestr = way_t::api_string();
     break;
   case RELATION:
   case RELATION_ID:
-    typestr = "relation";
+    typestr = relation_t::api_string();
     break;
   default:
     g_assert_not_reached();
@@ -1285,7 +1285,7 @@ xmlChar *relation_t::generate_xml(item_id_t changeset) const {
   char str[32];
 
   xmlNodePtr xml_node;
-  xmlDocPtr doc = osm_generate_xml_init(&xml_node, "relation");
+  xmlDocPtr doc = osm_generate_xml_init(&xml_node, apiString());
 
   snprintf(str, sizeof(str), ITEM_ID_FORMAT, id);
   xmlNewProp(xml_node, BAD_CAST "id", BAD_CAST str);

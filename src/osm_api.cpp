@@ -1060,15 +1060,18 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
     }
     if(!dirty.relations.deleted.empty()) {
       appendf(context.log, O2G_NULLPTR, _("Deleting relations:\n"));
-      std::for_each(dirty.relations.deleted.begin(), dirty.relations.deleted.end(), osm_delete_objects(context, "relation"));
+      std::for_each(dirty.relations.deleted.begin(), dirty.relations.deleted.end(),
+                    osm_delete_objects(context, relation_t::api_string()));
     }
     if(!dirty.ways.deleted.empty()) {
       appendf(context.log, O2G_NULLPTR, _("Deleting ways:\n"));
-      std::for_each(dirty.ways.deleted.begin(), dirty.ways.deleted.end(), osm_delete_objects(context, "way"));
+      std::for_each(dirty.ways.deleted.begin(), dirty.ways.deleted.end(),
+                    osm_delete_objects(context, way_t::api_string()));
     }
     if(!dirty.nodes.deleted.empty()) {
       appendf(context.log, O2G_NULLPTR, _("Deleting nodes:\n"));
-      std::for_each(dirty.nodes.deleted.begin(), dirty.nodes.deleted.end(), osm_delete_objects(context, "node"));
+      std::for_each(dirty.nodes.deleted.begin(), dirty.nodes.deleted.end(),
+                    osm_delete_objects(context, node_t::api_string()));
     }
 
     /* close changeset */

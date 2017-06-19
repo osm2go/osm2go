@@ -359,6 +359,12 @@ public:
   void updateTags(const osm_t::TagMap &ntags);
 
   virtual xmlChar *generate_xml(item_id_t changeset) const = 0;
+
+  /**
+   * @brief get the API string for this object type
+   * @return the string used for this kind of object in the OSM API
+   */
+  virtual const char *apiString() const = 0;
 };
 
 class node_t : public base_object_t {
@@ -376,6 +382,12 @@ public:
   struct map_item_chain_t *map_item_chain;
 
   xmlChar *generate_xml(item_id_t changeset) const O2G_OVERRIDE;
+  const char *apiString() const O2G_OVERRIDE {
+    return api_string();
+  }
+  static const char *api_string() {
+    return "node";
+  }
 };
 
 struct item_id_chain_t {
@@ -445,6 +457,13 @@ public:
   void write_node_chain(xmlNodePtr way_node) const;
 
   void cleanup();
+
+  const char *apiString() const O2G_OVERRIDE {
+    return api_string();
+  }
+  static const char *api_string() {
+    return "way";
+  }
 };
 
 class relation_t : public base_object_t {
@@ -465,6 +484,13 @@ public:
   bool is_multipolygon() const;
 
   void cleanup();
+
+  const char *apiString() const O2G_OVERRIDE {
+    return api_string();
+  }
+  static const char *api_string() {
+    return "relation";
+  }
 };
 
 void osm_node_chain_free(node_chain_t &node_chain);
