@@ -599,128 +599,43 @@ void osm_delete_objects::operator()(base_object_t *obj)
   xmlFree(xml_str);
 }
 
-struct osm_upload_nodes {
+struct osm_upload_objects {
   osm_upload_context_t &context;
-  osm_upload_nodes(osm_upload_context_t &co) : context(co) {}
-  void operator()(node_t *node);
+  osm_upload_objects(osm_upload_context_t &co) : context(co) {}
+  void operator()(base_object_t *obj);
 };
 
-void osm_upload_nodes::operator()(node_t *node)
+void osm_upload_objects::operator()(base_object_t *obj)
 {
   project_t *project = context.project;
 
   /* make sure gui gets updated */
   while(gtk_events_pending()) gtk_main_iteration();
 
-  g_assert(node->flags & (OSM_FLAG_DIRTY | OSM_FLAG_NEW));
+  g_assert(obj->flags & (OSM_FLAG_DIRTY | OSM_FLAG_NEW));
 
-  char *url = O2G_NULLPTR;
+  std::string url = context.urlbasestr + '/' + obj->apiString() + '/';
 
-  if(node->flags & OSM_FLAG_NEW) {
-    url = g_strconcat(context.urlbasestr.c_str(), "/node/create", O2G_NULLPTR);
-    appendf(context.log, O2G_NULLPTR, _("New node "));
+  if(obj->flags & OSM_FLAG_NEW) {
+    url += "create";
+    appendf(context.log, O2G_NULLPTR, _("New %s "), obj->apiString());
   } else {
-    url = g_strdup_printf("%s/node/" ITEM_ID_FORMAT,
-                          context.urlbasestr.c_str(), node->id);
-    appendf(context.log, O2G_NULLPTR, _("Modified node #" ITEM_ID_FORMAT " "), node->id);
+    url += obj->id_string();
+    appendf(context.log, O2G_NULLPTR, _("Modified %s #" ITEM_ID_FORMAT " "), obj->apiString(), obj->id);
   }
 
-  /* upload this node */
-  xmlChar *xml_str = node->generate_xml(context.changeset);
+  /* upload this object */
+  xmlChar *xml_str = obj->generate_xml(context.changeset);
   if(xml_str) {
-    printf("uploading node %s from address %p\n", url, xml_str);
+    printf("uploading %s " ITEM_ID_FORMAT " to %s\n", obj->apiString(), obj->id, url.c_str());
 
-    if(osm_update_item(context, xml_str, url,
-       (node->flags & OSM_FLAG_NEW) ? &(node->id) : &node->version)) {
-      node->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_NEW);
+    if(osm_update_item(context, xml_str, url.c_str(),
+       (obj->flags & OSM_FLAG_NEW) ? &obj->id : &obj->version)) {
+      obj->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_NEW);
       project->data_dirty = true;
     }
     xmlFree(xml_str);
   }
-  g_free(url);
-}
-
-struct osm_upload_ways {
-  osm_upload_context_t &context;
-  osm_upload_ways(osm_upload_context_t &co) : context(co) {}
-  void operator()(way_t *way);
-};
-
-void osm_upload_ways::operator()(way_t *way)
-{
-  project_t *project = context.project;
-
-  /* make sure gui gets updated */
-  while(gtk_events_pending()) gtk_main_iteration();
-
-  g_assert(way->flags & (OSM_FLAG_DIRTY | OSM_FLAG_NEW));
-
-  char *url = O2G_NULLPTR;
-
-  if(way->flags & OSM_FLAG_NEW) {
-    url = g_strconcat(context.urlbasestr.c_str(), "/way/create", O2G_NULLPTR);
-    appendf(context.log, O2G_NULLPTR, _("New way "));
-  } else {
-    url = g_strdup_printf("%s/way/" ITEM_ID_FORMAT,
-                          context.urlbasestr.c_str(), way->id);
-    appendf(context.log, O2G_NULLPTR, _("Modified way #" ITEM_ID_FORMAT " "), way->id);
-  }
-
-  /* upload this node */
-  xmlChar *xml_str = way->generate_xml(context.changeset);
-  if(xml_str) {
-    printf("uploading way %s from address %p\n", url, xml_str);
-
-    if(osm_update_item(context, xml_str, url,
-        (way->flags & OSM_FLAG_NEW) ? &way->id : &way->version)) {
-      way->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_NEW);
-      project->data_dirty = true;
-    }
-    xmlFree(xml_str);
-  }
-  g_free(url);
-}
-
-struct osm_upload_relations {
-  osm_upload_context_t &context;
-  osm_upload_relations(osm_upload_context_t &co) : context(co) {}
-  void operator()(relation_t *relation);
-};
-
-void osm_upload_relations::operator()(relation_t *relation)
-{
-  project_t *project = context.project;
-
-  /* make sure gui gets updated */
-  while(gtk_events_pending()) gtk_main_iteration();
-
-  g_assert(relation->flags & (OSM_FLAG_DIRTY | OSM_FLAG_NEW));
-
-  char *url = O2G_NULLPTR;
-
-  if(relation->flags & OSM_FLAG_NEW) {
-    url = g_strdup_printf("%s/relation/create", context.urlbasestr.c_str());
-    appendf(context.log, O2G_NULLPTR, _("New relation "));
-  } else {
-    url = g_strdup_printf("%s/relation/" ITEM_ID_FORMAT,
-                          context.urlbasestr.c_str(), relation->id);
-    appendf(context.log, O2G_NULLPTR, _("Modified relation #" ITEM_ID_FORMAT " "),
-            relation->id);
-  }
-
-  /* upload this relation */
-  xmlChar *xml_str = relation->generate_xml(context.changeset);
-  if(xml_str) {
-    printf("uploading relation %s from address %p\n", url, xml_str);
-
-    if(osm_update_item(context, xml_str, url,
-        (relation->flags & OSM_FLAG_NEW) ? &relation->id : &relation->version)) {
-      relation->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_NEW);
-      project->data_dirty = true;
-    }
-    xmlFree(xml_str);
-  }
-  g_free(url);
 }
 
 static bool osm_create_changeset(osm_upload_context_t &context) {
@@ -1044,17 +959,22 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   /* create a new changeset */
   if(osm_create_changeset(context)) {
     /* check for dirty entries */
+    osm_upload_objects ufc(context);
+
     if(!dirty.nodes.modified.empty()) {
       appendf(context.log, O2G_NULLPTR, _("Uploading nodes:\n"));
-      std::for_each(dirty.nodes.modified.begin(), dirty.nodes.modified.end(), osm_upload_nodes(context));
+      std::for_each(dirty.nodes.modified.begin(),
+                    dirty.nodes.modified.end(), ufc);
     }
     if(!dirty.ways.modified.empty()) {
       appendf(context.log, O2G_NULLPTR, _("Uploading ways:\n"));
-      std::for_each(dirty.ways.modified.begin(), dirty.ways.modified.end(), osm_upload_ways(context));
+      std::for_each(dirty.ways.modified.begin(),
+                    dirty.ways.modified.end(), ufc);
     }
     if(!dirty.relations.modified.empty()) {
       appendf(context.log, O2G_NULLPTR, _("Uploading relations:\n"));
-      std::for_each(dirty.relations.modified.begin(), dirty.relations.modified.end(), osm_upload_relations(context));
+      std::for_each(dirty.relations.modified.begin(),
+                    dirty.relations.modified.end(), ufc);
     }
     if(!dirty.relations.deleted.empty()) {
       appendf(context.log, O2G_NULLPTR, _("Deleting relations:\n"));
