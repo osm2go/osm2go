@@ -1276,8 +1276,6 @@ void gen_xml_relation_functor::operator()(const member_t &member)
 
   if(member.role)
     xmlNewProp(m_node, BAD_CAST "role", BAD_CAST member.role);
-  else
-    xmlNewProp(m_node, BAD_CAST "role", BAD_CAST "");
 }
 
 /* build xml representation for a relation */
