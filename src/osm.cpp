@@ -117,23 +117,8 @@ std::string object_t::id_string() const {
   // long enough for every int64
   char buf[32] = { 0 };
 
-  switch(type) {
-  case ILLEGAL:
-    break;
-  case NODE:
-  case WAY:
-  case RELATION:
-    snprintf(buf, sizeof(buf), ITEM_ID_FORMAT, obj->id);
-    break;
-  case NODE_ID:
-  case WAY_ID:
-  case RELATION_ID:
-    snprintf(buf, sizeof(buf), ITEM_ID_FORMAT, id);
-    break;
-  default:
-    g_assert_not_reached();
-    break;
-  }
+  g_assert_cmpuint(type, !=, ILLEGAL);
+  snprintf(buf, sizeof(buf), ITEM_ID_FORMAT, get_id());
 
   return buf;
 }
