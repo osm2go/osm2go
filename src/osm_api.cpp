@@ -386,7 +386,7 @@ static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
   return false;
 }
 
-static gboolean osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
+static bool osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
                                 const char *url) {
   int retry = MAX_TRY;
   char buffer[CURL_ERROR_SIZE];
@@ -410,7 +410,7 @@ static gboolean osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
     curl = curl_easy_init();
     if(!curl) {
       appendf(log, O2G_NULLPTR, _("CURL init error\n"));
-      return FALSE;
+      return false;
     }
 
     read_data = read_data_init;
@@ -500,7 +500,7 @@ static gboolean osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
     retry--;
   }
 
-  return FALSE;
+  return false;
 }
 
 struct osm_dirty_t {
