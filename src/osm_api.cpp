@@ -268,6 +268,44 @@ static G_GNUC_PRINTF(3, 4) void appendf(struct log_s &log, const char *colname,
 
 #define MAX_TRY 5
 
+static CURL *curl_custom_setup(const osm_upload_context_t &context, const char *url)
+{
+  /* get a curl handle */
+  CURL *curl = curl_easy_init();
+  if(!curl)
+    return curl;
+
+  /* we want to use our own read/write functions */
+  curl_easy_setopt(curl, CURLOPT_READFUNCTION, read_callback);
+  curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
+
+  /* enable uploading */
+  curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
+
+  /* specify target URL, and note that this URL should include a file
+     name, not only a directory */
+  curl_easy_setopt(curl, CURLOPT_URL, url);
+
+  curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+
+  /* some servers don't like requests that are made without a user-agent
+     field, so we provide one */
+  curl_easy_setopt(curl, CURLOPT_USERAGENT, PACKAGE "-libcurl/" VERSION);
+
+  /* set user name and password for the authentication */
+  curl_easy_setopt(curl, CURLOPT_USERPWD, context.credentials.c_str());
+
+  net_io_set_proxy(curl, context.proxy);
+
+#ifndef CURL_SSLVERSION_MAX_DEFAULT
+#define CURL_SSLVERSION_MAX_DEFAULT 0
+#endif
+  curl_easy_setopt(curl, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1 |
+                   CURL_SSLVERSION_MAX_DEFAULT);
+
+  return curl;
+}
+
 static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
                             const char *url, item_id_t *id) {
   int retry = MAX_TRY;
@@ -289,7 +327,7 @@ static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
       appendf(log, O2G_NULLPTR, _("Retry %d/%d "), MAX_TRY-retry, MAX_TRY-1);
 
     /* get a curl handle */
-    curl = curl_easy_init();
+    curl = curl_custom_setup(context, url);
     if(!curl) {
       appendf(log, O2G_NULLPTR, _("CURL init error\n"));
       return false;
@@ -298,19 +336,6 @@ static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
     read_data = read_data_init;
     write_data.ptr = O2G_NULLPTR;
     write_data.len = 0;
-
-    /* we want to use our own read/write functions */
-    curl_easy_setopt(curl, CURLOPT_READFUNCTION, read_callback);
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
-
-    /* enable uploading */
-    curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
-
-    /* specify target URL, and note that this URL should include a file
-       name, not only a directory */
-    curl_easy_setopt(curl, CURLOPT_URL, url);
-
-	curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
 
     /* now specify which file to upload */
     curl_easy_setopt(curl, CURLOPT_READDATA, &read_data);
@@ -322,10 +347,6 @@ static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
     /* we pass our 'chunk' struct to the callback function */
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &write_data);
 
-    /* some servers don't like requests that are made without a user-agent
-       field, so we provide one */
-    curl_easy_setopt(curl, CURLOPT_USERAGENT, PACKAGE "-libcurl/" VERSION);
-
 #ifdef NO_EXPECT
     struct curl_slist *slist = O2G_NULLPTR;
     slist = curl_slist_append(slist, "Expect:");
@@ -333,11 +354,6 @@ static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
 #endif
 
     curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, buffer);
-
-    /* set user name and password for the authentication */
-    curl_easy_setopt(curl, CURLOPT_USERPWD, context.credentials.c_str());
-
-    net_io_set_proxy(curl, context.proxy);
 
     /* Now run off and do what you've been told! */
     res = curl_easy_perform(curl);
@@ -407,7 +423,7 @@ static bool osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
       appendf(log, O2G_NULLPTR, _("Retry %d/%d "), MAX_TRY-retry, MAX_TRY-1);
 
     /* get a curl handle */
-    curl = curl_easy_init();
+    curl = curl_custom_setup(context, url);
     if(!curl) {
       appendf(log, O2G_NULLPTR, _("CURL init error\n"));
       return false;
@@ -417,10 +433,6 @@ static bool osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
     write_data.ptr = O2G_NULLPTR;
     write_data.len = 0;
 
-    /* we want to use our own read/write functions */
-    curl_easy_setopt(curl, CURLOPT_READFUNCTION, read_callback);
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
-
     curl_easy_setopt(curl, CURLOPT_INFILESIZE, (curl_off_t)read_data.len);
 
     /* now specify which file to upload */
@@ -428,22 +440,6 @@ static bool osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
 
     /* we pass our 'chunk' struct to the callback function */
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &write_data);
-
-    /* enable uploading */
-    curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
-
-    /* no read/write functions required */
-    curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "DELETE");
-
-    /* specify target URL, and note that this URL should include a file
-       name, not only a directory */
-    curl_easy_setopt(curl, CURLOPT_URL, url);
-
-	curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
-
-    /* some servers don't like requests that are made without a user-agent
-       field, so we provide one */
-    curl_easy_setopt(curl, CURLOPT_USERAGENT, PACKAGE "-libcurl/" VERSION);
 
 #ifdef NO_EXPECT
     struct curl_slist *slist = O2G_NULLPTR;
@@ -453,16 +449,8 @@ static bool osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
 
     curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, buffer);
 
-    /* set user name and password for the authentication */
-    curl_easy_setopt(curl, CURLOPT_USERPWD, context.credentials.c_str());
-
-#ifndef CURL_SSLVERSION_MAX_DEFAULT
-#define CURL_SSLVERSION_MAX_DEFAULT 0
-#endif
-    curl_easy_setopt(curl, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1 |
-                     CURL_SSLVERSION_MAX_DEFAULT);
-
-    net_io_set_proxy(curl, context.proxy);
+    /* no read/write functions required */
+    curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "DELETE");
 
     /* Now run off and do what you've been told! */
     res = curl_easy_perform(curl);
