@@ -138,47 +138,6 @@ void diff_save_ways::operator()(const std::pair<item_id_t, way_t *> pair)
   }
 }
 
-struct diff_save_rel {
-  xmlNodePtr const node_rel;
-  diff_save_rel(xmlNodePtr n) : node_rel(n) {}
-  void operator()(const member_t &member);
-};
-
-void diff_save_rel::operator()(const member_t &member)
-{
-  xmlNodePtr node_member = xmlNewChild(node_rel, O2G_NULLPTR,
-                                       BAD_CAST "member", O2G_NULLPTR);
-
-  const char *tp;
-  switch(member.object.type) {
-  case NODE:
-  case NODE_ID:
-    tp = node_t::api_string();
-    break;
-  case WAY:
-  case WAY_ID:
-    tp = way_t::api_string();
-    break;
-  case RELATION:
-  case RELATION_ID:
-    tp = relation_t::api_string();
-    break;
-
-  default:
-    printf("unexpected member type %d\n", member.object.type);
-    g_assert_not_reached();
-    return;
-  }
-  xmlNewProp(node_member, BAD_CAST "type", BAD_CAST tp);
-
-  gchar ref[G_ASCII_DTOSTR_BUF_SIZE];
-  g_snprintf(ref, sizeof(ref), ITEM_ID_FORMAT, member.object.get_id());
-  xmlNewProp(node_member, BAD_CAST "ref", BAD_CAST ref);
-
-  if(member.role)
-    xmlNewProp(node_member, BAD_CAST "role", BAD_CAST member.role);
-}
-
 struct diff_save_relations : diff_save_objects {
   diff_save_relations(xmlNodePtr r) : diff_save_objects(r) { }
   void operator()(const std::pair<item_id_t, relation_t *> pair);
@@ -198,8 +157,7 @@ void diff_save_relations::operator()(const std::pair<item_id_t, relation_t *> pa
 
   /* additional info is only required if the relation */
   /* hasn't been deleted */
-  std::for_each(relation->members.begin(), relation->members.end(),
-                diff_save_rel(node_rel));
+  relation->generate_member_xml(node_rel);
 
   diff_save_tags(relation, node_rel);
 }

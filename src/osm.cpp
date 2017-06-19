@@ -1277,10 +1277,15 @@ xmlChar *relation_t::generate_xml(item_id_t changeset) const {
   snprintf(str, sizeof(str), "%u", (unsigned)changeset);
   xmlNewProp(xml_node, BAD_CAST "changeset", BAD_CAST str);
 
-  std::for_each(members.begin(), members.end(), gen_xml_relation_functor(xml_node));
+  generate_member_xml(xml_node);
   tags.for_each(tag_to_xml(xml_node));
 
   return osm_generate_xml_finish(doc);
+}
+
+void relation_t::generate_member_xml(xmlNodePtr xml_node) const
+{
+  std::for_each(members.begin(), members.end(), gen_xml_relation_functor(xml_node));
 }
 
 /* build xml representation for a changeset */

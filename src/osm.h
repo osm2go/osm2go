@@ -480,6 +480,7 @@ public:
   void members_by_type(guint *nodes, guint *ways, guint *relations) const;
   std::string descriptive_name() const;
   xmlChar *generate_xml(item_id_t changeset) const O2G_OVERRIDE;
+  void generate_member_xml(xmlNodePtr xml_node) const;
 
   bool is_multipolygon() const;
 
