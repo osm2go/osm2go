@@ -204,7 +204,7 @@ bool osm_download(GtkWidget *parent, settings_t *settings, project_t *project)
 
 typedef struct {
   char *ptr;
-  size_t len;
+  long len;
 } curl_data_t;
 
 static size_t read_callback(void *ptr, size_t size, size_t nmemb, void *stream) {
@@ -213,7 +213,7 @@ static size_t read_callback(void *ptr, size_t size, size_t nmemb, void *stream) 
   //  printf("request to read %d items of size %d, pointer = %p\n",
   //  nmemb, size, p->ptr);
 
-  if(nmemb*size > p->len)
+  if(nmemb * size > static_cast<size_t>(p->len))
     nmemb = p->len/size;
 
   memcpy(ptr, p->ptr, size*nmemb);
@@ -338,9 +338,8 @@ static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
     /* now specify which file to upload */
     curl_easy_setopt(curl, CURLOPT_READDATA, &read_data);
 
-    /* provide the size of the upload, we specicially typecast the value
-       to curl_off_t since we must be sure to use the correct data size */
-    curl_easy_setopt(curl, CURLOPT_INFILESIZE, (curl_off_t)read_data.len);
+    /* provide the size of the upload */
+    curl_easy_setopt(curl, CURLOPT_INFILESIZE, read_data.len);
 
     /* we pass our 'chunk' struct to the callback function */
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &write_data);
@@ -431,7 +430,7 @@ static bool osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
     write_data.ptr = O2G_NULLPTR;
     write_data.len = 0;
 
-    curl_easy_setopt(curl, CURLOPT_INFILESIZE, (curl_off_t)read_data.len);
+    curl_easy_setopt(curl, CURLOPT_INFILESIZE, read_data.len);
 
     /* now specify which file to upload */
     curl_easy_setopt(curl, CURLOPT_READDATA, &read_data);
