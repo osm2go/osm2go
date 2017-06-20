@@ -294,11 +294,6 @@ replace_string(const gchar *src, const gchar *from, const gchar *to)
                 size += tolen - fromlen;
 
                 temp = g_realloc(value, size);
-                if ( temp == NULL )
-                {
-                    g_free(value);
-                    return NULL;
-                }
 
                 /* we'll want to return 'value' eventually, so let's point it
                  * to the memory that we are now working with.

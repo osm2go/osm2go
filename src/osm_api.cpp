@@ -227,11 +227,9 @@ static size_t write_callback(void *ptr, size_t size, size_t nmemb, void *stream)
   curl_data_t *p = (curl_data_t*)stream;
 
   p->ptr = static_cast<char *>(g_realloc(p->ptr, p->len + size*nmemb + 1));
-  if(p->ptr) {
-    memcpy(p->ptr+p->len, ptr, size*nmemb);
-    p->len += size*nmemb;
-    p->ptr[p->len] = 0;
-  }
+  memcpy(p->ptr+p->len, ptr, size*nmemb);
+  p->len += size*nmemb;
+  p->ptr[p->len] = 0;
   return nmemb;
 }
 
