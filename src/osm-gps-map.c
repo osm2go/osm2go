@@ -225,9 +225,7 @@ typedef struct {
 /*
  * Drawing function forward defintions
  */
-static gchar    *replace_string(const gchar *src, const gchar *from, const gchar *to);
 static void     inspect_map_uri(OsmGpsMap *map);
-static gchar    *replace_map_uri(OsmGpsMap *map, const gchar *uri, int zoom, int x, int y);
 static void     osm_gps_map_print_images (OsmGpsMap *map);
 static void     osm_gps_map_blit_tile(OsmGpsMap *map, GdkPixbuf *pixbuf, int offset_x, int offset_y);
 #ifdef LIBSOUP22
