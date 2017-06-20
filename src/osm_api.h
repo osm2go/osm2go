@@ -20,11 +20,10 @@
 #ifndef OSM_API_H
 #define OSM_API_H
 
-#include "osm.h"
-
 #include <gtk/gtk.h>
 
 struct appdata_t;
+struct osm_t;
 struct project_t;
 struct settings_t;
 

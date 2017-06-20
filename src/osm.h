@@ -358,7 +358,7 @@ public:
    */
   void updateTags(const osm_t::TagMap &ntags);
 
-  xmlChar *generate_xml(item_id_t changeset) const;
+  xmlChar *generate_xml(const std::string &changeset) const;
 
   /**
    * @brief get the API string for this object type

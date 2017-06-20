@@ -23,6 +23,7 @@
 #include "diff.h"
 #include "map.h"
 #include "misc.h"
+#include "osm.h"
 #include "net_io.h"
 #include "project.h"
 #include "settings.h"
@@ -91,7 +92,6 @@ struct osm_upload_context_t {
     , osm(o)
     , project(p)
     , urlbasestr(p->server + std::string("/"))
-    , changeset(0)
     , proxy(appdata->settings->proxy)
     , comment(c)
     , src(s ? s : std::string())
@@ -105,7 +105,7 @@ struct osm_upload_context_t {
 
   struct log_s log;
 
-  item_id_t changeset;
+  std::string changeset;
 
   proxy_t * const proxy;
   std::string comment;
@@ -628,7 +628,6 @@ void osm_upload_objects::operator()(base_object_t *obj)
 
 static bool osm_create_changeset(osm_upload_context_t &context) {
   bool result = false;
-  context.changeset = ILLEGAL;
 
   /* make sure gui gets updated */
   while(gtk_events_pending()) gtk_main_iteration();
@@ -644,8 +643,12 @@ static bool osm_create_changeset(osm_upload_context_t &context) {
     context.credentials = context.appdata->settings->username + std::string(":") +
                           context.appdata->settings->password;
 
-    if(osm_update_item(context, xml_str, url.c_str(), &context.changeset)) {
-      printf("got changeset id " ITEM_ID_FORMAT "\n", context.changeset);
+    item_id_t changeset;
+    if(osm_update_item(context, xml_str, url.c_str(), &changeset)) {
+      char str[32];
+      snprintf(str, sizeof(str), ITEM_ID_FORMAT, changeset);
+      printf("got changeset id %s\n", str);
+      context.changeset = str;
       result = true;
     }
     xmlFree(xml_str);
@@ -657,18 +660,16 @@ static bool osm_create_changeset(osm_upload_context_t &context) {
 static bool osm_close_changeset(osm_upload_context_t &context) {
   bool result = false;
 
-  g_assert(context.changeset != ILLEGAL);
+  g_assert_false(context.changeset.empty());
 
   /* make sure gui gets updated */
   while(gtk_events_pending()) gtk_main_iteration();
 
-  char *url = g_strdup_printf("%schangeset/" ITEM_ID_FORMAT "/close",
-                              context.urlbasestr.c_str(), context.changeset);
+  const std::string url = context.urlbasestr + "changeset/" + context.changeset +
+                          "/close";
   appendf(context.log, O2G_NULLPTR, _("Close changeset "));
 
-  result = osm_update_item(context, O2G_NULLPTR, url, O2G_NULLPTR);
-
-  g_free(url);
+  result = osm_update_item(context, O2G_NULLPTR, url.c_str(), O2G_NULLPTR);
 
   return result;
 }

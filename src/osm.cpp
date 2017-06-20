@@ -1180,7 +1180,7 @@ struct tag_to_xml {
   }
 };
 
-xmlChar *base_object_t::generate_xml(item_id_t changeset) const
+xmlChar *base_object_t::generate_xml(const std::string &changeset) const
 {
   char str[32];
   xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
@@ -1196,8 +1196,7 @@ xmlChar *base_object_t::generate_xml(item_id_t changeset) const
   }
   snprintf(str, sizeof(str), ITEM_ID_FORMAT, version);
   xmlNewProp(xml_node, BAD_CAST "version", BAD_CAST str);
-  snprintf(str, sizeof(str), "%u", (unsigned)changeset);
-  xmlNewProp(xml_node, BAD_CAST "changeset", BAD_CAST str);
+  xmlNewProp(xml_node, BAD_CAST "changeset", BAD_CAST changeset.c_str());
 
   // save the information specific to the given object type
   generate_xml_custom(xml_node);

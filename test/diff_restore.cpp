@@ -131,7 +131,7 @@ int main(int argc, char **argv)
 
   verify_diff(osm);
 
-  xmlChar *rel_str = r255->generate_xml(42);
+  xmlChar *rel_str = r255->generate_xml("42");
   printf("%s\n", rel_str);
   xmlFree(rel_str);
 
