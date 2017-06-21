@@ -202,13 +202,15 @@ bool osm_download(GtkWidget *parent, settings_t *settings, project_t *project)
   return result;
 }
 
-typedef struct {
+struct curl_data_t {
+  curl_data_t(char *p = O2G_NULLPTR, curl_off_t l = 0)
+    : ptr(p), len(l) {}
   char *ptr;
   long len;
-} curl_data_t;
+};
 
 static size_t read_callback(void *ptr, size_t size, size_t nmemb, void *stream) {
-  curl_data_t *p = (curl_data_t*)stream;
+  curl_data_t *p = static_cast<curl_data_t *>(stream);
 
   //  printf("request to read %d items of size %d, pointer = %p\n",
   //  nmemb, size, p->ptr);
@@ -224,7 +226,7 @@ static size_t read_callback(void *ptr, size_t size, size_t nmemb, void *stream) 
 }
 
 static size_t write_callback(void *ptr, size_t size, size_t nmemb, void *stream) {
-  curl_data_t *p = (curl_data_t*)stream;
+  curl_data_t *p = static_cast<curl_data_t *>(stream);
 
   p->ptr = static_cast<char *>(g_realloc(p->ptr, p->len + size*nmemb + 1));
   memcpy(p->ptr+p->len, ptr, size*nmemb);
@@ -312,9 +314,7 @@ static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
   CURL *curl;
   CURLcode res;
 
-  curl_data_t read_data, read_data_init;
-  curl_data_t write_data;
-  read_data_init.ptr = reinterpret_cast<char *>(xml_str);
+  curl_data_t read_data_init(reinterpret_cast<char *>(xml_str));
   read_data_init.len = read_data_init.ptr ? strlen(read_data_init.ptr) : 0;
 
   struct log_s &log = context.log;
@@ -331,9 +331,8 @@ static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
       return false;
     }
 
-    read_data = read_data_init;
-    write_data.ptr = O2G_NULLPTR;
-    write_data.len = 0;
+    curl_data_t read_data = read_data_init;
+    curl_data_t write_data;
 
     /* now specify which file to upload */
     curl_easy_setopt(curl, CURLOPT_READDATA, &read_data);
@@ -408,10 +407,9 @@ static bool osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
   CURLcode res;
 
   /* delete has a payload since api 0.6 */
-  curl_data_t read_data, read_data_init;
-  curl_data_t write_data;
-  read_data_init.ptr = reinterpret_cast<char *>(xml_str);
+  curl_data_t read_data_init(reinterpret_cast<char *>(xml_str));
   read_data_init.len = read_data_init.ptr ? strlen(read_data_init.ptr) : 0;
+
   struct log_s &log = context.log;
 
   while(retry >= 0) {
@@ -426,9 +424,8 @@ static bool osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
       return false;
     }
 
-    read_data = read_data_init;
-    write_data.ptr = O2G_NULLPTR;
-    write_data.len = 0;
+    curl_data_t read_data = read_data_init;
+    curl_data_t write_data;
 
     curl_easy_setopt(curl, CURLOPT_INFILESIZE, read_data.len);
 
