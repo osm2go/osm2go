@@ -31,28 +31,6 @@
 
 #include "osm2go_cpp.h"
 
-static const struct {
-  int id;
-  const char *msg;
-} http_messages [] = {
-  {   0, "Curl internal failure" },
-  { 200, "Ok" },
-  { 301, "Moved permanently" },
-  { 302, "Found" },
-  { 303, "See Other" },
-  { 400, "Bad Request (area too big?)" },
-  { 401, "Unauthorized (wrong user/password?)" },
-  { 403, "Forbidden" },
-  { 404, "Not Found" },
-  { 405, "Method Not Allowed" },
-  { 410, "Gone" },
-  { 412, "Precondition Failed" },
-  { 417, "Expectation failed (expect rejected)" },
-  { 500, "Internal Server Error" },
-  { 503, "Service Unavailable" },
-  { 0,   O2G_NULLPTR }
-};
-
 typedef struct {
   char *ptr;
   size_t len;
@@ -86,12 +64,34 @@ typedef struct {
 
 } net_io_request_t;
 
-static const char *http_message(int id) {
-  unsigned int i;
+static std::map<int, const char *> http_msg_init() {
+  std::map<int, const char *> http_messages;
 
-  for(i = 0; http_messages[i].msg != O2G_NULLPTR; i++)
-    if(http_messages[i].id == id)
-      return _(http_messages[i].msg);
+  http_messages[200] = "Ok";
+  http_messages[203] = "No Content";
+  http_messages[301] = "Moved Permenently";
+  http_messages[302] = "Moved Temporarily";
+  http_messages[400] = "Bad Request";
+  http_messages[401] = "Unauthorized";
+  http_messages[403] = "Forbidden";
+  http_messages[404] = "Not Found";
+  http_messages[405] = "Method Not Allowed";
+  http_messages[409] = "Conflict";
+  http_messages[410] = "Gone";
+  http_messages[412] = "Precondition Failed";
+  http_messages[417] = "(Expect rejected)";
+  http_messages[500] = "Internal Server Error";
+  http_messages[503] = "Service Unavailable";
+
+  return http_messages;
+}
+
+const char *http_message(int id) {
+  static const std::map<int, const char *> http_messages = http_msg_init();
+
+  const std::map<int, const char *>::const_iterator it = http_messages.find(id);
+  if(it != http_messages.end())
+    return it->second;
 
   return O2G_NULLPTR;
 }

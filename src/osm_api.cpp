@@ -46,38 +46,6 @@
 
 #define NO_EXPECT
 
-static std::map<int, const char *> http_msg_init() {
-  std::map<int, const char *> http_messages;
-
-  http_messages[200] = "Ok";
-  http_messages[203] = "No Content";
-  http_messages[301] = "Moved Permenently";
-  http_messages[302] = "Moved Temporarily";
-  http_messages[400] = "Bad Request";
-  http_messages[401] = "Unauthorized";
-  http_messages[403] = "Forbidden";
-  http_messages[404] = "Not Found";
-  http_messages[405] = "Method Not Allowed";
-  http_messages[409] = "Conflict";
-  http_messages[410] = "Gone";
-  http_messages[412] = "Precondition Failed";
-  http_messages[417] = "(Expect rejected)";
-  http_messages[500] = "Internal Server Error";
-  http_messages[503] = "Service Unavailable";
-
-  return http_messages;
-}
-
-static const char *osm_http_message(int id) {
-  static const std::map<int, const char *> http_messages = http_msg_init();
-
-  const std::map<int, const char *>::const_iterator it = http_messages.find(id);
-  if(it != http_messages.end())
-    return it->second;
-
-  return O2G_NULLPTR;
-}
-
 struct log_s {
   log_s()
     : buffer(O2G_NULLPTR), view(O2G_NULLPTR) {}
@@ -370,7 +338,7 @@ static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
       appendf(log, COLOR_ERR, _("failed: %s\n"), buffer);
     else if(response != 200)
       appendf(log, COLOR_ERR, _("failed, code: %ld %s\n"),
-	      response, osm_http_message(response));
+	      response, http_message(response));
     else {
       if(!id) appendf(log, COLOR_OK, _("ok\n"));
       else    appendf(log, COLOR_OK, _("ok: #" ITEM_ID_FORMAT "\n"), *id);
@@ -459,7 +427,7 @@ static bool osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
       appendf(log, COLOR_ERR, _("failed: %s\n"), buffer);
     else if(response != 200)
       appendf(log, COLOR_ERR, _("failed, code: %ld %s\n"),
-	      response, osm_http_message(response));
+	      response, http_message(response));
     else
       appendf(log, COLOR_OK, _("ok\n"));
 

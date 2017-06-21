@@ -33,4 +33,10 @@ bool net_io_download_mem(GtkWidget *parent, settings_t *settings,
 #include <curl/curl.h>
 void net_io_set_proxy(CURL *curl, proxy_t *proxy);
 
+/**
+ * @brief translate HTTP status code to string
+ * @param id the HTTP status code
+ */
+const char *http_message(int id);
+
 #endif // NET_IO_H
