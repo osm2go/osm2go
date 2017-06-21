@@ -25,6 +25,8 @@
 
 #define YETI_PASSIVE_WIDGET appdata->statusbar->widget
 
+#include "osm2go_cpp.h"
+
 #ifdef USE_HILDON
 #include <hildon/hildon.h>
 
@@ -49,7 +51,7 @@ void banner_clear(appdata_t *appdata) {
   }
   gtk_widget_destroy(appdata->banner);
   g_object_unref(appdata->banner);
-  appdata->banner = NULL;
+  appdata->banner = O2G_NULLPTR;
 }
 
 
@@ -60,7 +62,7 @@ void banner_show_info(appdata_t *appdata, const char *text) {
     return;
   banner_clear(appdata);
   appdata->banner = hildon_banner_show_information(
-    GTK_WIDGET(appdata->window), NULL, text);
+    GTK_WIDGET(appdata->window), O2G_NULLPTR, text);
   g_object_ref(appdata->banner);
   gtk_widget_show(appdata->banner);
 }
@@ -81,7 +83,7 @@ void banner_busy_start(appdata_t *appdata, gboolean grab, const char *text) {
     return;
   banner_clear(appdata);
   appdata->banner = hildon_banner_show_animation(
-    GTK_WIDGET(appdata->window), NULL, text);
+    GTK_WIDGET(appdata->window), O2G_NULLPTR, text);
   g_object_ref(appdata->banner);
   gtk_widget_show(appdata->banner);
   appdata->banner_is_grabby = grab;
@@ -130,7 +132,7 @@ void banner_busy_start(appdata_t *appdata, gboolean grab, const char *text) {
 }
 
 void banner_clear(appdata_t *appdata) {
-  statusbar_brief(appdata->statusbar, NULL, 0);
+  statusbar_brief(appdata->statusbar, O2G_NULLPTR, 0);
   if (appdata->banner_is_grabby) {
     GtkWidget *win;
     win = GTK_WIDGET(appdata->window);

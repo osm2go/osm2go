@@ -40,7 +40,7 @@ set(osm2go_SOURCE_FILES
 	src/appdata.h
 	src/area_edit.cpp
 	src/area_edit.h
-	src/banner.c
+	src/banner.cpp
 	src/banner.h
 	src/canvas.c
 	src/canvas.h
