@@ -71,7 +71,7 @@ set(osm2go_SOURCE_FILES
 	src/map_hl.h
 	src/misc.cpp
 	src/misc.h
-	src/net_io.c
+	src/net_io.cpp
 	src/net_io.h
 	src/osm.cpp
 	src/osm.h

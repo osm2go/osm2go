@@ -1079,7 +1079,7 @@ void wms_import(appdata_t *appdata) {
   char *cap = O2G_NULLPTR;
   size_t caplen;
   net_io_download_mem(GTK_WIDGET(appdata->window), appdata->settings,
-		      url.c_str(), &cap, &caplen);
+		      url.c_str(), &cap, caplen);
 
   /* ----------- parse capabilities -------------- */
 

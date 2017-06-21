@@ -25,7 +25,10 @@
 
 #include <curl/curl.h>
 #include <curl/easy.h>  /* new for v7 */
+#include <string>
 #include <unistd.h>
+
+#include "osm2go_cpp.h"
 
 static const struct {
   int id;
@@ -46,7 +49,7 @@ static const struct {
   { 417, "Expectation failed (expect rejected)" },
   { 500, "Internal Server Error" },
   { 503, "Service Unavailable" },
-  { 0,   NULL }
+  { 0,   O2G_NULLPTR }
 };
 
 typedef struct {
@@ -62,7 +65,7 @@ typedef struct {
   gint refcount;       /* reference counter for master and worker thread */
 
   char *url, *user;
-  gboolean cancel;
+  bool cancel;
   curl_off_t download_cur;
   curl_off_t download_end;
 
@@ -85,27 +88,27 @@ typedef struct {
 static const char *http_message(int id) {
   unsigned int i;
 
-  for(i = 0; http_messages[i].msg != NULL; i++)
+  for(i = 0; http_messages[i].msg != O2G_NULLPTR; i++)
     if(http_messages[i].id == id)
       return _(http_messages[i].msg);
 
-  return NULL;
+  return O2G_NULLPTR;
 }
 
-static gint dialog_destroy_event(gboolean *data) {
+static gint dialog_destroy_event(bool *data) {
   /* set cancel flag */
-  *data = TRUE;
+  *data = true;
   return FALSE;
 }
 
-static void on_cancel(gboolean *data) {
+static void on_cancel(bool *data) {
   /* set cancel flag */
-  *data = TRUE;
+  *data = true;
 }
 
 /* create the dialog box shown while worker is running */
 static GtkWidget *busy_dialog(GtkWidget *parent, GtkProgressBar **pbar,
-			      gboolean *cancel_ind, const char *title) {
+			      bool *cancel_ind, const char *title) {
   GtkWidget *dialog = gtk_dialog_new();
 
   gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
@@ -162,26 +165,24 @@ static void request_free(net_io_request_t *request) {
 #ifdef CURLOPT_XFERINFOFUNCTION
 static int curl_progress_func(void *req,
 			    curl_off_t t, /* dltotal */ curl_off_t d, /* dlnow */
-			    G_GNUC_UNUSED curl_off_t ultotal,
-			    G_GNUC_UNUSED curl_off_t ulnow) {
+                            curl_off_t, curl_off_t) {
 #else
 static int curl_progress_func(void *req,
 			    double t, /* dltotal */ double d, /* dlnow */
-			    G_GNUC_UNUSED double ultotal,
-			    G_GNUC_UNUSED double ulnow) {
+                            double, double) {
 #endif
-  net_io_request_t *request = req;
-  request->download_cur = (curl_off_t)d;
-  request->download_end = (curl_off_t)t;
+  net_io_request_t *request = static_cast<net_io_request_t *>(req);
+  request->download_cur = static_cast<curl_off_t>(d);
+  request->download_end = static_cast<curl_off_t>(t);
   return 0;
 }
 
 static size_t mem_write(void *ptr, size_t size, size_t nmemb,
 			void *stream) {
-  curl_mem_t *p = (curl_mem_t*)stream;
+  curl_mem_t *p = static_cast<curl_mem_t *>(stream);
 
   size_t nlen = p->len + size * nmemb;
-  p->ptr = g_realloc(p->ptr, nlen + 1);
+  p->ptr = static_cast<char *>(g_realloc(p->ptr, nlen + 1));
   memcpy(p->ptr + p->len, ptr, size * nmemb);
   p->len = nlen;
   p->ptr[nlen] = '\0';
@@ -198,13 +199,10 @@ void net_io_set_proxy(CURL *curl, proxy_t *proxy) {
     if(proxy->use_authentication) {
       printf("net_io:   use auth for user %s\n", proxy->authentication_user);
 
-      char *cred = g_strjoin(":",
-				   proxy->authentication_user,
-				   proxy->authentication_password,
-				   NULL);
+      const std::string &cred = proxy->authentication_user + std::string(":") +
+                                proxy->authentication_password;
 
-      curl_easy_setopt(curl, CURLOPT_PROXYUSERPWD, cred);
-      g_free(cred);
+      curl_easy_setopt(curl, CURLOPT_PROXYUSERPWD, cred.c_str());
     }
   }
 }
@@ -216,26 +214,26 @@ static void *worker_thread(void *ptr) {
 
   CURL *curl = curl_easy_init();
   if(curl) {
-    FILE *outfile = NULL;
-    gboolean ok = FALSE;
+    FILE *outfile = O2G_NULLPTR;
+    bool ok = false;
 
     /* prepare target (file, memory, ...) */
     switch(request->type) {
     case NET_IO_DL_FILE:
       outfile = fopen(request->filename, "w");
-      ok = (outfile != NULL);
+      ok = (outfile != O2G_NULLPTR);
       break;
 
     case NET_IO_DL_MEM:
-      request->mem.ptr = NULL;
+      request->mem.ptr = O2G_NULLPTR;
       request->mem.len = 0;
-      ok = TRUE;
+      ok = true;
       break;
 
     default:
       printf("thread: unsupported request\n");
       /* ugh?? */
-      ok = TRUE;
+      ok = true;
       break;
     }
 
@@ -295,7 +293,7 @@ static void *worker_thread(void *ptr) {
 
 #if 0
       /* try to read "Error" */
-      struct curl_slist *slist = NULL;
+      struct curl_slist *slist = O2G_NULLPTR;
       slist = curl_slist_append(slist, "Error:");
       curl_easy_setopt(curl, CURLOPT_HTTPHEADER, slist);
 #endif
@@ -313,18 +311,18 @@ static void *worker_thread(void *ptr) {
   request_free(request);
 
   printf("thread: terminating\n");
-  return NULL;
+  return O2G_NULLPTR;
 }
 
-static gboolean net_io_do(GtkWidget *parent, net_io_request_t *request,
-                          const char *title) {
+static bool net_io_do(GtkWidget *parent, net_io_request_t *request,
+                      const char *title) {
   /* the request structure is shared between master and worker thread. */
   /* typically the master thread will do some waiting until the worker */
   /* thread returns. But the master may very well stop waiting since e.g. */
   /* the user activated some cancel button. The client will learn this */
   /* from the fact that it's holding the only reference to the request */
 
-  GtkProgressBar *pbar = NULL;
+  GtkProgressBar *pbar = O2G_NULLPTR;
   GtkWidget *dialog = busy_dialog(parent, &pbar, &request->cancel, title);
 
   /* create worker thread */
@@ -332,17 +330,17 @@ static gboolean net_io_do(GtkWidget *parent, net_io_request_t *request,
   GThread *worker;
 
 #if GLIB_CHECK_VERSION(2,32,0)
-  worker = g_thread_try_new("download", &worker_thread, request, NULL);
+  worker = g_thread_try_new("download", &worker_thread, request, O2G_NULLPTR);
 #else
-  worker = g_thread_create(&worker_thread, request, FALSE, NULL);
+  worker = g_thread_create(&worker_thread, request, FALSE, O2G_NULLPTR);
 #endif
-  if(worker == NULL) {
+  if(worker == O2G_NULLPTR) {
     g_warning("failed to create the worker thread");
 
     /* free request and return error */
     request->refcount--;    /* decrease by one for dead worker thread */
     gtk_widget_destroy(dialog);
-    return FALSE;
+    return false;
   }
 
   /* wait for worker thread */
@@ -376,7 +374,7 @@ static gboolean net_io_do(GtkWidget *parent, net_io_request_t *request,
   /* user pressed cancel */
   if(request->refcount > 1) {
     printf("operation cancelled, leave worker alone\n");
-    return FALSE;
+    return false;
   }
 
   printf("worker thread has ended\n");
@@ -386,21 +384,21 @@ static gboolean net_io_do(GtkWidget *parent, net_io_request_t *request,
   /* the http connection itself may have failed */
   if(request->res != 0) {
     errorf(parent, _("Download failed with message:\n\n%s"), request->buffer);
-    return FALSE;
+    return false;
   }
 
   /* a valid http connection may have returned an error */
   if(request->response != 200) {
     errorf(parent, _("Download failed with code %ld:\n\n%s\n"),
 	   request->response, http_message(request->response));
-    return FALSE;
+    return false;
   }
 
-  return TRUE;
+  return true;
 }
 
-gboolean net_io_download_file(GtkWidget *parent, settings_t *settings,
-                              const char *url, const char *filename, const char *title) {
+bool net_io_download_file(GtkWidget *parent, settings_t *settings,
+                          const char *url, const char *filename, const char *title) {
   net_io_request_t *request = g_new0(net_io_request_t, 1);
 
   printf("net_io: download %s to file %s\n", url, filename);
@@ -410,7 +408,7 @@ gboolean net_io_download_file(GtkWidget *parent, settings_t *settings,
   if(settings->proxy)
     request->proxy = settings->proxy;
 
-  gboolean result = net_io_do(parent, request, title);
+  bool result = net_io_do(parent, request, title);
   if(!result) {
 
     /* remove the file that may have been written by now. the kernel */
@@ -430,9 +428,8 @@ gboolean net_io_download_file(GtkWidget *parent, settings_t *settings,
   return result;
 }
 
-
-gboolean net_io_download_mem(GtkWidget *parent, settings_t *settings,
-                             const char *url, char **mem, size_t *len) {
+bool net_io_download_mem(GtkWidget *parent, settings_t *settings,
+                         const char *url, char **mem, size_t &len) {
   net_io_request_t *request = g_new0(net_io_request_t, 1);
 
   printf("net_io: download %s to memory\n", url);
@@ -441,11 +438,11 @@ gboolean net_io_download_mem(GtkWidget *parent, settings_t *settings,
   if(settings->proxy)
     request->proxy = settings->proxy;
 
-  gboolean result = net_io_do(parent, request, NULL);
+  bool result = net_io_do(parent, request, O2G_NULLPTR);
   if(result) {
     printf("ptr = %p, len = %zu\n", request->mem.ptr, request->mem.len);
     *mem = request->mem.ptr;
-    *len = request->mem.len;
+    len = request->mem.len;
   }
 
   request_free(request);
