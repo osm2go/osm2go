@@ -90,8 +90,8 @@ static int josm_type_bit(const char *type, char sep) {
 }
 
 /* parse a comma seperated list of types and set their bits */
-static presets_item_t::item_type josm_type_parse(const char *type) {
-  int type_mask = 0;
+static unsigned int josm_type_parse(const char *type) {
+  unsigned int type_mask = 0;
   if(!type) return presets_item_t::TY_ALL;
 
   const char *ntype = strchr(type, ',');
@@ -102,7 +102,7 @@ static presets_item_t::item_type josm_type_parse(const char *type) {
   }
 
   type_mask |= josm_type_bit(type, '\0');
-  return static_cast<presets_item_t::item_type>(type_mask);
+  return type_mask;
 }
 
 // custom find to avoid memory allocations for std::string
