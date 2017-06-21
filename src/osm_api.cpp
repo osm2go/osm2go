@@ -244,17 +244,14 @@ static G_GNUC_PRINTF(3, 4) void appendf(struct log_s &log, const char *colname,
 
   printf("%s", buf);
 
-  GtkTextTag *tag = O2G_NULLPTR;
-  if(colname)
-    tag = gtk_text_buffer_create_tag(log.buffer, O2G_NULLPTR,
-				     "foreground", colname,
-				     O2G_NULLPTR);
-
   GtkTextIter end;
   gtk_text_buffer_get_end_iter(log.buffer, &end);
-  if(tag)
+  if(colname) {
+    GtkTextTag *tag = gtk_text_buffer_create_tag(log.buffer, O2G_NULLPTR,
+                                                 "foreground", colname,
+                                                 O2G_NULLPTR);
     gtk_text_buffer_insert_with_tags(log.buffer, &end, buf, -1, tag, O2G_NULLPTR);
-  else
+  } else
     gtk_text_buffer_insert(log.buffer, &end, buf, -1);
 
   g_free(buf);
