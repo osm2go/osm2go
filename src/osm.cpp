@@ -29,6 +29,7 @@
 #include "icon.h"
 #include "map.h"
 #include "misc.h"
+#include "osm2go_platform.h"
 #include "pos.h"
 
 #include <cmath>
@@ -1095,7 +1096,7 @@ static osm_t *process_osm(xmlTextReaderPtr reader) {
 
     if (num_elems++ > tick_every) {
       num_elems = 0;
-      banner_busy_tick();
+      osm2go_platform::process_events();
     }
   }
 

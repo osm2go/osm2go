@@ -28,6 +28,7 @@
 #include "map_edit.h"
 #include "map_hl.h"
 #include "misc.h"
+#include "osm2go_platform.h"
 #include "project.h"
 #include "statusbar.h"
 #include "style.h"
@@ -131,10 +132,8 @@ void map_item_chain_destroy(map_item_chain_t **chainP) {
 #ifdef DESTROY_WAIT_FOR_GTK
   /* wait until gtks event handling has actually destroyed this item */
   printf("waiting for item destruction ");
-  while(gtk_events_pending() || *chainP) {
-    putchar('.');
-    gtk_main_iteration();
-  }
+  while(*chainP)
+    osm2go_platform::process_events(true);
   printf(" ok\n");
 
   /* the callback routine connected to this item should have been */

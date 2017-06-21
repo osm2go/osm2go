@@ -28,6 +28,7 @@
 #include "map.h"
 #include "misc.h"
 #include "osm_api.h"
+#include "osm2go_platform.h"
 #include "statusbar.h"
 #include "track.h"
 #include "wms.h"
@@ -1309,13 +1310,13 @@ bool project_load(appdata_t *appdata, const std::string &name) {
   banner_busy_start(appdata, TRUE, banner_txt);
 
   /* close current project */
-  banner_busy_tick();
+  osm2go_platform::process_events();
 
   if(appdata->project)
     project_close(appdata);
 
   /* open project itself */
-  banner_busy_tick();
+  osm2go_platform::process_events();
 
   if(G_UNLIKELY(!project_open(appdata, name.c_str()))) {
     printf("error opening requested project\n");
@@ -1338,7 +1339,7 @@ bool project_load(appdata_t *appdata, const std::string &name) {
     return false;
 
   /* check if OSM data is valid */
-  banner_busy_tick();
+  osm2go_platform::process_events();
   const char *errmsg = appdata->osm->sanity_check();
   if(G_UNLIKELY(errmsg != O2G_NULLPTR)) {
     errorf(GTK_WIDGET(appdata->window), "%s", errmsg);
@@ -1359,19 +1360,19 @@ bool project_load(appdata_t *appdata, const std::string &name) {
   }
 
   /* load diff possibly preset */
-  banner_busy_tick();
+  osm2go_platform::process_events();
   if(!appdata->window) goto fail;
 
   diff_restore(appdata, appdata->project, appdata->osm);
 
   /* prepare colors etc, draw data and adjust scroll/zoom settings */
-  banner_busy_tick();
+  osm2go_platform::process_events();
   if(!appdata->window) goto fail;
 
   map_init(appdata->map);
 
   /* restore a track */
-  banner_busy_tick();
+  osm2go_platform::process_events();
   if(!appdata->window) goto fail;
 
   track_clear(appdata);
@@ -1379,7 +1380,7 @@ bool project_load(appdata_t *appdata, const std::string &name) {
     map_track_draw(appdata->map, appdata->track.track);
 
   /* finally load a background if present */
-  banner_busy_tick();
+  osm2go_platform::process_events();
   if(!appdata->window) goto fail;
   wms_load(appdata);
 

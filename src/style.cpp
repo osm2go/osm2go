@@ -22,6 +22,7 @@
 #include "appdata.h"
 #include "map.h"
 #include "misc.h"
+#include "osm2go_platform.h"
 #include "settings.h"
 
 #include <algorithm>
@@ -396,10 +397,7 @@ void style_change(appdata_t *appdata, const char *name) {
 
   map_clear(appdata->map, MAP_LAYER_OBJECTS_ONLY);
   /* let gtk clean up first */
-  while(gtk_events_pending()) {
-    putchar('.');
-    gtk_main_iteration();
-  }
+  osm2go_platform::process_events();
 
   delete appdata->map->style;
   appdata->map->style = nstyle;

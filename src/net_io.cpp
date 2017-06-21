@@ -22,6 +22,7 @@
 #include "appdata.h"
 #include "banner.h"
 #include "misc.h"
+#include "osm2go_platform.h"
 
 #include <curl/curl.h>
 #include <curl/easy.h>  /* new for v7 */
@@ -346,8 +347,7 @@ static bool net_io_do(GtkWidget *parent, net_io_request_t *request,
   /* wait for worker thread */
   curl_off_t last = 0;
   while(request->refcount > 1 && !request->cancel) {
-    while(gtk_events_pending())
-      gtk_main_iteration();
+    osm2go_platform::process_events();
 
     /* worker has made progress changed the progress value */
     if(request->download_cur != last) {

@@ -43,6 +43,7 @@
 #include "map.h"
 #include "misc.h"
 #include "osm_api.h"
+#include "osm2go_platform.h"
 #include "project.h"
 #include "relation_edit.h"
 #include "statusbar.h"
@@ -894,8 +895,7 @@ static void on_submenu_entry_clicked(GtkWidget *menu)
   gtk_widget_hide(menu);
 
   /* let gtk clean up */
-  while(gtk_events_pending())
-    gtk_main_iteration();
+  osm2go_platform::process_events();
 }
 
 /* use standard dialog boxes for fremantle submenues */
@@ -1133,10 +1133,7 @@ appdata_t::~appdata_t() {
   printf("waiting for gtk to shut down ");
 
   /* let gtk clean up first */
-  while(gtk_events_pending()) {
-    putchar('.');
-    gtk_main_iteration();
-  }
+  osm2go_platform::process_events(true);
 
   printf(" ok\n");
 
@@ -1254,13 +1251,6 @@ static GtkWidget *icon_button(appdata_t *appdata, const char *icon, GCallback cb
   return but;
 }
 #endif
-
-/* handle pending gtk events, but don't let the user actually do something */
-static void gtk_process_blocking() {
-  while(gtk_events_pending())
-    gtk_main_iteration();
-}
-
 
 int main(int argc, char *argv[]) {
   appdata_t appdata;
@@ -1444,7 +1434,7 @@ int main(int argc, char *argv[]) {
 
   /* let gtk do its thing before loading the data, */
   /* so the user sees something */
-  gtk_process_blocking();
+  osm2go_platform::process_events();
   if(!appdata.window) {
     printf("shutdown while starting up (1)\n");
     return -1;
@@ -1461,7 +1451,7 @@ int main(int argc, char *argv[]) {
     track_enable_gps(&appdata, TRUE);
 
   /* again let the ui do its thing */
-  gtk_process_blocking();
+  osm2go_platform::process_events();
   if(!appdata.window) {
     printf("shutdown while starting up (2)\n");
     return -1;

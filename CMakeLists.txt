@@ -77,6 +77,7 @@ set(osm2go_SOURCE_FILES
 	src/osm.h
 	src/osm_api.cpp
 	src/osm_api.h
+	src/osm2go_platform.h
 	src/pos.cpp
 	src/pos.h
 	src/project.cpp

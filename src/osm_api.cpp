@@ -24,6 +24,7 @@
 #include "map.h"
 #include "misc.h"
 #include "osm.h"
+#include "osm2go_platform.h"
 #include "net_io.h"
 #include "project.h"
 #include "settings.h"
@@ -259,8 +260,7 @@ static G_GNUC_PRINTF(3, 4) void appendf(struct log_s &log, const char *colname,
   gtk_text_view_scroll_to_iter(GTK_TEXT_VIEW(log.view),
 			       &end, 0.0, FALSE, 0, 0);
 
-  while(gtk_events_pending())
-    gtk_main_iteration();
+  osm2go_platform::process_events();
 }
 
 #define MAX_TRY 5
@@ -559,7 +559,7 @@ struct osm_delete_objects {
 void osm_delete_objects::operator()(base_object_t *obj)
 {
   /* make sure gui gets updated */
-  while(gtk_events_pending()) gtk_main_iteration();
+  osm2go_platform::process_events();
 
   g_assert(obj->flags & OSM_FLAG_DELETED);
 
@@ -589,7 +589,7 @@ void osm_upload_objects::operator()(base_object_t *obj)
   project_t *project = context.project;
 
   /* make sure gui gets updated */
-  while(gtk_events_pending()) gtk_main_iteration();
+  osm2go_platform::process_events();
 
   g_assert(obj->flags & (OSM_FLAG_DIRTY | OSM_FLAG_NEW));
 
@@ -621,7 +621,7 @@ static bool osm_create_changeset(osm_upload_context_t &context) {
   bool result = false;
 
   /* make sure gui gets updated */
-  while(gtk_events_pending()) gtk_main_iteration();
+  osm2go_platform::process_events();
 
   const std::string url = context.urlbasestr + "changeset/create";
   appendf(context.log, O2G_NULLPTR, _("Create changeset "));
@@ -654,7 +654,7 @@ static bool osm_close_changeset(osm_upload_context_t &context) {
   g_assert_false(context.changeset.empty());
 
   /* make sure gui gets updated */
-  while(gtk_events_pending()) gtk_main_iteration();
+  osm2go_platform::process_events();
 
   const std::string url = context.urlbasestr + "changeset/" + context.changeset +
                           "/close";

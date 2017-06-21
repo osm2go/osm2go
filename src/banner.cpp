@@ -19,6 +19,7 @@
 
 #include "banner.h"
 
+#include "osm2go_platform.h"
 #include "statusbar.h"
 
 #include <gtk/gtk.h>
@@ -101,7 +102,7 @@ void banner_busy_start(appdata_t *appdata, gboolean grab, const char *text) {
 #endif
     gtk_grab_add(YETI_PASSIVE_WIDGET);
   }
-  banner_busy_tick();
+  osm2go_platform::process_events();
 }
 
 
@@ -150,18 +151,3 @@ void banner_clear(appdata_t *appdata) {
 void banner_busy_stop(appdata_t *appdata) {
   banner_clear(appdata);
 }
-
-
-/*
- * Process any outstanding GTK events to make the app look more responsive
- * while still allowing long-running things to process in the mainloop.
- * This could perhaps be generalised; it isn't banner-specific.
- */
-
-void banner_busy_tick() {
-  while (gtk_events_pending()) {
-    gtk_main_iteration();
-  }
-}
-
-// vim:et:ts=8:sw=2:sts=2:ai

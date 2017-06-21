@@ -41,7 +41,6 @@ void banner_show_info(appdata_t *appdata, const char *text);
 // app environment in use. This can be an animation for some builds, might be
 // a static statusbar for others, a modal dialog for others.
 void banner_busy_start(appdata_t *appdata, gboolean grab, const char *text);
-void banner_busy_tick();    // perhaps move elsewhere "still_alive()"? :)
 void banner_busy_stop(appdata_t *appdata);
 
 // Clear any message created with banner_busy_start or banner_show_info
