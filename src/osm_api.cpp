@@ -759,6 +759,13 @@ static void info_more(const osm_dirty_t &context) {
 }
 #endif
 
+static __attribute__((nonnull(1,2))) void update_if_different(char **value, const gchar *newval) {
+  if(*value && strcmp(*value, newval) == 0)
+    return;
+  *value = static_cast<char *>(g_realloc(*value, strlen(newval) + 1));
+  memcpy(*value, newval, strlen(newval) + 1);
+}
+
 void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
 
   printf("starting upload\n");
@@ -872,13 +879,8 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   printf("clicked ok\n");
 
   /* retrieve username and password */
-  g_free(appdata->settings->username);
-  appdata->settings->username =
-    g_strdup(gtk_entry_get_text(GTK_ENTRY(uentry)));
-
-  g_free(appdata->settings->password);
-  appdata->settings->password =
-    g_strdup(gtk_entry_get_text(GTK_ENTRY(pentry)));
+  update_if_different(&appdata->settings->username, gtk_entry_get_text(GTK_ENTRY(uentry)));
+  update_if_different(&appdata->settings->password, gtk_entry_get_text(GTK_ENTRY(pentry)));
 
   /* fetch comment from dialog */
   GtkTextIter start, end;
