@@ -1566,7 +1566,7 @@ void osm_unref_way_free::operator()(node_t* node)
   node->ways--;
 
   /* this node must only be part of this way */
-  if(!node->ways) {
+  if(!node->ways && node->tags.empty()) {
     /* delete this node, but don't let this actually affect the */
     /* associated ways as the only such way is the one we are currently */
     /* deleting */

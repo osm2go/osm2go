@@ -442,6 +442,51 @@ static void test_way_delete()
 
   g_assert_cmpuint(o.nodes.size(), ==, 0);
   g_assert_cmpuint(o.ways.size(), ==, 0);
+
+  // test way deletion with nodes that should be preserved
+  l.x = 10;
+  l.y = 20;
+  n1 = o.node_new(l);
+  o.node_attach(n1);
+
+  // this node will be removed when the way is removed
+  l.y = 40;
+  n2 = o.node_new(l);
+  o.node_attach(n2);
+
+  w = new way_t(1);
+  w->append_node(n1);
+  w->append_node(n2);
+  o.way_attach(w);
+
+  osm_t::TagMap nstags;
+  nstags.insert(osm_t::TagMap::value_type("a", "A"));
+  n1->tags.replace(nstags);
+
+  l.x = 5;
+  node_t *n3 = o.node_new(l);
+  o.node_attach(n3);
+  l.y = 25;
+  node_t *n4 = o.node_new(l);
+  o.node_attach(n4);
+
+  way_t *w2 = new way_t(1);
+  o.way_attach(w2);
+  w2->append_node(n3);
+  w2->append_node(n4);
+
+  w->append_node(n3);
+
+  // now delete the way, which would reduce the use counter of all nodes
+  // n1 should be preserved as it has tags on it's own
+  // n3 should be preserved as it is used in another way
+  o.way_delete(w);
+
+  g_assert_cmpuint(o.nodes.size(), ==, 3);
+  g_assert_cmpuint(o.ways.size(), ==, 1);
+  g_assert(o.node_by_id(n1->id) == n1);
+  g_assert(o.node_by_id(n3->id) == n3);
+  g_assert(o.node_by_id(n4->id) == n4);
 }
 
 static void test_member_delete()
