@@ -641,7 +641,7 @@ member_t osm_t::parse_relation_member(xmlNode *a_node) {
       /* search matching relation */
       member.object.relation = relation_by_id(id);
       if(!member.object.relation) {
-	member.object.type = NODE_ID;
+        member.object.type = RELATION_ID;
 	member.object.id = id;
       }
       break;
@@ -960,7 +960,7 @@ static bool process_member(xmlTextReaderPtr reader, osm_t *osm, std::vector<memb
       /* search matching relation */
       member.object.relation = osm->relation_by_id(id);
       if(!member.object.relation) {
-	member.object.type = NODE_ID;
+        member.object.type = RELATION_ID;
 	member.object.id = id;
       }
       break;
