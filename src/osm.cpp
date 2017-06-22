@@ -1551,6 +1551,15 @@ void osm_t::relation_attach(relation_t *relation) {
   osm_attach(relations, relation);
 }
 
+struct find_relation_members {
+  const object_t obj;
+  find_relation_members(const object_t o) : obj(o) {}
+  bool operator()(const std::pair<item_id_t, relation_t *> &pair) {
+    const std::vector<member_t>::const_iterator itEnd = pair.second->members.end();
+    return std::find(cbegin(pair.second->members), itEnd, obj) != itEnd;
+  }
+};
+
 struct osm_unref_way_free {
   osm_t * const osm;
   const way_t * const way;
@@ -1570,9 +1579,13 @@ void osm_unref_way_free::operator()(node_t* node)
     /* delete this node, but don't let this actually affect the */
     /* associated ways as the only such way is the one we are currently */
     /* deleting */
-    const way_chain_t &way_chain = osm->node_delete(node, false);
-    g_assert_cmpuint(way_chain.size(), ==, 1);
-    g_assert(way_chain.front() == way);
+    const std::map<item_id_t, relation_t *>::const_iterator itEnd = osm->relations.end();
+    // do not delete if it is still referenced by a relation
+    if(std::find_if(cbegin(osm->relations), itEnd, find_relation_members(object_t(node))) == itEnd) {
+      const way_chain_t &way_chain = osm->node_delete(node, false);
+      g_assert_cmpuint(way_chain.size(), ==, 1);
+      g_assert(way_chain.front() == way);
+    }
   }
 }
 

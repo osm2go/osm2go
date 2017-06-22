@@ -459,6 +459,16 @@ static void test_way_delete()
   w->append_node(n2);
   o.way_attach(w);
 
+  // this instance will persist
+  l.x = 20;
+  n2 = o.node_new(l);
+  o.node_attach(n2);
+  w->append_node(n2);
+
+  relation_t *r = new relation_t(1);
+  o.relation_attach(r);
+  r->members.push_back(member_t(object_t(n2), O2G_NULLPTR));
+
   osm_t::TagMap nstags;
   nstags.insert(osm_t::TagMap::value_type("a", "A"));
   n1->tags.replace(nstags);
@@ -479,14 +489,18 @@ static void test_way_delete()
 
   // now delete the way, which would reduce the use counter of all nodes
   // n1 should be preserved as it has tags on it's own
+  // n2 should be preserved as it is still referenced by a relation
   // n3 should be preserved as it is used in another way
   o.way_delete(w);
 
-  g_assert_cmpuint(o.nodes.size(), ==, 3);
+  g_assert_cmpuint(o.nodes.size(), ==, 4);
   g_assert_cmpuint(o.ways.size(), ==, 1);
+  g_assert_cmpuint(o.relations.size(), ==, 1);
   g_assert(o.node_by_id(n1->id) == n1);
+  g_assert(o.node_by_id(n2->id) == n2);
   g_assert(o.node_by_id(n3->id) == n3);
   g_assert(o.node_by_id(n4->id) == n4);
+  g_assert_cmpuint(r->members.size(), ==, 1);
 }
 
 static void test_member_delete()
