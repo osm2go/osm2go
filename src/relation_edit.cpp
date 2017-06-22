@@ -790,7 +790,7 @@ static void on_relation_remove(GtkWidget *, relation_context_t *context) {
     gtk_list_store_remove(context->store, &iter);
 
   /* then really delete it */
-  context->appdata->osm->relation_delete(sel, false);
+  context->appdata->osm->relation_delete(sel);
 
   relation_list_selected(context->list, O2G_NULLPTR);
 }

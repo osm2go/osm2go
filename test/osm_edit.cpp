@@ -415,7 +415,7 @@ static void test_way_delete()
   w->append_node(n2);
   o.way_attach(w);
 
-  o.way_delete(w, true);
+  o.way_delete(w);
 
   g_assert_cmpuint(o.nodes.size(), ==, 0);
   g_assert_cmpuint(o.ways.size(), ==, 0);
@@ -438,7 +438,7 @@ static void test_way_delete()
   w->append_node(n1);
   g_assert_true(w->is_closed());
 
-  o.way_delete(w, false);
+  o.way_delete(w);
 
   g_assert_cmpuint(o.nodes.size(), ==, 0);
   g_assert_cmpuint(o.ways.size(), ==, 0);
@@ -485,7 +485,7 @@ static void test_member_delete()
 
   // now delete the node that is member of both other objects
   o.remove_from_relations(object_t(n2));
-  o.node_delete(n2, false, true);
+  o.node_delete(n2, true);
 
   g_assert_cmpuint(o.nodes.size(), ==, 2);
   g_assert_cmpuint(o.ways.size(), ==, 1);

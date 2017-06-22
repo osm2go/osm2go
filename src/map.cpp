@@ -1307,7 +1307,7 @@ void map_way_delete(map_t *map, way_t *way) {
   /* and mark it "deleted" in the database */
   map->appdata->osm->remove_from_relations(object_t(way));
 
-  map->appdata->osm->way_delete(way, false);
+  map->appdata->osm->way_delete(way);
 }
 
 static void map_handle_click(map_t *map) {
@@ -2065,7 +2065,7 @@ void map_delete_selected(map_t *map) {
     /* and mark it "deleted" in the database */
     map->appdata->osm->remove_from_relations(item.object);
     const way_chain_t &chain = map->appdata->osm->node_delete(
-                                        item.object.node, false, true);
+                                        item.object.node, true);
     std::for_each(chain.begin(), chain.end(), node_deleted_from_ways(map));
 
     break;
@@ -2076,7 +2076,7 @@ void map_delete_selected(map_t *map) {
     break;
 
   case RELATION:
-    map->appdata->osm->relation_delete(item.object.relation, false);
+    map->appdata->osm->relation_delete(item.object.relation);
     break;
 
   default:

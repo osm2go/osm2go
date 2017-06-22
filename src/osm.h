@@ -179,17 +179,17 @@ struct osm_t {
   node_t *node_new(const pos_t &pos);
   void node_attach(node_t *node);
   void node_restore(node_t *node);
-  void way_delete(way_t *way, bool permanently);
+  void way_delete(way_t *way);
   void way_attach(way_t *way);
   void remove_from_relations(object_t obj);
   void way_restore(way_t *way, const std::vector<item_id_chain_t> &id_chain);
   void way_free(way_t *way);
   void node_free(node_t *node);
   way_chain_t node_to_way(const node_t *node) const;
-  way_chain_t node_delete(node_t *node, bool permanently, bool affect_ways);
+  way_chain_t node_delete(node_t *node, bool affect_ways);
   void relation_free(relation_t *relation);
   void relation_attach(relation_t *relation);
-  void relation_delete(relation_t *relation, bool permanently);
+  void relation_delete(relation_t *relation);
   relation_chain_t to_relation(const way_t *way) const;
   relation_chain_t to_relation(const object_t &object) const;
 

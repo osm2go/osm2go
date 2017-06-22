@@ -1352,15 +1352,14 @@ void node_chain_delete_functor::operator()(std::pair<item_id_t, way_t *> p)
 }
 
 /* returns pointer to chain of ways affected by this deletion */
-way_chain_t osm_t::node_delete(node_t *node, bool permanently,
-			    bool affect_ways) {
+way_chain_t osm_t::node_delete(node_t *node, bool affect_ways) {
   way_chain_t way_chain;
+  bool permanently = node->flags & OSM_FLAG_NEW;
 
   /* new nodes aren't stored on the server and are just deleted permanently */
-  if(node->flags & OSM_FLAG_NEW) {
+  if(permanently) {
     printf("About to delete NEW node #" ITEM_ID_FORMAT
 	   " -> force permanent delete\n", node->id);
-    permanently = true;
   }
 
   /* first remove node from all ways using it */
@@ -1571,19 +1570,19 @@ void osm_unref_way_free::operator()(node_t* node)
     /* delete this node, but don't let this actually affect the */
     /* associated ways as the only such way is the one we are currently */
     /* deleting */
-    const way_chain_t &way_chain = osm->node_delete(node, false, false);
+    const way_chain_t &way_chain = osm->node_delete(node, false);
     g_assert_cmpuint(way_chain.size(), ==, 1);
     g_assert(way_chain.front() == way);
   }
 }
 
-void osm_t::way_delete(way_t *way, bool permanently) {
+void osm_t::way_delete(way_t *way) {
+  bool permanently = way->flags & OSM_FLAG_NEW;
 
   /* new ways aren't stored on the server and are just deleted permanently */
-  if(way->flags & OSM_FLAG_NEW) {
+  if(permanently) {
     printf("About to delete NEW way #" ITEM_ID_FORMAT
 	   " -> force permanent delete\n", way->id);
-    permanently = true;
   }
 
   /* delete all nodes that aren't in other use now */
@@ -1604,14 +1603,14 @@ void osm_t::way_delete(way_t *way, bool permanently) {
   }
 }
 
-void osm_t::relation_delete(relation_t *relation, bool permanently) {
+void osm_t::relation_delete(relation_t *relation) {
+  bool permanently = relation->flags & OSM_FLAG_NEW;
 
   /* new relations aren't stored on the server and are just */
   /* deleted permanently */
-  if(relation->flags & OSM_FLAG_NEW) {
+  if(permanently) {
     printf("About to delete NEW relation #" ITEM_ID_FORMAT
 	   " -> force permanent delete\n", relation->id);
-    permanently = TRUE;
   }
 
   /* the deletion of a relation doesn't affect the members as they */
