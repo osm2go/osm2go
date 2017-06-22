@@ -1305,8 +1305,6 @@ void map_way_delete(map_t *map, way_t *way) {
   map_item_chain_destroy(&way->map_item_chain);
 
   /* and mark it "deleted" in the database */
-  map->appdata->osm->remove_from_relations(object_t(way));
-
   map->appdata->osm->way_delete(way);
 }
 

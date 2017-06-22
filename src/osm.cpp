@@ -1585,6 +1585,8 @@ void osm_t::way_delete(way_t *way) {
 	   " -> force permanent delete\n", way->id);
   }
 
+  remove_from_relations(object_t(way));
+
   /* delete all nodes that aren't in other use now */
   std::for_each(way->node_chain.begin(), way->node_chain.end(),
                 osm_unref_way_free(this, way));
@@ -1612,6 +1614,8 @@ void osm_t::relation_delete(relation_t *relation) {
     printf("About to delete NEW relation #" ITEM_ID_FORMAT
 	   " -> force permanent delete\n", relation->id);
   }
+
+  remove_from_relations(object_t(relation));
 
   /* the deletion of a relation doesn't affect the members as they */
   /* don't have any reference to the relation they are part of */
