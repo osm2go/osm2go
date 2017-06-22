@@ -520,9 +520,7 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
     if(member_node->type == XML_ELEMENT_NODE) {
       if(G_LIKELY(strcmp((char*)member_node->name, "member") == 0)) {
 	/* attach member to member_chain */
-	member_t member = osm->parse_relation_member(member_node);
-	if(member.object.type != ILLEGAL)
-          members.push_back(member);
+        osm->parse_relation_member(member_node, members);
       }
     }
   }

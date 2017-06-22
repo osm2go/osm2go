@@ -597,71 +597,85 @@ static void osm_relation_free_pair(std::pair<item_id_t, relation_t *> pair) {
   delete pair.second;
 }
 
-member_t osm_t::parse_relation_member(xmlNode *a_node) {
-  xmlChar *prop;
-  member_t member(ILLEGAL);
-
-  if((prop = xmlGetProp(a_node, BAD_CAST "type"))) {
-    if(strcmp((char*)prop, way_t::api_string()) == 0)
-      member.object.type = WAY;
-    else if(strcmp((char*)prop, node_t::api_string()) == 0)
-      member.object.type = NODE;
-    else if(G_LIKELY(strcmp((char*)prop, relation_t::api_string()) == 0))
-      member.object.type = RELATION;
-    xmlFree(prop);
+bool osm_t::parse_relation_member(const char *tp, const char *ref, const char *role, std::vector<member_t> &members) {
+  if(G_UNLIKELY(tp == O2G_NULLPTR)) {
+    printf("missing type for relation member\n");
+    return false;
+  }
+  if(G_UNLIKELY(ref == O2G_NULLPTR)) {
+    printf("missing ref for relation member\n");
+    return false;
   }
 
-  if((prop = xmlGetProp(a_node, BAD_CAST "ref"))) {
-    item_id_t id = strtoll((char*)prop, O2G_NULLPTR, 10);
+  type_t type;
+  if(strcmp(tp, way_t::api_string()) == 0)
+    type = WAY;
+  else if(strcmp(tp, node_t::api_string()) == 0)
+    type = NODE;
+  else if(G_LIKELY(strcmp(tp, relation_t::api_string()) == 0))
+    type = RELATION;
+  else {
+    printf("Unable to store illegal type '%s'\n", tp);
+    return false;
+  }
 
-    switch(member.object.type) {
-    case ILLEGAL:
-      printf("Unable to store illegal type\n");
-      return member;
+  char *endp;
+  item_id_t id = strtoll(ref, &endp, 10);
+  if(G_UNLIKELY(*endp != '\0')) {
+    printf("Illegal ref '%s' for relation member\n", ref);
+    return false;
+  }
+  member_t member(type);
 
-    case WAY:
-      /* search matching way */
-      member.object.way = way_by_id(id);
-      if(!member.object.way) {
-	member.object.type = WAY_ID;
-	member.object.id = id;
-      }
-      break;
-
-    case NODE:
-      /* search matching node */
-      member.object.node = node_by_id(id);
-      if(!member.object.node) {
-	member.object.type = NODE_ID;
-	member.object.id = id;
-      }
-      break;
-
-    case RELATION:
-      /* search matching relation */
-      member.object.relation = relation_by_id(id);
-      if(!member.object.relation) {
-        member.object.type = RELATION_ID;
-	member.object.id = id;
-      }
-      break;
-
-    case WAY_ID:
-    case NODE_ID:
-    case RELATION_ID:
-      break;
+  switch(type) {
+  case WAY:
+    /* search matching way */
+    member.object.way = way_by_id(id);
+    if(!member.object.way) {
+      member.object.type = WAY_ID;
+      member.object.id = id;
     }
+    break;
 
-    xmlFree(prop);
+  case NODE:
+    /* search matching node */
+    member.object.node = node_by_id(id);
+    if(!member.object.node) {
+      member.object.type = NODE_ID;
+      member.object.id = id;
+    }
+    break;
+
+  case RELATION:
+    /* search matching relation */
+    member.object.relation = relation_by_id(id);
+    if(!member.object.relation) {
+      member.object.type = RELATION_ID;
+      member.object.id = id;
+    }
+    break;
+  default:
+    g_assert_not_reached();
   }
 
-  if((prop = xmlGetProp(a_node, BAD_CAST "role"))) {
-    if(strlen((char*)prop) > 0)
-      member.role = g_strdup((char*)prop);
-    xmlFree(prop);
-  }
+  if(role != O2G_NULLPTR && strlen(role) > 0)
+    member.role = g_strdup(role);
 
-  return member;
+  members.push_back(member);
+  return true;
+}
+
+void osm_t::parse_relation_member(xmlNode *a_node, std::vector<member_t> &members) {
+  xmlChar *tp = xmlGetProp(a_node, BAD_CAST "type");
+  xmlChar *ref = xmlGetProp(a_node, BAD_CAST "ref");
+  xmlChar *role = xmlGetProp(a_node, BAD_CAST "role");
+
+  parse_relation_member(reinterpret_cast<char *>(tp), reinterpret_cast<char *>(ref),
+                        reinterpret_cast<char *>(role), members);
+
+  xmlFree(tp);
+  xmlFree(ref);
+  xmlFree(role);
 }
 
 /* try to find something descriptive */
@@ -916,73 +930,18 @@ static way_t *process_way(xmlTextReaderPtr reader, osm_t *osm) {
 }
 
 static bool process_member(xmlTextReaderPtr reader, osm_t *osm, std::vector<member_t> &members) {
-  char *prop;
-  member_t member(ILLEGAL);
+  xmlChar *tp = xmlTextReaderGetAttribute(reader, BAD_CAST "type");
+  xmlChar *ref = xmlTextReaderGetAttribute(reader, BAD_CAST "ref");
+  xmlChar *role = xmlTextReaderGetAttribute(reader, BAD_CAST "role");
 
-  if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "type"))) {
-    if(strcmp(prop, way_t::api_string()) == 0)
-      member.object.type = WAY;
-    else if(strcmp(prop, node_t::api_string()) == 0)
-      member.object.type = NODE;
-    else if(G_LIKELY(strcmp(prop, relation_t::api_string()) == 0))
-      member.object.type = RELATION;
-    else {
-      printf("Unable to store illegal type '%s'\n", prop);
-      xmlFree(prop);
-      return false;
-    }
-    xmlFree(prop);
-  }
+  bool ret = osm->parse_relation_member(reinterpret_cast<char *>(tp), reinterpret_cast<char *>(ref),
+                                        reinterpret_cast<char *>(role), members);
 
-  if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "ref"))) {
-    item_id_t id = strtoll(prop, O2G_NULLPTR, 10);
+  xmlFree(tp);
+  xmlFree(ref);
+  xmlFree(role);
 
-    switch(member.object.type) {
-    case WAY:
-      /* search matching way */
-      member.object.way = osm->way_by_id(id);
-      if(!member.object.way) {
-	member.object.type = WAY_ID;
-	member.object.id = id;
-      }
-      break;
-
-    case NODE:
-      /* search matching node */
-      member.object.node = osm->node_by_id(id);
-      if(!member.object.node) {
-	member.object.type = NODE_ID;
-	member.object.id = id;
-      }
-      break;
-
-    case RELATION:
-      /* search matching relation */
-      member.object.relation = osm->relation_by_id(id);
-      if(!member.object.relation) {
-        member.object.type = RELATION_ID;
-	member.object.id = id;
-      }
-      break;
-
-    case WAY_ID:
-    case NODE_ID:
-    case RELATION_ID:
-      break;
-    default:
-      g_assert_not_reached();
-    }
-
-    xmlFree(prop);
-  }
-
-  if((prop = (char*)xmlTextReaderGetAttribute(reader, BAD_CAST "role"))) {
-    if(strlen(prop) > 0) member.role = g_strdup(prop);
-    xmlFree(prop);
-  }
-
-  members.push_back(member);
-  return true;
+  return ret;
 }
 
 static relation_t *process_relation(xmlTextReaderPtr reader, osm_t *osm) {

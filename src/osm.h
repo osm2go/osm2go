@@ -213,7 +213,8 @@ struct osm_t {
    */
   static bool parse_tag(xmlNode* a_node, TagMap &tags);
 
-  member_t parse_relation_member(xmlNode *a_node);
+  bool parse_relation_member(const char *tp, const char *ref, const char *role, std::vector<member_t> &members);
+  void parse_relation_member(xmlNode *a_node, std::vector<member_t> &members);
 
   node_t *parse_way_nd(xmlNode *a_node) const;
 
