@@ -484,7 +484,7 @@ static void test_member_delete()
   o.relation_attach(r);
 
   // now delete the node that is member of both other objects
-  o.remove_from_relations(n2);
+  o.remove_from_relations(object_t(n2));
   o.node_delete(n2, false, true);
 
   g_assert_cmpuint(o.nodes.size(), ==, 2);

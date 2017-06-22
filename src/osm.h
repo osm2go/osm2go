@@ -181,8 +181,7 @@ struct osm_t {
   void node_restore(node_t *node);
   void way_delete(way_t *way, bool permanently);
   void way_attach(way_t *way);
-  void remove_from_relations(node_t *node);
-  void remove_from_relations(way_t *way);
+  void remove_from_relations(object_t obj);
   void way_restore(way_t *way, const std::vector<item_id_chain_t> &id_chain);
   void way_free(way_t *way);
   void node_free(node_t *node);

@@ -1537,21 +1537,13 @@ void remove_member_functor::operator()(std::pair<item_id_t, relation_t *> pair)
   }
 }
 
-/* remove the given node from all relations. used if the node is to */
+/* remove the given object from all relations. used if the object is to */
 /* be deleted */
-void osm_t::remove_from_relations(node_t *node) {
-  printf("removing node #" ITEM_ID_FORMAT " from all relations:\n", node->id);
+void osm_t::remove_from_relations(object_t obj) {
+  printf("removing %s #" ITEM_ID_FORMAT " from all relations:\n", obj.obj->apiString(), obj.id);
 
   std::for_each(relations.begin(), relations.end(),
-                remove_member_functor(object_t(node), false));
-}
-
-/* remove the given way from all relations */
-void osm_t::remove_from_relations(way_t *way) {
-  printf("removing way #" ITEM_ID_FORMAT " from all relations:\n", way->id);
-
-  std::for_each(relations.begin(), relations.end(),
-                remove_member_functor(object_t(way), false));
+                remove_member_functor(obj, false));
 }
 
 void osm_t::relation_attach(relation_t *relation) {
