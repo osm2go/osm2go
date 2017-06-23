@@ -724,17 +724,13 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, gint ex, gint ey) {
       std::for_each(osm->relations.begin(), osm->relations.end(),
                     relation_node_replacer(touchnode, node));
 
+      /* transfer tags from touchnode to node */
       bool conflict = node->tags.merge(touchnode->tags);
 
       /* touchnode must not have any references to ways anymore */
       g_assert_cmpint(touchnode->ways, ==, 0);
 
-      /* delete touchnode */
-      /* remove it visually from the screen */
-      map_item_chain_destroy(&touchnode->map_item_chain);
-
-      /* and remove it from the data structures */
-      osm->node_delete(touchnode);
+      osm->node_delete(touchnode, false);
 
       /* and open dialog to resolve tag collisions if necessary */
       if(conflict)
@@ -799,8 +795,6 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, gint ex, gint ey) {
 	  chain.insert(chain.end(), ways2join[1]->node_chain.begin()++, ways2join[1]->node_chain.end());
 
 	  ways2join[1]->node_chain.resize(1);
-
-	  /* transfer tags from touchnode to node */
 
 	  /* ---------- transfer tags from way[1] to way[0] ----------- */
 	  bool conflict = ways2join[0]->tags.merge(ways2join[1]->tags);
