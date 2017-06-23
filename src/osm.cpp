@@ -1351,8 +1351,7 @@ void node_chain_delete_functor::operator()(std::pair<item_id_t, way_t *> p)
   }
 }
 
-/* returns pointer to chain of ways affected by this deletion */
-way_chain_t osm_t::node_delete(node_t *node, bool affect_ways) {
+way_chain_t osm_t::node_delete(node_t *node, bool remove_refs) {
   way_chain_t way_chain;
   bool permanently = node->flags & OSM_FLAG_NEW;
 
@@ -1364,7 +1363,10 @@ way_chain_t osm_t::node_delete(node_t *node, bool affect_ways) {
 
   /* first remove node from all ways using it */
   std::for_each(ways.begin(), ways.end(),
-                node_chain_delete_functor(node, way_chain, affect_ways));
+                node_chain_delete_functor(node, way_chain, remove_refs));
+
+  if(remove_refs)
+    remove_from_relations(object_t(node));
 
   /* remove that nodes map representations */
   if(node->map_item_chain)

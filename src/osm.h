@@ -186,7 +186,13 @@ struct osm_t {
   void way_free(way_t *way);
   void node_free(node_t *node);
   way_chain_t node_to_way(const node_t *node) const;
-  way_chain_t node_delete(node_t *node, bool affect_ways);
+  /**
+   * @brief remove the given node
+   * @param node the node to remove
+   * @param remove_refs if it should be cleaned also from ways and relations referencing it
+   * @return list of ways affected by this deletion
+   */
+  way_chain_t node_delete(node_t *node, bool remove_refs = true);
   void relation_free(relation_t *relation);
   void relation_attach(relation_t *relation);
   void relation_delete(relation_t *relation);

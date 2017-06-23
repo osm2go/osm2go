@@ -734,8 +734,7 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, gint ex, gint ey) {
       map_item_chain_destroy(&touchnode->map_item_chain);
 
       /* and remove it from the data structures */
-      osm->remove_from_relations(object_t(touchnode));
-      osm->node_delete(touchnode, true);
+      osm->node_delete(touchnode);
 
       /* and open dialog to resolve tag collisions if necessary */
       if(conflict)
