@@ -696,7 +696,7 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, gint ex, gint ey) {
 
   /* check if it was dropped onto another node */
   node_t *touchnode = map_hl_touchnode_get_node(map);
-  gboolean joined_with_touchnode = FALSE;
+  bool joined_with_touchnode = false;
 
   if(touchnode) {
     map_hl_touchnode_clear(map);
@@ -711,7 +711,7 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, gint ex, gint ey) {
 
       /* the touchnode vanishes and is replaced by the node the */
       /* user dropped onto it */
-      joined_with_touchnode = TRUE;
+      joined_with_touchnode = true;
 
       /* use touchnodes position */
       node->lpos = touchnode->lpos;
