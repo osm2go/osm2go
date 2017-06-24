@@ -2,10 +2,13 @@ osm2go (1:0.9.7-maemo1) karmic; urgency=low
 
   * do not show deleted relations in relation list (broken forever)
   * fix crash when deleting an object that is member of a relation (broken in 0.9.0)
+  * fix silent corruption of relations that have other relations as members (broken forever)
+  * do not remove member nodes if a way is deleted and the nodes have tags on their own or are members of a relation
+  * show the type of the object that will be deleted in delete confirm dialog
   * allow to delete selected relation from map view
   * speed up upload by avoiding unneeded local calculations
 
- -- Rolf Eike Beer <eike@sf-mail.de>  Sat, 17 Jun 2017 13:24:48 +0200
+ -- Rolf Eike Beer <eike@sf-mail.de>  Sat, 24 Jun 2017 13:35:19 +0200
 
 osm2go (1:0.9.6-maemo1) karmic; urgency=low
 
