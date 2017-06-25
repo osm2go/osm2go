@@ -39,9 +39,9 @@
 #include <osm2go_cpp.h>
 
 #ifdef ENABLE_BROWSER_INTERFACE
-static void on_info(GtkWidget *widget, gpointer context) {
+static void on_info(GtkWidget *widget, appdata_t *context) {
   const char *link = (char*)g_object_get_data(G_OBJECT(widget), "link");
-  open_url((appdata_t*)context, link);
+  open_url(context, link);
 }
 #endif
 
@@ -530,9 +530,7 @@ static void remove_subs(std::vector<presets_item_group *> &oldsubs,
 }
 
 static void
-on_presets_picker_selected(GtkTreeSelection *selection, gpointer data) {
-  presets_context_t *context = (presets_context_t*)data;
-
+on_presets_picker_selected(GtkTreeSelection *selection, presets_context_t *context) {
 #ifdef FREMANTLE
   /* try to prevent inital selection */
   if(!g_object_get_data(G_OBJECT(selection), "setup_done")) {
@@ -866,9 +864,7 @@ static inline void remove_sub_reference(presets_item_group *sub_item) {
 #endif
 
 static gint button_press(GtkWidget *widget, GdkEventButton *event,
-			 gpointer data) {
-  presets_context_t *context = (presets_context_t*)data;
-
+                         presets_context_t *context) {
   if(event->type != GDK_BUTTON_PRESS)
     return FALSE;
 
@@ -941,9 +937,7 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event,
   return TRUE;
 }
 
-static gint on_button_destroy(gpointer data) {
-  presets_context_t *context = (presets_context_t*)data;
-
+static gint on_button_destroy(presets_context_t *context) {
 #ifndef FREMANTLE
   printf("freeing preset button context\n");
   if (context->menu)
@@ -1152,8 +1146,7 @@ const char *presets_widget_checkbox::getValue(GtkWidget *widget) const
          (value_on.empty() ? "yes" : value_on.c_str()) : O2G_NULLPTR;
 }
 
-static void item_link_clicked(GtkButton *button, gpointer data) {
-  presets_item * const item = static_cast<presets_item *>(data);
+static void item_link_clicked(GtkButton *button, presets_item *item) {
   presets_context_t * const context = static_cast<presets_context_t *>(
                                           g_object_get_data(G_OBJECT(button),
                                                             "presets_context"));
