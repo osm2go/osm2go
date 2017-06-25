@@ -151,6 +151,10 @@ struct member_t {
   bool operator==(const member_t &other) const;
   inline bool operator==(const object_t &other) const
   { return object == other; }
+
+  static inline void clear(member_t &member) {
+    g_free(member.role);
+  }
 };
 
 struct osm_t {
@@ -254,6 +258,8 @@ struct tag_t {
    * @brief replace the value
    */
   void update_value(const char *nvalue);
+
+  static void clear(tag_t &tag);
 };
 
 class tag_list_t {
@@ -504,10 +510,7 @@ protected:
 
 void osm_node_chain_free(node_chain_t &node_chain);
 
-void osm_member_free(member_t &member);
 void osm_members_free(std::vector<member_t> &members);
-
-void osm_tag_free(tag_t &tag);
 
 #endif
 

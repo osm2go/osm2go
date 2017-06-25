@@ -175,7 +175,7 @@ static void relation_remove_item(relation_t *relation, const object_t &object) {
   std::vector<member_t>::iterator it = relation->find_member_object(object);
   g_assert(it != relation->members.end());
 
-  osm_member_free(*it);
+  member_t::clear(*it);
   relation->members.erase(it);
 
   relation->flags |= OSM_FLAG_DIRTY;

@@ -83,6 +83,9 @@ public:
   const Match match;
 
   virtual bool is_interactive() const;
+  static inline bool isInteractive(const presets_widget_t *w) {
+    return w->is_interactive();
+  }
 
   virtual GtkWidget *attach(GtkTable *table, guint &row, const char *preset,
                             presets_context_t *context) const;
@@ -313,10 +316,6 @@ struct presets_items {
 
   bool addFile(const std::string &filename, const std::string &basepath);
 };
-
-static inline bool is_widget_interactive(const presets_widget_t *w) {
-  return w->is_interactive();
-}
 
 static inline guint widget_rows(guint init, const presets_widget_t *w) {
   return init + w->rows();

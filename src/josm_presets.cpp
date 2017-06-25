@@ -220,7 +220,7 @@ static void presets_item_dialog(presets_context_t *context,
    * dialog if there's no interactive gui element at all */
   const std::vector<presets_widget_t *>::const_iterator itEnd = item->widgets.end();
   std::vector<presets_widget_t *>::const_iterator it = std::find_if(item->widgets.begin(), itEnd,
-                                                                    is_widget_interactive);
+                                                                    presets_widget_t::isInteractive);
   bool has_interactive_widget = (it != itEnd);
 
   std::map<const presets_widget_t *, GtkWidget *> gtk_widgets;

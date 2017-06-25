@@ -165,7 +165,7 @@ static void test_taglist() {
   std::rotate(ntags.begin(), ntags.begin() + 1, ntags.end());
   g_assert(tags == ntags);
 
-  std::for_each(ntags.begin(), ntags.end(), osm_tag_free);
+  std::for_each(ntags.begin(), ntags.end(), tag_t::clear);
   ntags.clear();
   tags.clear();
 
@@ -198,7 +198,7 @@ static void test_taglist() {
   g_assert(tags == ntags);
   g_assert(virgin != tags.asMap());
 
-  std::for_each(ntags.begin(), ntags.end(), osm_tag_free);
+  std::for_each(ntags.begin(), ntags.end(), tag_t::clear);
 }
 
 static void test_replace() {

@@ -191,7 +191,7 @@ time_t __attribute__((nonnull(1))) convert_iso8601(const char *str) {
 
 /* -------------------- tag handling ----------------------- */
 
-void osm_tag_free(tag_t &tag) {
+void tag_t::clear(tag_t &tag) {
   g_free(tag.key);
   g_free(tag.value);
 }
@@ -309,7 +309,7 @@ bool tag_list_t::merge(tag_list_t &other)
     /* don't copy "created_by" tag or tags that already */
     /* exist in identical form */
     if(src.is_creator_tag() || contains(tag_match_functor(src, true))) {
-      osm_tag_free(src);
+      tag_t::clear(src);
     } else {
       /* check if same key but with different value is present */
       if(!conflict)
@@ -524,12 +524,8 @@ node_t *osm_t::parse_way_nd(xmlNode *a_node) const {
 
 /* ------------------- relation handling ------------------- */
 
-void osm_member_free(member_t &member) {
-  g_free(member.role);
-}
-
 void osm_members_free(std::vector<member_t> &members) {
-  std::for_each(members.begin(), members.end(), osm_member_free);
+  std::for_each(members.begin(), members.end(), member_t::clear);
   members.clear();
 }
 
@@ -1497,7 +1493,7 @@ void remove_member_functor::operator()(std::pair<item_id_t, relation_t *> pair)
   while((it = std::find(it, itEnd, obj)) != itEnd) {
     printf("  from relation #" ITEM_ID_FORMAT "\n", relation->id);
 
-    osm_member_free(*it);
+    member_t::clear(*it);
     it = relation->members.erase(it);
     // refresh end iterator as the vector was modified
     itEnd = relation->members.end();
@@ -2051,7 +2047,7 @@ const char* tag_list_t::get_value(const char *key) const
 
 void tag_list_t::clear()
 {
-  for_each(osm_tag_free);
+  for_each(tag_t::clear);
   delete contents;
   contents = O2G_NULLPTR;
 }

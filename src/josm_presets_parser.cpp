@@ -1050,7 +1050,7 @@ presets_widget_checkbox::presets_widget_checkbox(const std::string &key, const s
 
 bool presets_widget_reference::is_interactive() const
 {
-  return std::find_if(item->widgets.begin(), item->widgets.end(), is_widget_interactive) !=
+  return std::find_if(item->widgets.begin(), item->widgets.end(), presets_widget_t::isInteractive) !=
          item->widgets.end();
 }
 
