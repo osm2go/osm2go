@@ -35,6 +35,9 @@ static void verify_diff(osm_t *osm)
   const way_t * const w = osm->ways[351899455];
   g_assert_nonnull(w);
   g_assert((w->flags & OSM_FLAG_DELETED) != 0);
+  g_assert_cmpint(w->user, ==, 53064);
+  g_assert(osm->users.find(53064) != osm->users.end());
+  g_assert(osm->users[53064] == "Dakon");
   // added in diff
   const node_t * const nn1 = osm->nodes[-1];
   g_assert_nonnull(nn1);

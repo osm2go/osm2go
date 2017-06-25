@@ -154,27 +154,45 @@ struct cmp_user {
   }
 };
 
-static const char *osm_user(osm_t *osm, const char *name, int uid) {
-  if(G_UNLIKELY(!name))
-    return O2G_NULLPTR;
+/**
+ * @brief insert a username into osm_t::users if needed
+ * @param osm the osm object
+ * @param name the username
+ * @param uid the user id as returned by the server
+ * @returns the id in the user map
+ *
+ * In case no userid is given a temporary one will be created.
+ */
+static int osm_user_insert(osm_t *osm, const char *name, int uid) {
+  if(G_UNLIKELY(!name)) {
+    osm->users[0] = std::string();
+    return 0;
+  }
 
+  const std::map<int, std::string>::const_iterator itEnd = osm->users.end();
   /* search through user list */
-  if(G_LIKELY(uid >= 0)) {
+  if(G_LIKELY(uid > 0)) {
     const std::map<int, std::string>::const_iterator it = osm->users.find(uid);
-    if(G_LIKELY(it != osm->users.end()))
-      return it->second.c_str();
+    if(G_UNLIKELY(it == itEnd))
+      osm->users[uid] = name;
 
-    osm->users[uid] = name;
-    return osm->users[uid].c_str();
+    return uid;
   } else {
-    /* match with the name, but only against users without uid */
-    const std::vector<std::string>::const_iterator itEnd = osm->anonusers.end();
-    std::vector<std::string>::const_iterator it = std::find_if(cbegin(osm->anonusers),
-                                                               itEnd, cmp_user(name));
-    if(it != itEnd)
-      return it->c_str();
-    osm->anonusers.push_back(name);
-    return osm->anonusers.back().c_str();
+    // no virtual user found
+    if(osm->users.empty() || osm->users.begin()->first > 0) {
+      osm->users[-1] = name;
+      return -1;
+    }
+    /* check if ay of the temporary ids already matches the name */
+    std::map<int, std::string>::const_iterator it = osm->users.begin();
+    for(; it != itEnd && it->first < 0; it++)
+      if(it->second == name)
+        return it->first;
+    // generate a new temporary id
+    // it is already one in there, so use one less as the lowest existing id
+    int id = osm->users.begin()->first - 1;
+    osm->users[id] = name;
+    return id;
   }
 }
 
@@ -805,7 +823,7 @@ static void process_base_attributes(base_object_t *obj, xmlTextReaderPtr reader,
       }
       xmlFree(puid);
     }
-    obj->user = osm_user(osm, (char*)prop, uid);
+    obj->user = osm_user_insert(osm, (char*)prop, uid);
     xmlFree(prop);
   }
 
@@ -2095,9 +2113,9 @@ void tag_list_t::replace(const osm_t::TagMap &ntags)
 base_object_t::base_object_t(item_id_t ver, item_id_t i)
   : id(i)
   , version(ver)
-  , user(O2G_NULLPTR)
   , time(0)
   , flags(version == 1 ? OSM_FLAG_NEW : 0)
+  , user(0)
 {
 }
 

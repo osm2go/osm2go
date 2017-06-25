@@ -436,14 +436,14 @@ static void table_attach(GtkWidget *table, GtkWidget *child, int x, int y) {
 static GtkWidget *details_widget(const tag_context_t &context, bool big) {
   GtkWidget *table = gtk_table_new(big?4:2, 2, FALSE);  // y, x
 
-  const char *user = context.object.obj->user;
+  const std::map<int, std::string>::const_iterator userIt = context.appdata->osm->users.find(context.object.obj->user);
   GtkWidget *label;
 
   /* ------------ user ----------------- */
-  if(user) {
+  if(userIt != context.appdata->osm->users.end()) {
     if(big) table_attach(table, gtk_label_new(_("User:")), 0, 0);
 
-    label = gtk_label_new(user);
+    label = gtk_label_new(userIt->second.c_str());
     gtk_label_set_ellipsize(GTK_LABEL(label), PANGO_ELLIPSIZE_END);
     table_attach(table, label, big?1:0, 0);
   }

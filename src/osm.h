@@ -171,8 +171,7 @@ struct osm_t {
   std::map<item_id_t, node_t *> nodes;
   std::map<item_id_t, way_t *> ways;
   std::map<item_id_t, relation_t *> relations;
-  std::map<int, std::string> users;   //< users where uid is given in XML
-  std::vector<std::string> anonusers; //< users without uid
+  std::map<int, std::string> users;   ///< mapping of user id to username
 
   node_t *node_by_id(item_id_t id) const;
   way_t *way_by_id(item_id_t id) const;
@@ -354,10 +353,10 @@ public:
 
   item_id_t id;
   item_id_t version;
-  const char *user;
   tag_list_t tags;
   time_t time;
   unsigned int flags;
+  int user;
 
   /**
    * @brief replace the tags and set dirty flag if they were actually different
