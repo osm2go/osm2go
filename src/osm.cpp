@@ -1288,36 +1288,6 @@ void osm_t::way_attach(way_t *way) {
   osm_attach(ways, way);
 }
 
-struct way_member_ref {
-  osm_t * const osm;
-  node_chain_t &node_chain;
-  way_member_ref(osm_t *o, node_chain_t &n) : osm(o), node_chain(n) {}
-  void operator()(const item_id_chain_t &member);
-};
-
-void way_member_ref::operator()(const item_id_chain_t &member) {
-  printf("Node " ITEM_ID_FORMAT " is member\n", member.id);
-
-  node_t *node = osm->node_by_id(member.id);
-  node_chain.push_back(node);
-  node->ways++;
-
-  printf("   -> %p\n", node);
-}
-
-void osm_t::way_restore(way_t *way, const std::vector<item_id_chain_t> &id_chain) {
-  printf("Restoring way\n");
-
-  ways[way->id] = way;
-
-  /* restore node memberships by converting ids into real pointers */
-  g_assert_true(way->node_chain.empty());
-  way_member_ref fc(this, way->node_chain);
-  std::for_each(id_chain.begin(), id_chain.end(), fc);
-
-  printf("done\n");
-}
-
 struct node_chain_delete_functor {
   const node_t * const node;
   way_chain_t &way_chain;

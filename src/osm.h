@@ -66,7 +66,6 @@ typedef struct bounds_t {
 
 #ifdef __cplusplus
 class base_object_t;
-struct item_id_chain_t;
 class node_t;
 class relation_t;
 class way_t;
@@ -182,7 +181,6 @@ struct osm_t {
   void way_delete(way_t *way);
   void way_attach(way_t *way);
   void remove_from_relations(object_t obj);
-  void way_restore(way_t *way, const std::vector<item_id_chain_t> &id_chain);
   void way_free(way_t *way);
   void node_free(node_t *node);
   way_chain_t node_to_way(const node_t *node) const;
@@ -399,13 +397,6 @@ public:
   }
 protected:
   virtual void generate_xml_custom(xmlNodePtr xml_node) const O2G_OVERRIDE;
-};
-
-struct item_id_chain_t {
-  item_id_chain_t(type_t t, item_id_t i)
-    : type(t), id(i) {}
-  type_t type;
-  item_id_t id;
 };
 
 typedef std::vector<node_t *> node_chain_t;
