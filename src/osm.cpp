@@ -155,13 +155,13 @@ struct cmp_user {
 };
 
 static const char *osm_user(osm_t *osm, const char *name, int uid) {
-  if(!name)
+  if(G_UNLIKELY(!name))
     return O2G_NULLPTR;
 
   /* search through user list */
-  if(uid >= 0) {
+  if(G_LIKELY(uid >= 0)) {
     const std::map<int, std::string>::const_iterator it = osm->users.find(uid);
-    if(it != osm->users.end())
+    if(G_LIKELY(it != osm->users.end()))
       return it->second.c_str();
 
     osm->users[uid] = name;
