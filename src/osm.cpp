@@ -202,7 +202,7 @@ void osm_tag_free(tag_t &tag) {
  * @param v the value found in XML
  * @param tags the vector where the new tag will be added
  * @return if a new tag was added
- * @retval false if k and v were not empty
+ * @retval true if k and v were not empty
  *
  * k and v will be freed.
  */
