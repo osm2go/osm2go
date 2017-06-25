@@ -179,9 +179,7 @@ static const char *osm_user(osm_t *osm, const char *name, int uid) {
 }
 
 static
-time_t convert_iso8601(const char *str) {
-  if(!str) return 0;
-
+time_t __attribute__((nonnull(1))) convert_iso8601(const char *str) {
   struct tm ctime;
   memset(&ctime, 0, sizeof(ctime));
   strptime(str, "%FT%T%z", &ctime);
