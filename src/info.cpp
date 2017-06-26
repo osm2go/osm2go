@@ -574,26 +574,16 @@ bool info_dialog(GtkWidget *parent, appdata_t *appdata, object_t &object) {
   case NODE:
     str = g_strdup_printf(_("Node #" ITEM_ID_FORMAT),
 			  context.object.obj->id);
-    context.presets_type = PRESETS_TYPE_NODE;
     break;
 
   case WAY:
     str = g_strdup_printf(_("Way #" ITEM_ID_FORMAT),
 			  context.object.obj->id);
-    context.presets_type = PRESETS_TYPE_WAY;
-
-    if(context.object.way->is_closed())
-      context.presets_type |= PRESETS_TYPE_CLOSEDWAY;
-
     break;
 
   case RELATION:
     str = g_strdup_printf(_("Relation #" ITEM_ID_FORMAT),
 			  context.object.obj->id);
-    context.presets_type = PRESETS_TYPE_RELATION;
-
-    if(context.object.relation->is_multipolygon())
-      context.presets_type |= PRESETS_TYPE_MULTIPOLYGON;
     break;
 
   default:
@@ -664,7 +654,6 @@ tag_context_t::tag_context_t(appdata_t *a, const object_t &o)
   , list(O2G_NULLPTR)
   , store(O2G_NULLPTR)
   , object(o)
-  , presets_type(0)
   , tags(object.obj->tags.asMap())
 {
 }

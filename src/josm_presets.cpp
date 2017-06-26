@@ -38,6 +38,38 @@
 
 #include <osm2go_cpp.h>
 
+unsigned int presets_type_mask(const object_t &obj)
+{
+  unsigned int r = 0;
+
+  switch(obj.type) {
+  case NODE:
+    r = presets_item_t::TY_NODE;
+    break;
+
+  case WAY:
+    r = presets_item_t::TY_WAY;
+
+    if(obj.way->is_closed())
+      r |= presets_item_t::TY_CLOSED_WAY;
+
+    break;
+
+  case RELATION:
+    r = presets_item_t::TY_RELATION;
+
+    if(obj.relation->is_multipolygon())
+      r |= presets_item_t::TY_MULTIPOLYGON;
+    break;
+
+  default:
+    g_assert_not_reached();
+    break;
+  }
+
+  return r;
+}
+
 #ifdef ENABLE_BROWSER_INTERFACE
 static void on_info(GtkWidget *widget, appdata_t *context) {
   const char *link = (char*)g_object_get_data(G_OBJECT(widget), "link");
@@ -122,6 +154,7 @@ struct presets_context_t {
     , menu(O2G_NULLPTR)
 #endif
     , tag_context(t)
+    , presets_mask(presets_type_mask(t->object))
   {
   }
 
@@ -133,6 +166,7 @@ struct presets_context_t {
   std::vector<presets_item_group *> submenus;
 #endif
   tag_context_t * const tag_context;
+  unsigned int presets_mask;
 };
 
 struct add_widget_functor {
@@ -429,7 +463,7 @@ static GtkWidget *build_menu(presets_context_t *context,
 void build_menu_functor::operator()(presets_item_t *item)
 {
   /* check if this presets entry is appropriate for the current item */
-  if(item->type & context->tag_context->presets_type) {
+  if(item->type & context->presets_mask) {
     GtkWidget *menu_item;
 
     /* Show a separator if one was requested, but not if there was no item
@@ -735,7 +769,7 @@ template<> void insert_recent_items<false>::operator()(const presets_item_t *pre
  */
 template<> void insert_recent_items<true>::operator()(const presets_item_t *preset)
 {
-  if(preset->type & context->tag_context->presets_type)
+  if(preset->type & context->presets_mask)
     preset_insert_item(static_cast<const presets_item_named *>(preset),
                        &context->appdata->icon, store);
 }
@@ -772,7 +806,7 @@ struct picker_add_functor {
 void picker_add_functor::operator()(const presets_item_t *item)
 {
   /* check if this presets entry is appropriate for the current item */
-  if(!(item->type & context->tag_context->presets_type))
+  if(!(item->type & context->presets_mask))
     return;
 
   const presets_item_named * const itemv = static_cast<typeof(itemv)>(item);
@@ -832,8 +866,8 @@ presets_picker(presets_context_t *context, const std::vector<presets_item_t *> &
 
   if(top_level &&
      std::find_if(lru.begin(), lru.end(),
-                  matching_type_functor(context->tag_context->presets_type)) != lru.end()) {
-    GtkTreeIter     iter;
+                  matching_type_functor(context->presets_mask)) != lru.end()) {
+    GtkTreeIter iter;
 
     /* Append a row and fill in some data */
     gtk_list_store_prepend(store, &iter);

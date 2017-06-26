@@ -23,15 +23,6 @@
 #include <gtk/gtk.h>
 #include <string>
 
-/* the presets type specifies which item type it is */
-/* appropriate for */
-#define PRESETS_TYPE_WAY          (1<<0)
-#define PRESETS_TYPE_NODE         (1<<1)
-#define PRESETS_TYPE_RELATION     (1<<2)
-#define PRESETS_TYPE_CLOSEDWAY    (1<<3)
-#define PRESETS_TYPE_MULTIPOLYGON (1<<4)
-#define PRESETS_TYPE_ALL          (0xffff)
-
 struct presets_items;
 
 struct presets_items *josm_presets_load(void);

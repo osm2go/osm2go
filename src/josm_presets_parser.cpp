@@ -66,11 +66,11 @@ std::string josm_icon_name_adjust(const char *name, const std::string &basepath)
 static std::map<int, std::string> type_map_init() {
   std::map<int, std::string> ret;
 
-  ret[PRESETS_TYPE_WAY] = "way";
-  ret[PRESETS_TYPE_NODE] = "node";
-  ret[PRESETS_TYPE_RELATION] = "relation";
-  ret[PRESETS_TYPE_CLOSEDWAY] = "closedway";
-  ret[PRESETS_TYPE_MULTIPOLYGON] = "multipolygon";
+  ret[presets_item_t::TY_WAY] = "way";
+  ret[presets_item_t::TY_NODE] = "node";
+  ret[presets_item_t::TY_RELATION] = "relation";
+  ret[presets_item_t::TY_CLOSED_WAY] = "closedway";
+  ret[presets_item_t::TY_MULTIPOLYGON] = "multipolygon";
 
   return ret;
 }

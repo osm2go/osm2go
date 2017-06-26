@@ -238,11 +238,12 @@ class presets_item_t {
 public:
   enum item_type {
     TY_NONE = 0,
-    TY_WAY = PRESETS_TYPE_WAY,
-    TY_NODE = PRESETS_TYPE_NODE,
-    TY_RELATION = PRESETS_TYPE_RELATION,
-    TY_CLOSED_WAY = PRESETS_TYPE_CLOSEDWAY,
-    TY_ALL = PRESETS_TYPE_ALL,
+    TY_WAY = (1<<0),
+    TY_NODE = (1<<1),
+    TY_RELATION = (1<<2),
+    TY_CLOSED_WAY = (1<<3),
+    TY_MULTIPOLYGON = (1<<4),
+    TY_ALL = (0xffff),
     TY_SEPARATOR = (1 << 16),
     TY_GROUP = (1 << 17)
   };

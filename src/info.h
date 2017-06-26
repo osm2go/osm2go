@@ -47,7 +47,6 @@ public:
   GtkWidget *dialog, *list;
   GtkListStore *store;
   object_t object;
-  int presets_type;
   osm_t::TagMap tags;
 
   void info_tags_replace();
