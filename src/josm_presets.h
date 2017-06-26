@@ -25,8 +25,8 @@
 
 struct presets_items;
 
-struct presets_items *josm_presets_load(void);
-void josm_presets_free(struct presets_items *presets);
+presets_items *josm_presets_load(void);
+void josm_presets_free(presets_items *presets);
 
 struct appdata_t;
 class tag_context_t;
