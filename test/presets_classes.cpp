@@ -23,7 +23,7 @@ static osm_t::TagMap VECTOR_ONE(const osm_t::TagMap::value_type &a)
   return ret;
 }
 
-static bool checkTextMatch()
+static void checkTextMatch()
 {
   presets_widget_text w_0(tag_testkey_testtext.first,
                           tag_testkey_testtext.second,
@@ -80,11 +80,9 @@ static bool checkTextMatch()
   g_assert_cmpint(w_kvf.matches(VECTOR_ONE(tag_testkey_other)), ==, 1);
   g_assert_cmpint(w_kvf.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 1);
   g_assert_cmpint(w_kvf.matches(osm_t::TagMap()), ==, -1);
-
-  return true;
 }
 
-static bool checkComboMatch()
+static void checkComboMatch()
 {
   std::vector<std::string> values;
   values.push_back("nonmatch");
@@ -162,11 +160,9 @@ static bool checkComboMatch()
   g_assert_cmpint(w_kvf.matches(VECTOR_ONE(tag_testkey_other)), ==, -1);
   g_assert_cmpint(w_kvf.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 1);
   g_assert_cmpint(w_kvf.matches(osm_t::TagMap()), ==, -1);
-
-  return true;
 }
 
-static bool check_combined()
+static void check_combined()
 {
   presets_item item(presets_item_t::TY_ALL);
 
@@ -214,20 +210,13 @@ static bool check_combined()
                                                 "keyvalue!"));
 
   g_assert_false(item.matches(tags));
-
-  return true;
 }
 
 int main()
 {
-  if(!checkTextMatch())
-    return 1;
-
-  if(!checkComboMatch())
-    return 1;
-
-  if(!check_combined())
-    return 1;
+  checkTextMatch();
+  checkComboMatch();
+  check_combined();
 
   return 0;
 }
