@@ -54,7 +54,7 @@
 
 /* don't reorder these as some things in map.c */
 /* rely on a certain order */
-typedef enum {
+enum map_action_t {
   MAP_ACTION_IDLE=0,
   MAP_ACTION_NODE_ADD,
   MAP_ACTION_BG_ADJUST,
@@ -62,15 +62,15 @@ typedef enum {
   MAP_ACTION_WAY_NODE_ADD,
   MAP_ACTION_WAY_CUT,
   MAP_ACTION_NUM
-} map_action_t;
+};
 
-typedef struct map_item_t {
+#ifdef __cplusplus
+struct map_item_t {
   object_t object;
   gboolean highlight;
   canvas_item_t *item;
-} map_item_t;
+};
 
-#ifdef __cplusplus
 /* this is a chain of map_items which is attached to all entries */
 /* in the osm tree (node_t, way_t, ...) to be able to get a link */
 /* to the screen representation of a give node/way/etc */
@@ -88,10 +88,11 @@ struct map_state_t {
 };
 
 struct map_t {
+  explicit map_t(appdata_t *a, struct style_t *s);
+  ~map_t();
+
   appdata_t * const appdata;
-
   canvas_t * const canvas;
-
   map_state_t * const state;
 
   guint autosave_handler_id;
@@ -133,20 +134,11 @@ struct map_t {
 
   size_t elements_drawn;	///< number of elements drawn in last segment
 
-  explicit map_t(appdata_t *a, struct style_t *s);
-  ~map_t();
-
   osm_t::TagMap last_node_tags;           // used to "repeat" tagging
   osm_t::TagMap last_way_tags;
 };
 
 void map_item_redraw(map_t *map, map_item_t *map_item);
-
-extern "C" {
-#endif
-
-typedef struct map_state_t map_state_t;
-typedef struct map_t map_t;
 
 GtkWidget *map_new(appdata_t *appdata);
 void map_state_free(map_state_t *state);
@@ -167,11 +159,9 @@ void map_delete_selected(map_t *map);
 
 /* track stuff */
 void map_track_draw(map_t *map, struct track_t *track);
-#ifdef __cplusplus
 struct track_seg_t;
 void map_track_draw_seg(map_t *map, track_seg_t &seg);
 void map_track_update_seg(map_t *map, track_seg_t &seg);
-#endif
 void map_track_remove(struct track_t *track);
 void map_track_pos(map_t *map, const lpos_t *lpos);
 void map_track_remove_pos(appdata_t *appdata);
@@ -186,13 +176,19 @@ void map_show_all(map_t *map);
 void map_set_zoom(map_t *map, double zoom, gboolean update_scroll_offsets);
 gboolean map_scroll_to_if_offscreen(map_t *map, const lpos_t *lpos);
 
+extern "C" {
+#else
+typedef struct map_t map_t;
+#endif
+
 void map_detail_change(map_t *map, float detail);
+
+#ifdef __cplusplus
+}
 void map_detail_increase(map_t *map);
 void map_detail_decrease(map_t *map);
 void map_detail_normal(map_t *map);
 
-#ifdef __cplusplus
-}
 /* various functions required by map_edit */
 bool map_item_is_selected_node(map_t *map, map_item_t *map_item);
 gboolean map_item_is_selected_way(map_t *map, map_item_t *map_item);

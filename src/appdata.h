@@ -96,7 +96,7 @@ typedef struct appdata_t {
 
   GtkWidget *vbox;
   struct map_t *map;
-  osm_t *osm;
+  struct osm_t *osm;
 
   GtkWidget *btn_zoom_in, *btn_zoom_out, *btn_detail_popup;
 

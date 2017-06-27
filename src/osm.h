@@ -20,10 +20,11 @@
 #ifndef OSM_H
 #define OSM_H
 
+#ifdef __cplusplus
+
 #include "misc.h"
 #include "pos.h"
 
-#ifdef __cplusplus
 #include <algorithm>
 #include <map>
 #include <string>
@@ -35,9 +36,6 @@
 #include <glib.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
-
-extern "C" {
-#endif
 
 #define OSM_FLAG_DIRTY    (1<<0)
 #define OSM_FLAG_DELETED  (1<<1)
@@ -52,19 +50,13 @@ typedef gint64 item_id_t;
 
 #define ID_ILLEGAL  ((item_id_t)0)
 
-/* icon stuff is required since nodes may held a icon reference */
-struct icon_s;
-
-typedef struct osm_t osm_t;
-
-typedef struct bounds_t {
+struct bounds_t {
   pos_t ll_min, ll_max;
   lpos_t min, max;
   lpos_t center;
   float scale;
-} bounds_t;
+};
 
-#ifdef __cplusplus
 class base_object_t;
 class node_t;
 class relation_t;
@@ -72,19 +64,12 @@ class way_t;
 struct tag_t;
 typedef std::vector<relation_t *> relation_chain_t;
 typedef std::vector<way_t *> way_chain_t;
-#else
-struct base_object_t;
-typedef struct base_object_t base_object_t;
-typedef struct node_s node_t;
-typedef struct relation_s relation_t;
-typedef struct way_s way_t;
-#endif
 
-typedef enum {
+enum type_t {
   ILLEGAL=0, NODE, WAY, RELATION, NODE_ID, WAY_ID, RELATION_ID
-} type_t;
+};
 
-typedef struct object_t {
+struct object_t {
   type_t type;
   union {
     node_t *node;
@@ -94,7 +79,6 @@ typedef struct object_t {
     base_object_t *obj;
   };
 
-#ifdef __cplusplus
   explicit inline object_t(type_t t = ILLEGAL)
     : type(t), obj(O2G_NULLPTR) {}
   explicit inline object_t(node_t *n)
@@ -135,11 +119,7 @@ typedef struct object_t {
   bool has_tags() const;
   item_id_t get_id() const;
   std::string get_name() const;
-#endif
-} object_t;
-
-#ifdef __cplusplus
-}
+};
 
 struct member_t {
   explicit member_t(type_t t);
