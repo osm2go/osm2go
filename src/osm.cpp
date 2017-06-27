@@ -2147,16 +2147,14 @@ struct value_match_functor {
 };
 
 way_t::way_t()
-  : base_object_t()
-  , map_item_chain(O2G_NULLPTR)
+  : visible_item_t()
   , node_chain(0)
 {
   memset(&draw, 0, sizeof(draw));
 }
 
 way_t::way_t(item_id_t ver, item_id_t i)
-  : base_object_t(ver, i)
-  , map_item_chain(O2G_NULLPTR)
+  : visible_item_t(ver, i)
   , node_chain(0)
 {
   memset(&draw, 0, sizeof(draw));
@@ -2284,22 +2282,18 @@ void relation_t::members_by_type(guint *nodes, guint *ways, guint *relations) co
 }
 
 node_t::node_t()
-  : base_object_t()
+  : visible_item_t()
   , ways(0)
-  , zoom_max(0.0)
-  , map_item_chain(O2G_NULLPTR)
 {
   memset(&pos, 0, sizeof(pos));
   memset(&lpos, 0, sizeof(lpos));
 }
 
 node_t::node_t(item_id_t ver, const lpos_t &lp, const pos_t &p, item_id_t i)
-  : base_object_t(ver, i)
+  : visible_item_t(ver, i)
+  , ways(0)
   , pos(p)
   , lpos(lp)
-  , ways(0)
-  , zoom_max(0.0)
-  , map_item_chain(O2G_NULLPTR)
 {
 }
 

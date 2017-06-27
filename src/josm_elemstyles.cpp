@@ -639,9 +639,9 @@ void josm_elemstyles_colorize_way_functor::apply_condition::operator()(const ele
       way->draw.bg.width =  WIDTH_SCALE * elemstyle->line->bg.width;
     }
     if (elemstyle->zoom_max > 0)
-      way->draw.zoom_max = elemstyle->zoom_max;
+      way->zoom_max = elemstyle->zoom_max;
     else
-      way->draw.zoom_max = style->way.zoom_max;
+      way->zoom_max = style->way.zoom_max;
 
     way->draw.dash_length_on = elemstyle->line->dash_length_on;
     way->draw.dash_length_off = elemstyle->line->dash_length_off;
@@ -661,9 +661,9 @@ void josm_elemstyles_colorize_way_functor::apply_condition::operator()(const ele
     way->draw.area.color =
     RGBA_COMBINE(elemstyle->area.color, style->area.color);
     if (elemstyle->zoom_max > 0)
-      way->draw.zoom_max = elemstyle->zoom_max;
+      way->zoom_max = elemstyle->zoom_max;
     else
-      way->draw.zoom_max = style->area.zoom_max;
+      way->zoom_max = style->area.zoom_max;
 
     way_processed = true;
   }
@@ -674,7 +674,7 @@ void josm_elemstyles_colorize_way_functor::operator()(way_t *way) {
   way->draw.color = style->way.color;
   way->draw.width = style->way.width;
   way->draw.flags = 0;
-  way->draw.zoom_max = 0;   // draw at all zoom levels
+  way->zoom_max = 0;   // draw at all zoom levels
 
   /* during the elemstyle search a line_mod may be found. save it here */
   const elemstyle_line_mod_t *line_mod = O2G_NULLPTR;

@@ -84,15 +84,8 @@ map_t::~map_t()
 /* to the screen representation of a give node/way/etc */
 struct map_item_chain_t {
   std::vector<map_item_t *> map_items;
-  map_item_t *firstItem() const;
   canvas_item_t *firstCanvasItem() const;
 };
-
-map_item_t *map_item_chain_t::firstItem() const {
-  if(map_items.empty())
-    return O2G_NULLPTR;
-  return map_items.front();
-}
 
 canvas_item_t *map_item_chain_t::firstCanvasItem() const {
   if(map_items.empty())
@@ -556,7 +549,7 @@ static map_item_t *map_way_new(map_t *map, canvas_group_t group,
   }
 
   canvas_item_set_zoom_max(map_item->item,
-			   way->draw.zoom_max / (2 * map->state->detail));
+			   way->zoom_max / (2 * map->state->detail));
 
   /* a ways outline itself is never dashed */
   if (group != CANVAS_GROUP_WAYS_OL)
@@ -680,20 +673,14 @@ static void map_item_draw(map_t *map, map_item_t *map_item) {
 }
 
 static void map_item_remove(map_item_t *map_item) {
-  map_item_chain_t **chainP = O2G_NULLPTR;
-
   switch(map_item->object.type) {
   case NODE:
-    chainP = &map_item->object.node->map_item_chain;
-    break;
   case WAY:
-    chainP = &map_item->object.way->map_item_chain;
+    map_item_chain_destroy(&static_cast<visible_item_t *>(map_item->object.obj)->map_item_chain);
     break;
   default:
     g_assert_not_reached();
   }
-
-  map_item_chain_destroy(chainP);
 }
 
 static void map_item_init(style_t *style, map_item_t *map_item) {
@@ -906,36 +893,27 @@ map_item_t *map_real_item_at(map_t *map, gint x, gint y) {
   if(!map_item || !map_item->highlight) return map_item;
 
   /* get the item (parent) this item is the highlight of */
-  map_item_t *parent = O2G_NULLPTR;
   switch(map_item->object.type) {
-
   case NODE:
-    if(map_item->object.node->map_item_chain)
-      parent = map_item->object.node->map_item_chain->firstItem();
+  case WAY: {
+    visible_item_t * const vis = static_cast<visible_item_t *>(map_item->object.obj);
+    if(vis->map_item_chain && !vis->map_item_chain->map_items.empty()) {
+      map_item_t *parent = vis->map_item_chain->map_items.front();
 
-    if(parent)
-      printf("  using parent item node #" ITEM_ID_FORMAT "\n",
-	     parent->object.obj->id);
+      if(parent) {
+        printf("  using parent item %s #" ITEM_ID_FORMAT "\n", vis->apiString(), vis->id);
+        return parent;
+      }
+    }
     break;
-
-  case WAY:
-    if(map_item->object.way->map_item_chain)
-      parent = map_item->object.way->map_item_chain->firstItem();
-
-    if(parent)
-      printf("  using parent item way #" ITEM_ID_FORMAT "\n",
-	     parent->object.obj->id);
-    break;
+  }
 
   default:
     g_assert_not_reached();
     break;
   }
 
-  if(parent)
-    map_item = parent;
-  else
-    printf("  no parent, working on highlight itself\n");
+  printf("  no parent, working on highlight itself\n");
 
   return map_item;
 }
@@ -1091,8 +1069,8 @@ gboolean map_scroll_to_if_offscreen(map_t *map, const lpos_t *lpos) {
 void map_deselect_if_zoom_below_zoom_max(map_t *map) {
     if (map->selected.object.type == WAY) {
         printf("will deselect way if zoomed below %f\n",
-               map->selected.object.way->draw.zoom_max);
-        if (map->state->zoom < map->selected.object.way->draw.zoom_max) {
+               map->selected.object.way->zoom_max);
+        if (map->state->zoom < map->selected.object.way->zoom_max) {
             printf("  deselecting way!\n");
             map_item_deselect(map);
         }

@@ -380,19 +380,31 @@ protected:
   virtual void generate_xml_custom(xmlNodePtr xml_node) const = 0;
 };
 
-class node_t : public base_object_t {
+class visible_item_t : public base_object_t {
+protected:
+  inline visible_item_t(item_id_t ver = 0, item_id_t i = 0)
+    : base_object_t(ver, i)
+    , map_item_chain(O2G_NULLPTR)
+    , zoom_max(0.0f)
+  {
+  }
+
+public:
+  /* a link to the visual representation on screen */
+  struct map_item_chain_t *map_item_chain;
+
+  float zoom_max;
+};
+
+class node_t : public visible_item_t {
 public:
   explicit node_t();
   explicit node_t(item_id_t ver, const lpos_t &lp, const pos_t &p, item_id_t i = 0);
   virtual ~node_t() {}
 
+  int ways;
   pos_t pos;
   lpos_t lpos;
-  int ways;
-  float zoom_max;
-
-  /* a link to the visual representation on screen */
-  struct map_item_chain_t *map_item_chain;
 
   const char *apiString() const O2G_OVERRIDE {
     return api_string();
@@ -409,7 +421,7 @@ typedef std::vector<node_t *> node_chain_t;
 #define OSM_DRAW_FLAG_AREA  (1<<0)
 #define OSM_DRAW_FLAG_BG    (1<<1)
 
-class way_t: public base_object_t {
+class way_t: public visible_item_t {
 public:
   explicit way_t();
   explicit way_t(item_id_t ver, item_id_t i = 0);
@@ -417,7 +429,6 @@ public:
 
   /* visual representation from elemstyle */
   struct {
-    float zoom_max;
     guint color;
     guint flags : 8;
     gint width : 8;
@@ -435,9 +446,6 @@ public:
       } area;
     };
   } draw;
-
-  /* a link to the visual representation on screen */
-  struct map_item_chain_t *map_item_chain;
 
   node_chain_t node_chain;
 
