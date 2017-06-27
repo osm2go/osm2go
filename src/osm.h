@@ -345,7 +345,7 @@ private:
   std::vector<tag_t> *contents;
 };
 
-G_STATIC_ASSERT(sizeof(tag_list_t) == sizeof(tag_t *));
+static_assert(sizeof(tag_list_t) == sizeof(tag_t *), "tag_list_t is not exactly as big as a pointer");
 
 class base_object_t {
 public:

@@ -90,8 +90,8 @@ struct elemstyle_line_t {
   } bg;
 };
 
-G_STATIC_ASSERT(sizeof(elemstyle_line_t) == 6*4);
-G_STATIC_ASSERT(sizeof(reinterpret_cast<elemstyle_line_t *>(0)->bg) == 8);
+static_assert(sizeof(elemstyle_line_t) == 6*4, "wrong size of elemstyle_line_t");
+static_assert(sizeof(reinterpret_cast<elemstyle_line_t *>(0)->bg) == 8, "wrong size of elemstyle_line_t::bg");
 
 /* attribute modifiers */
 typedef enum {
@@ -112,7 +112,7 @@ struct elemstyle_line_mod_t {
   elemstyle_color_t color;
 } __attribute__ ((packed));
 
-G_STATIC_ASSERT(sizeof(elemstyle_line_mod_t) == 4 + sizeof(elemstyle_color_t));
+static_assert(sizeof(elemstyle_line_mod_t) == 4 + sizeof(elemstyle_color_t), "wrong size of elemstyle_line_mod_t");
 
 struct elemstyle_area_t {
   elemstyle_area_t() : color (0) {}
@@ -152,7 +152,7 @@ struct elemstyle_t {
   elemstyle_icon_t icon;
 };
 
-G_STATIC_ASSERT(sizeof(elemstyle_line_mod_t) >= sizeof(elemstyle_line_t*));
-G_STATIC_ASSERT(sizeof(elemstyle_line_mod_t) >= sizeof(elemstyle_area_t));
+// memset(&line_mod, ...) must zero out the whole union
+static_assert(sizeof(elemstyle_line_mod_t) >= sizeof(elemstyle_line_t*), "elemstyle_line_mod_t not larger than pointer");
 
 #endif // JOSM_ELEMSTYLES_P_H
