@@ -25,6 +25,8 @@
 #include "map_edit.h"
 #include "misc.h"
 
+#include <osm2go_cpp.h>
+
 #ifdef FINGER_UI
 #define TOOL_ICON(a)  a "_thumb"
 #define MENU_ICON(a)  a "_thumb"
@@ -73,13 +75,13 @@ static GtkWidget *menu_add(GtkWidget *menu, appdata_t *appdata,
   return item;
 }
 
-static gint on_way_button_press(G_GNUC_UNUSED GtkWidget *button,
+static gint on_way_button_press(GtkWidget *,
                                 GdkEventButton *event, iconbar_t *iconbar) {
   if(event->type == GDK_BUTTON_PRESS) {
     printf("way clicked\n");
 
     /* draw a popup menu */
-    gtk_menu_popup(GTK_MENU(iconbar->menu), NULL, NULL, NULL, NULL,
+    gtk_menu_popup(GTK_MENU(iconbar->menu), O2G_NULLPTR, O2G_NULLPTR, O2G_NULLPTR, O2G_NULLPTR,
 		   event->button, event->time);
     return TRUE;
   }
@@ -188,13 +190,13 @@ static GtkWidget *icon_add(GtkWidget *vbox, appdata_t *appdata,
 #endif
 
 static GtkWidget *tool_add(GtkWidget *toolbar, appdata_t *appdata,
-			   char *icon_str, char *tooltip_str,
+                           const char *icon_str, char *tooltip_str,
                            GCallback func, gpointer context) {
   GtkWidget *item =
     GTK_WIDGET(gtk_tool_button_new(
-	   icon_widget_load(&appdata->icon, icon_str), NULL));
+               icon_widget_load(&appdata->icon, icon_str), O2G_NULLPTR));
 
-  GtkWidget *label = gtk_label_new(NULL);
+  GtkWidget *label = gtk_label_new(O2G_NULLPTR);
   char *markup = g_markup_printf_escaped(MARKUP, tooltip_str);
   gtk_label_set_markup(GTK_LABEL(label), markup);
   g_free(markup);
@@ -260,9 +262,9 @@ GtkWidget *iconbar_new(appdata_t *appdata) {
   /* further too selection */
   GtkWidget *way =
     GTK_WIDGET(gtk_tool_button_new(
-	   icon_widget_load(&appdata->icon, TOOL_ICON("way")), NULL));
+               icon_widget_load(&appdata->icon, TOOL_ICON("way")), O2G_NULLPTR));
 
-  GtkWidget *label = gtk_label_new(NULL);
+  GtkWidget *label = gtk_label_new(O2G_NULLPTR);
   char *markup = g_markup_printf_escaped(MARKUP, _("Way"));
   gtk_label_set_markup(GTK_LABEL(label), markup);
   g_free(markup);
@@ -324,7 +326,7 @@ GtkWidget *iconbar_new(appdata_t *appdata) {
 
   /* --------------------------------------------------------- */
 
-  icon_bar_map_item_selected(iconbar, NULL);
+  icon_bar_map_item_selected(iconbar, O2G_NULLPTR);
 
 #ifndef FINGER_UI
   icon_bar_map_cancel_ok(iconbar, FALSE, FALSE);

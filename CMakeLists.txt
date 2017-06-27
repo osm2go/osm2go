@@ -55,7 +55,7 @@ set(osm2go_SOURCE_FILES
 	src/gps.h
 	src/icon.cpp
 	src/icon.h
-	src/iconbar.c
+	src/iconbar.cpp
 	src/iconbar.h
 	src/info.cpp
 	src/info.h
