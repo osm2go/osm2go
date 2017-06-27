@@ -1288,28 +1288,15 @@ static void map_handle_click(map_t *map) {
 
   /* problem: on_item may be the highlight itself! So store it! */
   map_item_t map_item;
-  if(map->pen_down.on_item) map_item = *map->pen_down.on_item;
-  else                      map_item.object.type = ILLEGAL;
+  if(map->pen_down.on_item)
+    map_item = *map->pen_down.on_item;
 
   /* if we aready have something selected, then de-select it */
   map_item_deselect(map);
 
   /* select the clicked item (if there was one) */
-  if(map_item.object.type != ILLEGAL) {
-    switch(map_item.object.type) {
-    case NODE:
-      map_node_select(map, map_item.object.node);
-      break;
-
-    case WAY:
-      map_way_select(map, map_item.object.way);
-      break;
-
-    default:
-      g_assert_not_reached();
-      break;
-    }
-  }
+  if(map_item.object.type != ILLEGAL)
+    map_object_select(map, map_item.object);
 }
 
 struct hl_nodes {
@@ -1453,8 +1440,8 @@ static void map_button_release(map_t *map, gint x, gint y) {
 
       if((old_sel.object.type != ILLEGAL) &&
 	 (old_sel.object == map->selected.object)) {
-	printf("re-selected same item of type %d, "
-	       "pushing it to the bottom\n", old_sel.object.type);
+        printf("re-selected same item of type %s, pushing it to the bottom\n",
+               old_sel.object.type_string());
 
 	if(!map->selected.item) {
 	  printf("  item has no visible representation to push\n");
