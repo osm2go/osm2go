@@ -67,7 +67,7 @@ enum map_action_t {
 #ifdef __cplusplus
 struct map_item_t {
   object_t object;
-  gboolean highlight;
+  bool highlight;
   canvas_item_t *item;
 };
 

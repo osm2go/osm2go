@@ -144,7 +144,7 @@ static void map_node_select(map_t *map, node_t *node) {
   g_assert_null(map->highlight);
 
   map_item->object = node;
-  map_item->highlight = FALSE;
+  map_item->highlight = false;
 
   /* node may not have any visible representation at all */
   if(node->map_item_chain)
@@ -161,7 +161,7 @@ static void map_node_select(map_t *map, node_t *node) {
   /* create a copy of this map item and mark it as being a highlight */
   map_item_t *new_map_item = g_new0(map_item_t, 1);
   memcpy(new_map_item, map_item, sizeof(map_item_t));
-  new_map_item->highlight = TRUE;
+  new_map_item->highlight = true;
 
   float radius = 0;
   std::map<item_id_t, GdkPixbuf *>::iterator it = map->style->node_icons.find(node->id);
@@ -186,7 +186,7 @@ static void map_node_select(map_t *map, node_t *node) {
     /* and draw a fake node */
     new_map_item = g_new0(map_item_t, 1);
     memcpy(new_map_item, map_item, sizeof(map_item_t));
-    new_map_item->highlight = TRUE;
+    new_map_item->highlight = true;
     map_hl_circle_new(map, CANVAS_GROUP_NODES_IHL, new_map_item,
 		      x, y, map->style->node.radius,
 		      map->style->highlight.node_color);
@@ -255,7 +255,7 @@ void draw_selected_way_functor::operator()(node_t* node)
       /* create a new map item for every arrow */
       map_item_t *new_map_item = g_new0(map_item_t, 1);
       new_map_item->object = way;
-      new_map_item->highlight = TRUE;
+      new_map_item->highlight = true;
 
       len /= arrow_width;
       diff.x /= len;
@@ -280,7 +280,7 @@ void draw_selected_way_functor::operator()(node_t* node)
     /* create a new map item for every node */
     map_item_t *new_map_item = g_new0(map_item_t, 1);
     new_map_item->object = node;
-    new_map_item->highlight = TRUE;
+    new_map_item->highlight = true;
 
     map_hl_circle_new(map, CANVAS_GROUP_NODES_IHL, new_map_item,
                       node->lpos.x, node->lpos.y,
@@ -297,7 +297,7 @@ void map_way_select(map_t *map, way_t *way) {
   g_assert_null(map->highlight);
 
   map_item->object = way;
-  map_item->highlight = FALSE;
+  map_item->highlight = false;
   map_item->item      = way->map_item_chain->firstCanvasItem();
 
   map_statusbar(map, map_item);
@@ -320,7 +320,7 @@ void map_way_select(map_t *map, way_t *way) {
     /* create a copy of this map item and mark it as being a highlight */
     map_item_t *new_map_item = g_new(map_item_t, 1);
     *new_map_item = *map_item;
-    new_map_item->highlight = TRUE;
+    new_map_item->highlight = true;
 
     map_hl_polyline_new(map, CANVAS_GROUP_WAYS_HL, new_map_item, points,
 		 ((way->draw.flags & OSM_DRAW_FLAG_BG)?
@@ -396,7 +396,7 @@ void map_relation_select(map_t *map, relation_t *relation) {
 
   map_item_t *map_item = &map->selected;
   map_item->object = relation;
-  map_item->highlight = FALSE;
+  map_item->highlight = false;
   map_item->item      = O2G_NULLPTR;
 
   map_statusbar(map, map_item);
@@ -705,11 +705,9 @@ void map_item_redraw(map_t *map, map_item_t *map_item) {
     return;
 
   /* check if the item to be redrawn is the selected one */
-  gboolean is_selected = FALSE;
-  if(map_item->object.obj == map->selected.object.obj) {
+  bool is_selected = (map_item->object.obj == map->selected.object.obj);
+  if(is_selected)
     map_item_deselect(map);
-    is_selected = TRUE;
-  }
 
   map_item_remove(&item);
   map_item_init(map->style, &item);
