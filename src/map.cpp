@@ -659,19 +659,6 @@ void map_node_draw(map_t *map, node_t *node) {
   m(node);
 }
 
-static void map_item_draw(map_t *map, map_item_t *map_item) {
-  switch(map_item->object.type) {
-  case NODE:
-    map_node_draw(map, map_item->object.node);
-    break;
-  case WAY:
-    map_way_draw(map, map_item->object.way);
-    break;
-  default:
-    g_assert_not_reached();
-  }
-}
-
 static void map_item_remove(map_item_t *map_item) {
   switch(map_item->object.type) {
   case NODE:
@@ -683,39 +670,34 @@ static void map_item_remove(map_item_t *map_item) {
   }
 }
 
-static void map_item_init(style_t *style, map_item_t *map_item) {
-  switch (map_item->object.type){
-    case WAY:
-      josm_elemstyles_colorize_way(style, map_item->object.way);
-      break;
-    case NODE:
-      josm_elemstyles_colorize_node(style, map_item->object.node);
-      break;
-    default:
-      g_assert_not_reached();
-  }
-}
-
 void map_item_redraw(map_t *map, map_item_t *map_item) {
-  map_item_t item = *map_item;
-
   /* a relation cannot be redrawn as it doesn't have a visual */
   /* representation */
   if(map_item->object.type == RELATION)
     return;
 
   /* check if the item to be redrawn is the selected one */
-  bool is_selected = (map_item->object.obj == map->selected.object.obj);
+  bool is_selected = (map_item->object == map->selected.object);
   if(is_selected)
     map_item_deselect(map);
 
-  map_item_remove(&item);
-  map_item_init(map->style, &item);
-  map_item_draw(map, &item);
+  map_item_remove(map_item);
+  switch (map_item->object.type){
+  case WAY:
+    josm_elemstyles_colorize_way(map->style, map_item->object.way);
+    map_way_draw(map, map_item->object.way);
+    break;
+  case NODE:
+    josm_elemstyles_colorize_node(map->style, map_item->object.node);
+    map_node_draw(map, map_item->object.node);
+    break;
+  default:
+    g_assert_not_reached();
+  }
 
   /* restore selection if there was one */
   if(is_selected)
-    map_object_select(map, item.object);
+    map_object_select(map, map_item->object);
 }
 
 static void map_frisket_rectangle(canvas_points_t *points,
