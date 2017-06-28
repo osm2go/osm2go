@@ -501,7 +501,7 @@ static inline void nodefree(std::pair<item_id_t, node_t *> pair) {
 /* ------------------- way handling ------------------- */
 static void osm_unref_node(node_t* node)
 {
-  g_assert_cmpint(node->ways, >, 0);
+  g_assert_cmpuint(node->ways, >, 0);
   node->ways--;
 }
 
@@ -1553,9 +1553,9 @@ struct osm_unref_way_free {
 
 void osm_unref_way_free::operator()(node_t* node)
 {
-  printf("checking node #" ITEM_ID_FORMAT " (still used by %d)\n",
+  printf("checking node #" ITEM_ID_FORMAT " (still used by %u)\n",
          node->id, node->ways);
-  g_assert_cmpint(node->ways, >, 0);
+  g_assert_cmpuint(node->ways, >, 0);
   node->ways--;
 
   /* this node must only be part of this way */

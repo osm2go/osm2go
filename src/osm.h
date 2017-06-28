@@ -382,7 +382,7 @@ public:
   explicit node_t(item_id_t ver, const lpos_t &lp, const pos_t &p, item_id_t i = 0);
   virtual ~node_t() {}
 
-  int ways;
+  unsigned int ways;
   pos_t pos;
   lpos_t lpos;
 

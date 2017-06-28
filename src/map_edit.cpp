@@ -152,10 +152,10 @@ struct map_unref_ways {
 
 void map_unref_ways::operator()(node_t* node)
 {
-  printf("    node #" ITEM_ID_FORMAT " (used by %d)\n",
+  printf("    node #" ITEM_ID_FORMAT " (used by %u)\n",
          node->id, node->ways);
 
-  g_assert_cmpint(node->ways, >, 0);
+  g_assert_cmpuint(node->ways, >, 0);
   node->ways--;
   if(!node->ways && (node->id == ID_ILLEGAL)) {
     printf("      -> freeing temp node\n");
@@ -221,7 +221,7 @@ struct map_draw_nodes {
 
 void map_draw_nodes::operator()(node_t* node)
 {
-  printf("    node #" ITEM_ID_FORMAT " (used by %d)\n",
+  printf("    node #" ITEM_ID_FORMAT " (used by %u)\n",
          node->id, node->ways);
 
   /* a node may have been a stand-alone node before, so remove its */
@@ -631,6 +631,7 @@ void join_nodes::operator()(const std::pair<item_id_t, way_t *> &p)
 
     /* and adjust way references of both nodes */
     node->ways++;
+    g_assert_cmpuint(touchnode->ways, >, 0);
     touchnode->ways--;
 
     way->flags |= OSM_FLAG_DIRTY;
