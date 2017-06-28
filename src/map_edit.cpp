@@ -224,19 +224,19 @@ void map_draw_nodes::operator()(node_t* node)
   printf("    node #" ITEM_ID_FORMAT " (used by %u)\n",
          node->id, node->ways);
 
-  /* a node may have been a stand-alone node before, so remove its */
-  /* visual representation as its now drawn as part of the way */
-  /* (if at all) */
-  if(node->id != ID_ILLEGAL)
+  if(node->id != ID_ILLEGAL) {
+    /* a node may have been a stand-alone node before, so remove its */
+    /* visual representation as its now drawn as part of the way */
+    /* (if at all) */
     map_item_chain_destroy(&node->map_item_chain);
+  } else {
+    /* we can be sure that no node gets inserted twice (even if twice in */
+    /* the ways chain) because it gets assigned a non-ID_ILLEGAL id when */
+    /* being moved to the osm node chain */
+    map->appdata->osm->node_attach(node);
+  }
 
   map_node_draw(map, node);
-
-  /* we can be sure that no node gets inserted twice (even if twice in */
-  /* the ways chain) because it gets assigned a non-ID_ILLEGAL id when */
-  /* being moved to the osm node chain */
-  if(node->id == ID_ILLEGAL)
-    map->appdata->osm->node_attach(node);
 }
 
 void map_edit_way_add_ok(map_t *map) {
