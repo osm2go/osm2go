@@ -159,7 +159,7 @@ void map_unref_ways::operator()(node_t* node)
   node->ways--;
   if(!node->ways && (node->id == ID_ILLEGAL)) {
     printf("      -> freeing temp node\n");
-    osm->node_free(node);
+    delete node;
   }
 }
 
