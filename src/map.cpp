@@ -659,37 +659,41 @@ void map_node_draw(map_t *map, node_t *node) {
   m(node);
 }
 
-static void map_item_remove(map_item_t *map_item) {
-  switch(map_item->object.type) {
+static void map_item_remove(object_t &object) {
+  switch(object.type) {
   case NODE:
   case WAY:
-    map_item_chain_destroy(&static_cast<visible_item_t *>(map_item->object.obj)->map_item_chain);
+    map_item_chain_destroy(&static_cast<visible_item_t *>(object.obj)->map_item_chain);
     break;
   default:
     g_assert_not_reached();
   }
 }
 
-void map_item_redraw(map_t *map, map_item_t *map_item) {
+void map_item_redraw(map_t *map, object_t object) {
   /* a relation cannot be redrawn as it doesn't have a visual */
   /* representation */
-  if(map_item->object.type == RELATION)
+  if(object.type == RELATION)
     return;
 
   /* check if the item to be redrawn is the selected one */
-  bool is_selected = (map_item->object == map->selected.object);
+  bool is_selected = (object == map->selected.object);
+  // object must not be passed by reference or by pointer because of this:
+  // map_item_deselect would modify object.type of the selected object, if
+  // exactly that is passed in the switch statements below would see an
+  // invalid type
   if(is_selected)
     map_item_deselect(map);
 
-  map_item_remove(map_item);
-  switch (map_item->object.type){
+  map_item_remove(object);
+  switch (object.type){
   case WAY:
-    josm_elemstyles_colorize_way(map->style, map_item->object.way);
-    map_way_draw(map, map_item->object.way);
+    josm_elemstyles_colorize_way(map->style, object.way);
+    map_way_draw(map, object.way);
     break;
   case NODE:
-    josm_elemstyles_colorize_node(map->style, map_item->object.node);
-    map_node_draw(map, map_item->object.node);
+    josm_elemstyles_colorize_node(map->style, object.node);
+    map_node_draw(map, object.node);
     break;
   default:
     g_assert_not_reached();
@@ -697,7 +701,7 @@ void map_item_redraw(map_t *map, map_item_t *map_item) {
 
   /* restore selection if there was one */
   if(is_selected)
-    map_object_select(map, map_item->object);
+    map_object_select(map, object);
 }
 
 static void map_frisket_rectangle(canvas_points_t *points,
@@ -1949,10 +1953,9 @@ void node_deleted_from_ways::operator()(way_t *way) {
     /* cause other nodes to be deleted as well) */
     map_way_delete(map, way);
   } else {
-    map_item_t item;
-    item.object = way;
-    undo_append_object(map->appdata, UNDO_MODIFY, item.object);
-    map_item_redraw(map, &item);
+    object_t object(way);
+    undo_append_object(map->appdata, UNDO_MODIFY, object);
+    map_item_redraw(map, object);
   }
 }
 

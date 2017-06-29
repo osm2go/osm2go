@@ -138,7 +138,7 @@ struct map_t {
   osm_t::TagMap last_way_tags;
 };
 
-void map_item_redraw(map_t *map, map_item_t *map_item);
+void map_item_redraw(map_t *map, object_t object);
 
 GtkWidget *map_new(appdata_t *appdata);
 void map_state_free(map_state_t *state);
