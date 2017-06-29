@@ -1177,7 +1177,7 @@ static void on_window_destroy(appdata_t *appdata) {
 }
 
 static gboolean on_window_key_press(GtkWidget *, GdkEventKey *event, appdata_t *appdata) {
-  int handled = FALSE;
+  gboolean handled = FALSE;
 
   //  printf("key event with keyval %x\n", event->keyval);
 
@@ -1208,7 +1208,7 @@ static gboolean on_window_key_press(GtkWidget *, GdkEventKey *event, appdata_t *
   }
 
   /* forward unprocessed key presses to map */
-  if(!handled && appdata->project && appdata->osm)
+  if(!handled && appdata->project)
     handled = map_key_press_event(appdata->map, event);
 
   return handled;
