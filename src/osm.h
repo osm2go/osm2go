@@ -329,7 +329,7 @@ static_assert(sizeof(tag_list_t) == sizeof(tag_t *), "tag_list_t is not exactly 
 
 class base_object_t {
 public:
-  explicit base_object_t(item_id_t ver = 0, item_id_t i = 0);
+  explicit base_object_t(item_id_t ver = 0, item_id_t i = ID_ILLEGAL);
 
   item_id_t id;
   item_id_t version;
@@ -362,7 +362,7 @@ protected:
 
 class visible_item_t : public base_object_t {
 protected:
-  inline visible_item_t(item_id_t ver = 0, item_id_t i = 0)
+  inline visible_item_t(item_id_t ver = 0, item_id_t i = ID_ILLEGAL)
     : base_object_t(ver, i)
     , map_item_chain(O2G_NULLPTR)
     , zoom_max(0.0f)
@@ -379,7 +379,7 @@ public:
 class node_t : public visible_item_t {
 public:
   explicit node_t();
-  explicit node_t(item_id_t ver, const lpos_t &lp, const pos_t &p, item_id_t i = 0);
+  explicit node_t(item_id_t ver, const lpos_t &lp, const pos_t &p, item_id_t i = ID_ILLEGAL);
   virtual ~node_t() {}
 
   unsigned int ways;
@@ -404,7 +404,7 @@ typedef std::vector<node_t *> node_chain_t;
 class way_t: public visible_item_t {
 public:
   explicit way_t();
-  explicit way_t(item_id_t ver, item_id_t i = 0);
+  explicit way_t(item_id_t ver, item_id_t i = ID_ILLEGAL);
   virtual ~way_t() {}
 
   /* visual representation from elemstyle */
@@ -467,7 +467,7 @@ protected:
 class relation_t : public base_object_t {
 public:
   explicit relation_t();
-  explicit relation_t(item_id_t ver, item_id_t i = 0);
+  explicit relation_t(item_id_t ver, item_id_t i = ID_ILLEGAL);
   virtual ~relation_t() {}
 
   std::vector<member_t> members;
