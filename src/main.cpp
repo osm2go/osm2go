@@ -1159,9 +1159,7 @@ appdata_t::~appdata_t() {
   settings_free(settings);
 
   delete statusbar;
-
-  iconbar_free(iconbar);
-
+  delete iconbar;
   delete project;
 
   menu_cleanup(*this);

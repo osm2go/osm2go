@@ -87,27 +87,6 @@ static gint on_way_button_press(GtkWidget *,
   }
   return FALSE;
 }
-
-static GtkWidget *popup_menu_create(appdata_t *appdata) {
-  GtkWidget *menu = gtk_menu_new();
-
-  appdata->iconbar->way_add =
-    menu_add(menu, appdata, MENU_ICON("way_add"),
-             _("Add new way"), G_CALLBACK(on_way_add_clicked));
-  appdata->iconbar->way_node_add =
-    menu_add(menu, appdata, MENU_ICON("way_node_add"),
-             _("Add new node to way"), G_CALLBACK(on_way_node_add_clicked));
-  appdata->iconbar->way_cut =
-    menu_add(menu, appdata, MENU_ICON("way_cut"),
-             _("Split way"), G_CALLBACK(on_way_cut_clicked));
-  appdata->iconbar->way_reverse =
-    menu_add(menu, appdata, MENU_ICON("way_reverse"),
-             _("Reverse way"), G_CALLBACK(map_edit_way_reverse));
-
-  gtk_widget_show_all(menu);
-
-  return menu;
-}
 #endif
 
 #ifdef MAIN_GUI_RELATION
@@ -213,11 +192,38 @@ static GtkWidget *tool_add(GtkWidget *toolbar, appdata_t *appdata,
   return item;
 }
 
-GtkWidget *iconbar_new(appdata_t *appdata) {
-  appdata->iconbar = g_new0(iconbar_t, 1);
-  iconbar_t *iconbar = appdata->iconbar;
+iconbar_t::iconbar_t(appdata_t *appdata)
+  : toolbar(gtk_toolbar_new())
+  , info(O2G_NULLPTR)
+  , trash(O2G_NULLPTR)
+  , node_add(O2G_NULLPTR)
+#ifdef FINGER_UI
+  , menu(gtk_menu_new())
+  , way_add(menu_add(menu, appdata, MENU_ICON("way_add"),
+            _("Add new way"), G_CALLBACK(on_way_add_clicked)))
+  , way_node_add(menu_add(menu, appdata, MENU_ICON("way_node_add"),
+                 _("Add new node to way"), G_CALLBACK(on_way_node_add_clicked)))
+  , way_cut(menu_add(menu, appdata, MENU_ICON("way_cut"),
+            _("Split way"), G_CALLBACK(on_way_cut_clicked)))
+  , way_reverse(menu_add(menu, appdata, MENU_ICON("way_reverse"),
+                _("Reverse way"), G_CALLBACK(map_edit_way_reverse)))
+#else
+  , way_add(O2G_NULLPTR)
+  , way_node_add(O2G_NULLPTR)
+  , way_cut(O2G_NULLPTR)
+  , way_reverse(O2G_NULLPTR)
+#endif
+  , relation_add(O2G_NULLPTR)
+  , cancel(O2G_NULLPTR)
+  , ok(O2G_NULLPTR)
+{
+#ifndef FINGER_UI
+  (void) appdata;
+#endif
+}
 
-  iconbar->toolbar = gtk_toolbar_new();
+GtkWidget *iconbar_new(appdata_t *appdata) {
+  iconbar_t * const iconbar = appdata->iconbar = new iconbar_t(appdata);
 
 #ifndef PORTRAIT
   GtkWidget *box = gtk_vbox_new(FALSE, 0);
@@ -256,7 +262,7 @@ GtkWidget *iconbar_new(appdata_t *appdata) {
 		     gtk_separator_tool_item_new(),-1);
 
 #ifdef FINGER_UI
-  iconbar->menu = popup_menu_create(appdata);
+  gtk_widget_show_all(iconbar->menu);
 
   /* the way button is special as it pops up a menu for */
   /* further too selection */
@@ -333,10 +339,6 @@ GtkWidget *iconbar_new(appdata_t *appdata) {
 #endif
 
   return box;
-}
-
-void iconbar_free(iconbar_t *iconbar) {
-  g_free(iconbar);
 }
 
 #if defined(FINGER_UI)

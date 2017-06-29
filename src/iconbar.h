@@ -29,16 +29,19 @@
 #define FINGER_UI
 #endif
 
-typedef struct iconbar_t {
-  GtkWidget *toolbar;
+struct iconbar_t {
+  iconbar_t(appdata_t *appdata);
 
-#ifdef FINGER_UI
-  GtkWidget *menu;
-#endif
+  GtkWidget * const toolbar;
 
   GtkWidget *info;
   GtkWidget *trash;
   GtkWidget *node_add;
+
+#ifdef FINGER_UI
+  GtkWidget * const menu;
+#endif
+
   GtkWidget *way_add;
   GtkWidget *way_node_add;
   GtkWidget *way_cut;
@@ -47,11 +50,7 @@ typedef struct iconbar_t {
 
   GtkWidget *cancel;
   GtkWidget *ok;
-} iconbar_t;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+};
 
 struct map_item_t;
 
@@ -68,14 +67,9 @@ void icon_bar_map_cancel_ok(iconbar_t *iconbar, gboolean cancel, gboolean ok);
  * cause an action to take place or interfere with the action.
  */
 void icon_bar_map_action_idle(iconbar_t *iconbar, gboolean idle, gboolean way_en);
-void iconbar_free(iconbar_t *iconbar);
 
 #ifdef FINGER_UI
 void iconbar_register_buttons(appdata_t *appdata, GtkWidget *ok, GtkWidget *cancel);
-#endif
-
-#ifdef __cplusplus
-}
 #endif
 
 #endif // ICONBAR_H
