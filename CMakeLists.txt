@@ -8,6 +8,7 @@ include(GNUInstallDirs)
 include(WriteCompilerDetectionHeader)
 
 find_package(CURL REQUIRED)
+find_package(OpenSSL REQUIRED)
 find_package(LibXml2 REQUIRED)
 find_package(PkgConfig REQUIRED)
 
@@ -268,6 +269,7 @@ target_link_libraries(osm2go_lib
 		${MATH_LIBRARY}
 	PUBLIC
 		${CURL_LIBRARIES}
+		OpenSSL::SSL
 		${LIBXML2_LIBRARIES}
 		PkgConfig::GooCanvas
 )
