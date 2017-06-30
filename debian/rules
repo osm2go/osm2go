@@ -36,8 +36,6 @@ build-stamp: configure-stamp
 	dh_testdir
 	#XXX dh_auto_build
 	DESTDIR=`pwd`/debian/osm2go $(MAKE)
-	# VERSION_PREFIX=`perl debian/parse-changelog prefix $(TRUNK_VERSION)`  \
-	# VERSION_SUFFIX=`perl debian/parse-changelog suffix $(TRUNK_VERSION)`  \
 	# $(MAKE)
 	#docbook-to-man debian/osm2go.sgml > osm2go.1
 	touch $@
