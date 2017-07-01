@@ -233,15 +233,11 @@ settings_t *settings_load(void) {
   if(!settings->username) {
     if((p = getenv("OSM_USER")))
       settings->username = g_strdup(p);
-    else
-      settings->username = g_strdup(_("<your osm username>"));
   }
 
   if(!settings->password) {
     if((p = getenv("OSM_PASS")))
       settings->password = g_strdup(p);
-    else
-      settings->password = g_strdup(_("<password>"));
   }
 
   if(G_UNLIKELY(settings->style == O2G_NULLPTR))

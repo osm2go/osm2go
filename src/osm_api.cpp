@@ -776,12 +776,16 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   table_attach_label_l(table, _("Username:"), 0, 1, 0, 1);
   GtkWidget *uentry = entry_new();
   HILDON_ENTRY_NO_AUTOCAP(uentry);
-  gtk_entry_set_text(GTK_ENTRY(uentry), appdata->settings->username);
+  const char *username = (appdata->settings->username && *appdata->settings->username) ?
+                         appdata->settings->username :
+                         _("<your osm username>");
+  gtk_entry_set_text(GTK_ENTRY(uentry), username);
   gtk_table_attach_defaults(GTK_TABLE(table),  uentry, 1, 2, 0, 1);
   table_attach_label_l(table, _("Password:"), 0, 1, 1, 2);
   GtkWidget *pentry = entry_new();
   HILDON_ENTRY_NO_AUTOCAP(pentry);
-  gtk_entry_set_text(GTK_ENTRY(pentry), appdata->settings->password);
+  if(appdata->settings->password)
+    gtk_entry_set_text(GTK_ENTRY(pentry), appdata->settings->password);
   gtk_entry_set_visibility(GTK_ENTRY(pentry), FALSE);
   gtk_table_attach_defaults(GTK_TABLE(table),  pentry, 1, 2, 1, 2);
   gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, FALSE, FALSE, 0);
