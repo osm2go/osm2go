@@ -39,6 +39,21 @@ static void nevercalled(const tag_t &) {
   g_assert_not_reached();
 }
 
+static void set_bounds(osm_t &o) {
+  o.rbounds.ll_min.lat = 52.2692786;
+  o.rbounds.ll_min.lon = 9.5750497;
+  o.rbounds.ll_max.lat = 52.2695463;
+  o.rbounds.ll_max.lon = 9.5755;
+
+  pos_t center((o.rbounds.ll_max.lat + o.rbounds.ll_min.lat) / 2,
+               (o.rbounds.ll_max.lon + o.rbounds.ll_min.lon) / 2);
+
+  pos2lpos_center(&center, &o.rbounds.center);
+  o.rbounds.scale = cos(DEG2RAD(center.lat));
+
+  o.bounds = &o.rbounds;
+}
+
 static void test_taglist() {
   tag_list_t tags;
   std::vector<tag_t> ntags;
@@ -328,18 +343,7 @@ static void test_changeset()
 static void test_reverse()
 {
   osm_t o;
-  o.rbounds.ll_min.lat = 52.2692786;
-  o.rbounds.ll_min.lon = 9.5750497;
-  o.rbounds.ll_max.lat = 52.2695463;
-  o.rbounds.ll_max.lon = 9.5755;
-
-  pos_t center((o.rbounds.ll_max.lat + o.rbounds.ll_min.lat) / 2,
-               (o.rbounds.ll_max.lon + o.rbounds.ll_min.lon) / 2);
-
-  pos2lpos_center(&center, &o.rbounds.center);
-  o.rbounds.scale = cos(DEG2RAD(center.lat));
-
-  o.bounds = &o.rbounds;
+  set_bounds(o);
 
   lpos_t l(10, 20);
   node_t *n1 = o.node_new(l);
@@ -390,18 +394,7 @@ static void test_reverse()
 static void test_way_delete()
 {
   osm_t o;
-  o.rbounds.ll_min.lat = 52.2692786;
-  o.rbounds.ll_min.lon = 9.5750497;
-  o.rbounds.ll_max.lat = 52.2695463;
-  o.rbounds.ll_max.lon = 9.5755;
-
-  pos_t center((o.rbounds.ll_max.lat + o.rbounds.ll_min.lat) / 2,
-               (o.rbounds.ll_max.lon + o.rbounds.ll_min.lon) / 2);
-
-  pos2lpos_center(&center, &o.rbounds.center);
-  o.rbounds.scale = cos(DEG2RAD(center.lat));
-
-  o.bounds = &o.rbounds;
+  set_bounds(o);
 
   // delete a simple way
   lpos_t l(10, 20);
@@ -506,18 +499,7 @@ static void test_way_delete()
 static void test_member_delete()
 {
   osm_t o;
-  o.rbounds.ll_min.lat = 52.2692786;
-  o.rbounds.ll_min.lon = 9.5750497;
-  o.rbounds.ll_max.lat = 52.2695463;
-  o.rbounds.ll_max.lon = 9.5755;
-
-  pos_t center((o.rbounds.ll_max.lat + o.rbounds.ll_min.lat) / 2,
-               (o.rbounds.ll_max.lon + o.rbounds.ll_min.lon) / 2);
-
-  pos2lpos_center(&center, &o.rbounds.center);
-  o.rbounds.scale = cos(DEG2RAD(center.lat));
-
-  o.bounds = &o.rbounds;
+  set_bounds(o);
 
   // a way with 3 points
   lpos_t l(10, 20);
@@ -550,6 +532,107 @@ static void test_member_delete()
   g_assert_cmpuint(o.relations.size(), ==, 1);
 }
 
+static void test_merge_nodes()
+{
+  osm_t o;
+  set_bounds(o);
+
+  // join 2 new nodes
+  lpos_t oldpos(10, 10);
+  lpos_t newpos(20, 20);
+  node_t *n1 = o.node_new(oldpos);
+  node_t *n2 = o.node_new(newpos);
+  o.node_attach(n1);
+  o.node_attach(n2);
+
+  bool conflict = true;
+
+  node_t *n = o.mergeNodes(n1, n2, conflict);
+  g_assert(n == n1);
+  g_assert(n->lpos == newpos);
+  g_assert_false(conflict);
+  g_assert_cmpuint(o.nodes.size(), ==, 1);
+  g_assert_cmpuint(n->flags, ==, OSM_FLAG_DIRTY | OSM_FLAG_NEW);
+
+  // join a new and an old node, the old one should be preserved
+  n2 = o.node_new(oldpos);
+  n2->id = 1234;
+  n2->flags = 0;
+  o.nodes[n2->id] = n2;
+
+  conflict = true;
+  n = o.mergeNodes(n2, n1, conflict);
+  g_assert(n == n2);
+  g_assert(n->lpos == newpos);
+  g_assert_false(conflict);
+  g_assert_cmpuint(o.nodes.size(), ==, 1);
+  g_assert_cmpuint(n->flags, ==, OSM_FLAG_DIRTY);
+
+  // do the same join again, but with swapped arguments
+  n2->lpos = newpos;
+  n2->flags = 0;
+  n1 = o.node_new(oldpos);
+  o.node_attach(n1);
+
+  conflict = true;
+  n = o.mergeNodes(n1, n2, conflict);
+  g_assert(n == n2);
+  // order is important for the position, but nothing else
+  g_assert(n->lpos == newpos);
+  g_assert_false(conflict);
+  g_assert_cmpuint(o.nodes.size(), ==, 1);
+  g_assert_cmpuint(n->flags, ==, OSM_FLAG_DIRTY);
+
+  o.node_free(n);
+  g_assert_cmpuint(o.nodes.size(), ==, 0);
+
+  // start new
+  n1 = o.node_new(oldpos);
+  n2 = o.node_new(newpos);
+  o.node_attach(n1);
+  o.node_attach(n2);
+
+  conflict = true;
+
+  // attach one node to a way, that one should be preserved
+  way_t *w = new way_t(1);
+  o.way_attach(w);
+  w->append_node(n2);
+
+  n = o.mergeNodes(n1, n2, conflict);
+  g_assert(n == n2);
+  g_assert(n->lpos == newpos);
+  g_assert_false(conflict);
+  g_assert_cmpuint(o.nodes.size(), ==, 1);
+  g_assert_cmpuint(n->flags, ==, OSM_FLAG_DIRTY | OSM_FLAG_NEW);
+  g_assert_cmpuint(w->node_chain.size(), ==, 1);
+  g_assert(w->node_chain.front() == n2);
+
+  o.way_delete(w);
+  g_assert_cmpuint(o.nodes.size(), ==, 0);
+  g_assert_cmpuint(o.ways.size(), ==, 0);
+
+  // now check with relation membership
+  relation_t *r = new relation_t(1);
+  o.relation_attach(r);
+  n1 = o.node_new(oldpos);
+  n2 = o.node_new(newpos);
+  o.node_attach(n1);
+  o.node_attach(n2);
+
+  conflict = true;
+  r->members.push_back(member_t(object_t(n2), O2G_NULLPTR));
+
+  n = o.mergeNodes(n1, n2, conflict);
+  g_assert(n == n2);
+  g_assert(n->lpos == newpos);
+  g_assert_false(conflict);
+  g_assert_cmpuint(o.nodes.size(), ==, 1);
+  g_assert_cmpuint(n->flags, ==, OSM_FLAG_DIRTY | OSM_FLAG_NEW);
+  g_assert_cmpuint(r->members.size(), ==, 1);
+  g_assert(r->members.front().object == n2);
+}
+
 int main()
 {
   xmlInitParser();
@@ -561,6 +644,7 @@ int main()
   test_reverse();
   test_way_delete();
   test_member_delete();
+  test_merge_nodes();
 
   xmlCleanupParser();
 

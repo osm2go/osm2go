@@ -217,6 +217,21 @@ struct osm_t {
    * @returns if all elements from sub are in super
    */
   static bool tagSubset(const TagMap &sub, const TagMap &super);
+
+  /**
+   * @brief merge 2 nodes
+   * @param first first node
+   * @param second second node
+   * @param conflict if any conflicts (e.g. incompatible tags) were detected
+   * @return the remaining node (may be any of first and second)
+   *
+   * This merges the nodes on the position of second, joining the tags together
+   * and moving all way and relationship memberships to the remaining node.
+   *
+   * Which of the nodes remains depends on the age (node id) and number of
+   * affected ways and relationships. The other node is deleted.
+   */
+  node_t *mergeNodes(node_t *first, node_t *second, bool &conflict);
 };
 
 xmlChar *osm_generate_xml_changeset(const std::string &comment, const std::string &src);

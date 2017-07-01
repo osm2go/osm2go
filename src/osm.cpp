@@ -32,15 +32,15 @@
 #include "osm2go_platform.h"
 #include "pos.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
-#include <strings.h>
-
-#include <algorithm>
+#include <numeric>
 #include <string>
+#include <strings.h>
 #include <utility>
 
 #include <libxml/parser.h>
@@ -293,6 +293,131 @@ bool osm_t::tagSubset(const TagMap &sub, const TagMap &super)
     if(osm_t::findTag(super, it->first, it->second) == superEnd)
       return false;
   return true;
+}
+
+struct relation_node_replacer {
+  const node_t * const touchnode;
+  node_t * const node;
+  relation_node_replacer(const node_t *t, node_t *n) : touchnode(t), node(n) {}
+  void operator()(std::pair<item_id_t, relation_t *> pair);
+
+  struct member_replacer {
+    relation_t * const r;
+    const node_t * const touchnode;
+    node_t * const node;
+    member_replacer(relation_t *rel, const node_t *t, node_t *n)
+      : r(rel), touchnode(t), node(n) {}
+    void operator()(member_t &member);
+  };
+};
+
+void relation_node_replacer::operator()(std::pair<item_id_t, relation_t *> pair)
+{
+  relation_t * const r = pair.second;
+  std::for_each(r->members.begin(), r->members.end(),
+                member_replacer(r, touchnode, node));
+}
+
+void relation_node_replacer::member_replacer::operator()(member_t &member)
+{
+  if(member.object != touchnode)
+    return;
+
+  printf("  found node in relation #" ITEM_ID_FORMAT "\n", r->id);
+
+  /* replace by node */
+  member.object.node = node;
+
+  r->flags |= OSM_FLAG_DIRTY;
+}
+
+struct join_nodes {
+  node_t * const keep;
+  node_t * const remove;
+  join_nodes(node_t *n, node_t *t) : keep(n), remove(t) {}
+  void operator()(const std::pair<item_id_t, way_t *> &p);
+};
+
+void join_nodes::operator()(const std::pair<item_id_t, way_t *> &p)
+{
+  way_t * const way = p.second;
+  node_chain_t::iterator it = way->node_chain.begin();
+  const node_chain_t::iterator itEnd = way->node_chain.end();
+
+  while(remove->ways > 0 && (it = std::find(it, itEnd, remove)) != itEnd) {
+    printf("  found node in way #" ITEM_ID_FORMAT "\n", way->id);
+
+    /* replace by node */
+    *it = keep;
+
+    /* and adjust way references of both nodes */
+    keep->ways++;
+    g_assert_cmpuint(remove->ways, >, 0);
+    remove->ways--;
+
+    way->flags |= OSM_FLAG_DIRTY;
+  }
+}
+
+struct relation_membership_counter {
+  const object_t obj;
+  relation_membership_counter(node_t *n) : obj(n) {}
+  unsigned int operator()(unsigned int init, const std::pair<item_id_t, const relation_t *> &p) {
+    return std::accumulate(p.second->members.begin(), p.second->members.end(), init, *this);
+  }
+  unsigned int operator()(unsigned int init, const member_t &m) {
+    return init + (m.object == obj ? 1 : 0);
+  }
+};
+
+node_t *osm_t::mergeNodes(node_t *first, node_t *second, bool &conflict)
+{
+  node_t *keep = first, *remove = second;
+
+  unsigned int removeRels = std::accumulate(relations.begin(), relations.end(), 0, relation_membership_counter(remove));
+  unsigned int keepRels = std::accumulate(relations.begin(), relations.end(), 0, relation_membership_counter(keep));
+
+  // find out which node to keep
+    // if one is new: keep the other one
+  if((keep->flags & OSM_FLAG_NEW && !(remove->flags & OSM_FLAG_NEW)) ||
+     // or keep the one with most relations
+     removeRels > keepRels ||
+     // or the one with most ways
+     remove->ways > keep->ways ||
+     // or the one with the longest history
+     remove->version > keep->version ||
+     // or simply the older one
+     (remove->id > 0 && remove->id < keep->id)) {
+    std::swap(keep, remove);
+    std::swap(keepRels, removeRels);
+  }
+
+  /* use "second" position as that was the target */
+  keep->lpos = second->lpos;
+  keep->pos = second->pos;
+
+  if(remove->ways > 0) {
+    const std::map<item_id_t, way_t *>::iterator witEnd = ways.end();
+    std::for_each(ways.begin(), witEnd, join_nodes(keep, remove));
+  }
+
+  if(removeRels > 0) {
+    /* replace "remove" in relations */
+    std::for_each(relations.begin(), relations.end(),
+                  relation_node_replacer(remove, keep));
+  }
+
+  /* transfer tags from "remove" to "keep" */
+  conflict = keep->tags.merge(remove->tags);
+
+  /* remove must not have any references to ways anymore */
+  g_assert_cmpint(remove->ways, ==, 0);
+
+  node_delete(remove, false);
+
+  keep->flags |= OSM_FLAG_DIRTY;
+
+  return keep;
 }
 
 struct tag_match_functor {

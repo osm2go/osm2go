@@ -574,70 +574,6 @@ void member_merge::operator()(relation_t *relation)
   }
 }
 
-struct relation_node_replacer {
-  const node_t * const touchnode;
-  node_t * const node;
-  relation_node_replacer(const node_t *t, node_t *n) : touchnode(t), node(n) {}
-  void operator()(std::pair<item_id_t, relation_t *> pair);
-
-  struct member_replacer {
-    relation_t * const r;
-    const node_t * const touchnode;
-    node_t * const node;
-    member_replacer(relation_t *rel, const node_t *t, node_t *n)
-      : r(rel), touchnode(t), node(n) {}
-    void operator()(member_t &member);
-  };
-};
-
-void relation_node_replacer::operator()(std::pair<item_id_t, relation_t *> pair)
-{
-  relation_t * const r = pair.second;
-  std::for_each(r->members.begin(), r->members.end(),
-                member_replacer(r, touchnode, node));
-}
-
-void relation_node_replacer::member_replacer::operator()(member_t &member)
-{
-  if(member.object != touchnode)
-    return;
-
-  printf("  found node in relation #" ITEM_ID_FORMAT "\n", r->id);
-
-  /* replace by node */
-  member.object.node = node;
-
-  r->flags |= OSM_FLAG_DIRTY;
-}
-
-struct join_nodes {
-  node_t * const node;
-  node_t * const touchnode;
-  join_nodes(node_t *n, node_t *t) : node(n), touchnode(t) {}
-  void operator()(const std::pair<item_id_t, way_t *> &p);
-};
-
-void join_nodes::operator()(const std::pair<item_id_t, way_t *> &p)
-{
-  way_t * const way = p.second;
-  node_chain_t &chain = way->node_chain;
-  node_chain_t::iterator it = chain.begin();
-  const node_chain_t::iterator itEnd = chain.end();
-  while((it = std::find(it, itEnd, touchnode)) != itEnd) {
-    printf("  found node in way #" ITEM_ID_FORMAT "\n", way->id);
-
-    /* replace by node */
-    *it = node;
-
-    /* and adjust way references of both nodes */
-    node->ways++;
-    g_assert_cmpuint(touchnode->ways, >, 0);
-    touchnode->ways--;
-
-    way->flags |= OSM_FLAG_DIRTY;
-  }
-}
-
 struct redraw_way {
   node_t * const node;
   map_t * const map;
@@ -713,25 +649,11 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, gint ex, gint ey) {
       /* the touchnode vanishes and is replaced by the node the */
       /* user dropped onto it */
       joined_with_touchnode = true;
+      bool conflict;
 
-      /* use touchnodes position */
-      node->lpos = touchnode->lpos;
-      node->pos = touchnode->pos;
+      node = osm->mergeNodes(node, touchnode, conflict);
 
       const std::map<item_id_t, way_t *>::iterator witEnd = osm->ways.end();
-      std::for_each(osm->ways.begin(), witEnd, join_nodes(node, touchnode));
-
-      /* replace node in relations */
-      std::for_each(osm->relations.begin(), osm->relations.end(),
-                    relation_node_replacer(touchnode, node));
-
-      /* transfer tags from touchnode to node */
-      bool conflict = node->tags.merge(touchnode->tags);
-
-      /* touchnode must not have any references to ways anymore */
-      g_assert_cmpint(touchnode->ways, ==, 0);
-
-      osm->node_delete(touchnode, false);
 
       /* and open dialog to resolve tag collisions if necessary */
       if(conflict)
