@@ -20,6 +20,7 @@
 #include "settings.h"
 
 #include "appdata.h"
+#include "misc.h"
 #include "project.h"
 #include "wms.h"
 
@@ -30,13 +31,9 @@
 
 #define PROXY_KEY  "/system/http_proxy/"
 
-enum {
-  STORE_STRING, STORE_FLOAT, STORE_INT, STORE_BOOL,
-};
-
 typedef struct {
-  char *key;
-  int type;
+  const char *key;
+  GConfValueType type;
   int offset;
 } store_t;
 
@@ -44,25 +41,25 @@ typedef struct {
 
 static store_t store[] = {
   /* not user configurable */
-  { "base_path",        STORE_STRING, OFFSET(base_path)    },
+  { "base_path",        GCONF_VALUE_STRING, OFFSET(base_path)    },
 
   /* from project.c */
-  { "project",          STORE_STRING, OFFSET(project)      },
+  { "project",          GCONF_VALUE_STRING, OFFSET(project)      },
 
   /* from osm_api.c */
-  { "server",           STORE_STRING, OFFSET(server)       },
-  { "username",         STORE_STRING, OFFSET(username)     },
-  { "password",         STORE_STRING, OFFSET(password)     },
+  { "server",           GCONF_VALUE_STRING, OFFSET(server)       },
+  { "username",         GCONF_VALUE_STRING, OFFSET(username)     },
+  { "password",         GCONF_VALUE_STRING, OFFSET(password)     },
 
   /* wms servers are saved seperately */
 
   /* style */
-  { "style",            STORE_STRING, OFFSET(style)        },
+  { "style",            GCONF_VALUE_STRING, OFFSET(style)        },
 
   /* main */
-  { "track_path",       STORE_STRING, OFFSET(track_path)   },
-  { "enable_gps",       STORE_BOOL,   OFFSET(enable_gps)   },
-  { "follow_gps",       STORE_BOOL,   OFFSET(follow_gps)   },
+  { "track_path",       GCONF_VALUE_STRING, OFFSET(track_path)   },
+  { "enable_gps",       GCONF_VALUE_BOOL,   OFFSET(enable_gps)   },
+  { "follow_gps",       GCONF_VALUE_BOOL,   OFFSET(follow_gps)   },
 
   { NULL, -1, -1 }
 };
@@ -75,43 +72,47 @@ settings_t *settings_load(void) {
 
   if(G_LIKELY(client != O2G_NULLPTR)) {
     /* restore everything listed in the store table */
-    store_t *st = store;
-    while(st->key) {
+    const store_t *st;
+    for(st = store; st->key; st++) {
       void **ptr = ((void*)settings) + st->offset;
       gchar *key = g_strconcat("/apps/" PACKAGE "/", st->key, NULL);
 
       /* check if key is present */
       GConfValue *value = gconf_client_get(client, key, NULL);
-      if(value) {
-	gconf_value_free(value);
+      g_free(key);
 
-	switch(st->type) {
-	case STORE_STRING: {
-	  char **str = (char**)ptr;
-	  g_free(*str);
-	  *str = gconf_client_get_string(client, key, NULL);
-	} break;
+      if(!value)
+        continue;
 
-	case STORE_BOOL:
-	  *((int*)ptr) = gconf_client_get_bool(client, key, NULL);
-	  break;
-
-	case STORE_INT:
-	  *((int*)ptr) = gconf_client_get_int(client, key, NULL);
-	  break;
-
-	case STORE_FLOAT:
-	  *((float*)ptr) = gconf_client_get_float(client, key, NULL);
-	  break;
-
-	default:
-	  printf("Unsupported type %d\n", st->type);
-	  break;
-	}
+      if(value->type != st->type) {
+        printf("invalid type found for key '%s': expected %u, got %u\n",
+               st->key, st->type, value->type);
+        gconf_value_free(value);
       }
 
-      g_free(key);
-      st++;
+      switch(st->type) {
+      case GCONF_VALUE_STRING:
+        g_assert_null(*((char**)ptr));
+        *((char**)ptr) = g_strdup(gconf_value_get_string(value));
+        break;
+
+      case GCONF_VALUE_BOOL:
+        *((int*)ptr) = gconf_value_get_bool(value);
+        break;
+
+      case GCONF_VALUE_INT:
+        *((int*)ptr) = gconf_value_get_int(value);
+        break;
+
+      case GCONF_VALUE_FLOAT:
+        *((float*)ptr) = gconf_value_get_float(value);
+        break;
+
+      default:
+        printf("Unsupported type %d\n", st->type);
+        break;
+      }
+      gconf_value_free(value);
     }
 
     /* adjust default server stored in settings if required */
@@ -261,22 +262,22 @@ void settings_save(settings_t *settings) {
     char *key = g_strconcat("/apps/" PACKAGE "/", st->key, NULL);
 
     switch(st->type) {
-    case STORE_STRING:
+    case GCONF_VALUE_STRING:
       if((char*)(*ptr))
 	gconf_client_set_string(client, key, (char*)(*ptr), NULL);
       else
 	gconf_client_unset(client, key, NULL);
       break;
 
-    case STORE_BOOL:
+    case GCONF_VALUE_BOOL:
       gconf_client_set_bool(client, key, *((int*)ptr), NULL);
       break;
 
-    case STORE_INT:
+    case GCONF_VALUE_INT:
       gconf_client_set_int(client, key, *((int*)ptr), NULL);
       break;
 
-    case STORE_FLOAT:
+    case GCONF_VALUE_FLOAT:
       gconf_client_set_float(client, key, *((float*)ptr), NULL);
       break;
 
@@ -319,7 +320,7 @@ void settings_free(settings_t *settings) {
   while(st->key) {
     void **ptr = ((void*)settings) + st->offset;
 
-    if(st->type == STORE_STRING)
+    if(st->type == GCONF_VALUE_STRING)
       g_free(*ptr);
 
     st++;
