@@ -72,6 +72,8 @@ static store_t store_bool[] = {
   { O2G_NULLPTR, -1 }
 };
 
+static const std::string keybase = "/apps/" PACKAGE "/";
+
 settings_t *settings_load(void) {
   settings_t *settings = g_new0(settings_t,1);
   const char *api06https = "https://api.openstreetmap.org/api/0.6";
@@ -81,13 +83,13 @@ settings_t *settings_load(void) {
 
   if(G_LIKELY(client != O2G_NULLPTR)) {
     /* restore everything listed in the store tables */
+    std::string key;
     for(const store_t *st = store_str; st->key; st++) {
       char **ptr = reinterpret_cast<char **>(reinterpret_cast<uintptr_t>(settings) + st->offset);
-      gchar *key = g_strconcat("/apps/" PACKAGE "/", st->key, O2G_NULLPTR);
+      key = keybase + st->key;
 
       /* check if key is present */
-      GConfValue *value = gconf_client_get(client, key, O2G_NULLPTR);
-      g_free(key);
+      GConfValue *value = gconf_client_get(client, key.c_str(), O2G_NULLPTR);
 
       if(!value)
         continue;
@@ -104,11 +106,10 @@ settings_t *settings_load(void) {
 
     for(const store_t *st = store_bool; st->key; st++) {
       gboolean *ptr = reinterpret_cast<gboolean *>(reinterpret_cast<uintptr_t>(settings) + st->offset);
-      gchar *key = g_strconcat("/apps/" PACKAGE "/", st->key, O2G_NULLPTR);
+      key = keybase + st->key;
 
       /* check if key is present */
-      GConfValue *value = gconf_client_get(client, key, O2G_NULLPTR);
-      g_free(key);
+      GConfValue *value = gconf_client_get(client, key.c_str(), O2G_NULLPTR);
 
       if(!value)
         continue;
@@ -144,14 +145,15 @@ settings_t *settings_load(void) {
 
       wms_server_t **cur = &settings->wms_server;
       for(i=0;i<count;i++) {
-        /* keep ordering, the longest key must be first */
-        gchar *key = g_strdup_printf("/apps/" PACKAGE "/wms/server%d", i);
-        gchar *server = gconf_client_get_string(client, key, O2G_NULLPTR);
-        g_sprintf(key, "/apps/" PACKAGE "/wms/name%d", i);
-        gchar *name = gconf_client_get_string(client, key, O2G_NULLPTR);
-        g_sprintf(key, "/apps/" PACKAGE "/wms/path%d", i);
-        gchar *path = gconf_client_get_string(client, key, O2G_NULLPTR);
-	g_free(key);
+        char nbuf[16];
+        snprintf(nbuf, sizeof(nbuf), "%i", i);
+
+        key = keybase + "wms/server" + nbuf;
+        gchar *server = gconf_client_get_string(client, key.c_str(), O2G_NULLPTR);
+        key = keybase + "wms/name" + nbuf;
+        gchar *name = gconf_client_get_string(client, key.c_str(), O2G_NULLPTR);
+        key = keybase + "wms/path" + nbuf;
+        gchar *path = gconf_client_get_string(client, key.c_str(), O2G_NULLPTR);
 
 	/* apply valid entry to list */
 	if(name && server && path) {
@@ -238,43 +240,40 @@ void settings_save(settings_t *settings) {
   GConfClient *client = gconf_client_get_default();
   if(!client) return;
 
+  std::string key;
+
   /* store everything listed in the store tables */
   for(const store_t *st = store_str; st->key; st++) {
     char **ptr = reinterpret_cast<char **>(reinterpret_cast<uintptr_t>(settings) + st->offset);
-    char *key = g_strconcat("/apps/" PACKAGE "/", st->key, O2G_NULLPTR);
+    key = keybase + st->key;
 
     if(*ptr)
-      gconf_client_set_string(client, key, (char*)(*ptr), O2G_NULLPTR);
+      gconf_client_set_string(client, key.c_str(), (char*)(*ptr), O2G_NULLPTR);
     else
-      gconf_client_unset(client, key, O2G_NULLPTR);
-
-    g_free(key);
+      gconf_client_unset(client, key.c_str(), O2G_NULLPTR);
   }
 
   for(const store_t *st = store_bool; st->key; st++) {
     gboolean *ptr = reinterpret_cast<gboolean *>(reinterpret_cast<uintptr_t>(settings) + st->offset);
-    char *key = g_strconcat("/apps/" PACKAGE "/", st->key, O2G_NULLPTR);
+    key = keybase + st->key;
 
-    gconf_client_set_bool(client, key, *ptr, O2G_NULLPTR);
-
-    g_free(key);
+    gconf_client_set_bool(client, key.c_str(), *ptr, O2G_NULLPTR);
   }
 
   /* store list of wms servers */
-  wms_server_t *cur = settings->wms_server;
-  int count = 0;
-  while(cur) {
-    /* keep ordering, the longest key must be first */
-    gchar *key = g_strdup_printf("/apps/" PACKAGE "/wms/server%d", count);
-    gconf_client_set_string(client, key, cur->server, O2G_NULLPTR);
-    g_sprintf(key, "/apps/" PACKAGE "/wms/name%d", count);
-    gconf_client_set_string(client, key, cur->name, O2G_NULLPTR);
-    g_sprintf(key, "/apps/" PACKAGE "/wms/path%d", count);
-    gconf_client_set_string(client, key, cur->path, O2G_NULLPTR);
-    g_free(key);
+  unsigned int count = 0;
+  for(wms_server_t *cur = settings->wms_server; cur; cur = cur->next) {
+    char nbuf[16];
+    snprintf(nbuf, sizeof(nbuf), "%u", count);
+
+    key = keybase + "wms/server" + nbuf;
+    gconf_client_set_string(client, key.c_str(), cur->server, O2G_NULLPTR);
+    key = keybase + "wms/name" + nbuf;
+    gconf_client_set_string(client, key.c_str(), cur->name, O2G_NULLPTR);
+    key = keybase + "wms/path" + nbuf;
+    gconf_client_set_string(client, key.c_str(), cur->path, O2G_NULLPTR);
 
     count++;
-    cur = cur->next;
   }
 
   gconf_client_set_int(client, "/apps/" PACKAGE "/wms/count", count, O2G_NULLPTR);
