@@ -1445,7 +1445,7 @@ int main(int argc, char *argv[]) {
   main_ui_enable(&appdata);
 
   /* start GPS if enabled by config */
-  if(appdata.settings && appdata.settings->enable_gps)
+  if(appdata.settings->enable_gps)
     track_enable_gps(&appdata, TRUE);
 
   /* again let the ui do its thing */

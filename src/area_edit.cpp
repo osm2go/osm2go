@@ -580,9 +580,7 @@ static void on_page_switch(GtkNotebook *, GtkNotebookPage *,
 static gboolean map_gps_update(gpointer data) {
   context_t *context = static_cast<context_t *>(data);
 
-  gboolean gps_on =
-    context->area->appdata->settings &&
-    context->area->appdata->settings->enable_gps;
+  gboolean gps_on = context->area->appdata->settings->enable_gps;
 
   pos_t pos(NAN, NAN);
   gboolean gps_fix = gps_on &&
