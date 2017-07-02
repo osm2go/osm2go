@@ -101,7 +101,7 @@ static bool api_adjust(std::string &rserver) {
 
 static std::string urlbase(const project_t *project) {
   std::string url = project->server;
-  if(strncmp(url.c_str(), "http://", 7) == 0 && strstr(curl_version(), "OpenSSL/1") != O2G_NULLPTR) {
+  if(strncmp(url.c_str(), "http://", 7) == 0 && url.find(".openstreetmap.org/") != std::string::npos) {
     printf("dynamically switching download to HTTPS\n");
     url.insert(4, "s");
   }

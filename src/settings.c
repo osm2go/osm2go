@@ -66,6 +66,7 @@ static store_t store[] = {
 
 settings_t *settings_load(void) {
   settings_t *settings = g_new0(settings_t,1);
+  const char *api06https = "https://api.openstreetmap.org/api/0.6";
 
   /* ------ overwrite with settings from gconf if present ------- */
   GConfClient *client = gconf_client_get_default();
@@ -119,6 +120,12 @@ settings_t *settings_load(void) {
     if(G_UNLIKELY(settings->server && strstr(settings->server, "0.5") != NULL)) {
       strstr(settings->server, "0.5")[2] = '6';
       printf("adjusting server path in settings to 0.6\n");
+    }
+    const char *api06http = "http://api.openstreetmap.org/api/0.6";
+    if(G_UNLIKELY(settings->server && strncmp(settings->server, api06http, strlen(api06http)) == 0)) {
+      g_free(settings->server);
+      settings->server = g_strdup(api06https);
+      printf("adjusting server path in settings to https\n");
     }
 
     /* restore wms server list */
@@ -227,7 +234,7 @@ settings_t *settings_load(void) {
 
   if(G_UNLIKELY(settings->server == O2G_NULLPTR)) {
     /* ------------- setup download defaults -------------------- */
-    settings->server = g_strdup("http://api.openstreetmap.org/api/0.6");
+    settings->server = g_strdup(api06https);
   }
 
   if(!settings->username) {

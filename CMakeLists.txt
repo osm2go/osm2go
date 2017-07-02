@@ -8,7 +8,7 @@ include(GNUInstallDirs)
 include(WriteCompilerDetectionHeader)
 
 find_package(CURL REQUIRED)
-find_package(OpenSSL REQUIRED)
+find_package(OpenSSL 1 REQUIRED)
 find_package(LibXml2 REQUIRED)
 find_package(PkgConfig REQUIRED)
 
