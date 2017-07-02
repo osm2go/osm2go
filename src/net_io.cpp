@@ -36,7 +36,7 @@ typedef struct {
   size_t len;
 } curl_mem_t;
 
-typedef enum { NET_IO_DL_FILE, NET_IO_DL_MEM, NET_IO_DELETE } net_io_type_t;
+typedef enum { NET_IO_DL_FILE, NET_IO_DL_MEM } net_io_type_t;
 
 /* structure shared between worker and master thread */
 typedef struct {
@@ -230,10 +230,6 @@ static void *worker_thread(void *ptr) {
       case NET_IO_DL_MEM:
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &request->mem);
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, mem_write);
-	break;
-
-      case NET_IO_DELETE:
-	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "DELETE");
 	break;
       }
 
