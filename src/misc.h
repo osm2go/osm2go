@@ -137,6 +137,12 @@ extern "C" {
                                         } G_STMT_END
 #endif
 
+GtkWidget *button_new(void);
+GtkWidget *button_new_with_label(const gchar *label);
+
+#ifdef __cplusplus
+}
+
 struct appdata_t;
 
 void errorf(GtkWidget *parent, const char *fmt, ...) G_GNUC_PRINTF(2, 3);
@@ -159,14 +165,8 @@ void misc_table_attach(GtkWidget *table, GtkWidget *widget, int x, int y);
 GtkWidget *entry_new(void);
 GType entry_type(void);
 
-GtkWidget *button_new(void);
-GtkWidget *button_new_with_label(const gchar *label);
-
-#ifdef __cplusplus
-}
-
 bool yes_no_f(GtkWidget *parent,
-              struct appdata_t *appdata, guint again_bit, gint flags,
+              appdata_t *appdata, guint again_bit, gint flags,
               const char *title, const char *fmt, ...) G_GNUC_PRINTF(6, 7);
 GtkWidget *check_button_new_with_label(const gchar *label);
 void check_button_set_active(GtkWidget *button, gboolean active);
