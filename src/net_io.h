@@ -22,11 +22,12 @@
 
 #include <glib.h>
 #include <gtk/gtk.h>
+#include <string>
 
 bool net_io_download_file(GtkWidget *parent,
-                          const char *url, const char *filename, const char *title);
+                          const std::string &url, const std::string &filename, const char *title);
 bool net_io_download_mem(GtkWidget *parent,
-                         const char *url, char **mem, size_t &len);
+                         const std::string &url, char **mem, size_t &len);
 
 /**
  * @brief translate HTTP status code to string

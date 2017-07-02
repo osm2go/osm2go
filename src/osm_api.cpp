@@ -149,7 +149,7 @@ bool osm_download(GtkWidget *parent, settings_t *settings, project_t *project)
   const std::string update = project->path + "update.osm";
   g_remove(update.c_str());
 
-  bool result = net_io_download_file(parent, url.c_str(), update.c_str(),
+  bool result = net_io_download_file(parent, url, update,
                                          project->name.c_str()) == TRUE;
 
   /* if there's a new file use this from now on */

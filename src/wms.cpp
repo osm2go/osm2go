@@ -1078,7 +1078,7 @@ void wms_import(appdata_t *appdata) {
 
   char *cap = O2G_NULLPTR;
   size_t caplen;
-  net_io_download_mem(GTK_WIDGET(appdata->window), url.c_str(), &cap, caplen);
+  net_io_download_mem(GTK_WIDGET(appdata->window), url, &cap, caplen);
 
   /* ----------- parse capabilities -------------- */
 
@@ -1220,7 +1220,7 @@ void wms_import(appdata_t *appdata) {
   wms_remove(appdata);
 
   if(!net_io_download_file(GTK_WIDGET(appdata->window),
-                           url.c_str(), filename.c_str(), O2G_NULLPTR))
+                           url, filename, O2G_NULLPTR))
     return;
 
   /* there should be a matching file on disk now */

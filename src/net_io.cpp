@@ -36,14 +36,19 @@ struct curl_mem_t {
   size_t len;
 };
 
-typedef enum { NET_IO_DL_FILE, NET_IO_DL_MEM } net_io_type_t;
-
 /* structure shared between worker and master thread */
 struct net_io_request_t {
-  net_io_type_t type;
+  enum net_io_type_t {
+    NET_IO_DL_FILE,
+    NET_IO_DL_MEM
+  };
+
+  net_io_request_t(net_io_type_t t, const std::string &u, const std::string &f = std::string());
+
+  const net_io_type_t type;
   gint refcount;       /* reference counter for master and worker thread */
 
-  char *url;
+  const std::string url;
   bool cancel;
   curl_off_t download_cur;
   curl_off_t download_end;
@@ -54,10 +59,8 @@ struct net_io_request_t {
   char buffer[CURL_ERROR_SIZE];
 
   /* request specific fields */
-  union {
-    char *filename;   /* used for NET_IO_DL_FILE */
-    curl_mem_t mem;   /* used for NET_IO_DL_MEM */
-  };
+  const std::string filename;   /* used for NET_IO_DL_FILE */
+  curl_mem_t mem;   /* used for NET_IO_DL_MEM */
 };
 
 static std::map<int, const char *> http_msg_init() {
@@ -140,8 +143,24 @@ static GtkWidget *busy_dialog(GtkWidget *parent, GtkProgressBar **pbar,
   return dialog;
 }
 
+net_io_request_t::net_io_request_t(net_io_type_t t, const std::string &u, const std::string &f)
+  : type(t)
+  , refcount(0)
+  , url(u)
+  , cancel(false)
+  , download_cur(0)
+  , download_end(0)
+  , res(CURLE_OK)
+  , response(0)
+  , filename(f)
+{
+  memset(buffer, 0, sizeof(buffer));
+  memset(&mem, 0, sizeof(mem));
+}
+
 static void request_free(net_io_request_t *request) {
   /* decrease refcount and only free structure if no references are left */
+  g_assert_cmpint(request->refcount, >, 0);
   request->refcount--;
   if(request->refcount) {
     printf("still %d references, keeping request\n", request->refcount);
@@ -149,13 +168,7 @@ static void request_free(net_io_request_t *request) {
   }
 
   printf("no references left, freeing request\n");
-  g_free(request->url);
-
-  /* filename is only a valid filename in NET_IO_DL_FILE mode */
-  if(request->type == NET_IO_DL_FILE)
-    g_free(request->filename);
-
-  g_free(request);
+  delete request;
 }
 
 #ifdef CURLOPT_XFERINFOFUNCTION
@@ -192,45 +205,39 @@ static void *worker_thread(void *ptr) {
 
   CURL *curl = curl_easy_init();
   if(curl) {
-    FILE *outfile = O2G_NULLPTR;
     bool ok = false;
+    FILE *outfile = O2G_NULLPTR;
 
     /* prepare target (file, memory, ...) */
     switch(request->type) {
-    case NET_IO_DL_FILE:
-      outfile = fopen(request->filename, "w");
+    case net_io_request_t::NET_IO_DL_FILE: {
+      outfile = fopen(request->filename.c_str(), "w");
       ok = (outfile != O2G_NULLPTR);
+      curl_easy_setopt(curl, CURLOPT_WRITEDATA, outfile);
+      curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, fwrite);
       break;
+    }
 
-    case NET_IO_DL_MEM:
+    case net_io_request_t::NET_IO_DL_MEM:
       request->mem.ptr = O2G_NULLPTR;
       request->mem.len = 0;
+      curl_easy_setopt(curl, CURLOPT_WRITEDATA, &request->mem);
+      curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, mem_write);
       ok = true;
       break;
 
     default:
       printf("thread: unsupported request\n");
+      g_assert_not_reached();
       /* ugh?? */
       ok = true;
       break;
     }
 
     if(ok) {
-      curl_easy_setopt(curl, CURLOPT_URL, request->url);
+      curl_easy_setopt(curl, CURLOPT_URL, request->url.c_str());
 
     curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
-
-      switch(request->type) {
-      case NET_IO_DL_FILE:
-	curl_easy_setopt(curl, CURLOPT_WRITEDATA, outfile);
-	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, fwrite);
-	break;
-
-      case NET_IO_DL_MEM:
-	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &request->mem);
-	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, mem_write);
-	break;
-      }
 
       /* setup progress notification */
       curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
@@ -266,7 +273,7 @@ static void *worker_thread(void *ptr) {
       curl_easy_setopt(curl, CURLOPT_HTTPHEADER, slist);
 #endif
 
-      if(request->type == NET_IO_DL_FILE)
+      if(request->type == net_io_request_t::NET_IO_DL_FILE)
 	fclose(outfile);
     }
 
@@ -365,13 +372,10 @@ static bool net_io_do(GtkWidget *parent, net_io_request_t *request,
 }
 
 bool net_io_download_file(GtkWidget *parent,
-                          const char *url, const char *filename, const char *title) {
-  net_io_request_t *request = g_new0(net_io_request_t, 1);
+                          const std::string &url, const std::string &filename, const char *title) {
+  net_io_request_t *request = new net_io_request_t(net_io_request_t::NET_IO_DL_FILE, url, filename);
 
-  printf("net_io: download %s to file %s\n", url, filename);
-  request->type = NET_IO_DL_FILE;
-  request->url = g_strdup(url);
-  request->filename = g_strdup(filename);
+  printf("net_io: download %s to file %s\n", url.c_str(), filename.c_str());
 
   bool result = net_io_do(parent, request, title);
   if(!result) {
@@ -384,8 +388,8 @@ bool net_io_download_file(GtkWidget *parent,
     /* user has restarted the download by then, the worker will erase that */
     /* newly written file */
 
-    printf("request failed, deleting %s\n", filename);
-    g_remove(filename);
+    printf("request failed, deleting %s\n", filename.c_str());
+    g_remove(filename.c_str());
   } else
     printf("request ok\n");
 
@@ -394,12 +398,10 @@ bool net_io_download_file(GtkWidget *parent,
 }
 
 bool net_io_download_mem(GtkWidget *parent,
-                         const char *url, char **mem, size_t &len) {
-  net_io_request_t *request = g_new0(net_io_request_t, 1);
+                         const std::string &url, char **mem, size_t &len) {
+  net_io_request_t *request = new net_io_request_t(net_io_request_t::NET_IO_DL_MEM, url);
 
-  printf("net_io: download %s to memory\n", url);
-  request->type = NET_IO_DL_MEM;
-  request->url = g_strdup(url);
+  printf("net_io: download %s to memory\n", url.c_str());
 
   bool result = net_io_do(parent, request, O2G_NULLPTR);
   if(result) {
