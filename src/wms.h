@@ -22,28 +22,20 @@
 
 #include <glib.h>
 
-typedef struct wms_server_t {
+struct wms_server_t {
   gchar *name, *server, *path;
   struct wms_server_t *next;
-} wms_server_t;
+};
 
-#ifdef __cplusplus
 struct appdata_t;
 struct project_t;
 
-void wms_import(struct appdata_t *appdata);
-void wms_load(struct appdata_t *appdata);
-void wms_remove(struct appdata_t *appdata);
+void wms_import(appdata_t *appdata);
+void wms_load(appdata_t *appdata);
+void wms_remove(appdata_t *appdata);
 void wms_remove_file(project_t *project);
-
-extern "C" {
-#endif
 
 wms_server_t *wms_server_get_default(void);
 void wms_servers_free(wms_server_t *wms_server);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif // WMS_H
