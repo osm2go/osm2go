@@ -320,10 +320,6 @@ GtkWidget *misc_scrolled_window_new(gboolean) {
   return hildon_pannable_area_new();
 }
 
-void misc_scrolled_window_add_with_viewport(GtkWidget *win, GtkWidget *child) {
-  hildon_pannable_area_add_with_viewport(HILDON_PANNABLE_AREA(win), child);
-}
-
 #else
 /* create a scrolled window */
 GtkWidget *misc_scrolled_window_new(gboolean etched_in) {
@@ -335,11 +331,6 @@ GtkWidget *misc_scrolled_window_new(gboolean etched_in) {
 					GTK_SHADOW_ETCHED_IN);
   return scrolled_window;
 }
-
-void misc_scrolled_window_add_with_viewport(GtkWidget *win, GtkWidget *child) {
-  gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(win), child);
-}
-
 
 #endif
 

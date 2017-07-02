@@ -153,7 +153,6 @@ void messagef(GtkWidget *parent, const char *title, const char *fmt, ...) G_GNUC
 
 GtkWidget *misc_dialog_new(int hint, const gchar *title, GtkWindow *parent, ...);
 GtkWidget *misc_scrolled_window_new(gboolean etched_in);
-void misc_scrolled_window_add_with_viewport(GtkWidget *win, GtkWidget *child);
 void misc_table_attach(GtkWidget *table, GtkWidget *widget, int x, int y);
 
 /* unified widgets */
