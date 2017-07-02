@@ -31,19 +31,19 @@
 
 #include "osm2go_cpp.h"
 
-typedef struct {
+struct curl_mem_t {
   char *ptr;
   size_t len;
-} curl_mem_t;
+};
 
 typedef enum { NET_IO_DL_FILE, NET_IO_DL_MEM } net_io_type_t;
 
 /* structure shared between worker and master thread */
-typedef struct {
+struct net_io_request_t {
   net_io_type_t type;
   gint refcount;       /* reference counter for master and worker thread */
 
-  char *url, *user;
+  char *url;
   bool cancel;
   curl_off_t download_cur;
   curl_off_t download_end;
@@ -58,7 +58,7 @@ typedef struct {
     char *filename;   /* used for NET_IO_DL_FILE */
     curl_mem_t mem;   /* used for NET_IO_DL_MEM */
   };
-} net_io_request_t;
+};
 
 static std::map<int, const char *> http_msg_init() {
   std::map<int, const char *> http_messages;
@@ -150,7 +150,6 @@ static void request_free(net_io_request_t *request) {
 
   printf("no references left, freeing request\n");
   g_free(request->url);
-  g_free(request->user);
 
   /* filename is only a valid filename in NET_IO_DL_FILE mode */
   if(request->type == NET_IO_DL_FILE)
@@ -232,10 +231,6 @@ static void *worker_thread(void *ptr) {
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, mem_write);
 	break;
       }
-
-      /* set user name and password for the authentication */
-      if(request->user)
-	curl_easy_setopt(curl, CURLOPT_USERPWD, request->user);
 
       /* setup progress notification */
       curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
