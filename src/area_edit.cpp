@@ -638,7 +638,7 @@ bool area_edit(area_edit_t &area) {
   context.map.needs_redraw = FALSE;
   context.map.widget = GTK_WIDGET(g_object_new(OSM_TYPE_GPS_MAP,
  	        "map-source", OSM_GPS_MAP_SOURCE_OPENSTREETMAP,
-		"proxy-uri", misc_get_proxy_uri(area.appdata->settings),
+		"proxy-uri", g_getenv("http_proxy"),
 		"auto-center", FALSE,
 	        "tile-cache", O2G_NULLPTR,
 		 O2G_NULLPTR));

@@ -29,8 +29,6 @@
 
 #include <osm2go_cpp.h>
 
-#define PROXY_KEY  "/system/http_proxy/"
-
 typedef struct {
   const char *key;
   GConfValueType type;
@@ -164,27 +162,6 @@ settings_t *settings_load(void) {
       /* add default server(s) */
       printf("No WMS servers configured, adding default\n");
       settings->wms_server = wms_server_get_default();
-    }
-
-    /* ------------- get proxy settings -------------------- */
-    if(gconf_client_get_bool(client, PROXY_KEY "use_http_proxy", NULL)) {
-      proxy_t *proxy = settings->proxy = g_new0(proxy_t, 1);
-
-      /* get basic settings */
-      proxy->host = gconf_client_get_string(client, PROXY_KEY "host", NULL);
-      proxy->port = gconf_client_get_int(client, PROXY_KEY "port", NULL);
-
-      /* check for authentication */
-      proxy->use_authentication =
-	gconf_client_get_bool(client, PROXY_KEY "use_authentication", NULL);
-
-      if(proxy->use_authentication) {
-	proxy->authentication_user =
-	  gconf_client_get_string(client, PROXY_KEY "authentication_user", NULL);
-	proxy->authentication_password =
-	  gconf_client_get_string(client, PROXY_KEY "authentication_password",
-				  NULL);
-      }
     }
 
     /* use demo setup if present */
@@ -327,17 +304,6 @@ void settings_free(settings_t *settings) {
       g_free(*ptr);
 
     st++;
-  }
-
-  /* free proxy settings if present */
-  if(settings->proxy) {
-    proxy_t *proxy = settings->proxy;
-
-    g_free(proxy->host);
-    g_free(proxy->authentication_user);
-    g_free(proxy->authentication_password);
-
-    g_free(proxy);
   }
 
   g_free(settings);

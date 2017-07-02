@@ -20,18 +20,13 @@
 #ifndef NET_IO_H
 #define NET_IO_H
 
-#include "settings.h"
-
 #include <glib.h>
 #include <gtk/gtk.h>
 
-bool net_io_download_file(GtkWidget *parent, settings_t *settings,
+bool net_io_download_file(GtkWidget *parent,
                           const char *url, const char *filename, const char *title);
-bool net_io_download_mem(GtkWidget *parent, settings_t *settings,
+bool net_io_download_mem(GtkWidget *parent,
                          const char *url, char **mem, size_t &len);
-
-#include <curl/curl.h>
-void net_io_set_proxy(CURL *curl, proxy_t *proxy);
 
 /**
  * @brief translate HTTP status code to string

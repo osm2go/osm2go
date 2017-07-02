@@ -61,7 +61,6 @@ struct osm_upload_context_t {
     , osm(o)
     , project(p)
     , urlbasestr(p->server + std::string("/"))
-    , proxy(appdata->settings->proxy)
     , comment(c)
     , src(s ? s : std::string())
   {}
@@ -76,7 +75,6 @@ struct osm_upload_context_t {
 
   std::string changeset;
 
-  proxy_t * const proxy;
   std::string comment;
   std::string credentials;
   const std::string src;
@@ -151,7 +149,7 @@ bool osm_download(GtkWidget *parent, settings_t *settings, project_t *project)
   const std::string update = project->path + "update.osm";
   g_remove(update.c_str());
 
-  bool result = net_io_download_file(parent, settings, url.c_str(), update.c_str(),
+  bool result = net_io_download_file(parent, url.c_str(), update.c_str(),
                                          project->name.c_str()) == TRUE;
 
   /* if there's a new file use this from now on */
@@ -259,8 +257,6 @@ static CURL *curl_custom_setup(const osm_upload_context_t &context, const char *
 
   /* set user name and password for the authentication */
   curl_easy_setopt(curl, CURLOPT_USERPWD, context.credentials.c_str());
-
-  net_io_set_proxy(curl, context.proxy);
 
 #ifndef CURL_SSLVERSION_MAX_DEFAULT
 #define CURL_SSLVERSION_MAX_DEFAULT 0

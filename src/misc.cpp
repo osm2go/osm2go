@@ -343,32 +343,6 @@ void misc_scrolled_window_add_with_viewport(GtkWidget *win, GtkWidget *child) {
 
 #endif
 
-const char *misc_get_proxy_uri(settings_t *settings) {
-  static char proxy_buffer[64];
-
-  /* use environment settings if preset */
-  const char *proxy = g_getenv("http_proxy");
-  if(proxy) {
-    printf("http_proxy: %s\n", proxy);
-    return proxy;
-  }
-
-  /* otherwise try settings */
-  if(!settings->proxy || !settings->proxy->host)
-    return O2G_NULLPTR;
-
-  const char *protocol = strncmp(settings->proxy->host, "http://", 7) ? "" :
-			 strncmp(settings->proxy->host, "https://", 8) ? "" :
-			 "http://";
-
-  snprintf(proxy_buffer, sizeof(proxy_buffer), "%s%s:%u",
-	   protocol, settings->proxy->host, settings->proxy->port);
-
-  proxy_buffer[sizeof(proxy_buffer)-1] = 0;
-  printf("gconf_proxy: %s\n", proxy_buffer);
-  return proxy_buffer;
-}
-
 void misc_table_attach(GtkWidget *table, GtkWidget *widget, int x, int y) {
   gtk_table_attach_defaults(GTK_TABLE(table), widget, x, x+1, y, y+1);
 }

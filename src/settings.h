@@ -37,13 +37,6 @@
 
 #define DEFAULT_STYLE "mapnik"
 
-typedef struct {
-  char *authentication_password, *authentication_user;
-  char *host;
-  gint port;
-  gboolean use_authentication;
-} proxy_t;
-
 typedef struct settings_t {
 
   /* never changed */
@@ -65,10 +58,6 @@ typedef struct settings_t {
   char *track_path;
   gboolean enable_gps;
   gboolean follow_gps;
-
-  /* fetched from the system settings at startup, */
-  /* never changed */
-  proxy_t *proxy;
 
   /* set to true if no gconf settings were found */
   /* and the demo was loaded */
