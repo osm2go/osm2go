@@ -99,14 +99,6 @@ settings_t *settings_load(void) {
         *((int*)ptr) = gconf_value_get_bool(value);
         break;
 
-      case GCONF_VALUE_INT:
-        *((int*)ptr) = gconf_value_get_int(value);
-        break;
-
-      case GCONF_VALUE_FLOAT:
-        *((float*)ptr) = gconf_value_get_float(value);
-        break;
-
       default:
         printf("Unsupported type %d\n", st->type);
         break;
@@ -251,14 +243,6 @@ void settings_save(settings_t *settings) {
 
     case GCONF_VALUE_BOOL:
       gconf_client_set_bool(client, key, *((int*)ptr), NULL);
-      break;
-
-    case GCONF_VALUE_INT:
-      gconf_client_set_int(client, key, *((int*)ptr), NULL);
-      break;
-
-    case GCONF_VALUE_FLOAT:
-      gconf_client_set_float(client, key, *((float*)ptr), NULL);
       break;
 
     default:
