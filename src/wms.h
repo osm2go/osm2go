@@ -22,13 +22,10 @@
 
 #include <glib.h>
 #include <string>
-
-#include <osm2go_cpp.h>
+#include <vector>
 
 struct wms_server_t {
-  inline wms_server_t() : next(O2G_NULLPTR) {}
   std::string name, server, path;
-  struct wms_server_t *next;
 };
 
 struct appdata_t;
@@ -39,7 +36,7 @@ void wms_load(appdata_t *appdata);
 void wms_remove(appdata_t *appdata);
 void wms_remove_file(project_t *project);
 
-wms_server_t *wms_server_get_default(void);
-void wms_servers_free(wms_server_t *wms_server);
+std::vector<wms_server_t *> wms_server_get_default(void);
+void wms_server_free(wms_server_t *wms_server);
 
 #endif // WMS_H

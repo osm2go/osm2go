@@ -22,6 +22,7 @@
 
 #include <glib.h>
 #include <map>
+#include <vector>
 
 /* define this for a vertical UI layout */
 #undef PORTRAIT
@@ -53,7 +54,7 @@ public:
   char *server, *username, *password;
 
   /* changed in wms.c */
-  struct wms_server_t *wms_server;
+  std::vector<struct wms_server_t *> wms_server;
 
   /* changed in style.c */
   char *style;

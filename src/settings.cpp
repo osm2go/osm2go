@@ -110,12 +110,10 @@ settings_t *settings_t::load() {
     const gchar *countkey = "/apps/" PACKAGE "/wms/count";
     GConfValue *value = gconf_client_get(client, countkey, O2G_NULLPTR);
     if(value) {
+      unsigned int count = gconf_value_get_int(value);
       gconf_value_free(value);
 
-      int i, count = gconf_client_get_int(client, countkey, O2G_NULLPTR);
-
-      wms_server_t **cur = &settings->wms_server;
-      for(i=0;i<count;i++) {
+      for(unsigned int i = 0; i < count; i++) {
         char nbuf[16];
         snprintf(nbuf, sizeof(nbuf), "%i", i);
 
@@ -128,11 +126,11 @@ settings_t *settings_t::load() {
 
 	/* apply valid entry to list */
         if(G_LIKELY(name && server && path)) {
-          *cur = new wms_server_t();
-          (*cur)->name = gconf_value_get_string(name);
-          (*cur)->server = gconf_value_get_string(server);
-          (*cur)->path = gconf_value_get_string(path);
-	  cur = &(*cur)->next;
+          wms_server_t *cur = new wms_server_t();
+          cur->name = gconf_value_get_string(name);
+          cur->server = gconf_value_get_string(server);
+          cur->path = gconf_value_get_string(path);
+          settings->wms_server.push_back(cur);
         }
         gconf_value_free(name);
         gconf_value_free(server);
@@ -233,8 +231,8 @@ void settings_t::save() const {
   }
 
   /* store list of wms servers */
-  unsigned int count = 0;
-  for(wms_server_t *cur = wms_server; cur; cur = cur->next) {
+  for(unsigned int count = 0; count < wms_server.size(); count++) {
+    const wms_server_t * const cur = wms_server[count];
     char nbuf[16];
     snprintf(nbuf, sizeof(nbuf), "%u", count);
 
@@ -244,11 +242,9 @@ void settings_t::save() const {
     gconf_client_set_string(client, key.c_str(), cur->name.c_str(), O2G_NULLPTR);
     key = keybase + "wms/path" + nbuf;
     gconf_client_set_string(client, key.c_str(), cur->path.c_str(), O2G_NULLPTR);
-
-    count++;
   }
 
-  gconf_client_set_int(client, "/apps/" PACKAGE "/wms/count", count, O2G_NULLPTR);
+  gconf_client_set_int(client, "/apps/" PACKAGE "/wms/count", wms_server.size(), O2G_NULLPTR);
 
   g_object_unref(client);
 }
@@ -259,7 +255,6 @@ settings_t::settings_t()
   , server(O2G_NULLPTR)
   , username(O2G_NULLPTR)
   , password(O2G_NULLPTR)
-  , wms_server(O2G_NULLPTR)
   , style(O2G_NULLPTR)
   , track_path(O2G_NULLPTR)
   , enable_gps(FALSE)
@@ -291,7 +286,7 @@ settings_t::settings_t()
 
 settings_t::~settings_t()
 {
-  wms_servers_free(wms_server);
+  std::for_each(wms_server.begin(), wms_server.end(), default_delete<wms_server_t>());
 
   const std::map<const char *, char **>::const_iterator sitEnd = store_str.end();
   for(std::map<const char *, char **>::const_iterator it = store_str.begin();

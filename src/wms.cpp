@@ -416,6 +416,14 @@ void requestable_layers_functor::operator()(const wms_layer_t* layer)
                                     c_layer));
 }
 
+struct find_wms_functor {
+  const char *name;
+  find_wms_functor(const char *n) : name(n) {}
+  bool operator()(const wms_server_t *srv) {
+    return srv->name == name;
+  }
+};
+
 enum {
   WMS_SERVER_COL_NAME = 0,
   WMS_SERVER_COL_DATA,
@@ -528,12 +536,14 @@ static void on_server_remove(GtkWidget *, wms_server_context_t *context) {
 
     /* de-chain */
     printf("de-chaining server %s\n", server->name.c_str());
-    wms_server_t **prev = &context->appdata->settings->wms_server;
-    while(*prev != server) prev = &((*prev)->next);
-    *prev = server->next;
+    std::vector<wms_server_t *> &servers = context->appdata->settings->wms_server;
+    const std::vector<wms_server_t *>::iterator itEnd = servers.end();
+    std::vector<wms_server_t *>::iterator it = std::find(servers.begin(), itEnd, server);
+    g_assert(it != itEnd);
 
     /* free tag itself */
-    delete server;
+    delete *it;
+    servers.erase(it);
 
     /* and remove from store */
     gtk_list_store_remove(GTK_LIST_STORE(model), &iter);
@@ -547,18 +557,13 @@ static void callback_modified_name(GtkWidget *widget, gpointer data) {
 
   const gchar *name = gtk_entry_get_text(GTK_ENTRY(widget));
 
-  /* name must not contain some special chars */
-  gboolean ok = TRUE;
-
   /* search all entries except the last (which is the one we are editing) */
-  wms_server_t *server = settings->wms_server;
-  while(server && server->next) {
-    if(strcasecmp(server->name.c_str(), (char*)name) == 0) {
-      ok = FALSE;
-      break;
-    }
-    server = server->next;
-  }
+  std::vector<wms_server_t *> &servers = settings->wms_server;
+  const std::vector<wms_server_t *>::iterator itEnd = servers.end() - 1;
+  std::vector<wms_server_t *>::iterator it = std::find_if(servers.begin(), itEnd,
+                                                          find_wms_functor(name));
+
+  gboolean ok = it == itEnd ? TRUE : FALSE;
 
   GtkWidget *toplevel = gtk_widget_get_toplevel(widget);
   /* toplevel is a dialog only of dialog has been realized */
@@ -674,7 +679,7 @@ static void on_server_add(wms_server_context_t *context) {
   newserver->name   = "<service name>";
   // in case the project has a server set, but the global list is empty,
   // fill the data of the project server
-  if(context->appdata->settings->wms_server == O2G_NULLPTR &&
+  if(context->appdata->settings->wms_server.empty() &&
      !context->appdata->project->wms_server.empty()) {
     newserver->server = context->appdata->project->wms_server;
     newserver->path   = context->appdata->project->wms_path;
@@ -690,10 +695,7 @@ static void on_server_add(wms_server_context_t *context) {
     delete newserver;
   } else {
     /* attach a new server item to the chain */
-    wms_server_t **prev = &context->appdata->settings->wms_server;
-    while(*prev)
-      prev = &(*prev)->next;
-    *prev = newserver;
+    context->appdata->settings->wms_server.push_back(newserver);
 
     GtkTreeIter iter = store_fill_functor(context->store)(newserver);
 
@@ -721,10 +723,8 @@ static GtkWidget *wms_server_widget(wms_server_context_t *context) {
 
   list_set_store(context->list, context->store);
 
-  store_fill_functor fc(context->store);
-  for(const wms_server_t *wms_server = context->appdata->settings->wms_server;
-      wms_server; wms_server = wms_server->next)
-    fc(wms_server);
+  const std::vector<wms_server_t *> &servers = context->appdata->settings->wms_server;
+  std::for_each(servers.begin(), servers.end(), store_fill_functor(context->store));
 
   g_object_unref(context->store);
 
@@ -1258,31 +1258,23 @@ void wms_remove(appdata_t *appdata) {
 }
 
 static const struct server_preset_s {
-  const gchar *name, *server, *path;
+  const char *name, *server, *path;
 } default_servers[] = {
   { "Open Geospatial Consortium Web Services", "http://ows.terrestris.de", "/osm/service?" },
   /* add more servers here ... */
   { O2G_NULLPTR, O2G_NULLPTR, O2G_NULLPTR }
 };
 
-wms_server_t *wms_server_get_default(void) {
-  wms_server_t *server = O2G_NULLPTR, **cur = &server;
+std::vector<wms_server_t *> wms_server_get_default(void) {
+  std::vector<wms_server_t *> servers;
 
   for(const server_preset_s *preset = default_servers; preset->name; preset++) {
-    *cur = new wms_server_t();
-    (*cur)->name = preset->name;
-    (*cur)->server = preset->server;
-    (*cur)->path = preset->path;
-    cur = &(*cur)->next;
+    wms_server_t *cur = new wms_server_t();
+    cur->name = preset->name;
+    cur->server = preset->server;
+    cur->path = preset->path;
+    servers.push_back(cur);
   }
 
-  return server;
-}
-
-void wms_servers_free(wms_server_t *wms_server) {
-  while(wms_server) {
-    wms_server_t *next = wms_server->next;
-    delete wms_server;
-    wms_server = next;
-  }
+  return servers;
 }
