@@ -778,8 +778,8 @@ static GtkWidget *wms_server_widget(wms_server_context_t *context) {
   return context->list;
 }
 
-static gboolean wms_server_dialog(appdata_t *appdata, wms_t *wms) {
-  gboolean ok = FALSE;
+static bool wms_server_dialog(appdata_t *appdata, wms_t *wms) {
+  bool ok = false;
 
   wms_server_context_t context(appdata, wms,
     misc_dialog_new(MISC_DIALOG_MEDIUM, _("WMS Server Selection"),
@@ -835,10 +835,9 @@ static gboolean wms_server_dialog(appdata_t *appdata, wms_t *wms) {
       printf("WMS: using %s\n", server->name);
       wms->server = server->server;
       wms->path = server->path;
-      ok = TRUE;
+      ok = true;
     } else {
-      if(!wms->server.empty() && !wms->path.empty())
-	ok = TRUE;
+      ok = !wms->server.empty() && !wms->path.empty();
     }
   }
 
@@ -1063,11 +1062,8 @@ void wms_import(appdata_t *appdata) {
     return;
 
   /* ------------- copy values back into project ---------------- */
-  if(wms.server != appdata->project->wms_server)
-    appdata->project->wms_server = wms.server;
-
-  if(wms.path != appdata->project->wms_path)
-    appdata->project->wms_path = wms.path;
+  appdata->project->wms_server = wms.server;
+  appdata->project->wms_path = wms.path;
 
   /* ----------- request capabilities -------------- */
   /* nothing has to be done if the last character of path is already a valid URL delimiter */
