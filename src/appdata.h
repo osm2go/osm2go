@@ -94,7 +94,6 @@ typedef struct appdata_t {
   GtkWidget *btn_zoom_in, *btn_zoom_out, *btn_detail_popup;
 
   struct statusbar_t *statusbar;
-  struct settings_t *settings;
   struct project_t *project;
   struct iconbar_t *iconbar;
   struct icon_t *icon;
@@ -135,6 +134,7 @@ typedef struct appdata_t {
 #ifdef __cplusplus
   struct map_t *map;
   struct osm_t *osm;
+  class settings_t *settings;
   class gps_state_t *gps_state;
 
   appdata_t();

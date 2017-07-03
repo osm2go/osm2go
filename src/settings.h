@@ -21,6 +21,7 @@
 #define SETTINGS_H
 
 #include <glib.h>
+#include <map>
 
 /* define this for a vertical UI layout */
 #undef PORTRAIT
@@ -37,7 +38,10 @@
 
 #define DEFAULT_STYLE "mapnik"
 
-struct settings_t {
+class settings_t {
+  settings_t();
+public:
+  ~settings_t();
 
   /* never changed */
   char *base_path;
@@ -63,10 +67,12 @@ struct settings_t {
   /* and the demo was loaded */
   gboolean first_run_demo;
 
-};
+  static settings_t *load();
+  void save() const;
 
-settings_t *settings_load(void);
-void settings_save(settings_t *settings);
-void settings_free(settings_t *settings);
+private:
+  std::map<const char *, char **> store_str;
+  std::map<const char *, gboolean *> store_bool;
+};
 
 #endif // SETTINGS_H

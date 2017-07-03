@@ -23,6 +23,7 @@
 #include "project.h"
 #include "wms.h"
 
+#include <algorithm>
 #include <cstring>
 #include <gconf/gconf.h>
 #include <gconf/gconf-client.h>
@@ -34,48 +35,51 @@
 
 #include <osm2go_cpp.h>
 
-struct store_t {
-  const char *key;
-  ptrdiff_t offset;
-};
-
-#define ST_ENTRY(a) { #a, reinterpret_cast<ptrdiff_t>(&(reinterpret_cast<settings_t *>(0)->a)) }
-
-static store_t store_str[] = {
-  /* not user configurable */
-  ST_ENTRY(base_path),
-
-  /* from project.c */
-  ST_ENTRY(project),
-
-  /* from osm_api.c */
-  ST_ENTRY(server),
-  ST_ENTRY(username),
-  ST_ENTRY(password),
-
-  /* wms servers are saved seperately */
-
-  /* style */
-  ST_ENTRY(style),
-
-  /* main */
-  ST_ENTRY(track_path),
-
-  { O2G_NULLPTR, -1 }
-};
-
-static store_t store_bool[] = {
-  /* main */
-  ST_ENTRY(enable_gps),
-  ST_ENTRY(follow_gps),
-
-  { O2G_NULLPTR, -1 }
-};
+#define ST_ENTRY(map, a) map[#a] = &a
 
 static const std::string keybase = "/apps/" PACKAGE "/";
 
-settings_t *settings_load(void) {
-  settings_t *settings = g_new0(settings_t,1);
+template<typename T> struct load_functor {
+  std::string &key; ///< reference to avoid most reallocations
+  GConfClient * const client;
+  const GConfValueType type;
+  load_functor(std::string &k, GConfClient *c, GConfValueType t)
+    : key(k), client(c), type(t) {}
+  void operator()(const std::pair<const char *, T *> &p);
+  T get(GConfValue *value);
+};
+
+template<typename T> void load_functor<T>::operator()(const std::pair<const char *, T *> &p)
+{
+  key = keybase + p.first;
+
+  /* check if key is present */
+  GConfValue *value = gconf_client_get(client, key.c_str(), O2G_NULLPTR);
+
+  if(!value)
+    return;
+
+  if(G_UNLIKELY(value->type != type)) {
+    printf("invalid type found for key '%s': expected %u, got %u\n",
+           p.first, type, value->type);
+  } else {
+    *(p.second) = get(value);
+  }
+  gconf_value_free(value);
+}
+
+template<> char *load_functor<char *>::get(GConfValue *value)
+{
+  return g_strdup(gconf_value_get_string(value));
+}
+
+template<> gboolean load_functor<gboolean>::get(GConfValue *value)
+{
+  return gconf_value_get_bool(value);
+}
+
+settings_t *settings_t::load() {
+  settings_t *settings = new settings_t();
   const char *api06https = "https://api.openstreetmap.org/api/0.6";
 
   /* ------ overwrite with settings from gconf if present ------- */
@@ -84,44 +88,11 @@ settings_t *settings_load(void) {
   if(G_LIKELY(client != O2G_NULLPTR)) {
     /* restore everything listed in the store tables */
     std::string key;
-    for(const store_t *st = store_str; st->key; st++) {
-      char **ptr = reinterpret_cast<char **>(reinterpret_cast<uintptr_t>(settings) + st->offset);
-      key = keybase + st->key;
 
-      /* check if key is present */
-      GConfValue *value = gconf_client_get(client, key.c_str(), O2G_NULLPTR);
-
-      if(!value)
-        continue;
-
-      if(value->type != GCONF_VALUE_STRING) {
-        printf("invalid type found for key '%s': expected %u, got %u\n",
-               st->key, GCONF_VALUE_STRING, value->type);
-      } else {
-        g_assert_null(*ptr);
-        *ptr = g_strdup(gconf_value_get_string(value));
-      }
-      gconf_value_free(value);
-    }
-
-    for(const store_t *st = store_bool; st->key; st++) {
-      gboolean *ptr = reinterpret_cast<gboolean *>(reinterpret_cast<uintptr_t>(settings) + st->offset);
-      key = keybase + st->key;
-
-      /* check if key is present */
-      GConfValue *value = gconf_client_get(client, key.c_str(), O2G_NULLPTR);
-
-      if(!value)
-        continue;
-
-      if(value->type != GCONF_VALUE_BOOL) {
-        printf("invalid type found for key '%s': expected %u, got %u\n",
-               st->key, GCONF_VALUE_BOOL, value->type);
-      } else {
-        *ptr = gconf_value_get_bool(value);
-      }
-      gconf_value_free(value);
-    }
+    std::for_each(settings->store_str.begin(), settings->store_str.end(),
+                  load_functor<char *>(key, client, GCONF_VALUE_STRING));
+    std::for_each(settings->store_bool.begin(), settings->store_bool.end(),
+                  load_functor<gboolean>(key, client, GCONF_VALUE_BOOL));
 
     /* adjust default server stored in settings if required */
     if(G_UNLIKELY(settings->server && strstr(settings->server, "0.5") != O2G_NULLPTR)) {
@@ -234,7 +205,7 @@ settings_t *settings_load(void) {
   return settings;
 }
 
-void settings_save(settings_t *settings) {
+void settings_t::save() const {
 
   GConfClient *client = gconf_client_get_default();
   if(!client) return;
@@ -242,26 +213,28 @@ void settings_save(settings_t *settings) {
   std::string key;
 
   /* store everything listed in the store tables */
-  for(const store_t *st = store_str; st->key; st++) {
-    char **ptr = reinterpret_cast<char **>(reinterpret_cast<uintptr_t>(settings) + st->offset);
-    key = keybase + st->key;
+  const std::map<const char *, char **>::const_iterator sitEnd = store_str.end();
+  for(std::map<const char *, char **>::const_iterator it = store_str.begin();
+      it != sitEnd; it++) {
+    key = keybase + it->first;
 
-    if(*ptr)
-      gconf_client_set_string(client, key.c_str(), (char*)(*ptr), O2G_NULLPTR);
+    if(*(it->second))
+      gconf_client_set_string(client, key.c_str(), *(it->second), O2G_NULLPTR);
     else
       gconf_client_unset(client, key.c_str(), O2G_NULLPTR);
   }
 
-  for(const store_t *st = store_bool; st->key; st++) {
-    gboolean *ptr = reinterpret_cast<gboolean *>(reinterpret_cast<uintptr_t>(settings) + st->offset);
-    key = keybase + st->key;
+  const std::map<const char *, gboolean *>::const_iterator bitEnd = store_bool.end();
+  for(std::map<const char *, gboolean *>::const_iterator it = store_bool.begin();
+      it != bitEnd; it++) {
+    key = keybase + it->first;
 
-    gconf_client_set_bool(client, key.c_str(), *ptr, O2G_NULLPTR);
+    gconf_client_set_bool(client, key.c_str(), *(it->second), O2G_NULLPTR);
   }
 
   /* store list of wms servers */
   unsigned int count = 0;
-  for(wms_server_t *cur = settings->wms_server; cur; cur = cur->next) {
+  for(wms_server_t *cur = wms_server; cur; cur = cur->next) {
     char nbuf[16];
     snprintf(nbuf, sizeof(nbuf), "%u", count);
 
@@ -280,14 +253,48 @@ void settings_save(settings_t *settings) {
   g_object_unref(client);
 }
 
-void settings_free(settings_t *settings) {
-  wms_servers_free(settings->wms_server);
+settings_t::settings_t()
+  : base_path(O2G_NULLPTR)
+  , project(O2G_NULLPTR)
+  , server(O2G_NULLPTR)
+  , username(O2G_NULLPTR)
+  , password(O2G_NULLPTR)
+  , wms_server(O2G_NULLPTR)
+  , style(O2G_NULLPTR)
+  , track_path(O2G_NULLPTR)
+  , enable_gps(FALSE)
+  , follow_gps(FALSE)
+  , first_run_demo(FALSE)
+{
+  /* not user configurable */
+  ST_ENTRY(store_str, base_path);
 
-  for(const store_t *st = store_str; st->key; st++) {
-    char **ptr = reinterpret_cast<char **>(reinterpret_cast<uintptr_t>(settings) + st->offset);
+  /* from project.c */
+  ST_ENTRY(store_str, project);
 
-    g_free(*ptr);
-  }
+  /* from osm_api.c */
+  ST_ENTRY(store_str, server);
+  ST_ENTRY(store_str, username);
+  ST_ENTRY(store_str, password);
 
-  g_free(settings);
+  /* wms servers are saved seperately */
+
+  /* style */
+  ST_ENTRY(store_str, style);
+
+  /* main */
+  ST_ENTRY(store_str, track_path);
+
+  ST_ENTRY(store_bool, enable_gps);
+  ST_ENTRY(store_bool, follow_gps);
+}
+
+settings_t::~settings_t()
+{
+  wms_servers_free(wms_server);
+
+  const std::map<const char *, char **>::const_iterator sitEnd = store_str.end();
+  for(std::map<const char *, char **>::const_iterator it = store_str.begin();
+      it != sitEnd; it++)
+    g_free(*(it->second));
 }

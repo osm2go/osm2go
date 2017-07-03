@@ -1121,7 +1121,7 @@ appdata_t::~appdata_t() {
   g_free(accels_file);
 #endif
 
-  settings_save(settings);
+  settings->save();
 
 #ifdef USE_HILDON
   if(osso_context)
@@ -1155,9 +1155,7 @@ appdata_t::~appdata_t() {
   icon_free_all(icon);
 
   delete gps_state;
-
-  settings_free(settings);
-
+  delete settings;
   delete statusbar;
   delete iconbar;
   delete project;
@@ -1280,7 +1278,7 @@ int main(int argc, char *argv[]) {
   misc_init();
 
   /* user specific init */
-  appdata.settings = settings_load();
+  appdata.settings = settings_t::load();
 
   appdata.gps_state = gps_state_t::create();
 

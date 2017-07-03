@@ -25,7 +25,7 @@
 struct appdata_t;
 struct osm_t;
 struct project_t;
-struct settings_t;
+class settings_t;
 
 bool osm_download(GtkWidget *parent, settings_t *settings, project_t *project);
 void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project);
