@@ -433,6 +433,12 @@ struct wms_server_context_t {
   GtkWidget * const dialog, *list;
   GtkListStore *store;
   GtkWidget *server_label, *path_label;
+
+  /**
+   * @brief select the server referenced in wms in the treeview
+   * @returns the matching entry in the settings list
+   */
+  const wms_server_t *select_server() const;
 };
 
 static wms_server_t *get_selection(GtkTreeSelection *selection) {
@@ -449,36 +455,39 @@ static wms_server_t *get_selection(GtkTreeSelection *selection) {
   return O2G_NULLPTR;
 }
 
-static void wms_server_selected(wms_server_context_t *context,
-				wms_server_t *selected) {
+const wms_server_t *wms_server_context_t::select_server() const
+{
+  if(wms->server.empty() || wms->path.empty())
+    return O2G_NULLPTR;
 
-  if(!selected && !context->wms->server.empty() && !context->wms->path.empty()) {
-    /* if the projects settings match a list entry, then select this */
+  /* if the projects settings match a list entry, then select this */
 
-    GtkTreeSelection *selection = list_get_selection(context->list);
+  GtkTreeSelection *selection = list_get_selection(list);
 
-    /* walk the entire store to get all values */
-    wms_server_t *server = O2G_NULLPTR;
-    GtkTreeIter iter;
+  /* walk the entire store to get all values */
+  wms_server_t *server = O2G_NULLPTR;
+  GtkTreeIter iter;
 
-    bool valid =
-      (gtk_tree_model_get_iter_first(GTK_TREE_MODEL(context->store), &iter) == TRUE);
+  bool valid = (gtk_tree_model_get_iter_first(GTK_TREE_MODEL(store), &iter) == TRUE);
 
-    while(valid && !selected) {
-      gtk_tree_model_get(GTK_TREE_MODEL(context->store), &iter,
-			 WMS_SERVER_COL_DATA, &server, -1);
-      g_assert_nonnull(server);
+  while(valid) {
+    gtk_tree_model_get(GTK_TREE_MODEL(store), &iter, WMS_SERVER_COL_DATA, &server, -1);
+    g_assert_nonnull(server);
 
-      if(context->wms->server == server->server &&
-         context->wms->path == server->path) {
-	gtk_tree_selection_select_iter(selection, &iter);
-	selected = server;
-      }
-
-      valid = (gtk_tree_model_iter_next(GTK_TREE_MODEL(context->store), &iter) == TRUE);
+    if(wms->server == server->server &&
+       wms->path == server->path) {
+       gtk_tree_selection_select_iter(selection, &iter);
+       return server;
     }
+
+    valid = (gtk_tree_model_iter_next(GTK_TREE_MODEL(store), &iter) == TRUE);
   }
 
+  return O2G_NULLPTR;
+}
+
+static void wms_server_selected(wms_server_context_t *context,
+                                const wms_server_t *selected) {
   list_button_enable(context->list, LIST_BUTTON_REMOVE, selected != O2G_NULLPTR);
   list_button_enable(context->list, LIST_BUTTON_EDIT, selected != O2G_NULLPTR);
 
@@ -532,7 +541,7 @@ static void on_server_remove(GtkWidget *, wms_server_context_t *context) {
     gtk_list_store_remove(GTK_LIST_STORE(model), &iter);
   }
 
-  wms_server_selected(context, O2G_NULLPTR);
+  wms_server_selected(context, context->select_server());
 }
 
 static void callback_modified_name(GtkWidget *widget, gpointer data) {
@@ -774,7 +783,7 @@ static bool wms_server_dialog(appdata_t *appdata, wms_t *wms) {
   gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context.dialog)->vbox),
 		     table, FALSE, FALSE, 0);
 
-  wms_server_selected(&context, O2G_NULLPTR);
+  wms_server_selected(&context, context.select_server());
 
   gtk_widget_show_all(context.dialog);
 
