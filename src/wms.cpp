@@ -31,6 +31,7 @@
 #include <cstring>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
+#include <map>
 #include <strings.h>
 #include <vector>
 
@@ -38,10 +39,35 @@
 #error "Tree not enabled in libxml"
 #endif
 
-#define WMS_FORMAT_JPG  (1<<0)
-#define WMS_FORMAT_JPEG (1<<1)
-#define WMS_FORMAT_PNG  (1<<2)
-#define WMS_FORMAT_GIF  (1<<3)
+enum WmsImageFormat {
+  WMS_FORMAT_JPG = (1<<0),
+  WMS_FORMAT_JPEG = (1<<1),
+  WMS_FORMAT_PNG = (1<<2),
+  WMS_FORMAT_GIF = (1<<3)
+};
+
+struct charcmp {
+  bool operator()(const char *a, const char *b) const {
+    return g_strcmp0(a, b) < 0;
+  }
+};
+
+typedef std::map<const char *, WmsImageFormat, charcmp> FormatMap;
+static FormatMap ImageFormats;
+static std::map<WmsImageFormat, const char *> ImageFormatExtensions;
+
+static void initImageFormats()
+{
+  ImageFormats["image/png"] = WMS_FORMAT_PNG;
+  ImageFormats["image/gif"] = WMS_FORMAT_GIF;
+  ImageFormats["image/jpg"] = WMS_FORMAT_JPG;
+  ImageFormats["image/jpeg"] = WMS_FORMAT_JPEG;
+
+  ImageFormatExtensions[WMS_FORMAT_PNG] = "png";
+  ImageFormatExtensions[WMS_FORMAT_GIF] = "gif";
+  ImageFormatExtensions[WMS_FORMAT_JPG] = "jpg";
+  ImageFormatExtensions[WMS_FORMAT_JPEG] = "jpg";
+}
 
 struct wms_llbbox_t {
   wms_llbbox_t() : valid(FALSE) {}
@@ -102,10 +128,6 @@ struct wms_t {
 
   wms_cap_t cap;
 };
-
-static bool xmlTextIs(const xmlChar *nstr, const char *str) {
-  return (g_strcmp0(str, reinterpret_cast<const char *>(nstr)) == 0);
-}
 
 static gboolean wms_bbox_is_valid(pos_t *min, pos_t *max) {
   /* all four coordinates are valid? */
@@ -192,14 +214,11 @@ static wms_getmap_t wms_cap_parse_getmap(xmlDocPtr doc, xmlNode *a_node) {
       if(strcasecmp((char*)cur_node->name, "Format") == 0) {
         xmlChar *nstr = xmlNodeListGetString(doc, cur_node->children, 1);
 
-        if(xmlTextIs(nstr, "image/png"))
-	  wms_getmap.format |= WMS_FORMAT_PNG;
-        else if(xmlTextIs(nstr, "image/gif"))
-	  wms_getmap.format |= WMS_FORMAT_GIF;
-        else if(xmlTextIs(nstr, "image/jpg"))
-	  wms_getmap.format |= WMS_FORMAT_JPG;
-        else if(xmlTextIs(nstr, "image/jpeg"))
-	  wms_getmap.format |= WMS_FORMAT_JPEG;
+        const FormatMap::const_iterator it =
+              ImageFormats.find(reinterpret_cast<char *>(nstr));
+        if(it != ImageFormats.end())
+          wms_getmap.format |= it->second;
+
         xmlFree(nstr);
       } else
 	printf("found unhandled "
@@ -993,6 +1012,14 @@ static bool layer_is_usable(const wms_layer_t *layer) {
   return layer->is_usable();
 }
 
+struct find_format_reverse_functor {
+  const unsigned int mask;
+  find_format_reverse_functor(unsigned int m) : mask(m) {}
+  bool operator()(const std::pair<const char *, WmsImageFormat> &p) {
+    return p.second & mask;
+  }
+};
+
 void wms_import(appdata_t *appdata) {
   if(!appdata->project) {
     errorf(GTK_WIDGET(appdata->window),
@@ -1042,6 +1069,8 @@ void wms_import(appdata_t *appdata) {
   net_io_download_mem(GTK_WIDGET(appdata->window), url, &cap, caplen);
 
   /* ----------- parse capabilities -------------- */
+  if(G_UNLIKELY(ImageFormats.empty()))
+    initImageFormats();
 
   bool parse_success = false;
   if(!cap) {
@@ -1158,25 +1187,23 @@ void wms_import(appdata_t *appdata) {
 		  appdata->project->max.lat);
 
   /* find preferred supported video format */
-  gint format = 0;
-  while(!(wms.cap.request.getmap.format & (1<<format)))
-    format++;
+  const FormatMap::const_iterator itEnd = ImageFormats.end();
+  FormatMap::const_iterator it = std::find_if(cbegin(ImageFormats), itEnd,
+                                              find_format_reverse_functor(wms.cap.request.getmap.format));
+  g_assert(it != itEnd);
 
-  const char *formats[] = { "image/jpg", "image/jpeg",
-			    "image/png", "image/gif" };
   char buf[64];
   sprintf(buf, "&WIDTH=%d&HEIGHT=%d&FORMAT=", wms.width, wms.height);
 
   /* build complete url */
   const char *parts[] = { "&SRS=", srs, "&BBOX=", minlon, ",", minlat, ",",
-                          maxlon, ",", maxlat, buf, formats[format], "&reaspect=false",
+                          maxlon, ",", maxlat, buf, it->first, "&reaspect=false",
                           O2G_NULLPTR };
   for(int i = 0; parts[i]; i++)
     url += parts[i];
 
-  const char *exts[] = { "jpg", "jpg", "png", "gif" };
   const std::string filename = std::string(appdata->project->path) + "wms." +
-                               exts[format];
+                               ImageFormatExtensions[it->second];
 
   /* remove any existing image before */
   wms_remove(appdata);
@@ -1197,17 +1224,20 @@ void wms_import(appdata_t *appdata) {
   gtk_widget_set_sensitive(appdata->menuitems[MENU_ITEM_WMS_ADJUST], TRUE);
 }
 
-static const char *wms_exts[] = { "png", "gif", "jpg", O2G_NULLPTR };
-
 /* try to load an existing image into map */
 void wms_load(appdata_t *appdata) {
-  int i;
+  if(G_UNLIKELY(ImageFormatExtensions.empty()))
+    initImageFormats();
+
+  const std::map<WmsImageFormat, const char *>::const_iterator itEnd = ImageFormatExtensions.end();
+  std::map<WmsImageFormat, const char *>::const_iterator it = ImageFormatExtensions.begin();
+
   std::string filename = appdata->project->path + "/wms.";
   const std::string::size_type extpos = filename.size();
 
-  for(i = 0; wms_exts[i]; i++) {
+  for(; it != itEnd; it++) {
     filename.erase(extpos);
-    filename += wms_exts[i];
+    filename += it->second;
 
     if(g_file_test(filename.c_str(), G_FILE_TEST_EXISTS)) {
       appdata->map->bg.offset.x = appdata->project->wms_offset.x;
@@ -1230,13 +1260,18 @@ void wms_load(appdata_t *appdata) {
 }
 
 void wms_remove_file(project_t *project) {
-  int i;
+  if(G_UNLIKELY(ImageFormatExtensions.empty()))
+    initImageFormats();
+
+  const std::map<WmsImageFormat, const char *>::const_iterator itEnd = ImageFormatExtensions.end();
+  std::map<WmsImageFormat, const char *>::const_iterator it = ImageFormatExtensions.begin();
+
   std::string filename = project->path + "/wms.";
   const std::string::size_type extpos = filename.size();
 
-  for(i = 0; wms_exts[i]; i++) {
+  for(; it != itEnd; it++) {
     filename.erase(extpos);
-    filename += wms_exts[i];
+    filename += it->second;
 
     if(g_file_test(filename.c_str(), G_FILE_TEST_EXISTS))
       g_remove(filename.c_str());
