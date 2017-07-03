@@ -442,16 +442,16 @@ struct wms_server_context_t {
   GtkWidget *server_label, *path_label;
 };
 
-static wms_server_t *get_selection(GtkWidget *list) {
-  GtkTreeSelection *selection;
+static const wms_server_t *get_selection(GtkWidget *list) {
+  GtkTreeSelection *selection = list_get_selection(list);
   GtkTreeModel     *model;
   GtkTreeIter       iter;
 
-  selection = list_get_selection(list);
   if(gtk_tree_selection_get_selected(selection, &model, &iter)) {
     wms_server_t *wms_server;
     gtk_tree_model_get(model, &iter, WMS_SERVER_COL_DATA, &wms_server, -1);
-    return(wms_server);
+    g_assert_nonnull(wms_server);
+    return wms_server;
   }
 
   return O2G_NULLPTR;
@@ -819,7 +819,7 @@ static bool wms_server_dialog(appdata_t *appdata, wms_t *wms) {
   gtk_widget_show_all(context.dialog);
 
   if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(context.dialog))) {
-    wms_server_t *server = get_selection(context.list);
+    const wms_server_t *server = get_selection(context.list);
     if(server) {
       /* fetch parameters from selected entry */
       printf("WMS: using %s\n", server->name);
