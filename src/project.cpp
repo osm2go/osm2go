@@ -483,7 +483,7 @@ static bool project_delete(select_context_t *context, project_t *project) {
   GDir *dir = g_dir_open(project->path.c_str(), 0, O2G_NULLPTR);
   const gchar *name;
   std::string fullname;
-  fullname.resize(project->path.size() + project->name.size() + 8); // long enough for all usual project filenames
+  fullname.reserve(project->path.size() + project->name.size() + 8); // long enough for all usual project filenames
   while ((name = g_dir_read_name(dir))) {
     fullname = project->path + name;
     g_remove(fullname.c_str());

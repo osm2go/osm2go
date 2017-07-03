@@ -1070,7 +1070,7 @@ void wms_import(appdata_t *appdata) {
                             (wms.path.find('?') != std::string::npos ? "&" : "?");
 
   std::string url;
-  url.resize(256); // make enough room that most URLs will need no reallocation
+  url.reserve(256); // make enough room that most URLs will need no reallocation
   url = wms.server + wms.path + append_char +
                                  "SERVICE=wms"
                                  "&VERSION=1.1.1"
@@ -1237,14 +1237,11 @@ void wms_import(appdata_t *appdata) {
 }
 
 static const char *wms_exts[] = { "png", "gif", "jpg", O2G_NULLPTR };
-/* this must be the longest one */
-#define DUMMYEXT wms_exts[0]
 
 /* try to load an existing image into map */
 void wms_load(appdata_t *appdata) {
   int i;
   std::string filename = appdata->project->path + "/wms.";
-  filename.resize(filename.size() + strlen(DUMMYEXT));
   const std::string::size_type extpos = filename.size();
 
   for(i = 0; wms_exts[i]; i++) {
@@ -1274,7 +1271,6 @@ void wms_load(appdata_t *appdata) {
 void wms_remove_file(project_t *project) {
   int i;
   std::string filename = project->path + "/wms.";
-  filename.resize(filename.size() + strlen(DUMMYEXT));
   const std::string::size_type extpos = filename.size();
 
   for(i = 0; wms_exts[i]; i++) {
