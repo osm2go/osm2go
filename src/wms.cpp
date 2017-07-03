@@ -470,7 +470,7 @@ static void wms_server_selected(wms_server_context_t *context,
     GtkTreeIter iter;
 
     bool valid =
-      (gtk_tree_model_get_iter_first(GTK_TREE_MODEL(context->store), &iter) != TRUE);
+      (gtk_tree_model_get_iter_first(GTK_TREE_MODEL(context->store), &iter) == TRUE);
 
     while(valid && !selected) {
       gtk_tree_model_get(GTK_TREE_MODEL(context->store), &iter,
@@ -483,7 +483,7 @@ static void wms_server_selected(wms_server_context_t *context,
 	selected = server;
       }
 
-      valid = (gtk_tree_model_iter_next(GTK_TREE_MODEL(context->store), &iter) != TRUE);
+      valid = (gtk_tree_model_iter_next(GTK_TREE_MODEL(context->store), &iter) == TRUE);
     }
   }
 
