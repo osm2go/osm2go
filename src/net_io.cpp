@@ -192,18 +192,12 @@ void request_free::operator()(net_io_request_t *request)
   delete request;
 }
 
-#ifdef CURLOPT_XFERINFOFUNCTION
 static int curl_progress_func(void *req,
-			    curl_off_t t, /* dltotal */ curl_off_t d, /* dlnow */
+			    curl_off_t dltotal, curl_off_t dlnow,
                             curl_off_t, curl_off_t) {
-#else
-static int curl_progress_func(void *req,
-			    double t, /* dltotal */ double d, /* dlnow */
-                            double, double) {
-#endif
   net_io_request_t *request = static_cast<net_io_request_t *>(req);
-  request->download_cur = static_cast<curl_off_t>(d);
-  request->download_end = static_cast<curl_off_t>(t);
+  request->download_cur = dlnow;
+  request->download_end = dltotal;
   return 0;
 }
 
@@ -249,11 +243,7 @@ static void *worker_thread(void *ptr) {
 
       /* setup progress notification */
       curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
-#ifdef CURLOPT_XFERINFOFUNCTION
       curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, curl_progress_func);
-#else
-      curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, curl_progress_func);
-#endif
       curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, request.get());
 
       curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, request->buffer);

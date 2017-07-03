@@ -7,7 +7,7 @@ include(CMakePushCheckState)
 include(GNUInstallDirs)
 include(WriteCompilerDetectionHeader)
 
-find_package(CURL 7.19 REQUIRED)
+find_package(CURL 7.32 REQUIRED)
 find_package(OpenSSL 1 REQUIRED)
 find_package(LibXml2 REQUIRED)
 find_package(PkgConfig REQUIRED)
