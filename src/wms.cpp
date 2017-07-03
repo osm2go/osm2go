@@ -502,18 +502,8 @@ static void wms_server_selected(wms_server_context_t *context,
     gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog),
 	      GTK_RESPONSE_ACCEPT, !context->wms->server.empty() && !context->wms->path.empty());
 
-    if(!context->wms->server.empty())
-      gtk_label_set_text(GTK_LABEL(context->server_label),
-			 context->wms->server.c_str());
-    else
-      gtk_label_set_text(GTK_LABEL(context->server_label),
-			 "");
-    if(!context->wms->path.empty())
-      gtk_label_set_text(GTK_LABEL(context->path_label),
-			 context->wms->path.c_str());
-    else
-      gtk_label_set_text(GTK_LABEL(context->path_label),
-			 "");
+    gtk_label_set_text(GTK_LABEL(context->server_label), context->wms->server.c_str());
+    gtk_label_set_text(GTK_LABEL(context->path_label), context->wms->path.c_str());
   }
 }
 
