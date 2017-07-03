@@ -149,24 +149,23 @@ settings_t *settings_load(void) {
         snprintf(nbuf, sizeof(nbuf), "%i", i);
 
         key = keybase + "wms/server" + nbuf;
-        gchar *server = gconf_client_get_string(client, key.c_str(), O2G_NULLPTR);
+        GConfValue *server = gconf_client_get(client, key.c_str(), O2G_NULLPTR);
         key = keybase + "wms/name" + nbuf;
-        gchar *name = gconf_client_get_string(client, key.c_str(), O2G_NULLPTR);
+        GConfValue *name = gconf_client_get(client, key.c_str(), O2G_NULLPTR);
         key = keybase + "wms/path" + nbuf;
-        gchar *path = gconf_client_get_string(client, key.c_str(), O2G_NULLPTR);
+        GConfValue *path = gconf_client_get(client, key.c_str(), O2G_NULLPTR);
 
 	/* apply valid entry to list */
-	if(name && server && path) {
-	  *cur = g_new0(wms_server_t, 1);
-	  (*cur)->name = name;
-	  (*cur)->server = server;
-	  (*cur)->path = path;
+        if(G_LIKELY(name && server && path)) {
+          *cur = new wms_server_t();
+          (*cur)->name = gconf_value_get_string(name);
+          (*cur)->server = gconf_value_get_string(server);
+          (*cur)->path = gconf_value_get_string(path);
 	  cur = &(*cur)->next;
-	} else {
-	  g_free(name);
-	  g_free(server);
-	  g_free(path);
-	}
+        }
+        gconf_value_free(name);
+        gconf_value_free(server);
+        gconf_value_free(path);
       }
     } else {
       /* add default server(s) */
@@ -267,11 +266,11 @@ void settings_save(settings_t *settings) {
     snprintf(nbuf, sizeof(nbuf), "%u", count);
 
     key = keybase + "wms/server" + nbuf;
-    gconf_client_set_string(client, key.c_str(), cur->server, O2G_NULLPTR);
+    gconf_client_set_string(client, key.c_str(), cur->server.c_str(), O2G_NULLPTR);
     key = keybase + "wms/name" + nbuf;
-    gconf_client_set_string(client, key.c_str(), cur->name, O2G_NULLPTR);
+    gconf_client_set_string(client, key.c_str(), cur->name.c_str(), O2G_NULLPTR);
     key = keybase + "wms/path" + nbuf;
-    gconf_client_set_string(client, key.c_str(), cur->path, O2G_NULLPTR);
+    gconf_client_set_string(client, key.c_str(), cur->path.c_str(), O2G_NULLPTR);
 
     count++;
   }

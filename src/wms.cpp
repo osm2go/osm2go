@@ -103,13 +103,6 @@ struct wms_t {
   wms_cap_t cap;
 };
 
-static void wms_server_free(wms_server_t *wms_server) {
-  g_free(wms_server->name);
-  g_free(wms_server->server);
-  g_free(wms_server->path);
-  g_free(wms_server);
-}
-
 static gboolean xmlTextIs(xmlDocPtr doc, xmlNodePtr list, const char *str) {
   xmlChar *nstr = xmlNodeListGetString(doc, list, 1);
   if(!nstr) return FALSE;
@@ -496,8 +489,8 @@ static void wms_server_selected(wms_server_context_t *context,
     gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog),
 		      GTK_RESPONSE_ACCEPT, TRUE);
 
-    gtk_label_set_text(GTK_LABEL(context->server_label), selected->server);
-    gtk_label_set_text(GTK_LABEL(context->path_label), selected->path);
+    gtk_label_set_text(GTK_LABEL(context->server_label), selected->server.c_str());
+    gtk_label_set_text(GTK_LABEL(context->path_label), selected->path.c_str());
   } else {
     gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog),
 	      GTK_RESPONSE_ACCEPT, !context->wms->server.empty() && !context->wms->path.empty());
@@ -535,13 +528,13 @@ static void on_server_remove(GtkWidget *, wms_server_context_t *context) {
     g_assert_nonnull(server);
 
     /* de-chain */
-    printf("de-chaining server %s\n", server->name);
+    printf("de-chaining server %s\n", server->name.c_str());
     wms_server_t **prev = &context->appdata->settings->wms_server;
     while(*prev != server) prev = &((*prev)->next);
     *prev = server->next;
 
     /* free tag itself */
-    wms_server_free(server);
+    delete server;
 
     /* and remove from store */
     gtk_list_store_remove(GTK_LIST_STORE(model), &iter);
@@ -561,7 +554,7 @@ static void callback_modified_name(GtkWidget *widget, gpointer data) {
   /* search all entries except the last (which is the one we are editing) */
   wms_server_t *server = settings->wms_server;
   while(server && server->next) {
-    if(strcasecmp(server->name, (char*)name) == 0) {
+    if(strcasecmp(server->name.c_str(), (char*)name) == 0) {
       ok = FALSE;
       break;
     }
@@ -622,9 +615,9 @@ gboolean wms_server_edit(wms_server_context_t *context, gboolean edit_name,
   gtk_entry_set_activates_default(GTK_ENTRY(path), TRUE);
   HILDON_ENTRY_NO_AUTOCAP(path);
 
-  gtk_entry_set_text(GTK_ENTRY(name), wms_server->name);
-  gtk_entry_set_text(GTK_ENTRY(server), wms_server->server);
-  gtk_entry_set_text(GTK_ENTRY(path), wms_server->path);
+  gtk_entry_set_text(GTK_ENTRY(name), wms_server->name.c_str());
+  gtk_entry_set_text(GTK_ENTRY(server), wms_server->server.c_str());
+  gtk_entry_set_text(GTK_ENTRY(path), wms_server->path.c_str());
 
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), table);
 
@@ -638,22 +631,19 @@ gboolean wms_server_edit(wms_server_context_t *context, gboolean edit_name,
       selection = list_get_selection(context->list);
       gtk_tree_selection_get_selected(selection, &model, &iter);
       gtk_list_store_set(context->store, &iter,
-			 WMS_SERVER_COL_NAME, wms_server->name,
+                         WMS_SERVER_COL_NAME, wms_server->name.c_str(),
 			 -1);
 
-      g_free(wms_server->name);
-      wms_server->name = g_strdup(gtk_entry_get_text(GTK_ENTRY(name)));
+      wms_server->name = gtk_entry_get_text(GTK_ENTRY(name));
     }
 
-    g_free(wms_server->server);
-    wms_server->server = g_strdup(gtk_entry_get_text(GTK_ENTRY(server)));
-    g_free(wms_server->path);
-    wms_server->path = g_strdup(gtk_entry_get_text(GTK_ENTRY(path)));
-    printf("setting %s/%s\n", wms_server->server, wms_server->path);
+    wms_server->server = gtk_entry_get_text(GTK_ENTRY(server));
+    wms_server->path = gtk_entry_get_text(GTK_ENTRY(path));
+    printf("setting %s/%s\n", wms_server->server.c_str(), wms_server->path.c_str());
 
     /* set texts below */
-    gtk_label_set_text(GTK_LABEL(context->server_label), wms_server->server);
-    gtk_label_set_text(GTK_LABEL(context->path_label), wms_server->path);
+    gtk_label_set_text(GTK_LABEL(context->server_label), wms_server->server.c_str());
+    gtk_label_set_text(GTK_LABEL(context->path_label), wms_server->path.c_str());
 
     gtk_widget_destroy(dialog);
 
@@ -687,17 +677,17 @@ static void on_server_add(wms_server_context_t *context) {
   wms_server_t **prev = &context->appdata->settings->wms_server;
   while(*prev) prev = &(*prev)->next;
 
-  *prev = g_new0(wms_server_t, 1);
-  (*prev)->name   = g_strdup("<service name>");
+  *prev = new wms_server_t();
+  (*prev)->name   = "<service name>";
   // in case the project has a server set, but the global list is empty,
   // fill the data of the project server
   if(context->appdata->settings->wms_server == *prev &&
      !context->appdata->project->wms_server.empty()) {
-    (*prev)->server = g_strdup(context->appdata->project->wms_server.c_str());
-    (*prev)->path   = g_strdup(context->appdata->project->wms_path.c_str());
+    (*prev)->server = context->appdata->project->wms_server;
+    (*prev)->path   = context->appdata->project->wms_path;
   } else {
-    (*prev)->server = g_strdup("<server url>");
-    (*prev)->path   = g_strdup("<path in server>");
+    (*prev)->server = "<server url>";
+    (*prev)->path   = "<path in server>";
   }
 
   GtkTreeModel *model = list_get_model(context->list);
@@ -705,7 +695,7 @@ static void on_server_add(wms_server_context_t *context) {
   GtkTreeIter iter;
   gtk_list_store_append(GTK_LIST_STORE(model), &iter);
   gtk_list_store_set(GTK_LIST_STORE(model), &iter,
-		     WMS_SERVER_COL_NAME, (*prev)->name,
+                     WMS_SERVER_COL_NAME, (*prev)->name.c_str(),
 		     WMS_SERVER_COL_DATA, *prev,
 		     -1);
 
@@ -716,14 +706,14 @@ static void on_server_add(wms_server_context_t *context) {
     /* user has cancelled request. remove newly added item */
     printf("user clicked cancel\n");
 
-    wms_server_free(*prev);
+    delete *prev;
     *prev = O2G_NULLPTR;
 
     gtk_list_store_remove(GTK_LIST_STORE(model), &iter);
   } else
     /* update name from edit result */
     gtk_list_store_set(GTK_LIST_STORE(model), &iter,
-		       WMS_SERVER_COL_NAME, (*prev)->name,
+                       WMS_SERVER_COL_NAME, (*prev)->name.c_str(),
 		       -1);
 
   wms_server_selected(context, *prev);
@@ -752,7 +742,7 @@ static GtkWidget *wms_server_widget(wms_server_context_t *context) {
     /* Append a row and fill in some data */
     gtk_list_store_append(context->store, &iter);
     gtk_list_store_set(context->store, &iter,
-		       WMS_SERVER_COL_NAME, wms_server->name,
+                       WMS_SERVER_COL_NAME, wms_server->name.c_str(),
 		       WMS_SERVER_COL_DATA, wms_server,
 		       -1);
 
@@ -822,7 +812,7 @@ static bool wms_server_dialog(appdata_t *appdata, wms_t *wms) {
     const wms_server_t *server = get_selection(context.list);
     if(server) {
       /* fetch parameters from selected entry */
-      printf("WMS: using %s\n", server->name);
+      printf("WMS: using %s\n", server->name.c_str());
       wms->server = server->server;
       wms->path = server->path;
       ok = true;
@@ -1302,10 +1292,10 @@ wms_server_t *wms_server_get_default(void) {
   wms_server_t *server = O2G_NULLPTR, **cur = &server;
 
   for(const server_preset_s *preset = default_servers; preset->name; preset++) {
-    *cur = g_new0(wms_server_t, 1);
-    (*cur)->name = g_strdup(preset->name);
-    (*cur)->server = g_strdup(preset->server);
-    (*cur)->path = g_strdup(preset->path);
+    *cur = new wms_server_t();
+    (*cur)->name = preset->name;
+    (*cur)->server = preset->server;
+    (*cur)->path = preset->path;
     cur = &(*cur)->next;
   }
 
@@ -1315,7 +1305,7 @@ wms_server_t *wms_server_get_default(void) {
 void wms_servers_free(wms_server_t *wms_server) {
   while(wms_server) {
     wms_server_t *next = wms_server->next;
-    wms_server_free(wms_server);
+    delete wms_server;
     wms_server = next;
   }
 }

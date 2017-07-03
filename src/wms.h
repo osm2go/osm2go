@@ -21,9 +21,13 @@
 #define WMS_H
 
 #include <glib.h>
+#include <string>
+
+#include <osm2go_cpp.h>
 
 struct wms_server_t {
-  gchar *name, *server, *path;
+  inline wms_server_t() : next(O2G_NULLPTR) {}
+  std::string name, server, path;
   struct wms_server_t *next;
 };
 
