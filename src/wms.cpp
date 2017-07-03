@@ -699,8 +699,16 @@ static void on_server_add(wms_server_context_t *context) {
 
   *prev = g_new0(wms_server_t, 1);
   (*prev)->name   = g_strdup("<service name>");
-  (*prev)->server = g_strdup("<server url>");
-  (*prev)->path   = g_strdup("<path in server>");
+  // in case the project has a server set, but the global list is empty,
+  // fill the data of the project server
+  if(context->appdata->settings->wms_server == *prev &&
+     !context->appdata->project->wms_server.empty()) {
+    (*prev)->server = g_strdup(context->appdata->project->wms_server.c_str());
+    (*prev)->path   = g_strdup(context->appdata->project->wms_path.c_str());
+  } else {
+    (*prev)->server = g_strdup("<server url>");
+    (*prev)->path   = g_strdup("<path in server>");
+  }
 
   GtkTreeModel *model = list_get_model(context->list);
 
