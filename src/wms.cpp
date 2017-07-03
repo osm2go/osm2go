@@ -1208,13 +1208,14 @@ void wms_import(appdata_t *appdata) {
 
   /* build complete url */
   const char *parts[] = { "&SRS=", srs, "&BBOX=", minlon, ",", minlat, ",",
-                          maxlon, ",", maxlat, buf, formats[format], O2G_NULLPTR };
+                          maxlon, ",", maxlat, buf, formats[format], "&reaspect=false",
+                          O2G_NULLPTR };
   for(int i = 0; parts[i]; i++)
     url += parts[i];
 
   const char *exts[] = { "jpg", "jpg", "png", "gif" };
   const std::string filename = std::string(appdata->project->path) + "wms." +
-                               exts[format] + "&reaspect=false";
+                               exts[format];
 
   /* remove any existing image before */
   wms_remove(appdata);
