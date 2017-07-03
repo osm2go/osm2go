@@ -103,13 +103,8 @@ struct wms_t {
   wms_cap_t cap;
 };
 
-static gboolean xmlTextIs(xmlDocPtr doc, xmlNodePtr list, const char *str) {
-  xmlChar *nstr = xmlNodeListGetString(doc, list, 1);
-  if(!nstr) return FALSE;
-
-  gboolean match = (strcmp(str, (char*)nstr) == 0);
-  xmlFree(nstr);
-  return match;
+static bool xmlTextIs(const xmlChar *nstr, const char *str) {
+  return (g_strcmp0(str, reinterpret_cast<const char *>(nstr)) == 0);
 }
 
 static gboolean wms_bbox_is_valid(pos_t *min, pos_t *max) {
@@ -195,14 +190,17 @@ static wms_getmap_t wms_cap_parse_getmap(xmlDocPtr doc, xmlNode *a_node) {
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcasecmp((char*)cur_node->name, "Format") == 0) {
-	if(xmlTextIs(doc, cur_node->children, "image/png"))
+        xmlChar *nstr = xmlNodeListGetString(doc, cur_node->children, 1);
+
+        if(xmlTextIs(nstr, "image/png"))
 	  wms_getmap.format |= WMS_FORMAT_PNG;
-	else if(xmlTextIs(doc, cur_node->children, "image/gif"))
+        else if(xmlTextIs(nstr, "image/gif"))
 	  wms_getmap.format |= WMS_FORMAT_GIF;
-	else if(xmlTextIs(doc, cur_node->children, "image/jpg"))
+        else if(xmlTextIs(nstr, "image/jpg"))
 	  wms_getmap.format |= WMS_FORMAT_JPG;
-	else if(xmlTextIs(doc, cur_node->children, "image/jpeg"))
+        else if(xmlTextIs(nstr, "image/jpeg"))
 	  wms_getmap.format |= WMS_FORMAT_JPEG;
+        xmlFree(nstr);
       } else
 	printf("found unhandled "
 	       "WMT_MS_Capabilities/Capability/Request/GetMap/%s\n",
