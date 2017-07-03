@@ -1304,7 +1304,7 @@ void wms_remove(appdata_t *appdata) {
   wms_remove_file(appdata->project);
 }
 
-struct server_preset_s {
+static const struct server_preset_s {
   const gchar *name, *server, *path;
 } default_servers[] = {
   { "Open Geospatial Consortium Web Services", "http://ows.terrestris.de", "/osm/service?" },
@@ -1314,15 +1314,13 @@ struct server_preset_s {
 
 wms_server_t *wms_server_get_default(void) {
   wms_server_t *server = O2G_NULLPTR, **cur = &server;
-  struct server_preset_s *preset = default_servers;
 
-  while(preset->name) {
+  for(const server_preset_s *preset = default_servers; preset->name; preset++) {
     *cur = g_new0(wms_server_t, 1);
     (*cur)->name = g_strdup(preset->name);
     (*cur)->server = g_strdup(preset->server);
     (*cur)->path = g_strdup(preset->path);
     cur = &(*cur)->next;
-    preset++;
   }
 
   return server;
