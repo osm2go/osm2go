@@ -296,9 +296,9 @@ bool project_save(GtkWidget *parent, project_t *project) {
  * @param fullname where to store absolute filename if project exists
  * @returns if project exists
  */
-static gboolean project_exists(settings_t *settings, const char *name, std::string &fullname) {
+bool project_exists(settings_t *settings, const char *name, std::string &fullname) {
   if(G_UNLIKELY(settings->base_path == O2G_NULLPTR))
-    return FALSE;
+    return false;
   fullname = settings->base_path;
   fullname += name;
   fullname += '/';
@@ -306,12 +306,7 @@ static gboolean project_exists(settings_t *settings, const char *name, std::stri
   fullname += ".proj";
 
   /* check for project file */
-  return g_file_test(fullname.c_str(), G_FILE_TEST_IS_REGULAR);
-}
-
-gboolean project_exists(settings_t *settings, const char *name) {
-  std::string dummy;
-  return project_exists(settings, name, dummy);
+  return g_file_test(fullname.c_str(), G_FILE_TEST_IS_REGULAR) == TRUE;
 }
 
 static std::vector<project_t *> project_scan(settings_t *settings) {

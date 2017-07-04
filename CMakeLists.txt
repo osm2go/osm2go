@@ -90,7 +90,7 @@ set(osm2go_SOURCE_FILES
 	src/project.h
 	src/relation_edit.cpp
 	src/relation_edit.h
-	src/settings.c
+	src/settings.cpp
 	src/settings.h
 	src/statusbar.cpp
 	src/statusbar.h

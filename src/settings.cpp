@@ -26,16 +26,20 @@
 
 #include <gconf/gconf.h>
 #include <gconf/gconf-client.h>
+#if __cplusplus >= 201103L
+#include <cstdint>
+#else
 #include <stdint.h>
+#endif
 
 #include <osm2go_cpp.h>
 
-typedef struct {
+struct store_t {
   const char *key;
   ptrdiff_t offset;
-} store_t;
+};
 
-#define ST_ENTRY(a) { #a, ((ptrdiff_t)&(((settings_t*)NULL)->a)) }
+#define ST_ENTRY(a) { #a, reinterpret_cast<ptrdiff_t>(&(reinterpret_cast<settings_t *>(0)->a)) }
 
 static store_t store_str[] = {
   /* not user configurable */
@@ -57,7 +61,7 @@ static store_t store_str[] = {
   /* main */
   ST_ENTRY(track_path),
 
-  { NULL, -1 }
+  { O2G_NULLPTR, -1 }
 };
 
 static store_t store_bool[] = {
@@ -65,7 +69,7 @@ static store_t store_bool[] = {
   ST_ENTRY(enable_gps),
   ST_ENTRY(follow_gps),
 
-  { NULL, -1 }
+  { O2G_NULLPTR, -1 }
 };
 
 settings_t *settings_load(void) {
@@ -77,13 +81,12 @@ settings_t *settings_load(void) {
 
   if(G_LIKELY(client != O2G_NULLPTR)) {
     /* restore everything listed in the store tables */
-    const store_t *st;
-    for(st = store_str; st->key; st++) {
-      char **ptr = (char**)((uintptr_t)settings + st->offset);
-      gchar *key = g_strconcat("/apps/" PACKAGE "/", st->key, NULL);
+    for(const store_t *st = store_str; st->key; st++) {
+      char **ptr = reinterpret_cast<char **>(reinterpret_cast<uintptr_t>(settings) + st->offset);
+      gchar *key = g_strconcat("/apps/" PACKAGE "/", st->key, O2G_NULLPTR);
 
       /* check if key is present */
-      GConfValue *value = gconf_client_get(client, key, NULL);
+      GConfValue *value = gconf_client_get(client, key, O2G_NULLPTR);
       g_free(key);
 
       if(!value)
@@ -99,12 +102,12 @@ settings_t *settings_load(void) {
       gconf_value_free(value);
     }
 
-    for(st = store_bool; st->key; st++) {
-      gboolean *ptr = (gboolean*)((uintptr_t)settings + st->offset);
-      gchar *key = g_strconcat("/apps/" PACKAGE "/", st->key, NULL);
+    for(const store_t *st = store_bool; st->key; st++) {
+      gboolean *ptr = reinterpret_cast<gboolean *>(reinterpret_cast<uintptr_t>(settings) + st->offset);
+      gchar *key = g_strconcat("/apps/" PACKAGE "/", st->key, O2G_NULLPTR);
 
       /* check if key is present */
-      GConfValue *value = gconf_client_get(client, key, NULL);
+      GConfValue *value = gconf_client_get(client, key, O2G_NULLPTR);
       g_free(key);
 
       if(!value)
@@ -120,7 +123,7 @@ settings_t *settings_load(void) {
     }
 
     /* adjust default server stored in settings if required */
-    if(G_UNLIKELY(settings->server && strstr(settings->server, "0.5") != NULL)) {
+    if(G_UNLIKELY(settings->server && strstr(settings->server, "0.5") != O2G_NULLPTR)) {
       strstr(settings->server, "0.5")[2] = '6';
       printf("adjusting server path in settings to 0.6\n");
     }
@@ -133,21 +136,21 @@ settings_t *settings_load(void) {
 
     /* restore wms server list */
     const gchar *countkey = "/apps/" PACKAGE "/wms/count";
-    GConfValue *value = gconf_client_get(client, countkey, NULL);
+    GConfValue *value = gconf_client_get(client, countkey, O2G_NULLPTR);
     if(value) {
       gconf_value_free(value);
 
-      int i, count = gconf_client_get_int(client, countkey, NULL);
+      int i, count = gconf_client_get_int(client, countkey, O2G_NULLPTR);
 
       wms_server_t **cur = &settings->wms_server;
       for(i=0;i<count;i++) {
         /* keep ordering, the longest key must be first */
         gchar *key = g_strdup_printf("/apps/" PACKAGE "/wms/server%d", i);
-        gchar *server = gconf_client_get_string(client, key, NULL);
+        gchar *server = gconf_client_get_string(client, key, O2G_NULLPTR);
         g_sprintf(key, "/apps/" PACKAGE "/wms/name%d", i);
-        gchar *name = gconf_client_get_string(client, key, NULL);
+        gchar *name = gconf_client_get_string(client, key, O2G_NULLPTR);
         g_sprintf(key, "/apps/" PACKAGE "/wms/path%d", i);
-        gchar *path = gconf_client_get_string(client, key, NULL);
+        gchar *path = gconf_client_get_string(client, key, O2G_NULLPTR);
 	g_free(key);
 
 	/* apply valid entry to list */
@@ -174,7 +177,8 @@ settings_t *settings_load(void) {
       printf("base_path not set, assuming first time boot\n");
 
       /* check for presence of demo project */
-      if(project_exists(settings, "demo")) {
+      std::string fullname;
+      if(project_exists(settings, "demo", fullname)) {
         printf("demo project exists, use it as default\n");
         settings->project = g_strdup("demo");
         settings->first_run_demo = TRUE;
@@ -186,7 +190,7 @@ settings_t *settings_load(void) {
 
   /* ------ set useful defaults ------- */
 
-  char *p;
+  const char *p;
   if(G_UNLIKELY(settings->base_path == O2G_NULLPTR)) {
 #ifdef USE_HILDON
     /* try to use internal memory card on hildon/maemo */
@@ -201,9 +205,9 @@ settings_t *settings_load(void) {
 
     /* build image path in home directory */
     if(strncmp(p, "/home", 5) == 0)
-      settings->base_path = g_strconcat(p, "/.osm2go/", NULL);
+      settings->base_path = g_strconcat(p, "/.osm2go/", O2G_NULLPTR);
     else
-      settings->base_path = g_strconcat(p, "/osm2go/", NULL);
+      settings->base_path = g_strconcat(p, "/osm2go/", O2G_NULLPTR);
 
     fprintf(stderr, "base_path = %s\n", settings->base_path);
   }
@@ -235,24 +239,23 @@ void settings_save(settings_t *settings) {
   if(!client) return;
 
   /* store everything listed in the store tables */
-  const store_t *st;
-  for(st = store_str; st->key; st++) {
-    char **ptr = (char**)((uintptr_t)settings + st->offset);
-    char *key = g_strconcat("/apps/" PACKAGE "/", st->key, NULL);
+  for(const store_t *st = store_str; st->key; st++) {
+    char **ptr = reinterpret_cast<char **>(reinterpret_cast<uintptr_t>(settings) + st->offset);
+    char *key = g_strconcat("/apps/" PACKAGE "/", st->key, O2G_NULLPTR);
 
     if(*ptr)
-      gconf_client_set_string(client, key, (char*)(*ptr), NULL);
+      gconf_client_set_string(client, key, (char*)(*ptr), O2G_NULLPTR);
     else
-      gconf_client_unset(client, key, NULL);
+      gconf_client_unset(client, key, O2G_NULLPTR);
 
     g_free(key);
   }
 
-  for(st = store_bool; st->key; st++) {
-    gboolean *ptr = (gboolean*)((uintptr_t)settings + st->offset);
-    char *key = g_strconcat("/apps/" PACKAGE "/", st->key, NULL);
+  for(const store_t *st = store_bool; st->key; st++) {
+    gboolean *ptr = reinterpret_cast<gboolean *>(reinterpret_cast<uintptr_t>(settings) + st->offset);
+    char *key = g_strconcat("/apps/" PACKAGE "/", st->key, O2G_NULLPTR);
 
-    gconf_client_set_bool(client, key, *ptr, NULL);
+    gconf_client_set_bool(client, key, *ptr, O2G_NULLPTR);
 
     g_free(key);
   }
@@ -263,18 +266,18 @@ void settings_save(settings_t *settings) {
   while(cur) {
     /* keep ordering, the longest key must be first */
     gchar *key = g_strdup_printf("/apps/" PACKAGE "/wms/server%d", count);
-    gconf_client_set_string(client, key, cur->server, NULL);
+    gconf_client_set_string(client, key, cur->server, O2G_NULLPTR);
     g_sprintf(key, "/apps/" PACKAGE "/wms/name%d", count);
-    gconf_client_set_string(client, key, cur->name, NULL);
+    gconf_client_set_string(client, key, cur->name, O2G_NULLPTR);
     g_sprintf(key, "/apps/" PACKAGE "/wms/path%d", count);
-    gconf_client_set_string(client, key, cur->path, NULL);
+    gconf_client_set_string(client, key, cur->path, O2G_NULLPTR);
     g_free(key);
 
     count++;
     cur = cur->next;
   }
 
-  gconf_client_set_int(client, "/apps/" PACKAGE "/wms/count", count, NULL);
+  gconf_client_set_int(client, "/apps/" PACKAGE "/wms/count", count, O2G_NULLPTR);
 
   g_object_unref(client);
 }
@@ -282,9 +285,8 @@ void settings_save(settings_t *settings) {
 void settings_free(settings_t *settings) {
   wms_servers_free(settings->wms_server);
 
-  const store_t *st;
-  for(st = store_str; st->key; st++) {
-    char **ptr = (char**)((uintptr_t)settings + st->offset);
+  for(const store_t *st = store_str; st->key; st++) {
+    char **ptr = reinterpret_cast<char **>(reinterpret_cast<uintptr_t>(settings) + st->offset);
 
     g_free(*ptr);
   }

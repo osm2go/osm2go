@@ -22,7 +22,6 @@
 
 #include "settings.h"
 
-#ifdef __cplusplus
 #include "appdata.h"
 #include "pos.h"
 
@@ -57,13 +56,7 @@ struct project_t {
   std::string wms_path;
 };
 
-extern "C" {
-#endif
-
-gboolean project_exists(settings_t *settings, const char *name);
-
-#ifdef __cplusplus
-}
+bool project_exists(settings_t *settings, const char *name, std::string &fullname);
 
 bool project_save(GtkWidget *parent, project_t *project);
 bool project_check_demo(GtkWidget *parent, project_t *project);
@@ -72,6 +65,5 @@ osm_t *project_parse_osm(const project_t *project, struct icon_t **icons);
 
 bool project_load(appdata_t *appdata, const std::string &name);
 std::string project_select(appdata_t *appdata);
-#endif
 
 #endif // PROJECT_H

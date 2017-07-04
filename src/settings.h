@@ -37,7 +37,7 @@
 
 #define DEFAULT_STYLE "mapnik"
 
-typedef struct settings_t {
+struct settings_t {
 
   /* never changed */
   char *base_path;
@@ -63,18 +63,10 @@ typedef struct settings_t {
   /* and the demo was loaded */
   gboolean first_run_demo;
 
-} settings_t;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+};
 
 settings_t *settings_load(void);
 void settings_save(settings_t *settings);
 void settings_free(settings_t *settings);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif // SETTINGS_H
