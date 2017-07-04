@@ -157,20 +157,14 @@ settings_t *settings_load(void) {
     }
 
     /* use demo setup if present */
-    if(!settings->project) {
-      char *key = g_strdup("/apps/" PACKAGE "/base_path");
-      GConfValue *value = gconf_client_get(client, key, NULL);
-      if(value)
-	gconf_value_free(value);
-      else {
-	printf("base_path not set, assuming first time boot\n");
+    if(!settings->project && !settings->base_path) {
+      printf("base_path not set, assuming first time boot\n");
 
-	/* check for presence of demo project */
-	if(project_exists(settings, "demo")) {
-	  printf("demo project exists, use it as default\n");
-	  settings->project = g_strdup("demo");
-	  settings->first_run_demo = TRUE;
-	}
+      /* check for presence of demo project */
+      if(project_exists(settings, "demo")) {
+        printf("demo project exists, use it as default\n");
+        settings->project = g_strdup("demo");
+        settings->first_run_demo = TRUE;
       }
     }
 
