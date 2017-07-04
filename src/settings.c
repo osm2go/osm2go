@@ -35,35 +35,35 @@ typedef struct {
   ptrdiff_t offset;
 } store_t;
 
-#define OFFSET(a) offsetof(settings_t, a)
+#define ST_ENTRY(a) { #a, ((ptrdiff_t)&(((settings_t*)NULL)->a)) }
 
 static store_t store_str[] = {
   /* not user configurable */
-  { "base_path",        OFFSET(base_path)    },
+  ST_ENTRY(base_path),
 
   /* from project.c */
-  { "project",          OFFSET(project)      },
+  ST_ENTRY(project),
 
   /* from osm_api.c */
-  { "server",           OFFSET(server)       },
-  { "username",         OFFSET(username)     },
-  { "password",         OFFSET(password)     },
+  ST_ENTRY(server),
+  ST_ENTRY(username),
+  ST_ENTRY(password),
 
   /* wms servers are saved seperately */
 
   /* style */
-  { "style",            OFFSET(style)        },
+  ST_ENTRY(style),
 
   /* main */
-  { "track_path",       OFFSET(track_path)   },
+  ST_ENTRY(track_path),
 
   { NULL, -1 }
 };
 
 static store_t store_bool[] = {
   /* main */
-  { "enable_gps",       OFFSET(enable_gps)   },
-  { "follow_gps",       OFFSET(follow_gps)   },
+  ST_ENTRY(enable_gps),
+  ST_ENTRY(follow_gps),
 
   { NULL, -1 }
 };
