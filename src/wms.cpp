@@ -652,50 +652,43 @@ static void on_server_edit(GtkWidget *, wms_server_context_t *context) {
 /* user clicked "add..." button in the wms server list */
 static void on_server_add(wms_server_context_t *context) {
 
-  /* attach a new server item to the chain */
-  wms_server_t **prev = &context->appdata->settings->wms_server;
-  while(*prev) prev = &(*prev)->next;
-
-  *prev = new wms_server_t();
-  (*prev)->name   = "<service name>";
+  wms_server_t *newserver = new wms_server_t();
+  newserver->name   = "<service name>";
   // in case the project has a server set, but the global list is empty,
   // fill the data of the project server
-  if(context->appdata->settings->wms_server == *prev &&
+  if(context->appdata->settings->wms_server == O2G_NULLPTR &&
      !context->appdata->project->wms_server.empty()) {
-    (*prev)->server = context->appdata->project->wms_server;
-    (*prev)->path   = context->appdata->project->wms_path;
+    newserver->server = context->appdata->project->wms_server;
+    newserver->path   = context->appdata->project->wms_path;
   } else {
-    (*prev)->server = "<server url>";
-    (*prev)->path   = "<path in server>";
+    newserver->server = "<server url>";
+    newserver->path   = "<path in server>";
   }
 
-  GtkTreeModel *model = list_get_model(context->list);
-
-  GtkTreeIter iter;
-  gtk_list_store_append(GTK_LIST_STORE(model), &iter);
-  gtk_list_store_set(GTK_LIST_STORE(model), &iter,
-                     WMS_SERVER_COL_NAME, (*prev)->name.c_str(),
-		     WMS_SERVER_COL_DATA, *prev,
-		     -1);
-
-  GtkTreeSelection *selection = list_get_selection(context->list);
-  gtk_tree_selection_select_iter(selection, &iter);
-
-  if(!wms_server_edit(context, TRUE, *prev)) {
+  if(!wms_server_edit(context, TRUE, newserver)) {
     /* user has cancelled request. remove newly added item */
     printf("user clicked cancel\n");
 
-    delete *prev;
-    *prev = O2G_NULLPTR;
+    delete newserver;
+  } else {
+    /* attach a new server item to the chain */
+    wms_server_t **prev = &context->appdata->settings->wms_server;
+    while(*prev)
+      prev = &(*prev)->next;
+    *prev = newserver;
 
-    gtk_list_store_remove(GTK_LIST_STORE(model), &iter);
-  } else
-    /* update name from edit result */
-    gtk_list_store_set(GTK_LIST_STORE(model), &iter,
-                       WMS_SERVER_COL_NAME, (*prev)->name.c_str(),
-		       -1);
+    GtkTreeIter iter;
+    gtk_list_store_append(context->store, &iter);
+    gtk_list_store_set(context->store, &iter,
+                     WMS_SERVER_COL_NAME, newserver->name.c_str(),
+                     WMS_SERVER_COL_DATA, newserver,
+                    -1);
 
-  wms_server_selected(context, *prev);
+    GtkTreeSelection *selection = list_get_selection(context->list);
+    gtk_tree_selection_select_iter(selection, &iter);
+
+    wms_server_selected(context, newserver);
+  }
 }
 
 /* widget to select a wms server from a list */
