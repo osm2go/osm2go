@@ -649,6 +649,25 @@ static void on_server_edit(GtkWidget *, wms_server_context_t *context) {
   wms_server_edit(context, FALSE, server);
 }
 
+struct store_fill_functor {
+  GtkListStore *store;
+  store_fill_functor(GtkListStore *s) : store(s) {}
+  GtkTreeIter operator()(const wms_server_t *srv);
+};
+
+GtkTreeIter store_fill_functor::operator()(const wms_server_t *srv)
+{
+  GtkTreeIter iter;
+
+  gtk_list_store_append(store, &iter);
+  gtk_list_store_set(store, &iter,
+                     WMS_SERVER_COL_NAME, srv->name.c_str(),
+                     WMS_SERVER_COL_DATA, srv,
+                     -1);
+
+  return iter;
+}
+
 /* user clicked "add..." button in the wms server list */
 static void on_server_add(wms_server_context_t *context) {
 
@@ -677,12 +696,7 @@ static void on_server_add(wms_server_context_t *context) {
       prev = &(*prev)->next;
     *prev = newserver;
 
-    GtkTreeIter iter;
-    gtk_list_store_append(context->store, &iter);
-    gtk_list_store_set(context->store, &iter,
-                     WMS_SERVER_COL_NAME, newserver->name.c_str(),
-                     WMS_SERVER_COL_DATA, newserver,
-                    -1);
+    GtkTreeIter iter = store_fill_functor(context->store)(newserver);
 
     GtkTreeSelection *selection = list_get_selection(context->list);
     gtk_tree_selection_select_iter(selection, &iter);
@@ -708,18 +722,10 @@ static GtkWidget *wms_server_widget(wms_server_context_t *context) {
 
   list_set_store(context->list, context->store);
 
-  GtkTreeIter iter;
-  wms_server_t *wms_server = context->appdata->settings->wms_server;
-  while(wms_server) {
-    /* Append a row and fill in some data */
-    gtk_list_store_append(context->store, &iter);
-    gtk_list_store_set(context->store, &iter,
-                       WMS_SERVER_COL_NAME, wms_server->name.c_str(),
-		       WMS_SERVER_COL_DATA, wms_server,
-		       -1);
-
-    wms_server = wms_server->next;
-  }
+  store_fill_functor fc(context->store);
+  for(const wms_server_t *wms_server = context->appdata->settings->wms_server;
+      wms_server; wms_server = wms_server->next)
+    fc(wms_server);
 
   g_object_unref(context->store);
 
