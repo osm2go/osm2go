@@ -435,8 +435,7 @@ struct wms_server_context_t {
   GtkWidget *server_label, *path_label;
 };
 
-static wms_server_t *get_selection(GtkWidget *list) {
-  GtkTreeSelection *selection = list_get_selection(list);
+static wms_server_t *get_selection(GtkTreeSelection *selection) {
   GtkTreeModel     *model;
   GtkTreeIter       iter;
 
@@ -504,23 +503,16 @@ static void
 wms_server_changed(GtkTreeSelection *selection, gpointer userdata) {
   wms_server_context_t *context = static_cast<wms_server_context_t *>(userdata);
 
-  GtkTreeModel *model = O2G_NULLPTR;
-  GtkTreeIter iter;
-
-  if(gtk_tree_selection_get_selected(selection, &model, &iter)) {
-    wms_server_t *wms_server = O2G_NULLPTR;
-
-    gtk_tree_model_get(model, &iter, WMS_SERVER_COL_DATA, &wms_server, -1);
+  wms_server_t *wms_server = get_selection(selection);
+  if(wms_server != O2G_NULLPTR)
     wms_server_selected(context, wms_server);
-  }
 }
 
 static void on_server_remove(GtkWidget *, wms_server_context_t *context) {
-  GtkTreeSelection *selection;
+  GtkTreeSelection *selection = list_get_selection(context->list);
   GtkTreeModel     *model;
   GtkTreeIter       iter;
 
-  selection = list_get_selection(context->list);
   if(gtk_tree_selection_get_selected(selection, &model, &iter)) {
     wms_server_t *server = O2G_NULLPTR;
     gtk_tree_model_get(model, &iter, WMS_SERVER_COL_DATA, &server, -1);
@@ -643,7 +635,7 @@ bool wms_server_edit(wms_server_context_t *context, gboolean edit_name,
 
 /* user clicked "edit..." button in the wms server list */
 static void on_server_edit(GtkWidget *, wms_server_context_t *context) {
-  wms_server_t *server = get_selection(context->list);
+  wms_server_t *server = get_selection(list_get_selection(context->list));
   g_assert_nonnull(server);
 
   wms_server_edit(context, FALSE, server);
@@ -787,7 +779,7 @@ static bool wms_server_dialog(appdata_t *appdata, wms_t *wms) {
   gtk_widget_show_all(context.dialog);
 
   if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(context.dialog))) {
-    const wms_server_t *server = get_selection(context.list);
+    const wms_server_t *server = get_selection(list_get_selection(context.list));
     if(server) {
       /* fetch parameters from selected entry */
       printf("WMS: using %s\n", server->name.c_str());
