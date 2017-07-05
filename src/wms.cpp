@@ -570,8 +570,8 @@ static void callback_modified_name(GtkWidget *widget, gpointer data) {
 }
 
 /* edit url and path of a given wms server entry */
-gboolean wms_server_edit(wms_server_context_t *context, gboolean edit_name,
-			 wms_server_t *wms_server) {
+bool wms_server_edit(wms_server_context_t *context, gboolean edit_name,
+                     wms_server_t *wms_server) {
   GtkWidget *dialog =
     misc_dialog_new(MISC_DIALOG_WIDE, _("Edit WMS Server"),
 		    GTK_WINDOW(context->dialog),
@@ -623,19 +623,10 @@ gboolean wms_server_edit(wms_server_context_t *context, gboolean edit_name,
 
   gtk_widget_show_all(dialog);
 
-  if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog))) {
-    if(edit_name) {
-      GtkTreeSelection *selection;
-      GtkTreeModel     *model;
-      GtkTreeIter       iter;
-      selection = list_get_selection(context->list);
-      gtk_tree_selection_get_selected(selection, &model, &iter);
-      gtk_list_store_set(context->store, &iter,
-                         WMS_SERVER_COL_NAME, wms_server->name.c_str(),
-			 -1);
-
+  const bool ret = (GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog)));
+  if(ret) {
+    if(edit_name)
       wms_server->name = gtk_entry_get_text(GTK_ENTRY(name));
-    }
 
     wms_server->server = gtk_entry_get_text(GTK_ENTRY(server));
     wms_server->path = gtk_entry_get_text(GTK_ENTRY(path));
@@ -644,14 +635,10 @@ gboolean wms_server_edit(wms_server_context_t *context, gboolean edit_name,
     /* set texts below */
     gtk_label_set_text(GTK_LABEL(context->server_label), wms_server->server.c_str());
     gtk_label_set_text(GTK_LABEL(context->path_label), wms_server->path.c_str());
-
-    gtk_widget_destroy(dialog);
-
-    return TRUE;
   }
 
   gtk_widget_destroy(dialog);
-  return FALSE;
+  return ret;
 }
 
 /* user clicked "edit..." button in the wms server list */
