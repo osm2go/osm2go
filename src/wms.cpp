@@ -435,7 +435,7 @@ struct wms_server_context_t {
   GtkWidget *server_label, *path_label;
 };
 
-static const wms_server_t *get_selection(GtkWidget *list) {
+static wms_server_t *get_selection(GtkWidget *list) {
   GtkTreeSelection *selection = list_get_selection(list);
   GtkTreeModel     *model;
   GtkTreeIter       iter;
@@ -656,18 +656,10 @@ gboolean wms_server_edit(wms_server_context_t *context, gboolean edit_name,
 
 /* user clicked "edit..." button in the wms server list */
 static void on_server_edit(GtkWidget *, wms_server_context_t *context) {
-  GtkTreeSelection *selection;
-  GtkTreeModel     *model;
-  GtkTreeIter       iter;
+  wms_server_t *server = get_selection(context->list);
+  g_assert_nonnull(server);
 
-  selection = list_get_selection(context->list);
-  if(gtk_tree_selection_get_selected(selection, &model, &iter)) {
-    wms_server_t *server = O2G_NULLPTR;
-    gtk_tree_model_get(model, &iter, WMS_SERVER_COL_DATA, &server, -1);
-    g_assert_nonnull(server);
-
-    wms_server_edit(context, FALSE, server);
-  }
+  wms_server_edit(context, FALSE, server);
 }
 
 /* user clicked "add..." button in the wms server list */
