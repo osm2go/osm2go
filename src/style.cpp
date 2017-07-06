@@ -224,9 +224,11 @@ static style_t *style_load_fname(appdata_t *appdata, const std::string &filename
   xmlChar *fname = O2G_NULLPTR;
   style_t *style = style_parse(appdata, filename, &fname, FALSE);
 
-  printf("  elemstyle filename: %s\n", fname);
-  style->elemstyles = josm_elemstyles_load((char*)fname);
-  xmlFree(fname);
+  if(style) {
+    printf("  elemstyle filename: %s\n", fname);
+    style->elemstyles = josm_elemstyles_load((char*)fname);
+    xmlFree(fname);
+  }
 
   return style;
 }
@@ -278,6 +280,9 @@ void combo_add_styles::operator()(const std::string &filename)
   printf("  file: %s\n", filename.c_str());
 
   style_t *style = style_parse(appdata, filename, O2G_NULLPTR, TRUE);
+  if(!style)
+    return;
+
   printf("    name: %s\n", style->name);
   combo_box_append_text(cbox, style->name);
 
@@ -363,6 +368,8 @@ struct style_find {
 bool style_find::operator()(const std::string &filename)
 {
   style_t *style = style_parse(appdata, filename, O2G_NULLPTR, TRUE);
+  if(!style)
+    return false;
 
   bool match = (strcmp(style->name, name) == 0);
   delete style;
