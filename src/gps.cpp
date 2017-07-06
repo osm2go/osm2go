@@ -333,6 +333,7 @@ gpsd_state_t::gpsd_state_t()
 #else
   , mutex(g_mutex_new())
 #endif
+  , enable(false)
 {
   printf("GPS init: Using gpsd\n");
 
