@@ -20,12 +20,12 @@
 #ifndef STYLE_H
 #define STYLE_H
 
-#include "appdata.h"
 #include "icon.h"
 #include "josm_elemstyles.h"
 
 #include <vector>
 
+struct appdata_t;
 class node_t;
 
 struct style_t {

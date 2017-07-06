@@ -20,14 +20,14 @@
 #ifndef ICONBAR_H
 #define ICONBAR_H
 
-#include "appdata.h"
-
 #include <glib.h>
 #include <gtk/gtk.h>
 
 #if defined(USE_HILDON) && (MAEMO_VERSION_MAJOR == 5)
 #define FINGER_UI
 #endif
+
+struct appdata_t;
 
 struct iconbar_t {
   iconbar_t(appdata_t *appdata);

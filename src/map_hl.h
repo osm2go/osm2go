@@ -20,12 +20,14 @@
 #ifndef MAP_HL_H
 #define MAP_HL_H
 
-#include "appdata.h"
 #include "canvas.h"
-#include "map.h"
+#include "osm.h"
 
 #include <glib.h>
 #include <vector>
+
+struct map_item_t;
+struct map_t;
 
 struct map_highlight_t {
   std::vector<canvas_item_t *> items;

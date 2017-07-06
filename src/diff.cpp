@@ -29,6 +29,7 @@
 #include "statusbar.h"
 
 #include <algorithm>
+#include <cstring>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 

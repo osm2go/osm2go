@@ -10,6 +10,7 @@
 #include <cstring>
 #include <gtk/gtk.h>
 #include <iostream>
+#include <sys/stat.h>
 
 static void verify_diff(osm_t *osm)
 {

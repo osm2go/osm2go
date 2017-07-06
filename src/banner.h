@@ -26,25 +26,25 @@
 #ifndef BANNER_H
 #define BANNER_H
 
-#include "appdata.h"
-
 #include <glib.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+struct appdata_t;
+
 // Shows a brief info splash in a suitable way for the app environment being used
-void banner_show_info(appdata_t *appdata, const char *text);
+void banner_show_info(struct appdata_t *appdata, const char *text);
 
 // Start, stop, and say "I'm still alive" to a busy message targetted at the
 // app environment in use. This can be an animation for some builds, might be
 // a static statusbar for others, a modal dialog for others.
-void banner_busy_start(appdata_t *appdata, gboolean grab, const char *text);
-void banner_busy_stop(appdata_t *appdata);
+void banner_busy_start(struct appdata_t *appdata, gboolean grab, const char *text);
+void banner_busy_stop(struct appdata_t *appdata);
 
 // Clear any message created with banner_busy_start or banner_show_info
-void banner_clear(appdata_t *appdata);
+void banner_clear(struct appdata_t *appdata);
 
 #ifdef __cplusplus
 }

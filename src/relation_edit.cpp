@@ -26,6 +26,7 @@
 #include "misc.h"
 
 #include <algorithm>
+#include <cstring>
 #include <set>
 #include <string>
 #include <strings.h>

@@ -22,7 +22,6 @@
 
 #include "settings.h"
 
-#include "appdata.h"
 #include "pos.h"
 
 #include <glib.h>
@@ -30,7 +29,9 @@
 #include <libxml/parser.h>
 #include <string>
 
+struct appdata_t;
 struct map_state_t;
+struct osm_t;
 
 struct project_t {
   project_t(const char *n, const char *base_path);

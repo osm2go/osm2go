@@ -20,8 +20,6 @@
 #ifndef OSM_H
 #define OSM_H
 
-#ifdef __cplusplus
-
 #include "misc.h"
 #include "pos.h"
 
@@ -32,7 +30,6 @@
 
 #include <osm2go_cpp.h>
 
-#include <math.h>
 #include <glib.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
@@ -513,8 +510,6 @@ protected:
 void osm_node_chain_free(node_chain_t &node_chain);
 
 void osm_members_free(std::vector<member_t> &members);
-
-#endif
 
 #endif /* OSM_H */
 

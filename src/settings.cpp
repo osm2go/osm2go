@@ -19,11 +19,11 @@
 
 #include "settings.h"
 
-#include "appdata.h"
 #include "misc.h"
 #include "project.h"
 #include "wms.h"
 
+#include <cstring>
 #include <gconf/gconf.h>
 #include <gconf/gconf-client.h>
 #if __cplusplus >= 201103L

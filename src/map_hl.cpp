@@ -20,6 +20,7 @@
 #include "map_hl.h"
 
 #include "appdata.h"
+#include "map.h"
 #include "style.h"
 
 #include <algorithm>

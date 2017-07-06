@@ -19,6 +19,7 @@
 
 #include "banner.h"
 
+#include "appdata.h"
 #include "osm2go_platform.h"
 #include "statusbar.h"
 

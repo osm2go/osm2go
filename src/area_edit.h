@@ -20,10 +20,11 @@
 #ifndef AREA_EDIT_H
 #define AREA_EDIT_H
 
-#include "appdata.h"
 #include "pos.h"
 
 #include <vector>
+
+struct appdata_t;
 
 struct pos_bounds {
   pos_bounds(const pos_t &mi, const pos_t &ma)

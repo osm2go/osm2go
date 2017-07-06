@@ -19,10 +19,10 @@
 
 #include "icon.h"
 
-#include "appdata.h"
 #include "misc.h"
 
 #include <algorithm>
+#include <cstring>
 #include <map>
 #include <string>
 #include <sys/stat.h>

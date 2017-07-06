@@ -20,10 +20,9 @@
 #ifndef MAP_H
 #define MAP_H
 
-#include "appdata.h"
 #include "canvas.h"
-#include "osm.h"
 #ifdef __cplusplus
+#include "osm.h"
 #include <vector>
 #endif
 
@@ -65,6 +64,8 @@ enum map_action_t {
 };
 
 #ifdef __cplusplus
+struct appdata_t;
+
 struct map_item_t {
   object_t object;
   bool highlight;

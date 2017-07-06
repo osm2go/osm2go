@@ -20,10 +20,6 @@
 #ifndef APPDATA_H
 #define APPDATA_H
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include <locale.h>
 #include <libintl.h>
 
@@ -54,10 +50,13 @@
 #include <glib/gstdio.h>
 
 #include "canvas.h"
-#include "osm.h"
 
 #ifdef USE_HILDON
 #include "dbus.h"
+#endif
+
+#ifdef __cplusplus
+#include "osm.h"
 #endif
 
 enum menu_items {
@@ -80,10 +79,6 @@ enum menu_items {
   MENU_ITEMS_COUNT
 };
 
-#ifdef __cplusplus
-class gps_state_t;
-#endif
-
 typedef struct appdata_t {
 #ifdef USE_HILDON
   HildonProgram *program;
@@ -95,8 +90,6 @@ typedef struct appdata_t {
 #endif
 
   GtkWidget *vbox;
-  struct map_t *map;
-  struct osm_t *osm;
 
   GtkWidget *btn_zoom_in, *btn_zoom_out, *btn_detail_popup;
 
@@ -140,7 +133,9 @@ typedef struct appdata_t {
 #endif
 
 #ifdef __cplusplus
-  gps_state_t *gps_state;
+  struct map_t *map;
+  struct osm_t *osm;
+  class gps_state_t *gps_state;
 
   appdata_t();
   ~appdata_t();

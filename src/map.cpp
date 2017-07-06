@@ -39,6 +39,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <cstring>
 #include <gdk/gdkkeysyms.h>
 #include <vector>
 

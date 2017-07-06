@@ -33,6 +33,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstring>
 #include <strings.h>
 
 #define TAB_LABEL_MAP    "Map"
