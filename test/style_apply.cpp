@@ -3,7 +3,6 @@
 
 #include <appdata.h>
 #include <icon.h>
-#include <settings.h>
 #include <style.h>
 
 #include <osm2go_cpp.h>
@@ -15,13 +14,11 @@
 appdata_t::appdata_t()
 {
   memset(this, 0, sizeof(*this));
-  settings = g_new0(settings_t, 1);
 }
 
 appdata_t::~appdata_t()
 {
   icon_free_all(icon);
-  g_free(settings);
 }
 
 int main(int argc, char **argv)
@@ -38,9 +35,8 @@ int main(int argc, char **argv)
   xmlInitParser();
 
   appdata_t appdata;
-  appdata.settings->style = argv[1];
 
-  style_t *style = style_load(&appdata);
+  style_t *style = style_load(argv[1], &appdata.icon);
 
   if(style == O2G_NULLPTR) {
     std::cerr << "failed to load styles" << std::endl;

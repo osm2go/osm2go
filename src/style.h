@@ -93,7 +93,7 @@ struct style_t {
   std::map<item_id_t, GdkPixbuf *> node_icons;
 };
 
-style_t *style_load(appdata_t *appdata);
+style_t *style_load(const char *name, icon_t **iconP);
 
 #ifndef FREMANTLE
 void style_select(GtkWidget *parent, appdata_t *appdata);

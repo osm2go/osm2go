@@ -1718,9 +1718,10 @@ static gboolean map_autosave(gpointer data) {
 }
 
 GtkWidget *map_new(appdata_t *appdata) {
-  style_t *s = style_load(appdata);
+  style_t *s = style_load(appdata->settings->style, &appdata->icon);
   if(!s) {
-    errorf(O2G_NULLPTR, _("Unable to load valid style, terminating."));
+    errorf(O2G_NULLPTR, _("Unable to load valid style %s, terminating."),
+           appdata->settings->style);
     return O2G_NULLPTR;
   }
 

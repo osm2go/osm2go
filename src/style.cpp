@@ -174,24 +174,19 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t *style) {
 
 /**
  * @brief parse a style definition file
- * @param appdata the global information structure
  * @param fullname absolute path of the file to read
  * @param fname location to store name of the object style XML file or O2G_NULLPTR
  * @param name_only only parse the style name, leave all other fields empty
  * @return a new style pointer
  */
-static style_t *style_parse(appdata_t *appdata, const std::string &fullname,
-                            xmlChar **fname, gboolean name_only) {
+static style_t *style_parse(const std::string &fullname,
+                            xmlChar **fname, bool name_only) {
   xmlDoc *doc = xmlReadFile(fullname.c_str(), O2G_NULLPTR, 0);
 
   /* parse the file and get the DOM */
   if(doc == O2G_NULLPTR) {
     xmlErrorPtr errP = xmlGetLastError();
-    errorf(GTK_WIDGET(appdata->window),
-	   _("Style parsing failed:\n\n"
-	     "XML error while parsing style file\n"
-	     "%s"), errP->message);
-
+    printf("parsing %s failed: %s\n", fullname.c_str(), errP->message);
     return O2G_NULLPTR;
   } else {
     /* Get the root element node */
@@ -208,7 +203,6 @@ static style_t *style_parse(appdata_t *appdata, const std::string &fullname,
             if(name_only)
               break;
             parse_style_node(cur_node, fname, style);
-            style->iconP = &appdata->icon;
           }
         } else
 	  printf("  found unhandled %s\n", cur_node->name);
@@ -220,21 +214,21 @@ static style_t *style_parse(appdata_t *appdata, const std::string &fullname,
   }
 }
 
-static style_t *style_load_fname(appdata_t *appdata, const std::string &filename) {
+static style_t *style_load_fname(icon_t **icons, const std::string &filename) {
   xmlChar *fname = O2G_NULLPTR;
-  style_t *style = style_parse(appdata, filename, &fname, FALSE);
+  style_t *style = style_parse(filename, &fname, false);
 
   if(style) {
     printf("  elemstyle filename: %s\n", fname);
     style->elemstyles = josm_elemstyles_load((char*)fname);
     xmlFree(fname);
+    style->iconP = icons;
   }
 
   return style;
 }
 
-style_t *style_load(appdata_t *appdata) {
-  const char *name = appdata->settings->style;
+style_t *style_load(const char *name, icon_t **iconP) {
   printf("Trying to load style %s\n", name);
 
   std::string fullname = find_file(std::string(name) + ".style");
@@ -250,7 +244,7 @@ style_t *style_load(appdata_t *appdata) {
 
   printf("  style filename: %s\n", fullname.c_str());
 
-  return style_load_fname(appdata, fullname);
+  return style_load_fname(iconP, fullname);
 }
 
 static std::string style_basename(const std::string &name) {
@@ -270,8 +264,9 @@ struct combo_add_styles {
   GtkWidget * const cbox;
   int cnt;
   int &match;
-  appdata_t * const appdata;
-  combo_add_styles(GtkWidget *w, appdata_t *a, int &m) : cbox(w), cnt(0), match(m), appdata(a) {};
+  const char * const currentstyle;
+  combo_add_styles(GtkWidget *w, const char *sname, int &m)
+    : cbox(w), cnt(0), match(m), currentstyle(sname) {}
   void operator()(const std::string &filename);
 };
 
@@ -279,7 +274,7 @@ void combo_add_styles::operator()(const std::string &filename)
 {
   printf("  file: %s\n", filename.c_str());
 
-  style_t *style = style_parse(appdata, filename, O2G_NULLPTR, TRUE);
+  style_t *style = style_parse(filename, O2G_NULLPTR, true);
   if(!style)
     return;
 
@@ -287,7 +282,7 @@ void combo_add_styles::operator()(const std::string &filename)
   combo_box_append_text(cbox, style->name);
 
   const std::string &basename = style_basename(filename);
-  if(strcmp(basename.c_str(), appdata->settings->style) == 0)
+  if(basename == currentstyle)
     match = cnt;
 
   delete style;
@@ -349,7 +344,7 @@ GtkWidget *style_select_widget(appdata_t *appdata) {
 
   /* fill combo box with presets */
   int match = -1;
-  combo_add_styles cas(cbox, appdata, match);
+  combo_add_styles cas(cbox, appdata->settings->style, match);
   std::for_each(chain.begin(), chain.end(), cas);
 
   if(cas.match >= 0)
@@ -359,15 +354,14 @@ GtkWidget *style_select_widget(appdata_t *appdata) {
 }
 
 struct style_find {
-  appdata_t * const appdata;
   const char * const name;
-  style_find(appdata_t *a, const char *n) : appdata(a), name(n) {}
+  style_find(const char *n) : name(n) {}
   bool operator()(const std::string &filename);
 };
 
 bool style_find::operator()(const std::string &filename)
 {
-  style_t *style = style_parse(appdata, filename, O2G_NULLPTR, TRUE);
+  style_t *style = style_parse(filename, O2G_NULLPTR, true);
   if(!style)
     return false;
 
@@ -381,18 +375,16 @@ void style_change(appdata_t *appdata, const char *name) {
   const std::vector<std::string> &chain = style_scan();
 
   const std::vector<std::string>::const_iterator it =
-      std::find_if(chain.begin(), chain.end(), style_find(appdata, name));
+      std::find_if(chain.begin(), chain.end(), style_find(name));
 
   g_assert(it != chain.end());
   const std::string &new_style = style_basename(*it);
 
   /* check if style has really been changed */
-  if(appdata->settings->style &&
-     !strcmp(appdata->settings->style, new_style.c_str())) {
+  if(appdata->settings->style && appdata->settings->style == new_style)
     return;
-  }
 
-  style_t *nstyle = style_load_fname(appdata, *it);
+  style_t *nstyle = style_load_fname(&appdata->icon, *it);
   if (nstyle == O2G_NULLPTR) {
     errorf(GTK_WIDGET(appdata->window),
            _("Error loading style %s"), it->c_str());
