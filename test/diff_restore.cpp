@@ -189,5 +189,5 @@ int main(int argc, char **argv)
 
 void main_ui_enable(appdata_t *)
 {
-  abort();
+  g_assert_not_reached();
 }
