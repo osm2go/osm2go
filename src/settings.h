@@ -77,4 +77,11 @@ private:
   std::map<const char *, gboolean *> store_bool;
 };
 
+/**
+ * @brief adjust an API 0.5 url to 0.6 or http to https
+ * @param rserver configured server URL
+ * @returns if the server was changed
+ */
+bool api_adjust(std::string &rserver);
+
 #endif // SETTINGS_H

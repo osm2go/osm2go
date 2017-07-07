@@ -38,6 +38,8 @@
 #define ST_ENTRY(map, a) map[#a] = &a
 
 static const std::string keybase = "/apps/" PACKAGE "/";
+const char *api06https = "https://api.openstreetmap.org/api/0.6";
+const char *apihttp = "http://api.openstreetmap.org/api/0.";
 
 template<typename T, typename U, U GETTER(const GConfValue *)> struct load_functor {
   std::string &key; ///< reference to avoid most reallocations
@@ -69,7 +71,6 @@ template<typename T, typename U, U GETTER(const GConfValue *)> void load_functor
 
 settings_t *settings_t::load() {
   settings_t *settings = new settings_t();
-  const char *api06https = "https://api.openstreetmap.org/api/0.6";
 
   /* ------ overwrite with settings from gconf if present ------- */
   GConfClient *client = gconf_client_get_default();
@@ -89,10 +90,8 @@ settings_t *settings_t::load() {
       settings->server[pos05 + 2] = '6';
       printf("adjusting server path in settings to 0.6\n");
     }
-    const char *api06http = "http://api.openstreetmap.org/api/0.6";
-    if(G_UNLIKELY(settings->server.find(api06http) == 0)) {
-      settings->server = api06https;
-      printf("adjusting server path in settings to https\n");
+    if(G_UNLIKELY(api_adjust(settings->server))) {
+      printf("adjusting server path in settings\n");
     }
 
     /* restore wms server list */
@@ -271,4 +270,16 @@ settings_t::settings_t()
 settings_t::~settings_t()
 {
   std::for_each(wms_server.begin(), wms_server.end(), default_delete<wms_server_t>());
+}
+
+bool api_adjust(std::string &rserver) {
+  if(G_UNLIKELY(rserver.size() > strlen(apihttp) &&
+                rserver.find(apihttp) == 0 &&
+                (rserver[strlen(apihttp)] == '5' ||
+                 rserver[strlen(apihttp)] == '6'))) {
+    rserver = api06https;
+    return true;
+  }
+
+  return false;
 }

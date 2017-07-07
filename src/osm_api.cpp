@@ -81,32 +81,6 @@ struct osm_upload_context_t {
   const std::string src;
 };
 
-/**
- * @brief adjust an API 0.5 url to 0.6
- * @param rserver configured server URL
- * @returns if the server was changed
- */
-static bool api_adjust(std::string &rserver) {
-  if(!rserver.empty()) {
-    std::string::size_type pos = rserver.find("0.5");
-    if(pos != std::string::npos) {
-      rserver[pos + 2] = '6';
-      return true;
-    }
-  }
-
-  return false;
-}
-
-static std::string urlbase(const project_t *project) {
-  std::string url = project->server;
-  if(strncmp(url.c_str(), "http://", 7) == 0 && url.find(".openstreetmap.org/") != std::string::npos) {
-    printf("dynamically switching download to HTTPS\n");
-    url.insert(4, "s");
-  }
-  return url;
-}
-
 bool osm_download(GtkWidget *parent, settings_t *settings, project_t *project)
 {
   printf("download osm ...\n");
@@ -117,12 +91,12 @@ bool osm_download(GtkWidget *parent, settings_t *settings, project_t *project)
   if(!project->rserver.empty()) {
     if(api_adjust(project->rserver))
       messagef(parent, _("Server changed"),
-               _("It seems your current project uses a server/protocol no "
-               "longer in use by OSM. It has thus been changed to:\n\n%s"),
+               _("It seems your current project uses an outdated server/protocol. "
+               "It has thus been changed to:\n\n%s"),
                project->server);
 
     /* server url should not end with a slash */
-    if(project->rserver[project->rserver.size() - 1] == '/') {
+    if(G_UNLIKELY(project->rserver[project->rserver.size() - 1] == '/')) {
       printf("removing trailing slash\n");
       project->rserver.erase(project->rserver.size() - 1);
     }
@@ -141,7 +115,7 @@ bool osm_download(GtkWidget *parent, settings_t *settings, project_t *project)
   g_ascii_formatd(maxlon, sizeof(maxlon), LL_FORMAT, project->max.lon);
   g_ascii_formatd(maxlat, sizeof(maxlat), LL_FORMAT, project->max.lat);
 
-  const std::string url = urlbase(project) + "/map?bbox=" +
+  const std::string url = std::string(project->server) + "/map?bbox=" +
                           minlon + "," + minlat + "," +
                           maxlon +  "," +  maxlat;
 
@@ -895,8 +869,14 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
 	  PACKAGE, VERSION);
   appendf(context.log, O2G_NULLPTR, _("User comment: %s\n"), context.comment.c_str());
 
-  if(api_adjust(project->rserver))
-    appendf(context.log, O2G_NULLPTR, _("Adjusting server name to v0.6\n"));
+  if(api_adjust(project->rserver)) {
+    appendf(context.log, O2G_NULLPTR, _("Server URL adjusted to %s\n"),
+            project->rserver.c_str());
+    if(G_LIKELY(project->rserver == context.appdata->settings->server)) {
+      project->rserver.clear();
+      project->server = context.appdata->settings->server.c_str();
+    }
+  }
 
   appendf(context.log, O2G_NULLPTR, _("Uploading to %s\n"), project->server);
 

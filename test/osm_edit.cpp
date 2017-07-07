@@ -1,4 +1,5 @@
 #include <osm.h>
+#include <settings.h>
 
 #include <misc.h>
 #include <osm2go_cpp.h>
@@ -634,6 +635,36 @@ static void test_merge_nodes()
   g_assert(r->members.front().object == n2);
 }
 
+static void test_api_adjust()
+{
+ const std::string api06https = "https://api.openstreetmap.org/api/0.6";
+ const std::string apihttp = "http://api.openstreetmap.org/api/0.";
+ const std::string apidev = "http://master.apis.dev.openstreetmap.org/api/0.6";
+ std::string server;
+
+ g_assert_false(api_adjust(server));
+ g_assert_true(server.empty());
+
+ server = apihttp + '5';
+ g_assert_true(api_adjust(server));
+ g_assert(server == api06https);
+
+ g_assert_false(api_adjust(server));
+ g_assert(server == api06https);
+
+ server = apihttp + '6';
+ g_assert_true(api_adjust(server));
+ g_assert(server == api06https);
+
+ server = apihttp + '7';
+ g_assert_false(api_adjust(server));
+ g_assert(server != api06https);
+
+ server = apidev;
+ g_assert_false(api_adjust(server));
+ g_assert(server == apidev);
+}
+
 int main()
 {
   xmlInitParser();
@@ -646,8 +677,14 @@ int main()
   test_way_delete();
   test_member_delete();
   test_merge_nodes();
+  test_api_adjust();
 
   xmlCleanupParser();
 
   return 0;
+}
+
+void main_ui_enable(appdata_t *)
+{
+  g_assert_not_reached();
 }
