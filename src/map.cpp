@@ -1722,7 +1722,7 @@ GtkWidget *map_new(appdata_t *appdata) {
   style_t *s = style_load(appdata->settings->style, &appdata->icon);
   if(!s) {
     errorf(O2G_NULLPTR, _("Unable to load valid style %s, terminating."),
-           appdata->settings->style);
+           appdata->settings->style.c_str());
     return O2G_NULLPTR;
   }
 

@@ -22,6 +22,7 @@
 
 #include <glib.h>
 #include <map>
+#include <string>
 #include <vector>
 
 /* define this for a vertical UI layout */
@@ -45,22 +46,22 @@ public:
   ~settings_t();
 
   /* never changed */
-  char *base_path;
+  std::string base_path;
 
   /* changed in project.c */
-  char *project;
+  std::string project;
 
   /* changed in osm_api.c */
-  char *server, *username, *password;
+  std::string server, username, password;
 
   /* changed in wms.c */
   std::vector<struct wms_server_t *> wms_server;
 
   /* changed in style.c */
-  char *style;
+  std::string style;
 
   /* changed in main.c */
-  char *track_path;
+  std::string track_path;
   gboolean enable_gps;
   gboolean follow_gps;
 
@@ -72,7 +73,7 @@ public:
   void save() const;
 
 private:
-  std::map<const char *, char **> store_str;
+  std::map<const char *, std::string *> store_str;
   std::map<const char *, gboolean *> store_bool;
 };
 

@@ -129,7 +129,7 @@ bool osm_download(GtkWidget *parent, settings_t *settings, project_t *project)
 
     if(project->rserver == settings->server) {
       project->rserver.clear();
-      project->server = settings->server;
+      project->server = settings->server.c_str();
     }
   }
 
@@ -596,7 +596,7 @@ static bool osm_create_changeset(osm_upload_context_t &context) {
   if(xml_str) {
     printf("creating changeset %s from address %p\n", url.c_str(), xml_str);
 
-    context.credentials = context.appdata->settings->username + std::string(":") +
+    context.credentials = context.appdata->settings->username + ":" +
                           context.appdata->settings->password;
 
     item_id_t changeset;
@@ -724,13 +724,6 @@ static void info_more(const osm_dirty_t &context) {
 }
 #endif
 
-static __attribute__((nonnull(1,2))) void update_if_different(char **value, const gchar *newval) {
-  if(*value && strcmp(*value, newval) == 0)
-    return;
-  *value = static_cast<char *>(g_realloc(*value, strlen(newval) + 1));
-  memcpy(*value, newval, strlen(newval) + 1);
-}
-
 void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
 
   printf("starting upload\n");
@@ -773,16 +766,16 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   table_attach_label_l(table, _("Username:"), 0, 1, 0, 1);
   GtkWidget *uentry = entry_new();
   HILDON_ENTRY_NO_AUTOCAP(uentry);
-  const char *username = (appdata->settings->username && *appdata->settings->username) ?
-                         appdata->settings->username :
+  const char *username = !appdata->settings->username.empty() ?
+                         appdata->settings->username.c_str() :
                          _("<your osm username>");
   gtk_entry_set_text(GTK_ENTRY(uentry), username);
   gtk_table_attach_defaults(GTK_TABLE(table),  uentry, 1, 2, 0, 1);
   table_attach_label_l(table, _("Password:"), 0, 1, 1, 2);
   GtkWidget *pentry = entry_new();
   HILDON_ENTRY_NO_AUTOCAP(pentry);
-  if(appdata->settings->password)
-    gtk_entry_set_text(GTK_ENTRY(pentry), appdata->settings->password);
+  if(!appdata->settings->password.empty())
+    gtk_entry_set_text(GTK_ENTRY(pentry), appdata->settings->password.c_str());
   gtk_entry_set_visibility(GTK_ENTRY(pentry), FALSE);
   gtk_table_attach_defaults(GTK_TABLE(table),  pentry, 1, 2, 1, 2);
   gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, FALSE, FALSE, 0);
@@ -848,8 +841,8 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   printf("clicked ok\n");
 
   /* retrieve username and password */
-  update_if_different(&appdata->settings->username, gtk_entry_get_text(GTK_ENTRY(uentry)));
-  update_if_different(&appdata->settings->password, gtk_entry_get_text(GTK_ENTRY(pentry)));
+  appdata->settings->username = gtk_entry_get_text(GTK_ENTRY(uentry));
+  appdata->settings->password = gtk_entry_get_text(GTK_ENTRY(pentry));
 
   /* fetch comment from dialog */
   GtkTextIter start, end;

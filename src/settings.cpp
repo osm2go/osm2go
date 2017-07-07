@@ -39,17 +39,16 @@
 
 static const std::string keybase = "/apps/" PACKAGE "/";
 
-template<typename T> struct load_functor {
+template<typename T, typename U, U GETTER(const GConfValue *)> struct load_functor {
   std::string &key; ///< reference to avoid most reallocations
   GConfClient * const client;
   const GConfValueType type;
   load_functor(std::string &k, GConfClient *c, GConfValueType t)
     : key(k), client(c), type(t) {}
   void operator()(const std::pair<const char *, T *> &p);
-  T get(GConfValue *value);
 };
 
-template<typename T> void load_functor<T>::operator()(const std::pair<const char *, T *> &p)
+template<typename T, typename U, U GETTER(const GConfValue *)> void load_functor<T, U, GETTER>::operator()(const std::pair<const char *, T *> &p)
 {
   key = keybase + p.first;
 
@@ -63,19 +62,9 @@ template<typename T> void load_functor<T>::operator()(const std::pair<const char
     printf("invalid type found for key '%s': expected %u, got %u\n",
            p.first, type, value->type);
   } else {
-    *(p.second) = get(value);
+    *(p.second) = GETTER(value);
   }
   gconf_value_free(value);
-}
-
-template<> char *load_functor<char *>::get(GConfValue *value)
-{
-  return g_strdup(gconf_value_get_string(value));
-}
-
-template<> gboolean load_functor<gboolean>::get(GConfValue *value)
-{
-  return gconf_value_get_bool(value);
 }
 
 settings_t *settings_t::load() {
@@ -90,19 +79,19 @@ settings_t *settings_t::load() {
     std::string key;
 
     std::for_each(settings->store_str.begin(), settings->store_str.end(),
-                  load_functor<char *>(key, client, GCONF_VALUE_STRING));
+                  load_functor<std::string, const char *, gconf_value_get_string>(key, client, GCONF_VALUE_STRING));
     std::for_each(settings->store_bool.begin(), settings->store_bool.end(),
-                  load_functor<gboolean>(key, client, GCONF_VALUE_BOOL));
+                  load_functor<gboolean, gboolean, gconf_value_get_bool>(key, client, GCONF_VALUE_BOOL));
 
     /* adjust default server stored in settings if required */
-    if(G_UNLIKELY(settings->server && strstr(settings->server, "0.5") != O2G_NULLPTR)) {
-      strstr(settings->server, "0.5")[2] = '6';
+    std::string::size_type pos05 = settings->server.find("0.5");
+    if(G_UNLIKELY(pos05 != std::string::npos)) {
+      settings->server[pos05 + 2] = '6';
       printf("adjusting server path in settings to 0.6\n");
     }
     const char *api06http = "http://api.openstreetmap.org/api/0.6";
-    if(G_UNLIKELY(settings->server && strncmp(settings->server, api06http, strlen(api06http)) == 0)) {
-      g_free(settings->server);
-      settings->server = g_strdup(api06https);
+    if(G_UNLIKELY(settings->server.find(api06http) == 0)) {
+      settings->server = api06https;
       printf("adjusting server path in settings to https\n");
     }
 
@@ -143,7 +132,7 @@ settings_t *settings_t::load() {
     }
 
     /* use demo setup if present */
-    if(!settings->project && !settings->base_path) {
+    if(settings->project.empty() && settings->base_path.empty()) {
       printf("base_path not set, assuming first time boot\n");
 
       /* check for presence of demo project */
@@ -161,7 +150,7 @@ settings_t *settings_t::load() {
   /* ------ set useful defaults ------- */
 
   const char *p;
-  if(G_UNLIKELY(settings->base_path == O2G_NULLPTR)) {
+  if(G_UNLIKELY(settings->base_path.empty())) {
 #ifdef USE_HILDON
     /* try to use internal memory card on hildon/maemo */
     p = getenv("INTERNAL_MMC_MOUNTPOINT");
@@ -173,32 +162,34 @@ settings_t *settings_t::load() {
     if(!p)
       p = "/tmp";
 
+    settings->base_path = p;
+
     /* build image path in home directory */
     if(strncmp(p, "/home", 5) == 0)
-      settings->base_path = g_strconcat(p, "/.osm2go/", O2G_NULLPTR);
+      settings->base_path += "/.osm2go/";
     else
-      settings->base_path = g_strconcat(p, "/osm2go/", O2G_NULLPTR);
+      settings->base_path += "/osm2go/";
 
-    fprintf(stderr, "base_path = %s\n", settings->base_path);
+    fprintf(stderr, "base_path = %s\n", settings->base_path.c_str());
   }
 
-  if(G_UNLIKELY(settings->server == O2G_NULLPTR)) {
+  if(G_UNLIKELY(settings->server.empty())) {
     /* ------------- setup download defaults -------------------- */
-    settings->server = g_strdup(api06https);
+    settings->server = api06https;
   }
 
-  if(!settings->username) {
+  if(settings->username.empty()) {
     if((p = getenv("OSM_USER")))
-      settings->username = g_strdup(p);
+      settings->username = p;
   }
 
-  if(!settings->password) {
+  if(settings->password.empty()) {
     if((p = getenv("OSM_PASS")))
-      settings->password = g_strdup(p);
+      settings->password = p;
   }
 
-  if(G_UNLIKELY(settings->style == O2G_NULLPTR))
-    settings->style = g_strdup(DEFAULT_STYLE);
+  if(G_UNLIKELY(settings->style.empty()))
+    settings->style = DEFAULT_STYLE;
 
   return settings;
 }
@@ -211,13 +202,13 @@ void settings_t::save() const {
   std::string key;
 
   /* store everything listed in the store tables */
-  const std::map<const char *, char **>::const_iterator sitEnd = store_str.end();
-  for(std::map<const char *, char **>::const_iterator it = store_str.begin();
+  const std::map<const char *, std::string *>::const_iterator sitEnd = store_str.end();
+  for(std::map<const char *, std::string *>::const_iterator it = store_str.begin();
       it != sitEnd; it++) {
     key = keybase + it->first;
 
-    if(*(it->second))
-      gconf_client_set_string(client, key.c_str(), *(it->second), O2G_NULLPTR);
+    if(!it->second->empty())
+      gconf_client_set_string(client, key.c_str(), it->second->c_str(), O2G_NULLPTR);
     else
       gconf_client_unset(client, key.c_str(), O2G_NULLPTR);
   }
@@ -250,14 +241,7 @@ void settings_t::save() const {
 }
 
 settings_t::settings_t()
-  : base_path(O2G_NULLPTR)
-  , project(O2G_NULLPTR)
-  , server(O2G_NULLPTR)
-  , username(O2G_NULLPTR)
-  , password(O2G_NULLPTR)
-  , style(O2G_NULLPTR)
-  , track_path(O2G_NULLPTR)
-  , enable_gps(FALSE)
+  : enable_gps(FALSE)
   , follow_gps(FALSE)
   , first_run_demo(FALSE)
 {
@@ -287,9 +271,4 @@ settings_t::settings_t()
 settings_t::~settings_t()
 {
   std::for_each(wms_server.begin(), wms_server.end(), default_delete<wms_server_t>());
-
-  const std::map<const char *, char **>::const_iterator sitEnd = store_str.end();
-  for(std::map<const char *, char **>::const_iterator it = store_str.begin();
-      it != sitEnd; it++)
-    g_free(*(it->second));
 }

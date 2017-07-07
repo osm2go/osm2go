@@ -109,7 +109,7 @@ static std::string project_filename(const project_t *project) {
 }
 
 static bool project_read(const std::string &project_file, project_t *project,
-                             const char *defaultserver) {
+                             const std::string &defaultserver) {
   xmlDoc *doc = xmlReadFile(project_file.c_str(), O2G_NULLPTR, 0);
 
   /* parse the file and get the DOM */
@@ -137,8 +137,8 @@ static bool project_read(const std::string &project_file, project_t *project,
               xmlFree(desc);
 	    } else if(strcmp((char*)node->name, "server") == 0) {
 	      str = xmlNodeListGetString(doc, node->children, 1);
-              if(g_strcmp0(defaultserver, (gchar *)str) == 0) {
-                project->server = defaultserver;
+              if(defaultserver == reinterpret_cast<char *>(str)) {
+                project->server = defaultserver.c_str();
               } else {
                 project->rserver = reinterpret_cast<char *>(str);
                 project->server = project->rserver.c_str();
@@ -297,7 +297,7 @@ bool project_save(GtkWidget *parent, project_t *project) {
  * @returns if project exists
  */
 bool project_exists(settings_t *settings, const char *name, std::string &fullname) {
-  if(G_UNLIKELY(settings->base_path == O2G_NULLPTR))
+  if(G_UNLIKELY(settings->base_path.empty()))
     return false;
   fullname = settings->base_path;
   fullname += name;
@@ -313,7 +313,7 @@ static std::vector<project_t *> project_scan(settings_t *settings) {
   std::vector<project_t *> projects;
 
   /* scan for projects */
-  GDir *dir = g_dir_open(settings->base_path, 0, O2G_NULLPTR);
+  GDir *dir = g_dir_open(settings->base_path.c_str(), 0, O2G_NULLPTR);
   const gchar *name;
   while((name = g_dir_read_name(dir)) != O2G_NULLPTR) {
     std::string fullname;
@@ -443,11 +443,7 @@ static void project_close(appdata_t *appdata) {
   }
 
   /* remember in settings that no project is open */
-  if(appdata->settings->project)
-  {
-    g_free(appdata->settings->project);
-    appdata->settings->project = O2G_NULLPTR;
-  }
+  appdata->settings->project.clear();
 
   /* update project file on disk */
   project_save(GTK_WIDGET(appdata->window), appdata->project);
@@ -560,7 +556,7 @@ static project_t *project_new(select_context_t *context) {
   project->data_dirty = true;
 
   /* use global server/access settings */
-  project->server = context->appdata->settings->server;
+  project->server = context->appdata->settings->server.c_str();
 
   /* build project osm file name */
   project->osm = project->name + ".osm";
@@ -693,8 +689,8 @@ static void on_project_edit(GtkButton *, gpointer data) {
       cur->desc = project->desc;
 
       /* update server */
-      if(g_strcmp0(project->server, context->appdata->settings->server) == 0) {
-        cur->server = context->appdata->settings->server;
+      if(project->server == context->appdata->settings->server) {
+        cur->server = context->appdata->settings->server.c_str();
 	cur->rserver.clear();
       } else {
         cur->rserver = project->server;
@@ -1241,7 +1237,7 @@ project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
   if(context.project->rserver.empty() ||
      context.project->rserver == appdata->settings->server) {
     context.project->rserver.clear();
-    context.project->server = appdata->settings->server;
+    context.project->server = appdata->settings->server.c_str();
   } else {
     context.project->server = context.project->rserver.c_str();
   }
@@ -1380,8 +1376,7 @@ bool project_load(appdata_t *appdata, const std::string &name) {
   wms_load(appdata);
 
   /* save the name of the project for the perferences */
-  g_free(appdata->settings->project);
-  appdata->settings->project = g_strdup(appdata->project->name.c_str());
+  appdata->settings->project = appdata->project->name;
 
   banner_busy_stop(appdata);
 
@@ -1414,12 +1409,12 @@ osm_t *project_parse_osm(const project_t *project, struct icon_t **icons) {
   return osm_t::parse(project->path, project->osm, icons);
 }
 
-project_t::project_t(const char *n, const char *base_path)
+project_t::project_t(const char *n, const std::string &base_path)
   : server(O2G_NULLPTR)
   , map_state(O2G_NULLPTR)
   , data_dirty(false)
   , name(n)
-  , path(std::string(base_path) +  name + '/')
+  , path(base_path +  name + '/')
 {
   memset(&wms_offset, 0, sizeof(wms_offset));
   memset(&min, 0, sizeof(min));

@@ -323,24 +323,24 @@ cb_menu_track_import(appdata_t *appdata) {
 			O2G_NULLPTR);
 #endif
 
-  if(appdata->settings->track_path) {
-    if(!g_file_test(appdata->settings->track_path, G_FILE_TEST_EXISTS)) {
-      char *last_sep = strrchr(appdata->settings->track_path, '/');
-      if(last_sep) {
-	*last_sep = 0;  // seperate path from file
+  if(!appdata->settings->track_path.empty()) {
+    if(!g_file_test(appdata->settings->track_path.c_str(), G_FILE_TEST_EXISTS)) {
+      std::string::size_type slashpos = appdata->settings->track_path.rfind('/');
+      if(slashpos != std::string::npos) {
+        appdata->settings->track_path[slashpos] = '\0';  // seperate path from file
 
 	/* the user just created a new document */
 	gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog),
-				    appdata->settings->track_path);
+                                            appdata->settings->track_path.c_str());
 	gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(dialog),
-					  last_sep+1);
+                                          appdata->settings->track_path.c_str() + slashpos + 1);
 
 	/* restore full filename */
-	*last_sep = '/';
+        appdata->settings->track_path[slashpos] = '/';
       }
     } else
       gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(dialog),
-				    appdata->settings->track_path);
+                                    appdata->settings->track_path.c_str());
   }
 
   gtk_widget_show_all (GTK_WIDGET(dialog));
@@ -355,7 +355,6 @@ cb_menu_track_import(appdata_t *appdata) {
     if(appdata->track.track) {
       map_track_draw(appdata->map, appdata->track.track);
 
-      g_free(appdata->settings->track_path);
       appdata->settings->track_path = filename;
       filename = O2G_NULLPTR;
     }
@@ -397,26 +396,25 @@ cb_menu_track_export(appdata_t *appdata) {
 				       O2G_NULLPTR);
 #endif
 
-  printf("set filename <%s>\n", appdata->settings->track_path);
+  printf("set filename <%s>\n", appdata->settings->track_path.c_str());
 
-  if(appdata->settings->track_path) {
-    if(!g_file_test(appdata->settings->track_path, G_FILE_TEST_EXISTS)) {
-      char *last_sep = strrchr(appdata->settings->track_path, '/');
-      if(last_sep) {
-	*last_sep = 0;  // seperate path from file
+  if(!appdata->settings->track_path.empty()) {
+    if(!g_file_test(appdata->settings->track_path.c_str(), G_FILE_TEST_EXISTS)) {
+      std::string::size_type slashpos = appdata->settings->track_path.rfind('/');
+      if(slashpos != std::string::npos) {
+        appdata->settings->track_path[slashpos] = '\0';  // seperate path from file
 
-	/* the user just created a new document */
 	gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog),
-					    appdata->settings->track_path);
+                                            appdata->settings->track_path.c_str());
 	gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(dialog),
-					  last_sep+1);
+                                          appdata->settings->track_path.c_str() + slashpos + 1);
 
 	/* restore full filename */
-	*last_sep = '/';
+        appdata->settings->track_path[slashpos] = '/';
       }
     } else
       gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(dialog),
-				    appdata->settings->track_path);
+                                    appdata->settings->track_path.c_str());
   }
 
   if(gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_FM_OK) {
@@ -430,11 +428,11 @@ cb_menu_track_export(appdata_t *appdata) {
 		  "Overwrite existing file",
 		  "The file already exists. "
 		  "Do you really want to replace it?")) {
-	g_free(appdata->settings->track_path);
-	appdata->settings->track_path = g_strdup(filename);
+	appdata->settings->track_path = filename;
 
         g_assert_nonnull(appdata->track.track);
         track_export(appdata->track.track, filename);
+        g_free(filename);
       }
     }
   }
@@ -1097,10 +1095,8 @@ void menu_cleanup(appdata_t &appdata) {
 #define ACCELS_FILE "accels"
 
 static void menu_accels_load(appdata_t *appdata) {
-  char *accels_file = g_strconcat(appdata->settings->base_path, ACCELS_FILE,
-                                      O2G_NULLPTR);
-  gtk_accel_map_load(accels_file);
-  g_free(accels_file);
+  const std::string &accels_file = appdata->settings->base_path + ACCELS_FILE;
+  gtk_accel_map_load(accels_file.c_str());
 }
 #endif
 
@@ -1113,10 +1109,8 @@ appdata_t::~appdata_t() {
   printf("cleaning up ...\n");
 
 #ifdef UISPECIFIC_MENU_HAS_ACCELS
-  char *accels_file = g_strconcat(settings->base_path, ACCELS_FILE,
-                                      O2G_NULLPTR);
-  gtk_accel_map_save(accels_file);
-  g_free(accels_file);
+  const std::string &accels_file = settings->base_path + ACCELS_FILE;
+  gtk_accel_map_save(accels_file.c_str());
 #endif
 
   settings->save();
@@ -1435,7 +1429,7 @@ int main(int argc, char *argv[]) {
   }
 
   /* load project if one is specified in the settings */
-  if(appdata.settings->project)
+  if(!appdata.settings->project.empty())
     project_load(&appdata, appdata.settings->project);
 
   main_ui_enable(&appdata);

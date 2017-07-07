@@ -228,13 +228,13 @@ static style_t *style_load_fname(icon_t **icons, const std::string &filename) {
   return style;
 }
 
-style_t *style_load(const char *name, icon_t **iconP) {
-  printf("Trying to load style %s\n", name);
+style_t *style_load(const std::string &name, icon_t **iconP) {
+  printf("Trying to load style %s\n", name.c_str());
 
-  std::string fullname = find_file(std::string(name) + ".style");
+  std::string fullname = find_file(name + ".style");
 
   if (G_UNLIKELY(fullname.empty())) {
-    printf("style %s not found, trying %s instead\n", name, DEFAULT_STYLE);
+    printf("style %s not found, trying %s instead\n", name.c_str(), DEFAULT_STYLE);
     fullname = find_file(DEFAULT_STYLE ".style");
     if (G_UNLIKELY(fullname.empty())) {
       printf("  style not found, failed to find fallback style too\n");
@@ -264,8 +264,8 @@ struct combo_add_styles {
   GtkWidget * const cbox;
   int cnt;
   int &match;
-  const char * const currentstyle;
-  combo_add_styles(GtkWidget *w, const char *sname, int &m)
+  const std::string &currentstyle;
+  combo_add_styles(GtkWidget *w, const std::string &sname, int &m)
     : cbox(w), cnt(0), match(m), currentstyle(sname) {}
   void operator()(const std::string &filename);
 };
@@ -381,7 +381,7 @@ void style_change(appdata_t *appdata, const char *name) {
   const std::string &new_style = style_basename(*it);
 
   /* check if style has really been changed */
-  if(appdata->settings->style && appdata->settings->style == new_style)
+  if(appdata->settings->style == new_style)
     return;
 
   style_t *nstyle = style_load_fname(&appdata->icon, *it);
@@ -391,8 +391,7 @@ void style_change(appdata_t *appdata, const char *name) {
     return;
   }
 
-  g_free(appdata->settings->style);
-  appdata->settings->style = g_strdup(new_style.c_str());
+  appdata->settings->style = new_style;
 
   map_clear(appdata->map, MAP_LAYER_OBJECTS_ONLY);
   /* let gtk clean up first */
