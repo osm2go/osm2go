@@ -131,7 +131,7 @@ struct wms_t {
 
 static gboolean wms_bbox_is_valid(pos_t *min, pos_t *max) {
   /* all four coordinates are valid? */
-  if(isnan(min->lat)||isnan(min->lon)||isnan(max->lat)||isnan(max->lon))
+  if(std::isnan(min->lat) || std::isnan(min->lon) || std::isnan(max->lat) || std::isnan(max->lon))
     return FALSE;
 
   /* min/max span a useful range? */

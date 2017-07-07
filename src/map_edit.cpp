@@ -28,9 +28,10 @@
 #include "statusbar.h"
 #include "style.h"
 
-#include <algorithm>
-
 #include <osm2go_cpp.h>
+
+#include <algorithm>
+#include <cmath>
 
 /* -------------------------- way_add ----------------------- */
 
@@ -61,7 +62,7 @@ void map_edit_way_add_segment(map_t *map, gint x, gint y) {
   /* the last node placed is less than 5 pixels from the current */
   /* position */
   const node_t *lnode = map->action.way->last_node();
-  if(lnode && (map->state->zoom * sqrt((lnode->lpos.x-x)*(lnode->lpos.x-x)+
+  if(lnode && (map->state->zoom * std::sqrt((lnode->lpos.x - x) * (lnode->lpos.x - x) +
 		       (lnode->lpos.y-y)*(lnode->lpos.y-y))) < 5) {
 #if 0
     printf("detected double click -> simulate ok click\n");

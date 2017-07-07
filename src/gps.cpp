@@ -124,7 +124,7 @@ bool gpsd_state_t::get_pos(pos_t &pos, float* alt)
 
   g_mutex_unlock(mutex);
 
-  return !isnan(pos.lat);
+  return !std::isnan(pos.lat);
 }
 
 static int gps_connect(gpsd_state_t *gps_state) {

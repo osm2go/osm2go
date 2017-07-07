@@ -17,22 +17,6 @@
  * along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
-#include <string.h>
-
-#include <curl/curl.h>
-#include <gdk/gdkkeysyms.h>
-
-#ifdef FREMANTLE
-#include <hildon/hildon-button.h>
-#include <hildon/hildon-check-button.h>
-#include <hildon/hildon-window-stack.h>
-#include <gdk/gdkx.h>
-#include <X11/Xatom.h>
-#else
-#include "scale_popup.h"
-#endif
-
 #include "appdata.h"
 #include "about.h"
 #include "banner.h"
@@ -51,7 +35,21 @@
 #include "track.h"
 #include "wms.h"
 
-#include <stdint.h>
+#ifdef FREMANTLE
+#include <hildon/hildon-button.h>
+#include <hildon/hildon-check-button.h>
+#include <hildon/hildon-window-stack.h>
+#include <gdk/gdkx.h>
+#include <X11/Xatom.h>
+#else
+#include "scale_popup.h"
+#endif
+
+#include <cmath>
+#include <cstdio>
+#include <cstring>
+#include <curl/curl.h>
+#include <gdk/gdkkeysyms.h>
 
 /* disable/enable main screen control dependant on presence of open project */
 void main_ui_enable(appdata_t *appdata) {
@@ -278,7 +276,7 @@ cb_scale_popup(GtkWidget *button, appdata_t *appdata) {
     return;
 
   float lin =
-    -rint(log(appdata->project->map_state->detail)/log(MAP_DETAIL_STEP));
+    -rint(std::log(appdata->project->map_state->detail) / std::log(MAP_DETAIL_STEP));
 
   scale_popup(button, lin, GTK_WINDOW(appdata->window), appdata->map);
 }

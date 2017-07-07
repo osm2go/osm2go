@@ -20,6 +20,8 @@
 
 #include "map.h"
 
+#include <math.h>
+
 #ifndef USE_HILDON
 #define HEIGHT 100
 #else

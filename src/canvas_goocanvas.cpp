@@ -21,6 +21,7 @@
 
 #include "misc.h"
 
+#include <cmath>
 #include <cstring>
 
 #include <osm2go_cpp.h>

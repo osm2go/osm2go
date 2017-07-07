@@ -22,7 +22,6 @@
 
 #include <glib.h>
 #include <gtk/gtk.h>
-#include <math.h>
 
 /* format string used to write lat/lon coordinates, altitude and time */
 #define LL_FORMAT   "%.07f"
@@ -40,6 +39,8 @@ typedef double pos_float_t;
 #define NAN (0.0/0.0)
 #endif
 
+#ifdef __cplusplus
+#include <cmath>
 /* equatorial radius in meters */
 #define POS_EQ_RADIUS     (6378137.0)
 #define KMPMIL   (1.609344)
@@ -48,6 +49,7 @@ typedef double pos_float_t;
 
 #define DEG2RAD(a)  ((a) * M_PI / 180.0)
 #define RAD2DEG(a)  ((a) * 180.0 / M_PI)
+#endif
 
 /* global position */
 typedef struct pos_t {

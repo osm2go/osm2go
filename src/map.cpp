@@ -38,6 +38,7 @@
 #include <osm2go_cpp.h>
 
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <cstring>
 #include <gdk/gdkkeysyms.h>
@@ -251,7 +252,7 @@ void draw_selected_way_functor::operator()(node_t* node)
 
     /* only draw arrow if there's sufficient space */
     /* TODO: what if there's not enough space anywhere? */
-    float len = sqrt(pow(diff.x, 2)+pow(diff.y, 2));
+    float len = std::sqrt(std::pow(diff.x, 2) + std::pow(diff.y, 2));
     if(len > map->style->highlight.arrow_limit * arrow_width) {
       /* create a new map item for every arrow */
       map_item_t *new_map_item = g_new0(map_item_t, 1);

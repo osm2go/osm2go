@@ -986,8 +986,8 @@ struct projects_to_bounds {
 
 void projects_to_bounds::operator()(const project_t* project)
 {
-  if (isnan(project->min.lat) || isnan(project->min.lon) ||
-      isnan(project->min.lat) || isnan(project->min.lon))
+  if (std::isnan(project->min.lat) || std::isnan(project->min.lon) ||
+      std::isnan(project->min.lat) || std::isnan(project->min.lon))
     return;
 
   pbounds.push_back(pos_bounds(project->min, project->max));

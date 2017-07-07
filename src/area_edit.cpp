@@ -173,8 +173,8 @@ static gboolean area_warning(context_t *context) {
 static void area_main_update(context_t *context) {
   /* also setup the local error messages here, so they are */
   /* updated for all entries at once */
-  if(isnan(context->min.lat) || isnan(context->min.lon) ||
-     isnan(context->min.lat) || isnan(context->min.lon)) {
+  if(std::isnan(context->min.lat) || std::isnan(context->min.lon) ||
+     std::isnan(context->min.lat) || std::isnan(context->min.lon)) {
     gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog),
 				      GTK_RESPONSE_ACCEPT, FALSE);
   } else {
@@ -253,8 +253,8 @@ static void map_update(context_t *context, gboolean forced) {
   printf("do map redraw\n");
 
   /* check if the position is invalid */
-  if(isnan(context->min.lat) || isnan(context->min.lon) ||
-     isnan(context->min.lat) || isnan(context->min.lon)) {
+  if(std::isnan(context->min.lat) || std::isnan(context->min.lon) ||
+     std::isnan(context->min.lat) || std::isnan(context->min.lon)) {
 
     /* no coordinates given: display around the current GPS position if available */
     pos_t pos;
@@ -492,8 +492,8 @@ on_map_button_press_event(GtkWidget *widget,
 static gboolean
 on_map_motion_notify_event(GtkWidget *widget,
 			   GdkEventMotion  *event, context_t *context) {
-  if(!isnan(context->map.start.rlon) &&
-     !isnan(context->map.start.rlat)) {
+  if(!std::isnan(context->map.start.rlon) &&
+     !std::isnan(context->map.start.rlat)) {
     OsmGpsMap *map = OSM_GPS_MAP(context->map.widget);
 
     /* remove existing marker */
@@ -522,8 +522,8 @@ on_map_button_release_event(GtkWidget *widget,
   OsmGpsMap *map = OSM_GPS_MAP(context->map.widget);
   osm_gps_map_osd_t *osd = osm_gps_map_osd_get(map);
 
-  if(!isnan(context->map.start.rlon) &&
-     !isnan(context->map.start.rlat)) {
+  if(!std::isnan(context->map.start.rlon) &&
+     !std::isnan(context->map.start.rlat)) {
 
     OsmGpsMapPoint start = context->map.start, end;
     osm_gps_map_convert_screen_to_geographic(map, (gint)event->x, (gint)event->y, &end);

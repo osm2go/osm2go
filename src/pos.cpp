@@ -17,8 +17,10 @@
  * along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "appdata.h"
+#include "pos.h"
+
 #include "misc.h"
+#include "osm.h"
 
 #include <osm2go_cpp.h>
 
@@ -40,7 +42,7 @@ static void remove_trailing_zeroes(char *str) {
 }
 
 void pos_lat_str(char *str, size_t len, pos_float_t latitude) {
-  if(isnan(latitude))
+  if(std::isnan(latitude))
     strcpy(str, "---");
   else {
     snprintf(str, len-1, "%.5f", latitude);
@@ -62,11 +64,11 @@ pos_float_t pos_parse_lon(const char *str) {
 }
 
 bool pos_lat_valid(pos_float_t lat) {
-  return(!isnan(lat) && (lat >= -90.0) && (lat <= 90.0));
+  return(!std::isnan(lat) && (lat >= -90.0) && (lat <= 90.0));
 }
 
 bool pos_lon_valid(pos_float_t lon) {
-  return(!isnan(lon) && (lon >= -180.0) && (lon <= 180.0));
+  return(!std::isnan(lon) && (lon >= -180.0) && (lon <= 180.0));
 }
 
 static void mark(GtkWidget *widget, bool valid) {
@@ -188,7 +190,7 @@ void lpos2pos(const bounds_t *bounds, const lpos_t *lpos, pos_t *pos) {
 
 void pos_dist_entry_set(GtkWidget *entry, pos_float_t dist, bool is_mil) {
   char str[32] = "---";
-  if(!isnan(dist)) {
+  if(!std::isnan(dist)) {
     /* is this to be displayed as miles? */
     if(is_mil) dist /= KMPMIL;  // kilometer per mile
 

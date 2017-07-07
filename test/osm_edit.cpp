@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cerrno>
+#include <cmath>
 #include <cstring>
 #include <iostream>
 
@@ -49,7 +50,7 @@ static void set_bounds(osm_t &o) {
                (o.rbounds.ll_max.lon + o.rbounds.ll_min.lon) / 2);
 
   pos2lpos_center(&center, &o.rbounds.center);
-  o.rbounds.scale = cos(DEG2RAD(center.lat));
+  o.rbounds.scale = std::cos(DEG2RAD(center.lat));
 
   o.bounds = &o.rbounds;
 }
