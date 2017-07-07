@@ -503,9 +503,10 @@ menu_append_new_item(appdata_t *appdata,
     item = gtk_check_menu_item_new_with_mnemonic (label);
   }
   else if (!stock_item_known) {
-    GdkPixbuf *pbuf = icon_load(&appdata->icon, icon_name);
-    if (pbuf) {
-      image = gtk_image_new_from_pixbuf(pbuf);
+    if(icon_name) {
+      GdkPixbuf *pbuf = icon_load(&appdata->icon, icon_name);
+      if (pbuf)
+        image = gtk_image_new_from_pixbuf(pbuf);
     }
     if (image) {
       item = gtk_image_menu_item_new_with_mnemonic(label);

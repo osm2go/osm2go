@@ -21,21 +21,11 @@
 #define ICON_H
 
 #include <gtk/gtk.h>
+#include <string>
 
 typedef struct icon_t icon_t;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-GdkPixbuf *icon_load(icon_t **icon, const char *name);
 void icon_free(icon_t **icons, GdkPixbuf *buf);
-GtkWidget *icon_widget_load(icon_t **icon, const char *name);
-
-#ifdef __cplusplus
-}
-
-#include <string>
 
 /**
  * @brief load an icon from disk, limited to given dimensions
@@ -49,10 +39,8 @@ GtkWidget *icon_widget_load(icon_t **icon, const char *name);
  */
 GdkPixbuf *icon_load(icon_t **icon, const std::string &sname, int limit = -1);
 
-GtkWidget *icon_widget_load(icon_t **icon, const std::string &name, int limit);
+GtkWidget *icon_widget_load(icon_t **icon, const std::string &name, int limit = -1);
 
 void icon_free_all(icon_t *icons);
-
-#endif
 
 #endif // ICON_H
