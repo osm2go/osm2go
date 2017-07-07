@@ -58,7 +58,8 @@ static void on_way_cut_clicked(map_t *map) {
 }
 
 #ifdef FINGER_UI
-static GtkWidget *menu_add(GtkWidget *menu, appdata_t *appdata,
+static GtkWidget * __attribute__((nonnull(1,2,3,4,5)))
+                  menu_add(GtkWidget *menu, appdata_t *appdata,
                            const char *icon_str, const char *menu_str,
                            GCallback func) {
 
@@ -168,7 +169,8 @@ static GtkWidget *icon_add(GtkWidget *vbox, appdata_t *appdata,
 }
 #endif
 
-static GtkWidget *tool_add(GtkWidget *toolbar, appdata_t *appdata,
+static GtkWidget *  __attribute__((nonnull(1,2,3,4,5)))
+                  tool_add(GtkWidget *toolbar, appdata_t *appdata,
                            const char *icon_str, char *tooltip_str,
                            GCallback func, gpointer context) {
   GtkWidget *item =

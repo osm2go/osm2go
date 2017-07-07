@@ -1222,7 +1222,8 @@ on_window_realize(GtkWidget *widget, gpointer) {
 #endif
 
 #ifdef FREMANTLE
-static GtkWidget *icon_button(appdata_t *appdata, const char *icon, GCallback cb,
+static GtkWidget *  __attribute__((nonnull(1,2,4)))
+                  icon_button(appdata_t *appdata, const char *icon, GCallback cb,
 			      GtkWidget *box) {
   /* add zoom-in button */
   GtkWidget *but = gtk_button_new();
