@@ -30,6 +30,11 @@
 
 #define TAG_STATE  GTK_STATE_PRELIGHT
 
+bool pos_t::valid() const
+{
+  return pos_lat_valid(lat) && pos_lon_valid(lon);
+}
+
 static void remove_trailing_zeroes(char *str) {
   char *delim = strpbrk(str, ".,");
   if(delim == O2G_NULLPTR)

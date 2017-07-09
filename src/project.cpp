@@ -34,7 +34,6 @@
 #include "wms.h"
 
 #include <algorithm>
-#include <cmath>
 #include <cstring>
 #include <glib/gstdio.h>
 #include <libxml/parser.h>
@@ -967,11 +966,8 @@ static void project_diffstat(project_context_t &context) {
 }
 
 static gboolean
-project_pos_is_valid(project_t *project) {
-  return (!std::isnan(project->min.lat) &&
-          !std::isnan(project->min.lon) &&
-          !std::isnan(project->max.lat) &&
-          !std::isnan(project->max.lon));
+project_pos_is_valid(const project_t *project) {
+  return (project->min.valid() && project->max.valid()) ? TRUE : FALSE;
 }
 
 struct projects_to_bounds {
@@ -982,8 +978,7 @@ struct projects_to_bounds {
 
 void projects_to_bounds::operator()(const project_t* project)
 {
-  if (std::isnan(project->min.lat) || std::isnan(project->min.lon) ||
-      std::isnan(project->min.lat) || std::isnan(project->min.lon))
+  if (!project_pos_is_valid(project))
     return;
 
   pbounds.push_back(pos_bounds(project->min, project->max));

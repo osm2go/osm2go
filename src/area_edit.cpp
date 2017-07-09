@@ -173,8 +173,7 @@ static gboolean area_warning(context_t *context) {
 static void area_main_update(context_t *context) {
   /* also setup the local error messages here, so they are */
   /* updated for all entries at once */
-  if(std::isnan(context->min.lat) || std::isnan(context->min.lon) ||
-     std::isnan(context->min.lat) || std::isnan(context->min.lon)) {
+  if(!context->min.valid() || !context->max.valid()) {
     gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog),
 				      GTK_RESPONSE_ACCEPT, FALSE);
   } else {
@@ -253,9 +252,7 @@ static void map_update(context_t *context, bool forced) {
   printf("do map redraw\n");
 
   /* check if the position is invalid */
-  if(std::isnan(context->min.lat) || std::isnan(context->min.lon) ||
-     std::isnan(context->min.lat) || std::isnan(context->min.lon)) {
-
+  if(!context->min.valid() || !context->max.valid()) {
     /* no coordinates given: display around the current GPS position if available */
     pos_t pos;
     int zoom = 12;
