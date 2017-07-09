@@ -50,14 +50,14 @@
 
 struct project_context_t {
   explicit project_context_t(appdata_t *a, project_t *p, gboolean n, const std::vector<project_t *> &j, GtkWidget *dlg);
-  project_t *project;
-  settings_t *settings;
-  GtkWidget * const dialog, *fsize, *diff_stat, *diff_remove;
-  GtkWidget *desc, *download;
-  GtkWidget *minlat, *minlon, *maxlat, *maxlon;
-  gboolean is_new;
+  project_t * const project;
+  settings_t * const settings;
+  GtkWidget * const dialog, * const fsize, * const diff_stat, * const diff_remove;
+  GtkWidget * const desc, * const download;
+  GtkWidget * const minlat, * const minlon, * const maxlat, * const maxlon;
+  const gboolean is_new;
 #ifdef SERVER_EDITABLE
-  GtkWidget *server;
+  GtkWidget * const server;
 #endif
   area_edit_t area_edit;
   const std::vector<project_t *> &projects;
@@ -65,23 +65,30 @@ struct project_context_t {
   bool active_n_dirty() const;
 };
 
+/* create a left aligned label (normal ones are centered) */
+static GtkWidget *gtk_label_left_new(const char *str = O2G_NULLPTR) {
+  GtkWidget *label = gtk_label_new(str);
+  gtk_misc_set_alignment(GTK_MISC(label), 0.f, .5f);
+  return label;
+}
+
 project_context_t::project_context_t(appdata_t* a, project_t *p, gboolean n,
                                      const std::vector<project_t *> &j, GtkWidget *dlg)
   : project(p)
   , settings(a->settings)
   , dialog(dlg)
-  , fsize(O2G_NULLPTR)
-  , diff_stat(O2G_NULLPTR)
-  , diff_remove(O2G_NULLPTR)
-  , desc(O2G_NULLPTR)
-  , download(O2G_NULLPTR)
-  , minlat(O2G_NULLPTR)
-  , minlon(O2G_NULLPTR)
-  , maxlat(O2G_NULLPTR)
-  , maxlon(O2G_NULLPTR)
+  , fsize(gtk_label_left_new())
+  , diff_stat(gtk_label_left_new())
+  , diff_remove(button_new_with_label(_("Undo all")))
+  , desc(entry_new())
+  , download(button_new_with_label(_("Download")))
+  , minlat(pos_lat_label_new(project->min.lat))
+  , minlon(pos_lon_label_new(project->min.lon))
+  , maxlat(pos_lat_label_new(project->max.lat))
+  , maxlon(pos_lon_label_new(project->max.lon))
   , is_new(n)
 #ifdef SERVER_EDITABLE
-  , server(O2G_NULLPTR)
+  , server(entry_new())
 #endif
   , area_edit(a, project->min, project->max, dlg)
   , projects(j)
@@ -1079,13 +1086,6 @@ bool project_check_demo(GtkWidget *parent, project_t *project) {
   return !project->server;
 }
 
-/* create a left aligned label (normal ones are centered) */
-static GtkWidget *gtk_label_left_new(char *str) {
-  GtkWidget *label = gtk_label_new(str);
-  gtk_misc_set_alignment(GTK_MISC(label), 0.f, .5f);
-  return label;
-}
-
 static bool
 project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
   appdata_t *appdata = scontext->appdata;
@@ -1120,36 +1120,25 @@ project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
   gtk_dialog_set_default_response(GTK_DIALOG(dialog),
 				  GTK_RESPONSE_ACCEPT);
 
-  GtkWidget *label;
   GtkWidget *table = gtk_table_new(5, 5, FALSE);  // x, y
   gtk_table_set_col_spacing(GTK_TABLE(table), 0, 8);
   gtk_table_set_col_spacing(GTK_TABLE(table), 3, 8);
 
-  label = gtk_label_left_new(_("Description:"));
-  gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 0, 1);
-  context.desc = entry_new();
+  gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_left_new(_("Description:")), 0, 1, 0, 1);
   gtk_entry_set_activates_default(GTK_ENTRY(context.desc), TRUE);
   if(!project->desc.empty())
     gtk_entry_set_text(GTK_ENTRY(context.desc), project->desc.c_str());
   gtk_table_attach_defaults(GTK_TABLE(table),  context.desc, 1, 5, 0, 1);
   gtk_table_set_row_spacing(GTK_TABLE(table), 0, 4);
 
-  label = gtk_label_left_new(_("Latitude:"));
-  gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 1, 2);
-  context.minlat = pos_lat_label_new(project->min.lat);
+  gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_left_new(_("Latitude:")), 0, 1, 1, 2);
   gtk_table_attach_defaults(GTK_TABLE(table), context.minlat, 1, 2, 1, 2);
-  label = gtk_label_new(_("to"));
-  gtk_table_attach_defaults(GTK_TABLE(table),  label, 2, 3, 1, 2);
-  context.maxlat = pos_lon_label_new(project->max.lat);
+  gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_new(_("to")), 2, 3, 1, 2);
   gtk_table_attach_defaults(GTK_TABLE(table), context.maxlat, 3, 4, 1, 2);
 
-  label = gtk_label_left_new(_("Longitude:"));
-  gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 2, 3);
-  context.minlon = pos_lat_label_new(project->min.lon);
+  gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_left_new(_("Longitude:")), 0, 1, 2, 3);
   gtk_table_attach_defaults(GTK_TABLE(table), context.minlon, 1, 2, 2, 3);
-  label = gtk_label_new(_("to"));
-  gtk_table_attach_defaults(GTK_TABLE(table),  label, 2, 3, 2, 3);
-  context.maxlon = pos_lon_label_new(project->max.lon);
+  gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_new(_("to")), 2, 3, 2, 3);
   gtk_table_attach_defaults(GTK_TABLE(table), context.maxlon, 3, 4, 2, 3);
 
   GtkWidget *edit = button_new_with_label(_("Edit"));
@@ -1162,9 +1151,7 @@ project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
   gtk_table_set_row_spacing(GTK_TABLE(table), 2, 4);
 
 #ifdef SERVER_EDITABLE
-  label = gtk_label_left_new(_("Server:"));
-  gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 3, 4);
-  context.server = entry_new();
+  gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_left_new(_("Server:")), 0, 1, 3, 4);
   gtk_entry_set_activates_default(GTK_ENTRY(context.server), TRUE);
   HILDON_ENTRY_NO_AUTOCAP(context.server);
   gtk_entry_set_text(GTK_ENTRY(context.server), project->server);
@@ -1173,12 +1160,9 @@ project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
   gtk_table_set_row_spacing(GTK_TABLE(table), 3, 4);
 #endif
 
-  label = gtk_label_left_new(_("Map data:"));
-  gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 4, 5);
-  context.fsize = gtk_label_left_new(_(""));
+  gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_left_new(_("Map data:")), 0, 1, 4, 5);
   project_filesize(&context);
   gtk_table_attach_defaults(GTK_TABLE(table), context.fsize, 1, 4, 4, 5);
-  context.download = button_new_with_label(_("Download"));
   g_signal_connect_swapped(GTK_OBJECT(context.download), "clicked",
                            G_CALLBACK(on_download_clicked), &context);
   gtk_widget_set_sensitive(context.download, project_pos_is_valid(project));
@@ -1187,12 +1171,9 @@ project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
 
   gtk_table_set_row_spacing(GTK_TABLE(table), 4, 4);
 
-  label = gtk_label_left_new(_("Changes:"));
-  gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 5, 6);
-  context.diff_stat = gtk_label_left_new(_(""));
+  gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_left_new(_("Changes:")), 0, 1, 5, 6);
   project_diffstat(context);
   gtk_table_attach_defaults(GTK_TABLE(table), context.diff_stat, 1, 4, 5, 6);
-  context.diff_remove = button_new_with_label(_("Undo all"));
   if(!diff_present(project) && !context.active_n_dirty())
     gtk_widget_set_sensitive(context.diff_remove,  FALSE);
   g_signal_connect_swapped(GTK_OBJECT(context.diff_remove), "clicked",
