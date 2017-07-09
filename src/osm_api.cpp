@@ -93,7 +93,7 @@ bool osm_download(GtkWidget *parent, settings_t *settings, project_t *project)
       messagef(parent, _("Server changed"),
                _("It seems your current project uses an outdated server/protocol. "
                "It has thus been changed to:\n\n%s"),
-               project->server);
+               project->rserver.c_str());
 
     /* server url should not end with a slash */
     if(G_UNLIKELY(project->rserver[project->rserver.size() - 1] == '/')) {
