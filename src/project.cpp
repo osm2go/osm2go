@@ -1001,6 +1001,7 @@ static void on_edit_clicked(project_context_t *context) {
 	       "Changing the area may cause pending changes to be "
 	       "lost if they are outside the updated area."));
 
+  context->area_edit.other_bounds.clear();
   std::for_each(context->projects.begin(), context->projects.end(),
                 projects_to_bounds(context->area_edit.other_bounds));
 
