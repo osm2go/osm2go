@@ -193,7 +193,7 @@ void diff_save(const project_t *project, const osm_t *osm) {
 
   const std::string &diff_name = diff_filename(project);
 
-  if(diff_is_clean(osm, TRUE)) {
+  if(diff_is_clean(osm, true)) {
     printf("data set is clean, removing diff if present\n");
     g_remove(diff_name.c_str());
     return;

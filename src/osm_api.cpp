@@ -922,7 +922,7 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
 
   appendf(context.log, O2G_NULLPTR, _("Upload done.\n"));
 
-  gboolean reload_map = FALSE;
+  bool reload_map = false;
   if(project->data_dirty) {
     appendf(context.log, O2G_NULLPTR, _("Server data has been modified.\n"));
     appendf(context.log, O2G_NULLPTR, _("Downloading updated osm data ...\n"));
@@ -931,7 +931,7 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
       appendf(context.log, O2G_NULLPTR, _("Download successful!\n"));
       appendf(context.log, O2G_NULLPTR, _("The map will be reloaded.\n"));
       project->data_dirty = false;
-      reload_map = TRUE;
+      reload_map = true;
     } else
       appendf(context.log, O2G_NULLPTR, _("Download failed!\n"));
 
@@ -945,7 +945,7 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
 
       appendf(context.log, O2G_NULLPTR, _("Reloading map ...\n"));
 
-      if(!diff_is_clean(appdata->osm, FALSE)) {
+      if(!diff_is_clean(appdata->osm, false)) {
 	appendf(context.log, COLOR_ERR, _("*** DIFF IS NOT CLEAN ***\n"));
 	appendf(context.log, COLOR_ERR, _("Something went wrong during upload,\n"));
 	appendf(context.log, COLOR_ERR, _("proceed with care!\n"));

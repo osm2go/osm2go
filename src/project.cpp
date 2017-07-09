@@ -948,7 +948,7 @@ bool project_context_t::active_n_dirty() const {
 
     printf("editing the currently open project\n");
 
-    return !diff_is_clean(area_edit.appdata->osm, TRUE);
+    return !diff_is_clean(area_edit.appdata->osm, true);
   }
 
   return false;

@@ -241,7 +241,7 @@ void add_bounds::operator()(const pos_bounds &b)
 }
 
 /* the contents of the map tab have been changed */
-static void map_update(context_t *context, gboolean forced) {
+static void map_update(context_t *context, bool forced) {
 
   /* map is first tab (page 0) */
   if(!forced && !current_tab_is(context, -1, TAB_LABEL_MAP)) {
@@ -314,7 +314,7 @@ static void map_update(context_t *context, gboolean forced) {
 
 static gboolean on_map_configure(GtkWidget *, GdkEventConfigure *,
 				 context_t *context) {
-  map_update(context, FALSE);
+  map_update(context, false);
   return FALSE;
 }
 #endif
@@ -361,7 +361,7 @@ static void callback_modified_direct(context_t *context) {
   /* also adjust other views */
   extent_update(context);
 #ifdef ENABLE_OSM_GPS_MAP
-  map_update(context, FALSE);
+  map_update(context, false);
 #endif
 }
 
@@ -395,7 +395,7 @@ static void callback_modified_extent(context_t *context) {
   /* also update other tabs */
   direct_update(context);
 #ifdef ENABLE_OSM_GPS_MAP
-  map_update(context, FALSE);
+  map_update(context, false);
 #endif
 }
 
@@ -460,7 +460,7 @@ static void callback_fetch_mm_clicked(context_t *context) {
   direct_update(context);
   extent_update(context);
 #ifdef ENABLE_OSM_GPS_MAP
-  map_update(context, FALSE);
+  map_update(context, false);
 #endif
 }
 #endif
@@ -575,7 +575,7 @@ static void on_page_switch(GtkNotebook *, GtkNotebookPage *,
   /* is becoming visible */
   if(current_tab_is(context, page_num, TAB_LABEL_MAP) &&
      context->map.needs_redraw)
-    map_update(context, TRUE);
+    map_update(context, true);
 }
 
 static gboolean map_gps_update(gpointer data) {
