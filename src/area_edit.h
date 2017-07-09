@@ -34,10 +34,10 @@ struct pos_bounds {
 };
 
 struct area_edit_t {
-  explicit area_edit_t(appdata_t *a, pos_t *mi, pos_t *ma);
-  appdata_t *appdata;
-  GtkWidget *parent;   /* parent widget to be placed upon */
-  pos_t *min, *max;    /* positions to work on */
+  explicit area_edit_t(appdata_t *a, pos_t &mi, pos_t &ma, GtkWidget *dlg);
+  appdata_t * const appdata;
+  GtkWidget * const parent;   /* parent widget to be placed upon */
+  pos_t &min, &max;    /* positions to work on */
   std::vector<pos_bounds> other_bounds;   ///< bounds of all other valid projects
 };
 

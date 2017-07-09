@@ -53,7 +53,7 @@
 /* limit of square kilometers above the warning is enabled */
 #define WARN_OVER  5.0
 
-typedef struct {
+struct context_t {
   GtkWidget *dialog, *notebook;
   area_edit_t *area;
   pos_t min, max;      /* local copy to work on */
@@ -84,11 +84,11 @@ typedef struct {
     OsmGpsMapPoint start;
   } map;
 #endif
-} context_t;
+};
 
-area_edit_t::area_edit_t(appdata_t *a, pos_t *mi, pos_t *ma)
+area_edit_t::area_edit_t(appdata_t *a, pos_t &mi, pos_t &ma, GtkWidget *dlg)
   : appdata(a)
-  , parent(O2G_NULLPTR)
+  , parent(dlg)
   , min(mi)
   , max(ma)
 {
@@ -604,10 +604,8 @@ bool area_edit(area_edit_t &area) {
   context_t context;
   memset(&context, 0, sizeof(context));
   context.area = &area;
-  context.min.lat = area.min->lat;
-  context.min.lon = area.min->lon;
-  context.max.lat = area.max->lat;
-  context.max.lon = area.max->lon;
+  context.min = area.min;
+  context.max = area.max;
 
   context.dialog =
     misc_dialog_new(MISC_DIALOG_HIGH, _("Area editor"),
@@ -672,7 +670,7 @@ bool area_edit(area_edit_t &area) {
   context.direct.maxlat = pos_lat_entry_new(0.0);
   misc_table_attach(table, context.direct.maxlat, 2, 0);
 
-  context.direct.minlon = pos_lon_entry_new(area.min->lon);
+  context.direct.minlon = pos_lon_entry_new(area.min.lon);
   misc_table_attach(table, context.direct.minlon, 0, 1);
   label = gtk_label_new(_("to"));
   misc_table_attach(table,  label, 1, 1);
@@ -816,8 +814,8 @@ bool area_edit(area_edit_t &area) {
 
   if(ok) {
     /* copy modified values back to given storage */
-    *area.min = context.min;
-    *area.max = context.max;
+    area.min = context.min;
+    area.max = context.max;
   }
 
 #ifdef ENABLE_OSM_GPS_MAP

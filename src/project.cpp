@@ -49,10 +49,10 @@
 #endif
 
 struct project_context_t {
-  explicit project_context_t(appdata_t *a, project_t *p, gboolean n, const std::vector<project_t *> &j);
+  explicit project_context_t(appdata_t *a, project_t *p, gboolean n, const std::vector<project_t *> &j, GtkWidget *dlg);
   project_t *project;
   settings_t *settings;
-  GtkWidget *dialog, *fsize, *diff_stat, *diff_remove;
+  GtkWidget * const dialog, *fsize, *diff_stat, *diff_remove;
   GtkWidget *desc, *download;
   GtkWidget *minlat, *minlon, *maxlat, *maxlon;
   gboolean is_new;
@@ -66,10 +66,10 @@ struct project_context_t {
 };
 
 project_context_t::project_context_t(appdata_t* a, project_t *p, gboolean n,
-                                     const std::vector<project_t *> &j)
+                                     const std::vector<project_t *> &j, GtkWidget *dlg)
   : project(p)
   , settings(a->settings)
-  , dialog(O2G_NULLPTR)
+  , dialog(dlg)
   , fsize(O2G_NULLPTR)
   , diff_stat(O2G_NULLPTR)
   , diff_remove(O2G_NULLPTR)
@@ -83,7 +83,7 @@ project_context_t::project_context_t(appdata_t* a, project_t *p, gboolean n,
 #ifdef SERVER_EDITABLE
   , server(O2G_NULLPTR)
 #endif
-  , area_edit(a, &project->min, &project->max)
+  , area_edit(a, project->min, project->max, dlg)
   , projects(j)
 {
 }
@@ -1096,29 +1096,28 @@ project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
 
   /* ------------ project edit dialog ------------- */
 
-  project_context_t context(appdata, project, is_new, scontext->projects);
-
+  GtkWidget *dialog;
   /* cancel is enabled for "new" projects only */
   if(is_new) {
     char *str = g_strdup_printf(_("New project - %s"), project->name.c_str());
 
-    context.area_edit.parent =
-      context.dialog = misc_dialog_new(MISC_DIALOG_WIDE, str,
-				GTK_WINDOW(parent),
-				GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
-				GTK_STOCK_OK, GTK_RESPONSE_ACCEPT, O2G_NULLPTR);
+    dialog = misc_dialog_new(MISC_DIALOG_WIDE, str,
+                             GTK_WINDOW(parent),
+                             GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
+                             GTK_STOCK_OK, GTK_RESPONSE_ACCEPT, O2G_NULLPTR);
     g_free(str);
   } else {
     char *str = g_strdup_printf(_("Edit project - %s"), project->name.c_str());
 
-    context.area_edit.parent =
-      context.dialog = misc_dialog_new(MISC_DIALOG_WIDE, str,
-				GTK_WINDOW(parent),
-				GTK_STOCK_CLOSE, GTK_RESPONSE_ACCEPT, O2G_NULLPTR);
+    dialog = misc_dialog_new(MISC_DIALOG_WIDE, str,
+                             GTK_WINDOW(parent),
+                             GTK_STOCK_CLOSE, GTK_RESPONSE_ACCEPT, O2G_NULLPTR);
     g_free(str);
   }
 
-  gtk_dialog_set_default_response(GTK_DIALOG(context.dialog),
+  project_context_t context(appdata, project, is_new, scontext->projects, dialog);
+
+  gtk_dialog_set_default_response(GTK_DIALOG(dialog),
 				  GTK_RESPONSE_ACCEPT);
 
   GtkWidget *label;
