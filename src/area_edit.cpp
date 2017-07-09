@@ -54,8 +54,10 @@
 #define WARN_OVER  5.0
 
 struct context_t {
+  context_t(area_edit_t &a);
+
   GtkWidget *dialog, *notebook;
-  area_edit_t *area;
+  area_edit_t &area;
   pos_t min, max;      /* local copy to work on */
   GtkWidget *warning;
 
@@ -85,6 +87,24 @@ struct context_t {
   } map;
 #endif
 };
+
+context_t::context_t(area_edit_t& a)
+  : dialog(O2G_NULLPTR)
+  , notebook(O2G_NULLPTR)
+  , area(a)
+  , min(a.min)
+  , max(a.max)
+  , warning(O2G_NULLPTR)
+{
+  memset(&direct, 0, sizeof(direct));
+  memset(&extent, 0, sizeof(extent));
+#ifdef HAS_MAEMO_MAPPER
+  mmapper.fetch = O2G_NULLPTR;
+#endif
+#ifdef ENABLE_OSM_GPS_MAP
+  memset(&map, 0, sizeof(map));
+#endif
+}
 
 area_edit_t::area_edit_t(appdata_t *a, pos_t &mi, pos_t &ma, GtkWidget *dlg)
   : appdata(a)
@@ -159,7 +179,7 @@ static gboolean area_warning(context_t *context) {
   if(area > WARN_OVER) {
     gchar *text = g_strdup_printf(warn_text(), area, area / (KMPMIL * KMPMIL),
                                   WARN_OVER, WARN_OVER/(KMPMIL*KMPMIL));
-    ret = yes_no_f(context->dialog, context->area->appdata,
+    ret = yes_no_f(context->dialog, context->area.appdata,
 		   MISC_AGAIN_ID_AREA_TOO_BIG, MISC_AGAIN_FLAG_DONT_SAVE_NO,
 		   _("Area size warning!"),
 		   _("%s\n\nDo you really want to continue?"),
@@ -256,7 +276,7 @@ static void map_update(context_t *context, bool forced) {
     /* no coordinates given: display around the current GPS position if available */
     pos_t pos;
     int zoom = 12;
-    if(!context->area->appdata->gps_state->get_pos(pos)) {
+    if(!context->area.appdata->gps_state->get_pos(pos)) {
       /* no GPS position available: display the entire world */
       pos.lat = 0.0;
       pos.lon = 0.0;
@@ -303,7 +323,7 @@ static void map_update(context_t *context, bool forced) {
   }
 
   // show all other bounds
-  std::for_each(context->area->other_bounds.begin(), context->area->other_bounds.end(),
+  std::for_each(context->area.other_bounds.begin(), context->area.other_bounds.end(),
                 add_bounds(OSM_GPS_MAP(context->map.widget)));
 
   context->map.needs_redraw = FALSE;
@@ -412,7 +432,7 @@ static void callback_modified_unit(context_t *context) {
 
 #ifdef HAS_MAEMO_MAPPER
 static void callback_fetch_mm_clicked(context_t *context) {
-  if(!dbus_mm_set_position(context->area->appdata->osso_context)) {
+  if(!dbus_mm_set_position(context->area.appdata->osso_context)) {
     errorf(context->dialog,
 	   _("Unable to communicate with Maemo Mapper. "
 	     "You need to have Maemo Mapper installed "
@@ -420,7 +440,7 @@ static void callback_fetch_mm_clicked(context_t *context) {
     return;
   }
 
-  if(!context->area->appdata->mmpos.valid) {
+  if(!context->area.appdata->mmpos.valid) {
     errorf(context->dialog,
 	   _("No valid position received yet. You need "
 	     "to scroll or zoom the Maemo Mapper view "
@@ -434,9 +454,9 @@ static void callback_fetch_mm_clicked(context_t *context) {
     return;
 
   /* maemo mapper pos data ... */
-  pos_float_t center_lat = context->area->appdata->mmpos.pos.lat;
-  pos_float_t center_lon = context->area->appdata->mmpos.pos.lon;
-  int zoom = context->area->appdata->mmpos.zoom;
+  pos_float_t center_lat = context->area.appdata->mmpos.pos.lat;
+  pos_float_t center_lon = context->area.appdata->mmpos.pos.lon;
+  int zoom = context->area.appdata->mmpos.zoom;
 
   if(!pos_lat_valid(center_lat) || !pos_lon_valid(center_lon))
     return;
@@ -578,11 +598,11 @@ static void on_page_switch(GtkNotebook *, GtkNotebookPage *,
 static gboolean map_gps_update(gpointer data) {
   context_t *context = static_cast<context_t *>(data);
 
-  gboolean gps_on = context->area->appdata->settings->enable_gps;
+  gboolean gps_on = context->area.appdata->settings->enable_gps;
 
   pos_t pos(NAN, NAN);
   gboolean gps_fix = gps_on &&
-    context->area->appdata->gps_state->get_pos(pos);
+    context->area.appdata->gps_state->get_pos(pos);
 
   if(gps_fix) {
     g_object_set(context->map.widget, "gps-track-highlight-radius", 0, O2G_NULLPTR);
@@ -596,20 +616,16 @@ static gboolean map_gps_update(gpointer data) {
 
 #endif
 
-bool area_edit(area_edit_t &area) {
+bool area_edit_t::run() {
   GtkWidget *vbox;
   GdkColor color;
   gdk_color_parse("red", &color);
 
-  context_t context;
-  memset(&context, 0, sizeof(context));
-  context.area = &area;
-  context.min = area.min;
-  context.max = area.max;
+  context_t context(*this);
 
   context.dialog =
     misc_dialog_new(MISC_DIALOG_HIGH, _("Area editor"),
-	  GTK_WINDOW(area.parent),
+	  GTK_WINDOW(parent),
 	  GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
           GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
           O2G_NULLPTR);
@@ -670,7 +686,7 @@ bool area_edit(area_edit_t &area) {
   context.direct.maxlat = pos_lat_entry_new(0.0);
   misc_table_attach(table, context.direct.maxlat, 2, 0);
 
-  context.direct.minlon = pos_lon_entry_new(area.min.lon);
+  context.direct.minlon = pos_lon_entry_new(min.lon);
   misc_table_attach(table, context.direct.minlon, 0, 1);
   label = gtk_label_new(_("to"));
   misc_table_attach(table,  label, 1, 1);
@@ -814,8 +830,8 @@ bool area_edit(area_edit_t &area) {
 
   if(ok) {
     /* copy modified values back to given storage */
-    area.min = context.min;
-    area.max = context.max;
+    min = context.min;
+    max = context.max;
   }
 
 #ifdef ENABLE_OSM_GPS_MAP

@@ -1004,7 +1004,7 @@ static void on_edit_clicked(project_context_t *context) {
   std::for_each(context->projects.begin(), context->projects.end(),
                 projects_to_bounds(context->area_edit.other_bounds));
 
-  if(area_edit(context->area_edit)) {
+  if(context->area_edit.run()) {
     printf("coordinates changed!!\n");
 
     /* the wms layer isn't usable with new coordinates */

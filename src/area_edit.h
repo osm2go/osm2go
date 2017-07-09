@@ -39,8 +39,8 @@ struct area_edit_t {
   GtkWidget * const parent;   /* parent widget to be placed upon */
   pos_t &min, &max;    /* positions to work on */
   std::vector<pos_bounds> other_bounds;   ///< bounds of all other valid projects
-};
 
-bool area_edit(area_edit_t &area);
+  bool run();
+};
 
 #endif // AREA_EDIT_H
