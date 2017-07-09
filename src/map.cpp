@@ -2364,21 +2364,21 @@ void map_detail_change(map_t *map, float detail) {
 
 void map_detail_increase(map_t *map) {
   if(!map) return;
-  banner_busy_start(map->appdata, 1, _("Increasing detail level"));
+  banner_busy_start(map->appdata, _("Increasing detail level"));
   map_detail_change(map, map->state->detail * MAP_DETAIL_STEP);
   banner_busy_stop(map->appdata);
 }
 
 void map_detail_decrease(map_t *map) {
   if(!map) return;
-  banner_busy_start(map->appdata, 1, _("Decreasing detail level"));
+  banner_busy_start(map->appdata, _("Decreasing detail level"));
   map_detail_change(map, map->state->detail / MAP_DETAIL_STEP);
   banner_busy_stop(map->appdata);
 }
 
 void map_detail_normal(map_t *map) {
   if(!map) return;
-  banner_busy_start(map->appdata, 1, _("Restoring default detail level"));
+  banner_busy_start(map->appdata, _("Restoring default detail level"));
   map_detail_change(map, 1.0);
   banner_busy_stop(map->appdata);
 }

@@ -1298,7 +1298,7 @@ static bool project_open(appdata_t *appdata, const char *name) {
 bool project_load(appdata_t *appdata, const std::string &name) {
   char banner_txt[64];
   snprintf(banner_txt, sizeof(banner_txt), _("Loading %s"), name.c_str());
-  banner_busy_start(appdata, TRUE, banner_txt);
+  banner_busy_start(appdata, banner_txt);
 
   /* close current project */
   osm2go_platform::process_events();

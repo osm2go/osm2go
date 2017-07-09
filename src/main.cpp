@@ -160,7 +160,7 @@ cb_menu_download(appdata_t *appdata) {
       delete appdata->osm;
     }
 
-    banner_busy_start(appdata, 1, "Drawing");
+    banner_busy_start(appdata, _("Drawing"));
     appdata->osm = project_parse_osm(appdata->project, &appdata->icon);
     diff_restore(appdata, appdata->project, appdata->osm);
     map_paint(appdata->map);

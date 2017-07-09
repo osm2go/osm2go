@@ -103,7 +103,6 @@ typedef struct appdata_t {
   dbus_mm_pos_t mmpos;
   GtkWidget *banner;
 #endif
-  gboolean banner_is_grabby;
 
   /* flags used to prevent re-appearence of dialogs */
   struct {
