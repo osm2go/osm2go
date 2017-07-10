@@ -305,11 +305,7 @@ bool project_save(GtkWidget *parent, project_t *project) {
 bool project_exists(settings_t *settings, const char *name, std::string &fullname) {
   if(G_UNLIKELY(settings->base_path.empty()))
     return false;
-  fullname = settings->base_path;
-  fullname += name;
-  fullname += '/';
-  fullname += name;
-  fullname += ".proj";
+  fullname = settings->base_path + name + '/' + name + ".proj";
 
   /* check for project file */
   return g_file_test(fullname.c_str(), G_FILE_TEST_IS_REGULAR) == TRUE;
