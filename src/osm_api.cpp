@@ -958,7 +958,7 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
       delete appdata->osm;
 
       appendf(context.log, O2G_NULLPTR, _("Loading OSM ...\n"));
-      appdata->osm = project_parse_osm(appdata->project, &appdata->icon);
+      appdata->osm = project_parse_osm(appdata->project, appdata->icons);
       appendf(context.log, O2G_NULLPTR, _("Applying diff ...\n"));
       diff_restore(appdata, appdata->project, appdata->osm);
       appendf(context.log, O2G_NULLPTR, _("Painting ...\n"));

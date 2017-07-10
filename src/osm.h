@@ -55,6 +55,7 @@ struct bounds_t {
 };
 
 class base_object_t;
+class icon_t;
 class node_t;
 class relation_t;
 class way_t;
@@ -137,11 +138,12 @@ struct member_t {
 struct osm_t {
   typedef std::multimap<std::string, std::string> TagMap;
 
+  osm_t(icon_t &ic) : icons(ic) {}
   ~osm_t();
 
   bounds_t *bounds;   // original bounds as they appear in the file
 
-  struct icon_t **icons;
+  icon_t &icons;
 
   bounds_t rbounds;
 
@@ -201,7 +203,7 @@ struct osm_t {
 
   node_t *parse_way_nd(xmlNode *a_node) const;
 
-  static osm_t *parse(const std::string &path, const std::string &filename, struct icon_t **icons);
+  static osm_t *parse(const std::string &path, const std::string &filename, icon_t &icons);
 
   static TagMap::iterator findTag(TagMap &map, const std::string &k, const std::string &v);
   static inline TagMap::const_iterator findTag(const TagMap &map, const std::string &k, const std::string &v) {

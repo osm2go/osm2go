@@ -1,4 +1,5 @@
 #include <diff.h>
+#include <icon.h>
 #include <misc.h>
 #include <osm.h>
 #include <project.h>
@@ -100,14 +101,14 @@ int main(int argc, char **argv)
 
   xmlInitParser();
 
-  struct icon_t *icons = O2G_NULLPTR;
+  icon_t icons;
   std::string osm_path = argv[1];
   g_assert(osm_path[osm_path.size() - 1] == '/');
   osm_path += argv[2];
   osm_path += "/";
   osm_path += argv[2];
   osm_path += ".osm";
-  osm_t *osm = osm_t::parse(std::string(), osm_path.c_str(), &icons);
+  osm_t *osm = osm_t::parse(std::string(), osm_path.c_str(), icons);
   if(!osm) {
     std::cerr << "cannot open " << argv[1] << argv[2] << ": " << strerror(errno) << std::endl;
     return 1;
@@ -166,7 +167,7 @@ int main(int argc, char **argv)
     rename(bpath.c_str(), bdiff.c_str());
 
     delete osm;
-    osm = osm_t::parse(std::string(), osm_path.c_str(), &icons);
+    osm = osm_t::parse(std::string(), osm_path.c_str(), icons);
     g_assert_nonnull(osm);
 
     diff_restore(O2G_NULLPTR, &sproject, osm);

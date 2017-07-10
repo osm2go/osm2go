@@ -29,10 +29,10 @@ struct appdata_t;
 class node_t;
 
 struct style_t {
-  style_t();
+  style_t(icon_t &ic);
   ~style_t();
 
-  icon_t **iconP;  // pointer to global list of icons
+  icon_t &icons;  // pointer to global list of icons
   char *name;
 
   struct {
@@ -93,7 +93,7 @@ struct style_t {
   std::map<item_id_t, GdkPixbuf *> node_icons;
 };
 
-style_t *style_load(const std::string &name, icon_t **iconP);
+style_t *style_load(const std::string &name, icon_t &icons);
 
 #ifndef FREMANTLE
 void style_select(GtkWidget *parent, appdata_t *appdata);

@@ -179,7 +179,7 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t *style) {
  * @param name_only only parse the style name, leave all other fields empty
  * @return a new style pointer
  */
-static style_t *style_parse(const std::string &fullname,
+static style_t *style_parse(const std::string &fullname, icon_t &icons,
                             xmlChar **fname, bool name_only) {
   xmlDoc *doc = xmlReadFile(fullname.c_str(), O2G_NULLPTR, 0);
 
@@ -198,7 +198,7 @@ static style_t *style_parse(const std::string &fullname,
       if (cur_node->type == XML_ELEMENT_NODE) {
         if(strcasecmp((char*)cur_node->name, "style") == 0) {
           if(!style) {
-            style = new style_t();
+            style = new style_t(icons);
             style->name = (char*)xmlGetProp(cur_node, BAD_CAST "name");
             if(name_only)
               break;
@@ -214,21 +214,20 @@ static style_t *style_parse(const std::string &fullname,
   }
 }
 
-static style_t *style_load_fname(icon_t **icons, const std::string &filename) {
+static style_t *style_load_fname(icon_t &icons, const std::string &filename) {
   xmlChar *fname = O2G_NULLPTR;
-  style_t *style = style_parse(filename, &fname, false);
+  style_t *style = style_parse(filename, icons, &fname, false);
 
   if(style) {
     printf("  elemstyle filename: %s\n", fname);
     style->elemstyles = josm_elemstyles_load((char*)fname);
     xmlFree(fname);
-    style->iconP = icons;
   }
 
   return style;
 }
 
-style_t *style_load(const std::string &name, icon_t **iconP) {
+style_t *style_load(const std::string &name, icon_t &icons) {
   printf("Trying to load style %s\n", name.c_str());
 
   std::string fullname = find_file(name + ".style");
@@ -244,7 +243,7 @@ style_t *style_load(const std::string &name, icon_t **iconP) {
 
   printf("  style filename: %s\n", fullname.c_str());
 
-  return style_load_fname(iconP, fullname);
+  return style_load_fname(icons, fullname);
 }
 
 static std::string style_basename(const std::string &name) {
@@ -265,6 +264,7 @@ struct combo_add_styles {
   int cnt;
   int &match;
   const std::string &currentstyle;
+  icon_t dummyicons;
   combo_add_styles(GtkWidget *w, const std::string &sname, int &m)
     : cbox(w), cnt(0), match(m), currentstyle(sname) {}
   void operator()(const std::string &filename);
@@ -274,7 +274,7 @@ void combo_add_styles::operator()(const std::string &filename)
 {
   printf("  file: %s\n", filename.c_str());
 
-  style_t *style = style_parse(filename, O2G_NULLPTR, true);
+  style_t *style = style_parse(filename, dummyicons, O2G_NULLPTR, true);
   if(!style)
     return;
 
@@ -355,13 +355,14 @@ GtkWidget *style_select_widget(appdata_t *appdata) {
 
 struct style_find {
   const char * const name;
+  icon_t dummyicons;
   style_find(const char *n) : name(n) {}
   bool operator()(const std::string &filename);
 };
 
 bool style_find::operator()(const std::string &filename)
 {
-  style_t *style = style_parse(filename, O2G_NULLPTR, true);
+  style_t *style = style_parse(filename, dummyicons, O2G_NULLPTR, true);
   if(!style)
     return false;
 
@@ -384,7 +385,7 @@ void style_change(appdata_t *appdata, const char *name) {
   if(appdata->settings->style == new_style)
     return;
 
-  style_t *nstyle = style_load_fname(&appdata->icon, *it);
+  style_t *nstyle = style_load_fname(appdata->icons, *it);
   if (nstyle == O2G_NULLPTR) {
     errorf(GTK_WIDGET(appdata->window),
            _("Error loading style %s"), it->c_str());
@@ -449,8 +450,8 @@ void style_select(GtkWidget *parent, appdata_t *appdata) {
 }
 #endif
 
-style_t::style_t()
-  : iconP(O2G_NULLPTR)
+style_t::style_t(icon_t &ic)
+  : icons(ic)
   , name(O2G_NULLPTR)
 {
   memset(&icon, 0, sizeof(icon));
@@ -465,10 +466,10 @@ style_t::style_t()
 }
 
 struct unref_icon {
-  icon_t ** const icons;
-  unref_icon(icon_t **i) : icons(i) {}
+  icon_t &icons;
+  unref_icon(icon_t &i) : icons(i) {}
   void operator()(const std::pair<item_id_t, GdkPixbuf *> &pair) {
-    (*icons)->icon_free(pair.second);
+    icons.icon_free(pair.second);
   }
 };
 
@@ -478,7 +479,7 @@ style_t::~style_t()
 
   josm_elemstyles_free(elemstyles);
 
-  std::for_each(node_icons.begin(), node_icons.end(), unref_icon(iconP));
+  std::for_each(node_icons.begin(), node_icons.end(), unref_icon(icons));
 
   g_free(name);
   xmlFree(BAD_CAST icon.path_prefix);

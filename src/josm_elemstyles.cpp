@@ -491,7 +491,7 @@ struct condition_not_matches_obj {
 static void node_icon_unref(style_t *style, const node_t *node) {
   std::map<item_id_t, GdkPixbuf *>::iterator it = style->node_icons.find(node->id);
   if(it != style->node_icons.end()) {
-    (*(style->iconP))->icon_free(it->second);
+    style->icons.icon_free(it->second);
     style->node_icons.erase(it);
   }
 }
@@ -525,7 +525,7 @@ void colorize_node::operator()(const elemstyle_t *elemstyle)
   name += '/';
   name += elemstyle->icon.filename;
 
-  GdkPixbuf *buf = (*(style->iconP))->load(name);
+  GdkPixbuf *buf = style->icons.load(name);
 
   /* Free old icon if there's one present, but only after loading (not
    * assigning!) the new one. In case the old and new icon are the same

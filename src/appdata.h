@@ -56,6 +56,7 @@
 #endif
 
 #ifdef __cplusplus
+#include "icon.h"
 #include "osm.h"
 #endif
 
@@ -83,8 +84,7 @@ typedef struct appdata_t {
 #ifdef USE_HILDON
   HildonProgram *program;
   HildonWindow *window;
-  osso_context_t *osso_context;
-
+  osso_context_t * const osso_context;
 #else
   GtkWidget *window;
 #endif
@@ -132,9 +132,9 @@ typedef struct appdata_t {
 #ifdef __cplusplus
   struct map_t *map;
   struct osm_t *osm;
-  class settings_t *settings;
-  class gps_state_t *gps_state;
-  class icon_t *icon;
+  class settings_t * const settings;
+  class gps_state_t * const gps_state;
+  icon_t icons;
 
   appdata_t();
   ~appdata_t();

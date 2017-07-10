@@ -424,7 +424,7 @@ cb_menu_item(GtkWidget *menu_item, gpointer data) {
   presets_item_dialog(context, item);
 }
 
-static GtkWidget *create_menuitem(icon_t **icons, const presets_item_named *item)
+static GtkWidget *create_menuitem(icon_t &icons, const presets_item_named *item)
 {
   GtkWidget *menu_item;
 
@@ -434,7 +434,7 @@ static GtkWidget *create_menuitem(icon_t **icons, const presets_item_named *item
     menu_item = gtk_image_menu_item_new_with_label(item->name.c_str());
 
     gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(menu_item),
-                                  (*icons)->widget_load(item->icon, 16));
+                                  icons.widget_load(item->icon, 16));
   }
 
   return menu_item;
@@ -473,7 +473,7 @@ void build_menu_functor::operator()(presets_item_t *item)
     was_item = true;
     was_separator = false;
 
-    menu_item = create_menuitem(&context->appdata->icon,
+    menu_item = create_menuitem(context->appdata->icons,
                                 static_cast<presets_item_named *>(item));
 
     if(item->type & presets_item_t::TY_GROUP) {
@@ -490,7 +490,7 @@ void build_menu_functor::operator()(presets_item_t *item)
         if(!*matches)
           *matches = gtk_menu_new();
 
-        GtkWidget *used_item = create_menuitem(&context->appdata->icon,
+        GtkWidget *used_item = create_menuitem(context->appdata->icons,
                                                static_cast<presets_item_named *>(item));
         g_object_set_data(G_OBJECT(used_item), "item", item);
         g_signal_connect(used_item, "activate",
@@ -724,10 +724,10 @@ static GtkWidget *presets_picker_embed(GtkTreeView *view, GtkListStore *store,
   return c;
 }
 
-static GtkTreeIter preset_insert_item(const presets_item_named *item, icon_t **icons,
+static GtkTreeIter preset_insert_item(const presets_item_named *item, icon_t &icons,
                                       GtkListStore *store) {
   /* icon load can cope with empty string as name (returns O2G_NULLPTR then) */
-  GdkPixbuf *icon = (*icons)->load(item->icon, 16);
+  GdkPixbuf *icon = icons.load(item->icon, 16);
 
   /* Append a row and fill in some data */
   GtkTreeIter iter;
@@ -761,7 +761,7 @@ template<> void insert_recent_items<false>::operator()(const presets_item_t *pre
                   insert_recent_items(context, store));
   } else if(preset->matches(context->tag_context->tags))
     preset_insert_item(static_cast<const presets_item_named *>(preset),
-                       &context->appdata->icon, store);
+                       context->appdata->icons, store);
 }
 
 /**
@@ -771,7 +771,7 @@ template<> void insert_recent_items<true>::operator()(const presets_item_t *pres
 {
   if(preset->type & context->presets_mask)
     preset_insert_item(static_cast<const presets_item_named *>(preset),
-                       &context->appdata->icon, store);
+                       context->appdata->icons, store);
 }
 
 static GtkWidget *preset_picker_recent(presets_context_t *context) {
@@ -814,7 +814,7 @@ void picker_add_functor::operator()(const presets_item_t *item)
   if(itemv->name.empty())
     return;
 
-  GtkTreeIter iter = preset_insert_item(itemv, &context->appdata->icon, store);
+  GtkTreeIter iter = preset_insert_item(itemv, context->appdata->icons, store);
 
   /* mark submenues as such */
   if(item->type & presets_item_t::TY_GROUP) {
@@ -857,7 +857,7 @@ presets_picker(presets_context_t *context, const std::vector<presets_item_t *> &
   GtkListStore *store = presets_picker_store(&view);
 
   bool show_recent = false;
-  GdkPixbuf *subicon = context->appdata->icon->load("submenu_arrow");
+  GdkPixbuf *subicon = context->appdata->icons.load("submenu_arrow");
   picker_add_functor fc(context, store, subicon, top_level, show_recent);
 
   std::for_each(items.begin(), items.end(), fc);
@@ -886,7 +886,7 @@ presets_picker(presets_context_t *context, const std::vector<presets_item_t *> &
 		       -1);
   }
 
-  context->appdata->icon->icon_free(subicon);
+  context->appdata->icons.icon_free(subicon);
 
   return presets_picker_embed(view, store, context);
 }
@@ -1194,7 +1194,7 @@ GtkWidget *presets_widget_link::attach(GtkTable *table, guint &row, const char *
   GtkWidget *button = button_new_with_label(label);
   g_free(label);
   g_object_set_data(G_OBJECT(button), "presets_context", context);
-  GtkWidget *img = context->appdata->icon->widget_load(item->icon, 16);
+  GtkWidget *img = context->appdata->icons.widget_load(item->icon, 16);
   if(img) {
     gtk_button_set_image(GTK_BUTTON(button), img);
     // make sure the image is always shown, Hildon seems to hide it by default

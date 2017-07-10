@@ -1,3 +1,4 @@
+#include <icon.h>
 #include <osm.h>
 #include <settings.h>
 
@@ -277,7 +278,8 @@ static void test_replace() {
 
 static void test_split()
 {
-  osm_t o;
+  icon_t icons;
+  osm_t o(icons);
   way_t * const v = new way_t();
   way_t * const w = new way_t();
 
@@ -344,7 +346,8 @@ static void test_changeset()
 
 static void test_reverse()
 {
-  osm_t o;
+  icon_t icons;
+  osm_t o(icons);
   set_bounds(o);
 
   lpos_t l(10, 20);
@@ -395,7 +398,8 @@ static void test_reverse()
 
 static void test_way_delete()
 {
-  osm_t o;
+  icon_t icons;
+  osm_t o(icons);
   set_bounds(o);
 
   // delete a simple way
@@ -500,7 +504,8 @@ static void test_way_delete()
 
 static void test_member_delete()
 {
-  osm_t o;
+  icon_t icons;
+  osm_t o(icons);
   set_bounds(o);
 
   // a way with 3 points
@@ -536,7 +541,8 @@ static void test_member_delete()
 
 static void test_merge_nodes()
 {
-  osm_t o;
+  icon_t icons;
+  osm_t o(icons);
   set_bounds(o);
 
   // join 2 new nodes

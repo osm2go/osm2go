@@ -30,6 +30,7 @@
 #include <string>
 
 struct appdata_t;
+class icon_t;
 struct map_state_t;
 struct osm_t;
 
@@ -62,7 +63,7 @@ bool project_exists(settings_t *settings, const char *name, std::string &fullnam
 bool project_save(GtkWidget *parent, project_t *project);
 bool project_check_demo(GtkWidget *parent, project_t *project);
 
-osm_t *project_parse_osm(const project_t *project, struct icon_t **icons);
+osm_t *project_parse_osm(const project_t *project, icon_t &icons);
 
 bool project_load(appdata_t *appdata, const std::string &name);
 std::string project_select(appdata_t *appdata);

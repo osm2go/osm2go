@@ -161,7 +161,7 @@ cb_menu_download(appdata_t *appdata) {
     }
 
     banner_busy_start(appdata, _("Drawing"));
-    appdata->osm = project_parse_osm(appdata->project, &appdata->icon);
+    appdata->osm = project_parse_osm(appdata->project, appdata->icons);
     diff_restore(appdata, appdata->project, appdata->osm);
     map_paint(appdata->map);
     banner_busy_stop(appdata); //"Redrawing"
@@ -231,7 +231,7 @@ cb_menu_undo_changes(appdata_t *appdata) {
   appdata->osm = O2G_NULLPTR;
 
   diff_remove(appdata->project);
-  appdata->osm = project_parse_osm(appdata->project, &appdata->icon);
+  appdata->osm = project_parse_osm(appdata->project, appdata->icons);
   map_paint(appdata->map);
 
   banner_show_info(appdata, _("Undo all changes"));
@@ -504,7 +504,7 @@ menu_append_new_item(appdata_t *appdata,
   }
   else if (!stock_item_known) {
     if(icon_name) {
-      GdkPixbuf *pbuf = appdata->icon->load(icon_name);
+      GdkPixbuf *pbuf = appdata->icons.load(icon_name);
       if (pbuf)
         image = gtk_image_new_from_pixbuf(pbuf);
     }
@@ -1102,8 +1102,45 @@ static void menu_accels_load(appdata_t *appdata) {
 #endif
 
 appdata_t::appdata_t()
+#ifdef USE_HILDON
+  : program(O2G_NULLPTR)
+  , window(O2G_NULLPTR)
+  , osso_context(osso_initialize("org.harbaum." PACKAGE, VERSION, TRUE, O2G_NULLPTR))
+#else
+  : window(O2G_NULLPTR)
+#endif
+  , vbox(O2G_NULLPTR)
+  , btn_zoom_in(O2G_NULLPTR)
+  , btn_zoom_out(O2G_NULLPTR)
+  , btn_detail_popup(O2G_NULLPTR)
+  , statusbar(O2G_NULLPTR)
+  , project(O2G_NULLPTR)
+  , iconbar(O2G_NULLPTR)
+  , presets(O2G_NULLPTR)
+#ifdef USE_HILDON
+  , banner(O2G_NULLPTR)
+#endif
+#if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
+  , menu_item_view_fullscreen(O2G_NULLPTR)
+#endif
+  , menu_item_map_save_changes(O2G_NULLPTR)
+#if defined(USE_HILDON) && (MAEMO_VERSION_MAJOR == 5)
+  , app_menu_view(O2G_NULLPTR)
+  , app_menu_wms(O2G_NULLPTR)
+  , app_menu_track(O2G_NULLPTR)
+  , app_menu_map(O2G_NULLPTR)
+#endif
+  , map(O2G_NULLPTR)
+  , osm(O2G_NULLPTR)
+  , settings(settings_t::load())
+  , gps_state(gps_state_t::create())
 {
-  memset(this, 0, sizeof(*this));
+#ifdef USE_HILDON
+  memset(&mmpos, 0, sizeof(mmpos));
+#endif
+  memset(&dialog_again, 0, sizeof(dialog_again));
+  memset(menuitems, 0, sizeof(menuitems));
+  memset(&track, 0, sizeof(track));
 }
 
 appdata_t::~appdata_t() {
@@ -1150,7 +1187,6 @@ appdata_t::~appdata_t() {
   delete statusbar;
   delete iconbar;
   delete project;
-  delete icon;
 
   menu_cleanup(*this);
 
@@ -1227,7 +1263,7 @@ static GtkWidget *  __attribute__((nonnull(1,2,4)))
 			      GtkWidget *box) {
   /* add zoom-in button */
   GtkWidget *but = gtk_button_new();
-  gtk_button_set_image(GTK_BUTTON(but), appdata->icon->widget_load(icon));
+  gtk_button_set_image(GTK_BUTTON(but), appdata->icons.widget_load(icon));
   //  gtk_button_set_relief(GTK_BUTTON(but), GTK_RELIEF_NONE);
   hildon_gtk_widget_set_theme_size(but,
             static_cast<HildonSizeType>(HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH));
@@ -1241,8 +1277,6 @@ static GtkWidget *  __attribute__((nonnull(1,2,4)))
 #endif
 
 int main(int argc, char *argv[]) {
-  appdata_t appdata;
-
   LIBXML_TEST_VERSION;
 
   printf("Using locale for %s in %s\n", PACKAGE, LOCALEDIR);
@@ -1270,14 +1304,9 @@ int main(int argc, char *argv[]) {
   misc_init();
 
   /* user specific init */
-  appdata.settings = settings_t::load();
-
-  appdata.gps_state = gps_state_t::create();
+  appdata_t appdata;
 
 #ifdef USE_HILDON
-  printf("Installing osso context for \"org.harbaum." PACKAGE "\"\n");
-  appdata.osso_context = osso_initialize("org.harbaum." PACKAGE,
-					 VERSION, TRUE, O2G_NULLPTR);
   if(appdata.osso_context == O2G_NULLPTR)
     fprintf(stderr, "error initiating osso context\n");
 
@@ -1310,7 +1339,7 @@ int main(int argc, char *argv[]) {
   gtk_window_set_default_size(GTK_WINDOW(appdata.window),
 			      DEFAULT_WIDTH, DEFAULT_HEIGHT);
   gtk_window_set_icon(GTK_WINDOW(appdata.window),
-		      appdata.icon->load(PACKAGE));
+		      appdata.icons.load(PACKAGE));
 #endif
 
   g_signal_connect(G_OBJECT(appdata.window), "key_press_event",

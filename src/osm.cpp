@@ -1118,9 +1118,9 @@ static relation_t *process_relation(xmlTextReaderPtr reader, osm_t *osm) {
   return relation;
 }
 
-static osm_t *process_osm(xmlTextReaderPtr reader) {
+static osm_t *process_osm(xmlTextReaderPtr reader, icon_t &icons) {
   /* alloc osm structure */
-  osm_t *osm = new osm_t();
+  osm_t *osm = new osm_t(icons);
 
   /* no attributes of interest */
 
@@ -1199,22 +1199,22 @@ static osm_t *process_osm(xmlTextReaderPtr reader) {
   return O2G_NULLPTR;
 }
 
-static osm_t *process_file(const char *filename) {
+static osm_t *process_file(const std::string &filename, icon_t &icons) {
   osm_t *osm = O2G_NULLPTR;
   xmlTextReaderPtr reader;
 
-  reader = xmlReaderForFile(filename, O2G_NULLPTR, 0);
+  reader = xmlReaderForFile(filename.c_str(), O2G_NULLPTR, 0);
   if (G_LIKELY(reader != O2G_NULLPTR)) {
     if(G_LIKELY(xmlTextReaderRead(reader) == 1)) {
       const char *name = (const char*)xmlTextReaderConstName(reader);
       if(G_LIKELY(name && strcmp(name, "osm") == 0))
-	osm = process_osm(reader);
+	osm = process_osm(reader, icons);
     } else
       printf("file empty\n");
 
     xmlFreeTextReader(reader);
   } else {
-    fprintf(stderr, "Unable to open %s\n", filename);
+    fprintf(stderr, "Unable to open %s\n", filename.c_str());
   }
   return osm;
 }
@@ -1223,7 +1223,7 @@ static osm_t *process_file(const char *filename) {
 
 #include <sys/time.h>
 
-osm_t *osm_t::parse(const std::string &path, const std::string &filename, icon_t **icon) {
+osm_t *osm_t::parse(const std::string &path, const std::string &filename, icon_t &icons) {
 
   struct timeval start;
   gettimeofday(&start, O2G_NULLPTR);
@@ -1231,17 +1231,13 @@ osm_t *osm_t::parse(const std::string &path, const std::string &filename, icon_t
   // use stream parser
   osm_t *osm = O2G_NULLPTR;
   if(filename[0] == '/')
-    osm = process_file(filename.c_str());
+    osm = process_file(filename, icons);
   else {
-    const std::string full = path + filename;
-    osm = process_file(full.c_str());
+    osm = process_file(path + filename, icons);
   }
 
   struct timeval end;
   gettimeofday(&end, O2G_NULLPTR);
-
-  if(osm)
-    osm->icons = icon;
 
   printf("total parse time: %ldms\n",
 	 (end.tv_usec - start.tv_usec)/1000 +

@@ -12,14 +12,13 @@
 #include <iostream>
 
 appdata_t::appdata_t()
+  : settings(O2G_NULLPTR)
+  , gps_state(O2G_NULLPTR)
 {
-  memset(this, 0, sizeof(*this));
-  icon = new icon_t();
 }
 
 appdata_t::~appdata_t()
 {
-  delete icon;
 }
 
 int main(int argc, char **argv)
@@ -37,7 +36,7 @@ int main(int argc, char **argv)
 
   appdata_t appdata;
 
-  style_t *style = style_load(argv[1], &appdata.icon);
+  style_t *style = style_load(argv[1], appdata.icons);
 
   if(style == O2G_NULLPTR) {
     std::cerr << "failed to load styles" << std::endl;
@@ -46,7 +45,7 @@ int main(int argc, char **argv)
 
   g_assert_false(style->elemstyles.empty());
 
-  osm_t osm;
+  osm_t osm(appdata.icons);
 
   memset(&osm.rbounds, 0, sizeof(osm.rbounds));
   osm.bounds = &osm.rbounds;
