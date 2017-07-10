@@ -85,13 +85,6 @@ icon_file_exists(const std::string &file) {
   return std::string();
 }
 
-GdkPixbuf *icon_load(icon_t **icon, const char *name) {
-  if(!name || !*name)
-    return O2G_NULLPTR;
-
-  return icon_load(icon, std::string(name));
-}
-
 GdkPixbuf *icon_load(icon_t **icon, const std::string &sname, int limit) {
   if(sname.empty())
     return O2G_NULLPTR;
@@ -123,13 +116,6 @@ GdkPixbuf *icon_load(icon_t **icon, const std::string &sname, int limit) {
 
   printf("Icon %s not found\n", sname.c_str());
   return O2G_NULLPTR;
-}
-
-GtkWidget *icon_widget_load(icon_t **icon, const char *name) {
-  GdkPixbuf *pix = icon_load(icon, name);
-  if(!pix) return O2G_NULLPTR;
-
-  return gtk_image_new_from_pixbuf(pix);
 }
 
 GtkWidget *icon_widget_load(icon_t **icon, const std::string &name, int limit) {
