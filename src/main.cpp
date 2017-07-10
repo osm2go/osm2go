@@ -1176,10 +1176,6 @@ appdata_t::~appdata_t() {
   delete osm;
   osm = O2G_NULLPTR;
 
-  xmlCleanupParser();
-
-  curl_global_cleanup();
-
   josm_presets_free(presets);
 
   delete gps_state;
@@ -1276,33 +1272,8 @@ static GtkWidget *  __attribute__((nonnull(1,2,4)))
 }
 #endif
 
-int main(int argc, char *argv[]) {
-  LIBXML_TEST_VERSION;
-
-  printf("Using locale for %s in %s\n", PACKAGE, LOCALEDIR);
-
-  setlocale(LC_ALL, "");
-  bindtextdomain(PACKAGE, LOCALEDIR);
-  bind_textdomain_codeset(PACKAGE, "UTF-8");
-  textdomain(PACKAGE);
-
-  /* Must initialize libcurl before any threads are started */
-  curl_global_init(CURL_GLOBAL_ALL);
-
-  /* Same for libxml2 */
-  xmlInitParser();
-
-  /* whitespace between tags has no meaning in any of the XML files used here */
-  xmlKeepBlanksDefault(0);
-
-#if !GLIB_CHECK_VERSION(2,32,0)
-  g_thread_init(O2G_NULLPTR);
-#endif
-
-  gtk_init (&argc, &argv);
-
-  misc_init();
-
+static int application_run()
+{
   /* user specific init */
   appdata_t appdata;
 
@@ -1506,4 +1477,37 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 
-// vim:et:ts=8:sw=2:sts=2:ai
+int main(int argc, char *argv[]) {
+  // library init
+  LIBXML_TEST_VERSION;
+
+  setlocale(LC_ALL, "");
+  bindtextdomain(PACKAGE, LOCALEDIR);
+  bind_textdomain_codeset(PACKAGE, "UTF-8");
+  textdomain(PACKAGE);
+
+  /* Must initialize libcurl before any threads are started */
+  curl_global_init(CURL_GLOBAL_ALL);
+
+  /* Same for libxml2 */
+  xmlInitParser();
+
+  /* whitespace between tags has no meaning in any of the XML files used here */
+  xmlKeepBlanksDefault(0);
+
+#if !GLIB_CHECK_VERSION(2,32,0)
+  g_thread_init(O2G_NULLPTR);
+#endif
+
+  gtk_init (&argc, &argv);
+
+  misc_init();
+
+  int ret = application_run();
+
+  // library cleanups
+  xmlCleanupParser();
+  curl_global_cleanup();
+
+  return ret;
+}
