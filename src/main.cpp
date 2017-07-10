@@ -504,7 +504,7 @@ menu_append_new_item(appdata_t *appdata,
   }
   else if (!stock_item_known) {
     if(icon_name) {
-      GdkPixbuf *pbuf = icon_load(&appdata->icon, icon_name);
+      GdkPixbuf *pbuf = appdata->icon->load(icon_name);
       if (pbuf)
         image = gtk_image_new_from_pixbuf(pbuf);
     }
@@ -1145,13 +1145,12 @@ appdata_t::~appdata_t() {
 
   josm_presets_free(presets);
 
-  icon_free_all(icon);
-
   delete gps_state;
   delete settings;
   delete statusbar;
   delete iconbar;
   delete project;
+  delete icon;
 
   menu_cleanup(*this);
 
@@ -1228,8 +1227,7 @@ static GtkWidget *  __attribute__((nonnull(1,2,4)))
 			      GtkWidget *box) {
   /* add zoom-in button */
   GtkWidget *but = gtk_button_new();
-  gtk_button_set_image(GTK_BUTTON(but),
-		       icon_widget_load(&appdata->icon, icon));
+  gtk_button_set_image(GTK_BUTTON(but), appdata->icon->widget_load(icon));
   //  gtk_button_set_relief(GTK_BUTTON(but), GTK_RELIEF_NONE);
   hildon_gtk_widget_set_theme_size(but,
             static_cast<HildonSizeType>(HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH));
@@ -1312,7 +1310,7 @@ int main(int argc, char *argv[]) {
   gtk_window_set_default_size(GTK_WINDOW(appdata.window),
 			      DEFAULT_WIDTH, DEFAULT_HEIGHT);
   gtk_window_set_icon(GTK_WINDOW(appdata.window),
-		      icon_load(&appdata.icon, PACKAGE));
+		      appdata.icon->load(PACKAGE));
 #endif
 
   g_signal_connect(G_OBJECT(appdata.window), "key_press_event",

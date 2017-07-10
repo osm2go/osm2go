@@ -468,7 +468,7 @@ struct unref_icon {
   icon_t ** const icons;
   unref_icon(icon_t **i) : icons(i) {}
   void operator()(const std::pair<item_id_t, GdkPixbuf *> &pair) {
-    icon_free(icons, pair.second);
+    (*icons)->icon_free(pair.second);
   }
 };
 

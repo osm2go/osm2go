@@ -96,7 +96,6 @@ typedef struct appdata_t {
   struct statusbar_t *statusbar;
   struct project_t *project;
   struct iconbar_t *iconbar;
-  struct icon_t *icon;
   struct presets_items *presets;
 
 #ifdef USE_HILDON
@@ -135,6 +134,7 @@ typedef struct appdata_t {
   struct osm_t *osm;
   class settings_t *settings;
   class gps_state_t *gps_state;
+  class icon_t *icon;
 
   appdata_t();
   ~appdata_t();

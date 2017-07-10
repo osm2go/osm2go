@@ -29,29 +29,9 @@
 
 #include <osm2go_cpp.h>
 
-struct icon_item {
-  icon_item();
-  icon_item(GdkPixbuf *nbuf);
-
-  GdkPixbuf *buf;
-  int use;
-};
-
-struct icon_t {
-  ~icon_t();
-
-  std::map<std::string, icon_item> entries;
-};
-
-icon_item::icon_item()
-  : buf(O2G_NULLPTR)
-  , use(0)
-{
-}
-
-icon_item::icon_item(GdkPixbuf *nbuf)
+icon_t::icon_item::icon_item(GdkPixbuf *nbuf)
   : buf(nbuf)
-  , use(1)
+  , use(nbuf ? 1 : 0)
 {
 }
 
@@ -85,19 +65,16 @@ icon_file_exists(const std::string &file) {
   return std::string();
 }
 
-GdkPixbuf *icon_load(icon_t **icon, const std::string &sname, int limit) {
+GdkPixbuf *icon_t::load(const std::string &sname, int limit) {
   if(sname.empty())
     return O2G_NULLPTR;
 
-  if(*icon) {
-    /* check if icon list already contains an icon of that name */
-    const std::map<std::string, icon_item>::iterator it =
-     (*icon)->entries.find(sname);
+  /* check if icon list already contains an icon of that name */
+  const std::map<std::string, icon_item>::iterator it = entries.find(sname);
 
-    if(it != (*icon)->entries.end()) {
-      it->second.use++;
-      return it->second.buf;
-    }
+  if(it != entries.end()) {
+    it->second.use++;
+    return it->second.buf;
   }
 
   const std::string &fullname = icon_file_exists(sname);
@@ -105,10 +82,8 @@ GdkPixbuf *icon_load(icon_t **icon, const std::string &sname, int limit) {
     GdkPixbuf *pix = gdk_pixbuf_new_from_file_at_size(fullname.c_str(), limit, limit, O2G_NULLPTR);
 
     if(G_LIKELY(pix)) {
-      if(G_UNLIKELY(!*icon))
-        *icon = new icon_t();
       //    printf("Successfully loaded icon %s to %p\n", name, pix);
-      (*icon)->entries[sname] = pix;
+      entries[sname] = icon_item(pix);
     }
 
     return pix;
@@ -118,48 +93,48 @@ GdkPixbuf *icon_load(icon_t **icon, const std::string &sname, int limit) {
   return O2G_NULLPTR;
 }
 
-GtkWidget *icon_widget_load(icon_t **icon, const std::string &name, int limit) {
-  GdkPixbuf *pix = icon_load(icon, name, limit);
+GtkWidget *icon_t::widget_load(const std::string &name, int limit) {
+  GdkPixbuf *pix = load(name, limit);
   if(!pix)
     return O2G_NULLPTR;
 
   return gtk_image_new_from_pixbuf(pix);
 }
 
-static void icon_destroy(icon_item &icon) {
+void icon_t::icon_item::destroy(icon_t::icon_item &icon) {
   if(icon.buf)
     g_object_unref(icon.buf);
 }
 
-static void icon_destroy_pair(std::pair<const std::string, icon_item> &pair) {
-  icon_destroy(pair.second);
+static void icon_destroy_pair(std::pair<const std::string, icon_t::icon_item> &pair) {
+  icon_t::icon_item::destroy(pair.second);
 }
 
 struct find_icon_buf {
   const GdkPixbuf * const buf;
   find_icon_buf(const GdkPixbuf *b) : buf(b) {}
-  bool operator()(const std::pair<std::string, icon_item> &pair) {
-    return pair.second.buf == buf;
+  bool operator()(const std::pair<std::string, icon_t::icon_item> &pair) {
+    return pair.second == buf;
   }
 };
 
-void icon_free(icon_t **icon, GdkPixbuf *buf) {
+void icon_t::icon_free(GdkPixbuf *buf) {
   //  printf("request to free icon %p\n", buf);
 
   /* check if icon list already contains an icon of that name */
+  const std::map<std::string, icon_item>::iterator itEnd = entries.end();
   std::map<std::string, icon_item>::iterator it = std::find_if(
-                                                  (*icon)->entries.begin(),
-                                                  (*icon)->entries.end(),
+                                                  entries.begin(), itEnd,
                                                   find_icon_buf(buf));
-  if(G_UNLIKELY(it == (*icon)->entries.end())) {
+  if(G_UNLIKELY(it == itEnd)) {
     printf("ERROR: icon to be freed not found\n");
   } else {
     it->second.use--;
     if(!it->second.use) {
       //  printf("freeing unused icon %s\n", it->first.c_str());
 
-      icon_destroy(it->second);
-      (*icon)->entries.erase(it);
+      icon_item::destroy(it->second);
+      entries.erase(it);
     }
   }
 }
@@ -168,8 +143,4 @@ icon_t::~icon_t()
 {
   std::for_each(entries.begin(), entries.end(),
                 icon_destroy_pair);
-}
-
-void icon_free_all(icon_t *icons) {
-  delete icons;
 }

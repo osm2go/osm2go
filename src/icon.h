@@ -21,26 +21,44 @@
 #define ICON_H
 
 #include <gtk/gtk.h>
+#include <map>
 #include <string>
 
-typedef struct icon_t icon_t;
+#include <osm2go_cpp.h>
 
-void icon_free(icon_t **icons, GdkPixbuf *buf);
+class icon_t {
+public:
+  class icon_item {
+    friend class icon_t;
 
-/**
- * @brief load an icon from disk, limited to given dimensions
- * @param icon the global icon cache
- * @param sname the name of the icon
- * @param limit the maximum dimensions of the image
- * @return the scaled pixbuf
- *
- * The image is only scaled down to the given dimensions, not enlarged.
- * The limit is only applied if the icon is not already cached.
- */
-GdkPixbuf *icon_load(icon_t **icon, const std::string &sname, int limit = -1);
+    GdkPixbuf *buf;
+    int use;
+  public:
+    explicit icon_item(GdkPixbuf *nbuf = O2G_NULLPTR);
+    inline bool operator==(const GdkPixbuf *b) const { return buf == b; }
+    static void destroy(icon_item &icon);
+  };
 
-GtkWidget *icon_widget_load(icon_t **icon, const std::string &name, int limit = -1);
+  ~icon_t();
 
-void icon_free_all(icon_t *icons);
+  /**
+   * @brief load an icon from disk, limited to given dimensions
+   * @param icon the global icon cache
+   * @param sname the name of the icon
+   * @param limit the maximum dimensions of the image
+   * @return the scaled pixbuf
+   *
+   * The image is only scaled down to the given dimensions, not enlarged.
+   * The limit is only applied if the icon is not already cached.
+   */
+  GdkPixbuf *load(const std::string &sname, int limit = -1);
+
+  GtkWidget *widget_load(const std::string &name, int limit = -1);
+
+  void icon_free(GdkPixbuf *buf);
+
+private:
+  std::map<std::string, icon_item> entries;
+};
 
 #endif // ICON_H

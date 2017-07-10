@@ -14,11 +14,12 @@
 appdata_t::appdata_t()
 {
   memset(this, 0, sizeof(*this));
+  icon = new icon_t();
 }
 
 appdata_t::~appdata_t()
 {
-  icon_free_all(icon);
+  delete icon;
 }
 
 int main(int argc, char **argv)
@@ -56,7 +57,6 @@ int main(int argc, char **argv)
   josm_elemstyles_colorize_node(style, node);
 
   g_assert_true(style->node_icons.empty());
-  g_assert_null(*(style->iconP));
 
   osm_t::TagMap tags;
   tags.insert(osm_t::TagMap::value_type("barrier", "bollard"));
@@ -65,7 +65,6 @@ int main(int argc, char **argv)
   josm_elemstyles_colorize_node(style, node);
 
   g_assert_true(style->node_icons.empty());
-  g_assert_null(*(style->iconP));
 
   // this should actually apply
   tags.insert(osm_t::TagMap::value_type("access", "no"));
@@ -75,7 +74,6 @@ int main(int argc, char **argv)
 
   g_assert_false(style->node_icons.empty());
   g_assert_nonnull(style->node_icons[node->id]);
-  g_assert_nonnull(*(style->iconP));
 
   GdkPixbuf *oldicon = style->node_icons[node->id];
   float oldzoom = node->zoom_max;
@@ -88,7 +86,6 @@ int main(int argc, char **argv)
 
   g_assert_false(style->node_icons.empty());
   g_assert_nonnull(style->node_icons[node->id]);
-  g_assert_nonnull(*(style->iconP));
   g_assert(oldicon != style->node_icons[node->id]);
   g_assert_cmpfloat(oldzoom * 1.9, <, node->zoom_max);
 

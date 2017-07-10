@@ -434,7 +434,7 @@ static GtkWidget *create_menuitem(icon_t **icons, const presets_item_named *item
     menu_item = gtk_image_menu_item_new_with_label(item->name.c_str());
 
     gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(menu_item),
-                                  icon_widget_load(icons, item->icon, 16));
+                                  (*icons)->widget_load(item->icon, 16));
   }
 
   return menu_item;
@@ -727,7 +727,7 @@ static GtkWidget *presets_picker_embed(GtkTreeView *view, GtkListStore *store,
 static GtkTreeIter preset_insert_item(const presets_item_named *item, icon_t **icons,
                                       GtkListStore *store) {
   /* icon load can cope with empty string as name (returns O2G_NULLPTR then) */
-  GdkPixbuf *icon = icon_load(icons, item->icon, 16);
+  GdkPixbuf *icon = (*icons)->load(item->icon, 16);
 
   /* Append a row and fill in some data */
   GtkTreeIter iter;
@@ -857,8 +857,7 @@ presets_picker(presets_context_t *context, const std::vector<presets_item_t *> &
   GtkListStore *store = presets_picker_store(&view);
 
   bool show_recent = false;
-  GdkPixbuf *subicon = icon_load(&context->appdata->icon,
-                                 "submenu_arrow");
+  GdkPixbuf *subicon = context->appdata->icon->load("submenu_arrow");
   picker_add_functor fc(context, store, subicon, top_level, show_recent);
 
   std::for_each(items.begin(), items.end(), fc);
@@ -887,7 +886,7 @@ presets_picker(presets_context_t *context, const std::vector<presets_item_t *> &
 		       -1);
   }
 
-  icon_free(&context->appdata->icon, subicon);
+  context->appdata->icon->icon_free(subicon);
 
   return presets_picker_embed(view, store, context);
 }
@@ -1195,7 +1194,7 @@ GtkWidget *presets_widget_link::attach(GtkTable *table, guint &row, const char *
   GtkWidget *button = button_new_with_label(label);
   g_free(label);
   g_object_set_data(G_OBJECT(button), "presets_context", context);
-  GtkWidget *img = icon_widget_load(&context->appdata->icon, item->icon, 16);
+  GtkWidget *img = context->appdata->icon->widget_load(item->icon, 16);
   if(img) {
     gtk_button_set_image(GTK_BUTTON(button), img);
     // make sure the image is always shown, Hildon seems to hide it by default

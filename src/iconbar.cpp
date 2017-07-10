@@ -66,7 +66,7 @@ static GtkWidget * __attribute__((nonnull(1,2,3,4,5)))
   GtkWidget *item = gtk_image_menu_item_new_with_label(menu_str);
 
   gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item),
-                                icon_widget_load(&appdata->icon, icon_str));
+                                appdata->icon->widget_load(icon_str));
 
   g_signal_connect_swapped(GTK_OBJECT(item), "activate",
                            func, appdata->map);
@@ -159,8 +159,7 @@ static GtkWidget *icon_add(GtkWidget *vbox, appdata_t *appdata,
                            const char *icon_str,
                            void(*func)(map_t *)) {
   GtkWidget *but = gtk_button_new();
-  GtkWidget *icon = gtk_image_new_from_pixbuf(
-		      icon_load(&appdata->icon, icon_str));
+  GtkWidget *icon = gtk_image_new_from_pixbuf(appdata->icon->load(icon_str));
   gtk_button_set_image(GTK_BUTTON(but), icon);
   g_signal_connect_swapped(GTK_OBJECT(but), "clicked", G_CALLBACK(func), appdata->map);
 
@@ -175,7 +174,7 @@ static GtkWidget *  __attribute__((nonnull(1,2,3,4,5)))
                            GCallback func, gpointer context) {
   GtkWidget *item =
     GTK_WIDGET(gtk_tool_button_new(
-               icon_widget_load(&appdata->icon, icon_str), O2G_NULLPTR));
+               appdata->icon->widget_load(icon_str), O2G_NULLPTR));
 
   GtkWidget *label = gtk_label_new(O2G_NULLPTR);
   char *markup = g_markup_printf_escaped(MARKUP, tooltip_str);
@@ -268,9 +267,8 @@ GtkWidget *iconbar_new(appdata_t *appdata) {
 
   /* the way button is special as it pops up a menu for */
   /* further too selection */
-  GtkWidget *way =
-    GTK_WIDGET(gtk_tool_button_new(
-               icon_widget_load(&appdata->icon, TOOL_ICON("way")), O2G_NULLPTR));
+  GtkWidget *way = GTK_WIDGET(gtk_tool_button_new(
+               appdata->icon->widget_load(TOOL_ICON("way")), O2G_NULLPTR));
 
   GtkWidget *label = gtk_label_new(O2G_NULLPTR);
   char *markup = g_markup_printf_escaped(MARKUP, _("Way"));

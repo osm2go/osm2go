@@ -166,8 +166,7 @@ static GtkWidget *copyright_page_new(appdata_t *appdata) {
 
   GtkWidget *hbox = gtk_hbox_new(FALSE, 0);
   GtkWidget *ihbox = gtk_hbox_new(FALSE, 20);
-  gtk_box_pack_start(GTK_BOX(ihbox),
-                     icon_widget_load(&appdata->icon, OSM2GO_ICON),
+  gtk_box_pack_start(GTK_BOX(ihbox), appdata->icon->widget_load(OSM2GO_ICON),
 		     FALSE, FALSE, 0);
   gtk_box_pack_start(GTK_BOX(ihbox), label_xbig("OSM2Go"),
 		     FALSE, FALSE, 0);
@@ -288,8 +287,7 @@ static GtkWidget *donate_page_new(appdata_t *appdata) {
 
   GtkWidget *ihbox = gtk_hbox_new(FALSE, 0);
   GtkWidget *button = gtk_button_new();
-  gtk_button_set_image(GTK_BUTTON(button),
-                       icon_widget_load(&appdata->icon, PAYPAL_ICON));
+  gtk_button_set_image(GTK_BUTTON(button), appdata->icon->widget_load(PAYPAL_ICON));
   gtk_button_set_relief(GTK_BUTTON(button), GTK_RELIEF_NONE);
   g_signal_connect_swapped(button, "clicked",
                            G_CALLBACK(on_paypal_button_clicked), appdata);
