@@ -26,6 +26,16 @@
 
 bool net_io_download_file(GtkWidget *parent,
                           const std::string &url, const std::string &filename, const char *title);
+/**
+ * @brief download from the given URL to memory
+ * @param parent widget for status messages
+ * @param url the request URL
+ * @param mem where output will be stored
+ * @param len length of the returned data
+ * @returns if the request was successful
+ *
+ * The data is possibly gzip encoded.
+ */
 bool net_io_download_mem(GtkWidget *parent,
                          const std::string &url, char **mem, size_t &len);
 

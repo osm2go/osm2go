@@ -62,6 +62,7 @@ struct net_io_request_t {
   /* request specific fields */
   const std::string filename;   /* used for NET_IO_DL_FILE */
   curl_mem_t mem;   /* used for NET_IO_DL_MEM */
+  bool use_compression;
 };
 
 static std::map<int, const char *> http_msg_init() {
@@ -154,6 +155,7 @@ net_io_request_t::net_io_request_t(net_io_type_t t, const std::string &u, const 
   , res(CURLE_OK)
   , response(0)
   , filename(f)
+  , use_compression(true)
 {
   memset(buffer, 0, sizeof(buffer));
   memset(&mem, 0, sizeof(mem));
@@ -262,9 +264,16 @@ static void *worker_thread(void *ptr) {
       curl_easy_setopt(curl, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1 |
                        CURL_SSLVERSION_MAX_DEFAULT);
 
+      struct curl_slist *slist = !request->use_compression ? O2G_NULLPTR :
+                                 curl_slist_append(O2G_NULLPTR, "Accept-Encoding: gzip");
+      if(slist != O2G_NULLPTR)
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, slist);
+
       request->res = curl_easy_perform(curl);
       printf("thread: curl perform returned with %d\n", request->res);
 
+      if(slist != O2G_NULLPTR)
+        curl_slist_free_all(slist);
       curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &request->response);
 
 #if 0
@@ -375,6 +384,8 @@ static bool net_io_do(GtkWidget *parent, net_io_request_t *request,
 bool net_io_download_file(GtkWidget *parent,
                           const std::string &url, const std::string &filename, const char *title) {
   net_io_request_t *request = new net_io_request_t(net_io_request_t::NET_IO_DL_FILE, url, filename);
+
+  request->use_compression = false;
 
   printf("net_io: download %s to file %s\n", url.c_str(), filename.c_str());
 
