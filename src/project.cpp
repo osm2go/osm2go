@@ -915,8 +915,12 @@ static void project_filesize(project_context_t *context) {
         char time_str[32];
         strftime(time_str, sizeof(time_str), "%x %X", &loctime);
 
-        gstr = g_strdup_printf(_("%" G_GOFFSET_FORMAT " bytes present\nfrom %s"),
-                               (goffset)st.st_size, time_str);
+        if(project->osm.size() > 3 && strcmp(project->osm.c_str() + project->osm.size() - 3, ".gz") == 0)
+          gstr = g_strdup_printf(_("%" G_GOFFSET_FORMAT " bytes present (compressed)\nfrom %s"),
+                                 (goffset)st.st_size, time_str);
+        else
+          gstr = g_strdup_printf(_("%" G_GOFFSET_FORMAT " bytes present\nfrom %s"),
+                                 (goffset)st.st_size, time_str);
         str = gstr;
       } else {
         str = _("Error testing data file");
