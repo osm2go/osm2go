@@ -223,6 +223,20 @@ static bool project_read(const std::string &project_file, project_t *project,
 
   xmlFreeDoc(doc);
 
+  if(project->name.empty())
+    return false;
+
+  // no explicit filename was given, guess the default ones
+  if(project->osm.empty()) {
+    std::string fname = project->path + project->name + ".osm.gz";
+    if(g_file_test(fname.c_str(), G_FILE_TEST_IS_REGULAR) != TRUE)
+      fname.erase(fname.size() - 3);
+    project->osm = fname.substr(project->path.size());
+  }
+
+  if(project->server == O2G_NULLPTR)
+    project->server = defaultserver.c_str();
+
   return true;
 }
 
@@ -250,14 +264,18 @@ bool project_save(GtkWidget *parent, project_t *project) {
 
   xmlDocSetRootElement(doc, root_node);
 
-  if(project->server)
+  if(!project->rserver.empty()) {
+    g_assert(project->server == project->rserver.c_str());
     xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "server",
 		BAD_CAST project->server);
+  }
 
   if(!project->desc.empty())
     xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "desc", BAD_CAST project->desc.c_str());
 
-  xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "osm", BAD_CAST project->osm.c_str());
+  const std::string defaultOsm = project->name + ".osm";
+  if(G_UNLIKELY(project->osm != defaultOsm + ".gz" && project->osm != defaultOsm))
+    xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "osm", BAD_CAST project->osm.c_str());
 
   node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "min", O2G_NULLPTR);
   xml_set_prop_pos(node, &project->min);
@@ -277,15 +295,18 @@ bool project_save(GtkWidget *parent, project_t *project) {
     xmlNewProp(node, BAD_CAST "scroll-offset-y", BAD_CAST str);
   }
 
-  node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "wms", O2G_NULLPTR);
-  if(!project->wms_server.empty())
-    xmlNewProp(node, BAD_CAST "server", BAD_CAST project->wms_server.c_str());
-  if(!project->wms_path.empty())
-    xmlNewProp(node, BAD_CAST "path", BAD_CAST project->wms_path.c_str());
-  snprintf(str, sizeof(str), "%d", project->wms_offset.x);
-  xmlNewProp(node, BAD_CAST "x-offset", BAD_CAST str);
-  snprintf(str, sizeof(str), "%d", project->wms_offset.y);
-  xmlNewProp(node, BAD_CAST "y-offset", BAD_CAST str);
+  if(project->wms_offset.x != 0 || project->wms_offset.y != 0 ||
+     !project->wms_server.empty() || !project->wms_path.empty()) {
+    node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "wms", O2G_NULLPTR);
+    if(!project->wms_server.empty())
+      xmlNewProp(node, BAD_CAST "server", BAD_CAST project->wms_server.c_str());
+    if(!project->wms_path.empty())
+      xmlNewProp(node, BAD_CAST "path", BAD_CAST project->wms_path.c_str());
+    snprintf(str, sizeof(str), "%d", project->wms_offset.x);
+    xmlNewProp(node, BAD_CAST "x-offset", BAD_CAST str);
+    snprintf(str, sizeof(str), "%d", project->wms_offset.y);
+    xmlNewProp(node, BAD_CAST "y-offset", BAD_CAST str);
+  }
 
   xmlSaveFormatFileEnc(project_file.c_str(), doc, "UTF-8", 1);
   xmlFreeDoc(doc);
