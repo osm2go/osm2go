@@ -153,9 +153,9 @@ bool osm_download(GtkWidget *parent, settings_t *settings, project_t *project)
   printf("download ok, replacing previous file\n");
 
   if(wasGzip != isGzip) {
-    const std::string oldfname = project->osm;
-    std::string newfname = (project->osm[0] == '/' ? std::string() : project->path) +
-                           project->osm;
+    const std::string oldfname = (project->osm[0] == '/' ? std::string() : project->path) +
+                                 project->osm;
+    std::string newfname = oldfname;
     if(wasGzip)
       newfname.erase(newfname.size() - 3);
     else
