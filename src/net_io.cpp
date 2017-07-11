@@ -382,10 +382,11 @@ static bool net_io_do(GtkWidget *parent, net_io_request_t *request,
 }
 
 bool net_io_download_file(GtkWidget *parent,
-                          const std::string &url, const std::string &filename, const char *title) {
+                          const std::string &url, const std::string &filename,
+                          const char *title, bool compress) {
   net_io_request_t *request = new net_io_request_t(net_io_request_t::NET_IO_DL_FILE, url, filename);
 
-  request->use_compression = false;
+  request->use_compression = compress;
 
   printf("net_io: download %s to file %s\n", url.c_str(), filename.c_str());
 
@@ -424,4 +425,9 @@ bool net_io_download_mem(GtkWidget *parent,
 
   request_free(request);
   return result;
+}
+
+bool check_gzip(const char* mem, const size_t len)
+{
+  return len > 2 && mem[0] == 0x1f && static_cast<unsigned char>(mem[1]) == 0x8b;
 }

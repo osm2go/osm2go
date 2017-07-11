@@ -124,24 +124,62 @@ bool osm_download(GtkWidget *parent, settings_t *settings, project_t *project)
   const std::string update = project->path + "update.osm";
   g_remove(update.c_str());
 
-  bool result = net_io_download_file(parent, url, update,
-                                         project->name.c_str()) == TRUE;
+  if(G_UNLIKELY(!net_io_download_file(parent, url, update, project->name.c_str(), true)))
+    return false;
+
+  if(G_UNLIKELY(!g_file_test(update.c_str(), G_FILE_TEST_IS_REGULAR)))
+    return false;
+
+  // if the project's gzip setting and the download one don't match change the project
+  const bool wasGzip = project->osm.size() > 3 && strcmp(project->osm.c_str() + project->osm.size() - 3, ".gz") == 0;
+
+  // check the contents of the new file
+  GMappedFile *osmData = g_mapped_file_new(update.c_str(), FALSE, O2G_NULLPTR);
+  if(G_UNLIKELY(!osmData)) {
+    messagef(parent, _("Download error"),
+             _("Error accessing the downloaded file:\n\n%s"), update.c_str());
+    unlink(update.c_str());
+    return false;
+  }
+
+  const bool isGzip = check_gzip(g_mapped_file_get_contents(osmData),
+                              g_mapped_file_get_length(osmData));
+#if GLIB_CHECK_VERSION(2,22,0)
+  g_mapped_file_unref(osmData);
+#else
+  g_mapped_file_free(osmData);
+#endif
 
   /* if there's a new file use this from now on */
-  if(result && g_file_test(update.c_str(), G_FILE_TEST_IS_REGULAR)) {
-    printf("download ok, replacing previous file\n");
+  printf("download ok, replacing previous file\n");
 
+  if(wasGzip != isGzip) {
+    const std::string oldfname = project->osm;
+    std::string newfname = (project->osm[0] == '/' ? std::string() : project->path) +
+                           project->osm;
+    if(wasGzip)
+      newfname.erase(newfname.size() - 3);
+    else
+      newfname += ".gz";
+    g_rename(update.c_str(), newfname.c_str());
+    // save the project before deleting the old file so that a valid file is always found
+    if(newfname.substr(0, project->path.size()) == project->path)
+      newfname.erase(0, project->path.size());
+    project->osm = newfname;
+    project_save(parent, project);
+
+    // now remove the old file
+    unlink(oldfname.c_str());
+  } else {
     if(project->osm[0] == '/') {
       g_rename(update.c_str(), project->osm.c_str());
     } else {
       const std::string fname = project->path + project->osm;
       g_rename(update.c_str(), fname.c_str());
     }
-
-    result = TRUE;
   }
 
-  return result;
+  return true;
 }
 
 struct curl_data_t {

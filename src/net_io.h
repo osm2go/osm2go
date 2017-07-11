@@ -24,8 +24,19 @@
 #include <gtk/gtk.h>
 #include <string>
 
+/**
+ * @brief download from the given URL to file
+ * @param parent widget for status messages
+ * @param url the request URL
+ * @param filename output filename
+ * @param title window title string for the download window
+ * @param compress if gzip compression of the data should be enabled
+ *
+ * @returns if the request was successful
+ */
 bool net_io_download_file(GtkWidget *parent,
-                          const std::string &url, const std::string &filename, const char *title);
+                          const std::string &url, const std::string &filename,
+                          const char *title, bool compress = false);
 /**
  * @brief download from the given URL to memory
  * @param parent widget for status messages
@@ -44,5 +55,10 @@ bool net_io_download_mem(GtkWidget *parent,
  * @param id the HTTP status code
  */
 const char *http_message(int id);
+
+/**
+ * @brief check if the given memory contains a valid gzip header
+ */
+bool check_gzip(const char *mem, const size_t len);
 
 #endif // NET_IO_H
