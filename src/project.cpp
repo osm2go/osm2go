@@ -591,10 +591,7 @@ static project_t *project_new(select_context_t *context) {
  * @return if OSM data file was found
  */
 static gboolean project_osm_present(const project_t *project) {
-  std::string osm_name = project->path;
-  osm_name += '/';
-  osm_name += project->name;
-  osm_name += ".osm";
+  const std::string &osm_name = project->path + '/' + project->osm;
   return g_file_test(osm_name.c_str(), G_FILE_TEST_EXISTS);
 }
 
