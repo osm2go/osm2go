@@ -969,7 +969,6 @@ static node_t *process_node(xmlTextReaderPtr reader, osm_t *osm) {
 
   pos2lpos(osm->bounds, &node->pos, &node->lpos);
 
-  /* append node to end of hash table if present */
   osm->nodes[node->id] = node;
 
   /* just an empty element? then return the node as it is */
@@ -1029,7 +1028,6 @@ static way_t *process_way(xmlTextReaderPtr reader, osm_t *osm) {
 
   process_base_attributes(way, reader, osm);
 
-  /* append way to end of hash table if present */
   osm->ways[way->id] = way;
 
   /* just an empty element? then return the way as it is */

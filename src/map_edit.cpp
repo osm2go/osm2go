@@ -268,7 +268,6 @@ void map_edit_way_add_ok(map_t *map) {
     } else
       printf("  need to append\n");
 
-    /* search end of way to be extended */
     merge_node_chains(map->action.extending, map->action.way->node_chain, reverse);
 
     /* erase and free new way (now only containing the first node anymore) */

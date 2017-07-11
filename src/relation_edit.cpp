@@ -156,7 +156,6 @@ static gboolean relation_add_item(GtkWidget *parent,
 
   gtk_widget_destroy(dialog);
 
-  /* search end of member chain */
   g_assert_true(object.is_real());
 
   /* create new member */

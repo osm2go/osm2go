@@ -87,7 +87,6 @@ bool osm_download(GtkWidget *parent, settings_t *settings, project_t *project)
 
   g_assert_nonnull(project->server);
 
-  /* check if server name contains string "0.5" and adjust it */
   if(!project->rserver.empty()) {
     if(api_adjust(project->rserver))
       messagef(parent, _("Server changed"),
