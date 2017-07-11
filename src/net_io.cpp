@@ -238,7 +238,7 @@ static void *worker_thread(void *ptr) {
     if(ok) {
       curl_easy_setopt(curl, CURLOPT_URL, request->url.c_str());
 
-    curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+      curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
 
       /* setup progress notification */
       curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
@@ -256,16 +256,16 @@ static void *worker_thread(void *ptr) {
       /* play nice and report some user agent */
       curl_easy_setopt(curl, CURLOPT_USERAGENT, PACKAGE "-libcurl/" VERSION);
 
+#ifndef CURL_SSLVERSION_MAX_DEFAULT
+#define CURL_SSLVERSION_MAX_DEFAULT 0
+#endif
+      curl_easy_setopt(curl, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1 |
+                       CURL_SSLVERSION_MAX_DEFAULT);
+
       request->res = curl_easy_perform(curl);
       printf("thread: curl perform returned with %d\n", request->res);
 
       curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &request->response);
-
-#ifndef CURL_SSLVERSION_MAX_DEFAULT
-#define CURL_SSLVERSION_MAX_DEFAULT 0
-#endif
-     curl_easy_setopt(curl, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1 |
-                      CURL_SSLVERSION_MAX_DEFAULT);
 
 #if 0
       /* try to read "Error" */
