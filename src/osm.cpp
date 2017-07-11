@@ -957,7 +957,7 @@ static void process_base_attributes(base_object_t *obj, xmlTextReaderPtr reader,
   }
 }
 
-static node_t *process_node(xmlTextReaderPtr reader, osm_t *osm) {
+static void process_node(xmlTextReaderPtr reader, osm_t *osm) {
 
   /* allocate a new node structure */
   node_t *node = new node_t();
@@ -969,11 +969,12 @@ static node_t *process_node(xmlTextReaderPtr reader, osm_t *osm) {
 
   pos2lpos(osm->bounds, &node->pos, &node->lpos);
 
+  g_assert(osm->nodes.find(node->id) == osm->nodes.end());
   osm->nodes[node->id] = node;
 
   /* just an empty element? then return the node as it is */
   if(xmlTextReaderIsEmptyElement(reader))
-    return node;
+    return;
 
   /* parse tags if present */
   int depth = xmlTextReaderDepth(reader);
@@ -996,8 +997,6 @@ static node_t *process_node(xmlTextReaderPtr reader, osm_t *osm) {
     ret = xmlTextReaderRead(reader);
   }
   node->tags.replace(tags);
-
-  return node;
 }
 
 static node_t *process_nd(xmlTextReaderPtr reader, osm_t *osm) {
@@ -1022,18 +1021,19 @@ static node_t *process_nd(xmlTextReaderPtr reader, osm_t *osm) {
   return O2G_NULLPTR;
 }
 
-static way_t *process_way(xmlTextReaderPtr reader, osm_t *osm) {
+static void process_way(xmlTextReaderPtr reader, osm_t *osm) {
   /* allocate a new way structure */
   way_t *way = new way_t();
 
   process_base_attributes(way, reader, osm);
 
+  g_assert(osm->ways.find(way->id) == osm->ways.end());
   osm->ways[way->id] = way;
 
   /* just an empty element? then return the way as it is */
   /* (this should in fact never happen as this would be a way without nodes) */
   if(xmlTextReaderIsEmptyElement(reader))
-    return way;
+    return;
 
   /* parse tags/nodes if present */
   int depth = xmlTextReaderDepth(reader);
@@ -1059,8 +1059,6 @@ static way_t *process_way(xmlTextReaderPtr reader, osm_t *osm) {
     ret = xmlTextReaderRead(reader);
   }
   way->tags.replace(tags);
-
-  return way;
 }
 
 static bool process_member(xmlTextReaderPtr reader, osm_t *osm, std::vector<member_t> &members) {
@@ -1078,17 +1076,20 @@ static bool process_member(xmlTextReaderPtr reader, osm_t *osm, std::vector<memb
   return ret;
 }
 
-static relation_t *process_relation(xmlTextReaderPtr reader, osm_t *osm) {
+static void process_relation(xmlTextReaderPtr reader, osm_t *osm) {
   /* allocate a new relation structure */
   relation_t *relation = new relation_t();
 
   process_base_attributes(relation, reader, osm);
 
+  g_assert(osm->relations.find(relation->id) == osm->relations.end());
+  osm->relations[relation->id] = relation;
+
   /* just an empty element? then return the relation as it is */
   /* (this should in fact never happen as this would be a relation */
   /* without members) */
   if(xmlTextReaderIsEmptyElement(reader))
-    return relation;
+    return;
 
   /* parse tags/member if present */
   int depth = xmlTextReaderDepth(reader);
@@ -1112,8 +1113,6 @@ static relation_t *process_relation(xmlTextReaderPtr reader, osm_t *osm) {
     ret = xmlTextReaderRead(reader);
   }
   relation->tags.replace(tags);
-
-  return relation;
 }
 
 static osm_t *process_osm(xmlTextReaderPtr reader, icon_t &icons) {
@@ -1154,19 +1153,13 @@ static osm_t *process_osm(xmlTextReaderPtr reader, icon_t &icons) {
           osm->bounds = &osm->rbounds;
 	block = BLOCK_BOUNDS;
       } else if(block <= BLOCK_NODES && strcmp(name, node_t::api_string()) == 0) {
-        node_t *node = process_node(reader, osm);
-        if(node)
-          osm->nodes[node->id] = node;
+        process_node(reader, osm);
 	block = BLOCK_NODES;
       } else if(block <= BLOCK_WAYS && strcmp(name, way_t::api_string()) == 0) {
-        way_t *way = process_way(reader, osm);
-        if(way)
-          osm->ways[way->id] = way;
+        process_way(reader, osm);
 	block = BLOCK_WAYS;
       } else if(G_LIKELY(block <= BLOCK_RELATIONS && strcmp(name, relation_t::api_string()) == 0)) {
-	relation_t *relation = process_relation(reader, osm);
-	if(relation)
-	  osm->relations[relation->id] = relation;
+        process_relation(reader, osm);
 	block = BLOCK_RELATIONS;
       } else {
 	printf("something unknown found: %s\n", name);

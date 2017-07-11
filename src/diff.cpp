@@ -295,6 +295,7 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
   switch(state) {
   case OSM_FLAG_NEW: {
     printf("  Restoring NEW node\n");
+    g_assert_cmpint(id, <, 0);
 
     node = new node_t(1, lpos_t(), pos, id);
 
@@ -368,6 +369,7 @@ static void diff_restore_way(xmlNodePtr node_way, osm_t *osm) {
   switch(state) {
   case OSM_FLAG_NEW: {
     printf("  Restoring NEW way\n");
+    g_assert_cmpint(id, <, 0);
 
     way = new way_t(1, id);
 
@@ -469,6 +471,7 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
   switch(state) {
   case OSM_FLAG_NEW:
     printf("  Restoring NEW relation\n");
+    g_assert_cmpint(id, <, 0);
 
     relation = new relation_t(1, id);
 
