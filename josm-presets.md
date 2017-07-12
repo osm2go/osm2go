@@ -100,14 +100,14 @@ __&lt;separator/&gt;__       |                               | supported |
 __&lt;item_separator/&gt;__  |                               | ignored   |
 __&lt;link&gt;__             |                               | supported |
 __&nbsp;__                   | href                          | supported |
-__&lt;roles&gt;__            |                               | ignored   |
-__&lt;role&gt;__             |                               | ignored   |
-__&nbsp;__                   | key                           | ignored   | required
+__&lt;roles&gt;__            |                               | supported |
+__&lt;role&gt;__             |                               | supported |
+__&nbsp;__                   | key                           | supported |
 __&nbsp;__                   | text                          | ignored   |
 __&nbsp;__                   | text_context                  | ignored   |
 __&nbsp;__                   | requisite                     | ignored   |
-__&nbsp;__                   | count                         | ignored   |
-__&nbsp;__                   | type                          | ignored   |
+__&nbsp;__                   | count                         | supported |
+__&nbsp;__                   | type                          | supported |
 __&nbsp;__                   | member_expression             | ignored   |
 __&lt;preset_link&gt;__      |                               | supported |
 __&nbsp;__                   | preset_name                   | supported | required

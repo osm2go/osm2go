@@ -136,6 +136,8 @@ class PresetSax {
     TagSpace,
     TagSeparator,
     TagLink,
+    TagRoles,
+    TagRole,
     IntermediateTag,    ///< tag itself is ignored, but childs are processed
     UnknownTag
   };
@@ -256,6 +258,8 @@ const PresetSax::StateMap &PresetSax::preset_state_map() {
     map.insert(StateMap::value_type("label", StateMap::mapped_type(TagLabel, item_chunks)));
     map.insert(StateMap::value_type("space", StateMap::mapped_type(TagSpace, item_chunks)));
     map.insert(StateMap::value_type("link", StateMap::mapped_type(TagLink, item_chunks)));
+    map.insert(StateMap::value_type("roles", StateMap::mapped_type(TagRoles, item_chunks)));
+    map.insert(StateMap::value_type("role", StateMap::mapped_type(TagRole, VECTOR_ONE(TagRoles))));
 
     map.insert(StateMap::value_type("checkgroup", StateMap::mapped_type(IntermediateTag, item_chunks)));
     map.insert(StateMap::value_type("optional", StateMap::mapped_type(IntermediateTag, item_chunks)));
@@ -740,6 +744,34 @@ void PresetSax::startElement(const char *name, const char **attrs)
     }
     break;
   }
+  case TagRoles:
+    g_assert_false(items.empty());
+    break;
+  case TagRole: {
+    g_assert_false(items.empty());
+    g_assert_true(items.top()->isItem());
+    presets_item * const item = static_cast<presets_item *>(items.top());
+
+    const char *names[] = { "key", "type", O2G_NULLPTR };
+    const AttrMap &a = findAttributes(attrs, names, 0);
+    const AttrMap::const_iterator itEnd = a.end();
+
+    const std::string &key = NULL_OR_MAP_STR(a.find("key"));
+    const char *tp = NULL_OR_MAP_VAL(a.find("type"));
+    const char *cnt = NULL_OR_MAP_VAL(a.find("count"));
+    unsigned int count = 0;
+    if(cnt) {
+      char *endp;
+      count = strtoul(cnt, &endp, 10);
+      if(G_UNLIKELY(*endp != '\0')) {
+        dumpState("ignoring invalid count value of", "role\n");
+        count = 0;
+      }
+    }
+
+    item->roles.push_back(presets_item::role(key, josm_type_parse(tp), count));
+    break;
+  }
   }
 
   state.push_back(it->second.first);
@@ -774,6 +806,8 @@ void PresetSax::endElement(const xmlChar *name)
   case TagListEntry:
   case TagPresets:
   case IntermediateTag:
+  case TagRoles:
+  case TagRole:
     break;
   case TagItem: {
     g_assert_cmpint(0, ==, widgets.size());
@@ -791,6 +825,10 @@ void PresetSax::endElement(const xmlChar *name)
       presets_item_t * const group = items.top();
       g_assert((group->type & presets_item_t::TY_GROUP) != 0);
       *const_cast<unsigned int *>(&group->type) |= item->type;
+      if(G_UNLIKELY(!item->roles.empty() && (item->type & (presets_item_t::TY_RELATION | presets_item_t::TY_MULTIPOLYGON)) == 0)) {
+        dumpState("found", "item with roles, but type does not match relations or multipolygons\n");
+        item->roles.clear();
+      }
       break;
     }
   }

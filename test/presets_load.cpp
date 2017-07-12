@@ -60,11 +60,12 @@ struct counter {
   unsigned int &checks;
   unsigned int &refs;
   unsigned int &plinks;
+  unsigned int &roles;
   counter(unsigned int &gr, unsigned int &it, unsigned int &sep, unsigned int &c,
           unsigned int &ce, unsigned int &lb, unsigned int &ky,  unsigned int &chk,
-          unsigned int &rf, unsigned int &pl)
+          unsigned int &rf, unsigned int &pl, unsigned int &rl)
     : groups(gr), items(it), separators(sep), combos(c), combo_entries(ce),
-      labels(lb), keys(ky), checks(chk), refs(rf), plinks(pl) {}
+      labels(lb), keys(ky), checks(chk), refs(rf), plinks(pl), roles(rl) {}
   void operator()(const presets_item_t *p);
   void operator()(const presets_widget_t *w);
 };
@@ -83,6 +84,7 @@ void counter::operator()(const presets_item_t *p)
     items++;
     const presets_item * const item = static_cast<const presets_item *>(p);
     std::for_each(item->widgets.begin(), item->widgets.end(), *this);
+    roles += item->roles.size();
   }
 }
 
@@ -138,6 +140,46 @@ static void checkItem(const presets_item_t *item)
   }
 }
 
+static void test_roles(const presets_items *presets)
+{
+  relation_t r;
+  osm_t::TagMap tags;
+  tags.insert(osm_t::TagMap::value_type("type", "multipolygon"));
+  r.tags.replace(tags);
+
+  // object type does not match
+  node_t n;
+  std::set<std::string> roles = preset_roles(&r, object_t(&n), presets);
+  g_assert_true(roles.empty());
+
+  way_t w;
+  roles = preset_roles(&r, object_t(&w), presets);
+  g_assert_cmpuint(roles.size(), ==, 2);
+  g_assert(roles.find("inner") != roles.end());
+  g_assert(roles.find("outer") != roles.end());
+
+  // check count restriction
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("type", "restriction"));
+  r.tags.replace(tags);
+
+  roles = preset_roles(&r, object_t(&w), presets);
+  g_assert_cmpuint(roles.size(), ==, 3);
+  g_assert(roles.find("from") != roles.end());
+  g_assert(roles.find("via") != roles.end());
+  g_assert(roles.find("to") != roles.end());
+
+  way_t w2;
+  r.members.push_back(member_t(object_t(&w2), g_strdup("from")));
+
+  roles = preset_roles(&r, object_t(&w), presets);
+  g_assert_cmpuint(roles.size(), ==, 2);
+  g_assert(roles.find("via") != roles.end());
+  g_assert(roles.find("to") != roles.end());
+
+  r.cleanup();
+}
+
 int main(int argc, char **argv)
 {
   struct presets_items *presets;
@@ -170,7 +212,8 @@ int main(int argc, char **argv)
   unsigned int checks = 0;
   unsigned int refs = 0;
   unsigned int plinks = 0;
-  counter cnt(groups, items, separators, combos, combo_entries, labels, keys, checks, refs, plinks);
+  unsigned int roles = 0;
+  counter cnt(groups, items, separators, combos, combo_entries, labels, keys, checks, refs, plinks, roles);
 
   std::for_each(presets->items.begin(), presets->items.end(), cnt);
   std::for_each(presets->chunks.begin(), presets->chunks.end(), cnt);
@@ -187,9 +230,12 @@ int main(int argc, char **argv)
     << "keys: " << keys << std::endl
     << "checks: " << checks << std::endl
     << "references: " << refs << std::endl
-    << "preset_links: " << plinks << std::endl;
+    << "preset_links: " << plinks << std::endl
+    << "roles: " << roles << std::endl;
 
   std::for_each(presets->items.begin(), presets->items.end(), checkItem);
+
+  test_roles(presets);
 
   delete presets;
   xmlCleanupParser();

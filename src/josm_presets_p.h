@@ -274,12 +274,20 @@ public:
 
 class presets_item : public presets_item_named {
 public:
+  struct role {
+    role(const std::string &n, unsigned int t, unsigned int cnt) : name(n), type(t), count(cnt) {}
+    std::string name;
+    unsigned int type;  ///< object types that may have this role
+    unsigned int count; ///< maximum amount of members with that role
+  };
+
   explicit presets_item(unsigned int t, const std::string &n = std::string(),
                const std::string &ic = std::string(), bool edname = false)
     : presets_item_named(t, n, ic), addEditName(edname) {}
   virtual ~presets_item();
 
   std::vector<presets_widget_t *> widgets;
+  std::vector<role> roles;
 
   virtual bool isItem() const O2G_OVERRIDE {
     return true;

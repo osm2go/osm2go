@@ -1205,4 +1205,88 @@ GtkWidget *presets_widget_link::attach(GtkTable *table, guint &row, const char *
   return O2G_NULLPTR;
 }
 
-// vim:et:ts=8:sw=2:sts=2:ai
+struct relation_preset_functor {
+  const relation_t * const relation;
+  const unsigned int typemask;
+  const osm_t::TagMap tags;
+  const presets_item **result;
+  relation_preset_functor(const relation_t *rl, const presets_item **rs)
+    : relation(rl)
+    , typemask(presets_item_t::TY_RELATION | (rl->is_multipolygon() ? presets_item_t::TY_MULTIPOLYGON : 0))
+    , tags(rl->tags.asMap())
+    , result(rs)
+  {
+  }
+  bool operator()(const presets_item_t *item);
+};
+
+bool relation_preset_functor::operator()(const presets_item_t *item)
+{
+  if(item->type & presets_item_t::TY_GROUP) {
+    const presets_item_group * const gr = static_cast<const presets_item_group *>(item);
+    const std::vector<presets_item_t *>::const_iterator itEnd = gr->items.end();
+    return std::find_if(gr->items.begin(), itEnd, *this) != itEnd;
+  }
+
+  if(!(item->type & typemask))
+    return false;
+
+  if(item->matches(tags)) {
+    g_assert_true(item->isItem());
+    *result = static_cast<const presets_item *>(item);
+    return true;
+  } else {
+    return false;
+  }
+}
+
+struct role_collect_functor {
+  std::set<std::string> &result;
+  const std::map<std::string, unsigned int> &existing;
+  const unsigned int typemask;
+  role_collect_functor(std::set<std::string> &r, std::map<std::string, unsigned int> &e, unsigned int m)
+    : result(r), existing(e), typemask(m) {}
+  void operator()(const presets_item::role &role);
+};
+
+void role_collect_functor::operator()(const presets_item::role &role)
+{
+  if(!(typemask & role.type))
+    return;
+
+  const std::map<std::string, unsigned int>::const_iterator itEnd = existing.end();
+  const std::map<std::string, unsigned int>::const_iterator it = existing.find(role.name);
+
+  // if the limit of members with that type is already reached do not show it again
+  if(it != itEnd && it->second >= role.count)
+    return;
+
+  result.insert(role.name);
+}
+
+static bool has_role(const member_t &member) {
+  return member.role != O2G_NULLPTR;
+}
+
+std::set<std::string> preset_roles(const relation_t *relation, const object_t &obj, const presets_items *presets)
+{
+  // collect existing roles first
+  std::map<std::string, unsigned int> existingRoles;
+  const std::vector<member_t>::const_iterator mitEnd = relation->members.end();
+  std::vector<member_t>::const_iterator mit = relation->members.begin();
+  while((mit = std::find_if(mit, mitEnd, has_role)) != mitEnd) {
+    existingRoles[mit->role]++;
+    mit++;
+  }
+
+  std::set<std::string> ret;
+  const presets_item *item = O2G_NULLPTR;
+  relation_preset_functor fc(relation, &item);
+  const std::vector<presets_item_t *>::const_iterator itEnd = presets->items.end();
+  role_collect_functor rfc(ret, existingRoles, presets_type_mask(obj));
+
+  if(std::find_if(presets->items.begin(), itEnd, fc) != itEnd)
+    std::for_each(item->roles.begin(), item->roles.end(), rfc);
+
+  return ret;
+}

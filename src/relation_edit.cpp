@@ -21,6 +21,7 @@
 
 #include "appdata.h"
 #include "info.h"
+#include "josm_presets.h"
 #include "list.h"
 #include "map.h"
 #include "misc.h"
@@ -69,27 +70,14 @@ struct entry_insert_text {
   }
 };
 
-static bool has_role(const member_t &member) {
-  return member.role != O2G_NULLPTR;
-}
-
-static gboolean relation_add_item(GtkWidget *parent,
-			      relation_t *relation, object_t &object) {
-  std::set<std::string> roles;
-
+static bool relation_add_item(GtkWidget *parent, relation_t *relation,
+                              const object_t &object, const presets_items *presets) {
   printf("add object of type %d to relation #" ITEM_ID_FORMAT "\n",
          object.type, relation->id);
 
+  const std::set<std::string> &roles = preset_roles(relation, object, presets);
+
   /* ask the user for the role of the new object in this relation */
-
-  /* collect roles first */
-  const std::vector<member_t>::const_iterator mitEnd = relation->members.end();
-  std::vector<member_t>::const_iterator mit = relation->members.begin();
-  while((mit = std::find_if(mit, mitEnd, has_role)) != mitEnd) {
-    roles.insert(mit->role);
-    mit++;
-  }
-
   /* ------------------ role dialog ---------------- */
   GtkWidget *dialog =
     misc_dialog_new(MISC_DIALOG_NOSIZE,_("Select role"),
@@ -138,7 +126,7 @@ static gboolean relation_add_item(GtkWidget *parent,
   if(GTK_RESPONSE_ACCEPT != gtk_dialog_run(GTK_DIALOG(dialog))) {
     printf("user clicked cancel\n");
     gtk_widget_destroy(dialog);
-    return FALSE;
+    return false;
   }
 
   printf("user clicked ok\n");
@@ -162,7 +150,7 @@ static gboolean relation_add_item(GtkWidget *parent,
   relation->members.push_back(member_t(object, role));
 
   relation->flags |= OSM_FLAG_DIRTY;
-  return TRUE;
+  return true;
 }
 
 static void relation_remove_item(relation_t *relation, const object_t &object) {
@@ -212,7 +200,7 @@ static void changed(GtkTreeSelection *sel, gpointer user_data) {
       printf("selected: " ITEM_ID_FORMAT "\n", relation->id);
 
       /* either accept this or unselect again */
-      if(relation_add_item(context->dialog, relation, context->item)) {
+      if(relation_add_item(context->dialog, relation, context->item, context->appdata->presets)) {
         // the item is now the last one in the chain
         const member_t &member = relation->members.back();
 	gtk_list_store_set(context->store, &iter,
