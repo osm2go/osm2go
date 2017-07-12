@@ -1154,7 +1154,7 @@ bool presets_widget_checkbox::matchValue(const char *val) const
 GtkWidget *presets_widget_checkbox::attach(GtkTable *table, guint &row, const char *preset,
                                            presets_context_t *) const
 {
-  gboolean deflt = FALSE;
+  gboolean deflt;
   if(preset)
     deflt = matchValue(preset) ? TRUE : FALSE;
   else
