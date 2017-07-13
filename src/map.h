@@ -88,7 +88,7 @@ struct map_state_t {
 };
 
 struct map_t {
-  explicit map_t(appdata_t *a, struct style_t *s);
+  explicit map_t(appdata_t *a);
   ~map_t();
 
   appdata_t * const appdata;
@@ -130,17 +130,18 @@ struct map_t {
                                 // (may be part of a selected way)
   } pen_down;
 
-  struct style_t *style;
+  struct style_t *&style;
 
   size_t elements_drawn;	///< number of elements drawn in last segment
 
   osm_t::TagMap last_node_tags;           // used to "repeat" tagging
   osm_t::TagMap last_way_tags;
+
+  void set_autosave(bool enable);
 };
 
 void map_item_redraw(map_t *map, object_t object);
 
-GtkWidget *map_new(appdata_t *appdata);
 void map_init(map_t *map);
 gboolean map_key_press_event(map_t *map, GdkEventKey *event);
 void map_show_node(map_t *map, node_t *node);
@@ -202,8 +203,6 @@ void map_node_draw(map_t *map, node_t *node);
 void map_relation_select(map_t *map, relation_t *relation);
 
 void map_item_chain_destroy(map_item_chain_t **chainP);
-
-void map_set_autosave(map_t *map, bool enable);
 #endif
 
 #endif // MAP_H

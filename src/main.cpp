@@ -144,7 +144,7 @@ cb_menu_download(appdata_t *appdata) {
   if(project_check_demo(GTK_WIDGET(appdata->window), appdata->project))
     return;
 
-  map_set_autosave(appdata->map, false);
+  appdata->map->set_autosave(false);
 
   /* if we have valid osm data loaded: save state first */
   if(appdata->osm)
@@ -167,7 +167,7 @@ cb_menu_download(appdata_t *appdata) {
     banner_busy_stop(appdata); //"Redrawing"
   }
 
-  map_set_autosave(appdata->map, true);
+  appdata->map->set_autosave(true);
   main_ui_enable(appdata);
 }
 
@@ -1130,6 +1130,7 @@ appdata_t::appdata_t()
   , app_menu_map(O2G_NULLPTR)
 #endif
   , map(O2G_NULLPTR)
+  , style(O2G_NULLPTR)
   , osm(O2G_NULLPTR)
   , settings(settings_t::load())
   , gps_state(gps_state_t::create())
@@ -1179,6 +1180,7 @@ appdata_t::~appdata_t() {
 
   delete gps_state;
   delete settings;
+  delete style;
   delete statusbar;
   delete iconbar;
   delete project;
@@ -1338,13 +1340,19 @@ static int application_run()
 #ifdef PORTRAIT
   gtk_box_pack_start(GTK_BOX(vbox), iconbar_new(&appdata), FALSE, FALSE, 0);
 #endif
+  appdata.style = style_load(appdata.settings->style, appdata.icons);
+  if(!appdata.style) {
+    errorf(O2G_NULLPTR, _("Unable to load valid style %s, terminating."),
+           appdata.settings->style.c_str());
+    return -1;
+  }
 
   /* generate main map view */
-  GtkWidget *map = map_new(&appdata);
-  if(!map)
+  appdata.map = new map_t(&appdata);
+  if(!appdata.map)
     return -1;
 
-  gtk_box_pack_start(GTK_BOX(vbox), map, TRUE, TRUE, 0);
+  gtk_box_pack_start(GTK_BOX(vbox), appdata.map->canvas->widget, TRUE, TRUE, 0);
 
   /* fremantle has seperate zoom/details buttons on the right screen side */
   appdata.statusbar = new statusbar_t();

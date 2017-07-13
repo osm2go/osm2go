@@ -398,12 +398,12 @@ void style_change(appdata_t *appdata, const char *name) {
   /* let gtk clean up first */
   osm2go_platform::process_events();
 
-  delete appdata->map->style;
-  appdata->map->style = nstyle;
+  delete appdata->style;
+  appdata->style = nstyle;
 
   /* canvas background may have changed */
   canvas_set_background(appdata->map->canvas,
-			appdata->map->style->background.color);
+                        appdata->style->background.color);
 
   map_paint(appdata->map);
 }

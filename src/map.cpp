@@ -44,34 +44,6 @@
 #include <gdk/gdkkeysyms.h>
 #include <vector>
 
-map_t::map_t(appdata_t *a, style_t *s)
-  : appdata(a)
-  , canvas(new canvas_t())
-  , state(appdata->map_state)
-  , autosave_handler_id(0)
-  , highlight(O2G_NULLPTR)
-  , cursor(O2G_NULLPTR)
-  , touchnode(O2G_NULLPTR)
-  , style(s)
-  , elements_drawn(0)
-{
-  memset(&selected, 0, sizeof(selected));
-  memset(&bg, 0, sizeof(bg));
-  memset(&action, 0, sizeof(action));
-  memset(&pen_down, 0, sizeof(pen_down));
-  pen_down.at.x = -1;
-  pen_down.at.y = -1;
-  action.type = MAP_ACTION_IDLE;
-}
-
-map_t::~map_t()
-{
-  delete style;
-
-  /* destroy existing highlight */
-  delete highlight;
-}
-
 /* this is a chain of map_items which is attached to all entries */
 /* in the osm tree (node_t, way_t, ...) to be able to get a link */
 /* to the screen representation of a give node/way/etc */
@@ -806,7 +778,7 @@ static gint map_destroy_event(GtkWidget *, gpointer data) {
   map_t *map = static_cast<map_t *>(data);
   appdata_t *appdata = map->appdata;
 
-  map_set_autosave(map, false);
+  map->set_autosave(false);
 
   printf("destroying entire map\n");
 
@@ -1699,18 +1671,26 @@ static gboolean map_autosave(gpointer data) {
   return TRUE;
 }
 
-GtkWidget *map_new(appdata_t *appdata) {
-  style_t *s = style_load(appdata->settings->style, appdata->icons);
-  if(!s) {
-    errorf(O2G_NULLPTR, _("Unable to load valid style %s, terminating."),
-           appdata->settings->style.c_str());
-    return O2G_NULLPTR;
-  }
+map_t::map_t(appdata_t *a)
+  : appdata(a)
+  , canvas(new canvas_t())
+  , state(appdata->map_state)
+  , autosave_handler_id(0)
+  , highlight(O2G_NULLPTR)
+  , cursor(O2G_NULLPTR)
+  , touchnode(O2G_NULLPTR)
+  , style(appdata->style)
+  , elements_drawn(0)
+{
+  memset(&selected, 0, sizeof(selected));
+  memset(&bg, 0, sizeof(bg));
+  memset(&action, 0, sizeof(action));
+  memset(&pen_down, 0, sizeof(pen_down));
+  pen_down.at.x = -1;
+  pen_down.at.y = -1;
+  action.type = MAP_ACTION_IDLE;
 
-  map_t *map = new map_t(appdata, s);
-  appdata->map = map;
-
-  GtkWidget *canvas_widget = map->canvas->widget;
+  GtkWidget *canvas_widget = canvas->widget;
 
   gtk_widget_set_events(canvas_widget,
                           GDK_BUTTON_PRESS_MASK
@@ -1720,21 +1700,25 @@ GtkWidget *map_new(appdata_t *appdata) {
 			| GDK_POINTER_MOTION_HINT_MASK);
 
   /* autosave happens every two minutes */
-  map_set_autosave(map, true);
+  set_autosave(true);
 
   g_signal_connect(GTK_OBJECT(canvas_widget),
-     "button_press_event", G_CALLBACK(map_button_event), map);
+     "button_press_event", G_CALLBACK(map_button_event), this);
   g_signal_connect(GTK_OBJECT(canvas_widget),
-     "button_release_event", G_CALLBACK(map_button_event), map);
+     "button_release_event", G_CALLBACK(map_button_event), this);
   g_signal_connect(GTK_OBJECT(canvas_widget),
-     "motion_notify_event", G_CALLBACK(map_motion_notify_event), map);
+     "motion_notify_event", G_CALLBACK(map_motion_notify_event), this);
   g_signal_connect(GTK_OBJECT(canvas_widget),
      "scroll_event", G_CALLBACK(map_scroll_event), appdata);
 
   g_signal_connect(GTK_OBJECT(canvas_widget),
-     "destroy", G_CALLBACK(map_destroy_event), map);
+     "destroy", G_CALLBACK(map_destroy_event), this);
+}
 
-  return canvas_widget;
+map_t::~map_t()
+{
+  /* destroy existing highlight */
+  delete highlight;
 }
 
 void map_init(map_t *map) {
@@ -2364,11 +2348,11 @@ void map_detail_normal(map_t *map) {
   banner_busy_stop(map->appdata);
 }
 
-void map_set_autosave(map_t *map, bool enable) {
+void map_t::set_autosave(bool enable) {
   if(enable)
-    map->autosave_handler_id = g_timeout_add_seconds(120, map_autosave, map);
+    autosave_handler_id = g_timeout_add_seconds(120, map_autosave, this);
   else
-    g_source_remove(map->autosave_handler_id);
+    g_source_remove(autosave_handler_id);
 }
 
 map_state_t::map_state_t()
