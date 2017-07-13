@@ -82,7 +82,6 @@ struct map_state_t {
 
   void reset();
 
-  gint refcount;
   float zoom;                          // zoom level (1.0 = 1m/pixel
   float detail;                        // deatil level (1.0 = normal)
   struct { gint x,y; } scroll_offset;  // initial scroll offset
@@ -94,7 +93,7 @@ struct map_t {
 
   appdata_t * const appdata;
   canvas_t * const canvas;
-  map_state_t * const state;
+  map_state_t &state;
 
   guint autosave_handler_id;
 
@@ -142,7 +141,6 @@ struct map_t {
 void map_item_redraw(map_t *map, object_t object);
 
 GtkWidget *map_new(appdata_t *appdata);
-void map_state_free(map_state_t *state);
 void map_init(map_t *map);
 gboolean map_key_press_event(map_t *map, GdkEventKey *event);
 void map_show_node(map_t *map, node_t *node);

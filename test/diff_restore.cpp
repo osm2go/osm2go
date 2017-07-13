@@ -1,5 +1,6 @@
 #include <diff.h>
 #include <icon.h>
+#include <map.h>
 #include <misc.h>
 #include <osm.h>
 #include <project.h>
@@ -133,7 +134,8 @@ int main(int argc, char **argv)
 
   g_assert_true(diff_is_clean(osm, true));
 
-  project_t project(argv[2], argv[1]);
+  map_state_t dummystate;
+  project_t project(dummystate, argv[2], argv[1]);
   diff_restore(O2G_NULLPTR, &project, osm);
 
   verify_diff(osm);
@@ -151,7 +153,7 @@ int main(int argc, char **argv)
     std::string bpath = tmpdir + std::string("/") + argv[2];
     mkdir(bpath.c_str(), 0755);
     bpath.erase(bpath.rfind('/') + 1);
-    project_t sproject(argv[2], bpath.c_str());
+    project_t sproject(dummystate, argv[2], bpath.c_str());
 
     diff_restore(O2G_NULLPTR, &sproject, osm);
 

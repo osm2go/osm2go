@@ -35,14 +35,14 @@ struct map_state_t;
 struct osm_t;
 
 struct project_t {
-  project_t(const char *n, const std::string &base_path);
+  project_t(map_state_t &ms, const char *n, const std::string &base_path);
   ~project_t();
 
   const char *server; /**< the server string used, either rserver or settings->server */
 
   struct { gint x, y; } wms_offset;
 
-  struct map_state_t *map_state;
+  map_state_t &map_state;
 
   pos_t min, max;
 

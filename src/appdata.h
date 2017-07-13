@@ -57,6 +57,7 @@
 
 #ifdef __cplusplus
 #include "icon.h"
+#include "map.h"
 #include "osm.h"
 #endif
 
@@ -130,7 +131,8 @@ typedef struct appdata_t {
 #endif
 
 #ifdef __cplusplus
-  struct map_t *map;
+  map_state_t map_state;
+  map_t *map;
   struct osm_t *osm;
   class settings_t * const settings;
   class gps_state_t * const gps_state;

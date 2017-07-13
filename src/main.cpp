@@ -257,26 +257,25 @@ static void
 cb_menu_zoomin(appdata_t *appdata) {
   if(!appdata->map) return;
 
-  map_set_zoom(appdata->map, appdata->map->state->zoom*ZOOM_FACTOR_MENU, TRUE);
-  printf("zoom is now %f\n", appdata->map->state->zoom);
+  map_set_zoom(appdata->map, appdata->map->state.zoom * ZOOM_FACTOR_MENU, TRUE);
+  printf("zoom is now %f\n", appdata->map->state.zoom);
 }
 
 static void
 cb_menu_zoomout(appdata_t *appdata) {
   if(!appdata->map) return;
 
-  map_set_zoom(appdata->map, appdata->map->state->zoom/ZOOM_FACTOR_MENU, TRUE);
-  printf("zoom is now %f\n", appdata->map->state->zoom);
+  map_set_zoom(appdata->map, appdata->map->state.zoom / ZOOM_FACTOR_MENU, TRUE);
+  printf("zoom is now %f\n", appdata->map->state.zoom);
 }
 
 #ifndef FREMANTLE
 static void
 cb_scale_popup(GtkWidget *button, appdata_t *appdata) {
-  if(!appdata->project || !appdata->project->map_state)
+  if(!appdata->project)
     return;
 
-  float lin =
-    -rint(std::log(appdata->project->map_state->detail) / std::log(MAP_DETAIL_STEP));
+  float lin = -rint(std::log(appdata->map_state.detail) / std::log(MAP_DETAIL_STEP));
 
   scale_popup(button, lin, GTK_WINDOW(appdata->window), appdata->map);
 }

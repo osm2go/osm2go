@@ -100,6 +100,7 @@ struct select_context_t {
   ~select_context_t();
 
   appdata_t * const appdata;
+  map_state_t dummystate;
   std::vector<project_t *> projects;
   GtkWidget * const dialog;
   GtkWidget *list;
@@ -152,23 +153,22 @@ static bool project_read(const std::string &project_file, project_t *project,
 	      printf("server = %s\n", project->server);
 	      xmlFree(str);
 
-	    } else if(project->map_state &&
-		      strcmp((char*)node->name, "map") == 0) {
+            } else if(strcmp((char*)node->name, "map") == 0) {
 
 	      if((str = xmlGetProp(node, BAD_CAST "zoom"))) {
-		project->map_state->zoom = g_ascii_strtod((gchar *)str, O2G_NULLPTR);
+                project->map_state.zoom = g_ascii_strtod((gchar *)str, O2G_NULLPTR);
 		xmlFree(str);
 	      }
 	      if((str = xmlGetProp(node, BAD_CAST "detail"))) {
-		project->map_state->detail = g_ascii_strtod((gchar *)str, O2G_NULLPTR);
+                project->map_state.detail = g_ascii_strtod((gchar *)str, O2G_NULLPTR);
 		xmlFree(str);
 	      }
 	      if((str = xmlGetProp(node, BAD_CAST "scroll-offset-x"))) {
-		project->map_state->scroll_offset.x = strtoul((char *)str, O2G_NULLPTR, 10);
+                project->map_state.scroll_offset.x = strtoul((char *)str, O2G_NULLPTR, 10);
 		xmlFree(str);
 	      }
 	      if((str = xmlGetProp(node, BAD_CAST "scroll-offset-y"))) {
-		project->map_state->scroll_offset.y = strtoul((char *)str, O2G_NULLPTR, 10);
+                project->map_state.scroll_offset.y = strtoul((char *)str, O2G_NULLPTR, 10);
 		xmlFree(str);
 	      }
 
@@ -283,17 +283,15 @@ bool project_save(GtkWidget *parent, project_t *project) {
   node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "max", O2G_NULLPTR);
   xml_set_prop_pos(node, &project->max);
 
-  if(project->map_state) {
-    node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "map", BAD_CAST O2G_NULLPTR);
-    g_ascii_formatd(str, sizeof(str), "%.04f", project->map_state->zoom);
-    xmlNewProp(node, BAD_CAST "zoom", BAD_CAST str);
-    g_ascii_formatd(str, sizeof(str), "%.04f", project->map_state->detail);
-    xmlNewProp(node, BAD_CAST "detail", BAD_CAST str);
-    snprintf(str, sizeof(str), "%d", project->map_state->scroll_offset.x);
-    xmlNewProp(node, BAD_CAST "scroll-offset-x", BAD_CAST str);
-    snprintf(str, sizeof(str), "%d", project->map_state->scroll_offset.y);
-    xmlNewProp(node, BAD_CAST "scroll-offset-y", BAD_CAST str);
-  }
+  node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "map", BAD_CAST O2G_NULLPTR);
+  g_ascii_formatd(str, sizeof(str), "%.04f", project->map_state.zoom);
+  xmlNewProp(node, BAD_CAST "zoom", BAD_CAST str);
+  g_ascii_formatd(str, sizeof(str), "%.04f", project->map_state.detail);
+  xmlNewProp(node, BAD_CAST "detail", BAD_CAST str);
+  snprintf(str, sizeof(str), "%d", project->map_state.scroll_offset.x);
+  xmlNewProp(node, BAD_CAST "scroll-offset-x", BAD_CAST str);
+  snprintf(str, sizeof(str), "%d", project->map_state.scroll_offset.y);
+  xmlNewProp(node, BAD_CAST "scroll-offset-y", BAD_CAST str);
 
   if(project->wms_offset.x != 0 || project->wms_offset.y != 0 ||
      !project->wms_server.empty() || !project->wms_path.empty()) {
@@ -332,7 +330,7 @@ bool project_exists(settings_t *settings, const char *name, std::string &fullnam
   return g_file_test(fullname.c_str(), G_FILE_TEST_IS_REGULAR) == TRUE;
 }
 
-static std::vector<project_t *> project_scan(settings_t *settings) {
+static std::vector<project_t *> project_scan(map_state_t &ms, settings_t *settings) {
   std::vector<project_t *> projects;
 
   /* scan for projects */
@@ -344,7 +342,7 @@ static std::vector<project_t *> project_scan(settings_t *settings) {
       printf("found project %s\n", name);
 
       /* try to read project and append it to chain */
-      project_t *n = new project_t(name, settings->base_path);
+      project_t *n = new project_t(ms, name, settings->base_path);
 
       if(project_read(fullname, n, settings->server))
         projects.push_back(n);
@@ -571,7 +569,7 @@ static project_t *project_new(select_context_t *context) {
     return O2G_NULLPTR;
   }
 
-  project_t *project = new project_t(gtk_entry_get_text(GTK_ENTRY(entry)),
+  project_t *project = new project_t(context->dummystate, gtk_entry_get_text(GTK_ENTRY(entry)),
                                      context->appdata->settings->base_path);
   gtk_widget_destroy(dialog);
 
@@ -1246,18 +1244,9 @@ project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
 }
 
 static bool project_open(appdata_t *appdata, const char *name) {
-  project_t *project = new project_t(name, appdata->settings->base_path);
+  project_t *project = new project_t(appdata->map_state, name, appdata->settings->base_path);
 
-  /* link to map state if a map already exists */
-  if(appdata->map) {
-    printf("Project: Using map state\n");
-    project->map_state = appdata->map->state;
-    project->map_state->reset();
-    project->map_state->refcount++;
-  } else {
-    printf("Project: Creating new map_state\n");
-    project->map_state = new map_state_t();
-  }
+  project->map_state.reset();
 
   const std::string &project_file = project_filename(project);
 
@@ -1403,9 +1392,9 @@ osm_t *project_parse_osm(const project_t *project, icon_t &icons) {
   return osm_t::parse(project->path, project->osm, icons);
 }
 
-project_t::project_t(const char *n, const std::string &base_path)
+project_t::project_t(map_state_t &ms, const char *n, const std::string &base_path)
   : server(O2G_NULLPTR)
-  , map_state(O2G_NULLPTR)
+  , map_state(ms)
   , data_dirty(false)
   , name(n)
   , path(base_path +  name + '/')
@@ -1417,12 +1406,11 @@ project_t::project_t(const char *n, const std::string &base_path)
 
 project_t::~project_t()
 {
-  map_state_free(map_state);
 }
 
 select_context_t::select_context_t(appdata_t* a, GtkWidget *dial)
   : appdata(a)
-  , projects(project_scan(appdata->settings))
+  , projects(project_scan(dummystate, appdata->settings))
   , dialog(dial)
   , list(O2G_NULLPTR)
 {
