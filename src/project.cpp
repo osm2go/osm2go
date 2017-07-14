@@ -816,7 +816,7 @@ static GtkWidget *project_list_widget(select_context_t &context, gboolean &has_s
                    _("Name"), 0,
                    _("State"), LIST_FLAG_STOCK_ICON,
                    _("Description"), LIST_FLAG_ELLIPSIZE,
-                   0);
+                   O2G_NULLPTR);
 
   /* build the store */
   GtkListStore *store = gtk_list_store_new(PROJECT_NUM_COLS,
