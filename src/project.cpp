@@ -321,10 +321,8 @@ bool project_save(GtkWidget *parent, project_t *project) {
  * @param fullname where to store absolute filename if project exists
  * @returns if project exists
  */
-bool project_exists(settings_t *settings, const char *name, std::string &fullname) {
-  if(G_UNLIKELY(settings->base_path.empty()))
-    return false;
-  fullname = settings->base_path + name + '/' + name + ".proj";
+static bool project_exists(const std::string &base_path, const char *name, std::string &fullname) {
+  fullname = base_path + name + '/' + name + ".proj";
 
   /* check for project file */
   return g_file_test(fullname.c_str(), G_FILE_TEST_IS_REGULAR) == TRUE;
@@ -338,7 +336,7 @@ static std::vector<project_t *> project_scan(map_state_t &ms, settings_t *settin
   const gchar *name;
   while((name = g_dir_read_name(dir)) != O2G_NULLPTR) {
     std::string fullname;
-    if(project_exists(settings, name, fullname)) {
+    if(project_exists(settings->base_path, name, fullname)) {
       printf("found project %s\n", name);
 
       /* try to read project and append it to chain */
@@ -439,7 +437,7 @@ static void callback_modified_name(GtkWidget *widget, gpointer data) {
     if(strpbrk(name, "\\*?()\n\t\r") == O2G_NULLPTR) {
       /* check if such a project already exists */
       std::string fullname;
-      if(!project_exists(context->settings, name, fullname))
+      if(!project_exists(context->settings->base_path, name, fullname))
 	ok = TRUE;
     }
   }

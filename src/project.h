@@ -58,8 +58,6 @@ struct project_t {
   std::string wms_path;
 };
 
-bool project_exists(settings_t *settings, const char *name, std::string &fullname);
-
 bool project_save(GtkWidget *parent, project_t *project);
 bool project_check_demo(GtkWidget *parent, project_t *project);
 
