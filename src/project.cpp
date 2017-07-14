@@ -657,8 +657,7 @@ static void on_project_new(select_context_t *context) {
   }
 }
 
-static void on_project_delete(GtkButton *, gpointer data) {
-  select_context_t *context = (select_context_t*)data;
+static void on_project_delete(select_context_t *context) {
   project_t *project = project_get_selected(context->list);
 
   if(!yes_no_f(context->dialog, O2G_NULLPTR, 0, 0, _("Delete project?"),
@@ -670,8 +669,7 @@ static void on_project_delete(GtkButton *, gpointer data) {
     printf("unable to delete project\n");
 }
 
-static void on_project_edit(GtkButton *, gpointer data) {
-  select_context_t *context = (select_context_t*)data;
+static void on_project_edit(select_context_t *context) {
   project_t *project = project_get_selected(context->list);
 
   if(project_edit(context, project, FALSE)) {

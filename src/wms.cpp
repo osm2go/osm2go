@@ -542,7 +542,7 @@ wms_server_changed(GtkTreeSelection *selection, gpointer userdata) {
     wms_server_selected(context, wms_server);
 }
 
-static void on_server_remove(GtkWidget *, wms_server_context_t *context) {
+static void on_server_remove(wms_server_context_t *context) {
   GtkTreeSelection *selection = list_get_selection(context->list);
   GtkTreeModel     *model;
   GtkTreeIter       iter;
@@ -665,7 +665,7 @@ bool wms_server_edit(wms_server_context_t *context, gboolean edit_name,
 }
 
 /* user clicked "edit..." button in the wms server list */
-static void on_server_edit(GtkWidget *, wms_server_context_t *context) {
+static void on_server_edit(wms_server_context_t *context) {
   wms_server_t *server = get_selection(list_get_selection(context->list));
   g_assert_nonnull(server);
 

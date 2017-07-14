@@ -88,7 +88,7 @@ struct value_match_functor {
   }
 };
 
-static void on_tag_remove(GtkWidget *, tag_context_t *context) {
+static void on_tag_remove(tag_context_t *context) {
   GtkTreeModel     *model;
   GtkTreeIter       iter;
 
@@ -203,7 +203,7 @@ static void select_item(const std::string &k, const std::string &v, tag_context_
   } while(gtk_tree_model_iter_next(GTK_TREE_MODEL(context->store), &iter));
 }
 
-static void on_tag_edit(GtkWidget *, tag_context_t *context) {
+static void on_tag_edit(tag_context_t *context) {
   GtkTreeModel *model;
   GtkTreeIter iter;
 

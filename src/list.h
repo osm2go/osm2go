@@ -95,8 +95,8 @@ void list_set_store(GtkWidget *list, GtkListStore *store);
  * @param list the list widget
  * @param flags list creation flags
  * @param cb_new the callback on the leftmost button, WARNING: swapped arguments
- * @param cb_edit callback for the middle button, normal argument order
- * @param cb_remove callback for the rightmost button, normal argument order
+ * @param cb_edit callback for the middle button, WARNING: swapped arguments
+ * @param cb_remove callback for the rightmost button, WARNING: swapped arguments
  * @param data context pointer passed to the callbacks
  */
 void list_set_static_buttons(GtkWidget *list, int flags,

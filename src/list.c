@@ -293,8 +293,8 @@ void list_set_static_buttons(GtkWidget *list, int flags,
     priv->button.widget[1] = gtk_button_new_with_mnemonic(_("_Edit"));
     gtk_table_attach_defaults(GTK_TABLE(priv->table),
 			      priv->button.widget[1], 1, 2, 0, 1);
-    g_signal_connect(GTK_OBJECT(priv->button.widget[1]), "clicked",
-                     G_CALLBACK(cb_edit), data);
+    g_signal_connect_swapped(GTK_OBJECT(priv->button.widget[1]), "clicked",
+                             G_CALLBACK(cb_edit), data);
 #endif
     gtk_widget_set_sensitive(priv->button.widget[1], FALSE);
   }
@@ -307,8 +307,8 @@ void list_set_static_buttons(GtkWidget *list, int flags,
     priv->button.widget[2] = button_new_with_label(_("Remove"));
     gtk_table_attach_defaults(GTK_TABLE(priv->table),
 			      priv->button.widget[2], 2, 3, 0, 1);
-    g_signal_connect(GTK_OBJECT(priv->button.widget[2]), "clicked",
-                     G_CALLBACK(cb_remove), data);
+    g_signal_connect_swapped(GTK_OBJECT(priv->button.widget[2]), "clicked",
+                             G_CALLBACK(cb_remove), data);
 #endif
     gtk_widget_set_sensitive(priv->button.widget[2], FALSE);
   }
@@ -341,15 +341,6 @@ void list_focus_on(GtkWidget *list, GtkTreeIter *iter, gboolean highlight) {
   // reselect
   if (highlight)
     gtk_tree_selection_select_iter(sel, iter);
-}
-
-static gint on_list_destroy(GtkWidget *list, G_GNUC_UNUSED gpointer data) {
-  list_priv_t *priv = g_object_get_data(G_OBJECT(list), "priv");
-  g_assert_nonnull(priv);
-
-  g_free(priv);
-
-  return FALSE;
 }
 
 static void changed(GtkTreeSelection *treeselection, gpointer user_data) {
@@ -397,8 +388,8 @@ GtkWidget *list_new(gboolean show_headers)
 
   GtkWidget *vbox = gtk_vbox_new(FALSE,3);
   g_object_set_data(G_OBJECT(vbox), "priv", priv);
-  g_signal_connect(G_OBJECT(vbox), "destroy",
-		   G_CALLBACK(on_list_destroy), priv);
+  g_signal_connect_swapped(G_OBJECT(vbox), "destroy",
+                           G_CALLBACK(g_free), priv);
 
 #ifndef FREMANTLE_PANNABLE_AREA
   priv->view = gtk_tree_view_new();

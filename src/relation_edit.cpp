@@ -719,7 +719,7 @@ static void on_relation_add(relation_context_t *context) {
 }
 
 /* user clicked "edit..." button in relation list */
-static void on_relation_edit(GtkWidget *, relation_context_t *context) {
+static void on_relation_edit(relation_context_t *context) {
   relation_t *sel = get_selected_relation(context);
   if(!sel) return;
 
@@ -758,7 +758,7 @@ static void on_relation_edit(GtkWidget *, relation_context_t *context) {
 
 
 /* remove the selected relation */
-static void on_relation_remove(GtkWidget *, relation_context_t *context) {
+static void on_relation_remove(relation_context_t *context) {
   relation_t *sel = get_selected_relation(context);
   if(!sel) return;
 
