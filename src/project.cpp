@@ -328,21 +328,21 @@ static bool project_exists(const std::string &base_path, const char *name, std::
   return g_file_test(fullname.c_str(), G_FILE_TEST_IS_REGULAR) == TRUE;
 }
 
-static std::vector<project_t *> project_scan(map_state_t &ms, settings_t *settings) {
+static std::vector<project_t *> project_scan(map_state_t &ms, const std::string &base_path, const std::string &server) {
   std::vector<project_t *> projects;
 
   /* scan for projects */
-  GDir *dir = g_dir_open(settings->base_path.c_str(), 0, O2G_NULLPTR);
+  GDir *dir = g_dir_open(base_path.c_str(), 0, O2G_NULLPTR);
   const gchar *name;
   while((name = g_dir_read_name(dir)) != O2G_NULLPTR) {
     std::string fullname;
-    if(project_exists(settings->base_path, name, fullname)) {
+    if(project_exists(base_path, name, fullname)) {
       printf("found project %s\n", name);
 
       /* try to read project and append it to chain */
-      project_t *n = new project_t(ms, name, settings->base_path);
+      project_t *n = new project_t(ms, name, base_path);
 
-      if(project_read(fullname, n, settings->server))
+      if(project_read(fullname, n, server))
         projects.push_back(n);
       else
         delete n;
@@ -1422,9 +1422,9 @@ project_t::~project_t()
 {
 }
 
-select_context_t::select_context_t(appdata_t* a, GtkWidget *dial)
+select_context_t::select_context_t(appdata_t *a, GtkWidget *dial)
   : appdata(a)
-  , projects(project_scan(dummystate, appdata->settings))
+  , projects(project_scan(dummystate, appdata->settings->base_path, appdata->settings->server))
   , dialog(dial)
   , list(O2G_NULLPTR)
 {
