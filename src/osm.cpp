@@ -1221,11 +1221,10 @@ osm_t *osm_t::parse(const std::string &path, const std::string &filename, icon_t
 
   // use stream parser
   osm_t *osm = O2G_NULLPTR;
-  if(filename[0] == '/')
+  if(G_UNLIKELY(filename.find('/') != std::string::npos))
     osm = process_file(filename, icons);
-  else {
+  else
     osm = process_file(path + filename, icons);
-  }
 
   struct timeval end;
   gettimeofday(&end, O2G_NULLPTR);

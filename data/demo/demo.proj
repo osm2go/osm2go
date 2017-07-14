@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <proj name="demo">
+  <server>http://invalid</server>
   <desc>Demo project</desc>
-  <osm>demo.osm</osm>
   <min lat="49.005" lon="8.3911"/>
   <max lat="49.023" lon="8.4185"/>
 </proj>

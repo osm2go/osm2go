@@ -35,7 +35,7 @@ struct map_state_t;
 struct osm_t;
 
 struct project_t {
-  project_t(map_state_t &ms, const char *n, const std::string &base_path);
+  project_t(map_state_t &ms, const std::string &n, const std::string &base_path);
   ~project_t();
 
   const char *server; /**< the server string used, either rserver or settings->server */

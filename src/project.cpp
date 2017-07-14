@@ -1243,12 +1243,28 @@ project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
   return ok;
 }
 
-static bool project_open(appdata_t *appdata, const char *name) {
-  project_t *project = new project_t(appdata->map_state, name, appdata->settings->base_path);
+static bool project_open(appdata_t *appdata, const std::string &name) {
+  project_t *project;
+  std::string project_file;
 
+  g_assert_false(name.empty());
+  if(G_UNLIKELY(name.find('/') != std::string::npos)) {
+    // load with absolute or relative path, usually only done for demo
+    project_file = name;
+    std::string::size_type sl = name.rfind('/');
+    std::string pname = name.substr(sl + 1);
+    if(G_LIKELY(pname.substr(pname.size() - 5) == ".proj"))
+      pname.erase(pname.size() - 5);
+    // usually that ends in /foo/foo.proj
+    if(name.substr(sl - pname.size() - 1, pname.size() + 1) == '/' + pname)
+      sl -= pname.size();
+    project = new project_t(appdata->map_state, pname, name.substr(0, sl));
+  } else {
+    project = new project_t(appdata->map_state, name, appdata->settings->base_path);
+
+    project_file = project_filename(project);
+  }
   project->map_state.reset();
-
-  const std::string &project_file = project_filename(project);
 
   printf("project file = %s\n", project_file.c_str());
   if(!g_file_test(project_file.c_str(), G_FILE_TEST_IS_REGULAR)) {
@@ -1292,7 +1308,7 @@ bool project_load(appdata_t *appdata, const std::string &name) {
   /* open project itself */
   osm2go_platform::process_events();
 
-  if(G_UNLIKELY(!project_open(appdata, name.c_str()))) {
+  if(G_UNLIKELY(!project_open(appdata, name))) {
     printf("error opening requested project\n");
 
     delete appdata->project;
@@ -1392,7 +1408,7 @@ osm_t *project_parse_osm(const project_t *project, icon_t &icons) {
   return osm_t::parse(project->path, project->osm, icons);
 }
 
-project_t::project_t(map_state_t &ms, const char *n, const std::string &base_path)
+project_t::project_t(map_state_t &ms, const std::string &n, const std::string &base_path)
   : server(O2G_NULLPTR)
   , map_state(ms)
   , data_dirty(false)

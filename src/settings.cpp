@@ -132,13 +132,13 @@ settings_t *settings_t::load() {
 
     /* use demo setup if present */
     if(settings->project.empty() && settings->base_path.empty()) {
-      printf("base_path not set, assuming first time boot\n");
+      printf("base_path not set, assuming first time run\n");
 
       /* check for presence of demo project */
-      std::string fullname;
-      if(project_exists(settings, "demo", fullname)) {
+      std::string fullname = find_file("demo/demo.proj");
+      if(!fullname.empty()) {
         printf("demo project exists, use it as default\n");
-        settings->project = g_strdup("demo");
+        settings->project = fullname;
         settings->first_run_demo = TRUE;
       }
     }
