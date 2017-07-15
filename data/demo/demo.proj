@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<proj name="demo">
-  <server>http://invalid</server>
+<proj name="demo" demo="true">
   <desc>Demo project</desc>
   <min lat="49.005" lon="8.3911"/>
   <max lat="49.023" lon="8.4185"/>

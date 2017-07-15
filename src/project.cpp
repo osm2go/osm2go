@@ -132,6 +132,7 @@ static bool project_read(const std::string &project_file, project_t *project,
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcmp((char*)cur_node->name, "proj") == 0) {
         project->data_dirty = xml_get_prop_is(cur_node, "dirty", "true");
+        project->isDemo = xml_get_prop_is(cur_node, "demo", "true");
 
 	xmlNode *node = cur_node->children;
 
@@ -263,6 +264,8 @@ bool project_save(GtkWidget *parent, project_t *project) {
   xmlNewProp(root_node, BAD_CAST "name", BAD_CAST project->name.c_str());
   if(project->data_dirty)
     xmlNewProp(root_node, BAD_CAST "dirty", BAD_CAST "true");
+  if(project->isDemo)
+    xmlNewProp(root_node, BAD_CAST "demo", BAD_CAST "true");
 
   xmlDocSetRootElement(doc, root_node);
 
@@ -1094,14 +1097,14 @@ static void on_diff_remove_clicked(project_context_t *context) {
 }
 
 bool project_check_demo(GtkWidget *parent, project_t *project) {
-  if(!project->server)
+  if(project->isDemo)
     messagef(parent, "Demo project",
 	     "This is a preinstalled demo project. This means that the "
 	     "basic project parameters cannot be changed and no data can "
 	     "be up- or downloaded via the OSM servers.\n\n"
 	     "Please setup a new project to do these things.");
 
-  return !project->server;
+  return project->isDemo;
 }
 
 static bool
@@ -1412,9 +1415,10 @@ osm_t *project_parse_osm(const project_t *project, icon_t &icons) {
 project_t::project_t(map_state_t &ms, const std::string &n, const std::string &base_path)
   : server(O2G_NULLPTR)
   , map_state(ms)
-  , data_dirty(false)
   , name(n)
   , path(base_path +  name + '/')
+  , data_dirty(false)
+  , isDemo(false)
 {
   memset(&wms_offset, 0, sizeof(wms_offset));
   memset(&min, 0, sizeof(min));

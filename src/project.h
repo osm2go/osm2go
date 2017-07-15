@@ -46,8 +46,6 @@ struct project_t {
 
   pos_t min, max;
 
-  bool data_dirty;     /* needs to download new data */
-
   const std::string name;
   const std::string path;
   std::string desc;
@@ -56,6 +54,9 @@ struct project_t {
 
   std::string wms_server;
   std::string wms_path;
+
+  bool data_dirty;     // needs to download new data
+  bool isDemo;         // if this is the demo project
 };
 
 bool project_save(GtkWidget *parent, project_t *project);

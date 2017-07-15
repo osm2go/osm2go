@@ -1453,7 +1453,7 @@ static int application_run()
   }
 
   /* start to interact with the user now that the gui is running */
-  if(appdata.settings->first_run_demo) {
+  if(appdata.project && appdata.project->isDemo) {
     messagef(GTK_WIDGET(appdata.window), _("Welcome to OSM2Go"),
 	     _("This is the first time you run OSM2Go. "
 	       "A demo project has been loaded to get you "
