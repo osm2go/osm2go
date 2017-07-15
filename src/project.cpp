@@ -52,7 +52,8 @@ struct project_context_t {
   explicit project_context_t(appdata_t *a, project_t *p, gboolean n, const std::vector<project_t *> &j, GtkWidget *dlg);
   project_t * const project;
   settings_t * const settings;
-  GtkWidget * const dialog, * const fsize, * const diff_stat, * const diff_remove;
+  GtkWidget * const dialog;
+  GtkWidget * const fsizehdr, * const fsize, * const diff_stat, * const diff_remove;
   GtkWidget * const desc, * const download;
   GtkWidget * const minlat, * const minlon, * const maxlat, * const maxlon;
   const gboolean is_new;
@@ -77,6 +78,7 @@ project_context_t::project_context_t(appdata_t* a, project_t *p, gboolean n,
   : project(p)
   , settings(a->settings)
   , dialog(dlg)
+  , fsizehdr(gtk_label_left_new(_("Map data:")))
   , fsize(gtk_label_left_new())
   , diff_stat(gtk_label_left_new())
   , diff_remove(button_new_with_label(_("Undo all")))
@@ -930,12 +932,15 @@ static void project_filesize(project_context_t *context) {
         char time_str[32];
         strftime(time_str, sizeof(time_str), "%x %X", &loctime);
 
-        if(project->osm.size() > 3 && strcmp(project->osm.c_str() + project->osm.size() - 3, ".gz") == 0)
-          gstr = g_strdup_printf(_("%" G_GOFFSET_FORMAT " bytes present (compressed)\nfrom %s"),
-                                 (goffset)st.st_size, time_str);
-        else
+        if(project->osm.size() > 3 && strcmp(project->osm.c_str() + project->osm.size() - 3, ".gz") == 0) {
           gstr = g_strdup_printf(_("%" G_GOFFSET_FORMAT " bytes present\nfrom %s"),
                                  (goffset)st.st_size, time_str);
+          gtk_label_set_text(GTK_LABEL(context->fsizehdr), _("Map data:\n(compressed)"));
+        } else {
+          gstr = g_strdup_printf(_("%" G_GOFFSET_FORMAT " bytes present\nfrom %s"),
+                                 (goffset)st.st_size, time_str);
+          gtk_label_set_text(GTK_LABEL(context->fsizehdr), _("Map data:"));
+        }
         str = gstr;
       } else {
         str = _("Error testing data file");
@@ -1173,7 +1178,7 @@ project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
   gtk_table_set_row_spacing(GTK_TABLE(table), 3, 4);
 #endif
 
-  gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_left_new(_("Map data:")), 0, 1, 4, 5);
+  gtk_table_attach_defaults(GTK_TABLE(table), context.fsizehdr, 0, 1, 4, 5);
   project_filesize(&context);
   gtk_table_attach_defaults(GTK_TABLE(table), context.fsize, 1, 4, 4, 5);
   g_signal_connect_swapped(GTK_OBJECT(context.download), "clicked",
