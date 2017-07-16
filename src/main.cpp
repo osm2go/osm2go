@@ -1273,7 +1273,7 @@ static GtkWidget *  __attribute__((nonnull(1,2,4)))
 }
 #endif
 
-static int application_run()
+static int application_run(const char *proj)
 {
   /* user specific init */
   appdata_t appdata;
@@ -1435,8 +1435,16 @@ static int application_run()
     return -1;
   }
 
+  if(proj) {
+    if(!project_load(&appdata, proj)) {
+      messagef(GTK_WIDGET(appdata.window), _("Command line arguments"),
+               _("You passed '%s' on the command line, but it was neither"
+                 "recognized as option nor could it be loaded as project."),
+               proj);
+    }
+  }
   /* load project if one is specified in the settings */
-  if(!appdata.settings->project.empty())
+  if(!appdata.project && !appdata.settings->project.empty())
     project_load(&appdata, appdata.settings->project);
 
   main_ui_enable(&appdata);
@@ -1510,7 +1518,7 @@ int main(int argc, char *argv[]) {
 
   misc_init();
 
-  int ret = application_run();
+  int ret = application_run(argc > 1 ? argv[1] : O2G_NULLPTR);
 
   // library cleanups
   xmlCleanupParser();
