@@ -146,7 +146,7 @@ typedef struct appdata_t {
 
 #ifdef __cplusplus
 
-void main_ui_enable(appdata_t *appdata);
+void main_ui_enable(appdata_t &appdata);
 
 #endif
 

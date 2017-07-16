@@ -88,10 +88,10 @@ struct map_state_t {
 };
 
 struct map_t {
-  explicit map_t(appdata_t *a);
+  explicit map_t(appdata_t &a);
   ~map_t();
 
-  appdata_t * const appdata;
+  appdata_t &appdata;
   canvas_t * const canvas;
   map_state_t &state;
 
@@ -164,7 +164,7 @@ void map_track_draw_seg(map_t *map, track_seg_t &seg);
 void map_track_update_seg(map_t *map, track_seg_t &seg);
 void map_track_remove(struct track_t *track);
 void map_track_pos(map_t *map, const lpos_t *lpos);
-void map_track_remove_pos(appdata_t *appdata);
+void map_track_remove_pos(appdata_t &appdata);
 
 /* background stuff */
 void map_set_bg_image(map_t *map, const char *filename);
@@ -198,7 +198,7 @@ void map_item_deselect(map_t *map);
 void map_way_delete(map_t *map, way_t *way);
 void map_way_draw(map_t *map, way_t *way);
 void map_way_select(map_t *map, way_t *way);
-void map_outside_error(appdata_t *appdata);
+void map_outside_error(appdata_t &appdata);
 void map_node_draw(map_t *map, node_t *node);
 void map_relation_select(map_t *map, relation_t *relation);
 

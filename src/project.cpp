@@ -49,7 +49,7 @@
 #endif
 
 struct project_context_t {
-  explicit project_context_t(appdata_t *a, project_t *p, gboolean n, const std::vector<project_t *> &j, GtkWidget *dlg);
+  explicit project_context_t(appdata_t &a, project_t *p, gboolean n, const std::vector<project_t *> &j, GtkWidget *dlg);
   project_t * const project;
   settings_t * const settings;
   GtkWidget * const dialog;
@@ -73,10 +73,10 @@ static GtkWidget *gtk_label_left_new(const char *str = O2G_NULLPTR) {
   return label;
 }
 
-project_context_t::project_context_t(appdata_t* a, project_t *p, gboolean n,
+project_context_t::project_context_t(appdata_t &a, project_t *p, gboolean n,
                                      const std::vector<project_t *> &j, GtkWidget *dlg)
   : project(p)
-  , settings(a->settings)
+  , settings(a.settings)
   , dialog(dlg)
   , fsizehdr(gtk_label_left_new(_("Map data:")))
   , fsize(gtk_label_left_new())
@@ -98,10 +98,10 @@ project_context_t::project_context_t(appdata_t* a, project_t *p, gboolean n,
 }
 
 struct select_context_t {
-  select_context_t(appdata_t *a, GtkWidget *dial);
+  select_context_t(appdata_t &a, GtkWidget *dial);
   ~select_context_t();
 
-  appdata_t * const appdata;
+  appdata_t &appdata;
   map_state_t dummystate;
   std::vector<project_t *> projects;
   GtkWidget * const dialog;
@@ -451,29 +451,29 @@ static void callback_modified_name(GtkWidget *widget, gpointer data) {
 				    GTK_RESPONSE_ACCEPT, ok);
 }
 
-static void project_close(appdata_t *appdata) {
+static void project_close(appdata_t &appdata) {
   printf("closing current project\n");
 
   /* Save track and turn off the handler callback */
-  track_save(appdata->project, appdata->track.track);
+  track_save(appdata.project, appdata.track.track);
   track_clear(appdata);
 
-  map_clear(appdata->map, MAP_LAYER_ALL);
+  map_clear(appdata.map, MAP_LAYER_ALL);
 
-  if(appdata->osm) {
-    diff_save(appdata->project, appdata->osm);
-    delete appdata->osm;
-    appdata->osm = O2G_NULLPTR;
+  if(appdata.osm) {
+    diff_save(appdata.project, appdata.osm);
+    delete appdata.osm;
+    appdata.osm = O2G_NULLPTR;
   }
 
   /* remember in settings that no project is open */
-  appdata->settings->project.clear();
+  appdata.settings->project.clear();
 
   /* update project file on disk */
-  project_save(GTK_WIDGET(appdata->window), appdata->project);
+  project_save(GTK_WIDGET(appdata.window), appdata.project);
 
-  delete appdata->project;
-  appdata->project = O2G_NULLPTR;
+  delete appdata.project;
+  appdata.project = O2G_NULLPTR;
 }
 
 static bool project_delete(select_context_t *context, project_t *project) {
@@ -481,10 +481,10 @@ static bool project_delete(select_context_t *context, project_t *project) {
   printf("deleting project \"%s\"\n", project->name.c_str());
 
   /* check if we are to delete the currently open project */
-  if(context->appdata->project &&
-     context->appdata->project->name == project->name) {
+  if(context->appdata.project &&
+     context->appdata.project->name == project->name) {
 
-    if(!yes_no_f(context->dialog, O2G_NULLPTR, 0, 0,
+    if(!yes_no_f(context->dialog, context->appdata, 0, 0,
 		 _("Delete current project?"),
 		 _("The project you are about to delete is the one "
 		   "you are currently working on!\n\n"
@@ -554,7 +554,7 @@ static project_t *project_new(select_context_t *context) {
   GtkWidget *hbox = gtk_hbox_new(FALSE, 8);
   gtk_box_pack_start_defaults(GTK_BOX(hbox), gtk_label_new(_("Name:")));
 
-  name_callback_context_t name_context = { dialog, context->appdata->settings };
+  name_callback_context_t name_context = { dialog, context->appdata.settings };
   GtkWidget *entry = entry_new();
   gtk_box_pack_start_defaults(GTK_BOX(hbox), entry);
   g_signal_connect(G_OBJECT(entry), "changed",
@@ -573,14 +573,14 @@ static project_t *project_new(select_context_t *context) {
   }
 
   project_t *project = new project_t(context->dummystate, gtk_entry_get_text(GTK_ENTRY(entry)),
-                                     context->appdata->settings->base_path);
+                                     context->appdata.settings->base_path);
   gtk_widget_destroy(dialog);
 
   /* no data downloaded yet */
   project->data_dirty = true;
 
   /* use global server/access settings */
-  project->server = context->appdata->settings->server.c_str();
+  project->server = context->appdata.settings->server.c_str();
 
   /* build project osm file name */
   project->osm = project->name + ".osm";
@@ -648,7 +648,7 @@ static void on_project_new(select_context_t *context) {
 
     GtkTreeIter iter;
     const gchar *status_stock_id = project_get_status_icon_stock_id(
-                                         context->appdata->project, project);
+                                         context->appdata.project, project);
     gtk_list_store_append(GTK_LIST_STORE(model), &iter);
     gtk_list_store_set(GTK_LIST_STORE(model), &iter,
 		       PROJECT_COL_NAME,        project->name.c_str(),
@@ -665,7 +665,7 @@ static void on_project_new(select_context_t *context) {
 static void on_project_delete(select_context_t *context) {
   project_t *project = project_get_selected(context->list);
 
-  if(!yes_no_f(context->dialog, O2G_NULLPTR, 0, 0, _("Delete project?"),
+  if(!yes_no_f(context->dialog, context->appdata, 0, 0, _("Delete project?"),
                _("Do you really want to delete the project \"%s\"?"),
                project->name.c_str()))
     return;
@@ -687,7 +687,7 @@ static void on_project_edit(select_context_t *context) {
 
     //     gtk_tree_model_get(model, &iter, PROJECT_COL_DATA, &project, -1);
     const gchar *status_stock_id = project_get_status_icon_stock_id(
-                                         context->appdata->project, project);
+                                         context->appdata.project, project);
     gtk_list_store_set(GTK_LIST_STORE(model), &iter,
 		       PROJECT_COL_NAME, project->name.c_str(),
                        PROJECT_COL_STATUS, status_stock_id,
@@ -696,9 +696,9 @@ static void on_project_edit(select_context_t *context) {
 
 
     /* check if we have actually editing the currently open project */
-    if(context->appdata->project &&
-       context->appdata->project->name == project->name) {
-      project_t *cur = context->appdata->project;
+    if(context->appdata.project &&
+       context->appdata.project->name == project->name) {
+      project_t *cur = context->appdata.project;
 
       printf("edited project was actually the active one!\n");
 
@@ -708,8 +708,8 @@ static void on_project_edit(select_context_t *context) {
       cur->desc = project->desc;
 
       /* update server */
-      if(project->server == context->appdata->settings->server) {
-        cur->server = context->appdata->settings->server.c_str();
+      if(project->server == context->appdata.settings->server) {
+        cur->server = context->appdata.settings->server.c_str();
 	cur->rserver.clear();
       } else {
         cur->rserver = project->server;
@@ -721,7 +721,7 @@ static void on_project_edit(select_context_t *context) {
 	 (cur->max.lat != project->max.lat) ||
 	 (cur->min.lon != project->min.lon) ||
 	 (cur->max.lon != project->max.lon)) {
-	appdata_t *appdata = context->appdata;
+        appdata_t &appdata = context->appdata;
 
 	/* save modified coordinates */
         cur->min = project->min;
@@ -730,18 +730,18 @@ static void on_project_edit(select_context_t *context) {
 	/* try to do this automatically */
 
 	/* if we have valid osm data loaded: save state first */
-	if(appdata->osm) {
+        if(appdata.osm) {
 	  /* redraw the entire map by destroying all map items  */
-	  diff_save(appdata->project, appdata->osm);
-	  map_clear(appdata->map, MAP_LAYER_ALL);
+          diff_save(appdata.project, appdata.osm);
+          map_clear(appdata.map, MAP_LAYER_ALL);
 
-	  delete appdata->osm;
+          delete appdata.osm;
 	}
 
 	/* and load the (hopefully) new file */
-        appdata->osm = project_parse_osm(appdata->project, appdata->icons);
-	diff_restore(appdata, appdata->project, appdata->osm);
-	map_paint(appdata->map);
+        appdata.osm = project_parse_osm(appdata.project, appdata.icons);
+        diff_restore(appdata, appdata.project, appdata.osm);
+        map_paint(appdata.map);
 
 	main_ui_enable(appdata);
       }
@@ -765,7 +765,7 @@ on_project_update_all(select_context_t *context)
       if(prj && project_osm_present(prj)) {
         printf("found %s to update\n", prj->name.c_str());
         if (!osm_download(GTK_WIDGET(context->dialog),
-                     context->appdata->settings, prj))
+                     context->appdata.settings, prj))
           break;
       }
     } while(gtk_tree_model_iter_next(model, &iter));
@@ -779,8 +779,8 @@ struct project_list_add {
   bool check_pos;
   GtkTreeIter &seliter;
   gboolean &has_sel;
-  project_list_add(GtkListStore *s, appdata_t *a, GtkTreeIter &l, gboolean &h)
-    : store(s), cur_proj(a->project), check_pos(a->gps_state->get_pos(pos))
+  project_list_add(GtkListStore *s, appdata_t &a, GtkTreeIter &l, gboolean &h)
+    : store(s), cur_proj(a.project), check_pos(a.gps_state->get_pos(pos))
     , seliter(l), has_sel(h) {}
   void operator()(const project_t *project);
 };
@@ -857,12 +857,12 @@ static GtkWidget *project_list_widget(select_context_t &context, gboolean &has_s
   return context.list;
 }
 
-std::string project_select(appdata_t *appdata) {
+std::string project_select(appdata_t &appdata) {
   std::string name;
 
   select_context_t context(appdata,
                     misc_dialog_new(MISC_DIALOG_MEDIUM,_("Project selection"),
-                                    GTK_WINDOW(appdata->window),
+                                    GTK_WINDOW(appdata.window),
                                     GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                     GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
                                     O2G_NULLPTR));
@@ -966,15 +966,15 @@ static void project_filesize(project_context_t *context) {
 /* means that the user may have unsaved changes */
 bool project_context_t::active_n_dirty() const {
 
-  if(!area_edit.appdata->osm)
+  if(!area_edit.appdata.osm)
     return false;
 
-  if(area_edit.appdata->project &&
-     area_edit.appdata->project->name == project->name) {
+  if(area_edit.appdata.project &&
+     area_edit.appdata.project->name == project->name) {
 
     printf("editing the currently open project\n");
 
-    return !diff_is_clean(area_edit.appdata->osm, true);
+    return !diff_is_clean(area_edit.appdata.osm, true);
   }
 
   return false;
@@ -1029,7 +1029,7 @@ static void on_edit_clicked(project_context_t *context) {
     printf("coordinates changed!!\n");
 
     /* the wms layer isn't usable with new coordinates */
-    wms_remove_file(project);
+    wms_remove_file(*project);
 
     pos_lon_label_set(context->minlat, project->min.lat);
     pos_lon_label_set(context->minlon, project->min.lon);
@@ -1043,7 +1043,7 @@ static void on_edit_clicked(project_context_t *context) {
     if (pos_valid)
     {
       if(osm_download(GTK_WIDGET(context->dialog),
-	      context->area_edit.appdata->settings, project))
+	      context->area_edit.appdata.settings, project))
          project->data_dirty = false;
     }
     project_filesize(context);
@@ -1068,26 +1068,25 @@ static void on_diff_remove_clicked(project_context_t *context) {
 
   printf("clicked diff remove\n");
 
-  if(yes_no_f(context->dialog, O2G_NULLPTR, 0, 0, _("Discard changes?"),
+  appdata_t &appdata = context->area_edit.appdata;
+  if(yes_no_f(context->dialog, appdata, 0, 0, _("Discard changes?"),
 	      _("Do you really want to discard your changes? This will "
 		"permanently undo all changes you have made so far and which "
 		"you did not upload yet."))) {
-    appdata_t *appdata = context->area_edit.appdata;
-
     diff_remove(project);
 
     /* if this is the currently open project, we need to undo */
     /* the map changes as well */
 
-    if(appdata->project && appdata->project->name == project->name) {
+    if(appdata.project && appdata.project->name == project->name) {
 
       printf("undo all on current project: delete map changes as well\n");
 
       /* just reload the map */
-      map_clear(appdata->map, MAP_LAYER_OBJECTS_ONLY);
-      delete appdata->osm;
-      appdata->osm = project_parse_osm(appdata->project, appdata->icons);
-      map_paint(appdata->map);
+      map_clear(appdata.map, MAP_LAYER_OBJECTS_ONLY);
+      delete appdata.osm;
+      appdata.osm = project_parse_osm(appdata.project, appdata.icons);
+      map_paint(appdata.map);
     }
 
     /* update button/label state */
@@ -1109,7 +1108,6 @@ bool project_check_demo(GtkWidget *parent, project_t *project) {
 
 static bool
 project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
-  appdata_t *appdata = scontext->appdata;
   GtkWidget *parent = scontext->dialog;
 
   if(project_check_demo(parent, project))
@@ -1136,7 +1134,7 @@ project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
     g_free(str);
   }
 
-  project_context_t context(appdata, project, is_new, scontext->projects, dialog);
+  project_context_t context(scontext->appdata, project, is_new, scontext->projects, dialog);
 
   gtk_dialog_set_default_response(GTK_DIALOG(dialog),
 				  GTK_RESPONSE_ACCEPT);
@@ -1231,9 +1229,9 @@ project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
 #ifdef SERVER_EDITABLE
   context.project->rserver = gtk_entry_get_text(GTK_ENTRY(context.server));
   if(context.project->rserver.empty() ||
-     context.project->rserver == appdata->settings->server) {
+     context.project->rserver == scontext->appdata.settings->server) {
     context.project->rserver.clear();
-    context.project->server = appdata->settings->server.c_str();
+    context.project->server = scontext->appdata.settings->server.c_str();
   } else {
     context.project->server = context.project->rserver.c_str();
   }
@@ -1247,7 +1245,7 @@ project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
   return ok;
 }
 
-static bool project_open(appdata_t *appdata, const std::string &name) {
+static bool project_open(appdata_t &appdata, const std::string &name) {
   project_t *project;
   std::string project_file;
 
@@ -1262,9 +1260,9 @@ static bool project_open(appdata_t *appdata, const std::string &name) {
     // usually that ends in /foo/foo.proj
     if(name.substr(sl - pname.size() - 1, pname.size() + 1) == '/' + pname)
       sl -= pname.size();
-    project = new project_t(appdata->map_state, pname, name.substr(0, sl));
+    project = new project_t(appdata.map_state, pname, name.substr(0, sl));
   } else {
-    project = new project_t(appdata->map_state, name, appdata->settings->base_path);
+    project = new project_t(appdata.map_state, name, appdata.settings->base_path);
 
     project_file = project_filename(project);
   }
@@ -1277,18 +1275,18 @@ static bool project_open(appdata_t *appdata, const std::string &name) {
     return false;
   }
 
-  if(!project_read(project_file, project, appdata->settings->server)) {
+  if(!project_read(project_file, project, appdata.settings->server)) {
     printf("error reading project file\n");
     delete project;
     return false;
   }
 
   /* --------- project structure ok: load its OSM file --------- */
-  appdata->project = project;
+  appdata.project = project;
 
   printf("project_open: loading osm %s\n", project->osm.c_str());
-  appdata->osm = project_parse_osm(project, appdata->icons);
-  if(!appdata->osm) {
+  appdata.osm = project_parse_osm(project, appdata.icons);
+  if(!appdata.osm) {
     printf("OSM parsing failed\n");
     return false;
   }
@@ -1298,7 +1296,7 @@ static bool project_open(appdata_t *appdata, const std::string &name) {
   return true;
 }
 
-bool project_load(appdata_t *appdata, const std::string &name) {
+bool project_load(appdata_t &appdata, const std::string &name) {
   char banner_txt[64];
   snprintf(banner_txt, sizeof(banner_txt), _("Loading %s"), name.c_str());
   banner_busy_start(appdata, banner_txt);
@@ -1306,7 +1304,7 @@ bool project_load(appdata_t *appdata, const std::string &name) {
   /* close current project */
   osm2go_platform::process_events();
 
-  if(appdata->project)
+  if(appdata.project)
     project_close(appdata);
 
   /* open project itself */
@@ -1315,11 +1313,11 @@ bool project_load(appdata_t *appdata, const std::string &name) {
   if(G_UNLIKELY(!project_open(appdata, name))) {
     printf("error opening requested project\n");
 
-    delete appdata->project;
-    appdata->project = O2G_NULLPTR;
+    delete appdata.project;
+    appdata.project = O2G_NULLPTR;
 
-    delete appdata->osm;
-    appdata->osm = O2G_NULLPTR;
+    delete appdata.osm;
+    appdata.osm = O2G_NULLPTR;
 
     snprintf(banner_txt, sizeof(banner_txt),
 	     _("Error opening %s"), name.c_str());
@@ -1329,21 +1327,21 @@ bool project_load(appdata_t *appdata, const std::string &name) {
     return false;
   }
 
-  if(!appdata->window)
+  if(!appdata.window)
     return false;
 
   /* check if OSM data is valid */
   osm2go_platform::process_events();
-  const char *errmsg = appdata->osm->sanity_check();
+  const char *errmsg = appdata.osm->sanity_check();
   if(G_UNLIKELY(errmsg != O2G_NULLPTR)) {
-    errorf(GTK_WIDGET(appdata->window), "%s", errmsg);
+    errorf(GTK_WIDGET(appdata.window), "%s", errmsg);
     printf("project/osm sanity checks failed, unloading project\n");
 
-    delete appdata->project;
-    appdata->project = O2G_NULLPTR;
+    delete appdata.project;
+    appdata.project = O2G_NULLPTR;
 
-    delete appdata->osm;
-    appdata->osm = O2G_NULLPTR;
+    delete appdata.osm;
+    appdata.osm = O2G_NULLPTR;
 
     snprintf(banner_txt, sizeof(banner_txt),
 	     _("Error opening %s"), name.c_str());
@@ -1355,31 +1353,31 @@ bool project_load(appdata_t *appdata, const std::string &name) {
 
   /* load diff possibly preset */
   osm2go_platform::process_events();
-  if(!appdata->window) goto fail;
+  if(!appdata.window) goto fail;
 
-  diff_restore(appdata, appdata->project, appdata->osm);
+  diff_restore(appdata, appdata.project, appdata.osm);
 
   /* prepare colors etc, draw data and adjust scroll/zoom settings */
   osm2go_platform::process_events();
-  if(!appdata->window) goto fail;
+  if(!appdata.window) goto fail;
 
-  map_init(appdata->map);
+  map_init(appdata.map);
 
   /* restore a track */
   osm2go_platform::process_events();
-  if(!appdata->window) goto fail;
+  if(!appdata.window) goto fail;
 
   track_clear(appdata);
   if(track_restore(appdata))
-    map_track_draw(appdata->map, appdata->track.track);
+    map_track_draw(appdata.map, appdata.track.track);
 
   /* finally load a background if present */
   osm2go_platform::process_events();
-  if(!appdata->window) goto fail;
+  if(!appdata.window) goto fail;
   wms_load(appdata);
 
   /* save the name of the project for the perferences */
-  appdata->settings->project = appdata->project->name;
+  appdata.settings->project = appdata.project->name;
 
   banner_busy_stop(appdata);
 
@@ -1388,21 +1386,21 @@ bool project_load(appdata_t *appdata, const std::string &name) {
   banner_show_info(appdata, banner_txt);
 #endif
 
-  appdata->statusbar->set(O2G_NULLPTR, FALSE);
+  appdata.statusbar->set(O2G_NULLPTR, FALSE);
 
   return true;
 
  fail:
   printf("project loading interrupted by user\n");
 
-  if(appdata->project) {
-    delete appdata->project;
-    appdata->project = O2G_NULLPTR;
+  if(appdata.project) {
+    delete appdata.project;
+    appdata.project = O2G_NULLPTR;
   }
 
-  if(appdata->osm) {
-    delete appdata->osm;
-    appdata->osm = O2G_NULLPTR;
+  if(appdata.osm) {
+    delete appdata.osm;
+    appdata.osm = O2G_NULLPTR;
   }
 
   return false;
@@ -1429,9 +1427,9 @@ project_t::~project_t()
 {
 }
 
-select_context_t::select_context_t(appdata_t *a, GtkWidget *dial)
+select_context_t::select_context_t(appdata_t &a, GtkWidget *dial)
   : appdata(a)
-  , projects(project_scan(dummystate, appdata->settings->base_path, appdata->settings->server))
+  , projects(project_scan(dummystate, appdata.settings->base_path, appdata.settings->server))
   , dialog(dial)
   , list(O2G_NULLPTR)
 {

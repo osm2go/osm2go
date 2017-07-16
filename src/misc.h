@@ -166,7 +166,7 @@ GtkWidget *entry_new(void);
 GType entry_type(void);
 
 bool yes_no_f(GtkWidget *parent,
-              appdata_t *appdata, guint again_bit, gint flags,
+              appdata_t &appdata, guint again_bit, gint flags,
               const char *title, const char *fmt, ...) G_GNUC_PRINTF(6, 7);
 GtkWidget *check_button_new_with_label(const gchar *label);
 void check_button_set_active(GtkWidget *button, gboolean active);
@@ -187,7 +187,7 @@ const char *combo_box_get_active_text(GtkWidget *cbox);
 GType combo_box_type(void);
 GType combo_box_entry_type(void);
 
-void open_url(struct appdata_t *appdata, const char *url);
+void open_url(appdata_t &appdata, const char *url);
 
 void misc_init(void);
 

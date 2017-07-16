@@ -83,7 +83,7 @@ void map_edit_way_add_segment(map_t *map, gint x, gint y) {
 
       /* check whether this node is first or last one of a different way */
       way_t *touch_way = O2G_NULLPTR;
-      const way_chain_t &way_chain = map->appdata->osm->node_to_way(node);
+      const way_chain_t &way_chain = map->appdata.osm->node_to_way(node);
       const way_chain_t::const_iterator it =
         std::find_if(way_chain.begin(), way_chain.end(), check_first_last_node(node));
       if(it != way_chain.end())
@@ -98,14 +98,14 @@ void map_edit_way_add_segment(map_t *map, gint x, gint y) {
 	map->action.extending = touch_way;
 
 	if(map->action.extending) {
-	  if(!yes_no_f(GTK_WIDGET(map->appdata->window),
+	  if(!yes_no_f(GTK_WIDGET(map->appdata.window),
 	       map->appdata, MISC_AGAIN_ID_EXTEND_WAY, 0,
 	       _("Extend way?"),
 	       _("Do you want to extend the way present at this location?")))
 	    map->action.extending = O2G_NULLPTR;
 	  else
 	    /* there are immediately enough nodes for a valid way */
-	    icon_bar_map_cancel_ok(map->appdata->iconbar, TRUE, TRUE);
+	    icon_bar_map_cancel_ok(map->appdata.iconbar, TRUE, TRUE);
 	}
       }
 
@@ -114,10 +114,10 @@ void map_edit_way_add_segment(map_t *map, gint x, gint y) {
       /* a new node */
       map->action.ends_on = O2G_NULLPTR;
 
-      if(!map->appdata->osm->position_within_bounds(x, y))
+      if(!map->appdata.osm->position_within_bounds(x, y))
 	map_outside_error(map->appdata);
       else
-	node = map->appdata->osm->node_new(lpos_t(x, y));
+        node = map->appdata.osm->node_new(lpos_t(x, y));
     }
 
     if(node) {
@@ -127,11 +127,11 @@ void map_edit_way_add_segment(map_t *map, gint x, gint y) {
       switch(map->action.way->node_chain.size()) {
       case 1:
         /* replace "place first node..." message */
-        map->appdata->statusbar->set(_("Place next node of way"), FALSE);
+        map->appdata.statusbar->set(_("Place next node of way"), FALSE);
         break;
       case 2:
         /* two nodes are enough for a valid way */
-        icon_bar_map_cancel_ok(map->appdata->iconbar, TRUE, TRUE);
+        icon_bar_map_cancel_ok(map->appdata.iconbar, TRUE, TRUE);
         break;
       }
 
@@ -165,7 +165,7 @@ void map_unref_ways::operator()(node_t* node)
 }
 
 void map_edit_way_add_cancel(map_t *map) {
-  osm_t *osm = map->appdata->osm;
+  osm_t *osm = map->appdata.osm;
   g_assert_nonnull(osm);
 
   printf("  removing temporary way\n");
@@ -234,14 +234,14 @@ void map_draw_nodes::operator()(node_t* node)
     /* we can be sure that no node gets inserted twice (even if twice in */
     /* the ways chain) because it gets assigned a non-ID_ILLEGAL id when */
     /* being moved to the osm node chain */
-    map->appdata->osm->node_attach(node);
+    map->appdata.osm->node_attach(node);
   }
 
   map_node_draw(map, node);
 }
 
 void map_edit_way_add_ok(map_t *map) {
-  osm_t *osm = map->appdata->osm;
+  osm_t *osm = map->appdata.osm;
 
   g_assert_nonnull(osm);
   g_assert_nonnull(map->action.way);
@@ -278,7 +278,7 @@ void map_edit_way_add_ok(map_t *map) {
     map->action.way->flags |= OSM_FLAG_DIRTY;
   } else {
     /* now move the way itself into the main data structure */
-    map->appdata->osm->way_attach(map->action.way);
+    map->appdata.osm->way_attach(map->action.way);
   }
 
   /* we might already be working on the "ends_on" way as we may */
@@ -289,7 +289,7 @@ void map_edit_way_add_ok(map_t *map) {
   }
 
   if(map->action.ends_on)
-    if(!yes_no_f(GTK_WIDGET(map->appdata->window),
+    if(!yes_no_f(GTK_WIDGET(map->appdata.window),
 		 map->appdata, MISC_AGAIN_ID_EXTEND_WAY_END, 0,
 		 _("Join way?"),
 		 _("Do you want to join the way present at this location?")))
@@ -312,12 +312,12 @@ void map_edit_way_add_ok(map_t *map) {
 
     /* and open dialog to resolve tag collisions if necessary */
     if(map->action.way->tags.merge(map->action.ends_on->tags))
-      messagef(GTK_WIDGET(map->appdata->window), _("Way tag conflict"),
+      messagef(GTK_WIDGET(map->appdata.window), _("Way tag conflict"),
 	       _("The resulting way contains some conflicting tags. "
 		 "Please solve these."));
 
     /* make way member of all relations ends_on already is */
-    map->action.way->transfer_relations(map->appdata->osm, map->action.ends_on);
+    map->action.way->transfer_relations(map->appdata.osm, map->action.ends_on);
 
     /* check if we have to reverse (again?) to match the way order */
     if(map->action.way->is_closed()) {
@@ -346,7 +346,7 @@ void map_edit_way_add_ok(map_t *map) {
   map->action.way = O2G_NULLPTR;
 
   /* let the user specify some tags for the new way */
-  info_dialog(GTK_WIDGET(map->appdata->window), map->appdata);
+  info_dialog(GTK_WIDGET(map->appdata.window), map->appdata);
 }
 
 /* -------------------------- way_node_add ----------------------- */
@@ -370,8 +370,8 @@ void map_edit_way_node_add(map_t *map, gint x, gint y) {
     gint insert_after = canvas_item_get_segment(item->item, x, y)+1;
     if(insert_after > 0) {
       /* create new node */
-      node_t* node = map->appdata->osm->node_new(lpos_t(x, y));
-      map->appdata->osm->node_attach(node);
+      node_t* node = map->appdata.osm->node_new(lpos_t(x, y));
+      map->appdata.osm->node_attach(node);
 
       /* insert it into ways chain of nodes */
       way_t *way = item->object.way;
@@ -488,7 +488,7 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
          cut_at - way->node_chain.begin());
 
   /* create a duplicate of the currently selected way */
-  way_t *neww = way->split(map->appdata->osm, cut_at, cut_at_node);
+  way_t *neww = way->split(map->appdata.osm, cut_at, cut_at_node);
 
   /* clear selection */
   map_item_deselect(map);
@@ -620,7 +620,7 @@ void find_way_ends::operator()(const std::pair<item_id_t, way_t *>& p)
 }
 
 void map_edit_node_move(map_t *map, map_item_t *map_item, gint ex, gint ey) {
-  osm_t *osm = map->appdata->osm;
+  osm_t *osm = map->appdata.osm;
 
   g_assert(map_item->object.type == NODE);
   node_t *node = map_item->object.node;
@@ -640,8 +640,8 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, gint ex, gint ey) {
 
     printf("  dropped onto node #" ITEM_ID_FORMAT "\n", touchnode->id);
 
-    if(yes_no_f(GTK_WIDGET(map->appdata->window),
-                map->appdata, MISC_AGAIN_ID_JOIN_NODES, 0,
+    if(yes_no_f(GTK_WIDGET(map->appdata.window),
+		map->appdata, MISC_AGAIN_ID_JOIN_NODES, 0,
 		_("Join nodes?"),
 		_("Do you want to join the dragged node with the one "
 		  "you dropped it on?"))) {
@@ -657,7 +657,7 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, gint ex, gint ey) {
 
       /* and open dialog to resolve tag collisions if necessary */
       if(conflict)
-        messagef(GTK_WIDGET(map->appdata->window), _("Node tag conflict"),
+        messagef(GTK_WIDGET(map->appdata.window), _("Node tag conflict"),
 		 _("The resulting node contains some conflicting tags. "
 		   "Please solve these."));
 
@@ -669,12 +669,12 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, gint ex, gint ey) {
                     find_way_ends(ways2join_cnt, node, ways2join));
 
       if(ways2join_cnt > 2) {
-        messagef(GTK_WIDGET(map->appdata->window), _("Too many ways to join"),
+        messagef(GTK_WIDGET(map->appdata.window), _("Too many ways to join"),
 		 _("More than two ways now end on this node. Joining more "
 		   "than two ways is not yet implemented, sorry"));
 
       } else if(ways2join_cnt == 2) {
-        if(yes_no_f(GTK_WIDGET(map->appdata->window),
+        if(yes_no_f(GTK_WIDGET(map->appdata.window),
                     map->appdata, MISC_AGAIN_ID_JOIN_WAYS, 0,
 		    _("Join ways?"),
 		    _("Do you want to join the dragged way with the one "
@@ -729,7 +729,7 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, gint ex, gint ey) {
 
 	  /* and open dialog to resolve tag collisions if necessary */
 	  if(conflict)
-            messagef(GTK_WIDGET(map->appdata->window), _("Way tag conflict"),
+            messagef(GTK_WIDGET(map->appdata.window), _("Way tag conflict"),
 		     _("The resulting way contains some conflicting tags. "
 		       "Please solve these."));
 
@@ -798,7 +798,7 @@ void map_edit_way_reverse(map_t *map) {
   unsigned int n_tags_flipped =
     item.object.way->reverse_direction_sensitive_tags();
   unsigned int n_roles_flipped =
-    item.object.way->reverse_direction_sensitive_roles(map->appdata->osm);
+    item.object.way->reverse_direction_sensitive_roles(map->appdata.osm);
 
   item.object.obj->flags |= OSM_FLAG_DIRTY;
   map_way_select(map, item.object.way);

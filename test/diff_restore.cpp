@@ -1,3 +1,4 @@
+#include <appdata.h>
 #include <diff.h>
 #include <icon.h>
 #include <map.h>
@@ -13,6 +14,21 @@
 #include <gtk/gtk.h>
 #include <iostream>
 #include <sys/stat.h>
+
+appdata_t::appdata_t()
+#ifdef USE_HILDON
+  : osso_context(O2G_NULLPTR),
+#else
+  :
+#endif
+    settings(O2G_NULLPTR)
+  , gps_state(O2G_NULLPTR)
+{
+}
+
+appdata_t::~appdata_t()
+{
+}
 
 static void verify_diff(osm_t *osm)
 {
@@ -136,7 +152,8 @@ int main(int argc, char **argv)
 
   map_state_t dummystate;
   project_t project(dummystate, argv[2], argv[1]);
-  diff_restore(O2G_NULLPTR, &project, osm);
+  appdata_t appdata;
+  diff_restore(appdata, &project, osm);
 
   verify_diff(osm);
 
@@ -155,7 +172,8 @@ int main(int argc, char **argv)
     bpath.erase(bpath.rfind('/') + 1);
     project_t sproject(dummystate, argv[2], bpath.c_str());
 
-    diff_restore(O2G_NULLPTR, &sproject, osm);
+    appdata_t appdata;
+    diff_restore(appdata, &sproject, osm);
 
     diff_save(&sproject, osm);
     bpath += argv[2];
@@ -172,7 +190,7 @@ int main(int argc, char **argv)
     osm = osm_t::parse(std::string(), osm_path.c_str(), icons);
     g_assert_nonnull(osm);
 
-    diff_restore(O2G_NULLPTR, &sproject, osm);
+    diff_restore(appdata, &sproject, osm);
 
     verify_diff(osm);
 
@@ -190,7 +208,7 @@ int main(int argc, char **argv)
   return result;
 }
 
-void main_ui_enable(appdata_t *)
+void main_ui_enable(appdata_t &)
 {
   g_assert_not_reached();
 }

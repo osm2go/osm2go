@@ -106,7 +106,7 @@ context_t::context_t(area_edit_t& a)
 #endif
 }
 
-area_edit_t::area_edit_t(appdata_t *a, pos_t &mi, pos_t &ma, GtkWidget *dlg)
+area_edit_t::area_edit_t(appdata_t &a, pos_t &mi, pos_t &ma, GtkWidget *dlg)
   : appdata(a)
   , parent(dlg)
   , min(mi)
@@ -276,7 +276,7 @@ static void map_update(context_t *context, bool forced) {
     /* no coordinates given: display around the current GPS position if available */
     pos_t pos;
     int zoom = 12;
-    if(!context->area.appdata->gps_state->get_pos(pos)) {
+    if(!context->area.appdata.gps_state->get_pos(pos)) {
       /* no GPS position available: display the entire world */
       pos.lat = 0.0;
       pos.lon = 0.0;
@@ -432,7 +432,7 @@ static void callback_modified_unit(context_t *context) {
 
 #ifdef HAS_MAEMO_MAPPER
 static void callback_fetch_mm_clicked(context_t *context) {
-  if(!dbus_mm_set_position(context->area.appdata->osso_context)) {
+  if(!dbus_mm_set_position(context->area.appdata.osso_context)) {
     errorf(context->dialog,
 	   _("Unable to communicate with Maemo Mapper. "
 	     "You need to have Maemo Mapper installed "
@@ -440,7 +440,7 @@ static void callback_fetch_mm_clicked(context_t *context) {
     return;
   }
 
-  if(!context->area.appdata->mmpos.valid) {
+  if(!context->area.appdata.mmpos.valid) {
     errorf(context->dialog,
 	   _("No valid position received yet. You need "
 	     "to scroll or zoom the Maemo Mapper view "
@@ -454,9 +454,9 @@ static void callback_fetch_mm_clicked(context_t *context) {
     return;
 
   /* maemo mapper pos data ... */
-  pos_float_t center_lat = context->area.appdata->mmpos.pos.lat;
-  pos_float_t center_lon = context->area.appdata->mmpos.pos.lon;
-  int zoom = context->area.appdata->mmpos.zoom;
+  pos_float_t center_lat = context->area.appdata.mmpos.pos.lat;
+  pos_float_t center_lon = context->area.appdata.mmpos.pos.lon;
+  int zoom = context->area.appdata.mmpos.zoom;
 
   if(!pos_lat_valid(center_lat) || !pos_lon_valid(center_lon))
     return;
@@ -598,11 +598,11 @@ static void on_page_switch(GtkNotebook *, GtkNotebookPage *,
 static gboolean map_gps_update(gpointer data) {
   context_t *context = static_cast<context_t *>(data);
 
-  gboolean gps_on = context->area.appdata->settings->enable_gps;
+  gboolean gps_on = context->area.appdata.settings->enable_gps;
 
   pos_t pos(NAN, NAN);
   gboolean gps_fix = gps_on &&
-    context->area.appdata->gps_state->get_pos(pos);
+    context->area.appdata.gps_state->get_pos(pos);
 
   if(gps_fix) {
     g_object_set(context->map.widget, "gps-track-highlight-radius", 0, O2G_NULLPTR);

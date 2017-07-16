@@ -543,7 +543,7 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
   }
 }
 
-void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) {
+void diff_restore(appdata_t &appdata, project_t *project, osm_t *osm) {
   if(!osm)
     return;
 
@@ -568,7 +568,7 @@ void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) {
 
   /* parse the file and get the DOM */
   if(G_UNLIKELY((doc = xmlReadFile(diff_name.c_str(), O2G_NULLPTR, 0)) == O2G_NULLPTR)) {
-    errorf(GTK_WIDGET(appdata->window),
+    errorf(GTK_WIDGET(appdata.window),
 	   "Error: could not parse file %s\n", diff_name.c_str());
     return;
   }
@@ -585,7 +585,7 @@ void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) {
 	  const char *cstr = (const char*)str;
 	  printf("diff for project %s\n", cstr);
 	  if(G_UNLIKELY(project->name != cstr)) {
-	    messagef(GTK_WIDGET(appdata->window), _("Warning"),
+            messagef(GTK_WIDGET(appdata.window), _("Warning"),
 		     "Diff name (%s) does not match project name (%s)",
 		     cstr, project->name.c_str());
 	  }
@@ -623,8 +623,8 @@ void diff_restore(appdata_t *appdata, project_t *project, osm_t *osm) {
   if(it != osm->ways.end()) {
     printf("hidden flags have been restored, enable show_add menu\n");
 
-    appdata->statusbar->set(_("Some objects are hidden"), TRUE);
-    gtk_widget_set_sensitive(appdata->menuitems[MENU_ITEM_MAP_SHOW_ALL], TRUE);
+    appdata.statusbar->set(_("Some objects are hidden"), TRUE);
+    gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_MAP_SHOW_ALL], TRUE);
   }
 }
 

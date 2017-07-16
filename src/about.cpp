@@ -40,12 +40,10 @@
 #ifdef ENABLE_BROWSER_INTERFACE
 
 static gboolean on_link_clicked(GtkWidget *widget, GdkEventButton *,
-				gpointer user_data) {
+                                appdata_t *appdata) {
+  const char *str = gtk_label_get_text(GTK_LABEL(gtk_bin_get_child(GTK_BIN(widget))));
 
-  const char *str =
-    gtk_label_get_text(GTK_LABEL(gtk_bin_get_child(GTK_BIN(widget))));
-
-  open_url((appdata_t*)user_data, str);
+  open_url(*appdata, str);
   return TRUE;
 }
 #endif
@@ -75,9 +73,8 @@ static GtkWidget *link_new(appdata_t *appdata, const char *url) {
 
 #ifdef ENABLE_BROWSER_INTERFACE
 static void on_paypal_button_clicked(appdata_t *appdata) {
-  open_url(appdata,
-	      "https://www.paypal.com/cgi-bin/webscr"
-	      "?cmd=_s-xclick&hosted_button_id=7400558");
+  open_url(*appdata,
+           "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=7400558");
 }
 #endif
 

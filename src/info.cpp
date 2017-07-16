@@ -302,8 +302,8 @@ static bool replace_with_last(const tag_context_t *context, const osm_t::TagMap 
 
 static void on_tag_last(tag_context_t *context) {
   const osm_t::TagMap &ntags = context->object.type == NODE ?
-                               context->appdata->map->last_node_tags :
-                               context->appdata->map->last_way_tags;
+                               context->appdata.map->last_node_tags :
+                               context->appdata.map->last_way_tags;
 
   if(!replace_with_last(context, ntags))
     return;
@@ -398,16 +398,16 @@ static GtkWidget *tag_widget(tag_context_t *context) {
   GtkWidget *presets = josm_build_presets_button(context->appdata, context);
   if(presets) {
     list_set_custom_user_button(context->list, LIST_BUTTON_USER1, presets);
-    if(!context->appdata->presets)
+    if(!context->appdata.presets)
       list_button_enable(context->list, LIST_BUTTON_USER1, FALSE);
   }
 
   /* disable if no appropriate "last" tags have been stored or if the */
   /* selected item isn't a node or way */
   if(((context->object.type == NODE) &&
-      (context->appdata->map->last_node_tags.empty())) ||
+      (context->appdata.map->last_node_tags.empty())) ||
      ((context->object.type == WAY) &&
-      (context->appdata->map->last_way_tags.empty())) ||
+      (context->appdata.map->last_way_tags.empty())) ||
      ((context->object.type != NODE) && (context->object.type != WAY)))
 	list_button_enable(context->list, LIST_BUTTON_USER0, FALSE);
 
@@ -436,11 +436,11 @@ static void table_attach(GtkWidget *table, GtkWidget *child, int x, int y) {
 static GtkWidget *details_widget(const tag_context_t &context, bool big) {
   GtkWidget *table = gtk_table_new(big?4:2, 2, FALSE);  // y, x
 
-  const std::map<int, std::string>::const_iterator userIt = context.appdata->osm->users.find(context.object.obj->user);
+  const std::map<int, std::string>::const_iterator userIt = context.appdata.osm->users.find(context.object.obj->user);
   GtkWidget *label;
 
   /* ------------ user ----------------- */
-  if(userIt != context.appdata->osm->users.end()) {
+  if(userIt != context.appdata.osm->users.end()) {
     if(big) table_attach(table, gtk_label_new(_("User:")), 0, 0);
 
     label = gtk_label_new(userIt->second.c_str());
@@ -551,18 +551,18 @@ static void info_more(const tag_context_t &context) {
 
 /* edit tags of currently selected node or way or of the relation */
 /* given */
-void info_dialog(GtkWidget *parent, appdata_t *appdata) {
-  bool ret = info_dialog(parent, appdata, appdata->map->selected.object);
+void info_dialog(GtkWidget *parent, appdata_t &appdata) {
+  bool ret = info_dialog(parent, appdata, appdata.map->selected.object);
 
   /* since nodes being parts of ways but with no tags are invisible, */
   /* the result of editing them may have changed their visibility */
-  if(ret && appdata->map->selected.object.type != RELATION)
-    map_item_redraw(appdata->map, appdata->map->selected.object);
+  if(ret && appdata.map->selected.object.type != RELATION)
+    map_item_redraw(appdata.map, appdata.map->selected.object);
 }
 
 /* edit tags of currently selected node or way or of the relation */
 /* given */
-bool info_dialog(GtkWidget *parent, appdata_t *appdata, object_t &object) {
+bool info_dialog(GtkWidget *parent, appdata_t &appdata, object_t &object) {
 
   g_assert_true(object.is_real());
 
@@ -648,7 +648,7 @@ bool info_dialog(GtkWidget *parent, appdata_t *appdata, object_t &object) {
   return ok;
 }
 
-tag_context_t::tag_context_t(appdata_t *a, const object_t &o)
+tag_context_t::tag_context_t(appdata_t &a, const object_t &o)
   : appdata(a)
   , dialog(O2G_NULLPTR)
   , list(O2G_NULLPTR)

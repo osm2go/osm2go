@@ -25,7 +25,7 @@
 
 #include <gtk/gtk.h>
 
-#define YETI_PASSIVE_WIDGET appdata->statusbar->widget
+#define YETI_PASSIVE_WIDGET appdata.statusbar->widget
 
 #include "osm2go_cpp.h"
 
@@ -34,11 +34,11 @@
 
 // Clear any current animations.
 
-void banner_clear(appdata_t *appdata) {
-  if (! (appdata->window && appdata->banner))
+void banner_clear(appdata_t &appdata) {
+  if(!appdata.window || !appdata.banner)
     return;
   gtk_grab_remove(YETI_PASSIVE_WIDGET);
-  GtkWidget *win = GTK_WIDGET(appdata->window);
+  GtkWidget *win = GTK_WIDGET(appdata.window);
 #if MAEMO_VERSION_MAJOR < 5
   GtkWidget *menu = GTK_WIDGET(hildon_window_get_menu(HILDON_WINDOW(win)));
   GtkWidget *menu_att = gtk_menu_get_attach_widget(
@@ -49,21 +49,21 @@ void banner_clear(appdata_t *appdata) {
   gtk_widget_set_sensitive(menu, TRUE);
   gtk_widget_set_sensitive(menu_att, TRUE);
 #endif
-  gtk_widget_destroy(appdata->banner);
-  g_object_unref(appdata->banner);
-  appdata->banner = O2G_NULLPTR;
+  gtk_widget_destroy(appdata.banner);
+  g_object_unref(appdata.banner);
+  appdata.banner = O2G_NULLPTR;
 }
 
 // Cancel any animations currently going, and show a brief text message.
 
-void banner_show_info(appdata_t *appdata, const char *text) {
-  if (!appdata->window)
+void banner_show_info(appdata_t &appdata, const char *text) {
+  if(!appdata.window)
     return;
   banner_clear(appdata);
-  appdata->banner = hildon_banner_show_information(
-    GTK_WIDGET(appdata->window), O2G_NULLPTR, text);
-  g_object_ref(appdata->banner);
-  gtk_widget_show(appdata->banner);
+  appdata.banner = hildon_banner_show_information(
+    GTK_WIDGET(appdata.window), O2G_NULLPTR, text);
+  g_object_ref(appdata.banner);
+  gtk_widget_show(appdata.banner);
 }
 
 /*
@@ -77,15 +77,15 @@ void banner_show_info(appdata_t *appdata, const char *text) {
  *   http://mail.gnome.org/archives/gtk-app-devel-list/2006-May/msg00020.html
  */
 
-void banner_busy_start(appdata_t *appdata, const char *text) {
-  if (!appdata->window)
+void banner_busy_start(appdata_t &appdata, const char *text) {
+  if(!appdata.window)
     return;
   banner_clear(appdata);
-  appdata->banner = hildon_banner_show_animation(
-    GTK_WIDGET(appdata->window), O2G_NULLPTR, text);
-  g_object_ref(appdata->banner);
-  gtk_widget_show(appdata->banner);
-  GtkWidget *win = GTK_WIDGET(appdata->window);
+  appdata.banner = hildon_banner_show_animation(
+    GTK_WIDGET(appdata.window), O2G_NULLPTR, text);
+  g_object_ref(appdata.banner);
+  gtk_widget_show(appdata.banner);
+  GtkWidget *win = GTK_WIDGET(appdata.window);
 #if MAEMO_VERSION_MAJOR < 5
   GtkWidget *menu = GTK_WIDGET(hildon_window_get_menu(HILDON_WINDOW(win)));
   GtkWidget *menu_att = gtk_menu_get_attach_widget(
@@ -109,22 +109,22 @@ void banner_busy_start(appdata_t *appdata, const char *text) {
 
 #include "statusbar.h"
 
-void banner_show_info(appdata_t *appdata, const char *text) {
+void banner_show_info(appdata_t &appdata, const char *text) {
   banner_clear(appdata);
-  statusbar_brief(appdata->statusbar, text, 0);
+  statusbar_brief(appdata.statusbar, text, 0);
 }
 
-void banner_busy_start(appdata_t *appdata, const char *text) {
+void banner_busy_start(appdata_t &appdata, const char *text) {
   banner_clear(appdata);
-  statusbar_brief(appdata->statusbar, text, -1);
-  GtkWidget *win = GTK_WIDGET(appdata->window);
+  statusbar_brief(appdata.statusbar, text, -1);
+  GtkWidget *win = GTK_WIDGET(appdata.window);
   gtk_widget_set_sensitive(win, FALSE);
   gtk_grab_add(YETI_PASSIVE_WIDGET);
 }
 
-void banner_clear(appdata_t *appdata) {
-  statusbar_brief(appdata->statusbar, O2G_NULLPTR, 0);
-  GtkWidget *win = GTK_WIDGET(appdata->window);
+void banner_clear(appdata_t &appdata) {
+  statusbar_brief(appdata.statusbar, O2G_NULLPTR, 0);
+  GtkWidget *win = GTK_WIDGET(appdata.window);
   gtk_widget_set_sensitive(win, TRUE);
   gtk_grab_remove(YETI_PASSIVE_WIDGET);
 }
@@ -133,6 +133,6 @@ void banner_clear(appdata_t *appdata) {
 
 // Just an alias right now
 
-void banner_busy_stop(appdata_t *appdata) {
+void banner_busy_stop(appdata_t &appdata) {
   banner_clear(appdata);
 }

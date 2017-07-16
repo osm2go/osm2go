@@ -30,7 +30,7 @@
 struct appdata_t;
 
 struct iconbar_t {
-  iconbar_t(appdata_t *appdata);
+  iconbar_t(appdata_t &appdata);
 
   GtkWidget * const toolbar;
 
@@ -54,7 +54,7 @@ struct iconbar_t {
 
 struct map_item_t;
 
-GtkWidget *iconbar_new(appdata_t *appdata);
+GtkWidget *iconbar_new(appdata_t &appdata);
 void icon_bar_map_item_selected(iconbar_t *iconbar, struct map_item_t *map_item);
 void icon_bar_map_cancel_ok(iconbar_t *iconbar, gboolean cancel, gboolean ok);
 /**
@@ -69,7 +69,7 @@ void icon_bar_map_cancel_ok(iconbar_t *iconbar, gboolean cancel, gboolean ok);
 void icon_bar_map_action_idle(iconbar_t *iconbar, gboolean idle, gboolean way_en);
 
 #ifdef FINGER_UI
-void iconbar_register_buttons(appdata_t *appdata, GtkWidget *ok, GtkWidget *cancel);
+void iconbar_register_buttons(appdata_t &appdata, GtkWidget *ok, GtkWidget *cancel);
 #endif
 
 #endif // ICONBAR_H

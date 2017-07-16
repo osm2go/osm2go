@@ -12,7 +12,12 @@
 #include <iostream>
 
 appdata_t::appdata_t()
-  : settings(O2G_NULLPTR)
+#ifdef USE_HILDON
+  : osso_context(O2G_NULLPTR),
+#else
+  :
+#endif
+    settings(O2G_NULLPTR)
   , gps_state(O2G_NULLPTR)
 {
 }
@@ -140,8 +145,4 @@ int main(int argc, char **argv)
   xmlCleanupParser();
 
   return 0;
-}
-
-void main_ui_enable(appdata_t *) {
-  g_assert_not_reached();
 }

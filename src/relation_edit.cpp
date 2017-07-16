@@ -37,10 +37,10 @@
 /* --------------- relation dialog for an item (node or way) ----------- */
 
 struct relitem_context_t {
-  relitem_context_t(object_t &o, appdata_t *a);
+  relitem_context_t(object_t &o, appdata_t &a);
 
   object_t &item;
-  appdata_t *appdata;
+  appdata_t &appdata;
   GtkWidget *dialog, *view;
   GtkListStore *store;
 };
@@ -53,7 +53,7 @@ enum {
   RELITEM_NUM_COLS
 };
 
-relitem_context_t::relitem_context_t(object_t& o, appdata_t *a)
+relitem_context_t::relitem_context_t(object_t &o, appdata_t &a)
   : item(o)
   , appdata(a)
   , dialog(O2G_NULLPTR)
@@ -169,15 +169,13 @@ static void relation_remove_item(relation_t *relation, const object_t &object) {
   relation->flags |= OSM_FLAG_DIRTY;
 }
 
-static gboolean relation_info_dialog(GtkWidget *parent, appdata_t *appdata,
+static gboolean relation_info_dialog(GtkWidget *parent, appdata_t &appdata,
 				     relation_t *relation) {
   object_t object(relation);
   return info_dialog(parent, appdata, object);
 }
 
-static void changed(GtkTreeSelection *sel, gpointer user_data) {
-  relitem_context_t *context = (relitem_context_t*)user_data;
-
+static void changed(GtkTreeSelection *sel, relitem_context_t *context) {
   printf("relation-edit changed event\n");
 
   /* we need to know what changed in order to let the user acknowlege it! */
@@ -200,7 +198,7 @@ static void changed(GtkTreeSelection *sel, gpointer user_data) {
       printf("selected: " ITEM_ID_FORMAT "\n", relation->id);
 
       /* either accept this or unselect again */
-      if(relation_add_item(context->dialog, relation, context->item, context->appdata->presets)) {
+      if(relation_add_item(context->dialog, relation, context->item, context->appdata.presets)) {
         // the item is now the last one in the chain
         const member_t &member = relation->members.back();
 	gtk_list_store_set(context->store, &iter,
@@ -353,8 +351,8 @@ static GtkWidget *relation_item_list_widget(relitem_context_t &context) {
   /* build a list of iters of all items that should be selected */
   relation_list_insert_functor inserter(context, selection);
 
-  std::for_each(context.appdata->osm->relations.begin(),
-                context.appdata->osm->relations.end(), inserter);
+  std::for_each(context.appdata.osm->relations.begin(),
+                context.appdata.osm->relations.end(), inserter);
 
   if(!inserter.selname.empty())
     list_view_scroll(GTK_TREE_VIEW(context.view), selection, &inserter.sel_iter);
@@ -380,9 +378,9 @@ static GtkWidget *relation_item_list_widget(relitem_context_t &context) {
 }
 
 void relation_membership_dialog(GtkWidget *parent,
-			 appdata_t *appdata, object_t &object) {
+			 appdata_t &appdata, object_t &object) {
   relitem_context_t context(object, appdata);
-  map_t *map = appdata->map;
+  map_t *map = appdata.map;
   g_assert_nonnull(map);
 
   char *str = O2G_NULLPTR;
@@ -426,10 +424,10 @@ void relation_membership_dialog(GtkWidget *parent,
 /* -------------------- global relation list ----------------- */
 
 struct relation_context_t {
-  relation_context_t(appdata_t *a, GtkWidget *d)
+  relation_context_t(appdata_t &a, GtkWidget *d)
     : appdata(a), dialog(d) {}
 
-  appdata_t * const appdata;
+  appdata_t &appdata;
   GtkWidget * const dialog;
   GtkWidget *list, *show_btn;
   GtkListStore *store;
@@ -672,10 +670,10 @@ static void on_relation_members(relation_context_t *context) {
 /* user clicked "select" button in relation list */
 static void on_relation_select(relation_context_t *context, GtkWidget *but) {
   relation_t *sel = get_selected_relation(context);
-  map_item_deselect(context->appdata->map);
+  map_item_deselect(context->appdata.map);
 
   if(sel) {
-    map_relation_select(context->appdata->map, sel);
+    map_relation_select(context->appdata.map, sel);
 
     /* tell dialog to close as we want to see the selected relation */
 
@@ -697,7 +695,7 @@ static void on_relation_add(relation_context_t *context) {
     relation->cleanup();
     delete relation;
   } else {
-    context->appdata->osm->relation_attach(relation);
+    context->appdata.osm->relation_attach(relation);
 
     /* append a row for the new data */
 
@@ -765,7 +763,7 @@ static void on_relation_remove(relation_context_t *context) {
   printf("remove relation #" ITEM_ID_FORMAT "\n", sel->id);
 
   if(!sel->members.empty())
-    if(!yes_no_f(context->dialog, O2G_NULLPTR, 0, 0,
+    if(!yes_no_f(context->dialog, context->appdata, 0, 0,
 		 _("Delete non-empty relation?"),
 		 _("This relation still has %zu members. "
 		   "Delete it anyway?"), sel->members.size()))
@@ -778,7 +776,7 @@ static void on_relation_remove(relation_context_t *context) {
     gtk_list_store_remove(context->store, &iter);
 
   /* then really delete it */
-  context->appdata->osm->relation_delete(sel);
+  context->appdata.osm->relation_delete(sel);
 
   relation_list_selected(context->list, O2G_NULLPTR);
 }
@@ -835,8 +833,7 @@ static GtkWidget *relation_list_widget(relation_context_t &context) {
 
   relation_list_widget_functor fc(context.store);
 
-  const std::map<item_id_t, relation_t *> &rchain =
-                                       context.appdata->osm->relations;
+  const std::map<item_id_t, relation_t *> &rchain = context.appdata.osm->relations;
   std::for_each(rchain.begin(), rchain.end(), fc);
 
   g_object_unref(context.store);
@@ -856,7 +853,7 @@ static GtkWidget *relation_list_widget(relation_context_t &context) {
 }
 
 /* a global view on all relations */
-void relation_list(GtkWidget *parent, appdata_t *appdata) {
+void relation_list(GtkWidget *parent, appdata_t &appdata) {
   relation_context_t context(appdata,
                      misc_dialog_new(MISC_DIALOG_LARGE, _("All relations"),
                                      GTK_WINDOW(parent),

@@ -64,7 +64,7 @@ bool project_check_demo(GtkWidget *parent, project_t *project);
 
 osm_t *project_parse_osm(const project_t *project, icon_t &icons);
 
-bool project_load(appdata_t *appdata, const std::string &name);
-std::string project_select(appdata_t *appdata);
+bool project_load(appdata_t &appdata, const std::string &name);
+std::string project_select(appdata_t &appdata);
 
 #endif // PROJECT_H

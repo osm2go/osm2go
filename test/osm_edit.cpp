@@ -689,8 +689,3 @@ int main()
 
   return 0;
 }
-
-void main_ui_enable(appdata_t *)
-{
-  g_assert_not_reached();
-}

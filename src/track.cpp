@@ -98,14 +98,15 @@ private:
 };
 
 /* make menu represent the track state */
-void track_menu_set(appdata_t *appdata) {
-  if(!appdata->window) return;
+void track_menu_set(appdata_t &appdata) {
+  if(!appdata.window)
+    return;
 
-  gboolean present = (appdata->track.track != O2G_NULLPTR);
+  gboolean present = (appdata.track.track != O2G_NULLPTR);
 
   /* if a track is present, then it can be cleared or exported */
-  gtk_widget_set_sensitive(appdata->menuitems[MENU_ITEM_TRACK_CLEAR], present);
-  gtk_widget_set_sensitive(appdata->menuitems[MENU_ITEM_TRACK_EXPORT], present);
+  gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_TRACK_CLEAR], present);
+  gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_TRACK_EXPORT], present);
 }
 
 static track_t *track_read(const char *filename, bool dirty) {
@@ -128,16 +129,16 @@ static track_t *track_read(const char *filename, bool dirty) {
 
 /* --------------------------------------------------------------- */
 
-void track_clear(appdata_t *appdata) {
-  track_t *track = appdata->track.track;
+void track_clear(appdata_t &appdata) {
+  track_t *track = appdata.track.track;
   if (! track) return;
 
   printf("clearing track\n");
 
-  if(G_LIKELY(appdata->map))
+  if(G_LIKELY(appdata.map))
     map_track_remove(track);
 
-  appdata->track.track = O2G_NULLPTR;
+  appdata.track.track = O2G_NULLPTR;
   track_menu_set(appdata);
 
   delete track;
@@ -306,8 +307,8 @@ void track_export(const track_t *track, const char *filename) {
 
 /* ----------------------  loading track --------------------------- */
 
-gboolean track_restore(appdata_t *appdata) {
-  const project_t *project = appdata->project;
+gboolean track_restore(appdata_t &appdata) {
+  const project_t *project = appdata.project;
 
   /* first try to open a backup which is only present if saving the */
   /* actual diff didn't succeed */
@@ -328,7 +329,7 @@ gboolean track_restore(appdata_t *appdata) {
     printf("track found, loading ...\n");
   }
 
-  appdata->track.track = track_read(trk_name.c_str(), false);
+  appdata.track.track = track_read(trk_name.c_str(), false);
 
   track_menu_set(appdata);
 
@@ -356,13 +357,13 @@ static void track_end_segment(track_t *track) {
  * @returns if the position changed
  * @retval FALSE if the GPS position marker needs to be redrawn (i.e. the position changed)
  */
-static gboolean track_append_position(appdata_t *appdata, const pos_t *pos, float alt, const lpos_t *lpos) {
-  track_t *track = appdata->track.track;
+static gboolean track_append_position(appdata_t &appdata, const pos_t *pos, float alt, const lpos_t *lpos) {
+  track_t *track = appdata.track.track;
 
   /* no track at all? might be due to a "clear track" while running */
   if(G_UNLIKELY(!track)) {
     printf("restarting after \"clear\"\n");
-    track = appdata->track.track = new track_t();
+    track = appdata.track.track = new track_t();
   }
 
   track_menu_set(appdata);
@@ -394,20 +395,20 @@ static gboolean track_append_position(appdata_t *appdata, const pos_t *pos, floa
       /* the segment can now be drawn for the first time */
       printf("initial draw\n");
       g_assert_true(seg.item_chain.empty());
-      map_track_draw_seg(appdata->map, seg);
+      map_track_draw_seg(appdata.map, seg);
     } else {
       /* the segment has to be updated */
-      map_track_update_seg(appdata->map, seg);
+      map_track_update_seg(appdata.map, seg);
     }
   }
 
-  if(appdata->settings->follow_gps) {
-    if(!map_scroll_to_if_offscreen(appdata->map, lpos)) {
-      if(!--appdata->track.warn_cnt) {
+  if(appdata.settings->follow_gps) {
+    if(!map_scroll_to_if_offscreen(appdata.map, lpos)) {
+      if(!--appdata.track.warn_cnt) {
 	/* warn user once a minute that the current gps */
 	/* position is outside the working area */
 	banner_show_info(appdata, _("GPS position outside working area!"));
-	appdata->track.warn_cnt = 60;  // warn again after one minute
+	appdata.track.warn_cnt = 60;  // warn again after one minute
       }
     } else
       ret = TRUE;
@@ -416,37 +417,37 @@ static gboolean track_append_position(appdata_t *appdata, const pos_t *pos, floa
   return ret;
 }
 
-static void track_do_disable_gps(appdata_t *appdata) {
-  appdata->settings->enable_gps = FALSE;
-  appdata->gps_state->setEnable(false);
+static void track_do_disable_gps(appdata_t &appdata) {
+  appdata.settings->enable_gps = FALSE;
+  appdata.gps_state->setEnable(false);
 
-  appdata->gps_state->registerCallback(O2G_NULLPTR, O2G_NULLPTR);
+  appdata.gps_state->registerCallback(O2G_NULLPTR, O2G_NULLPTR);
 
   /* stopping the GPS removes the marker ... */
   map_track_remove_pos(appdata);
 
   /* ... and terminates the current segment if present */
-  track_end_segment(appdata->track.track);
+  track_end_segment(appdata.track.track);
 }
 
 static int update(void *data) {
-  appdata_t *appdata = static_cast<appdata_t *>(data);
+  appdata_t &appdata = *static_cast<appdata_t *>(data);
 
   /* ignore updates while no valid osm file is loaded, e.g. when switching */
   /* projects */
-  if(G_UNLIKELY(!appdata->osm))
+  if(G_UNLIKELY(!appdata.osm))
     return 1;
 
   /* the map is only gone of the main screen is being closed */
-  if(G_UNLIKELY(!appdata->map)) {
+  if(G_UNLIKELY(!appdata.map)) {
     printf("map has gone while tracking was active, stopping tracker\n");
 
-    appdata->gps_state->registerCallback(O2G_NULLPTR, O2G_NULLPTR);
+    appdata.gps_state->registerCallback(O2G_NULLPTR, O2G_NULLPTR);
 
     return 0;
   }
 
-  if(!appdata->settings->enable_gps) {
+  if(!appdata.settings->enable_gps) {
     // Turn myself off gracefully.
     track_do_disable_gps(appdata);
     return 0;
@@ -454,40 +455,40 @@ static int update(void *data) {
 
   pos_t pos;
   float alt;
-  if(appdata->gps_state->get_pos(pos, &alt)) {
+  if(appdata.gps_state->get_pos(pos, &alt)) {
     printf("valid position %.6f/%.6f alt %.2f\n", pos.lat, pos.lon, alt);
     lpos_t lpos;
-    pos2lpos(appdata->osm->bounds, &pos, &lpos);
+    pos2lpos(appdata.osm->bounds, &pos, &lpos);
     if(track_append_position(appdata, &pos, alt, &lpos))
-      map_track_pos(appdata->map, &lpos);
+      map_track_pos(appdata.map, &lpos);
   } else {
     printf("no valid position\n");
     /* end segment */
-    track_end_segment(appdata->track.track);
+    track_end_segment(appdata.track.track);
     map_track_remove_pos(appdata);
   }
 
   return 1;
 }
 
-static void track_do_enable_gps(appdata_t *appdata) {
-  appdata->settings->enable_gps = TRUE;
-  appdata->gps_state->setEnable(true);
-  appdata->track.warn_cnt = 1;
+static void track_do_enable_gps(appdata_t &appdata) {
+  appdata.settings->enable_gps = TRUE;
+  appdata.gps_state->setEnable(true);
+  appdata.track.warn_cnt = 1;
 
-  if (!appdata->gps_state->registerCallback(update, appdata)) {
-    if(!appdata->track.track) {
+  if (!appdata.gps_state->registerCallback(update, &appdata)) {
+    if(!appdata.track.track) {
       printf("GPS: no track yet, starting new one\n");
-      appdata->track.track = new track_t();
+      appdata.track.track = new track_t();
     } else
       printf("GPS: extending existing track\n");
   }
 }
 
-void track_enable_gps(appdata_t *appdata, gboolean enable) {
+void track_enable_gps(appdata_t &appdata, gboolean enable) {
   printf("request to %sable gps\n", enable?"en":"dis");
 
-  gtk_widget_set_sensitive(appdata->menuitems[MENU_ITEM_TRACK_FOLLOW_GPS], enable);
+  gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_TRACK_FOLLOW_GPS], enable);
 
   if(enable) track_do_enable_gps(appdata);
   else       track_do_disable_gps(appdata);

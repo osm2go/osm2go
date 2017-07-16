@@ -450,10 +450,10 @@ enum {
 };
 
 struct wms_server_context_t {
-  wms_server_context_t(appdata_t *a, wms_t *w, GtkWidget *d)
+  wms_server_context_t(appdata_t &a, wms_t *w, GtkWidget *d)
     : appdata(a), wms(w), dialog(d), list(O2G_NULLPTR), store(O2G_NULLPTR)
     , server_label(O2G_NULLPTR), path_label(O2G_NULLPTR) {}
-  appdata_t * const appdata;
+  appdata_t &appdata;
   wms_t * const wms;
   GtkWidget * const dialog, *list;
   GtkListStore *store;
@@ -555,7 +555,7 @@ static void on_server_remove(wms_server_context_t *context) {
 
     /* de-chain */
     printf("de-chaining server %s\n", server->name.c_str());
-    std::vector<wms_server_t *> &servers = context->appdata->settings->wms_server;
+    std::vector<wms_server_t *> &servers = context->appdata.settings->wms_server;
     const std::vector<wms_server_t *>::iterator itEnd = servers.end();
     std::vector<wms_server_t *>::iterator it = std::find(servers.begin(), itEnd, server);
     g_assert(it != itEnd);
@@ -618,7 +618,7 @@ bool wms_server_edit(wms_server_context_t *context, gboolean edit_name,
   HILDON_ENTRY_NO_AUTOCAP(name);
   gtk_widget_set_sensitive(GTK_WIDGET(name), edit_name);
   g_signal_connect(G_OBJECT(name), "changed",
-		   G_CALLBACK(callback_modified_name), context->appdata->settings);
+		   G_CALLBACK(callback_modified_name), context->appdata.settings);
 
   gtk_table_attach(GTK_TABLE(table),
 		   label = gtk_label_new(_("Server:")), 0, 1, 1, 2,
@@ -698,10 +698,10 @@ static void on_server_add(wms_server_context_t *context) {
   newserver->name   = "<service name>";
   // in case the project has a server set, but the global list is empty,
   // fill the data of the project server
-  if(context->appdata->settings->wms_server.empty() &&
-     !context->appdata->project->wms_server.empty()) {
-    newserver->server = context->appdata->project->wms_server;
-    newserver->path   = context->appdata->project->wms_path;
+  if(context->appdata.settings->wms_server.empty() &&
+     !context->appdata.project->wms_server.empty()) {
+    newserver->server = context->appdata.project->wms_server;
+    newserver->path   = context->appdata.project->wms_path;
   } else {
     newserver->server = "<server url>";
     newserver->path   = "<path in server>";
@@ -714,7 +714,7 @@ static void on_server_add(wms_server_context_t *context) {
     delete newserver;
   } else {
     /* attach a new server item to the chain */
-    context->appdata->settings->wms_server.push_back(newserver);
+    context->appdata.settings->wms_server.push_back(newserver);
 
     GtkTreeIter iter = store_fill_functor(context->store)(newserver);
 
@@ -742,7 +742,7 @@ static GtkWidget *wms_server_widget(wms_server_context_t *context) {
 
   list_set_store(context->list, context->store);
 
-  const std::vector<wms_server_t *> &servers = context->appdata->settings->wms_server;
+  const std::vector<wms_server_t *> &servers = context->appdata.settings->wms_server;
   std::for_each(servers.begin(), servers.end(), store_fill_functor(context->store));
 
   g_object_unref(context->store);
@@ -754,12 +754,12 @@ static GtkWidget *wms_server_widget(wms_server_context_t *context) {
   return context->list;
 }
 
-static bool wms_server_dialog(appdata_t *appdata, wms_t *wms) {
+static bool wms_server_dialog(appdata_t &appdata, wms_t *wms) {
   bool ok = false;
 
   wms_server_context_t context(appdata, wms,
     misc_dialog_new(MISC_DIALOG_MEDIUM, _("WMS Server Selection"),
-		    GTK_WINDOW(appdata->window),
+		    GTK_WINDOW(appdata.window),
 		    GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
 		    GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
 		    O2G_NULLPTR));
@@ -856,9 +856,9 @@ static gboolean on_view_clicked(GtkWidget *widget, GdkEventButton *event, gpoint
 #endif
 
 struct selected_context {
-  appdata_t * const appdata;
+  appdata_t &appdata;
   wms_layer_t::list selected;
-  selected_context(appdata_t *a) : appdata(a) {}
+  selected_context(appdata_t &a) : appdata(a) {}
   void operator()(const wms_layer_t *layer);
 };
 
@@ -956,7 +956,7 @@ static GtkWidget *wms_layer_widget(selected_context *context, const wms_layer_t:
   gtk_tree_view_set_model(GTK_TREE_VIEW(view), GTK_TREE_MODEL(store));
 
   std::for_each(layers.begin(), layers.end(),
-                fitting_layers_functor(store, context->appdata->project));
+                fitting_layers_functor(store, context->appdata.project));
 
   g_object_unref(store);
 
@@ -985,7 +985,7 @@ static gboolean wms_layer_dialog(selected_context *ctx, const wms_layer_t::list 
 
   GtkWidget *dialog =
     misc_dialog_new(MISC_DIALOG_LARGE, _("WMS layer selection"),
-		    GTK_WINDOW(ctx->appdata->window),
+		    GTK_WINDOW(ctx->appdata.window),
 		    GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
 		    GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
 		    O2G_NULLPTR);
@@ -1020,34 +1020,34 @@ struct find_format_reverse_functor {
   }
 };
 
-void wms_import(appdata_t *appdata) {
-  if(!appdata->project) {
-    errorf(GTK_WIDGET(appdata->window),
+void wms_import(appdata_t &appdata) {
+  if(!appdata.project) {
+    errorf(GTK_WIDGET(appdata.window),
 	   _("Need an open project to derive WMS coordinates"));
     return;
   }
 
   /* this cancels any wms adjustment in progress */
-  if(appdata->map->action.type == MAP_ACTION_BG_ADJUST)
-    map_action_cancel(appdata->map);
+  if(appdata.map->action.type == MAP_ACTION_BG_ADJUST)
+    map_action_cancel(appdata.map);
 
-  wms_t wms(appdata->project->wms_server, appdata->project->wms_path);
+  wms_t wms(appdata.project->wms_server, appdata.project->wms_path);
 
   /* reset any background adjustments in the project ... */
-  appdata->project->wms_offset.x = 0;
-  appdata->project->wms_offset.y = 0;
+  appdata.project->wms_offset.x = 0;
+  appdata.project->wms_offset.y = 0;
 
   /* ... as well as in the map */
-  appdata->map->bg.offset.x = 0;
-  appdata->map->bg.offset.y = 0;
+  appdata.map->bg.offset.x = 0;
+  appdata.map->bg.offset.y = 0;
 
   /* get server from dialog */
   if(!wms_server_dialog(appdata, &wms))
     return;
 
   /* ------------- copy values back into project ---------------- */
-  appdata->project->wms_server = wms.server;
-  appdata->project->wms_path = wms.path;
+  appdata.project->wms_server = wms.server;
+  appdata.project->wms_path = wms.path;
 
   /* ----------- request capabilities -------------- */
   /* nothing has to be done if the last character of path is already a valid URL delimiter */
@@ -1066,7 +1066,7 @@ void wms_import(appdata_t *appdata) {
 
   char *cap = O2G_NULLPTR;
   size_t caplen;
-  net_io_download_mem(GTK_WIDGET(appdata->window), url, &cap, caplen);
+  net_io_download_mem(GTK_WIDGET(appdata.window), url, &cap, caplen);
 
   /* ----------- parse capabilities -------------- */
   if(G_UNLIKELY(ImageFormats.empty()))
@@ -1074,7 +1074,7 @@ void wms_import(appdata_t *appdata) {
 
   bool parse_success = false;
   if(!cap) {
-    errorf(GTK_WIDGET(appdata->window),
+    errorf(GTK_WIDGET(appdata.window),
 	   _("WMS download failed:\n\n"
 	     "GetCapabilities failed"));
   } else {
@@ -1083,7 +1083,7 @@ void wms_import(appdata_t *appdata) {
     /* parse the file and get the DOM */
     if((doc = xmlReadMemory(cap, caplen, O2G_NULLPTR, O2G_NULLPTR, 0)) == O2G_NULLPTR) {
       xmlErrorPtr errP = xmlGetLastError();
-      errorf(GTK_WIDGET(appdata->window),
+      errorf(GTK_WIDGET(appdata.window),
 	     _("WMS download failed:\n\n"
 	       "XML error while parsing capabilities:\n"
 	       "%s"), errP->message);
@@ -1099,12 +1099,12 @@ void wms_import(appdata_t *appdata) {
   /* ------------ basic checks ------------- */
 
   if(!parse_success) {
-    errorf(GTK_WIDGET(appdata->window), _("Incomplete/unexpected reply!"));
+    errorf(GTK_WIDGET(appdata.window), _("Incomplete/unexpected reply!"));
     return;
   }
 
   if(!wms.cap.request.getmap.format) {
-    errorf(GTK_WIDGET(appdata->window), _("No supported image format found."));
+    errorf(GTK_WIDGET(appdata.window), _("No supported image format found."));
     return;
   }
 
@@ -1119,7 +1119,7 @@ void wms_import(appdata_t *appdata) {
                          layers.end();
 
   if(!at_least_one_ok) {
-    errorf(GTK_WIDGET(appdata->window),
+    errorf(GTK_WIDGET(appdata.window),
 	   _("Server provides no data in the required format!\n\n"
 	     "(epsg4326 and LatLonBoundingBox are mandatory for osm2go)"));
 #if 0
@@ -1138,7 +1138,7 @@ void wms_import(appdata_t *appdata) {
   /* --------- build getmap request ----------- */
 
   /* get required image size */
-  wms_setup_extent(appdata->project, &wms);
+  wms_setup_extent(appdata.project, &wms);
 
   /* start building url */
   url.erase(url.size() - strlen("Capabilities")); // Keep "Get"
@@ -1178,13 +1178,13 @@ void wms_import(appdata_t *appdata) {
 
   /* build strings of min and max lat and lon to be used in url */
   g_ascii_formatd(minlon, sizeof(minlon), LL_FORMAT,
-		  appdata->project->min.lon);
+		  appdata.project->min.lon);
   g_ascii_formatd(minlat, sizeof(minlat), LL_FORMAT,
-		  appdata->project->min.lat);
+		  appdata.project->min.lat);
   g_ascii_formatd(maxlon, sizeof(maxlon), LL_FORMAT,
-		  appdata->project->max.lon);
+		  appdata.project->max.lon);
   g_ascii_formatd(maxlat, sizeof(maxlat), LL_FORMAT,
-		  appdata->project->max.lat);
+		  appdata.project->max.lat);
 
   /* find preferred supported video format */
   const FormatMap::const_iterator itEnd = ImageFormats.end();
@@ -1202,37 +1202,37 @@ void wms_import(appdata_t *appdata) {
   for(int i = 0; parts[i]; i++)
     url += parts[i];
 
-  const std::string filename = std::string(appdata->project->path) + "wms." +
+  const std::string filename = std::string(appdata.project->path) + "wms." +
                                ImageFormatExtensions[it->second];
 
   /* remove any existing image before */
   wms_remove(appdata);
 
-  if(!net_io_download_file(GTK_WIDGET(appdata->window),
+  if(!net_io_download_file(GTK_WIDGET(appdata.window),
                            url, filename, O2G_NULLPTR))
     return;
 
   /* there should be a matching file on disk now */
-  map_set_bg_image(appdata->map, filename.c_str());
+  map_set_bg_image(appdata.map, filename.c_str());
 
-  gint x = appdata->osm->bounds->min.x + appdata->map->bg.offset.x;
-  gint y = appdata->osm->bounds->min.y + appdata->map->bg.offset.y;
-  canvas_image_move(appdata->map->bg.item, x, y,
-		    appdata->map->bg.scale.x, appdata->map->bg.scale.y);
+  gint x = appdata.osm->bounds->min.x + appdata.map->bg.offset.x;
+  gint y = appdata.osm->bounds->min.y + appdata.map->bg.offset.y;
+  canvas_image_move(appdata.map->bg.item, x, y,
+		    appdata.map->bg.scale.x, appdata.map->bg.scale.y);
 
-  gtk_widget_set_sensitive(appdata->menuitems[MENU_ITEM_WMS_CLEAR], TRUE);
-  gtk_widget_set_sensitive(appdata->menuitems[MENU_ITEM_WMS_ADJUST], TRUE);
+  gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_WMS_CLEAR], TRUE);
+  gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_WMS_ADJUST], TRUE);
 }
 
 /* try to load an existing image into map */
-void wms_load(appdata_t *appdata) {
+void wms_load(appdata_t &appdata) {
   if(G_UNLIKELY(ImageFormatExtensions.empty()))
     initImageFormats();
 
   const std::map<WmsImageFormat, const char *>::const_iterator itEnd = ImageFormatExtensions.end();
   std::map<WmsImageFormat, const char *>::const_iterator it = ImageFormatExtensions.begin();
 
-  std::string filename = appdata->project->path + "/wms.";
+  std::string filename = appdata.project->path + "/wms.";
   const std::string::size_type extpos = filename.size();
 
   for(; it != itEnd; it++) {
@@ -1240,33 +1240,33 @@ void wms_load(appdata_t *appdata) {
     filename += it->second;
 
     if(g_file_test(filename.c_str(), G_FILE_TEST_EXISTS)) {
-      appdata->map->bg.offset.x = appdata->project->wms_offset.x;
-      appdata->map->bg.offset.y = appdata->project->wms_offset.y;
+      appdata.map->bg.offset.x = appdata.project->wms_offset.x;
+      appdata.map->bg.offset.y = appdata.project->wms_offset.y;
 
-      map_set_bg_image(appdata->map, filename.c_str());
+      map_set_bg_image(appdata.map, filename.c_str());
 
       /* restore image to saved position */
-      gint x = appdata->osm->bounds->min.x + appdata->map->bg.offset.x;
-      gint y = appdata->osm->bounds->min.y + appdata->map->bg.offset.y;
-      canvas_image_move(appdata->map->bg.item, x, y,
-			appdata->map->bg.scale.x, appdata->map->bg.scale.y);
+      gint x = appdata.osm->bounds->min.x + appdata.map->bg.offset.x;
+      gint y = appdata.osm->bounds->min.y + appdata.map->bg.offset.y;
+      canvas_image_move(appdata.map->bg.item, x, y,
+			appdata.map->bg.scale.x, appdata.map->bg.scale.y);
 
-      gtk_widget_set_sensitive(appdata->menuitems[MENU_ITEM_WMS_CLEAR], TRUE);
-      gtk_widget_set_sensitive(appdata->menuitems[MENU_ITEM_WMS_ADJUST], TRUE);
+      gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_WMS_CLEAR], TRUE);
+      gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_WMS_ADJUST], TRUE);
 
       break;
     }
   }
 }
 
-void wms_remove_file(project_t *project) {
+void wms_remove_file(project_t &project) {
   if(G_UNLIKELY(ImageFormatExtensions.empty()))
     initImageFormats();
 
   const std::map<WmsImageFormat, const char *>::const_iterator itEnd = ImageFormatExtensions.end();
   std::map<WmsImageFormat, const char *>::const_iterator it = ImageFormatExtensions.begin();
 
-  std::string filename = project->path + "/wms.";
+  std::string filename = project.path + "/wms.";
   const std::string::size_type extpos = filename.size();
 
   for(; it != itEnd; it++) {
@@ -1278,18 +1278,18 @@ void wms_remove_file(project_t *project) {
   }
 }
 
-void wms_remove(appdata_t *appdata) {
+void wms_remove(appdata_t &appdata) {
 
   /* this cancels any wms adjustment in progress */
-  if(appdata->map->action.type == MAP_ACTION_BG_ADJUST)
-    map_action_cancel(appdata->map);
+  if(appdata.map->action.type == MAP_ACTION_BG_ADJUST)
+    map_action_cancel(appdata.map);
 
-  gtk_widget_set_sensitive(appdata->menuitems[MENU_ITEM_WMS_CLEAR], FALSE);
-  gtk_widget_set_sensitive(appdata->menuitems[MENU_ITEM_WMS_ADJUST], FALSE);
+  gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_WMS_CLEAR], FALSE);
+  gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_WMS_ADJUST], FALSE);
 
-  map_remove_bg_image(appdata->map);
+  map_remove_bg_image(appdata.map);
 
-  wms_remove_file(appdata->project);
+  wms_remove_file(*appdata.project);
 }
 
 static const struct server_preset_s {

@@ -56,7 +56,7 @@ struct log_s {
 };
 
 struct osm_upload_context_t {
-  osm_upload_context_t(appdata_t *a, osm_t *o, project_t *p, const char *c, const char *s)
+  osm_upload_context_t(appdata_t &a, osm_t *o, project_t *p, const char *c, const char *s)
     : appdata(a)
     , dialog(O2G_NULLPTR)
     , osm(o)
@@ -66,7 +66,7 @@ struct osm_upload_context_t {
     , src(s ? s : std::string())
   {}
 
-  appdata_t * const appdata;
+  appdata_t &appdata;
   GtkWidget *dialog;
   osm_t * const osm;
   project_t * const project;
@@ -607,8 +607,8 @@ static bool osm_create_changeset(osm_upload_context_t &context) {
   if(xml_str) {
     printf("creating changeset %s from address %p\n", url.c_str(), xml_str);
 
-    context.credentials = context.appdata->settings->username + ":" +
-                          context.appdata->settings->password;
+    context.credentials = context.appdata.settings->username + ":" +
+                          context.appdata.settings->password;
 
     item_id_t changeset;
     if(osm_update_item(context, xml_str, url.c_str(), &changeset)) {
@@ -735,7 +735,7 @@ static void info_more(const osm_dirty_t &context) {
 }
 #endif
 
-void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
+void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
 
   printf("starting upload\n");
 
@@ -753,7 +753,7 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
 
   GtkWidget *dialog =
     misc_dialog_new(MISC_DIALOG_MEDIUM, _("Upload to OSM"),
-		    GTK_WINDOW(appdata->window),
+		    GTK_WINDOW(appdata.window),
 #ifdef FREMANTLE
                     _("More"), GTK_RESPONSE_HELP,
 #endif
@@ -777,16 +777,16 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   table_attach_label_l(table, _("Username:"), 0, 1, 0, 1);
   GtkWidget *uentry = entry_new();
   HILDON_ENTRY_NO_AUTOCAP(uentry);
-  const char *username = !appdata->settings->username.empty() ?
-                         appdata->settings->username.c_str() :
+  const char *username = !appdata.settings->username.empty() ?
+                         appdata.settings->username.c_str() :
                          _("<your osm username>");
   gtk_entry_set_text(GTK_ENTRY(uentry), username);
   gtk_table_attach_defaults(GTK_TABLE(table),  uentry, 1, 2, 0, 1);
   table_attach_label_l(table, _("Password:"), 0, 1, 1, 2);
   GtkWidget *pentry = entry_new();
   HILDON_ENTRY_NO_AUTOCAP(pentry);
-  if(!appdata->settings->password.empty())
-    gtk_entry_set_text(GTK_ENTRY(pentry), appdata->settings->password.c_str());
+  if(!appdata.settings->password.empty())
+    gtk_entry_set_text(GTK_ENTRY(pentry), appdata.settings->password.c_str());
   gtk_entry_set_visibility(GTK_ENTRY(pentry), FALSE);
   gtk_table_attach_defaults(GTK_TABLE(table),  pentry, 1, 2, 1, 2);
   gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, FALSE, FALSE, 0);
@@ -852,8 +852,8 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   printf("clicked ok\n");
 
   /* retrieve username and password */
-  appdata->settings->username = gtk_entry_get_text(GTK_ENTRY(uentry));
-  appdata->settings->password = gtk_entry_get_text(GTK_ENTRY(pentry));
+  appdata.settings->username = gtk_entry_get_text(GTK_ENTRY(uentry));
+  appdata.settings->password = gtk_entry_get_text(GTK_ENTRY(pentry));
 
   /* fetch comment from dialog */
   GtkTextIter start, end;
@@ -871,11 +871,11 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
                                gtk_entry_get_text(GTK_ENTRY(sentry)));
 
   gtk_widget_destroy(dialog);
-  project_save(GTK_WIDGET(appdata->window), project);
+  project_save(GTK_WIDGET(appdata.window), project);
 
   context.dialog =
     misc_dialog_new(MISC_DIALOG_LARGE,_("Uploading"),
-	  GTK_WINDOW(appdata->window),
+	  GTK_WINDOW(appdata.window),
 	  GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE, O2G_NULLPTR);
 
   gtk_dialog_set_response_sensitive(GTK_DIALOG(context.dialog),
@@ -909,9 +909,9 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
   if(api_adjust(project->rserver)) {
     appendf(context.log, O2G_NULLPTR, _("Server URL adjusted to %s\n"),
             project->rserver.c_str());
-    if(G_LIKELY(project->rserver == context.appdata->settings->server)) {
+    if(G_LIKELY(project->rserver == context.appdata.settings->server)) {
       project->rserver.clear();
-      project->server = context.appdata->settings->server.c_str();
+      project->server = context.appdata.settings->server.c_str();
     }
   }
 
@@ -964,7 +964,7 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
     appendf(context.log, O2G_NULLPTR, _("Server data has been modified.\n"));
     appendf(context.log, O2G_NULLPTR, _("Downloading updated osm data ...\n"));
 
-    if(osm_download(context.dialog, appdata->settings, project)) {
+    if(osm_download(context.dialog, appdata.settings, project)) {
       appendf(context.log, O2G_NULLPTR, _("Download successful!\n"));
       appendf(context.log, O2G_NULLPTR, _("The map will be reloaded.\n"));
       project->data_dirty = false;
@@ -982,7 +982,7 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
 
       appendf(context.log, O2G_NULLPTR, _("Reloading map ...\n"));
 
-      if(!diff_is_clean(appdata->osm, false)) {
+      if(!diff_is_clean(appdata.osm, false)) {
 	appendf(context.log, COLOR_ERR, _("*** DIFF IS NOT CLEAN ***\n"));
 	appendf(context.log, COLOR_ERR, _("Something went wrong during upload,\n"));
 	appendf(context.log, COLOR_ERR, _("proceed with care!\n"));
@@ -990,16 +990,16 @@ void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project) {
 
       /* redraw the entire map by destroying all map items and redrawing them */
       appendf(context.log, O2G_NULLPTR, _("Cleaning up ...\n"));
-      diff_save(appdata->project, appdata->osm);
-      map_clear(appdata->map, MAP_LAYER_OBJECTS_ONLY);
-      delete appdata->osm;
+      diff_save(appdata.project, appdata.osm);
+      map_clear(appdata.map, MAP_LAYER_OBJECTS_ONLY);
+      delete appdata.osm;
 
       appendf(context.log, O2G_NULLPTR, _("Loading OSM ...\n"));
-      appdata->osm = project_parse_osm(appdata->project, appdata->icons);
+      appdata.osm = project_parse_osm(appdata.project, appdata.icons);
       appendf(context.log, O2G_NULLPTR, _("Applying diff ...\n"));
-      diff_restore(appdata, appdata->project, appdata->osm);
+      diff_restore(appdata, appdata.project, appdata.osm);
       appendf(context.log, O2G_NULLPTR, _("Painting ...\n"));
-      map_paint(appdata->map);
+      map_paint(appdata.map);
       appendf(context.log, O2G_NULLPTR, _("Done!\n"));
     }
   }

@@ -33,13 +33,13 @@ struct undo_t;
 
 struct appdata_t;
 static inline void undo_free(osm_t *, undo_t *) {}
-static inline void undo(struct appdata_t *) {}
+static inline void undo(struct appdata_t &) {}
 
-static inline void undo_append_way(struct appdata_t *, undo_type_t, way_t *) {}
-static inline void undo_append_node(struct appdata_t *, undo_type_t, node_t *) {}
-static inline void undo_close_state(struct appdata_t *) {}
+static inline void undo_append_way(struct appdata_t &, undo_type_t, way_t *) {}
+static inline void undo_append_node(struct appdata_t &, undo_type_t, node_t *) {}
+static inline void undo_close_state(struct appdata_t &) {}
 
-static inline void undo_open_new_state(struct appdata_t *, undo_type_t, object_t &) {}
-static inline void undo_append_object(struct appdata_t *, undo_type_t, const object_t &) {}
+static inline void undo_open_new_state(struct appdata_t &, undo_type_t, object_t &) {}
+static inline void undo_append_object(struct appdata_t &, undo_type_t, const object_t &) {}
 
 #endif // UNDO_H

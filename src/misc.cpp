@@ -158,10 +158,10 @@ static void on_toggled(GtkWidget *button, gpointer data) {
 				      RESPONSE_YES, !active);
 }
 
-bool yes_no_f(GtkWidget *parent, appdata_t *appdata, guint again_bit,
+bool yes_no_f(GtkWidget *parent, appdata_t &appdata, guint again_bit,
               gint flags, const char *title, const char *fmt, ...) {
-  if(again_bit && (appdata->dialog_again.not_again & again_bit))
-    return ((appdata->dialog_again.reply & again_bit) != 0);
+  if(again_bit && (appdata.dialog_again.not_again & again_bit))
+    return ((appdata.dialog_again.reply & again_bit) != 0);
 
   va_list args;
   va_start( args, fmt );
@@ -207,9 +207,11 @@ bool yes_no_f(GtkWidget *parent, appdata_t *appdata, guint again_bit,
   if(cbut && gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cbut))) {
     /* the user doesn't want to see this dialog again */
 
-    appdata->dialog_again.not_again |= again_bit;
-    if(yes) appdata->dialog_again.reply |=  again_bit;
-    else    appdata->dialog_again.reply &= ~again_bit;
+    appdata.dialog_again.not_again |= again_bit;
+    if(yes)
+      appdata.dialog_again.reply |=  again_bit;
+    else
+      appdata.dialog_again.reply &= ~again_bit;
   }
 
   gtk_widget_destroy(dialog);
@@ -596,14 +598,14 @@ GType combo_box_entry_type(void) {
 }
 
 /* ---------- simple interface to the systems web browser ---------- */
-void open_url(struct appdata_t *appdata, const char *url)
+void open_url(struct appdata_t &appdata, const char *url)
 {
 #ifdef ENABLE_BROWSER_INTERFACE
 #ifndef USE_HILDON
   gtk_show_uri(O2G_NULLPTR, url, GDK_CURRENT_TIME, O2G_NULLPTR);
   (void)appdata;
 #else
-  osso_rpc_run_with_defaults(appdata->osso_context, "osso_browser",
+  osso_rpc_run_with_defaults(appdata.osso_context, "osso_browser",
                              OSSO_BROWSER_OPEN_NEW_WINDOW_REQ, O2G_NULLPTR,
                              DBUS_TYPE_STRING, url,
                              DBUS_TYPE_BOOLEAN, FALSE, DBUS_TYPE_INVALID);

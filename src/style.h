@@ -96,10 +96,10 @@ struct style_t {
 style_t *style_load(const std::string &name, icon_t &icons);
 
 #ifndef FREMANTLE
-void style_select(GtkWidget *parent, appdata_t *appdata);
+void style_select(GtkWidget *parent, appdata_t &appdata);
 #else
-GtkWidget *style_select_widget(appdata_t *appdata);
-void style_change(appdata_t *appdata, const char *name);
+GtkWidget *style_select_widget(appdata_t &appdata);
+void style_change(appdata_t &appdata, const char *name);
 #endif
 
 #endif // STYLE_H

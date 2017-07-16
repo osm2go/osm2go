@@ -26,9 +26,9 @@ struct appdata_t;
 struct object_t;
 class relation_t;
 
-void relation_membership_dialog(GtkWidget *parent, appdata_t *appdata, object_t &object);
+void relation_membership_dialog(GtkWidget *parent, appdata_t &appdata, object_t &object);
 
-void relation_list(GtkWidget *parent, appdata_t *appdata);
+void relation_list(GtkWidget *parent, appdata_t &appdata);
 void relation_show_members(GtkWidget *parent, const relation_t *relation);
 
 #endif // RELATION_EDIT_H

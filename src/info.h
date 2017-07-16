@@ -20,30 +20,20 @@
 #ifndef INFO_H
 #define INFO_H
 
-#include <gtk/gtk.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-struct appdata_t;
-
-void info_dialog(GtkWidget *parent, struct appdata_t *appdata);
-
-#ifdef __cplusplus
-}
-
 #include "osm.h"
 
+#include <gtk/gtk.h>
 #include <string>
 #include <vector>
 
+struct appdata_t;
+
 class tag_context_t {
 public:
-  explicit tag_context_t(appdata_t *a, const object_t &o);
+  explicit tag_context_t(appdata_t &a, const object_t &o);
   ~tag_context_t();
 
-  appdata_t * const appdata;
+  appdata_t &appdata;
   GtkWidget *dialog, *list;
   GtkListStore *store;
   object_t object;
@@ -53,8 +43,7 @@ public:
   void update_collisions(const std::string &k);
 };
 
-bool info_dialog(GtkWidget *parent, appdata_t *appdata, object_t &object);
-
-#endif
+void info_dialog(GtkWidget *parent, appdata_t &appdata);
+bool info_dialog(GtkWidget *parent, appdata_t &appdata, object_t &object);
 
 #endif // INFO_H

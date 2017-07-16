@@ -333,7 +333,7 @@ static std::vector<std::string> style_scan() {
   return chain;
 }
 
-GtkWidget *style_select_widget(appdata_t *appdata) {
+GtkWidget *style_select_widget(appdata_t &appdata) {
   const std::vector<std::string> &chain = style_scan();
 
   /* there must be at least one style, otherwise */
@@ -344,7 +344,7 @@ GtkWidget *style_select_widget(appdata_t *appdata) {
 
   /* fill combo box with presets */
   int match = -1;
-  combo_add_styles cas(cbox, appdata->settings->style, match);
+  combo_add_styles cas(cbox, appdata.settings->style, match);
   std::for_each(chain.begin(), chain.end(), cas);
 
   if(cas.match >= 0)
@@ -372,7 +372,7 @@ bool style_find::operator()(const std::string &filename)
   return match;
 }
 
-void style_change(appdata_t *appdata, const char *name) {
+void style_change(appdata_t &appdata, const char *name) {
   const std::vector<std::string> &chain = style_scan();
 
   const std::vector<std::string>::const_iterator it =
@@ -382,36 +382,36 @@ void style_change(appdata_t *appdata, const char *name) {
   const std::string &new_style = style_basename(*it);
 
   /* check if style has really been changed */
-  if(appdata->settings->style == new_style)
+  if(appdata.settings->style == new_style)
     return;
 
-  style_t *nstyle = style_load_fname(appdata->icons, *it);
+  style_t *nstyle = style_load_fname(appdata.icons, *it);
   if (nstyle == O2G_NULLPTR) {
-    errorf(GTK_WIDGET(appdata->window),
+    errorf(GTK_WIDGET(appdata.window),
            _("Error loading style %s"), it->c_str());
     return;
   }
 
-  appdata->settings->style = new_style;
+  appdata.settings->style = new_style;
 
-  map_clear(appdata->map, MAP_LAYER_OBJECTS_ONLY);
+  map_clear(appdata.map, MAP_LAYER_OBJECTS_ONLY);
   /* let gtk clean up first */
   osm2go_platform::process_events();
 
-  delete appdata->style;
-  appdata->style = nstyle;
+  delete appdata.style;
+  appdata.style = nstyle;
 
   /* canvas background may have changed */
-  canvas_set_background(appdata->map->canvas,
-                        appdata->style->background.color);
+  canvas_set_background(appdata.map->canvas,
+                        appdata.style->background.color);
 
-  map_paint(appdata->map);
+  map_paint(appdata.map);
 }
 
 #ifndef FREMANTLE
 /* in fremantle this happens inside the submenu handling since this button */
 /* is actually placed inside the submenu there */
-void style_select(GtkWidget *parent, appdata_t *appdata) {
+void style_select(GtkWidget *parent, appdata_t &appdata) {
 
   printf("select style\n");
 

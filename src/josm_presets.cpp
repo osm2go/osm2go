@@ -71,9 +71,9 @@ unsigned int presets_type_mask(const object_t &obj)
 }
 
 #ifdef ENABLE_BROWSER_INTERFACE
-static void on_info(GtkWidget *widget, appdata_t *context) {
+static void on_info(GtkWidget *widget, appdata_t *appdata) {
   const char *link = (char*)g_object_get_data(G_OBJECT(widget), "link");
-  open_url(context, link);
+  open_url(*appdata, link);
 }
 #endif
 
@@ -148,7 +148,7 @@ static gint table_expose_event(GtkWidget *widget, GdkEventExpose *,
 #endif
 
 struct presets_context_t {
-  explicit presets_context_t(appdata_t *a, tag_context_t *t)
+  explicit presets_context_t(appdata_t &a, tag_context_t *t)
     : appdata(a)
 #ifndef FREMANTLE
     , menu(O2G_NULLPTR)
@@ -158,7 +158,7 @@ struct presets_context_t {
   {
   }
 
-  appdata_t * const appdata;
+  appdata_t &appdata;
 #ifndef FREMANTLE
   GtkWidget *menu;
 #endif
@@ -240,7 +240,7 @@ void get_widget_functor::operator()(const presets_widget_t* w)
 
 static void presets_item_dialog(presets_context_t *context,
                                 const presets_item *item) {
-  appdata_t *appdata = context->appdata;
+  appdata_t &appdata = context->appdata;
   GtkWindow *parent = GTK_WINDOW(context->tag_context->dialog);
 
   GtkWidget *dialog = O2G_NULLPTR;
@@ -275,7 +275,7 @@ static void presets_item_dialog(presets_context_t *context,
 			("Info"), GTK_RESPONSE_HELP);
       g_object_set_data(G_OBJECT(button), "link", const_cast<char *>(item->link.c_str()));
       g_signal_connect(GTK_OBJECT(button), "clicked",
-                       G_CALLBACK(on_info), appdata);
+                       G_CALLBACK(on_info), &appdata);
     }
 #endif
     /* special handling for the first label/separators */
@@ -353,7 +353,7 @@ static void presets_item_dialog(presets_context_t *context,
     if(changed)
       context->tag_context->info_tags_replace();
 
-    std::vector<presets_item_t *> &lru = appdata->presets->lru;
+    std::vector<presets_item_t *> &lru = appdata.presets->lru;
     std::vector<presets_item_t *>::iterator it = std::find(lru.begin(),
                                                            lru.end(), item);
     // if it is already the first item in the list nothing is to do
@@ -473,7 +473,7 @@ void build_menu_functor::operator()(presets_item_t *item)
     was_item = true;
     was_separator = false;
 
-    menu_item = create_menuitem(context->appdata->icons,
+    menu_item = create_menuitem(context->appdata.icons,
                                 static_cast<presets_item_named *>(item));
 
     if(item->type & presets_item_t::TY_GROUP) {
@@ -490,7 +490,7 @@ void build_menu_functor::operator()(presets_item_t *item)
         if(!*matches)
           *matches = gtk_menu_new();
 
-        GtkWidget *used_item = create_menuitem(context->appdata->icons,
+        GtkWidget *used_item = create_menuitem(context->appdata.icons,
                                                static_cast<presets_item_named *>(item));
         g_object_set_data(G_OBJECT(used_item), "item", item);
         g_signal_connect(used_item, "activate",
@@ -761,7 +761,7 @@ template<> void insert_recent_items<false>::operator()(const presets_item_t *pre
                   insert_recent_items(context, store));
   } else if(preset->matches(context->tag_context->tags))
     preset_insert_item(static_cast<const presets_item_named *>(preset),
-                       context->appdata->icons, store);
+                       context->appdata.icons, store);
 }
 
 /**
@@ -771,14 +771,14 @@ template<> void insert_recent_items<true>::operator()(const presets_item_t *pres
 {
   if(preset->type & context->presets_mask)
     preset_insert_item(static_cast<const presets_item_named *>(preset),
-                       context->appdata->icons, store);
+                       context->appdata.icons, store);
 }
 
 static GtkWidget *preset_picker_recent(presets_context_t *context) {
   GtkTreeView *view;
   insert_recent_items<false> fc(context, presets_picker_store(&view));
 
-  std::for_each(context->appdata->presets->items.begin(), context->appdata->presets->items.end(), fc);
+  std::for_each(context->appdata.presets->items.begin(), context->appdata.presets->items.end(), fc);
 
   return presets_picker_embed(view, fc.store, context);
 }
@@ -787,7 +787,7 @@ static GtkWidget *preset_picker_lru(presets_context_t *context) {
   GtkTreeView *view;
   insert_recent_items<true> fc(context, presets_picker_store(&view));
 
-  std::for_each(context->appdata->presets->lru.begin(), context->appdata->presets->lru.end(), fc);
+  std::for_each(context->appdata.presets->lru.begin(), context->appdata.presets->lru.end(), fc);
 
   return presets_picker_embed(view, fc.store, context);
 }
@@ -814,7 +814,7 @@ void picker_add_functor::operator()(const presets_item_t *item)
   if(itemv->name.empty())
     return;
 
-  GtkTreeIter iter = preset_insert_item(itemv, context->appdata->icons, store);
+  GtkTreeIter iter = preset_insert_item(itemv, context->appdata.icons, store);
 
   /* mark submenues as such */
   if(item->type & presets_item_t::TY_GROUP) {
@@ -857,11 +857,11 @@ presets_picker(presets_context_t *context, const std::vector<presets_item_t *> &
   GtkListStore *store = presets_picker_store(&view);
 
   bool show_recent = false;
-  GdkPixbuf *subicon = context->appdata->icons.load("submenu_arrow");
+  GdkPixbuf *subicon = context->appdata.icons.load("submenu_arrow");
   picker_add_functor fc(context, store, subicon, top_level, show_recent);
 
   std::for_each(items.begin(), items.end(), fc);
-  const std::vector<presets_item_t *> &lru = context->appdata->presets->lru;
+  const std::vector<presets_item_t *> &lru = context->appdata.presets->lru;
 
   if(top_level &&
      std::find_if(lru.begin(), lru.end(),
@@ -886,7 +886,7 @@ presets_picker(presets_context_t *context, const std::vector<presets_item_t *> &
 		       -1);
   }
 
-  context->appdata->icons.icon_free(subicon);
+  context->appdata.icons.icon_free(subicon);
 
   return presets_picker_embed(view, store, context);
 }
@@ -908,11 +908,11 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event,
 
   if (!context->menu) {
     GtkWidget *matches = O2G_NULLPTR;
-    context->menu = build_menu(context, context->appdata->presets->items, &matches);
-    if(!context->appdata->presets->lru.empty()) {
+    context->menu = build_menu(context, context->appdata.presets->items, &matches);
+    if(!context->appdata.presets->lru.empty()) {
       // This will not update the menu while the dialog is open. Not worth the effort.
       GtkWidget *menu_item = gtk_menu_item_new_with_label(_("Last used presets"));
-      GtkWidget *lrumenu = build_menu(context, context->appdata->presets->lru, NULL);
+      GtkWidget *lrumenu = build_menu(context, context->appdata.presets->lru, NULL);
 
       gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item), lrumenu);
       gtk_menu_shell_prepend(GTK_MENU_SHELL(context->menu), gtk_separator_menu_item_new());
@@ -945,7 +945,7 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event,
   /* create root picker */
   GtkWidget *hbox = gtk_hbox_new(TRUE, 0);
 
-  GtkWidget *root = presets_picker(context, context->appdata->presets->items, true);
+  GtkWidget *root = presets_picker(context, context->appdata.presets->items, true);
   gtk_box_pack_start_defaults(GTK_BOX(hbox), root);
 
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox);
@@ -982,7 +982,7 @@ static gint on_button_destroy(presets_context_t *context) {
   return FALSE;
 }
 
-GtkWidget *josm_build_presets_button(appdata_t *appdata,
+GtkWidget *josm_build_presets_button(appdata_t &appdata,
 			       tag_context_t *tag_context) {
   presets_context_t *context = new presets_context_t(appdata, tag_context);
 
@@ -1194,7 +1194,7 @@ GtkWidget *presets_widget_link::attach(GtkTable *table, guint &row, const char *
   GtkWidget *button = button_new_with_label(label);
   g_free(label);
   g_object_set_data(G_OBJECT(button), "presets_context", context);
-  GtkWidget *img = context->appdata->icons.widget_load(item->icon, 16);
+  GtkWidget *img = context->appdata.icons.widget_load(item->icon, 16);
   if(img) {
     gtk_button_set_image(GTK_BUTTON(button), img);
     // make sure the image is always shown, Hildon seems to hide it by default

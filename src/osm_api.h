@@ -28,6 +28,6 @@ struct project_t;
 class settings_t;
 
 bool osm_download(GtkWidget *parent, settings_t *settings, project_t *project);
-void osm_upload(appdata_t *appdata, osm_t *osm, project_t *project);
+void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project);
 
 #endif // OSM_API_H
