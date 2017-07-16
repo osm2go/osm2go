@@ -139,7 +139,7 @@ settings_t *settings_t::load() {
       if(!fullname.empty()) {
         printf("demo project exists, use it as default\n");
         settings->project = fullname;
-        settings->first_run_demo = TRUE;
+        settings->first_run_demo = true;
       }
     }
 
@@ -242,7 +242,7 @@ void settings_t::save() const {
 settings_t::settings_t()
   : enable_gps(FALSE)
   , follow_gps(FALSE)
-  , first_run_demo(FALSE)
+  , first_run_demo(false)
 {
   /* not user configurable */
   ST_ENTRY(store_str, base_path);

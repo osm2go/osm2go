@@ -67,7 +67,7 @@ public:
 
   /* set to true if no gconf settings were found */
   /* and the demo was loaded */
-  gboolean first_run_demo;
+  bool first_run_demo;
 
   static settings_t *load();
   void save() const;
