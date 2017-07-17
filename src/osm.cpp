@@ -1929,13 +1929,17 @@ way_t * way_t::split(osm_t *osm, node_chain_t::iterator cut_at, bool cut_at_node
 
   /* if we cut at a node, this node is now part of both ways. so */
   /* keep it in the old way. */
-  if(cut_at_node){
+  if(cut_at_node) {
     (*cut_at)->ways++;
     cut_at++;
   }
 
   /* terminate remainig chain on old way */
   node_chain.erase(cut_at, node_chain.end());
+
+  // keep the history with the longer way
+  if(node_chain.size() < neww->node_chain.size())
+    node_chain.swap(neww->node_chain);
 
   /* now move the way itself into the main data structure */
   osm->way_attach(neww);

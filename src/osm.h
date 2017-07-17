@@ -453,7 +453,9 @@ public:
    * @brief split the way into 2
    * @param osm parent osm object
    * @param cut_at position to split at
-   * @param cut_at_node if split should happen between or at nde
+   * @param cut_at_node if split should happen before or at the given node
+   *
+   * The returned way will be the shorter of the 2 new ways.
    */
   way_t *split(osm_t *osm, node_chain_t::iterator cut_at, bool cut_at_node);
   void transfer_relations(osm_t *osm, const way_t *from);
