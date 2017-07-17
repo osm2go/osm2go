@@ -389,16 +389,41 @@ static void test_reverse()
 
   w->flags = 0;
 
+  // some relations the way is member in to see how the roles change
+  std::vector<relation_t *> rels;
+  for(unsigned int i = 0; i < 5; i++) {
+    relation_t *r = new relation_t();
+    rels.push_back(r);
+    o.relation_attach(r);
+    osm_t::TagMap rtags;
+    rtags.insert(osm_t::TagMap::value_type("type", i == 0 ? "multipolygon" : "route"));
+    r->tags.replace(rtags);
+    if(i < 4) {
+      const char *role = O2G_NULLPTR;
+      switch(i) {
+      case 0:
+      case 1:
+        role = "forward";
+        break;
+      case 2:
+        role = "backward";
+        break;
+      }
+      r->members.push_back(member_t(object_t(w), g_strdup(role)));
+      r->members.push_back(member_t(object_t(n1), g_strdup(role)));
+    }
+  }
+
   w->tags.replace(tags);
   w->reverse();
   unsigned int r = w->reverse_direction_sensitive_tags();
+  unsigned int rroles = w->reverse_direction_sensitive_roles(&o);
 
   g_assert_cmpuint(r, ==, 5);
   g_assert_cmpuint(w->flags, ==, OSM_FLAG_DIRTY);
   g_assert(w->node_chain.front() == n2);
   g_assert(w->node_chain.back() == n1);
   g_assert(w->tags != tags);
-
   osm_t::TagMap rtags;
   rtags.insert(osm_t::TagMap::value_type("highway", "residential"));
   rtags.insert(osm_t::TagMap::value_type("foo:backward", "yes"));
@@ -408,6 +433,28 @@ static void test_reverse()
   rtags.insert(osm_t::TagMap::value_type("oneway", "yes"));
 
   g_assert(w->tags == rtags);
+
+  // check relations and their roles
+  g_assert_cmpuint(rroles, ==, 2);
+  // rels[0] has wrong type, roles should not be modified
+  g_assert_cmpuint(rels[0]->members.size(), ==, 2);
+  g_assert_cmpint(g_strcmp0(rels[0]->members.front().role, "forward"), ==, 0);
+  g_assert_cmpint(g_strcmp0(rels[0]->members.back().role, "forward"), ==, 0);
+  // rels[1] has matching type, first member role should be changed
+  g_assert_cmpuint(rels[1]->members.size(), ==, 2);
+  g_assert_cmpint(g_strcmp0(rels[1]->members.front().role, "backward"), ==, 0);
+  g_assert(rels[1]->members.front().object == w);
+  g_assert_cmpint(g_strcmp0(rels[1]->members.back().role, "forward"), ==, 0);
+  // rels[2] has matching type, first member role should be changed (other direction)
+  g_assert_cmpuint(rels[1]->members.size(), ==, 2);
+  g_assert_cmpint(g_strcmp0(rels[2]->members.front().role, "forward"), ==, 0);
+  g_assert(rels[2]->members.front().object == w);
+  g_assert_cmpint(g_strcmp0(rels[2]->members.back().role, "backward"), ==, 0);
+  // rels[3] has matching type, but roles are empty
+  g_assert_cmpuint(rels[1]->members.size(), ==, 2);
+  g_assert(rels[3]->members.front().role == O2G_NULLPTR);
+  g_assert(rels[3]->members.front().object == w);
+  g_assert(rels[3]->members.back().role == O2G_NULLPTR);
 }
 
 static void test_way_delete()

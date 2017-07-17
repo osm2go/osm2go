@@ -1827,12 +1827,12 @@ way_t::reverse_direction_sensitive_tags() {
  * dirty. */
 
 static const char *DS_ROUTE_FORWARD = "forward";
-static const char *DS_ROUTE_REVERSE = "reverse";
+static const char *DS_ROUTE_REVERSE = "backward";
 
 struct reverse_roles {
   way_t * const way;
-  unsigned int n_roles_flipped;
-  reverse_roles(way_t *w) : way(w), n_roles_flipped(0) {}
+  unsigned int &n_roles_flipped;
+  reverse_roles(way_t *w, unsigned int &n) : way(w), n_roles_flipped(n) {}
   void operator()(relation_t *relation);
 };
 
@@ -1886,10 +1886,11 @@ unsigned int
 way_t::reverse_direction_sensitive_roles(osm_t *osm) {
   const relation_chain_t &rchain = osm->to_relation(this);
 
-  reverse_roles context(this);
+  unsigned int n_roles_flipped = 0;
+  reverse_roles context(this, n_roles_flipped);
   std::for_each(rchain.begin(), rchain.end(), context);
 
-  return context.n_roles_flipped;
+  return n_roles_flipped;
 }
 
 const node_t *way_t::first_node() const {
