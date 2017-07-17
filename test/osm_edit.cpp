@@ -319,6 +319,7 @@ static void test_split()
   g_assert_cmpuint(o.ways.size(), ==, 2);
   way_t *neww = w->split(&o, w->node_chain.begin() + 2, false);
   g_assert_cmpuint(o.ways.size(), ==, 3);
+  g_assert(w->flags & OSM_FLAG_DIRTY);
 
   g_assert_cmpuint(w->node_chain.size(), ==, 2);
   g_assert_cmpuint(neww->node_chain.size(), ==, 2);

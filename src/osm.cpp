@@ -1938,6 +1938,10 @@ way_t * way_t::split(osm_t *osm, node_chain_t::iterator cut_at, bool cut_at_node
   /* now move the way itself into the main data structure */
   osm->way_attach(neww);
 
+  /* remember that the way needs to be uploaded */
+  if(flags != OSM_FLAG_NEW)
+    flags |= OSM_FLAG_DIRTY;
+
   return neww;
 }
 

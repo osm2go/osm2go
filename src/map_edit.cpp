@@ -522,9 +522,6 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
     /* draw the updated old way */
     josm_elemstyles_colorize_way(map->style, way);
     map_way_draw(map, way);
-
-    /* remember that the way needs to be uploaded */
-    way->flags |= OSM_FLAG_DIRTY;
   }
 
   if(neww != O2G_NULLPTR) {
