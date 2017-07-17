@@ -308,27 +308,52 @@ static void test_split()
   r3->members.push_back(member_t(object_t(v), O2G_NULLPTR));
   o.relation_attach(r3);
 
-  for(int i = 0; i < 4; i++) {
+  std::vector<node_t *> nodes;
+  for(int i = 0; i < 6; i++) {
     node_t *n = new node_t(3, lpos_t(), pos_t(52.25 + i / 0.001, 9.58 + i / 0.001), 1234500 + i);
     o.node_attach(n);
     v->node_chain.push_back(n);
     w->node_chain.push_back(n);
     n->ways += 2;
+    nodes.push_back(n);
   }
 
   g_assert_cmpuint(o.ways.size(), ==, 2);
   way_t *neww = w->split(&o, w->node_chain.begin() + 2, false);
   g_assert_cmpuint(o.ways.size(), ==, 3);
   g_assert(w->flags & OSM_FLAG_DIRTY);
+  for(unsigned int i = 0; i < nodes.size(); i++)
+    g_assert_cmpuint(nodes[i]->ways, ==, 2);
 
   g_assert_cmpuint(w->node_chain.size(), ==, 2);
-  g_assert_cmpuint(neww->node_chain.size(), ==, 2);
+  g_assert_cmpuint(neww->node_chain.size(), ==, 4);
   g_assert(neww->tags == w->tags.asMap());
   g_assert(neww->tags == v->tags.asMap());
   g_assert_cmpuint(neww->tags.asMap().size(), ==, ocnt - 1);
   g_assert_cmpuint(r1->members.size(), ==, 2);
   g_assert_cmpuint(r2->members.size(), ==, 3);
   g_assert_cmpuint(r3->members.size(), ==, 1);
+
+  // now split the remaining way at a node
+  way_t *neww2 = neww->split(&o, neww->node_chain.begin() + 2, true);
+  g_assert_cmpuint(o.ways.size(), ==, 4);
+  g_assert(w->flags & OSM_FLAG_DIRTY);
+  for(unsigned int i = 0; i < nodes.size(); i++)
+    if(i == 4)
+      g_assert_cmpuint(nodes[4]->ways, ==, 3);
+    else
+      g_assert_cmpuint(nodes[i]->ways, ==, 2);
+
+  g_assert_cmpuint(w->node_chain.size(), ==, 2);
+  g_assert_cmpuint(neww->node_chain.size(), ==, 3);
+  g_assert_cmpuint(neww2->node_chain.size(), ==, 2);
+  g_assert(neww2->tags == w->tags.asMap());
+  g_assert(neww2->tags == v->tags.asMap());
+  g_assert_cmpuint(neww2->tags.asMap().size(), ==, ocnt - 1);
+  g_assert_cmpuint(r1->members.size(), ==, 3);
+  g_assert_cmpuint(r2->members.size(), ==, 4);
+  g_assert_cmpuint(r3->members.size(), ==, 1);
+
 }
 
 static void test_changeset()
