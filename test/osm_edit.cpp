@@ -282,6 +282,9 @@ static void test_split()
   osm_t o(icons);
   way_t * const v = new way_t();
   way_t * const w = new way_t();
+  relation_t * const r1 = new relation_t();
+  relation_t * const r2 = new relation_t();
+  relation_t * const r3 = new relation_t();
 
   std::vector<tag_t> otags;
   otags.push_back(tag_t(g_strdup("a"), g_strdup("b")));
@@ -296,6 +299,14 @@ static void test_split()
 
   o.way_attach(v);
   o.way_attach(w);
+
+  r1->members.push_back(member_t(object_t(w), O2G_NULLPTR));
+  o.relation_attach(r1);
+  r2->members.push_back(member_t(object_t(w), O2G_NULLPTR));
+  r2->members.push_back(member_t(object_t(v), O2G_NULLPTR));
+  o.relation_attach(r2);
+  r3->members.push_back(member_t(object_t(v), O2G_NULLPTR));
+  o.relation_attach(r3);
 
   for(int i = 0; i < 4; i++) {
     node_t *n = new node_t(3, lpos_t(), pos_t(52.25 + i / 0.001, 9.58 + i / 0.001), 1234500 + i);
@@ -314,6 +325,9 @@ static void test_split()
   g_assert(neww->tags == w->tags.asMap());
   g_assert(neww->tags == v->tags.asMap());
   g_assert_cmpuint(neww->tags.asMap().size(), ==, ocnt - 1);
+  g_assert_cmpuint(r1->members.size(), ==, 2);
+  g_assert_cmpuint(r2->members.size(), ==, 3);
+  g_assert_cmpuint(r3->members.size(), ==, 1);
 }
 
 static void test_changeset()

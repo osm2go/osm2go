@@ -1558,9 +1558,11 @@ relation_chain_t osm_t::to_relation(const object_t &object) const {
 
     const std::map<item_id_t, relation_t *>::const_iterator ritEnd = relations.end();
     std::map<item_id_t, relation_t *>::const_iterator rit = relations.begin();
-    while((rit = std::find_if(rit, ritEnd, fc)) != ritEnd)
+    while((rit = std::find_if(rit, ritEnd, fc)) != ritEnd) {
       /* relation is a member of this relation, so move it to the member chain */
       rel_chain.push_back(rit->second);
+      rit++;
+    }
 
     return rel_chain;
   }
