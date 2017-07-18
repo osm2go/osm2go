@@ -68,8 +68,8 @@ static void mark(GtkWidget *widget, bool valid) {
   gtk_widget_set_state(widget, valid?GTK_STATE_NORMAL:TAG_STATE);
 }
 
-static void callback_modified_lat(GtkWidget *widget, G_GNUC_UNUSED gpointer data) {
-  pos_float_t i = pos_parse_lat((char*)gtk_entry_get_text(GTK_ENTRY(widget)));
+static void callback_modified_lat(GtkWidget *widget) {
+  pos_float_t i = pos_parse_lat(gtk_entry_get_text(GTK_ENTRY(widget)));
   mark(widget, pos_lat_valid(i));
 }
 
@@ -90,8 +90,8 @@ GtkWidget *pos_lat_entry_new(pos_float_t lat) {
   return widget;
 }
 
-static void callback_modified_lon(GtkWidget *widget, G_GNUC_UNUSED gpointer data) {
-  pos_float_t i = pos_parse_lon((char*)gtk_entry_get_text(GTK_ENTRY(widget)));
+static void callback_modified_lon(GtkWidget *widget) {
+  pos_float_t i = pos_parse_lon(gtk_entry_get_text(GTK_ENTRY(widget)));
   mark(widget, pos_lon_valid(i));
 }
 
@@ -113,12 +113,12 @@ GtkWidget *pos_lon_entry_new(pos_float_t lon) {
 }
 
 pos_float_t pos_lat_get(GtkWidget *widget) {
-  char *p = (char*)gtk_entry_get_text(GTK_ENTRY(widget));
+  const char *p = gtk_entry_get_text(GTK_ENTRY(widget));
   return pos_parse_lat(p);
 }
 
 pos_float_t pos_lon_get(GtkWidget *widget) {
-  char *p = (char*)gtk_entry_get_text(GTK_ENTRY(widget));
+  const char *p = gtk_entry_get_text(GTK_ENTRY(widget));
   return pos_parse_lon(p);
 }
 
