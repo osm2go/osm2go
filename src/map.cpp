@@ -1997,12 +1997,10 @@ void map_delete_selected(map_t *map) {
 
 /* ----------------------- track related stuff ----------------------- */
 
-static bool track_pos2lpos(const bounds_t *bounds, const pos_t &pos, lpos_t &lpos) {
-  pos2lpos(bounds, &pos, &lpos);
-
+static bool __attribute__((warn_unused_result)) pointVisible(const bounds_t *bounds, const pos_t &pos) {
   /* check if point is within bounds */
-  return ((lpos.x >= bounds->min.x) && (lpos.x <= bounds->max.x) &&
-          (lpos.y >= bounds->min.y) && (lpos.y <= bounds->max.y));
+  return ((pos.lat >= bounds->ll_min.lat) && (pos.lat <= bounds->ll_max.lat) &&
+          (pos.lon >= bounds->ll_min.lon) && (pos.lon <= bounds->ll_max.lon));
 }
 
 /**
@@ -2019,7 +2017,7 @@ static canvas_points_t *canvas_points_init(const bounds_t *bounds,
   lpos_t lpos;
 
   for(gint i = 0; i < count; i++) {
-    track_pos2lpos(bounds, point->pos, lpos);
+    pos2lpos(bounds, &point->pos, &lpos);
     canvas_point_set_pos(points, i, &lpos);
     point++;
   }
@@ -2040,11 +2038,9 @@ void map_track_draw_seg(map_t *map, track_seg_t &seg) {
   const std::vector<track_point_t>::const_iterator itEnd = seg.track_points.end();
   std::vector<track_point_t>::const_iterator it = seg.track_points.begin();
   while(it != itEnd) {
-    lpos_t lpos;
-
     /* skip all points not on screen */
     std::vector<track_point_t>::const_iterator last = itEnd;
-    while(it != itEnd && !track_pos2lpos(bounds, it->pos, lpos)) {
+    while(it != itEnd && !pointVisible(bounds, it->pos)) {
       last = it;
       it++;
     }
@@ -2059,7 +2055,7 @@ void map_track_draw_seg(map_t *map, track_seg_t &seg) {
 
     /* count nodes that _are_ on screen */
     std::vector<track_point_t>::const_iterator tmp = it;
-    while(tmp != itEnd && track_pos2lpos(bounds, tmp->pos, lpos)) {
+    while(tmp != itEnd && pointVisible(bounds, tmp->pos)) {
       tmp++;
       visible++;
     }
@@ -2112,9 +2108,8 @@ void map_track_update_seg(map_t *map, track_seg_t &seg) {
   /* search last point */
   const std::vector<track_point_t>::const_iterator itEnd = seg.track_points.end();
   std::vector<track_point_t>::const_iterator last = itEnd - 1;
-  lpos_t lpos;
   /* check if the last and second_last points are visible */
-  const bool last_is_visible = track_pos2lpos(bounds, last->pos, lpos);
+  const bool last_is_visible = pointVisible(bounds, last->pos);
   const bool second_last_is_visible = (map->elements_drawn > 0);
 
   /* if both are invisible, then nothing has changed on screen */
@@ -2139,8 +2134,9 @@ void map_track_update_seg(map_t *map, track_seg_t &seg) {
   const size_t npoints = itEnd - begin;
   map->elements_drawn = last_is_visible ? npoints : 0;
 
-  lpos_t lpos2;
-  track_pos2lpos(bounds, (last - 1)->pos, lpos2);
+  lpos_t lpos, lpos2;
+  pos2lpos(bounds, &last->pos, &lpos);
+  pos2lpos(bounds, &(last - 1)->pos, &lpos2);
   /* if both items appear on the screen in the same position (e.g. because they are
    * close to each other and a low zoom level) don't redraw as nothing would change
    * visually. */
