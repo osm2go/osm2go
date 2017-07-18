@@ -97,6 +97,13 @@ typedef struct lpos_t {
 
 #ifdef __cplusplus
 
+struct bounds_t {
+  pos_t ll_min, ll_max;
+  lpos_t min, max;
+  lpos_t center;
+  float scale;
+};
+
 void pos_lat_str(char *str, size_t len, pos_float_t latitude);
 void pos_lon_str(char *str, size_t len, pos_float_t longitude);
 

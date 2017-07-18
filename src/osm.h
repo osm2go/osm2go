@@ -47,13 +47,6 @@ typedef gint64 item_id_t;
 
 #define ID_ILLEGAL  ((item_id_t)0)
 
-struct bounds_t {
-  pos_t ll_min, ll_max;
-  lpos_t min, max;
-  lpos_t center;
-  float scale;
-};
-
 class base_object_t;
 class icon_t;
 class node_t;

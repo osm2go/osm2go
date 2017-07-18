@@ -20,7 +20,6 @@
 #include "pos.h"
 
 #include "misc.h"
-#include "osm.h"
 
 #include <osm2go_cpp.h>
 
