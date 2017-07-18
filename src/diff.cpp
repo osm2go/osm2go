@@ -348,7 +348,7 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
 
   /* update screen position, the absolute position has already been changed */
   if(pos_diff)
-    pos2lpos(osm->bounds, &node->pos, &node->lpos);
+    node->lpos = node->pos.toLpos(*(osm->bounds));
 }
 
 static void diff_restore_way(xmlNodePtr node_way, osm_t *osm) {

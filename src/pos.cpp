@@ -170,27 +170,29 @@ void pos_lon_label_set(GtkWidget *label, pos_float_t lon) {
   gtk_label_set_text(GTK_LABEL(label), str);
 }
 
-void pos2lpos(const bounds_t *bounds, const pos_t *pos, lpos_t *lpos) {
-  lpos->x = POS_EQ_RADIUS * DEG2RAD(pos->lon);
-  lpos->y = POS_EQ_RADIUS * log(tan(M_PI/4 + DEG2RAD(pos->lat)/2));
-  lpos->x = ( lpos->x - bounds->center.x) * bounds->scale;
-  lpos->y = (-lpos->y + bounds->center.y) * bounds->scale;
+lpos_t pos_t::toLpos(const bounds_t &bounds) const {
+  lpos_t lpos = toLpos();
+  lpos.x = ( lpos.x - bounds.center.x) * bounds.scale;
+  lpos.y = (-lpos.y + bounds.center.y) * bounds.scale;
+  return lpos;
 }
 
-/* the maps center is special as it isn't offset (by itself) */
-void pos2lpos_center(const pos_t *pos, lpos_t *lpos) {
-  lpos->x = POS_EQ_RADIUS * DEG2RAD(pos->lon);
-  lpos->y = POS_EQ_RADIUS * log(tan(M_PI/4 + DEG2RAD(pos->lat)/2));
+lpos_t pos_t::toLpos() const {
+  lpos_t lpos;
+  lpos.x = POS_EQ_RADIUS * DEG2RAD(lon);
+  lpos.y = POS_EQ_RADIUS * log(tan(M_PI / 4 + DEG2RAD(lat) / 2));
+  return lpos;
 }
 
-void lpos2pos(const bounds_t *bounds, const lpos_t *lpos, pos_t *pos) {
-  lpos_t tmp = *lpos;
+pos_t lpos_t::toPos(const bounds_t &bounds) const {
+  lpos_t lpos = *this;
+  lpos.x = ( lpos.x / bounds.scale) + bounds.center.x;
+  lpos.y = (-lpos.y / bounds.scale) + bounds.center.y;
 
-  tmp.x = ( tmp.x/bounds->scale) + bounds->center.x;
-  tmp.y = (-tmp.y/bounds->scale) + bounds->center.y;
-
-  pos->lon = RAD2DEG(tmp.x / POS_EQ_RADIUS);
-  pos->lat = RAD2DEG(2 * atan(exp(tmp.y/POS_EQ_RADIUS)) - M_PI/2);
+  pos_t pos;
+  pos.lon = RAD2DEG(lpos.x / POS_EQ_RADIUS);
+  pos.lat = RAD2DEG(2 * atan(exp(lpos.y / POS_EQ_RADIUS)) - M_PI/2);
+  return pos;
 }
 
 void pos_dist_entry_set(GtkWidget *entry, pos_float_t dist, bool is_mil) {

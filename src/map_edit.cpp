@@ -755,10 +755,10 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, gint ex, gint ey) {
     node->lpos.y = y;
 
     /* convert screen position to lat/lon */
-    lpos2pos(osm->bounds, &node->lpos, &node->pos);
+    node->pos = node->lpos.toPos(*(osm->bounds));
 
     /* convert pos back to lpos to see rounding errors */
-    pos2lpos(osm->bounds, &node->pos, &node->lpos);
+    node->lpos = node->pos.toLpos(*(osm->bounds));
 
     printf("  now at %d %d (%f %f)\n",
 	   node->lpos.x, node->lpos.y, node->pos.lat, node->pos.lon);

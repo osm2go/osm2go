@@ -1997,10 +1997,10 @@ void map_delete_selected(map_t *map) {
 
 /* ----------------------- track related stuff ----------------------- */
 
-static bool __attribute__((warn_unused_result)) pointVisible(const bounds_t *bounds, const pos_t &pos) {
+static bool __attribute__((warn_unused_result)) pointVisible(const bounds_t &bounds, const pos_t &pos) {
   /* check if point is within bounds */
-  return ((pos.lat >= bounds->ll_min.lat) && (pos.lat <= bounds->ll_max.lat) &&
-          (pos.lon >= bounds->ll_min.lon) && (pos.lon <= bounds->ll_max.lon));
+  return ((pos.lat >= bounds.ll_min.lat) && (pos.lat <= bounds.ll_max.lat) &&
+          (pos.lon >= bounds.ll_min.lon) && (pos.lon <= bounds.ll_max.lon));
 }
 
 /**
@@ -2010,14 +2010,14 @@ static bool __attribute__((warn_unused_result)) pointVisible(const bounds_t *bou
  * @param count number of points to use
  * @return point array
  */
-static canvas_points_t *canvas_points_init(const bounds_t *bounds,
+static canvas_points_t *canvas_points_init(const bounds_t &bounds,
                                            std::vector<track_point_t>::const_iterator point,
                                            const gint count) {
   canvas_points_t *points = canvas_points_new(count);
   lpos_t lpos;
 
   for(gint i = 0; i < count; i++) {
-    pos2lpos(bounds, &point->pos, &lpos);
+    lpos = point->pos.toLpos(bounds);
     canvas_point_set_pos(points, i, &lpos);
     point++;
   }
@@ -2026,7 +2026,7 @@ static canvas_points_t *canvas_points_init(const bounds_t *bounds,
 }
 
 void map_track_draw_seg(map_t *map, track_seg_t &seg) {
-  const bounds_t *bounds = map->appdata.osm->bounds;
+  const bounds_t &bounds = *(map->appdata.osm->bounds);
 
   /* a track_seg needs at least 2 points to be drawn */
   if (seg.track_points.empty())
@@ -2097,7 +2097,7 @@ void map_track_draw_seg(map_t *map, track_seg_t &seg) {
 /* update the last visible fragment of this segment since a */
 /* gps position may have been added */
 void map_track_update_seg(map_t *map, track_seg_t &seg) {
-  const bounds_t *bounds = map->appdata.osm->bounds;
+  const bounds_t &bounds = *(map->appdata.osm->bounds);
 
   printf("-- APPENDING TO TRACK --\n");
 
@@ -2134,9 +2134,8 @@ void map_track_update_seg(map_t *map, track_seg_t &seg) {
   const size_t npoints = itEnd - begin;
   map->elements_drawn = last_is_visible ? npoints : 0;
 
-  lpos_t lpos, lpos2;
-  pos2lpos(bounds, &last->pos, &lpos);
-  pos2lpos(bounds, &(last - 1)->pos, &lpos2);
+  lpos_t lpos = last->pos.toLpos(bounds);
+  lpos_t lpos2 = (last - 1)->pos.toLpos(bounds);
   /* if both items appear on the screen in the same position (e.g. because they are
    * close to each other and a low zoom level) don't redraw as nothing would change
    * visually. */

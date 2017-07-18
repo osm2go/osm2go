@@ -458,7 +458,7 @@ static int update(void *data) {
   if(appdata.gps_state->get_pos(pos, &alt)) {
     printf("valid position %.6f/%.6f alt %.2f\n", pos.lat, pos.lon, alt);
     lpos_t lpos;
-    pos2lpos(appdata.osm->bounds, &pos, &lpos);
+    lpos = pos.toLpos(*(appdata.osm->bounds));
     if(track_append_position(appdata, &pos, alt, &lpos))
       map_track_pos(appdata.map, &lpos);
   } else {

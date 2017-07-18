@@ -51,6 +51,9 @@ typedef double pos_float_t;
 #define RAD2DEG(a)  ((a) * 180.0 / M_PI)
 #endif
 
+struct bounds_t;
+struct lpos_t;
+
 /* global position */
 typedef struct pos_t {
   pos_float_t lat, lon;
@@ -60,6 +63,18 @@ typedef struct pos_t {
   bool operator==(const pos_t &other) const
   { return lat == other.lat && lon == other.lon; }
   bool valid() const;
+
+  /**
+   * @brief calculate the screen coordinates
+   *
+   * Use this for the map center as it is not offset by itself.
+   */
+  lpos_t toLpos() const;
+
+  /**
+   * @brief calculate the screen coordinates inside the given bounds
+   */
+  lpos_t toLpos(const bounds_t &bounds) const;
 #endif
 } pos_t;
 
@@ -71,16 +86,16 @@ typedef struct lpos_t {
     : x(px) , y(py) {}
   bool operator==(const lpos_t &other)
   { return x == other.x && y == other.y; }
+
+  /**
+   * @brief calculate the global coordinates from local position in given bounds
+   */
+  pos_t toPos(const bounds_t &bounds) const;
 #endif
   gint x, y;
 } lpos_t;
 
 #ifdef __cplusplus
-
-struct bounds_t;
-void pos2lpos(const bounds_t *bounds, const pos_t *pos, lpos_t *lpos);
-void pos2lpos_center(const pos_t *pos, lpos_t *lpos);
-void lpos2pos(const bounds_t *bounds, const lpos_t *lpos, pos_t *pos);
 
 void pos_lat_str(char *str, size_t len, pos_float_t latitude);
 void pos_lon_str(char *str, size_t len, pos_float_t longitude);

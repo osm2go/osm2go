@@ -332,19 +332,19 @@ void wms_setup_extent(project_t *project, wms_t *wms) {
   center.lat = (project->min.lat + project->max.lat)/2;
   center.lon = (project->min.lon + project->max.lon)/2;
 
-  pos2lpos_center(&center, &lcenter);
+  lcenter = center.toLpos();
 
   /* the scale is needed to accomodate for "streching" */
   /* by the mercartor projection */
   scale = cos(DEG2RAD(center.lat));
 
-  pos2lpos_center(&project->min, &lmin);
+  lmin = project->min.toLpos();
   lmin.x -= lcenter.x;
   lmin.y -= lcenter.y;
   lmin.x *= scale;
   lmin.y *= scale;
 
-  pos2lpos_center(&project->max, &lmax);
+  lmax = project->max.toLpos();
   lmax.x -= lcenter.x;
   lmax.y -= lcenter.y;
   lmax.x *= scale;

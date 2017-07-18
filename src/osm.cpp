@@ -894,19 +894,19 @@ static gboolean process_bounds(xmlTextReaderPtr reader, bounds_t *bounds) {
   pos_t center((bounds->ll_max.lat + bounds->ll_min.lat)/2,
                (bounds->ll_max.lon + bounds->ll_min.lon)/2);
 
-  pos2lpos_center(&center, &bounds->center);
+  bounds->center = center.toLpos();
 
   /* the scale is needed to accomodate for "streching" */
   /* by the mercartor projection */
   bounds->scale = cos(DEG2RAD(center.lat));
 
-  pos2lpos_center(&bounds->ll_min, &bounds->min);
+  bounds->min = bounds->ll_min.toLpos();
   bounds->min.x -= bounds->center.x;
   bounds->min.y -= bounds->center.y;
   bounds->min.x *= bounds->scale;
   bounds->min.y *= bounds->scale;
 
-  pos2lpos_center(&bounds->ll_max, &bounds->max);
+  bounds->max = bounds->ll_max.toLpos();
   bounds->max.x -= bounds->center.x;
   bounds->max.y -= bounds->center.y;
   bounds->max.x *= bounds->scale;
@@ -967,7 +967,7 @@ static void process_node(xmlTextReaderPtr reader, osm_t *osm) {
   node->pos.lat = xml_reader_attr_float(reader, "lat");
   node->pos.lon = xml_reader_attr_float(reader, "lon");
 
-  pos2lpos(osm->bounds, &node->pos, &node->lpos);
+  node->lpos = node->pos.toLpos(*(osm->bounds));
 
   g_assert(osm->nodes.find(node->id) == osm->nodes.end());
   osm->nodes[node->id] = node;
@@ -1374,8 +1374,7 @@ template<typename T> void osm_attach(std::map<item_id_t, T *> &map, T *obj) {
 
 node_t *osm_t::node_new(const lpos_t &lpos) {
   /* convert screen position back to ll */
-  pos_t pos;
-  lpos2pos(bounds, &lpos, &pos);
+  pos_t pos = lpos.toPos(*bounds);
 
   printf("Creating new node at %d %d (%f %f)\n", lpos.x, lpos.y, pos.lat, pos.lon);
 
@@ -1384,8 +1383,7 @@ node_t *osm_t::node_new(const lpos_t &lpos) {
 
 node_t *osm_t::node_new(const pos_t &pos) {
   /* convert ll position to screen */
-  lpos_t lpos;
-  pos2lpos(bounds, &pos, &lpos);
+  lpos_t lpos = pos.toLpos(*bounds);
 
   printf("Creating new node from lat/lon at %d %d (%f %f)\n", lpos.x, lpos.y, pos.lat, pos.lon);
 

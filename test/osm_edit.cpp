@@ -51,7 +51,7 @@ static void set_bounds(osm_t &o) {
   pos_t center((o.rbounds.ll_max.lat + o.rbounds.ll_min.lat) / 2,
                (o.rbounds.ll_max.lon + o.rbounds.ll_min.lon) / 2);
 
-  pos2lpos_center(&center, &o.rbounds.center);
+  o.rbounds.center = center.toLpos();
   o.rbounds.scale = std::cos(DEG2RAD(center.lat));
 
   o.bounds = &o.rbounds;
