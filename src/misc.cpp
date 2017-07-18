@@ -46,6 +46,17 @@
 
 #include <osm2go_cpp.h>
 
+void remove_trailing_zeroes(char *str) {
+  char *delim = strpbrk(str, ".,");
+  if(delim == O2G_NULLPTR)
+    return;
+  char *p = delim + strlen(delim) - 1;
+  while(*p == '0')
+    *p-- = '\0';
+  if((*p == '.') || (*p == ','))
+    *p = '\0';
+}
+
 double xml_get_prop_float(xmlNode *node, const char *prop) {
   xmlChar *str = xmlGetProp(node, BAD_CAST prop);
   double value = NAN;
@@ -77,8 +88,10 @@ void xml_set_prop_pos(xmlNode *node, const pos_t *pos) {
   char str[G_ASCII_DTOSTR_BUF_SIZE];
 
   g_ascii_formatd(str, sizeof(str), LL_FORMAT, pos->lat);
+  remove_trailing_zeroes(str);
   xmlNewProp(node, BAD_CAST "lat", BAD_CAST str);
   g_ascii_formatd(str, sizeof(str), LL_FORMAT, pos->lon);
+  remove_trailing_zeroes(str);
   xmlNewProp(node, BAD_CAST "lon", BAD_CAST str);
 }
 

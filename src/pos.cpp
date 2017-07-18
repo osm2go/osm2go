@@ -34,17 +34,6 @@ bool pos_t::valid() const
   return pos_lat_valid(lat) && pos_lon_valid(lon);
 }
 
-static void remove_trailing_zeroes(char *str) {
-  char *delim = strpbrk(str, ".,");
-  if(delim == O2G_NULLPTR)
-    return;
-  char *p = delim + strlen(delim) - 1;
-  while(*p == '0')
-    *p-- = '\0';
-  if((*p == '.') || (*p == ','))
-    *p = '\0';
-}
-
 void pos_lat_str(char *str, size_t len, pos_float_t latitude) {
   if(std::isnan(latitude))
     strcpy(str, "---");

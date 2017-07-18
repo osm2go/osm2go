@@ -93,6 +93,8 @@ struct default_delete {
 
 struct pos_t;
 
+void remove_trailing_zeroes(char *str);
+
 double xml_get_prop_float(xmlNode *node, const char *prop);
 bool xml_get_prop_is(xmlNode *node, const char *prop, const char *str);
 bool xml_get_prop_pos(xmlNode *node, struct pos_t *pos);
