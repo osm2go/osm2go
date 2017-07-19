@@ -69,8 +69,7 @@ static void mark(GtkWidget *widget, bool valid) {
 }
 
 static void callback_modified_lat(GtkWidget *widget) {
-  pos_float_t i = pos_parse_lat(gtk_entry_get_text(GTK_ENTRY(widget)));
-  mark(widget, pos_lat_valid(i));
+  mark(widget, pos_lat_valid(pos_lat_get(widget)));
 }
 
 /* a entry that is colored red when being "active" */
@@ -91,8 +90,7 @@ GtkWidget *pos_lat_entry_new(pos_float_t lat) {
 }
 
 static void callback_modified_lon(GtkWidget *widget) {
-  pos_float_t i = pos_parse_lon(gtk_entry_get_text(GTK_ENTRY(widget)));
-  mark(widget, pos_lon_valid(i));
+  mark(widget, pos_lon_valid(pos_lon_get(widget)));
 }
 
 /* a entry that is colored red when filled with invalid coordinate */
