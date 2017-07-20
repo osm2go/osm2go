@@ -80,7 +80,7 @@ xmlNodePtr diff_save_objects::diff_save_state_n_id(const base_object_t *obj,
 
   if(obj->flags & OSM_FLAG_DELETED)
     xmlNewProp(node, BAD_CAST "state", BAD_CAST "deleted");
-  else if(obj->flags & OSM_FLAG_NEW)
+  else if(obj->isNew())
     xmlNewProp(node, BAD_CAST "state", BAD_CAST "new");
 
   /* all items need an id */
@@ -131,7 +131,7 @@ void diff_save_ways::operator()(const std::pair<item_id_t, way_t *> pair)
   /* and of the dirty or new flags are set. (otherwise e.g. only */
   /* the hidden flag may be set) */
   if((!(way->flags & OSM_FLAG_DELETED)) &&
-     (way->flags & (OSM_FLAG_DIRTY | OSM_FLAG_NEW))) {
+     (way->flags & OSM_FLAG_DIRTY)) {
     way->write_node_chain(node_way);
     diff_save_tags(way, node_way);
   }
@@ -240,7 +240,7 @@ static int xml_get_prop_state(xmlNode *node) {
   if(str) {
     if(strcmp((char*)str, "new") == 0) {
       xmlFree(str);
-      return OSM_FLAG_NEW;
+      return OSM_FLAG_DIRTY;
     } else if(G_LIKELY(strcmp((char*)str, "deleted") == 0)) {
       xmlFree(str);
       return OSM_FLAG_DELETED;
@@ -293,16 +293,6 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
   node_t *node = O2G_NULLPTR;
 
   switch(state) {
-  case OSM_FLAG_NEW: {
-    printf("  Restoring NEW node\n");
-    g_assert_cmpint(id, <, 0);
-
-    node = new node_t(1, lpos_t(), pos, id);
-
-    osm->nodes[id] = node;
-    break;
-  }
-
   case OSM_FLAG_DELETED:
     printf("  Restoring DELETE flag\n");
 
@@ -315,18 +305,27 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
     }
 
   case OSM_FLAG_DIRTY:
-    printf("  Valid id/position (DIRTY)\n");
+    if(id < 0) {
+      printf("  Restoring NEW node\n");
 
-    if(G_LIKELY((node = osm->node_by_id(id)) != O2G_NULLPTR)) {
-      node->flags |= OSM_FLAG_DIRTY;
-      if (node->pos == pos)
-        pos_diff = false;
-      else
-        node->pos = pos;
+      node = new node_t(1, lpos_t(), pos, id);
+
+      osm->nodes[id] = node;
       break;
     } else {
-      printf("  WARNING: no node with that id found\n");
-      return;
+      printf("  Valid id/position (DIRTY)\n");
+
+      if(G_LIKELY((node = osm->node_by_id(id)) != O2G_NULLPTR)) {
+        node->flags |= OSM_FLAG_DIRTY;
+        if (node->pos == pos)
+          pos_diff = false;
+        else
+          node->pos = pos;
+        break;
+      } else {
+        printf("  WARNING: no node with that id found\n");
+         return;
+      }
     }
 
   default:
@@ -367,15 +366,6 @@ static void diff_restore_way(xmlNodePtr node_way, osm_t *osm) {
   /* evaluate properties */
   way_t *way = O2G_NULLPTR;
   switch(state) {
-  case OSM_FLAG_NEW: {
-    printf("  Restoring NEW way\n");
-    g_assert_cmpint(id, <, 0);
-
-    way = new way_t(1, id);
-
-    osm->ways[id] = way;
-    break;
-  }
 
   case OSM_FLAG_DELETED:
     printf("  Restoring DELETE flag\n");
@@ -389,14 +379,23 @@ static void diff_restore_way(xmlNodePtr node_way, osm_t *osm) {
     }
 
   case OSM_FLAG_DIRTY:
-    printf("  Valid id (DIRTY)\n");
+    if(id < 0) {
+      printf("  Restoring NEW way\n");
 
-    if(G_LIKELY((way = osm->way_by_id(id)) != O2G_NULLPTR)) {
-      way->flags |= OSM_FLAG_DIRTY;
+      way = new way_t(1, id);
+
+      osm->ways[id] = way;
       break;
     } else {
-      printf("  WARNING: no way with that id found\n");
-      return;
+      printf("  Valid id (DIRTY)\n");
+
+      if(G_LIKELY((way = osm->way_by_id(id)) != O2G_NULLPTR)) {
+        way->flags |= OSM_FLAG_DIRTY;
+        break;
+      } else {
+        printf("  WARNING: no way with that id found\n");
+        return;
+      }
     }
 
   default:
@@ -469,15 +468,6 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
   /* evaluate properties */
   relation_t *relation = O2G_NULLPTR;
   switch(state) {
-  case OSM_FLAG_NEW:
-    printf("  Restoring NEW relation\n");
-    g_assert_cmpint(id, <, 0);
-
-    relation = new relation_t(1, id);
-
-    osm->relations[id] = relation;
-    break;
-
   case OSM_FLAG_DELETED:
     printf("  Restoring DELETE flag\n");
 
@@ -490,14 +480,23 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
     }
 
   case OSM_FLAG_DIRTY:
-    printf("  Valid id (DIRTY)\n");
+    if(id < 0) {
+      printf("  Restoring NEW relation\n");
 
-    if(G_LIKELY((relation = osm->relation_by_id(id)) != O2G_NULLPTR)) {
-      relation->flags |= OSM_FLAG_DIRTY;
+      relation = new relation_t(1, id);
+
+      osm->relations[id] = relation;
       break;
     } else {
-      printf("  WARNING: no relation with that id found\n");
-      return;
+      printf("  Valid id (DIRTY)\n");
+
+      if(G_LIKELY((relation = osm->relation_by_id(id)) != O2G_NULLPTR)) {
+        relation->flags |= OSM_FLAG_DIRTY;
+        break;
+      } else {
+        printf("  WARNING: no relation with that id found\n");
+        return;
+      }
     }
 
   default:

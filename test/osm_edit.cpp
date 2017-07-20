@@ -353,7 +353,6 @@ static void test_split()
   g_assert_cmpuint(r1->members.size(), ==, 3);
   g_assert_cmpuint(r2->members.size(), ==, 4);
   g_assert_cmpuint(r3->members.size(), ==, 1);
-
 }
 
 static void test_changeset()
@@ -411,7 +410,7 @@ static void test_reverse()
 
   g_assert(w->node_chain.front() == n1);
   g_assert(w->node_chain.back() == n2);
-  g_assert_cmpuint(w->flags, ==, OSM_FLAG_NEW);
+  g_assert_true(w->isNew());
 
   w->flags = 0;
 
@@ -647,7 +646,7 @@ static void test_merge_nodes()
   g_assert(n->lpos == newpos);
   g_assert_false(conflict);
   g_assert_cmpuint(o.nodes.size(), ==, 1);
-  g_assert_cmpuint(n->flags, ==, OSM_FLAG_DIRTY | OSM_FLAG_NEW);
+  g_assert_cmpuint(n->flags, ==, OSM_FLAG_DIRTY);
 
   // join a new and an old node, the old one should be preserved
   n2 = o.node_new(oldpos);
@@ -699,7 +698,7 @@ static void test_merge_nodes()
   g_assert(n->lpos == newpos);
   g_assert_false(conflict);
   g_assert_cmpuint(o.nodes.size(), ==, 1);
-  g_assert_cmpuint(n->flags, ==, OSM_FLAG_DIRTY | OSM_FLAG_NEW);
+  g_assert_cmpuint(n->flags, ==, OSM_FLAG_DIRTY);
   g_assert_cmpuint(w->node_chain.size(), ==, 1);
   g_assert(w->node_chain.front() == n2);
 
@@ -723,7 +722,7 @@ static void test_merge_nodes()
   g_assert(n->lpos == newpos);
   g_assert_false(conflict);
   g_assert_cmpuint(o.nodes.size(), ==, 1);
-  g_assert_cmpuint(n->flags, ==, OSM_FLAG_DIRTY | OSM_FLAG_NEW);
+  g_assert_cmpuint(n->flags, ==, OSM_FLAG_DIRTY);
   g_assert_cmpuint(r->members.size(), ==, 1);
   g_assert(r->members.front().object == n2);
 }

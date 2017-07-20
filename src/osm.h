@@ -36,7 +36,6 @@
 
 #define OSM_FLAG_DIRTY    (1<<0)
 #define OSM_FLAG_DELETED  (1<<1)
-#define OSM_FLAG_NEW      (1<<2)
 #define OSM_FLAG_HIDDEN   (1<<3)
 
 /* item_id_t needs to be signed as osm2go uses negative ids for items */
@@ -363,6 +362,9 @@ public:
   virtual const char *apiString() const = 0;
 
   std::string id_string() const;
+
+  inline bool isNew() const
+  { return id < 0; }
 protected:
   virtual void generate_xml_custom(xmlNodePtr xml_node) const = 0;
 };

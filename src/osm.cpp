@@ -379,7 +379,7 @@ node_t *osm_t::mergeNodes(node_t *first, node_t *second, bool &conflict)
 
   // find out which node to keep
     // if one is new: keep the other one
-  if((keep->flags & OSM_FLAG_NEW && !(remove->flags & OSM_FLAG_NEW)) ||
+  if((keep->isNew() && !remove->isNew()) ||
      // or keep the one with most relations
      removeRels > keepRels ||
      // or the one with most ways
@@ -1272,7 +1272,7 @@ xmlChar *base_object_t::generate_xml(const std::string &changeset) const
   xmlNodePtr xml_node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST apiString(), O2G_NULLPTR);
 
   /* new nodes don't have an id, but get one after the upload */
-  if(!(flags & OSM_FLAG_NEW)) {
+  if(!isNew()) {
     snprintf(str, sizeof(str), ITEM_ID_FORMAT, id);
     xmlNewProp(xml_node, BAD_CAST "id", BAD_CAST str);
   }
@@ -1443,7 +1443,7 @@ void node_chain_delete_functor::operator()(std::pair<item_id_t, way_t *> p)
 
 way_chain_t osm_t::node_delete(node_t *node, bool remove_refs) {
   way_chain_t way_chain;
-  bool permanently = node->flags & OSM_FLAG_NEW;
+  bool permanently = node->isNew();
 
   /* new nodes aren't stored on the server and are just deleted permanently */
   if(permanently) {
@@ -1684,7 +1684,7 @@ void osm_unref_way_free::operator()(node_t* node)
 }
 
 void osm_t::way_delete(way_t *way) {
-  bool permanently = way->flags & OSM_FLAG_NEW;
+  bool permanently = way->isNew();
 
   /* new ways aren't stored on the server and are just deleted permanently */
   if(permanently) {
@@ -1713,7 +1713,7 @@ void osm_t::way_delete(way_t *way) {
 }
 
 void osm_t::relation_delete(relation_t *relation) {
-  bool permanently = relation->flags & OSM_FLAG_NEW;
+  bool permanently = relation->isNew();
 
   /* new relations aren't stored on the server and are just */
   /* deleted permanently */
@@ -1911,7 +1911,7 @@ bool way_t::is_closed() const {
   return node_chain.front() == node_chain.back();
 }
 
-way_t * way_t::split(osm_t *osm, node_chain_t::iterator cut_at, bool cut_at_node)
+way_t *way_t::split(osm_t *osm, node_chain_t::iterator cut_at, bool cut_at_node)
 {
   /* create a duplicate of the currently selected way */
   way_t *neww = new way_t(1);
@@ -1943,8 +1943,7 @@ way_t * way_t::split(osm_t *osm, node_chain_t::iterator cut_at, bool cut_at_node
   osm->way_attach(neww);
 
   /* remember that the way needs to be uploaded */
-  if(flags != OSM_FLAG_NEW)
-    flags |= OSM_FLAG_DIRTY;
+  flags |= OSM_FLAG_DIRTY;
 
   return neww;
 }
@@ -2235,7 +2234,7 @@ base_object_t::base_object_t(item_id_t ver, item_id_t i)
   : id(i)
   , version(ver)
   , time(0)
-  , flags(version == 1 ? OSM_FLAG_NEW : 0)
+  , flags(version == 1 ? OSM_FLAG_DIRTY : 0)
   , user(0)
 {
 }

@@ -567,11 +567,11 @@ void osm_upload_objects::operator()(base_object_t *obj)
   /* make sure gui gets updated */
   osm2go_platform::process_events();
 
-  g_assert(obj->flags & (OSM_FLAG_DIRTY | OSM_FLAG_NEW));
+  g_assert(obj->flags & OSM_FLAG_DIRTY);
 
   std::string url = context.urlbasestr + obj->apiString() + '/';
 
-  if(obj->flags & OSM_FLAG_NEW) {
+  if(obj->isNew()) {
     url += "create";
     appendf(context.log, O2G_NULLPTR, _("New %s "), obj->apiString());
   } else {
@@ -584,9 +584,8 @@ void osm_upload_objects::operator()(base_object_t *obj)
   if(xml_str) {
     printf("uploading %s " ITEM_ID_FORMAT " to %s\n", obj->apiString(), obj->id, url.c_str());
 
-    if(osm_update_item(context, xml_str, url.c_str(),
-       (obj->flags & OSM_FLAG_NEW) ? &obj->id : &obj->version)) {
-      obj->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_NEW);
+    if(osm_update_item(context, xml_str, url.c_str(), obj->isNew() ? &obj->id : &obj->version)) {
+      obj->flags ^= OSM_FLAG_DIRTY;
       project->data_dirty = true;
     }
     xmlFree(xml_str);
@@ -676,7 +675,7 @@ void osm_dirty_t::counter<T>::object_counter::operator()(std::pair<item_id_t, T 
   int flags = obj->flags;
   if(flags & OSM_FLAG_DELETED) {
     dirty.deleted.push_back(obj);
-  } else if(flags & OSM_FLAG_NEW) {
+  } else if(obj->isNew()) {
     dirty.added++;
     dirty.modified.push_back(obj);
   } else if(flags & OSM_FLAG_DIRTY) {

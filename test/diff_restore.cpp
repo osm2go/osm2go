@@ -39,13 +39,13 @@ static void verify_diff(osm_t *osm)
   // new tag added in diff
   const node_t * const n72 = osm->nodes[638499572];
   g_assert_nonnull(n72);
-  g_assert((n72->flags & OSM_FLAG_DIRTY) != 0);
+  g_assert_cmpuint(n72->flags, ==, OSM_FLAG_DIRTY);
   g_assert_nonnull(n72->tags.get_value("testtag"));
   g_assert_cmpuint(n72->tags.asMap().size(), ==, 5);
   // in diff, but the same as in .osm
   const node_t * const n23 = osm->nodes[3577031223LL];
   g_assert_nonnull(n23);
-  g_assert_cmpuint((n23->flags & OSM_FLAG_DIRTY), ==, 0);
+  g_assert_cmpuint(n23->flags, ==, 0);
   g_assert_true(n23->tags.empty());
   // deleted in diff
   const node_t * const n26 = osm->nodes[3577031226LL];
@@ -72,7 +72,7 @@ static void verify_diff(osm_t *osm)
   // which is this one
   const node_t * const n27 = osm->nodes[3577031227LL];
   g_assert_nonnull(n27);
-  g_assert((n27->flags & OSM_FLAG_DIRTY) == 0);
+  g_assert_cmpuint(n27->flags, ==, 0);
   g_assert_cmpfloat(nn2->pos.lat, ==, n27->pos.lat);
   g_assert_cmpfloat(nn2->pos.lon, ==, n27->pos.lon);
   // the upstream version has "wheelchair", we have "source"
@@ -90,7 +90,7 @@ static void verify_diff(osm_t *osm)
   g_assert_cmpuint(r66316->flags, ==, OSM_FLAG_DELETED);
   const relation_t * const r255 = osm->relations[296255];
   g_assert_nonnull(r255);
-  g_assert_cmpuint(r255->flags & OSM_FLAG_DIRTY, ==, OSM_FLAG_DIRTY);
+  g_assert_cmpuint(r255->flags, ==, OSM_FLAG_DIRTY);
   g_assert_cmpuint(r255->members.size(), ==, 164);
   const object_t r255m572(const_cast<node_t *>(n72));
   std::vector<member_t>::const_iterator r255it = r255->find_member_object(r255m572);
@@ -102,7 +102,7 @@ static void verify_diff(osm_t *osm)
 
   const relation_t * const r853 = osm->relations[5827853];
   g_assert_nonnull(r853);
-  g_assert_cmpuint(r853->flags & OSM_FLAG_DIRTY, ==, OSM_FLAG_DIRTY);
+  g_assert_cmpuint(r853->flags, ==, OSM_FLAG_DIRTY);
   for(std::vector<member_t>::const_iterator it = r853->members.begin(); it != r853->members.end(); it++)
     g_assert(it->object.type == RELATION || it->object.type == RELATION_ID);
 
@@ -133,7 +133,7 @@ int main(int argc, char **argv)
 
   const relation_t * const r255 = osm->relations[296255];
   g_assert_nonnull(r255);
-  g_assert_cmpuint(r255->flags & OSM_FLAG_DIRTY, ==, 0);
+  g_assert_cmpuint(r255->flags, ==, 0);
   g_assert_cmpuint(r255->members.size(), ==, 165);
   g_assert_cmpuint(r255->tags.asMap().size(), ==, 8);
   const node_t * const n72 = osm->nodes[638499572];
