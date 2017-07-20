@@ -602,7 +602,7 @@ void TrackSax::startElement(const xmlChar *name, const xmlChar **attrs)
     for(unsigned int i = 0; attrs[i]; i += 2) {
       if(strcmp(reinterpret_cast<const char *>(attrs[i]), "lat") == 0)
         curPoint->pos.lat = g_ascii_strtod((gchar*)(attrs[i + 1]), O2G_NULLPTR);
-      else if(strcmp(reinterpret_cast<const char *>(attrs[i]), "lon") == 0)
+      else if(G_LIKELY(strcmp(reinterpret_cast<const char *>(attrs[i]), "lon") == 0))
         curPoint->pos.lon = g_ascii_strtod((gchar*)(attrs[i + 1]), O2G_NULLPTR);
     }
   }
