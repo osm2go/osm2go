@@ -114,7 +114,6 @@ static void vmessagef(GtkWidget *parent, GtkMessageType type, GtkButtonsType but
   (void)type;
   (void)buttons;
   (void)title;
-  (void)fmt;
 #endif
 
   gtk_dialog_run(GTK_DIALOG(dialog));
