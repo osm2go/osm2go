@@ -57,12 +57,13 @@ struct project_t {
 
   bool data_dirty;     // needs to download new data
   bool isDemo;         // if this is the demo project
+
+  osm_t *parse_osm(icon_t &icons) const;
 };
 
 bool project_save(GtkWidget *parent, project_t *project);
 bool project_check_demo(GtkWidget *parent, project_t *project);
 
-osm_t *project_parse_osm(const project_t *project, icon_t &icons);
 
 bool project_load(appdata_t &appdata, const std::string &name);
 std::string project_select(appdata_t &appdata);

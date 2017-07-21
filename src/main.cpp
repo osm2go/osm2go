@@ -161,7 +161,7 @@ cb_menu_download(appdata_t *appdata) {
     }
 
     banner_busy_start(*appdata, _("Drawing"));
-    appdata->osm = project_parse_osm(appdata->project, appdata->icons);
+    appdata->osm = appdata->project->parse_osm(appdata->icons);
     diff_restore(*appdata);
     map_paint(appdata->map);
     banner_busy_stop(*appdata); //"Redrawing"
@@ -231,7 +231,7 @@ cb_menu_undo_changes(appdata_t *appdata) {
   appdata->osm = O2G_NULLPTR;
 
   diff_remove(appdata->project);
-  appdata->osm = project_parse_osm(appdata->project, appdata->icons);
+  appdata->osm = appdata->project->parse_osm(appdata->icons);
   map_paint(appdata->map);
 
   banner_show_info(*appdata, _("Undo all changes"));

@@ -739,7 +739,7 @@ static void on_project_edit(select_context_t *context) {
 	}
 
 	/* and load the (hopefully) new file */
-        appdata.osm = project_parse_osm(appdata.project, appdata.icons);
+        appdata.osm = appdata.project->parse_osm(appdata.icons);
         diff_restore(appdata);
         map_paint(appdata.map);
 
@@ -1085,7 +1085,7 @@ static void on_diff_remove_clicked(project_context_t *context) {
       /* just reload the map */
       map_clear(appdata.map, MAP_LAYER_OBJECTS_ONLY);
       delete appdata.osm;
-      appdata.osm = project_parse_osm(appdata.project, appdata.icons);
+      appdata.osm = appdata.project->parse_osm(appdata.icons);
       map_paint(appdata.map);
     }
 
@@ -1285,7 +1285,7 @@ static bool project_open(appdata_t &appdata, const std::string &name) {
   appdata.project = project;
 
   printf("project_open: loading osm %s\n", project->osm.c_str());
-  appdata.osm = project_parse_osm(project, appdata.icons);
+  appdata.osm = project->parse_osm(appdata.icons);
   if(!appdata.osm) {
     printf("OSM parsing failed\n");
     return false;
@@ -1406,8 +1406,8 @@ bool project_load(appdata_t &appdata, const std::string &name) {
   return false;
 }
 
-osm_t *project_parse_osm(const project_t *project, icon_t &icons) {
-  return osm_t::parse(project->path, project->osm, icons);
+osm_t *project_t::parse_osm(icon_t &icons) const {
+  return osm_t::parse(path, osm, icons);
 }
 
 project_t::project_t(map_state_t &ms, const std::string &n, const std::string &base_path)

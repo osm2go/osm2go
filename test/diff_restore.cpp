@@ -119,13 +119,14 @@ int main(int argc, char **argv)
   xmlInitParser();
 
   icon_t icons;
-  std::string osm_path = argv[1];
+  const std::string osm_path = argv[1];
   g_assert(osm_path[osm_path.size() - 1] == '/');
-  osm_path += argv[2];
-  osm_path += "/";
-  osm_path += argv[2];
-  osm_path += ".osm";
-  osm_t *osm = osm_t::parse(std::string(), osm_path.c_str(), icons);
+
+  map_state_t dummystate;
+  project_t project(dummystate, argv[2], osm_path);
+  project.osm = argv[2] + std::string(".osm");
+
+  osm_t *osm = project.parse_osm(icons);
   if(!osm) {
     std::cerr << "cannot open " << argv[1] << argv[2] << ": " << strerror(errno) << std::endl;
     return 1;
@@ -150,8 +151,6 @@ int main(int argc, char **argv)
 
   g_assert_true(diff_is_clean(osm, true));
 
-  map_state_t dummystate;
-  project_t project(dummystate, argv[2], argv[1]);
   unsigned int flags = diff_restore_file(O2G_NULLPTR, &project, osm);
   g_assert_cmpuint(flags, ==, DIFF_RESTORED | DIFF_HAS_HIDDEN);
 
@@ -187,7 +186,7 @@ int main(int argc, char **argv)
     rename(bpath.c_str(), bdiff.c_str());
 
     delete osm;
-    osm = osm_t::parse(std::string(), osm_path.c_str(), icons);
+    osm = osm_t::parse(project.path, project.osm, icons);
     g_assert_nonnull(osm);
 
     flags = diff_restore_file(O2G_NULLPTR, &sproject, osm);
