@@ -162,7 +162,7 @@ cb_menu_download(appdata_t *appdata) {
 
     banner_busy_start(*appdata, _("Drawing"));
     appdata->osm = project_parse_osm(appdata->project, appdata->icons);
-    diff_restore(*appdata, appdata->project, appdata->osm);
+    diff_restore(*appdata);
     map_paint(appdata->map);
     banner_busy_stop(*appdata); //"Redrawing"
   }

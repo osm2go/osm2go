@@ -542,10 +542,7 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
   }
 }
 
-void diff_restore(appdata_t &appdata, project_t *project, osm_t *osm) {
-  if(!osm)
-    return;
-
+unsigned int diff_restore_file(GtkWidget *window, const project_t *project, osm_t *osm) {
   /* first try to open a backup which is only present if saving the */
   /* actual diff didn't succeed */
   std::string diff_name = project->path;
@@ -557,7 +554,7 @@ void diff_restore(appdata_t &appdata, project_t *project, osm_t *osm) {
 
     if(!g_file_test(diff_name.c_str(), G_FILE_TEST_EXISTS)) {
       printf("no diff present!\n");
-      return;
+      return DIFF_NONE_PRESENT;
     }
     printf("diff found, applying ...\n");
   }
@@ -567,10 +564,11 @@ void diff_restore(appdata_t &appdata, project_t *project, osm_t *osm) {
 
   /* parse the file and get the DOM */
   if(G_UNLIKELY((doc = xmlReadFile(diff_name.c_str(), O2G_NULLPTR, 0)) == O2G_NULLPTR)) {
-    errorf(GTK_WIDGET(appdata.window),
-	   "Error: could not parse file %s\n", diff_name.c_str());
-    return;
+    errorf(window, _("Error: could not parse file %s\n"), diff_name.c_str());
+    return DIFF_INVALID;
   }
+
+  unsigned int res = DIFF_RESTORED;
 
   /* Get the root element node */
   root_element = xmlDocGetRootElement(doc);
@@ -584,9 +582,9 @@ void diff_restore(appdata_t &appdata, project_t *project, osm_t *osm) {
 	  const char *cstr = (const char*)str;
 	  printf("diff for project %s\n", cstr);
 	  if(G_UNLIKELY(project->name != cstr)) {
-            messagef(GTK_WIDGET(appdata.window), _("Warning"),
-		     "Diff name (%s) does not match project name (%s)",
+            warningf(window, _("Diff name (%s) does not match project name (%s)"),
 		     cstr, project->name.c_str());
+            res |= DIFF_PROJECT_MISMATCH;
 	  }
 	  xmlFree(str);
 	}
@@ -604,8 +602,10 @@ void diff_restore(appdata_t &appdata, project_t *project, osm_t *osm) {
 	    else if(G_LIKELY(strcmp((char*)node_node->name, relation_t::api_string()) == 0))
 	      diff_restore_relation(node_node, osm);
 
-	    else
+            else {
 	      printf("WARNING: item %s not restored\n", node_node->name);
+              res |= DIFF_ELEMENTS_IGNORED;
+            }
 	  }
 	  node_node = node_node->next;
 	}
@@ -619,7 +619,18 @@ void diff_restore(appdata_t &appdata, project_t *project, osm_t *osm) {
   const std::map<item_id_t, way_t *>::const_iterator it =
       std::find_if(osm->ways.begin(), osm->ways.end(), find_object_by_flags(OSM_FLAG_HIDDEN));
 
-  if(it != osm->ways.end()) {
+  if(it != osm->ways.end())
+    res |= DIFF_HAS_HIDDEN;
+
+  return res;
+}
+
+void diff_restore(appdata_t &appdata) {
+  if(G_UNLIKELY(!appdata.osm))
+    return;
+
+  unsigned int flags = diff_restore_file(GTK_WIDGET(appdata.window), appdata.project, appdata.osm);
+  if(flags & DIFF_HAS_HIDDEN) {
     printf("hidden flags have been restored, enable show_add menu\n");
 
     appdata.statusbar->set(_("Some objects are hidden"), TRUE);

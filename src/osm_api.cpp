@@ -996,7 +996,7 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
       appendf(context.log, O2G_NULLPTR, _("Loading OSM ...\n"));
       appdata.osm = project_parse_osm(appdata.project, appdata.icons);
       appendf(context.log, O2G_NULLPTR, _("Applying diff ...\n"));
-      diff_restore(appdata, appdata.project, appdata.osm);
+      diff_restore(appdata);
       appendf(context.log, O2G_NULLPTR, _("Painting ...\n"));
       map_paint(appdata.map);
       appendf(context.log, O2G_NULLPTR, _("Done!\n"));

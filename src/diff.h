@@ -20,12 +20,24 @@
 #ifndef DIFF_H
 #define DIFF_H
 
+#include <gtk/gtk.h>
+
 struct appdata_t;
 struct project_t;
 struct osm_t;
 
+enum diff_restore_results {
+  DIFF_RESTORED = 0, ///< a diff was present and has successfully been restored
+  DIFF_NONE_PRESENT = (1 << 0), ///< no diff file was present at all
+  DIFF_INVALID = (1 << 1), ///< the diff file was completely invalid
+  DIFF_PROJECT_MISMATCH = (1 << 3), ///< the name given in the diff does not match the given project
+  DIFF_ELEMENTS_IGNORED = (1 << 4), ///< parts of the diff file were invalid and have been ignored
+  DIFF_HAS_HIDDEN = (1 << 5), ///< some of the object have the hidden flag set
+};
+
 void diff_save(const project_t *project, const osm_t *osm);
-void diff_restore(appdata_t &appdata, project_t *project, osm_t *osm) __attribute__((nonnull(2)));
+unsigned int diff_restore_file(GtkWidget *window, const project_t *project, osm_t *osm) __attribute__((nonnull(2,3)));
+void diff_restore(appdata_t &appdata);
 bool diff_present(const project_t *project);
 void diff_remove(const project_t *project);
 bool diff_is_clean(const osm_t *osm, bool honor_hidden_flags);

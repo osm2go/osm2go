@@ -14,7 +14,7 @@
   </node>
   <node id="3577031223" lat="52.2694261" lon="9.5752398" time="1433599117"/>
   <node id="3577031226" state="deleted"/>
-  <way id='351899452'>
+  <way id='351899452' hidden='true'>
     <nd ref='3577031225' />
     <nd ref='3577031221' />
     <tag k='public_transport' v='platform' />

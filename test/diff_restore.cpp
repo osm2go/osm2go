@@ -152,8 +152,8 @@ int main(int argc, char **argv)
 
   map_state_t dummystate;
   project_t project(dummystate, argv[2], argv[1]);
-  appdata_t appdata;
-  diff_restore(appdata, &project, osm);
+  unsigned int flags = diff_restore_file(O2G_NULLPTR, &project, osm);
+  g_assert_cmpuint(flags, ==, DIFF_RESTORED | DIFF_HAS_HIDDEN);
 
   verify_diff(osm);
 
@@ -172,8 +172,8 @@ int main(int argc, char **argv)
     bpath.erase(bpath.rfind('/') + 1);
     project_t sproject(dummystate, argv[2], bpath.c_str());
 
-    appdata_t appdata;
-    diff_restore(appdata, &sproject, osm);
+    flags = diff_restore_file(O2G_NULLPTR, &sproject, osm);
+    g_assert_cmpuint(flags, ==, DIFF_NONE_PRESENT);
 
     diff_save(&sproject, osm);
     bpath += argv[2];
@@ -190,7 +190,8 @@ int main(int argc, char **argv)
     osm = osm_t::parse(std::string(), osm_path.c_str(), icons);
     g_assert_nonnull(osm);
 
-    diff_restore(appdata, &sproject, osm);
+    flags = diff_restore_file(O2G_NULLPTR, &sproject, osm);
+    g_assert_cmpuint(flags, ==, DIFF_RESTORED | DIFF_HAS_HIDDEN);
 
     verify_diff(osm);
 

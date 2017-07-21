@@ -740,7 +740,7 @@ static void on_project_edit(select_context_t *context) {
 
 	/* and load the (hopefully) new file */
         appdata.osm = project_parse_osm(appdata.project, appdata.icons);
-        diff_restore(appdata, appdata.project, appdata.osm);
+        diff_restore(appdata);
         map_paint(appdata.map);
 
 	main_ui_enable(appdata);
@@ -1355,7 +1355,7 @@ bool project_load(appdata_t &appdata, const std::string &name) {
   osm2go_platform::process_events();
   if(!appdata.window) goto fail;
 
-  diff_restore(appdata, appdata.project, appdata.osm);
+  diff_restore(appdata);
 
   /* prepare colors etc, draw data and adjust scroll/zoom settings */
   osm2go_platform::process_events();
