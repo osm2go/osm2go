@@ -95,8 +95,9 @@ void main_ui_enable(appdata_t &appdata) {
   /* disable all menu entries related to map */
   gtk_widget_set_sensitive(appdata.menuitems[SUBMENU_MAP], project_valid);
   gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_MAP_UPLOAD], osm_valid);
-  if(appdata.menu_item_map_save_changes)
-    gtk_widget_set_sensitive(appdata.menu_item_map_save_changes, osm_valid);
+#ifndef USE_HILDON
+  gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_MAP_SAVE_CHANGES], osm_valid);
+#endif
   gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_MAP_UNDO_CHANGES], osm_valid);
   gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_MAP_RELATIONS], osm_valid);
   gtk_widget_set_sensitive(appdata.menuitems[SUBMENU_TRACK], osm_valid);
@@ -683,7 +684,7 @@ static void menu_create(appdata_t &appdata) {
   gtk_menu_shell_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
 
 #ifndef USE_HILDON
-  appdata.menu_item_map_save_changes = menu_append_new_item(
+  appdata.menuitems[MENU_ITEM_MAP_SAVE_CHANGES] = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_save_changes), _("_Save local changes"),
     GTK_STOCK_SAVE, "<OSM2Go-Main>/Map/SaveChanges",
     GDK_s, static_cast<GdkModifierType>(GDK_SHIFT_MASK|GDK_CONTROL_MASK), TRUE, false, FALSE
@@ -1122,7 +1123,6 @@ appdata_t::appdata_t()
 #if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
   , menu_item_view_fullscreen(O2G_NULLPTR)
 #endif
-  , menu_item_map_save_changes(O2G_NULLPTR)
 #if defined(USE_HILDON) && (MAEMO_VERSION_MAJOR == 5)
   , app_menu_view(O2G_NULLPTR)
   , app_menu_wms(O2G_NULLPTR)

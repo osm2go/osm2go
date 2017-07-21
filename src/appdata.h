@@ -78,6 +78,9 @@ enum menu_items {
   MENU_ITEM_TRACK_IMPORT,
   MENU_ITEM_MAP_UPLOAD,
   MENU_ITEM_MAP_UNDO_CHANGES,
+#ifndef HILDON
+  MENU_ITEM_MAP_SAVE_CHANGES,
+#endif
   MENU_ITEMS_COUNT
 };
 
@@ -121,8 +124,6 @@ typedef struct appdata_t {
 #if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
   GtkWidget *menu_item_view_fullscreen;
 #endif
-
-  GtkWidget *menu_item_map_save_changes;
 
 #if defined(USE_HILDON) && (MAEMO_VERSION_MAJOR == 5)
   /* submenues are seperate menues under fremantle */
