@@ -94,15 +94,21 @@ void main_ui_enable(appdata_t &appdata) {
     gtk_widget_set_sensitive(appdata.iconbar->toolbar, osm_valid);
   /* disable all menu entries related to map */
   gtk_widget_set_sensitive(appdata.menuitems[SUBMENU_MAP], project_valid);
-  gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_MAP_UPLOAD], osm_valid);
+
+  // those icons that get enabled or disabled depending on OSM data being loaded
+  const menu_items osm_active_items[] = {
+    MENU_ITEM_MAP_UPLOAD,
 #ifndef USE_HILDON
-  gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_MAP_SAVE_CHANGES], osm_valid);
+    MENU_ITEM_MAP_SAVE_CHANGES,
 #endif
-  gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_MAP_UNDO_CHANGES], osm_valid);
-  gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_MAP_RELATIONS], osm_valid);
-  gtk_widget_set_sensitive(appdata.menuitems[SUBMENU_TRACK], osm_valid);
-  gtk_widget_set_sensitive(appdata.menuitems[SUBMENU_VIEW], osm_valid);
-  gtk_widget_set_sensitive(appdata.menuitems[SUBMENU_WMS], osm_valid);
+    MENU_ITEM_MAP_UNDO_CHANGES,
+    MENU_ITEM_MAP_RELATIONS,
+    SUBMENU_TRACK,
+    SUBMENU_VIEW,
+    SUBMENU_WMS
+  };
+  for(unsigned int i = 0; i < sizeof(osm_active_items) / sizeof(osm_active_items[0]); i++)
+    gtk_widget_set_sensitive(appdata.menuitems[osm_active_items[i]], osm_valid);
 
   gtk_widget_set_sensitive(appdata.btn_zoom_in, osm_valid);
   gtk_widget_set_sensitive(appdata.btn_zoom_out, osm_valid);
