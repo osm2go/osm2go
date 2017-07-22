@@ -1136,9 +1136,9 @@ appdata_t::appdata_t()
   , app_menu_map(O2G_NULLPTR)
 #endif
   , map(O2G_NULLPTR)
-  , style(O2G_NULLPTR)
   , osm(O2G_NULLPTR)
   , settings(settings_t::load())
+  , style(style_load(settings->style, icons))
   , gps_state(gps_state_t::create())
 {
 #ifdef USE_HILDON
@@ -1284,6 +1284,12 @@ static int application_run(const char *proj)
   /* user specific init */
   appdata_t appdata;
 
+  if(!appdata.style) {
+    errorf(O2G_NULLPTR, _("Unable to load valid style %s, terminating."),
+           appdata.settings->style.c_str());
+    return -1;
+  }
+
 #ifdef USE_HILDON
   if(appdata.osso_context == O2G_NULLPTR)
     fprintf(stderr, "error initiating osso context\n");
@@ -1346,13 +1352,6 @@ static int application_run(const char *proj)
 #ifdef PORTRAIT
   gtk_box_pack_start(GTK_BOX(vbox), iconbar_new(&appdata), FALSE, FALSE, 0);
 #endif
-  appdata.style = style_load(appdata.settings->style, appdata.icons);
-  if(!appdata.style) {
-    errorf(O2G_NULLPTR, _("Unable to load valid style %s, terminating."),
-           appdata.settings->style.c_str());
-    return -1;
-  }
-
   /* generate main map view */
   appdata.map = new map_t(appdata);
   if(!appdata.map)

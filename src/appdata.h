@@ -134,9 +134,9 @@ typedef struct appdata_t {
 #ifdef __cplusplus
   map_state_t map_state;
   map_t *map;
-  struct style_t *style;
   struct osm_t *osm;
   class settings_t * const settings;
+  struct style_t *style;
   class gps_state_t * const gps_state;
   icon_t icons;
 
