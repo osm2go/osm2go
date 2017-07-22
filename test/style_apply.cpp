@@ -12,12 +12,12 @@
 #include <iostream>
 
 appdata_t::appdata_t()
+  : window(O2G_NULLPTR)
 #ifdef USE_HILDON
-  : osso_context(O2G_NULLPTR),
-#else
-  :
+  , osso_context(O2G_NULLPTR)
 #endif
-    settings(O2G_NULLPTR)
+  , statusbar(O2G_NULLPTR)
+  , settings(O2G_NULLPTR)
   , gps_state(O2G_NULLPTR)
 {
 }

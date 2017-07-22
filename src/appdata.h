@@ -97,7 +97,7 @@ typedef struct appdata_t {
 
   GtkWidget *btn_zoom_in, *btn_zoom_out, *btn_detail_popup;
 
-  struct statusbar_t *statusbar;
+  struct statusbar_t * const statusbar;
   struct project_t *project;
   struct iconbar_t *iconbar;
   struct presets_items *presets;

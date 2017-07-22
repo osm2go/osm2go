@@ -1119,7 +1119,7 @@ appdata_t::appdata_t()
   , btn_zoom_in(O2G_NULLPTR)
   , btn_zoom_out(O2G_NULLPTR)
   , btn_detail_popup(O2G_NULLPTR)
-  , statusbar(O2G_NULLPTR)
+  , statusbar(new statusbar_t())
   , project(O2G_NULLPTR)
   , iconbar(O2G_NULLPTR)
   , presets(O2G_NULLPTR)
@@ -1360,7 +1360,6 @@ static int application_run(const char *proj)
   gtk_box_pack_start(GTK_BOX(vbox), appdata.map->canvas->widget, TRUE, TRUE, 0);
 
   /* fremantle has seperate zoom/details buttons on the right screen side */
-  appdata.statusbar = new statusbar_t();
 #ifndef FREMANTLE
   GtkWidget *zhbox = gtk_hbox_new(FALSE, 0);
   gtk_box_pack_start_defaults(GTK_BOX(zhbox), appdata.statusbar->widget);
