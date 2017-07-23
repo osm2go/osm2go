@@ -109,11 +109,45 @@ static void verify_diff(osm_t *osm)
   g_assert_false(diff_is_clean(osm, true));
 }
 
+static void compare_with_file(const void *buf, size_t len, const char *fn)
+{
+  GMappedFile *fdata = g_mapped_file_new(fn, FALSE, O2G_NULLPTR);
+
+  g_assert_nonnull(fdata);
+  g_assert_cmpuint(g_mapped_file_get_length(fdata), ==, len);
+
+  g_assert_cmpint(memcmp(g_mapped_file_get_contents(fdata),
+                         buf,
+                         g_mapped_file_get_length(fdata)), ==, 0);
+
+#if GLIB_CHECK_VERSION(2,22,0)
+  g_mapped_file_unref(fdata);
+#else
+  g_mapped_file_free(fdata);
+#endif
+}
+
+static void test_osmChange(const osm_t *osm, const char *fn)
+{
+  xmlDocPtr doc = osmchange_init();
+  const item_id_t changeset = 42;
+
+  osmchange_delete(osm, xmlDocGetRootElement(doc), changeset);
+
+  xmlChar *result;
+  int len;
+  xmlDocDumpFormatMemoryEnc(doc, &result, &len, "UTF-8", 1);
+  xmlFreeDoc(doc);
+
+  compare_with_file(result, len, fn);
+  xmlFree(result);
+}
+
 int main(int argc, char **argv)
 {
   int result = 0;
 
-  if(argc != 3)
+  if(argc != 4)
     return EINVAL;
 
   xmlInitParser();
@@ -200,6 +234,8 @@ int main(int argc, char **argv)
     bpath.erase(bpath.rfind('/'));
     rmdir(bpath.c_str());
   }
+
+  test_osmChange(osm, argv[3]);
 
   delete osm;
 

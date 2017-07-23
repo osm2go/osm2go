@@ -20,11 +20,13 @@
 #ifndef DIFF_H
 #define DIFF_H
 
+#include "osm.h"
+
 #include <gtk/gtk.h>
+#include <libxml/tree.h>
 
 struct appdata_t;
 struct project_t;
-struct osm_t;
 
 enum diff_restore_results {
   DIFF_RESTORED = 0, ///< a diff was present and has successfully been restored
@@ -41,5 +43,19 @@ void diff_restore(appdata_t &appdata);
 bool diff_present(const project_t *project);
 void diff_remove(const project_t *project);
 bool diff_is_clean(const osm_t *osm, bool honor_hidden_flags);
+
+/**
+ * @brief create an empty osmChange document
+ *
+ * This sets the root node (osmChange) and it's properties, but does not add any content.
+ */
+xmlDocPtr osmchange_init();
+
+/**
+ * @brief generate a "delete" XML section in OsmChange format
+ * @param osm the OSM data
+ * @param xml_node the parent node (usually <osmChange>)
+ */
+void osmchange_delete(const osm_t *osm, xmlNodePtr xml_node, item_id_t changeset);
 
 #endif // DIFF_H

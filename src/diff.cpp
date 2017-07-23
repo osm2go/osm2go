@@ -648,3 +648,43 @@ void diff_remove(const project_t *project) {
   const std::string &diff_name = diff_filename(project);
   g_remove(diff_name.c_str());
 }
+
+xmlDocPtr osmchange_init()
+{
+  xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
+  xmlNodePtr root_node = xmlNewNode(O2G_NULLPTR, BAD_CAST "osmChange");
+  xmlNewProp(root_node, BAD_CAST "generator", BAD_CAST "OSM2go v" VERSION);
+  xmlDocSetRootElement(doc, root_node);
+
+  return doc;
+}
+
+struct osmchange_delete_functor {
+  xmlNodePtr const xml_node; ///< <delete> node
+  const char * const changeset; ///< changeset string
+  osmchange_delete_functor(xmlNodePtr delnode, const char *cs) : xml_node(delnode), changeset(cs) {}
+  void operator()(const base_object_t *obj) {
+    if(obj->flags & OSM_FLAG_DELETED)
+      obj->osmchange_delete(xml_node, changeset);
+  }
+  inline void operator()(const std::pair<const item_id_t, node_t *> &p) {
+    operator()(p.second);
+  }
+  inline void operator()(const std::pair<const item_id_t, way_t *> &p) {
+    operator()(p.second);
+  }
+  inline void operator()(const std::pair<const item_id_t, relation_t *> &p) {
+    operator()(p.second);
+  }
+};
+
+void osmchange_delete(const osm_t *osm, xmlNodePtr xml_node, item_id_t changeset)
+{
+  xmlNodePtr del_node = xmlNewChild(xml_node, O2G_NULLPTR, BAD_CAST "delete", O2G_NULLPTR);
+  char buf[32] = { 0 };
+  snprintf(buf, sizeof(buf), ITEM_ID_FORMAT, changeset);
+
+  std::for_each(osm->relations.begin(), osm->relations.end(), osmchange_delete_functor(del_node, buf));
+  std::for_each(osm->ways.begin(), osm->ways.end(), osmchange_delete_functor(del_node, buf));
+  std::for_each(osm->nodes.begin(), osm->nodes.end(), osmchange_delete_functor(del_node, buf));
+}

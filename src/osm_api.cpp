@@ -250,12 +250,8 @@ static CURL *curl_custom_setup(const osm_upload_context_t &context, const char *
   if(!curl)
     return curl;
 
-  /* we want to use our own read/write functions */
-  curl_easy_setopt(curl, CURLOPT_READFUNCTION, read_callback);
+  /* we want to use our own write function */
   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
-
-  /* enable uploading */
-  curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
 
   /* specify target URL, and note that this URL should include a file
      name, not only a directory */
@@ -306,6 +302,12 @@ static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
 
     curl_data_t read_data = read_data_init;
     curl_data_t write_data;
+
+    /* enable uploading */
+    curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
+
+    /* we want to use our own read function */
+    curl_easy_setopt(curl, CURLOPT_READFUNCTION, read_callback);
 
     /* now specify which file to upload */
     curl_easy_setopt(curl, CURLOPT_READDATA, &read_data);
@@ -372,16 +374,12 @@ static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
 }
 
 static bool osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
-                                const char *url) {
+                            int len, const char *url) {
   int retry = MAX_TRY;
   char buffer[CURL_ERROR_SIZE];
 
   CURL *curl;
   CURLcode res;
-
-  /* delete has a payload since api 0.6 */
-  curl_data_t read_data_init(reinterpret_cast<char *>(xml_str));
-  read_data_init.len = read_data_init.ptr ? strlen(read_data_init.ptr) : 0;
 
   struct log_s &log = context.log;
 
@@ -397,13 +395,13 @@ static bool osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
       return false;
     }
 
-    curl_data_t read_data = read_data_init;
     curl_data_t write_data;
 
-    curl_easy_setopt(curl, CURLOPT_INFILESIZE, read_data.len);
+    /* no read function required */
+    curl_easy_setopt(curl, CURLOPT_POST, 1);
 
-    /* now specify which file to upload */
-    curl_easy_setopt(curl, CURLOPT_READDATA, &read_data);
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, xml_str);
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, len);
 
     /* we pass our 'chunk' struct to the callback function */
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &write_data);
@@ -415,9 +413,6 @@ static bool osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
 #endif
 
     curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, buffer);
-
-    /* no read/write functions required */
-    curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "DELETE");
 
     /* Now run off and do what you've been told! */
     res = curl_easy_perform(curl);
@@ -520,38 +515,70 @@ static GtkWidget *table_attach_int(GtkWidget *table, int num,
 
 struct osm_delete_objects {
   osm_upload_context_t &context;
-  const char * const objname;
-  const std::string urlbase;
+  xmlNodePtr const del_node;
   /**
    * @brief create the delete functor object
    * @param co the upload context instance
-   * @param oname the object name string AS USED BY THE OSM API
+   * @param dn the osmChange document <delete> node to append to
    */
-  osm_delete_objects(osm_upload_context_t &co, const char *oname)
-    : context(co), objname(oname), urlbase(context.urlbasestr + oname + '/') {}
+  osm_delete_objects(osm_upload_context_t &co, xmlNodePtr dn)
+    : context(co), del_node(dn) {}
   void operator()(base_object_t *obj);
 };
 
 void osm_delete_objects::operator()(base_object_t *obj)
 {
+  g_assert(obj->flags & OSM_FLAG_DELETED);
+
+  printf("deleting %s " ITEM_ID_FORMAT " on server\n", obj->apiString(), obj->id);
+
+  appendf(context.log, O2G_NULLPTR, _("Delete %s #" ITEM_ID_FORMAT " \n"), obj->apiString(), obj->id);
+
+  obj->osmchange_delete(del_node, context.changeset.c_str());
+}
+
+struct osm_delete_objects_final {
+  osm_t * const osm;
+  osm_delete_objects_final(osm_t *o) : osm(o) {}
+  inline void operator()(relation_t *r) {
+    osm->relation_free(r);
+  }
+  inline void operator()(way_t *w) {
+    osm->way_free(w);
+  }
+  inline void operator()(node_t *n) {
+    osm->node_free(n);
+  }
+};
+
+/**
+ * @brief upload the given osmChange document
+ * @param context the context pointer
+ * @param doc the document to upload
+ * @returns if the operation was successful
+ */
+static bool osmchange_upload(osm_upload_context_t &context, xmlDocPtr doc)
+{
   /* make sure gui gets updated */
   osm2go_platform::process_events();
 
-  g_assert(obj->flags & OSM_FLAG_DELETED);
+  printf("deleting objects on server\n");
 
-  printf("deleting %s " ITEM_ID_FORMAT " on server\n", objname, obj->id);
+  appendf(context.log, O2G_NULLPTR, _("Uploading object deletions "));
 
-  appendf(context.log, O2G_NULLPTR, _("Delete %s #" ITEM_ID_FORMAT " "), objname, obj->id);
+  const std::string url = context.urlbasestr + "changeset/" + context.changeset + "/upload";
 
-  const std::string &url = urlbase + obj->id_string();
+  xmlChar *xml_str = O2G_NULLPTR;
+  int len = 0;
 
-  xmlChar *xml_str = obj->generate_xml(context.changeset);
+  xmlDocDumpFormatMemoryEnc(doc, &xml_str, &len, "UTF-8", 1);
 
-  if(osm_delete_item(context, xml_str, url.c_str())) {
-    obj->flags &= ~(OSM_FLAG_DIRTY | OSM_FLAG_DELETED);
+  bool ret = osm_delete_item(context, xml_str, len, url.c_str());
+  if(ret)
     context.project->data_dirty = true;
-  }
   xmlFree(xml_str);
+
+  return ret;
 }
 
 struct osm_upload_objects {
@@ -936,20 +963,23 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
       std::for_each(dirty.relations.modified.begin(),
                     dirty.relations.modified.end(), ufc);
     }
-    if(!dirty.relations.deleted.empty()) {
-      appendf(context.log, O2G_NULLPTR, _("Deleting relations:\n"));
-      std::for_each(dirty.relations.deleted.begin(), dirty.relations.deleted.end(),
-                    osm_delete_objects(context, relation_t::api_string()));
-    }
-    if(!dirty.ways.deleted.empty()) {
-      appendf(context.log, O2G_NULLPTR, _("Deleting ways:\n"));
-      std::for_each(dirty.ways.deleted.begin(), dirty.ways.deleted.end(),
-                    osm_delete_objects(context, way_t::api_string()));
-    }
-    if(!dirty.nodes.deleted.empty()) {
-      appendf(context.log, O2G_NULLPTR, _("Deleting nodes:\n"));
-      std::for_each(dirty.nodes.deleted.begin(), dirty.nodes.deleted.end(),
-                    osm_delete_objects(context, node_t::api_string()));
+    if(!dirty.relations.deleted.empty() || !dirty.ways.deleted.empty() || !dirty.nodes.deleted.empty()) {
+      appendf(context.log, O2G_NULLPTR, _("Deleting objects:\n"));
+      xmlDocPtr doc = osmchange_init();
+      xmlNodePtr del_node = xmlNewChild(xmlDocGetRootElement(doc), O2G_NULLPTR, BAD_CAST "delete", O2G_NULLPTR);
+      osm_delete_objects fc(context, del_node);
+
+      std::for_each(dirty.relations.deleted.begin(), dirty.relations.deleted.end(), fc);
+      std::for_each(dirty.ways.deleted.begin(), dirty.ways.deleted.end(), fc);
+      std::for_each(dirty.nodes.deleted.begin(), dirty.nodes.deleted.end(), fc);
+
+      // deletion was successful, remove the objects
+      if(osmchange_upload(context, doc)) {
+        osm_delete_objects_final finfc(context.osm);
+        std::for_each(dirty.relations.deleted.begin(), dirty.relations.deleted.end(), finfc);
+        std::for_each(dirty.ways.deleted.begin(), dirty.ways.deleted.end(), finfc);
+        std::for_each(dirty.nodes.deleted.begin(), dirty.nodes.deleted.end(), finfc);
+      }
     }
 
     /* close changeset */

@@ -2258,6 +2258,21 @@ std::string base_object_t::id_string() const {
   return buf;
 }
 
+void base_object_t::osmchange_delete(xmlNodePtr parent_node, const char *changeset) const
+{
+  g_assert(flags & OSM_FLAG_DELETED);
+
+  xmlNodePtr obj_node = xmlNewChild(parent_node, O2G_NULLPTR, BAD_CAST apiString(), O2G_NULLPTR);
+
+  xmlNewProp(obj_node, BAD_CAST "id", BAD_CAST id_string().c_str());
+
+  char buf[32] = { 0 };
+  snprintf(buf, sizeof(buf), ITEM_ID_FORMAT, version);
+
+  xmlNewProp(obj_node, BAD_CAST "version", BAD_CAST buf);
+  xmlNewProp(obj_node, BAD_CAST "changeset", BAD_CAST changeset);
+}
+
 struct value_match_functor {
   const char * const value;
   value_match_functor(const char *v) : value(v) {}

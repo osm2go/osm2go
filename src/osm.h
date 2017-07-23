@@ -365,6 +365,15 @@ public:
 
   inline bool isNew() const
   { return id < 0; }
+
+  /**
+   * @brief generate the xml elements for an osmChange delete section
+   * @param parent_node the "delete" node of the osmChange document
+   * @param changeset a string for the changeset attribute
+   *
+   * May only be called if this element is marked as deleted
+   */
+  void osmchange_delete(xmlNodePtr parent_node, const char *changeset) const;
 protected:
   virtual void generate_xml_custom(xmlNodePtr xml_node) const = 0;
 };

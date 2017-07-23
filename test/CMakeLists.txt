@@ -9,6 +9,7 @@ function(osm_test BASENAME)
 endfunction()
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/test1.trk.in" "${CMAKE_CURRENT_BINARY_DIR}/test1.trk" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/diff_restore/diff_restore.osmchange.in" "${CMAKE_CURRENT_BINARY_DIR}/diff_restore.osmchange" @ONLY)
 
 osm_test(track_load_save "${CMAKE_CURRENT_BINARY_DIR}/" "test1" "${CMAKE_CURRENT_BINARY_DIR}/export.gpx")
 osm_test(osm_edit)
@@ -16,7 +17,7 @@ osm_test(presets_classes)
 osm_test(presets_load "${CMAKE_CURRENT_BINARY_DIR}/../data" "${CMAKE_CURRENT_SOURCE_DIR}/../data")
 set_property(TEST presets_load PROPERTY WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../data)
 osm_test(track_load_multi "${CMAKE_CURRENT_SOURCE_DIR}/multi.gpx")
-osm_test(diff_restore "${CMAKE_CURRENT_SOURCE_DIR}/" "diff_restore")
+osm_test(diff_restore "${CMAKE_CURRENT_SOURCE_DIR}/" "diff_restore" "${CMAKE_CURRENT_BINARY_DIR}/diff_restore.osmchange")
 
 osm_test(style_load "elemstyles.xml" 347 357 "standard")
 set_property(TEST style_load PROPERTY WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
