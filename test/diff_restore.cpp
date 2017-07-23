@@ -185,6 +185,7 @@ int main(int argc, char **argv)
 
   g_assert_true(diff_is_clean(osm, true));
 
+  g_assert_true(diff_present(&project));
   unsigned int flags = diff_restore_file(O2G_NULLPTR, &project, osm);
   g_assert_cmpuint(flags, ==, DIFF_RESTORED | DIFF_HAS_HIDDEN);
 
@@ -217,7 +218,9 @@ int main(int argc, char **argv)
     bpath += "diff";
 
     bdiff += "/backup.diff";
+    g_assert_true(diff_present(&sproject));
     rename(bpath.c_str(), bdiff.c_str());
+    g_assert_false(diff_present(&sproject));
 
     delete osm;
     osm = osm_t::parse(project.path, project.osm, icons);
