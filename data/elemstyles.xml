@@ -28,6 +28,8 @@ A little help:
 	- icon (path to icon)
 	  - relative to the icon path
 	- priority
+7. scale_min / scale_max
+	- zoom scale for display (scale_min currently unused)
 
 Using both area and line attributes for the same key/value pair does work.
 
