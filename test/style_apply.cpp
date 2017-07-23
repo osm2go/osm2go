@@ -55,7 +55,7 @@ int main(int argc, char **argv)
   memset(&osm.rbounds, 0, sizeof(osm.rbounds));
   osm.bounds = &osm.rbounds;
 
-  node_t *node = osm.node_new(pos_t(0.0, 0.0));
+  node_t * const node = osm.node_new(pos_t(0.0, 0.0));
   osm.node_attach(node);
 
   josm_elemstyles_colorize_node(style, node);
@@ -93,7 +93,7 @@ int main(int argc, char **argv)
   g_assert(oldicon != style->node_icons[node->id]);
   g_assert_cmpfloat(oldzoom * 1.9, <, node->zoom_max);
 
-  way_t *way = new way_t(1);
+  way_t * const way = new way_t(1);
   osm.way_attach(way);
 
   josm_elemstyles_colorize_world(style, &osm);
@@ -118,7 +118,6 @@ int main(int argc, char **argv)
   tags.insert(osm_t::TagMap::value_type("access", "no"));
   way->tags.replace(tags);
   josm_elemstyles_colorize_way(style, way);
-  g_assert_cmpint(memcmp(&(way->draw), &(w0.draw), sizeof(w0.draw)), !=, 0);
   g_assert_cmpuint(way->draw.color, ==, 0xff8080ff);
   g_assert_cmpint(way->draw.width, ==, 5);
 
@@ -127,7 +126,6 @@ int main(int argc, char **argv)
   tags.insert(osm_t::TagMap::value_type("highway", "residential"));
   way->tags.replace(tags);
   josm_elemstyles_colorize_way(style, way);
-  g_assert_cmpint(memcmp(&(way->draw), &(w0.draw), sizeof(w0.draw)), !=, 0);
   g_assert_cmpuint(way->draw.color, ==, 0xc0c0c0ff);
   g_assert_cmpint(way->draw.width, ==, 2);
 
@@ -136,9 +134,42 @@ int main(int argc, char **argv)
   tags.insert(osm_t::TagMap::value_type("highway", "platform"));
   way->tags.replace(tags);
   josm_elemstyles_colorize_way(style, way);
-  g_assert_cmpint(memcmp(&(way->draw), &(w0.draw), sizeof(w0.draw)), !=, 0);
   g_assert_cmpuint(way->draw.color, ==, 0x809bc0ff);
   g_assert_cmpint(way->draw.width, ==, 1);
+
+  // apply styling
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("public_transport", "platform"));
+  node->tags.replace(tags);
+  way->tags.replace(tags);
+
+  oldicon = style->node_icons[node->id];
+  oldzoom = node->zoom_max;
+
+  josm_elemstyles_colorize_world(style, &osm);
+  g_assert_cmpuint(way->draw.color, ==, 0xccccccff);
+  g_assert_cmpint(way->draw.area.color, ==, 0);
+  g_assert_cmpint(way->draw.width, ==, 1);
+
+  g_assert_false(style->node_icons.empty());
+  g_assert_nonnull(style->node_icons[node->id]);
+  g_assert(oldicon != style->node_icons[node->id]);
+  g_assert_cmpfloat(oldzoom, !=, node->zoom_max);
+
+  // check priorities
+  tags.insert(osm_t::TagMap::value_type("train", "yes"));
+  node->tags.replace(tags);
+  way->tags.replace(tags);
+
+  josm_elemstyles_colorize_world(style, &osm);
+  g_assert_cmpuint(way->draw.color, ==, 0xaaaaaaff);
+  g_assert_cmpint(way->draw.area.color, ==, 0);
+  g_assert_cmpint(way->draw.width, ==, 2);
+
+  g_assert_false(style->node_icons.empty());
+  g_assert_nonnull(style->node_icons[node->id]);
+  g_assert(oldicon != style->node_icons[node->id]);
+  g_assert_cmpfloat(oldzoom, !=, node->zoom_max);
 
   delete style;
 

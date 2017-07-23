@@ -73,6 +73,7 @@ struct elemstyle_line_t {
     memset(this, 0, sizeof(*this));
   }
 
+  int priority;
   gint width;
   elemstyle_color_t color;
   guint dash_length_on: 16;
@@ -90,9 +91,6 @@ struct elemstyle_line_t {
   } bg;
 };
 
-static_assert(sizeof(elemstyle_line_t) == 6*4, "wrong size of elemstyle_line_t");
-static_assert(sizeof(reinterpret_cast<elemstyle_line_t *>(0)->bg) == 8, "wrong size of elemstyle_line_t::bg");
-
 /* attribute modifiers */
 typedef enum {
   ES_MOD_NONE = 0,  // don't change attribute
@@ -108,23 +106,32 @@ struct elemstyle_width_mod_t {
 } __attribute__ ((packed));
 
 struct elemstyle_line_mod_t {
+  // must not have a constructor when used in an anonymous union, gcc 4.2.1
+  // (e.g. N900) chokes on this
+  int priority;
   elemstyle_width_mod_t line, bg;
   elemstyle_color_t color;
 } __attribute__ ((packed));
 
-static_assert(sizeof(elemstyle_line_mod_t) == 4 + sizeof(elemstyle_color_t), "wrong size of elemstyle_line_mod_t");
-
 struct elemstyle_area_t {
-  elemstyle_area_t() : color (0) {}
+  elemstyle_area_t()
+    : priority(0)
+    , color(0)
+  {
+  }
+
+  int priority;
   elemstyle_color_t color;
 };
 
 struct elemstyle_icon_t {
   elemstyle_icon_t()
-    : annotate(false)
+    : priority(0)
+    , annotate(false)
   {
   }
 
+  int priority;
   bool annotate;
   std::string filename;
 };

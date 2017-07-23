@@ -7,11 +7,12 @@ A little help:
 	-v for the value as a string
 	-b for the values yes / no (boolean, will also understand true, 1 and false, 0 respectively)
 	Both -v and -b are optional (but recommended). If both are ommitted, the rule will apply to all
-	tags with the given key.
+	tags with the given key - don't forget to set a priority if other rules could also apply.
 3. line attributes
 	- width absolute width in pixel in every zoom level
 	- realwidth relative width which will be scaled in meters, integer
 	- colour
+	- priority
 	- dashed x - dashed line, length of dashes / spaces in x pixels
 	- dashed x,y - dashed line, x length of dashes / spaces in y pixels
 4. linemod attributes
@@ -22,9 +23,11 @@ A little help:
 	 If the size is <= 1 the minimum size of 1 is used.
 5. area attributes
 	- colour
+	- priority
 6. icon attributes
 	- icon (path to icon)
-	 - relative to the icon path
+	  - relative to the icon path
+	- priority
 
 Using both area and line attributes for the same key/value pair does work.
 
@@ -33,6 +36,9 @@ If both are given, the color name is introduced in preferences with that value. 
 code is given (e.g. #0000ff), it is used directly. If only name is given, either user
 modified preferences or previous value is used. The 6 hex digit color code can also
 be appended by a hex value of the alpha channel (thus having 8 hex digits instead of 6).
+
+If a key/value pair matches more than one rule, the "rule that wins" is unpredicted
+in case they have same priority! Using priority settings helps to solve conflicts.
 -->
 
 <rules>

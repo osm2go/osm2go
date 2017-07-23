@@ -29,4 +29,17 @@
 		<line width="1" realwidth="1" colour="service#809bc0" dashed="9" dashedcolour="livingdashed#00ff00"/>
 		<area colour="highway_platform#c0c0c0" closed="true"/>
 	</rule>
+	<rule>
+		<condition k="public_transport" v="platform"/>
+		<condition k="train" v="yes"/>
+		<icon annotate="true" src="transport/railway_station.png"  priority="10" />
+		<line width="2" realwidth="2" colour="#aaa" priority="10"/>
+		<area colour="#bbb" closed="true" priority="10"/>
+	</rule>
+	<rule>
+		<condition k="public_transport" v="platform"/>
+		<icon annotate="true" src="transport/bus_small.png" priority="-10"/>
+		<line width="1" realwidth="1" colour="#ccc"/>
+		<area colour="#ddd" closed="true" />
+	</rule>
 </rules>

@@ -32,6 +32,7 @@
 #include <algorithm>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
+#include <limits>
 #include <map>
 #include <strings.h>
 
@@ -269,6 +270,16 @@ static void parse_width_mod(const char *mod_str, elemstyle_width_mod_t &value) {
   }
 }
 
+static int parse_priority(const char *attr)
+{
+  char *endch;
+  long prio = strtol(attr, &endch, 10);
+  if(G_LIKELY(*endch == '\0'))
+    return prio;
+  else
+    return 0;
+}
+
 void StyleSax::startElement(const xmlChar *name, const char **attrs)
 {
   StateMap::const_iterator it = std::find_if(tags.begin(), tags.end(), tag_find(name));
@@ -336,6 +347,8 @@ void StyleSax::startElement(const xmlChar *name, const char **attrs)
         hasBgWidth = (*endch == '\0');
       } else if(strcmp(attrs[i], "colour_bg") == 0) {
         hasBgColor = parse_color(attrs[i + 1], line->bg.color, colors);
+      } else if(strcmp(attrs[i], "priority") == 0) {
+        line->priority = parse_priority(attrs[i + 1]);
       } else if(strcmp(attrs[i], "dashed") == 0) {
         const char * const dval = attrs[i + 1];
         if(parse_boolean(dval, true_values)) {
@@ -382,6 +395,8 @@ void StyleSax::startElement(const xmlChar *name, const char **attrs)
         parse_width_mod(attrs[i + 1], line_mod.line);
       else if(strcmp(attrs[i], "width_bg") == 0)
         parse_width_mod(attrs[i + 1], line_mod.bg);
+      else if(strcmp(attrs[i], "priority") == 0)
+        line_mod.priority = parse_priority(attrs[i + 1]);
     }
     break;
   }
@@ -393,6 +408,8 @@ void StyleSax::startElement(const xmlChar *name, const char **attrs)
     for(unsigned int i = 0; attrs[i] && !hasColor; i += 2) {
       if(strcmp(attrs[i], "colour") == 0)
         hasColor = parse_color(attrs[i + 1], elemstyle->area.color, colors);
+      else if(strcmp(attrs[i], "priority") == 0)
+        elemstyle->area.priority = parse_priority(attrs[i + 1]);
     }
 
     /* this has to be present */
@@ -405,6 +422,8 @@ void StyleSax::startElement(const xmlChar *name, const char **attrs)
         elemstyle->icon.annotate = strcmp(attrs[i + 1], "true");
       else if(strcmp(attrs[i], "src") == 0)
         elemstyle->icon.filename = josm_icon_name_adjust(attrs[i + 1]);
+      else if(strcmp(attrs[i], "priority") == 0)
+        elemstyle->icon.priority = parse_priority(attrs[i + 1]);
     }
 
     g_assert_false(elemstyle->icon.filename.empty());
@@ -500,6 +519,7 @@ struct colorize_node {
   style_t * const style;
   node_t * const node;
   bool &somematch;
+  int priority;
   colorize_node(style_t *s, node_t *n, bool &m) : style(s), node(n), somematch(m) {}
   void operator()(const elemstyle_t *elemstyle);
 };
@@ -507,6 +527,9 @@ struct colorize_node {
 void colorize_node::operator()(const elemstyle_t *elemstyle)
 {
   if(elemstyle->icon.filename.empty())
+    return;
+
+  if(priority >= elemstyle->icon.priority)
     return;
 
   // if any condition mismatches->rule mismatches
@@ -538,6 +561,8 @@ void colorize_node::operator()(const elemstyle_t *elemstyle)
 
   if (elemstyle->zoom_max > 0)
     node->zoom_max = elemstyle->zoom_max;
+
+  priority = elemstyle->icon.priority;
 }
 
 void josm_elemstyles_colorize_node(style_t *style, node_t *node) {
@@ -546,6 +571,7 @@ void josm_elemstyles_colorize_node(style_t *style, node_t *node) {
   bool somematch = false;
   if(style->icon.enable) {
     colorize_node fc(style, node, somematch);
+    fc.priority = std::numeric_limits<typeof(fc.priority)>::min();
     std::for_each(style->elemstyles.begin(), style->elemstyles.end(), fc);
   }
 
