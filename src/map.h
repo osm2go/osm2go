@@ -176,15 +176,8 @@ void map_show_all(map_t *map);
 void map_set_zoom(map_t *map, double zoom, gboolean update_scroll_offsets);
 gboolean map_scroll_to_if_offscreen(map_t *map, const lpos_t *lpos);
 
-extern "C" {
-#else
-typedef struct map_t map_t;
-#endif
-
 void map_detail_change(map_t *map, float detail);
 
-#ifdef __cplusplus
-}
 void map_detail_increase(map_t *map);
 void map_detail_decrease(map_t *map);
 void map_detail_normal(map_t *map);

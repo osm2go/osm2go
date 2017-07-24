@@ -215,7 +215,7 @@ if (FREMANTLE)
 	add_definitions(-DFREMANTLE)
 else ()
 	list(APPEND osm2go_SOURCE_FILES
-		src/scale_popup.c
+		src/scale_popup.cpp
 		src/scale_popup.h
 	)
 endif ()

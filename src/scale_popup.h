@@ -22,16 +22,8 @@
 
 #include <gtk/gtk.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 struct map_t;
 
-void scale_popup(GtkWidget *button, float lin, GtkWindow *awindow, struct map_t *map);
-
-#ifdef __cplusplus
-}
-#endif
+void scale_popup(GtkWidget *button, float lin, GtkWindow *awindow, map_t *map);
 
 #endif // SCALE_POPUP_H

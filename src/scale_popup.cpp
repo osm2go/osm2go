@@ -20,7 +20,7 @@
 
 #include "map.h"
 
-#include <math.h>
+#include <cmath>
 
 #ifndef USE_HILDON
 #define HEIGHT 100
@@ -45,8 +45,7 @@ pointer_in_window(GtkWidget *widget, gint x_root, gint y_root) {
 }
 
 static gboolean
-on_button_press_event(GtkWidget *widget,
-                      GdkEventButton *event, G_GNUC_UNUSED gpointer data) {
+on_button_press_event(GtkWidget *widget, GdkEventButton *event, gpointer) {
   gboolean in = pointer_in_window(widget, event->x_root, event->y_root);
 
   printf("overlay button press(in = %d)\n", in);
@@ -54,8 +53,7 @@ on_button_press_event(GtkWidget *widget,
 }
 
 static gboolean
-on_button_release_event(GtkWidget *widget,
-                        GdkEventButton *event, G_GNUC_UNUSED gpointer data) {
+on_button_release_event(GtkWidget *widget, GdkEventButton *event, gpointer) {
   gboolean in = pointer_in_window(widget, event->x_root, event->y_root);
 
   printf("overlay button release(in = %d)\n", in);
@@ -75,25 +73,24 @@ shutdown_loop(GMainLoop *loop) {
 }
 
 static gint
-run_delete_handler(G_GNUC_UNUSED GtkWindow *window, G_GNUC_UNUSED GdkEventAny *event,
-		   GMainLoop *loop) {
+run_delete_handler(GtkWindow *, GdkEventAny *, GMainLoop *loop) {
   shutdown_loop(loop);
   return TRUE; /* Do not destroy */
 }
 
 static void
-run_destroy_handler(G_GNUC_UNUSED GtkWindow *window, G_GNUC_UNUSED gpointer data) {
+run_destroy_handler(GtkWindow *, gpointer) {
   /* shutdown_loop will be called by run_unmap_handler */
   printf("popup destroyed\n");
 }
 
 static void
-run_unmap_handler(G_GNUC_UNUSED GtkWindow *window, GMainLoop *loop) {
+run_unmap_handler(GtkWindow *, GMainLoop *loop) {
   shutdown_loop(loop);
 }
 
 static void
-on_value_changed(GtkAdjustment *adjustment,  map_t *map) {
+on_value_changed(GtkAdjustment *adjustment, map_t *map) {
   printf("value changed to %f (%f)\n",
 	 gtk_adjustment_get_value(adjustment),
 	 pow(MAP_DETAIL_STEP, -gtk_adjustment_get_value(adjustment)));
@@ -115,23 +112,23 @@ void scale_popup(GtkWidget *button, float lin, GtkWindow *awindow, map_t *map) {
   gtk_window_set_gravity(GTK_WINDOW(window), GDK_GRAVITY_STATIC);
   gtk_window_set_modal(GTK_WINDOW(window), TRUE);
 
-  GMainLoop *loop = g_main_loop_new(NULL, FALSE);
+  GMainLoop *loop = g_main_loop_new(O2G_NULLPTR, FALSE);
 
   /* connect events */
   g_signal_connect(G_OBJECT(window), "button-press-event",
-		   G_CALLBACK(on_button_press_event), NULL);
+		   G_CALLBACK(on_button_press_event), O2G_NULLPTR);
   g_signal_connect(G_OBJECT(window), "button-release-event",
-		   G_CALLBACK(on_button_release_event), NULL);
+		   G_CALLBACK(on_button_release_event), O2G_NULLPTR);
   g_signal_connect(G_OBJECT(window), "delete-event",
 		   G_CALLBACK(run_delete_handler), loop);
   g_signal_connect(G_OBJECT(window), "destroy",
-		   G_CALLBACK(run_destroy_handler), NULL);
+		   G_CALLBACK(run_destroy_handler), O2G_NULLPTR);
   g_signal_connect(G_OBJECT(window), "unmap",
 		   G_CALLBACK(run_unmap_handler), loop);
 
   gdk_pointer_grab(window->window, TRUE,
-     GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_BUTTON_MOTION_MASK,
-		   NULL, NULL, GDK_CURRENT_TIME);
+     static_cast<GdkEventMask>(GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_BUTTON_MOTION_MASK),
+		   O2G_NULLPTR, O2G_NULLPTR, GDK_CURRENT_TIME);
   gtk_grab_add(window);
 
   gint x, y;
@@ -142,7 +139,7 @@ void scale_popup(GtkWidget *button, float lin, GtkWindow *awindow, map_t *map) {
   		  y + button->allocation.y - HEIGHT);
 
   /* a frame with a vscale inside */
-  GtkWidget *frame = gtk_frame_new(NULL);
+  GtkWidget *frame = gtk_frame_new(O2G_NULLPTR);
   gtk_frame_set_shadow_type(GTK_FRAME(frame), GTK_SHADOW_OUT);
 
   GtkWidget *hbox = gtk_hbox_new(FALSE, 0);
