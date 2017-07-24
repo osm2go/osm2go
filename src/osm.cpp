@@ -1190,6 +1190,24 @@ static osm_t *process_osm(xmlTextReaderPtr reader, icon_t &icons) {
   return O2G_NULLPTR;
 }
 
+struct relation_ref_functor {
+  osm_t * const osm;
+  relation_ref_functor(osm_t *o) : osm(o) {}
+  void operator()(std::pair<item_id_t, relation_t *> p) {
+    std::for_each(p.second->members.begin(), p.second->members.end(), *this);
+  }
+  void operator()(member_t &m) {
+    if(m.object.type != RELATION_ID)
+      return;
+    std::map<item_id_t, relation_t *>::const_iterator itEnd = osm->relations.end();
+    std::map<item_id_t, relation_t *>::const_iterator it = osm->relations.find(m.object.id);
+    if(it == itEnd)
+      return;
+    m.object.relation = it->second;
+    m.object.type = RELATION;
+  }
+};
+
 static osm_t *process_file(const std::string &filename, icon_t &icons) {
   osm_t *osm = O2G_NULLPTR;
   xmlTextReaderPtr reader;
@@ -1198,8 +1216,12 @@ static osm_t *process_file(const std::string &filename, icon_t &icons) {
   if (G_LIKELY(reader != O2G_NULLPTR)) {
     if(G_LIKELY(xmlTextReaderRead(reader) == 1)) {
       const char *name = (const char*)xmlTextReaderConstName(reader);
-      if(G_LIKELY(name && strcmp(name, "osm") == 0))
-	osm = process_osm(reader, icons);
+      if(G_LIKELY(name && strcmp(name, "osm") == 0)) {
+        osm = process_osm(reader, icons);
+        // relations may have references to other relation, which have greater ids
+        // those are not present when the relation itself was created, but may be now
+        std::for_each(osm->relations.begin(), osm->relations.end(), relation_ref_functor(osm));
+      }
     } else
       printf("file empty\n");
 
