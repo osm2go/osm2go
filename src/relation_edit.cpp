@@ -527,14 +527,14 @@ void members_list_functor::operator()(const member_t &member)
   const std::string &id = member.object.id_string();
 
   /* try to find something descriptive */
-  const char *name = member.object.get_tag_value("name");
+  const std::string &name = member.object.is_real() ? member.object.get_name() : std::string();
 
   /* Append a row and fill in some data */
   gtk_list_store_append(store, &iter);
   gtk_list_store_set(store, &iter,
      MEMBER_COL_TYPE, member.object.type_string(),
      MEMBER_COL_ID,   id.c_str(),
-     MEMBER_COL_NAME, name,
+     MEMBER_COL_NAME, name.c_str(),
      MEMBER_COL_ROLE, member.role,
      MEMBER_COL_REF_ONLY, member.object.type >= NODE_ID,
      MEMBER_COL_DATA, &member,

@@ -138,12 +138,6 @@ std::string object_t::id_string() const {
   return buf;
 }
 
-const char *object_t::get_tag_value(const char *key) const {
-  if(!is_real())
-    return O2G_NULLPTR;
-  return obj->tags.get_value(key);
-}
-
 bool object_t::has_tags() const {
   if(!is_real())
     return false;
