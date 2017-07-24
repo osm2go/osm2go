@@ -180,8 +180,9 @@ int main(int argc, char **argv)
   g_assert_cmpint(strcmp(r255it->role, "stop"), ==, 0);
   const relation_t * const r66316 = osm->relations[66316];
   g_assert_nonnull(r66316);
-  object_t rmember(osm->relations[296255]);
-  g_assert_true(rmember.is_real());
+  object_t rmember(RELATION_ID);
+  rmember.id = 296255;
+  g_assert_false(rmember.is_real());
   const std::vector<member_t>::const_iterator r66316it = r66316->find_member_object(rmember);
   g_assert(r66316it != r66316->members.end());
   // the child relation exists, so it should be stored as real ref

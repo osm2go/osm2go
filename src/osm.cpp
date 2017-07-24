@@ -54,8 +54,22 @@
 
 bool object_t::operator==(const object_t &other) const
 {
-  if (type != other.type)
-    return false;
+  if (type != other.type) {
+    if ((type | _REF_FLAG) != (other.type | _REF_FLAG))
+      return false;
+    // we only handle the other case
+    if(type & _REF_FLAG)
+      return other == *this;
+    switch(type) {
+    case NODE:
+    case WAY:
+    case RELATION:
+      return obj->id == other.id;
+    default:
+      g_assert_not_reached();
+      return false;
+    }
+  }
 
   switch(type) {
   case NODE:
