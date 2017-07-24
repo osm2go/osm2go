@@ -725,6 +725,62 @@ static void test_merge_nodes()
   g_assert_cmpuint(n->flags, ==, OSM_FLAG_DIRTY);
   g_assert_cmpuint(r->members.size(), ==, 1);
   g_assert(r->members.front().object == n2);
+
+  o.relation_delete(r);
+  g_assert_cmpuint(o.nodes.size(), ==, 1);
+  g_assert_cmpuint(o.ways.size(), ==, 0);
+  g_assert_cmpuint(o.relations.size(), ==, 0);
+  o.node_delete(o.nodes.begin()->second);
+  g_assert_cmpuint(o.nodes.size(), ==, 0);
+
+  // now put both into a way, the way of the second node should be updated
+  for(int i = 0; i < 2; i++) {
+    w = new way_t(1);
+    o.way_attach(w);
+    lpos_t pos(i + 4, i + 4);
+    n1 = o.node_new(pos);
+    o.node_attach(n1);
+    w->append_node(n1);
+    r = new relation_t(1);
+    o.relation_attach(r);
+  }
+
+  n1 = o.node_new(oldpos);
+  n2 = o.node_new(newpos);
+  o.node_attach(n1);
+  o.node_attach(n2);
+
+  o.ways.begin()->second->append_node(n1);
+  w = (++o.ways.begin())->second;
+  w->append_node(n2);
+  w->flags = 0;
+  o.relations.begin()->second->members.push_back(member_t(object_t(n1), O2G_NULLPTR));
+  r = (++o.relations.begin())->second;
+  r->members.push_back(member_t(object_t(n2), O2G_NULLPTR));
+  r->flags = 0;
+  g_assert_cmpuint(o.ways.begin()->second->node_chain.size(), ==, 2);
+  g_assert_cmpuint(w->node_chain.size(), ==, 2);
+  g_assert(o.ways.begin()->second->node_chain[1] == n1);
+  g_assert(w->node_chain[1] == n2);
+  g_assert_cmpuint(n1->ways, ==, 1);
+  g_assert(o.relations.begin()->second->members.front().object == n1);
+  g_assert(r->members.front().object == n2);
+
+  conflict = true;
+  n = o.mergeNodes(n1, n2, conflict);
+  g_assert(n == n1);
+  g_assert(n->lpos == newpos);
+  g_assert_false(conflict);
+  g_assert_cmpuint(o.nodes.size(), ==, 3);
+  g_assert_cmpuint(n->flags, ==, OSM_FLAG_DIRTY);
+  g_assert_cmpuint(r->members.size(), ==, 1);
+  g_assert(o.ways.begin()->second->node_chain[1] == n1);
+  g_assert(w->node_chain[1] == n1);
+  g_assert_cmpuint(w->flags, ==, OSM_FLAG_DIRTY);
+  g_assert_cmpuint(n1->ways, ==, 2);
+  g_assert(o.relations.begin()->second->members.front().object == n1);
+  g_assert(r->members.front().object == n1);
+  g_assert_cmpuint(r->flags, ==, OSM_FLAG_DIRTY);
 }
 
 static void test_api_adjust()
