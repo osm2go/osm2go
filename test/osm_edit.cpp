@@ -407,9 +407,10 @@ static void test_reverse()
   tags.insert(osm_t::TagMap::value_type("bar:left", "3"));
   tags.insert(osm_t::TagMap::value_type("bar:right", "4"));
   tags.insert(osm_t::TagMap::value_type("oneway", "-1"));
+  tags.insert(osm_t::TagMap::value_type("sidewalk", "left"));
 
-  g_assert(w->node_chain.front() == n1);
-  g_assert(w->node_chain.back() == n2);
+  g_assert(w->first_node() == n1);
+  g_assert(w->last_node() == n2);
   g_assert_true(w->isNew());
 
   w->flags = 0;
@@ -456,6 +457,7 @@ static void test_reverse()
   rtags.insert(osm_t::TagMap::value_type("bar:right", "3"));
   rtags.insert(osm_t::TagMap::value_type("bar:left", "4"));
   rtags.insert(osm_t::TagMap::value_type("oneway", "yes"));
+  rtags.insert(osm_t::TagMap::value_type("sidewalk", "right"));
 
   g_assert(w->tags == rtags);
 
@@ -751,6 +753,7 @@ static void test_merge_nodes()
   o.node_attach(n2);
 
   o.ways.begin()->second->append_node(n1);
+  o.ways.begin()->second->reverse();
   w = (++o.ways.begin())->second;
   w->append_node(n2);
   w->flags = 0;
@@ -760,8 +763,10 @@ static void test_merge_nodes()
   r->flags = 0;
   g_assert_cmpuint(o.ways.begin()->second->node_chain.size(), ==, 2);
   g_assert_cmpuint(w->node_chain.size(), ==, 2);
-  g_assert(o.ways.begin()->second->node_chain[1] == n1);
-  g_assert(w->node_chain[1] == n2);
+  g_assert_true(o.ways.begin()->second->node_chain.front() == n1);
+  g_assert_true(o.ways.begin()->second->ends_with_node(n1));
+  g_assert(w->node_chain.back() == n2);
+  g_assert_true(w->ends_with_node(n2));
   g_assert_cmpuint(n1->ways, ==, 1);
   g_assert(o.relations.begin()->second->members.front().object == n1);
   g_assert(r->members.front().object == n2);
@@ -774,13 +779,29 @@ static void test_merge_nodes()
   g_assert_cmpuint(o.nodes.size(), ==, 3);
   g_assert_cmpuint(n->flags, ==, OSM_FLAG_DIRTY);
   g_assert_cmpuint(r->members.size(), ==, 1);
-  g_assert(o.ways.begin()->second->node_chain[1] == n1);
-  g_assert(w->node_chain[1] == n1);
+  g_assert(o.ways.begin()->second->first_node() == n1);
+  g_assert_true(o.ways.begin()->second->ends_with_node(n1));
+  g_assert(w->last_node() == n1);
+  g_assert_true(w->ends_with_node(n1));
   g_assert_cmpuint(w->flags, ==, OSM_FLAG_DIRTY);
   g_assert_cmpuint(n1->ways, ==, 2);
   g_assert(o.relations.begin()->second->members.front().object == n1);
   g_assert(r->members.front().object == n1);
   g_assert_cmpuint(r->flags, ==, OSM_FLAG_DIRTY);
+
+  // while at it: test backwards mapping to containing objects
+  const relation_chain_t &rchain = o.to_relation(object_t(n1));
+  g_assert_cmpuint(rchain.size(), ==, 2);
+  g_assert(std::find(rchain.begin(), rchain.end(), o.relations.begin()->second) != rchain.end());
+  g_assert(std::find(rchain.begin(), rchain.end(), r) != rchain.end());
+
+  const way_chain_t &wchain = o.node_to_way(n1);
+  g_assert_cmpuint(wchain.size(), ==, 2);
+  g_assert(std::find(wchain.begin(), wchain.end(), o.ways.begin()->second) != wchain.end());
+  g_assert(std::find(wchain.begin(), wchain.end(), w) != wchain.end());
+
+  // the relation with the highest id (since all are negative)
+  g_assert(r->descriptive_name() == "<ID #-1>");
 }
 
 static void test_api_adjust()
