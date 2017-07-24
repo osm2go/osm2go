@@ -619,12 +619,26 @@ static void test_member_delete()
   r->members.push_back(member_t(object_t(n2), O2G_NULLPTR));
   o.relation_attach(r);
 
+  guint nodes = 0, ways = 0, relations = 0;
+  r->members_by_type(nodes, ways, relations);
+  g_assert_cmpuint(nodes, ==, 1);
+  g_assert_cmpuint(ways, ==, 1);
+  g_assert_cmpuint(relations, ==, 0);
+
   // now delete the node that is member of both other objects
   o.node_delete(n2, true);
 
   g_assert_cmpuint(o.nodes.size(), ==, 2);
   g_assert_cmpuint(o.ways.size(), ==, 1);
   g_assert_cmpuint(o.relations.size(), ==, 1);
+
+  nodes = 0;
+  ways = 0;
+  relations = 0;
+  r->members_by_type(nodes, ways, relations);
+  g_assert_cmpuint(nodes, ==, 0);
+  g_assert_cmpuint(ways, ==, 1);
+  g_assert_cmpuint(relations, ==, 0);
 }
 
 static void test_merge_nodes()

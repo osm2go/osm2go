@@ -500,7 +500,7 @@ public:
   std::vector<member_t>::iterator find_member_object(const object_t &o);
   std::vector<member_t>::const_iterator find_member_object(const object_t &o) const;
 
-  void members_by_type(guint *nodes, guint *ways, guint *relations) const;
+  void members_by_type(guint &nodes, guint &ways, guint &relations) const;
   std::string descriptive_name() const;
   void generate_member_xml(xmlNodePtr xml_node) const;
 

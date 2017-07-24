@@ -2408,10 +2408,8 @@ std::vector<member_t>::const_iterator relation_t::find_member_object(const objec
 }
 
 struct member_counter {
-  guint *nodes, *ways, *relations;
-  member_counter(guint *n, guint *w, guint *r) : nodes(n), ways(w), relations(r) {
-    *n = 0; *w = 0; *r = 0;
-  }
+  guint &nodes, &ways, &relations;
+  member_counter(guint &n, guint &w, guint &r) : nodes(n), ways(w), relations(r) {}
   void operator()(const member_t &member);
 };
 
@@ -2420,15 +2418,15 @@ void member_counter::operator()(const member_t &member)
   switch(member.object.type) {
   case NODE:
   case NODE_ID:
-    (*nodes)++;
+    nodes++;
     break;
   case WAY:
   case WAY_ID:
-    (*ways)++;
+    ways++;
     break;
   case RELATION:
   case RELATION_ID:
-    (*relations)++;
+    relations++;
     break;
   default:
     g_assert_not_reached();
@@ -2436,7 +2434,7 @@ void member_counter::operator()(const member_t &member)
   }
 }
 
-void relation_t::members_by_type(guint *nodes, guint *ways, guint *relations) const {
+void relation_t::members_by_type(guint &nodes, guint &ways, guint &relations) const {
   std::for_each(members.begin(), members.end(),
                 member_counter(nodes, ways, relations));
 }

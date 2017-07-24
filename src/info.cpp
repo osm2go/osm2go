@@ -500,7 +500,7 @@ static GtkWidget *details_widget(const tag_context_t &context, bool big) {
   case RELATION: {
     /* relations tell something about their members */
     guint nodes = 0, ways = 0, relations = 0;
-    context.object.relation->members_by_type(&nodes, &ways, &relations);
+    context.object.relation->members_by_type(nodes, ways, relations);
 
     char *str =
       g_strdup_printf(_("Members: %u nodes, %u ways, %u relations"),
