@@ -1483,8 +1483,7 @@ way_chain_t osm_t::node_delete(node_t *node, bool remove_refs) {
     remove_from_relations(object_t(node));
 
   /* remove that nodes map representations */
-  if(node->map_item_chain)
-    map_item_chain_destroy(&node->map_item_chain);
+  map_item_chain_destroy(node->map_item_chain);
 
   if(!permanently) {
     printf("mark node #" ITEM_ID_FORMAT " as deleted\n", node->id);

@@ -202,7 +202,7 @@ void map_outside_error(appdata_t &appdata);
 void map_node_draw(map_t *map, node_t *node);
 void map_relation_select(map_t *map, relation_t *relation);
 
-void map_item_chain_destroy(map_item_chain_t **chainP);
+void map_item_chain_destroy(map_item_chain_t *&chainP);
 #endif
 
 #endif // MAP_H

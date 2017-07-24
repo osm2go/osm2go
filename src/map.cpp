@@ -78,19 +78,19 @@ static inline void map_item_destroy_canvas_item(map_item_t *m) {
   canvas_item_destroy(m->item);
 }
 
-void map_item_chain_destroy(map_item_chain_t **chainP) {
-  if(!*chainP) {
+void map_item_chain_destroy(map_item_chain_t *&chainP) {
+  if(!chainP) {
     printf("nothing to destroy!\n");
     return;
   }
 
-  std::for_each((*chainP)->map_items.begin(), (*chainP)->map_items.end(),
+  std::for_each(chainP->map_items.begin(), chainP->map_items.end(),
                 map_item_destroy_canvas_item);
 
 #ifdef DESTROY_WAIT_FOR_GTK
   /* wait until gtks event handling has actually destroyed this item */
   printf("waiting for item destruction ");
-  while(*chainP)
+  while(chainP)
     osm2go_platform::process_events(true);
   printf(" ok\n");
 
@@ -98,8 +98,8 @@ void map_item_chain_destroy(map_item_chain_t **chainP) {
   /* called by now and it has set the chain to O2G_NULLPTR */
 
 #else
-  delete *chainP;
-  *chainP = O2G_NULLPTR;
+  delete chainP;
+  chainP = O2G_NULLPTR;
 #endif
 }
 
@@ -628,7 +628,7 @@ static void map_item_remove(object_t &object) {
   switch(object.type) {
   case NODE:
   case WAY:
-    map_item_chain_destroy(&static_cast<visible_item_t *>(object.obj)->map_item_chain);
+    map_item_chain_destroy(static_cast<visible_item_t *>(object.obj)->map_item_chain);
     break;
   default:
     g_assert_not_reached();
@@ -1217,7 +1217,7 @@ void map_way_delete(map_t *map, way_t *way) {
   undo_append_way(map->appdata, UNDO_DELETE, way);
 
   /* remove it visually from the screen */
-  map_item_chain_destroy(&way->map_item_chain);
+  map_item_chain_destroy(way->map_item_chain);
 
   /* and mark it "deleted" in the database */
   map->appdata.osm->way_delete(way);
@@ -2278,7 +2278,7 @@ void map_hide_selected(map_t *map) {
 
   map_item_deselect(map);
   way->flags |= OSM_FLAG_HIDDEN;
-  map_item_chain_destroy(&way->map_item_chain);
+  map_item_chain_destroy(way->map_item_chain);
 
   gtk_widget_set_sensitive(map->appdata.menuitems[MENU_ITEM_MAP_SHOW_ALL], TRUE);
 }

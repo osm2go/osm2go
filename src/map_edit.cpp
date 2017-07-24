@@ -136,7 +136,7 @@ void map_edit_way_add_segment(map_t *map, gint x, gint y) {
       }
 
       /* remove prior version of this way */
-      map_item_chain_destroy(&map->action.way->map_item_chain);
+      map_item_chain_destroy(map->action.way->map_item_chain);
 
       /* draw current way */
       josm_elemstyles_colorize_way(map->style, map->action.way);
@@ -178,7 +178,7 @@ void map_edit_way_add_cancel(map_t *map) {
   chain.clear();
 
   /* remove ways visual representation */
-  map_item_chain_destroy(&map->action.way->map_item_chain);
+  map_item_chain_destroy(map->action.way->map_item_chain);
 
   osm->way_free(map->action.way);
   map->action.way = O2G_NULLPTR;
@@ -229,7 +229,7 @@ void map_draw_nodes::operator()(node_t* node)
     /* a node may have been a stand-alone node before, so remove its */
     /* visual representation as its now drawn as part of the way */
     /* (if at all) */
-    map_item_chain_destroy(&node->map_item_chain);
+    map_item_chain_destroy(node->map_item_chain);
   } else {
     /* we can be sure that no node gets inserted twice (even if twice in */
     /* the ways chain) because it gets assigned a non-ID_ILLEGAL id when */
@@ -271,7 +271,7 @@ void map_edit_way_add_ok(map_t *map) {
     merge_node_chains(map->action.extending, map->action.way->node_chain, reverse);
 
     /* erase and free new way (now only containing the first node anymore) */
-    map_item_chain_destroy(&map->action.way->map_item_chain);
+    map_item_chain_destroy(map->action.way->map_item_chain);
     osm->way_free(map->action.way);
 
     map->action.way = map->action.extending;
@@ -336,7 +336,7 @@ void map_edit_way_add_ok(map_t *map) {
   }
 
   /* remove prior version of this way */
-  map_item_chain_destroy(&map->action.way->map_item_chain);
+  map_item_chain_destroy(map->action.way->map_item_chain);
 
   /* draw the updated way */
   map_way_draw(map, map->action.way);
@@ -383,7 +383,7 @@ void map_edit_way_node_add(map_t *map, gint x, gint y) {
       map_item_deselect(map);
 
       /* remove prior version of this way */
-      map_item_chain_destroy(&way->map_item_chain);
+      map_item_chain_destroy(way->map_item_chain);
 
       /* draw the updated way */
       map_way_draw(map, way);
@@ -495,7 +495,7 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
 
   /* remove prior version of this way */
   printf("remove visible version of way #" ITEM_ID_FORMAT "\n", way->id);
-  map_item_chain_destroy(&way->map_item_chain);
+  map_item_chain_destroy(way->map_item_chain);
 
   /* swap chains if the old way is to be destroyed due to a lack */
   /* of nodes */
@@ -587,7 +587,7 @@ void redraw_way::operator()(const std::pair<item_id_t, way_t *> &p)
   printf("  node is part of way #" ITEM_ID_FORMAT ", redraw!\n", way->id);
 
   /* remove prior version of this way */
-  map_item_chain_destroy(&way->map_item_chain);
+  map_item_chain_destroy(way->map_item_chain);
 
   /* draw current way */
   josm_elemstyles_colorize_way(map->style, way);
@@ -766,7 +766,7 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, gint ex, gint ey) {
 
   /* now update the visual representation of the node */
 
-  map_item_chain_destroy(&node->map_item_chain);
+  map_item_chain_destroy(node->map_item_chain);
   map_node_draw(map, node);
 
   /* visually update ways, node is part of */
