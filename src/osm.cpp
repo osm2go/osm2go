@@ -138,12 +138,6 @@ std::string object_t::id_string() const {
   return buf;
 }
 
-bool object_t::has_tags() const {
-  if(!is_real())
-    return false;
-  return obj->tags.hasRealTags();
-}
-
 item_id_t object_t::get_id() const {
   if(G_UNLIKELY(type == ILLEGAL))
     return ID_ILLEGAL;
@@ -2065,9 +2059,11 @@ void tag_list_t::copy(const tag_list_t &other)
 std::string object_t::get_name() const {
   std::string ret;
 
+  g_assert(is_real());
+
   /* worst case: we have no tags at all. return techincal info then */
-  if(!has_tags())
-    return std::string("unspecified ") + type_string();
+  if(!obj->tags.hasRealTags())
+    return std::string(_("unspecified ")) + type_string();
 
   /* try to figure out _what_ this is */
   const char *name_tags[] = { "name", "ref", "note", "fix" "me", "sport", O2G_NULLPTR };

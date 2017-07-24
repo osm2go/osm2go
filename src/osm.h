@@ -112,7 +112,6 @@ struct object_t {
   bool is_real() const;
   const char *type_string() const;
   std::string id_string() const;
-  bool has_tags() const;
   item_id_t get_id() const;
   std::string get_name() const;
 };
