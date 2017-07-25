@@ -980,8 +980,9 @@ static void submenu_popup(appdata_t &appdata, GtkWidget *menu) {
   /* check if the style menu was in here */
   GtkWidget *style_widget = GTK_WIDGET(g_object_get_data(G_OBJECT(menu), "style_widget"));
   if(style_widget) {
-    const char *ptr = combo_box_get_active_text(style_widget);
-    if(ptr) style_change(appdata, ptr);
+    const std::string &style = combo_box_get_active_text(style_widget);
+    if(!style.empty())
+      style_change(appdata, style);
   }
 }
 

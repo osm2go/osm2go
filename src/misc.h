@@ -185,7 +185,7 @@ GtkWidget *combo_box_entry_new(const gchar *title);
 void combo_box_append_text(GtkWidget *cbox, const gchar *text);
 void combo_box_set_active(GtkWidget *cbox, int index);
 int combo_box_get_active(GtkWidget *cbox);
-const char *combo_box_get_active_text(GtkWidget *cbox);
+std::string combo_box_get_active_text(GtkWidget *cbox);
 GType combo_box_type(void);
 GType combo_box_entry_type(void);
 

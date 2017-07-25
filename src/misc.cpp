@@ -585,9 +585,13 @@ int combo_box_get_active(GtkWidget *cbox) {
 #endif
 }
 
-const char *combo_box_get_active_text(GtkWidget *cbox) {
+std::string combo_box_get_active_text(GtkWidget *cbox) {
 #ifndef FREMANTLE
-  return gtk_combo_box_get_active_text(GTK_COMBO_BOX(cbox));
+  char *ptr;
+  ptr = gtk_combo_box_get_active_text(GTK_COMBO_BOX(cbox));
+  std::string ret = ptr;
+  g_free(ptr);
+  return ret;
 #else
   return hildon_button_get_value(HILDON_BUTTON(cbox));
 #endif

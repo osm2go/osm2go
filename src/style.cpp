@@ -354,9 +354,9 @@ GtkWidget *style_select_widget(appdata_t &appdata) {
 }
 
 struct style_find {
-  const char * const name;
+  const std::string &name;
   icon_t dummyicons;
-  style_find(const char *n) : name(n) {}
+  style_find(const std::string &n) : name(n) {}
   bool operator()(const std::string &filename);
 };
 
@@ -366,13 +366,13 @@ bool style_find::operator()(const std::string &filename)
   if(!style)
     return false;
 
-  bool match = (strcmp(style->name, name) == 0);
+  bool match = name == style->name;
   delete style;
 
   return match;
 }
 
-void style_change(appdata_t &appdata, const char *name) {
+void style_change(appdata_t &appdata, const std::string &name) {
   const std::vector<std::string> &chain = style_scan();
 
   const std::vector<std::string>::const_iterator it =
@@ -441,12 +441,12 @@ void style_select(GtkWidget *parent, appdata_t &appdata) {
     return;
   }
 
-  const char *ptr = combo_box_get_active_text(cbox);
-  printf("user clicked ok on %s\n", ptr);
+  const std::string &style = combo_box_get_active_text(cbox);
+  printf("user clicked ok on %s\n", style.c_str());
 
   gtk_widget_destroy(dialog);
 
-  style_change(appdata, ptr);
+  style_change(appdata, style);
 }
 #endif
 

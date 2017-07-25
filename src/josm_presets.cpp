@@ -102,14 +102,13 @@ static void attach_right(GtkTable *table, const char *text, GtkWidget *widget, g
  * @brief update the given tag with the newly entered value
  * @param widget the entry widget description
  * @param tags all tags of the object
- * @param ctag iterator of the tag to edit, tags.end() in case it does not yet exist
  * @param value the new value
  */
 static bool store_value(const presets_widget_t *widget, osm_t::TagMap &tags,
-                        const char *value) {
+                        const std::string &value) {
   bool changed = false;
   osm_t::TagMap::iterator ctag = tags.find(widget->key);
-  if(value && strlen(value)) {
+  if(!value.empty()) {
     if(ctag != tags.end()) {
       /* only update if the value actually changed */
       if(ctag->second != value) {
@@ -215,7 +214,7 @@ void get_widget_functor::operator()(const presets_widget_t* w)
 {
   const std::map<const presets_widget_t *, GtkWidget *>::const_iterator hint = gtk_widgets.find(w);
   GtkWidget *widget = hint != hintEnd ? hint->second : O2G_NULLPTR;
-  const char *text;
+  std::string text;
 
   switch(w->type) {
   case WIDGET_TYPE_KEY:
@@ -1004,10 +1003,10 @@ GtkWidget *presets_widget_t::attach(GtkTable *, guint &, const char *,
   return O2G_NULLPTR;
 }
 
-const char *presets_widget_t::getValue(GtkWidget *) const
+std::string presets_widget_t::getValue(GtkWidget *) const
 {
   g_assert_not_reached();
-  return O2G_NULLPTR;
+  return std::string();
 }
 
 int presets_widget_t::matches(const osm_t::TagMap &tags) const
@@ -1051,7 +1050,7 @@ GtkWidget *presets_widget_text::attach(GtkTable *table, guint &row, const char *
   return ret;
 }
 
-const char *presets_widget_text::getValue(GtkWidget *widget) const
+std::string presets_widget_text::getValue(GtkWidget *widget) const
 {
   g_assert(GTK_WIDGET_TYPE(widget) == entry_type());
 
@@ -1109,14 +1108,14 @@ GtkWidget *presets_widget_combo::attach(GtkTable *table, guint &row, const char 
   return ret;
 }
 
-const char *presets_widget_combo::getValue(GtkWidget* widget) const
+std::string presets_widget_combo::getValue(GtkWidget* widget) const
 {
   g_assert(GTK_WIDGET_TYPE(widget) == combo_box_type());
 
-  const char *text = combo_box_get_active_text(widget);
+  std::string text = combo_box_get_active_text(widget);
 
-  if(!strcmp(text, _("<unset>")))
-    return O2G_NULLPTR;
+  if(text == _("<unset>"))
+    return std::string();
 
   if(display_values.empty())
     return text;
@@ -1136,10 +1135,10 @@ bool presets_widget_key::matchValue(const char *val) const
   return (value == val);
 }
 
-const char *presets_widget_key::getValue(GtkWidget *widget) const
+std::string presets_widget_key::getValue(GtkWidget *widget) const
 {
   g_assert_null(widget);
-  return value.c_str();
+  return value;
 }
 
 bool presets_widget_checkbox::matchValue(const char *val) const
@@ -1171,12 +1170,12 @@ GtkWidget *presets_widget_checkbox::attach(GtkTable *table, guint &row, const ch
   return ret;
 }
 
-const char *presets_widget_checkbox::getValue(GtkWidget *widget) const
+std::string presets_widget_checkbox::getValue(GtkWidget *widget) const
 {
   g_assert(GTK_WIDGET_TYPE(widget) == check_button_type());
 
   return check_button_get_active(widget) ?
-         (value_on.empty() ? "yes" : value_on.c_str()) : O2G_NULLPTR;
+         (value_on.empty() ? "yes" : value_on) : std::string();
 }
 
 static void item_link_clicked(GtkButton *button, presets_item *item) {

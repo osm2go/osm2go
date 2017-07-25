@@ -99,7 +99,7 @@ style_t *style_load(const std::string &name, icon_t &icons);
 void style_select(GtkWidget *parent, appdata_t &appdata);
 #else
 GtkWidget *style_select_widget(appdata_t &appdata);
-void style_change(appdata_t &appdata, const char *name);
+void style_change(appdata_t &appdata, const std::string &name);
 #endif
 
 #endif // STYLE_H

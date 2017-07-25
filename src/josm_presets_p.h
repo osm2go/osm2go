@@ -89,7 +89,7 @@ public:
 
   virtual GtkWidget *attach(GtkTable *table, guint &row, const char *preset,
                             presets_context_t *context) const;
-  virtual const char *getValue(GtkWidget *widget) const;
+  virtual std::string getValue(GtkWidget *widget) const;
   virtual guint rows() const = 0;
 
   /**
@@ -115,7 +115,7 @@ public:
 
   virtual GtkWidget *attach(GtkTable *table, guint &row, const char *preset,
                             presets_context_t *) const O2G_OVERRIDE;
-  virtual const char *getValue(GtkWidget *widget) const O2G_OVERRIDE;
+  virtual std::string getValue(GtkWidget *widget) const O2G_OVERRIDE;
   virtual guint rows() const O2G_OVERRIDE {
     return 1;
   }
@@ -162,7 +162,7 @@ public:
 
   virtual GtkWidget *attach(GtkTable *table, guint &row, const char *preset,
                             presets_context_t *) const O2G_OVERRIDE;
-  virtual const char *getValue(GtkWidget *widget) const O2G_OVERRIDE;
+  virtual std::string getValue(GtkWidget *widget) const O2G_OVERRIDE;
   virtual guint rows() const O2G_OVERRIDE {
     return 1;
   }
@@ -180,7 +180,7 @@ public:
   presets_widget_key(const std::string &key, const std::string &val, const char *matches);
 
   const std::string value;
-  virtual const char *getValue(GtkWidget *widget) const O2G_OVERRIDE;
+  virtual std::string getValue(GtkWidget *widget) const O2G_OVERRIDE;
   virtual guint rows() const O2G_OVERRIDE {
     return 0;
   }
@@ -198,7 +198,7 @@ public:
 
   virtual GtkWidget *attach(GtkTable *table, guint &row, const char *preset,
                             presets_context_t *) const O2G_OVERRIDE;
-  virtual const char *getValue(GtkWidget *widget) const O2G_OVERRIDE;
+  virtual std::string getValue(GtkWidget *widget) const O2G_OVERRIDE;
   virtual guint rows() const O2G_OVERRIDE {
     return 1;
   }
