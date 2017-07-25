@@ -98,7 +98,7 @@ style_t *style_load(const std::string &name, icon_t &icons);
 #ifndef FREMANTLE
 void style_select(GtkWidget *parent, appdata_t &appdata);
 #else
-GtkWidget *style_select_widget(appdata_t &appdata);
+GtkWidget *style_select_widget(const std::string &currentstyle);
 void style_change(appdata_t &appdata, const std::string &name);
 #endif
 

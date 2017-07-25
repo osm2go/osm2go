@@ -333,9 +333,8 @@ static std::vector<std::string> style_scan() {
   return chain;
 }
 
-GtkWidget *style_select_widget(appdata_t &appdata) {
-  const std::vector<std::string> &chain = style_scan();
-
+static GtkWidget *style_select_widget(const std::string &currentstyle,
+                                      const std::vector<std::string> &chain) {
   /* there must be at least one style, otherwise */
   /* the program wouldn't be running */
   g_assert_false(chain.empty());
@@ -344,13 +343,17 @@ GtkWidget *style_select_widget(appdata_t &appdata) {
 
   /* fill combo box with presets */
   int match = -1;
-  combo_add_styles cas(cbox, appdata.settings->style, match);
-  std::for_each(chain.begin(), chain.end(), cas);
+  std::for_each(chain.begin(), chain.end(),
+                combo_add_styles(cbox, currentstyle, match));
 
-  if(cas.match >= 0)
-    combo_box_set_active(cbox, cas.match);
+  if(match >= 0)
+    combo_box_set_active(cbox, match);
 
   return cbox;
+}
+
+GtkWidget *style_select_widget(const std::string &currentstyle) {
+  return style_select_widget(currentstyle, style_scan());
 }
 
 struct style_find {
@@ -372,9 +375,8 @@ bool style_find::operator()(const std::string &filename)
   return match;
 }
 
-void style_change(appdata_t &appdata, const std::string &name) {
-  const std::vector<std::string> &chain = style_scan();
-
+static void style_change(appdata_t &appdata, const std::string &name,
+                         const std::vector<std::string> &chain) {
   const std::vector<std::string>::const_iterator it =
       std::find_if(chain.begin(), chain.end(), style_find(name));
 
@@ -408,6 +410,10 @@ void style_change(appdata_t &appdata, const std::string &name) {
   appdata.map->paint();
 }
 
+void style_change(appdata_t &appdata, const std::string &name) {
+  style_change(appdata, name, style_scan());
+}
+
 #ifndef FREMANTLE
 /* in fremantle this happens inside the submenu handling since this button */
 /* is actually placed inside the submenu there */
@@ -425,7 +431,8 @@ void style_select(GtkWidget *parent, appdata_t &appdata) {
 
   gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_ACCEPT);
 
-  GtkWidget *cbox = style_select_widget(appdata);
+  const std::vector<std::string> &styles = style_scan();
+  GtkWidget *cbox = style_select_widget(appdata.settings->style, styles);
 
   GtkWidget *hbox = gtk_hbox_new(FALSE, 8);
   gtk_box_pack_start_defaults(GTK_BOX(hbox), gtk_label_new(_("Style:")));
@@ -446,7 +453,7 @@ void style_select(GtkWidget *parent, appdata_t &appdata) {
 
   gtk_widget_destroy(dialog);
 
-  style_change(appdata, style);
+  style_change(appdata, style, styles);
 }
 #endif
 

@@ -919,7 +919,7 @@ static GtkWidget *app_submenu_create(appdata_t &appdata,
     /* the "Style" menu entry is very special */
     /* and is being handled seperately */
     if(!strcmp("Style", menu_entries->label)) {
-      button = style_select_widget(appdata);
+      button = style_select_widget(appdata.settings->style);
       g_object_set_data(G_OBJECT(dialog), "style_widget", button);
     } else {
       if(!menu_entries->toggle) {
