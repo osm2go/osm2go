@@ -57,7 +57,7 @@ void track_save(struct project_t *project, track_t *track);
  * @param appdata global appdata object
  * @return if a track was loaded
  */
-gboolean track_restore(appdata_t &appdata);
+bool track_restore(appdata_t &appdata);
 
 /* accessible via the menu */
 void track_clear(appdata_t &appdata);

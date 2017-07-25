@@ -307,7 +307,7 @@ void track_export(const track_t *track, const char *filename) {
 
 /* ----------------------  loading track --------------------------- */
 
-gboolean track_restore(appdata_t &appdata) {
+bool track_restore(appdata_t &appdata) {
   const project_t *project = appdata.project;
 
   /* first try to open a backup which is only present if saving the */
@@ -324,7 +324,7 @@ gboolean track_restore(appdata_t &appdata) {
 
     if(!g_file_test(trk_name.c_str(), G_FILE_TEST_EXISTS)) {
       printf("no track present!\n");
-      return FALSE;
+      return false;
     }
     printf("track found, loading ...\n");
   }
@@ -335,7 +335,7 @@ gboolean track_restore(appdata_t &appdata) {
 
   printf("restored track\n");
 
-  return TRUE;
+  return true;
 }
 
 static void track_end_segment(track_t *track) {
