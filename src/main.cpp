@@ -362,7 +362,6 @@ cb_menu_track_import(appdata_t *appdata) {
       map_track_draw(appdata->map, appdata->track.track);
 
       appdata->settings->track_path = filename;
-      filename = O2G_NULLPTR;
     }
     track_menu_set(*appdata);
     g_free(filename);
