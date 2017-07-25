@@ -140,7 +140,7 @@ void map_edit_way_add_segment(map_t *map, gint x, gint y) {
 
       /* draw current way */
       josm_elemstyles_colorize_way(map->style, map->action.way);
-      map_way_draw(map, map->action.way);
+      map->draw(map->action.way);
     }
   }
 }
@@ -237,7 +237,7 @@ void map_draw_nodes::operator()(node_t* node)
     map->appdata.osm->node_attach(node);
   }
 
-  map_node_draw(map, node);
+  map->draw(node);
 }
 
 void map_edit_way_add_ok(map_t *map) {
@@ -332,16 +332,16 @@ void map_edit_way_add_ok(map_t *map) {
     merge_node_chains(map->action.way, map->action.ends_on->node_chain, reverse);
 
     /* erase and free ends_on (now only containing the first node anymore) */
-    map_way_delete(map, map->action.ends_on);
+    map->delete_way(map->action.ends_on);
   }
 
   /* remove prior version of this way */
   map_item_chain_destroy(map->action.way->map_item_chain);
 
   /* draw the updated way */
-  map_way_draw(map, map->action.way);
+  map->draw(map->action.way);
 
-  map_way_select(map, map->action.way);
+  map->select_way(map->action.way);
 
   map->action.way = O2G_NULLPTR;
 
@@ -380,19 +380,19 @@ void map_edit_way_node_add(map_t *map, gint x, gint y) {
       way->node_chain.insert(way->node_chain.begin() + insert_after + 1, node);
 
       /* clear selection */
-      map_item_deselect(map);
+      map->item_deselect();
 
       /* remove prior version of this way */
       map_item_chain_destroy(way->map_item_chain);
 
       /* draw the updated way */
-      map_way_draw(map, way);
+      map->draw(way);
 
       /* remember that this node is contained in one way */
       node->ways=1;
 
       /* and now draw the node */
-      map_node_draw(map, node);
+      map->draw(node);
 
       /* and that the way needs to be uploaded */
       way->flags |= OSM_FLAG_DIRTY;
@@ -401,7 +401,7 @@ void map_edit_way_node_add(map_t *map, gint x, gint y) {
       map_action_set(map, MAP_ACTION_IDLE);
 
       /* and redo it */
-      map_way_select(map, way);
+      map->select_way(way);
     }
   }
 }
@@ -491,7 +491,7 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
   way_t *neww = way->split(map->appdata.osm, cut_at, cut_at_node);
 
   /* clear selection */
-  map_item_deselect(map);
+  map->item_deselect();
 
   /* remove prior version of this way */
   printf("remove visible version of way #" ITEM_ID_FORMAT "\n", way->id);
@@ -502,11 +502,11 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
   if(way->node_chain.size() < 2) {
     printf("swapping ways to avoid destruction of original way\n");
     way->node_chain.swap(neww->node_chain);
-    map_way_delete(map, neww);
+    map->delete_way(neww);
     neww = O2G_NULLPTR;
   } else if(neww->node_chain.size() < 2) {
     printf("new way has less than 2 nodes, deleting it\n");
-    map_way_delete(map, neww);
+    map->delete_way(neww);
     neww = O2G_NULLPTR;
   }
 
@@ -514,20 +514,20 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
   /* remove it then */
   if(way->node_chain.size() < 2) {
     printf("original way has less than 2 nodes left, deleting it\n");
-    map_way_delete(map, way);
+    map->delete_way(way);
     item = O2G_NULLPTR;
   } else {
     printf("original way still has %zu nodes\n", way->node_chain.size());
 
     /* draw the updated old way */
     josm_elemstyles_colorize_way(map->style, way);
-    map_way_draw(map, way);
+    map->draw(way);
   }
 
   if(neww != O2G_NULLPTR) {
     /* colorize the new way before drawing */
     josm_elemstyles_colorize_way(map->style, neww);
-    map_way_draw(map, neww);
+    map->draw(neww);
   }
 
   /* put gui into idle state */
@@ -535,9 +535,9 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
 
   /* and redo selection if way still exists */
   if(item)
-    map_way_select(map, way);
+    map->select_way(way);
   else if(neww)
-    map_way_select(map, neww);
+    map->select_way(neww);
 }
 
 struct member_merge {
@@ -591,7 +591,7 @@ void redraw_way::operator()(const std::pair<item_id_t, way_t *> &p)
 
   /* draw current way */
   josm_elemstyles_colorize_way(map->style, way);
-  map_way_draw(map, way);
+  map->draw(way);
 }
 
 struct find_way_ends {
@@ -731,7 +731,7 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, gint ex, gint ey) {
 		       "Please solve these."));
 
 	  ways2join[0]->flags |= OSM_FLAG_DIRTY;
-          map_way_delete(map, ways2join[1]);
+          map->delete_way(ways2join[1]);
 	}
       }
     }
@@ -767,7 +767,7 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, gint ex, gint ey) {
   /* now update the visual representation of the node */
 
   map_item_chain_destroy(node->map_item_chain);
-  map_node_draw(map, node);
+  map->draw(node);
 
   /* visually update ways, node is part of */
   std::for_each(osm->ways.begin(), osm->ways.end(), redraw_way(node, map));
@@ -776,7 +776,7 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, gint ex, gint ey) {
   node->flags |= OSM_FLAG_DIRTY;
 
   /* update highlight */
-  map_highlight_refresh(map);
+  map->highlight_refresh();
 }
 
 /* -------------------------- way_reverse ----------------------- */
@@ -787,7 +787,7 @@ void map_edit_way_reverse(map_t *map) {
   map_item_t item = map->selected;
 
   /* deleting the selected item de-selects it ... */
-  map_item_deselect(map);
+  map->item_deselect();
 
   g_assert(item.object.type == WAY);
 
@@ -798,7 +798,7 @@ void map_edit_way_reverse(map_t *map) {
     item.object.way->reverse_direction_sensitive_roles(map->appdata.osm);
 
   item.object.obj->flags |= OSM_FLAG_DIRTY;
-  map_way_select(map, item.object.way);
+  map->select_way(item.object.way);
 
   // Flash a message about any side-effects
   gchar *msg = O2G_NULLPTR;

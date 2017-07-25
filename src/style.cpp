@@ -394,7 +394,7 @@ void style_change(appdata_t &appdata, const char *name) {
 
   appdata.settings->style = new_style;
 
-  map_clear(appdata.map, MAP_LAYER_OBJECTS_ONLY);
+  appdata.map->clear(MAP_LAYER_OBJECTS_ONLY);
   /* let gtk clean up first */
   osm2go_platform::process_events();
 
@@ -405,7 +405,7 @@ void style_change(appdata_t &appdata, const char *name) {
   canvas_set_background(appdata.map->canvas,
                         appdata.style->background.color);
 
-  map_paint(appdata.map);
+  appdata.map->paint();
 }
 
 #ifndef FREMANTLE

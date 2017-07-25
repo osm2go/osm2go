@@ -48,10 +48,10 @@ struct track_t {
 
 struct appdata_t;
 struct project_t;
-typedef struct track_t track_t;
+struct track_t;
 
 /* used internally to save and restore the currently displayed track */
-void track_save(struct project_t *project, track_t *track);
+void track_save(project_t *project, track_t *track);
 /**
  * @brief restore the track of the current project
  * @param appdata global appdata object

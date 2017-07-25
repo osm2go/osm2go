@@ -162,7 +162,7 @@ cb_menu_download(appdata_t *appdata) {
 		  appdata->project)) {
     if(appdata->osm) {
       /* redraw the entire map by destroying all map items and redrawing them */
-      map_clear(appdata->map, MAP_LAYER_OBJECTS_ONLY);
+      appdata->map->clear(MAP_LAYER_OBJECTS_ONLY);
 
       delete appdata->osm;
     }
@@ -170,7 +170,7 @@ cb_menu_download(appdata_t *appdata) {
     banner_busy_start(*appdata, _("Drawing"));
     appdata->osm = appdata->project->parse_osm(appdata->icons);
     diff_restore(*appdata);
-    map_paint(appdata->map);
+    appdata->map->paint();
     banner_busy_stop(*appdata); //"Redrawing"
   }
 
@@ -232,14 +232,14 @@ cb_menu_undo_changes(appdata_t *appdata) {
 		 "uploaded yet? This cannot be undone.")))
     return;
 
-  map_clear(appdata->map, MAP_LAYER_OBJECTS_ONLY);
+  appdata->map->clear(MAP_LAYER_OBJECTS_ONLY);
 
   delete appdata->osm;
   appdata->osm = O2G_NULLPTR;
 
   diff_remove(appdata->project);
   appdata->osm = appdata->project->parse_osm(appdata->icons);
-  map_paint(appdata->map);
+  appdata->map->paint();
 
   banner_show_info(*appdata, _("Undo all changes"));
 }
@@ -264,7 +264,7 @@ static void
 cb_menu_zoomin(appdata_t *appdata) {
   if(!appdata->map) return;
 
-  map_set_zoom(appdata->map, appdata->map->state.zoom * ZOOM_FACTOR_MENU, TRUE);
+  map_set_zoom(appdata->map, appdata->map->state.zoom * ZOOM_FACTOR_MENU, true);
   printf("zoom is now %f\n", appdata->map->state.zoom);
 }
 
@@ -272,7 +272,7 @@ static void
 cb_menu_zoomout(appdata_t *appdata) {
   if(!appdata->map) return;
 
-  map_set_zoom(appdata->map, appdata->map->state.zoom / ZOOM_FACTOR_MENU, TRUE);
+  map_set_zoom(appdata->map, appdata->map->state.zoom / ZOOM_FACTOR_MENU, true);
   printf("zoom is now %f\n", appdata->map->state.zoom);
 }
 
@@ -1236,7 +1236,7 @@ static gboolean on_window_key_press(GtkWidget *, GdkEventKey *event, appdata_t *
 
   /* forward unprocessed key presses to map */
   if(!handled && appdata->project)
-    handled = map_key_press_event(appdata->map, event);
+    handled = appdata->map->key_press_event(event);
 
   return handled;
 }

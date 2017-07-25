@@ -138,18 +138,22 @@ struct map_t {
   osm_t::TagMap last_way_tags;
 
   void set_autosave(bool enable);
+  gboolean key_press_event(GdkEventKey *event);
+  void init();
+  void paint();
+  void clear(gint group_mask);
+  void item_deselect();
+  void highlight_refresh();
+  void draw(node_t *node);
+  void select_relation(relation_t *relation);
+  void redraw_item(object_t object);
+  void delete_way(way_t *way);
+  void draw(way_t *way);
+  void select_way(way_t *way);
 };
 
-void map_item_redraw(map_t *map, object_t object);
-
-void map_init(map_t *map);
-gboolean map_key_press_event(map_t *map, GdkEventKey *event);
 void map_show_node(map_t *map, node_t *node);
 void map_cmenu_show(map_t *map);
-void map_highlight_refresh(map_t *map);
-
-void map_clear(map_t *map, gint layer_mask);
-void map_paint(map_t *map);
 
 void map_action_set(map_t *map, map_action_t action);
 void map_action_cancel(map_t *map);
@@ -158,7 +162,8 @@ void map_action_ok(map_t *map);
 void map_delete_selected(map_t *map);
 
 /* track stuff */
-void map_track_draw(map_t *map, struct track_t *track);
+struct track_t;
+void map_track_draw(map_t *map, track_t *track);
 struct track_seg_t;
 void map_track_draw_seg(map_t *map, track_seg_t &seg);
 void map_track_update_seg(map_t *map, track_seg_t &seg);
@@ -173,7 +178,7 @@ void map_remove_bg_image(map_t *map);
 void map_hide_selected(map_t *map);
 void map_show_all(map_t *map);
 
-void map_set_zoom(map_t *map, double zoom, gboolean update_scroll_offsets);
+void map_set_zoom(map_t *map, double zoom, bool update_scroll_offsets);
 gboolean map_scroll_to_if_offscreen(map_t *map, const lpos_t *lpos);
 
 void map_detail_change(map_t *map, float detail);
@@ -187,13 +192,7 @@ bool map_item_is_selected_node(map_t *map, map_item_t *map_item);
 gboolean map_item_is_selected_way(map_t *map, map_item_t *map_item);
 map_item_t *map_item_at(map_t *map, gint x, gint y);
 map_item_t *map_real_item_at(map_t *map, gint x, gint y);
-void map_item_deselect(map_t *map);
-void map_way_delete(map_t *map, way_t *way);
-void map_way_draw(map_t *map, way_t *way);
-void map_way_select(map_t *map, way_t *way);
 void map_outside_error(appdata_t &appdata);
-void map_node_draw(map_t *map, node_t *node);
-void map_relation_select(map_t *map, relation_t *relation);
 
 void map_item_chain_destroy(map_item_chain_t *&chainP);
 #endif

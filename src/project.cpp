@@ -458,7 +458,7 @@ static void project_close(appdata_t &appdata) {
   track_save(appdata.project, appdata.track.track);
   track_clear(appdata);
 
-  map_clear(appdata.map, MAP_LAYER_ALL);
+  appdata.map->clear(MAP_LAYER_ALL);
 
   if(appdata.osm) {
     diff_save(appdata.project, appdata.osm);
@@ -733,7 +733,7 @@ static void on_project_edit(select_context_t *context) {
         if(appdata.osm) {
 	  /* redraw the entire map by destroying all map items  */
           diff_save(appdata.project, appdata.osm);
-          map_clear(appdata.map, MAP_LAYER_ALL);
+          appdata.map->clear(MAP_LAYER_ALL);
 
           delete appdata.osm;
 	}
@@ -741,7 +741,7 @@ static void on_project_edit(select_context_t *context) {
 	/* and load the (hopefully) new file */
         appdata.osm = appdata.project->parse_osm(appdata.icons);
         diff_restore(appdata);
-        map_paint(appdata.map);
+        appdata.map->paint();
 
 	main_ui_enable(appdata);
       }
@@ -1083,10 +1083,10 @@ static void on_diff_remove_clicked(project_context_t *context) {
       printf("undo all on current project: delete map changes as well\n");
 
       /* just reload the map */
-      map_clear(appdata.map, MAP_LAYER_OBJECTS_ONLY);
+      appdata.map->clear(MAP_LAYER_OBJECTS_ONLY);
       delete appdata.osm;
       appdata.osm = appdata.project->parse_osm(appdata.icons);
-      map_paint(appdata.map);
+      appdata.map->paint();
     }
 
     /* update button/label state */
@@ -1361,7 +1361,7 @@ bool project_load(appdata_t &appdata, const std::string &name) {
   osm2go_platform::process_events();
   if(!appdata.window) goto fail;
 
-  map_init(appdata.map);
+  appdata.map->init();
 
   /* restore a track */
   osm2go_platform::process_events();
