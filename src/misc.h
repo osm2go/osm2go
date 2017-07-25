@@ -193,6 +193,8 @@ void open_url(appdata_t &appdata, const char *url);
 
 void misc_init(void);
 
+GtkWidget *string_select_widget(const char *title, const std::vector<std::string> &entries, int match);
+
 #endif
 
 #endif // MISC_H

@@ -639,3 +639,23 @@ void misc_init(void) {
 		g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 #endif
 }
+
+struct combo_add_string {
+  GtkWidget * const cbox;
+  combo_add_string(GtkWidget *w) : cbox(w) {}
+  void operator()(const std::string &entry) {
+    combo_box_append_text(cbox, entry.c_str());
+  }
+};
+
+GtkWidget *string_select_widget(const char *title, const std::vector<std::string> &entries, int match) {
+  GtkWidget *cbox = combo_box_new(title);
+
+  /* fill combo box with entries */
+  std::for_each(entries.begin(), entries.end(), combo_add_string(cbox));
+
+  if(match >= 0)
+    combo_box_set_active(cbox, match);
+
+  return cbox;
+}

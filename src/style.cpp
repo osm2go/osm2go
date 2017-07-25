@@ -260,40 +260,29 @@ static std::string style_basename(const std::string &name) {
 }
 
 struct combo_add_styles {
-  GtkWidget * const cbox;
   int cnt;
   int &match;
   const std::string &currentstyle;
-  icon_t dummyicons;
-  combo_add_styles(GtkWidget *w, const std::string &sname, int &m)
-    : cbox(w), cnt(0), match(m), currentstyle(sname) {}
-  void operator()(const std::string &filename);
+  std::vector<std::string> &styles;
+  combo_add_styles(const std::string &sname, int &m, std::vector<std::string> &s)
+    : cnt(0), match(m), currentstyle(sname), styles(s) {}
+  void operator()(const std::pair<std::string, std::string> &pair);
 };
 
-void combo_add_styles::operator()(const std::string &filename)
+void combo_add_styles::operator()(const std::pair<std::string, std::string> &pair)
 {
-  printf("  file: %s\n", filename.c_str());
-
-  style_t *style = style_parse(filename, dummyicons, O2G_NULLPTR, true);
-  if(!style)
-    return;
-
-  printf("    name: %s\n", style->name);
-  combo_box_append_text(cbox, style->name);
-
-  const std::string &basename = style_basename(filename);
-  if(basename == currentstyle)
+  if(match < 0 && style_basename(pair.second) == currentstyle)
     match = cnt;
 
-  delete style;
+  styles.push_back(pair.first);
 
   cnt++;
 }
 
 /* scan all data directories for the given file extension and */
 /* return a list of files matching this extension */
-static std::vector<std::string> style_scan() {
-  std::vector<std::string> chain;
+static std::map<std::string, std::string> style_scan() {
+  std::map<std::string, std::string> ret;
   const char *extension = ".style";
 
   char *p = getenv("HOME");
@@ -318,8 +307,14 @@ static std::vector<std::string> style_scan() {
           fullname.reserve(strlen(dirname) + nlen + 1);
           fullname = dirname;
           fullname += name;
-          if(g_file_test(fullname.c_str(), G_FILE_TEST_IS_REGULAR))
-            chain.push_back(fullname);
+          if(g_file_test(fullname.c_str(), G_FILE_TEST_IS_REGULAR)) {
+            icon_t dummyicons;
+            style_t *style = style_parse(fullname, dummyicons, O2G_NULLPTR, true);
+            if(style) {
+              ret[style->name] = fullname;
+              delete style;
+            }
+          }
         }
       }
 
@@ -330,67 +325,43 @@ static std::vector<std::string> style_scan() {
       g_free((char*)dirname);
   }
 
-  return chain;
+  return ret;
 }
 
 static GtkWidget *style_select_widget(const std::string &currentstyle,
-                                      const std::vector<std::string> &chain) {
+                                      const std::map<std::string, std::string> &styles) {
   /* there must be at least one style, otherwise */
   /* the program wouldn't be running */
-  g_assert_false(chain.empty());
-
-  GtkWidget *cbox = combo_box_new(_("Style"));
+  g_assert_false(styles.empty());
 
   /* fill combo box with presets */
   int match = -1;
-  std::for_each(chain.begin(), chain.end(),
-                combo_add_styles(cbox, currentstyle, match));
+  std::vector<std::string> stylesNames;
+  std::for_each(styles.begin(), styles.end(),
+                combo_add_styles(currentstyle, match, stylesNames));
 
-  if(match >= 0)
-    combo_box_set_active(cbox, match);
-
-  return cbox;
+  return string_select_widget(_("Style"), stylesNames, match);
 }
 
 GtkWidget *style_select_widget(const std::string &currentstyle) {
   return style_select_widget(currentstyle, style_scan());
 }
 
-struct style_find {
-  const std::string &name;
-  icon_t dummyicons;
-  style_find(const std::string &n) : name(n) {}
-  bool operator()(const std::string &filename);
-};
-
-bool style_find::operator()(const std::string &filename)
-{
-  style_t *style = style_parse(filename, dummyicons, O2G_NULLPTR, true);
-  if(!style)
-    return false;
-
-  bool match = name == style->name;
-  delete style;
-
-  return match;
-}
-
 static void style_change(appdata_t &appdata, const std::string &name,
-                         const std::vector<std::string> &chain) {
-  const std::vector<std::string>::const_iterator it =
-      std::find_if(chain.begin(), chain.end(), style_find(name));
+                         const std::map<std::string, std::string> &styles) {
+  const std::map<std::string, std::string>::const_iterator it = styles.find(name);
 
-  g_assert(it != chain.end());
-  const std::string &new_style = style_basename(*it);
+  g_assert(it != styles.end());
+  const std::string &new_style = style_basename(it->second);
 
   /* check if style has really been changed */
   if(appdata.settings->style == new_style)
     return;
 
-  style_t *nstyle = style_load_fname(appdata.icons, *it);
+  style_t *nstyle = style_load_fname(appdata.icons, it->second);
   if (nstyle == O2G_NULLPTR) {
     errorf(GTK_WIDGET(appdata.window),
-           _("Error loading style %s"), it->c_str());
+           _("Error loading style %s"), it->second.c_str());
     return;
   }
 
@@ -431,7 +402,7 @@ void style_select(GtkWidget *parent, appdata_t &appdata) {
 
   gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_ACCEPT);
 
-  const std::vector<std::string> &styles = style_scan();
+  const std::map<std::string, std::string> &styles = style_scan();
   GtkWidget *cbox = style_select_widget(appdata.settings->style, styles);
 
   GtkWidget *hbox = gtk_hbox_new(FALSE, 8);
