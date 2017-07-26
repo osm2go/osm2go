@@ -232,8 +232,6 @@ struct osm_t {
 
 xmlChar *osm_generate_xml_changeset(const std::string &comment, const std::string &src);
 
-bool osm_position_within_bounds_ll(const pos_t *ll_min, const pos_t *ll_max, const pos_t *pos);
-
 struct tag_t {
   char *key, *value;
   tag_t(char *k, char *v)

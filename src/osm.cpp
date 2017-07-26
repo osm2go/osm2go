@@ -1620,14 +1620,6 @@ bool osm_t::position_within_bounds(gint x, gint y) const {
   return true;
 }
 
-bool osm_position_within_bounds_ll(const pos_t *ll_min, const pos_t *ll_max, const pos_t *pos) {
-  if((pos->lat < ll_min->lat) || (pos->lat > ll_max->lat))
-    return false;
-  if((pos->lon < ll_min->lon) || (pos->lon > ll_max->lon))
-    return false;
-  return true;
-}
-
 struct remove_member_functor {
   const object_t obj;
   // the second argument is to distinguish the constructor from operator()

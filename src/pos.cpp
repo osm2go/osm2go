@@ -197,3 +197,11 @@ pos_float_t pos_dist_get(GtkWidget *widget, bool is_mil) {
   const gchar *p = gtk_entry_get_text(GTK_ENTRY(widget));
   return g_strtod(p, O2G_NULLPTR) * (is_mil?KMPMIL:1.0);
 }
+
+bool position_in_rect(const pos_t &ll_min, const pos_t &ll_max, const pos_t &pos) {
+  if((pos.lat < ll_min.lat) || (pos.lat > ll_max.lat))
+    return false;
+  if((pos.lon < ll_min.lon) || (pos.lon > ll_max.lon))
+    return false;
+  return true;
+}

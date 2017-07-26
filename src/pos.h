@@ -129,6 +129,8 @@ bool pos_lon_valid(pos_float_t lon);
 void pos_dist_entry_set(GtkWidget *entry, pos_float_t dist, bool is_mil);
 pos_float_t pos_dist_get(GtkWidget *widget, bool is_mil);
 
+bool position_in_rect(const pos_t &ll_min, const pos_t &ll_max, const pos_t &pos);
+
 #endif
 
 #endif // POS_H

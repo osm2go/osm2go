@@ -800,7 +800,7 @@ void project_list_add::operator()(const project_t* project)
                      -1);
 
   /* decide if to select this project because it matches the current position */
-  if(check_pos && osm_position_within_bounds_ll(&project->min, &project->max, &pos)) {
+  if(check_pos && position_in_rect(project->min, project->max, pos)) {
     seliter = iter;
     has_sel = TRUE;
     check_pos = false;

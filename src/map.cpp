@@ -1837,8 +1837,7 @@ void map_action_ok(map_t *map) {
     node_t *node = O2G_NULLPTR;
     osm_t * const osm = map->appdata.osm;
 
-    if(!osm_position_within_bounds_ll(&osm->bounds->ll_min,
-                                      &osm->bounds->ll_max, &pos)) {
+    if(!position_in_rect(osm->bounds->ll_min, osm->bounds->ll_max, pos)) {
       map_outside_error(map->appdata);
     } else {
       node = osm->node_new(pos);
