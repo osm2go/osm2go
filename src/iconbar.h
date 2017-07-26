@@ -46,7 +46,6 @@ struct iconbar_t {
   GtkWidget *way_node_add;
   GtkWidget *way_cut;
   GtkWidget *way_reverse;
-  GtkWidget *relation_add;
 
   GtkWidget *cancel;
   GtkWidget *ok;

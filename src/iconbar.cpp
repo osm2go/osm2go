@@ -90,16 +90,6 @@ static gint on_way_button_press(GtkWidget *,
 }
 #endif
 
-#ifdef MAIN_GUI_RELATION
-static void on_relation_add_clicked(appdata_t *appdata) {
-  g_assert((appdata->map->selected.object.type == NODE) ||
-	   (appdata->map->selected.object.type == WAY));
-
-  relation_add_dialog(GTK_WIDGET(appdata.window), appdata,
-		      &appdata->map->selected.object);
-}
-#endif
-
 /* enable/disable ok and cancel button */
 void icon_bar_map_cancel_ok(iconbar_t *iconbar,
               gboolean cancel, gboolean ok) {
@@ -113,10 +103,6 @@ void icon_bar_map_item_selected(iconbar_t *iconbar,
   gtk_widget_set_sensitive(iconbar->trash, selected);
 
   gtk_widget_set_sensitive(iconbar->info, selected);
-
-#ifdef MAIN_GUI_RELATION
-  gtk_widget_set_sensitive(iconbar->relation_add, selected);
-#endif
 
   gboolean way_en = (selected && map_item->object.type == WAY) ?
                     TRUE : FALSE;
@@ -136,9 +122,6 @@ void icon_bar_map_action_idle(iconbar_t *iconbar, gboolean idle, gboolean way_en
 
   /* icons that are disabled in idle mode */
   GtkWidget *action_disable_widgets[] = {
-#ifdef MAIN_GUI_RELATION
-    iconbar->relation_add,
-#endif
     iconbar->trash,
     iconbar->info
   };
@@ -214,7 +197,6 @@ iconbar_t::iconbar_t(appdata_t &appdata)
   , way_cut(O2G_NULLPTR)
   , way_reverse(O2G_NULLPTR)
 #endif
-  , relation_add(O2G_NULLPTR)
   , cancel(O2G_NULLPTR)
   , ok(O2G_NULLPTR)
 {
@@ -298,18 +280,6 @@ GtkWidget *iconbar_new(appdata_t &appdata) {
         TOOL_ICON("way_cut"), _("Split way"), G_CALLBACK(on_way_cut_clicked), appdata.map);
   iconbar->way_reverse = tool_add(iconbar->toolbar, appdata,
         TOOL_ICON("way_reverse"), _("Reverse way"), G_CALLBACK(map_edit_way_reverse), appdata.map);
-#endif
-
-#ifdef MAIN_GUI_RELATION
-#ifndef FINGER_UI
-  /* -------------------------------------------------------- */
-  gtk_toolbar_insert(GTK_TOOLBAR(iconbar->toolbar),
-		     gtk_separator_tool_item_new(),-1);
-#endif
-
-  iconbar->relation_add = tool_add(iconbar->toolbar, appdata,
-      TOOL_ICON("relation_add"), _("Edit item's relations"),
-      G_CALLBACK(on_relation_add_clicked), appdata);
 #endif
 
   gtk_box_pack_start(GTK_BOX(box), iconbar->toolbar, TRUE, TRUE, 0);
