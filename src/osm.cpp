@@ -1656,7 +1656,7 @@ void remove_member_functor::operator()(std::pair<item_id_t, relation_t *> pair)
 /* remove the given object from all relations. used if the object is to */
 /* be deleted */
 void osm_t::remove_from_relations(object_t obj) {
-  printf("removing %s #" ITEM_ID_FORMAT " from all relations:\n", obj.obj->apiString(), obj.id);
+  printf("removing %s #" ITEM_ID_FORMAT " from all relations:\n", obj.obj->apiString(), obj.get_id());
 
   std::for_each(relations.begin(), relations.end(),
                 remove_member_functor(obj, false));
