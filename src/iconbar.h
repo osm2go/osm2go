@@ -35,18 +35,18 @@ struct iconbar_t {
 
   GtkWidget * const toolbar;
 
-  GtkWidget *info;
-  GtkWidget *trash;
-  GtkWidget *node_add;
+  GtkWidget * const info;
+  GtkWidget * const trash;
+  GtkWidget * const node_add;
 
 #ifdef FINGER_UI
   GtkWidget * const menu;
 #endif
 
-  GtkWidget *way_add;
-  GtkWidget *way_node_add;
-  GtkWidget *way_cut;
-  GtkWidget *way_reverse;
+  GtkWidget * const way_add;
+  GtkWidget * const way_node_add;
+  GtkWidget * const way_cut;
+  GtkWidget * const way_reverse;
 
   GtkWidget *cancel;
   GtkWidget *ok;

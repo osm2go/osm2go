@@ -160,7 +160,8 @@ static GtkWidget *icon_add(GtkWidget *vbox, appdata_t &appdata,
 static GtkWidget *  __attribute__((nonnull(1,3,4,5)))
                   tool_add(GtkWidget *toolbar, appdata_t &appdata,
                            const char *icon_str, char *tooltip_str,
-                           GCallback func, gpointer context) {
+                           GCallback func, gpointer context,
+                           bool separator = false) {
   GtkWidget *item =
     GTK_WIDGET(gtk_tool_button_new(
                appdata.icons.widget_load(icon_str), O2G_NULLPTR));
@@ -179,14 +180,23 @@ static GtkWidget *  __attribute__((nonnull(1,3,4,5)))
 
   gtk_toolbar_insert(GTK_TOOLBAR(toolbar), GTK_TOOL_ITEM(item), -1);
 
+  if(separator)
+    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), gtk_separator_tool_item_new(), -1);
+
   return item;
 }
 
 iconbar_t::iconbar_t(appdata_t &appdata)
   : toolbar(gtk_toolbar_new())
-  , info(O2G_NULLPTR)
-  , trash(O2G_NULLPTR)
-  , node_add(O2G_NULLPTR)
+  , info(tool_add(toolbar, appdata,
+                  TOOL_ICON("info"), _("Properties"),
+                  G_CALLBACK(on_info_clicked), &appdata, true))
+  , trash(tool_add(toolbar, appdata,
+                   TOOL_ICON("trash"), _("Delete"),
+                   G_CALLBACK(map_delete_selected), appdata.map, true))
+  , node_add(tool_add(toolbar, appdata,
+                      TOOL_ICON("node_add"), _("New node"),
+                      G_CALLBACK(on_node_add_clicked), appdata.map, true))
 #ifdef FINGER_UI
   , menu(gtk_menu_new())
   , way_add(menu_add(menu, appdata, MENU_ICON("way_add"),
@@ -198,16 +208,31 @@ iconbar_t::iconbar_t(appdata_t &appdata)
   , way_reverse(menu_add(menu, appdata, MENU_ICON("way_reverse"),
                 _("Reverse way"), G_CALLBACK(map_edit_way_reverse)))
 #else
-  , way_add(O2G_NULLPTR)
-  , way_node_add(O2G_NULLPTR)
-  , way_cut(O2G_NULLPTR)
-  , way_reverse(O2G_NULLPTR)
+  , way_add(tool_add(toolbar, appdata,
+                     TOOL_ICON("way_add"), _("Add way"),
+                     G_CALLBACK(on_way_add_clicked), appdata.map))
+  , way_node_add(tool_add(toolbar, appdata,
+                          TOOL_ICON("way_node_add"), _("Add node"),
+                          G_CALLBACK(on_way_node_add_clicked), appdata.map))
+  , way_cut(tool_add(toolbar, appdata,
+                     TOOL_ICON("way_cut"), _("Split way"),
+                     G_CALLBACK(on_way_cut_clicked), appdata.map))
+  , way_reverse(tool_add(toolbar, appdata,
+                         TOOL_ICON("way_reverse"), _("Reverse way"),
+                         G_CALLBACK(map_edit_way_reverse), appdata.map))
 #endif
   , cancel(O2G_NULLPTR)
   , ok(O2G_NULLPTR)
 {
-#ifndef FINGER_UI
-  (void) appdata;
+#ifndef PORTRAIT
+  gtk_toolbar_set_orientation(GTK_TOOLBAR(toolbar), GTK_ORIENTATION_VERTICAL);
+#endif
+
+  gtk_toolbar_set_style(GTK_TOOLBAR(toolbar),
+#if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
+                                              GTK_TOOLBAR_ICONS);
+#else
+                                              GTK_TOOLBAR_BOTH);
 #endif
 }
 
@@ -216,39 +241,9 @@ GtkWidget *iconbar_new(appdata_t &appdata) {
 
 #ifndef PORTRAIT
   GtkWidget *box = gtk_vbox_new(FALSE, 0);
-  gtk_toolbar_set_orientation(GTK_TOOLBAR(iconbar->toolbar),
-			      GTK_ORIENTATION_VERTICAL);
 #else
   GtkWidget *box = gtk_hbox_new(FALSE, 0);
 #endif
-
-#if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
-  gtk_toolbar_set_style(GTK_TOOLBAR(iconbar->toolbar), GTK_TOOLBAR_ICONS);
-#else
-  gtk_toolbar_set_style(GTK_TOOLBAR(iconbar->toolbar), GTK_TOOLBAR_BOTH);
-#endif
-
-  /* -------------------------------------------------------- */
-  iconbar->trash = tool_add(iconbar->toolbar, appdata,
-      TOOL_ICON("trash"), _("Delete"), G_CALLBACK(map_delete_selected), appdata.map);
-
-  /* -------------------------------------------------------- */
-  gtk_toolbar_insert(GTK_TOOLBAR(iconbar->toolbar),
-		     gtk_separator_tool_item_new(),-1);
-
-  iconbar->info = tool_add(iconbar->toolbar, appdata,
-      TOOL_ICON("info"), _("Properties"), G_CALLBACK(on_info_clicked), &appdata);
-
-  /* -------------------------------------------------------- */
-  gtk_toolbar_insert(GTK_TOOLBAR(iconbar->toolbar),
-		     gtk_separator_tool_item_new(),-1);
-
-  iconbar->node_add = tool_add(iconbar->toolbar, appdata,
-       TOOL_ICON("node_add"), _("New node"), G_CALLBACK(on_node_add_clicked), appdata.map);
-
-  /* -------------------------------------------------------- */
-  gtk_toolbar_insert(GTK_TOOLBAR(iconbar->toolbar),
-		     gtk_separator_tool_item_new(),-1);
 
 #ifdef FINGER_UI
   gtk_widget_show_all(iconbar->menu);
@@ -275,17 +270,6 @@ GtkWidget *iconbar_new(appdata_t &appdata) {
   g_signal_connect(GTK_OBJECT(gtk_bin_get_child(GTK_BIN(way))),
                    "button-press-event",
                    G_CALLBACK(on_way_button_press), appdata.iconbar);
-
-#else
-  iconbar->way_add = tool_add(iconbar->toolbar, appdata,
-        TOOL_ICON("way_add"), _("Add way"), G_CALLBACK(on_way_add_clicked), appdata.map);
-  iconbar->way_node_add = tool_add(iconbar->toolbar, appdata,
-	TOOL_ICON("way_node_add"), _("Add node"),
-                                   G_CALLBACK(on_way_node_add_clicked), appdata.map);
-  iconbar->way_cut = tool_add(iconbar->toolbar, appdata,
-        TOOL_ICON("way_cut"), _("Split way"), G_CALLBACK(on_way_cut_clicked), appdata.map);
-  iconbar->way_reverse = tool_add(iconbar->toolbar, appdata,
-        TOOL_ICON("way_reverse"), _("Reverse way"), G_CALLBACK(map_edit_way_reverse), appdata.map);
 #endif
 
   gtk_box_pack_start(GTK_BOX(box), iconbar->toolbar, TRUE, TRUE, 0);
