@@ -118,7 +118,7 @@ static void map_node_select(map_t *map, node_t *node) {
     map_item->item = O2G_NULLPTR;
 
   map_statusbar(map, map_item);
-  icon_bar_map_item_selected(map->appdata.iconbar, map_item);
+  map->appdata.iconbar->map_item_selected(map_item);
 
   /* highlight node */
   gint x = map_item->object.node->lpos.x, y = map_item->object.node->lpos.y;
@@ -266,7 +266,7 @@ void map_t::select_way(way_t *way) {
   map_item->item      = way->map_item_chain->firstCanvasItem();
 
   map_statusbar(this, map_item);
-  icon_bar_map_item_selected(appdata.iconbar, map_item);
+  appdata.iconbar->map_item_selected(map_item);
   gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_MAP_HIDE_SEL], TRUE);
 
   gint arrow_width = ((map_item->object.way->draw.flags & OSM_DRAW_FLAG_BG)?
@@ -365,7 +365,7 @@ void map_t::select_relation(relation_t *relation) {
   map_item->item      = O2G_NULLPTR;
 
   map_statusbar(this, map_item);
-  icon_bar_map_item_selected(appdata.iconbar, map_item);
+  appdata.iconbar->map_item_selected(map_item);
 
   /* process all members */
   relation_select_functor fc(*hl, this);
@@ -403,7 +403,7 @@ void map_t::item_deselect() {
   appdata.statusbar->set(O2G_NULLPTR, FALSE);
 
   /* disable/enable icons in icon bar */
-  icon_bar_map_item_selected(appdata.iconbar, O2G_NULLPTR);
+  appdata.iconbar->map_item_selected(O2G_NULLPTR);
   gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_MAP_HIDE_SEL], FALSE);
 
   /* remove highlight */
@@ -1409,7 +1409,7 @@ static void map_button_release(map_t *map, gint x, gint y) {
       map->appdata.osm->node_attach(node);
       map->draw(node);
     }
-    map_action_set(map, MAP_ACTION_IDLE);
+    map->set_action(MAP_ACTION_IDLE);
 
     map->item_deselect();
 
@@ -1761,65 +1761,68 @@ void map_t::paint() {
 }
 
 /* called from several icons like e.g. "node_add" */
-void map_action_set(map_t *map, map_action_t action) {
+void map_t::set_action(map_action_t action) {
   printf("map action set to %d\n", action);
 
-  map->action.type = action;
+  this->action.type = action;
 
   /* enable/disable ok/cancel buttons */
   // MAP_ACTION_IDLE=0, NODE_ADD, BG_ADJUST, WAY_ADD, WAY_NODE_ADD, WAY_CUT
-  const gboolean ok_state[] = { FALSE, TRUE, TRUE, FALSE, FALSE, FALSE };
-  const gboolean cancel_state[] = { FALSE, TRUE, TRUE, TRUE, TRUE, TRUE };
+  gboolean ok_state = FALSE;
+  gboolean cancel_state = TRUE;
 
-  g_assert_cmpint(MAP_ACTION_NUM, ==, sizeof(ok_state)/sizeof(gboolean));
-  g_assert_cmpint(action, <, sizeof(ok_state)/sizeof(gboolean));
-
-  icon_bar_map_cancel_ok(map->appdata.iconbar, cancel_state[action], ok_state[action]);
+  const char *statusbar_text;
+  gboolean idle = FALSE;
 
   switch(action) {
   case MAP_ACTION_BG_ADJUST:
+    statusbar_text = _("Adjust background image position");
+    ok_state = TRUE;
     /* an existing selection only causes confusion ... */
-    map->item_deselect();
+    item_deselect();
     break;
 
   case MAP_ACTION_WAY_ADD: {
+    statusbar_text = _("Place first node of new way");
     printf("starting new way\n");
 
     /* remember if there was a way selected */
     way_t *way_sel = O2G_NULLPTR;
-    if(map->selected.object.type == WAY)
-      way_sel = map->selected.object.way;
+    if(selected.object.type == WAY)
+      way_sel = selected.object.way;
 
-    map->item_deselect();
-    map_edit_way_add_begin(map, way_sel);
+    item_deselect();
+    map_edit_way_add_begin(this, way_sel);
     break;
   }
 
   case MAP_ACTION_NODE_ADD:
-    map->item_deselect();
+    statusbar_text = _("Place a node");
+    ok_state = TRUE;
+    item_deselect();
     break;
 
-  default:
+  case MAP_ACTION_IDLE:
+    statusbar_text = O2G_NULLPTR;
+    cancel_state = FALSE;
+    idle = TRUE;
+    break;
+
+  case MAP_ACTION_WAY_CUT:
+    statusbar_text = _("Select segment to cut way");
+    break;
+
+  case MAP_ACTION_WAY_NODE_ADD:
+    statusbar_text = _("Place node on selected way");
     break;
   }
 
-  icon_bar_map_action_idle(map->appdata.iconbar, action == MAP_ACTION_IDLE ? TRUE : FALSE,
-                           map->selected.object.type == WAY ? TRUE : FALSE);
-  gtk_widget_set_sensitive(map->appdata.menuitems[MENU_ITEM_WMS_ADJUST],
-			   action == MAP_ACTION_IDLE);
+  appdata.iconbar->map_cancel_ok(cancel_state, ok_state);
+  appdata.iconbar->map_action_idle(idle,
+                                   selected.object.type == WAY ? TRUE : FALSE);
+  gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_WMS_ADJUST], idle);
 
-  const char *str_state[] = {
-    O2G_NULLPTR,
-    _("Place a node"),
-    _("Adjust background image position"),
-    _("Place first node of new way"),
-    _("Place node on selected way"),
-    _("Select segment to cut way"),
-  };
-
-  g_assert_cmpint(MAP_ACTION_NUM, ==, sizeof(str_state)/sizeof(char*));
-
-  map->appdata.statusbar->set(str_state[action], FALSE);
+  appdata.statusbar->set(statusbar_text, FALSE);
 }
 
 
@@ -1844,14 +1847,14 @@ void map_action_cancel(map_t *map) {
     break;
   }
 
-  map_action_set(map, MAP_ACTION_IDLE);
+  map->set_action(MAP_ACTION_IDLE);
 }
 
 void map_action_ok(map_t *map) {
   /* reset action now as this erases the statusbar and some */
   /* of the actions may set it */
   map_action_t type = map->action.type;
-  map_action_set(map, MAP_ACTION_IDLE);
+  map->set_action(MAP_ACTION_IDLE);
 
   switch(type) {
   case MAP_ACTION_WAY_ADD:
@@ -1881,7 +1884,7 @@ void map_action_ok(map_t *map) {
       osm->node_attach(node);
       map->draw(node);
     }
-    map_action_set(map, MAP_ACTION_IDLE);
+    map->set_action(MAP_ACTION_IDLE);
 
     map->item_deselect();
 

@@ -180,7 +180,7 @@ cb_menu_download(appdata_t *appdata) {
 
 static void
 cb_menu_wms_adjust(appdata_t *appdata) {
-  map_action_set(appdata->map, MAP_ACTION_BG_ADJUST);
+  appdata->map->set_action(MAP_ACTION_BG_ADJUST);
 }
 
 /* ----------- hide objects for performance reasons ----------- */

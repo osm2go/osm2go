@@ -60,7 +60,6 @@ enum map_action_t {
   MAP_ACTION_WAY_ADD,
   MAP_ACTION_WAY_NODE_ADD,
   MAP_ACTION_WAY_CUT,
-  MAP_ACTION_NUM
 };
 
 #ifdef __cplusplus
@@ -150,12 +149,12 @@ struct map_t {
   void delete_way(way_t *way);
   void draw(way_t *way);
   void select_way(way_t *way);
+  void set_action(map_action_t action);
 };
 
 void map_show_node(map_t *map, node_t *node);
 void map_cmenu_show(map_t *map);
 
-void map_action_set(map_t *map, map_action_t action);
 void map_action_cancel(map_t *map);
 void map_action_ok(map_t *map);
 

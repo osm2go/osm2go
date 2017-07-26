@@ -28,6 +28,7 @@
 #endif
 
 struct appdata_t;
+struct map_item_t;
 
 struct iconbar_t {
   iconbar_t(appdata_t &appdata);
@@ -49,23 +50,22 @@ struct iconbar_t {
 
   GtkWidget *cancel;
   GtkWidget *ok;
+
+  void map_item_selected(map_item_t *map_item);
+  void map_cancel_ok(gboolean cancelv, gboolean okv);
+
+  /**
+   * @brief set enable state of edit buttons
+   * @param idle if an operation is currently active
+   * @param way_en if the operations affecting ways should be enabled
+   *
+   * If a user action is in progress, then disable all buttons that
+   * cause an action to take place or interfere with the action.
+   */
+  void map_action_idle(gboolean idle, gboolean way_en);
 };
 
-struct map_item_t;
-
 GtkWidget *iconbar_new(appdata_t &appdata);
-void icon_bar_map_item_selected(iconbar_t *iconbar, struct map_item_t *map_item);
-void icon_bar_map_cancel_ok(iconbar_t *iconbar, gboolean cancel, gboolean ok);
-/**
- * @brief set enable state of edit buttons
- * @param iconbar the iconbar to operate on
- * @param idle if an operation is currently active
- * @param way_en if the operations affecting ways should be enabled
- *
- * If a user action is in progress, then disable all buttons that
- * cause an action to take place or interfere with the action.
- */
-void icon_bar_map_action_idle(iconbar_t *iconbar, gboolean idle, gboolean way_en);
 
 #ifdef FINGER_UI
 void iconbar_register_buttons(appdata_t &appdata, GtkWidget *ok, GtkWidget *cancel);

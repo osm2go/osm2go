@@ -105,7 +105,7 @@ void map_edit_way_add_segment(map_t *map, gint x, gint y) {
 	    map->action.extending = O2G_NULLPTR;
 	  else
 	    /* there are immediately enough nodes for a valid way */
-	    icon_bar_map_cancel_ok(map->appdata.iconbar, TRUE, TRUE);
+	    map->appdata.iconbar->map_cancel_ok(TRUE, TRUE);
 	}
       }
 
@@ -131,7 +131,7 @@ void map_edit_way_add_segment(map_t *map, gint x, gint y) {
         break;
       case 2:
         /* two nodes are enough for a valid way */
-        icon_bar_map_cancel_ok(map->appdata.iconbar, TRUE, TRUE);
+        map->appdata.iconbar->map_cancel_ok(TRUE, TRUE);
         break;
       }
 
@@ -398,7 +398,7 @@ void map_edit_way_node_add(map_t *map, gint x, gint y) {
       way->flags |= OSM_FLAG_DIRTY;
 
       /* put gui into idle state */
-      map_action_set(map, MAP_ACTION_IDLE);
+      map->set_action(MAP_ACTION_IDLE);
 
       /* and redo it */
       map->select_way(way);
@@ -531,7 +531,7 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
   }
 
   /* put gui into idle state */
-  map_action_set(map, MAP_ACTION_IDLE);
+  map->set_action(MAP_ACTION_IDLE);
 
   /* and redo selection if way still exists */
   if(item)

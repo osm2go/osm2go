@@ -36,25 +36,26 @@
 #endif
 
 #define MARKUP "<span size='xx-small'>%s</span>"
+#define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
 
 static void on_info_clicked(appdata_t *appdata) {
   info_dialog(GTK_WIDGET(appdata->window), *appdata);
 }
 
 static void on_node_add_clicked(map_t *map) {
-  map_action_set(map, MAP_ACTION_NODE_ADD);
+  map->set_action(MAP_ACTION_NODE_ADD);
 }
 
 static void on_way_add_clicked(map_t *map) {
-  map_action_set(map, MAP_ACTION_WAY_ADD);
+  map->set_action(MAP_ACTION_WAY_ADD);
 }
 
 static void on_way_node_add_clicked(map_t *map) {
-  map_action_set(map, MAP_ACTION_WAY_NODE_ADD);
+  map->set_action(MAP_ACTION_WAY_NODE_ADD);
 }
 
 static void on_way_cut_clicked(map_t *map) {
-  map_action_set(map, MAP_ACTION_WAY_CUT);
+  map->set_action(MAP_ACTION_WAY_CUT);
 }
 
 #ifdef FINGER_UI
@@ -91,50 +92,55 @@ static gint on_way_button_press(GtkWidget *,
 #endif
 
 /* enable/disable ok and cancel button */
-void icon_bar_map_cancel_ok(iconbar_t *iconbar,
-              gboolean cancel, gboolean ok) {
-  gtk_widget_set_sensitive(iconbar->ok, ok);
-  gtk_widget_set_sensitive(iconbar->cancel, cancel);
+void iconbar_t::map_cancel_ok(gboolean cancelv, gboolean okv) {
+  gtk_widget_set_sensitive(ok, okv);
+  gtk_widget_set_sensitive(cancel, cancelv);
 }
 
-void icon_bar_map_item_selected(iconbar_t *iconbar,
-		map_item_t *map_item) {
-  gboolean selected = map_item ? TRUE : FALSE;
-  gtk_widget_set_sensitive(iconbar->trash, selected);
+static void iconbar_toggle_sel_widgets(iconbar_t *iconbar, gboolean value) {
+  GtkWidget *sel_widgets[] = {
+    iconbar->trash,
+    iconbar->info
+  };
 
-  gtk_widget_set_sensitive(iconbar->info, selected);
+  for(int i = ARRAY_SIZE(sel_widgets) - 1; i >= 0; i--)
+    gtk_widget_set_sensitive(sel_widgets[i], value);
+}
+
+static void iconbar_toggle_way_widgets(iconbar_t *iconbar, gboolean value) {
+  GtkWidget *way_widgets[] = {
+    iconbar->way_node_add,
+    iconbar->way_cut,
+    iconbar->way_reverse
+  };
+
+  for(int i = ARRAY_SIZE(way_widgets) - 1; i >= 0; i--)
+    gtk_widget_set_sensitive(way_widgets[i], value);
+}
+
+void iconbar_t::map_item_selected(map_item_t *map_item) {
+  gboolean selected = map_item ? TRUE : FALSE;
+  iconbar_toggle_sel_widgets(this, selected);
 
   gboolean way_en = (selected && map_item->object.type == WAY) ?
                     TRUE : FALSE;
-  gtk_widget_set_sensitive(iconbar->way_node_add, way_en);
-  gtk_widget_set_sensitive(iconbar->way_cut, way_en);
-  gtk_widget_set_sensitive(iconbar->way_reverse, way_en);
+  iconbar_toggle_way_widgets(this, way_en);
 }
 
-void icon_bar_map_action_idle(iconbar_t *iconbar, gboolean idle, gboolean way_en) {
+void iconbar_t::map_action_idle(gboolean idle, gboolean way_en) {
   gint i;
 
   /* icons that are enabled in idle mode */
   GtkWidget *action_idle_widgets[] = {
-    iconbar->node_add,
-    iconbar->way_add,
-  };
-
-  /* icons that are disabled in idle mode */
-  GtkWidget *action_disable_widgets[] = {
-    iconbar->trash,
-    iconbar->info
+    node_add,
+    way_add,
   };
 
   for(i = sizeof(action_idle_widgets) / sizeof(*action_idle_widgets) - 1; i >= 0; i--)
     gtk_widget_set_sensitive(action_idle_widgets[i], idle);
 
-  for(i = sizeof(action_disable_widgets) / sizeof(*action_disable_widgets) - 1; i >= 0; i--)
-    gtk_widget_set_sensitive(action_disable_widgets[i], FALSE);
-
-  gtk_widget_set_sensitive(iconbar->way_node_add, idle && way_en);
-  gtk_widget_set_sensitive(iconbar->way_cut, idle && way_en);
-  gtk_widget_set_sensitive(iconbar->way_reverse, idle && way_en);
+  iconbar_toggle_sel_widgets(this, FALSE);
+  iconbar_toggle_way_widgets(this, idle && way_en);
 }
 
 #ifndef FINGER_UI
@@ -302,10 +308,10 @@ GtkWidget *iconbar_new(appdata_t &appdata) {
 
   /* --------------------------------------------------------- */
 
-  icon_bar_map_item_selected(iconbar, O2G_NULLPTR);
+  iconbar->map_item_selected(O2G_NULLPTR);
 
 #ifndef FINGER_UI
-  icon_bar_map_cancel_ok(iconbar, FALSE, FALSE);
+  iconbar->map_cancel_ok(FALSE, FALSE);
 #endif
 
   return box;
@@ -325,6 +331,6 @@ void iconbar_register_buttons(appdata_t &appdata, GtkWidget *ok, GtkWidget *canc
   g_signal_connect_swapped(GTK_OBJECT(cancel), "clicked",
                            G_CALLBACK(map_action_cancel), appdata.map);
 
-  icon_bar_map_cancel_ok(appdata.iconbar, FALSE, FALSE);
+  appdata.iconbar->map_cancel_ok(FALSE, FALSE);
 }
 #endif
