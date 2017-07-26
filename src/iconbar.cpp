@@ -304,15 +304,12 @@ GtkWidget *iconbar_new(appdata_t &appdata) {
   iconbar->ok = icon_add(hbox, appdata, TOOL_ICON("ok"), map_action_ok);
   iconbar->cancel = icon_add(hbox, appdata, TOOL_ICON("cancel"), map_action_cancel);
   gtk_box_pack_end(GTK_BOX(box), hbox, FALSE, FALSE, 0);
+  iconbar->map_cancel_ok(FALSE, FALSE);
 #endif
 
   /* --------------------------------------------------------- */
 
   iconbar->map_item_selected(O2G_NULLPTR);
-
-#ifndef FINGER_UI
-  iconbar->map_cancel_ok(FALSE, FALSE);
-#endif
 
   return box;
 }
