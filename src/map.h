@@ -150,6 +150,8 @@ struct map_t {
   void draw(way_t *way);
   void select_way(way_t *way);
   void set_action(map_action_t action);
+  bool item_is_selected_way(const map_item_t *map_item) const;
+  bool item_is_selected_node(const map_item_t *map_item) const;
 };
 
 void map_show_node(map_t *map, node_t *node);
@@ -187,8 +189,6 @@ void map_detail_decrease(map_t *map);
 void map_detail_normal(map_t *map);
 
 /* various functions required by map_edit */
-bool map_item_is_selected_node(map_t *map, map_item_t *map_item);
-gboolean map_item_is_selected_way(map_t *map, map_item_t *map_item);
 map_item_t *map_item_at(map_t *map, gint x, gint y);
 map_item_t *map_real_item_at(map_t *map, gint x, gint y);
 void map_outside_error(appdata_t &appdata);

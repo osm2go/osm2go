@@ -1104,16 +1104,11 @@ static void map_do_scroll_step(map_t *map, gint x, gint y) {
 		    &map->state.scroll_offset.y);
 }
 
-bool map_item_is_selected_node(map_t *map, map_item_t *map_item) {
+bool map_t::item_is_selected_node(const map_item_t *map_item) const {
   printf("check if item is a selected node\n");
 
   if(!map_item) {
     printf("  no item requested\n");
-    return false;
-  }
-
-  if(map->selected.object.type == ILLEGAL) {
-    printf("  nothing is selected\n");
     return false;
   }
 
@@ -1123,26 +1118,14 @@ bool map_item_is_selected_node(map_t *map, map_item_t *map_item) {
     return false;
   }
 
-  if(map->selected.object.type == NODE) {
+  if(selected.object.type == NODE) {
     printf("  selected item is a node\n");
 
-    if(map_item->object.node == map->selected.object.node) {
-      printf("  requested item is a selected node\n");
-      return true;
-    }
-    printf("  but it's not the requested one\n");
-    return false;
-
-  } else if(map->selected.object.type == WAY) {
+    return selected.object == map_item->object;
+  } else if(selected.object.type == WAY) {
     printf("  selected item is a way\n");
 
-    if(map->selected.object.way->contains_node(map_item->object.node)) {
-      printf("  requested item is part of selected way\n");
-      return true;
-    }
-    printf("  but it doesn't include the requested node\n");
-    return false;
-
+    return selected.object.way->contains_node(map_item->object.node);
   } else {
     printf("  selected item is unknown\n");
     return false;
@@ -1151,38 +1134,20 @@ bool map_item_is_selected_node(map_t *map, map_item_t *map_item) {
 
 /* return true if the item given is the currenly selected way */
 /* also return false if nothing is selected or the selection is no way */
-gboolean map_item_is_selected_way(map_t *map, map_item_t *map_item) {
+bool map_t::item_is_selected_way(const map_item_t *map_item) const {
   printf("check if item is the selected way\n");
 
   if(!map_item) {
     printf("  no item requested\n");
-    return FALSE;
+    return false;
   }
 
-  if(map->selected.object.type == ILLEGAL) {
-    printf("  nothing is selected\n");
-    return FALSE;
+  if(selected.object.type != WAY) {
+    printf("  selected item is not a way\n");
+    return false;
   }
 
-  /* clicked the highlight directly */
-  if(map_item->object.type != WAY) {
-    printf("  didn't click way\n");
-    return FALSE;
-  }
-
-  if(map->selected.object.type == WAY) {
-    printf("  selected item is a way\n");
-
-    if(map_item->object.way == map->selected.object.way) {
-      printf("  requested item is a selected way\n");
-      return TRUE;
-    }
-    printf("  but it's not the requested one\n");
-    return FALSE;
-  }
-
-  printf("  selected item is not a way\n");
-  return FALSE;
+  return map_item->object == selected.object;
 }
 
 void map_t::highlight_refresh() {
@@ -1299,7 +1264,7 @@ static void map_button_press(map_t *map, gint x, gint y) {
 
   /* check if the clicked item is a highlighted node as the user */
   /* might want to drag that */
-  map->pen_down.on_selected_node = map_item_is_selected_node(map, map->pen_down.on_item);
+  map->pen_down.on_selected_node = map->item_is_selected_node(map->pen_down.on_item);
 
   /* button press */
   switch(map->action.type) {
