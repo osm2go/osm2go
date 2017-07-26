@@ -1494,19 +1494,15 @@ static gboolean map_motion_notify_event(GtkWidget *,
     map_touchnode_update(map, x, y);
     break;
 
-  case MAP_ACTION_WAY_NODE_ADD: {
+  case MAP_ACTION_WAY_NODE_ADD:
     map_hl_cursor_clear(map);
-    map_item_t *item = map_item_at(map, x, y);
-    if(item) map_edit_way_node_add_highlight(map, item, x, y);
+    map_edit_way_node_add_highlight(map, map_item_at(map, x, y), x, y);
     break;
-  }
 
-  case MAP_ACTION_WAY_CUT: {
+  case MAP_ACTION_WAY_CUT:
     map_hl_cursor_clear(map);
-    map_item_t *item = map_item_at(map, x, y);
-    if(item) map_edit_way_cut_highlight(map, item, x, y);
+    map_edit_way_cut_highlight(map, map_item_at(map, x, y), x, y);
     break;
-  }
 
   default:
     break;
