@@ -1,3 +1,28 @@
+osm2go (1:0.9.8-maemo1) karmic; urgency=low
+
+  * fix several bugs in WMS handling (introduced in 0.9.4)
+  * fix loading the demo project on first run
+  * fix endless loop when splitting a way that is member of a relation (broken in 0.9.0).
+  * fix reversed roles in route relations when reversing way to use "backward" instead of "reverse"
+  * fix refcount error if splitting a way on a node
+  * drop otherwise unreferenced nodes with only created_by tag on deleting ways
+  * do a better guess when merging nodes which node to keep
+  * use https for OSM API connections whenever possible
+  * do not try to load proxy settings from config, they were never saved there
+  * do not crash on invalid style files
+  * improve manually entered project coordinate verification
+  * download and store OSM server data gzipped, files are ~85% smaller
+  * offer relation roles from JOSM preset when adding new members
+  * allow project to open to be given on the commandline
+  * keep the history in the longer remaining part when splitting ways
+  * remove trailing zeroes also from project and track coordinates when saving
+  * use osmChange XML format to upload deletions, only one HTTP transfer for any number of deletions
+  * update JOSM presets and icons to svn revision 12504
+  * show better description of relation members in list
+  * N900 version: statically linked against CURL 7.54.1, needs OpenSSL 1.0.2l
+
+ -- Rolf Eike Beer <eike@sf-mail.de>  Thu, 27 Jul 2017 11:40:33 +0200
+
 osm2go (1:0.9.7-maemo1) karmic; urgency=low
 
   * do not show deleted relations in relation list (broken forever)

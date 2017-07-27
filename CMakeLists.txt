@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
 
-project(osm2go VERSION 0.9.7 LANGUAGES C CXX)
+project(osm2go VERSION 0.9.8 LANGUAGES C CXX)
 
 include(CheckFunctionExists)
 include(CMakePushCheckState)
