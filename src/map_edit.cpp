@@ -488,9 +488,6 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
   printf("  moving everthing after segment %zi to new way\n",
          cut_at - way->node_chain.begin());
 
-  /* create a duplicate of the currently selected way */
-  way_t *neww = way->split(map->appdata.osm, cut_at, cut_at_node);
-
   /* clear selection */
   map->item_deselect();
 
@@ -498,14 +495,11 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
   printf("remove visible version of way #" ITEM_ID_FORMAT "\n", way->id);
   map_item_chain_destroy(way->map_item_chain);
 
-  /* swap chains if the old way is to be destroyed due to a lack */
-  /* of nodes */
-  if(way->node_chain.size() < 2) {
-    printf("swapping ways to avoid destruction of original way\n");
-    way->node_chain.swap(neww->node_chain);
-    map->delete_way(neww);
-    neww = O2G_NULLPTR;
-  } else if(neww->node_chain.size() < 2) {
+  /* create a duplicate of the currently selected way */
+  way_t *neww = way->split(map->appdata.osm, cut_at, cut_at_node);
+
+  /* remove new way if it is too short */
+  if(neww->node_chain.size() < 2) {
     printf("new way has less than 2 nodes, deleting it\n");
     map->delete_way(neww);
     neww = O2G_NULLPTR;
