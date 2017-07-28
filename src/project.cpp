@@ -707,6 +707,9 @@ static void on_project_edit(select_context_t *context) {
       /* update description */
       cur->desc = project->desc;
 
+      // update OSM file, may have changed (gzip or not)
+      cur->osm = project->osm;
+
       /* update server */
       if(project->server == context->appdata.settings->server) {
         cur->server = context->appdata.settings->server.c_str();
