@@ -469,7 +469,8 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
     if(c < 0)
       return;
     way = item->object.way;
-    cut_at = way->node_chain.begin() + c;
+    // add one since to denote the end of the segment
+    cut_at = way->node_chain.begin() + c + 1;
   }
 
   g_assert_nonnull(way);
