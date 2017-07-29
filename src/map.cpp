@@ -33,7 +33,6 @@
 #include "statusbar.h"
 #include "style.h"
 #include "track.h"
-#include "undo.h"
 
 #include <osm2go_cpp.h>
 
@@ -1164,8 +1163,6 @@ void map_t::highlight_refresh() {
 void map_t::delete_way(way_t *way) {
   printf("deleting way #" ITEM_ID_FORMAT " from map and osm\n", way->id);
 
-  undo_append_way(appdata, UNDO_DELETE, way);
-
   /* remove it visually from the screen */
   map_item_chain_destroy(way->map_item_chain);
 
@@ -1876,7 +1873,6 @@ void node_deleted_from_ways::operator()(way_t *way) {
     map->delete_way(way);
   } else {
     object_t object(way);
-    undo_append_object(map->appdata, UNDO_MODIFY, object);
     map->redraw_item(object);
   }
 }
@@ -1903,15 +1899,11 @@ void map_delete_selected(map_t *map) {
   /* deleting the selected item de-selects it ... */
   map->item_deselect();
 
-  undo_open_new_state(map->appdata, UNDO_DELETE, item.object);
-
   printf("request to delete %s #" ITEM_ID_FORMAT "\n",
          objtype, item.object.obj->id);
 
   switch(item.object.type) {
   case NODE: {
-    undo_append_object(map->appdata, UNDO_DELETE, item.object);
-
     /* check if this node is part of a way with two nodes only. */
     /* we cannot delete this as this would also delete the way */
     const way_chain_t &way_chain = map->appdata.osm->node_to_way(item.object.node);
@@ -1949,7 +1941,6 @@ void map_delete_selected(map_t *map) {
     g_assert_not_reached();
     break;
   }
-  undo_close_state(map->appdata);
 }
 
 /* ----------------------- track related stuff ----------------------- */

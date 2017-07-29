@@ -98,7 +98,6 @@ set(osm2go_SOURCE_FILES
 	src/style.h
 	src/track.cpp
 	src/track.h
-	src/undo.h
 	src/wms.cpp
 	src/wms.h
 	${CMAKE_CURRENT_BINARY_DIR}/osm2go_cpp.h
