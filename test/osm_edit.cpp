@@ -818,6 +818,64 @@ static void test_merge_nodes()
   g_assert(r->descriptive_name() == "<ID #-1>");
 }
 
+static void test_merge_ways()
+{
+  icon_t icons;
+  osm_t o(icons);
+  set_bounds(o);
+
+  node_chain_t nodes;
+  for(int i = 0; i < 8; i++) {
+    nodes.push_back(o.node_new(lpos_t(i * 3, i * 3)));
+    o.node_attach(nodes.back());
+  }
+
+  // test all 4 combinations how the ways can be oriented
+  for(unsigned int i = 0; i < 4; i++) {
+    node_chain_t expect;
+
+    way_t *w0 = new way_t(1);
+    if(i < 2) {
+      for(unsigned int j = 0; j < nodes.size() / 2; j++)
+        w0->append_node(nodes[j]);
+    } else {
+      for(int j = nodes.size() / 2 - 1; j >= 0; j--)
+        w0->append_node(nodes[j]);
+    }
+    o.way_attach(w0);
+
+    way_t *w1 = new way_t(1);
+    if(i % 2) {
+      for(unsigned int j = nodes.size() / 2 - 1; j < nodes.size(); j++)
+        w1->append_node(nodes[j]);
+      expect = nodes;
+    } else {
+      for(unsigned int j = nodes.size() - 1; j >= nodes.size() / 2 - 1; j--)
+        w1->append_node(nodes[j]);
+      expect = nodes;
+      std::reverse(expect.begin(), expect.end());
+    }
+    o.way_attach(w1);
+
+    w1->merge(w0, &o);
+    g_assert_cmpuint(w1->node_chain.size(), ==, nodes.size());
+    g_assert_cmpuint(o.ways.size(), ==, 1);
+    g_assert_cmpuint(o.nodes.size(), ==, nodes.size());
+    for(unsigned int i = 0; i < nodes.size(); i++) {
+      w1->contains_node(nodes[i]);
+      g_assert_cmpuint(nodes[i]->ways, ==, 1);
+    }
+    g_assert(expect == w1->node_chain);
+
+    o.way_free(w1);
+
+    g_assert_cmpuint(o.ways.size(), ==, 0);
+    g_assert_cmpuint(o.nodes.size(), ==, nodes.size());
+    for(unsigned int i = 0; i < nodes.size(); i++)
+      g_assert_cmpuint(nodes[i]->ways, ==, 0);
+  }
+}
+
 static void test_api_adjust()
 {
  const std::string api06https = "https://api.openstreetmap.org/api/0.6";
@@ -860,6 +918,7 @@ int main()
   test_way_delete();
   test_member_delete();
   test_merge_nodes();
+  test_merge_ways();
   test_api_adjust();
 
   xmlCleanupParser();

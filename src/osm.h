@@ -495,6 +495,15 @@ public:
   static const char *api_string() {
     return "way";
   }
+
+  /**
+   * @brief merge this way with the other one
+   * @param other the way to take the nodes from
+   * @param osm map database
+   *
+   * Other will be removed. Only the node_chain entries are tranferred.
+   */
+  void merge(way_t *other, osm_t *osm);
 protected:
   virtual void generate_xml_custom(xmlNodePtr xml_node) const O2G_OVERRIDE {
     write_node_chain(xml_node);

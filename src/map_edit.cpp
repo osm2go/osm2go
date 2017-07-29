@@ -184,36 +184,6 @@ void map_edit_way_add_cancel(map_t *map) {
   map->action.way = O2G_NULLPTR;
 }
 
-/**
- * @brief merge the two node chains
- * @param way the way to append to
- * @param nchain the tail of the new chain
- * @param reverse if way should be reversed afterwards
- *
- * The first node of nchain must be the last one of way. It will be
- * preserved in nchain, all other nodes will be moded to chain.
- */
-static void merge_node_chains(way_t *way, node_chain_t &nchain, bool reverse)
-{
-  node_chain_t &chain = way->node_chain;
-
-  if(nchain.size() > 1) {
-    /* make enough room for all nodes */
-    chain.reserve(chain.size() + nchain.size() - 1);
-
-    /* skip first node of new way as its the same as the last one of the */
-    /* way we are attaching it to */
-    chain.insert(chain.end(), ++nchain.begin(), nchain.end());
-
-    /* terminate new way afer first node */
-    nchain.resize(1);
-  }
-
-  /* and undo reversion of required */
-  if(reverse)
-    way->reverse();
-}
-
 struct map_draw_nodes {
   map_t * const map;
   map_draw_nodes(map_t *m) : map(m) {}
@@ -254,28 +224,11 @@ void map_edit_way_add_ok(map_t *map) {
   std::for_each(chain.begin(), chain.end(), map_draw_nodes(map));
 
   /* attach to existing way if the user requested so */
-  bool reverse = false;
   if(map->action.extending) {
-    node_t *nfirst = map->action.way->node_chain.front();
-
-    printf("  request to extend way #" ITEM_ID_FORMAT "\n",
-	   map->action.extending->id);
-
-    if(map->action.extending->first_node() == nfirst) {
-      printf("  need to prepend\n");
-      map->action.extending->reverse();
-      reverse = true;
-    } else
-      printf("  need to append\n");
-
-    merge_node_chains(map->action.extending, map->action.way->node_chain, reverse);
-
-    /* erase and free new way (now only containing the first node anymore) */
-    map_item_chain_destroy(map->action.way->map_item_chain);
-    osm->way_free(map->action.way);
+    // this is triggered when the user started with extending an existing way
+    map->action.extending->merge(map->action.way, osm);
 
     map->action.way = map->action.extending;
-    map->action.way->flags |= OSM_FLAG_DIRTY;
   } else {
     /* now move the way itself into the main data structure */
     map->appdata.osm->way_attach(map->action.way);
@@ -288,27 +241,19 @@ void map_edit_way_add_ok(map_t *map) {
     map->action.ends_on = O2G_NULLPTR;
   }
 
-  if(map->action.ends_on)
-    if(!yes_no_f(GTK_WIDGET(map->appdata.window),
-		 map->appdata, MISC_AGAIN_ID_EXTEND_WAY_END, 0,
-		 _("Join way?"),
-		 _("Do you want to join the way present at this location?")))
-      map->action.ends_on = O2G_NULLPTR;
-
-  if(map->action.ends_on) {
+  if(map->action.ends_on &&
+     yes_no_f(GTK_WIDGET(map->appdata.window),
+              map->appdata, MISC_AGAIN_ID_EXTEND_WAY_END, 0,
+              _("Join way?"),
+              _("Do you want to join the way present at this location?"))) {
     printf("  this new way ends on another way\n");
-
-    /* If reverse is true the node in question is the first one */
-    /* of the newly created way. Thus it is reversed again before */
-    /* attaching and the result is finally reversed once more */
+    // this is triggered when the new way ends on an existing way, this can
+    // happen even if an existing way was extended before
 
     /* this is slightly more complex as this time two full tagged */
     /* ways may be involved as the new way may be an extended existing */
     /* way being connected to another way. This happens if you connect */
     /* two existing ways using a new way between them */
-
-    if (reverse)
-      map->action.way->reverse();
 
     /* and open dialog to resolve tag collisions if necessary */
     if(map->action.way->tags.merge(map->action.ends_on->tags))
@@ -319,20 +264,8 @@ void map_edit_way_add_ok(map_t *map) {
     /* make way member of all relations ends_on already is */
     map->action.way->transfer_relations(map->appdata.osm, map->action.ends_on);
 
-    /* check if we have to reverse (again?) to match the way order */
-    if(map->action.way->is_closed()) {
-
-      printf("  need to prepend ends_on\n");
-
-      /* need to reverse ends_on way */
-      map->action.ends_on->reverse();
-      reverse = !reverse;
-    }
-
-    merge_node_chains(map->action.way, map->action.ends_on->node_chain, reverse);
-
-    /* erase and free ends_on (now only containing the first node anymore) */
-    map->delete_way(map->action.ends_on);
+    map->action.way->merge(map->action.ends_on, osm);
+    map->action.ends_on = O2G_NULLPTR;
   }
 
   /* remove prior version of this way */

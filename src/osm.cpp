@@ -2368,6 +2368,53 @@ void way_t::cleanup() {
   g_assert_null(map_item_chain);
 }
 
+void way_t::merge(way_t *other, osm_t *osm)
+{
+  printf("  request to extend way #" ITEM_ID_FORMAT "\n", other->id);
+
+  // drop the visible items
+  map_item_chain_destroy(other->map_item_chain);
+
+  g_assert(ends_with_node(other->node_chain.front()) ||
+           ends_with_node(other->node_chain.back()));
+
+  // nothing to do
+  if(G_UNLIKELY(other->node_chain.size() < 2)) {
+    osm->way_free(other);
+    return;
+  }
+
+  /* make enough room for all nodes */
+  node_chain.reserve(node_chain.size() + other->node_chain.size() - 1);
+
+  if(other->node_chain.front() == node_chain.front()) {
+    printf("  need to prepend\n");
+    node_chain.insert(node_chain.begin(), other->node_chain.rbegin(), --other->node_chain.rend());
+
+    other->node_chain.resize(1);
+  } else if(other->node_chain.back() == node_chain.front()) {
+    printf("  need to prepend\n");
+    node_chain.insert(node_chain.begin(), other->node_chain.begin(), --other->node_chain.end());
+
+    other->node_chain.erase(other->node_chain.begin(), other->node_chain.end() - 1);
+  } else if(other->node_chain.back() == node_chain.back()) {
+    printf("  need to append\n");
+    node_chain.insert(node_chain.end(), ++other->node_chain.rbegin(), other->node_chain.rend());
+
+    other->node_chain.erase(other->node_chain.begin(), other->node_chain.end() - 1);
+  } else {
+    printf("  need to append\n");
+    node_chain.insert(node_chain.end(), ++other->node_chain.begin(), other->node_chain.end());
+
+    other->node_chain.resize(1);
+  }
+
+  /* erase and free other way (now only containing the overlapping node anymore) */
+  osm->way_free(other);
+
+  flags |= OSM_FLAG_DIRTY;
+}
+
 member_t::member_t(type_t t)
   : role(O2G_NULLPTR)
 {
