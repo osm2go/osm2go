@@ -215,6 +215,18 @@ struct osm_t {
   static bool tagSubset(const TagMap &sub, const TagMap &super);
 
   /**
+   * @brief check which of the objects should persist
+   * @param first the first object
+   * @param second the second object
+   * @param hasRels if the object to remove is member in any relations
+   * @returns if the first object should persist
+   *
+   * This takes into account the age (object id) and number of affected ways
+   * and relationships.
+   */
+  bool checkObjectPersistence(const object_t &first, const object_t &second, bool &hasRels) const;
+
+  /**
    * @brief merge 2 nodes
    * @param first first node
    * @param second second node
@@ -224,8 +236,7 @@ struct osm_t {
    * This merges the nodes on the position of second, joining the tags together
    * and moving all way and relationship memberships to the remaining node.
    *
-   * Which of the nodes remains depends on the age (node id) and number of
-   * affected ways and relationships. The other node is deleted.
+   * The victim node is deleted.
    */
   node_t *mergeNodes(node_t *first, node_t *second, bool &conflict);
 };

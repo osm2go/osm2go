@@ -362,8 +362,8 @@ void join_nodes::operator()(const std::pair<item_id_t, way_t *> &p)
 }
 
 struct relation_membership_counter {
-  const object_t obj;
-  relation_membership_counter(node_t *n) : obj(n) {}
+  const object_t &obj;
+  relation_membership_counter(const object_t &o) : obj(o) {}
   unsigned int operator()(unsigned int init, const std::pair<item_id_t, const relation_t *> &p) {
     return std::accumulate(p.second->members.begin(), p.second->members.end(), init, *this);
   }
@@ -372,27 +372,45 @@ struct relation_membership_counter {
   }
 };
 
-node_t *osm_t::mergeNodes(node_t *first, node_t *second, bool &conflict)
+bool osm_t::checkObjectPersistence(const object_t &first, const object_t &second, bool &hasRels) const
 {
-  node_t *keep = first, *remove = second;
+  object_t keep = first, remove = second;
 
   unsigned int removeRels = std::accumulate(relations.begin(), relations.end(), 0, relation_membership_counter(remove));
   unsigned int keepRels = std::accumulate(relations.begin(), relations.end(), 0, relation_membership_counter(keep));
 
   // find out which node to keep
-    // if one is new: keep the other one
-  if((keep->isNew() && !remove->isNew()) ||
-     // or keep the one with most relations
-     removeRels > keepRels ||
-     // or the one with most ways
-     remove->ways > keep->ways ||
-     // or the one with the longest history
-     remove->version > keep->version ||
-     // or simply the older one
-     (remove->id > 0 && remove->id < keep->id)) {
+  bool nret =
+              // if one is new: keep the other one
+              (keep.obj->isNew() && !remove.obj->isNew()) ||
+              // or keep the one with most relations
+              removeRels > keepRels ||
+              // or the one with most ways (if nodes)
+              (keep.type == NODE && remove.type == keep.type && remove.node->ways > keep.node->ways) ||
+              // or the one with most nodes (if ways)
+              (keep.type == WAY && remove.type == keep.type && remove.way->node_chain.size() > keep.way->node_chain.size()) ||
+              // or the one with most members (if relations)
+              (keep.type == RELATION && remove.type == keep.type && remove.relation->members.size() > keep.relation->members.size()) ||
+              // or the one with the longest history
+              remove.obj->version > keep.obj->version ||
+              // or simply the older one
+              (remove.obj->id > 0 && remove.obj->id < keep.obj->id);
+
+  if(nret)
+    hasRels = keepRels > 0;
+  else
+    hasRels = removeRels > 0;
+
+  return !nret;
+}
+
+node_t *osm_t::mergeNodes(node_t *first, node_t *second, bool &conflict)
+{
+  node_t *keep = first, *remove = second;
+
+  bool hasRels;
+  if(!checkObjectPersistence(object_t(keep), object_t(remove), hasRels))
     std::swap(keep, remove);
-    std::swap(keepRels, removeRels);
-  }
 
   /* use "second" position as that was the target */
   keep->lpos = second->lpos;
@@ -403,7 +421,7 @@ node_t *osm_t::mergeNodes(node_t *first, node_t *second, bool &conflict)
     std::for_each(ways.begin(), witEnd, join_nodes(keep, remove));
   }
 
-  if(removeRels > 0) {
+  if(hasRels) {
     /* replace "remove" in relations */
     std::for_each(relations.begin(), relations.end(),
                   relation_node_replacer(remove, keep));
