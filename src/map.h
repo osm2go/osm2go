@@ -180,7 +180,7 @@ void map_hide_selected(map_t *map);
 void map_show_all(map_t *map);
 
 void map_set_zoom(map_t *map, double zoom, bool update_scroll_offsets);
-gboolean map_scroll_to_if_offscreen(map_t *map, const lpos_t *lpos);
+bool map_scroll_to_if_offscreen(map_t *map, const lpos_t *lpos);
 
 void map_detail_change(map_t *map, float detail);
 

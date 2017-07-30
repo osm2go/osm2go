@@ -121,6 +121,11 @@ typedef enum { CANVAS_UNIT_METER = 0, CANVAS_UNIT_PIXEL } canvas_unit_t;
 #ifdef __cplusplus
 struct canvas_dimensions {
   gdouble width, height;
+  inline canvas_dimensions operator/(double d) const {
+    canvas_dimensions ret = *this;
+    ret.width /= d; ret.height /= d;
+    return ret;
+  }
 };
 
 canvas_dimensions canvas_get_viewport_dimensions(canvas_t *canvas, canvas_unit_t unit);

@@ -853,9 +853,7 @@ static void map_limit_scroll(map_t *map, canvas_unit_t unit, gint &sx, gint &sy)
   gdouble sy_cu = sy / scale;
 
   /* get size of visible area in canvas units (meters) */
-  canvas_dimensions dim = canvas_get_viewport_dimensions(map->canvas, CANVAS_UNIT_METER);
-  dim.height /= 2;
-  dim.width /= 2;
+  canvas_dimensions dim = canvas_get_viewport_dimensions(map->canvas, CANVAS_UNIT_METER) / 2;
 
   // Data rect minimum and maximum
   gint min_x, min_y, max_x, max_y;
@@ -888,9 +886,7 @@ static bool map_limit_zoom(map_t *map, gdouble &zoom) {
 
     /* get size of visible area in pixels and convert to meters of intended */
     /* zoom by deviding by zoom (which is basically pix/m) */
-    canvas_dimensions dim = canvas_get_viewport_dimensions(map->canvas, CANVAS_UNIT_PIXEL);
-    dim.height /= zoom;
-    dim.width /= zoom;
+    canvas_dimensions dim = canvas_get_viewport_dimensions(map->canvas, CANVAS_UNIT_PIXEL) / zoom;
 
     gdouble oldzoom = zoom;
     if (dim.height < dim.width) {
@@ -920,11 +916,11 @@ static bool map_limit_zoom(map_t *map, gdouble &zoom) {
  * Return true if this was possible, false if position is outside
  * working area
  */
-gboolean map_scroll_to_if_offscreen(map_t *map, const lpos_t *lpos) {
+bool map_scroll_to_if_offscreen(map_t *map, const lpos_t *lpos) {
 
   // Ignore anything outside the working area
   if(!(map && map->appdata.osm))
-    return FALSE;
+    return false;
 
   gint min_x, min_y, max_x, max_y;
   min_x = map->appdata.osm->bounds->min.x;
@@ -935,7 +931,7 @@ gboolean map_scroll_to_if_offscreen(map_t *map, const lpos_t *lpos) {
       || (lpos->y > max_y) || (lpos->y < min_y)) {
     printf("cannot scroll to (%d, %d): outside the working area\n",
 	   lpos->x, lpos->y);
-    return FALSE;
+    return false;
   }
 
   // Viewport dimensions in canvas space
@@ -945,8 +941,7 @@ gboolean map_scroll_to_if_offscreen(map_t *map, const lpos_t *lpos) {
   canvas_dimensions dim = canvas_get_viewport_dimensions(map->canvas, CANVAS_UNIT_METER);
 
   // Is the point still onscreen?
-  gboolean vert_recentre_needed = FALSE;
-  gboolean horiz_recentre_needed = FALSE;
+  bool recentre_needed = false;
   gint sx, sy;
   canvas_scroll_get(map->canvas, CANVAS_UNIT_METER, &sx, &sy);
   gint viewport_left   = sx - dim.width / 2;
@@ -956,22 +951,22 @@ gboolean map_scroll_to_if_offscreen(map_t *map, const lpos_t *lpos) {
 
   if (lpos->x > viewport_right) {
     printf("** off right edge (%d > %d)\n", lpos->x, viewport_right);
-    horiz_recentre_needed = TRUE;
+    recentre_needed = true;
   }
   if (lpos->x < viewport_left) {
     printf("** off left edge (%d < %d)\n", lpos->x, viewport_left);
-    horiz_recentre_needed = TRUE;
+    recentre_needed = true;
   }
   if (lpos->y > viewport_bottom) {
     printf("** off bottom edge (%d > %d)\n", lpos->y, viewport_bottom);
-    vert_recentre_needed = TRUE;
+    recentre_needed = true;
   }
   if (lpos->y < viewport_top) {
     printf("** off top edge (%d < %d)\n", lpos->y, viewport_top);
-    vert_recentre_needed = TRUE;
+    recentre_needed = true;
   }
 
-  if (horiz_recentre_needed || vert_recentre_needed) {
+  if(recentre_needed) {
     gint new_sx, new_sy;
 
     // Just centre both at once
@@ -981,7 +976,7 @@ gboolean map_scroll_to_if_offscreen(map_t *map, const lpos_t *lpos) {
     map_limit_scroll(map, CANVAS_UNIT_PIXEL, new_sx, new_sy);
     canvas_scroll_to(map->canvas, CANVAS_UNIT_PIXEL, new_sx, new_sy);
   }
-  return TRUE;
+  return true;
 }
 
 /* Deselects the current way or node if its zoom_max
