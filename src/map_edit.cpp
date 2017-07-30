@@ -256,13 +256,17 @@ void map_edit_way_add_ok(map_t *map) {
     /* way being connected to another way. This happens if you connect */
     /* two existing ways using a new way between them */
 
+    bool hasRels;
+    if(!osm->checkObjectPersistence(object_t(map->action.way), object_t(map->action.ends_on), hasRels))
+      std::swap(map->action.way, map->action.ends_on);
+
     /* and open dialog to resolve tag collisions if necessary */
     if(map->action.way->tags.merge(map->action.ends_on->tags))
       messagef(GTK_WIDGET(map->appdata.window), _("Way tag conflict"),
 	       _("The resulting way contains some conflicting tags. "
 		 "Please solve these."));
 
-    map->action.way->merge(map->action.ends_on, osm, true);
+    map->action.way->merge(map->action.ends_on, osm, hasRels);
     map->action.ends_on = O2G_NULLPTR;
   }
 
