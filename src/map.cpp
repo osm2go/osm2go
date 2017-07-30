@@ -981,7 +981,7 @@ bool map_t::scroll_to_if_offscreen(const lpos_t *lpos) {
 
 /* Deselects the current way or node if its zoom_max
  * means that it's not going to render at the current map zoom. */
-void map_deselect_if_zoom_below_zoom_max(map_t *map) {
+static void map_deselect_if_zoom_below_zoom_max(map_t *map) {
     if (map->selected.object.type == WAY) {
         printf("will deselect way if zoomed below %f\n",
                map->selected.object.way->zoom_max);
