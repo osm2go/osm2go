@@ -119,8 +119,15 @@ typedef struct canvas_item_info_t {
 typedef enum { CANVAS_UNIT_METER = 0, CANVAS_UNIT_PIXEL } canvas_unit_t;
 
 #ifdef __cplusplus
+struct canvas_dimensions {
+  gdouble width, height;
+};
+
+canvas_dimensions canvas_get_viewport_dimensions(canvas_t *canvas, canvas_unit_t unit);
+
 extern "C" {
 #endif
+
 
 /****** manipulating the canvas ******/
 void canvas_set_background(canvas_t *canvas, canvas_color_t bg_color);
@@ -130,8 +137,6 @@ void canvas_window2world(canvas_t *canvas, gint x, gint y, gint *wx, gint *wy);
 canvas_item_t *canvas_get_item_at(canvas_t *canvas, gint x, gint y);
 void canvas_set_zoom(canvas_t *canvas, gdouble zoom);
 gdouble canvas_get_zoom(canvas_t *canvas);
-gdouble canvas_get_viewport_width(canvas_t *canvas, canvas_unit_t unit);
-gdouble canvas_get_viewport_height(canvas_t *canvas, canvas_unit_t unit);
 void canvas_scroll_to(canvas_t *canvas, canvas_unit_t unit, gint sx, gint sy);
 void canvas_scroll_get(canvas_t *canvas, canvas_unit_t unit, gint *sx, gint *sy);
 void canvas_set_bounds(canvas_t *canvas, gint minx, gint miny,

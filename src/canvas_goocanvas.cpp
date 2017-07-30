@@ -86,25 +86,21 @@ gdouble canvas_get_zoom(canvas_t *canvas) {
   return goo_canvas_get_scale(GOO_CANVAS(canvas->widget));
 }
 
-gdouble canvas_get_viewport_width(canvas_t *canvas, canvas_unit_t unit) {
+canvas_dimensions canvas_get_viewport_dimensions(canvas_t *canvas, canvas_unit_t unit) {
   // Canvas viewport dimensions
+  canvas_dimensions ret;
 
-  GtkAllocation *a = &(canvas->widget)->allocation;
-  if(unit == CANVAS_UNIT_PIXEL) return a->width;
-
-  /* convert to meters by dividing by zoom */
-  gdouble zoom = goo_canvas_get_scale(GOO_CANVAS(canvas->widget));
-  return a->width / zoom;
-}
-
-gdouble canvas_get_viewport_height(canvas_t *canvas, canvas_unit_t unit) {
-  // Canvas viewport dimensions
-  GtkAllocation *a = &(canvas->widget)->allocation;
-  if(unit == CANVAS_UNIT_PIXEL) return a->height;
-
-  /* convert to meters by dividing by zoom */
-  gdouble zoom = goo_canvas_get_scale(GOO_CANVAS(canvas->widget));
-  return a->height / zoom;
+  GtkAllocation &a = (canvas->widget)->allocation;
+  if(unit == CANVAS_UNIT_PIXEL) {
+    ret.width = a.width;
+    ret.height = a.height;
+  } else {
+    /* convert to meters by dividing by zoom */
+    gdouble zoom = goo_canvas_get_scale(GOO_CANVAS(canvas->widget));
+    ret.width = a.width / zoom;
+    ret.height = a.height / zoom;
+  }
+  return ret;
 }
 
 /* get scroll position in meters/pixels */

@@ -853,8 +853,9 @@ static void map_limit_scroll(map_t *map, canvas_unit_t unit, gint &sx, gint &sy)
   gdouble sy_cu = sy / scale;
 
   /* get size of visible area in canvas units (meters) */
-  gint aw_cu = canvas_get_viewport_width(map->canvas, CANVAS_UNIT_METER)/2;
-  gint ah_cu = canvas_get_viewport_height(map->canvas, CANVAS_UNIT_METER)/2;
+  canvas_dimensions dim = canvas_get_viewport_dimensions(map->canvas, CANVAS_UNIT_METER);
+  dim.height /= 2;
+  dim.width /= 2;
 
   // Data rect minimum and maximum
   gint min_x, min_y, max_x, max_y;
@@ -864,10 +865,10 @@ static void map_limit_scroll(map_t *map, canvas_unit_t unit, gint &sx, gint &sy)
   max_y = map->appdata.osm->bounds->max.y;
 
   // limit stops - prevent scrolling beyond these
-  gint min_sy_cu = 0.95*(min_y - ah_cu);
-  gint min_sx_cu = 0.95*(min_x - aw_cu);
-  gint max_sy_cu = 0.95*(max_y + ah_cu);
-  gint max_sx_cu = 0.95*(max_x + aw_cu);
+  gint min_sy_cu = 0.95*(min_y - dim.height);
+  gint min_sx_cu = 0.95*(min_x - dim.width);
+  gint max_sy_cu = 0.95*(max_y + dim.height);
+  gint max_sx_cu = 0.95*(max_x + dim.width);
   if (sy_cu < min_sy_cu) { sy = min_sy_cu * scale; }
   if (sx_cu < min_sx_cu) { sx = min_sx_cu * scale; }
   if (sy_cu > max_sy_cu) { sy = max_sy_cu * scale; }
@@ -887,21 +888,20 @@ static bool map_limit_zoom(map_t *map, gdouble &zoom) {
 
     /* get size of visible area in pixels and convert to meters of intended */
     /* zoom by deviding by zoom (which is basically pix/m) */
-    gint aw_cu =
-      canvas_get_viewport_width(map->canvas, CANVAS_UNIT_PIXEL) / zoom;
-    gint ah_cu =
-      canvas_get_viewport_height(map->canvas, CANVAS_UNIT_PIXEL) / zoom;
+    canvas_dimensions dim = canvas_get_viewport_dimensions(map->canvas, CANVAS_UNIT_PIXEL);
+    dim.height /= zoom;
+    dim.width /= zoom;
 
     gdouble oldzoom = zoom;
-    if (ah_cu < aw_cu) {
-        gint lim_h = ah_cu*0.95;
+    if (dim.height < dim.width) {
+        gint lim_h = dim.height * 0.95;
         if (max_y-min_y < lim_h) {
             gdouble corr = ((gdouble)max_y-min_y) / (gdouble)lim_h;
             zoom /= corr;
         }
     }
     else {
-        gint lim_w = aw_cu*0.95;
+        gint lim_w = dim.width * 0.95;
         if (max_x-min_x < lim_w) {
             gdouble corr = ((gdouble)max_x-min_x) / (gdouble)lim_w;
             zoom /= corr;
@@ -942,18 +942,17 @@ gboolean map_scroll_to_if_offscreen(map_t *map, const lpos_t *lpos) {
 
   /* get size of visible area in canvas units (meters) */
   gdouble pix_per_meter = canvas_get_zoom(map->canvas);
-  gdouble aw = canvas_get_viewport_width(map->canvas, CANVAS_UNIT_METER);
-  gdouble ah = canvas_get_viewport_height(map->canvas, CANVAS_UNIT_METER);
+  canvas_dimensions dim = canvas_get_viewport_dimensions(map->canvas, CANVAS_UNIT_METER);
 
   // Is the point still onscreen?
   gboolean vert_recentre_needed = FALSE;
   gboolean horiz_recentre_needed = FALSE;
   gint sx, sy;
   canvas_scroll_get(map->canvas, CANVAS_UNIT_METER, &sx, &sy);
-  gint viewport_left   = sx-aw/2;
-  gint viewport_right  = sx+aw/2;
-  gint viewport_top    = sy-ah/2;
-  gint viewport_bottom = sy+ah/2;
+  gint viewport_left   = sx - dim.width / 2;
+  gint viewport_right  = sx + dim.width / 2;
+  gint viewport_top    = sy - dim.height / 2;
+  gint viewport_bottom = sy + dim.height / 2;
 
   if (lpos->x > viewport_right) {
     printf("** off right edge (%d > %d)\n", lpos->x, viewport_right);
