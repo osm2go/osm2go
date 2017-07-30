@@ -152,6 +152,7 @@ struct map_t {
   void set_action(map_action_t action);
   bool item_is_selected_way(const map_item_t *map_item) const;
   bool item_is_selected_node(const map_item_t *map_item) const;
+  bool scroll_to_if_offscreen(const lpos_t *lpos);
 };
 
 void map_show_node(map_t *map, node_t *node);
@@ -180,7 +181,6 @@ void map_hide_selected(map_t *map);
 void map_show_all(map_t *map);
 
 void map_set_zoom(map_t *map, double zoom, bool update_scroll_offsets);
-bool map_scroll_to_if_offscreen(map_t *map, const lpos_t *lpos);
 
 void map_detail_change(map_t *map, float detail);
 

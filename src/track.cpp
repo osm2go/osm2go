@@ -403,7 +403,7 @@ static gboolean track_append_position(appdata_t &appdata, const pos_t *pos, floa
   }
 
   if(appdata.settings->follow_gps) {
-    if(!map_scroll_to_if_offscreen(appdata.map, lpos)) {
+    if(!appdata.map->scroll_to_if_offscreen(lpos)) {
       if(!--appdata.track.warn_cnt) {
 	/* warn user once a minute that the current gps */
 	/* position is outside the working area */

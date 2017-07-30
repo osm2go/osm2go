@@ -916,17 +916,17 @@ static bool map_limit_zoom(map_t *map, gdouble &zoom) {
  * Return true if this was possible, false if position is outside
  * working area
  */
-bool map_scroll_to_if_offscreen(map_t *map, const lpos_t *lpos) {
+bool map_t::scroll_to_if_offscreen(const lpos_t *lpos) {
 
   // Ignore anything outside the working area
-  if(!(map && map->appdata.osm))
+  if(G_UNLIKELY(!appdata.osm))
     return false;
 
   gint min_x, min_y, max_x, max_y;
-  min_x = map->appdata.osm->bounds->min.x;
-  min_y = map->appdata.osm->bounds->min.y;
-  max_x = map->appdata.osm->bounds->max.x;
-  max_y = map->appdata.osm->bounds->max.y;
+  min_x = appdata.osm->bounds->min.x;
+  min_y = appdata.osm->bounds->min.y;
+  max_x = appdata.osm->bounds->max.x;
+  max_y = appdata.osm->bounds->max.y;
   if (   (lpos->x > max_x) || (lpos->x < min_x)
       || (lpos->y > max_y) || (lpos->y < min_y)) {
     printf("cannot scroll to (%d, %d): outside the working area\n",
@@ -937,13 +937,13 @@ bool map_scroll_to_if_offscreen(map_t *map, const lpos_t *lpos) {
   // Viewport dimensions in canvas space
 
   /* get size of visible area in canvas units (meters) */
-  gdouble pix_per_meter = canvas_get_zoom(map->canvas);
-  canvas_dimensions dim = canvas_get_viewport_dimensions(map->canvas, CANVAS_UNIT_METER);
+  gdouble pix_per_meter = canvas_get_zoom(canvas);
+  canvas_dimensions dim = canvas_get_viewport_dimensions(canvas, CANVAS_UNIT_METER);
 
   // Is the point still onscreen?
   bool recentre_needed = false;
   gint sx, sy;
-  canvas_scroll_get(map->canvas, CANVAS_UNIT_METER, &sx, &sy);
+  canvas_scroll_get(canvas, CANVAS_UNIT_METER, &sx, &sy);
   gint viewport_left   = sx - dim.width / 2;
   gint viewport_right  = sx + dim.width / 2;
   gint viewport_top    = sy - dim.height / 2;
@@ -973,8 +973,8 @@ bool map_scroll_to_if_offscreen(map_t *map, const lpos_t *lpos) {
     new_sx = pix_per_meter * lpos->x; // XXX (lpos->x - (aw/2));
     new_sy = pix_per_meter * lpos->y; // XXX (lpos->y - (ah/2));
 
-    map_limit_scroll(map, CANVAS_UNIT_PIXEL, new_sx, new_sy);
-    canvas_scroll_to(map->canvas, CANVAS_UNIT_PIXEL, new_sx, new_sy);
+    map_limit_scroll(this, CANVAS_UNIT_PIXEL, new_sx, new_sy);
+    canvas_scroll_to(canvas, CANVAS_UNIT_PIXEL, new_sx, new_sy);
   }
   return true;
 }
