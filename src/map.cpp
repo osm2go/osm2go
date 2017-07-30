@@ -877,7 +877,7 @@ static void map_limit_scroll(map_t *map, canvas_unit_t unit, gint &sx, gint &sy)
 
 /* Limit a proposed zoom factor to sane ranges.
  * Specifically the map is allowed to be no smaller than the viewport. */
-static gboolean map_limit_zoom(map_t *map, gdouble *zoom) {
+static bool map_limit_zoom(map_t *map, gdouble &zoom) {
     // Data rect minimum and maximum
     gint min_x, min_y, max_x, max_y;
     min_x = map->appdata.osm->bounds->min.x;
@@ -888,30 +888,30 @@ static gboolean map_limit_zoom(map_t *map, gdouble *zoom) {
     /* get size of visible area in pixels and convert to meters of intended */
     /* zoom by deviding by zoom (which is basically pix/m) */
     gint aw_cu =
-      canvas_get_viewport_width(map->canvas, CANVAS_UNIT_PIXEL) / *zoom;
+      canvas_get_viewport_width(map->canvas, CANVAS_UNIT_PIXEL) / zoom;
     gint ah_cu =
-      canvas_get_viewport_height(map->canvas, CANVAS_UNIT_PIXEL) / *zoom;
+      canvas_get_viewport_height(map->canvas, CANVAS_UNIT_PIXEL) / zoom;
 
-    gdouble oldzoom = *zoom;
+    gdouble oldzoom = zoom;
     if (ah_cu < aw_cu) {
         gint lim_h = ah_cu*0.95;
         if (max_y-min_y < lim_h) {
             gdouble corr = ((gdouble)max_y-min_y) / (gdouble)lim_h;
-            *zoom /= corr;
+            zoom /= corr;
         }
     }
     else {
         gint lim_w = aw_cu*0.95;
         if (max_x-min_x < lim_w) {
             gdouble corr = ((gdouble)max_x-min_x) / (gdouble)lim_w;
-            *zoom /= corr;
+            zoom /= corr;
         }
     }
-    if (*zoom != oldzoom) {
-        printf("Can't zoom further out (%f)\n", *zoom);
-        return 1;
+    if (zoom != oldzoom) {
+        printf("Can't zoom further out (%f)\n", zoom);
+        return true;
     }
-    return 0;
+    return false;
 }
 
 
@@ -1009,8 +1009,7 @@ void map_deselect_if_zoom_below_zoom_max(map_t *map) {
 #define GPS_RADIUS_LIMIT  3.0
 
 void map_set_zoom(map_t *map, double zoom, bool update_scroll_offsets) {
-  gboolean at_zoom_limit = 0;
-  at_zoom_limit = map_limit_zoom(map, &zoom);
+  bool at_zoom_limit = map_limit_zoom(map, zoom);
 
   map->state.zoom = zoom;
   canvas_set_zoom(map->canvas, map->state.zoom);
