@@ -297,38 +297,38 @@ bool osm_t::tagSubset(const TagMap &sub, const TagMap &super)
   return true;
 }
 
-struct relation_node_replacer {
-  const node_t * const touchnode;
-  node_t * const node;
-  relation_node_replacer(const node_t *t, node_t *n) : touchnode(t), node(n) {}
+struct relation_object_replacer {
+  const object_t &old;
+  const object_t &replace;
+  relation_object_replacer(const object_t &t, const object_t &n) : old(t), replace(n) {}
   void operator()(std::pair<item_id_t, relation_t *> pair);
 
   struct member_replacer {
     relation_t * const r;
-    const node_t * const touchnode;
-    node_t * const node;
-    member_replacer(relation_t *rel, const node_t *t, node_t *n)
-      : r(rel), touchnode(t), node(n) {}
+    const object_t &old;
+    const object_t &replace;
+    member_replacer(relation_t *rel, const object_t &t, const object_t &n)
+      : r(rel), old(t), replace(n) {}
     void operator()(member_t &member);
   };
 };
 
-void relation_node_replacer::operator()(std::pair<item_id_t, relation_t *> pair)
+void relation_object_replacer::operator()(std::pair<item_id_t, relation_t *> pair)
 {
   relation_t * const r = pair.second;
   std::for_each(r->members.begin(), r->members.end(),
-                member_replacer(r, touchnode, node));
+                member_replacer(r, old, replace));
 }
 
-void relation_node_replacer::member_replacer::operator()(member_t &member)
+void relation_object_replacer::member_replacer::operator()(member_t &member)
 {
-  if(member.object != touchnode)
+  if(member.object != old)
     return;
 
   printf("  found node in relation #" ITEM_ID_FORMAT "\n", r->id);
 
   /* replace by node */
-  member.object.node = node;
+  member.object = replace;
 
   r->flags |= OSM_FLAG_DIRTY;
 }
@@ -424,7 +424,7 @@ node_t *osm_t::mergeNodes(node_t *first, node_t *second, bool &conflict)
   if(hasRels) {
     /* replace "remove" in relations */
     std::for_each(relations.begin(), relations.end(),
-                  relation_node_replacer(remove, keep));
+                  relation_object_replacer(object_t(remove), object_t(keep)));
   }
 
   /* transfer tags from "remove" to "keep" */
@@ -2368,7 +2368,7 @@ void way_t::cleanup() {
   g_assert_null(map_item_chain);
 }
 
-void way_t::merge(way_t *other, osm_t *osm)
+void way_t::merge(way_t *other, osm_t *osm, const bool doRels)
 {
   printf("  request to extend way #" ITEM_ID_FORMAT "\n", other->id);
 
@@ -2408,6 +2408,11 @@ void way_t::merge(way_t *other, osm_t *osm)
 
     other->node_chain.resize(1);
   }
+
+  /* replace "other" in relations */
+  if(doRels)
+    std::for_each(osm->relations.begin(), osm->relations.end(),
+                  relation_object_replacer(object_t(other), object_t(this)));
 
   /* erase and free other way (now only containing the overlapping node anymore) */
   osm->way_free(other);

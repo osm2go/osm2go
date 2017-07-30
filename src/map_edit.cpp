@@ -226,7 +226,8 @@ void map_edit_way_add_ok(map_t *map) {
   /* attach to existing way if the user requested so */
   if(map->action.extending) {
     // this is triggered when the user started with extending an existing way
-    map->action.extending->merge(map->action.way, osm);
+    // since the merged way is a temporary one there are no relation memberships
+    map->action.extending->merge(map->action.way, osm, false);
 
     map->action.way = map->action.extending;
   } else {
@@ -261,10 +262,7 @@ void map_edit_way_add_ok(map_t *map) {
 	       _("The resulting way contains some conflicting tags. "
 		 "Please solve these."));
 
-    /* make way member of all relations ends_on already is */
-    map->action.way->transfer_relations(map->appdata.osm, map->action.ends_on);
-
-    map->action.way->merge(map->action.ends_on, osm);
+    map->action.way->merge(map->action.ends_on, osm, true);
     map->action.ends_on = O2G_NULLPTR;
   }
 
