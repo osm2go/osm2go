@@ -1,3 +1,11 @@
+osm2go (1:0.9.9-maemo1) karmic; urgency=low
+
+  * fix crash if currently active project is edited and gzip mode of data file changes (broken in 0.9.8)
+  * fix splitting way between nodes
+  * improve results of way merging
+
+ -- Rolf Eike Beer <eike@sf-mail.de>  Mon, 31 Jul 2017 15:38:27 +0200
+
 osm2go (1:0.9.8-maemo1) karmic; urgency=low
 
   * fix several bugs in WMS handling (introduced in 0.9.4)
