@@ -2318,14 +2318,12 @@ struct value_match_functor {
 
 way_t::way_t()
   : visible_item_t()
-  , node_chain(0)
 {
   memset(&draw, 0, sizeof(draw));
 }
 
 way_t::way_t(item_id_t ver, item_id_t i)
   : visible_item_t(ver, i)
-  , node_chain(0)
 {
   memset(&draw, 0, sizeof(draw));
 }
