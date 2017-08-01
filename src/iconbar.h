@@ -51,7 +51,7 @@ struct iconbar_t {
   GtkWidget *cancel;
   GtkWidget *ok;
 
-  void map_item_selected(map_item_t *map_item);
+  void map_item_selected(const map_item_t *map_item);
   void map_cancel_ok(gboolean cancelv, gboolean okv);
 
   /**
@@ -62,7 +62,7 @@ struct iconbar_t {
    * If a user action is in progress, then disable all buttons that
    * cause an action to take place or interfere with the action.
    */
-  void map_action_idle(gboolean idle, gboolean way_en);
+  void map_action_idle(gboolean idle, const map_item_t &selected);
 };
 
 GtkWidget *iconbar_new(appdata_t &appdata);

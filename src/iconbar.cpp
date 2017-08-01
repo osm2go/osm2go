@@ -107,27 +107,32 @@ static void iconbar_toggle_sel_widgets(iconbar_t *iconbar, gboolean value) {
     gtk_widget_set_sensitive(sel_widgets[i], value);
 }
 
-static void iconbar_toggle_way_widgets(iconbar_t *iconbar, gboolean value) {
+static void iconbar_toggle_way_widgets(iconbar_t *iconbar, gboolean value, const map_item_t *selected) {
   GtkWidget *way_widgets[] = {
     iconbar->way_node_add,
-    iconbar->way_cut,
     iconbar->way_reverse
   };
 
   for(int i = ARRAY_SIZE(way_widgets) - 1; i >= 0; i--)
     gtk_widget_set_sensitive(way_widgets[i], value);
+
+  if(value)
+    g_assert_nonnull(selected);
+
+  gtk_widget_set_sensitive(iconbar->way_cut,
+                           value && selected->object.way->node_chain.size() > 2);
 }
 
-void iconbar_t::map_item_selected(map_item_t *map_item) {
+void iconbar_t::map_item_selected(const map_item_t *map_item) {
   gboolean selected = map_item ? TRUE : FALSE;
   iconbar_toggle_sel_widgets(this, selected);
 
   gboolean way_en = (selected && map_item->object.type == WAY) ?
                     TRUE : FALSE;
-  iconbar_toggle_way_widgets(this, way_en);
+  iconbar_toggle_way_widgets(this, way_en, map_item);
 }
 
-void iconbar_t::map_action_idle(gboolean idle, gboolean way_en) {
+void iconbar_t::map_action_idle(gboolean idle, const map_item_t &selected) {
   gint i;
 
   /* icons that are enabled in idle mode */
@@ -139,8 +144,10 @@ void iconbar_t::map_action_idle(gboolean idle, gboolean way_en) {
   for(i = sizeof(action_idle_widgets) / sizeof(*action_idle_widgets) - 1; i >= 0; i--)
     gtk_widget_set_sensitive(action_idle_widgets[i], idle);
 
+  gboolean way_en = (idle && selected.object.type == WAY) ? TRUE : FALSE;
+
   iconbar_toggle_sel_widgets(this, FALSE);
-  iconbar_toggle_way_widgets(this, idle && way_en);
+  iconbar_toggle_way_widgets(this, way_en, &selected);
 }
 
 #ifndef FINGER_UI

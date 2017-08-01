@@ -1769,8 +1769,7 @@ void map_t::set_action(map_action_t action) {
   }
 
   appdata.iconbar->map_cancel_ok(cancel_state, ok_state);
-  appdata.iconbar->map_action_idle(idle,
-                                   selected.object.type == WAY ? TRUE : FALSE);
+  appdata.iconbar->map_action_idle(idle, selected);
   gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_WMS_ADJUST], idle);
 
   appdata.statusbar->set(statusbar_text, FALSE);
