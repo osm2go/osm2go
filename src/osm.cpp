@@ -1946,14 +1946,10 @@ bool way_t::is_closed() const {
 
 way_t *way_t::split(osm_t *osm, node_chain_t::iterator cut_at, bool cut_at_node)
 {
+  g_assert_cmpuint(node_chain.size(), >, 2);
+
   /* create a duplicate of the currently selected way */
   way_t *neww = new way_t(1);
-
-  /* ------------  copy all tags ------------- */
-  neww->tags.copy(tags);
-
-  /* ---- transfer relation membership from way to new ----- */
-  neww->transfer_relations(osm, this);
 
   /* attach remaining nodes to new way */
   neww->node_chain.insert(neww->node_chain.end(), cut_at, node_chain.end());
@@ -1968,15 +1964,29 @@ way_t *way_t::split(osm_t *osm, node_chain_t::iterator cut_at, bool cut_at_node)
   /* terminate remainig chain on old way */
   node_chain.erase(cut_at, node_chain.end());
 
+  /* remember that the way needs to be uploaded */
+  flags |= OSM_FLAG_DIRTY;
+
+  // This may just split the last node out of the way. The new way is no
+  // valid way so it is deleted
+  if(neww->node_chain.size() < 2) {
+    osm_unref_node(neww->node_chain.front());
+    delete neww;
+    return O2G_NULLPTR;
+  }
+
+  /* ------------  copy all tags ------------- */
+  neww->tags.copy(tags);
+
+  /* ---- transfer relation membership from way to new ----- */
+  neww->transfer_relations(osm, this);
+
   // keep the history with the longer way
   if(node_chain.size() < neww->node_chain.size())
     node_chain.swap(neww->node_chain);
 
   /* now move the way itself into the main data structure */
   osm->way_attach(neww);
-
-  /* remember that the way needs to be uploaded */
-  flags |= OSM_FLAG_DIRTY;
 
   return neww;
 }

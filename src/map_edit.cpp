@@ -409,6 +409,7 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
   }
 
   g_assert_nonnull(way);
+  g_assert_cmpuint(way->node_chain.size(), >, 2);
 
   /* if this is a closed way, reorder (rotate) it, so the */
   /* place to cut is adjacent to the begin/end of the way. */
@@ -431,28 +432,13 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
   map_item_chain_destroy(way->map_item_chain);
 
   /* create a duplicate of the currently selected way */
-  way_t *neww = way->split(map->appdata.osm, cut_at, cut_at_node);
+  way_t * const neww = way->split(map->appdata.osm, cut_at, cut_at_node);
 
-  /* remove new way if it is too short */
-  if(neww->node_chain.size() < 2) {
-    printf("new way has less than 2 nodes, deleting it\n");
-    map->delete_way(neww);
-    neww = O2G_NULLPTR;
-  }
+  printf("original way still has %zu nodes\n", way->node_chain.size());
 
-  /* the way may still only consist of a single node. */
-  /* remove it then */
-  if(way->node_chain.size() < 2) {
-    printf("original way has less than 2 nodes left, deleting it\n");
-    map->delete_way(way);
-    item = O2G_NULLPTR;
-  } else {
-    printf("original way still has %zu nodes\n", way->node_chain.size());
-
-    /* draw the updated old way */
-    josm_elemstyles_colorize_way(map->style, way);
-    map->draw(way);
-  }
+  /* draw the updated old way */
+  josm_elemstyles_colorize_way(map->style, way);
+  map->draw(way);
 
   if(neww != O2G_NULLPTR) {
     /* colorize the new way before drawing */

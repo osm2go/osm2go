@@ -344,12 +344,31 @@ static void test_split()
     else
       g_assert_cmpuint(nodes[i]->ways, ==, 2);
 
+  g_assert_true(w->contains_node(nodes[4]));
+  g_assert_true(w->ends_with_node(nodes[4]));
   g_assert_cmpuint(w->node_chain.size(), ==, 3);
   g_assert_cmpuint(neww->node_chain.size(), ==, 2);
   g_assert_cmpuint(neww2->node_chain.size(), ==, 2);
   g_assert(neww2->tags == w->tags.asMap());
   g_assert(neww2->tags == v->tags.asMap());
   g_assert_cmpuint(neww2->tags.asMap().size(), ==, ocnt - 1);
+  g_assert_cmpuint(r1->members.size(), ==, 3);
+  g_assert_cmpuint(r2->members.size(), ==, 4);
+  g_assert_cmpuint(r3->members.size(), ==, 1);
+
+  // just split the last node out of the way
+  w->flags = 0;
+  g_assert_null(w->split(&o, w->node_chain.begin() + 2, false));
+  g_assert_cmpuint(o.ways.size(), ==, 4);
+  g_assert(w->flags & OSM_FLAG_DIRTY);
+  for(unsigned int i = 0; i < nodes.size(); i++)
+    g_assert_cmpuint(nodes[i]->ways, ==, 2);
+
+  g_assert_false(w->contains_node(nodes[4]));
+  g_assert_false(w->ends_with_node(nodes[4]));
+  g_assert_cmpuint(w->node_chain.size(), ==, 2);
+  g_assert_cmpuint(neww->node_chain.size(), ==, 2);
+  g_assert_cmpuint(neww2->node_chain.size(), ==, 2);
   g_assert_cmpuint(r1->members.size(), ==, 3);
   g_assert_cmpuint(r2->members.size(), ==, 4);
   g_assert_cmpuint(r3->members.size(), ==, 1);

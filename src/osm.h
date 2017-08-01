@@ -472,6 +472,8 @@ public:
    * @param osm parent osm object
    * @param cut_at position to split at
    * @param cut_at_node if split should happen before or at the given node
+   * @returns the new way
+   * @retval nullptr the new way would have only one node
    *
    * The returned way will be the shorter of the 2 new ways.
    *
