@@ -60,12 +60,9 @@ canvas_item_t *map_item_chain_t::firstCanvasItem() const {
 #undef DESTROY_WAIT_FOR_GTK
 
 static void map_statusbar(map_t *map, map_item_t *map_item) {
-  const tag_list_t &tags = map_item->object.obj->tags;
-
-  gboolean collision = tags.hasTagCollisions() ? TRUE : FALSE;
-
   const std::string &str = map_item->object.get_name();
-  map->appdata.statusbar->set(str.c_str(), collision);
+  map->appdata.statusbar->set(str.c_str(),
+                              map_item->object.obj->tags.hasTagCollisions());
 }
 
 void map_outside_error(appdata_t &appdata) {
@@ -399,7 +396,7 @@ void map_t::item_deselect() {
   }
 
   /* remove statusbar message */
-  appdata.statusbar->set(O2G_NULLPTR, FALSE);
+  appdata.statusbar->set(O2G_NULLPTR, false);
 
   /* disable/enable icons in icon bar */
   appdata.iconbar->map_item_selected(O2G_NULLPTR);
@@ -1772,7 +1769,7 @@ void map_t::set_action(map_action_t action) {
   appdata.iconbar->map_action_idle(idle, selected);
   gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_WMS_ADJUST], idle);
 
-  appdata.statusbar->set(statusbar_text, FALSE);
+  appdata.statusbar->set(statusbar_text, false);
 }
 
 

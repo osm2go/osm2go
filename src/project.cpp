@@ -1389,7 +1389,7 @@ bool project_load(appdata_t &appdata, const std::string &name) {
   banner_show_info(appdata, banner_txt);
 #endif
 
-  appdata.statusbar->set(O2G_NULLPTR, FALSE);
+  appdata.statusbar->set(O2G_NULLPTR, false);
 
   return true;
 

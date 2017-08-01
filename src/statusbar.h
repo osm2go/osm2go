@@ -38,7 +38,7 @@ typedef struct statusbar_t {
   guint brief_mid;
 #endif
 
-  void set(const char *msg, gboolean highlight);
+  void set(const char *msg, bool highlight);
 #endif
 } statusbar_t;
 

@@ -27,7 +27,7 @@ static GdkColor color_red() {
   return color;
 }
 
-static void statusbar_highlight(statusbar_t *statusbar, gboolean highlight) {
+static void statusbar_highlight(statusbar_t *statusbar, bool highlight) {
   GtkWidget * const w =
 #if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
       GTK_STATUSBAR(statusbar->widget)->label;
@@ -43,7 +43,7 @@ static void statusbar_highlight(statusbar_t *statusbar, gboolean highlight) {
 
 #if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
 // Set the persistent message, replacing anything currently there.
-void statusbar_t::set(const char *msg, gboolean highlight) {
+void statusbar_t::set(const char *msg, bool highlight) {
   statusbar_highlight(this, highlight);
 
   printf("statusbar_set: %s\n", msg);
@@ -67,7 +67,7 @@ static gboolean statusbar_brief_clear(gpointer data) {
     gtk_statusbar_remove(GTK_STATUSBAR(statusbar->widget),
                          statusbar->cid, statusbar->brief_mid);
     statusbar->brief_mid = 0;
-    statusbar_highlight(statusbar, FALSE);
+    statusbar_highlight(statusbar, false);
   }
   return FALSE;
 }
@@ -89,7 +89,7 @@ void statusbar_brief(statusbar_t *statusbar, const char *msg, gint timeout) {
   statusbar_brief_clear(statusbar);
   guint mid = 0;
   if (msg) {
-    statusbar_highlight(statusbar, TRUE);
+    statusbar_highlight(statusbar, true);
     mid = gtk_statusbar_push(GTK_STATUSBAR(statusbar->widget),
                                  statusbar->cid, msg);
     if (mid) {
@@ -109,7 +109,7 @@ void statusbar_brief(statusbar_t *statusbar, const char *msg, gint timeout) {
 #else
 
 // Set the persistent message, replacing anything currently there.
-void statusbar_t::set(const char *msg, gboolean highlight) {
+void statusbar_t::set(const char *msg, bool highlight) {
   statusbar_highlight(this, highlight);
 
   printf("statusbar_set: %s\n", msg);
