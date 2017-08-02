@@ -114,7 +114,7 @@ static void map_node_select(map_t *map, node_t *node) {
     map_item->item = O2G_NULLPTR;
 
   map_statusbar(map, map_item);
-  map->appdata.iconbar->map_item_selected(map_item);
+  map->appdata.iconbar->map_item_selected(map_item->object);
 
   /* highlight node */
   gint x = map_item->object.node->lpos.x, y = map_item->object.node->lpos.y;
@@ -262,7 +262,7 @@ void map_t::select_way(way_t *way) {
   map_item->item      = way->map_item_chain->firstCanvasItem();
 
   map_statusbar(this, map_item);
-  appdata.iconbar->map_item_selected(map_item);
+  appdata.iconbar->map_item_selected(map_item->object);
   gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_MAP_HIDE_SEL], TRUE);
 
   gint arrow_width = ((map_item->object.way->draw.flags & OSM_DRAW_FLAG_BG)?
@@ -355,13 +355,12 @@ void map_t::select_relation(relation_t *relation) {
     hl = highlight = new map_highlight_t();
   }
 
-  map_item_t *map_item = &selected;
-  map_item->object = relation;
-  map_item->highlight = false;
-  map_item->item      = O2G_NULLPTR;
+  selected.object = relation;
+  selected.highlight = false;
+  selected.item = O2G_NULLPTR;
 
-  map_statusbar(this, map_item);
-  appdata.iconbar->map_item_selected(map_item);
+  map_statusbar(this, &selected);
+  appdata.iconbar->map_item_selected(selected.object);
 
   /* process all members */
   relation_select_functor fc(*hl, this);
@@ -399,7 +398,7 @@ void map_t::item_deselect() {
   appdata.statusbar->set(O2G_NULLPTR, false);
 
   /* disable/enable icons in icon bar */
-  appdata.iconbar->map_item_selected(O2G_NULLPTR);
+  appdata.iconbar->map_item_selected(object_t());
   gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_MAP_HIDE_SEL], FALSE);
 
   /* remove highlight */
@@ -1766,7 +1765,7 @@ void map_t::set_action(map_action_t action) {
   }
 
   appdata.iconbar->map_cancel_ok(cancel_state, ok_state);
-  appdata.iconbar->map_action_idle(idle, selected);
+  appdata.iconbar->map_action_idle(idle, selected.object);
   gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_WMS_ADJUST], idle);
 
   appdata.statusbar->set(statusbar_text, false);

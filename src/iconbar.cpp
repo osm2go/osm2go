@@ -24,6 +24,7 @@
 #include "info.h"
 #include "map_edit.h"
 #include "misc.h"
+#include "osm.h"
 
 #include <osm2go_cpp.h>
 
@@ -107,7 +108,7 @@ static void iconbar_toggle_sel_widgets(iconbar_t *iconbar, gboolean value) {
     gtk_widget_set_sensitive(sel_widgets[i], value);
 }
 
-static void iconbar_toggle_way_widgets(iconbar_t *iconbar, gboolean value, const map_item_t *selected) {
+static void iconbar_toggle_way_widgets(iconbar_t *iconbar, gboolean value, const object_t &selected) {
   GtkWidget *way_widgets[] = {
     iconbar->way_node_add,
     iconbar->way_reverse
@@ -117,22 +118,22 @@ static void iconbar_toggle_way_widgets(iconbar_t *iconbar, gboolean value, const
     gtk_widget_set_sensitive(way_widgets[i], value);
 
   if(value)
-    g_assert_nonnull(selected);
+    g_assert(selected.type != ILLEGAL);
 
   gtk_widget_set_sensitive(iconbar->way_cut,
-                           value && selected->object.way->node_chain.size() > 2);
+                           value && selected.way->node_chain.size() > 2);
 }
 
-void iconbar_t::map_item_selected(const map_item_t *map_item) {
-  gboolean selected = map_item ? TRUE : FALSE;
+void iconbar_t::map_item_selected(const object_t &item) {
+  gboolean selected = item.type != ILLEGAL ? TRUE : FALSE;
   iconbar_toggle_sel_widgets(this, selected);
 
-  gboolean way_en = (selected && map_item->object.type == WAY) ?
+  gboolean way_en = (selected && item.type == WAY) ?
                     TRUE : FALSE;
-  iconbar_toggle_way_widgets(this, way_en, map_item);
+  iconbar_toggle_way_widgets(this, way_en, item);
 }
 
-void iconbar_t::map_action_idle(gboolean idle, const map_item_t &selected) {
+void iconbar_t::map_action_idle(gboolean idle, const object_t &selected) {
   gint i;
 
   /* icons that are enabled in idle mode */
@@ -144,10 +145,10 @@ void iconbar_t::map_action_idle(gboolean idle, const map_item_t &selected) {
   for(i = sizeof(action_idle_widgets) / sizeof(*action_idle_widgets) - 1; i >= 0; i--)
     gtk_widget_set_sensitive(action_idle_widgets[i], idle);
 
-  gboolean way_en = (idle && selected.object.type == WAY) ? TRUE : FALSE;
+  gboolean way_en = (idle && selected.type == WAY) ? TRUE : FALSE;
 
   iconbar_toggle_sel_widgets(this, FALSE);
-  iconbar_toggle_way_widgets(this, way_en, &selected);
+  iconbar_toggle_way_widgets(this, way_en, selected);
 }
 
 #ifndef FINGER_UI
@@ -300,7 +301,7 @@ GtkWidget *iconbar_new(appdata_t &appdata) {
 
   /* --------------------------------------------------------- */
 
-  iconbar->map_item_selected(O2G_NULLPTR);
+  iconbar->map_item_selected(object_t());
 
   return box;
 }
