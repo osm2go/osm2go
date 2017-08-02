@@ -295,9 +295,10 @@ static std::map<std::string, std::string> style_scan() {
 
     /* scan for projects */
     const char *dirname = *path;
+    gchar *home_path = O2G_NULLPTR;
 
     if(*path[0] == '~')
-      dirname = g_strjoin(p, *path + 1, O2G_NULLPTR);
+      dirname = home_path = g_strjoin(p, *path + 1, O2G_NULLPTR);
 
     if((dir = g_dir_open(dirname, 0, O2G_NULLPTR))) {
       const char *name;
@@ -321,8 +322,7 @@ static std::map<std::string, std::string> style_scan() {
       g_dir_close(dir);
     }
 
-    if(*path[0] == '~')
-      g_free((char*)dirname);
+    g_free(home_path);
   }
 
   return ret;
