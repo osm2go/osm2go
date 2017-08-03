@@ -288,7 +288,7 @@ bool project_save(GtkWidget *parent, project_t *project) {
   node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "max", O2G_NULLPTR);
   xml_set_prop_pos(node, &project->max);
 
-  node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "map", BAD_CAST O2G_NULLPTR);
+  node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "map", O2G_NULLPTR);
   g_ascii_formatd(str, sizeof(str), "%.04f", project->map_state.zoom);
   xmlNewProp(node, BAD_CAST "zoom", BAD_CAST str);
   g_ascii_formatd(str, sizeof(str), "%.04f", project->map_state.detail);

@@ -458,7 +458,7 @@ bool tag_list_t::merge(tag_list_t &other)
   if(empty()) {
     delete contents; // just to be sure not to leak if an empty vector is around
     contents = other.contents;
-    other.contents = 0;
+    other.contents = O2G_NULLPTR;
     return false;
   }
 
@@ -2239,7 +2239,7 @@ void tag_list_t::replace(std::vector<tag_t> &ntags)
 {
   clear();
   if(ntags.empty()) {
-    contents = 0;
+    contents = O2G_NULLPTR;
     return;
   }
 #if __cplusplus >= 201103L
@@ -2267,7 +2267,7 @@ void tag_list_t::replace(const osm_t::TagMap &ntags)
 {
   clear();
   if(ntags.empty()) {
-    contents = 0;
+    contents = O2G_NULLPTR;
     return;
   }
   contents = new std::vector<tag_t>();
