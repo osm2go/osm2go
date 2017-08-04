@@ -159,7 +159,7 @@ struct set_point_pos {
   gint node;
   set_point_pos(canvas_points_t *p) : points(p), node(0) {}
   void operator()(const node_t *n) {
-    canvas_point_set_pos(points, node++, &n->lpos);
+    canvas_point_set_pos(points, node++, n->lpos);
   }
 };
 
@@ -773,7 +773,7 @@ static gint map_destroy_event(map_t *map) {
 map_item_t *map_item_at(map_t *map, gint x, gint y) {
   printf("map check at %d/%d\n", x, y);
 
-  canvas_window2world(map->canvas, x, y, &x, &y);
+  canvas_window2world(map->canvas, x, y, x, y);
 
   printf("world check at %d/%d\n", x, y);
 
@@ -939,7 +939,7 @@ bool map_t::scroll_to_if_offscreen(const lpos_t *lpos) {
   // Is the point still onscreen?
   bool recentre_needed = false;
   gint sx, sy;
-  canvas_scroll_get(canvas, CANVAS_UNIT_METER, &sx, &sy);
+  canvas_scroll_get(canvas, CANVAS_UNIT_METER, sx, sy);
   gint viewport_left   = sx - dim.width / 2;
   gint viewport_right  = sx + dim.width / 2;
   gint viewport_top    = sy - dim.height / 2;
@@ -1010,7 +1010,7 @@ void map_set_zoom(map_t *map, double zoom, bool update_scroll_offsets) {
     if (!at_zoom_limit) {
       /* zooming affects the scroll offsets */
       gint sx, sy;
-      canvas_scroll_get(map->canvas, CANVAS_UNIT_PIXEL, &sx, &sy);
+      canvas_scroll_get(map->canvas, CANVAS_UNIT_PIXEL, sx, sy);
       map_limit_scroll(map, CANVAS_UNIT_PIXEL, sx, sy);
 
       // keep the map visible
@@ -1018,8 +1018,8 @@ void map_set_zoom(map_t *map, double zoom, bool update_scroll_offsets) {
     }
 
     canvas_scroll_get(map->canvas, CANVAS_UNIT_METER,
-		      &map->state.scroll_offset.x,
-		      &map->state.scroll_offset.y);
+                      map->state.scroll_offset.x,
+                      map->state.scroll_offset.y);
   }
 
   if(map->appdata.track.gps_item) {
@@ -1064,30 +1064,30 @@ static gboolean distance_above(map_t *map, gint x, gint y, gint limit) {
 static void map_do_scroll(map_t *map, gint x, gint y) {
   gint sx, sy;
 
-  canvas_scroll_get(map->canvas, CANVAS_UNIT_PIXEL, &sx, &sy);
+  canvas_scroll_get(map->canvas, CANVAS_UNIT_PIXEL, sx, sy);
   sx -= x-map->pen_down.at.x;
   sy -= y-map->pen_down.at.y;
   map_limit_scroll(map, CANVAS_UNIT_PIXEL, sx, sy);
   canvas_scroll_to(map->canvas, CANVAS_UNIT_PIXEL, sx, sy);
 
   canvas_scroll_get(map->canvas, CANVAS_UNIT_METER,
-		    &map->state.scroll_offset.x,
-		    &map->state.scroll_offset.y);
+                    map->state.scroll_offset.x,
+                    map->state.scroll_offset.y);
 }
 
 
 /* scroll a certain step */
 static void map_do_scroll_step(map_t *map, gint x, gint y) {
   gint sx, sy;
-  canvas_scroll_get(map->canvas, CANVAS_UNIT_PIXEL, &sx, &sy);
+  canvas_scroll_get(map->canvas, CANVAS_UNIT_PIXEL, sx, sy);
   sx += x;
   sy += y;
   map_limit_scroll(map, CANVAS_UNIT_PIXEL, sx, sy);
   canvas_scroll_to(map->canvas, CANVAS_UNIT_PIXEL, sx, sy);
 
   canvas_scroll_get(map->canvas, CANVAS_UNIT_METER,
-		    &map->state.scroll_offset.x,
-		    &map->state.scroll_offset.y);
+                    map->state.scroll_offset.x,
+                    map->state.scroll_offset.y);
 }
 
 bool map_t::item_is_selected_node(const map_item_t *map_item) const {
@@ -1221,7 +1221,7 @@ static void map_touchnode_update(map_t *map, gint x, gint y) {
   }
 
   /* check if we are close to one of the other nodes */
-  canvas_window2world(map->canvas, x, y, &x, &y);
+  canvas_window2world(map->canvas, x, y, x, y);
   hl_nodes fc(cur_node, x, y, map);
   std::for_each(map->appdata.osm->nodes.begin(), map->appdata.osm->nodes.end(), fc);
 
@@ -1348,7 +1348,7 @@ static void map_button_release(map_t *map, gint x, gint y) {
     map_hl_cursor_clear(map);
 
     /* convert mouse position to canvas (world) position */
-    canvas_window2world(map->canvas, x, y, &x, &y);
+    canvas_window2world(map->canvas, x, y, x, y);
 
     node_t *node = O2G_NULLPTR;
     if(!map->appdata.osm->position_within_bounds(x, y))
@@ -1952,7 +1952,7 @@ static canvas_points_t *canvas_points_init(const bounds_t &bounds,
 
   for(gint i = 0; i < count; i++) {
     lpos = point->pos.toLpos(bounds);
-    canvas_point_set_pos(points, i, &lpos);
+    canvas_point_set_pos(points, i, lpos);
     point++;
   }
 

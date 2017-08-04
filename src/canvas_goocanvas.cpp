@@ -67,11 +67,10 @@ void canvas_set_antialias(canvas_t *canvas, gboolean antialias) {
                antialias ? CAIRO_ANTIALIAS_DEFAULT : CAIRO_ANTIALIAS_NONE, O2G_NULLPTR);
 }
 
-void canvas_window2world(canvas_t *canvas,
-			 gint x, gint y, gint *wx, gint *wy) {
+void canvas_window2world(canvas_t *canvas, gint x, gint y, gint &wx, gint &wy) {
   double sx = x, sy = y;
   goo_canvas_convert_from_pixels(GOO_CANVAS(canvas->widget), &sx, &sy);
-  *wx = sx; *wy = sy;
+  wx = sx; wy = sy;
 }
 
 canvas_item_t *canvas_get_item_at(canvas_t *canvas, gint x, gint y) {
@@ -105,7 +104,7 @@ canvas_dimensions canvas_get_viewport_dimensions(canvas_t *canvas, canvas_unit_t
 
 /* get scroll position in meters/pixels */
 void canvas_scroll_get(canvas_t *canvas, canvas_unit_t unit,
-		       gint *sx, gint *sy) {
+                       gint &sx, gint &sy) {
   GooCanvas *gc = GOO_CANVAS(canvas->widget);
   gdouble zoom = goo_canvas_get_scale(gc);
 
@@ -119,11 +118,11 @@ void canvas_scroll_get(canvas_t *canvas, canvas_unit_t unit,
 
   if(unit == CANVAS_UNIT_PIXEL) {
     /* make values zoom independant */
-    *sx = hs * zoom;
-    *sy = vs * zoom;
+    sx = hs * zoom;
+    sy = vs * zoom;
   } else {
-    *sx = hs;
-    *sy = vs;
+    sx = hs;
+    sy = vs;
   }
 }
 
@@ -184,9 +183,9 @@ canvas_points_t *canvas_points_new(gint points) {
   return goo_canvas_points_new(points);
 }
 
-void canvas_point_set_pos(canvas_points_t *points, gint index, const lpos_t *lpos) {
-  points->coords[2*index+0] = lpos->x;
-  points->coords[2*index+1] = lpos->y;
+void canvas_point_set_pos(canvas_points_t *points, gint index, const lpos_t &lpos) {
+  points->coords[2*index+0] = lpos.x;
+  points->coords[2*index+1] = lpos.y;
 }
 
 void canvas_points_free(canvas_points_t *points) {
@@ -420,7 +419,7 @@ gint canvas_item_get_segment(canvas_item_t *item, gint x, gint y) {
 }
 
 void canvas_item_get_segment_pos(canvas_item_t *item, gint seg,
-				 gint *x0, gint *y0, gint *x1, gint *y1) {
+                                 gint &x0, gint &y0, gint &x1, gint &y1) {
   printf("get segment %d of item %p\n", seg, item);
 
   canvas_points_t *points = O2G_NULLPTR;
@@ -429,8 +428,8 @@ void canvas_item_get_segment_pos(canvas_item_t *item, gint seg,
   g_assert_nonnull(points);
   g_assert_cmpint(seg, <, points->num_points-1);
 
-  *x0 = points->coords[2 * seg + 0];
-  *y0 = points->coords[2 * seg + 1];
-  *x1 = points->coords[2 * seg + 2];
-  *y1 = points->coords[2 * seg + 3];
+  x0 = points->coords[2 * seg + 0];
+  y0 = points->coords[2 * seg + 1];
+  x1 = points->coords[2 * seg + 2];
+  y1 = points->coords[2 * seg + 3];
 }

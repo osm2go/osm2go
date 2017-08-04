@@ -34,7 +34,7 @@ void map_hl_cursor_draw(map_t *map, gint x, gint y, bool is_world,
     canvas_item_destroy(map->cursor);
 
   gint wx, wy;
-  if(!is_world) canvas_window2world(map->canvas, x, y, &wx, &wy);
+  if(!is_world) canvas_window2world(map->canvas, x, y, wx, wy);
   else { wx = x; wy = y; }
 
   map->cursor = canvas_circle_new(map->canvas, CANVAS_GROUP_DRAW, wx, wy,

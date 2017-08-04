@@ -129,6 +129,11 @@ struct canvas_dimensions {
 };
 
 canvas_dimensions canvas_get_viewport_dimensions(canvas_t *canvas, canvas_unit_t unit);
+void canvas_window2world(canvas_t *canvas, gint x, gint y, gint &wx, gint &wy);
+void canvas_scroll_get(canvas_t *canvas, canvas_unit_t unit, gint &sx, gint &sy);
+void canvas_point_set_pos(canvas_points_t *points, gint index, const lpos_t &lpos);
+void canvas_item_get_segment_pos(canvas_item_t *item, gint seg,
+                                 gint &x0, gint &y0, gint &x1, gint &y1);
 
 extern "C" {
 #endif
@@ -138,12 +143,10 @@ extern "C" {
 void canvas_set_background(canvas_t *canvas, canvas_color_t bg_color);
 void canvas_set_antialias(canvas_t *canvas, gboolean antialias);
 void canvas_erase(canvas_t *canvas, gint group_mask);
-void canvas_window2world(canvas_t *canvas, gint x, gint y, gint *wx, gint *wy);
 canvas_item_t *canvas_get_item_at(canvas_t *canvas, gint x, gint y);
 void canvas_set_zoom(canvas_t *canvas, gdouble zoom);
 gdouble canvas_get_zoom(canvas_t *canvas);
 void canvas_scroll_to(canvas_t *canvas, canvas_unit_t unit, gint sx, gint sy);
-void canvas_scroll_get(canvas_t *canvas, canvas_unit_t unit, gint *sx, gint *sy);
 void canvas_set_bounds(canvas_t *canvas, gint minx, gint miny,
 		       gint maxx, gint maxy);
 
@@ -162,7 +165,6 @@ canvas_item_t *canvas_image_new(canvas_t *canvas, canvas_group_t group,
 				float hscale, float vscale);
 
 canvas_points_t *canvas_points_new(gint points);
-void canvas_point_set_pos(canvas_points_t *points, gint index, const lpos_t *lpos);
 void canvas_points_free(canvas_points_t *points);
 gint canvas_points_num(canvas_points_t *points);
 void canvas_point_get_lpos(canvas_points_t *points, gint index, lpos_t *lpos);
@@ -181,8 +183,6 @@ void canvas_item_destroy_connect(canvas_item_t *item, void(*c_handler)(gpointer)
 void canvas_image_move(canvas_item_t *item, gint x, gint y,
 		       float hscale, float vscale);
 gint canvas_item_get_segment(canvas_item_t *item, gint x, gint y);
-void canvas_item_get_segment_pos(canvas_item_t *item, gint seg,
-				 gint *x0, gint *y0, gint *x1, gint *y1);
 
 void canvas_item_info_attach_circle(canvas_t *canvas, canvas_group_t group,
 			    canvas_item_t *item, gint x, gint y, gint r);
