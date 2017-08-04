@@ -115,13 +115,13 @@ area_edit_t::area_edit_t(appdata_t &a, pos_t &mi, pos_t &ma, GtkWidget *dlg)
 }
 
 static void parse_and_set_lat(GtkWidget *src, pos_float_t &store) {
-  pos_float_t i = pos_parse_lat((char*)gtk_entry_get_text(GTK_ENTRY(src)));
+  pos_float_t i = pos_parse_lat(gtk_entry_get_text(GTK_ENTRY(src)));
   if(pos_lat_valid(i))
     store = i;
 }
 
 static void parse_and_set_lon(GtkWidget *src, pos_float_t &store) {
-  pos_float_t i = pos_parse_lon((char*)gtk_entry_get_text(GTK_ENTRY(src)));
+  pos_float_t i = pos_parse_lon(gtk_entry_get_text(GTK_ENTRY(src)));
   if(pos_lon_valid(i))
     store = i;
 }
@@ -491,7 +491,7 @@ on_map_button_press_event(GtkWidget *widget,
   osm_gps_map_osd_t *osd = osm_gps_map_osd_get(map);
 
   /* osm-gps-map needs this event to handle the OSD */
-  if(osd->check(osd, TRUE, (int)event->x, (int)event->y))
+  if(osd->check(osd, TRUE, event->x, event->y))
     return FALSE;
 
   if(osm_gps_map_osd_get_state(OSM_GPS_MAP(widget)))
@@ -501,7 +501,7 @@ on_map_button_press_event(GtkWidget *widget,
   osm_gps_map_track_remove_all(map);
 
   /* and remember this location as the start */
-  osm_gps_map_convert_screen_to_geographic(map, (gint)event->x, (gint)event->y, &context->map.start);
+  osm_gps_map_convert_screen_to_geographic(map, event->x, event->y, &context->map.start);
 
   return TRUE;
 }
@@ -517,7 +517,7 @@ on_map_motion_notify_event(GtkWidget *widget,
     osm_gps_map_track_remove_all(map);
 
     OsmGpsMapPoint start = context->map.start, end;
-    osm_gps_map_convert_screen_to_geographic(map, (gint)event->x, (gint)event->y, &end);
+    osm_gps_map_convert_screen_to_geographic(map, event->x, event->y, &end);
 
     GSList *box = pos_append_rad(O2G_NULLPTR, start.rlat, start.rlon);
     box = pos_append_rad(box, end.rlat,   start.rlon);
@@ -543,7 +543,7 @@ on_map_button_release_event(GtkWidget *widget,
      !std::isnan(context->map.start.rlat)) {
 
     OsmGpsMapPoint start = context->map.start, end;
-    osm_gps_map_convert_screen_to_geographic(map, (gint)event->x, (gint)event->y, &end);
+    osm_gps_map_convert_screen_to_geographic(map, event->x, event->y, &end);
 
     GSList *box = pos_append_rad(O2G_NULLPTR, start.rlat, start.rlon);
     box = pos_append_rad(box, end.rlat,   start.rlon);
@@ -577,7 +577,7 @@ on_map_button_release_event(GtkWidget *widget,
   }
 
   /* osm-gps-map needs this event to handle the OSD */
-  if(osd->check(osd, TRUE, (int)event->x, (int)event->y))
+  if(osd->check(osd, TRUE, event->x, event->y))
     return FALSE;
 
   /* returning true here disables dragging in osm-gps-map */

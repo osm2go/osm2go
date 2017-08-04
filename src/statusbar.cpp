@@ -62,7 +62,7 @@ void statusbar_t::set(const char *msg, bool highlight) {
 // Clear any brief message currently set, dropping back to the persistent one.
 
 static gboolean statusbar_brief_clear(gpointer data) {
-  statusbar_t *statusbar = (statusbar_t *)data;
+  statusbar_t *statusbar = static_cast<statusbar_t *>(data);
   if (statusbar->brief_mid) {
     gtk_statusbar_remove(GTK_STATUSBAR(statusbar->widget),
                          statusbar->cid, statusbar->brief_mid);

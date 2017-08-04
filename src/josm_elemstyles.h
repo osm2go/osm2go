@@ -30,7 +30,7 @@
 // Ratio conversions
 
 float scaledn_to_zoom(const float scaledn);
-float zoom_to_scaledn(const float zoom);
+int zoom_to_scaledn(const float zoom);
 
 typedef enum {
   ES_TYPE_NONE = 0,

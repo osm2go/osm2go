@@ -410,7 +410,7 @@ void map_t::item_deselect() {
 
 /* called whenever a map item is to be destroyed */
 static void map_item_destroy_event(gpointer data) {
-  map_item_t *map_item = (map_item_t*)data;
+  map_item_t *map_item = static_cast<map_item_t *>(data);
 
   //  printf("destroying map_item @ %p\n", map_item);
 
@@ -786,7 +786,7 @@ map_item_t *map_item_at(map_t *map, gint x, gint y) {
 
   printf("  there's an item (%p)\n", item);
 
-  map_item_t *map_item = (map_item_t*)canvas_item_get_user_data(item);
+  map_item_t *map_item = static_cast<map_item_t *>(canvas_item_get_user_data(item));
 
   if(!map_item) {
     printf("  item has no user data!\n");
@@ -888,14 +888,14 @@ static bool map_limit_zoom(map_t *map, gdouble &zoom) {
     if (dim.height < dim.width) {
         gint lim_h = dim.height * 0.95;
         if (max_y-min_y < lim_h) {
-            gdouble corr = ((gdouble)max_y-min_y) / (gdouble)lim_h;
+            gdouble corr = (static_cast<gdouble>(max_y) - min_y) / lim_h;
             zoom /= corr;
         }
     }
     else {
         gint lim_w = dim.width * 0.95;
         if (max_x-min_x < lim_w) {
-            gdouble corr = ((gdouble)max_x-min_x) / (gdouble)lim_w;
+            gdouble corr = (static_cast<gdouble>(max_x) - min_x) / lim_w;
             zoom /= corr;
         }
     }
@@ -1033,9 +1033,7 @@ void map_set_zoom(map_t *map, double zoom, bool update_scroll_offsets) {
   }
 }
 
-static gboolean map_scroll_event(GtkWidget *, GdkEventScroll *event,
-				 gpointer data) {
-  appdata_t *appdata = (appdata_t*)data;
+static gboolean map_scroll_event(GtkWidget *, GdkEventScroll *event, appdata_t *appdata) {
   map_t *map = appdata->map;
 
   if(!appdata->osm) return FALSE;
@@ -1446,7 +1444,7 @@ static gboolean map_motion_notify_event(GtkWidget *,
   else {
     x = event->x;
     y = event->y;
-    state = (GdkModifierType)event->state;
+    state = static_cast<GdkModifierType>(event->state);
   }
 
   /* check if distance to press is above drag limit */
@@ -1557,7 +1555,7 @@ gboolean map_t::key_press_event(GdkEventKey *event) {
       zoom = state.zoom;
       zoom *= ZOOM_FACTOR_BUTTON;
       map_set_zoom(this, zoom, true);
-      printf("zoom is now %f (1:%d)\n", zoom, (int)zoom_to_scaledn(zoom));
+      printf("zoom is now %f (1:%d)\n", zoom, zoom_to_scaledn(zoom));
       return TRUE;
       break;
 
@@ -1570,7 +1568,7 @@ gboolean map_t::key_press_event(GdkEventKey *event) {
       zoom = state.zoom;
       zoom /= ZOOM_FACTOR_BUTTON;
       map_set_zoom(this, zoom, true);
-      printf("zoom is now %f (1:%d)\n", zoom, (int)zoom_to_scaledn(zoom));
+      printf("zoom is now %f (1:%d)\n", zoom, zoom_to_scaledn(zoom));
       return TRUE;
       break;
 
@@ -1583,7 +1581,7 @@ gboolean map_t::key_press_event(GdkEventKey *event) {
 }
 
 static gboolean map_autosave(gpointer data) {
-  map_t *map = (map_t*)data;
+  map_t *map = static_cast<map_t *>(data);
 
   /* only do this if root window has focus as otherwise */
   /* a dialog may be open and modifying the basic structures */
@@ -2186,10 +2184,10 @@ void map_set_bg_image(map_t *map, const char *filename) {
   map->bg.pix = gdk_pixbuf_new_from_file(filename, O2G_NULLPTR);
 
   /* calculate required scale factor */
-  map->bg.scale.x = (float)(bounds->max.x - bounds->min.x)/
-    (float)gdk_pixbuf_get_width(map->bg.pix);
-  map->bg.scale.y = (float)(bounds->max.y - bounds->min.y)/
-    (float)gdk_pixbuf_get_height(map->bg.pix);
+  map->bg.scale.x = static_cast<float>(bounds->max.x - bounds->min.x) /
+                    gdk_pixbuf_get_width(map->bg.pix);
+  map->bg.scale.y = static_cast<float>(bounds->max.y - bounds->min.y) /
+                    gdk_pixbuf_get_height(map->bg.pix);
 
   map->bg.item = canvas_image_new(map->canvas, CANVAS_GROUP_BG, map->bg.pix,
 	  bounds->min.x, bounds->min.y, map->bg.scale.x, map->bg.scale.y);

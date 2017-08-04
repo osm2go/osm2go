@@ -157,19 +157,19 @@ static wms_layer_t *wms_cap_parse_layer(xmlDocPtr doc, xmlNode *a_node) {
 
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
-      if(strcasecmp((char*)cur_node->name, "Layer") == 0) {
+      if(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "Layer") == 0) {
         wms_layer_t *children = wms_cap_parse_layer(doc, cur_node);
         if(children)
           wms_layer->children.push_back(children);
-      } else if(strcasecmp((char*)cur_node->name, "Name") == 0) {
+      } else if(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "Name") == 0) {
 	xmlChar *str = xmlNodeListGetString(doc, cur_node->children, 1);
 	wms_layer->name = reinterpret_cast<char *>(str);
 	xmlFree(str);
-      } else if(strcasecmp((char*)cur_node->name, "Title") == 0) {
+      } else if(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "Title") == 0) {
 	xmlChar *str = xmlNodeListGetString(doc, cur_node->children, 1);
 	wms_layer->title = reinterpret_cast<char *>(str);
 	xmlFree(str);
-      } else if(strcasecmp((char*)cur_node->name, "SRS") == 0) {
+      } else if(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "SRS") == 0) {
 	xmlChar *str = xmlNodeListGetString(doc, cur_node->children, 1);
         if(strcmp(reinterpret_cast<char *>(str), wms_layer_t::EPSG4326()) == 0)
           wms_layer->epsg4326 = true;
@@ -177,7 +177,7 @@ static wms_layer_t *wms_cap_parse_layer(xmlDocPtr doc, xmlNode *a_node) {
           wms_layer->srs = reinterpret_cast<char *>(str);
         printf("SRS = %s\n", str);
 	xmlFree(str);
-      } else if(strcasecmp((char*)cur_node->name, "LatLonBoundingBox") == 0) {
+      } else if(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "LatLonBoundingBox") == 0) {
 	wms_layer->llbbox.min.lat = xml_get_prop_float(cur_node, "miny");
 	wms_layer->llbbox.min.lon = xml_get_prop_float(cur_node, "minx");
 	wms_layer->llbbox.max.lat = xml_get_prop_float(cur_node, "maxy");
@@ -211,7 +211,7 @@ static wms_getmap_t wms_cap_parse_getmap(xmlDocPtr doc, xmlNode *a_node) {
 
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
-      if(strcasecmp((char*)cur_node->name, "Format") == 0) {
+      if(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "Format") == 0) {
         xmlChar *nstr = xmlNodeListGetString(doc, cur_node->children, 1);
 
         const FormatMap::const_iterator it =
@@ -240,7 +240,7 @@ static wms_request_t wms_cap_parse_request(xmlDocPtr doc, xmlNode *a_node) {
 
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
-      if(strcasecmp((char*)cur_node->name, "GetMap") == 0) {
+      if(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "GetMap") == 0) {
 	wms_request.getmap = wms_cap_parse_getmap(doc, cur_node);
       } else
 	printf("found unhandled WMT_MS_Capabilities/Capability/Request/%s\n",
@@ -257,10 +257,10 @@ static bool wms_cap_parse_cap(xmlDocPtr doc, xmlNode *a_node, wms_cap_t *wms_cap
 
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
-      if(strcasecmp((char*)cur_node->name, "Request") == 0) {
+      if(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "Request") == 0) {
 	wms_cap->request = wms_cap_parse_request(doc, cur_node);
         has_request = true;
-      } else if(strcasecmp((char*)cur_node->name, "Layer") == 0) {
+      } else if(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "Layer") == 0) {
         wms_layer_t *layer = wms_cap_parse_layer(doc, cur_node);
         if(layer)
           wms_cap->layers.push_back(layer);
@@ -280,9 +280,9 @@ static bool wms_cap_parse(wms_t *wms, xmlDocPtr doc, xmlNode *a_node) {
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
 
-      if(strcasecmp((char*)cur_node->name, "Service") == 0) {
+      if(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "Service") == 0) {
         has_service = true;
-      } else if(strcasecmp((char*)cur_node->name, "Capability") == 0) {
+      } else if(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "Capability") == 0) {
         if(!has_cap)
           has_cap = wms_cap_parse_cap(doc, cur_node, &wms->cap);
       } else
@@ -301,7 +301,7 @@ static bool wms_cap_parse_root(wms_t *wms, xmlDocPtr doc, xmlNode *a_node) {
   for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
 
-      if(strcasecmp((char*)cur_node->name, "WMT_MS_Capabilities") == 0) {
+      if(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "WMT_MS_Capabilities") == 0) {
         ret = wms_cap_parse(wms, doc, cur_node);
       } else
 	printf("found unhandled %s\n", cur_node->name);
@@ -571,9 +571,7 @@ static void on_server_remove(wms_server_context_t *context) {
   wms_server_selected(context, context->select_server());
 }
 
-static void callback_modified_name(GtkWidget *widget, gpointer data) {
-  settings_t *settings = (settings_t*)data;
-
+static void callback_modified_name(GtkWidget *widget, settings_t *settings) {
   const gchar *name = gtk_entry_get_text(GTK_ENTRY(widget));
 
   /* search all entries except the last (which is the one we are editing) */

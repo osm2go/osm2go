@@ -110,8 +110,8 @@ float scaledn_to_zoom(const float scaledn) {
   return N810_PX_PER_METRE / scaledn;
 }
 
-float zoom_to_scaledn(const float zoom) {
-  return N810_PX_PER_METRE / zoom;
+int zoom_to_scaledn(const float zoom) {
+  return static_cast<int>(N810_PX_PER_METRE / zoom);
 }
 
 

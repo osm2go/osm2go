@@ -106,14 +106,12 @@ canvas_dimensions canvas_get_viewport_dimensions(canvas_t *canvas, canvas_unit_t
 /* get scroll position in meters/pixels */
 void canvas_scroll_get(canvas_t *canvas, canvas_unit_t unit,
 		       gint *sx, gint *sy) {
-  gdouble zoom = goo_canvas_get_scale(GOO_CANVAS(canvas->widget));
+  GooCanvas *gc = GOO_CANVAS(canvas->widget);
+  gdouble zoom = goo_canvas_get_scale(gc);
 
-  GtkAdjustment *hadj = ((struct _GooCanvas*)(canvas->widget))->hadjustment;
-  GtkAdjustment *vadj = ((struct _GooCanvas*)(canvas->widget))->vadjustment;
-
-  gdouble hs = gtk_adjustment_get_value(hadj);
-  gdouble vs = gtk_adjustment_get_value(vadj);
-  goo_canvas_convert_from_pixels(GOO_CANVAS(canvas->widget), &hs, &vs);
+  gdouble hs = gtk_adjustment_get_value(gc->hadjustment);
+  gdouble vs = gtk_adjustment_get_value(gc->vadjustment);
+  goo_canvas_convert_from_pixels(gc, &hs, &vs);
 
   /* convert to position relative to screen center */
   hs += canvas->widget->allocation.width/(2*zoom);
@@ -170,10 +168,8 @@ canvas_item_t *canvas_circle_new(canvas_t *canvas, canvas_group_t group,
 			 canvas_color_t fill_col, canvas_color_t border_col) {
 
   canvas_item_t *item =
-    goo_canvas_ellipse_new(canvas->group[group],
-			   (gdouble) x, (gdouble) y,
-			   (gdouble) radius, (gdouble) radius,
-			   "line-width", (double)border,
+    goo_canvas_ellipse_new(canvas->group[group], x, y, radius, radius,
+                           "line-width", static_cast<double>(border),
 			   "stroke-color-rgba", border_col,
 			   "fill-color-rgba", fill_col,
                            O2G_NULLPTR);
@@ -211,7 +207,7 @@ canvas_item_t *canvas_polyline_new(canvas_t *canvas, canvas_group_t group,
   canvas_item_t *item =
     goo_canvas_polyline_new(canvas->group[group], FALSE, 0,
 			    "points", points,
-			    "line-width", (double)width,
+                            "line-width", static_cast<double>(width),
 			    "stroke-color-rgba", color,
 			    "line-join", CAIRO_LINE_JOIN_ROUND,
 			    "line-cap", CAIRO_LINE_CAP_ROUND,
@@ -229,7 +225,7 @@ canvas_item_t *canvas_polygon_new(canvas_t *canvas, canvas_group_t group,
   canvas_item_t *item =
     goo_canvas_polyline_new(canvas->group[group], TRUE, 0,
 			    "points", points,
-			    "line-width", (double)width,
+                            "line-width", static_cast<double>(width),
 			    "stroke-color-rgba", color,
 			    "fill-color-rgba", fill,
 			    "line-join", CAIRO_LINE_JOIN_ROUND,
@@ -271,15 +267,15 @@ void canvas_item_set_points(canvas_item_t *item, canvas_points_t *points) {
 
 void canvas_item_set_pos(canvas_item_t *item, lpos_t *lpos) {
   g_object_set(G_OBJECT(item),
-	       "center-x", (gdouble)lpos->x,
-	       "center-y", (gdouble)lpos->y,
+               "center-x", static_cast<gdouble>(lpos->x),
+               "center-y", static_cast<gdouble>(lpos->y),
                O2G_NULLPTR);
 }
 
 void canvas_item_set_radius(canvas_item_t *item, gint radius) {
   g_object_set(G_OBJECT(item),
-	       "radius-x", (gdouble)radius,
-	       "radius-y", (gdouble)radius,
+               "radius-x", static_cast<gdouble>(radius),
+               "radius-y", static_cast<gdouble>(radius),
                O2G_NULLPTR);
 }
 
@@ -316,7 +312,7 @@ void canvas_item_set_dashed(canvas_item_t *item,
   gfloat off_len = dash_length_off;
   gfloat on_len = dash_length_on;
   guint cap = CAIRO_LINE_CAP_BUTT;
-  if ((gint)dash_length_on > line_width) {
+  if (static_cast<gint>(dash_length_on) > line_width) {
     cap = CAIRO_LINE_CAP_ROUND;
   }
   dash = goo_canvas_line_dash_new(2, on_len, off_len, 0);
@@ -365,8 +361,8 @@ void canvas_image_move(canvas_item_t *item, gint x, gint y,
 		       float hscale, float vscale) {
 
   g_object_set(G_OBJECT(item),
-	       "x", (gdouble)x / hscale,
-	       "y", (gdouble)y / vscale,
+               "x", static_cast<gdouble>(x) / hscale,
+               "y", static_cast<gdouble>(y) / vscale,
                O2G_NULLPTR);
 }
 
@@ -391,8 +387,8 @@ gint canvas_item_get_segment(canvas_item_t *item, gint x, gint y) {
 #define AY (points->coords[2*i+1])
 #define BX (points->coords[2*i+2])
 #define BY (points->coords[2*i+3])
-#define CX ((double)x)
-#define CY ((double)y)
+#define CX static_cast<double>(x)
+#define CY static_cast<double>(y)
 
     double len2 = pow(BY-AY,2)+pow(BX-AX,2);
     double m = ((CX-AX)*(BX-AX)+(CY-AY)*(BY-AY)) / len2;

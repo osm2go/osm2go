@@ -61,7 +61,7 @@ double xml_get_prop_float(xmlNode *node, const char *prop) {
   xmlChar *str = xmlGetProp(node, BAD_CAST prop);
   double value = NAN;
   if(str) {
-    value = g_ascii_strtod((gchar*)str, O2G_NULLPTR);
+    value = g_ascii_strtod(reinterpret_cast<gchar *>(str), O2G_NULLPTR);
     xmlFree(str);
   }
   return value;
@@ -72,7 +72,7 @@ bool xml_get_prop_is(xmlNode *node, const char *prop, const char *str) {
   if(!prop_str)
     return false;
 
-  bool match = (strcasecmp((char*)prop_str, str) == 0);
+  bool match = (strcasecmp(reinterpret_cast<char *>(prop_str), str) == 0);
   xmlFree(prop_str);
   return match;
 }
@@ -158,14 +158,15 @@ void warningf(GtkWidget *parent, const char *fmt, ...) {
 
 static void on_toggled(GtkWidget *button, gpointer data) {
   gboolean active = check_button_get_active(button);
+  int flags = *static_cast<gint *>(data);
 
   GtkWidget *dialog = gtk_widget_get_toplevel(button);
 
-  if(*(gint*)data & MISC_AGAIN_FLAG_DONT_SAVE_NO)
+  if(flags & MISC_AGAIN_FLAG_DONT_SAVE_NO)
     gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog),
 				      RESPONSE_NO, !active);
 
-  if(*(gint*)data & MISC_AGAIN_FLAG_DONT_SAVE_YES)
+  if(flags & MISC_AGAIN_FLAG_DONT_SAVE_YES)
     gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog),
 				      RESPONSE_YES, !active);
 }

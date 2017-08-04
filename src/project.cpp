@@ -130,7 +130,7 @@ static bool project_read(const std::string &project_file, project_t *project,
   xmlNode *cur_node;
   for (cur_node = xmlDocGetRootElement(doc); cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
-      if(strcmp((char*)cur_node->name, "proj") == 0) {
+      if(strcmp(reinterpret_cast<const char *>(cur_node->name), "proj") == 0) {
         project->data_dirty = xml_get_prop_is(cur_node, "dirty", "true");
         project->isDemo = xml_get_prop_is(cur_node, "demo", "true");
 
@@ -140,12 +140,12 @@ static bool project_read(const std::string &project_file, project_t *project,
 	  if(node->type == XML_ELEMENT_NODE) {
             xmlChar *str;
 
-	    if(strcmp((char*)node->name, "desc") == 0) {
+	    if(strcmp(reinterpret_cast<const char *>(node->name), "desc") == 0) {
               xmlChar *desc = xmlNodeListGetString(doc, node->children, 1);
               project->desc = reinterpret_cast<char *>(desc);
               printf("desc = %s\n", desc);
               xmlFree(desc);
-	    } else if(strcmp((char*)node->name, "server") == 0) {
+	    } else if(strcmp(reinterpret_cast<const char *>(node->name), "server") == 0) {
 	      str = xmlNodeListGetString(doc, node->children, 1);
               if(defaultserver == reinterpret_cast<char *>(str)) {
                 project->server = defaultserver.c_str();
@@ -156,26 +156,26 @@ static bool project_read(const std::string &project_file, project_t *project,
 	      printf("server = %s\n", project->server);
 	      xmlFree(str);
 
-            } else if(strcmp((char*)node->name, "map") == 0) {
+            } else if(strcmp(reinterpret_cast<const char *>(node->name), "map") == 0) {
 
 	      if((str = xmlGetProp(node, BAD_CAST "zoom"))) {
-                project->map_state.zoom = g_ascii_strtod((gchar *)str, O2G_NULLPTR);
+                project->map_state.zoom = g_ascii_strtod(reinterpret_cast<gchar *>(str), O2G_NULLPTR);
 		xmlFree(str);
 	      }
 	      if((str = xmlGetProp(node, BAD_CAST "detail"))) {
-                project->map_state.detail = g_ascii_strtod((gchar *)str, O2G_NULLPTR);
+                project->map_state.detail = g_ascii_strtod(reinterpret_cast<gchar *>(str), O2G_NULLPTR);
 		xmlFree(str);
 	      }
 	      if((str = xmlGetProp(node, BAD_CAST "scroll-offset-x"))) {
-                project->map_state.scroll_offset.x = strtoul((char *)str, O2G_NULLPTR, 10);
+                project->map_state.scroll_offset.x = strtoul(reinterpret_cast<gchar *>(str), O2G_NULLPTR, 10);
 		xmlFree(str);
 	      }
 	      if((str = xmlGetProp(node, BAD_CAST "scroll-offset-y"))) {
-                project->map_state.scroll_offset.y = strtoul((char *)str, O2G_NULLPTR, 10);
+                project->map_state.scroll_offset.y = strtoul(reinterpret_cast<gchar *>(str), O2G_NULLPTR, 10);
 		xmlFree(str);
 	      }
 
-	    } else if(strcmp((char*)node->name, "wms") == 0) {
+            } else if(strcmp(reinterpret_cast<const char *>(node->name), "wms") == 0) {
 
 	      if((str = xmlGetProp(node, BAD_CAST "server"))) {
 		project->wms_server = reinterpret_cast<char *>(str);
@@ -186,24 +186,24 @@ static bool project_read(const std::string &project_file, project_t *project,
 		xmlFree(str);
 	      }
 	      if((str = xmlGetProp(node, BAD_CAST "x-offset"))) {
-		project->wms_offset.x = strtoul((char *)str, O2G_NULLPTR, 10);
+                project->wms_offset.x = strtoul(reinterpret_cast<char *>(str), O2G_NULLPTR, 10);
 		xmlFree(str);
 	      }
 	      if((str = xmlGetProp(node, BAD_CAST "y-offset"))) {
-		project->wms_offset.y = strtoul((char *)str, O2G_NULLPTR, 10);
+                project->wms_offset.y = strtoul(reinterpret_cast<char *>(str), O2G_NULLPTR, 10);
 		xmlFree(str);
 	      }
 
-	    } else if(strcmp((char*)node->name, "osm") == 0) {
+            } else if(strcmp(reinterpret_cast<const char *>(node->name), "osm") == 0) {
 	      str = xmlNodeListGetString(doc, node->children, 1);
 	      printf("osm = %s\n", str);
 
 	      /* make this a relative path if possible */
 	      /* if the project path actually is a prefix of this, */
 	      /* then just remove this prefix */
-	      if((str[0] == '/') &&
-		 (strlen((char *)str) > project->path.size()) &&
-		 !strncmp((char *)str, project->path.c_str(), project->path.size())) {
+	      if(str[0] == '/' &&
+                 strlen(reinterpret_cast<char *>(str)) > project->path.size() &&
+                 !strncmp(reinterpret_cast<char *>(str), project->path.c_str(), project->path.size())) {
 
 		project->osm = reinterpret_cast<char *>(str + project->path.size());
 		printf("osm name converted to relative %s\n", project->osm.c_str());
@@ -212,9 +212,9 @@ static bool project_read(const std::string &project_file, project_t *project,
 
 	      xmlFree(str);
 
-	    } else if(strcmp((char*)node->name, "min") == 0) {
+            } else if(strcmp(reinterpret_cast<const char *>(node->name), "min") == 0) {
               xml_get_prop_pos(node, &project->min);
-	    } else if(strcmp((char*)node->name, "max") == 0) {
+            } else if(strcmp(reinterpret_cast<const char *>(node->name), "max") == 0) {
               xml_get_prop_pos(node, &project->max);
 	    }
 	  }
@@ -385,7 +385,7 @@ static void view_selected(GtkWidget *dialog, project_t *project) {
 
 static void
 changed(GtkTreeSelection *selection, gpointer userdata) {
-  select_context_t *context = (select_context_t*)userdata;
+  select_context_t *context = static_cast<select_context_t *>(userdata);
 
   GtkTreeModel *model = O2G_NULLPTR;
   GtkTreeIter iter;
@@ -428,9 +428,7 @@ typedef struct {
   settings_t *settings;
 } name_callback_context_t;
 
-static void callback_modified_name(GtkWidget *widget, gpointer data) {
-  name_callback_context_t *context = (name_callback_context_t*)data;
-
+static void callback_modified_name(GtkWidget *widget, name_callback_context_t *context) {
   const gchar *name = gtk_entry_get_text(GTK_ENTRY(widget));
 
   /* name must not contain some special chars */
@@ -940,11 +938,11 @@ static void project_filesize(project_context_t *context) {
 
         if(project->osm.size() > 3 && strcmp(project->osm.c_str() + project->osm.size() - 3, ".gz") == 0) {
           gstr = g_strdup_printf(_("%" G_GOFFSET_FORMAT " bytes present\nfrom %s"),
-                                 (goffset)st.st_size, time_str);
+                                 static_cast<goffset>(st.st_size), time_str);
           gtk_label_set_text(GTK_LABEL(context->fsizehdr), _("Map data:\n(compressed)"));
         } else {
           gstr = g_strdup_printf(_("%" G_GOFFSET_FORMAT " bytes present\nfrom %s"),
-                                 (goffset)st.st_size, time_str);
+                                 static_cast<goffset>(st.st_size), time_str);
           gtk_label_set_text(GTK_LABEL(context->fsizehdr), _("Map data:"));
         }
         str = gstr;

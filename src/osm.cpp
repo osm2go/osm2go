@@ -666,11 +666,11 @@ static void way_free(std::pair<item_id_t, way_t *> pair) {
 }
 
 node_t *osm_t::parse_way_nd(xmlNode *a_node) const {
-  xmlChar *prop;
+  xmlChar *prop = xmlGetProp(a_node, BAD_CAST "ref");
   node_t *node = O2G_NULLPTR;
 
-  if((prop = xmlGetProp(a_node, BAD_CAST "ref"))) {
-    item_id_t id = strtoll((char*)prop, O2G_NULLPTR, 10);
+  if(prop != O2G_NULLPTR) {
+    item_id_t id = strtoll(reinterpret_cast<char *>(prop), O2G_NULLPTR, 10);
 
     /* search matching node */
     node = node_by_id(id);
@@ -855,7 +855,7 @@ std::string relation_t::descriptive_name() const {
 
 static inline gint __attribute__((nonnull(2))) my_strcmp(const xmlChar *a, const xmlChar *b) {
   if(!a) return -1;
-  return strcmp((char*)a,(char*)b);
+  return strcmp(reinterpret_cast<const char *>(a), reinterpret_cast<const char *>(b));
 }
 
 /* skip current element incl. everything below (mainly for testing) */
@@ -883,7 +883,7 @@ static pos_float_t xml_reader_attr_float(xmlTextReaderPtr reader, const char *na
   pos_float_t ret;
 
   if((prop)) {
-    ret = g_ascii_strtod((gchar *)prop, O2G_NULLPTR);
+    ret = g_ascii_strtod(reinterpret_cast<gchar *>(prop), O2G_NULLPTR);
     xmlFree(prop);
   } else
     ret = NAN;
@@ -945,13 +945,13 @@ static void process_base_attributes(base_object_t *obj, xmlTextReaderPtr reader,
 {
   xmlChar *prop;
   if(G_LIKELY((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "id")))) {
-    obj->id = strtoll((char*)prop, O2G_NULLPTR, 10);
+    obj->id = strtoll(reinterpret_cast<char *>(prop), O2G_NULLPTR, 10);
     xmlFree(prop);
   }
 
   /* new in api 0.6: */
   if(G_LIKELY((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "version")))) {
-    obj->version = strtoul((char*)prop, O2G_NULLPTR, 10);
+    obj->version = strtoul(reinterpret_cast<char *>(prop), O2G_NULLPTR, 10);
     xmlFree(prop);
   }
 
@@ -960,19 +960,19 @@ static void process_base_attributes(base_object_t *obj, xmlTextReaderPtr reader,
     xmlChar *puid = xmlTextReaderGetAttribute(reader, BAD_CAST "uid");
     if(G_LIKELY(puid)) {
       char *endp;
-      uid = strtol((char*)puid, &endp, 10);
+      uid = strtol(reinterpret_cast<char *>(puid), &endp, 10);
       if(G_UNLIKELY(*endp)) {
         printf("WARNING: cannot parse uid '%s' for user '%s'\n", puid, prop);
         uid = -1;
       }
       xmlFree(puid);
     }
-    obj->user = osm_user_insert(osm, (char*)prop, uid);
+    obj->user = osm_user_insert(osm, reinterpret_cast<char *>(prop), uid);
     xmlFree(prop);
   }
 
   if(G_LIKELY((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "timestamp")))) {
-    obj->time = convert_iso8601((char*)prop);
+    obj->time = convert_iso8601(reinterpret_cast<char *>(prop));
     xmlFree(prop);
   }
 }
@@ -1007,10 +1007,10 @@ static void process_node(xmlTextReaderPtr reader, osm_t *osm) {
 	 (xmlTextReaderDepth(reader) != depth))) {
 
     if(xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT) {
-      const char *subname = (const char*)xmlTextReaderConstName(reader);
-      if(strcmp(subname, "tag") == 0) {
+      const char *subname = reinterpret_cast<const char *>(xmlTextReaderConstName(reader));
+      if(strcmp(subname, "tag") == 0)
         process_tag(reader, tags);
-      } else
+      else
 	skip_element(reader);
     }
 
@@ -1020,10 +1020,10 @@ static void process_node(xmlTextReaderPtr reader, osm_t *osm) {
 }
 
 static node_t *process_nd(xmlTextReaderPtr reader, osm_t *osm) {
-  xmlChar *prop;
+  xmlChar *prop = xmlTextReaderGetAttribute(reader, BAD_CAST "ref");
 
-  if((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "ref"))) {
-    item_id_t id = strtoll((char*)prop, O2G_NULLPTR, 10);
+  if(prop != O2G_NULLPTR) {
+    item_id_t id = strtoll(reinterpret_cast<char *>(prop), O2G_NULLPTR, 10);
     /* search matching node */
     node_t *node = osm->node_by_id(id);
     if(!node)
@@ -1066,7 +1066,7 @@ static void process_way(xmlTextReaderPtr reader, osm_t *osm) {
 	 (xmlTextReaderDepth(reader) != depth))) {
 
     if(xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT) {
-      const char *subname = (const char*)xmlTextReaderConstName(reader);
+      const char *subname = reinterpret_cast<const char *>(xmlTextReaderConstName(reader));
       if(strcmp(subname, "nd") == 0) {
 	node_t *n = process_nd(reader, osm);
         if(n)
@@ -1122,7 +1122,7 @@ static void process_relation(xmlTextReaderPtr reader, osm_t *osm) {
 	 (xmlTextReaderDepth(reader) != depth))) {
 
     if(xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT) {
-      const char *subname = (const char*)xmlTextReaderConstName(reader);
+      const char *subname = reinterpret_cast<const char *>(xmlTextReaderConstName(reader));
       if(strcmp(subname, "member") == 0) {
         process_member(reader, osm, relation->members);
       } else if(strcmp(subname, "tag") == 0) {
@@ -1167,7 +1167,7 @@ static osm_t *process_osm(xmlTextReaderPtr reader, icon_t &icons) {
     case XML_READER_TYPE_ELEMENT: {
 
       g_assert_cmpint(xmlTextReaderDepth(reader), ==, 1);
-      const char *name = (const char*)xmlTextReaderConstName(reader);
+      const char *name = reinterpret_cast<const char *>(xmlTextReaderConstName(reader));
       if(block <= BLOCK_BOUNDS && strcmp(name, "bounds") == 0) {
         if(process_bounds(reader, &osm->rbounds))
           osm->bounds = &osm->rbounds;
@@ -1235,7 +1235,7 @@ static osm_t *process_file(const std::string &filename, icon_t &icons) {
   reader = xmlReaderForFile(filename.c_str(), O2G_NULLPTR, 0);
   if (G_LIKELY(reader != O2G_NULLPTR)) {
     if(G_LIKELY(xmlTextReaderRead(reader) == 1)) {
-      const char *name = (const char*)xmlTextReaderConstName(reader);
+      const char *name = reinterpret_cast<const char *>(xmlTextReaderConstName(reader));
       if(G_LIKELY(name && strcmp(name, "osm") == 0)) {
         osm = process_osm(reader, icons);
         // relations may have references to other relation, which have greater ids
@@ -1827,7 +1827,7 @@ void reverse_direction_sensitive_tags_functor::operator()(tag_t &etag)
         /* length of key that will persist */
         size_t plen = strlen(etag.key) - rtable[i].first.size();
         /* add length of new suffix */
-        etag.key = (char*)g_realloc(etag.key, plen + 1 + rtable[i].second.size());
+        etag.key = static_cast<char *>(g_realloc(etag.key, plen + 1 + rtable[i].second.size()));
         char *lastcolon = etag.key + plen;
         g_assert(*lastcolon == ':');
         /* replace suffix */

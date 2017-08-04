@@ -44,7 +44,7 @@ typedef gint64 item_id_t;
 #define G_TYPE_ITEM_ID_T G_TYPE_INT64
 #define ITEM_ID_FORMAT  "%" G_GINT64_FORMAT
 
-#define ID_ILLEGAL  ((item_id_t)0)
+#define ID_ILLEGAL  (static_cast<item_id_t>(0))
 
 class base_object_t;
 class icon_t;

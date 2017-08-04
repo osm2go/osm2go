@@ -206,14 +206,14 @@ static void track_write(const char *name, const track_t *track, xmlDoc *doc) {
     xmlNodePtr root_node = xmlDocGetRootElement(doc);
     bool err = false;
     if (G_UNLIKELY(!root_node || root_node->type != XML_ELEMENT_NODE ||
-                   strcasecmp((char*)root_node->name, "gpx") != 0)) {
+                   strcasecmp(reinterpret_cast<const char *>(root_node->name), "gpx") != 0)) {
       err = true;
     } else {
       cur_node = root_node->children;
       while(cur_node && cur_node->type != XML_ELEMENT_NODE)
         cur_node = cur_node->next;
       if(G_UNLIKELY(!cur_node || !cur_node->children ||
-                    strcasecmp((char*)cur_node->name, "trk") != 0)) {
+                    strcasecmp(reinterpret_cast<const char *>(cur_node->name), "trk") != 0)) {
         err = true;
       } else {
         trk_node = cur_node;
@@ -228,7 +228,7 @@ static void track_write(const char *name, const track_t *track, xmlDoc *doc) {
             break;
           }
           /* something else, this track is not written from osm2go */
-          if(G_UNLIKELY(strcasecmp((char*)cur_node->name, "trkseg") != 0)) {
+          if(G_UNLIKELY(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "trkseg") != 0)) {
             err = true;
             break;
           }
@@ -249,8 +249,8 @@ static void track_write(const char *name, const track_t *track, xmlDoc *doc) {
   if (!doc) {
     doc = xmlNewDoc(BAD_CAST "1.0");
     xmlNodePtr root_node = xmlNewNode(O2G_NULLPTR, BAD_CAST "gpx");
-    xmlNewProp(root_node, BAD_CAST "xmlns", BAD_CAST
-               "http://www.topografix.com/GPX/1/0");
+    xmlNewProp(root_node, BAD_CAST "xmlns",
+               BAD_CAST "http://www.topografix.com/GPX/1/0");
     xmlNewProp(root_node, BAD_CAST "creator", BAD_CAST PACKAGE " v" VERSION);
     it = track->segments.begin();
 
@@ -601,9 +601,9 @@ void TrackSax::startElement(const xmlChar *name, const xmlChar **attrs)
     curPoint = &track->segments.back().track_points.back();
     for(unsigned int i = 0; attrs[i]; i += 2) {
       if(strcmp(reinterpret_cast<const char *>(attrs[i]), "lat") == 0)
-        curPoint->pos.lat = g_ascii_strtod((gchar*)(attrs[i + 1]), O2G_NULLPTR);
+        curPoint->pos.lat = g_ascii_strtod(reinterpret_cast<const gchar *>(attrs[i + 1]), O2G_NULLPTR);
       else if(G_LIKELY(strcmp(reinterpret_cast<const char *>(attrs[i]), "lon") == 0))
-        curPoint->pos.lon = g_ascii_strtod((gchar*)(attrs[i + 1]), O2G_NULLPTR);
+        curPoint->pos.lon = g_ascii_strtod(reinterpret_cast<const gchar *>(attrs[i + 1]), O2G_NULLPTR);
     }
   }
   default:

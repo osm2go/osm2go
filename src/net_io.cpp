@@ -202,7 +202,7 @@ static size_t mem_write(void *ptr, size_t size, size_t nmemb,
 }
 
 static void *worker_thread(void *ptr) {
-  net_io_request_t *request = (net_io_request_t*)ptr;
+  net_io_request_t *request = static_cast<net_io_request_t *>(ptr);
 
   printf("thread: running\n");
 
@@ -336,14 +336,14 @@ static bool net_io_do(GtkWidget *parent, net_io_request_t *request,
     /* worker has made progress changed the progress value */
     if(request->download_cur != last) {
       if(request->download_end != 0) {
-        gdouble progress = (gdouble)request->download_cur / (gdouble)request->download_end;
+        gdouble progress = static_cast<gdouble>(request->download_cur) / request->download_end;
         gtk_progress_bar_set_fraction(pbar, progress);
       } else {
         gtk_progress_bar_pulse(pbar);
       }
 
       gchar buf[G_ASCII_DTOSTR_BUF_SIZE];
-      g_snprintf(buf, sizeof(buf), "%llu", (unsigned long long)request->download_cur);
+      g_snprintf(buf, sizeof(buf), "%llu", static_cast<unsigned long long>(request->download_cur));
       gtk_progress_bar_set_text(pbar, buf);
     }
 

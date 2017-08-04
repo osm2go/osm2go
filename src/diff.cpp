@@ -227,7 +227,7 @@ static item_id_t xml_get_prop_int(xmlNode *node, const char *prop, item_id_t def
   item_id_t value = def;
 
   if(str) {
-    value = strtoll((char*)str, O2G_NULLPTR, 10);
+    value = strtoll(reinterpret_cast<char*>(str), O2G_NULLPTR, 10);
     xmlFree(str);
   }
 
@@ -238,10 +238,10 @@ static int xml_get_prop_state(xmlNode *node) {
   xmlChar *str = xmlGetProp(node, BAD_CAST "state");
 
   if(str) {
-    if(strcmp((char*)str, "new") == 0) {
+    if(strcmp(reinterpret_cast<char *>(str), "new") == 0) {
       xmlFree(str);
       return OSM_FLAG_DIRTY;
-    } else if(G_LIKELY(strcmp((char*)str, "deleted") == 0)) {
+    } else if(G_LIKELY(strcmp(reinterpret_cast<char *>(str), "deleted") == 0)) {
       xmlFree(str);
       return OSM_FLAG_DELETED;
     } else {
@@ -260,7 +260,7 @@ static osm_t::TagMap xml_scan_tags(xmlNodePtr node) {
 
   while(node) {
     if(node->type == XML_ELEMENT_NODE) {
-      if(G_LIKELY(strcmp((char*)node->name, "tag") == 0))
+      if(G_LIKELY(strcmp(reinterpret_cast<const char *>(node->name), "tag") == 0))
         osm_t::parse_tag(node, ret);
     }
     node = node->next;
@@ -415,7 +415,7 @@ static void diff_restore_way(xmlNodePtr node_way, osm_t *osm) {
   xmlNode *nd_node = O2G_NULLPTR;
   for(nd_node = node_way->children; nd_node; nd_node = nd_node->next) {
     if(nd_node->type == XML_ELEMENT_NODE) {
-      if(G_LIKELY(strcmp((char*)nd_node->name, "nd") == 0)) {
+      if(G_LIKELY(strcmp(reinterpret_cast<const char *>(nd_node->name), "nd") == 0)) {
 	/* attach node to node_chain */
 	node_t *tmp = osm->parse_way_nd(nd_node);
 	if(tmp)
@@ -521,7 +521,7 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
   for(member_node = node_rel->children; member_node;
       member_node = member_node->next) {
     if(member_node->type == XML_ELEMENT_NODE) {
-      if(G_LIKELY(strcmp((char*)member_node->name, "member") == 0)) {
+      if(G_LIKELY(strcmp(reinterpret_cast<const char *>(member_node->name), "member") == 0)) {
 	/* attach member to member_chain */
         osm->parse_relation_member(member_node, members);
       }
@@ -576,10 +576,10 @@ unsigned int diff_restore_file(GtkWidget *window, const project_t *project, osm_
   xmlNode *cur_node = O2G_NULLPTR;
   for (cur_node = root_element; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
-      if(strcmp((char*)cur_node->name, "diff") == 0) {
+      if(strcmp(reinterpret_cast<const char *>(cur_node->name), "diff") == 0) {
 	xmlChar *str = xmlGetProp(cur_node, BAD_CAST "name");
 	if(str) {
-	  const char *cstr = (const char*)str;
+          const char *cstr = reinterpret_cast<const char *>(str);
 	  printf("diff for project %s\n", cstr);
 	  if(G_UNLIKELY(project->name != cstr)) {
             warningf(window, _("Diff name (%s) does not match project name (%s)"),
@@ -593,13 +593,13 @@ unsigned int diff_restore_file(GtkWidget *window, const project_t *project, osm_
 	while(node_node) {
 	  if(node_node->type == XML_ELEMENT_NODE) {
 
-	    if(strcmp((char*)node_node->name, node_t::api_string()) == 0)
+            if(strcmp(reinterpret_cast<const char *>(node_node->name), node_t::api_string()) == 0)
 	      diff_restore_node(node_node, osm);
 
-	    else if(strcmp((char*)node_node->name, way_t::api_string()) == 0)
+            else if(strcmp(reinterpret_cast<const char *>(node_node->name), way_t::api_string()) == 0)
 	      diff_restore_way(node_node, osm);
 
-	    else if(G_LIKELY(strcmp((char*)node_node->name, relation_t::api_string()) == 0))
+            else if(G_LIKELY(strcmp(reinterpret_cast<const char *>(node_node->name), relation_t::api_string()) == 0))
 	      diff_restore_relation(node_node, osm);
 
             else {

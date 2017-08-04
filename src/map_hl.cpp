@@ -77,7 +77,7 @@ void map_hl_touchnode_draw(map_t *map, node_t *node) {
 
 node_t *map_hl_touchnode_get_node(map_t *map) {
   if(!map->touchnode) return O2G_NULLPTR;
-  return (node_t*)canvas_item_get_user_data(map->touchnode);
+  return static_cast<node_t *>(canvas_item_get_user_data(map->touchnode));
 }
 
 void map_hl_touchnode_clear(map_t *map) {

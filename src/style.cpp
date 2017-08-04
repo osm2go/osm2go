@@ -221,7 +221,7 @@ static style_t *style_load_fname(icon_t &icons, const std::string &filename) {
 
   if(style) {
     printf("  elemstyle filename: %s\n", fname);
-    style->elemstyles = josm_elemstyles_load((char*)fname);
+    style->elemstyles = josm_elemstyles_load(reinterpret_cast<char *>(fname));
     xmlFree(fname);
   }
 

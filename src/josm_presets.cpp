@@ -72,7 +72,7 @@ unsigned int presets_type_mask(const object_t &obj)
 
 #ifdef ENABLE_BROWSER_INTERFACE
 static void on_info(GtkWidget *widget, appdata_t *appdata) {
-  const char *link = (char*)g_object_get_data(G_OBJECT(widget), "link");
+  const char *link = static_cast<char *>(g_object_get_data(G_OBJECT(widget), "link"));
   open_url(*appdata, link);
 }
 #endif
@@ -596,7 +596,7 @@ on_presets_picker_selected(GtkTreeSelection *selection, presets_context_t *conte
   if(item && !(item->type & presets_item_t::TY_GROUP)) {
     /* save item pointer in dialog */
     g_object_set_data(G_OBJECT(gtk_widget_get_toplevel(view)),
-                      "item", (gpointer)item);
+                      "item", item);
 
     /* and request closing of menu */
     gtk_dialog_response(GTK_DIALOG(gtk_widget_get_toplevel(view)),

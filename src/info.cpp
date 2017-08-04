@@ -40,7 +40,7 @@ enum {
 };
 
 static void changed(GtkTreeSelection *, gpointer user_data) {
-  GtkWidget *list = (GtkWidget*)user_data;
+  GtkWidget *list = static_cast<GtkWidget *>(user_data);
 
   GtkTreeModel *model;
   GtkTreeIter iter;
