@@ -41,7 +41,7 @@ void map_edit_way_add_begin(map_t *map, way_t *way_sel) {
 		     way_sel->id);
 
   g_assert_null(map->action.way);
-  map->action.way = new way_t(1);
+  map->action.way = new way_t(0);
   map->action.extending = O2G_NULLPTR;
 }
 

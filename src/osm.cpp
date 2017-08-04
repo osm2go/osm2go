@@ -978,16 +978,16 @@ static void process_base_attributes(base_object_t *obj, xmlTextReaderPtr reader,
 }
 
 static void process_node(xmlTextReaderPtr reader, osm_t *osm) {
+  pos_t pos;
+  pos.lat = xml_reader_attr_float(reader, "lat");
+  pos.lon = xml_reader_attr_float(reader, "lon");
 
   /* allocate a new node structure */
-  node_t *node = new node_t();
+  node_t *node = osm->node_new(pos);
+  // reset the flags, this object comes from upstream OSM
+  node->flags = 0;
 
   process_base_attributes(node, reader, osm);
-
-  node->pos.lat = xml_reader_attr_float(reader, "lat");
-  node->pos.lon = xml_reader_attr_float(reader, "lon");
-
-  node->lpos = node->pos.toLpos(*(osm->bounds));
 
   g_assert(osm->nodes.find(node->id) == osm->nodes.end());
   osm->nodes[node->id] = node;
@@ -1043,7 +1043,7 @@ static node_t *process_nd(xmlTextReaderPtr reader, osm_t *osm) {
 
 static void process_way(xmlTextReaderPtr reader, osm_t *osm) {
   /* allocate a new way structure */
-  way_t *way = new way_t();
+  way_t *way = new way_t(1);
 
   process_base_attributes(way, reader, osm);
 
@@ -1098,7 +1098,7 @@ static bool process_member(xmlTextReaderPtr reader, osm_t *osm, std::vector<memb
 
 static void process_relation(xmlTextReaderPtr reader, osm_t *osm) {
   /* allocate a new relation structure */
-  relation_t *relation = new relation_t();
+  relation_t *relation = new relation_t(1);
 
   process_base_attributes(relation, reader, osm);
 
@@ -1420,7 +1420,7 @@ node_t *osm_t::node_new(const lpos_t &lpos) {
 
   printf("Creating new node at %d %d (%f %f)\n", lpos.x, lpos.y, pos.lat, pos.lon);
 
-  return new node_t(1, lpos, pos);
+  return new node_t(0, lpos, pos);
 }
 
 node_t *osm_t::node_new(const pos_t &pos) {
@@ -1429,7 +1429,7 @@ node_t *osm_t::node_new(const pos_t &pos) {
 
   printf("Creating new node from lat/lon at %d %d (%f %f)\n", lpos.x, lpos.y, pos.lat, pos.lon);
 
-  return new node_t(1, lpos, pos);
+  return new node_t(0, lpos, pos);
 }
 
 void osm_t::node_attach(node_t *node) {
@@ -1949,7 +1949,7 @@ way_t *way_t::split(osm_t *osm, node_chain_t::iterator cut_at, bool cut_at_node)
   g_assert_cmpuint(node_chain.size(), >, 2);
 
   /* create a duplicate of the currently selected way */
-  way_t *neww = new way_t(1);
+  way_t *neww = new way_t(0);
 
   /* attach remaining nodes to new way */
   neww->node_chain.insert(neww->node_chain.end(), cut_at, node_chain.end());
@@ -2279,7 +2279,7 @@ base_object_t::base_object_t(item_id_t ver, item_id_t i)
   : id(i)
   , version(ver)
   , time(0)
-  , flags(version == 1 ? OSM_FLAG_DIRTY : 0)
+  , flags(version == 0 ? OSM_FLAG_DIRTY : 0)
   , user(0)
 {
 }

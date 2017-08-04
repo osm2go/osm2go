@@ -308,7 +308,7 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
     if(id < 0) {
       printf("  Restoring NEW node\n");
 
-      node = new node_t(1, lpos_t(), pos, id);
+      node = new node_t(0, lpos_t(), pos, id);
 
       osm->nodes[id] = node;
       break;
@@ -382,7 +382,7 @@ static void diff_restore_way(xmlNodePtr node_way, osm_t *osm) {
     if(id < 0) {
       printf("  Restoring NEW way\n");
 
-      way = new way_t(1, id);
+      way = new way_t(0, id);
 
       osm->ways[id] = way;
       break;
@@ -483,7 +483,7 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
     if(id < 0) {
       printf("  Restoring NEW relation\n");
 
-      relation = new relation_t(1, id);
+      relation = new relation_t(0, id);
 
       osm->relations[id] = relation;
       break;

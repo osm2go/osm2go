@@ -221,6 +221,7 @@ static void test_taglist() {
 
 static void test_replace() {
   node_t node;
+  node.flags = 0;
 
   g_assert_true(node.tags.empty());
 
@@ -410,11 +411,13 @@ static void test_reverse()
 
   lpos_t l(10, 20);
   node_t *n1 = o.node_new(l);
+  g_assert_cmpint(n1->version, ==, 0);
+  g_assert_cmpint(n1->flags, ==, OSM_FLAG_DIRTY);
   o.node_attach(n1);
   l.y = 40;
   node_t *n2 = o.node_new(l);
   o.node_attach(n2);
-  way_t *w = new way_t(1);
+  way_t *w = new way_t(0);
   w->append_node(n1);
   w->append_node(n2);
   o.way_attach(w);
@@ -516,7 +519,7 @@ static void test_way_delete()
   l.y = 40;
   node_t *n2 = o.node_new(l);
   o.node_attach(n2);
-  way_t *w = new way_t(1);
+  way_t *w = new way_t(0);
   w->append_node(n1);
   w->append_node(n2);
   o.way_attach(w);
@@ -532,7 +535,7 @@ static void test_way_delete()
   l.y = 20;
   n2 = o.node_new(l);
   o.node_attach(n2);
-  w = new way_t(1);
+  w = new way_t(0);
   w->append_node(n1);
   w->append_node(n2);
   o.way_attach(w);
@@ -560,7 +563,7 @@ static void test_way_delete()
   n2 = o.node_new(l);
   o.node_attach(n2);
 
-  w = new way_t(1);
+  w = new way_t(0);
   w->append_node(n1);
   w->append_node(n2);
   o.way_attach(w);
@@ -571,7 +574,7 @@ static void test_way_delete()
   o.node_attach(n2);
   w->append_node(n2);
 
-  relation_t *r = new relation_t(1);
+  relation_t *r = new relation_t(0);
   o.relation_attach(r);
   r->members.push_back(member_t(object_t(n2), O2G_NULLPTR));
 
@@ -586,7 +589,7 @@ static void test_way_delete()
   node_t *n4 = o.node_new(l);
   o.node_attach(n4);
 
-  way_t *w2 = new way_t(1);
+  way_t *w2 = new way_t(0);
   o.way_attach(w2);
   w2->append_node(n3);
   w2->append_node(n4);
@@ -622,7 +625,7 @@ static void test_member_delete()
   l.y = 40;
   node_t *n2 = o.node_new(l);
   o.node_attach(n2);
-  way_t *w = new way_t(1);
+  way_t *w = new way_t(0);
   w->append_node(n1);
   w->append_node(n2);
   o.way_attach(w);
@@ -633,7 +636,7 @@ static void test_member_delete()
   w->append_node(n2);
 
   // a relation containing both the way as well as the node
-  relation_t * const r = new relation_t(1);
+  relation_t * const r = new relation_t(0);
   r->members.push_back(member_t(object_t(w), O2G_NULLPTR));
   r->members.push_back(member_t(object_t(n2), O2G_NULLPTR));
   o.relation_attach(r);
@@ -724,7 +727,7 @@ static void test_merge_nodes()
   conflict = true;
 
   // attach one node to a way, that one should be preserved
-  way_t *w = new way_t(1);
+  way_t *w = new way_t(0);
   o.way_attach(w);
   w->append_node(n2);
 
@@ -742,7 +745,7 @@ static void test_merge_nodes()
   g_assert_cmpuint(o.ways.size(), ==, 0);
 
   // now check with relation membership
-  relation_t *r = new relation_t(1);
+  relation_t *r = new relation_t(0);
   o.relation_attach(r);
   n1 = o.node_new(oldpos);
   n2 = o.node_new(newpos);
@@ -770,13 +773,13 @@ static void test_merge_nodes()
 
   // now put both into a way, the way of the second node should be updated
   for(int i = 0; i < 2; i++) {
-    w = new way_t(1);
+    w = new way_t(0);
     o.way_attach(w);
     lpos_t pos(i + 4, i + 4);
     n1 = o.node_new(pos);
     o.node_attach(n1);
     w->append_node(n1);
-    r = new relation_t(1);
+    r = new relation_t(0);
     o.relation_attach(r);
   }
 
@@ -853,7 +856,7 @@ static void test_merge_ways()
   for(unsigned int i = 0; i < 4; i++) {
     node_chain_t expect;
 
-    way_t *w0 = new way_t(1);
+    way_t *w0 = new way_t(0);
     if(i < 2) {
       for(unsigned int j = 0; j < nodes.size() / 2; j++)
         w0->append_node(nodes[j]);
@@ -863,7 +866,7 @@ static void test_merge_ways()
     }
     o.way_attach(w0);
 
-    way_t *w1 = new way_t(1);
+    way_t *w1 = new way_t(0);
     if(i % 2) {
       for(unsigned int j = nodes.size() / 2 - 1; j < nodes.size(); j++)
         w1->append_node(nodes[j]);

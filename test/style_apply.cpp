@@ -93,7 +93,7 @@ int main(int argc, char **argv)
   g_assert(oldicon != style->node_icons[node->id]);
   g_assert_cmpfloat(oldzoom * 1.9, <, node->zoom_max);
 
-  way_t * const way = new way_t(1);
+  way_t * const way = new way_t(0);
   osm.way_attach(way);
 
   josm_elemstyles_colorize_world(style, &osm);

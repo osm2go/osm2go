@@ -691,7 +691,7 @@ static void on_relation_select(relation_context_t *context, GtkWidget *but) {
 static void on_relation_add(relation_context_t *context) {
   /* create a new relation */
 
-  relation_t *relation = new relation_t(1);
+  relation_t *relation = new relation_t(0);
   if(!relation_info_dialog(context->dialog, context->appdata, relation)) {
     printf("tag edit cancelled\n");
     relation->cleanup();
