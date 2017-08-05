@@ -230,7 +230,6 @@ static void *worker_thread(void *ptr) {
       outfile = fopen(request->filename.c_str(), "w");
       ok = (outfile != O2G_NULLPTR);
       curl_easy_setopt(curl, CURLOPT_WRITEDATA, outfile);
-      curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, fwrite);
     } else {
       request->mem->ptr = O2G_NULLPTR;
       request->mem->len = 0;
