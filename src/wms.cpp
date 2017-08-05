@@ -360,7 +360,7 @@ void wms_setup_extent(project_t *project, wms_t *wms) {
 /* --------------- freeing stuff ------------------- */
 
 static void wms_layers_free(wms_layer_t::list &layers) {
-  std::for_each(layers.begin(), layers.end(), default_delete<wms_layer_t>());
+  std::for_each(layers.begin(), layers.end(), std::default_delete<wms_layer_t>());
 }
 
 wms_layer_t::~wms_layer_t() {

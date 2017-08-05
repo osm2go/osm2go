@@ -269,7 +269,7 @@ settings_t::settings_t()
 
 settings_t::~settings_t()
 {
-  std::for_each(wms_server.begin(), wms_server.end(), default_delete<wms_server_t>());
+  std::for_each(wms_server.begin(), wms_server.end(), std::default_delete<wms_server_t>());
 }
 
 bool api_adjust(std::string &rserver) {

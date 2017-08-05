@@ -1438,7 +1438,7 @@ select_context_t::select_context_t(appdata_t &a, GtkWidget *dial)
 
 select_context_t::~select_context_t()
 {
-  std::for_each(projects.begin(), projects.end(), default_delete<project_t>());
+  std::for_each(projects.begin(), projects.end(), std::default_delete<project_t>());
 
   gtk_widget_destroy(dialog);
 }
