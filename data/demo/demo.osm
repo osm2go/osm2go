@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<osm version="0.6" generator="OpenStreetMap server">
+<osm version="0.6" generator="OpenStreetMap server" upload='never'>
   <bounds minlat="49.0050011" minlon="8.3910999" maxlat="49.0229988" maxlon="8.4184999"/>
   <node id="412397" lat="49.0055222" lon="8.4034558" version="2" changeset="95342" user="Mueck" uid="6269" visible="true" timestamp="2008-04-09T15:35:37Z"/>
   <node id="412398" lat="49.0055266" lon="8.4014235" version="1" changeset="1771" user="Jens Kammann" uid="516" visible="true" timestamp="2006-01-15T09:36:33Z"/>

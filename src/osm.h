@@ -133,9 +133,15 @@ struct member_t {
 };
 
 struct osm_t {
+  enum UploadPolicy {
+    Upload_Normal,
+    Upload_Discouraged,
+    Upload_Blocked
+  };
+
   typedef std::multimap<std::string, std::string> TagMap;
 
-  osm_t(icon_t &ic) : icons(ic) {}
+  osm_t(icon_t &ic) : icons(ic), uploadPolicy(Upload_Normal) {}
   ~osm_t();
 
   bounds_t *bounds;   // original bounds as they appear in the file
@@ -148,6 +154,7 @@ struct osm_t {
   std::map<item_id_t, way_t *> ways;
   std::map<item_id_t, relation_t *> relations;
   std::map<int, std::string> users;   ///< mapping of user id to username
+  UploadPolicy uploadPolicy;
 
   node_t *node_by_id(item_id_t id) const;
   way_t *way_by_id(item_id_t id) const;

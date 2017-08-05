@@ -762,6 +762,10 @@ static void info_more(const osm_dirty_t &context) {
 #endif
 
 void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
+  if(G_UNLIKELY(osm->uploadPolicy == osm_t::Upload_Blocked)) {
+    printf("Upload prohibited\n");
+    return;
+  }
 
   printf("starting upload\n");
 

@@ -166,6 +166,7 @@ int main(int argc, char **argv)
     return 1;
   }
 
+  g_assert_cmpint(osm->uploadPolicy, ==, osm_t::Upload_Blocked);
   g_assert(osm->sanity_check() == O2G_NULLPTR);
 
   const relation_t * const r255 = osm->relations[296255];

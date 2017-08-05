@@ -1135,11 +1135,29 @@ static void process_relation(xmlTextReaderPtr reader, osm_t *osm) {
   relation->tags.replace(tags);
 }
 
+static osm_t::UploadPolicy parseUploadPolicy(const char *str) {
+  if(G_LIKELY(strcmp(str, "true") == 0))
+    return osm_t::Upload_Normal;
+  else if(strcmp(str, "false") == 0)
+    return osm_t::Upload_Discouraged;
+  else if(G_LIKELY(strcmp(str, "never") == 0))
+    return osm_t::Upload_Blocked;
+
+  printf("unknown key for upload found: %s\n", str);
+
+  // just to be cautious
+  return osm_t::Upload_Discouraged;
+}
+
 static osm_t *process_osm(xmlTextReaderPtr reader, icon_t &icons) {
   /* alloc osm structure */
   osm_t *osm = new osm_t(icons);
 
-  /* no attributes of interest */
+  xmlChar *prop = xmlTextReaderGetAttribute(reader, BAD_CAST "upload");
+  if(G_UNLIKELY(prop != O2G_NULLPTR)) {
+    osm->uploadPolicy = parseUploadPolicy(reinterpret_cast<const char *>(prop));
+    xmlFree(prop);
+  }
 
   const xmlChar *name = xmlTextReaderConstName(reader);
   g_assert_nonnull(name);

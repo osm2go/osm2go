@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<osm version='0.6' generator='JOSM'>
+<osm version='0.6' generator='JOSM' upload='never'>
   <bounds minlat='52.2692786' minlon='9.5750497' maxlat='52.2695463' maxlon='9.5755' origin='CGImap 0.6.0 (18208 thorn-01.openstreetmap.org)' />
   <node id='638499572' timestamp='2015-10-10T10:56:21Z' uid='53064' user='Dakon' version='12' changeset='34546949' lat='52.2694654' lon='9.5752283'>
     <tag k='highway' v='bus_stop' />
