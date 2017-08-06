@@ -27,7 +27,7 @@
 
 #define YETI_PASSIVE_WIDGET appdata.statusbar->widget
 
-#include "osm2go_cpp.h"
+#include <osm2go_cpp.h>
 
 #ifdef USE_HILDON
 #include <hildon/hildon.h>

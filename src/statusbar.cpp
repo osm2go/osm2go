@@ -19,7 +19,7 @@
 
 #include "statusbar.h"
 
-#include "osm2go_cpp.h"
+#include <osm2go_cpp.h>
 
 static GdkColor color_red() {
   GdkColor color;
