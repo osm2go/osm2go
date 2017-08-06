@@ -153,6 +153,7 @@ net_io_request_t::net_io_request_t(const std::string &u, const std::string &f)
   , mem(O2G_NULLPTR)
   , use_compression(true)
 {
+  g_assert_false(filename.empty());
   memset(buffer, 0, sizeof(buffer));
 }
 
