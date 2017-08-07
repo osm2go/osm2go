@@ -511,26 +511,12 @@ void redraw_way::operator()(const std::pair<item_id_t, way_t *> &p)
 }
 
 struct find_way_ends {
-  unsigned int &ways2join_cnt;
   const node_t * const node;
-  way_t ** const ways2join;
-  find_way_ends(unsigned int &w, const node_t *n, way_t **j)
-    : ways2join_cnt(w), node(n), ways2join(j) {}
-  void operator()(const std::pair<item_id_t, way_t *> &p);
+  find_way_ends(const node_t *n) : node(n) {}
+  bool operator()(const std::pair<item_id_t, way_t *> &p) {
+    return p.second->ends_with_node(node);
+  }
 };
-
-void find_way_ends::operator()(const std::pair<item_id_t, way_t *>& p)
-{
-  way_t * const way = p.second;
-  if(!way->ends_with_node(node))
-    return;
-
-  if(ways2join_cnt < 2)
-    ways2join[ways2join_cnt] = way;
-
-  printf("  way #" ITEM_ID_FORMAT " ends with this node\n", way->id);
-  ways2join_cnt++;
-}
 
 void map_edit_node_move(map_t *map, map_item_t *map_item, gint ex, gint ey) {
   osm_t *osm = map->appdata.osm;
@@ -563,12 +549,30 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, gint ex, gint ey) {
       /* user dropped onto it */
       joined_with_touchnode = true;
       bool conflict;
+      unsigned int ways2join_cnt = 0;
+
+      // only offer to join ways if they come from the different nodes, not
+      // if e.g. one node has 2 ways and the other has none
+      way_t *ways2join[2] = { O2G_NULLPTR, O2G_NULLPTR };
+      if(node->ways > 0 && touchnode->ways > 0) {
+        ways2join_cnt = node->ways + touchnode->ways;
+        if(ways2join_cnt == 2) {
+          const std::map<item_id_t, way_t *>::iterator witEnd = osm->ways.end();
+          const std::map<item_id_t, way_t *>::iterator witBegin = osm->ways.begin();
+          const std::map<item_id_t, way_t *>::iterator way0It = std::find_if(witBegin, witEnd,
+                                                                             find_way_ends(node));
+          const std::map<item_id_t, way_t *>::iterator way1It = std::find_if(witBegin, witEnd,
+                                                                             find_way_ends(touchnode));
+          g_assert(way0It != witEnd);
+          g_assert(way1It != witEnd);
+          ways2join[0] = way0It->second;
+          ways2join[1] = way1It->second;
+        }
+      }
 
       node = osm->mergeNodes(node, touchnode, conflict);
       // make sure the object marked as selected is the surviving node
       map->selected.object = node;
-
-      const std::map<item_id_t, way_t *>::iterator witEnd = osm->ways.end();
 
       /* and open dialog to resolve tag collisions if necessary */
       if(conflict)
@@ -578,10 +582,6 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, gint ex, gint ey) {
 
       /* check whether this will also join two ways */
       printf("  checking if node is end of way\n");
-      unsigned int ways2join_cnt = 0;
-      way_t *ways2join[2] = { O2G_NULLPTR, O2G_NULLPTR };
-      std::for_each(osm->ways.begin(), witEnd,
-                    find_way_ends(ways2join_cnt, node, ways2join));
 
       if(ways2join_cnt > 2) {
         messagef(GTK_WIDGET(map->appdata.window), _("Too many ways to join"),
