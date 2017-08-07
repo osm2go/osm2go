@@ -428,12 +428,12 @@ cb_menu_track_export(appdata_t *appdata) {
       printf("export to %s\n", filename);
 
       if(!g_file_test(filename, G_FILE_TEST_EXISTS) ||
-	 yes_no_f(dialog, *appdata, MISC_AGAIN_ID_EXPORT_OVERWRITE,
-		  MISC_AGAIN_FLAG_DONT_SAVE_NO,
-		  "Overwrite existing file",
-		  "The file already exists. "
-		  "Do you really want to replace it?")) {
-	appdata->settings->track_path = filename;
+         yes_no_f(dialog, *appdata, MISC_AGAIN_ID_EXPORT_OVERWRITE,
+                  MISC_AGAIN_FLAG_DONT_SAVE_NO,
+                  _("Overwrite existing file"),
+                  _("The file already exists. "
+                    "Do you really want to replace it?"))) {
+        appdata->settings->track_path = filename;
 
         g_assert_nonnull(appdata->track.track);
         track_export(appdata->track.track, filename);
