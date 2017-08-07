@@ -338,27 +338,23 @@ static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
 #endif
     curl_easy_cleanup(curl);
 
-    /* this will return the id on a successful create */
-    if(id && (res == 0) && (response == 200)) {
+    if(G_UNLIKELY(res != 0)) {
+      appendf(log, COLOR_ERR, _("failed: %s\n"), buffer);
+    } else if(G_UNLIKELY(response != 200)) {
+      appendf(log, COLOR_ERR, _("failed, code: %ld %s\n"), response,
+              http_message(response));
+      /* if it's neither "ok" (200), nor "internal server error" (500) */
+      /* then write the message to the log */
+      if(response != 500 && write_data.ptr) {
+        appendf(log, O2G_NULLPTR, _("Server reply: "));
+        appendf(log, COLOR_ERR, _("%s\n"), write_data.ptr);
+      }
+    } else if(G_UNLIKELY(!id)) {
+      appendf(log, COLOR_OK, _("ok\n"));
+    } else {
+      /* this will return the id on a successful create */
       printf("request to parse successful reply as an id\n");
       *id = strtoull(write_data.ptr, O2G_NULLPTR, 10);
-    }
-
-    if(res != 0)
-      appendf(log, COLOR_ERR, _("failed: %s\n"), buffer);
-    else if(response != 200)
-      appendf(log, COLOR_ERR, _("failed, code: %ld %s\n"),
-	      response, http_message(response));
-    else {
-      if(!id) appendf(log, COLOR_OK, _("ok\n"));
-      else    appendf(log, COLOR_OK, _("ok: #" ITEM_ID_FORMAT "\n"), *id);
-    }
-
-    /* if it's neither "ok" (200), nor "internal server error" (500) */
-    /* then write the message to the log */
-    if((response != 200) && (response != 500) && write_data.ptr) {
-      appendf(log, O2G_NULLPTR, _("Server reply: "));
-      appendf(log, COLOR_ERR, _("%s\n"), write_data.ptr);
     }
 
     g_free(write_data.ptr);
