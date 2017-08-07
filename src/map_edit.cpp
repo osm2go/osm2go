@@ -565,6 +565,8 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, gint ex, gint ey) {
       bool conflict;
 
       node = osm->mergeNodes(node, touchnode, conflict);
+      // make sure the object marked as selected is the surviving node
+      map->selected.object = node;
 
       const std::map<item_id_t, way_t *>::iterator witEnd = osm->ways.end();
 
