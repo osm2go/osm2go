@@ -455,37 +455,6 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
     map->select_way(neww);
 }
 
-struct member_merge {
-  const object_t other;
-  member_merge(way_t *o) : other(o) {}
-  void operator()(relation_t *relation);
-};
-
-void member_merge::operator()(relation_t *relation)
-{
-  printf("way[1] is part of relation #" ITEM_ID_FORMAT "\n",
-         relation->id);
-
-  /* make way[0] member of the same relation */
-
-  /* walk member chain. save role of way[1] if its being found. */
-  /* end search either at end of chain or if way[0] was found */
-  /* as it's already a member of that relation */
-  std::vector<member_t>::iterator mit =
-               relation->find_member_object(other);
-
-  if(mit != relation->members.end()) {
-    printf("  both ways were members of this relation\n");
-  } else {
-    printf("  adding way[0] to relation\n");
-    member_t member(other);
-    member.role = g_strdup(mit->role);
-    relation->members.push_back(member);
-
-    relation->flags |= OSM_FLAG_DIRTY;
-  }
-}
-
 struct redraw_way {
   node_t * const node;
   map_t * const map;
@@ -587,69 +556,24 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, gint ex, gint ey) {
 		 _("More than two ways now end on this node. Joining more "
 		   "than two ways is not yet implemented, sorry"));
 
-      } else if(ways2join_cnt == 2) {
-        if(yes_no_f(GTK_WIDGET(map->appdata.window),
-                    map->appdata, MISC_AGAIN_ID_JOIN_WAYS, 0,
-		    _("Join ways?"),
-		    _("Do you want to join the dragged way with the one "
-		      "you dropped it on?"))) {
+      } else if(ways2join_cnt == 2 &&
+                yes_no_f(GTK_WIDGET(map->appdata.window), map->appdata,
+                         MISC_AGAIN_ID_JOIN_WAYS, 0, _("Join ways?"),
+                         _("Do you want to join the dragged way with the one you dropped it on?"))) {
+        printf("  about to join ways #" ITEM_ID_FORMAT " and #" ITEM_ID_FORMAT "\n",
+               ways2join[0]->id, ways2join[1]->id);
 
-	  printf("  about to join ways #" ITEM_ID_FORMAT " and #"
-	      ITEM_ID_FORMAT "\n", ways2join[0]->id, ways2join[1]->id);
+        bool hasRels;
+        if(!osm->checkObjectPersistence(object_t(ways2join[0]), object_t(ways2join[1]), hasRels))
+          std::swap(ways2join[0], ways2join[1]);
 
-	  /* way[1] gets destroyed and attached to way[0] */
-	  /* so check if way[1] is selected and exchainge ways then */
-	  /* so that way may stay selected */
-	  if((map->selected.object == ways2join[1])) {
-	    printf("  swapping ways to keep selected one alive\n");
-	    way_t *tmp = ways2join[1];
-	    ways2join[1] = ways2join[0];
-	    ways2join[0] = tmp;
-	  }
+        map_item_chain_destroy(ways2join[1]->map_item_chain);
 
-	  /* take all nodes from way[1] and append them to way[0] */
-	  /* check if we have to append or prepend to way[0] */
-	  if(ways2join[0]->node_chain.front() == node) {
-	    /* make "prepend" to be "append" by reversing way[0] */
-	    printf("  target prepend -> reverse\n");
-	    ways2join[0]->reverse();
-	  }
-
-	  /* verify the common node is last in the target way */
-	  node_chain_t &chain = ways2join[0]->node_chain;
-	  g_assert(chain.back() == node);
-
-	  /* common node must be first in the chain to attach */
-	  if(ways2join[1]->node_chain.front() != node) {
-	    printf("  source reverse\n");
-	    ways2join[1]->reverse();
-	  }
-
-	  /* verify the common node is first in the source way */
-	  g_assert(ways2join[1]->node_chain.front() == node);
-
-	  /* finally append source chain to target */
-	  chain.insert(chain.end(), ways2join[1]->node_chain.begin()++, ways2join[1]->node_chain.end());
-
-	  ways2join[1]->node_chain.resize(1);
-
-	  /* ---------- transfer tags from way[1] to way[0] ----------- */
-	  bool conflict = ways2join[0]->tags.merge(ways2join[1]->tags);
-
-	  /* ---- transfer relation membership from way[1] to way[0] ----- */
-          const relation_chain_t &rchain = osm->to_relation(ways2join[1]);
-
-	  std::for_each(rchain.begin(), rchain.end(), member_merge(ways2join[0]));
-
-	  /* and open dialog to resolve tag collisions if necessary */
-	  if(conflict)
-            messagef(GTK_WIDGET(map->appdata.window), _("Way tag conflict"),
-		     _("The resulting way contains some conflicting tags. "
-		       "Please solve these."));
-
-	  ways2join[0]->flags |= OSM_FLAG_DIRTY;
-          map->delete_way(ways2join[1]);
-	}
+        /* ---------- transfer tags from way[1] to way[0] ----------- */
+        if(ways2join[0]->merge(ways2join[1], osm, hasRels))
+          messagef(GTK_WIDGET(map->appdata.window), _("Way tag conflict"),
+                   _("The resulting way contains some conflicting tags. "
+                     "Please solve these."));
       }
     }
   }
