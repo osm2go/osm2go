@@ -2394,7 +2394,7 @@ void way_t::cleanup() {
   g_assert_null(map_item_chain);
 }
 
-void way_t::merge(way_t *other, osm_t *osm, const bool doRels)
+bool way_t::merge(way_t *other, osm_t *osm, const bool doRels)
 {
   printf("  request to extend way #" ITEM_ID_FORMAT "\n", other->id);
 
@@ -2404,10 +2404,12 @@ void way_t::merge(way_t *other, osm_t *osm, const bool doRels)
   g_assert(ends_with_node(other->node_chain.front()) ||
            ends_with_node(other->node_chain.back()));
 
+  const bool collision = tags.merge(other->tags);
+
   // nothing to do
   if(G_UNLIKELY(other->node_chain.size() < 2)) {
     osm->way_free(other);
-    return;
+    return collision;
   }
 
   /* make enough room for all nodes */
@@ -2444,6 +2446,8 @@ void way_t::merge(way_t *other, osm_t *osm, const bool doRels)
   osm->way_free(other);
 
   flags |= OSM_FLAG_DIRTY;
+
+  return collision;
 }
 
 member_t::member_t(type_t t)

@@ -261,12 +261,11 @@ void map_edit_way_add_ok(map_t *map) {
       std::swap(map->action.way, map->action.ends_on);
 
     /* and open dialog to resolve tag collisions if necessary */
-    if(map->action.way->tags.merge(map->action.ends_on->tags))
+    if(map->action.way->merge(map->action.ends_on, osm, hasRels))
       messagef(GTK_WIDGET(map->appdata.window), _("Way tag conflict"),
 	       _("The resulting way contains some conflicting tags. "
 		 "Please solve these."));
 
-    map->action.way->merge(map->action.ends_on, osm, hasRels);
     map->action.ends_on = O2G_NULLPTR;
   }
 

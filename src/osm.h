@@ -510,10 +510,11 @@ public:
    * @param other the way to take the nodes from
    * @param osm map database
    * @param doRels if relation memberships should be checked
+   * @returns if merging the tags caused collisions
    *
-   * Other will be removed. Only the node_chain entries are tranferred.
+   * @other will be removed.
    */
-  void merge(way_t *other, osm_t *osm, const bool doRels);
+  bool merge(way_t *other, osm_t *osm, const bool doRels);
 protected:
   virtual void generate_xml_custom(xmlNodePtr xml_node) const O2G_OVERRIDE {
     write_node_chain(xml_node);

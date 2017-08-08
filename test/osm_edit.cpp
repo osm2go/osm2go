@@ -879,7 +879,7 @@ static void test_merge_ways()
     }
     o.way_attach(w1);
 
-    w1->merge(w0, &o, false);
+    g_assert_false(w1->merge(w0, &o, false));
     g_assert_cmpuint(w1->node_chain.size(), ==, nodes.size());
     g_assert_cmpuint(o.ways.size(), ==, 1);
     g_assert_cmpuint(o.nodes.size(), ==, nodes.size());
