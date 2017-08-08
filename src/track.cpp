@@ -131,12 +131,13 @@ static track_t *track_read(const char *filename, bool dirty) {
 
 void track_clear(appdata_t &appdata) {
   track_t *track = appdata.track.track;
-  if (! track) return;
+  if (!track)
+    return;
 
   printf("clearing track\n");
 
   if(G_LIKELY(appdata.map))
-    map_track_remove(track);
+    map_track_remove(*track);
 
   appdata.track.track = O2G_NULLPTR;
   track_menu_set(appdata);

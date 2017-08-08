@@ -2113,13 +2113,11 @@ void map_track_draw(map_t *map, track_t *track) {
                 map_track_seg_draw_functor(map));
 }
 
-void map_track_remove(track_t *track) {
+void map_track_remove(track_t &track) {
   printf("removing track\n");
 
-  g_assert_nonnull(track);
-
   /* remove all segments */
-  std::for_each(track->segments.begin(), track->segments.end(),
+  std::for_each(track.segments.begin(), track.segments.end(),
                 free_track_item_chain<true>);
 }
 
