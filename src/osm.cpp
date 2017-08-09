@@ -1429,14 +1429,13 @@ template<typename T, typename U> U osm_new_id(const std::map<U, T *> &map) {
 
 template<typename T> void osm_attach(std::map<item_id_t, T *> &map, T *obj) {
   obj->id = osm_new_id(map);
+  printf("Attaching %s " ITEM_ID_FORMAT "\n", obj->apiString(), obj->id);
   map[obj->id] = obj;
 }
 
 node_t *osm_t::node_new(const lpos_t &lpos) {
   /* convert screen position back to ll */
   pos_t pos = lpos.toPos(*bounds);
-
-  printf("Creating new node at %d %d (%f %f)\n", lpos.x, lpos.y, pos.lat, pos.lon);
 
   return new node_t(0, lpos, pos);
 }
@@ -1445,20 +1444,14 @@ node_t *osm_t::node_new(const pos_t &pos) {
   /* convert ll position to screen */
   lpos_t lpos = pos.toLpos(*bounds);
 
-  printf("Creating new node from lat/lon at %d %d (%f %f)\n", lpos.x, lpos.y, pos.lat, pos.lon);
-
   return new node_t(0, lpos, pos);
 }
 
 void osm_t::node_attach(node_t *node) {
-  printf("Attaching node\n");
-
   osm_attach(nodes, node);
 }
 
 void osm_t::way_attach(way_t *way) {
-  printf("Attaching way\n");
-
   osm_attach(ways, way);
 }
 
@@ -1685,8 +1678,6 @@ void osm_t::remove_from_relations(object_t obj) {
 }
 
 void osm_t::relation_attach(relation_t *relation) {
-  printf("Attaching relation\n");
-
   osm_attach(relations, relation);
 }
 
