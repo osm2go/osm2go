@@ -57,6 +57,37 @@ static void set_bounds(osm_t &o) {
   o.bounds = &o.rbounds;
 }
 
+/**
+ * @brief collection of trivial tests to get some coverage
+ */
+static void test_trivial() {
+  object_t obj;
+
+  g_assert(obj == obj);
+
+  tag_list_t tags;
+  g_assert_false(tags.hasTagCollisions());
+  tag_t cr_by(g_strdup("created_by"), g_strdup("test"));
+  g_assert_true(cr_by.is_creator_tag());
+  std::vector<tag_t> ntags(1, cr_by);
+  tags.replace(ntags);
+  g_assert_false(tags.hasRealTags());
+  g_assert_false(tags.hasTagCollisions());
+
+  icon_t icons;
+  osm_t osm(icons);
+  memset(&osm.rbounds, 0, sizeof(osm.rbounds));
+  set_bounds(osm);
+
+  g_assert_true(osm.position_within_bounds(0, 0));
+  g_assert_false(osm.position_within_bounds(-1, 0));
+  g_assert_false(osm.position_within_bounds(0, -1));
+
+  way_t w(0);
+  g_assert(w.first_node() == O2G_NULLPTR);
+  g_assert(w.last_node() == O2G_NULLPTR);
+}
+
 static void test_taglist() {
   tag_list_t tags;
   std::vector<tag_t> ntags;
@@ -504,6 +535,15 @@ static void test_reverse()
   g_assert(rels[3]->members.front().role == O2G_NULLPTR);
   g_assert(rels[3]->members.front().object == w);
   g_assert(rels[3]->members.back().role == O2G_NULLPTR);
+
+  // go back
+  w->reverse();
+  r = w->reverse_direction_sensitive_tags();
+  rroles = w->reverse_direction_sensitive_roles(&o);
+
+  g_assert_cmpuint(r, ==, 5);
+  g_assert_cmpuint(rroles, ==, 2);
+  g_assert(w->tags == tags);
 }
 
 static void test_way_delete()
@@ -632,7 +672,8 @@ static void test_member_delete()
 
   l.x = 20;
   n2 = o.node_new(l);
-  o.node_attach(n2);
+  n2->id = 42;
+  o.nodes[n2->id] = n2;
   w->append_node(n2);
 
   // a relation containing both the way as well as the node
@@ -649,10 +690,13 @@ static void test_member_delete()
 
   // now delete the node that is member of both other objects
   o.node_delete(n2, true);
-
-  g_assert_cmpuint(o.nodes.size(), ==, 2);
+  fflush(stdout);
+  // since the object had a valid id it should still be there, but unreferenced
+  g_assert_cmpuint(o.nodes.size(), ==, 3);
   g_assert_cmpuint(o.ways.size(), ==, 1);
   g_assert_cmpuint(o.relations.size(), ==, 1);
+  g_assert_true(n2->tags.empty());
+  g_assert_cmpuint(n2->flags, ==, OSM_FLAG_DELETED | OSM_FLAG_DIRTY);
 
   nodes = 0;
   ways = 0;
@@ -932,6 +976,7 @@ int main()
 {
   xmlInitParser();
 
+  test_trivial();
   test_taglist();
   test_replace();
   test_split();

@@ -207,6 +207,10 @@ int main(int argc, char **argv)
   printf("%s\n", rel_str);
   xmlFree(rel_str);
 
+  rel_str = n72->generate_xml("42");
+  printf("%s\n", rel_str);
+  xmlFree(rel_str);
+
   char tmpdir[] = "/tmp/osm2go-diff_restore-XXXXXX";
 
   if(mkdtemp(tmpdir) == O2G_NULLPTR) {
