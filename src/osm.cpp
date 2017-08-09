@@ -837,7 +837,7 @@ void osm_t::parse_relation_member(xmlNode *a_node, std::vector<member_t> &member
 
 /* try to find something descriptive */
 std::string relation_t::descriptive_name() const {
-  const char *keys[] = { "ref", "name", "description", "note", "fix" "me", O2G_NULLPTR};
+  const char *keys[] = { "name", "ref", "description", "note", "fix" "me", O2G_NULLPTR};
   for (unsigned int i = 0; keys[i] != O2G_NULLPTR; i++) {
     const char *name = tags.get_value(keys[i]);
     if(name)
