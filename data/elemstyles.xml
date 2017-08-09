@@ -31,7 +31,9 @@ A little help:
 7. scale_min / scale_max
 	- zoom scale for display (scale_min currently unused)
 
-Using both area and line attributes for the same key/value pair does work.
+Using both area and line attributes for the same key/value pair does work. For areas
+first the best matching area rule is searched and the best matching line rule is
+connected with it. They need not have the same key/value pair.
 
 The colours can consist of the two components - name and hex code (e.g. water#0000ff).
 If both are given, the color name is introduced in preferences with that value. If only

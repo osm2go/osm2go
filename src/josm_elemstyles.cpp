@@ -655,7 +655,7 @@ void josm_elemstyles_colorize_way_functor::apply_condition::operator()(const ele
   if(way_processed)
     return;
 
-  if(elemstyle->type & ES_TYPE_LINE) {
+  if(!way_is_closed && elemstyle->type & ES_TYPE_LINE) {
     way->draw.color = elemstyle->line->color;
     way->draw.width =  WIDTH_SCALE * elemstyle->line->width;
     if(elemstyle->line->bg.valid) {
@@ -706,6 +706,14 @@ void josm_elemstyles_colorize_way_functor::operator()(way_t *way) {
   apply_condition fc(style, way, &line_mod);
 
   std::for_each(style->elemstyles.begin(), style->elemstyles.end(), fc);
+
+  // If this is an area the previous run has done the area style. Run again
+  // for the line style of the outer way.
+  if(fc.way_is_closed) {
+    fc.way_processed = false;
+    fc.way_is_closed = false;
+    std::for_each(style->elemstyles.begin(), style->elemstyles.end(), fc);
+  }
 
   /* apply the last line mod entry that has been found during search */
   if(line_mod) {

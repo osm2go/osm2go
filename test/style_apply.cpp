@@ -137,9 +137,24 @@ int main(int argc, char **argv)
   g_assert_cmpuint(way->draw.color, ==, 0x809bc0ff);
   g_assert_cmpint(way->draw.width, ==, 1);
 
+  way_t * const area = new way_t(1);
+  area->append_node(node);
+  node_t *tmpn = osm.node_new(pos_t(0.0, 1.0));
+  osm.node_attach(tmpn);
+  area->append_node(tmpn);
+  tmpn = osm.node_new(pos_t(1.0, 1.0));
+  osm.node_attach(tmpn);
+  area->append_node(tmpn);
+  osm.way_attach(area);
+
+  g_assert_false(area->is_closed());
+  area->append_node(node);
+  g_assert_true(area->is_closed());
+
   // apply styling
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("public_transport", "platform"));
+  area->tags.replace(tags);
   node->tags.replace(tags);
   way->tags.replace(tags);
 
@@ -156,8 +171,14 @@ int main(int argc, char **argv)
   g_assert(oldicon != style->node_icons[node->id]);
   g_assert_cmpfloat(oldzoom, !=, node->zoom_max);
 
+  g_assert_cmpuint(area->draw.color, ==, 0xccccccff);
+  // test1.xml says color #ddd, test1.style says color 0x00000066
+  g_assert_cmpuint(area->draw.area.color, ==, 0xdddddd66);
+  g_assert_cmpint(area->draw.width, ==, 1);
+
   // check priorities
   tags.insert(osm_t::TagMap::value_type("train", "yes"));
+  area->tags.replace(tags);
   node->tags.replace(tags);
   way->tags.replace(tags);
 
@@ -170,6 +191,11 @@ int main(int argc, char **argv)
   g_assert_nonnull(style->node_icons[node->id]);
   g_assert(oldicon != style->node_icons[node->id]);
   g_assert_cmpfloat(oldzoom, !=, node->zoom_max);
+
+  g_assert_cmpuint(area->draw.color, ==, 0xaaaaaaff);
+  // test1.xml says color #bbb, test1.style says color 0x00000066
+  g_assert_cmpuint(area->draw.area.color, ==, 0xbbbbbb66);
+  g_assert_cmpint(area->draw.width, ==, 2);
 
   delete style;
 
