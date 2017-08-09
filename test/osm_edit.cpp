@@ -1,3 +1,4 @@
+#include <appdata.h>
 #include <icon.h>
 #include <osm.h>
 #include <settings.h>
@@ -77,7 +78,9 @@ static void test_trivial() {
   icon_t icons;
   osm_t osm(icons);
   memset(&osm.rbounds, 0, sizeof(osm.rbounds));
+  g_assert_cmpint(strcmp(osm.sanity_check(), _("Invalid data in OSM file:\nBoundary box missing!")), ==, 0);
   set_bounds(osm);
+  g_assert_cmpint(strcmp(osm.sanity_check(), _("Invalid data in OSM file:\nNo drawable content found!")), ==, 0);
 
   g_assert_true(osm.position_within_bounds(0, 0));
   g_assert_false(osm.position_within_bounds(-1, 0));

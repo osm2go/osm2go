@@ -141,7 +141,7 @@ struct osm_t {
 
   typedef std::multimap<std::string, std::string> TagMap;
 
-  osm_t(icon_t &ic) : icons(ic), uploadPolicy(Upload_Normal) {}
+  osm_t(icon_t &ic) : bounds(O2G_NULLPTR), icons(ic), uploadPolicy(Upload_Normal) {}
   ~osm_t();
 
   bounds_t *bounds;   // original bounds as they appear in the file
