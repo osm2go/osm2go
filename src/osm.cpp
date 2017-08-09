@@ -1960,6 +1960,24 @@ way_t *way_t::split(osm_t *osm, node_chain_t::iterator cut_at, bool cut_at_node)
 {
   g_assert_cmpuint(node_chain.size(), >, 2);
 
+  /* remember that the way needs to be uploaded */
+  flags |= OSM_FLAG_DIRTY;
+
+  /* If this is a closed way, reorder (rotate) it, so the place to cut is
+   * adjacent to the begin/end of the way. This prevents a cut polygon to be
+   * split into two ways. Splitting closed ways is much less complex as there
+   * will be no second way, the only modification done is the node chain. */
+  if(is_closed()) {
+    printf("CLOSED WAY -> rotate by %zi\n", cut_at - node_chain.begin());
+
+    // un-close the way
+    node_chain.back()->ways--;
+    node_chain.pop_back();
+    // generate the correct layout
+    std::rotate(node_chain.begin(), cut_at, node_chain.end());
+    return O2G_NULLPTR;
+  }
+
   /* create a duplicate of the currently selected way */
   way_t *neww = new way_t(0);
 
@@ -1975,9 +1993,6 @@ way_t *way_t::split(osm_t *osm, node_chain_t::iterator cut_at, bool cut_at_node)
 
   /* terminate remainig chain on old way */
   node_chain.erase(cut_at, node_chain.end());
-
-  /* remember that the way needs to be uploaded */
-  flags |= OSM_FLAG_DIRTY;
 
   // This may just split the last node out of the way. The new way is no
   // valid way so it is deleted
@@ -2035,13 +2050,6 @@ void way_t::transfer_relations(osm_t *osm, const way_t *from) {
   /* transfer relation memberships from the src way to the dst one */
   const relation_chain_t &rchain = osm->to_relation(from);
   std::for_each(rchain.begin(), rchain.end(), relation_transfer(this, from));
-}
-
-void way_t::rotate(node_chain_t::iterator nfirst) {
-  if(nfirst == node_chain.begin())
-    return;
-
-  std::rotate(node_chain.begin(), nfirst, node_chain.end());
 }
 
 struct tag_map_functor {

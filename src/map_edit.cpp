@@ -410,15 +410,6 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
   g_assert_nonnull(way);
   g_assert_cmpuint(way->node_chain.size(), >, 2);
 
-  /* if this is a closed way, reorder (rotate) it, so the */
-  /* place to cut is adjacent to the begin/end of the way. */
-  /* this prevents a cut polygon to be split into two ways */
-  if(way->is_closed()) {
-    printf("CLOSED WAY -> rotate by %zi\n", cut_at - way->node_chain.begin());
-    way->rotate(cut_at);
-    cut_at = way->node_chain.begin();
-  }
-
   /* move parts of node_chain to the new way */
   printf("  moving everthing after segment %zi to new way\n",
          cut_at - way->node_chain.begin());

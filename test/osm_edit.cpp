@@ -355,6 +355,7 @@ static void test_split()
 
   g_assert_cmpuint(o.ways.size(), ==, 2);
   way_t *neww = w->split(&o, w->node_chain.begin() + 2, false);
+  g_assert_nonnull(neww);
   g_assert_cmpuint(o.ways.size(), ==, 3);
   g_assert(w->flags & OSM_FLAG_DIRTY);
   for(unsigned int i = 0; i < nodes.size(); i++)
@@ -371,6 +372,7 @@ static void test_split()
 
   // now split the remaining way at a node
   way_t *neww2 = w->split(&o, w->node_chain.begin() + 2, true);
+  g_assert_nonnull(neww2);
   g_assert_cmpuint(o.ways.size(), ==, 4);
   g_assert(w->flags & OSM_FLAG_DIRTY);
   for(unsigned int i = 0; i < nodes.size(); i++)
@@ -407,6 +409,49 @@ static void test_split()
   g_assert_cmpuint(r1->members.size(), ==, 3);
   g_assert_cmpuint(r2->members.size(), ==, 4);
   g_assert_cmpuint(r3->members.size(), ==, 1);
+
+  // now test a closed way
+  way_t * const area = new way_t(0);
+  for(unsigned int i = 0; i < nodes.size(); i++)
+    area->append_node(nodes[i]);
+  area->append_node(nodes[0]);
+  g_assert_true(area->is_closed());
+  o.way_attach(area);
+
+  // drop the other ways to make reference counting easier
+  o.way_delete(v);
+  o.way_delete(w);
+  o.way_delete(neww);
+  o.way_delete(neww2);
+  g_assert_cmpuint(o.ways.size(), ==, 1);
+  for(unsigned int i = 1; i < nodes.size(); i++)
+    g_assert_cmpuint(nodes[i]->ways, ==, 1);
+  g_assert_cmpuint(nodes.front()->ways, ==, 2);
+
+  g_assert_null(area->split(&o, area->node_chain.begin(), true));
+  g_assert_cmpuint(area->node_chain.size(), ==, nodes.size());
+  for(unsigned int i = 0; i < nodes.size(); i++) {
+    g_assert(area->node_chain[i] == nodes[i]);
+    g_assert_cmpuint(nodes[i]->ways, ==, 1);
+  }
+
+  // close the way again
+  area->append_node(const_cast<node_t *>(area->first_node()));
+  g_assert_null(area->split(&o, area->node_chain.begin() + 1, false));
+  g_assert_cmpuint(area->node_chain.size(), ==, nodes.size());
+  for(unsigned int i = 0; i < nodes.size(); i++) {
+    g_assert(area->node_chain[i] == nodes[(i + 1) % nodes.size()]);
+    g_assert_cmpuint(nodes[i]->ways, ==, 1);
+  }
+
+  // recreate old layout
+  area->append_node(const_cast<node_t *>(area->first_node()));
+  g_assert_null(area->split(&o, --area->node_chain.end(), true));
+  g_assert_cmpuint(area->node_chain.size(), ==, nodes.size());
+  for(unsigned int i = 0; i < nodes.size(); i++) {
+    g_assert(area->node_chain[i] == nodes[(i + 1) % nodes.size()]);
+    g_assert_cmpuint(nodes[i]->ways, ==, 1);
+  }
 }
 
 static void test_changeset()

@@ -483,12 +483,14 @@ public:
    *
    * The returned way will be the shorter of the 2 new ways.
    *
-   * cut_at denotes the first node that is part of the second way. In case
-   * cut_at_node is true this is also the last node of the first way.
+   * @cut_at denotes the first node that is part of the second way. In case
+   * @cut_at_node is true this is also the last node of the first way.
+   *
+   * In case the way is closed @cut_at denotes the first way of the node
+   * after splitting. @cut_at_node has no effect in this case.
    */
   way_t *split(osm_t *osm, node_chain_t::iterator cut_at, bool cut_at_node);
   void transfer_relations(osm_t *osm, const way_t *from);
-  void rotate(node_chain_t::iterator nfirst);
   const node_t *last_node() const;
   const node_t *first_node() const;
   unsigned int reverse_direction_sensitive_tags();
