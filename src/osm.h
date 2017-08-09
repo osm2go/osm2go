@@ -490,7 +490,6 @@ public:
    * after splitting. @cut_at_node has no effect in this case.
    */
   way_t *split(osm_t *osm, node_chain_t::iterator cut_at, bool cut_at_node);
-  void transfer_relations(osm_t *osm, const way_t *from);
   const node_t *last_node() const;
   const node_t *first_node() const;
   unsigned int reverse_direction_sensitive_tags();

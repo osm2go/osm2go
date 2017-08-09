@@ -1947,6 +1947,34 @@ bool way_t::is_closed() const {
   return node_chain.front() == node_chain.back();
 }
 
+struct relation_transfer {
+  way_t * const dst;
+  const way_t * const src;
+  relation_transfer(way_t *d, const way_t *s) : dst(d), src(s) {}
+  void operator()(relation_t *relation);
+};
+
+void relation_transfer::operator()(relation_t* relation)
+{
+  printf("way #" ITEM_ID_FORMAT " is part of relation #" ITEM_ID_FORMAT "\n",
+         src->id, relation->id);
+
+  /* make new member of the same relation */
+
+  /* walk member chain. save role of way if its being found. */
+  std::vector<member_t>::iterator it = relation->find_member_object(object_t(const_cast<way_t *>(src)));
+
+  printf("  adding way #" ITEM_ID_FORMAT " to relation\n", dst->id);
+  object_t o(dst);
+  member_t member(o);
+  member.object = dst;
+  if(it != relation->members.end())
+    member.role = g_strdup(it->role);
+  relation->members.push_back(member);
+
+  relation->flags |= OSM_FLAG_DIRTY;
+}
+
 way_t *way_t::split(osm_t *osm, node_chain_t::iterator cut_at, bool cut_at_node)
 {
   g_assert_cmpuint(node_chain.size(), >, 2);
@@ -1996,51 +2024,19 @@ way_t *way_t::split(osm_t *osm, node_chain_t::iterator cut_at, bool cut_at_node)
   /* ------------  copy all tags ------------- */
   neww->tags.copy(tags);
 
+  // now move the way itself into the main data structure
+  // do it before transferring the relation membership to get meaningful ids in debug output
+  osm->way_attach(neww);
+
   /* ---- transfer relation membership from way to new ----- */
-  neww->transfer_relations(osm, this);
+  const relation_chain_t &rchain = osm->to_relation(this);
+  std::for_each(rchain.begin(), rchain.end(), relation_transfer(neww, this));
 
   // keep the history with the longer way
   if(node_chain.size() < neww->node_chain.size())
     node_chain.swap(neww->node_chain);
 
-  /* now move the way itself into the main data structure */
-  osm->way_attach(neww);
-
   return neww;
-}
-
-struct relation_transfer {
-  way_t * const dst;
-  const way_t * const src;
-  relation_transfer(way_t *d, const way_t *s) : dst(d), src(s) {}
-  void operator()(relation_t *relation);
-};
-
-void relation_transfer::operator()(relation_t* relation)
-{
-  printf("way #" ITEM_ID_FORMAT " is part of relation #" ITEM_ID_FORMAT "\n",
-         src->id, relation->id);
-
-  /* make new member of the same relation */
-
-  /* walk member chain. save role of way if its being found. */
-  std::vector<member_t>::iterator it = relation->find_member_object(object_t(const_cast<way_t *>(src)));
-
-  printf("  adding way #" ITEM_ID_FORMAT " to relation\n", dst->id);
-  object_t o(dst);
-  member_t member(o);
-  member.object = dst;
-  if(it != relation->members.end())
-    member.role = g_strdup(it->role);
-  relation->members.push_back(member);
-
-  relation->flags |= OSM_FLAG_DIRTY;
-}
-
-void way_t::transfer_relations(osm_t *osm, const way_t *from) {
-  /* transfer relation memberships from the src way to the dst one */
-  const relation_chain_t &rchain = osm->to_relation(from);
-  std::for_each(rchain.begin(), rchain.end(), relation_transfer(this, from));
 }
 
 struct tag_map_functor {
