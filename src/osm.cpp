@@ -1456,12 +1456,6 @@ void osm_t::node_attach(node_t *node) {
   osm_attach(nodes, node);
 }
 
-void osm_t::node_restore(node_t *node) {
-  printf("Restoring node\n");
-
-  nodes[node->id] = node;
-}
-
 void osm_t::way_attach(way_t *way) {
   printf("Attaching way\n");
 

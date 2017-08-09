@@ -163,7 +163,6 @@ struct osm_t {
   node_t *node_new(const lpos_t &pos);
   node_t *node_new(const pos_t &pos);
   void node_attach(node_t *node);
-  void node_restore(node_t *node);
   void way_delete(way_t *way);
   void way_attach(way_t *way);
   void remove_from_relations(object_t obj);
