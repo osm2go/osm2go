@@ -179,7 +179,6 @@ struct osm_t {
   void relation_free(relation_t *relation);
   void relation_attach(relation_t *relation);
   void relation_delete(relation_t *relation);
-  relation_chain_t to_relation(const way_t *way) const;
   relation_chain_t to_relation(const object_t &object) const;
 
   bool position_within_bounds(gint x, gint y) const;

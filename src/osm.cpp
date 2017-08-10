@@ -1577,11 +1577,6 @@ struct check_member {
   }
 };
 
-/* return all relations a way is in */
-relation_chain_t osm_t::to_relation(const way_t *way) const {
-  return to_relation(object_t(const_cast<way_t *>(way)));
-}
-
 /* return all relations an object is in */
 relation_chain_t osm_t::to_relation(const object_t &object) const {
   switch(object.type) {
@@ -1911,7 +1906,7 @@ void reverse_roles::operator()(relation_t* relation)
 
 unsigned int
 way_t::reverse_direction_sensitive_roles(osm_t *osm) {
-  const relation_chain_t &rchain = osm->to_relation(this);
+  const relation_chain_t &rchain = osm->to_relation(object_t(this));
 
   unsigned int n_roles_flipped = 0;
   reverse_roles context(this, n_roles_flipped);
@@ -2022,7 +2017,7 @@ way_t *way_t::split(osm_t *osm, node_chain_t::iterator cut_at, bool cut_at_node)
   osm->way_attach(neww);
 
   /* ---- transfer relation membership from way to new ----- */
-  const relation_chain_t &rchain = osm->to_relation(this);
+  const relation_chain_t &rchain = osm->to_relation(object_t(this));
   std::for_each(rchain.begin(), rchain.end(), relation_transfer(neww, this));
 
   // keep the history with the longer way
