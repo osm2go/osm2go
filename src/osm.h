@@ -76,8 +76,8 @@ struct object_t {
     base_object_t *obj;
   };
 
-  explicit inline object_t(type_t t = ILLEGAL)
-    : type(t), obj(O2G_NULLPTR) {}
+  explicit inline object_t(type_t t = ILLEGAL, item_id_t i = ID_ILLEGAL)
+    : type(t), id(i) {}
   explicit inline object_t(node_t *n)
     : type(NODE), node(n) { }
   explicit inline object_t(way_t *w)

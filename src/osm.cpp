@@ -1516,60 +1516,8 @@ way_chain_t osm_t::node_delete(node_t *node, bool remove_refs) {
   return way_chain;
 }
 
-struct find_member_object_functor_to_rel {
-  const node_t * const node;
-  bool via_way;
-  find_member_object_functor_to_rel(const node_t *n, bool v) : node(n), via_way(v) {}
-  bool operator()(const member_t &member);
-};
-
-bool find_member_object_functor_to_rel::operator()(const member_t& member)
-{
-  switch(member.object.type) {
-  case NODE:
-    /* nodes are checked directly */
-    return member.object.node == node;
-  case WAY:
-    if(via_way)
-      /* ways have to be checked for the nodes they consist of */
-      return member.object.way->contains_node(node);
-    break;
-  default:
-    break;
-  }
-
-  return false;
-}
-
-struct node_to_relation_functor {
-  find_member_object_functor_to_rel fc;
-  relation_chain_t &rel_chain;
-  node_to_relation_functor(relation_chain_t &r, const node_t *n, bool v) : fc(n, v), rel_chain(r) {}
-  void operator()(const std::pair<item_id_t, relation_t *> &pair);
-};
-
-void node_to_relation_functor::operator()(const std::pair<item_id_t, relation_t *> &pair)
-{
-  const std::vector<member_t> &members = pair.second->members;
-  const std::vector<member_t>::const_iterator mitEnd = members.end();
-  /* node is a member of this relation, so move it to the member chain */
-  if(std::find_if(members.begin(), mitEnd, fc) != mitEnd)
-    rel_chain.push_back(pair.second);
-}
-
-/* return all relations a node is in */
-static relation_chain_t osm_node_to_relation(const osm_t *osm, const node_t *node,
-				       bool via_way) {
-  relation_chain_t rel_chain;
-
-  std::for_each(osm->relations.begin(), osm->relations.end(),
-                node_to_relation_functor(rel_chain, node, via_way));
-
-  return rel_chain;
-}
-
 struct check_member {
-  const object_t object;
+  const object_t &object;
   check_member(const object_t &o) : object(o) {}
   bool operator()(std::pair<item_id_t, relation_t *> pair) {
     return std::find(pair.second->members.begin(), pair.second->members.end(),
@@ -1579,29 +1527,18 @@ struct check_member {
 
 /* return all relations an object is in */
 relation_chain_t osm_t::to_relation(const object_t &object) const {
-  switch(object.type) {
-  case NODE:
-    return osm_node_to_relation(this, object.node, false);
+  relation_chain_t rel_chain;
+  check_member fc(object);
 
-  case WAY:
-  case RELATION: {
-    relation_chain_t rel_chain;
-    check_member fc(object);
-
-    const std::map<item_id_t, relation_t *>::const_iterator ritEnd = relations.end();
-    std::map<item_id_t, relation_t *>::const_iterator rit = relations.begin();
-    while((rit = std::find_if(rit, ritEnd, fc)) != ritEnd) {
-      /* relation is a member of this relation, so move it to the member chain */
-      rel_chain.push_back(rit->second);
-      rit++;
-    }
-
-    return rel_chain;
+  const std::map<item_id_t, relation_t *>::const_iterator ritEnd = relations.end();
+  std::map<item_id_t, relation_t *>::const_iterator rit = relations.begin();
+  while((rit = std::find_if(rit, ritEnd, fc)) != ritEnd) {
+    /* relation is a member of this relation, so move it to the member chain */
+    rel_chain.push_back(rit->second);
+    rit++;
   }
 
-  default:
-    return relation_chain_t();
-  }
+  return rel_chain;
 }
 
 struct node_collector {
