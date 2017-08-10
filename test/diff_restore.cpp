@@ -104,7 +104,7 @@ static void verify_diff(osm_t *osm)
   g_assert_nonnull(r853);
   g_assert_cmpuint(r853->flags, ==, OSM_FLAG_DIRTY);
   for(std::vector<member_t>::const_iterator it = r853->members.begin(); it != r853->members.end(); it++)
-    g_assert(it->object.type == RELATION || it->object.type == RELATION_ID);
+    g_assert(it->object.type == RELATION_ID);
 
   g_assert_false(diff_is_clean(osm, true));
 }

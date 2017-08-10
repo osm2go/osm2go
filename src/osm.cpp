@@ -788,31 +788,24 @@ bool osm_t::parse_relation_member(const char *tp, const char *ref, const char *r
   case WAY:
     /* search matching way */
     member.object.way = way_by_id(id);
-    if(!member.object.way) {
-      member.object.type = WAY_ID;
-      member.object.id = id;
-    }
     break;
 
   case NODE:
     /* search matching node */
     member.object.node = node_by_id(id);
-    if(!member.object.node) {
-      member.object.type = NODE_ID;
-      member.object.id = id;
-    }
     break;
 
   case RELATION:
     /* search matching relation */
     member.object.relation = relation_by_id(id);
-    if(!member.object.relation) {
-      member.object.type = RELATION_ID;
-      member.object.id = id;
-    }
     break;
   default:
     g_assert_not_reached();
+  }
+
+  if(!member.object.obj) {
+    member.object.type = static_cast<type_t>(member.object.type | _REF_FLAG);
+    member.object.id = id;
   }
 
   if(role != O2G_NULLPTR && strlen(role) > 0)
