@@ -97,7 +97,7 @@ static void verify_diff(osm_t *osm)
   r255it = r255->find_member_object(r255m572);
   g_assert(r255it != r255->members.end());
   g_assert_nonnull(r255it->role);
-  g_assert_cmpint(strcmp(r255it->role, "forward_stop"), ==, 0);
+  g_assert_cmpstr(r255it->role, ==, "forward_stop");
   g_assert_cmpuint(r255->tags.asMap().size(), ==, 8);
 
   const relation_t * const r853 = osm->relations[5827853];
@@ -180,7 +180,7 @@ int main(int argc, char **argv)
   std::vector<member_t>::const_iterator r255it = r255->find_member_object(r255m572);
   g_assert(r255it != r255->members.end());
   g_assert_nonnull(r255it->role);
-  g_assert_cmpint(strcmp(r255it->role, "stop"), ==, 0);
+  g_assert_cmpstr(r255it->role, ==, "stop");
   const relation_t * const r66316 = osm->relations[66316];
   g_assert_nonnull(r66316);
   object_t rmember(RELATION_ID, 296255);

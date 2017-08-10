@@ -78,9 +78,9 @@ static void test_trivial() {
   icon_t icons;
   osm_t osm(icons);
   memset(&osm.rbounds, 0, sizeof(osm.rbounds));
-  g_assert_cmpint(strcmp(osm.sanity_check(), _("Invalid data in OSM file:\nBoundary box missing!")), ==, 0);
+  g_assert_cmpstr(osm.sanity_check(), ==, _("Invalid data in OSM file:\nBoundary box missing!"));
   set_bounds(osm);
-  g_assert_cmpint(strcmp(osm.sanity_check(), _("Invalid data in OSM file:\nNo drawable content found!")), ==, 0);
+  g_assert_cmpstr(osm.sanity_check(), ==, _("Invalid data in OSM file:\nNo drawable content found!"));
 
   g_assert_true(osm.position_within_bounds(0, 0));
   g_assert_false(osm.position_within_bounds(-1, 0));
@@ -130,9 +130,9 @@ static void test_taglist() {
 
   g_assert_cmpuint(nstags.size(), ==, 2);
   g_assert_nonnull(tags.get_value("a"));
-  g_assert_cmpint(strcmp(tags.get_value("a"), "A"), ==, 0);
+  g_assert_cmpstr(tags.get_value("a"), ==, "A");
   g_assert_nonnull(tags.get_value("b"));
-  g_assert_cmpint(strcmp(tags.get_value("b"), "B"), ==, 0);
+  g_assert_cmpstr(tags.get_value("b"), ==, "B");
   g_assert_false(tags.hasTagCollisions());
 
   // check replacing the tag list from tag_t
@@ -143,9 +143,9 @@ static void test_taglist() {
 
   g_assert_true(ntags.empty());
   g_assert_nonnull(tags.get_value("a"));
-  g_assert_cmpint(strcmp(tags.get_value("a"), "aa"), ==, 0);
+  g_assert_cmpstr(tags.get_value("a"), ==, "aa");
   g_assert_nonnull(tags.get_value("b"));
-  g_assert_cmpint(strcmp(tags.get_value("b"), "bb"), ==, 0);
+  g_assert_cmpstr(tags.get_value("b"), ==, "bb");
   g_assert_false(tags.hasTagCollisions());
 
   osm_t::TagMap lowerTags = tags.asMap();
@@ -155,9 +155,9 @@ static void test_taglist() {
 
   g_assert_cmpuint(nstags.size(), ==, 2);
   g_assert_nonnull(tags.get_value("a"));
-  g_assert_cmpint(strcmp(tags.get_value("a"), "A"), ==, 0);
+  g_assert_cmpstr(tags.get_value("a"), ==, "A");
   g_assert_nonnull(tags.get_value("b"));
-  g_assert_cmpint(strcmp(tags.get_value("b"), "B"), ==, 0);
+  g_assert_cmpstr(tags.get_value("b"), ==, "B");
   g_assert_false(tags.hasTagCollisions());
 
   tag_list_t tags2;
@@ -169,9 +169,9 @@ static void test_taglist() {
   g_assert_false(tags.hasTagCollisions());
 
   g_assert_nonnull(tags.get_value("a"));
-  g_assert_cmpint(strcmp(tags.get_value("a"), "A"), ==, 0);
+  g_assert_cmpstr(tags.get_value("a"), ==, "A");
   g_assert_nonnull(tags.get_value("b"));
-  g_assert_cmpint(strcmp(tags.get_value("b"), "B"), ==, 0);
+  g_assert_cmpstr(tags.get_value("b"), ==, "B");
 
   g_assert_null(tags2.get_value("a"));
   g_assert_null(tags2.get_value("b"));
@@ -180,9 +180,9 @@ static void test_taglist() {
   g_assert_cmpuint(tags2.asMap().size(), ==, 2);
   g_assert_false(lowerTags.empty());
   g_assert_nonnull(tags2.get_value("a"));
-  g_assert_cmpint(strcmp(tags2.get_value("a"), "aa"), ==, 0);
+  g_assert_cmpstr(tags2.get_value("a"), ==, "aa");
   g_assert_nonnull(tags2.get_value("b"));
-  g_assert_cmpint(strcmp(tags2.get_value("b"), "bb"), ==, 0);
+  g_assert_cmpstr(tags2.get_value("b"), ==, "bb");
   g_assert_false(osm_t::tagSubset(tags2.asMap(), tags.asMap()));
   g_assert_false(osm_t::tagSubset(tags.asMap(), tags2.asMap()));
 
@@ -200,9 +200,9 @@ static void test_taglist() {
 
   g_assert_true(tags.hasTagCollisions());
   g_assert_nonnull(tags.get_value("a"));
-  g_assert_cmpint(strcmp(tags.get_value("a"), "A"), ==, 0);
+  g_assert_cmpstr(tags.get_value("a"), ==, "A");
   g_assert_nonnull(tags.get_value("b"));
-  g_assert_cmpint(strcmp(tags.get_value("b"), "B"), ==, 0);
+  g_assert_cmpstr(tags.get_value("b"), ==, "B");
   g_assert_cmpuint(tags.asMap().size(), ==, 4);
   g_assert_true(tags.contains(find_aa));
   g_assert_true(tags.contains(find_bb));
@@ -566,18 +566,18 @@ static void test_reverse()
   g_assert_cmpuint(rroles, ==, 2);
   // rels[0] has wrong type, roles should not be modified
   g_assert_cmpuint(rels[0]->members.size(), ==, 2);
-  g_assert_cmpint(g_strcmp0(rels[0]->members.front().role, "forward"), ==, 0);
-  g_assert_cmpint(g_strcmp0(rels[0]->members.back().role, "forward"), ==, 0);
+  g_assert_cmpstr(rels[0]->members.front().role, ==, "forward");
+  g_assert_cmpstr(rels[0]->members.back().role, ==, "forward");
   // rels[1] has matching type, first member role should be changed
   g_assert_cmpuint(rels[1]->members.size(), ==, 2);
-  g_assert_cmpint(g_strcmp0(rels[1]->members.front().role, "backward"), ==, 0);
+  g_assert_cmpstr(rels[1]->members.front().role, ==, "backward");
   g_assert(rels[1]->members.front().object == w);
-  g_assert_cmpint(g_strcmp0(rels[1]->members.back().role, "forward"), ==, 0);
+  g_assert_cmpstr(rels[1]->members.back().role, ==, "forward");
   // rels[2] has matching type, first member role should be changed (other direction)
   g_assert_cmpuint(rels[1]->members.size(), ==, 2);
-  g_assert_cmpint(g_strcmp0(rels[2]->members.front().role, "forward"), ==, 0);
+  g_assert_cmpstr(rels[2]->members.front().role, ==, "forward");
   g_assert(rels[2]->members.front().object == w);
-  g_assert_cmpint(g_strcmp0(rels[2]->members.back().role, "backward"), ==, 0);
+  g_assert_cmpstr(rels[2]->members.back().role, ==, "backward");
   // rels[3] has matching type, but roles are empty
   g_assert_cmpuint(rels[1]->members.size(), ==, 2);
   g_assert(rels[3]->members.front().role == O2G_NULLPTR);
