@@ -49,8 +49,8 @@ int main(int argc, char **argv)
 
   std::cout
     << "Nodes: " << osm->nodes.size()     << ", " << to[0] << " with " << t[0] << " tags" << std::endl
-    << "Nodes: " << osm->ways.size()      << ", " << to[1] << " with " << t[1] << " tags" << std::endl
-    << "Nodes: " << osm->relations.size() << ", " << to[2] << " with " << t[2] << " tags" << std::endl;
+    << "Ways: " << osm->ways.size()      << ", " << to[1] << " with " << t[1] << " tags" << std::endl
+    << "Relations: " << osm->relations.size() << ", " << to[2] << " with " << t[2] << " tags" << std::endl;
 
   delete osm;
 
