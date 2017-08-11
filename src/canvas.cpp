@@ -17,7 +17,8 @@
  * along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* canvas.c
+/**
+ * @file canvas.cpp
  *
  * this file contains framework independant canvas functionality like
  * e.g. a canvas agnostic way of detecting which items are at a certain
@@ -38,7 +39,7 @@
 #include "appdata.h"
 #include "misc.h"
 
-#include <math.h>
+#include <cmath>
 
 /* The fuzziness allows to specify how far besides an object a user may */
 /* click so it's still considered a click onto that object. This can */
@@ -78,11 +79,11 @@ static void canvas_item_info_dechain(canvas_item_info_t *item_info) {
   /* adjust current pointer to next */
   *itemP = (*itemP)->next;
 
-  item_info->prev = item_info->next = NULL;
+  item_info->prev = item_info->next = O2G_NULLPTR;
 
 #if 0
   /* do some sanity checks on chain to check if got damaged */
-  canvas_item_info_t *prev = NULL, *sc_item = canvas->item_info.first;
+  canvas_item_info_t *prev = O2G_NULLPTR, *sc_item = canvas->item_info.first;
   while(sc_item) {
     g_assert(sc_item->prev == prev);
 
@@ -99,7 +100,7 @@ static void canvas_item_info_dechain(canvas_item_info_t *item_info) {
 /* remove item_info from chain as its visual representation */
 /* has been destroyed */
 static void item_info_destroy(gpointer data) {
-  canvas_item_info_t *item_info = data;
+  canvas_item_info_t *item_info = static_cast<canvas_item_info_t *>(data);
 
   canvas_item_info_dechain(item_info);
   canvas_item_info_free(item_info);
@@ -146,8 +147,7 @@ static void canvas_item_append(canvas_t *canvas, canvas_group_t group,
 static canvas_item_info_t *canvas_item_get_info(canvas_t *canvas,
 						canvas_item_t *item) {
   /* search for item in all chains */
-  canvas_group_t group;
-  for(group = 0; group < CANVAS_GROUPS; group++) {
+  for(unsigned int group = 0; group < CANVAS_GROUPS; group++) {
     canvas_item_info_t *item_info = canvas->item_info[group].first;
     while(item_info) {
       if(item_info->item == item)
@@ -156,7 +156,7 @@ static canvas_item_info_t *canvas_item_get_info(canvas_t *canvas,
       item_info = item_info->next;
     }
   }
-  return NULL;
+  return O2G_NULLPTR;
 }
 
 void canvas_item_info_push(canvas_t *canvas, canvas_item_t *item) {
@@ -187,7 +187,7 @@ void canvas_item_info_attach_circle(canvas_t *canvas, canvas_group_t group,
 
 void canvas_item_info_attach_poly(canvas_t *canvas, canvas_group_t group,
 				  canvas_item_t *canvas_item,
-		  gboolean is_polygon, canvas_points_t *points, gint width) {
+                                  bool is_polygon, canvas_points_t *points, gint width) {
 
   /* create a new object and insert it into the chain */
   canvas_item_info_t *item = g_new0(canvas_item_info_t, 1);
@@ -230,19 +230,19 @@ void canvas_item_info_attach_poly(canvas_t *canvas, canvas_group_t group,
 
 /* check whether a given point is inside a polygon */
 /* inpoly() taken from http://www.visibone.com/inpoly/ */
-static gboolean inpoly(lpos_t *poly, gint npoints, gint x, gint y) {
+static bool inpoly(lpos_t *poly, gint npoints, gint x, gint y) {
   int xnew, ynew;
   int xold, yold;
   int x1, y1;
   int x2, y2;
   int i;
-  gboolean inside = FALSE;
 
   if(npoints < 3)
-    return 0;
+    return false;
 
   xold = poly[npoints-1].x;
   yold = poly[npoints-1].y;
+  bool inside = false;
   for (i=0 ; i < npoints ; i++) {
     xnew = poly[i].x;
     ynew = poly[i].y;
@@ -324,15 +324,12 @@ canvas_item_t *canvas_item_info_get_at(canvas_t *canvas, gint x, gint y) {
 
   printf("************ searching at %d %d *****************\n", x, y);
 
-  /* search through all groups */
-  canvas_group_t group;
-
   /* convert all "fuzziness" into meters */
   gint fuzziness = EXTRA_FUZZINESS_METER +
     EXTRA_FUZZINESS_PIXEL / canvas_get_zoom(canvas);
 
   /* search from top to bottom */
-  for(group = CANVAS_GROUPS - 1; group > 0; group--) {
+  for(unsigned int group = CANVAS_GROUPS - 1; group > 0; group--) {
     canvas_item_info_t *item = canvas->item_info[group].first;
     //    if(item) printf("searching in group %d\n", group);
 
@@ -365,7 +362,7 @@ canvas_item_t *canvas_item_info_get_at(canvas_t *canvas, gint x, gint y) {
 	   (y <= item->data.poly.bbox.bottom_right.y + fuzziness)) {
 
 	  int on_segment = canvas_item_info_get_segment(item, x, y, fuzziness);
-	  gboolean in_poly = FALSE;
+          bool in_poly = false;
 	  if(item->data.poly.is_polygon)
 	    in_poly = inpoly(item->data.poly.points,
 			     item->data.poly.num_points, x, y);
@@ -390,5 +387,5 @@ canvas_item_t *canvas_item_info_get_at(canvas_t *canvas, gint x, gint y) {
   }
   printf("************* nothing found ******************\n");
 
-  return NULL;
+  return O2G_NULLPTR;
 }

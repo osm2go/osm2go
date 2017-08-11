@@ -48,7 +48,7 @@ set(osm2go_SOURCE_FILES
 	src/area_edit.h
 	src/banner.cpp
 	src/banner.h
-	src/canvas.c
+	src/canvas.cpp
 	src/canvas.h
 	src/canvas_goocanvas.cpp
 	src/diff.cpp

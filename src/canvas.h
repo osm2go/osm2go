@@ -64,27 +64,31 @@ typedef enum {
 typedef GooCanvasItem canvas_item_t;
 typedef GooCanvasPoints canvas_points_t;
 
-typedef struct canvas_t {
+#ifdef __cplusplus
+
+struct canvas_t {
   GtkWidget * const widget;
   GooCanvasItem *group[CANVAS_GROUPS];
 
   struct {
     struct canvas_item_info_t *first, *last;
   } item_info[CANVAS_GROUPS];
-#ifdef __cplusplus
   canvas_t();
-#endif
-} canvas_t;
+};
 
 typedef guint canvas_color_t;
+
+#endif
 
 #else
 #error "No canvas type defined!"
 #endif
 
-typedef enum { CANVAS_ITEM_CIRCLE, CANVAS_ITEM_POLY } canvas_item_type_t;
+#ifdef __cplusplus
 
-typedef struct canvas_item_info_t {
+enum canvas_item_type_t { CANVAS_ITEM_CIRCLE, CANVAS_ITEM_POLY };
+
+struct canvas_item_info_t {
   canvas_t *canvas;
   canvas_item_type_t type;
 
@@ -103,7 +107,7 @@ typedef struct canvas_item_info_t {
 	} top_left, bottom_right;
       } bbox;
 
-      gboolean is_polygon;
+      bool is_polygon;
       gint width, num_points;
       lpos_t *points;
 
@@ -114,11 +118,10 @@ typedef struct canvas_item_info_t {
   canvas_group_t group;
   canvas_item_t *item;
   struct canvas_item_info_t *prev, *next;
-} canvas_item_info_t;
+};
 
-typedef enum { CANVAS_UNIT_METER = 0, CANVAS_UNIT_PIXEL } canvas_unit_t;
+enum canvas_unit_t { CANVAS_UNIT_METER = 0, CANVAS_UNIT_PIXEL };
 
-#ifdef __cplusplus
 struct canvas_dimensions {
   gdouble width, height;
   inline canvas_dimensions operator/(double d) const {
@@ -134,10 +137,6 @@ void canvas_scroll_get(canvas_t *canvas, canvas_unit_t unit, gint &sx, gint &sy)
 void canvas_point_set_pos(canvas_points_t *points, gint index, const lpos_t &lpos);
 void canvas_item_get_segment_pos(canvas_item_t *item, gint seg,
                                  gint &x0, gint &y0, gint &x1, gint &y1);
-
-extern "C" {
-#endif
-
 
 /****** manipulating the canvas ******/
 void canvas_set_background(canvas_t *canvas, canvas_color_t bg_color);
@@ -188,12 +187,10 @@ void canvas_item_info_attach_circle(canvas_t *canvas, canvas_group_t group,
 			    canvas_item_t *item, gint x, gint y, gint r);
 void canvas_item_info_attach_poly(canvas_t *canvas, canvas_group_t group,
 		  canvas_item_t *item,
-		  gboolean is_polygon, canvas_points_t *points, gint width);
+                                  bool is_polygon, canvas_points_t *points, gint width);
 canvas_item_t *canvas_item_info_get_at(canvas_t *canvas, gint x, gint y);
 void canvas_item_info_push(canvas_t *canvas, canvas_item_t *item);
 
-#ifdef __cplusplus
-}
 #endif
 
 #endif // CANVAS_H
