@@ -57,8 +57,6 @@ canvas_item_t *map_item_chain_t::firstCanvasItem() const {
   return map_items.front()->item;
 }
 
-#undef DESTROY_WAIT_FOR_GTK
-
 static void map_statusbar(map_t *map, map_item_t *map_item) {
   const std::string &str = map_item->object.get_name();
   map->appdata.statusbar->set(str.c_str(),
@@ -83,20 +81,8 @@ void map_item_chain_destroy(map_item_chain_t *&chainP) {
   std::for_each(chainP->map_items.begin(), chainP->map_items.end(),
                 map_item_destroy_canvas_item);
 
-#ifdef DESTROY_WAIT_FOR_GTK
-  /* wait until gtks event handling has actually destroyed this item */
-  printf("waiting for item destruction ");
-  while(chainP)
-    osm2go_platform::process_events(true);
-  printf(" ok\n");
-
-  /* the callback routine connected to this item should have been */
-  /* called by now and it has set the chain to O2G_NULLPTR */
-
-#else
   delete chainP;
   chainP = O2G_NULLPTR;
-#endif
 }
 
 static void map_node_select(map_t *map, node_t *node) {
@@ -412,30 +398,6 @@ void map_t::item_deselect() {
 static void map_item_destroy_event(gpointer data) {
   map_item_t *map_item = static_cast<map_item_t *>(data);
 
-  //  printf("destroying map_item @ %p\n", map_item);
-
-#ifdef DESTROY_WAIT_FOR_GTK
-  /* remove item from nodes/ways map_item_chain */
-  map_item_chain_t *chain = O2G_NULLPTR;
-  if(map_item->object.type == NODE)
-    chain = map_item->object.node->map_item_chain;
-  else if(map_item->object.type == WAY)
-    chain = map_item->object.way->map_item_chain;
-
-  /* there must be a chain with content, otherwise things are broken */
-  g_assert_nonnull(chain);
-
-  /* search current map_item, ... */
-  std::vector<map_item_t *>::iterator it = std::find(chain->map_items.begin(),
-                                                     chain->map_items.end(),
-                                                     map_item);
-
-  g_assert(it != chain->map_items.end());
-
-  /* ... remove it from chain and free it */
-  chain->map_items.erase(it);
-#endif
-
   g_free(map_item);
 }
 
@@ -739,7 +701,6 @@ static void map_free_map_item_chains(appdata_t &appdata) {
   if(!appdata.osm)
     return;
 
-#ifndef DESTROY_WAIT_FOR_GTK
   /* free all map_item_chains */
   std::for_each(appdata.osm->nodes.begin(), appdata.osm->nodes.end(),
                 free_map_item_chain<node_t>);
@@ -753,7 +714,6 @@ static void map_free_map_item_chains(appdata_t &appdata) {
                   appdata.track.track->segments.end(),
                   free_track_item_chain<false>);
   }
-#endif
 }
 
 static gint map_destroy_event(map_t *map) {
