@@ -43,6 +43,22 @@ int main(int argc, char **argv)
 
   style_t *style = style_load(argv[1], appdata.icons);
 
+  g_assert_true(style->frisket.border.present);
+  g_assert_cmpuint(style->frisket.border.color, ==, 0xff0000c0);
+  g_assert_cmpfloat(style->frisket.border.width, ==, 20.75);
+  g_assert_cmpuint(style->frisket.color, ==, 0x0f0f0fff);
+  g_assert_cmpfloat(style->frisket.mult, ==, 3.5);
+  g_assert_cmpuint(style->highlight.color, ==, 0xffff00c0);
+  g_assert_cmpuint(style->highlight.node_color, ==, 0xff00000c);
+  g_assert_cmpuint(style->highlight.touch_color, ==, 0x0000ffc0);
+  g_assert_cmpuint(style->highlight.arrow_color, ==, 0xf0f0f0f0);
+  g_assert_cmpfloat(style->highlight.width, ==, 2.5);
+  g_assert_cmpfloat(style->highlight.arrow_limit, ==, 1.25);
+  g_assert_cmpfloat(style->track.width, ==, 3.5);
+  g_assert_cmpuint(style->track.color, ==, 0x0000ff40);
+  g_assert_cmpuint(style->track.gps_color, ==, 0x00008040);
+  g_assert_cmpuint(style->background.color, ==, 0x00ff00ff);
+
   if(style == O2G_NULLPTR) {
     std::cerr << "failed to load styles" << std::endl;
     return 1;

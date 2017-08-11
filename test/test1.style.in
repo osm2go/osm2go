@@ -5,4 +5,10 @@
 	<way width="3" color="#999999" scale-max="40000"/>
 	<area border-width="1" border-color="#cccccc" color="#00000066" scale-max="20000"/>
 	<icon enable="true" scale="0.80" path-prefix="standard"/>
+	<track width="3.5" color="#0000ff40" gps-color="#00008040"/>
+	<highlight color="#ffff00c0" node-color="#ff00000c"  touch-color="#0000ffc0" arrow-color="#f0f0f0f0" width="2.5" arrow-limit="1.25"/>
+	<frisket mult="3.5" color="#0f0f0fff">
+		<border width="20.75" color="#ff0000c0"/>
+	</frisket>
+	<background color="#0f0"/>
 </style>
