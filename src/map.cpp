@@ -1361,7 +1361,8 @@ static gboolean map_button_event(GtkWidget *, GdkEventButton *event,
 				       gpointer data) {
   map_t *map = static_cast<map_t *>(data);
 
-  if(!map->appdata.osm) return FALSE;
+  if(G_UNLIKELY(!map->appdata.osm))
+    return FALSE;
 
   if(event->button == 1) {
     gint x = event->x, y = event->y;
@@ -1369,7 +1370,7 @@ static gboolean map_button_event(GtkWidget *, GdkEventButton *event,
     if(event->type == GDK_BUTTON_PRESS)
       map_button_press(map, x, y);
 
-    if(event->type == GDK_BUTTON_RELEASE)
+    else if(event->type == GDK_BUTTON_RELEASE)
       map_button_release(map, x, y);
   }
 
