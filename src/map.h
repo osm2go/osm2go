@@ -64,6 +64,8 @@ enum map_action_t {
 
 #ifdef __cplusplus
 struct appdata_t;
+struct track_seg_t;
+struct track_t;
 
 struct map_item_t {
   object_t object;
@@ -153,6 +155,12 @@ struct map_t {
   bool item_is_selected_way(const map_item_t *map_item) const;
   bool item_is_selected_node(const map_item_t *map_item) const;
   bool scroll_to_if_offscreen(const lpos_t *lpos);
+
+  /* track stuff */
+  void track_draw(track_t &track);
+  void track_draw_seg(track_seg_t &seg);
+  void track_update_seg(track_seg_t &seg);
+  void track_pos(const lpos_t *lpos);
 };
 
 void map_show_node(map_t *map, node_t *node);
@@ -164,13 +172,7 @@ void map_action_ok(map_t *map);
 void map_delete_selected(map_t *map);
 
 /* track stuff */
-struct track_t;
-void map_track_draw(map_t *map, track_t *track);
-struct track_seg_t;
-void map_track_draw_seg(map_t *map, track_seg_t &seg);
-void map_track_update_seg(map_t *map, track_seg_t &seg);
 void map_track_remove(track_t &track);
-void map_track_pos(map_t *map, const lpos_t *lpos);
 void map_track_remove_pos(appdata_t &appdata);
 
 /* background stuff */

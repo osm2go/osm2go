@@ -1959,8 +1959,8 @@ static canvas_points_t *canvas_points_init(const bounds_t &bounds,
   return points;
 }
 
-void map_track_draw_seg(map_t *map, track_seg_t &seg) {
-  const bounds_t &bounds = *(map->appdata.osm->bounds);
+void map_t::track_draw_seg(track_seg_t &seg) {
+  const bounds_t &bounds = *appdata.osm->bounds;
 
   /* a track_seg needs at least 2 points to be drawn */
   if (seg.track_points.empty())
@@ -1981,7 +1981,7 @@ void map_track_draw_seg(map_t *map, track_seg_t &seg) {
 
     if(it == itEnd) {
       // the segment ends in a segment that is not on screen
-      map->elements_drawn = 0;
+      elements_drawn = 0;
       return;
     }
 
@@ -1997,7 +1997,7 @@ void map_track_draw_seg(map_t *map, track_seg_t &seg) {
     /* the last element is still on screen, so save the number of elements in
      * the point list to avoid recalculation on update */
     if(tmp == itEnd)
-      map->elements_drawn = visible;
+      elements_drawn = visible;
 
     /* actually start drawing with the last position that was offscreen */
     /* so the track nicely enters the viewing area */
@@ -2020,8 +2020,9 @@ void map_track_draw_seg(map_t *map, track_seg_t &seg) {
     canvas_points_t *points = canvas_points_init(bounds, it, visible);
     it = tmp;
 
-    canvas_item_t *item = canvas_polyline_new(map->canvas, CANVAS_GROUP_TRACK,
-		 points, map->style->track.width, map->style->track.color);
+    canvas_item_t *item = canvas_polyline_new(canvas, CANVAS_GROUP_TRACK,
+                                              points, style->track.width,
+                                              style->track.color);
     seg.item_chain.push_back(item);
 
     canvas_points_free(points);
@@ -2030,8 +2031,8 @@ void map_track_draw_seg(map_t *map, track_seg_t &seg) {
 
 /* update the last visible fragment of this segment since a */
 /* gps position may have been added */
-void map_track_update_seg(map_t *map, track_seg_t &seg) {
-  const bounds_t &bounds = *(map->appdata.osm->bounds);
+void map_t::track_update_seg(track_seg_t &seg) {
+  const bounds_t &bounds = *appdata.osm->bounds;
 
   printf("-- APPENDING TO TRACK --\n");
 
@@ -2044,18 +2045,18 @@ void map_track_update_seg(map_t *map, track_seg_t &seg) {
   std::vector<track_point_t>::const_iterator last = itEnd - 1;
   /* check if the last and second_last points are visible */
   const bool last_is_visible = pointVisible(bounds, last->pos);
-  const bool second_last_is_visible = (map->elements_drawn > 0);
+  const bool second_last_is_visible = (elements_drawn > 0);
 
   /* if both are invisible, then nothing has changed on screen */
   if(!last_is_visible && !second_last_is_visible) {
     printf("second_last and last entry are invisible -> doing nothing\n");
-    map->elements_drawn = 0;
+    elements_drawn = 0;
     return;
   }
 
   const std::vector<track_point_t>::const_iterator begin = // start of track to draw
                                                    second_last_is_visible
-                                                   ? itEnd - map->elements_drawn - 1
+                                                   ? itEnd - elements_drawn - 1
                                                    : itEnd - 2;
 
   /* since we are updating an existing track, it sure has at least two
@@ -2066,7 +2067,7 @@ void map_track_update_seg(map_t *map, track_seg_t &seg) {
 
   /* count points to be placed */
   const size_t npoints = itEnd - begin;
-  map->elements_drawn = last_is_visible ? npoints : 0;
+  elements_drawn = last_is_visible ? npoints : 0;
 
   lpos_t lpos = last->pos.toLpos(bounds);
   lpos_t lpos2 = (last - 1)->pos.toLpos(bounds);
@@ -2093,8 +2094,8 @@ void map_track_update_seg(map_t *map, track_seg_t &seg) {
 
     printf("second last is invisible -> start new screen segment with %zu points\n", npoints);
 
-    canvas_item_t *item = canvas_polyline_new(map->canvas, CANVAS_GROUP_TRACK,
-		 points, map->style->track.width, map->style->track.color);
+    canvas_item_t *item = canvas_polyline_new(canvas, CANVAS_GROUP_TRACK,
+                                              points, style->track.width, style->track.color);
     seg.item_chain.push_back(item);
   }
   canvas_points_free(points);
@@ -2104,13 +2105,13 @@ struct map_track_seg_draw_functor {
   map_t * const map;
   map_track_seg_draw_functor(map_t *m) : map(m) {}
   void operator()(track_seg_t &seg) {
-    map_track_draw_seg(map, seg);
+    map->track_draw_seg(seg);
   }
 };
 
-void map_track_draw(map_t *map, track_t *track) {
-  std::for_each(track->segments.begin(), track->segments.end(),
-                map_track_seg_draw_functor(map));
+void map_t::track_draw(track_t &track) {
+  std::for_each(track.segments.begin(), track.segments.end(),
+                map_track_seg_draw_functor(this));
 }
 
 void map_track_remove(track_t &track) {
@@ -2124,20 +2125,20 @@ void map_track_remove(track_t &track) {
 /**
  * @brief show the marker item for the current GPS position
  */
-void map_track_pos(map_t *map, const lpos_t *lpos) {
+void map_t::track_pos(const lpos_t *lpos) {
   /* remove the old item */
-  map_track_remove_pos(map->appdata);
+  map_track_remove_pos(appdata);
 
-  float radius = map->style->track.width / 2.0;
-  gdouble zoom = canvas_get_zoom(map->canvas);
+  float radius = style->track.width / 2.0;
+  gdouble zoom = canvas_get_zoom(canvas);
   if(zoom < GPS_RADIUS_LIMIT) {
     radius *= GPS_RADIUS_LIMIT;
     radius /= zoom;
   }
 
-  map->appdata.track.gps_item =
-    canvas_circle_new(map->canvas, CANVAS_GROUP_GPS, lpos->x, lpos->y,
-                      radius, 0, map->style->track.gps_color, NO_COLOR);
+  appdata.track.gps_item =
+    canvas_circle_new(canvas, CANVAS_GROUP_GPS, lpos->x, lpos->y, radius, 0,
+                      style->track.gps_color, NO_COLOR);
 }
 
 /**

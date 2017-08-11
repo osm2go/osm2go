@@ -359,7 +359,7 @@ cb_menu_track_import(appdata_t *appdata) {
     /* load a track */
     appdata->track.track = track_import(filename);
     if(appdata->track.track) {
-      map_track_draw(appdata->map, appdata->track.track);
+      appdata->map->track_draw(*appdata->track.track);
 
       appdata->settings->track_path = filename;
     }

@@ -396,10 +396,10 @@ static gboolean track_append_position(appdata_t &appdata, const pos_t *pos, floa
       /* the segment can now be drawn for the first time */
       printf("initial draw\n");
       g_assert_true(seg.item_chain.empty());
-      map_track_draw_seg(appdata.map, seg);
+      appdata.map->track_draw_seg(seg);
     } else {
       /* the segment has to be updated */
-      map_track_update_seg(appdata.map, seg);
+      appdata.map->track_update_seg(seg);
     }
   }
 
@@ -461,7 +461,7 @@ static int update(void *data) {
     lpos_t lpos;
     lpos = pos.toLpos(*(appdata.osm->bounds));
     if(track_append_position(appdata, &pos, alt, &lpos))
-      map_track_pos(appdata.map, &lpos);
+      appdata.map->track_pos(&lpos);
   } else {
     printf("no valid position\n");
     /* end segment */
