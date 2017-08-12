@@ -56,45 +56,17 @@ static void canvas_item_info_free(canvas_item_info_t *info) {
 }
 
 static void canvas_item_info_dechain(canvas_item_info_t *item_info) {
-  canvas_t *canvas = item_info->canvas;
+  std::vector<canvas_item_info_t *> &info_group = item_info->canvas->item_info[item_info->group];
 
   //   printf("dechain %p\n", item_info);
 
   /* search for item in chain */
-  canvas_item_info_t **itemP = &canvas->item_info[item_info->group].first;
-  while(*itemP && *itemP != item_info)
-    itemP = &(*itemP)->next;
+  const std::vector<canvas_item_info_t *>::iterator itEnd = info_group.end();
+  std::vector<canvas_item_info_t *>::iterator it = std::find(info_group.begin(),
+                                                             itEnd, item_info);
+  g_assert(it != itEnd);
 
-  g_assert_nonnull(*itemP);
-
-  /* check if we are removing the last entry in the list and */
-  /* adjust last pointer if yes */
-  if(canvas->item_info[item_info->group].last == item_info)
-    canvas->item_info[item_info->group].last = item_info->prev;
-
-  /* adjust prev pointer in next element (if present) */
-  if((*itemP)->next)
-    (*itemP)->next->prev = (*itemP)->prev;
-
-  /* adjust current pointer to next */
-  *itemP = (*itemP)->next;
-
-  item_info->prev = item_info->next = O2G_NULLPTR;
-
-#if 0
-  /* do some sanity checks on chain to check if got damaged */
-  canvas_item_info_t *prev = O2G_NULLPTR, *sc_item = canvas->item_info.first;
-  while(sc_item) {
-    g_assert(sc_item->prev == prev);
-
-    /* last in chain must be pointed at by last_item_info */
-    if(!sc_item->next)
-      g_assert(sc_item == canvas->item_info.last);
-
-    prev = sc_item;
-    sc_item = sc_item->next;
-  }
-#endif
+  info_group.erase(it);
 }
 
 /* remove item_info from chain as its visual representation */
@@ -108,53 +80,47 @@ static void item_info_destroy(gpointer data) {
 
 static void canvas_item_prepend(canvas_t *canvas, canvas_group_t group,
 			canvas_item_t *canvas_item, canvas_item_info_t *item) {
-  if(!canvas->item_info[group].first) {
-    g_assert_null(canvas->item_info[group].last);
-    canvas->item_info[group].last = item;
-  } else
-    canvas->item_info[group].first->prev = item;
+  canvas->item_info[group].insert(canvas->item_info[group].begin(), item);
 
   /* attach destroy event handler if it hasn't already been attached */
   if(!item->item)
     canvas_item_destroy_connect(canvas_item, item_info_destroy, item);
 
   item->group = group;
-  item->next = canvas->item_info[group].first;
-  canvas->item_info[group].first = item;
   item->item = canvas_item;   /* reference to visual representation */
   item->canvas = canvas;
 }
 
 static void canvas_item_append(canvas_t *canvas, canvas_group_t group,
 	       canvas_item_t *canvas_item, canvas_item_info_t *item) {
-  if(!canvas->item_info[group].last) {
-    g_assert_null(canvas->item_info[group].first);
-    canvas->item_info[group].first = item;
-  } else
-    canvas->item_info[group].last->next = item;
+  canvas->item_info[group].push_back(item);
 
   /* attach destroy event handler if it hasn't already been attached */
   if(!item->item)
     canvas_item_destroy_connect(canvas_item, item_info_destroy, item);
 
   item->group = group;
-  item->prev = canvas->item_info[group].last;
-  canvas->item_info[group].last = item;
   item->item = canvas_item;   /* reference to visual representation */
   item->canvas = canvas;
 }
+
+struct item_info_find {
+  const canvas_item_t * const citem;
+  item_info_find(const canvas_item_t *i) : citem(i) {}
+  bool operator()(const canvas_item_info_t *item) {
+    return item->item == citem;
+  }
+};
 
 static canvas_item_info_t *canvas_item_get_info(canvas_t *canvas,
 						canvas_item_t *item) {
   /* search for item in all chains */
   for(unsigned int group = 0; group < CANVAS_GROUPS; group++) {
-    canvas_item_info_t *item_info = canvas->item_info[group].first;
-    while(item_info) {
-      if(item_info->item == item)
-	return item_info;
-
-      item_info = item_info->next;
-    }
+    const std::vector<canvas_item_info_t *>::const_iterator itEnd = canvas->item_info[group].end();
+    std::vector<canvas_item_info_t *>::const_iterator it = std::find_if(cbegin(canvas->item_info[group]),
+                                                                        itEnd, item_info_find(item));
+    if(it != itEnd)
+      return *it;
   }
   return O2G_NULLPTR;
 }
@@ -330,11 +296,11 @@ canvas_item_t *canvas_item_info_get_at(canvas_t *canvas, gint x, gint y) {
 
   /* search from top to bottom */
   for(unsigned int group = CANVAS_GROUPS - 1; group > 0; group--) {
-    canvas_item_info_t *item = canvas->item_info[group].first;
-    //    if(item) printf("searching in group %d\n", group);
-
     /* search through all item infos */
-    while(item) {
+    const std::vector<canvas_item_info_t *>::const_iterator itEnd = canvas->item_info[group].end();
+    for(std::vector<canvas_item_info_t *>::const_iterator it = canvas->item_info[group].begin();
+        it != itEnd; it++) {
+      canvas_item_info_t *item = *it;
       switch(item->type) {
       case CANVAS_ITEM_CIRCLE: {
 	if((x >= item->data.circle.center.x - item->data.circle.r - fuzziness) &&
@@ -381,8 +347,6 @@ canvas_item_t *canvas_item_info_get_at(canvas_t *canvas, gint x, gint y) {
 	g_assert_not_reached();
 	break;
       }
-
-      item = item->next;
     }
   }
   printf("************* nothing found ******************\n");

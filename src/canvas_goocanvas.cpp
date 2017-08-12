@@ -36,8 +36,6 @@ static void canvas_delete(canvas_t *canvas) {
 canvas_t::canvas_t()
   : widget(goo_canvas_new())
 {
-  memset(item_info, 0, sizeof(item_info));
-
   g_object_set_data(G_OBJECT(widget), "canvas-pointer", this);
 
   g_object_set(G_OBJECT(widget), "anchor", GTK_ANCHOR_CENTER, O2G_NULLPTR);
@@ -48,7 +46,6 @@ canvas_t::canvas_t()
   int gr;
   for(gr = 0; gr < CANVAS_GROUPS; gr++)
     group[gr] = goo_canvas_group_new(root, O2G_NULLPTR);
-
 
   g_signal_connect_swapped(GTK_OBJECT(widget), "destroy",
                            G_CALLBACK(canvas_delete), this);

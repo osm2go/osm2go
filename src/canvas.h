@@ -66,14 +66,17 @@ typedef GooCanvasPoints canvas_points_t;
 
 #ifdef __cplusplus
 
+struct canvas_item_info_t;
+
+#include <vector>
+
 struct canvas_t {
+  canvas_t();
+
   GtkWidget * const widget;
   GooCanvasItem *group[CANVAS_GROUPS];
 
-  struct {
-    struct canvas_item_info_t *first, *last;
-  } item_info[CANVAS_GROUPS];
-  canvas_t();
+  std::vector<canvas_item_info_t *> item_info[CANVAS_GROUPS];
 };
 
 typedef guint canvas_color_t;
@@ -117,7 +120,6 @@ struct canvas_item_info_t {
 
   canvas_group_t group;
   canvas_item_t *item;
-  struct canvas_item_info_t *prev, *next;
 };
 
 enum canvas_unit_t { CANVAS_UNIT_METER = 0, CANVAS_UNIT_PIXEL };
