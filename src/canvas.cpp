@@ -230,7 +230,7 @@ void canvas_item_info_attach_poly(canvas_t *canvas, canvas_group_t group,
 
 /* check whether a given point is inside a polygon */
 /* inpoly() taken from http://www.visibone.com/inpoly/ */
-static bool inpoly(lpos_t *poly, gint npoints, gint x, gint y) {
+static bool inpoly(const lpos_t *poly, gint npoints, gint x, gint y) {
   int xnew, ynew;
   int xold, yold;
   int x1, y1;
