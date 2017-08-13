@@ -63,7 +63,7 @@ canvas_item_info_t::canvas_item_info_t(canvas_item_type_t t, canvas_t *cv, canva
 {
   memset(&data, 0, sizeof(data));
 
-  canvas->item_info[group].insert(canvas->item_info[group].begin(), this);
+  canvas->item_info[group].push_back(this);
 
   canvas_item_destroy_connect(item, item_info_destroy, this);
 }
@@ -113,9 +113,9 @@ void canvas_item_info_push(canvas_t *canvas, canvas_item_t *item) {
   g_assert(item_info->canvas == canvas);
 
   std::vector<canvas_item_info_t *> &info_group = canvas->item_info[item_info->group];
-  const std::vector<canvas_item_info_t *>::iterator itEnd = info_group.end();
-  std::vector<canvas_item_info_t *>::iterator it = std::find(info_group.begin(),
-                                                             itEnd, item_info);
+  const std::vector<canvas_item_info_t *>::reverse_iterator itEnd = info_group.rend();
+  std::vector<canvas_item_info_t *>::reverse_iterator it = std::find(info_group.rbegin(),
+                                                                     itEnd, item_info);
 
   std::rotate(it, it + 1, itEnd);
 }
@@ -277,8 +277,8 @@ canvas_item_t *canvas_item_info_get_at(canvas_t *canvas, gint x, gint y) {
   /* search from top to bottom */
   for(unsigned int group = CANVAS_GROUPS - 1; group > 0; group--) {
     /* search through all item infos */
-    const std::vector<canvas_item_info_t *>::const_iterator itEnd = canvas->item_info[group].end();
-    for(std::vector<canvas_item_info_t *>::const_iterator it = canvas->item_info[group].begin();
+    const std::vector<canvas_item_info_t *>::const_reverse_iterator itEnd = canvas->item_info[group].rend();
+    for(std::vector<canvas_item_info_t *>::const_reverse_iterator it = canvas->item_info[group].rbegin();
         it != itEnd; it++) {
       canvas_item_info_t *item = *it;
       switch(item->type) {
