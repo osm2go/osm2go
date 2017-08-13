@@ -49,27 +49,10 @@
 #define EXTRA_FUZZINESS_METER  0
 #define EXTRA_FUZZINESS_PIXEL  8
 
-static void canvas_item_info_dechain(canvas_item_info_t *item_info) {
-  std::vector<canvas_item_info_t *> &info_group = item_info->canvas->item_info[item_info->group];
-
-  //   printf("dechain %p\n", item_info);
-
-  /* search for item in chain */
-  const std::vector<canvas_item_info_t *>::iterator itEnd = info_group.end();
-  std::vector<canvas_item_info_t *>::iterator it = std::find(info_group.begin(),
-                                                             itEnd, item_info);
-  g_assert(it != itEnd);
-
-  info_group.erase(it);
-}
-
 /* remove item_info from chain as its visual representation */
 /* has been destroyed */
 static void item_info_destroy(gpointer data) {
-  canvas_item_info_t *item_info = static_cast<canvas_item_info_t *>(data);
-
-  canvas_item_info_dechain(item_info);
-  delete item_info;
+  delete static_cast<canvas_item_info_t *>(data);
 }
 
 canvas_item_info_t::canvas_item_info_t(canvas_item_type_t t, canvas_t *cv, canvas_group_t g, canvas_item_t *it)
@@ -89,18 +72,16 @@ canvas_item_info_t::~canvas_item_info_t()
 {
   if(type == CANVAS_ITEM_POLY)
     g_free(data.poly.points);
-}
 
-static void canvas_item_append(canvas_t *canvas, canvas_group_t group,
-	       canvas_item_t *canvas_item, canvas_item_info_t *item) {
-  canvas->item_info[group].push_back(item);
+  std::vector<canvas_item_info_t *> &info_group = canvas->item_info[group];
 
-  /* attach destroy event handler if it hasn't already been attached */
-  if(!item->item)
-    canvas_item_destroy_connect(canvas_item, item_info_destroy, item);
+  /* search for item in chain */
+  const std::vector<canvas_item_info_t *>::iterator itEnd = info_group.end();
+  std::vector<canvas_item_info_t *>::iterator it = std::find(info_group.begin(),
+                                                             itEnd, this);
+  g_assert(it != itEnd);
 
-  item->group = group;
-  item->item = canvas_item;   /* reference to visual representation */
+  info_group.erase(it);
 }
 
 struct item_info_find {
@@ -131,9 +112,12 @@ void canvas_item_info_push(canvas_t *canvas, canvas_item_t *item) {
   printf("pushing item_info %p to background\n", item_info);
   g_assert(item_info->canvas == canvas);
 
-  canvas_item_info_dechain(item_info);
-  canvas_item_append(canvas, item_info->group,
-		     item_info->item, item_info);
+  std::vector<canvas_item_info_t *> &info_group = canvas->item_info[item_info->group];
+  const std::vector<canvas_item_info_t *>::iterator itEnd = info_group.end();
+  std::vector<canvas_item_info_t *>::iterator it = std::find(info_group.begin(),
+                                                             itEnd, item_info);
+
+  std::rotate(it, it + 1, itEnd);
 }
 
 /* store local information about the location of a circle to be able */

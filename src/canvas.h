@@ -120,8 +120,8 @@ struct canvas_item_info_t {
 
   } data;
 
-  canvas_group_t group;
-  canvas_item_t *item;   ///< reference to visual representation
+  const canvas_group_t group;
+  canvas_item_t * const item;   ///< reference to visual representation
 };
 
 enum canvas_unit_t { CANVAS_UNIT_METER = 0, CANVAS_UNIT_PIXEL };
