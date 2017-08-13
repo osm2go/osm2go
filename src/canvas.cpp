@@ -40,6 +40,7 @@
 #include "misc.h"
 
 #include <cmath>
+#include <cstring>
 
 /* The fuzziness allows to specify how far besides an object a user may */
 /* click so it's still considered a click onto that object. This can */
@@ -47,13 +48,6 @@
 /* the total fuzziness. */
 #define EXTRA_FUZZINESS_METER  0
 #define EXTRA_FUZZINESS_PIXEL  8
-
-static void canvas_item_info_free(canvas_item_info_t *info) {
-  if(info->type == CANVAS_ITEM_POLY)
-    g_free(info->data.poly.points);
-
-  g_free(info);
-}
 
 static void canvas_item_info_dechain(canvas_item_info_t *item_info) {
   std::vector<canvas_item_info_t *> &info_group = item_info->canvas->item_info[item_info->group];
@@ -75,20 +69,26 @@ static void item_info_destroy(gpointer data) {
   canvas_item_info_t *item_info = static_cast<canvas_item_info_t *>(data);
 
   canvas_item_info_dechain(item_info);
-  canvas_item_info_free(item_info);
+  delete item_info;
 }
 
-static void canvas_item_prepend(canvas_t *canvas, canvas_group_t group,
-			canvas_item_t *canvas_item, canvas_item_info_t *item) {
-  canvas->item_info[group].insert(canvas->item_info[group].begin(), item);
+canvas_item_info_t::canvas_item_info_t(canvas_item_type_t t, canvas_t *cv, canvas_group_t g, canvas_item_t *it)
+  : canvas(cv)
+  , type(t)
+  , group(g)
+  , item(it)
+{
+  memset(&data, 0, sizeof(data));
 
-  /* attach destroy event handler if it hasn't already been attached */
-  if(!item->item)
-    canvas_item_destroy_connect(canvas_item, item_info_destroy, item);
+  canvas->item_info[group].insert(canvas->item_info[group].begin(), this);
 
-  item->group = group;
-  item->item = canvas_item;   /* reference to visual representation */
-  item->canvas = canvas;
+  canvas_item_destroy_connect(item, item_info_destroy, this);
+}
+
+canvas_item_info_t::~canvas_item_info_t()
+{
+  if(type == CANVAS_ITEM_POLY)
+    g_free(data.poly.points);
 }
 
 static void canvas_item_append(canvas_t *canvas, canvas_group_t group,
@@ -101,7 +101,6 @@ static void canvas_item_append(canvas_t *canvas, canvas_group_t group,
 
   item->group = group;
   item->item = canvas_item;   /* reference to visual representation */
-  item->canvas = canvas;
 }
 
 struct item_info_find {
@@ -130,6 +129,7 @@ void canvas_item_info_push(canvas_t *canvas, canvas_item_t *item) {
   g_assert_nonnull(item_info);
 
   printf("pushing item_info %p to background\n", item_info);
+  g_assert(item_info->canvas == canvas);
 
   canvas_item_info_dechain(item_info);
   canvas_item_append(canvas, item_info->group,
@@ -142,10 +142,8 @@ void canvas_item_info_attach_circle(canvas_t *canvas, canvas_group_t group,
 		    canvas_item_t *canvas_item, gint x, gint y, gint r) {
 
   /* create a new object and insert it into the chain */
-  canvas_item_info_t *item = g_new0(canvas_item_info_t, 1);
-  canvas_item_prepend(canvas, group, canvas_item, item);
+  canvas_item_info_t *item = new canvas_item_info_t(CANVAS_ITEM_CIRCLE, canvas, group, canvas_item);
 
-  item->type = CANVAS_ITEM_CIRCLE;
   item->data.circle.center.x = x;
   item->data.circle.center.y = y;
   item->data.circle.r = r;
@@ -156,10 +154,8 @@ void canvas_item_info_attach_poly(canvas_t *canvas, canvas_group_t group,
                                   bool is_polygon, canvas_points_t *points, gint width) {
 
   /* create a new object and insert it into the chain */
-  canvas_item_info_t *item = g_new0(canvas_item_info_t, 1);
-  canvas_item_prepend(canvas, group, canvas_item, item);
+  canvas_item_info_t *item = new canvas_item_info_t(CANVAS_ITEM_POLY, canvas, group, canvas_item);
 
-  item->type = CANVAS_ITEM_POLY;
   item->data.poly.is_polygon = is_polygon;
   item->data.poly.width = width;
 

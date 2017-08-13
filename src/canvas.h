@@ -92,8 +92,10 @@ typedef guint canvas_color_t;
 enum canvas_item_type_t { CANVAS_ITEM_CIRCLE, CANVAS_ITEM_POLY };
 
 struct canvas_item_info_t {
-  canvas_t *canvas;
-  canvas_item_type_t type;
+  canvas_item_info_t(canvas_item_type_t t, canvas_t *cv, canvas_group_t g, canvas_item_t *it);
+  ~canvas_item_info_t();
+  canvas_t * const canvas;
+  const canvas_item_type_t type;
 
   union {
     struct {
@@ -119,7 +121,7 @@ struct canvas_item_info_t {
   } data;
 
   canvas_group_t group;
-  canvas_item_t *item;
+  canvas_item_t *item;   ///< reference to visual representation
 };
 
 enum canvas_unit_t { CANVAS_UNIT_METER = 0, CANVAS_UNIT_PIXEL };
