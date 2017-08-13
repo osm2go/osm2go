@@ -51,28 +51,24 @@
 
 /* remove item_info from chain as its visual representation */
 /* has been destroyed */
-static void item_info_destroy(gpointer data) {
-  delete static_cast<canvas_item_info_t *>(data);
+template<typename T>
+void item_info_destroy(gpointer data) {
+  delete static_cast<T *>(data);
 }
 
-canvas_item_info_t::canvas_item_info_t(canvas_item_type_t t, canvas_t *cv, canvas_group_t g, canvas_item_t *it)
+canvas_item_info_t::canvas_item_info_t(canvas_item_type_t t, canvas_t *cv, canvas_group_t g, canvas_item_t *it, void(*deleter)(gpointer))
   : canvas(cv)
   , type(t)
   , group(g)
   , item(it)
 {
-  memset(&data, 0, sizeof(data));
-
   canvas->item_info[group].push_back(this);
 
-  canvas_item_destroy_connect(item, item_info_destroy, this);
+  canvas_item_destroy_connect(item, deleter, this);
 }
 
 canvas_item_info_t::~canvas_item_info_t()
 {
-  if(type == CANVAS_ITEM_POLY)
-    g_free(data.poly.points);
-
   std::vector<canvas_item_info_t *> &info_group = canvas->item_info[group];
 
   /* search for item in chain */
@@ -82,6 +78,48 @@ canvas_item_info_t::~canvas_item_info_t()
   g_assert(it != itEnd);
 
   info_group.erase(it);
+}
+
+canvas_item_info_circle::canvas_item_info_circle(canvas_t *cv, canvas_group_t g, canvas_item_t *it,
+                                                 const gint cx, const gint cy, const gint radius)
+  : canvas_item_info_t(CANVAS_ITEM_CIRCLE, cv, g, it, item_info_destroy<canvas_item_info_circle>)
+  , r(radius)
+{
+  center.x = cx;
+  center.y = cy;
+}
+
+canvas_item_info_poly::canvas_item_info_poly(canvas_t* cv, canvas_group_t g, canvas_item_t* it,
+                                             bool poly, gint wd, canvas_points_t *cpoints)
+  : canvas_item_info_t(CANVAS_ITEM_POLY, cv, g, it, item_info_destroy<canvas_item_info_poly>)
+  , is_polygon(poly)
+  , width(wd)
+  , num_points(canvas_points_num(cpoints))
+  , points(g_new0(lpos_t, num_points))
+{
+  bbox.top_left.x = bbox.top_left.y = G_MAXINT;
+  bbox.bottom_right.x = bbox.bottom_right.y = G_MININT;
+
+  for(gint i = 0; i < num_points; i++) {
+    canvas_point_get_lpos(cpoints, i, points + i);
+
+    /* determine bounding box */
+    bbox.top_left.x = std::min(bbox.top_left.x, points[i].x);
+    bbox.top_left.y = std::min(bbox.top_left.y, points[i].y);
+    bbox.bottom_right.x = std::max(bbox.bottom_right.x, points[i].x);
+    bbox.bottom_right.y = std::max(bbox.bottom_right.y, points[i].y);
+  }
+
+  /* take width of lines into account when calculating bounding box */
+  bbox.top_left.x -= width / 2;
+  bbox.top_left.y -= width / 2;
+  bbox.bottom_right.x += width / 2;
+  bbox.bottom_right.y += width / 2;
+}
+
+canvas_item_info_poly::~canvas_item_info_poly()
+{
+  g_free(points);
 }
 
 struct item_info_find {
@@ -118,60 +156,6 @@ void canvas_item_info_push(canvas_t *canvas, canvas_item_t *item) {
                                                                      itEnd, item_info);
 
   std::rotate(it, it + 1, itEnd);
-}
-
-/* store local information about the location of a circle to be able */
-/* to find it when searching for items at a certain position on screen */
-void canvas_item_info_attach_circle(canvas_t *canvas, canvas_group_t group,
-		    canvas_item_t *canvas_item, gint x, gint y, gint r) {
-
-  /* create a new object and insert it into the chain */
-  canvas_item_info_t *item = new canvas_item_info_t(CANVAS_ITEM_CIRCLE, canvas, group, canvas_item);
-
-  item->data.circle.center.x = x;
-  item->data.circle.center.y = y;
-  item->data.circle.r = r;
-}
-
-void canvas_item_info_attach_poly(canvas_t *canvas, canvas_group_t group,
-				  canvas_item_t *canvas_item,
-                                  bool is_polygon, canvas_points_t *points, gint width) {
-
-  /* create a new object and insert it into the chain */
-  canvas_item_info_t *item = new canvas_item_info_t(CANVAS_ITEM_POLY, canvas, group, canvas_item);
-
-  item->data.poly.is_polygon = is_polygon;
-  item->data.poly.width = width;
-
-  /* allocate space for point list */
-  item->data.poly.num_points = canvas_points_num(points);
-  item->data.poly.points = g_new0(lpos_t, item->data.poly.num_points);
-  gint i;
-
-  item->data.poly.bbox.top_left.x =
-    item->data.poly.bbox.top_left.y = G_MAXINT;
-  item->data.poly.bbox.bottom_right.x =
-    item->data.poly.bbox.bottom_right.y = G_MININT;
-
-  for(i=0;i<item->data.poly.num_points;i++) {
-    canvas_point_get_lpos(points, i, item->data.poly.points+i);
-
-    /* determine bounding box */
-    if(item->data.poly.points[i].x < item->data.poly.bbox.top_left.x)
-      item->data.poly.bbox.top_left.x = item->data.poly.points[i].x;
-    if(item->data.poly.points[i].y < item->data.poly.bbox.top_left.y)
-      item->data.poly.bbox.top_left.y = item->data.poly.points[i].y;
-    if(item->data.poly.points[i].x > item->data.poly.bbox.bottom_right.x)
-      item->data.poly.bbox.bottom_right.x = item->data.poly.points[i].x;
-    if(item->data.poly.points[i].y > item->data.poly.bbox.bottom_right.y)
-      item->data.poly.bbox.bottom_right.y = item->data.poly.points[i].y;
-  }
-
-  /* take width of lines into account when calculating bounding box */
-  item->data.poly.bbox.top_left.x -= width/2;
-  item->data.poly.bbox.top_left.y -= width/2;
-  item->data.poly.bbox.bottom_right.x += width/2;
-  item->data.poly.bbox.bottom_right.y += width/2;
 }
 
 /* check whether a given point is inside a polygon */
@@ -217,21 +201,18 @@ static bool inpoly(const lpos_t *poly, gint npoints, gint x, gint y) {
 
 
 /* get the polygon/polyway segment a certain coordinate is over */
-static gint canvas_item_info_get_segment(canvas_item_info_t *item,
+static gint canvas_item_info_get_segment(canvas_item_info_poly *item,
 					 gint x, gint y, gint fuzziness) {
-
-  g_assert(item->type == CANVAS_ITEM_POLY);
-
-  if(item->data.poly.num_points < 2) return -1;
+  if(item->num_points < 2) return -1;
 
   gint retval = -1, i;
   float mindist = 1000000.0;
-  for(i=0;i<item->data.poly.num_points-1;i++) {
+  for(i = 0; i < item->num_points - 1; i++) {
 
-#define AX (item->data.poly.points[i].x)
-#define AY (item->data.poly.points[i].y)
-#define BX (item->data.poly.points[i+1].x)
-#define BY (item->data.poly.points[i+1].y)
+#define AX (item->points[i].x)
+#define AY (item->points[i].y)
+#define BX (item->points[i+1].x)
+#define BY (item->points[i+1].y)
 #define CX ((double)x)
 #define CY ((double)y)
 
@@ -249,7 +230,7 @@ static gint canvas_item_info_get_segment(canvas_item_info_t *item,
 
       /* check if this is actually on the line and closer than anything */
       /* we found so far */
-      if((n <= (item->data.poly.width/2+fuzziness)) && (n < mindist)) {
+      if((n <= (item->width/2+fuzziness)) && (n < mindist)) {
 	retval = i;
 	mindist = n;
       }
@@ -283,39 +264,36 @@ canvas_item_t *canvas_item_info_get_at(canvas_t *canvas, gint x, gint y) {
       canvas_item_info_t *item = *it;
       switch(item->type) {
       case CANVAS_ITEM_CIRCLE: {
-	if((x >= item->data.circle.center.x - item->data.circle.r - fuzziness) &&
-	   (y >= item->data.circle.center.y - item->data.circle.r - fuzziness) &&
-	   (x <= item->data.circle.center.x + item->data.circle.r + fuzziness) &&
-	   (y <= item->data.circle.center.y + item->data.circle.r + fuzziness)) {
+        canvas_item_info_circle *circle = static_cast<canvas_item_info_circle *>(item);
+        if((x >= circle->center.x - circle->r - fuzziness) &&
+           (y >= circle->center.y - circle->r - fuzziness) &&
+           (x <= circle->center.x + circle->r + fuzziness) &&
+           (y <= circle->center.y + circle->r + fuzziness)) {
 
-	  gint xdist = item->data.circle.center.x - x;
-	  gint ydist = item->data.circle.center.y - y;
-	  if(xdist*xdist + ydist*ydist <
-	     (item->data.circle.r+fuzziness)*(item->data.circle.r+fuzziness)) {
-	    printf("circle item %p at %d/%d(%d)\n", item,
-		   item->data.circle.center.x,
-		   item->data.circle.center.y,
-		   item->data.circle.r);
-	    return item->item;
-	  }
-	}
+          gint xdist = circle->center.x - x;
+          gint ydist = circle->center.y - y;
+          if(xdist*xdist + ydist*ydist < (circle->r+fuzziness)*(circle->r+fuzziness)) {
+            printf("circle item %p at %d/%d(%d)\n", item,
+                   circle->center.x, circle->center.y, circle->r);
+            return item->item;
+          }
+        }
       } break;
 
       case CANVAS_ITEM_POLY: {
-	if((x >= item->data.poly.bbox.top_left.x - fuzziness) &&
-	   (y >= item->data.poly.bbox.top_left.y - fuzziness) &&
-	   (x <= item->data.poly.bbox.bottom_right.x + fuzziness) &&
-	   (y <= item->data.poly.bbox.bottom_right.y + fuzziness)) {
+        canvas_item_info_poly *poly = static_cast<canvas_item_info_poly *>(item);
+        if((x >= poly->bbox.top_left.x - fuzziness) &&
+           (y >= poly->bbox.top_left.y - fuzziness) &&
+           (x <= poly->bbox.bottom_right.x + fuzziness) &&
+           (y <= poly->bbox.bottom_right.y + fuzziness)) {
 
-	  int on_segment = canvas_item_info_get_segment(item, x, y, fuzziness);
-          bool in_poly = false;
-	  if(item->data.poly.is_polygon)
-	    in_poly = inpoly(item->data.poly.points,
-			     item->data.poly.num_points, x, y);
+        int on_segment = canvas_item_info_get_segment(poly, x, y, fuzziness);
+        bool in_poly = poly->is_polygon &&
+                       inpoly(poly->points, poly->num_points, x, y);
 
 	  if((on_segment >= 0) || in_poly) {
 	    printf("bbox item %p, %d pts -> %d %s\n", item,
-		   item->data.poly.num_points, on_segment,
+		   poly->num_points, on_segment,
 		   in_poly?"in_poly":"");
 
 	    return item->item;

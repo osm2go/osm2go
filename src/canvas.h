@@ -66,7 +66,7 @@ typedef GooCanvasPoints canvas_points_t;
 
 #ifdef __cplusplus
 
-struct canvas_item_info_t;
+class canvas_item_info_t;
 
 #include <vector>
 
@@ -91,37 +91,44 @@ typedef guint canvas_color_t;
 
 enum canvas_item_type_t { CANVAS_ITEM_CIRCLE, CANVAS_ITEM_POLY };
 
-struct canvas_item_info_t {
-  canvas_item_info_t(canvas_item_type_t t, canvas_t *cv, canvas_group_t g, canvas_item_t *it);
+class canvas_item_info_t {
+protected:
+  canvas_item_info_t(canvas_item_type_t t, canvas_t *cv, canvas_group_t g, canvas_item_t *it, void(*deleter)(gpointer));
+public:
   ~canvas_item_info_t();
+
   canvas_t * const canvas;
   const canvas_item_type_t type;
-
-  union {
-    struct {
-      struct {
-	gint x, y;
-      } center;
-      gint r;
-    } circle;
-
-    struct {
-      struct {
-	struct {
-	  gint x,y;
-	} top_left, bottom_right;
-      } bbox;
-
-      bool is_polygon;
-      gint width, num_points;
-      lpos_t *points;
-
-    } poly;
-
-  } data;
-
   const canvas_group_t group;
   canvas_item_t * const item;   ///< reference to visual representation
+};
+
+class canvas_item_info_circle : public canvas_item_info_t {
+public:
+  canvas_item_info_circle(canvas_t *cv, canvas_group_t g, canvas_item_t *it,
+                          const gint cx, const gint cy, const gint radius);
+
+  struct {
+    gint x, y;
+  } center;
+  const gint r;
+};
+
+class canvas_item_info_poly : public canvas_item_info_t {
+public:
+  canvas_item_info_poly(canvas_t *cv, canvas_group_t g, canvas_item_t *it, bool poly,
+                        gint wd, canvas_points_t *cpoints);
+  ~canvas_item_info_poly();
+
+  struct {
+    struct {
+      gint x,y;
+    } top_left, bottom_right;
+  } bbox;
+
+  bool is_polygon;
+  gint width, num_points;
+  lpos_t *points;
 };
 
 enum canvas_unit_t { CANVAS_UNIT_METER = 0, CANVAS_UNIT_PIXEL };
@@ -187,11 +194,6 @@ void canvas_image_move(canvas_item_t *item, gint x, gint y,
 		       float hscale, float vscale);
 gint canvas_item_get_segment(canvas_item_t *item, gint x, gint y);
 
-void canvas_item_info_attach_circle(canvas_t *canvas, canvas_group_t group,
-			    canvas_item_t *item, gint x, gint y, gint r);
-void canvas_item_info_attach_poly(canvas_t *canvas, canvas_group_t group,
-		  canvas_item_t *item,
-                                  bool is_polygon, canvas_points_t *points, gint width);
 canvas_item_t *canvas_item_info_get_at(canvas_t *canvas, gint x, gint y);
 void canvas_item_info_push(canvas_t *canvas, canvas_item_t *item);
 

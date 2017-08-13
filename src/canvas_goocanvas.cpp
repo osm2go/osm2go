@@ -171,7 +171,7 @@ canvas_item_t *canvas_circle_new(canvas_t *canvas, canvas_group_t group,
                            O2G_NULLPTR);
 
   if(CANVAS_SELECTABLE & (1<<group))
-    canvas_item_info_attach_circle(canvas, group, item, x, y, radius + border);
+    (void) new canvas_item_info_circle(canvas, group, item, x, y, radius + border);
 
   return item;
 }
@@ -210,7 +210,7 @@ canvas_item_t *canvas_polyline_new(canvas_t *canvas, canvas_group_t group,
                             O2G_NULLPTR);
 
   if(CANVAS_SELECTABLE & (1<<group))
-    canvas_item_info_attach_poly(canvas, group, item, FALSE, points, width);
+    (void) new canvas_item_info_poly(canvas, group, item, FALSE, width, points);
 
   return item;
 }
@@ -229,7 +229,7 @@ canvas_item_t *canvas_polygon_new(canvas_t *canvas, canvas_group_t group,
                             O2G_NULLPTR);
 
   if(CANVAS_SELECTABLE & (1<<group))
-    canvas_item_info_attach_poly(canvas, group, item, TRUE, points, width);
+    (void) new canvas_item_info_poly(canvas, group, item, TRUE, width, points);
 
   return item;
 }
@@ -245,7 +245,7 @@ canvas_item_t *canvas_image_new(canvas_t *canvas, canvas_group_t group,
 
   if(CANVAS_SELECTABLE & (1<<group)) {
     gint radius = 0.75 * hscale * MAX(gdk_pixbuf_get_width(pix), gdk_pixbuf_get_height(pix)); /* hscale and vscale are the same */
-    canvas_item_info_attach_circle(canvas, group, item, x, y, radius);
+    (void) new canvas_item_info_circle(canvas, group, item, x, y, radius);
   }
 
   return item;
