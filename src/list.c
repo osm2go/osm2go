@@ -33,10 +33,16 @@
 
 #include "list.h"
 
-#include "appdata.h"
 #include "misc.h"
 
+#ifdef FREMANTLE
+#include <hildon/hildon-gtk.h>
+#include <hildon/hildon-pannable-area.h>
+#endif
+#include <libintl.h>
 #include <stdarg.h>
+
+#define _(String) gettext(String)
 
 typedef struct {
   GtkWidget *view;
