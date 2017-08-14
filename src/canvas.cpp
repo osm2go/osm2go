@@ -95,7 +95,7 @@ canvas_item_info_poly::canvas_item_info_poly(canvas_t* cv, canvas_group_t g, can
   , is_polygon(poly)
   , width(wd)
   , num_points(canvas_points_num(cpoints))
-  , points(g_new0(lpos_t, num_points))
+  , points(g_new(lpos_t, num_points))
 {
   bbox.top_left.x = bbox.top_left.y = G_MAXINT;
   bbox.bottom_right.x = bbox.bottom_right.y = G_MININT;
