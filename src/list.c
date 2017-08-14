@@ -292,30 +292,20 @@ void list_set_static_buttons(GtkWidget *list, int flags,
   }
 
   if(cb_edit) {
-#ifdef FREMANTLE_USE_POPUP
-    priv->button.widget[1] = cmenu_append(list, _("Edit"),
-			  GTK_SIGNAL_FUNC(cb_edit), data);
-#else
     priv->button.widget[1] = gtk_button_new_with_mnemonic(_("_Edit"));
     gtk_table_attach_defaults(GTK_TABLE(priv->table),
 			      priv->button.widget[1], 1, 2, 0, 1);
     g_signal_connect_swapped(GTK_OBJECT(priv->button.widget[1]), "clicked",
                              G_CALLBACK(cb_edit), data);
-#endif
     gtk_widget_set_sensitive(priv->button.widget[1], FALSE);
   }
 
   if(cb_remove) {
-#ifdef FREMANTLE_USE_POPUP
-    priv->button.widget[2] = cmenu_append(list, _("Remove"),
-			  GTK_SIGNAL_FUNC(cb_remove), data);
-#else
     priv->button.widget[2] = button_new_with_label(_("Remove"));
     gtk_table_attach_defaults(GTK_TABLE(priv->table),
 			      priv->button.widget[2], 2, 3, 0, 1);
     g_signal_connect_swapped(GTK_OBJECT(priv->button.widget[2]), "clicked",
                              G_CALLBACK(cb_remove), data);
-#endif
     gtk_widget_set_sensitive(priv->button.widget[2], FALSE);
   }
 }
@@ -425,10 +415,6 @@ GtkWidget *list_new(gboolean show_headers)
   GtkWidget *pannable_area = hildon_pannable_area_new();
   gtk_container_add(GTK_CONTAINER(pannable_area), priv->view);
   gtk_box_pack_start_defaults(GTK_BOX(vbox), pannable_area);
-
-#ifdef FREMANTLE_USE_POPUP
-  cmenu_init(vbox);
-#endif
 #endif
 
   /* make list react on clicks (double clicks on pre-fremantle) */
