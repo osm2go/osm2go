@@ -23,6 +23,7 @@
 
 #include <osm2go_cpp.h>
 
+#include <cstdio>
 #include <cstring>
 #include <ctype.h>
 #include <cmath>
