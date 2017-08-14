@@ -17,18 +17,16 @@
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "appdata.h"
-#include "config.h"
-#include "misc.h"
+#include "osm-gps-map-osd-select.h"
 
-#include <stdlib.h>  // abs
-#include <math.h>    // M_PI/cos()
+#include "config.h"
+#include "converter.h"
+#include "misc.h"
+#include "osm-gps-map.h"
 
 #include <cairo.h>
-
-#include "osm-gps-map.h"
-#include "converter.h"
-#include "osm-gps-map-osd-select.h"
+#include <math.h>    // M_PI/cos()
+#include <stdlib.h>  // abs
 
 #ifdef USE_HILDON
 #define OSD_W 80
