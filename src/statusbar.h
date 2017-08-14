@@ -24,10 +24,10 @@
 
 #define STATUSBAR_DEFAULT_BRIEF_TIME 3
 
-typedef struct statusbar_t {
-  GtkWidget * const widget;
-#ifdef __cplusplus
+struct statusbar_t {
   statusbar_t();
+
+  GtkWidget * const widget;
 
 #if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
   guint cid;
@@ -39,19 +39,10 @@ typedef struct statusbar_t {
 #endif
 
   void set(const char *msg, bool highlight);
-#endif
-} statusbar_t;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+};
 
 #ifndef USE_HILDON
 void statusbar_brief(statusbar_t *statusbar, const char *msg, gint timeout);
-#endif
-
-#ifdef __cplusplus
-}
 #endif
 
 #endif // STATUSBAR_H
