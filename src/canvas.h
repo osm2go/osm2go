@@ -64,8 +64,6 @@ typedef enum {
 typedef GooCanvasItem canvas_item_t;
 typedef GooCanvasPoints canvas_points_t;
 
-#ifdef __cplusplus
-
 class canvas_item_info_t;
 
 #include <vector>
@@ -81,13 +79,9 @@ struct canvas_t {
 
 typedef guint canvas_color_t;
 
-#endif
-
 #else
 #error "No canvas type defined!"
 #endif
-
-#ifdef __cplusplus
 
 enum canvas_item_type_t { CANVAS_ITEM_CIRCLE, CANVAS_ITEM_POLY };
 
@@ -196,7 +190,5 @@ gint canvas_item_get_segment(canvas_item_t *item, gint x, gint y);
 
 canvas_item_t *canvas_item_info_get_at(canvas_t *canvas, gint x, gint y);
 void canvas_item_info_push(canvas_t *canvas, canvas_item_t *item);
-
-#endif
 
 #endif // CANVAS_H
