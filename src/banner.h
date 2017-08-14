@@ -26,10 +26,6 @@
 #ifndef BANNER_H
 #define BANNER_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 struct appdata_t;
 
 // Shows a brief info splash in a suitable way for the app environment being used
@@ -43,10 +39,6 @@ void banner_busy_stop(appdata_t &appdata);
 
 // Clear any message created with banner_busy_start or banner_show_info
 void banner_clear(appdata_t &appdata);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif //BANNER_H
 // vim:et:ts=8:sw=2:sts=2:ai
