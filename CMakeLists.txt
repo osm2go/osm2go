@@ -193,6 +193,7 @@ if (MAEMO_FOUND)
 		add_definitions(-DFREMANTLE_PANNABLE_AREA)
 		set(PICKER_MENU On)
 		set(FREMANTLE On)
+		add_definitions(-DFREMANTLE)
 	endif ()
 
 	message(STATUS "Using application installer icon '${ICONNAME}'")
@@ -217,9 +218,7 @@ else ()
 	set(USE_SVG_ICONS_DEFAULT On)
 endif ()
 
-if (FREMANTLE)
-	add_definitions(-DFREMANTLE)
-else ()
+if (NOT FREMANTLE)
 	list(APPEND osm2go_SOURCE_FILES
 		src/scale_popup.cpp
 		src/scale_popup.h
