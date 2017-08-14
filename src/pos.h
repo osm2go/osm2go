@@ -78,9 +78,10 @@ typedef struct pos_t {
 #endif
 } pos_t;
 
+#ifdef __cplusplus
+
 /* local position */
 typedef struct lpos_t {
-#ifdef __cplusplus
   lpos_t() {}
   lpos_t(gint px, gint py)
     : x(px) , y(py) {}
@@ -91,11 +92,8 @@ typedef struct lpos_t {
    * @brief calculate the global coordinates from local position in given bounds
    */
   pos_t toPos(const bounds_t &bounds) const;
-#endif
   gint x, y;
 } lpos_t;
-
-#ifdef __cplusplus
 
 struct bounds_t {
   pos_t ll_min, ll_max;
