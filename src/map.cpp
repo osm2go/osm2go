@@ -1562,7 +1562,7 @@ static gboolean map_autosave(gpointer data) {
 
 map_t::map_t(appdata_t &a)
   : appdata(a)
-  , canvas(new canvas_t())
+  , canvas(canvas_t::create())
   , state(appdata.map_state)
   , autosave_handler_id(0)
   , highlight(O2G_NULLPTR)

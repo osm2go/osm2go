@@ -26,6 +26,18 @@
 
 #include <osm2go_cpp.h>
 
+struct canvas_goocanvas : public canvas_t {
+  canvas_goocanvas();
+
+  GooCanvasItem *group[CANVAS_GROUPS];
+
+  std::vector<canvas_item_info_t *> item_info[CANVAS_GROUPS];
+};
+
+canvas_t *canvas_t::create() {
+  return new canvas_goocanvas();
+}
+
 /* ------------------- creating and destroying the canvas ----------------- */
 
 static void canvas_delete(canvas_t *canvas) {
@@ -33,13 +45,9 @@ static void canvas_delete(canvas_t *canvas) {
 }
 
 /* create a new canvas */
-canvas_t::canvas_t()
-  : widget(goo_canvas_new())
+canvas_goocanvas::canvas_goocanvas()
+  : canvas_t(goo_canvas_new())
 {
-  g_object_set_data(G_OBJECT(widget), "canvas-pointer", this);
-
-  g_object_set(G_OBJECT(widget), "anchor", GTK_ANCHOR_CENTER, O2G_NULLPTR);
-
   GooCanvasItem *root = goo_canvas_get_root_item(GOO_CANVAS(widget));
 
   /* create the groups */
@@ -147,13 +155,16 @@ void canvas_set_bounds(canvas_t *canvas, gint minx, gint miny,
 
 void canvas_erase(canvas_t *canvas, gint group_mask) {
   int group;
+
+  canvas_goocanvas *gcanvas = static_cast<canvas_goocanvas *>(canvas);
+
   for(group=0;group<CANVAS_GROUPS;group++) {
 
     if(group_mask & (1<<group)) {
-      gint children = goo_canvas_item_get_n_children(canvas->group[group]);
+      gint children = goo_canvas_item_get_n_children(gcanvas->group[group]);
       printf("Removing %d children from group %d\n", children, group);
       while(children--)
-	goo_canvas_item_remove_child(canvas->group[group], children);
+	goo_canvas_item_remove_child(gcanvas->group[group], children);
     }
   }
 }
@@ -164,7 +175,8 @@ canvas_item_t *canvas_circle_new(canvas_t *canvas, canvas_group_t group,
 			 canvas_color_t fill_col, canvas_color_t border_col) {
 
   canvas_item_t *item =
-    goo_canvas_ellipse_new(canvas->group[group], x, y, radius, radius,
+    goo_canvas_ellipse_new(static_cast<canvas_goocanvas *>(canvas)->group[group],
+                           x, y, radius, radius,
                            "line-width", static_cast<double>(border),
 			   "stroke-color-rgba", border_col,
 			   "fill-color-rgba", fill_col,
@@ -201,8 +213,8 @@ void canvas_point_get_lpos(canvas_points_t *points, gint index, lpos_t *lpos) {
 canvas_item_t *canvas_polyline_new(canvas_t *canvas, canvas_group_t group,
 		  canvas_points_t *points, gint width, canvas_color_t color) {
   canvas_item_t *item =
-    goo_canvas_polyline_new(canvas->group[group], FALSE, 0,
-			    "points", points,
+    goo_canvas_polyline_new(static_cast<canvas_goocanvas *>(canvas)->group[group],
+                            FALSE, 0, "points", points,
                             "line-width", static_cast<double>(width),
 			    "stroke-color-rgba", color,
 			    "line-join", CAIRO_LINE_JOIN_ROUND,
@@ -219,8 +231,8 @@ canvas_item_t *canvas_polygon_new(canvas_t *canvas, canvas_group_t group,
 		  canvas_points_t *points, gint width, canvas_color_t color,
 				  canvas_color_t fill) {
   canvas_item_t *item =
-    goo_canvas_polyline_new(canvas->group[group], TRUE, 0,
-			    "points", points,
+    goo_canvas_polyline_new(static_cast<canvas_goocanvas *>(canvas)->group[group],
+                            TRUE, 0, "points", points,
                             "line-width", static_cast<double>(width),
 			    "stroke-color-rgba", color,
 			    "fill-color-rgba", fill,
@@ -238,8 +250,8 @@ canvas_item_t *canvas_polygon_new(canvas_t *canvas, canvas_group_t group,
 canvas_item_t *canvas_image_new(canvas_t *canvas, canvas_group_t group,
 		GdkPixbuf *pix, gint x, gint y, float hscale, float vscale) {
 
-  canvas_item_t *item = goo_canvas_image_new(canvas->group[group], pix,
-			                     x/hscale - gdk_pixbuf_get_width(pix)/2,
+  canvas_item_t *item = goo_canvas_image_new(static_cast<canvas_goocanvas *>(canvas)->group[group],
+                                             pix, x/hscale - gdk_pixbuf_get_width(pix)/2,
                                              y/vscale - gdk_pixbuf_get_height(pix)/2, O2G_NULLPTR);
   goo_canvas_item_scale(item, hscale, vscale);
 

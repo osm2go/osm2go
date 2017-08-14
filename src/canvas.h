@@ -24,6 +24,7 @@
 
 #include <glib.h>
 #include <gtk/gtk.h>
+#include <vector>
 
 /* --------- generic canvas --------- */
 
@@ -63,25 +64,24 @@ typedef enum {
 
 typedef GooCanvasItem canvas_item_t;
 typedef GooCanvasPoints canvas_points_t;
-
-class canvas_item_info_t;
-
-#include <vector>
-
-struct canvas_t {
-  canvas_t();
-
-  GtkWidget * const widget;
-  GooCanvasItem *group[CANVAS_GROUPS];
-
-  std::vector<canvas_item_info_t *> item_info[CANVAS_GROUPS];
-};
-
 typedef guint canvas_color_t;
 
 #else
 #error "No canvas type defined!"
 #endif
+
+class canvas_item_info_t;
+
+class canvas_t {
+protected:
+  canvas_t(GtkWidget *w);
+public:
+  static canvas_t *create();
+
+  GtkWidget * const widget;
+
+  std::vector<canvas_item_info_t *> item_info[CANVAS_GROUPS];
+};
 
 enum canvas_item_type_t { CANVAS_ITEM_CIRCLE, CANVAS_ITEM_POLY };
 
