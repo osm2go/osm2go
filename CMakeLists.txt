@@ -50,7 +50,6 @@ set(osm2go_SOURCE_FILES
 	src/banner.h
 	src/canvas.cpp
 	src/canvas.h
-	src/canvas_goocanvas.cpp
 	src/diff.cpp
 	src/diff.h
 	src/gps.h
@@ -131,7 +130,15 @@ set(DATA_DIR "${CMAKE_INSTALL_FULL_DATADIR}/${PROJECT_NAME}")
 
 option(PICKER_MENU "use a picker table for tagging preset selection" OFF)
 
+# required at the moment, but add proper checks to allow easier porting later
 pkg_search_module(GooCanvas REQUIRED IMPORTED_TARGET goocanvas)
+if (GooCanvas_FOUND)
+	list(APPEND osm2go_SOURCE_FILES
+		src/canvas_goocanvas.cpp
+	)
+	add_definitions(-DUSE_GOOCANVAS)
+	list(APPEND MORE_LIBS PUBLIC PkgConfig::GooCanvas)
+endif ()
 
 set(FREMANTLE Off)
 pkg_check_modules(MAEMO maemo-version)
@@ -221,7 +228,6 @@ endif ()
 
 find_library(MATH_LIBRARY m)
 
-add_definitions(-DUSE_GOOCANVAS)
 add_definitions("-DPACKAGE=\"${PROJECT_NAME}\"" "-DPREFIX=\"${CMAKE_INSTALL_PREFIX}\"" "-DVERSION=\"${PROJECT_VERSION}\"")
 
 if (libLocation_FOUND)
@@ -270,7 +276,6 @@ target_link_libraries(osm2go_lib
 		${CURL_LIBRARIES}
 		OpenSSL::SSL
 		${LIBXML2_LIBRARIES}
-		PkgConfig::GooCanvas
 )
 
 target_include_directories(osm2go_lib
