@@ -26,8 +26,6 @@
 #ifndef BANNER_H
 #define BANNER_H
 
-#include <glib.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
