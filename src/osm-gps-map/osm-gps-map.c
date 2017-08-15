@@ -76,7 +76,7 @@
 #include <gdk/gdkkeysyms.h>
 #endif
 
-#define USER_AGENT "OSM2go "VERSION" (https://github.com/osm2go/osm2go)"
+#define USER_AGENT "OSM2go " VERSION " (https://github.com/osm2go/osm2go)"
 
 struct _OsmGpsMapPrivate
 {

@@ -102,30 +102,6 @@ set(osm2go_SOURCE_FILES
 	${CMAKE_CURRENT_BINARY_DIR}/osm2go_cpp.h
 )
 
-pkg_search_module(SOUP IMPORTED_TARGET libsoup-2.4 libsoup-2.2)
-
-if (SOUP_FOUND)
-	add_definitions(-DENABLE_OSM_GPS_MAP)
-	list(APPEND osm2go_SOURCE_FILES
-		src/converter.c
-		src/converter.h
-		src/osm-gps-map.c
-		src/osm-gps-map.h
-		src/osm-gps-map-point.h
-		src/osm-gps-map-source.h
-		src/osm-gps-map-types.h
-		src/osm-gps-map-widget.h
-		src/osm-gps-map-osd-select.c
-		src/osm-gps-map-osd-select.h
-	)
-	list(APPEND MORE_LIBS PRIVATE PkgConfig::SOUP)
-	if (SOUP_VERSION VERSION_LESS 2.4)
-		set_property(SOURCE src/osm-gps-map.c APPEND PROPERTY COMPILE_DEFINITIONS LIBSOUP22)
-	endif ()
-else ()
-	message(WARNING "libsoup-2.4/2.2 missing, disabling internal map")
-endif ()
-
 set(DATA_DIR "${CMAKE_INSTALL_FULL_DATADIR}/${PROJECT_NAME}")
 
 option(PICKER_MENU "use a picker table for tagging preset selection" OFF)
@@ -218,6 +194,15 @@ if (NOT FREMANTLE)
 endif ()
 
 find_library(MATH_LIBRARY m)
+
+pkg_search_module(SOUP IMPORTED_TARGET libsoup-2.4 libsoup-2.2)
+
+if (SOUP_FOUND)
+	add_subdirectory(src/osm-gps-map)
+	list(APPEND MORE_LIBS PRIVATE osm-gps-map)
+else ()
+	message(WARNING "libsoup-2.4/2.2 missing, disabling internal map")
+endif ()
 
 add_definitions("-DPACKAGE=\"${PROJECT_NAME}\"" "-DPREFIX=\"${CMAKE_INSTALL_PREFIX}\"" "-DVERSION=\"${PROJECT_VERSION}\"")
 
