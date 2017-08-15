@@ -23,8 +23,6 @@
 #include <locale.h>
 #include <libintl.h>
 
-#define LOCALEDIR PREFIX "/locale"
-
 #define _(String) gettext(String)
 
 #ifdef USE_HILDON

@@ -51,6 +51,8 @@
 #include <curl/curl.h>
 #include <gdk/gdkkeysyms.h>
 
+#define LOCALEDIR PREFIX "/locale"
+
 /* disable/enable main screen control dependant on presence of open project */
 void main_ui_enable(appdata_t &appdata) {
   gboolean project_valid = (appdata.project != O2G_NULLPTR);

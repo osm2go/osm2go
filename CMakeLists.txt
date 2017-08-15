@@ -206,7 +206,6 @@ endif ()
 
 target_compile_definitions(osm2go_lib
 		PUBLIC PACKAGE="${PROJECT_NAME}"
-		PUBLIC PREFIX="${CMAKE_INSTALL_PREFIX}"
 		PUBLIC VERSION="${PROJECT_VERSION}"
 )
 
@@ -267,6 +266,10 @@ add_executable(osm2go
 
 target_link_libraries(osm2go
 	osm2go_lib
+)
+
+target_compile_definitions(osm2go
+		PRIVATE PREFIX="${CMAKE_INSTALL_PREFIX}"
 )
 
 if (MAEMO_FOUND)
