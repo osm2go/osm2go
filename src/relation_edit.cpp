@@ -362,7 +362,7 @@ static GtkWidget *relation_item_list_widget(relitem_context_t &context) {
   g_signal_connect(G_OBJECT(selection), "changed",
 		   G_CALLBACK(changed), &context);
 
-#ifndef FREMANTLE_PANNABLE_AREA
+#ifndef FREMANTLE
   /* put view into a scrolled window */
   GtkWidget *scrolled_window = gtk_scrolled_window_new(O2G_NULLPTR, O2G_NULLPTR);
   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window),
@@ -547,7 +547,7 @@ static GtkWidget *member_list_widget(member_context_t &context) {
   GtkWidget *vbox = gtk_vbox_new(FALSE,3);
   GtkWidget * const view =
 
-#ifndef FREMANTLE_PANNABLE_AREA
+#ifndef FREMANTLE
         gtk_tree_view_new();
 #else
         hildon_gtk_tree_view_new(HILDON_UI_MODE_EDIT);
@@ -612,7 +612,7 @@ static GtkWidget *member_list_widget(member_context_t &context) {
 
   g_object_unref(store);
 
-#ifndef FREMANTLE_PANNABLE_AREA
+#ifndef FREMANTLE
   /* put it into a scrolled window */
   GtkWidget *scrolled_window = gtk_scrolled_window_new(O2G_NULLPTR, O2G_NULLPTR);
   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window),

@@ -387,7 +387,7 @@ GtkWidget *list_new(gboolean show_headers)
   g_signal_connect_swapped(G_OBJECT(vbox), "destroy",
                            G_CALLBACK(g_free), priv);
 
-#ifndef FREMANTLE_PANNABLE_AREA
+#ifndef FREMANTLE
   priv->view = gtk_tree_view_new();
 #else
   priv->view = hildon_gtk_tree_view_new(HILDON_UI_MODE_EDIT);
@@ -401,7 +401,7 @@ GtkWidget *list_new(gboolean show_headers)
 
   g_signal_connect(G_OBJECT(sel), "changed", G_CALLBACK(changed), vbox);
 
-#ifndef FREMANTLE_PANNABLE_AREA
+#ifndef FREMANTLE
   /* put view into a scrolled window */
   GtkWidget *scrolled_window = gtk_scrolled_window_new(NULL, NULL);
   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window),

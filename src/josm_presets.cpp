@@ -305,7 +305,7 @@ static void presets_item_dialog(presets_context_t *context,
     gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), table);
     gtk_window_set_default_size(GTK_WINDOW(dialog), 300, 50);
 #else
-#ifndef FREMANTLE_PANNABLE_AREA
+#ifndef FREMANTLE
     /* put it into a scrolled window */
     GtkWidget *scroll_win = gtk_scrolled_window_new(O2G_NULLPTR, O2G_NULLPTR);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll_win),
@@ -712,7 +712,7 @@ static GtkWidget *presets_picker_embed(GtkTreeView *view, GtkListStore *store,
 
   /* put this inside a scrolled view */
   GtkWidget *c;
-#ifndef FREMANTLE_PANNABLE_AREA
+#ifndef FREMANTLE
   c = gtk_scrolled_window_new (O2G_NULLPTR, O2G_NULLPTR);
   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(c),
 				 GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);

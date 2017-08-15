@@ -918,7 +918,7 @@ void fitting_layers_functor::operator()(const wms_layer_t *layer)
 static GtkWidget *wms_layer_widget(selected_context *context, const wms_layer_t::list &layers,
                                    GtkWidget *) {
 
-#ifndef FREMANTLE_PANNABLE_AREA
+#ifndef FREMANTLE
   GtkWidget *view = gtk_tree_view_new();
 #else
   GtkWidget *view = hildon_gtk_tree_view_new(HILDON_UI_MODE_EDIT);
@@ -960,7 +960,7 @@ static GtkWidget *wms_layer_widget(selected_context *context, const wms_layer_t:
 
   g_signal_connect(G_OBJECT(selection), "changed", G_CALLBACK(changed), &context->selected);
 
-#ifndef FREMANTLE_PANNABLE_AREA
+#ifndef FREMANTLE
   /* put it into a scrolled window */
   GtkWidget *scrolled_window = gtk_scrolled_window_new(O2G_NULLPTR, O2G_NULLPTR);
   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window),
