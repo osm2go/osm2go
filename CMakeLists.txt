@@ -132,7 +132,7 @@ if (MAEMO_FOUND)
 	# prefer gpsbt over liblocation as we got complaints regarding liblocation stability
 	pkg_check_modules(GPSBT IMPORTED_TARGET gpsbt)
 	if (GPSBT_FOUND)
-		list(APPEND MODE_LIBS PkgConfig::GPSBT)
+		target_link_libraries(osm2go_lib PRIVATE PkgConfig::GPSBT)
 		target_compile_definitions(osm2go_lib PRIVATE ENABLE_GPSBT)
 	else ()
 		pkg_check_modules(libLocation IMPORTED_TARGET liblocation)
