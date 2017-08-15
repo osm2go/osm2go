@@ -40,7 +40,7 @@ write_compiler_detection_header(
 "
 )
 
-set(osm2go_SOURCE_FILES
+add_library(osm2go_lib STATIC
 	src/about.cpp
 	src/about.h
 	src/appdata.h
@@ -109,11 +109,11 @@ option(PICKER_MENU "use a picker table for tagging preset selection" OFF)
 # required at the moment, but add proper checks to allow easier porting later
 pkg_search_module(GooCanvas REQUIRED IMPORTED_TARGET goocanvas)
 if (GooCanvas_FOUND)
-	list(APPEND osm2go_SOURCE_FILES
+	target_sources(osm2go_lib PRIVATE
 		src/canvas_goocanvas.cpp
 	)
-	add_definitions(-DUSE_GOOCANVAS)
-	list(APPEND MORE_LIBS PUBLIC PkgConfig::GooCanvas)
+	target_compile_definitions(osm2go_lib PUBLIC USE_GOOCANVAS)
+	target_link_libraries(osm2go_lib PUBLIC PkgConfig::GooCanvas)
 endif ()
 
 set(FREMANTLE Off)
@@ -123,7 +123,7 @@ if (MAEMO_FOUND)
 	pkg_check_modules(Osso REQUIRED IMPORTED_TARGET libosso)
 	pkg_check_modules(Hildon_FM2 REQUIRED IMPORTED_TARGET hildon-fm-2)
 
-	list(APPEND MORE_LIBS PUBLIC
+	target_link_libraries(osm2go_lib PUBLIC
 			PkgConfig::Hildon
 			PkgConfig::Osso
 			PkgConfig::Hildon_FM2
@@ -133,11 +133,11 @@ if (MAEMO_FOUND)
 	pkg_check_modules(GPSBT IMPORTED_TARGET gpsbt)
 	if (GPSBT_FOUND)
 		list(APPEND MODE_LIBS PkgConfig::GPSBT)
-		add_definitions(-DENABLE_GPSBT)
+		target_compile_definitions(osm2go_lib PRIVATE ENABLE_GPSBT)
 	else ()
 		pkg_check_modules(libLocation IMPORTED_TARGET liblocation)
 		if (libLocation_FOUND)
-			list(APPEND MORE_LIBS PRIVATE PkgConfig::libLocation)
+			target_link_libraries(osm2go_lib PRIVATE PkgConfig::libLocation)
 		else ()
 			message(WARNING "No liblocation nor gpsbt found, disabling gps auto start!")
 		endif ()
@@ -146,12 +146,12 @@ if (MAEMO_FOUND)
 	pkg_check_modules(TabletBrowserInterface REQUIRED tablet-browser-interface)
 
 	# maemo uses dbus for ipc with maemo mapper
-	list(APPEND osm2go_SOURCE_FILES
+	target_sources(osm2go_lib PRIVATE
 		src/dbus.c
 		src/dbus.h
 	)
 
-	add_definitions(-DUSE_HILDON)
+	target_compile_definitions(osm2go_lib PUBLIC USE_HILDON)
 
 	# fremantle uses icons of 48x48 pixels for the app installer,
 	# older versions used 26x26
@@ -163,7 +163,7 @@ if (MAEMO_FOUND)
 		set(DATA_DIR "/opt/${PROJECT_NAME}")
 		set(PICKER_MENU On)
 		set(FREMANTLE On)
-		add_definitions(-DFREMANTLE)
+		target_compile_definitions(osm2go_lib PUBLIC FREMANTLE)
 	endif ()
 
 	message(STATUS "Using application installer icon '${ICONNAME}'")
@@ -181,13 +181,13 @@ if (MAEMO_FOUND)
 else ()
 	find_package(GTK2 REQUIRED)
 
-	list(APPEND MORE_LIBS PUBLIC ${GTK2_TARGETS})
+	target_link_libraries(osm2go_lib PUBLIC ${GTK2_TARGETS})
 
 	set(USE_SVG_ICONS_DEFAULT On)
 endif ()
 
 if (NOT FREMANTLE)
-	list(APPEND osm2go_SOURCE_FILES
+	target_sources(osm2go_lib PRIVATE
 		src/scale_popup.cpp
 		src/scale_popup.h
 	)
@@ -199,19 +199,23 @@ pkg_search_module(SOUP IMPORTED_TARGET libsoup-2.4 libsoup-2.2)
 
 if (SOUP_FOUND)
 	add_subdirectory(src/osm-gps-map)
-	list(APPEND MORE_LIBS PRIVATE osm-gps-map)
+	target_link_libraries(osm2go_lib PRIVATE osm-gps-map)
 else ()
 	message(WARNING "libsoup-2.4/2.2 missing, disabling internal map")
 endif ()
 
-add_definitions("-DPACKAGE=\"${PROJECT_NAME}\"" "-DPREFIX=\"${CMAKE_INSTALL_PREFIX}\"" "-DVERSION=\"${PROJECT_VERSION}\"")
+target_compile_definitions(osm2go_lib
+		PUBLIC PACKAGE="${PROJECT_NAME}"
+		PUBLIC PREFIX="${CMAKE_INSTALL_PREFIX}"
+		PUBLIC VERSION="${PROJECT_VERSION}"
+)
 
 if (libLocation_FOUND)
-	list(APPEND osm2go_SOURCE_FILES src/gps_liblocation.cpp)
+	target_sources(osm2go_lib PRIVATE src/gps_liblocation.cpp)
 else ()
 	pkg_check_modules(GVFS REQUIRED IMPORTED_TARGET gnome-vfs-module-2.0)
-	list(APPEND osm2go_SOURCE_FILES src/gps.cpp)
-	list(APPEND MORE_LIBS PRIVATE PkgConfig::GVFS)
+	target_sources(osm2go_lib PRIVATE src/gps.cpp)
+	target_link_libraries(osm2go_lib PRIVATE PkgConfig::GVFS)
 endif ()
 
 cmake_push_check_state(RESET)
@@ -240,12 +244,7 @@ if (USE_SVG_ICONS)
 	set_property(SOURCE src/icon.cpp APPEND PROPERTY COMPILE_DEFINITIONS USE_SVG_ICONS)
 endif ()
 
-add_library(osm2go_lib STATIC
-	${osm2go_SOURCE_FILES}
-)
-
 target_link_libraries(osm2go_lib
-	${MORE_LIBS}
 	PRIVATE
 		${MATH_LIBRARY}
 	PUBLIC
