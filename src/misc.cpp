@@ -31,12 +31,10 @@
 #include <hildon/hildon-note.h>
 #endif
 
-#ifdef ENABLE_BROWSER_INTERFACE
 #ifdef USE_HILDON
 #include <tablet-browser-interface.h>
 #else
 #include <gtk/gtk.h>
-#endif
 #endif
 
 #include <cmath>
@@ -608,7 +606,6 @@ GType combo_box_entry_type(void) {
 /* ---------- simple interface to the systems web browser ---------- */
 void open_url(struct appdata_t &appdata, const char *url)
 {
-#ifdef ENABLE_BROWSER_INTERFACE
 #ifndef USE_HILDON
   gtk_show_uri(O2G_NULLPTR, url, GDK_CURRENT_TIME, O2G_NULLPTR);
   (void)appdata;
@@ -617,10 +614,6 @@ void open_url(struct appdata_t &appdata, const char *url)
                              OSSO_BROWSER_OPEN_NEW_WINDOW_REQ, O2G_NULLPTR,
                              DBUS_TYPE_STRING, url,
                              DBUS_TYPE_BOOLEAN, FALSE, DBUS_TYPE_INVALID);
-#endif
-#else
-  (void)appdata;
-  (void)url;
 #endif
 }
 

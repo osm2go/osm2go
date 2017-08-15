@@ -37,8 +37,6 @@
 
 #include <osm2go_cpp.h>
 
-#ifdef ENABLE_BROWSER_INTERFACE
-
 static gboolean on_link_clicked(GtkWidget *widget, GdkEventButton *,
                                 appdata_t *appdata) {
   const char *str = gtk_label_get_text(GTK_LABEL(gtk_bin_get_child(GTK_BIN(widget))));
@@ -46,10 +44,8 @@ static gboolean on_link_clicked(GtkWidget *widget, GdkEventButton *,
   open_url(*appdata, str);
   return TRUE;
 }
-#endif
 
 static GtkWidget *link_new(appdata_t *appdata, const char *url) {
-#ifdef ENABLE_BROWSER_INTERFACE
   GtkWidget *label = gtk_label_new(O2G_NULLPTR);
   char *str = g_strconcat("<span color=\"" LINK_COLOR "\"><u>", url,
                           "</u></span>", O2G_NULLPTR);
@@ -62,21 +58,12 @@ static GtkWidget *link_new(appdata_t *appdata, const char *url) {
   g_signal_connect(eventbox, "button-press-event",
                    G_CALLBACK(on_link_clicked), appdata);
   return eventbox;
-#else
-  GtkWidget *label = gtk_label_new(O2G_NULLPTR);
-  char *str = g_strconcat("<span color=\"" LINK_COLOR "\">", url, "</span>", O2G_NULLPTR);
-  gtk_label_set_markup(GTK_LABEL(label), str);
-  g_free(str);
-  return label;
-#endif
 }
 
-#ifdef ENABLE_BROWSER_INTERFACE
 static void on_paypal_button_clicked(appdata_t *appdata) {
   open_url(*appdata,
            "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=7400558");
 }
-#endif
 
 static GtkWidget *label_big(const char *str) {
   GtkWidget *label = gtk_label_new(O2G_NULLPTR);
@@ -277,7 +264,6 @@ static GtkWidget *donate_page_new(appdata_t *appdata) {
   gtk_box_pack_start_defaults(GTK_BOX(vbox),
 			      link_new(O2G_NULLPTR, "till@harbaum.org"));
 
-#ifdef ENABLE_BROWSER_INTERFACE
   gtk_box_pack_start_defaults(GTK_BOX(vbox),
       label_wrap(_("or you can just click the button below which will open "
 		   "the appropriate web page in your browser.")));
@@ -290,7 +276,6 @@ static GtkWidget *donate_page_new(appdata_t *appdata) {
                            G_CALLBACK(on_paypal_button_clicked), appdata);
   gtk_box_pack_start(GTK_BOX(ihbox), button, TRUE, FALSE, 0);
   gtk_box_pack_start_defaults(GTK_BOX(vbox), ihbox);
-#endif
 
   return vbox;
 }

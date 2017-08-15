@@ -167,10 +167,7 @@ if (MAEMO_FOUND)
 		endif ()
 	endif ()
 
-	pkg_check_modules(TabletBrowserInterface tablet-browser-interface)
-	if (TabletBrowserInterface_FOUND)
-		add_definitions(-DENABLE_BROWSER_INTERFACE)
-	endif ()
+	pkg_check_modules(TabletBrowserInterface REQUIRED tablet-browser-interface)
 
 	# maemo uses dbus for ipc with maemo mapper
 	list(APPEND osm2go_SOURCE_FILES
@@ -207,8 +204,6 @@ if (MAEMO_FOUND)
 	set(USE_SVG_ICONS_DEFAULT Off)
 else ()
 	find_package(GTK2 REQUIRED)
-
-	add_definitions(-DENABLE_BROWSER_INTERFACE)
 
 	list(APPEND MORE_LIBS PUBLIC ${GTK2_TARGETS})
 

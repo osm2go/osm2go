@@ -70,12 +70,10 @@ unsigned int presets_type_mask(const object_t &obj)
   return r;
 }
 
-#ifdef ENABLE_BROWSER_INTERFACE
 static void on_info(GtkWidget *widget, appdata_t *appdata) {
   const char *link = static_cast<char *>(g_object_get_data(G_OBJECT(widget), "link"));
   open_url(*appdata, link);
 }
-#endif
 
 /* --------------------- the items dialog -------------------- */
 
@@ -266,7 +264,6 @@ static void presets_item_dialog(presets_context_t *context,
 		      GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
 		      O2G_NULLPTR);
 
-#ifdef ENABLE_BROWSER_INTERFACE
     /* if a web link has been provided for this item install */
     /* a button for this */
     if(!item->link.empty()) {
@@ -276,7 +273,7 @@ static void presets_item_dialog(presets_context_t *context,
       g_signal_connect(GTK_OBJECT(button), "clicked",
                        G_CALLBACK(on_info), &appdata);
     }
-#endif
+
     /* special handling for the first label/separators */
     if(item->addEditName) {
       gchar *title = g_strdup_printf(_("Edit %s"), item->name.c_str());
