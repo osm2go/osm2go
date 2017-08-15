@@ -21,10 +21,8 @@
 #define MAP_H
 
 #include "canvas.h"
-#ifdef __cplusplus
 #include "osm.h"
 #include <vector>
-#endif
 
 #define MAP_LAYER_ALL (0xffff)
 #define MAP_LAYER_OBJECTS_ONLY ((1<<CANVAS_GROUP_POLYGONS) | (1<<CANVAS_GROUP_WAYS_HL) | (1<<CANVAS_GROUP_WAYS_OL) | (1<<CANVAS_GROUP_WAYS) | (1<<CANVAS_GROUP_WAYS_INT) | (1<<CANVAS_GROUP_NODES_HL) | (1<<CANVAS_GROUP_NODES_IHL) | (1<<CANVAS_GROUP_NODES) | (1<<CANVAS_GROUP_WAYS_DIR))
@@ -62,7 +60,6 @@ enum map_action_t {
   MAP_ACTION_WAY_CUT,
 };
 
-#ifdef __cplusplus
 struct appdata_t;
 struct track_seg_t;
 struct track_t;
@@ -196,6 +193,5 @@ map_item_t *map_real_item_at(map_t *map, gint x, gint y);
 void map_outside_error(appdata_t &appdata);
 
 void map_item_chain_destroy(map_item_chain_t *&chainP);
-#endif
 
 #endif // MAP_H
