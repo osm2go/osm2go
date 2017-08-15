@@ -371,15 +371,6 @@ GType entry_type(void) {
 #endif
 }
 
-GtkWidget *button_new(void) {
-  GtkWidget *button = gtk_button_new();
-#ifdef FREMANTLE
-  hildon_gtk_widget_set_theme_size(button,
-           static_cast<HildonSizeType>(HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH));
-#endif
-  return button;
-}
-
 GtkWidget *button_new_with_label(const gchar *label) {
   GtkWidget *button = gtk_button_new_with_label(label);
 #ifdef FREMANTLE

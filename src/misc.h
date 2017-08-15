@@ -202,7 +202,6 @@ extern "C" {
                                         } G_STMT_END
 #endif
 
-GtkWidget *button_new(void);
 GtkWidget *button_new_with_label(const gchar *label);
 
 #ifdef __cplusplus
