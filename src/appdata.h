@@ -125,7 +125,7 @@ typedef struct appdata_t {
   GtkWidget *menu_item_view_fullscreen;
 #endif
 
-#if defined(USE_HILDON) && (MAEMO_VERSION_MAJOR == 5)
+#ifdef FREMANTLE
   /* submenues are seperate menues under fremantle */
   GtkWidget *app_menu_view, *app_menu_wms, *app_menu_track;
   GtkWidget *app_menu_map;

@@ -328,7 +328,7 @@ GtkWidget *misc_dialog_new(int hint, const gchar *title,
   return dialog;
 }
 
-#if defined(USE_HILDON) && (MAEMO_VERSION_MAJOR == 5)
+#ifdef FREMANTLE
 #include <hildon/hildon-pannable-area.h>
 /* create a pannable area */
 GtkWidget *misc_scrolled_window_new(gboolean) {
@@ -489,7 +489,7 @@ void notebook_append_page(GtkWidget *notebook,
   g_signal_connect(GTK_OBJECT(button), "clicked",
                    G_CALLBACK(on_notebook_button_clicked), notebook);
 
-#if defined(USE_HILDON) && (MAEMO_VERSION_MAJOR == 5)
+#ifdef FREMANTLE
   hildon_gtk_widget_set_theme_size(button,
 	   static_cast<HildonSizeType>(HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH));
 #endif

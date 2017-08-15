@@ -1117,7 +1117,7 @@ appdata_t::appdata_t()
 #if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
   , menu_item_view_fullscreen(O2G_NULLPTR)
 #endif
-#if defined(USE_HILDON) && (MAEMO_VERSION_MAJOR == 5)
+#ifdef FREMANTLE
   , app_menu_view(O2G_NULLPTR)
   , app_menu_wms(O2G_NULLPTR)
   , app_menu_track(O2G_NULLPTR)
@@ -1229,7 +1229,7 @@ static gboolean on_window_key_press(GtkWidget *, GdkEventKey *event, appdata_t *
   return handled;
 }
 
-#if (MAEMO_VERSION_MAJOR == 5) && !defined(__i386__)
+#if defined(FREMANTLE) && !defined(__i386__)
 /* get access to zoom buttons */
 static void
 on_window_realize(GtkWidget *widget, gpointer) {
@@ -1298,7 +1298,7 @@ static int application_run(const char *proj)
 
   /* try to enable the zoom buttons. don't do this on x86 as it breaks */
   /* at runtime with cygwin x */
-#if (MAEMO_VERSION_MAJOR == 5) && !defined(__i386__)
+#if defined(FREMANTLE) && !defined(__i386__)
   g_signal_connect(G_OBJECT(appdata.window), "realize",
 		   G_CALLBACK(on_window_realize), O2G_NULLPTR);
 #endif // MAEMO_VERSION_MAJOR

@@ -23,7 +23,7 @@
 #include <glib.h>
 #include <gtk/gtk.h>
 
-#if defined(USE_HILDON) && (MAEMO_VERSION_MAJOR == 5)
+#ifdef FREMANTLE
 #define FINGER_UI
 #endif
 
