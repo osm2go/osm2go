@@ -27,7 +27,7 @@
 /* only maemo devices up to version 4 have a fullscreen button */
 #ifdef USE_HILDON
 #include <hildon/hildon-defines.h>
-#if (MAEMO_VERSION_MAJOR < 5)
+#ifndef FREMANTLE
 #define OSM_GPS_MAP_KEY_FULLSCREEN  HILDON_HARDKEY_FULLSCREEN
 #else
 #define OSM_GPS_MAP_KEY_FULLSCREEN  'f'

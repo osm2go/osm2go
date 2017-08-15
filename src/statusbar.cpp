@@ -29,7 +29,7 @@ static GdkColor color_red() {
 
 static void statusbar_highlight(statusbar_t *statusbar, bool highlight) {
   GtkWidget * const w =
-#if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
+#ifndef FREMANTLE
       GTK_STATUSBAR(statusbar->widget)->label;
 #else
       statusbar->widget;
@@ -41,7 +41,7 @@ static void statusbar_highlight(statusbar_t *statusbar, bool highlight) {
   gtk_widget_modify_text(w, GTK_STATE_NORMAL, col);
 }
 
-#if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
+#ifndef FREMANTLE
 // Set the persistent message, replacing anything currently there.
 void statusbar_t::set(const char *msg, bool highlight) {
   statusbar_highlight(this, highlight);
@@ -120,7 +120,7 @@ void statusbar_t::set(const char *msg, bool highlight) {
 #endif
 
 statusbar_t::statusbar_t()
-#if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
+#ifndef FREMANTLE
   : widget(gtk_statusbar_new())
   , cid(gtk_statusbar_get_context_id(GTK_STATUSBAR(widget), "Msg"))
   , mid(0)

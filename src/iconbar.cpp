@@ -237,7 +237,7 @@ iconbar_t::iconbar_t(appdata_t &appdata)
 #endif
 
   gtk_toolbar_set_style(GTK_TOOLBAR(toolbar),
-#if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
+#ifndef FREMANTLE
                                               GTK_TOOLBAR_ICONS);
 #else
                                               GTK_TOOLBAR_BOTH);

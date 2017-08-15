@@ -129,7 +129,7 @@ gps_liblocation_state_t::~gps_liblocation_state_t()
 
 #ifdef LL_CONTROL_GPSD
   if(control
-#if MAEMO_VERSION_MAJOR < 5
+#ifndef FREMANTLE
      && control->can_control
 #endif
      ) {
@@ -147,7 +147,7 @@ void gps_liblocation_state_t::setEnable(bool en)
 {
   if(en != gps_is_on) {
     if(device && control
-#if MAEMO_VERSION_MAJOR < 5
+#ifndef FREMANTLE
        && control->can_control
 #endif
        ) {

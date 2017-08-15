@@ -121,11 +121,9 @@ typedef struct appdata_t {
     int warn_cnt;
   } track;
 
-#if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
+#ifndef FREMANTLE
   GtkWidget *menu_item_view_fullscreen;
-#endif
-
-#ifdef FREMANTLE
+#else
   /* submenues are seperate menues under fremantle */
   GtkWidget *app_menu_view, *app_menu_wms, *app_menu_track;
   GtkWidget *app_menu_map;

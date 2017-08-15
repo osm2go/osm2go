@@ -101,7 +101,7 @@ static void vmessagef(GtkWidget *parent, GtkMessageType type, GtkButtonsType but
 
   char *buf = g_strdup_vprintf(fmt, args);
 
-#if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
+#ifndef FREMANTLE
   GtkWidget *dialog = gtk_message_dialog_new(
 			   GTK_WINDOW(parent),
 			   GTK_DIALOG_DESTROY_WITH_PARENT,
@@ -114,7 +114,7 @@ static void vmessagef(GtkWidget *parent, GtkMessageType type, GtkButtonsType but
   (void)type;
   (void)buttons;
   (void)title;
-#endif
+#endif // FREMANTLE
 
   gtk_dialog_run(GTK_DIALOG(dialog));
   gtk_widget_destroy(dialog);
@@ -279,7 +279,7 @@ std::string find_file(const std::string &n) {
 #ifdef USE_HILDON
 static const gint dialog_sizes[][2] = {
   { 400, 100 },  // SMALL
-#if MAEMO_VERSION_MAJOR < 5
+#ifndef FREMANTLE
   { 450, 300 },  // MEDIUM
   { 800, 480 },  // LARGE
 #else

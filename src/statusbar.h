@@ -29,7 +29,7 @@ struct statusbar_t {
 
   GtkWidget * const widget;
 
-#if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
+#ifndef FREMANTLE
   guint cid;
   guint mid;
 #endif

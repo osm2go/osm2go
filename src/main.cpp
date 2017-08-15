@@ -67,7 +67,7 @@ void main_ui_enable(appdata_t &appdata) {
     map_action_cancel(appdata.map);
 
   /* ---- set project name as window title ----- */
-#if defined(USE_HILDON) && MAEMO_VERSION_MAJOR < 5
+#if defined(USE_HILDON) && !defined(FREMANTLE)
   if(project_valid)
     gtk_window_set_title(GTK_WINDOW(appdata.window), appdata.project->name.c_str());
   else
@@ -250,7 +250,7 @@ cb_menu_osm_relations(appdata_t *appdata) {
   relation_list(GTK_WIDGET(appdata->window), *appdata);
 }
 
-#if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
+#ifndef FREMANTLE
 static void
 cb_menu_fullscreen(appdata_t *appdata, MENU_CHECK_ITEM *item) {
   if(MENU_CHECK_ITEM_ACTIVE(item))
@@ -288,14 +288,13 @@ cb_scale_popup(GtkWidget *button, appdata_t *appdata) {
 }
 #endif
 
-#if defined(FREMANTLE) || (MAEMO_VERSION_MAJOR != 5)
 static void
 cb_menu_view_detail_inc(appdata_t *appdata) {
   printf("detail level increase\n");
   map_detail_increase(appdata->map);
 }
 
-#if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
+#ifndef FREMANTLE
 static void
 cb_menu_view_detail_normal(appdata_t *appdata) {
   printf("detail level normal\n");
@@ -308,7 +307,6 @@ cb_menu_view_detail_dec(appdata_t *appdata) {
   printf("detail level decrease\n");
   map_detail_decrease(appdata->map);
 }
-#endif
 
 static void
 cb_menu_track_import(appdata_t *appdata) {
@@ -473,7 +471,7 @@ cb_menu_track_export(appdata_t *appdata) {
 #endif
 
 
-#if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
+#ifndef FREMANTLE
 // Half-arsed slapdash common menu item constructor. Let's use GtkBuilder
 // instead so we have some flexibility.
 
@@ -600,7 +598,7 @@ static void menu_create(appdata_t &appdata) {
   gtk_menu_set_accel_group(GTK_MENU(submenu), accel_grp);
   gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), submenu);
 
-#if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
+#ifndef FREMANTLE
   appdata.menu_item_view_fullscreen = menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_fullscreen), _("_Fullscreen"),
     GTK_STOCK_FULLSCREEN, "<OSM2Go-Main>/View/Fullscreen",
@@ -608,7 +606,7 @@ static void menu_create(appdata_t &appdata) {
   );
 #endif
 
-#if !defined(USE_HILDON)
+#ifndef USE_HILDON
   menu_append_new_item(
     appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_zoomin), _("Zoom _in"),
     GTK_STOCK_ZOOM_IN, "<OSM2Go-Main>/View/ZoomIn",
@@ -825,7 +823,7 @@ static void menu_create(appdata_t &appdata) {
 
 void menu_cleanup(appdata_t &) { }
 
-#else // !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
+#else // !FREMANTLE
 
 struct menu_entry_t {
   typedef gboolean (*toggle_cb)(appdata_t &appdata);
@@ -1114,7 +1112,7 @@ appdata_t::appdata_t()
 #ifdef USE_HILDON
   , banner(O2G_NULLPTR)
 #endif
-#if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
+#ifndef FREMANTLE
   , menu_item_view_fullscreen(O2G_NULLPTR)
 #endif
 #ifdef FREMANTLE
@@ -1199,13 +1197,13 @@ static gboolean on_window_key_press(GtkWidget *, GdkEventKey *event, appdata_t *
   // the map handles some keys on its own ...
   switch(event->keyval) {
 
-#if !defined(USE_HILDON) || (MAEMO_VERSION_MAJOR < 5)
+#ifndef FREMANTLE
 #ifdef USE_HILDON
     /* this is in fact a mapping to GDK_F6 */
   case HILDON_HARDKEY_FULLSCREEN:
-#else
+#else // USE_HILDON
   case GDK_F11:
-#endif
+#endif // USE_HILDON
     if(!gtk_check_menu_item_get_active(
              GTK_CHECK_MENU_ITEM(appdata->menu_item_view_fullscreen))) {
       gtk_window_fullscreen(GTK_WINDOW(appdata->window));
@@ -1219,7 +1217,7 @@ static gboolean on_window_key_press(GtkWidget *, GdkEventKey *event, appdata_t *
 
     handled = TRUE;
     break;
-#endif
+#endif // !FREMANTLE
   }
 
   /* forward unprocessed key presses to map */
@@ -1289,7 +1287,7 @@ static int application_run(const char *proj)
   g_set_application_name("OSM2Go");
 
   /* Create HildonWindow and set it to HildonProgram */
-#if MAEMO_VERSION_MAJOR < 5
+#ifndef FREMANTLE
   appdata.window = HILDON_WINDOW(hildon_window_new());
 #else
   appdata.window = HILDON_WINDOW(hildon_stackable_window_new());
@@ -1301,7 +1299,7 @@ static int application_run(const char *proj)
 #if defined(FREMANTLE) && !defined(__i386__)
   g_signal_connect(G_OBJECT(appdata.window), "realize",
 		   G_CALLBACK(on_window_realize), O2G_NULLPTR);
-#endif // MAEMO_VERSION_MAJOR
+#endif // FREMANTLE
 
 #else
   /* Create a Window. */

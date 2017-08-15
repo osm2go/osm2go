@@ -143,8 +143,6 @@ endif ()
 set(FREMANTLE Off)
 pkg_check_modules(MAEMO maemo-version)
 if (MAEMO_FOUND)
-	string(REGEX REPLACE "^([0-9]+)\\..*" "\\1" MAEMO_VERSION_MAJOR "${MAEMO_VERSION}")
-
 	pkg_check_modules(Hildon REQUIRED IMPORTED_TARGET hildon-1)
 	pkg_check_modules(Osso REQUIRED IMPORTED_TARGET libosso)
 	pkg_check_modules(Hildon_FM2 REQUIRED IMPORTED_TARGET hildon-fm-2)
@@ -180,7 +178,7 @@ if (MAEMO_FOUND)
 		src/dbus.h
 	)
 
-	add_definitions(-DMAEMO_VERSION_MAJOR=${MAEMO_VERSION_MAJOR} -DUSE_HILDON)
+	add_definitions(-DUSE_HILDON)
 
 	# fremantle uses icons of 48x48 pixels for the app installer,
 	# older versions used 26x26
@@ -211,7 +209,7 @@ if (MAEMO_FOUND)
 else ()
 	find_package(GTK2 REQUIRED)
 
-	add_definitions(-DENABLE_BROWSER_INTERFACE -DMAEMO_VERSION_MAJOR)
+	add_definitions(-DENABLE_BROWSER_INTERFACE)
 
 	list(APPEND MORE_LIBS PUBLIC ${GTK2_TARGETS})
 
