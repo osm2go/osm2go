@@ -53,11 +53,9 @@
 #include "dbus.h"
 #endif
 
-#ifdef __cplusplus
 #include "icon.h"
 #include "map.h"
 #include "osm.h"
-#endif
 
 enum menu_items {
   MENU_ITEM_MAP_HIDE_SEL,
@@ -83,6 +81,9 @@ enum menu_items {
 };
 
 typedef struct appdata_t {
+  appdata_t();
+  ~appdata_t();
+
 #ifdef USE_HILDON
   HildonProgram *program;
   HildonWindow *window;
@@ -127,7 +128,6 @@ typedef struct appdata_t {
   GtkWidget *app_menu_map;
 #endif
 
-#ifdef __cplusplus
   map_state_t map_state;
   map_t *map;
   struct osm_t *osm;
@@ -135,16 +135,8 @@ typedef struct appdata_t {
   struct style_t *style;
   class gps_state_t * const gps_state;
   icon_t icons;
-
-  appdata_t();
-  ~appdata_t();
-#endif
 } appdata_t;
 
-#ifdef __cplusplus
-
 void main_ui_enable(appdata_t &appdata);
-
-#endif
 
 #endif // APPDATA_H
