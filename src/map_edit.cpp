@@ -56,7 +56,7 @@ struct check_first_last_node {
 void map_edit_way_add_segment(map_t *map, gint x, gint y) {
 
   /* convert mouse position to canvas (world) position */
-  canvas_window2world(map->canvas, x, y, x, y);
+  map->canvas->window2world(x, y, x, y);
 
   /* check if this was a double click. This is the case if */
   /* the last node placed is less than 5 pixels from the current */
@@ -289,7 +289,7 @@ void map_edit_way_node_add_highlight(map_t *map, map_item_t *item,
 				     gint x, gint y) {
   if(map->item_is_selected_way(item)) {
     gint nx, ny;
-    canvas_window2world(map->canvas, x, y, nx, ny);
+    map->canvas->window2world(x, y, nx, ny);
     if(canvas_item_get_segment(item->item, nx, ny) >= 0)
       map_hl_cursor_draw(map, x, y, false, map->style->node.radius);
   }
@@ -300,7 +300,7 @@ void map_edit_way_node_add(map_t *map, gint x, gint y) {
   map_item_t *item = map_item_at(map, x, y);
   if(map->item_is_selected_way(item)) {
     /* convert mouse position to canvas (world) position */
-    canvas_window2world(map->canvas, x, y, x, y);
+    map->canvas->window2world(x, y, x, y);
     gint insert_after = canvas_item_get_segment(item->item, x, y)+1;
     if(insert_after > 0) {
       /* create new node */
@@ -346,7 +346,7 @@ void map_edit_way_cut_highlight(map_t *map, map_item_t *item, gint x, gint y) {
 
   if(map->item_is_selected_way(item)) {
     gint nx, ny, seg;
-    canvas_window2world(map->canvas, x, y, nx, ny);
+    map->canvas->window2world(x, y, nx, ny);
     seg = canvas_item_get_segment(item->item, nx, ny);
     if(seg >= 0) {
       gint x0, y0, x1, y1;
@@ -377,7 +377,7 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
     return;
 
   /* convert mouse position to canvas (world) position */
-  canvas_window2world(map->canvas, x, y, x, y);
+  map->canvas->window2world(x, y, x, y);
 
   node_chain_t::iterator cut_at;
   way_t *way = O2G_NULLPTR;
@@ -577,7 +577,7 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, gint ex, gint ey) {
 
     /* convert mouse position to canvas (world) position */
     gint x, y;
-    canvas_window2world(map->canvas, ex, ey, x, y);
+    map->canvas->window2world(ex, ey, x, y);
     if(!osm->position_within_bounds(x, y)) {
       map_outside_error(map->appdata);
       return;

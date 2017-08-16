@@ -34,10 +34,11 @@ void map_hl_cursor_draw(map_t *map, gint x, gint y, bool is_world,
     canvas_item_destroy(map->cursor);
 
   gint wx, wy;
-  if(!is_world) canvas_window2world(map->canvas, x, y, wx, wy);
+  if(!is_world)
+    map->canvas->window2world(x, y, wx, wy);
   else { wx = x; wy = y; }
 
-  map->cursor = canvas_circle_new(map->canvas, CANVAS_GROUP_DRAW, wx, wy,
+  map->cursor = map->canvas->circle_new(CANVAS_GROUP_DRAW, wx, wy,
 		  radius, 0, map->style->highlight.node_color, NO_COLOR);
 }
 
@@ -49,7 +50,7 @@ void map_hl_segment_draw(map_t *map, gint width,
   points->coords[0] = x0; points->coords[1] = y0;
   points->coords[2] = x1; points->coords[3] = y1;
 
-  map->cursor = canvas_polyline_new(map->canvas, CANVAS_GROUP_DRAW,
+  map->cursor = map->canvas->polyline_new(CANVAS_GROUP_DRAW,
 		    points, width, map->style->highlight.node_color);
   canvas_points_free(points);
 }
@@ -66,8 +67,7 @@ void map_hl_touchnode_draw(map_t *map, node_t *node) {
   if(map->touchnode)
     canvas_item_destroy(map->touchnode);
 
-  map->touchnode =
-    canvas_circle_new(map->canvas, CANVAS_GROUP_DRAW,
+  map->touchnode = map->canvas->circle_new(CANVAS_GROUP_DRAW,
 		      node->lpos.x, node->lpos.y,
 		      2*map->style->node.radius, 0,
 		      map->style->highlight.touch_color, NO_COLOR);
@@ -131,8 +131,7 @@ static void hl_add(map_t *map, canvas_item_t *item)
 canvas_item_t *map_hl_circle_new(map_t *map, canvas_group_t group,
 		 map_item_t *map_item,
 		 gint x, gint y, gint radius, canvas_color_t color) {
-  map_item->item =
-    canvas_circle_new(map->canvas, group, x, y, radius, 0, color, NO_COLOR);
+  map_item->item = map->canvas->circle_new(group, x, y, radius, 0, color, NO_COLOR);
   hl_add(map, map_item->item);
 
   canvas_item_set_user_data(map_item->item, map_item);
@@ -144,8 +143,7 @@ canvas_item_t *map_hl_circle_new(map_t *map, canvas_group_t group,
 
 canvas_item_t *map_hl_polygon_new(map_t *map, canvas_group_t group, map_item_t *map_item,
 				  canvas_points_t *points, canvas_color_t color) {
-  map_item->item =
-    canvas_polygon_new(map->canvas, group, points, 0, 0, color);
+  map_item->item = map->canvas->polygon_new(group, points, 0, 0, color);
   hl_add(map, map_item->item);
 
   canvas_item_set_user_data(map_item->item, map_item);
@@ -157,8 +155,7 @@ canvas_item_t *map_hl_polygon_new(map_t *map, canvas_group_t group, map_item_t *
 
 canvas_item_t *map_hl_polyline_new(map_t *map, canvas_group_t group, map_item_t *map_item,
 				   canvas_points_t *points, gint width, canvas_color_t color) {
-  map_item->item =
-    canvas_polyline_new(map->canvas, group, points, width, color);
+  map_item->item = map->canvas->polyline_new(group, points, width, color);
   hl_add(map, map_item->item);
 
   canvas_item_set_user_data(map_item->item, map_item);

@@ -72,6 +72,17 @@ typedef guint canvas_color_t;
 
 class canvas_item_info_t;
 
+enum canvas_unit_t { CANVAS_UNIT_METER = 0, CANVAS_UNIT_PIXEL };
+
+struct canvas_dimensions {
+  gdouble width, height;
+  inline canvas_dimensions operator/(double d) const {
+    canvas_dimensions ret = *this;
+    ret.width /= d; ret.height /= d;
+    return ret;
+  }
+};
+
 class canvas_t {
 protected:
   canvas_t(GtkWidget *w);
@@ -81,6 +92,35 @@ public:
   GtkWidget * const widget;
 
   std::vector<canvas_item_info_t *> item_info[CANVAS_GROUPS];
+
+  canvas_dimensions get_viewport_dimensions(canvas_unit_t unit) const;
+  void window2world(gint x, gint y, gint &wx, gint &wy) const;
+  void scroll_get(canvas_unit_t unit, gint &sx, gint &sy) const;
+
+  /****** manipulating the canvas ******/
+  void set_background(canvas_color_t bg_color);
+  void set_antialias(bool antialias);
+  void erase(unsigned int group_mask);
+  canvas_item_t *get_item_at(gint x, gint y) const;
+  void set_zoom(gdouble zoom);
+  gdouble get_zoom() const;
+  void scroll_to(canvas_unit_t unit, gint sx, gint sy);
+  void set_bounds(gint minx, gint miny, gint maxx, gint maxy);
+
+  /***** creating/destroying items ******/
+  canvas_item_t *circle_new(canvas_group_t group,
+                            gint x, gint y, gint radius, gint border,
+                            canvas_color_t fill_col, canvas_color_t border_col);
+  canvas_item_t *polyline_new(canvas_group_t group, canvas_points_t *points,
+                              gint width, canvas_color_t color);
+  canvas_item_t *polygon_new(canvas_group_t group, canvas_points_t *points,
+                             gint width, canvas_color_t color,
+                             canvas_color_t fill);
+  canvas_item_t *image_new(canvas_group_t group, GdkPixbuf *pix, gint x, gint y,
+                           float hscale, float vscale);
+
+  canvas_item_t *item_info_get_at(gint x, gint y) const;
+  void item_info_push(canvas_item_t *item);
 };
 
 enum canvas_item_type_t { CANVAS_ITEM_CIRCLE, CANVAS_ITEM_POLY };
@@ -125,48 +165,9 @@ public:
   lpos_t *points;
 };
 
-enum canvas_unit_t { CANVAS_UNIT_METER = 0, CANVAS_UNIT_PIXEL };
-
-struct canvas_dimensions {
-  gdouble width, height;
-  inline canvas_dimensions operator/(double d) const {
-    canvas_dimensions ret = *this;
-    ret.width /= d; ret.height /= d;
-    return ret;
-  }
-};
-
-canvas_dimensions canvas_get_viewport_dimensions(canvas_t *canvas, canvas_unit_t unit);
-void canvas_window2world(canvas_t *canvas, gint x, gint y, gint &wx, gint &wy);
-void canvas_scroll_get(canvas_t *canvas, canvas_unit_t unit, gint &sx, gint &sy);
 void canvas_point_set_pos(canvas_points_t *points, gint index, const lpos_t &lpos);
 void canvas_item_get_segment_pos(canvas_item_t *item, gint seg,
                                  gint &x0, gint &y0, gint &x1, gint &y1);
-
-/****** manipulating the canvas ******/
-void canvas_set_background(canvas_t *canvas, canvas_color_t bg_color);
-void canvas_set_antialias(canvas_t *canvas, gboolean antialias);
-void canvas_erase(canvas_t *canvas, gint group_mask);
-canvas_item_t *canvas_get_item_at(canvas_t *canvas, gint x, gint y);
-void canvas_set_zoom(canvas_t *canvas, gdouble zoom);
-gdouble canvas_get_zoom(canvas_t *canvas);
-void canvas_scroll_to(canvas_t *canvas, canvas_unit_t unit, gint sx, gint sy);
-void canvas_set_bounds(canvas_t *canvas, gint minx, gint miny,
-		       gint maxx, gint maxy);
-
-
-/***** creating/destroying items ******/
-canvas_item_t *canvas_circle_new(canvas_t *canvas, canvas_group_t group,
-		 gint x, gint y, gint radius, gint border,
-		 canvas_color_t fill_col, canvas_color_t border_col);
-canvas_item_t *canvas_polyline_new(canvas_t *canvas, canvas_group_t group,
-		 canvas_points_t *points, gint width, canvas_color_t color);
-canvas_item_t *canvas_polygon_new(canvas_t *canvas, canvas_group_t group,
-		  canvas_points_t *points, gint width, canvas_color_t color,
-		  canvas_color_t fill);
-canvas_item_t *canvas_image_new(canvas_t *canvas, canvas_group_t group,
-				GdkPixbuf *pix, gint x, gint y,
-				float hscale, float vscale);
 
 canvas_points_t *canvas_points_new(gint points);
 void canvas_points_free(canvas_points_t *points);
@@ -187,8 +188,5 @@ void canvas_item_destroy_connect(canvas_item_t *item, void(*c_handler)(gpointer)
 void canvas_image_move(canvas_item_t *item, gint x, gint y,
 		       float hscale, float vscale);
 gint canvas_item_get_segment(canvas_item_t *item, gint x, gint y);
-
-canvas_item_t *canvas_item_info_get_at(canvas_t *canvas, gint x, gint y);
-void canvas_item_info_push(canvas_t *canvas, canvas_item_t *item);
 
 #endif // CANVAS_H

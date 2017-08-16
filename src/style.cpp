@@ -376,8 +376,7 @@ static void style_change(appdata_t &appdata, const std::string &name,
   appdata.style = nstyle;
 
   /* canvas background may have changed */
-  canvas_set_background(appdata.map->canvas,
-                        appdata.style->background.color);
+  appdata.map->canvas->set_background(appdata.style->background.color);
 
   appdata.map->paint();
 }

@@ -151,17 +151,17 @@ static canvas_item_info_t *canvas_item_get_info(canvas_t *canvas,
   return O2G_NULLPTR;
 }
 
-void canvas_item_info_push(canvas_t *canvas, canvas_item_t *item) {
-  canvas_item_info_t *item_info = canvas_item_get_info(canvas, item);
-  g_assert_nonnull(item_info);
+void canvas_t::item_info_push(canvas_item_t *item) {
+  canvas_item_info_t *info = canvas_item_get_info(this, item);
+  g_assert_nonnull(info);
 
-  printf("pushing item_info %p to background\n", item_info);
-  g_assert(item_info->canvas == canvas);
+  printf("pushing item_info %p to background\n", info);
+  g_assert(info->canvas == this);
 
-  std::vector<canvas_item_info_t *> &info_group = canvas->item_info[item_info->group];
+  std::vector<canvas_item_info_t *> &info_group = item_info[info->group];
   const std::vector<canvas_item_info_t *>::reverse_iterator itEnd = info_group.rend();
   std::vector<canvas_item_info_t *>::reverse_iterator it = std::find(info_group.rbegin(),
-                                                                     itEnd, item_info);
+                                                                     itEnd, info);
 
   std::rotate(it, it + 1, itEnd);
 }
@@ -255,19 +255,19 @@ static gint canvas_item_info_get_segment(canvas_item_info_poly *item,
 
 /* try to find the object at position x/y by searching through the */
 /* item_info list */
-canvas_item_t *canvas_item_info_get_at(canvas_t *canvas, gint x, gint y) {
+canvas_item_t *canvas_t::item_info_get_at(gint x, gint y) const {
 
   printf("************ searching at %d %d *****************\n", x, y);
 
   /* convert all "fuzziness" into meters */
   gint fuzziness = EXTRA_FUZZINESS_METER +
-    EXTRA_FUZZINESS_PIXEL / canvas_get_zoom(canvas);
+    EXTRA_FUZZINESS_PIXEL / get_zoom();
 
   /* search from top to bottom */
   for(unsigned int group = CANVAS_GROUPS - 1; group > 0; group--) {
     /* search through all item infos */
-    const std::vector<canvas_item_info_t *>::const_reverse_iterator itEnd = canvas->item_info[group].rend();
-    for(std::vector<canvas_item_info_t *>::const_reverse_iterator it = canvas->item_info[group].rbegin();
+    const std::vector<canvas_item_info_t *>::const_reverse_iterator itEnd = item_info[group].rend();
+    for(std::vector<canvas_item_info_t *>::const_reverse_iterator it = item_info[group].rbegin();
         it != itEnd; it++) {
       canvas_item_info_t *item = *it;
       switch(item->type) {

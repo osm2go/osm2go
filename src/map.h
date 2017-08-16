@@ -139,7 +139,7 @@ struct map_t {
   gboolean key_press_event(GdkEventKey *event);
   void init();
   void paint();
-  void clear(gint group_mask);
+  void clear(unsigned int group_mask);
   void item_deselect();
   void highlight_refresh();
   void draw(node_t *node);

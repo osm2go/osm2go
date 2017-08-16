@@ -61,46 +61,46 @@ canvas_goocanvas::canvas_goocanvas()
 
 /* ------------------------ accessing the canvas ---------------------- */
 
-void canvas_set_background(canvas_t *canvas, canvas_color_t bg_color) {
-  g_object_set(G_OBJECT(canvas->widget),
+void canvas_t::set_background(canvas_color_t bg_color) {
+  g_object_set(G_OBJECT(widget),
                "background-color-rgb", bg_color >> 8, O2G_NULLPTR);
 }
 
-void canvas_set_antialias(canvas_t *canvas, gboolean antialias) {
-  GooCanvasItem *root = goo_canvas_get_root_item(GOO_CANVAS(canvas->widget));
+void canvas_t::set_antialias(bool antialias) {
+  GooCanvasItem *root = goo_canvas_get_root_item(GOO_CANVAS(widget));
   g_object_set(G_OBJECT(root), "antialias",
                antialias ? CAIRO_ANTIALIAS_DEFAULT : CAIRO_ANTIALIAS_NONE, O2G_NULLPTR);
 }
 
-void canvas_window2world(canvas_t *canvas, gint x, gint y, gint &wx, gint &wy) {
+void canvas_t::window2world(gint x, gint y, gint &wx, gint &wy) const {
   double sx = x, sy = y;
-  goo_canvas_convert_from_pixels(GOO_CANVAS(canvas->widget), &sx, &sy);
+  goo_canvas_convert_from_pixels(GOO_CANVAS(widget), &sx, &sy);
   wx = sx; wy = sy;
 }
 
-canvas_item_t *canvas_get_item_at(canvas_t *canvas, gint x, gint y) {
-  return canvas_item_info_get_at(canvas, x, y);
+canvas_item_t *canvas_t::get_item_at(gint x, gint y) const {
+  return item_info_get_at(x, y);
 }
 
-void canvas_set_zoom(canvas_t *canvas, gdouble zoom) {
-  goo_canvas_set_scale(GOO_CANVAS(canvas->widget), zoom);
+void canvas_t::set_zoom(gdouble zoom) {
+  goo_canvas_set_scale(GOO_CANVAS(widget), zoom);
 }
 
-gdouble canvas_get_zoom(canvas_t *canvas) {
-  return goo_canvas_get_scale(GOO_CANVAS(canvas->widget));
+gdouble canvas_t::get_zoom() const {
+  return goo_canvas_get_scale(GOO_CANVAS(widget));
 }
 
-canvas_dimensions canvas_get_viewport_dimensions(canvas_t *canvas, canvas_unit_t unit) {
+canvas_dimensions canvas_t::get_viewport_dimensions(canvas_unit_t unit) const {
   // Canvas viewport dimensions
   canvas_dimensions ret;
 
-  GtkAllocation &a = (canvas->widget)->allocation;
+  const GtkAllocation &a = widget->allocation;
   if(unit == CANVAS_UNIT_PIXEL) {
     ret.width = a.width;
     ret.height = a.height;
   } else {
     /* convert to meters by dividing by zoom */
-    gdouble zoom = goo_canvas_get_scale(GOO_CANVAS(canvas->widget));
+    gdouble zoom = goo_canvas_get_scale(GOO_CANVAS(widget));
     ret.width = a.width / zoom;
     ret.height = a.height / zoom;
   }
@@ -108,9 +108,8 @@ canvas_dimensions canvas_get_viewport_dimensions(canvas_t *canvas, canvas_unit_t
 }
 
 /* get scroll position in meters/pixels */
-void canvas_scroll_get(canvas_t *canvas, canvas_unit_t unit,
-                       gint &sx, gint &sy) {
-  GooCanvas *gc = GOO_CANVAS(canvas->widget);
+void canvas_t::scroll_get(canvas_unit_t unit, gint &sx, gint &sy) const {
+  GooCanvas *gc = GOO_CANVAS(widget);
   gdouble zoom = goo_canvas_get_scale(gc);
 
   gdouble hs = gtk_adjustment_get_value(gc->hadjustment);
@@ -118,8 +117,8 @@ void canvas_scroll_get(canvas_t *canvas, canvas_unit_t unit,
   goo_canvas_convert_from_pixels(gc, &hs, &vs);
 
   /* convert to position relative to screen center */
-  hs += canvas->widget->allocation.width/(2*zoom);
-  vs += canvas->widget->allocation.height/(2*zoom);
+  hs += widget->allocation.width/(2*zoom);
+  vs += widget->allocation.height/(2*zoom);
 
   if(unit == CANVAS_UNIT_PIXEL) {
     /* make values zoom independant */
@@ -132,31 +131,30 @@ void canvas_scroll_get(canvas_t *canvas, canvas_unit_t unit,
 }
 
 /* set scroll position in meters/pixels */
-void canvas_scroll_to(canvas_t *canvas, canvas_unit_t unit, gint sx, gint sy) {
-  gdouble zoom = goo_canvas_get_scale(GOO_CANVAS(canvas->widget));
+void canvas_t::scroll_to(canvas_unit_t unit, gint sx, gint sy) {
+  gdouble zoom = goo_canvas_get_scale(GOO_CANVAS(widget));
 
   if(unit != CANVAS_UNIT_METER) {
     sx /= zoom; sy /= zoom;
   }
 
   /* adjust to screen center */
-  sx -= canvas->widget->allocation.width/(2*zoom);
-  sy -= canvas->widget->allocation.height/(2*zoom);
+  sx -= widget->allocation.width / (2 * zoom);
+  sy -= widget->allocation.height / (2 * zoom);
 
-  goo_canvas_scroll_to(GOO_CANVAS(canvas->widget), sx, sy);
+  goo_canvas_scroll_to(GOO_CANVAS(widget), sx, sy);
 }
 
-void canvas_set_bounds(canvas_t *canvas, gint minx, gint miny,
-		       gint maxx, gint maxy) {
-  goo_canvas_set_bounds(GOO_CANVAS(canvas->widget), minx, miny, maxx, maxy);
+void canvas_t::set_bounds(gint minx, gint miny, gint maxx, gint maxy) {
+  goo_canvas_set_bounds(GOO_CANVAS(widget), minx, miny, maxx, maxy);
 }
 
 /* ------------------- creating and destroying objects ---------------- */
 
-void canvas_erase(canvas_t *canvas, gint group_mask) {
+void canvas_t::erase(unsigned int group_mask) {
   int group;
 
-  canvas_goocanvas *gcanvas = static_cast<canvas_goocanvas *>(canvas);
+  canvas_goocanvas *gcanvas = static_cast<canvas_goocanvas *>(this);
 
   for(group=0;group<CANVAS_GROUPS;group++) {
 
@@ -169,13 +167,12 @@ void canvas_erase(canvas_t *canvas, gint group_mask) {
   }
 }
 
-
-canvas_item_t *canvas_circle_new(canvas_t *canvas, canvas_group_t group,
+canvas_item_t *canvas_t::circle_new(canvas_group_t group,
 			 gint x, gint y, gint radius, gint border,
 			 canvas_color_t fill_col, canvas_color_t border_col) {
 
   canvas_item_t *item =
-    goo_canvas_ellipse_new(static_cast<canvas_goocanvas *>(canvas)->group[group],
+    goo_canvas_ellipse_new(static_cast<canvas_goocanvas *>(this)->group[group],
                            x, y, radius, radius,
                            "line-width", static_cast<double>(border),
 			   "stroke-color-rgba", border_col,
@@ -183,7 +180,7 @@ canvas_item_t *canvas_circle_new(canvas_t *canvas, canvas_group_t group,
                            O2G_NULLPTR);
 
   if(CANVAS_SELECTABLE & (1<<group))
-    (void) new canvas_item_info_circle(canvas, group, item, x, y, radius + border);
+    (void) new canvas_item_info_circle(this, group, item, x, y, radius + border);
 
   return item;
 }
@@ -210,10 +207,10 @@ void canvas_point_get_lpos(canvas_points_t *points, gint index, lpos_t *lpos) {
   lpos->y = points->coords[2*index+1];
 }
 
-canvas_item_t *canvas_polyline_new(canvas_t *canvas, canvas_group_t group,
+canvas_item_t *canvas_t::polyline_new(canvas_group_t group,
 		  canvas_points_t *points, gint width, canvas_color_t color) {
   canvas_item_t *item =
-    goo_canvas_polyline_new(static_cast<canvas_goocanvas *>(canvas)->group[group],
+    goo_canvas_polyline_new(static_cast<canvas_goocanvas *>(this)->group[group],
                             FALSE, 0, "points", points,
                             "line-width", static_cast<double>(width),
 			    "stroke-color-rgba", color,
@@ -222,16 +219,16 @@ canvas_item_t *canvas_polyline_new(canvas_t *canvas, canvas_group_t group,
                             O2G_NULLPTR);
 
   if(CANVAS_SELECTABLE & (1<<group))
-    (void) new canvas_item_info_poly(canvas, group, item, FALSE, width, points);
+    (void) new canvas_item_info_poly(this, group, item, FALSE, width, points);
 
   return item;
 }
 
-canvas_item_t *canvas_polygon_new(canvas_t *canvas, canvas_group_t group,
+canvas_item_t *canvas_t::polygon_new(canvas_group_t group,
 		  canvas_points_t *points, gint width, canvas_color_t color,
 				  canvas_color_t fill) {
   canvas_item_t *item =
-    goo_canvas_polyline_new(static_cast<canvas_goocanvas *>(canvas)->group[group],
+    goo_canvas_polyline_new(static_cast<canvas_goocanvas *>(this)->group[group],
                             TRUE, 0, "points", points,
                             "line-width", static_cast<double>(width),
 			    "stroke-color-rgba", color,
@@ -241,23 +238,23 @@ canvas_item_t *canvas_polygon_new(canvas_t *canvas, canvas_group_t group,
                             O2G_NULLPTR);
 
   if(CANVAS_SELECTABLE & (1<<group))
-    (void) new canvas_item_info_poly(canvas, group, item, TRUE, width, points);
+    (void) new canvas_item_info_poly(this, group, item, TRUE, width, points);
 
   return item;
 }
 
 /* place the image in pix centered on x/y on the canvas */
-canvas_item_t *canvas_image_new(canvas_t *canvas, canvas_group_t group,
+canvas_item_t *canvas_t::image_new(canvas_group_t group,
 		GdkPixbuf *pix, gint x, gint y, float hscale, float vscale) {
 
-  canvas_item_t *item = goo_canvas_image_new(static_cast<canvas_goocanvas *>(canvas)->group[group],
+  canvas_item_t *item = goo_canvas_image_new(static_cast<canvas_goocanvas *>(this)->group[group],
                                              pix, x/hscale - gdk_pixbuf_get_width(pix)/2,
                                              y/vscale - gdk_pixbuf_get_height(pix)/2, O2G_NULLPTR);
   goo_canvas_item_scale(item, hscale, vscale);
 
   if(CANVAS_SELECTABLE & (1<<group)) {
     gint radius = 0.75 * hscale * MAX(gdk_pixbuf_get_width(pix), gdk_pixbuf_get_height(pix)); /* hscale and vscale are the same */
-    (void) new canvas_item_info_circle(canvas, group, item, x, y, radius);
+    (void) new canvas_item_info_circle(this, group, item, x, y, radius);
   }
 
   return item;
@@ -296,7 +293,7 @@ void canvas_item_to_bottom(canvas_item_t *item) {
                                               "canvas-pointer"));
 
   g_assert_nonnull(canvas);
-  canvas_item_info_push(canvas, item);
+  canvas->item_info_push(item);
 }
 
 void canvas_item_set_zoom_max(canvas_item_t *item, float zoom_max) {

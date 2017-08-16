@@ -295,7 +295,7 @@ void relation_select_functor::operator()(member_t& member)
     node_t *node = member.object.node;
     printf("  -> node " ITEM_ID_FORMAT "\n", node->id);
 
-    item = canvas_circle_new(map->canvas, CANVAS_GROUP_NODES_HL,
+    item = map->canvas->circle_new(CANVAS_GROUP_NODES_HL,
                              node->lpos.x, node->lpos.y,
                              map->style->highlight.width + map->style->node.radius,
                              0, map->style->highlight.color, NO_COLOR);
@@ -307,10 +307,10 @@ void relation_select_functor::operator()(member_t& member)
     canvas_points_t *points = points_from_node_chain(way);
     if(points != O2G_NULLPTR) {
       if(way->draw.flags & OSM_DRAW_FLAG_AREA)
-        item = canvas_polygon_new(map->canvas, CANVAS_GROUP_WAYS_HL, points, 0, 0,
+        item = map->canvas->polygon_new(CANVAS_GROUP_WAYS_HL, points, 0, 0,
                                   map->style->highlight.color);
       else
-        item = canvas_polyline_new(map->canvas, CANVAS_GROUP_WAYS_HL, points,
+        item = map->canvas->polyline_new(CANVAS_GROUP_WAYS_HL, points,
                                    (way->draw.flags & OSM_DRAW_FLAG_BG) ?
                                      2 * map->style->highlight.width + way->draw.bg.width :
                                      2 * map->style->highlight.width + way->draw.width,
@@ -410,10 +410,10 @@ static void map_node_new(map_t *map, node_t *node, gint radius,
   const std::map<item_id_t, GdkPixbuf *>::const_iterator it = map->style->node_icons.find(node->id);
 
   if(it == map->style->node_icons.end() || !map->style->icon.enable)
-    map_item->item = canvas_circle_new(map->canvas, CANVAS_GROUP_NODES,
+    map_item->item = map->canvas->circle_new(CANVAS_GROUP_NODES,
        node->lpos.x, node->lpos.y, radius, width, fill, border);
   else
-    map_item->item = canvas_image_new(map->canvas, CANVAS_GROUP_NODES,
+    map_item->item = map->canvas->image_new(CANVAS_GROUP_NODES,
       it->second, node->lpos.x, node->lpos.y,
 		      map->state.detail * map->style->icon.scale,
 		      map->state.detail * map->style->icon.scale);
@@ -439,7 +439,7 @@ static map_item_t *map_way_single_new(map_t *map, way_t *way, gint radius,
 
   map_item_t *map_item = g_new0(map_item_t, 1);
   map_item->object = way;
-  map_item->item = canvas_circle_new(map->canvas, CANVAS_GROUP_WAYS,
+  map_item->item = map->canvas->circle_new(CANVAS_GROUP_WAYS,
 	  way->node_chain.front()->lpos.x, way->node_chain.front()->lpos.y,
 				     radius, width, fill, border);
 
@@ -461,13 +461,13 @@ static map_item_t *map_way_new(map_t *map, canvas_group_t group,
 
   if(way->draw.flags & OSM_DRAW_FLAG_AREA) {
     if(map->style->area.color & 0xff)
-      map_item->item = canvas_polygon_new(map->canvas, group, points,
+      map_item->item = map->canvas->polygon_new(group, points,
 					  width, color, fill_color);
     else
-      map_item->item = canvas_polyline_new(map->canvas, group, points,
+      map_item->item = map->canvas->polyline_new(group, points,
 					   width, color);
   } else {
-    map_item->item = canvas_polyline_new(map->canvas, group, points, width, color);
+    map_item->item = map->canvas->polyline_new(group, points, width, color);
   }
 
   canvas_item_set_zoom_max(map_item->item,
@@ -648,25 +648,25 @@ static void map_frisket_draw(map_t *map, const bounds_t *bounds) {
     /* top rectangle */
     map_frisket_rectangle(points, mult*bounds->min.x, mult*bounds->max.x,
 			  mult*bounds->min.y, bounds->min.y);
-    canvas_polygon_new(map->canvas, CANVAS_GROUP_FRISKET, points,
+    map->canvas->polygon_new(CANVAS_GROUP_FRISKET, points,
 		       1, NO_COLOR, color);
 
     /* bottom rectangle */
     map_frisket_rectangle(points, mult*bounds->min.x, mult*bounds->max.x,
 			  bounds->max.y, mult*bounds->max.y);
-    canvas_polygon_new(map->canvas, CANVAS_GROUP_FRISKET, points,
+    map->canvas->polygon_new(CANVAS_GROUP_FRISKET, points,
 		       1, NO_COLOR, color);
 
     /* left rectangle */
     map_frisket_rectangle(points, mult*bounds->min.x, bounds->min.x,
 			  mult*bounds->min.y, mult*bounds->max.y);
-    canvas_polygon_new(map->canvas, CANVAS_GROUP_FRISKET, points,
+    map->canvas->polygon_new(CANVAS_GROUP_FRISKET, points,
 		       1, NO_COLOR, color);
 
     /* right rectangle */
     map_frisket_rectangle(points, bounds->max.x, mult*bounds->max.x,
 			  mult*bounds->min.y, mult*bounds->max.y);
-    canvas_polygon_new(map->canvas, CANVAS_GROUP_FRISKET, points,
+    map->canvas->polygon_new(CANVAS_GROUP_FRISKET, points,
 		       1, NO_COLOR, color);
 
   }
@@ -678,7 +678,7 @@ static void map_frisket_draw(map_t *map, const bounds_t *bounds) {
 			  bounds->min.x-ew2, bounds->max.x+ew2,
 			  bounds->min.y-ew2, bounds->max.y+ew2);
 
-    canvas_polyline_new(map->canvas, CANVAS_GROUP_FRISKET, points,
+    map->canvas->polyline_new(CANVAS_GROUP_FRISKET, points,
 			map->style->frisket.border.width,
 			map->style->frisket.border.color);
 
@@ -733,11 +733,11 @@ static gint map_destroy_event(map_t *map) {
 map_item_t *map_item_at(map_t *map, gint x, gint y) {
   printf("map check at %d/%d\n", x, y);
 
-  canvas_window2world(map->canvas, x, y, x, y);
+  map->canvas->window2world(x, y, x, y);
 
   printf("world check at %d/%d\n", x, y);
 
-  canvas_item_t *item = canvas_get_item_at(map->canvas, x, y);
+  canvas_item_t *item = map->canvas->get_item_at(x, y);
 
   if(!item) {
     printf("  there's no item\n");
@@ -802,14 +802,14 @@ static void map_limit_scroll(map_t *map, canvas_unit_t unit, gint &sx, gint &sy)
 
   /* get scale factor for pixel->meter conversion. set to 1 if */
   /* given coordinates are already in meters */
-  gdouble scale = (unit == CANVAS_UNIT_METER)?1.0:canvas_get_zoom(map->canvas);
+  gdouble scale = (unit == CANVAS_UNIT_METER) ? 1.0 : map->canvas->get_zoom();
 
   /* convert pixels to meters if necessary */
   gdouble sx_cu = sx / scale;
   gdouble sy_cu = sy / scale;
 
   /* get size of visible area in canvas units (meters) */
-  canvas_dimensions dim = canvas_get_viewport_dimensions(map->canvas, CANVAS_UNIT_METER) / 2;
+  canvas_dimensions dim = map->canvas->get_viewport_dimensions(CANVAS_UNIT_METER) / 2;
 
   // Data rect minimum and maximum
   gint min_x, min_y, max_x, max_y;
@@ -842,7 +842,7 @@ static bool map_limit_zoom(map_t *map, gdouble &zoom) {
 
     /* get size of visible area in pixels and convert to meters of intended */
     /* zoom by deviding by zoom (which is basically pix/m) */
-    canvas_dimensions dim = canvas_get_viewport_dimensions(map->canvas, CANVAS_UNIT_PIXEL) / zoom;
+    canvas_dimensions dim = map->canvas->get_viewport_dimensions(CANVAS_UNIT_PIXEL) / zoom;
 
     gdouble oldzoom = zoom;
     if (dim.height < dim.width) {
@@ -893,13 +893,13 @@ bool map_t::scroll_to_if_offscreen(const lpos_t *lpos) {
   // Viewport dimensions in canvas space
 
   /* get size of visible area in canvas units (meters) */
-  gdouble pix_per_meter = canvas_get_zoom(canvas);
-  canvas_dimensions dim = canvas_get_viewport_dimensions(canvas, CANVAS_UNIT_METER);
+  gdouble pix_per_meter = canvas->get_zoom();
+  canvas_dimensions dim = canvas->get_viewport_dimensions(CANVAS_UNIT_METER);
 
   // Is the point still onscreen?
   bool recentre_needed = false;
   gint sx, sy;
-  canvas_scroll_get(canvas, CANVAS_UNIT_METER, sx, sy);
+  canvas->scroll_get(CANVAS_UNIT_METER, sx, sy);
   gint viewport_left   = sx - dim.width / 2;
   gint viewport_right  = sx + dim.width / 2;
   gint viewport_top    = sy - dim.height / 2;
@@ -930,7 +930,7 @@ bool map_t::scroll_to_if_offscreen(const lpos_t *lpos) {
     new_sy = pix_per_meter * lpos->y; // XXX (lpos->y - (ah/2));
 
     map_limit_scroll(this, CANVAS_UNIT_PIXEL, new_sx, new_sy);
-    canvas_scroll_to(canvas, CANVAS_UNIT_PIXEL, new_sx, new_sy);
+    canvas->scroll_to(CANVAS_UNIT_PIXEL, new_sx, new_sy);
   }
   return true;
 }
@@ -962,7 +962,7 @@ void map_set_zoom(map_t *map, double zoom, bool update_scroll_offsets) {
   bool at_zoom_limit = map_limit_zoom(map, zoom);
 
   map->state.zoom = zoom;
-  canvas_set_zoom(map->canvas, map->state.zoom);
+  map->canvas->set_zoom(map->state.zoom);
 
   map_deselect_if_zoom_below_zoom_max(map);
 
@@ -970,16 +970,15 @@ void map_set_zoom(map_t *map, double zoom, bool update_scroll_offsets) {
     if (!at_zoom_limit) {
       /* zooming affects the scroll offsets */
       gint sx, sy;
-      canvas_scroll_get(map->canvas, CANVAS_UNIT_PIXEL, sx, sy);
+      map->canvas->scroll_get(CANVAS_UNIT_PIXEL, sx, sy);
       map_limit_scroll(map, CANVAS_UNIT_PIXEL, sx, sy);
 
       // keep the map visible
-      canvas_scroll_to(map->canvas, CANVAS_UNIT_PIXEL, sx, sy);
+      map->canvas->scroll_to(CANVAS_UNIT_PIXEL, sx, sy);
     }
 
-    canvas_scroll_get(map->canvas, CANVAS_UNIT_METER,
-                      map->state.scroll_offset.x,
-                      map->state.scroll_offset.y);
+    map->canvas->scroll_get(CANVAS_UNIT_METER, map->state.scroll_offset.x,
+                            map->state.scroll_offset.y);
   }
 
   if(map->appdata.track.gps_item) {
@@ -1024,13 +1023,13 @@ static gboolean distance_above(map_t *map, gint x, gint y, gint limit) {
 static void map_do_scroll(map_t *map, gint x, gint y) {
   gint sx, sy;
 
-  canvas_scroll_get(map->canvas, CANVAS_UNIT_PIXEL, sx, sy);
+  map->canvas->scroll_get(CANVAS_UNIT_PIXEL, sx, sy);
   sx -= x-map->pen_down.at.x;
   sy -= y-map->pen_down.at.y;
   map_limit_scroll(map, CANVAS_UNIT_PIXEL, sx, sy);
-  canvas_scroll_to(map->canvas, CANVAS_UNIT_PIXEL, sx, sy);
+  map->canvas->scroll_to(CANVAS_UNIT_PIXEL, sx, sy);
 
-  canvas_scroll_get(map->canvas, CANVAS_UNIT_METER,
+  map->canvas->scroll_get(CANVAS_UNIT_METER,
                     map->state.scroll_offset.x,
                     map->state.scroll_offset.y);
 }
@@ -1039,13 +1038,13 @@ static void map_do_scroll(map_t *map, gint x, gint y) {
 /* scroll a certain step */
 static void map_do_scroll_step(map_t *map, gint x, gint y) {
   gint sx, sy;
-  canvas_scroll_get(map->canvas, CANVAS_UNIT_PIXEL, sx, sy);
+  map->canvas->scroll_get(CANVAS_UNIT_PIXEL, sx, sy);
   sx += x;
   sy += y;
   map_limit_scroll(map, CANVAS_UNIT_PIXEL, sx, sy);
-  canvas_scroll_to(map->canvas, CANVAS_UNIT_PIXEL, sx, sy);
+  map->canvas->scroll_to(CANVAS_UNIT_PIXEL, sx, sy);
 
-  canvas_scroll_get(map->canvas, CANVAS_UNIT_METER,
+  map->canvas->scroll_get(CANVAS_UNIT_METER,
                     map->state.scroll_offset.x,
                     map->state.scroll_offset.y);
 }
@@ -1181,7 +1180,7 @@ static void map_touchnode_update(map_t *map, gint x, gint y) {
   }
 
   /* check if we are close to one of the other nodes */
-  canvas_window2world(map->canvas, x, y, x, y);
+  map->canvas->window2world(x, y, x, y);
   hl_nodes fc(cur_node, x, y, map);
   std::for_each(map->appdata.osm->nodes.begin(), map->appdata.osm->nodes.end(), fc);
 
@@ -1308,7 +1307,7 @@ static void map_button_release(map_t *map, gint x, gint y) {
     map_hl_cursor_clear(map);
 
     /* convert mouse position to canvas (world) position */
-    canvas_window2world(map->canvas, x, y, x, y);
+    map->canvas->window2world(x, y, x, y);
 
     node_t *node = O2G_NULLPTR;
     if(!map->appdata.osm->position_within_bounds(x, y))
@@ -1614,28 +1613,26 @@ void map_t::init() {
   osm_t * const osm = appdata.osm;
 
   /* update canvas background color */
-  canvas_set_background(canvas, style->background.color);
+  canvas->set_background(style->background.color);
 
   /* set initial zoom */
   map_set_zoom(this, state.zoom, false);
   paint();
 
   float mult = style->frisket.mult;
-  canvas_set_bounds(canvas,
-                    mult * osm->bounds->min.x, mult * osm->bounds->min.y,
-                    mult * osm->bounds->max.x, mult * osm->bounds->max.y);
+  canvas->set_bounds(mult * osm->bounds->min.x, mult * osm->bounds->min.y,
+                     mult * osm->bounds->max.x, mult * osm->bounds->max.y);
 
   printf("restore scroll position %d/%d\n",
          state.scroll_offset.x, state.scroll_offset.y);
 
   map_limit_scroll(this, CANVAS_UNIT_METER,
                    state.scroll_offset.x, state.scroll_offset.y);
-  canvas_scroll_to(canvas, CANVAS_UNIT_METER,
-                   state.scroll_offset.x, state.scroll_offset.y);
+  canvas->scroll_to(CANVAS_UNIT_METER, state.scroll_offset.x, state.scroll_offset.y);
 }
 
 
-void map_t::clear(gint group_mask) {
+void map_t::clear(unsigned int group_mask) {
   printf("freeing map contents\n");
 
   if(group_mask == MAP_LAYER_ALL)
@@ -1646,7 +1643,7 @@ void map_t::clear(gint group_mask) {
   /* remove a possibly existing highlight */
   item_deselect();
 
-  canvas_erase(canvas, group_mask);
+  canvas->erase(group_mask);
 }
 
 void map_t::paint() {
@@ -1981,9 +1978,8 @@ void map_t::track_draw_seg(track_seg_t &seg) {
     canvas_points_t *points = canvas_points_init(bounds, it, visible);
     it = tmp;
 
-    canvas_item_t *item = canvas_polyline_new(canvas, CANVAS_GROUP_TRACK,
-                                              points, style->track.width,
-                                              style->track.color);
+    canvas_item_t *item = canvas->polyline_new(CANVAS_GROUP_TRACK, points,
+                                               style->track.width, style->track.color);
     seg.item_chain.push_back(item);
 
     canvas_points_free(points);
@@ -2055,8 +2051,8 @@ void map_t::track_update_seg(track_seg_t &seg) {
 
     printf("second last is invisible -> start new screen segment with %zu points\n", npoints);
 
-    canvas_item_t *item = canvas_polyline_new(canvas, CANVAS_GROUP_TRACK,
-                                              points, style->track.width, style->track.color);
+    canvas_item_t *item = canvas->polyline_new(CANVAS_GROUP_TRACK, points,
+                                               style->track.width, style->track.color);
     seg.item_chain.push_back(item);
   }
   canvas_points_free(points);
@@ -2091,15 +2087,15 @@ void map_t::track_pos(const lpos_t *lpos) {
   map_track_remove_pos(appdata);
 
   float radius = style->track.width / 2.0;
-  gdouble zoom = canvas_get_zoom(canvas);
+  gdouble zoom = canvas->get_zoom();
   if(zoom < GPS_RADIUS_LIMIT) {
     radius *= GPS_RADIUS_LIMIT;
     radius /= zoom;
   }
 
   appdata.track.gps_item =
-    canvas_circle_new(canvas, CANVAS_GROUP_GPS, lpos->x, lpos->y, radius, 0,
-                      style->track.gps_color, NO_COLOR);
+    canvas->circle_new(CANVAS_GROUP_GPS, lpos->x, lpos->y, radius, 0,
+                       style->track.gps_color, NO_COLOR);
 }
 
 /**
@@ -2149,7 +2145,7 @@ void map_set_bg_image(map_t *map, const char *filename) {
   map->bg.scale.y = static_cast<float>(bounds->max.y - bounds->min.y) /
                     gdk_pixbuf_get_height(map->bg.pix);
 
-  map->bg.item = canvas_image_new(map->canvas, CANVAS_GROUP_BG, map->bg.pix,
+  map->bg.item = map->canvas->image_new(CANVAS_GROUP_BG, map->bg.pix,
 	  bounds->min.x, bounds->min.y, map->bg.scale.x, map->bg.scale.y);
 
   canvas_item_destroy_connect(map->bg.item,
