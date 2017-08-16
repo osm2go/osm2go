@@ -106,6 +106,7 @@ struct select_context_t {
   std::vector<project_t *> projects;
   GtkWidget * const dialog;
   GtkWidget *list;
+  GtkListStore *store;
 };
 
 static bool project_edit(select_context_t *scontext,
@@ -508,7 +509,7 @@ static bool project_delete(select_context_t *context, project_t *project) {
 
   /* remove from view */
   GtkTreeIter iter;
-  GtkTreeModel *model = list_get_model(context->list);
+  GtkTreeModel *model = GTK_TREE_MODEL(context->store);
   if(gtk_tree_model_get_iter_first(model, &iter)) {
     do {
       project_t *prj = O2G_NULLPTR;
@@ -516,7 +517,7 @@ static bool project_delete(select_context_t *context, project_t *project) {
       if(prj && (prj == project)) {
 	printf("found %s to remove\n", prj->name.c_str());
 	/* and remove from store */
-	gtk_list_store_remove(GTK_LIST_STORE(model), &iter);
+        gtk_list_store_remove(context->store, &iter);
         break;
       }
     } while(gtk_tree_model_iter_next(model, &iter));
@@ -642,13 +643,11 @@ static void on_project_new(select_context_t *context) {
   if(project) {
     context->projects.push_back(project);
 
-    GtkTreeModel *model = list_get_model(context->list);
-
     GtkTreeIter iter;
     const gchar *status_stock_id = project_get_status_icon_stock_id(
                                          context->appdata.project, project);
-    gtk_list_store_append(GTK_LIST_STORE(model), &iter);
-    gtk_list_store_set(GTK_LIST_STORE(model), &iter,
+    gtk_list_store_append(GTK_LIST_STORE(context->store), &iter);
+    gtk_list_store_set(GTK_LIST_STORE(context->store), &iter,
 		       PROJECT_COL_NAME,        project->name.c_str(),
 		       PROJECT_COL_STATUS,      status_stock_id,
 		       PROJECT_COL_DESCRIPTION, project->desc.c_str(),
@@ -757,7 +756,7 @@ static void
 on_project_update_all(select_context_t *context)
 {
   GtkTreeIter iter;
-  GtkTreeModel *model = list_get_model(context->list);
+  GtkTreeModel *model = GTK_TREE_MODEL(context->store);
   if(gtk_tree_model_get_iter_first(model, &iter)) {
     do {
       project_t *prj = O2G_NULLPTR;
@@ -814,42 +813,36 @@ void project_list_add::operator()(const project_t* project)
  * @param has_sel if an item has been selected
  */
 static GtkWidget *project_list_widget(select_context_t &context, gboolean &has_sel) {
-  context.list = list_new(LIST_HILDON_WITHOUT_HEADERS);
+  std::vector<list_view_column> columns;
+  columns.push_back(list_view_column(_("Name"), 0));
+  columns.push_back(list_view_column(_("State"), LIST_FLAG_STOCK_ICON));
+  columns.push_back(list_view_column(_("Description"), LIST_FLAG_ELLIPSIZE));
 
-  list_override_changed_event(context.list, changed, &context);
-
-  list_set_columns(context.list,
-                   _("Name"), 0,
-                   _("State"), LIST_FLAG_STOCK_ICON,
-                   _("Description"), LIST_FLAG_ELLIPSIZE,
-                   O2G_NULLPTR);
+  std::vector<list_button> buttons;
+  buttons.push_back(list_button(_("_New"), G_CALLBACK(on_project_new)));
+  buttons.push_back(list_button(_("_Edit"), G_CALLBACK(on_project_edit)));
+  buttons.push_back(list_button(_("Remove"), G_CALLBACK(on_project_delete)));
+  buttons.push_back(list_button(_("Update all"), GCallback(on_project_update_all)));
 
   /* build the store */
-  GtkListStore *store = gtk_list_store_new(PROJECT_NUM_COLS,
+  context.store = gtk_list_store_new(PROJECT_NUM_COLS,
       G_TYPE_STRING,    // name
       G_TYPE_STRING,    // status
       G_TYPE_STRING,    // desc
       G_TYPE_POINTER);  // data
 
+  context.list = list_new(LIST_HILDON_WITHOUT_HEADERS, 0,
+                          &context, changed, buttons, columns, context.store);
+
   GtkTreeIter seliter;
   has_sel = FALSE;
 
   std::for_each(context.projects.begin(), context.projects.end(),
-                project_list_add(store, context.appdata, seliter, has_sel));
+                project_list_add(context.store, context.appdata, seliter, has_sel));
 
-  list_set_store(context.list, store);
-  g_object_unref(store);
+  g_object_unref(context.store);
 
-  list_set_static_buttons(context.list, LIST_BTN_NEW | LIST_BTN_WIDE | LIST_BTN_WIDE4,
-                          G_CALLBACK(on_project_new), G_CALLBACK(on_project_edit),
-                          G_CALLBACK(on_project_delete), &context);
-
-  list_set_user_buttons(context.list,
-                        _("Update all"), GCallback(on_project_update_all),
-                        O2G_NULLPTR, O2G_NULLPTR,
-                        O2G_NULLPTR, O2G_NULLPTR);
-
-  gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(store),
+  gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(context.store),
                                        PROJECT_COL_NAME, GTK_SORT_ASCENDING);
 
   if(has_sel)

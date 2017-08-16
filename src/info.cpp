@@ -40,7 +40,7 @@ enum {
 };
 
 static void changed(GtkTreeSelection *, gpointer user_data) {
-  GtkWidget *list = static_cast<GtkWidget *>(user_data);
+  GtkWidget *list = static_cast<tag_context_t *>(user_data)->list;
 
   GtkTreeModel *model;
   GtkTreeIter iter;
@@ -315,7 +315,7 @@ static void on_tag_last(tag_context_t *context) {
   // Adding those tags above will usually make the first of the newly
   // added tags selected. Enable edit/remove buttons now.
   GtkTreeSelection *sel = list_get_selection(context->list);
-  changed(sel, context->list);
+  changed(sel, context);
 }
 
 static GtkTreeIter store_append(GtkListStore *store, const std::string &key,
@@ -377,23 +377,24 @@ static void on_relations(tag_context_t *context) {
 }
 
 static GtkWidget *tag_widget(tag_context_t *context) {
-  context->list = list_new(LIST_HILDON_WITHOUT_HEADERS);
-
-  list_set_static_buttons(context->list, 0, G_CALLBACK(on_tag_add),
-	  G_CALLBACK(on_tag_edit), G_CALLBACK(on_tag_remove), context);
-
-  list_override_changed_event(context->list, changed, context->list);
-
-  list_set_user_buttons(context->list,
-                        _("Last"),      GCallback(on_tag_last),
-                        O2G_NULLPTR,    O2G_NULLPTR,
-                        _("Relations"), GCallback(on_relations));
-
   /* setup both columns */
-  list_set_columns(context->list,
-      _("Key"),   LIST_FLAG_ELLIPSIZE|LIST_FLAG_CAN_HIGHLIGHT, TAG_COL_COLLISION,
-      _("Value"), LIST_FLAG_ELLIPSIZE,
-      O2G_NULLPTR);
+  std::vector<list_view_column> columns;
+  columns.push_back(list_view_column(_("Key"),   LIST_FLAG_ELLIPSIZE|LIST_FLAG_CAN_HIGHLIGHT, TAG_COL_COLLISION));
+  columns.push_back(list_view_column(_("Value"), LIST_FLAG_ELLIPSIZE));
+
+  std::vector<list_button> buttons;
+  buttons.push_back(list_button(_("_Add"), G_CALLBACK(on_tag_add)));
+  buttons.push_back(list_button(_("_Edit"), G_CALLBACK(on_tag_edit)));
+  buttons.push_back(list_button(_("Remove"), G_CALLBACK(on_tag_remove)));
+  buttons.push_back(list_button(_("Last"), GCallback(on_tag_last)));
+  buttons.push_back(list_button(O2G_NULLPTR, O2G_NULLPTR));
+  buttons.push_back(list_button(_("Relations"), GCallback(on_relations)));
+
+  context->store = gtk_list_store_new(TAG_NUM_COLS,
+		G_TYPE_STRING, G_TYPE_STRING, G_TYPE_BOOLEAN, G_TYPE_POINTER);
+
+  context->list = list_new(LIST_HILDON_WITHOUT_HEADERS, LIST_BTN_2ROW, context, changed,
+                           buttons, columns, context->store);
 
   GtkWidget *presets = josm_build_presets_button(context->appdata, context);
   if(presets) {
@@ -412,11 +413,6 @@ static GtkWidget *tag_widget(tag_context_t *context) {
 	list_button_enable(context->list, LIST_BUTTON_USER0, FALSE);
 
   /* --------- build and fill the store ------------ */
-  context->store = gtk_list_store_new(TAG_NUM_COLS,
-		G_TYPE_STRING, G_TYPE_STRING, G_TYPE_BOOLEAN, G_TYPE_POINTER);
-
-  list_set_store(context->list, context->store);
-
   context->info_tags_replace();
 
   g_object_unref(context->store);

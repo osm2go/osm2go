@@ -471,7 +471,7 @@ static void relation_list_selected(GtkWidget *list,
 
 static void
 relation_list_changed(GtkTreeSelection *selection, gpointer userdata) {
-  GtkWidget *list = static_cast<GtkWidget *>(userdata);
+  GtkWidget *list = static_cast<relation_context_t *>(userdata)->list;
   GtkTreeModel *model = O2G_NULLPTR;
   GtkTreeIter iter;
 
@@ -753,9 +753,8 @@ static void on_relation_edit(relation_context_t *context) {
     -1);
 
   // Order will probably have changed, so refocus
-  list_focus_on(context->list, &iter, TRUE);
+  list_focus_on(context->list, &iter);
 }
-
 
 /* remove the selected relation */
 static void on_relation_remove(relation_context_t *context) {
@@ -811,22 +810,26 @@ void relation_list_widget_functor::operator()(const relation_t *rel)
 }
 
 static GtkWidget *relation_list_widget(relation_context_t &context) {
-  context.list = list_new(LIST_HILDON_WITH_HEADERS);
+  std::vector<list_view_column> columns;
+  columns.push_back(list_view_column(_("Type"),    0));
+  columns.push_back(list_view_column(_("Name"),    LIST_FLAG_ELLIPSIZE));
+  columns.push_back(list_view_column(_("Members"), 0));
 
-  list_override_changed_event(context.list, relation_list_changed, context.list);
-
-  list_set_columns(context.list,
-                   _("Type"),    0,
-                   _("Name"),    LIST_FLAG_ELLIPSIZE,
-                   _("Members"), 0,
-                   O2G_NULLPTR);
+  std::vector<list_button> buttons;
+  buttons.push_back(list_button(_("_New"), G_CALLBACK(on_relation_add)));
+  buttons.push_back(list_button(_("_Edit"), G_CALLBACK(on_relation_edit)));
+  buttons.push_back(list_button(_("Remove"), G_CALLBACK(on_relation_remove)));
+  buttons.push_back(list_button(_("Members"), GCallback(on_relation_members)));
+  buttons.push_back(list_button(_("Select"),  GCallback(on_relation_select)));
 
   /* build and fill the store */
   context.store = gtk_list_store_new(RELATION_NUM_COLS,
 		G_TYPE_STRING, G_TYPE_STRING, G_TYPE_UINT,
 	        G_TYPE_POINTER);
 
-  list_set_store(context.list, context.store);
+  context.list = list_new(LIST_HILDON_WITH_HEADERS, 0, &context,
+                          relation_list_changed, buttons, columns,
+                          context.store);
 
   // Sorting by ref/name by default is useful for places with lots of numbered
   // bus routes. Especially for small screens.
@@ -839,15 +842,6 @@ static GtkWidget *relation_list_widget(relation_context_t &context) {
   std::for_each(rchain.begin(), rchain.end(), fc);
 
   g_object_unref(context.store);
-
-  list_set_static_buttons(context.list, LIST_BTN_NEW | LIST_BTN_WIDE,
-	  G_CALLBACK(on_relation_add), G_CALLBACK(on_relation_edit),
-	  G_CALLBACK(on_relation_remove), &context);
-
-  list_set_user_buttons(context.list,
-                        _("Members"), GCallback(on_relation_members),
-                        _("Select"),  GCallback(on_relation_select),
-                        O2G_NULLPTR,  O2G_NULLPTR);
 
   relation_list_selected(context.list, O2G_NULLPTR);
 

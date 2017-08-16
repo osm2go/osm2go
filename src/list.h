@@ -21,26 +21,27 @@
 #define LIST_H
 
 #include <gtk/gtk.h>
+#include <vector>
+#include <utility>
 
-typedef enum {
+#include <osm2go_cpp.h>
+
+enum list_button_t {
   LIST_BUTTON_NEW = 0,
   LIST_BUTTON_EDIT,
   LIST_BUTTON_REMOVE,
   LIST_BUTTON_USER0,
   LIST_BUTTON_USER1,
   LIST_BUTTON_USER2
-} list_button_t;
+};
 
-#define LIST_BTN_NEW   (1<<0)   // use "new" instead of "add" button
-#define LIST_BTN_WIDE  (1<<1)   // use "wide" button layout (i.e. 5 buttons in one row)
-#define LIST_BTN_WIDE4 (1<<2)   // same as LIST_BTN_WIDE, but only make room for 1 user button
+#define LIST_BTN_2ROW  (1<<4)   // use 2 rows for the buttons
 
 /* list item flags */
 #define LIST_FLAG_EXPAND         (1<<0)   /* column expands with dialog size */
 #define LIST_FLAG_ELLIPSIZE      (1<<1)   /* column expands and text is ellipsized */
 #define LIST_FLAG_CAN_HIGHLIGHT  (1<<2)   /* column can be highlighted */
 #define LIST_FLAG_STOCK_ICON     (1<<3)   /* column contains stock icons */
-#define LIST_FLAG_TOGGLE         (1<<4)   /* column contains a toggle item */
 
 #ifdef FREMANTLE
 
@@ -57,51 +58,40 @@ typedef enum {
 #define LIST_HILDON_WITHOUT_HEADERS true
 #endif
 
-GtkWidget *list_new(bool show_headers);
+struct list_view_column {
+  explicit list_view_column(const char *n, unsigned int fl, int hk = -1)
+    : name(n), flags(fl), hlkey(hk) {}
+  const char *name;
+  unsigned int flags;
+  int hlkey; ///< highlight key in case LIST_FLAG_CAN_HIGHLIGHT is set
+};
 
-GtkWidget *list_get_view(GtkWidget *list);
+typedef std::pair<const char *, GCallback> list_button;
+
 /**
- * @brief set up additional buttons
- * @param list the list widget
- * @param label0 the label for LIST_BUTTON_USER0
- * @param cb0 the callback for LIST_BUTTON_USER0
- * @param label1 the label for LIST_BUTTON_USER1
- * @param cb1 the callback for LIST_BUTTON_USER1
- * @param label2 the label for LIST_BUTTON_USER2
- * @param cb2 the callback for LIST_BUTTON_USER2
+ * @brief create a new list widget
+ * @param show_headers if the table headers should be shown
+ * @param btn_flags list button flags
+ * @param context the context passed to all callbacks
+ * @param buttons list of button texts and their callbacks
+ * @param columns definition of the columns that should be shown
+ * @param store the data store
  *
- * Any unused button should have label and cb set to null pointer.s
- *
- * The context pointer passed to the callbacks is the same as set in
- * list_set_static_buttons(), which must be called before.
+ * WARNING: all callbacks have swapped arguments
  */
-void list_set_user_buttons(GtkWidget *list,
-                           const char *label0, GCallback cb0,
-                           const char *label1, GCallback cb1,
-                           const char *label2, GCallback cb2);
-void list_set_columns(GtkWidget *list, ...);
+GtkWidget *list_new(bool show_headers, unsigned int btn_flags, void *context,
+                    void(*cb_changed)(GtkTreeSelection*,void*),
+                    const std::vector<list_button> &buttons,
+                    const std::vector<list_view_column> &columns,
+                    GtkListStore *store);
+
 void list_set_custom_user_button(GtkWidget *list, list_button_t id,
 				 GtkWidget *widget);
 GtkTreeSelection *list_get_selection(GtkWidget *list);
 void list_button_enable(GtkWidget *list, list_button_t id, bool enable);
-void list_set_store(GtkWidget *list, GtkListStore *store);
 
-/**
- * @brief register the standard buttons and their callbacks
- * @param list the list widget
- * @param flags list creation flags
- * @param cb_new the callback on the leftmost button, WARNING: swapped arguments
- * @param cb_edit callback for the middle button, WARNING: swapped arguments
- * @param cb_remove callback for the rightmost button, WARNING: swapped arguments
- * @param data context pointer passed to the callbacks
- */
-void list_set_static_buttons(GtkWidget *list, int flags,
-GCallback cb_new, GCallback cb_edit, GCallback cb_remove,
-	     gpointer data);
-GtkTreeModel *list_get_model(GtkWidget *list);
-void list_focus_on(GtkWidget *list, GtkTreeIter *iter, bool highlight);
+void list_focus_on(GtkWidget *list, GtkTreeIter *iter);
 bool list_get_selected(GtkWidget *list, GtkTreeModel **model, GtkTreeIter *iter);
-void list_override_changed_event(GtkWidget *list, void(*handler)(GtkTreeSelection*,gpointer), gpointer data);
 void list_scroll(GtkWidget *list, GtkTreeIter *iter);
 void list_view_scroll(GtkTreeView *view, GtkTreeSelection *sel, GtkTreeIter* iter);
 

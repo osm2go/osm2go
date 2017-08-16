@@ -725,29 +725,23 @@ static void on_server_add(wms_server_context_t *context) {
 
 /* widget to select a wms server from a list */
 static GtkWidget *wms_server_widget(wms_server_context_t *context) {
+  std::vector<list_button> buttons;
+  buttons.push_back(list_button(_("_Add"), G_CALLBACK(on_server_add)));
+  buttons.push_back(list_button(_("_Edit"), G_CALLBACK(on_server_edit)));
+  buttons.push_back(list_button(_("Remove"), G_CALLBACK(on_server_remove)));
 
-  context->list = list_new(LIST_HILDON_WITHOUT_HEADERS);
-
-  list_override_changed_event(context->list, wms_server_changed, context);
-
-  list_set_columns(context->list,
-		   _("Name"), LIST_FLAG_ELLIPSIZE,
-		   O2G_NULLPTR);
-
-  /* build and fill the store */
   context->store = gtk_list_store_new(WMS_SERVER_NUM_COLS,
 	        G_TYPE_STRING, G_TYPE_POINTER);
 
-  list_set_store(context->list, context->store);
+  context->list = list_new(LIST_HILDON_WITHOUT_HEADERS, 0, context,
+                           wms_server_changed, buttons,
+                           std::vector<list_view_column>(1, list_view_column(_("Name"), LIST_FLAG_ELLIPSIZE)),
+                           context->store);
 
   const std::vector<wms_server_t *> &servers = context->appdata.settings->wms_server;
   std::for_each(servers.begin(), servers.end(), store_fill_functor(context->store));
 
   g_object_unref(context->store);
-
-  list_set_static_buttons(context->list, 0,
-	  G_CALLBACK(on_server_add), G_CALLBACK(on_server_edit),
-	  G_CALLBACK(on_server_remove), context);
 
   return context->list;
 }
