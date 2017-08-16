@@ -45,8 +45,6 @@
 #define NAN (0.0/0.0)
 #endif
 
-#ifdef __cplusplus
-
 #include <osm2go_cpp.h>
 
 #include <memory>
@@ -163,9 +161,6 @@ bool xml_get_prop_is(xmlNode *node, const char *prop, const char *str);
 bool xml_get_prop_pos(xmlNode *node, struct pos_t *pos);
 void xml_set_prop_pos(xmlNode *node, const struct pos_t *pos);
 
-extern "C" {
-#endif
-
 #ifndef g_assert_true
 #define g_assert_true(expr)             G_STMT_START { \
                                              if G_LIKELY (expr) ; else \
@@ -181,20 +176,12 @@ extern "C" {
                                         } G_STMT_END
 #endif
 #ifndef g_assert_null
-#ifndef __cplusplus
-#define O2G_NULLPTR NULL
-#endif
 #define g_assert_null(expr)             G_STMT_START { if G_LIKELY ((expr) == O2G_NULLPTR) ; else \
                                                g_assertion_message (G_LOG_DOMAIN, __FILE__, __LINE__, G_STRFUNC, \
                                                                     "'" #expr "' should be NULL"); \
                                         } G_STMT_END
 #endif
 #ifndef g_assert_nonnull
-#ifndef __cplusplus
-#ifndef O2G_NULLPTR
-#define O2G_NULLPTR NULL
-#endif
-#endif
 #define g_assert_nonnull(expr)          G_STMT_START { \
                                              if G_LIKELY ((expr) != O2G_NULLPTR) ; else \
                                                g_assertion_message (G_LOG_DOMAIN, __FILE__, __LINE__, G_STRFUNC, \
@@ -203,9 +190,6 @@ extern "C" {
 #endif
 
 GtkWidget *button_new_with_label(const gchar *label);
-
-#ifdef __cplusplus
-}
 
 struct appdata_t;
 
@@ -256,7 +240,5 @@ void open_url(appdata_t &appdata, const char *url);
 void misc_init(void);
 
 GtkWidget *string_select_widget(const char *title, const std::vector<std::string> &entries, int match);
-
-#endif
 
 #endif // MISC_H
