@@ -44,7 +44,7 @@
 
 #define _(String) gettext(String)
 
-typedef struct {
+struct list_priv_t {
   GtkWidget *view;
   GtkMenu *menu;
 
@@ -61,10 +61,10 @@ typedef struct {
     int flags;
   } button;
 
-} list_priv_t;
+};
 
 GtkWidget *list_get_view(GtkWidget *list) {
-  list_priv_t *priv = g_object_get_data(G_OBJECT(list), "priv");
+  list_priv_t *priv = static_cast<list_priv_t *>(g_object_get_data(G_OBJECT(list), "priv"));
   g_assert_nonnull(priv);
   return priv->view;
 }
@@ -75,7 +75,7 @@ void list_set_user_buttons(GtkWidget *list,
                            const char *label0, GCallback cb0,
                            const char *label1, GCallback cb1,
                            const char *label2, GCallback cb2) {
-  list_priv_t *priv = g_object_get_data(G_OBJECT(list), "priv");
+  list_priv_t *priv = static_cast<list_priv_t *>(g_object_get_data(G_OBJECT(list), "priv"));
   g_assert_nonnull(priv);
 
   /* make space for user buttons */
@@ -89,8 +89,7 @@ void list_set_user_buttons(GtkWidget *list,
   const char *labels[] = { label0, label1, label2 };
   GCallback cbs[] = { cb0, cb1, cb2 };
 
-  list_button_t id;
-  for(id = LIST_BUTTON_USER0; id <= LIST_BUTTON_USER2; id++) {
+  for(int id = LIST_BUTTON_USER0; id <= LIST_BUTTON_USER2; id++) {
     const char *label = labels[id - LIST_BUTTON_USER0];
     if(!label)
       continue;
@@ -110,7 +109,7 @@ void list_set_user_buttons(GtkWidget *list,
 }
 
 void list_set_columns(GtkWidget *list, ...) {
-  list_priv_t *priv = g_object_get_data(G_OBJECT(list), "priv");
+  list_priv_t *priv = static_cast<list_priv_t *>(g_object_get_data(G_OBJECT(list), "priv"));
   g_assert_nonnull(priv);
   va_list ap;
 
@@ -124,7 +123,7 @@ void list_set_columns(GtkWidget *list, ...) {
     if(flags & LIST_FLAG_CAN_HIGHLIGHT)
       hlkey = va_arg(ap, int);
 
-    GtkTreeViewColumn *column = NULL;
+    GtkTreeViewColumn *column = O2G_NULLPTR;
 
     if(flags & LIST_FLAG_TOGGLE) {
       GCallback cb = va_arg(ap, GCallback);
@@ -132,26 +131,26 @@ void list_set_columns(GtkWidget *list, ...) {
 
       GtkCellRenderer *renderer = gtk_cell_renderer_toggle_new();
       column = gtk_tree_view_column_new_with_attributes(
-			   name, renderer, "active", key, NULL);
+			   name, renderer, "active", key, O2G_NULLPTR);
       g_signal_connect(renderer, "toggled", cb, data);
 
     } else if(flags & LIST_FLAG_STOCK_ICON) {
       GtkCellRenderer *pixbuf_renderer = gtk_cell_renderer_pixbuf_new();
       column = gtk_tree_view_column_new_with_attributes(name,
-	          pixbuf_renderer, "stock_id", key, NULL);
+	          pixbuf_renderer, "stock_id", key, O2G_NULLPTR);
     } else {
       GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
 
       if(flags & LIST_FLAG_CAN_HIGHLIGHT)
-	g_object_set(renderer, "background", "red", NULL );
+	g_object_set(renderer, "background", "red", O2G_NULLPTR );
 
       if(flags & LIST_FLAG_ELLIPSIZE)
-	g_object_set(renderer, "ellipsize", PANGO_ELLIPSIZE_END, NULL);
+	g_object_set(renderer, "ellipsize", PANGO_ELLIPSIZE_END, O2G_NULLPTR);
 
       column = gtk_tree_view_column_new_with_attributes(name, renderer,
 	"text", key,
-	 (flags & LIST_FLAG_CAN_HIGHLIGHT)?"background-set":NULL, hlkey,
-	NULL);
+	 (flags & LIST_FLAG_CAN_HIGHLIGHT)?"background-set":O2G_NULLPTR, hlkey,
+	O2G_NULLPTR);
 
       gtk_tree_view_column_set_expand(column,
 		      flags & (LIST_FLAG_EXPAND | LIST_FLAG_ELLIPSIZE));
@@ -168,7 +167,7 @@ void list_set_columns(GtkWidget *list, ...) {
 }
 
 static GtkWidget *list_button_get(GtkWidget *list, list_button_t id) {
-  list_priv_t *priv = g_object_get_data(G_OBJECT(list), "priv");
+  list_priv_t *priv = static_cast<list_priv_t *>(g_object_get_data(G_OBJECT(list), "priv"));
   g_assert_nonnull(priv);
 
   return priv->button.widget[id];
@@ -177,7 +176,7 @@ static GtkWidget *list_button_get(GtkWidget *list, list_button_t id) {
 /* put a custom widget into one of the button slots */
 void list_set_custom_user_button(GtkWidget *list, list_button_t id,
 				 GtkWidget *widget) {
-  list_priv_t *priv = g_object_get_data(G_OBJECT(list), "priv");
+  list_priv_t *priv = static_cast<list_priv_t *>(g_object_get_data(G_OBJECT(list), "priv"));
   g_assert_nonnull(priv);
   g_assert_cmpint(id, >=, 3);
   g_assert_cmpint(id, <,  6);
@@ -196,7 +195,7 @@ void list_set_custom_user_button(GtkWidget *list, list_button_t id,
 }
 
 GtkTreeSelection *list_get_selection(GtkWidget *list) {
-  list_priv_t *priv = g_object_get_data(G_OBJECT(list), "priv");
+  list_priv_t *priv = static_cast<list_priv_t *>(g_object_get_data(G_OBJECT(list), "priv"));
   g_assert_nonnull(priv);
 
   GtkTreeSelection *sel =
@@ -207,10 +206,10 @@ GtkTreeSelection *list_get_selection(GtkWidget *list) {
 
 /* returns true if something is selected. on in mode multiple returns */
 /* true if exactly one item is selected */
-gboolean list_get_selected(GtkWidget *list, GtkTreeModel **model,
+bool list_get_selected(GtkWidget *list, GtkTreeModel **model,
 			   GtkTreeIter *iter) {
-  gboolean retval = FALSE;
-  list_priv_t *priv = g_object_get_data(G_OBJECT(list), "priv");
+  bool retval = false;
+  list_priv_t *priv = static_cast<list_priv_t *>(g_object_get_data(G_OBJECT(list), "priv"));
   g_assert_nonnull(priv);
 
 #if 1
@@ -221,29 +220,29 @@ gboolean list_get_selected(GtkWidget *list, GtkTreeModel **model,
   GList *slist = gtk_tree_selection_get_selected_rows(sel, model);
 
   if(g_list_length(slist) == 1)
-    retval = gtk_tree_model_get_iter(*model, iter, slist->data);
+    retval = gtk_tree_model_get_iter(*model, iter, static_cast<GtkTreePath *>(slist->data)) == TRUE;
 
 #if GLIB_CHECK_VERSION(2,28,0)
   g_list_free_full(slist, (GDestroyNotify)gtk_tree_path_free);
 #else
-  g_list_foreach(slist, (GFunc)gtk_tree_path_free, NULL);
+  g_list_foreach(slist, (GFunc)gtk_tree_path_free, O2G_NULLPTR);
   g_list_free(slist);
 #endif
 
   return retval;
 #else
   // ... this doesn't
-  return gtk_tree_selection_get_selected(sel, model, iter);
+  return gtk_tree_selection_get_selected(sel, model, iter) == TRUE;
 #endif
 }
 
-void list_button_enable(GtkWidget *list, list_button_t id, gboolean enable) {
+void list_button_enable(GtkWidget *list, list_button_t id, bool enable) {
   GtkWidget *but = list_button_get(list, id);
-  if(but) gtk_widget_set_sensitive(but, enable);
+  if(but) gtk_widget_set_sensitive(but, enable ? TRUE : FALSE);
 }
 
 void list_set_store(GtkWidget *list, GtkListStore *store) {
-  list_priv_t *priv = g_object_get_data(G_OBJECT(list), "priv");
+  list_priv_t *priv = static_cast<list_priv_t *>(g_object_get_data(G_OBJECT(list), "priv"));
   g_assert_nonnull(priv);
 
   gtk_tree_view_set_model(GTK_TREE_VIEW(priv->view), GTK_TREE_MODEL(store));
@@ -259,7 +258,7 @@ static void on_row_activated(GtkTreeView *treeview,
   printf("row activated\n");
 
   if(gtk_tree_model_get_iter(model, &iter, path)) {
-    list_priv_t *priv = g_object_get_data(G_OBJECT(userdata), "priv");
+    list_priv_t *priv = static_cast<list_priv_t *>(g_object_get_data(G_OBJECT(userdata), "priv"));
     g_assert_nonnull(priv);
 
     GtkWidget *toplevel = gtk_widget_get_toplevel(GTK_WIDGET(treeview));
@@ -274,7 +273,7 @@ static void on_row_activated(GtkTreeView *treeview,
 void list_set_static_buttons(GtkWidget *list, int flags,
 			     GCallback cb_new, GCallback cb_edit,
 			     GCallback cb_remove, gpointer data) {
-  list_priv_t *priv = g_object_get_data(G_OBJECT(list), "priv");
+  list_priv_t *priv = static_cast<list_priv_t *>(g_object_get_data(G_OBJECT(list), "priv"));
   g_assert_nonnull(priv);
 
   priv->button.data = data;
@@ -318,8 +317,8 @@ GtkTreeModel *list_get_model(GtkWidget *list) {
    selection and optionally highlighting the new one. Typically called after
    making an edit to an item with a covering sub-dialog. */
 
-void list_focus_on(GtkWidget *list, GtkTreeIter *iter, gboolean highlight) {
-  list_priv_t *priv = g_object_get_data(G_OBJECT(list), "priv");
+void list_focus_on(GtkWidget *list, GtkTreeIter *iter, bool highlight) {
+  list_priv_t *priv = static_cast<list_priv_t *>(g_object_get_data(G_OBJECT(list), "priv"));
   g_assert_nonnull(priv);
   GtkTreeModel *model = gtk_tree_view_get_model(GTK_TREE_VIEW(priv->view));
 
@@ -331,7 +330,7 @@ void list_focus_on(GtkWidget *list, GtkTreeIter *iter, gboolean highlight) {
   // Scroll to it, since it might now be out of view.
   GtkTreePath *path = gtk_tree_model_get_path(model, iter);
   gtk_tree_view_scroll_to_cell(GTK_TREE_VIEW(priv->view), path,
-			       NULL, FALSE, 0, 0);
+			       O2G_NULLPTR, FALSE, 0, 0);
   gtk_tree_path_free(path);
 
   // reselect
@@ -341,16 +340,16 @@ void list_focus_on(GtkWidget *list, GtkTreeIter *iter, gboolean highlight) {
 
 static void changed(GtkTreeSelection *treeselection, gpointer user_data) {
   GtkWidget *list = (GtkWidget*)user_data;
-  list_priv_t *priv = g_object_get_data(G_OBJECT(list), "priv");
+  list_priv_t *priv = static_cast<list_priv_t *>(g_object_get_data(G_OBJECT(list), "priv"));
 
   GtkTreeModel *model;
   GtkTreeIter iter;
-  gboolean selected = list_get_selected(list, &model, &iter);
+  bool selected = list_get_selected(list, &model, &iter);
 
   /* scroll to selected entry if exactly one is selected */
   if(selected) {
     /* check if the entry isn't already visible */
-    GtkTreePath *start = NULL, *end = NULL;
+    GtkTreePath *start = O2G_NULLPTR, *end = O2G_NULLPTR;
     GtkTreePath *path = gtk_tree_model_get_path(model, &iter);
 
     gtk_tree_view_get_visible_range(GTK_TREE_VIEW(priv->view), &start, &end);
@@ -359,7 +358,7 @@ static void changed(GtkTreeSelection *treeselection, gpointer user_data) {
     if((start && (gtk_tree_path_compare(path, start)) < 0) ||
        (end && (gtk_tree_path_compare(path, end) > 0)))
       gtk_tree_view_scroll_to_cell(GTK_TREE_VIEW(priv->view),
-				   path, NULL, TRUE, 0.5, 0.5);
+				   path, O2G_NULLPTR, TRUE, 0.5, 0.5);
 
     if(start) gtk_tree_path_free(start);
     if(end)   gtk_tree_path_free(end);
@@ -378,7 +377,7 @@ static void changed(GtkTreeSelection *treeselection, gpointer user_data) {
 
 /* a generic list widget with "add", "edit" and "remove" buttons as used */
 /* for all kinds of lists in osm2go */
-GtkWidget *list_new(gboolean show_headers)
+GtkWidget *list_new(bool show_headers)
 {
   list_priv_t *priv = g_new0(list_priv_t, 1);
 
@@ -394,7 +393,7 @@ GtkWidget *list_new(gboolean show_headers)
 #endif
 
   /* hildon hides these by default */
-  gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(priv->view), show_headers);
+  gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(priv->view), show_headers ? TRUE : FALSE);
 
   GtkTreeSelection *sel =
     gtk_tree_view_get_selection(GTK_TREE_VIEW(priv->view));
@@ -403,7 +402,7 @@ GtkWidget *list_new(gboolean show_headers)
 
 #ifndef FREMANTLE
   /* put view into a scrolled window */
-  GtkWidget *scrolled_window = gtk_scrolled_window_new(NULL, NULL);
+  GtkWidget *scrolled_window = gtk_scrolled_window_new(O2G_NULLPTR, O2G_NULLPTR);
   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window),
 				 GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
   gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scrolled_window),
@@ -431,7 +430,7 @@ GtkWidget *list_new(gboolean show_headers)
 
 void list_override_changed_event(GtkWidget *list,
       void(*handler)(GtkTreeSelection*,gpointer), gpointer data) {
-  list_priv_t *priv = g_object_get_data(G_OBJECT(list), "priv");
+  list_priv_t *priv = static_cast<list_priv_t *>(g_object_get_data(G_OBJECT(list), "priv"));
   g_assert_nonnull(priv);
 
   priv->change.func = handler;
@@ -439,7 +438,7 @@ void list_override_changed_event(GtkWidget *list,
 }
 
 void list_scroll(GtkWidget* list, GtkTreeIter* iter) {
-  list_priv_t *priv = g_object_get_data(G_OBJECT(list), "priv");
+  list_priv_t *priv = static_cast<list_priv_t *>(g_object_get_data(G_OBJECT(list), "priv"));
   g_assert_nonnull(priv);
 
   list_view_scroll(GTK_TREE_VIEW(priv->view), list_get_selection(list), iter);
@@ -451,6 +450,6 @@ void list_view_scroll(GtkTreeView *view, GtkTreeSelection *sel, GtkTreeIter* ite
   gtk_tree_selection_select_iter(sel, iter);
 
   GtkTreePath *mpath = gtk_tree_model_get_path(model, iter);
-  gtk_tree_view_scroll_to_cell(view, mpath, NULL, FALSE, 0.0f, 0.0f);
+  gtk_tree_view_scroll_to_cell(view, mpath, O2G_NULLPTR, FALSE, 0.0f, 0.0f);
   gtk_tree_path_free(mpath);
 }

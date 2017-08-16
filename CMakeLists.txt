@@ -66,7 +66,7 @@ add_library(osm2go_lib STATIC
 	src/josm_presets.h
 	src/josm_presets_p.h
 	src/josm_presets_parser.cpp
-	src/list.c
+	src/list.cpp
 	src/list.h
 	src/map.cpp
 	src/map.h

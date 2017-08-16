@@ -42,26 +42,22 @@ typedef enum {
 #define LIST_FLAG_STOCK_ICON     (1<<3)   /* column contains stock icons */
 #define LIST_FLAG_TOGGLE         (1<<4)   /* column contains a toggle item */
 
-#ifdef USE_HILDON
+#ifdef FREMANTLE
 
 /* on hildon a list may be system default (LIST_HILDON_WITHOUT_HEADERS), */
 /* or forced to have headers (LIST_HILDON_WITH_HEADERS) */
 
-#define LIST_HILDON_WITH_HEADERS     TRUE
-#define LIST_HILDON_WITHOUT_HEADERS  FALSE
+#define LIST_HILDON_WITH_HEADERS     true
+#define LIST_HILDON_WITHOUT_HEADERS  false
 
 #else
 
 /* there is more space on the PC, so always show headers there */
-#define LIST_HILDON_WITH_HEADERS TRUE
-#define LIST_HILDON_WITHOUT_HEADERS TRUE
+#define LIST_HILDON_WITH_HEADERS true
+#define LIST_HILDON_WITHOUT_HEADERS true
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-GtkWidget *list_new(gboolean show_headers);
+GtkWidget *list_new(bool show_headers);
 
 GtkWidget *list_get_view(GtkWidget *list);
 /**
@@ -87,7 +83,7 @@ void list_set_columns(GtkWidget *list, ...);
 void list_set_custom_user_button(GtkWidget *list, list_button_t id,
 				 GtkWidget *widget);
 GtkTreeSelection *list_get_selection(GtkWidget *list);
-void list_button_enable(GtkWidget *list, list_button_t id, gboolean enable);
+void list_button_enable(GtkWidget *list, list_button_t id, bool enable);
 void list_set_store(GtkWidget *list, GtkListStore *store);
 
 /**
@@ -103,15 +99,10 @@ void list_set_static_buttons(GtkWidget *list, int flags,
 GCallback cb_new, GCallback cb_edit, GCallback cb_remove,
 	     gpointer data);
 GtkTreeModel *list_get_model(GtkWidget *list);
-void list_focus_on(GtkWidget *list, GtkTreeIter *iter, gboolean highlight);
-gboolean list_get_selected(GtkWidget *list, GtkTreeModel **model,
-			   GtkTreeIter *iter);
+void list_focus_on(GtkWidget *list, GtkTreeIter *iter, bool highlight);
+bool list_get_selected(GtkWidget *list, GtkTreeModel **model, GtkTreeIter *iter);
 void list_override_changed_event(GtkWidget *list, void(*handler)(GtkTreeSelection*,gpointer), gpointer data);
 void list_scroll(GtkWidget *list, GtkTreeIter *iter);
 void list_view_scroll(GtkTreeView *view, GtkTreeSelection *sel, GtkTreeIter* iter);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif // LIST_H
