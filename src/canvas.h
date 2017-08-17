@@ -59,15 +59,7 @@ typedef enum {
 #error "More than 16 canvas groups needs adjustment e.g. in map.h"
 #endif
 
-/* --------- goocanvas specific --------- */
-#if defined(USE_GOOCANVAS)
-
-typedef guint canvas_color_t;
-
-#else
-#error "No canvas type defined!"
-#endif
-
+typedef unsigned int canvas_color_t;
 struct canvas_item_t;
 class canvas_item_info_t;
 

@@ -112,7 +112,6 @@ if (GooCanvas_FOUND)
 	target_sources(osm2go_lib PRIVATE
 		src/canvas_goocanvas.cpp
 	)
-	target_compile_definitions(osm2go_lib PUBLIC USE_GOOCANVAS)
 	target_link_libraries(osm2go_lib PRIVATE PkgConfig::GooCanvas)
 endif ()
 
