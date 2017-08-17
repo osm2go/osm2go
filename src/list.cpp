@@ -306,8 +306,6 @@ GtkWidget *list_new(bool show_headers, unsigned int btn_flags, void *context,
   GtkTreeSelection *sel =
     gtk_tree_view_get_selection(GTK_TREE_VIEW(priv->view));
 
-  g_signal_connect(G_OBJECT(sel), "changed", G_CALLBACK(changed), vbox);
-
 #ifndef FREMANTLE
   /* put view into a scrolled window */
   GtkWidget *scrolled_window = gtk_scrolled_window_new(O2G_NULLPTR, O2G_NULLPTR);
@@ -346,7 +344,7 @@ GtkWidget *list_new(bool show_headers, unsigned int btn_flags, void *context,
   g_assert_cmpuint(buttons.size(), >=, cols);
   g_assert_cmpuint(buttons.size(), <=, cols * rows);
 
-  /* add the three default buttons, but keep the disabled for now */
+  /* add the three default buttons, but keep all but the first disabled for now */
   for(unsigned int i = 0; i < 3; i++) {
     if(strchr(buttons[i].first, '_') != O2G_NULLPTR)
       priv->button.widget[i] = gtk_button_new_with_mnemonic(buttons[i].first);
@@ -356,14 +354,19 @@ GtkWidget *list_new(bool show_headers, unsigned int btn_flags, void *context,
                               priv->button.widget[i], i, i + 1, 0, 1);
     g_signal_connect_swapped(GTK_OBJECT(priv->button.widget[i]), "clicked",
                              buttons[i].second, priv->callback_context);
-    gtk_widget_set_sensitive(priv->button.widget[0], TRUE);
+    gtk_widget_set_sensitive(priv->button.widget[i], i == 0 ? TRUE : FALSE);
   }
 
   list_set_columns(priv, columns);
+
   if(buttons.size() > 3)
     list_set_user_buttons(priv, buttons);
 
   gtk_tree_view_set_model(GTK_TREE_VIEW(priv->view), GTK_TREE_MODEL(store));
+
+  // set this up last so it will not be called with an incompletely set up
+  // context pointer
+  g_signal_connect(G_OBJECT(sel), "changed", G_CALLBACK(changed), vbox);
 
   return vbox;
 }
