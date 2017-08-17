@@ -62,7 +62,6 @@ typedef enum {
 
 #include <goocanvas.h>
 
-typedef GooCanvasItem canvas_item_t;
 typedef GooCanvasPoints canvas_points_t;
 typedef guint canvas_color_t;
 
@@ -70,6 +69,7 @@ typedef guint canvas_color_t;
 #error "No canvas type defined!"
 #endif
 
+struct canvas_item_t;
 class canvas_item_info_t;
 
 struct canvas_dimensions {

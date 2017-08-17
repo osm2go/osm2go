@@ -26,6 +26,14 @@
 
 #include <osm2go_cpp.h>
 
+static inline canvas_item_t *fromGooCanvasItem(GooCanvasItem *item) {
+  return reinterpret_cast<canvas_item_t *>(item);
+}
+
+static inline GooCanvasItem *toGooCanvasItem(canvas_item_t *item) {
+  return reinterpret_cast<GooCanvasItem *>(item);
+}
+
 struct canvas_goocanvas : public canvas_t {
   canvas_goocanvas();
 
@@ -171,13 +179,13 @@ canvas_item_t *canvas_t::circle_new(canvas_group_t group,
 			 gint x, gint y, gint radius, gint border,
 			 canvas_color_t fill_col, canvas_color_t border_col) {
 
-  canvas_item_t *item =
+  canvas_item_t *item = fromGooCanvasItem(
     goo_canvas_ellipse_new(static_cast<canvas_goocanvas *>(this)->group[group],
                            x, y, radius, radius,
                            "line-width", static_cast<double>(border),
 			   "stroke-color-rgba", border_col,
 			   "fill-color-rgba", fill_col,
-                           O2G_NULLPTR);
+                           O2G_NULLPTR));
 
   if(CANVAS_SELECTABLE & (1<<group))
     (void) new canvas_item_info_circle(this, group, item, x, y, radius + border);
@@ -209,14 +217,14 @@ void canvas_point_get_lpos(canvas_points_t *points, gint index, lpos_t *lpos) {
 
 canvas_item_t *canvas_t::polyline_new(canvas_group_t group,
 		  canvas_points_t *points, gint width, canvas_color_t color) {
-  canvas_item_t *item =
+  canvas_item_t *item = fromGooCanvasItem(
     goo_canvas_polyline_new(static_cast<canvas_goocanvas *>(this)->group[group],
                             FALSE, 0, "points", points,
                             "line-width", static_cast<double>(width),
 			    "stroke-color-rgba", color,
 			    "line-join", CAIRO_LINE_JOIN_ROUND,
 			    "line-cap", CAIRO_LINE_CAP_ROUND,
-                            O2G_NULLPTR);
+                            O2G_NULLPTR));
 
   if(CANVAS_SELECTABLE & (1<<group))
     (void) new canvas_item_info_poly(this, group, item, FALSE, width, points);
@@ -227,7 +235,7 @@ canvas_item_t *canvas_t::polyline_new(canvas_group_t group,
 canvas_item_t *canvas_t::polygon_new(canvas_group_t group,
 		  canvas_points_t *points, gint width, canvas_color_t color,
 				  canvas_color_t fill) {
-  canvas_item_t *item =
+  canvas_item_t *item = fromGooCanvasItem(
     goo_canvas_polyline_new(static_cast<canvas_goocanvas *>(this)->group[group],
                             TRUE, 0, "points", points,
                             "line-width", static_cast<double>(width),
@@ -235,7 +243,7 @@ canvas_item_t *canvas_t::polygon_new(canvas_group_t group,
 			    "fill-color-rgba", fill,
 			    "line-join", CAIRO_LINE_JOIN_ROUND,
 			    "line-cap", CAIRO_LINE_CAP_ROUND,
-                            O2G_NULLPTR);
+                            O2G_NULLPTR));
 
   if(CANVAS_SELECTABLE & (1<<group))
     (void) new canvas_item_info_poly(this, group, item, TRUE, width, points);
@@ -247,10 +255,11 @@ canvas_item_t *canvas_t::polygon_new(canvas_group_t group,
 canvas_item_t *canvas_t::image_new(canvas_group_t group,
 		GdkPixbuf *pix, gint x, gint y, float hscale, float vscale) {
 
-  canvas_item_t *item = goo_canvas_image_new(static_cast<canvas_goocanvas *>(this)->group[group],
-                                             pix, x/hscale - gdk_pixbuf_get_width(pix)/2,
-                                             y/vscale - gdk_pixbuf_get_height(pix)/2, O2G_NULLPTR);
-  goo_canvas_item_scale(item, hscale, vscale);
+  GooCanvasItem *gitem = goo_canvas_image_new(static_cast<canvas_goocanvas *>(this)->group[group],
+                                              pix, x / hscale - gdk_pixbuf_get_width(pix) / 2,
+                                              y / vscale - gdk_pixbuf_get_height(pix) / 2, O2G_NULLPTR);
+  goo_canvas_item_scale(gitem, hscale, vscale);
+  canvas_item_t *item = fromGooCanvasItem(gitem);
 
   if(CANVAS_SELECTABLE & (1<<group)) {
     gint radius = 0.75 * hscale * MAX(gdk_pixbuf_get_width(pix), gdk_pixbuf_get_height(pix)); /* hscale and vscale are the same */
@@ -261,7 +270,7 @@ canvas_item_t *canvas_t::image_new(canvas_group_t group,
 }
 
 void canvas_item_destroy(canvas_item_t *item) {
-  goo_canvas_item_remove(item);
+  goo_canvas_item_remove(toGooCanvasItem(item));
 }
 
 /* ------------------------ accessing items ---------------------- */
@@ -285,11 +294,10 @@ void canvas_item_set_radius(canvas_item_t *item, gint radius) {
 }
 
 void canvas_item_to_bottom(canvas_item_t *item) {
-
-
-  goo_canvas_item_lower(item, O2G_NULLPTR);
+  GooCanvasItem *gitem = toGooCanvasItem(item);
+  goo_canvas_item_lower(gitem, O2G_NULLPTR);
   canvas_t *canvas =
-    static_cast<canvas_t *>(g_object_get_data(G_OBJECT(goo_canvas_item_get_canvas(item)),
+    static_cast<canvas_t *>(g_object_get_data(G_OBJECT(goo_canvas_item_get_canvas(gitem)),
                                               "canvas-pointer"));
 
   g_assert_nonnull(canvas);
