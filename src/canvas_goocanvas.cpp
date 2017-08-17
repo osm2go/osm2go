@@ -23,8 +23,35 @@
 
 #include <cmath>
 #include <cstring>
+#include <goocanvas.h>
 
 #include <osm2go_cpp.h>
+
+#if __cplusplus >= 201103L
+#include <type_traits>
+static_assert(std::is_same<decltype(canvas_points_t::coords), decltype(GooCanvasPoints::coords)>::value,
+              "coordinate type mismatch");
+static_assert(offsetof(canvas_points_t, coords) == offsetof(GooCanvasPoints, coords),
+              "coordinate offset mismatch");
+#else
+struct coord_check {
+  inline void operator()(canvas_points_t &cp) {
+    GooCanvasPoints gp;
+    typeof(gp.coords) &gco = cp.coords;
+    typeof(cp.coords) &cco = gp.coords;
+    std::swap(gco, cco);
+
+    // canvas_points_t is non-POD, but standard layout
+    // the old gcc doesn't support offsetof here
+    static_assert(offsetof(GooCanvasPoints, coords) == 0,
+                  "coordinate offset mismatch");
+    static_assert(sizeof(static_cast<canvas_points_t *>(O2G_NULLPTR)->coords) == sizeof(void *),
+                  "coordinate size mismatch");
+    static_assert(sizeof(canvas_points_t) == sizeof(void *),
+                  "coordinate offset mismatch");
+  }
+};
+#endif
 
 static inline canvas_item_t *fromGooCanvasItem(GooCanvasItem *item) {
   return reinterpret_cast<canvas_item_t *>(item);
@@ -194,7 +221,7 @@ canvas_item_t *canvas_t::circle_new(canvas_group_t group,
 }
 
 canvas_points_t *canvas_points_new(gint points) {
-  return goo_canvas_points_new(points);
+  return reinterpret_cast<canvas_points_t *>(goo_canvas_points_new(points));
 }
 
 void canvas_point_set_pos(canvas_points_t *points, gint index, const lpos_t &lpos) {
@@ -203,14 +230,14 @@ void canvas_point_set_pos(canvas_points_t *points, gint index, const lpos_t &lpo
 }
 
 void canvas_points_free(canvas_points_t *points) {
-  goo_canvas_points_unref(points);
+  goo_canvas_points_unref(reinterpret_cast<GooCanvasPoints *>(points));
 }
 
-gint canvas_points_num(canvas_points_t *points) {
-  return points->num_points;
+gint canvas_points_num(const canvas_points_t *points) {
+  return reinterpret_cast<const GooCanvasPoints *>(points)->num_points;
 }
 
-void canvas_point_get_lpos(canvas_points_t *points, gint index, lpos_t *lpos) {
+void canvas_point_get_lpos(const canvas_points_t *points, gint index, lpos_t *lpos) {
   lpos->x = points->coords[2*index+0];
   lpos->y = points->coords[2*index+1];
 }
@@ -394,7 +421,8 @@ gint canvas_item_get_segment(canvas_item_t *item, gint x, gint y) {
 
   gint retval = -1, i;
   double mindist = 100;
-  for(i=0;i<points->num_points-1;i++) {
+  const int max = canvas_points_num(points);
+  for(i = 0; i < max - 1; i++) {
 
 #define AX (points->coords[2*i+0])
 #define AY (points->coords[2*i+1])
@@ -440,7 +468,7 @@ void canvas_item_get_segment_pos(canvas_item_t *item, gint seg,
   g_object_get(G_OBJECT(item), "points", &points, O2G_NULLPTR);
 
   g_assert_nonnull(points);
-  g_assert_cmpint(seg, <, points->num_points-1);
+  g_assert_cmpint(seg, <, canvas_points_num(points) - 1);
 
   x0 = points->coords[2 * seg + 0];
   y0 = points->coords[2 * seg + 1];

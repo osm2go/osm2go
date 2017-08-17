@@ -27,7 +27,7 @@ write_compiler_detection_header(
 		FILE "${CMAKE_CURRENT_BINARY_DIR}/osm2go_cpp.h"
 		PREFIX "O2G"
 		COMPILERS GNU Clang
-		FEATURES cxx_nullptr cxx_override cxx_static_assert
+		FEATURES cxx_nullptr cxx_override cxx_static_assert cxx_deleted_functions
 		ALLOW_UNKNOWN_COMPILER_VERSIONS ALLOW_UNKNOWN_COMPILERS
 		EPILOG
 "#if !(defined(O2G_COMPILER_CXX_NULLPTR) && O2G_COMPILER_CXX_NULLPTR)
@@ -113,7 +113,7 @@ if (GooCanvas_FOUND)
 		src/canvas_goocanvas.cpp
 	)
 	target_compile_definitions(osm2go_lib PUBLIC USE_GOOCANVAS)
-	target_link_libraries(osm2go_lib PUBLIC PkgConfig::GooCanvas)
+	target_link_libraries(osm2go_lib PRIVATE PkgConfig::GooCanvas)
 endif ()
 
 set(FREMANTLE Off)

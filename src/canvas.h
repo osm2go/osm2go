@@ -26,6 +26,8 @@
 #include <gtk/gtk.h>
 #include <vector>
 
+#include <osm2go_cpp.h>
+
 /* --------- generic canvas --------- */
 
 typedef enum {
@@ -60,9 +62,6 @@ typedef enum {
 /* --------- goocanvas specific --------- */
 #if defined(USE_GOOCANVAS)
 
-#include <goocanvas.h>
-
-typedef GooCanvasPoints canvas_points_t;
 typedef guint canvas_color_t;
 
 #else
@@ -71,6 +70,13 @@ typedef guint canvas_color_t;
 
 struct canvas_item_t;
 class canvas_item_info_t;
+
+class canvas_points_t {
+  canvas_points_t() O2G_DELETED_FUNCTION;
+  canvas_points_t &operator=(const canvas_points_t &) O2G_DELETED_FUNCTION;
+public:
+  double *coords;
+};
 
 struct canvas_dimensions {
   gdouble width, height;
@@ -171,8 +177,8 @@ void canvas_item_get_segment_pos(canvas_item_t *item, gint seg,
 
 canvas_points_t *canvas_points_new(gint points);
 void canvas_points_free(canvas_points_t *points);
-gint canvas_points_num(canvas_points_t *points);
-void canvas_point_get_lpos(canvas_points_t *points, gint index, lpos_t *lpos);
+gint canvas_points_num(const canvas_points_t *points);
+void canvas_point_get_lpos(const canvas_points_t *points, gint index, lpos_t *lpos);
 void canvas_item_destroy(canvas_item_t *item);
 
 /****** manipulating items ******/
