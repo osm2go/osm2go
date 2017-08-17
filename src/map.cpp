@@ -798,18 +798,18 @@ map_item_t *map_real_item_at(map_t *map, gint x, gint y) {
 
 /* Limitations on the amount by which we can scroll. Keeps part of the
  * map visible at all times */
-static void map_limit_scroll(map_t *map, canvas_unit_t unit, gint &sx, gint &sy) {
+static void map_limit_scroll(map_t *map, canvas_t::canvas_unit_t unit, gint &sx, gint &sy) {
 
   /* get scale factor for pixel->meter conversion. set to 1 if */
   /* given coordinates are already in meters */
-  gdouble scale = (unit == CANVAS_UNIT_METER) ? 1.0 : map->canvas->get_zoom();
+  gdouble scale = (unit == canvas_t::UNIT_METER) ? 1.0 : map->canvas->get_zoom();
 
   /* convert pixels to meters if necessary */
   gdouble sx_cu = sx / scale;
   gdouble sy_cu = sy / scale;
 
   /* get size of visible area in canvas units (meters) */
-  canvas_dimensions dim = map->canvas->get_viewport_dimensions(CANVAS_UNIT_METER) / 2;
+  canvas_dimensions dim = map->canvas->get_viewport_dimensions(canvas_t::UNIT_METER) / 2;
 
   // Data rect minimum and maximum
   gint min_x, min_y, max_x, max_y;
@@ -842,7 +842,7 @@ static bool map_limit_zoom(map_t *map, gdouble &zoom) {
 
     /* get size of visible area in pixels and convert to meters of intended */
     /* zoom by deviding by zoom (which is basically pix/m) */
-    canvas_dimensions dim = map->canvas->get_viewport_dimensions(CANVAS_UNIT_PIXEL) / zoom;
+    canvas_dimensions dim = map->canvas->get_viewport_dimensions(canvas_t::UNIT_PIXEL) / zoom;
 
     gdouble oldzoom = zoom;
     if (dim.height < dim.width) {
@@ -894,12 +894,12 @@ bool map_t::scroll_to_if_offscreen(const lpos_t *lpos) {
 
   /* get size of visible area in canvas units (meters) */
   gdouble pix_per_meter = canvas->get_zoom();
-  canvas_dimensions dim = canvas->get_viewport_dimensions(CANVAS_UNIT_METER);
+  canvas_dimensions dim = canvas->get_viewport_dimensions(canvas_t::UNIT_METER);
 
   // Is the point still onscreen?
   bool recentre_needed = false;
   gint sx, sy;
-  canvas->scroll_get(CANVAS_UNIT_METER, sx, sy);
+  canvas->scroll_get(canvas_t::UNIT_METER, sx, sy);
   gint viewport_left   = sx - dim.width / 2;
   gint viewport_right  = sx + dim.width / 2;
   gint viewport_top    = sy - dim.height / 2;
@@ -929,8 +929,8 @@ bool map_t::scroll_to_if_offscreen(const lpos_t *lpos) {
     new_sx = pix_per_meter * lpos->x; // XXX (lpos->x - (aw/2));
     new_sy = pix_per_meter * lpos->y; // XXX (lpos->y - (ah/2));
 
-    map_limit_scroll(this, CANVAS_UNIT_PIXEL, new_sx, new_sy);
-    canvas->scroll_to(CANVAS_UNIT_PIXEL, new_sx, new_sy);
+    map_limit_scroll(this, canvas_t::UNIT_PIXEL, new_sx, new_sy);
+    canvas->scroll_to(canvas_t::UNIT_PIXEL, new_sx, new_sy);
   }
   return true;
 }
@@ -970,14 +970,14 @@ void map_set_zoom(map_t *map, double zoom, bool update_scroll_offsets) {
     if (!at_zoom_limit) {
       /* zooming affects the scroll offsets */
       gint sx, sy;
-      map->canvas->scroll_get(CANVAS_UNIT_PIXEL, sx, sy);
-      map_limit_scroll(map, CANVAS_UNIT_PIXEL, sx, sy);
+      map->canvas->scroll_get(canvas_t::UNIT_PIXEL, sx, sy);
+      map_limit_scroll(map, canvas_t::UNIT_PIXEL, sx, sy);
 
       // keep the map visible
-      map->canvas->scroll_to(CANVAS_UNIT_PIXEL, sx, sy);
+      map->canvas->scroll_to(canvas_t::UNIT_PIXEL, sx, sy);
     }
 
-    map->canvas->scroll_get(CANVAS_UNIT_METER, map->state.scroll_offset.x,
+    map->canvas->scroll_get(canvas_t::UNIT_METER, map->state.scroll_offset.x,
                             map->state.scroll_offset.y);
   }
 
@@ -1023,13 +1023,13 @@ static gboolean distance_above(map_t *map, gint x, gint y, gint limit) {
 static void map_do_scroll(map_t *map, gint x, gint y) {
   gint sx, sy;
 
-  map->canvas->scroll_get(CANVAS_UNIT_PIXEL, sx, sy);
+  map->canvas->scroll_get(canvas_t::UNIT_PIXEL, sx, sy);
   sx -= x-map->pen_down.at.x;
   sy -= y-map->pen_down.at.y;
-  map_limit_scroll(map, CANVAS_UNIT_PIXEL, sx, sy);
-  map->canvas->scroll_to(CANVAS_UNIT_PIXEL, sx, sy);
+  map_limit_scroll(map, canvas_t::UNIT_PIXEL, sx, sy);
+  map->canvas->scroll_to(canvas_t::UNIT_PIXEL, sx, sy);
 
-  map->canvas->scroll_get(CANVAS_UNIT_METER,
+  map->canvas->scroll_get(canvas_t::UNIT_METER,
                     map->state.scroll_offset.x,
                     map->state.scroll_offset.y);
 }
@@ -1038,13 +1038,13 @@ static void map_do_scroll(map_t *map, gint x, gint y) {
 /* scroll a certain step */
 static void map_do_scroll_step(map_t *map, gint x, gint y) {
   gint sx, sy;
-  map->canvas->scroll_get(CANVAS_UNIT_PIXEL, sx, sy);
+  map->canvas->scroll_get(canvas_t::UNIT_PIXEL, sx, sy);
   sx += x;
   sy += y;
-  map_limit_scroll(map, CANVAS_UNIT_PIXEL, sx, sy);
-  map->canvas->scroll_to(CANVAS_UNIT_PIXEL, sx, sy);
+  map_limit_scroll(map, canvas_t::UNIT_PIXEL, sx, sy);
+  map->canvas->scroll_to(canvas_t::UNIT_PIXEL, sx, sy);
 
-  map->canvas->scroll_get(CANVAS_UNIT_METER,
+  map->canvas->scroll_get(canvas_t::UNIT_METER,
                     map->state.scroll_offset.x,
                     map->state.scroll_offset.y);
 }
@@ -1626,9 +1626,9 @@ void map_t::init() {
   printf("restore scroll position %d/%d\n",
          state.scroll_offset.x, state.scroll_offset.y);
 
-  map_limit_scroll(this, CANVAS_UNIT_METER,
+  map_limit_scroll(this, canvas_t::UNIT_METER,
                    state.scroll_offset.x, state.scroll_offset.y);
-  canvas->scroll_to(CANVAS_UNIT_METER, state.scroll_offset.x, state.scroll_offset.y);
+  canvas->scroll_to(canvas_t::UNIT_METER, state.scroll_offset.x, state.scroll_offset.y);
 }
 
 

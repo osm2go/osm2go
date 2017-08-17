@@ -95,7 +95,7 @@ canvas_dimensions canvas_t::get_viewport_dimensions(canvas_unit_t unit) const {
   canvas_dimensions ret;
 
   const GtkAllocation &a = widget->allocation;
-  if(unit == CANVAS_UNIT_PIXEL) {
+  if(unit == canvas_t::UNIT_PIXEL) {
     ret.width = a.width;
     ret.height = a.height;
   } else {
@@ -120,7 +120,7 @@ void canvas_t::scroll_get(canvas_unit_t unit, gint &sx, gint &sy) const {
   hs += widget->allocation.width/(2*zoom);
   vs += widget->allocation.height/(2*zoom);
 
-  if(unit == CANVAS_UNIT_PIXEL) {
+  if(unit == canvas_t::UNIT_PIXEL) {
     /* make values zoom independant */
     sx = hs * zoom;
     sy = vs * zoom;
@@ -134,7 +134,7 @@ void canvas_t::scroll_get(canvas_unit_t unit, gint &sx, gint &sy) const {
 void canvas_t::scroll_to(canvas_unit_t unit, gint sx, gint sy) {
   gdouble zoom = goo_canvas_get_scale(GOO_CANVAS(widget));
 
-  if(unit != CANVAS_UNIT_METER) {
+  if(unit != canvas_t::UNIT_METER) {
     sx /= zoom; sy /= zoom;
   }
 

@@ -72,8 +72,6 @@ typedef guint canvas_color_t;
 
 class canvas_item_info_t;
 
-enum canvas_unit_t { CANVAS_UNIT_METER = 0, CANVAS_UNIT_PIXEL };
-
 struct canvas_dimensions {
   gdouble width, height;
   inline canvas_dimensions operator/(double d) const {
@@ -87,6 +85,8 @@ class canvas_t {
 protected:
   canvas_t(GtkWidget *w);
 public:
+  enum canvas_unit_t { UNIT_METER = 0, UNIT_PIXEL };
+
   static canvas_t *create();
 
   GtkWidget * const widget;
