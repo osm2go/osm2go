@@ -166,7 +166,7 @@ net_io_request_t::net_io_request_t(const std::string &u, curl_mem_t *cmem)
   , res(CURLE_OK)
   , response(0)
   , mem(cmem)
-  , use_compression(true)
+  , use_compression(false)
 {
   memset(buffer, 0, sizeof(buffer));
 }
