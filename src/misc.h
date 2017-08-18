@@ -68,6 +68,8 @@ template<typename T> void shrink_to_fit(T &v) {
 #endif
 }
 
+#if __cplusplus < 201402L
+namespace std {
 template<typename T> typename T::const_iterator cbegin(const T &c) {
 #if __cplusplus >= 201103L
   return c.cbegin();
@@ -75,6 +77,8 @@ template<typename T> typename T::const_iterator cbegin(const T &c) {
   return typename T::const_iterator(c.begin());
 #endif
 }
+}
+#endif
 
 // gcc did not set the C++ level before it was officially released
 #if __cplusplus < 201103L && O2G_COMPILER_CXX_NULLPTR == 0

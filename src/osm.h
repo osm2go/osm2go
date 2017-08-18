@@ -288,7 +288,7 @@ public:
     if(!contents)
       return false;
     const std::vector<tag_t>::const_iterator itEnd = contents->end();
-    return itEnd != std::find_if(cbegin(*contents), itEnd, pred);
+    return itEnd != std::find_if(std::cbegin(*contents), itEnd, pred);
   }
 
   template<typename _Predicate>

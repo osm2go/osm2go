@@ -1002,7 +1002,7 @@ presets_widget_t::Match presets_widget_t::parseMatch(const char *matchstring, Ma
     matches["keyvalue!"] = MatchKeyValue_Force;
   }
   const VMap::const_iterator itEnd = matches.end();
-  const VMap::const_iterator it = !matchstring ? itEnd : std::find_if(cbegin(matches),
+  const VMap::const_iterator it = !matchstring ? itEnd : std::find_if(std::cbegin(matches),
                                                itEnd, str_map_find<VMap>(matchstring));
 
   return (it == itEnd) ? def : it->second;

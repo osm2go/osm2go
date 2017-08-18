@@ -1180,7 +1180,7 @@ void wms_import(appdata_t &appdata) {
 
   /* find preferred supported video format */
   const FormatMap::const_iterator itEnd = ImageFormats.end();
-  FormatMap::const_iterator it = std::find_if(cbegin(ImageFormats), itEnd,
+  FormatMap::const_iterator it = std::find_if(std::cbegin(ImageFormats), itEnd,
                                               find_format_reverse_functor(wms.cap.request.getmap.format));
   g_assert(it != itEnd);
 

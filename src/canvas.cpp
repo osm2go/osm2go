@@ -143,7 +143,7 @@ static canvas_item_info_t *canvas_item_get_info(canvas_t *canvas,
   /* search for item in all chains */
   for(unsigned int group = 0; group < CANVAS_GROUPS; group++) {
     const std::vector<canvas_item_info_t *>::const_iterator itEnd = canvas->item_info[group].end();
-    std::vector<canvas_item_info_t *>::const_iterator it = std::find_if(cbegin(canvas->item_info[group]),
+    std::vector<canvas_item_info_t *>::const_iterator it = std::find_if(std::cbegin(canvas->item_info[group]),
                                                                         itEnd, item_info_find(item));
     if(it != itEnd)
       return *it;
