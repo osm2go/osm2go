@@ -73,6 +73,9 @@ signal_filter(G_GNUC_UNUSED DBusConnection *connection, DBusMessage *message, G_
 /* only the screen is refreshed, useful if e.g. the poi database changed */
 gboolean dbus_mm_set_position(osso_context_t *osso_context, dbus_mm_pos_t *mmp) {
   osso_rpc_t retval;
+
+  mmpos.valid = FALSE;
+
   osso_return_t ret = osso_rpc_run(osso_context,
 		     MM_DBUS_SERVICE,
 		     MM_DBUS_PATH,
@@ -103,7 +106,6 @@ gboolean dbus_register() {
 
   /* listening to messages from all objects as no path is specified */
   dbus_bus_add_match(bus, "type='signal',interface='"MM_DBUS_INTERFACE"'", &error);
-  mmpos.valid = FALSE;
   dbus_connection_add_filter(bus, signal_filter, NULL, NULL);
 
   return TRUE;

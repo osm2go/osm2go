@@ -1103,6 +1103,7 @@ appdata_t::appdata_t()
   : program(O2G_NULLPTR)
   , window(O2G_NULLPTR)
   , osso_context(osso_initialize("org.harbaum." PACKAGE, VERSION, TRUE, O2G_NULLPTR))
+  , banner(O2G_NULLPTR)
 #else
   : window(O2G_NULLPTR)
 #endif
@@ -1114,9 +1115,6 @@ appdata_t::appdata_t()
   , project(O2G_NULLPTR)
   , iconbar(O2G_NULLPTR)
   , presets(O2G_NULLPTR)
-#ifdef USE_HILDON
-  , banner(O2G_NULLPTR)
-#endif
 #ifndef FREMANTLE
   , menu_item_view_fullscreen(O2G_NULLPTR)
 #endif

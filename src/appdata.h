@@ -84,6 +84,7 @@ typedef struct appdata_t {
   HildonProgram *program;
   HildonWindow *window;
   osso_context_t * const osso_context;
+  GtkWidget *banner;
 #else
   GtkWidget *window;
 #endif
@@ -96,10 +97,6 @@ typedef struct appdata_t {
   struct project_t *project;
   struct iconbar_t *iconbar;
   struct presets_items *presets;
-
-#ifdef USE_HILDON
-  GtkWidget *banner;
-#endif
 
   /* flags used to prevent re-appearence of dialogs */
   struct {
