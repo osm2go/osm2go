@@ -29,31 +29,36 @@
 #include <glib.h>
 #include <dbus/dbus-glib.h>
 
-static DBusHandlerResult
-signal_filter(G_GNUC_UNUSED DBusConnection *connection, DBusMessage *message, void *user_data) {
-  /* User data is the place to store the received position */
-  dbus_mm_pos_t *mmpos = user_data;
+static dbus_mm_pos_t mmpos;
 
+static DBusHandlerResult
+signal_filter(G_GNUC_UNUSED DBusConnection *connection, DBusMessage *message, G_GNUC_UNUSED void *user_data) {
   if(dbus_message_is_signal(message, MM_DBUS_SERVICE, "view_position_changed")) {
     DBusError error;
+#ifdef USE_FLOAT
     double lat, lon;
+    double *latp = &lat, *lonp = &lon;
+#else
+    double *latp = &mmpos.pos.lat, *lonp = &mmpos.pos.lon;
+#endif
     long zoom;
     dbus_error_init(&error);
 
     if(dbus_message_get_args(message, &error,
-			     DBUS_TYPE_DOUBLE, &lat,
-			     DBUS_TYPE_DOUBLE, &lon,
-			     DBUS_TYPE_INT32,  &zoom,
+			     DBUS_TYPE_DOUBLE, latp,
+			     DBUS_TYPE_DOUBLE, lonp,
+			     DBUS_TYPE_INT32,  &mmpos.zoom,
 			     DBUS_TYPE_INVALID)) {
 
       g_print("MM: position received: %f/%f, zoom = %ld\n",
-	      (float)lat, (float)lon, zoom);
+	      (float)*latp, (float)*lonp, zoom);
 
       /* store position for further processing */
-      mmpos->pos.lat = lat;
-      mmpos->pos.lon = lon;
-      mmpos->zoom = zoom;
-      mmpos->valid = TRUE;
+#ifdef USE_FLOAT
+      mmpos.pos.lat = lat;
+      mmpos.pos.lon = lon;
+#endif
+      mmpos.valid = TRUE;
 
     } else {
       g_print("  Error getting message: %s\n", error.message);
@@ -66,11 +71,9 @@ signal_filter(G_GNUC_UNUSED DBusConnection *connection, DBusMessage *message, vo
 }
 
 /* only the screen is refreshed, useful if e.g. the poi database changed */
-gboolean dbus_mm_set_position(osso_context_t *osso_context) {
+gboolean dbus_mm_set_position(osso_context_t *osso_context, dbus_mm_pos_t *mmp) {
   osso_rpc_t retval;
-  osso_return_t ret;
-
-  ret = osso_rpc_run(osso_context,
+  osso_return_t ret = osso_rpc_run(osso_context,
 		     MM_DBUS_SERVICE,
 		     MM_DBUS_PATH,
 		     MM_DBUS_INTERFACE,
@@ -80,10 +83,12 @@ gboolean dbus_mm_set_position(osso_context_t *osso_context) {
 
   osso_rpc_free_val(&retval);
 
+  *mmp = mmpos;
+
   return(ret == OSSO_OK);
 }
 
-void dbus_register(dbus_mm_pos_t *mmpos) {
+gboolean dbus_register() {
   DBusConnection *bus;
   DBusError error;
 
@@ -92,11 +97,14 @@ void dbus_register(dbus_mm_pos_t *mmpos) {
   if(!bus) {
     g_warning("Failed to connect to the D-BUS daemon: %s", error.message);
     dbus_error_free(&error);
-    return;
+    return FALSE;
   }
   dbus_connection_setup_with_g_main(bus, NULL);
 
   /* listening to messages from all objects as no path is specified */
   dbus_bus_add_match(bus, "type='signal',interface='"MM_DBUS_INTERFACE"'", &error);
-  dbus_connection_add_filter(bus, signal_filter, mmpos, NULL);
+  mmpos.valid = FALSE;
+  dbus_connection_add_filter(bus, signal_filter, NULL, NULL);
+
+  return TRUE;
 }

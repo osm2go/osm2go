@@ -42,6 +42,7 @@
 
 /* maemo5 just got maemo mapper */
 #if defined(USE_HILDON)
+#include "dbus.h"
 #define HAS_MAEMO_MAPPER
 #ifdef FREMANTLE
 #define TAB_LABEL_MM     "M.Mapper"
@@ -432,20 +433,17 @@ static void callback_modified_unit(context_t *context) {
 
 #ifdef HAS_MAEMO_MAPPER
 static void callback_fetch_mm_clicked(context_t *context) {
-  if(!dbus_mm_set_position(context->area.appdata.osso_context)) {
-    errorf(context->dialog,
-	   _("Unable to communicate with Maemo Mapper. "
-	     "You need to have Maemo Mapper installed "
-	     "to use this feature."));
+  dbus_mm_pos_t mmpos;
+  if(!dbus_mm_set_position(context->area.appdata.osso_context, &mmpos)) {
+    errorf(context->dialog, _("Unable to communicate with Maemo Mapper. "
+              "You need to have Maemo Mapper installed to use this feature."));
     return;
   }
 
-  if(!context->area.appdata.mmpos.valid) {
-    errorf(context->dialog,
-	   _("No valid position received yet. You need "
-	     "to scroll or zoom the Maemo Mapper view "
-	     "in order to force it to send its current "
-	     "view position to osm2go."));
+  if(!mmpos.valid) {
+    errorf(context->dialog, _("No valid position received yet. You need to "
+           "scroll or zoom the Maemo Mapper view in order to force it to send "
+           "its current view position to osm2go."));
     return;
   }
 
@@ -454,9 +452,9 @@ static void callback_fetch_mm_clicked(context_t *context) {
     return;
 
   /* maemo mapper pos data ... */
-  pos_float_t center_lat = context->area.appdata.mmpos.pos.lat;
-  pos_float_t center_lon = context->area.appdata.mmpos.pos.lon;
-  int zoom = context->area.appdata.mmpos.zoom;
+  pos_float_t center_lat = mmpos.pos.lat;
+  pos_float_t center_lon = mmpos.pos.lon;
+  int zoom = mmpos.zoom;
 
   if(!pos_lat_valid(center_lat) || !pos_lon_valid(center_lon))
     return;

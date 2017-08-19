@@ -49,10 +49,6 @@
 
 #include "canvas.h"
 
-#ifdef USE_HILDON
-#include "dbus.h"
-#endif
-
 #include "icon.h"
 #include "map.h"
 #include "osm.h"
@@ -102,7 +98,6 @@ typedef struct appdata_t {
   struct presets_items *presets;
 
 #ifdef USE_HILDON
-  dbus_mm_pos_t mmpos;
   GtkWidget *banner;
 #endif
 

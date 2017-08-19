@@ -44,6 +44,9 @@
 #else
 #include "scale_popup.h"
 #endif
+#ifdef USE_HILDON
+#include "dbus.h"
+#endif
 
 #include <cmath>
 #include <cstdio>
@@ -1129,9 +1132,6 @@ appdata_t::appdata_t()
   , style(style_load(settings->style, icons))
   , gps_state(gps_state_t::create())
 {
-#ifdef USE_HILDON
-  memset(&mmpos, 0, sizeof(mmpos));
-#endif
   memset(&dialog_again, 0, sizeof(dialog_again));
   memset(menuitems, 0, sizeof(menuitems));
   memset(&track, 0, sizeof(track));
@@ -1282,7 +1282,7 @@ static int application_run(const char *proj)
   if(appdata.osso_context == O2G_NULLPTR)
     fprintf(stderr, "error initiating osso context\n");
 
-  dbus_register(&appdata.mmpos);
+  dbus_register();
 
   /* Create the hildon program and setup the title */
   appdata.program = HILDON_PROGRAM(hildon_program_get_instance());
