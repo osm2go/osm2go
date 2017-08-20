@@ -542,9 +542,8 @@ static void test_reverse()
   }
 
   w->tags.replace(tags);
-  w->reverse();
-  unsigned int r = w->reverse_direction_sensitive_tags();
-  unsigned int rroles = w->reverse_direction_sensitive_roles(&o);
+  unsigned int r, rroles;
+  w->reverse(&o, r, rroles);
 
   g_assert_cmpuint(r, ==, 5);
   g_assert_cmpuint(w->flags, ==, OSM_FLAG_DIRTY);
@@ -585,9 +584,7 @@ static void test_reverse()
   g_assert(rels[3]->members.back().role == O2G_NULLPTR);
 
   // go back
-  w->reverse();
-  r = w->reverse_direction_sensitive_tags();
-  rroles = w->reverse_direction_sensitive_roles(&o);
+  w->reverse(&o, r, rroles);
 
   g_assert_cmpuint(r, ==, 5);
   g_assert_cmpuint(rroles, ==, 2);
@@ -881,7 +878,10 @@ static void test_merge_nodes()
   o.node_attach(n2);
 
   o.ways.begin()->second->append_node(n1);
-  o.ways.begin()->second->reverse();
+  unsigned int rc, rrc;
+  o.ways.begin()->second->reverse(&o, rc, rrc);
+  g_assert_cmpuint(rc, ==, 0);
+  g_assert_cmpuint(rrc, ==, 0);
   w = (++o.ways.begin())->second;
   w->append_node(n2);
   w->flags = 0;

@@ -1699,10 +1699,6 @@ void osm_t::relation_delete(relation_t *relation) {
   }
 }
 
-void way_t::reverse() {
-  std::reverse(node_chain.begin(), node_chain.end());
-}
-
 static const char *DS_ONEWAY_FWD = "yes";
 static const char *DS_ONEWAY_REV = "-1";
 
@@ -1769,18 +1765,6 @@ void reverse_direction_sensitive_tags_functor::operator()(tag_t &etag)
   g_free(lc_key);
 }
 
-unsigned int
-way_t::reverse_direction_sensitive_tags() {
-  unsigned int n_tags_altered = 0;
-
-  tags.for_each(reverse_direction_sensitive_tags_functor(n_tags_altered));
-
-  if (n_tags_altered > 0)
-    flags |= OSM_FLAG_DIRTY;
-
-  return n_tags_altered;
-}
-
 /* Reverse a way's role within relations where the role is direction-sensitive.
  * Returns the number of roles flipped, and marks any relations changed as
  * dirty. */
@@ -1841,15 +1825,21 @@ void reverse_roles::operator()(relation_t* relation)
   // of it.
 }
 
-unsigned int
-way_t::reverse_direction_sensitive_roles(osm_t *osm) {
+void way_t::reverse(osm_t *osm, unsigned int &tags_flipped, unsigned int &roles_flipped) {
+  tags_flipped = 0;
+
+  tags.for_each(reverse_direction_sensitive_tags_functor(tags_flipped));
+
+  if (tags_flipped> 0)
+    flags |= OSM_FLAG_DIRTY;
+
+  std::reverse(node_chain.begin(), node_chain.end());
+
   const relation_chain_t &rchain = osm->to_relation(object_t(this));
 
-  unsigned int n_roles_flipped = 0;
-  reverse_roles context(this, n_roles_flipped);
+  roles_flipped = 0;
+  reverse_roles context(this, roles_flipped);
   std::for_each(rchain.begin(), rchain.end(), context);
-
-  return n_roles_flipped;
 }
 
 const node_t *way_t::first_node() const {

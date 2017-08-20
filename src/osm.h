@@ -470,7 +470,8 @@ public:
   void append_node(node_t *node);
   bool ends_with_node(const node_t *node) const;
   bool is_closed() const;
-  void reverse();
+
+  void reverse(osm_t *osm, unsigned int &tags_flipped, unsigned int &roles_flipped);
 
   /**
    * @brief split the way into 2
@@ -491,8 +492,6 @@ public:
   way_t *split(osm_t *osm, node_chain_t::iterator cut_at, bool cut_at_node);
   const node_t *last_node() const;
   const node_t *first_node() const;
-  unsigned int reverse_direction_sensitive_tags();
-  unsigned int reverse_direction_sensitive_roles(osm_t *osm);
   void write_node_chain(xmlNodePtr way_node) const;
 
   void cleanup();

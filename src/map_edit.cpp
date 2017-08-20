@@ -623,11 +623,9 @@ void map_edit_way_reverse(map_t *map) {
 
   g_assert(item.object.type == WAY);
 
-  item.object.way->reverse();
-  unsigned int n_tags_flipped =
-    item.object.way->reverse_direction_sensitive_tags();
-  unsigned int n_roles_flipped =
-    item.object.way->reverse_direction_sensitive_roles(map->appdata.osm);
+  unsigned int n_tags_flipped;
+  unsigned int n_roles_flipped;
+  item.object.way->reverse(map->appdata.osm, n_tags_flipped, n_roles_flipped);
 
   item.object.obj->flags |= OSM_FLAG_DIRTY;
   map->select_way(item.object.way);
