@@ -355,6 +355,7 @@ static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
       /* this will return the id on a successful create */
       printf("request to parse successful reply as an id\n");
       *id = strtoull(write_data.ptr, O2G_NULLPTR, 10);
+      appendf(log, COLOR_OK, _("ok: #" ITEM_ID_FORMAT "\n"), *id);
     }
 
     g_free(write_data.ptr);
