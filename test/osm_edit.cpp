@@ -345,7 +345,7 @@ static void test_split()
 
   std::vector<node_t *> nodes;
   for(int i = 0; i < 6; i++) {
-    node_t *n = new node_t(3, lpos_t(), pos_t(52.25 + i / 0.001, 9.58 + i / 0.001), 1234500 + i);
+    node_t *n = new node_t(3, lpos_t(), pos_t(52.25 + i * 0.001, 9.58 + i * 0.001), 1234500 + i);
     o.node_attach(n);
     v->node_chain.push_back(n);
     w->node_chain.push_back(n);
