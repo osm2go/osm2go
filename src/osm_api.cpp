@@ -449,6 +449,38 @@ static bool osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
   return false;
 }
 
+/**
+ * @brief upload one object to the OSM server
+ */
+static void upload_object(osm_upload_context_t &context, base_object_t *obj) {
+  /* make sure gui gets updated */
+  osm2go_platform::process_events();
+
+  g_assert(obj->flags & OSM_FLAG_DIRTY);
+
+  std::string url = context.urlbasestr + obj->apiString() + '/';
+
+  if(obj->isNew()) {
+    url += "create";
+    appendf(context.log, O2G_NULLPTR, _("New %s "), obj->apiString());
+  } else {
+    url += obj->id_string();
+    appendf(context.log, O2G_NULLPTR, _("Modified %s #" ITEM_ID_FORMAT " "), obj->apiString(), obj->id);
+  }
+
+  /* upload this object */
+  xmlChar *xml_str = obj->generate_xml(context.changeset);
+  if(xml_str) {
+    printf("uploading %s " ITEM_ID_FORMAT " to %s\n", obj->apiString(), obj->id, url.c_str());
+
+    if(osm_update_item(context, xml_str, url.c_str(), obj->isNew() ? &obj->id : &obj->version)) {
+      obj->flags ^= OSM_FLAG_DIRTY;
+      context.project->data_dirty = true;
+    }
+    xmlFree(xml_str);
+  }
+}
+
 struct osm_dirty_t {
   osm_dirty_t(osm_t *osm)
     : dialog(O2G_NULLPTR)
@@ -466,6 +498,14 @@ struct osm_dirty_t {
       object_counter(counter<T> &d) : dirty(d) {}
       void operator()(std::pair<item_id_t, T *> pair);
     };
+    struct upload_objects {
+      osm_upload_context_t &context;
+      std::map<item_id_t, T *> &map;
+      upload_objects(osm_upload_context_t &co, std::map<item_id_t, T*> &m)
+        : context(co), map(m) {}
+      void operator()(T *obj);
+    };
+
   public:
     counter(const std::map<item_id_t, T *> &map)
       : total(map.size())
@@ -480,12 +520,26 @@ struct osm_dirty_t {
     std::vector<T *> deleted;
 
     void table_insert_count(GtkWidget *table, const int row) const;
+    void upload(osm_upload_context_t &context, std::map<item_id_t, T *> &map) {
+      std::for_each(modified.begin(), modified.end(), upload_objects(context, map));
+    }
   };
 
   counter<node_t> nodes;
   counter<way_t> ways;
   counter<relation_t> relations;
 };
+
+template<typename T>
+void osm_dirty_t::counter<T>::upload_objects::operator()(T *obj)
+{
+  item_id_t oldid = obj->id;
+  upload_object(context, obj);
+  if(oldid != obj->id) {
+    map.erase(oldid);
+    map[obj->id] = obj;
+  }
+}
 
 static GtkWidget *table_attach_label_c(GtkWidget *table, char *str,
 				       int x1, int x2, int y1, int y2) {
@@ -575,44 +629,6 @@ static bool osmchange_upload(osm_upload_context_t &context, xmlDocPtr doc)
   xmlFree(xml_str);
 
   return ret;
-}
-
-struct osm_upload_objects {
-  osm_upload_context_t &context;
-  osm_upload_objects(osm_upload_context_t &co) : context(co) {}
-  void operator()(base_object_t *obj);
-};
-
-void osm_upload_objects::operator()(base_object_t *obj)
-{
-  project_t *project = context.project;
-
-  /* make sure gui gets updated */
-  osm2go_platform::process_events();
-
-  g_assert(obj->flags & OSM_FLAG_DIRTY);
-
-  std::string url = context.urlbasestr + obj->apiString() + '/';
-
-  if(obj->isNew()) {
-    url += "create";
-    appendf(context.log, O2G_NULLPTR, _("New %s "), obj->apiString());
-  } else {
-    url += obj->id_string();
-    appendf(context.log, O2G_NULLPTR, _("Modified %s #" ITEM_ID_FORMAT " "), obj->apiString(), obj->id);
-  }
-
-  /* upload this object */
-  xmlChar *xml_str = obj->generate_xml(context.changeset);
-  if(xml_str) {
-    printf("uploading %s " ITEM_ID_FORMAT " to %s\n", obj->apiString(), obj->id, url.c_str());
-
-    if(osm_update_item(context, xml_str, url.c_str(), obj->isNew() ? &obj->id : &obj->version)) {
-      obj->flags ^= OSM_FLAG_DIRTY;
-      project->data_dirty = true;
-    }
-    xmlFree(xml_str);
-  }
 }
 
 static bool osm_create_changeset(osm_upload_context_t &context) {
@@ -946,22 +962,17 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
   /* create a new changeset */
   if(osm_create_changeset(context)) {
     /* check for dirty entries */
-    osm_upload_objects ufc(context);
-
     if(!dirty.nodes.modified.empty()) {
       appendf(context.log, O2G_NULLPTR, _("Uploading nodes:\n"));
-      std::for_each(dirty.nodes.modified.begin(),
-                    dirty.nodes.modified.end(), ufc);
+      dirty.nodes.upload(context, osm->nodes);
     }
     if(!dirty.ways.modified.empty()) {
       appendf(context.log, O2G_NULLPTR, _("Uploading ways:\n"));
-      std::for_each(dirty.ways.modified.begin(),
-                    dirty.ways.modified.end(), ufc);
+      dirty.ways.upload(context, osm->ways);
     }
     if(!dirty.relations.modified.empty()) {
       appendf(context.log, O2G_NULLPTR, _("Uploading relations:\n"));
-      std::for_each(dirty.relations.modified.begin(),
-                    dirty.relations.modified.end(), ufc);
+      dirty.relations.upload(context, osm->relations);
     }
     if(!dirty.relations.deleted.empty() || !dirty.ways.deleted.empty() || !dirty.nodes.deleted.empty()) {
       appendf(context.log, O2G_NULLPTR, _("Deleting objects:\n"));
