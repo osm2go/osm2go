@@ -1516,31 +1516,6 @@ way_chain_t osm_t::node_delete(node_t *node, bool remove_refs) {
   return way_chain;
 }
 
-struct check_member {
-  const object_t &object;
-  check_member(const object_t &o) : object(o) {}
-  bool operator()(std::pair<item_id_t, relation_t *> pair) {
-    return std::find(pair.second->members.begin(), pair.second->members.end(),
-                     object) != pair.second->members.end();
-  }
-};
-
-/* return all relations an object is in */
-relation_chain_t osm_t::to_relation(const object_t &object) const {
-  relation_chain_t rel_chain;
-  check_member fc(object);
-
-  const std::map<item_id_t, relation_t *>::const_iterator ritEnd = relations.end();
-  std::map<item_id_t, relation_t *>::const_iterator rit = relations.begin();
-  while((rit = std::find_if(rit, ritEnd, fc)) != ritEnd) {
-    /* relation is a member of this relation, so move it to the member chain */
-    rel_chain.push_back(rit->second);
-    rit++;
-  }
-
-  return rel_chain;
-}
-
 struct node_collector {
   way_chain_t &chain;
   const node_t * const node;
@@ -1773,26 +1748,15 @@ static const char *DS_ROUTE_FORWARD = "forward";
 static const char *DS_ROUTE_REVERSE = "backward";
 
 struct reverse_roles {
-  way_t * const way;
+  const object_t way;
   unsigned int &n_roles_flipped;
   reverse_roles(way_t *w, unsigned int &n) : way(w), n_roles_flipped(n) {}
-  void operator()(relation_t *relation);
+  void operator()(const std::pair<item_id_t, relation_t *> &pair);
 };
 
-struct find_way_or_ref {
-  const object_t way;
-  object_t way_ref;
-  find_way_or_ref(const way_t *w) : way(const_cast<way_t *>(w)) {
-    way_ref.type = WAY_ID;
-    way_ref.id = w->id;
-  }
-  bool operator()(const member_t &member) {
-    return member == way || member == way_ref;
-  }
-};
-
-void reverse_roles::operator()(relation_t* relation)
+void reverse_roles::operator()(const std::pair<item_id_t, relation_t *> &pair)
 {
+  relation_t * const relation = pair.second;
   const char *type = relation->tags.get_value("type");
 
   // Route relations; http://wiki.openstreetmap.org/wiki/Relation:route
@@ -1801,9 +1765,9 @@ void reverse_roles::operator()(relation_t* relation)
 
   // First find the member corresponding to our way:
   const std::vector<member_t>::iterator mitEnd = relation->members.end();
-  std::vector<member_t>::iterator member = std::find_if(relation->members.begin(),
-                                                        mitEnd, find_way_or_ref(way));
-  g_assert(member != relation->members.end());  // osm_way_to_relation() broken?
+  std::vector<member_t>::iterator member = std::find(relation->members.begin(), mitEnd, way);
+  if(member == relation->members.end())
+    return;
 
   // Then flip its role if it's one of the direction-sensitive ones
   if (member->role == O2G_NULLPTR) {
@@ -1835,11 +1799,9 @@ void way_t::reverse(osm_t *osm, unsigned int &tags_flipped, unsigned int &roles_
 
   std::reverse(node_chain.begin(), node_chain.end());
 
-  const relation_chain_t &rchain = osm->to_relation(object_t(this));
-
   roles_flipped = 0;
   reverse_roles context(this, roles_flipped);
-  std::for_each(rchain.begin(), rchain.end(), context);
+  std::for_each(osm->relations.begin(), osm->relations.end(), context);
 }
 
 const node_t *way_t::first_node() const {
@@ -1866,26 +1828,22 @@ struct relation_transfer {
   way_t * const dst;
   const way_t * const src;
   relation_transfer(way_t *d, const way_t *s) : dst(d), src(s) {}
-  void operator()(relation_t *relation);
+  void operator()(const std::pair<item_id_t, relation_t *> &pair);
 };
 
-void relation_transfer::operator()(relation_t* relation)
+void relation_transfer::operator()(const std::pair<item_id_t, relation_t *> &pair)
 {
-  printf("way #" ITEM_ID_FORMAT " is part of relation #" ITEM_ID_FORMAT "\n",
-         src->id, relation->id);
-
-  /* make new member of the same relation */
-
+  relation_t * const relation = pair.second;
   /* walk member chain. save role of way if its being found. */
   std::vector<member_t>::iterator it = relation->find_member_object(object_t(const_cast<way_t *>(src)));
+  if(it == relation->members.end())
+    return;
 
-  printf("  adding way #" ITEM_ID_FORMAT " to relation\n", dst->id);
-  object_t o(dst);
-  member_t member(o);
-  member.object = dst;
-  if(it != relation->members.end())
-    member.role = g_strdup(it->role);
-  relation->members.push_back(member);
+  printf("way #" ITEM_ID_FORMAT " is part of relation #" ITEM_ID_FORMAT ", adding way #" ITEM_ID_FORMAT "\n",
+         src->id, relation->id, dst->id);
+
+  /* make dst member of the same relation */
+  relation->members.push_back(member_t(object_t(dst), g_strdup(it->role)));
 
   relation->flags |= OSM_FLAG_DIRTY;
 }
@@ -1944,8 +1902,7 @@ way_t *way_t::split(osm_t *osm, node_chain_t::iterator cut_at, bool cut_at_node)
   osm->way_attach(neww);
 
   /* ---- transfer relation membership from way to new ----- */
-  const relation_chain_t &rchain = osm->to_relation(object_t(this));
-  std::for_each(rchain.begin(), rchain.end(), relation_transfer(neww, this));
+  std::for_each(osm->relations.begin(), osm->relations.end(), relation_transfer(neww, this));
 
   // keep the history with the longer way
   if(node_chain.size() < neww->node_chain.size())

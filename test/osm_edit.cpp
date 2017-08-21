@@ -918,17 +918,6 @@ static void test_merge_nodes()
   g_assert_cmpuint(r->flags, ==, OSM_FLAG_DIRTY);
 
   // while at it: test backwards mapping to containing objects
-  const relation_chain_t &rchain = o.to_relation(object_t(n1));
-  g_assert_cmpuint(rchain.size(), ==, 2);
-  g_assert(std::find(rchain.begin(), rchain.end(), o.relations.begin()->second) != rchain.end());
-  g_assert(std::find(rchain.begin(), rchain.end(), r) != rchain.end());
-
-  const relation_chain_t &rchain2 = o.to_relation(object_t(NODE_ID, n1->id));
-  g_assert_cmpuint(rchain2.size(), ==, rchain.size());
-  g_assert(std::find(rchain2.begin(), rchain2.end(), o.relations.begin()->second) != rchain2.end());
-  g_assert(std::find(rchain2.begin(), rchain2.end(), r) != rchain2.end());
-  g_assert(rchain == rchain2);
-
   const way_chain_t &wchain = o.node_to_way(n1);
   g_assert_cmpuint(wchain.size(), ==, 2);
   g_assert(std::find(wchain.begin(), wchain.end(), o.ways.begin()->second) != wchain.end());
