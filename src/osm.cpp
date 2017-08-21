@@ -1843,7 +1843,7 @@ void relation_transfer::operator()(const std::pair<item_id_t, relation_t *> &pai
          src->id, relation->id, dst->id);
 
   /* make dst member of the same relation */
-  relation->members.push_back(member_t(object_t(dst), g_strdup(it->role)));
+  relation->members.insert(++it, member_t(object_t(dst), g_strdup(it->role)));
 
   relation->flags |= OSM_FLAG_DIRTY;
 }
