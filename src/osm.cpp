@@ -1831,21 +1831,34 @@ struct relation_transfer {
   void operator()(const std::pair<item_id_t, relation_t *> &pair);
 };
 
+struct find_member_object_functor {
+  const object_t &object;
+  find_member_object_functor(const object_t &o) : object(o) {}
+  bool operator()(const member_t &member) {
+    return member.object == object;
+  }
+};
+
 void relation_transfer::operator()(const std::pair<item_id_t, relation_t *> &pair)
 {
   relation_t * const relation = pair.second;
   /* walk member chain. save role of way if its being found. */
-  std::vector<member_t>::iterator it = relation->find_member_object(object_t(const_cast<way_t *>(src)));
-  if(it == relation->members.end())
-    return;
+  find_member_object_functor fc(object_t(const_cast<way_t *>(src)));
+  std::vector<member_t>::iterator itEnd = relation->members.end();
+  std::vector<member_t>::iterator it = std::find_if(relation->members.begin(), itEnd, fc);
+  for(; it != itEnd; it = std::find_if(it, itEnd, fc)) {
+    printf("way #" ITEM_ID_FORMAT " is part of relation #" ITEM_ID_FORMAT " at position %zu, adding way #" ITEM_ID_FORMAT "\n",
+           src->id, relation->id, it - relation->members.begin(), dst->id);
 
-  printf("way #" ITEM_ID_FORMAT " is part of relation #" ITEM_ID_FORMAT ", adding way #" ITEM_ID_FORMAT "\n",
-         src->id, relation->id, dst->id);
+    // make dst member of the same relation
+    it = relation->members.insert(++it, member_t(object_t(dst), g_strdup(it->role)));
+    // skip this object when calling fc again, it can't be the searched one
+    it++;
+    // refresh the end iterator as the container was modified
+    itEnd = relation->members.end();
 
-  /* make dst member of the same relation */
-  relation->members.insert(++it, member_t(object_t(dst), g_strdup(it->role)));
-
-  relation->flags |= OSM_FLAG_DIRTY;
+    relation->flags |= OSM_FLAG_DIRTY;
+  }
 }
 
 way_t *way_t::split(osm_t *osm, node_chain_t::iterator cut_at, bool cut_at_node)
@@ -2344,14 +2357,6 @@ relation_t::relation_t(item_id_t ver, item_id_t i)
   : base_object_t(ver, i)
 {
 }
-
-struct find_member_object_functor {
-  const object_t &object;
-  find_member_object_functor(const object_t &o) : object(o) {}
-  bool operator()(const member_t &member) {
-    return member.object == object;
-  }
-};
 
 std::vector<member_t>::iterator relation_t::find_member_object(const object_t &o) {
   return std::find_if(members.begin(), members.end(), find_member_object_functor(o));

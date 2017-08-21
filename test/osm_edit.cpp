@@ -339,6 +339,8 @@ static void test_split()
   o.relation_attach(r1);
   r2->members.push_back(member_t(object_t(w), O2G_NULLPTR));
   r2->members.push_back(member_t(object_t(v), O2G_NULLPTR));
+  // insert twice, to check if all entries get duplicated
+  r2->members.push_back(member_t(object_t(w), O2G_NULLPTR));
   o.relation_attach(r2);
   r3->members.push_back(member_t(object_t(v), O2G_NULLPTR));
   o.relation_attach(r3);
@@ -367,7 +369,7 @@ static void test_split()
   g_assert(neww->tags == v->tags.asMap());
   g_assert_cmpuint(neww->tags.asMap().size(), ==, ocnt - 1);
   g_assert_cmpuint(r1->members.size(), ==, 2);
-  g_assert_cmpuint(r2->members.size(), ==, 3);
+  g_assert_cmpuint(r2->members.size(), ==, 5);
   g_assert_cmpuint(r3->members.size(), ==, 1);
 
   // now split the remaining way at a node
@@ -390,7 +392,7 @@ static void test_split()
   g_assert(neww2->tags == v->tags.asMap());
   g_assert_cmpuint(neww2->tags.asMap().size(), ==, ocnt - 1);
   g_assert_cmpuint(r1->members.size(), ==, 3);
-  g_assert_cmpuint(r2->members.size(), ==, 4);
+  g_assert_cmpuint(r2->members.size(), ==, 7);
   g_assert_cmpuint(r3->members.size(), ==, 1);
 
   // just split the last node out of the way
@@ -407,7 +409,7 @@ static void test_split()
   g_assert_cmpuint(neww->node_chain.size(), ==, 2);
   g_assert_cmpuint(neww2->node_chain.size(), ==, 2);
   g_assert_cmpuint(r1->members.size(), ==, 3);
-  g_assert_cmpuint(r2->members.size(), ==, 4);
+  g_assert_cmpuint(r2->members.size(), ==, 7);
   g_assert_cmpuint(r3->members.size(), ==, 1);
 
   // now test a closed way
