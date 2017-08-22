@@ -121,7 +121,8 @@ static void map_node_select(map_t *map, node_t *node) {
     radius = 0.75 * map->style->icon.scale * MAX(w, h);
   } else {
     radius = map->style->highlight.width + map->style->node.radius;
-    if(!node->ways) radius += map->style->node.border_radius;
+    if(!node->ways)
+      radius += map->style->node.border_radius;
   }
 
   radius *= map->state.detail;
@@ -474,10 +475,9 @@ static map_item_t *map_way_new(map_t *map, canvas_group_t group,
 			   way->zoom_max / (2 * map->state.detail));
 
   /* a ways outline itself is never dashed */
-  if (group != CANVAS_GROUP_WAYS_OL)
-    if (way->draw.dash_length_on > 0)
-      canvas_item_set_dashed(map_item->item, width,
-                             way->draw.dash_length_on, way->draw.dash_length_off);
+  if (group != CANVAS_GROUP_WAYS_OL && way->draw.dash_length_on > 0)
+    canvas_item_set_dashed(map_item->item, width,
+                           way->draw.dash_length_on, way->draw.dash_length_off);
 
   canvas_item_set_user_data(map_item->item, map_item);
 
@@ -525,18 +525,17 @@ void map_way_draw_functor::operator()(way_t *way)
     if(way->draw.flags & OSM_DRAW_FLAG_AREA) {
       chain.push_back(map_way_new(map, CANVAS_GROUP_POLYGONS, way, points,
                                   width, way->draw.color, way->draw.area.color));
+    } else if(way->draw.flags & OSM_DRAW_FLAG_BG) {
+      chain.push_back(map_way_new(map, CANVAS_GROUP_WAYS_INT, way, points,
+                                  width, way->draw.color, NO_COLOR));
+
+      chain.push_back(map_way_new(map, CANVAS_GROUP_WAYS_OL, way, points,
+                                  way->draw.bg.width * map->state.detail,
+                                  way->draw.bg.color, NO_COLOR));
+
     } else {
-      if(way->draw.flags & OSM_DRAW_FLAG_BG) {
-        chain.push_back(map_way_new(map, CANVAS_GROUP_WAYS_INT, way, points,
-                                    width, way->draw.color, NO_COLOR));
-
-        chain.push_back(map_way_new(map, CANVAS_GROUP_WAYS_OL, way, points,
-                                    way->draw.bg.width * map->state.detail,
-                                    way->draw.bg.color, NO_COLOR));
-
-      } else
-        chain.push_back(map_way_new(map, CANVAS_GROUP_WAYS, way, points,
-                                    width, way->draw.color, NO_COLOR));
+      chain.push_back(map_way_new(map, CANVAS_GROUP_WAYS, way, points,
+                                  width, way->draw.color, NO_COLOR));
     }
     canvas_points_free(points);
   }
@@ -822,12 +821,15 @@ static void map_limit_scroll(map_t *map, canvas_t::canvas_unit_t unit, gint &sx,
   gint min_sx_cu = 0.95*(min_x - dim.width);
   gint max_sy_cu = 0.95*(max_y + dim.height);
   gint max_sx_cu = 0.95*(max_x + dim.width);
-  if (sy_cu < min_sy_cu) { sy = min_sy_cu * scale; }
-  if (sx_cu < min_sx_cu) { sx = min_sx_cu * scale; }
-  if (sy_cu > max_sy_cu) { sy = max_sy_cu * scale; }
-  if (sx_cu > max_sx_cu) { sx = max_sx_cu * scale; }
+  if (sy_cu < min_sy_cu)
+    sy = min_sy_cu * scale;
+  if (sx_cu < min_sx_cu)
+    sx = min_sx_cu * scale;
+  if (sy_cu > max_sy_cu)
+    sy = max_sy_cu * scale;
+  if (sx_cu > max_sx_cu)
+    sx = max_sx_cu * scale;
 }
-
 
 /* Limit a proposed zoom factor to sane ranges.
  * Specifically the map is allowed to be no smaller than the viewport. */
@@ -845,18 +847,17 @@ static bool map_limit_zoom(map_t *map, gdouble &zoom) {
 
     gdouble oldzoom = zoom;
     if (dim.height < dim.width) {
-        gint lim_h = dim.height * 0.95;
-        if (max_y-min_y < lim_h) {
-            gdouble corr = (static_cast<gdouble>(max_y) - min_y) / lim_h;
-            zoom /= corr;
-        }
-    }
-    else {
-        gint lim_w = dim.width * 0.95;
-        if (max_x-min_x < lim_w) {
-            gdouble corr = (static_cast<gdouble>(max_x) - min_x) / lim_w;
-            zoom /= corr;
-        }
+      gint lim_h = dim.height * 0.95;
+      if (max_y-min_y < lim_h) {
+          gdouble corr = (static_cast<gdouble>(max_y) - min_y) / lim_h;
+          zoom /= corr;
+      }
+    } else {
+      gint lim_w = dim.width * 0.95;
+      if (max_x-min_x < lim_w) {
+          gdouble corr = (static_cast<gdouble>(max_x) - min_x) / lim_w;
+          zoom /= corr;
+      }
     }
     if (zoom != oldzoom) {
         printf("Can't zoom further out (%f)\n", zoom);
@@ -882,8 +883,7 @@ bool map_t::scroll_to_if_offscreen(const lpos_t *lpos) {
   min_y = appdata.osm->bounds->min.y;
   max_x = appdata.osm->bounds->max.x;
   max_y = appdata.osm->bounds->max.y;
-  if (   (lpos->x > max_x) || (lpos->x < min_x)
-      || (lpos->y > max_y) || (lpos->y < min_y)) {
+  if (lpos->x > max_x || lpos->x < min_x || lpos->y > max_y || lpos->y < min_y) {
     printf("cannot scroll to (%d, %d): outside the working area\n",
 	   lpos->x, lpos->y);
     return false;
@@ -907,16 +907,14 @@ bool map_t::scroll_to_if_offscreen(const lpos_t *lpos) {
   if (lpos->x > viewport_right) {
     printf("** off right edge (%d > %d)\n", lpos->x, viewport_right);
     recentre_needed = true;
-  }
-  if (lpos->x < viewport_left) {
+  } else if (lpos->x < viewport_left) {
     printf("** off left edge (%d < %d)\n", lpos->x, viewport_left);
     recentre_needed = true;
   }
   if (lpos->y > viewport_bottom) {
     printf("** off bottom edge (%d > %d)\n", lpos->y, viewport_bottom);
     recentre_needed = true;
-  }
-  if (lpos->y < viewport_top) {
+  } else if (lpos->y < viewport_top) {
     printf("** off top edge (%d < %d)\n", lpos->y, viewport_top);
     recentre_needed = true;
   }
@@ -937,22 +935,21 @@ bool map_t::scroll_to_if_offscreen(const lpos_t *lpos) {
 /* Deselects the current way or node if its zoom_max
  * means that it's not going to render at the current map zoom. */
 static void map_deselect_if_zoom_below_zoom_max(map_t *map) {
-    if (map->selected.object.type == WAY) {
-        printf("will deselect way if zoomed below %f\n",
-               map->selected.object.way->zoom_max);
-        if (map->state.zoom < map->selected.object.way->zoom_max) {
-            printf("  deselecting way!\n");
-            map->item_deselect();
-        }
+  if (map->selected.object.type == WAY) {
+    printf("will deselect way if zoomed below %f\n",
+            map->selected.object.way->zoom_max);
+    if (map->state.zoom < map->selected.object.way->zoom_max) {
+      printf("  deselecting way!\n");
+      map->item_deselect();
     }
-    else if (map->selected.object.type == NODE) {
-        printf("will deselect node if zoomed below %f\n",
-               map->selected.object.node->zoom_max);
-        if (map->state.zoom < map->selected.object.node->zoom_max) {
-            printf("  deselecting node!\n");
-            map->item_deselect();
-        }
+  } else if (map->selected.object.type == NODE) {
+    printf("will deselect node if zoomed below %f\n",
+            map->selected.object.node->zoom_max);
+    if (map->state.zoom < map->selected.object.node->zoom_max) {
+      printf("  deselecting node!\n");
+      map->item_deselect();
     }
+  }
 }
 
 #define GPS_RADIUS_LIMIT  3.0
@@ -994,7 +991,8 @@ void map_t::set_zoom(double zoom, bool update_scroll_offsets) {
 static gboolean map_scroll_event(GtkWidget *, GdkEventScroll *event, appdata_t *appdata) {
   map_t *map = appdata->map;
 
-  if(!appdata->osm) return FALSE;
+  if(!appdata->osm)
+    return FALSE;
 
   if(event->type == GDK_SCROLL && map) {
     double zoom = map->state.zoom;
@@ -1015,7 +1013,7 @@ static gboolean distance_above(map_t *map, gint x, gint y, gint limit) {
   sx = (x-map->pen_down.at.x);
   sy = (y-map->pen_down.at.y);
 
-  return(sx*sx + sy*sy > limit*limit);
+  return sx*sx + sy*sy > limit*limit;
 }
 
 /* scroll with respect to two screen positions */
