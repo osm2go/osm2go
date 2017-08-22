@@ -70,9 +70,9 @@ static void initImageFormats()
 }
 
 struct wms_llbbox_t {
-  wms_llbbox_t() : valid(FALSE) {}
+  wms_llbbox_t() : valid(false) {}
   pos_t min, max;
-  gboolean valid;
+  bool valid;
 };
 
 struct wms_layer_t {
@@ -129,16 +129,18 @@ struct wms_t {
   wms_cap_t cap;
 };
 
-static gboolean wms_bbox_is_valid(pos_t *min, pos_t *max) {
+static bool wms_bbox_is_valid(const pos_t &min, const pos_t &max) {
   /* all four coordinates are valid? */
-  if(!min->valid() || !max->valid())
-    return FALSE;
+  if(G_UNLIKELY(!min.valid() || !max.valid()))
+    return false;
 
   /* min/max span a useful range? */
-  if(max->lat - min->lat < 0.1) return FALSE;
-  if(max->lon - min->lon < 0.1) return FALSE;
+  if(G_UNLIKELY(max.lat - min.lat < 0.1))
+    return false;
+  if(G_UNLIKELY(max.lon - min.lon < 0.1))
+    return false;
 
-  return TRUE;
+  return true;
 }
 
 static wms_layer_t *wms_cap_parse_layer(xmlDocPtr doc, xmlNode *a_node) {
@@ -182,8 +184,8 @@ static wms_layer_t *wms_cap_parse_layer(xmlDocPtr doc, xmlNode *a_node) {
     }
   }
 
-  wms_layer->llbbox.valid = wms_bbox_is_valid(&wms_layer->llbbox.min,
-					      &wms_layer->llbbox.max);
+  wms_layer->llbbox.valid = wms_bbox_is_valid(wms_layer->llbbox.min,
+                                              wms_layer->llbbox.max);
 
   printf("------------------- Layer: %s ---------------------------\n",
 	 wms_layer->title.c_str());
@@ -367,14 +369,11 @@ wms_t::~wms_t() {
 
 /* ---------------------- use ------------------- */
 
-static gboolean wms_llbbox_fits(const project_t *project, const wms_llbbox_t *llbbox) {
-  if((project->min.lat < llbbox->min.lat) ||
-     (project->min.lon < llbbox->min.lon) ||
-     (project->max.lat > llbbox->max.lat) ||
-     (project->max.lon > llbbox->max.lon))
-    return FALSE;
-
-  return TRUE;
+static bool wms_llbbox_fits(const project_t *project, const wms_llbbox_t &llbbox) {
+  return ((project->min.lat >= llbbox.min.lat) &&
+          (project->min.lon >= llbbox.min.lon) &&
+          (project->max.lat <= llbbox.max.lat) &&
+          (project->max.lon <= llbbox.max.lon));
 }
 
 struct child_layer_functor {
@@ -892,13 +891,13 @@ struct fitting_layers_functor {
 void fitting_layers_functor::operator()(const wms_layer_t *layer)
 {
   GtkTreeIter iter;
-  gboolean fits = layer->llbbox.valid && wms_llbbox_fits(project, &layer->llbbox);
+  bool fits = layer->llbbox.valid && wms_llbbox_fits(project, layer->llbbox);
 
   /* Append a row and fill in some data */
   gtk_list_store_append(store, &iter);
   gtk_list_store_set(store, &iter,
                      LAYER_COL_TITLE, layer->title.c_str(),
-                     LAYER_COL_FITS, fits,
+                     LAYER_COL_FITS, fits ? TRUE : FALSE,
                      LAYER_COL_DATA, layer,
                      -1);
 }
