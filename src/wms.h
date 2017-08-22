@@ -37,6 +37,5 @@ void wms_remove(appdata_t &appdata);
 void wms_remove_file(project_t &project);
 
 std::vector<wms_server_t *> wms_server_get_default(void);
-void wms_server_free(wms_server_t *wms_server);
 
 #endif // WMS_H
