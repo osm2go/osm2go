@@ -178,7 +178,8 @@ struct map_t {
 
   /* various functions required by map_edit */
   map_item_t *item_at(gint x, gint y);
-  map_item_t *real_item_at(gint x, gint y);
+
+  void pen_down_item();
 };
 
 // Gtk callbacks

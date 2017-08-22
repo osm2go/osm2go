@@ -763,23 +763,25 @@ map_item_t *map_t::item_at(gint x, gint y) {
 }
 
 /* get the real item (no highlight) at x, y */
-map_item_t *map_t::real_item_at(gint x, gint y) {
-  map_item_t *map_item = item_at(x, y);
+void map_t::pen_down_item() {
+  pen_down.on_item = item_at(pen_down.at.x, pen_down.at.y);
 
   /* no item or already a real one */
-  if(!map_item || !map_item->highlight) return map_item;
+  if(!pen_down.on_item || !pen_down.on_item->highlight)
+    return;
 
   /* get the item (parent) this item is the highlight of */
-  switch(map_item->object.type) {
+  switch(pen_down.on_item->object.type) {
   case NODE:
   case WAY: {
-    visible_item_t * const vis = static_cast<visible_item_t *>(map_item->object.obj);
+    visible_item_t * const vis = static_cast<visible_item_t *>(pen_down.on_item->object.obj);
     if(vis->map_item_chain && !vis->map_item_chain->map_items.empty()) {
       map_item_t *parent = vis->map_item_chain->map_items.front();
 
       if(parent) {
         printf("  using parent item %s #" ITEM_ID_FORMAT "\n", vis->apiString(), vis->id);
-        return parent;
+        pen_down.on_item = parent;
+        return;
       }
     }
     break;
@@ -791,8 +793,6 @@ map_item_t *map_t::real_item_at(gint x, gint y) {
   }
 
   printf("  no parent, working on highlight itself\n");
-
-  return map_item;
 }
 
 /* Limitations on the amount by which we can scroll. Keeps part of the
@@ -1202,7 +1202,7 @@ static void map_button_press(map_t *map, gint x, gint y) {
   map->pen_down.drag = FALSE;     // don't assume drag yet
 
   /* determine wether this press was on an item */
-  map->pen_down.on_item = map->real_item_at(x, y);
+  map->pen_down_item();
 
   /* check if the clicked item is a highlighted node as the user */
   /* might want to drag that */
@@ -1279,8 +1279,7 @@ static void map_button_release(map_t *map, gint x, gint y) {
 	  canvas_item_to_bottom(map->selected.item);
 
 	  /* update clicked item, to correctly handle the click */
-	  map->pen_down.on_item =
-	    map->real_item_at(map->pen_down.at.x, map->pen_down.at.y);
+          map->pen_down_item();
 
 	  map_handle_click(map);
 	}
