@@ -487,9 +487,8 @@ static map_item_t *map_way_new(map_t *map, canvas_group_t group,
   return map_item;
 }
 
-void map_show_node(map_t *map, node_t *node) {
-  map_node_new(map, node, map->style->node.radius, 0,
-	       map->style->node.color, 0);
+void map_t::show_node(node_t *node) {
+  map_node_new(this, node, style->node.radius, 0, style->node.color, 0);
 }
 
 struct map_way_draw_functor {
@@ -730,14 +729,14 @@ static gint map_destroy_event(map_t *map) {
 }
 
 /* get the item at position x, y */
-map_item_t *map_item_at(map_t *map, gint x, gint y) {
+map_item_t *map_t::item_at(gint x, gint y) {
   printf("map check at %d/%d\n", x, y);
 
-  map->canvas->window2world(x, y, x, y);
+  canvas->window2world(x, y, x, y);
 
   printf("world check at %d/%d\n", x, y);
 
-  canvas_item_t *item = map->canvas->get_item_at(x, y);
+  canvas_item_t *item = canvas->get_item_at(x, y);
 
   if(!item) {
     printf("  there's no item\n");
@@ -764,8 +763,8 @@ map_item_t *map_item_at(map_t *map, gint x, gint y) {
 }
 
 /* get the real item (no highlight) at x, y */
-map_item_t *map_real_item_at(map_t *map, gint x, gint y) {
-  map_item_t *map_item = map_item_at(map, x, y);
+map_item_t *map_t::real_item_at(gint x, gint y) {
+  map_item_t *map_item = item_at(x, y);
 
   /* no item or already a real one */
   if(!map_item || !map_item->highlight) return map_item;
@@ -958,36 +957,36 @@ static void map_deselect_if_zoom_below_zoom_max(map_t *map) {
 
 #define GPS_RADIUS_LIMIT  3.0
 
-void map_set_zoom(map_t *map, double zoom, bool update_scroll_offsets) {
-  bool at_zoom_limit = map_limit_zoom(map, zoom);
+void map_t::set_zoom(double zoom, bool update_scroll_offsets) {
+  bool at_zoom_limit = map_limit_zoom(this, zoom);
 
-  map->state.zoom = zoom;
-  map->canvas->set_zoom(map->state.zoom);
+  state.zoom = zoom;
+  canvas->set_zoom(state.zoom);
 
-  map_deselect_if_zoom_below_zoom_max(map);
+  map_deselect_if_zoom_below_zoom_max(this);
 
   if(update_scroll_offsets) {
     if (!at_zoom_limit) {
       /* zooming affects the scroll offsets */
       gint sx, sy;
-      map->canvas->scroll_get(canvas_t::UNIT_PIXEL, sx, sy);
-      map_limit_scroll(map, canvas_t::UNIT_PIXEL, sx, sy);
+      canvas->scroll_get(canvas_t::UNIT_PIXEL, sx, sy);
+      map_limit_scroll(this, canvas_t::UNIT_PIXEL, sx, sy);
 
       // keep the map visible
-      map->canvas->scroll_to(canvas_t::UNIT_PIXEL, sx, sy);
+      canvas->scroll_to(canvas_t::UNIT_PIXEL, sx, sy);
     }
 
-    map->canvas->scroll_get(canvas_t::UNIT_METER, map->state.scroll_offset.x,
-                            map->state.scroll_offset.y);
+    canvas->scroll_get(canvas_t::UNIT_METER, state.scroll_offset.x,
+                       state.scroll_offset.y);
   }
 
-  if(map->appdata.track.gps_item) {
-    float radius = map->style->track.width/2.0;
+  if(appdata.track.gps_item) {
+    float radius = style->track.width / 2.0;
     if(zoom < GPS_RADIUS_LIMIT) {
       radius *= GPS_RADIUS_LIMIT;
       radius /= zoom;
 
-      canvas_item_set_radius(map->appdata.track.gps_item, radius);
+      canvas_item_set_radius(appdata.track.gps_item, radius);
     }
   }
 }
@@ -1003,7 +1002,7 @@ static gboolean map_scroll_event(GtkWidget *, GdkEventScroll *event, appdata_t *
       zoom /= ZOOM_FACTOR_WHEEL;
     else
       zoom *= ZOOM_FACTOR_WHEEL;
-    map_set_zoom(map, zoom, true);
+    map->set_zoom(zoom, true);
   }
 
   return TRUE;
@@ -1203,7 +1202,7 @@ static void map_button_press(map_t *map, gint x, gint y) {
   map->pen_down.drag = FALSE;     // don't assume drag yet
 
   /* determine wether this press was on an item */
-  map->pen_down.on_item = map_real_item_at(map, x, y);
+  map->pen_down.on_item = map->real_item_at(x, y);
 
   /* check if the clicked item is a highlighted node as the user */
   /* might want to drag that */
@@ -1281,7 +1280,7 @@ static void map_button_release(map_t *map, gint x, gint y) {
 
 	  /* update clicked item, to correctly handle the click */
 	  map->pen_down.on_item =
-	    map_real_item_at(map, map->pen_down.at.x, map->pen_down.at.y);
+	    map->real_item_at(map->pen_down.at.x, map->pen_down.at.y);
 
 	  map_handle_click(map);
 	}
@@ -1440,12 +1439,12 @@ static gboolean map_motion_notify_event(GtkWidget *,
 
   case MAP_ACTION_WAY_NODE_ADD:
     map_hl_cursor_clear(map);
-    map_edit_way_node_add_highlight(map, map_item_at(map, x, y), x, y);
+    map_edit_way_node_add_highlight(map, map->item_at(x, y), x, y);
     break;
 
   case MAP_ACTION_WAY_CUT:
     map_hl_cursor_clear(map);
-    map_edit_way_cut_highlight(map, map_item_at(map, x, y), x, y);
+    map_edit_way_cut_highlight(map, map->item_at(x, y), x, y);
     break;
 
   default:
@@ -1514,7 +1513,7 @@ gboolean map_t::key_press_event(GdkEventKey *event) {
 #endif
       zoom = state.zoom;
       zoom *= ZOOM_FACTOR_BUTTON;
-      map_set_zoom(this, zoom, true);
+      set_zoom(zoom, true);
       printf("zoom is now %f (1:%d)\n", zoom, zoom_to_scaledn(zoom));
       return TRUE;
       break;
@@ -1527,7 +1526,7 @@ gboolean map_t::key_press_event(GdkEventKey *event) {
 #endif
       zoom = state.zoom;
       zoom /= ZOOM_FACTOR_BUTTON;
-      map_set_zoom(this, zoom, true);
+      set_zoom(zoom, true);
       printf("zoom is now %f (1:%d)\n", zoom, zoom_to_scaledn(zoom));
       return TRUE;
       break;
@@ -1616,7 +1615,7 @@ void map_t::init() {
   canvas->set_background(style->background.color);
 
   /* set initial zoom */
-  map_set_zoom(this, state.zoom, false);
+  set_zoom(state.zoom, false);
   paint();
 
   float mult = style->frisket.mult;
@@ -2110,12 +2109,10 @@ void map_track_remove_pos(appdata_t &appdata) {
 
 /* ------------------- map background ------------------ */
 
-void map_remove_bg_image(map_t *map) {
-  if(!map) return;
-
-  if(map->bg.item) {
-    canvas_item_destroy(map->bg.item);
-    map->bg.item = O2G_NULLPTR;
+void map_t::remove_bg_image() {
+  if(bg.item) {
+    canvas_item_destroy(bg.item);
+    bg.item = O2G_NULLPTR;
   }
 }
 
@@ -2132,45 +2129,41 @@ static void map_bg_item_destroy_event(gpointer data) {
   }
 }
 
-void map_set_bg_image(map_t *map, const char *filename) {
-  const bounds_t *bounds = map->appdata.osm->bounds;
+void map_t::set_bg_image(const char *filename) {
+  const bounds_t *bounds = appdata.osm->bounds;
 
-  map_remove_bg_image(map);
+  remove_bg_image();
 
-  map->bg.pix = gdk_pixbuf_new_from_file(filename, O2G_NULLPTR);
+  bg.pix = gdk_pixbuf_new_from_file(filename, O2G_NULLPTR);
 
   /* calculate required scale factor */
-  map->bg.scale.x = static_cast<float>(bounds->max.x - bounds->min.x) /
-                    gdk_pixbuf_get_width(map->bg.pix);
-  map->bg.scale.y = static_cast<float>(bounds->max.y - bounds->min.y) /
-                    gdk_pixbuf_get_height(map->bg.pix);
+  bg.scale.x = static_cast<float>(bounds->max.x - bounds->min.x) /
+                    gdk_pixbuf_get_width(bg.pix);
+  bg.scale.y = static_cast<float>(bounds->max.y - bounds->min.y) /
+                    gdk_pixbuf_get_height(bg.pix);
 
-  map->bg.item = map->canvas->image_new(CANVAS_GROUP_BG, map->bg.pix,
-	  bounds->min.x, bounds->min.y, map->bg.scale.x, map->bg.scale.y);
+  bg.item = canvas->image_new(CANVAS_GROUP_BG, bg.pix,
+                              bounds->min.x, bounds->min.y, bg.scale.x, bg.scale.y);
 
-  canvas_item_destroy_connect(map->bg.item,
-                              map_bg_item_destroy_event, map);
+  canvas_item_destroy_connect(bg.item, map_bg_item_destroy_event, this);
 }
-
 
 /* -------- hide and show objects (for performance reasons) ------- */
 
-void map_hide_selected(map_t *map) {
-  if(!map) return;
-
-  if(map->selected.object.type != WAY) {
+void map_t::hide_selected() {
+  if(selected.object.type != WAY) {
     printf("selected item is not a way\n");
     return;
   }
 
-  way_t *way = map->selected.object.way;
+  way_t *way = selected.object.way;
   printf("hiding way #" ITEM_ID_FORMAT "\n", way->id);
 
-  map->item_deselect();
+  item_deselect();
   way->flags |= OSM_FLAG_HIDDEN;
   map_item_chain_destroy(way->map_item_chain);
 
-  gtk_widget_set_sensitive(map->appdata.menuitems[MENU_ITEM_MAP_SHOW_ALL], TRUE);
+  gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_MAP_SHOW_ALL], TRUE);
 }
 
 struct map_show_all_functor {
@@ -2188,46 +2181,39 @@ void map_show_all_functor::operator()(std::pair<item_id_t, way_t *> pair)
   }
 }
 
-void map_show_all(map_t *map) {
-  if(!map) return;
+void map_t::show_all() {
+  std::for_each(appdata.osm->ways.begin(), appdata.osm->ways.end(),
+                map_show_all_functor(this));
 
-  std::for_each(map->appdata.osm->ways.begin(), map->appdata.osm->ways.end(),
-                map_show_all_functor(map));
-
-  gtk_widget_set_sensitive(map->appdata.menuitems[MENU_ITEM_MAP_SHOW_ALL], FALSE);
+  gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_MAP_SHOW_ALL], FALSE);
 }
 
-void map_detail_change(map_t *map, float detail) {
+void map_t::detail_change(float detail, const char *banner_msg) {
+  if(banner_msg)
+    banner_busy_start(appdata, banner_msg);
   /* deselecting anything allows us not to care about automatic deselection */
   /* as well as items becoming invisible by the detail change */
-  map->item_deselect();
+  item_deselect();
 
-  map->state.detail = detail;
-  printf("changing detail factor to %f\n", map->state.detail);
+  state.detail = detail;
+  printf("changing detail factor to %f\n", state.detail);
 
-  map->clear(MAP_LAYER_OBJECTS_ONLY);
-  map->paint();
+  clear(MAP_LAYER_OBJECTS_ONLY);
+  paint();
+  if(banner_msg)
+    banner_busy_stop(appdata);
 }
 
-void map_detail_increase(map_t *map) {
-  if(!map) return;
-  banner_busy_start(map->appdata, _("Increasing detail level"));
-  map_detail_change(map, map->state.detail * MAP_DETAIL_STEP);
-  banner_busy_stop(map->appdata);
+void map_t::detail_increase() {
+  detail_change(state.detail * MAP_DETAIL_STEP, _("Increasing detail level"));
 }
 
-void map_detail_decrease(map_t *map) {
-  if(!map) return;
-  banner_busy_start(map->appdata, _("Decreasing detail level"));
-  map_detail_change(map, map->state.detail / MAP_DETAIL_STEP);
-  banner_busy_stop(map->appdata);
+void map_t::detail_decrease() {
+  detail_change(state.detail / MAP_DETAIL_STEP, _("Decreasing detail level"));
 }
 
-void map_detail_normal(map_t *map) {
-  if(!map) return;
-  banner_busy_start(map->appdata, _("Restoring default detail level"));
-  map_detail_change(map, 1.0);
-  banner_busy_stop(map->appdata);
+void map_t::detail_normal() {
+  detail_change(1.0, _("Restoring default detail level"));
 }
 
 void map_t::set_autosave(bool enable) {

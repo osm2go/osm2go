@@ -192,12 +192,12 @@ cb_menu_wms_adjust(appdata_t *appdata) {
 
 static void
 cb_menu_map_hide_sel(appdata_t *appdata) {
-  map_hide_selected(appdata->map);
+  appdata->map->hide_selected();
 }
 
 static void
 cb_menu_map_show_all(appdata_t *appdata) {
-  map_show_all(appdata->map);
+  appdata->map->show_all();
 }
 
 /* ---------------------------------------------------------- */
@@ -269,7 +269,7 @@ static void
 cb_menu_zoomin(appdata_t *appdata) {
   if(!appdata->map) return;
 
-  map_set_zoom(appdata->map, appdata->map->state.zoom * ZOOM_FACTOR_MENU, true);
+  appdata->map->set_zoom(appdata->map->state.zoom * ZOOM_FACTOR_MENU, true);
   printf("zoom is now %f\n", appdata->map->state.zoom);
 }
 
@@ -277,7 +277,7 @@ static void
 cb_menu_zoomout(appdata_t *appdata) {
   if(!appdata->map) return;
 
-  map_set_zoom(appdata->map, appdata->map->state.zoom / ZOOM_FACTOR_MENU, true);
+  appdata->map->set_zoom(appdata->map->state.zoom / ZOOM_FACTOR_MENU, true);
   printf("zoom is now %f\n", appdata->map->state.zoom);
 }
 
@@ -296,21 +296,21 @@ cb_scale_popup(GtkWidget *button, appdata_t *appdata) {
 static void
 cb_menu_view_detail_inc(appdata_t *appdata) {
   printf("detail level increase\n");
-  map_detail_increase(appdata->map);
+  appdata->map->detail_increase();
 }
 
 #ifndef FREMANTLE
 static void
 cb_menu_view_detail_normal(appdata_t *appdata) {
   printf("detail level normal\n");
-  map_detail_normal(appdata->map);
+  appdata->map->detail_normal();
 }
 #endif
 
 static void
 cb_menu_view_detail_dec(appdata_t *appdata) {
   printf("detail level decrease\n");
-  map_detail_decrease(appdata->map);
+  appdata->map->detail_decrease();
 }
 
 static void
@@ -1162,8 +1162,6 @@ appdata_t::~appdata_t() {
   /* save project file */
   if(project)
     project_save(GTK_WIDGET(window), project);
-
-  map_remove_bg_image(map);
 
   delete osm;
   osm = O2G_NULLPTR;

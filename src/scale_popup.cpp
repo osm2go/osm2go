@@ -94,8 +94,7 @@ on_value_changed(GtkAdjustment *adjustment, map_t *map) {
   printf("value changed to %f (%f)\n",
 	 gtk_adjustment_get_value(adjustment),
 	 pow(MAP_DETAIL_STEP, -gtk_adjustment_get_value(adjustment)));
-  map_detail_change(map, pow(MAP_DETAIL_STEP,
-				      -gtk_adjustment_get_value(adjustment)));
+  map->detail_change(pow(MAP_DETAIL_STEP, -gtk_adjustment_get_value(adjustment)));
 }
 
 void scale_popup(GtkWidget *button, float lin, GtkWindow *awindow, map_t *map) {

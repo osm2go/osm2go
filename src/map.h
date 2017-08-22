@@ -158,11 +158,30 @@ struct map_t {
   void track_draw_seg(track_seg_t &seg);
   void track_update_seg(track_seg_t &seg);
   void track_pos(const lpos_t *lpos);
+
+  void show_node(node_t *node);
+  void cmenu_show();
+
+  /* background stuff */
+  void set_bg_image(const char *filename);
+  void remove_bg_image();
+
+  void hide_selected();
+  void show_all();
+
+  void set_zoom(double zoom, bool update_scroll_offsets);
+
+  void detail_change(float detail, const char *banner_msg = O2G_NULLPTR);
+  void detail_increase();
+  void detail_decrease();
+  void detail_normal();
+
+  /* various functions required by map_edit */
+  map_item_t *item_at(gint x, gint y);
+  map_item_t *real_item_at(gint x, gint y);
 };
 
-void map_show_node(map_t *map, node_t *node);
-void map_cmenu_show(map_t *map);
-
+// Gtk callbacks
 void map_action_cancel(map_t *map);
 void map_action_ok(map_t *map);
 
@@ -172,24 +191,6 @@ void map_delete_selected(map_t *map);
 void map_track_remove(track_t &track);
 void map_track_remove_pos(appdata_t &appdata);
 
-/* background stuff */
-void map_set_bg_image(map_t *map, const char *filename);
-void map_remove_bg_image(map_t *map);
-
-void map_hide_selected(map_t *map);
-void map_show_all(map_t *map);
-
-void map_set_zoom(map_t *map, double zoom, bool update_scroll_offsets);
-
-void map_detail_change(map_t *map, float detail);
-
-void map_detail_increase(map_t *map);
-void map_detail_decrease(map_t *map);
-void map_detail_normal(map_t *map);
-
-/* various functions required by map_edit */
-map_item_t *map_item_at(map_t *map, gint x, gint y);
-map_item_t *map_real_item_at(map_t *map, gint x, gint y);
 void map_outside_error(appdata_t &appdata);
 
 void map_item_chain_destroy(map_item_chain_t *&chainP);

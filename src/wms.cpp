@@ -1198,7 +1198,7 @@ void wms_import(appdata_t &appdata) {
     return;
 
   /* there should be a matching file on disk now */
-  map_set_bg_image(appdata.map, filename.c_str());
+  appdata.map->set_bg_image(filename.c_str());
 
   gint x = appdata.osm->bounds->min.x + appdata.map->bg.offset.x;
   gint y = appdata.osm->bounds->min.y + appdata.map->bg.offset.y;
@@ -1228,7 +1228,7 @@ void wms_load(appdata_t &appdata) {
       appdata.map->bg.offset.x = appdata.project->wms_offset.x;
       appdata.map->bg.offset.y = appdata.project->wms_offset.y;
 
-      map_set_bg_image(appdata.map, filename.c_str());
+      appdata.map->set_bg_image(filename.c_str());
 
       /* restore image to saved position */
       gint x = appdata.osm->bounds->min.x + appdata.map->bg.offset.x;
@@ -1272,7 +1272,7 @@ void wms_remove(appdata_t &appdata) {
   gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_WMS_CLEAR], FALSE);
   gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_WMS_ADJUST], FALSE);
 
-  map_remove_bg_image(appdata.map);
+  appdata.map->remove_bg_image();
 
   wms_remove_file(*appdata.project);
 }
