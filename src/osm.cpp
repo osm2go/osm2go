@@ -1630,6 +1630,9 @@ void osm_t::way_delete(way_t *way) {
 
   remove_from_relations(object_t(way));
 
+  /* remove it visually from the screen */
+  map_item_chain_destroy(way->map_item_chain);
+
   /* delete all nodes that aren't in other use now */
   std::for_each(way->node_chain.begin(), way->node_chain.end(),
                 osm_unref_way_free(this, way));

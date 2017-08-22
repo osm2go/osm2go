@@ -145,7 +145,6 @@ struct map_t {
   void draw(node_t *node);
   void select_relation(relation_t *relation);
   void redraw_item(object_t object);
-  void delete_way(way_t *way);
   void draw(way_t *way);
   void select_way(way_t *way);
   void set_action(map_action_t action);

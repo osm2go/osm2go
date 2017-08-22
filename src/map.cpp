@@ -1105,16 +1105,6 @@ void map_t::highlight_refresh() {
   map_object_select(this, old);
 }
 
-void map_t::delete_way(way_t *way) {
-  printf("deleting way #" ITEM_ID_FORMAT " from map and osm\n", way->id);
-
-  /* remove it visually from the screen */
-  map_item_chain_destroy(way->map_item_chain);
-
-  /* and mark it "deleted" in the database */
-  appdata.osm->way_delete(way);
-}
-
 static void map_handle_click(map_t *map) {
 
   /* problem: on_item may be the highlight itself! So store it! */
@@ -1812,7 +1802,7 @@ void node_deleted_from_ways::operator()(way_t *way) {
     /* this way now only contains one node and thus isn't a valid */
     /* way anymore. So it'll also get deleted (which in turn may */
     /* cause other nodes to be deleted as well) */
-    map->delete_way(way);
+    map->appdata.osm->way_delete(way);
   } else {
     object_t object(way);
     map->redraw_item(object);
@@ -1872,7 +1862,7 @@ void map_delete_selected(map_t *map) {
   }
 
   case WAY:
-    map->delete_way(item.object.way);
+    map->appdata.osm->way_delete(item.object.way);
     break;
 
   case RELATION:
