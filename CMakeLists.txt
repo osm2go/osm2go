@@ -221,6 +221,8 @@ set(CMAKE_REQUIRED_LIBRARIES ${MATH_LIBRARY})
 set(CMAKE_REQUIRED_INCLUDES math.h)
 check_function_exists(log2 HAVE_LOG2)
 cmake_pop_check_state()
+pkg_check_modules(GConf2 REQUIRED IMPORTED_TARGET gconf-2.0)
+target_link_libraries(osm2go_lib PRIVATE PkgConfig::GConf2)
 
 set_property(SOURCE src/misc.cpp APPEND PROPERTY COMPILE_DEFINITIONS "DATADIR=\"${DATA_DIR}\"")
 if (HAVE_LOG2)
