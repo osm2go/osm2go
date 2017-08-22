@@ -138,12 +138,6 @@ static gboolean wms_bbox_is_valid(pos_t *min, pos_t *max) {
   if(max->lat - min->lat < 0.1) return FALSE;
   if(max->lon - min->lon < 0.1) return FALSE;
 
-  /* useful angles? */
-  if(min->lat > 90.0  || min->lat < -90.0)  return FALSE;
-  if(max->lat > 90.0  || max->lat < -90.0)  return FALSE;
-  if(min->lon > 180.0 || min->lon < -180.0) return FALSE;
-  if(max->lon > 180.0 || max->lon < -180.0) return FALSE;
-
   return TRUE;
 }
 
