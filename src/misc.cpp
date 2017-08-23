@@ -299,7 +299,7 @@ static const gint dialog_sizes[][2] = {
 #endif
 
 /* create a modal dialog using one of the predefined size hints */
-GtkWidget *misc_dialog_new(int hint, const gchar *title,
+GtkWidget *misc_dialog_new(DialogSizeHing hint, const gchar *title,
 			   GtkWindow *parent, ...) {
   va_list args;
   va_start( args, parent );

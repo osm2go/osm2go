@@ -202,14 +202,16 @@ void warningf(GtkWidget *parent, const char *fmt, ...) G_GNUC_PRINTF(2, 3);
 void messagef(GtkWidget *parent, const char *title, const char *fmt, ...) G_GNUC_PRINTF(3, 4);
 
 /* dialog size are specified rather fuzzy */
-#define MISC_DIALOG_NOSIZE  -1
-#define MISC_DIALOG_SMALL    0
-#define MISC_DIALOG_MEDIUM   1
-#define MISC_DIALOG_LARGE    2
-#define MISC_DIALOG_WIDE     3
-#define MISC_DIALOG_HIGH     4
+enum DialogSizeHing {
+  MISC_DIALOG_NOSIZE = -1,
+  MISC_DIALOG_SMALL  =  0,
+  MISC_DIALOG_MEDIUM =  1,
+  MISC_DIALOG_LARGE  =  2,
+  MISC_DIALOG_WIDE   =  3,
+  MISC_DIALOG_HIGH   =  4
+};
 
-GtkWidget *misc_dialog_new(int hint, const gchar *title, GtkWindow *parent, ...);
+GtkWidget *misc_dialog_new(DialogSizeHing hint, const gchar *title, GtkWindow *parent, ...);
 GtkWidget *misc_scrolled_window_new(gboolean etched_in);
 void misc_table_attach(GtkWidget *table, GtkWidget *widget, int x, int y);
 
