@@ -222,7 +222,7 @@ static void *worker_thread(void *ptr) {
   printf("thread: running\n");
 
   CURL *curl = curl_easy_init();
-  if(curl) {
+  if(G_LIKELY(curl != O2G_NULLPTR)) {
     bool ok = false;
     FILE *outfile = O2G_NULLPTR;
 
@@ -239,7 +239,7 @@ static void *worker_thread(void *ptr) {
       ok = true;
     }
 
-    if(ok) {
+    if(G_LIKELY(ok)) {
       curl_easy_setopt(curl, CURLOPT_URL, request->url.c_str());
 
       curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
@@ -322,7 +322,7 @@ static bool net_io_do(GtkWidget *parent, net_io_request_t *rq,
 #else
   worker = g_thread_create(&worker_thread, request.get(), FALSE, O2G_NULLPTR);
 #endif
-  if(worker == O2G_NULLPTR) {
+  if(G_UNLIKELY(worker == O2G_NULLPTR)) {
     g_warning("failed to create the worker thread");
 
     /* free request and return error */
