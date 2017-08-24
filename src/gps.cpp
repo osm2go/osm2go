@@ -73,7 +73,7 @@ public:
   gpsd_state_t();
   ~gpsd_state_t();
 
-  virtual bool get_pos(pos_t &pos, float *alt = O2G_NULLPTR) O2G_OVERRIDE;
+  virtual pos_t get_pos(float *alt = O2G_NULLPTR) O2G_OVERRIDE;
   virtual void setEnable(bool en) O2G_OVERRIDE;
   virtual bool registerCallback(GpsCallback cb, void *context) O2G_OVERRIDE;
 
@@ -108,9 +108,9 @@ public:
 #define GPSD_HOST "127.0.0.1"
 #define GPSD_PORT 2947
 
-bool gpsd_state_t::get_pos(pos_t &pos, float* alt)
+pos_t gpsd_state_t::get_pos(float* alt)
 {
-  pos.lat = NAN;
+  pos_t pos(NAN, NAN);
 
   g_mutex_lock(mutex);
   if(gpsdata.set & STATUS_SET) {
@@ -124,7 +124,7 @@ bool gpsd_state_t::get_pos(pos_t &pos, float* alt)
 
   g_mutex_unlock(mutex);
 
-  return !std::isnan(pos.lat);
+  return pos;
 }
 
 static int gps_connect(gpsd_state_t *gps_state) {

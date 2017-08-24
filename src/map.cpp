@@ -1757,8 +1757,8 @@ void map_action_ok(map_t *map) {
 
   case MAP_ACTION_NODE_ADD:
     {
-    pos_t pos;
-    if(!map->appdata.gps_state->get_pos(pos))
+    pos_t pos = map->appdata.gps_state->get_pos();
+    if(!pos.valid())
       break;
 
     node_t *node = O2G_NULLPTR;

@@ -38,7 +38,7 @@ public:
   gps_liblocation_state_t();
   virtual ~gps_liblocation_state_t();
 
-  virtual bool get_pos(pos_t &pos, float *alt = O2G_NULLPTR) O2G_OVERRIDE;
+  virtual pos_t get_pos(float *alt = O2G_NULLPTR) O2G_OVERRIDE;
   virtual void setEnable(bool) O2G_OVERRIDE;
   virtual bool registerCallback(GpsCallback cb, void *context) O2G_OVERRIDE;
 
@@ -57,22 +57,17 @@ public:
   float altitude;
 };
 
-bool gps_liblocation_state_t::get_pos(pos_t &pos, float* alt)
+pos_t gps_liblocation_state_t::get_pos(float* alt)
 {
-  if(!enabled)
-    return false;
+  if(enabled && fix) {
+    if(alt)
+      *alt = altitude;
 
-  if(!fix)
-    return false;
-
-  pos = this->pos;
-
-  if(alt)
-    *alt = altitude;
-
-  return true;
+    return pos;
+  } else {
+    return pos_t(NAN, NAN);
+  }
 }
-
 
 static void
 location_changed(gps_liblocation_state_t *gps_state) {

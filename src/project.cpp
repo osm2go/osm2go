@@ -780,7 +780,7 @@ struct project_list_add {
   GtkTreeIter &seliter;
   gboolean &has_sel;
   project_list_add(GtkListStore *s, appdata_t &a, GtkTreeIter &l, gboolean &h)
-    : store(s), cur_proj(a.project), check_pos(a.gps_state->get_pos(pos))
+    : store(s), cur_proj(a.project), pos(a.gps_state->get_pos()), check_pos(pos.valid())
     , seliter(l), has_sel(h) {}
   void operator()(const project_t *project);
 };

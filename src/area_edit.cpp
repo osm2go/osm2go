@@ -275,9 +275,9 @@ static void map_update(context_t *context, bool forced) {
   /* check if the position is invalid */
   if(!context->min.valid() || !context->max.valid()) {
     /* no coordinates given: display around the current GPS position if available */
-    pos_t pos;
+    pos_t pos = context->area.appdata.gps_state->get_pos();
     int zoom = 12;
-    if(!context->area.appdata.gps_state->get_pos(pos)) {
+    if(!pos.valid()) {
       /* no GPS position available: display the entire world */
       pos.lat = 0.0;
       pos.lon = 0.0;
@@ -599,10 +599,10 @@ static gboolean map_gps_update(gpointer data) {
   gboolean gps_on = context->area.appdata.settings->enable_gps;
 
   pos_t pos(NAN, NAN);
-  gboolean gps_fix = gps_on &&
-    context->area.appdata.gps_state->get_pos(pos);
+  if(gps_on)
+    pos = context->area.appdata.gps_state->get_pos();
 
-  if(gps_fix) {
+  if(pos.valid()) {
     g_object_set(context->map.widget, "gps-track-highlight-radius", 0, O2G_NULLPTR);
     osm_gps_map_gps_add(OSM_GPS_MAP(context->map.widget),
 			 pos.lat, pos.lon, NAN);
