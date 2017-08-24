@@ -285,7 +285,7 @@ static void *worker_thread(void *ptr) {
       curl_easy_setopt(curl, CURLOPT_HTTPHEADER, slist);
 #endif
 
-      if(!request->filename.empty())
+      if(outfile != O2G_NULLPTR)
 	fclose(outfile);
     }
 
