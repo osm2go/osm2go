@@ -1363,7 +1363,7 @@ bool project_load(appdata_t &appdata, const std::string &name) {
 
   track_clear(appdata);
   if(track_restore(appdata))
-    appdata.map->track_draw(*appdata.track.track);
+    appdata.map->track_draw(appdata.settings->trackVisibility, *appdata.track.track);
 
   /* finally load a background if present */
   osm2go_platform::process_events();

@@ -2052,9 +2052,28 @@ struct map_track_seg_draw_functor {
   }
 };
 
-void map_t::track_draw(track_t &track) {
-  std::for_each(track.segments.begin(), track.segments.end(),
-                map_track_seg_draw_functor(this));
+void map_t::track_draw(TrackVisibility visibility, track_t &track) {
+  if(G_UNLIKELY(track.segments.empty()))
+    return;
+
+  map_track_remove(track);
+  if(visibility < ShowPosition)
+    map_track_remove_pos(appdata);
+
+  canvas->erase(1 << CANVAS_GROUP_TRACK);
+
+  switch(visibility) {
+  case DrawAll:
+    std::for_each(track.segments.begin(), track.segments.end(),
+                  map_track_seg_draw_functor(this));
+    break;
+  case DrawCurrent:
+    if(track.active)
+      track_draw_seg(track.segments.back());
+    break;
+  default:
+    break;
+  }
 }
 
 void map_track_remove(track_t &track) {

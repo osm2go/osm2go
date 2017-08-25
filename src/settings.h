@@ -20,6 +20,8 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
 
+#include <track.h>
+
 #include <glib.h>
 #include <map>
 #include <string>
@@ -64,6 +66,7 @@ public:
   std::string track_path;
   gboolean enable_gps;
   gboolean follow_gps;
+  TrackVisibility trackVisibility;
 
   /* set to true if no gconf settings were found */
   /* and the demo was loaded */

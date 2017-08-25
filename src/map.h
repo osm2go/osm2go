@@ -22,6 +22,7 @@
 
 #include "canvas.h"
 #include "osm.h"
+#include "track.h"
 #include <vector>
 
 #define MAP_LAYER_ALL (0xffff)
@@ -153,7 +154,7 @@ struct map_t {
   bool scroll_to_if_offscreen(const lpos_t *lpos);
 
   /* track stuff */
-  void track_draw(track_t &track);
+  void track_draw(TrackVisibility visibiliy, track_t &track);
   void track_draw_seg(track_seg_t &seg);
   void track_update_seg(track_seg_t &seg);
   void track_pos(const lpos_t *lpos);

@@ -392,14 +392,16 @@ static gboolean track_append_position(appdata_t &appdata, const pos_t *pos, floa
     track->dirty = true;
     points.push_back(track_point_t(*pos, alt, time(O2G_NULLPTR)));
 
-    if(seg.item_chain.empty()) {
-      /* the segment can now be drawn for the first time */
-      printf("initial draw\n");
-      g_assert_true(seg.item_chain.empty());
-      appdata.map->track_draw_seg(seg);
-    } else {
-      /* the segment has to be updated */
-      appdata.map->track_update_seg(seg);
+    if(appdata.settings->trackVisibility >= DrawCurrent) {
+      if(seg.item_chain.empty()) {
+        /* the segment can now be drawn for the first time */
+        printf("initial draw\n");
+        g_assert_true(seg.item_chain.empty());
+        appdata.map->track_draw_seg(seg);
+      } else {
+        /* the segment has to be updated */
+        appdata.map->track_update_seg(seg);
+      }
     }
   }
 
@@ -460,7 +462,8 @@ static int update(void *data) {
     printf("valid position %.6f/%.6f alt %.2f\n", pos.lat, pos.lon, alt);
     lpos_t lpos;
     lpos = pos.toLpos(*(appdata.osm->bounds));
-    if(track_append_position(appdata, &pos, alt, &lpos))
+    if(track_append_position(appdata, &pos, alt, &lpos) &&
+       appdata.settings->trackVisibility >= ShowPosition)
       appdata.map->track_pos(&lpos);
   } else {
     printf("no valid position\n");

@@ -41,6 +41,23 @@ static const std::string keybase = "/apps/" PACKAGE "/";
 const char *api06https = "https://api.openstreetmap.org/api/0.6";
 const char *apihttp = "http://api.openstreetmap.org/api/0.";
 
+static std::map<TrackVisibility, std::string> trackVisibilityKeys;
+
+static void initTrackVisibility() {
+  trackVisibilityKeys[RecordOnly] = "RecordOnly";
+  trackVisibilityKeys[ShowPosition] = "ShowPosition";
+  trackVisibilityKeys[DrawCurrent] = "DrawCurrent";
+  trackVisibilityKeys[DrawAll] = "DrawAll";
+}
+
+struct matchTrackVisibility {
+  const std::string key;
+  matchTrackVisibility(const std::string &k) : key(k) {}
+  bool operator()(const std::pair<TrackVisibility, std::string> &p) {
+    return p.second == key;
+  }
+};
+
 template<typename T, typename U, U GETTER(const GConfValue *)> struct load_functor {
   std::string &key; ///< reference to avoid most reallocations
   GConfClient * const client;
@@ -72,6 +89,9 @@ template<typename T, typename U, U GETTER(const GConfValue *)> void load_functor
 settings_t *settings_t::load() {
   settings_t *settings = new settings_t();
 
+  if(G_LIKELY(trackVisibilityKeys.empty()))
+    initTrackVisibility();
+
   /* ------ overwrite with settings from gconf if present ------- */
   GConfClient *client = gconf_client_get_default();
 
@@ -92,6 +112,19 @@ settings_t *settings_t::load() {
     }
     if(G_UNLIKELY(api_adjust(settings->server))) {
       printf("adjusting server path in settings\n");
+    }
+
+    key = keybase + "track_visibility";
+    GConfValue *gvalue = gconf_client_get(client, key.c_str(), O2G_NULLPTR);
+    settings->trackVisibility = DrawAll;
+    if(G_LIKELY(gvalue != O2G_NULLPTR)) {
+      const std::map<TrackVisibility, std::string>::const_iterator it =
+          std::find_if(trackVisibilityKeys.begin(), trackVisibilityKeys.end(),
+                       matchTrackVisibility(gconf_value_get_string(gvalue)));
+      if(it != trackVisibilityKeys.end())
+        settings->trackVisibility = it->first;
+
+      gconf_value_free(gvalue);
     }
 
     /* restore wms server list */
@@ -194,11 +227,13 @@ settings_t *settings_t::load() {
 }
 
 void settings_t::save() const {
-
   GConfClient *client = gconf_client_get_default();
   if(!client) return;
 
   std::string key;
+
+  if(G_UNLIKELY(trackVisibilityKeys.empty()))
+    initTrackVisibility();
 
   /* store everything listed in the store tables */
   const std::map<const char *, std::string *>::const_iterator sitEnd = store_str.end();
@@ -219,6 +254,9 @@ void settings_t::save() const {
 
     gconf_client_set_bool(client, key.c_str(), *(it->second), O2G_NULLPTR);
   }
+
+  key = keybase + "track_visibility";
+  gconf_client_set_string(client, key.c_str(), trackVisibilityKeys[trackVisibility].c_str(), O2G_NULLPTR);
 
   /* store list of wms servers */
   for(unsigned int count = 0; count < wms_server.size(); count++) {

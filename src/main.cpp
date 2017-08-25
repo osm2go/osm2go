@@ -210,10 +210,66 @@ cb_menu_map_show_all(appdata_t *appdata) {
 #define MENU_CHECK_ITEM_ACTIVE(a) gtk_check_menu_item_get_active(a)
 #endif
 
+GtkWidget *track_vis_select_widget(TrackVisibility current) {
+  std::vector<std::string> labels;
+  labels.push_back(_("Hide tracks"));
+  labels.push_back(_("Show current position"));
+  labels.push_back(_("Show current segment"));
+  labels.push_back(_("Show all segments"));
+
+  return string_select_widget(_("Track visibility"), labels,
+                                         static_cast<int>(current));
+}
+
 #ifndef FREMANTLE
+/* in fremantle this happens inside the submenu handling since this button */
+/* is actually placed inside the submenu there */
+static bool track_visibility_select(GtkWidget *parent, appdata_t &appdata) {
+  GtkWidget *dialog =
+    misc_dialog_new(MISC_DIALOG_NOSIZE, _("Select track visibility"),
+                    GTK_WINDOW(parent),
+                    GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
+                    GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+                    O2G_NULLPTR);
+
+  gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_ACCEPT);
+
+  GtkWidget *cbox = track_vis_select_widget(appdata.settings->trackVisibility);
+
+  GtkWidget *hbox = gtk_hbox_new(FALSE, 8);
+  gtk_box_pack_start_defaults(GTK_BOX(hbox), gtk_label_new(_("Track visibility:")));
+
+  gtk_box_pack_start_defaults(GTK_BOX(hbox), cbox);
+  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox);
+
+  gtk_widget_show_all(dialog);
+
+  bool ret = false;
+  if(GTK_RESPONSE_ACCEPT != gtk_dialog_run(GTK_DIALOG(dialog))) {
+    printf("user clicked cancel\n");
+  } else {
+    int index = combo_box_get_active(cbox);
+    printf("user clicked ok on %i\n", index);
+
+    TrackVisibility tv = static_cast<TrackVisibility>(index);
+    ret = (tv != appdata.settings->trackVisibility);
+    appdata.settings->trackVisibility = tv;
+  }
+
+  gtk_widget_destroy(dialog);
+
+  return ret;
+}
+
 static void
 cb_menu_style(appdata_t *appdata) {
   style_select(GTK_WIDGET(appdata->window), *appdata);
+}
+
+static void
+cb_menu_track_vis(appdata_t *appdata) {
+  if(track_visibility_select(GTK_WIDGET(appdata->window), *appdata) && appdata->track.track)
+    appdata->map->track_draw(appdata->settings->trackVisibility, *appdata->track.track);
 }
 #endif
 
@@ -362,7 +418,7 @@ cb_menu_track_import(appdata_t *appdata) {
     /* load a track */
     appdata->track.track = track_import(filename);
     if(appdata->track.track) {
-      appdata->map->track_draw(*appdata->track.track);
+      appdata->map->track_draw(appdata->settings->trackVisibility, *appdata->track.track);
 
       appdata->settings->track_path = filename;
     }
@@ -782,6 +838,13 @@ static void menu_create(appdata_t &appdata) {
     appdata.settings->follow_gps
   );
 
+  menu_append_new_item(
+    appdata, submenu, GTK_SIGNAL_FUNC(cb_menu_track_vis), _("Track _visibility"),
+    O2G_NULLPTR, "<OSM2Go-Main>/Track/GPS",
+    GDK_g, static_cast<GdkModifierType>(GDK_CONTROL_MASK|GDK_SHIFT_MASK), TRUE, false,
+    FALSE
+  );
+
   /* ------------------------------------------------------- */
 
   gtk_menu_shell_append(GTK_MENU_SHELL(about_quit_items_menu),
@@ -880,9 +943,12 @@ static GtkWidget *app_submenu_create(appdata_t &appdata,
 
     /* the "Style" menu entry is very special */
     /* and is being handled seperately */
-    if(!strcmp("Style", menu_entries->label)) {
+    if(!strcmp(_("Style"), menu_entries->label)) {
       button = style_select_widget(appdata.settings->style);
       g_object_set_data(G_OBJECT(dialog), "style_widget", button);
+    } else if(!strcmp(_("Track visibility"), menu_entries->label)) {
+      button = track_vis_select_widget(appdata.settings->trackVisibility);
+      g_object_set_data(G_OBJECT(dialog), "track_widget", button);
     } else {
       if(!menu_entries->toggle) {
 	button = hildon_button_new_with_text(
@@ -940,11 +1006,16 @@ static void submenu_popup(appdata_t &appdata, GtkWidget *menu) {
   gtk_widget_hide(menu);
 
   /* check if the style menu was in here */
-  GtkWidget *style_widget = GTK_WIDGET(g_object_get_data(G_OBJECT(menu), "style_widget"));
-  if(style_widget) {
-    const std::string &style = combo_box_get_active_text(style_widget);
+  GtkWidget *combo_widget = GTK_WIDGET(g_object_get_data(G_OBJECT(menu), "style_widget"));
+  if(combo_widget) {
+    const std::string &style = combo_box_get_active_text(combo_widget);
     if(!style.empty())
       style_change(appdata, style);
+  } else if((combo_widget = GTK_WIDGET(g_object_get_data(G_OBJECT(menu), "track_widget"))) != O2G_NULLPTR) {
+    TrackVisibility tv = static_cast<TrackVisibility>(combo_box_get_active(combo_widget));
+    if(tv != appdata.settings->trackVisibility && appdata.track.track)
+      appdata.map->track_draw(tv, *appdata.track.track);
+    appdata.settings->trackVisibility = tv;
   }
 }
 
@@ -1059,6 +1130,7 @@ static void menu_create(appdata_t &appdata) {
                          enable_gps_get_toggle, MENU_ITEM_TRACK_ENABLE_GPS),
     DISABLED_TOGGLE_ENTRY("GPS follow", cb_menu_track_follow_gps,
                           follow_gps_get_toggle, MENU_ITEM_TRACK_FOLLOW_GPS),
+    SIMPLE_ENTRY("Track visibility", O2G_NULLPTR),
   };
 
   /* build menu/submenus */

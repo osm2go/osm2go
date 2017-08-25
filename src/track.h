@@ -25,6 +25,13 @@
 
 #include <vector>
 
+enum TrackVisibility {
+  RecordOnly,   ///< record track, nothing drawn
+  ShowPosition, ///< record track, show only current position
+  DrawCurrent,  ///< only draw current segment
+  DrawAll,      ///< draw everything
+};
+
 struct track_point_t {
   track_point_t();
   track_point_t(const pos_t &p, float alt = 0.0f, time_t t = 0);
