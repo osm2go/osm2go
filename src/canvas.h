@@ -163,7 +163,7 @@ public:
   lpos_t *points;
 };
 
-void canvas_point_set_pos(canvas_points_t *points, gint index, const lpos_t &lpos);
+void canvas_point_set_pos(canvas_points_t *points, gint index, const lpos_t lpos);
 void canvas_item_get_segment_pos(canvas_item_t *item, gint seg,
                                  gint &x0, gint &y0, gint &x1, gint &y1);
 

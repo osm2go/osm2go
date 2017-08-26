@@ -160,7 +160,7 @@ struct osm_t {
   way_t *way_by_id(item_id_t id) const;
   relation_t *relation_by_id(item_id_t id) const;
 
-  node_t *node_new(const lpos_t &pos);
+  node_t *node_new(const lpos_t pos);
   node_t *node_new(const pos_t &pos);
   void node_attach(node_t *node);
   void way_delete(way_t *way);
@@ -415,7 +415,7 @@ public:
 class node_t : public visible_item_t {
 public:
   explicit node_t();
-  explicit node_t(item_id_t ver, const lpos_t &lp, const pos_t &p, item_id_t i = ID_ILLEGAL);
+  explicit node_t(item_id_t ver, const lpos_t lp, const pos_t &p, item_id_t i = ID_ILLEGAL);
   virtual ~node_t() {}
 
   unsigned int ways;

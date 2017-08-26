@@ -1426,7 +1426,7 @@ template<typename T> void osm_attach(std::map<item_id_t, T *> &map, T *obj) {
   map[obj->id] = obj;
 }
 
-node_t *osm_t::node_new(const lpos_t &lpos) {
+node_t *osm_t::node_new(const lpos_t lpos) {
   /* convert screen position back to ll */
   pos_t pos = lpos.toPos(*bounds);
 
@@ -2408,7 +2408,7 @@ node_t::node_t()
   memset(&lpos, 0, sizeof(lpos));
 }
 
-node_t::node_t(item_id_t ver, const lpos_t &lp, const pos_t &p, item_id_t i)
+node_t::node_t(item_id_t ver, const lpos_t lp, const pos_t &p, item_id_t i)
   : visible_item_t(ver, i)
   , ways(0)
   , pos(p)

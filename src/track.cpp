@@ -358,7 +358,7 @@ static void track_end_segment(track_t *track) {
  * @returns if the position changed
  * @retval FALSE if the GPS position marker needs to be redrawn (i.e. the position changed)
  */
-static gboolean track_append_position(appdata_t &appdata, const pos_t &pos, float alt, const lpos_t *lpos) {
+static gboolean track_append_position(appdata_t &appdata, const pos_t &pos, float alt, const lpos_t lpos) {
   track_t *track = appdata.track.track;
 
   /* no track at all? might be due to a "clear track" while running */
@@ -461,9 +461,9 @@ static int update(void *data) {
     printf("valid position %.6f/%.6f alt %.2f\n", pos.lat, pos.lon, alt);
     lpos_t lpos;
     lpos = pos.toLpos(*(appdata.osm->bounds));
-    if(track_append_position(appdata, pos, alt, &lpos) &&
+    if(track_append_position(appdata, pos, alt, lpos) &&
        appdata.settings->trackVisibility >= ShowPosition)
-      appdata.map->track_pos(&lpos);
+      appdata.map->track_pos(lpos);
   } else {
     printf("no valid position\n");
     /* end segment */

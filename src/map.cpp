@@ -872,7 +872,7 @@ static bool map_limit_zoom(map_t *map, gdouble &zoom) {
  * Return true if this was possible, false if position is outside
  * working area
  */
-bool map_t::scroll_to_if_offscreen(const lpos_t *lpos) {
+bool map_t::scroll_to_if_offscreen(const lpos_t lpos) {
 
   // Ignore anything outside the working area
   if(G_UNLIKELY(!appdata.osm))
@@ -883,9 +883,9 @@ bool map_t::scroll_to_if_offscreen(const lpos_t *lpos) {
   min_y = appdata.osm->bounds->min.y;
   max_x = appdata.osm->bounds->max.x;
   max_y = appdata.osm->bounds->max.y;
-  if (lpos->x > max_x || lpos->x < min_x || lpos->y > max_y || lpos->y < min_y) {
+  if (lpos.x > max_x || lpos.x < min_x || lpos.y > max_y || lpos.y < min_y) {
     printf("cannot scroll to (%d, %d): outside the working area\n",
-	   lpos->x, lpos->y);
+	   lpos.x, lpos.y);
     return false;
   }
 
@@ -904,18 +904,18 @@ bool map_t::scroll_to_if_offscreen(const lpos_t *lpos) {
   gint viewport_top    = sy - dim.height / 2;
   gint viewport_bottom = sy + dim.height / 2;
 
-  if (lpos->x > viewport_right) {
-    printf("** off right edge (%d > %d)\n", lpos->x, viewport_right);
+  if (lpos.x > viewport_right) {
+    printf("** off right edge (%d > %d)\n", lpos.x, viewport_right);
     recentre_needed = true;
-  } else if (lpos->x < viewport_left) {
-    printf("** off left edge (%d < %d)\n", lpos->x, viewport_left);
+  } else if (lpos.x < viewport_left) {
+    printf("** off left edge (%d < %d)\n", lpos.x, viewport_left);
     recentre_needed = true;
   }
-  if (lpos->y > viewport_bottom) {
-    printf("** off bottom edge (%d > %d)\n", lpos->y, viewport_bottom);
+  if (lpos.y > viewport_bottom) {
+    printf("** off bottom edge (%d > %d)\n", lpos.y, viewport_bottom);
     recentre_needed = true;
-  } else if (lpos->y < viewport_top) {
-    printf("** off top edge (%d < %d)\n", lpos->y, viewport_top);
+  } else if (lpos.y < viewport_top) {
+    printf("** off top edge (%d < %d)\n", lpos.y, viewport_top);
     recentre_needed = true;
   }
 
@@ -923,8 +923,8 @@ bool map_t::scroll_to_if_offscreen(const lpos_t *lpos) {
     gint new_sx, new_sy;
 
     // Just centre both at once
-    new_sx = pix_per_meter * lpos->x; // XXX (lpos->x - (aw/2));
-    new_sy = pix_per_meter * lpos->y; // XXX (lpos->y - (ah/2));
+    new_sx = pix_per_meter * lpos.x; // XXX (lpos.x - (aw/2));
+    new_sy = pix_per_meter * lpos.y; // XXX (lpos.y - (ah/2));
 
     map_limit_scroll(this, canvas_t::UNIT_PIXEL, new_sx, new_sy);
     canvas->scroll_to(canvas_t::UNIT_PIXEL, new_sx, new_sy);
@@ -2087,7 +2087,7 @@ void map_track_remove(track_t &track) {
 /**
  * @brief show the marker item for the current GPS position
  */
-void map_t::track_pos(const lpos_t *lpos) {
+void map_t::track_pos(const lpos_t lpos) {
   /* remove the old item */
   map_track_remove_pos(appdata);
 
@@ -2099,7 +2099,7 @@ void map_t::track_pos(const lpos_t *lpos) {
   }
 
   appdata.track.gps_item =
-    canvas->circle_new(CANVAS_GROUP_GPS, lpos->x, lpos->y, radius, 0,
+    canvas->circle_new(CANVAS_GROUP_GPS, lpos.x, lpos.y, radius, 0,
                        style->track.gps_color, NO_COLOR);
 }
 
