@@ -358,7 +358,7 @@ static void track_end_segment(track_t *track) {
  * @returns if the position changed
  * @retval FALSE if the GPS position marker needs to be redrawn (i.e. the position changed)
  */
-static gboolean track_append_position(appdata_t &appdata, const pos_t *pos, float alt, const lpos_t *lpos) {
+static gboolean track_append_position(appdata_t &appdata, const pos_t &pos, float alt, const lpos_t *lpos) {
   track_t *track = appdata.track.track;
 
   /* no track at all? might be due to a "clear track" while running */
@@ -383,14 +383,13 @@ static gboolean track_append_position(appdata_t &appdata, const pos_t *pos, floa
 
   /* don't append if point is the same as last time */
   gboolean ret;
-  if(G_UNLIKELY(!points.empty() && points.back().pos.lat == pos->lat &&
-                                   points.back().pos.lon == pos->lon)) {
+  if(G_UNLIKELY(!points.empty() && points.back().pos == pos)) {
     printf("same value as last point -> ignore\n");
     ret = FALSE;
   } else {
     ret = TRUE;
     track->dirty = true;
-    points.push_back(track_point_t(*pos, alt, time(O2G_NULLPTR)));
+    points.push_back(track_point_t(pos, alt, time(O2G_NULLPTR)));
 
     if(appdata.settings->trackVisibility >= DrawCurrent) {
       if(seg.item_chain.empty()) {
@@ -462,7 +461,7 @@ static int update(void *data) {
     printf("valid position %.6f/%.6f alt %.2f\n", pos.lat, pos.lon, alt);
     lpos_t lpos;
     lpos = pos.toLpos(*(appdata.osm->bounds));
-    if(track_append_position(appdata, &pos, alt, &lpos) &&
+    if(track_append_position(appdata, pos, alt, &lpos) &&
        appdata.settings->trackVisibility >= ShowPosition)
       appdata.map->track_pos(&lpos);
   } else {
