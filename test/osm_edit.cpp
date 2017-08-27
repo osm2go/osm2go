@@ -9,8 +9,12 @@
 #include <algorithm>
 #include <cerrno>
 #include <cmath>
+#include <cstdlib>
 #include <cstring>
 #include <iostream>
+#if __cplusplus >= 201103L
+#include <random>
+#endif
 
 static bool find_aa(const tag_t &t)
 {
@@ -311,6 +315,10 @@ static void test_replace() {
   g_assert(node.tags == nstags);
 }
 
+static unsigned int intrnd(unsigned int r) {
+  return std::rand() % r;
+}
+
 static void test_split()
 {
   icon_t icons;
@@ -345,6 +353,7 @@ static void test_split()
   r3->members.push_back(member_t(object_t(v), O2G_NULLPTR));
   o.relation_attach(r3);
 
+  // create the way to split
   std::vector<node_t *> nodes;
   for(int i = 0; i < 6; i++) {
     node_t *n = new node_t(3, lpos_t(), pos_t(52.25 + i * 0.001, 9.58 + i * 0.001), 1234500 + i);
@@ -453,6 +462,136 @@ static void test_split()
   for(unsigned int i = 0; i < nodes.size(); i++) {
     g_assert(area->node_chain[i] == nodes[(i + 1) % nodes.size()]);
     g_assert_cmpuint(nodes[i]->ways, ==, 1);
+  }
+}
+
+static bool checkLinearRelation(const relation_t *r)
+{
+  std::cout << "checking order of relation " << r->id << std::endl;
+  bool ret = true;
+
+  const std::vector<member_t>::const_iterator itEnd = r->members.end();
+  std::vector<member_t>::const_iterator it = r->members.begin();
+  if(it->object.type == NODE)
+    it++;
+  g_assert_cmpuint(it->object.type, ==, WAY);
+  const way_t *last = it->object.way;
+
+  std::cout << "WAY " << last->id << " start " << last->first_node()->id
+            << " end " << last->last_node()->id << " length " << last->node_chain.size()
+            << std::endl;
+
+  for(++it; it != itEnd; it++) {
+    g_assert_cmpuint(it->object.type, ==, WAY);
+    const way_t *w = it->object.way;
+    std::cout << "WAY " << w->id << " start " << w->first_node()->id
+              << " end " << w->last_node()->id << " length " << w->node_chain.size()
+              << std::endl;
+
+    if(!last->ends_with_node(w->node_chain.front()) &&
+       !last->ends_with_node(w->node_chain.back())) {
+      std::cout << "\tGAP DETECTED!" << std::endl;
+      ret = false;
+    }
+
+    last = it->object.way;
+  }
+
+  return ret;
+}
+
+// find out which part of the original way can be split at the given node
+struct findWay {
+  const node_t * const node;
+  findWay(const node_t *n) : node(n) {}
+  bool operator()(way_t *way) const {
+    const std::vector<node_t *> &ch = way->node_chain;
+    return !way->ends_with_node(node) &&
+      ch.end() != std::find(ch.begin(), ch.end(), node);
+  }
+};
+
+static void test_split_order()
+{
+  icon_t icons;
+  osm_t o(icons);
+  for(unsigned int i = 1; i <= 10; i++) {
+    node_t *n = new node_t(3, lpos_t(), pos_t(52.25 + i * 0.001, 9.58 + i * 0.001), 1234500 + i);
+    n->id = i;
+    o.nodes[i] = n;
+  }
+  // the ways that start and end each relation, opposing directions
+  way_t *wstart = new way_t();
+  o.way_attach(wstart);
+  wstart->append_node(o.nodes[1]);
+  wstart->append_node(o.nodes[2]);
+  way_t *wend = new way_t();
+  o.way_attach(wend);
+  wend->append_node(o.nodes[10]);
+  wend->append_node(o.nodes[9]);
+
+  // now the ways that are split
+  std::vector<way_t *> splitw;
+  for(unsigned int i = 0; i < 12; i++) {
+    way_t *w = new way_t();
+    o.way_attach(w);
+    splitw.push_back(w);
+    const std::map<item_id_t, node_t *>::const_iterator itEnd = --o.nodes.end();
+    std::map<item_id_t, node_t *>::const_iterator it = ++o.nodes.begin();
+
+    for(; it != itEnd; it++)
+      w->append_node(it->second);
+  }
+
+  for(unsigned int i = 1; i <= splitw.size(); i++) {
+    relation_t * const r = new relation_t();
+    r->id = i;
+    o.relations[i] = r;
+    // create relations where either the first way is a different way (in order), or is a node
+    if(i % 4 == 1)
+      r->members.push_back(member_t(object_t(wstart)));
+    else if(i % 4 == 3)
+      r->members.push_back(member_t(object_t(wstart->node_chain.front())));
+    r->members.push_back(member_t(object_t(splitw[i - 1])));
+    r->members.push_back(member_t(object_t(wend)));
+  }
+
+  // define the sequences in which the ways are split
+  // insert every sequence twice to check both the relations that have
+  // the split way in the middle and those that start with it
+  std::vector<std::vector<node_t *> > sequences;
+  std::vector<node_t *> tmpseq = splitw.front()->node_chain;
+  // keep the first and last nodes, so removes them from the split sequence
+  tmpseq.pop_back();
+  tmpseq.erase(tmpseq.begin());
+  sequences.push_back(tmpseq);
+  sequences.push_back(tmpseq);
+  std::reverse(tmpseq.begin(), tmpseq.end());
+  sequences.push_back(tmpseq);
+  sequences.push_back(tmpseq);
+
+  // use also shorter random sequences
+  while(sequences.size() < splitw.size()) {
+    std::random_shuffle(tmpseq.begin(), tmpseq.end(), intrnd);
+    sequences.push_back(tmpseq);
+    sequences.push_back(tmpseq);
+    tmpseq.erase(tmpseq.begin() + intrnd(tmpseq.size()));
+  }
+
+  // split the ways in several orders
+  for(unsigned int i = 0; i < sequences.size(); i++) {
+    std::vector<way_t *> sw;
+    sw.push_back(splitw[i]);
+    g_assert_true(checkLinearRelation(o.relations[i + 1]));
+
+    for(unsigned int j = 0; j < sequences[i].size(); j++) {
+      std::vector<way_t *>::iterator it = std::find_if(sw.begin(), sw.end(),
+                                                       findWay(sequences[i][j]));
+      g_assert(it != sw.end());
+      way_t *nw = (*it)->split(&o, std::find((*it)->node_chain.begin(), (*it)->node_chain.end(), sequences[i][j]), true);
+      sw.push_back(nw);
+    }
+    g_assert_true(checkLinearRelation(o.relations[i + 1]));
   }
 }
 
@@ -1025,6 +1164,7 @@ int main()
   test_taglist();
   test_replace();
   test_split();
+  test_split_order();
   test_changeset();
   test_reverse();
   test_way_delete();

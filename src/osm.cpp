@@ -1847,14 +1847,39 @@ void relation_transfer::operator()(const std::pair<item_id_t, relation_t *> &pai
   relation_t * const relation = pair.second;
   /* walk member chain. save role of way if its being found. */
   find_member_object_functor fc(object_t(const_cast<way_t *>(src)));
+  std::vector<member_t>::iterator itBegin = relation->members.begin();
   std::vector<member_t>::iterator itEnd = relation->members.end();
-  std::vector<member_t>::iterator it = std::find_if(relation->members.begin(), itEnd, fc);
+  std::vector<member_t>::iterator it = std::find_if(itBegin, itEnd, fc);
   for(; it != itEnd; it = std::find_if(it, itEnd, fc)) {
     printf("way #" ITEM_ID_FORMAT " is part of relation #" ITEM_ID_FORMAT " at position %zu, adding way #" ITEM_ID_FORMAT "\n",
            src->id, relation->id, it - relation->members.begin(), dst->id);
 
+    member_t m(object_t(dst), g_strdup(it->role));
+
+    // find out if the relation members are ordered ways, so the split parts should
+    // be inserted in a sensible order to keep the relation intact
+    bool insertBefore = false;
+    if(it != itBegin && (it - 1)->object.type == WAY) {
+      std::vector<member_t>::iterator prev = it - 1;
+
+      insertBefore = prev->object.way->ends_with_node(dst->node_chain.front()) ||
+                     prev->object.way->ends_with_node(dst->node_chain.back());
+    } else if (it != itEnd && (it + 1)->object.type == WAY) {
+      std::vector<member_t>::iterator next = it + 1;
+
+      insertBefore = next->object.way->ends_with_node(src->node_chain.front()) ||
+                     next->object.way->ends_with_node(src->node_chain.back());
+    } // if this is both itEnd and itBegin it is the only member, so the ordering is irrelevant
+
     // make dst member of the same relation
-    it = relation->members.insert(++it, member_t(object_t(dst), g_strdup(it->role)));
+    if(insertBefore) {
+      printf("\tinserting before way #" ITEM_ID_FORMAT " to keep relation ordering\n", src->id);
+      it = relation->members.insert(it, m);
+      // skip this object when calling fc again, it can't be the searched one
+      it++;
+    } else {
+      it = relation->members.insert(++it, m);
+    }
     // skip this object when calling fc again, it can't be the searched one
     it++;
     // refresh the end iterator as the container was modified
@@ -1917,12 +1942,14 @@ way_t *way_t::split(osm_t *osm, node_chain_t::iterator cut_at, bool cut_at_node)
   // do it before transferring the relation membership to get meaningful ids in debug output
   osm->way_attach(neww);
 
-  /* ---- transfer relation membership from way to new ----- */
-  std::for_each(osm->relations.begin(), osm->relations.end(), relation_transfer(neww, this));
-
   // keep the history with the longer way
+  // this must be before the relation transfer, as that needs to know the
+  // contained nodes to determine proper ordering in the relations
   if(node_chain.size() < neww->node_chain.size())
     node_chain.swap(neww->node_chain);
+
+  /* ---- transfer relation membership from way to new ----- */
+  std::for_each(osm->relations.begin(), osm->relations.end(), relation_transfer(neww, this));
 
   return neww;
 }
