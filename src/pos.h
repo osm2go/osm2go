@@ -35,10 +35,6 @@ typedef float pos_float_t;
 typedef double pos_float_t;
 #endif
 
-#ifndef NAN
-#define NAN (0.0/0.0)
-#endif
-
 #ifdef __cplusplus
 #include <cmath>
 /* equatorial radius in meters */

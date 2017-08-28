@@ -41,10 +41,6 @@
 #define MISC_AGAIN_FLAG_DONT_SAVE_NO  (1<<0)
 #define MISC_AGAIN_FLAG_DONT_SAVE_YES (1<<1)
 
-#ifndef NAN
-#define NAN (0.0/0.0)
-#endif
-
 #include <osm2go_cpp.h>
 
 #include <memory>
