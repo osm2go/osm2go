@@ -216,18 +216,10 @@ else ()
 	target_link_libraries(osm2go_lib PRIVATE PkgConfig::GVFS)
 endif ()
 
-cmake_push_check_state(RESET)
-set(CMAKE_REQUIRED_LIBRARIES ${MATH_LIBRARY})
-set(CMAKE_REQUIRED_INCLUDES math.h)
-check_function_exists(log2 HAVE_LOG2)
-cmake_pop_check_state()
 pkg_check_modules(GConf2 REQUIRED IMPORTED_TARGET gconf-2.0)
 target_link_libraries(osm2go_lib PRIVATE PkgConfig::GConf2)
 
 set_property(SOURCE src/misc.cpp APPEND PROPERTY COMPILE_DEFINITIONS "DATADIR=\"${DATA_DIR}\"")
-if (HAVE_LOG2)
-	set_property(SOURCE src/area_edit.c APPEND PROPERTY COMPILE_DEFINITIONS "LOG2=log2")
-endif ()
 
 # there shouldn't be a reason to change the server url
 option(SERVER_EDITABLE "add widget to make API URL editable" OFF)

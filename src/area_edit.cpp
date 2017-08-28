@@ -227,9 +227,6 @@ static void area_main_update(context_t *context) {
 }
 
 #ifdef ENABLE_OSM_GPS_MAP
-#ifndef LOG2
-#define LOG2(x) (log(x) / log(2))
-#endif
 
 static GSList *pos_append_rad(GSList *list, pos_float_t lat, pos_float_t lon) {
   OsmGpsMapPoint *coo = g_new0(OsmGpsMapPoint, 1);
@@ -295,10 +292,10 @@ static void map_update(context_t *context, bool forced) {
 
     /* we know the widgets pixel size, we know the required real size, */
     /* we want the zoom! */
-    double vzoom = LOG2((45.0 * context->map.widget->allocation.height)/
+    double vzoom = log2((45.0 * context->map.widget->allocation.height)/
 			((context->max.lat - context->min.lat)*32.0)) -1;
 
-    double hzoom = LOG2((45.0 * context->map.widget->allocation.width)/
+    double hzoom = log2((45.0 * context->map.widget->allocation.width)/
 			((context->max.lon - context->min.lon)*32.0)) -1;
 
     osm_gps_map_set_center(OSM_GPS_MAP(context->map.widget),
