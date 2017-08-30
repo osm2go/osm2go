@@ -36,7 +36,7 @@ public:
   public:
     explicit icon_item(GdkPixbuf *nbuf = O2G_NULLPTR);
     inline bool operator==(const GdkPixbuf *b) const { return buf == b; }
-    static void destroy(icon_item &icon);
+    void destroy();
   };
 
   ~icon_t();

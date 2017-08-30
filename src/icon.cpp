@@ -101,13 +101,14 @@ GtkWidget *icon_t::widget_load(const std::string &name, int limit) {
   return gtk_image_new_from_pixbuf(pix);
 }
 
-void icon_t::icon_item::destroy(icon_t::icon_item &icon) {
-  if(icon.buf)
-    g_object_unref(icon.buf);
+void icon_t::icon_item::destroy()
+{
+  if(buf)
+    g_object_unref(buf);
 }
 
 static void icon_destroy_pair(std::pair<const std::string, icon_t::icon_item> &pair) {
-  icon_t::icon_item::destroy(pair.second);
+  pair.second.destroy();
 }
 
 struct find_icon_buf {
@@ -133,7 +134,7 @@ void icon_t::icon_free(GdkPixbuf *buf) {
     if(!it->second.use) {
       //  printf("freeing unused icon %s\n", it->first.c_str());
 
-      icon_item::destroy(it->second);
+      it->second.destroy();
       entries.erase(it);
     }
   }
