@@ -43,7 +43,6 @@ public:
 
   /**
    * @brief load an icon from disk, limited to given dimensions
-   * @param icon the global icon cache
    * @param sname the name of the icon
    * @param limit the maximum dimensions of the image
    * @return the scaled pixbuf
