@@ -540,7 +540,7 @@ static GtkWidget *
 menu_append_new_item(appdata_t &appdata,
                      GtkWidget *menu_shell,
                      GtkSignalFunc activate_cb,
-                     char *label,
+                     const char *label,
                      const gchar *icon_name, // stock id or name for icon_load
                                     // overridden by label, accels, icon_name
                      const gchar *accel_path, // must be a static string
