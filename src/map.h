@@ -25,7 +25,8 @@
 #include "track.h"
 #include <vector>
 
-#define MAP_LAYER_ALL (0xffff)
+// add one so this is a usually illegal bitmask
+#define MAP_LAYER_ALL ((1 << (CANVAS_GROUPS + 1)) - 1)
 #define MAP_LAYER_OBJECTS_ONLY ((1<<CANVAS_GROUP_POLYGONS) | (1<<CANVAS_GROUP_WAYS_HL) | (1<<CANVAS_GROUP_WAYS_OL) | (1<<CANVAS_GROUP_WAYS) | (1<<CANVAS_GROUP_WAYS_INT) | (1<<CANVAS_GROUP_NODES_HL) | (1<<CANVAS_GROUP_NODES_IHL) | (1<<CANVAS_GROUP_NODES) | (1<<CANVAS_GROUP_WAYS_DIR))
 
 /* -------- all sizes are in meters ---------- */
