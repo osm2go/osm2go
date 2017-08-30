@@ -567,11 +567,8 @@ menu_append_new_item(appdata_t &appdata,
     item = gtk_check_menu_item_new_with_mnemonic (label);
   }
   else if (!stock_item_known) {
-    if(icon_name) {
-      GdkPixbuf *pbuf = appdata.icons.load(icon_name);
-      if (pbuf)
-        image = gtk_image_new_from_pixbuf(pbuf);
-    }
+    if(icon_name)
+      image = appdata.icons.widget_load(icon_name);
     if (image) {
       item = gtk_image_menu_item_new_with_mnemonic(label);
       gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item), image);

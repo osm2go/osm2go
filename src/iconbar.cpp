@@ -156,7 +156,7 @@ static GtkWidget *icon_add(GtkWidget *vbox, appdata_t &appdata,
                            const char *icon_str,
                            void(*func)(map_t *)) {
   GtkWidget *but = gtk_button_new();
-  GtkWidget *icon = gtk_image_new_from_pixbuf(appdata.icons.load(icon_str));
+  GtkWidget *icon = appdata.icons.widget_load(icon_str);
   gtk_button_set_image(GTK_BUTTON(but), icon);
   g_signal_connect_swapped(GTK_OBJECT(but), "clicked", G_CALLBACK(func), appdata.map);
 
