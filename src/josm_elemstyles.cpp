@@ -583,17 +583,10 @@ void josm_elemstyles_colorize_node(style_t *style, node_t *node) {
 struct josm_elemstyles_colorize_node_functor {
   style_t * const style;
   josm_elemstyles_colorize_node_functor(style_t *s) : style(s) {}
-  void operator()(std::pair<item_id_t, node_t *> pair);
+  void operator()(std::pair<item_id_t, node_t *> pair) {
+    josm_elemstyles_colorize_node(style, pair.second);
+  }
 };
-
-void josm_elemstyles_colorize_node_functor::operator()(std::pair<item_id_t, node_t *> pair) {
-  node_t * const node = pair.second;
-  /* remove all icon references that may still be there from */
-  /* an old style */
-  node_icon_unref(style, node);
-
-  josm_elemstyles_colorize_node(style, node);
-}
 
 static int line_mod_apply_width(gint width, const elemstyle_width_mod_t *mod) {
   switch(mod->mod) {
