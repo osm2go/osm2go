@@ -113,10 +113,10 @@ void canvas_t::set_antialias(bool antialias) {
                antialias ? CAIRO_ANTIALIAS_DEFAULT : CAIRO_ANTIALIAS_NONE, O2G_NULLPTR);
 }
 
-void canvas_t::window2world(int x, int y, int &wx, int &wy) const {
+lpos_t canvas_t::window2world(int x, int y) const {
   double sx = x, sy = y;
   goo_canvas_convert_from_pixels(GOO_CANVAS(widget), &sx, &sy);
-  wx = sx; wy = sy;
+  return lpos_t(sx, sy);
 }
 
 void canvas_t::set_zoom(gdouble zoom) {

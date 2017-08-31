@@ -29,10 +29,7 @@
 
 /* create a new item for the cursor */
 void map_hl_cursor_draw(map_t *map, gint x, gint y, unsigned int radius) {
-  lpos_t pos;
-  map->canvas->window2world(x, y, pos.x, pos.y);
-
-  map_hl_cursor_draw(map, pos, radius);
+  map_hl_cursor_draw(map, map->canvas->window2world(x, y), radius);
 }
 
 void map_hl_cursor_draw(map_t *map, lpos_t pos, unsigned int radius) {

@@ -56,14 +56,14 @@ struct check_first_last_node {
 void map_edit_way_add_segment(map_t *map, gint x, gint y) {
 
   /* convert mouse position to canvas (world) position */
-  map->canvas->window2world(x, y, x, y);
+  lpos_t pos = map->canvas->window2world(x, y);
 
   /* check if this was a double click. This is the case if */
   /* the last node placed is less than 5 pixels from the current */
   /* position */
   const node_t *lnode = map->action.way->last_node();
-  if(lnode && (map->state.zoom * std::sqrt((lnode->lpos.x - x) * (lnode->lpos.x - x) +
-		       (lnode->lpos.y-y)*(lnode->lpos.y-y))) < 5) {
+  if(lnode && (map->state.zoom * std::sqrt((lnode->lpos.x - pos.x) * (lnode->lpos.x - pos.x) +
+                                           (lnode->lpos.y - pos.y) * (lnode->lpos.y - pos.y))) < 5) {
 #if 0
     printf("detected double click -> simulate ok click\n");
     map_hl_touchnode_clear(map);
@@ -114,10 +114,10 @@ void map_edit_way_add_segment(map_t *map, gint x, gint y) {
       /* a new node */
       map->action.ends_on = O2G_NULLPTR;
 
-      if(!map->appdata.osm->position_within_bounds(x, y))
+      if(!map->appdata.osm->position_within_bounds(pos.x, pos.y))
 	map_outside_error(map->appdata);
       else
-        node = map->appdata.osm->node_new(lpos_t(x, y));
+        node = map->appdata.osm->node_new(pos);
     }
 
     if(node) {
@@ -288,23 +288,22 @@ void map_edit_way_add_ok(map_t *map) {
 void map_edit_way_node_add_highlight(map_t *map, map_item_t *item,
 				     gint x, gint y) {
   if(map->item_is_selected_way(item)) {
-    gint nx, ny;
-    map->canvas->window2world(x, y, nx, ny);
-    if(canvas_item_get_segment(item->item, nx, ny) >= 0)
-      map_hl_cursor_draw(map, lpos_t(nx, ny), map->style->node.radius);
+    lpos_t pos = map->canvas->window2world(x, y);
+    if(canvas_item_get_segment(item->item, pos.x, pos.y) >= 0)
+      map_hl_cursor_draw(map, pos, map->style->node.radius);
   }
 }
 
-void map_edit_way_node_add(map_t *map, gint x, gint y) {
+void map_edit_way_node_add(map_t *map, gint px, gint py) {
   /* check if we are still hovering above the selected way */
-  map_item_t *item = map->item_at(x, y);
+  map_item_t *item = map->item_at(px, py);
   if(map->item_is_selected_way(item)) {
     /* convert mouse position to canvas (world) position */
-    map->canvas->window2world(x, y, x, y);
-    gint insert_after = canvas_item_get_segment(item->item, x, y)+1;
+    lpos_t pos = map->canvas->window2world(px, py);
+    gint insert_after = canvas_item_get_segment(item->item, pos.x, pos.y)+1;
     if(insert_after > 0) {
       /* create new node */
-      node_t* node = map->appdata.osm->node_new(lpos_t(x, y));
+      node_t* node = map->appdata.osm->node_new(pos);
       map->appdata.osm->node_attach(node);
 
       /* insert it into ways chain of nodes */
@@ -345,9 +344,8 @@ void map_edit_way_node_add(map_t *map, gint x, gint y) {
 void map_edit_way_cut_highlight(map_t *map, map_item_t *item, gint x, gint y) {
 
   if(map->item_is_selected_way(item)) {
-    gint nx, ny, seg;
-    map->canvas->window2world(x, y, nx, ny);
-    seg = canvas_item_get_segment(item->item, nx, ny);
+    lpos_t pos = map->canvas->window2world(x, y);
+    int seg = canvas_item_get_segment(item->item, pos.x, pos.y);
     if(seg >= 0) {
       gint x0, y0, x1, y1;
       canvas_item_get_segment_pos(item->item, seg, x0, y0, x1, y1);
@@ -366,17 +364,17 @@ void map_edit_way_cut_highlight(map_t *map, map_item_t *item, gint x, gint y) {
 }
 
 /* cut the currently selected way at the current cursor position */
-void map_edit_way_cut(map_t *map, gint x, gint y) {
+void map_edit_way_cut(map_t *map, gint px, gint py) {
 
   /* check if we are still hovering above the selected way */
-  map_item_t *item = map->item_at(x, y);
+  map_item_t *item = map->item_at(px, py);
   bool cut_at_node = map->item_is_selected_node(item);
 
   if(!map->item_is_selected_way(item) && !cut_at_node)
     return;
 
   /* convert mouse position to canvas (world) position */
-  map->canvas->window2world(x, y, x, y);
+  lpos_t pos = map->canvas->window2world(px, py);
 
   node_chain_t::iterator cut_at;
   way_t *way = O2G_NULLPTR;
@@ -398,7 +396,7 @@ void map_edit_way_cut(map_t *map, gint x, gint y) {
 
   } else {
     printf("  cut at segment\n");
-    gint c = canvas_item_get_segment(item->item, x, y);
+    gint c = canvas_item_get_segment(item->item, pos.x, pos.y);
     if(c < 0)
       return;
     way = item->object.way;
@@ -575,18 +573,14 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, gint ex, gint ey) {
     /* finally update dragged nodes position */
 
     /* convert mouse position to canvas (world) position */
-    gint x, y;
-    map->canvas->window2world(ex, ey, x, y);
-    if(!osm->position_within_bounds(x, y)) {
+    lpos_t pos = map->canvas->window2world(ex, ey);
+    if(!osm->position_within_bounds(pos.x, pos.y)) {
       map_outside_error(map->appdata);
       return;
     }
 
-    node->lpos.x = x;
-    node->lpos.y = y;
-
     /* convert screen position to lat/lon */
-    node->pos = node->lpos.toPos(*(osm->bounds));
+    node->pos = pos.toPos(*(osm->bounds));
 
     /* convert pos back to lpos to see rounding errors */
     node->lpos = node->pos.toLpos(*(osm->bounds));

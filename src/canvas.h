@@ -92,7 +92,7 @@ public:
   std::vector<canvas_item_info_t *> item_info[CANVAS_GROUPS];
 
   canvas_dimensions get_viewport_dimensions(canvas_unit_t unit) const;
-  void window2world(int x, int y, int &wx, int &wy) const;
+  lpos_t window2world(int x, int y) const;
   void scroll_get(canvas_unit_t unit, int &sx, int &sy) const;
 
   /****** manipulating the canvas ******/

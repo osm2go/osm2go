@@ -731,11 +731,11 @@ static gint map_destroy_event(map_t *map) {
 map_item_t *map_t::item_at(gint x, gint y) {
   printf("map check at %d/%d\n", x, y);
 
-  canvas->window2world(x, y, x, y);
+  lpos_t pos = canvas->window2world(x, y);
 
-  printf("world check at %d/%d\n", x, y);
+  printf("world check at %d/%d\n", pos.x, pos.y);
 
-  canvas_item_t *item = canvas->get_item_at(x, y);
+  canvas_item_t *item = canvas->get_item_at(pos.x, pos.y);
 
   if(!item) {
     printf("  there's no item\n");
@@ -1120,10 +1120,10 @@ static void map_handle_click(map_t *map) {
 
 struct hl_nodes {
   const node_t * const cur_node;
-  const gint x, y;
+  const lpos_t pos;
   map_t * const map;
-  hl_nodes(const node_t *c, gint px, gint py, map_t *m)
-    : cur_node(c), x(px), y(py), map(m) {}
+  hl_nodes(const node_t *c, lpos_t p, map_t *m)
+    : cur_node(c), pos(p), map(m) {}
   void operator()(const std::pair<item_id_t, node_t *> &p);
   void operator()(node_t *node);
 };
@@ -1138,8 +1138,8 @@ void hl_nodes::operator()(const std::pair<item_id_t, node_t *> &p)
 
 void hl_nodes::operator()(node_t* node)
 {
-  gint nx = abs(x - node->lpos.x);
-  gint ny = abs(y - node->lpos.y);
+  gint nx = abs(pos.x - node->lpos.x);
+  gint ny = abs(pos.y - node->lpos.y);
 
   if((nx < map->style->node.radius) && (ny < map->style->node.radius) &&
      (nx*nx + ny*ny < map->style->node.radius * map->style->node.radius))
@@ -1167,8 +1167,8 @@ static void map_touchnode_update(map_t *map, gint x, gint y) {
   }
 
   /* check if we are close to one of the other nodes */
-  map->canvas->window2world(x, y, x, y);
-  hl_nodes fc(cur_node, x, y, map);
+  lpos_t pos = map->canvas->window2world(x, y);
+  hl_nodes fc(cur_node, pos, map);
   std::for_each(map->appdata.osm->nodes.begin(), map->appdata.osm->nodes.end(), fc);
 
   /* during way creation also nodes of the new way */
@@ -1293,13 +1293,13 @@ static void map_button_release(map_t *map, gint x, gint y) {
     map_hl_cursor_clear(map);
 
     /* convert mouse position to canvas (world) position */
-    map->canvas->window2world(x, y, x, y);
+    lpos_t pos = map->canvas->window2world(x, y);
 
     node_t *node = O2G_NULLPTR;
-    if(!map->appdata.osm->position_within_bounds(x, y))
+    if(!map->appdata.osm->position_within_bounds(pos.x, pos.y))
       map_outside_error(map->appdata);
     else {
-      node = map->appdata.osm->node_new(lpos_t(x, y));
+      node = map->appdata.osm->node_new(pos);
       map->appdata.osm->node_attach(node);
       map->draw(node);
     }
