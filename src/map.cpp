@@ -1208,11 +1208,11 @@ static void map_button_press(map_t *map, gint x, gint y) {
     break;
 
   case MAP_ACTION_NODE_ADD:
-    map_hl_cursor_draw(map, x, y, false, map->style->node.radius);
+    map_hl_cursor_draw(map, x, y, map->style->node.radius);
     break;
 
   case MAP_ACTION_WAY_ADD:
-    map_hl_cursor_draw(map, x, y, false, map->style->node.radius);
+    map_hl_cursor_draw(map, x, y, map->style->node.radius);
     map_touchnode_update(map, x, y);
     break;
 
@@ -1409,18 +1409,18 @@ static gboolean map_motion_notify_event(GtkWidget *,
       if(!map->pen_down.on_selected_node)
 	map_do_scroll(map, x, y);
       else {
-	map_hl_cursor_draw(map, x, y, false, map->style->node.radius);
+        map_hl_cursor_draw(map, x, y, map->style->node.radius);
 	map_touchnode_update(map, x, y);
       }
     }
     break;
 
   case MAP_ACTION_NODE_ADD:
-    map_hl_cursor_draw(map, x, y, false, map->style->node.radius);
+    map_hl_cursor_draw(map, x, y, map->style->node.radius);
     break;
 
   case MAP_ACTION_WAY_ADD:
-    map_hl_cursor_draw(map, x, y, false, map->style->node.radius);
+    map_hl_cursor_draw(map, x, y, map->style->node.radius);
     map_touchnode_update(map, x, y);
     break;
 

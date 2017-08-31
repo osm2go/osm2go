@@ -291,7 +291,7 @@ void map_edit_way_node_add_highlight(map_t *map, map_item_t *item,
     gint nx, ny;
     map->canvas->window2world(x, y, nx, ny);
     if(canvas_item_get_segment(item->item, nx, ny) >= 0)
-      map_hl_cursor_draw(map, x, y, false, map->style->node.radius);
+      map_hl_cursor_draw(map, lpos_t(nx, ny), map->style->node.radius);
   }
 }
 
@@ -361,8 +361,7 @@ void map_edit_way_cut_highlight(map_t *map, map_item_t *item, gint x, gint y) {
   } else if(map->item_is_selected_node(item)) {
     /* cutting a way at its first or last node doesn't make much sense ... */
     if(!map->selected.object.way->ends_with_node(item->object.node))
-      map_hl_cursor_draw(map, item->object.node->lpos.x, item->object.node->lpos.y,
-			 true, 2*map->style->node.radius);
+      map_hl_cursor_draw(map, item->object.node->lpos, 2 * map->style->node.radius);
   }
 }
 

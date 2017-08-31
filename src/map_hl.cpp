@@ -28,17 +28,18 @@
 #include <osm2go_cpp.h>
 
 /* create a new item for the cursor */
-void map_hl_cursor_draw(map_t *map, gint x, gint y, bool is_world,
-			gint radius) {
+void map_hl_cursor_draw(map_t *map, gint x, gint y, unsigned int radius) {
+  lpos_t pos;
+  map->canvas->window2world(x, y, pos.x, pos.y);
+
+  map_hl_cursor_draw(map, pos, radius);
+}
+
+void map_hl_cursor_draw(map_t *map, lpos_t pos, unsigned int radius) {
   if(map->cursor)
     canvas_item_destroy(map->cursor);
 
-  gint wx, wy;
-  if(!is_world)
-    map->canvas->window2world(x, y, wx, wy);
-  else { wx = x; wy = y; }
-
-  map->cursor = map->canvas->circle_new(CANVAS_GROUP_DRAW, wx, wy,
+  map->cursor = map->canvas->circle_new(CANVAS_GROUP_DRAW, pos.x, pos.y,
 		  radius, 0, map->style->highlight.node_color, NO_COLOR);
 }
 

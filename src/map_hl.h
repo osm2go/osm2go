@@ -33,7 +33,14 @@ struct map_highlight_t {
   std::vector<canvas_item_t *> items;
 };
 
-void map_hl_cursor_draw(map_t *map, gint x, gint y, bool is_world, gint radius);
+/**
+ * @brief draw highlight cursor on screen coordinates
+ */
+void map_hl_cursor_draw(map_t *map, gint x, gint y, unsigned int radius);
+/**
+ * @brief draw highlight cursor on map coordinates
+ */
+void map_hl_cursor_draw(map_t *map, lpos_t pos, unsigned int radius);
 void map_hl_cursor_clear(map_t *map);
 
 void map_hl_touchnode_draw(map_t *map, node_t *node);
