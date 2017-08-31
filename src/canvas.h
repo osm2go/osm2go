@@ -71,7 +71,7 @@ public:
 };
 
 struct canvas_dimensions {
-  gdouble width, height;
+  double width, height;
   inline canvas_dimensions operator/(double d) const {
     canvas_dimensions ret = *this;
     ret.width /= d; ret.height /= d;
@@ -92,32 +92,32 @@ public:
   std::vector<canvas_item_info_t *> item_info[CANVAS_GROUPS];
 
   canvas_dimensions get_viewport_dimensions(canvas_unit_t unit) const;
-  void window2world(gint x, gint y, gint &wx, gint &wy) const;
-  void scroll_get(canvas_unit_t unit, gint &sx, gint &sy) const;
+  void window2world(int x, int y, int &wx, int &wy) const;
+  void scroll_get(canvas_unit_t unit, int &sx, int &sy) const;
 
   /****** manipulating the canvas ******/
   void set_background(canvas_color_t bg_color);
   void set_antialias(bool antialias);
   void erase(unsigned int group_mask);
-  canvas_item_t *get_item_at(gint x, gint y) const;
-  void set_zoom(gdouble zoom);
-  gdouble get_zoom() const;
-  void scroll_to(canvas_unit_t unit, gint sx, gint sy);
-  void set_bounds(gint minx, gint miny, gint maxx, gint maxy);
+  canvas_item_t *get_item_at(int x, int y) const;
+  void set_zoom(double zoom);
+  double get_zoom() const;
+  void scroll_to(canvas_unit_t unit, int sx, int sy);
+  void set_bounds(int minx, int miny, int maxx, int maxy);
 
   /***** creating/destroying items ******/
   canvas_item_t *circle_new(canvas_group_t group,
-                            gint x, gint y, gint radius, gint border,
+                            int x, int y, unsigned int radius, int border,
                             canvas_color_t fill_col, canvas_color_t border_col);
   canvas_item_t *polyline_new(canvas_group_t group, canvas_points_t *points,
-                              gint width, canvas_color_t color);
+                              unsigned int width, canvas_color_t color);
   canvas_item_t *polygon_new(canvas_group_t group, canvas_points_t *points,
-                             gint width, canvas_color_t color,
+                             unsigned int width, canvas_color_t color,
                              canvas_color_t fill);
-  canvas_item_t *image_new(canvas_group_t group, GdkPixbuf *pix, gint x, gint y,
+  canvas_item_t *image_new(canvas_group_t group, GdkPixbuf *pix, int x, int y,
                            float hscale, float vscale);
 
-  canvas_item_t *item_info_get_at(gint x, gint y) const;
+  canvas_item_t *item_info_get_at(int x, int y) const;
   void item_info_push(canvas_item_t *item);
 };
 
@@ -125,7 +125,7 @@ enum canvas_item_type_t { CANVAS_ITEM_CIRCLE, CANVAS_ITEM_POLY };
 
 class canvas_item_info_t {
 protected:
-  canvas_item_info_t(canvas_item_type_t t, canvas_t *cv, canvas_group_t g, canvas_item_t *it, void(*deleter)(gpointer));
+  canvas_item_info_t(canvas_item_type_t t, canvas_t *cv, canvas_group_t g, canvas_item_t *it, void(*deleter)(void *));
 public:
   ~canvas_item_info_t();
 
@@ -138,53 +138,57 @@ public:
 class canvas_item_info_circle : public canvas_item_info_t {
 public:
   canvas_item_info_circle(canvas_t *cv, canvas_group_t g, canvas_item_t *it,
-                          const gint cx, const gint cy, const gint radius);
+                          const int cx, const int cy, const unsigned int radius);
 
   struct {
-    gint x, y;
+    int x, y;
   } center;
-  const gint r;
+  const unsigned int r;
 };
 
 class canvas_item_info_poly : public canvas_item_info_t {
 public:
   canvas_item_info_poly(canvas_t *cv, canvas_group_t g, canvas_item_t *it, bool poly,
-                        gint wd, canvas_points_t *cpoints);
+                        unsigned int wd, canvas_points_t *cpoints);
   ~canvas_item_info_poly();
 
   struct {
     struct {
-      gint x,y;
+      int x,y;
     } top_left, bottom_right;
   } bbox;
 
   bool is_polygon;
-  gint width, num_points;
+  unsigned int width, num_points;
   lpos_t *points;
 };
 
-void canvas_point_set_pos(canvas_points_t *points, gint index, const lpos_t lpos);
-void canvas_item_get_segment_pos(canvas_item_t *item, gint seg,
-                                 gint &x0, gint &y0, gint &x1, gint &y1);
+void canvas_point_set_pos(canvas_points_t *points, unsigned int index, const lpos_t lpos);
+void canvas_item_get_segment_pos(canvas_item_t *item, int seg,
+                                 int &x0, int &y0, int &x1, int &y1);
 
-canvas_points_t *canvas_points_new(gint points);
+canvas_points_t *canvas_points_new(unsigned int points);
 void canvas_points_free(canvas_points_t *points);
-gint canvas_points_num(const canvas_points_t *points);
-void canvas_point_get_lpos(const canvas_points_t *points, gint index, lpos_t *lpos);
+unsigned int canvas_points_num(const canvas_points_t *points);
+void canvas_point_get_lpos(const canvas_points_t *points, unsigned int index, lpos_t &lpos);
 void canvas_item_destroy(canvas_item_t *item);
 
 /****** manipulating items ******/
 void canvas_item_set_pos(canvas_item_t *item, lpos_t *lpos);
-void canvas_item_set_radius(canvas_item_t *item, gint radius);
+void canvas_item_set_radius(canvas_item_t *item, int radius);
 void canvas_item_set_points(canvas_item_t *item, canvas_points_t *points);
 void canvas_item_set_zoom_max(canvas_item_t *item, float zoom_max);
-void canvas_item_set_dashed(canvas_item_t *item, gint line_width, guint dash_length_on, guint dash_length_off);
+void canvas_item_set_dashed(canvas_item_t *item, unsigned int line_width,
+                            unsigned int dash_length_on, unsigned int dash_length_off);
 void canvas_item_to_bottom(canvas_item_t *item);
 void canvas_item_set_user_data(canvas_item_t *item, void *data);
 void *canvas_item_get_user_data(canvas_item_t *item);
-void canvas_item_destroy_connect(canvas_item_t *item, void(*c_handler)(gpointer), gpointer data);
-void canvas_image_move(canvas_item_t *item, gint x, gint y,
+void canvas_item_destroy_connect(canvas_item_t *item, void(*c_handler)(void *), void *data);
+void canvas_image_move(canvas_item_t *item, int x, int y,
 		       float hscale, float vscale);
-gint canvas_item_get_segment(canvas_item_t *item, gint x, gint y);
+/**
+ * @brief get the polygon/polyway segment a certain coordinate is over
+ */
+int canvas_item_get_segment(canvas_item_t *item, int x, int y);
 
 #endif // CANVAS_H

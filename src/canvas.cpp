@@ -89,7 +89,7 @@ canvas_item_info_t::~canvas_item_info_t()
 }
 
 canvas_item_info_circle::canvas_item_info_circle(canvas_t *cv, canvas_group_t g, canvas_item_t *it,
-                                                 const gint cx, const gint cy, const gint radius)
+                                                 const int cx, const int cy, const unsigned int radius)
   : canvas_item_info_t(CANVAS_ITEM_CIRCLE, cv, g, it, item_info_destroy<canvas_item_info_circle>)
   , r(radius)
 {
@@ -98,7 +98,7 @@ canvas_item_info_circle::canvas_item_info_circle(canvas_t *cv, canvas_group_t g,
 }
 
 canvas_item_info_poly::canvas_item_info_poly(canvas_t* cv, canvas_group_t g, canvas_item_t* it,
-                                             bool poly, gint wd, canvas_points_t *cpoints)
+                                             bool poly, unsigned int wd, canvas_points_t *cpoints)
   : canvas_item_info_t(CANVAS_ITEM_POLY, cv, g, it, item_info_destroy<canvas_item_info_poly>)
   , is_polygon(poly)
   , width(wd)
@@ -108,8 +108,8 @@ canvas_item_info_poly::canvas_item_info_poly(canvas_t* cv, canvas_group_t g, can
   bbox.top_left.x = bbox.top_left.y = G_MAXINT;
   bbox.bottom_right.x = bbox.bottom_right.y = G_MININT;
 
-  for(gint i = 0; i < num_points; i++) {
-    canvas_point_get_lpos(cpoints, i, points + i);
+  for(unsigned int i = 0; i < num_points; i++) {
+    canvas_point_get_lpos(cpoints, i, points[i]);
 
     /* determine bounding box */
     bbox.top_left.x = std::min(bbox.top_left.x, points[i].x);
@@ -213,9 +213,9 @@ static gint canvas_item_info_get_segment(canvas_item_info_poly *item,
 					 gint x, gint y, gint fuzziness) {
   if(item->num_points < 2) return -1;
 
-  gint retval = -1, i;
+  gint retval = -1;
   float mindist = 1000000.0;
-  for(i = 0; i < item->num_points - 1; i++) {
+  for(unsigned int i = 0; i < item->num_points - 1; i++) {
 
 #define AX (item->points[i].x)
 #define AY (item->points[i].y)
@@ -255,8 +255,7 @@ static gint canvas_item_info_get_segment(canvas_item_info_poly *item,
 
 /* try to find the object at position x/y by searching through the */
 /* item_info list */
-canvas_item_t *canvas_t::item_info_get_at(gint x, gint y) const {
-
+canvas_item_t *canvas_t::item_info_get_at(int x, int y) const {
   printf("************ searching at %d %d *****************\n", x, y);
 
   /* convert all "fuzziness" into meters */
@@ -273,15 +272,16 @@ canvas_item_t *canvas_t::item_info_get_at(gint x, gint y) const {
       switch(item->type) {
       case CANVAS_ITEM_CIRCLE: {
         canvas_item_info_circle *circle = static_cast<canvas_item_info_circle *>(item);
-        if((x >= circle->center.x - circle->r - fuzziness) &&
-           (y >= circle->center.y - circle->r - fuzziness) &&
-           (x <= circle->center.x + circle->r + fuzziness) &&
-           (y <= circle->center.y + circle->r + fuzziness)) {
+        int radius = circle->r;
+        if((x >= circle->center.x - radius - fuzziness) &&
+           (y >= circle->center.y - radius - fuzziness) &&
+           (x <= circle->center.x + radius + fuzziness) &&
+           (y <= circle->center.y + radius + fuzziness)) {
 
           gint xdist = circle->center.x - x;
           gint ydist = circle->center.y - y;
-          if(xdist*xdist + ydist*ydist < (circle->r+fuzziness)*(circle->r+fuzziness)) {
-            printf("circle item %p at %d/%d(%d)\n", item,
+          if(xdist * xdist + ydist * ydist < (radius + fuzziness) * (radius + fuzziness)) {
+            printf("circle item %p at %d/%d(%u)\n", item,
                    circle->center.x, circle->center.y, circle->r);
             return item->item;
           }

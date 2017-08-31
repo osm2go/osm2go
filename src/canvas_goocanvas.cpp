@@ -113,13 +113,13 @@ void canvas_t::set_antialias(bool antialias) {
                antialias ? CAIRO_ANTIALIAS_DEFAULT : CAIRO_ANTIALIAS_NONE, O2G_NULLPTR);
 }
 
-void canvas_t::window2world(gint x, gint y, gint &wx, gint &wy) const {
+void canvas_t::window2world(int x, int y, int &wx, int &wy) const {
   double sx = x, sy = y;
   goo_canvas_convert_from_pixels(GOO_CANVAS(widget), &sx, &sy);
   wx = sx; wy = sy;
 }
 
-canvas_item_t *canvas_t::get_item_at(gint x, gint y) const {
+canvas_item_t *canvas_t::get_item_at(int x, int y) const {
   return item_info_get_at(x, y);
 }
 
@@ -127,7 +127,7 @@ void canvas_t::set_zoom(gdouble zoom) {
   goo_canvas_set_scale(GOO_CANVAS(widget), zoom);
 }
 
-gdouble canvas_t::get_zoom() const {
+double canvas_t::get_zoom() const {
   return goo_canvas_get_scale(GOO_CANVAS(widget));
 }
 
@@ -149,7 +149,7 @@ canvas_dimensions canvas_t::get_viewport_dimensions(canvas_unit_t unit) const {
 }
 
 /* get scroll position in meters/pixels */
-void canvas_t::scroll_get(canvas_unit_t unit, gint &sx, gint &sy) const {
+void canvas_t::scroll_get(canvas_unit_t unit, int &sx, int &sy) const {
   GooCanvas *gc = GOO_CANVAS(widget);
   gdouble zoom = goo_canvas_get_scale(gc);
 
@@ -172,7 +172,7 @@ void canvas_t::scroll_get(canvas_unit_t unit, gint &sx, gint &sy) const {
 }
 
 /* set scroll position in meters/pixels */
-void canvas_t::scroll_to(canvas_unit_t unit, gint sx, gint sy) {
+void canvas_t::scroll_to(canvas_unit_t unit, int sx, int sy) {
   gdouble zoom = goo_canvas_get_scale(GOO_CANVAS(widget));
 
   if(unit != canvas_t::UNIT_METER) {
@@ -186,7 +186,7 @@ void canvas_t::scroll_to(canvas_unit_t unit, gint sx, gint sy) {
   goo_canvas_scroll_to(GOO_CANVAS(widget), sx, sy);
 }
 
-void canvas_t::set_bounds(gint minx, gint miny, gint maxx, gint maxy) {
+void canvas_t::set_bounds(int minx, int miny, int maxx, int maxy) {
   goo_canvas_set_bounds(GOO_CANVAS(widget), minx, miny, maxx, maxy);
 }
 
@@ -209,9 +209,8 @@ void canvas_t::erase(unsigned int group_mask) {
 }
 
 canvas_item_t *canvas_t::circle_new(canvas_group_t group,
-			 gint x, gint y, gint radius, gint border,
-			 canvas_color_t fill_col, canvas_color_t border_col) {
-
+                                    int x, int y, unsigned int radius, int border,
+                                    canvas_color_t fill_col, canvas_color_t border_col) {
   canvas_item_t *item =
     goo_canvas_ellipse_new(static_cast<canvas_goocanvas *>(this)->group[group],
                            x, y, radius, radius,
@@ -226,11 +225,11 @@ canvas_item_t *canvas_t::circle_new(canvas_group_t group,
   return item;
 }
 
-canvas_points_t *canvas_points_new(gint points) {
+canvas_points_t *canvas_points_new(unsigned int points) {
   return reinterpret_cast<canvas_points_t *>(goo_canvas_points_new(points));
 }
 
-void canvas_point_set_pos(canvas_points_t *points, gint index, const lpos_t lpos) {
+void canvas_point_set_pos(canvas_points_t *points, unsigned int index, const lpos_t lpos) {
   points->coords[2*index+0] = lpos.x;
   points->coords[2*index+1] = lpos.y;
 }
@@ -239,17 +238,17 @@ void canvas_points_free(canvas_points_t *points) {
   goo_canvas_points_unref(reinterpret_cast<GooCanvasPoints *>(points));
 }
 
-gint canvas_points_num(const canvas_points_t *points) {
+unsigned int canvas_points_num(const canvas_points_t *points) {
   return reinterpret_cast<const GooCanvasPoints *>(points)->num_points;
 }
 
-void canvas_point_get_lpos(const canvas_points_t *points, gint index, lpos_t *lpos) {
-  lpos->x = points->coords[2*index+0];
-  lpos->y = points->coords[2*index+1];
+void canvas_point_get_lpos(const canvas_points_t *points, unsigned int index, lpos_t &lpos) {
+  lpos.x = points->coords[2 * index + 0];
+  lpos.y = points->coords[2 * index + 1];
 }
 
-canvas_item_t *canvas_t::polyline_new(canvas_group_t group,
-		  canvas_points_t *points, gint width, canvas_color_t color) {
+canvas_item_t *canvas_t::polyline_new(canvas_group_t group, canvas_points_t *points,
+                                      unsigned int width, canvas_color_t color) {
   canvas_item_t *item =
     goo_canvas_polyline_new(static_cast<canvas_goocanvas *>(this)->group[group],
                             FALSE, 0, "points", points,
@@ -265,9 +264,8 @@ canvas_item_t *canvas_t::polyline_new(canvas_group_t group,
   return item;
 }
 
-canvas_item_t *canvas_t::polygon_new(canvas_group_t group,
-		  canvas_points_t *points, gint width, canvas_color_t color,
-				  canvas_color_t fill) {
+canvas_item_t *canvas_t::polygon_new(canvas_group_t group, canvas_points_t *points,
+                                     unsigned int width, canvas_color_t color, canvas_color_t fill) {
   canvas_item_t *item =
     goo_canvas_polyline_new(static_cast<canvas_goocanvas *>(this)->group[group],
                             TRUE, 0, "points", points,
@@ -285,9 +283,8 @@ canvas_item_t *canvas_t::polygon_new(canvas_group_t group,
 }
 
 /* place the image in pix centered on x/y on the canvas */
-canvas_item_t *canvas_t::image_new(canvas_group_t group,
-		GdkPixbuf *pix, gint x, gint y, float hscale, float vscale) {
-
+canvas_item_t *canvas_t::image_new(canvas_group_t group, GdkPixbuf *pix, int x,
+                                   int y, float hscale, float vscale) {
   canvas_item_t *item =
       goo_canvas_image_new(static_cast<canvas_goocanvas *>(this)->group[group],
                            pix, x / hscale - gdk_pixbuf_get_width(pix) / 2,
@@ -295,7 +292,7 @@ canvas_item_t *canvas_t::image_new(canvas_group_t group,
   goo_canvas_item_scale(item, hscale, vscale);
 
   if(CANVAS_SELECTABLE & (1<<group)) {
-    gint radius = 0.75 * hscale * MAX(gdk_pixbuf_get_width(pix), gdk_pixbuf_get_height(pix)); /* hscale and vscale are the same */
+    int radius = 0.75 * hscale * MAX(gdk_pixbuf_get_width(pix), gdk_pixbuf_get_height(pix)); /* hscale and vscale are the same */
     (void) new canvas_item_info_circle(this, group, item, x, y, radius);
   }
 
@@ -319,7 +316,7 @@ void canvas_item_set_pos(canvas_item_t *item, lpos_t *lpos) {
                O2G_NULLPTR);
 }
 
-void canvas_item_set_radius(canvas_item_t *item, gint radius) {
+void canvas_item_set_radius(canvas_item_t *item, int radius) {
   g_object_set(G_OBJECT(item),
                "radius-x", static_cast<gdouble>(radius),
                "radius-y", static_cast<gdouble>(radius),
@@ -351,16 +348,15 @@ void canvas_item_set_zoom_max(canvas_item_t *item, float zoom_max) {
                O2G_NULLPTR);
 }
 
-void canvas_item_set_dashed(canvas_item_t *item,
-                            gint line_width, guint dash_length_on,
-                            guint dash_length_off) {
+void canvas_item_set_dashed(canvas_item_t *item, unsigned int line_width,
+                            unsigned int dash_length_on, guint dash_length_off) {
   GooCanvasLineDash *dash;
   gfloat off_len = dash_length_off;
   gfloat on_len = dash_length_on;
   guint cap = CAIRO_LINE_CAP_BUTT;
-  if (static_cast<gint>(dash_length_on) > line_width) {
+  if(dash_length_on > line_width)
     cap = CAIRO_LINE_CAP_ROUND;
-  }
+
   dash = goo_canvas_line_dash_new(2, on_len, off_len, 0);
   g_object_set(G_OBJECT(item),
                "line-dash", dash,
@@ -397,8 +393,8 @@ static void canvas_item_weak_notify(gpointer data, GObject *) {
   delete static_cast<weak_t *>(data);
 }
 
-void canvas_item_destroy_connect(canvas_item_t *item, void(*c_handler)(gpointer),
-                                 gpointer data) {
+void canvas_item_destroy_connect(canvas_item_t *item, void(*c_handler)(void *),
+                                 void *data) {
   g_object_weak_ref(G_OBJECT(item), canvas_item_weak_notify,
                     new weak_t(c_handler, data));
 }
@@ -412,8 +408,7 @@ void canvas_image_move(canvas_item_t *item, gint x, gint y,
                O2G_NULLPTR);
 }
 
-/* get the polygon/polyway segment a certain coordinate is over */
-gint canvas_item_get_segment(canvas_item_t *item, gint x, gint y) {
+int canvas_item_get_segment(canvas_item_t *item, int x, int y) {
 
   canvas_points_t *points = O2G_NULLPTR;
   double line_width = 0;
@@ -466,8 +461,8 @@ gint canvas_item_get_segment(canvas_item_t *item, gint x, gint y) {
   return retval;
 }
 
-void canvas_item_get_segment_pos(canvas_item_t *item, gint seg,
-                                 gint &x0, gint &y0, gint &x1, gint &y1) {
+void canvas_item_get_segment_pos(canvas_item_t *item, int seg,
+                                 int &x0, int &y0, int &x1, int &y1) {
   printf("get segment %d of item %p\n", seg, item);
 
   canvas_points_t *points = O2G_NULLPTR;
