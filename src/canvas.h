@@ -188,6 +188,6 @@ void canvas_image_move(canvas_item_t *item, int x, int y,
 /**
  * @brief get the polygon/polyway segment a certain coordinate is over
  */
-int canvas_item_get_segment(canvas_item_t *item, int x, int y);
+int canvas_item_get_segment(canvas_item_t *item, lpos_t pos);
 
 #endif // CANVAS_H

@@ -404,7 +404,7 @@ void canvas_image_move(canvas_item_t *item, gint x, gint y,
                O2G_NULLPTR);
 }
 
-int canvas_item_get_segment(canvas_item_t *item, int x, int y) {
+int canvas_item_get_segment(canvas_item_t *item, lpos_t pos) {
 
   canvas_points_t *points = O2G_NULLPTR;
   double line_width = 0;
@@ -425,8 +425,8 @@ int canvas_item_get_segment(canvas_item_t *item, int x, int y) {
 #define AY (points->coords[2*i+1])
 #define BX (points->coords[2*i+2])
 #define BY (points->coords[2*i+3])
-#define CX static_cast<double>(x)
-#define CY static_cast<double>(y)
+#define CX static_cast<double>(pos.x)
+#define CY static_cast<double>(pos.y)
 
     double len2 = pow(BY-AY,2)+pow(BX-AX,2);
     double m = ((CX-AX)*(BX-AX)+(CY-AY)*(BY-AY)) / len2;
