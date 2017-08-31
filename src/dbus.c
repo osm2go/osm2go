@@ -41,7 +41,6 @@ signal_filter(G_GNUC_UNUSED DBusConnection *connection, DBusMessage *message, G_
 #else
     double *latp = &mmpos.pos.lat, *lonp = &mmpos.pos.lon;
 #endif
-    long zoom;
     dbus_error_init(&error);
 
     if(dbus_message_get_args(message, &error,
@@ -50,8 +49,8 @@ signal_filter(G_GNUC_UNUSED DBusConnection *connection, DBusMessage *message, G_
 			     DBUS_TYPE_INT32,  &mmpos.zoom,
 			     DBUS_TYPE_INVALID)) {
 
-      g_print("MM: position received: %f/%f, zoom = %ld\n",
-	      (float)*latp, (float)*lonp, zoom);
+      g_print("MM: position received: %f/%f, zoom = %d\n",
+              (float)*latp, (float)*lonp, mmpos.zoom);
 
       /* store position for further processing */
 #ifdef USE_FLOAT
