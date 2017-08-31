@@ -255,7 +255,7 @@ static gint canvas_item_info_get_segment(canvas_item_info_poly *item,
 
 /* try to find the object at position x/y by searching through the */
 /* item_info list */
-canvas_item_t *canvas_t::item_info_get_at(int x, int y) const {
+canvas_item_t *canvas_t::get_item_at(int x, int y) const {
   printf("************ searching at %d %d *****************\n", x, y);
 
   /* convert all "fuzziness" into meters */

@@ -117,7 +117,6 @@ public:
   canvas_item_t *image_new(canvas_group_t group, GdkPixbuf *pix, int x, int y,
                            float hscale, float vscale);
 
-  canvas_item_t *item_info_get_at(int x, int y) const;
   void item_info_push(canvas_item_t *item);
 };
 

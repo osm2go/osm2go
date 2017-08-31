@@ -119,10 +119,6 @@ void canvas_t::window2world(int x, int y, int &wx, int &wy) const {
   wx = sx; wy = sy;
 }
 
-canvas_item_t *canvas_t::get_item_at(int x, int y) const {
-  return item_info_get_at(x, y);
-}
-
 void canvas_t::set_zoom(gdouble zoom) {
   goo_canvas_set_scale(GOO_CANVAS(widget), zoom);
 }
