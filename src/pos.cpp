@@ -182,6 +182,14 @@ pos_t lpos_t::toPos(const bounds_t &bounds) const {
   return pos;
 }
 
+bool bounds_t::contains(lpos_t pos) const {
+  if((pos.x < min.x) || (pos.x > max.x))
+    return false;
+  if((pos.y < min.y) || (pos.y > max.y))
+    return false;
+  return true;
+}
+
 void pos_dist_entry_set(GtkWidget *entry, pos_float_t dist, bool is_mil) {
   char str[32] = "---";
   if(!std::isnan(dist)) {

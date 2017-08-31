@@ -96,6 +96,7 @@ struct bounds_t {
   lpos_t min, max;
   lpos_t center;
   float scale;
+  bool contains(lpos_t pos) const;
 };
 
 void pos_lat_str(char *str, size_t len, pos_float_t latitude);

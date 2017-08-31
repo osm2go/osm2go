@@ -1296,7 +1296,7 @@ static void map_button_release(map_t *map, gint x, gint y) {
     lpos_t pos = map->canvas->window2world(x, y);
 
     node_t *node = O2G_NULLPTR;
-    if(!map->appdata.osm->position_within_bounds(pos.x, pos.y))
+    if(!map->appdata.osm->bounds->contains(pos))
       map_outside_error(map->appdata);
     else {
       node = map->appdata.osm->node_new(pos);

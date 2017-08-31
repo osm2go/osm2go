@@ -1535,14 +1535,6 @@ way_chain_t osm_t::node_to_way(const node_t *node) const {
   return chain;
 }
 
-bool osm_t::position_within_bounds(gint x, gint y) const {
-  if((x < bounds->min.x) || (x > bounds->max.x))
-    return false;
-  if((y < bounds->min.y) || (y > bounds->max.y))
-    return false;
-  return true;
-}
-
 struct remove_member_functor {
   const object_t obj;
   // the second argument is to distinguish the constructor from operator()

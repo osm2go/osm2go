@@ -180,8 +180,6 @@ struct osm_t {
   void relation_attach(relation_t *relation);
   void relation_delete(relation_t *relation);
 
-  bool position_within_bounds(gint x, gint y) const;
-
   /**
    * @brief check if object is in sane state
    * @returns error string or NULL

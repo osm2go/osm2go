@@ -114,7 +114,7 @@ void map_edit_way_add_segment(map_t *map, gint x, gint y) {
       /* a new node */
       map->action.ends_on = O2G_NULLPTR;
 
-      if(!map->appdata.osm->position_within_bounds(pos.x, pos.y))
+      if(!map->appdata.osm->bounds->contains(pos))
 	map_outside_error(map->appdata);
       else
         node = map->appdata.osm->node_new(pos);
@@ -574,7 +574,7 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, gint ex, gint ey) {
 
     /* convert mouse position to canvas (world) position */
     lpos_t pos = map->canvas->window2world(ex, ey);
-    if(!osm->position_within_bounds(pos.x, pos.y)) {
+    if(!osm->bounds->contains(pos)) {
       map_outside_error(map->appdata);
       return;
     }

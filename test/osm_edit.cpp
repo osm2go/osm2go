@@ -86,9 +86,9 @@ static void test_trivial() {
   set_bounds(osm);
   g_assert_cmpstr(osm.sanity_check(), ==, _("Invalid data in OSM file:\nNo drawable content found!"));
 
-  g_assert_true(osm.position_within_bounds(0, 0));
-  g_assert_false(osm.position_within_bounds(-1, 0));
-  g_assert_false(osm.position_within_bounds(0, -1));
+  g_assert_true(osm.bounds->contains(lpos_t(0, 0)));
+  g_assert_false(osm.bounds->contains(lpos_t(-1, 0)));
+  g_assert_false(osm.bounds->contains(lpos_t(0, -1)));
 
   way_t w(0);
   g_assert(w.first_node() == O2G_NULLPTR);
