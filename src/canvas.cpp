@@ -211,8 +211,6 @@ static bool inpoly(const lpos_t *poly, gint npoints, gint x, gint y) {
 /* get the polygon/polyway segment a certain coordinate is over */
 static gint canvas_item_info_get_segment(canvas_item_info_poly *item,
 					 gint x, gint y, gint fuzziness) {
-  if(item->num_points < 2) return -1;
-
   gint retval = -1;
   float mindist = 1000000.0;
   for(unsigned int i = 0; i < item->num_points - 1; i++) {
