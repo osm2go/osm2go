@@ -21,12 +21,15 @@
 #define STYLE_H
 
 #include "icon.h"
-#include "josm_elemstyles.h"
+#include "osm.h"
 
 #include <vector>
 
 struct appdata_t;
 class node_t;
+struct elemstyle_t;
+
+typedef unsigned int elemstyle_color_t;
 
 struct style_t {
   style_t(icon_t &ic);

@@ -110,11 +110,6 @@ float scaledn_to_zoom(const float scaledn) {
   return N810_PX_PER_METRE / scaledn;
 }
 
-int zoom_to_scaledn(const float zoom) {
-  return static_cast<int>(N810_PX_PER_METRE / zoom);
-}
-
-
 /* --------------------- elemstyles.xml parsing ----------------------- */
 
 static bool parse_color(const char *col, elemstyle_color_t &color, ColorMap &colors) {
@@ -184,7 +179,7 @@ bool parse_color(xmlNode *a_node, const char *name,
   return ret;
 }
 
-static double parse_scale(const char *val_str, int len) {
+static float parse_scale(const char *val_str, int len) {
   char buf[G_ASCII_DTOSTR_BUF_SIZE];
   if(G_UNLIKELY(static_cast<unsigned int>(len) >= sizeof(buf))) {
     return 0.0;

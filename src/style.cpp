@@ -20,6 +20,7 @@
 #include "style.h"
 
 #include "appdata.h"
+#include "josm_elemstyles.h"
 #include "map.h"
 #include "misc.h"
 #include "osm2go_platform.h"

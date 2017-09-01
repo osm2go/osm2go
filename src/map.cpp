@@ -1501,7 +1501,6 @@ gboolean map_t::key_press_event(GdkEventKey *event) {
       zoom = state.zoom;
       zoom *= ZOOM_FACTOR_BUTTON;
       set_zoom(zoom, true);
-      printf("zoom is now %f (1:%d)\n", zoom, zoom_to_scaledn(zoom));
       return TRUE;
       break;
 
@@ -1514,7 +1513,6 @@ gboolean map_t::key_press_event(GdkEventKey *event) {
       zoom = state.zoom;
       zoom /= ZOOM_FACTOR_BUTTON;
       set_zoom(zoom, true);
-      printf("zoom is now %f (1:%d)\n", zoom, zoom_to_scaledn(zoom));
       return TRUE;
       break;
 

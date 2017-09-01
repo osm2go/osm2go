@@ -21,6 +21,7 @@
 #define JOSM_ELEMSTYLES_H
 
 #include "osm.h"
+#include "style.h"
 
 #include <glib.h>
 #include <libxml/tree.h>
@@ -30,7 +31,6 @@
 // Ratio conversions
 
 float scaledn_to_zoom(const float scaledn);
-int zoom_to_scaledn(const float zoom);
 
 typedef enum {
   ES_TYPE_NONE = 0,
@@ -41,15 +41,9 @@ typedef enum {
 
 #define DEFAULT_DASH_LENGTH 0
 
-typedef guint elemstyle_color_t;
-
-struct elemstyle_t;
-
 std::vector<elemstyle_t *> josm_elemstyles_load(const char *name);
 void josm_elemstyles_free(std::vector<elemstyle_t *> &elemstyles);
 bool parse_color(xmlNode *a_node, const char *name, elemstyle_color_t &color);
-
-struct style_t;
 
 void josm_elemstyles_colorize_node(style_t *style, node_t *node);
 void josm_elemstyles_colorize_way(const style_t *style, way_t *way);
