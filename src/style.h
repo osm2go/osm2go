@@ -91,6 +91,10 @@ struct style_t {
   std::vector<elemstyle_t *> elemstyles;
 
   std::map<item_id_t, GdkPixbuf *> node_icons;
+
+  void colorize_node(node_t *node);
+  void colorize_way(way_t *way) const;
+  void colorize_world(osm_t *osm);
 };
 
 style_t *style_load(const std::string &name, icon_t &icons);

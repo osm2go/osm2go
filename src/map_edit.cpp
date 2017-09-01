@@ -139,7 +139,7 @@ void map_edit_way_add_segment(map_t *map, gint x, gint y) {
       map_item_chain_destroy(map->action.way->map_item_chain);
 
       /* draw current way */
-      josm_elemstyles_colorize_way(map->style, map->action.way);
+      map->style->colorize_way(map->action.way);
       map->draw(map->action.way);
     }
   }
@@ -424,12 +424,12 @@ void map_edit_way_cut(map_t *map, gint px, gint py) {
   printf("original way still has %zu nodes\n", way->node_chain.size());
 
   /* draw the updated old way */
-  josm_elemstyles_colorize_way(map->style, way);
+  map->style->colorize_way(way);
   map->draw(way);
 
   if(neww != O2G_NULLPTR) {
     /* colorize the new way before drawing */
-    josm_elemstyles_colorize_way(map->style, neww);
+    map->style->colorize_way(neww);
     map->draw(neww);
   }
 
@@ -462,7 +462,7 @@ void redraw_way::operator()(const std::pair<item_id_t, way_t *> &p)
   map_item_chain_destroy(way->map_item_chain);
 
   /* draw current way */
-  josm_elemstyles_colorize_way(map->style, way);
+  map->style->colorize_way(way);
   map->draw(way);
 }
 

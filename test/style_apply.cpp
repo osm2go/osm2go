@@ -74,7 +74,7 @@ int main(int argc, char **argv)
   node_t * const node = osm.node_new(pos_t(0.0, 0.0));
   osm.node_attach(node);
 
-  josm_elemstyles_colorize_node(style, node);
+  style->colorize_node(node);
 
   g_assert_true(style->node_icons.empty());
 
@@ -82,7 +82,7 @@ int main(int argc, char **argv)
   tags.insert(osm_t::TagMap::value_type("barrier", "bollard"));
   node->tags.replace(tags);
 
-  josm_elemstyles_colorize_node(style, node);
+  style->colorize_node(node);
 
   g_assert_true(style->node_icons.empty());
 
@@ -90,7 +90,7 @@ int main(int argc, char **argv)
   tags.insert(osm_t::TagMap::value_type("access", "no"));
   node->tags.replace(tags);
 
-  josm_elemstyles_colorize_node(style, node);
+  style->colorize_node(node);
 
   g_assert_false(style->node_icons.empty());
   g_assert_nonnull(style->node_icons[node->id]);
@@ -102,7 +102,7 @@ int main(int argc, char **argv)
   tags.insert(osm_t::TagMap::value_type("addr:housenumber", "42"));
   node->tags.replace(tags);
 
-  josm_elemstyles_colorize_world(style, &osm);
+  style->colorize_world(&osm);
 
   g_assert_false(style->node_icons.empty());
   g_assert_nonnull(style->node_icons[node->id]);
@@ -112,7 +112,7 @@ int main(int argc, char **argv)
   way_t * const way = new way_t(0);
   osm.way_attach(way);
 
-  josm_elemstyles_colorize_world(style, &osm);
+  style->colorize_world(&osm);
   // default values for all ways set in test1.style
   way_t w0;
   w0.draw.width = 3;
@@ -123,7 +123,7 @@ int main(int argc, char **argv)
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("bridge", "yes"));
   way->tags.replace(tags);
-  josm_elemstyles_colorize_way(style, way);
+  style->colorize_way(way);
   g_assert_cmpint(memcmp(&(way->draw), &(w0.draw), sizeof(w0.draw)), !=, 0);
   g_assert_cmpuint(way->draw.color, ==, 0x00008080);
   g_assert_cmpint(way->draw.width, ==, 7);
@@ -133,7 +133,7 @@ int main(int argc, char **argv)
   tags.insert(osm_t::TagMap::value_type("bridge", "yes"));
   tags.insert(osm_t::TagMap::value_type("access", "no"));
   way->tags.replace(tags);
-  josm_elemstyles_colorize_way(style, way);
+  style->colorize_way(way);
   g_assert_cmpuint(way->draw.color, ==, 0xff8080ff);
   g_assert_cmpint(way->draw.width, ==, 5);
 
@@ -141,7 +141,7 @@ int main(int argc, char **argv)
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("highway", "residential"));
   way->tags.replace(tags);
-  josm_elemstyles_colorize_way(style, way);
+  style->colorize_way(way);
   g_assert_cmpuint(way->draw.color, ==, 0xc0c0c0ff);
   g_assert_cmpint(way->draw.width, ==, 2);
 
@@ -149,7 +149,7 @@ int main(int argc, char **argv)
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("highway", "platform"));
   way->tags.replace(tags);
-  josm_elemstyles_colorize_way(style, way);
+  style->colorize_way(way);
   g_assert_cmpuint(way->draw.color, ==, 0x809bc0ff);
   g_assert_cmpint(way->draw.width, ==, 1);
 
@@ -177,7 +177,7 @@ int main(int argc, char **argv)
   oldicon = style->node_icons[node->id];
   oldzoom = node->zoom_max;
 
-  josm_elemstyles_colorize_world(style, &osm);
+  style->colorize_world(&osm);
   g_assert_cmpuint(way->draw.color, ==, 0xccccccff);
   g_assert_cmpint(way->draw.area.color, ==, 0);
   g_assert_cmpint(way->draw.width, ==, 1);
@@ -198,7 +198,7 @@ int main(int argc, char **argv)
   node->tags.replace(tags);
   way->tags.replace(tags);
 
-  josm_elemstyles_colorize_world(style, &osm);
+  style->colorize_world(&osm);
   g_assert_cmpuint(way->draw.color, ==, 0xaaaaaaff);
   g_assert_cmpint(way->draw.area.color, ==, 0);
   g_assert_cmpint(way->draw.width, ==, 2);

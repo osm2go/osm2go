@@ -463,4 +463,19 @@ style_t::~style_t()
   xmlFree(BAD_CAST icon.path_prefix);
 }
 
+void style_t::colorize_node(node_t *node)
+{
+  josm_elemstyles_colorize_node(this, node);
+}
+
+void style_t::colorize_way(way_t *way) const
+{
+  josm_elemstyles_colorize_way(this, way);
+}
+
+void style_t::colorize_world(osm_t *osm)
+{
+  josm_elemstyles_colorize_world(this, osm);
+}
+
 //vim:et:ts=8:sw=2:sts=2:ai

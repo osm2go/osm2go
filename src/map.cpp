@@ -608,11 +608,11 @@ void map_t::redraw_item(object_t object) {
   map_item_remove(object);
   switch (object.type){
   case WAY:
-    josm_elemstyles_colorize_way(style, object.way);
+    style->colorize_way(object.way);
     draw(object.way);
     break;
   case NODE:
-    josm_elemstyles_colorize_node(style, object.node);
+    style->colorize_node(object.node);
     draw(object.node);
     break;
   default:
@@ -1635,7 +1635,7 @@ void map_t::clear(unsigned int group_mask) {
 void map_t::paint() {
   osm_t * const osm = appdata.osm;
 
-  josm_elemstyles_colorize_world(style, osm);
+  style->colorize_world(osm);
 
   g_assert_nonnull(canvas);
 
