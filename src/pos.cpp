@@ -23,10 +23,10 @@
 
 #include <osm2go_cpp.h>
 
+#include <cmath>
 #include <cstdio>
 #include <cstring>
 #include <ctype.h>
-#include <cmath>
 
 #define TAG_STATE  GTK_STATE_PRELIGHT
 

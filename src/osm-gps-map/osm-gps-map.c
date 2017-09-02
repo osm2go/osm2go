@@ -27,15 +27,15 @@
 
 #include <fcntl.h>
 #include <math.h>
-#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <gdk/gdk.h>
 #include <glib.h>
-#include <glib/gstdio.h>
 #include <glib/gprintf.h>
+#include <glib/gstdio.h>
 #include <libsoup/soup.h>
 
 #include "converter.h"
