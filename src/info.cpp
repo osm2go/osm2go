@@ -82,7 +82,7 @@ void tag_context_t::update_collisions(const std::string &k)
 
 struct value_match_functor {
   const std::string &value;
-  value_match_functor(const std::string &v) : value(v) {}
+  explicit value_match_functor(const std::string &v) : value(v) {}
   bool operator()(const osm_t::TagMap::value_type &pair) {
     return pair.second == value;
   }

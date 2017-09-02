@@ -48,7 +48,7 @@ static std::string diff_filename(const project_t *project) {
 
 struct diff_save_tags_functor {
   xmlNodePtr const node;
-  diff_save_tags_functor(xmlNodePtr n) : node(n) {}
+  explicit diff_save_tags_functor(xmlNodePtr n) : node(n) {}
   void operator()(const tag_t &tag) {
     xmlNodePtr tag_node = xmlNewChild(node, O2G_NULLPTR,
                                       BAD_CAST "tag", O2G_NULLPTR);
@@ -64,7 +64,7 @@ static void diff_save_tags(const base_object_t *obj, xmlNodePtr node) {
 
 struct diff_save_objects {
   xmlNodePtr const root_node;
-  diff_save_objects(xmlNodePtr r) : root_node(r) {}
+  explicit diff_save_objects(xmlNodePtr r) : root_node(r) {}
   /**
    * @brief save the common OSM object information
    * @param obj the object to save
@@ -90,7 +90,7 @@ xmlNodePtr diff_save_objects::diff_save_state_n_id(const base_object_t *obj,
 }
 
 struct diff_save_nodes : diff_save_objects {
-  diff_save_nodes(xmlNodePtr r) : diff_save_objects(r) { }
+  explicit diff_save_nodes(xmlNodePtr r) : diff_save_objects(r) { }
   void operator()(const std::pair<item_id_t, node_t *> pair);
 };
 
@@ -112,7 +112,7 @@ void diff_save_nodes::operator()(const std::pair<item_id_t, node_t *> pair)
 }
 
 struct diff_save_ways : diff_save_objects {
-  diff_save_ways(xmlNodePtr r) : diff_save_objects(r) { }
+  explicit diff_save_ways(xmlNodePtr r) : diff_save_objects(r) { }
   void operator()(const std::pair<item_id_t, way_t *> pair);
 };
 
@@ -138,7 +138,7 @@ void diff_save_ways::operator()(const std::pair<item_id_t, way_t *> pair)
 }
 
 struct diff_save_relations : diff_save_objects {
-  diff_save_relations(xmlNodePtr r) : diff_save_objects(r) { }
+  explicit diff_save_relations(xmlNodePtr r) : diff_save_objects(r) { }
   void operator()(const std::pair<item_id_t, relation_t *> pair);
 };
 
@@ -163,7 +163,7 @@ void diff_save_relations::operator()(const std::pair<item_id_t, relation_t *> pa
 
 struct find_object_by_flags {
   int flagmask;
-  find_object_by_flags(int f = ~0) : flagmask(f) {}
+  explicit find_object_by_flags(int f = ~0) : flagmask(f) {}
   bool operator()(std::pair<item_id_t, base_object_t *> pair) {
     return pair.second->flags & flagmask;
   }

@@ -505,7 +505,7 @@ void build_menu_functor::operator()(presets_item_t *item)
 
 struct group_member_used {
   const osm_t::TagMap &tags;
-  group_member_used(const osm_t::TagMap &t) : tags(t) {}
+  explicit group_member_used(const osm_t::TagMap &t) : tags(t) {}
   bool operator()(const presets_item_t *item);
 };
 
@@ -830,7 +830,7 @@ void picker_add_functor::operator()(const presets_item_t *item)
 
 struct matching_type_functor {
   const unsigned int type; ///< the type to match
-  matching_type_functor(unsigned int t) : type(t) {}
+  explicit matching_type_functor(unsigned int t) : type(t) {}
   bool operator()(const presets_item_t *item) {
     return item->type & type;
   }

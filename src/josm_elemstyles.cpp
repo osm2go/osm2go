@@ -67,14 +67,14 @@ class StyleSax {
   // custom find to avoid memory allocations for std::string
   struct tag_find {
     const char * const name;
-    tag_find(const xmlChar *n) : name(reinterpret_cast<const char *>(n)) {}
+    explicit tag_find(const xmlChar *n) : name(reinterpret_cast<const char *>(n)) {}
     bool operator()(const std::pair<StateMap::key_type, const StateMap::mapped_type> &p) {
       return (strcmp(p.first, name) == 0);
     }
   };
 
 public:
-  StyleSax();
+  explicit StyleSax();
 
   bool parse(const std::string &filename);
 
@@ -496,7 +496,7 @@ bool elemstyle_condition_t::matches(const base_object_t &obj) const {
 
 struct condition_not_matches_obj {
   const base_object_t &obj;
-  condition_not_matches_obj(const base_object_t *o) : obj(*o) {}
+  explicit condition_not_matches_obj(const base_object_t *o) : obj(*o) {}
   bool operator()(const elemstyle_condition_t &cond) {
     return !cond.matches(obj);
   }
@@ -577,7 +577,7 @@ void josm_elemstyles_colorize_node(style_t *style, node_t *node) {
 
 struct josm_elemstyles_colorize_node_functor {
   style_t * const style;
-  josm_elemstyles_colorize_node_functor(style_t *s) : style(s) {}
+  explicit josm_elemstyles_colorize_node_functor(style_t *s) : style(s) {}
   void operator()(std::pair<item_id_t, node_t *> pair) {
     josm_elemstyles_colorize_node(style, pair.second);
   }
@@ -602,7 +602,7 @@ static int line_mod_apply_width(gint width, const elemstyle_width_mod_t *mod) {
 
 struct josm_elemstyles_colorize_way_functor {
   const style_t * const style;
-  josm_elemstyles_colorize_way_functor(const style_t *s) : style(s) {}
+  explicit josm_elemstyles_colorize_way_functor(const style_t *s) : style(s) {}
   void operator()(way_t *way);
   void operator()(std::pair<item_id_t, way_t *> pair) {
     operator()(pair.second);

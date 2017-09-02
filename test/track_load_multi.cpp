@@ -7,7 +7,7 @@
 
 struct point_count {
   gint &points;
-  point_count(gint &p) : points(p) {}
+  explicit point_count(gint &p) : points(p) {}
   void operator()(const track_seg_t &seg) {
     points += seg.track_points.size();
   }

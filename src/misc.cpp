@@ -627,7 +627,7 @@ void misc_init(void) {
 
 struct combo_add_string {
   GtkWidget * const cbox;
-  combo_add_string(GtkWidget *w) : cbox(w) {}
+  explicit combo_add_string(GtkWidget *w) : cbox(w) {}
   void operator()(const std::string &entry) {
     combo_box_append_text(cbox, entry.c_str());
   }

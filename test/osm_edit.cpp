@@ -503,7 +503,7 @@ static bool checkLinearRelation(const relation_t *r)
 // find out which part of the original way can be split at the given node
 struct findWay {
   const node_t * const node;
-  findWay(const node_t *n) : node(n) {}
+  explicit findWay(const node_t *n) : node(n) {}
   bool operator()(way_t *way) const {
     const std::vector<node_t *> &ch = way->node_chain;
     return !way->ends_with_node(node) &&

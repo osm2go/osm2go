@@ -66,7 +66,7 @@ class TrackSax {
   // custom find to avoid memory allocations for std::string
   struct tag_find {
     const char * const name;
-    tag_find(const xmlChar *n) : name(reinterpret_cast<const char *>(n)) {}
+    explicit tag_find(const xmlChar *n) : name(reinterpret_cast<const char *>(n)) {}
     bool operator()(const std::pair<const char *, std::pair<State, State> > &p) {
       return (strcmp(p.first, name) == 0);
     }
@@ -149,11 +149,11 @@ void track_clear(appdata_t &appdata) {
 
 struct track_save_segs {
   xmlNodePtr const node;
-  track_save_segs(xmlNodePtr n) : node(n) {}
+  explicit track_save_segs(xmlNodePtr n) : node(n) {}
 
   struct save_point {
     xmlNodePtr const node;
-    save_point(xmlNodePtr n) : node(n) {}
+    explicit save_point(xmlNodePtr n) : node(n) {}
     void operator()(const track_point_t &point);
   };
 

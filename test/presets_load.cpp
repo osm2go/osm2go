@@ -16,7 +16,7 @@ static std::vector<std::string> basedirs;
 
 struct check_icon {
   const std::string &filename;
-  check_icon(const std::string &fn) : filename(fn) {}
+  explicit check_icon(const std::string &fn) : filename(fn) {}
   bool operator()(const std::string &dir);
 };
 

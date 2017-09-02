@@ -144,7 +144,7 @@ static void map_node_select(map_t *map, node_t *node) {
 struct set_point_pos {
   canvas_points_t * const points;
   gint node;
-  set_point_pos(canvas_points_t *p) : points(p), node(0) {}
+  explicit set_point_pos(canvas_points_t *p) : points(p), node(0) {}
   void operator()(const node_t *n) {
     canvas_point_set_pos(points, node++, n->lpos);
   }
@@ -493,7 +493,7 @@ void map_t::show_node(node_t *node) {
 
 struct map_way_draw_functor {
   map_t * const map;
-  map_way_draw_functor(map_t *m) : map(m) {}
+  explicit map_way_draw_functor(map_t *m) : map(m) {}
   void operator()(way_t *way);
   void operator()(std::pair<item_id_t, way_t *> pair) {
     operator()(pair.second);
@@ -548,7 +548,7 @@ void map_t::draw(way_t *way) {
 
 struct map_node_draw_functor {
   map_t * const map;
-  map_node_draw_functor(map_t *m) : map(m) {}
+  explicit map_node_draw_functor(map_t *m) : map(m) {}
   void operator()(node_t *node);
   void operator()(std::pair<item_id_t, node_t *> pair) {
     operator()(pair.second);
@@ -1788,7 +1788,7 @@ void map_action_ok(map_t *map) {
 
 struct node_deleted_from_ways {
   map_t * const map;
-  node_deleted_from_ways(map_t *m) : map(m) { }
+  explicit node_deleted_from_ways(map_t *m) : map(m) { }
   void operator()(way_t *way);
 };
 
@@ -2044,7 +2044,7 @@ void map_t::track_update_seg(track_seg_t &seg) {
 
 struct map_track_seg_draw_functor {
   map_t * const map;
-  map_track_seg_draw_functor(map_t *m) : map(m) {}
+  explicit map_track_seg_draw_functor(map_t *m) : map(m) {}
   void operator()(track_seg_t &seg) {
     map->track_draw_seg(seg);
   }
@@ -2172,7 +2172,7 @@ void map_t::hide_selected() {
 
 struct map_show_all_functor {
   map_t * const map;
-  map_show_all_functor(map_t *m) : map(m) {}
+  explicit map_show_all_functor(map_t *m) : map(m) {}
   void operator()(std::pair<item_id_t, way_t *> pair);
 };
 

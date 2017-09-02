@@ -52,7 +52,7 @@ static void initTrackVisibility() {
 
 struct matchTrackVisibility {
   const std::string key;
-  matchTrackVisibility(const std::string &k) : key(k) {}
+  explicit matchTrackVisibility(const std::string &k) : key(k) {}
   bool operator()(const std::pair<TrackVisibility, std::string> &p) {
     return p.second == key;
   }

@@ -132,7 +132,7 @@ canvas_item_info_poly::~canvas_item_info_poly()
 
 struct item_info_find {
   const canvas_item_t * const citem;
-  item_info_find(const canvas_item_t *i) : citem(i) {}
+  explicit item_info_find(const canvas_item_t *i) : citem(i) {}
   bool operator()(const canvas_item_info_t *item) {
     return item->item == citem;
   }

@@ -109,7 +109,7 @@ static unsigned int josm_type_parse(const char *type) {
 template<typename T>
 struct str_map_find {
   const char * const name;
-  str_map_find(const char * n)
+  explicit str_map_find(const char * n)
     : name(n) {}
   bool operator()(const typename T::value_type &p) {
     return (strcmp(p.first, name) == 0);
@@ -157,7 +157,7 @@ class PresetSax {
   // Map back a state to it's string. Only used for debug messages.
   struct name_find {
     const State state;
-    name_find(State s) : state(s) {}
+    explicit name_find(State s) : state(s) {}
     bool operator()(const StateMap::value_type &p) {
       return p.second.first == state;
     }
@@ -182,7 +182,7 @@ public:
 private:
   struct find_link_ref {
     PresetSax &px;
-    find_link_ref(PresetSax &p) : px(p) {}
+    explicit find_link_ref(PresetSax &p) : px(p) {}
     void operator()(LLinks::value_type &l);
   };
 
@@ -327,7 +327,7 @@ PresetSax::PresetSax(presets_items &p, const std::string &b)
 
 struct find_link_parent {
   const presets_widget_link *link;
-  find_link_parent(const presets_widget_link *l) : link(l) {}
+  explicit find_link_parent(const presets_widget_link *l) : link(l) {}
   bool operator()(presets_item_t *t);
   bool operator()(const ChunkMap::value_type &p) {
     return operator()(p.second);
@@ -921,7 +921,7 @@ void PresetSax::endElement(const xmlChar *name)
 
 struct move_chunks_functor {
   std::vector<presets_item_t *> &chunks;
-  move_chunks_functor(std::vector<presets_item_t *> &c) : chunks(c) {}
+  explicit move_chunks_functor(std::vector<presets_item_t *> &c) : chunks(c) {}
   void operator()(const ChunkMap::value_type &p) {
     chunks.push_back(p.second);
   }

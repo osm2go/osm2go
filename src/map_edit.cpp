@@ -47,7 +47,7 @@ void map_edit_way_add_begin(map_t *map, way_t *way_sel) {
 
 struct check_first_last_node {
   const node_t * const node;
-  check_first_last_node(const node_t *n) : node(n) {}
+  explicit check_first_last_node(const node_t *n) : node(n) {}
   bool operator()(const way_t *way) {
     return way->ends_with_node(node);
   }
@@ -147,7 +147,7 @@ void map_edit_way_add_segment(map_t *map, gint x, gint y) {
 
 struct map_unref_ways {
   osm_t * const osm;
-  map_unref_ways(osm_t *o) : osm(o) {}
+  explicit map_unref_ways(osm_t *o) : osm(o) {}
   void operator()(node_t *node);
 };
 
@@ -186,7 +186,7 @@ void map_edit_way_add_cancel(map_t *map) {
 
 struct map_draw_nodes {
   map_t * const map;
-  map_draw_nodes(map_t *m) : map(m) {}
+  explicit map_draw_nodes(map_t *m) : map(m) {}
   void operator()(node_t *node);
 };
 
@@ -468,7 +468,7 @@ void redraw_way::operator()(const std::pair<item_id_t, way_t *> &p)
 
 struct find_way_ends {
   const node_t * const node;
-  find_way_ends(const node_t *n) : node(n) {}
+  explicit find_way_ends(const node_t *n) : node(n) {}
   bool operator()(const std::pair<item_id_t, way_t *> &p) {
     return p.second->ends_with_node(node);
   }

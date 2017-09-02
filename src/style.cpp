@@ -446,7 +446,7 @@ style_t::style_t(icon_t &ic)
 
 struct unref_icon {
   icon_t &icons;
-  unref_icon(icon_t &i) : icons(i) {}
+  explicit unref_icon(icon_t &i) : icons(i) {}
   void operator()(const std::pair<item_id_t, GdkPixbuf *> &pair) {
     icons.icon_free(pair.second);
   }

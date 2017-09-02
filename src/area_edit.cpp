@@ -55,7 +55,7 @@
 #define WARN_OVER  5.0
 
 struct context_t {
-  context_t(area_edit_t &a);
+  explicit context_t(area_edit_t &a);
 
   GtkWidget *dialog, *notebook;
   area_edit_t &area;
@@ -242,7 +242,7 @@ static GSList *pos_append(GSList *list, pos_float_t lat, pos_float_t lon) {
 
 struct add_bounds {
   OsmGpsMap * const map;
-  add_bounds(OsmGpsMap *m) : map(m) {}
+  explicit add_bounds(OsmGpsMap *m) : map(m) {}
   void operator()(const pos_bounds &b);
 };
 

@@ -182,7 +182,7 @@ bool osm_download(GtkWidget *parent, settings_t *settings, project_t *project)
 }
 
 struct curl_data_t {
-  curl_data_t(char *p = O2G_NULLPTR, curl_off_t l = 0)
+  explicit curl_data_t(char *p = O2G_NULLPTR, curl_off_t l = 0)
     : ptr(p), len(l) {}
   char *ptr;
   long len;
@@ -483,7 +483,7 @@ static void upload_object(osm_upload_context_t &context, base_object_t *obj) {
 }
 
 struct osm_dirty_t {
-  osm_dirty_t(osm_t *osm)
+  explicit osm_dirty_t(osm_t *osm)
     : dialog(O2G_NULLPTR)
     , nodes(osm->nodes)
     , ways(osm->ways)
@@ -496,7 +496,7 @@ struct osm_dirty_t {
   class counter {
     struct object_counter {
       counter<T> &dirty;
-      object_counter(counter<T> &d) : dirty(d) {}
+      explicit object_counter(counter<T> &d) : dirty(d) {}
       void operator()(std::pair<item_id_t, T *> pair);
     };
     struct upload_objects {
@@ -508,7 +508,7 @@ struct osm_dirty_t {
     };
 
   public:
-    counter(const std::map<item_id_t, T *> &map)
+    explicit counter(const std::map<item_id_t, T *> &map)
       : total(map.size())
       , added(0)
       , dirty(0)
@@ -590,7 +590,7 @@ void osm_delete_objects::operator()(base_object_t *obj)
 
 struct osm_delete_objects_final {
   osm_t * const osm;
-  osm_delete_objects_final(osm_t *o) : osm(o) {}
+  explicit osm_delete_objects_final(osm_t *o) : osm(o) {}
   inline void operator()(relation_t *r) {
     osm->relation_free(r);
   }

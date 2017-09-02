@@ -64,7 +64,7 @@ relitem_context_t::relitem_context_t(object_t &o, appdata_t &a)
 
 struct entry_insert_text {
   GtkWidget * const entry;
-  entry_insert_text(GtkWidget *en) : entry(en) {}
+  explicit entry_insert_text(GtkWidget *en) : entry(en) {}
   void operator()(const std::string &role) {
     combo_box_append_text(entry, role.c_str());
   }
@@ -518,7 +518,7 @@ member_list_selection_func(GtkTreeSelection *, GtkTreeModel *model,
 
 struct members_list_functor {
   GtkListStore * const store;
-  members_list_functor(GtkListStore *s) : store(s) {}
+  explicit members_list_functor(GtkListStore *s) : store(s) {}
   void operator()(const member_t &member);
 };
 
@@ -784,7 +784,7 @@ static void on_relation_remove(relation_context_t *context) {
 
 struct relation_list_widget_functor {
   GtkListStore * const store;
-  relation_list_widget_functor(GtkListStore *s) : store(s) {}
+  explicit relation_list_widget_functor(GtkListStore *s) : store(s) {}
   void operator()(const relation_t *rel);
   inline void operator()(std::pair<item_id_t, relation_t *> pair) {
     operator()(pair.second);

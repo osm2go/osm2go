@@ -150,7 +150,7 @@ item_id_t object_t::get_id() const {
 
 struct cmp_user {
   const char * const uname;
-  cmp_user(const char *u) : uname(u) {}
+  explicit cmp_user(const char *u) : uname(u) {}
   bool operator()(const std::string &s) {
     return (strcasecmp(s.c_str(), uname) == 0);
   }
@@ -272,7 +272,7 @@ bool osm_t::parse_tag(xmlNode *a_node, TagMap &tags) {
 
 struct map_value_match_functor {
   const std::string &value;
-  map_value_match_functor(const std::string &v) : value(v) {}
+  explicit map_value_match_functor(const std::string &v) : value(v) {}
   bool operator()(const osm_t::TagMap::value_type &pair) {
     return pair.second == value;
   }
@@ -363,7 +363,7 @@ void join_nodes::operator()(const std::pair<item_id_t, way_t *> &p)
 
 struct relation_membership_counter {
   const object_t &obj;
-  relation_membership_counter(const object_t &o) : obj(o) {}
+  explicit relation_membership_counter(const object_t &o) : obj(o) {}
   unsigned int operator()(unsigned int init, const std::pair<item_id_t, const relation_t *> &p) {
     return std::accumulate(p.second->members.begin(), p.second->members.end(), init, *this);
   }
@@ -493,7 +493,7 @@ static inline bool is_creator_tag(const tag_t &tag) {
 
 struct tag_find_functor {
   const char * const needle;
-  tag_find_functor(const char *n) : needle(n) {}
+  explicit tag_find_functor(const char *n) : needle(n) {}
   bool operator()(const tag_t &tag) {
     return (strcmp(needle, tag.key) == 0);
   }
@@ -601,7 +601,7 @@ bool tag_list_t::operator!=(const osm_t::TagMap &t2) const {
 
 struct collision_functor {
   const tag_t &tag;
-  collision_functor(const tag_t &t) : tag(t) { }
+  explicit collision_functor(const tag_t &t) : tag(t) { }
   bool operator()(const tag_t &t) {
     return (strcasecmp(t.key, tag.key) == 0);
   }
@@ -704,7 +704,7 @@ void relation_t::cleanup() {
 
 struct gen_xml_relation_functor {
   xmlNodePtr const xml_node;
-  gen_xml_relation_functor(xmlNodePtr n) : xml_node(n) {}
+  explicit gen_xml_relation_functor(xmlNodePtr n) : xml_node(n) {}
   void operator()(const member_t &member);
 };
 
@@ -1223,7 +1223,7 @@ static osm_t *process_osm(xmlTextReaderPtr reader, icon_t &icons) {
 
 struct relation_ref_functor {
   osm_t * const osm;
-  relation_ref_functor(osm_t *o) : osm(o) {}
+  explicit relation_ref_functor(osm_t *o) : osm(o) {}
   void operator()(std::pair<item_id_t, relation_t *> p) {
     std::for_each(p.second->members.begin(), p.second->members.end(), *this);
   }
@@ -1304,7 +1304,7 @@ const char *osm_t::sanity_check() const {
 struct tag_to_xml {
   xmlNodePtr const node;
   const bool keep_created;
-  tag_to_xml(xmlNodePtr n, bool k = false) : node(n), keep_created(k) {}
+  explicit tag_to_xml(xmlNodePtr n, bool k = false) : node(n), keep_created(k) {}
   void operator()(const tag_t &tag) {
     /* skip "created_by" tags as they aren't needed anymore with api 0.6 */
     if(G_LIKELY(keep_created || !tag.is_creator_tag())) {
@@ -1355,7 +1355,7 @@ void node_t::generate_xml_custom(xmlNodePtr xml_node) const {
 
 struct add_xml_node_refs {
   xmlNodePtr const way_node;
-  add_xml_node_refs(xmlNodePtr n) : way_node(n) {}
+  explicit add_xml_node_refs(xmlNodePtr n) : way_node(n) {}
   void operator()(const node_t *node);
 };
 
@@ -1575,7 +1575,7 @@ void osm_t::relation_attach(relation_t *relation) {
 
 struct find_relation_members {
   const object_t obj;
-  find_relation_members(const object_t o) : obj(o) {}
+  explicit find_relation_members(const object_t o) : obj(o) {}
   bool operator()(const std::pair<item_id_t, relation_t *> &pair) {
     const std::vector<member_t>::const_iterator itEnd = pair.second->members.end();
     return std::find(std::cbegin(pair.second->members), itEnd, obj) != itEnd;
@@ -1677,7 +1677,7 @@ static const char *DS_ONEWAY_REV = "-1";
 
 struct reverse_direction_sensitive_tags_functor {
   unsigned int &n_tags_altered;
-  reverse_direction_sensitive_tags_functor(unsigned int &c) : n_tags_altered(c) {}
+  explicit reverse_direction_sensitive_tags_functor(unsigned int &c) : n_tags_altered(c) {}
   void operator()(tag_t &etag);
 };
 
@@ -1828,7 +1828,7 @@ struct relation_transfer {
 
 struct find_member_object_functor {
   const object_t &object;
-  find_member_object_functor(const object_t &o) : object(o) {}
+  explicit find_member_object_functor(const object_t &o) : object(o) {}
   bool operator()(const member_t &member) {
     return member.object == object;
   }
@@ -1948,7 +1948,7 @@ way_t *way_t::split(osm_t *osm, node_chain_t::iterator cut_at, bool cut_at_node)
 
 struct tag_map_functor {
   osm_t::TagMap &tags;
-  tag_map_functor(osm_t::TagMap &t) : tags(t) {}
+  explicit tag_map_functor(osm_t::TagMap &t) : tags(t) {}
   void operator()(const tag_t &otag) {
     tags.insert(osm_t::TagMap::value_type(otag.key, otag.value));
   }
@@ -1966,7 +1966,7 @@ osm_t::TagMap tag_list_t::asMap() const
 
 struct tag_vector_copy_functor {
   std::vector<tag_t> &tags;
-  tag_vector_copy_functor(std::vector<tag_t> &t) : tags(t) {}
+  explicit tag_vector_copy_functor(std::vector<tag_t> &t) : tags(t) {}
   void operator()(const tag_t &otag) {
     if(G_UNLIKELY(otag.is_creator_tag()))
       return;
@@ -2123,7 +2123,7 @@ bool tag_list_t::hasRealTags() const
 
 struct key_match_functor {
   const char * const key;
-  key_match_functor(const char *k) : key(k) {}
+  explicit key_match_functor(const char *k) : key(k) {}
   bool operator()(const tag_t &tag) {
     return (strcasecmp(key, tag.key) == 0);
   }
@@ -2168,7 +2168,7 @@ void tag_list_t::replace(std::vector<tag_t> &ntags)
 
 struct tag_fill_functor {
   std::vector<tag_t> &tags;
-  tag_fill_functor(std::vector<tag_t> &t) : tags(t) {}
+  explicit tag_fill_functor(std::vector<tag_t> &t) : tags(t) {}
   void operator()(const osm_t::TagMap::value_type &p) {
     if(G_UNLIKELY(tag_t::is_creator_tag(p.first.c_str())))
       return;
@@ -2234,7 +2234,7 @@ void base_object_t::osmchange_delete(xmlNodePtr parent_node, const char *changes
 
 struct value_match_functor {
   const char * const value;
-  value_match_functor(const char *v) : value(v) {}
+  explicit value_match_functor(const char *v) : value(v) {}
   bool operator()(const tag_t *tag) {
     return tag->value && (strcasecmp(tag->value, value) == 0);
   }

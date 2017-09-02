@@ -993,7 +993,7 @@ project_pos_is_valid(const project_t *project) {
 
 struct projects_to_bounds {
   std::vector<pos_bounds> &pbounds;
-  projects_to_bounds(std::vector<pos_bounds> &b) : pbounds(b) {}
+  explicit projects_to_bounds(std::vector<pos_bounds> &b) : pbounds(b) {}
   void operator()(const project_t *project);
 };
 

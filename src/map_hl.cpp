@@ -99,7 +99,7 @@ void map_hl_remove(map_t *map) {
 
 struct find_highlighted {
   const map_item_t * const item;
-  find_highlighted(const map_item_t *t) : item(t) {}
+  explicit find_highlighted(const map_item_t *t) : item(t) {}
   bool operator()(canvas_item_t *c);
 };
 

@@ -413,7 +413,7 @@ void child_layer_functor::operator()(const wms_layer_t *layer)
 
 struct requestable_layers_functor {
   wms_layer_t::list &c_layer;
-  requestable_layers_functor(wms_layer_t::list &c) : c_layer(c) {}
+  explicit requestable_layers_functor(wms_layer_t::list &c) : c_layer(c) {}
   void operator()(const wms_layer_t *layer);
 };
 
@@ -430,7 +430,7 @@ void requestable_layers_functor::operator()(const wms_layer_t* layer)
 
 struct find_wms_functor {
   const char *name;
-  find_wms_functor(const char *n) : name(n) {}
+  explicit find_wms_functor(const char *n) : name(n) {}
   bool operator()(const wms_server_t *srv) {
     return srv->name == name;
   }
@@ -665,7 +665,7 @@ static void on_server_edit(wms_server_context_t *context) {
 
 struct store_fill_functor {
   GtkListStore *store;
-  store_fill_functor(GtkListStore *s) : store(s) {}
+  explicit store_fill_functor(GtkListStore *s) : store(s) {}
   GtkTreeIter operator()(const wms_server_t *srv);
 };
 
@@ -843,7 +843,7 @@ static gboolean on_view_clicked(GtkWidget *widget, GdkEventButton *event, gpoint
 struct selected_context {
   appdata_t &appdata;
   wms_layer_t::list selected;
-  selected_context(appdata_t &a) : appdata(a) {}
+  explicit selected_context(appdata_t &a) : appdata(a) {}
   void operator()(const wms_layer_t *layer);
 };
 
@@ -999,7 +999,7 @@ static bool layer_is_usable(const wms_layer_t *layer) {
 
 struct find_format_reverse_functor {
   const unsigned int mask;
-  find_format_reverse_functor(unsigned int m) : mask(m) {}
+  explicit find_format_reverse_functor(unsigned int m) : mask(m) {}
   bool operator()(const std::pair<const char *, WmsImageFormat> &p) {
     return p.second & mask;
   }
