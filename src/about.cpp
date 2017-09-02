@@ -67,8 +67,7 @@ static void on_paypal_button_clicked(appdata_t *appdata) {
 
 static GtkWidget *label_big(const char *str) {
   GtkWidget *label = gtk_label_new(O2G_NULLPTR);
-  char *markup =
-    g_markup_printf_escaped("<span size='x-large'>%s</span>", str);
+  gchar *markup = g_markup_printf_escaped("<span size='x-large'>%s</span>", str);
   gtk_label_set_markup(GTK_LABEL(label), markup);
   g_free(markup);
   return label;
@@ -76,8 +75,7 @@ static GtkWidget *label_big(const char *str) {
 
 static GtkWidget *label_xbig(const char *str) {
   GtkWidget *label = gtk_label_new(O2G_NULLPTR);
-  char *markup =
-    g_markup_printf_escaped("<span size='xx-large'>%s</span>", str);
+  gchar *markup = g_markup_printf_escaped("<span size='xx-large'>%s</span>", str);
   gtk_label_set_markup(GTK_LABEL(label), markup);
   g_free(markup);
   return label;
