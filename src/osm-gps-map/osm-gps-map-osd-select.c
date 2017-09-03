@@ -56,16 +56,21 @@ typedef struct {
 #define ARROW_W  (ICON_SIZE/3)
 #define ARROW_H  (ICON_SIZE/3)
 
-static void render_arrow(cairo_t *cr, int x, int y, float angle) {
-#define R(x,y,a,b,r)  x+cos(r)*a+sin(r)*b, y-sin(r)*a+cos(r)*b
+static void render_arrow(cairo_t *cr, int angle) {
+    // the angles are 0, pi, -pi/2, pi/2
+    // now their sin() results (cos() results are just backwards)
+    const float an_sin[] = { 0, 0, -1, 1 };
+    float x = (2 - an_sin[3 - angle]) * OSD_W / 4;
+    float y = 3 * OSD_H / 4 + an_sin[angle] * OSD_W / 4;
+#define R(a,b)  x + an_sin[3 - angle] * (a) + an_sin[angle] * (b), y - an_sin[angle] * (a) + an_sin[3 - angle] * (b)
 
-    cairo_move_to (cr, R(x, y, -ARROW_W/2, 0, angle));
-    cairo_line_to (cr, R(x, y, 0, -ARROW_H/2, angle));
-    cairo_line_to (cr, R(x, y, 0, -ARROW_H/4, angle));
-    cairo_line_to (cr, R(x, y, +ARROW_W/2, -ARROW_H/4, angle));
-    cairo_line_to (cr, R(x, y, +ARROW_W/2, +ARROW_H/4, angle));
-    cairo_line_to (cr, R(x, y, 0, +ARROW_H/4, angle));
-    cairo_line_to (cr, R(x, y, 0, +ARROW_H/2, angle));
+    cairo_move_to (cr, R(-ARROW_W/2, 0));
+    cairo_line_to (cr, R(0, -ARROW_H/2));
+    cairo_line_to (cr, R(0, -ARROW_H/4));
+    cairo_line_to (cr, R(+ARROW_W/2, -ARROW_H/4));
+    cairo_line_to (cr, R(+ARROW_W/2, +ARROW_H/4));
+    cairo_line_to (cr, R(0, +ARROW_H/4));
+    cairo_line_to (cr, R(0, +ARROW_H/2));
 
     cairo_close_path (cr);
     cairo_stroke(cr);
@@ -136,10 +141,9 @@ osd_render_toggle(osm_gps_map_osd_t *osd) {
     cairo_set_source_rgb(cr, bright, bright, bright);
 
     cairo_set_dash(cr, NULL, 0, 0.0);
-    render_arrow(cr, 1*OSD_W/4, 3*OSD_H/4, 0);
-    render_arrow(cr, 3*OSD_W/4, 3*OSD_H/4, M_PI);
-    render_arrow(cr,   OSD_W/2, 3*OSD_H/4-OSD_W/4, -M_PI/2);
-    render_arrow(cr,   OSD_W/2, 3*OSD_H/4+OSD_W/4,  M_PI/2);
+    int i;
+    for(i = 0; i < 4; i++)
+      render_arrow(cr, i);
 
     cairo_destroy(cr);
 }
