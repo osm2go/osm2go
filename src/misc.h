@@ -226,7 +226,7 @@ GType check_button_type(void);
 GtkWidget *notebook_new(void);
 void notebook_append_page(GtkWidget *notebook,
 			  GtkWidget *page, const gchar *label);
-GtkWidget *notebook_get_gtk_notebook(GtkWidget *notebook);
+GtkNotebook *notebook_get_gtk_notebook(GtkWidget *notebook);
 
 GtkWidget *combo_box_new(const gchar *title);
 GtkWidget *combo_box_entry_new(const gchar *title);

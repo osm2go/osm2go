@@ -140,19 +140,19 @@ static double selected_area(const context_t *context) {
 }
 
 static bool current_tab_is(context_t *context, gint page_num, const char *str) {
-  GtkWidget *nb = notebook_get_gtk_notebook(context->notebook);
+  GtkNotebook *nb = notebook_get_gtk_notebook(context->notebook);
 
   if(page_num < 0)
     page_num =
-      gtk_notebook_get_current_page(GTK_NOTEBOOK(nb));
+      gtk_notebook_get_current_page(nb);
 
   if(page_num < 0)
     return false;
 
   GtkWidget *w =
-    gtk_notebook_get_nth_page(GTK_NOTEBOOK(nb), page_num);
+    gtk_notebook_get_nth_page(nb, page_num);
   const char *name =
-    gtk_notebook_get_tab_label_text(GTK_NOTEBOOK(nb), w);
+    gtk_notebook_get_tab_label_text(nb, w);
 
   return(strcasecmp(name, _(str)) == 0);
 }

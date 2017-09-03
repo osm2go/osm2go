@@ -442,11 +442,11 @@ GtkWidget *notebook_new(void) {
 #endif
 }
 
-GtkWidget *notebook_get_gtk_notebook(GtkWidget *notebook) {
+GtkNotebook *notebook_get_gtk_notebook(GtkWidget *notebook) {
 #ifdef FREMANTLE
-  return GTK_WIDGET(g_object_get_data(G_OBJECT(notebook), "notebook"));
+  return GTK_NOTEBOOK(g_object_get_data(G_OBJECT(notebook), "notebook"));
 #else
-  return notebook;
+  return GTK_NOTEBOOK(notebook);
 #endif
 }
 
