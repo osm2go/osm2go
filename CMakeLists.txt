@@ -1,4 +1,3 @@
-
 cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
 
 project(osm2go VERSION 0.9.9 LANGUAGES C CXX)
@@ -40,14 +39,6 @@ write_compiler_detection_header(
 #endif
 "
 )
-
-find_program(CLANG_TIDY NAMES clang-tidy)
-
-if (CLANG_TIDY)
-  set(CMAKE_CXX_CLANG_TIDY ${CLANG_TIDY} "--checks=*,-google-readability-braces-around-statements,-readability-braces-around-statements,-readability-named-parameter,-modernize-raw-string-literal,-cppcoreguidelines-pro-type-cstyle-cast,-modernize-use-bool-literals,-modernize-loop-convert,-modernize-use-emplace,-modernize-use-auto,-cppcoreguidelines-pro-type-reinterpret-cast,-cppcoreguidelines-pro-type-vararg,-modernize-use-default-member-init,-modernize-use-default,-llvm-include-order")
-#   set(CMAKE_CXX_CLANG_TIDY ${CLANG_TIDY} "--checks=-*,google-explicit-constructor" "-fix")
-  set(CMAKE_C_CLANG_TIDY ${CMAKE_CXX_CLANG_TIDY})
-endif ()
 
 add_library(osm2go_lib STATIC
 	src/about.cpp
