@@ -752,24 +752,27 @@ void PresetSax::startElement(const char *name, const char **attrs)
     g_assert_true(items.top()->isItem());
     presets_item * const item = static_cast<presets_item *>(items.top());
 
-    const char *names[] = { "key", "type", "count", O2G_NULLPTR };
+    const char *names[] = { "key", "type", "count", "regexp", O2G_NULLPTR };
     const AttrMap &a = findAttributes(attrs, names, 0);
     const AttrMap::const_iterator itEnd = a.end();
 
-    const std::string &key = NULL_OR_MAP_STR(a.find("key"));
-    const char *tp = NULL_OR_MAP_VAL(a.find("type"));
-    const char *cnt = NULL_OR_MAP_VAL(a.find("count"));
-    unsigned int count = 0;
-    if(cnt) {
-      char *endp;
-      count = strtoul(cnt, &endp, 10);
-      if(G_UNLIKELY(*endp != '\0')) {
-        dumpState("ignoring invalid count value of", "role\n");
-        count = 0;
+    // ignore roles marked as regexp, this is not implemented yet
+    if(G_LIKELY(a.find("regexp") == itEnd)) {
+      const std::string &key = NULL_OR_MAP_STR(a.find("key"));
+      const char *tp = NULL_OR_MAP_VAL(a.find("type"));
+      const char *cnt = NULL_OR_MAP_VAL(a.find("count"));
+      unsigned int count = 0;
+      if(cnt) {
+        char *endp;
+        count = strtoul(cnt, &endp, 10);
+        if(G_UNLIKELY(*endp != '\0')) {
+          dumpState("ignoring invalid count value of", "role\n");
+          count = 0;
+        }
       }
-    }
 
-    item->roles.push_back(presets_item::role(key, josm_type_parse(tp), count));
+      item->roles.push_back(presets_item::role(key, josm_type_parse(tp), count));
+    }
     break;
   }
   }

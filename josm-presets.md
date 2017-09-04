@@ -107,6 +107,7 @@ __&nbsp;__                   | text                          | ignored   |
 __&nbsp;__                   | text_context                  | ignored   |
 __&nbsp;__                   | requisite                     | ignored   |
 __&nbsp;__                   | count                         | supported |
+__&nbsp;__                   | regexp                        | supported | used to hide those roles
 __&nbsp;__                   | type                          | supported |
 __&nbsp;__                   | member_expression             | ignored   |
 __&lt;preset_link&gt;__      |                               | supported |

@@ -198,6 +198,11 @@ static void test_roles(const presets_items *presets)
   g_assert_cmpuint(roles.size(), ==, 1);
   g_assert(roles.find("entrance") != roles.end());
 
+  // check that regexp-roles are not shown
+  relation_t r2;
+  roles = preset_roles(&r, object_t(&r2), presets);
+  g_assert_cmpuint(roles.size(), ==, 0);
+
   r.cleanup();
 }
 
