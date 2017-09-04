@@ -327,6 +327,7 @@ static bool net_io_do(GtkWidget *parent, net_io_request_t *rq,
 
     /* free request and return error */
     gtk_widget_destroy(dialog);
+    rq->refcount = 1;
     return false;
   }
 
