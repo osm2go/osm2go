@@ -1250,12 +1250,14 @@ void role_collect_functor::operator()(const presets_item::role &role)
   if(!(typemask & role.type))
     return;
 
-  const std::map<std::string, unsigned int>::const_iterator itEnd = existing.end();
-  const std::map<std::string, unsigned int>::const_iterator it = existing.find(role.name);
+  // check count limit if one is set
+  if(role.count > 0) {
+    const std::map<std::string, unsigned int>::const_iterator it = existing.find(role.name);
 
-  // if the limit of members with that type is already reached do not show it again
-  if(it != itEnd && it->second >= role.count)
-    return;
+    // if the limit of members with that type is already reached do not show it again
+    if(it != existing.end() && it->second >= role.count)
+      return;
+  }
 
   result.insert(role.name);
 }

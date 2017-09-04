@@ -160,22 +160,34 @@ static void test_roles(const presets_items *presets)
 
   // check count restriction
   tags.clear();
-  tags.insert(osm_t::TagMap::value_type("type", "restriction"));
+  tags.insert(osm_t::TagMap::value_type("type", "boundary"));
   r.tags.replace(tags);
 
+  roles = preset_roles(&r, object_t(&n), presets);
+  g_assert_cmpuint(roles.size(), ==, 2);
+  g_assert(roles.find("admin_centre") != roles.end());
+  g_assert(roles.find("label") != roles.end());
+
+  r.members.push_back(member_t(object_t(&n), g_strdup("admin_centre")));
+
+  node_t n2;
+  roles = preset_roles(&r, object_t(&n2), presets);
+  g_assert_cmpuint(roles.size(), ==, 1);
+  g_assert(roles.find("label") != roles.end());
+
+  // check count restriction does not apply if it is 0
   roles = preset_roles(&r, object_t(&w), presets);
-  g_assert_cmpuint(roles.size(), ==, 3);
-  g_assert(roles.find("from") != roles.end());
-  g_assert(roles.find("via") != roles.end());
-  g_assert(roles.find("to") != roles.end());
+  g_assert_cmpuint(roles.size(), ==, 2);
+  g_assert(roles.find("outer") != roles.end());
+  g_assert(roles.find("inner") != roles.end());
 
   way_t w2;
-  r.members.push_back(member_t(object_t(&w2), g_strdup("from")));
+  r.members.push_back(member_t(object_t(&w2), g_strdup("outer")));
 
   roles = preset_roles(&r, object_t(&w), presets);
   g_assert_cmpuint(roles.size(), ==, 2);
-  g_assert(roles.find("via") != roles.end());
-  g_assert(roles.find("to") != roles.end());
+  g_assert(roles.find("outer") != roles.end());
+  g_assert(roles.find("inner") != roles.end());
 
   r.cleanup();
 }

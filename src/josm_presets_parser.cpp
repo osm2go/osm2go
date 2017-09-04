@@ -752,7 +752,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
     g_assert_true(items.top()->isItem());
     presets_item * const item = static_cast<presets_item *>(items.top());
 
-    const char *names[] = { "key", "type", O2G_NULLPTR };
+    const char *names[] = { "key", "type", "count", O2G_NULLPTR };
     const AttrMap &a = findAttributes(attrs, names, 0);
     const AttrMap::const_iterator itEnd = a.end();
 
