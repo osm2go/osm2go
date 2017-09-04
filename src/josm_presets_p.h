@@ -95,11 +95,12 @@ public:
   /**
    * @brief checks if this widget matches the given tags
    * @param tags the tags of the object
+   * @param interactive if only interactive items should be returned
    * @retval -1 negative match
    * @retval 0 no match, but continue searching
    * @retval 1 positive match
    */
-  int matches(const osm_t::TagMap &tags) const;
+  int matches(const osm_t::TagMap &tags, bool interactive = true) const;
 };
 
 /**
@@ -260,7 +261,7 @@ public:
 
   const unsigned int type;
 
-  bool matches(const osm_t::TagMap &tags) const;
+  bool matches(const osm_t::TagMap &tags, bool interactive = true) const;
 };
 
 class presets_item_named : public presets_item_t {

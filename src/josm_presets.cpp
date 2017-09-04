@@ -395,7 +395,7 @@ bool used_preset_functor::operator()(const presets_widget_t* w)
 /**
  * @brief check if the currently active object uses this preset and the preset is interactive
  */
-bool presets_item_t::matches(const osm_t::TagMap &tags) const
+bool presets_item_t::matches(const osm_t::TagMap &tags, bool interactive) const
 {
   bool is_interactive = false;
   bool hasPositive = false;
@@ -406,7 +406,7 @@ bool presets_item_t::matches(const osm_t::TagMap &tags) const
       return false;
   }
 
-  return hasPositive && is_interactive;
+  return hasPositive && (is_interactive || !interactive);
 }
 
 #ifndef PICKER_MENU
@@ -1006,7 +1006,7 @@ std::string presets_widget_t::getValue(GtkWidget *) const
   return std::string();
 }
 
-int presets_widget_t::matches(const osm_t::TagMap &tags) const
+int presets_widget_t::matches(const osm_t::TagMap &tags, bool) const
 {
   if(match == MatchIgnore)
     return 0;
@@ -1227,7 +1227,7 @@ bool relation_preset_functor::operator()(const presets_item_t *item)
   if(!(item->type & typemask))
     return false;
 
-  if(item->matches(tags)) {
+  if(item->matches(tags, false)) {
     g_assert_true(item->isItem());
     *result = static_cast<const presets_item *>(item);
     return true;

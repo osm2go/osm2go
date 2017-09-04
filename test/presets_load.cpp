@@ -189,6 +189,15 @@ static void test_roles(const presets_items *presets)
   g_assert(roles.find("outer") != roles.end());
   g_assert(roles.find("inner") != roles.end());
 
+  // check that also non-interactive presets are considered
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("type", "building"));
+  r.tags.replace(tags);
+
+  roles = preset_roles(&r, object_t(&n), presets);
+  g_assert_cmpuint(roles.size(), ==, 1);
+  g_assert(roles.find("entrance") != roles.end());
+
   r.cleanup();
 }
 
