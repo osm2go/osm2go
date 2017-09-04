@@ -72,7 +72,7 @@ float osm_gps_map_get_scale (OsmGpsMap *map);
 void osm_gps_map_track_remove_all (OsmGpsMap *map);
 void osm_gps_map_gps_add (OsmGpsMap *map, float latitude, float longitude, float heading);
 void osm_gps_map_gps_clear (OsmGpsMap *map);
-void osm_gps_map_convert_screen_to_geographic(OsmGpsMap *map, gint pixel_x, gint pixel_y, OsmGpsMapPoint *pt);
+OsmGpsMapPoint osm_gps_map_convert_screen_to_geographic(OsmGpsMap *map, gint pixel_x, gint pixel_y);
 
 G_END_DECLS
 

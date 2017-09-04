@@ -496,7 +496,7 @@ on_map_button_press_event(GtkWidget *widget,
   osm_gps_map_track_remove_all(map);
 
   /* and remember this location as the start */
-  osm_gps_map_convert_screen_to_geographic(map, event->x, event->y, &context->map.start);
+  context->map.start = osm_gps_map_convert_screen_to_geographic(map, event->x, event->y);
 
   return TRUE;
 }
@@ -511,8 +511,8 @@ on_map_motion_notify_event(GtkWidget *widget,
     /* remove existing marker */
     osm_gps_map_track_remove_all(map);
 
-    OsmGpsMapPoint start = context->map.start, end;
-    osm_gps_map_convert_screen_to_geographic(map, event->x, event->y, &end);
+    OsmGpsMapPoint start = context->map.start;
+    OsmGpsMapPoint end = osm_gps_map_convert_screen_to_geographic(map, event->x, event->y);
 
     GSList *box = pos_append_rad(O2G_NULLPTR, start.rlat, start.rlon);
     box = pos_append_rad(box, end.rlat,   start.rlon);
@@ -537,8 +537,8 @@ on_map_button_release_event(GtkWidget *widget,
   if(!std::isnan(context->map.start.rlon) &&
      !std::isnan(context->map.start.rlat)) {
 
-    OsmGpsMapPoint start = context->map.start, end;
-    osm_gps_map_convert_screen_to_geographic(map, event->x, event->y, &end);
+    OsmGpsMapPoint start = context->map.start;
+    OsmGpsMapPoint end = osm_gps_map_convert_screen_to_geographic(map, event->x, event->y);
 
     GSList *box = pos_append_rad(O2G_NULLPTR, start.rlat, start.rlon);
     box = pos_append_rad(box, end.rlat,   start.rlon);

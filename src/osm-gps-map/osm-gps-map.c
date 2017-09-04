@@ -2792,13 +2792,16 @@ osm_gps_map_gps_clear (OsmGpsMap *map)
     osm_gps_map_map_redraw_idle(map);
 }
 
-void
-osm_gps_map_convert_screen_to_geographic(OsmGpsMap *map, gint pixel_x, gint pixel_y, OsmGpsMapPoint *pt)
+OsmGpsMapPoint
+osm_gps_map_convert_screen_to_geographic(OsmGpsMap *map, gint pixel_x, gint pixel_y)
 {
     OsmGpsMapPrivate *priv = map->priv;
+    OsmGpsMapPoint pt;
 
-    pt->rlat = pixel2lat(priv->map_zoom, priv->map_y + pixel_y);
-    pt->rlon = pixel2lon(priv->map_zoom, priv->map_x + pixel_x);
+    pt.rlat = pixel2lat(priv->map_zoom, priv->map_y + pixel_y);
+    pt.rlon = pixel2lon(priv->map_zoom, priv->map_x + pixel_x);
+
+    return pt;
 }
 
 void
