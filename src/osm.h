@@ -130,6 +130,13 @@ struct member_t {
   static inline void clear(member_t &member) {
     g_free(member.role);
   }
+
+  /**
+   * @brief check function for use in std::find_if
+   */
+  static inline bool has_role(const member_t &member) {
+    return member.role != O2G_NULLPTR;
+  }
 };
 
 struct osm_t {

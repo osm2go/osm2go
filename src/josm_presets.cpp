@@ -1260,17 +1260,13 @@ void role_collect_functor::operator()(const presets_item::role &role)
   result.insert(role.name);
 }
 
-static bool has_role(const member_t &member) {
-  return member.role != O2G_NULLPTR;
-}
-
 std::set<std::string> preset_roles(const relation_t *relation, const object_t &obj, const presets_items *presets)
 {
   // collect existing roles first
   std::map<std::string, unsigned int> existingRoles;
   const std::vector<member_t>::const_iterator mitEnd = relation->members.end();
   std::vector<member_t>::const_iterator mit = relation->members.begin();
-  while((mit = std::find_if(mit, mitEnd, has_role)) != mitEnd) {
+  while((mit = std::find_if(mit, mitEnd, member_t::has_role)) != mitEnd) {
     existingRoles[mit->role]++;
     mit++;
   }
