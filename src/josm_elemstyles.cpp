@@ -126,7 +126,7 @@ static bool parse_color(const char *col, elemstyle_color_t &color, ColorMap &col
 
       color = strtoul(hash + 1, &err, 16);
 
-      ret = (*err == '\0') ? true : false;
+      ret = (*err == '\0');
     } else {
       GdkColor gdk_color;
       if(gdk_color_parse(hash, &gdk_color)) {

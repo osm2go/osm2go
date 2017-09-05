@@ -80,12 +80,12 @@ struct elemstyle_line_t {
   guint dash_length_off: 16;
 
   struct {
-    gboolean valid : 8;
+    bool valid : 8;
     gint width : 24;
   } real;
 
   struct {
-    gboolean valid: 8;
+    bool valid: 8;
     gint width : 24;
     elemstyle_color_t color;
   } bg;

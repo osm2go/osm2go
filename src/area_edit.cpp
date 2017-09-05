@@ -69,7 +69,7 @@ struct context_t {
 
   struct {
     GtkWidget *lat, *lon, *height, *width, *mil_km;
-    gboolean is_mil;
+    bool is_mil;
     GtkWidget *error;
   } extent;
 
@@ -82,7 +82,7 @@ struct context_t {
 #ifdef ENABLE_OSM_GPS_MAP
   struct {
     GtkWidget *widget;
-    gboolean needs_redraw;
+    bool needs_redraw;
     guint handler_id;
     OsmGpsMapPoint start;
   } map;
@@ -171,8 +171,8 @@ static void on_area_warning_clicked(context_t *context) {
            WARN_OVER, WARN_OVER/(KMPMIL*KMPMIL));
 }
 
-static gboolean area_warning(context_t *context) {
-  gboolean ret = TRUE;
+static bool area_warning(context_t *context) {
+  bool ret = true;
 
   /* check if area size exceeds recommended values */
   double area = selected_area(context);
@@ -263,7 +263,7 @@ static void map_update(context_t *context, bool forced) {
   /* map is first tab (page 0) */
   if(!forced && !current_tab_is(context, -1, TAB_LABEL_MAP)) {
     printf("schedule map redraw\n");
-    context->map.needs_redraw = TRUE;
+    context->map.needs_redraw = true;
     return;
   }
 
@@ -324,7 +324,7 @@ static void map_update(context_t *context, bool forced) {
   std::for_each(context->area.other_bounds.begin(), context->area.other_bounds.end(),
                 add_bounds(OSM_GPS_MAP(context->map.widget)));
 
-  context->map.needs_redraw = FALSE;
+  context->map.needs_redraw = false;
 }
 
 static gboolean on_map_configure(GtkWidget *, GdkEventConfigure *,
@@ -593,10 +593,8 @@ static void on_page_switch(GtkNotebook *, GtkNotebookPage *,
 static gboolean map_gps_update(gpointer data) {
   context_t *context = static_cast<context_t *>(data);
 
-  gboolean gps_on = context->area.appdata.settings->enable_gps;
-
   pos_t pos(NAN, NAN);
-  if(gps_on)
+  if(context->area.appdata.settings->enable_gps)
     pos = context->area.appdata.gps_state->get_pos();
 
   if(pos.valid()) {
@@ -640,7 +638,7 @@ bool area_edit_t::run() {
 #ifdef ENABLE_OSM_GPS_MAP
   /* ------------- fetch from map ------------------------ */
 
-  context.map.needs_redraw = FALSE;
+  context.map.needs_redraw = false;
   context.map.widget = GTK_WIDGET(g_object_new(OSM_TYPE_GPS_MAP,
  	        "map-source", OSM_GPS_MAP_SOURCE_OPENSTREETMAP,
 		"proxy-uri", g_getenv("http_proxy"),

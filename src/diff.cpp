@@ -185,7 +185,7 @@ bool diff_is_clean(const osm_t *osm, bool honor_hidden_flags) {
 
   std::map<item_id_t, relation_t *>::const_iterator it =
     std::find_if(osm->relations.begin(), osm->relations.end(), find_object_by_flags());
-  return (it == osm->relations.end()) ? true : false;
+  return it == osm->relations.end();
 }
 
 void diff_save(const project_t *project, const osm_t *osm) {
