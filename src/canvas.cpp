@@ -291,17 +291,10 @@ canvas_item_t *canvas_t::get_item_at(int x, int y) const {
            (x <= poly->bbox.bottom_right.x + fuzziness) &&
            (y <= poly->bbox.bottom_right.y + fuzziness)) {
 
-        int on_segment = canvas_item_info_get_segment(poly, x, y, fuzziness);
-        bool in_poly = poly->is_polygon && inpoly(poly, x, y);
-
-	  if((on_segment >= 0) || in_poly) {
-	    printf("bbox item %p, %d pts -> %d %s\n", item,
-		   poly->num_points, on_segment,
-		   in_poly?"in_poly":"");
-
-	    return item->item;
-	  }
-	}
+          int on_segment = canvas_item_info_get_segment(poly, x, y, fuzziness);
+          if((on_segment >= 0) || (poly->is_polygon && inpoly(poly, x, y)))
+            return item->item;
+        }
       } break;
 
       default:
