@@ -43,20 +43,14 @@ int
 lat2pixel(  int zoom,
             float lat)
 {
-    float lat_m;
-    int pixel_y;
-
-    lat_m = atanh(sin(lat));
+    float lat_m = atanhf(sinf(lat));
 
     /* the formula is
      *
      * pixel_y = -(2^zoom * TILESIZE * lat_m) / 2PI + (2^zoom * TILESIZE) / 2
      */
-    pixel_y = -(int)( (lat_m * TILESIZE * (1 << zoom) ) / (2*M_PI)) +
+    return -(int)( (lat_m * TILESIZE * (1 << zoom) ) / (2*M_PI)) +
         ((1 << zoom) * (TILESIZE/2) );
-
-
-    return pixel_y;
 }
 
 
@@ -64,39 +58,28 @@ int
 lon2pixel(  int zoom,
             float lon)
 {
-    int pixel_x;
-
     /* the formula is
      *
      * pixel_x = (2^zoom * TILESIZE * lon) / 2PI + (2^zoom * TILESIZE) / 2
      */
-    pixel_x = (int)(( lon * TILESIZE * (1 << zoom) ) / (2*M_PI)) +
+    return (int)(( lon * TILESIZE * (1 << zoom) ) / (2*M_PI)) +
         ( (1 << zoom) * (TILESIZE/2) );
-    return pixel_x;
 }
 
 float
 pixel2lon(  float zoom,
             int pixel_x)
 {
-    float lon;
-
-    lon = ((pixel_x - ( exp(zoom * M_LN2) * (TILESIZE/2) ) ) *2*M_PI) /
+    return ((pixel_x - ( exp(zoom * M_LN2) * (TILESIZE/2) ) ) *2*M_PI) /
         (TILESIZE * exp(zoom * M_LN2) );
-
-    return lon;
 }
 
 float
 pixel2lat(  float zoom,
             int pixel_y)
 {
-    float lat, lat_m;
-
-    lat_m = (-( pixel_y - ( exp(zoom * M_LN2) * (TILESIZE/2) ) ) * (2*M_PI)) /
+    float lat_m = (-( pixel_y - ( exp(zoom * M_LN2) * (TILESIZE/2) ) ) * (2*M_PI)) /
         (TILESIZE * exp(zoom * M_LN2));
 
-    lat = asin(tanh(lat_m));
-
-    return lat;
+    return asinf(tanhf(lat_m));
 }

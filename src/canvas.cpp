@@ -194,8 +194,7 @@ static bool inpoly(const canvas_item_info_poly *poly, gint x, gint y) {
       y2 = yold;
     }
     if ((xnew < x) == (x <= xold)          /* edge "open" at one end */
-	&& ((long)y-(long)y1)*(long)(x2-x1)
-	< ((long)y2-(long)y1)*(long)(x-x1))
+        && (y - y1) * (long)(x2 - x1) < (y2 - y1) * (long)(x - x1))
       inside = !inside;
 
     xold = xnew;

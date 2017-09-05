@@ -483,7 +483,7 @@ static float
 osm_gps_map_get_scale_at_point(int zoom, float rlat, G_GNUC_UNUSED float rlon)
 {
     /* world at zoom 1 == 512 pixels */
-    return cos(rlat) * M_PI * OSM_EQ_RADIUS / (1<<(7+zoom));
+    return cosf(rlat) * M_PI * OSM_EQ_RADIUS / (1<<(7+zoom));
 }
 
 /* clears the trip list and all resources */
@@ -1135,8 +1135,8 @@ osm_gps_map_fill_tiles_pixel (OsmGpsMap *map)
     tiles_nx = (width  - offset_x) / TILESIZE + 1;
     tiles_ny = (height - offset_y) / TILESIZE + 1;
 
-    tile_x0 =  floor((float)priv->map_x / (float)TILESIZE);
-    tile_y0 =  floor((float)priv->map_y / (float)TILESIZE);
+    tile_x0 =  floorf((float)priv->map_x / (float)TILESIZE);
+    tile_y0 =  floorf((float)priv->map_y / (float)TILESIZE);
 
     //TODO: implement wrap around
     for (i=tile_x0; i<(tile_x0+tiles_nx);i++)
@@ -2583,11 +2583,11 @@ osm_gps_map_download_maps (OsmGpsMap *map, OsmGpsMapPoint *pt1, OsmGpsMapPoint *
         {
             int x1,y1,x2,y2;
 
-            x1 = (int)floor((float)lon2pixel(zoom, pt1->rlon) / (float)TILESIZE);
-            y1 = (int)floor((float)lat2pixel(zoom, pt1->rlat) / (float)TILESIZE);
+            x1 = floorf((float)lon2pixel(zoom, pt1->rlon) / (float)TILESIZE);
+            y1 = floorf((float)lat2pixel(zoom, pt1->rlat) / (float)TILESIZE);
 
-            x2 = (int)floor((float)lon2pixel(zoom, pt2->rlon) / (float)TILESIZE);
-            y2 = (int)floor((float)lat2pixel(zoom, pt2->rlat) / (float)TILESIZE);
+            x2 = floorf((float)lon2pixel(zoom, pt2->rlon) / (float)TILESIZE);
+            y2 = floorf((float)lat2pixel(zoom, pt2->rlat) / (float)TILESIZE);
 
             // loop x1-x2
             for(i=x1; i<=x2; i++)
