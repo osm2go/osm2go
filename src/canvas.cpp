@@ -168,22 +168,20 @@ void canvas_t::item_info_push(canvas_item_t *item) {
 
 /* check whether a given point is inside a polygon */
 /* inpoly() taken from http://www.visibone.com/inpoly/ */
-static bool inpoly(const lpos_t *poly, gint npoints, gint x, gint y) {
-  int xnew, ynew;
+static bool inpoly(const canvas_item_info_poly *poly, gint x, gint y) {
   int xold, yold;
-  int x1, y1;
-  int x2, y2;
-  int i;
 
-  if(npoints < 3)
+  if(poly->num_points < 3)
     return false;
 
-  xold = poly[npoints-1].x;
-  yold = poly[npoints-1].y;
+  xold = poly->points[poly->num_points - 1].x;
+  yold = poly->points[poly->num_points - 1].y;
   bool inside = false;
-  for (i=0 ; i < npoints ; i++) {
-    xnew = poly[i].x;
-    ynew = poly[i].y;
+  for (unsigned i = 0 ; i < poly->num_points ; i++) {
+    int x1, y1, x2, y2;
+    int xnew = poly->points[i].x;
+    int ynew = poly->points[i].y;
+
     if (xnew > xold) {
       x1 = xold;
       x2 = xnew;
@@ -294,8 +292,7 @@ canvas_item_t *canvas_t::get_item_at(int x, int y) const {
            (y <= poly->bbox.bottom_right.y + fuzziness)) {
 
         int on_segment = canvas_item_info_get_segment(poly, x, y, fuzziness);
-        bool in_poly = poly->is_polygon &&
-                       inpoly(poly->points, poly->num_points, x, y);
+        bool in_poly = poly->is_polygon && inpoly(poly, x, y);
 
 	  if((on_segment >= 0) || in_poly) {
 	    printf("bbox item %p, %d pts -> %d %s\n", item,
