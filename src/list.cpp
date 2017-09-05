@@ -244,7 +244,7 @@ void list_focus_on(GtkWidget *list, GtkTreeIter *iter) {
 }
 
 static void changed(GtkTreeSelection *treeselection, gpointer user_data) {
-  GtkWidget *list = (GtkWidget*)user_data;
+  GtkWidget *list = static_cast<GtkWidget *>(user_data);
   list_priv_t *priv = static_cast<list_priv_t *>(g_object_get_data(G_OBJECT(list), "priv"));
 
   GtkTreeModel *model;
