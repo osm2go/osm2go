@@ -1337,7 +1337,7 @@ static int application_run(const char *proj)
   /* user specific init */
   appdata_t appdata;
 
-  if(!appdata.style) {
+  if(G_UNLIKELY(!appdata.style)) {
     errorf(O2G_NULLPTR, _("Unable to load valid style %s, terminating."),
            appdata.settings->style.c_str());
     return -1;
@@ -1399,7 +1399,6 @@ static int application_run(const char *proj)
 
   /* ----------------------- setup main window ---------------- */
 
-  GtkWidget *hbox = gtk_hbox_new(FALSE,0);
   GtkWidget *vbox = gtk_vbox_new(FALSE,0);
 
 #ifdef PORTRAIT
@@ -1407,7 +1406,7 @@ static int application_run(const char *proj)
 #endif
   /* generate main map view */
   appdata.map = new map_t(appdata);
-  if(!appdata.map)
+  if(G_UNLIKELY(!appdata.map))
     return -1;
 
   gtk_box_pack_start(GTK_BOX(vbox), appdata.map->canvas->widget, TRUE, TRUE, 0);
@@ -1446,6 +1445,7 @@ static int application_run(const char *proj)
   gtk_box_pack_start(GTK_BOX(vbox), appdata.statusbar->widget, FALSE, FALSE, 0);
 #endif
 
+  GtkWidget *hbox = gtk_hbox_new(FALSE, 0);
 #ifndef PORTRAIT
   gtk_box_pack_start(GTK_BOX(hbox), iconbar_new(appdata), FALSE, FALSE, 0);
 #endif
@@ -1487,7 +1487,7 @@ static int application_run(const char *proj)
   /* let gtk do its thing before loading the data, */
   /* so the user sees something */
   osm2go_platform::process_events();
-  if(!appdata.window) {
+  if(G_UNLIKELY(!appdata.window)) {
     printf("shutdown while starting up (1)\n");
     return -1;
   }
@@ -1512,13 +1512,13 @@ static int application_run(const char *proj)
 
   /* again let the ui do its thing */
   osm2go_platform::process_events();
-  if(!appdata.window) {
+  if(G_UNLIKELY(!appdata.window)) {
     printf("shutdown while starting up (2)\n");
     return -1;
   }
 
   /* start to interact with the user now that the gui is running */
-  if(appdata.project && appdata.project->isDemo && appdata.settings->first_run_demo) {
+  if(G_UNLIKELY(appdata.project && appdata.project->isDemo && appdata.settings->first_run_demo)) {
     messagef(GTK_WIDGET(appdata.window), _("Welcome to OSM2Go"),
 	     _("This is the first time you run OSM2Go. "
 	       "A demo project has been loaded to get you "
