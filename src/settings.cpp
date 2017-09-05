@@ -24,14 +24,15 @@
 #include "wms.h"
 
 #include <algorithm>
-#include <cstring>
-#include <gconf/gconf.h>
-#include <gconf/gconf-client.h>
 #if __cplusplus >= 201103L
 #include <cstdint>
 #else
-#include <stdint.h>
+#include <tr1/cstdint>
 #endif
+#include <cstring>
+#include <gconf/gconf.h>
+#include <gconf/gconf-client.h>
+#include <map>
 
 #include <osm2go_cpp.h>
 

@@ -26,7 +26,7 @@
 #if __cplusplus >= 201103L
 #include <cstdint>
 #else
-#include <stdint.h>
+#include <tr1/cstdint>
 #endif
 
 #include <osm2go_cpp.h>
