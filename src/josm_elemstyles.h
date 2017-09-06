@@ -23,7 +23,6 @@
 #include "osm.h"
 #include "style.h"
 
-#include <glib.h>
 #include <libxml/tree.h>
 
 #include <vector>

@@ -23,6 +23,7 @@
 #include "icon.h"
 #include "osm.h"
 
+#include <glib.h>
 #include <vector>
 
 struct appdata_t;

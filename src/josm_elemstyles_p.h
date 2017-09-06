@@ -28,6 +28,7 @@
 #else
 #include <tr1/cstdint>
 #endif
+#include <glib.h>
 
 #include <osm2go_cpp.h>
 

@@ -20,6 +20,7 @@
 #ifndef STATUSBAR_H
 #define STATUSBAR_H
 
+#include <glib.h>
 #include <gtk/gtk.h>
 
 #define STATUSBAR_DEFAULT_BRIEF_TIME 3

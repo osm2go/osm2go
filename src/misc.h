@@ -20,6 +20,7 @@
 #ifndef MISC_H
 #define MISC_H
 
+#include <glib.h>
 #include <gtk/gtk.h>
 #include <libxml/tree.h>
 

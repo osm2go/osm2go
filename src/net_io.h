@@ -20,7 +20,6 @@
 #ifndef NET_IO_H
 #define NET_IO_H
 
-#include <glib.h>
 #include <gtk/gtk.h>
 #include <string>
 

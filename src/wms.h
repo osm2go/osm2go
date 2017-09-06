@@ -20,7 +20,6 @@
 #ifndef WMS_H
 #define WMS_H
 
-#include <glib.h>
 #include <string>
 #include <vector>
 

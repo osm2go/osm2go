@@ -39,7 +39,6 @@
 
 #include <cmath>
 #include <cstring>
-#include <glib.h>
 #include <strings.h>
 
 #include <osm2go_cpp.h>

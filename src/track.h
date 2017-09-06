@@ -23,6 +23,7 @@
 #include "canvas.h"
 #include "pos.h"
 
+#include <glib.h>
 #include <vector>
 
 enum TrackVisibility {
