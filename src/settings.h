@@ -22,7 +22,6 @@
 
 #include <track.h>
 
-#include <glib.h>
 #include <map>
 #include <string>
 #include <vector>
@@ -64,8 +63,8 @@ public:
 
   /* changed in main.c */
   std::string track_path;
-  gboolean enable_gps;
-  gboolean follow_gps;
+  bool enable_gps;
+  bool follow_gps;
   TrackVisibility trackVisibility;
 
   /* set to true if no gconf settings were found */
@@ -77,7 +76,7 @@ public:
 
 private:
   std::map<const char *, std::string *> store_str;
-  std::map<const char *, gboolean *> store_bool;
+  std::map<const char *, bool *> store_bool;
 };
 
 /**

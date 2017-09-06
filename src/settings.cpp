@@ -32,6 +32,7 @@
 #include <cstring>
 #include <gconf/gconf.h>
 #include <gconf/gconf-client.h>
+#include <glib.h>
 #include <map>
 
 #include <osm2go_cpp.h>
@@ -59,6 +60,10 @@ struct matchTrackVisibility {
     return p.second == key;
   }
 };
+
+bool gconf_value_get_bool_wrapper(const GConfValue *gvalue) {
+  return gconf_value_get_bool(gvalue) == TRUE;
+}
 
 template<typename T, typename U, U GETTER(const GConfValue *)> struct load_functor {
   std::string &key; ///< reference to avoid most reallocations
@@ -104,7 +109,7 @@ settings_t *settings_t::load() {
     std::for_each(settings->store_str.begin(), settings->store_str.end(),
                   load_functor<std::string, const char *, gconf_value_get_string>(key, client, GCONF_VALUE_STRING));
     std::for_each(settings->store_bool.begin(), settings->store_bool.end(),
-                  load_functor<gboolean, gboolean, gconf_value_get_bool>(key, client, GCONF_VALUE_BOOL));
+                  load_functor<bool, bool, gconf_value_get_bool_wrapper>(key, client, GCONF_VALUE_BOOL));
 
     /* adjust default server stored in settings if required */
     std::string::size_type pos05 = settings->server.find("0.5");
@@ -249,8 +254,8 @@ void settings_t::save() const {
       gconf_client_unset(client, key.c_str(), O2G_NULLPTR);
   }
 
-  const std::map<const char *, gboolean *>::const_iterator bitEnd = store_bool.end();
-  for(std::map<const char *, gboolean *>::const_iterator it = store_bool.begin();
+  const std::map<const char *, bool *>::const_iterator bitEnd = store_bool.end();
+  for(std::map<const char *, bool *>::const_iterator it = store_bool.begin();
       it != bitEnd; it++) {
     key = keybase + it->first;
 
