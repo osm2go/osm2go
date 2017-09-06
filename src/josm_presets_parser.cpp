@@ -22,6 +22,11 @@
 #include "misc.h"
 
 #include <algorithm>
+#if __cplusplus < 201103L
+#include <tr1/array>
+#else
+#include <array>
+#endif
 #include <cstring>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
@@ -228,10 +233,11 @@ private:
    * @brief find the attributes with the given names
    * @param attrs the attribute list to search
    * @param names the keys to look for
+   * @param count elements in names
    * @param langflags if localized keys should be preferred (bitwise positions of entries in names)
    * @returns the found keys
    */
-  AttrMap findAttributes(const char **attrs, const char **names, unsigned int langflags = 0) const;
+  AttrMap findAttributes(const char **attrs, const char **names, unsigned int count, unsigned int langflags = 0) const;
 };
 
 const PresetSax::StateMap &PresetSax::preset_state_map() {
@@ -448,7 +454,7 @@ const char *PresetSax::findAttribute(const char **attrs, const char *name, bool 
   return c;
 }
 
-PresetSax::AttrMap PresetSax::findAttributes(const char **attrs, const char **names, unsigned int langflags) const
+PresetSax::AttrMap PresetSax::findAttributes(const char **attrs, const char **names, unsigned int count, unsigned int langflags) const
 {
   AttrMap ret;
 
@@ -465,7 +471,7 @@ PresetSax::AttrMap PresetSax::findAttributes(const char **attrs, const char **na
       }
     }
 
-    for(unsigned int j = 0; names[j]; j++) {
+    for(unsigned int j = 0; j < count; j++) {
       if(strcmp(a, names[j]) == 0) {
         // if this is localized and no localization was permitted: skip
         if(isLoc && !(langflags & (1 << j)))
@@ -536,8 +542,8 @@ void PresetSax::startElement(const char *name, const char **attrs)
     break;
   }
   case TagGroup: {
-    const char *names[] = { "name", "icon", O2G_NULLPTR };
-    const AttrMap &a = findAttributes(attrs, names, 1);
+    std::array<const char *, 2> names = { { "name", "icon" } };
+    const AttrMap &a = findAttributes(attrs, names.data(), names.size(), 1);
 
     const AttrMap::const_iterator itEnd = a.end();
     const std::string &name = NULL_OR_MAP_STR(a.find("name"));
@@ -567,8 +573,8 @@ void PresetSax::startElement(const char *name, const char **attrs)
     break;
   }
   case TagItem: {
-    const char *names[] = { "name", "type", "icon", "preset_name_label", O2G_NULLPTR };
-    const AttrMap &a = findAttributes(attrs, names, 1);
+    std::array<const char *, 4> names = { { "name", "type", "icon", "preset_name_label" } };
+    const AttrMap &a = findAttributes(attrs, names.data(), names.size(), 1);
 
     const AttrMap::const_iterator itEnd = a.end();
     AttrMap::const_iterator it = a.find("preset_name_label");
@@ -647,8 +653,8 @@ void PresetSax::startElement(const char *name, const char **attrs)
 #endif
     break;
   case TagText: {
-    const char *names[] = { "key", "text", "default", "match", O2G_NULLPTR };
-    const AttrMap &a = findAttributes(attrs, names, 2);
+    std::array<const char *, 4> names = { { "key", "text", "default", "match" } };
+    const AttrMap &a = findAttributes(attrs, names.data(), names.size(), 2);
     const AttrMap::const_iterator itEnd = a.end();
 
     const std::string &key = NULL_OR_MAP_STR(a.find("key"));
@@ -677,8 +683,8 @@ void PresetSax::startElement(const char *name, const char **attrs)
     break;
   }
   case TagCheck: {
-    const char *names[] = { "key", "text", "value_on", "match", "default", O2G_NULLPTR };
-    const AttrMap &a = findAttributes(attrs, names, 2);
+    std::array<const char *, 5> names = { { "key", "text", "value_on", "match", "default" } };
+    const AttrMap &a = findAttributes(attrs, names.data(), names.size(), 2);
     const AttrMap::const_iterator itEnd = a.end();
 
     const std::string &key = NULL_OR_MAP_STR(a.find("key"));
@@ -708,8 +714,8 @@ void PresetSax::startElement(const char *name, const char **attrs)
     break;
   }
   case TagCombo: {
-    const char *names[] = { "key", "text", "display_values", "match", "default", "delimiter", "values", O2G_NULLPTR };
-    const AttrMap &a = findAttributes(attrs, names, 6);
+    std::array<const char *, 7> names = { { "key", "text", "display_values", "match", "default", "delimiter", "values" } };
+    const AttrMap &a = findAttributes(attrs, names.data(), names.size(), 6);
     const AttrMap::const_iterator itEnd = a.end();
 
     const std::string &key = NULL_OR_MAP_STR(a.find("key"));
@@ -744,8 +750,8 @@ void PresetSax::startElement(const char *name, const char **attrs)
     g_assert_cmpuint(widgets.top()->type, ==, WIDGET_TYPE_COMBO);
     presets_widget_combo * const combo = static_cast<presets_widget_combo *>(widgets.top());
 
-    const char *names[] = { "display_value", "value", O2G_NULLPTR };
-    const AttrMap &a = findAttributes(attrs, names, 3);
+    std::array<const char *, 2> names = { { "display_value", "value" } };
+    const AttrMap &a = findAttributes(attrs, names.data(), names.size(), 3);
     const AttrMap::const_iterator itEnd = a.end();
 
     const char *value = NULL_OR_MAP_VAL(a.find("value"));
@@ -766,8 +772,8 @@ void PresetSax::startElement(const char *name, const char **attrs)
     g_assert_true(items.top()->isItem());
     presets_item * const item = static_cast<presets_item *>(items.top());
 
-    const char *names[] = { "key", "type", "count", "regexp", O2G_NULLPTR };
-    const AttrMap &a = findAttributes(attrs, names, 0);
+    std::array<const char *, 4> names = { { "key", "type", "count", "regexp" } };
+    const AttrMap &a = findAttributes(attrs, names.data(), names.size(), 0);
     const AttrMap::const_iterator itEnd = a.end();
 
     // ignore roles marked as regexp, this is not implemented yet

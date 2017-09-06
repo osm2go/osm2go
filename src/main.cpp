@@ -49,6 +49,14 @@
 #include "dbus.h"
 #endif
 
+#if __cplusplus < 201103L
+#include <tr1/array>
+namespace std {
+  using namespace tr1;
+};
+#else
+#include <array>
+#endif
 #include <cmath>
 #include <cstdio>
 #include <cstring>
@@ -102,18 +110,20 @@ void main_ui_enable(appdata_t &appdata) {
   gtk_widget_set_sensitive(appdata.menuitems[SUBMENU_MAP], project_valid);
 
   // those icons that get enabled or disabled depending on OSM data being loaded
-  const menu_items osm_active_items[] = {
-    MENU_ITEM_MAP_UPLOAD,
 #ifndef USE_HILDON
+  std::array<menu_items, 7> osm_active_items = { {
     MENU_ITEM_MAP_SAVE_CHANGES,
+#else
+  std::array<menu_items, 6> osm_active_items = { {
 #endif
+    MENU_ITEM_MAP_UPLOAD,
     MENU_ITEM_MAP_UNDO_CHANGES,
     MENU_ITEM_MAP_RELATIONS,
     SUBMENU_TRACK,
     SUBMENU_VIEW,
     SUBMENU_WMS
-  };
-  for(unsigned int i = 0; i < sizeof(osm_active_items) / sizeof(osm_active_items[0]); i++)
+  } };
+  for(unsigned int i = 0; i < osm_active_items.size(); i++)
     gtk_widget_set_sensitive(appdata.menuitems[osm_active_items[i]], osm_valid);
 
   gtk_widget_set_sensitive(appdata.btn_zoom_in, osm_valid);
@@ -1049,46 +1059,43 @@ void on_submenu_track_clicked(appdata_t *appdata)
 #define ENABLED_TOGGLE_ENTRY(a,b,c,d) menu_entry_t(a, GTK_SIGNAL_FUNC(b), d, TRUE, c)
 
 /* -- the applications main menu -- */
-static const menu_entry_t main_menu[] = {
+static std::array<menu_entry_t, 7> main_menu = { {
   SIMPLE_ENTRY(_("About"),   about_box),
   SIMPLE_ENTRY(_("Project"), cb_menu_project_open),
   ENABLED_ENTRY(_("View"),   on_submenu_view_clicked,  SUBMENU_VIEW),
   ENABLED_ENTRY(_("OSM"),    on_submenu_map_clicked,   SUBMENU_MAP),
   ENABLED_ENTRY(_("Relations"), cb_menu_osm_relations, MENU_ITEM_MAP_RELATIONS),
   ENABLED_ENTRY(_("WMS"),    on_submenu_wms_clicked,   SUBMENU_WMS),
-  ENABLED_ENTRY(_("Track"),  on_submenu_track_clicked, SUBMENU_TRACK),
-
-  menu_entry_t()
-};
+  ENABLED_ENTRY(_("Track"),  on_submenu_track_clicked, SUBMENU_TRACK)
+} };
 
 /* create a HildonAppMenu */
 static HildonAppMenu *app_menu_create(appdata_t &appdata) {
-  const menu_entry_t *entry = main_menu;
   HildonAppMenu *menu = HILDON_APP_MENU(hildon_app_menu_new());
 
-  while(entry->label) {
+  for(unsigned int i = 0; i < main_menu.size(); i++) {
+    const menu_entry_t &entry = main_menu[i];
     GtkWidget *button = O2G_NULLPTR;
 
-    g_assert_null(entry->toggle);
+    g_assert_null(entry.toggle);
     button = hildon_button_new_with_text(
                 static_cast<HildonSizeType>(HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH),
                 HILDON_BUTTON_ARRANGEMENT_VERTICAL,
-                entry->label, O2G_NULLPTR);
+                entry.label, O2G_NULLPTR);
 
     g_signal_connect_data(button, "clicked",
-                          entry->activate_cb, &appdata, O2G_NULLPTR,
+                          entry.activate_cb, &appdata, O2G_NULLPTR,
                           static_cast<GConnectFlags>(G_CONNECT_AFTER | G_CONNECT_SWAPPED));
     hildon_button_set_title_alignment(HILDON_BUTTON(button), 0.5, 0.5);
     hildon_button_set_value_alignment(HILDON_BUTTON(button), 0.5, 0.5);
 
     /* index to GtkWidget pointer array was given -> store pointer */
-    if(entry->menuindex >= 0)
-      appdata.menuitems[entry->menuindex] = button;
+    if(entry.menuindex >= 0)
+      appdata.menuitems[entry.menuindex] = button;
 
-    gtk_widget_set_sensitive(button, entry->enabled);
+    gtk_widget_set_sensitive(button, entry.enabled);
 
     hildon_app_menu_append(menu, GTK_BUTTON(button));
-    entry++;
   }
 
   gtk_widget_show_all(GTK_WIDGET(menu));
@@ -1097,30 +1104,30 @@ static HildonAppMenu *app_menu_create(appdata_t &appdata) {
 
 static void menu_create(appdata_t &appdata) {
   /* -- the view submenu -- */
-  const menu_entry_t submenu_view_entries[] = {
+  const std::array<menu_entry_t, 3> sm_view_entries = { {
     /* --- */
     SIMPLE_ENTRY("Style",           O2G_NULLPTR),
     /* --- */
     DISABLED_ENTRY("Hide selected", cb_menu_map_hide_sel, MENU_ITEM_MAP_HIDE_SEL),
     DISABLED_ENTRY("Show all",      cb_menu_map_show_all, MENU_ITEM_MAP_SHOW_ALL),
-  };
+  } };
 
   /* -- the map submenu -- */
-  const menu_entry_t submenu_map_entries[] = {
+  const std::array<menu_entry_t, 3> sm_map_entries = { {
     ENABLED_ENTRY("Upload",      cb_menu_upload, MENU_ITEM_MAP_UPLOAD),
     SIMPLE_ENTRY("Download",     cb_menu_download),
     ENABLED_ENTRY("Undo all",    cb_menu_undo_changes, MENU_ITEM_MAP_UNDO_CHANGES),
-  };
+  } };
 
   /* -- the wms submenu -- */
-  const menu_entry_t submenu_wms_entries[] = {
+  const std::array<menu_entry_t, 3> sm_wms_entries = { {
     SIMPLE_ENTRY("Import",   wms_import),
     DISABLED_ENTRY("Clear",  wms_remove, MENU_ITEM_WMS_CLEAR),
     DISABLED_ENTRY("Adjust", cb_menu_wms_adjust, MENU_ITEM_WMS_ADJUST),
-  };
+  } };
 
   /* -- the track submenu -- */
-  const menu_entry_t submenu_track_entries[] = {
+  const std::array<menu_entry_t, 6> sm_track_entries = { {
     ENABLED_ENTRY("Import",  cb_menu_track_import, MENU_ITEM_TRACK_IMPORT),
     DISABLED_ENTRY("Export", cb_menu_track_export, MENU_ITEM_TRACK_EXPORT),
     DISABLED_ENTRY("Clear",  track_clear, MENU_ITEM_TRACK_CLEAR),
@@ -1129,18 +1136,18 @@ static void menu_create(appdata_t &appdata) {
     DISABLED_TOGGLE_ENTRY("GPS follow", cb_menu_track_follow_gps,
                           follow_gps_get_toggle, MENU_ITEM_TRACK_FOLLOW_GPS),
     SIMPLE_ENTRY("Track visibility", O2G_NULLPTR),
-  };
+  } };
 
   /* build menu/submenus */
   HildonAppMenu *menu = app_menu_create(appdata);
-  appdata.app_menu_wms   = app_submenu_create(appdata, _("WMS"),   submenu_wms_entries,
-                                              sizeof(submenu_wms_entries) / sizeof(submenu_wms_entries[0]));
-  appdata.app_menu_map   = app_submenu_create(appdata, _("OSM"),   submenu_map_entries,
-                                              sizeof(submenu_map_entries) / sizeof(submenu_map_entries[0]));
-  appdata.app_menu_view  = app_submenu_create(appdata, _("View"),  submenu_view_entries,
-                                              sizeof(submenu_view_entries) / sizeof(submenu_view_entries[0]));
-  appdata.app_menu_track = app_submenu_create(appdata, _("Track"), submenu_track_entries,
-                                              sizeof(submenu_track_entries) / sizeof(submenu_track_entries[0]));
+  appdata.app_menu_wms   = app_submenu_create(appdata, _("WMS"),
+                                              sm_wms_entries.data(), sm_wms_entries.size());
+  appdata.app_menu_map   = app_submenu_create(appdata, _("OSM"),
+                                              sm_map_entries.data(), sm_map_entries.size());
+  appdata.app_menu_view  = app_submenu_create(appdata, _("View"),
+                                              sm_view_entries.data(), sm_view_entries.size());
+  appdata.app_menu_track = app_submenu_create(appdata, _("Track"),
+                                              sm_track_entries.data(), sm_track_entries.size());
 
   /* enable/disable some entries according to settings */
   gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_TRACK_FOLLOW_GPS],
@@ -1201,7 +1208,12 @@ appdata_t::appdata_t()
   , gps_state(gps_state_t::create())
 {
   memset(&dialog_again, 0, sizeof(dialog_again));
-  memset(menuitems, 0, sizeof(menuitems));
+  // the TR1 header has assign() for what is later called fill()
+#if __cplusplus >= 201103L
+  menuitems.fill(O2G_NULLPTR);
+#else
+  menuitems.assign(O2G_NULLPTR);
+#endif
   memset(&track, 0, sizeof(track));
 }
 

@@ -46,6 +46,15 @@
 
 #include <gtk/gtk.h>
 
+#if __cplusplus < 201103L
+#include <tr1/array>
+namespace std {
+  using namespace tr1;
+};
+#else
+#include <array>
+#endif
+
 #include "canvas.h"
 
 #include "icon.h"
@@ -103,7 +112,7 @@ struct appdata_t {
     unsigned int reply;         /* reply to be assumed if "not_again" bit is set */
   } dialog_again;
 
-  GtkWidget *menuitems[MENU_ITEMS_COUNT];
+  std::array<GtkWidget *, MENU_ITEMS_COUNT> menuitems;
 
   struct {
     struct track_t *track;

@@ -21,6 +21,14 @@
 
 #include "misc.h"
 
+#if __cplusplus < 201103L
+#include <tr1/array>
+namespace std {
+  using namespace tr1;
+};
+#else
+#include <array>
+#endif
 #include <cmath>
 #include <cstring>
 #include <goocanvas.h>
@@ -70,9 +78,9 @@ canvas_item_t *_GooCanvasItem::toCanvas()
 struct canvas_goocanvas : public canvas_t {
   canvas_goocanvas();
 
-  GooCanvasItem *group[CANVAS_GROUPS];
+  std::array<GooCanvasItem *, CANVAS_GROUPS> group;
 
-  std::vector<canvas_item_info_t *> item_info[CANVAS_GROUPS];
+  std::array<std::vector<canvas_item_info_t *>, CANVAS_GROUPS> item_info;
 };
 
 canvas_t *canvas_t::create() {

@@ -22,6 +22,14 @@
 #include "misc.h"
 
 #include <algorithm>
+#if __cplusplus < 201103L
+#include <tr1/array>
+namespace std {
+  using namespace tr1;
+};
+#else
+#include <array>
+#endif
 #include <cstring>
 #include <map>
 #include <string>
@@ -37,11 +45,12 @@ icon_t::icon_item::icon_item(GdkPixbuf *nbuf)
 
 static std::string
 icon_file_exists(const std::string &file) {
-  const char *icon_exts[] = {
 #ifdef USE_SVG_ICONS
-                              ".svg",
+  const std::array<const char *, 4> icon_exts = { { ".svg",
+#else
+  const std::array<const char *, 3> icon_exts = { {
 #endif
-                              ".gif", ".png", ".jpg", O2G_NULLPTR };
+                              ".gif", ".png", ".jpg" } };
 
   // absolute filenames are not mangled
   if(file[0] == '/') {
@@ -54,13 +63,13 @@ icon_file_exists(const std::string &file) {
   std::string iname = "icons/" + file + icon_exts[0];
   iname.erase(iname.size() - strlen(icon_exts[0]));
 
-  for(const char **ic = icon_exts; *ic; ic++) {
-    iname += *ic;
+  for(unsigned int i = 0; i < icon_exts.size(); i++) {
+    iname += icon_exts[i];
     const std::string &fullname = find_file(iname);
 
     if(!fullname.empty())
       return fullname;
-    iname.erase(iname.size() - strlen(*ic));
+    iname.erase(iname.size() - strlen(icon_exts[i]));
   }
   return std::string();
 }

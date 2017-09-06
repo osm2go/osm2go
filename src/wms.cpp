@@ -28,6 +28,11 @@
 #include "settings.h"
 
 #include <algorithm>
+#if __cplusplus < 201103L
+#include <tr1/array>
+#else
+#include <array>
+#endif
 #include <cmath>
 #include <cstring>
 #include <libxml/parser.h>
@@ -1184,10 +1189,11 @@ void wms_import(appdata_t &appdata) {
   sprintf(buf, "&WIDTH=%d&HEIGHT=%d&FORMAT=", wms.width, wms.height);
 
   /* build complete url */
-  const char *parts[] = { "&SRS=", srs, "&BBOX=", minlon, ",", minlat, ",",
-                          maxlon, ",", maxlat, buf, it->first, "&reaspect=false",
-                          O2G_NULLPTR };
-  for(int i = 0; parts[i]; i++)
+  const std::array<const char *, 13> parts = { {
+                          "&SRS=", srs, "&BBOX=", minlon, ",", minlat, ",",
+                          maxlon, ",", maxlat, buf, it->first, "&reaspect=false"
+                          } };
+  for(unsigned int i = 0; i < parts.size(); i++)
     url += parts[i];
 
   const std::string filename = std::string(appdata.project->path) + "wms." +
@@ -1280,22 +1286,23 @@ void wms_remove(appdata_t &appdata) {
   wms_remove_file(*appdata.project);
 }
 
-static const struct server_preset_s {
+struct server_preset_s {
   const char *name, *server, *path;
-} default_servers[] = {
-  { "Open Geospatial Consortium Web Services", "http://ows.terrestris.de", "/osm/service?" },
-  /* add more servers here ... */
-  { O2G_NULLPTR, O2G_NULLPTR, O2G_NULLPTR }
 };
+
+static const std::array<struct server_preset_s, 1> default_servers = { {
+  { "Open Geospatial Consortium Web Services", "http://ows.terrestris.de", "/osm/service?" }
+  /* add more servers here ... */
+} };
 
 std::vector<wms_server_t *> wms_server_get_default(void) {
   std::vector<wms_server_t *> servers;
 
-  for(const server_preset_s *preset = default_servers; preset->name; preset++) {
+  for(unsigned int i = 0; i < default_servers.size(); i++) {
     wms_server_t *cur = new wms_server_t();
-    cur->name = preset->name;
-    cur->server = preset->server;
-    cur->path = preset->path;
+    cur->name = default_servers[i].name;
+    cur->server = default_servers[i].server;
+    cur->path = default_servers[i].path;
     servers.push_back(cur);
   }
 

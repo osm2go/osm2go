@@ -260,8 +260,8 @@ std::string find_file(const std::string &n) {
   return std::string();
 }
 
-#ifdef USE_HILDON
 static const gint dialog_sizes[][2] = {
+#ifdef USE_HILDON
   { 400, 100 },  // SMALL
 #ifndef FREMANTLE
   { 450, 300 },  // MEDIUM
@@ -273,16 +273,14 @@ static const gint dialog_sizes[][2] = {
 #endif
   { 640, 100 },  // WIDE
   { 450, 480 },  // HIGH
-};
 #else
-static const gint dialog_sizes[][2] = {
   { 300, 100 },  // SMALL
   { 400, 300 },  // MEDIUM
   { 500, 350 },  // LARGE
   { 450, 100 },  // WIDE
   { 200, 350 },  // HIGH
-};
 #endif
+};
 
 /* create a modal dialog using one of the predefined size hints */
 GtkWidget *misc_dialog_new(DialogSizeHing hint, const gchar *title,

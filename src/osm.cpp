@@ -33,6 +33,11 @@
 #include "pos.h"
 
 #include <algorithm>
+#if __cplusplus < 201103L
+#include <tr1/array>
+#else
+#include <array>
+#endif
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -832,8 +837,8 @@ void osm_t::parse_relation_member(xmlNode *a_node, std::vector<member_t> &member
 
 /* try to find something descriptive */
 std::string relation_t::descriptive_name() const {
-  const char *keys[] = { "name", "ref", "description", "note", "fix" "me", O2G_NULLPTR};
-  for (unsigned int i = 0; keys[i] != O2G_NULLPTR; i++) {
+  std::array<const char *, 5> keys = { { "name", "ref", "description", "note", "fix" "me" } };
+  for (unsigned int i = 0; i < keys.size(); i++) {
     const char *name = tags.get_value(keys[i]);
     if(name)
       return name;
@@ -2002,18 +2007,19 @@ std::string object_t::get_name() const {
     return std::string(_("unspecified ")) + type_string();
 
   /* try to figure out _what_ this is */
-  const char *name_tags[] = { "name", "ref", "note", "fix" "me", "sport", O2G_NULLPTR };
+  const std::array<const char *, 5> name_tags = { { "name", "ref", "note", "fix" "me", "sport" } };
   const char *name = O2G_NULLPTR;
-  for(unsigned int i = 0; !name && name_tags[i]; i++)
+  for(unsigned int i = 0; !name && i < name_tags.size(); i++)
     name = obj->tags.get_value(name_tags[i]);
 
   /* search for some kind of "type" */
-  const char *type_tags[] = { "amenity", "place", "historic", "leisure",
+  const std::array<const char *, 9> type_tags =
+                          { { "amenity", "place", "historic", "leisure",
                               "tourism", "landuse", "waterway", "railway",
-                              "natural", O2G_NULLPTR };
+                              "natural" } };
   const char *type = O2G_NULLPTR;
 
-  for(unsigned int i = 0; !type && type_tags[i]; i++)
+  for(unsigned int i = 0; !type && i < type_tags.size(); i++)
     type = obj->tags.get_value(type_tags[i]);
 
   if(!type && obj->tags.get_value("building")) {

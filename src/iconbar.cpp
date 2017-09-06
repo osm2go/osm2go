@@ -26,6 +26,15 @@
 #include "misc.h"
 #include "osm.h"
 
+#if __cplusplus < 201103L
+#include <tr1/array>
+namespace std {
+  using namespace tr1;
+};
+#else
+#include <array>
+#endif
+
 #include <osm2go_cpp.h>
 
 #ifdef FINGER_UI
@@ -37,7 +46,6 @@
 #endif
 
 #define MARKUP "<span size='xx-small'>%s</span>"
-#define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
 
 static void on_info_clicked(appdata_t *appdata) {
   info_dialog(GTK_WIDGET(appdata->window), *appdata);
@@ -99,22 +107,22 @@ void iconbar_t::map_cancel_ok(gboolean cancelv, gboolean okv) {
 }
 
 static void iconbar_toggle_sel_widgets(iconbar_t *iconbar, gboolean value) {
-  GtkWidget *sel_widgets[] = {
+  const std::array<GtkWidget *, 2> sel_widgets = { {
     iconbar->trash,
     iconbar->info
-  };
+  } };
 
-  for(int i = ARRAY_SIZE(sel_widgets) - 1; i >= 0; i--)
+  for(int i = sel_widgets.size() - 1; i >= 0; i--)
     gtk_widget_set_sensitive(sel_widgets[i], value);
 }
 
 static void iconbar_toggle_way_widgets(iconbar_t *iconbar, gboolean value, const object_t &selected) {
-  GtkWidget *way_widgets[] = {
+  const std::array<GtkWidget *, 2> way_widgets = { {
     iconbar->way_node_add,
     iconbar->way_reverse
-  };
+  } };
 
-  for(int i = ARRAY_SIZE(way_widgets) - 1; i >= 0; i--)
+  for(int i = way_widgets.size() - 1; i >= 0; i--)
     gtk_widget_set_sensitive(way_widgets[i], value);
 
   if(value)
@@ -134,15 +142,13 @@ void iconbar_t::map_item_selected(const object_t &item) {
 }
 
 void iconbar_t::map_action_idle(gboolean idle, const object_t &selected) {
-  gint i;
-
   /* icons that are enabled in idle mode */
-  GtkWidget *action_idle_widgets[] = {
+  std::array<GtkWidget *, 2> action_idle_widgets = { {
     node_add,
     way_add,
-  };
+  } };
 
-  for(i = sizeof(action_idle_widgets) / sizeof(*action_idle_widgets) - 1; i >= 0; i--)
+  for(int i = action_idle_widgets.size() - 1; i >= 0; i--)
     gtk_widget_set_sensitive(action_idle_widgets[i], idle);
 
   gboolean way_en = (idle && selected.type == WAY) ? TRUE : FALSE;

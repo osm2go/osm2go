@@ -22,6 +22,14 @@
 
 #include "pos.h"
 
+#if __cplusplus < 201103L
+#include <tr1/array>
+namespace std {
+  using namespace tr1;
+};
+#else
+#include <array>
+#endif
 #include <glib.h>
 #include <gtk/gtk.h>
 #include <vector>
@@ -89,7 +97,7 @@ public:
 
   GtkWidget * const widget;
 
-  std::vector<canvas_item_info_t *> item_info[CANVAS_GROUPS];
+  std::array<std::vector<canvas_item_info_t *>, CANVAS_GROUPS> item_info;
 
   canvas_dimensions get_viewport_dimensions(canvas_unit_t unit) const;
   lpos_t window2world(int x, int y) const;

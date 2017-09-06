@@ -6,6 +6,14 @@
 #include <osm2go_cpp.h>
 
 #include <algorithm>
+#if __cplusplus < 201103L
+#include <tr1/array>
+namespace std {
+  using namespace tr1;
+};
+#else
+#include <array>
+#endif
 #include <cstdlib>
 #include <cerrno>
 #include <cstring>
@@ -29,19 +37,19 @@ bool check_icon::operator()(const std::string &dir)
   if(filename[0] == '/')
     return (g_file_test(filename.c_str(), G_FILE_TEST_IS_REGULAR) == TRUE);
 
-  const char *icon_exts[] = { ".svg", ".gif", ".png", ".jpg", O2G_NULLPTR };
+  const std::array<const char *, 4> icon_exts = { { ".svg", ".gif", ".png", ".jpg" } };
   std::string name = dir + "/icons/" + filename + icon_exts[0];
   name.erase(name.size() - strlen(icon_exts[0]));
 
   if(g_file_test(name.c_str(), G_FILE_TEST_IS_REGULAR) == TRUE)
     return true;
 
-  for (const char **ic = icon_exts; *ic; ic++) {
-    name += *ic;
+  for(unsigned int i = 0; i < icon_exts.size(); i++) {
+    name += icon_exts[i];
 
     if(g_file_test(name.c_str(), G_FILE_TEST_IS_REGULAR) == TRUE)
       return true;
-    name.erase(name.size() - strlen(*ic));
+    name.erase(name.size() - strlen(icon_exts[i]));
   }
   return false;
 }

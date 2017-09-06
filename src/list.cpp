@@ -35,11 +35,19 @@
 
 #include "misc.h"
 
+#if __cplusplus < 201103L
+#include <tr1/array>
+namespace std {
+  using namespace tr1;
+};
+#else
+#include <array>
+#endif
+#include <cstring>
 #ifdef FREMANTLE
 #include <hildon/hildon-gtk.h>
 #include <hildon/hildon-pannable-area.h>
 #endif
-#include <cstring>
 #include <libintl.h>
 #include <stdarg.h>
 
@@ -56,7 +64,7 @@ struct list_priv_t {
   GtkWidget *table;
 
   struct {
-    GtkWidget *widget[6];
+    std::array<GtkWidget *, 6> widget;
     int flags;
   } button;
 };
