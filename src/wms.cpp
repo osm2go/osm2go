@@ -35,6 +35,8 @@
 #include <strings.h>
 #include <vector>
 
+#include "osm2go_stl.h"
+
 #ifndef LIBXML_TREE_ENABLED
 #error "Tree not enabled in libxml"
 #endif

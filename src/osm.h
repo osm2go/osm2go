@@ -20,7 +20,6 @@
 #ifndef OSM_H
 #define OSM_H
 
-#include "misc.h"
 #include "pos.h"
 
 #include <algorithm>
@@ -29,6 +28,7 @@
 #include <vector>
 
 #include <osm2go_cpp.h>
+#include "osm2go_stl.h"
 
 #include <glib.h>
 #include <libxml/parser.h>

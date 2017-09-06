@@ -3,6 +3,7 @@
 
 #include <appdata.h>
 #include <icon.h>
+#include <misc.h>
 #include <style.h>
 
 #include <osm2go_cpp.h>

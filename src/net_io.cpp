@@ -32,6 +32,7 @@
 #include <unistd.h>
 
 #include <osm2go_cpp.h>
+#include "osm2go_stl.h"
 
 struct curl_mem_t {
   char *ptr;

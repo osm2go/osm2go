@@ -35,6 +35,7 @@
 #include <map>
 
 #include <osm2go_cpp.h>
+#include "osm2go_stl.h"
 
 #define ST_ENTRY(map, a) map[#a] = &a
 

@@ -1,6 +1,8 @@
 #include <josm_presets.h>
 #include <josm_presets_p.h>
 
+#include <misc.h>
+
 #include <osm2go_cpp.h>
 
 #include <algorithm>

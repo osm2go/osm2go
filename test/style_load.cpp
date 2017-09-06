@@ -2,6 +2,7 @@
 #include <josm_elemstyles_p.h>
 
 #include <icon.h>
+#include <misc.h>
 
 #include <osm2go_cpp.h>
 

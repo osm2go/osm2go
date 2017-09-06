@@ -42,6 +42,8 @@
 #include <cmath>
 #include <cstring>
 
+#include "osm2go_stl.h"
+
 /* The fuzziness allows to specify how far besides an object a user may */
 /* click so it's still considered a click onto that object. This can */
 /* be given in meters _and_ in pixels. Both values will be added to */

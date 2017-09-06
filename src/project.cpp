@@ -43,6 +43,7 @@
 #include <unistd.h>
 
 #include <osm2go_cpp.h>
+#include "osm2go_stl.h"
 
 #if !defined(LIBXML_TREE_ENABLED) || !defined(LIBXML_OUTPUT_ENABLED)
 #error "libxml doesn't support required tree or output"
