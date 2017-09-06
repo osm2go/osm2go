@@ -346,7 +346,7 @@ static bool net_io_do(GtkWidget *parent, net_io_request_t *rq,
       }
 
       gchar buf[G_ASCII_DTOSTR_BUF_SIZE];
-      g_snprintf(buf, sizeof(buf), "%llu", static_cast<unsigned long long>(request->download_cur));
+      g_snprintf(buf, sizeof(buf), "%" CURL_FORMAT_CURL_OFF_T, request->download_cur);
       gtk_progress_bar_set_text(pbar, buf);
     }
 
