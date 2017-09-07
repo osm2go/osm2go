@@ -63,14 +63,22 @@ class StyleSax {
 
   State state;
 
-  typedef std::map<const char *, std::pair<State, State> > StateMap;
+  struct StateChange {
+    StateChange(const char *nm, State os, State ns)
+      : name(nm), oldState(os), newState(ns) {}
+    const char *name;
+    State oldState;
+    State newState;
+  };
+
+  typedef std::vector<StateChange> StateMap;
   StateMap tags;
   // custom find to avoid memory allocations for std::string
   struct tag_find {
     const char * const name;
     explicit tag_find(const xmlChar *n) : name(reinterpret_cast<const char *>(n)) {}
-    bool operator()(const std::pair<StateMap::key_type, const StateMap::mapped_type> &p) {
-      return (strcmp(p.first, name) == 0);
+    bool operator()(const StateMap::value_type &p) {
+      return (strcmp(p.name, name) == 0);
     }
   };
 
@@ -209,15 +217,15 @@ StyleSax::StyleSax()
   handler.startElement = cb_startElement;
   handler.endElement = cb_endElement;
 
-  tags["rules"] = StateMap::mapped_type(DocStart, TagRules);
-  tags["rule"] = StateMap::mapped_type(TagRules, TagRule);
-  tags["condition"] = StateMap::mapped_type(TagRule, TagCondition);
-  tags["line"] = StateMap::mapped_type(TagRule, TagLine);
-  tags["linemod"] = StateMap::mapped_type(TagRule, TagLineMod);
-  tags["area"] = StateMap::mapped_type(TagRule, TagArea);
-  tags["icon"] = StateMap::mapped_type(TagRule, TagIcon);
-  tags["scale_min"] = StateMap::mapped_type(TagRule, TagScaleMin);
-  tags["scale_max"] = StateMap::mapped_type(TagRule, TagScaleMax);
+  tags.push_back(StateMap::value_type("rules", DocStart, TagRules));
+  tags.push_back(StateMap::value_type("rule", TagRules, TagRule));
+  tags.push_back(StateMap::value_type("condition", TagRule, TagCondition));
+  tags.push_back(StateMap::value_type("line", TagRule, TagLine));
+  tags.push_back(StateMap::value_type("linemod", TagRule, TagLineMod));
+  tags.push_back(StateMap::value_type("area", TagRule, TagArea));
+  tags.push_back(StateMap::value_type("icon", TagRule, TagIcon));
+  tags.push_back(StateMap::value_type("scale_min", TagRule, TagScaleMin));
+  tags.push_back(StateMap::value_type("scale_max", TagRule, TagScaleMax));
 }
 
 bool StyleSax::parse(const std::string &filename)
@@ -280,18 +288,18 @@ void StyleSax::startElement(const xmlChar *name, const char **attrs)
 {
   StateMap::const_iterator it = std::find_if(tags.begin(), tags.end(), tag_find(name));
 
-  if(it == tags.end()) {
+  if(G_UNLIKELY(it == tags.end())) {
     fprintf(stderr, "found unhandled element %s\n", name);
     return;
   }
 
-  if(state != it->second.first) {
+  if(G_UNLIKELY(state != it->oldState)) {
     fprintf(stderr, "found element %s in state %i, but expected %i\n",
-            name, state, it->second.first);
+            name, state, it->oldState);
     return;
   }
 
-  state = it->second.second;
+  state = it->newState;
 
   elemstyle_t * const elemstyle = styles.empty() ? O2G_NULLPTR : styles.back();
 
@@ -435,7 +443,7 @@ void StyleSax::endElement(const xmlChar *name)
   StateMap::const_iterator it = std::find_if(tags.begin(), tags.end(), tag_find(name));
 
   g_assert(it != tags.end());
-  g_assert(state == it->second.second);
+  g_assert(state == it->newState);
 
   if(G_UNLIKELY(state == TagRule && styles.back()->conditions.empty())) {
     printf("Rule %zu has no conditions\n", styles.size());
@@ -443,7 +451,7 @@ void StyleSax::endElement(const xmlChar *name)
     styles.pop_back();
   }
 
-  state = it->second.first;
+  state = it->oldState;
 }
 
 std::vector<elemstyle_t *> josm_elemstyles_load(const char *name) {
