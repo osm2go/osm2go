@@ -524,7 +524,8 @@ struct colorize_node {
   node_t * const node;
   bool &somematch;
   int priority;
-  colorize_node(style_t *s, node_t *n, bool &m) : style(s), node(n), somematch(m) {}
+  colorize_node(style_t *s, node_t *n, bool &m)
+    : style(s), node(n), somematch(m), priority(std::numeric_limits<typeof(priority)>::min()) {}
   void operator()(const elemstyle_t *elemstyle);
 };
 
@@ -575,7 +576,6 @@ void josm_elemstyles_colorize_node(style_t *style, node_t *node) {
   bool somematch = false;
   if(style->icon.enable) {
     colorize_node fc(style, node, somematch);
-    fc.priority = std::numeric_limits<typeof(fc.priority)>::min();
     std::for_each(style->elemstyles.begin(), style->elemstyles.end(), fc);
   }
 
