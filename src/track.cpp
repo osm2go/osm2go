@@ -63,11 +63,14 @@ class TrackSax {
 
   State state;
 
+  typedef std::map<const char *, std::pair<State, State> > StateMap;
+  StateMap tags;
+
   // custom find to avoid memory allocations for std::string
   struct tag_find {
     const char * const name;
     explicit tag_find(const xmlChar *n) : name(reinterpret_cast<const char *>(n)) {}
-    bool operator()(const std::pair<const char *, std::pair<State, State> > &p) {
+    bool operator()(const StateMap::value_type &p) {
       return (strcmp(p.first, name) == 0);
     }
   };
@@ -81,8 +84,6 @@ public:
   std::vector<track_point_t>::size_type points;  ///< total points
 
 private:
-  std::map<const char *, std::pair<State, State> > tags;
-
   void characters(const char *ch, int len);
   static void cb_characters(void *ts, const xmlChar *ch, int len) {
     static_cast<TrackSax *>(ts)->characters(reinterpret_cast<const char *>(ch), len);
@@ -574,8 +575,7 @@ void TrackSax::characters(const char *ch, int len)
 
 void TrackSax::startElement(const xmlChar *name, const xmlChar **attrs)
 {
-  std::map<const char *, std::pair<State, State> >::const_iterator it =
-          std::find_if(tags.begin(), tags.end(), tag_find(name));
+  StateMap::const_iterator it = std::find_if(tags.begin(), tags.end(), tag_find(name));
 
   if(G_UNLIKELY(it == tags.end())) {
     fprintf(stderr, "found unhandled element %s\n", name);
@@ -616,8 +616,7 @@ void TrackSax::startElement(const xmlChar *name, const xmlChar **attrs)
 
 void TrackSax::endElement(const xmlChar *name)
 {
-  std::map<const char *, std::pair<State, State> >::const_iterator it =
-          std::find_if(tags.begin(), tags.end(), tag_find(name));
+  StateMap::const_iterator it = std::find_if(tags.begin(), tags.end(), tag_find(name));
 
   g_assert(it != tags.end());
   g_assert(state == it->second.second);

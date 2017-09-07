@@ -166,17 +166,19 @@ struct presets_context_t {
   unsigned int presets_mask;
 };
 
+typedef std::map<const presets_widget_t *, GtkWidget *> WidgetMap;
+
 struct add_widget_functor {
   guint &row;
   presets_context_t * const context;
-  std::map<const presets_widget_t *, GtkWidget *> &gtk_widgets;
+  WidgetMap &gtk_widgets;
   GtkWidget * const table;
-  add_widget_functor(std::map<const presets_widget_t *, GtkWidget *> &g, presets_context_t *c, GtkWidget *t, guint &r)
+  add_widget_functor(WidgetMap &g, presets_context_t *c, GtkWidget *t, guint &r)
     : row(r), context(c), gtk_widgets(g), table(t) {}
-  void operator()(const presets_widget_t *w);
+  void operator()(const WidgetMap::key_type w);
 };
 
-void add_widget_functor::operator()(const presets_widget_t *w)
+void add_widget_functor::operator()(const WidgetMap::key_type w)
 {
   if(w->type == WIDGET_TYPE_REFERENCE) {
     const presets_widget_reference * const r = static_cast<const presets_widget_reference *>(w);
@@ -200,17 +202,16 @@ void add_widget_functor::operator()(const presets_widget_t *w)
 struct get_widget_functor {
   bool &changed;
   osm_t::TagMap &tags;
-  const std::map<const presets_widget_t *, GtkWidget *> &gtk_widgets;
-  const std::map<const presets_widget_t *, GtkWidget *>::const_iterator hintEnd;
-  get_widget_functor(bool &c, osm_t::TagMap &t,
-                     const std::map<const presets_widget_t *, GtkWidget *> &g)
+  const WidgetMap &gtk_widgets;
+  const WidgetMap::const_iterator hintEnd;
+  get_widget_functor(bool &c, osm_t::TagMap &t, const WidgetMap &g)
     : changed(c), tags(t), gtk_widgets(g), hintEnd(g.end()) {}
   void operator()(const presets_widget_t *w);
 };
 
 void get_widget_functor::operator()(const presets_widget_t* w)
 {
-  const std::map<const presets_widget_t *, GtkWidget *>::const_iterator hint = gtk_widgets.find(w);
+  const WidgetMap::const_iterator hint = gtk_widgets.find(w);
   GtkWidget *widget = hint != hintEnd ? hint->second : O2G_NULLPTR;
   std::string text;
 
@@ -254,7 +255,7 @@ static void presets_item_dialog(presets_context_t *context,
                                                                     presets_widget_t::isInteractive);
   bool has_interactive_widget = (it != itEnd);
 
-  std::map<const presets_widget_t *, GtkWidget *> gtk_widgets;
+  WidgetMap gtk_widgets;
 
   if(has_interactive_widget)  {
     dialog =
@@ -1238,9 +1239,10 @@ bool relation_preset_functor::operator()(const presets_item_t *item)
 
 struct role_collect_functor {
   std::set<std::string> &result;
-  const std::map<std::string, unsigned int> &existing;
+  typedef std::map<std::string, unsigned int> RoleCountMap;
+  const RoleCountMap &existing;
   const unsigned int typemask;
-  role_collect_functor(std::set<std::string> &r, std::map<std::string, unsigned int> &e, unsigned int m)
+  role_collect_functor(std::set<std::string> &r, RoleCountMap &e, unsigned int m)
     : result(r), existing(e), typemask(m) {}
   void operator()(const presets_item::role &role);
 };
@@ -1252,7 +1254,7 @@ void role_collect_functor::operator()(const presets_item::role &role)
 
   // check count limit if one is set
   if(role.count > 0) {
-    const std::map<std::string, unsigned int>::const_iterator it = existing.find(role.name);
+    const RoleCountMap::const_iterator it = existing.find(role.name);
 
     // if the limit of members with that type is already reached do not show it again
     if(it != existing.end() && it->second >= role.count)
@@ -1265,7 +1267,7 @@ void role_collect_functor::operator()(const presets_item::role &role)
 std::set<std::string> preset_roles(const relation_t *relation, const object_t &obj, const presets_items *presets)
 {
   // collect existing roles first
-  std::map<std::string, unsigned int> existingRoles;
+  role_collect_functor::RoleCountMap existingRoles;
   const std::vector<member_t>::const_iterator mitEnd = relation->members.end();
   std::vector<member_t>::const_iterator mit = relation->members.begin();
   while((mit = std::find_if(mit, mitEnd, member_t::has_role)) != mitEnd) {

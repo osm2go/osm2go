@@ -62,8 +62,10 @@ struct net_io_request_t {
   bool use_compression;
 };
 
-static std::map<int, const char *> http_msg_init() {
-  std::map<int, const char *> http_messages;
+typedef std::map<int, const char *> HttpCodeMap;
+
+static HttpCodeMap http_msg_init() {
+  HttpCodeMap http_messages;
 
   http_messages[200] = "Ok";
   http_messages[203] = "No Content";
@@ -85,10 +87,10 @@ static std::map<int, const char *> http_msg_init() {
 }
 
 const char *http_message(int id) {
-  static const std::map<int, const char *> http_messages = http_msg_init();
+  static const HttpCodeMap http_messages = http_msg_init();
 
-  const std::map<int, const char *>::const_iterator it = http_messages.find(id);
-  if(it != http_messages.end())
+  const HttpCodeMap::const_iterator it = http_messages.find(id);
+  if(G_LIKELY(it != http_messages.end()))
     return it->second;
 
   return O2G_NULLPTR;

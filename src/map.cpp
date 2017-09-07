@@ -111,7 +111,7 @@ static void map_node_select(map_t *map, node_t *node) {
   new_map_item->highlight = true;
 
   float radius = 0;
-  std::map<item_id_t, GdkPixbuf *>::iterator it = map->style->node_icons.find(node->id);
+  style_t::IconCache::iterator it = map->style->node_icons.find(node->id);
   if(it != map->style->node_icons.end() && map->style->icon.enable) {
     gint w = gdk_pixbuf_get_width(it->second);
     gint h = gdk_pixbuf_get_height(it->second);
@@ -408,7 +408,7 @@ static void map_node_new(map_t *map, node_t *node, gint radius,
   map_item_t *map_item = g_new0(map_item_t, 1);
   map_item->object = node;
 
-  const std::map<item_id_t, GdkPixbuf *>::const_iterator it = map->style->node_icons.find(node->id);
+  const style_t::IconCache::const_iterator it = map->style->node_icons.find(node->id);
 
   if(it == map->style->node_icons.end() || !map->style->icon.enable)
     map_item->item = map->canvas->circle_new(CANVAS_GROUP_NODES,
