@@ -117,7 +117,7 @@ struct str_map_find {
   explicit str_map_find(const char * n)
     : name(n) {}
   bool operator()(const typename T::value_type &p) {
-    return (strcmp(p.first, name) == 0);
+    return (strcmp(p.name, name) == 0);
   }
 };
 
@@ -156,7 +156,14 @@ class PresetSax {
   const std::vector<std::string> &langs;
 
   // this maps the XML tag name to the target state and the list of allowed source states
-  typedef std::multimap<const char *, std::pair<State, const std::vector<State> > > StateMap;
+  struct StateChange {
+    StateChange(const char *nm, State os, const std::vector<State> &ns)
+      : name(nm), oldState(os), newStates(ns) {}
+    const char *name;
+    State oldState;
+    std::vector<State> newStates;
+  };
+  typedef std::vector<StateChange> StateMap;
   static const StateMap &preset_state_map();
 
   // Map back a state to it's string. Only used for debug messages.
@@ -164,7 +171,7 @@ class PresetSax {
     const State state;
     explicit name_find(State s) : state(s) {}
     bool operator()(const StateMap::value_type &p) {
-      return p.second.first == state;
+      return p.oldState == state;
     }
   };
 
@@ -232,8 +239,8 @@ const PresetSax::StateMap &PresetSax::preset_state_map() {
 
   if(map.empty()) {
 #if __cplusplus >= 201103L
-    const StateMap::mapped_type::second_type item_chunks = { TagChunk, TagItem };
-    const StateMap::mapped_type::second_type pr_gr = { TagPresets, TagGroup };
+    const std::vector<State> item_chunks = { TagChunk, TagItem };
+    const std::vector<State> pr_gr = { TagPresets, TagGroup };
 # define VECTOR_ONE(a) { a }
 #else
     std::vector<State> item_chunks;
@@ -245,29 +252,31 @@ const PresetSax::StateMap &PresetSax::preset_state_map() {
 # define VECTOR_ONE(a) std::vector<State>(1, (a))
 #endif
 
-    map.insert(StateMap::value_type("presets", StateMap::mapped_type(TagPresets, VECTOR_ONE(DocStart))));
-    map.insert(StateMap::value_type("chunk", StateMap::mapped_type(TagChunk, VECTOR_ONE(TagPresets))));
-    map.insert(StateMap::value_type("group", StateMap::mapped_type(TagGroup, pr_gr)));
+    map.reserve(19);
+
+    map.push_back(StateMap::value_type("presets", TagPresets, VECTOR_ONE(DocStart)));
+    map.push_back(StateMap::value_type("chunk", TagChunk, VECTOR_ONE(TagPresets)));
+    map.push_back(StateMap::value_type("group", TagGroup, pr_gr));
 
     // ignore the case of standalone items and separators for now as it does not happen yet
-    map.insert(StateMap::value_type("item", StateMap::mapped_type(TagItem, VECTOR_ONE(TagGroup))));
-    map.insert(StateMap::value_type("separator", StateMap::mapped_type(TagSeparator, VECTOR_ONE(TagGroup))));
+    map.push_back(StateMap::value_type("item", TagItem, VECTOR_ONE(TagGroup)));
+    map.push_back(StateMap::value_type("separator", TagSeparator, VECTOR_ONE(TagGroup)));
 
-    map.insert(StateMap::value_type("reference", StateMap::mapped_type(TagReference, item_chunks)));
-    map.insert(StateMap::value_type("preset_link", StateMap::mapped_type(TagPresetLink, item_chunks)));
-    map.insert(StateMap::value_type("key", StateMap::mapped_type(TagKey, item_chunks)));
-    map.insert(StateMap::value_type("text", StateMap::mapped_type(TagText, item_chunks)));
-    map.insert(StateMap::value_type("combo", StateMap::mapped_type(TagCombo, item_chunks)));
-    map.insert(StateMap::value_type("list_entry", StateMap::mapped_type(TagListEntry, VECTOR_ONE(TagCombo))));
-    map.insert(StateMap::value_type("check", StateMap::mapped_type(TagCheck, item_chunks)));
-    map.insert(StateMap::value_type("label", StateMap::mapped_type(TagLabel, item_chunks)));
-    map.insert(StateMap::value_type("space", StateMap::mapped_type(TagSpace, item_chunks)));
-    map.insert(StateMap::value_type("link", StateMap::mapped_type(TagLink, item_chunks)));
-    map.insert(StateMap::value_type("roles", StateMap::mapped_type(TagRoles, item_chunks)));
-    map.insert(StateMap::value_type("role", StateMap::mapped_type(TagRole, VECTOR_ONE(TagRoles))));
+    map.push_back(StateMap::value_type("reference", TagReference, item_chunks));
+    map.push_back(StateMap::value_type("preset_link", TagPresetLink, item_chunks));
+    map.push_back(StateMap::value_type("key", TagKey, item_chunks));
+    map.push_back(StateMap::value_type("text", TagText, item_chunks));
+    map.push_back(StateMap::value_type("combo", TagCombo, item_chunks));
+    map.push_back(StateMap::value_type("list_entry", TagListEntry, VECTOR_ONE(TagCombo)));
+    map.push_back(StateMap::value_type("check", TagCheck, item_chunks));
+    map.push_back(StateMap::value_type("label", TagLabel, item_chunks));
+    map.push_back(StateMap::value_type("space", TagSpace, item_chunks));
+    map.push_back(StateMap::value_type("link", TagLink, item_chunks));
+    map.push_back(StateMap::value_type("roles", TagRoles, item_chunks));
+    map.push_back(StateMap::value_type("role", TagRole, VECTOR_ONE(TagRoles)));
 
-    map.insert(StateMap::value_type("checkgroup", StateMap::mapped_type(IntermediateTag, item_chunks)));
-    map.insert(StateMap::value_type("optional", StateMap::mapped_type(IntermediateTag, item_chunks)));
+    map.push_back(StateMap::value_type("checkgroup", IntermediateTag, item_chunks));
+    map.push_back(StateMap::value_type("optional", IntermediateTag, item_chunks));
   }
 
   return map;
@@ -285,7 +294,7 @@ void PresetSax::dumpState(const char *before, const char *after) const
     } else {
       const StateMap::const_iterator nit = std::find_if(tags.begin(), tags.end(), name_find(*it));
       g_assert(nit != tags.end());
-      printf("%s/", nit->first);
+      printf("%s/", nit->name);
     }
   }
   if(after != O2G_NULLPTR)
@@ -501,8 +510,8 @@ void PresetSax::startElement(const char *name, const char **attrs)
       }
   }
 
-  if(std::find(it->second.second.begin(), it->second.second.end(), oldState) ==
-     it->second.second.end()) {
+  if(std::find(it->newStates.begin(), it->newStates.end(), oldState) ==
+     it->newStates.end()) {
     dumpState("found unexpected", name);
     printf("\n");
     state.push_back(UnknownTag);
@@ -511,7 +520,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
 
   presets_widget_t *widget = O2G_NULLPTR;
 
-  switch(it->second.first) {
+  switch(it->oldState) {
   case IntermediateTag:
     break;
   case DocStart:
@@ -782,7 +791,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
   }
   }
 
-  state.push_back(it->second.first);
+  state.push_back(it->oldState);
   if(widget != O2G_NULLPTR) {
     g_assert_false(items.empty());
     g_assert_true(items.top()->isItem());
@@ -803,10 +812,10 @@ void PresetSax::endElement(const xmlChar *name)
                                              str_map_find<StateMap>(reinterpret_cast<const char *>(name)));
 
   g_assert(it != tags.end() || state.back() == UnknownTag);
-  g_assert(state.back() == it->second.first);
+  g_assert(state.back() == it->oldState);
   state.pop_back();
 
-  switch(it->second.first) {
+  switch(it->oldState) {
   case DocStart:
   case UnknownTag:
     g_assert_not_reached();
@@ -998,22 +1007,28 @@ void josm_presets_free(struct presets_items *presets) {
   delete presets;
 }
 
+struct MatchValue {
+  MatchValue(const char *n, presets_widget_t::Match m) : name(n), match(m) {}
+  const char *name;
+  presets_widget_t::Match match;
+};
+
 presets_widget_t::Match presets_widget_t::parseMatch(const char *matchstring, Match def)
 {
-  typedef std::map<const char *, Match> VMap;
+  typedef std::vector<MatchValue> VMap;
   static VMap matches;
   if(G_UNLIKELY(matches.empty())) {
-    matches["none"] = MatchIgnore;
-    matches["key"] = MatchKey;
-    matches["key!"] = MatchKey_Force;
-    matches["keyvalue"] = MatchKeyValue;
-    matches["keyvalue!"] = MatchKeyValue_Force;
+    matches.push_back(VMap::value_type("none", MatchIgnore));
+    matches.push_back(VMap::value_type("key", MatchKey));
+    matches.push_back(VMap::value_type("key!", MatchKey_Force));
+    matches.push_back(VMap::value_type("keyvalue", MatchKeyValue));
+    matches.push_back(VMap::value_type("keyvalue!", MatchKeyValue_Force));
   }
   const VMap::const_iterator itEnd = matches.end();
   const VMap::const_iterator it = !matchstring ? itEnd : std::find_if(std::cbegin(matches),
                                                itEnd, str_map_find<VMap>(matchstring));
 
-  return (it == itEnd) ? def : it->second;
+  return (it == itEnd) ? def : it->match;
 }
 
 presets_widget_t::presets_widget_t(presets_widget_type_t t, Match m, const std::string &key, const std::string &text)
