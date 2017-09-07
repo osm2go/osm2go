@@ -65,23 +65,26 @@ std::string josm_icon_name_adjust(const char *name, const std::string &basepath)
   return ret;
 }
 
-static std::map<int, std::string> type_map_init() {
-  std::map<int, std::string> ret;
+typedef std::vector<std::pair<presets_item_t::item_type, std::string> > TypeStrMap;
 
-  ret[presets_item_t::TY_WAY] = "way";
-  ret[presets_item_t::TY_NODE] = "node";
-  ret[presets_item_t::TY_RELATION] = "relation";
-  ret[presets_item_t::TY_CLOSED_WAY] = "closedway";
-  ret[presets_item_t::TY_MULTIPOLYGON] = "multipolygon";
+static TypeStrMap type_map_init() {
+  TypeStrMap ret(5);
+
+  TypeStrMap::size_type pos = 0;
+  ret[pos++] = TypeStrMap::value_type(presets_item_t::TY_WAY, "way");
+  ret[pos++] = TypeStrMap::value_type(presets_item_t::TY_NODE, "node");
+  ret[pos++] = TypeStrMap::value_type(presets_item_t::TY_RELATION, "relation");
+  ret[pos++] = TypeStrMap::value_type(presets_item_t::TY_CLOSED_WAY, "closedway");
+  ret[pos++] = TypeStrMap::value_type(presets_item_t::TY_MULTIPOLYGON, "multipolygon");
 
   return ret;
 }
 
 static int josm_type_bit(const char *type, char sep) {
-  static const std::map<int, std::string> types = type_map_init();
-  static const std::map<int, std::string>::const_iterator itEnd = types.end();
+  static const TypeStrMap types = type_map_init();
+  const TypeStrMap::const_iterator itEnd = types.end();
 
-  for(std::map<int, std::string>::const_iterator it = types.begin(); it != itEnd; it++) {
+  for(TypeStrMap::const_iterator it = types.begin(); it != itEnd; it++) {
     const size_t tlen = it->second.size();
     if(strncmp(it->second.c_str(), type, tlen) == 0 && type[tlen] == sep)
       return it->first;
