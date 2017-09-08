@@ -20,8 +20,6 @@
 #ifndef POS_H
 #define POS_H
 
-#include <glib.h>
-
 /* format string used to write lat/lon coordinates, altitude and time */
 #define LL_FORMAT   "%.07f"
 #define ALT_FORMAT  "%.02f"
@@ -36,6 +34,7 @@ typedef double pos_float_t;
 
 #ifdef __cplusplus
 #include <cmath>
+#include <cstddef>
 /* equatorial radius in meters */
 #define POS_EQ_RADIUS     (6378137.0)
 #define KMPMIL   (1.609344)
@@ -78,7 +77,7 @@ typedef struct pos_t {
 /* local position */
 typedef struct lpos_t {
   lpos_t() {}
-  lpos_t(gint px, gint py)
+  lpos_t(int px, int py)
     : x(px) , y(py) {}
   bool operator==(const lpos_t &other)
   { return x == other.x && y == other.y; }
@@ -87,7 +86,7 @@ typedef struct lpos_t {
    * @brief calculate the global coordinates from local position in given bounds
    */
   pos_t toPos(const bounds_t &bounds) const;
-  gint x, y;
+  int x, y;
 } lpos_t;
 
 struct bounds_t {
