@@ -49,130 +49,130 @@ static float parse_scale_max(xmlNodePtr cur_node) {
     return 0.0f;
 }
 
-static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t *style) {
+static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t &style) {
   xmlNode *cur_node = O2G_NULLPTR, *sub_node = O2G_NULLPTR;
 
   /* -------------- setup defaults -------------------- */
   /* (the defaults are pretty much the potlatch style) */
-  style->area.border_width      = 2.0;
-  style->area.color             = 0x00000060; // 37.5%
-  style->area.zoom_max          = 0.1111;     // zoom factor above which an area is visible & selectable
+  style.area.border_width      = 2.0;
+  style.area.color             = 0x00000060; // 37.5%
+  style.area.zoom_max          = 0.1111;     // zoom factor above which an area is visible & selectable
 
-  style->node.radius            = 4.0;
-  style->node.border_radius     = 2.0;
-  style->node.color             = 0x000000ff; // black with filling ...
-  style->node.fill_color        = 0x008800ff; // ... in dark green
-  style->node.show_untagged     = FALSE;
-  style->node.zoom_max          = 0.4444;     // zoom factor above which a node is visible & selectable
+  style.node.radius            = 4.0;
+  style.node.border_radius     = 2.0;
+  style.node.color             = 0x000000ff; // black with filling ...
+  style.node.fill_color        = 0x008800ff; // ... in dark green
+  style.node.show_untagged     = FALSE;
+  style.node.zoom_max          = 0.4444;     // zoom factor above which a node is visible & selectable
 
-  style->track.width            = 6.0;
-  style->track.color            = 0x0000ff40; // blue
-  style->track.gps_color        = 0x000080ff;
+  style.track.width            = 6.0;
+  style.track.color            = 0x0000ff40; // blue
+  style.track.gps_color        = 0x000080ff;
 
-  style->way.width              = 3.0;
-  style->way.color              = 0x606060ff; // grey
-  style->way.zoom_max           = 0.2222;     // zoom above which it's visible & selectable
+  style.way.width              = 3.0;
+  style.way.color              = 0x606060ff; // grey
+  style.way.zoom_max           = 0.2222;     // zoom above which it's visible & selectable
 
-  style->highlight.width        = 3.0;
-  style->highlight.color        = 0xffff0080;  // normal highlights are yellow
-  style->highlight.node_color   = 0xff000080;  // node highlights are red
-  style->highlight.touch_color  = 0x0000ff80;  // touchnode and
-  style->highlight.arrow_color  = 0x0000ff80;  // arrows are blue
-  style->highlight.arrow_limit  = 4.0;
+  style.highlight.width        = 3.0;
+  style.highlight.color        = 0xffff0080;  // normal highlights are yellow
+  style.highlight.node_color   = 0xff000080;  // node highlights are red
+  style.highlight.touch_color  = 0x0000ff80;  // touchnode and
+  style.highlight.arrow_color  = 0x0000ff80;  // arrows are blue
+  style.highlight.arrow_limit  = 4.0;
 
-  style->frisket.mult           = 3.0;
-  style->frisket.color          = 0xffffffff;
-  style->frisket.border.present = TRUE;
-  style->frisket.border.width   = 6.0;
-  style->frisket.border.color   = 0x00000099;
+  style.frisket.mult           = 3.0;
+  style.frisket.color          = 0xffffffff;
+  style.frisket.border.present = TRUE;
+  style.frisket.border.width   = 6.0;
+  style.frisket.border.color   = 0x00000099;
 
-  style->icon.enable            = FALSE;
-  style->icon.scale             = 1.0;    // icon size (multiplier)
+  style.icon.enable            = FALSE;
+  style.icon.scale             = 1.0;    // icon size (multiplier)
 
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       const char *nodename = reinterpret_cast<const char *>(cur_node->name);
-      if(fname != O2G_NULLPTR && strcmp(nodename, "elemstyles") == 0) {
+      if(strcmp(nodename, "elemstyles") == 0) {
 	*fname = xmlGetProp(cur_node, BAD_CAST "filename");
 
 	/* ---------- node ------------------------------------- */
       } else if(strcmp(nodename, "node") == 0) {
-	parse_color(cur_node, "color", style->node.color);
-	parse_color(cur_node, "fill-color", style->node.fill_color);
-        style->node.radius = xml_get_prop_float(cur_node, "radius");
-        style->node.border_radius = xml_get_prop_float(cur_node, "border-radius");
-        style->node.zoom_max = parse_scale_max(cur_node);
+        parse_color(cur_node, "color", style.node.color);
+        parse_color(cur_node, "fill-color", style.node.fill_color);
+        style.node.radius = xml_get_prop_float(cur_node, "radius");
+        style.node.border_radius = xml_get_prop_float(cur_node, "border-radius");
+        style.node.zoom_max = parse_scale_max(cur_node);
 
-	style->node.show_untagged =
+        style.node.show_untagged =
 	  xml_get_prop_is(cur_node, "show-untagged", "true") ? TRUE : FALSE;
 
 	/* ---------- icon ------------------------------------- */
       } else if(strcmp(nodename, "icon") == 0) {
-        style->icon.scale = xml_get_prop_float(cur_node, "scale");
+        style.icon.scale = xml_get_prop_float(cur_node, "scale");
         xmlChar *prefix = xmlGetProp(cur_node, BAD_CAST "path-prefix");
 	if(prefix) {
-          xmlFree(BAD_CAST style->icon.path_prefix);
-          style->icon.path_prefix = reinterpret_cast<char *>(prefix);
+          xmlFree(BAD_CAST style.icon.path_prefix);
+          style.icon.path_prefix = reinterpret_cast<char *>(prefix);
 	}
-	style->icon.enable = xml_get_prop_is(cur_node, "enable", "true") ? TRUE : FALSE;
+        style.icon.enable = xml_get_prop_is(cur_node, "enable", "true") ? TRUE : FALSE;
 
 	/* ---------- way ------------------------------------- */
       } else if(strcmp(nodename, "way") == 0) {
-	parse_color(cur_node, "color", style->way.color);
-        style->way.width = xml_get_prop_float(cur_node, "width");
-        style->way.zoom_max = parse_scale_max(cur_node);
+        parse_color(cur_node, "color", style.way.color);
+        style.way.width = xml_get_prop_float(cur_node, "width");
+        style.way.zoom_max = parse_scale_max(cur_node);
 
 	/* ---------- frisket --------------------------------- */
       } else if(strcmp(nodename, "frisket") == 0) {
-        style->frisket.mult = xml_get_prop_float(cur_node, "mult");
-	parse_color(cur_node, "color", style->frisket.color);
-	style->frisket.border.present = FALSE;
+        style.frisket.mult = xml_get_prop_float(cur_node, "mult");
+        parse_color(cur_node, "color", style.frisket.color);
+        style.frisket.border.present = FALSE;
 
 	for(sub_node = cur_node->children; sub_node; sub_node=sub_node->next) {
 	  if(sub_node->type == XML_ELEMENT_NODE) {
             if(strcmp(reinterpret_cast<const char *>(sub_node->name), "border") == 0) {
-	      style->frisket.border.present = TRUE;
-              style->frisket.border.width = xml_get_prop_float(sub_node, "width");
+              style.frisket.border.present = TRUE;
+              style.frisket.border.width = xml_get_prop_float(sub_node, "width");
 
-	      parse_color(sub_node, "color", style->frisket.border.color);
+              parse_color(sub_node, "color", style.frisket.border.color);
 	    }
 	  }
 	}
 
 	/* ---------- highlight ------------------------------- */
       } else if(strcmp(nodename, "highlight") == 0) {
-	parse_color(cur_node, "color", style->highlight.color);
-	parse_color(cur_node, "node-color", style->highlight.node_color);
-	parse_color(cur_node, "touch-color", style->highlight.touch_color);
-	parse_color(cur_node, "arrow-color", style->highlight.arrow_color);
-        style->highlight.width = xml_get_prop_float(cur_node, "width");
-        style->highlight.arrow_limit = xml_get_prop_float(cur_node, "arrow-limit");
+        parse_color(cur_node, "color", style.highlight.color);
+        parse_color(cur_node, "node-color", style.highlight.node_color);
+        parse_color(cur_node, "touch-color", style.highlight.touch_color);
+        parse_color(cur_node, "arrow-color", style.highlight.arrow_color);
+        style.highlight.width = xml_get_prop_float(cur_node, "width");
+        style.highlight.arrow_limit = xml_get_prop_float(cur_node, "arrow-limit");
 
 	/* ---------- track ------------------------------------ */
       } else if(strcmp(nodename, "track") == 0) {
-	parse_color(cur_node, "color", style->track.color);
-	parse_color(cur_node, "gps-color", style->track.gps_color);
-        style->track.width = xml_get_prop_float(cur_node, "width");
+        parse_color(cur_node, "color", style.track.color);
+        parse_color(cur_node, "gps-color", style.track.gps_color);
+        style.track.width = xml_get_prop_float(cur_node, "width");
 
 	/* ---------- area ------------------------------------- */
       } else if(strcmp(nodename, "area") == 0) {
-	style->area.has_border_color =
-	  parse_color(cur_node, "border-color", style->area.border_color);
-        style->area.border_width = xml_get_prop_float(cur_node,"border-width");
-        style->area.zoom_max = parse_scale_max(cur_node);
+        style.area.has_border_color =
+            parse_color(cur_node, "border-color", style.area.border_color);
+        style.area.border_width = xml_get_prop_float(cur_node,"border-width");
+        style.area.zoom_max = parse_scale_max(cur_node);
 
-	parse_color(cur_node, "color", style->area.color);
+        parse_color(cur_node, "color", style.area.color);
 
 	/* ---------- background ------------------------------- */
       } else if(strcmp(nodename, "background") == 0) {
-	parse_color(cur_node, "color", style->background.color);
+        parse_color(cur_node, "color", style.background.color);
 
       } else
 	printf("  found unhandled style/%s\n", cur_node->name);
     }
   }
 
-  g_assert(style->icon.path_prefix || !style->icon.enable);
+  g_assert(style.icon.path_prefix || !style.icon.enable);
 }
 
 /**
@@ -180,29 +180,31 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t *style) {
  * @param fullname absolute path of the file to read
  * @param fname location to store name of the object style XML file or O2G_NULLPTR
  * @param name_only only parse the style name, leave all other fields empty
- * @return a new style pointer
+ * @param style the object to fill
+ * @return if parsing the style succeeded
+ *
+ * fname may be nullptr when name_only is true
  */
-static style_t *style_parse(const std::string &fullname, icon_t &icons,
-                            xmlChar **fname, bool name_only) {
+static bool style_parse(const std::string &fullname, xmlChar **fname,
+                        bool name_only, style_t &style) {
   xmlDoc *doc = xmlReadFile(fullname.c_str(), O2G_NULLPTR, 0);
+  bool ret = false;
 
   /* parse the file and get the DOM */
-  if(doc == O2G_NULLPTR) {
+  if(G_UNLIKELY(doc == O2G_NULLPTR)) {
     xmlErrorPtr errP = xmlGetLastError();
     printf("parsing %s failed: %s\n", fullname.c_str(), errP->message);
-    return O2G_NULLPTR;
   } else {
     /* Get the root element node */
     xmlNode *cur_node = O2G_NULLPTR;
-    style_t *style = O2G_NULLPTR;
 
     for(cur_node = xmlDocGetRootElement(doc);
         cur_node; cur_node = cur_node->next) {
       if (cur_node->type == XML_ELEMENT_NODE) {
-        if(strcmp(reinterpret_cast<const char *>(cur_node->name), "style") == 0) {
-          if(!style) {
-            style = new style_t(icons);
-            style->name = (char*)xmlGetProp(cur_node, BAD_CAST "name");
+        if(G_LIKELY(strcmp(reinterpret_cast<const char *>(cur_node->name), "style") == 0)) {
+          if(G_LIKELY(!ret)) {
+            style.name = reinterpret_cast<char *>(xmlGetProp(cur_node, BAD_CAST "name"));
+            ret = true;
             if(name_only)
               break;
             parse_style_node(cur_node, fname, style);
@@ -213,21 +215,22 @@ static style_t *style_parse(const std::string &fullname, icon_t &icons,
     }
 
     xmlFreeDoc(doc);
-    return style;
   }
+  return ret;
 }
 
 static style_t *style_load_fname(icon_t &icons, const std::string &filename) {
   xmlChar *fname = O2G_NULLPTR;
-  style_t *style = style_parse(filename, icons, &fname, false);
+  std::unique_ptr<style_t> style(new style_t(icons));
 
-  if(style) {
+  if(G_LIKELY(style_parse(filename, &fname, false, *style.get()))) {
     printf("  elemstyle filename: %s\n", fname);
     style->elemstyles = josm_elemstyles_load(reinterpret_cast<char *>(fname));
     xmlFree(fname);
+    return style.release();
   }
 
-  return style;
+  return O2G_NULLPTR;
 }
 
 style_t *style_load(const std::string &name, icon_t &icons) {
@@ -313,11 +316,9 @@ static std::map<std::string, std::string> style_scan() {
           fullname += name;
           if(g_file_test(fullname.c_str(), G_FILE_TEST_IS_REGULAR)) {
             icon_t dummyicons;
-            style_t *style = style_parse(fullname, dummyicons, O2G_NULLPTR, true);
-            if(style) {
-              ret[style->name] = fullname;
-              delete style;
-            }
+            style_t style(dummyicons);
+            if(style_parse(fullname, O2G_NULLPTR, true, style))
+              ret[style.name] = fullname;
           }
         }
       }
