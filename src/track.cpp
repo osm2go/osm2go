@@ -63,7 +63,15 @@ class TrackSax {
 
   State state;
 
-  typedef std::map<const char *, std::pair<State, State> > StateMap;
+  struct StateChange {
+    StateChange(const char *nm, State os, State ns)
+      : name(nm), oldState(os), newState(ns) {}
+    const char *name;
+    State oldState;
+    State newState;
+  };
+
+  typedef std::vector<StateChange> StateMap;
   StateMap tags;
 
   // custom find to avoid memory allocations for std::string
@@ -71,7 +79,7 @@ class TrackSax {
     const char * const name;
     explicit tag_find(const xmlChar *n) : name(reinterpret_cast<const char *>(n)) {}
     bool operator()(const StateMap::value_type &p) {
-      return (strcmp(p.first, name) == 0);
+      return (strcmp(p.name, name) == 0);
     }
   };
 
@@ -530,12 +538,12 @@ TrackSax::TrackSax()
   handler.startElement = cb_startElement;
   handler.endElement = cb_endElement;
 
-  tags["gpx"] = std::pair<State, State>(DocStart, TagGpx);
-  tags["trk"] = std::pair<State, State>(TagGpx, TagTrk);
-  tags["trkseg"] = std::pair<State, State>(TagTrk, TagTrkSeg);
-  tags["trkpt"] = std::pair<State, State>(TagTrkSeg, TagTrkPt);
-  tags["time"] = std::pair<State, State>(TagTrkPt, TagTime);
-  tags["ele"] = std::pair<State, State>(TagTrkPt, TagEle);
+  tags.push_back(StateMap::value_type("gpx", DocStart, TagGpx));
+  tags.push_back(StateMap::value_type("trk", TagGpx, TagTrk));
+  tags.push_back(StateMap::value_type("trkseg", TagTrk, TagTrkSeg));
+  tags.push_back(StateMap::value_type("trkpt", TagTrkSeg, TagTrkPt));
+  tags.push_back(StateMap::value_type("time", TagTrkPt, TagTime));
+  tags.push_back(StateMap::value_type("ele", TagTrkPt, TagEle));
 }
 
 bool TrackSax::parse(const char *filename)
@@ -582,13 +590,13 @@ void TrackSax::startElement(const xmlChar *name, const xmlChar **attrs)
     return;
   }
 
-  if(G_UNLIKELY(state != it->second.first)) {
+  if(G_UNLIKELY(state != it->oldState)) {
     fprintf(stderr, "found element %s in state %i, but expected %i\n",
-            name, state, it->second.first);
+            name, state, it->oldState);
     return;
   }
 
-  state = it->second.second;
+  state = it->newState;
 
   switch(state){
   case TagTrk:
@@ -619,7 +627,7 @@ void TrackSax::endElement(const xmlChar *name)
   StateMap::const_iterator it = std::find_if(tags.begin(), tags.end(), tag_find(name));
 
   g_assert(it != tags.end());
-  g_assert(state == it->second.second);
+  g_assert(state == it->newState);
 
   switch(state){
   case TagTrkSeg: {
@@ -637,7 +645,7 @@ void TrackSax::endElement(const xmlChar *name)
   default:
     break;
   }
-  state = it->second.first;
+  state = it->oldState;
 }
 
 track_t::track_t()
