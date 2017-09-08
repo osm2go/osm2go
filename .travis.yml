@@ -6,7 +6,7 @@ compiler:
   - clang
 env:
   global:
-    - CMAKE_VERSION=3.9.0
+    - CMAKE_VERSION=3.9.2
     - OSM2GO_BUILD_DIR=/tmp/osm2go-cdash
 addons:
   apt:
