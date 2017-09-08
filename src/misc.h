@@ -71,7 +71,7 @@ void remove_trailing_zeroes(char *str);
 
 double xml_get_prop_float(xmlNode *node, const char *prop);
 bool xml_get_prop_is(xmlNode *node, const char *prop, const char *str);
-bool xml_get_prop_pos(xmlNode *node, struct pos_t *pos);
+pos_t xml_get_prop_pos(xmlNode *node);
 void xml_set_prop_pos(xmlNode *node, const struct pos_t *pos);
 
 #ifndef g_assert_true

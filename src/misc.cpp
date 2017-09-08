@@ -74,11 +74,9 @@ bool xml_get_prop_is(xmlNode *node, const char *prop, const char *str) {
   return match;
 }
 
-bool xml_get_prop_pos(xmlNode *node, pos_t *pos) {
-  pos->lat = xml_get_prop_float(node, "lat");
-  pos->lon = xml_get_prop_float(node, "lon");
-
-  return !std::isnan(pos->lat) && !std::isnan(pos->lon);
+pos_t xml_get_prop_pos(xmlNode *node) {
+  return pos_t(xml_get_prop_float(node, "lat"),
+               xml_get_prop_float(node, "lon"));
 }
 
 void xml_set_prop_pos(xmlNode *node, const pos_t *pos) {

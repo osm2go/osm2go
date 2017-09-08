@@ -239,9 +239,9 @@ static bool project_read(const std::string &project_file, project_t *project,
 	      xmlFree(str);
 
             } else if(strcmp(reinterpret_cast<const char *>(node->name), "min") == 0) {
-              xml_get_prop_pos(node, &project->min);
+              project->min = xml_get_prop_pos(node);
             } else if(strcmp(reinterpret_cast<const char *>(node->name), "max") == 0) {
-              xml_get_prop_pos(node, &project->max);
+              project->max = xml_get_prop_pos(node);
 	    }
 	  }
 	  node = node->next;
