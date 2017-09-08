@@ -62,7 +62,7 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t &style) {
   style.node.border_radius     = 2.0;
   style.node.color             = 0x000000ff; // black with filling ...
   style.node.fill_color        = 0x008800ff; // ... in dark green
-  style.node.show_untagged     = FALSE;
+  style.node.show_untagged     = false;
   style.node.zoom_max          = 0.4444;     // zoom factor above which a node is visible & selectable
 
   style.track.width            = 6.0;
@@ -82,11 +82,11 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t &style) {
 
   style.frisket.mult           = 3.0;
   style.frisket.color          = 0xffffffff;
-  style.frisket.border.present = TRUE;
+  style.frisket.border.present = true;
   style.frisket.border.width   = 6.0;
   style.frisket.border.color   = 0x00000099;
 
-  style.icon.enable            = FALSE;
+  style.icon.enable            = false;
   style.icon.scale             = 1.0;    // icon size (multiplier)
 
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
@@ -103,8 +103,7 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t &style) {
         style.node.border_radius = xml_get_prop_float(cur_node, "border-radius");
         style.node.zoom_max = parse_scale_max(cur_node);
 
-        style.node.show_untagged =
-	  xml_get_prop_is(cur_node, "show-untagged", "true") ? TRUE : FALSE;
+        style.node.show_untagged = xml_get_prop_is(cur_node, "show-untagged", "true");
 
 	/* ---------- icon ------------------------------------- */
       } else if(strcmp(nodename, "icon") == 0) {
@@ -114,7 +113,7 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t &style) {
           xmlFree(BAD_CAST style.icon.path_prefix);
           style.icon.path_prefix = reinterpret_cast<char *>(prefix);
 	}
-        style.icon.enable = xml_get_prop_is(cur_node, "enable", "true") ? TRUE : FALSE;
+        style.icon.enable = xml_get_prop_is(cur_node, "enable", "true");
 
 	/* ---------- way ------------------------------------- */
       } else if(strcmp(nodename, "way") == 0) {
@@ -126,12 +125,12 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t &style) {
       } else if(strcmp(nodename, "frisket") == 0) {
         style.frisket.mult = xml_get_prop_float(cur_node, "mult");
         parse_color(cur_node, "color", style.frisket.color);
-        style.frisket.border.present = FALSE;
+        style.frisket.border.present = false;
 
 	for(sub_node = cur_node->children; sub_node; sub_node=sub_node->next) {
 	  if(sub_node->type == XML_ELEMENT_NODE) {
             if(strcmp(reinterpret_cast<const char *>(sub_node->name), "border") == 0) {
-              style.frisket.border.present = TRUE;
+              style.frisket.border.present = true;
               style.frisket.border.width = xml_get_prop_float(sub_node, "width");
 
               parse_color(sub_node, "color", style.frisket.border.color);
@@ -449,7 +448,7 @@ style_t::style_t(icon_t &ic)
 struct unref_icon {
   icon_t &icons;
   explicit unref_icon(icon_t &i) : icons(i) {}
-  void operator()(const std::pair<item_id_t, GdkPixbuf *> &pair) {
+  void operator()(const style_t::IconCache::value_type &pair) {
     icons.icon_free(pair.second);
   }
 };

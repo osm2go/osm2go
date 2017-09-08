@@ -40,7 +40,7 @@ struct style_t {
   char *name;
 
   struct {
-    gboolean enable;
+    bool enable;
     float scale;  // how big the icon is drawn
     char *path_prefix;
   } icon;
@@ -58,7 +58,7 @@ struct style_t {
   } way;
 
   struct {
-    gboolean has_border_color;
+    bool has_border_color;
     elemstyle_color_t border_color;
     float border_width;
     elemstyle_color_t color;
@@ -70,7 +70,7 @@ struct style_t {
     elemstyle_color_t color;
 
     struct {
-      gboolean present;
+      bool present;
       float width;
       elemstyle_color_t color;
     } border;
@@ -79,7 +79,7 @@ struct style_t {
   struct {
     float radius, border_radius;
     elemstyle_color_t fill_color, color;
-    gboolean show_untagged;
+    bool show_untagged;
     float zoom_max;
   } node;
 
