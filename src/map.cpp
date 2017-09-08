@@ -111,14 +111,13 @@ static void map_node_select(map_t *map, node_t *node) {
   new_map_item->highlight = true;
 
   float radius = 0;
-  style_t::IconCache::iterator it = map->style->node_icons.find(node->id);
-  if(it != map->style->node_icons.end() && map->style->icon.enable) {
-    gint w = gdk_pixbuf_get_width(it->second);
-    gint h = gdk_pixbuf_get_height(it->second);
-
+  style_t::IconCache::iterator it;
+  if(map->style->icon.enable &&
+     (it = map->style->node_icons.find(node->id)) != map->style->node_icons.end()) {
     /* icons are technically square, so a radius slightly bigger */
     /* than sqrt(2)*MAX(w,h) should fit nicely */
-    radius = 0.75 * map->style->icon.scale * MAX(w, h);
+    radius = 0.75 * map->style->icon.scale *
+             std::max(gdk_pixbuf_get_width(it->second), gdk_pixbuf_get_height(it->second));
   } else {
     radius = map->style->highlight.width + map->style->node.radius;
     if(!node->ways)
