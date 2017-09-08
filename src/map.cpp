@@ -103,7 +103,7 @@ static void map_node_select(map_t *map, node_t *node) {
   map->appdata.iconbar->map_item_selected(map_item->object);
 
   /* highlight node */
-  gint x = map_item->object.node->lpos.x, y = map_item->object.node->lpos.y;
+  int x = map_item->object.node->lpos.x, y = map_item->object.node->lpos.y;
 
   /* create a copy of this map item and mark it as being a highlight */
   map_item_t *new_map_item = g_new0(map_item_t, 1);
@@ -142,7 +142,7 @@ static void map_node_select(map_t *map, node_t *node) {
 
 struct set_point_pos {
   canvas_points_t * const points;
-  gint node;
+  unsigned int node;
   explicit set_point_pos(canvas_points_t *p) : points(p), node(0) {}
   void operator()(const node_t *n) {
     canvas_point_set_pos(points, node++, n->lpos);
@@ -153,7 +153,7 @@ struct set_point_pos {
  * @brief create a canvas point array for a way
  * @param way the way to convert
  * @return canvas node array if at least 2 nodes were present
- * @retval O2G_NULLPTR the way has less than 2 ways
+ * @retval O2G_NULLPTR the way has less than 2 nodes
  */
 static canvas_points_t *
 points_from_node_chain(const way_t *way)
@@ -174,10 +174,10 @@ points_from_node_chain(const way_t *way)
 
 struct draw_selected_way_functor {
   node_t *last;
-  const gint arrow_width;
+  const float arrow_width;
   map_t * const map;
   way_t * const way;
-  draw_selected_way_functor(gint a, map_t *m, way_t *w)
+  draw_selected_way_functor(float a, map_t *m, way_t *w)
     : last(O2G_NULLPTR), arrow_width(a), map(m), way(w) {}
   void operator()(node_t *node);
 };
@@ -251,10 +251,10 @@ void map_t::select_way(way_t *way) {
   appdata.iconbar->map_item_selected(map_item->object);
   gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_MAP_HIDE_SEL], TRUE);
 
-  gint arrow_width = ((map_item->object.way->draw.flags & OSM_DRAW_FLAG_BG)?
-                      style->highlight.width + map_item->object.way->draw.bg.width / 2:
-                      style->highlight.width + map_item->object.way->draw.width / 2)
-                     * state.detail;
+  float arrow_width = ((map_item->object.way->draw.flags & OSM_DRAW_FLAG_BG)?
+                        style->highlight.width + map_item->object.way->draw.bg.width / 2:
+                        style->highlight.width + map_item->object.way->draw.width / 2)
+                       * state.detail;
 
   const node_chain_t &node_chain = map_item->object.way->node_chain;
   std::for_each(node_chain.begin(), node_chain.end(),
@@ -401,8 +401,8 @@ static void map_item_destroy_event(gpointer data) {
   g_free(map_item);
 }
 
-static void map_node_new(map_t *map, node_t *node, gint radius,
-		   gint width, canvas_color_t fill, canvas_color_t border) {
+static void map_node_new(map_t *map, node_t *node, unsigned int radius,
+                         int width, canvas_color_t fill, canvas_color_t border) {
 
   map_item_t *map_item = g_new0(map_item_t, 1);
   map_item->object = node;
@@ -624,7 +624,7 @@ void map_t::redraw_item(object_t object) {
 }
 
 static void map_frisket_rectangle(canvas_points_t *points,
-				  gint x0, gint x1, gint y0, gint y1) {
+                                  int x0, int x1, int y0, int y1) {
   points->coords[2*0+0] = points->coords[2*3+0] = points->coords[2*4+0] = x0;
   points->coords[2*1+0] = points->coords[2*2+0] = x1;
   points->coords[2*0+1] = points->coords[2*1+1] = points->coords[2*4+1] = y0;
@@ -670,7 +670,7 @@ static void map_frisket_draw(map_t *map, const bounds_t *bounds) {
 
   if(map->style->frisket.border.present) {
     // Edge marker line
-    gint ew2 = map->style->frisket.border.width/2;
+    int ew2 = map->style->frisket.border.width/2;
     map_frisket_rectangle(points,
 			  bounds->min.x-ew2, bounds->max.x+ew2,
 			  bounds->min.y-ew2, bounds->max.y+ew2);
@@ -727,7 +727,7 @@ static gint map_destroy_event(map_t *map) {
 }
 
 /* get the item at position x, y */
-map_item_t *map_t::item_at(gint x, gint y) {
+map_item_t *map_t::item_at(int x, int y) {
   printf("map check at %d/%d\n", x, y);
 
   lpos_t pos = canvas->window2world(x, y);
@@ -795,7 +795,7 @@ void map_t::pen_down_item() {
 
 /* Limitations on the amount by which we can scroll. Keeps part of the
  * map visible at all times */
-static void map_limit_scroll(map_t *map, canvas_t::canvas_unit_t unit, gint &sx, gint &sy) {
+static void map_limit_scroll(map_t *map, canvas_t::canvas_unit_t unit, int &sx, int &sy) {
 
   /* get scale factor for pixel->meter conversion. set to 1 if */
   /* given coordinates are already in meters */
@@ -809,24 +809,18 @@ static void map_limit_scroll(map_t *map, canvas_t::canvas_unit_t unit, gint &sx,
   canvas_dimensions dim = map->canvas->get_viewport_dimensions(canvas_t::UNIT_METER) / 2;
 
   // Data rect minimum and maximum
-  gint min_x, min_y, max_x, max_y;
-  min_x = map->appdata.osm->bounds->min.x;
-  min_y = map->appdata.osm->bounds->min.y;
-  max_x = map->appdata.osm->bounds->max.x;
-  max_y = map->appdata.osm->bounds->max.y;
-
   // limit stops - prevent scrolling beyond these
-  gint min_sy_cu = 0.95*(min_y - dim.height);
-  gint min_sx_cu = 0.95*(min_x - dim.width);
-  gint max_sy_cu = 0.95*(max_y + dim.height);
-  gint max_sx_cu = 0.95*(max_x + dim.width);
+  int min_sy_cu = 0.95 * (map->appdata.osm->bounds->min.y - dim.height);
+  int min_sx_cu = 0.95 * (map->appdata.osm->bounds->min.x - dim.width);
+  int max_sy_cu = 0.95 * (map->appdata.osm->bounds->max.y + dim.height);
+  int max_sx_cu = 0.95 * (map->appdata.osm->bounds->max.x + dim.width);
   if (sy_cu < min_sy_cu)
     sy = min_sy_cu * scale;
+  else if (sy_cu > max_sy_cu)
+    sy = max_sy_cu * scale;
   if (sx_cu < min_sx_cu)
     sx = min_sx_cu * scale;
-  if (sy_cu > max_sy_cu)
-    sy = max_sy_cu * scale;
-  if (sx_cu > max_sx_cu)
+  else if (sx_cu > max_sx_cu)
     sx = max_sx_cu * scale;
 }
 
@@ -834,7 +828,7 @@ static void map_limit_scroll(map_t *map, canvas_t::canvas_unit_t unit, gint &sx,
  * Specifically the map is allowed to be no smaller than the viewport. */
 static bool map_limit_zoom(map_t *map, gdouble &zoom) {
     // Data rect minimum and maximum
-    gint min_x, min_y, max_x, max_y;
+    int min_x, min_y, max_x, max_y;
     min_x = map->appdata.osm->bounds->min.x;
     min_y = map->appdata.osm->bounds->min.y;
     max_x = map->appdata.osm->bounds->max.x;
@@ -846,13 +840,13 @@ static bool map_limit_zoom(map_t *map, gdouble &zoom) {
 
     gdouble oldzoom = zoom;
     if (dim.height < dim.width) {
-      gint lim_h = dim.height * 0.95;
+      int lim_h = dim.height * 0.95;
       if (max_y-min_y < lim_h) {
           gdouble corr = (static_cast<gdouble>(max_y) - min_y) / lim_h;
           zoom /= corr;
       }
     } else {
-      gint lim_w = dim.width * 0.95;
+      int lim_w = dim.width * 0.95;
       if (max_x-min_x < lim_w) {
           gdouble corr = (static_cast<gdouble>(max_x) - min_x) / lim_w;
           zoom /= corr;
@@ -877,7 +871,7 @@ bool map_t::scroll_to_if_offscreen(const lpos_t lpos) {
   if(G_UNLIKELY(!appdata.osm))
     return false;
 
-  gint min_x, min_y, max_x, max_y;
+  int min_x, min_y, max_x, max_y;
   min_x = appdata.osm->bounds->min.x;
   min_y = appdata.osm->bounds->min.y;
   max_x = appdata.osm->bounds->max.x;
@@ -896,12 +890,12 @@ bool map_t::scroll_to_if_offscreen(const lpos_t lpos) {
 
   // Is the point still onscreen?
   bool recentre_needed = false;
-  gint sx, sy;
+  int sx, sy;
   canvas->scroll_get(canvas_t::UNIT_METER, sx, sy);
-  gint viewport_left   = sx - dim.width / 2;
-  gint viewport_right  = sx + dim.width / 2;
-  gint viewport_top    = sy - dim.height / 2;
-  gint viewport_bottom = sy + dim.height / 2;
+  int viewport_left   = sx - dim.width / 2;
+  int viewport_right  = sx + dim.width / 2;
+  int viewport_top    = sy - dim.height / 2;
+  int viewport_bottom = sy + dim.height / 2;
 
   if (lpos.x > viewport_right) {
     printf("** off right edge (%d > %d)\n", lpos.x, viewport_right);
@@ -919,11 +913,9 @@ bool map_t::scroll_to_if_offscreen(const lpos_t lpos) {
   }
 
   if(recentre_needed) {
-    gint new_sx, new_sy;
-
     // Just centre both at once
-    new_sx = pix_per_meter * lpos.x; // XXX (lpos.x - (aw/2));
-    new_sy = pix_per_meter * lpos.y; // XXX (lpos.y - (ah/2));
+    int new_sx = pix_per_meter * lpos.x; // XXX (lpos.x - (aw/2));
+    int new_sy = pix_per_meter * lpos.y; // XXX (lpos.y - (ah/2));
 
     map_limit_scroll(this, canvas_t::UNIT_PIXEL, new_sx, new_sy);
     canvas->scroll_to(canvas_t::UNIT_PIXEL, new_sx, new_sy);
@@ -964,7 +956,7 @@ void map_t::set_zoom(double zoom, bool update_scroll_offsets) {
   if(update_scroll_offsets) {
     if (!at_zoom_limit) {
       /* zooming affects the scroll offsets */
-      gint sx, sy;
+      int sx, sy;
       canvas->scroll_get(canvas_t::UNIT_PIXEL, sx, sy);
       map_limit_scroll(this, canvas_t::UNIT_PIXEL, sx, sy);
 
@@ -1005,8 +997,8 @@ static gboolean map_scroll_event(GtkWidget *, GdkEventScroll *event, appdata_t *
   return TRUE;
 }
 
-static gboolean distance_above(map_t *map, gint x, gint y, gint limit) {
-  gint sx, sy;
+static gboolean distance_above(map_t *map, int x, int y, int limit) {
+  int sx, sy;
 
   /* add offsets generated by mouse within map and map scrolling */
   sx = (x-map->pen_down.at.x);
@@ -1016,8 +1008,8 @@ static gboolean distance_above(map_t *map, gint x, gint y, gint limit) {
 }
 
 /* scroll with respect to two screen positions */
-static void map_do_scroll(map_t *map, gint x, gint y) {
-  gint sx, sy;
+static void map_do_scroll(map_t *map, int x, int y) {
+  int sx, sy;
 
   map->canvas->scroll_get(canvas_t::UNIT_PIXEL, sx, sy);
   sx -= x-map->pen_down.at.x;
@@ -1032,8 +1024,8 @@ static void map_do_scroll(map_t *map, gint x, gint y) {
 
 
 /* scroll a certain step */
-static void map_do_scroll_step(map_t *map, gint x, gint y) {
-  gint sx, sy;
+static void map_do_scroll_step(map_t *map, int x, int y) {
+  int sx, sy;
   map->canvas->scroll_get(canvas_t::UNIT_PIXEL, sx, sy);
   sx += x;
   sy += y;
@@ -1137,15 +1129,15 @@ void hl_nodes::operator()(const std::pair<item_id_t, node_t *> &p)
 
 void hl_nodes::operator()(node_t* node)
 {
-  gint nx = abs(pos.x - node->lpos.x);
-  gint ny = abs(pos.y - node->lpos.y);
+  int nx = abs(pos.x - node->lpos.x);
+  int ny = abs(pos.y - node->lpos.y);
 
   if((nx < map->style->node.radius) && (ny < map->style->node.radius) &&
      (nx*nx + ny*ny < map->style->node.radius * map->style->node.radius))
     map_hl_touchnode_draw(map, node);
 }
 
-static void map_touchnode_update(map_t *map, gint x, gint y) {
+static void map_touchnode_update(map_t *map, int x, int y) {
   map_hl_touchnode_clear(map);
 
   const node_t *cur_node = O2G_NULLPTR;
@@ -1178,15 +1170,15 @@ static void map_touchnode_update(map_t *map, gint x, gint y) {
   }
 }
 
-static void map_button_press(map_t *map, gint x, gint y) {
+static void map_button_press(map_t *map, int x, int y) {
 
   printf("left button pressed\n");
-  map->pen_down.is = TRUE;
+  map->pen_down.is = true;
 
   /* save press position */
   map->pen_down.at.x = x;
   map->pen_down.at.y = y;
-  map->pen_down.drag = FALSE;     // don't assume drag yet
+  map->pen_down.drag = false;     // don't assume drag yet
 
   /* determine wether this press was on an item */
   map->pen_down_item();
@@ -1234,7 +1226,7 @@ static void map_bg_adjust(map_t *map, gint x, gint y) {
 }
 
 static void map_button_release(map_t *map, gint x, gint y) {
-  map->pen_down.is = FALSE;
+  map->pen_down.is = false;
 
   /* before button release is handled */
   switch(map->action.type) {

@@ -84,7 +84,7 @@ struct map_state_t {
 
   float zoom;                          // zoom level (1.0 = 1m/pixel
   float detail;                        // deatil level (1.0 = normal)
-  struct { gint x,y; } scroll_offset;  // initial scroll offset
+  struct { int x,y; } scroll_offset;  // initial scroll offset
 };
 
 struct map_t {
@@ -121,11 +121,11 @@ struct map_t {
 
   /* variables required for pen/mouse handling */
   struct {
-    gboolean is;
-    gboolean drag;
+    bool is;
+    bool drag;
     map_item_t *on_item;
-    struct { gint x,y; } at;    // point mouse button was last pressed
-    struct { gint x,y; } so;    // initial scroll offset
+    struct { int x,y; } at;    // point mouse button was last pressed
+    struct { int x,y; } so;    // initial scroll offset
     bool on_selected_node;      // the currently clicked node
                                 // (may be part of a selected way)
   } pen_down;
@@ -178,7 +178,7 @@ struct map_t {
   void detail_normal();
 
   /* various functions required by map_edit */
-  map_item_t *item_at(gint x, gint y);
+  map_item_t *item_at(int x, int y);
 
   void pen_down_item();
 };

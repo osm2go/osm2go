@@ -347,7 +347,7 @@ void map_edit_way_cut_highlight(map_t *map, map_item_t *item, gint x, gint y) {
     lpos_t pos = map->canvas->window2world(x, y);
     int seg = canvas_item_get_segment(item->item, pos);
     if(seg >= 0) {
-      gint x0, y0, x1, y1;
+      int x0, y0, x1, y1;
       canvas_item_get_segment_pos(item->item, seg, x0, y0, x1, y1);
 
       gint width = (item->object.way->draw.flags &

@@ -23,7 +23,6 @@
 #include "canvas.h"
 #include "osm.h"
 
-#include <glib.h>
 #include <vector>
 
 struct map_item_t;
@@ -36,7 +35,7 @@ struct map_highlight_t {
 /**
  * @brief draw highlight cursor on screen coordinates
  */
-void map_hl_cursor_draw(map_t *map, gint x, gint y, unsigned int radius);
+void map_hl_cursor_draw(map_t *map, int x, int y, unsigned int radius);
 /**
  * @brief draw highlight cursor on map coordinates
  */
@@ -51,14 +50,15 @@ void map_hl_remove(map_t *map);
 bool map_hl_item_is_highlighted(map_t *map, map_item_t *item);
 
 canvas_item_t *map_hl_circle_new(map_t *map, canvas_group_t group, map_item_t *map_item,
-				 gint x, gint y, gint radius, canvas_color_t color);
+                                 int x, int y, unsigned int radius, canvas_color_t color);
 
 canvas_item_t *map_hl_polyline_new(map_t *map, canvas_group_t group, map_item_t *map_item,
-				   canvas_points_t *points, gint width, canvas_color_t color);
+                                   canvas_points_t *points, unsigned int width,
+                                   canvas_color_t color);
 
 canvas_item_t *map_hl_polygon_new(map_t *map, canvas_group_t group, map_item_t *map_item,
 				   canvas_points_t *points, canvas_color_t color);
 
-void map_hl_segment_draw(map_t *map, gint width, gint x0, gint y0, gint x1, gint y1);
+void map_hl_segment_draw(map_t *map, unsigned int width, int x0, int y0, int x1, int y1);
 
 #endif // MAP_HL_H
