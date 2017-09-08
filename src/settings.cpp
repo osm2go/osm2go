@@ -38,7 +38,7 @@
 #include <osm2go_cpp.h>
 #include "osm2go_stl.h"
 
-#define ST_ENTRY(map, a) map[#a] = &a
+#define ST_ENTRY(map, a) map.push_back(std::pair<const char *, typeof(a) *>(#a, &a))
 
 static const std::string keybase = "/apps/" PACKAGE "/";
 const char *api06https = "https://api.openstreetmap.org/api/0.6";
@@ -243,8 +243,8 @@ void settings_t::save() const {
     initTrackVisibility();
 
   /* store everything listed in the store tables */
-  const std::map<const char *, std::string *>::const_iterator sitEnd = store_str.end();
-  for(std::map<const char *, std::string *>::const_iterator it = store_str.begin();
+  const StringKeys::const_iterator sitEnd = store_str.end();
+  for(StringKeys::const_iterator it = store_str.begin();
       it != sitEnd; it++) {
     key = keybase + it->first;
 
@@ -254,8 +254,8 @@ void settings_t::save() const {
       gconf_client_unset(client, key.c_str(), O2G_NULLPTR);
   }
 
-  const std::map<const char *, bool *>::const_iterator bitEnd = store_bool.end();
-  for(std::map<const char *, bool *>::const_iterator it = store_bool.begin();
+  const BooleanKeys::const_iterator bitEnd = store_bool.end();
+  for(BooleanKeys::const_iterator it = store_bool.begin();
       it != bitEnd; it++) {
     key = keybase + it->first;
 
@@ -288,7 +288,12 @@ settings_t::settings_t()
   : enable_gps(FALSE)
   , follow_gps(FALSE)
   , first_run_demo(false)
+  , store_str(7)
+  , store_bool(2)
 {
+  store_str.clear();
+  store_bool.clear();
+
   /* not user configurable */
   ST_ENTRY(store_str, base_path);
 

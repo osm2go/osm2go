@@ -22,9 +22,9 @@
 
 #include <track.h>
 
-#include <map>
 #include <string>
 #include <vector>
+#include <utility>
 
 /* define this for a vertical UI layout */
 #undef PORTRAIT
@@ -75,8 +75,10 @@ public:
   void save() const;
 
 private:
-  std::map<const char *, std::string *> store_str;
-  std::map<const char *, bool *> store_bool;
+  typedef std::vector<std::pair<const char *, std::string *> > StringKeys;
+  StringKeys store_str;
+  typedef std::vector<std::pair<const char *, bool *> > BooleanKeys;
+  BooleanKeys store_bool;
 };
 
 /**
