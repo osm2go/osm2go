@@ -683,7 +683,7 @@ static void map_frisket_draw(map_t *map, const bounds_t *bounds) {
   canvas_points_free(points);
 }
 
-template<typename T> void free_map_item_chain(std::pair<item_id_t, T *> pair) {
+static void free_map_item_chain(std::pair<item_id_t, visible_item_t *> pair) {
   delete pair.second->map_item_chain;
   pair.second->map_item_chain = O2G_NULLPTR;
 }
@@ -695,15 +695,15 @@ template<bool b> void free_track_item_chain(track_seg_t &seg) {
 }
 
 static void map_free_map_item_chains(appdata_t &appdata) {
-  if(!appdata.osm)
+  if(G_UNLIKELY(!appdata.osm))
     return;
 
   /* free all map_item_chains */
   std::for_each(appdata.osm->nodes.begin(), appdata.osm->nodes.end(),
-                free_map_item_chain<node_t>);
+                free_map_item_chain);
 
   std::for_each(appdata.osm->ways.begin(), appdata.osm->ways.end(),
-                free_map_item_chain<way_t>);
+                free_map_item_chain);
 
   if (appdata.track.track) {
     /* remove all segments */
@@ -714,11 +714,7 @@ static void map_free_map_item_chains(appdata_t &appdata) {
 }
 
 static gboolean map_destroy_event(map_t *map) {
-  map->set_autosave(false);
-
   printf("destroying entire map\n");
-
-  map_free_map_item_chains(map->appdata);
 
   map->appdata.map = O2G_NULLPTR;
   delete map;
@@ -1580,6 +1576,10 @@ map_t::map_t(appdata_t &a)
 
 map_t::~map_t()
 {
+  set_autosave(false);
+
+  map_free_map_item_chains(appdata);
+
   /* destroy existing highlight */
   delete highlight;
 }
