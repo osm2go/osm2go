@@ -74,6 +74,18 @@ static GtkWidget *gtk_label_left_new(const char *str = O2G_NULLPTR) {
   return label;
 }
 
+static GtkWidget *pos_lat_label_new(pos_float_t lat) {
+  char str[32];
+  pos_lat_str(str, sizeof(str), lat);
+  return gtk_label_new(str);
+}
+
+static GtkWidget *pos_lon_label_new(pos_float_t lon) {
+  char str[32];
+  pos_lon_str(str, sizeof(str), lon);
+  return gtk_label_new(str);
+}
+
 project_context_t::project_context_t(appdata_t &a, project_t *p, gboolean n,
                                      const std::vector<project_t *> &j, GtkWidget *dlg)
   : project(p)
@@ -109,6 +121,18 @@ struct select_context_t {
   GtkWidget *list;
   GtkListStore *store;
 };
+
+static void pos_lat_label_set(GtkWidget *label, pos_float_t lat) {
+  char str[32];
+  pos_lat_str(str, sizeof(str), lat);
+  gtk_label_set_text(GTK_LABEL(label), str);
+}
+
+static void pos_lon_label_set(GtkWidget *label, pos_float_t lon) {
+  char str[32];
+  pos_lon_str(str, sizeof(str), lon);
+  gtk_label_set_text(GTK_LABEL(label), str);
+}
 
 static bool project_edit(select_context_t *scontext,
                              project_t *project, gboolean is_new);
@@ -1026,9 +1050,9 @@ static void on_edit_clicked(project_context_t *context) {
     /* the wms layer isn't usable with new coordinates */
     wms_remove_file(*project);
 
-    pos_lon_label_set(context->minlat, project->min.lat);
+    pos_lat_label_set(context->minlat, project->min.lat);
     pos_lon_label_set(context->minlon, project->min.lon);
-    pos_lon_label_set(context->maxlat, project->max.lat);
+    pos_lat_label_set(context->maxlat, project->max.lat);
     pos_lon_label_set(context->maxlon, project->max.lon);
 
     gboolean pos_valid = project_pos_is_valid(project);

@@ -54,6 +54,117 @@
 /* limit of square kilometers above the warning is enabled */
 #define WARN_OVER  5.0
 
+/**
+ * @brief parse a latitude value from an input widget
+ * @param widget the input widget
+ * @param lat storage for the parsed value
+ * @returns if the input was a valid latitude value
+ *
+ * If the function returns false, lat will not be modified.
+ */
+static bool pos_lat_get(GtkWidget *widget, pos_float_t &lat) {
+  const char *p = gtk_entry_get_text(GTK_ENTRY(widget));
+  pos_float_t t = g_strtod(p, O2G_NULLPTR);
+  bool ret = pos_lat_valid(t);
+  if(ret)
+    lat = t;
+  return ret;
+}
+
+/**
+ * @brief parse a longitude value from an input widget
+ * @param widget the input widget
+ * @param lon storage for the parsed value
+ * @returns if the input was a valid longitude value
+ *
+ * If the function returns false, lon will not be modified.
+ */
+static bool pos_lon_get(GtkWidget *widget, pos_float_t &lon) {
+  const char *p = gtk_entry_get_text(GTK_ENTRY(widget));
+  pos_float_t t = g_strtod(p, O2G_NULLPTR);
+  bool ret = pos_lon_valid(t);
+  if(ret)
+    lon = t;
+  return ret;
+}
+
+static void mark(GtkWidget *widget, bool valid) {
+  gtk_widget_set_state(widget, valid ? GTK_STATE_NORMAL : GTK_STATE_PRELIGHT);
+}
+
+static void callback_modified_lat(GtkWidget *widget) {
+  pos_float_t tmp;
+  mark(widget, pos_lat_get(widget, tmp));
+}
+
+/* a entry that is colored red when being "active" */
+static GtkWidget *pos_lat_entry_new(pos_float_t lat) {
+  GdkColor color;
+  GtkWidget *widget = entry_new();
+  gdk_color_parse("red", &color);
+  gtk_widget_modify_text(widget, GTK_STATE_PRELIGHT, &color);
+
+  char str[32];
+  pos_lat_str(str, sizeof(str), lat);
+  gtk_entry_set_text(GTK_ENTRY(widget), str);
+
+  g_signal_connect(G_OBJECT(widget), "changed",
+                   G_CALLBACK(callback_modified_lat), O2G_NULLPTR);
+
+  return widget;
+}
+
+static void callback_modified_lon(GtkWidget *widget) {
+  pos_float_t tmp;
+  mark(widget, pos_lon_get(widget, tmp));
+}
+
+/* a entry that is colored red when filled with invalid coordinate */
+static GtkWidget *pos_lon_entry_new(pos_float_t lon) {
+  GdkColor color;
+  GtkWidget *widget = entry_new();
+  gdk_color_parse("#ff0000", &color);
+  gtk_widget_modify_text(widget, GTK_STATE_PRELIGHT, &color);
+
+  char str[32];
+  pos_lon_str(str, sizeof(str), lon);
+  gtk_entry_set_text(GTK_ENTRY(widget), str);
+
+  g_signal_connect(G_OBJECT(widget), "changed",
+                   G_CALLBACK(callback_modified_lon), O2G_NULLPTR);
+
+  return widget;
+}
+
+static void pos_lat_entry_set(GtkWidget *entry, pos_float_t lat) {
+  char str[32];
+  pos_lat_str(str, sizeof(str), lat);
+  gtk_entry_set_text(GTK_ENTRY(entry), str);
+}
+
+static void pos_lon_entry_set(GtkWidget *entry, pos_float_t lon) {
+  char str[32];
+  pos_lon_str(str, sizeof(str), lon);
+  gtk_entry_set_text(GTK_ENTRY(entry), str);
+}
+
+static void pos_dist_entry_set(GtkWidget *entry, pos_float_t dist, bool is_mil) {
+  char str[32] = "---";
+  if(!std::isnan(dist)) {
+    /* is this to be displayed as miles? */
+    if(is_mil) dist /= KMPMIL;  // kilometer per mile
+
+    snprintf(str, sizeof(str), "%.4f", dist);
+    remove_trailing_zeroes(str);
+  }
+  gtk_entry_set_text(GTK_ENTRY(entry), str);
+}
+
+static pos_float_t pos_dist_get(GtkWidget *widget, bool is_mil) {
+  const gchar *p = gtk_entry_get_text(GTK_ENTRY(widget));
+  return g_strtod(p, O2G_NULLPTR) * (is_mil?KMPMIL:1.0);
+}
+
 struct context_t {
   explicit context_t(area_edit_t &a);
 
@@ -113,18 +224,6 @@ area_edit_t::area_edit_t(appdata_t &a, pos_t &mi, pos_t &ma, GtkWidget *dlg)
   , min(mi)
   , max(ma)
 {
-}
-
-static void parse_and_set_lat(GtkWidget *src, pos_float_t &store) {
-  pos_float_t i = pos_parse_lat(gtk_entry_get_text(GTK_ENTRY(src)));
-  if(pos_lat_valid(i))
-    store = i;
-}
-
-static void parse_and_set_lon(GtkWidget *src, pos_float_t &store) {
-  pos_float_t i = pos_parse_lon(gtk_entry_get_text(GTK_ENTRY(src)));
-  if(pos_lon_valid(i))
-    store = i;
 }
 
 /**
@@ -366,10 +465,11 @@ static void callback_modified_direct(context_t *context) {
     return;
 
   /* parse the fields from the direct entry pad */
-  parse_and_set_lat(context->direct.minlat, context->min.lat);
-  parse_and_set_lon(context->direct.minlon, context->min.lon);
-  parse_and_set_lat(context->direct.maxlat, context->max.lat);
-  parse_and_set_lon(context->direct.maxlon, context->max.lon);
+  if(G_UNLIKELY(!pos_lat_get(context->direct.minlat, context->min.lat) &&
+                !pos_lon_get(context->direct.minlon, context->min.lon) &&
+                !pos_lat_get(context->direct.maxlat, context->max.lat) &&
+                !pos_lon_get(context->direct.maxlon, context->max.lon)))
+    return;
 
   area_main_update(context);
 
@@ -385,10 +485,9 @@ static void callback_modified_extent(context_t *context) {
   if(!current_tab_is(context, -1, TAB_LABEL_EXTENT))
     return;
 
-  pos_float_t center_lat = pos_lat_get(context->extent.lat);
-  pos_float_t center_lon = pos_lon_get(context->extent.lon);
-
-  if(!pos_lat_valid(center_lat) || !pos_lon_valid(center_lon))
+  pos_float_t center_lat, center_lon;
+  if(G_UNLIKELY(!pos_lat_get(context->extent.lat, center_lat) ||
+                !pos_lon_get(context->extent.lon, center_lon)))
     return;
 
   double vscale = DEG2RAD(POS_EQ_RADIUS / 1000.0);
@@ -672,23 +771,21 @@ bool area_edit_t::run() {
   gtk_table_set_col_spacings(GTK_TABLE(table), 10);
   gtk_table_set_row_spacings(GTK_TABLE(table), 5);
 
-  context.direct.minlat = pos_lat_entry_new(0.0);
+  context.direct.minlat = pos_lat_entry_new(min.lat);
   misc_table_attach(table, context.direct.minlat, 0, 0);
   GtkWidget *label = gtk_label_new(_("to"));
   misc_table_attach(table,  label, 1, 0);
-  context.direct.maxlat = pos_lat_entry_new(0.0);
+  context.direct.maxlat = pos_lat_entry_new(max.lat);
   misc_table_attach(table, context.direct.maxlat, 2, 0);
 
   context.direct.minlon = pos_lon_entry_new(min.lon);
   misc_table_attach(table, context.direct.minlon, 0, 1);
   label = gtk_label_new(_("to"));
   misc_table_attach(table,  label, 1, 1);
-  context.direct.maxlon = pos_lon_entry_new(0.0);
+  context.direct.maxlon = pos_lon_entry_new(max.lat);
   misc_table_attach(table, context.direct.maxlon, 2, 1);
 
   /* setup this page */
-  direct_update(&context);
-
   g_signal_connect_swapped(G_OBJECT(context.direct.minlat), "changed",
                            G_CALLBACK(callback_modified_direct), &context);
   g_signal_connect_swapped(G_OBJECT(context.direct.minlon), "changed",

@@ -21,7 +21,6 @@
 #define POS_H
 
 #include <glib.h>
-#include <gtk/gtk.h>
 
 /* format string used to write lat/lon coordinates, altitude and time */
 #define LL_FORMAT   "%.07f"
@@ -102,27 +101,8 @@ struct bounds_t {
 void pos_lat_str(char *str, size_t len, pos_float_t latitude);
 void pos_lon_str(char *str, size_t len, pos_float_t longitude);
 
-pos_float_t pos_parse_lat(const char *str);
-pos_float_t pos_parse_lon(const char *str);
-
-GtkWidget *pos_lat_entry_new(pos_float_t lat);
-GtkWidget *pos_lon_entry_new(pos_float_t lon);
-void pos_lat_entry_set(GtkWidget *label, pos_float_t lat);
-void pos_lon_entry_set(GtkWidget *label, pos_float_t lon);
-
-GtkWidget *pos_lat_label_new(pos_float_t lat);
-GtkWidget *pos_lon_label_new(pos_float_t lon);
-void pos_lat_label_set(GtkWidget *label, pos_float_t lat);
-void pos_lon_label_set(GtkWidget *label, pos_float_t lon);
-
-pos_float_t pos_lat_get(GtkWidget *widget);
-pos_float_t pos_lon_get(GtkWidget *widget);
-
 bool pos_lat_valid(pos_float_t lat);
 bool pos_lon_valid(pos_float_t lon);
-
-void pos_dist_entry_set(GtkWidget *entry, pos_float_t dist, bool is_mil);
-pos_float_t pos_dist_get(GtkWidget *widget, bool is_mil);
 
 bool position_in_rect(const pos_t &ll_min, const pos_t &ll_max, const pos_t &pos);
 

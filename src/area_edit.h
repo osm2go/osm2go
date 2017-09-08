@@ -22,6 +22,7 @@
 
 #include "pos.h"
 
+#include <gtk/gtk.h>
 #include <vector>
 
 struct appdata_t;
