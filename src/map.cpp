@@ -713,7 +713,7 @@ static void map_free_map_item_chains(appdata_t &appdata) {
   }
 }
 
-static gint map_destroy_event(map_t *map) {
+static gboolean map_destroy_event(map_t *map) {
   map->set_autosave(false);
 
   printf("destroying entire map\n");
