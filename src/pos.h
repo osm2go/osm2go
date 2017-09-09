@@ -105,6 +105,8 @@ bool pos_lon_valid(pos_float_t lon);
 
 bool position_in_rect(const pos_t &ll_min, const pos_t &ll_max, const pos_t &pos);
 
+void remove_trailing_zeroes(char *str);
+
 #endif
 
 #endif // POS_H

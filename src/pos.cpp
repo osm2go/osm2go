@@ -19,8 +19,6 @@
 
 #include "pos.h"
 
-#include "misc.h"
-
 #include <osm2go_cpp.h>
 
 #include <cmath>
@@ -94,4 +92,15 @@ bool position_in_rect(const pos_t &ll_min, const pos_t &ll_max, const pos_t &pos
   if((pos.lon < ll_min.lon) || (pos.lon > ll_max.lon))
     return false;
   return true;
+}
+
+void remove_trailing_zeroes(char *str) {
+  char *delim = strpbrk(str, ".,");
+  if(delim == O2G_NULLPTR)
+    return;
+  char *p = delim + strlen(delim) - 1;
+  while(*p == '0')
+    *p-- = '\0';
+  if((*p == '.') || (*p == ','))
+    *p = '\0';
 }

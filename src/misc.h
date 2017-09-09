@@ -67,8 +67,6 @@ template<typename T> void shrink_to_fit(T &v) {
 
 struct pos_t;
 
-void remove_trailing_zeroes(char *str);
-
 double xml_get_prop_float(xmlNode *node, const char *prop);
 bool xml_get_prop_is(xmlNode *node, const char *prop, const char *str);
 pos_t xml_get_prop_pos(xmlNode *node);

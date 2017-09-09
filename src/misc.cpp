@@ -43,17 +43,6 @@
 
 #include <osm2go_cpp.h>
 
-void remove_trailing_zeroes(char *str) {
-  char *delim = strpbrk(str, ".,");
-  if(delim == O2G_NULLPTR)
-    return;
-  char *p = delim + strlen(delim) - 1;
-  while(*p == '0')
-    *p-- = '\0';
-  if((*p == '.') || (*p == ','))
-    *p = '\0';
-}
-
 double xml_get_prop_float(xmlNode *node, const char *prop) {
   xmlChar *str = xmlGetProp(node, BAD_CAST prop);
   double value = NAN;
