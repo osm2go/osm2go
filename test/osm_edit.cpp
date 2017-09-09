@@ -667,18 +667,19 @@ static void test_reverse()
     rtags.insert(osm_t::TagMap::value_type("type", i == 0 ? "multipolygon" : "route"));
     r->tags.replace(rtags);
     if(i < 4) {
-      const char *role = O2G_NULLPTR;
+      char *role = O2G_NULLPTR;
       switch(i) {
       case 0:
       case 1:
-        role = "forward";
+        role = strdup("forward");
         break;
       case 2:
-        role = "backward";
+        role = strdup("backward");
         break;
       }
-      r->members.push_back(member_t(object_t(w), g_strdup(role)));
-      r->members.push_back(member_t(object_t(n1), g_strdup(role)));
+      r->members.push_back(member_t(object_t(w), role));
+      r->members.push_back(member_t(object_t(n1),
+                                    role == O2G_NULLPTR ? O2G_NULLPTR : strdup(role)));
     }
   }
 

@@ -137,11 +137,11 @@ static bool relation_add_item(GtkWidget *parent, relation_t *relation,
   if(GTK_WIDGET_TYPE(entry) == combo_box_entry_type()) {
     const std::string &rstr = combo_box_get_active_text(entry);
     if(!rstr.empty())
-      role = g_strdup(rstr.c_str());
+      role = strdup(rstr.c_str());
   } else {
     const char *ptr = gtk_entry_get_text(GTK_ENTRY(entry));
     if(ptr && strlen(ptr))
-      role = g_strdup(ptr);
+      role = strdup(ptr);
   }
 
   gtk_widget_destroy(dialog);

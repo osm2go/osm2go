@@ -31,6 +31,7 @@
 #include <tr1/cinttypes>
 #include <tr1/cstdint>
 #endif
+#include <cstdlib>
 #include <map>
 #include <string>
 #include <vector>
@@ -135,7 +136,7 @@ struct member_t {
   { return object == other; }
 
   static inline void clear(member_t &member) {
-    g_free(member.role);
+    free(member.role);
   }
 
   /**
