@@ -633,7 +633,7 @@ void TrackSax::endElement(const xmlChar *name)
   case TagTrkSeg: {
     // drop empty segments
     std::vector<track_point_t> &last = track->segments.back().track_points;
-    if(last.empty()) {
+    if(G_UNLIKELY(last.empty())) {
       track->segments.pop_back();
     } else {
       // this vector will never be appended to again, so shrink it to the size
