@@ -457,20 +457,20 @@ public:
 
   /* visual representation from elemstyle */
   struct {
-    guint color;
-    guint flags : 8;
-    gint width : 8;
-    guint dash_length_on: 8;
-    guint dash_length_off: 8;
+    unsigned int color;
+    unsigned int flags : 8;
+    int width : 8;
+    unsigned int dash_length_on: 8;
+    unsigned int dash_length_off: 8;
 
     union {
       struct {
-	guint color;
-	gint width;
+        unsigned int color;
+        int width;
       } bg;
 
       struct {
-	guint color;
+        unsigned int color;
       } area;
     };
   } draw;
@@ -541,7 +541,7 @@ public:
   std::vector<member_t>::iterator find_member_object(const object_t &o);
   std::vector<member_t>::const_iterator find_member_object(const object_t &o) const;
 
-  void members_by_type(guint &nodes, guint &ways, guint &relations) const;
+  void members_by_type(unsigned int &nodes, unsigned int &ways, unsigned int &relations) const;
   std::string descriptive_name() const;
   void generate_member_xml(xmlNodePtr xml_node) const;
 
