@@ -20,11 +20,12 @@
 #ifndef TRACK_H
 #define TRACK_H
 
-#include "canvas.h"
 #include "pos.h"
 
-#include <glib.h>
+#include <ctime>
 #include <vector>
+
+struct canvas_item_t;
 
 enum TrackVisibility {
   RecordOnly,   ///< record track, nothing drawn
@@ -79,6 +80,6 @@ track_t *track_import(const char *filename);
  */
 void track_menu_set(appdata_t &appdata);
 
-void track_enable_gps(appdata_t &appdata, gboolean enable);
+void track_enable_gps(appdata_t &appdata, bool enable);
 
 #endif // TRACK_H

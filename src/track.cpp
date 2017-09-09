@@ -497,10 +497,11 @@ static void track_do_enable_gps(appdata_t &appdata) {
   }
 }
 
-void track_enable_gps(appdata_t &appdata, gboolean enable) {
+void track_enable_gps(appdata_t &appdata, bool enable) {
   printf("request to %sable gps\n", enable?"en":"dis");
 
-  gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_TRACK_FOLLOW_GPS], enable);
+  gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_TRACK_FOLLOW_GPS],
+                           enable ? TRUE : FALSE);
 
   if(enable) track_do_enable_gps(appdata);
   else       track_do_disable_gps(appdata);
