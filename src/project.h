@@ -24,7 +24,6 @@
 
 #include "pos.h"
 
-#include <glib.h>
 #include <gtk/gtk.h>
 #include <libxml/parser.h>
 #include <string>
@@ -40,7 +39,9 @@ struct project_t {
 
   const char *server; /**< the server string used, either rserver or settings->server */
 
-  struct { gint x, y; } wms_offset;
+  struct {
+    int x, y;
+  } wms_offset;
 
   map_state_t &map_state;
 
