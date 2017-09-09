@@ -23,6 +23,14 @@
 #include "pos.h"
 
 #include <algorithm>
+#if __cplusplus >= 201103L
+#include <cinttypes>
+#include <cstdint>
+#else
+#define _GLIBCXX_USE_C99_INTTYPES_TR1 1
+#include <tr1/cinttypes>
+#include <tr1/cstdint>
+#endif
 #include <map>
 #include <string>
 #include <vector>
@@ -40,9 +48,8 @@
 
 /* item_id_t needs to be signed as osm2go uses negative ids for items */
 /* not yet registered with the main osm database */
-typedef gint64 item_id_t;
-#define G_TYPE_ITEM_ID_T G_TYPE_INT64
-#define ITEM_ID_FORMAT  "%" G_GINT64_FORMAT
+typedef int64_t item_id_t;
+#define ITEM_ID_FORMAT  "%" PRIi64
 
 #define ID_ILLEGAL  (static_cast<item_id_t>(0))
 
