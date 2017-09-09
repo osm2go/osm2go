@@ -43,6 +43,7 @@
 #include <strings.h>
 #include <utility>
 
+#include <glib.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 
@@ -51,6 +52,8 @@
 #ifndef LIBXML_TREE_ENABLED
 #error "Tree not enabled in libxml"
 #endif
+
+static_assert(sizeof(tag_list_t) == sizeof(tag_t *), "tag_list_t is not exactly as big as a pointer");
 
 bool object_t::operator==(const object_t &other) const
 {

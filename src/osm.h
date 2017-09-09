@@ -39,7 +39,6 @@
 #include <osm2go_cpp.h>
 #include "osm2go_stl.h"
 
-#include <glib.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 
@@ -361,8 +360,6 @@ private:
   // any tags and that would waste too much memory
   std::vector<tag_t> *contents;
 };
-
-static_assert(sizeof(tag_list_t) == sizeof(tag_t *), "tag_list_t is not exactly as big as a pointer");
 
 class base_object_t {
 public:
