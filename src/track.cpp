@@ -404,7 +404,6 @@ static gboolean track_append_position(appdata_t &appdata, const pos_t &pos, floa
       if(seg.item_chain.empty()) {
         /* the segment can now be drawn for the first time */
         printf("initial draw\n");
-        g_assert_true(seg.item_chain.empty());
         appdata.map->track_draw_seg(seg);
       } else {
         /* the segment has to be updated */
