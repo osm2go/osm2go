@@ -30,6 +30,7 @@
 #include "osm2go_platform.h"
 #include "project.h"
 #include "relation_edit.h"
+#include "settings.h"
 #include "statusbar.h"
 #include "style.h"
 #include "track.h"

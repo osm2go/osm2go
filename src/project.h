@@ -20,8 +20,6 @@
 #ifndef PROJECT_H
 #define PROJECT_H
 
-#include "settings.h"
-
 #include "pos.h"
 
 #include <gtk/gtk.h>

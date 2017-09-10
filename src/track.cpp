@@ -30,6 +30,7 @@
 #include "map.h"
 #include "misc.h"
 #include "project.h"
+#include "settings.h"
 
 #include <cmath>
 #include <cstring>

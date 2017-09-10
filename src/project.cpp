@@ -29,6 +29,7 @@
 #include "misc.h"
 #include "osm_api.h"
 #include "osm2go_platform.h"
+#include "settings.h"
 #include "statusbar.h"
 #include "track.h"
 #include "wms.h"

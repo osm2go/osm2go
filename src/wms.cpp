@@ -25,6 +25,7 @@
 #include "misc.h"
 #include "net_io.h"
 #include "project.h"
+#include "settings.h"
 
 #include <algorithm>
 #include <cmath>
