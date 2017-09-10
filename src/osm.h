@@ -153,6 +153,29 @@ struct osm_t {
     Upload_Blocked
   };
 
+  struct dirty_t {
+    explicit dirty_t(const osm_t &osm);
+
+    template<typename T>
+    class counter {
+      struct object_counter {
+        counter<T> &dirty;
+        explicit object_counter(counter<T> &d) : dirty(d) {}
+        void operator()(std::pair<item_id_t, T *> pair);
+      };
+    public:
+      explicit counter(const std::map<item_id_t, T *> &map);
+      const unsigned int total;
+      unsigned int added, dirty;
+      std::vector<T *> modified;
+      std::vector<T *> deleted;
+    };
+
+    counter<node_t> nodes;
+    counter<way_t> ways;
+    counter<relation_t> relations;
+  };
+
   typedef std::multimap<std::string, std::string> TagMap;
 
   osm_t(icon_t &ic) : bounds(O2G_NULLPTR), icons(ic), uploadPolicy(Upload_Normal) {}
@@ -255,6 +278,10 @@ struct osm_t {
    * The victim node is deleted.
    */
   node_t *mergeNodes(node_t *first, node_t *second, bool &conflict);
+
+  dirty_t modified() const {
+    return dirty_t(*this);
+  }
 };
 
 xmlChar *osm_generate_xml_changeset(const std::string &comment, const std::string &src);

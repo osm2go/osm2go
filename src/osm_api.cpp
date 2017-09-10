@@ -482,57 +482,17 @@ static void upload_object(osm_upload_context_t &context, base_object_t *obj) {
   }
 }
 
-struct osm_dirty_t {
-  explicit osm_dirty_t(osm_t *osm)
-    : dialog(O2G_NULLPTR)
-    , nodes(osm->nodes)
-    , ways(osm->ways)
-    , relations(osm->relations)
-  {
-  }
-
-  GtkWidget *dialog;
-  template<typename T>
-  class counter {
-    struct object_counter {
-      counter<T> &dirty;
-      explicit object_counter(counter<T> &d) : dirty(d) {}
-      void operator()(std::pair<item_id_t, T *> pair);
-    };
-    struct upload_objects {
-      osm_upload_context_t &context;
-      std::map<item_id_t, T *> &map;
-      upload_objects(osm_upload_context_t &co, std::map<item_id_t, T*> &m)
-        : context(co), map(m) {}
-      void operator()(T *obj);
-    };
-
-  public:
-    explicit counter(const std::map<item_id_t, T *> &map)
-      : total(map.size())
-      , added(0)
-      , dirty(0)
-    {
-      std::for_each(map.begin(), map.end(), object_counter(*this));
-    }
-    const unsigned int total;
-    unsigned int added, dirty;
-    std::vector<T *> modified;
-    std::vector<T *> deleted;
-
-    void table_insert_count(GtkWidget *table, const int row) const;
-    void upload(osm_upload_context_t &context, std::map<item_id_t, T *> &map) {
-      std::for_each(modified.begin(), modified.end(), upload_objects(context, map));
-    }
-  };
-
-  counter<node_t> nodes;
-  counter<way_t> ways;
-  counter<relation_t> relations;
+template<typename T>
+struct upload_objects {
+  osm_upload_context_t &context;
+  std::map<item_id_t, T *> &map;
+  upload_objects(osm_upload_context_t &co, std::map<item_id_t, T*> &m)
+    : context(co), map(m) {}
+  void operator()(T *obj);
 };
 
 template<typename T>
-void osm_dirty_t::counter<T>::upload_objects::operator()(T *obj)
+void upload_objects<T>::operator()(T *obj)
 {
   item_id_t oldid = obj->id;
   upload_object(context, obj);
@@ -709,30 +669,14 @@ static gboolean cb_focus_in(GtkTextView *view, GdkEventFocus *,
 }
 
 template<typename T>
-void osm_dirty_t::counter<T>::object_counter::operator()(std::pair<item_id_t, T *> pair)
-{
-  T * const obj = pair.second;
-  int flags = obj->flags;
-  if(flags & OSM_FLAG_DELETED) {
-    dirty.deleted.push_back(obj);
-  } else if(obj->isNew()) {
-    dirty.added++;
-    dirty.modified.push_back(obj);
-  } else if(flags & OSM_FLAG_DIRTY) {
-    dirty.dirty++;
-    dirty.modified.push_back(obj);
-  }
+void table_insert_count(GtkWidget *table, const osm_t::dirty_t::counter<T> &counter, const int row) {
+  table_attach_int(table, counter.total,   1, 2, row, row + 1);
+  table_attach_int(table, counter.added,   2, 3, row, row + 1);
+  table_attach_int(table, counter.dirty,   3, 4, row, row + 1);
+  table_attach_int(table, counter.deleted.size(), 4, 5, row, row + 1);
 }
 
-template<typename T>
-void osm_dirty_t::counter<T>::table_insert_count(GtkWidget *table, const int row) const {
-  table_attach_int(table, total,   1, 2, row, row + 1);
-  table_attach_int(table, added,   2, 3, row, row + 1);
-  table_attach_int(table, dirty,   3, 4, row, row + 1);
-  table_attach_int(table, deleted.size(), 4, 5, row, row + 1);
-}
-
-static void details_table(GtkWidget *dialog, const osm_dirty_t &dirty) {
+static void details_table(GtkWidget *dialog, const osm_t::dirty_t &dirty) {
   GtkWidget *table = gtk_table_new(4, 5, TRUE);
 
   table_attach_label_c(table, _("Total"),          1, 2, 0, 1);
@@ -742,13 +686,13 @@ static void details_table(GtkWidget *dialog, const osm_dirty_t &dirty) {
 
   int row = 1;
   table_attach_label_l(table, _("Nodes:"),         0, 1, row, row + 1);
-  dirty.nodes.table_insert_count(table, row++);
+  table_insert_count(table, dirty.nodes, row++);
 
   table_attach_label_l(table, _("Ways:"),          0, 1, row, row + 1);
-  dirty.ways.table_insert_count(table, row++);
+  table_insert_count(table, dirty.ways, row++);
 
   table_attach_label_l(table, _("Relations:"),     0, 1, row, row + 1);
-  dirty.relations.table_insert_count(table, row++);
+  table_insert_count(table, dirty.relations, row++);
 
   gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
                      table, FALSE, FALSE, 0);
@@ -757,10 +701,10 @@ static void details_table(GtkWidget *dialog, const osm_dirty_t &dirty) {
 #ifdef FREMANTLE
 /* put additional infos into a seperate dialog for fremantle as */
 /* screen space is sparse there */
-static void info_more(const osm_dirty_t &context) {
+static void info_more(const osm_t::dirty_t &context, GtkWidget *parent) {
   GtkWidget *dialog =
     misc_dialog_new(MISC_DIALOG_SMALL, _("Changeset details"),
-		    GTK_WINDOW(context.dialog),
+                    GTK_WINDOW(parent),
 		    GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
 		    O2G_NULLPTR);
 
@@ -785,7 +729,7 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
   /* upload config and confirmation dialog */
 
   /* count objects */
-  osm_dirty_t dirty(osm);
+  osm_t::dirty_t dirty = osm->modified();
 
   printf("nodes:     new %2u, dirty %2u, deleted %2zu\n",
          dirty.nodes.added, dirty.nodes.dirty, dirty.nodes.deleted.size());
@@ -803,7 +747,6 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
 		    GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
 		    GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
 		    O2G_NULLPTR);
-  dirty.dialog = dialog;
 
 #ifndef FREMANTLE
   details_table(dialog, dirty);
@@ -879,7 +822,7 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
     switch(gtk_dialog_run(GTK_DIALOG(dialog))) {
 #ifdef FREMANTLE
     case GTK_RESPONSE_HELP:
-      info_more(dirty);
+      info_more(dirty, dialog);
       break;
 #endif
     case GTK_RESPONSE_ACCEPT:
@@ -965,15 +908,18 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
     /* check for dirty entries */
     if(!dirty.nodes.modified.empty()) {
       appendf(context.log, O2G_NULLPTR, _("Uploading nodes:\n"));
-      dirty.nodes.upload(context, osm->nodes);
+      std::for_each(dirty.nodes.modified.begin(), dirty.nodes.modified.end(),
+                    upload_objects<node_t>(context, osm->nodes));
     }
     if(!dirty.ways.modified.empty()) {
       appendf(context.log, O2G_NULLPTR, _("Uploading ways:\n"));
-      dirty.ways.upload(context, osm->ways);
+      std::for_each(dirty.ways.modified.begin(), dirty.ways.modified.end(),
+                    upload_objects<way_t>(context, osm->ways));
     }
     if(!dirty.relations.modified.empty()) {
       appendf(context.log, O2G_NULLPTR, _("Uploading relations:\n"));
-      dirty.relations.upload(context, osm->relations);
+      std::for_each(dirty.relations.modified.begin(), dirty.relations.modified.end(),
+                    upload_objects<relation_t>(context, osm->relations));
     }
     if(!dirty.relations.deleted.empty() || !dirty.ways.deleted.empty() || !dirty.nodes.deleted.empty()) {
       appendf(context.log, O2G_NULLPTR, _("Deleting objects:\n"));

@@ -2467,4 +2467,43 @@ relation_t *osm_t::relation_by_id(item_id_t id) const {
   return osm_find_by_id<relation_t>(relations, id);
 }
 
+osm_t::dirty_t::dirty_t(const osm_t &osm)
+  : nodes(osm.nodes)
+  , ways(osm.ways)
+  , relations(osm.relations)
+{
+}
+
+template<typename T>
+struct object_counter {
+  osm_t::dirty_t::counter<T> &dirty;
+  explicit object_counter(osm_t::dirty_t::counter<T> &d) : dirty(d) {}
+  void operator()(std::pair<item_id_t, T *> pair);
+};
+
+template<typename T>
+void osm_t::dirty_t::counter<T>::object_counter::operator()(std::pair<item_id_t, T *> pair)
+{
+  T * const obj = pair.second;
+  int flags = obj->flags;
+  if(flags & OSM_FLAG_DELETED) {
+    dirty.deleted.push_back(obj);
+  } else if(obj->isNew()) {
+    dirty.added++;
+    dirty.modified.push_back(obj);
+  } else if(flags & OSM_FLAG_DIRTY) {
+    dirty.dirty++;
+    dirty.modified.push_back(obj);
+  }
+}
+
+template<typename T>
+osm_t::dirty_t::counter<T>::counter(const std::map<item_id_t, T *> &map)
+  : total(map.size())
+  , added(0)
+  , dirty(0)
+{
+  std::for_each(map.begin(), map.end(), object_counter(*this));
+}
+
 // vim:et:ts=8:sw=2:sts=2:ai

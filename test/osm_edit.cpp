@@ -381,6 +381,16 @@ static void test_split()
   g_assert_cmpuint(r2->members.size(), ==, 5);
   g_assert_cmpuint(r3->members.size(), ==, 1);
 
+  osm_t::dirty_t dirty0 = o.modified();
+  g_assert_cmpuint(dirty0.nodes.dirty, ==, 0);
+  g_assert_cmpuint(dirty0.nodes.added, ==, 6);
+  g_assert_cmpuint(dirty0.nodes.modified.size(), ==, dirty0.nodes.added);
+  g_assert_cmpuint(dirty0.nodes.deleted.size(), ==, 0);
+  g_assert_cmpuint(dirty0.ways.dirty, ==, 0);
+  g_assert_cmpuint(dirty0.ways.added, ==, 3);
+  g_assert_cmpuint(dirty0.ways.modified.size(), ==, dirty0.ways.added);
+  g_assert_cmpuint(dirty0.ways.deleted.size(), ==, 0);
+
   // now split the remaining way at a node
   way_t *neww2 = w->split(&o, w->node_chain.begin() + 2, true);
   g_assert_nonnull(neww2);
@@ -391,6 +401,16 @@ static void test_split()
       g_assert_cmpuint(nodes[4]->ways, ==, 3);
     else
       g_assert_cmpuint(nodes[i]->ways, ==, 2);
+
+  osm_t::dirty_t dirty1 = o.modified();
+  g_assert_cmpuint(dirty1.nodes.dirty, ==, 0);
+  g_assert_cmpuint(dirty1.nodes.added, ==, 6);
+  g_assert_cmpuint(dirty1.nodes.modified.size(), ==, dirty1.nodes.added);
+  g_assert_cmpuint(dirty1.nodes.deleted.size(), ==, 0);
+  g_assert_cmpuint(dirty1.ways.dirty, ==, 0);
+  g_assert_cmpuint(dirty1.ways.added, ==, 4);
+  g_assert_cmpuint(dirty1.ways.modified.size(), ==, dirty1.ways.added);
+  g_assert_cmpuint(dirty1.ways.deleted.size(), ==, 0);
 
   g_assert_true(w->contains_node(nodes[4]));
   g_assert_true(w->ends_with_node(nodes[4]));
@@ -859,6 +879,8 @@ static void test_member_delete()
 
   l.x = 20;
   n2 = o.node_new(l);
+  n2->flags = 0;
+  n2->version = 1;
   n2->id = 42;
   o.nodes[n2->id] = n2;
   w->append_node(n2);
@@ -868,6 +890,21 @@ static void test_member_delete()
   r->members.push_back(member_t(object_t(w), O2G_NULLPTR));
   r->members.push_back(member_t(object_t(n2), O2G_NULLPTR));
   o.relation_attach(r);
+
+  osm_t::dirty_t dirty0 = o.modified();
+  g_assert_cmpuint(dirty0.nodes.total, ==, 3);
+  g_assert_cmpuint(dirty0.nodes.dirty, ==, 0);
+  g_assert_cmpuint(dirty0.nodes.added, ==, 2);
+  g_assert_cmpuint(dirty0.nodes.modified.size(), ==, dirty0.nodes.added);
+  g_assert_cmpuint(dirty0.nodes.deleted.size(), ==, 0);
+  g_assert_cmpuint(dirty0.ways.dirty, ==, 0);
+  g_assert_cmpuint(dirty0.ways.added, ==, 1);
+  g_assert_cmpuint(dirty0.ways.modified.size(), ==, dirty0.ways.added);
+  g_assert_cmpuint(dirty0.ways.deleted.size(), ==, 0);
+  g_assert_cmpuint(dirty0.relations.dirty, ==, 0);
+  g_assert_cmpuint(dirty0.relations.added, ==, 1);
+  g_assert_cmpuint(dirty0.relations.modified.size(), ==, dirty0.relations.added);
+  g_assert_cmpuint(dirty0.relations.deleted.size(), ==, 0);
 
   guint nodes = 0, ways = 0, relations = 0;
   r->members_by_type(nodes, ways, relations);
@@ -883,7 +920,22 @@ static void test_member_delete()
   g_assert_cmpuint(o.ways.size(), ==, 1);
   g_assert_cmpuint(o.relations.size(), ==, 1);
   g_assert_true(n2->tags.empty());
-  g_assert_cmpuint(n2->flags, ==, OSM_FLAG_DELETED | OSM_FLAG_DIRTY);
+  g_assert_cmpuint(n2->flags, ==, OSM_FLAG_DELETED);
+
+  osm_t::dirty_t dirty1 = o.modified();
+  g_assert_cmpuint(dirty1.nodes.total, ==, 3);
+  g_assert_cmpuint(dirty1.nodes.dirty, ==, 0);
+  g_assert_cmpuint(dirty1.nodes.added, ==, 2);
+  g_assert_cmpuint(dirty1.nodes.modified.size(), ==, dirty1.nodes.added);
+  g_assert_cmpuint(dirty1.nodes.deleted.size(), ==, 1);
+  g_assert_cmpuint(dirty1.ways.dirty, ==, 0);
+  g_assert_cmpuint(dirty1.ways.added, ==, 1);
+  g_assert_cmpuint(dirty1.ways.modified.size(), ==, dirty1.ways.added);
+  g_assert_cmpuint(dirty1.ways.deleted.size(), ==, 0);
+  g_assert_cmpuint(dirty1.relations.dirty, ==, 0);
+  g_assert_cmpuint(dirty1.relations.added, ==, 1);
+  g_assert_cmpuint(dirty1.relations.modified.size(), ==, dirty1.relations.added);
+  g_assert_cmpuint(dirty1.relations.deleted.size(), ==, 0);
 
   nodes = 0;
   ways = 0;
