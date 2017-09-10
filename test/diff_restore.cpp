@@ -130,9 +130,9 @@ static void compare_with_file(const void *buf, size_t len, const char *fn)
 static void test_osmChange(const osm_t *osm, const char *fn)
 {
   xmlDocPtr doc = osmchange_init();
-  const item_id_t changeset = 42;
+  const char *changeset = "42";
 
-  osmchange_delete(osm, xmlDocGetRootElement(doc), changeset);
+  osmchange_delete(osm->modified(), xmlDocGetRootElement(doc), changeset);
 
   xmlChar *result;
   int len;

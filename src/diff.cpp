@@ -25,6 +25,7 @@
 
 #include "appdata.h"
 #include "misc.h"
+#include "osm.h"
 #include "project.h"
 #include "statusbar.h"
 
@@ -664,27 +665,16 @@ struct osmchange_delete_functor {
   const char * const changeset; ///< changeset string
   osmchange_delete_functor(xmlNodePtr delnode, const char *cs) : xml_node(delnode), changeset(cs) {}
   void operator()(const base_object_t *obj) {
-    if(obj->flags & OSM_FLAG_DELETED)
-      obj->osmchange_delete(xml_node, changeset);
-  }
-  inline void operator()(const std::pair<const item_id_t, node_t *> &p) {
-    operator()(p.second);
-  }
-  inline void operator()(const std::pair<const item_id_t, way_t *> &p) {
-    operator()(p.second);
-  }
-  inline void operator()(const std::pair<const item_id_t, relation_t *> &p) {
-    operator()(p.second);
+    obj->osmchange_delete(xml_node, changeset);
   }
 };
 
-void osmchange_delete(const osm_t *osm, xmlNodePtr xml_node, item_id_t changeset)
+void osmchange_delete(const osm_t::dirty_t &dirty, xmlNodePtr xml_node, const char *changeset)
 {
   xmlNodePtr del_node = xmlNewChild(xml_node, O2G_NULLPTR, BAD_CAST "delete", O2G_NULLPTR);
-  char buf[32] = { 0 };
-  snprintf(buf, sizeof(buf), ITEM_ID_FORMAT, changeset);
+  osmchange_delete_functor fc(del_node, changeset);
 
-  std::for_each(osm->relations.begin(), osm->relations.end(), osmchange_delete_functor(del_node, buf));
-  std::for_each(osm->ways.begin(), osm->ways.end(), osmchange_delete_functor(del_node, buf));
-  std::for_each(osm->nodes.begin(), osm->nodes.end(), osmchange_delete_functor(del_node, buf));
+  std::for_each(dirty.relations.deleted.begin(), dirty.relations.deleted.end(), fc);
+  std::for_each(dirty.ways.deleted.begin(), dirty.ways.deleted.end(), fc);
+  std::for_each(dirty.nodes.deleted.begin(), dirty.nodes.deleted.end(), fc);
 }

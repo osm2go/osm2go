@@ -524,41 +524,28 @@ static GtkWidget *table_attach_int(GtkWidget *table, int num,
   return label;
 }
 
-struct osm_delete_objects {
-  osm_upload_context_t &context;
-  xmlNodePtr const del_node;
-  /**
-   * @brief create the delete functor object
-   * @param co the upload context instance
-   * @param dn the osmChange document <delete> node to append to
-   */
-  osm_delete_objects(osm_upload_context_t &co, xmlNodePtr dn)
-    : context(co), del_node(dn) {}
-  void operator()(base_object_t *obj);
-};
-
-void osm_delete_objects::operator()(base_object_t *obj)
-{
+static void log_deletion(osm_upload_context_t &context, const base_object_t *obj) {
   g_assert(obj->flags & OSM_FLAG_DELETED);
 
-  printf("deleting %s " ITEM_ID_FORMAT " on server\n", obj->apiString(), obj->id);
-
-  appendf(context.log, O2G_NULLPTR, _("Delete %s #" ITEM_ID_FORMAT " \n"), obj->apiString(), obj->id);
-
-  obj->osmchange_delete(del_node, context.changeset.c_str());
+  appendf(context.log, O2G_NULLPTR, _("Deleted %s #" ITEM_ID_FORMAT " (version " ITEM_ID_FORMAT ")\n"),
+          obj->apiString(), obj->id, obj->version);
 }
 
 struct osm_delete_objects_final {
-  osm_t * const osm;
-  explicit osm_delete_objects_final(osm_t *o) : osm(o) {}
-  inline void operator()(relation_t *r) {
-    osm->relation_free(r);
+  osm_upload_context_t &context;
+  explicit osm_delete_objects_final(osm_upload_context_t &c)
+    : context(c) {}
+  void operator()(relation_t *r) {
+    log_deletion(context, r);
+    context.osm->relation_free(r);
   }
-  inline void operator()(way_t *w) {
-    osm->way_free(w);
+  void operator()(way_t *w) {
+    log_deletion(context, w);
+    context.osm->way_free(w);
   }
-  inline void operator()(node_t *n) {
-    osm->node_free(n);
+  void operator()(node_t *n) {
+    log_deletion(context, n);
+    context.osm->node_free(n);
   }
 };
 
@@ -925,15 +912,11 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
       appendf(context.log, O2G_NULLPTR, _("Deleting objects:\n"));
       xmlDocPtr doc = osmchange_init();
       xmlNodePtr del_node = xmlNewChild(xmlDocGetRootElement(doc), O2G_NULLPTR, BAD_CAST "delete", O2G_NULLPTR);
-      osm_delete_objects fc(context, del_node);
-
-      std::for_each(dirty.relations.deleted.begin(), dirty.relations.deleted.end(), fc);
-      std::for_each(dirty.ways.deleted.begin(), dirty.ways.deleted.end(), fc);
-      std::for_each(dirty.nodes.deleted.begin(), dirty.nodes.deleted.end(), fc);
+      osmchange_delete(dirty, del_node, context.changeset.c_str());
 
       // deletion was successful, remove the objects
       if(osmchange_upload(context, doc)) {
-        osm_delete_objects_final finfc(context.osm);
+        osm_delete_objects_final finfc(context);
         std::for_each(dirty.relations.deleted.begin(), dirty.relations.deleted.end(), finfc);
         std::for_each(dirty.ways.deleted.begin(), dirty.ways.deleted.end(), finfc);
         std::for_each(dirty.nodes.deleted.begin(), dirty.nodes.deleted.end(), finfc);

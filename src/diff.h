@@ -55,7 +55,8 @@ xmlDocPtr osmchange_init();
  * @brief generate a "delete" XML section in OsmChange format
  * @param osm the OSM data
  * @param xml_node the parent node (usually <osmChange>)
+ * @param changeset the changeset id
  */
-void osmchange_delete(const osm_t *osm, xmlNodePtr xml_node, item_id_t changeset);
+void osmchange_delete(const osm_t::dirty_t &dirty, xmlNodePtr xml_node, const char *changeset);
 
 #endif // DIFF_H
