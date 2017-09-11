@@ -43,7 +43,6 @@
 #include <strings.h>
 #include <utility>
 
-#include <glib.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 
@@ -849,7 +848,7 @@ std::string relation_t::descriptive_name() const {
 
 #include <libxml/xmlreader.h>
 
-static inline gint __attribute__((nonnull(2))) my_strcmp(const xmlChar *a, const xmlChar *b) {
+static inline int __attribute__((nonnull(2))) my_strcmp(const xmlChar *a, const xmlChar *b) {
   if(!a) return -1;
   return strcmp(reinterpret_cast<const char *>(a), reinterpret_cast<const char *>(b));
 }
@@ -888,7 +887,7 @@ static pos_float_t xml_reader_attr_float(xmlTextReaderPtr reader, const char *na
 }
 
 /* parse bounds */
-static gboolean process_bounds(xmlTextReaderPtr reader, bounds_t *bounds) {
+static bool process_bounds(xmlTextReaderPtr reader, bounds_t *bounds) {
   bounds->ll_min.lat = xml_reader_attr_float(reader, "minlat");
   bounds->ll_min.lon = xml_reader_attr_float(reader, "minlon");
   bounds->ll_max.lat = xml_reader_attr_float(reader, "maxlat");
@@ -899,7 +898,7 @@ static gboolean process_bounds(xmlTextReaderPtr reader, bounds_t *bounds) {
 	   bounds->ll_min.lat, bounds->ll_min.lon,
 	   bounds->ll_max.lat, bounds->ll_max.lon);
 
-    return FALSE;
+    return false;
   }
 
   /* skip everything below */
@@ -928,7 +927,7 @@ static gboolean process_bounds(xmlTextReaderPtr reader, bounds_t *bounds) {
   bounds->max.x *= bounds->scale;
   bounds->max.y *= bounds->scale;
 
-  return TRUE;
+  return true;
 }
 
 static void process_tag(xmlTextReaderPtr reader, std::vector<tag_t> &tags) {
