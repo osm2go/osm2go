@@ -1839,7 +1839,8 @@ void relation_transfer::operator()(const std::pair<item_id_t, relation_t *> &pai
 {
   relation_t * const relation = pair.second;
   /* walk member chain. save role of way if its being found. */
-  find_member_object_functor fc(object_t(const_cast<way_t *>(src)));
+  const object_t osrc(const_cast<way_t *>(src));
+  find_member_object_functor fc(osrc);
   std::vector<member_t>::iterator itBegin = relation->members.begin();
   std::vector<member_t>::iterator itEnd = relation->members.end();
   std::vector<member_t>::iterator it = std::find_if(itBegin, itEnd, fc);
