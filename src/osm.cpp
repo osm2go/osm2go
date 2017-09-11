@@ -973,9 +973,8 @@ static void process_base_attributes(base_object_t *obj, xmlTextReaderPtr reader,
 }
 
 static void process_node(xmlTextReaderPtr reader, osm_t *osm) {
-  pos_t pos;
-  pos.lat = xml_reader_attr_float(reader, "lat");
-  pos.lon = xml_reader_attr_float(reader, "lon");
+  const pos_t pos(xml_reader_attr_float(reader, "lat"),
+                  xml_reader_attr_float(reader, "lon"));
 
   /* allocate a new node structure */
   node_t *node = osm->node_new(pos);
@@ -1003,7 +1002,7 @@ static void process_node(xmlTextReaderPtr reader, osm_t *osm) {
 
     if(xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT) {
       const char *subname = reinterpret_cast<const char *>(xmlTextReaderConstName(reader));
-      if(strcmp(subname, "tag") == 0)
+      if(G_LIKELY(strcmp(subname, "tag") == 0))
         process_tag(reader, tags);
       else
 	skip_element(reader);
@@ -1066,7 +1065,7 @@ static void process_way(xmlTextReaderPtr reader, osm_t *osm) {
 	node_t *n = process_nd(reader, osm);
         if(n)
           way->node_chain.push_back(n);
-      } else if(strcmp(subname, "tag") == 0) {
+      } else if(G_LIKELY(strcmp(subname, "tag") == 0)) {
         process_tag(reader, tags);
       } else
 	skip_element(reader);
@@ -1120,7 +1119,7 @@ static void process_relation(xmlTextReaderPtr reader, osm_t *osm) {
       const char *subname = reinterpret_cast<const char *>(xmlTextReaderConstName(reader));
       if(strcmp(subname, "member") == 0) {
         process_member(reader, osm, relation->members);
-      } else if(strcmp(subname, "tag") == 0) {
+      } else if(G_LIKELY(strcmp(subname, "tag") == 0)) {
         process_tag(reader, tags);
       } else
 	skip_element(reader);
