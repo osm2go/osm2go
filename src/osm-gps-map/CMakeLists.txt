@@ -38,6 +38,4 @@ endif ()
 
 set_property(SOURCE osm-gps-map.c APPEND PROPERTY COMPILE_DEFINITIONS VERSION="${PROJECT_VERSION}")
 
-target_compile_definitions(osm-gps-map INTERFACE ENABLE_OSM_GPS_MAP)
-
 target_include_directories(osm-gps-map INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
