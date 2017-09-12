@@ -396,12 +396,10 @@ static GtkWidget *tag_widget(tag_context_t *context) {
   context->list = list_new(LIST_HILDON_WITHOUT_HEADERS, LIST_BTN_2ROW, context, changed,
                            buttons, columns, context->store);
 
-  GtkWidget *presets = josm_build_presets_button(context->appdata, context);
-  if(presets) {
-    list_set_custom_user_button(context->list, LIST_BUTTON_USER1, presets);
-    if(!context->appdata.presets)
-      list_button_enable(context->list, LIST_BUTTON_USER1, FALSE);
-  }
+  list_set_custom_user_button(context->list, LIST_BUTTON_USER1,
+                              josm_build_presets_button(context->appdata, context));
+  if(!context->appdata.presets)
+    list_button_enable(context->list, LIST_BUTTON_USER1, FALSE);
 
   /* disable if no appropriate "last" tags have been stored or if the */
   /* selected item isn't a node or way */
