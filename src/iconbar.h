@@ -57,7 +57,7 @@ struct iconbar_t {
   /**
    * @brief set enable state of edit buttons
    * @param idle if an operation is currently active
-   * @param way_en if the operations affecting ways should be enabled
+   * @param selected if the operations affecting ways should be enabled
    *
    * If a user action is in progress, then disable all buttons that
    * cause an action to take place or interfere with the action.
