@@ -288,7 +288,7 @@ void track_save(project_t *project, track_t *track) {
   const std::string trk_name = project->path + project->name + ".trk";
 
   if(!track) {
-    g_remove(trk_name.c_str());
+    unlink(trk_name.c_str());
     return;
   }
 
@@ -298,8 +298,8 @@ void track_save(project_t *project, track_t *track) {
   xmlDocPtr doc = O2G_NULLPTR;
   if(g_file_test(trk_name.c_str(), G_FILE_TEST_IS_REGULAR)) {
     printf("backing up existing file \"%s\" to \"%s\"\n", trk_name.c_str(), backup.c_str());
-    g_remove(backup.c_str());
-    g_rename(trk_name.c_str(), backup.c_str());
+    remove(backup.c_str());
+    rename(trk_name.c_str(), backup.c_str());
     /* parse the old file and get the DOM */
     doc = xmlReadFile(backup.c_str(), O2G_NULLPTR, 0);
   }
@@ -309,7 +309,7 @@ void track_save(project_t *project, track_t *track) {
 
   /* if we reach this point writing the new file worked and we */
   /* can delete the backup */
-  g_remove(backup.c_str());
+  unlink(backup.c_str());
 }
 
 void track_export(const track_t *track, const char *filename) {

@@ -526,12 +526,12 @@ static bool project_delete(select_context_t *context, project_t *project) {
   fullname.reserve(project->path.size() + project->name.size() + 8); // long enough for all usual project filenames
   while ((name = g_dir_read_name(dir))) {
     fullname = project->path + name;
-    g_remove(fullname.c_str());
+    remove(fullname.c_str());
   }
   g_dir_close(dir);
 
   /* remove the projects directory */
-  g_remove(project->path.c_str());
+  rmdir(project->path.c_str());
 
   /* remove from view */
   GtkTreeIter iter;

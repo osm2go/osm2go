@@ -33,6 +33,7 @@
 #include <cstring>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
+#include <unistd.h>
 
 #include <osm2go_cpp.h>
 
@@ -196,7 +197,7 @@ void diff_save(const project_t *project, const osm_t *osm) {
 
   if(diff_is_clean(osm, true)) {
     printf("data set is clean, removing diff if present\n");
-    g_remove(diff_name.c_str());
+    unlink(diff_name.c_str());
     return;
   }
 
@@ -220,7 +221,7 @@ void diff_save(const project_t *project, const osm_t *osm) {
 
   /* if we reach this point writing the new file worked and we */
   /* can delete the backup */
-  g_rename(ndiff.c_str(), diff_name.c_str());
+  rename(ndiff.c_str(), diff_name.c_str());
 }
 
 static item_id_t xml_get_prop_int(xmlNode *node, const char *prop, item_id_t def) {
@@ -647,7 +648,7 @@ bool diff_present(const project_t *project) {
 
 void diff_remove(const project_t *project) {
   const std::string &diff_name = diff_filename(project);
-  g_remove(diff_name.c_str());
+  unlink(diff_name.c_str());
 }
 
 xmlDocPtr osmchange_init()

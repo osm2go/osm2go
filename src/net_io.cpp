@@ -408,7 +408,7 @@ bool net_io_download_file(GtkWidget *parent,
     /* newly written file */
 
     printf("request failed, deleting %s\n", filename.c_str());
-    g_remove(filename.c_str());
+    unlink(filename.c_str());
   } else
     printf("request ok\n");
 

@@ -1262,7 +1262,7 @@ void wms_remove_file(project_t &project) {
     filename += it->second;
 
     if(g_file_test(filename.c_str(), G_FILE_TEST_EXISTS))
-      g_remove(filename.c_str());
+      remove(filename.c_str());
   }
 }
 

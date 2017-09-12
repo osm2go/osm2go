@@ -121,7 +121,7 @@ bool osm_download(GtkWidget *parent, settings_t *settings, project_t *project)
   /* Download the new file to a new name. If something goes wrong then the
    * old file will still be in place to be opened. */
   const std::string update = project->path + "update.osm";
-  g_remove(update.c_str());
+  remove(update.c_str());
 
   if(G_UNLIKELY(!net_io_download_file(parent, url, update, project->name.c_str(), true)))
     return false;
@@ -160,7 +160,7 @@ bool osm_download(GtkWidget *parent, settings_t *settings, project_t *project)
       newfname.erase(newfname.size() - 3);
     else
       newfname += ".gz";
-    g_rename(update.c_str(), newfname.c_str());
+    rename(update.c_str(), newfname.c_str());
     // save the project before deleting the old file so that a valid file is always found
     if(newfname.substr(0, project->path.size()) == project->path)
       newfname.erase(0, project->path.size());
@@ -171,10 +171,10 @@ bool osm_download(GtkWidget *parent, settings_t *settings, project_t *project)
     unlink(oldfname.c_str());
   } else {
     if(project->osm[0] == '/') {
-      g_rename(update.c_str(), project->osm.c_str());
+      rename(update.c_str(), project->osm.c_str());
     } else {
       const std::string fname = project->path + project->osm;
-      g_rename(update.c_str(), fname.c_str());
+      rename(update.c_str(), fname.c_str());
     }
   }
 
