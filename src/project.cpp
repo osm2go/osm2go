@@ -36,7 +36,8 @@
 
 #include <algorithm>
 #include <cstring>
-#include <glib/gstdio.h>
+#include <dirent.h>
+#include <fcntl.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <string>
@@ -908,20 +909,16 @@ std::string project_select(appdata_t &appdata) {
 }
 
 /* ---------------------------------------------------- */
-  /* no idea if that check is correct, but this way it works both for the N900 and my desktop */
-#if !GLIB_CHECK_VERSION(2,24,2)
-typedef struct stat GStatBuf;
-#endif
 
 /* return file length or false on error */
-static bool file_info(const project_t *project, GStatBuf &st) {
+static bool file_info(const project_t *project, struct stat &st) {
   int r;
 
   if (project->osm[0] == '/') {
-    r = g_stat(project->osm.c_str(), &st);
+    r = stat(project->osm.c_str(), &st);
   } else {
     const std::string str = project->path + project->osm;
-    r = g_stat(str.c_str(), &st);
+    r = stat(str.c_str(), &st);
   }
 
   return (r == 0);
@@ -948,7 +945,7 @@ static void project_filesize(project_context_t *context) {
     gtk_widget_modify_fg(context->fsize, GTK_STATE_NORMAL, O2G_NULLPTR);
 
     if(!project->data_dirty) {
-      GStatBuf st;
+      struct stat st;
       if (file_info(project, st)) {
         struct tm loctime;
         localtime_r(&st.st_mtim.tv_sec, &loctime);
