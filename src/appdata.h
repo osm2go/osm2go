@@ -76,7 +76,7 @@ enum menu_items {
   MENU_ITEMS_COUNT
 };
 
-typedef struct appdata_t {
+struct appdata_t {
   appdata_t();
   ~appdata_t();
 
@@ -127,7 +127,7 @@ typedef struct appdata_t {
   struct style_t *style;
   class gps_state_t * const gps_state;
   icon_t icons;
-} appdata_t;
+};
 
 void main_ui_enable(appdata_t &appdata);
 
