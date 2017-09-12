@@ -53,7 +53,7 @@ struct check_first_last_node {
   }
 };
 
-void map_edit_way_add_segment(map_t *map, gint x, gint y) {
+void map_edit_way_add_segment(map_t *map, int x, int y) {
 
   /* convert mouse position to canvas (world) position */
   lpos_t pos = map->canvas->window2world(x, y);
@@ -286,7 +286,7 @@ void map_edit_way_add_ok(map_t *map) {
 /* -------------------------- way_node_add ----------------------- */
 
 void map_edit_way_node_add_highlight(map_t *map, map_item_t *item,
-				     gint x, gint y) {
+                                     int x, int y) {
   if(map->item_is_selected_way(item)) {
     lpos_t pos = map->canvas->window2world(x, y);
     if(canvas_item_get_segment(item->item, pos) >= 0)
@@ -294,7 +294,7 @@ void map_edit_way_node_add_highlight(map_t *map, map_item_t *item,
   }
 }
 
-void map_edit_way_node_add(map_t *map, gint px, gint py) {
+void map_edit_way_node_add(map_t *map, int px, int py) {
   /* check if we are still hovering above the selected way */
   map_item_t *item = map->item_at(px, py);
   if(map->item_is_selected_way(item)) {
@@ -341,7 +341,7 @@ void map_edit_way_node_add(map_t *map, gint px, gint py) {
 
 /* -------------------------- way_node_cut ----------------------- */
 
-void map_edit_way_cut_highlight(map_t *map, map_item_t *item, gint x, gint y) {
+void map_edit_way_cut_highlight(map_t *map, map_item_t *item, int x, int y) {
 
   if(map->item_is_selected_way(item)) {
     lpos_t pos = map->canvas->window2world(x, y);
@@ -350,8 +350,7 @@ void map_edit_way_cut_highlight(map_t *map, map_item_t *item, gint x, gint y) {
       int x0, y0, x1, y1;
       canvas_item_get_segment_pos(item->item, seg, x0, y0, x1, y1);
 
-      gint width = (item->object.way->draw.flags &
-		    OSM_DRAW_FLAG_BG)?
+      unsigned int width = (item->object.way->draw.flags & OSM_DRAW_FLAG_BG) ?
 	2*item->object.way->draw.bg.width:
 	3*item->object.way->draw.width;
       map_hl_segment_draw(map, width, x0, y0, x1, y1);
@@ -364,7 +363,7 @@ void map_edit_way_cut_highlight(map_t *map, map_item_t *item, gint x, gint y) {
 }
 
 /* cut the currently selected way at the current cursor position */
-void map_edit_way_cut(map_t *map, gint px, gint py) {
+void map_edit_way_cut(map_t *map, int px, int py) {
 
   /* check if we are still hovering above the selected way */
   map_item_t *item = map->item_at(px, py);
@@ -474,7 +473,7 @@ struct find_way_ends {
   }
 };
 
-void map_edit_node_move(map_t *map, map_item_t *map_item, gint ex, gint ey) {
+void map_edit_node_move(map_t *map, map_item_t *map_item, int ex, int ey) {
   osm_t *osm = map->appdata.osm;
 
   g_assert(map_item->object.type == NODE);
