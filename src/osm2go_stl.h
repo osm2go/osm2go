@@ -41,7 +41,7 @@ template<typename T> typename T::const_iterator cbegin(const T &c) {
 #endif
 
 // gcc did not set the C++ level before it was officially released
-#if __cplusplus < 201103L && O2G_COMPILER_CXX_NULLPTR == 0
+#if __cplusplus < 201103L && !defined(_UNIQUE_PTR_H)
 // taken from gcc 4.8.5, stripped down to what is actually needed
 namespace std {
   template<typename T>
