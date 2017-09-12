@@ -45,7 +45,6 @@
 #endif
 
 #include <gtk/gtk.h>
-#include <glib/gstdio.h>
 
 #include "canvas.h"
 
@@ -100,8 +99,8 @@ struct appdata_t {
 
   /* flags used to prevent re-appearence of dialogs */
   struct {
-    guint not_again;     /* bit is set if dialog is not to be displayed again */
-    guint reply;         /* reply to be assumed if "not_again" bit is set */
+    unsigned int not_again;     /* bit is set if dialog is not to be displayed again */
+    unsigned int reply;         /* reply to be assumed if "not_again" bit is set */
   } dialog_again;
 
   GtkWidget *menuitems[MENU_ITEMS_COUNT];
