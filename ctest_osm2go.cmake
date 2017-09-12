@@ -112,7 +112,12 @@ if (NOT CTEST_BUILD_NAME)
 endif ()
 
 find_program(CTEST_MEMORYCHECK_COMMAND valgrind)
-find_program(CTEST_COVERAGE_COMMAND gcov)
+if ($ENV{CC} MATCHES clang)
+	find_program(CTEST_COVERAGE_COMMAND llvm-cov)
+	set(CTEST_COVERAGE_EXTRA_FLAGS gcov)
+else ()
+	find_program(CTEST_COVERAGE_COMMAND gcov)
+endif ()
 
 ctest_read_custom_files(${CMAKE_CURRENT_LIST_DIR})
 
