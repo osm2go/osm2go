@@ -1233,7 +1233,7 @@ void wms_load(appdata_t &appdata) {
     filename.erase(extpos);
     filename += it->second;
 
-    if(g_file_test(filename.c_str(), G_FILE_TEST_EXISTS)) {
+    if(g_file_test(filename.c_str(), G_FILE_TEST_IS_REGULAR) == TRUE) {
       appdata.map->bg.offset.x = appdata.project->wms_offset.x;
       appdata.map->bg.offset.y = appdata.project->wms_offset.y;
 

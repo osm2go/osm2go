@@ -549,12 +549,12 @@ unsigned int diff_restore_file(GtkWidget *window, const project_t *project, osm_
   /* actual diff didn't succeed */
   std::string diff_name = project->path;
   diff_name += "backup.diff";
-  if(G_UNLIKELY(g_file_test(diff_name.c_str(), G_FILE_TEST_EXISTS))) {
+  if(G_UNLIKELY(g_file_test(diff_name.c_str(), G_FILE_TEST_IS_REGULAR) == TRUE)) {
     printf("diff backup present, loading it instead of real diff ...\n");
   } else {
     diff_name = diff_filename(project);
 
-    if(!g_file_test(diff_name.c_str(), G_FILE_TEST_EXISTS)) {
+    if(g_file_test(diff_name.c_str(), G_FILE_TEST_IS_REGULAR) != TRUE) {
       printf("no diff present!\n");
       return DIFF_NONE_PRESENT;
     }
@@ -643,7 +643,7 @@ void diff_restore(appdata_t &appdata) {
 bool diff_present(const project_t *project) {
   const std::string &diff_name = diff_filename(project);
 
-  return g_file_test(diff_name.c_str(), G_FILE_TEST_EXISTS) == TRUE;
+  return g_file_test(diff_name.c_str(), G_FILE_TEST_IS_REGULAR) == TRUE;
 }
 
 void diff_remove(const project_t *project) {

@@ -296,7 +296,7 @@ void track_save(project_t *project, track_t *track) {
   /* in case new diff saving fails */
   const std::string backup = project->path + "backup.trk";
   xmlDocPtr doc = O2G_NULLPTR;
-  if(g_file_test(trk_name.c_str(), G_FILE_TEST_IS_REGULAR)) {
+  if(g_file_test(trk_name.c_str(), G_FILE_TEST_IS_REGULAR) == TRUE) {
     printf("backing up existing file \"%s\" to \"%s\"\n", trk_name.c_str(), backup.c_str());
     remove(backup.c_str());
     rename(trk_name.c_str(), backup.c_str());
@@ -326,14 +326,14 @@ bool track_restore(appdata_t &appdata) {
   std::string trk_name = project->path;
   const std::string::size_type plen = trk_name.size();
   trk_name += "backup.trk";
-  if(G_UNLIKELY(g_file_test(trk_name.c_str(), G_FILE_TEST_EXISTS))) {
+  if(G_UNLIKELY(g_file_test(trk_name.c_str(), G_FILE_TEST_IS_REGULAR) == TRUE)) {
     printf("track backup present, loading it instead of real track ...\n");
   } else {
     trk_name.erase(plen, std::string::npos);
     trk_name += project->name;
     trk_name += ".trk";
 
-    if(!g_file_test(trk_name.c_str(), G_FILE_TEST_EXISTS)) {
+    if(g_file_test(trk_name.c_str(), G_FILE_TEST_IS_REGULAR) != TRUE) {
       printf("no track present!\n");
       return false;
     }
