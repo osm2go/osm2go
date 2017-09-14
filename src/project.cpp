@@ -406,8 +406,8 @@ enum {
 };
 
 static gboolean osm_file_exists(const project_t *project) {
-  if(project->name[0] == '/')
-    return g_file_test(project->name.c_str(), G_FILE_TEST_IS_REGULAR);
+  if(project->osm[0] == '/')
+    return g_file_test(project->osm.c_str(), G_FILE_TEST_IS_REGULAR);
   else {
     const std::string full = project->path + project->osm;
     return g_file_test(full.c_str(), G_FILE_TEST_IS_REGULAR);
@@ -933,7 +933,7 @@ static bool file_info(const project_t *project, struct stat &st) {
     r = stat(str.c_str(), &st);
   }
 
-  return (r == 0);
+  return r == 0 && S_ISREG(st.st_mode);
 }
 
 static void project_filesize(project_context_t *context) {
@@ -943,7 +943,9 @@ static void project_filesize(project_context_t *context) {
 
   printf("Checking size of %s\n", project->osm.c_str());
 
-  if(!osm_file_exists(project)) {
+  struct stat st;
+  bool stret = file_info(project, st);
+  if(!stret && errno == ENOENT) {
     GdkColor color;
     gdk_color_parse("red", &color);
     gtk_widget_modify_fg(context->fsize, GTK_STATE_NORMAL, &color);
@@ -957,8 +959,7 @@ static void project_filesize(project_context_t *context) {
     gtk_widget_modify_fg(context->fsize, GTK_STATE_NORMAL, O2G_NULLPTR);
 
     if(!project->data_dirty) {
-      struct stat st;
-      if (file_info(project, st)) {
+      if(stret) {
         struct tm loctime;
         localtime_r(&st.st_mtim.tv_sec, &loctime);
         char time_str[32];
