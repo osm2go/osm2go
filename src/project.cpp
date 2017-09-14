@@ -385,7 +385,7 @@ static std::vector<project_t *> project_scan(map_state_t &ms, const std::string 
       /* try to read project and append it to chain */
       project_t *n = new project_t(ms, d->d_name, base_path);
 
-      if(project_read(fullname, n, server))
+      if(G_LIKELY(project_read(fullname, n, server)))
         projects.push_back(n);
       else
         delete n;
@@ -1300,7 +1300,7 @@ static bool project_open(appdata_t &appdata, const std::string &name) {
     return false;
   }
 
-  if(!project_read(project_file, project, appdata.settings->server)) {
+  if(G_UNLIKELY(!project_read(project_file, project, appdata.settings->server))) {
     printf("error reading project file\n");
     delete project;
     return false;
