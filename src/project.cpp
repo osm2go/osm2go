@@ -1294,12 +1294,6 @@ static bool project_open(appdata_t &appdata, const std::string &name) {
   project->map_state.reset();
 
   printf("project file = %s\n", project_file.c_str());
-  if(!g_file_test(project_file.c_str(), G_FILE_TEST_IS_REGULAR)) {
-    printf("requested project file doesn't exist\n");
-    delete project;
-    return false;
-  }
-
   if(G_UNLIKELY(!project_read(project_file, project, appdata.settings->server))) {
     printf("error reading project file\n");
     delete project;
