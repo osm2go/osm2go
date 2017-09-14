@@ -29,10 +29,12 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
+#include <dirent.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <string>
 #include <strings.h>
+#include <sys/stat.h>
 
 #include <osm2go_cpp.h>
 #include "osm2go_stl.h"
@@ -291,41 +293,53 @@ static std::map<std::string, std::string> style_scan() {
   const char *extension = ".style";
 
   char *p = getenv("HOME");
+  g_assert_nonnull(p);
   std::string fullname;
 
   const size_t elen = strlen(extension);
+  std::string home_path;
+  home_path.reserve(strlen(p) + 32);
 
   for(const char **path = data_paths; *path; path++) {
-    GDir *dir = O2G_NULLPTR;
+    DIR *dir;
 
     /* scan for projects */
     const char *dirname = *path;
-    gchar *home_path = O2G_NULLPTR;
 
-    if(*path[0] == '~')
-      dirname = home_path = g_strjoin(p, *path + 1, O2G_NULLPTR);
-
-    if((dir = g_dir_open(dirname, 0, O2G_NULLPTR))) {
-      const char *name;
-      while ((name = g_dir_read_name(dir)) != O2G_NULLPTR) {
-        const size_t nlen = strlen(name);
-        if(nlen > elen && strcmp(name + nlen - elen, extension) == 0) {
-          fullname.reserve(strlen(dirname) + nlen + 1);
-          fullname = dirname;
-          fullname += name;
-          if(g_file_test(fullname.c_str(), G_FILE_TEST_IS_REGULAR)) {
-            icon_t dummyicons;
-            style_t style(dummyicons);
-            if(style_parse(fullname, O2G_NULLPTR, true, style))
-              ret[style.name] = fullname;
-          }
-        }
-      }
-
-      g_dir_close(dir);
+    if(*path[0] == '~') {
+      home_path = std::string(p) + (*path + 1);
+      dirname = home_path.c_str();
     }
 
-    g_free(home_path);
+    if((dir = opendir(dirname)) != O2G_NULLPTR) {
+      dirent *d;
+      int dfd = dirfd(dir);
+      while ((d = readdir(dir)) != O2G_NULLPTR) {
+        if(d->d_type == DT_DIR)
+          continue;
+
+        const size_t nlen = strlen(d->d_name);
+        if(nlen <= elen || strcmp(d->d_name + nlen - elen, extension) != 0)
+          continue;
+
+        struct stat st;
+        fstatat(dfd, d->d_name, &st, 0);
+
+        if(G_UNLIKELY(!S_ISREG(st.st_mode)))
+          continue;
+
+        fullname.reserve(strlen(dirname) + nlen + 1);
+        fullname = dirname;
+        fullname += d->d_name;
+
+        icon_t dummyicons;
+        style_t style(dummyicons);
+        if(style_parse(fullname, O2G_NULLPTR, true, style))
+          ret[style.name] = fullname;
+      }
+
+      closedir(dir);
+    }
   }
 
   return ret;

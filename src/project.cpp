@@ -35,6 +35,7 @@
 #include "wms.h"
 
 #include <algorithm>
+#include <cerrno>
 #include <cstring>
 #include <dirent.h>
 #include <fcntl.h>
@@ -365,15 +366,24 @@ static std::vector<project_t *> project_scan(map_state_t &ms, const std::string 
   std::vector<project_t *> projects;
 
   /* scan for projects */
-  GDir *dir = g_dir_open(base_path.c_str(), 0, O2G_NULLPTR);
-  const gchar *name;
-  while((name = g_dir_read_name(dir)) != O2G_NULLPTR) {
+  DIR *dir = opendir(base_path.c_str());
+  if(dir == O2G_NULLPTR)
+    return projects;
+
+  dirent *d;
+  while((d = readdir(dir)) != O2G_NULLPTR) {
+    if(d->d_type != DT_DIR && d->d_type != DT_UNKNOWN)
+      continue;
+
+    if(G_UNLIKELY(strcmp(d->d_name, ".") == 0 || strcmp(d->d_name, "..") == 0))
+      continue;
+
     std::string fullname;
-    if(project_exists(base_path, name, fullname)) {
-      printf("found project %s\n", name);
+    if(project_exists(base_path, d->d_name, fullname)) {
+      printf("found project %s\n", d->d_name);
 
       /* try to read project and append it to chain */
-      project_t *n = new project_t(ms, name, base_path);
+      project_t *n = new project_t(ms, d->d_name, base_path);
 
       if(project_read(fullname, n, server))
         projects.push_back(n);
@@ -382,7 +392,7 @@ static std::vector<project_t *> project_scan(map_state_t &ms, const std::string 
     }
   }
 
-  g_dir_close(dir);
+  closedir(dir);
 
   return projects;
 }
@@ -521,18 +531,20 @@ static bool project_delete(select_context_t *context, project_t *project) {
   }
 
   /* remove entire directory from disk */
-  GDir *dir = g_dir_open(project->path.c_str(), 0, O2G_NULLPTR);
-  const gchar *name;
-  std::string fullname;
-  fullname.reserve(project->path.size() + project->name.size() + 8); // long enough for all usual project filenames
-  while ((name = g_dir_read_name(dir))) {
-    fullname = project->path + name;
-    remove(fullname.c_str());
-  }
-  g_dir_close(dir);
+  DIR *dir = opendir(project->path.c_str());
+  if(G_LIKELY(dir != O2G_NULLPTR)) {
+    int dfd = dirfd(dir);
+    dirent *d;
+    while ((d = readdir(dir)) != O2G_NULLPTR) {
+      if(G_UNLIKELY(d->d_type == DT_DIR ||
+                    (unlinkat(dfd, d->d_name, 0) == -1 && errno == EISDIR)))
+        unlinkat(dfd, d->d_name, AT_REMOVEDIR);
+    }
+    closedir(dir);
 
-  /* remove the projects directory */
-  rmdir(project->path.c_str());
+    /* remove the projects directory */
+    rmdir(project->path.c_str());
+  }
 
   /* remove from view */
   GtkTreeIter iter;

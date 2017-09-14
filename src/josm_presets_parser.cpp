@@ -28,6 +28,7 @@
 #include <array>
 #endif
 #include <cstring>
+#include <dirent.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <numeric>
@@ -975,28 +976,35 @@ struct presets_items *josm_presets_load(void) {
   // check for user presets
   std::string dirname = getenv("HOME");
   dirname += "/.local/share/osm2go/presets/";
-  GDir *dir = g_dir_open(dirname.c_str(), 0, O2G_NULLPTR);
+  DIR *dir = opendir(dirname.c_str());
 
   if(dir != O2G_NULLPTR) {
-    const gchar *name;
+    dirent *d;
     std::string xmlname;
-    while ((name = g_dir_read_name(dir)) != O2G_NULLPTR) {
-      const std::string dn = dirname + name + '/';
-      GDir *pdir = g_dir_open(dn.c_str(), 0, O2G_NULLPTR);
-      if(pdir != O2G_NULLPTR) {
+    while ((d = readdir(dir)) != O2G_NULLPTR) {
+      if(d->d_type != DT_DIR && d->d_type != DT_UNKNOWN)
+        continue;
+      if(strcmp(d->d_name, ".") == 0 || strcmp(d->d_name, "..") == 0)
+        continue;
+
+      const std::string dn = dirname + d->d_name + '/';
+      DIR *pdir = opendir(dn.c_str());
+      if(G_LIKELY(pdir != O2G_NULLPTR)) {
         // find first XML file inside those directories
-        const gchar *fname;
-        while ((fname = g_dir_read_name(pdir)) != O2G_NULLPTR) {
-          if(g_str_has_suffix(fname, ".xml")) {
-            presets->addFile(dn + fname, dn);
+        dirent *pd;
+        while ((pd = readdir(pdir)) != O2G_NULLPTR) {
+          if(pd->d_type == DT_DIR)
+            continue;
+          if(g_str_has_suffix(pd->d_name, ".xml")) {
+            presets->addFile(dn + pd->d_name, dn);
             break;
           }
         }
-        g_dir_close(pdir);
+        closedir(pdir);
       }
     }
 
-    g_dir_close(dir);
+    closedir(dir);
   }
 
   if(G_UNLIKELY(presets->items.empty())) {
