@@ -405,6 +405,11 @@ enum {
   PROJECT_NUM_COLS
 };
 
+/**
+ * @brief check if OSM data is present for the given project
+ * @param project the project to check
+ * @return if OSM data file was found
+ */
 static gboolean osm_file_exists(const project_t *project) {
   if(project->osm[0] == '/')
     return g_file_test(project->osm.c_str(), G_FILE_TEST_IS_REGULAR);
@@ -646,16 +651,6 @@ static project_t *project_new(select_context_t *context) {
 }
 
 /**
- * @brief check if OSM data is present for the given project
- * @param project the project to check
- * @return if OSM data file was found
- */
-static gboolean project_osm_present(const project_t *project) {
-  const std::string &osm_name = project->path + '/' + project->osm;
-  return g_file_test(osm_name.c_str(), G_FILE_TEST_EXISTS);
-}
-
-/**
  * @brief get icon for the given project
  * @param current the currently active project or O2G_NULLPTR
  * @param project the project to check
@@ -667,7 +662,7 @@ project_get_status_icon_stock_id(const project_t *current,
   /* is this the currently open project? */
   if(current && current->name == project->name)
     return GTK_STOCK_OPEN;
-  else if(!project_osm_present(project))
+  else if(osm_file_exists(project) != TRUE)
     return GTK_STOCK_DIALOG_WARNING;
   else if(diff_present(project))
     return GTK_STOCK_PROPERTIES;
@@ -801,7 +796,7 @@ on_project_update_all(select_context_t *context)
       project_t *prj = O2G_NULLPTR;
       gtk_tree_model_get(model, &iter, PROJECT_COL_DATA, &prj, -1);
       /* if the project was already downloaded do it again */
-      if(prj && project_osm_present(prj)) {
+      if(prj && osm_file_exists(prj) == TRUE) {
         printf("found %s to update\n", prj->name.c_str());
         if (!osm_download(GTK_WIDGET(context->dialog),
                      context->appdata.settings, prj))
