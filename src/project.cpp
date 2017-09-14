@@ -410,20 +410,20 @@ enum {
  * @param project the project to check
  * @return if OSM data file was found
  */
-static gboolean osm_file_exists(const project_t *project) {
+static bool osm_file_exists(const project_t *project) {
   if(project->osm[0] == '/')
-    return g_file_test(project->osm.c_str(), G_FILE_TEST_IS_REGULAR);
+    return g_file_test(project->osm.c_str(), G_FILE_TEST_IS_REGULAR) == TRUE;
   else {
     const std::string full = project->path + project->osm;
-    return g_file_test(full.c_str(), G_FILE_TEST_IS_REGULAR);
+    return g_file_test(full.c_str(), G_FILE_TEST_IS_REGULAR) == TRUE;
   }
 }
 
 static void view_selected(GtkWidget *dialog, project_t *project) {
   /* check if the selected project also has a valid osm file */
   gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog),
-      GTK_RESPONSE_ACCEPT,
-      project && osm_file_exists(project));
+                                    GTK_RESPONSE_ACCEPT,
+                                    (project != O2G_NULLPTR && osm_file_exists(project)) ? TRUE : FALSE);
 }
 
 static void
@@ -662,7 +662,7 @@ project_get_status_icon_stock_id(const project_t *current,
   /* is this the currently open project? */
   if(current && current->name == project->name)
     return GTK_STOCK_OPEN;
-  else if(osm_file_exists(project) != TRUE)
+  else if(!osm_file_exists(project))
     return GTK_STOCK_DIALOG_WARNING;
   else if(diff_present(project))
     return GTK_STOCK_PROPERTIES;
@@ -796,7 +796,7 @@ on_project_update_all(select_context_t *context)
       project_t *prj = O2G_NULLPTR;
       gtk_tree_model_get(model, &iter, PROJECT_COL_DATA, &prj, -1);
       /* if the project was already downloaded do it again */
-      if(prj && osm_file_exists(prj) == TRUE) {
+      if(prj && osm_file_exists(prj)) {
         printf("found %s to update\n", prj->name.c_str());
         if (!osm_download(GTK_WIDGET(context->dialog),
                      context->appdata.settings, prj))
@@ -1232,8 +1232,8 @@ project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
   /* disable "ok" if there's no valid file downloaded */
   if(is_new)
     gtk_dialog_set_response_sensitive(GTK_DIALOG(context.dialog),
-		    GTK_RESPONSE_ACCEPT,
-		    osm_file_exists(project));
+                                      GTK_RESPONSE_ACCEPT,
+                                      osm_file_exists(project) ? TRUE : FALSE);
 
   gtk_widget_show_all(context.dialog);
 
