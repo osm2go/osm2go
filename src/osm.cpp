@@ -1390,8 +1390,6 @@ xmlChar *osm_generate_xml_changeset(const std::string &comment,
                     const_cast<char *>(comment.c_str()));
   tag_t tag_creator(const_cast<char*>("created_by"),
                     const_cast<char*>(PACKAGE " v" VERSION));
-  tag_t tag_source(const_cast<char *>("source"),
-                   const_cast<char *>(src.c_str()));
 
   xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
   xmlNodePtr root_node = xmlNewNode(O2G_NULLPTR, BAD_CAST "osm");
@@ -1402,8 +1400,11 @@ xmlChar *osm_generate_xml_changeset(const std::string &comment,
   tag_to_xml fc(cs_node, true);
   fc(tag_creator);
   fc(tag_comment);
-  if(!src.empty())
+  if(!src.empty()) {
+    tag_t tag_source(const_cast<char *>("source"),
+                    const_cast<char *>(src.c_str()));
     fc(tag_source);
+  }
 
   xmlDocDumpFormatMemoryEnc(doc, &result, &len, "UTF-8", 1);
   xmlFreeDoc(doc);
