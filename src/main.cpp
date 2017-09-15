@@ -1243,7 +1243,7 @@ appdata_t::~appdata_t() {
 
   /* save project file */
   if(project)
-    project->save(GTK_WIDGET(window));
+    project->save(O2G_NULLPTR);
 
   delete osm;
   osm = O2G_NULLPTR;

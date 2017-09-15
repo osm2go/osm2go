@@ -80,21 +80,24 @@ void xml_set_prop_pos(xmlNode *node, const pos_t *pos) {
 }
 
 static void vmessagef(GtkWidget *parent, GtkMessageType type, GtkButtonsType buttons,
-		      const char *title, const char *fmt,
-		      va_list args) {
-
+                      const char *title, const char *fmt, va_list args) {
+  GtkWindow *wnd = GTK_WINDOW(parent);
   char *buf = g_strdup_vprintf(fmt, args);
 
+  if(G_UNLIKELY(wnd == O2G_NULLPTR)) {
+    printf("%s", buf);
+    g_free(buf);
+    return;
+  }
+
 #ifndef FREMANTLE
-  GtkWidget *dialog = gtk_message_dialog_new(
-			   GTK_WINDOW(parent),
+  GtkWidget *dialog = gtk_message_dialog_new(wnd,
 			   GTK_DIALOG_DESTROY_WITH_PARENT,
 			   type, buttons, "%s", buf);
 
   gtk_window_set_title(GTK_WINDOW(dialog), title);
 #else
-  GtkWidget *dialog =
-    hildon_note_new_information(GTK_WINDOW(parent), buf);
+  GtkWidget *dialog = hildon_note_new_information(wnd, buf);
   (void)type;
   (void)buttons;
   (void)title;
