@@ -272,71 +272,70 @@ static bool project_read(const std::string &project_file, project_t *project,
   return true;
 }
 
-bool project_save(GtkWidget *parent, project_t *project) {
+bool project_t::save(GtkWidget *parent) {
   char str[32];
-  const std::string &project_file = project_filename(project);
+  const std::string &project_file = project_filename(this);
 
   printf("saving project to %s\n", project_file.c_str());
 
   /* check if project path exists */
-  if(!g_file_test(project->path.c_str(), G_FILE_TEST_IS_DIR)) {
+  if(G_UNLIKELY(g_file_test(path.c_str(), G_FILE_TEST_IS_DIR) != TRUE)) {
     /* make sure project base path exists */
-    if(g_mkdir_with_parents(project->path.c_str(), S_IRWXU) != 0) {
+    if(G_UNLIKELY(g_mkdir_with_parents(path.c_str(), S_IRWXU) != 0)) {
       errorf(GTK_WIDGET(parent),
-	     _("Unable to create project path %s"), project->path.c_str());
+	     _("Unable to create project path %s"), path.c_str());
       return false;
     }
   }
 
   xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
   xmlNodePtr node, root_node = xmlNewNode(O2G_NULLPTR, BAD_CAST "proj");
-  xmlNewProp(root_node, BAD_CAST "name", BAD_CAST project->name.c_str());
-  if(project->data_dirty)
+  xmlNewProp(root_node, BAD_CAST "name", BAD_CAST name.c_str());
+  if(data_dirty)
     xmlNewProp(root_node, BAD_CAST "dirty", BAD_CAST "true");
-  if(project->isDemo)
+  if(isDemo)
     xmlNewProp(root_node, BAD_CAST "demo", BAD_CAST "true");
 
   xmlDocSetRootElement(doc, root_node);
 
-  if(!project->rserver.empty()) {
-    g_assert(project->server == project->rserver.c_str());
-    xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "server",
-		BAD_CAST project->server);
+  if(!rserver.empty()) {
+    g_assert(server == rserver.c_str());
+    xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "server", BAD_CAST server);
   }
 
-  if(!project->desc.empty())
-    xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "desc", BAD_CAST project->desc.c_str());
+  if(!desc.empty())
+    xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "desc", BAD_CAST desc.c_str());
 
-  const std::string defaultOsm = project->name + ".osm";
-  if(G_UNLIKELY(project->osm != defaultOsm + ".gz" && project->osm != defaultOsm))
-    xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "osm", BAD_CAST project->osm.c_str());
+  const std::string defaultOsm = name + ".osm";
+  if(G_UNLIKELY(osm != defaultOsm + ".gz" && osm != defaultOsm))
+    xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "osm", BAD_CAST osm.c_str());
 
   node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "min", O2G_NULLPTR);
-  xml_set_prop_pos(node, &project->min);
+  xml_set_prop_pos(node, &min);
 
   node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "max", O2G_NULLPTR);
-  xml_set_prop_pos(node, &project->max);
+  xml_set_prop_pos(node, &max);
 
   node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "map", O2G_NULLPTR);
-  g_ascii_formatd(str, sizeof(str), "%.04f", project->map_state.zoom);
+  g_ascii_formatd(str, sizeof(str), "%.04f", map_state.zoom);
   xmlNewProp(node, BAD_CAST "zoom", BAD_CAST str);
-  g_ascii_formatd(str, sizeof(str), "%.04f", project->map_state.detail);
+  g_ascii_formatd(str, sizeof(str), "%.04f", map_state.detail);
   xmlNewProp(node, BAD_CAST "detail", BAD_CAST str);
-  snprintf(str, sizeof(str), "%d", project->map_state.scroll_offset.x);
+  snprintf(str, sizeof(str), "%d", map_state.scroll_offset.x);
   xmlNewProp(node, BAD_CAST "scroll-offset-x", BAD_CAST str);
-  snprintf(str, sizeof(str), "%d", project->map_state.scroll_offset.y);
+  snprintf(str, sizeof(str), "%d", map_state.scroll_offset.y);
   xmlNewProp(node, BAD_CAST "scroll-offset-y", BAD_CAST str);
 
-  if(project->wms_offset.x != 0 || project->wms_offset.y != 0 ||
-     !project->wms_server.empty() || !project->wms_path.empty()) {
+  if(wms_offset.x != 0 || wms_offset.y != 0 ||
+     !wms_server.empty() || !wms_path.empty()) {
     node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "wms", O2G_NULLPTR);
-    if(!project->wms_server.empty())
-      xmlNewProp(node, BAD_CAST "server", BAD_CAST project->wms_server.c_str());
-    if(!project->wms_path.empty())
-      xmlNewProp(node, BAD_CAST "path", BAD_CAST project->wms_path.c_str());
-    snprintf(str, sizeof(str), "%d", project->wms_offset.x);
+    if(!wms_server.empty())
+      xmlNewProp(node, BAD_CAST "server", BAD_CAST wms_server.c_str());
+    if(!wms_path.empty())
+      xmlNewProp(node, BAD_CAST "path", BAD_CAST wms_path.c_str());
+    snprintf(str, sizeof(str), "%d", wms_offset.x);
     xmlNewProp(node, BAD_CAST "x-offset", BAD_CAST str);
-    snprintf(str, sizeof(str), "%d", project->wms_offset.y);
+    snprintf(str, sizeof(str), "%d", wms_offset.y);
     xmlNewProp(node, BAD_CAST "y-offset", BAD_CAST str);
   }
 
@@ -511,7 +510,7 @@ static void project_close(appdata_t &appdata) {
   appdata.settings->project.clear();
 
   /* update project file on disk */
-  project_save(GTK_WIDGET(appdata.window), appdata.project);
+  appdata.project->save(GTK_WIDGET(appdata.window));
 
   delete appdata.project;
   appdata.project = O2G_NULLPTR;
@@ -632,7 +631,7 @@ static project_t *project_new(select_context_t *context) {
   project->max.lat = NAN;  project->max.lon = NAN;
 
   /* create project file on disk */
-  if(!project_save(context->dialog, project)) {
+  if(!project->save(context->dialog)) {
     project_delete(context, project);
 
     project = O2G_NULLPTR;
@@ -1120,22 +1119,22 @@ static void on_diff_remove_clicked(project_context_t *context) {
   }
 }
 
-bool project_check_demo(GtkWidget *parent, project_t *project) {
-  if(project->isDemo)
+bool project_t::check_demo(GtkWidget *parent) const {
+  if(isDemo)
     messagef(parent, "Demo project",
 	     "This is a preinstalled demo project. This means that the "
 	     "basic project parameters cannot be changed and no data can "
 	     "be up- or downloaded via the OSM servers.\n\n"
 	     "Please setup a new project to do these things.");
 
-  return project->isDemo;
+  return isDemo;
 }
 
 static bool
 project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
   GtkWidget *parent = scontext->dialog;
 
-  if(project_check_demo(parent, project))
+  if(project->check_demo(parent))
     return false;
 
   /* ------------ project edit dialog ------------- */
@@ -1262,8 +1261,7 @@ project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
   }
 #endif
 
-  /* save project */
-  project_save(context.dialog, project);
+  project->save(context.dialog);
 
   gtk_widget_destroy(context.dialog);
 

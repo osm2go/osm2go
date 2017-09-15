@@ -154,7 +154,7 @@ static void
 cb_menu_upload(appdata_t *appdata) {
   if(!appdata->osm || !appdata->project) return;
 
-  if(project_check_demo(GTK_WIDGET(appdata->window), appdata->project))
+  if(appdata->project->check_demo(GTK_WIDGET(appdata->window)))
     return;
 
   osm_upload(*appdata, appdata->osm, appdata->project);
@@ -164,7 +164,7 @@ static void
 cb_menu_download(appdata_t *appdata) {
   if(!appdata->project) return;
 
-  if(project_check_demo(GTK_WIDGET(appdata->window), appdata->project))
+  if(appdata->project->check_demo(GTK_WIDGET(appdata->window)))
     return;
 
   appdata->map->set_autosave(false);
@@ -1243,7 +1243,7 @@ appdata_t::~appdata_t() {
 
   /* save project file */
   if(project)
-    project_save(GTK_WIDGET(window), project);
+    project->save(GTK_WIDGET(window));
 
   delete osm;
   osm = O2G_NULLPTR;

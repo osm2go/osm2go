@@ -165,7 +165,7 @@ bool osm_download(GtkWidget *parent, settings_t *settings, project_t *project)
     if(newfname.substr(0, project->path.size()) == project->path)
       newfname.erase(0, project->path.size());
     project->osm = newfname;
-    project_save(parent, project);
+    project->save(parent);
 
     // now remove the old file
     unlink(oldfname.c_str());
@@ -844,7 +844,7 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
                                gtk_entry_get_text(GTK_ENTRY(sentry)));
 
   gtk_widget_destroy(dialog);
-  project_save(GTK_WIDGET(appdata.window), project);
+  project->save(GTK_WIDGET(appdata.window));
 
   context.dialog =
     misc_dialog_new(MISC_DIALOG_LARGE,_("Uploading"),
@@ -942,7 +942,7 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
     } else
       appendf(context.log, O2G_NULLPTR, _("Download failed!\n"));
 
-    project_save(context.dialog, project);
+    project->save(context.dialog);
 
     if(reload_map) {
       /* this kind of rather brute force reload is useful as the moment */
