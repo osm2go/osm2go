@@ -37,7 +37,7 @@ enum diff_restore_results {
   DIFF_HAS_HIDDEN = (1 << 5), ///< some of the object have the hidden flag set
 };
 
-void diff_save(const project_t *project, const osm_t *osm);
+void diff_save(const project_t *project, const osm_t *osm) __attribute__((nonnull(1,2)));
 unsigned int diff_restore_file(GtkWidget *window, const project_t *project, osm_t *osm) __attribute__((nonnull(2,3)));
 void diff_restore(appdata_t &appdata);
 bool diff_present(const project_t *project);

@@ -191,8 +191,6 @@ bool diff_is_clean(const osm_t *osm, bool honor_hidden_flags) {
 }
 
 void diff_save(const project_t *project, const osm_t *osm) {
-  if(!project || !osm) return;
-
   const std::string &diff_name = diff_filename(project);
 
   if(diff_is_clean(osm, true)) {

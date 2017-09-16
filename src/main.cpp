@@ -287,7 +287,8 @@ cb_menu_track_vis(appdata_t *appdata) {
 #ifndef USE_HILDON
 static void
 cb_menu_save_changes(appdata_t *appdata) {
-  diff_save(appdata->project, appdata->osm);
+  if(G_LIKELY(appdata->project && appdata->osm))
+    diff_save(appdata->project, appdata->osm);
   banner_show_info(*appdata, _("Saved local changes"));
 }
 #endif
@@ -1557,7 +1558,8 @@ static int application_run(const char *proj)
   track_clear(appdata);
 
   /* save a diff if there are dirty entries */
-  diff_save(appdata.project, appdata.osm);
+  if(appdata.project && appdata.osm)
+    diff_save(appdata.project, appdata.osm);
 
   return 0;
 }
