@@ -591,8 +591,8 @@ unsigned int diff_restore_file(GtkWidget *window, const project_t *project, osm_
 	  xmlFree(str);
 	}
 
-	xmlNodePtr node_node = cur_node->children;
-	while(node_node) {
+        for(xmlNodePtr node_node = cur_node->children; node_node != O2G_NULLPTR;
+            node_node = node_node->next) {
 	  if(node_node->type == XML_ELEMENT_NODE) {
 
             if(strcmp(reinterpret_cast<const char *>(node_node->name), node_t::api_string()) == 0)
@@ -609,7 +609,6 @@ unsigned int diff_restore_file(GtkWidget *window, const project_t *project, osm_
               res |= DIFF_ELEMENTS_IGNORED;
             }
 	  }
-	  node_node = node_node->next;
 	}
       }
     }
