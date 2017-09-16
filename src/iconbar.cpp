@@ -116,28 +116,27 @@ static void iconbar_toggle_sel_widgets(iconbar_t *iconbar, gboolean value) {
     gtk_widget_set_sensitive(sel_widgets[i], value);
 }
 
-static void iconbar_toggle_way_widgets(iconbar_t *iconbar, gboolean value, const object_t &selected) {
+static void iconbar_toggle_way_widgets(iconbar_t *iconbar, bool value, const object_t &selected) {
   const std::array<GtkWidget *, 2> way_widgets = { {
     iconbar->way_node_add,
     iconbar->way_reverse
   } };
 
   for(int i = way_widgets.size() - 1; i >= 0; i--)
-    gtk_widget_set_sensitive(way_widgets[i], value);
+    gtk_widget_set_sensitive(way_widgets[i], value ? TRUE : FALSE);
 
   if(value)
     g_assert(selected.type != ILLEGAL);
 
   gtk_widget_set_sensitive(iconbar->way_cut,
-                           value && selected.way->node_chain.size() > 2);
+                           (value && selected.way->node_chain.size() > 2) ? TRUE : FALSE);
 }
 
 void iconbar_t::map_item_selected(const object_t &item) {
-  gboolean selected = item.type != ILLEGAL ? TRUE : FALSE;
-  iconbar_toggle_sel_widgets(this, selected);
+  gboolean selected = item.type != ILLEGAL;
+  iconbar_toggle_sel_widgets(this, selected ? TRUE : FALSE);
 
-  gboolean way_en = (selected && item.type == WAY) ?
-                    TRUE : FALSE;
+  bool way_en = selected && item.type == WAY;
   iconbar_toggle_way_widgets(this, way_en, item);
 }
 
@@ -151,7 +150,7 @@ void iconbar_t::map_action_idle(gboolean idle, const object_t &selected) {
   for(int i = action_idle_widgets.size() - 1; i >= 0; i--)
     gtk_widget_set_sensitive(action_idle_widgets[i], idle);
 
-  gboolean way_en = (idle && selected.type == WAY) ? TRUE : FALSE;
+  bool way_en = (idle == TRUE) && selected.type == WAY;
 
   iconbar_toggle_sel_widgets(this, FALSE);
   iconbar_toggle_way_widgets(this, way_en, selected);

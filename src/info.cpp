@@ -44,7 +44,7 @@ static void changed(GtkTreeSelection *, gpointer user_data) {
 
   GtkTreeModel *model;
   GtkTreeIter iter;
-  gboolean selected = list_get_selected(list, &model, &iter);
+  bool selected = list_get_selected(list, &model, &iter);
 
   if(selected) {
     const gchar *key = O2G_NULLPTR;
@@ -54,7 +54,7 @@ static void changed(GtkTreeSelection *, gpointer user_data) {
 
     /* you just cannot delete or edit the "created_by" tag */
     if(key && tag_t::is_creator_tag(key))
-      selected = FALSE;
+      selected = false;
   }
 
   list_button_enable(GTK_WIDGET(list), LIST_BUTTON_REMOVE, selected);
