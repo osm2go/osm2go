@@ -219,7 +219,7 @@ int main(int argc, char **argv)
     std::string bpath = tmpdir + std::string("/") + argv[2];
     mkdir(bpath.c_str(), 0755);
     bpath.erase(bpath.rfind('/') + 1);
-    project_t sproject(dummystate, argv[2], bpath.c_str());
+    project_t sproject(dummystate, argv[2], bpath);
 
     flags = diff_restore_file(O2G_NULLPTR, &sproject, osm);
     g_assert_cmpuint(flags, ==, DIFF_NONE_PRESENT);

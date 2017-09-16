@@ -1125,7 +1125,7 @@ std::string presets_widget_combo::getValue(GtkWidget* widget) const
   g_assert(it != display_values.end());
 
   // get the value corresponding to the displayed string
-  return values[it - display_values.begin()].c_str();
+  return values[it - display_values.begin()];
 }
 
 bool presets_widget_key::matchValue(const char *val) const
