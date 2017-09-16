@@ -222,18 +222,21 @@ static void on_tag_edit(tag_context_t *context) {
   gtk_tree_model_get(model, &iter, TAG_COL_KEY, &kc, TAG_COL_VALUE, &vc, -1);
   printf("got %s/%s\n", kc, vc);
 
-  std::string k = kc, v = vc;
-  const std::string oldk = k;
+  // keep it in string for easier string compare
+  const std::string oldv = vc;
+  const std::string oldk = kc;
+
+  std::string k = oldk, v = oldv;
 
   if(tag_edit(GTK_WINDOW(context->dialog), k, v)) {
-    if(k == kc && v == vc)
+    if(k == kc && v == oldv)
       return;
 
     printf("setting %s/%s\n", k.c_str(), v.c_str());
 
     const std::pair<osm_t::TagMap::iterator, osm_t::TagMap::iterator> matches = context->tags.equal_range(oldk);
     g_assert(matches.first != matches.second);
-    osm_t::TagMap::iterator it = std::find_if(matches.first, matches.second, value_match_functor(vc));
+    osm_t::TagMap::iterator it = std::find_if(matches.first, matches.second, value_match_functor(oldv));
     g_assert(it != matches.second);
 
     if(it->first == k) {
