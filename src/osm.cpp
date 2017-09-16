@@ -1865,7 +1865,7 @@ void relation_transfer::operator()(const std::pair<item_id_t, relation_t *> &pai
 
       insertBefore = prev->object.way->ends_with_node(dst->node_chain.front()) ||
                      prev->object.way->ends_with_node(dst->node_chain.back());
-    } else if (it != itEnd && (it + 1)->object.type == WAY) {
+    } else if (it + 1 < itEnd && (it + 1)->object.type == WAY) {
       std::vector<member_t>::iterator next = it + 1;
 
       insertBefore = next->object.way->ends_with_node(src->node_chain.front()) ||
