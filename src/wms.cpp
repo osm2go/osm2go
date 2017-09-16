@@ -20,6 +20,7 @@
 #include "wms.h"
 
 #include "appdata.h"
+#include "fdguard.h"
 #include "list.h"
 #include "map.h"
 #include "misc.h"
@@ -1257,18 +1258,20 @@ void wms_remove_file(project_t &project) {
   if(G_UNLIKELY(ImageFormatExtensions.empty()))
     initImageFormats();
 
-  const std::map<WmsImageFormat, const char *>::const_iterator itEnd = ImageFormatExtensions.end();
-  std::map<WmsImageFormat, const char *>::const_iterator it = ImageFormatExtensions.begin();
+  fdguard dirfd(project.path.c_str());
+  if(G_UNLIKELY(!dirfd.valid()))
+    return;
 
-  std::string filename = project.path + "/wms.";
+  std::string filename = "wms.";
   const std::string::size_type extpos = filename.size();
 
-  for(; it != itEnd; it++) {
+  const std::map<WmsImageFormat, const char *>::const_iterator itEnd = ImageFormatExtensions.end();
+  for(std::map<WmsImageFormat, const char *>::const_iterator it = ImageFormatExtensions.begin();
+      it != itEnd; it++) {
     filename.erase(extpos);
     filename += it->second;
 
-    if(g_file_test(filename.c_str(), G_FILE_TEST_EXISTS))
-      remove(filename.c_str());
+    unlinkat(dirfd, filename.c_str(), 0);
   }
 }
 
