@@ -52,6 +52,8 @@ add_library(osm2go_lib STATIC
 	src/canvas.h
 	src/diff.cpp
 	src/diff.h
+	src/fdguard.cpp
+	src/fdguard.h
 	src/gps.h
 	src/icon.cpp
 	src/icon.h

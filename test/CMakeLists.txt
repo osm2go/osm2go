@@ -47,3 +47,5 @@ if (DPKG_PARSECHANGELOG)
 			WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 	set_property(TEST parsechangelog PROPERTY FAIL_REGULAR_EXPRESSION ": warning:")
 endif ()
+
+osm_test(fdguard)
