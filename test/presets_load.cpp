@@ -1,6 +1,7 @@
 #include <josm_presets.h>
 #include <josm_presets_p.h>
 
+#include <fdguard.h>
 #include <misc.h>
 
 #include <osm2go_cpp.h>
@@ -21,6 +22,7 @@ namespace std {
 #include <libxml/parser.h>
 #include <set>
 #include <string>
+#include <sys/stat.h>
 
 static std::vector<std::string> basedirs;
 
@@ -34,20 +36,23 @@ static std::set<std::string> missingIcons;
 
 bool check_icon::operator()(const std::string &dir)
 {
+  struct stat st;
+
   if(filename[0] == '/')
-    return (g_file_test(filename.c_str(), G_FILE_TEST_IS_REGULAR) == TRUE);
+    return (stat(filename.c_str(), &st) == 0 && S_ISREG(st.st_mode));
 
   const std::array<const char *, 4> icon_exts = { { ".svg", ".gif", ".png", ".jpg" } };
-  std::string name = dir + "/icons/" + filename + icon_exts[0];
-  name.erase(name.size() - strlen(icon_exts[0]));
+  const std::string dirname = dir + "/icons";
+  fdguard dirfd(dirname.c_str());
+  if(G_UNLIKELY(!dirfd.valid()))
+    return false;
 
-  if(g_file_test(name.c_str(), G_FILE_TEST_IS_REGULAR) == TRUE)
-    return true;
+  std::string name = filename;
 
   for(unsigned int i = 0; i < icon_exts.size(); i++) {
     name += icon_exts[i];
 
-    if(g_file_test(name.c_str(), G_FILE_TEST_IS_REGULAR) == TRUE)
+    if(fstatat(dirfd, name.c_str(), &st, 0) == 0 && S_ISREG(st.st_mode))
       return true;
     name.erase(name.size() - strlen(icon_exts[i]));
   }
