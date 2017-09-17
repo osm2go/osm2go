@@ -164,7 +164,7 @@ struct map_t {
   void cmenu_show();
 
   /* background stuff */
-  void set_bg_image(const char *filename);
+  bool set_bg_image(const char *filename);
   void remove_bg_image();
 
   void hide_selected();

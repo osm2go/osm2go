@@ -2124,12 +2124,14 @@ static void map_bg_item_destroy_event(gpointer data) {
   }
 }
 
-void map_t::set_bg_image(const char *filename) {
+bool map_t::set_bg_image(const char *filename) {
   const bounds_t *bounds = appdata.osm->bounds;
 
   remove_bg_image();
 
   bg.pix = gdk_pixbuf_new_from_file(filename, O2G_NULLPTR);
+  if(bg.pix == O2G_NULLPTR)
+    return false;
 
   /* calculate required scale factor */
   bg.scale.x = static_cast<float>(bounds->max.x - bounds->min.x) /
@@ -2141,6 +2143,8 @@ void map_t::set_bg_image(const char *filename) {
                               bounds->min.x, bounds->min.y, bg.scale.x, bg.scale.y);
 
   canvas_item_destroy_connect(bg.item, map_bg_item_destroy_event, this);
+
+  return true;
 }
 
 /* -------- hide and show objects (for performance reasons) ------- */

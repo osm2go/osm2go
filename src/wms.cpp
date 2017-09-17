@@ -1208,7 +1208,8 @@ void wms_import(appdata_t &appdata) {
     return;
 
   /* there should be a matching file on disk now */
-  appdata.map->set_bg_image(filename.c_str());
+  if(G_UNLIKELY(!appdata.map->set_bg_image(filename.c_str())))
+    return;
 
   gint x = appdata.osm->bounds->min.x + appdata.map->bg.offset.x;
   gint y = appdata.osm->bounds->min.y + appdata.map->bg.offset.y;
@@ -1234,12 +1235,10 @@ void wms_load(appdata_t &appdata) {
     filename.erase(extpos);
     filename += it->second;
 
-    if(g_file_test(filename.c_str(), G_FILE_TEST_IS_REGULAR) == TRUE) {
-      appdata.map->bg.offset.x = appdata.project->wms_offset.x;
-      appdata.map->bg.offset.y = appdata.project->wms_offset.y;
+    appdata.map->bg.offset.x = appdata.project->wms_offset.x;
+    appdata.map->bg.offset.y = appdata.project->wms_offset.y;
 
-      appdata.map->set_bg_image(filename.c_str());
-
+    if(appdata.map->set_bg_image(filename.c_str())) {
       /* restore image to saved position */
       gint x = appdata.osm->bounds->min.x + appdata.map->bg.offset.x;
       gint y = appdata.osm->bounds->min.y + appdata.map->bg.offset.y;
