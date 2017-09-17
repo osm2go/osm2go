@@ -188,7 +188,7 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t &style) {
  */
 static bool style_parse(const std::string &fullname, xmlChar **fname,
                         bool name_only, style_t &style) {
-  xmlDoc *doc = xmlReadFile(fullname.c_str(), O2G_NULLPTR, 0);
+  xmlDoc *doc = xmlReadFile(fullname.c_str(), O2G_NULLPTR, XML_PARSE_NONET);
   bool ret = false;
 
   /* parse the file and get the DOM */

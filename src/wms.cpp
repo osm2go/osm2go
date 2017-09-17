@@ -1075,7 +1075,7 @@ void wms_import(appdata_t &appdata) {
     xmlDoc *doc = O2G_NULLPTR;
 
     /* parse the file and get the DOM */
-    if((doc = xmlReadMemory(cap, caplen, O2G_NULLPTR, O2G_NULLPTR, 0)) == O2G_NULLPTR) {
+    if((doc = xmlReadMemory(cap, caplen, O2G_NULLPTR, O2G_NULLPTR, XML_PARSE_NONET)) == O2G_NULLPTR) {
       xmlErrorPtr errP = xmlGetLastError();
       errorf(GTK_WIDGET(appdata.window),
 	     _("WMS download failed:\n\n"

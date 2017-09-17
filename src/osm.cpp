@@ -1249,7 +1249,7 @@ static osm_t *process_file(const std::string &filename, icon_t &icons) {
   osm_t *osm = O2G_NULLPTR;
   xmlTextReaderPtr reader;
 
-  reader = xmlReaderForFile(filename.c_str(), O2G_NULLPTR, 0);
+  reader = xmlReaderForFile(filename.c_str(), O2G_NULLPTR, XML_PARSE_NONET);
   if (G_LIKELY(reader != O2G_NULLPTR)) {
     if(G_LIKELY(xmlTextReaderRead(reader) == 1)) {
       const char *name = reinterpret_cast<const char *>(xmlTextReaderConstName(reader));

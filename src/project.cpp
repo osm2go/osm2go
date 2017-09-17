@@ -148,7 +148,7 @@ static std::string project_filename(const project_t *project) {
 
 static bool project_read(const std::string &project_file, project_t *project,
                              const std::string &defaultserver) {
-  xmlDoc *doc = xmlReadFile(project_file.c_str(), O2G_NULLPTR, 0);
+  xmlDoc *doc = xmlReadFile(project_file.c_str(), O2G_NULLPTR, XML_PARSE_NONET);
 
   /* parse the file and get the DOM */
   if(doc == O2G_NULLPTR) {

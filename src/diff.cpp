@@ -563,7 +563,7 @@ unsigned int diff_restore_file(GtkWidget *window, const project_t *project, osm_
   xmlNode *root_element = O2G_NULLPTR;
 
   /* parse the file and get the DOM */
-  if(G_UNLIKELY((doc = xmlReadFile(diff_name.c_str(), O2G_NULLPTR, 0)) == O2G_NULLPTR)) {
+  if(G_UNLIKELY((doc = xmlReadFile(diff_name.c_str(), O2G_NULLPTR, XML_PARSE_NONET)) == O2G_NULLPTR)) {
     errorf(window, _("Error: could not parse file %s\n"), diff_name.c_str());
     return DIFF_INVALID;
   }
