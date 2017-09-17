@@ -26,6 +26,7 @@
 
 #include "appdata.h"
 #include "banner.h"
+#include "fdguard.h"
 #include "gps.h"
 #include "map.h"
 #include "misc.h"
@@ -35,10 +36,12 @@
 #include <cmath>
 #include <cstring>
 #include <ctime>
+#include <fcntl.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <map>
 #include <strings.h>
+#include <sys/stat.h>
 
 #ifndef LIBXML_TREE_ENABLED
 #error "Tree not enabled in libxml"
@@ -275,6 +278,10 @@ static void track_write(const char *name, const track_t *track, xmlDoc *doc) {
   xmlFreeDoc(doc);
 }
 
+#ifndef O_CLOEXEC
+#define O_CLOEXEC 0
+#endif
+
 /* save track in project */
 void track_save(project_t *project, track_t *track) {
   if(!project) return;
@@ -285,31 +292,40 @@ void track_save(project_t *project, track_t *track) {
     return;
   }
 
-  const std::string trk_name = project->path + project->name + ".trk";
+  fdguard dirfd(project->path.c_str());
+  if(G_UNLIKELY(!dirfd.valid()))
+    return;
+
+  const std::string trkfname = project->name + ".trk";
 
   if(!track) {
-    unlink(trk_name.c_str());
+    unlinkat(dirfd, trkfname.c_str(), 0);
     return;
   }
 
   /* check if there already is such a diff file and make it a backup */
   /* in case new diff saving fails */
-  const std::string backup = project->path + "backup.trk";
+  const char *backupfn = "backup.trk";
   xmlDocPtr doc = O2G_NULLPTR;
-  if(g_file_test(trk_name.c_str(), G_FILE_TEST_IS_REGULAR) == TRUE) {
-    printf("backing up existing file \"%s\" to \"%s\"\n", trk_name.c_str(), backup.c_str());
-    remove(backup.c_str());
-    rename(trk_name.c_str(), backup.c_str());
-    /* parse the old file and get the DOM */
-    doc = xmlReadFile(backup.c_str(), O2G_NULLPTR, 0);
+
+  struct stat st;
+  if(fstatat(dirfd, trkfname.c_str(), &st, 0) == 0 && S_ISREG(st.st_mode)) {
+    printf("backing up existing file '%s' to '%s'\n", trkfname.c_str(), backupfn);
+    if(renameat(dirfd, trkfname.c_str(), dirfd, backupfn) == 0) {
+      /* parse the old file and get the DOM */
+      fdguard bupfd(openat(dirfd, backupfn, O_RDONLY | O_CLOEXEC));
+      if(G_LIKELY(bupfd.valid()))
+        doc = xmlReadFd(bupfd, O2G_NULLPTR, O2G_NULLPTR, XML_PARSE_NONET);
+    }
   }
 
+  const std::string trk_name = project->path + trkfname;
   track_write(trk_name.c_str(), track, doc);
   track->dirty = false;
 
   /* if we reach this point writing the new file worked and we */
   /* can delete the backup */
-  unlink(backup.c_str());
+  unlinkat(dirfd, backupfn, 0);
 }
 
 void track_export(const track_t *track, const char *filename) {
@@ -321,19 +337,25 @@ void track_export(const track_t *track, const char *filename) {
 bool track_restore(appdata_t &appdata) {
   const project_t *project = appdata.project;
 
+  fdguard dirfd(project->path.c_str());
+  if(G_UNLIKELY(!dirfd.valid()))
+    return false;
+
   /* first try to open a backup which is only present if saving the */
   /* actual diff didn't succeed */
-  std::string trk_name = project->path;
-  const std::string::size_type plen = trk_name.size();
-  trk_name += "backup.trk";
-  if(G_UNLIKELY(g_file_test(trk_name.c_str(), G_FILE_TEST_IS_REGULAR) == TRUE)) {
-    printf("track backup present, loading it instead of real track ...\n");
-  } else {
-    trk_name.erase(plen, std::string::npos);
-    trk_name += project->name;
-    trk_name += ".trk";
+  const char *backupfn = "backup.trk";
+  std::string trk_name;
 
-    if(g_file_test(trk_name.c_str(), G_FILE_TEST_IS_REGULAR) != TRUE) {
+  struct stat st;
+  if(G_UNLIKELY(fstatat(dirfd, backupfn, &st, 0) == 0 && S_ISREG(st.st_mode))) {
+    printf("track backup present, loading it instead of real track ...\n");
+    trk_name = project->path + backupfn;
+  } else {
+    // allocate in one go
+    trk_name = project->path + project->name + ".trk";
+
+    // use relative filename to test
+    if(fstatat(dirfd, trk_name.c_str() + project->path.size(), &st, 0) != 0 || !S_ISREG(st.st_mode)) {
       printf("no track present!\n");
       return false;
     }
