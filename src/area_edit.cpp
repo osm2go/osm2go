@@ -253,7 +253,7 @@ static bool current_tab_is(context_t *context, gint page_num, const char *str) {
   const char *name =
     gtk_notebook_get_tab_label_text(nb, w);
 
-  return(strcasecmp(name, _(str)) == 0);
+  return (strcmp(name, _(str)) == 0);
 }
 
 static inline const char *warn_text() {
