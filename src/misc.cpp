@@ -449,13 +449,11 @@ static void on_notebook_button_clicked(GtkWidget *button, gpointer data) {
 }
 #endif
 
-void notebook_append_page(GtkWidget *notebook,
-			  GtkWidget *page, const gchar *label) {
-#ifdef FREMANTLE
-  GtkNotebook *nb =
-    GTK_NOTEBOOK(g_object_get_data(G_OBJECT(notebook), "notebook"));
-
+void notebook_append_page(GtkWidget *notebook, GtkWidget *page, const gchar *label) {
+  GtkNotebook *nb = notebook_get_gtk_notebook(notebook);
   gint page_num = gtk_notebook_append_page(nb, page, gtk_label_new(label));
+
+#ifdef FREMANTLE
   GtkWidget *button = O2G_NULLPTR;
 
   /* select button for page 0 by default */
@@ -483,9 +481,8 @@ void notebook_append_page(GtkWidget *notebook,
   gtk_box_pack_start_defaults(
 	      GTK_BOX(g_object_get_data(G_OBJECT(notebook), "hbox")),
 	      button);
-
 #else
-  gtk_notebook_append_page(GTK_NOTEBOOK(notebook), page, gtk_label_new(label));
+  (void)page_num;
 #endif
 }
 

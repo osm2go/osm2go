@@ -135,8 +135,7 @@ gboolean check_button_get_active(GtkWidget *button);
 GType check_button_type(void);
 
 GtkWidget *notebook_new(void);
-void notebook_append_page(GtkWidget *notebook,
-			  GtkWidget *page, const gchar *label);
+void notebook_append_page(GtkWidget *notebook, GtkWidget *page, const gchar *label);
 GtkNotebook *notebook_get_gtk_notebook(GtkWidget *notebook);
 
 GtkWidget *combo_box_new(const gchar *title);
