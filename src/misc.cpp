@@ -417,12 +417,12 @@ GtkWidget *notebook_new(void) {
   gtk_box_pack_start_defaults(GTK_BOX(vbox), notebook);
 
   /* store a reference to the notebook in the vbox */
-  g_object_set_data(G_OBJECT(vbox), "notebook", (gpointer)notebook);
+  g_object_set_data(G_OBJECT(vbox), "notebook", notebook);
 
   /* create a hbox for the buttons */
   GtkWidget *hbox = gtk_hbox_new(TRUE, 0);
   gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
-  g_object_set_data(G_OBJECT(vbox), "hbox", (gpointer)hbox);
+  g_object_set_data(G_OBJECT(vbox), "hbox", hbox);
 
   return vbox;
 #else
