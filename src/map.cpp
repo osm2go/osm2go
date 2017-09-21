@@ -1995,7 +1995,7 @@ void map_t::track_update_seg(track_seg_t &seg) {
    * points, second_last must be valid and its "next" (last) also */
   g_assert(begin != itEnd);
   g_assert(last != itEnd);
-  g_assert_cmpfloat(itEnd - begin, <=, seg.track_points.size());
+  g_assert_cmpuint(itEnd - begin, <=, seg.track_points.size());
 
   /* count points to be placed */
   const size_t npoints = itEnd - begin;

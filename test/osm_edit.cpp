@@ -91,8 +91,8 @@ static void test_trivial() {
   g_assert_false(osm.bounds->contains(lpos_t(0, -1)));
 
   way_t w(0);
-  g_assert(w.first_node() == O2G_NULLPTR);
-  g_assert(w.last_node() == O2G_NULLPTR);
+  g_assert_null(w.first_node());
+  g_assert_null(w.last_node());
 }
 
 static void test_taglist() {
@@ -741,9 +741,9 @@ static void test_reverse()
   g_assert_cmpstr(rels[2]->members.back().role, ==, "backward");
   // rels[3] has matching type, but roles are empty
   g_assert_cmpuint(rels[1]->members.size(), ==, 2);
-  g_assert(rels[3]->members.front().role == O2G_NULLPTR);
+  g_assert_null(rels[3]->members.front().role);
   g_assert(rels[3]->members.front().object == w);
-  g_assert(rels[3]->members.back().role == O2G_NULLPTR);
+  g_assert_null(rels[3]->members.back().role);
 
   // go back
   w->reverse(&o, r, rroles);

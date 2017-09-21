@@ -2001,7 +2001,7 @@ void tag_list_t::copy(const tag_list_t &other)
 std::string object_t::get_name() const {
   std::string ret;
 
-  g_assert(is_real());
+  g_assert_true(is_real());
 
   /* worst case: we have no tags at all. return techincal info then */
   if(!obj->tags.hasRealTags())

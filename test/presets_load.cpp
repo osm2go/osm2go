@@ -95,7 +95,7 @@ void counter::operator()(const presets_item_t *p)
   } else if (p->type == presets_item_t::TY_SEPARATOR) {
     separators++;
   } else {
-    g_assert(p->isItem());
+    g_assert_true(p->isItem());
     items++;
     const presets_item * const item = static_cast<const presets_item *>(p);
     std::for_each(item->widgets.begin(), item->widgets.end(), *this);

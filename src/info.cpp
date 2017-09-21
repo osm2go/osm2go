@@ -422,7 +422,7 @@ static GtkWidget *tag_widget(tag_context_t *context) {
 }
 
 static void on_relation_members(GtkWidget *, const tag_context_t *context) {
-  g_assert(context->object.type == RELATION);
+  g_assert_cmpuint(context->object.type, ==, RELATION);
   relation_show_members(context->dialog, context->object.relation);
 }
 
