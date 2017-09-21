@@ -120,8 +120,9 @@ bool osm_download(GtkWidget *parent, settings_t *settings, project_t *project)
 
   /* Download the new file to a new name. If something goes wrong then the
    * old file will still be in place to be opened. */
-  const std::string update = project->path + "update.osm";
-  remove(update.c_str());
+  const char *updatefn = "update.osm";
+  const std::string update = project->path + updatefn;
+  unlinkat(project->dirfd, updatefn, 0);
 
   if(G_UNLIKELY(!net_io_download_file(parent, url, update, project->name.c_str(), true)))
     return false;

@@ -48,10 +48,6 @@ static std::string diff_filename(const project_t *project) {
   return project->name + ".diff";
 }
 
-static std::string diff_pathname(const project_t *project) {
-  return project->path + diff_filename(project);
-}
-
 struct diff_save_tags_functor {
   xmlNodePtr const node;
   explicit diff_save_tags_functor(xmlNodePtr n) : node(n) {}
@@ -195,17 +191,11 @@ bool diff_is_clean(const osm_t *osm, bool honor_hidden_flags) {
 }
 
 void diff_save(const project_t *project, const osm_t *osm) {
-  fdguard dirfd(project->path.c_str());
-  if(G_UNLIKELY(!dirfd.valid())) {
-    printf("can't access project directory to save diff!\n");
-    return;
-  }
-
   const std::string &diff_name = diff_filename(project);
 
   if(diff_is_clean(osm, true)) {
     printf("data set is clean, removing diff if present\n");
-    unlinkat(dirfd, diff_name.c_str(), 0);
+    unlinkat(project->dirfd, diff_name.c_str(), 0);
     return;
   }
 
@@ -229,7 +219,7 @@ void diff_save(const project_t *project, const osm_t *osm) {
 
   /* if we reach this point writing the new file worked and we */
   /* can move it over the real file */
-  renameat(-1, ndiff.c_str(), dirfd, diff_name.c_str());
+  renameat(-1, ndiff.c_str(), project->dirfd, diff_name.c_str());
 }
 
 static item_id_t xml_get_prop_int(xmlNode *node, const char *prop, item_id_t def) {
@@ -557,23 +547,19 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
 #endif
 
 unsigned int diff_restore_file(GtkWidget *window, const project_t *project, osm_t *osm) {
-  fdguard dirfd(project->path.c_str());
-  if(G_UNLIKELY(!dirfd.valid()))
-    return DIFF_NONE_PRESENT;
-
   struct stat st;
 
   /* first try to open a backup which is only present if saving the */
   /* actual diff didn't succeed */
   const char *backupfn = "backup.diff";
   std::string diff_name;
-  if(G_UNLIKELY(fstatat(dirfd, backupfn, &st, 0) == 0 && S_ISREG(st.st_mode))) {
+  if(G_UNLIKELY(fstatat(project->dirfd, backupfn, &st, 0) == 0 && S_ISREG(st.st_mode))) {
     printf("diff backup present, loading it instead of real diff ...\n");
     diff_name = backupfn;
   } else {
     diff_name = diff_filename(project);
 
-    if(fstatat(dirfd, diff_name.c_str(), &st, 0) != 0 || !S_ISREG(st.st_mode)) {
+    if(fstatat(project->dirfd, diff_name.c_str(), &st, 0) != 0 || !S_ISREG(st.st_mode)) {
       printf("no diff present!\n");
       return DIFF_NONE_PRESENT;
     }
@@ -583,7 +569,7 @@ unsigned int diff_restore_file(GtkWidget *window, const project_t *project, osm_
   xmlDoc *doc = O2G_NULLPTR;
   xmlNode *root_element = O2G_NULLPTR;
 
-  fdguard difffd(openat(dirfd, diff_name.c_str(), O_RDONLY | O_CLOEXEC));
+  fdguard difffd(openat(project->dirfd, diff_name.c_str(), O_RDONLY | O_CLOEXEC));
 
   /* parse the file and get the DOM */
   if(G_UNLIKELY((doc = xmlReadFd(difffd, O2G_NULLPTR, O2G_NULLPTR, XML_PARSE_NONET)) == O2G_NULLPTR)) {
@@ -661,14 +647,12 @@ void diff_restore(appdata_t &appdata) {
 }
 
 bool diff_present(const project_t *project) {
-  const std::string &diff_name = diff_pathname(project);
-
-  return g_file_test(diff_name.c_str(), G_FILE_TEST_IS_REGULAR) == TRUE;
+  struct stat st;
+  return fstatat(project->dirfd, diff_filename(project).c_str(), &st, 0) == 0 && S_ISREG(st.st_mode);
 }
 
 void diff_remove(const project_t *project) {
-  const std::string &diff_name = diff_pathname(project);
-  unlink(diff_name.c_str());
+  unlinkat(project->dirfd, diff_filename(project).c_str(), 0);
 }
 
 xmlDocPtr osmchange_init()

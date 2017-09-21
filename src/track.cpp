@@ -292,14 +292,10 @@ void track_save(project_t *project, track_t *track) {
     return;
   }
 
-  fdguard dirfd(project->path.c_str());
-  if(G_UNLIKELY(!dirfd.valid()))
-    return;
-
   const std::string trkfname = project->name + ".trk";
 
   if(!track) {
-    unlinkat(dirfd, trkfname.c_str(), 0);
+    unlinkat(project->dirfd, trkfname.c_str(), 0);
     return;
   }
 
@@ -309,11 +305,11 @@ void track_save(project_t *project, track_t *track) {
   xmlDocPtr doc = O2G_NULLPTR;
 
   struct stat st;
-  if(fstatat(dirfd, trkfname.c_str(), &st, 0) == 0 && S_ISREG(st.st_mode)) {
+  if(fstatat(project->dirfd, trkfname.c_str(), &st, 0) == 0 && S_ISREG(st.st_mode)) {
     printf("backing up existing file '%s' to '%s'\n", trkfname.c_str(), backupfn);
-    if(renameat(dirfd, trkfname.c_str(), dirfd, backupfn) == 0) {
+    if(renameat(project->dirfd, trkfname.c_str(), project->dirfd, backupfn) == 0) {
       /* parse the old file and get the DOM */
-      fdguard bupfd(openat(dirfd, backupfn, O_RDONLY | O_CLOEXEC));
+      fdguard bupfd(openat(project->dirfd, backupfn, O_RDONLY | O_CLOEXEC));
       if(G_LIKELY(bupfd.valid()))
         doc = xmlReadFd(bupfd, O2G_NULLPTR, O2G_NULLPTR, XML_PARSE_NONET);
     }
@@ -325,7 +321,7 @@ void track_save(project_t *project, track_t *track) {
 
   /* if we reach this point writing the new file worked and we */
   /* can delete the backup */
-  unlinkat(dirfd, backupfn, 0);
+  unlinkat(project->dirfd, backupfn, 0);
 }
 
 void track_export(const track_t *track, const char *filename) {
@@ -337,17 +333,13 @@ void track_export(const track_t *track, const char *filename) {
 bool track_restore(appdata_t &appdata) {
   const project_t *project = appdata.project;
 
-  fdguard dirfd(project->path.c_str());
-  if(G_UNLIKELY(!dirfd.valid()))
-    return false;
-
   /* first try to open a backup which is only present if saving the */
   /* actual diff didn't succeed */
   const char *backupfn = "backup.trk";
   std::string trk_name;
 
   struct stat st;
-  if(G_UNLIKELY(fstatat(dirfd, backupfn, &st, 0) == 0 && S_ISREG(st.st_mode))) {
+  if(G_UNLIKELY(fstatat(project->dirfd, backupfn, &st, 0) == 0 && S_ISREG(st.st_mode))) {
     printf("track backup present, loading it instead of real track ...\n");
     trk_name = project->path + backupfn;
   } else {
@@ -355,7 +347,7 @@ bool track_restore(appdata_t &appdata) {
     trk_name = project->path + project->name + ".trk";
 
     // use relative filename to test
-    if(fstatat(dirfd, trk_name.c_str() + project->path.size(), &st, 0) != 0 || !S_ISREG(st.st_mode)) {
+    if(fstatat(project->dirfd, trk_name.c_str() + project->path.size(), &st, 0) != 0 || !S_ISREG(st.st_mode)) {
       printf("no track present!\n");
       return false;
     }

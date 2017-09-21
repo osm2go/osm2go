@@ -1270,7 +1270,7 @@ void wms_remove_file(project_t &project) {
     filename.erase(extpos);
     filename += it->second;
 
-    unlinkat(dirfd, filename.c_str(), 0);
+    unlinkat(project.dirfd, filename.c_str(), 0);
   }
 }
 

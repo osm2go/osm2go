@@ -286,6 +286,12 @@ bool project_t::save(GtkWidget *parent) {
 	     _("Unable to create project path %s"), path.c_str());
       return false;
     }
+    fdguard nfd(path.c_str());
+    if(G_UNLIKELY(!nfd.valid())) {
+      errorf(GTK_WIDGET(parent), _("Unable to open project path %s"), path.c_str());
+      return false;
+    }
+    dirfd.swap(nfd);
   }
 
   xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
@@ -410,12 +416,8 @@ enum {
  * @return if OSM data file was found
  */
 static bool osm_file_exists(const project_t *project) {
-  if(project->osm[0] == '/')
-    return g_file_test(project->osm.c_str(), G_FILE_TEST_IS_REGULAR) == TRUE;
-  else {
-    const std::string full = project->path + project->osm;
-    return g_file_test(full.c_str(), G_FILE_TEST_IS_REGULAR) == TRUE;
-  }
+  struct stat st;
+  return fstatat(project->dirfd, project->osm.c_str(), &st, 0) == 0 && S_ISREG(st.st_mode);
 }
 
 static void view_selected(GtkWidget *dialog, project_t *project) {
@@ -916,20 +918,6 @@ std::string project_select(appdata_t &appdata) {
 
 /* ---------------------------------------------------- */
 
-/* return file length or false on error */
-static bool file_info(const project_t *project, struct stat &st) {
-  int r;
-
-  if (project->osm[0] == '/') {
-    r = stat(project->osm.c_str(), &st);
-  } else {
-    const std::string str = project->path + project->osm;
-    r = stat(str.c_str(), &st);
-  }
-
-  return r == 0 && S_ISREG(st.st_mode);
-}
-
 static void project_filesize(project_context_t *context) {
   char *str = O2G_NULLPTR;
   gchar *gstr = O2G_NULLPTR;
@@ -938,7 +926,8 @@ static void project_filesize(project_context_t *context) {
   printf("Checking size of %s\n", project->osm.c_str());
 
   struct stat st;
-  bool stret = file_info(project, st);
+  bool stret = fstatat(project->dirfd, project->osm.c_str(), &st, 0) == 0 &&
+               S_ISREG(st.st_mode);
   if(!stret && errno == ENOENT) {
     GdkColor color;
     gdk_color_parse("red", &color);
@@ -1434,6 +1423,7 @@ project_t::project_t(map_state_t &ms, const std::string &n, const std::string &b
   , path(base_path +  name + '/')
   , data_dirty(false)
   , isDemo(false)
+  , dirfd(path.c_str())
 {
   memset(&wms_offset, 0, sizeof(wms_offset));
   memset(&min, 0, sizeof(min));

@@ -20,6 +20,7 @@
 #ifndef PROJECT_H
 #define PROJECT_H
 
+#include "fdguard.h"
 #include "pos.h"
 
 #include <gtk/gtk.h>
@@ -56,6 +57,7 @@ struct project_t {
 
   bool data_dirty;     // needs to download new data
   bool isDemo;         // if this is the demo project
+  fdguard dirfd;       // filedescriptor of path
 
   osm_t *parse_osm(icon_t &icons) const;
 
