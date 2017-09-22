@@ -42,8 +42,6 @@
 #include <hildon/hildon-window-stack.h>
 #include <gdk/gdkx.h>
 #include <X11/Xatom.h>
-#else
-#include "scale_popup.h"
 #endif
 #ifdef USE_HILDON
 #include "dbus.h"
@@ -348,18 +346,6 @@ cb_menu_zoomout(appdata_t *appdata) {
   appdata->map->set_zoom(appdata->map->state.zoom / ZOOM_FACTOR_MENU, true);
   printf("zoom is now %f\n", appdata->map->state.zoom);
 }
-
-#ifndef FREMANTLE
-static void
-cb_scale_popup(appdata_t *appdata, GtkWidget *button) {
-  if(!appdata->project)
-    return;
-
-  float lin = -rint(std::log(appdata->map_state.detail) / std::log(MAP_DETAIL_STEP));
-
-  scale_popup(button, lin, GTK_WINDOW(appdata->window), appdata->map);
-}
-#endif
 
 static void
 cb_menu_view_detail_inc(appdata_t *appdata) {
@@ -1330,19 +1316,21 @@ static GtkWidget *  __attribute__((nonnull(1,2,4)))
                   icon_button(appdata_t *appdata, const char *icon, GCallback cb,
 			      GtkWidget *box) {
   GtkWidget *but = gtk_button_new();
+  GtkWidget *iconw = appdata->icons.widget_load(icon, 24);
+#ifndef FREMANTLE
+  // explicitely assign image so the button does not show the action text
+  if(iconw == O2G_NULLPTR)
+    iconw = gtk_image_new_from_stock(icon, GTK_ICON_SIZE_MENU);
+#endif
+  gtk_button_set_image(GTK_BUTTON(but), iconw);
 #ifdef FREMANTLE
-  gtk_button_set_image(GTK_BUTTON(but), appdata->icons.widget_load(icon));
   //  gtk_button_set_relief(GTK_BUTTON(but), GTK_RELIEF_NONE);
   hildon_gtk_widget_set_theme_size(but,
             static_cast<HildonSizeType>(HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH));
 
   if(cb)
-#else
-  // explicitely assign image so the button does not show the action text
-  gtk_button_set_image(GTK_BUTTON(but),
-                         gtk_image_new_from_stock(icon, GTK_ICON_SIZE_MENU));
 #endif
-  g_signal_connect_swapped(but, "clicked", cb, appdata);
+    g_signal_connect_swapped(but, "clicked", cb, appdata);
 
   gtk_box_pack_start(GTK_BOX(box), but, FALSE, FALSE, 0);
   return but;
@@ -1432,7 +1420,8 @@ static int application_run(const char *proj)
   GtkWidget *zhbox = gtk_hbox_new(FALSE, 0);
   gtk_box_pack_start_defaults(GTK_BOX(zhbox), appdata.statusbar->widget);
 
-  icon_button(&appdata, GTK_STOCK_EDIT, G_CALLBACK(cb_scale_popup), zhbox);
+  icon_button(&appdata, "detailup_thumb",   G_CALLBACK(cb_menu_view_detail_inc), zhbox);
+  icon_button(&appdata, "detaildown_thumb", G_CALLBACK(cb_menu_view_detail_dec), zhbox);
   appdata.btn_zoom_out = icon_button(&appdata, GTK_STOCK_ZOOM_OUT, G_CALLBACK(cb_menu_zoomout), zhbox);
   appdata.btn_zoom_in = icon_button(&appdata, GTK_STOCK_ZOOM_IN, G_CALLBACK(cb_menu_zoomin), zhbox);
 

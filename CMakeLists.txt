@@ -187,13 +187,6 @@ else ()
 	set(USE_SVG_ICONS_DEFAULT On)
 endif ()
 
-if (NOT FREMANTLE)
-	target_sources(osm2go_lib PRIVATE
-		src/scale_popup.cpp
-		src/scale_popup.h
-	)
-endif ()
-
 find_library(MATH_LIBRARY m)
 
 pkg_search_module(SOUP IMPORTED_TARGET libsoup-2.4 libsoup-2.2)
