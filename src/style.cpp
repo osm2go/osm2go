@@ -52,8 +52,6 @@ static float parse_scale_max(xmlNodePtr cur_node) {
 }
 
 static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t &style) {
-  xmlNode *cur_node = O2G_NULLPTR, *sub_node = O2G_NULLPTR;
-
   /* -------------- setup defaults -------------------- */
   /* (the defaults are pretty much the potlatch style) */
   style.area.border_width      = 2.0;
@@ -91,7 +89,7 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t &style) {
   style.icon.enable            = false;
   style.icon.scale             = 1.0;    // icon size (multiplier)
 
-  for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
+  for (xmlNode *cur_node = a_node->children; cur_node != O2G_NULLPTR; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       const char *nodename = reinterpret_cast<const char *>(cur_node->name);
       if(strcmp(nodename, "elemstyles") == 0) {
@@ -129,14 +127,13 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t &style) {
         parse_color(cur_node, "color", style.frisket.color);
         style.frisket.border.present = false;
 
-	for(sub_node = cur_node->children; sub_node; sub_node=sub_node->next) {
-	  if(sub_node->type == XML_ELEMENT_NODE) {
-            if(strcmp(reinterpret_cast<const char *>(sub_node->name), "border") == 0) {
-              style.frisket.border.present = true;
-              style.frisket.border.width = xml_get_prop_float(sub_node, "width");
+        for(xmlNode *sub_node = cur_node->children; sub_node != O2G_NULLPTR; sub_node=sub_node->next) {
+          if(sub_node->type == XML_ELEMENT_NODE &&
+             strcmp(reinterpret_cast<const char *>(sub_node->name), "border") == 0) {
+            style.frisket.border.present = true;
+            style.frisket.border.width = xml_get_prop_float(sub_node, "width");
 
-              parse_color(sub_node, "color", style.frisket.border.color);
-	    }
+            parse_color(sub_node, "color", style.frisket.border.color);
 	  }
 	}
 
