@@ -351,7 +351,7 @@ cb_menu_zoomout(appdata_t *appdata) {
 
 #ifndef FREMANTLE
 static void
-cb_scale_popup(GtkWidget *button, appdata_t *appdata) {
+cb_scale_popup(appdata_t *appdata, GtkWidget *button) {
   if(!appdata->project)
     return;
 
@@ -1188,7 +1188,6 @@ appdata_t::appdata_t()
   , vbox(O2G_NULLPTR)
   , btn_zoom_in(O2G_NULLPTR)
   , btn_zoom_out(O2G_NULLPTR)
-  , btn_detail_popup(O2G_NULLPTR)
   , statusbar(new statusbar_t())
   , project(O2G_NULLPTR)
   , iconbar(O2G_NULLPTR)
@@ -1327,24 +1326,27 @@ on_window_realize(GtkWidget *widget, gpointer) {
 }
 #endif
 
-#ifdef FREMANTLE
 static GtkWidget *  __attribute__((nonnull(1,2,4)))
                   icon_button(appdata_t *appdata, const char *icon, GCallback cb,
 			      GtkWidget *box) {
-  /* add zoom-in button */
   GtkWidget *but = gtk_button_new();
+#ifdef FREMANTLE
   gtk_button_set_image(GTK_BUTTON(but), appdata->icons.widget_load(icon));
   //  gtk_button_set_relief(GTK_BUTTON(but), GTK_RELIEF_NONE);
   hildon_gtk_widget_set_theme_size(but,
             static_cast<HildonSizeType>(HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH));
 
   if(cb)
-    g_signal_connect_swapped(but, "clicked", G_CALLBACK(cb), appdata);
+#else
+  // explicitely assign image so the button does not show the action text
+  gtk_button_set_image(GTK_BUTTON(but),
+                         gtk_image_new_from_stock(icon, GTK_ICON_SIZE_MENU));
+#endif
+  g_signal_connect_swapped(but, "clicked", cb, appdata);
 
   gtk_box_pack_start(GTK_BOX(box), but, FALSE, FALSE, 0);
   return but;
 }
-#endif
 
 static int application_run(const char *proj)
 {
@@ -1430,29 +1432,9 @@ static int application_run(const char *proj)
   GtkWidget *zhbox = gtk_hbox_new(FALSE, 0);
   gtk_box_pack_start_defaults(GTK_BOX(zhbox), appdata.statusbar->widget);
 
-  /* ---- detail popup ---- */
-  appdata.btn_detail_popup = gtk_button_new();
-  gtk_button_set_image(GTK_BUTTON(appdata.btn_detail_popup),
-	gtk_image_new_from_stock(GTK_STOCK_EDIT, GTK_ICON_SIZE_MENU));
-  g_signal_connect(appdata.btn_detail_popup, "clicked",
-		   G_CALLBACK(cb_scale_popup), &appdata);
-  gtk_box_pack_start(GTK_BOX(zhbox), appdata.btn_detail_popup, FALSE, FALSE, 0);
-
-  /* ---- add zoom out button right of statusbar ---- */
-  appdata.btn_zoom_out = gtk_button_new();
-  gtk_button_set_image(GTK_BUTTON(appdata.btn_zoom_out),
-	gtk_image_new_from_stock(GTK_STOCK_ZOOM_OUT, GTK_ICON_SIZE_MENU));
-  g_signal_connect_swapped(appdata.btn_zoom_out, "clicked",
-                           G_CALLBACK(cb_menu_zoomout), &appdata);
-  gtk_box_pack_start(GTK_BOX(zhbox), appdata.btn_zoom_out, FALSE, FALSE, 0);
-
-  /* ---- add zoom in button right of statusbar ---- */
-  appdata.btn_zoom_in = gtk_button_new();
-  gtk_button_set_image(GTK_BUTTON(appdata.btn_zoom_in),
-	gtk_image_new_from_stock(GTK_STOCK_ZOOM_IN, GTK_ICON_SIZE_MENU));
-  g_signal_connect_swapped(appdata.btn_zoom_in, "clicked",
-                           G_CALLBACK(cb_menu_zoomin), &appdata);
-  gtk_box_pack_start(GTK_BOX(zhbox), appdata.btn_zoom_in, FALSE, FALSE, 0);
+  icon_button(&appdata, GTK_STOCK_EDIT, G_CALLBACK(cb_scale_popup), zhbox);
+  appdata.btn_zoom_out = icon_button(&appdata, GTK_STOCK_ZOOM_OUT, G_CALLBACK(cb_menu_zoomout), zhbox);
+  appdata.btn_zoom_in = icon_button(&appdata, GTK_STOCK_ZOOM_IN, G_CALLBACK(cb_menu_zoomin), zhbox);
 
   gtk_box_pack_start(GTK_BOX(vbox), zhbox, FALSE, FALSE, 0);
 #else

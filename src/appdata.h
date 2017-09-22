@@ -99,7 +99,7 @@ struct appdata_t {
 
   GtkWidget *vbox;
 
-  GtkWidget *btn_zoom_in, *btn_zoom_out, *btn_detail_popup;
+  GtkWidget *btn_zoom_in, *btn_zoom_out;
 
   struct statusbar_t * const statusbar;
   struct project_t *project;
