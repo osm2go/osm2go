@@ -54,6 +54,9 @@ struct statusbar_t {
   void brief(const char *msg, gint timeout);
 #endif
 
+  /**
+   * @brief set the persistent message, replacing anything currently there
+   */
   void set(const char *msg, bool highlight);
 };
 

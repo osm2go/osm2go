@@ -41,21 +41,22 @@ static void statusbar_highlight(statusbar_t *statusbar, bool highlight) {
   gtk_widget_modify_text(w, GTK_STATE_NORMAL, col);
 }
 
-#ifndef FREMANTLE
-// Set the persistent message, replacing anything currently there.
 void statusbar_t::set(const char *msg, bool highlight) {
   statusbar_highlight(this, highlight);
 
   printf("statusbar_set: %s\n", msg);
 
+#ifndef FREMANTLE
   if (mid) {
-    gtk_statusbar_remove(GTK_STATUSBAR(widget),
-                         cid, mid);
+    gtk_statusbar_remove(GTK_STATUSBAR(widget), cid, mid);
     mid = 0;
   }
 
   if (msg)
     mid = gtk_statusbar_push(GTK_STATUSBAR(widget), cid, msg);
+#else
+  gtk_label_set_text(GTK_LABEL(widget), msg);
+#endif
 }
 
 #ifndef USE_HILDON
@@ -95,19 +96,6 @@ void statusbar_t::brief(const char *msg, gint timeout) {
       = g_timeout_add_seconds(timeout, statusbar_brief_clear, this);
   }
 }
-#endif
-
-#else
-
-// Set the persistent message, replacing anything currently there.
-void statusbar_t::set(const char *msg, bool highlight) {
-  statusbar_highlight(this, highlight);
-
-  printf("statusbar_set: %s\n", msg);
-
-  gtk_label_set_text(GTK_LABEL(widget), msg);
-}
-
 #endif
 
 statusbar_t::statusbar_t()
