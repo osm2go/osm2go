@@ -72,36 +72,27 @@ static gboolean statusbar_brief_clear(gpointer data) {
   return FALSE;
 }
 
-// Flash up a brief, temporary message. Once it disappears, drop back to any
-// persistent message set with statusbar_set().
-//
-// If msg is NULL, clear the message and don't establish a handler.
-//
-// If timeout is negative, don't establish a handler. You'll have to clear it
-// yourself later. If it's zero, use the default.
-
-void statusbar_brief(statusbar_t *statusbar, const char *msg, gint timeout) {
-  printf("statusbar_brief: %s\n", msg);
-  if (statusbar->brief_handler_id) {
-    g_source_remove(statusbar->brief_handler_id);
-    statusbar->brief_handler_id = 0;
+void statusbar_t::brief(const char *msg, gint timeout) {
+  printf("%s: %s\n", __PRETTY_FUNCTION__, msg);
+  if (brief_handler_id) {
+    g_source_remove(brief_handler_id);
+    brief_handler_id = 0;
   }
-  statusbar_brief_clear(statusbar);
+  statusbar_brief_clear(this);
   guint mid = 0;
   if (msg) {
-    statusbar_highlight(statusbar, true);
-    mid = gtk_statusbar_push(GTK_STATUSBAR(statusbar->widget),
-                                 statusbar->cid, msg);
+    statusbar_highlight(this, true);
+    mid = gtk_statusbar_push(GTK_STATUSBAR(widget), cid, msg);
     if (mid) {
-      statusbar->brief_mid = mid;
+      brief_mid = mid;
     }
   }
   if (mid && (timeout >= 0)) {
     if (timeout == 0) {
       timeout = STATUSBAR_DEFAULT_BRIEF_TIME;
     }
-    statusbar->brief_handler_id
-      = g_timeout_add_seconds(timeout, statusbar_brief_clear, statusbar);
+    brief_handler_id
+      = g_timeout_add_seconds(timeout, statusbar_brief_clear, this);
   }
 }
 #endif

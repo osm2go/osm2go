@@ -111,18 +111,18 @@ void banner_busy_start(appdata_t &appdata, const char *text) {
 
 void banner_show_info(appdata_t &appdata, const char *text) {
   banner_clear(appdata);
-  statusbar_brief(appdata.statusbar, text, 0);
+  appdata.statusbar->brief(text, 0);
 }
 
 void banner_busy_start(appdata_t &appdata, const char *text) {
   banner_clear(appdata);
-  statusbar_brief(appdata.statusbar, text, -1);
+  appdata.statusbar->brief(text, -1);
   gtk_widget_set_sensitive(appdata.window, FALSE);
   gtk_grab_add(YETI_PASSIVE_WIDGET);
 }
 
 void banner_clear(appdata_t &appdata) {
-  statusbar_brief(appdata.statusbar, O2G_NULLPTR, 0);
+  appdata.statusbar->brief(O2G_NULLPTR, 0);
   gtk_widget_set_sensitive(appdata.window, TRUE);
   gtk_grab_remove(YETI_PASSIVE_WIDGET);
 }

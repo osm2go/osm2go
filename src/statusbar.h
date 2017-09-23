@@ -37,13 +37,24 @@ struct statusbar_t {
 #ifndef USE_HILDON
   guint brief_handler_id;
   guint brief_mid;
+
+  /**
+   * @brief flash up a brief, temporary message.
+   * @param msg the message to show
+   * @param timeout the timeout in seconds
+   *
+   * Once the message disappears, drop back to any persistent message set
+   * with set().
+   *
+   * If @msg is nullptr, clear the message and don't establish a handler.
+   *
+   * If timeout is negative, don't establish a handler. You'll have to clear it
+   * yourself later. If it's zero, use the default.
+   */
+  void brief(const char *msg, gint timeout);
 #endif
 
   void set(const char *msg, bool highlight);
 };
-
-#ifndef USE_HILDON
-void statusbar_brief(statusbar_t *statusbar, const char *msg, gint timeout);
-#endif
 
 #endif // STATUSBAR_H
