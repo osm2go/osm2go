@@ -85,6 +85,7 @@ add_library(osm2go_lib STATIC
 	src/osm_api.cpp
 	src/osm_api.h
 	src/osm2go_platform.h
+	src/osm2go_stl.h
 	src/pos.cpp
 	src/pos.h
 	src/project.cpp
