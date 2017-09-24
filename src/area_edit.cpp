@@ -238,22 +238,22 @@ static double selected_area(const context_t *context) {
          hscale * (context->max.lon - context->min.lon);
 }
 
-static bool current_tab_is(context_t *context, gint page_num, const char *str) {
-  GtkNotebook *nb = notebook_get_gtk_notebook(context->notebook);
-
-  if(page_num < 0)
-    page_num =
-      gtk_notebook_get_current_page(nb);
-
-  if(page_num < 0)
-    return false;
-
-  GtkWidget *w =
-    gtk_notebook_get_nth_page(nb, page_num);
+static bool current_tab_is(GtkNotebook *nb, GtkWidget *w, const char *str) {
   const char *name =
     gtk_notebook_get_tab_label_text(nb, w);
 
   return (strcmp(name, _(str)) == 0);
+}
+
+static bool current_tab_is(context_t *context, const char *str) {
+  GtkNotebook *nb = notebook_get_gtk_notebook(context->notebook);
+
+  gint page_num = gtk_notebook_get_current_page(nb);
+
+  if(page_num < 0)
+    return false;
+
+  return current_tab_is(nb, gtk_notebook_get_nth_page(nb, page_num), str);
 }
 
 static inline const char *warn_text() {
@@ -360,7 +360,7 @@ void add_bounds::operator()(const pos_bounds &b)
 static void map_update(context_t *context, bool forced) {
 
   /* map is first tab (page 0) */
-  if(!forced && !current_tab_is(context, -1, TAB_LABEL_MAP)) {
+  if(!forced && !current_tab_is(context, TAB_LABEL_MAP)) {
     printf("schedule map redraw\n");
     context->map.needs_redraw = true;
     return;
@@ -461,7 +461,7 @@ static void extent_update(context_t *context) {
 
 static void callback_modified_direct(context_t *context) {
   /* direct is second tab (page 1) */
-  if(!current_tab_is(context, -1, TAB_LABEL_DIRECT))
+  if(!current_tab_is(context, TAB_LABEL_DIRECT))
     return;
 
   /* parse the fields from the direct entry pad */
@@ -482,7 +482,7 @@ static void callback_modified_direct(context_t *context) {
 
 static void callback_modified_extent(context_t *context) {
   /* extent is third tab (page 2) */
-  if(!current_tab_is(context, -1, TAB_LABEL_EXTENT))
+  if(!current_tab_is(context, TAB_LABEL_EXTENT))
     return;
 
   pos_float_t center_lat, center_lon;
@@ -544,7 +544,7 @@ static void callback_fetch_mm_clicked(context_t *context) {
   }
 
   /* maemo mapper is fourth tab (page 3) */
-  if(!current_tab_is(context, -1, TAB_LABEL_MM))
+  if(!current_tab_is(context, TAB_LABEL_MM))
     return;
 
   /* maemo mapper pos data ... */
@@ -678,14 +678,11 @@ on_map_button_release_event(GtkWidget *widget,
   return !osm_gps_map_osd_get_state(OSM_GPS_MAP(widget));
 }
 
-static void on_page_switch(GtkNotebook *, GtkNotebookPage *,
-			   guint page_num, context_t *context) {
-
+static void on_page_switch(GtkNotebook *nb, GtkWidget *pg, guint, context_t *context) {
   /* updating the map while the user manually changes some coordinates */
   /* may confuse the map. so we delay those updates until the map tab */
   /* is becoming visible */
-  if(current_tab_is(context, page_num, TAB_LABEL_MAP) &&
-     context->map.needs_redraw)
+  if(current_tab_is(nb, pg, TAB_LABEL_MAP) && context->map.needs_redraw)
     map_update(context, true);
 }
 
