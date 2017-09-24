@@ -1316,10 +1316,17 @@ static GtkWidget *  __attribute__((nonnull(1,2,4)))
                   icon_button(appdata_t *appdata, const char *icon, GCallback cb,
 			      GtkWidget *box) {
   GtkWidget *but = gtk_button_new();
-  GtkWidget *iconw = appdata->icons.widget_load(icon, 24);
+  const int icon_scale =
+#ifndef FREMANTLE
+    24;
+#else
+    -1;
+#endif
+  GtkWidget *iconw = appdata->icons.widget_load(icon, icon_scale);
 #ifndef FREMANTLE
   // explicitely assign image so the button does not show the action text
   if(iconw == O2G_NULLPTR)
+    // gtk_image_new_from_stock() can't be used first, as it will return non-null even if nothing is found
     iconw = gtk_image_new_from_stock(icon, GTK_ICON_SIZE_MENU);
 #endif
   gtk_button_set_image(GTK_BUTTON(but), iconw);
