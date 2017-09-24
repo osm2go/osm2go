@@ -481,7 +481,7 @@ void build_menu_functor::operator()(presets_item_t *item)
     } else {
       g_object_set_data(G_OBJECT(menu_item), "item", item);
       g_signal_connect(menu_item, "activate",
-                       GTK_SIGNAL_FUNC(cb_menu_item), context);
+                       G_CALLBACK(cb_menu_item), context);
 
       if(matches && item->matches(context->tag_context->tags)) {
         if(!*matches)
@@ -491,7 +491,7 @@ void build_menu_functor::operator()(presets_item_t *item)
                                                static_cast<presets_item_named *>(item));
         g_object_set_data(G_OBJECT(used_item), "item", item);
         g_signal_connect(used_item, "activate",
-                         GTK_SIGNAL_FUNC(cb_menu_item), context);
+                         G_CALLBACK(cb_menu_item), context);
         gtk_menu_shell_append(GTK_MENU_SHELL(*matches), used_item);
       }
     }
