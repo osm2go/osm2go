@@ -465,9 +465,9 @@ static void callback_modified_direct(context_t *context) {
     return;
 
   /* parse the fields from the direct entry pad */
-  if(G_UNLIKELY(!pos_lat_get(context->direct.minlat, context->min.lat) &&
-                !pos_lon_get(context->direct.minlon, context->min.lon) &&
-                !pos_lat_get(context->direct.maxlat, context->max.lat) &&
+  if(G_UNLIKELY(!pos_lat_get(context->direct.minlat, context->min.lat) ||
+                !pos_lon_get(context->direct.minlon, context->min.lon) ||
+                !pos_lat_get(context->direct.maxlat, context->max.lat) ||
                 !pos_lon_get(context->direct.maxlon, context->max.lon)))
     return;
 
@@ -782,7 +782,7 @@ bool area_edit_t::run() {
   misc_table_attach(table, context.direct.minlon, 0, 1);
   label = gtk_label_new(_("to"));
   misc_table_attach(table,  label, 1, 1);
-  context.direct.maxlon = pos_lon_entry_new(max.lat);
+  context.direct.maxlon = pos_lon_entry_new(max.lon);
   misc_table_attach(table, context.direct.maxlon, 2, 1);
 
   /* setup this page */
