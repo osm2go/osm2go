@@ -1110,11 +1110,11 @@ static void on_diff_remove_clicked(project_context_t *context) {
 
 bool project_t::check_demo(GtkWidget *parent) const {
   if(isDemo)
-    messagef(parent, "Demo project",
-	     "This is a preinstalled demo project. This means that the "
-	     "basic project parameters cannot be changed and no data can "
-	     "be up- or downloaded via the OSM servers.\n\n"
-	     "Please setup a new project to do these things.");
+    messagef(parent, _("Demo project"),
+             _("This is a preinstalled demo project. This means that the "
+               "basic project parameters cannot be changed and no data can "
+               "be up- or downloaded via the OSM servers.\n\n"
+               "Please setup a new project to do these things."));
 
   return isDemo;
 }
