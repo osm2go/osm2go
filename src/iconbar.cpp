@@ -253,7 +253,7 @@ iconbar_t::iconbar_t(appdata_t &appdata)
 #endif
 }
 
-GtkWidget *iconbar_new(appdata_t &appdata) {
+GtkWidget *iconbar_t::create(appdata_t &appdata) {
   iconbar_t * const iconbar = appdata.iconbar = new iconbar_t(appdata);
 
 #ifndef PORTRAIT

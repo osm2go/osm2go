@@ -101,7 +101,7 @@ struct appdata_t {
 
   struct statusbar_t * const statusbar;
   struct project_t *project;
-  struct iconbar_t *iconbar;
+  class iconbar_t *iconbar;
   struct presets_items *presets;
 
   /* flags used to prevent re-appearence of dialogs */

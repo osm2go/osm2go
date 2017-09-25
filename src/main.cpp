@@ -1415,7 +1415,7 @@ static int application_run(const char *proj)
 #else
                      GTK_BOX(hbox),
 #endif
-                     iconbar_new(appdata), FALSE, FALSE, 0);
+                     iconbar_t::create(appdata), FALSE, FALSE, 0);
 
   gtk_box_pack_start(GTK_BOX(vbox), appdata.map->canvas->widget, TRUE, TRUE, 0);
 

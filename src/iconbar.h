@@ -30,8 +30,11 @@
 struct appdata_t;
 struct object_t;
 
-struct iconbar_t {
+class iconbar_t {
   iconbar_t(appdata_t &appdata);
+
+public:
+  static GtkWidget *create(appdata_t &appdata);
 
   GtkWidget * const toolbar;
 
@@ -64,8 +67,6 @@ struct iconbar_t {
    */
   void map_action_idle(gboolean idle, const object_t &selected);
 };
-
-GtkWidget *iconbar_new(appdata_t &appdata);
 
 #ifdef FINGER_UI
 void iconbar_register_buttons(appdata_t &appdata, GtkWidget *ok, GtkWidget *cancel);
