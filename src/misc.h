@@ -153,4 +153,8 @@ void misc_init(void);
 
 GtkWidget *string_select_widget(const char *title, const std::vector<std::string> &entries, int match);
 
+#if !GTK_CHECK_VERSION(2, 18, 0)
+#define gtk_widget_is_sensitive(w) (GTK_WIDGET_FLAGS(w) & GTK_SENSITIVE)
+#endif
+
 #endif // MISC_H

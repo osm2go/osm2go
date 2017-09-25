@@ -1460,22 +1460,22 @@ gboolean map_t::key_press_event(GdkEventKey *event) {
 
     case GDK_Return:   // same as HILDON_HARDKEY_SELECT
       /* if the ok button is enabled, call its function */
-      if(GTK_WIDGET_FLAGS(appdata.iconbar->ok) & GTK_SENSITIVE)
+      if(gtk_widget_is_sensitive(appdata.iconbar->ok))
         map_action_ok(this);
       /* otherwise if info is enabled call that */
-      else if(GTK_WIDGET_FLAGS(appdata.iconbar->info) & GTK_SENSITIVE)
+      else if(gtk_widget_is_sensitive(appdata.iconbar->info))
         info_dialog(GTK_WIDGET(appdata.window), appdata);
       break;
 
     case GDK_Escape:   // same as HILDON_HARDKEY_ESC
       /* if the cancel button is enabled, call its function */
-      if(GTK_WIDGET_FLAGS(appdata.iconbar->cancel) & GTK_SENSITIVE)
+      if(gtk_widget_is_sensitive(appdata.iconbar->cancel))
         map_action_cancel(this);
       break;
 
     case GDK_Delete:
       /* if the delete button is enabled, call its function */
-      if(GTK_WIDGET_FLAGS(appdata.iconbar->trash) & GTK_SENSITIVE)
+      if(gtk_widget_is_sensitive(appdata.iconbar->trash))
         map_delete_selected(this);
       break;
 

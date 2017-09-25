@@ -75,7 +75,7 @@ void main_ui_enable(appdata_t &appdata) {
 
   /* cancel any action in progress */
   g_assert_nonnull(appdata.iconbar->cancel);
-  if(GTK_WIDGET_FLAGS(appdata.iconbar->cancel) & GTK_SENSITIVE)
+  if(gtk_widget_is_sensitive(appdata.iconbar->cancel))
     map_action_cancel(appdata.map);
 
   /* ---- set project name as window title ----- */
