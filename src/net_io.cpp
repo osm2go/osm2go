@@ -110,9 +110,12 @@ static void on_cancel(bool *data) {
 /* create the dialog box shown while worker is running */
 static GtkWidget *busy_dialog(GtkWidget *parent, GtkProgressBar **pbar,
 			      bool *cancel_ind, const char *title) {
+#ifdef GTK_DIALOG_NO_SEPARATOR
+  GtkWidget *dialog = gtk_dialog_new_with_buttons(O2G_NULLPTR, O2G_NULLPTR, GTK_DIALOG_NO_SEPARATOR);
+#else
   GtkWidget *dialog = gtk_dialog_new();
+#endif
 
-  gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
   if(title) {
     char *str = g_strdup_printf(_("Downloading %s"), title);
     gtk_window_set_title(GTK_WINDOW(dialog), str);
