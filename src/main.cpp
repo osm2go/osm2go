@@ -66,7 +66,7 @@ namespace std {
 /* disable/enable main screen control dependant on presence of open project */
 void main_ui_enable(appdata_t &appdata) {
   gboolean project_valid = (appdata.project != O2G_NULLPTR);
-  gboolean osm_valid = (appdata.osm != O2G_NULLPTR);
+  gboolean osm_valid = (appdata.osm != O2G_NULLPTR) ? TRUE : FALSE;
 
   if(!appdata.window) {
     printf("main_ui_enable: main window gone\n");
@@ -74,8 +74,7 @@ void main_ui_enable(appdata_t &appdata) {
   }
 
   /* cancel any action in progress */
-  g_assert_nonnull(appdata.iconbar->cancel);
-  if(gtk_widget_is_sensitive(appdata.iconbar->cancel))
+  if(appdata.iconbar->isCancelEnabled())
     map_action_cancel(appdata.map);
 
   /* ---- set project name as window title ----- */
@@ -102,7 +101,7 @@ void main_ui_enable(appdata_t &appdata) {
   g_free(str);
 #endif
 
-  gtk_widget_set_sensitive(appdata.iconbar->toolbar, osm_valid);
+  appdata.iconbar->setToolbarEnable(osm_valid == TRUE);
   /* disable all menu entries related to map */
   gtk_widget_set_sensitive(appdata.menuitems[SUBMENU_MAP], project_valid);
 

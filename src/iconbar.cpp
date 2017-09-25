@@ -37,6 +37,10 @@ namespace std {
 
 #include <osm2go_cpp.h>
 
+#if !GTK_CHECK_VERSION(2, 18, 0)
+#define gtk_widget_is_sensitive(w) (GTK_WIDGET_FLAGS(w) & GTK_SENSITIVE)
+#endif
+
 #ifdef FINGER_UI
 #define TOOL_ICON(a)  a "_thumb"
 #define MENU_ICON(a)  a "_thumb"
@@ -46,6 +50,33 @@ namespace std {
 #endif
 
 #define MARKUP "<span size='xx-small'>%s</span>"
+
+class iconbar_gtk : public iconbar_t {
+public:
+  iconbar_gtk(appdata_t &appdata);
+
+  GtkWidget * const toolbar;
+
+  GtkWidget * const info;
+  GtkWidget * const trash;
+
+  GtkWidget * const node_add;
+
+#ifdef FINGER_UI
+  GtkWidget * const menu;
+#endif
+
+  GtkWidget * const way_add;
+  GtkWidget * const way_node_add;
+  GtkWidget * const way_cut;
+  GtkWidget * const way_reverse;
+
+  GtkWidget *cancel;
+  GtkWidget *ok;
+
+  inline void map_action_idle(bool idle, const object_t &selected);
+  inline void map_cancel_ok(bool cancelv, bool okv);
+};
 
 static void on_info_clicked(appdata_t *appdata) {
   info_dialog(GTK_WIDGET(appdata->window), *appdata);
@@ -86,8 +117,7 @@ static GtkWidget * __attribute__((nonnull(1,3,4,5)))
   return item;
 }
 
-static gint on_way_button_press(GtkWidget *,
-                                GdkEventButton *event, iconbar_t *iconbar) {
+static gint on_way_button_press(iconbar_gtk *iconbar, GdkEventButton *event) {
   if(event->type == GDK_BUTTON_PRESS) {
     printf("way clicked\n");
 
@@ -101,12 +131,16 @@ static gint on_way_button_press(GtkWidget *,
 #endif
 
 /* enable/disable ok and cancel button */
-void iconbar_t::map_cancel_ok(bool cancelv, bool okv) {
+void iconbar_gtk::map_cancel_ok(bool cancelv, bool okv) {
   gtk_widget_set_sensitive(ok, okv ? TRUE : FALSE);
   gtk_widget_set_sensitive(cancel, cancelv ? TRUE : FALSE);
 }
 
-static void iconbar_toggle_sel_widgets(iconbar_t *iconbar, gboolean value) {
+void iconbar_t::map_cancel_ok(bool cancel, bool ok) {
+  static_cast<iconbar_gtk *>(this)->map_cancel_ok(cancel, ok);
+}
+
+static void iconbar_toggle_sel_widgets(iconbar_gtk *iconbar, gboolean value) {
   const std::array<GtkWidget *, 2> sel_widgets = { {
     iconbar->trash,
     iconbar->info
@@ -116,7 +150,7 @@ static void iconbar_toggle_sel_widgets(iconbar_t *iconbar, gboolean value) {
     gtk_widget_set_sensitive(sel_widgets[i], value);
 }
 
-static void iconbar_toggle_way_widgets(iconbar_t *iconbar, bool value, const object_t &selected) {
+static void iconbar_toggle_way_widgets(iconbar_gtk *iconbar, bool value, const object_t &selected) {
   const std::array<GtkWidget *, 2> way_widgets = { {
     iconbar->way_node_add,
     iconbar->way_reverse
@@ -134,13 +168,13 @@ static void iconbar_toggle_way_widgets(iconbar_t *iconbar, bool value, const obj
 
 void iconbar_t::map_item_selected(const object_t &item) {
   bool selected = item.type != ILLEGAL;
-  iconbar_toggle_sel_widgets(this, selected ? TRUE : FALSE);
+  iconbar_toggle_sel_widgets(static_cast<iconbar_gtk *>(this), selected ? TRUE : FALSE);
 
   bool way_en = selected && item.type == WAY;
-  iconbar_toggle_way_widgets(this, way_en, item);
+  iconbar_toggle_way_widgets(static_cast<iconbar_gtk *>(this), way_en, item);
 }
 
-void iconbar_t::map_action_idle(bool idle, const object_t &selected) {
+void iconbar_gtk::map_action_idle(bool idle, const object_t &selected) {
   /* icons that are enabled in idle mode */
   std::array<GtkWidget *, 2> action_idle_widgets = { {
     node_add,
@@ -154,6 +188,35 @@ void iconbar_t::map_action_idle(bool idle, const object_t &selected) {
 
   iconbar_toggle_sel_widgets(this, FALSE);
   iconbar_toggle_way_widgets(this, way_en, selected);
+}
+
+void iconbar_t::map_action_idle(bool idle, const object_t &selected) {
+  static_cast<iconbar_gtk *>(this)->map_action_idle(idle, selected);
+}
+
+void iconbar_t::setToolbarEnable(bool en)
+{
+  gtk_widget_set_sensitive(static_cast<iconbar_gtk *>(this)->toolbar, en);
+}
+
+bool iconbar_t::isCancelEnabled() const
+{
+  return gtk_widget_is_sensitive(static_cast<const iconbar_gtk *>(this)->cancel) == TRUE;
+}
+
+bool iconbar_t::isInfoEnabled() const
+{
+  return gtk_widget_is_sensitive(static_cast<const iconbar_gtk *>(this)->info) == TRUE;
+}
+
+bool iconbar_t::isOkEnabled() const
+{
+  return gtk_widget_is_sensitive(static_cast<const iconbar_gtk *>(this)->ok) == TRUE;
+}
+
+bool iconbar_t::isTrashEnabled() const
+{
+  return gtk_widget_is_sensitive(static_cast<const iconbar_gtk *>(this)->trash) == TRUE;
 }
 
 #ifndef FINGER_UI
@@ -199,8 +262,9 @@ static GtkWidget *  __attribute__((nonnull(1,3,4,5)))
   return item;
 }
 
-iconbar_t::iconbar_t(appdata_t &appdata)
-  : toolbar(gtk_toolbar_new())
+iconbar_gtk::iconbar_gtk(appdata_t& appdata)
+  : iconbar_t()
+  , toolbar(gtk_toolbar_new())
   , info(tool_add(toolbar, appdata,
                   TOOL_ICON("info"), _("Properties"),
                   G_CALLBACK(on_info_clicked), &appdata, true))
@@ -254,7 +318,8 @@ iconbar_t::iconbar_t(appdata_t &appdata)
 }
 
 GtkWidget *iconbar_t::create(appdata_t &appdata) {
-  iconbar_t * const iconbar = appdata.iconbar = new iconbar_t(appdata);
+  iconbar_gtk * const iconbar = new iconbar_gtk(appdata);
+  appdata.iconbar = iconbar;
 
 #ifndef PORTRAIT
   GtkWidget *box = gtk_vbox_new(FALSE, 0);
@@ -284,9 +349,9 @@ GtkWidget *iconbar_t::create(appdata_t &appdata) {
 
   gtk_widget_set_events(way, GDK_EXPOSURE_MASK);
   gtk_widget_add_events(way, GDK_BUTTON_PRESS_MASK);
-  g_signal_connect(GTK_OBJECT(gtk_bin_get_child(GTK_BIN(way))),
-                   "button-press-event",
-                   G_CALLBACK(on_way_button_press), appdata.iconbar);
+  g_signal_connect_swapped(GTK_OBJECT(gtk_bin_get_child(GTK_BIN(way))),
+                           "button-press-event",
+                           G_CALLBACK(on_way_button_press), appdata.iconbar);
 #endif
 
   gtk_box_pack_start(GTK_BOX(box), iconbar->toolbar, TRUE, TRUE, 0);
@@ -321,14 +386,15 @@ GtkWidget *iconbar_t::create(appdata_t &appdata) {
 /* are registered there */
 void iconbar_register_buttons(appdata_t &appdata, GtkWidget *ok, GtkWidget *cancel) {
   g_assert_nonnull(appdata.iconbar);
+  iconbar_gtk * const iconbar = static_cast<iconbar_gtk *>(appdata.iconbar);
 
-  appdata.iconbar->ok = ok;
+  iconbar->ok = ok;
   g_signal_connect_swapped(GTK_OBJECT(ok), "clicked",
                            G_CALLBACK(map_action_ok), appdata.map);
-  appdata.iconbar->cancel = cancel;
+  iconbar->cancel = cancel;
   g_signal_connect_swapped(GTK_OBJECT(cancel), "clicked",
                            G_CALLBACK(map_action_cancel), appdata.map);
 
-  appdata.iconbar->map_cancel_ok(false, false);
+  iconbar->map_cancel_ok(false, false);
 }
 #endif

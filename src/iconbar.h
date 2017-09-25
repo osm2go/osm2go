@@ -30,31 +30,14 @@ struct appdata_t;
 struct object_t;
 
 class iconbar_t {
-  iconbar_t(appdata_t &appdata);
+protected:
+  iconbar_t() {}
 
 public:
   static GtkWidget *create(appdata_t &appdata);
 
-  GtkWidget * const toolbar;
-
-  GtkWidget * const info;
-  GtkWidget * const trash;
-  GtkWidget * const node_add;
-
-#ifdef FINGER_UI
-  GtkWidget * const menu;
-#endif
-
-  GtkWidget * const way_add;
-  GtkWidget * const way_node_add;
-  GtkWidget * const way_cut;
-  GtkWidget * const way_reverse;
-
-  GtkWidget *cancel;
-  GtkWidget *ok;
-
   void map_item_selected(const object_t &item);
-  void map_cancel_ok(bool cancelv, bool okv);
+  void map_cancel_ok(bool cancel, bool ok);
 
   /**
    * @brief set enable state of edit buttons
@@ -65,6 +48,13 @@ public:
    * cause an action to take place or interfere with the action.
    */
   void map_action_idle(bool idle, const object_t &selected);
+
+  void setToolbarEnable(bool en);
+
+  bool isCancelEnabled() const;
+  bool isInfoEnabled() const;
+  bool isOkEnabled() const;
+  bool isTrashEnabled() const;
 };
 
 #ifdef FINGER_UI
