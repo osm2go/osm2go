@@ -101,9 +101,9 @@ static gint on_way_button_press(GtkWidget *,
 #endif
 
 /* enable/disable ok and cancel button */
-void iconbar_t::map_cancel_ok(gboolean cancelv, gboolean okv) {
-  gtk_widget_set_sensitive(ok, okv);
-  gtk_widget_set_sensitive(cancel, cancelv);
+void iconbar_t::map_cancel_ok(bool cancelv, bool okv) {
+  gtk_widget_set_sensitive(ok, okv ? TRUE : FALSE);
+  gtk_widget_set_sensitive(cancel, cancelv ? TRUE : FALSE);
 }
 
 static void iconbar_toggle_sel_widgets(iconbar_t *iconbar, gboolean value) {
@@ -133,14 +133,14 @@ static void iconbar_toggle_way_widgets(iconbar_t *iconbar, bool value, const obj
 }
 
 void iconbar_t::map_item_selected(const object_t &item) {
-  gboolean selected = item.type != ILLEGAL;
+  bool selected = item.type != ILLEGAL;
   iconbar_toggle_sel_widgets(this, selected ? TRUE : FALSE);
 
   bool way_en = selected && item.type == WAY;
   iconbar_toggle_way_widgets(this, way_en, item);
 }
 
-void iconbar_t::map_action_idle(gboolean idle, const object_t &selected) {
+void iconbar_t::map_action_idle(bool idle, const object_t &selected) {
   /* icons that are enabled in idle mode */
   std::array<GtkWidget *, 2> action_idle_widgets = { {
     node_add,
@@ -148,9 +148,9 @@ void iconbar_t::map_action_idle(gboolean idle, const object_t &selected) {
   } };
 
   for(int i = action_idle_widgets.size() - 1; i >= 0; i--)
-    gtk_widget_set_sensitive(action_idle_widgets[i], idle);
+    gtk_widget_set_sensitive(action_idle_widgets[i], idle ? TRUE : FALSE);
 
-  bool way_en = (idle == TRUE) && selected.type == WAY;
+  bool way_en = idle && selected.type == WAY;
 
   iconbar_toggle_sel_widgets(this, FALSE);
   iconbar_toggle_way_widgets(this, way_en, selected);
@@ -305,7 +305,7 @@ GtkWidget *iconbar_t::create(appdata_t &appdata) {
   iconbar->ok = icon_add(hbox, appdata, TOOL_ICON("ok"), map_action_ok);
   iconbar->cancel = icon_add(hbox, appdata, TOOL_ICON("cancel"), map_action_cancel);
   gtk_box_pack_end(GTK_BOX(box), hbox, FALSE, FALSE, 0);
-  iconbar->map_cancel_ok(FALSE, FALSE);
+  iconbar->map_cancel_ok(false, false);
 #endif
 
   /* --------------------------------------------------------- */
@@ -329,6 +329,6 @@ void iconbar_register_buttons(appdata_t &appdata, GtkWidget *ok, GtkWidget *canc
   g_signal_connect_swapped(GTK_OBJECT(cancel), "clicked",
                            G_CALLBACK(map_action_cancel), appdata.map);
 
-  appdata.iconbar->map_cancel_ok(FALSE, FALSE);
+  appdata.iconbar->map_cancel_ok(false, false);
 }
 #endif

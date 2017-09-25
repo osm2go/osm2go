@@ -20,7 +20,6 @@
 #ifndef ICONBAR_H
 #define ICONBAR_H
 
-#include <glib.h>
 #include <gtk/gtk.h>
 
 #ifdef FREMANTLE
@@ -55,7 +54,7 @@ public:
   GtkWidget *ok;
 
   void map_item_selected(const object_t &item);
-  void map_cancel_ok(gboolean cancelv, gboolean okv);
+  void map_cancel_ok(bool cancelv, bool okv);
 
   /**
    * @brief set enable state of edit buttons
@@ -65,7 +64,7 @@ public:
    * If a user action is in progress, then disable all buttons that
    * cause an action to take place or interfere with the action.
    */
-  void map_action_idle(gboolean idle, const object_t &selected);
+  void map_action_idle(bool idle, const object_t &selected);
 };
 
 #ifdef FINGER_UI

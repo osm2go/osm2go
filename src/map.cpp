@@ -1646,16 +1646,16 @@ void map_t::set_action(map_action_t action) {
 
   /* enable/disable ok/cancel buttons */
   // MAP_ACTION_IDLE=0, NODE_ADD, BG_ADJUST, WAY_ADD, WAY_NODE_ADD, WAY_CUT
-  gboolean ok_state = FALSE;
-  gboolean cancel_state = TRUE;
+  bool ok_state = false;
+  bool cancel_state = true;
 
   const char *statusbar_text;
-  gboolean idle = FALSE;
+  bool idle = false;
 
   switch(action) {
   case MAP_ACTION_BG_ADJUST:
     statusbar_text = _("Adjust background image position");
-    ok_state = TRUE;
+    ok_state = true;
     /* an existing selection only causes confusion ... */
     item_deselect();
     break;
@@ -1676,14 +1676,14 @@ void map_t::set_action(map_action_t action) {
 
   case MAP_ACTION_NODE_ADD:
     statusbar_text = _("Place a node");
-    ok_state = TRUE;
+    ok_state = true;
     item_deselect();
     break;
 
   case MAP_ACTION_IDLE:
     statusbar_text = O2G_NULLPTR;
-    cancel_state = FALSE;
-    idle = TRUE;
+    cancel_state = false;
+    idle = true;
     break;
 
   case MAP_ACTION_WAY_CUT:
@@ -1697,7 +1697,7 @@ void map_t::set_action(map_action_t action) {
 
   appdata.iconbar->map_cancel_ok(cancel_state, ok_state);
   appdata.iconbar->map_action_idle(idle, selected.object);
-  gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_WMS_ADJUST], idle);
+  gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_WMS_ADJUST], idle ? TRUE : FALSE);
 
   appdata.statusbar->set(statusbar_text, false);
 }

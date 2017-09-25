@@ -105,7 +105,7 @@ void map_edit_way_add_segment(map_t *map, int x, int y) {
 	    map->action.extending = O2G_NULLPTR;
 	  else
 	    /* there are immediately enough nodes for a valid way */
-	    map->appdata.iconbar->map_cancel_ok(TRUE, TRUE);
+	    map->appdata.iconbar->map_cancel_ok(true, true);
 	}
       }
 
@@ -131,7 +131,7 @@ void map_edit_way_add_segment(map_t *map, int x, int y) {
         break;
       case 2:
         /* two nodes are enough for a valid way */
-        map->appdata.iconbar->map_cancel_ok(TRUE, TRUE);
+        map->appdata.iconbar->map_cancel_ok(true, true);
         break;
       }
 
