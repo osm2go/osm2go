@@ -238,7 +238,11 @@ iconbar_t::iconbar_t(appdata_t &appdata)
   , ok(O2G_NULLPTR)
 {
 #ifndef PORTRAIT
+#if !GTK_CHECK_VERSION(2, 16, 0)
   gtk_toolbar_set_orientation(GTK_TOOLBAR(toolbar), GTK_ORIENTATION_VERTICAL);
+#else
+  gtk_orientable_set_orientation(GTK_ORIENTABLE(toolbar), GTK_ORIENTATION_VERTICAL);
+#endif
 #endif
 
   gtk_toolbar_set_style(GTK_TOOLBAR(toolbar),
