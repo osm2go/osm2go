@@ -1050,7 +1050,7 @@ GtkWidget *presets_widget_text::attach(GtkTable *table, guint &row, const char *
 
 std::string presets_widget_text::getValue(GtkWidget *widget) const
 {
-  g_assert(GTK_WIDGET_TYPE(widget) == entry_type());
+  g_assert(G_OBJECT_TYPE(widget) == entry_type());
 
   return gtk_entry_get_text(GTK_ENTRY(widget));
 }
@@ -1108,7 +1108,7 @@ GtkWidget *presets_widget_combo::attach(GtkTable *table, guint &row, const char 
 
 std::string presets_widget_combo::getValue(GtkWidget* widget) const
 {
-  g_assert(GTK_WIDGET_TYPE(widget) == combo_box_type());
+  g_assert(G_OBJECT_TYPE(widget) == combo_box_type());
 
   std::string text = combo_box_get_active_text(widget);
 
@@ -1170,7 +1170,7 @@ GtkWidget *presets_widget_checkbox::attach(GtkTable *table, guint &row, const ch
 
 std::string presets_widget_checkbox::getValue(GtkWidget *widget) const
 {
-  g_assert(GTK_WIDGET_TYPE(widget) == check_button_type());
+  g_assert(G_OBJECT_TYPE(widget) == check_button_type());
 
   return check_button_get_active(widget) ?
          (value_on.empty() ? "yes" : value_on) : std::string();

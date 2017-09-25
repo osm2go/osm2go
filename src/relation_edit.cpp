@@ -134,7 +134,7 @@ static bool relation_add_item(GtkWidget *parent, relation_t *relation,
   /* get role from dialog */
   char *role = O2G_NULLPTR;
 
-  if(GTK_WIDGET_TYPE(entry) == combo_box_entry_type()) {
+  if(G_OBJECT_TYPE(entry) == combo_box_entry_type()) {
     const std::string &rstr = combo_box_get_active_text(entry);
     if(!rstr.empty())
       role = strdup(rstr.c_str());
