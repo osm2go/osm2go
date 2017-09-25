@@ -1010,10 +1010,6 @@ static void submenu_popup(appdata_t &appdata, GtkWidget *menu) {
   }
 }
 
-static void submenu_cleanup(GtkWidget *menu) {
-  gtk_widget_destroy(menu);
-}
-
 /* the view submenu */
 void on_submenu_view_clicked(appdata_t *appdata)
 {
@@ -1140,10 +1136,10 @@ static void menu_create(appdata_t &appdata, GtkBox *) {
 }
 
 void menu_cleanup(appdata_t &appdata) {
-  submenu_cleanup(appdata.app_menu_view);
-  submenu_cleanup(appdata.app_menu_map);
-  submenu_cleanup(appdata.app_menu_wms);
-  submenu_cleanup(appdata.app_menu_track);
+  gtk_widget_destroy(appdata.app_menu_view);
+  gtk_widget_destroy(appdata.app_menu_map);
+  gtk_widget_destroy(appdata.app_menu_wms);
+  gtk_widget_destroy(appdata.app_menu_track);
 }
 #endif
 
