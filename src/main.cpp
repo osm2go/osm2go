@@ -506,7 +506,6 @@ cb_menu_track_export(appdata_t *appdata) {
  *  Platform-specific UI tweaks.
  */
 
-
 #ifndef USE_HILDON
 #ifdef PORTRAIT
 
@@ -1410,7 +1409,7 @@ static int application_run(const char *proj)
   GtkWidget *vbox = gtk_vbox_new(FALSE,0);
 
 #ifdef PORTRAIT
-  gtk_box_pack_start(GTK_BOX(vbox), iconbar_new(&appdata), FALSE, FALSE, 0);
+  gtk_box_pack_start(GTK_BOX(vbox), iconbar_new(appdata), FALSE, FALSE, 0);
 #endif
   /* generate main map view */
   appdata.map = new map_t(appdata);
