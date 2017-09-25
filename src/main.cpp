@@ -1244,7 +1244,7 @@ static void on_window_destroy(appdata_t *appdata) {
   appdata->window = O2G_NULLPTR;
 }
 
-static gboolean on_window_key_press(GtkWidget *, GdkEventKey *event, appdata_t *appdata) {
+static gboolean on_window_key_press(appdata_t *appdata, GdkEventKey *event) {
   gboolean handled = FALSE;
 
   //  printf("key event with keyval %x\n", event->keyval);
@@ -1379,8 +1379,8 @@ static int application_run(const char *proj)
 		      appdata.icons.load(PACKAGE));
 #endif
 
-  g_signal_connect(G_OBJECT(appdata.window), "key_press_event",
- 		   G_CALLBACK(on_window_key_press), &appdata);
+  g_signal_connect_swapped(G_OBJECT(appdata.window), "key_press_event",
+                           G_CALLBACK(on_window_key_press), &appdata);
   g_signal_connect_swapped(G_OBJECT(appdata.window), "destroy",
                            G_CALLBACK(on_window_destroy), &appdata);
 
