@@ -102,8 +102,7 @@ void main_ui_enable(appdata_t &appdata) {
   g_free(str);
 #endif
 
-  if(appdata.iconbar && appdata.iconbar->toolbar)
-    gtk_widget_set_sensitive(appdata.iconbar->toolbar, osm_valid);
+  gtk_widget_set_sensitive(appdata.iconbar->toolbar, osm_valid);
   /* disable all menu entries related to map */
   gtk_widget_set_sensitive(appdata.menuitems[SUBMENU_MAP], project_valid);
 
