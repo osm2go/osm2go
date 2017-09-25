@@ -299,17 +299,17 @@ static void area_main_update(context_t *context) {
   } else {
     if(context->min.lat >= context->max.lat ||
        context->min.lon >= context->max.lon) {
-      gtk_label_set(GTK_LABEL(context->direct.error),
+      gtk_label_set_text(GTK_LABEL(context->direct.error),
 		  _("\"From\" must be smaller than \"to\" value!"));
-      gtk_label_set(GTK_LABEL(context->extent.error),
+      gtk_label_set_text(GTK_LABEL(context->extent.error),
 		  _("Extents must be positive!"));
       gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog),
 				      GTK_RESPONSE_ACCEPT, FALSE);
     }
     else
     {
-      gtk_label_set(GTK_LABEL(context->direct.error), "");
-      gtk_label_set(GTK_LABEL(context->extent.error), "");
+      gtk_label_set_text(GTK_LABEL(context->direct.error), "");
+      gtk_label_set_text(GTK_LABEL(context->extent.error), "");
 
       gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog),
 				      GTK_RESPONSE_ACCEPT, TRUE);
