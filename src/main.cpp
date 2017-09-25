@@ -604,7 +604,7 @@ menu_append_new_item(appdata_t &appdata, GtkWidget *menu_shell,
   return item;
 }
 
-static void menu_create(appdata_t &appdata) {
+static void menu_create(appdata_t &appdata, GtkBox *mainvbox) {
   GtkWidget *menu, *item, *submenu;
   GtkWidget *about_quit_items_menu;
 
@@ -875,7 +875,7 @@ static void menu_create(appdata_t &appdata) {
   gtk_widget_show(menu_bar);
 #endif //UISPECIFIC_MAIN_MENU_IS_MENU_BAR
 
-  gtk_box_pack_start(GTK_BOX(appdata.vbox), menu_bar, 0, 0, 0);
+  gtk_box_pack_start(mainvbox, menu_bar, 0, 0, 0);
 
 #endif //USE_HILDON
 }
@@ -1085,7 +1085,7 @@ static HildonAppMenu *app_menu_create(appdata_t &appdata) {
   return menu;
 }
 
-static void menu_create(appdata_t &appdata) {
+static void menu_create(appdata_t &appdata, GtkBox *) {
   /* -- the view submenu -- */
   const std::array<menu_entry_t, 3> sm_view_entries = { {
     /* --- */
@@ -1167,7 +1167,6 @@ appdata_t::appdata_t()
 #else
   : window(O2G_NULLPTR)
 #endif
-  , vbox(O2G_NULLPTR)
   , btn_zoom_in(O2G_NULLPTR)
   , btn_zoom_out(O2G_NULLPTR)
   , statusbar(new statusbar_t())
@@ -1391,11 +1390,11 @@ static int application_run(const char *proj)
   g_signal_connect_swapped(G_OBJECT(appdata.window), "destroy",
                            G_CALLBACK(on_window_destroy), &appdata);
 
-  appdata.vbox = gtk_vbox_new(FALSE,0);
+  GtkBox *mainvbox = GTK_BOX(gtk_vbox_new(FALSE, 0));
 
   /* unconditionally enable the GPS */
   appdata.settings->enable_gps = TRUE;
-  menu_create(appdata);
+  menu_create(appdata, mainvbox);
 
   /* if tracking is enable, start it now */
   track_enable_gps(appdata, appdata.settings->enable_gps);
@@ -1406,15 +1405,21 @@ static int application_run(const char *proj)
 
   /* ----------------------- setup main window ---------------- */
 
-  GtkWidget *vbox = gtk_vbox_new(FALSE,0);
-
-#ifdef PORTRAIT
-  gtk_box_pack_start(GTK_BOX(vbox), iconbar_new(appdata), FALSE, FALSE, 0);
-#endif
   /* generate main map view */
   appdata.map = new map_t(appdata);
   if(G_UNLIKELY(!appdata.map))
     return -1;
+
+  GtkWidget *vbox = gtk_vbox_new(FALSE, 0);
+  GtkWidget *hbox = gtk_hbox_new(FALSE, 0);
+
+  gtk_box_pack_start(
+#ifdef PORTRAIT
+                     GTK_BOX(vbox),
+#else
+                     GTK_BOX(hbox),
+#endif
+                     iconbar_new(appdata), FALSE, FALSE, 0);
 
   gtk_box_pack_start(GTK_BOX(vbox), appdata.map->canvas->widget, TRUE, TRUE, 0);
 
@@ -1433,10 +1438,6 @@ static int application_run(const char *proj)
   gtk_box_pack_start(GTK_BOX(vbox), appdata.statusbar->widget, FALSE, FALSE, 0);
 #endif
 
-  GtkWidget *hbox = gtk_hbox_new(FALSE, 0);
-#ifndef PORTRAIT
-  gtk_box_pack_start(GTK_BOX(hbox), iconbar_new(appdata), FALSE, FALSE, 0);
-#endif
   gtk_box_pack_start(GTK_BOX(hbox), vbox, TRUE, TRUE, 0);
 
 #ifdef FREMANTLE
@@ -1464,9 +1465,9 @@ static int application_run(const char *proj)
   gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
 #endif // FREMANTLE
 
-  gtk_box_pack_start(GTK_BOX(appdata.vbox), hbox, TRUE, TRUE, 0);
+  gtk_box_pack_start(mainvbox, hbox, TRUE, TRUE, 0);
 
-  gtk_container_add(GTK_CONTAINER(appdata.window), appdata.vbox);
+  gtk_container_add(GTK_CONTAINER(appdata.window), GTK_WIDGET(mainvbox));
 
   gtk_widget_show_all(GTK_WIDGET(appdata.window));
 

@@ -97,8 +97,6 @@ struct appdata_t {
   GtkWidget *window;
 #endif
 
-  GtkWidget *vbox;
-
   GtkWidget *btn_zoom_in, *btn_zoom_out;
 
   struct statusbar_t * const statusbar;
