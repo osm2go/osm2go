@@ -1329,10 +1329,7 @@ static void map_button_release(map_t *map, gint x, gint y) {
   }
 }
 
-static gboolean map_button_event(GtkWidget *, GdkEventButton *event,
-				       gpointer data) {
-  map_t *map = static_cast<map_t *>(data);
-
+static gboolean map_button_event(map_t *map, GdkEventButton *event) {
   if(G_UNLIKELY(!map->appdata.osm))
     return FALSE;
 
@@ -1561,9 +1558,9 @@ map_t::map_t(appdata_t &a)
   /* autosave happens every two minutes */
   set_autosave(true);
 
-  g_signal_connect(GTK_OBJECT(canvas_widget),
+  g_signal_connect_swapped(GTK_OBJECT(canvas_widget),
      "button_press_event", G_CALLBACK(map_button_event), this);
-  g_signal_connect(GTK_OBJECT(canvas_widget),
+  g_signal_connect_swapped(GTK_OBJECT(canvas_widget),
      "button_release_event", G_CALLBACK(map_button_event), this);
   g_signal_connect(GTK_OBJECT(canvas_widget),
      "motion_notify_event", G_CALLBACK(map_motion_notify_event), this);
