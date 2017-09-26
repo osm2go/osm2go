@@ -194,7 +194,6 @@ struct context_t {
   struct {
     OsmGpsMap *widget;
     bool needs_redraw;
-    guint handler_id;
     OsmGpsMapPoint start;
   } map;
 #endif
@@ -747,7 +746,7 @@ bool area_edit_t::run() {
 		   G_CALLBACK(on_map_button_release_event), &context);
 
   /* install handler for timed updates of the gps button */
-  context.map.handler_id = g_timeout_add_seconds(1, map_gps_update, &context);
+  guint handler_id = g_timeout_add_seconds(1, map_gps_update, &context);
   context.map.start.rlon = context.map.start.rlat = NAN;
 
   notebook_append_page(context.notebook, GTK_WIDGET(context.map.widget), _(TAB_LABEL_MAP));
@@ -915,7 +914,7 @@ bool area_edit_t::run() {
   }
 
 #ifdef ENABLE_OSM_GPS_MAP
-  g_source_remove(context.map.handler_id);
+  g_source_remove(handler_id);
 #endif
 
   gtk_widget_destroy(context.dialog);
