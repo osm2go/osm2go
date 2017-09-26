@@ -407,9 +407,10 @@ static void map_node_new(map_t *map, node_t *node, unsigned int radius,
   map_item_t *map_item = g_new0(map_item_t, 1);
   map_item->object = node;
 
-  const style_t::IconCache::const_iterator it = map->style->node_icons.find(node->id);
+  style_t::IconCache::const_iterator it;
 
-  if(it == map->style->node_icons.end() || !map->style->icon.enable)
+  if(!map->style->icon.enable ||
+     (it = map->style->node_icons.find(node->id)) == map->style->node_icons.end())
     map_item->item = map->canvas->circle_new(CANVAS_GROUP_NODES,
        node->lpos.x, node->lpos.y, radius, width, fill, border);
   else
