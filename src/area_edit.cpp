@@ -423,8 +423,7 @@ static void map_update(context_t *context, bool forced) {
   context->map.needs_redraw = false;
 }
 
-static gboolean on_map_configure(GtkWidget *, GdkEventConfigure *,
-				 context_t *context) {
+static gboolean on_map_configure(context_t *context) {
   map_update(context, false);
   return FALSE;
 }
@@ -578,14 +577,14 @@ static void callback_fetch_mm_clicked(context_t *context) {
 static gboolean
 on_map_button_press_event(GtkWidget *widget,
 			  GdkEventButton *event, context_t *context) {
-  OsmGpsMap *map = OSM_GPS_MAP(context->map.widget);
+  OsmGpsMap *map = OSM_GPS_MAP(widget);
   osm_gps_map_osd_t *osd = osm_gps_map_osd_get(map);
 
   /* osm-gps-map needs this event to handle the OSD */
   if(osd->check(osd, TRUE, event->x, event->y) != OSD_NONE)
     return FALSE;
 
-  if(osm_gps_map_osd_get_state(OSM_GPS_MAP(widget)))
+  if(osm_gps_map_osd_get_state(map))
     return FALSE;
 
   /* remove existing marker */
@@ -600,9 +599,10 @@ on_map_button_press_event(GtkWidget *widget,
 static gboolean
 on_map_motion_notify_event(GtkWidget *widget,
 			   GdkEventMotion  *event, context_t *context) {
+  OsmGpsMap *map = OSM_GPS_MAP(widget);
+
   if(!std::isnan(context->map.start.rlon) &&
      !std::isnan(context->map.start.rlat)) {
-    OsmGpsMap *map = OSM_GPS_MAP(context->map.widget);
 
     /* remove existing marker */
     osm_gps_map_track_remove_all(map);
@@ -620,14 +620,14 @@ on_map_motion_notify_event(GtkWidget *widget,
   }
 
   /* returning true here disables dragging in osm-gps-map */
-  return !osm_gps_map_osd_get_state(OSM_GPS_MAP(widget));
+  return !osm_gps_map_osd_get_state(map);
 }
 
 static gboolean
 on_map_button_release_event(GtkWidget *widget,
 			    GdkEventButton *event, context_t *context) {
 
-  OsmGpsMap *map = OSM_GPS_MAP(context->map.widget);
+  OsmGpsMap *map = OSM_GPS_MAP(widget);
   osm_gps_map_osd_t *osd = osm_gps_map_osd_get(map);
 
   if(!std::isnan(context->map.start.rlon) &&
@@ -672,14 +672,14 @@ on_map_button_release_event(GtkWidget *widget,
     return FALSE;
 
   /* returning true here disables dragging in osm-gps-map */
-  return !osm_gps_map_osd_get_state(OSM_GPS_MAP(widget));
+  return !osm_gps_map_osd_get_state(map);
 }
 
 static void on_page_switch(GtkNotebook *nb, GtkWidget *pg, guint, context_t *context) {
   /* updating the map while the user manually changes some coordinates */
   /* may confuse the map. so we delay those updates until the map tab */
   /* is becoming visible */
-  if(current_tab_is(nb, pg, TAB_LABEL_MAP) && context->map.needs_redraw)
+  if(context->map.needs_redraw && current_tab_is(nb, pg, TAB_LABEL_MAP))
     map_update(context, true);
 }
 
@@ -741,7 +741,7 @@ bool area_edit_t::run() {
 
   osm_gps_map_osd_select_init(OSM_GPS_MAP(context.map.widget));
 
-  g_signal_connect(G_OBJECT(context.map.widget), "configure-event",
+  g_signal_connect_swapped(G_OBJECT(context.map.widget), "configure-event",
 		   G_CALLBACK(on_map_configure), &context);
   g_signal_connect(G_OBJECT(context.map.widget), "button-press-event",
 		   G_CALLBACK(on_map_button_press_event), &context);
