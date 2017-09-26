@@ -138,7 +138,7 @@ struct map_t {
   osm_t::TagMap last_way_tags;
 
   void set_autosave(bool enable);
-  gboolean key_press_event(GdkEventKey *event);
+  bool key_press_event(unsigned int keyval);
   void init();
   void paint();
   void clear(unsigned int group_mask);

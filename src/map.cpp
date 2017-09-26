@@ -1426,86 +1426,69 @@ static gboolean map_motion_notify_event(GtkWidget *,
   return FALSE;  /* forward to further processing */
 }
 
-gboolean map_t::key_press_event(GdkEventKey *event) {
+bool map_t::key_press_event(unsigned int keyval) {
+  switch(keyval) {
+  case GDK_Left:
+    map_do_scroll_step(this, -50, 0);
+    break;
 
-  if(!appdata.osm)
-    return FALSE;
+  case GDK_Right:
+    map_do_scroll_step(this, +50, 0);
+    break;
 
-  /* map needs to be there to handle buttons */
-  if(!canvas)
-    return FALSE;
+  case GDK_Up:
+    map_do_scroll_step(this, 0, -50);
+    break;
 
-  if(event->type == GDK_KEY_PRESS) {
-    gdouble zoom = 0;
-    switch(event->keyval) {
+  case GDK_Down:
+    map_do_scroll_step(this, 0, +50);
+    break;
 
-    case GDK_Left:
-      map_do_scroll_step(this, -50, 0);
-      break;
+  case GDK_Return:   // same as HILDON_HARDKEY_SELECT
+    /* if the ok button is enabled, call its function */
+    if(appdata.iconbar->isOkEnabled())
+      map_action_ok(this);
+    /* otherwise if info is enabled call that */
+    else if(appdata.iconbar->isInfoEnabled())
+      info_dialog(GTK_WIDGET(appdata.window), appdata);
+    break;
 
-    case GDK_Right:
-      map_do_scroll_step(this, +50, 0);
-      break;
+  case GDK_Escape:   // same as HILDON_HARDKEY_ESC
+    /* if the cancel button is enabled, call its function */
+    if(appdata.iconbar->isCancelEnabled())
+      map_action_cancel(this);
+    break;
 
-    case GDK_Up:
-      map_do_scroll_step(this, 0, -50);
-      break;
-
-    case GDK_Down:
-      map_do_scroll_step(this, 0, +50);
-      break;
-
-    case GDK_Return:   // same as HILDON_HARDKEY_SELECT
-      /* if the ok button is enabled, call its function */
-      if(appdata.iconbar->isOkEnabled())
-        map_action_ok(this);
-      /* otherwise if info is enabled call that */
-      else if(appdata.iconbar->isInfoEnabled())
-        info_dialog(GTK_WIDGET(appdata.window), appdata);
-      break;
-
-    case GDK_Escape:   // same as HILDON_HARDKEY_ESC
-      /* if the cancel button is enabled, call its function */
-      if(appdata.iconbar->isCancelEnabled())
-        map_action_cancel(this);
-      break;
-
-    case GDK_Delete:
-      /* if the delete button is enabled, call its function */
-      if(appdata.iconbar->isTrashEnabled())
-        map_delete_selected(this);
-      break;
+  case GDK_Delete:
+    /* if the delete button is enabled, call its function */
+    if(appdata.iconbar->isTrashEnabled())
+      map_delete_selected(this);
+    break;
 
 #ifdef USE_HILDON
-    case HILDON_HARDKEY_INCREASE:
+  case HILDON_HARDKEY_INCREASE:
 #else
-    case '+':
-    case GDK_KP_Add:
+  case '+':
+  case GDK_KP_Add:
 #endif
-      zoom = state.zoom;
-      zoom *= ZOOM_FACTOR_BUTTON;
-      set_zoom(zoom, true);
-      return TRUE;
-      break;
+    set_zoom(state.zoom * ZOOM_FACTOR_BUTTON, true);
+    return true;
 
 #ifdef USE_HILDON
-    case HILDON_HARDKEY_DECREASE:
+  case HILDON_HARDKEY_DECREASE:
 #else
-    case '-':
-    case GDK_KP_Subtract:
+  case '-':
+  case GDK_KP_Subtract:
 #endif
-      zoom = state.zoom;
-      zoom /= ZOOM_FACTOR_BUTTON;
-      set_zoom(zoom, true);
-      return TRUE;
-      break;
+    set_zoom(state.zoom / ZOOM_FACTOR_BUTTON, true);
+    return true;
 
-    default:
-      printf("key event %d\n", event->keyval);
-      break;
-    }
+  default:
+    printf("key event %d\n", keyval);
+    break;
   }
-  return FALSE;
+
+  return false;
 }
 
 static gboolean map_autosave(gpointer data) {

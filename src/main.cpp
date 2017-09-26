@@ -1276,8 +1276,8 @@ static gboolean on_window_key_press(appdata_t *appdata, GdkEventKey *event) {
   }
 
   /* forward unprocessed key presses to map */
-  if(!handled && appdata->project)
-    handled = appdata->map->key_press_event(event);
+  if(!handled && appdata->project && appdata->osm && event->type == GDK_KEY_PRESS)
+    handled = appdata->map->key_press_event(event->keyval) ? TRUE : FALSE;
 
   return handled;
 }
