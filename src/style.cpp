@@ -464,7 +464,7 @@ style_t::~style_t()
 
   std::for_each(node_icons.begin(), node_icons.end(), unref_icon(icons));
 
-  g_free(name);
+  xmlFree(BAD_CAST name);
   xmlFree(BAD_CAST icon.path_prefix);
 }
 
