@@ -192,7 +192,7 @@ struct context_t {
 
 #ifdef ENABLE_OSM_GPS_MAP
   struct {
-    GtkWidget *widget;
+    OsmGpsMap *widget;
     bool needs_redraw;
     guint handler_id;
     OsmGpsMapPoint start;
@@ -377,10 +377,8 @@ static void map_update(context_t *context, bool forced) {
       zoom = 1;
     }
 
-    osm_gps_map_set_center_and_zoom(OSM_GPS_MAP(context->map.widget),
-			      pos.lat, pos.lon, zoom);
-
-    osm_gps_map_track_remove_all(OSM_GPS_MAP(context->map.widget));
+    osm_gps_map_set_center_and_zoom(context->map.widget, pos.lat, pos.lon, zoom);
+    osm_gps_map_track_remove_all(context->map.widget);
   } else {
 
     pos_float_t center_lat = (context->max.lat + context->min.lat)/2;
@@ -388,21 +386,20 @@ static void map_update(context_t *context, bool forced) {
 
     /* we know the widgets pixel size, we know the required real size, */
     /* we want the zoom! */
-    double vzoom = log2((45.0 * context->map.widget->allocation.height)/
+    GtkWidget *wd = GTK_WIDGET(context->map.widget);
+    double vzoom = log2((45.0 * wd->allocation.height)/
 			((context->max.lat - context->min.lat)*32.0)) -1;
 
-    double hzoom = log2((45.0 * context->map.widget->allocation.width)/
+    double hzoom = log2((45.0 * wd->allocation.width)/
 			((context->max.lon - context->min.lon)*32.0)) -1;
 
-    osm_gps_map_set_center(OSM_GPS_MAP(context->map.widget),
-			   center_lat, center_lon);
+    osm_gps_map_set_center(context->map.widget, center_lat, center_lon);
 
     /* use smallest zoom, so everything fits on screen */
-    osm_gps_map_set_zoom(OSM_GPS_MAP(context->map.widget),
-			 (vzoom < hzoom)?vzoom:hzoom);
+    osm_gps_map_set_zoom(context->map.widget, std::min(vzoom, hzoom));
 
     /* ---------- draw border (as a gps track) -------------- */
-    osm_gps_map_track_remove_all(OSM_GPS_MAP(context->map.widget));
+    osm_gps_map_track_remove_all(context->map.widget);
 
     if(context->max.lat > context->min.lat &&
        context->max.lon > context->min.lon) {
@@ -412,13 +409,13 @@ static void map_update(context_t *context, bool forced) {
       box = pos_append(box, context->min.lat, context->max.lon);
       box = pos_append(box, context->min.lat, context->min.lon);
 
-      osm_gps_map_add_track(OSM_GPS_MAP(context->map.widget), box);
+      osm_gps_map_add_track(context->map.widget, box);
     }
   }
 
   // show all other bounds
   std::for_each(context->area.other_bounds.begin(), context->area.other_bounds.end(),
-                add_bounds(OSM_GPS_MAP(context->map.widget)));
+                add_bounds(context->map.widget));
 
   context->map.needs_redraw = false;
 }
@@ -692,10 +689,9 @@ static gboolean map_gps_update(gpointer data) {
 
   if(pos.valid()) {
     g_object_set(context->map.widget, "gps-track-highlight-radius", 0, O2G_NULLPTR);
-    osm_gps_map_gps_add(OSM_GPS_MAP(context->map.widget),
-			 pos.lat, pos.lon, NAN);
+    osm_gps_map_gps_add(context->map.widget, pos.lat, pos.lon, NAN);
   } else
-    osm_gps_map_gps_clear(OSM_GPS_MAP(context->map.widget));
+    osm_gps_map_gps_clear(context->map.widget);
 
   return TRUE;
 }
@@ -732,14 +728,14 @@ bool area_edit_t::run() {
   /* ------------- fetch from map ------------------------ */
 
   context.map.needs_redraw = false;
-  context.map.widget = GTK_WIDGET(g_object_new(OSM_TYPE_GPS_MAP,
- 	        "map-source", OSM_GPS_MAP_SOURCE_OPENSTREETMAP,
-		"proxy-uri", g_getenv("http_proxy"),
-		"auto-center", FALSE,
-	        "tile-cache", O2G_NULLPTR,
-		 O2G_NULLPTR));
+  context.map.widget = OSM_GPS_MAP(g_object_new(OSM_TYPE_GPS_MAP,
+                                                "map-source", OSM_GPS_MAP_SOURCE_OPENSTREETMAP,
+                                                "proxy-uri", g_getenv("http_proxy"),
+                                                "auto-center", FALSE,
+                                                "tile-cache", O2G_NULLPTR,
+                                                O2G_NULLPTR));
 
-  osm_gps_map_osd_select_init(OSM_GPS_MAP(context.map.widget));
+  osm_gps_map_osd_select_init(context.map.widget);
 
   g_signal_connect_swapped(G_OBJECT(context.map.widget), "configure-event",
 		   G_CALLBACK(on_map_configure), &context);
@@ -754,7 +750,7 @@ bool area_edit_t::run() {
   context.map.handler_id = g_timeout_add_seconds(1, map_gps_update, &context);
   context.map.start.rlon = context.map.start.rlat = NAN;
 
-  notebook_append_page(context.notebook, context.map.widget, _(TAB_LABEL_MAP));
+  notebook_append_page(context.notebook, GTK_WIDGET(context.map.widget), _(TAB_LABEL_MAP));
 #endif
 
   /* ------------ direct min/max edit --------------- */
