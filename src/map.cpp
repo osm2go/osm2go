@@ -106,8 +106,7 @@ static void map_node_select(map_t *map, node_t *node) {
   int x = map_item->object.node->lpos.x, y = map_item->object.node->lpos.y;
 
   /* create a copy of this map item and mark it as being a highlight */
-  map_item_t *new_map_item = g_new0(map_item_t, 1);
-  memcpy(new_map_item, map_item, sizeof(map_item_t));
+  map_item_t *new_map_item = new map_item_t(*map_item);
   new_map_item->highlight = true;
 
   float radius = 0;
@@ -131,8 +130,7 @@ static void map_node_select(map_t *map, node_t *node) {
 
   if(!map_item->item) {
     /* and draw a fake node */
-    new_map_item = g_new0(map_item_t, 1);
-    memcpy(new_map_item, map_item, sizeof(map_item_t));
+    new_map_item = new map_item_t(*map_item);
     new_map_item->highlight = true;
     map_hl_circle_new(map, CANVAS_GROUP_NODES_IHL, new_map_item,
 		      x, y, map->style->node.radius,
@@ -200,9 +198,7 @@ void draw_selected_way_functor::operator()(node_t* node)
     float len = std::sqrt(std::pow(diff.x, 2) + std::pow(diff.y, 2));
     if(len > map->style->highlight.arrow_limit * arrow_width) {
       /* create a new map item for every arrow */
-      map_item_t *new_map_item = g_new0(map_item_t, 1);
-      new_map_item->object = way;
-      new_map_item->highlight = true;
+      map_item_t *new_map_item = new map_item_t(object_t(way), true);
 
       len /= arrow_width;
       diff.x /= len;
@@ -225,9 +221,7 @@ void draw_selected_way_functor::operator()(node_t* node)
 
   if(!map_hl_item_is_highlighted(map, &item)) {
     /* create a new map item for every node */
-    map_item_t *new_map_item = g_new0(map_item_t, 1);
-    new_map_item->object = node;
-    new_map_item->highlight = true;
+    map_item_t *new_map_item = new map_item_t(object_t(node), true);
 
     map_hl_circle_new(map, CANVAS_GROUP_NODES_IHL, new_map_item,
                       node->lpos.x, node->lpos.y,
@@ -265,8 +259,7 @@ void map_t::select_way(way_t *way) {
   canvas_points_t *points = points_from_node_chain(way);
   if(points != O2G_NULLPTR) {
     /* create a copy of this map item and mark it as being a highlight */
-    map_item_t *new_map_item = g_new(map_item_t, 1);
-    *new_map_item = *map_item;
+    map_item_t *new_map_item = new map_item_t(*map_item);
     new_map_item->highlight = true;
 
     map_hl_polyline_new(this, CANVAS_GROUP_WAYS_HL, new_map_item, points,
@@ -394,18 +387,10 @@ void map_t::item_deselect() {
   selected.object.type = ILLEGAL;
 }
 
-/* called whenever a map item is to be destroyed */
-static void map_item_destroy_event(gpointer data) {
-  map_item_t *map_item = static_cast<map_item_t *>(data);
-
-  g_free(map_item);
-}
-
 static void map_node_new(map_t *map, node_t *node, unsigned int radius,
                          int width, canvas_color_t fill, canvas_color_t border) {
 
-  map_item_t *map_item = g_new0(map_item_t, 1);
-  map_item->object = node;
+  map_item_t *map_item = new map_item_t(object_t(node));
 
   style_t::IconCache::const_iterator it;
 
@@ -429,8 +414,7 @@ static void map_node_new(map_t *map, node_t *node, unsigned int radius,
 
   canvas_item_set_user_data(map_item->item, map_item);
 
-  canvas_item_destroy_connect(map_item->item,
-                              map_item_destroy_event, map_item);
+  canvas_item_destroy_connect(map_item->item, map_item_t::free, map_item);
 }
 
 /* in the rare case that a way consists of only one node, it is */
@@ -438,8 +422,8 @@ static void map_node_new(map_t *map, node_t *node, unsigned int radius,
 static map_item_t *map_way_single_new(map_t *map, way_t *way, gint radius,
 		   gint width, canvas_color_t fill, canvas_color_t border) {
 
-  map_item_t *map_item = g_new0(map_item_t, 1);
-  map_item->object = way;
+  map_item_t *map_item = new map_item_t(object_t(way));
+
   map_item->item = map->canvas->circle_new(CANVAS_GROUP_WAYS,
 	  way->node_chain.front()->lpos.x, way->node_chain.front()->lpos.y,
 				     radius, width, fill, border);
@@ -448,8 +432,7 @@ static map_item_t *map_way_single_new(map_t *map, way_t *way, gint radius,
 
   canvas_item_set_user_data(map_item->item, map_item);
 
-  canvas_item_destroy_connect(map_item->item,
-                              map_item_destroy_event, map_item);
+  canvas_item_destroy_connect(map_item->item, map_item_t::free, map_item);
 
   return map_item;
 }
@@ -457,8 +440,7 @@ static map_item_t *map_way_single_new(map_t *map, way_t *way, gint radius,
 static map_item_t *map_way_new(map_t *map, canvas_group_t group,
 	  way_t *way, canvas_points_t *points, gint width,
 	  canvas_color_t color, canvas_color_t fill_color) {
-  map_item_t *map_item = g_new0(map_item_t, 1);
-  map_item->object = way;
+  map_item_t *map_item = new map_item_t(object_t(way));
 
   if(way->draw.flags & OSM_DRAW_FLAG_AREA) {
     if(map->style->area.color & 0xff)
@@ -481,8 +463,7 @@ static map_item_t *map_way_new(map_t *map, canvas_group_t group,
 
   canvas_item_set_user_data(map_item->item, map_item);
 
-  canvas_item_destroy_connect(map_item->item,
-                              map_item_destroy_event, map_item);
+  canvas_item_destroy_connect(map_item->item, map_item_t::free, map_item);
 
   return map_item;
 }

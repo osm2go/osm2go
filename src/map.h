@@ -67,9 +67,16 @@ struct track_seg_t;
 struct track_t;
 
 struct map_item_t {
+  map_item_t(object_t o = object_t(), bool hl = false, canvas_item_t *i = O2G_NULLPTR)
+    : object(o), highlight(hl) , item(i) {}
+
   object_t object;
   bool highlight;
   canvas_item_t *item;
+
+  static inline void free(void *p) {
+    delete static_cast<map_item_t *>(p);
+  }
 };
 
 /* this is a chain of map_items which is attached to all entries */
