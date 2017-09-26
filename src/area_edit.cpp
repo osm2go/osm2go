@@ -317,9 +317,7 @@ static void area_main_update(context_t *context) {
   }
 
   /* check if area size exceeds recommended values */
-  double area = selected_area(context);
-
-  if(area > WARN_OVER)
+  if(selected_area(context) > WARN_OVER)
     gtk_widget_show(context->warning);
   else
     gtk_widget_hide(context->warning);
@@ -331,8 +329,7 @@ static GSList *pos_append_rad(GSList *list, pos_float_t lat, pos_float_t lon) {
   OsmGpsMapPoint *coo = g_new0(OsmGpsMapPoint, 1);
   coo->rlat = lat;
   coo->rlon = lon;
-  list = g_slist_append(list, coo);
-  return list;
+  return g_slist_append(list, coo);
 }
 
 static GSList *pos_append(GSList *list, pos_float_t lat, pos_float_t lon) {
