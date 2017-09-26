@@ -28,7 +28,6 @@
 #else
 #include <tr1/cstdint>
 #endif
-#include <glib.h>
 
 #include <osm2go_cpp.h>
 
@@ -75,19 +74,19 @@ struct elemstyle_line_t {
   }
 
   int priority;
-  gint width;
+  int width;
   elemstyle_color_t color;
-  guint dash_length_on: 16;
-  guint dash_length_off: 16;
+  unsigned short dash_length_on;
+  unsigned short dash_length_off;
 
   struct {
     bool valid : 8;
-    gint width : 24;
+    int width : 24;
   } real;
 
   struct {
     bool valid: 8;
-    gint width : 24;
+    int width : 24;
     elemstyle_color_t color;
   } bg;
 };
