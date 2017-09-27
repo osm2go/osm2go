@@ -75,7 +75,7 @@ static GtkWidget *label_scale(const char *str, double scale_factor) {
 }
 
 static void
-on_label_realize(GtkWidget *widget, gpointer)  {
+on_label_realize(GtkWidget *widget) {
   /* get parent size (which is a container) */
   gtk_widget_set_size_request(widget, widget->parent->allocation.width, -1);
 }
