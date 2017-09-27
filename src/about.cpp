@@ -102,17 +102,15 @@ static GtkWidget *license_page_new(void) {
   }
 
   if(licMap) {
-    gchar *buffer = g_strndup(g_mapped_file_get_contents(licMap),
-                              g_mapped_file_get_length(licMap));
+    const std::string buffer(g_mapped_file_get_contents(licMap),
+                             g_mapped_file_get_length(licMap));
 #if GLIB_CHECK_VERSION(2,22,0)
     g_mapped_file_unref(licMap);
 #else
     g_mapped_file_free(licMap);
 #endif
 
-    gtk_label_set_text(GTK_LABEL(label), buffer);
-
-    g_free(buffer);
+    gtk_label_set_text(GTK_LABEL(label), buffer.c_str());
   } else
     gtk_label_set_text(GTK_LABEL(label), _("Load error"));
 
