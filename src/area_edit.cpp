@@ -383,19 +383,17 @@ static void map_update(context_t *context, bool forced) {
     pos_float_t center_lat = (context->max.lat + context->min.lat)/2;
     pos_float_t center_lon = (context->max.lon + context->min.lon)/2;
 
+    osm_gps_map_set_center(context->map.widget, center_lat, center_lon);
+
     /* we know the widgets pixel size, we know the required real size, */
     /* we want the zoom! */
     GtkWidget *wd = GTK_WIDGET(context->map.widget);
-    double vzoom = log2((45.0 * wd->allocation.height)/
-			((context->max.lat - context->min.lat)*32.0)) -1;
-
-    double hzoom = log2((45.0 * wd->allocation.width)/
-			((context->max.lon - context->min.lon)*32.0)) -1;
-
-    osm_gps_map_set_center(context->map.widget, center_lat, center_lon);
+    double vzoom = wd->allocation.height / (context->max.lat - context->min.lat);
+    double hzoom = wd->allocation.width  / (context->max.lon - context->min.lon);
 
     /* use smallest zoom, so everything fits on screen */
-    osm_gps_map_set_zoom(context->map.widget, std::min(vzoom, hzoom));
+    osm_gps_map_set_zoom(context->map.widget,
+                         log2((45.0 / 32.0) * std::min(vzoom, hzoom)) - 1);
 
     /* ---------- draw border (as a gps track) -------------- */
     osm_gps_map_track_remove_all(context->map.widget);
