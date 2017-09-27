@@ -65,19 +65,12 @@ static void on_paypal_button_clicked(appdata_t *appdata) {
            "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=7400558");
 }
 
-static GtkWidget *label_big(const char *str) {
-  GtkWidget *label = gtk_label_new(O2G_NULLPTR);
-  gchar *markup = g_markup_printf_escaped("<span size='x-large'>%s</span>", str);
-  gtk_label_set_markup(GTK_LABEL(label), markup);
-  g_free(markup);
-  return label;
-}
-
-static GtkWidget *label_xbig(const char *str) {
-  GtkWidget *label = gtk_label_new(O2G_NULLPTR);
-  gchar *markup = g_markup_printf_escaped("<span size='xx-large'>%s</span>", str);
-  gtk_label_set_markup(GTK_LABEL(label), markup);
-  g_free(markup);
+static GtkWidget *label_scale(const char *str, double scale_factor) {
+  PangoAttrList *attrs = pango_attr_list_new();
+  pango_attr_list_change(attrs, pango_attr_scale_new(scale_factor));
+  GtkWidget *label = gtk_label_new(str);
+  gtk_label_set_attributes(GTK_LABEL(label), attrs);
+  pango_attr_list_unref(attrs);
   return label;
 }
 
@@ -150,14 +143,14 @@ static GtkWidget *copyright_page_new(appdata_t *appdata) {
   GtkWidget *ihbox = gtk_hbox_new(FALSE, 20);
   gtk_box_pack_start(GTK_BOX(ihbox), appdata->icons.widget_load(OSM2GO_ICON),
 		     FALSE, FALSE, 0);
-  gtk_box_pack_start(GTK_BOX(ihbox), label_xbig("OSM2Go"),
+  gtk_box_pack_start(GTK_BOX(ihbox), label_scale("OSM2Go", PANGO_SCALE_XX_LARGE),
 		     FALSE, FALSE, 0);
 
   gtk_box_pack_start(GTK_BOX(hbox), ihbox, TRUE, FALSE, 0);
   gtk_box_pack_start_defaults(GTK_BOX(ivbox), hbox);
 
   gtk_box_pack_start_defaults(GTK_BOX(ivbox),
-		      label_big(_("Mobile OpenStreetMap Editor")));
+                              label_scale(_("Mobile OpenStreetMap Editor"), PANGO_SCALE_X_LARGE));
 
   gtk_box_pack_start(GTK_BOX(vbox), ivbox, TRUE, FALSE, 0);
 
