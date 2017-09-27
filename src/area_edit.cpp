@@ -894,24 +894,21 @@ bool area_edit_t::run() {
 
   area_main_update(&context);
 
-  bool leave = false, ok = false;
+  bool ok = false;
+  int response;
   do {
-    int response = gtk_dialog_run(GTK_DIALOG(context.dialog));
+    response = gtk_dialog_run(GTK_DIALOG(context.dialog));
 
     if(GTK_RESPONSE_ACCEPT == response) {
       if(area_warning(&context)) {
-	leave = true;
-	ok = true;
+        /* copy modified values back to given storage */
+        min = context.min;
+        max = context.max;
+        ok = true;
+        break;
       }
-    } else if(response != GTK_RESPONSE_HELP)
-      leave = true;
-  } while(!leave);
-
-  if(ok) {
-    /* copy modified values back to given storage */
-    min = context.min;
-    max = context.max;
-  }
+    }
+  } while(response == GTK_RESPONSE_HELP || response == GTK_RESPONSE_ACCEPT);
 
 #ifdef ENABLE_OSM_GPS_MAP
   g_source_remove(handler_id);
