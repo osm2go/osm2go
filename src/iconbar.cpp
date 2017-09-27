@@ -55,7 +55,7 @@ class iconbar_gtk : public iconbar_t {
 public:
   iconbar_gtk(appdata_t &appdata);
 
-  GtkWidget * const toolbar;
+  GtkToolbar * const toolbar;
 
   GtkWidget * const info;
   GtkWidget * const trash;
@@ -117,12 +117,12 @@ static GtkWidget * __attribute__((nonnull(1,3,4,5)))
   return item;
 }
 
-static gint on_way_button_press(iconbar_gtk *iconbar, GdkEventButton *event) {
+static gint on_way_button_press(GtkMenu *menu, GdkEventButton *event) {
   if(event->type == GDK_BUTTON_PRESS) {
     printf("way clicked\n");
 
     /* draw a popup menu */
-    gtk_menu_popup(GTK_MENU(iconbar->menu), O2G_NULLPTR, O2G_NULLPTR, O2G_NULLPTR, O2G_NULLPTR,
+    gtk_menu_popup(menu, O2G_NULLPTR, O2G_NULLPTR, O2G_NULLPTR, O2G_NULLPTR,
 		   event->button, event->time);
     return TRUE;
   }
@@ -196,7 +196,7 @@ void iconbar_t::map_action_idle(bool idle, const object_t &selected) {
 
 void iconbar_t::setToolbarEnable(bool en)
 {
-  gtk_widget_set_sensitive(static_cast<iconbar_gtk *>(this)->toolbar, en);
+  gtk_widget_set_sensitive(GTK_WIDGET(static_cast<iconbar_gtk *>(this)->toolbar), en);
 }
 
 bool iconbar_t::isCancelEnabled() const
@@ -233,38 +233,46 @@ static GtkWidget *icon_add(GtkWidget *vbox, appdata_t &appdata,
 }
 #endif
 
-static GtkWidget *  __attribute__((nonnull(1,3,4,5)))
-                  tool_add(GtkWidget *toolbar, appdata_t &appdata,
-                           const char *icon_str, char *tooltip_str,
-                           GCallback func, gpointer context,
-                           bool separator = false) {
-  GtkWidget *item =
-    GTK_WIDGET(gtk_tool_button_new(
-               appdata.icons.widget_load(icon_str), O2G_NULLPTR));
+static GtkWidget *tool_button_label(appdata_t &appdata, GtkToolbar *toolbar,
+                                    const char *label_str, const char *icon_str) {
+  PangoAttrList *attrs = pango_attr_list_new();
+  pango_attr_list_change(attrs, pango_attr_scale_new(PANGO_SCALE_XX_SMALL));
+  GtkWidget *label = gtk_label_new(label_str);
+  gtk_label_set_attributes(GTK_LABEL(label), attrs);
+  pango_attr_list_unref(attrs);
 
-  GtkWidget *label = gtk_label_new(O2G_NULLPTR);
-  char *markup = g_markup_printf_escaped(MARKUP, tooltip_str);
-  gtk_label_set_markup(GTK_LABEL(label), markup);
-  g_free(markup);
+  GtkToolItem *item = gtk_tool_button_new(
+               appdata.icons.widget_load(icon_str), O2G_NULLPTR);
+
   gtk_tool_button_set_label_widget(GTK_TOOL_BUTTON(item), label);
 
 #ifndef USE_HILDON
-  gtk_widget_set_tooltip_text(item, tooltip_str);
+  gtk_widget_set_tooltip_text(GTK_WIDGET(item), label_str);
 #endif
+
+  gtk_toolbar_insert(toolbar, item, -1);
+
+  return GTK_WIDGET(item);
+}
+
+static GtkWidget *  __attribute__((nonnull(1,3,4,5)))
+                  tool_add(GtkToolbar *toolbar, appdata_t &appdata,
+                           const char *icon_str, char *tooltip_str,
+                           GCallback func, gpointer context,
+                           bool separator = false) {
+  GtkWidget *item = tool_button_label(appdata, toolbar, tooltip_str, icon_str);
 
   g_signal_connect_swapped(GTK_OBJECT(item), "clicked", func, context);
 
-  gtk_toolbar_insert(GTK_TOOLBAR(toolbar), GTK_TOOL_ITEM(item), -1);
-
   if(separator)
-    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), gtk_separator_tool_item_new(), -1);
+    gtk_toolbar_insert(toolbar, gtk_separator_tool_item_new(), -1);
 
-  return item;
+  return GTK_WIDGET(item);
 }
 
 iconbar_gtk::iconbar_gtk(appdata_t& appdata)
   : iconbar_t()
-  , toolbar(gtk_toolbar_new())
+  , toolbar(GTK_TOOLBAR(gtk_toolbar_new()))
   , info(tool_add(toolbar, appdata,
                   TOOL_ICON("info"), _("Properties"),
                   G_CALLBACK(on_info_clicked), &appdata, true))
@@ -309,7 +317,7 @@ iconbar_gtk::iconbar_gtk(appdata_t& appdata)
 #endif
 #endif
 
-  gtk_toolbar_set_style(GTK_TOOLBAR(toolbar),
+  gtk_toolbar_set_style(toolbar,
 #ifndef FREMANTLE
                                               GTK_TOOLBAR_ICONS);
 #else
@@ -321,10 +329,11 @@ GtkWidget *iconbar_t::create(appdata_t &appdata) {
   iconbar_gtk * const iconbar = new iconbar_gtk(appdata);
   appdata.iconbar = iconbar;
 
+  GtkBox * const box =
 #ifndef PORTRAIT
-  GtkWidget *box = gtk_vbox_new(FALSE, 0);
+                       GTK_BOX(gtk_vbox_new(FALSE, 0));
 #else
-  GtkWidget *box = gtk_hbox_new(FALSE, 0);
+                       GTK_BOX(gtk_hbox_new(FALSE, 0));
 #endif
 
 #ifdef FINGER_UI
@@ -332,29 +341,18 @@ GtkWidget *iconbar_t::create(appdata_t &appdata) {
 
   /* the way button is special as it pops up a menu for */
   /* further too selection */
-  GtkWidget *way = GTK_WIDGET(gtk_tool_button_new(
-               appdata.icons.widget_load(TOOL_ICON("way")), O2G_NULLPTR));
+  GtkWidget *way = tool_button_label(appdata, iconbar->toolbar, _("Way"), TOOL_ICON("way"));
 
-  GtkWidget *label = gtk_label_new(O2G_NULLPTR);
-  char *markup = g_markup_printf_escaped(MARKUP, _("Way"));
-  gtk_label_set_markup(GTK_LABEL(label), markup);
-  g_free(markup);
-  gtk_tool_button_set_label_widget(GTK_TOOL_BUTTON(way), label);
-
-  gtk_widget_set_tooltip_text(way, "Way");
-
-  gtk_toolbar_insert(GTK_TOOLBAR(iconbar->toolbar), GTK_TOOL_ITEM(way), -1);
-
-  gtk_widget_set_size_request(GTK_WIDGET(way), -1, 40);
+  gtk_widget_set_size_request(way, -1, 40);
 
   gtk_widget_set_events(way, GDK_EXPOSURE_MASK);
   gtk_widget_add_events(way, GDK_BUTTON_PRESS_MASK);
   g_signal_connect_swapped(GTK_OBJECT(gtk_bin_get_child(GTK_BIN(way))),
                            "button-press-event",
-                           G_CALLBACK(on_way_button_press), appdata.iconbar);
+                           G_CALLBACK(on_way_button_press), iconbar->menu);
 #endif
 
-  gtk_box_pack_start(GTK_BOX(box), iconbar->toolbar, TRUE, TRUE, 0);
+  gtk_box_pack_start(box, GTK_WIDGET(iconbar->toolbar), TRUE, TRUE, 0);
 
   /* -------------------------------------------------------- */
 
@@ -369,7 +367,7 @@ GtkWidget *iconbar_t::create(appdata_t &appdata) {
 
   iconbar->ok = icon_add(hbox, appdata, TOOL_ICON("ok"), map_action_ok);
   iconbar->cancel = icon_add(hbox, appdata, TOOL_ICON("cancel"), map_action_cancel);
-  gtk_box_pack_end(GTK_BOX(box), hbox, FALSE, FALSE, 0);
+  gtk_box_pack_end(box, hbox, FALSE, FALSE, 0);
   iconbar->map_cancel_ok(false, false);
 #endif
 
@@ -377,7 +375,7 @@ GtkWidget *iconbar_t::create(appdata_t &appdata) {
 
   iconbar->map_item_selected(object_t());
 
-  return box;
+  return GTK_WIDGET(box);
 }
 
 #if defined(FINGER_UI)
