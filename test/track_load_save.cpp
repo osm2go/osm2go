@@ -32,12 +32,8 @@ int main(int argc, char **argv)
 
   g_assert_nonnull(ogpx);
   g_assert_nonnull(ngpx);
-  g_assert_cmpuint(g_mapped_file_get_length(ogpx), ==,
-                   g_mapped_file_get_length(ngpx));
-
-  g_assert_cmpint(memcmp(g_mapped_file_get_contents(ogpx),
-                         g_mapped_file_get_contents(ngpx),
-                         g_mapped_file_get_length(ogpx)), ==, 0);
+  g_assert_cmpmem(g_mapped_file_get_contents(ogpx), g_mapped_file_get_length(ogpx),
+                  g_mapped_file_get_contents(ngpx), g_mapped_file_get_length(ngpx));
 
 #if GLIB_CHECK_VERSION(2,22,0)
   g_mapped_file_unref(ogpx);

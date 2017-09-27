@@ -116,9 +116,8 @@ static void compare_with_file(const void *buf, size_t len, const char *fn)
   g_assert_nonnull(fdata);
   g_assert_cmpuint(g_mapped_file_get_length(fdata), ==, len);
 
-  g_assert_cmpint(memcmp(g_mapped_file_get_contents(fdata),
-                         buf,
-                         g_mapped_file_get_length(fdata)), ==, 0);
+  g_assert_cmpmem(g_mapped_file_get_contents(fdata), g_mapped_file_get_length(fdata),
+                  buf, len);
 
 #if GLIB_CHECK_VERSION(2,22,0)
   g_mapped_file_unref(fdata);

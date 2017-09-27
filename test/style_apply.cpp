@@ -118,7 +118,7 @@ int main(int argc, char **argv)
   way_t w0;
   w0.draw.width = 3;
   w0.draw.color = 0x999999ff;
-  g_assert_cmpint(memcmp(&(way->draw), &(w0.draw), sizeof(w0.draw)), ==, 0);
+  g_assert_cmpmem(&(way->draw), sizeof(way->draw), &(w0.draw), sizeof(w0.draw));
 
   // apply a way style (linemod)
   tags.clear();

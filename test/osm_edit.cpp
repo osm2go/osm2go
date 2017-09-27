@@ -634,12 +634,12 @@ static void test_changeset()
                              "</osm>\n";
   xmlChar *cs = osm_generate_xml_changeset("<&>", std::string());
 
-  g_assert_cmpint(memcmp(cs, message, strlen(message)), ==, 0);
+  g_assert_cmpstr(reinterpret_cast<char *>(cs), ==, message);
   xmlFree(cs);
 
   cs = osm_generate_xml_changeset("testcase comment", "survey");
 
-  g_assert_cmpint(memcmp(cs, message_src, strlen(message_src)), ==, 0);
+  g_assert_cmpstr(reinterpret_cast<char *>(cs), ==, message_src);
   xmlFree(cs);
 }
 
