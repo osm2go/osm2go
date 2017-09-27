@@ -41,6 +41,7 @@
 
 #include <cmath>
 #include <cstring>
+#include <limits>
 
 #include "osm2go_stl.h"
 
@@ -62,11 +63,11 @@ canvas_t::canvas_t(GtkWidget *w)
 /* remove item_info from chain as its visual representation */
 /* has been destroyed */
 template<typename T>
-void item_info_destroy(gpointer data) {
+void item_info_destroy(void *data) {
   delete static_cast<T *>(data);
 }
 
-canvas_item_info_t::canvas_item_info_t(canvas_item_type_t t, canvas_t *cv, canvas_group_t g, canvas_item_t *it, void(*deleter)(gpointer))
+canvas_item_info_t::canvas_item_info_t(canvas_item_type_t t, canvas_t *cv, canvas_group_t g, canvas_item_t *it, void (*deleter)(void *))
   : canvas(cv)
   , type(t)
   , group(g)
@@ -107,8 +108,8 @@ canvas_item_info_poly::canvas_item_info_poly(canvas_t* cv, canvas_group_t g, can
   , num_points(canvas_points_num(cpoints))
   , points(new lpos_t[num_points])
 {
-  bbox.top_left.x = bbox.top_left.y = G_MAXINT;
-  bbox.bottom_right.x = bbox.bottom_right.y = G_MININT;
+  bbox.top_left.x = bbox.top_left.y = std::numeric_limits<typeof(bbox.top_left.y)>::max();
+  bbox.bottom_right.x = bbox.bottom_right.y = std::numeric_limits<typeof(bbox.bottom_right.y)>::min();
 
   for(unsigned int i = 0; i < num_points; i++) {
     canvas_point_get_lpos(cpoints, i, points[i]);
@@ -170,7 +171,7 @@ void canvas_t::item_info_push(canvas_item_t *item) {
 
 /* check whether a given point is inside a polygon */
 /* inpoly() taken from http://www.visibone.com/inpoly/ */
-static bool inpoly(const canvas_item_info_poly *poly, gint x, gint y) {
+static bool inpoly(const canvas_item_info_poly *poly, int x, int y) {
   int xold, yold;
 
   if(poly->num_points < 3)
@@ -208,9 +209,9 @@ static bool inpoly(const canvas_item_info_poly *poly, gint x, gint y) {
 
 
 /* get the polygon/polyway segment a certain coordinate is over */
-static gint canvas_item_info_get_segment(canvas_item_info_poly *item,
-					 gint x, gint y, gint fuzziness) {
-  gint retval = -1;
+static int canvas_item_info_get_segment(canvas_item_info_poly *item,
+                                        int x, int y, int fuzziness) {
+  int retval = -1;
   float mindist = 1000000.0;
   for(unsigned int i = 0; i < item->num_points - 1; i++) {
 
@@ -218,8 +219,8 @@ static gint canvas_item_info_get_segment(canvas_item_info_poly *item,
 #define AY (item->points[i].y)
 #define BX (item->points[i+1].x)
 #define BY (item->points[i+1].y)
-#define CX ((double)x)
-#define CY ((double)y)
+#define CX static_cast<double>(x)
+#define CY static_cast<double>(y)
 
     float len2 = pow(BY-AY,2)+pow(BX-AX,2);
     float m = ((CX-AX)*(BX-AX)+(CY-AY)*(BY-AY)) / len2;
@@ -256,7 +257,7 @@ canvas_item_t *canvas_t::get_item_at(int x, int y) const {
   printf("************ searching at %d %d *****************\n", x, y);
 
   /* convert all "fuzziness" into meters */
-  gint fuzziness = EXTRA_FUZZINESS_METER +
+  int fuzziness = EXTRA_FUZZINESS_METER +
     EXTRA_FUZZINESS_PIXEL / get_zoom();
 
   /* search from top to bottom */
@@ -275,8 +276,8 @@ canvas_item_t *canvas_t::get_item_at(int x, int y) const {
            (x <= circle->center.x + radius + fuzziness) &&
            (y <= circle->center.y + radius + fuzziness)) {
 
-          gint xdist = circle->center.x - x;
-          gint ydist = circle->center.y - y;
+          int xdist = circle->center.x - x;
+          int ydist = circle->center.y - y;
           if(xdist * xdist + ydist * ydist < (radius + fuzziness) * (radius + fuzziness)) {
             printf("circle item %p at %d/%d(%u)\n", item,
                    circle->center.x, circle->center.y, circle->r);
