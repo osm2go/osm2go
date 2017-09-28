@@ -492,8 +492,8 @@ cb_menu_track_export(appdata_t *appdata) {
 
         g_assert_nonnull(appdata->track.track);
         track_export(appdata->track.track, filename);
-        g_free(filename);
       }
+      g_free(filename);
     }
   }
 
