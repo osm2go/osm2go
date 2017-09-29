@@ -43,14 +43,14 @@ void map_hl_cursor_draw(map_t *map, lpos_t pos, unsigned int radius) {
 /* special highlight for segments. use when cutting ways */
 void map_hl_segment_draw(map_t *map, unsigned int width,
                          int x0, int y0, int x1, int y1) {
-  canvas_points_t *points = canvas_points_new(2);
+  canvas_points_t *points = canvas_points_t::create(2);
 
   points->coords[0] = x0; points->coords[1] = y0;
   points->coords[2] = x1; points->coords[3] = y1;
 
   map->cursor = map->canvas->polyline_new(CANVAS_GROUP_DRAW,
 		    points, width, map->style->highlight.node_color);
-  canvas_points_free(points);
+  points->free();
 }
 
 void map_hl_cursor_clear(map_t *map) {

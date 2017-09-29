@@ -143,7 +143,7 @@ struct set_point_pos {
   unsigned int node;
   explicit set_point_pos(canvas_points_t *p) : points(p), node(0) {}
   void operator()(const node_t *n) {
-    canvas_point_set_pos(points, node++, n->lpos);
+    points->set_pos(node++, n->lpos);
   }
 };
 
@@ -162,7 +162,7 @@ points_from_node_chain(const way_t *way)
     return O2G_NULLPTR;
 
   /* allocate space for nodes */
-  canvas_points_t *points = canvas_points_new(nodes);
+  canvas_points_t *points = canvas_points_t::create(nodes);
 
   std::for_each(way->node_chain.begin(), way->node_chain.end(),
                 set_point_pos(points));
@@ -204,7 +204,7 @@ void draw_selected_way_functor::operator()(node_t* node)
       diff.x /= len;
       diff.y /= len;
 
-      canvas_points_t *points = canvas_points_new(4);
+      canvas_points_t *points = canvas_points_t::create(4);
       points->coords[2 * 0 + 0] = points->coords[2 * 3 + 0] = center.x + diff.x;
       points->coords[2 * 0 + 1] = points->coords[2 * 3 + 1] = center.y + diff.y;
       points->coords[2 * 1 + 0] = center.x + diff.y - diff.x;
@@ -215,7 +215,7 @@ void draw_selected_way_functor::operator()(node_t* node)
       map_hl_polygon_new(map, CANVAS_GROUP_WAYS_DIR, new_map_item,
                          points, map->style->highlight.arrow_color);
 
-      canvas_points_free(points);
+      points->free();
     }
   }
 
@@ -268,7 +268,7 @@ void map_t::select_way(way_t *way) {
                   2 * style->highlight.width + way->draw.width)
                  * state.detail, style->highlight.color);
 
-    canvas_points_free(points);
+    points->free();
   }
 }
 
@@ -309,7 +309,7 @@ void relation_select_functor::operator()(member_t& member)
                                      2 * map->style->highlight.width + way->draw.width,
                                    map->style->highlight.color);
 
-      canvas_points_free(points);
+      points->free();
     }
     break;
     }
@@ -518,7 +518,7 @@ void map_way_draw_functor::operator()(way_t *way)
       chain.push_back(map_way_new(map, CANVAS_GROUP_WAYS, way, points,
                                   width, way->draw.color, NO_COLOR));
     }
-    canvas_points_free(points);
+    points->free();
   }
 }
 
@@ -616,7 +616,7 @@ static void map_frisket_rectangle(canvas_points_t *points,
 /* Draw the frisket area which masks off areas it'd be unsafe to edit,
  * plus its inner edge marker line */
 static void map_frisket_draw(map_t *map, const bounds_t *bounds) {
-  canvas_points_t *points = canvas_points_new(5);
+  canvas_points_t *points = canvas_points_t::create(5);
 
   /* don't draw frisket at all if it's completely transparent */
   if(map->style->frisket.color & 0xff) {
@@ -662,7 +662,7 @@ static void map_frisket_draw(map_t *map, const bounds_t *bounds) {
 			map->style->frisket.border.color);
 
   }
-  canvas_points_free(points);
+  points->free();
 }
 
 static void free_map_item_chain(std::pair<item_id_t, visible_item_t *> pair) {
@@ -1842,12 +1842,12 @@ static bool __attribute__((warn_unused_result)) pointVisible(const bounds_t &bou
 static canvas_points_t *canvas_points_init(const bounds_t &bounds,
                                            std::vector<track_point_t>::const_iterator point,
                                            const gint count) {
-  canvas_points_t *points = canvas_points_new(count);
+  canvas_points_t *points = canvas_points_t::create(count);
   lpos_t lpos;
 
   for(gint i = 0; i < count; i++) {
     lpos = point->pos.toLpos(bounds);
-    canvas_point_set_pos(points, i, lpos);
+    points->set_pos(i, lpos);
     point++;
   }
 
@@ -1919,7 +1919,7 @@ void map_t::track_draw_seg(track_seg_t &seg) {
                                                style->track.width, style->track.color);
     seg.item_chain.push_back(item);
 
-    canvas_points_free(points);
+    points->free();
   }
 }
 
@@ -1992,7 +1992,7 @@ void map_t::track_update_seg(track_seg_t &seg) {
                                                style->track.width, style->track.color);
     seg.item_chain.push_back(item);
   }
-  canvas_points_free(points);
+  points->free();
 }
 
 struct map_track_seg_draw_functor {

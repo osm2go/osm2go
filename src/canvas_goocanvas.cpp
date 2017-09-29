@@ -229,26 +229,28 @@ canvas_item_t *canvas_t::circle_new(canvas_group_t group,
   return item;
 }
 
-canvas_points_t *canvas_points_new(unsigned int points) {
+canvas_points_t *canvas_points_t::create(unsigned int points) {
   return reinterpret_cast<canvas_points_t *>(goo_canvas_points_new(points));
 }
 
-void canvas_point_set_pos(canvas_points_t *points, unsigned int index, const lpos_t lpos) {
-  points->coords[2*index+0] = lpos.x;
-  points->coords[2*index+1] = lpos.y;
+void canvas_points_t::set_pos(unsigned int index, const lpos_t lpos) {
+  coords[2*index+0] = lpos.x;
+  coords[2*index+1] = lpos.y;
 }
 
-void canvas_points_free(canvas_points_t *points) {
-  goo_canvas_points_unref(reinterpret_cast<GooCanvasPoints *>(points));
+void canvas_points_t::free() {
+  goo_canvas_points_unref(reinterpret_cast<GooCanvasPoints *>(this));
 }
 
-unsigned int canvas_points_num(const canvas_points_t *points) {
-  return reinterpret_cast<const GooCanvasPoints *>(points)->num_points;
+unsigned int canvas_points_t::count() const {
+  return reinterpret_cast<const GooCanvasPoints *>(this)->num_points;
 }
 
-void canvas_point_get_lpos(const canvas_points_t *points, unsigned int index, lpos_t &lpos) {
-  lpos.x = points->coords[2 * index + 0];
-  lpos.y = points->coords[2 * index + 1];
+lpos_t canvas_points_t::get_lpos(unsigned int index) const {
+  lpos_t lpos;
+  lpos.x = coords[2 * index + 0];
+  lpos.y = coords[2 * index + 1];
+  return lpos;
 }
 
 canvas_item_t *canvas_t::polyline_new(canvas_group_t group, canvas_points_t *points,
@@ -426,7 +428,7 @@ int canvas_item_get_segment(canvas_item_t *item, lpos_t pos) {
 
   gint retval = -1, i;
   double mindist = 100;
-  const int max = canvas_points_num(points);
+  const int max = points->count();
   for(i = 0; i < max - 1; i++) {
 
 #define AX (points->coords[2*i+0])
@@ -473,7 +475,7 @@ void canvas_item_get_segment_pos(canvas_item_t *item, int seg,
   g_object_get(G_OBJECT(item), "points", &points, O2G_NULLPTR);
 
   g_assert_nonnull(points);
-  g_assert_cmpint(seg, <, canvas_points_num(points) - 1);
+  g_assert_cmpint(seg, <, points->count() - 1);
 
   x0 = points->coords[2 * seg + 0];
   y0 = points->coords[2 * seg + 1];

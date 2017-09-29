@@ -76,6 +76,12 @@ class canvas_points_t {
   canvas_points_t &operator=(const canvas_points_t &) O2G_DELETED_FUNCTION;
 public:
   double *coords;
+
+  static canvas_points_t *create(unsigned int points);
+  void set_pos(unsigned int index, const lpos_t lpos);
+  void free();
+  unsigned int count() const;
+  lpos_t get_lpos(unsigned int index) const;
 };
 
 struct canvas_dimensions {
@@ -170,14 +176,8 @@ public:
   lpos_t *points;
 };
 
-void canvas_point_set_pos(canvas_points_t *points, unsigned int index, const lpos_t lpos);
 void canvas_item_get_segment_pos(canvas_item_t *item, int seg,
                                  int &x0, int &y0, int &x1, int &y1);
-
-canvas_points_t *canvas_points_new(unsigned int points);
-void canvas_points_free(canvas_points_t *points);
-unsigned int canvas_points_num(const canvas_points_t *points);
-void canvas_point_get_lpos(const canvas_points_t *points, unsigned int index, lpos_t &lpos);
 void canvas_item_destroy(canvas_item_t *item);
 
 /****** manipulating items ******/
