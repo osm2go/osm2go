@@ -478,7 +478,7 @@ canvas_points_t *canvas_item_get_segment(const canvas_item_t *item, unsigned int
 
   canvas_points_t *ret = canvas_points_t::create(2);
 
-  memcpy(ret->coords, points->coords + 2 * seg, sizeof(points->coords) * 4);
+  memcpy(ret->coords, points->coords + 2 * seg, sizeof(*points->coords) * 4);
 
   return ret;
 }
