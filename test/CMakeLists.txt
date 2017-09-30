@@ -48,6 +48,7 @@ if (DPKG_PARSECHANGELOG)
 	set_property(TEST parsechangelog PROPERTY FAIL_REGULAR_EXPRESSION ": warning:")
 endif ()
 
+osm_test(canvas_points)
 osm_test(fdguard)
 
 add_executable(suppression-dummy suppression-dummy.cpp)
