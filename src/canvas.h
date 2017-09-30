@@ -74,8 +74,11 @@ class canvas_item_info_t;
 class canvas_points_t {
   canvas_points_t() O2G_DELETED_FUNCTION;
   canvas_points_t &operator=(const canvas_points_t &) O2G_DELETED_FUNCTION;
+protected:
+  double *points;
 public:
-  double *coords;
+  inline double *coords() { return points; }
+  inline const double *coords() const { return points; }
 
   static canvas_points_t *create(unsigned int points);
   void set_pos(unsigned int index, const lpos_t lpos);

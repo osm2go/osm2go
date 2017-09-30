@@ -205,12 +205,12 @@ void draw_selected_way_functor::operator()(node_t* node)
       diff.y /= len;
 
       canvas_points_t *points = canvas_points_t::create(4);
-      points->coords[2 * 0 + 0] = points->coords[2 * 3 + 0] = center.x + diff.x;
-      points->coords[2 * 0 + 1] = points->coords[2 * 3 + 1] = center.y + diff.y;
-      points->coords[2 * 1 + 0] = center.x + diff.y - diff.x;
-      points->coords[2 * 1 + 1] = center.y - diff.x - diff.y;
-      points->coords[2 * 2 + 0] = center.x - diff.y - diff.x;
-      points->coords[2 * 2 + 1] = center.y + diff.x - diff.y;
+      points->coords()[2 * 0 + 0] = points->coords()[2 * 3 + 0] = center.x + diff.x;
+      points->coords()[2 * 0 + 1] = points->coords()[2 * 3 + 1] = center.y + diff.y;
+      points->coords()[2 * 1 + 0] = center.x + diff.y - diff.x;
+      points->coords()[2 * 1 + 1] = center.y - diff.x - diff.y;
+      points->coords()[2 * 2 + 0] = center.x - diff.y - diff.x;
+      points->coords()[2 * 2 + 1] = center.y + diff.x - diff.y;
 
       map_hl_polygon_new(map, CANVAS_GROUP_WAYS_DIR, new_map_item,
                          points, map->style->highlight.arrow_color);
@@ -607,10 +607,10 @@ void map_t::redraw_item(object_t object) {
 
 static void map_frisket_rectangle(canvas_points_t *points,
                                   int x0, int x1, int y0, int y1) {
-  points->coords[2*0+0] = points->coords[2*3+0] = points->coords[2*4+0] = x0;
-  points->coords[2*1+0] = points->coords[2*2+0] = x1;
-  points->coords[2*0+1] = points->coords[2*1+1] = points->coords[2*4+1] = y0;
-  points->coords[2*2+1] = points->coords[2*3+1] = y1;
+  points->coords()[2*0+0] = points->coords()[2*3+0] = points->coords()[2*4+0] = x0;
+  points->coords()[2*1+0] = points->coords()[2*2+0] = x1;
+  points->coords()[2*0+1] = points->coords()[2*1+1] = points->coords()[2*4+1] = y0;
+  points->coords()[2*2+1] = points->coords()[2*3+1] = y1;
 }
 
 /* Draw the frisket area which masks off areas it'd be unsafe to edit,

@@ -37,25 +37,21 @@ namespace std {
 
 #if __cplusplus >= 201103L
 #include <type_traits>
-static_assert(std::is_same<decltype(canvas_points_t::coords), decltype(GooCanvasPoints::coords)>::value,
-              "coordinate type mismatch");
-static_assert(offsetof(canvas_points_t, coords) == offsetof(GooCanvasPoints, coords),
-              "coordinate offset mismatch");
 #else
-struct coord_check {
-  inline void operator()(canvas_points_t &cp) {
+class coord_check : public canvas_points_t {
+  inline void operator()(canvas_points_t *cp) {
     GooCanvasPoints gp;
-    typeof(gp.coords) &gco = cp.coords;
-    typeof(cp.coords) &cco = gp.coords;
+    typeof(gp.coords) &gco = static_cast<coord_check *>(cp)->points;
+    typeof(points) cco = gp.coords;
     std::swap(gco, cco);
 
     // canvas_points_t is non-POD, but standard layout
     // the old gcc doesn't support offsetof here
     static_assert(offsetof(GooCanvasPoints, coords) == 0,
                   "coordinate offset mismatch");
-    static_assert(sizeof(static_cast<canvas_points_t *>(O2G_NULLPTR)->coords) == sizeof(void *),
+    static_assert(sizeof(static_cast<coord_check *>(O2G_NULLPTR)->points) == sizeof(void *),
                   "coordinate size mismatch");
-    static_assert(sizeof(canvas_points_t) == sizeof(void *),
+    static_assert(sizeof(coord_check) == sizeof(void *),
                   "coordinate offset mismatch");
   }
 };
@@ -230,12 +226,18 @@ canvas_item_t *canvas_t::circle_new(canvas_group_t group,
 }
 
 canvas_points_t *canvas_points_t::create(unsigned int points) {
+#if __cplusplus >= 201103L
+  static_assert(std::is_same<decltype(canvas_points_t::points), decltype(GooCanvasPoints::coords)>::value,
+                "coordinate type mismatch");
+  static_assert(offsetof(canvas_points_t, points) == offsetof(GooCanvasPoints, coords),
+                "coordinate offset mismatch");
+#endif
   return reinterpret_cast<canvas_points_t *>(goo_canvas_points_new(points));
 }
 
 void canvas_points_t::set_pos(unsigned int index, const lpos_t lpos) {
-  coords[2*index+0] = lpos.x;
-  coords[2*index+1] = lpos.y;
+  coords()[2*index+0] = lpos.x;
+  coords()[2*index+1] = lpos.y;
 }
 
 void canvas_points_t::free() {
@@ -248,8 +250,8 @@ unsigned int canvas_points_t::count() const {
 
 lpos_t canvas_points_t::get_lpos(unsigned int index) const {
   lpos_t lpos;
-  lpos.x = coords[2 * index + 0];
-  lpos.y = coords[2 * index + 1];
+  lpos.x = coords()[2 * index + 0];
+  lpos.y = coords()[2 * index + 1];
   return lpos;
 }
 
@@ -431,10 +433,10 @@ int canvas_item_get_segment(canvas_item_t *item, lpos_t pos) {
   const int max = points->count();
   for(i = 0; i < max - 1; i++) {
 
-#define AX (points->coords[2*i+0])
-#define AY (points->coords[2*i+1])
-#define BX (points->coords[2*i+2])
-#define BY (points->coords[2*i+3])
+#define AX (points->coords()[2*i+0])
+#define AY (points->coords()[2*i+1])
+#define BX (points->coords()[2*i+2])
+#define BY (points->coords()[2*i+3])
 #define CX static_cast<double>(pos.x)
 #define CY static_cast<double>(pos.y)
 
@@ -478,7 +480,7 @@ canvas_points_t *canvas_item_get_segment(const canvas_item_t *item, unsigned int
 
   canvas_points_t *ret = canvas_points_t::create(2);
 
-  memcpy(ret->coords, points->coords + 2 * seg, sizeof(*points->coords) * 4);
+  memcpy(ret->coords(), points->coords() + 2 * seg, sizeof(*points->coords()) * 4);
 
   return ret;
 }
