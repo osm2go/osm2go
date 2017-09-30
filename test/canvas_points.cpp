@@ -20,14 +20,14 @@ bool testSegment()
 
   points->free();
 
-  int i, j, k, l;
+  canvas_points_t * const seg = canvas_item_get_segment(line, 1);
+  g_assert_nonnull(seg);
+  g_assert_cmpint(seg->coords[0] , ==, 4);
+  g_assert_cmpint(seg->coords[1] , ==, 8);
+  g_assert_cmpint(seg->coords[2] , ==, 16);
+  g_assert_cmpint(seg->coords[3] , ==, 32);
 
-  canvas_item_get_segment_pos(line, 1, i, j, k, l);
-  g_assert_cmpint(i, ==, 4);
-  g_assert_cmpint(j, ==, 8);
-  g_assert_cmpint(k, ==, 16);
-  g_assert_cmpint(l, ==, 32);
-
+  seg->free();
   canvas_item_destroy(line);
   delete canvas;
 

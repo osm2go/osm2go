@@ -467,18 +467,18 @@ int canvas_item_get_segment(canvas_item_t *item, lpos_t pos) {
   return retval;
 }
 
-void canvas_item_get_segment_pos(canvas_item_t *item, int seg,
-                                 int &x0, int &y0, int &x1, int &y1) {
+canvas_points_t *canvas_item_get_segment(const canvas_item_t *item, unsigned int seg) {
   printf("get segment %d of item %p\n", seg, item);
 
   canvas_points_t *points = O2G_NULLPTR;
   g_object_get(G_OBJECT(item), "points", &points, O2G_NULLPTR);
 
   g_assert_nonnull(points);
-  g_assert_cmpint(seg, <, points->count() - 1);
+  g_assert_cmpuint(seg, <, points->count() - 1);
 
-  x0 = points->coords[2 * seg + 0];
-  y0 = points->coords[2 * seg + 1];
-  x1 = points->coords[2 * seg + 2];
-  y1 = points->coords[2 * seg + 3];
+  canvas_points_t *ret = canvas_points_t::create(2);
+
+  memcpy(ret->coords, points->coords + 2 * seg, sizeof(points->coords) * 4);
+
+  return ret;
 }

@@ -176,8 +176,7 @@ public:
   lpos_t *points;
 };
 
-void canvas_item_get_segment_pos(canvas_item_t *item, int seg,
-                                 int &x0, int &y0, int &x1, int &y1);
+canvas_points_t *canvas_item_get_segment(const canvas_item_t *item, unsigned int seg);
 void canvas_item_destroy(canvas_item_t *item);
 
 /****** manipulating items ******/

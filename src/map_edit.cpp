@@ -347,13 +347,10 @@ void map_edit_way_cut_highlight(map_t *map, map_item_t *item, int x, int y) {
     lpos_t pos = map->canvas->window2world(x, y);
     int seg = canvas_item_get_segment(item->item, pos);
     if(seg >= 0) {
-      int x0, y0, x1, y1;
-      canvas_item_get_segment_pos(item->item, seg, x0, y0, x1, y1);
-
       unsigned int width = (item->object.way->draw.flags & OSM_DRAW_FLAG_BG) ?
 	2*item->object.way->draw.bg.width:
 	3*item->object.way->draw.width;
-      map_hl_segment_draw(map, width, x0, y0, x1, y1);
+      map_hl_segment_draw(map, width, item->item, seg);
     }
   } else if(map->item_is_selected_node(item)) {
     /* cutting a way at its first or last node doesn't make much sense ... */
