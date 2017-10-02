@@ -32,13 +32,16 @@ bool pos_t::valid() const
 }
 
 void pos_lat_str(char *str, size_t len, pos_float_t latitude) {
-  if(std::isnan(latitude))
-    strcpy(str, "---");
-  else {
+  size_t offs;
+  if(std::isnan(latitude)) {
+    strncpy(str, "---", len);
+    offs = 3;
+  } else {
     snprintf(str, len-1, "%.5f", latitude);
     remove_trailing_zeroes(str);
+    offs = strlen(str);
   }
-  strcat(str, "°");
+  strncat(str + offs, "°", len - offs);
 }
 
 void pos_lon_str(char *str, size_t len, pos_float_t longitude) {
