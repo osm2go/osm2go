@@ -43,11 +43,11 @@ void map_hl_cursor_draw(map_t *map, lpos_t pos, unsigned int radius) {
 
 /* special highlight for segments. use when cutting ways */
 void map_hl_segment_draw(map_t *map, unsigned int width, const canvas_item_t *item, int seg) {
-  canvas_points_t *points = canvas_item_get_segment(item, seg);
+  std::unique_ptr<canvas_points_t> points(canvas_item_get_segment(item, seg));
 
   map->cursor = map->canvas->polyline_new(CANVAS_GROUP_DRAW,
-		    points, width, map->style->highlight.node_color);
-  delete points;
+                                          points.get(), width,
+                                          map->style->highlight.node_color);
 }
 
 void map_hl_cursor_clear(map_t *map) {

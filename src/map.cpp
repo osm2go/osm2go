@@ -204,7 +204,7 @@ void draw_selected_way_functor::operator()(node_t* node)
       diff.x /= len;
       diff.y /= len;
 
-      canvas_points_t *points = canvas_points_t::create(4);
+      std::unique_ptr<canvas_points_t> points(canvas_points_t::create(4));
       points->coords()[2 * 0 + 0] = points->coords()[2 * 3 + 0] = center.x + diff.x;
       points->coords()[2 * 0 + 1] = points->coords()[2 * 3 + 1] = center.y + diff.y;
       points->coords()[2 * 1 + 0] = center.x + diff.y - diff.x;
@@ -213,9 +213,7 @@ void draw_selected_way_functor::operator()(node_t* node)
       points->coords()[2 * 2 + 1] = center.y + diff.x - diff.y;
 
       map_hl_polygon_new(map, CANVAS_GROUP_WAYS_DIR, new_map_item,
-                         points, map->style->highlight.arrow_color);
-
-      delete points;
+                         points.get(), map->style->highlight.arrow_color);
     }
   }
 
@@ -256,19 +254,17 @@ void map_t::select_way(way_t *way) {
 
   /* a way needs at least 2 points to be drawn */
   g_assert(map_item->object.way == way);
-  canvas_points_t *points = points_from_node_chain(way);
-  if(points != O2G_NULLPTR) {
+  std::unique_ptr<canvas_points_t> points(points_from_node_chain(way));
+  if(points) {
     /* create a copy of this map item and mark it as being a highlight */
     map_item_t *new_map_item = new map_item_t(*map_item);
     new_map_item->highlight = true;
 
-    map_hl_polyline_new(this, CANVAS_GROUP_WAYS_HL, new_map_item, points,
+    map_hl_polyline_new(this, CANVAS_GROUP_WAYS_HL, new_map_item, points.get(),
 		 ((way->draw.flags & OSM_DRAW_FLAG_BG)?
                   2 * style->highlight.width + way->draw.bg.width:
                   2 * style->highlight.width + way->draw.width)
                  * state.detail, style->highlight.color);
-
-    delete points;
   }
 }
 
@@ -297,19 +293,17 @@ void relation_select_functor::operator()(member_t& member)
   case WAY: {
     way_t *way = member.object.way;
     /* a way needs at least 2 points to be drawn */
-    canvas_points_t *points = points_from_node_chain(way);
-    if(points != O2G_NULLPTR) {
+    std::unique_ptr<canvas_points_t> points(points_from_node_chain(way));
+    if(points) {
       if(way->draw.flags & OSM_DRAW_FLAG_AREA)
-        item = map->canvas->polygon_new(CANVAS_GROUP_WAYS_HL, points, 0, 0,
+        item = map->canvas->polygon_new(CANVAS_GROUP_WAYS_HL, points.get(), 0, 0,
                                   map->style->highlight.color);
       else
-        item = map->canvas->polyline_new(CANVAS_GROUP_WAYS_HL, points,
+        item = map->canvas->polyline_new(CANVAS_GROUP_WAYS_HL, points.get(),
                                    (way->draw.flags & OSM_DRAW_FLAG_BG) ?
                                      2 * map->style->highlight.width + way->draw.bg.width :
                                      2 * map->style->highlight.width + way->draw.width,
                                    map->style->highlight.color);
-
-      delete points;
     }
     break;
     }
@@ -494,8 +488,8 @@ void map_way_draw_functor::operator()(way_t *way)
 
   /* allocate space for nodes */
   /* a way needs at least 2 points to be drawn */
-  canvas_points_t *points = points_from_node_chain(way);
-  if(points == O2G_NULLPTR) {
+  std::unique_ptr<canvas_points_t> points(points_from_node_chain(way));
+  if(!points) {
     /* draw a single dot where this single node is */
     chain.push_back(map_way_single_new(map, way, map->style->node.radius, 0,
                                        map->style->node.color, 0));
@@ -504,21 +498,20 @@ void map_way_draw_functor::operator()(way_t *way)
     float width = way->draw.width * map->state.detail;
 
     if(way->draw.flags & OSM_DRAW_FLAG_AREA) {
-      chain.push_back(map_way_new(map, CANVAS_GROUP_POLYGONS, way, points,
+      chain.push_back(map_way_new(map, CANVAS_GROUP_POLYGONS, way, points.get(),
                                   width, way->draw.color, way->draw.area.color));
     } else if(way->draw.flags & OSM_DRAW_FLAG_BG) {
-      chain.push_back(map_way_new(map, CANVAS_GROUP_WAYS_INT, way, points,
+      chain.push_back(map_way_new(map, CANVAS_GROUP_WAYS_INT, way, points.get(),
                                   width, way->draw.color, NO_COLOR));
 
-      chain.push_back(map_way_new(map, CANVAS_GROUP_WAYS_OL, way, points,
+      chain.push_back(map_way_new(map, CANVAS_GROUP_WAYS_OL, way, points.get(),
                                   way->draw.bg.width * map->state.detail,
                                   way->draw.bg.color, NO_COLOR));
 
     } else {
-      chain.push_back(map_way_new(map, CANVAS_GROUP_WAYS, way, points,
+      chain.push_back(map_way_new(map, CANVAS_GROUP_WAYS, way, points.get(),
                                   width, way->draw.color, NO_COLOR));
     }
-    delete points;
   }
 }
 
@@ -616,7 +609,7 @@ static void map_frisket_rectangle(canvas_points_t *points,
 /* Draw the frisket area which masks off areas it'd be unsafe to edit,
  * plus its inner edge marker line */
 static void map_frisket_draw(map_t *map, const bounds_t *bounds) {
-  canvas_points_t *points = canvas_points_t::create(5);
+  std::unique_ptr<canvas_points_t> points(canvas_points_t::create(5));
 
   /* don't draw frisket at all if it's completely transparent */
   if(map->style->frisket.color & 0xff) {
@@ -625,27 +618,27 @@ static void map_frisket_draw(map_t *map, const bounds_t *bounds) {
     float mult = map->style->frisket.mult;
 
     /* top rectangle */
-    map_frisket_rectangle(points, mult*bounds->min.x, mult*bounds->max.x,
+    map_frisket_rectangle(points.get(), mult*bounds->min.x, mult*bounds->max.x,
 			  mult*bounds->min.y, bounds->min.y);
-    map->canvas->polygon_new(CANVAS_GROUP_FRISKET, points,
+    map->canvas->polygon_new(CANVAS_GROUP_FRISKET, points.get(),
 		       1, NO_COLOR, color);
 
     /* bottom rectangle */
-    map_frisket_rectangle(points, mult*bounds->min.x, mult*bounds->max.x,
+    map_frisket_rectangle(points.get(), mult*bounds->min.x, mult*bounds->max.x,
 			  bounds->max.y, mult*bounds->max.y);
-    map->canvas->polygon_new(CANVAS_GROUP_FRISKET, points,
+    map->canvas->polygon_new(CANVAS_GROUP_FRISKET, points.get(),
 		       1, NO_COLOR, color);
 
     /* left rectangle */
-    map_frisket_rectangle(points, mult*bounds->min.x, bounds->min.x,
+    map_frisket_rectangle(points.get(), mult*bounds->min.x, bounds->min.x,
 			  mult*bounds->min.y, mult*bounds->max.y);
-    map->canvas->polygon_new(CANVAS_GROUP_FRISKET, points,
+    map->canvas->polygon_new(CANVAS_GROUP_FRISKET, points.get(),
 		       1, NO_COLOR, color);
 
     /* right rectangle */
-    map_frisket_rectangle(points, bounds->max.x, mult*bounds->max.x,
+    map_frisket_rectangle(points.get(), bounds->max.x, mult*bounds->max.x,
 			  mult*bounds->min.y, mult*bounds->max.y);
-    map->canvas->polygon_new(CANVAS_GROUP_FRISKET, points,
+    map->canvas->polygon_new(CANVAS_GROUP_FRISKET, points.get(),
 		       1, NO_COLOR, color);
 
   }
@@ -653,16 +646,15 @@ static void map_frisket_draw(map_t *map, const bounds_t *bounds) {
   if(map->style->frisket.border.present) {
     // Edge marker line
     int ew2 = map->style->frisket.border.width/2;
-    map_frisket_rectangle(points,
+    map_frisket_rectangle(points.get(),
 			  bounds->min.x-ew2, bounds->max.x+ew2,
 			  bounds->min.y-ew2, bounds->max.y+ew2);
 
-    map->canvas->polyline_new(CANVAS_GROUP_FRISKET, points,
+    map->canvas->polyline_new(CANVAS_GROUP_FRISKET, points.get(),
 			map->style->frisket.border.width,
 			map->style->frisket.border.color);
 
   }
-  delete points;
 }
 
 static void free_map_item_chain(std::pair<item_id_t, visible_item_t *> pair) {
@@ -1912,14 +1904,12 @@ void map_t::track_draw_seg(track_seg_t &seg) {
 
     /* allocate space for nodes */
     printf("visible are %d\n", visible);
-    canvas_points_t *points = canvas_points_init(bounds, it, visible);
+    std::unique_ptr<canvas_points_t> points(canvas_points_init(bounds, it, visible));
     it = tmp;
 
-    canvas_item_t *item = canvas->polyline_new(CANVAS_GROUP_TRACK, points,
+    canvas_item_t *item = canvas->polyline_new(CANVAS_GROUP_TRACK, points.get(),
                                                style->track.width, style->track.color);
     seg.item_chain.push_back(item);
-
-    delete points;
   }
 }
 
@@ -1971,7 +1961,7 @@ void map_t::track_update_seg(track_seg_t &seg) {
   if(lpos == lpos2)
     return;
 
-  canvas_points_t *points = canvas_points_init(bounds, begin, npoints);
+  std::unique_ptr<canvas_points_t> points(canvas_points_init(bounds, begin, npoints));
 
   if(second_last_is_visible) {
     /* there must be something already on the screen and there must */
@@ -1981,18 +1971,17 @@ void map_t::track_update_seg(track_seg_t &seg) {
     printf("second_last is visible -> updating last segment to %zu points\n", npoints);
 
     canvas_item_t *item = seg.item_chain.back();
-    canvas_item_set_points(item, points);
+    canvas_item_set_points(item, points.get());
   } else {
     g_assert(begin + 1 == last);
     g_assert_true(last_is_visible);
 
     printf("second last is invisible -> start new screen segment with %zu points\n", npoints);
 
-    canvas_item_t *item = canvas->polyline_new(CANVAS_GROUP_TRACK, points,
+    canvas_item_t *item = canvas->polyline_new(CANVAS_GROUP_TRACK, points.get(),
                                                style->track.width, style->track.color);
     seg.item_chain.push_back(item);
   }
-  delete points;
 }
 
 struct map_track_seg_draw_functor {
