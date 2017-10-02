@@ -77,12 +77,13 @@ class canvas_points_t {
 protected:
   double *points;
 public:
+  static void operator delete(void *ptr);
+
   inline double *coords() { return points; }
   inline const double *coords() const { return points; }
 
   static canvas_points_t *create(unsigned int points);
   void set_pos(unsigned int index, const lpos_t lpos);
-  void free();
   unsigned int count() const;
   lpos_t get_lpos(unsigned int index) const;
 };

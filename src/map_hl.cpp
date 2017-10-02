@@ -47,7 +47,7 @@ void map_hl_segment_draw(map_t *map, unsigned int width, const canvas_item_t *it
 
   map->cursor = map->canvas->polyline_new(CANVAS_GROUP_DRAW,
 		    points, width, map->style->highlight.node_color);
-  points->free();
+  delete points;
 }
 
 void map_hl_cursor_clear(map_t *map) {

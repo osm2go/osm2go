@@ -18,7 +18,7 @@ bool testSegment()
   canvas_item_t * const line = canvas->polyline_new(CANVAS_GROUP_WAYS, points, 1, 0);
   g_assert_nonnull(line);
 
-  points->free();
+  delete points;
 
   canvas_points_t * const seg = canvas_item_get_segment(line, 1);
   g_assert_nonnull(seg);
@@ -27,7 +27,7 @@ bool testSegment()
   g_assert_cmpint(seg->coords()[2] , ==, 16);
   g_assert_cmpint(seg->coords()[3] , ==, 32);
 
-  seg->free();
+  delete seg;
   canvas_item_destroy(line);
   delete canvas;
 

@@ -240,8 +240,8 @@ void canvas_points_t::set_pos(unsigned int index, const lpos_t lpos) {
   coords()[2*index+1] = lpos.y;
 }
 
-void canvas_points_t::free() {
-  goo_canvas_points_unref(reinterpret_cast<GooCanvasPoints *>(this));
+void canvas_points_t::operator delete(void *ptr) {
+  goo_canvas_points_unref(static_cast<GooCanvasPoints *>(ptr));
 }
 
 unsigned int canvas_points_t::count() const {

@@ -215,7 +215,7 @@ void draw_selected_way_functor::operator()(node_t* node)
       map_hl_polygon_new(map, CANVAS_GROUP_WAYS_DIR, new_map_item,
                          points, map->style->highlight.arrow_color);
 
-      points->free();
+      delete points;
     }
   }
 
@@ -268,7 +268,7 @@ void map_t::select_way(way_t *way) {
                   2 * style->highlight.width + way->draw.width)
                  * state.detail, style->highlight.color);
 
-    points->free();
+    delete points;
   }
 }
 
@@ -309,7 +309,7 @@ void relation_select_functor::operator()(member_t& member)
                                      2 * map->style->highlight.width + way->draw.width,
                                    map->style->highlight.color);
 
-      points->free();
+      delete points;
     }
     break;
     }
@@ -518,7 +518,7 @@ void map_way_draw_functor::operator()(way_t *way)
       chain.push_back(map_way_new(map, CANVAS_GROUP_WAYS, way, points,
                                   width, way->draw.color, NO_COLOR));
     }
-    points->free();
+    delete points;
   }
 }
 
@@ -662,7 +662,7 @@ static void map_frisket_draw(map_t *map, const bounds_t *bounds) {
 			map->style->frisket.border.color);
 
   }
-  points->free();
+  delete points;
 }
 
 static void free_map_item_chain(std::pair<item_id_t, visible_item_t *> pair) {
@@ -1919,7 +1919,7 @@ void map_t::track_draw_seg(track_seg_t &seg) {
                                                style->track.width, style->track.color);
     seg.item_chain.push_back(item);
 
-    points->free();
+    delete points;
   }
 }
 
@@ -1992,7 +1992,7 @@ void map_t::track_update_seg(track_seg_t &seg) {
                                                style->track.width, style->track.color);
     seg.item_chain.push_back(item);
   }
-  points->free();
+  delete points;
 }
 
 struct map_track_seg_draw_functor {
