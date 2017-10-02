@@ -16,21 +16,18 @@ bool testSegment()
   for (unsigned int i = 0; i < 8; i++)
     points->coords()[i] = 1 << i;
 
-  canvas_t * const canvas = canvas_t::create();
+  std::unique_ptr<canvas_t> canvas(canvas_t::create());
   g_assert_nonnull(canvas);
 
-  canvas_item_t * const line = canvas->polyline_new(CANVAS_GROUP_WAYS, points.get(), 1, 0);
+  std::unique_ptr<canvas_item_t> line(canvas->polyline_new(CANVAS_GROUP_WAYS, points.get(), 1, 0));
   g_assert_nonnull(line);
 
-  std::unique_ptr<canvas_points_t> seg(canvas_item_get_segment(line, 1));
+  std::unique_ptr<canvas_points_t> seg(line->get_segment(1));
   g_assert_true(seg);
   g_assert_cmpint(seg->coords()[0] , ==, 4);
   g_assert_cmpint(seg->coords()[1] , ==, 8);
   g_assert_cmpint(seg->coords()[2] , ==, 16);
   g_assert_cmpint(seg->coords()[3] , ==, 32);
-
-  canvas_item_destroy(line);
-  delete canvas;
 
   return ret;
 }
@@ -39,7 +36,7 @@ bool testInObject()
 {
   bool ret = true;
 
-  canvas_t * const canvas = canvas_t::create();
+  std::unique_ptr<canvas_t> canvas(canvas_t::create());
   g_assert_nonnull(canvas);
 
   std::unique_ptr<canvas_points_t> points(canvas_points_t::create(5));
@@ -56,11 +53,11 @@ bool testInObject()
   points->coords()[8] = points->coords()[0];
   points->coords()[9] = points->coords()[1];
 
-  canvas_item_t * const line = canvas->polygon_new(CANVAS_GROUP_WAYS, points.get(), 1, 0, 0);
+  std::unique_ptr<canvas_item_t> line(canvas->polygon_new(CANVAS_GROUP_WAYS, points.get(), 1, 0, 0));
   g_assert_nonnull(line);
 
   canvas_item_t *search = canvas->get_item_at(200, 200);
-  g_assert(line == search);
+  g_assert(line.get() == search);
 
   search = canvas->get_item_at(40, 50);
   g_assert_null(search);

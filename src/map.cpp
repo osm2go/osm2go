@@ -69,7 +69,7 @@ void map_outside_error(appdata_t &appdata) {
 }
 
 static inline void map_item_destroy_canvas_item(map_item_t *m) {
-  canvas_item_destroy(m->item);
+  delete m->item;
 }
 
 void map_item_chain_destroy(map_item_chain_t *&chainP) {
@@ -398,17 +398,16 @@ static void map_node_new(map_t *map, node_t *node, unsigned int radius,
 		      map->state.detail * map->style->icon.scale,
 		      map->state.detail * map->style->icon.scale);
 
-  canvas_item_set_zoom_max(map_item->item,
-			   node->zoom_max / (2 * map->state.detail));
+  map_item->item->set_zoom_max(node->zoom_max / (2 * map->state.detail));
 
   /* attach map_item to nodes map_item_chain */
   if(!node->map_item_chain)
     node->map_item_chain = new map_item_chain_t();
   node->map_item_chain->map_items.push_back(map_item);
 
-  canvas_item_set_user_data(map_item->item, map_item);
+  map_item->item->set_user_data(map_item);
 
-  canvas_item_destroy_connect(map_item->item, map_item_t::free, map_item);
+  map_item->item->destroy_connect(map_item_t::free, map_item);
 }
 
 /* in the rare case that a way consists of only one node, it is */
@@ -424,9 +423,9 @@ static map_item_t *map_way_single_new(map_t *map, way_t *way, gint radius,
 
   // TODO: decide: do we need canvas_item_set_zoom_max() here too?
 
-  canvas_item_set_user_data(map_item->item, map_item);
+  map_item->item->set_user_data(map_item);
 
-  canvas_item_destroy_connect(map_item->item, map_item_t::free, map_item);
+  map_item->item->destroy_connect(map_item_t::free, map_item);
 
   return map_item;
 }
@@ -447,17 +446,15 @@ static map_item_t *map_way_new(map_t *map, canvas_group_t group,
     map_item->item = map->canvas->polyline_new(group, points, width, color);
   }
 
-  canvas_item_set_zoom_max(map_item->item,
-			   way->zoom_max / (2 * map->state.detail));
+  map_item->item->set_zoom_max(way->zoom_max / (2 * map->state.detail));
 
   /* a ways outline itself is never dashed */
   if (group != CANVAS_GROUP_WAYS_OL && way->draw.dash_length_on > 0)
-    canvas_item_set_dashed(map_item->item, width,
-                           way->draw.dash_length_on, way->draw.dash_length_off);
+    map_item->item->set_dashed(width, way->draw.dash_length_on, way->draw.dash_length_off);
 
-  canvas_item_set_user_data(map_item->item, map_item);
+  map_item->item->set_user_data(map_item);
 
-  canvas_item_destroy_connect(map_item->item, map_item_t::free, map_item);
+  map_item->item->destroy_connect(map_item_t::free, map_item);
 
   return map_item;
 }
@@ -664,7 +661,8 @@ static void free_map_item_chain(std::pair<item_id_t, visible_item_t *> pair) {
 
 template<bool b> void free_track_item_chain(track_seg_t &seg) {
   if(b)
-    std::for_each(seg.item_chain.begin(), seg.item_chain.end(), canvas_item_destroy);
+    std::for_each(seg.item_chain.begin(), seg.item_chain.end(),
+                  std::default_delete<canvas_item_t>());
   seg.item_chain.clear();
 }
 
@@ -713,7 +711,7 @@ map_item_t *map_t::item_at(int x, int y) {
 
   printf("  there's an item (%p)\n", item);
 
-  map_item_t *map_item = static_cast<map_item_t *>(canvas_item_get_user_data(item));
+  map_item_t *map_item = static_cast<map_item_t *>(item->get_user_data());
 
   if(!map_item) {
     printf("  item has no user data!\n");
@@ -944,7 +942,7 @@ void map_t::set_zoom(double zoom, bool update_scroll_offsets) {
       radius *= GPS_RADIUS_LIMIT;
       radius /= zoom;
 
-      canvas_item_set_radius(appdata.track.gps_item, radius);
+      appdata.track.gps_item->set_radius(radius);
     }
   }
 }
@@ -1192,7 +1190,7 @@ static void map_bg_adjust(map_t *map, gint x, gint y) {
   y += map->appdata.osm->bounds->min.y + map->bg.offset.y -
     map->pen_down.at.y;
 
-  canvas_image_move(map->bg.item, x, y, map->bg.scale.x, map->bg.scale.y);
+  map->bg.item->image_move(x, y, map->bg.scale.x, map->bg.scale.y);
 }
 
 static void map_button_release(map_t *map, gint x, gint y) {
@@ -1225,7 +1223,7 @@ static void map_button_release(map_t *map, gint x, gint y) {
 	if(!map->selected.item) {
 	  printf("  item has no visible representation to push\n");
 	} else {
-	  canvas_item_to_bottom(map->selected.item);
+          map->selected.item->to_bottom();
 
 	  /* update clicked item, to correctly handle the click */
           map->pen_down_item();
@@ -1670,7 +1668,7 @@ void map_action_cancel(map_t *map) {
 
     gint x = map->appdata.osm->bounds->min.x + map->bg.offset.x;
     gint y = map->appdata.osm->bounds->min.y + map->bg.offset.y;
-    canvas_image_move(map->bg.item, x, y, map->bg.scale.x, map->bg.scale.y);
+    map->bg.item->image_move(x, y, map->bg.scale.x, map->bg.scale.y);
     break;
   }
 
@@ -1971,7 +1969,7 @@ void map_t::track_update_seg(track_seg_t &seg) {
     printf("second_last is visible -> updating last segment to %zu points\n", npoints);
 
     canvas_item_t *item = seg.item_chain.back();
-    canvas_item_set_points(item, points.get());
+    item->set_points(points.get());
   } else {
     g_assert(begin + 1 == last);
     g_assert_true(last_is_visible);
@@ -2048,7 +2046,7 @@ void map_t::track_pos(const lpos_t lpos) {
  */
 void map_track_remove_pos(appdata_t &appdata) {
   if(appdata.track.gps_item) {
-    canvas_item_destroy(appdata.track.gps_item);
+    delete appdata.track.gps_item;
     appdata.track.gps_item = O2G_NULLPTR;
   }
 }
@@ -2057,7 +2055,7 @@ void map_track_remove_pos(appdata_t &appdata) {
 
 void map_t::remove_bg_image() {
   if(bg.item) {
-    canvas_item_destroy(bg.item);
+    delete bg.item;
     bg.item = O2G_NULLPTR;
   }
 }
@@ -2093,7 +2091,7 @@ bool map_t::set_bg_image(const char *filename) {
   bg.item = canvas->image_new(CANVAS_GROUP_BG, bg.pix,
                               bounds->min.x, bounds->min.y, bg.scale.x, bg.scale.y);
 
-  canvas_item_destroy_connect(bg.item, map_bg_item_destroy_event, this);
+  bg.item->destroy_connect(map_bg_item_destroy_event, this);
 
   return true;
 }

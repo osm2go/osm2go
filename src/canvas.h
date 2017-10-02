@@ -68,7 +68,6 @@ typedef enum {
 #endif
 
 typedef unsigned int canvas_color_t;
-struct canvas_item_t;
 class canvas_item_info_t;
 
 class canvas_points_t {
@@ -86,6 +85,33 @@ public:
   void set_pos(unsigned int index, const lpos_t lpos);
   unsigned int count() const;
   lpos_t get_lpos(unsigned int index) const;
+};
+
+struct canvas_item_t {
+  canvas_item_t() O2G_DELETED_FUNCTION;
+  canvas_item_t &operator=(const canvas_item_t &) O2G_DELETED_FUNCTION;
+
+  static void operator delete(void *ptr);
+
+  canvas_points_t *get_segment(unsigned int seg) const;
+
+  /****** manipulating items ******/
+  void set_pos(lpos_t *lpos);
+  void set_radius(int radius);
+  void set_points(canvas_points_t *points);
+  void set_zoom_max(float zoom_max);
+  void set_dashed(unsigned int line_width, unsigned int dash_length_on,
+                  unsigned int dash_length_off);
+  void to_bottom();
+  void set_user_data(void *data);
+  void *get_user_data();
+  void destroy_connect(void (*c_handler)(void *), void *data);
+  void image_move(int x, int y, float hscale, float vscale);
+
+  /**
+  * @brief get the polygon/polyway segment a certain coordinate is over
+  */
+  int get_segment(lpos_t pos) const;
 };
 
 struct canvas_dimensions {
@@ -179,26 +205,5 @@ public:
   unsigned int width, num_points;
   lpos_t *points;
 };
-
-canvas_points_t *canvas_item_get_segment(const canvas_item_t *item, unsigned int seg);
-void canvas_item_destroy(canvas_item_t *item);
-
-/****** manipulating items ******/
-void canvas_item_set_pos(canvas_item_t *item, lpos_t *lpos);
-void canvas_item_set_radius(canvas_item_t *item, int radius);
-void canvas_item_set_points(canvas_item_t *item, canvas_points_t *points);
-void canvas_item_set_zoom_max(canvas_item_t *item, float zoom_max);
-void canvas_item_set_dashed(canvas_item_t *item, unsigned int line_width,
-                            unsigned int dash_length_on, unsigned int dash_length_off);
-void canvas_item_to_bottom(canvas_item_t *item);
-void canvas_item_set_user_data(canvas_item_t *item, void *data);
-void *canvas_item_get_user_data(canvas_item_t *item);
-void canvas_item_destroy_connect(canvas_item_t *item, void(*c_handler)(void *), void *data);
-void canvas_image_move(canvas_item_t *item, int x, int y,
-		       float hscale, float vscale);
-/**
- * @brief get the polygon/polyway segment a certain coordinate is over
- */
-int canvas_item_get_segment(canvas_item_t *item, lpos_t pos);
 
 #endif // CANVAS_H

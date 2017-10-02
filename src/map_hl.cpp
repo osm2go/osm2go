@@ -34,8 +34,7 @@ void map_hl_cursor_draw(map_t *map, int x, int y, unsigned int radius) {
 }
 
 void map_hl_cursor_draw(map_t *map, lpos_t pos, unsigned int radius) {
-  if(map->cursor)
-    canvas_item_destroy(map->cursor);
+  delete map->cursor;
 
   map->cursor = map->canvas->circle_new(CANVAS_GROUP_DRAW, pos.x, pos.y,
 		  radius, 0, map->style->highlight.node_color, NO_COLOR);
@@ -43,7 +42,7 @@ void map_hl_cursor_draw(map_t *map, lpos_t pos, unsigned int radius) {
 
 /* special highlight for segments. use when cutting ways */
 void map_hl_segment_draw(map_t *map, unsigned int width, const canvas_item_t *item, int seg) {
-  std::unique_ptr<canvas_points_t> points(canvas_item_get_segment(item, seg));
+  std::unique_ptr<canvas_points_t> points(item->get_segment(seg));
 
   map->cursor = map->canvas->polyline_new(CANVAS_GROUP_DRAW,
                                           points.get(), width,
@@ -52,32 +51,31 @@ void map_hl_segment_draw(map_t *map, unsigned int width, const canvas_item_t *it
 
 void map_hl_cursor_clear(map_t *map) {
   if(map->cursor) {
-    canvas_item_destroy(map->cursor);
+    delete map->cursor;
     map->cursor = O2G_NULLPTR;
   }
 }
 
 /* create a new item used for touched node */
 void map_hl_touchnode_draw(map_t *map, node_t *node) {
-  if(map->touchnode)
-    canvas_item_destroy(map->touchnode);
+  delete map->touchnode;
 
   map->touchnode = map->canvas->circle_new(CANVAS_GROUP_DRAW,
 		      node->lpos.x, node->lpos.y,
 		      2*map->style->node.radius, 0,
 		      map->style->highlight.touch_color, NO_COLOR);
 
-  canvas_item_set_user_data(map->touchnode, node);
+  map->touchnode->set_user_data(node);
 }
 
 node_t *map_hl_touchnode_get_node(map_t *map) {
   if(!map->touchnode) return O2G_NULLPTR;
-  return static_cast<node_t *>(canvas_item_get_user_data(map->touchnode));
+  return static_cast<node_t *>(map->touchnode->get_user_data());
 }
 
 void map_hl_touchnode_clear(map_t *map) {
   if(map->touchnode) {
-    canvas_item_destroy(map->touchnode);
+    delete map->touchnode;
     map->touchnode = O2G_NULLPTR;
   }
 }
@@ -89,7 +87,7 @@ void map_hl_remove(map_t *map) {
 
   map_highlight_t *hl = map->highlight;
   map->highlight = O2G_NULLPTR;
-  std::for_each(hl->items.begin(), hl->items.end(), canvas_item_destroy);
+  std::for_each(hl->items.begin(), hl->items.end(), std::default_delete<canvas_item_t>());
 
   delete hl;
 }
@@ -102,7 +100,7 @@ struct find_highlighted {
 
 bool find_highlighted::operator()(canvas_item_t* c)
 {
-  map_item_t *hl_item = static_cast<map_item_t *>(canvas_item_get_user_data(c));
+  map_item_t *hl_item = static_cast<map_item_t *>(c->get_user_data());
 
   return hl_item && hl_item->object == item->object;
 }
@@ -129,9 +127,9 @@ canvas_item_t *map_hl_circle_new(map_t *map, canvas_group_t group,
   map_item->item = map->canvas->circle_new(group, x, y, radius, 0, color, NO_COLOR);
   hl_add(map, map_item->item);
 
-  canvas_item_set_user_data(map_item->item, map_item);
+  map_item->item->set_user_data(map_item);
 
-  canvas_item_destroy_connect(map_item->item, map_item_t::free, map_item);
+  map_item->item->destroy_connect(map_item_t::free, map_item);
 
   return map_item->item;
 }
@@ -141,9 +139,9 @@ canvas_item_t *map_hl_polygon_new(map_t *map, canvas_group_t group, map_item_t *
   map_item->item = map->canvas->polygon_new(group, points, 0, 0, color);
   hl_add(map, map_item->item);
 
-  canvas_item_set_user_data(map_item->item, map_item);
+  map_item->item->set_user_data(map_item);
 
-  canvas_item_destroy_connect(map_item->item, map_item_t::free, map_item);
+  map_item->item->destroy_connect(map_item_t::free, map_item);
 
   return map_item->item;
 }
@@ -154,9 +152,9 @@ canvas_item_t *map_hl_polyline_new(map_t *map, canvas_group_t group, map_item_t 
   map_item->item = map->canvas->polyline_new(group, points, width, color);
   hl_add(map, map_item->item);
 
-  canvas_item_set_user_data(map_item->item, map_item);
+  map_item->item->set_user_data(map_item);
 
-  canvas_item_destroy_connect(map_item->item, map_item_t::free, map_item);
+  map_item->item->destroy_connect(map_item_t::free, map_item);
 
   return map_item->item;
 }

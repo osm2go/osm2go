@@ -75,7 +75,7 @@ canvas_item_info_t::canvas_item_info_t(canvas_item_type_t t, canvas_t *cv, canva
 {
   canvas->item_info[group].push_back(this);
 
-  canvas_item_destroy_connect(item, deleter, this);
+  item->destroy_connect(deleter, this);
 }
 
 canvas_item_info_t::~canvas_item_info_t()

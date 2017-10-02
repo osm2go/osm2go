@@ -1213,8 +1213,7 @@ void wms_import(appdata_t &appdata) {
 
   gint x = appdata.osm->bounds->min.x + appdata.map->bg.offset.x;
   gint y = appdata.osm->bounds->min.y + appdata.map->bg.offset.y;
-  canvas_image_move(appdata.map->bg.item, x, y,
-		    appdata.map->bg.scale.x, appdata.map->bg.scale.y);
+  appdata.map->bg.item->image_move(x, y, appdata.map->bg.scale.x, appdata.map->bg.scale.y);
 
   gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_WMS_CLEAR], TRUE);
   gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_WMS_ADJUST], TRUE);
@@ -1242,7 +1241,7 @@ void wms_load(appdata_t &appdata) {
       /* restore image to saved position */
       gint x = appdata.osm->bounds->min.x + appdata.map->bg.offset.x;
       gint y = appdata.osm->bounds->min.y + appdata.map->bg.offset.y;
-      canvas_image_move(appdata.map->bg.item, x, y,
+      appdata.map->bg.item->image_move(x, y,
 			appdata.map->bg.scale.x, appdata.map->bg.scale.y);
 
       gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_WMS_CLEAR], TRUE);

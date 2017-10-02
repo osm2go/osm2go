@@ -60,16 +60,8 @@ class coord_check : public canvas_points_t {
 // since struct _GooCanvasItem does not exist, but is defined as an interface type
 // in the GooCanvas headers define it here and inherit from it to get the internal
 // casting type save
-
-struct _GooCanvasItem {
-  inline canvas_item_t *toCanvas();
+struct _GooCanvasItem : public canvas_item_t {
 };
-struct canvas_item_t : _GooCanvasItem {};
-
-canvas_item_t *_GooCanvasItem::toCanvas()
-{
-  return static_cast<canvas_item_t *>(this);
-}
 
 struct canvas_goocanvas : public canvas_t {
   canvas_goocanvas();
@@ -217,7 +209,7 @@ canvas_item_t *canvas_t::circle_new(canvas_group_t group,
                            "line-width", static_cast<double>(border),
 			   "stroke-color-rgba", border_col,
 			   "fill-color-rgba", fill_col,
-                           O2G_NULLPTR)->toCanvas();
+                           O2G_NULLPTR);
 
   if(CANVAS_SELECTABLE & (1<<group))
     (void) new canvas_item_info_circle(this, group, item, x, y, radius + border);
@@ -264,7 +256,7 @@ canvas_item_t *canvas_t::polyline_new(canvas_group_t group, canvas_points_t *poi
 			    "stroke-color-rgba", color,
 			    "line-join", CAIRO_LINE_JOIN_ROUND,
 			    "line-cap", CAIRO_LINE_CAP_ROUND,
-                            O2G_NULLPTR)->toCanvas();
+                            O2G_NULLPTR);
 
   if(CANVAS_SELECTABLE & (1<<group))
     (void) new canvas_item_info_poly(this, group, item, FALSE, width, points);
@@ -282,7 +274,7 @@ canvas_item_t *canvas_t::polygon_new(canvas_group_t group, canvas_points_t *poin
 			    "fill-color-rgba", fill,
 			    "line-join", CAIRO_LINE_JOIN_ROUND,
 			    "line-cap", CAIRO_LINE_CAP_ROUND,
-                            O2G_NULLPTR)->toCanvas();
+                            O2G_NULLPTR);
 
   if(CANVAS_SELECTABLE & (1<<group))
     (void) new canvas_item_info_poly(this, group, item, TRUE, width, points);
@@ -293,10 +285,10 @@ canvas_item_t *canvas_t::polygon_new(canvas_group_t group, canvas_points_t *poin
 /* place the image in pix centered on x/y on the canvas */
 canvas_item_t *canvas_t::image_new(canvas_group_t group, GdkPixbuf *pix, int x,
                                    int y, float hscale, float vscale) {
-  canvas_item_t *item =
+  GooCanvasItem *item =
       goo_canvas_image_new(static_cast<canvas_goocanvas *>(this)->group[group],
                            pix, x / hscale - gdk_pixbuf_get_width(pix) / 2,
-                           y / vscale - gdk_pixbuf_get_height(pix) / 2, O2G_NULLPTR)->toCanvas();
+                           y / vscale - gdk_pixbuf_get_height(pix) / 2, O2G_NULLPTR);
   goo_canvas_item_scale(item, hscale, vscale);
 
   if(CANVAS_SELECTABLE & (1<<group)) {
@@ -307,42 +299,43 @@ canvas_item_t *canvas_t::image_new(canvas_group_t group, GdkPixbuf *pix, int x,
   return item;
 }
 
-void canvas_item_destroy(canvas_item_t *item) {
-  goo_canvas_item_remove(item);
+void canvas_item_t::operator delete(void *ptr) {
+  if(G_LIKELY(ptr != O2G_NULLPTR))
+    goo_canvas_item_remove(static_cast<GooCanvasItem *>(ptr));
 }
 
 /* ------------------------ accessing items ---------------------- */
 
-void canvas_item_set_points(canvas_item_t *item, canvas_points_t *points) {
-  g_object_set(G_OBJECT(item), "points", points, O2G_NULLPTR);
+void canvas_item_t::set_points(canvas_points_t *points) {
+  g_object_set(G_OBJECT(this), "points", points, O2G_NULLPTR);
 }
 
-void canvas_item_set_pos(canvas_item_t *item, lpos_t *lpos) {
-  g_object_set(G_OBJECT(item),
+void canvas_item_t::set_pos(lpos_t *lpos) {
+  g_object_set(G_OBJECT(this),
                "center-x", static_cast<gdouble>(lpos->x),
                "center-y", static_cast<gdouble>(lpos->y),
                O2G_NULLPTR);
 }
 
-void canvas_item_set_radius(canvas_item_t *item, int radius) {
-  g_object_set(G_OBJECT(item),
+void canvas_item_t::set_radius(int radius) {
+  g_object_set(G_OBJECT(this),
                "radius-x", static_cast<gdouble>(radius),
                "radius-y", static_cast<gdouble>(radius),
                O2G_NULLPTR);
 }
 
-void canvas_item_to_bottom(canvas_item_t *item) {
-  GooCanvasItem *gitem = item;
+void canvas_item_t::to_bottom() {
+  GooCanvasItem *gitem = static_cast<GooCanvasItem *>(this);
   goo_canvas_item_lower(gitem, O2G_NULLPTR);
   canvas_t *canvas =
     static_cast<canvas_t *>(g_object_get_data(G_OBJECT(goo_canvas_item_get_canvas(gitem)),
                                               "canvas-pointer"));
 
   g_assert_nonnull(canvas);
-  canvas->item_info_push(item);
+  canvas->item_info_push(this);
 }
 
-void canvas_item_set_zoom_max(canvas_item_t *item, float zoom_max) {
+void canvas_item_t::set_zoom_max(float zoom_max) {
   gdouble vis_thres = zoom_max;
   GooCanvasItemVisibility vis
     = GOO_CANVAS_ITEM_VISIBLE_ABOVE_THRESHOLD;
@@ -350,14 +343,14 @@ void canvas_item_set_zoom_max(canvas_item_t *item, float zoom_max) {
     vis_thres = 0;
     vis = GOO_CANVAS_ITEM_VISIBLE;
   }
-  g_object_set(G_OBJECT(item),
+  g_object_set(G_OBJECT(this),
                "visibility", vis,
                "visibility-threshold", vis_thres,
                O2G_NULLPTR);
 }
 
-void canvas_item_set_dashed(canvas_item_t *item, unsigned int line_width,
-                            unsigned int dash_length_on, guint dash_length_off) {
+void canvas_item_t::set_dashed(unsigned int line_width, unsigned int dash_length_on,
+                               unsigned int dash_length_off) {
   GooCanvasLineDash *dash;
   gfloat off_len = dash_length_off;
   gfloat on_len = dash_length_on;
@@ -366,19 +359,19 @@ void canvas_item_set_dashed(canvas_item_t *item, unsigned int line_width,
     cap = CAIRO_LINE_CAP_ROUND;
 
   dash = goo_canvas_line_dash_new(2, on_len, off_len, 0);
-  g_object_set(G_OBJECT(item),
+  g_object_set(G_OBJECT(this),
                "line-dash", dash,
                "line-cap", cap,
                O2G_NULLPTR);
   goo_canvas_line_dash_unref(dash);
 }
 
-void canvas_item_set_user_data(canvas_item_t *item, void *data) {
-  g_object_set_data(G_OBJECT(item), "user data", data);
+void canvas_item_t::set_user_data(void *data) {
+  g_object_set_data(G_OBJECT(this), "user data", data);
 }
 
-void *canvas_item_get_user_data(canvas_item_t *item) {
-  return g_object_get_data(G_OBJECT(item), "user data");
+void *canvas_item_t::get_user_data() {
+  return g_object_get_data(G_OBJECT(this), "user data");
 }
 
 class weak_t {
@@ -401,27 +394,24 @@ static void canvas_item_weak_notify(gpointer data, GObject *) {
   delete static_cast<weak_t *>(data);
 }
 
-void canvas_item_destroy_connect(canvas_item_t *item, void(*c_handler)(void *),
-                                 void *data) {
-  g_object_weak_ref(G_OBJECT(item), canvas_item_weak_notify,
+void canvas_item_t::destroy_connect(void (*c_handler)(void *), void *data) {
+  g_object_weak_ref(G_OBJECT(this), canvas_item_weak_notify,
                     new weak_t(c_handler, data));
 }
 
-void canvas_image_move(canvas_item_t *item, gint x, gint y,
-		       float hscale, float vscale) {
+void canvas_item_t::image_move(gint x, gint y, float hscale, float vscale) {
 
-  g_object_set(G_OBJECT(item),
+  g_object_set(G_OBJECT(this),
                "x", static_cast<gdouble>(x) / hscale,
                "y", static_cast<gdouble>(y) / vscale,
                O2G_NULLPTR);
 }
 
-int canvas_item_get_segment(canvas_item_t *item, lpos_t pos) {
-
+int canvas_item_t::get_segment(lpos_t pos) const {
   canvas_points_t *points = O2G_NULLPTR;
   double line_width = 0;
 
-  g_object_get(G_OBJECT(item),
+  g_object_get(G_OBJECT(this),
 	       "points", &points,
 	       "line-width", &line_width,
                O2G_NULLPTR);
@@ -469,11 +459,11 @@ int canvas_item_get_segment(canvas_item_t *item, lpos_t pos) {
   return retval;
 }
 
-canvas_points_t *canvas_item_get_segment(const canvas_item_t *item, unsigned int seg) {
-  printf("get segment %d of item %p\n", seg, item);
+canvas_points_t *canvas_item_t::get_segment(unsigned int seg) const {
+  printf("get segment %d of item %p\n", seg, this);
 
   canvas_points_t *points = O2G_NULLPTR;
-  g_object_get(G_OBJECT(item), "points", &points, O2G_NULLPTR);
+  g_object_get(G_OBJECT(this), "points", &points, O2G_NULLPTR);
 
   g_assert_nonnull(points);
   g_assert_cmpuint(seg, <, points->count() - 1);
