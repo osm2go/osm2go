@@ -93,8 +93,6 @@ struct canvas_item_t {
 
   static void operator delete(void *ptr);
 
-  canvas_points_t *get_segment(unsigned int seg) const;
-
   /****** manipulating items ******/
   void set_pos(lpos_t *lpos);
   void set_radius(int radius);
@@ -111,7 +109,7 @@ struct canvas_item_t {
   /**
   * @brief get the polygon/polyway segment a certain coordinate is over
   */
-  int get_segment(lpos_t pos) const;
+  int get_segment(lpos_t pos, double *coords = O2G_NULLPTR) const;
 };
 
 struct canvas_dimensions {

@@ -59,6 +59,6 @@ canvas_item_t *map_hl_polyline_new(map_t *map, canvas_group_t group, map_item_t 
 canvas_item_t *map_hl_polygon_new(map_t *map, canvas_group_t group, map_item_t *map_item,
 				   canvas_points_t *points, canvas_color_t color);
 
-void map_hl_segment_draw(map_t *map, unsigned int width, const canvas_item_t *item, int seg);
+void map_hl_segment_draw(map_t *map, unsigned int width, const double (&coords)[4]);
 
 #endif // MAP_HL_H

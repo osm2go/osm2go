@@ -407,7 +407,7 @@ void canvas_item_t::image_move(gint x, gint y, float hscale, float vscale) {
                O2G_NULLPTR);
 }
 
-int canvas_item_t::get_segment(lpos_t pos) const {
+int canvas_item_t::get_segment(lpos_t pos, double *coords) const {
   canvas_points_t *points = O2G_NULLPTR;
   double line_width = 0;
 
@@ -456,21 +456,9 @@ int canvas_item_t::get_segment(lpos_t pos) const {
   /* us from having to check the last->first connection for polygons */
   /* seperately */
 
+  // this code path is only used during way split, which is seldomly done
+  if(G_UNLIKELY(coords != O2G_NULLPTR && retval >= 0))
+    memcpy(coords, points->coords() + 2 * retval, 4 * sizeof(*coords));
+
   return retval;
-}
-
-canvas_points_t *canvas_item_t::get_segment(unsigned int seg) const {
-  printf("get segment %d of item %p\n", seg, this);
-
-  canvas_points_t *points = O2G_NULLPTR;
-  g_object_get(G_OBJECT(this), "points", &points, O2G_NULLPTR);
-
-  g_assert_nonnull(points);
-  g_assert_cmpuint(seg, <, points->count() - 1);
-
-  canvas_points_t *ret = canvas_points_t::create(2);
-
-  memcpy(ret->coords(), points->coords() + 2 * seg, sizeof(*points->coords()) * 4);
-
-  return ret;
 }

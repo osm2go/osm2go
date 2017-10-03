@@ -25,6 +25,7 @@
 #include "style.h"
 
 #include <algorithm>
+#include <cstring>
 
 #include <osm2go_cpp.h>
 
@@ -41,8 +42,9 @@ void map_hl_cursor_draw(map_t *map, lpos_t pos, unsigned int radius) {
 }
 
 /* special highlight for segments. use when cutting ways */
-void map_hl_segment_draw(map_t *map, unsigned int width, const canvas_item_t *item, int seg) {
-  std::unique_ptr<canvas_points_t> points(item->get_segment(seg));
+void map_hl_segment_draw(map_t *map, unsigned int width, const double (&coords)[4]) {
+  std::unique_ptr<canvas_points_t> points(canvas_points_t::create(2));
+  memcpy(points->coords(), coords, sizeof(coords));
 
   map->cursor = map->canvas->polyline_new(CANVAS_GROUP_DRAW,
                                           points.get(), width,
