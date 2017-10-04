@@ -35,6 +35,7 @@
  */
 
 #include "canvas.h"
+#include "canvas_p.h"
 
 #include "appdata.h"
 #include "misc.h"

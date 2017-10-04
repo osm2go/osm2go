@@ -18,6 +18,7 @@
  */
 
 #include "canvas.h"
+#include "canvas_p.h"
 
 #include "misc.h"
 

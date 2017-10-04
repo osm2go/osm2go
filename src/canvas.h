@@ -176,32 +176,4 @@ public:
   canvas_item_t * const item;   ///< reference to visual representation
 };
 
-class canvas_item_info_circle : public canvas_item_info_t {
-public:
-  canvas_item_info_circle(canvas_t *cv, canvas_group_t g, canvas_item_t *it,
-                          const int cx, const int cy, const unsigned int radius);
-
-  struct {
-    int x, y;
-  } center;
-  const unsigned int r;
-};
-
-class canvas_item_info_poly : public canvas_item_info_t {
-public:
-  canvas_item_info_poly(canvas_t *cv, canvas_group_t g, canvas_item_t *it, bool poly,
-                        unsigned int wd, canvas_points_t *cpoints);
-  ~canvas_item_info_poly();
-
-  struct {
-    struct {
-      int x,y;
-    } top_left, bottom_right;
-  } bbox;
-
-  bool is_polygon;
-  unsigned int width, num_points;
-  lpos_t *points;
-};
-
 #endif // CANVAS_H
