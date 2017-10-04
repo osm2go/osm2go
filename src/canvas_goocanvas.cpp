@@ -91,8 +91,7 @@ canvas_goocanvas::canvas_goocanvas()
   GooCanvasItem *root = goo_canvas_get_root_item(GOO_CANVAS(widget));
 
   /* create the groups */
-  int gr;
-  for(gr = 0; gr < CANVAS_GROUPS; gr++)
+  for(unsigned int gr = 0; gr < group.size(); gr++)
     group[gr] = goo_canvas_group_new(root, O2G_NULLPTR);
 
   g_signal_connect_swapped(GTK_OBJECT(widget), "destroy",
