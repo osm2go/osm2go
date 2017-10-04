@@ -422,10 +422,10 @@ int canvas_item_t::get_segment(lpos_t pos, double *coords) const {
 
   std::unique_ptr<canvas_points_t> cpoints(points);
 
-  gint retval = -1, i;
+  int retval = -1;
   double mindist = 100;
   const int max = cpoints->count();
-  for(i = 0; i < max - 1; i++) {
+  for(int i = 0; i < max - 1; i++) {
 
 #define AX (cpoints->coords()[2*i+0])
 #define AY (cpoints->coords()[2*i+1])

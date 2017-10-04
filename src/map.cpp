@@ -157,7 +157,7 @@ static canvas_points_t *
 points_from_node_chain(const way_t *way)
 {
   /* a way needs at least 2 points to be drawn */
-  guint nodes = way->node_chain.size();
+  unsigned int nodes = way->node_chain.size();
   if (nodes < 2)
     return O2G_NULLPTR;
 
@@ -412,9 +412,8 @@ static void map_node_new(map_t *map, node_t *node, unsigned int radius,
 
 /* in the rare case that a way consists of only one node, it is */
 /* drawn as a circle. This e.g. happens when drawing a new way */
-static map_item_t *map_way_single_new(map_t *map, way_t *way, gint radius,
-		   gint width, canvas_color_t fill, canvas_color_t border) {
-
+static map_item_t *map_way_single_new(map_t *map, way_t *way, unsigned int radius,
+                                      int width, canvas_color_t fill, canvas_color_t border) {
   map_item_t *map_item = new map_item_t(object_t(way));
 
   map_item->item = map->canvas->circle_new(CANVAS_GROUP_WAYS,
@@ -431,8 +430,8 @@ static map_item_t *map_way_single_new(map_t *map, way_t *way, gint radius,
 }
 
 static map_item_t *map_way_new(map_t *map, canvas_group_t group,
-	  way_t *way, canvas_points_t *points, gint width,
-	  canvas_color_t color, canvas_color_t fill_color) {
+                               way_t *way, canvas_points_t *points, unsigned int width,
+                               canvas_color_t color, canvas_color_t fill_color) {
   map_item_t *map_item = new map_item_t(object_t(way));
 
   if(way->draw.flags & OSM_DRAW_FLAG_AREA) {
@@ -1138,7 +1137,7 @@ static void map_touchnode_update(map_t *map, int x, int y) {
   }
 }
 
-static void map_button_press(map_t *map, int x, int y) {
+static void map_button_press(map_t *map, float x, float y) {
 
   printf("left button pressed\n");
   map->pen_down.is = true;
@@ -1181,7 +1180,7 @@ static void map_button_press(map_t *map, int x, int y) {
 }
 
 /* move the background image (wms data) during wms adjustment */
-static void map_bg_adjust(map_t *map, gint x, gint y) {
+static void map_bg_adjust(map_t *map, int x, int y) {
   g_assert_nonnull(map->appdata.osm);
   g_assert_nonnull(map->appdata.osm->bounds);
 
@@ -1193,7 +1192,7 @@ static void map_bg_adjust(map_t *map, gint x, gint y) {
   map->bg.item->image_move(x, y, map->bg.scale.x, map->bg.scale.y);
 }
 
-static void map_button_release(map_t *map, gint x, gint y) {
+static void map_button_release(map_t *map, int x, int y) {
   map->pen_down.is = false;
 
   /* before button release is handled */
@@ -1306,7 +1305,7 @@ static gboolean map_button_event(map_t *map, GdkEventButton *event) {
     return FALSE;
 
   if(event->button == 1) {
-    gint x = event->x, y = event->y;
+    float x = event->x, y = event->y;
 
     if(event->type == GDK_BUTTON_PRESS)
       map_button_press(map, x, y);
@@ -1666,8 +1665,8 @@ void map_action_cancel(map_t *map) {
     map->bg.offset.x = map->appdata.project->wms_offset.x;
     map->bg.offset.y = map->appdata.project->wms_offset.y;
 
-    gint x = map->appdata.osm->bounds->min.x + map->bg.offset.x;
-    gint y = map->appdata.osm->bounds->min.y + map->bg.offset.y;
+    int x = map->appdata.osm->bounds->min.x + map->bg.offset.x;
+    int y = map->appdata.osm->bounds->min.y + map->bg.offset.y;
     map->bg.item->image_move(x, y, map->bg.scale.x, map->bg.scale.y);
     break;
   }
@@ -1831,11 +1830,11 @@ static bool __attribute__((warn_unused_result)) pointVisible(const bounds_t &bou
  */
 static canvas_points_t *canvas_points_init(const bounds_t &bounds,
                                            std::vector<track_point_t>::const_iterator point,
-                                           const gint count) {
+                                           const unsigned int count) {
   canvas_points_t *points = canvas_points_t::create(count);
   lpos_t lpos;
 
-  for(gint i = 0; i < count; i++) {
+  for(unsigned int i = 0; i < count; i++) {
     lpos = point->pos.toLpos(bounds);
     points->set_pos(i, lpos);
     point++;
@@ -1870,7 +1869,7 @@ void map_t::track_draw_seg(track_seg_t &seg) {
       return;
     }
 
-    int visible = 0;
+    unsigned int visible = 0;
 
     /* count nodes that _are_ on screen */
     std::vector<track_point_t>::const_iterator tmp = it;
@@ -1901,7 +1900,7 @@ void map_t::track_draw_seg(track_seg_t &seg) {
     }
 
     /* allocate space for nodes */
-    printf("visible are %d\n", visible);
+    printf("visible are %u\n", visible);
     std::unique_ptr<canvas_points_t> points(canvas_points_init(bounds, it, visible));
     it = tmp;
 
