@@ -31,9 +31,11 @@ namespace std {
 #endif
 #include <cmath>
 #include <cstring>
+#include <memory>
 #include <goocanvas.h>
 
 #include <osm2go_cpp.h>
+#include "osm2go_stl.h"
 
 #if __cplusplus >= 201103L
 #include <type_traits>
@@ -418,15 +420,17 @@ int canvas_item_t::get_segment(lpos_t pos, double *coords) const {
 
   if(!points) return -1;
 
+  std::unique_ptr<canvas_points_t> cpoints(points);
+
   gint retval = -1, i;
   double mindist = 100;
-  const int max = points->count();
+  const int max = cpoints->count();
   for(i = 0; i < max - 1; i++) {
 
-#define AX (points->coords()[2*i+0])
-#define AY (points->coords()[2*i+1])
-#define BX (points->coords()[2*i+2])
-#define BY (points->coords()[2*i+3])
+#define AX (cpoints->coords()[2*i+0])
+#define AY (cpoints->coords()[2*i+1])
+#define BX (cpoints->coords()[2*i+2])
+#define BY (cpoints->coords()[2*i+3])
 #define CX static_cast<double>(pos.x)
 #define CY static_cast<double>(pos.y)
 
@@ -458,7 +462,7 @@ int canvas_item_t::get_segment(lpos_t pos, double *coords) const {
 
   // this code path is only used during way split, which is seldomly done
   if(G_UNLIKELY(coords != O2G_NULLPTR && retval >= 0))
-    memcpy(coords, points->coords() + 2 * retval, 4 * sizeof(*coords));
+    memcpy(coords, cpoints->coords() + 2 * retval, 4 * sizeof(*coords));
 
   return retval;
 }
