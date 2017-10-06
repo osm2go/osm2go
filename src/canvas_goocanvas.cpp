@@ -265,14 +265,16 @@ canvas_item_t *canvas_t::polygon_new(canvas_group_t group, const std::vector<lpo
 /* place the image in pix centered on x/y on the canvas */
 canvas_item_t *canvas_t::image_new(canvas_group_t group, GdkPixbuf *pix, int x,
                                    int y, float hscale, float vscale) {
+  int width = gdk_pixbuf_get_width(pix);
+  int height = gdk_pixbuf_get_height(pix);
   GooCanvasItem *item =
       goo_canvas_image_new(static_cast<canvas_goocanvas *>(this)->group[group],
-                           pix, x / hscale - gdk_pixbuf_get_width(pix) / 2,
-                           y / vscale - gdk_pixbuf_get_height(pix) / 2, O2G_NULLPTR);
+                           pix, x / hscale - width / 2,
+                           y / vscale - height / 2, O2G_NULLPTR);
   goo_canvas_item_scale(item, hscale, vscale);
 
   if(CANVAS_SELECTABLE & (1<<group)) {
-    int radius = 0.75 * hscale * MAX(gdk_pixbuf_get_width(pix), gdk_pixbuf_get_height(pix)); /* hscale and vscale are the same */
+    int radius = 0.75 * hscale * std::max(width, height); /* hscale and vscale are the same */
     (void) new canvas_item_info_circle(this, group, item, x, y, radius);
   }
 
