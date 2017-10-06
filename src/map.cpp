@@ -2111,6 +2111,10 @@ bool map_t::set_bg_image(const char *filename) {
 
   bg.item->destroy_connect(map_bg_item_destroy_event, this);
 
+  int x = appdata.osm->bounds->min.x + bg.offset.x;
+  int y = appdata.osm->bounds->min.y + bg.offset.y;
+  bg.item->image_move(x, y, bg.scale.x, bg.scale.y);
+
   return true;
 }
 
