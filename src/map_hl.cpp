@@ -42,12 +42,8 @@ void map_hl_cursor_draw(map_t *map, lpos_t pos, unsigned int radius) {
 }
 
 /* special highlight for segments. use when cutting ways */
-void map_hl_segment_draw(map_t *map, unsigned int width, const double (&coords)[4]) {
-  std::unique_ptr<canvas_points_t> points(canvas_points_t::create(2));
-  memcpy(points->coords(), coords, sizeof(coords));
-
-  map->cursor = map->canvas->polyline_new(CANVAS_GROUP_DRAW,
-                                          points.get(), width,
+void map_hl_segment_draw(map_t *map, unsigned int width, const std::vector<lpos_t> &points) {
+  map->cursor = map->canvas->polyline_new(CANVAS_GROUP_DRAW, points, width,
                                           map->style->highlight.node_color);
 }
 
@@ -137,7 +133,7 @@ canvas_item_t *map_hl_circle_new(map_t *map, canvas_group_t group,
 }
 
 canvas_item_t *map_hl_polygon_new(map_t *map, canvas_group_t group, map_item_t *map_item,
-				  canvas_points_t *points, canvas_color_t color) {
+                                  const std::vector<lpos_t> &points, canvas_color_t color) {
   map_item->item = map->canvas->polygon_new(group, points, 0, 0, color);
   hl_add(map, map_item->item);
 
@@ -149,7 +145,7 @@ canvas_item_t *map_hl_polygon_new(map_t *map, canvas_group_t group, map_item_t *
 }
 
 canvas_item_t *map_hl_polyline_new(map_t *map, canvas_group_t group, map_item_t *map_item,
-                                   canvas_points_t *points, unsigned int width,
+                                   const std::vector<lpos_t> &points, unsigned int width,
                                    canvas_color_t color) {
   map_item->item = map->canvas->polyline_new(group, points, width, color);
   hl_add(map, map_item->item);

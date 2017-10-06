@@ -53,12 +53,12 @@ canvas_item_t *map_hl_circle_new(map_t *map, canvas_group_t group, map_item_t *m
                                  int x, int y, unsigned int radius, canvas_color_t color);
 
 canvas_item_t *map_hl_polyline_new(map_t *map, canvas_group_t group, map_item_t *map_item,
-                                   canvas_points_t *points, unsigned int width,
+                                   const std::vector<lpos_t> &points, unsigned int width,
                                    canvas_color_t color);
 
 canvas_item_t *map_hl_polygon_new(map_t *map, canvas_group_t group, map_item_t *map_item,
-				   canvas_points_t *points, canvas_color_t color);
+                                  const std::vector<lpos_t> &points, canvas_color_t color);
 
-void map_hl_segment_draw(map_t *map, unsigned int width, const double (&coords)[4]);
+void map_hl_segment_draw(map_t *map, unsigned int width, const std::vector<lpos_t> &points);
 
 #endif // MAP_HL_H

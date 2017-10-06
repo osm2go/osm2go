@@ -70,23 +70,6 @@ typedef enum {
 typedef unsigned int canvas_color_t;
 class canvas_item_info_t;
 
-class canvas_points_t {
-  canvas_points_t() O2G_DELETED_FUNCTION;
-  canvas_points_t &operator=(const canvas_points_t &) O2G_DELETED_FUNCTION;
-protected:
-  double *points;
-public:
-  static void operator delete(void *ptr);
-
-  inline double *coords() { return points; }
-  inline const double *coords() const { return points; }
-
-  static canvas_points_t *create(unsigned int points);
-  void set_pos(unsigned int index, const lpos_t lpos);
-  unsigned int count() const;
-  lpos_t get_lpos(unsigned int index) const;
-};
-
 struct canvas_item_t {
   canvas_item_t() O2G_DELETED_FUNCTION;
   canvas_item_t &operator=(const canvas_item_t &) O2G_DELETED_FUNCTION;
@@ -96,7 +79,7 @@ struct canvas_item_t {
   /****** manipulating items ******/
   void set_pos(lpos_t *lpos);
   void set_radius(int radius);
-  void set_points(canvas_points_t *points);
+  void set_points(const std::vector<lpos_t> &points);
   void set_zoom_max(float zoom_max);
   void set_dashed(unsigned int line_width, unsigned int dash_length_on,
                   unsigned int dash_length_off);
@@ -109,7 +92,7 @@ struct canvas_item_t {
   /**
   * @brief get the polygon/polyway segment a certain coordinate is over
   */
-  int get_segment(lpos_t pos, double *coords = O2G_NULLPTR) const;
+  int get_segment(lpos_t pos) const;
 };
 
 struct canvas_dimensions {
@@ -151,29 +134,15 @@ public:
   canvas_item_t *circle_new(canvas_group_t group,
                             int x, int y, unsigned int radius, int border,
                             canvas_color_t fill_col, canvas_color_t border_col);
-  canvas_item_t *polyline_new(canvas_group_t group, canvas_points_t *points,
+  canvas_item_t *polyline_new(canvas_group_t group, const std::vector<lpos_t> &points,
                               unsigned int width, canvas_color_t color);
-  canvas_item_t *polygon_new(canvas_group_t group, canvas_points_t *points,
+  canvas_item_t *polygon_new(canvas_group_t group, const std::vector<lpos_t> &points,
                              unsigned int width, canvas_color_t color,
                              canvas_color_t fill);
   canvas_item_t *image_new(canvas_group_t group, GdkPixbuf *pix, int x, int y,
                            float hscale, float vscale);
 
   void item_info_push(canvas_item_t *item);
-};
-
-enum canvas_item_type_t { CANVAS_ITEM_CIRCLE, CANVAS_ITEM_POLY };
-
-class canvas_item_info_t {
-protected:
-  canvas_item_info_t(canvas_item_type_t t, canvas_t *cv, canvas_group_t g, canvas_item_t *it, void(*deleter)(void *));
-public:
-  ~canvas_item_info_t();
-
-  canvas_t * const canvas;
-  const canvas_item_type_t type;
-  const canvas_group_t group;
-  canvas_item_t * const item;   ///< reference to visual representation
 };
 
 #endif // CANVAS_H

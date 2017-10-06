@@ -345,12 +345,14 @@ void map_edit_way_cut_highlight(map_t *map, map_item_t *item, int x, int y) {
 
   if(map->item_is_selected_way(item)) {
     lpos_t pos = map->canvas->window2world(x, y);
-    double coords[4];
-    int seg = item->item->get_segment(pos, coords);
+    int seg = item->item->get_segment(pos);
     if(seg >= 0) {
       unsigned int width = (item->object.way->draw.flags & OSM_DRAW_FLAG_BG) ?
 	2*item->object.way->draw.bg.width:
 	3*item->object.way->draw.width;
+      std::vector<lpos_t> coords(2);
+      coords[0] = item->object.way->node_chain[seg]->lpos;
+      coords[1] = item->object.way->node_chain[seg + 1]->lpos;
       map_hl_segment_draw(map, width, coords);
     }
   } else if(map->item_is_selected_node(item)) {

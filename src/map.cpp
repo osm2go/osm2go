@@ -139,11 +139,10 @@ static void map_node_select(map_t *map, node_t *node) {
 }
 
 struct set_point_pos {
-  canvas_points_t * const points;
-  unsigned int node;
-  explicit set_point_pos(canvas_points_t *p) : points(p), node(0) {}
+  std::vector<lpos_t> &points;
+  explicit set_point_pos(std::vector<lpos_t> &p) : points(p) {}
   void operator()(const node_t *n) {
-    points->set_pos(node++, n->lpos);
+    points.push_back(n->lpos);
   }
 };
 
@@ -153,17 +152,17 @@ struct set_point_pos {
  * @return canvas node array if at least 2 nodes were present
  * @retval O2G_NULLPTR the way has less than 2 nodes
  */
-static canvas_points_t *
+static std::vector<lpos_t>
 points_from_node_chain(const way_t *way)
 {
+  std::vector<lpos_t> points;
+
   /* a way needs at least 2 points to be drawn */
   unsigned int nodes = way->node_chain.size();
   if (nodes < 2)
-    return O2G_NULLPTR;
+    return points;
 
   /* allocate space for nodes */
-  canvas_points_t *points = canvas_points_t::create(nodes);
-
   std::for_each(way->node_chain.begin(), way->node_chain.end(),
                 set_point_pos(points));
 
@@ -204,16 +203,14 @@ void draw_selected_way_functor::operator()(node_t* node)
       diff.x /= len;
       diff.y /= len;
 
-      std::unique_ptr<canvas_points_t> points(canvas_points_t::create(4));
-      points->coords()[2 * 0 + 0] = points->coords()[2 * 3 + 0] = center.x + diff.x;
-      points->coords()[2 * 0 + 1] = points->coords()[2 * 3 + 1] = center.y + diff.y;
-      points->coords()[2 * 1 + 0] = center.x + diff.y - diff.x;
-      points->coords()[2 * 1 + 1] = center.y - diff.x - diff.y;
-      points->coords()[2 * 2 + 0] = center.x - diff.y - diff.x;
-      points->coords()[2 * 2 + 1] = center.y + diff.x - diff.y;
+      std::vector<lpos_t> points(4);
+      points[0] = lpos_t(center.x + diff.x, center.y + diff.y);
+      points[1] = lpos_t(center.x + diff.y - diff.x, center.y - diff.x - diff.y);
+      points[2] = lpos_t(center.x - diff.y - diff.x, center.y + diff.x - diff.y);
+      points[3] = points[0];
 
       map_hl_polygon_new(map, CANVAS_GROUP_WAYS_DIR, new_map_item,
-                         points.get(), map->style->highlight.arrow_color);
+                         points, map->style->highlight.arrow_color);
     }
   }
 
@@ -254,13 +251,13 @@ void map_t::select_way(way_t *way) {
 
   /* a way needs at least 2 points to be drawn */
   g_assert(map_item->object.way == way);
-  std::unique_ptr<canvas_points_t> points(points_from_node_chain(way));
-  if(points) {
+  std::vector<lpos_t> points = points_from_node_chain(way);
+  if(!points.empty()) {
     /* create a copy of this map item and mark it as being a highlight */
     map_item_t *new_map_item = new map_item_t(*map_item);
     new_map_item->highlight = true;
 
-    map_hl_polyline_new(this, CANVAS_GROUP_WAYS_HL, new_map_item, points.get(),
+    map_hl_polyline_new(this, CANVAS_GROUP_WAYS_HL, new_map_item, points,
 		 ((way->draw.flags & OSM_DRAW_FLAG_BG)?
                   2 * style->highlight.width + way->draw.bg.width:
                   2 * style->highlight.width + way->draw.width)
@@ -293,13 +290,13 @@ void relation_select_functor::operator()(member_t& member)
   case WAY: {
     way_t *way = member.object.way;
     /* a way needs at least 2 points to be drawn */
-    std::unique_ptr<canvas_points_t> points(points_from_node_chain(way));
-    if(points) {
+    std::vector<lpos_t> points = points_from_node_chain(way);
+    if(!points.empty()) {
       if(way->draw.flags & OSM_DRAW_FLAG_AREA)
-        item = map->canvas->polygon_new(CANVAS_GROUP_WAYS_HL, points.get(), 0, 0,
+        item = map->canvas->polygon_new(CANVAS_GROUP_WAYS_HL, points, 0, 0,
                                   map->style->highlight.color);
       else
-        item = map->canvas->polyline_new(CANVAS_GROUP_WAYS_HL, points.get(),
+        item = map->canvas->polyline_new(CANVAS_GROUP_WAYS_HL, points,
                                    (way->draw.flags & OSM_DRAW_FLAG_BG) ?
                                      2 * map->style->highlight.width + way->draw.bg.width :
                                      2 * map->style->highlight.width + way->draw.width,
@@ -430,7 +427,7 @@ static map_item_t *map_way_single_new(map_t *map, way_t *way, unsigned int radiu
 }
 
 static map_item_t *map_way_new(map_t *map, canvas_group_t group,
-                               way_t *way, canvas_points_t *points, unsigned int width,
+                               way_t *way, const std::vector<lpos_t> &points, unsigned int width,
                                canvas_color_t color, canvas_color_t fill_color) {
   map_item_t *map_item = new map_item_t(object_t(way));
 
@@ -484,8 +481,8 @@ void map_way_draw_functor::operator()(way_t *way)
 
   /* allocate space for nodes */
   /* a way needs at least 2 points to be drawn */
-  std::unique_ptr<canvas_points_t> points(points_from_node_chain(way));
-  if(!points) {
+  std::vector<lpos_t> points = points_from_node_chain(way);
+  if(points.empty()) {
     /* draw a single dot where this single node is */
     chain.push_back(map_way_single_new(map, way, map->style->node.radius, 0,
                                        map->style->node.color, 0));
@@ -494,18 +491,18 @@ void map_way_draw_functor::operator()(way_t *way)
     float width = way->draw.width * map->state.detail;
 
     if(way->draw.flags & OSM_DRAW_FLAG_AREA) {
-      chain.push_back(map_way_new(map, CANVAS_GROUP_POLYGONS, way, points.get(),
+      chain.push_back(map_way_new(map, CANVAS_GROUP_POLYGONS, way, points,
                                   width, way->draw.color, way->draw.area.color));
     } else if(way->draw.flags & OSM_DRAW_FLAG_BG) {
-      chain.push_back(map_way_new(map, CANVAS_GROUP_WAYS_INT, way, points.get(),
+      chain.push_back(map_way_new(map, CANVAS_GROUP_WAYS_INT, way, points,
                                   width, way->draw.color, NO_COLOR));
 
-      chain.push_back(map_way_new(map, CANVAS_GROUP_WAYS_OL, way, points.get(),
+      chain.push_back(map_way_new(map, CANVAS_GROUP_WAYS_OL, way, points,
                                   way->draw.bg.width * map->state.detail,
                                   way->draw.bg.color, NO_COLOR));
 
     } else {
-      chain.push_back(map_way_new(map, CANVAS_GROUP_WAYS, way, points.get(),
+      chain.push_back(map_way_new(map, CANVAS_GROUP_WAYS, way, points,
                                   width, way->draw.color, NO_COLOR));
     }
   }
@@ -594,18 +591,19 @@ void map_t::redraw_item(object_t object) {
     map_object_select(this, object);
 }
 
-static void map_frisket_rectangle(canvas_points_t *points,
+static void map_frisket_rectangle(std::vector<lpos_t> &points,
                                   int x0, int x1, int y0, int y1) {
-  points->coords()[2*0+0] = points->coords()[2*3+0] = points->coords()[2*4+0] = x0;
-  points->coords()[2*1+0] = points->coords()[2*2+0] = x1;
-  points->coords()[2*0+1] = points->coords()[2*1+1] = points->coords()[2*4+1] = y0;
-  points->coords()[2*2+1] = points->coords()[2*3+1] = y1;
+  points[0] = lpos_t(x0, y0);
+  points[1] = lpos_t(x1, y0);
+  points[2] = lpos_t(x1, y1);
+  points[3] = lpos_t(x0, y1);
+  points[4] = points[0];
 }
 
 /* Draw the frisket area which masks off areas it'd be unsafe to edit,
  * plus its inner edge marker line */
 static void map_frisket_draw(map_t *map, const bounds_t *bounds) {
-  std::unique_ptr<canvas_points_t> points(canvas_points_t::create(5));
+  std::vector<lpos_t> points(5);
 
   /* don't draw frisket at all if it's completely transparent */
   if(map->style->frisket.color & 0xff) {
@@ -614,27 +612,27 @@ static void map_frisket_draw(map_t *map, const bounds_t *bounds) {
     float mult = map->style->frisket.mult;
 
     /* top rectangle */
-    map_frisket_rectangle(points.get(), mult*bounds->min.x, mult*bounds->max.x,
+    map_frisket_rectangle(points, mult*bounds->min.x, mult*bounds->max.x,
 			  mult*bounds->min.y, bounds->min.y);
-    map->canvas->polygon_new(CANVAS_GROUP_FRISKET, points.get(),
+    map->canvas->polygon_new(CANVAS_GROUP_FRISKET, points,
 		       1, NO_COLOR, color);
 
     /* bottom rectangle */
-    map_frisket_rectangle(points.get(), mult*bounds->min.x, mult*bounds->max.x,
+    map_frisket_rectangle(points, mult*bounds->min.x, mult*bounds->max.x,
 			  bounds->max.y, mult*bounds->max.y);
-    map->canvas->polygon_new(CANVAS_GROUP_FRISKET, points.get(),
+    map->canvas->polygon_new(CANVAS_GROUP_FRISKET, points,
 		       1, NO_COLOR, color);
 
     /* left rectangle */
-    map_frisket_rectangle(points.get(), mult*bounds->min.x, bounds->min.x,
+    map_frisket_rectangle(points, mult*bounds->min.x, bounds->min.x,
 			  mult*bounds->min.y, mult*bounds->max.y);
-    map->canvas->polygon_new(CANVAS_GROUP_FRISKET, points.get(),
+    map->canvas->polygon_new(CANVAS_GROUP_FRISKET, points,
 		       1, NO_COLOR, color);
 
     /* right rectangle */
-    map_frisket_rectangle(points.get(), bounds->max.x, mult*bounds->max.x,
+    map_frisket_rectangle(points, bounds->max.x, mult*bounds->max.x,
 			  mult*bounds->min.y, mult*bounds->max.y);
-    map->canvas->polygon_new(CANVAS_GROUP_FRISKET, points.get(),
+    map->canvas->polygon_new(CANVAS_GROUP_FRISKET, points,
 		       1, NO_COLOR, color);
 
   }
@@ -642,11 +640,11 @@ static void map_frisket_draw(map_t *map, const bounds_t *bounds) {
   if(map->style->frisket.border.present) {
     // Edge marker line
     int ew2 = map->style->frisket.border.width/2;
-    map_frisket_rectangle(points.get(),
+    map_frisket_rectangle(points,
 			  bounds->min.x-ew2, bounds->max.x+ew2,
 			  bounds->min.y-ew2, bounds->max.y+ew2);
 
-    map->canvas->polyline_new(CANVAS_GROUP_FRISKET, points.get(),
+    map->canvas->polyline_new(CANVAS_GROUP_FRISKET, points,
 			map->style->frisket.border.width,
 			map->style->frisket.border.color);
 
@@ -1828,15 +1826,15 @@ static bool __attribute__((warn_unused_result)) pointVisible(const bounds_t &bou
  * @param count number of points to use
  * @return point array
  */
-static canvas_points_t *canvas_points_init(const bounds_t &bounds,
+static std::vector<lpos_t> canvas_points_init(const bounds_t &bounds,
                                            std::vector<track_point_t>::const_iterator point,
                                            const unsigned int count) {
-  canvas_points_t *points = canvas_points_t::create(count);
+  std::vector<lpos_t> points;
+  points.reserve(count);
   lpos_t lpos;
 
   for(unsigned int i = 0; i < count; i++) {
-    lpos = point->pos.toLpos(bounds);
-    points->set_pos(i, lpos);
+    points.push_back(point->pos.toLpos(bounds));
     point++;
   }
 
@@ -1901,10 +1899,10 @@ void map_t::track_draw_seg(track_seg_t &seg) {
 
     /* allocate space for nodes */
     printf("visible are %u\n", visible);
-    std::unique_ptr<canvas_points_t> points(canvas_points_init(bounds, it, visible));
+    std::vector<lpos_t> points = canvas_points_init(bounds, it, visible);
     it = tmp;
 
-    canvas_item_t *item = canvas->polyline_new(CANVAS_GROUP_TRACK, points.get(),
+    canvas_item_t *item = canvas->polyline_new(CANVAS_GROUP_TRACK, points,
                                                style->track.width, style->track.color);
     seg.item_chain.push_back(item);
   }
@@ -1958,7 +1956,7 @@ void map_t::track_update_seg(track_seg_t &seg) {
   if(lpos == lpos2)
     return;
 
-  std::unique_ptr<canvas_points_t> points(canvas_points_init(bounds, begin, npoints));
+  std::vector<lpos_t> points = canvas_points_init(bounds, begin, npoints);
 
   if(second_last_is_visible) {
     /* there must be something already on the screen and there must */
@@ -1968,14 +1966,14 @@ void map_t::track_update_seg(track_seg_t &seg) {
     printf("second_last is visible -> updating last segment to %zu points\n", npoints);
 
     canvas_item_t *item = seg.item_chain.back();
-    item->set_points(points.get());
+    item->set_points(points);
   } else {
     g_assert(begin + 1 == last);
     g_assert_true(last_is_visible);
 
     printf("second last is invisible -> start new screen segment with %zu points\n", npoints);
 
-    canvas_item_t *item = canvas->polyline_new(CANVAS_GROUP_TRACK, points.get(),
+    canvas_item_t *item = canvas->polyline_new(CANVAS_GROUP_TRACK, points,
                                                style->track.width, style->track.color);
     seg.item_chain.push_back(item);
   }

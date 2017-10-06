@@ -102,18 +102,18 @@ canvas_item_info_circle::canvas_item_info_circle(canvas_t *cv, canvas_group_t g,
 }
 
 canvas_item_info_poly::canvas_item_info_poly(canvas_t* cv, canvas_group_t g, canvas_item_t* it,
-                                             bool poly, unsigned int wd, canvas_points_t *cpoints)
+                                             bool poly, unsigned int wd, const std::vector<lpos_t> &p)
   : canvas_item_info_t(CANVAS_ITEM_POLY, cv, g, it, item_info_destroy<canvas_item_info_poly>)
   , is_polygon(poly)
   , width(wd)
-  , num_points(cpoints->count())
-  , points(new lpos_t[num_points])
+  , num_points(p.size())
+  , points(new lpos_t[p.size()])
 {
   bbox.top_left.x = bbox.top_left.y = std::numeric_limits<typeof(bbox.top_left.y)>::max();
   bbox.bottom_right.x = bbox.bottom_right.y = std::numeric_limits<typeof(bbox.bottom_right.y)>::min();
 
   for(unsigned int i = 0; i < num_points; i++) {
-    points[i] = cpoints->get_lpos(i);
+    points[i] = p[i];
 
     /* determine bounding box */
     bbox.top_left.x = std::min(bbox.top_left.x, points[i].x);

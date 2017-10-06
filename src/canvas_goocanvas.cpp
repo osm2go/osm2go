@@ -22,6 +22,7 @@
 
 #include "misc.h"
 
+#include <algorithm>
 #if __cplusplus < 201103L
 #include <tr1/array>
 namespace std {
@@ -32,33 +33,18 @@ namespace std {
 #endif
 #include <cmath>
 #include <cstring>
-#include <memory>
 #include <goocanvas.h>
 
 #include <osm2go_cpp.h>
 #include "osm2go_stl.h"
 
-#if __cplusplus >= 201103L
-#include <type_traits>
-#else
-class coord_check : public canvas_points_t {
-  inline void operator()(canvas_points_t *cp) {
-    GooCanvasPoints gp;
-    typeof(gp.coords) &gco = static_cast<coord_check *>(cp)->points;
-    typeof(points) cco = gp.coords;
-    std::swap(gco, cco);
-
-    // canvas_points_t is non-POD, but standard layout
-    // the old gcc doesn't support offsetof here
-    static_assert(offsetof(GooCanvasPoints, coords) == 0,
-                  "coordinate offset mismatch");
-    static_assert(sizeof(static_cast<coord_check *>(O2G_NULLPTR)->points) == sizeof(void *),
-                  "coordinate size mismatch");
-    static_assert(sizeof(coord_check) == sizeof(void *),
-                  "coordinate offset mismatch");
+struct canvas_points_deleter {
+  void operator()(void *ptr) {
+    goo_canvas_points_unref(static_cast<GooCanvasPoints *>(ptr));
   }
 };
-#endif
+
+typedef std::unique_ptr<GooCanvasPoints, canvas_points_deleter> pointGuard;
 
 // since struct _GooCanvasItem does not exist, but is defined as an interface type
 // in the GooCanvas headers define it here and inherit from it to get the internal
@@ -219,41 +205,31 @@ canvas_item_t *canvas_t::circle_new(canvas_group_t group,
   return item;
 }
 
-canvas_points_t *canvas_points_t::create(unsigned int points) {
-#if __cplusplus >= 201103L
-  static_assert(std::is_same<decltype(canvas_points_t::points), decltype(GooCanvasPoints::coords)>::value,
-                "coordinate type mismatch");
-  static_assert(offsetof(canvas_points_t, points) == offsetof(GooCanvasPoints, coords),
-                "coordinate offset mismatch");
-#endif
-  return reinterpret_cast<canvas_points_t *>(goo_canvas_points_new(points));
+struct points_fill {
+  GooCanvasPoints * const gpoints;
+  unsigned int offs;
+  points_fill(GooCanvasPoints *g) : gpoints(g), offs(0) {}
+  inline void operator()(lpos_t p) {
+    gpoints->coords[offs++] = p.x;
+    gpoints->coords[offs++] = p.y;
+  }
+};
+
+GooCanvasPoints *canvas_points_create(const std::vector<lpos_t> &points) {
+  GooCanvasPoints *gpoints = goo_canvas_points_new(points.size());
+
+  std::for_each(points.begin(), points.end(), points_fill(gpoints));
+
+  return gpoints;
 }
 
-void canvas_points_t::set_pos(unsigned int index, const lpos_t lpos) {
-  coords()[2*index+0] = lpos.x;
-  coords()[2*index+1] = lpos.y;
-}
-
-void canvas_points_t::operator delete(void *ptr) {
-  goo_canvas_points_unref(static_cast<GooCanvasPoints *>(ptr));
-}
-
-unsigned int canvas_points_t::count() const {
-  return reinterpret_cast<const GooCanvasPoints *>(this)->num_points;
-}
-
-lpos_t canvas_points_t::get_lpos(unsigned int index) const {
-  lpos_t lpos;
-  lpos.x = coords()[2 * index + 0];
-  lpos.y = coords()[2 * index + 1];
-  return lpos;
-}
-
-canvas_item_t *canvas_t::polyline_new(canvas_group_t group, canvas_points_t *points,
+canvas_item_t *canvas_t::polyline_new(canvas_group_t group, const std::vector<lpos_t> &points,
                                       unsigned int width, canvas_color_t color) {
+  pointGuard cpoints(canvas_points_create(points));
+
   canvas_item_t *item =
     goo_canvas_polyline_new(static_cast<canvas_goocanvas *>(this)->group[group],
-                            FALSE, 0, "points", points,
+                            FALSE, 0, "points", cpoints.get(),
                             "line-width", static_cast<double>(width),
 			    "stroke-color-rgba", color,
 			    "line-join", CAIRO_LINE_JOIN_ROUND,
@@ -266,11 +242,13 @@ canvas_item_t *canvas_t::polyline_new(canvas_group_t group, canvas_points_t *poi
   return item;
 }
 
-canvas_item_t *canvas_t::polygon_new(canvas_group_t group, canvas_points_t *points,
+canvas_item_t *canvas_t::polygon_new(canvas_group_t group, const std::vector<lpos_t> &points,
                                      unsigned int width, canvas_color_t color, canvas_color_t fill) {
+  pointGuard cpoints(canvas_points_create(points));
+
   canvas_item_t *item =
     goo_canvas_polyline_new(static_cast<canvas_goocanvas *>(this)->group[group],
-                            TRUE, 0, "points", points,
+                            TRUE, 0, "points", cpoints.get(),
                             "line-width", static_cast<double>(width),
 			    "stroke-color-rgba", color,
 			    "fill-color-rgba", fill,
@@ -308,8 +286,9 @@ void canvas_item_t::operator delete(void *ptr) {
 
 /* ------------------------ accessing items ---------------------- */
 
-void canvas_item_t::set_points(canvas_points_t *points) {
-  g_object_set(G_OBJECT(this), "points", points, O2G_NULLPTR);
+void canvas_item_t::set_points(const std::vector<lpos_t> &points) {
+  pointGuard cpoints(canvas_points_create(points));
+  g_object_set(G_OBJECT(this), "points", cpoints.get(), O2G_NULLPTR);
 }
 
 void canvas_item_t::set_pos(lpos_t *lpos) {
@@ -409,8 +388,8 @@ void canvas_item_t::image_move(gint x, gint y, float hscale, float vscale) {
                O2G_NULLPTR);
 }
 
-int canvas_item_t::get_segment(lpos_t pos, double *coords) const {
-  canvas_points_t *points = O2G_NULLPTR;
+int canvas_item_t::get_segment(lpos_t pos) const {
+  GooCanvasPoints *points = O2G_NULLPTR;
   double line_width = 0;
 
   g_object_get(G_OBJECT(this),
@@ -420,17 +399,16 @@ int canvas_item_t::get_segment(lpos_t pos, double *coords) const {
 
   if(!points) return -1;
 
-  std::unique_ptr<canvas_points_t> cpoints(points);
+  pointGuard cpoints(points);
 
   int retval = -1;
   double mindist = 100;
-  const int max = cpoints->count();
-  for(int i = 0; i < max - 1; i++) {
+  for(int i = 0; i < cpoints->num_points - 1; i++) {
 
-#define AX (cpoints->coords()[2*i+0])
-#define AY (cpoints->coords()[2*i+1])
-#define BX (cpoints->coords()[2*i+2])
-#define BY (cpoints->coords()[2*i+3])
+#define AX (cpoints->coords[2*i+0])
+#define AY (cpoints->coords[2*i+1])
+#define BX (cpoints->coords[2*i+2])
+#define BY (cpoints->coords[2*i+3])
 #define CX static_cast<double>(pos.x)
 #define CY static_cast<double>(pos.y)
 
@@ -459,10 +437,6 @@ int canvas_item_t::get_segment(lpos_t pos, double *coords) const {
   /* goocanvas doesn't need that, but that's how OSM works and it saves */
   /* us from having to check the last->first connection for polygons */
   /* seperately */
-
-  // this code path is only used during way split, which is seldomly done
-  if(G_UNLIKELY(coords != O2G_NULLPTR && retval >= 0))
-    memcpy(coords, cpoints->coords() + 2 * retval, 4 * sizeof(*coords));
 
   return retval;
 }
