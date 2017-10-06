@@ -174,7 +174,7 @@ cb_menu_download(appdata_t *appdata) {
 		  appdata->project)) {
     if(appdata->osm) {
       /* redraw the entire map by destroying all map items and redrawing them */
-      appdata->map->clear(MAP_LAYER_OBJECTS_ONLY);
+      appdata->map->clear(map_t::MAP_LAYER_OBJECTS_ONLY);
 
       delete appdata->osm;
     }
@@ -301,7 +301,7 @@ cb_menu_undo_changes(appdata_t *appdata) {
 		 "uploaded yet? This cannot be undone.")))
     return;
 
-  appdata->map->clear(MAP_LAYER_OBJECTS_ONLY);
+  appdata->map->clear(map_t::MAP_LAYER_OBJECTS_ONLY);
 
   delete appdata->osm;
   appdata->osm = O2G_NULLPTR;

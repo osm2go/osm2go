@@ -64,7 +64,7 @@ typedef enum {
 #define CANVAS_SELECTABLE   ((1<<CANVAS_GROUP_POLYGONS) | (1<<CANVAS_GROUP_WAYS) | (1<<CANVAS_GROUP_WAYS_OL) | (1<<CANVAS_GROUP_WAYS_INT) | (1<<CANVAS_GROUP_NODES) | CANVAS_HIGHLIGHTS)
 
 #if CANVAS_GROUPS >= 16
-#error "More than 16 canvas groups needs adjustment e.g. in map.h"
+#error "More than 16 canvas groups needs adjustment e.g. in map.cpp"
 #endif
 
 typedef unsigned int canvas_color_t;

@@ -43,6 +43,10 @@
 #include <gdk/gdkkeysyms.h>
 #include <vector>
 
+int map_item_t::get_segment(lpos_t pos) const {
+  return item->get_segment(pos);
+}
+
 /* this is a chain of map_items which is attached to all entries */
 /* in the osm tree (node_t, way_t, ...) to be able to get a link */
 /* to the screen representation of a give node/way/etc */
@@ -1556,11 +1560,28 @@ void map_t::init() {
 }
 
 
-void map_t::clear(unsigned int group_mask) {
+void map_t::clear(clearLayers layers) {
   printf("freeing map contents\n");
 
-  if(group_mask == MAP_LAYER_ALL)
+  unsigned int group_mask;
+  switch(layers) {
+  case MAP_LAYER_ALL:
+    // add one so this is a usually illegal bitmask
+    group_mask = ((1 << (CANVAS_GROUPS + 1)) - 1);
     map_track_remove_pos(appdata);
+    break;
+  case MAP_LAYER_OBJECTS_ONLY:
+    group_mask = ((1 << CANVAS_GROUP_POLYGONS) |
+                  (1 << CANVAS_GROUP_WAYS_HL) |
+                  (1 << CANVAS_GROUP_WAYS_OL) |
+                  (1 << CANVAS_GROUP_WAYS) |
+                  (1 << CANVAS_GROUP_WAYS_INT) |
+                  (1 << CANVAS_GROUP_NODES_HL) |
+                  (1 << CANVAS_GROUP_NODES_IHL) |
+                  (1 << CANVAS_GROUP_NODES) |
+                  (1 << CANVAS_GROUP_WAYS_DIR));
+    break;
+  }
 
   map_free_map_item_chains(appdata);
 

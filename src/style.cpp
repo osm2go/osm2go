@@ -373,7 +373,7 @@ static void style_change(appdata_t &appdata, const std::string &name,
 
   appdata.settings->style = new_style;
 
-  appdata.map->clear(MAP_LAYER_OBJECTS_ONLY);
+  appdata.map->clear(map_t::MAP_LAYER_OBJECTS_ONLY);
   /* let gtk clean up first */
   osm2go_platform::process_events();
 

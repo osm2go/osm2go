@@ -500,7 +500,7 @@ static void project_close(appdata_t &appdata) {
   track_save(appdata.project, appdata.track.track);
   track_clear(appdata);
 
-  appdata.map->clear(MAP_LAYER_ALL);
+  appdata.map->clear(map_t::MAP_LAYER_ALL);
 
   if(appdata.osm) {
     diff_save(appdata.project, appdata.osm);
@@ -768,7 +768,7 @@ static void on_project_edit(select_context_t *context) {
         if(appdata.osm) {
 	  /* redraw the entire map by destroying all map items  */
           diff_save(appdata.project, appdata.osm);
-          appdata.map->clear(MAP_LAYER_ALL);
+          appdata.map->clear(map_t::MAP_LAYER_ALL);
 
           delete appdata.osm;
 	}
@@ -1096,7 +1096,7 @@ static void on_diff_remove_clicked(project_context_t *context) {
       printf("undo all on current project: delete map changes as well\n");
 
       /* just reload the map */
-      appdata.map->clear(MAP_LAYER_OBJECTS_ONLY);
+      appdata.map->clear(map_t::MAP_LAYER_OBJECTS_ONLY);
       delete appdata.osm;
       appdata.osm = appdata.project->parse_osm(appdata.icons);
       appdata.map->paint();

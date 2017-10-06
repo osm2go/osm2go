@@ -289,7 +289,7 @@ void map_edit_way_node_add_highlight(map_t *map, map_item_t *item,
                                      int x, int y) {
   if(map->item_is_selected_way(item)) {
     lpos_t pos = map->canvas->window2world(x, y);
-    if(item->item->get_segment(pos) >= 0)
+    if(item->get_segment(pos) >= 0)
       map_hl_cursor_draw(map, pos, map->style->node.radius);
   }
 }
@@ -300,7 +300,7 @@ void map_edit_way_node_add(map_t *map, int px, int py) {
   if(map->item_is_selected_way(item)) {
     /* convert mouse position to canvas (world) position */
     lpos_t pos = map->canvas->window2world(px, py);
-    int insert_after = item->item->get_segment(pos) + 1;
+    int insert_after = item->get_segment(pos) + 1;
     if(insert_after > 0) {
       /* create new node */
       node_t* node = map->appdata.osm->node_new(pos);
@@ -345,7 +345,7 @@ void map_edit_way_cut_highlight(map_t *map, map_item_t *item, int x, int y) {
 
   if(map->item_is_selected_way(item)) {
     lpos_t pos = map->canvas->window2world(x, y);
-    int seg = item->item->get_segment(pos);
+    int seg = item->get_segment(pos);
     if(seg >= 0) {
       unsigned int width = (item->object.way->draw.flags & OSM_DRAW_FLAG_BG) ?
 	2*item->object.way->draw.bg.width:
@@ -395,7 +395,7 @@ void map_edit_way_cut(map_t *map, int px, int py) {
 
   } else {
     printf("  cut at segment\n");
-    int c = item->item->get_segment(pos);
+    int c = item->get_segment(pos);
     if(c < 0)
       return;
     way = item->object.way;

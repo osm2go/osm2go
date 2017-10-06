@@ -20,14 +20,12 @@
 #ifndef MAP_H
 #define MAP_H
 
-#include "canvas.h"
 #include "osm.h"
 #include "track.h"
-#include <vector>
 
-// add one so this is a usually illegal bitmask
-#define MAP_LAYER_ALL ((1 << (CANVAS_GROUPS + 1)) - 1)
-#define MAP_LAYER_OBJECTS_ONLY ((1<<CANVAS_GROUP_POLYGONS) | (1<<CANVAS_GROUP_WAYS_HL) | (1<<CANVAS_GROUP_WAYS_OL) | (1<<CANVAS_GROUP_WAYS) | (1<<CANVAS_GROUP_WAYS_INT) | (1<<CANVAS_GROUP_NODES_HL) | (1<<CANVAS_GROUP_NODES_IHL) | (1<<CANVAS_GROUP_NODES) | (1<<CANVAS_GROUP_WAYS_DIR))
+#include <glib.h>
+#include <gtk/gtk.h>
+#include <vector>
 
 /* -------- all sizes are in meters ---------- */
 #define MAP_COLOR_NONE   0x0
@@ -63,6 +61,8 @@ enum map_action_t {
 };
 
 struct appdata_t;
+class canvas_t;
+struct canvas_item_t;
 struct track_seg_t;
 struct track_t;
 
@@ -77,6 +77,11 @@ struct map_item_t {
   static inline void free(void *p) {
     delete static_cast<map_item_t *>(p);
   }
+
+  /**
+  * @brief get the polygon/polyway segment a certain coordinate is over
+  */
+  int get_segment(lpos_t pos) const;
 };
 
 /* this is a chain of map_items which is attached to all entries */
@@ -95,6 +100,11 @@ struct map_state_t {
 };
 
 struct map_t {
+  enum clearLayers {
+    MAP_LAYER_ALL,
+    MAP_LAYER_OBJECTS_ONLY
+  };
+
   explicit map_t(appdata_t &a);
   ~map_t();
 
@@ -148,7 +158,7 @@ struct map_t {
   bool key_press_event(unsigned int keyval);
   void init();
   void paint();
-  void clear(unsigned int group_mask);
+  void clear(clearLayers layers);
   void item_deselect();
   void highlight_refresh();
   void draw(node_t *node);
