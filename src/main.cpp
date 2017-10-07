@@ -1401,7 +1401,7 @@ static int application_run(const char *proj)
   /* ----------------------- setup main window ---------------- */
 
   /* generate main map view */
-  appdata.map = new map_t(appdata);
+  appdata.map = map_t::create(appdata);
   if(G_UNLIKELY(!appdata.map))
     return -1;
 

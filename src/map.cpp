@@ -44,6 +44,18 @@
 #include <gdk/gdkkeysyms.h>
 #include <vector>
 
+class map_internal : public map_t {
+public:
+  map_internal(appdata_t &a);
+
+  guint autosave_handler_id;
+
+  struct {
+    GdkPixbuf *pix;
+    canvas_item_t *item;
+  } background;
+};
+
 int map_item_t::get_segment(lpos_t pos) const {
   return item->get_segment(pos);
 }
@@ -1192,7 +1204,7 @@ static void map_bg_adjust(map_t *map, int x, int y) {
   y += map->appdata.osm->bounds->min.y + map->bg.offset.y -
     map->pen_down.at.y;
 
-  map->bg.item->image_move(x, y, map->bg.scale.x, map->bg.scale.y);
+  static_cast<map_internal *>(map)->background.item->image_move(x, y, map->bg.scale.x, map->bg.scale.y);
 }
 
 static void map_button_release(map_t *map, int x, int y) {
@@ -1488,7 +1500,6 @@ map_t::map_t(appdata_t &a)
   : appdata(a)
   , canvas(canvas_t::create())
   , state(appdata.map_state)
-  , autosave_handler_id(0)
   , highlight(O2G_NULLPTR)
   , cursor(O2G_NULLPTR)
   , touchnode(O2G_NULLPTR)
@@ -1526,6 +1537,19 @@ map_t::map_t(appdata_t &a)
 
   g_signal_connect_swapped(GTK_OBJECT(canvas_widget),
                            "destroy", G_CALLBACK(map_destroy_event), this);
+}
+
+map_internal::map_internal(appdata_t &a)
+  : map_t(a)
+  , autosave_handler_id(0)
+{
+  background.pix = O2G_NULLPTR;
+  background.item = O2G_NULLPTR;
+}
+
+map_t *map_t::create(appdata_t &a)
+{
+  return new map_internal(a);
 }
 
 map_t::~map_t()
@@ -1687,7 +1711,7 @@ void map_action_cancel(map_t *map) {
 
     int x = map->appdata.osm->bounds->min.x + map->bg.offset.x;
     int y = map->appdata.osm->bounds->min.y + map->bg.offset.y;
-    map->bg.item->image_move(x, y, map->bg.scale.x, map->bg.scale.y);
+    static_cast<map_internal *>(map)->background.item->image_move(x, y, map->bg.scale.x, map->bg.scale.y);
     break;
   }
 
@@ -2073,22 +2097,23 @@ void map_track_remove_pos(appdata_t &appdata) {
 /* ------------------- map background ------------------ */
 
 void map_t::remove_bg_image() {
-  if(bg.item) {
-    delete bg.item;
-    bg.item = O2G_NULLPTR;
+  map_internal *m = static_cast<map_internal *>(this);
+  if(m->background.item) {
+    delete m->background.item;
+    m->background.item = O2G_NULLPTR;
   }
 }
 
 static void map_bg_item_destroy_event(gpointer data) {
-  map_t *map = static_cast<map_t *>(data);
+  map_internal *map = static_cast<map_internal *>(data);
 
   /* destroying background item */
 
-  map->bg.item = O2G_NULLPTR;
-  if(map->bg.pix) {
+  map->background.item = O2G_NULLPTR;
+  if(map->background.pix) {
     printf("destroying background item\n");
-    g_object_unref(map->bg.pix);
-    map->bg.pix = O2G_NULLPTR;
+    g_object_unref(map->background.pix);
+    map->background.pix = O2G_NULLPTR;
   }
 }
 
@@ -2097,24 +2122,26 @@ bool map_t::set_bg_image(const std::string &filename) {
 
   remove_bg_image();
 
-  bg.pix = gdk_pixbuf_new_from_file(filename.c_str(), O2G_NULLPTR);
-  if(bg.pix == O2G_NULLPTR)
+  map_internal *m = static_cast<map_internal *>(this);
+
+  m->background.pix = gdk_pixbuf_new_from_file(filename.c_str(), O2G_NULLPTR);
+  if(m->background.pix == O2G_NULLPTR)
     return false;
 
   /* calculate required scale factor */
   bg.scale.x = static_cast<float>(bounds->max.x - bounds->min.x) /
-                    gdk_pixbuf_get_width(bg.pix);
+                    gdk_pixbuf_get_width(m->background.pix);
   bg.scale.y = static_cast<float>(bounds->max.y - bounds->min.y) /
-                    gdk_pixbuf_get_height(bg.pix);
+                    gdk_pixbuf_get_height(m->background.pix);
 
-  bg.item = canvas->image_new(CANVAS_GROUP_BG, bg.pix,
+  m->background.item = canvas->image_new(CANVAS_GROUP_BG, m->background.pix,
                               bounds->min.x, bounds->min.y, bg.scale.x, bg.scale.y);
 
-  bg.item->destroy_connect(map_bg_item_destroy_event, this);
+  m->background.item->destroy_connect(map_bg_item_destroy_event, this);
 
   int x = appdata.osm->bounds->min.x + bg.offset.x;
   int y = appdata.osm->bounds->min.y + bg.offset.y;
-  bg.item->image_move(x, y, bg.scale.x, bg.scale.y);
+  m->background.item->image_move(x, y, bg.scale.x, bg.scale.y);
 
   return true;
 }
@@ -2193,10 +2220,11 @@ void map_t::detail_normal() {
 }
 
 void map_t::set_autosave(bool enable) {
+  map_internal *m = static_cast<map_internal *>(this);
   if(enable)
-    autosave_handler_id = g_timeout_add_seconds(120, map_autosave, this);
+    m->autosave_handler_id = g_timeout_add_seconds(120, map_autosave, this);
   else
-    g_source_remove(autosave_handler_id);
+    g_source_remove(m->autosave_handler_id);
 }
 
 map_state_t::map_state_t()

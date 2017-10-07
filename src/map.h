@@ -23,8 +23,6 @@
 #include "osm.h"
 #include "track.h"
 
-#include <glib.h>
-#include <gtk/gtk.h>
 #include <vector>
 
 /* -------- all sizes are in meters ---------- */
@@ -99,20 +97,22 @@ struct map_state_t {
   struct { int x,y; } scroll_offset;  // initial scroll offset
 };
 
-struct map_t {
+class map_t {
+protected:
+  explicit map_t(appdata_t &a);
+
+public:
   enum clearLayers {
     MAP_LAYER_ALL,
     MAP_LAYER_OBJECTS_ONLY
   };
 
-  explicit map_t(appdata_t &a);
+  static map_t *create(appdata_t &a);
   ~map_t();
 
   appdata_t &appdata;
   canvas_t * const canvas;
   map_state_t &state;
-
-  guint autosave_handler_id;
 
   struct map_highlight_t *highlight;      // list of elements used for highlighting
 
@@ -123,8 +123,6 @@ struct map_t {
 
   /* background image related stuff */
   struct {
-    GdkPixbuf *pix;
-    canvas_item_t *item;
     struct { float x, y; } offset;
     struct { float x, y; } scale;
   } bg;

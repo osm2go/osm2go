@@ -26,7 +26,7 @@
 #include <vector>
 
 struct map_item_t;
-struct map_t;
+class map_t;
 
 struct map_highlight_t {
   std::vector<canvas_item_t *> items;

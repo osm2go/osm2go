@@ -20,7 +20,7 @@
 #ifndef MAP_EDIT_H
 #define MAP_EDIT_H
 
-struct map_t;
+class map_t;
 struct map_item_t;
 class way_t;
 
