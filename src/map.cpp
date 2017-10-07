@@ -21,6 +21,7 @@
 
 #include "appdata.h"
 #include "banner.h"
+#include "canvas.h"
 #include "diff.h"
 #include "gps.h"
 #include "iconbar.h"
@@ -218,7 +219,7 @@ void draw_selected_way_functor::operator()(node_t* node)
     }
   }
 
-  if(!map_hl_item_is_highlighted(map, &item)) {
+  if(!map_hl_item_is_highlighted(map, item)) {
     /* create a new map item for every node */
     map_item_t *new_map_item = new map_item_t(object_t(node), true);
 

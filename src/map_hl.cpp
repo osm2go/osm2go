@@ -91,8 +91,8 @@ void map_hl_remove(map_t *map) {
 }
 
 struct find_highlighted {
-  const map_item_t * const item;
-  explicit find_highlighted(const map_item_t *t) : item(t) {}
+  const map_item_t &item;
+  explicit find_highlighted(const map_item_t &t) : item(t) {}
   bool operator()(canvas_item_t *c);
 };
 
@@ -100,15 +100,15 @@ bool find_highlighted::operator()(canvas_item_t* c)
 {
   map_item_t *hl_item = static_cast<map_item_t *>(c->get_user_data());
 
-  return hl_item && hl_item->object == item->object;
+  return hl_item && hl_item->object == item.object;
 }
 
-bool map_hl_item_is_highlighted(map_t *map, map_item_t *item) {
-  map_highlight_t *hl = map->highlight;
+bool map_hl_item_is_highlighted(const map_t *map, const map_item_t &item) {
+  const map_highlight_t *hl = map->highlight;
   if(!hl)
     return false;
-  return std::find_if(hl->items.begin(), hl->items.end(), find_highlighted(item)) !=
-         hl->items.end();
+  const std::vector<canvas_item_t *>::const_iterator itEnd = hl->items.end();
+  return std::find_if(hl->items.begin(), itEnd, find_highlighted(item)) != itEnd;
 }
 
 static void hl_add(map_t *map, canvas_item_t *item)
