@@ -1002,6 +1002,15 @@ static gboolean wms_layer_dialog(selected_context *ctx, const wms_layer_t::list 
   return ok;
 }
 
+static bool setBgImage(appdata_t &appdata, const std::string &filename) {
+  bool ret = appdata.map->set_bg_image(filename);
+  if(ret) {
+    gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_WMS_CLEAR], TRUE);
+    gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_WMS_ADJUST], TRUE);
+  }
+  return ret;
+}
+
 static bool layer_is_usable(const wms_layer_t *layer) {
   return layer->is_usable();
 }
@@ -1208,11 +1217,7 @@ void wms_import(appdata_t &appdata) {
     return;
 
   /* there should be a matching file on disk now */
-  if(G_UNLIKELY(!appdata.map->set_bg_image(filename)))
-    return;
-
-  gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_WMS_CLEAR], TRUE);
-  gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_WMS_ADJUST], TRUE);
+  setBgImage(appdata, filename);
 }
 
 /* try to load an existing image into map */
@@ -1233,13 +1238,8 @@ void wms_load(appdata_t &appdata) {
     appdata.map->bg.offset.x = appdata.project->wms_offset.x;
     appdata.map->bg.offset.y = appdata.project->wms_offset.y;
 
-    if(appdata.map->set_bg_image(filename)) {
-      /* restore image to saved position */
-      gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_WMS_CLEAR], TRUE);
-      gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_WMS_ADJUST], TRUE);
-
+    if(setBgImage(appdata, filename))
       break;
-    }
   }
 }
 
