@@ -30,7 +30,6 @@ namespace std {
 #else
 #include <array>
 #endif
-#include <glib.h>
 #include <gtk/gtk.h>
 #include <vector>
 
