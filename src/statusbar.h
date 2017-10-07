@@ -20,24 +20,19 @@
 #ifndef STATUSBAR_H
 #define STATUSBAR_H
 
-#include <glib.h>
 #include <gtk/gtk.h>
 
 #define STATUSBAR_DEFAULT_BRIEF_TIME 3
 
-struct statusbar_t {
+class statusbar_t {
+protected:
   statusbar_t();
+public:
+  static statusbar_t *create();
 
   GtkWidget * const widget;
 
-#ifndef FREMANTLE
-  guint cid;
-  guint mid;
-#endif
 #ifndef USE_HILDON
-  guint brief_handler_id;
-  guint brief_mid;
-
   /**
    * @brief flash up a brief, temporary message.
    * @param msg the message to show
@@ -51,7 +46,7 @@ struct statusbar_t {
    * If timeout is negative, don't establish a handler. You'll have to clear it
    * yourself later. If it's zero, use the default.
    */
-  void brief(const char *msg, gint timeout);
+  void brief(const char *msg, int timeout);
 #endif
 
   /**

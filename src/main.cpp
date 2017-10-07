@@ -1164,7 +1164,7 @@ appdata_t::appdata_t()
 #endif
   , btn_zoom_in(O2G_NULLPTR)
   , btn_zoom_out(O2G_NULLPTR)
-  , statusbar(new statusbar_t())
+  , statusbar(statusbar_t::create())
   , project(O2G_NULLPTR)
   , iconbar(O2G_NULLPTR)
   , presets(O2G_NULLPTR)
