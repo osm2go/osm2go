@@ -182,6 +182,7 @@ struct map_t {
 
   /* background stuff */
   bool set_bg_image(const std::string &filename);
+  void set_bg_color_from_style();
   void remove_bg_image();
 
   void hide_selected();

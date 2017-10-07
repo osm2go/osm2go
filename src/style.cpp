@@ -20,7 +20,6 @@
 #include "style.h"
 
 #include "appdata.h"
-#include "canvas.h"
 #include "josm_elemstyles.h"
 #include "map.h"
 #include "misc.h"
@@ -382,7 +381,7 @@ static void style_change(appdata_t &appdata, const std::string &name,
   appdata.style = nstyle;
 
   /* canvas background may have changed */
-  appdata.map->canvas->set_background(appdata.style->background.color);
+  appdata.map->set_bg_color_from_style();
 
   appdata.map->paint();
 }

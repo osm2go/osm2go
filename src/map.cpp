@@ -2118,6 +2118,11 @@ bool map_t::set_bg_image(const std::string &filename) {
   return true;
 }
 
+void map_t::set_bg_color_from_style()
+{
+  canvas->set_background(style->background.color);
+}
+
 /* -------- hide and show objects (for performance reasons) ------- */
 
 void map_t::hide_selected() {
