@@ -1208,7 +1208,7 @@ void wms_import(appdata_t &appdata) {
     return;
 
   /* there should be a matching file on disk now */
-  if(G_UNLIKELY(!appdata.map->set_bg_image(filename.c_str())))
+  if(G_UNLIKELY(!appdata.map->set_bg_image(filename)))
     return;
 
   gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_WMS_CLEAR], TRUE);
@@ -1233,7 +1233,7 @@ void wms_load(appdata_t &appdata) {
     appdata.map->bg.offset.x = appdata.project->wms_offset.x;
     appdata.map->bg.offset.y = appdata.project->wms_offset.y;
 
-    if(appdata.map->set_bg_image(filename.c_str())) {
+    if(appdata.map->set_bg_image(filename)) {
       /* restore image to saved position */
       gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_WMS_CLEAR], TRUE);
       gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_WMS_ADJUST], TRUE);

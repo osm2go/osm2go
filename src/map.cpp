@@ -2091,12 +2091,12 @@ static void map_bg_item_destroy_event(gpointer data) {
   }
 }
 
-bool map_t::set_bg_image(const char *filename) {
+bool map_t::set_bg_image(const std::string &filename) {
   const bounds_t *bounds = appdata.osm->bounds;
 
   remove_bg_image();
 
-  bg.pix = gdk_pixbuf_new_from_file(filename, O2G_NULLPTR);
+  bg.pix = gdk_pixbuf_new_from_file(filename.c_str(), O2G_NULLPTR);
   if(bg.pix == O2G_NULLPTR)
     return false;
 
