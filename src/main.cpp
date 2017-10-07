@@ -20,6 +20,7 @@
 #include "appdata.h"
 #include "about.h"
 #include "banner.h"
+#include "canvas.h"
 #include "diff.h"
 #include "gps.h"
 #include "iconbar.h"

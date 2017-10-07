@@ -55,8 +55,6 @@ namespace std {
 #include <array>
 #endif
 
-#include "canvas.h"
-
 #include "icon.h"
 #include "map.h"
 #include "osm.h"
