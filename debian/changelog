@@ -1,3 +1,21 @@
+osm2go (1:0.9.10-maemo1) karmic; urgency=low
+
+  * enable way_cut only when way has more than 2 nodes
+  * add support for the 'upload' attribute of the <osm> tag in data
+  * fix crash after merging nodes
+  * elemstyles: apply area and line styles independent from each other
+  * use "name" tag before "ref" when trying to get a description for a relation
+  * Maemo: require tablet-browser-interface
+  * fix WMS downloads
+  * update the object maps after uploading new objects, avoids stale references if the download fails half-way
+  * insert new way directly after old one into relations when splitting
+  * duplicate all relation memberships when splitting ways, not only the first
+  * make track visibility configurable
+  * insert splitted way into containing relations so ordering is kept
+  * fix "count" restriction of presets for relation member roles
+
+ -- Rolf Eike Beer <eike@sf-mail.de>  Sun, 08 Oct 2017 10:11:22 +0200
+
 osm2go (1:0.9.9-maemo1) karmic; urgency=low
 
   * fix crash if currently active project is edited and gzip mode of data file changes (broken in 0.9.8)
