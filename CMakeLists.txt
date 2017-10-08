@@ -190,7 +190,7 @@ endif ()
 
 find_library(MATH_LIBRARY m)
 
-pkg_search_module(SOUP IMPORTED_TARGET libsoup-2.4 libsoup-2.2)
+pkg_search_module(SOUP IMPORTED_TARGET libsoup-2.4)
 
 if (SOUP_FOUND)
 	add_subdirectory(src/osm-gps-map)

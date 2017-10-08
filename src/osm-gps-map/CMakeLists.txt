@@ -32,10 +32,6 @@ else ()
 	)
 endif ()
 
-if (SOUP_VERSION VERSION_LESS 2.4)
-	set_property(SOURCE osm-gps-map.c APPEND PROPERTY COMPILE_DEFINITIONS LIBSOUP22)
-endif ()
-
 set_property(SOURCE osm-gps-map.c APPEND PROPERTY COMPILE_DEFINITIONS VERSION="${PROJECT_VERSION}")
 
 target_include_directories(osm-gps-map INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
