@@ -196,13 +196,13 @@ static GtkWidget *authors_page_new(void) {
   author_add(ivbox, _("Main developers:"));
   author_add(ivbox, "Till Harbaum <till@harbaum.org>");
   author_add(ivbox, "Andrew Chadwick <andrewc-osm2go@piffle.org>");
+  author_add(ivbox, "Rolf Eike Beer <eike@sf-mail.de>");
   gtk_box_pack_start(GTK_BOX(vbox), ivbox, TRUE, FALSE, 0);
 
   /* -------------------------------------------- */
   ivbox = gtk_vbox_new(FALSE, 0);
   author_add(ivbox, _("Patches by:"));
   author_add(ivbox, "Rolf Bode-Meyer <robome@gmail.com>");
-  author_add(ivbox, "Rolf Eike Beer <eike@sf-mail.de>");
   gtk_box_pack_start(GTK_BOX(vbox), ivbox, TRUE, FALSE, 0);
 
   /* -------------------------------------------- */
