@@ -309,12 +309,10 @@ iconbar_gtk::iconbar_gtk(appdata_t& appdata)
   , cancel(O2G_NULLPTR)
   , ok(O2G_NULLPTR)
 {
-#ifndef PORTRAIT
 #if !GTK_CHECK_VERSION(2, 16, 0)
   gtk_toolbar_set_orientation(GTK_TOOLBAR(toolbar), GTK_ORIENTATION_VERTICAL);
 #else
   gtk_orientable_set_orientation(GTK_ORIENTABLE(toolbar), GTK_ORIENTATION_VERTICAL);
-#endif
 #endif
 
   gtk_toolbar_set_style(toolbar,
@@ -329,12 +327,7 @@ GtkWidget *iconbar_t::create(appdata_t &appdata) {
   iconbar_gtk * const iconbar = new iconbar_gtk(appdata);
   appdata.iconbar = iconbar;
 
-  GtkBox * const box =
-#ifndef PORTRAIT
-                       GTK_BOX(gtk_vbox_new(FALSE, 0));
-#else
-                       GTK_BOX(gtk_hbox_new(FALSE, 0));
-#endif
+  GtkBox * const box = GTK_BOX(gtk_vbox_new(FALSE, 0));
 
 #ifdef FINGER_UI
   gtk_widget_show_all(iconbar->menu);

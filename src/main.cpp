@@ -63,6 +63,12 @@ namespace std {
 
 #define LOCALEDIR PREFIX "/locale"
 
+#ifndef FREMANTLE
+/* these size defaults are used in the non-hildonized version only */
+#define DEFAULT_WIDTH 640
+#define DEFAULT_HEIGHT 480
+#endif
+
 /* disable/enable main screen control dependant on presence of open project */
 void main_ui_enable(appdata_t &appdata) {
   gboolean project_valid = (appdata.project != O2G_NULLPTR);
@@ -496,12 +502,6 @@ cb_menu_track_export(appdata_t *appdata) {
  */
 
 #ifndef FREMANTLE
-#ifdef PORTRAIT
-
-// Portrait mode, for openmoko-like systems
-#define uispecific_main_menu_new gtk_menu_new
-
-#else
 
 // Regular desktop builds
 #define uispecific_main_menu_new gtk_menu_bar_new
@@ -509,7 +509,6 @@ cb_menu_track_export(appdata_t *appdata) {
 #define UISPECIFIC_MENU_HAS_ICONS
 #define UISPECIFIC_MENU_HAS_ACCELS
 
-#endif //PORTRAIT
 #else//FREMANTLE
 
 // Maemo/Hildon builds
@@ -1365,14 +1364,7 @@ static int application_run(const char *proj)
   GtkWidget *vbox = gtk_vbox_new(FALSE, 0);
   GtkWidget *hbox = gtk_hbox_new(FALSE, 0);
 
-  gtk_box_pack_start(
-#ifdef PORTRAIT
-                     GTK_BOX(vbox),
-#else
-                     GTK_BOX(hbox),
-#endif
-                     iconbar_t::create(appdata), FALSE, FALSE, 0);
-
+  gtk_box_pack_start(GTK_BOX(hbox), iconbar_t::create(appdata), FALSE, FALSE, 0);
   gtk_box_pack_start(GTK_BOX(vbox), appdata.map->canvas->widget, TRUE, TRUE, 0);
 
   /* fremantle has seperate zoom/details buttons on the right screen side */

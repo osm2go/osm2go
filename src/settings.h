@@ -26,19 +26,6 @@
 #include <vector>
 #include <utility>
 
-/* define this for a vertical UI layout */
-#undef PORTRAIT
-
-/* these size defaults are used in the non-hildonized version only */
-#ifndef PORTRAIT
-#define DEFAULT_WIDTH 640
-#define DEFAULT_HEIGHT 480
-#else
-/* about the size of the openmoko screen */
-#define DEFAULT_WIDTH 480
-#define DEFAULT_HEIGHT 620
-#endif
-
 #define DEFAULT_STYLE "mapnik"
 
 class settings_t {
