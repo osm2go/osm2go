@@ -848,7 +848,7 @@ static void menu_create(appdata_t &appdata, GtkBox *mainvbox) {
 
 }
 
-void menu_cleanup(appdata_t &) { }
+static void menu_cleanup(appdata_t &) { }
 
 #else // !FREMANTLE
 
@@ -979,22 +979,22 @@ static void submenu_popup(appdata_t &appdata, GtkWidget *menu) {
 }
 
 /* the view submenu */
-void on_submenu_view_clicked(appdata_t *appdata)
+static void on_submenu_view_clicked(appdata_t *appdata)
 {
   submenu_popup(*appdata, appdata->app_menu_view);
 }
 
-void on_submenu_map_clicked(appdata_t *appdata)
+static void on_submenu_map_clicked(appdata_t *appdata)
 {
   submenu_popup(*appdata, appdata->app_menu_map);
 }
 
-void on_submenu_wms_clicked(appdata_t *appdata)
+static void on_submenu_wms_clicked(appdata_t *appdata)
 {
   submenu_popup(*appdata, appdata->app_menu_wms);
 }
 
-void on_submenu_track_clicked(appdata_t *appdata)
+static void on_submenu_track_clicked(appdata_t *appdata)
 {
   submenu_popup(*appdata, appdata->app_menu_track);
 }
@@ -1103,7 +1103,7 @@ static void menu_create(appdata_t &appdata, GtkBox *) {
   hildon_window_set_app_menu(HILDON_WINDOW(appdata.window), menu);
 }
 
-void menu_cleanup(appdata_t &appdata) {
+static void menu_cleanup(appdata_t &appdata) {
   gtk_widget_destroy(appdata.app_menu_view);
   gtk_widget_destroy(appdata.app_menu_map);
   gtk_widget_destroy(appdata.app_menu_wms);
