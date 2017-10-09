@@ -25,13 +25,11 @@
 
 #ifdef FREMANTLE
 #include <hildon/hildon-check-button.h>
+#include <hildon/hildon-pannable-area.h>
 #include <hildon/hildon-picker-button.h>
 #include <hildon/hildon-entry.h>
 #include <hildon/hildon-touch-selector-entry.h>
 #include <hildon/hildon-note.h>
-#endif
-
-#ifdef USE_HILDON
 #include <tablet-browser-interface.h>
 #else
 #include <gtk/gtk.h>
@@ -225,7 +223,7 @@ bool yes_no_f(GtkWidget *parent, appdata_t &appdata, guint again_bit,
 const char *data_paths[] = {
   "~/." PACKAGE "/",           // in home directory
   DATADIR "/",                 // final installation path
-#ifdef USE_HILDON
+#ifdef FREMANTLE
   "/media/mmc1/" PACKAGE "/",  // path to external memory card
   "/media/mmc2/" PACKAGE "/",  // path to internal memory card
 #endif
@@ -265,16 +263,11 @@ std::string find_file(const std::string &n) {
 }
 
 static const gint dialog_sizes[][2] = {
-#ifdef USE_HILDON
+#ifdef FREMANTLE
   { 400, 100 },  // SMALL
-#ifndef FREMANTLE
-  { 450, 300 },  // MEDIUM
-  { 800, 480 },  // LARGE
-#else
   /* in maemo5 most dialogs are full screen */
   { 800, 480 },  // MEDIUM
   { 790, 380 },  // LARGE
-#endif
   { 640, 100 },  // WIDE
   { 450, 480 },  // HIGH
 #else
@@ -315,7 +308,6 @@ GtkWidget *misc_dialog_new(DialogSizeHing hint, const gchar *title,
 }
 
 #ifdef FREMANTLE
-#include <hildon/hildon-pannable-area.h>
 /* create a pannable area */
 GtkWidget *misc_scrolled_window_new(gboolean) {
   return hildon_pannable_area_new();
@@ -591,7 +583,7 @@ GType combo_box_entry_type(void) {
 /* ---------- simple interface to the systems web browser ---------- */
 void open_url(struct appdata_t &appdata, const char *url)
 {
-#ifndef USE_HILDON
+#ifndef FREMANTLE
   gtk_show_uri(O2G_NULLPTR, url, GDK_CURRENT_TIME, O2G_NULLPTR);
   (void)appdata;
 #else

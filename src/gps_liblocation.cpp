@@ -123,11 +123,7 @@ gps_liblocation_state_t::~gps_liblocation_state_t()
     return;
 
 #ifdef LL_CONTROL_GPSD
-  if(control
-#ifndef FREMANTLE
-     && control->can_control
-#endif
-     ) {
+  if(control) {
     printf("Having control over GPSD and its running, stopping it\n");
     if(gps_is_on)
       location_gpsd_control_stop(control);
@@ -141,11 +137,7 @@ gps_liblocation_state_t::~gps_liblocation_state_t()
 void gps_liblocation_state_t::setEnable(bool en)
 {
   if(en != gps_is_on) {
-    if(device && control
-#ifndef FREMANTLE
-       && control->can_control
-#endif
-       ) {
+    if(device && control) {
       if(en) {
         printf("starting gpsd\n");
         location_gpsd_control_start(control);

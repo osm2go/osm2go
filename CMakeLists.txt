@@ -118,9 +118,12 @@ if (GooCanvas_FOUND)
 	target_link_libraries(osm2go_lib PRIVATE PkgConfig::GooCanvas)
 endif ()
 
-set(FREMANTLE Off)
 pkg_check_modules(MAEMO maemo-version)
 if (MAEMO_FOUND)
+	if (MAEMO_VERSION VERSION_LESS 5)
+		message(FATAL_ERROR "Build for Maemo requires at least Fremantle")
+	endif ()
+
 	pkg_check_modules(Hildon REQUIRED IMPORTED_TARGET hildon-1)
 	pkg_check_modules(Osso REQUIRED IMPORTED_TARGET libosso)
 	pkg_check_modules(Hildon_FM2 REQUIRED IMPORTED_TARGET hildon-fm-2)
@@ -153,20 +156,12 @@ if (MAEMO_FOUND)
 		src/dbus.h
 	)
 
-	target_compile_definitions(osm2go_lib PUBLIC USE_HILDON)
-
-	# fremantle uses icons of 48x48 pixels for the app installer,
-	# older versions used 26x26
-	if (MAEMO_VERSION VERSION_LESS 5)
-		set(ICONNAME osm2go.26.png)
-	else ()
-		set(ICONNAME osm2go.48.png)
-		# the data root dir is /opt on fremantle
-		set(DATA_DIR "/opt/${PROJECT_NAME}")
-		set(PICKER_MENU On)
-		set(FREMANTLE On)
-		target_compile_definitions(osm2go_lib PUBLIC FREMANTLE)
-	endif ()
+	set(ICONNAME osm2go.48.png)
+	# the data root dir is /opt on fremantle
+	set(DATA_DIR "/opt/${PROJECT_NAME}")
+	set(PICKER_MENU On)
+	set(FREMANTLE On)
+	target_compile_definitions(osm2go_lib PUBLIC FREMANTLE)
 
 	message(STATUS "Using application installer icon '${ICONNAME}'")
 

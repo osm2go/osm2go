@@ -246,7 +246,7 @@ static GtkWidget *tool_button_label(appdata_t &appdata, GtkToolbar *toolbar,
 
   gtk_tool_button_set_label_widget(GTK_TOOL_BUTTON(item), label);
 
-#ifndef USE_HILDON
+#ifndef FREMANTLE
   gtk_widget_set_tooltip_text(GTK_WIDGET(item), label_str);
 #endif
 
@@ -360,7 +360,7 @@ GtkWidget *iconbar_t::create(appdata_t &appdata) {
 #ifndef FINGER_UI
   GtkWidget *hbox = gtk_hbox_new(FALSE, 0);
 
-#ifdef USE_HILDON
+#ifdef FREMANTLE
   /* make buttons smaller for non-finger maemo */
   gtk_widget_set_size_request(GTK_WIDGET(hbox), -1, 32);
 #endif

@@ -24,14 +24,10 @@
 
 #define USE_CAIRO
 
-/* only maemo devices up to version 4 have a fullscreen button */
-#ifdef USE_HILDON
+#ifdef FREMANTLE
 #include <hildon/hildon-defines.h>
-#ifndef FREMANTLE
-#define OSM_GPS_MAP_KEY_FULLSCREEN  HILDON_HARDKEY_FULLSCREEN
-#else
+/* only maemo devices up to version 4 have a fullscreen button */
 #define OSM_GPS_MAP_KEY_FULLSCREEN  'f'
-#endif
 #define OSM_GPS_MAP_KEY_ZOOMIN      HILDON_HARDKEY_INCREASE
 #define OSM_GPS_MAP_KEY_ZOOMOUT     HILDON_HARDKEY_DECREASE
 #else

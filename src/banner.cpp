@@ -29,7 +29,7 @@
 
 #include <osm2go_cpp.h>
 
-#ifdef USE_HILDON
+#ifdef FREMANTLE
 #include <hildon/hildon.h>
 
 // Clear any current animations.
@@ -39,16 +39,7 @@ void banner_clear(appdata_t &appdata) {
     return;
   gtk_grab_remove(YETI_PASSIVE_WIDGET);
   GtkWidget *win = GTK_WIDGET(appdata.window);
-#ifndef FREMANTLE
-  GtkWidget *menu = GTK_WIDGET(hildon_window_get_menu(HILDON_WINDOW(win)));
-  GtkWidget *menu_att = gtk_menu_get_attach_widget(
-                            hildon_window_get_menu(HILDON_WINDOW(win)));
-#endif
   gtk_widget_set_sensitive(win, TRUE);
-#ifndef FREMANTLE
-  gtk_widget_set_sensitive(menu, TRUE);
-  gtk_widget_set_sensitive(menu_att, TRUE);
-#endif
   gtk_widget_destroy(appdata.banner);
   g_object_unref(appdata.banner);
   appdata.banner = O2G_NULLPTR;
@@ -86,21 +77,12 @@ void banner_busy_start(appdata_t &appdata, const char *text) {
   g_object_ref(appdata.banner);
   gtk_widget_show(appdata.banner);
   GtkWidget *win = GTK_WIDGET(appdata.window);
-#ifndef FREMANTLE
-  GtkWidget *menu = GTK_WIDGET(hildon_window_get_menu(HILDON_WINDOW(win)));
-  GtkWidget *menu_att = gtk_menu_get_attach_widget(
-                            hildon_window_get_menu(HILDON_WINDOW(win)));
-#endif
   gtk_widget_set_sensitive(win, FALSE);
-#ifndef FREMANTLE
-  gtk_widget_set_sensitive(menu, FALSE);
-  gtk_widget_set_sensitive(menu_att, FALSE);
-#endif
   gtk_grab_add(YETI_PASSIVE_WIDGET);
   osm2go_platform::process_events();
 }
 
-#else  // USE_HILDON
+#else  // FREMANTLE
 
 /*
  * For non-Hildon builds, use the "brief" message in the statusbar to show
@@ -127,7 +109,7 @@ void banner_clear(appdata_t &appdata) {
   gtk_grab_remove(YETI_PASSIVE_WIDGET);
 }
 
-#endif //USE_HILDON
+#endif //FREMANTLE
 
 // Just an alias right now
 

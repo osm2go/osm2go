@@ -41,7 +41,7 @@
 /* be moved so the action is actually considered dragging. This is */
 /* to prevent accidential dragging when the user only intended to click */
 /* something. This is especially useful when using a touchscreen. */
-#ifndef USE_HILDON
+#ifndef FREMANTLE
 #define MAP_DRAG_LIMIT   4
 #else
 #define MAP_DRAG_LIMIT   16

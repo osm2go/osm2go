@@ -1340,7 +1340,7 @@ static gboolean map_motion_notify_event(GtkWidget *,
 
   if(!map->appdata.osm) return FALSE;
 
-#if 0 // def USE_HILDON
+#if 0 // def FREMANTLE
   /* reduce update frequency on hildon to keep screen update fluid */
   static guint32 last_time = 0;
 
@@ -1451,7 +1451,7 @@ bool map_t::key_press_event(unsigned int keyval) {
       map_delete_selected(this);
     break;
 
-#ifdef USE_HILDON
+#ifdef FREMANTLE
   case HILDON_HARDKEY_INCREASE:
 #else
   case '+':
@@ -1460,7 +1460,7 @@ bool map_t::key_press_event(unsigned int keyval) {
     set_zoom(state.zoom * ZOOM_FACTOR_BUTTON, true);
     return true;
 
-#ifdef USE_HILDON
+#ifdef FREMANTLE
   case HILDON_HARDKEY_DECREASE:
 #else
   case '-':

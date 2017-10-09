@@ -22,10 +22,7 @@ if (MAEMO_FOUND)
 	target_link_libraries(osm-gps-map
 		PUBLIC PkgConfig::Hildon
 	)
-	target_compile_definitions(osm-gps-map PRIVATE USE_HILDON)
-	if (MAEMO_VERSION VERSION_GREATER_EQUAL 5)
-		target_compile_definitions(osm-gps-map PRIVATE FREMANTLE)
-	endif ()
+	target_compile_definitions(osm-gps-map PRIVATE FREMANTLE)
 else ()
 	target_link_libraries(osm-gps-map
 		PUBLIC ${GTK2_TARGETS}

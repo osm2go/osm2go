@@ -298,7 +298,7 @@ void about_box(appdata_t *appdata) {
 	  GTK_WINDOW(appdata->window), GTK_DIALOG_MODAL,
           GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE, O2G_NULLPTR);
 
-#ifdef USE_HILDON
+#ifdef FREMANTLE
   gtk_window_set_default_size(GTK_WINDOW(dialog), 640, 480);
 #else
   gtk_window_set_default_size(GTK_WINDOW(dialog), 400, 200);

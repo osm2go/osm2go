@@ -32,7 +32,7 @@ public:
 
   GtkWidget * const widget;
 
-#ifndef USE_HILDON
+#ifndef FREMANTLE
   /**
    * @brief flash up a brief, temporary message.
    * @param msg the message to show

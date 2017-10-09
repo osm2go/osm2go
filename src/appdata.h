@@ -25,12 +25,9 @@
 
 #define _(String) gettext(String)
 
-#ifdef USE_HILDON
 #ifdef FREMANTLE
 #include <hildon/hildon-gtk.h>
 #include <hildon/hildon-pannable-area.h>
-#endif
-
 #include <hildon/hildon-program.h>
 #include <hildon/hildon-file-chooser-dialog.h>
 #include <hildon/hildon-file-system-model.h>
@@ -86,13 +83,17 @@ struct appdata_t {
   appdata_t();
   ~appdata_t();
 
-#ifdef USE_HILDON
+#ifdef FREMANTLE
   HildonProgram *program;
   HildonWindow *window;
   osso_context_t * const osso_context;
   GtkWidget *banner;
+  /* submenues are seperate menues under fremantle */
+  GtkWidget *app_menu_view, *app_menu_wms, *app_menu_track;
+  GtkWidget *app_menu_map;
 #else
   GtkWidget *window;
+  GtkWidget *menu_item_view_fullscreen;
 #endif
 
   GtkWidget *btn_zoom_in, *btn_zoom_out;
@@ -115,14 +116,6 @@ struct appdata_t {
     canvas_item_t *gps_item; // the purple circle
     int warn_cnt;
   } track;
-
-#ifndef FREMANTLE
-  GtkWidget *menu_item_view_fullscreen;
-#else
-  /* submenues are seperate menues under fremantle */
-  GtkWidget *app_menu_view, *app_menu_wms, *app_menu_track;
-  GtkWidget *app_menu_map;
-#endif
 
   map_state_t map_state;
   map_t *map;

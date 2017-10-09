@@ -41,14 +41,9 @@
 #define TAB_LABEL_EXTENT "Extent"
 
 /* maemo5 just got maemo mapper */
-#if defined(USE_HILDON)
+#ifdef FREMANTLE
 #include "dbus.h"
 #define HAS_MAEMO_MAPPER
-#ifdef FREMANTLE
-#define TAB_LABEL_MM     "M.Mapper"
-#else
-#define TAB_LABEL_MM     "Maemo Mapper"
-#endif
 #endif
 
 /* limit of square kilometers above the warning is enabled */
@@ -534,7 +529,7 @@ static void callback_fetch_mm_clicked(context_t *context) {
   }
 
   /* maemo mapper is fourth tab (page 3) */
-  if(!current_tab_is(context, TAB_LABEL_MM))
+  if(!current_tab_is(context, "M.Mapper"))
     return;
 
   /* maemo mapper pos data ... */
@@ -875,7 +870,7 @@ bool area_edit_t::run() {
   label = gtk_label_new(_("(recommended MM zoom level < 7)"));
   gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
 
-  notebook_append_page(context.notebook, vbox, _(TAB_LABEL_MM));
+  notebook_append_page(context.notebook, vbox, _("M.Mapper"));
 #endif
 
   /* ------------------------------------------------------ */

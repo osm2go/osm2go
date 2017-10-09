@@ -649,7 +649,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
   }
   case TagSpace:
     g_assert_false(items.empty());
-#ifndef USE_HILDON
+#ifndef FREMANTLE
     widget = new presets_widget_separator();
 #endif
     break;
@@ -926,7 +926,7 @@ void PresetSax::endElement(const xmlChar *name)
   }
   case TagSpace:
     g_assert_false(items.empty());
-#ifndef USE_HILDON
+#ifndef FREMANTLE
     g_assert_false(widgets.empty());
     widgets.pop();
 #endif

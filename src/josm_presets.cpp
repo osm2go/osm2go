@@ -127,7 +127,7 @@ static bool store_value(const presets_widget_t *widget, osm_t::TagMap &tags,
   return changed;
 }
 
-#ifdef USE_HILDON
+#ifdef FREMANTLE
 static gint table_expose_event(GtkWidget *widget, GdkEventExpose *,
 			 gboolean *first) {
 
@@ -298,7 +298,7 @@ static void presets_item_dialog(presets_context_t *context,
     add_widget_functor fc(gtk_widgets, context, table, row);
     std::for_each(it, itEnd, fc);
 
-#ifndef USE_HILDON
+#ifndef FREMANTLE
     /* add widget to dialog */
     gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), table);
     gtk_window_set_default_size(GTK_WINDOW(dialog), 300, 50);

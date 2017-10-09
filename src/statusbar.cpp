@@ -32,15 +32,12 @@ public:
   statusbar_internal();
 
 #ifndef FREMANTLE
-#ifndef USE_HILDON
   guint brief_handler_id;
   guint brief_mid;
-
-  void brief(int timeout, const char *msg);
-#endif /* USE_HILDON */
   guint cid;
   guint mid;
 
+  void brief(int timeout, const char *msg);
   inline void setMsg(const char *msg);
 #endif /* FREMANTLE */
 };
@@ -83,7 +80,7 @@ void statusbar_t::set(const char *msg, bool highlight) {
 #endif
 }
 
-#ifndef USE_HILDON
+#ifndef FREMANTLE
 // Clear any brief message currently set, dropping back to the persistent one.
 
 static gboolean statusbar_brief_clear(gpointer data) {
@@ -134,7 +131,7 @@ statusbar_t::statusbar_t()
   : widget(gtk_label_new(O2G_NULLPTR))
 #endif
 {
-#ifdef USE_HILDON
+#ifdef FREMANTLE
   /* why the heck does hildon show this by default? It's useless!! */
   g_object_set(widget, "has-resize-grip", FALSE, O2G_NULLPTR);
 #endif
@@ -143,10 +140,8 @@ statusbar_t::statusbar_t()
 statusbar_internal::statusbar_internal()
   : statusbar_t()
 #ifndef FREMANTLE
-#ifndef USE_HILDON
   , brief_handler_id(0)
   , brief_mid(0)
-#endif
   , cid(gtk_statusbar_get_context_id(GTK_STATUSBAR(widget), "Msg"))
   , mid(0)
 #endif

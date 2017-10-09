@@ -38,14 +38,13 @@
 #include "wms.h"
 
 #ifdef FREMANTLE
+#include "dbus.h"
+
 #include <hildon/hildon-button.h>
 #include <hildon/hildon-check-button.h>
 #include <hildon/hildon-window-stack.h>
 #include <gdk/gdkx.h>
 #include <X11/Xatom.h>
-#endif
-#ifdef USE_HILDON
-#include "dbus.h"
 #endif
 
 #if __cplusplus < 201103L
@@ -79,35 +78,28 @@ void main_ui_enable(appdata_t &appdata) {
     map_action_cancel(appdata.map);
 
   /* ---- set project name as window title ----- */
-#if defined(USE_HILDON) && !defined(FREMANTLE)
-  if(project_valid)
-    gtk_window_set_title(GTK_WINDOW(appdata.window), appdata.project->name.c_str());
-  else
-    gtk_window_set_title(GTK_WINDOW(appdata.window), "");
-#else
   char *str = O2G_NULLPTR;
   const char *cstr = "OSM2go";
-#ifdef USE_HILDON
+
   if(project_valid)
+#ifdef FREMANTLE
     cstr = str = g_markup_printf_escaped(_("<b>%s</b> - OSM2Go"),
                                          appdata.project->name.c_str());
 
   hildon_window_set_markup(HILDON_WINDOW(appdata.window), cstr);
 #else
-  if(project_valid)
     cstr = str = g_strdup_printf(_("%s - OSM2Go"), appdata.project->name.c_str());
 
   gtk_window_set_title(GTK_WINDOW(appdata.window), cstr);
 #endif
   g_free(str);
-#endif
 
   appdata.iconbar->setToolbarEnable(osm_valid == TRUE);
   /* disable all menu entries related to map */
   gtk_widget_set_sensitive(appdata.menuitems[SUBMENU_MAP], project_valid);
 
   // those icons that get enabled or disabled depending on OSM data being loaded
-#ifndef USE_HILDON
+#ifndef FREMANTLE
   std::array<menu_items, 7> osm_active_items = { {
     MENU_ITEM_MAP_SAVE_CHANGES,
 #else
@@ -140,7 +132,7 @@ cb_menu_project_open(appdata_t *appdata) {
   main_ui_enable(*appdata);
 }
 
-#ifndef USE_HILDON
+#ifndef FREMANTLE
 static void
 cb_menu_quit(appdata_t *appdata) {
   gtk_widget_destroy(GTK_WIDGET(appdata->window));
@@ -279,9 +271,7 @@ cb_menu_track_vis(appdata_t *appdata) {
   if(track_visibility_select(GTK_WIDGET(appdata->window), *appdata) && appdata->track.track)
     appdata->map->track_draw(appdata->settings->trackVisibility, *appdata->track.track);
 }
-#endif
 
-#ifndef USE_HILDON
 static void
 cb_menu_save_changes(appdata_t *appdata) {
   if(G_LIKELY(appdata->project && appdata->osm))
@@ -373,7 +363,7 @@ cb_menu_track_import(appdata_t *appdata) {
   /* open a file selector */
   GtkWidget *dialog;
 
-#ifdef USE_HILDON
+#ifdef FREMANTLE
   dialog = hildon_file_chooser_dialog_new(GTK_WINDOW(appdata->window),
 					  GTK_FILE_CHOOSER_ACTION_OPEN);
 #else
@@ -445,7 +435,7 @@ cb_menu_track_export(appdata_t *appdata) {
   /* open a file selector */
   GtkWidget *dialog;
 
-#ifdef USE_HILDON
+#ifdef FREMANTLE
   dialog = hildon_file_chooser_dialog_new(GTK_WINDOW(appdata->window),
 					  GTK_FILE_CHOOSER_ACTION_SAVE);
 #else
@@ -505,7 +495,7 @@ cb_menu_track_export(appdata_t *appdata) {
  *  Platform-specific UI tweaks.
  */
 
-#ifndef USE_HILDON
+#ifndef FREMANTLE
 #ifdef PORTRAIT
 
 // Portrait mode, for openmoko-like systems
@@ -520,7 +510,7 @@ cb_menu_track_export(appdata_t *appdata) {
 #define UISPECIFIC_MENU_HAS_ACCELS
 
 #endif //PORTRAIT
-#else//USE_HILDON
+#else//FREMANTLE
 
 // Maemo/Hildon builds
 #define uispecific_main_menu_new gtk_menu_new
@@ -614,7 +604,6 @@ static void menu_create(appdata_t &appdata, GtkBox *mainvbox) {
 
   GtkAccelGroup *accel_grp = gtk_accel_group_new();
 
-#ifndef USE_HILDON
   item = gtk_menu_item_new_with_mnemonic( _("_Project") );
   gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
   submenu = gtk_menu_new();
@@ -629,13 +618,6 @@ static void menu_create(appdata_t &appdata, GtkBox *mainvbox) {
     GTK_STOCK_OPEN, "<OSM2Go-Main>/Project/Open",
     0, static_cast<GdkModifierType>(0), TRUE, false, FALSE
   );
-#else
-  menu_append_new_item(
-    appdata, menu, G_CALLBACK(cb_menu_project_open), _("_Project"),
-    GTK_STOCK_OPEN, "<OSM2Go-Main>/Project",
-    0, static_cast<GdkModifierType>(0), TRUE, false, FALSE
-  );
-#endif
 
   /* --------------- view menu ------------------- */
 
@@ -649,15 +631,12 @@ static void menu_create(appdata_t &appdata, GtkBox *mainvbox) {
   gtk_menu_set_accel_group(GTK_MENU(submenu), accel_grp);
   gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), submenu);
 
-#ifndef FREMANTLE
   appdata.menu_item_view_fullscreen = menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_fullscreen), _("_Fullscreen"),
     GTK_STOCK_FULLSCREEN, "<OSM2Go-Main>/View/Fullscreen",
     0, static_cast<GdkModifierType>(0), TRUE, true, FALSE
   );
-#endif
 
-#ifndef USE_HILDON
   menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_zoomin), _("Zoom _in"),
     GTK_STOCK_ZOOM_IN, "<OSM2Go-Main>/View/ZoomIn",
@@ -669,7 +648,6 @@ static void menu_create(appdata_t &appdata, GtkBox *mainvbox) {
     GTK_STOCK_ZOOM_OUT, "<OSM2Go-Main>/View/ZoomOut",
     GDK_period, GDK_CONTROL_MASK, TRUE, false, FALSE
   );
-#endif
 
   gtk_menu_shell_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
 
@@ -737,13 +715,11 @@ static void menu_create(appdata_t &appdata, GtkBox *mainvbox) {
 
   gtk_menu_shell_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
 
-#ifndef USE_HILDON
   appdata.menuitems[MENU_ITEM_MAP_SAVE_CHANGES] = menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_save_changes), _("_Save local changes"),
     GTK_STOCK_SAVE, "<OSM2Go-Main>/Map/SaveChanges",
     GDK_s, static_cast<GdkModifierType>(GDK_SHIFT_MASK|GDK_CONTROL_MASK), TRUE, false, FALSE
   );
-#endif
 
   appdata.menuitems[MENU_ITEM_MAP_UNDO_CHANGES] = menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_undo_changes), _("Undo _all"),
@@ -846,19 +822,14 @@ static void menu_create(appdata_t &appdata, GtkBox *mainvbox) {
     0, static_cast<GdkModifierType>(0), TRUE, false, FALSE
   );
 
-#ifndef USE_HILDON
   menu_append_new_item(
     appdata, about_quit_items_menu, G_CALLBACK(cb_menu_quit), _("_Quit"),
     GTK_STOCK_QUIT, "<OSM2Go-Main>/Quit",
     0, static_cast<GdkModifierType>(0), TRUE, false, FALSE
   );
-#endif
 
   gtk_window_add_accel_group(GTK_WINDOW(appdata.window), accel_grp);
 
-#ifdef USE_HILDON
-  hildon_window_set_menu(appdata.window, GTK_MENU(menu));
-#else
   GtkWidget *menu_bar = menu;
 
 #ifndef UISPECIFIC_MAIN_MENU_IS_MENU_BAR
@@ -876,7 +847,6 @@ static void menu_create(appdata_t &appdata, GtkBox *mainvbox) {
 
   gtk_box_pack_start(mainvbox, menu_bar, 0, 0, 0);
 
-#endif //USE_HILDON
 }
 
 void menu_cleanup(appdata_t &) { }
@@ -1154,13 +1124,18 @@ static void menu_accels_load(appdata_t *appdata) {
 #endif
 
 appdata_t::appdata_t()
-#ifdef USE_HILDON
+#ifdef FREMANTLE
   : program(O2G_NULLPTR)
   , window(O2G_NULLPTR)
   , osso_context(osso_initialize("org.harbaum." PACKAGE, VERSION, TRUE, O2G_NULLPTR))
   , banner(O2G_NULLPTR)
+  , app_menu_view(O2G_NULLPTR)
+  , app_menu_wms(O2G_NULLPTR)
+  , app_menu_track(O2G_NULLPTR)
+  , app_menu_map(O2G_NULLPTR)
 #else
   : window(O2G_NULLPTR)
+  , menu_item_view_fullscreen(O2G_NULLPTR)
 #endif
   , btn_zoom_in(O2G_NULLPTR)
   , btn_zoom_out(O2G_NULLPTR)
@@ -1168,15 +1143,6 @@ appdata_t::appdata_t()
   , project(O2G_NULLPTR)
   , iconbar(O2G_NULLPTR)
   , presets(O2G_NULLPTR)
-#ifndef FREMANTLE
-  , menu_item_view_fullscreen(O2G_NULLPTR)
-#endif
-#ifdef FREMANTLE
-  , app_menu_view(O2G_NULLPTR)
-  , app_menu_wms(O2G_NULLPTR)
-  , app_menu_track(O2G_NULLPTR)
-  , app_menu_map(O2G_NULLPTR)
-#endif
   , map(O2G_NULLPTR)
   , osm(O2G_NULLPTR)
   , settings(settings_t::load())
@@ -1203,7 +1169,7 @@ appdata_t::~appdata_t() {
 
   settings->save();
 
-#ifdef USE_HILDON
+#ifdef FREMANTLE
   if(osso_context)
     osso_deinitialize(osso_context);
 
@@ -1254,12 +1220,7 @@ static gboolean on_window_key_press(appdata_t *appdata, GdkEventKey *event) {
   switch(event->keyval) {
 
 #ifndef FREMANTLE
-#ifdef USE_HILDON
-    /* this is in fact a mapping to GDK_F6 */
-  case HILDON_HARDKEY_FULLSCREEN:
-#else // USE_HILDON
   case GDK_F11:
-#endif // USE_HILDON
     if(!gtk_check_menu_item_get_active(
              GTK_CHECK_MENU_ITEM(appdata->menu_item_view_fullscreen))) {
       gtk_window_fullscreen(GTK_WINDOW(appdata->window));
@@ -1307,10 +1268,10 @@ static GtkWidget *  __attribute__((nonnull(1,2,4)))
 			      GtkWidget *box) {
   GtkWidget *but = gtk_button_new();
   const int icon_scale =
-#ifndef FREMANTLE
-    24;
-#else
+#ifdef FREMANTLE
     -1;
+#else
+    24;
 #endif
   GtkWidget *iconw = appdata->icons.widget_load(icon, icon_scale);
 #ifndef FREMANTLE
@@ -1344,7 +1305,7 @@ static int application_run(const char *proj)
     return -1;
   }
 
-#ifdef USE_HILDON
+#ifdef FREMANTLE
   if(appdata.osso_context == O2G_NULLPTR)
     fprintf(stderr, "error initiating osso context\n");
 
@@ -1355,16 +1316,12 @@ static int application_run(const char *proj)
   g_set_application_name("OSM2Go");
 
   /* Create HildonWindow and set it to HildonProgram */
-#ifndef FREMANTLE
-  appdata.window = HILDON_WINDOW(hildon_window_new());
-#else
   appdata.window = HILDON_WINDOW(hildon_stackable_window_new());
-#endif
   hildon_program_add_window(appdata.program, appdata.window);
 
   /* try to enable the zoom buttons. don't do this on x86 as it breaks */
   /* at runtime with cygwin x */
-#if defined(FREMANTLE) && !defined(__i386__)
+#if !defined(__i386__)
   g_signal_connect(G_OBJECT(appdata.window), "realize",
 		   G_CALLBACK(on_window_realize), O2G_NULLPTR);
 #endif // FREMANTLE

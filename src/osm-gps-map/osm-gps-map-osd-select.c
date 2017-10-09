@@ -27,7 +27,7 @@
 #include <math.h>    // M_PI/cos()
 #include <stdlib.h>  // abs
 
-#ifdef USE_HILDON
+#ifdef FREMANTLE
 #define OSD_W 80
 #else
 #define OSD_W 40

@@ -190,7 +190,7 @@ settings_t *settings_t::load() {
 
   const char *p;
   if(G_UNLIKELY(settings->base_path.empty())) {
-#ifdef USE_HILDON
+#ifdef FREMANTLE
     /* try to use internal memory card on hildon/maemo */
     p = getenv("INTERNAL_MMC_MOUNTPOINT");
     if(!p)

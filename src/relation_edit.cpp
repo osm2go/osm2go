@@ -302,7 +302,7 @@ static GtkWidget *relation_item_list_widget(relitem_context_t &context) {
   context.view = hildon_gtk_tree_view_new(HILDON_UI_MODE_EDIT);
 #endif
 
-#ifdef USE_HILDON
+#ifdef FREMANTLE
   /* hildon hides these by default */
   gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(context.view), TRUE);
 #endif

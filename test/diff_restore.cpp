@@ -17,7 +17,7 @@
 
 appdata_t::appdata_t()
   : window(O2G_NULLPTR)
-#ifdef USE_HILDON
+#ifdef FREMANTLE
   , osso_context(O2G_NULLPTR)
 #endif
   , statusbar(O2G_NULLPTR)
