@@ -325,7 +325,7 @@ static std::map<std::string, std::string> style_scan() {
         icon_t dummyicons;
         style_t style(dummyicons);
         if(style_parse(fullname, O2G_NULLPTR, true, style))
-          ret[style.name] = fullname;
+          ret[style.name].swap(fullname);
       }
     }
   }
