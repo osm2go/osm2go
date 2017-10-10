@@ -23,7 +23,7 @@
 #include "icon.h"
 #include "osm.h"
 
-#include <glib.h>
+#include <gtk/gtk.h>
 #include <vector>
 
 struct appdata_t;
@@ -94,7 +94,7 @@ struct style_t {
 
   std::vector<elemstyle_t *> elemstyles;
 
-  typedef std::map<item_id_t, GdkPixbuf *> IconCache;
+  typedef std::map<item_id_t, icon_t::icon_item *> IconCache;
   IconCache node_icons;
 
   void colorize_node(node_t *node);

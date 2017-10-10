@@ -132,8 +132,7 @@ static void map_node_select(map_t *map, node_t *node) {
      (it = map->style->node_icons.find(node->id)) != map->style->node_icons.end()) {
     /* icons are technically square, so a radius slightly bigger */
     /* than sqrt(2)*MAX(w,h) should fit nicely */
-    radius = 0.75 * map->style->icon.scale *
-             std::max(gdk_pixbuf_get_width(it->second), gdk_pixbuf_get_height(it->second));
+    radius = 0.75 * map->style->icon.scale * it->second->maxDimension();
   } else {
     radius = map->style->highlight.width + map->style->node.radius;
     if(!node->ways)
@@ -407,8 +406,8 @@ static void map_node_new(map_t *map, node_t *node, unsigned int radius,
     map_item->item = map->canvas->circle_new(CANVAS_GROUP_NODES,
        node->lpos.x, node->lpos.y, radius, width, fill, border);
   else
-    map_item->item = map->canvas->image_new(CANVAS_GROUP_NODES,
-      it->second, node->lpos.x, node->lpos.y,
+    map_item->item = map->canvas->image_new(CANVAS_GROUP_NODES, it->second->buffer(),
+                                            node->lpos.x, node->lpos.y,
 		      map->state.detail * map->style->icon.scale,
 		      map->state.detail * map->style->icon.scale);
 

@@ -1333,7 +1333,7 @@ static int application_run(const char *proj)
   gtk_window_set_default_size(GTK_WINDOW(appdata.window),
 			      DEFAULT_WIDTH, DEFAULT_HEIGHT);
   gtk_window_set_icon(GTK_WINDOW(appdata.window),
-		      appdata.icons.load(PACKAGE));
+		      appdata.icons.load(PACKAGE)->buffer());
 #endif
 
   g_signal_connect_swapped(G_OBJECT(appdata.window), "key_press_event",

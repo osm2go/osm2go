@@ -63,7 +63,7 @@ static void icon_check(const elemstyle_t *item)
   name += item->icon.filename;
 
   icon_t icons;
-  GdkPixbuf *buf = icons.load(name);
+  icon_t::icon_item *buf = icons.load(name);
   if(!buf) {
     std::cout << "icon missing: " << item->icon.filename << std::endl;
     if(strcmp(path_prefix, "standard") == 0)

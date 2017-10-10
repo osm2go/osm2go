@@ -96,7 +96,7 @@ int main(int argc, char **argv)
   g_assert_false(style->node_icons.empty());
   g_assert_nonnull(style->node_icons[node->id]);
 
-  GdkPixbuf *oldicon = style->node_icons[node->id];
+  icon_t::icon_item *oldicon = style->node_icons[node->id];
   float oldzoom = node->zoom_max;
 
   // this should change the icon and zoom_max

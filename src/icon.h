@@ -20,6 +20,7 @@
 #ifndef ICON_H
 #define ICON_H
 
+#include <algorithm>
 #include <gtk/gtk.h>
 #include <map>
 #include <string>
@@ -33,10 +34,22 @@ public:
 
     GdkPixbuf *buf;
     int use;
-  public:
     explicit icon_item(GdkPixbuf *nbuf = O2G_NULLPTR);
+  public:
+    ~icon_item();
+
     inline bool operator==(const GdkPixbuf *b) const { return buf == b; }
-    void destroy();
+    inline bool operator==(const icon_item &other) const { return buf == other.buf; }
+
+    inline GdkPixbuf *buffer() {
+      return buf;
+    }
+
+    int width() const;
+    int height() const;
+    inline int maxDimension() const {
+      return std::max(width(), height());
+    }
   };
 
   ~icon_t();
@@ -50,14 +63,14 @@ public:
    * The image is only scaled down to the given dimensions, not enlarged.
    * The limit is only applied if the icon is not already cached.
    */
-  GdkPixbuf *load(const std::string &sname, int limit = -1);
+  icon_item *load(const std::string &sname, int limit = -1);
 
   GtkWidget *widget_load(const std::string &name, int limit = -1);
 
-  void icon_free(GdkPixbuf *buf);
+  void icon_free(icon_item *buf);
 
 private:
-  std::map<std::string, icon_item> entries;
+  std::map<std::string, icon_item *> entries;
 };
 
 #endif // ICON_H

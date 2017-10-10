@@ -724,14 +724,14 @@ static GtkWidget *presets_picker_embed(GtkTreeView *view, GtkListStore *store,
 static GtkTreeIter preset_insert_item(const presets_item_named *item, icon_t &icons,
                                       GtkListStore *store) {
   /* icon load can cope with empty string as name (returns O2G_NULLPTR then) */
-  GdkPixbuf *icon = icons.load(item->icon, 16);
+  icon_t::icon_item *icon = icons.load(item->icon, 16);
 
   /* Append a row and fill in some data */
   GtkTreeIter iter;
   gtk_list_store_append(store, &iter);
 
   gtk_list_store_set(store, &iter,
-		     PRESETS_PICKER_COL_ICON, icon,
+		     PRESETS_PICKER_COL_ICON, icon->buffer(),
 		     PRESETS_PICKER_COL_NAME, item->name.c_str(),
 		     PRESETS_PICKER_COL_ITEM_PTR, item,
 		     -1);
@@ -792,10 +792,10 @@ static GtkWidget *preset_picker_lru(presets_context_t *context) {
 struct picker_add_functor {
   presets_context_t * const context;
   GtkListStore * const store;
-  GdkPixbuf * const subicon;
+  icon_t::icon_item * const subicon;
   bool &show_recent;
   bool scan_for_recent;
-  picker_add_functor(presets_context_t *c, GtkListStore *s, GdkPixbuf *i, bool r, bool &w)
+  picker_add_functor(presets_context_t *c, GtkListStore *s, icon_t::icon_item *i, bool r, bool &w)
     : context(c), store(s), subicon(i), show_recent(w), scan_for_recent(r) {}
   void operator()(const presets_item_t *item);
 };
@@ -817,7 +817,7 @@ void picker_add_functor::operator()(const presets_item_t *item)
   if(item->type & presets_item_t::TY_GROUP) {
     gtk_list_store_set(store, &iter,
                        PRESETS_PICKER_COL_SUBMENU_PTR,  item,
-                       PRESETS_PICKER_COL_SUBMENU_ICON, subicon, -1);
+                       PRESETS_PICKER_COL_SUBMENU_ICON, subicon->buffer(), -1);
     if(scan_for_recent) {
       show_recent = preset_group_is_used(static_cast<const presets_item_group *>(itemv),
                                          context->tag_context->tags);
@@ -841,7 +841,7 @@ struct matching_type_functor {
  * @brief create a picker list for preset items
  * @param context the tag context
  * @param items the list of presets to show
- * @param scan_for_recent if a "Used Presets" subentry should be created
+ * @param top_level if a "Used Presets" subentry should be created
  *
  * This will create a view with the given items. This is just one column in the
  * presets view, every submenu will get it's own view created by a call to this
@@ -854,7 +854,7 @@ presets_picker(presets_context_t *context, const std::vector<presets_item_t *> &
   GtkListStore *store = presets_picker_store(&view);
 
   bool show_recent = false;
-  GdkPixbuf *subicon = context->appdata.icons.load("submenu_arrow");
+  icon_t::icon_item *subicon = context->appdata.icons.load("submenu_arrow");
   picker_add_functor fc(context, store, subicon, top_level, show_recent);
 
   std::for_each(items.begin(), items.end(), fc);
@@ -869,7 +869,7 @@ presets_picker(presets_context_t *context, const std::vector<presets_item_t *> &
     gtk_list_store_prepend(store, &iter);
     gtk_list_store_set(store, &iter,
                        PRESETS_PICKER_COL_NAME, _("Last used presets"),
-                       PRESETS_PICKER_COL_SUBMENU_ICON, subicon,
+                       PRESETS_PICKER_COL_SUBMENU_ICON, subicon->buffer(),
 		       -1);
   }
   if(show_recent) {
@@ -879,7 +879,7 @@ presets_picker(presets_context_t *context, const std::vector<presets_item_t *> &
     gtk_list_store_prepend(store, &iter);
     gtk_list_store_set(store, &iter,
 		       PRESETS_PICKER_COL_NAME, _("Used presets"),
-		       PRESETS_PICKER_COL_SUBMENU_ICON, subicon,
+		       PRESETS_PICKER_COL_SUBMENU_ICON, subicon->buffer(),
 		       -1);
   }
 
