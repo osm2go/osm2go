@@ -50,7 +50,7 @@ icon_file_exists(const std::string &file) {
 #else
   const std::array<const char *, 3> icon_exts = { {
 #endif
-                              ".gif", ".png", ".jpg" } };
+                              ".png", ".gif", ".jpg" } };
 
   // absolute filenames are not mangled
   if(file[0] == '/') {
