@@ -47,3 +47,14 @@ void fdguard::swap(fdguard &other)
   const_cast<int&>(fd) = other.fd;
   const_cast<int&>(other.fd) = f;
 }
+
+dirguard::dirguard(const char *name)
+  : d(opendir(name))
+{
+}
+
+dirguard::~dirguard()
+{
+  if(G_LIKELY(valid()))
+    closedir(d);
+}

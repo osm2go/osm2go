@@ -30,6 +30,7 @@
 #include <cmath>
 #include <cstring>
 #include <dirent.h>
+#include <fdguard.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <string>
@@ -290,8 +291,6 @@ static std::map<std::string, std::string> style_scan() {
   home_path.reserve(strlen(p) + 32);
 
   for(const char **path = data_paths; *path; path++) {
-    DIR *dir;
-
     /* scan for projects */
     const char *dirname = *path;
 
@@ -300,10 +299,12 @@ static std::map<std::string, std::string> style_scan() {
       dirname = home_path.c_str();
     }
 
-    if((dir = opendir(dirname)) != O2G_NULLPTR) {
+    dirguard dir(dirname);
+
+    if(dir.valid()) {
       dirent *d;
-      int dfd = dirfd(dir);
-      while ((d = readdir(dir)) != O2G_NULLPTR) {
+      int dfd = dir.dirfd();
+      while ((d = dir.next()) != O2G_NULLPTR) {
         if(d->d_type == DT_DIR)
           continue;
 
@@ -326,8 +327,6 @@ static std::map<std::string, std::string> style_scan() {
         if(style_parse(fullname, O2G_NULLPTR, true, style))
           ret[style.name] = fullname;
       }
-
-      closedir(dir);
     }
   }
 

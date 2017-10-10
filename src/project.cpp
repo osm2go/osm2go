@@ -371,12 +371,12 @@ static std::vector<project_t *> project_scan(map_state_t &ms, const std::string 
   std::vector<project_t *> projects;
 
   /* scan for projects */
-  DIR *dir = opendir(base_path.c_str());
-  if(dir == O2G_NULLPTR)
+  dirguard dir(base_path.c_str());
+  if(!dir.valid())
     return projects;
 
   dirent *d;
-  while((d = readdir(dir)) != O2G_NULLPTR) {
+  while((d = dir.next()) != O2G_NULLPTR) {
     if(d->d_type != DT_DIR && d->d_type != DT_UNKNOWN)
       continue;
 
@@ -396,8 +396,6 @@ static std::vector<project_t *> project_scan(map_state_t &ms, const std::string 
         delete n;
     }
   }
-
-  closedir(dir);
 
   return projects;
 }
@@ -537,16 +535,15 @@ static bool project_delete(select_context_t *context, project_t *project) {
   }
 
   /* remove entire directory from disk */
-  DIR *dir = opendir(project->path.c_str());
-  if(G_LIKELY(dir != O2G_NULLPTR)) {
-    int dfd = dirfd(dir);
+  dirguard dir(project->path.c_str());
+  if(G_LIKELY(dir.valid())) {
+    int dfd = dir.dirfd();
     dirent *d;
-    while ((d = readdir(dir)) != O2G_NULLPTR) {
+    while ((d = dir.next()) != O2G_NULLPTR) {
       if(G_UNLIKELY(d->d_type == DT_DIR ||
                     (unlinkat(dfd, d->d_name, 0) == -1 && errno == EISDIR)))
         unlinkat(dfd, d->d_name, AT_REMOVEDIR);
     }
-    closedir(dir);
 
     /* remove the projects directory */
     rmdir(project->path.c_str());

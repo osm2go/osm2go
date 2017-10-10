@@ -20,6 +20,10 @@
 #ifndef FDGUARD_H
 #define FDGUARD_H
 
+#include <dirent.h>
+
+#include <osm2go_cpp.h>
+
 struct fdguard {
   explicit fdguard(int f) : fd(f) {}
   /**
@@ -34,6 +38,20 @@ struct fdguard {
   inline operator int() const { return fd; }
   inline bool valid() const { return fd >= 0; }
   void swap(fdguard &other);
+};
+
+class dirguard {
+  DIR *d;
+public:
+  /**
+   * @brief opens the given directory
+   */
+  dirguard(const char *name);
+  ~dirguard();
+
+  inline bool valid() const { return d != O2G_NULLPTR; }
+  inline dirent *next() { return readdir(d); }
+  inline int dirfd() { return ::dirfd(d); }
 };
 
 #endif /* FDGUARD_H */

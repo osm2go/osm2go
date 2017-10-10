@@ -32,6 +32,7 @@ write_compiler_detection_header(
 		EPILOG
 "#if !(defined(O2G_COMPILER_CXX_NULLPTR) && O2G_COMPILER_CXX_NULLPTR)
 #  undef O2G_NULLPTR
+#  include <cstdlib>
 #  define O2G_NULLPTR NULL
 #endif
 #if !(defined(O2G_COMPILER_CXX_STATIC_ASSERT) && O2G_COMPILER_CXX_STATIC_ASSERT)
