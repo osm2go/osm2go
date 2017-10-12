@@ -105,7 +105,7 @@ struct canvas_dimensions {
 
 class canvas_t {
 protected:
-  canvas_t(GtkWidget *w);
+  explicit canvas_t(GtkWidget *w);
 public:
   enum canvas_unit_t { UNIT_METER = 0, UNIT_PIXEL };
 

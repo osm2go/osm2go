@@ -33,7 +33,7 @@ struct elemstyle_t;
 typedef unsigned int elemstyle_color_t;
 
 struct style_t {
-  style_t(icon_t &ic);
+  explicit style_t(icon_t &ic);
   ~style_t();
 
   icon_t &icons;  // pointer to global list of icons

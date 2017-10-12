@@ -46,7 +46,7 @@ public:
   /**
    * @brief opens the given directory
    */
-  dirguard(const char *name);
+  explicit dirguard(const char *name);
   ~dirguard();
 
   inline bool valid() const { return d != O2G_NULLPTR; }

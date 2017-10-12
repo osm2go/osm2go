@@ -53,7 +53,7 @@ namespace std {
 
 class iconbar_gtk : public iconbar_t {
 public:
-  iconbar_gtk(appdata_t &appdata);
+  explicit iconbar_gtk(appdata_t &appdata);
 
   GtkToolbar * const toolbar;
 
