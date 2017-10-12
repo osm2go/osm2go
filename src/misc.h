@@ -48,7 +48,7 @@
 #include <string>
 #include <vector>
 
-extern const char *data_paths[];
+extern std::vector<std::string> base_paths;
 
 std::string find_file(const std::string &n);
 

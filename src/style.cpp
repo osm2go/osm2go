@@ -282,22 +282,15 @@ static std::map<std::string, std::string> style_scan() {
   std::map<std::string, std::string> ret;
   const char *extension = ".style";
 
-  char *p = getenv("HOME");
-  g_assert_nonnull(p);
   std::string fullname;
 
   const size_t elen = strlen(extension);
-  std::string home_path;
-  home_path.reserve(strlen(p) + 32);
 
-  for(const char **path = data_paths; *path; path++) {
+  g_assert_false(base_paths.empty());
+
+  for(unsigned int i = 0; i < base_paths.size(); i++) {
     /* scan for projects */
-    const char *dirname = *path;
-
-    if(*path[0] == '~') {
-      home_path = std::string(p) + (*path + 1);
-      dirname = home_path.c_str();
-    }
+    const char *dirname = base_paths[i].c_str();
 
     dirguard dir(dirname);
 
@@ -318,9 +311,7 @@ static std::map<std::string, std::string> style_scan() {
         if(G_UNLIKELY(!S_ISREG(st.st_mode)))
           continue;
 
-        fullname.reserve(strlen(dirname) + nlen + 1);
-        fullname = dirname;
-        fullname += d->d_name;
+        fullname = base_paths[i] + d->d_name;
 
         icon_t dummyicons;
         style_t style(dummyicons);

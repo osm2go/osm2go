@@ -219,17 +219,31 @@ bool yes_no_f(GtkWidget *parent, appdata_t &appdata, guint again_bit,
   return yes;
 }
 
+std::vector<std::string> base_paths;
+
 /* all entries must contain a trailing '/' ! */
-const char *data_paths[] = {
-  "~/." PACKAGE "/",           // in home directory
-  DATADIR "/",                 // final installation path
+static std::vector<std::string> init_paths() {
+  std::vector<std::string> ret;
+
+  const char *home = getenv("HOME");
+  g_assert_nonnull(home);
+
+  // in home directory
+  ret.push_back(home + std::string("/." PACKAGE "/"));
+  // final installation path
+  ret.push_back(DATADIR "/");
 #ifdef FREMANTLE
-  "/media/mmc1/" PACKAGE "/",  // path to external memory card
-  "/media/mmc2/" PACKAGE "/",  // path to internal memory card
+  // path to external memory card
+  ret.push_back("/media/mmc1/" PACKAGE "/");
+  // path to internal memory card
+  ret.push_back("/media/mmc2/" PACKAGE "/");
 #endif
-  "./data/", "../data/",       // local paths for testing
-  O2G_NULLPTR
-};
+  // local paths for testing
+  ret.push_back("./data/");
+  ret.push_back("../data/");
+
+  return ret;
+}
 
 std::string find_file(const std::string &n) {
   g_assert_false(n.empty());
@@ -239,21 +253,10 @@ std::string find_file(const std::string &n) {
     return std::string();
   }
 
-  const char *home = getenv("HOME");
   std::string full_path;
-  full_path.reserve(n.size() + strlen(home) + strlen(data_paths[0]));
 
-  for(const char **path = data_paths; *path; path++) {
-    const char *p = *path;
-
-    if(p[0] == '~') {
-      full_path = home;
-      p++;
-    } else {
-      full_path.clear();
-    }
-
-    full_path += p + n;
+  for(unsigned int i = 0; i < base_paths.size(); i++) {
+    full_path = base_paths[i] + n;
 
     if(g_file_test(full_path.c_str(), G_FILE_TEST_IS_REGULAR))
       return full_path;
@@ -595,6 +598,7 @@ void open_url(struct appdata_t &appdata, const char *url)
 }
 
 void misc_init(void) {
+  base_paths = init_paths();
 #ifdef FREMANTLE
   g_signal_new ("changed", HILDON_TYPE_PICKER_BUTTON,
 		G_SIGNAL_RUN_FIRST, 0, O2G_NULLPTR, O2G_NULLPTR,

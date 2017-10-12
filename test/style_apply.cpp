@@ -39,6 +39,7 @@ int main(int argc, char **argv)
 #endif
 
   xmlInitParser();
+  misc_init();
 
   appdata_t appdata;
 

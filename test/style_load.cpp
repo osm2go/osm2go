@@ -98,6 +98,7 @@ int main(int argc, char **argv)
 #endif
 
   xmlInitParser();
+  misc_init();
 
   std::vector<elemstyle_t *> styles = josm_elemstyles_load(argv[1]);
 
