@@ -20,6 +20,8 @@
 #ifndef MISC_H
 #define MISC_H
 
+#include "fdguard.h"
+
 #include <glib.h>
 #include <gtk/gtk.h>
 #include <libxml/tree.h>
@@ -48,7 +50,13 @@
 #include <string>
 #include <vector>
 
-extern std::vector<std::string> base_paths;
+struct datapath {
+  explicit inline datapath(int f) : fd(f) {}
+  fdguard fd;
+  std::string pathname;
+};
+
+extern std::vector<datapath> base_paths;
 
 std::string find_file(const std::string &n);
 

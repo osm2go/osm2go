@@ -286,13 +286,10 @@ static std::map<std::string, std::string> style_scan() {
 
   const size_t elen = strlen(extension);
 
-  g_assert_false(base_paths.empty());
-
   for(unsigned int i = 0; i < base_paths.size(); i++) {
     /* scan for projects */
-    const char *dirname = base_paths[i].c_str();
 
-    dirguard dir(dirname);
+    dirguard dir(base_paths[i].fd);
 
     if(dir.valid()) {
       dirent *d;
@@ -311,7 +308,7 @@ static std::map<std::string, std::string> style_scan() {
         if(G_UNLIKELY(!S_ISREG(st.st_mode)))
           continue;
 
-        fullname = base_paths[i] + d->d_name;
+        fullname = base_paths[i].pathname + d->d_name;
 
         icon_t dummyicons;
         style_t style(dummyicons);

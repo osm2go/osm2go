@@ -39,6 +39,7 @@
 #include <cstring>
 #include <fcntl.h>
 #include <strings.h>
+#include <sys/stat.h>
 
 #include <osm2go_cpp.h>
 
@@ -219,47 +220,60 @@ bool yes_no_f(GtkWidget *parent, appdata_t &appdata, guint again_bit,
   return yes;
 }
 
-std::vector<std::string> base_paths;
+std::vector<datapath> base_paths;
+
+#ifndef O_CLOEXEC
+#define O_CLOEXEC 0
+#endif
 
 /* all entries must contain a trailing '/' ! */
-static std::vector<std::string> init_paths() {
-  std::vector<std::string> ret;
+static void init_paths() {
+  std::vector<std::string> pathnames;
 
   const char *home = getenv("HOME");
   g_assert_nonnull(home);
 
   // in home directory
-  ret.push_back(home + std::string("/." PACKAGE "/"));
+  pathnames.push_back(home + std::string("/." PACKAGE "/"));
   // final installation path
-  ret.push_back(DATADIR "/");
+  pathnames.push_back(DATADIR "/");
 #ifdef FREMANTLE
   // path to external memory card
-  ret.push_back("/media/mmc1/" PACKAGE "/");
+  pathnames.push_back("/media/mmc1/" PACKAGE "/");
   // path to internal memory card
-  ret.push_back("/media/mmc2/" PACKAGE "/");
+  pathnames.push_back("/media/mmc2/" PACKAGE "/");
 #endif
   // local paths for testing
-  ret.push_back("./data/");
-  ret.push_back("../data/");
+  pathnames.push_back("./data/");
+  pathnames.push_back("../data/");
 
-  return ret;
+  for (unsigned int i = 0; i < pathnames.size(); i++) {
+    g_assert(pathnames[i][pathnames[i].size() - 1] == '/');
+    int dfd = open(pathnames[i].c_str(), O_DIRECTORY | O_CLOEXEC);
+    if(dfd >= 0) {
+      base_paths.push_back(datapath(dfd));
+
+      base_paths.back().pathname.swap(pathnames[i]);
+    }
+  }
+
+  g_assert_false(base_paths.empty());
 }
 
 std::string find_file(const std::string &n) {
   g_assert_false(n.empty());
+
+  struct stat st;
+
   if(G_UNLIKELY(n[0] == '/')) {
-    if(g_file_test(n.c_str(), G_FILE_TEST_IS_REGULAR))
+    if(stat(n.c_str(), &st) == 0 && S_ISREG(st.st_mode))
       return n;
     return std::string();
   }
 
-  std::string full_path;
-
   for(unsigned int i = 0; i < base_paths.size(); i++) {
-    full_path = base_paths[i] + n;
-
-    if(g_file_test(full_path.c_str(), G_FILE_TEST_IS_REGULAR))
-      return full_path;
+    if(fstatat(base_paths[i].fd, n.c_str(), &st, 0) == 0 && S_ISREG(st.st_mode))
+      return base_paths[i].pathname + n;
   }
 
   return std::string();
@@ -598,7 +612,7 @@ void open_url(struct appdata_t &appdata, const char *url)
 }
 
 void misc_init(void) {
-  base_paths = init_paths();
+  init_paths();
 #ifdef FREMANTLE
   g_signal_new ("changed", HILDON_TYPE_PICKER_BUTTON,
 		G_SIGNAL_RUN_FIRST, 0, O2G_NULLPTR, O2G_NULLPTR,

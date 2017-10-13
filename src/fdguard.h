@@ -32,6 +32,18 @@ struct fdguard {
    * It will use O_CLOEXEC, O_PATH, and O_DIRECTORY if present.
    */
   explicit fdguard(const char *dirname);
+#if __cplusplus >= 201103L
+  fdguard(fdguard &&other)
+    : fd(other.fd)
+  {
+    const_cast<int &>(other.fd) = -1;
+  }
+  fdguard(const fdguard &other) O2G_DELETED_FUNCTION;
+  fdguard &operator=(const fdguard &other) O2G_DELETED_FUNCTION;
+#else
+  fdguard(const fdguard &other);
+  fdguard &operator=(const fdguard &other);
+#endif
   ~fdguard();
 
   const int fd;
@@ -47,6 +59,7 @@ public:
    * @brief opens the given directory
    */
   explicit dirguard(const char *name);
+  explicit dirguard(int fd);
   ~dirguard();
 
   inline bool valid() const { return d != O2G_NULLPTR; }

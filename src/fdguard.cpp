@@ -41,6 +41,19 @@ fdguard::~fdguard() {
     close(fd);
 }
 
+#if __cplusplus < 201103L
+fdguard::fdguard(const fdguard &other)
+  : fd(dup(other.fd))
+{
+}
+
+fdguard &fdguard::operator=(const fdguard& other)
+{
+  const_cast<int &>(fd) = dup(other.fd);
+  return *this;
+}
+#endif
+
 void fdguard::swap(fdguard &other)
 {
   int f = fd;
@@ -51,6 +64,13 @@ void fdguard::swap(fdguard &other)
 dirguard::dirguard(const char *name)
   : d(opendir(name))
 {
+}
+
+dirguard::dirguard(int fd)
+  : d(fdopendir(dup(fd)))
+{
+  // ignore the position of base_path_fd
+  rewinddir(d);
 }
 
 dirguard::~dirguard()
