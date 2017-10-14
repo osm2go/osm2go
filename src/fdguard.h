@@ -29,9 +29,27 @@ struct fdguard {
   /**
    * @brief open a filename as anchor point
    *
-   * It will use O_CLOEXEC, O_PATH, and O_DIRECTORY if present.
+   * It will use O_CLOEXEC, O_PATH, and O_DIRECTORY if present. If O_PATH is not
+   * defined O_RDONLY will be used instead.
    */
   explicit fdguard(const char *dirname);
+  /**
+   * @brief open a filename as anchor point
+   * @param pathname the path to open
+   * @param flags additional flags to pass to open.
+   *
+   * O_CLOEXEC will always be added to flags.
+   */
+  explicit fdguard(const char *pathname, int flags);
+  /**
+   * @brief open a filename as anchor point
+   * @param basefd file descriptor to use as base for pathname
+   * @param pathname the path to open
+   * @param flags additional flags to pass to open.
+   *
+   * O_CLOEXEC will always be added to flags.
+   */
+  explicit fdguard(int basefd, const char *pathname, int flags);
 #if __cplusplus >= 201103L
   fdguard(fdguard &&other)
     : fd(other.fd)

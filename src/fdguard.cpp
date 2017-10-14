@@ -36,6 +36,16 @@ fdguard::fdguard(const char *dirname)
 {
 }
 
+fdguard::fdguard(const char *pathname, int flags)
+  : fd(open(pathname, flags | O_CLOEXEC))
+{
+}
+
+fdguard::fdguard(int basefd, const char *pathname, int flags)
+  : fd(openat(basefd, pathname, flags | O_CLOEXEC))
+{
+}
+
 fdguard::~fdguard() {
   if(G_LIKELY(valid()))
     close(fd);

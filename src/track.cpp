@@ -278,10 +278,6 @@ static void track_write(const char *name, const track_t *track, xmlDoc *doc) {
   xmlFreeDoc(doc);
 }
 
-#ifndef O_CLOEXEC
-#define O_CLOEXEC 0
-#endif
-
 /* save track in project */
 void track_save(project_t *project, track_t *track) {
   if(!project) return;
@@ -309,7 +305,7 @@ void track_save(project_t *project, track_t *track) {
     printf("backing up existing file '%s' to '%s'\n", trkfname.c_str(), backupfn);
     if(renameat(project->dirfd, trkfname.c_str(), project->dirfd, backupfn) == 0) {
       /* parse the old file and get the DOM */
-      fdguard bupfd(openat(project->dirfd, backupfn, O_RDONLY | O_CLOEXEC));
+      fdguard bupfd(project->dirfd, backupfn, O_RDONLY);
       if(G_LIKELY(bupfd.valid()))
         doc = xmlReadFd(bupfd, O2G_NULLPTR, O2G_NULLPTR, XML_PARSE_NONET);
     }

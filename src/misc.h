@@ -51,7 +51,11 @@
 #include <vector>
 
 struct datapath {
-  explicit inline datapath(int f) : fd(f) {}
+#if __cplusplus >= 201103L
+  explicit inline datapath(fdguard &&f)  : fd(std::move(f)) {}
+#else
+  explicit inline datapath(fdguard &f)  : fd(f) {}
+#endif
   fdguard fd;
   std::string pathname;
 };

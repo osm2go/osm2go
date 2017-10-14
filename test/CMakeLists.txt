@@ -49,7 +49,7 @@ if (DPKG_PARSECHANGELOG)
 endif ()
 
 osm_test(canvas_points)
-osm_test(fdguard)
+osm_test(fdguard $<TARGET_FILE:fdguard>)
 
 add_executable(suppression-dummy suppression-dummy.cpp)
 target_link_libraries(suppression-dummy PRIVATE ${LIBXML2_LIBRARIES} ${CURL_LIBRARIES} OpenSSL::SSL)

@@ -542,10 +542,6 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
   }
 }
 
-#ifndef O_CLOEXEC
-#define O_CLOEXEC 0
-#endif
-
 unsigned int diff_restore_file(GtkWidget *window, const project_t *project, osm_t *osm) {
   struct stat st;
 
@@ -569,7 +565,7 @@ unsigned int diff_restore_file(GtkWidget *window, const project_t *project, osm_
   xmlDoc *doc = O2G_NULLPTR;
   xmlNode *root_element = O2G_NULLPTR;
 
-  fdguard difffd(openat(project->dirfd, diff_name.c_str(), O_RDONLY | O_CLOEXEC));
+  fdguard difffd(project->dirfd, diff_name.c_str(), O_RDONLY);
 
   /* parse the file and get the DOM */
   if(G_UNLIKELY((doc = xmlReadFd(difffd, O2G_NULLPTR, O2G_NULLPTR, XML_PARSE_NONET)) == O2G_NULLPTR)) {

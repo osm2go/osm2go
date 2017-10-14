@@ -222,10 +222,6 @@ bool yes_no_f(GtkWidget *parent, appdata_t &appdata, guint again_bit,
 
 std::vector<datapath> base_paths;
 
-#ifndef O_CLOEXEC
-#define O_CLOEXEC 0
-#endif
-
 /* all entries must contain a trailing '/' ! */
 static void init_paths() {
   std::vector<std::string> pathnames;
@@ -249,9 +245,13 @@ static void init_paths() {
 
   for (unsigned int i = 0; i < pathnames.size(); i++) {
     g_assert(pathnames[i][pathnames[i].size() - 1] == '/');
-    int dfd = open(pathnames[i].c_str(), O_DIRECTORY | O_CLOEXEC);
-    if(dfd >= 0) {
+    fdguard dfd(pathnames[i].c_str(), O_DIRECTORY);
+    if(dfd.valid()) {
+#if __cplusplus >= 201103L
+      base_paths.emplace_back(datapath(std::move(dfd)));
+#else
       base_paths.push_back(datapath(dfd));
+#endif
 
       base_paths.back().pathname.swap(pathnames[i]);
     }
