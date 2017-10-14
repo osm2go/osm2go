@@ -9,6 +9,7 @@
 #include <osm2go_cpp.h>
 
 #include <algorithm>
+#include <cassert>
 #include <cstdlib>
 #include <iostream>
 
@@ -108,7 +109,7 @@ int main(int argc, char **argv)
 
   g_assert_false(style->node_icons.empty());
   g_assert_nonnull(style->node_icons[node->id]);
-  g_assert(oldicon != style->node_icons[node->id]);
+  assert(oldicon != style->node_icons[node->id]);
   g_assert_cmpfloat(oldzoom * 1.9, <, node->zoom_max);
 
   way_t * const way = new way_t(0);
@@ -186,7 +187,7 @@ int main(int argc, char **argv)
 
   g_assert_false(style->node_icons.empty());
   g_assert_nonnull(style->node_icons[node->id]);
-  g_assert(oldicon != style->node_icons[node->id]);
+  assert(oldicon != style->node_icons[node->id]);
   g_assert_cmpfloat(oldzoom, !=, node->zoom_max);
 
   g_assert_cmpuint(area->draw.color, ==, 0xccccccff);
@@ -207,7 +208,7 @@ int main(int argc, char **argv)
 
   g_assert_false(style->node_icons.empty());
   g_assert_nonnull(style->node_icons[node->id]);
-  g_assert(oldicon != style->node_icons[node->id]);
+  assert(oldicon != style->node_icons[node->id]);
   g_assert_cmpfloat(oldzoom, !=, node->zoom_max);
 
   g_assert_cmpuint(area->draw.color, ==, 0xaaaaaaff);

@@ -34,6 +34,7 @@
 #else
 #include <array>
 #endif
+#include <cassert>
 #include <cmath>
 #include <cstring>
 #include <libxml/parser.h>
@@ -560,7 +561,7 @@ static void on_server_remove(wms_server_context_t *context) {
     std::vector<wms_server_t *> &servers = context->appdata.settings->wms_server;
     const std::vector<wms_server_t *>::iterator itEnd = servers.end();
     std::vector<wms_server_t *>::iterator it = std::find(servers.begin(), itEnd, server);
-    g_assert(it != itEnd);
+    assert(it != itEnd);
 
     /* free tag itself */
     delete *it;
@@ -1193,7 +1194,7 @@ void wms_import(appdata_t &appdata) {
   const FormatMap::const_iterator itEnd = ImageFormats.end();
   FormatMap::const_iterator it = std::find_if(std::cbegin(ImageFormats), itEnd,
                                               find_format_reverse_functor(wms.cap.request.getmap.format));
-  g_assert(it != itEnd);
+  assert(it != itEnd);
 
   char buf[64];
   sprintf(buf, "&WIDTH=%d&HEIGHT=%d&FORMAT=", wms.width, wms.height);

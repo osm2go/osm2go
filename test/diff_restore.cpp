@@ -8,6 +8,7 @@
 
 #include <osm2go_cpp.h>
 
+#include <cassert>
 #include <cerrno>
 #include <cstdlib>
 #include <cstring>
@@ -53,10 +54,10 @@ static void verify_diff(osm_t *osm)
   g_assert_cmpuint(n26->flags, ==, OSM_FLAG_DELETED);
   const way_t * const w = osm->ways[351899455];
   g_assert_nonnull(w);
-  g_assert((w->flags & OSM_FLAG_DELETED) != 0);
+  assert((w->flags & OSM_FLAG_DELETED) != 0);
   g_assert_cmpint(w->user, ==, 53064);
-  g_assert(osm->users.find(53064) != osm->users.end());
-  g_assert(osm->users[53064] == "Dakon");
+  assert(osm->users.find(53064) != osm->users.end());
+  assert(osm->users[53064] == "Dakon");
   // added in diff
   const node_t * const nn1 = osm->nodes[-1];
   g_assert_nonnull(nn1);
@@ -95,7 +96,7 @@ static void verify_diff(osm_t *osm)
   const object_t r255m572(const_cast<node_t *>(n72));
   std::vector<member_t>::const_iterator r255it = r255->find_member_object(r255m572);
   r255it = r255->find_member_object(r255m572);
-  g_assert(r255it != r255->members.end());
+  assert(r255it != r255->members.end());
   g_assert_nonnull(r255it->role);
   g_assert_cmpstr(r255it->role, ==, "forward_stop");
   g_assert_cmpuint(r255->tags.asMap().size(), ==, 8);
@@ -104,7 +105,7 @@ static void verify_diff(osm_t *osm)
   g_assert_nonnull(r853);
   g_assert_cmpuint(r853->flags, ==, OSM_FLAG_DIRTY);
   for(std::vector<member_t>::const_iterator it = r853->members.begin(); it != r853->members.end(); it++)
-    g_assert(it->object.type == RELATION_ID);
+    assert(it->object.type == RELATION_ID);
 
   g_assert_false(diff_is_clean(osm, true));
 }
@@ -153,7 +154,7 @@ int main(int argc, char **argv)
 
   icon_t icons;
   const std::string osm_path = argv[1];
-  g_assert(osm_path[osm_path.size() - 1] == '/');
+  assert(osm_path[osm_path.size() - 1] == '/');
 
   map_state_t dummystate;
   project_t project(dummystate, argv[2], osm_path);
@@ -177,7 +178,7 @@ int main(int argc, char **argv)
   g_assert_cmpuint(n72->tags.asMap().size(), ==, 4);
   const object_t r255m572(const_cast<node_t *>(n72));
   std::vector<member_t>::const_iterator r255it = r255->find_member_object(r255m572);
-  g_assert(r255it != r255->members.end());
+  assert(r255it != r255->members.end());
   g_assert_nonnull(r255it->role);
   g_assert_cmpstr(r255it->role, ==, "stop");
   const relation_t * const r66316 = osm->relations[66316];
@@ -185,7 +186,7 @@ int main(int argc, char **argv)
   object_t rmember(RELATION_ID, 296255);
   g_assert_false(rmember.is_real());
   const std::vector<member_t>::const_iterator r66316it = r66316->find_member_object(rmember);
-  g_assert(r66316it != r66316->members.end());
+  assert(r66316it != r66316->members.end());
   // the child relation exists, so it should be stored as real ref
   g_assert_true(r66316it->object.is_real());
 

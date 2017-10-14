@@ -35,6 +35,7 @@
 #include "wms.h"
 
 #include <algorithm>
+#include <cassert>
 #include <cerrno>
 #include <cstring>
 #include <dirent.h>
@@ -307,7 +308,7 @@ bool project_t::save(GtkWidget *parent) {
   xmlDocSetRootElement(doc, root_node);
 
   if(!rserver.empty()) {
-    g_assert(server == rserver.c_str());
+    assert(server == rserver.c_str());
     xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "server", BAD_CAST server);
   }
 

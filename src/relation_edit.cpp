@@ -27,6 +27,7 @@
 #include "misc.h"
 
 #include <algorithm>
+#include <cassert>
 #include <cstring>
 #include <set>
 #include <string>
@@ -163,7 +164,7 @@ static void relation_remove_item(relation_t *relation, const object_t &object) {
   g_assert_true(object.is_real());
 
   std::vector<member_t>::iterator it = relation->find_member_object(object);
-  g_assert(it != relation->members.end());
+  assert(it != relation->members.end());
 
   member_t::clear(*it);
   relation->members.erase(it);

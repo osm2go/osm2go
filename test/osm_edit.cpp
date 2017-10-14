@@ -7,6 +7,7 @@
 #include <osm2go_cpp.h>
 
 #include <algorithm>
+#include <cassert>
 #include <cerrno>
 #include <cmath>
 #include <cstdlib>
@@ -68,7 +69,7 @@ static void set_bounds(osm_t &o) {
 static void test_trivial() {
   object_t obj;
 
-  g_assert(obj == obj);
+  assert(obj == obj);
 
   tag_list_t tags;
   g_assert_false(tags.hasTagCollisions());
@@ -100,15 +101,15 @@ static void test_taglist() {
   std::vector<tag_t> ntags;
 
   // compare empty lists
-  g_assert(tags == ntags);
-  g_assert(!(tags != ntags));
+  assert(tags == ntags);
+  assert(!(tags != ntags));
 
   // a list with only created_by must still be considered empty
   tag_t cr_by(const_cast<char *>("created_by"), const_cast<char *>("test"));
   g_assert_true(cr_by.is_creator_tag());
   ntags.push_back(cr_by);
-  g_assert(tags == ntags);
-  g_assert(!(tags != ntags));
+  assert(tags == ntags);
+  assert(!(tags != ntags));
   ntags.clear();
 
   // check replacing the tag list from osm_t::TagMap::value_type
@@ -215,11 +216,11 @@ static void test_taglist() {
   ntags = ab_with_creator();
   tags.replace(ntags);
   ntags = ab_with_creator();
-  g_assert(tags == ntags);
+  assert(tags == ntags);
   std::rotate(ntags.begin(), ntags.begin() + 1, ntags.end());
-  g_assert(tags == ntags);
+  assert(tags == ntags);
   std::rotate(ntags.begin(), ntags.begin() + 1, ntags.end());
-  g_assert(tags == ntags);
+  assert(tags == ntags);
 
   std::for_each(ntags.begin(), ntags.end(), tag_t::clear);
   ntags.clear();
@@ -232,8 +233,8 @@ static void test_taglist() {
   g_assert_false(tags.contains(rtrue));
   tags.for_each(nevercalled);
   g_assert_true(tags.asMap().empty());
-  g_assert(tags == std::vector<tag_t>());
-  g_assert(tags == osm_t::TagMap());
+  assert(tags == std::vector<tag_t>());
+  assert(tags == osm_t::TagMap());
   tags.clear();
 
   tag_list_t virgin;
@@ -243,16 +244,16 @@ static void test_taglist() {
   g_assert_false(virgin.contains(rtrue));
   virgin.for_each(nevercalled);
   g_assert_true(virgin.asMap().empty());
-  g_assert(virgin == std::vector<tag_t>());
-  g_assert(virgin == osm_t::TagMap());
+  assert(virgin == std::vector<tag_t>());
+  assert(virgin == osm_t::TagMap());
   virgin.clear();
 
   ntags.push_back(tag_t(g_strdup("one"), g_strdup("1")));
-  g_assert(tags != ntags);
+  assert(tags != ntags);
   tags.replace(ntags);
   ntags.push_back(tag_t(g_strdup("one"), g_strdup("1")));
-  g_assert(tags == ntags);
-  g_assert(virgin != tags.asMap());
+  assert(tags == ntags);
+  assert(virgin != tags.asMap());
 
   std::for_each(ntags.begin(), ntags.end(), tag_t::clear);
 }
@@ -272,7 +273,7 @@ static void test_replace() {
   g_assert_true(tag_t::is_creator_tag(cr_by.first.c_str()));
   nstags.insert(cr_by);
   node.updateTags(nstags);
-  g_assert(node.flags == 0);
+  assert(node.flags == 0);
   g_assert_true(node.tags.empty());
 
   node.tags.replace(nstags);
@@ -285,14 +286,14 @@ static void test_replace() {
   node.updateTags(nstags);
   g_assert_cmpuint(node.flags, ==, OSM_FLAG_DIRTY);
   g_assert_false(node.tags.empty());
-  g_assert(node.tags == nstags);
+  assert(node.tags == nstags);
 
   node.flags = 0;
 
   node.updateTags(nstags);
   g_assert_cmpuint(node.flags, ==, 0);
   g_assert_false(node.tags.empty());
-  g_assert(node.tags == nstags);
+  assert(node.tags == nstags);
 
   node.tags.clear();
   g_assert_true(node.tags.empty());
@@ -306,13 +307,13 @@ static void test_replace() {
 
   g_assert_cmpuint(node.flags, ==, 0);
   g_assert_false(node.tags.empty());
-  g_assert(node.tags == nstags);
+  assert(node.tags == nstags);
 
   // updating with the same "real" tag shouldn't change anything
   node.updateTags(nstags);
   g_assert_cmpuint(node.flags, ==, 0);
   g_assert_false(node.tags.empty());
-  g_assert(node.tags == nstags);
+  assert(node.tags == nstags);
 }
 
 static unsigned int intrnd(unsigned int r) {
@@ -368,14 +369,14 @@ static void test_split()
   way_t *neww = w->split(&o, w->node_chain.begin() + 2, false);
   g_assert_nonnull(neww);
   g_assert_cmpuint(o.ways.size(), ==, 3);
-  g_assert(w->flags & OSM_FLAG_DIRTY);
+  assert(w->flags & OSM_FLAG_DIRTY);
   for(unsigned int i = 0; i < nodes.size(); i++)
     g_assert_cmpuint(nodes[i]->ways, ==, 2);
 
   g_assert_cmpuint(w->node_chain.size(), ==, 4);
   g_assert_cmpuint(neww->node_chain.size(), ==, 2);
-  g_assert(neww->tags == w->tags.asMap());
-  g_assert(neww->tags == v->tags.asMap());
+  assert(neww->tags == w->tags.asMap());
+  assert(neww->tags == v->tags.asMap());
   g_assert_cmpuint(neww->tags.asMap().size(), ==, ocnt - 1);
   g_assert_cmpuint(r1->members.size(), ==, 2);
   g_assert_cmpuint(r2->members.size(), ==, 5);
@@ -395,7 +396,7 @@ static void test_split()
   way_t *neww2 = w->split(&o, w->node_chain.begin() + 2, true);
   g_assert_nonnull(neww2);
   g_assert_cmpuint(o.ways.size(), ==, 4);
-  g_assert(w->flags & OSM_FLAG_DIRTY);
+  assert(w->flags & OSM_FLAG_DIRTY);
   for(unsigned int i = 0; i < nodes.size(); i++)
     if(i == 4)
       g_assert_cmpuint(nodes[4]->ways, ==, 3);
@@ -417,8 +418,8 @@ static void test_split()
   g_assert_cmpuint(w->node_chain.size(), ==, 3);
   g_assert_cmpuint(neww->node_chain.size(), ==, 2);
   g_assert_cmpuint(neww2->node_chain.size(), ==, 2);
-  g_assert(neww2->tags == w->tags.asMap());
-  g_assert(neww2->tags == v->tags.asMap());
+  assert(neww2->tags == w->tags.asMap());
+  assert(neww2->tags == v->tags.asMap());
   g_assert_cmpuint(neww2->tags.asMap().size(), ==, ocnt - 1);
   g_assert_cmpuint(r1->members.size(), ==, 3);
   g_assert_cmpuint(r2->members.size(), ==, 7);
@@ -428,7 +429,7 @@ static void test_split()
   w->flags = 0;
   g_assert_null(w->split(&o, w->node_chain.begin() + 2, false));
   g_assert_cmpuint(o.ways.size(), ==, 4);
-  g_assert(w->flags & OSM_FLAG_DIRTY);
+  assert(w->flags & OSM_FLAG_DIRTY);
   for(unsigned int i = 0; i < nodes.size(); i++)
     g_assert_cmpuint(nodes[i]->ways, ==, 2);
 
@@ -462,7 +463,7 @@ static void test_split()
   g_assert_null(area->split(&o, area->node_chain.begin(), true));
   g_assert_cmpuint(area->node_chain.size(), ==, nodes.size());
   for(unsigned int i = 0; i < nodes.size(); i++) {
-    g_assert(area->node_chain[i] == nodes[i]);
+    assert(area->node_chain[i] == nodes[i]);
     g_assert_cmpuint(nodes[i]->ways, ==, 1);
   }
 
@@ -471,7 +472,7 @@ static void test_split()
   g_assert_null(area->split(&o, area->node_chain.begin() + 1, false));
   g_assert_cmpuint(area->node_chain.size(), ==, nodes.size());
   for(unsigned int i = 0; i < nodes.size(); i++) {
-    g_assert(area->node_chain[i] == nodes[(i + 1) % nodes.size()]);
+    assert(area->node_chain[i] == nodes[(i + 1) % nodes.size()]);
     g_assert_cmpuint(nodes[i]->ways, ==, 1);
   }
 
@@ -480,7 +481,7 @@ static void test_split()
   g_assert_null(area->split(&o, --area->node_chain.end(), true));
   g_assert_cmpuint(area->node_chain.size(), ==, nodes.size());
   for(unsigned int i = 0; i < nodes.size(); i++) {
-    g_assert(area->node_chain[i] == nodes[(i + 1) % nodes.size()]);
+    assert(area->node_chain[i] == nodes[(i + 1) % nodes.size()]);
     g_assert_cmpuint(nodes[i]->ways, ==, 1);
   }
 }
@@ -607,7 +608,7 @@ static void test_split_order()
     for(unsigned int j = 0; j < sequences[i].size(); j++) {
       std::vector<way_t *>::iterator it = std::find_if(sw.begin(), sw.end(),
                                                        findWay(sequences[i][j]));
-      g_assert(it != sw.end());
+      assert(it != sw.end());
       way_t *nw = (*it)->split(&o, std::find((*it)->node_chain.begin(), (*it)->node_chain.end(), sequences[i][j]), true);
       sw.push_back(nw);
     }
@@ -671,8 +672,8 @@ static void test_reverse()
   tags.insert(osm_t::TagMap::value_type("oneway", "-1"));
   tags.insert(osm_t::TagMap::value_type("sidewalk", "left"));
 
-  g_assert(w->first_node() == n1);
-  g_assert(w->last_node() == n2);
+  assert(w->first_node() == n1);
+  assert(w->last_node() == n2);
   g_assert_true(w->isNew());
 
   w->flags = 0;
@@ -709,9 +710,9 @@ static void test_reverse()
 
   g_assert_cmpuint(r, ==, 5);
   g_assert_cmpuint(w->flags, ==, OSM_FLAG_DIRTY);
-  g_assert(w->node_chain.front() == n2);
-  g_assert(w->node_chain.back() == n1);
-  g_assert(w->tags != tags);
+  assert(w->node_chain.front() == n2);
+  assert(w->node_chain.back() == n1);
+  assert(w->tags != tags);
   osm_t::TagMap rtags;
   rtags.insert(osm_t::TagMap::value_type("highway", "residential"));
   rtags.insert(osm_t::TagMap::value_type("foo:backward", "yes"));
@@ -721,7 +722,7 @@ static void test_reverse()
   rtags.insert(osm_t::TagMap::value_type("oneway", "yes"));
   rtags.insert(osm_t::TagMap::value_type("sidewalk", "right"));
 
-  g_assert(w->tags == rtags);
+  assert(w->tags == rtags);
 
   // check relations and their roles
   g_assert_cmpuint(rroles, ==, 2);
@@ -732,17 +733,17 @@ static void test_reverse()
   // rels[1] has matching type, first member role should be changed
   g_assert_cmpuint(rels[1]->members.size(), ==, 2);
   g_assert_cmpstr(rels[1]->members.front().role, ==, "backward");
-  g_assert(rels[1]->members.front().object == w);
+  assert(rels[1]->members.front().object == w);
   g_assert_cmpstr(rels[1]->members.back().role, ==, "forward");
   // rels[2] has matching type, first member role should be changed (other direction)
   g_assert_cmpuint(rels[1]->members.size(), ==, 2);
   g_assert_cmpstr(rels[2]->members.front().role, ==, "forward");
-  g_assert(rels[2]->members.front().object == w);
+  assert(rels[2]->members.front().object == w);
   g_assert_cmpstr(rels[2]->members.back().role, ==, "backward");
   // rels[3] has matching type, but roles are empty
   g_assert_cmpuint(rels[1]->members.size(), ==, 2);
   g_assert_null(rels[3]->members.front().role);
-  g_assert(rels[3]->members.front().object == w);
+  assert(rels[3]->members.front().object == w);
   g_assert_null(rels[3]->members.back().role);
 
   // go back
@@ -750,7 +751,7 @@ static void test_reverse()
 
   g_assert_cmpuint(r, ==, 5);
   g_assert_cmpuint(rroles, ==, 2);
-  g_assert(w->tags == tags);
+  assert(w->tags == tags);
 }
 
 static void test_way_delete()
@@ -852,10 +853,10 @@ static void test_way_delete()
   g_assert_cmpuint(o.nodes.size(), ==, 4);
   g_assert_cmpuint(o.ways.size(), ==, 1);
   g_assert_cmpuint(o.relations.size(), ==, 1);
-  g_assert(o.node_by_id(n1->id) == n1);
-  g_assert(o.node_by_id(n2->id) == n2);
-  g_assert(o.node_by_id(n3->id) == n3);
-  g_assert(o.node_by_id(n4->id) == n4);
+  assert(o.node_by_id(n1->id) == n1);
+  assert(o.node_by_id(n2->id) == n2);
+  assert(o.node_by_id(n3->id) == n3);
+  assert(o.node_by_id(n4->id) == n4);
   g_assert_cmpuint(r->members.size(), ==, 1);
 }
 
@@ -963,8 +964,8 @@ static void test_merge_nodes()
   bool conflict = true;
 
   node_t *n = o.mergeNodes(n1, n2, conflict);
-  g_assert(n == n1);
-  g_assert(n->lpos == newpos);
+  assert(n == n1);
+  assert(n->lpos == newpos);
   g_assert_false(conflict);
   g_assert_cmpuint(o.nodes.size(), ==, 1);
   g_assert_cmpuint(n->flags, ==, OSM_FLAG_DIRTY);
@@ -977,8 +978,8 @@ static void test_merge_nodes()
 
   conflict = true;
   n = o.mergeNodes(n2, n1, conflict);
-  g_assert(n == n2);
-  g_assert(n->lpos == newpos);
+  assert(n == n2);
+  assert(n->lpos == newpos);
   g_assert_false(conflict);
   g_assert_cmpuint(o.nodes.size(), ==, 1);
   g_assert_cmpuint(n->flags, ==, OSM_FLAG_DIRTY);
@@ -991,9 +992,9 @@ static void test_merge_nodes()
 
   conflict = true;
   n = o.mergeNodes(n1, n2, conflict);
-  g_assert(n == n2);
+  assert(n == n2);
   // order is important for the position, but nothing else
-  g_assert(n->lpos == newpos);
+  assert(n->lpos == newpos);
   g_assert_false(conflict);
   g_assert_cmpuint(o.nodes.size(), ==, 1);
   g_assert_cmpuint(n->flags, ==, OSM_FLAG_DIRTY);
@@ -1015,13 +1016,13 @@ static void test_merge_nodes()
   w->append_node(n2);
 
   n = o.mergeNodes(n1, n2, conflict);
-  g_assert(n == n2);
-  g_assert(n->lpos == newpos);
+  assert(n == n2);
+  assert(n->lpos == newpos);
   g_assert_false(conflict);
   g_assert_cmpuint(o.nodes.size(), ==, 1);
   g_assert_cmpuint(n->flags, ==, OSM_FLAG_DIRTY);
   g_assert_cmpuint(w->node_chain.size(), ==, 1);
-  g_assert(w->node_chain.front() == n2);
+  assert(w->node_chain.front() == n2);
 
   o.way_delete(w);
   g_assert_cmpuint(o.nodes.size(), ==, 0);
@@ -1039,13 +1040,13 @@ static void test_merge_nodes()
   r->members.push_back(member_t(object_t(n2), O2G_NULLPTR));
 
   n = o.mergeNodes(n1, n2, conflict);
-  g_assert(n == n2);
-  g_assert(n->lpos == newpos);
+  assert(n == n2);
+  assert(n->lpos == newpos);
   g_assert_false(conflict);
   g_assert_cmpuint(o.nodes.size(), ==, 1);
   g_assert_cmpuint(n->flags, ==, OSM_FLAG_DIRTY);
   g_assert_cmpuint(r->members.size(), ==, 1);
-  g_assert(r->members.front().object == n2);
+  assert(r->members.front().object == n2);
 
   o.relation_delete(r);
   g_assert_cmpuint(o.nodes.size(), ==, 1);
@@ -1087,38 +1088,38 @@ static void test_merge_nodes()
   g_assert_cmpuint(w->node_chain.size(), ==, 2);
   g_assert_true(o.ways.begin()->second->node_chain.front() == n1);
   g_assert_true(o.ways.begin()->second->ends_with_node(n1));
-  g_assert(w->node_chain.back() == n2);
+  assert(w->node_chain.back() == n2);
   g_assert_true(w->ends_with_node(n2));
   g_assert_cmpuint(n1->ways, ==, 1);
-  g_assert(o.relations.begin()->second->members.front().object == n1);
-  g_assert(r->members.front().object == n2);
+  assert(o.relations.begin()->second->members.front().object == n1);
+  assert(r->members.front().object == n2);
 
   conflict = true;
   n = o.mergeNodes(n1, n2, conflict);
-  g_assert(n == n1);
-  g_assert(n->lpos == newpos);
+  assert(n == n1);
+  assert(n->lpos == newpos);
   g_assert_false(conflict);
   g_assert_cmpuint(o.nodes.size(), ==, 3);
   g_assert_cmpuint(n->flags, ==, OSM_FLAG_DIRTY);
   g_assert_cmpuint(r->members.size(), ==, 1);
-  g_assert(o.ways.begin()->second->first_node() == n1);
+  assert(o.ways.begin()->second->first_node() == n1);
   g_assert_true(o.ways.begin()->second->ends_with_node(n1));
-  g_assert(w->last_node() == n1);
+  assert(w->last_node() == n1);
   g_assert_true(w->ends_with_node(n1));
   g_assert_cmpuint(w->flags, ==, OSM_FLAG_DIRTY);
   g_assert_cmpuint(n1->ways, ==, 2);
-  g_assert(o.relations.begin()->second->members.front().object == n1);
-  g_assert(r->members.front().object == n1);
+  assert(o.relations.begin()->second->members.front().object == n1);
+  assert(r->members.front().object == n1);
   g_assert_cmpuint(r->flags, ==, OSM_FLAG_DIRTY);
 
   // while at it: test backwards mapping to containing objects
   const way_chain_t &wchain = o.node_to_way(n1);
   g_assert_cmpuint(wchain.size(), ==, 2);
-  g_assert(std::find(wchain.begin(), wchain.end(), o.ways.begin()->second) != wchain.end());
-  g_assert(std::find(wchain.begin(), wchain.end(), w) != wchain.end());
+  assert(std::find(wchain.begin(), wchain.end(), o.ways.begin()->second) != wchain.end());
+  assert(std::find(wchain.begin(), wchain.end(), w) != wchain.end());
 
   // the relation with the highest id (since all are negative)
-  g_assert(r->descriptive_name() == "<ID #-1>");
+  assert(r->descriptive_name() == "<ID #-1>");
 }
 
 static void test_merge_ways()
@@ -1168,7 +1169,7 @@ static void test_merge_ways()
       w1->contains_node(*it);
       g_assert_cmpuint((*it)->ways, ==, 1);
     }
-    g_assert(expect == w1->node_chain);
+    assert(expect == w1->node_chain);
 
     o.way_free(w1);
 
@@ -1191,22 +1192,22 @@ static void test_api_adjust()
 
  server = apihttp + '5';
  g_assert_true(api_adjust(server));
- g_assert(server == api06https);
+ assert(server == api06https);
 
  g_assert_false(api_adjust(server));
- g_assert(server == api06https);
+ assert(server == api06https);
 
  server = apihttp + '6';
  g_assert_true(api_adjust(server));
- g_assert(server == api06https);
+ assert(server == api06https);
 
  server = apihttp + '7';
  g_assert_false(api_adjust(server));
- g_assert(server != api06https);
+ assert(server != api06https);
 
  server = apidev;
  g_assert_false(api_adjust(server));
- g_assert(server == apidev);
+ assert(server == apidev);
 }
 
 int main()

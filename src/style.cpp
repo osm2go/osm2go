@@ -27,6 +27,7 @@
 #include "settings.h"
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <cstring>
 #include <dirent.h>
@@ -163,7 +164,7 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t &style) {
     }
   }
 
-  g_assert(style.icon.path_prefix || !style.icon.enable);
+  assert(style.icon.path_prefix || !style.icon.enable);
 }
 
 /**
@@ -344,7 +345,7 @@ static void style_change(appdata_t &appdata, const std::string &name,
                          const std::map<std::string, std::string> &styles) {
   const std::map<std::string, std::string>::const_iterator it = styles.find(name);
 
-  g_assert(it != styles.end());
+  assert(it != styles.end());
   const std::string &new_style = style_basename(it->second);
 
   /* check if style has really been changed */

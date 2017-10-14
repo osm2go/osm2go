@@ -34,6 +34,7 @@ namespace std {
 #else
 #include <array>
 #endif
+#include <cassert>
 
 #include <osm2go_cpp.h>
 
@@ -160,7 +161,7 @@ static void iconbar_toggle_way_widgets(iconbar_gtk *iconbar, bool value, const o
     gtk_widget_set_sensitive(way_widgets[i], value ? TRUE : FALSE);
 
   if(value)
-    g_assert(selected.type != ILLEGAL);
+    assert(selected.type != ILLEGAL);
 
   gtk_widget_set_sensitive(iconbar->way_cut,
                            (value && selected.way->node_chain.size() > 2) ? TRUE : FALSE);

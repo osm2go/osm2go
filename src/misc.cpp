@@ -35,6 +35,7 @@
 #include <gtk/gtk.h>
 #endif
 
+#include <cassert>
 #include <cmath>
 #include <cstring>
 #include <fcntl.h>
@@ -244,7 +245,7 @@ static void init_paths() {
   pathnames.push_back("../data/");
 
   for (unsigned int i = 0; i < pathnames.size(); i++) {
-    g_assert(pathnames[i][pathnames[i].size() - 1] == '/');
+    assert(pathnames[i][pathnames[i].size() - 1] == '/');
     fdguard dfd(pathnames[i].c_str(), O_DIRECTORY);
     if(dfd.valid()) {
 #if __cplusplus >= 201103L

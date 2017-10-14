@@ -38,6 +38,7 @@
 #else
 #include <array>
 #endif
+#include <cassert>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -861,7 +862,7 @@ static inline int __attribute__((nonnull(2))) my_strcmp(const xmlChar *a, const 
 /* skip current element incl. everything below (mainly for testing) */
 /* returns FALSE if something failed */
 static void skip_element(xmlTextReaderPtr reader) {
-  g_assert(xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT);
+  assert(xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT);
   const xmlChar *name = xmlTextReaderConstName(reader);
   g_assert_nonnull(name);
   int depth = xmlTextReaderDepth(reader);
@@ -988,7 +989,7 @@ static void process_node(xmlTextReaderPtr reader, osm_t *osm) {
 
   process_base_attributes(node, reader, osm);
 
-  g_assert(osm->nodes.find(node->id) == osm->nodes.end());
+  assert(osm->nodes.find(node->id) == osm->nodes.end());
   osm->nodes[node->id] = node;
 
   /* just an empty element? then return the node as it is */
@@ -1046,7 +1047,7 @@ static void process_way(xmlTextReaderPtr reader, osm_t *osm) {
 
   process_base_attributes(way, reader, osm);
 
-  g_assert(osm->ways.find(way->id) == osm->ways.end());
+  assert(osm->ways.find(way->id) == osm->ways.end());
   osm->ways[way->id] = way;
 
   /* just an empty element? then return the way as it is */
@@ -1101,7 +1102,7 @@ static void process_relation(xmlTextReaderPtr reader, osm_t *osm) {
 
   process_base_attributes(relation, reader, osm);
 
-  g_assert(osm->relations.find(relation->id) == osm->relations.end());
+  assert(osm->relations.find(relation->id) == osm->relations.end());
   osm->relations[relation->id] = relation;
 
   /* just an empty element? then return the relation as it is */
@@ -1512,7 +1513,7 @@ way_chain_t osm_t::node_delete(node_t *node, bool remove_refs) {
     printf("permanently delete node #" ITEM_ID_FORMAT "\n", node->id);
 
     std::map<item_id_t, node_t *>::iterator it = nodes.find(node->id);
-    g_assert(it != nodes.end());
+    assert(it != nodes.end());
 
     node_free(it->second);
   }
@@ -1610,7 +1611,7 @@ void osm_unref_way_free::operator()(node_t* node)
     if(std::find_if(std::cbegin(osm->relations), itEnd, find_relation_members(object_t(node))) == itEnd) {
       const way_chain_t &way_chain = osm->node_delete(node, false);
       g_assert_cmpuint(way_chain.size(), ==, 1);
-      g_assert(way_chain.front() == way);
+      assert(way_chain.front() == way);
     }
   }
 }
@@ -1641,7 +1642,7 @@ void osm_t::way_delete(way_t *way) {
     printf("permanently delete way #" ITEM_ID_FORMAT "\n", way->id);
 
     std::map<item_id_t, way_t *>::iterator it = ways.find(way->id);
-    g_assert(it != ways.end());
+    assert(it != ways.end());
 
     way_free(it->second);
   }
@@ -1727,7 +1728,7 @@ void reverse_direction_sensitive_tags_functor::operator()(tag_t &etag)
         /* add length of new suffix */
         etag.key = static_cast<char *>(g_realloc(etag.key, plen + 1 + rtable[i].second.size()));
         char *lastcolon = etag.key + plen;
-        g_assert(*lastcolon == ':');
+        assert(*lastcolon == ':');
         /* replace suffix */
         strcpy(lastcolon, rtable[i].second.c_str());
         n_tags_altered++;
@@ -2226,7 +2227,7 @@ std::string base_object_t::id_string() const {
 
 void base_object_t::osmchange_delete(xmlNodePtr parent_node, const char *changeset) const
 {
-  g_assert(flags & OSM_FLAG_DELETED);
+  assert(flags & OSM_FLAG_DELETED);
 
   xmlNodePtr obj_node = xmlNewChild(parent_node, O2G_NULLPTR, BAD_CAST apiString(), O2G_NULLPTR);
 
@@ -2304,7 +2305,7 @@ bool way_t::merge(way_t *other, osm_t *osm, const bool doRels)
   // drop the visible items
   map_item_chain_destroy(other->map_item_chain);
 
-  g_assert(ends_with_node(other->node_chain.front()) ||
+  assert(ends_with_node(other->node_chain.front()) ||
            ends_with_node(other->node_chain.back()));
 
   const bool collision = tags.merge(other->tags);

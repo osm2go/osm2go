@@ -40,6 +40,7 @@
 #include "appdata.h"
 #include "misc.h"
 
+#include <cassert>
 #include <cmath>
 #include <cstring>
 #include <limits>
@@ -87,7 +88,7 @@ canvas_item_info_t::~canvas_item_info_t()
   const std::vector<canvas_item_info_t *>::iterator itEnd = info_group.end();
   std::vector<canvas_item_info_t *>::iterator it = std::find(info_group.begin(),
                                                              itEnd, this);
-  g_assert(it != itEnd);
+  assert(it != itEnd);
 
   info_group.erase(it);
 }
@@ -160,7 +161,7 @@ void canvas_t::item_info_push(canvas_item_t *item) {
   g_assert_nonnull(info);
 
   printf("pushing item_info %p to background\n", info);
-  g_assert(info->canvas == this);
+  assert(info->canvas == this);
 
   std::vector<canvas_item_info_t *> &info_group = item_info[info->group];
   const std::vector<canvas_item_info_t *>::reverse_iterator itEnd = info_group.rend();

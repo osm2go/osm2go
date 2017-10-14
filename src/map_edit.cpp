@@ -31,6 +31,7 @@
 #include <osm2go_cpp.h>
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 
 /* -------------------------- way_add ----------------------- */
@@ -381,7 +382,7 @@ void map_edit_way_cut(map_t *map, int px, int py) {
     printf("  cut at node\n");
 
     /* node must not be first or last node of way */
-    g_assert(map->selected.object.type == WAY);
+    assert(map->selected.object.type == WAY);
 
     if(!map->selected.object.way->ends_with_node(item->object.node)) {
       way = map->selected.object.way;
@@ -476,7 +477,7 @@ struct find_way_ends {
 void map_edit_node_move(map_t *map, map_item_t *map_item, int ex, int ey) {
   osm_t *osm = map->appdata.osm;
 
-  g_assert(map_item->object.type == NODE);
+  assert(map_item->object.type == NODE);
   node_t *node = map_item->object.node;
 
   printf("released dragged node #" ITEM_ID_FORMAT "\n", node->id);
@@ -518,8 +519,8 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, int ex, int ey) {
                                                                              find_way_ends(node));
           const std::map<item_id_t, way_t *>::iterator way1It = std::find_if(witBegin, witEnd,
                                                                              find_way_ends(touchnode));
-          g_assert(way0It != witEnd);
-          g_assert(way1It != witEnd);
+          assert(way0It != witEnd);
+          assert(way1It != witEnd);
           ways2join[0] = way0It->second;
           ways2join[1] = way1It->second;
         }
@@ -613,7 +614,7 @@ void map_edit_way_reverse(map_t *map) {
   /* deleting the selected item de-selects it ... */
   map->item_deselect();
 
-  g_assert(item.object.type == WAY);
+  assert(item.object.type == WAY);
 
   unsigned int n_tags_flipped;
   unsigned int n_roles_flipped;

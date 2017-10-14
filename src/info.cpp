@@ -28,6 +28,7 @@
 #include "relation_edit.h"
 
 #include <algorithm>
+#include <cassert>
 #include <strings.h>
 
 #include <osm2go_cpp.h>
@@ -104,7 +105,7 @@ static void on_tag_remove(tag_context_t *context) {
     printf("de-chaining tag %s/%s\n", kc, vc);
     const std::string k = kc;
     osm_t::TagMap::iterator it = osm_t::findTag(context->tags, k, vc);
-    g_assert(it != context->tags.end());
+    assert(it != context->tags.end());
 
     context->tags.erase(it);
 
@@ -235,9 +236,9 @@ static void on_tag_edit(tag_context_t *context) {
     printf("setting %s/%s\n", k.c_str(), v.c_str());
 
     const std::pair<osm_t::TagMap::iterator, osm_t::TagMap::iterator> matches = context->tags.equal_range(oldk);
-    g_assert(matches.first != matches.second);
+    assert(matches.first != matches.second);
     osm_t::TagMap::iterator it = std::find_if(matches.first, matches.second, value_match_functor(oldv));
-    g_assert(it != matches.second);
+    assert(it != matches.second);
 
     if(it->first == k) {
       // only value was changed

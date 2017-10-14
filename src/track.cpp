@@ -33,6 +33,7 @@
 #include "project.h"
 #include "settings.h"
 
+#include <cassert>
 #include <cmath>
 #include <cstring>
 #include <ctime>
@@ -637,8 +638,8 @@ void TrackSax::endElement(const xmlChar *name)
 {
   StateMap::const_iterator it = std::find_if(tags.begin(), tags.end(), tag_find(name));
 
-  g_assert(it != tags.end());
-  g_assert(state == it->newState);
+  assert(it != tags.end());
+  assert(state == it->newState);
 
   switch(state){
   case TagTrkSeg: {

@@ -27,6 +27,7 @@
 #include "osm.h"
 
 #include <algorithm>
+#include <cassert>
 #include <cstring>
 #include <map>
 #include <numeric>
@@ -513,7 +514,7 @@ struct group_member_used {
 static bool preset_group_is_used(const presets_item_group *item,
                                  const osm_t::TagMap &tags)
 {
-  g_assert(item->type & presets_item_t::TY_GROUP);
+  assert(item->type & presets_item_t::TY_GROUP);
   return std::find_if(item->items.begin(), item->items.end(),
                       group_member_used(tags)) != item->items.end();
 }
@@ -555,7 +556,7 @@ static void remove_subs(std::vector<presets_item_group *> &oldsubs,
                         presets_item_group *sub_item) {
   std::vector<presets_item_group *>::iterator it =
              std::find(oldsubs.begin(), oldsubs.end(), sub_item);
-  g_assert(it != oldsubs.end());
+  assert(it != oldsubs.end());
   std::for_each(++it, oldsubs.end(), remove_sub);
   oldsubs.erase(it, oldsubs.end());
 }
@@ -1052,7 +1053,7 @@ GtkWidget *presets_widget_text::attach(GtkTable *table, guint &row, const char *
 
 std::string presets_widget_text::getValue(GtkWidget *widget) const
 {
-  g_assert(G_OBJECT_TYPE(widget) == entry_type());
+  assert(G_OBJECT_TYPE(widget) == entry_type());
 
   return gtk_entry_get_text(GTK_ENTRY(widget));
 }
@@ -1110,7 +1111,7 @@ GtkWidget *presets_widget_combo::attach(GtkTable *table, guint &row, const char 
 
 std::string presets_widget_combo::getValue(GtkWidget* widget) const
 {
-  g_assert(G_OBJECT_TYPE(widget) == combo_box_type());
+  assert(G_OBJECT_TYPE(widget) == combo_box_type());
 
   std::string txt = combo_box_get_active_text(widget);
 
@@ -1124,7 +1125,7 @@ std::string presets_widget_combo::getValue(GtkWidget* widget) const
   const std::vector<std::string>::const_iterator it = std::find(display_values.begin(),
                                                                 display_values.end(),
                                                                 txt);
-  g_assert(it != display_values.end());
+  assert(it != display_values.end());
 
   // get the value corresponding to the displayed string
   return values[it - display_values.begin()];
@@ -1172,7 +1173,7 @@ GtkWidget *presets_widget_checkbox::attach(GtkTable *table, guint &row, const ch
 
 std::string presets_widget_checkbox::getValue(GtkWidget *widget) const
 {
-  g_assert(G_OBJECT_TYPE(widget) == check_button_type());
+  assert(G_OBJECT_TYPE(widget) == check_button_type());
 
   return check_button_get_active(widget) ?
          (value_on.empty() ? "yes" : value_on) : std::string();

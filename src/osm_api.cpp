@@ -30,6 +30,7 @@
 #include "settings.h"
 
 #include <algorithm>
+#include <cassert>
 #include <cstring>
 #include <curl/curl.h>
 #include <curl/easy.h> /* new for v7 */
@@ -460,7 +461,7 @@ static void upload_object(osm_upload_context_t &context, base_object_t *obj) {
   /* make sure gui gets updated */
   osm2go_platform::process_events();
 
-  g_assert(obj->flags & OSM_FLAG_DIRTY);
+  assert(obj->flags & OSM_FLAG_DIRTY);
 
   std::string url = context.urlbasestr + obj->apiString() + '/';
 
@@ -528,7 +529,7 @@ static GtkWidget *table_attach_int(GtkWidget *table, int num,
 }
 
 static void log_deletion(osm_upload_context_t &context, const base_object_t *obj) {
-  g_assert(obj->flags & OSM_FLAG_DELETED);
+  assert(obj->flags & OSM_FLAG_DELETED);
 
   appendf(context.log, O2G_NULLPTR, _("Deleted %s #" ITEM_ID_FORMAT " (version " ITEM_ID_FORMAT ")\n"),
           obj->apiString(), obj->id, obj->version);

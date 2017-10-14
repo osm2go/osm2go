@@ -27,6 +27,7 @@
 #else
 #include <array>
 #endif
+#include <cassert>
 #include <cstring>
 #include <dirent.h>
 #include <fdguard.h>
@@ -308,7 +309,7 @@ void PresetSax::dumpState(const char *before, const char *after) const
       printf("*/");
     } else {
       const StateMap::const_iterator nit = std::find_if(tags.begin(), tags.end(), name_find(*it));
-      g_assert(nit != tags.end());
+      assert(nit != tags.end());
       printf("%s/", nit->name);
     }
   }
@@ -397,7 +398,7 @@ void PresetSax::find_link_ref::operator()(PresetSax::LLinks::value_type &l)
     if(it == px.presets.items.end()) {
       const ChunkMap::const_iterator cit =
           std::find_if(px.chunks.begin(), px.chunks.end(), fc);
-      g_assert(cit != px.chunks.end());
+      assert(cit != px.chunks.end());
     }
   }
 }
@@ -576,7 +577,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
   }
   case TagSeparator: {
     g_assert_false(items.empty());
-    g_assert(items.top()->type & presets_item_t::TY_GROUP);
+    assert(items.top()->type & presets_item_t::TY_GROUP);
     presets_item_separator *sep = new presets_item_separator();
     static_cast<presets_item_group *>(items.top())->items.push_back(sep);
     items.push(sep);
@@ -600,7 +601,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
 
     presets_item *item = new presets_item(josm_type_parse(tp), n, ic,
                                           addEditName);
-    g_assert((items.top()->type & presets_item_t::TY_GROUP) != 0);
+    assert((items.top()->type & presets_item_t::TY_GROUP) != 0);
     static_cast<presets_item_group *>(items.top())->items.push_back(item);
     items.push(item);
     if(G_LIKELY(!n.empty())) {
@@ -827,8 +828,8 @@ void PresetSax::endElement(const xmlChar *name)
   StateMap::const_iterator it = std::find_if(tags.begin(), tags.end(),
                                              str_map_find<StateMap>(reinterpret_cast<const char *>(name)));
 
-  g_assert(it != tags.end() || state.back() == UnknownTag);
-  g_assert(state.back() == it->oldState);
+  assert(it != tags.end() || state.back() == UnknownTag);
+  assert(state.back() == it->oldState);
   state.pop_back();
 
   switch(it->oldState) {
@@ -856,7 +857,7 @@ void PresetSax::endElement(const xmlChar *name)
       // update the group type
       g_assert_false(items.empty());
       presets_item_t * const group = items.top();
-      g_assert((group->type & presets_item_t::TY_GROUP) != 0);
+      assert((group->type & presets_item_t::TY_GROUP) != 0);
       *const_cast<unsigned int *>(&group->type) |= item->type;
       if(G_UNLIKELY(!item->roles.empty() && (item->type & (presets_item_t::TY_RELATION | presets_item_t::TY_MULTIPOLYGON)) == 0)) {
         dumpState("found", "item with roles, but type does not match relations or multipolygons\n");
@@ -873,12 +874,12 @@ void PresetSax::endElement(const xmlChar *name)
   case TagGroup: {
     g_assert_false(items.empty());
     const presets_item_t * const item = items.top();
-    g_assert((item->type & presets_item_t::TY_GROUP) != 0);
+    assert((item->type & presets_item_t::TY_GROUP) != 0);
     items.pop();
     // update the parent group type
     if(!items.empty()) {
       presets_item_t * const group = items.top();
-      g_assert((group->type & presets_item_t::TY_GROUP) != 0);
+      assert((group->type & presets_item_t::TY_GROUP) != 0);
       *const_cast<unsigned int *>(&group->type) |= item->type;
     }
     break;
@@ -904,7 +905,7 @@ void PresetSax::endElement(const xmlChar *name)
       chunks[id] = chunk;
     }
     // if this was a top level chunk no active widgets should remain
-    g_assert(!items.empty() || widgets.empty());
+    assert(!items.empty() || widgets.empty());
     break;
   }
   case TagReference: {
@@ -1146,7 +1147,7 @@ presets_item_group::presets_item_group(const unsigned int types, presets_item_gr
                                        const std::string &n, const std::string &ic)
   : presets_item_named(types | TY_GROUP, n, ic), parent(p), widget(O2G_NULLPTR)
 {
-  g_assert(p == O2G_NULLPTR || ((p->type & TY_GROUP) != 0));
+  assert(p == O2G_NULLPTR || ((p->type & TY_GROUP) != 0));
 }
 
 presets_item_group::~presets_item_group()

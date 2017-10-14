@@ -2,6 +2,7 @@
 
 #include <misc.h>
 
+#include <cassert>
 #include <memory>
 
 #include <osm2go_stl.h>
@@ -45,7 +46,7 @@ bool testInObject()
   g_assert_true(line);
 
   canvas_item_t *search = canvas->get_item_at(200, 200);
-  g_assert(line.get() == search);
+  assert(line.get() == search);
 
   search = canvas->get_item_at(40, 50);
   g_assert_null(search);

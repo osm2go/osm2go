@@ -38,6 +38,7 @@
 #include <osm2go_cpp.h>
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <cstddef>
 #include <cstring>
@@ -266,7 +267,7 @@ void map_t::select_way(way_t *way) {
                 draw_selected_way_functor(arrow_width, this, way));
 
   /* a way needs at least 2 points to be drawn */
-  g_assert(map_item->object.way == way);
+  assert(map_item->object.way == way);
   std::vector<lpos_t> points = points_from_node_chain(way);
   if(!points.empty()) {
     /* create a copy of this map item and mark it as being a highlight */
@@ -1130,7 +1131,7 @@ static void map_touchnode_update(map_t *map, int x, int y) {
     /* in idle mode the dragged node is not highlighted */
   case MAP_ACTION_IDLE:
     g_assert_nonnull(map->pen_down.on_item);
-    g_assert(map->pen_down.on_item->object.type == NODE);
+    assert(map->pen_down.on_item->object.type == NODE);
     cur_node = map->pen_down.on_item->object.node;
     break;
 
@@ -1985,8 +1986,8 @@ void map_t::track_update_seg(track_seg_t &seg) {
 
   /* since we are updating an existing track, it sure has at least two
    * points, second_last must be valid and its "next" (last) also */
-  g_assert(begin != itEnd);
-  g_assert(last != itEnd);
+  assert(begin != itEnd);
+  assert(last != itEnd);
   g_assert_cmpuint(itEnd - begin, <=, seg.track_points.size());
 
   /* count points to be placed */
@@ -2013,7 +2014,7 @@ void map_t::track_update_seg(track_seg_t &seg) {
     canvas_item_t *item = seg.item_chain.back();
     item->set_points(points);
   } else {
-    g_assert(begin + 1 == last);
+    assert(begin + 1 == last);
     g_assert_true(last_is_visible);
 
     printf("second last is invisible -> start new screen segment with %zu points\n", npoints);

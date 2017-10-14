@@ -30,6 +30,7 @@
 #include "style.h"
 
 #include <algorithm>
+#include <cassert>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <limits>
@@ -442,8 +443,8 @@ void StyleSax::endElement(const xmlChar *name)
 {
   StateMap::const_iterator it = std::find_if(tags.begin(), tags.end(), tag_find(name));
 
-  g_assert(it != tags.end());
-  g_assert(state == it->newState);
+  assert(it != tags.end());
+  assert(state == it->newState);
 
   if(G_UNLIKELY(state == TagRule && styles.back()->conditions.empty())) {
     printf("Rule %zu has no conditions\n", styles.size());
