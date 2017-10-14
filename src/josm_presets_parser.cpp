@@ -500,8 +500,8 @@ PresetSax::AttrMap PresetSax::findAttributes(const char **attrs, const char **na
 }
 
 #define NULL_OR_VAL(a) (a ? a : std::string())
-#define NULL_OR_MAP_STR(it) (it != itEnd ? it->second : std::string())
-#define NULL_OR_MAP_VAL(it) (it != itEnd ? it->second : O2G_NULLPTR)
+#define NULL_OR_MAP_STR(it) (it != aitEnd ? it->second : std::string())
+#define NULL_OR_MAP_VAL(it) (it != aitEnd ? it->second : O2G_NULLPTR)
 
 void PresetSax::startElement(const char *name, const char **attrs)
 {
@@ -518,10 +518,10 @@ void PresetSax::startElement(const char *name, const char **attrs)
   // ignore IntermediateTag when checking for valid parent tags
   State oldState = state.back();
   if(oldState == IntermediateTag) {
-    const std::vector<State>::const_reverse_iterator itEnd = state.rend();
-    for(std::vector<State>::const_reverse_iterator it = state.rbegin() + 1; it != itEnd; it++)
-      if(*it != IntermediateTag) {
-        oldState = *it;
+    const std::vector<State>::const_reverse_iterator ritEnd = state.rend();
+    for(std::vector<State>::const_reverse_iterator rit = state.rbegin() + 1; rit != ritEnd; rit++)
+      if(*rit != IntermediateTag) {
+        oldState = *rit;
         break;
       }
   }
@@ -555,17 +555,17 @@ void PresetSax::startElement(const char *name, const char **attrs)
     std::array<const char *, 2> names = { { "name", "icon" } };
     const AttrMap &a = findAttributes(attrs, names.data(), names.size(), 1);
 
-    const AttrMap::const_iterator itEnd = a.end();
-    const std::string &name = NULL_OR_MAP_STR(a.find("name"));
+    const AttrMap::const_iterator aitEnd = a.end();
+    const std::string &nm = NULL_OR_MAP_STR(a.find("name"));
     const AttrMap::const_iterator icit = a.find("icon");
 
     std::string ic;
-    if(icit != itEnd)
+    if(icit != aitEnd)
       ic = josm_icon_name_adjust(icit->second, basepath, basedirfd);
 
     presets_item_group *group = new presets_item_group(0,
                                 items.empty() ? O2G_NULLPTR : static_cast<presets_item_group *>(items.top()),
-                                name, ic);
+                                nm, ic);
 
     if(items.empty())
       presets.items.push_back(group);
@@ -586,14 +586,14 @@ void PresetSax::startElement(const char *name, const char **attrs)
     std::array<const char *, 4> names = { { "name", "type", "icon", "preset_name_label" } };
     const AttrMap &a = findAttributes(attrs, names.data(), names.size(), 1);
 
-    const AttrMap::const_iterator itEnd = a.end();
-    AttrMap::const_iterator it = a.find("preset_name_label");
-    bool addEditName = it != itEnd && (strcmp(it->second, "true") == 0);
+    const AttrMap::const_iterator aitEnd = a.end();
+    AttrMap::const_iterator ait = a.find("preset_name_label");
+    bool addEditName = ait != aitEnd && (strcmp(ait->second, "true") == 0);
 
-    it = a.find("icon");
+    ait = a.find("icon");
     std::string ic;
-    if(it != itEnd)
-      ic = josm_icon_name_adjust(it->second, basepath, basedirfd);
+    if(ait != aitEnd)
+      ic = josm_icon_name_adjust(ait->second, basepath, basedirfd);
 
     const char *tp = NULL_OR_MAP_VAL(a.find("type"));
     const std::string &n = NULL_OR_MAP_STR(a.find("name"));
@@ -640,12 +640,12 @@ void PresetSax::startElement(const char *name, const char **attrs)
     if(!id) {
       dumpState("found", "reference without ref\n");
     } else {
-      const ChunkMap::const_iterator it = chunks.find(id);
-      if(G_UNLIKELY(it == chunks.end())) {
+      const ChunkMap::const_iterator ait = chunks.find(id);
+      if(G_UNLIKELY(ait == chunks.end())) {
         dumpState("found");
         printf("reference with unresolved ref %s\n", id);
       } else
-        ref = it->second;
+        ref = ait->second;
     }
     widgets.push(new presets_widget_reference(ref));
     break;
@@ -665,7 +665,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
   case TagText: {
     std::array<const char *, 4> names = { { "key", "text", "default", "match" } };
     const AttrMap &a = findAttributes(attrs, names.data(), names.size(), 2);
-    const AttrMap::const_iterator itEnd = a.end();
+    const AttrMap::const_iterator aitEnd = a.end();
 
     const std::string &key = NULL_OR_MAP_STR(a.find("key"));
     const std::string &text = NULL_OR_MAP_STR(a.find("text"));
@@ -695,7 +695,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
   case TagCheck: {
     std::array<const char *, 5> names = { { "key", "text", "value_on", "match", "default" } };
     const AttrMap &a = findAttributes(attrs, names.data(), names.size(), 2);
-    const AttrMap::const_iterator itEnd = a.end();
+    const AttrMap::const_iterator aitEnd = a.end();
 
     const std::string &key = NULL_OR_MAP_STR(a.find("key"));
     const std::string &text = NULL_OR_MAP_STR(a.find("text"));
@@ -726,7 +726,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
   case TagCombo: {
     std::array<const char *, 7> names = { { "key", "text", "display_values", "match", "default", "delimiter", "values" } };
     const AttrMap &a = findAttributes(attrs, names.data(), names.size(), 6);
-    const AttrMap::const_iterator itEnd = a.end();
+    const AttrMap::const_iterator aitEnd = a.end();
 
     const std::string &key = NULL_OR_MAP_STR(a.find("key"));
     const std::string &text = NULL_OR_MAP_STR(a.find("text"));
@@ -762,7 +762,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
 
     std::array<const char *, 2> names = { { "display_value", "value" } };
     const AttrMap &a = findAttributes(attrs, names.data(), names.size(), 3);
-    const AttrMap::const_iterator itEnd = a.end();
+    const AttrMap::const_iterator aitEnd = a.end();
 
     const char *value = NULL_OR_MAP_VAL(a.find("value"));
 
@@ -784,10 +784,10 @@ void PresetSax::startElement(const char *name, const char **attrs)
 
     std::array<const char *, 4> names = { { "key", "type", "count", "regexp" } };
     const AttrMap &a = findAttributes(attrs, names.data(), names.size(), 0);
-    const AttrMap::const_iterator itEnd = a.end();
+    const AttrMap::const_iterator aitEnd = a.end();
 
     // ignore roles marked as regexp, this is not implemented yet
-    if(G_LIKELY(a.find("regexp") == itEnd)) {
+    if(G_LIKELY(a.find("regexp") == aitEnd)) {
       const std::string &key = NULL_OR_MAP_STR(a.find("key"));
       const char *tp = NULL_OR_MAP_VAL(a.find("type"));
       const char *cnt = NULL_OR_MAP_VAL(a.find("count"));
@@ -1051,10 +1051,10 @@ presets_widget_t::Match presets_widget_t::parseMatch(const char *matchstring, Ma
   return (it == itEnd) ? def : it->match;
 }
 
-presets_widget_t::presets_widget_t(presets_widget_type_t t, Match m, const std::string &key, const std::string &text)
+presets_widget_t::presets_widget_t(presets_widget_type_t t, Match m, const std::string &k, const std::string &txt)
   : type(t)
-  , key(key)
-  , text(text)
+  , key(k)
+  , text(txt)
   , match(m)
 {
 }
@@ -1072,17 +1072,17 @@ bool presets_widget_t::is_interactive() const
   }
 }
 
-presets_widget_text::presets_widget_text(const std::string &key, const std::string &text,
-                                         const std::string &deflt, const char *matches)
-  : presets_widget_t(WIDGET_TYPE_TEXT, parseMatch(matches), key, text)
+presets_widget_text::presets_widget_text(const std::string &k, const std::string &txt,
+                                         const std::string &deflt, const char *m)
+  : presets_widget_t(WIDGET_TYPE_TEXT, parseMatch(m), k, txt)
   , def(deflt)
 {
 }
 
-presets_widget_combo::presets_widget_combo(const std::string &key, const std::string &text,
-                                           const std::string &deflt, const char *matches,
+presets_widget_combo::presets_widget_combo(const std::string &k, const std::string &txt,
+                                           const std::string &deflt, const char *m,
                                            std::vector<std::string> vals, std::vector<std::string> dvals)
-  : presets_widget_t(WIDGET_TYPE_COMBO, parseMatch(matches), key, text)
+  : presets_widget_t(WIDGET_TYPE_COMBO, parseMatch(m), k, txt)
   , def(deflt)
   , values(vals)
   , display_values(dvals)
@@ -1111,16 +1111,16 @@ std::vector<std::string> presets_widget_combo::split_string(const char *str, con
   return ret;
 }
 
-presets_widget_key::presets_widget_key(const std::string &key, const std::string &val,
-                                       const char *matches)
-  : presets_widget_t(WIDGET_TYPE_KEY, parseMatch(matches, MatchKeyValue_Force), key)
+presets_widget_key::presets_widget_key(const std::string &k, const std::string &val,
+                                       const char *m)
+  : presets_widget_t(WIDGET_TYPE_KEY, parseMatch(m, MatchKeyValue_Force), k)
   , value(val)
 {
 }
 
-presets_widget_checkbox::presets_widget_checkbox(const std::string &key, const std::string &text,
-                                                 bool deflt, const char *matches, const std::string &von)
-  : presets_widget_t(WIDGET_TYPE_CHECK, parseMatch(matches), key, text)
+presets_widget_checkbox::presets_widget_checkbox(const std::string &k, const std::string &txt,
+                                                 bool deflt, const char *m, const std::string &von)
+  : presets_widget_t(WIDGET_TYPE_CHECK, parseMatch(m), k, txt)
   , def(deflt)
   , value_on(von)
 {

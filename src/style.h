@@ -97,8 +97,8 @@ struct style_t {
   typedef std::map<item_id_t, icon_t::icon_item *> IconCache;
   IconCache node_icons;
 
-  void colorize_node(node_t *node);
-  void colorize_way(way_t *way) const;
+  void colorize_node(node_t *n);
+  void colorize_way(way_t *w) const;
   void colorize_world(osm_t *osm);
 };
 

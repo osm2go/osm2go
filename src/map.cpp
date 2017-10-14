@@ -1633,10 +1633,10 @@ void map_t::paint() {
 }
 
 /* called from several icons like e.g. "node_add" */
-void map_t::set_action(map_action_t action) {
-  printf("map action set to %d\n", action);
+void map_t::set_action(map_action_t act) {
+  printf("map action set to %d\n", act);
 
-  this->action.type = action;
+  action.type = act;
 
   /* enable/disable ok/cancel buttons */
   // MAP_ACTION_IDLE=0, NODE_ADD, BG_ADJUST, WAY_ADD, WAY_NODE_ADD, WAY_CUT
@@ -1646,7 +1646,7 @@ void map_t::set_action(map_action_t action) {
   const char *statusbar_text;
   bool idle = false;
 
-  switch(action) {
+  switch(act) {
   case MAP_ACTION_BG_ADJUST:
     statusbar_text = _("Adjust background image position");
     ok_state = true;

@@ -1158,9 +1158,6 @@ static osm_t *process_osm(xmlTextReaderPtr reader, icon_t &icons) {
     xmlFree(prop);
   }
 
-  const xmlChar *name = xmlTextReaderConstName(reader);
-  g_assert_nonnull(name);
-
   /* read next node */
   int num_elems = 0;
 
@@ -2018,12 +2015,12 @@ std::string object_t::get_name() const {
                           { { "amenity", "place", "historic", "leisure",
                               "tourism", "landuse", "waterway", "railway",
                               "natural" } };
-  const char *type = O2G_NULLPTR;
+  const char *typestr = O2G_NULLPTR;
 
-  for(unsigned int i = 0; !type && i < type_tags.size(); i++)
-    type = obj->tags.get_value(type_tags[i]);
+  for(unsigned int i = 0; !typestr && i < type_tags.size(); i++)
+    typestr = obj->tags.get_value(type_tags[i]);
 
-  if(!type && obj->tags.get_value("building")) {
+  if(!typestr && obj->tags.get_value("building")) {
     const char *street = obj->tags.get_value("addr:street");
     const char *hn = obj->tags.get_value("addr:housenumber");
 
@@ -2037,13 +2034,13 @@ std::string object_t::get_name() const {
       }
       ret += hn;
     } else {
-      type = "building";
+      typestr = "building";
       if(!name)
         name = obj->tags.get_value("addr:housename");
     }
   }
-  if(!type && ret.empty())
-    type = obj->tags.get_value("emergency");
+  if(!typestr && ret.empty())
+    typestr = obj->tags.get_value("emergency");
 
   /* highways are a little bit difficult */
   const char *highway = obj->tags.get_value("highway");
@@ -2056,24 +2053,24 @@ std::string object_t::get_name() const {
        (!strcmp(highway, "service"))) {
       ret = highway;
       ret += " road";
-      type = O2G_NULLPTR;
+      typestr = O2G_NULLPTR;
     }
 
     else if(!strcmp(highway, "pedestrian")) {
-      type = "pedestrian way/area";
+      typestr = "pedestrian way/area";
     }
 
     else if(!strcmp(highway, "construction")) {
-      type = "road/street under construction";
+      typestr = "road/street under construction";
     }
 
     else
-      type = highway;
+      typestr = highway;
   }
 
-  if(type) {
+  if(typestr) {
     g_assert_true(ret.empty());
-    ret = type;
+    ret = typestr;
   }
 
   if(name) {

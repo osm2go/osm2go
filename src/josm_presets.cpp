@@ -351,17 +351,17 @@ static void presets_item_dialog(presets_context_t *context,
       context->tag_context->info_tags_replace();
 
     std::vector<presets_item_t *> &lru = appdata.presets->lru;
-    std::vector<presets_item_t *>::iterator it = std::find(lru.begin(),
+    std::vector<presets_item_t *>::iterator lit = std::find(lru.begin(),
                                                            lru.end(), item);
     // if it is already the first item in the list nothing is to do
-    if(it == lru.end()) {
+    if(lit == lru.end()) {
       // drop the oldest ones if too many
       if(lru.size() >= LRU_MAX)
         lru.resize(LRU_MAX - 1);
       lru.insert(lru.begin(), const_cast<presets_item *>(item));
-    } else if(it != lru.begin()) {
+    } else if(lit != lru.begin()) {
       // move to front
-      std::rotate(lru.begin(), it, it + 1);
+      std::rotate(lru.begin(), lit, lit + 1);
     }
   }
 
@@ -1112,18 +1112,18 @@ std::string presets_widget_combo::getValue(GtkWidget* widget) const
 {
   g_assert(G_OBJECT_TYPE(widget) == combo_box_type());
 
-  std::string text = combo_box_get_active_text(widget);
+  std::string txt = combo_box_get_active_text(widget);
 
-  if(text == _("<unset>"))
+  if(txt == _("<unset>"))
     return std::string();
 
   if(display_values.empty())
-    return text;
+    return txt;
 
   // map back from display string to value string
   const std::vector<std::string>::const_iterator it = std::find(display_values.begin(),
                                                                 display_values.end(),
-                                                                text);
+                                                                txt);
   g_assert(it != display_values.end());
 
   // get the value corresponding to the displayed string

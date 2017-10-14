@@ -1164,9 +1164,9 @@ static void test_merge_ways()
     g_assert_cmpuint(w1->node_chain.size(), ==, nodes.size());
     g_assert_cmpuint(o.ways.size(), ==, 1);
     g_assert_cmpuint(o.nodes.size(), ==, nodes.size());
-    for(unsigned int i = 0; i < nodes.size(); i++) {
-      w1->contains_node(nodes[i]);
-      g_assert_cmpuint(nodes[i]->ways, ==, 1);
+    for(node_chain_t::const_iterator it = nodes.begin(); it != nodes.end(); it++) {
+      w1->contains_node(*it);
+      g_assert_cmpuint((*it)->ways, ==, 1);
     }
     g_assert(expect == w1->node_chain);
 
@@ -1174,8 +1174,8 @@ static void test_merge_ways()
 
     g_assert_cmpuint(o.ways.size(), ==, 0);
     g_assert_cmpuint(o.nodes.size(), ==, nodes.size());
-    for(unsigned int i = 0; i < nodes.size(); i++)
-      g_assert_cmpuint(nodes[i]->ways, ==, 0);
+    for(node_chain_t::const_iterator it = nodes.begin(); it != nodes.end(); it++)
+      g_assert_cmpuint((*it)->ways, ==, 0);
   }
 }
 

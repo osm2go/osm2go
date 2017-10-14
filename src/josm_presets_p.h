@@ -64,7 +64,7 @@ public:
   static Match parseMatch(const char *matchstring, Match def = MatchIgnore);
 protected:
   presets_widget_t(presets_widget_type_t t, Match m, const std::string &key = std::string(),
-                   const std::string &text = std::string());
+                   const std::string &txt = std::string());
 
   /**
    * @brief check if the tag value matches this item
@@ -109,8 +109,8 @@ public:
 class presets_widget_text : public presets_widget_t {
   // no matchValue as it doesn't make sense to match on the value
 public:
-  presets_widget_text(const std::string &key, const std::string &text,
-                      const std::string &deflt, const char *matches);
+  presets_widget_text(const std::string &k, const std::string &txt,
+                      const std::string &deflt, const char *m);
 
   const std::string def;
 
@@ -136,8 +136,8 @@ public:
 
 class presets_widget_label : public presets_widget_t {
 public:
-  explicit presets_widget_label(const std::string &text)
-    : presets_widget_t(WIDGET_TYPE_LABEL, MatchIgnore, std::string(), text) {}
+  explicit presets_widget_label(const std::string &txt)
+    : presets_widget_t(WIDGET_TYPE_LABEL, MatchIgnore, std::string(), txt) {}
 
   virtual GtkWidget *attach(GtkTable *table, guint &row, const char *,
                             presets_context_t *) const O2G_OVERRIDE;
@@ -153,8 +153,8 @@ class presets_widget_combo : public presets_widget_t {
 protected:
   virtual bool matchValue(const char *val) const O2G_OVERRIDE;
 public:
-  presets_widget_combo(const std::string &key, const std::string &text,
-                       const std::string &deflt, const char *matches,
+  presets_widget_combo(const std::string &k, const std::string &txt,
+                       const std::string &deflt, const char *m,
                        std::vector<std::string> vals, std::vector<std::string> dvals);
 
   const std::string def;
@@ -178,7 +178,7 @@ class presets_widget_key : public presets_widget_t {
 protected:
   virtual bool matchValue(const char *val) const O2G_OVERRIDE;
 public:
-  presets_widget_key(const std::string &key, const std::string &val, const char *matches);
+  presets_widget_key(const std::string &k, const std::string &val, const char *m);
 
   const std::string value;
   virtual std::string getValue(GtkWidget *widget) const O2G_OVERRIDE;
@@ -191,8 +191,8 @@ class presets_widget_checkbox : public presets_widget_t {
 protected:
   virtual bool matchValue(const char *val) const O2G_OVERRIDE;
 public:
-  presets_widget_checkbox(const std::string &key, const std::string &text, bool deflt,
-                          const char *matches, const std::string &von = std::string());
+  presets_widget_checkbox(const std::string &k, const std::string &txt, bool deflt,
+                          const char *m, const std::string &von = std::string());
 
   const bool def;
   std::string value_on;

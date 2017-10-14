@@ -455,14 +455,14 @@ style_t::~style_t()
   xmlFree(BAD_CAST icon.path_prefix);
 }
 
-void style_t::colorize_node(node_t *node)
+void style_t::colorize_node(node_t *n)
 {
-  josm_elemstyles_colorize_node(this, node);
+  josm_elemstyles_colorize_node(this, n);
 }
 
-void style_t::colorize_way(way_t *way) const
+void style_t::colorize_way(way_t *w) const
 {
-  josm_elemstyles_colorize_way(this, way);
+  josm_elemstyles_colorize_way(this, w);
 }
 
 void style_t::colorize_world(osm_t *osm)
