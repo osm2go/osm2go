@@ -34,6 +34,7 @@
 #include <curl/curl.h>
 #include <curl/easy.h> /* new for v7 */
 #include <map>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #ifdef FREMANTLE
@@ -127,7 +128,8 @@ bool osm_download(GtkWidget *parent, settings_t *settings, project_t *project)
   if(G_UNLIKELY(!net_io_download_file(parent, url, update, project->name.c_str(), true)))
     return false;
 
-  if(G_UNLIKELY(!g_file_test(update.c_str(), G_FILE_TEST_IS_REGULAR)))
+  struct stat st;
+  if(G_UNLIKELY(stat(update.c_str(), &st) != 0 || !S_ISREG(st.st_mode)))
     return false;
 
   // if the project's gzip setting and the download one don't match change the project

@@ -54,7 +54,8 @@ icon_file_exists(const std::string &file) {
 
   // absolute filenames are not mangled
   if(file[0] == '/') {
-    if(g_file_test(file.c_str(), G_FILE_TEST_IS_REGULAR))
+    struct stat st;
+    if(stat(file.c_str(), &st) == 0 && S_ISREG(st.st_mode))
       return file;
     else
       return std::string();
