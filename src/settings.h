@@ -36,19 +36,19 @@ public:
   /* never changed */
   std::string base_path;
 
-  /* changed in project.c */
+  /* changed in project.cpp */
   std::string project;
 
-  /* changed in osm_api.c */
+  /* changed in osm_api.cpp */
   std::string server, username, password;
 
-  /* changed in wms.c */
+  /* changed in wms.cpp */
   std::vector<struct wms_server_t *> wms_server;
 
-  /* changed in style.c */
+  /* changed in style.cpp */
   std::string style;
 
-  /* changed in main.c */
+  /* changed in main.cpp */
   std::string track_path;
   bool enable_gps;
   bool follow_gps;
