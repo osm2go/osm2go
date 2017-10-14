@@ -324,7 +324,7 @@ struct presets_items {
   std::vector<presets_item_t *> chunks;
   std::vector<presets_item_t *> lru;
 
-  bool addFile(const std::string &filename, const std::string &basepath);
+  bool addFile(const std::string &filename, const std::string &basepath, int basefd);
 };
 
 static inline guint widget_rows(guint init, const presets_widget_t *w) {

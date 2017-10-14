@@ -35,6 +35,7 @@
 #include <numeric>
 #include <stack>
 #include <strings.h>
+#include <sys/stat.h>
 
 #include "osm2go_stl.h"
 
@@ -46,17 +47,11 @@ typedef std::map<std::string, presets_item *> ChunkMap;
 
 /* --------------------- presets.xml parsing ----------------------- */
 
-std::string josm_icon_name_adjust(const char *name, const std::string &basepath) {
+std::string josm_icon_name_adjust(const char *name) {
   std::string ret;
 
-  if(!name)
+  if(G_UNLIKELY(!name))
     return ret;
-
-  if(!basepath.empty()) {
-    ret = basepath + name;
-    if(g_file_test(ret.c_str(), G_FILE_TEST_IS_REGULAR))
-      return ret;
-  }
 
   size_t len = strlen(name);
 
@@ -70,6 +65,17 @@ std::string josm_icon_name_adjust(const char *name, const std::string &basepath)
   ret.assign(name, len);
 
   return ret;
+}
+
+std::string josm_icon_name_adjust(const char *name, const std::string &basepath, int basedirfd) {
+
+  g_assert_nonnull(name);
+
+  struct stat st;
+  if(fstatat(basedirfd, name, &st, 0) == 0 && S_ISREG(st.st_mode))
+    return basepath + name;
+
+  return josm_icon_name_adjust(name);
 }
 
 typedef std::vector<std::pair<presets_item_t::item_type, std::string> > TypeStrMap;
@@ -160,6 +166,7 @@ class PresetSax {
   std::stack<presets_widget_t *> widgets; // the current widget stack (i.e. dialog layout)
   presets_items &presets;
   const std::string &basepath;
+  const int basedirfd;
   const std::vector<std::string> &langs;
 
   // this maps the XML tag name to the target state and the list of allowed source states
@@ -187,7 +194,7 @@ class PresetSax {
   void dumpState(const char *before = O2G_NULLPTR, const char *after = O2G_NULLPTR) const;
 
 public:
-  explicit PresetSax(presets_items &p, const std::string &b);
+  explicit PresetSax(presets_items &p, const std::string &b, int basefd);
 
   bool parse(const std::string &filename);
 
@@ -334,9 +341,10 @@ const std::vector<std::string> &userLangs()
   return lcodes;
 }
 
-PresetSax::PresetSax(presets_items &p, const std::string &b)
+PresetSax::PresetSax(presets_items &p, const std::string &b, int basefd)
   : presets(p)
   , basepath(b)
+  , basedirfd(basefd)
   , langs(userLangs())
 {
   memset(&handler, 0, sizeof(handler));
@@ -553,7 +561,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
 
     std::string ic;
     if(icit != itEnd)
-      ic = josm_icon_name_adjust(icit->second, basepath);
+      ic = josm_icon_name_adjust(icit->second, basepath, basedirfd);
 
     presets_item_group *group = new presets_item_group(0,
                                 items.empty() ? O2G_NULLPTR : static_cast<presets_item_group *>(items.top()),
@@ -585,7 +593,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
     it = a.find("icon");
     std::string ic;
     if(it != itEnd)
-      ic = josm_icon_name_adjust(it->second, basepath);
+      ic = josm_icon_name_adjust(it->second, basepath, basedirfd);
 
     const char *tp = NULL_OR_MAP_VAL(a.find("type"));
     const std::string &n = NULL_OR_MAP_STR(a.find("name"));
@@ -952,9 +960,9 @@ struct move_chunks_functor {
   }
 };
 
-bool presets_items::addFile(const std::string &filename, const std::string &basepath)
+bool presets_items::addFile(const std::string &filename, const std::string &basepath, int basefd)
 {
-  PresetSax p(*this, basepath);
+  PresetSax p(*this, basepath, basefd);
   if(!p.parse(filename))
     return false;
 
@@ -972,7 +980,7 @@ struct presets_items *josm_presets_load(void) {
 
   const std::string &filename = find_file("defaultpresets.xml");
   if(G_LIKELY(!filename.empty()))
-    presets->addFile(filename, std::string());
+    presets->addFile(filename, std::string(), -1);
 
   // check for user presets
   std::string dirname = getenv("HOME");
@@ -997,7 +1005,7 @@ struct presets_items *josm_presets_load(void) {
           if(pd->d_type == DT_DIR)
             continue;
           if(g_str_has_suffix(pd->d_name, ".xml")) {
-            presets->addFile(dn + pd->d_name, dn);
+            presets->addFile(dn + pd->d_name, dn, pdir.dirfd());
             break;
           }
         }
