@@ -730,8 +730,10 @@ static GtkTreeIter preset_insert_item(const presets_item_named *item, icon_t &ic
   GtkTreeIter iter;
   gtk_list_store_append(store, &iter);
 
+  GdkPixbuf *pixmap = icon == O2G_NULLPTR ? O2G_NULLPTR : icon->buffer();
+
   gtk_list_store_set(store, &iter,
-		     PRESETS_PICKER_COL_ICON, icon->buffer(),
+		     PRESETS_PICKER_COL_ICON, pixmap,
 		     PRESETS_PICKER_COL_NAME, item->name.c_str(),
 		     PRESETS_PICKER_COL_ITEM_PTR, item,
 		     -1);
