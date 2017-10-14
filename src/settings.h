@@ -20,7 +20,8 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
 
-#include <track.h>
+#include "fdguard.h"
+#include "track.h"
 
 #include <string>
 #include <vector>
@@ -35,6 +36,7 @@ public:
 
   /* never changed */
   std::string base_path;
+  fdguard base_path_fd;
 
   /* changed in project.cpp */
   std::string project;

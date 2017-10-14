@@ -30,6 +30,7 @@
 #include <tr1/cstdint>
 #endif
 #include <cstring>
+#include <fcntl.h>
 #include <gconf/gconf.h>
 #include <gconf/gconf-client.h>
 #include <glib.h>
@@ -209,8 +210,11 @@ settings_t *settings_t::load() {
     else
       settings->base_path += "/osm2go/";
 
-    fprintf(stderr, "base_path = %s\n", settings->base_path.c_str());
+    printf("base_path = %s\n", settings->base_path.c_str());
   }
+
+  fdguard fg(settings->base_path.c_str(), O_DIRECTORY | O_RDONLY);
+  settings->base_path_fd.swap(fg);
 
   if(G_UNLIKELY(settings->server.empty())) {
     /* ------------- setup download defaults -------------------- */
@@ -285,7 +289,8 @@ void settings_t::save() const {
 }
 
 settings_t::settings_t()
-  : enable_gps(FALSE)
+  : base_path_fd(-1)
+  , enable_gps(FALSE)
   , follow_gps(FALSE)
   , first_run_demo(false)
   , store_str(7)

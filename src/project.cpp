@@ -147,8 +147,9 @@ static std::string project_filename(const project_t *project) {
 }
 
 static bool project_read(const std::string &project_file, project_t *project,
-                             const std::string &defaultserver) {
-  xmlDoc *doc = xmlReadFile(project_file.c_str(), O2G_NULLPTR, XML_PARSE_NONET);
+                         const std::string &defaultserver, int basefd) {
+  fdguard projectfd(basefd, project_file.c_str(), O_RDONLY);
+  xmlDoc *doc = xmlReadFd(projectfd, project_file.c_str(), O2G_NULLPTR, XML_PARSE_NONET);
 
   /* parse the file and get the DOM */
   if(doc == O2G_NULLPTR) {
@@ -260,10 +261,11 @@ static bool project_read(const std::string &project_file, project_t *project,
 
   // no explicit filename was given, guess the default ones
   if(project->osm.empty()) {
-    std::string fname = project->path + project->name + ".osm.gz";
-    if(g_file_test(fname.c_str(), G_FILE_TEST_IS_REGULAR) != TRUE)
+    std::string fname = project->name + ".osm.gz";
+    struct stat st;
+    if(fstatat(project->dirfd, fname.c_str(), &st, 0) != 0 || !S_ISREG(st.st_mode))
       fname.erase(fname.size() - 3);
-    project->osm = fname.substr(project->path.size());
+    project->osm = fname;
   }
 
   if(project->server == O2G_NULLPTR)
@@ -355,23 +357,24 @@ bool project_t::save(GtkWidget *parent) {
 
 /**
  * @brief check if a project with the given name exists
- * @param settings settings
+ * @param base_path root path for projects
  * @param name project name
  * @param fullname where to store absolute filename if project exists
  * @returns if project exists
  */
-static bool project_exists(const std::string &base_path, const char *name, std::string &fullname) {
-  fullname = base_path + name + '/' + name + ".proj";
+static bool project_exists(int base_path, const char *name, std::string &fullname) {
+  fullname = std::string(name) + '/' + name + ".proj";
+  struct stat st;
 
   /* check for project file */
-  return g_file_test(fullname.c_str(), G_FILE_TEST_IS_REGULAR) == TRUE;
+  return fstatat(base_path, fullname.c_str(), &st, 0) == 0 && S_ISREG(st.st_mode);
 }
 
-static std::vector<project_t *> project_scan(map_state_t &ms, const std::string &base_path, const std::string &server) {
+static std::vector<project_t *> project_scan(map_state_t &ms, const std::string &base_path, int base_path_fd, const std::string &server) {
   std::vector<project_t *> projects;
 
   /* scan for projects */
-  dirguard dir(base_path.c_str());
+  dirguard dir(base_path_fd);
   if(!dir.valid())
     return projects;
 
@@ -384,13 +387,13 @@ static std::vector<project_t *> project_scan(map_state_t &ms, const std::string 
       continue;
 
     std::string fullname;
-    if(project_exists(base_path, d->d_name, fullname)) {
+    if(project_exists(base_path_fd, d->d_name, fullname)) {
       printf("found project %s\n", d->d_name);
 
       /* try to read project and append it to chain */
       project_t *n = new project_t(ms, d->d_name, base_path);
 
-      if(G_LIKELY(project_read(fullname, n, server)))
+      if(G_LIKELY(project_read(fullname, n, server, base_path_fd)))
         projects.push_back(n);
       else
         delete n;
@@ -482,7 +485,7 @@ static void callback_modified_name(GtkWidget *widget, name_callback_context_t *c
     if(strpbrk(name, "\\*?()\n\t\r") == O2G_NULLPTR) {
       /* check if such a project already exists */
       std::string fullname;
-      if(!project_exists(context->settings->base_path, name, fullname))
+      if(!project_exists(context->settings->base_path_fd, name, fullname))
 	ok = TRUE;
     }
   }
@@ -1278,7 +1281,8 @@ static bool project_open(appdata_t &appdata, const std::string &name) {
   project->map_state.reset();
 
   printf("project file = %s\n", project_file.c_str());
-  if(G_UNLIKELY(!project_read(project_file, project, appdata.settings->server))) {
+  if(G_UNLIKELY(!project_read(project_file, project, appdata.settings->server,
+                              appdata.settings->base_path_fd))) {
     printf("error reading project file\n");
     delete project;
     return false;
@@ -1433,7 +1437,8 @@ project_t::~project_t()
 
 select_context_t::select_context_t(appdata_t &a, GtkWidget *dial)
   : appdata(a)
-  , projects(project_scan(dummystate, appdata.settings->base_path, appdata.settings->server))
+  , projects(project_scan(dummystate, appdata.settings->base_path,
+                          appdata.settings->base_path_fd, appdata.settings->server))
   , dialog(dial)
   , list(O2G_NULLPTR)
 {
