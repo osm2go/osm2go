@@ -28,6 +28,7 @@ struct fdguard {
   explicit fdguard(int f) : fd(f) {}
   /**
    * @brief open a filename as anchor point
+   * @param dirname path of the directory to open
    *
    * It will use O_CLOEXEC, O_PATH, and O_DIRECTORY if present. If O_PATH is not
    * defined O_RDONLY will be used instead.

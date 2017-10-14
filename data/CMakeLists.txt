@@ -29,11 +29,8 @@ if (MAEMO_FOUND)
 	install(FILES ${PROJECT_NAME}.64.png
 		DESTINATION share/icons/hicolor/scalable/hildon
 		RENAME ${PROJECT_NAME}.png)
-	if (NOT MAEMO_VERSION VERSION_LESS 5)
-		message(STATUS "Installing backup configuration for maemo >= 5")
-		install(FILES ${PROJECT_NAME}.conf
-			DESTINATION /etc/osso-backup/applications)
-	endif ()
+	install(FILES ${PROJECT_NAME}.conf
+		DESTINATION /etc/osso-backup/applications)
 else ()
 	install(FILES ${PROJECT_NAME}-ubuntu.desktop
 		DESTINATION ${CMAKE_INSTALL_DATADIR}/applications/${PROJECT_NAME}.desktop)
