@@ -90,7 +90,7 @@ public:
   virtual GtkWidget *attach(GtkTable *table, guint &row, const char *preset,
                             presets_context_t *context) const;
   virtual std::string getValue(GtkWidget *widget) const;
-  virtual guint rows() const = 0;
+  virtual unsigned int rows() const = 0;
 
   /**
    * @brief checks if this widget matches the given tags
@@ -117,7 +117,7 @@ public:
   virtual GtkWidget *attach(GtkTable *table, guint &row, const char *preset,
                             presets_context_t *) const O2G_OVERRIDE;
   virtual std::string getValue(GtkWidget *widget) const O2G_OVERRIDE;
-  virtual guint rows() const O2G_OVERRIDE {
+  virtual unsigned int rows() const O2G_OVERRIDE {
     return 1;
   }
 };
@@ -129,7 +129,7 @@ public:
 
   virtual GtkWidget *attach(GtkTable *table, guint &row, const char *,
                             presets_context_t *) const O2G_OVERRIDE;
-  virtual guint rows() const O2G_OVERRIDE {
+  virtual unsigned int rows() const O2G_OVERRIDE {
     return 1;
   }
 };
@@ -141,7 +141,7 @@ public:
 
   virtual GtkWidget *attach(GtkTable *table, guint &row, const char *,
                             presets_context_t *) const O2G_OVERRIDE;
-  virtual guint rows() const O2G_OVERRIDE {
+  virtual unsigned int rows() const O2G_OVERRIDE {
     return 1;
   }
 };
@@ -164,7 +164,7 @@ public:
   virtual GtkWidget *attach(GtkTable *table, guint &row, const char *preset,
                             presets_context_t *) const O2G_OVERRIDE;
   virtual std::string getValue(GtkWidget *widget) const O2G_OVERRIDE;
-  virtual guint rows() const O2G_OVERRIDE {
+  virtual unsigned int rows() const O2G_OVERRIDE {
     return 1;
   }
 
@@ -182,7 +182,7 @@ public:
 
   const std::string value;
   virtual std::string getValue(GtkWidget *widget) const O2G_OVERRIDE;
-  virtual guint rows() const O2G_OVERRIDE {
+  virtual unsigned int rows() const O2G_OVERRIDE {
     return 0;
   }
 };
@@ -200,7 +200,7 @@ public:
   virtual GtkWidget *attach(GtkTable *table, guint &row, const char *preset,
                             presets_context_t *) const O2G_OVERRIDE;
   virtual std::string getValue(GtkWidget *widget) const O2G_OVERRIDE;
-  virtual guint rows() const O2G_OVERRIDE {
+  virtual unsigned int rows() const O2G_OVERRIDE {
     return 1;
   }
 };
@@ -215,7 +215,7 @@ public:
   presets_item * const item;
 
   virtual bool is_interactive() const O2G_OVERRIDE;
-  virtual guint rows() const O2G_OVERRIDE;
+  virtual unsigned int rows() const O2G_OVERRIDE;
 };
 
 class presets_widget_link : public presets_widget_t {
@@ -230,7 +230,7 @@ public:
   }
   virtual GtkWidget *attach(GtkTable *table, guint &row, const char *preset,
                             presets_context_t *context) const O2G_OVERRIDE;
-  virtual guint rows() const O2G_OVERRIDE {
+  virtual unsigned int rows() const O2G_OVERRIDE {
     return 1;
   }
 };
@@ -327,7 +327,7 @@ struct presets_items {
   bool addFile(const std::string &filename, const std::string &basepath, int basefd);
 };
 
-static inline guint widget_rows(guint init, const presets_widget_t *w) {
+static inline unsigned int widget_rows(unsigned int init, const presets_widget_t *w) {
   return init + w->rows();
 }
 

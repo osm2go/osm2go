@@ -1133,7 +1133,7 @@ bool presets_widget_reference::is_interactive() const
          item->widgets.end();
 }
 
-guint presets_widget_reference::rows() const
+unsigned int presets_widget_reference::rows() const
 {
   return std::accumulate(item->widgets.begin(), item->widgets.end(), 0, widget_rows);
 }
