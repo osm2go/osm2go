@@ -282,7 +282,7 @@ bool project_t::save(GtkWidget *parent) {
   printf("saving project to %s\n", project_file.c_str());
 
   /* check if project path exists */
-  if(G_UNLIKELY(g_file_test(path.c_str(), G_FILE_TEST_IS_DIR) != TRUE)) {
+  if(G_UNLIKELY(!dirfd.valid())) {
     /* make sure project base path exists */
     if(G_UNLIKELY(g_mkdir_with_parents(path.c_str(), S_IRWXU) != 0)) {
       errorf(GTK_WIDGET(parent),
