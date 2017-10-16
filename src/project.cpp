@@ -462,10 +462,11 @@ static project_t *project_get_selected(GtkWidget *list) {
 
 /* ------------------------- create a new project ---------------------- */
 
-typedef struct {
+struct name_callback_context_t {
+  name_callback_context_t(GtkWidget *w, fdguard &f) : dialog(w), basefd(f) {}
   GtkWidget *dialog;
-  settings_t *settings;
-} name_callback_context_t;
+  fdguard &basefd;
+};
 
 static void callback_modified_name(GtkWidget *widget, name_callback_context_t *context) {
   const gchar *name = gtk_entry_get_text(GTK_ENTRY(widget));
@@ -478,7 +479,7 @@ static void callback_modified_name(GtkWidget *widget, name_callback_context_t *c
     /* check if it consists of valid characters */
     if(strpbrk(name, "\\*?()\n\t\r") == O2G_NULLPTR) {
       /* check if such a project already exists */
-      if(project_exists(context->settings->base_path_fd, name).empty())
+      if(project_exists(context->basefd, name).empty())
         ok = TRUE;
     }
   }
@@ -591,7 +592,7 @@ static project_t *project_new(select_context_t *context) {
   GtkWidget *hbox = gtk_hbox_new(FALSE, 8);
   gtk_box_pack_start_defaults(GTK_BOX(hbox), gtk_label_new(_("Name:")));
 
-  name_callback_context_t name_context = { dialog, context->appdata.settings };
+  name_callback_context_t name_context(dialog, context->appdata.settings->base_path_fd);
   GtkWidget *entry = entry_new();
   gtk_box_pack_start_defaults(GTK_BOX(hbox), entry);
   g_signal_connect(G_OBJECT(entry), "changed",
