@@ -352,15 +352,16 @@ bool project_t::save(GtkWidget *parent) {
  * @brief check if a project with the given name exists
  * @param base_path root path for projects
  * @param name project name
- * @param fullname where to store absolute filename if project exists
- * @returns if project exists
+ * @returns path of project file relative to base_path or empty
  */
-static bool project_exists(int base_path, const char *name, std::string &fullname) {
-  fullname = std::string(name) + '/' + name + ".proj";
+static std::string project_exists(int base_path, const char *name) {
+  std::string ret = std::string(name) + '/' + name + ".proj";
   struct stat st;
 
   /* check for project file */
-  return fstatat(base_path, fullname.c_str(), &st, 0) == 0 && S_ISREG(st.st_mode);
+  if(fstatat(base_path, ret.c_str(), &st, 0) != 0 || !S_ISREG(st.st_mode))
+    ret.clear();
+  return ret;
 }
 
 static std::vector<project_t *> project_scan(map_state_t &ms, const std::string &base_path, int base_path_fd, const std::string &server) {
@@ -379,8 +380,8 @@ static std::vector<project_t *> project_scan(map_state_t &ms, const std::string 
     if(G_UNLIKELY(strcmp(d->d_name, ".") == 0 || strcmp(d->d_name, "..") == 0))
       continue;
 
-    std::string fullname;
-    if(project_exists(base_path_fd, d->d_name, fullname)) {
+    std::string fullname = project_exists(base_path_fd, d->d_name);
+    if(!fullname.empty()) {
       printf("found project %s\n", d->d_name);
 
       /* try to read project and append it to chain */
@@ -477,9 +478,8 @@ static void callback_modified_name(GtkWidget *widget, name_callback_context_t *c
     /* check if it consists of valid characters */
     if(strpbrk(name, "\\*?()\n\t\r") == O2G_NULLPTR) {
       /* check if such a project already exists */
-      std::string fullname;
-      if(!project_exists(context->settings->base_path_fd, name, fullname))
-	ok = TRUE;
+      if(project_exists(context->settings->base_path_fd, name).empty())
+        ok = TRUE;
     }
   }
 
