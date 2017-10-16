@@ -1286,7 +1286,7 @@ static bool project_open(appdata_t &appdata, const std::string &name) {
   return appdata.osm != O2G_NULLPTR;
 }
 
-bool project_load(appdata_t &appdata, const std::string &name) {
+static bool project_load_inner(appdata_t &appdata, const std::string &name) {
   char banner_txt[64];
   snprintf(banner_txt, sizeof(banner_txt), _("Loading %s"), name.c_str());
   banner_busy_start(appdata, banner_txt);
@@ -1302,12 +1302,6 @@ bool project_load(appdata_t &appdata, const std::string &name) {
 
   if(G_UNLIKELY(!project_open(appdata, name))) {
     printf("error opening requested project\n");
-
-    delete appdata.project;
-    appdata.project = O2G_NULLPTR;
-
-    delete appdata.osm;
-    appdata.osm = O2G_NULLPTR;
 
     snprintf(banner_txt, sizeof(banner_txt),
 	     _("Error opening %s"), name.c_str());
@@ -1327,12 +1321,6 @@ bool project_load(appdata_t &appdata, const std::string &name) {
     errorf(GTK_WIDGET(appdata.window), "%s", errmsg);
     printf("project/osm sanity checks failed, unloading project\n");
 
-    delete appdata.project;
-    appdata.project = O2G_NULLPTR;
-
-    delete appdata.osm;
-    appdata.osm = O2G_NULLPTR;
-
     snprintf(banner_txt, sizeof(banner_txt),
 	     _("Error opening %s"), name.c_str());
     banner_busy_stop(appdata);
@@ -1343,19 +1331,22 @@ bool project_load(appdata_t &appdata, const std::string &name) {
 
   /* load diff possibly preset */
   osm2go_platform::process_events();
-  if(!appdata.window) goto fail;
+  if(G_UNLIKELY(!appdata.window))
+    return false;
 
   diff_restore(appdata);
 
   /* prepare colors etc, draw data and adjust scroll/zoom settings */
   osm2go_platform::process_events();
-  if(!appdata.window) goto fail;
+  if(G_UNLIKELY(!appdata.window))
+    return false;
 
   appdata.map->init();
 
   /* restore a track */
   osm2go_platform::process_events();
-  if(!appdata.window) goto fail;
+  if(G_UNLIKELY(!appdata.window))
+    return false;
 
   track_clear(appdata);
   if(track_restore(appdata))
@@ -1363,7 +1354,8 @@ bool project_load(appdata_t &appdata, const std::string &name) {
 
   /* finally load a background if present */
   osm2go_platform::process_events();
-  if(!appdata.window) goto fail;
+  if(G_UNLIKELY(!appdata.window))
+    return false;
   wms_load(appdata);
 
   /* save the name of the project for the perferences */
@@ -1371,29 +1363,22 @@ bool project_load(appdata_t &appdata, const std::string &name) {
 
   banner_busy_stop(appdata);
 
-#if 0
-  snprintf(banner_txt, sizeof(banner_txt), _("Loaded %s"), name.c_str());
-  banner_show_info(appdata, banner_txt);
-#endif
-
   appdata.statusbar->set(O2G_NULLPTR, false);
 
   return true;
+}
 
- fail:
-  printf("project loading interrupted by user\n");
+bool project_load(appdata_t &appdata, const std::string &name) {
+  bool ret = project_load_inner(appdata, name);
+  if(G_UNLIKELY(!ret)) {
+    printf("project loading interrupted by user\n");
 
-  if(appdata.project) {
     delete appdata.project;
     appdata.project = O2G_NULLPTR;
-  }
-
-  if(appdata.osm) {
     delete appdata.osm;
     appdata.osm = O2G_NULLPTR;
   }
-
-  return false;
+  return ret;
 }
 
 osm_t *project_t::parse_osm(icon_t &icons) const {
