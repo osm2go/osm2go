@@ -42,6 +42,7 @@
 #include <fcntl.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
+#include <memory>
 #include <string>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -385,12 +386,10 @@ static std::vector<project_t *> project_scan(map_state_t &ms, const std::string 
       printf("found project %s\n", d->d_name);
 
       /* try to read project and append it to chain */
-      project_t *n = new project_t(ms, d->d_name, base_path);
+      std::unique_ptr<project_t> n(new project_t(ms, d->d_name, base_path));
 
-      if(G_LIKELY(project_read(fullname, n, server, base_path_fd)))
-        projects.push_back(n);
-      else
-        delete n;
+      if(G_LIKELY(project_read(fullname, n.get(), server, base_path_fd)))
+        projects.push_back(n.release());
     }
   }
 
@@ -610,8 +609,9 @@ static project_t *project_new(select_context_t *context) {
     return O2G_NULLPTR;
   }
 
-  project_t *project = new project_t(context->dummystate, gtk_entry_get_text(GTK_ENTRY(entry)),
-                                     context->appdata.settings->base_path);
+  std::unique_ptr<project_t> project(new project_t(context->dummystate,
+                                                   gtk_entry_get_text(GTK_ENTRY(entry)),
+                                                   context->appdata.settings->base_path));
   gtk_widget_destroy(dialog);
 
   /* no data downloaded yet */
@@ -628,21 +628,17 @@ static project_t *project_new(select_context_t *context) {
 
   /* create project file on disk */
   if(!project->save(context->dialog)) {
-    project_delete(context, project);
-
-    project = O2G_NULLPTR;
-  } else if(!project_edit(context, project, TRUE)) {
+    project_delete(context, project.release());
+  } else if(!project_edit(context, project.get(), TRUE)) {
     printf("new/edit cancelled!!\n");
 
-    project_delete(context, project);
-
-    project = O2G_NULLPTR;
+    project_delete(context, project.release());
   }
 
   /* enable/disable edit/remove buttons */
-  view_selected(context->dialog, project);
+  view_selected(context->dialog, project.get());
 
-  return project;
+  return project.get();
 }
 
 /**
@@ -1252,7 +1248,7 @@ project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
 }
 
 static bool project_open(appdata_t &appdata, const std::string &name) {
-  project_t *project;
+  std::unique_ptr<project_t> project(O2G_NULLPTR);
   std::string project_file;
 
   g_assert_false(name.empty());
@@ -1266,35 +1262,28 @@ static bool project_open(appdata_t &appdata, const std::string &name) {
     // usually that ends in /foo/foo.proj
     if(name.substr(sl - pname.size() - 1, pname.size() + 1) == '/' + pname)
       sl -= pname.size();
-    project = new project_t(appdata.map_state, pname, name.substr(0, sl));
+    project.reset(new project_t(appdata.map_state, pname, name.substr(0, sl)));
   } else {
-    project = new project_t(appdata.map_state, name, appdata.settings->base_path);
+    project.reset(new project_t(appdata.map_state, name, appdata.settings->base_path));
 
-    project_file = project_filename(project);
+    project_file = project_filename(project.get());
   }
   project->map_state.reset();
 
   printf("project file = %s\n", project_file.c_str());
-  if(G_UNLIKELY(!project_read(project_file, project, appdata.settings->server,
+  if(G_UNLIKELY(!project_read(project_file, project.get(), appdata.settings->server,
                               appdata.settings->base_path_fd))) {
     printf("error reading project file\n");
-    delete project;
     return false;
   }
 
   /* --------- project structure ok: load its OSM file --------- */
-  appdata.project = project;
 
   printf("project_open: loading osm %s\n", project->osm.c_str());
   appdata.osm = project->parse_osm(appdata.icons);
-  if(!appdata.osm) {
-    printf("OSM parsing failed\n");
-    return false;
-  }
+  appdata.project = project.release();
 
-  printf("parsing ok\n");
-
-  return true;
+  return appdata.osm != O2G_NULLPTR;
 }
 
 bool project_load(appdata_t &appdata, const std::string &name) {
