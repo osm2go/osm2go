@@ -67,8 +67,8 @@ fdguard &fdguard::operator=(const fdguard& other)
 void fdguard::swap(fdguard &other)
 {
   int f = fd;
-  const_cast<int&>(fd) = other.fd;
-  const_cast<int&>(other.fd) = f;
+  const_cast<int &>(fd) = other.fd;
+  const_cast<int &>(other.fd) = f;
 }
 
 dirguard::dirguard(const char *name)
@@ -79,7 +79,7 @@ dirguard::dirguard(const char *name)
 dirguard::dirguard(int fd)
   : d(fdopendir(dup(fd)))
 {
-  // ignore the position of base_path_fd
+  // ignore the position of fd
   rewinddir(d);
 }
 
