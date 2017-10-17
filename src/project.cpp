@@ -638,7 +638,7 @@ static project_t *project_new(select_context_t *context) {
   /* enable/disable edit/remove buttons */
   view_selected(context->dialog, project.get());
 
-  return project.get();
+  return project.release();
 }
 
 /**
