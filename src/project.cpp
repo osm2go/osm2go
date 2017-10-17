@@ -1252,10 +1252,10 @@ static bool project_open(appdata_t &appdata, const std::string &name) {
   std::string project_file;
 
   g_assert_false(name.empty());
-  if(G_UNLIKELY(name.find('/') != std::string::npos)) {
+  std::string::size_type sl = name.rfind('/');
+  if(G_UNLIKELY(sl != std::string::npos)) {
     // load with absolute or relative path, usually only done for demo
     project_file = name;
-    std::string::size_type sl = name.rfind('/');
     std::string pname = name.substr(sl + 1);
     if(G_LIKELY(pname.substr(pname.size() - 5) == ".proj"))
       pname.erase(pname.size() - 5);
