@@ -99,27 +99,22 @@ void statusbar_t::brief(const char *msg, gint timeout) {
   static_cast<statusbar_internal *>(this)->brief(timeout, msg);
 }
 
-void statusbar_internal::brief(int timeout, const char* msg)
+void statusbar_internal::brief(int timeout, const char *msg)
 {
   if (brief_handler_id) {
     g_source_remove(brief_handler_id);
     brief_handler_id = 0;
   }
   statusbar_brief_clear(this);
-  guint mid = 0;
   if (msg) {
     statusbar_highlight(this, true);
-    mid = gtk_statusbar_push(GTK_STATUSBAR(widget), cid, msg);
-    if (mid) {
-      brief_mid = mid;
-    }
+    brief_mid = gtk_statusbar_push(GTK_STATUSBAR(widget), cid, msg);
   }
-  if (mid && (timeout >= 0)) {
+  if (brief_mid && (timeout >= 0)) {
     if (timeout == 0) {
       timeout = STATUSBAR_DEFAULT_BRIEF_TIME;
     }
-    brief_handler_id
-      = g_timeout_add_seconds(timeout, statusbar_brief_clear, this);
+    brief_handler_id = g_timeout_add_seconds(timeout, statusbar_brief_clear, this);
   }
 }
 #endif
