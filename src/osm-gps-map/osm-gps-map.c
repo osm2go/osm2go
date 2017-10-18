@@ -2518,31 +2518,33 @@ osm_gps_map_source_get_max_zoom(OsmGpsMapSource_t source)
 void
 osm_gps_map_download_maps (OsmGpsMap *map, OsmGpsMapPoint *pt1, OsmGpsMapPoint *pt2, int zoom_start, int zoom_end)
 {
-    int i,j,zoom,num_tiles;
-    OsmGpsMapPrivate *priv = map->priv;
-
     if (pt1 && pt2)
     {
+        OsmGpsMapPrivate *priv = map->priv;
         gchar *filename;
-        num_tiles = 0;
+        int num_tiles = 0;
+        int zoom;
+
         zoom_end = CLAMP(zoom_end, priv->min_zoom, priv->max_zoom);
         g_debug("Download maps: z:%d->%d",zoom_start, zoom_end);
 
         for(zoom=zoom_start; zoom<=zoom_end; zoom++)
         {
-            int x1,y1,x2,y2;
+            int x_1, y_1, x_2, y_2;
+            int i;
 
-            x1 = floorf((float)lon2pixel(zoom, pt1->rlon) / (float)TILESIZE);
-            y1 = floorf((float)lat2pixel(zoom, pt1->rlat) / (float)TILESIZE);
+            x_1 = floorf((float)lon2pixel(zoom, pt1->rlon) / (float)TILESIZE);
+            y_1 = floorf((float)lat2pixel(zoom, pt1->rlat) / (float)TILESIZE);
 
-            x2 = floorf((float)lon2pixel(zoom, pt2->rlon) / (float)TILESIZE);
-            y2 = floorf((float)lat2pixel(zoom, pt2->rlat) / (float)TILESIZE);
+            x_2 = floorf((float)lon2pixel(zoom, pt2->rlon) / (float)TILESIZE);
+            y_2 = floorf((float)lat2pixel(zoom, pt2->rlat) / (float)TILESIZE);
 
             // loop x1-x2
-            for(i=x1; i<=x2; i++)
+            for(i=x_1; i<=x_2; i++)
             {
                 // loop y1 - y2
-                for(j=y1; j<=y2; j++)
+                int j;
+                for(j=y_1; j<=y_2; j++)
                 {
                     // x = i, y = j
                     filename = g_strdup_printf("%s%c%d%c%d%c%d.%s",
