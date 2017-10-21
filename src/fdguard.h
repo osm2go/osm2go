@@ -67,6 +67,7 @@ struct fdguard {
 
   const int fd;
   inline operator int() const { return fd; }
+  inline operator bool() const { return valid(); }
   inline bool valid() const { return fd >= 0; }
   void swap(fdguard &other);
 };

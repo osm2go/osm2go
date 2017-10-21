@@ -10,30 +10,37 @@
 
 static void check_guard(int openfd, int &dirfd)
 {
+  fdguard infd(0);
+  assert(infd);
+
   fdguard ofd(openfd);
   fdguard rootfd("/");
 
   dirfd = rootfd;
 
   g_assert_true(ofd.valid());
-  g_assert_cmpint(ofd, >, 0);
-  g_assert_cmpint(ofd, ==, openfd);
+  g_assert_true(ofd);
+  g_assert_cmpint(static_cast<int>(ofd), >, 0);
+  g_assert_cmpint(static_cast<int>(ofd), ==, openfd);
   g_assert_true(rootfd.valid());
-  g_assert_cmpint(rootfd, >, 0);
-  g_assert_cmpint(rootfd, ==, dirfd);
+  g_assert_true(rootfd);
+  g_assert_cmpint(static_cast<int>(rootfd), >, 0);
+  g_assert_cmpint(static_cast<int>(rootfd), ==, dirfd);
 
   rootfd.swap(ofd);
 
-  g_assert_cmpint(rootfd, ==, openfd);
-  g_assert_cmpint(ofd, ==, dirfd);
+  g_assert_cmpint(static_cast<int>(rootfd), ==, openfd);
+  g_assert_cmpint(static_cast<int>(ofd), ==, dirfd);
 }
 
 static void check_notdir(const char *exe)
 {
   fdguard dir(exe);
   g_assert_false(dir.valid());
+  g_assert_false(dir);
   fdguard file(exe, O_RDONLY);
   g_assert_true(file.valid());
+  g_assert_true(file);
 
   std::string exepath(exe);
   std::string::size_type slpos = exepath.rfind('/');
