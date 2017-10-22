@@ -1086,7 +1086,7 @@ static void test_merge_nodes()
   r->flags = 0;
   g_assert_cmpuint(o.ways.begin()->second->node_chain.size(), ==, 2);
   g_assert_cmpuint(w->node_chain.size(), ==, 2);
-  g_assert_true(o.ways.begin()->second->node_chain.front() == n1);
+  assert(o.ways.begin()->second->node_chain.front() == n1);
   g_assert_true(o.ways.begin()->second->ends_with_node(n1));
   assert(w->node_chain.back() == n2);
   g_assert_true(w->ends_with_node(n2));

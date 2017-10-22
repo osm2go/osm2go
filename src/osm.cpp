@@ -862,7 +862,7 @@ static inline int __attribute__((nonnull(2))) my_strcmp(const xmlChar *a, const 
 /* skip current element incl. everything below (mainly for testing) */
 /* returns FALSE if something failed */
 static void skip_element(xmlTextReaderPtr reader) {
-  assert(xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT);
+  g_assert_cmpint(xmlTextReaderNodeType(reader), ==, XML_READER_TYPE_ELEMENT);
   const xmlChar *name = xmlTextReaderConstName(reader);
   assert(name != O2G_NULLPTR);
   int depth = xmlTextReaderDepth(reader);
