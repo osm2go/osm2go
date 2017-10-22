@@ -96,7 +96,7 @@ int main(int argc, char **argv)
   style->colorize_node(node);
 
   g_assert_false(style->node_icons.empty());
-  g_assert_nonnull(style->node_icons[node->id]);
+  assert(style->node_icons[node->id] != O2G_NULLPTR);
 
   icon_t::icon_item *oldicon = style->node_icons[node->id];
   float oldzoom = node->zoom_max;
@@ -108,7 +108,7 @@ int main(int argc, char **argv)
   style->colorize_world(&osm);
 
   g_assert_false(style->node_icons.empty());
-  g_assert_nonnull(style->node_icons[node->id]);
+  assert(style->node_icons[node->id] != O2G_NULLPTR);
   assert(oldicon != style->node_icons[node->id]);
   g_assert_cmpfloat(oldzoom * 1.9, <, node->zoom_max);
 
@@ -186,7 +186,7 @@ int main(int argc, char **argv)
   g_assert_cmpint(way->draw.width, ==, 1);
 
   g_assert_false(style->node_icons.empty());
-  g_assert_nonnull(style->node_icons[node->id]);
+  assert(style->node_icons[node->id] != O2G_NULLPTR);
   assert(oldicon != style->node_icons[node->id]);
   g_assert_cmpfloat(oldzoom, !=, node->zoom_max);
 
@@ -207,7 +207,7 @@ int main(int argc, char **argv)
   g_assert_cmpint(way->draw.width, ==, 2);
 
   g_assert_false(style->node_icons.empty());
-  g_assert_nonnull(style->node_icons[node->id]);
+  assert(style->node_icons[node->id] != O2G_NULLPTR);
   assert(oldicon != style->node_icons[node->id]);
   g_assert_cmpfloat(oldzoom, !=, node->zoom_max);
 

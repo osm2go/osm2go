@@ -31,6 +31,7 @@
 #include "statusbar.h"
 
 #include <algorithm>
+#include <cassert>
 #include <cstring>
 #include <fcntl.h>
 #include <libxml/parser.h>
@@ -333,7 +334,7 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
     return;
   }
 
-  g_assert_nonnull(node);
+  assert(node != O2G_NULLPTR);
 
   osm_t::TagMap ntags = xml_scan_tags(node_node->children);
   /* check if the same changes have been done upstream */
@@ -403,7 +404,7 @@ static void diff_restore_way(xmlNodePtr node_way, osm_t *osm) {
     return;
   }
 
-  g_assert_nonnull(way);
+  assert(way != O2G_NULLPTR);
 
   /* handle hidden flag */
   if(xml_get_prop_is(node_way, "hidden", "true"))
@@ -504,7 +505,7 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
     return;
   }
 
-  g_assert_nonnull(relation);
+  assert(relation != O2G_NULLPTR);
 
   bool was_changed = false;
   osm_t::TagMap ntags = xml_scan_tags(node_rel->children);

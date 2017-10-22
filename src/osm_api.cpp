@@ -87,7 +87,7 @@ bool osm_download(GtkWidget *parent, settings_t *settings, project_t *project)
 {
   printf("download osm ...\n");
 
-  g_assert_nonnull(project->server);
+  assert(project->server != O2G_NULLPTR);
 
   if(!project->rserver.empty()) {
     if(api_adjust(project->rserver))

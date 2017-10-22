@@ -43,6 +43,7 @@ namespace std {
 #else
 #include <array>
 #endif
+#include <cassert>
 #include <cstring>
 #ifdef FREMANTLE
 #include <hildon/hildon-gtk.h>
@@ -130,7 +131,7 @@ static void list_set_columns(list_priv_t *priv, const std::vector<list_view_colu
 void list_set_custom_user_button(GtkWidget *list, list_button_t id,
 				 GtkWidget *widget) {
   list_priv_t *priv = static_cast<list_priv_t *>(g_object_get_data(G_OBJECT(list), "priv"));
-  g_assert_nonnull(priv);
+  assert(priv != O2G_NULLPTR);
   g_assert_cmpint(id, >=, 3);
   g_assert_cmpint(id, <,  6);
 
@@ -149,7 +150,7 @@ void list_set_custom_user_button(GtkWidget *list, list_button_t id,
 
 GtkTreeSelection *list_get_selection(GtkWidget *list) {
   list_priv_t *priv = static_cast<list_priv_t *>(g_object_get_data(G_OBJECT(list), "priv"));
-  g_assert_nonnull(priv);
+  assert(priv != O2G_NULLPTR);
 
   GtkTreeSelection *sel =
     gtk_tree_view_get_selection(GTK_TREE_VIEW(priv->view));
@@ -162,7 +163,7 @@ GtkTreeSelection *list_get_selection(GtkWidget *list) {
 bool list_get_selected(GtkWidget *list, GtkTreeModel **model, GtkTreeIter *iter) {
   bool retval = false;
   list_priv_t *priv = static_cast<list_priv_t *>(g_object_get_data(G_OBJECT(list), "priv"));
-  g_assert_nonnull(priv);
+  assert(priv != O2G_NULLPTR);
 
 #if 1
   // this copes with multiple selections ...
@@ -190,7 +191,7 @@ bool list_get_selected(GtkWidget *list, GtkTreeModel **model, GtkTreeIter *iter)
 
 void list_button_enable(GtkWidget *list, list_button_t id, bool enable) {
   list_priv_t *priv = static_cast<list_priv_t *>(g_object_get_data(G_OBJECT(list), "priv"));
-  g_assert_nonnull(priv);
+  assert(priv != O2G_NULLPTR);
 
   GtkWidget *but = priv->button.widget[id];
 
@@ -209,7 +210,7 @@ static void on_row_activated(GtkTreeView *treeview,
 
   if(gtk_tree_model_get_iter(model, &iter, path)) {
     list_priv_t *priv = static_cast<list_priv_t *>(g_object_get_data(G_OBJECT(userdata), "priv"));
-    g_assert_nonnull(priv);
+    assert(priv != O2G_NULLPTR);
 
     GtkWidget *toplevel = gtk_widget_get_toplevel(GTK_WIDGET(treeview));
     g_assert_true(GTK_IS_DIALOG(toplevel));
@@ -222,7 +223,7 @@ static void on_row_activated(GtkTreeView *treeview,
 
 GtkTreeModel *list_get_model(GtkWidget *list) {
   list_priv_t *priv = static_cast<list_priv_t *>(g_object_get_data(G_OBJECT(list), "priv"));
-  g_assert_nonnull(priv);
+  assert(priv != O2G_NULLPTR);
 
   return gtk_tree_view_get_model(GTK_TREE_VIEW(priv->view));
 }
@@ -233,7 +234,7 @@ GtkTreeModel *list_get_model(GtkWidget *list) {
 
 void list_focus_on(GtkWidget *list, GtkTreeIter *iter) {
   list_priv_t *priv = static_cast<list_priv_t *>(g_object_get_data(G_OBJECT(list), "priv"));
-  g_assert_nonnull(priv);
+  assert(priv != O2G_NULLPTR);
   GtkTreeModel *model = gtk_tree_view_get_model(GTK_TREE_VIEW(priv->view));
 
   // Handle de/reselection
@@ -292,7 +293,7 @@ GtkWidget *list_new(bool show_headers, unsigned int btn_flags, void *context,
 {
   list_priv_t *priv = g_new0(list_priv_t, 1);
 
-  g_assert_nonnull(cb_changed);
+  assert(cb_changed != O2G_NULLPTR);
 
   GtkWidget *vbox = gtk_vbox_new(FALSE,3);
   g_object_set_data(G_OBJECT(vbox), "priv", priv);
@@ -381,7 +382,7 @@ GtkWidget *list_new(bool show_headers, unsigned int btn_flags, void *context,
 
 void list_scroll(GtkWidget* list, GtkTreeIter* iter) {
   list_priv_t *priv = static_cast<list_priv_t *>(g_object_get_data(G_OBJECT(list), "priv"));
-  g_assert_nonnull(priv);
+  assert(priv != O2G_NULLPTR);
 
   list_view_scroll(GTK_TREE_VIEW(priv->view), list_get_selection(list), iter);
 }

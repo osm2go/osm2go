@@ -23,6 +23,7 @@
 #include "misc.h"
 #include "osm2go_platform.h"
 
+#include <cassert>
 #include <cstring>
 #include <curl/curl.h>
 #include <curl/easy.h>  /* new for v7 */
@@ -127,7 +128,7 @@ static GtkWidget *busy_dialog(GtkWidget *parent, GtkProgressBar **pbar,
   gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);
   gtk_window_set_transient_for(GTK_WINDOW(dialog), GTK_WINDOW(parent));
 
-  g_assert_nonnull(pbar);
+  assert(pbar != O2G_NULLPTR);
   /* extra cast as the version used in Maemo returns GtkWidget for whatever reason */
   *pbar = GTK_PROGRESS_BAR(gtk_progress_bar_new());
   gtk_progress_bar_set_pulse_step(*pbar, 0.1);

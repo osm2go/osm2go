@@ -3,6 +3,7 @@
 #include <misc.h>
 #include <osm2go_cpp.h>
 
+#include <cassert>
 #include <cerrno>
 #include <cstdlib>
 #include <cstring>
@@ -30,8 +31,8 @@ int main(int argc, char **argv)
   GMappedFile *ogpx = g_mapped_file_new(fn.c_str(), FALSE, O2G_NULLPTR);
   GMappedFile *ngpx = g_mapped_file_new(argv[3], FALSE, O2G_NULLPTR);
 
-  g_assert_nonnull(ogpx);
-  g_assert_nonnull(ngpx);
+  assert(ogpx != O2G_NULLPTR);
+  assert(ngpx != O2G_NULLPTR);
   g_assert_cmpmem(g_mapped_file_get_contents(ogpx), g_mapped_file_get_length(ogpx),
                   g_mapped_file_get_contents(ngpx), g_mapped_file_get_length(ngpx));
 

@@ -320,7 +320,7 @@ void StyleSax::startElement(const xmlChar *name, const char **attrs)
       else if(strcmp(attrs[i], "b") == 0)
         b = attrs[i + 1];
     }
-    g_assert_nonnull(k);
+    assert(k != O2G_NULLPTR);
     elemstyle_condition_t cond = !b ? elemstyle_condition_t(k, v) :
                                  elemstyle_condition_t(k, parse_boolean(b, true_values));
     styles.back()->conditions.push_back(cond);
@@ -546,7 +546,7 @@ void colorize_node::operator()(const elemstyle_t *elemstyle)
 
   somematch = true;
 
-  g_assert_nonnull(style->icon.path_prefix);
+  assert(style->icon.path_prefix != O2G_NULLPTR);
   std::string name = "styles/";
   name += style->icon.path_prefix;
   // the final size is now known, avoid too big allocations

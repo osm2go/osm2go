@@ -72,7 +72,7 @@ void tag_context_t::update_collisions(const std::string &k)
     do {
       const gchar *key = O2G_NULLPTR;
       gtk_tree_model_get(GTK_TREE_MODEL(store), &iter, TAG_COL_KEY, &key, -1);
-      g_assert_nonnull(key);
+      assert(key != O2G_NULLPTR);
       if(checkAll || k == key)
         gtk_list_store_set(store, &iter,
            TAG_COL_COLLISION, (tags.count(key) > 1) ? TRUE : FALSE, -1);
@@ -98,8 +98,8 @@ static void on_tag_remove(tag_context_t *context) {
     const gchar *kc = O2G_NULLPTR, *vc = O2G_NULLPTR;
     gtk_tree_model_get(model, &iter, TAG_COL_KEY, &kc, TAG_COL_VALUE, &vc, -1);
 
-    g_assert_nonnull(kc);
-    g_assert_nonnull(vc);
+    assert(kc != O2G_NULLPTR);
+    assert(vc != O2G_NULLPTR);
 
     /* de-chain */
     printf("de-chaining tag %s/%s\n", kc, vc);
@@ -195,8 +195,8 @@ static void select_item(const std::string &k, const std::string &v, tag_context_
     gtk_tree_model_get(GTK_TREE_MODEL(context->store), &iter,
                        TAG_COL_KEY, &key,
                        TAG_COL_VALUE, &value, -1);
-    g_assert_nonnull(key);
-    g_assert_nonnull(value);
+    assert(key != O2G_NULLPTR);
+    assert(value != O2G_NULLPTR);
     if(k == key && v == value) {
       gtk_tree_selection_select_iter(list_get_selection(context->list), &iter);
       return;

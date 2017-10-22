@@ -80,7 +80,7 @@ void map_edit_way_add_segment(map_t *map, int x, int y) {
       printf("  re-using node #" ITEM_ID_FORMAT "\n", node->id);
       map_hl_touchnode_clear(map);
 
-      g_assert_nonnull(map->action.way);
+      assert(map->action.way != O2G_NULLPTR);
 
       /* check whether this node is first or last one of a different way */
       way_t *touch_way = O2G_NULLPTR;
@@ -122,7 +122,7 @@ void map_edit_way_add_segment(map_t *map, int x, int y) {
     }
 
     if(node) {
-      g_assert_nonnull(map->action.way);
+      assert(map->action.way != O2G_NULLPTR);
       map->action.way->append_node(node);
 
       switch(map->action.way->node_chain.size()) {
@@ -167,10 +167,10 @@ void map_unref_ways::operator()(node_t* node)
 
 void map_edit_way_add_cancel(map_t *map) {
   osm_t *osm = map->appdata.osm;
-  g_assert_nonnull(osm);
+  assert(osm != O2G_NULLPTR);
 
   printf("  removing temporary way\n");
-  g_assert_nonnull(map->action.way);
+  assert(map->action.way != O2G_NULLPTR);
 
   /* remove all nodes that have been created for this way */
   /* (their way count will be 0 after removing the way) */
@@ -214,8 +214,8 @@ void map_draw_nodes::operator()(node_t* node)
 void map_edit_way_add_ok(map_t *map) {
   osm_t *osm = map->appdata.osm;
 
-  g_assert_nonnull(osm);
-  g_assert_nonnull(map->action.way);
+  assert(osm != O2G_NULLPTR);
+  assert(map->action.way != O2G_NULLPTR);
 
   /* transfer all nodes that have been created for this way */
   /* into the node chain */
@@ -404,7 +404,7 @@ void map_edit_way_cut(map_t *map, int px, int py) {
     cut_at = way->node_chain.begin() + c + 1;
   }
 
-  g_assert_nonnull(way);
+  assert(way != O2G_NULLPTR);
   g_assert_cmpuint(way->node_chain.size(), >, 2);
 
   /* move parts of node_chain to the new way */

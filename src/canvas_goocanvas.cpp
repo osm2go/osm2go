@@ -31,6 +31,7 @@ namespace std {
 #else
 #include <array>
 #endif
+#include <cassert>
 #include <cmath>
 #include <cstring>
 #include <goocanvas.h>
@@ -314,7 +315,7 @@ void canvas_item_t::to_bottom() {
     static_cast<canvas_t *>(g_object_get_data(G_OBJECT(goo_canvas_item_get_canvas(gitem)),
                                               "canvas-pointer"));
 
-  g_assert_nonnull(canvas);
+  assert(canvas != O2G_NULLPTR);
   canvas->item_info_push(this);
 }
 

@@ -7,6 +7,7 @@
 #include <osm2go_cpp.h>
 
 #include <algorithm>
+#include <cassert>
 #include <cstdlib>
 #include <iostream>
 #include <map>
@@ -54,7 +55,7 @@ static void icon_check(const elemstyle_t *item)
   if(item->icon.filename.empty())
     return;
 
-  g_assert_nonnull(path_prefix);
+  assert(path_prefix != O2G_NULLPTR);
   std::string name = "styles/";
   name += path_prefix;
   // the final size is now known, avoid too big allocations

@@ -158,7 +158,7 @@ static canvas_item_info_t *canvas_item_get_info(canvas_t *canvas,
 
 void canvas_t::item_info_push(canvas_item_t *item) {
   canvas_item_info_t *info = canvas_item_get_info(this, item);
-  g_assert_nonnull(info);
+  assert(info != O2G_NULLPTR);
 
   printf("pushing item_info %p to background\n", info);
   assert(info->canvas == this);

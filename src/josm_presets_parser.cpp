@@ -70,7 +70,7 @@ std::string josm_icon_name_adjust(const char *name) {
 
 std::string josm_icon_name_adjust(const char *name, const std::string &basepath, int basedirfd) {
 
-  g_assert_nonnull(name);
+  assert(name != O2G_NULLPTR);
 
   struct stat st;
   if(fstatat(basedirfd, name, &st, 0) == 0 && S_ISREG(st.st_mode))

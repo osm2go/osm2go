@@ -1130,7 +1130,7 @@ static void map_touchnode_update(map_t *map, int x, int y) {
 
     /* in idle mode the dragged node is not highlighted */
   case MAP_ACTION_IDLE:
-    g_assert_nonnull(map->pen_down.on_item);
+    assert(map->pen_down.on_item != O2G_NULLPTR);
     assert(map->pen_down.on_item->object.type == NODE);
     cur_node = map->pen_down.on_item->object.node;
     break;
@@ -1196,8 +1196,8 @@ static void map_button_press(map_t *map, float x, float y) {
 
 /* move the background image (wms data) during wms adjustment */
 static void map_bg_adjust(map_t *map, int x, int y) {
-  g_assert_nonnull(map->appdata.osm);
-  g_assert_nonnull(map->appdata.osm->bounds);
+  assert(map->appdata.osm != O2G_NULLPTR);
+  assert(map->appdata.osm->bounds != O2G_NULLPTR);
 
   x += map->appdata.osm->bounds->min.x + map->bg.offset.x -
     map->pen_down.at.x;
@@ -1621,7 +1621,7 @@ void map_t::paint() {
 
   style->colorize_world(osm);
 
-  g_assert_nonnull(canvas);
+  assert(canvas != O2G_NULLPTR);
 
   printf("drawing ways ...\n");
   std::for_each(osm->ways.begin(), osm->ways.end(), map_way_draw_functor(this));

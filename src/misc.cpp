@@ -228,7 +228,7 @@ static void init_paths() {
   std::vector<std::string> pathnames;
 
   const char *home = getenv("HOME");
-  g_assert_nonnull(home);
+  assert(home != O2G_NULLPTR);
 
   // in home directory
   pathnames.push_back(home + std::string("/." PACKAGE "/"));

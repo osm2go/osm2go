@@ -55,6 +55,7 @@ namespace std {
 #else
 #include <array>
 #endif
+#include <cassert>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
@@ -364,7 +365,7 @@ cb_menu_view_detail_dec(appdata_t *appdata) {
 
 static void
 cb_menu_track_import(appdata_t *appdata) {
-  g_assert_nonnull(appdata->settings);
+  assert(appdata->settings != O2G_NULLPTR);
 
   /* open a file selector */
   GtkWidget *dialog;
@@ -436,7 +437,7 @@ cb_menu_track_follow_gps(appdata_t *appdata, MENU_CHECK_ITEM *item) {
 
 static void
 cb_menu_track_export(appdata_t *appdata) {
-  g_assert_nonnull(appdata->settings);
+  assert(appdata->settings != O2G_NULLPTR);
 
   /* open a file selector */
   GtkWidget *dialog;
@@ -487,7 +488,7 @@ cb_menu_track_export(appdata_t *appdata) {
                     "Do you really want to replace it?"))) {
         appdata->settings->track_path = filename;
 
-        g_assert_nonnull(appdata->track.track);
+        assert(appdata->track.track != O2G_NULLPTR);
         track_export(appdata->track.track, filename);
       }
       g_free(filename);

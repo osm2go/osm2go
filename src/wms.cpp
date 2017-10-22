@@ -476,7 +476,7 @@ static wms_server_t *get_selection(GtkTreeSelection *selection) {
   if(gtk_tree_selection_get_selected(selection, &model, &iter)) {
     wms_server_t *wms_server;
     gtk_tree_model_get(model, &iter, WMS_SERVER_COL_DATA, &wms_server, -1);
-    g_assert_nonnull(wms_server);
+    assert(wms_server != O2G_NULLPTR);
     return wms_server;
   }
 
@@ -500,7 +500,7 @@ const wms_server_t *wms_server_context_t::select_server() const
 
   while(valid) {
     gtk_tree_model_get(GTK_TREE_MODEL(store), &iter, WMS_SERVER_COL_DATA, &server, -1);
-    g_assert_nonnull(server);
+    assert(server != O2G_NULLPTR);
 
     if(wms->server == server->server &&
        wms->path == server->path) {
@@ -554,7 +554,7 @@ static void on_server_remove(wms_server_context_t *context) {
     wms_server_t *server = O2G_NULLPTR;
     gtk_tree_model_get(model, &iter, WMS_SERVER_COL_DATA, &server, -1);
 
-    g_assert_nonnull(server);
+    assert(server != O2G_NULLPTR);
 
     /* de-chain */
     printf("de-chaining server %s\n", server->name.c_str());
@@ -668,7 +668,7 @@ bool wms_server_edit(wms_server_context_t *context, gboolean edit_name,
 /* user clicked "edit..." button in the wms server list */
 static void on_server_edit(wms_server_context_t *context) {
   wms_server_t *server = get_selection(list_get_selection(context->list));
-  g_assert_nonnull(server);
+  assert(server != O2G_NULLPTR);
 
   wms_server_edit(context, FALSE, server);
 }
@@ -863,11 +863,11 @@ static void changed(GtkTreeSelection *sel, gpointer user_data) {
 
   /* get view from selection ... */
   GtkTreeView *view = gtk_tree_selection_get_tree_view(sel);
-  g_assert_nonnull(view);
+  assert(view != O2G_NULLPTR);
 
   /* ... and get model from view */
   GtkTreeModel *model = gtk_tree_view_get_model(view);
-  g_assert_nonnull(model);
+  assert(model != O2G_NULLPTR);
 
   /* walk the entire store */
   GtkTreeIter iter;
@@ -877,7 +877,7 @@ static void changed(GtkTreeSelection *sel, gpointer user_data) {
     wms_layer_t *layer = O2G_NULLPTR;
 
     gtk_tree_model_get(model, &iter, LAYER_COL_DATA, &layer, -1);
-    g_assert_nonnull(layer);
+    assert(layer != O2G_NULLPTR);
 
     if(gtk_tree_selection_iter_is_selected(sel, &iter) == TRUE)
       selected->push_back(layer);

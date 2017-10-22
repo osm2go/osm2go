@@ -377,7 +377,7 @@ GtkWidget *iconbar_t::create(appdata_t &appdata) {
 /* fremantle. technically they are still part of the iconbar and thus */
 /* are registered there */
 void iconbar_register_buttons(appdata_t &appdata, GtkWidget *ok, GtkWidget *cancel) {
-  g_assert_nonnull(appdata.iconbar);
+  assert(appdata.iconbar != O2G_NULLPTR);
   iconbar_gtk * const iconbar = static_cast<iconbar_gtk *>(appdata.iconbar);
 
   iconbar->ok = ok;

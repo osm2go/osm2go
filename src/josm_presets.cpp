@@ -417,7 +417,7 @@ cb_menu_item(GtkWidget *menu_item, gpointer data) {
   presets_context_t *context = (presets_context_t*)data;
 
   presets_item *item = static_cast<presets_item *>(g_object_get_data(G_OBJECT(menu_item), "item"));
-  g_assert_nonnull(item);
+  assert(item != O2G_NULLPTR);
 
   presets_item_dialog(context, item);
 }
@@ -648,8 +648,8 @@ on_presets_picker_selected(GtkTreeSelection *selection, presets_context_t *conte
     }
 
     /* views parent is a scrolled window whichs parent in turn is the hbox */
-    g_assert_nonnull(sub);
-    g_assert_nonnull(view->parent);
+    assert(sub != O2G_NULLPTR);
+    assert(view->parent != O2G_NULLPTR);
     GtkWidget *hbox = view->parent->parent;
 
     gtk_box_pack_start_defaults(GTK_BOX(hbox), sub);

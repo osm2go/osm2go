@@ -192,7 +192,7 @@ static void changed(GtkTreeSelection *sel, relitem_context_t *context) {
     relation_t *relation = O2G_NULLPTR;
     gtk_tree_model_get(GTK_TREE_MODEL(context->store), &iter,
 		       RELITEM_COL_DATA, &relation, -1);
-    g_assert_nonnull(relation);
+    assert(relation != O2G_NULLPTR);
 
     const std::vector<member_t>::const_iterator itEnd = relation->members.end();
     const std::vector<member_t>::const_iterator it = relation->find_member_object(context->item);
@@ -384,7 +384,7 @@ void relation_membership_dialog(GtkWidget *parent,
 			 appdata_t &appdata, object_t &object) {
   relitem_context_t context(object, appdata);
   map_t *map = appdata.map;
-  g_assert_nonnull(map);
+  assert(map != O2G_NULLPTR);
 
   char *str = O2G_NULLPTR;
   switch(object.type) {

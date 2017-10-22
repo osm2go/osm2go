@@ -134,9 +134,9 @@ static void test_taglist() {
   tags.replace(nstags);
 
   g_assert_cmpuint(nstags.size(), ==, 2);
-  g_assert_nonnull(tags.get_value("a"));
+  assert(tags.get_value("a") != O2G_NULLPTR);
   g_assert_cmpstr(tags.get_value("a"), ==, "A");
-  g_assert_nonnull(tags.get_value("b"));
+  assert(tags.get_value("b") != O2G_NULLPTR);
   g_assert_cmpstr(tags.get_value("b"), ==, "B");
   g_assert_false(tags.hasTagCollisions());
 
@@ -147,9 +147,9 @@ static void test_taglist() {
   tags.replace(ntags);
 
   g_assert_true(ntags.empty());
-  g_assert_nonnull(tags.get_value("a"));
+  assert(tags.get_value("a") != O2G_NULLPTR);
   g_assert_cmpstr(tags.get_value("a"), ==, "aa");
-  g_assert_nonnull(tags.get_value("b"));
+  assert(tags.get_value("b") != O2G_NULLPTR);
   g_assert_cmpstr(tags.get_value("b"), ==, "bb");
   g_assert_false(tags.hasTagCollisions());
 
@@ -159,9 +159,9 @@ static void test_taglist() {
   tags.replace(nstags);
 
   g_assert_cmpuint(nstags.size(), ==, 2);
-  g_assert_nonnull(tags.get_value("a"));
+  assert(tags.get_value("a") != O2G_NULLPTR);
   g_assert_cmpstr(tags.get_value("a"), ==, "A");
-  g_assert_nonnull(tags.get_value("b"));
+  assert(tags.get_value("b") != O2G_NULLPTR);
   g_assert_cmpstr(tags.get_value("b"), ==, "B");
   g_assert_false(tags.hasTagCollisions());
 
@@ -173,9 +173,9 @@ static void test_taglist() {
   g_assert_false(collision);
   g_assert_false(tags.hasTagCollisions());
 
-  g_assert_nonnull(tags.get_value("a"));
+  assert(tags.get_value("a") != O2G_NULLPTR);
   g_assert_cmpstr(tags.get_value("a"), ==, "A");
-  g_assert_nonnull(tags.get_value("b"));
+  assert(tags.get_value("b") != O2G_NULLPTR);
   g_assert_cmpstr(tags.get_value("b"), ==, "B");
 
   g_assert_null(tags2.get_value("a"));
@@ -184,9 +184,9 @@ static void test_taglist() {
   tags2.replace(lowerTags);
   g_assert_cmpuint(tags2.asMap().size(), ==, 2);
   g_assert_false(lowerTags.empty());
-  g_assert_nonnull(tags2.get_value("a"));
+  assert(tags2.get_value("a") != O2G_NULLPTR);
   g_assert_cmpstr(tags2.get_value("a"), ==, "aa");
-  g_assert_nonnull(tags2.get_value("b"));
+  assert(tags2.get_value("b") != O2G_NULLPTR);
   g_assert_cmpstr(tags2.get_value("b"), ==, "bb");
   g_assert_false(osm_t::tagSubset(tags2.asMap(), tags.asMap()));
   g_assert_false(osm_t::tagSubset(tags.asMap(), tags2.asMap()));
@@ -204,9 +204,9 @@ static void test_taglist() {
   g_assert_false(collision);
 
   g_assert_true(tags.hasTagCollisions());
-  g_assert_nonnull(tags.get_value("a"));
+  assert(tags.get_value("a") != O2G_NULLPTR);
   g_assert_cmpstr(tags.get_value("a"), ==, "A");
-  g_assert_nonnull(tags.get_value("b"));
+  assert(tags.get_value("b") != O2G_NULLPTR);
   g_assert_cmpstr(tags.get_value("b"), ==, "B");
   g_assert_cmpuint(tags.asMap().size(), ==, 4);
   g_assert_true(tags.contains(find_aa));
@@ -367,7 +367,7 @@ static void test_split()
 
   g_assert_cmpuint(o.ways.size(), ==, 2);
   way_t *neww = w->split(&o, w->node_chain.begin() + 2, false);
-  g_assert_nonnull(neww);
+  assert(neww != O2G_NULLPTR);
   g_assert_cmpuint(o.ways.size(), ==, 3);
   assert(w->flags & OSM_FLAG_DIRTY);
   for(unsigned int i = 0; i < nodes.size(); i++)
@@ -394,7 +394,7 @@ static void test_split()
 
   // now split the remaining way at a node
   way_t *neww2 = w->split(&o, w->node_chain.begin() + 2, true);
-  g_assert_nonnull(neww2);
+  assert(neww2 != O2G_NULLPTR);
   g_assert_cmpuint(o.ways.size(), ==, 4);
   assert(w->flags & OSM_FLAG_DIRTY);
   for(unsigned int i = 0; i < nodes.size(); i++)

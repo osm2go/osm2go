@@ -455,7 +455,7 @@ static project_t *project_get_selected(GtkWidget *list) {
   g_assert_true(list_get_selected(list, &model, &iter));
   gtk_tree_model_get(model, &iter, PROJECT_COL_DATA, &project, -1);
 
-  g_assert_nonnull(project);
+  assert(project != O2G_NULLPTR);
   return project;
 }
 
