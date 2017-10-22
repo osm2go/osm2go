@@ -84,20 +84,6 @@ bool xml_get_prop_is(xmlNode *node, const char *prop, const char *str);
 pos_t xml_get_prop_pos(xmlNode *node);
 void xml_set_prop_pos(xmlNode *node, const struct pos_t *pos);
 
-#ifndef g_assert_true
-#define g_assert_true(expr)             G_STMT_START { \
-                                             if G_LIKELY (expr) ; else \
-                                               g_assertion_message (G_LOG_DOMAIN, __FILE__, __LINE__, G_STRFUNC, \
-                                                                    "'" #expr "' should be TRUE"); \
-                                        } G_STMT_END
-#endif
-#ifndef g_assert_false
-#define g_assert_false(expr)            G_STMT_START { \
-                                             if G_LIKELY (!(expr)) ; else \
-                                               g_assertion_message (G_LOG_DOMAIN, __FILE__, __LINE__, G_STRFUNC, \
-                                                                    "'" #expr "' should be FALSE"); \
-                                        } G_STMT_END
-#endif
 #ifndef g_assert_null
 #define g_assert_null(expr)             G_STMT_START { if G_LIKELY ((expr) == O2G_NULLPTR) ; else \
                                                g_assertion_message (G_LOG_DOMAIN, __FILE__, __LINE__, G_STRFUNC, \

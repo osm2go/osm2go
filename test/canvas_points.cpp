@@ -16,10 +16,10 @@ bool testSegment()
     points.push_back(lpos_t(1 << i, 2 << i));
 
   std::unique_ptr<canvas_t> canvas(canvas_t::create());
-  g_assert_true(canvas);
+  assert(canvas);
 
   std::unique_ptr<canvas_item_t> line(canvas->polyline_new(CANVAS_GROUP_WAYS, points, 1, 0));
-  g_assert_true(line);
+  assert(line);
 
   int segnum = line->get_segment(lpos_t((4 + 16) / 2, (8 + 32) / 2));
   g_assert_cmpint(segnum, ==, 1);
@@ -32,7 +32,7 @@ bool testInObject()
   bool ret = true;
 
   std::unique_ptr<canvas_t> canvas(canvas_t::create());
-  g_assert_true(canvas);
+  assert(canvas);
 
   // a square, rotated by 45 degrees
   std::vector<lpos_t> points;
@@ -43,7 +43,7 @@ bool testInObject()
   points.push_back(points.front());
 
   std::unique_ptr<canvas_item_t> line(canvas->polygon_new(CANVAS_GROUP_WAYS, points, 1, 0, 0));
-  g_assert_true(line);
+  assert(line);
 
   canvas_item_t *search = canvas->get_item_at(200, 200);
   assert(line.get() == search);

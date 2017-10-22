@@ -562,7 +562,7 @@ void info_dialog(GtkWidget *parent, appdata_t &appdata) {
 /* given */
 bool info_dialog(GtkWidget *parent, appdata_t &appdata, object_t &object) {
 
-  g_assert_true(object.is_real());
+  assert(object.is_real());
 
   /* use implicit selection if not explicitely given */
   tag_context_t context(appdata, object);

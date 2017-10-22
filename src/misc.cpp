@@ -258,11 +258,11 @@ static void init_paths() {
     }
   }
 
-  g_assert_false(base_paths.empty());
+  assert(!base_paths.empty());
 }
 
 std::string find_file(const std::string &n) {
-  g_assert_false(n.empty());
+  assert(!n.empty());
 
   struct stat st;
 

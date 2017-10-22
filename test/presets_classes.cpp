@@ -4,6 +4,7 @@
 #include <osm.h>
 
 #include <algorithm>
+#include <cassert>
 #include <cstdlib>
 #include <cerrno>
 #include <glib.h>
@@ -174,42 +175,42 @@ static void check_combined()
                                                  "different",
                                                  std::string(), "none"));
 
-  g_assert_false(item.matches(tags));
+  assert(!item.matches(tags));
 
   // another one that reports neutral
   item.widgets.push_back(new presets_widget_text("different",
                                                  "different",
                                                  std::string(), "key"));
 
-  g_assert_false(item.matches(tags));
+  assert(!item.matches(tags));
 
   // one that matches on key
   item.widgets.push_back(new presets_widget_text(tag_testkey_testtext.first,
                                                  "different",
                                                  std::string(), "key"));
 
-  g_assert_true(item.matches(tags));
+  assert(item.matches(tags));
 
   // one that matches on key+value
   item.widgets.push_back(new presets_widget_key(tag_testkey_testtext.first,
                                                 tag_testkey_testtext.second,
                                                 "keyvalue"));
 
-  g_assert_true(item.matches(tags));
+  assert(item.matches(tags));
 
   // key matches, value not, still neutral
   item.widgets.push_back(new presets_widget_key(tag_testkey_other.first,
                                                 tag_testkey_other.second,
                                                 "keyvalue"));
 
-  g_assert_true(item.matches(tags));
+  assert(item.matches(tags));
 
   // key matches, value not, fail
   item.widgets.push_back(new presets_widget_key(tag_testkey_other.first,
                                                 tag_testkey_other.second,
                                                 "keyvalue!"));
 
-  g_assert_false(item.matches(tags));
+  assert(!item.matches(tags));
 }
 
 int main()

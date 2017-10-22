@@ -96,7 +96,7 @@ void counter::operator()(const presets_item_t *p)
   } else if (p->type == presets_item_t::TY_SEPARATOR) {
     separators++;
   } else {
-    g_assert_true(p->isItem());
+    assert(p->isItem());
     items++;
     const presets_item * const item = static_cast<const presets_item *>(p);
     std::for_each(item->widgets.begin(), item->widgets.end(), *this);
@@ -166,7 +166,7 @@ static void test_roles(const presets_items *presets)
   // object type does not match
   node_t n;
   std::set<std::string> roles = preset_roles(&r, object_t(&n), presets);
-  g_assert_true(roles.empty());
+  assert(roles.empty());
 
   way_t w;
   roles = preset_roles(&r, object_t(&w), presets);

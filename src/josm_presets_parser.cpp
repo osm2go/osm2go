@@ -576,7 +576,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
     break;
   }
   case TagSeparator: {
-    g_assert_false(items.empty());
+    assert(!items.empty());
     assert(items.top()->type & presets_item_t::TY_GROUP);
     presets_item_separator *sep = new presets_item_separator();
     static_cast<presets_item_group *>(items.top())->items.push_back(sep);
@@ -615,8 +615,8 @@ void PresetSax::startElement(const char *name, const char **attrs)
   case TagPresetLink: {
     const char *id = findAttribute(attrs, "preset_name", false);
     presets_widget_link *link = new presets_widget_link();
-    g_assert_false(items.empty());
-    g_assert_true(items.top()->isItem());
+    assert(!items.empty());
+    assert(items.top()->isItem());
     presets_item *item = static_cast<presets_item *>(items.top());
 
     // make sure not to insert it as a stale link in case the item is invalid,
@@ -658,7 +658,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
     break;
   }
   case TagSpace:
-    g_assert_false(items.empty());
+    assert(!items.empty());
 #ifndef FREMANTLE
     widget = new presets_widget_separator();
 #endif
@@ -709,8 +709,8 @@ void PresetSax::startElement(const char *name, const char **attrs)
     break;
   }
   case TagLink: {
-    g_assert_false(items.empty());
-    g_assert_true(items.top()->isItem());
+    assert(!items.empty());
+    assert(items.top()->isItem());
     presets_item * const item = static_cast<presets_item *>(items.top());
     const char *href = findAttribute(attrs, "href");
     if(G_UNLIKELY(href == O2G_NULLPTR)) {
@@ -756,8 +756,8 @@ void PresetSax::startElement(const char *name, const char **attrs)
     break;
   }
   case TagListEntry: {
-    g_assert_false(items.empty());
-    g_assert_false(widgets.empty());
+    assert(!items.empty());
+    assert(!widgets.empty());
     g_assert_cmpuint(widgets.top()->type, ==, WIDGET_TYPE_COMBO);
     presets_widget_combo * const combo = static_cast<presets_widget_combo *>(widgets.top());
 
@@ -776,11 +776,11 @@ void PresetSax::startElement(const char *name, const char **attrs)
     break;
   }
   case TagRoles:
-    g_assert_false(items.empty());
+    assert(!items.empty());
     break;
   case TagRole: {
-    g_assert_false(items.empty());
-    g_assert_true(items.top()->isItem());
+    assert(!items.empty());
+    assert(items.top()->isItem());
     presets_item * const item = static_cast<presets_item *>(items.top());
 
     std::array<const char *, 4> names = { { "key", "type", "count", "regexp" } };
@@ -810,8 +810,8 @@ void PresetSax::startElement(const char *name, const char **attrs)
 
   state.push_back(it->oldState);
   if(widget != O2G_NULLPTR) {
-    g_assert_false(items.empty());
-    g_assert_true(items.top()->isItem());
+    assert(!items.empty());
+    assert(items.top()->isItem());
     widgets.push(widget);
     static_cast<presets_item *>(items.top())->widgets.push_back(widget);
   }
@@ -845,8 +845,8 @@ void PresetSax::endElement(const xmlChar *name)
     break;
   case TagItem: {
     g_assert_cmpint(0, ==, widgets.size());
-    g_assert_false(items.empty());
-    g_assert_true(items.top()->isItem());
+    assert(!items.empty());
+    assert(items.top()->isItem());
     presets_item * const item = static_cast<presets_item *>(items.top());
     items.pop();
     if(G_UNLIKELY(item->name.empty())) {
@@ -855,7 +855,7 @@ void PresetSax::endElement(const xmlChar *name)
       break;
     } else {
       // update the group type
-      g_assert_false(items.empty());
+      assert(!items.empty());
       presets_item_t * const group = items.top();
       assert((group->type & presets_item_t::TY_GROUP) != 0);
       *const_cast<unsigned int *>(&group->type) |= item->type;
@@ -867,12 +867,12 @@ void PresetSax::endElement(const xmlChar *name)
     }
   }
   case TagSeparator:
-    g_assert_false(items.empty());
+    assert(!items.empty());
     g_assert_cmpuint(items.top()->type, ==, presets_item_t::TY_SEPARATOR);
     items.pop();
     break;
   case TagGroup: {
-    g_assert_false(items.empty());
+    assert(!items.empty());
     const presets_item_t * const item = items.top();
     assert((item->type & presets_item_t::TY_GROUP) != 0);
     items.pop();
@@ -885,7 +885,7 @@ void PresetSax::endElement(const xmlChar *name)
     break;
   }
   case TagChunk: {
-    g_assert_false(items.empty());
+    assert(!items.empty());
     presets_item * const chunk = static_cast<presets_item *>(items.top());
     g_assert_cmpuint(chunk->type, ==, presets_item_t::TY_ALL);
     items.pop();
@@ -909,9 +909,9 @@ void PresetSax::endElement(const xmlChar *name)
     break;
   }
   case TagReference: {
-    g_assert_false(items.empty());
-    g_assert_true(items.top()->isItem());
-    g_assert_false(widgets.empty());
+    assert(!items.empty());
+    assert(items.top()->isItem());
+    assert(!widgets.empty());
     presets_widget_reference * const ref = static_cast<presets_widget_reference *>(widgets.top());
     widgets.pop();
     g_assert_cmpuint(ref->type, ==, WIDGET_TYPE_REFERENCE);
@@ -922,8 +922,8 @@ void PresetSax::endElement(const xmlChar *name)
     break;
   }
   case TagLabel: {
-    g_assert_false(items.empty());
-    g_assert_false(widgets.empty());
+    assert(!items.empty());
+    assert(!widgets.empty());
     presets_widget_label * const label = static_cast<presets_widget_label *>(widgets.top());
     widgets.pop();
     if(G_UNLIKELY(label->text.empty())) {
@@ -935,9 +935,9 @@ void PresetSax::endElement(const xmlChar *name)
     break;
   }
   case TagSpace:
-    g_assert_false(items.empty());
+    assert(!items.empty());
 #ifndef FREMANTLE
-    g_assert_false(widgets.empty());
+    assert(!widgets.empty());
     widgets.pop();
 #endif
     break;
@@ -946,8 +946,8 @@ void PresetSax::endElement(const xmlChar *name)
   case TagCheck:
   case TagCombo:
   case TagPresetLink:
-    g_assert_false(items.empty());
-    g_assert_false(widgets.empty());
+    assert(!items.empty());
+    assert(!widgets.empty());
     widgets.pop();
     break;
   }

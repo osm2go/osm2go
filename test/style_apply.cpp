@@ -46,7 +46,7 @@ int main(int argc, char **argv)
 
   style_t *style = style_load(argv[1], appdata.icons);
 
-  g_assert_true(style->frisket.border.present);
+  assert(style->frisket.border.present);
   g_assert_cmpuint(style->frisket.border.color, ==, 0xff0000c0);
   g_assert_cmpfloat(style->frisket.border.width, ==, 20.75);
   g_assert_cmpuint(style->frisket.color, ==, 0x0f0f0fff);
@@ -67,7 +67,7 @@ int main(int argc, char **argv)
     return 1;
   }
 
-  g_assert_false(style->elemstyles.empty());
+  assert(!style->elemstyles.empty());
 
   osm_t osm(appdata.icons);
 
@@ -79,7 +79,7 @@ int main(int argc, char **argv)
 
   style->colorize_node(node);
 
-  g_assert_true(style->node_icons.empty());
+  assert(style->node_icons.empty());
 
   osm_t::TagMap tags;
   tags.insert(osm_t::TagMap::value_type("barrier", "bollard"));
@@ -87,7 +87,7 @@ int main(int argc, char **argv)
 
   style->colorize_node(node);
 
-  g_assert_true(style->node_icons.empty());
+  assert(style->node_icons.empty());
 
   // this should actually apply
   tags.insert(osm_t::TagMap::value_type("access", "no"));
@@ -95,7 +95,7 @@ int main(int argc, char **argv)
 
   style->colorize_node(node);
 
-  g_assert_false(style->node_icons.empty());
+  assert(!style->node_icons.empty());
   assert(style->node_icons[node->id] != O2G_NULLPTR);
 
   icon_t::icon_item *oldicon = style->node_icons[node->id];
@@ -107,7 +107,7 @@ int main(int argc, char **argv)
 
   style->colorize_world(&osm);
 
-  g_assert_false(style->node_icons.empty());
+  assert(!style->node_icons.empty());
   assert(style->node_icons[node->id] != O2G_NULLPTR);
   assert(oldicon != style->node_icons[node->id]);
   g_assert_cmpfloat(oldzoom * 1.9, <, node->zoom_max);
@@ -166,9 +166,9 @@ int main(int argc, char **argv)
   area->append_node(tmpn);
   osm.way_attach(area);
 
-  g_assert_false(area->is_closed());
+  assert(!area->is_closed());
   area->append_node(node);
-  g_assert_true(area->is_closed());
+  assert(area->is_closed());
 
   // apply styling
   tags.clear();
@@ -185,7 +185,7 @@ int main(int argc, char **argv)
   g_assert_cmpint(way->draw.area.color, ==, 0);
   g_assert_cmpint(way->draw.width, ==, 1);
 
-  g_assert_false(style->node_icons.empty());
+  assert(!style->node_icons.empty());
   assert(style->node_icons[node->id] != O2G_NULLPTR);
   assert(oldicon != style->node_icons[node->id]);
   g_assert_cmpfloat(oldzoom, !=, node->zoom_max);
@@ -206,7 +206,7 @@ int main(int argc, char **argv)
   g_assert_cmpint(way->draw.area.color, ==, 0);
   g_assert_cmpint(way->draw.width, ==, 2);
 
-  g_assert_false(style->node_icons.empty());
+  assert(!style->node_icons.empty());
   assert(style->node_icons[node->id] != O2G_NULLPTR);
   assert(oldicon != style->node_icons[node->id]);
   g_assert_cmpfloat(oldzoom, !=, node->zoom_max);

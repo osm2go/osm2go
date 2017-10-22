@@ -337,7 +337,7 @@ void map_t::select_relation(relation_t *relation) {
 
   map_highlight_t *hl = highlight;
   if(hl) {
-    g_assert_true(hl->items.empty());
+    assert(hl->items.empty());
   } else {
     hl = highlight = new map_highlight_t();
   }
@@ -1895,7 +1895,7 @@ void map_t::track_draw_seg(track_seg_t &seg) {
     return;
 
   /* nothing should have been drawn by now ... */
-  g_assert_true(seg.item_chain.empty());
+  assert(seg.item_chain.empty());
 
   const std::vector<track_point_t>::const_iterator itEnd = seg.track_points.end();
   std::vector<track_point_t>::const_iterator it = seg.track_points.begin();
@@ -2007,7 +2007,7 @@ void map_t::track_update_seg(track_seg_t &seg) {
   if(second_last_is_visible) {
     /* there must be something already on the screen and there must */
     /* be visible nodes in the chain */
-    g_assert_false(seg.item_chain.empty());
+    assert(!seg.item_chain.empty());
 
     printf("second_last is visible -> updating last segment to %zu points\n", npoints);
 
@@ -2015,7 +2015,7 @@ void map_t::track_update_seg(track_seg_t &seg) {
     item->set_points(points);
   } else {
     assert(begin + 1 == last);
-    g_assert_true(last_is_visible);
+    assert(last_is_visible);
 
     printf("second last is invisible -> start new screen segment with %zu points\n", npoints);
 

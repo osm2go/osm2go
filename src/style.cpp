@@ -326,7 +326,7 @@ static GtkWidget *style_select_widget(const std::string &currentstyle,
                                       const std::map<std::string, std::string> &styles) {
   /* there must be at least one style, otherwise */
   /* the program wouldn't be running */
-  g_assert_false(styles.empty());
+  assert(!styles.empty());
 
   /* fill combo box with presets */
   int match = -1;

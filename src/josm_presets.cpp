@@ -290,7 +290,7 @@ static void presets_item_dialog(presets_context_t *context,
 
     /* skip all following non-interactive widgets: use the first one that
      * was found to be interactive above. */
-    g_assert_true((*it)->is_interactive());
+    assert((*it)->is_interactive());
 
     /* create table of required size */
     GtkWidget *table = gtk_table_new(std::accumulate(it, item->widgets.end(), 0, widget_rows), 2, FALSE);
@@ -931,7 +931,7 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event,
   gtk_menu_popup(GTK_MENU(context->menu), O2G_NULLPTR, O2G_NULLPTR, O2G_NULLPTR, O2G_NULLPTR,
                  event->button, event->time);
 #else
-  g_assert_true(context->submenus.empty());
+  assert(context->submenus.empty());
   /* popup our special picker like menu */
   GtkWidget *dialog =
       gtk_dialog_new_with_buttons(_("Presets"),
@@ -1232,7 +1232,7 @@ bool relation_preset_functor::operator()(const presets_item_t *item)
     return false;
 
   if(item->matches(tags, false)) {
-    g_assert_true(item->isItem());
+    assert(item->isItem());
     *result = static_cast<const presets_item *>(item);
     return true;
   } else {

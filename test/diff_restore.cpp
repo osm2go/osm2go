@@ -47,7 +47,7 @@ static void verify_diff(osm_t *osm)
   const node_t * const n23 = osm->nodes[3577031223LL];
   assert(n23 != O2G_NULLPTR);
   g_assert_cmpuint(n23->flags, ==, 0);
-  g_assert_true(n23->tags.empty());
+  assert(n23->tags.empty());
   // deleted in diff
   const node_t * const n26 = osm->nodes[3577031226LL];
   assert(n26 != O2G_NULLPTR);
@@ -63,13 +63,13 @@ static void verify_diff(osm_t *osm)
   assert(nn1 != O2G_NULLPTR);
   g_assert_cmpfloat(nn1->pos.lat, ==, 52.2693518);
   g_assert_cmpfloat(nn1->pos.lon, ==, 9.5760140);
-  g_assert_true(nn1->tags.empty());
+  assert(nn1->tags.empty());
   // added in diff, same position as existing node
   const node_t * const nn2 = osm->nodes[-2];
   assert(nn2 != O2G_NULLPTR);
   g_assert_cmpfloat(nn2->pos.lat, ==, 52.269497);
   g_assert_cmpfloat(nn2->pos.lon, ==, 9.5752223);
-  g_assert_true(nn2->tags.empty());
+  assert(nn2->tags.empty());
   // which is this one
   const node_t * const n27 = osm->nodes[3577031227LL];
   assert(n27 != O2G_NULLPTR);
@@ -107,7 +107,7 @@ static void verify_diff(osm_t *osm)
   for(std::vector<member_t>::const_iterator it = r853->members.begin(); it != r853->members.end(); it++)
     g_assert_cmpuint(it->object.type, ==, RELATION_ID);
 
-  g_assert_false(diff_is_clean(osm, true));
+  assert(!diff_is_clean(osm, true));
 }
 
 static void compare_with_file(const void *buf, size_t len, const char *fn)
@@ -184,19 +184,19 @@ int main(int argc, char **argv)
   const relation_t * const r66316 = osm->relations[66316];
   assert(r66316 != O2G_NULLPTR);
   object_t rmember(RELATION_ID, 296255);
-  g_assert_false(rmember.is_real());
+  assert(!rmember.is_real());
   const std::vector<member_t>::const_iterator r66316it = r66316->find_member_object(rmember);
   assert(r66316it != r66316->members.end());
   // the child relation exists, so it should be stored as real ref
-  g_assert_true(r66316it->object.is_real());
+  assert(r66316it->object.is_real());
 
   g_assert_cmpuint(10, ==, osm->nodes.size());
   g_assert_cmpuint(3, ==, osm->ways.size());
   g_assert_cmpuint(4, ==, osm->relations.size());
 
-  g_assert_true(diff_is_clean(osm, true));
+  assert(diff_is_clean(osm, true));
 
-  g_assert_true(diff_present(&project));
+  assert(diff_present(&project));
   unsigned int flags = diff_restore_file(O2G_NULLPTR, &project, osm);
   g_assert_cmpuint(flags, ==, DIFF_RESTORED | DIFF_HAS_HIDDEN);
 
@@ -233,9 +233,9 @@ int main(int argc, char **argv)
     bpath += "diff";
 
     bdiff += "/backup.diff";
-    g_assert_true(diff_present(&sproject));
+    assert(diff_present(&sproject));
     rename(bpath.c_str(), bdiff.c_str());
-    g_assert_false(diff_present(&sproject));
+    assert(!diff_present(&sproject));
 
     delete osm;
     osm = osm_t::parse(project.path, project.osm, icons);

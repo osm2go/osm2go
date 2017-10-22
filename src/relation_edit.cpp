@@ -147,7 +147,7 @@ static bool relation_add_item(GtkWidget *parent, relation_t *relation,
 
   gtk_widget_destroy(dialog);
 
-  g_assert_true(object.is_real());
+  assert(object.is_real());
 
   /* create new member */
   relation->members.push_back(member_t(object, role));
@@ -161,7 +161,7 @@ static void relation_remove_item(relation_t *relation, const object_t &object) {
   printf("remove object of type %d from relation #" ITEM_ID_FORMAT "\n",
 	 object.type, relation->id);
 
-  g_assert_true(object.is_real());
+  assert(object.is_real());
 
   std::vector<member_t>::iterator it = relation->find_member_object(object);
   assert(it != relation->members.end());
@@ -681,7 +681,7 @@ static void on_relation_select(relation_context_t *context, GtkWidget *but) {
     /* tell dialog to close as we want to see the selected relation */
 
     GtkWidget *toplevel = gtk_widget_get_toplevel(GTK_WIDGET(but));
-    g_assert_true(GTK_IS_DIALOG(toplevel));
+    assert(GTK_IS_DIALOG(toplevel) == TRUE);
 
     /* emit a "response" signal so we might close the dialog */
     gtk_dialog_response(GTK_DIALOG(toplevel), GTK_RESPONSE_CLOSE);

@@ -380,8 +380,8 @@ void StyleSax::startElement(const xmlChar *name, const char **attrs)
 
     line->bg.valid = hasBgColor && hasBgWidth;
 
-    g_assert_true(hasColor);
-    g_assert_true(hasWidth);
+    assert(hasColor);
+    assert(hasWidth);
 
     break;
   }
@@ -418,7 +418,7 @@ void StyleSax::startElement(const xmlChar *name, const char **attrs)
     }
 
     /* this has to be present */
-    g_assert_true(hasColor);
+    assert(hasColor);
     break;
   }
   case TagIcon:
@@ -431,7 +431,7 @@ void StyleSax::startElement(const xmlChar *name, const char **attrs)
         elemstyle->icon.priority = parse_priority(attrs[i + 1]);
     }
 
-    g_assert_false(elemstyle->icon.filename.empty());
+    assert(!elemstyle->icon.filename.empty());
 
     break;
   default:

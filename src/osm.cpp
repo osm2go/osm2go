@@ -1999,7 +1999,7 @@ void tag_list_t::copy(const tag_list_t &other)
 std::string object_t::get_name() const {
   std::string ret;
 
-  g_assert_true(is_real());
+  assert(is_real());
 
   /* worst case: we have no tags at all. return techincal info then */
   if(!obj->tags.hasRealTags())
@@ -2070,7 +2070,7 @@ std::string object_t::get_name() const {
   }
 
   if(typestr) {
-    g_assert_true(ret.empty());
+    assert(ret.empty());
     ret = typestr;
   }
 
@@ -2279,7 +2279,7 @@ bool way_t::ends_with_node(const node_t *node) const
     return false;
 
   /* any valid way must have at least two nodes */
-  g_assert_false(node_chain.empty());
+  assert(!node_chain.empty());
 
   if(node_chain.front() == node)
     return true;

@@ -617,7 +617,7 @@ static bool osm_create_changeset(osm_upload_context_t &context) {
 static bool osm_close_changeset(osm_upload_context_t &context) {
   bool result = false;
 
-  g_assert_false(context.changeset.empty());
+  assert(!context.changeset.empty());
 
   /* make sure gui gets updated */
   osm2go_platform::process_events();
