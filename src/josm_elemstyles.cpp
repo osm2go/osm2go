@@ -37,6 +37,7 @@
 #include <map>
 #include <strings.h>
 
+#include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
 #include "osm2go_stl.h"
 
@@ -158,7 +159,7 @@ static bool parse_color(const char *col, elemstyle_color_t &color, ColorMap &col
   if(!colname.empty()) {
     const ColorMap::const_iterator it = colors.find(colname);
     if(it == colors.end()) {
-      if(G_UNLIKELY(!hash)) {
+      if(unlikely(!hash)) {
         printf("found invalid colour name reference '%s'\n", col);
       } else {
         colors[colname] = color;
@@ -169,7 +170,7 @@ static bool parse_color(const char *col, elemstyle_color_t &color, ColorMap &col
         ret = TRUE;
       } else if(hash)
         // check that the colors are the same if the key is specified multiple times
-        g_assert_cmpuint(it->second, ==, color);
+        assert_cmpnum(it->second, color);
     }
   }
 
@@ -191,7 +192,7 @@ bool parse_color(xmlNode *a_node, const char *name,
 
 static float parse_scale(const char *val_str, int len) {
   char buf[G_ASCII_DTOSTR_BUF_SIZE];
-  if(G_UNLIKELY(static_cast<unsigned int>(len) >= sizeof(buf))) {
+  if(unlikely(static_cast<unsigned int>(len) >= sizeof(buf))) {
     return 0.0;
   } else {
     memcpy(buf, val_str, len);
@@ -279,7 +280,7 @@ static int parse_priority(const char *attr)
 {
   char *endch;
   long prio = strtol(attr, &endch, 10);
-  if(G_LIKELY(*endch == '\0'))
+  if(likely(*endch == '\0'))
     return prio;
   else
     return 0;
@@ -289,12 +290,12 @@ void StyleSax::startElement(const xmlChar *name, const char **attrs)
 {
   StateMap::const_iterator it = std::find_if(tags.begin(), tags.end(), tag_find(name));
 
-  if(G_UNLIKELY(it == tags.end())) {
+  if(unlikely(it == tags.end())) {
     fprintf(stderr, "found unhandled element %s\n", name);
     return;
   }
 
-  if(G_UNLIKELY(state != it->oldState)) {
+  if(unlikely(state != it->oldState)) {
     fprintf(stderr, "found element %s in state %i, but expected %i\n",
             name, state, it->oldState);
     return;
@@ -327,7 +328,7 @@ void StyleSax::startElement(const xmlChar *name, const char **attrs)
     break;
   }
   case TagLine: {
-    g_assert_cmpuint(elemstyle->type & (ES_TYPE_LINE | ES_TYPE_LINE_MOD), ==, 0);
+    assert_cmpnum(elemstyle->type & (ES_TYPE_LINE | ES_TYPE_LINE_MOD), 0);
     elemstyle->type |= ES_TYPE_LINE;
 
     bool hasBgWidth = false, hasBgColor = false;
@@ -369,7 +370,7 @@ void StyleSax::startElement(const xmlChar *name, const char **attrs)
             line->dash_length_off = strtoul(end + 1, &end, 10);
           else
             line->dash_length_off = line->dash_length_on;
-          if(G_UNLIKELY(*end != '\0')) {
+          if(unlikely(*end != '\0')) {
             printf("WARNING: invalid value '%s' for dashed\n", dval);
             line->dash_length_on = 0;
             line->dash_length_off = 0;
@@ -386,7 +387,7 @@ void StyleSax::startElement(const xmlChar *name, const char **attrs)
     break;
   }
   case TagLineMod: {
-    g_assert_cmpuint(elemstyle->type & (ES_TYPE_LINE | ES_TYPE_LINE_MOD), ==, 0);
+    assert_cmpnum(elemstyle->type & (ES_TYPE_LINE | ES_TYPE_LINE_MOD), 0);
     elemstyle->type |= ES_TYPE_LINE_MOD;
 
     elemstyle_line_mod_t &line_mod = elemstyle->line_mod;
@@ -406,7 +407,7 @@ void StyleSax::startElement(const xmlChar *name, const char **attrs)
     break;
   }
   case TagArea: {
-    g_assert_cmpuint(elemstyle->type & ES_TYPE_AREA, ==, 0);
+    assert_cmpnum(elemstyle->type & ES_TYPE_AREA, 0);
     elemstyle->type |= ES_TYPE_AREA;
 
     bool hasColor = false;
@@ -446,7 +447,7 @@ void StyleSax::endElement(const xmlChar *name)
   assert(it != tags.end());
   assert(state == it->newState);
 
-  if(G_UNLIKELY(state == TagRule && styles.back()->conditions.empty())) {
+  if(unlikely(state == TagRule && styles.back()->conditions.empty())) {
     printf("Rule %zu has no conditions\n", styles.size());
     delete styles.back();
     styles.pop_back();
@@ -459,13 +460,13 @@ std::vector<elemstyle_t *> josm_elemstyles_load(const char *name) {
   printf("Loading JOSM elemstyles ...\n");
 
   const std::string &filename = find_file(name);
-  if(G_UNLIKELY(filename.empty())) {
+  if(unlikely(filename.empty())) {
     printf("elemstyle file not found\n");
     return std::vector<elemstyle_t *>();
   }
 
   StyleSax sx;
-  if(G_UNLIKELY(!sx.parse(filename)))
+  if(unlikely(!sx.parse(filename)))
     fprintf(stderr, "error parsing elemstyles\n");
 
   return sx.styles;

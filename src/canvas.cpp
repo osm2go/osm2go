@@ -45,6 +45,7 @@
 #include <cstring>
 #include <limits>
 
+#include "osm2go_annotations.h"
 #include "osm2go_stl.h"
 
 /* The fuzziness allows to specify how far besides an object a user may */
@@ -302,7 +303,7 @@ canvas_item_t *canvas_t::get_item_at(int x, int y) const {
       } break;
 
       default:
-	g_assert_not_reached();
+	assert_unreachable();
 	break;
       }
     }

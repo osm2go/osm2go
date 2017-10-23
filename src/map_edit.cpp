@@ -28,6 +28,7 @@
 #include "statusbar.h"
 #include "style.h"
 
+#include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
 
 #include <algorithm>
@@ -41,7 +42,7 @@ void map_edit_way_add_begin(map_t *map, way_t *way_sel) {
     printf("previously selected way is #" ITEM_ID_FORMAT "\n",
 		     way_sel->id);
 
-  g_assert_null(map->action.way);
+  assert_null(map->action.way);
   map->action.way = new way_t(0);
   map->action.extending = O2G_NULLPTR;
 }
@@ -157,7 +158,7 @@ void map_unref_ways::operator()(node_t* node)
   printf("    node #" ITEM_ID_FORMAT " (used by %u)\n",
          node->id, node->ways);
 
-  g_assert_cmpuint(node->ways, >, 0);
+  assert_cmpnum_op(node->ways, >, 0);
   node->ways--;
   if(!node->ways && (node->id == ID_ILLEGAL)) {
     printf("      -> freeing temp node\n");
@@ -405,7 +406,7 @@ void map_edit_way_cut(map_t *map, int px, int py) {
   }
 
   assert(way != O2G_NULLPTR);
-  g_assert_cmpuint(way->node_chain.size(), >, 2);
+  assert_cmpnum_op(way->node_chain.size(), >, 2);
 
   /* move parts of node_chain to the new way */
   printf("  moving everthing after segment %zi to new way\n",

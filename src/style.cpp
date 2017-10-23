@@ -38,6 +38,7 @@
 #include <strings.h>
 #include <sys/stat.h>
 
+#include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
 #include "osm2go_stl.h"
 
@@ -156,7 +157,7 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t &style) {
 
         parse_color(cur_node, "color", style.area.color);
 
-      } else if(G_LIKELY(strcmp(nodename, "background") == 0)) {
+      } else if(likely(strcmp(nodename, "background") == 0)) {
         parse_color(cur_node, "color", style.background.color);
 
       } else
@@ -183,7 +184,7 @@ static bool style_parse(const std::string &fullname, xmlChar **fname,
   bool ret = false;
 
   /* parse the file and get the DOM */
-  if(G_UNLIKELY(doc == O2G_NULLPTR)) {
+  if(unlikely(doc == O2G_NULLPTR)) {
     xmlErrorPtr errP = xmlGetLastError();
     printf("parsing %s failed: %s\n", fullname.c_str(), errP->message);
   } else {
@@ -193,8 +194,8 @@ static bool style_parse(const std::string &fullname, xmlChar **fname,
     for(cur_node = xmlDocGetRootElement(doc);
         cur_node; cur_node = cur_node->next) {
       if (cur_node->type == XML_ELEMENT_NODE) {
-        if(G_LIKELY(strcmp(reinterpret_cast<const char *>(cur_node->name), "style") == 0)) {
-          if(G_LIKELY(!ret)) {
+        if(likely(strcmp(reinterpret_cast<const char *>(cur_node->name), "style") == 0)) {
+          if(likely(!ret)) {
             style.name = reinterpret_cast<char *>(xmlGetProp(cur_node, BAD_CAST "name"));
             ret = true;
             if(name_only)
@@ -215,7 +216,7 @@ static style_t *style_load_fname(icon_t &icons, const std::string &filename) {
   xmlChar *fname = O2G_NULLPTR;
   std::unique_ptr<style_t> style(new style_t(icons));
 
-  if(G_LIKELY(style_parse(filename, &fname, false, *style.get()))) {
+  if(likely(style_parse(filename, &fname, false, *style.get()))) {
     printf("  elemstyle filename: %s\n", fname);
     style->elemstyles = josm_elemstyles_load(reinterpret_cast<char *>(fname));
     xmlFree(fname);
@@ -230,10 +231,10 @@ style_t *style_load(const std::string &name, icon_t &icons) {
 
   std::string fullname = find_file(name + ".style");
 
-  if (G_UNLIKELY(fullname.empty())) {
+  if (unlikely(fullname.empty())) {
     printf("style %s not found, trying %s instead\n", name.c_str(), DEFAULT_STYLE);
     fullname = find_file(DEFAULT_STYLE ".style");
-    if (G_UNLIKELY(fullname.empty())) {
+    if (unlikely(fullname.empty())) {
       printf("  style not found, failed to find fallback style too\n");
       return O2G_NULLPTR;
     }
@@ -306,7 +307,7 @@ static std::map<std::string, std::string> style_scan() {
         struct stat st;
         fstatat(dfd, d->d_name, &st, 0);
 
-        if(G_UNLIKELY(!S_ISREG(st.st_mode)))
+        if(unlikely(!S_ISREG(st.st_mode)))
           continue;
 
         fullname = base_paths[i].pathname + d->d_name;

@@ -31,6 +31,7 @@
 #include <cassert>
 #include <strings.h>
 
+#include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
 
 enum {
@@ -117,7 +118,7 @@ static void on_tag_remove(tag_context_t *context) {
     gtk_list_store_remove(GTK_LIST_STORE(model), &iter);
 
     // no collision was there if this was the only instance of the key
-    if(G_UNLIKELY(context->tags.count(k) > 0))
+    if(unlikely(context->tags.count(k) > 0))
       context->update_collisions(k);
   }
 }
@@ -244,7 +245,7 @@ static void on_tag_edit(tag_context_t *context) {
       // only value was changed
       // collision flags only need to be updated if there is more than one entry with that key
       osm_t::TagMap::iterator i = matches.first;
-      if(G_UNLIKELY(++i != matches.second)) {
+      if(unlikely(++i != matches.second)) {
         // check if the entry is now equal to another entry
         i = std::find_if(matches.first, matches.second, value_match_functor(v));
 
@@ -263,7 +264,7 @@ static void on_tag_edit(tag_context_t *context) {
     } else {
       context->tags.erase(it);
       it = osm_t::findTag(context->tags, k, v);
-      if(G_UNLIKELY(it != context->tags.end())) {
+      if(unlikely(it != context->tags.end())) {
         // this tag is now duplicate, drop it and select the other one
         gtk_list_store_remove(GTK_LIST_STORE(model), &iter);
 
@@ -343,7 +344,7 @@ static void on_tag_add(tag_context_t *context) {
   }
 
   osm_t::TagMap::iterator it = osm_t::findTag(context->tags, k, v);
-  if(G_UNLIKELY(it != context->tags.end())) {
+  if(unlikely(it != context->tags.end())) {
     select_item(k, v, context);
     return;
   }
@@ -423,7 +424,7 @@ static GtkWidget *tag_widget(tag_context_t *context) {
 }
 
 static void on_relation_members(GtkWidget *, const tag_context_t *context) {
-  g_assert_cmpuint(context->object.type, ==, RELATION);
+  assert_cmpnum(context->object.type, RELATION);
   relation_show_members(context->dialog, context->object.relation);
 }
 
@@ -518,7 +519,7 @@ static GtkWidget *details_widget(const tag_context_t &context, bool big) {
 
   default:
     printf("ERROR: No node, way or relation\n");
-    g_assert_not_reached();
+    assert_unreachable();
     break;
   }
 
@@ -585,7 +586,7 @@ bool info_dialog(GtkWidget *parent, appdata_t &appdata, object_t &object) {
     break;
 
   default:
-    g_assert_not_reached();
+    assert_unreachable();
     break;
   }
 

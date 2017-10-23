@@ -4,6 +4,7 @@
 #include <icon.h>
 #include <misc.h>
 
+#include <osm2go_annotations.h>
 #include <osm2go_cpp.h>
 
 #include <algorithm>
@@ -24,7 +25,7 @@ static std::vector<elemstyle_type_t> types;
 
 static void checkItem(const elemstyle_t *item)
 {
-  if(G_UNLIKELY(types.empty())) {
+  if(unlikely(types.empty())) {
     types.push_back(ES_TYPE_NONE);
     types.push_back(ES_TYPE_AREA);
     types.push_back(ES_TYPE_LINE);

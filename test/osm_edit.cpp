@@ -3,6 +3,7 @@
 #include <osm.h>
 #include <settings.h>
 
+#include <osm2go_annotations.h>
 #include <misc.h>
 #include <osm2go_cpp.h>
 
@@ -45,7 +46,7 @@ static bool rtrue(const tag_t &) {
 }
 
 static void nevercalled(const tag_t &) {
-  g_assert_not_reached();
+  assert_unreachable();
 }
 
 static void set_bounds(osm_t &o) {
@@ -83,17 +84,17 @@ static void test_trivial() {
   icon_t icons;
   osm_t osm(icons);
   memset(&osm.rbounds, 0, sizeof(osm.rbounds));
-  g_assert_cmpstr(osm.sanity_check(), ==, _("Invalid data in OSM file:\nBoundary box missing!"));
+  assert_cmpstr(osm.sanity_check(), _("Invalid data in OSM file:\nBoundary box missing!"));
   set_bounds(osm);
-  g_assert_cmpstr(osm.sanity_check(), ==, _("Invalid data in OSM file:\nNo drawable content found!"));
+  assert_cmpstr(osm.sanity_check(), _("Invalid data in OSM file:\nNo drawable content found!"));
 
   assert(osm.bounds->contains(lpos_t(0, 0)));
   assert(!osm.bounds->contains(lpos_t(-1, 0)));
   assert(!osm.bounds->contains(lpos_t(0, -1)));
 
   way_t w(0);
-  g_assert_null(w.first_node());
-  g_assert_null(w.last_node());
+  assert_null(w.first_node());
+  assert_null(w.last_node());
 }
 
 static void test_taglist() {
@@ -133,11 +134,11 @@ static void test_taglist() {
 
   tags.replace(nstags);
 
-  g_assert_cmpuint(nstags.size(), ==, 2);
+  assert_cmpnum(nstags.size(), 2);
   assert(tags.get_value("a") != O2G_NULLPTR);
-  g_assert_cmpstr(tags.get_value("a"), ==, "A");
+  assert_cmpstr(tags.get_value("a"), "A");
   assert(tags.get_value("b") != O2G_NULLPTR);
-  g_assert_cmpstr(tags.get_value("b"), ==, "B");
+  assert_cmpstr(tags.get_value("b"), "B");
   assert(!tags.hasTagCollisions());
 
   // check replacing the tag list from tag_t
@@ -148,9 +149,9 @@ static void test_taglist() {
 
   assert(ntags.empty());
   assert(tags.get_value("a") != O2G_NULLPTR);
-  g_assert_cmpstr(tags.get_value("a"), ==, "aa");
+  assert_cmpstr(tags.get_value("a"), "aa");
   assert(tags.get_value("b") != O2G_NULLPTR);
-  g_assert_cmpstr(tags.get_value("b"), ==, "bb");
+  assert_cmpstr(tags.get_value("b"), "bb");
   assert(!tags.hasTagCollisions());
 
   osm_t::TagMap lowerTags = tags.asMap();
@@ -158,11 +159,11 @@ static void test_taglist() {
   // replace again
   tags.replace(nstags);
 
-  g_assert_cmpuint(nstags.size(), ==, 2);
+  assert_cmpnum(nstags.size(), 2);
   assert(tags.get_value("a") != O2G_NULLPTR);
-  g_assert_cmpstr(tags.get_value("a"), ==, "A");
+  assert_cmpstr(tags.get_value("a"), "A");
   assert(tags.get_value("b") != O2G_NULLPTR);
-  g_assert_cmpstr(tags.get_value("b"), ==, "B");
+  assert_cmpstr(tags.get_value("b"), "B");
   assert(!tags.hasTagCollisions());
 
   tag_list_t tags2;
@@ -173,20 +174,20 @@ static void test_taglist() {
   assert(!tags.hasTagCollisions());
 
   assert(tags.get_value("a") != O2G_NULLPTR);
-  g_assert_cmpstr(tags.get_value("a"), ==, "A");
+  assert_cmpstr(tags.get_value("a"), "A");
   assert(tags.get_value("b") != O2G_NULLPTR);
-  g_assert_cmpstr(tags.get_value("b"), ==, "B");
+  assert_cmpstr(tags.get_value("b"), "B");
 
-  g_assert_null(tags2.get_value("a"));
-  g_assert_null(tags2.get_value("b"));
+  assert_null(tags2.get_value("a"));
+  assert_null(tags2.get_value("b"));
 
   tags2.replace(lowerTags);
-  g_assert_cmpuint(tags2.asMap().size(), ==, 2);
+  assert_cmpnum(tags2.asMap().size(), 2);
   assert(!lowerTags.empty());
   assert(tags2.get_value("a") != O2G_NULLPTR);
-  g_assert_cmpstr(tags2.get_value("a"), ==, "aa");
+  assert_cmpstr(tags2.get_value("a"), "aa");
   assert(tags2.get_value("b") != O2G_NULLPTR);
-  g_assert_cmpstr(tags2.get_value("b"), ==, "bb");
+  assert_cmpstr(tags2.get_value("b"), "bb");
   assert(!osm_t::tagSubset(tags2.asMap(), tags.asMap()));
   assert(!osm_t::tagSubset(tags.asMap(), tags2.asMap()));
 
@@ -200,10 +201,10 @@ static void test_taglist() {
 
   assert(tags.hasTagCollisions());
   assert(tags.get_value("a") != O2G_NULLPTR);
-  g_assert_cmpstr(tags.get_value("a"), ==, "A");
+  assert_cmpstr(tags.get_value("a"), "A");
   assert(tags.get_value("b") != O2G_NULLPTR);
-  g_assert_cmpstr(tags.get_value("b"), ==, "B");
-  g_assert_cmpuint(tags.asMap().size(), ==, 4);
+  assert_cmpstr(tags.get_value("b"), "B");
+  assert_cmpnum(tags.asMap().size(), 4);
   assert(tags.contains(find_aa));
   assert(tags.contains(find_bb));
 
@@ -224,7 +225,7 @@ static void test_taglist() {
   // check that all these methods work on empty objects, both newly created and cleared ones
   assert(tags.empty());
   assert(!tags.hasRealTags());
-  g_assert_null(tags.get_value("foo"));
+  assert_null(tags.get_value("foo"));
   assert(!tags.contains(rtrue));
   tags.for_each(nevercalled);
   assert(tags.asMap().empty());
@@ -235,7 +236,7 @@ static void test_taglist() {
   tag_list_t virgin;
   assert(virgin.empty());
   assert(!virgin.hasRealTags());
-  g_assert_null(virgin.get_value("foo"));
+  assert_null(virgin.get_value("foo"));
   assert(!virgin.contains(rtrue));
   virgin.for_each(nevercalled);
   assert(virgin.asMap().empty());
@@ -261,7 +262,7 @@ static void test_replace() {
 
   osm_t::TagMap nstags;
   node.updateTags(nstags);
-  g_assert_cmpuint(node.flags, ==, 0);
+  assert_cmpnum(node.flags, 0);
   assert(node.tags.empty());
 
   osm_t::TagMap::value_type cr_by("created_by", "test");
@@ -272,21 +273,21 @@ static void test_replace() {
   assert(node.tags.empty());
 
   node.tags.replace(nstags);
-  g_assert_cmpuint(node.flags, ==, 0);
+  assert_cmpnum(node.flags, 0);
   assert(node.tags.empty());
 
   osm_t::TagMap::value_type aA("a", "A");
   nstags.insert(aA);
 
   node.updateTags(nstags);
-  g_assert_cmpuint(node.flags, ==, OSM_FLAG_DIRTY);
+  assert_cmpnum(node.flags, OSM_FLAG_DIRTY);
   assert(!node.tags.empty());
   assert(node.tags == nstags);
 
   node.flags = 0;
 
   node.updateTags(nstags);
-  g_assert_cmpuint(node.flags, ==, 0);
+  assert_cmpnum(node.flags, 0);
   assert(!node.tags.empty());
   assert(node.tags == nstags);
 
@@ -300,13 +301,13 @@ static void test_replace() {
   ntags.push_back(tag_t(g_strdup("a"), g_strdup("A")));
   node.tags.replace(ntags);
 
-  g_assert_cmpuint(node.flags, ==, 0);
+  assert_cmpnum(node.flags, 0);
   assert(!node.tags.empty());
   assert(node.tags == nstags);
 
   // updating with the same "real" tag shouldn't change anything
   node.updateTags(nstags);
-  g_assert_cmpuint(node.flags, ==, 0);
+  assert_cmpnum(node.flags, 0);
   assert(!node.tags.empty());
   assert(node.tags == nstags);
 }
@@ -360,82 +361,82 @@ static void test_split()
     nodes.push_back(n);
   }
 
-  g_assert_cmpuint(o.ways.size(), ==, 2);
+  assert_cmpnum(o.ways.size(), 2);
   way_t *neww = w->split(&o, w->node_chain.begin() + 2, false);
   assert(neww != O2G_NULLPTR);
-  g_assert_cmpuint(o.ways.size(), ==, 3);
+  assert_cmpnum(o.ways.size(), 3);
   assert(w->flags & OSM_FLAG_DIRTY);
   for(unsigned int i = 0; i < nodes.size(); i++)
-    g_assert_cmpuint(nodes[i]->ways, ==, 2);
+    assert_cmpnum(nodes[i]->ways, 2);
 
-  g_assert_cmpuint(w->node_chain.size(), ==, 4);
-  g_assert_cmpuint(neww->node_chain.size(), ==, 2);
+  assert_cmpnum(w->node_chain.size(), 4);
+  assert_cmpnum(neww->node_chain.size(), 2);
   assert(neww->tags == w->tags.asMap());
   assert(neww->tags == v->tags.asMap());
-  g_assert_cmpuint(neww->tags.asMap().size(), ==, ocnt - 1);
-  g_assert_cmpuint(r1->members.size(), ==, 2);
-  g_assert_cmpuint(r2->members.size(), ==, 5);
-  g_assert_cmpuint(r3->members.size(), ==, 1);
+  assert_cmpnum(neww->tags.asMap().size(), ocnt - 1);
+  assert_cmpnum(r1->members.size(), 2);
+  assert_cmpnum(r2->members.size(), 5);
+  assert_cmpnum(r3->members.size(), 1);
 
   osm_t::dirty_t dirty0 = o.modified();
-  g_assert_cmpuint(dirty0.nodes.dirty, ==, 0);
-  g_assert_cmpuint(dirty0.nodes.added, ==, 6);
-  g_assert_cmpuint(dirty0.nodes.modified.size(), ==, dirty0.nodes.added);
-  g_assert_cmpuint(dirty0.nodes.deleted.size(), ==, 0);
-  g_assert_cmpuint(dirty0.ways.dirty, ==, 0);
-  g_assert_cmpuint(dirty0.ways.added, ==, 3);
-  g_assert_cmpuint(dirty0.ways.modified.size(), ==, dirty0.ways.added);
-  g_assert_cmpuint(dirty0.ways.deleted.size(), ==, 0);
+  assert_cmpnum(dirty0.nodes.dirty, 0);
+  assert_cmpnum(dirty0.nodes.added, 6);
+  assert_cmpnum(dirty0.nodes.modified.size(), dirty0.nodes.added);
+  assert_cmpnum(dirty0.nodes.deleted.size(), 0);
+  assert_cmpnum(dirty0.ways.dirty, 0);
+  assert_cmpnum(dirty0.ways.added, 3);
+  assert_cmpnum(dirty0.ways.modified.size(), dirty0.ways.added);
+  assert_cmpnum(dirty0.ways.deleted.size(), 0);
 
   // now split the remaining way at a node
   way_t *neww2 = w->split(&o, w->node_chain.begin() + 2, true);
   assert(neww2 != O2G_NULLPTR);
-  g_assert_cmpuint(o.ways.size(), ==, 4);
+  assert_cmpnum(o.ways.size(), 4);
   assert(w->flags & OSM_FLAG_DIRTY);
   for(unsigned int i = 0; i < nodes.size(); i++)
     if(i == 4)
-      g_assert_cmpuint(nodes[4]->ways, ==, 3);
+      assert_cmpnum(nodes[4]->ways, 3);
     else
-      g_assert_cmpuint(nodes[i]->ways, ==, 2);
+      assert_cmpnum(nodes[i]->ways, 2);
 
   osm_t::dirty_t dirty1 = o.modified();
-  g_assert_cmpuint(dirty1.nodes.dirty, ==, 0);
-  g_assert_cmpuint(dirty1.nodes.added, ==, 6);
-  g_assert_cmpuint(dirty1.nodes.modified.size(), ==, dirty1.nodes.added);
-  g_assert_cmpuint(dirty1.nodes.deleted.size(), ==, 0);
-  g_assert_cmpuint(dirty1.ways.dirty, ==, 0);
-  g_assert_cmpuint(dirty1.ways.added, ==, 4);
-  g_assert_cmpuint(dirty1.ways.modified.size(), ==, dirty1.ways.added);
-  g_assert_cmpuint(dirty1.ways.deleted.size(), ==, 0);
+  assert_cmpnum(dirty1.nodes.dirty, 0);
+  assert_cmpnum(dirty1.nodes.added, 6);
+  assert_cmpnum(dirty1.nodes.modified.size(), dirty1.nodes.added);
+  assert_cmpnum(dirty1.nodes.deleted.size(), 0);
+  assert_cmpnum(dirty1.ways.dirty, 0);
+  assert_cmpnum(dirty1.ways.added, 4);
+  assert_cmpnum(dirty1.ways.modified.size(), dirty1.ways.added);
+  assert_cmpnum(dirty1.ways.deleted.size(), 0);
 
   assert(w->contains_node(nodes[4]));
   assert(w->ends_with_node(nodes[4]));
-  g_assert_cmpuint(w->node_chain.size(), ==, 3);
-  g_assert_cmpuint(neww->node_chain.size(), ==, 2);
-  g_assert_cmpuint(neww2->node_chain.size(), ==, 2);
+  assert_cmpnum(w->node_chain.size(), 3);
+  assert_cmpnum(neww->node_chain.size(), 2);
+  assert_cmpnum(neww2->node_chain.size(), 2);
   assert(neww2->tags == w->tags.asMap());
   assert(neww2->tags == v->tags.asMap());
-  g_assert_cmpuint(neww2->tags.asMap().size(), ==, ocnt - 1);
-  g_assert_cmpuint(r1->members.size(), ==, 3);
-  g_assert_cmpuint(r2->members.size(), ==, 7);
-  g_assert_cmpuint(r3->members.size(), ==, 1);
+  assert_cmpnum(neww2->tags.asMap().size(), ocnt - 1);
+  assert_cmpnum(r1->members.size(), 3);
+  assert_cmpnum(r2->members.size(), 7);
+  assert_cmpnum(r3->members.size(), 1);
 
   // just split the last node out of the way
   w->flags = 0;
-  g_assert_null(w->split(&o, w->node_chain.begin() + 2, false));
-  g_assert_cmpuint(o.ways.size(), ==, 4);
+  assert_null(w->split(&o, w->node_chain.begin() + 2, false));
+  assert_cmpnum(o.ways.size(), 4);
   assert(w->flags & OSM_FLAG_DIRTY);
   for(unsigned int i = 0; i < nodes.size(); i++)
-    g_assert_cmpuint(nodes[i]->ways, ==, 2);
+    assert_cmpnum(nodes[i]->ways, 2);
 
   assert(!w->contains_node(nodes[4]));
   assert(!w->ends_with_node(nodes[4]));
-  g_assert_cmpuint(w->node_chain.size(), ==, 2);
-  g_assert_cmpuint(neww->node_chain.size(), ==, 2);
-  g_assert_cmpuint(neww2->node_chain.size(), ==, 2);
-  g_assert_cmpuint(r1->members.size(), ==, 3);
-  g_assert_cmpuint(r2->members.size(), ==, 7);
-  g_assert_cmpuint(r3->members.size(), ==, 1);
+  assert_cmpnum(w->node_chain.size(), 2);
+  assert_cmpnum(neww->node_chain.size(), 2);
+  assert_cmpnum(neww2->node_chain.size(), 2);
+  assert_cmpnum(r1->members.size(), 3);
+  assert_cmpnum(r2->members.size(), 7);
+  assert_cmpnum(r3->members.size(), 1);
 
   // now test a closed way
   way_t * const area = new way_t(0);
@@ -450,34 +451,34 @@ static void test_split()
   o.way_delete(w);
   o.way_delete(neww);
   o.way_delete(neww2);
-  g_assert_cmpuint(o.ways.size(), ==, 1);
+  assert_cmpnum(o.ways.size(), 1);
   for(unsigned int i = 1; i < nodes.size(); i++)
-    g_assert_cmpuint(nodes[i]->ways, ==, 1);
-  g_assert_cmpuint(nodes.front()->ways, ==, 2);
+    assert_cmpnum(nodes[i]->ways, 1);
+  assert_cmpnum(nodes.front()->ways, 2);
 
-  g_assert_null(area->split(&o, area->node_chain.begin(), true));
-  g_assert_cmpuint(area->node_chain.size(), ==, nodes.size());
+  assert_null(area->split(&o, area->node_chain.begin(), true));
+  assert_cmpnum(area->node_chain.size(), nodes.size());
   for(unsigned int i = 0; i < nodes.size(); i++) {
     assert(area->node_chain[i] == nodes[i]);
-    g_assert_cmpuint(nodes[i]->ways, ==, 1);
+    assert_cmpnum(nodes[i]->ways, 1);
   }
 
   // close the way again
   area->append_node(const_cast<node_t *>(area->first_node()));
-  g_assert_null(area->split(&o, area->node_chain.begin() + 1, false));
-  g_assert_cmpuint(area->node_chain.size(), ==, nodes.size());
+  assert_null(area->split(&o, area->node_chain.begin() + 1, false));
+  assert_cmpnum(area->node_chain.size(), nodes.size());
   for(unsigned int i = 0; i < nodes.size(); i++) {
     assert(area->node_chain[i] == nodes[(i + 1) % nodes.size()]);
-    g_assert_cmpuint(nodes[i]->ways, ==, 1);
+    assert_cmpnum(nodes[i]->ways, 1);
   }
 
   // recreate old layout
   area->append_node(const_cast<node_t *>(area->first_node()));
-  g_assert_null(area->split(&o, --area->node_chain.end(), true));
-  g_assert_cmpuint(area->node_chain.size(), ==, nodes.size());
+  assert_null(area->split(&o, --area->node_chain.end(), true));
+  assert_cmpnum(area->node_chain.size(), nodes.size());
   for(unsigned int i = 0; i < nodes.size(); i++) {
     assert(area->node_chain[i] == nodes[(i + 1) % nodes.size()]);
-    g_assert_cmpuint(nodes[i]->ways, ==, 1);
+    assert_cmpnum(nodes[i]->ways, 1);
   }
 }
 
@@ -490,7 +491,7 @@ static bool checkLinearRelation(const relation_t *r)
   std::vector<member_t>::const_iterator it = r->members.begin();
   if(it->object.type == NODE)
     it++;
-  g_assert_cmpuint(it->object.type, ==, WAY);
+  assert_cmpnum(it->object.type, WAY);
   const way_t *last = it->object.way;
 
   std::cout << "WAY " << last->id << " start " << last->first_node()->id
@@ -498,7 +499,7 @@ static bool checkLinearRelation(const relation_t *r)
             << std::endl;
 
   for(++it; it != itEnd; it++) {
-    g_assert_cmpuint(it->object.type, ==, WAY);
+    assert_cmpnum(it->object.type, WAY);
     const way_t *w = it->object.way;
     std::cout << "WAY " << w->id << " start " << w->first_node()->id
               << " end " << w->last_node()->id << " length " << w->node_chain.size()
@@ -630,12 +631,12 @@ static void test_changeset()
                              "</osm>\n";
   xmlChar *cs = osm_generate_xml_changeset("<&>", std::string());
 
-  g_assert_cmpstr(reinterpret_cast<char *>(cs), ==, message);
+  assert_cmpstr(reinterpret_cast<char *>(cs), message);
   xmlFree(cs);
 
   cs = osm_generate_xml_changeset("testcase comment", "survey");
 
-  g_assert_cmpstr(reinterpret_cast<char *>(cs), ==, message_src);
+  assert_cmpstr(reinterpret_cast<char *>(cs), message_src);
   xmlFree(cs);
 }
 
@@ -647,8 +648,8 @@ static void test_reverse()
 
   lpos_t l(10, 20);
   node_t *n1 = o.node_new(l);
-  g_assert_cmpint(n1->version, ==, 0);
-  g_assert_cmpint(n1->flags, ==, OSM_FLAG_DIRTY);
+  assert_cmpnum(n1->version, 0);
+  assert_cmpnum(n1->flags, OSM_FLAG_DIRTY);
   o.node_attach(n1);
   l.y = 40;
   node_t *n2 = o.node_new(l);
@@ -703,8 +704,8 @@ static void test_reverse()
   unsigned int r, rroles;
   w->reverse(&o, r, rroles);
 
-  g_assert_cmpuint(r, ==, 5);
-  g_assert_cmpuint(w->flags, ==, OSM_FLAG_DIRTY);
+  assert_cmpnum(r, 5);
+  assert_cmpnum(w->flags, OSM_FLAG_DIRTY);
   assert(w->node_chain.front() == n2);
   assert(w->node_chain.back() == n1);
   assert(w->tags != tags);
@@ -720,32 +721,32 @@ static void test_reverse()
   assert(w->tags == rtags);
 
   // check relations and their roles
-  g_assert_cmpuint(rroles, ==, 2);
+  assert_cmpnum(rroles, 2);
   // rels[0] has wrong type, roles should not be modified
-  g_assert_cmpuint(rels[0]->members.size(), ==, 2);
-  g_assert_cmpstr(rels[0]->members.front().role, ==, "forward");
-  g_assert_cmpstr(rels[0]->members.back().role, ==, "forward");
+  assert_cmpnum(rels[0]->members.size(), 2);
+  assert_cmpstr(rels[0]->members.front().role, "forward");
+  assert_cmpstr(rels[0]->members.back().role, "forward");
   // rels[1] has matching type, first member role should be changed
-  g_assert_cmpuint(rels[1]->members.size(), ==, 2);
-  g_assert_cmpstr(rels[1]->members.front().role, ==, "backward");
+  assert_cmpnum(rels[1]->members.size(), 2);
+  assert_cmpstr(rels[1]->members.front().role, "backward");
   assert(rels[1]->members.front().object == w);
-  g_assert_cmpstr(rels[1]->members.back().role, ==, "forward");
+  assert_cmpstr(rels[1]->members.back().role, "forward");
   // rels[2] has matching type, first member role should be changed (other direction)
-  g_assert_cmpuint(rels[1]->members.size(), ==, 2);
-  g_assert_cmpstr(rels[2]->members.front().role, ==, "forward");
+  assert_cmpnum(rels[1]->members.size(), 2);
+  assert_cmpstr(rels[2]->members.front().role, "forward");
   assert(rels[2]->members.front().object == w);
-  g_assert_cmpstr(rels[2]->members.back().role, ==, "backward");
+  assert_cmpstr(rels[2]->members.back().role, "backward");
   // rels[3] has matching type, but roles are empty
-  g_assert_cmpuint(rels[1]->members.size(), ==, 2);
-  g_assert_null(rels[3]->members.front().role);
+  assert_cmpnum(rels[1]->members.size(), 2);
+  assert_null(rels[3]->members.front().role);
   assert(rels[3]->members.front().object == w);
-  g_assert_null(rels[3]->members.back().role);
+  assert_null(rels[3]->members.back().role);
 
   // go back
   w->reverse(&o, r, rroles);
 
-  g_assert_cmpuint(r, ==, 5);
-  g_assert_cmpuint(rroles, ==, 2);
+  assert_cmpnum(r, 5);
+  assert_cmpnum(rroles, 2);
   assert(w->tags == tags);
 }
 
@@ -769,8 +770,8 @@ static void test_way_delete()
 
   o.way_delete(w);
 
-  g_assert_cmpuint(o.nodes.size(), ==, 0);
-  g_assert_cmpuint(o.ways.size(), ==, 0);
+  assert_cmpnum(o.nodes.size(), 0);
+  assert_cmpnum(o.ways.size(), 0);
 
   // delete a closed way
   n1 = o.node_new(l);
@@ -792,8 +793,8 @@ static void test_way_delete()
 
   o.way_delete(w);
 
-  g_assert_cmpuint(o.nodes.size(), ==, 0);
-  g_assert_cmpuint(o.ways.size(), ==, 0);
+  assert_cmpnum(o.nodes.size(), 0);
+  assert_cmpnum(o.ways.size(), 0);
 
   // test way deletion with nodes that should be preserved
   l.x = 10;
@@ -845,14 +846,14 @@ static void test_way_delete()
   // n3 should be preserved as it is used in another way
   o.way_delete(w);
 
-  g_assert_cmpuint(o.nodes.size(), ==, 4);
-  g_assert_cmpuint(o.ways.size(), ==, 1);
-  g_assert_cmpuint(o.relations.size(), ==, 1);
+  assert_cmpnum(o.nodes.size(), 4);
+  assert_cmpnum(o.ways.size(), 1);
+  assert_cmpnum(o.relations.size(), 1);
   assert(o.node_by_id(n1->id) == n1);
   assert(o.node_by_id(n2->id) == n2);
   assert(o.node_by_id(n3->id) == n3);
   assert(o.node_by_id(n4->id) == n4);
-  g_assert_cmpuint(r->members.size(), ==, 1);
+  assert_cmpnum(r->members.size(), 1);
 }
 
 static void test_member_delete()
@@ -888,58 +889,58 @@ static void test_member_delete()
   o.relation_attach(r);
 
   osm_t::dirty_t dirty0 = o.modified();
-  g_assert_cmpuint(dirty0.nodes.total, ==, 3);
-  g_assert_cmpuint(dirty0.nodes.dirty, ==, 0);
-  g_assert_cmpuint(dirty0.nodes.added, ==, 2);
-  g_assert_cmpuint(dirty0.nodes.modified.size(), ==, dirty0.nodes.added);
-  g_assert_cmpuint(dirty0.nodes.deleted.size(), ==, 0);
-  g_assert_cmpuint(dirty0.ways.dirty, ==, 0);
-  g_assert_cmpuint(dirty0.ways.added, ==, 1);
-  g_assert_cmpuint(dirty0.ways.modified.size(), ==, dirty0.ways.added);
-  g_assert_cmpuint(dirty0.ways.deleted.size(), ==, 0);
-  g_assert_cmpuint(dirty0.relations.dirty, ==, 0);
-  g_assert_cmpuint(dirty0.relations.added, ==, 1);
-  g_assert_cmpuint(dirty0.relations.modified.size(), ==, dirty0.relations.added);
-  g_assert_cmpuint(dirty0.relations.deleted.size(), ==, 0);
+  assert_cmpnum(dirty0.nodes.total, 3);
+  assert_cmpnum(dirty0.nodes.dirty, 0);
+  assert_cmpnum(dirty0.nodes.added, 2);
+  assert_cmpnum(dirty0.nodes.modified.size(), dirty0.nodes.added);
+  assert_cmpnum(dirty0.nodes.deleted.size(), 0);
+  assert_cmpnum(dirty0.ways.dirty, 0);
+  assert_cmpnum(dirty0.ways.added, 1);
+  assert_cmpnum(dirty0.ways.modified.size(), dirty0.ways.added);
+  assert_cmpnum(dirty0.ways.deleted.size(), 0);
+  assert_cmpnum(dirty0.relations.dirty, 0);
+  assert_cmpnum(dirty0.relations.added, 1);
+  assert_cmpnum(dirty0.relations.modified.size(), dirty0.relations.added);
+  assert_cmpnum(dirty0.relations.deleted.size(), 0);
 
   guint nodes = 0, ways = 0, relations = 0;
   r->members_by_type(nodes, ways, relations);
-  g_assert_cmpuint(nodes, ==, 1);
-  g_assert_cmpuint(ways, ==, 1);
-  g_assert_cmpuint(relations, ==, 0);
+  assert_cmpnum(nodes, 1);
+  assert_cmpnum(ways, 1);
+  assert_cmpnum(relations, 0);
 
   // now delete the node that is member of both other objects
   o.node_delete(n2, true);
   fflush(stdout);
   // since the object had a valid id it should still be there, but unreferenced
-  g_assert_cmpuint(o.nodes.size(), ==, 3);
-  g_assert_cmpuint(o.ways.size(), ==, 1);
-  g_assert_cmpuint(o.relations.size(), ==, 1);
+  assert_cmpnum(o.nodes.size(), 3);
+  assert_cmpnum(o.ways.size(), 1);
+  assert_cmpnum(o.relations.size(), 1);
   assert(n2->tags.empty());
-  g_assert_cmpuint(n2->flags, ==, OSM_FLAG_DELETED);
+  assert_cmpnum(n2->flags, OSM_FLAG_DELETED);
 
   osm_t::dirty_t dirty1 = o.modified();
-  g_assert_cmpuint(dirty1.nodes.total, ==, 3);
-  g_assert_cmpuint(dirty1.nodes.dirty, ==, 0);
-  g_assert_cmpuint(dirty1.nodes.added, ==, 2);
-  g_assert_cmpuint(dirty1.nodes.modified.size(), ==, dirty1.nodes.added);
-  g_assert_cmpuint(dirty1.nodes.deleted.size(), ==, 1);
-  g_assert_cmpuint(dirty1.ways.dirty, ==, 0);
-  g_assert_cmpuint(dirty1.ways.added, ==, 1);
-  g_assert_cmpuint(dirty1.ways.modified.size(), ==, dirty1.ways.added);
-  g_assert_cmpuint(dirty1.ways.deleted.size(), ==, 0);
-  g_assert_cmpuint(dirty1.relations.dirty, ==, 0);
-  g_assert_cmpuint(dirty1.relations.added, ==, 1);
-  g_assert_cmpuint(dirty1.relations.modified.size(), ==, dirty1.relations.added);
-  g_assert_cmpuint(dirty1.relations.deleted.size(), ==, 0);
+  assert_cmpnum(dirty1.nodes.total, 3);
+  assert_cmpnum(dirty1.nodes.dirty, 0);
+  assert_cmpnum(dirty1.nodes.added, 2);
+  assert_cmpnum(dirty1.nodes.modified.size(), dirty1.nodes.added);
+  assert_cmpnum(dirty1.nodes.deleted.size(), 1);
+  assert_cmpnum(dirty1.ways.dirty, 0);
+  assert_cmpnum(dirty1.ways.added, 1);
+  assert_cmpnum(dirty1.ways.modified.size(), dirty1.ways.added);
+  assert_cmpnum(dirty1.ways.deleted.size(), 0);
+  assert_cmpnum(dirty1.relations.dirty, 0);
+  assert_cmpnum(dirty1.relations.added, 1);
+  assert_cmpnum(dirty1.relations.modified.size(), dirty1.relations.added);
+  assert_cmpnum(dirty1.relations.deleted.size(), 0);
 
   nodes = 0;
   ways = 0;
   relations = 0;
   r->members_by_type(nodes, ways, relations);
-  g_assert_cmpuint(nodes, ==, 0);
-  g_assert_cmpuint(ways, ==, 1);
-  g_assert_cmpuint(relations, ==, 0);
+  assert_cmpnum(nodes, 0);
+  assert_cmpnum(ways, 1);
+  assert_cmpnum(relations, 0);
 }
 
 static void test_merge_nodes()
@@ -962,8 +963,8 @@ static void test_merge_nodes()
   assert(n == n1);
   assert(n->lpos == newpos);
   assert(!conflict);
-  g_assert_cmpuint(o.nodes.size(), ==, 1);
-  g_assert_cmpuint(n->flags, ==, OSM_FLAG_DIRTY);
+  assert_cmpnum(o.nodes.size(), 1);
+  assert_cmpnum(n->flags, OSM_FLAG_DIRTY);
 
   // join a new and an old node, the old one should be preserved
   n2 = o.node_new(oldpos);
@@ -976,8 +977,8 @@ static void test_merge_nodes()
   assert(n == n2);
   assert(n->lpos == newpos);
   assert(!conflict);
-  g_assert_cmpuint(o.nodes.size(), ==, 1);
-  g_assert_cmpuint(n->flags, ==, OSM_FLAG_DIRTY);
+  assert_cmpnum(o.nodes.size(), 1);
+  assert_cmpnum(n->flags, OSM_FLAG_DIRTY);
 
   // do the same join again, but with swapped arguments
   n2->lpos = newpos;
@@ -991,11 +992,11 @@ static void test_merge_nodes()
   // order is important for the position, but nothing else
   assert(n->lpos == newpos);
   assert(!conflict);
-  g_assert_cmpuint(o.nodes.size(), ==, 1);
-  g_assert_cmpuint(n->flags, ==, OSM_FLAG_DIRTY);
+  assert_cmpnum(o.nodes.size(), 1);
+  assert_cmpnum(n->flags, OSM_FLAG_DIRTY);
 
   o.node_free(n);
-  g_assert_cmpuint(o.nodes.size(), ==, 0);
+  assert_cmpnum(o.nodes.size(), 0);
 
   // start new
   n1 = o.node_new(oldpos);
@@ -1014,14 +1015,14 @@ static void test_merge_nodes()
   assert(n == n2);
   assert(n->lpos == newpos);
   assert(!conflict);
-  g_assert_cmpuint(o.nodes.size(), ==, 1);
-  g_assert_cmpuint(n->flags, ==, OSM_FLAG_DIRTY);
-  g_assert_cmpuint(w->node_chain.size(), ==, 1);
+  assert_cmpnum(o.nodes.size(), 1);
+  assert_cmpnum(n->flags, OSM_FLAG_DIRTY);
+  assert_cmpnum(w->node_chain.size(), 1);
   assert(w->node_chain.front() == n2);
 
   o.way_delete(w);
-  g_assert_cmpuint(o.nodes.size(), ==, 0);
-  g_assert_cmpuint(o.ways.size(), ==, 0);
+  assert_cmpnum(o.nodes.size(), 0);
+  assert_cmpnum(o.ways.size(), 0);
 
   // now check with relation membership
   relation_t *r = new relation_t(0);
@@ -1038,17 +1039,17 @@ static void test_merge_nodes()
   assert(n == n2);
   assert(n->lpos == newpos);
   assert(!conflict);
-  g_assert_cmpuint(o.nodes.size(), ==, 1);
-  g_assert_cmpuint(n->flags, ==, OSM_FLAG_DIRTY);
-  g_assert_cmpuint(r->members.size(), ==, 1);
+  assert_cmpnum(o.nodes.size(), 1);
+  assert_cmpnum(n->flags, OSM_FLAG_DIRTY);
+  assert_cmpnum(r->members.size(), 1);
   assert(r->members.front().object == n2);
 
   o.relation_delete(r);
-  g_assert_cmpuint(o.nodes.size(), ==, 1);
-  g_assert_cmpuint(o.ways.size(), ==, 0);
-  g_assert_cmpuint(o.relations.size(), ==, 0);
+  assert_cmpnum(o.nodes.size(), 1);
+  assert_cmpnum(o.ways.size(), 0);
+  assert_cmpnum(o.relations.size(), 0);
   o.node_delete(o.nodes.begin()->second);
-  g_assert_cmpuint(o.nodes.size(), ==, 0);
+  assert_cmpnum(o.nodes.size(), 0);
 
   // now put both into a way, the way of the second node should be updated
   for(int i = 0; i < 2; i++) {
@@ -1070,8 +1071,8 @@ static void test_merge_nodes()
   o.ways.begin()->second->append_node(n1);
   unsigned int rc, rrc;
   o.ways.begin()->second->reverse(&o, rc, rrc);
-  g_assert_cmpuint(rc, ==, 0);
-  g_assert_cmpuint(rrc, ==, 0);
+  assert_cmpnum(rc, 0);
+  assert_cmpnum(rrc, 0);
   w = (++o.ways.begin())->second;
   w->append_node(n2);
   w->flags = 0;
@@ -1079,13 +1080,13 @@ static void test_merge_nodes()
   r = (++o.relations.begin())->second;
   r->members.push_back(member_t(object_t(n2), O2G_NULLPTR));
   r->flags = 0;
-  g_assert_cmpuint(o.ways.begin()->second->node_chain.size(), ==, 2);
-  g_assert_cmpuint(w->node_chain.size(), ==, 2);
+  assert_cmpnum(o.ways.begin()->second->node_chain.size(), 2);
+  assert_cmpnum(w->node_chain.size(), 2);
   assert(o.ways.begin()->second->node_chain.front() == n1);
   assert(o.ways.begin()->second->ends_with_node(n1));
   assert(w->node_chain.back() == n2);
   assert(w->ends_with_node(n2));
-  g_assert_cmpuint(n1->ways, ==, 1);
+  assert_cmpnum(n1->ways, 1);
   assert(o.relations.begin()->second->members.front().object == n1);
   assert(r->members.front().object == n2);
 
@@ -1094,22 +1095,22 @@ static void test_merge_nodes()
   assert(n == n1);
   assert(n->lpos == newpos);
   assert(!conflict);
-  g_assert_cmpuint(o.nodes.size(), ==, 3);
-  g_assert_cmpuint(n->flags, ==, OSM_FLAG_DIRTY);
-  g_assert_cmpuint(r->members.size(), ==, 1);
+  assert_cmpnum(o.nodes.size(), 3);
+  assert_cmpnum(n->flags, OSM_FLAG_DIRTY);
+  assert_cmpnum(r->members.size(), 1);
   assert(o.ways.begin()->second->first_node() == n1);
   assert(o.ways.begin()->second->ends_with_node(n1));
   assert(w->last_node() == n1);
   assert(w->ends_with_node(n1));
-  g_assert_cmpuint(w->flags, ==, OSM_FLAG_DIRTY);
-  g_assert_cmpuint(n1->ways, ==, 2);
+  assert_cmpnum(w->flags, OSM_FLAG_DIRTY);
+  assert_cmpnum(n1->ways, 2);
   assert(o.relations.begin()->second->members.front().object == n1);
   assert(r->members.front().object == n1);
-  g_assert_cmpuint(r->flags, ==, OSM_FLAG_DIRTY);
+  assert_cmpnum(r->flags, OSM_FLAG_DIRTY);
 
   // while at it: test backwards mapping to containing objects
   const way_chain_t &wchain = o.node_to_way(n1);
-  g_assert_cmpuint(wchain.size(), ==, 2);
+  assert_cmpnum(wchain.size(), 2);
   assert(std::find(wchain.begin(), wchain.end(), o.ways.begin()->second) != wchain.end());
   assert(std::find(wchain.begin(), wchain.end(), w) != wchain.end());
 
@@ -1157,21 +1158,21 @@ static void test_merge_ways()
     o.way_attach(w1);
 
     assert(!w1->merge(w0, &o, false));
-    g_assert_cmpuint(w1->node_chain.size(), ==, nodes.size());
-    g_assert_cmpuint(o.ways.size(), ==, 1);
-    g_assert_cmpuint(o.nodes.size(), ==, nodes.size());
+    assert_cmpnum(w1->node_chain.size(), nodes.size());
+    assert_cmpnum(o.ways.size(), 1);
+    assert_cmpnum(o.nodes.size(), nodes.size());
     for(node_chain_t::const_iterator it = nodes.begin(); it != nodes.end(); it++) {
       w1->contains_node(*it);
-      g_assert_cmpuint((*it)->ways, ==, 1);
+      assert_cmpnum((*it)->ways, 1);
     }
     assert(expect == w1->node_chain);
 
     o.way_free(w1);
 
-    g_assert_cmpuint(o.ways.size(), ==, 0);
-    g_assert_cmpuint(o.nodes.size(), ==, nodes.size());
+    assert_cmpnum(o.ways.size(), 0);
+    assert_cmpnum(o.nodes.size(), nodes.size());
     for(node_chain_t::const_iterator it = nodes.begin(); it != nodes.end(); it++)
-      g_assert_cmpuint((*it)->ways, ==, 0);
+      assert_cmpnum((*it)->ways, 0);
   }
 }
 

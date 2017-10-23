@@ -43,6 +43,7 @@
 #include <strings.h>
 #include <vector>
 
+#include "osm2go_annotations.h"
 #include "osm2go_stl.h"
 
 #ifndef LIBXML_TREE_ENABLED
@@ -141,13 +142,13 @@ struct wms_t {
 
 static bool wms_bbox_is_valid(const pos_t &min, const pos_t &max) {
   /* all four coordinates are valid? */
-  if(G_UNLIKELY(!min.valid() || !max.valid()))
+  if(unlikely(!min.valid() || !max.valid()))
     return false;
 
   /* min/max span a useful range? */
-  if(G_UNLIKELY(max.lat - min.lat < 0.1))
+  if(unlikely(max.lat - min.lat < 0.1))
     return false;
-  if(G_UNLIKELY(max.lon - min.lon < 0.1))
+  if(unlikely(max.lon - min.lon < 0.1))
     return false;
 
   return true;
@@ -1073,7 +1074,7 @@ void wms_import(appdata_t &appdata) {
   net_io_download_mem(GTK_WIDGET(appdata.window), url, &cap, caplen);
 
   /* ----------- parse capabilities -------------- */
-  if(G_UNLIKELY(ImageFormats.empty()))
+  if(unlikely(ImageFormats.empty()))
     initImageFormats();
 
   bool parse_success = false;
@@ -1223,7 +1224,7 @@ void wms_import(appdata_t &appdata) {
 
 /* try to load an existing image into map */
 void wms_load(appdata_t &appdata) {
-  if(G_UNLIKELY(ImageFormatExtensions.empty()))
+  if(unlikely(ImageFormatExtensions.empty()))
     initImageFormats();
 
   const std::map<WmsImageFormat, const char *>::const_iterator itEnd = ImageFormatExtensions.end();
@@ -1245,11 +1246,11 @@ void wms_load(appdata_t &appdata) {
 }
 
 void wms_remove_file(project_t &project) {
-  if(G_UNLIKELY(ImageFormatExtensions.empty()))
+  if(unlikely(ImageFormatExtensions.empty()))
     initImageFormats();
 
   fdguard dirfd(project.path.c_str());
-  if(G_UNLIKELY(!dirfd.valid()))
+  if(unlikely(!dirfd.valid()))
     return;
 
   std::string filename = "wms.";

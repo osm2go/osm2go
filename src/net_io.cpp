@@ -32,6 +32,7 @@
 #include <string>
 #include <unistd.h>
 
+#include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
 #include "osm2go_stl.h"
 
@@ -91,7 +92,7 @@ const char *http_message(int id) {
   static const HttpCodeMap http_messages = http_msg_init();
 
   const HttpCodeMap::const_iterator it = http_messages.find(id);
-  if(G_LIKELY(it != http_messages.end()))
+  if(likely(it != http_messages.end()))
     return it->second;
 
   return O2G_NULLPTR;
@@ -185,7 +186,7 @@ struct request_free {
 void request_free::operator()(net_io_request_t *request)
 {
   /* decrease refcount and only free structure if no references are left */
-  g_assert_cmpint(request->refcount, >, 0);
+  assert_cmpnum_op(request->refcount, >, 0);
   request->refcount--;
   if(request->refcount) {
     printf("still %d references, keeping request\n", request->refcount);
@@ -223,7 +224,7 @@ static void *worker_thread(void *ptr) {
   printf("thread: running\n");
 
   CURL *curl = curl_easy_init();
-  if(G_LIKELY(curl != O2G_NULLPTR)) {
+  if(likely(curl != O2G_NULLPTR)) {
     bool ok = false;
     FILE *outfile = O2G_NULLPTR;
 
@@ -240,7 +241,7 @@ static void *worker_thread(void *ptr) {
       ok = true;
     }
 
-    if(G_LIKELY(ok)) {
+    if(likely(ok)) {
       curl_easy_setopt(curl, CURLOPT_URL, request->url.c_str());
 
       curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
@@ -306,7 +307,7 @@ static bool net_io_do(GtkWidget *parent, net_io_request_t *rq,
   /* from the fact that it's holding the only reference to the request */
 
   /* create worker thread */
-  g_assert_cmpint(rq->refcount, ==, 1);
+  assert_cmpnum(rq->refcount, 1);
   rq->refcount = 2;   // master and worker hold a reference
   std::unique_ptr<net_io_request_t, request_free> request(rq);
   GtkProgressBar *pbar = O2G_NULLPTR;
@@ -319,7 +320,7 @@ static bool net_io_do(GtkWidget *parent, net_io_request_t *rq,
 #else
   worker = g_thread_create(&worker_thread, request.get(), FALSE, O2G_NULLPTR);
 #endif
-  if(G_UNLIKELY(worker == O2G_NULLPTR)) {
+  if(unlikely(worker == O2G_NULLPTR)) {
     g_warning("failed to create the worker thread");
 
     /* free request and return error */

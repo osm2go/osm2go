@@ -35,6 +35,7 @@ namespace std {
 #include <string>
 #include <sys/stat.h>
 
+#include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
 
 icon_t::icon_item::icon_item(GdkPixbuf *nbuf)
@@ -91,7 +92,7 @@ icon_t::icon_item *icon_t::load(const std::string &sname, int limit) {
   if(!fullname.empty()) {
     GdkPixbuf *pix = gdk_pixbuf_new_from_file_at_size(fullname.c_str(), limit, limit, O2G_NULLPTR);
 
-    if(G_LIKELY(pix)) {
+    if(likely(pix)) {
       //    printf("Successfully loaded icon %s to %p\n", name, pix);
       icon_item *ret = new icon_item(pix);
       entries[sname] = ret;
@@ -147,7 +148,7 @@ void icon_t::icon_free(icon_item *buf) {
   std::map<std::string, icon_item *>::iterator it = std::find_if(
                                                     entries.begin(), itEnd,
                                                     find_icon_buf(buf));
-  if(G_UNLIKELY(it == itEnd)) {
+  if(unlikely(it == itEnd)) {
     printf("ERROR: icon to be freed not found\n");
   } else {
     it->second->use--;

@@ -62,6 +62,8 @@ namespace std {
 #include <curl/curl.h>
 #include <gdk/gdkkeysyms.h>
 
+#include "osm2go_annotations.h"
+
 #define LOCALEDIR PREFIX "/locale"
 
 #ifndef FREMANTLE
@@ -281,7 +283,7 @@ cb_menu_track_vis(appdata_t *appdata) {
 
 static void
 cb_menu_save_changes(appdata_t *appdata) {
-  if(G_LIKELY(appdata->project && appdata->osm))
+  if(likely(appdata->project && appdata->osm))
     diff_save(appdata->project, appdata->osm);
   banner_show_info(*appdata, _("Saved local changes"));
 }
@@ -1025,7 +1027,7 @@ static HildonAppMenu *app_menu_create(appdata_t &appdata) {
     const menu_entry_t &entry = main_menu[i];
     GtkWidget *button = O2G_NULLPTR;
 
-    g_assert_null(entry.toggle);
+    assert_null(entry.toggle);
     button = hildon_button_new_with_text(
                 static_cast<HildonSizeType>(HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH),
                 HILDON_BUTTON_ARRANGEMENT_VERTICAL,
@@ -1299,7 +1301,7 @@ static int application_run(const char *proj)
   /* user specific init */
   appdata_t appdata;
 
-  if(G_UNLIKELY(!appdata.style)) {
+  if(unlikely(!appdata.style)) {
     errorf(O2G_NULLPTR, _("Unable to load valid style %s, terminating."),
            appdata.settings->style.c_str());
     return -1;
@@ -1359,7 +1361,7 @@ static int application_run(const char *proj)
 
   /* generate main map view */
   appdata.map = map_t::create(appdata);
-  if(G_UNLIKELY(!appdata.map))
+  if(unlikely(!appdata.map))
     return -1;
 
   GtkWidget *vbox = gtk_vbox_new(FALSE, 0);
@@ -1421,7 +1423,7 @@ static int application_run(const char *proj)
   /* let gtk do its thing before loading the data, */
   /* so the user sees something */
   osm2go_platform::process_events();
-  if(G_UNLIKELY(!appdata.window)) {
+  if(unlikely(!appdata.window)) {
     printf("shutdown while starting up (1)\n");
     return -1;
   }
@@ -1446,13 +1448,13 @@ static int application_run(const char *proj)
 
   /* again let the ui do its thing */
   osm2go_platform::process_events();
-  if(G_UNLIKELY(!appdata.window)) {
+  if(unlikely(!appdata.window)) {
     printf("shutdown while starting up (2)\n");
     return -1;
   }
 
   /* start to interact with the user now that the gui is running */
-  if(G_UNLIKELY(appdata.project && appdata.project->isDemo && appdata.settings->first_run_demo)) {
+  if(unlikely(appdata.project && appdata.project->isDemo && appdata.settings->first_run_demo)) {
     messagef(GTK_WIDGET(appdata.window), _("Welcome to OSM2Go"),
 	     _("This is the first time you run OSM2Go. "
 	       "A demo project has been loaded to get you "

@@ -5,6 +5,7 @@
 #include <cassert>
 #include <memory>
 
+#include <osm2go_annotations.h>
 #include <osm2go_stl.h>
 
 bool testSegment()
@@ -22,7 +23,7 @@ bool testSegment()
   assert(line);
 
   int segnum = line->get_segment(lpos_t((4 + 16) / 2, (8 + 32) / 2));
-  g_assert_cmpint(segnum, ==, 1);
+  assert_cmpnum(segnum, 1);
 
   return ret;
 }
@@ -49,7 +50,7 @@ bool testInObject()
   assert(line.get() == search);
 
   search = canvas->get_item_at(40, 50);
-  g_assert_null(search);
+  assert_null(search);
 
   return ret;
 }

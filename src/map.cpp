@@ -35,6 +35,7 @@
 #include "style.h"
 #include "track.h"
 
+#include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
 
 #include <algorithm>
@@ -106,7 +107,7 @@ void map_item_chain_destroy(map_item_chain_t *&chainP) {
 static void map_node_select(map_t *map, node_t *node) {
   map_item_t *map_item = &map->selected;
 
-  g_assert_null(map->highlight);
+  assert_null(map->highlight);
 
   map_item->object = node;
   map_item->highlight = false;
@@ -247,7 +248,7 @@ void draw_selected_way_functor::operator()(node_t* node)
 void map_t::select_way(way_t *way) {
   map_item_t *map_item = &selected;
 
-  g_assert_null(highlight);
+  assert_null(highlight);
 
   map_item->object = way;
   map_item->highlight = false;
@@ -366,7 +367,7 @@ static void map_object_select(map_t *map, object_t &object) {
     map->select_relation(object.relation);
     break;
   default:
-    g_assert_not_reached();
+    assert_unreachable();
     break;
   }
 }
@@ -570,7 +571,7 @@ static void map_item_remove(object_t &object) {
     map_item_chain_destroy(static_cast<visible_item_t *>(object.obj)->map_item_chain);
     break;
   default:
-    g_assert_not_reached();
+    assert_unreachable();
   }
 }
 
@@ -600,7 +601,7 @@ void map_t::redraw_item(object_t object) {
     draw(object.node);
     break;
   default:
-    g_assert_not_reached();
+    assert_unreachable();
   }
 
   /* restore selection if there was one */
@@ -681,7 +682,7 @@ template<bool b> void free_track_item_chain(track_seg_t &seg) {
 }
 
 static void map_free_map_item_chains(appdata_t &appdata) {
-  if(G_UNLIKELY(!appdata.osm))
+  if(unlikely(!appdata.osm))
     return;
 
   /* free all map_item_chains */
@@ -768,7 +769,7 @@ void map_t::pen_down_item() {
   }
 
   default:
-    g_assert_not_reached();
+    assert_unreachable();
     break;
   }
 
@@ -850,7 +851,7 @@ static bool map_limit_zoom(map_t *map, gdouble &zoom) {
 bool map_t::scroll_to_if_offscreen(const lpos_t lpos) {
 
   // Ignore anything outside the working area
-  if(G_UNLIKELY(!appdata.osm))
+  if(unlikely(!appdata.osm))
     return false;
 
   int min_x, min_y, max_x, max_y;
@@ -1131,7 +1132,7 @@ static void map_touchnode_update(map_t *map, int x, int y) {
     /* in idle mode the dragged node is not highlighted */
   case MAP_ACTION_IDLE:
     assert(map->pen_down.on_item != O2G_NULLPTR);
-    assert(map->pen_down.on_item->object.type == NODE);
+    assert_cmpnum(map->pen_down.on_item->object.type, NODE);
     cur_node = map->pen_down.on_item->object.node;
     break;
 
@@ -1316,7 +1317,7 @@ static void map_button_release(map_t *map, int x, int y) {
 }
 
 static gboolean map_button_event(map_t *map, GdkEventButton *event) {
-  if(G_UNLIKELY(!map->appdata.osm))
+  if(unlikely(!map->appdata.osm))
     return FALSE;
 
   if(event->button == 1) {
@@ -1852,7 +1853,7 @@ void map_delete_selected(map_t *map) {
     break;
 
   default:
-    g_assert_not_reached();
+    assert_unreachable();
     break;
   }
 }
@@ -1988,7 +1989,7 @@ void map_t::track_update_seg(track_seg_t &seg) {
    * points, second_last must be valid and its "next" (last) also */
   assert(begin != itEnd);
   assert(last != itEnd);
-  g_assert_cmpuint(itEnd - begin, <=, seg.track_points.size());
+  assert_cmpnum_op(seg.track_points.size(), >=, itEnd - begin);
 
   /* count points to be placed */
   const size_t npoints = itEnd - begin;
@@ -2034,7 +2035,7 @@ struct map_track_seg_draw_functor {
 };
 
 void map_t::track_draw(TrackVisibility visibility, track_t &track) {
-  if(G_UNLIKELY(track.segments.empty()))
+  if(unlikely(track.segments.empty()))
     return;
 
   map_track_remove(track);

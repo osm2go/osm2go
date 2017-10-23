@@ -42,6 +42,7 @@
 #include <strings.h>
 #include <sys/stat.h>
 
+#include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
 
 double xml_get_prop_float(xmlNode *node, const char *prop) {
@@ -85,7 +86,7 @@ static void vmessagef(GtkWidget *parent, GtkMessageType type, GtkButtonsType but
   GtkWindow *wnd = GTK_WINDOW(parent);
   char *buf = g_strdup_vprintf(fmt, args);
 
-  if(G_UNLIKELY(wnd == O2G_NULLPTR)) {
+  if(unlikely(wnd == O2G_NULLPTR)) {
     printf("%s", buf);
     g_free(buf);
     return;
@@ -266,7 +267,7 @@ std::string find_file(const std::string &n) {
 
   struct stat st;
 
-  if(G_UNLIKELY(n[0] == '/')) {
+  if(unlikely(n[0] == '/')) {
     if(stat(n.c_str(), &st) == 0 && S_ISREG(st.st_mode))
       return n;
     return std::string();

@@ -1,5 +1,7 @@
 #include <track.h>
 
+#include <osm2go_annotations.h>
+
 #include <algorithm>
 #include <cerrno>
 #include <gtk/gtk.h>
@@ -26,11 +28,11 @@ int main(int argc, char **argv)
 
   std::for_each(track->segments.begin(), track->segments.end(), point_count(points));
 
-  g_assert_cmpint(track->segments.size(), ==, 4);
+  assert_cmpnum(track->segments.size(), 4);
 
   delete track;
 
-  g_assert_cmpint(points, ==, 11);
+  assert_cmpnum(points, 11);
 
   xmlCleanupParser();
 

@@ -50,6 +50,7 @@
 
 #include <algorithm>
 
+#include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
 
 class TrackSax {
@@ -128,7 +129,7 @@ static track_t *track_read(const char *filename, bool dirty) {
   printf("loading track %s\n", filename);
 
   TrackSax sx;
-  if(G_UNLIKELY(!sx.parse(filename))) {
+  if(unlikely(!sx.parse(filename))) {
     delete sx.track;
     printf("track was empty/invalid track\n");
     return O2G_NULLPTR;
@@ -150,7 +151,7 @@ void track_clear(appdata_t &appdata) {
 
   printf("clearing track\n");
 
-  if(G_LIKELY(appdata.map))
+  if(likely(appdata.map))
     map_track_remove(*track);
 
   appdata.track.track = O2G_NULLPTR;
@@ -191,7 +192,7 @@ void track_save_segs::save_point::operator()(const track_point_t &point)
     xmlNewTextChild(node_point, O2G_NULLPTR, BAD_CAST "ele", BAD_CAST str);
   }
 
-  if(G_LIKELY(point.time)) {
+  if(likely(point.time)) {
     struct tm loctime;
     localtime_r(&point.time, &loctime);
     strftime(str, sizeof(str), DATE_FORMAT, &loctime);
@@ -220,14 +221,14 @@ static void track_write(const char *name, const track_t *track, xmlDoc *doc) {
     xmlNodePtr cur_node;
     xmlNodePtr root_node = xmlDocGetRootElement(doc);
     bool err = false;
-    if (G_UNLIKELY(!root_node || root_node->type != XML_ELEMENT_NODE ||
+    if (unlikely(!root_node || root_node->type != XML_ELEMENT_NODE ||
                    strcasecmp(reinterpret_cast<const char *>(root_node->name), "gpx") != 0)) {
       err = true;
     } else {
       cur_node = root_node->children;
       while(cur_node && cur_node->type != XML_ELEMENT_NODE)
         cur_node = cur_node->next;
-      if(G_UNLIKELY(!cur_node || !cur_node->children ||
+      if(unlikely(!cur_node || !cur_node->children ||
                     strcasecmp(reinterpret_cast<const char *>(cur_node->name), "trk") != 0)) {
         err = true;
       } else {
@@ -238,12 +239,12 @@ static void track_write(const char *name, const track_t *track, xmlDoc *doc) {
           if (cur_node->type != XML_ELEMENT_NODE)
             continue;
           // more tracks in the file than loaded, something is wrong
-          if(G_UNLIKELY(it == itEnd)) {
+          if(unlikely(it == itEnd)) {
             err = true;
             break;
           }
           /* something else, this track is not written from osm2go */
-          if(G_UNLIKELY(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "trkseg") != 0)) {
+          if(unlikely(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "trkseg") != 0)) {
             err = true;
             break;
           }
@@ -251,7 +252,7 @@ static void track_write(const char *name, const track_t *track, xmlDoc *doc) {
         }
       }
     }
-    if(G_UNLIKELY(err)) {
+    if(unlikely(err)) {
       xmlFreeDoc(doc);
       doc = O2G_NULLPTR;
     } else {
@@ -307,7 +308,7 @@ void track_save(project_t *project, track_t *track) {
     if(renameat(project->dirfd, trkfname.c_str(), project->dirfd, backupfn) == 0) {
       /* parse the old file and get the DOM */
       fdguard bupfd(project->dirfd, backupfn, O_RDONLY);
-      if(G_LIKELY(bupfd.valid()))
+      if(likely(bupfd.valid()))
         doc = xmlReadFd(bupfd, O2G_NULLPTR, O2G_NULLPTR, XML_PARSE_NONET);
     }
   }
@@ -336,7 +337,7 @@ bool track_restore(appdata_t &appdata) {
   std::string trk_name;
 
   struct stat st;
-  if(G_UNLIKELY(fstatat(project->dirfd, backupfn, &st, 0) == 0 && S_ISREG(st.st_mode))) {
+  if(unlikely(fstatat(project->dirfd, backupfn, &st, 0) == 0 && S_ISREG(st.st_mode))) {
     printf("track backup present, loading it instead of real track ...\n");
     trk_name = project->path + backupfn;
   } else {
@@ -383,14 +384,14 @@ static gboolean track_append_position(appdata_t &appdata, const pos_t &pos, floa
   track_t *track = appdata.track.track;
 
   /* no track at all? might be due to a "clear track" while running */
-  if(G_UNLIKELY(!track)) {
+  if(unlikely(!track)) {
     printf("restarting after \"clear\"\n");
     track = appdata.track.track = new track_t();
   }
 
   track_menu_set(appdata);
 
-  if(G_UNLIKELY(!track->active)) {
+  if(unlikely(!track->active)) {
     printf("starting new segment\n");
 
     track_seg_t seg;
@@ -404,7 +405,7 @@ static gboolean track_append_position(appdata_t &appdata, const pos_t &pos, floa
 
   /* don't append if point is the same as last time */
   gboolean ret;
-  if(G_UNLIKELY(!points.empty() && points.back().pos == pos)) {
+  if(unlikely(!points.empty() && points.back().pos == pos)) {
     printf("same value as last point -> ignore\n");
     ret = FALSE;
   } else {
@@ -457,11 +458,11 @@ static int update(void *data) {
 
   /* ignore updates while no valid osm file is loaded, e.g. when switching */
   /* projects */
-  if(G_UNLIKELY(!appdata.osm))
+  if(unlikely(!appdata.osm))
     return 1;
 
   /* the map is only gone of the main screen is being closed */
-  if(G_UNLIKELY(!appdata.map)) {
+  if(unlikely(!appdata.map)) {
     printf("map has gone while tracking was active, stopping tracker\n");
 
     appdata.gps_state->registerCallback(O2G_NULLPTR, O2G_NULLPTR);
@@ -560,7 +561,7 @@ TrackSax::TrackSax()
 
 bool TrackSax::parse(const char *filename)
 {
-  if(G_UNLIKELY(xmlSAXUserParseFile(&handler, this, filename) != 0))
+  if(unlikely(xmlSAXUserParseFile(&handler, this, filename) != 0))
     return false;
 
   return track && !track->segments.empty();
@@ -580,13 +581,13 @@ void TrackSax::characters(const char *ch, int len)
     struct tm time;
     memset(&time, 0, sizeof(time));
     time.tm_isdst = -1;
-    if(G_LIKELY(strptime(buf.c_str(), DATE_FORMAT, &time) != O2G_NULLPTR))
+    if(likely(strptime(buf.c_str(), DATE_FORMAT, &time) != O2G_NULLPTR))
       curPoint->time = mktime(&time);
     break;
   }
   default:
     for(int pos = 0; pos < len; pos++)
-      if(G_UNLIKELY(!isspace(ch[pos]))) {
+      if(unlikely(!isspace(ch[pos]))) {
         printf("unhandled character data: %*.*s state %i\n", len, len, ch, state);
         break;
       }
@@ -597,12 +598,12 @@ void TrackSax::startElement(const xmlChar *name, const xmlChar **attrs)
 {
   StateMap::const_iterator it = std::find_if(tags.begin(), tags.end(), tag_find(name));
 
-  if(G_UNLIKELY(it == tags.end())) {
+  if(unlikely(it == tags.end())) {
     fprintf(stderr, "found unhandled element %s\n", name);
     return;
   }
 
-  if(G_UNLIKELY(state != it->oldState)) {
+  if(unlikely(state != it->oldState)) {
     fprintf(stderr, "found element %s in state %i, but expected %i\n",
             name, state, it->oldState);
     return;
@@ -625,7 +626,7 @@ void TrackSax::startElement(const xmlChar *name, const xmlChar **attrs)
     for(unsigned int i = 0; attrs[i]; i += 2) {
       if(strcmp(reinterpret_cast<const char *>(attrs[i]), "lat") == 0)
         curPoint->pos.lat = g_ascii_strtod(reinterpret_cast<const gchar *>(attrs[i + 1]), O2G_NULLPTR);
-      else if(G_LIKELY(strcmp(reinterpret_cast<const char *>(attrs[i]), "lon") == 0))
+      else if(likely(strcmp(reinterpret_cast<const char *>(attrs[i]), "lon") == 0))
         curPoint->pos.lon = g_ascii_strtod(reinterpret_cast<const gchar *>(attrs[i + 1]), O2G_NULLPTR);
     }
   }
@@ -645,7 +646,7 @@ void TrackSax::endElement(const xmlChar *name)
   case TagTrkSeg: {
     // drop empty segments
     std::vector<track_point_t> &last = track->segments.back().track_points;
-    if(G_UNLIKELY(last.empty())) {
+    if(unlikely(last.empty())) {
       track->segments.pop_back();
     } else {
       // this vector will never be appended to again, so shrink it to the size

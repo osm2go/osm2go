@@ -47,6 +47,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
 #include "osm2go_stl.h"
 
@@ -275,15 +276,15 @@ bool project_t::save(GtkWidget *parent) {
   printf("saving project to %s\n", project_file.c_str());
 
   /* check if project path exists */
-  if(G_UNLIKELY(!dirfd.valid())) {
+  if(unlikely(!dirfd.valid())) {
     /* make sure project base path exists */
-    if(G_UNLIKELY(g_mkdir_with_parents(path.c_str(), S_IRWXU) != 0)) {
+    if(unlikely(g_mkdir_with_parents(path.c_str(), S_IRWXU) != 0)) {
       errorf(GTK_WIDGET(parent),
 	     _("Unable to create project path %s"), path.c_str());
       return false;
     }
     fdguard nfd(path.c_str());
-    if(G_UNLIKELY(!nfd.valid())) {
+    if(unlikely(!nfd.valid())) {
       errorf(GTK_WIDGET(parent), _("Unable to open project path %s"), path.c_str());
       return false;
     }
@@ -309,7 +310,7 @@ bool project_t::save(GtkWidget *parent) {
     xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "desc", BAD_CAST desc.c_str());
 
   const std::string defaultOsm = name + ".osm";
-  if(G_UNLIKELY(osm != defaultOsm + ".gz" && osm != defaultOsm))
+  if(unlikely(osm != defaultOsm + ".gz" && osm != defaultOsm))
     xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "osm", BAD_CAST osm.c_str());
 
   node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "min", O2G_NULLPTR);
@@ -378,7 +379,7 @@ static std::vector<project_t *> project_scan(map_state_t &ms, const std::string 
     if(d->d_type != DT_DIR && d->d_type != DT_UNKNOWN)
       continue;
 
-    if(G_UNLIKELY(strcmp(d->d_name, ".") == 0 || strcmp(d->d_name, "..") == 0))
+    if(unlikely(strcmp(d->d_name, ".") == 0 || strcmp(d->d_name, "..") == 0))
       continue;
 
     std::string fullname = project_exists(base_path_fd, d->d_name);
@@ -388,7 +389,7 @@ static std::vector<project_t *> project_scan(map_state_t &ms, const std::string 
       /* try to read project and append it to chain */
       std::unique_ptr<project_t> n(new project_t(ms, d->d_name, base_path));
 
-      if(G_LIKELY(project_read(fullname, n.get(), server, base_path_fd)))
+      if(likely(project_read(fullname, n.get(), server, base_path_fd)))
         projects.push_back(n.release());
     }
   }
@@ -532,11 +533,11 @@ static bool project_delete(select_context_t *context, project_t *project) {
 
   /* remove entire directory from disk */
   dirguard dir(project->path.c_str());
-  if(G_LIKELY(dir.valid())) {
+  if(likely(dir.valid())) {
     int dfd = dir.dirfd();
     dirent *d;
     while ((d = dir.next()) != O2G_NULLPTR) {
-      if(G_UNLIKELY(d->d_type == DT_DIR ||
+      if(unlikely(d->d_type == DT_DIR ||
                     (unlinkat(dfd, d->d_name, 0) == -1 && errno == EISDIR)))
         unlinkat(dfd, d->d_name, AT_REMOVEDIR);
     }
@@ -1253,11 +1254,11 @@ static bool project_open(appdata_t &appdata, const std::string &name) {
 
   assert(!name.empty());
   std::string::size_type sl = name.rfind('/');
-  if(G_UNLIKELY(sl != std::string::npos)) {
+  if(unlikely(sl != std::string::npos)) {
     // load with absolute or relative path, usually only done for demo
     project_file = name;
     std::string pname = name.substr(sl + 1);
-    if(G_LIKELY(pname.substr(pname.size() - 5) == ".proj"))
+    if(likely(pname.substr(pname.size() - 5) == ".proj"))
       pname.erase(pname.size() - 5);
     // usually that ends in /foo/foo.proj
     if(name.substr(sl - pname.size() - 1, pname.size() + 1) == '/' + pname)
@@ -1271,8 +1272,8 @@ static bool project_open(appdata_t &appdata, const std::string &name) {
   project->map_state.reset();
 
   printf("project file = %s\n", project_file.c_str());
-  if(G_UNLIKELY(!project_read(project_file, project.get(), appdata.settings->server,
-                              appdata.settings->base_path_fd))) {
+  if(unlikely(!project_read(project_file, project.get(), appdata.settings->server,
+                            appdata.settings->base_path_fd))) {
     printf("error reading project file\n");
     return false;
   }
@@ -1300,7 +1301,7 @@ static bool project_load_inner(appdata_t &appdata, const std::string &name) {
   /* open project itself */
   osm2go_platform::process_events();
 
-  if(G_UNLIKELY(!project_open(appdata, name))) {
+  if(unlikely(!project_open(appdata, name))) {
     printf("error opening requested project\n");
 
     snprintf(banner_txt, sizeof(banner_txt),
@@ -1317,7 +1318,7 @@ static bool project_load_inner(appdata_t &appdata, const std::string &name) {
   /* check if OSM data is valid */
   osm2go_platform::process_events();
   const char *errmsg = appdata.osm->sanity_check();
-  if(G_UNLIKELY(errmsg != O2G_NULLPTR)) {
+  if(unlikely(errmsg != O2G_NULLPTR)) {
     errorf(GTK_WIDGET(appdata.window), "%s", errmsg);
     printf("project/osm sanity checks failed, unloading project\n");
 
@@ -1331,21 +1332,21 @@ static bool project_load_inner(appdata_t &appdata, const std::string &name) {
 
   /* load diff possibly preset */
   osm2go_platform::process_events();
-  if(G_UNLIKELY(!appdata.window))
+  if(unlikely(!appdata.window))
     return false;
 
   diff_restore(appdata);
 
   /* prepare colors etc, draw data and adjust scroll/zoom settings */
   osm2go_platform::process_events();
-  if(G_UNLIKELY(!appdata.window))
+  if(unlikely(!appdata.window))
     return false;
 
   appdata.map->init();
 
   /* restore a track */
   osm2go_platform::process_events();
-  if(G_UNLIKELY(!appdata.window))
+  if(unlikely(!appdata.window))
     return false;
 
   track_clear(appdata);
@@ -1354,7 +1355,7 @@ static bool project_load_inner(appdata_t &appdata, const std::string &name) {
 
   /* finally load a background if present */
   osm2go_platform::process_events();
-  if(G_UNLIKELY(!appdata.window))
+  if(unlikely(!appdata.window))
     return false;
   wms_load(appdata);
 
@@ -1370,7 +1371,7 @@ static bool project_load_inner(appdata_t &appdata, const std::string &name) {
 
 bool project_load(appdata_t &appdata, const std::string &name) {
   bool ret = project_load_inner(appdata, name);
-  if(G_UNLIKELY(!ret)) {
+  if(unlikely(!ret)) {
     printf("project loading interrupted by user\n");
 
     delete appdata.project;

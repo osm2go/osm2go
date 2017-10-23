@@ -19,7 +19,7 @@
 
 #include "fdguard.h"
 
-#include "misc.h"
+#include "osm2go_annotations.h"
 
 #include <fcntl.h>
 #include <unistd.h>
@@ -47,7 +47,7 @@ fdguard::fdguard(int basefd, const char *pathname, int flags)
 }
 
 fdguard::~fdguard() {
-  if(G_LIKELY(valid()))
+  if(likely(valid()))
     close(fd);
 }
 
@@ -85,6 +85,6 @@ dirguard::dirguard(int fd)
 
 dirguard::~dirguard()
 {
-  if(G_LIKELY(valid()))
+  if(likely(valid()))
     closedir(d);
 }

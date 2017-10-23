@@ -52,6 +52,8 @@ namespace std {
 #include <libintl.h>
 #include <stdarg.h>
 
+#include "osm2go_annotations.h"
+
 #define _(String) gettext(String)
 
 struct list_priv_t {
@@ -132,8 +134,8 @@ void list_set_custom_user_button(GtkWidget *list, list_button_t id,
 				 GtkWidget *widget) {
   list_priv_t *priv = static_cast<list_priv_t *>(g_object_get_data(G_OBJECT(list), "priv"));
   assert(priv != O2G_NULLPTR);
-  g_assert_cmpint(id, >=, 3);
-  g_assert_cmpint(id, <,  6);
+  assert_cmpnum_op(static_cast<int>(id), >=, 3);
+  assert_cmpnum_op(static_cast<int>(id), <,  6);
 
   /* make space for user buttons */
   gtk_table_resize(GTK_TABLE(priv->table), 2, 3);
@@ -195,7 +197,7 @@ void list_button_enable(GtkWidget *list, list_button_t id, bool enable) {
 
   GtkWidget *but = priv->button.widget[id];
 
-  if(G_LIKELY(but))
+  if(likely(but))
     gtk_widget_set_sensitive(but, enable ? TRUE : FALSE);
 }
 
@@ -350,8 +352,8 @@ GtkWidget *list_new(bool show_headers, unsigned int btn_flags, void *context,
 
   priv->button.flags = btn_flags;
 
-  g_assert_cmpuint(buttons.size(), >=, cols);
-  g_assert_cmpuint(buttons.size(), <=, cols * rows);
+  assert_cmpnum_op(buttons.size(), >=, cols);
+  assert_cmpnum_op(buttons.size(), <=, cols * rows);
 
   /* add the three default buttons, but keep all but the first disabled for now */
   for(unsigned int i = 0; i < 3; i++) {

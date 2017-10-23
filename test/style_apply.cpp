@@ -6,6 +6,7 @@
 #include <misc.h>
 #include <style.h>
 
+#include <osm2go_annotations.h>
 #include <osm2go_cpp.h>
 
 #include <algorithm>
@@ -47,20 +48,20 @@ int main(int argc, char **argv)
   style_t *style = style_load(argv[1], appdata.icons);
 
   assert(style->frisket.border.present);
-  g_assert_cmpuint(style->frisket.border.color, ==, 0xff0000c0);
-  g_assert_cmpfloat(style->frisket.border.width, ==, 20.75);
-  g_assert_cmpuint(style->frisket.color, ==, 0x0f0f0fff);
-  g_assert_cmpfloat(style->frisket.mult, ==, 3.5);
-  g_assert_cmpuint(style->highlight.color, ==, 0xffff00c0);
-  g_assert_cmpuint(style->highlight.node_color, ==, 0xff00000c);
-  g_assert_cmpuint(style->highlight.touch_color, ==, 0x0000ffc0);
-  g_assert_cmpuint(style->highlight.arrow_color, ==, 0xf0f0f0f0);
-  g_assert_cmpfloat(style->highlight.width, ==, 2.5);
-  g_assert_cmpfloat(style->highlight.arrow_limit, ==, 1.25);
-  g_assert_cmpfloat(style->track.width, ==, 3.5);
-  g_assert_cmpuint(style->track.color, ==, 0x0000ff40);
-  g_assert_cmpuint(style->track.gps_color, ==, 0x00008040);
-  g_assert_cmpuint(style->background.color, ==, 0x00ff00ff);
+  assert_cmpnum(style->frisket.border.color, 0xff0000c0);
+  assert_cmpnum(style->frisket.border.width, 20.75);
+  assert_cmpnum(style->frisket.color, 0x0f0f0fff);
+  assert_cmpnum(style->frisket.mult, 3.5);
+  assert_cmpnum(style->highlight.color, 0xffff00c0);
+  assert_cmpnum(style->highlight.node_color, 0xff00000c);
+  assert_cmpnum(style->highlight.touch_color, 0x0000ffc0);
+  assert_cmpnum(style->highlight.arrow_color, 0xf0f0f0f0);
+  assert_cmpnum(style->highlight.width, 2.5);
+  assert_cmpnum(style->highlight.arrow_limit, 1.25);
+  assert_cmpnum(style->track.width, 3.5);
+  assert_cmpnum(style->track.color, 0x0000ff40);
+  assert_cmpnum(style->track.gps_color, 0x00008040);
+  assert_cmpnum(style->background.color, 0x00ff00ff);
 
   if(style == O2G_NULLPTR) {
     std::cerr << "failed to load styles" << std::endl;
@@ -110,7 +111,7 @@ int main(int argc, char **argv)
   assert(!style->node_icons.empty());
   assert(style->node_icons[node->id] != O2G_NULLPTR);
   assert(oldicon != style->node_icons[node->id]);
-  g_assert_cmpfloat(oldzoom * 1.9, <, node->zoom_max);
+  assert_cmpnum_op(oldzoom * 1.9, <, node->zoom_max);
 
   way_t * const way = new way_t(0);
   osm.way_attach(way);
@@ -120,16 +121,16 @@ int main(int argc, char **argv)
   way_t w0;
   w0.draw.width = 3;
   w0.draw.color = 0x999999ff;
-  g_assert_cmpmem(&(way->draw), sizeof(way->draw), &(w0.draw), sizeof(w0.draw));
+  assert_cmpmem(&(way->draw), sizeof(way->draw), &(w0.draw), sizeof(w0.draw));
 
   // apply a way style (linemod)
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("bridge", "yes"));
   way->tags.replace(tags);
   style->colorize_way(way);
-  g_assert_cmpint(memcmp(&(way->draw), &(w0.draw), sizeof(w0.draw)), !=, 0);
-  g_assert_cmpuint(way->draw.color, ==, 0x00008080);
-  g_assert_cmpint(way->draw.width, ==, 7);
+  assert_cmpnum_op(memcmp(&(way->draw), &(w0.draw), sizeof(w0.draw)), !=, 0);
+  assert_cmpnum(way->draw.color, 0x00008080);
+  assert_cmpnum(way->draw.width, 7);
 
   // 2 colliding linemods
   // only the last one should be used
@@ -137,24 +138,24 @@ int main(int argc, char **argv)
   tags.insert(osm_t::TagMap::value_type("access", "no"));
   way->tags.replace(tags);
   style->colorize_way(way);
-  g_assert_cmpuint(way->draw.color, ==, 0xff8080ff);
-  g_assert_cmpint(way->draw.width, ==, 5);
+  assert_cmpnum(way->draw.color, 0xff8080ff);
+  assert_cmpnum(way->draw.width, 5);
 
   // apply way style (line)
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("highway", "residential"));
   way->tags.replace(tags);
   style->colorize_way(way);
-  g_assert_cmpuint(way->draw.color, ==, 0xc0c0c0ff);
-  g_assert_cmpint(way->draw.width, ==, 2);
+  assert_cmpnum(way->draw.color, 0xc0c0c0ff);
+  assert_cmpnum(way->draw.width, 2);
 
   // apply way style (line, area style not matching)
   tags.clear();
   tags.insert(osm_t::TagMap::value_type("highway", "platform"));
   way->tags.replace(tags);
   style->colorize_way(way);
-  g_assert_cmpuint(way->draw.color, ==, 0x809bc0ff);
-  g_assert_cmpint(way->draw.width, ==, 1);
+  assert_cmpnum(way->draw.color, 0x809bc0ff);
+  assert_cmpnum(way->draw.width, 1);
 
   way_t * const area = new way_t(1);
   area->append_node(node);
@@ -181,19 +182,19 @@ int main(int argc, char **argv)
   oldzoom = node->zoom_max;
 
   style->colorize_world(&osm);
-  g_assert_cmpuint(way->draw.color, ==, 0xccccccff);
-  g_assert_cmpint(way->draw.area.color, ==, 0);
-  g_assert_cmpint(way->draw.width, ==, 1);
+  assert_cmpnum(way->draw.color, 0xccccccff);
+  assert_cmpnum(way->draw.area.color, 0);
+  assert_cmpnum(way->draw.width, 1);
 
   assert(!style->node_icons.empty());
   assert(style->node_icons[node->id] != O2G_NULLPTR);
   assert(oldicon != style->node_icons[node->id]);
-  g_assert_cmpfloat(oldzoom, !=, node->zoom_max);
+  assert_cmpnum_op(oldzoom, !=, node->zoom_max);
 
-  g_assert_cmpuint(area->draw.color, ==, 0xccccccff);
+  assert_cmpnum(area->draw.color, 0xccccccff);
   // test1.xml says color #ddd, test1.style says color 0x00000066
-  g_assert_cmpuint(area->draw.area.color, ==, 0xdddddd66);
-  g_assert_cmpint(area->draw.width, ==, 1);
+  assert_cmpnum(area->draw.area.color, 0xdddddd66);
+  assert_cmpnum(area->draw.width, 1);
 
   // check priorities
   tags.insert(osm_t::TagMap::value_type("train", "yes"));
@@ -202,19 +203,19 @@ int main(int argc, char **argv)
   way->tags.replace(tags);
 
   style->colorize_world(&osm);
-  g_assert_cmpuint(way->draw.color, ==, 0xaaaaaaff);
-  g_assert_cmpint(way->draw.area.color, ==, 0);
-  g_assert_cmpint(way->draw.width, ==, 2);
+  assert_cmpnum(way->draw.color, 0xaaaaaaff);
+  assert_cmpnum(way->draw.area.color, 0);
+  assert_cmpnum(way->draw.width, 2);
 
   assert(!style->node_icons.empty());
   assert(style->node_icons[node->id] != O2G_NULLPTR);
   assert(oldicon != style->node_icons[node->id]);
-  g_assert_cmpfloat(oldzoom, !=, node->zoom_max);
+  assert_cmpnum_op(oldzoom, !=, node->zoom_max);
 
-  g_assert_cmpuint(area->draw.color, ==, 0xaaaaaaff);
+  assert_cmpnum(area->draw.color, 0xaaaaaaff);
   // test1.xml says color #bbb, test1.style says color 0x00000066
-  g_assert_cmpuint(area->draw.area.color, ==, 0xbbbbbb66);
-  g_assert_cmpint(area->draw.width, ==, 2);
+  assert_cmpnum(area->draw.area.color, 0xbbbbbb66);
+  assert_cmpnum(area->draw.width, 2);
 
   delete style;
 

@@ -4,6 +4,7 @@
 #include <fdguard.h>
 #include <misc.h>
 
+#include <osm2go_annotations.h>
 #include <osm2go_cpp.h>
 
 #include <algorithm>
@@ -45,7 +46,7 @@ bool check_icon::operator()(const std::string &dir)
   const std::array<const char *, 4> icon_exts = { { ".svg", ".gif", ".png", ".jpg" } };
   const std::string dirname = dir + "/icons";
   fdguard dirfd(dirname.c_str());
-  if(G_UNLIKELY(!dirfd.valid()))
+  if(unlikely(!dirfd.valid()))
     return false;
 
   std::string name = filename;
@@ -170,7 +171,7 @@ static void test_roles(const presets_items *presets)
 
   way_t w;
   roles = preset_roles(&r, object_t(&w), presets);
-  g_assert_cmpuint(roles.size(), ==, 2);
+  assert_cmpnum(roles.size(), 2);
   assert(roles.find("inner") != roles.end());
   assert(roles.find("outer") != roles.end());
 
@@ -180,7 +181,7 @@ static void test_roles(const presets_items *presets)
   r.tags.replace(tags);
 
   roles = preset_roles(&r, object_t(&n), presets);
-  g_assert_cmpuint(roles.size(), ==, 2);
+  assert_cmpnum(roles.size(), 2);
   assert(roles.find("admin_centre") != roles.end());
   assert(roles.find("label") != roles.end());
 
@@ -188,12 +189,12 @@ static void test_roles(const presets_items *presets)
 
   node_t n2;
   roles = preset_roles(&r, object_t(&n2), presets);
-  g_assert_cmpuint(roles.size(), ==, 1);
+  assert_cmpnum(roles.size(), 1);
   assert(roles.find("label") != roles.end());
 
   // check count restriction does not apply if it is 0
   roles = preset_roles(&r, object_t(&w), presets);
-  g_assert_cmpuint(roles.size(), ==, 2);
+  assert_cmpnum(roles.size(), 2);
   assert(roles.find("outer") != roles.end());
   assert(roles.find("inner") != roles.end());
 
@@ -201,7 +202,7 @@ static void test_roles(const presets_items *presets)
   r.members.push_back(member_t(object_t(&w2), strdup("outer")));
 
   roles = preset_roles(&r, object_t(&w), presets);
-  g_assert_cmpuint(roles.size(), ==, 2);
+  assert_cmpnum(roles.size(), 2);
   assert(roles.find("outer") != roles.end());
   assert(roles.find("inner") != roles.end());
 
@@ -211,13 +212,13 @@ static void test_roles(const presets_items *presets)
   r.tags.replace(tags);
 
   roles = preset_roles(&r, object_t(&n), presets);
-  g_assert_cmpuint(roles.size(), ==, 1);
+  assert_cmpnum(roles.size(), 1);
   assert(roles.find("entrance") != roles.end());
 
   // check that regexp-roles are not shown
   relation_t r2;
   roles = preset_roles(&r, object_t(&r2), presets);
-  g_assert_cmpuint(roles.size(), ==, 0);
+  assert_cmpnum(roles.size(), 0);
 
   r.cleanup();
 }

@@ -38,6 +38,7 @@
 #include <strings.h>
 #include <sys/stat.h>
 
+#include "osm2go_annotations.h"
 #include "osm2go_stl.h"
 
 #ifndef LIBXML_TREE_ENABLED
@@ -51,12 +52,12 @@ typedef std::map<std::string, presets_item *> ChunkMap;
 std::string josm_icon_name_adjust(const char *name) {
   std::string ret;
 
-  if(G_UNLIKELY(!name))
+  if(unlikely(!name))
     return ret;
 
   size_t len = strlen(name);
 
-  if(G_LIKELY(len > 4)) {
+  if(likely(len > 4)) {
     const char * const ext = name + len - 4;
     /* the icon loader uses names without extension */
     if(strcasecmp(ext, ".png") == 0 || strcasecmp(ext, ".svg") == 0)
@@ -390,7 +391,7 @@ bool find_link_parent::operator()(presets_item_t *t)
 
 void PresetSax::find_link_ref::operator()(PresetSax::LLinks::value_type &l)
 {
-  if(G_UNLIKELY(!px.resolvePresetLink(l.first, l.second))) {
+  if(unlikely(!px.resolvePresetLink(l.first, l.second))) {
     printf("found preset_link with unmatched preset_name '%s'\n", l.second.c_str());
     find_link_parent fc(l.first);
     std::vector<presets_item_t *>::const_iterator it =
@@ -542,7 +543,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
     break;
   case DocStart:
   case UnknownTag:
-    g_assert_not_reached();
+    assert_unreachable();
     return;
   case TagPresets:
     break;
@@ -604,7 +605,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
     assert((items.top()->type & presets_item_t::TY_GROUP) != 0);
     static_cast<presets_item_group *>(items.top())->items.push_back(item);
     items.push(item);
-    if(G_LIKELY(!n.empty())) {
+    if(likely(!n.empty())) {
       // search again: the key must be the unlocalized name here
       itemsNames[findAttribute(attrs, "name", false)] = item;
     } else {
@@ -622,7 +623,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
     // make sure not to insert it as a stale link in case the item is invalid,
     // as that would be deleted on it's end tag and a stale reference would remain
     // in laterLinks
-    if(G_LIKELY(!item->name.empty())) {
+    if(likely(!item->name.empty())) {
       if(!id) {
         dumpState("found", "preset_link without preset_name\n");
       } else {
@@ -642,7 +643,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
       dumpState("found", "reference without ref\n");
     } else {
       const ChunkMap::const_iterator ait = chunks.find(id);
-      if(G_UNLIKELY(ait == chunks.end())) {
+      if(unlikely(ait == chunks.end())) {
         dumpState("found");
         printf("reference with unresolved ref %s\n", id);
       } else
@@ -713,10 +714,10 @@ void PresetSax::startElement(const char *name, const char **attrs)
     assert(items.top()->isItem());
     presets_item * const item = static_cast<presets_item *>(items.top());
     const char *href = findAttribute(attrs, "href");
-    if(G_UNLIKELY(href == O2G_NULLPTR)) {
+    if(unlikely(href == O2G_NULLPTR)) {
       dumpState("ignoring", "link without href\n");
     } else {
-      if(G_LIKELY(item->link.empty()))
+      if(likely(item->link.empty()))
        item->link = href;
       else {
         dumpState("found surplus", "link\n");
@@ -739,14 +740,14 @@ void PresetSax::startElement(const char *name, const char **attrs)
 
     char delimiter = ',';
     if(del) {
-      if(G_UNLIKELY(strlen(del) != 1)) {
+      if(unlikely(strlen(del) != 1)) {
         dumpState("found");
         printf("combo with invalid delimiter '%s'\n", del);
       } else
         delimiter = *del;
     }
 
-    if(G_UNLIKELY(!values && display_values)) {
+    if(unlikely(!values && display_values)) {
       dumpState("found", "combo with display_values but not values\n");
       display_values = O2G_NULLPTR;
     }
@@ -758,7 +759,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
   case TagListEntry: {
     assert(!items.empty());
     assert(!widgets.empty());
-    g_assert_cmpuint(widgets.top()->type, ==, WIDGET_TYPE_COMBO);
+    assert_cmpnum(widgets.top()->type, WIDGET_TYPE_COMBO);
     presets_widget_combo * const combo = static_cast<presets_widget_combo *>(widgets.top());
 
     std::array<const char *, 2> names = { { "display_value", "value" } };
@@ -767,7 +768,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
 
     const char *value = NULL_OR_MAP_VAL(a.find("value"));
 
-    if(G_UNLIKELY(!value)) {
+    if(unlikely(!value)) {
       dumpState("found", "list_entry without value\n");
     } else {
       combo->values.push_back(value);
@@ -788,7 +789,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
     const AttrMap::const_iterator aitEnd = a.end();
 
     // ignore roles marked as regexp, this is not implemented yet
-    if(G_LIKELY(a.find("regexp") == aitEnd)) {
+    if(likely(a.find("regexp") == aitEnd)) {
       const std::string &key = NULL_OR_MAP_STR(a.find("key"));
       const char *tp = NULL_OR_MAP_VAL(a.find("type"));
       const char *cnt = NULL_OR_MAP_VAL(a.find("count"));
@@ -796,7 +797,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
       if(cnt) {
         char *endp;
         count = strtoul(cnt, &endp, 10);
-        if(G_UNLIKELY(*endp != '\0')) {
+        if(unlikely(*endp != '\0')) {
           dumpState("ignoring invalid count value of", "role\n");
           count = 0;
         }
@@ -835,7 +836,7 @@ void PresetSax::endElement(const xmlChar *name)
   switch(it->oldState) {
   case DocStart:
   case UnknownTag:
-    g_assert_not_reached();
+    assert_unreachable();
   case TagLink:
   case TagListEntry:
   case TagPresets:
@@ -844,12 +845,12 @@ void PresetSax::endElement(const xmlChar *name)
   case TagRole:
     break;
   case TagItem: {
-    g_assert_cmpint(0, ==, widgets.size());
+    assert_cmpnum(0, widgets.size());
     assert(!items.empty());
     assert(items.top()->isItem());
     presets_item * const item = static_cast<presets_item *>(items.top());
     items.pop();
-    if(G_UNLIKELY(item->name.empty())) {
+    if(unlikely(item->name.empty())) {
       /* silently delete, was warned about before */
       delete item;
       break;
@@ -859,7 +860,7 @@ void PresetSax::endElement(const xmlChar *name)
       presets_item_t * const group = items.top();
       assert((group->type & presets_item_t::TY_GROUP) != 0);
       *const_cast<unsigned int *>(&group->type) |= item->type;
-      if(G_UNLIKELY(!item->roles.empty() && (item->type & (presets_item_t::TY_RELATION | presets_item_t::TY_MULTIPOLYGON)) == 0)) {
+      if(unlikely(!item->roles.empty() && (item->type & (presets_item_t::TY_RELATION | presets_item_t::TY_MULTIPOLYGON)) == 0)) {
         dumpState("found", "item with roles, but type does not match relations or multipolygons\n");
         item->roles.clear();
       }
@@ -868,7 +869,7 @@ void PresetSax::endElement(const xmlChar *name)
   }
   case TagSeparator:
     assert(!items.empty());
-    g_assert_cmpuint(items.top()->type, ==, presets_item_t::TY_SEPARATOR);
+    assert_cmpnum(items.top()->type, presets_item_t::TY_SEPARATOR);
     items.pop();
     break;
   case TagGroup: {
@@ -887,9 +888,9 @@ void PresetSax::endElement(const xmlChar *name)
   case TagChunk: {
     assert(!items.empty());
     presets_item * const chunk = static_cast<presets_item *>(items.top());
-    g_assert_cmpuint(chunk->type, ==, presets_item_t::TY_ALL);
+    assert_cmpnum(chunk->type, presets_item_t::TY_ALL);
     items.pop();
-    if(G_UNLIKELY(chunk->name.empty())) {
+    if(unlikely(chunk->name.empty())) {
       dumpState("ignoring", "chunk without id\n");
       delete chunk;
       return;
@@ -914,8 +915,8 @@ void PresetSax::endElement(const xmlChar *name)
     assert(!widgets.empty());
     presets_widget_reference * const ref = static_cast<presets_widget_reference *>(widgets.top());
     widgets.pop();
-    g_assert_cmpuint(ref->type, ==, WIDGET_TYPE_REFERENCE);
-    if(G_UNLIKELY(ref->item == O2G_NULLPTR))
+    assert_cmpnum(ref->type, WIDGET_TYPE_REFERENCE);
+    if(unlikely(ref->item == O2G_NULLPTR))
       delete ref;
     else
       static_cast<presets_item *>(items.top())->widgets.push_back(ref);
@@ -926,7 +927,7 @@ void PresetSax::endElement(const xmlChar *name)
     assert(!widgets.empty());
     presets_widget_label * const label = static_cast<presets_widget_label *>(widgets.top());
     widgets.pop();
-    if(G_UNLIKELY(label->text.empty())) {
+    if(unlikely(label->text.empty())) {
       dumpState("ignoring", "label without text\n");
       delete label;
     } else {
@@ -980,7 +981,7 @@ struct presets_items *josm_presets_load(void) {
   struct presets_items *presets = new presets_items();
 
   const std::string &filename = find_file("defaultpresets.xml");
-  if(G_LIKELY(!filename.empty()))
+  if(likely(!filename.empty()))
     presets->addFile(filename, std::string(), -1);
 
   // check for user presets
@@ -999,7 +1000,7 @@ struct presets_items *josm_presets_load(void) {
 
       const std::string dn = dirname + d->d_name + '/';
       dirguard pdir(dn.c_str());
-      if(G_LIKELY(pdir.valid())) {
+      if(likely(pdir.valid())) {
         // find first XML file inside those directories
         dirent *pd;
         while ((pd = pdir.next()) != O2G_NULLPTR) {
@@ -1014,7 +1015,7 @@ struct presets_items *josm_presets_load(void) {
     }
   }
 
-  if(G_UNLIKELY(presets->items.empty())) {
+  if(unlikely(presets->items.empty())) {
     delete presets;
     return O2G_NULLPTR;
   }
@@ -1038,7 +1039,7 @@ presets_widget_t::Match presets_widget_t::parseMatch(const char *matchstring, Ma
 {
   typedef std::vector<MatchValue> VMap;
   static VMap matches;
-  if(G_UNLIKELY(matches.empty())) {
+  if(unlikely(matches.empty())) {
     matches.push_back(VMap::value_type("none", MatchIgnore));
     matches.push_back(VMap::value_type("key", MatchKey));
     matches.push_back(VMap::value_type("key!", MatchKey_Force));

@@ -3,6 +3,8 @@
 #include <misc.h>
 #include <osm.h>
 
+#include <osm2go_annotations.h>
+
 #include <algorithm>
 #include <cassert>
 #include <cstdlib>
@@ -30,57 +32,57 @@ static void checkTextMatch()
                           tag_testkey_testtext.second,
                           std::string(), O2G_NULLPTR);
 
-  g_assert_cmpint(w_0.matches(VECTOR_ONE(tag_testkey_other)), ==, 0);
-  g_assert_cmpint(w_0.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 0);
-  g_assert_cmpint(w_0.matches(osm_t::TagMap()), ==, 0);
+  assert_cmpnum(w_0.matches(VECTOR_ONE(tag_testkey_other)), 0);
+  assert_cmpnum(w_0.matches(VECTOR_ONE(tag_testkey_testtext)), 0);
+  assert_cmpnum(w_0.matches(osm_t::TagMap()), 0);
 
   presets_widget_text w_ign(tag_testkey_testtext.first,
                             tag_testkey_testtext.second,
                             std::string(), "none");
 
-  g_assert_cmpint(w_ign.matches(VECTOR_ONE(tag_testkey_other)), ==, 0);
-  g_assert_cmpint(w_ign.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 0);
-  g_assert_cmpint(w_ign.matches(osm_t::TagMap()), ==, 0);
+  assert_cmpnum(w_ign.matches(VECTOR_ONE(tag_testkey_other)), 0);
+  assert_cmpnum(w_ign.matches(VECTOR_ONE(tag_testkey_testtext)), 0);
+  assert_cmpnum(w_ign.matches(osm_t::TagMap()), 0);
 
   presets_widget_text w_bad(tag_testkey_testtext.first,
                             tag_testkey_testtext.second,
                             std::string(), "nonsense");
 
-  g_assert_cmpint(w_bad.matches(VECTOR_ONE(tag_testkey_other)), ==, 0);
-  g_assert_cmpint(w_bad.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 0);
-  g_assert_cmpint(w_bad.matches(osm_t::TagMap()), ==, 0);
+  assert_cmpnum(w_bad.matches(VECTOR_ONE(tag_testkey_other)), 0);
+  assert_cmpnum(w_bad.matches(VECTOR_ONE(tag_testkey_testtext)), 0);
+  assert_cmpnum(w_bad.matches(osm_t::TagMap()), 0);
 
   presets_widget_text w_key(tag_testkey_testtext.first,
                             tag_testkey_testtext.second,
                             std::string(), "key");
 
-  g_assert_cmpint(w_key.matches(VECTOR_ONE(tag_testkey_other)), ==, 1);
-  g_assert_cmpint(w_key.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 1);
-  g_assert_cmpint(w_key.matches(osm_t::TagMap()), ==, 0);
+  assert_cmpnum(w_key.matches(VECTOR_ONE(tag_testkey_other)), 1);
+  assert_cmpnum(w_key.matches(VECTOR_ONE(tag_testkey_testtext)), 1);
+  assert_cmpnum(w_key.matches(osm_t::TagMap()), 0);
 
   presets_widget_text w_keyf(tag_testkey_testtext.first,
                              tag_testkey_testtext.second,
                              std::string(), "key!");
 
-  g_assert_cmpint(w_keyf.matches(VECTOR_ONE(tag_testkey_other)), ==, 1);
-  g_assert_cmpint(w_keyf.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 1);
-  g_assert_cmpint(w_keyf.matches(osm_t::TagMap()), ==, -1);
+  assert_cmpnum(w_keyf.matches(VECTOR_ONE(tag_testkey_other)), 1);
+  assert_cmpnum(w_keyf.matches(VECTOR_ONE(tag_testkey_testtext)), 1);
+  assert_cmpnum(w_keyf.matches(osm_t::TagMap()), -1);
 
   presets_widget_text w_kv(tag_testkey_testtext.first,
                            tag_testkey_testtext.second,
                            std::string(), "keyvalue");
 
-  g_assert_cmpint(w_kv.matches(VECTOR_ONE(tag_testkey_other)), ==, 1);
-  g_assert_cmpint(w_kv.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 1);
-  g_assert_cmpint(w_kv.matches(osm_t::TagMap()), ==, 0);
+  assert_cmpnum(w_kv.matches(VECTOR_ONE(tag_testkey_other)), 1);
+  assert_cmpnum(w_kv.matches(VECTOR_ONE(tag_testkey_testtext)), 1);
+  assert_cmpnum(w_kv.matches(osm_t::TagMap()), 0);
 
   presets_widget_text w_kvf(tag_testkey_testtext.first,
                             tag_testkey_testtext.second,
                             std::string(), "keyvalue!");
 
-  g_assert_cmpint(w_kvf.matches(VECTOR_ONE(tag_testkey_other)), ==, 1);
-  g_assert_cmpint(w_kvf.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 1);
-  g_assert_cmpint(w_kvf.matches(osm_t::TagMap()), ==, -1);
+  assert_cmpnum(w_kvf.matches(VECTOR_ONE(tag_testkey_other)), 1);
+  assert_cmpnum(w_kvf.matches(VECTOR_ONE(tag_testkey_testtext)), 1);
+  assert_cmpnum(w_kvf.matches(osm_t::TagMap()), -1);
 }
 
 static void checkComboMatch()
@@ -98,9 +100,9 @@ static void checkComboMatch()
                            values.front(),
                            O2G_NULLPTR, values, empty_vector);
 
-  g_assert_cmpint(w_0.matches(VECTOR_ONE(tag_testkey_other)), ==, 0);
-  g_assert_cmpint(w_0.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 0);
-  g_assert_cmpint(w_0.matches(osm_t::TagMap()), ==, 0);
+  assert_cmpnum(w_0.matches(VECTOR_ONE(tag_testkey_other)), 0);
+  assert_cmpnum(w_0.matches(VECTOR_ONE(tag_testkey_testtext)), 0);
+  assert_cmpnum(w_0.matches(osm_t::TagMap()), 0);
 
   values = backup;
   presets_widget_combo w_ign(tag_testkey_testtext.first,
@@ -108,9 +110,9 @@ static void checkComboMatch()
                              values.front(),
                              "none", values, empty_vector);
 
-  g_assert_cmpint(w_ign.matches(VECTOR_ONE(tag_testkey_other)), ==, 0);
-  g_assert_cmpint(w_ign.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 0);
-  g_assert_cmpint(w_ign.matches(osm_t::TagMap()), ==, 0);
+  assert_cmpnum(w_ign.matches(VECTOR_ONE(tag_testkey_other)), 0);
+  assert_cmpnum(w_ign.matches(VECTOR_ONE(tag_testkey_testtext)), 0);
+  assert_cmpnum(w_ign.matches(osm_t::TagMap()), 0);
 
   values = backup;
   presets_widget_combo w_bad(tag_testkey_testtext.first,
@@ -118,9 +120,9 @@ static void checkComboMatch()
                              values.front(),
                              "nonsense", values, empty_vector);
 
-  g_assert_cmpint(w_bad.matches(VECTOR_ONE(tag_testkey_other)), ==, 0);
-  g_assert_cmpint(w_bad.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 0);
-  g_assert_cmpint(w_bad.matches(osm_t::TagMap()), ==, 0);
+  assert_cmpnum(w_bad.matches(VECTOR_ONE(tag_testkey_other)), 0);
+  assert_cmpnum(w_bad.matches(VECTOR_ONE(tag_testkey_testtext)), 0);
+  assert_cmpnum(w_bad.matches(osm_t::TagMap()), 0);
 
   values = backup;
   presets_widget_combo w_key(tag_testkey_testtext.first,
@@ -128,9 +130,9 @@ static void checkComboMatch()
                              values.front(),
                              "key", values, empty_vector);
 
-  g_assert_cmpint(w_key.matches(VECTOR_ONE(tag_testkey_other)), ==, 1);
-  g_assert_cmpint(w_key.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 1);
-  g_assert_cmpint(w_key.matches(osm_t::TagMap()), ==, 0);
+  assert_cmpnum(w_key.matches(VECTOR_ONE(tag_testkey_other)), 1);
+  assert_cmpnum(w_key.matches(VECTOR_ONE(tag_testkey_testtext)), 1);
+  assert_cmpnum(w_key.matches(osm_t::TagMap()), 0);
 
   values = backup;
   presets_widget_combo w_keyf(tag_testkey_testtext.first,
@@ -138,9 +140,9 @@ static void checkComboMatch()
                               values.front(),
                               "key!", values, empty_vector);
 
-  g_assert_cmpint(w_keyf.matches(VECTOR_ONE(tag_testkey_other)), ==, 1);
-  g_assert_cmpint(w_keyf.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 1);
-  g_assert_cmpint(w_keyf.matches(osm_t::TagMap()), ==, -1);
+  assert_cmpnum(w_keyf.matches(VECTOR_ONE(tag_testkey_other)), 1);
+  assert_cmpnum(w_keyf.matches(VECTOR_ONE(tag_testkey_testtext)), 1);
+  assert_cmpnum(w_keyf.matches(osm_t::TagMap()), -1);
 
   values = backup;
   presets_widget_combo w_kv(tag_testkey_testtext.first,
@@ -148,9 +150,9 @@ static void checkComboMatch()
                             values.front(),
                             "keyvalue", values, empty_vector);
 
-  g_assert_cmpint(w_kv.matches(VECTOR_ONE(tag_testkey_other)), ==, 0);
-  g_assert_cmpint(w_kv.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 1);
-  g_assert_cmpint(w_kv.matches(osm_t::TagMap()), ==, 0);
+  assert_cmpnum(w_kv.matches(VECTOR_ONE(tag_testkey_other)), 0);
+  assert_cmpnum(w_kv.matches(VECTOR_ONE(tag_testkey_testtext)), 1);
+  assert_cmpnum(w_kv.matches(osm_t::TagMap()), 0);
 
   values = backup;
   presets_widget_combo w_kvf(tag_testkey_testtext.first,
@@ -158,9 +160,9 @@ static void checkComboMatch()
                              values.front(),
                              "keyvalue!", values, empty_vector);
 
-  g_assert_cmpint(w_kvf.matches(VECTOR_ONE(tag_testkey_other)), ==, -1);
-  g_assert_cmpint(w_kvf.matches(VECTOR_ONE(tag_testkey_testtext)), ==, 1);
-  g_assert_cmpint(w_kvf.matches(osm_t::TagMap()), ==, -1);
+  assert_cmpnum(w_kvf.matches(VECTOR_ONE(tag_testkey_other)), -1);
+  assert_cmpnum(w_kvf.matches(VECTOR_ONE(tag_testkey_testtext)), 1);
+  assert_cmpnum(w_kvf.matches(osm_t::TagMap()), -1);
 }
 
 static void check_combined()

@@ -42,6 +42,7 @@
 #include <hildon/hildon-text-view.h>
 #endif
 
+#include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
 
 #define COLOR_ERR  "red"
@@ -97,7 +98,7 @@ bool osm_download(GtkWidget *parent, settings_t *settings, project_t *project)
                project->rserver.c_str());
 
     /* server url should not end with a slash */
-    if(G_UNLIKELY(project->rserver[project->rserver.size() - 1] == '/')) {
+    if(unlikely(project->rserver[project->rserver.size() - 1] == '/')) {
       printf("removing trailing slash\n");
       project->rserver.erase(project->rserver.size() - 1);
     }
@@ -126,11 +127,11 @@ bool osm_download(GtkWidget *parent, settings_t *settings, project_t *project)
   const std::string update = project->path + updatefn;
   unlinkat(project->dirfd, updatefn, 0);
 
-  if(G_UNLIKELY(!net_io_download_file(parent, url, update, project->name.c_str(), true)))
+  if(unlikely(!net_io_download_file(parent, url, update, project->name.c_str(), true)))
     return false;
 
   struct stat st;
-  if(G_UNLIKELY(stat(update.c_str(), &st) != 0 || !S_ISREG(st.st_mode)))
+  if(unlikely(stat(update.c_str(), &st) != 0 || !S_ISREG(st.st_mode)))
     return false;
 
   // if the project's gzip setting and the download one don't match change the project
@@ -138,7 +139,7 @@ bool osm_download(GtkWidget *parent, settings_t *settings, project_t *project)
 
   // check the contents of the new file
   GMappedFile *osmData = g_mapped_file_new(update.c_str(), FALSE, O2G_NULLPTR);
-  if(G_UNLIKELY(!osmData)) {
+  if(unlikely(!osmData)) {
     messagef(parent, _("Download error"),
              _("Error accessing the downloaded file:\n\n%s"), update.c_str());
     unlink(update.c_str());
@@ -342,9 +343,9 @@ static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
 #endif
     curl_easy_cleanup(curl);
 
-    if(G_UNLIKELY(res != 0)) {
+    if(unlikely(res != 0)) {
       appendf(log, COLOR_ERR, _("failed: %s\n"), buffer);
-    } else if(G_UNLIKELY(response != 200)) {
+    } else if(unlikely(response != 200)) {
       appendf(log, COLOR_ERR, _("failed, code: %ld %s\n"), response,
               http_message(response));
       /* if it's neither "ok" (200), nor "internal server error" (500) */
@@ -353,7 +354,7 @@ static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
         appendf(log, O2G_NULLPTR, _("Server reply: "));
         appendf(log, COLOR_ERR, _("%s\n"), write_data.ptr);
       }
-    } else if(G_UNLIKELY(!id)) {
+    } else if(unlikely(!id)) {
       appendf(log, COLOR_OK, _("ok\n"));
     } else {
       /* this will return the id on a successful create */
@@ -710,7 +711,7 @@ static void info_more(const osm_t::dirty_t &context, GtkWidget *parent) {
 #endif
 
 void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
-  if(G_UNLIKELY(osm->uploadPolicy == osm_t::Upload_Blocked)) {
+  if(unlikely(osm->uploadPolicy == osm_t::Upload_Blocked)) {
     printf("Upload prohibited\n");
     return;
   }
@@ -886,7 +887,7 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
   if(api_adjust(project->rserver)) {
     appendf(context.log, O2G_NULLPTR, _("Server URL adjusted to %s\n"),
             project->rserver.c_str());
-    if(G_LIKELY(project->rserver == context.appdata.settings->server)) {
+    if(likely(project->rserver == context.appdata.settings->server)) {
       project->rserver.clear();
       project->server = context.appdata.settings->server.c_str();
     }

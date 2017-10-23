@@ -52,6 +52,7 @@
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 
+#include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
 
 #ifndef LIBXML_TREE_ENABLED
@@ -74,7 +75,7 @@ bool object_t::operator==(const object_t &other) const
     case RELATION:
       return obj->id == other.id;
     default:
-      g_assert_not_reached();
+      assert_unreachable();
       return false;
     }
   }
@@ -91,7 +92,7 @@ bool object_t::operator==(const object_t &other) const
   case ILLEGAL:
     return true;
   default:
-    g_assert_not_reached();
+    assert_unreachable();
     return false;
   }
 }
@@ -140,14 +141,14 @@ std::string object_t::id_string() const {
   // long enough for every int64
   char buf[32] = { 0 };
 
-  g_assert_cmpuint(type, !=, ILLEGAL);
+  assert_cmpnum_op(type, !=, ILLEGAL);
   snprintf(buf, sizeof(buf), ITEM_ID_FORMAT, get_id());
 
   return buf;
 }
 
 item_id_t object_t::get_id() const {
-  if(G_UNLIKELY(type == ILLEGAL))
+  if(unlikely(type == ILLEGAL))
     return ID_ILLEGAL;
   if(is_real())
     return obj->id;
@@ -174,16 +175,16 @@ struct cmp_user {
  * In case no userid is given a temporary one will be created.
  */
 static int osm_user_insert(osm_t *osm, const char *name, int uid) {
-  if(G_UNLIKELY(!name)) {
+  if(unlikely(!name)) {
     osm->users[0] = std::string();
     return 0;
   }
 
   const std::map<int, std::string>::const_iterator itEnd = osm->users.end();
   /* search through user list */
-  if(G_LIKELY(uid > 0)) {
+  if(likely(uid > 0)) {
     const std::map<int, std::string>::const_iterator it = osm->users.find(uid);
-    if(G_UNLIKELY(it == itEnd))
+    if(unlikely(it == itEnd))
       osm->users[uid] = name;
 
     return uid;
@@ -239,7 +240,7 @@ static bool tag_from_xml(xmlChar *k, xmlChar *v, std::vector<tag_t> &tags) {
   const char *key = reinterpret_cast<char *>(k);
   const char *value = reinterpret_cast<char *>(v);
 
-  if(G_LIKELY(key && value && strlen(key) > 0 &&
+  if(likely(key && value && strlen(key) > 0 &&
                               strlen(value) > 0)) {
     ret = true;
     tags.push_back(tag_t(g_strdup(key), g_strdup(value)));
@@ -257,7 +258,7 @@ bool osm_t::parse_tag(xmlNode *a_node, TagMap &tags) {
   xmlChar *key = xmlGetProp(a_node, BAD_CAST "k");
   xmlChar *value = xmlGetProp(a_node, BAD_CAST "v");
 
-  if(G_UNLIKELY(!key || !value || strlen(reinterpret_cast<char *>(key)) == 0 ||
+  if(unlikely(!key || !value || strlen(reinterpret_cast<char *>(key)) == 0 ||
                                   strlen(reinterpret_cast<char *>(value)) == 0)) {
     xmlFree(key);
     xmlFree(value);
@@ -270,7 +271,7 @@ bool osm_t::parse_tag(xmlNode *a_node, TagMap &tags) {
   xmlFree(key);
   xmlFree(value);
 
-  if(G_UNLIKELY(findTag(tags, k, v) != tags.end()))
+  if(unlikely(findTag(tags, k, v) != tags.end()))
     return false;
 
   tags.insert(TagMap::value_type(k, v));
@@ -362,7 +363,7 @@ void join_nodes::operator()(const std::pair<item_id_t, way_t *> &p)
 
     /* and adjust way references of both nodes */
     keep->ways++;
-    g_assert_cmpuint(remove->ways, >, 0);
+    assert_cmpnum_op(remove->ways, >, 0);
     remove->ways--;
 
     way->flags |= OSM_FLAG_DIRTY;
@@ -439,7 +440,7 @@ node_t *osm_t::mergeNodes(node_t *first, node_t *second, bool &conflict)
   conflict = keep->tags.merge(remove->tags);
 
   /* remove must not have any references to ways anymore */
-  g_assert_cmpint(remove->ways, ==, 0);
+  assert_cmpnum(remove->ways, 0);
 
   node_delete(remove, false);
 
@@ -642,7 +643,7 @@ void osm_t::node_free(node_t *node) {
   nodes.erase(node->id);
 
   /* there must not be anything left in this chain */
-  g_assert_null(node->map_item_chain);
+  assert_null(node->map_item_chain);
 
   delete node;
 }
@@ -654,7 +655,7 @@ static inline void nodefree(std::pair<item_id_t, node_t *> pair) {
 /* ------------------- way handling ------------------- */
 static void osm_unref_node(node_t* node)
 {
-  g_assert_cmpuint(node->ways, >, 0);
+  assert_cmpnum_op(node->ways, >, 0);
   node->ways--;
 }
 
@@ -735,7 +736,7 @@ void gen_xml_relation_functor::operator()(const member_t &member)
     typestr = relation_t::api_string();
     break;
   default:
-    g_assert_not_reached();
+    assert_unreachable();
     return;
   }
 
@@ -763,11 +764,11 @@ static void osm_relation_free_pair(std::pair<item_id_t, relation_t *> pair) {
 }
 
 bool osm_t::parse_relation_member(const char *tp, const char *ref, const char *role, std::vector<member_t> &members) {
-  if(G_UNLIKELY(tp == O2G_NULLPTR)) {
+  if(unlikely(tp == O2G_NULLPTR)) {
     printf("missing type for relation member\n");
     return false;
   }
-  if(G_UNLIKELY(ref == O2G_NULLPTR)) {
+  if(unlikely(ref == O2G_NULLPTR)) {
     printf("missing ref for relation member\n");
     return false;
   }
@@ -777,7 +778,7 @@ bool osm_t::parse_relation_member(const char *tp, const char *ref, const char *r
     type = WAY;
   else if(strcmp(tp, node_t::api_string()) == 0)
     type = NODE;
-  else if(G_LIKELY(strcmp(tp, relation_t::api_string()) == 0))
+  else if(likely(strcmp(tp, relation_t::api_string()) == 0))
     type = RELATION;
   else {
     printf("Unable to store illegal type '%s'\n", tp);
@@ -786,7 +787,7 @@ bool osm_t::parse_relation_member(const char *tp, const char *ref, const char *r
 
   char *endp;
   item_id_t id = strtoll(ref, &endp, 10);
-  if(G_UNLIKELY(*endp != '\0')) {
+  if(unlikely(*endp != '\0')) {
     printf("Illegal ref '%s' for relation member\n", ref);
     return false;
   }
@@ -808,7 +809,7 @@ bool osm_t::parse_relation_member(const char *tp, const char *ref, const char *r
     member.object.relation = relation_by_id(id);
     break;
   default:
-    g_assert_not_reached();
+    assert_unreachable();
   }
 
   if(!member.object.obj) {
@@ -862,7 +863,7 @@ static inline int __attribute__((nonnull(2))) my_strcmp(const xmlChar *a, const 
 /* skip current element incl. everything below (mainly for testing) */
 /* returns FALSE if something failed */
 static void skip_element(xmlTextReaderPtr reader) {
-  g_assert_cmpint(xmlTextReaderNodeType(reader), ==, XML_READER_TYPE_ELEMENT);
+  assert_cmpnum(xmlTextReaderNodeType(reader), XML_READER_TYPE_ELEMENT);
   const xmlChar *name = xmlTextReaderConstName(reader);
   assert(name != O2G_NULLPTR);
   int depth = xmlTextReaderDepth(reader);
@@ -899,7 +900,7 @@ static bool process_bounds(xmlTextReaderPtr reader, bounds_t *bounds) {
   bounds->ll_max.lat = xml_reader_attr_float(reader, "maxlat");
   bounds->ll_max.lon = xml_reader_attr_float(reader, "maxlon");
 
-  if(G_UNLIKELY(!bounds->ll_min.valid() || !bounds->ll_max.valid())) {
+  if(unlikely(!bounds->ll_min.valid() || !bounds->ll_max.valid())) {
     errorf(O2G_NULLPTR, "Invalid coordinate in bounds (%f/%f/%f/%f)",
 	   bounds->ll_min.lat, bounds->ll_min.lon,
 	   bounds->ll_max.lat, bounds->ll_max.lon);
@@ -945,24 +946,24 @@ static void process_tag(xmlTextReaderPtr reader, std::vector<tag_t> &tags) {
 static void process_base_attributes(base_object_t *obj, xmlTextReaderPtr reader, osm_t *osm)
 {
   xmlChar *prop;
-  if(G_LIKELY((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "id")))) {
+  if(likely((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "id")))) {
     obj->id = strtoll(reinterpret_cast<char *>(prop), O2G_NULLPTR, 10);
     xmlFree(prop);
   }
 
   /* new in api 0.6: */
-  if(G_LIKELY((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "version")))) {
+  if(likely((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "version")))) {
     obj->version = strtoul(reinterpret_cast<char *>(prop), O2G_NULLPTR, 10);
     xmlFree(prop);
   }
 
-  if(G_LIKELY((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "user")))) {
+  if(likely((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "user")))) {
     int uid = -1;
     xmlChar *puid = xmlTextReaderGetAttribute(reader, BAD_CAST "uid");
-    if(G_LIKELY(puid)) {
+    if(likely(puid)) {
       char *endp;
       uid = strtol(reinterpret_cast<char *>(puid), &endp, 10);
-      if(G_UNLIKELY(*endp)) {
+      if(unlikely(*endp)) {
         printf("WARNING: cannot parse uid '%s' for user '%s'\n", puid, prop);
         uid = -1;
       }
@@ -972,7 +973,7 @@ static void process_base_attributes(base_object_t *obj, xmlTextReaderPtr reader,
     xmlFree(prop);
   }
 
-  if(G_LIKELY((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "timestamp")))) {
+  if(likely((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "timestamp")))) {
     obj->time = convert_iso8601(reinterpret_cast<char *>(prop));
     xmlFree(prop);
   }
@@ -1008,7 +1009,7 @@ static void process_node(xmlTextReaderPtr reader, osm_t *osm) {
 
     if(xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT) {
       const char *subname = reinterpret_cast<const char *>(xmlTextReaderConstName(reader));
-      if(G_LIKELY(strcmp(subname, "tag") == 0))
+      if(likely(strcmp(subname, "tag") == 0))
         process_tag(reader, tags);
       else
 	skip_element(reader);
@@ -1071,7 +1072,7 @@ static void process_way(xmlTextReaderPtr reader, osm_t *osm) {
 	node_t *n = process_nd(reader, osm);
         if(n)
           way->node_chain.push_back(n);
-      } else if(G_LIKELY(strcmp(subname, "tag") == 0)) {
+      } else if(likely(strcmp(subname, "tag") == 0)) {
         process_tag(reader, tags);
       } else
 	skip_element(reader);
@@ -1125,7 +1126,7 @@ static void process_relation(xmlTextReaderPtr reader, osm_t *osm) {
       const char *subname = reinterpret_cast<const char *>(xmlTextReaderConstName(reader));
       if(strcmp(subname, "member") == 0) {
         process_member(reader, osm, relation->members);
-      } else if(G_LIKELY(strcmp(subname, "tag") == 0)) {
+      } else if(likely(strcmp(subname, "tag") == 0)) {
         process_tag(reader, tags);
       } else
 	skip_element(reader);
@@ -1136,11 +1137,11 @@ static void process_relation(xmlTextReaderPtr reader, osm_t *osm) {
 }
 
 static osm_t::UploadPolicy parseUploadPolicy(const char *str) {
-  if(G_LIKELY(strcmp(str, "true") == 0))
+  if(likely(strcmp(str, "true") == 0))
     return osm_t::Upload_Normal;
   else if(strcmp(str, "false") == 0)
     return osm_t::Upload_Discouraged;
-  else if(G_LIKELY(strcmp(str, "never") == 0))
+  else if(likely(strcmp(str, "never") == 0))
     return osm_t::Upload_Blocked;
 
   printf("unknown key for upload found: %s\n", str);
@@ -1154,7 +1155,7 @@ static osm_t *process_osm(xmlTextReaderPtr reader, icon_t &icons) {
   osm_t *osm = new osm_t(icons);
 
   xmlChar *prop = xmlTextReaderGetAttribute(reader, BAD_CAST "upload");
-  if(G_UNLIKELY(prop != O2G_NULLPTR)) {
+  if(unlikely(prop != O2G_NULLPTR)) {
     osm->uploadPolicy = parseUploadPolicy(reinterpret_cast<const char *>(prop));
     xmlFree(prop);
   }
@@ -1181,7 +1182,7 @@ static osm_t *process_osm(xmlTextReaderPtr reader, icon_t &icons) {
     switch(xmlTextReaderNodeType(reader)) {
     case XML_READER_TYPE_ELEMENT: {
 
-      g_assert_cmpint(xmlTextReaderDepth(reader), ==, 1);
+      assert_cmpnum(xmlTextReaderDepth(reader), 1);
       const char *name = reinterpret_cast<const char *>(xmlTextReaderConstName(reader));
       if(block <= BLOCK_BOUNDS && strcmp(name, "bounds") == 0) {
         if(process_bounds(reader, &osm->rbounds))
@@ -1193,12 +1194,12 @@ static osm_t *process_osm(xmlTextReaderPtr reader, icon_t &icons) {
       } else if(block <= BLOCK_WAYS && strcmp(name, way_t::api_string()) == 0) {
         process_way(reader, osm);
 	block = BLOCK_WAYS;
-      } else if(G_LIKELY(block <= BLOCK_RELATIONS && strcmp(name, relation_t::api_string()) == 0)) {
+      } else if(likely(block <= BLOCK_RELATIONS && strcmp(name, relation_t::api_string()) == 0)) {
         process_relation(reader, osm);
 	block = BLOCK_RELATIONS;
       } else {
 	printf("something unknown found: %s\n", name);
-	g_assert_not_reached();
+	assert_unreachable();
 	skip_element(reader);
       }
       break;
@@ -1206,7 +1207,7 @@ static osm_t *process_osm(xmlTextReaderPtr reader, icon_t &icons) {
 
     case XML_READER_TYPE_END_ELEMENT:
       /* end element must be for the current element */
-      g_assert_cmpint(xmlTextReaderDepth(reader), ==, 0);
+      assert_cmpnum(xmlTextReaderDepth(reader), 0);
       return osm;
       break;
 
@@ -1221,7 +1222,7 @@ static osm_t *process_osm(xmlTextReaderPtr reader, icon_t &icons) {
     }
   }
 
-  g_assert_not_reached();
+  assert_unreachable();
   return O2G_NULLPTR;
 }
 
@@ -1248,10 +1249,10 @@ static osm_t *process_file(const std::string &filename, icon_t &icons) {
   xmlTextReaderPtr reader;
 
   reader = xmlReaderForFile(filename.c_str(), O2G_NULLPTR, XML_PARSE_NONET);
-  if (G_LIKELY(reader != O2G_NULLPTR)) {
-    if(G_LIKELY(xmlTextReaderRead(reader) == 1)) {
+  if (likely(reader != O2G_NULLPTR)) {
+    if(likely(xmlTextReaderRead(reader) == 1)) {
       const char *name = reinterpret_cast<const char *>(xmlTextReaderConstName(reader));
-      if(G_LIKELY(name && strcmp(name, "osm") == 0)) {
+      if(likely(name && strcmp(name, "osm") == 0)) {
         osm = process_osm(reader, icons);
         // relations may have references to other relation, which have greater ids
         // those are not present when the relation itself was created, but may be now
@@ -1278,7 +1279,7 @@ osm_t *osm_t::parse(const std::string &path, const std::string &filename, icon_t
 
   // use stream parser
   osm_t *osm = O2G_NULLPTR;
-  if(G_UNLIKELY(filename.find('/') != std::string::npos))
+  if(unlikely(filename.find('/') != std::string::npos))
     osm = process_file(filename, icons);
   else
     osm = process_file(path + filename, icons);
@@ -1294,10 +1295,10 @@ osm_t *osm_t::parse(const std::string &path, const std::string &filename, icon_t
 }
 
 const char *osm_t::sanity_check() const {
-  if(G_UNLIKELY(!bounds))
+  if(unlikely(!bounds))
     return _("Invalid data in OSM file:\nBoundary box missing!");
 
-  if(G_UNLIKELY(nodes.empty()))
+  if(unlikely(nodes.empty()))
     return _("Invalid data in OSM file:\nNo drawable content found!");
 
   return O2G_NULLPTR;
@@ -1311,7 +1312,7 @@ struct tag_to_xml {
   explicit tag_to_xml(xmlNodePtr n, bool k = false) : node(n), keep_created(k) {}
   void operator()(const tag_t &tag) {
     /* skip "created_by" tags as they aren't needed anymore with api 0.6 */
-    if(G_LIKELY(keep_created || !tag.is_creator_tag())) {
+    if(likely(keep_created || !tag.is_creator_tag())) {
       xmlNodePtr tag_node = xmlNewChild(node, O2G_NULLPTR, BAD_CAST "tag", O2G_NULLPTR);
       xmlNewProp(tag_node, BAD_CAST "k", BAD_CAST tag.key);
       xmlNewProp(tag_node, BAD_CAST "v", BAD_CAST tag.value);
@@ -1598,7 +1599,7 @@ void osm_unref_way_free::operator()(node_t* node)
 {
   printf("checking node #" ITEM_ID_FORMAT " (still used by %u)\n",
          node->id, node->ways);
-  g_assert_cmpuint(node->ways, >, 0);
+  assert_cmpnum_op(node->ways, >, 0);
   node->ways--;
 
   /* this node must only be part of this way */
@@ -1610,7 +1611,7 @@ void osm_unref_way_free::operator()(node_t* node)
     // do not delete if it is still referenced by a relation
     if(std::find_if(std::cbegin(osm->relations), itEnd, find_relation_members(object_t(node))) == itEnd) {
       const way_chain_t &way_chain = osm->node_delete(node, false);
-      g_assert_cmpuint(way_chain.size(), ==, 1);
+      assert_cmpnum(way_chain.size(), 1);
       assert(way_chain.front() == way);
     }
   }
@@ -1728,7 +1729,7 @@ void reverse_direction_sensitive_tags_functor::operator()(tag_t &etag)
         /* add length of new suffix */
         etag.key = static_cast<char *>(g_realloc(etag.key, plen + 1 + rtable[i].second.size()));
         char *lastcolon = etag.key + plen;
-        assert(*lastcolon == ':');
+        assert_cmpnum(*lastcolon, ':');
         /* replace suffix */
         strcpy(lastcolon, rtable[i].second.c_str());
         n_tags_altered++;
@@ -1890,7 +1891,7 @@ void relation_transfer::operator()(const std::pair<item_id_t, relation_t *> &pai
 
 way_t *way_t::split(osm_t *osm, node_chain_t::iterator cut_at, bool cut_at_node)
 {
-  g_assert_cmpuint(node_chain.size(), >, 2);
+  assert_cmpnum_op(node_chain.size(), >, 2);
 
   /* remember that the way needs to be uploaded */
   flags |= OSM_FLAG_DIRTY;
@@ -1975,7 +1976,7 @@ struct tag_vector_copy_functor {
   std::vector<tag_t> &tags;
   explicit tag_vector_copy_functor(std::vector<tag_t> &t) : tags(t) {}
   void operator()(const tag_t &otag) {
-    if(G_UNLIKELY(otag.is_creator_tag()))
+    if(unlikely(otag.is_creator_tag()))
       return;
 
     tags.push_back(tag_t(g_strdup(otag.key), g_strdup(otag.value)));
@@ -1984,7 +1985,7 @@ struct tag_vector_copy_functor {
 
 void tag_list_t::copy(const tag_list_t &other)
 {
-  g_assert_null(contents);
+  assert_null(contents);
 
   if(other.empty())
     return;
@@ -2178,7 +2179,7 @@ struct tag_fill_functor {
   std::vector<tag_t> &tags;
   explicit tag_fill_functor(std::vector<tag_t> &t) : tags(t) {}
   void operator()(const osm_t::TagMap::value_type &p) {
-    if(G_UNLIKELY(tag_t::is_creator_tag(p.first.c_str())))
+    if(unlikely(tag_t::is_creator_tag(p.first.c_str())))
       return;
 
     tags.push_back(tag_t(g_strdup(p.first.c_str()), g_strdup(p.second.c_str())));
@@ -2295,7 +2296,7 @@ void way_t::cleanup() {
   tags.clear();
 
   /* there must not be anything left in this chain */
-  g_assert_null(map_item_chain);
+  assert_null(map_item_chain);
 }
 
 bool way_t::merge(way_t *other, osm_t *osm, const bool doRels)
@@ -2311,7 +2312,7 @@ bool way_t::merge(way_t *other, osm_t *osm, const bool doRels)
   const bool collision = tags.merge(other->tags);
 
   // nothing to do
-  if(G_UNLIKELY(other->node_chain.size() < 2)) {
+  if(unlikely(other->node_chain.size() < 2)) {
     osm->way_free(other);
     return collision;
   }
@@ -2417,7 +2418,7 @@ void member_counter::operator()(const member_t &member)
     relations++;
     break;
   default:
-    g_assert_not_reached();
+    assert_unreachable();
     break;
   }
 }

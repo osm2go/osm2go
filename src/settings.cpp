@@ -36,6 +36,7 @@
 #include <glib.h>
 #include <map>
 
+#include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
 #include "osm2go_stl.h"
 
@@ -85,7 +86,7 @@ template<typename T, typename U, U GETTER(const GConfValue *)> void load_functor
   if(!value)
     return;
 
-  if(G_UNLIKELY(value->type != type)) {
+  if(unlikely(value->type != type)) {
     printf("invalid type found for key '%s': expected %u, got %u\n",
            p.first, type, value->type);
   } else {
@@ -97,13 +98,13 @@ template<typename T, typename U, U GETTER(const GConfValue *)> void load_functor
 settings_t *settings_t::load() {
   settings_t *settings = new settings_t();
 
-  if(G_LIKELY(trackVisibilityKeys.empty()))
+  if(likely(trackVisibilityKeys.empty()))
     initTrackVisibility();
 
   /* ------ overwrite with settings from gconf if present ------- */
   GConfClient *client = gconf_client_get_default();
 
-  if(G_LIKELY(client != O2G_NULLPTR)) {
+  if(likely(client != O2G_NULLPTR)) {
     /* restore everything listed in the store tables */
     std::string key;
 
@@ -114,18 +115,18 @@ settings_t *settings_t::load() {
 
     /* adjust default server stored in settings if required */
     std::string::size_type pos05 = settings->server.find("0.5");
-    if(G_UNLIKELY(pos05 != std::string::npos)) {
+    if(unlikely(pos05 != std::string::npos)) {
       settings->server[pos05 + 2] = '6';
       printf("adjusting server path in settings to 0.6\n");
     }
-    if(G_UNLIKELY(api_adjust(settings->server))) {
+    if(unlikely(api_adjust(settings->server))) {
       printf("adjusting server path in settings\n");
     }
 
     key = keybase + "track_visibility";
     GConfValue *gvalue = gconf_client_get(client, key.c_str(), O2G_NULLPTR);
     settings->trackVisibility = DrawAll;
-    if(G_LIKELY(gvalue != O2G_NULLPTR)) {
+    if(likely(gvalue != O2G_NULLPTR)) {
       const std::map<TrackVisibility, std::string>::const_iterator it =
           std::find_if(trackVisibilityKeys.begin(), trackVisibilityKeys.end(),
                        matchTrackVisibility(gconf_value_get_string(gvalue)));
@@ -154,7 +155,7 @@ settings_t *settings_t::load() {
         GConfValue *path = gconf_client_get(client, key.c_str(), O2G_NULLPTR);
 
 	/* apply valid entry to list */
-        if(G_LIKELY(name && server && path)) {
+        if(likely(name && server && path)) {
           wms_server_t *cur = new wms_server_t();
           cur->name = gconf_value_get_string(name);
           cur->server = gconf_value_get_string(server);
@@ -190,7 +191,7 @@ settings_t *settings_t::load() {
   /* ------ set useful defaults ------- */
 
   const char *p;
-  if(G_UNLIKELY(settings->base_path.empty())) {
+  if(unlikely(settings->base_path.empty())) {
 #ifdef FREMANTLE
     /* try to use internal memory card on hildon/maemo */
     p = getenv("INTERNAL_MMC_MOUNTPOINT");
@@ -216,7 +217,7 @@ settings_t *settings_t::load() {
   fdguard fg(settings->base_path.c_str(), O_DIRECTORY | O_RDONLY);
   settings->base_path_fd.swap(fg);
 
-  if(G_UNLIKELY(settings->server.empty())) {
+  if(unlikely(settings->server.empty())) {
     /* ------------- setup download defaults -------------------- */
     settings->server = api06https;
   }
@@ -231,7 +232,7 @@ settings_t *settings_t::load() {
       settings->password = p;
   }
 
-  if(G_UNLIKELY(settings->style.empty()))
+  if(unlikely(settings->style.empty()))
     settings->style = DEFAULT_STYLE;
 
   return settings;
@@ -243,7 +244,7 @@ void settings_t::save() const {
 
   std::string key;
 
-  if(G_UNLIKELY(trackVisibilityKeys.empty()))
+  if(unlikely(trackVisibilityKeys.empty()))
     initTrackVisibility();
 
   /* store everything listed in the store tables */
@@ -328,7 +329,7 @@ settings_t::~settings_t()
 }
 
 bool api_adjust(std::string &rserver) {
-  if(G_UNLIKELY(rserver.size() > strlen(apihttp) &&
+  if(unlikely(rserver.size() > strlen(apihttp) &&
                 rserver.find(apihttp) == 0 &&
                 (rserver[strlen(apihttp)] == '5' ||
                  rserver[strlen(apihttp)] == '6'))) {

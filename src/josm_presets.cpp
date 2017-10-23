@@ -37,6 +37,7 @@
 #endif
 #include <strings.h>
 
+#include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
 
 unsigned int presets_type_mask(const object_t &obj)
@@ -64,7 +65,7 @@ unsigned int presets_type_mask(const object_t &obj)
     break;
 
   default:
-    g_assert_not_reached();
+    assert_unreachable();
     break;
   }
 
@@ -1006,7 +1007,7 @@ GtkWidget *presets_widget_t::attach(GtkTable *, guint &, const char *,
 
 std::string presets_widget_t::getValue(GtkWidget *) const
 {
-  g_assert_not_reached();
+  assert_unreachable();
   return std::string();
 }
 
@@ -1138,7 +1139,7 @@ bool presets_widget_key::matchValue(const char *val) const
 
 std::string presets_widget_key::getValue(GtkWidget *widget) const
 {
-  g_assert_null(widget);
+  assert_null(widget);
   return value;
 }
 

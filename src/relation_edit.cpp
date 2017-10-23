@@ -33,6 +33,7 @@
 #include <string>
 #include <strings.h>
 
+#include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
 
 /* --------------- relation dialog for an item (node or way) ----------- */
@@ -401,7 +402,7 @@ void relation_membership_dialog(GtkWidget *parent,
 			  object.obj->id);
     break;
   default:
-    g_assert_not_reached();
+    assert_unreachable();
   }
 
   context.dialog =
@@ -506,7 +507,7 @@ member_list_selection_func(GtkTreeSelection *, GtkTreeModel *model,
   GtkTreeIter iter;
 
   if(gtk_tree_model_get_iter(model, &iter, path)) {
-    g_assert_cmpint(gtk_tree_path_get_depth(path), ==, 1);
+    assert_cmpnum(gtk_tree_path_get_depth(path), 1);
 
     const member_t *member = O2G_NULLPTR;
     gtk_tree_model_get(model, &iter, MEMBER_COL_DATA, &member, -1);

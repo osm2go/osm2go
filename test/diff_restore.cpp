@@ -6,6 +6,7 @@
 #include <osm.h>
 #include <project.h>
 
+#include <osm2go_annotations.h>
 #include <osm2go_cpp.h>
 
 #include <cassert>
@@ -33,79 +34,79 @@ appdata_t::~appdata_t()
 
 static void verify_diff(osm_t *osm)
 {
-  g_assert_cmpuint(12, ==, osm->nodes.size());
-  g_assert_cmpuint(3, ==, osm->ways.size());
-  g_assert_cmpuint(4, ==, osm->relations.size());
+  assert_cmpnum(12, osm->nodes.size());
+  assert_cmpnum(3, osm->ways.size());
+  assert_cmpnum(4, osm->relations.size());
 
   // new tag added in diff
   const node_t * const n72 = osm->nodes[638499572];
   assert(n72 != O2G_NULLPTR);
-  g_assert_cmpuint(n72->flags, ==, OSM_FLAG_DIRTY);
+  assert_cmpnum(n72->flags, OSM_FLAG_DIRTY);
   assert(n72->tags.get_value("testtag") != O2G_NULLPTR);
-  g_assert_cmpuint(n72->tags.asMap().size(), ==, 5);
+  assert_cmpnum(n72->tags.asMap().size(), 5);
   // in diff, but the same as in .osm
   const node_t * const n23 = osm->nodes[3577031223LL];
   assert(n23 != O2G_NULLPTR);
-  g_assert_cmpuint(n23->flags, ==, 0);
+  assert_cmpnum(n23->flags, 0);
   assert(n23->tags.empty());
   // deleted in diff
   const node_t * const n26 = osm->nodes[3577031226LL];
   assert(n26 != O2G_NULLPTR);
-  g_assert_cmpuint(n26->flags, ==, OSM_FLAG_DELETED);
+  assert_cmpnum(n26->flags, OSM_FLAG_DELETED);
   const way_t * const w = osm->ways[351899455];
   assert(w != O2G_NULLPTR);
   assert((w->flags & OSM_FLAG_DELETED) != 0);
-  g_assert_cmpint(w->user, ==, 53064);
+  assert_cmpnum(w->user, 53064);
   assert(osm->users.find(53064) != osm->users.end());
   assert(osm->users[53064] == "Dakon");
   // added in diff
   const node_t * const nn1 = osm->nodes[-1];
   assert(nn1 != O2G_NULLPTR);
-  g_assert_cmpfloat(nn1->pos.lat, ==, 52.2693518);
-  g_assert_cmpfloat(nn1->pos.lon, ==, 9.5760140);
+  assert_cmpnum(nn1->pos.lat, 52.2693518);
+  assert_cmpnum(nn1->pos.lon, 9.576014);
   assert(nn1->tags.empty());
   // added in diff, same position as existing node
   const node_t * const nn2 = osm->nodes[-2];
   assert(nn2 != O2G_NULLPTR);
-  g_assert_cmpfloat(nn2->pos.lat, ==, 52.269497);
-  g_assert_cmpfloat(nn2->pos.lon, ==, 9.5752223);
+  assert_cmpnum(nn2->pos.lat, 52.269497);
+  assert_cmpnum(nn2->pos.lon, 9.5752223);
   assert(nn2->tags.empty());
   // which is this one
   const node_t * const n27 = osm->nodes[3577031227LL];
   assert(n27 != O2G_NULLPTR);
-  g_assert_cmpuint(n27->flags, ==, 0);
-  g_assert_cmpfloat(nn2->pos.lat, ==, n27->pos.lat);
-  g_assert_cmpfloat(nn2->pos.lon, ==, n27->pos.lon);
+  assert_cmpnum(n27->flags, 0);
+  assert_cmpnum(nn2->pos.lat, n27->pos.lat);
+  assert_cmpnum(nn2->pos.lon, n27->pos.lon);
   // the upstream version has "wheelchair", we have "source"
   // our modification must survive
   const way_t * const w452 = osm->ways[351899452];
   assert(w452 != O2G_NULLPTR);
   assert(w452->tags.get_value("source") != O2G_NULLPTR);
-  g_assert_null(w452->tags.get_value("wheelchair"));
-  g_assert_cmpuint(w452->tags.asMap().size(), ==, 3);
+  assert_null(w452->tags.get_value("wheelchair"));
+  assert_cmpnum(w452->tags.asMap().size(), 3);
   const way_t * const w453 = osm->ways[351899453];
   assert(w453 != O2G_NULLPTR);
-  g_assert_cmpuint(w453->flags, ==, 0);
+  assert_cmpnum(w453->flags, 0);
   const relation_t * const r66316 = osm->relations[66316];
   assert(r66316 != O2G_NULLPTR);
-  g_assert_cmpuint(r66316->flags, ==, OSM_FLAG_DELETED);
+  assert_cmpnum(r66316->flags, OSM_FLAG_DELETED);
   const relation_t * const r255 = osm->relations[296255];
   assert(r255 != O2G_NULLPTR);
-  g_assert_cmpuint(r255->flags, ==, OSM_FLAG_DIRTY);
-  g_assert_cmpuint(r255->members.size(), ==, 164);
+  assert_cmpnum(r255->flags, OSM_FLAG_DIRTY);
+  assert_cmpnum(r255->members.size(), 164);
   const object_t r255m572(const_cast<node_t *>(n72));
   std::vector<member_t>::const_iterator r255it = r255->find_member_object(r255m572);
   r255it = r255->find_member_object(r255m572);
   assert(r255it != r255->members.end());
   assert(r255it->role != O2G_NULLPTR);
-  g_assert_cmpstr(r255it->role, ==, "forward_stop");
-  g_assert_cmpuint(r255->tags.asMap().size(), ==, 8);
+  assert_cmpstr(r255it->role, "forward_stop");
+  assert_cmpnum(r255->tags.asMap().size(), 8);
 
   const relation_t * const r853 = osm->relations[5827853];
   assert(r853 != O2G_NULLPTR);
-  g_assert_cmpuint(r853->flags, ==, OSM_FLAG_DIRTY);
+  assert_cmpnum(r853->flags, OSM_FLAG_DIRTY);
   for(std::vector<member_t>::const_iterator it = r853->members.begin(); it != r853->members.end(); it++)
-    g_assert_cmpuint(it->object.type, ==, RELATION_ID);
+    assert_cmpnum(it->object.type, RELATION_ID);
 
   assert(!diff_is_clean(osm, true));
 }
@@ -115,10 +116,10 @@ static void compare_with_file(const void *buf, size_t len, const char *fn)
   GMappedFile *fdata = g_mapped_file_new(fn, FALSE, O2G_NULLPTR);
 
   assert(fdata != O2G_NULLPTR);
-  g_assert_cmpuint(g_mapped_file_get_length(fdata), ==, len);
+  assert_cmpnum(g_mapped_file_get_length(fdata), len);
 
-  g_assert_cmpmem(g_mapped_file_get_contents(fdata), g_mapped_file_get_length(fdata),
-                  buf, len);
+  assert_cmpmem(g_mapped_file_get_contents(fdata), g_mapped_file_get_length(fdata),
+                buf, len);
 
 #if GLIB_CHECK_VERSION(2,22,0)
   g_mapped_file_unref(fdata);
@@ -154,7 +155,7 @@ int main(int argc, char **argv)
 
   icon_t icons;
   const std::string osm_path = argv[1];
-  assert(osm_path[osm_path.size() - 1] == '/');
+  assert_cmpnum(osm_path[osm_path.size() - 1], '/');
 
   map_state_t dummystate;
   project_t project(dummystate, argv[2], osm_path);
@@ -166,21 +167,21 @@ int main(int argc, char **argv)
     return 1;
   }
 
-  g_assert_cmpint(osm->uploadPolicy, ==, osm_t::Upload_Blocked);
-  g_assert_null(osm->sanity_check());
+  assert_cmpnum(osm->uploadPolicy, osm_t::Upload_Blocked);
+  assert_null(osm->sanity_check());
 
   const relation_t * const r255 = osm->relations[296255];
   assert(r255 != O2G_NULLPTR);
-  g_assert_cmpuint(r255->flags, ==, 0);
-  g_assert_cmpuint(r255->members.size(), ==, 165);
-  g_assert_cmpuint(r255->tags.asMap().size(), ==, 8);
+  assert_cmpnum(r255->flags, 0);
+  assert_cmpnum(r255->members.size(), 165);
+  assert_cmpnum(r255->tags.asMap().size(), 8);
   const node_t * const n72 = osm->nodes[638499572];
-  g_assert_cmpuint(n72->tags.asMap().size(), ==, 4);
+  assert_cmpnum(n72->tags.asMap().size(), 4);
   const object_t r255m572(const_cast<node_t *>(n72));
   std::vector<member_t>::const_iterator r255it = r255->find_member_object(r255m572);
   assert(r255it != r255->members.end());
   assert(r255it->role != O2G_NULLPTR);
-  g_assert_cmpstr(r255it->role, ==, "stop");
+  assert_cmpstr(r255it->role, "stop");
   const relation_t * const r66316 = osm->relations[66316];
   assert(r66316 != O2G_NULLPTR);
   object_t rmember(RELATION_ID, 296255);
@@ -190,15 +191,15 @@ int main(int argc, char **argv)
   // the child relation exists, so it should be stored as real ref
   assert(r66316it->object.is_real());
 
-  g_assert_cmpuint(10, ==, osm->nodes.size());
-  g_assert_cmpuint(3, ==, osm->ways.size());
-  g_assert_cmpuint(4, ==, osm->relations.size());
+  assert_cmpnum(10, osm->nodes.size());
+  assert_cmpnum(3, osm->ways.size());
+  assert_cmpnum(4, osm->relations.size());
 
   assert(diff_is_clean(osm, true));
 
   assert(diff_present(&project));
   unsigned int flags = diff_restore_file(O2G_NULLPTR, &project, osm);
-  g_assert_cmpuint(flags, ==, DIFF_RESTORED | DIFF_HAS_HIDDEN);
+  assert_cmpnum(flags, DIFF_RESTORED | DIFF_HAS_HIDDEN);
 
   verify_diff(osm);
 
@@ -222,7 +223,7 @@ int main(int argc, char **argv)
     project_t sproject(dummystate, argv[2], bpath);
 
     flags = diff_restore_file(O2G_NULLPTR, &sproject, osm);
-    g_assert_cmpuint(flags, ==, DIFF_NONE_PRESENT);
+    assert_cmpnum(flags, DIFF_NONE_PRESENT);
 
     diff_save(&sproject, osm);
     bpath += argv[2];
@@ -242,7 +243,7 @@ int main(int argc, char **argv)
     assert(osm != O2G_NULLPTR);
 
     flags = diff_restore_file(O2G_NULLPTR, &sproject, osm);
-    g_assert_cmpuint(flags, ==, DIFF_RESTORED | DIFF_HAS_HIDDEN);
+    assert_cmpnum(flags, DIFF_RESTORED | DIFF_HAS_HIDDEN);
 
     verify_diff(osm);
 
@@ -264,5 +265,5 @@ int main(int argc, char **argv)
 
 void main_ui_enable(appdata_t &)
 {
-  g_assert_not_reached();
+  assert_unreachable();
 }

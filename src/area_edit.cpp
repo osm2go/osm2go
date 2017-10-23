@@ -29,6 +29,7 @@
 #include "osm-gps-map-osd-select.h"
 #endif
 
+#include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
 
 #include <algorithm>
@@ -450,10 +451,10 @@ static void callback_modified_direct(context_t *context) {
     return;
 
   /* parse the fields from the direct entry pad */
-  if(G_UNLIKELY(!pos_lat_get(context->direct.minlat, context->min.lat) ||
-                !pos_lon_get(context->direct.minlon, context->min.lon) ||
-                !pos_lat_get(context->direct.maxlat, context->max.lat) ||
-                !pos_lon_get(context->direct.maxlon, context->max.lon)))
+  if(unlikely(!pos_lat_get(context->direct.minlat, context->min.lat) ||
+              !pos_lon_get(context->direct.minlon, context->min.lon) ||
+              !pos_lat_get(context->direct.maxlat, context->max.lat) ||
+              !pos_lon_get(context->direct.maxlon, context->max.lon)))
     return;
 
   area_main_update(context);
@@ -471,7 +472,7 @@ static void callback_modified_extent(context_t *context) {
     return;
 
   pos_float_t center_lat, center_lon;
-  if(G_UNLIKELY(!pos_lat_get(context->extent.lat, center_lat) ||
+  if(unlikely(!pos_lat_get(context->extent.lat, center_lat) ||
                 !pos_lon_get(context->extent.lon, center_lon)))
     return;
 
