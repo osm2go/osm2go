@@ -109,12 +109,12 @@ void statusbar_internal::brief(int timeout, const char *msg)
   if (msg) {
     statusbar_highlight(this, true);
     brief_mid = gtk_statusbar_push(GTK_STATUSBAR(widget), cid, msg);
-  }
-  if (brief_mid && (timeout >= 0)) {
-    if (timeout == 0) {
-      timeout = STATUSBAR_DEFAULT_BRIEF_TIME;
+    if (brief_mid && (timeout >= 0)) {
+      if (timeout == 0) {
+        timeout = STATUSBAR_DEFAULT_BRIEF_TIME;
+      }
+      brief_handler_id = g_timeout_add_seconds(timeout, statusbar_brief_clear, this);
     }
-    brief_handler_id = g_timeout_add_seconds(timeout, statusbar_brief_clear, this);
   }
 }
 #endif
