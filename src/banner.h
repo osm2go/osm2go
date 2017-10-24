@@ -37,8 +37,5 @@ void banner_show_info(appdata_t &appdata, const char *text);
 void banner_busy_start(appdata_t &appdata, const char *text);
 void banner_busy_stop(appdata_t &appdata);
 
-// Clear any message created with banner_busy_start or banner_show_info
-void banner_clear(appdata_t &appdata);
-
 #endif //BANNER_H
 // vim:et:ts=8:sw=2:sts=2:ai
