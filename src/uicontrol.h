@@ -54,7 +54,7 @@ public:
 
   enum NotificationFlags {
     NoFlags = 0,
-    Persistent = 1, ///< the user must explicitely dismiss the message
+    Brief = 1, ///< the message automatically disappears
     Highlight = 2
   };
 

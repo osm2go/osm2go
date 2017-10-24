@@ -25,7 +25,6 @@
 #include "track.h"
 
 #include "appdata.h"
-#include "banner.h"
 #include "fdguard.h"
 #include "gps.h"
 #include "map.h"
@@ -430,7 +429,7 @@ static gboolean track_append_position(appdata_t &appdata, const pos_t &pos, floa
       if(!--appdata.track.warn_cnt) {
 	/* warn user once a minute that the current gps */
 	/* position is outside the working area */
-	banner_show_info(appdata, _("GPS position outside working area!"));
+        appdata.uicontrol->showNotification(_("GPS position outside working area!"), MainUi::Brief);
 	appdata.track.warn_cnt = 60;  // warn again after one minute
       }
     } else

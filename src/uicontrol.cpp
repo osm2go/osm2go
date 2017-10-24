@@ -20,6 +20,7 @@
 #include "uicontrol.h"
 
 #include "appdata.h"
+#include "banner.h"
 #include "statusbar.h"
 
 #include <gtk/gtk.h>
@@ -48,5 +49,9 @@ void MainUi::showNotification(const char *message, unsigned int flags)
 {
   appdata_t &appdata = static_cast<MainUiGtk *>(this)->appdata;
 
-  appdata.statusbar->set(message, flags & Highlight);
+  if (flags & Brief) {
+    banner_show_info(appdata, message);
+  } else {
+    appdata.statusbar->set(message, flags & Highlight);
+  }
 }

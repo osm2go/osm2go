@@ -20,7 +20,6 @@
 #include "map_edit.h"
 
 #include "appdata.h"
-#include "banner.h"
 #include "iconbar.h"
 #include "info.h"
 #include "map_hl.h"
@@ -648,7 +647,7 @@ void map_edit_way_reverse(map_t *map) {
     g_free(msg2);
   }
   if (msg) {
-    banner_show_info(map->appdata, msg);
+    map->appdata.uicontrol->showNotification(msg, MainUi::Brief);
     g_free(msg);
   }
 }

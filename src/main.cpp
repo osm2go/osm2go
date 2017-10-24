@@ -285,7 +285,7 @@ static void
 cb_menu_save_changes(appdata_t *appdata) {
   if(likely(appdata->project && appdata->osm))
     diff_save(appdata->project, appdata->osm);
-  banner_show_info(*appdata, _("Saved local changes"));
+  appdata->uicontrol->showNotification(_("Saved local changes"), MainUi::Brief);
 }
 #endif
 
@@ -310,7 +310,7 @@ cb_menu_undo_changes(appdata_t *appdata) {
   appdata->osm = appdata->project->parse_osm(appdata->icons);
   appdata->map->paint();
 
-  banner_show_info(*appdata, _("Undo all changes"));
+  appdata->uicontrol->showNotification(_("Undo all changes"), MainUi::Brief);
 }
 
 static void

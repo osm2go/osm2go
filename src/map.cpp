@@ -1489,7 +1489,6 @@ static gboolean map_autosave(gpointer data) {
     if(map->appdata.project && map->appdata.osm) {
       track_save(map->appdata.project, map->appdata.track.track);
       diff_save(map->appdata.project, map->appdata.osm);
-      //      banner_show_info(map->appdata, _("Autosave"));
     }
   } else
     printf("autosave supressed\n");

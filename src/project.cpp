@@ -1306,7 +1306,7 @@ static bool project_load_inner(appdata_t &appdata, const std::string &name) {
     snprintf(banner_txt, sizeof(banner_txt),
 	     _("Error opening %s"), name.c_str());
     banner_busy_stop(appdata);
-    banner_show_info(appdata, banner_txt);
+    appdata.uicontrol->showNotification(banner_txt, MainUi::Brief);
 
     return false;
   }
@@ -1324,7 +1324,7 @@ static bool project_load_inner(appdata_t &appdata, const std::string &name) {
     snprintf(banner_txt, sizeof(banner_txt),
 	     _("Error opening %s"), name.c_str());
     banner_busy_stop(appdata);
-    banner_show_info(appdata, banner_txt);
+    appdata.uicontrol->showNotification(banner_txt, MainUi::Brief);
 
     return false;
   }
