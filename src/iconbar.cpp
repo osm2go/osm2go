@@ -80,7 +80,7 @@ public:
 };
 
 static void on_info_clicked(appdata_t *appdata) {
-  info_dialog(GTK_WIDGET(appdata->window), *appdata);
+  info_dialog(appdata->window, *appdata);
 }
 
 static void on_node_add_clicked(map_t *map) {

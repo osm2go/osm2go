@@ -143,7 +143,7 @@ cb_menu_project_open(appdata_t *appdata) {
 #ifndef FREMANTLE
 static void
 cb_menu_quit(appdata_t *appdata) {
-  gtk_widget_destroy(GTK_WIDGET(appdata->window));
+  gtk_widget_destroy(appdata->window);
 }
 #endif
 
@@ -151,7 +151,7 @@ static void
 cb_menu_upload(appdata_t *appdata) {
   if(!appdata->osm || !appdata->project) return;
 
-  if(appdata->project->check_demo(GTK_WIDGET(appdata->window)))
+  if(appdata->project->check_demo(appdata->window))
     return;
 
   osm_upload(*appdata, appdata->osm, appdata->project);
@@ -161,7 +161,7 @@ static void
 cb_menu_download(appdata_t *appdata) {
   if(!appdata->project) return;
 
-  if(appdata->project->check_demo(GTK_WIDGET(appdata->window)))
+  if(appdata->project->check_demo(appdata->window))
     return;
 
   appdata->map->set_autosave(false);
@@ -171,7 +171,7 @@ cb_menu_download(appdata_t *appdata) {
     diff_save(appdata->project, appdata->osm);
 
   // download
-  if(osm_download(GTK_WIDGET(appdata->window), appdata->settings,
+  if(osm_download(appdata->window, appdata->settings,
 		  appdata->project)) {
     if(appdata->osm) {
       /* redraw the entire map by destroying all map items and redrawing them */
@@ -271,12 +271,12 @@ static bool track_visibility_select(GtkWidget *parent, appdata_t &appdata) {
 
 static void
 cb_menu_style(appdata_t *appdata) {
-  style_select(GTK_WIDGET(appdata->window), *appdata);
+  style_select(appdata->window, *appdata);
 }
 
 static void
 cb_menu_track_vis(appdata_t *appdata) {
-  if(track_visibility_select(GTK_WIDGET(appdata->window), *appdata) && appdata->track.track)
+  if(track_visibility_select(appdata->window, *appdata) && appdata->track.track)
     appdata->map->track_draw(appdata->settings->trackVisibility, *appdata->track.track);
 }
 
@@ -294,7 +294,7 @@ cb_menu_undo_changes(appdata_t *appdata) {
   if (!diff_present(appdata->project) && diff_is_clean(appdata->osm, true))
     return;
 
-  if(!yes_no_f(GTK_WIDGET(appdata->window), *appdata, 0, 0,
+  if(!yes_no_f(appdata->window, *appdata, 0, 0,
 	       _("Undo all changes?"),
 	       _("Throw away all the changes you've not "
 		 "uploaded yet? This cannot be undone.")))
@@ -315,7 +315,7 @@ cb_menu_undo_changes(appdata_t *appdata) {
 static void
 cb_menu_osm_relations(appdata_t *appdata) {
   /* list relations of all objects */
-  relation_list(GTK_WIDGET(appdata->window), *appdata);
+  relation_list(appdata->window, *appdata);
 }
 
 #ifndef FREMANTLE
@@ -1129,16 +1129,15 @@ static void menu_accels_load(appdata_t *appdata) {
 
 appdata_t::appdata_t()
   : uicontrol(MainUi::instance(*this))
+  , window(O2G_NULLPTR)
 #ifdef FREMANTLE
   , program(O2G_NULLPTR)
-  , window(O2G_NULLPTR)
   , osso_context(osso_initialize("org.harbaum." PACKAGE, VERSION, TRUE, O2G_NULLPTR))
   , app_menu_view(O2G_NULLPTR)
   , app_menu_wms(O2G_NULLPTR)
   , app_menu_track(O2G_NULLPTR)
   , app_menu_map(O2G_NULLPTR)
 #else
-  , window(O2G_NULLPTR)
   , menu_item_view_fullscreen(O2G_NULLPTR)
 #endif
   , btn_zoom_in(O2G_NULLPTR)
@@ -1317,8 +1316,9 @@ static int application_run(const char *proj)
   g_set_application_name("OSM2Go");
 
   /* Create HildonWindow and set it to HildonProgram */
-  appdata.window = HILDON_WINDOW(hildon_stackable_window_new());
-  hildon_program_add_window(appdata.program, appdata.window);
+  HildonWindow *wnd = HILDON_WINDOW(hildon_stackable_window_new());
+  appdata.window = GTK_WIDGET(wnd);
+  hildon_program_add_window(appdata.program, wnd);
 
   /* try to enable the zoom buttons. don't do this on x86 as it breaks */
   /* at runtime with cygwin x */
@@ -1413,7 +1413,7 @@ static int application_run(const char *proj)
 
   gtk_container_add(GTK_CONTAINER(appdata.window), GTK_WIDGET(mainvbox));
 
-  gtk_widget_show_all(GTK_WIDGET(appdata.window));
+  gtk_widget_show_all(appdata.window);
 
   appdata.presets = josm_presets_load();
 
@@ -1427,7 +1427,7 @@ static int application_run(const char *proj)
 
   if(proj) {
     if(!project_load(appdata, proj)) {
-      messagef(GTK_WIDGET(appdata.window), _("Command line arguments"),
+      messagef(appdata.window, _("Command line arguments"),
                _("You passed '%s' on the command line, but it was neither"
                  "recognized as option nor could it be loaded as project."),
                proj);
@@ -1452,7 +1452,7 @@ static int application_run(const char *proj)
 
   /* start to interact with the user now that the gui is running */
   if(unlikely(appdata.project && appdata.project->isDemo && appdata.settings->first_run_demo)) {
-    messagef(GTK_WIDGET(appdata.window), _("Welcome to OSM2Go"),
+    messagef(appdata.window, _("Welcome to OSM2Go"),
 	     _("This is the first time you run OSM2Go. "
 	       "A demo project has been loaded to get you "
 	       "started. You can play around with this demo as much "

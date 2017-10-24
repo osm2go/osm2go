@@ -82,8 +82,7 @@ static void map_statusbar(map_t *map, map_item_t *map_item) {
 }
 
 void map_outside_error(appdata_t &appdata) {
-  errorf(GTK_WIDGET(appdata.window),
-	 _("Items must not be placed outside the working area!"));
+  errorf(appdata.window, _("Items must not be placed outside the working area!"));
 }
 
 static inline void map_item_destroy_canvas_item(map_item_t *m) {
@@ -1284,7 +1283,7 @@ static void map_button_release(map_t *map, int x, int y) {
       map_node_select(map, node);
 
       /* let the user specify some tags for the new node */
-      info_dialog(GTK_WIDGET(map->appdata.window), map->appdata);
+      info_dialog(map->appdata.window, map->appdata);
     }
     break;
   }
@@ -1436,7 +1435,7 @@ bool map_t::key_press_event(unsigned int keyval) {
       map_action_ok(this);
     /* otherwise if info is enabled call that */
     else if(appdata.iconbar->isInfoEnabled())
-      info_dialog(GTK_WIDGET(appdata.window), appdata);
+      info_dialog(appdata.window, appdata);
     break;
 
   case GDK_Escape:   // same as HILDON_HARDKEY_ESC
@@ -1762,7 +1761,7 @@ void map_action_ok(map_t *map) {
       map_node_select(map, node);
 
       /* let the user specify some tags for the new node */
-      info_dialog(GTK_WIDGET(map->appdata.window), map->appdata);
+      info_dialog(map->appdata.window, map->appdata);
     }
     }
 
@@ -1801,9 +1800,8 @@ void map_delete_selected(map_t *map) {
 
   const char *objtype = item.object.type_string();
   gchar *msgtitle = g_strdup_printf(_("Delete selected %s?"), objtype);
-  bool yn = yes_no_f(GTK_WIDGET(map->appdata.window),
-                     map->appdata, MISC_AGAIN_ID_DELETE, MISC_AGAIN_FLAG_DONT_SAVE_NO,
-                     msgtitle,
+  bool yn = yes_no_f(map->appdata.window, map->appdata,
+                     MISC_AGAIN_ID_DELETE, MISC_AGAIN_FLAG_DONT_SAVE_NO, msgtitle,
                      _("Do you really want to delete the selected %s?"), objtype);
   g_free(msgtitle);
   if(!yn)
@@ -1826,7 +1824,7 @@ void map_delete_selected(map_t *map) {
           std::find_if(way_chain.begin(), way_chain.end(), short_way);
 
       if(it != way_chain.end()) {
-	if(!yes_no_f(GTK_WIDGET(map->appdata.window), map->appdata, 0, 0,
+        if(!yes_no_f(map->appdata.window, map->appdata, 0, 0,
 		     _("Delete node in short way(s)?"),
 		     _("Deleting this node will also delete one or more ways "
 		       "since they'll contain only one node afterwards. "

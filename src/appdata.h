@@ -63,15 +63,14 @@ struct appdata_t {
 
   MainUi * const uicontrol;
 
+  GtkWidget *window;
 #ifdef FREMANTLE
   HildonProgram *program;
-  HildonWindow *window;
   osso_context_t * const osso_context;
   /* submenues are seperate menues under fremantle */
   GtkWidget *app_menu_view, *app_menu_wms, *app_menu_track;
   GtkWidget *app_menu_map;
 #else
-  GtkWidget *window;
   GtkCheckMenuItem *menu_item_view_fullscreen;
 #endif
 

@@ -1027,8 +1027,7 @@ struct find_format_reverse_functor {
 
 void wms_import(appdata_t &appdata) {
   if(!appdata.project) {
-    errorf(GTK_WIDGET(appdata.window),
-	   _("Need an open project to derive WMS coordinates"));
+    errorf(appdata.window, _("Need an open project to derive WMS coordinates"));
     return;
   }
 
@@ -1071,7 +1070,7 @@ void wms_import(appdata_t &appdata) {
 
   char *cap = O2G_NULLPTR;
   size_t caplen;
-  net_io_download_mem(GTK_WIDGET(appdata.window), url, &cap, caplen);
+  net_io_download_mem(appdata.window, url, &cap, caplen);
 
   /* ----------- parse capabilities -------------- */
   if(unlikely(ImageFormats.empty()))
@@ -1079,19 +1078,15 @@ void wms_import(appdata_t &appdata) {
 
   bool parse_success = false;
   if(!cap) {
-    errorf(GTK_WIDGET(appdata.window),
-	   _("WMS download failed:\n\n"
-	     "GetCapabilities failed"));
+    errorf(appdata.window, _("WMS download failed:\n\nGetCapabilities failed"));
   } else {
     xmlDoc *doc = O2G_NULLPTR;
 
     /* parse the file and get the DOM */
     if((doc = xmlReadMemory(cap, caplen, O2G_NULLPTR, O2G_NULLPTR, XML_PARSE_NONET)) == O2G_NULLPTR) {
       xmlErrorPtr errP = xmlGetLastError();
-      errorf(GTK_WIDGET(appdata.window),
-	     _("WMS download failed:\n\n"
-	       "XML error while parsing capabilities:\n"
-	       "%s"), errP->message);
+      errorf(appdata.window, _("WMS download failed:\n\n"
+             "XML error while parsing capabilities:\n%s"), errP->message);
     } else {
       printf("ok, parse doc tree\n");
 
@@ -1104,12 +1099,12 @@ void wms_import(appdata_t &appdata) {
   /* ------------ basic checks ------------- */
 
   if(!parse_success) {
-    errorf(GTK_WIDGET(appdata.window), _("Incomplete/unexpected reply!"));
+    errorf(appdata.window, _("Incomplete/unexpected reply!"));
     return;
   }
 
   if(!wms.cap.request.getmap.format) {
-    errorf(GTK_WIDGET(appdata.window), _("No supported image format found."));
+    errorf(appdata.window, _("No supported image format found."));
     return;
   }
 
@@ -1124,8 +1119,7 @@ void wms_import(appdata_t &appdata) {
                          layers.end();
 
   if(!at_least_one_ok) {
-    errorf(GTK_WIDGET(appdata.window),
-	   _("Server provides no data in the required format!\n\n"
+    errorf(appdata.window, _("Server provides no data in the required format!\n\n"
 	     "(epsg4326 and LatLonBoundingBox are mandatory for osm2go)"));
 #if 0
     wms_layers_free(layers);
@@ -1214,8 +1208,7 @@ void wms_import(appdata_t &appdata) {
   /* remove any existing image before */
   wms_remove(appdata);
 
-  if(!net_io_download_file(GTK_WIDGET(appdata.window),
-                           url, filename, O2G_NULLPTR))
+  if(!net_io_download_file(appdata.window, url, filename, O2G_NULLPTR))
     return;
 
   /* there should be a matching file on disk now */

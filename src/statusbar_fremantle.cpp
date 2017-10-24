@@ -55,7 +55,7 @@ statusbar_fremantle::statusbar_fremantle()
 }
 
 void statusbar_fremantle::banner_busy_stop(appdata_t &appdata) {
-  GtkWidget *win = GTK_WIDGET(appdata.window);
+  GtkWidget *win = appdata.window;
   if(G_UNLIKELY(win == O2G_NULLPTR || banner == O2G_NULLPTR))
     return;
   gtk_grab_remove(widget);
@@ -70,7 +70,7 @@ void statusbar_fremantle::banner_busy_stop(appdata_t &appdata) {
 void statusbar_fremantle::banner_show_info(appdata_t &appdata, const char *text) {
   if(!appdata.window)
     return;
-  setBanner(appdata, hildon_banner_show_information(GTK_WIDGET(appdata.window), O2G_NULLPTR, text));
+  setBanner(appdata, hildon_banner_show_information(appdata.window, O2G_NULLPTR, text));
 }
 
 /*
@@ -85,7 +85,7 @@ void statusbar_fremantle::banner_show_info(appdata_t &appdata, const char *text)
  */
 
 void statusbar_fremantle::banner_busy_start(appdata_t &appdata, const char *text) {
-  GtkWidget *win = GTK_WIDGET(appdata.window);
+  GtkWidget *win = appdata.window;
   if(G_UNLIKELY(win == O2G_NULLPTR))
     return;
   setBanner(appdata, hildon_banner_show_animation(win, O2G_NULLPTR, text));

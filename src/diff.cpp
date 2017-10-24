@@ -634,7 +634,7 @@ void diff_restore(appdata_t &appdata) {
   if(unlikely(!appdata.osm))
     return;
 
-  unsigned int flags = diff_restore_file(GTK_WIDGET(appdata.window), appdata.project, appdata.osm);
+  unsigned int flags = diff_restore_file(appdata.window, appdata.project, appdata.osm);
   if(flags & DIFF_HAS_HIDDEN) {
     printf("hidden flags have been restored, enable show_add menu\n");
 

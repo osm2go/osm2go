@@ -505,7 +505,7 @@ static void project_close(appdata_t &appdata) {
   appdata.settings->project.clear();
 
   /* update project file on disk */
-  appdata.project->save(GTK_WIDGET(appdata.window));
+  appdata.project->save(appdata.window);
 
   delete appdata.project;
   appdata.project = O2G_NULLPTR;
@@ -1316,7 +1316,7 @@ static bool project_load_inner(appdata_t &appdata, const std::string &name) {
   osm2go_platform::process_events();
   const char *errmsg = appdata.osm->sanity_check();
   if(unlikely(errmsg != O2G_NULLPTR)) {
-    errorf(GTK_WIDGET(appdata.window), "%s", errmsg);
+    errorf(appdata.window, "%s", errmsg);
     printf("project/osm sanity checks failed, unloading project\n");
 
     snprintf(banner_txt, sizeof(banner_txt),

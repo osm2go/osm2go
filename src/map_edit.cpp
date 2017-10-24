@@ -98,9 +98,8 @@ void map_edit_way_add_segment(map_t *map, int x, int y) {
 	map->action.extending = touch_way;
 
 	if(map->action.extending) {
-	  if(!yes_no_f(GTK_WIDGET(map->appdata.window),
-	       map->appdata, MISC_AGAIN_ID_EXTEND_WAY, 0,
-	       _("Extend way?"),
+          if(!yes_no_f(map->appdata.window, map->appdata, MISC_AGAIN_ID_EXTEND_WAY,
+                       0, _("Extend way?"),
 	       _("Do you want to extend the way present at this location?")))
 	    map->action.extending = O2G_NULLPTR;
 	  else
@@ -243,9 +242,8 @@ void map_edit_way_add_ok(map_t *map) {
   }
 
   if(map->action.ends_on &&
-     yes_no_f(GTK_WIDGET(map->appdata.window),
-              map->appdata, MISC_AGAIN_ID_EXTEND_WAY_END, 0,
-              _("Join way?"),
+     yes_no_f(map->appdata.window, map->appdata, MISC_AGAIN_ID_EXTEND_WAY_END,
+              0, _("Join way?"),
               _("Do you want to join the way present at this location?"))) {
     printf("  this new way ends on another way\n");
     // this is triggered when the new way ends on an existing way, this can
@@ -262,7 +260,7 @@ void map_edit_way_add_ok(map_t *map) {
 
     /* and open dialog to resolve tag collisions if necessary */
     if(map->action.way->merge(map->action.ends_on, osm, hasRels))
-      messagef(GTK_WIDGET(map->appdata.window), _("Way tag conflict"),
+      messagef(map->appdata.window, _("Way tag conflict"),
 	       _("The resulting way contains some conflicting tags. "
 		 "Please solve these."));
 
@@ -280,7 +278,7 @@ void map_edit_way_add_ok(map_t *map) {
   map->action.way = O2G_NULLPTR;
 
   /* let the user specify some tags for the new way */
-  info_dialog(GTK_WIDGET(map->appdata.window), map->appdata);
+  info_dialog(map->appdata.window, map->appdata);
 }
 
 /* -------------------------- way_node_add ----------------------- */
@@ -494,8 +492,7 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, int ex, int ey) {
 
     printf("  dropped onto node #" ITEM_ID_FORMAT "\n", touchnode->id);
 
-    if(yes_no_f(GTK_WIDGET(map->appdata.window),
-		map->appdata, MISC_AGAIN_ID_JOIN_NODES, 0,
+    if(yes_no_f(map->appdata.window, map->appdata, MISC_AGAIN_ID_JOIN_NODES, 0,
 		_("Join nodes?"),
 		_("Do you want to join the dragged node with the one "
 		  "you dropped it on?"))) {
@@ -531,7 +528,7 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, int ex, int ey) {
 
       /* and open dialog to resolve tag collisions if necessary */
       if(conflict)
-        messagef(GTK_WIDGET(map->appdata.window), _("Node tag conflict"),
+        messagef(map->appdata.window, _("Node tag conflict"),
 		 _("The resulting node contains some conflicting tags. "
 		   "Please solve these."));
 
@@ -539,12 +536,12 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, int ex, int ey) {
       printf("  checking if node is end of way\n");
 
       if(ways2join_cnt > 2) {
-        messagef(GTK_WIDGET(map->appdata.window), _("Too many ways to join"),
+        messagef(map->appdata.window, _("Too many ways to join"),
 		 _("More than two ways now end on this node. Joining more "
 		   "than two ways is not yet implemented, sorry"));
 
       } else if(ways2join_cnt == 2 &&
-                yes_no_f(GTK_WIDGET(map->appdata.window), map->appdata,
+                yes_no_f(map->appdata.window, map->appdata,
                          MISC_AGAIN_ID_JOIN_WAYS, 0, _("Join ways?"),
                          _("Do you want to join the dragged way with the one you dropped it on?"))) {
         printf("  about to join ways #" ITEM_ID_FORMAT " and #" ITEM_ID_FORMAT "\n",
@@ -558,7 +555,7 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, int ex, int ey) {
 
         /* ---------- transfer tags from way[1] to way[0] ----------- */
         if(ways2join[0]->merge(ways2join[1], osm, hasRels))
-          messagef(GTK_WIDGET(map->appdata.window), _("Way tag conflict"),
+          messagef(map->appdata.window, _("Way tag conflict"),
                    _("The resulting way contains some conflicting tags. "
                      "Please solve these."));
       }

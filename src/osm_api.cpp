@@ -849,7 +849,7 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
                                gtk_entry_get_text(GTK_ENTRY(sentry)));
 
   gtk_widget_destroy(dialog);
-  project->save(GTK_WIDGET(appdata.window));
+  project->save(appdata.window);
 
   context.dialog =
     misc_dialog_new(MISC_DIALOG_LARGE,_("Uploading"),
