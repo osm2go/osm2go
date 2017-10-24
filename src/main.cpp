@@ -632,11 +632,11 @@ static void menu_create(appdata_t &appdata, GtkBox *mainvbox) {
   gtk_menu_set_accel_group(GTK_MENU(submenu), accel_grp);
   gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), submenu);
 
-  appdata.menu_item_view_fullscreen = menu_append_new_item(
+  appdata.menu_item_view_fullscreen = GTK_CHECK_MENU_ITEM(menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_fullscreen), _("_Fullscreen"),
     GTK_STOCK_FULLSCREEN, "<OSM2Go-Main>/View/Fullscreen",
     0, static_cast<GdkModifierType>(0), TRUE, true, FALSE
-  );
+  ));
 
   menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_zoomin), _("Zoom _in"),
@@ -1225,16 +1225,13 @@ static gboolean on_window_key_press(appdata_t *appdata, GdkEventKey *event) {
 
 #ifndef FREMANTLE
   case GDK_F11:
-    if(!gtk_check_menu_item_get_active(
-             GTK_CHECK_MENU_ITEM(appdata->menu_item_view_fullscreen))) {
+    if(!gtk_check_menu_item_get_active(appdata->menu_item_view_fullscreen)) {
       gtk_window_fullscreen(GTK_WINDOW(appdata->window));
-      gtk_check_menu_item_set_active(
-	     GTK_CHECK_MENU_ITEM(appdata->menu_item_view_fullscreen), TRUE);
-      } else {
-	gtk_window_unfullscreen(GTK_WINDOW(appdata->window));
-	gtk_check_menu_item_set_active(
-	     GTK_CHECK_MENU_ITEM(appdata->menu_item_view_fullscreen), FALSE);
-      }
+      gtk_check_menu_item_set_active(appdata->menu_item_view_fullscreen, TRUE);
+    } else {
+      gtk_window_unfullscreen(GTK_WINDOW(appdata->window));
+      gtk_check_menu_item_set_active(appdata->menu_item_view_fullscreen, FALSE);
+    }
 
     handled = TRUE;
     break;

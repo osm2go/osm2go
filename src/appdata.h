@@ -72,7 +72,7 @@ struct appdata_t {
   GtkWidget *app_menu_map;
 #else
   GtkWidget *window;
-  GtkWidget *menu_item_view_fullscreen;
+  GtkCheckMenuItem *menu_item_view_fullscreen;
 #endif
 
   GtkWidget *btn_zoom_in, *btn_zoom_out;
