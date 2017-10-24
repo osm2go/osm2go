@@ -20,7 +20,6 @@
 #include "uicontrol.h"
 
 #include "appdata.h"
-#include "banner.h"
 #include "statusbar.h"
 
 #include <gtk/gtk.h>
@@ -52,12 +51,12 @@ void MainUi::showNotification(const char *message, unsigned int flags)
   appdata_t &appdata = static_cast<MainUiGtk *>(this)->appdata;
 
   if (flags & Brief) {
-    banner_show_info(appdata, message);
+    appdata.statusbar->banner_show_info(appdata, message);
   } else if (flags & Busy) {
     if (message == O2G_NULLPTR)
-      banner_busy_stop(appdata);
+      appdata.statusbar->banner_busy_stop(appdata);
     else
-      banner_busy_start(appdata, message);
+      appdata.statusbar->banner_busy_start(appdata, message);
   } else {
     appdata.statusbar->set(message, flags & Highlight);
   }

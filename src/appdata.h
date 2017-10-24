@@ -67,7 +67,6 @@ struct appdata_t {
   HildonProgram *program;
   HildonWindow *window;
   osso_context_t * const osso_context;
-  GtkWidget *banner;
   /* submenues are seperate menues under fremantle */
   GtkWidget *app_menu_view, *app_menu_wms, *app_menu_track;
   GtkWidget *app_menu_map;

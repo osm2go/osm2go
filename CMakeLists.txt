@@ -47,8 +47,6 @@ add_library(osm2go_lib STATIC
 	src/appdata.h
 	src/area_edit.cpp
 	src/area_edit.h
-	src/banner.cpp
-	src/banner.h
 	src/canvas.cpp
 	src/canvas.h
 	src/diff.cpp
@@ -97,7 +95,6 @@ add_library(osm2go_lib STATIC
 	src/relation_edit.h
 	src/settings.cpp
 	src/settings.h
-	src/statusbar.cpp
 	src/statusbar.h
 	src/style.cpp
 	src/style.h
@@ -159,6 +156,7 @@ if (MAEMO_FOUND)
 	target_sources(osm2go_lib PRIVATE
 		src/dbus.c
 		src/dbus.h
+		src/statusbar_fremantle.cpp
 	)
 
 	set(ICONNAME osm2go.48.png)
@@ -184,6 +182,10 @@ else ()
 	find_package(GTK2 REQUIRED)
 
 	target_link_libraries(osm2go_lib PUBLIC ${GTK2_TARGETS})
+
+	target_sources(osm2go_lib PRIVATE
+		src/statusbar_gtk.cpp
+	)
 
 	set(USE_SVG_ICONS_DEFAULT On)
 endif ()

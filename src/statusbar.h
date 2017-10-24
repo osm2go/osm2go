@@ -24,35 +24,30 @@
 
 #define STATUSBAR_DEFAULT_BRIEF_TIME 3
 
+class appdata_t;
+
 class statusbar_t {
 protected:
-  statusbar_t();
+  statusbar_t(GtkWidget *w) : widget(w) {}
 public:
+  virtual ~statusbar_t() {}
   static statusbar_t *create();
 
   GtkWidget * const widget;
 
-#ifndef FREMANTLE
-  /**
-   * @brief flash up a brief, temporary message.
-   * @param msg the message to show
-   * @param timeout the timeout in seconds
-   *
-   * Once the message disappears, drop back to any persistent message set
-   * with set().
-   *
-   * If @msg is nullptr, clear the message and don't establish a handler.
-   *
-   * If timeout is negative, don't establish a handler. You'll have to clear it
-   * yourself later. If it's zero, use the default.
-   */
-  void brief(const char *msg, int timeout);
-#endif
-
   /**
    * @brief set the persistent message, replacing anything currently there
    */
-  void set(const char *msg, bool highlight);
+  virtual void set(const char *msg, bool highlight) = 0;
+
+  // Shows a brief info splash in a suitable way for the app environment being used
+  virtual void banner_show_info(appdata_t &appdata, const char *text) = 0;
+
+  // Start, stop, and say "I'm still alive" to a busy message targetted at the
+  // app environment in use. This can be an animation for some builds, might be
+  // a static statusbar for others, a modal dialog for others.
+  virtual void banner_busy_start(appdata_t &appdata, const char *text) = 0;
+  virtual void banner_busy_stop(appdata_t &appdata) = 0;
 };
 
 #endif // STATUSBAR_H
