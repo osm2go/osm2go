@@ -1350,9 +1350,6 @@ static int application_run(const char *proj)
   appdata.settings->enable_gps = TRUE;
   menu_create(appdata, mainvbox);
 
-  /* if tracking is enable, start it now */
-  track_enable_gps(appdata, appdata.settings->enable_gps);
-
 #ifdef UISPECIFIC_MENU_HAS_ACCELS
   menu_accels_load(&appdata);
 #endif
@@ -1363,6 +1360,9 @@ static int application_run(const char *proj)
   appdata.map = map_t::create(appdata);
   if(unlikely(!appdata.map))
     return -1;
+
+  /* if tracking is enable, start it now */
+  track_enable_gps(appdata, appdata.settings->enable_gps);
 
   GtkWidget *vbox = gtk_vbox_new(FALSE, 0);
   GtkWidget *hbox = gtk_hbox_new(FALSE, 0);
