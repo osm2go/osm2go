@@ -25,6 +25,8 @@
 
 #include <gtk/gtk.h>
 
+#include <osm2go_cpp.h>
+
 class MainUiGtk : public MainUi {
 public:
   MainUiGtk(appdata_t &a) : appdata(a) {}
@@ -51,6 +53,11 @@ void MainUi::showNotification(const char *message, unsigned int flags)
 
   if (flags & Brief) {
     banner_show_info(appdata, message);
+  } else if (flags & Busy) {
+    if (message == O2G_NULLPTR)
+      banner_busy_stop(appdata);
+    else
+      banner_busy_start(appdata, message);
   } else {
     appdata.statusbar->set(message, flags & Highlight);
   }

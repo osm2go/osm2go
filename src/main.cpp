@@ -19,7 +19,6 @@
 
 #include "appdata.h"
 #include "about.h"
-#include "banner.h"
 #include "canvas.h"
 #include "diff.h"
 #include "gps.h"
@@ -181,11 +180,11 @@ cb_menu_download(appdata_t *appdata) {
       delete appdata->osm;
     }
 
-    banner_busy_start(*appdata, _("Drawing"));
+    appdata->uicontrol->showNotification(_("Drawing"), MainUi::Busy);
     appdata->osm = appdata->project->parse_osm(appdata->icons);
     diff_restore(*appdata);
     appdata->map->paint();
-    banner_busy_stop(*appdata); //"Redrawing"
+    appdata->uicontrol->showNotification(O2G_NULLPTR, MainUi::Busy);
   }
 
   appdata->map->set_autosave(true);

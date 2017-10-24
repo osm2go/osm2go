@@ -21,7 +21,6 @@
 
 #include "appdata.h"
 #include "area_edit.h"
-#include "banner.h"
 #include "diff.h"
 #include "gps.h"
 #include "list.h"
@@ -1289,7 +1288,7 @@ static bool project_open(appdata_t &appdata, const std::string &name) {
 static bool project_load_inner(appdata_t &appdata, const std::string &name) {
   char banner_txt[64];
   snprintf(banner_txt, sizeof(banner_txt), _("Loading %s"), name.c_str());
-  banner_busy_start(appdata, banner_txt);
+  appdata.uicontrol->showNotification(banner_txt, MainUi::Busy);
 
   /* close current project */
   osm2go_platform::process_events();
@@ -1305,7 +1304,6 @@ static bool project_load_inner(appdata_t &appdata, const std::string &name) {
 
     snprintf(banner_txt, sizeof(banner_txt),
 	     _("Error opening %s"), name.c_str());
-    banner_busy_stop(appdata);
     appdata.uicontrol->showNotification(banner_txt, MainUi::Brief);
 
     return false;
@@ -1323,7 +1321,6 @@ static bool project_load_inner(appdata_t &appdata, const std::string &name) {
 
     snprintf(banner_txt, sizeof(banner_txt),
 	     _("Error opening %s"), name.c_str());
-    banner_busy_stop(appdata);
     appdata.uicontrol->showNotification(banner_txt, MainUi::Brief);
 
     return false;
@@ -1361,8 +1358,7 @@ static bool project_load_inner(appdata_t &appdata, const std::string &name) {
   /* save the name of the project for the perferences */
   appdata.settings->project = appdata.project->name;
 
-  banner_busy_stop(appdata);
-
+  appdata.uicontrol->showNotification(O2G_NULLPTR, MainUi::Busy);
   appdata.uicontrol->showNotification(O2G_NULLPTR);
 
   return true;

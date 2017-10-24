@@ -20,7 +20,6 @@
 #include "map.h"
 
 #include "appdata.h"
-#include "banner.h"
 #include "canvas.h"
 #include "diff.h"
 #include "gps.h"
@@ -2193,7 +2192,7 @@ void map_t::show_all() {
 
 void map_t::detail_change(float detail, const char *banner_msg) {
   if(banner_msg)
-    banner_busy_start(appdata, banner_msg);
+    appdata.uicontrol->showNotification(banner_msg, MainUi::Busy);
   /* deselecting anything allows us not to care about automatic deselection */
   /* as well as items becoming invisible by the detail change */
   item_deselect();
@@ -2204,7 +2203,7 @@ void map_t::detail_change(float detail, const char *banner_msg) {
   clear(MAP_LAYER_OBJECTS_ONLY);
   paint();
   if(banner_msg)
-    banner_busy_stop(appdata);
+    appdata.uicontrol->showNotification(O2G_NULLPTR, MainUi::Busy);
 }
 
 void map_t::detail_increase() {

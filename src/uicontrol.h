@@ -55,7 +55,8 @@ public:
   enum NotificationFlags {
     NoFlags = 0,
     Brief = 1, ///< the message automatically disappears
-    Highlight = 2
+    Highlight = 2,
+    Busy = 4 ///< cleared by nullptr + Busy or when setting any other message
   };
 
   void setActionEnable(menu_items item, bool en);
