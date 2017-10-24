@@ -38,8 +38,8 @@ public:
   guint mid;
 
   void brief(int timeout, const char *msg);
-  inline void setMsg(const char *msg);
 #endif /* FREMANTLE */
+  inline void setMsg(const char *msg);
 };
 
 static void statusbar_highlight(statusbar_t *statusbar, bool highlight) {
@@ -56,8 +56,8 @@ static void statusbar_highlight(statusbar_t *statusbar, bool highlight) {
   gtk_widget_modify_text(w, GTK_STATE_NORMAL, col);
 }
 
-#ifndef FREMANTLE
 void statusbar_internal::setMsg(const char *msg) {
+#ifndef FREMANTLE
   if (mid) {
     gtk_statusbar_remove(GTK_STATUSBAR(widget), cid, mid);
     mid = 0;
@@ -65,19 +65,17 @@ void statusbar_internal::setMsg(const char *msg) {
 
   if (msg)
     mid = gtk_statusbar_push(GTK_STATUSBAR(widget), cid, msg);
-}
+#else
+  gtk_label_set_text(GTK_LABEL(widget), msg);
 #endif
+}
 
 void statusbar_t::set(const char *msg, bool highlight) {
   statusbar_highlight(this, highlight);
 
   printf("statusbar_set: %s\n", msg);
 
-#ifndef FREMANTLE
   static_cast<statusbar_internal *>(this)->setMsg(msg);
-#else
-  gtk_label_set_text(GTK_LABEL(widget), msg);
-#endif
 }
 
 #ifndef FREMANTLE
