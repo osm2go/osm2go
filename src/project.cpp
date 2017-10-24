@@ -30,7 +30,6 @@
 #include "osm_api.h"
 #include "osm2go_platform.h"
 #include "settings.h"
-#include "statusbar.h"
 #include "track.h"
 #include "wms.h"
 
@@ -1364,7 +1363,7 @@ static bool project_load_inner(appdata_t &appdata, const std::string &name) {
 
   banner_busy_stop(appdata);
 
-  appdata.statusbar->set(O2G_NULLPTR, false);
+  appdata.uicontrol->showNotification(O2G_NULLPTR);
 
   return true;
 }

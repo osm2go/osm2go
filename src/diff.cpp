@@ -28,7 +28,6 @@
 #include "misc.h"
 #include "osm.h"
 #include "project.h"
-#include "statusbar.h"
 
 #include <algorithm>
 #include <cassert>
@@ -639,7 +638,7 @@ void diff_restore(appdata_t &appdata) {
   if(flags & DIFF_HAS_HIDDEN) {
     printf("hidden flags have been restored, enable show_add menu\n");
 
-    appdata.statusbar->set(_("Some objects are hidden"), true);
+    appdata.uicontrol->showNotification(_("Some objects are hidden"), MainUi::Highlight);
     appdata.uicontrol->setActionEnable(MainUi::MENU_ITEM_MAP_SHOW_ALL, true);
   }
 }

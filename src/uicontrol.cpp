@@ -20,6 +20,7 @@
 #include "uicontrol.h"
 
 #include "appdata.h"
+#include "statusbar.h"
 
 #include <gtk/gtk.h>
 
@@ -41,4 +42,11 @@ void MainUi::setActionEnable(menu_items item, bool en)
 {
   appdata_t &appdata = static_cast<MainUiGtk *>(this)->appdata;
   gtk_widget_set_sensitive(appdata.menuitems[item], en ? TRUE : FALSE);
+}
+
+void MainUi::showNotification(const char *message, unsigned int flags)
+{
+  appdata_t &appdata = static_cast<MainUiGtk *>(this)->appdata;
+
+  appdata.statusbar->set(message, flags & Highlight);
 }

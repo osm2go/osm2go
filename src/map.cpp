@@ -31,7 +31,6 @@
 #include "misc.h"
 #include "osm2go_platform.h"
 #include "project.h"
-#include "statusbar.h"
 #include "style.h"
 #include "track.h"
 
@@ -78,8 +77,9 @@ canvas_item_t *map_item_chain_t::firstCanvasItem() const {
 
 static void map_statusbar(map_t *map, map_item_t *map_item) {
   const std::string &str = map_item->object.get_name();
-  map->appdata.statusbar->set(str.c_str(),
-                              map_item->object.obj->tags.hasTagCollisions());
+  MainUi::NotificationFlags flags = map_item->object.obj->tags.hasTagCollisions() ?
+                                    MainUi::Highlight : MainUi::NoFlags;
+  map->appdata.uicontrol->showNotification(str.c_str(), flags);
 }
 
 void map_outside_error(appdata_t &appdata) {
@@ -383,7 +383,7 @@ void map_t::item_deselect() {
   }
 
   /* remove statusbar message */
-  appdata.statusbar->set(O2G_NULLPTR, false);
+  appdata.uicontrol->showNotification(O2G_NULLPTR);
 
   /* disable/enable icons in icon bar */
   appdata.iconbar->map_item_selected(object_t());
@@ -1695,7 +1695,7 @@ void map_t::set_action(map_action_t act) {
   appdata.iconbar->map_action_idle(idle, selected.object);
   appdata.uicontrol->setActionEnable(MainUi::MENU_ITEM_WMS_ADJUST, idle);
 
-  appdata.statusbar->set(statusbar_text, false);
+  appdata.uicontrol->showNotification(statusbar_text);
 }
 
 

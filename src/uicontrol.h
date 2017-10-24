@@ -52,7 +52,22 @@ public:
     MENU_ITEMS_COUNT
   };
 
+  enum NotificationFlags {
+    NoFlags = 0,
+    Persistent = 1, ///< the user must explicitely dismiss the message
+    Highlight = 2
+  };
+
   void setActionEnable(menu_items item, bool en);
+
+  /**
+   * @brief show a non-dialog notification message to the user
+   * @param message the text to show
+   * @param flags flags to control notification behavior
+   *
+   * message may be nullptr to clear the current message.
+   */
+  void showNotification(const char *message, unsigned int flags = NoFlags);
 };
 
 #endif /* UICONTROL_H */
