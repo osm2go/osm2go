@@ -18,7 +18,8 @@
 #include <sys/stat.h>
 
 appdata_t::appdata_t()
-  : window(O2G_NULLPTR)
+  : uicontrol(O2G_NULLPTR)
+  , window(O2G_NULLPTR)
 #ifdef FREMANTLE
   , osso_context(O2G_NULLPTR)
 #endif

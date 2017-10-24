@@ -600,7 +600,7 @@ GType combo_box_entry_type(void) {
 }
 
 /* ---------- simple interface to the systems web browser ---------- */
-void open_url(struct appdata_t &appdata, const char *url)
+void open_url(appdata_t &appdata, const char *url)
 {
 #ifndef FREMANTLE
   gtk_show_uri(O2G_NULLPTR, url, GDK_CURRENT_TIME, O2G_NULLPTR);

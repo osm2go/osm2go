@@ -55,33 +55,13 @@ namespace std {
 #include "icon.h"
 #include "map.h"
 #include "osm.h"
-
-enum menu_items {
-  MENU_ITEM_MAP_HIDE_SEL,
-  MENU_ITEM_MAP_SHOW_ALL,
-  MENU_ITEM_WMS_CLEAR,
-  MENU_ITEM_WMS_ADJUST,
-  MENU_ITEM_TRACK_EXPORT,
-  MENU_ITEM_TRACK_CLEAR,
-  MENU_ITEM_TRACK_ENABLE_GPS,
-  MENU_ITEM_TRACK_FOLLOW_GPS,
-  SUBMENU_VIEW,
-  SUBMENU_MAP,
-  MENU_ITEM_MAP_RELATIONS,
-  SUBMENU_WMS,
-  SUBMENU_TRACK,
-  MENU_ITEM_TRACK_IMPORT,
-  MENU_ITEM_MAP_UPLOAD,
-  MENU_ITEM_MAP_UNDO_CHANGES,
-#ifndef FREMANTLE
-  MENU_ITEM_MAP_SAVE_CHANGES,
-#endif
-  MENU_ITEMS_COUNT
-};
+#include "uicontrol.h"
 
 struct appdata_t {
   appdata_t();
   ~appdata_t();
+
+  MainUi * const uicontrol;
 
 #ifdef FREMANTLE
   HildonProgram *program;
@@ -109,7 +89,7 @@ struct appdata_t {
     unsigned int reply;         /* reply to be assumed if "not_again" bit is set */
   } dialog_again;
 
-  std::array<GtkWidget *, MENU_ITEMS_COUNT> menuitems;
+  std::array<GtkWidget *, MainUi::MENU_ITEMS_COUNT> menuitems;
 
   struct {
     struct track_t *track;

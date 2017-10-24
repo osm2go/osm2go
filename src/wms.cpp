@@ -1007,8 +1007,8 @@ static gboolean wms_layer_dialog(selected_context *ctx, const wms_layer_t::list 
 static bool setBgImage(appdata_t &appdata, const std::string &filename) {
   bool ret = appdata.map->set_bg_image(filename);
   if(ret) {
-    gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_WMS_CLEAR], TRUE);
-    gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_WMS_ADJUST], TRUE);
+    appdata.uicontrol->setActionEnable(MainUi::MENU_ITEM_WMS_CLEAR, true);
+    appdata.uicontrol->setActionEnable(MainUi::MENU_ITEM_WMS_ADJUST, true);
   }
   return ret;
 }
@@ -1272,8 +1272,8 @@ void wms_remove(appdata_t &appdata) {
   if(appdata.map->action.type == MAP_ACTION_BG_ADJUST)
     map_action_cancel(appdata.map);
 
-  gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_WMS_CLEAR], FALSE);
-  gtk_widget_set_sensitive(appdata.menuitems[MENU_ITEM_WMS_ADJUST], FALSE);
+  appdata.uicontrol->setActionEnable(MainUi::MENU_ITEM_WMS_CLEAR, false);
+  appdata.uicontrol->setActionEnable(MainUi::MENU_ITEM_WMS_ADJUST, false);
 
   appdata.map->remove_bg_image();
 
