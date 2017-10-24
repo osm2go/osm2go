@@ -1116,14 +1116,17 @@ static void menu_cleanup(appdata_t &appdata) {
 
 /********************* end of menu **********************/
 
+
+static void menu_accels_load(appdata_t *appdata) {
 #ifdef UISPECIFIC_MENU_HAS_ACCELS
 #define ACCELS_FILE "accels"
 
-static void menu_accels_load(appdata_t *appdata) {
   const std::string &accels_file = appdata->settings->base_path + ACCELS_FILE;
   gtk_accel_map_load(accels_file.c_str());
-}
+#else
+  (void) appdata;
 #endif
+}
 
 appdata_t::appdata_t()
 #ifdef FREMANTLE
@@ -1350,9 +1353,7 @@ static int application_run(const char *proj)
   appdata.settings->enable_gps = TRUE;
   menu_create(appdata, mainvbox);
 
-#ifdef UISPECIFIC_MENU_HAS_ACCELS
   menu_accels_load(&appdata);
-#endif
 
   /* ----------------------- setup main window ---------------- */
 
