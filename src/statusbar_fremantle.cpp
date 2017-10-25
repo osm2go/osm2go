@@ -88,7 +88,7 @@ void statusbar_fremantle::banner_busy_start(appdata_t &appdata, const char *text
   GtkWidget *win = appdata.window;
   if(G_UNLIKELY(win == O2G_NULLPTR))
     return;
-  setBanner(appdata, hildon_banner_show_animation(win, O2G_NULLPTR, text));
+  setBanner(appdata, hildon_banner_show_progress(win, O2G_NULLPTR, text));
   gtk_widget_set_sensitive(win, FALSE);
   gtk_grab_add(widget);
   osm2go_platform::process_events();
