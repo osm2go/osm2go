@@ -262,8 +262,6 @@ static CURL *curl_custom_setup(const osm_upload_context_t &context, const char *
      name, not only a directory */
   curl_easy_setopt(curl, CURLOPT_URL, url);
 
-  curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
-
   /* some servers don't like requests that are made without a user-agent
      field, so we provide one */
   curl_easy_setopt(curl, CURLOPT_USERAGENT, PACKAGE "-libcurl/" VERSION);

@@ -244,8 +244,6 @@ static void *worker_thread(void *ptr) {
     if(likely(ok)) {
       curl_easy_setopt(curl, CURLOPT_URL, request->url.c_str());
 
-      curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
-
       /* setup progress notification */
       curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
       curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, curl_progress_func);
