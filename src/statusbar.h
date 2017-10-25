@@ -24,7 +24,7 @@
 
 #define STATUSBAR_DEFAULT_BRIEF_TIME 3
 
-class appdata_t;
+struct appdata_t;
 
 class statusbar_t {
 protected:
