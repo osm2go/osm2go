@@ -57,7 +57,7 @@ struct gps_data_t {
 #define MODE_SET	0x00000200u
 #define SATELLITE_SET	0x00040000u
 
-    struct gps_fix_t	fix;		/* accumulated PVT data */
+    gps_fix_t fix;		/* accumulated PVT data */
 
     /* GPS status -- always valid */
     int    status;		/* Do we have a fix? */
@@ -97,7 +97,7 @@ public:
 
   bool enable;
 
-  struct gps_data_t gpsdata;
+  gps_data_t gpsdata;
 
 #if GLIB_CHECK_VERSION(2,32,0)
   GMutex rmutex;
@@ -193,7 +193,7 @@ static int gps_connect(gpsd_state_t *gps_state) {
   return 0;
 }
 
-static void gps_clear_fix(struct gps_fix_t *fixp) {
+static void gps_clear_fix(gps_fix_t *fixp) {
   fixp->mode = MODE_NOT_SEEN;
   fixp->pos.lat = fixp->pos.lon = NAN;
   fixp->alt = NAN;
@@ -201,7 +201,7 @@ static void gps_clear_fix(struct gps_fix_t *fixp) {
 }
 
 /* unpack a daemon response into a status structure */
-static void gps_unpack(char *buf, struct gps_data_t *gpsdata) {
+static void gps_unpack(char *buf, gps_data_t *gpsdata) {
   char *ns, *sp, *tp;
 
   for(ns = strstr(buf,"GPSD"); ns; ns = strstr(ns+1, "GPSD")) {
@@ -221,7 +221,7 @@ static void gps_unpack(char *buf, struct gps_data_t *gpsdata) {
 	  gpsdata->status = STATUS_NO_FIX;
 	  gps_clear_fix(&gpsdata->fix);
 	} else {
-	  struct gps_fix_t nf;
+          gps_fix_t nf;
 	  char tag[MAXTAGLEN+1], alt[20], eph[20], lat[20], lon[20], mode[2];
 	  int st = sscanf(sp+2,
 			  "%8s %*s %*s %19s %19s "
