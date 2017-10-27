@@ -2133,7 +2133,7 @@ struct key_match_functor {
   const char * const key;
   explicit key_match_functor(const char *k) : key(k) {}
   bool operator()(const tag_t &tag) {
-    return (strcasecmp(key, tag.key) == 0);
+    return (strcmp(key, tag.key) == 0);
   }
 };
 
