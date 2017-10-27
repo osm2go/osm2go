@@ -166,29 +166,28 @@ void diff_save_relations::operator()(const std::pair<item_id_t, relation_t *> pa
 
 struct find_object_by_flags {
   int flagmask;
-  explicit find_object_by_flags(int f = ~0) : flagmask(f) {}
+  explicit find_object_by_flags(int f) : flagmask(f) {}
   bool operator()(std::pair<item_id_t, base_object_t *> pair) {
     return pair.second->flags & flagmask;
   }
 };
 
+template<typename T> bool map_is_clean(const T &map, int flagmask = ~0) {
+  const typename T::const_iterator itEnd = map.end();
+  typename T::const_iterator it =
+    std::find_if(map.begin(), itEnd, find_object_by_flags(flagmask));
+  return it == itEnd;
+}
+
 /* return true if no diff needs to be saved */
 bool diff_is_clean(const osm_t *osm, bool honor_hidden_flags) {
   /* check if a diff is necessary */
-  std::map<item_id_t, node_t *>::const_iterator nit =
-    std::find_if(osm->nodes.begin(), osm->nodes.end(), find_object_by_flags());
-  if(nit != osm->nodes.end())
+  if(!map_is_clean(osm->nodes))
     return false;
-
   int flagmask = honor_hidden_flags ? ~0 : ~OSM_FLAG_HIDDEN;
-  std::map<item_id_t, way_t *>::const_iterator wit =
-    std::find_if(osm->ways.begin(), osm->ways.end(), find_object_by_flags(flagmask));
-  if(wit != osm->ways.end())
+  if(!map_is_clean(osm->ways, flagmask))
     return false;
-
-  std::map<item_id_t, relation_t *>::const_iterator it =
-    std::find_if(osm->relations.begin(), osm->relations.end(), find_object_by_flags());
-  return it == osm->relations.end();
+  return map_is_clean(osm->relations);
 }
 
 void diff_save(const project_t *project, const osm_t *osm) {
