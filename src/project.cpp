@@ -451,7 +451,8 @@ static project_t *project_get_selected(GtkWidget *list) {
   GtkTreeModel     *model;
   GtkTreeIter       iter;
 
-  assert(list_get_selected(list, &model, &iter));
+  bool b = list_get_selected(list, &model, &iter);
+  assert(b);
   gtk_tree_model_get(model, &iter, PROJECT_COL_DATA, &project, -1);
 
   assert(project != O2G_NULLPTR);
@@ -704,7 +705,8 @@ static void on_project_edit(select_context_t *context) {
 
     /* description etc. may have changed, so update list */
     GtkTreeSelection *selection = list_get_selection(context->list);
-    assert(gtk_tree_selection_get_selected(selection, &model, &iter) == TRUE);
+    gboolean b = gtk_tree_selection_get_selected(selection, &model, &iter);
+    assert(b == TRUE);
 
     //     gtk_tree_model_get(model, &iter, PROJECT_COL_DATA, &project, -1);
     const gchar *status_stock_id = project_get_status_icon_stock_id(
