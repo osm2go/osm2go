@@ -384,8 +384,6 @@ static GtkWidget *relation_item_list_widget(relitem_context_t &context) {
 void relation_membership_dialog(GtkWidget *parent,
 			 appdata_t &appdata, object_t &object) {
   relitem_context_t context(object, appdata);
-  map_t *map = appdata.map;
-  assert(map != O2G_NULLPTR);
 
   char *str = O2G_NULLPTR;
   switch(object.type) {
