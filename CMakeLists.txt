@@ -98,6 +98,9 @@ add_library(osm2go_lib STATIC
 	src/statusbar.h
 	src/style.cpp
 	src/style.h
+	src/style_p.h
+	src/style_widgets.cpp
+	src/style_widgets.h
 	src/track.cpp
 	src/track.h
 	src/uicontrol.h

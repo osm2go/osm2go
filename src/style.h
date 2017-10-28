@@ -23,7 +23,7 @@
 #include "icon.h"
 #include "osm.h"
 
-#include <gtk/gtk.h>
+#include <string>
 #include <vector>
 
 struct appdata_t;
@@ -103,12 +103,5 @@ struct style_t {
 };
 
 style_t *style_load(const std::string &name, icon_t &icons);
-
-#ifndef FREMANTLE
-void style_select(GtkWidget *parent, appdata_t &appdata);
-#else
-GtkWidget *style_select_widget(const std::string &currentstyle);
-void style_change(appdata_t &appdata, const std::string &name);
-#endif
 
 #endif // STYLE_H

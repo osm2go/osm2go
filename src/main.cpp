@@ -33,6 +33,7 @@
 #include "settings.h"
 #include "statusbar.h"
 #include "style.h"
+#include "style_widgets.h"
 #include "track.h"
 #include "wms.h"
 
@@ -969,9 +970,7 @@ static void submenu_popup(appdata_t &appdata, GtkWidget *menu) {
   /* check if the style menu was in here */
   GtkWidget *combo_widget = GTK_WIDGET(g_object_get_data(G_OBJECT(menu), "style_widget"));
   if(combo_widget) {
-    const std::string &style = combo_box_get_active_text(combo_widget);
-    if(!style.empty())
-      style_change(appdata, style);
+    style_change(appdata, combo_widget);
   } else if((combo_widget = GTK_WIDGET(g_object_get_data(G_OBJECT(menu), "track_widget"))) != O2G_NULLPTR) {
     TrackVisibility tv = static_cast<TrackVisibility>(combo_box_get_active(combo_widget));
     if(tv != appdata.settings->trackVisibility && appdata.track.track)
