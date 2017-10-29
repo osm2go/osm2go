@@ -385,23 +385,22 @@ void relation_membership_dialog(GtkWidget *parent,
 			 appdata_t &appdata, object_t &object) {
   relitem_context_t context(object, appdata);
 
-  char *str = O2G_NULLPTR;
+  const char *tpl;
   switch(object.type) {
   case NODE:
-    str = g_strdup_printf(_("Relation memberships of node #" ITEM_ID_FORMAT),
-			  object.obj->id);
+    tpl = _("Relation memberships of node #" ITEM_ID_FORMAT);
     break;
   case WAY:
-    str = g_strdup_printf(_("Relation memberships of way #" ITEM_ID_FORMAT),
-			  object.obj->id);
+    tpl = _("Relation memberships of way #" ITEM_ID_FORMAT);
     break;
   case RELATION:
-    str = g_strdup_printf(_("Relation memberships of relation #" ITEM_ID_FORMAT),
-			  object.obj->id);
+    tpl = _("Relation memberships of relation #" ITEM_ID_FORMAT);
     break;
   default:
     assert_unreachable();
   }
+
+  char *str = g_strdup_printf(tpl, object.obj->id);
 
   context.dialog =
     misc_dialog_new(MISC_DIALOG_LARGE, str,
