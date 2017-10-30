@@ -234,14 +234,12 @@ void tag_t::clear(tag_t &tag) {
  *
  * k and v will be freed.
  */
-static bool tag_from_xml(xmlChar *k, xmlChar *v, std::vector<tag_t> &tags) {
-  bool ret = false;
+static void tag_from_xml(xmlChar *k, xmlChar *v, std::vector<tag_t> &tags) {
   const char *key = reinterpret_cast<char *>(k);
   const char *value = reinterpret_cast<char *>(v);
 
   if(likely(key && value && strlen(key) > 0 &&
                               strlen(value) > 0)) {
-    ret = true;
     tags.push_back(tag_t(g_strdup(key), g_strdup(value)));
   } else {
     printf("incomplete tag key/value %s/%s\n", k, v);
@@ -249,8 +247,6 @@ static bool tag_from_xml(xmlChar *k, xmlChar *v, std::vector<tag_t> &tags) {
 
   xmlFree(k);
   xmlFree(v);
-
-  return ret;
 }
 
 bool osm_t::parse_tag(xmlNode *a_node, TagMap &tags) {
