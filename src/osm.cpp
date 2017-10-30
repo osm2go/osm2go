@@ -1019,11 +1019,11 @@ static void process_node(xmlTextReaderPtr reader, osm_t *osm) {
 static node_t *process_nd(xmlTextReaderPtr reader, osm_t *osm) {
   xmlChar *prop = xmlTextReaderGetAttribute(reader, BAD_CAST "ref");
 
-  if(prop != O2G_NULLPTR) {
+  if(likely(prop != O2G_NULLPTR)) {
     item_id_t id = strtoll(reinterpret_cast<char *>(prop), O2G_NULLPTR, 10);
     /* search matching node */
     node_t *node = osm->node_by_id(id);
-    if(!node)
+    if(unlikely(node == O2G_NULLPTR))
       printf("Node id " ITEM_ID_FORMAT " not found\n", id);
     else
       node->ways++;
@@ -1067,7 +1067,7 @@ static void process_way(xmlTextReaderPtr reader, osm_t *osm) {
       const char *subname = reinterpret_cast<const char *>(xmlTextReaderConstName(reader));
       if(strcmp(subname, "nd") == 0) {
 	node_t *n = process_nd(reader, osm);
-        if(n)
+        if(likely(n != O2G_NULLPTR))
           way->node_chain.push_back(n);
       } else if(likely(strcmp(subname, "tag") == 0)) {
         process_tag(reader, tags);
