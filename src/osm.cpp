@@ -937,9 +937,9 @@ static bool process_bounds(xmlTextReaderPtr reader, bounds_t *bounds) {
 }
 
 static void process_tag(xmlTextReaderPtr reader, std::vector<tag_t> &tags) {
-  if(tag_from_xml(xmlTextReaderGetAttribute(reader, BAD_CAST "k"),
-                  xmlTextReaderGetAttribute(reader, BAD_CAST "v"), tags))
-    skip_element(reader);
+  tag_from_xml(xmlTextReaderGetAttribute(reader, BAD_CAST "k"),
+               xmlTextReaderGetAttribute(reader, BAD_CAST "v"), tags);
+  skip_element(reader);
 }
 
 static void process_base_attributes(base_object_t *obj, xmlTextReaderPtr reader, osm_t *osm)
