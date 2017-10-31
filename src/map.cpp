@@ -1789,9 +1789,14 @@ void node_deleted_from_ways::operator()(way_t *way) {
   }
 }
 
-static bool short_way(const way_t *way) {
-  return way->node_chain.size() < 3;
-}
+struct short_way {
+  const node_t * const node;
+  short_way(const node_t *n) : node(n) {}
+  bool operator()(const std::pair<item_id_t, way_t *> &p) {
+    const way_t *way = p.second;
+    return way->node_chain.size() < 3 && way->contains_node(node);
+  }
+};
 
 /* called from icon "trash" */
 void map_delete_selected(map_t *map) {
@@ -1817,21 +1822,13 @@ void map_delete_selected(map_t *map) {
   case NODE: {
     /* check if this node is part of a way with two nodes only. */
     /* we cannot delete this as this would also delete the way */
-    const way_chain_t &way_chain = map->appdata.osm->node_to_way(item.object.node);
-    if(!way_chain.empty()) {
-
-      const way_chain_t::const_iterator it =
-          std::find_if(way_chain.begin(), way_chain.end(), short_way);
-
-      if(it != way_chain.end()) {
-        if(!yes_no_f(map->appdata.window, map->appdata, 0, 0,
-		     _("Delete node in short way(s)?"),
-		     _("Deleting this node will also delete one or more ways "
-		       "since they'll contain only one node afterwards. "
-		       "Do you really want this?")))
-	  return;
-      }
-    }
+    if(map->appdata.osm->find_way(short_way(item.object.node)) != O2G_NULLPTR &&
+       !yes_no_f(map->appdata.window, map->appdata, 0, 0,
+                 _("Delete node in short way(s)?"),
+                 _("Deleting this node will also delete one or more ways "
+                   "since they'll contain only one node afterwards. "
+                   "Do you really want this?")))
+      return;
 
     /* and mark it "deleted" in the database */
     const way_chain_t &chain = map->appdata.osm->node_delete(item.object.node);

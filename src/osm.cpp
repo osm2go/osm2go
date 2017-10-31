@@ -1520,25 +1520,6 @@ way_chain_t osm_t::node_delete(node_t *node, bool remove_refs) {
   return way_chain;
 }
 
-struct node_collector {
-  way_chain_t &chain;
-  const node_t * const node;
-  node_collector(way_chain_t &c, const node_t *n) : chain(c), node(n) {}
-  void operator()(std::pair<item_id_t, way_t *> pair) {
-    if(pair.second->contains_node(node))
-      chain.push_back(pair.second);
-  }
-};
-
-/* return all ways a node is in */
-way_chain_t osm_t::node_to_way(const node_t *node) const {
-  way_chain_t chain;
-
-  std::for_each(ways.begin(), ways.end(), node_collector(chain, node));
-
-  return chain;
-}
-
 struct remove_member_functor {
   const object_t obj;
   // the second argument is to distinguish the constructor from operator()

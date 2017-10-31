@@ -205,7 +205,17 @@ struct osm_t {
   void remove_from_relations(object_t obj);
   void way_free(way_t *way);
   void node_free(node_t *node);
-  way_chain_t node_to_way(const node_t *node) const;
+
+  template<typename _Predicate>
+  way_t *find_way(_Predicate pred) const {
+    const std::map<item_id_t, way_t *>::const_iterator itEnd = ways.end();
+    const std::map<item_id_t, way_t *>::const_iterator it =
+        std::find_if(ways.begin(), itEnd, pred);
+    if(it != itEnd)
+      return it->second;
+    return O2G_NULLPTR;
+  }
+
   /**
    * @brief remove the given node
    * @param node the node to remove

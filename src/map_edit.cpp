@@ -48,8 +48,8 @@ void map_edit_way_add_begin(map_t *map, way_t *way_sel) {
 struct check_first_last_node {
   const node_t * const node;
   explicit check_first_last_node(const node_t *n) : node(n) {}
-  bool operator()(const way_t *way) {
-    return way->ends_with_node(node);
+  bool operator()(const std::pair<item_id_t, way_t *> &p) {
+    return p.second->ends_with_node(node);
   }
 };
 
@@ -83,11 +83,7 @@ void map_edit_way_add_segment(map_t *map, int x, int y) {
 
       /* check whether this node is first or last one of a different way */
       way_t *touch_way = O2G_NULLPTR;
-      const way_chain_t &way_chain = map->appdata.osm->node_to_way(node);
-      const way_chain_t::const_iterator it =
-        std::find_if(way_chain.begin(), way_chain.end(), check_first_last_node(node));
-      if(it != way_chain.end())
-        touch_way = *it;
+      touch_way = map->appdata.osm->find_way(check_first_last_node(node));
 
       /* remeber this way as this may be the last node placed */
       /* and we might want to join this with this other way */

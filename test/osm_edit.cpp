@@ -943,6 +943,17 @@ static void test_member_delete()
   assert_cmpnum(relations, 0);
 }
 
+struct node_collector {
+  way_chain_t &chain;
+  const node_t * const node;
+  node_collector(way_chain_t &c, const node_t *n) : chain(c), node(n) {}
+  bool operator()(const std::pair<item_id_t, way_t *> &pair) {
+    if(pair.second->contains_node(node))
+      chain.push_back(pair.second);
+    return false;
+  }
+};
+
 static void test_merge_nodes()
 {
   icon_t icons;
@@ -1109,7 +1120,8 @@ static void test_merge_nodes()
   assert_cmpnum(r->flags, OSM_FLAG_DIRTY);
 
   // while at it: test backwards mapping to containing objects
-  const way_chain_t &wchain = o.node_to_way(n1);
+  way_chain_t wchain;
+  assert(o.find_way(node_collector(wchain, n1)) == O2G_NULLPTR);
   assert_cmpnum(wchain.size(), 2);
   assert(std::find(wchain.begin(), wchain.end(), o.ways.begin()->second) != wchain.end());
   assert(std::find(wchain.begin(), wchain.end(), w) != wchain.end());
