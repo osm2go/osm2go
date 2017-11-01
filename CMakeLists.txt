@@ -42,7 +42,7 @@ write_compiler_detection_header(
 )
 
 add_library(osm2go_lib STATIC
-	src/about.cpp
+	src/platforms/gtk/about.cpp
 	src/about.h
 	src/appdata.h
 	src/area_edit.cpp
@@ -67,7 +67,7 @@ add_library(osm2go_lib STATIC
 	src/josm_presets.h
 	src/josm_presets_p.h
 	src/josm_presets_parser.cpp
-	src/list.cpp
+	src/platforms/gtk/list.cpp
 	src/list.h
 	src/map.cpp
 	src/map.h
@@ -85,7 +85,7 @@ add_library(osm2go_lib STATIC
 	src/osm_api.h
 	src/osm2go_annotations.cpp
 	src/osm2go_annotations.h
-	src/osm2go_platform.h
+	src/platforms/gtk/osm2go_platform.h
 	src/osm2go_stl.h
 	src/pos.cpp
 	src/pos.h
@@ -93,14 +93,14 @@ add_library(osm2go_lib STATIC
 	src/project.h
 	src/relation_edit.cpp
 	src/relation_edit.h
-	src/settings.cpp
+	src/platforms/gtk/settings.cpp
 	src/settings.h
 	src/statusbar.h
 	src/style.cpp
 	src/style.h
 	src/style_p.h
-	src/style_widgets.cpp
-	src/style_widgets.h
+	src/platforms/gtk/style_widgets.cpp
+	src/platforms/gtk/style_widgets.h
 	src/track.cpp
 	src/track.h
 	src/uicontrol.h
@@ -118,7 +118,7 @@ option(PICKER_MENU "use a picker table for tagging preset selection" OFF)
 pkg_search_module(GooCanvas REQUIRED IMPORTED_TARGET goocanvas)
 if (GooCanvas_FOUND)
 	target_sources(osm2go_lib PRIVATE
-		src/canvas_goocanvas.cpp
+		src/platforms/gtk/canvas_goocanvas.cpp
 	)
 	target_link_libraries(osm2go_lib PRIVATE PkgConfig::GooCanvas)
 endif ()
@@ -157,10 +157,12 @@ if (MAEMO_FOUND)
 
 	# maemo uses dbus for ipc with maemo mapper
 	target_sources(osm2go_lib PRIVATE
-		src/dbus.c
-		src/dbus.h
-		src/statusbar_fremantle.cpp
+		src/platforms/gtk/fremantle/dbus.c
+		src/platforms/gtk/fremantle/dbus.h
+		src/platforms/gtk/fremantle/statusbar.cpp
 	)
+
+	target_include_directories(osm2go_lib PRIVATE src/platforms/gtk/fremantle)
 
 	set(ICONNAME osm2go.48.png)
 	# the data root dir is /opt on fremantle
@@ -187,8 +189,10 @@ else ()
 	target_link_libraries(osm2go_lib PUBLIC ${GTK2_TARGETS})
 
 	target_sources(osm2go_lib PRIVATE
-		src/statusbar_gtk.cpp
+		src/platforms/gtk/desktop/statusbar.cpp
 	)
+
+	target_include_directories(osm2go_lib PRIVATE src/platforms/gtk/desktop)
 
 	set(USE_SVG_ICONS_DEFAULT On)
 endif ()
@@ -211,7 +215,7 @@ target_compile_definitions(osm2go_lib
 )
 
 if (libLocation_FOUND)
-	target_sources(osm2go_lib PRIVATE src/gps_liblocation.cpp)
+	target_sources(osm2go_lib PRIVATE src/platforms/gtk/fremantle/gps_liblocation.cpp)
 else ()
 	pkg_check_modules(GVFS REQUIRED IMPORTED_TARGET gnome-vfs-module-2.0)
 	target_sources(osm2go_lib PRIVATE src/gps.cpp)
@@ -254,6 +258,7 @@ target_include_directories(osm2go_lib
 		${CURL_INCLUDE_DIRS}
 		${LIBXML2_INCLUDE_DIR}
 		src
+		src/platforms/gtk
 )
 
 add_executable(osm2go

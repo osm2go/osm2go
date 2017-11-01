@@ -24,6 +24,8 @@
 #include "settings.h"
 
 #ifdef FREMANTLE
+#include <dbus.h>
+
 #include <hildon/hildon-check-button.h>
 #include <hildon/hildon-pannable-area.h>
 #include <hildon/hildon-picker-button.h>
@@ -619,6 +621,8 @@ void misc_init(void) {
   g_signal_new ("changed", HILDON_TYPE_PICKER_BUTTON,
 		G_SIGNAL_RUN_FIRST, 0, O2G_NULLPTR, O2G_NULLPTR,
 		g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+
+  dbus_register();
 #endif
 }
 

@@ -38,8 +38,6 @@
 #include "wms.h"
 
 #ifdef FREMANTLE
-#include "dbus.h"
-
 #include <hildon/hildon-button.h>
 #include <hildon/hildon-check-button.h>
 #include <hildon/hildon-window-stack.h>
@@ -1307,8 +1305,6 @@ static int application_run(const char *proj)
 #ifdef FREMANTLE
   if(appdata.osso_context == O2G_NULLPTR)
     fprintf(stderr, "error initiating osso context\n");
-
-  dbus_register();
 
   /* Create the hildon program and setup the title */
   appdata.program = HILDON_PROGRAM(hildon_program_get_instance());
