@@ -42,7 +42,6 @@ write_compiler_detection_header(
 )
 
 add_library(osm2go_lib STATIC
-	src/platforms/gtk/about.cpp
 	src/about.h
 	src/appdata.h
 	src/area_edit.cpp
@@ -67,7 +66,6 @@ add_library(osm2go_lib STATIC
 	src/josm_presets.h
 	src/josm_presets_p.h
 	src/josm_presets_parser.cpp
-	src/platforms/gtk/list.cpp
 	src/list.h
 	src/map.cpp
 	src/map.h
@@ -85,7 +83,6 @@ add_library(osm2go_lib STATIC
 	src/osm_api.h
 	src/osm2go_annotations.cpp
 	src/osm2go_annotations.h
-	src/platforms/gtk/osm2go_platform.h
 	src/osm2go_stl.h
 	src/pos.cpp
 	src/pos.h
@@ -93,14 +90,11 @@ add_library(osm2go_lib STATIC
 	src/project.h
 	src/relation_edit.cpp
 	src/relation_edit.h
-	src/platforms/gtk/settings.cpp
 	src/settings.h
 	src/statusbar.h
 	src/style.cpp
 	src/style.h
 	src/style_p.h
-	src/platforms/gtk/style_widgets.cpp
-	src/platforms/gtk/style_widgets.h
 	src/track.cpp
 	src/track.h
 	src/uicontrol.h
@@ -155,31 +149,13 @@ if (MAEMO_FOUND)
 
 	pkg_check_modules(TabletBrowserInterface REQUIRED tablet-browser-interface)
 
-	# maemo uses dbus for ipc with maemo mapper
-	target_sources(osm2go_lib PRIVATE
-		src/platforms/gtk/fremantle/dbus.c
-		src/platforms/gtk/fremantle/dbus.h
-		src/platforms/gtk/fremantle/statusbar.cpp
-	)
-
-	target_include_directories(osm2go_lib PRIVATE src/platforms/gtk/fremantle)
-
 	set(ICONNAME osm2go.48.png)
 	# the data root dir is /opt on fremantle
 	set(DATA_DIR "/opt/${PROJECT_NAME}")
 	set(PICKER_MENU On)
 	set(FREMANTLE On)
-	target_compile_definitions(osm2go_lib PUBLIC FREMANTLE)
 
 	message(STATUS "Using application installer icon '${ICONNAME}'")
-
-	execute_process(COMMAND uuencode -m "${CMAKE_CURRENT_SOURCE_DIR}/data/${ICONNAME}" "${ICONNAME}"
-			COMMAND sed "1d;$d;s/^/ /"
-			OUTPUT_VARIABLE ICON
-			OUTPUT_STRIP_TRAILING_WHITESPACE)
-	set(ICON " Maemo icon ${ICONNAME}\nXB-Maemo-Icon-26:\n${ICON}")
-
-	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/debian/control.in ${CMAKE_CURRENT_BINARY_DIR}/debian/control @ONLY)
 
 	# SVG icons do not work on my N900
 	set(USE_SVG_ICONS_DEFAULT Off)
@@ -188,14 +164,10 @@ else ()
 
 	target_link_libraries(osm2go_lib PUBLIC ${GTK2_TARGETS})
 
-	target_sources(osm2go_lib PRIVATE
-		src/platforms/gtk/desktop/statusbar.cpp
-	)
-
-	target_include_directories(osm2go_lib PRIVATE src/platforms/gtk/desktop)
-
 	set(USE_SVG_ICONS_DEFAULT On)
 endif ()
+
+add_subdirectory(src/platforms/gtk)
 
 find_library(MATH_LIBRARY m)
 
@@ -214,9 +186,7 @@ target_compile_definitions(osm2go_lib
 		PUBLIC VERSION="${PROJECT_VERSION}"
 )
 
-if (libLocation_FOUND)
-	target_sources(osm2go_lib PRIVATE src/platforms/gtk/fremantle/gps_liblocation.cpp)
-else ()
+if (NOT libLocation_FOUND)
 	pkg_check_modules(GVFS REQUIRED IMPORTED_TARGET gnome-vfs-module-2.0)
 	target_sources(osm2go_lib PRIVATE src/gps.cpp)
 	target_link_libraries(osm2go_lib PRIVATE PkgConfig::GVFS)
