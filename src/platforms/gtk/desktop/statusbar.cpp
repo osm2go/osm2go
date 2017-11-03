@@ -22,10 +22,6 @@
 #include "appdata.h"
 #include "osm2go_platform.h"
 
-#ifdef FREMANTLE
-#include <hildon/hildon.h>
-#endif
-
 #include <osm2go_cpp.h>
 
 static GdkColor color_red() {
