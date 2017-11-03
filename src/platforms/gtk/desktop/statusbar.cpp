@@ -39,20 +39,19 @@ public:
   guint cid;
   guint mid;
 
+  void clear_message();
   /**
    * @brief flash up a brief, temporary message.
    * @param msg the message to show
-   * @param timeout the timeout in seconds
+   * @param timeout if the message should time out
    *
    * Once the message disappears, drop back to any persistent message set
    * with set().
    *
-   * If @msg is nullptr, clear the message and don't establish a handler.
-   *
-   * If timeout is negative, don't establish a handler. You'll have to clear it
-   * yourself later. If it's zero, use the default.
+   * If timeout is false, don't establish a handler. You'll have to clear it
+   * yourself later. If it's true, use STATUSBAR_DEFAULT_BRIEF_TIME.
    */
-  void brief(const char *msg, int timeout);
+  void brief(const char *msg, bool timeout);
 
   virtual void set(const char *msg, bool highlight) O2G_OVERRIDE;
   virtual void banner_show_info(appdata_t &appdata, const char *text) O2G_OVERRIDE;
@@ -66,19 +65,19 @@ public:
  */
 
 void statusbar_gtk::banner_busy_stop(appdata_t &appdata) {
-  brief(O2G_NULLPTR, 0);
+  clear_message();
   gtk_widget_set_sensitive(appdata.window, TRUE);
   gtk_grab_remove(widget);
 }
 
 void statusbar_gtk::banner_show_info(appdata_t &appdata, const char *text) {
   banner_busy_stop(appdata);
-  brief(text, 0);
+  brief(text, true);
 }
 
 void statusbar_gtk::banner_busy_start(appdata_t &appdata, const char *text) {
   banner_busy_stop(appdata);
-  brief(text, -1);
+  brief(text, false);
   gtk_widget_set_sensitive(appdata.window, FALSE);
   gtk_grab_add(widget);
 }
@@ -119,24 +118,24 @@ static gboolean statusbar_brief_clear(gpointer data) {
   return FALSE;
 }
 
-void statusbar_gtk::brief(const char *msg, int timeout)
+void statusbar_gtk::clear_message()
 {
-  printf("%s: %s\n", __PRETTY_FUNCTION__, msg);
   if (brief_handler_id) {
     g_source_remove(brief_handler_id);
     brief_handler_id = 0;
   }
   statusbar_brief_clear(this);
-  if (msg) {
-    statusbar_highlight(this, true);
-    brief_mid = gtk_statusbar_push(GTK_STATUSBAR(widget), cid, msg);
-    if (brief_mid && (timeout >= 0)) {
-      if (timeout == 0) {
-        timeout = STATUSBAR_DEFAULT_BRIEF_TIME;
-      }
-      brief_handler_id = g_timeout_add_seconds(timeout, statusbar_brief_clear, this);
-    }
-  }
+}
+
+void statusbar_gtk::brief(const char *msg, bool timeout)
+{
+  clear_message();
+  printf("%s: %s\n", __PRETTY_FUNCTION__, msg);
+  statusbar_highlight(this, true);
+  brief_mid = gtk_statusbar_push(GTK_STATUSBAR(widget), cid, msg);
+  if (brief_mid && timeout)
+    brief_handler_id = g_timeout_add_seconds(STATUSBAR_DEFAULT_BRIEF_TIME,
+                                             statusbar_brief_clear, this);
 }
 
 statusbar_gtk::statusbar_gtk()
