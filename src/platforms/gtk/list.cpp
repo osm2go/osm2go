@@ -211,8 +211,7 @@ static void on_row_activated(GtkTreeView *treeview,
   printf("row activated\n");
 
   if(gtk_tree_model_get_iter(model, &iter, path)) {
-    list_priv_t *priv = static_cast<list_priv_t *>(g_object_get_data(G_OBJECT(userdata), "priv"));
-    assert(priv != O2G_NULLPTR);
+    assert(g_object_get_data(G_OBJECT(userdata), "priv") != O2G_NULLPTR);
 
     GtkWidget *toplevel = gtk_widget_get_toplevel(GTK_WIDGET(treeview));
     assert(GTK_IS_DIALOG(toplevel) == TRUE);
