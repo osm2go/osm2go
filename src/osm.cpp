@@ -1666,6 +1666,18 @@ struct reverse_direction_sensitive_tags_functor {
   void operator()(tag_t &etag);
 };
 
+static std::vector<std::pair<std::string, std::string> > rtable_init()
+{
+  std::vector<std::pair<std::string, std::string> > rtable;
+
+  rtable.push_back(std::pair<std::string, std::string>("left", "right"));
+  rtable.push_back(std::pair<std::string, std::string>("right", "left"));
+  rtable.push_back(std::pair<std::string, std::string>("forward", "backward"));
+  rtable.push_back(std::pair<std::string, std::string>("backward", "forward"));
+
+  return rtable;
+}
+
 void reverse_direction_sensitive_tags_functor::operator()(tag_t &etag)
 {
   char *lc_key = g_ascii_strdown(etag.key, -1);
@@ -1693,26 +1705,24 @@ void reverse_direction_sensitive_tags_functor::operator()(tag_t &etag)
       etag.update_value("right");
   } else {
     // suffixes
-    static std::vector<std::pair<std::string, std::string> > rtable;
-    if(rtable.empty()) {
-      rtable.push_back(std::pair<std::string, std::string>(":left", ":right"));
-      rtable.push_back(std::pair<std::string, std::string>(":right", ":left"));
-      rtable.push_back(std::pair<std::string, std::string>(":forward", ":backward"));
-      rtable.push_back(std::pair<std::string, std::string>(":backward", ":forward"));
-    }
+    char *lastcolon = strrchr(lc_key, ':');
 
-    for (unsigned int i = 0; i < rtable.size(); i++) {
-      if (g_str_has_suffix(lc_key, rtable[i].first.c_str())) {
-        /* length of key that will persist */
-        size_t plen = strlen(etag.key) - rtable[i].first.size();
-        /* add length of new suffix */
-        etag.key = static_cast<char *>(g_realloc(etag.key, plen + 1 + rtable[i].second.size()));
-        char *lastcolon = etag.key + plen;
-        assert_cmpnum(*lastcolon, ':');
-        /* replace suffix */
-        strcpy(lastcolon, rtable[i].second.c_str());
-        n_tags_altered++;
-        break;
+    if (lastcolon != O2G_NULLPTR) {
+      static std::vector<std::pair<std::string, std::string> > rtable = rtable_init();
+
+      for (unsigned int i = 0; i < rtable.size(); i++) {
+        if (strcmp(lastcolon + 1, rtable[i].first.c_str()) == 0) {
+          /* length of key that will persist */
+          size_t plen = lastcolon - lc_key;
+          /* add length of new suffix */
+          etag.key = static_cast<char *>(g_realloc(etag.key, plen + 2 + rtable[i].second.size()));
+          char *lc = etag.key + plen;
+          assert_cmpnum(*lc, ':');
+          /* replace suffix */
+          strcpy(lc + 1, rtable[i].second.c_str());
+          n_tags_altered++;
+          break;
+        }
       }
     }
   }
