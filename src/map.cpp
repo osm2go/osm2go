@@ -2217,8 +2217,10 @@ void map_t::set_autosave(bool enable) {
   map_internal *m = static_cast<map_internal *>(this);
   if(enable)
     m->autosave_handler_id = g_timeout_add_seconds(120, map_autosave, this);
-  else
+  else if(likely(m->autosave_handler_id > 0)) {
     g_source_remove(m->autosave_handler_id);
+    m->autosave_handler_id = 0;
+  }
 }
 
 map_state_t::map_state_t()

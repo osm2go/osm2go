@@ -1169,6 +1169,9 @@ appdata_t::~appdata_t() {
 
   settings->save();
 
+  if(likely(map))
+    map->set_autosave(false);
+
 #ifdef FREMANTLE
   if(osso_context)
     osso_deinitialize(osso_context);
