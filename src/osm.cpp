@@ -229,8 +229,6 @@ void tag_t::clear(tag_t &tag) {
  * @param k the key found in XML
  * @param v the value found in XML
  * @param tags the vector where the new tag will be added
- * @return if a new tag was added
- * @retval true if k and v were not empty
  *
  * k and v will be freed.
  */
