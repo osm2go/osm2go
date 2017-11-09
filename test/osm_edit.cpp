@@ -32,11 +32,11 @@ static std::vector<tag_t> ab_with_creator(void)
 {
   std::vector<tag_t> ntags;
 
-  tag_t cr_by(g_strdup("created_by"), g_strdup("test"));
+  tag_t cr_by(strdup("created_by"), strdup("test"));
   assert(cr_by.is_creator_tag());
   ntags.push_back(cr_by);
-  ntags.push_back(tag_t(g_strdup("a"), g_strdup("aa")));
-  ntags.push_back(tag_t(g_strdup("b"), g_strdup("bb")));
+  ntags.push_back(tag_t(strdup("a"), strdup("aa")));
+  ntags.push_back(tag_t(strdup("b"), strdup("bb")));
 
   return ntags;
 }
@@ -74,7 +74,7 @@ static void test_trivial() {
 
   tag_list_t tags;
   assert(!tags.hasTagCollisions());
-  tag_t cr_by(g_strdup("created_by"), g_strdup("test"));
+  tag_t cr_by(strdup("created_by"), strdup("test"));
   assert(cr_by.is_creator_tag());
   std::vector<tag_t> ntags(1, cr_by);
   tags.replace(ntags);
@@ -142,8 +142,8 @@ static void test_taglist() {
   assert(!tags.hasTagCollisions());
 
   // check replacing the tag list from tag_t
-  ntags.push_back(tag_t(g_strdup("a"), g_strdup("aa")));
-  ntags.push_back(tag_t(g_strdup("b"), g_strdup("bb")));
+  ntags.push_back(tag_t(strdup("a"), strdup("aa")));
+  ntags.push_back(tag_t(strdup("b"), strdup("bb")));
 
   tags.replace(ntags);
 
@@ -244,10 +244,10 @@ static void test_taglist() {
   assert(virgin == osm_t::TagMap());
   virgin.clear();
 
-  ntags.push_back(tag_t(g_strdup("one"), g_strdup("1")));
+  ntags.push_back(tag_t(strdup("one"), strdup("1")));
   assert(tags != ntags);
   tags.replace(ntags);
-  ntags.push_back(tag_t(g_strdup("one"), g_strdup("1")));
+  ntags.push_back(tag_t(strdup("one"), strdup("1")));
   assert(tags == ntags);
   assert(virgin != tags.asMap());
 
@@ -297,8 +297,8 @@ static void test_replace() {
   // use the other replace() variant that is also used by diff_restore(),
   // which can also insert created_by tags
   std::vector<tag_t> ntags;
-  ntags.push_back(tag_t(g_strdup("created_by"), g_strdup("foo")));
-  ntags.push_back(tag_t(g_strdup("a"), g_strdup("A")));
+  ntags.push_back(tag_t(strdup("created_by"), strdup("foo")));
+  ntags.push_back(tag_t(strdup("a"), strdup("A")));
   node.tags.replace(ntags);
 
   assert_cmpnum(node.flags, 0);
@@ -327,11 +327,11 @@ static void test_split()
   relation_t * const r3 = new relation_t();
 
   std::vector<tag_t> otags;
-  otags.push_back(tag_t(g_strdup("a"), g_strdup("b")));
-  otags.push_back(tag_t(g_strdup("b"), g_strdup("c")));
-  otags.push_back(tag_t(g_strdup("created_by"), g_strdup("test")));
-  otags.push_back(tag_t(g_strdup("d"), g_strdup("e")));
-  otags.push_back(tag_t(g_strdup("f"), g_strdup("g")));
+  otags.push_back(tag_t(strdup("a"), strdup("b")));
+  otags.push_back(tag_t(strdup("b"), strdup("c")));
+  otags.push_back(tag_t(strdup("created_by"), strdup("test")));
+  otags.push_back(tag_t(strdup("d"), strdup("e")));
+  otags.push_back(tag_t(strdup("f"), strdup("g")));
   const size_t ocnt = otags.size();
 
   w->tags.replace(otags);

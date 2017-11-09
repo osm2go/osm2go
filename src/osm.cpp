@@ -220,8 +220,8 @@ time_t __attribute__((nonnull(1))) convert_iso8601(const char *str) {
 /* -------------------- tag handling ----------------------- */
 
 void tag_t::clear(tag_t &tag) {
-  g_free(tag.key);
-  g_free(tag.value);
+  free(tag.key);
+  free(tag.value);
 }
 
 /**
@@ -238,7 +238,7 @@ static void tag_from_xml(xmlChar *k, xmlChar *v, std::vector<tag_t> &tags) {
 
   if(likely(key && value && strlen(key) > 0 &&
                               strlen(value) > 0)) {
-    tags.push_back(tag_t(g_strdup(key), g_strdup(value)));
+    tags.push_back(tag_t(strdup(key), strdup(value)));
   } else {
     printf("incomplete tag key/value %s/%s\n", k, v);
   }
@@ -1966,7 +1966,7 @@ struct tag_vector_copy_functor {
     if(unlikely(otag.is_creator_tag()))
       return;
 
-    tags.push_back(tag_t(g_strdup(otag.key), g_strdup(otag.value)));
+    tags.push_back(tag_t(strdup(otag.key), strdup(otag.value)));
   }
 };
 
@@ -2169,7 +2169,7 @@ struct tag_fill_functor {
     if(unlikely(tag_t::is_creator_tag(p.first.c_str())))
       return;
 
-    tags.push_back(tag_t(g_strdup(p.first.c_str()), g_strdup(p.second.c_str())));
+    tags.push_back(tag_t(strdup(p.first.c_str()), strdup(p.second.c_str())));
   }
 };
 
