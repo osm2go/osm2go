@@ -811,7 +811,7 @@ bool osm_t::parse_relation_member(const char *tp, const char *ref, const char *r
   }
 
   if(role != O2G_NULLPTR && strlen(role) > 0)
-    member.role = g_strdup(role);
+    member.role = strdup(role);
 
   members.push_back(member);
   return true;
@@ -1761,13 +1761,13 @@ void reverse_roles::operator()(const std::pair<item_id_t, relation_t *> &pair)
   if (member->role == O2G_NULLPTR) {
     printf("null role in route relation -> ignore\n");
   } else if (strcasecmp(member->role, DS_ROUTE_FORWARD) == 0) {
-    g_free(member->role);
-    member->role = g_strdup(DS_ROUTE_REVERSE);
+    free(member->role);
+    member->role = strdup(DS_ROUTE_REVERSE);
     relation->flags |= OSM_FLAG_DIRTY;
     ++n_roles_flipped;
   } else if (strcasecmp(member->role, DS_ROUTE_REVERSE) == 0) {
-    g_free(member->role);
-    member->role = g_strdup(DS_ROUTE_FORWARD);
+    free(member->role);
+    member->role = strdup(DS_ROUTE_FORWARD);
     relation->flags |= OSM_FLAG_DIRTY;
     ++n_roles_flipped;
   }
