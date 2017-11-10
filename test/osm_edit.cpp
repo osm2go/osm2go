@@ -1218,6 +1218,53 @@ static void test_api_adjust()
  assert(server == apidev);
 }
 
+static void test_description()
+{
+  node_t n;
+
+  object_t o(&n);
+  assert_cmpstr(o.get_name(), "unspecified node");
+
+  osm_t::TagMap tags;
+  tags.insert(osm_t::TagMap::value_type("name", "foo"));
+
+  n.tags.replace(tags);
+  assert_cmpstr(o.get_name(), "node: \"foo\"");
+
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("highway", "emergency_access_point"));
+  tags.insert(osm_t::TagMap::value_type("ref", "H-112"));
+  n.tags.replace(tags);
+  assert_cmpstr(o.get_name(), "emergency access point: \"H-112\"");
+
+  way_t w;
+  o = &w;
+
+  assert_cmpstr(o.get_name(), "unspecified way/area");
+
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("name", "foo"));
+  tags.insert(osm_t::TagMap::value_type("highway", "residential"));
+  w.tags.replace(tags);
+  assert_cmpstr(o.get_name(), "residential road: \"foo\"");
+
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("ref", "B217"));
+  tags.insert(osm_t::TagMap::value_type("highway", "primary"));
+  w.tags.replace(tags);
+  assert_cmpstr(o.get_name(), "primary road: \"B217\"");
+
+  tags.clear();
+  tags.insert(osm_t::TagMap::value_type("building", "residential"));
+  tags.insert(osm_t::TagMap::value_type("addr:housenumber", "42"));
+  w.tags.replace(tags);
+  assert_cmpstr(o.get_name(), "building housenumber 42");
+
+  tags.insert(osm_t::TagMap::value_type("addr:street", "Highway to hell"));
+  w.tags.replace(tags);
+  assert_cmpstr(o.get_name(), "building Highway to hell 42");
+}
+
 int main()
 {
   xmlInitParser();
@@ -1234,6 +1281,7 @@ int main()
   test_merge_nodes();
   test_merge_ways();
   test_api_adjust();
+  test_description();
 
   xmlCleanupParser();
 
