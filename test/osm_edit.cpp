@@ -340,14 +340,14 @@ static void test_split()
   o.way_attach(v);
   o.way_attach(w);
 
-  r1->members.push_back(member_t(object_t(w), O2G_NULLPTR));
+  r1->members.push_back(member_t(object_t(w)));
   o.relation_attach(r1);
-  r2->members.push_back(member_t(object_t(w), O2G_NULLPTR));
-  r2->members.push_back(member_t(object_t(v), O2G_NULLPTR));
+  r2->members.push_back(member_t(object_t(w)));
+  r2->members.push_back(member_t(object_t(v)));
   // insert twice, to check if all entries get duplicated
-  r2->members.push_back(member_t(object_t(w), O2G_NULLPTR));
+  r2->members.push_back(member_t(object_t(w)));
   o.relation_attach(r2);
-  r3->members.push_back(member_t(object_t(v), O2G_NULLPTR));
+  r3->members.push_back(member_t(object_t(v)));
   o.relation_attach(r3);
 
   // create the way to split
@@ -820,7 +820,7 @@ static void test_way_delete()
 
   relation_t *r = new relation_t(0);
   o.relation_attach(r);
-  r->members.push_back(member_t(object_t(n2), O2G_NULLPTR));
+  r->members.push_back(member_t(object_t(n2)));
 
   osm_t::TagMap nstags;
   nstags.insert(osm_t::TagMap::value_type("a", "A"));
@@ -884,8 +884,8 @@ static void test_member_delete()
 
   // a relation containing both the way as well as the node
   relation_t * const r = new relation_t(0);
-  r->members.push_back(member_t(object_t(w), O2G_NULLPTR));
-  r->members.push_back(member_t(object_t(n2), O2G_NULLPTR));
+  r->members.push_back(member_t(object_t(w)));
+  r->members.push_back(member_t(object_t(n2)));
   o.relation_attach(r);
 
   osm_t::dirty_t dirty0 = o.modified();
@@ -1044,7 +1044,7 @@ static void test_merge_nodes()
   o.node_attach(n2);
 
   conflict = true;
-  r->members.push_back(member_t(object_t(n2), O2G_NULLPTR));
+  r->members.push_back(member_t(object_t(n2)));
 
   n = o.mergeNodes(n1, n2, conflict);
   assert(n == n2);
@@ -1087,9 +1087,9 @@ static void test_merge_nodes()
   w = (++o.ways.begin())->second;
   w->append_node(n2);
   w->flags = 0;
-  o.relations.begin()->second->members.push_back(member_t(object_t(n1), O2G_NULLPTR));
+  o.relations.begin()->second->members.push_back(member_t(object_t(n1)));
   r = (++o.relations.begin())->second;
-  r->members.push_back(member_t(object_t(n2), O2G_NULLPTR));
+  r->members.push_back(member_t(object_t(n2)));
   r->flags = 0;
   assert_cmpnum(o.ways.begin()->second->node_chain.size(), 2);
   assert_cmpnum(w->node_chain.size(), 2);
