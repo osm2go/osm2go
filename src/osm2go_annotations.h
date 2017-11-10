@@ -22,7 +22,9 @@
 
 #include <osm2go_cpp.h>
 
+#include <cassert>
 #include <cstring>
+#include <string>
 
 // this omits magic to support every thinkable compiler until anyone really needs them
 
@@ -85,18 +87,46 @@ public:
          } \
        } while (0)
 
+class assert_cmpstr_struct {
+public:
+  inline assert_cmpstr_struct(const std::string &a, const char *astr, const char *b, const char *file, const char *func, int line) {
+    if(unlikely(a != b))
+      fail(a.c_str(), astr, b, file, func, line);
+  }
+  inline assert_cmpstr_struct(const char *a, const char *astr, const char *b, const char *file, const char *func, int line) {
+    assert(a != O2G_NULLPTR);
+    assert(b != O2G_NULLPTR);
+    if(unlikely(strcmp(a, b) != 0))
+      fail(a, astr, b, file, func, line);
+  }
+  assert_cmpstr_struct(const std::string &a, const char *astr, const char *b, const char *bstr, const char *file, const char *func, int line) {
+    if(unlikely(a != b))
+      fail(a.c_str(), astr, b, bstr, file, func, line);
+  }
+  assert_cmpstr_struct(const char *a, const char *astr, const char *b, const char *bstr, const char *file, const char *func, int line) {
+    assert(a != O2G_NULLPTR);
+    assert(b != O2G_NULLPTR);
+    if(unlikely(strcmp(a, b) != 0))
+      fail(a, astr, b, bstr, file, func, line);
+  }
+
+#if __cplusplus >= 201103L
+  // catch if one passes a constant nullptr as second argument
+  assert_cmpstr_struct(const std::string &a, const char *astr, std::nullptr_t n, const char *file, const char *func, int line);
+  assert_cmpstr_struct(const char *a, const char *astr, std::nullptr_t n, const char *bstr, const char *file, const char *func, int line);
+#endif
+
+private:
+  __attribute__((noreturn)) ATTRIBUTE_COLD void fail(const char *a, const char *astr, const char *b, const char *file, const char *func, int line);
+  __attribute__((noreturn)) ATTRIBUTE_COLD void fail(const char *a, const char *astr, const char *b, const char *bstr, const char *file, const char *func, int line);
+};
+
 #define assert_cmpstr(a, b) \
-       do { \
-         const char *ca = a; \
-         const char *cb = b; \
-         assert(ca != O2G_NULLPTR); \
-         assert(cb != O2G_NULLPTR); \
-         if (unlikely(strcmp(ca, cb) != 0)) { \
+         do { \
            __builtin_constant_p(b) ? \
-             ASSERT_MSG_FMT(#a " == " #b " failed: " #a ": '%s'", ca) : \
-             ASSERT_MSG_FMT(#a " == " #b " failed: " #a ": '%s', " #b ": '%s'", ca, cb); \
-         } \
-       } while (0)
+             assert_cmpstr_struct(a, #a, b, __FILE__, __PRETTY_FUNCTION__, __LINE__) : \
+             assert_cmpstr_struct(a, #a, b, #b, __FILE__, __PRETTY_FUNCTION__, __LINE__); \
+         } while (0)
 
 #define assert_cmpmem(p1, l1, p2, l2) \
        do { \

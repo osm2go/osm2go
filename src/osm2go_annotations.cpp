@@ -140,3 +140,11 @@ template<> assert_num_tpl<const float_t>::assert_num_tpl(float_t a, float_t b,
   assert_num_tpl<pos_float_t>(a, b, amsg, opmsg, bmsg, file, func, line);
   abort();
 }
+
+void assert_cmpstr_struct::fail(const char *a, const char *astr, const char *b, const char *file, const char *func, int line) {
+  assert_msg_fmt(file, line, func, "%s == \"%s\" failed: %s: '%s'", astr, b, astr, a);
+}
+
+void assert_cmpstr_struct::fail(const char *a, const char *astr, const char *b, const char *bstr, const char *file, const char *func, int line) {
+  assert_msg_fmt(file, line, func, "%s == %s failed: %s: '%s', %s: '%s'", astr, bstr, astr, a, bstr, b);
+}
