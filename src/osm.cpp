@@ -854,7 +854,6 @@ static inline int __attribute__((nonnull(2))) my_strcmp(const xmlChar *a, const 
 }
 
 /* skip current element incl. everything below (mainly for testing) */
-/* returns FALSE if something failed */
 static void skip_element(xmlTextReaderPtr reader) {
   assert_cmpnum(xmlTextReaderNodeType(reader), XML_READER_TYPE_ELEMENT);
   if(xmlTextReaderIsEmptyElement(reader))
