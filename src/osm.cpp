@@ -2031,29 +2031,31 @@ std::string object_t::get_name() const {
     typestr = obj->tags.get_value("emergency");
 
   /* highways are a little bit difficult */
-  const char *highway = obj->tags.get_value("highway");
-  if(highway && ret.empty()) {
-    if((!strcmp(highway, "primary")) ||
-       (!strcmp(highway, "secondary")) ||
-       (!strcmp(highway, "tertiary")) ||
-       (!strcmp(highway, "unclassified")) ||
-       (!strcmp(highway, "residential")) ||
-       (!strcmp(highway, "service"))) {
-      ret = highway;
-      ret += " road";
-      typestr = O2G_NULLPTR;
-    }
+  if(ret.empty()) {
+    const char *highway = obj->tags.get_value("highway");
+    if(highway != O2G_NULLPTR) {
+      if((!strcmp(highway, "primary")) ||
+         (!strcmp(highway, "secondary")) ||
+         (!strcmp(highway, "tertiary")) ||
+         (!strcmp(highway, "unclassified")) ||
+         (!strcmp(highway, "residential")) ||
+         (!strcmp(highway, "service"))) {
+        ret = highway;
+        ret += " road";
+        typestr = O2G_NULLPTR;
+      }
 
-    else if(!strcmp(highway, "pedestrian")) {
-      typestr = "pedestrian way/area";
-    }
+      else if(!strcmp(highway, "pedestrian")) {
+        typestr = "pedestrian way/area";
+      }
 
-    else if(!strcmp(highway, "construction")) {
-      typestr = "road/street under construction";
-    }
+      else if(!strcmp(highway, "construction")) {
+        typestr = "road/street under construction";
+      }
 
-    else
-      typestr = highway;
+      else
+        typestr = highway;
+    }
   }
 
   if(typestr) {
