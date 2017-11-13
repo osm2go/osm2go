@@ -125,7 +125,7 @@ struct object_t {
 
 struct member_t {
   explicit member_t(type_t t);
-  explicit member_t(const object_t &o, char *r = O2G_NULLPTR);
+  explicit member_t(const object_t &o, const char *r = O2G_NULLPTR);
 
   object_t object;
   char   *role;

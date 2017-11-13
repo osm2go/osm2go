@@ -185,7 +185,7 @@ static void test_roles(const presets_items *presets)
   assert(roles.find("admin_centre") != roles.end());
   assert(roles.find("label") != roles.end());
 
-  r.members.push_back(member_t(object_t(&n), strdup("admin_centre")));
+  r.members.push_back(member_t(object_t(&n), "admin_centre"));
 
   node_t n2;
   roles = preset_roles(&r, object_t(&n2), presets);
@@ -199,7 +199,7 @@ static void test_roles(const presets_items *presets)
   assert(roles.find("inner") != roles.end());
 
   way_t w2;
-  r.members.push_back(member_t(object_t(&w2), strdup("outer")));
+  r.members.push_back(member_t(object_t(&w2), "outer"));
 
   roles = preset_roles(&r, object_t(&w), presets);
   assert_cmpnum(roles.size(), 2);

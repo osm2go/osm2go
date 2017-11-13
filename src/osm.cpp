@@ -1842,8 +1842,7 @@ void relation_transfer::operator()(const std::pair<item_id_t, relation_t *> &pai
     printf("way #" ITEM_ID_FORMAT " is part of relation #" ITEM_ID_FORMAT " at position %zu, adding way #" ITEM_ID_FORMAT "\n",
            src->id, relation->id, it - relation->members.begin(), dst->id);
 
-    member_t m(object_t(dst),
-               it->role == O2G_NULLPTR ? O2G_NULLPTR : strdup(it->role));
+    member_t m(object_t(dst), it->role);
 
     // find out if the relation members are ordered ways, so the split parts should
     // be inserted in a sensible order to keep the relation intact
@@ -2352,9 +2351,9 @@ member_t::member_t(type_t t)
   object.type = t;
 }
 
-member_t::member_t(const object_t &o, char *r)
+member_t::member_t(const object_t &o, const char *r)
   : object(o)
-  , role(r)
+  , role(r == O2G_NULLPTR ? O2G_NULLPTR : strdup(r))
 {
 }
 

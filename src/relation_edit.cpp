@@ -134,24 +134,27 @@ static bool relation_add_item(GtkWidget *parent, relation_t *relation,
   printf("user clicked ok\n");
 
   /* get role from dialog */
-  char *role = O2G_NULLPTR;
+  const char *role = O2G_NULLPTR;
+  std::string rstr;
 
   if(G_OBJECT_TYPE(entry) == combo_box_entry_type()) {
-    const std::string &rstr = combo_box_get_active_text(entry);
+    rstr = combo_box_get_active_text(entry);
     if(!rstr.empty())
-      role = strdup(rstr.c_str());
+      role = rstr.c_str();
   } else {
-    const char *ptr = gtk_entry_get_text(GTK_ENTRY(entry));
+    const gchar *ptr = gtk_entry_get_text(GTK_ENTRY(entry));
     if(ptr && strlen(ptr))
-      role = strdup(ptr);
+      role = ptr;
   }
+
+  // create new member
+  // must be done before the widget is destroyed as it may reference the
+  // internal string from the text entry
+  relation->members.push_back(member_t(object, role));
 
   gtk_widget_destroy(dialog);
 
   assert(object.is_real());
-
-  /* create new member */
-  relation->members.push_back(member_t(object, role));
 
   relation->flags |= OSM_FLAG_DIRTY;
   return true;
