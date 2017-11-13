@@ -1675,34 +1675,39 @@ static std::vector<std::pair<std::string, std::string> > rtable_init()
   return rtable;
 }
 
+static char ascii_lower(char ch) {
+  if (ch >= 'A' && ch <= 'Z')
+    return ch - 'A' + 'a';
+  else
+    return ch;
+}
+
 void reverse_direction_sensitive_tags_functor::operator()(tag_t &etag)
 {
-  char *lc_key = g_ascii_strdown(etag.key, -1);
-
-  if (strcmp(lc_key, "oneway") == 0) {
-    char *lc_value = g_ascii_strdown(etag.value, -1);
+  if (strcmp(etag.key, "oneway") == 0) {
+    std::string lc_value = etag.value;
+    std::transform(lc_value.begin(), lc_value.end(), lc_value.begin(), ascii_lower);
     // oneway={yes/true/1/-1} is unusual.
     // Favour "yes" and "-1".
-    if ((strcmp(lc_value, DS_ONEWAY_FWD) == 0) ||
-        (strcmp(lc_value, "true") == 0) ||
-        (strcmp(lc_value, "1") == 0)) {
+    if (lc_value == DS_ONEWAY_FWD ||
+        lc_value == "true" ||
+        lc_value == "1") {
       etag.update_value(DS_ONEWAY_REV);
       n_tags_altered++;
-    } else if (strcmp(lc_value, DS_ONEWAY_REV) == 0) {
+    } else if (lc_value == DS_ONEWAY_REV) {
       etag.update_value(DS_ONEWAY_FWD);
       n_tags_altered++;
     } else {
       printf("warning: unknown tag: %s=%s\n", etag.key, etag.value);
     }
-    g_free(lc_value);
-  } else if (strcmp(lc_key, "sidewalk") == 0) {
+  } else if (strcmp(etag.key, "sidewalk") == 0) {
     if (strcasecmp(etag.value, "right") == 0)
       etag.update_value("left");
     else if (strcasecmp(etag.value, "left") == 0)
       etag.update_value("right");
   } else {
     // suffixes
-    char *lastcolon = strrchr(lc_key, ':');
+    char *lastcolon = strrchr(etag.key, ':');
 
     if (lastcolon != O2G_NULLPTR) {
       static std::vector<std::pair<std::string, std::string> > rtable = rtable_init();
@@ -1710,7 +1715,7 @@ void reverse_direction_sensitive_tags_functor::operator()(tag_t &etag)
       for (unsigned int i = 0; i < rtable.size(); i++) {
         if (strcmp(lastcolon + 1, rtable[i].first.c_str()) == 0) {
           /* length of key that will persist */
-          size_t plen = lastcolon - lc_key;
+          size_t plen = lastcolon - etag.key;
           /* add length of new suffix */
           etag.key = static_cast<char *>(g_realloc(etag.key, plen + 2 + rtable[i].second.size()));
           char *lc = etag.key + plen;
@@ -1723,8 +1728,6 @@ void reverse_direction_sensitive_tags_functor::operator()(tag_t &etag)
       }
     }
   }
-
-  g_free(lc_key);
 }
 
 /* Reverse a way's role within relations where the role is direction-sensitive.
