@@ -46,6 +46,7 @@
 
 #include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
+#include <osm2go_i18n.h>
 
 double xml_get_prop_float(xmlNode *node, const char *prop) {
   xmlChar *str = xmlGetProp(node, BAD_CAST prop);

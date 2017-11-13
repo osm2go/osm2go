@@ -36,6 +36,7 @@
 #include <gtk/gtk.h>
 
 #include <osm2go_cpp.h>
+#include "osm2go_i18n.h"
 
 static gboolean on_link_clicked(GtkWidget *widget, GdkEventButton *,
                                 appdata_t *appdata) {

@@ -61,6 +61,7 @@ namespace std {
 #include <gdk/gdkkeysyms.h>
 
 #include "osm2go_annotations.h"
+#include <osm2go_i18n.h>
 
 #define LOCALEDIR PREFIX "/locale"
 

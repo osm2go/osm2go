@@ -49,12 +49,9 @@ namespace std {
 #include <hildon/hildon-gtk.h>
 #include <hildon/hildon-pannable-area.h>
 #endif
-#include <libintl.h>
-#include <stdarg.h>
 
 #include "osm2go_annotations.h"
-
-#define _(String) gettext(String)
+#include "osm2go_i18n.h"
 
 struct list_priv_t {
   GtkWidget *view;

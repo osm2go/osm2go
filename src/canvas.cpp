@@ -37,9 +37,9 @@
 #include "canvas.h"
 #include "canvas_p.h"
 
-#include "appdata.h"
 #include "misc.h"
 
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <cstring>

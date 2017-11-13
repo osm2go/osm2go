@@ -20,11 +20,6 @@
 #ifndef APPDATA_H
 #define APPDATA_H
 
-#include <locale.h>
-#include <libintl.h>
-
-#define _(String) gettext(String)
-
 #ifdef FREMANTLE
 #include <hildon/hildon-gtk.h>
 #include <hildon/hildon-pannable-area.h>

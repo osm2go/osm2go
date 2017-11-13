@@ -51,6 +51,7 @@
 
 #include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
+#include <osm2go_i18n.h>
 
 class TrackSax {
   xmlSAXHandler handler;

@@ -32,6 +32,7 @@
 #include <vector>
 
 #include <osm2go_cpp.h>
+#include "osm2go_i18n.h"
 
 struct combo_add_styles {
   int cnt;

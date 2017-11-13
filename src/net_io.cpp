@@ -19,7 +19,6 @@
 
 #include "net_io.h"
 
-#include "appdata.h"
 #include "misc.h"
 #include "osm2go_platform.h"
 
@@ -34,6 +33,7 @@
 
 #include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
+#include <osm2go_i18n.h>
 #include "osm2go_stl.h"
 
 struct curl_mem_t {

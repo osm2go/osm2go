@@ -19,7 +19,6 @@
 
 #include "map_hl.h"
 
-#include "appdata.h"
 #include "canvas.h"
 #include "map.h"
 #include "style.h"

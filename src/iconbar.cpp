@@ -37,6 +37,7 @@ namespace std {
 #include <cassert>
 
 #include <osm2go_cpp.h>
+#include <osm2go_i18n.h>
 
 #if !GTK_CHECK_VERSION(2, 18, 0)
 #define gtk_widget_is_sensitive(w) (GTK_WIDGET_FLAGS(w) & GTK_SENSITIVE)

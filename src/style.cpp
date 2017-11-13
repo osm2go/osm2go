@@ -20,7 +20,6 @@
 #include "style.h"
 #include "style_p.h"
 
-#include "appdata.h"
 #include "josm_elemstyles.h"
 #include "map.h"
 #include "misc.h"
