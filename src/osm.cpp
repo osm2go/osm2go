@@ -784,36 +784,37 @@ bool osm_t::parse_relation_member(const char *tp, const char *ref, const char *r
     printf("Illegal ref '%s' for relation member\n", ref);
     return false;
   }
-  member_t member(type);
+
+  object_t obj(type);
 
   switch(type) {
   case WAY:
     /* search matching way */
-    member.object.way = way_by_id(id);
+    obj.way = way_by_id(id);
     break;
 
   case NODE:
     /* search matching node */
-    member.object.node = node_by_id(id);
+    obj.node = node_by_id(id);
     break;
 
   case RELATION:
     /* search matching relation */
-    member.object.relation = relation_by_id(id);
+    obj.relation = relation_by_id(id);
     break;
   default:
     assert_unreachable();
   }
 
-  if(!member.object.obj) {
-    member.object.type = static_cast<type_t>(member.object.type | _REF_FLAG);
-    member.object.id = id;
+  if(!obj.obj) {
+    obj.type = static_cast<type_t>(type | _REF_FLAG);
+    obj.id = id;
   }
 
-  if(role != O2G_NULLPTR && strlen(role) > 0)
-    member.role = strdup(role);
+  if(role != O2G_NULLPTR && strlen(role) == 0)
+    role = O2G_NULLPTR;
 
-  members.push_back(member);
+  members.push_back(member_t(obj, role));
   return true;
 }
 
