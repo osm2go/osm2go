@@ -125,4 +125,15 @@ namespace std {
 }
 #endif
 
+template<typename T> void shrink_to_fit(T &v) {
+#if __cplusplus >= 201103L
+  v.shrink_to_fit();
+#else
+  T tmp;
+  tmp.resize(v.size());
+  tmp = v;
+  tmp.swap(v);
+#endif
+}
+
 #endif // OSM2GO_STL_H

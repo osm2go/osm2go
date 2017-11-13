@@ -66,17 +66,6 @@ std::string find_file(const std::string &n);
 
 /* some compat code */
 
-template<typename T> void shrink_to_fit(T &v) {
-#if __cplusplus >= 201103L
-  v.shrink_to_fit();
-#else
-  T tmp;
-  tmp.resize(v.size());
-  tmp = v;
-  tmp.swap(v);
-#endif
-}
-
 struct pos_t;
 
 double xml_get_prop_float(xmlNode *node, const char *prop);
