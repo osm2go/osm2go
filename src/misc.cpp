@@ -30,7 +30,6 @@
 #include <hildon/hildon-entry.h>
 #include <hildon/hildon-touch-selector-entry.h>
 #include <hildon/hildon-note.h>
-#include <tablet-browser-interface.h>
 #else
 #include <gtk/gtk.h>
 #endif
@@ -602,20 +601,6 @@ GType combo_box_entry_type(void) {
   return GTK_TYPE_COMBO_BOX_ENTRY;
 #else
   return HILDON_TYPE_PICKER_BUTTON;
-#endif
-}
-
-/* ---------- simple interface to the systems web browser ---------- */
-void open_url(appdata_t &appdata, const char *url)
-{
-#ifndef FREMANTLE
-  gtk_show_uri(O2G_NULLPTR, url, GDK_CURRENT_TIME, O2G_NULLPTR);
-  (void)appdata;
-#else
-  osso_rpc_run_with_defaults(appdata.osso_context, "osso_browser",
-                             OSSO_BROWSER_OPEN_NEW_WINDOW_REQ, O2G_NULLPTR,
-                             DBUS_TYPE_STRING, url,
-                             DBUS_TYPE_BOOLEAN, FALSE, DBUS_TYPE_INVALID);
 #endif
 }
 

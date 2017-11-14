@@ -37,16 +37,16 @@
 
 #include <osm2go_cpp.h>
 #include "osm2go_i18n.h"
+#include <osm2go_platform.h>
 
-static gboolean on_link_clicked(GtkWidget *widget, GdkEventButton *,
-                                appdata_t *appdata) {
+static gboolean on_link_clicked(GtkWidget *widget) {
   const char *str = gtk_label_get_text(GTK_LABEL(gtk_bin_get_child(GTK_BIN(widget))));
 
-  open_url(*appdata, str);
+  osm2go_platform::open_url(str);
   return TRUE;
 }
 
-static GtkWidget *link_new(appdata_t *appdata, const char *url) {
+static GtkWidget *link_new(const char *url) {
   GtkWidget *label = gtk_label_new(O2G_NULLPTR);
   char *str = g_strconcat("<span color=\"" LINK_COLOR "\"><u>", url,
                           "</u></span>", O2G_NULLPTR);
@@ -57,13 +57,12 @@ static GtkWidget *link_new(appdata_t *appdata, const char *url) {
   gtk_container_add(GTK_CONTAINER(eventbox), label);
 
   g_signal_connect(eventbox, "button-press-event",
-                   G_CALLBACK(on_link_clicked), appdata);
+                   G_CALLBACK(on_link_clicked), O2G_NULLPTR);
   return eventbox;
 }
 
-static void on_paypal_button_clicked(appdata_t *appdata) {
-  open_url(*appdata,
-           "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=7400558");
+static void on_paypal_button_clicked() {
+  osm2go_platform::open_url("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=7400558");
 }
 
 static GtkWidget *label_scale(const char *str, double scale_factor) {
@@ -170,7 +169,7 @@ static GtkWidget *copyright_page_new(appdata_t *appdata) {
 	      gtk_label_new(_("Copyright 2008-2017")), FALSE, FALSE, 0);
 
   gtk_box_pack_start(GTK_BOX(ivbox),
-      link_new(appdata, "http://www.harbaum.org/till/maemo#osm2go"),
+                     link_new("http://www.harbaum.org/till/maemo#osm2go"),
 			      FALSE, FALSE, 0);
 
   gtk_box_pack_start(GTK_BOX(vbox), ivbox, TRUE, FALSE, 0);
@@ -251,8 +250,7 @@ static GtkWidget *donate_page_new(appdata_t *appdata) {
 		   "please consider donating to the developer. You can either "
 		   "donate via paypal to")));
 
-  gtk_box_pack_start_defaults(GTK_BOX(vbox),
-			      link_new(O2G_NULLPTR, "till@harbaum.org"));
+  gtk_box_pack_start_defaults(GTK_BOX(vbox), link_new("till@harbaum.org"));
 
   gtk_box_pack_start_defaults(GTK_BOX(vbox),
       label_wrap(_("or you can just click the button below which will open "
@@ -263,14 +261,14 @@ static GtkWidget *donate_page_new(appdata_t *appdata) {
   gtk_button_set_image(GTK_BUTTON(button), appdata->icons.widget_load(PAYPAL_ICON));
   gtk_button_set_relief(GTK_BUTTON(button), GTK_RELIEF_NONE);
   g_signal_connect_swapped(button, "clicked",
-                           G_CALLBACK(on_paypal_button_clicked), appdata);
+                           G_CALLBACK(on_paypal_button_clicked), O2G_NULLPTR);
   gtk_box_pack_start(GTK_BOX(ihbox), button, TRUE, FALSE, 0);
   gtk_box_pack_start_defaults(GTK_BOX(vbox), ihbox);
 
   return vbox;
 }
 
-static GtkWidget *bugs_page_new(appdata_t *appdata) {
+static GtkWidget *bugs_page_new() {
   GtkWidget *vbox = gtk_vbox_new(FALSE, 0);
 
   gtk_box_pack_start_defaults(GTK_BOX(vbox),
@@ -279,14 +277,14 @@ static GtkWidget *bugs_page_new(appdata_t *appdata) {
 		   "the following link:")));
 
   gtk_box_pack_start_defaults(GTK_BOX(vbox),
-       link_new(appdata, "https://github.com/osm2go/osm2go/issues"));
+                              link_new("https://github.com/osm2go/osm2go/issues"));
 
   gtk_box_pack_start_defaults(GTK_BOX(vbox),
       label_wrap(_("You might also be interested in joining the mailing lists "
 		   "or the forum:")));
 
   gtk_box_pack_start_defaults(GTK_BOX(vbox),
-	      link_new(appdata, "http://garage.maemo.org/projects/osm2go/"));
+                              link_new("http://garage.maemo.org/projects/osm2go/"));
 
   gtk_box_pack_start_defaults(GTK_BOX(vbox),
       label_wrap(_("Thank you for contributing!")));
@@ -311,7 +309,7 @@ void about_box(appdata_t *appdata) {
   notebook_append_page(notebook, license_page_new(),          _("License"));
   notebook_append_page(notebook, authors_page_new(),          _("Authors"));
   notebook_append_page(notebook, donate_page_new(appdata),    _("Donate"));
-  notebook_append_page(notebook, bugs_page_new(appdata),      _("Bugs"));
+  notebook_append_page(notebook, bugs_page_new(),             _("Bugs"));
 
   gtk_box_pack_start_defaults(GTK_BOX((GTK_DIALOG(dialog))->vbox),
 			      notebook);

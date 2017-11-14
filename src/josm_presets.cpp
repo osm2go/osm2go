@@ -40,6 +40,7 @@
 #include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
 #include <osm2go_i18n.h>
+#include <osm2go_platform.h>
 
 unsigned int presets_type_mask(const object_t &obj)
 {
@@ -73,9 +74,9 @@ unsigned int presets_type_mask(const object_t &obj)
   return r;
 }
 
-static void on_info(GtkWidget *widget, appdata_t *appdata) {
+static void on_info(GtkWidget *widget) {
   const char *link = static_cast<char *>(g_object_get_data(G_OBJECT(widget), "link"));
-  open_url(*appdata, link);
+  osm2go_platform::open_url(link);
 }
 
 /* --------------------- the items dialog -------------------- */
@@ -275,7 +276,7 @@ static void presets_item_dialog(presets_context_t *context,
 			("Info"), GTK_RESPONSE_HELP);
       g_object_set_data(G_OBJECT(button), "link", const_cast<char *>(item->link.c_str()));
       g_signal_connect(GTK_OBJECT(button), "clicked",
-                       G_CALLBACK(on_info), &appdata);
+                       G_CALLBACK(on_info), O2G_NULLPTR);
     }
 
     /* special handling for the first label/separators */

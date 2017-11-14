@@ -24,6 +24,10 @@
 #include <osm2go_cpp.h>
 
 #include <hildon/hildon-picker-button.h>
+#include <libosso.h>
+#include <tablet-browser-interface.h>
+
+static osso_context_t *osso_context;
 
 int osm2go_platform::init(int &argc, char **argv)
 {
@@ -37,5 +41,28 @@ int osm2go_platform::init(int &argc, char **argv)
                G_SIGNAL_RUN_FIRST, 0, O2G_NULLPTR, O2G_NULLPTR,
                g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
-  return dbus_register() == TRUE ? 0 : 1;
+  osso_context = osso_initialize("org.harbaum." PACKAGE, VERSION, TRUE, O2G_NULLPTR);
+
+  if(G_UNLIKELY(osso_context == O2G_NULLPTR))
+    return 1;
+
+  if(G_UNLIKELY(dbus_register(osso_context) != TRUE)) {
+    osso_deinitialize(osso_context);
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+void osm2go_platform::cleanup()
+{
+  osso_deinitialize(osso_context);
+}
+
+void osm2go_platform::open_url(const char* url)
+{
+  osso_rpc_run_with_defaults(osso_context, "osso_browser",
+                             OSSO_BROWSER_OPEN_NEW_WINDOW_REQ, O2G_NULLPTR,
+                             DBUS_TYPE_STRING, url,
+                             DBUS_TYPE_BOOLEAN, FALSE, DBUS_TYPE_INVALID);
 }

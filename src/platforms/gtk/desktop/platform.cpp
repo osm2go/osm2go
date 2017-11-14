@@ -19,6 +19,8 @@
 
 #include <osm2go_platform.h>
 
+#include <osm2go_cpp.h>
+
 int osm2go_platform::init(int &argc, char **argv)
 {
 #if !GLIB_CHECK_VERSION(2,32,0)
@@ -28,4 +30,13 @@ int osm2go_platform::init(int &argc, char **argv)
   gtk_init(&argc, &argv);
 
   return 0;
+}
+
+void osm2go_platform::cleanup()
+{
+}
+
+void osm2go_platform::open_url(const char* url)
+{
+  gtk_show_uri(O2G_NULLPTR, url, GDK_CURRENT_TIME, O2G_NULLPTR);
 }

@@ -517,7 +517,7 @@ static void callback_modified_unit(context_t *context) {
 #ifdef HAS_MAEMO_MAPPER
 static void callback_fetch_mm_clicked(context_t *context) {
   dbus_mm_pos_t mmpos;
-  if(!dbus_mm_set_position(context->area.appdata.osso_context, &mmpos)) {
+  if(!dbus_mm_set_position(&mmpos)) {
     errorf(context->dialog, _("Unable to communicate with Maemo Mapper. "
               "You need to have Maemo Mapper installed to use this feature."));
     return;

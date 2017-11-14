@@ -1128,7 +1128,6 @@ appdata_t::appdata_t()
   , window(O2G_NULLPTR)
 #ifdef FREMANTLE
   , program(O2G_NULLPTR)
-  , osso_context(osso_initialize("org.harbaum." PACKAGE, VERSION, TRUE, O2G_NULLPTR))
   , app_menu_view(O2G_NULLPTR)
   , app_menu_wms(O2G_NULLPTR)
   , app_menu_track(O2G_NULLPTR)
@@ -1171,9 +1170,6 @@ appdata_t::~appdata_t() {
     map->set_autosave(false);
 
 #ifdef FREMANTLE
-  if(osso_context)
-    osso_deinitialize(osso_context);
-
   program = O2G_NULLPTR;
 #endif
 
@@ -1304,9 +1300,6 @@ static int application_run(const char *proj)
   }
 
 #ifdef FREMANTLE
-  if(appdata.osso_context == O2G_NULLPTR)
-    fprintf(stderr, "error initiating osso context\n");
-
   /* Create the hildon program and setup the title */
   appdata.program = HILDON_PROGRAM(hildon_program_get_instance());
   g_set_application_name("OSM2Go");
@@ -1502,6 +1495,8 @@ int main(int argc, char *argv[]) {
     misc_init();
 
     ret = application_run(argc > 1 ? argv[1] : O2G_NULLPTR);
+
+    osm2go_platform::cleanup();
   }
 
   // library cleanups

@@ -30,6 +30,7 @@
 #include <dbus/dbus-glib.h>
 
 static dbus_mm_pos_t mmpos;
+static osso_context_t *osso_context;
 
 static DBusHandlerResult
 signal_filter(G_GNUC_UNUSED DBusConnection *connection, DBusMessage *message, G_GNUC_UNUSED void *user_data) {
@@ -70,7 +71,7 @@ signal_filter(G_GNUC_UNUSED DBusConnection *connection, DBusMessage *message, G_
 }
 
 /* only the screen is refreshed, useful if e.g. the poi database changed */
-gboolean dbus_mm_set_position(osso_context_t *osso_context, dbus_mm_pos_t *mmp) {
+gboolean dbus_mm_set_position(dbus_mm_pos_t *mmp) {
   osso_rpc_t retval;
 
   mmpos.valid = FALSE;
@@ -90,7 +91,7 @@ gboolean dbus_mm_set_position(osso_context_t *osso_context, dbus_mm_pos_t *mmp) 
   return(ret == OSSO_OK);
 }
 
-gboolean dbus_register() {
+gboolean dbus_register(osso_context_t *ctx) {
   DBusConnection *bus;
   DBusError error;
 
@@ -106,6 +107,8 @@ gboolean dbus_register() {
   /* listening to messages from all objects as no path is specified */
   dbus_bus_add_match(bus, "type='signal',interface='"MM_DBUS_INTERFACE"'", &error);
   dbus_connection_add_filter(bus, signal_filter, NULL, NULL);
+
+  osso_context = ctx;
 
   return TRUE;
 }

@@ -17,9 +17,6 @@
 appdata_t::appdata_t()
   : uicontrol(O2G_NULLPTR)
   , window(O2G_NULLPTR)
-#ifdef FREMANTLE
-  , osso_context(O2G_NULLPTR)
-#endif
   , statusbar(O2G_NULLPTR)
   , settings(O2G_NULLPTR)
   , gps_state(O2G_NULLPTR)

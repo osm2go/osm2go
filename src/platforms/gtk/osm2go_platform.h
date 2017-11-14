@@ -36,6 +36,13 @@ struct osm2go_platform {
   }
 
   static int init(int &argc, char **argv);
+
+  static void cleanup();
+
+  /**
+   * @brief simple interface to the systems web browser
+   */
+  static void open_url(const char *url);
 };
 
 #endif // OSM2GO_PLATFORM_H

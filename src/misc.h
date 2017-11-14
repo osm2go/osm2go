@@ -119,8 +119,6 @@ std::string combo_box_get_active_text(GtkWidget *cbox);
 GType combo_box_type(void);
 GType combo_box_entry_type(void);
 
-void open_url(appdata_t &appdata, const char *url);
-
 void misc_init(void);
 
 GtkWidget *string_select_widget(const char *title, const std::vector<std::string> &entries, int match);
