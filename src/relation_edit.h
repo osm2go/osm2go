@@ -24,9 +24,12 @@
 
 struct appdata_t;
 struct object_t;
+struct osm_t;
+struct presets_items;
 class relation_t;
 
-void relation_membership_dialog(GtkWidget *parent, appdata_t &appdata, object_t &object);
+void relation_membership_dialog(GtkWidget *parent, const presets_items *presets,
+                                osm_t *osm, object_t &object);
 
 void relation_list(GtkWidget *parent, appdata_t &appdata);
 void relation_show_members(GtkWidget *parent, const relation_t *relation);

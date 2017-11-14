@@ -376,8 +376,8 @@ void tag_context_t::info_tags_replace() {
 }
 
 static void on_relations(tag_context_t *context) {
-  relation_membership_dialog(context->dialog, context->appdata,
-                             context->object);
+  relation_membership_dialog(context->dialog, context->appdata.presets,
+                             context->appdata.osm, context->object);
 }
 
 static GtkWidget *tag_widget(tag_context_t *context) {

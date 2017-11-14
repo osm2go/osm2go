@@ -40,10 +40,11 @@
 /* --------------- relation dialog for an item (node or way) ----------- */
 
 struct relitem_context_t {
-  relitem_context_t(object_t &o, appdata_t &a);
+  relitem_context_t(object_t &o, const presets_items *pr, osm_t *os);
 
   object_t &item;
-  appdata_t &appdata;
+  const presets_items * const presets;
+  osm_t * const osm;
   GtkWidget *dialog, *view;
   GtkListStore *store;
 };
@@ -56,9 +57,10 @@ enum {
   RELITEM_NUM_COLS
 };
 
-relitem_context_t::relitem_context_t(object_t &o, appdata_t &a)
+relitem_context_t::relitem_context_t(object_t &o, const presets_items *pr, osm_t *os)
   : item(o)
-  , appdata(a)
+  , presets(pr)
+  , osm(os)
   , dialog(O2G_NULLPTR)
   , view(O2G_NULLPTR)
   , store(O2G_NULLPTR)
@@ -206,7 +208,7 @@ static void changed(GtkTreeSelection *sel, relitem_context_t *context) {
       printf("selected: " ITEM_ID_FORMAT "\n", relation->id);
 
       /* either accept this or unselect again */
-      if(relation_add_item(context->dialog, relation, context->item, context->appdata.presets)) {
+      if(relation_add_item(context->dialog, relation, context->item, context->presets)) {
         // the item is now the last one in the chain
         const member_t &member = relation->members.back();
 	gtk_list_store_set(context->store, &iter,
@@ -359,8 +361,8 @@ static GtkWidget *relation_item_list_widget(relitem_context_t &context) {
   /* build a list of iters of all items that should be selected */
   relation_list_insert_functor inserter(context, selection);
 
-  std::for_each(context.appdata.osm->relations.begin(),
-                context.appdata.osm->relations.end(), inserter);
+  std::for_each(context.osm->relations.begin(),
+                context.osm->relations.end(), inserter);
 
   if(!inserter.selname.empty())
     list_view_scroll(GTK_TREE_VIEW(context.view), selection, &inserter.sel_iter);
@@ -385,9 +387,9 @@ static GtkWidget *relation_item_list_widget(relitem_context_t &context) {
 #endif
 }
 
-void relation_membership_dialog(GtkWidget *parent,
-			 appdata_t &appdata, object_t &object) {
-  relitem_context_t context(object, appdata);
+void relation_membership_dialog(GtkWidget *parent, const presets_items *presets,
+                                osm_t *osm, object_t &object) {
+  relitem_context_t context(object, presets, osm);
 
   const char *tpl;
   switch(object.type) {
