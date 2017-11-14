@@ -35,7 +35,7 @@ struct pos_bounds {
 };
 
 struct area_edit_t {
-  explicit area_edit_t(appdata_t &a, pos_t &mi, pos_t &ma, GtkWidget *dlg);
+  area_edit_t(appdata_t &a, pos_t &mi, pos_t &ma, GtkWidget *dlg);
   appdata_t &appdata;
   GtkWidget * const parent;   /* parent widget to be placed upon */
   pos_t &min, &max;    /* positions to work on */
