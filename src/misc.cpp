@@ -371,7 +371,7 @@ GType entry_type(void) {
 #endif
 }
 
-GtkWidget *button_new_with_label(const gchar *label) {
+GtkWidget *button_new_with_label(const char *label) {
   GtkWidget *button = gtk_button_new_with_label(label);
 #ifdef FREMANTLE
   hildon_gtk_widget_set_theme_size(button,
