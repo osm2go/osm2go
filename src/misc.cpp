@@ -146,23 +146,22 @@ void warningf(GtkWidget *parent, const char *fmt, ...) {
 #define RESPONSE_NO   GTK_RESPONSE_CANCEL
 #endif
 
-static void on_toggled(GtkWidget *button, gpointer data) {
+static void on_toggled(GtkWidget *button, int *flags) {
   gboolean active = check_button_get_active(button);
-  int flags = *static_cast<gint *>(data);
 
   GtkWidget *dialog = gtk_widget_get_toplevel(button);
 
-  if(flags & MISC_AGAIN_FLAG_DONT_SAVE_NO)
+  if(*flags & MISC_AGAIN_FLAG_DONT_SAVE_NO)
     gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog),
 				      RESPONSE_NO, !active);
 
-  if(flags & MISC_AGAIN_FLAG_DONT_SAVE_YES)
+  if(*flags & MISC_AGAIN_FLAG_DONT_SAVE_YES)
     gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog),
 				      RESPONSE_YES, !active);
 }
 
-bool yes_no_f(GtkWidget *parent, appdata_t &, guint again_bit,
-              gint flags, const char *title, const char *fmt, ...) {
+bool yes_no_f(GtkWidget *parent, unsigned int again_bit,
+              int flags, const char *title, const char *fmt, ...) {
   /* flags used to prevent re-appearence of dialogs */
   static struct {
     unsigned int not_again;     /* bit is set if dialog is not to be displayed again */

@@ -1806,7 +1806,7 @@ void map_delete_selected(map_t *map) {
 
   const char *objtype = item.object.type_string();
   gchar *msgtitle = g_strdup_printf(_("Delete selected %s?"), objtype);
-  bool yn = yes_no_f(map->appdata.window, map->appdata,
+  bool yn = yes_no_f(map->appdata.window,
                      MISC_AGAIN_ID_DELETE, MISC_AGAIN_FLAG_DONT_SAVE_NO, msgtitle,
                      _("Do you really want to delete the selected %s?"), objtype);
   g_free(msgtitle);
@@ -1824,7 +1824,7 @@ void map_delete_selected(map_t *map) {
     /* check if this node is part of a way with two nodes only. */
     /* we cannot delete this as this would also delete the way */
     if(map->appdata.osm->find_way(short_way(item.object.node)) != O2G_NULLPTR &&
-       !yes_no_f(map->appdata.window, map->appdata, 0, 0,
+       !yes_no_f(map->appdata.window, 0, 0,
                  _("Delete node in short way(s)?"),
                  _("Deleting this node will also delete one or more ways "
                    "since they'll contain only one node afterwards. "

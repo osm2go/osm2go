@@ -298,12 +298,10 @@ static bool replace_with_last(const tag_context_t *context, const osm_t::TagMap 
     return true;
 
   const char *ts = context->object.type_string();
-  return TRUE == yes_no_f(context->dialog,
-                          context->appdata, MISC_AGAIN_ID_OVERWRITE_TAGS, 0,
-                          _("Overwrite tags?"),
-                          _("This will overwrite all tags of this %s with the "
-                            "ones from the %s selected last.\n\n"
-                            "Do you really want this?"), ts, ts);
+  return yes_no_f(context->dialog, MISC_AGAIN_ID_OVERWRITE_TAGS, 0,
+                  _("Overwrite tags?"),
+                  _("This will overwrite all tags of this %s with the ones from "
+                    "the %s selected last.\n\nDo you really want this?"), ts, ts);
 }
 
 static void on_tag_last(tag_context_t *context) {

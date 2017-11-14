@@ -99,9 +99,8 @@ void misc_table_attach(GtkWidget *table, GtkWidget *widget, int x, int y);
 GtkWidget *entry_new(void);
 GType entry_type(void);
 
-bool yes_no_f(GtkWidget *parent,
-              appdata_t &appdata, guint again_bit, gint flags,
-              const char *title, const char *fmt, ...) G_GNUC_PRINTF(6, 7);
+bool yes_no_f(GtkWidget *parent, unsigned int again_bit, int flags,
+              const char *title, const char *fmt, ...) G_GNUC_PRINTF(5, 6);
 GtkWidget *check_button_new_with_label(const gchar *label);
 void check_button_set_active(GtkWidget *button, gboolean active);
 gboolean check_button_get_active(GtkWidget *button);

@@ -767,8 +767,7 @@ static void on_relation_remove(relation_context_t *context) {
   printf("remove relation #" ITEM_ID_FORMAT "\n", sel->id);
 
   if(!sel->members.empty())
-    if(!yes_no_f(context->dialog, context->appdata, 0, 0,
-		 _("Delete non-empty relation?"),
+    if(!yes_no_f(context->dialog, 0, 0, _("Delete non-empty relation?"),
 		 _("This relation still has %zu members. "
 		   "Delete it anyway?"), sel->members.size()))
       return;
