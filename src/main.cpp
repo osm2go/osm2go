@@ -40,9 +40,18 @@
 #ifdef FREMANTLE
 #include <hildon/hildon-button.h>
 #include <hildon/hildon-check-button.h>
+#include <hildon/hildon-defines.h>
+#include <hildon/hildon-file-chooser-dialog.h>
+#include <hildon/hildon-gtk.h>
+#include <hildon/hildon-pannable-area.h>
+#include <hildon/hildon-program.h>
 #include <hildon/hildon-window-stack.h>
 #include <gdk/gdkx.h>
 #include <X11/Xatom.h>
+#include <libosso.h>      /* required for screen saver timeout */
+#define GTK_FM_OK  GTK_RESPONSE_OK
+#else
+#define GTK_FM_OK  GTK_RESPONSE_ACCEPT
 #endif
 
 #if __cplusplus < 201103L

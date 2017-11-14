@@ -29,6 +29,10 @@
 #include <algorithm>
 #include <cassert>
 #include <cstring>
+#ifdef FREMANTLE
+#include <hildon/hildon-gtk.h>
+#include <hildon/hildon-pannable-area.h>
+#endif
 #include <set>
 #include <string>
 #include <strings.h>

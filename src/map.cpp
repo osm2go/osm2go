@@ -43,6 +43,9 @@
 #include <cstddef>
 #include <cstring>
 #include <gdk/gdkkeysyms.h>
+#ifdef FREMANTLE
+#include <hildon/hildon-defines.h>
+#endif
 #include <vector>
 
 class map_internal : public map_t {

@@ -33,6 +33,9 @@
 #define OSM2GO_ICON "osm2go.32"
 #endif
 
+#ifdef FREMANTLE
+#include <hildon/hildon-pannable-area.h>
+#endif
 #include <gtk/gtk.h>
 
 #include <osm2go_cpp.h>

@@ -37,6 +37,10 @@
 #include <cassert>
 #include <cmath>
 #include <cstring>
+#ifdef FREMANTLE
+#include <hildon/hildon-gtk.h>
+#include <hildon/hildon-pannable-area.h>
+#endif
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <map>
