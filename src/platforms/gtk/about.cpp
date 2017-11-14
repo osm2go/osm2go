@@ -131,7 +131,7 @@ static GtkWidget *license_page_new(void) {
 #endif
 }
 
-static GtkWidget *copyright_page_new(appdata_t *appdata) {
+static GtkWidget *copyright_page_new(icon_t &icons) {
   GtkWidget *vbox = gtk_vbox_new(FALSE, 0);
 
   /* ------------------------ */
@@ -139,8 +139,7 @@ static GtkWidget *copyright_page_new(appdata_t *appdata) {
 
   GtkWidget *hbox = gtk_hbox_new(FALSE, 0);
   GtkWidget *ihbox = gtk_hbox_new(FALSE, 20);
-  gtk_box_pack_start(GTK_BOX(ihbox), appdata->icons.widget_load(OSM2GO_ICON),
-		     FALSE, FALSE, 0);
+  gtk_box_pack_start(GTK_BOX(ihbox), icons.widget_load(OSM2GO_ICON), FALSE, FALSE, 0);
   gtk_box_pack_start(GTK_BOX(ihbox), label_scale("OSM2Go", PANGO_SCALE_XX_LARGE),
 		     FALSE, FALSE, 0);
 
@@ -242,7 +241,7 @@ static GtkWidget *authors_page_new(void) {
 #endif
 }
 
-static GtkWidget *donate_page_new(appdata_t *appdata) {
+static GtkWidget *donate_page_new(icon_t &icons) {
   GtkWidget *vbox = gtk_vbox_new(FALSE, 0);
 
   gtk_box_pack_start_defaults(GTK_BOX(vbox),
@@ -258,7 +257,7 @@ static GtkWidget *donate_page_new(appdata_t *appdata) {
 
   GtkWidget *ihbox = gtk_hbox_new(FALSE, 0);
   GtkWidget *button = gtk_button_new();
-  gtk_button_set_image(GTK_BUTTON(button), appdata->icons.widget_load(PAYPAL_ICON));
+  gtk_button_set_image(GTK_BUTTON(button), icons.widget_load(PAYPAL_ICON));
   gtk_button_set_relief(GTK_BUTTON(button), GTK_RELIEF_NONE);
   g_signal_connect_swapped(button, "clicked",
                            G_CALLBACK(on_paypal_button_clicked), O2G_NULLPTR);
@@ -305,11 +304,11 @@ void about_box(appdata_t *appdata) {
 
   GtkWidget *notebook = notebook_new();
 
-  notebook_append_page(notebook, copyright_page_new(appdata), _("Copyright"));
-  notebook_append_page(notebook, license_page_new(),          _("License"));
-  notebook_append_page(notebook, authors_page_new(),          _("Authors"));
-  notebook_append_page(notebook, donate_page_new(appdata),    _("Donate"));
-  notebook_append_page(notebook, bugs_page_new(),             _("Bugs"));
+  notebook_append_page(notebook, copyright_page_new(appdata->icons), _("Copyright"));
+  notebook_append_page(notebook, license_page_new(),                 _("License"));
+  notebook_append_page(notebook, authors_page_new(),                 _("Authors"));
+  notebook_append_page(notebook, donate_page_new(appdata->icons),    _("Donate"));
+  notebook_append_page(notebook, bugs_page_new(),                    _("Bugs"));
 
   gtk_box_pack_start_defaults(GTK_BOX((GTK_DIALOG(dialog))->vbox),
 			      notebook);
