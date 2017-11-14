@@ -76,12 +76,6 @@ struct appdata_t {
   class iconbar_t *iconbar;
   struct presets_items *presets;
 
-  /* flags used to prevent re-appearence of dialogs */
-  struct {
-    unsigned int not_again;     /* bit is set if dialog is not to be displayed again */
-    unsigned int reply;         /* reply to be assumed if "not_again" bit is set */
-  } dialog_again;
-
   std::array<GtkWidget *, MainUi::MENU_ITEMS_COUNT> menuitems;
 
   struct {

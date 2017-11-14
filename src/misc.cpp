@@ -161,10 +161,16 @@ static void on_toggled(GtkWidget *button, gpointer data) {
 				      RESPONSE_YES, !active);
 }
 
-bool yes_no_f(GtkWidget *parent, appdata_t &appdata, guint again_bit,
+bool yes_no_f(GtkWidget *parent, appdata_t &, guint again_bit,
               gint flags, const char *title, const char *fmt, ...) {
-  if(again_bit && (appdata.dialog_again.not_again & again_bit))
-    return ((appdata.dialog_again.reply & again_bit) != 0);
+  /* flags used to prevent re-appearence of dialogs */
+  static struct {
+    unsigned int not_again;     /* bit is set if dialog is not to be displayed again */
+    unsigned int reply;         /* reply to be assumed if "not_again" bit is set */
+  } dialog_again;
+
+  if(again_bit && (dialog_again.not_again & again_bit))
+    return ((dialog_again.reply & again_bit) != 0);
 
   va_list args;
   va_start( args, fmt );
@@ -210,11 +216,11 @@ bool yes_no_f(GtkWidget *parent, appdata_t &appdata, guint again_bit,
   if(cbut && gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cbut))) {
     /* the user doesn't want to see this dialog again */
 
-    appdata.dialog_again.not_again |= again_bit;
+    dialog_again.not_again |= again_bit;
     if(yes)
-      appdata.dialog_again.reply |=  again_bit;
+      dialog_again.reply |=  again_bit;
     else
-      appdata.dialog_again.reply &= ~again_bit;
+      dialog_again.reply &= ~again_bit;
   }
 
   gtk_widget_destroy(dialog);

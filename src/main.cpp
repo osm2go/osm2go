@@ -1150,7 +1150,6 @@ appdata_t::appdata_t()
   , style(style_load(settings->style, icons))
   , gps_state(gps_state_t::create())
 {
-  memset(&dialog_again, 0, sizeof(dialog_again));
   // the TR1 header has assign() for what is later called fill()
 #if __cplusplus >= 201103L
   menuitems.fill(O2G_NULLPTR);
