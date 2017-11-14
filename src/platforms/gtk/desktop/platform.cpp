@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Rolf Eike Beer <eike@sf-mail.de>.
+ * Copyright (C) 2008 Till Harbaum <till@harbaum.org>.
  *
  * This file is part of OSM2Go.
  *
@@ -14,28 +14,18 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
+ * along with OSM2Go. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef OSM2GO_PLATFORM_H
-#define OSM2GO_PLATFORM_H
+#include <osm2go_platform.h>
 
-#include <gtk/gtk.h>
+int osm2go_platform::init(int &argc, char **argv)
+{
+#if !GLIB_CHECK_VERSION(2,32,0)
+  g_thread_init(O2G_NULLPTR);
+#endif
 
-struct osm2go_platform {
-  /**
-   * @brief process all pending GUI events
-   * @param tick if a '.' should be printed for every iteration
-   */
-  static void process_events(bool tick = false) {
-    while(gtk_events_pending()) {
-      if(tick)
-        putchar('.');
-      gtk_main_iteration();
-    }
-  }
+  gtk_init(&argc, &argv);
 
-  static int init(int &argc, char **argv);
-};
-
-#endif // OSM2GO_PLATFORM_H
+  return 0;
+}

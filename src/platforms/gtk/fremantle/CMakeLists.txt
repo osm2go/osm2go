@@ -2,6 +2,7 @@
 target_sources(osm2go_lib PRIVATE
 	${CMAKE_CURRENT_SOURCE_DIR}/dbus.c
 	${CMAKE_CURRENT_SOURCE_DIR}/dbus.h
+	${CMAKE_CURRENT_SOURCE_DIR}/platform.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/statusbar.cpp
 )
 
