@@ -22,10 +22,6 @@
 
 #ifdef FREMANTLE
 typedef struct _HildonProgram HildonProgram;
-#define HILDON_ENTRY_NO_AUTOCAP(a) \
-  hildon_gtk_entry_set_input_mode(GTK_ENTRY(a),HILDON_GTK_INPUT_MODE_FULL)
-#else
-#define HILDON_ENTRY_NO_AUTOCAP(a)
 #endif
 
 #include <gtk/gtk.h>

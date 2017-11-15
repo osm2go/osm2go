@@ -612,38 +612,34 @@ bool wms_server_edit(wms_server_context_t *context, gboolean edit_name,
   gtk_dialog_set_default_response(GTK_DIALOG(dialog),
 				  GTK_RESPONSE_ACCEPT);
 
-  GtkWidget *label, *name, *server, *path;
+  GtkWidget *label = gtk_label_new(_("Name:"));
+  GtkWidget *name = entry_new(EntryFlagsNoAutoCap);
   GtkWidget *table = gtk_table_new(2, 3, FALSE);
 
-  gtk_table_attach(GTK_TABLE(table),
-		   label = gtk_label_new(_("Name:")), 0, 1, 0, 1,
+  gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1,
 		   GTK_FILL, static_cast<GtkAttachOptions>(0), 0, 0);
   gtk_misc_set_alignment(GTK_MISC(label), 0.f, 0.5f);
-  gtk_table_attach_defaults(GTK_TABLE(table),
-		    name = entry_new(), 1, 2, 0, 1);
+  gtk_table_attach_defaults(GTK_TABLE(table), name, 1, 2, 0, 1);
   gtk_entry_set_activates_default(GTK_ENTRY(name), TRUE);
-  HILDON_ENTRY_NO_AUTOCAP(name);
   gtk_widget_set_sensitive(GTK_WIDGET(name), edit_name);
   g_signal_connect(G_OBJECT(name), "changed",
 		   G_CALLBACK(callback_modified_name), context->appdata.settings);
 
-  gtk_table_attach(GTK_TABLE(table),
-		   label = gtk_label_new(_("Server:")), 0, 1, 1, 2,
+  label = gtk_label_new(_("Server:"));
+  GtkWidget *server = entry_new(EntryFlagsNoAutoCap);
+  gtk_table_attach(GTK_TABLE(table), label, 0, 1, 1, 2,
 		   GTK_FILL, static_cast<GtkAttachOptions>(0), 0, 0);
   gtk_misc_set_alignment(GTK_MISC(label), 0.f, 0.5f);
-  gtk_table_attach_defaults(GTK_TABLE(table),
-		    server = entry_new(), 1, 2, 1, 2);
+  gtk_table_attach_defaults(GTK_TABLE(table), server, 1, 2, 1, 2);
   gtk_entry_set_activates_default(GTK_ENTRY(server), TRUE);
-  HILDON_ENTRY_NO_AUTOCAP(server);
 
-  gtk_table_attach(GTK_TABLE(table),
-		   label = gtk_label_new(_("Path:")), 0, 1, 2, 3,
+  label = gtk_label_new(_("Path:"));
+  GtkWidget *path = entry_new(EntryFlagsNoAutoCap);
+  gtk_table_attach(GTK_TABLE(table), label, 0, 1, 2, 3,
 		   GTK_FILL, static_cast<GtkAttachOptions>(0), 0, 0);
   gtk_misc_set_alignment(GTK_MISC(label), 0.f, 0.5f);
-  gtk_table_attach_defaults(GTK_TABLE(table),
-		    path = entry_new(), 1, 2, 2, 3);
+  gtk_table_attach_defaults(GTK_TABLE(table), path, 1, 2, 2, 3);
   gtk_entry_set_activates_default(GTK_ENTRY(path), TRUE);
-  HILDON_ENTRY_NO_AUTOCAP(path);
 
   gtk_entry_set_text(GTK_ENTRY(name), wms_server->name.c_str());
   gtk_entry_set_text(GTK_ENTRY(server), wms_server->server.c_str());

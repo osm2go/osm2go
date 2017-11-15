@@ -96,7 +96,11 @@ GtkWidget *misc_scrolled_window_new(gboolean etched_in);
 void misc_table_attach(GtkWidget *table, GtkWidget *widget, int x, int y);
 
 /* unified widgets */
-GtkWidget *entry_new(void);
+enum EntryFlags {
+  EntryFlagsDefault,
+  EntryFlagsNoAutoCap
+};
+GtkWidget *entry_new(EntryFlags flags = EntryFlagsDefault);
 GType entry_type(void);
 
 bool yes_no_f(GtkWidget *parent, unsigned int again_bit, int flags,

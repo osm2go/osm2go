@@ -108,7 +108,7 @@ project_context_t::project_context_t(appdata_t &a, project_t *p, gboolean n,
   , maxlon(pos_lon_label_new(project->max.lon))
   , is_new(n)
 #ifdef SERVER_EDITABLE
-  , server(entry_new())
+  , server(entry_new(EntryFlagsNoAutoCap))
 #endif
   , area_edit(a.gps_state, project->min, project->max, dlg)
   , projects(j)
@@ -1173,7 +1173,6 @@ project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
 #ifdef SERVER_EDITABLE
   gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_left_new(_("Server:")), 0, 1, 3, 4);
   gtk_entry_set_activates_default(GTK_ENTRY(context.server), TRUE);
-  HILDON_ENTRY_NO_AUTOCAP(context.server);
   gtk_entry_set_text(GTK_ENTRY(context.server), project->server);
   gtk_table_attach_defaults(GTK_TABLE(table),  context.server, 1, 4, 3, 4);
 

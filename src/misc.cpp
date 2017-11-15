@@ -357,11 +357,15 @@ void misc_table_attach(GtkWidget *table, GtkWidget *widget, int x, int y) {
 
 /* ---------- unified widgets for fremantle/others --------------- */
 
-GtkWidget *entry_new(void) {
+GtkWidget *entry_new(EntryFlags flags) {
 #ifndef FREMANTLE
+  (void) flags;
   return gtk_entry_new();
 #else
-  return hildon_entry_new(HILDON_SIZE_AUTO);
+  GtkWidget *ret = hildon_entry_new(HILDON_SIZE_AUTO);
+  if(flags & EntryFlagsNoAutoCap)
+    hildon_gtk_entry_set_input_mode(GTK_ENTRY(ret), HILDON_GTK_INPUT_MODE_FULL);
+  return ret;
 #endif
 }
 

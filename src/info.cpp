@@ -142,28 +142,25 @@ static bool tag_edit(GtkWindow *window, std::string &k, std::string &v) {
   gtk_dialog_set_default_response(GTK_DIALOG(dialog),
 				  GTK_RESPONSE_ACCEPT);
 
-  GtkWidget *label, *key, *value;
+  GtkWidget *label = gtk_label_new(_("Key:"));
+  GtkWidget *key = entry_new(EntryFlagsNoAutoCap);
   GtkWidget *table = gtk_table_new(2, 2, FALSE);
 
-  gtk_table_attach(GTK_TABLE(table), label = gtk_label_new(_("Key:")),
-                   0, 1, 0, 1,
+  gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1,
                    static_cast<GtkAttachOptions>(0),
                    static_cast<GtkAttachOptions>(0), 0, 0);
   gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-  gtk_table_attach_defaults(GTK_TABLE(table),
-			    key = entry_new(), 1, 2, 0, 1);
+  gtk_table_attach_defaults(GTK_TABLE(table), key, 1, 2, 0, 1);
   gtk_entry_set_activates_default(GTK_ENTRY(key), TRUE);
-  HILDON_ENTRY_NO_AUTOCAP(key);
 
-  gtk_table_attach(GTK_TABLE(table),  label = gtk_label_new(_("Value:")),
-                   0, 1, 1, 2,
+  label = gtk_label_new(_("Value:"));
+  GtkWidget *value = entry_new(EntryFlagsNoAutoCap);
+  gtk_table_attach(GTK_TABLE(table), label, 0, 1, 1, 2,
                    static_cast<GtkAttachOptions>(0),
                    static_cast<GtkAttachOptions>(0), 0, 0);
   gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-  gtk_table_attach_defaults(GTK_TABLE(table),
-		    value = entry_new(), 1, 2, 1, 2);
+  gtk_table_attach_defaults(GTK_TABLE(table), value, 1, 2, 1, 2);
   gtk_entry_set_activates_default(GTK_ENTRY(value), TRUE);
-  HILDON_ENTRY_NO_AUTOCAP(value);
 
   gtk_entry_set_text(GTK_ENTRY(key), k.c_str());
   gtk_entry_set_text(GTK_ENTRY(value), v.c_str());

@@ -752,16 +752,14 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
 
   GtkWidget *table = gtk_table_new(2, 2, FALSE);
   table_attach_label_l(table, _("Username:"), 0, 1, 0, 1);
-  GtkWidget *uentry = entry_new();
-  HILDON_ENTRY_NO_AUTOCAP(uentry);
+  GtkWidget *uentry = entry_new(EntryFlagsNoAutoCap);
   const char *username = !appdata.settings->username.empty() ?
                          appdata.settings->username.c_str() :
                          _("<your osm username>");
   gtk_entry_set_text(GTK_ENTRY(uentry), username);
   gtk_table_attach_defaults(GTK_TABLE(table),  uentry, 1, 2, 0, 1);
   table_attach_label_l(table, _("Password:"), 0, 1, 1, 2);
-  GtkWidget *pentry = entry_new();
-  HILDON_ENTRY_NO_AUTOCAP(pentry);
+  GtkWidget *pentry = entry_new(EntryFlagsNoAutoCap);
   if(!appdata.settings->password.empty())
     gtk_entry_set_text(GTK_ENTRY(pentry), appdata.settings->password.c_str());
   gtk_entry_set_visibility(GTK_ENTRY(pentry), FALSE);
@@ -769,8 +767,7 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
   gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, FALSE, FALSE, 0);
 
   table_attach_label_l(table, _("Source:"), 0, 1, 2, 3);
-  GtkWidget *sentry = entry_new();
-  HILDON_ENTRY_NO_AUTOCAP(sentry);
+  GtkWidget *sentry = entry_new(EntryFlagsNoAutoCap);
   gtk_table_attach_defaults(GTK_TABLE(table),  sentry, 1, 2, 2, 3);
   gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, FALSE, FALSE, 0);
 
