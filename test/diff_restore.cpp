@@ -17,19 +17,6 @@
 #include <iostream>
 #include <sys/stat.h>
 
-appdata_t::appdata_t()
-  : uicontrol(O2G_NULLPTR)
-  , window(O2G_NULLPTR)
-  , statusbar(O2G_NULLPTR)
-  , settings(O2G_NULLPTR)
-  , gps_state(O2G_NULLPTR)
-{
-}
-
-appdata_t::~appdata_t()
-{
-}
-
 static void verify_diff(osm_t *osm)
 {
   assert_cmpnum(12, osm->nodes.size());
