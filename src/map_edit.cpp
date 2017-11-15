@@ -275,7 +275,7 @@ void map_edit_way_add_ok(map_t *map) {
   map->action.way = O2G_NULLPTR;
 
   /* let the user specify some tags for the new way */
-  info_dialog(map->appdata.window, map->appdata);
+  info_dialog(map->appdata.window, map, map->appdata.osm, map->appdata.presets);
 }
 
 /* -------------------------- way_node_add ----------------------- */

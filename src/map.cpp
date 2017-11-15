@@ -1287,7 +1287,7 @@ static void map_button_release(map_t *map, int x, int y) {
       map_node_select(map, node);
 
       /* let the user specify some tags for the new node */
-      info_dialog(map->appdata.window, map->appdata);
+      info_dialog(map->appdata.window, map, map->appdata.osm, map->appdata.presets);
     }
     break;
   }
@@ -1439,7 +1439,7 @@ bool map_t::key_press_event(unsigned int keyval) {
       map_action_ok(this);
     /* otherwise if info is enabled call that */
     else if(appdata.iconbar->isInfoEnabled())
-      info_dialog(appdata.window, appdata);
+      info_dialog(appdata.window, this, appdata.osm, appdata.presets);
     break;
 
   case GDK_Escape:   // same as HILDON_HARDKEY_ESC
@@ -1765,7 +1765,7 @@ void map_action_ok(map_t *map) {
       map_node_select(map, node);
 
       /* let the user specify some tags for the new node */
-      info_dialog(map->appdata.window, map->appdata);
+      info_dialog(map->appdata.window, map, map->appdata.osm, map->appdata.presets);
     }
     }
 

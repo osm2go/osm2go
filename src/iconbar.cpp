@@ -81,7 +81,7 @@ public:
 };
 
 static void on_info_clicked(appdata_t *appdata) {
-  info_dialog(appdata->window, *appdata);
+  info_dialog(appdata->window, appdata->map, appdata->osm, appdata->presets);
 }
 
 static void on_node_add_clicked(map_t *map) {

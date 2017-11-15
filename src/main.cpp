@@ -323,7 +323,7 @@ cb_menu_undo_changes(appdata_t *appdata) {
 static void
 cb_menu_osm_relations(appdata_t *appdata) {
   /* list relations of all objects */
-  relation_list(appdata->window, *appdata);
+  relation_list(appdata->window, appdata->map, appdata->osm, appdata->presets);
 }
 
 #ifndef FREMANTLE
@@ -524,7 +524,6 @@ cb_menu_track_export(appdata_t *appdata) {
 #define uispecific_main_menu_new gtk_menu_new
 
 #endif
-
 
 #ifndef FREMANTLE
 // Half-arsed slapdash common menu item constructor. Let's use GtkBuilder

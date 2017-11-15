@@ -26,14 +26,17 @@
 #include <string>
 #include <vector>
 
-struct appdata_t;
+class map_t;
+struct presets_items;
 
 class tag_context_t {
 public:
-  explicit tag_context_t(appdata_t &a, const object_t &o);
+  explicit tag_context_t(map_t *m, osm_t *os, presets_items *p, const object_t &o);
   ~tag_context_t();
 
-  appdata_t &appdata;
+  map_t * const map;
+  osm_t * const osm;
+  presets_items * const presets;
   GtkWidget *dialog, *list;
   GtkListStore *store;
   object_t object;
@@ -43,7 +46,7 @@ public:
   void update_collisions(const std::string &k);
 };
 
-void info_dialog(GtkWidget *parent, appdata_t &appdata);
-bool info_dialog(GtkWidget *parent, appdata_t &appdata, object_t &object);
+void info_dialog(GtkWidget *parent, map_t *map, osm_t *osm, presets_items *presets);
+bool info_dialog(GtkWidget *parent, map_t *map, osm_t *osm, presets_items *presets, object_t &object);
 
 #endif // INFO_H

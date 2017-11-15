@@ -19,7 +19,6 @@
 
 #include "relation_edit.h"
 
-#include "appdata.h"
 #include "info.h"
 #include "josm_presets.h"
 #include "list.h"
@@ -74,9 +73,21 @@ relitem_context_t::relitem_context_t(object_t &o, const presets_items *pr, osm_t
 struct entry_insert_text {
   GtkWidget * const entry;
   explicit entry_insert_text(GtkWidget *en) : entry(en) {}
-  void operator()(const std::string &role) {
+  inline void operator()(const std::string &role) {
     combo_box_append_text(entry, role.c_str());
   }
+};
+
+struct relation_context_t {
+  inline relation_context_t(map_t *m, osm_t *o, presets_items *p, GtkWidget *d)
+    : map(m), osm(o), presets(p), dialog(d) {}
+
+  map_t * const map;
+  osm_t * const osm;
+  presets_items * const presets;
+  GtkWidget * const dialog;
+  GtkWidget *list, *show_btn;
+  GtkListStore *store;
 };
 
 static bool relation_add_item(GtkWidget *parent, relation_t *relation,
@@ -183,10 +194,9 @@ static void relation_remove_item(relation_t *relation, const object_t &object) {
   relation->flags |= OSM_FLAG_DIRTY;
 }
 
-static gboolean relation_info_dialog(GtkWidget *parent, appdata_t &appdata,
-				     relation_t *relation) {
+static bool relation_info_dialog(relation_context_t *context, relation_t *relation) {
   object_t object(relation);
-  return info_dialog(parent, appdata, object);
+  return info_dialog(context->dialog, context->map, context->osm, context->presets, object);
 }
 
 static void changed(GtkTreeSelection *sel, relitem_context_t *context) {
@@ -434,16 +444,6 @@ void relation_membership_dialog(GtkWidget *parent, const presets_items *presets,
 
 /* -------------------- global relation list ----------------- */
 
-struct relation_context_t {
-  relation_context_t(appdata_t &a, GtkWidget *d)
-    : appdata(a), dialog(d) {}
-
-  appdata_t &appdata;
-  GtkWidget * const dialog;
-  GtkWidget *list, *show_btn;
-  GtkListStore *store;
-};
-
 enum {
   RELATION_COL_TYPE = 0,
   RELATION_COL_NAME,
@@ -681,10 +681,10 @@ static void on_relation_members(relation_context_t *context) {
 /* user clicked "select" button in relation list */
 static void on_relation_select(relation_context_t *context, GtkWidget *but) {
   relation_t *sel = get_selected_relation(context);
-  context->appdata.map->item_deselect();
+  context->map->item_deselect();
 
   if(sel) {
-    context->appdata.map->select_relation(sel);
+    context->map->select_relation(sel);
 
     /* tell dialog to close as we want to see the selected relation */
 
@@ -701,12 +701,12 @@ static void on_relation_add(relation_context_t *context) {
   /* create a new relation */
 
   relation_t *relation = new relation_t(0);
-  if(!relation_info_dialog(context->dialog, context->appdata, relation)) {
+  if(!relation_info_dialog(context, relation)) {
     printf("tag edit cancelled\n");
     relation->cleanup();
     delete relation;
   } else {
-    context->appdata.osm->relation_attach(relation);
+    context->osm->relation_attach(relation);
 
     /* append a row for the new data */
 
@@ -734,7 +734,7 @@ static void on_relation_edit(relation_context_t *context) {
 
   printf("edit relation #" ITEM_ID_FORMAT "\n", sel->id);
 
-  if (!relation_info_dialog(context->dialog, context->appdata, sel))
+  if (!relation_info_dialog(context, sel))
     return;
 
   // Locate the changed item
@@ -785,7 +785,7 @@ static void on_relation_remove(relation_context_t *context) {
     gtk_list_store_remove(context->store, &iter);
 
   /* then really delete it */
-  context->appdata.osm->relation_delete(sel);
+  context->osm->relation_delete(sel);
 
   relation_list_selected(context->list, O2G_NULLPTR);
 }
@@ -846,7 +846,7 @@ static GtkWidget *relation_list_widget(relation_context_t &context) {
 
   relation_list_widget_functor fc(context.store);
 
-  const std::map<item_id_t, relation_t *> &rchain = context.appdata.osm->relations;
+  const std::map<item_id_t, relation_t *> &rchain = context.osm->relations;
   std::for_each(rchain.begin(), rchain.end(), fc);
 
   g_object_unref(context.store);
@@ -857,8 +857,8 @@ static GtkWidget *relation_list_widget(relation_context_t &context) {
 }
 
 /* a global view on all relations */
-void relation_list(GtkWidget *parent, appdata_t &appdata) {
-  relation_context_t context(appdata,
+void relation_list(GtkWidget *parent, map_t *map, osm_t *osm, presets_items *presets) {
+  relation_context_t context(map, osm, presets,
                      misc_dialog_new(MISC_DIALOG_LARGE, _("All relations"),
                                      GTK_WINDOW(parent),
                                      GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
