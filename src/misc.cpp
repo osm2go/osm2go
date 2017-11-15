@@ -19,7 +19,6 @@
 
 #include "misc.h"
 
-#include "appdata.h"
 #include "pos.h"
 #include "settings.h"
 
@@ -34,6 +33,7 @@
 #include <gtk/gtk.h>
 #endif
 
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <cstring>
