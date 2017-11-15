@@ -112,13 +112,15 @@ pos_t gpsd_state_t::get_pos(float* alt)
 {
   pos_t pos(NAN, NAN);
 
-  g_mutex_lock(mutex);
-  if(gpsdata.set & STATUS_SET) {
-    if(gpsdata.status != STATUS_NO_FIX) {
-      if(gpsdata.set & LATLON_SET)
-        pos = gpsdata.fix.pos;
-      if(alt && gpsdata.set & ALTITUDE_SET)
-        *alt = gpsdata.fix.alt;
+  if(enable) {
+    g_mutex_lock(mutex);
+    if(gpsdata.set & STATUS_SET) {
+      if(gpsdata.status != STATUS_NO_FIX) {
+        if(gpsdata.set & LATLON_SET)
+          pos = gpsdata.fix.pos;
+        if(alt && gpsdata.set & ALTITUDE_SET)
+          *alt = gpsdata.fix.alt;
+      }
     }
   }
 

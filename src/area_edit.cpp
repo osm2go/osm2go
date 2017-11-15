@@ -22,7 +22,6 @@
 #include "appdata.h"
 #include "gps.h"
 #include "misc.h"
-#include "settings.h"
 
 #ifdef ENABLE_OSM_GPS_MAP
 #include "osm-gps-map.h"
@@ -677,9 +676,7 @@ static void on_page_switch(GtkNotebook *nb, GtkWidget *pg, guint, context_t *con
 static gboolean map_gps_update(gpointer data) {
   context_t *context = static_cast<context_t *>(data);
 
-  pos_t pos(NAN, NAN);
-  if(context->area.appdata.settings->enable_gps)
-    pos = context->area.appdata.gps_state->get_pos();
+  pos_t pos = context->area.appdata.gps_state->get_pos();
 
   if(pos.valid()) {
     g_object_set(context->map.widget, "gps-track-highlight-radius", 0, O2G_NULLPTR);

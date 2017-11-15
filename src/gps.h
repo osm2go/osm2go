@@ -50,10 +50,13 @@ public:
    * In case no valid position was received an invalid pos_t will be returned.
    *
    * If @alt was given but no altitude was received the value is set to NAN.
+   *
+   * This returns an invalid position if GPS tracking is disabled.
    */
   virtual pos_t get_pos(float *alt = O2G_NULLPTR) = 0;
 
   virtual void setEnable(bool en) = 0;
+
   /**
    * @brief register or clear the GPS callback
    * @param cb the new callback function, set to NULL to unregister
