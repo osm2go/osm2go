@@ -57,7 +57,7 @@
 struct project_context_t {
   explicit project_context_t(appdata_t &a, project_t *p, gboolean n, const std::vector<project_t *> &j, GtkWidget *dlg);
   project_t * const project;
-  settings_t * const settings;
+  appdata_t &appdata;
   GtkWidget * const dialog;
   GtkWidget * const fsizehdr, * const fsize, * const diff_stat, * const diff_remove;
   GtkWidget * const desc, * const download;
@@ -94,7 +94,7 @@ static GtkWidget *pos_lon_label_new(pos_float_t lon) {
 project_context_t::project_context_t(appdata_t &a, project_t *p, gboolean n,
                                      const std::vector<project_t *> &j, GtkWidget *dlg)
   : project(p)
-  , settings(a.settings)
+  , appdata(a)
   , dialog(dlg)
   , fsizehdr(gtk_label_left_new(_("Map data:")))
   , fsize(gtk_label_left_new())
@@ -110,7 +110,7 @@ project_context_t::project_context_t(appdata_t &a, project_t *p, gboolean n,
 #ifdef SERVER_EDITABLE
   , server(entry_new())
 #endif
-  , area_edit(a, project->min, project->max, dlg)
+  , area_edit(a.gps_state, project->min, project->max, dlg)
   , projects(j)
 {
 }
@@ -970,15 +970,13 @@ static void project_filesize(project_context_t *context) {
 /* means that the user may have unsaved changes */
 bool project_context_t::active_n_dirty() const {
 
-  if(!area_edit.appdata.osm)
+  if(!appdata.osm)
     return false;
 
-  if(area_edit.appdata.project &&
-     area_edit.appdata.project->name == project->name) {
-
+  if(appdata.project && appdata.project->name == project->name) {
     printf("editing the currently open project\n");
 
-    return !diff_is_clean(area_edit.appdata.osm, true);
+    return !diff_is_clean(appdata.osm, true);
   }
 
   return false;
@@ -1046,8 +1044,7 @@ static void on_edit_clicked(project_context_t *context) {
     /* (re-) download area */
     if (pos_valid)
     {
-      if(osm_download(GTK_WIDGET(context->dialog),
-	      context->area_edit.appdata.settings, project))
+      if(osm_download(GTK_WIDGET(context->dialog), context->appdata.settings, project))
          project->data_dirty = false;
     }
     project_filesize(context);
@@ -1059,7 +1056,7 @@ static void on_download_clicked(project_context_t *context) {
 
   printf("download %s\n", project->osm.c_str());
 
-  if(osm_download(context->dialog, context->settings, project))
+  if(osm_download(context->dialog, context->appdata.settings, project))
     project->data_dirty = false;
   else
     printf("download failed\n");
@@ -1072,7 +1069,6 @@ static void on_diff_remove_clicked(project_context_t *context) {
 
   printf("clicked diff remove\n");
 
-  appdata_t &appdata = context->area_edit.appdata;
   if(yes_no_f(context->dialog, 0, 0, _("Discard changes?"),
 	      _("Do you really want to discard your changes? This will "
 		"permanently undo all changes you have made so far and which "
@@ -1081,6 +1077,7 @@ static void on_diff_remove_clicked(project_context_t *context) {
 
     /* if this is the currently open project, we need to undo */
     /* the map changes as well */
+    appdata_t &appdata = context->appdata;
 
     if(appdata.project && appdata.project->name == project->name) {
 

@@ -19,7 +19,6 @@
 
 #include "area_edit.h"
 
-#include "appdata.h"
 #include "gps.h"
 #include "misc.h"
 
@@ -213,8 +212,8 @@ context_t::context_t(area_edit_t& a)
 #endif
 }
 
-area_edit_t::area_edit_t(appdata_t &a, pos_t &mi, pos_t &ma, GtkWidget *dlg)
-  : appdata(a)
+area_edit_t::area_edit_t(gps_state_t *gps, pos_t &mi, pos_t &ma, GtkWidget *dlg)
+  : gps_state(gps)
   , parent(dlg)
   , min(mi)
   , max(ma)
@@ -363,7 +362,7 @@ static void map_update(context_t *context, bool forced) {
   /* check if the position is invalid */
   if(!context->min.valid() || !context->max.valid()) {
     /* no coordinates given: display around the current GPS position if available */
-    pos_t pos = context->area.appdata.gps_state->get_pos();
+    pos_t pos = context->area.gps_state->get_pos();
     int zoom = 12;
     if(!pos.valid()) {
       /* no GPS position available: display the entire world */
@@ -676,7 +675,7 @@ static void on_page_switch(GtkNotebook *nb, GtkWidget *pg, guint, context_t *con
 static gboolean map_gps_update(gpointer data) {
   context_t *context = static_cast<context_t *>(data);
 
-  pos_t pos = context->area.appdata.gps_state->get_pos();
+  pos_t pos = context->area.gps_state->get_pos();
 
   if(pos.valid()) {
     g_object_set(context->map.widget, "gps-track-highlight-radius", 0, O2G_NULLPTR);

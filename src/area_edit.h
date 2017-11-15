@@ -26,6 +26,7 @@
 #include <vector>
 
 struct appdata_t;
+class gps_state_t;
 
 struct pos_bounds {
   pos_bounds(const pos_t &mi, const pos_t &ma)
@@ -35,8 +36,8 @@ struct pos_bounds {
 };
 
 struct area_edit_t {
-  area_edit_t(appdata_t &a, pos_t &mi, pos_t &ma, GtkWidget *dlg);
-  appdata_t &appdata;
+  area_edit_t(gps_state_t *gps, pos_t &mi, pos_t &ma, GtkWidget *dlg);
+  gps_state_t * const gps_state;
   GtkWidget * const parent;   /* parent widget to be placed upon */
   pos_t &min, &max;    /* positions to work on */
   std::vector<pos_bounds> other_bounds;   ///< bounds of all other valid projects
