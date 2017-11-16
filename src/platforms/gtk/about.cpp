@@ -51,10 +51,9 @@ static gboolean on_link_clicked(GtkWidget *widget) {
 
 static GtkWidget *link_new(const char *url) {
   GtkWidget *label = gtk_label_new(O2G_NULLPTR);
-  char *str = g_strconcat("<span color=\"" LINK_COLOR "\"><u>", url,
-                          "</u></span>", O2G_NULLPTR);
-  gtk_label_set_markup(GTK_LABEL(label), str);
-  g_free(str);
+  std::string str = "<span color=\"" LINK_COLOR "\"><u>" + std::string(url) +
+                          "</u></span>";
+  gtk_label_set_markup(GTK_LABEL(label), str.c_str());
 
   GtkWidget *eventbox = gtk_event_box_new();
   gtk_container_add(GTK_CONTAINER(eventbox), label);

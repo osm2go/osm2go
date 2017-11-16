@@ -479,17 +479,14 @@ static GtkWidget *details_widget(const tag_context_t &context, bool big) {
     table_attach(table, label, big?1:0, big?2:1);
     g_free(nodes_str);
 
-    char *type_str = g_strconcat(context.object.way->is_closed() ?
-			     "closed way":"open way",
-			     " (",
-	     (context.object.way->draw.flags & OSM_DRAW_FLAG_AREA)?
-			       "area":"line",
-			     ")", O2G_NULLPTR);
+    std::string type_str = context.object.way->is_closed() ? "closed way" : "open way";
+    type_str += " (";
+    type_str += (context.object.way->draw.flags & OSM_DRAW_FLAG_AREA)? "area" : "line";
+    type_str += ")";
 
-    label = gtk_label_new(type_str);
+    label = gtk_label_new(type_str.c_str());
     if(big) table_attach(table, gtk_label_new(_("Type:")), 0, 3);
     table_attach(table, label, 1, big?3:1);
-    g_free(type_str);
   } break;
 
   case RELATION: {
