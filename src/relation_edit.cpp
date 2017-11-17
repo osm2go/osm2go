@@ -405,28 +405,11 @@ void relation_membership_dialog(GtkWidget *parent, const presets_items *presets,
                                 osm_t *osm, object_t &object) {
   relitem_context_t context(object, presets, osm);
 
-  const char *tpl;
-  switch(object.type) {
-  case NODE:
-    tpl = _("Relation memberships of node #" ITEM_ID_FORMAT);
-    break;
-  case WAY:
-    tpl = _("Relation memberships of way #" ITEM_ID_FORMAT);
-    break;
-  case RELATION:
-    tpl = _("Relation memberships of relation #" ITEM_ID_FORMAT);
-    break;
-  default:
-    assert_unreachable();
-  }
+  gchar *str = g_strdup_printf(_("Relation memberships of %s #" ITEM_ID_FORMAT),
+                               object.type_string(), object.get_id());
 
-  char *str = g_strdup_printf(tpl, object.obj->id);
-
-  context.dialog =
-    misc_dialog_new(MISC_DIALOG_LARGE, str,
-		    GTK_WINDOW(parent),
-		    GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
-		    O2G_NULLPTR);
+  context.dialog = misc_dialog_new(MISC_DIALOG_LARGE, str, GTK_WINDOW(parent),
+                                   GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE, O2G_NULLPTR);
   g_free(str);
 
   gtk_dialog_set_default_response(GTK_DIALOG(context.dialog),
