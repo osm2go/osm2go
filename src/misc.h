@@ -77,9 +77,9 @@ GtkWidget *button_new_with_label(const char *label);
 
 struct appdata_t;
 
-void errorf(GtkWidget *parent, const char *fmt, ...) G_GNUC_PRINTF(2, 3);
-void warningf(GtkWidget *parent, const char *fmt, ...) G_GNUC_PRINTF(2, 3);
-void messagef(GtkWidget *parent, const char *title, const char *fmt, ...) G_GNUC_PRINTF(3, 4);
+void errorf(GtkWidget *parent, const char *fmt, ...) __attribute__((format (printf, 2, 3)));
+void warningf(GtkWidget *parent, const char *fmt, ...) __attribute__((format (printf, 2, 3)));
+void messagef(GtkWidget *parent, const char *title, const char *fmt, ...) __attribute__((format (printf, 3, 4)));
 
 /* dialog size are specified rather fuzzy */
 enum DialogSizeHing {
@@ -104,7 +104,7 @@ GtkWidget *entry_new(EntryFlags flags = EntryFlagsDefault);
 GType entry_type(void);
 
 bool yes_no_f(GtkWidget *parent, unsigned int again_bit, int flags,
-              const char *title, const char *fmt, ...) G_GNUC_PRINTF(5, 6);
+              const char *title, const char *fmt, ...) __attribute__((format (printf, 5, 6)));
 GtkWidget *check_button_new_with_label(const gchar *label);
 void check_button_set_active(GtkWidget *button, gboolean active);
 gboolean check_button_get_active(GtkWidget *button);
