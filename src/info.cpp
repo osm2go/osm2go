@@ -399,7 +399,7 @@ static GtkWidget *tag_widget(tag_context_t *context) {
   list_set_custom_user_button(context->list, LIST_BUTTON_USER1,
                               josm_build_presets_button(context->osm->icons,
                                                         context->presets, context));
-  if(likely(context->presets != O2G_NULLPTR))
+  if(unlikely(context->presets == O2G_NULLPTR))
     list_button_enable(context->list, LIST_BUTTON_USER1, FALSE);
 
   /* disable if no appropriate "last" tags have been stored or if the */
