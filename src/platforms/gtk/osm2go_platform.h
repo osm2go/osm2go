@@ -20,20 +20,12 @@
 #ifndef OSM2GO_PLATFORM_H
 #define OSM2GO_PLATFORM_H
 
-#include <gtk/gtk.h>
-
 struct osm2go_platform {
   /**
    * @brief process all pending GUI events
    * @param tick if a '.' should be printed for every iteration
    */
-  static void process_events(bool tick = false) {
-    while(gtk_events_pending()) {
-      if(tick)
-        putchar('.');
-      gtk_main_iteration();
-    }
-  }
+  static void process_events(bool tick = false);
 
   static int init(int &argc, char **argv);
 

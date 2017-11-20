@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008 Till Harbaum <till@harbaum.org>.
+ * Copyright (C) 2017 Rolf Eike Beer <eike@sf-mail.de>.
  *
  * This file is part of OSM2Go.
  *
@@ -14,31 +14,19 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with OSM2Go. If not, see <http://www.gnu.org/licenses/>.
+ * along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <osm2go_platform.h>
+#include "osm2go_platform.h"
 
+#include <cstdio>
 #include <gtk/gtk.h>
 
-#include <osm2go_cpp.h>
-
-int osm2go_platform::init(int &argc, char **argv)
+void osm2go_platform::process_events(bool tick)
 {
-#if !GLIB_CHECK_VERSION(2,32,0)
-  g_thread_init(O2G_NULLPTR);
-#endif
-
-  gtk_init(&argc, &argv);
-
-  return 0;
-}
-
-void osm2go_platform::cleanup()
-{
-}
-
-void osm2go_platform::open_url(const char* url)
-{
-  gtk_show_uri(O2G_NULLPTR, url, GDK_CURRENT_TIME, O2G_NULLPTR);
+  while(gtk_events_pending()) {
+    if(tick)
+      putchar('.');
+    gtk_main_iteration();
+  }
 }
