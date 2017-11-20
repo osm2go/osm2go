@@ -155,7 +155,7 @@ static bool relation_add_item(GtkWidget *parent, relation_t *relation,
   const char *role = O2G_NULLPTR;
   std::string rstr;
 
-  if(G_OBJECT_TYPE(entry) == combo_box_entry_type()) {
+  if(isComboBoxEntryWidget(entry)) {
     rstr = combo_box_get_active_text(entry);
     if(!rstr.empty())
       role = rstr.c_str();

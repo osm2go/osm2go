@@ -369,11 +369,13 @@ GtkWidget *entry_new(EntryFlags flags) {
 #endif
 }
 
-GType entry_type(void) {
+bool isEntryWidget(GtkWidget *widget)
+{
+  return G_OBJECT_TYPE(widget) ==
 #ifndef FREMANTLE
-  return GTK_TYPE_ENTRY;
+         GTK_TYPE_ENTRY;
 #else
-  return HILDON_TYPE_ENTRY;
+         HILDON_TYPE_ENTRY;
 #endif
 }
 
@@ -398,11 +400,13 @@ GtkWidget *check_button_new_with_label(const gchar *label) {
 #endif
 }
 
-GType check_button_type(void) {
+bool isCheckButtonWidget(GtkWidget *widget)
+{
+  return G_OBJECT_TYPE(widget) ==
 #ifndef FREMANTLE
-  return GTK_TYPE_CHECK_BUTTON;
+         GTK_TYPE_CHECK_BUTTON;
 #else
-  return HILDON_TYPE_CHECK_BUTTON;
+         HILDON_TYPE_CHECK_BUTTON;
 #endif
 }
 
@@ -592,19 +596,23 @@ std::string combo_box_get_active_text(GtkWidget *cbox) {
 #endif
 }
 
-GType combo_box_type(void) {
+bool isComboBoxWidget(GtkWidget *widget)
+{
+  return G_OBJECT_TYPE(widget) ==
 #ifndef FREMANTLE
-  return GTK_TYPE_COMBO_BOX;
+         GTK_TYPE_COMBO_BOX;
 #else
-  return HILDON_TYPE_PICKER_BUTTON;
+         HILDON_TYPE_PICKER_BUTTON;
 #endif
 }
 
-GType combo_box_entry_type(void) {
+bool isComboBoxEntryWidget(GtkWidget *widget)
+{
+  return G_OBJECT_TYPE(widget) ==
 #ifndef FREMANTLE
-  return GTK_TYPE_COMBO_BOX_ENTRY;
+         GTK_TYPE_COMBO_BOX_ENTRY;
 #else
-  return HILDON_TYPE_PICKER_BUTTON;
+         HILDON_TYPE_PICKER_BUTTON;
 #endif
 }
 

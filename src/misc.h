@@ -101,14 +101,14 @@ enum EntryFlags {
   EntryFlagsNoAutoCap
 };
 GtkWidget *entry_new(EntryFlags flags = EntryFlagsDefault);
-GType entry_type(void);
+bool isEntryWidget(GtkWidget *widget);
 
 bool yes_no_f(GtkWidget *parent, unsigned int again_bit, int flags,
               const char *title, const char *fmt, ...) __attribute__((format (printf, 5, 6)));
 GtkWidget *check_button_new_with_label(const gchar *label);
 void check_button_set_active(GtkWidget *button, gboolean active);
 gboolean check_button_get_active(GtkWidget *button);
-GType check_button_type(void);
+bool isCheckButtonWidget(GtkWidget *widget);
 
 GtkWidget *notebook_new(void);
 void notebook_append_page(GtkWidget *notebook, GtkWidget *page, const gchar *label);
@@ -120,8 +120,8 @@ void combo_box_append_text(GtkWidget *cbox, const gchar *text);
 void combo_box_set_active(GtkWidget *cbox, int index);
 int combo_box_get_active(GtkWidget *cbox);
 std::string combo_box_get_active_text(GtkWidget *cbox);
-GType combo_box_type(void);
-GType combo_box_entry_type(void);
+bool isComboBoxWidget(GtkWidget *widget);
+bool isComboBoxEntryWidget(GtkWidget *widget);
 
 void misc_init(void);
 
