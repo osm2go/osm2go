@@ -410,6 +410,8 @@ enum {
  * @return if OSM data file was found
  */
 static bool osm_file_exists(const project_t *project) {
+  if(project == O2G_NULLPTR)
+    return false;
   struct stat st;
   return fstatat(project->dirfd, project->osm.c_str(), &st, 0) == 0 && S_ISREG(st.st_mode);
 }
@@ -418,7 +420,7 @@ static void view_selected(GtkWidget *dialog, project_t *project) {
   /* check if the selected project also has a valid osm file */
   gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog),
                                     GTK_RESPONSE_ACCEPT,
-                                    (project != O2G_NULLPTR && osm_file_exists(project)) ? TRUE : FALSE);
+                                    osm_file_exists(project) ? TRUE : FALSE);
 }
 
 static void
@@ -788,7 +790,7 @@ on_project_update_all(select_context_t *context)
       project_t *prj = O2G_NULLPTR;
       gtk_tree_model_get(model, &iter, PROJECT_COL_DATA, &prj, -1);
       /* if the project was already downloaded do it again */
-      if(prj && osm_file_exists(prj)) {
+      if(osm_file_exists(prj)) {
         printf("found %s to update\n", prj->name.c_str());
         if (!osm_download(GTK_WIDGET(context->dialog),
                      context->appdata.settings, prj))
