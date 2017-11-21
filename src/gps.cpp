@@ -122,9 +122,8 @@ pos_t gpsd_state_t::get_pos(float* alt)
           *alt = gpsdata.fix.alt;
       }
     }
+    g_mutex_unlock(mutex);
   }
-
-  g_mutex_unlock(mutex);
 
   return pos;
 }
