@@ -685,7 +685,7 @@ static void menu_create(appdata_t &appdata, GtkBox *mainvbox) {
   );
   gtk_widget_set_sensitive(item, FALSE);
 
-  appdata.menuitems[MainUi::MENU_ITEM_MAP_HIDE_SEL] = item = menu_append_new_item(
+  appdata.menuitems[MainUi::MENU_ITEM_MAP_SHOW_ALL] = item = menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_map_show_all), _("_Show all"),
     GTK_STOCK_ADD, "<OSM2Go-Main>/View/ShowAll",
     0, static_cast<GdkModifierType>(0), TRUE, false, FALSE
