@@ -221,11 +221,17 @@ target_link_libraries(osm2go_lib
 		${LIBXML2_LIBRARIES}
 )
 
+# curl can't be added here as that would end up in the search list
+# _after_ the default curl in scratchbox
+target_include_directories(osm2go_lib
+	SYSTEM PUBLIC
+		${LIBXML2_INCLUDE_DIR}
+)
+
 target_include_directories(osm2go_lib
 	PUBLIC
-		${CMAKE_CURRENT_BINARY_DIR}
 		${CURL_INCLUDE_DIRS}
-		${LIBXML2_INCLUDE_DIR}
+		${CMAKE_CURRENT_BINARY_DIR}
 		src
 		src/platforms/gtk
 )
