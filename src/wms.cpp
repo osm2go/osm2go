@@ -190,10 +190,8 @@ static wms_layer_t *wms_cap_parse_layer(xmlDocPtr doc, xmlNode *a_node) {
         printf("SRS = %s\n", str);
 	xmlFree(str);
       } else if(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "LatLonBoundingBox") == 0) {
-	wms_layer->llbbox.min.lat = xml_get_prop_float(cur_node, "miny");
-	wms_layer->llbbox.min.lon = xml_get_prop_float(cur_node, "minx");
-	wms_layer->llbbox.max.lat = xml_get_prop_float(cur_node, "maxy");
-	wms_layer->llbbox.max.lon = xml_get_prop_float(cur_node, "maxx");
+        wms_layer->llbbox.min = pos_t::fromXmlProperties(cur_node, "miny", "minx");
+        wms_layer->llbbox.max = pos_t::fromXmlProperties(cur_node, "miny", "maxx");
       } else
 	printf("found unhandled WMT_MS_Capabilities/Capability/Layer/%s\n",
 	       cur_node->name);

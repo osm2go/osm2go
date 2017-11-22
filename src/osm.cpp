@@ -1351,7 +1351,7 @@ xmlChar *base_object_t::generate_xml(const std::string &changeset) const
 
 /* build xml representation for a node */
 void node_t::generate_xml_custom(xmlNodePtr xml_node) const {
-  xml_set_prop_pos(xml_node, &pos);
+  pos.toXmlProperties(xml_node);
 }
 
 struct add_xml_node_refs {

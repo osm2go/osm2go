@@ -110,7 +110,7 @@ void diff_save_nodes::operator()(const std::pair<item_id_t, node_t *> pair)
     return;
 
   /* additional info is only required if the node hasn't been deleted */
-  xml_set_prop_pos(node_node, &node->pos);
+  node->pos.toXmlProperties(node_node);
 
   diff_save_tags(node, node_node);
 }
@@ -282,7 +282,7 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
   printf(" " ITEM_ID_FORMAT "\n", id);
 
   int state = xml_get_prop_state(node_node);
-  pos_t pos = xml_get_prop_pos(node_node);
+  pos_t pos = pos_t::fromXmlProperties(node_node);
   bool pos_diff = pos.valid();
 
   if(unlikely(!(state & OSM_FLAG_DELETED) && !pos_diff)) {

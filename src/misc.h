@@ -70,8 +70,6 @@ struct pos_t;
 
 double xml_get_prop_float(xmlNode *node, const char *prop);
 bool xml_get_prop_is(xmlNode *node, const char *prop, const char *str);
-pos_t xml_get_prop_pos(xmlNode *node);
-void xml_set_prop_pos(xmlNode *node, const struct pos_t *pos);
 
 GtkWidget *button_new_with_label(const char *label);
 

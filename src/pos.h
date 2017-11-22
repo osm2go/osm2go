@@ -35,6 +35,7 @@ typedef double pos_float_t;
 #ifdef __cplusplus
 #include <cmath>
 #include <cstddef>
+#include <libxml/tree.h>
 /* equatorial radius in meters */
 #define POS_EQ_RADIUS     (6378137.0)
 #define KMPMIL   (1.609344)
@@ -69,6 +70,11 @@ typedef struct pos_t {
    * @brief calculate the screen coordinates inside the given bounds
    */
   lpos_t toLpos(const bounds_t &bounds) const;
+
+  void toXmlProperties(xmlNodePtr node) const;
+
+  static pos_t fromXmlProperties(xmlNodePtr node,
+                                 const char *latName = "lat", const char *lonName = "lon");
 #endif
 } pos_t;
 

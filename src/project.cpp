@@ -239,9 +239,9 @@ static bool project_read(const std::string &project_file, project_t *project,
 
             xmlFree(str);
           } else if(strcmp(reinterpret_cast<const char *>(node->name), "min") == 0) {
-            project->min = xml_get_prop_pos(node);
+            project->min = pos_t::fromXmlProperties(node);
           } else if(strcmp(reinterpret_cast<const char *>(node->name), "max") == 0) {
-            project->max = xml_get_prop_pos(node);
+            project->max = pos_t::fromXmlProperties(node);
           }
         }
       }
@@ -313,10 +313,10 @@ bool project_t::save(GtkWidget *parent) {
     xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "osm", BAD_CAST osm.c_str());
 
   node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "min", O2G_NULLPTR);
-  xml_set_prop_pos(node, &min);
+  min.toXmlProperties(node);
 
   node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "max", O2G_NULLPTR);
-  xml_set_prop_pos(node, &max);
+  max.toXmlProperties(node);
 
   node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "map", O2G_NULLPTR);
   g_ascii_formatd(str, sizeof(str), "%.04f", map_state.zoom);

@@ -19,12 +19,15 @@
 
 #include "pos.h"
 
+#include "misc.h"
+
 #include <osm2go_cpp.h>
 
 #include <cmath>
 #include <cstdio>
 #include <cstring>
 #include <ctype.h>
+#include <glib.h>
 
 bool pos_t::valid() const
 {
@@ -61,6 +64,23 @@ lpos_t pos_t::toLpos(const bounds_t &bounds) const {
   lpos.x = ( lpos.x - bounds.center.x) * bounds.scale;
   lpos.y = (-lpos.y + bounds.center.y) * bounds.scale;
   return lpos;
+}
+
+void pos_t::toXmlProperties(xmlNodePtr node) const {
+  char str[G_ASCII_DTOSTR_BUF_SIZE];
+
+  g_ascii_formatd(str, sizeof(str), LL_FORMAT, lat);
+  remove_trailing_zeroes(str);
+  xmlNewProp(node, BAD_CAST "lat", BAD_CAST str);
+  g_ascii_formatd(str, sizeof(str), LL_FORMAT, lon);
+  remove_trailing_zeroes(str);
+  xmlNewProp(node, BAD_CAST "lon", BAD_CAST str);
+}
+
+pos_t pos_t::fromXmlProperties(xmlNodePtr node, const char *latName, const char *lonName)
+{
+  return pos_t(xml_get_prop_float(node, latName),
+               xml_get_prop_float(node, lonName));
 }
 
 lpos_t pos_t::toLpos() const {

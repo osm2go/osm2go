@@ -186,7 +186,7 @@ void track_save_segs::save_point::operator()(const track_point_t &point)
 
   xmlNodePtr node_point = xmlNewChild(node, O2G_NULLPTR, BAD_CAST "trkpt", O2G_NULLPTR);
 
-  xml_set_prop_pos(node_point, &point.pos);
+  point.pos.toXmlProperties(node_point);
 
   if(!std::isnan(point.altitude)) {
     g_ascii_formatd(str, sizeof(str), ALT_FORMAT, point.altitude);

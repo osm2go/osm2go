@@ -65,22 +65,6 @@ bool xml_get_prop_is(xmlNode *node, const char *prop, const char *str) {
   return match;
 }
 
-pos_t xml_get_prop_pos(xmlNode *node) {
-  return pos_t(xml_get_prop_float(node, "lat"),
-               xml_get_prop_float(node, "lon"));
-}
-
-void xml_set_prop_pos(xmlNode *node, const pos_t *pos) {
-  char str[G_ASCII_DTOSTR_BUF_SIZE];
-
-  g_ascii_formatd(str, sizeof(str), LL_FORMAT, pos->lat);
-  remove_trailing_zeroes(str);
-  xmlNewProp(node, BAD_CAST "lat", BAD_CAST str);
-  g_ascii_formatd(str, sizeof(str), LL_FORMAT, pos->lon);
-  remove_trailing_zeroes(str);
-  xmlNewProp(node, BAD_CAST "lon", BAD_CAST str);
-}
-
 static void vmessagef(GtkWidget *parent, GtkMessageType type, GtkButtonsType buttons,
                       const char *title, const char *fmt, va_list args) {
   GtkWindow *wnd = GTK_WINDOW(parent);
