@@ -21,6 +21,7 @@
 
 #include "misc.h"
 
+#include <osm2go_annotations.h>
 #include <osm2go_cpp.h>
 
 #include <cmath>
@@ -81,6 +82,25 @@ pos_t pos_t::fromXmlProperties(xmlNodePtr node, const char *latName, const char 
 {
   return pos_t(xml_get_prop_float(node, latName),
                xml_get_prop_float(node, lonName));
+}
+
+static pos_float_t xml_reader_attr_float(xmlTextReaderPtr reader, const char *name) {
+  xmlChar *prop = xmlTextReaderGetAttribute(reader, BAD_CAST name);
+  pos_float_t ret;
+
+  if(likely(prop != O2G_NULLPTR)) {
+    ret = g_ascii_strtod(reinterpret_cast<gchar *>(prop), O2G_NULLPTR);
+    xmlFree(prop);
+  } else
+    ret = NAN;
+
+  return ret;
+}
+
+pos_t pos_t::fromXmlProperties(xmlTextReaderPtr reader, const char *latName, const char *lonName)
+{
+  return pos_t(xml_reader_attr_float(reader, latName),
+               xml_reader_attr_float(reader, lonName));
 }
 
 lpos_t pos_t::toLpos() const {

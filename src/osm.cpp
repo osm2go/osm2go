@@ -873,25 +873,10 @@ static void skip_element(xmlTextReaderPtr reader) {
   }
 }
 
-static pos_float_t xml_reader_attr_float(xmlTextReaderPtr reader, const char *name) {
-  xmlChar *prop = xmlTextReaderGetAttribute(reader, BAD_CAST name);
-  pos_float_t ret;
-
-  if((prop)) {
-    ret = g_ascii_strtod(reinterpret_cast<gchar *>(prop), O2G_NULLPTR);
-    xmlFree(prop);
-  } else
-    ret = NAN;
-
-  return ret;
-}
-
 /* parse bounds */
 static bool process_bounds(xmlTextReaderPtr reader, bounds_t *bounds) {
-  bounds->ll_min.lat = xml_reader_attr_float(reader, "minlat");
-  bounds->ll_min.lon = xml_reader_attr_float(reader, "minlon");
-  bounds->ll_max.lat = xml_reader_attr_float(reader, "maxlat");
-  bounds->ll_max.lon = xml_reader_attr_float(reader, "maxlon");
+  bounds->ll_min = pos_t::fromXmlProperties(reader, "minlat", "minlon");
+  bounds->ll_max = pos_t::fromXmlProperties(reader, "maxlat", "maxlon");
 
   if(unlikely(!bounds->ll_min.valid() || !bounds->ll_max.valid())) {
     errorf(O2G_NULLPTR, "Invalid coordinate in bounds (%f/%f/%f/%f)",
@@ -973,8 +958,7 @@ static void process_base_attributes(base_object_t *obj, xmlTextReaderPtr reader,
 }
 
 static void process_node(xmlTextReaderPtr reader, osm_t *osm) {
-  const pos_t pos(xml_reader_attr_float(reader, "lat"),
-                  xml_reader_attr_float(reader, "lon"));
+  const pos_t pos = pos_t::fromXmlProperties(reader);
 
   /* allocate a new node structure */
   node_t *node = osm->node_new(pos);
