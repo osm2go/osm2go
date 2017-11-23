@@ -37,6 +37,7 @@ typedef double pos_float_t;
 #include <cstddef>
 #include <libxml/tree.h>
 #include <libxml/xmlreader.h>
+#include <string>
 /* equatorial radius in meters */
 #define POS_EQ_RADIUS     (6378137.0)
 #define KMPMIL   (1.609344)
@@ -79,6 +80,11 @@ typedef struct pos_t {
 
   static pos_t fromXmlProperties(xmlTextReaderPtr reader,
                                  const char *latName = "lat", const char *lonName = "lon");
+
+  /**
+   * @brief returns a string representation of lon + delim + lat
+   */
+  std::string print(char delim = ',');
 #endif
 } pos_t;
 

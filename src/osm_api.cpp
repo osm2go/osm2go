@@ -110,17 +110,8 @@ bool osm_download(GtkWidget *parent, settings_t *settings, project_t *project)
     }
   }
 
-  char minlon[G_ASCII_DTOSTR_BUF_SIZE], minlat[G_ASCII_DTOSTR_BUF_SIZE];
-  char maxlon[G_ASCII_DTOSTR_BUF_SIZE], maxlat[G_ASCII_DTOSTR_BUF_SIZE];
-
-  g_ascii_formatd(minlon, sizeof(minlon), LL_FORMAT, project->min.lon);
-  g_ascii_formatd(minlat, sizeof(minlat), LL_FORMAT, project->min.lat);
-  g_ascii_formatd(maxlon, sizeof(maxlon), LL_FORMAT, project->max.lon);
-  g_ascii_formatd(maxlat, sizeof(maxlat), LL_FORMAT, project->max.lat);
-
   const std::string url = std::string(project->server) + "/map?bbox=" +
-                          minlon + "," + minlat + "," +
-                          maxlon +  "," +  maxlat;
+                          project->min.print(',') + "," + project->max.print(',');
 
   /* Download the new file to a new name. If something goes wrong then the
    * old file will still be in place to be opened. */

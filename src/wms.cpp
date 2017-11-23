@@ -1167,19 +1167,9 @@ void wms_import(appdata_t &appdata) {
   if(ctx.selected.size() > 1)
     url += std::string(ctx.selected.size() - 1, ',');
 
-  /* and append rest */
-  gchar minlon[G_ASCII_DTOSTR_BUF_SIZE], minlat[G_ASCII_DTOSTR_BUF_SIZE];
-  gchar maxlon[G_ASCII_DTOSTR_BUF_SIZE], maxlat[G_ASCII_DTOSTR_BUF_SIZE];
-
   /* build strings of min and max lat and lon to be used in url */
-  g_ascii_formatd(minlon, sizeof(minlon), LL_FORMAT,
-		  appdata.project->min.lon);
-  g_ascii_formatd(minlat, sizeof(minlat), LL_FORMAT,
-		  appdata.project->min.lat);
-  g_ascii_formatd(maxlon, sizeof(maxlon), LL_FORMAT,
-		  appdata.project->max.lon);
-  g_ascii_formatd(maxlat, sizeof(maxlat), LL_FORMAT,
-		  appdata.project->max.lat);
+  std::string mincoords = appdata.project->min.print(',');
+  std::string maxcoords = appdata.project->max.print(',');
 
   /* find preferred supported video format */
   const FormatMap::const_iterator itEnd = ImageFormats.end();
@@ -1191,9 +1181,9 @@ void wms_import(appdata_t &appdata) {
   sprintf(buf, "&WIDTH=%d&HEIGHT=%d&FORMAT=", wms.width, wms.height);
 
   /* build complete url */
-  const std::array<const char *, 13> parts = { {
-                          "&SRS=", srs, "&BBOX=", minlon, ",", minlat, ",",
-                          maxlon, ",", maxlat, buf, it->first, "&reaspect=false"
+  const std::array<const char *, 9> parts = { {
+                          "&SRS=", srs, "&BBOX=", mincoords.c_str(), ",",
+                          maxcoords.c_str(), buf, it->first, "&reaspect=false"
                           } };
   for(unsigned int i = 0; i < parts.size(); i++)
     url += parts[i];

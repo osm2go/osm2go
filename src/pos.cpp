@@ -103,6 +103,20 @@ pos_t pos_t::fromXmlProperties(xmlTextReaderPtr reader, const char *latName, con
                xml_reader_attr_float(reader, lonName));
 }
 
+std::string pos_t::print(char delim)
+{
+  char latstr[G_ASCII_DTOSTR_BUF_SIZE], lonstr[G_ASCII_DTOSTR_BUF_SIZE];
+
+  g_ascii_formatd(latstr, sizeof(latstr), LL_FORMAT, lat);
+  g_ascii_formatd(lonstr, sizeof(lonstr), LL_FORMAT, lon);
+
+  std::string ret(strlen(latstr) + 1 + strlen(lonstr), 0);
+  ret = lonstr;
+  ret += delim;
+  ret += latstr;
+  return ret;
+}
+
 lpos_t pos_t::toLpos() const {
   lpos_t lpos;
   lpos.x = POS_EQ_RADIUS * DEG2RAD(lon);
