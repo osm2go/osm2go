@@ -1073,7 +1073,7 @@ void wms_import(appdata_t &appdata) {
     initImageFormats();
 
   bool parse_success = false;
-  if(!cap) {
+  if(unlikely(!cap)) {
     errorf(appdata.window, _("WMS download failed:\n\nGetCapabilities failed"));
   } else {
     xmlDoc *doc = O2G_NULLPTR;
