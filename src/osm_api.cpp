@@ -281,7 +281,6 @@ static CURL *curl_custom_setup(const osm_upload_context_t &context, const char *
 
 static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
                             const char *url, item_id_t *id) {
-  int retry = MAX_TRY;
   char buffer[CURL_ERROR_SIZE];
 
   CURL *curl;
@@ -292,8 +291,7 @@ static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
 
   struct log_s &log = context.log;
 
-  while(retry >= 0) {
-
+  for(int retry = MAX_TRY; retry >= 0; retry--) {
     if(retry != MAX_TRY)
       appendf(log, O2G_NULLPTR, _("Retry %d/%d "), MAX_TRY-retry, MAX_TRY-1);
 
@@ -367,8 +365,6 @@ static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
     /* don't retry unless we had an "internal server error" */
     if(response != 500)
       return((res == 0)&&(response == 200));
-
-    retry--;
   }
 
   return false;
@@ -376,7 +372,6 @@ static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
 
 static bool osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
                             int len, const char *url) {
-  int retry = MAX_TRY;
   char buffer[CURL_ERROR_SIZE];
 
   CURL *curl;
@@ -384,8 +379,7 @@ static bool osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
 
   struct log_s &log = context.log;
 
-  while(retry >= 0) {
-
+  for(int retry = MAX_TRY; retry >= 0; retry--) {
     if(retry != MAX_TRY)
       appendf(log, O2G_NULLPTR, _("Retry %d/%d "), MAX_TRY-retry, MAX_TRY-1);
 
@@ -447,8 +441,6 @@ static bool osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
     /* don't retry unless we had an "internal server error" */
     if(response != 500)
       return((res == 0)&&(response == 200));
-
-    retry--;
   }
 
   return false;

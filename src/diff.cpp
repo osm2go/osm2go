@@ -259,12 +259,11 @@ static osm_t::TagMap xml_scan_tags(xmlNodePtr node) {
   /* scan for tags */
   osm_t::TagMap  ret;
 
-  while(node) {
+  for(; node != O2G_NULLPTR; node = node->next) {
     if(node->type == XML_ELEMENT_NODE) {
       if(likely(strcmp(reinterpret_cast<const char *>(node->name), "tag") == 0))
         osm_t::parse_tag(node, ret);
     }
-    node = node->next;
   }
   return ret;
 }

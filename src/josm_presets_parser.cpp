@@ -110,11 +110,10 @@ static unsigned int josm_type_parse(const char *type) {
   unsigned int type_mask = 0;
   if(!type) return presets_item_t::TY_ALL;
 
-  const char *ntype = strchr(type, ',');
-  while(ntype) {
+  for(const char *ntype = strchr(type, ',');
+      ntype != O2G_NULLPTR; ntype = strchr(type, ',')) {
     type_mask |= josm_type_bit(type, ',');
     type = ntype + 1;
-    ntype = strchr(type, ',');
   }
 
   type_mask |= josm_type_bit(type, '\0');
