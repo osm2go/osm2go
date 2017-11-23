@@ -69,7 +69,7 @@ std::string find_file(const std::string &n);
 struct pos_t;
 
 double xml_get_prop_float(xmlNode *node, const char *prop);
-bool xml_get_prop_is(xmlNode *node, const char *prop, const char *str);
+bool xml_get_prop_bool(xmlNode *node, const char *prop);
 
 GtkWidget *button_new_with_label(const char *label);
 

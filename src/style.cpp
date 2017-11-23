@@ -104,7 +104,7 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t &style) {
         style.node.border_radius = xml_get_prop_float(cur_node, "border-radius");
         style.node.zoom_max = parse_scale_max(cur_node);
 
-        style.node.show_untagged = xml_get_prop_is(cur_node, "show-untagged", "true");
+        style.node.show_untagged = xml_get_prop_bool(cur_node, "show-untagged");
 
       } else if(strcmp(nodename, "icon") == 0) {
         style.icon.scale = xml_get_prop_float(cur_node, "scale");
@@ -113,7 +113,7 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t &style) {
           xmlFree(BAD_CAST style.icon.path_prefix);
           style.icon.path_prefix = reinterpret_cast<char *>(prefix);
         }
-        style.icon.enable = xml_get_prop_is(cur_node, "enable", "true");
+        style.icon.enable = xml_get_prop_bool(cur_node, "enable");
 
       } else if(strcmp(nodename, "way") == 0) {
         parse_color(cur_node, "color", style.way.color);

@@ -407,7 +407,7 @@ static void diff_restore_way(xmlNodePtr node_way, osm_t *osm) {
   assert(way != O2G_NULLPTR);
 
   /* handle hidden flag */
-  if(xml_get_prop_is(node_way, "hidden", "true"))
+  if(xml_get_prop_bool(node_way, "hidden"))
     way->flags |= OSM_FLAG_HIDDEN;
 
   /* update node_chain */

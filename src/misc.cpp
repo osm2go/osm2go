@@ -55,12 +55,12 @@ double xml_get_prop_float(xmlNode *node, const char *prop) {
   return value;
 }
 
-bool xml_get_prop_is(xmlNode *node, const char *prop, const char *str) {
+bool xml_get_prop_bool(xmlNode *node, const char *prop) {
   xmlChar *prop_str = xmlGetProp(node, BAD_CAST prop);
   if(!prop_str)
     return false;
 
-  bool match = (strcasecmp(reinterpret_cast<char *>(prop_str), str) == 0);
+  bool match = (strcasecmp(reinterpret_cast<char *>(prop_str), "true") == 0);
   xmlFree(prop_str);
   return match;
 }
