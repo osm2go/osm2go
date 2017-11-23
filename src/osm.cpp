@@ -29,6 +29,7 @@
 #include "misc.h"
 #include "osm2go_platform.h"
 #include "pos.h"
+#include "xml_helpers.h"
 
 #include <algorithm>
 #include <array>

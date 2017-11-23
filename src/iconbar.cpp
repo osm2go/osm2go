@@ -23,7 +23,6 @@
 #include "icon.h"
 #include "info.h"
 #include "map_edit.h"
-#include "misc.h"
 #include "osm.h"
 
 #include <array>

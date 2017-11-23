@@ -19,7 +19,7 @@
 
 #include "pos.h"
 
-#include "misc.h"
+#include "xml_helpers.h"
 
 #include <osm2go_annotations.h>
 #include <osm2go_cpp.h>

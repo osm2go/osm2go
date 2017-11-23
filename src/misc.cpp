@@ -18,6 +18,7 @@
  */
 
 #include "misc.h"
+#include "xml_helpers.h"
 
 #include "pos.h"
 #include "settings.h"

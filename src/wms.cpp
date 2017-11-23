@@ -27,6 +27,7 @@
 #include "net_io.h"
 #include "project.h"
 #include "settings.h"
+#include "xml_helpers.h"
 
 #include <algorithm>
 #include <array>

@@ -24,7 +24,6 @@
 
 #include <glib.h>
 #include <gtk/gtk.h>
-#include <libxml/tree.h>
 
 #define MISC_AGAIN_ID_DELETE           (1<<0)
 #define MISC_AGAIN_ID_JOIN_NODES       (1<<1)
@@ -66,14 +65,7 @@ std::string find_file(const std::string &n);
 
 /* some compat code */
 
-struct pos_t;
-
-double xml_get_prop_float(xmlNode *node, const char *prop);
-bool xml_get_prop_bool(xmlNode *node, const char *prop);
-
 GtkWidget *button_new_with_label(const char *label);
-
-struct appdata_t;
 
 void errorf(GtkWidget *parent, const char *fmt, ...) __attribute__((format (printf, 2, 3)));
 void warningf(GtkWidget *parent, const char *fmt, ...) __attribute__((format (printf, 2, 3)));

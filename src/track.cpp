@@ -28,9 +28,9 @@
 #include "fdguard.h"
 #include "gps.h"
 #include "map.h"
-#include "misc.h"
 #include "project.h"
 #include "settings.h"
+#include "xml_helpers.h"
 
 #include <cassert>
 #include <cmath>
