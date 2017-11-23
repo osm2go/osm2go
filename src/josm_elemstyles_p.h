@@ -23,11 +23,7 @@
 #include "josm_elemstyles.h"
 
 #include <cstring>
-#if __cplusplus >= 201103L
 #include <cstdint>
-#else
-#include <tr1/cstdint>
-#endif
 
 #include <osm2go_cpp.h>
 

@@ -116,15 +116,6 @@ namespace std {
 }
 #endif
 
-#if __cplusplus < 201103L
-// import the TR1 namespace so things can be used as if they were already in std
-namespace std {
-  namespace tr1 {
-  }
-  using namespace tr1;
-}
-#endif
-
 template<typename T> void shrink_to_fit(T &v) {
 #if __cplusplus >= 201103L
   v.shrink_to_fit();

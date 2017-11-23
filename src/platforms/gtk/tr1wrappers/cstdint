@@ -1,0 +1,4 @@
+#pragma once
+
+#define _GLIBCXX_USE_C99_STDINT_TR1 1
+#include <tr1/cstdint>

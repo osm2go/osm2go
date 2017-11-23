@@ -24,11 +24,7 @@
 #include "wms.h"
 
 #include <algorithm>
-#if __cplusplus >= 201103L
 #include <cstdint>
-#else
-#include <tr1/cstdint>
-#endif
 #include <cstring>
 #include <fcntl.h>
 #include <gconf/gconf.h>

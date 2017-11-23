@@ -4,18 +4,8 @@
 #include <fdguard.h>
 #include <misc.h>
 
-#include <osm2go_annotations.h>
-#include <osm2go_cpp.h>
-
 #include <algorithm>
-#if __cplusplus < 201103L
-#include <tr1/array>
-namespace std {
-  using namespace tr1;
-};
-#else
 #include <array>
-#endif
 #include <cassert>
 #include <cstdlib>
 #include <cerrno>
@@ -25,6 +15,9 @@ namespace std {
 #include <set>
 #include <string>
 #include <sys/stat.h>
+
+#include <osm2go_annotations.h>
+#include <osm2go_cpp.h>
 
 static std::vector<std::string> basedirs;
 

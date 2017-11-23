@@ -23,14 +23,8 @@
 #include "pos.h"
 
 #include <algorithm>
-#if __cplusplus >= 201103L
 #include <cinttypes>
 #include <cstdint>
-#else
-#define _GLIBCXX_USE_C99_INTTYPES_TR1 1
-#include <tr1/cinttypes>
-#include <tr1/cstdint>
-#endif
 #include <cstdlib>
 #include <map>
 #include <string>

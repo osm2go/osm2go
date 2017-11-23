@@ -14,3 +14,11 @@ if (MAEMO_FOUND)
 else ()
 	add_subdirectory(desktop)
 endif ()
+
+include(CheckIncludeFileCXX)
+
+check_include_file_cxx(cstdint CSTDINT_HEADER)
+if (NOT CSTDINT_HEADER)
+	target_include_directories(osm2go_lib
+			PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/tr1wrappers)
+endif ()

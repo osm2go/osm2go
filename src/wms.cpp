@@ -29,11 +29,7 @@
 #include "settings.h"
 
 #include <algorithm>
-#if __cplusplus < 201103L
-#include <tr1/array>
-#else
 #include <array>
-#endif
 #include <cassert>
 #include <cmath>
 #include <cstring>
