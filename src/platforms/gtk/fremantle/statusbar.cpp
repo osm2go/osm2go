@@ -68,7 +68,7 @@ void statusbar_fremantle::banner_busy_stop(appdata_t &appdata) {
 // Cancel any animations currently going, and show a brief text message.
 
 void statusbar_fremantle::banner_show_info(appdata_t &appdata, const char *text) {
-  if(!appdata.window)
+  if(G_UNLIKELY(appdata.window == O2G_NULLPTR))
     return;
   setBanner(appdata, hildon_banner_show_information(appdata.window, O2G_NULLPTR, text));
 }
