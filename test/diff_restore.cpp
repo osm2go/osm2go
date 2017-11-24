@@ -248,7 +248,7 @@ int main(int argc, char **argv)
   return result;
 }
 
-void main_ui_enable(appdata_t &)
+void appdata_t::main_ui_enable()
 {
   assert_unreachable();
 }

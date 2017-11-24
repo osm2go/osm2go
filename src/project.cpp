@@ -772,7 +772,7 @@ static void on_project_edit(select_context_t *context) {
         diff_restore(appdata);
         appdata.map->paint();
 
-	main_ui_enable(appdata);
+        appdata.main_ui_enable();
       }
     }
   }

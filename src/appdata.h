@@ -70,8 +70,8 @@ struct appdata_t {
   struct style_t *style;
   class gps_state_t * const gps_state;
   icon_t icons;
-};
 
-void main_ui_enable(appdata_t &appdata);
+  void main_ui_enable();
+};
 
 #endif // APPDATA_H

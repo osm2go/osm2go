@@ -74,18 +74,18 @@
 #endif
 
 /* disable/enable main screen control dependant on presence of open project */
-void main_ui_enable(appdata_t &appdata) {
-  bool project_valid = (appdata.project != O2G_NULLPTR);
-  gboolean osm_valid = (appdata.osm != O2G_NULLPTR) ? TRUE : FALSE;
+void appdata_t::main_ui_enable() {
+  bool project_valid = (project != O2G_NULLPTR);
+  gboolean osm_valid = (osm != O2G_NULLPTR) ? TRUE : FALSE;
 
-  if(!appdata.window) {
-    printf("main_ui_enable: main window gone\n");
+  if(unlikely(window == O2G_NULLPTR)) {
+    printf("%s: main window gone\n", __PRETTY_FUNCTION__);
     return;
   }
 
   /* cancel any action in progress */
-  if(appdata.iconbar->isCancelEnabled())
-    map_action_cancel(appdata.map);
+  if(iconbar->isCancelEnabled())
+    map_action_cancel(map);
 
   /* ---- set project name as window title ----- */
   char *str = O2G_NULLPTR;
@@ -94,19 +94,19 @@ void main_ui_enable(appdata_t &appdata) {
   if(project_valid)
 #ifdef FREMANTLE
     cstr = str = g_markup_printf_escaped(_("<b>%s</b> - OSM2Go"),
-                                         appdata.project->name.c_str());
+                                         project->name.c_str());
 
-  hildon_window_set_markup(HILDON_WINDOW(appdata.window), cstr);
+  hildon_window_set_markup(HILDON_WINDOW(window), cstr);
 #else
-    cstr = str = g_strdup_printf(_("%s - OSM2Go"), appdata.project->name.c_str());
+    cstr = str = g_strdup_printf(_("%s - OSM2Go"), project->name.c_str());
 
-  gtk_window_set_title(GTK_WINDOW(appdata.window), cstr);
+  gtk_window_set_title(GTK_WINDOW(window), cstr);
 #endif
   g_free(str);
 
-  appdata.iconbar->setToolbarEnable(osm_valid == TRUE);
+  iconbar->setToolbarEnable(osm_valid == TRUE);
   /* disable all menu entries related to map */
-  appdata.uicontrol->setActionEnable(MainUi::SUBMENU_MAP, project_valid);
+  uicontrol->setActionEnable(MainUi::SUBMENU_MAP, project_valid);
 
   // those icons that get enabled or disabled depending on OSM data being loaded
 #ifndef FREMANTLE
@@ -123,13 +123,13 @@ void main_ui_enable(appdata_t &appdata) {
     MainUi::SUBMENU_WMS
   } };
   for(unsigned int i = 0; i < osm_active_items.size(); i++)
-    appdata.uicontrol->setActionEnable(osm_active_items[i], osm_valid);
+    uicontrol->setActionEnable(osm_active_items[i], osm_valid);
 
-  gtk_widget_set_sensitive(appdata.btn_zoom_in, osm_valid);
-  gtk_widget_set_sensitive(appdata.btn_zoom_out, osm_valid);
+  gtk_widget_set_sensitive(btn_zoom_in, osm_valid);
+  gtk_widget_set_sensitive(btn_zoom_out, osm_valid);
 
   if(!project_valid)
-    appdata.uicontrol->showNotification(_("Please load or create a project"));
+    uicontrol->showNotification(_("Please load or create a project"));
 }
 
 /******************** begin of menu *********************/
@@ -139,7 +139,7 @@ cb_menu_project_open(appdata_t *appdata) {
   const std::string &proj_name = project_select(*appdata);
   if(!proj_name.empty())
     project_load(*appdata, proj_name);
-  main_ui_enable(*appdata);
+  appdata->main_ui_enable();
 }
 
 #ifndef FREMANTLE
@@ -190,7 +190,7 @@ cb_menu_download(appdata_t *appdata) {
   }
 
   appdata->map->set_autosave(true);
-  main_ui_enable(*appdata);
+  appdata->main_ui_enable();
 }
 
 static void
@@ -1427,7 +1427,7 @@ static int application_run(const char *proj)
   if(!appdata.project && !appdata.settings->project.empty())
     project_load(appdata, appdata.settings->project);
 
-  main_ui_enable(appdata);
+  appdata.main_ui_enable();
 
   /* start GPS if enabled by config */
   if(appdata.settings->enable_gps)
