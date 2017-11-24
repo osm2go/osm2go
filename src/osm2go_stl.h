@@ -22,10 +22,6 @@
 
 #include <osm2go_cpp.h>
 
-#include <memory>
-#include <string>
-#include <vector>
-
 // some compat code
 
 #if __cplusplus < 201402L
