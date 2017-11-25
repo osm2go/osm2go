@@ -24,8 +24,10 @@ struct appdata_t;
 
 class MainUi {
 protected:
-  MainUi() {}
+  MainUi(appdata_t &a) : appdata(a) {}
   ~MainUi() {}
+
+  appdata_t &appdata;
 public:
   static MainUi *instance(appdata_t &appdata);
 
