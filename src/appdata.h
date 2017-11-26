@@ -71,6 +71,7 @@ struct appdata_t {
   class gps_state_t * const gps_state;
   icon_t icons;
 
+  void track_clear();
   void main_ui_enable();
 };
 

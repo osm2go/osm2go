@@ -17,6 +17,11 @@
 #include <iostream>
 #include <sys/stat.h>
 
+void appdata_t::track_clear()
+{
+  assert_unreachable();
+}
+
 static void verify_diff(osm_t *osm)
 {
   assert_cmpnum(12, osm->nodes.size());

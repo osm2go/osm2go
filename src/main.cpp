@@ -409,7 +409,7 @@ cb_menu_track_import(appdata_t *appdata) {
     gchar *filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
 
     /* remove any existing track */
-    track_clear(*appdata);
+    appdata->track_clear();
 
     /* load a track */
     appdata->track.track = track_import(filename);
@@ -517,6 +517,10 @@ cb_menu_track_export(appdata_t *appdata) {
 #define uispecific_main_menu_new gtk_menu_new
 
 #endif
+
+static void track_clear_cb(appdata_t *appdata) {
+  appdata->track_clear();
+}
 
 #ifndef FREMANTLE
 // Half-arsed slapdash common menu item constructor. Let's use GtkBuilder
@@ -784,7 +788,7 @@ static void menu_create(appdata_t &appdata, GtkBox *mainvbox) {
   );
 
   appdata.menuitems[MainUi::MENU_ITEM_TRACK_CLEAR] = item = menu_append_new_item(
-    appdata, submenu, G_CALLBACK(track_clear), _("_Clear"),
+    appdata, submenu, G_CALLBACK(track_clear_cb), _("_Clear"),
     GTK_STOCK_CLEAR, "<OSM2Go-Main>/Track/Clear",
     0, static_cast<GdkModifierType>(0), FALSE, false, FALSE
   );
@@ -1076,7 +1080,7 @@ static void menu_create(appdata_t &appdata, GtkBox *) {
   const std::array<menu_entry_t, 6> sm_track_entries = { {
     ENABLED_ENTRY("Import",  cb_menu_track_import, MENU_ITEM_TRACK_IMPORT),
     DISABLED_ENTRY("Export", cb_menu_track_export, MENU_ITEM_TRACK_EXPORT),
-    DISABLED_ENTRY("Clear",  track_clear, MENU_ITEM_TRACK_CLEAR),
+    DISABLED_ENTRY("Clear",  track_clear_cb, MENU_ITEM_TRACK_CLEAR),
     ENABLED_TOGGLE_ENTRY("GPS enable", cb_menu_track_enable_gps,
                          enable_gps_get_toggle, MENU_ITEM_TRACK_ENABLE_GPS),
     DISABLED_TOGGLE_ENTRY("GPS follow", cb_menu_track_follow_gps,
@@ -1200,6 +1204,23 @@ appdata_t::~appdata_t() {
   menu_cleanup(*this);
 
   puts("everything is gone");
+}
+
+void appdata_t::track_clear()
+{
+  track_t *tr = track.track;
+  if (!tr)
+    return;
+
+  printf("clearing track\n");
+
+  if(likely(map != O2G_NULLPTR))
+    map_track_remove(*tr);
+
+  track.track = O2G_NULLPTR;
+  track_menu_set(*this);
+
+  delete tr;
 }
 
 static void on_window_destroy(appdata_t *appdata) {
@@ -1464,7 +1485,7 @@ static int application_run(const char *proj)
   puts("gtk_main() left");
 
   track_save(appdata.project, appdata.track.track);
-  track_clear(appdata);
+  appdata.track_clear();
 
   /* save a diff if there are dirty entries */
   if(appdata.project && appdata.osm)

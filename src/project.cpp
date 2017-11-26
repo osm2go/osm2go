@@ -496,7 +496,7 @@ static void project_close(appdata_t &appdata) {
 
   /* Save track and turn off the handler callback */
   track_save(appdata.project, appdata.track.track);
-  track_clear(appdata);
+  appdata.track_clear();
 
   appdata.map->clear(map_t::MAP_LAYER_ALL);
 
@@ -1346,7 +1346,7 @@ static bool project_load_inner(appdata_t &appdata, const std::string &name) {
   if(unlikely(!appdata.window))
     return false;
 
-  track_clear(appdata);
+  appdata.track_clear();
   if(track_restore(appdata))
     appdata.map->track_draw(appdata.settings->trackVisibility, *appdata.track.track);
 

@@ -69,7 +69,6 @@ void track_save(project_t *project, track_t *track);
 bool track_restore(appdata_t &appdata);
 
 /* accessible via the menu */
-void track_clear(appdata_t &appdata);
 void track_export(const track_t *track, const char *filename);
 track_t *track_import(const char *filename);
 /**
