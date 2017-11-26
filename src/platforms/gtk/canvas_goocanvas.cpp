@@ -74,8 +74,13 @@ canvas_goocanvas::canvas_goocanvas()
   for(unsigned int gr = 0; gr < group.size(); gr++)
     group[gr] = goo_canvas_group_new(root, O2G_NULLPTR);
 
-  g_signal_connect_swapped(GTK_OBJECT(widget), "destroy",
+  GObject *w = G_OBJECT(widget);
+  g_signal_connect_swapped(w, "destroy",
                            G_CALLBACK(canvas_delete), this);
+
+  g_object_set_data(w, "canvas-pointer", this);
+
+  g_object_set(w, "anchor", GTK_ANCHOR_CENTER, O2G_NULLPTR);
 }
 
 /* ------------------------ accessing the canvas ---------------------- */
