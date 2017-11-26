@@ -1239,7 +1239,7 @@ project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
 }
 
 static bool project_open(appdata_t &appdata, const std::string &name) {
-  std::unique_ptr<project_t> project(O2G_NULLPTR);
+  std::unique_ptr<project_t> project;
   std::string project_file;
 
   assert(!name.empty());

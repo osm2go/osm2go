@@ -57,7 +57,7 @@ namespace std {
       __tuple_type                  _M_t;
 
       // Constructors.
-      unique_ptr(_Tp *__p, deleter_type __d = deleter_type())
+      explicit unique_ptr(_Tp *__p = O2G_NULLPTR, deleter_type __d = deleter_type())
       : _M_t(__p, __d) { }
 
       // Destructor.
