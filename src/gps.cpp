@@ -67,6 +67,21 @@ struct gps_data_t {
 
 };
 
+class AutoGMutex {
+  GMutex * const mutex;
+public:
+  explicit inline AutoGMutex(GMutex *m)
+    : mutex(m)
+  {
+    g_mutex_lock(mutex);
+  }
+
+  inline ~AutoGMutex()
+  {
+    g_mutex_unlock(mutex);
+  }
+};
+
 /* setup for direct gpsd based communication */
 class gpsd_state_t : public gps_state_t {
 public:
@@ -113,7 +128,7 @@ pos_t gpsd_state_t::get_pos(float* alt)
   pos_t pos(NAN, NAN);
 
   if(enable) {
-    g_mutex_lock(mutex);
+    AutoGMutex lock(mutex);
     if(gpsdata.set & STATUS_SET) {
       if(gpsdata.status != STATUS_NO_FIX) {
         if(gpsdata.set & LATLON_SET)
@@ -122,7 +137,6 @@ pos_t gpsd_state_t::get_pos(float* alt)
           *alt = gpsdata.fix.alt;
       }
     }
-    g_mutex_unlock(mutex);
   }
 
   return pos;
@@ -295,13 +309,12 @@ gpointer gps_thread(gpointer data) {
 
 	    printf("msg: %s (%zu)\n", str, strlen(str));
 
-	    g_mutex_lock(gps_state->mutex);
+          AutoGMutex lock(gps_state->mutex);
 
 	    gps_state->gpsdata.set &=
 	      ~(LATLON_SET|MODE_SET|STATUS_SET);
 
 	    gps_unpack(str, &gps_state->gpsdata);
-	    g_mutex_unlock(gps_state->mutex);
 	  }
 	}
       }
