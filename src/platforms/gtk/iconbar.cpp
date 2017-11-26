@@ -32,7 +32,9 @@
 #include <osm2go_i18n.h>
 
 #if !GTK_CHECK_VERSION(2, 18, 0)
-#define gtk_widget_is_sensitive(w) (GTK_WIDGET_FLAGS(w) & GTK_SENSITIVE)
+static inline gboolean gtk_widget_is_sensitive(const GtkWidget *w) {
+  return (GTK_WIDGET_FLAGS(w) & GTK_SENSITIVE) ? TRUE : FALSE;
+}
 #endif
 
 #ifdef FINGER_UI
