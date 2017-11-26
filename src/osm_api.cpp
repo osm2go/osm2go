@@ -28,6 +28,7 @@
 #include "net_io.h"
 #include "project.h"
 #include "settings.h"
+#include "xml_helpers.h"
 
 #include <algorithm>
 #include <cassert>
@@ -457,15 +458,14 @@ static void upload_object(osm_upload_context_t &context, base_object_t *obj) {
   }
 
   /* upload this object */
-  xmlChar *xml_str = obj->generate_xml(context.changeset);
+  xmlString xml_str(obj->generate_xml(context.changeset));
   if(xml_str) {
     printf("uploading %s " ITEM_ID_FORMAT " to %s\n", obj->apiString(), obj->id, url.c_str());
 
-    if(osm_update_item(context, xml_str, url.c_str(), obj->isNew() ? &obj->id : &obj->version)) {
+    if(osm_update_item(context, xml_str.get(), url.c_str(), obj->isNew() ? &obj->id : &obj->version)) {
       obj->flags ^= OSM_FLAG_DIRTY;
       context.project->data_dirty = true;
     }
-    xmlFree(xml_str);
   }
 }
 
@@ -576,22 +576,21 @@ static bool osm_create_changeset(osm_upload_context_t &context) {
   appendf(context.log, O2G_NULLPTR, _("Create changeset "));
 
   /* create changeset request */
-  xmlChar *xml_str = osm_generate_xml_changeset(context.comment, context.src);
+  xmlString xml_str(osm_generate_xml_changeset(context.comment, context.src));
   if(xml_str) {
-    printf("creating changeset %s from address %p\n", url.c_str(), xml_str);
+    printf("creating changeset %s from address %p\n", url.c_str(), xml_str.get());
 
     context.credentials = context.appdata.settings->username + ":" +
                           context.appdata.settings->password;
 
     item_id_t changeset;
-    if(osm_update_item(context, xml_str, url.c_str(), &changeset)) {
+    if(osm_update_item(context, xml_str.get(), url.c_str(), &changeset)) {
       char str[32];
       snprintf(str, sizeof(str), ITEM_ID_FORMAT, changeset);
       printf("got changeset id %s\n", str);
       context.changeset = str;
       result = true;
     }
-    xmlFree(xml_str);
   }
 
   return result;

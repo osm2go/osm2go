@@ -1,6 +1,7 @@
 #include <icon.h>
 #include <osm.h>
 #include <settings.h>
+#include <xml_helpers.h>
 
 #include <osm2go_annotations.h>
 #include <misc.h>
@@ -629,15 +630,13 @@ static void test_changeset()
                              "    <tag k=\"source\" v=\"survey\"/>\n"
                              "  </changeset>\n"
                              "</osm>\n";
-  xmlChar *cs = osm_generate_xml_changeset("<&>", std::string());
+  xmlString cs(osm_generate_xml_changeset("<&>", std::string()));
 
-  assert_cmpstr(reinterpret_cast<char *>(cs), message);
-  xmlFree(cs);
+  assert_cmpstr(reinterpret_cast<char *>(cs.get()), message);
 
-  cs = osm_generate_xml_changeset("testcase comment", "survey");
+  cs.reset(osm_generate_xml_changeset("testcase comment", "survey"));
 
-  assert_cmpstr(reinterpret_cast<char *>(cs), message_src);
-  xmlFree(cs);
+  assert_cmpstr(reinterpret_cast<char *>(cs.get()), message_src);
 }
 
 static void test_reverse()

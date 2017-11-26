@@ -225,35 +225,25 @@ void diff_save(const project_t *project, const osm_t *osm) {
 }
 
 static item_id_t xml_get_prop_int(xmlNode *node, const char *prop, item_id_t def) {
-  xmlChar *str = xmlGetProp(node, BAD_CAST prop);
-  item_id_t value = def;
+  xmlString str(xmlGetProp(node, BAD_CAST prop));
 
-  if(str) {
-    value = strtoll(reinterpret_cast<char*>(str), O2G_NULLPTR, 10);
-    xmlFree(str);
-  }
-
-  return value;
+  if(str)
+    return strtoll(reinterpret_cast<char*>(str.get()), O2G_NULLPTR, 10);
+  else
+    return def;
 }
 
 static int xml_get_prop_state(xmlNode *node) {
-  xmlChar *str = xmlGetProp(node, BAD_CAST "state");
+  xmlString str(xmlGetProp(node, BAD_CAST "state"));
 
-  if(str) {
-    if(strcmp(reinterpret_cast<char *>(str), "new") == 0) {
-      xmlFree(str);
-      return OSM_FLAG_DIRTY;
-    } else if(likely(strcmp(reinterpret_cast<char *>(str), "deleted") == 0)) {
-      xmlFree(str);
-      return OSM_FLAG_DELETED;
-    } else {
-      xmlFree(str);
-    }
+  if(!str)
+    return OSM_FLAG_DIRTY;
+  else if(strcmp(reinterpret_cast<char *>(str.get()), "new") == 0)
+    return OSM_FLAG_DIRTY;
+  else if(likely(strcmp(reinterpret_cast<char *>(str.get()), "deleted") == 0))
+    return OSM_FLAG_DELETED;
 
-    assert_unreachable();
-  }
-
-  return OSM_FLAG_DIRTY;
+  assert_unreachable();
 }
 
 static osm_t::TagMap xml_scan_tags(xmlNodePtr node) {
@@ -583,16 +573,15 @@ unsigned int diff_restore_file(GtkWidget *window, const project_t *project, osm_
   for (cur_node = root_element; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcmp(reinterpret_cast<const char *>(cur_node->name), "diff") == 0) {
-	xmlChar *str = xmlGetProp(cur_node, BAD_CAST "name");
+        xmlString str(xmlGetProp(cur_node, BAD_CAST "name"));
 	if(str) {
-          const char *cstr = reinterpret_cast<const char *>(str);
+          const char *cstr = reinterpret_cast<const char *>(str.get());
 	  printf("diff for project %s\n", cstr);
 	  if(unlikely(project->name != cstr)) {
             warningf(window, _("Diff name (%s) does not match project name (%s)"),
 		     cstr, project->name.c_str());
             res |= DIFF_PROJECT_MISMATCH;
 	  }
-	  xmlFree(str);
 	}
 
         for(xmlNodePtr node_node = cur_node->children; node_node != O2G_NULLPTR;

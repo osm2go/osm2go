@@ -85,16 +85,12 @@ pos_t pos_t::fromXmlProperties(xmlNodePtr node, const char *latName, const char 
 }
 
 static pos_float_t xml_reader_attr_float(xmlTextReaderPtr reader, const char *name) {
-  xmlChar *prop = xmlTextReaderGetAttribute(reader, BAD_CAST name);
-  pos_float_t ret;
+  xmlString prop(xmlTextReaderGetAttribute(reader, BAD_CAST name));
 
-  if(likely(prop != O2G_NULLPTR)) {
-    ret = g_ascii_strtod(reinterpret_cast<gchar *>(prop), O2G_NULLPTR);
-    xmlFree(prop);
-  } else
-    ret = NAN;
-
-  return ret;
+  if(likely(prop))
+    return g_ascii_strtod(reinterpret_cast<gchar *>(prop.get()), O2G_NULLPTR);
+  else
+    return NAN;
 }
 
 pos_t pos_t::fromXmlProperties(xmlTextReaderPtr reader, const char *latName, const char *lonName)

@@ -47,23 +47,19 @@
 #include <osm2go_i18n.h>
 
 double xml_get_prop_float(xmlNode *node, const char *prop) {
-  xmlChar *str = xmlGetProp(node, BAD_CAST prop);
-  double value = NAN;
-  if(str) {
-    value = g_ascii_strtod(reinterpret_cast<gchar *>(str), O2G_NULLPTR);
-    xmlFree(str);
-  }
-  return value;
+  xmlString str(xmlGetProp(node, BAD_CAST prop));
+  if(str)
+    return g_ascii_strtod(reinterpret_cast<gchar *>(str.get()), O2G_NULLPTR);
+  else
+    return NAN;
 }
 
 bool xml_get_prop_bool(xmlNode *node, const char *prop) {
-  xmlChar *prop_str = xmlGetProp(node, BAD_CAST prop);
+  xmlString prop_str(xmlGetProp(node, BAD_CAST prop));
   if(!prop_str)
     return false;
 
-  bool match = (strcasecmp(reinterpret_cast<char *>(prop_str), "true") == 0);
-  xmlFree(prop_str);
-  return match;
+  return (strcasecmp(reinterpret_cast<char *>(prop_str.get()), "true") == 0);
 }
 
 static void vmessagef(GtkWidget *parent, GtkMessageType type, GtkButtonsType buttons,

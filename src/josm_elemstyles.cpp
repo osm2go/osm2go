@@ -28,6 +28,7 @@
 #include "map.h"
 #include "misc.h"
 #include "style.h"
+#include "xml_helpers.h"
 
 #include <algorithm>
 #include <cassert>
@@ -179,13 +180,12 @@ static bool parse_color(const char *col, elemstyle_color_t &color, ColorMap &col
 
 bool parse_color(xmlNode *a_node, const char *name,
 		     elemstyle_color_t &color) {
-  xmlChar *color_str = xmlGetProp(a_node, BAD_CAST name);
+  xmlString color_str(xmlGetProp(a_node, BAD_CAST name));
   bool ret = false;
 
   if(color_str) {
     ColorMap dummy;
-    ret = parse_color(reinterpret_cast<char *>(color_str), color, dummy);
-    xmlFree(color_str);
+    ret = parse_color(reinterpret_cast<char *>(color_str.get()), color, dummy);
   }
   return ret;
 }

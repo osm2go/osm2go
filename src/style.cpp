@@ -109,7 +109,7 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t &style) {
 
       } else if(strcmp(nodename, "icon") == 0) {
         style.icon.scale = xml_get_prop_float(cur_node, "scale");
-        xmlChar *prefix = xmlGetProp(cur_node, BAD_CAST "path-prefix");
+        xmlChar *prefix(xmlGetProp(cur_node, BAD_CAST "path-prefix"));
         if(prefix) {
           xmlFree(BAD_CAST style.icon.path_prefix);
           style.icon.path_prefix = reinterpret_cast<char *>(prefix);

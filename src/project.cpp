@@ -170,75 +170,66 @@ static bool project_read(const std::string &project_file, project_t *project,
           if(node->type != XML_ELEMENT_NODE)
             continue;
 
-          xmlChar *str;
-
           if(strcmp(reinterpret_cast<const char *>(node->name), "desc") == 0) {
-            xmlChar *desc = xmlNodeListGetString(doc, node->children, 1);
-            project->desc = reinterpret_cast<char *>(desc);
-            printf("desc = %s\n", desc);
-            xmlFree(desc);
+            xmlString desc(xmlNodeListGetString(doc, node->children, 1));
+            project->desc = reinterpret_cast<char *>(desc.get());
+            printf("desc = %s\n", desc.get());
           } else if(strcmp(reinterpret_cast<const char *>(node->name), "server") == 0) {
-            str = xmlNodeListGetString(doc, node->children, 1);
-            if(defaultserver == reinterpret_cast<char *>(str)) {
+            xmlString str(xmlNodeListGetString(doc, node->children, 1));
+            if(defaultserver == reinterpret_cast<char *>(str.get())) {
               project->server = defaultserver.c_str();
             } else {
-              project->rserver = reinterpret_cast<char *>(str);
+              project->rserver = reinterpret_cast<char *>(str.get());
               project->server = project->rserver.c_str();
             }
             printf("server = %s\n", project->server);
-            xmlFree(str);
           } else if(strcmp(reinterpret_cast<const char *>(node->name), "map") == 0) {
-            if((str = xmlGetProp(node, BAD_CAST "zoom"))) {
-              project->map_state.zoom = g_ascii_strtod(reinterpret_cast<gchar *>(str), O2G_NULLPTR);
-              xmlFree(str);
-            }
-            if((str = xmlGetProp(node, BAD_CAST "detail"))) {
-              project->map_state.detail = g_ascii_strtod(reinterpret_cast<gchar *>(str), O2G_NULLPTR);
-              xmlFree(str);
-            }
-            if((str = xmlGetProp(node, BAD_CAST "scroll-offset-x"))) {
-              project->map_state.scroll_offset.x = strtoul(reinterpret_cast<gchar *>(str), O2G_NULLPTR, 10);
-              xmlFree(str);
-            }
-            if((str = xmlGetProp(node, BAD_CAST "scroll-offset-y"))) {
-              project->map_state.scroll_offset.y = strtoul(reinterpret_cast<gchar *>(str), O2G_NULLPTR, 10);
-              xmlFree(str);
-            }
-          } else if(strcmp(reinterpret_cast<const char *>(node->name), "wms") == 0) {
-            if((str = xmlGetProp(node, BAD_CAST "server"))) {
-              project->wms_server = reinterpret_cast<char *>(str);
-              xmlFree(str);
-            }
-            if((str = xmlGetProp(node, BAD_CAST "path"))) {
-              project->wms_path = reinterpret_cast<char *>(str);
-              xmlFree(str);
-            }
-            if((str = xmlGetProp(node, BAD_CAST "x-offset"))) {
-              project->wms_offset.x = strtoul(reinterpret_cast<char *>(str), O2G_NULLPTR, 10);
-              xmlFree(str);
-            }
-            if((str = xmlGetProp(node, BAD_CAST "y-offset"))) {
-              project->wms_offset.y = strtoul(reinterpret_cast<char *>(str), O2G_NULLPTR, 10);
-              xmlFree(str);
-            }
+            xmlString str(xmlGetProp(node, BAD_CAST "zoom"));
+            if(str)
+              project->map_state.zoom = g_ascii_strtod(reinterpret_cast<gchar *>(str.get()), O2G_NULLPTR);
 
+            str.reset(xmlGetProp(node, BAD_CAST "detail"));
+            if(str)
+              project->map_state.detail = g_ascii_strtod(reinterpret_cast<gchar *>(str.get()), O2G_NULLPTR);
+
+            str.reset(xmlGetProp(node, BAD_CAST "scroll-offset-x"));
+            if(str)
+              project->map_state.scroll_offset.x = strtoul(reinterpret_cast<gchar *>(str.get()), O2G_NULLPTR, 10);
+
+            str.reset(xmlGetProp(node, BAD_CAST "scroll-offset-y"));
+            if(str)
+              project->map_state.scroll_offset.y = strtoul(reinterpret_cast<gchar *>(str.get()), O2G_NULLPTR, 10);
+          } else if(strcmp(reinterpret_cast<const char *>(node->name), "wms") == 0) {
+            xmlString str(xmlGetProp(node, BAD_CAST "server"));
+            if(str)
+              project->wms_server = reinterpret_cast<char *>(str.get());
+
+            str.reset(xmlGetProp(node, BAD_CAST "path"));
+            if(str)
+              project->wms_path = reinterpret_cast<char *>(str.get());
+
+            str.reset(xmlGetProp(node, BAD_CAST "x-offset"));
+            if(str)
+              project->wms_offset.x = strtoul(reinterpret_cast<char *>(str.get()), O2G_NULLPTR, 10);
+
+            str.reset(xmlGetProp(node, BAD_CAST "y-offset"));
+            if(str)
+              project->wms_offset.y = strtoul(reinterpret_cast<char *>(str.get()), O2G_NULLPTR, 10);
           } else if(strcmp(reinterpret_cast<const char *>(node->name), "osm") == 0) {
-            str = xmlNodeListGetString(doc, node->children, 1);
-            printf("osm = %s\n", str);
+            xmlString str(xmlNodeListGetString(doc, node->children, 1));
+            printf("osm = %s\n", str.get());
 
             /* make this a relative path if possible */
             /* if the project path actually is a prefix of this, */
             /* then just remove this prefix */
-            if(str[0] == '/' &&
-               strlen(reinterpret_cast<char *>(str)) > project->path.size() &&
-               !strncmp(reinterpret_cast<char *>(str), project->path.c_str(), project->path.size())) {
+            if(str.get()[0] == '/' &&
+               strlen(reinterpret_cast<char *>(str.get())) > project->path.size() &&
+               !strncmp(reinterpret_cast<char *>(str.get()), project->path.c_str(), project->path.size())) {
 
-              project->osm = reinterpret_cast<char *>(str + project->path.size());
+              project->osm = reinterpret_cast<char *>(str.get() + project->path.size());
               printf("osm name converted to relative %s\n", project->osm.c_str());
             } else
-              project->osm = reinterpret_cast<char *>(str);
-
-            xmlFree(str);
+              project->osm = reinterpret_cast<char *>(str.get());
           } else if(strcmp(reinterpret_cast<const char *>(node->name), "min") == 0) {
             project->min = pos_t::fromXmlProperties(node);
           } else if(strcmp(reinterpret_cast<const char *>(node->name), "max") == 0) {

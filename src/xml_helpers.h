@@ -21,8 +21,21 @@
 #define XML_HELPERS_H
 
 #include <libxml/tree.h>
+#if __cplusplus >= 201103L
+#include <memory>
+#else
+#include <osm2go_stl.h>
+#endif
 
 double xml_get_prop_float(xmlNode *node, const char *prop);
 bool xml_get_prop_bool(xmlNode *node, const char *prop);
+
+struct xmlDelete {
+  inline void operator()(xmlChar *s) {
+    xmlFree(s);
+  }
+};
+
+typedef std::unique_ptr<xmlChar, xmlDelete> xmlString;
 
 #endif /* XML_HELPERS_H */

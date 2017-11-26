@@ -245,21 +245,16 @@ static void tag_from_xml(xmlChar *k, xmlChar *v, std::vector<tag_t> &tags) {
 }
 
 bool osm_t::parse_tag(xmlNode *a_node, TagMap &tags) {
-  xmlChar *key = xmlGetProp(a_node, BAD_CAST "k");
-  xmlChar *value = xmlGetProp(a_node, BAD_CAST "v");
+  xmlString key(xmlGetProp(a_node, BAD_CAST "k"));
+  xmlString value(xmlGetProp(a_node, BAD_CAST "v"));
 
-  if(unlikely(!key || !value || strlen(reinterpret_cast<char *>(key)) == 0 ||
-                                  strlen(reinterpret_cast<char *>(value)) == 0)) {
-    xmlFree(key);
-    xmlFree(value);
+  if(unlikely(!key || !value || strlen(reinterpret_cast<char *>(key.get())) == 0 ||
+                                  strlen(reinterpret_cast<char *>(value.get())) == 0)) {
     return false;
   }
 
-  std::string k = reinterpret_cast<char *>(key);
-  std::string v = reinterpret_cast<char *>(value);
-
-  xmlFree(key);
-  xmlFree(value);
+  std::string k = reinterpret_cast<char *>(key.get());
+  std::string v = reinterpret_cast<char *>(value.get());
 
   if(unlikely(findTag(tags, k, v) != tags.end()))
     return false;
@@ -665,11 +660,11 @@ static void way_free(std::pair<item_id_t, way_t *> pair) {
 }
 
 node_t *osm_t::parse_way_nd(xmlNode *a_node) const {
-  xmlChar *prop = xmlGetProp(a_node, BAD_CAST "ref");
+  xmlString prop(xmlGetProp(a_node, BAD_CAST "ref"));
   node_t *node = O2G_NULLPTR;
 
-  if(prop != O2G_NULLPTR) {
-    item_id_t id = strtoll(reinterpret_cast<char *>(prop), O2G_NULLPTR, 10);
+  if(prop) {
+    item_id_t id = strtoll(reinterpret_cast<char *>(prop.get()), O2G_NULLPTR, 10);
 
     /* search matching node */
     node = node_by_id(id);
@@ -677,8 +672,6 @@ node_t *osm_t::parse_way_nd(xmlNode *a_node) const {
       printf("Node id " ITEM_ID_FORMAT " not found\n", id);
     else
       node->ways++;
-
-    xmlFree(prop);
   }
 
   return node;
@@ -816,16 +809,12 @@ bool osm_t::parse_relation_member(const char *tp, const char *ref, const char *r
 }
 
 void osm_t::parse_relation_member(xmlNode *a_node, std::vector<member_t> &members) {
-  xmlChar *tp = xmlGetProp(a_node, BAD_CAST "type");
-  xmlChar *ref = xmlGetProp(a_node, BAD_CAST "ref");
-  xmlChar *role = xmlGetProp(a_node, BAD_CAST "role");
+  xmlString tp(xmlGetProp(a_node, BAD_CAST "type"));
+  xmlString ref(xmlGetProp(a_node, BAD_CAST "ref"));
+  xmlString role(xmlGetProp(a_node, BAD_CAST "role"));
 
-  parse_relation_member(reinterpret_cast<char *>(tp), reinterpret_cast<char *>(ref),
-                        reinterpret_cast<char *>(role), members);
-
-  xmlFree(tp);
-  xmlFree(ref);
-  xmlFree(role);
+  parse_relation_member(reinterpret_cast<char *>(tp.get()), reinterpret_cast<char *>(ref.get()),
+                        reinterpret_cast<char *>(role.get()), members);
 }
 
 /* try to find something descriptive */
@@ -920,38 +909,33 @@ static void process_tag(xmlTextReaderPtr reader, std::vector<tag_t> &tags) {
 
 static void process_base_attributes(base_object_t *obj, xmlTextReaderPtr reader, osm_t *osm)
 {
-  xmlChar *prop;
-  if(likely((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "id")))) {
-    obj->id = strtoll(reinterpret_cast<char *>(prop), O2G_NULLPTR, 10);
-    xmlFree(prop);
-  }
+  xmlString prop(xmlTextReaderGetAttribute(reader, BAD_CAST "id"));
+  if(likely(prop))
+    obj->id = strtoll(reinterpret_cast<char *>(prop.get()), O2G_NULLPTR, 10);
 
   /* new in api 0.6: */
-  if(likely((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "version")))) {
-    obj->version = strtoul(reinterpret_cast<char *>(prop), O2G_NULLPTR, 10);
-    xmlFree(prop);
-  }
+  prop.reset(xmlTextReaderGetAttribute(reader, BAD_CAST "version"));
+  if(likely(prop))
+    obj->version = strtoul(reinterpret_cast<char *>(prop.get()), O2G_NULLPTR, 10);
 
-  if(likely((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "user")))) {
+  prop.reset(xmlTextReaderGetAttribute(reader, BAD_CAST "user"));
+  if(likely(prop)) {
     int uid = -1;
-    xmlChar *puid = xmlTextReaderGetAttribute(reader, BAD_CAST "uid");
+    xmlString puid(xmlTextReaderGetAttribute(reader, BAD_CAST "uid"));
     if(likely(puid)) {
       char *endp;
-      uid = strtol(reinterpret_cast<char *>(puid), &endp, 10);
+      uid = strtol(reinterpret_cast<char *>(puid.get()), &endp, 10);
       if(unlikely(*endp)) {
-        printf("WARNING: cannot parse uid '%s' for user '%s'\n", puid, prop);
+        printf("WARNING: cannot parse uid '%s' for user '%s'\n", puid.get(), prop.get());
         uid = -1;
       }
-      xmlFree(puid);
     }
-    obj->user = osm_user_insert(osm, reinterpret_cast<char *>(prop), uid);
-    xmlFree(prop);
+    obj->user = osm_user_insert(osm, reinterpret_cast<char *>(prop.get()), uid);
   }
 
-  if(likely((prop = xmlTextReaderGetAttribute(reader, BAD_CAST "timestamp")))) {
-    obj->time = convert_iso8601(reinterpret_cast<char *>(prop));
-    xmlFree(prop);
-  }
+  prop.reset(xmlTextReaderGetAttribute(reader, BAD_CAST "timestamp"));
+  if(likely(prop))
+    obj->time = convert_iso8601(reinterpret_cast<char *>(prop.get()));
 }
 
 static void process_node(xmlTextReaderPtr reader, osm_t *osm) {
@@ -996,25 +980,21 @@ static void process_node(xmlTextReaderPtr reader, osm_t *osm) {
 }
 
 static node_t *process_nd(xmlTextReaderPtr reader, osm_t *osm) {
-  xmlChar *prop = xmlTextReaderGetAttribute(reader, BAD_CAST "ref");
+  xmlString prop(xmlTextReaderGetAttribute(reader, BAD_CAST "ref"));
+  node_t *node = O2G_NULLPTR;
 
-  if(likely(prop != O2G_NULLPTR)) {
-    item_id_t id = strtoll(reinterpret_cast<char *>(prop), O2G_NULLPTR, 10);
+  if(likely(prop)) {
+    item_id_t id = strtoll(reinterpret_cast<char *>(prop.get()), O2G_NULLPTR, 10);
     /* search matching node */
-    node_t *node = osm->node_by_id(id);
+    node = osm->node_by_id(id);
     if(unlikely(node == O2G_NULLPTR))
       printf("Node id " ITEM_ID_FORMAT " not found\n", id);
     else
       node->ways++;
-
-    xmlFree(prop);
-
-    skip_element(reader);
-    return node;
   }
 
   skip_element(reader);
-  return O2G_NULLPTR;
+  return node;
 }
 
 static void process_way(xmlTextReaderPtr reader, osm_t *osm) {
@@ -1059,18 +1039,12 @@ static void process_way(xmlTextReaderPtr reader, osm_t *osm) {
 }
 
 static bool process_member(xmlTextReaderPtr reader, osm_t *osm, std::vector<member_t> &members) {
-  xmlChar *tp = xmlTextReaderGetAttribute(reader, BAD_CAST "type");
-  xmlChar *ref = xmlTextReaderGetAttribute(reader, BAD_CAST "ref");
-  xmlChar *role = xmlTextReaderGetAttribute(reader, BAD_CAST "role");
+  xmlString tp(xmlTextReaderGetAttribute(reader, BAD_CAST "type"));
+  xmlString ref(xmlTextReaderGetAttribute(reader, BAD_CAST "ref"));
+  xmlString role(xmlTextReaderGetAttribute(reader, BAD_CAST "role"));
 
-  bool ret = osm->parse_relation_member(reinterpret_cast<char *>(tp), reinterpret_cast<char *>(ref),
-                                        reinterpret_cast<char *>(role), members);
-
-  xmlFree(tp);
-  xmlFree(ref);
-  xmlFree(role);
-
-  return ret;
+  return osm->parse_relation_member(reinterpret_cast<char *>(tp.get()), reinterpret_cast<char *>(ref.get()),
+                                    reinterpret_cast<char *>(role.get()), members);
 }
 
 static void process_relation(xmlTextReaderPtr reader, osm_t *osm) {
@@ -1131,11 +1105,9 @@ static osm_t *process_osm(xmlTextReaderPtr reader, icon_t &icons) {
   /* alloc osm structure */
   osm_t *osm = new osm_t(icons);
 
-  xmlChar *prop = xmlTextReaderGetAttribute(reader, BAD_CAST "upload");
-  if(unlikely(prop != O2G_NULLPTR)) {
-    osm->uploadPolicy = parseUploadPolicy(reinterpret_cast<const char *>(prop));
-    xmlFree(prop);
-  }
+  xmlString prop(xmlTextReaderGetAttribute(reader, BAD_CAST "upload"));
+  if(unlikely(prop))
+    osm->uploadPolicy = parseUploadPolicy(reinterpret_cast<const char *>(prop.get()));
 
   /* read next node */
   int num_elems = 0;

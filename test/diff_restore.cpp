@@ -5,6 +5,7 @@
 #include <misc.h>
 #include <osm.h>
 #include <project.h>
+#include <xml_helpers.h>
 
 #include <osm2go_annotations.h>
 #include <osm2go_cpp.h>
@@ -193,13 +194,11 @@ int main(int argc, char **argv)
 
   verify_diff(osm);
 
-  xmlChar *rel_str = r255->generate_xml("42");
-  printf("%s\n", rel_str);
-  xmlFree(rel_str);
+  xmlString rel_str(r255->generate_xml("42"));
+  printf("%s\n", rel_str.get());
 
-  rel_str = n72->generate_xml("42");
-  printf("%s\n", rel_str);
-  xmlFree(rel_str);
+  rel_str.reset(n72->generate_xml("42"));
+  printf("%s\n", rel_str.get());
 
   char tmpdir[] = "/tmp/osm2go-diff_restore-XXXXXX";
 
