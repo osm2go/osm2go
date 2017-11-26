@@ -69,7 +69,7 @@ protected:
   /**
    * @brief check if the tag value matches this item
    */
-  virtual bool matchValue(G_GNUC_UNUSED const char *val) const {
+  virtual bool matchValue(const char *) const {
     return true;
   }
 
