@@ -313,9 +313,9 @@ static bool net_io_do(GtkWidget *parent, net_io_request_t *rq,
   GThread *worker;
 
 #if GLIB_CHECK_VERSION(2,32,0)
-  worker = g_thread_try_new("download", &worker_thread, request.get(), O2G_NULLPTR);
+  worker = g_thread_try_new("download", worker_thread, request.get(), O2G_NULLPTR);
 #else
-  worker = g_thread_create(&worker_thread, request.get(), FALSE, O2G_NULLPTR);
+  worker = g_thread_create(worker_thread, request.get(), FALSE, O2G_NULLPTR);
 #endif
   if(unlikely(worker == O2G_NULLPTR)) {
     g_warning("failed to create the worker thread");
