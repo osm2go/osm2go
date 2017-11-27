@@ -503,10 +503,9 @@ static GtkWidget *table_attach_label_l(GtkWidget *table, char *str,
 
 static GtkWidget *table_attach_int(GtkWidget *table, int num,
 				   int x1, int x2, int y1, int y2) {
-  gchar str[G_ASCII_DTOSTR_BUF_SIZE];
-  g_snprintf(str, sizeof(str), "%d", num);
-  GtkWidget *label = table_attach_label_c(table, str, x1, x2, y1, y2);
-  return label;
+  char str[G_ASCII_DTOSTR_BUF_SIZE];
+  snprintf(str, sizeof(str), "%d", num);
+  return table_attach_label_c(table, str, x1, x2, y1, y2);
 }
 
 static void log_deletion(osm_upload_context_t &context, const base_object_t *obj) {

@@ -340,8 +340,8 @@ static bool net_io_do(GtkWidget *parent, net_io_request_t *rq,
         gtk_progress_bar_pulse(pbar);
       }
 
-      gchar buf[G_ASCII_DTOSTR_BUF_SIZE];
-      g_snprintf(buf, sizeof(buf), "%" CURL_FORMAT_CURL_OFF_T, request->download_cur);
+      char buf[G_ASCII_DTOSTR_BUF_SIZE];
+      snprintf(buf, sizeof(buf), "%" CURL_FORMAT_CURL_OFF_T, request->download_cur);
       gtk_progress_bar_set_text(pbar, buf);
     }
 
