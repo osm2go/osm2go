@@ -121,4 +121,13 @@ void misc_init(void);
 
 GtkWidget *string_select_widget(const char *title, const std::vector<std::string> &entries, int match);
 
+// simplified form of unique_ptr
+struct g_deleter {
+  inline void operator()(gpointer mem) {
+    g_free(mem);
+  }
+};
+
+typedef std::unique_ptr<gchar, g_deleter> g_string;
+
 #endif // MISC_H

@@ -271,14 +271,13 @@ static bool area_warning(context_t *context) {
   double area = selected_area(context);
 
   if(area > WARN_OVER) {
-    gchar *text = g_strdup_printf(warn_text(), area, area / (KMPMIL * KMPMIL),
-                                  WARN_OVER, WARN_OVER/(KMPMIL*KMPMIL));
+    g_string text(g_strdup_printf(warn_text(), area, area / (KMPMIL * KMPMIL),
+                                  WARN_OVER, WARN_OVER/(KMPMIL*KMPMIL)));
     ret = yes_no_f(context->dialog,
 		   MISC_AGAIN_ID_AREA_TOO_BIG, MISC_AGAIN_FLAG_DONT_SAVE_NO,
 		   _("Area size warning!"),
 		   _("%s\n\nDo you really want to continue?"),
-                   text);
-    g_free(text);
+                   text.get());
   }
 
   return ret;

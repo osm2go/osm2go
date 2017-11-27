@@ -472,12 +472,13 @@ static GtkWidget *details_widget(const tag_context_t &context, bool big) {
   } break;
 
   case WAY: {
-    char *nodes_str = g_strdup_printf(_("%s%zu nodes"),
-             big?"":_("Length: "), context.object.way->node_chain.size());
-    label = gtk_label_new(nodes_str);
+    g_string nodes_str(g_strdup_printf(_("%s%zu nodes"),
+                                       big ? "" : _("Length: "),
+                                       context.object.way->node_chain.size()));
+    label = gtk_label_new(nodes_str.get());
+
     if(big) table_attach(table, gtk_label_new(_("Length:")), 0, 2);
     table_attach(table, label, big?1:0, big?2:1);
-    g_free(nodes_str);
 
     std::string type_str = context.object.way->is_closed() ? "closed way" : "open way";
     type_str += " (";
@@ -494,19 +495,16 @@ static GtkWidget *details_widget(const tag_context_t &context, bool big) {
     guint nodes = 0, ways = 0, relations = 0;
     context.object.relation->members_by_type(nodes, ways, relations);
 
-    char *str =
-      g_strdup_printf(_("Members: %u nodes, %u ways, %u relations"),
-		      nodes, ways, relations);
+    g_string str(g_strdup_printf(_("Members: %u nodes, %u ways, %u relations"),
+                                 nodes, ways, relations));
 
-    GtkWidget *member_btn = button_new_with_label(str);
+    GtkWidget *member_btn = button_new_with_label(str.get());
     g_signal_connect(GTK_OBJECT(member_btn), "clicked",
                      G_CALLBACK(on_relation_members),
                      const_cast<tag_context_t *>(&context));
 
     gtk_table_attach_defaults(GTK_TABLE(table), member_btn, 0, 2,
 			      big?2:1, big?4:2);
-
-    g_free(str);
     break;
   }
 
@@ -579,17 +577,16 @@ bool info_dialog(GtkWidget *parent, map_t *map, osm_t *osm, presets_items *prese
     assert_unreachable();
   }
 
-  gchar *str = g_strdup_printf(msgtpl, context.object.obj->id);
+  g_string str(g_strdup_printf(msgtpl, context.object.obj->id));
 
-  context.dialog = misc_dialog_new(MISC_DIALOG_LARGE, str,
-	  GTK_WINDOW(parent),
+  context.dialog = misc_dialog_new(MISC_DIALOG_LARGE, str.get(), GTK_WINDOW(parent),
 #ifdef FREMANTLE
 	  _("More"), GTK_RESPONSE_HELP,
 #endif
 	  GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
 	  GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
 	  O2G_NULLPTR);
-  g_free(str);
+  str.reset();
 
   gtk_dialog_set_default_response(GTK_DIALOG(context.dialog),
 				  GTK_RESPONSE_ACCEPT);

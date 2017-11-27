@@ -282,9 +282,8 @@ static void presets_item_dialog(presets_context_t *context,
 
     /* special handling for the first label/separators */
     if(item->addEditName) {
-      gchar *title = g_strdup_printf(_("Edit %s"), item->name.c_str());
-      gtk_window_set_title(GTK_WINDOW(dialog), title);
-      g_free(title);
+      g_string title(g_strdup_printf(_("Edit %s"), item->name.c_str()));
+      gtk_window_set_title(GTK_WINDOW(dialog), title.get());
     } else {
       // use the first label as title
       const presets_widget_t * const w = item->widgets.front();
@@ -1194,9 +1193,8 @@ static void item_link_clicked(GtkButton *button, presets_item *item) {
 GtkWidget *presets_widget_link::attach(GtkTable *table, guint &row, const char *,
                                        presets_context_t *context) const
 {
-  gchar *label = g_strdup_printf(_("[Preset] %s"), item->name.c_str());
-  GtkWidget *button = button_new_with_label(label);
-  g_free(label);
+  g_string label(g_strdup_printf(_("[Preset] %s"), item->name.c_str()));
+  GtkWidget *button = button_new_with_label(label.get());
   g_object_set_data(G_OBJECT(button), "presets_context", context);
   GtkWidget *img = context->icons.widget_load(item->icon, 16);
   if(img) {

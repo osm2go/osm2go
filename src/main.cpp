@@ -88,21 +88,25 @@ void appdata_t::main_ui_enable() {
     map_action_cancel(map);
 
   /* ---- set project name as window title ----- */
-  char *str = O2G_NULLPTR;
+  g_string str;
   const char *cstr = "OSM2go";
 
-  if(project_valid)
+  if(project_valid) {
 #ifdef FREMANTLE
-    cstr = str = g_markup_printf_escaped(_("<b>%s</b> - OSM2Go"),
-                                         project->name.c_str());
+    str.reset(g_markup_printf_escaped(_("<b>%s</b> - OSM2Go"),
+                                      project->name.c_str()));
+    cstr = str.get();
+  }
 
   hildon_window_set_markup(HILDON_WINDOW(window), cstr);
 #else
-    cstr = str = g_strdup_printf(_("%s - OSM2Go"), project->name.c_str());
+    str.reset(g_strdup_printf(_("%s - OSM2Go"), project->name.c_str()));
+    cstr = str.get();
+  }
 
   gtk_window_set_title(GTK_WINDOW(window), cstr);
 #endif
-  g_free(str);
+  str.reset();
 
   iconbar->setToolbarEnable(osm_valid == TRUE);
   /* disable all menu entries related to map */
@@ -406,20 +410,19 @@ cb_menu_track_import(appdata_t *appdata) {
 
   gtk_widget_show_all (GTK_WIDGET(dialog));
   if (gtk_dialog_run (GTK_DIALOG(dialog)) == GTK_FM_OK) {
-    gchar *filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+    g_string filename(gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog)));
 
     /* remove any existing track */
     appdata->track_clear();
 
     /* load a track */
-    appdata->track.track = track_import(filename);
+    appdata->track.track = track_import(filename.get());
     if(appdata->track.track) {
       appdata->map->track_draw(appdata->settings->trackVisibility, *appdata->track.track);
 
-      appdata->settings->track_path = filename;
+      appdata->settings->track_path = filename.get();
     }
     track_menu_set(*appdata);
-    g_free(filename);
   }
 
   gtk_widget_destroy (dialog);
@@ -478,21 +481,20 @@ cb_menu_track_export(appdata_t *appdata) {
   }
 
   if(gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_FM_OK) {
-    gchar *filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+    g_string filename(gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog)));
     if(filename) {
-      printf("export to %s\n", filename);
+      printf("export to %s\n", filename.get());
 
-      if(!g_file_test(filename, G_FILE_TEST_EXISTS) ||
+      if(!g_file_test(filename.get(), G_FILE_TEST_EXISTS) ||
          yes_no_f(dialog, MISC_AGAIN_ID_EXPORT_OVERWRITE, MISC_AGAIN_FLAG_DONT_SAVE_NO,
                   _("Overwrite existing file"),
                   _("The file already exists. "
                     "Do you really want to replace it?"))) {
-        appdata->settings->track_path = filename;
+        appdata->settings->track_path = filename.get();
 
         assert(appdata->track.track != O2G_NULLPTR);
-        track_export(appdata->track.track, filename);
+        track_export(appdata->track.track, filename.get());
       }
-      g_free(filename);
     }
   }
 

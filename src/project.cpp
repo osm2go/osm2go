@@ -905,7 +905,7 @@ std::string project_select(appdata_t &appdata) {
 
 static void project_filesize(project_context_t *context) {
   char *str = O2G_NULLPTR;
-  gchar *gstr = O2G_NULLPTR;
+  g_string gstr;
   const project_t * const project = context->project;
 
   printf("Checking size of %s\n", project->osm.c_str());
@@ -934,15 +934,15 @@ static void project_filesize(project_context_t *context) {
         strftime(time_str, sizeof(time_str), "%x %X", &loctime);
 
         if(project->osm.size() > 3 && strcmp(project->osm.c_str() + project->osm.size() - 3, ".gz") == 0) {
-          gstr = g_strdup_printf(_("%" G_GOFFSET_FORMAT " bytes present\nfrom %s"),
-                                 static_cast<goffset>(st.st_size), time_str);
+          gstr.reset(g_strdup_printf(_("%" G_GOFFSET_FORMAT " bytes present\nfrom %s"),
+                                     static_cast<goffset>(st.st_size), time_str));
           gtk_label_set_text(GTK_LABEL(context->fsizehdr), _("Map data:\n(compressed)"));
         } else {
-          gstr = g_strdup_printf(_("%" G_GOFFSET_FORMAT " bytes present\nfrom %s"),
-                                 static_cast<goffset>(st.st_size), time_str);
+          gstr.reset(g_strdup_printf(_("%" G_GOFFSET_FORMAT " bytes present\nfrom %s"),
+                                     static_cast<goffset>(st.st_size), time_str));
           gtk_label_set_text(GTK_LABEL(context->fsizehdr), _("Map data:"));
         }
-        str = gstr;
+        str = gstr.get();
       } else {
         str = _("Error testing data file");
       }
@@ -954,10 +954,8 @@ static void project_filesize(project_context_t *context) {
                                       GTK_RESPONSE_ACCEPT, en);
   }
 
-  if(str) {
+  if(str)
     gtk_label_set_text(GTK_LABEL(context->fsize), str);
-    g_free(gstr);
-  }
 }
 
 /* a project may currently be open. "unsaved changes" then also */
@@ -1113,20 +1111,16 @@ project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
   GtkWidget *dialog;
   /* cancel is enabled for "new" projects only */
   if(is_new) {
-    char *str = g_strdup_printf(_("New project - %s"), project->name.c_str());
+    g_string str(g_strdup_printf(_("New project - %s"), project->name.c_str()));
 
-    dialog = misc_dialog_new(MISC_DIALOG_WIDE, str,
-                             GTK_WINDOW(parent),
+    dialog = misc_dialog_new(MISC_DIALOG_WIDE, str.get(), GTK_WINDOW(parent),
                              GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                              GTK_STOCK_OK, GTK_RESPONSE_ACCEPT, O2G_NULLPTR);
-    g_free(str);
   } else {
-    char *str = g_strdup_printf(_("Edit project - %s"), project->name.c_str());
+    g_string str(g_strdup_printf(_("Edit project - %s"), project->name.c_str()));
 
-    dialog = misc_dialog_new(MISC_DIALOG_WIDE, str,
-                             GTK_WINDOW(parent),
+    dialog = misc_dialog_new(MISC_DIALOG_WIDE, str.get(), GTK_WINDOW(parent),
                              GTK_STOCK_CLOSE, GTK_RESPONSE_ACCEPT, O2G_NULLPTR);
-    g_free(str);
   }
 
   project_context_t context(scontext->appdata, project, is_new, scontext->projects, dialog);

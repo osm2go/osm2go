@@ -65,22 +65,20 @@ bool xml_get_prop_bool(xmlNode *node, const char *prop) {
 static void vmessagef(GtkWidget *parent, GtkMessageType type, GtkButtonsType buttons,
                       const char *title, const char *fmt, va_list args) {
   GtkWindow *wnd = GTK_WINDOW(parent);
-  char *buf = g_strdup_vprintf(fmt, args);
+  g_string buf(g_strdup_vprintf(fmt, args));
 
   if(unlikely(wnd == O2G_NULLPTR)) {
-    printf("%s", buf);
-    g_free(buf);
+    printf("%s", buf.get());
     return;
   }
 
 #ifndef FREMANTLE
-  GtkWidget *dialog = gtk_message_dialog_new(wnd,
-			   GTK_DIALOG_DESTROY_WITH_PARENT,
-			   type, buttons, "%s", buf);
+  GtkWidget *dialog = gtk_message_dialog_new(wnd, GTK_DIALOG_DESTROY_WITH_PARENT,
+                                             type, buttons, "%s", buf.get());
 
   gtk_window_set_title(GTK_WINDOW(dialog), title);
 #else
-  GtkWidget *dialog = hildon_note_new_information(wnd, buf);
+  GtkWidget *dialog = hildon_note_new_information(wnd, buf.get());
   (void)type;
   (void)buttons;
   (void)title;
@@ -88,8 +86,6 @@ static void vmessagef(GtkWidget *parent, GtkMessageType type, GtkButtonsType but
 
   gtk_dialog_run(GTK_DIALOG(dialog));
   gtk_widget_destroy(dialog);
-
-  g_free(buf);
 }
 
 void messagef(GtkWidget *parent, const char *title, const char *fmt, ...) {
@@ -153,22 +149,21 @@ bool yes_no_f(GtkWidget *parent, unsigned int again_bit,
 
   va_list args;
   va_start( args, fmt );
-  char *buf = g_strdup_vprintf(fmt, args);
+  g_string buf(g_strdup_vprintf(fmt, args));
   va_end( args );
 
-  printf("%s: \"%s\"\n", title, buf);
+  printf("%s: \"%s\"\n", title, buf.get());
 
 #ifndef FREMANTLE
-  GtkWidget *dialog = gtk_message_dialog_new(
-		     GTK_WINDOW(parent),
-                     GTK_DIALOG_DESTROY_WITH_PARENT,
-		     GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO,
-                     "%s", buf);
+  GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(parent),
+                                             GTK_DIALOG_DESTROY_WITH_PARENT,
+                                             GTK_MESSAGE_QUESTION,
+                                             GTK_BUTTONS_YES_NO,
+                                             "%s", buf.get());
 
   gtk_window_set_title(GTK_WINDOW(dialog), title);
 #else
-  GtkWidget *dialog =
-    hildon_note_new_confirmation(GTK_WINDOW(parent), buf);
+  GtkWidget *dialog = hildon_note_new_confirmation(GTK_WINDOW(parent), buf.get());
 #endif
 
   GtkWidget *cbut = O2G_NULLPTR;
@@ -204,7 +199,6 @@ bool yes_no_f(GtkWidget *parent, unsigned int again_bit,
 
   gtk_widget_destroy(dialog);
 
-  g_free(buf);
   return yes;
 }
 
@@ -567,10 +561,8 @@ int combo_box_get_active(GtkWidget *cbox) {
 
 std::string combo_box_get_active_text(GtkWidget *cbox) {
 #ifndef FREMANTLE
-  char *ptr;
-  ptr = gtk_combo_box_get_active_text(GTK_COMBO_BOX(cbox));
-  std::string ret = ptr;
-  g_free(ptr);
+  g_string ptr(gtk_combo_box_get_active_text(GTK_COMBO_BOX(cbox)));
+  std::string ret = ptr.get();
   return ret;
 #else
   return hildon_button_get_value(HILDON_BUTTON(cbox));

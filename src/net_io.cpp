@@ -119,9 +119,8 @@ static GtkWidget *busy_dialog(GtkWidget *parent, GtkProgressBar **pbar,
 #endif
 
   if(title) {
-    char *str = g_strdup_printf(_("Downloading %s"), title);
-    gtk_window_set_title(GTK_WINDOW(dialog), str);
-    g_free(str);
+    g_string str(g_strdup_printf(_("Downloading %s"), title));
+    gtk_window_set_title(GTK_WINDOW(dialog), str.get());
   } else
     gtk_window_set_title(GTK_WINDOW(dialog), _("Downloading"));
   gtk_window_set_default_size(GTK_WINDOW(dialog), 300, 10);

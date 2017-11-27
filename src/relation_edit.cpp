@@ -110,13 +110,12 @@ static bool relation_add_item(GtkWidget *parent, relation_t *relation,
 
   const char *type = relation->tags.get_value("type");
 
-  char *info_str = O2G_NULLPTR;
-  if(type) info_str = g_strdup_printf(_("In relation of type: %s"), type);
-  else     info_str = g_strdup_printf(_("In relation #" ITEM_ID_FORMAT),
-				      relation->id);
+  g_string info_str(type ?
+                    g_strdup_printf(_("In relation of type: %s"), type) :
+                    g_strdup_printf(_("In relation #" ITEM_ID_FORMAT), relation->id));
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox),
-			      gtk_label_new(info_str));
-  g_free(info_str);
+                              gtk_label_new(info_str.get()));
+  info_str.reset();
 
   const char *name = relation->tags.get_value("name");
   if(name)
@@ -405,12 +404,12 @@ void relation_membership_dialog(GtkWidget *parent, const presets_items *presets,
                                 osm_t *osm, object_t &object) {
   relitem_context_t context(object, presets, osm);
 
-  gchar *str = g_strdup_printf(_("Relation memberships of %s #" ITEM_ID_FORMAT),
-                               object.type_string(), object.get_id());
+  g_string str(g_strdup_printf(_("Relation memberships of %s #" ITEM_ID_FORMAT),
+                               object.type_string(), object.get_id()));
 
-  context.dialog = misc_dialog_new(MISC_DIALOG_LARGE, str, GTK_WINDOW(parent),
+  context.dialog = misc_dialog_new(MISC_DIALOG_LARGE, str.get(), GTK_WINDOW(parent),
                                    GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE, O2G_NULLPTR);
-  g_free(str);
+  str.reset();
 
   gtk_dialog_set_default_response(GTK_DIALOG(context.dialog),
 				  GTK_RESPONSE_CLOSE);
@@ -625,21 +624,17 @@ static GtkWidget *member_list_widget(member_context_t &context) {
 }
 
 void relation_show_members(GtkWidget *parent, const relation_t *relation) {
-  gchar *nstr = O2G_NULLPTR;
   const char *str = relation->tags.get_value("name");
   if(!str)
     str = relation->tags.get_value("ref");
-  if(!str)
-    nstr = g_strdup_printf(_("Members of relation #" ITEM_ID_FORMAT), relation->id);
-  else
-    nstr = g_strdup_printf(_("Members of relation \"%s\""), str);
+
+  g_string nstr(str == O2G_NULLPTR ?
+                g_strdup_printf(_("Members of relation #" ITEM_ID_FORMAT), relation->id) :
+                g_strdup_printf(_("Members of relation \"%s\""), str));
 
   member_context_t mcontext(relation,
-    misc_dialog_new(MISC_DIALOG_MEDIUM, nstr,
-		    GTK_WINDOW(parent),
-		    GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
-		    O2G_NULLPTR));
-  g_free(nstr);
+                             misc_dialog_new(MISC_DIALOG_MEDIUM, nstr.get(), GTK_WINDOW(parent),
+                                             GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE, O2G_NULLPTR));
 
   gtk_dialog_set_default_response(GTK_DIALOG(mcontext.dialog),
 				  GTK_RESPONSE_CLOSE);

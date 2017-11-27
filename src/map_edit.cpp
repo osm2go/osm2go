@@ -616,33 +616,24 @@ void map_edit_way_reverse(map_t *map) {
   map->select_way(item.object.way);
 
   // Flash a message about any side-effects
-  gchar *msg = O2G_NULLPTR;
+  g_string msg;
   if (n_tags_flipped && !n_roles_flipped) {
-    msg = g_strdup_printf(ngettext("%u tag updated", "%u tags updated",
-                                   n_tags_flipped),
-                          n_tags_flipped);
+    msg.reset(g_strdup_printf(ngettext("%u tag updated", "%u tags updated",
+                                       n_tags_flipped), n_tags_flipped));
   }
   else if (!n_tags_flipped && n_roles_flipped) {
-    msg = g_strdup_printf(ngettext("%u relation updated",
-                                   "%u relations updated",
-                                   n_roles_flipped),
-                          n_roles_flipped);
+    msg.reset(g_strdup_printf(ngettext("%u relation updated", "%u relations updated",
+                                       n_roles_flipped), n_roles_flipped));
   }
   else if (n_tags_flipped && n_roles_flipped) {
-    gchar *msg1 = g_strdup_printf(ngettext("%u tag", "%u tags",
-                                          n_tags_flipped),
-                                 n_tags_flipped);
-    gchar *msg2 = g_strdup_printf(ngettext("%u relation", "%u relations",
-                                          n_roles_flipped),
-                                 n_roles_flipped);
-    msg = g_strdup_printf(_("%s & %s updated"), msg1, msg2);
-    g_free(msg1);
-    g_free(msg2);
+    g_string msg1(g_strdup_printf(ngettext("%u tag", "%u tags",
+                                           n_tags_flipped), n_tags_flipped));
+    g_string msg2(g_strdup_printf(ngettext("%u relation", "%u relations",
+                                          n_roles_flipped), n_roles_flipped));
+    msg.reset(g_strdup_printf(_("%s & %s updated"), msg1.get(), msg2.get()));
   }
-  if (msg) {
-    map->appdata.uicontrol->showNotification(msg, MainUi::Brief);
-    g_free(msg);
-  }
+  if (msg)
+    map->appdata.uicontrol->showNotification(msg.get(), MainUi::Brief);
 }
 
 // vim:et:ts=8:sw=2:sts=2:ai

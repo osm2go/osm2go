@@ -216,10 +216,10 @@ static __attribute__((format (printf, 3, 4))) void appendf(struct log_s &log, co
 		    const char *fmt, ...) {
   va_list args;
   va_start( args, fmt );
-  char *buf = g_strdup_vprintf(fmt, args);
+  g_string buf(g_strdup_vprintf(fmt, args));
   va_end( args );
 
-  printf("%s", buf);
+  printf("%s", buf.get());
 
   GtkTextIter end;
   gtk_text_buffer_get_end_iter(log.buffer, &end);
@@ -227,11 +227,9 @@ static __attribute__((format (printf, 3, 4))) void appendf(struct log_s &log, co
     GtkTextTag *tag = gtk_text_buffer_create_tag(log.buffer, O2G_NULLPTR,
                                                  "foreground", colname,
                                                  O2G_NULLPTR);
-    gtk_text_buffer_insert_with_tags(log.buffer, &end, buf, -1, tag, O2G_NULLPTR);
+    gtk_text_buffer_insert_with_tags(log.buffer, &end, buf.get(), -1, tag, O2G_NULLPTR);
   } else
-    gtk_text_buffer_insert(log.buffer, &end, buf, -1);
-
-  g_free(buf);
+    gtk_text_buffer_insert(log.buffer, &end, buf.get(), -1);
 
   gtk_text_view_scroll_to_iter(GTK_TEXT_VIEW(log.view),
 			       &end, 0.0, FALSE, 0, 0);
