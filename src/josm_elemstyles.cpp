@@ -489,7 +489,7 @@ void josm_elemstyles_free(std::vector<elemstyle_t *> &elemstyles) {
 
 bool elemstyle_condition_t::matches(const base_object_t &obj) const {
   if(key) {
-    const char *v = obj.tags.get_value(reinterpret_cast<const char *>(key));
+    const char *v = obj.tags.get_value(key);
     if(isBool) {
       if(v) {
          const char **value_strings = boolValue ? true_values : false_values;
@@ -498,7 +498,7 @@ bool elemstyle_condition_t::matches(const base_object_t &obj) const {
         return false;
       }
     } else {
-      if(!v || (value && strcasecmp(v, reinterpret_cast<const char *>(value)) != 0))
+      if(!v || (value && strcasecmp(v, value) != 0))
         return false;
     }
   }
