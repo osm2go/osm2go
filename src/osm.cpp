@@ -14,7 +14,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
+ * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #define _DEFAULT_SOURCE
@@ -1703,7 +1703,7 @@ void reverse_roles::operator()(const std::pair<item_id_t, relation_t *> &pair)
   relation_t * const relation = pair.second;
   const char *type = relation->tags.get_value("type");
 
-  // Route relations; http://wiki.openstreetmap.org/wiki/Relation:route
+  // Route relations; https://wiki.openstreetmap.org/wiki/Relation:route
   if (!type || strcasecmp(type, "route") != 0)
     return;
 

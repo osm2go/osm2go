@@ -14,7 +14,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
+ * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include "about.h"
@@ -285,7 +285,7 @@ static GtkWidget *bugs_page_new() {
 		   "or the forum:")));
 
   gtk_box_pack_start_defaults(GTK_BOX(vbox),
-                              link_new("http://garage.maemo.org/projects/osm2go/"));
+                              link_new("https://garage.maemo.org/projects/osm2go/"));
 
   gtk_box_pack_start_defaults(GTK_BOX(vbox),
       label_wrap(_("Thank you for contributing!")));

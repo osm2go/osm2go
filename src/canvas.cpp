@@ -14,7 +14,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
+ * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 /**
@@ -30,8 +30,8 @@
  * interior
  *
  * References:
- * http://en.wikipedia.org/wiki/Point_in_polygon
- * http://www.visibone.com/inpoly/
+ * https://en.wikipedia.org/wiki/Point_in_polygon
+ * https://www.visibone.com/inpoly/
  */
 
 #include "canvas.h"
@@ -168,7 +168,7 @@ void canvas_t::item_info_push(canvas_item_t *item) {
 }
 
 /* check whether a given point is inside a polygon */
-/* inpoly() taken from http://www.visibone.com/inpoly/ */
+/* inpoly() taken from https://www.visibone.com/inpoly/ */
 static bool inpoly(const canvas_item_info_poly *poly, int x, int y) {
   int xold, yold;
 

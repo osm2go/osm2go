@@ -15,7 +15,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with OSM2Go.  If not, see <http://www.gnu.org/licenses/>.
+ * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include "statusbar.h"
@@ -81,7 +81,7 @@ void statusbar_fremantle::banner_show_info(appdata_t &appdata, const char *text)
  * banner_clear() will ungrab if grab is set.
  *
  * Yeti mode:
- *   http://mail.gnome.org/archives/gtk-app-devel-list/2006-May/msg00020.html
+ *   https://mail.gnome.org/archives/gtk-app-devel-list/2006-May/msg00020.html
  */
 
 void statusbar_fremantle::banner_busy_start(appdata_t &appdata, const char *text) {
