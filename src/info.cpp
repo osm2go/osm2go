@@ -560,28 +560,26 @@ bool info_dialog(GtkWidget *parent, map_t *map, osm_t *osm, presets_items *prese
 
   /* use implicit selection if not explicitely given */
   tag_context_t context(map, osm, presets, object);
-  char *str = O2G_NULLPTR;
+  const char *msgtpl;
 
   switch(context.object.type) {
   case NODE:
-    str = g_strdup_printf(_("Node #" ITEM_ID_FORMAT),
-			  context.object.obj->id);
+    msgtpl = _("Node #" ITEM_ID_FORMAT);
     break;
 
   case WAY:
-    str = g_strdup_printf(_("Way #" ITEM_ID_FORMAT),
-			  context.object.obj->id);
+    msgtpl = _("Way #" ITEM_ID_FORMAT);
     break;
 
   case RELATION:
-    str = g_strdup_printf(_("Relation #" ITEM_ID_FORMAT),
-			  context.object.obj->id);
+    msgtpl = _("Relation #" ITEM_ID_FORMAT);
     break;
 
   default:
     assert_unreachable();
-    break;
   }
+
+  gchar *str = g_strdup_printf(msgtpl, context.object.obj->id);
 
   context.dialog = misc_dialog_new(MISC_DIALOG_LARGE, str,
 	  GTK_WINDOW(parent),
