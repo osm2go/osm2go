@@ -135,8 +135,7 @@ void diff_save_ways::operator()(const std::pair<item_id_t, way_t *> pair)
   /* additional info is only required if the way hasn't been deleted */
   /* and of the dirty or new flags are set. (otherwise e.g. only */
   /* the hidden flag may be set) */
-  if((!(way->flags & OSM_FLAG_DELETED)) &&
-     (way->flags & OSM_FLAG_DIRTY)) {
+  if(!(way->flags & OSM_FLAG_DELETED) && (way->flags & OSM_FLAG_DIRTY)) {
     way->write_node_chain(node_way);
     diff_save_tags(way, node_way);
   }
@@ -281,19 +280,18 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
   }
 
   /* evaluate properties */
-  node_t *node = O2G_NULLPTR;
+  node_t *node;
 
   switch(state) {
   case OSM_FLAG_DELETED:
     printf("  Restoring DELETE flag\n");
 
-    if(likely((node = osm->node_by_id(id)) != O2G_NULLPTR)) {
+    node = osm->node_by_id(id);
+    if(likely(node != O2G_NULLPTR))
       node->flags |= OSM_FLAG_DELETED;
-      return;
-    } else {
+    else
       printf("  WARNING: no node with that id found\n");
-      return;
-    }
+    return;
 
   case OSM_FLAG_DIRTY:
     if(id < 0) {
@@ -306,7 +304,8 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
     } else {
       printf("  Valid id/position (DIRTY)\n");
 
-      if(likely((node = osm->node_by_id(id)) != O2G_NULLPTR)) {
+      node = osm->node_by_id(id);
+      if(likely(node != O2G_NULLPTR)) {
         node->flags |= OSM_FLAG_DIRTY;
         if (node->pos == pos)
           pos_diff = false;
@@ -315,7 +314,7 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
         break;
       } else {
         printf("  WARNING: no node with that id found\n");
-         return;
+        return;
       }
     }
 
@@ -323,8 +322,6 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
     printf("  Illegal state entry %u\n", state);
     return;
   }
-
-  assert(node != O2G_NULLPTR);
 
   osm_t::TagMap ntags = xml_scan_tags(node_node->children);
   /* check if the same changes have been done upstream */
@@ -355,19 +352,18 @@ static void diff_restore_way(xmlNodePtr node_way, osm_t *osm) {
   int state = xml_get_prop_state(node_way);
 
   /* evaluate properties */
-  way_t *way = O2G_NULLPTR;
+  way_t *way;
   switch(state) {
 
   case OSM_FLAG_DELETED:
     printf("  Restoring DELETE flag\n");
 
-    if(likely((way = osm->way_by_id(id)) != O2G_NULLPTR)) {
+    way = osm->way_by_id(id);
+    if(likely(way != O2G_NULLPTR))
       way->flags |= OSM_FLAG_DELETED;
-      return;
-    } else {
+    else
       printf("  WARNING: no way with that id found\n");
-      return;
-    }
+    return;
 
   case OSM_FLAG_DIRTY:
     if(id < 0) {
@@ -380,7 +376,8 @@ static void diff_restore_way(xmlNodePtr node_way, osm_t *osm) {
     } else {
       printf("  Valid id (DIRTY)\n");
 
-      if(likely((way = osm->way_by_id(id)) != O2G_NULLPTR)) {
+      way = osm->way_by_id(id);
+      if(likely(way != O2G_NULLPTR)) {
         way->flags |= OSM_FLAG_DIRTY;
         break;
       } else {
@@ -393,8 +390,6 @@ static void diff_restore_way(xmlNodePtr node_way, osm_t *osm) {
     printf("  Illegal state entry %u\n", state);
     return;
   }
-
-  assert(way != O2G_NULLPTR);
 
   /* handle hidden flag */
   if(xml_get_prop_bool(node_way, "hidden"))
@@ -462,13 +457,12 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
   case OSM_FLAG_DELETED:
     printf("  Restoring DELETE flag\n");
 
-    if(likely((relation = osm->relation_by_id(id)) != O2G_NULLPTR)) {
+    relation = osm->relation_by_id(id);
+    if(likely(relation != O2G_NULLPTR))
       relation->flags |= OSM_FLAG_DELETED;
-      return;
-    } else {
+    else
       printf("  WARNING: no relation with that id found\n");
-      return;
-    }
+    return;
 
   case OSM_FLAG_DIRTY:
     if(id < 0) {
@@ -481,7 +475,8 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
     } else {
       printf("  Valid id (DIRTY)\n");
 
-      if(likely((relation = osm->relation_by_id(id)) != O2G_NULLPTR)) {
+      relation = osm->relation_by_id(id);
+      if(likely(relation != O2G_NULLPTR)) {
         relation->flags |= OSM_FLAG_DIRTY;
         break;
       } else {
@@ -494,8 +489,6 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
     printf("  Illegal state entry %u\n", state);
     return;
   }
-
-  assert(relation != O2G_NULLPTR);
 
   bool was_changed = false;
   osm_t::TagMap ntags = xml_scan_tags(node_rel->children);
@@ -553,13 +546,13 @@ unsigned int diff_restore_file(GtkWidget *window, const project_t *project, osm_
     printf("diff found, applying ...\n");
   }
 
-  xmlDoc *doc = O2G_NULLPTR;
   xmlNode *root_element = O2G_NULLPTR;
 
   fdguard difffd(project->dirfd, diff_name.c_str(), O_RDONLY);
 
   /* parse the file and get the DOM */
-  if(unlikely((doc = xmlReadFd(difffd, O2G_NULLPTR, O2G_NULLPTR, XML_PARSE_NONET)) == O2G_NULLPTR)) {
+  xmlDoc *doc = xmlReadFd(difffd, O2G_NULLPTR, O2G_NULLPTR, XML_PARSE_NONET);
+  if(unlikely(doc == O2G_NULLPTR)) {
     errorf(window, _("Error: could not parse file %s\n"), diff_name.c_str());
     return DIFF_INVALID;
   }

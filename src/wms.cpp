@@ -1073,10 +1073,10 @@ void wms_import(appdata_t &appdata) {
   if(unlikely(!cap)) {
     errorf(appdata.window, _("WMS download failed:\n\nGetCapabilities failed"));
   } else {
-    xmlDoc *doc = O2G_NULLPTR;
+    xmlDoc *doc = xmlReadMemory(cap, caplen, O2G_NULLPTR, O2G_NULLPTR, XML_PARSE_NONET);
 
     /* parse the file and get the DOM */
-    if((doc = xmlReadMemory(cap, caplen, O2G_NULLPTR, O2G_NULLPTR, XML_PARSE_NONET)) == O2G_NULLPTR) {
+    if(doc == O2G_NULLPTR) {
       xmlErrorPtr errP = xmlGetLastError();
       errorf(appdata.window, _("WMS download failed:\n\n"
              "XML error while parsing capabilities:\n%s"), errP->message);
