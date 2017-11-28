@@ -180,19 +180,19 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t &style) {
  */
 static bool style_parse(const std::string &fullname, xmlChar **fname,
                         bool name_only, style_t &style) {
-  xmlDoc *doc = xmlReadFile(fullname.c_str(), O2G_NULLPTR, XML_PARSE_NONET);
+  std::unique_ptr<xmlDoc, xmlDocDelete> doc(xmlReadFile(fullname.c_str(), O2G_NULLPTR, XML_PARSE_NONET));
   bool ret = false;
 
   /* parse the file and get the DOM */
-  if(unlikely(doc == O2G_NULLPTR)) {
+  if(unlikely(!doc)) {
     xmlErrorPtr errP = xmlGetLastError();
     printf("parsing %s failed: %s\n", fullname.c_str(), errP->message);
   } else {
     /* Get the root element node */
     xmlNode *cur_node = O2G_NULLPTR;
 
-    for(cur_node = xmlDocGetRootElement(doc);
-        cur_node; cur_node = cur_node->next) {
+    for(cur_node = xmlDocGetRootElement(doc.get()); cur_node != O2G_NULLPTR;
+        cur_node = cur_node->next) {
       if (cur_node->type == XML_ELEMENT_NODE) {
         if(likely(strcmp(reinterpret_cast<const char *>(cur_node->name), "style") == 0)) {
           if(likely(!ret)) {
@@ -206,8 +206,6 @@ static bool style_parse(const std::string &fullname, xmlChar **fname,
           printf("  found unhandled %s\n", cur_node->name);
       }
     }
-
-    xmlFreeDoc(doc);
   }
   return ret;
 }

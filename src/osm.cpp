@@ -1272,9 +1272,9 @@ struct tag_to_xml {
 xmlChar *base_object_t::generate_xml(const std::string &changeset) const
 {
   char str[32];
-  xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
+  std::unique_ptr<xmlDoc, xmlDocDelete> doc(xmlNewDoc(BAD_CAST "1.0"));
   xmlNodePtr root_node = xmlNewNode(O2G_NULLPTR, BAD_CAST "osm");
-  xmlDocSetRootElement(doc, root_node);
+  xmlDocSetRootElement(doc.get(), root_node);
 
   xmlNodePtr xml_node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST apiString(), O2G_NULLPTR);
 
@@ -1296,8 +1296,7 @@ xmlChar *base_object_t::generate_xml(const std::string &changeset) const
   xmlChar *result = O2G_NULLPTR;
   int len = 0;
 
-  xmlDocDumpFormatMemoryEnc(doc, &result, &len, "UTF-8", 1);
-  xmlFreeDoc(doc);
+  xmlDocDumpFormatMemoryEnc(doc.get(), &result, &len, "UTF-8", 1);
 
   return result;
 }
@@ -1339,9 +1338,9 @@ xmlChar *osm_generate_xml_changeset(const std::string &comment,
   tag_t tag_creator(const_cast<char*>("created_by"),
                     const_cast<char*>(PACKAGE " v" VERSION));
 
-  xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
+  std::unique_ptr<xmlDoc, xmlDocDelete> doc(xmlNewDoc(BAD_CAST "1.0"));
   xmlNodePtr root_node = xmlNewNode(O2G_NULLPTR, BAD_CAST "osm");
-  xmlDocSetRootElement(doc, root_node);
+  xmlDocSetRootElement(doc.get(), root_node);
 
   xmlNodePtr cs_node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "changeset", O2G_NULLPTR);
 
@@ -1354,8 +1353,7 @@ xmlChar *osm_generate_xml_changeset(const std::string &comment,
     fc(tag_source);
   }
 
-  xmlDocDumpFormatMemoryEnc(doc, &result, &len, "UTF-8", 1);
-  xmlFreeDoc(doc);
+  xmlDocDumpFormatMemoryEnc(doc.get(), &result, &len, "UTF-8", 1);
 
   return result;
 }

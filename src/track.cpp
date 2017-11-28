@@ -194,15 +194,16 @@ void track_save_segs::save_point::operator()(const track_point_t &point)
  *
  * doc is freed.
  */
-static void track_write(const char *name, const track_t *track, xmlDoc *doc) {
+static void track_write(const char *name, const track_t *track, xmlDoc *d) {
   printf("writing track to %s\n", name);
 
   xmlNodePtr trk_node;
   std::vector<track_seg_t>::const_iterator it = track->segments.begin();
   std::vector<track_seg_t>::const_iterator itEnd = track->segments.end();
+  std::unique_ptr<xmlDoc, xmlDocDelete> doc(d);
   if(doc) {
     xmlNodePtr cur_node;
-    xmlNodePtr root_node = xmlDocGetRootElement(doc);
+    xmlNodePtr root_node = xmlDocGetRootElement(doc.get());
     bool err = false;
     if (unlikely(!root_node || root_node->type != XML_ELEMENT_NODE ||
                    strcasecmp(reinterpret_cast<const char *>(root_node->name), "gpx") != 0)) {
@@ -236,8 +237,7 @@ static void track_write(const char *name, const track_t *track, xmlDoc *doc) {
       }
     }
     if(unlikely(err)) {
-      xmlFreeDoc(doc);
-      doc = O2G_NULLPTR;
+      doc.reset();
     } else {
       /* drop the last entry from XML, it will be rewritten */
       xmlUnlinkNode(cur_node);
@@ -246,7 +246,7 @@ static void track_write(const char *name, const track_t *track, xmlDoc *doc) {
   }
 
   if (!doc) {
-    doc = xmlNewDoc(BAD_CAST "1.0");
+    doc.reset(xmlNewDoc(BAD_CAST "1.0"));
     xmlNodePtr root_node = xmlNewNode(O2G_NULLPTR, BAD_CAST "gpx");
     xmlNewProp(root_node, BAD_CAST "xmlns",
                BAD_CAST "http://www.topografix.com/GPX/1/0");
@@ -254,13 +254,12 @@ static void track_write(const char *name, const track_t *track, xmlDoc *doc) {
     it = track->segments.begin();
 
     trk_node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "trk", O2G_NULLPTR);
-    xmlDocSetRootElement(doc, root_node);
+    xmlDocSetRootElement(doc.get(), root_node);
   }
 
   std::for_each(it, itEnd, track_save_segs(trk_node));
 
-  xmlSaveFormatFileEnc(name, doc, "UTF-8", 1);
-  xmlFreeDoc(doc);
+  xmlSaveFormatFileEnc(name, doc.get(), "UTF-8", 1);
 }
 
 /* save track in project */

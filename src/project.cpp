@@ -152,15 +152,15 @@ static std::string project_filename(const project_t *project) {
 static bool project_read(const std::string &project_file, project_t *project,
                          const std::string &defaultserver, int basefd) {
   fdguard projectfd(basefd, project_file.c_str(), O_RDONLY);
-  xmlDoc *doc = xmlReadFd(projectfd, project_file.c_str(), O2G_NULLPTR, XML_PARSE_NONET);
+  std::unique_ptr<xmlDoc, xmlDocDelete> doc(xmlReadFd(projectfd, project_file.c_str(), O2G_NULLPTR, XML_PARSE_NONET));
 
   /* parse the file and get the DOM */
-  if(doc == O2G_NULLPTR) {
+  if(unlikely(!doc)) {
     printf("error: could not parse file %s\n", project_file.c_str());
     return false;
   }
 
-  for (xmlNode *cur_node = xmlDocGetRootElement(doc); cur_node; cur_node = cur_node->next) {
+  for (xmlNode *cur_node = xmlDocGetRootElement(doc.get()); cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcmp(reinterpret_cast<const char *>(cur_node->name), "proj") == 0) {
         project->data_dirty = xml_get_prop_bool(cur_node, "dirty");
@@ -171,11 +171,11 @@ static bool project_read(const std::string &project_file, project_t *project,
             continue;
 
           if(strcmp(reinterpret_cast<const char *>(node->name), "desc") == 0) {
-            xmlString desc(xmlNodeListGetString(doc, node->children, 1));
+            xmlString desc(xmlNodeListGetString(doc.get(), node->children, 1));
             project->desc = reinterpret_cast<char *>(desc.get());
             printf("desc = %s\n", desc.get());
           } else if(strcmp(reinterpret_cast<const char *>(node->name), "server") == 0) {
-            xmlString str(xmlNodeListGetString(doc, node->children, 1));
+            xmlString str(xmlNodeListGetString(doc.get(), node->children, 1));
             if(defaultserver == reinterpret_cast<char *>(str.get())) {
               project->server = defaultserver.c_str();
             } else {
@@ -216,7 +216,7 @@ static bool project_read(const std::string &project_file, project_t *project,
             if(str)
               project->wms_offset.y = strtoul(reinterpret_cast<char *>(str.get()), O2G_NULLPTR, 10);
           } else if(strcmp(reinterpret_cast<const char *>(node->name), "osm") == 0) {
-            xmlString str(xmlNodeListGetString(doc, node->children, 1));
+            xmlString str(xmlNodeListGetString(doc.get(), node->children, 1));
             printf("osm = %s\n", str.get());
 
             /* make this a relative path if possible */
@@ -239,8 +239,6 @@ static bool project_read(const std::string &project_file, project_t *project,
       }
     }
   }
-
-  xmlFreeDoc(doc);
 
   if(project->name.empty())
     return false;
@@ -282,7 +280,7 @@ bool project_t::save(GtkWidget *parent) {
     dirfd.swap(nfd);
   }
 
-  xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
+  std::unique_ptr<xmlDoc, xmlDocDelete> doc(xmlNewDoc(BAD_CAST "1.0"));
   xmlNodePtr node, root_node = xmlNewNode(O2G_NULLPTR, BAD_CAST "proj");
   xmlNewProp(root_node, BAD_CAST "name", BAD_CAST name.c_str());
   if(data_dirty)
@@ -290,7 +288,7 @@ bool project_t::save(GtkWidget *parent) {
   if(isDemo)
     xmlNewProp(root_node, BAD_CAST "demo", BAD_CAST "true");
 
-  xmlDocSetRootElement(doc, root_node);
+  xmlDocSetRootElement(doc.get(), root_node);
 
   if(!rserver.empty()) {
     assert(server == rserver.c_str());
@@ -333,8 +331,7 @@ bool project_t::save(GtkWidget *parent) {
     xmlNewProp(node, BAD_CAST "y-offset", BAD_CAST str);
   }
 
-  xmlSaveFormatFileEnc(project_file.c_str(), doc, "UTF-8", 1);
-  xmlFreeDoc(doc);
+  xmlSaveFormatFileEnc(project_file.c_str(), doc.get(), "UTF-8", 1);
 
   return true;
 }

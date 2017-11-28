@@ -206,17 +206,16 @@ void diff_save(const project_t *project, const osm_t *osm) {
    * saving is completed */
   const std::string ndiff = project->path + "save.diff";
 
-  xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
+  std::unique_ptr<xmlDoc, xmlDocDelete> doc(xmlNewDoc(BAD_CAST "1.0"));
   xmlNodePtr root_node = xmlNewNode(O2G_NULLPTR, BAD_CAST "diff");
   xmlNewProp(root_node, BAD_CAST "name", BAD_CAST project->name.c_str());
-  xmlDocSetRootElement(doc, root_node);
+  xmlDocSetRootElement(doc.get(), root_node);
 
   std::for_each(osm->nodes.begin(), osm->nodes.end(), diff_save_nodes(root_node));
   std::for_each(osm->ways.begin(), osm->ways.end(), diff_save_ways(root_node));
   std::for_each(osm->relations.begin(), osm->relations.end(), diff_save_relations(root_node));
 
-  xmlSaveFormatFileEnc(ndiff.c_str(), doc, "UTF-8", 1);
-  xmlFreeDoc(doc);
+  xmlSaveFormatFileEnc(ndiff.c_str(), doc.get(), "UTF-8", 1);
 
   /* if we reach this point writing the new file worked and we */
   /* can move it over the real file */
@@ -551,8 +550,8 @@ unsigned int diff_restore_file(GtkWidget *window, const project_t *project, osm_
   fdguard difffd(project->dirfd, diff_name.c_str(), O_RDONLY);
 
   /* parse the file and get the DOM */
-  xmlDoc *doc = xmlReadFd(difffd, O2G_NULLPTR, O2G_NULLPTR, XML_PARSE_NONET);
-  if(unlikely(doc == O2G_NULLPTR)) {
+  std::unique_ptr<xmlDoc, xmlDocDelete> doc(xmlReadFd(difffd, O2G_NULLPTR, O2G_NULLPTR, XML_PARSE_NONET));
+  if(unlikely(!doc)) {
     errorf(window, _("Error: could not parse file %s\n"), diff_name.c_str());
     return DIFF_INVALID;
   }
@@ -560,7 +559,7 @@ unsigned int diff_restore_file(GtkWidget *window, const project_t *project, osm_
   unsigned int res = DIFF_RESTORED;
 
   /* Get the root element node */
-  root_element = xmlDocGetRootElement(doc);
+  root_element = xmlDocGetRootElement(doc.get());
 
   xmlNode *cur_node = O2G_NULLPTR;
   for (cur_node = root_element; cur_node; cur_node = cur_node->next) {
@@ -599,8 +598,6 @@ unsigned int diff_restore_file(GtkWidget *window, const project_t *project, osm_
       }
     }
   }
-
-  xmlFreeDoc(doc);
 
   /* check for hidden ways and update menu accordingly */
   const std::map<item_id_t, way_t *>::const_iterator it =

@@ -315,18 +315,6 @@ static bool wms_cap_parse_root(wms_t *wms, xmlDocPtr doc, xmlNode *a_node) {
   return ret;
 }
 
-static bool wms_cap_parse_doc(wms_t *wms, xmlDocPtr doc) {
-  /* Get the root element node */
-  xmlNode *root_element = xmlDocGetRootElement(doc);
-
-  bool ret = wms_cap_parse_root(wms, doc, root_element);
-
-  /*free the document */
-  xmlFreeDoc(doc);
-
-  return ret;
-}
-
 /* get pixel extent of image display */
 void wms_setup_extent(project_t *project, wms_t *wms) {
   pos_t center;
@@ -1073,17 +1061,17 @@ void wms_import(appdata_t &appdata) {
   if(unlikely(!cap)) {
     errorf(appdata.window, _("WMS download failed:\n\nGetCapabilities failed"));
   } else {
-    xmlDoc *doc = xmlReadMemory(cap, caplen, O2G_NULLPTR, O2G_NULLPTR, XML_PARSE_NONET);
+    std::unique_ptr<xmlDoc, xmlDocDelete> doc(xmlReadMemory(cap, caplen, O2G_NULLPTR, O2G_NULLPTR, XML_PARSE_NONET));
 
     /* parse the file and get the DOM */
-    if(doc == O2G_NULLPTR) {
+    if(unlikely(!doc)) {
       xmlErrorPtr errP = xmlGetLastError();
       errorf(appdata.window, _("WMS download failed:\n\n"
              "XML error while parsing capabilities:\n%s"), errP->message);
     } else {
       printf("ok, parse doc tree\n");
 
-      parse_success = wms_cap_parse_doc(&wms, doc);
+      parse_success = wms_cap_parse_root(&wms, doc.get(), xmlDocGetRootElement(doc.get()));
     }
 
     g_free(cap);

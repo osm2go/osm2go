@@ -121,15 +121,14 @@ static void compare_with_file(const void *buf, size_t len, const char *fn)
 
 static void test_osmChange(const osm_t *osm, const char *fn)
 {
-  xmlDocPtr doc = osmchange_init();
+   std::unique_ptr<xmlDoc, xmlDocDelete> doc(osmchange_init());
   const char *changeset = "42";
 
-  osmchange_delete(osm->modified(), xmlDocGetRootElement(doc), changeset);
+  osmchange_delete(osm->modified(), xmlDocGetRootElement(doc.get()), changeset);
 
   xmlChar *result;
   int len;
-  xmlDocDumpFormatMemoryEnc(doc, &result, &len, "UTF-8", 1);
-  xmlFreeDoc(doc);
+  xmlDocDumpFormatMemoryEnc(doc.get(), &result, &len, "UTF-8", 1);
 
   compare_with_file(result, len, fn);
   xmlFree(result);

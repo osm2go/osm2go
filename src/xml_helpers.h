@@ -38,4 +38,10 @@ struct xmlDelete {
 
 typedef std::unique_ptr<xmlChar, xmlDelete> xmlString;
 
+struct xmlDocDelete {
+  inline void operator()(xmlDocPtr doc) {
+    xmlFreeDoc(doc);
+  }
+};
+
 #endif /* XML_HELPERS_H */
