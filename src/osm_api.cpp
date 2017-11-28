@@ -487,7 +487,7 @@ void upload_objects<T>::operator()(T *obj)
   }
 }
 
-static GtkWidget *table_attach_label_c(GtkWidget *table, char *str,
+static GtkWidget *table_attach_label_c(GtkWidget *table, const char *str,
 				       int x1, int x2, int y1, int y2) {
   GtkWidget *label =  gtk_label_new(str);
   gtk_table_attach_defaults(GTK_TABLE(table), label, x1, x2, y1, y2);
