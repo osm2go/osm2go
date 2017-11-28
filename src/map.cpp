@@ -1809,12 +1809,11 @@ void map_delete_selected(map_t *map) {
 
   const char *objtype = item.object.type_string();
   g_string msgtitle(g_strdup_printf(_("Delete selected %s?"), objtype));
-  bool yn = yes_no_f(map->appdata.window,
-                     MISC_AGAIN_ID_DELETE, MISC_AGAIN_FLAG_DONT_SAVE_NO, msgtitle.get(),
-                     _("Do you really want to delete the selected %s?"), objtype);
-  msgtitle.reset();
-  if(!yn)
+  if(!yes_no_f(map->appdata.window, MISC_AGAIN_ID_DELETE, MISC_AGAIN_FLAG_DONT_SAVE_NO,
+               msgtitle.get(), _("Do you really want to delete the selected %s?"), objtype))
     return;
+
+  msgtitle.reset();
 
   /* deleting the selected item de-selects it ... */
   map->item_deselect();
@@ -1851,7 +1850,6 @@ void map_delete_selected(map_t *map) {
 
   default:
     assert_unreachable();
-    break;
   }
 }
 
