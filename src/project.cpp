@@ -31,6 +31,7 @@
 #include "settings.h"
 #include "track.h"
 #include "wms.h"
+#include "uicontrol.h"
 #include "xml_helpers.h"
 
 #include <algorithm>

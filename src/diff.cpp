@@ -28,6 +28,7 @@
 #include "misc.h"
 #include "osm.h"
 #include "project.h"
+#include "uicontrol.h"
 #include "xml_helpers.h"
 
 #include <algorithm>

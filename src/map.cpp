@@ -32,6 +32,7 @@
 #include "project.h"
 #include "style.h"
 #include "track.h"
+#include "uicontrol.h"
 
 #include "osm2go_annotations.h"
 #include <osm2go_cpp.h>

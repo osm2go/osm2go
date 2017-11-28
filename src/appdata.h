@@ -29,8 +29,10 @@ typedef struct _HildonProgram HildonProgram;
 
 #include "icon.h"
 #include "map.h"
-#include "osm.h"
 #include "uicontrol.h"
+
+struct canvas_item_t;
+struct osm_t;
 
 struct appdata_t {
   appdata_t();
@@ -65,7 +67,7 @@ struct appdata_t {
 
   map_state_t map_state;
   map_t *map;
-  struct osm_t *osm;
+  osm_t *osm;
   class settings_t * const settings;
   struct style_t *style;
   class gps_state_t * const gps_state;
