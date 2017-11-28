@@ -515,7 +515,7 @@ static bool project_delete(select_context_t *context, project_t *project) {
   if(context->appdata.project &&
      context->appdata.project->name == project->name) {
 
-    if(!yes_no_f(context->dialog, 0, 0, _("Delete current project?"),
+    if(!yes_no_f(context->dialog, 0, _("Delete current project?"),
 		 _("The project you are about to delete is the one "
 		   "you are currently working on!\n\n"
 		   "Do you want to delete it anyway?")))
@@ -681,7 +681,7 @@ static void on_project_new(select_context_t *context) {
 static void on_project_delete(select_context_t *context) {
   project_t *project = project_get_selected(context->list);
 
-  if(!yes_no_f(context->dialog, 0, 0, _("Delete project?"),
+  if(!yes_no_f(context->dialog, 0, _("Delete project?"),
                _("Do you really want to delete the project \"%s\"?"),
                project->name.c_str()))
     return;
@@ -1061,7 +1061,7 @@ static void on_diff_remove_clicked(project_context_t *context) {
 
   printf("clicked diff remove\n");
 
-  if(yes_no_f(context->dialog, 0, 0, _("Discard changes?"),
+  if(yes_no_f(context->dialog, 0, _("Discard changes?"),
 	      _("Do you really want to discard your changes? This will "
 		"permanently undo all changes you have made so far and which "
 		"you did not upload yet."))) {

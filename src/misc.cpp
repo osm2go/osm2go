@@ -136,13 +136,14 @@ static void on_toggled(GtkWidget *button, int *flags) {
 				      RESPONSE_YES, !active);
 }
 
-bool yes_no_f(GtkWidget *parent, unsigned int again_bit,
-              int flags, const char *title, const char *fmt, ...) {
+bool yes_no_f(GtkWidget *parent, unsigned int again_flags, const char *title,
+              const char *fmt, ...) {
   /* flags used to prevent re-appearence of dialogs */
   static struct {
     unsigned int not_again;     /* bit is set if dialog is not to be displayed again */
     unsigned int reply;         /* reply to be assumed if "not_again" bit is set */
   } dialog_again;
+  const unsigned int again_bit = again_flags & ~(MISC_AGAIN_FLAG_DONT_SAVE_NO | MISC_AGAIN_FLAG_DONT_SAVE_YES);
 
   if(again_bit && (dialog_again.not_again & again_bit))
     return ((dialog_again.reply & again_bit) != 0);
@@ -177,7 +178,7 @@ bool yes_no_f(GtkWidget *parent, unsigned int again_bit,
     GtkWidget *alignment = gtk_alignment_new(0.5, 0, 0, 0);
 
     cbut = check_button_new_with_label(_("Don't ask this question again"));
-    g_signal_connect(cbut, "toggled", G_CALLBACK(on_toggled), &flags);
+    g_signal_connect(cbut, "toggled", G_CALLBACK(on_toggled), &again_flags);
 
     gtk_container_add(GTK_CONTAINER(alignment), cbut);
     gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), alignment);

@@ -300,7 +300,7 @@ cb_menu_undo_changes(appdata_t *appdata) {
   if (!diff_present(appdata->project) && diff_is_clean(appdata->osm, true))
     return;
 
-  if(!yes_no_f(appdata->window, 0, 0, _("Undo all changes?"),
+  if(!yes_no_f(appdata->window, 0, _("Undo all changes?"),
 	       _("Throw away all the changes you've not "
 		 "uploaded yet? This cannot be undone.")))
     return;
@@ -486,7 +486,7 @@ cb_menu_track_export(appdata_t *appdata) {
       printf("export to %s\n", filename.get());
 
       if(!g_file_test(filename.get(), G_FILE_TEST_EXISTS) ||
-         yes_no_f(dialog, MISC_AGAIN_ID_EXPORT_OVERWRITE, MISC_AGAIN_FLAG_DONT_SAVE_NO,
+         yes_no_f(dialog, MISC_AGAIN_ID_EXPORT_OVERWRITE | MISC_AGAIN_FLAG_DONT_SAVE_NO,
                   _("Overwrite existing file"),
                   _("The file already exists. "
                     "Do you really want to replace it?"))) {

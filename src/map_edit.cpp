@@ -95,8 +95,7 @@ void map_edit_way_add_segment(map_t *map, int x, int y) {
 	map->action.extending = touch_way;
 
 	if(map->action.extending) {
-          if(!yes_no_f(map->appdata.window, MISC_AGAIN_ID_EXTEND_WAY, 0,
-                       _("Extend way?"),
+          if(!yes_no_f(map->appdata.window, MISC_AGAIN_ID_EXTEND_WAY, _("Extend way?"),
 	       _("Do you want to extend the way present at this location?")))
 	    map->action.extending = O2G_NULLPTR;
 	  else
@@ -239,8 +238,7 @@ void map_edit_way_add_ok(map_t *map) {
   }
 
   if(map->action.ends_on &&
-     yes_no_f(map->appdata.window, MISC_AGAIN_ID_EXTEND_WAY_END, 0,
-              _("Join way?"),
+     yes_no_f(map->appdata.window, MISC_AGAIN_ID_EXTEND_WAY_END, _("Join way?"),
               _("Do you want to join the way present at this location?"))) {
     printf("  this new way ends on another way\n");
     // this is triggered when the new way ends on an existing way, this can
@@ -489,8 +487,7 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, int ex, int ey) {
 
     printf("  dropped onto node #" ITEM_ID_FORMAT "\n", touchnode->id);
 
-    if(yes_no_f(map->appdata.window, MISC_AGAIN_ID_JOIN_NODES, 0,
-		_("Join nodes?"),
+    if(yes_no_f(map->appdata.window, MISC_AGAIN_ID_JOIN_NODES, _("Join nodes?"),
 		_("Do you want to join the dragged node with the one "
 		  "you dropped it on?"))) {
 
@@ -538,7 +535,7 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, int ex, int ey) {
 		   "than two ways is not yet implemented, sorry"));
 
       } else if(ways2join_cnt == 2 &&
-                yes_no_f(map->appdata.window, MISC_AGAIN_ID_JOIN_WAYS, 0, _("Join ways?"),
+                yes_no_f(map->appdata.window, MISC_AGAIN_ID_JOIN_WAYS, _("Join ways?"),
                          _("Do you want to join the dragged way with the one you dropped it on?"))) {
         printf("  about to join ways #" ITEM_ID_FORMAT " and #" ITEM_ID_FORMAT "\n",
                ways2join[0]->id, ways2join[1]->id);
