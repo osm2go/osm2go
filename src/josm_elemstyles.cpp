@@ -168,7 +168,7 @@ static bool parse_color(const char *col, elemstyle_color_t &color, ColorMap &col
     } else {
       if(hash == col) {
         color = it->second;
-        ret = TRUE;
+        ret = true;
       } else if(hash)
         // check that the colors are the same if the key is specified multiple times
         assert_cmpnum(it->second, color);
