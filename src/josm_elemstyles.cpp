@@ -151,7 +151,7 @@ static bool parse_color(const char *col, elemstyle_color_t &color, ColorMap &col
         ret = true;
       }
     }
-    if(hash != col)
+    if(ret && hash != col)
       colname.assign(col, hash - col);
   } else {
     colname = col;
