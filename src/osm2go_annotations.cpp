@@ -19,6 +19,7 @@
 
 #include "osm2go_annotations.h"
 
+#include "color.h"
 #include "josm_presets_p.h"
 #include "osm.h"
 #include "pos.h"
@@ -97,6 +98,7 @@ template<typename T> assert_num_tpl<T>::assert_num_tpl(T a, T b, const char *ams
 
 template class assert_num_tpl<const unsigned long>;
 template class assert_num_tpl<const unsigned int>;
+template class assert_num_tpl<const color_t>;
 template class assert_num_tpl<const int>;
 template class assert_num_tpl<const type_t>;
 template class assert_num_tpl<const item_id_t>;

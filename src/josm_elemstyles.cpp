@@ -46,7 +46,11 @@
 #error "Tree not enabled in libxml"
 #endif
 
-typedef std::map<std::string, unsigned int> ColorMap;
+// this assertion is here and not in the header to avoid needless
+// additional includes on non-C++11 compilers (i.e. Fremantle)
+static_assert(sizeof(color_t) == sizeof(unsigned int), "wrong size for color_t");
+
+typedef std::map<std::string, color_t> ColorMap;
 
 class StyleSax {
   xmlSAXHandler handler;
@@ -124,7 +128,7 @@ float scaledn_to_zoom(const float scaledn) {
 
 /* --------------------- elemstyles.xml parsing ----------------------- */
 
-static bool parse_color(const char *col, elemstyle_color_t &color, ColorMap &colors) {
+static bool parse_color(const char *col, color_t &color, ColorMap &colors) {
   bool ret = false;
 
   /* if the color name contains a # it's a hex representation */
@@ -142,12 +146,7 @@ static bool parse_color(const char *col, elemstyle_color_t &color, ColorMap &col
     } else {
       GdkColor gdk_color;
       if(gdk_color_parse(hash, &gdk_color)) {
-        color =
-              ((gdk_color.red   << 16) & 0xff000000) |
-              ((gdk_color.green <<  8) & 0xff0000) |
-              ((gdk_color.blue       ) & 0xff00) |
-               (0xff);
-
+        color = color_t(gdk_color.red, gdk_color.green, gdk_color.blue);
         ret = true;
       }
     }
@@ -178,8 +177,8 @@ static bool parse_color(const char *col, elemstyle_color_t &color, ColorMap &col
   return ret;
 }
 
-bool parse_color(xmlNode *a_node, const char *name,
-		     elemstyle_color_t &color) {
+bool parse_color(xmlNode *a_node, const char *name, color_t &color)
+{
   xmlString color_str(xmlGetProp(a_node, BAD_CAST name));
   bool ret = false;
 
@@ -394,7 +393,7 @@ void StyleSax::startElement(const xmlChar *name, const char **attrs)
 
     for(unsigned int i = 0; attrs[i]; i += 2) {
       if(strcmp(attrs[i], "colour") == 0) {
-        elemstyle_color_t col;
+        color_t col;
         if(parse_color(attrs[i + 1], col, colors))
           line_mod.color = col;
       } else if(strcmp(attrs[i], "width") == 0)

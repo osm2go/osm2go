@@ -20,6 +20,7 @@
 #ifndef OSM_H
 #define OSM_H
 
+#include "color.h"
 #include "pos.h"
 
 #include <algorithm>
@@ -486,7 +487,7 @@ public:
 
   /* visual representation from elemstyle */
   struct {
-    unsigned int color;
+    color_t color;
     unsigned int flags : 8;
     int width : 8;
     unsigned int dash_length_on: 8;

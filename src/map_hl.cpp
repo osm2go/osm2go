@@ -121,7 +121,7 @@ static void hl_add(map_t *map, canvas_item_t *item)
 
 canvas_item_t *map_hl_circle_new(map_t *map, canvas_group_t group,
                                  map_item_t *map_item, int x, int y,
-                                 unsigned int radius, canvas_color_t color) {
+                                 unsigned int radius, color_t color) {
   map_item->item = map->canvas->circle_new(group, x, y, radius, 0, color, NO_COLOR);
   hl_add(map, map_item->item);
 
@@ -133,7 +133,7 @@ canvas_item_t *map_hl_circle_new(map_t *map, canvas_group_t group,
 }
 
 canvas_item_t *map_hl_polygon_new(map_t *map, canvas_group_t group, map_item_t *map_item,
-                                  const std::vector<lpos_t> &points, canvas_color_t color) {
+                                  const std::vector<lpos_t> &points, color_t color) {
   map_item->item = map->canvas->polygon_new(group, points, 0, 0, color);
   hl_add(map, map_item->item);
 
@@ -146,7 +146,7 @@ canvas_item_t *map_hl_polygon_new(map_t *map, canvas_group_t group, map_item_t *
 
 canvas_item_t *map_hl_polyline_new(map_t *map, canvas_group_t group, map_item_t *map_item,
                                    const std::vector<lpos_t> &points, unsigned int width,
-                                   canvas_color_t color) {
+                                   color_t color) {
   map_item->item = map->canvas->polyline_new(group, points, width, color);
   hl_add(map, map_item->item);
 

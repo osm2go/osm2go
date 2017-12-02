@@ -20,6 +20,7 @@
 #ifndef STYLE_H
 #define STYLE_H
 
+#include "color.h"
 #include "icon.h"
 #include "osm.h"
 
@@ -29,8 +30,6 @@
 struct appdata_t;
 class node_t;
 struct elemstyle_t;
-
-typedef unsigned int elemstyle_color_t;
 
 struct style_t {
   explicit style_t(icon_t &ic);
@@ -46,50 +45,50 @@ struct style_t {
   } icon;
 
   struct {
-    elemstyle_color_t color;
-    elemstyle_color_t gps_color;
+    color_t color;
+    color_t gps_color;
     float width;
   } track;
 
   struct {
-    elemstyle_color_t color;
+    color_t color;
     float width;
     float zoom_max;
   } way;
 
   struct {
     bool has_border_color;
-    elemstyle_color_t border_color;
+    color_t border_color;
     float border_width;
-    elemstyle_color_t color;
+    color_t color;
     float zoom_max;
   } area;
 
   struct {
     float mult;
-    elemstyle_color_t color;
+    color_t color;
 
     struct {
       bool present;
       float width;
-      elemstyle_color_t color;
+      color_t color;
     } border;
   } frisket;
 
   struct {
     float radius, border_radius;
-    elemstyle_color_t fill_color, color;
+    color_t fill_color, color;
     bool show_untagged;
     float zoom_max;
   } node;
 
   struct {
-    elemstyle_color_t color, node_color, touch_color, arrow_color;
+    color_t color, node_color, touch_color, arrow_color;
     float width, arrow_limit;
   } highlight;
 
   struct {
-    elemstyle_color_t color;
+    color_t color;
   } background;
 
   std::vector<elemstyle_t *> elemstyles;

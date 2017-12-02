@@ -400,8 +400,7 @@ void map_t::item_deselect() {
 }
 
 static void map_node_new(map_t *map, node_t *node, unsigned int radius,
-                         int width, canvas_color_t fill, canvas_color_t border) {
-
+                         int width, color_t fill, color_t border) {
   map_item_t *map_item = new map_item_t(object_t(node));
 
   style_t::IconCache::const_iterator it;
@@ -431,7 +430,7 @@ static void map_node_new(map_t *map, node_t *node, unsigned int radius,
 /* in the rare case that a way consists of only one node, it is */
 /* drawn as a circle. This e.g. happens when drawing a new way */
 static map_item_t *map_way_single_new(map_t *map, way_t *way, unsigned int radius,
-                                      int width, canvas_color_t fill, canvas_color_t border) {
+                                      int width, color_t fill, color_t border) {
   map_item_t *map_item = new map_item_t(object_t(way));
 
   map_item->item = map->canvas->circle_new(CANVAS_GROUP_WAYS,
@@ -449,7 +448,7 @@ static map_item_t *map_way_single_new(map_t *map, way_t *way, unsigned int radiu
 
 static map_item_t *map_way_new(map_t *map, canvas_group_t group,
                                way_t *way, const std::vector<lpos_t> &points, unsigned int width,
-                               canvas_color_t color, canvas_color_t fill_color) {
+                               color_t color, color_t fill_color) {
   map_item_t *map_item = new map_item_t(object_t(way));
 
   if(way->draw.flags & OSM_DRAW_FLAG_AREA) {
@@ -628,7 +627,7 @@ static void map_frisket_draw(map_t *map, const bounds_t *bounds) {
 
   /* don't draw frisket at all if it's completely transparent */
   if(map->style->frisket.color & 0xff) {
-    elemstyle_color_t color = map->style->frisket.color;
+    color_t color = map->style->frisket.color;
 
     float mult = map->style->frisket.mult;
 

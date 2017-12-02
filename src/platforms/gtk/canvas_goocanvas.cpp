@@ -85,9 +85,9 @@ canvas_goocanvas::canvas_goocanvas()
 
 /* ------------------------ accessing the canvas ---------------------- */
 
-void canvas_t::set_background(canvas_color_t bg_color) {
+void canvas_t::set_background(color_t bg_color) {
   g_object_set(G_OBJECT(widget),
-               "background-color-rgb", bg_color >> 8, O2G_NULLPTR);
+               "background-color-rgb", bg_color.rgb(), O2G_NULLPTR);
 }
 
 void canvas_t::set_antialias(bool antialias) {
@@ -189,13 +189,13 @@ void canvas_t::erase(unsigned int group_mask) {
 
 canvas_item_t *canvas_t::circle_new(canvas_group_t group,
                                     int x, int y, unsigned int radius, int border,
-                                    canvas_color_t fill_col, canvas_color_t border_col) {
+                                    color_t fill_col, color_t border_col) {
   canvas_item_t *item =
     goo_canvas_ellipse_new(static_cast<canvas_goocanvas *>(this)->group[group],
                            x, y, radius, radius,
                            "line-width", static_cast<double>(border),
-			   "stroke-color-rgba", border_col,
-			   "fill-color-rgba", fill_col,
+                           "stroke-color-rgba", border_col.rgba(),
+                           "fill-color-rgba", fill_col.rgba(),
                            O2G_NULLPTR);
 
   if(CANVAS_SELECTABLE & (1<<group))
@@ -223,15 +223,15 @@ GooCanvasPoints *canvas_points_create(const std::vector<lpos_t> &points) {
 }
 
 canvas_item_t *canvas_t::polyline_new(canvas_group_t group, const std::vector<lpos_t> &points,
-                                      unsigned int width, canvas_color_t color) {
+                                      unsigned int width, color_t color) {
   pointGuard cpoints(canvas_points_create(points));
 
   canvas_item_t *item =
     goo_canvas_polyline_new(static_cast<canvas_goocanvas *>(this)->group[group],
                             FALSE, 0, "points", cpoints.get(),
                             "line-width", static_cast<double>(width),
-			    "stroke-color-rgba", color,
-			    "line-join", CAIRO_LINE_JOIN_ROUND,
+                            "stroke-color-rgba", color.rgba(),
+                            "line-join", CAIRO_LINE_JOIN_ROUND,
 			    "line-cap", CAIRO_LINE_CAP_ROUND,
                             O2G_NULLPTR);
 
@@ -242,15 +242,15 @@ canvas_item_t *canvas_t::polyline_new(canvas_group_t group, const std::vector<lp
 }
 
 canvas_item_t *canvas_t::polygon_new(canvas_group_t group, const std::vector<lpos_t> &points,
-                                     unsigned int width, canvas_color_t color, canvas_color_t fill) {
+                                     unsigned int width, color_t color, color_t fill) {
   pointGuard cpoints(canvas_points_create(points));
 
   canvas_item_t *item =
     goo_canvas_polyline_new(static_cast<canvas_goocanvas *>(this)->group[group],
                             TRUE, 0, "points", cpoints.get(),
                             "line-width", static_cast<double>(width),
-			    "stroke-color-rgba", color,
-			    "fill-color-rgba", fill,
+                            "stroke-color-rgba", color.rgba(),
+                            "fill-color-rgba", fill.rgba(),
 			    "line-join", CAIRO_LINE_JOIN_ROUND,
 			    "line-cap", CAIRO_LINE_CAP_ROUND,
                             O2G_NULLPTR);

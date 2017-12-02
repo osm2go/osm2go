@@ -20,6 +20,7 @@
 #ifndef CANVAS_H
 #define CANVAS_H
 
+#include "color.h"
 #include "pos.h"
 
 #include <array>
@@ -59,7 +60,6 @@ typedef enum {
 #error "More than 16 canvas groups needs adjustment e.g. in map.cpp"
 #endif
 
-typedef unsigned int canvas_color_t;
 class canvas_item_info_t;
 
 struct canvas_item_t {
@@ -113,7 +113,7 @@ public:
   void scroll_get(canvas_unit_t unit, int &sx, int &sy) const;
 
   /****** manipulating the canvas ******/
-  void set_background(canvas_color_t bg_color);
+  void set_background(color_t bg_color);
   void set_antialias(bool antialias);
   void erase(unsigned int group_mask);
   canvas_item_t *get_item_at(int x, int y) const;
@@ -125,12 +125,12 @@ public:
   /***** creating/destroying items ******/
   canvas_item_t *circle_new(canvas_group_t group,
                             int x, int y, unsigned int radius, int border,
-                            canvas_color_t fill_col, canvas_color_t border_col);
+                            color_t fill_col, color_t border_col);
   canvas_item_t *polyline_new(canvas_group_t group, const std::vector<lpos_t> &points,
-                              unsigned int width, canvas_color_t color);
+                              unsigned int width, color_t color);
   canvas_item_t *polygon_new(canvas_group_t group, const std::vector<lpos_t> &points,
-                             unsigned int width, canvas_color_t color,
-                             canvas_color_t fill);
+                             unsigned int width, color_t color,
+                             color_t fill);
   canvas_item_t *image_new(canvas_group_t group, GdkPixbuf *pix, int x, int y,
                            float hscale, float vscale);
 

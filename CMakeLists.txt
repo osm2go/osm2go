@@ -47,6 +47,7 @@ add_library(osm2go_lib STATIC
 	src/area_edit.h
 	src/canvas.cpp
 	src/canvas.h
+	src/color.h
 	src/diff.cpp
 	src/diff.h
 	src/fdguard.cpp

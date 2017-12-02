@@ -50,14 +50,14 @@ void map_hl_remove(map_t *map);
 bool map_hl_item_is_highlighted(const map_t *map, const map_item_t &item);
 
 canvas_item_t *map_hl_circle_new(map_t *map, canvas_group_t group, map_item_t *map_item,
-                                 int x, int y, unsigned int radius, canvas_color_t color);
+                                 int x, int y, unsigned int radius, color_t color);
 
 canvas_item_t *map_hl_polyline_new(map_t *map, canvas_group_t group, map_item_t *map_item,
                                    const std::vector<lpos_t> &points, unsigned int width,
-                                   canvas_color_t color);
+                                   color_t color);
 
 canvas_item_t *map_hl_polygon_new(map_t *map, canvas_group_t group, map_item_t *map_item,
-                                  const std::vector<lpos_t> &points, canvas_color_t color);
+                                  const std::vector<lpos_t> &points, color_t color);
 
 void map_hl_segment_draw(map_t *map, unsigned int width, const std::vector<lpos_t> &points);
 

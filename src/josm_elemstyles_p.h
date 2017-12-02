@@ -71,7 +71,7 @@ struct elemstyle_line_t {
 
   int priority;
   int width;
-  elemstyle_color_t color;
+  color_t color;
   unsigned short dash_length_on;
   unsigned short dash_length_off;
 
@@ -83,7 +83,7 @@ struct elemstyle_line_t {
   struct {
     bool valid: 8;
     int width : 24;
-    elemstyle_color_t color;
+    color_t color;
   } bg;
 };
 
@@ -110,24 +110,22 @@ struct elemstyle_width_mod_t {
 struct elemstyle_line_mod_t {
   inline elemstyle_line_mod_t()
     : priority(0)
-    , color(0)
   {
   }
 
   int priority;
   elemstyle_width_mod_t line, bg;
-  elemstyle_color_t color;
+  color_t color;
 } __attribute__ ((packed));
 
 struct elemstyle_area_t {
   elemstyle_area_t()
     : priority(0)
-    , color(0)
   {
   }
 
   int priority;
-  elemstyle_color_t color;
+  color_t color;
 };
 
 struct elemstyle_icon_t {
