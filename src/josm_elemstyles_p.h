@@ -97,13 +97,23 @@ typedef enum {
 
 /* a width with modifier */
 struct elemstyle_width_mod_t {
+  inline elemstyle_width_mod_t()
+    : mod(ES_MOD_NONE)
+    , width(0)
+  {
+  }
+
   elemstyle_mod_mode_t mod:8;
   int8_t width;
 } __attribute__ ((packed));
 
 struct elemstyle_line_mod_t {
-  // must not have a constructor when used in an anonymous union, gcc 4.2.1
-  // (e.g. N900) chokes on this
+  inline elemstyle_line_mod_t()
+    : priority(0)
+    , color(0)
+  {
+  }
+
   int priority;
   elemstyle_width_mod_t line, bg;
   elemstyle_color_t color;
@@ -135,9 +145,9 @@ struct elemstyle_icon_t {
 struct elemstyle_t {
   elemstyle_t()
     : type(ES_TYPE_NONE)
+    , line(O2G_NULLPTR)
     , zoom_max(0.0f)
   {
-    memset(&line_mod, 0, sizeof(line_mod));
   }
   ~elemstyle_t();
 
@@ -145,17 +155,12 @@ struct elemstyle_t {
 
   unsigned int type; ///< combination of elemstyle_type_t
 
-  union {
-    elemstyle_line_mod_t line_mod;
-    elemstyle_line_t *line;
-  };
+  elemstyle_line_mod_t line_mod;
+  elemstyle_line_t *line;
   elemstyle_area_t area;
 
   float zoom_max;
   elemstyle_icon_t icon;
 };
-
-// memset(&line_mod, ...) must zero out the whole union
-static_assert(sizeof(elemstyle_line_mod_t) >= sizeof(elemstyle_line_t*), "elemstyle_line_mod_t not larger than pointer");
 
 #endif // JOSM_ELEMSTYLES_P_H
