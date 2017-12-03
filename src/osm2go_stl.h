@@ -109,6 +109,106 @@ namespace std {
       unique_ptr& operator=(const unique_ptr &);
   };
 
+  template<typename _Tp>
+    class unique_ptr<_Tp[]>
+    {
+    public:
+      typedef _Tp                       element_type;
+
+      _Tp *                  _M_t;
+
+
+      // Constructors.
+
+      /** Takes ownership of a pointer.
+       *
+       * @param __p  A pointer to an array of a type safely convertible
+       * to an array of @c element_type
+       *
+       * The deleter will be value-initialized.
+       */
+      explicit
+      unique_ptr(_Tp *__p)
+      : _M_t(__p)
+        { }
+
+      /// Destructor, invokes the deleter if the stored pointer is not null.
+      ~unique_ptr()
+      {
+        _Tp *&__ptr = _M_t;
+        if (__ptr != O2G_NULLPTR)
+          delete[] (__ptr);
+        __ptr = O2G_NULLPTR;
+      }
+
+      // Observers.
+
+      /// Access an element of owned array.
+      const element_type &
+      operator[](size_t __i) const
+      {
+        return get()[__i];
+      }
+
+      element_type &
+      operator[](size_t __i)
+      {
+        return get()[__i];
+      }
+
+      /// Return the stored pointer.
+      element_type *
+      get()
+      { return _M_t; }
+
+      const element_type *
+      get() const
+      { return _M_t; }
+
+      /// Return @c true if the stored pointer is not null.
+      operator bool() const
+      { return get() == O2G_NULLPTR ? false : true; }
+
+      // Modifiers.
+
+      /// Release ownership of any stored pointer.
+      element_type *
+      release()
+      {
+        element_type * __p = get();
+        _M_t._M_ptr() = O2G_NULLPTR;
+        return __p;
+      }
+
+      /** @brief Replace the stored pointer.
+       *
+       * @param __p  The new pointer to store.
+       *
+       * The deleter will be invoked if a pointer is already owned.
+       */
+      void
+      reset(_Tp *__p = O2G_NULLPTR)
+      {
+        element_type *__ptr = __p;
+        using std::swap;
+        swap(_M_t._M_ptr(), __ptr);
+        if (__ptr != O2G_NULLPTR)
+          delete[] (__ptr);
+      }
+
+      /// Exchange the pointer and deleter with another object.
+      void
+      swap(unique_ptr& __u)
+      {
+        using std::swap;
+        swap(_M_t, __u._M_t);
+      }
+
+    private:
+      // Disable copy from lvalue.
+      unique_ptr(const unique_ptr&) O2G_DELETED_FUNCTION;
+      unique_ptr& operator=(const unique_ptr&) O2G_DELETED_FUNCTION;
+    };
 }
 #endif
 

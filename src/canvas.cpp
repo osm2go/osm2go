@@ -126,11 +126,6 @@ canvas_item_info_poly::canvas_item_info_poly(canvas_t* cv, canvas_group_t g, can
   bbox.bottom_right.y += width / 2;
 }
 
-canvas_item_info_poly::~canvas_item_info_poly()
-{
-  delete[] points;
-}
-
 struct item_info_find {
   const canvas_item_t * const citem;
   explicit item_info_find(const canvas_item_t *i) : citem(i) {}

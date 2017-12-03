@@ -23,9 +23,11 @@
 #include "canvas.h"
 #include "pos.h"
 
+#include <memory>
 #include <vector>
 
 #include <osm2go_cpp.h>
+#include <osm2go_stl.h>
 
 enum canvas_item_type_t { CANVAS_ITEM_CIRCLE, CANVAS_ITEM_POLY };
 
@@ -56,7 +58,6 @@ class canvas_item_info_poly : public canvas_item_info_t {
 public:
   canvas_item_info_poly(canvas_t *cv, canvas_group_t g, canvas_item_t *it, bool poly,
                         unsigned int wd, const std::vector<lpos_t> &p);
-  ~canvas_item_info_poly();
 
   struct {
     struct {
@@ -68,7 +69,7 @@ public:
   unsigned int width;
   // stored as single items to save one size_t of memory per object
   const unsigned int num_points;
-  lpos_t * const points;
+  std::unique_ptr<lpos_t[]> points;
 };
 
 #endif /* CANVAS_P_H */
