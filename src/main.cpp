@@ -73,6 +73,22 @@
 #define DEFAULT_HEIGHT 480
 #endif
 
+struct appdata_internal : public appdata_t {
+  appdata_internal();
+  ~appdata_internal();
+
+#ifdef FREMANTLE
+  HildonProgram *program;
+  /* submenues are seperate menues under fremantle */
+  GtkWidget *app_menu_view, *app_menu_wms, *app_menu_track;
+  GtkWidget *app_menu_map;
+#else
+  GtkCheckMenuItem *menu_item_view_fullscreen;
+#endif
+
+  GtkWidget *btn_zoom_in, *btn_zoom_out;
+};
+
 /* disable/enable main screen control dependant on presence of open project */
 void appdata_t::main_ui_enable() {
   bool project_valid = (project != O2G_NULLPTR);
@@ -129,8 +145,8 @@ void appdata_t::main_ui_enable() {
   for(unsigned int i = 0; i < osm_active_items.size(); i++)
     uicontrol->setActionEnable(osm_active_items[i], osm_valid);
 
-  gtk_widget_set_sensitive(btn_zoom_in, osm_valid);
-  gtk_widget_set_sensitive(btn_zoom_out, osm_valid);
+  gtk_widget_set_sensitive(static_cast<appdata_internal *>(this)->btn_zoom_in, osm_valid);
+  gtk_widget_set_sensitive(static_cast<appdata_internal *>(this)->btn_zoom_out, osm_valid);
 
   if(!project_valid)
     uicontrol->showNotification(_("Please load or create a project"));
@@ -599,7 +615,7 @@ menu_append_new_item(appdata_t &appdata, GtkWidget *menu_shell,
   return item;
 }
 
-static void menu_create(appdata_t &appdata, GtkBox *mainvbox) {
+static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
   GtkWidget *menu, *item, *submenu;
   GtkWidget *about_quit_items_menu;
 
@@ -984,22 +1000,22 @@ static void submenu_popup(appdata_t &appdata, GtkWidget *menu) {
 }
 
 /* the view submenu */
-static void on_submenu_view_clicked(appdata_t *appdata)
+static void on_submenu_view_clicked(appdata_internal *appdata)
 {
   submenu_popup(*appdata, appdata->app_menu_view);
 }
 
-static void on_submenu_map_clicked(appdata_t *appdata)
+static void on_submenu_map_clicked(appdata_internal *appdata)
 {
   submenu_popup(*appdata, appdata->app_menu_map);
 }
 
-static void on_submenu_wms_clicked(appdata_t *appdata)
+static void on_submenu_wms_clicked(appdata_internal *appdata)
 {
   submenu_popup(*appdata, appdata->app_menu_wms);
 }
 
-static void on_submenu_track_clicked(appdata_t *appdata)
+static void on_submenu_track_clicked(appdata_internal *appdata)
 {
   submenu_popup(*appdata, appdata->app_menu_track);
 }
@@ -1054,7 +1070,7 @@ static HildonAppMenu *app_menu_create(appdata_t &appdata) {
   return menu;
 }
 
-static void menu_create(appdata_t &appdata, GtkBox *) {
+static void menu_create(appdata_internal &appdata, GtkBox *) {
   /* -- the view submenu -- */
   const std::array<menu_entry_t, 3> sm_view_entries = { {
     /* --- */
@@ -1108,7 +1124,7 @@ static void menu_create(appdata_t &appdata, GtkBox *) {
   hildon_window_set_app_menu(HILDON_WINDOW(appdata.window), menu);
 }
 
-static void menu_cleanup(appdata_t &appdata) {
+static void menu_cleanup(appdata_internal &appdata) {
   gtk_widget_destroy(appdata.app_menu_view);
   gtk_widget_destroy(appdata.app_menu_map);
   gtk_widget_destroy(appdata.app_menu_wms);
@@ -1133,17 +1149,6 @@ static void menu_accels_load(appdata_t *appdata) {
 appdata_t::appdata_t()
   : uicontrol(MainUi::instance(*this))
   , window(O2G_NULLPTR)
-#ifdef FREMANTLE
-  , program(O2G_NULLPTR)
-  , app_menu_view(O2G_NULLPTR)
-  , app_menu_wms(O2G_NULLPTR)
-  , app_menu_track(O2G_NULLPTR)
-  , app_menu_map(O2G_NULLPTR)
-#else
-  , menu_item_view_fullscreen(O2G_NULLPTR)
-#endif
-  , btn_zoom_in(O2G_NULLPTR)
-  , btn_zoom_out(O2G_NULLPTR)
   , statusbar(statusbar_t::create())
   , project(O2G_NULLPTR)
   , iconbar(O2G_NULLPTR)
@@ -1176,10 +1181,6 @@ appdata_t::~appdata_t() {
   if(likely(map))
     map->set_autosave(false);
 
-#ifdef FREMANTLE
-  program = O2G_NULLPTR;
-#endif
-
   printf("waiting for gtk to shut down ");
 
   /* let gtk clean up first */
@@ -1203,8 +1204,6 @@ appdata_t::~appdata_t() {
   delete iconbar;
   delete project;
 
-  menu_cleanup(*this);
-
   puts("everything is gone");
 }
 
@@ -1225,6 +1224,31 @@ void appdata_t::track_clear()
   delete tr;
 }
 
+appdata_internal::appdata_internal()
+  : appdata_t()
+#ifdef FREMANTLE
+  , program(O2G_NULLPTR)
+  , app_menu_view(O2G_NULLPTR)
+  , app_menu_wms(O2G_NULLPTR)
+  , app_menu_track(O2G_NULLPTR)
+  , app_menu_map(O2G_NULLPTR)
+#else
+  , menu_item_view_fullscreen(O2G_NULLPTR)
+#endif
+  , btn_zoom_in(O2G_NULLPTR)
+  , btn_zoom_out(O2G_NULLPTR)
+{
+}
+
+appdata_internal::~appdata_internal()
+{
+#ifdef FREMANTLE
+  program = O2G_NULLPTR;
+#endif
+
+  menu_cleanup(*this);
+}
+
 static void on_window_destroy(appdata_t *appdata) {
   puts("main window destroy");
 
@@ -1232,7 +1256,7 @@ static void on_window_destroy(appdata_t *appdata) {
   appdata->window = O2G_NULLPTR;
 }
 
-static gboolean on_window_key_press(appdata_t *appdata, GdkEventKey *event) {
+static gboolean on_window_key_press(appdata_internal *appdata, GdkEventKey *event) {
   gboolean handled = FALSE;
 
   //  printf("key event with keyval %x\n", event->keyval);
@@ -1315,7 +1339,7 @@ static GtkWidget *  __attribute__((nonnull(1,2,4)))
 static int application_run(const char *proj)
 {
   /* user specific init */
-  appdata_t appdata;
+  appdata_internal appdata;
 
   if(unlikely(!appdata.style)) {
     errorf(O2G_NULLPTR, _("Unable to load valid style %s, terminating."),

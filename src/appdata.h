@@ -20,10 +20,6 @@
 #ifndef APPDATA_H
 #define APPDATA_H
 
-#ifdef FREMANTLE
-typedef struct _HildonProgram HildonProgram;
-#endif
-
 #include <array>
 #include <gtk/gtk.h>
 
@@ -41,16 +37,6 @@ struct appdata_t {
   MainUi * const uicontrol;
 
   GtkWidget *window;
-#ifdef FREMANTLE
-  HildonProgram *program;
-  /* submenues are seperate menues under fremantle */
-  GtkWidget *app_menu_view, *app_menu_wms, *app_menu_track;
-  GtkWidget *app_menu_map;
-#else
-  GtkCheckMenuItem *menu_item_view_fullscreen;
-#endif
-
-  GtkWidget *btn_zoom_in, *btn_zoom_out;
 
   class statusbar_t * const statusbar;
   struct project_t *project;
