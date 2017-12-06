@@ -1,0 +1,126 @@
+// std::mutex implementation -*- C++ -*-
+
+// Copyright (C) 2003-2017 Free Software Foundation, Inc.
+//
+// This file is part of the GNU ISO C++ Library.  This library is free
+// software; you can redistribute it and/or modify it under the
+// terms of the GNU General Public License as published by the
+// Free Software Foundation; either version 3, or (at your option)
+// any later version.
+
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// Under Section 7 of GPL version 3, you are granted additional
+// permissions described in the GCC Runtime Library Exception, version
+// 3.1, as published by the Free Software Foundation.
+
+// You should have received a copy of the GNU General Public License and
+// a copy of the GCC Runtime Library Exception along with this program;
+// see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+// <http://www.gnu.org/licenses/>.
+
+/** @file bits/std_mutex.h
+ *  This is an internal header file, included by other library headers.
+ *  Do not attempt to use it directly. @headername{mutex}
+ */
+
+#ifndef _GLIBCXX72_MUTEX_H
+#define _GLIBCXX72_MUTEX_H 1
+
+#include <glib.h>
+#include <osm2go_cpp.h>
+
+namespace std
+{
+  /**
+   * @defgroup mutexes Mutexes
+   * @ingroup concurrency
+   *
+   * Classes for mutex support.
+   * @{
+   */
+
+  // Common base class for std::mutex and std::timed_mutex
+  class __mutex_base
+  {
+  protected:
+    typedef GMutex			__native_type;
+
+    __native_type  _M_mutex;
+
+    __mutex_base()
+    {
+      g_mutex_init(&_M_mutex);
+    }
+
+    ~__mutex_base() { g_mutex_clear(&_M_mutex); }
+
+  private:
+    __mutex_base(const __mutex_base&) O2G_DELETED_FUNCTION;
+    __mutex_base& operator=(const __mutex_base&) O2G_DELETED_FUNCTION;
+  };
+
+  /// The standard mutex type.
+  class mutex : private __mutex_base
+  {
+    mutex(const mutex&) O2G_DELETED_FUNCTION;
+    mutex& operator=(const mutex&) O2G_DELETED_FUNCTION;
+
+  public:
+    typedef __native_type* 			native_handle_type;
+
+    mutex() : __mutex_base() {}
+    ~mutex() {}
+
+    void
+    lock()
+    {
+      g_mutex_lock(&_M_mutex);
+    }
+
+    bool
+    try_lock()
+    {
+      return g_mutex_trylock(&_M_mutex) == TRUE;
+    }
+
+    void
+    unlock()
+    {
+      g_mutex_unlock(&_M_mutex);
+    }
+
+    native_handle_type
+    native_handle()
+    { return &_M_mutex; }
+  };
+
+  /** @brief A simple scoped lock type.
+   *
+   * A lock_guard controls mutex ownership within a scope, releasing
+   * ownership in the destructor.
+   */
+  template<typename _Mutex>
+    class lock_guard
+    {
+    public:
+      typedef _Mutex mutex_type;
+
+      explicit lock_guard(mutex_type& __m) : _M_device(__m)
+      { _M_device.lock(); }
+
+      ~lock_guard()
+      { _M_device.unlock(); }
+
+    private:
+      lock_guard(const lock_guard&) O2G_DELETED_FUNCTION;
+      lock_guard& operator=(const lock_guard&) O2G_DELETED_FUNCTION;
+
+      mutex_type&  _M_device;
+    };
+} // namespace
+
+#endif // _GLIBCXX72_MUTEX_H

@@ -25,6 +25,7 @@
 #include <cstring>
 #include <gtk/gtk.h>
 #include <libgnomevfs/gnome-vfs-inet-connection.h>
+#include <mutex>
 #include <unistd.h>
 #ifdef ENABLE_GPSBT
 #include <gpsbt.h>
@@ -67,21 +68,6 @@ struct gps_data_t {
 
 };
 
-class AutoGMutex {
-  GMutex * const mutex;
-public:
-  explicit inline AutoGMutex(GMutex *m)
-    : mutex(m)
-  {
-    g_mutex_lock(mutex);
-  }
-
-  inline ~AutoGMutex()
-  {
-    g_mutex_unlock(mutex);
-  }
-};
-
 /* setup for direct gpsd based communication */
 class gpsd_state_t : public gps_state_t {
 public:
@@ -106,17 +92,13 @@ public:
 #endif
 
   GThread* thread_p;
-  GMutex * const mutex;
+  std::mutex mutex;
   GnomeVFSInetConnection *iconn;
   GnomeVFSSocket *socket;
 
   bool enable;
 
   gps_data_t gpsdata;
-
-#if GLIB_CHECK_VERSION(2,32,0)
-  GMutex rmutex;
-#endif
 };
 
 /* maybe user configurable later on ... */
@@ -128,7 +110,7 @@ pos_t gpsd_state_t::get_pos(float* alt)
   pos_t pos(NAN, NAN);
 
   if(enable) {
-    AutoGMutex lock(mutex);
+    std::lock_guard<std::mutex> lock(mutex);
     if(gpsdata.set & STATUS_SET) {
       if(gpsdata.status != STATUS_NO_FIX) {
         if(gpsdata.set & LATLON_SET)
@@ -309,7 +291,7 @@ gpointer gps_thread(gpointer data) {
 
 	    printf("msg: %s (%zu)\n", str, strlen(str));
 
-          AutoGMutex lock(gps_state->mutex);
+          std::lock_guard<std::mutex> lock(gps_state->mutex);
 
 	    gps_state->gpsdata.set &=
 	      ~(LATLON_SET|MODE_SET|STATUS_SET);
@@ -342,11 +324,6 @@ gps_state_t *gps_state_t::create() {
 
 gpsd_state_t::gpsd_state_t()
   : handler_id(0)
-#if GLIB_CHECK_VERSION(2,32,0)
-  , mutex(&rmutex)
-#else
-  , mutex(g_mutex_new())
-#endif
   , enable(false)
 {
   printf("GPS init: Using gpsd\n");
@@ -355,7 +332,6 @@ gpsd_state_t::gpsd_state_t()
 
   /* start a new thread to listen to gpsd */
 #if GLIB_CHECK_VERSION(2,32,0)
-  g_mutex_init(mutex);
   thread_p = g_thread_try_new("gps", gps_thread, this, O2G_NULLPTR);
 #else
   thread_p = g_thread_create(gps_thread, this, FALSE, O2G_NULLPTR);
@@ -369,11 +345,8 @@ gpsd_state_t::~gpsd_state_t()
   gpsbt_stop(&context);
 #endif
 #if GLIB_CHECK_VERSION(2,32,0)
-  g_mutex_clear(mutex);
   if(thread_p)
     g_thread_unref(thread_p);
-#else
-  g_mutex_free(mutex);
 #endif
 }
 
