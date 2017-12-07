@@ -77,7 +77,7 @@ struct counter {
     : groups(gr), items(it), separators(sep), combos(c), combo_entries(ce),
       labels(lb), keys(ky), checks(chk), refs(rf), plinks(pl), roles(rl) {}
   void operator()(const presets_item_t *p);
-  void operator()(const presets_widget_t *w);
+  void operator()(const presets_element_t *w);
 };
 
 void counter::operator()(const presets_item_t *p)
@@ -98,7 +98,7 @@ void counter::operator()(const presets_item_t *p)
   }
 }
 
-void counter::operator()(const presets_widget_t *w)
+void counter::operator()(const presets_element_t *w)
 {
   switch(w->type) {
   case WIDGET_TYPE_LABEL:
@@ -110,7 +110,7 @@ void counter::operator()(const presets_widget_t *w)
     break;
   case WIDGET_TYPE_COMBO:
     combos++;
-    combo_entries += static_cast<const presets_widget_combo *>(w)->values.size();
+    combo_entries += static_cast<const presets_element_combo *>(w)->values.size();
     break;
   case WIDGET_TYPE_CHECK:
     checks++;

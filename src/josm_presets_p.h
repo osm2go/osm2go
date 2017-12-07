@@ -31,7 +31,7 @@
 
 #include <osm2go_cpp.h>
 
-enum presets_widget_type_t {
+enum presets_element_type_t {
   WIDGET_TYPE_LABEL = 0,
   WIDGET_TYPE_SEPARATOR,
   WIDGET_TYPE_SPACE,
@@ -46,7 +46,7 @@ enum presets_widget_type_t {
 struct presets_context_t;
 struct tag_t;
 
-class presets_widget_t {
+class presets_element_t {
 public:
   enum Match {
     MatchIgnore,          ///< "none"
@@ -63,7 +63,7 @@ public:
    */
   static Match parseMatch(const char *matchstring, Match def = MatchIgnore);
 protected:
-  presets_widget_t(presets_widget_type_t t, Match m, const std::string &key = std::string(),
+  presets_element_t(presets_element_type_t t, Match m, const std::string &key = std::string(),
                    const std::string &txt = std::string());
 
   /**
@@ -74,16 +74,16 @@ protected:
   }
 
 public:
-  virtual ~presets_widget_t() {};
+  virtual ~presets_element_t() {}
 
-  const presets_widget_type_t type;
+  const presets_element_type_t type;
 
   const std::string key;
   const std::string text;
   const Match match;
 
   virtual bool is_interactive() const;
-  static inline bool isInteractive(const presets_widget_t *w) {
+  static inline bool isInteractive(const presets_element_t *w) {
     return w->is_interactive();
   }
 
@@ -106,10 +106,10 @@ public:
 /**
  * @brief a tag with an arbitrary text value
  */
-class presets_widget_text : public presets_widget_t {
+class presets_element_text : public presets_element_t {
   // no matchValue as it doesn't make sense to match on the value
 public:
-  presets_widget_text(const std::string &k, const std::string &txt,
+  presets_element_text(const std::string &k, const std::string &txt,
                       const std::string &deflt, const char *m);
 
   const std::string def;
@@ -122,10 +122,10 @@ public:
   }
 };
 
-class presets_widget_separator : public presets_widget_t {
+class presets_element_separator : public presets_element_t {
 public:
-  explicit presets_widget_separator()
-    : presets_widget_t(WIDGET_TYPE_SEPARATOR, MatchIgnore) {}
+  explicit presets_element_separator()
+    : presets_element_t(WIDGET_TYPE_SEPARATOR, MatchIgnore) {}
 
   virtual GtkWidget *attach(GtkTable *table, guint &row, const char *,
                             presets_context_t *) const O2G_OVERRIDE;
@@ -134,10 +134,10 @@ public:
   }
 };
 
-class presets_widget_label : public presets_widget_t {
+class presets_element_label : public presets_element_t {
 public:
-  explicit presets_widget_label(const std::string &txt)
-    : presets_widget_t(WIDGET_TYPE_LABEL, MatchIgnore, std::string(), txt) {}
+  explicit presets_element_label(const std::string &txt)
+    : presets_element_t(WIDGET_TYPE_LABEL, MatchIgnore, std::string(), txt) {}
 
   virtual GtkWidget *attach(GtkTable *table, guint &row, const char *,
                             presets_context_t *) const O2G_OVERRIDE;
@@ -149,11 +149,11 @@ public:
 /**
  * @brief a combo box with pre-defined values
  */
-class presets_widget_combo : public presets_widget_t {
+class presets_element_combo : public presets_element_t {
 protected:
   virtual bool matchValue(const char *val) const O2G_OVERRIDE;
 public:
-  presets_widget_combo(const std::string &k, const std::string &txt,
+  presets_element_combo(const std::string &k, const std::string &txt,
                        const std::string &deflt, const char *m,
                        std::vector<std::string> vals, std::vector<std::string> dvals);
 
@@ -174,11 +174,11 @@ public:
 /**
  * @brief a key is just a static key
  */
-class presets_widget_key : public presets_widget_t {
+class presets_element_key : public presets_element_t {
 protected:
   virtual bool matchValue(const char *val) const O2G_OVERRIDE;
 public:
-  presets_widget_key(const std::string &k, const std::string &val, const char *m);
+  presets_element_key(const std::string &k, const std::string &val, const char *m);
 
   const std::string value;
   virtual std::string getValue(GtkWidget *widget) const O2G_OVERRIDE;
@@ -187,11 +187,11 @@ public:
   }
 };
 
-class presets_widget_checkbox : public presets_widget_t {
+class presets_element_checkbox : public presets_element_t {
 protected:
   virtual bool matchValue(const char *val) const O2G_OVERRIDE;
 public:
-  presets_widget_checkbox(const std::string &k, const std::string &txt, bool deflt,
+  presets_element_checkbox(const std::string &k, const std::string &txt, bool deflt,
                           const char *m, const std::string &von = std::string());
 
   const bool def;
@@ -207,10 +207,10 @@ public:
 
 class presets_item;
 
-class presets_widget_reference : public presets_widget_t {
+class presets_element_reference : public presets_element_t {
 public:
-  explicit presets_widget_reference(presets_item *i)
-    : presets_widget_t(WIDGET_TYPE_REFERENCE, MatchIgnore), item(i) {}
+  explicit presets_element_reference(presets_item *i)
+    : presets_element_t(WIDGET_TYPE_REFERENCE, MatchIgnore), item(i) {}
 
   presets_item * const item;
 
@@ -218,10 +218,10 @@ public:
   virtual unsigned int rows() const O2G_OVERRIDE;
 };
 
-class presets_widget_link : public presets_widget_t {
+class presets_element_link : public presets_element_t {
 public:
-  explicit presets_widget_link()
-    : presets_widget_t(WIDGET_TYPE_LINK, MatchIgnore), item(O2G_NULLPTR) {}
+  explicit presets_element_link()
+    : presets_element_t(WIDGET_TYPE_LINK, MatchIgnore), item(O2G_NULLPTR) {}
 
   presets_item *item;
 
@@ -287,7 +287,7 @@ public:
     : presets_item_named(t, n, ic), addEditName(edname) {}
   virtual ~presets_item();
 
-  std::vector<presets_widget_t *> widgets;
+  std::vector<presets_element_t *> widgets;
   std::vector<role> roles;
 
   virtual bool isItem() const O2G_OVERRIDE {
@@ -327,7 +327,7 @@ struct presets_items {
   bool addFile(const std::string &filename, const std::string &basepath, int basefd);
 };
 
-static inline unsigned int widget_rows(unsigned int init, const presets_widget_t *w) {
+static inline unsigned int widget_rows(unsigned int init, const presets_element_t *w) {
   return init + w->rows();
 }
 

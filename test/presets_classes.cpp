@@ -28,7 +28,7 @@ static osm_t::TagMap VECTOR_ONE(const osm_t::TagMap::value_type &a)
 
 static void checkTextMatch()
 {
-  presets_widget_text w_0(tag_testkey_testtext.first,
+  presets_element_text w_0(tag_testkey_testtext.first,
                           tag_testkey_testtext.second,
                           std::string(), O2G_NULLPTR);
 
@@ -36,7 +36,7 @@ static void checkTextMatch()
   assert_cmpnum(w_0.matches(VECTOR_ONE(tag_testkey_testtext)), 0);
   assert_cmpnum(w_0.matches(osm_t::TagMap()), 0);
 
-  presets_widget_text w_ign(tag_testkey_testtext.first,
+  presets_element_text w_ign(tag_testkey_testtext.first,
                             tag_testkey_testtext.second,
                             std::string(), "none");
 
@@ -44,7 +44,7 @@ static void checkTextMatch()
   assert_cmpnum(w_ign.matches(VECTOR_ONE(tag_testkey_testtext)), 0);
   assert_cmpnum(w_ign.matches(osm_t::TagMap()), 0);
 
-  presets_widget_text w_bad(tag_testkey_testtext.first,
+  presets_element_text w_bad(tag_testkey_testtext.first,
                             tag_testkey_testtext.second,
                             std::string(), "nonsense");
 
@@ -52,7 +52,7 @@ static void checkTextMatch()
   assert_cmpnum(w_bad.matches(VECTOR_ONE(tag_testkey_testtext)), 0);
   assert_cmpnum(w_bad.matches(osm_t::TagMap()), 0);
 
-  presets_widget_text w_key(tag_testkey_testtext.first,
+  presets_element_text w_key(tag_testkey_testtext.first,
                             tag_testkey_testtext.second,
                             std::string(), "key");
 
@@ -60,7 +60,7 @@ static void checkTextMatch()
   assert_cmpnum(w_key.matches(VECTOR_ONE(tag_testkey_testtext)), 1);
   assert_cmpnum(w_key.matches(osm_t::TagMap()), 0);
 
-  presets_widget_text w_keyf(tag_testkey_testtext.first,
+  presets_element_text w_keyf(tag_testkey_testtext.first,
                              tag_testkey_testtext.second,
                              std::string(), "key!");
 
@@ -68,7 +68,7 @@ static void checkTextMatch()
   assert_cmpnum(w_keyf.matches(VECTOR_ONE(tag_testkey_testtext)), 1);
   assert_cmpnum(w_keyf.matches(osm_t::TagMap()), -1);
 
-  presets_widget_text w_kv(tag_testkey_testtext.first,
+  presets_element_text w_kv(tag_testkey_testtext.first,
                            tag_testkey_testtext.second,
                            std::string(), "keyvalue");
 
@@ -76,7 +76,7 @@ static void checkTextMatch()
   assert_cmpnum(w_kv.matches(VECTOR_ONE(tag_testkey_testtext)), 1);
   assert_cmpnum(w_kv.matches(osm_t::TagMap()), 0);
 
-  presets_widget_text w_kvf(tag_testkey_testtext.first,
+  presets_element_text w_kvf(tag_testkey_testtext.first,
                             tag_testkey_testtext.second,
                             std::string(), "keyvalue!");
 
@@ -95,7 +95,7 @@ static void checkComboMatch()
   std::vector<std::string> empty_vector;
   const std::vector<std::string> backup = values;
 
-  presets_widget_combo w_0(tag_testkey_testtext.first,
+  presets_element_combo w_0(tag_testkey_testtext.first,
                            "visual text",
                            values.front(),
                            O2G_NULLPTR, values, empty_vector);
@@ -105,7 +105,7 @@ static void checkComboMatch()
   assert_cmpnum(w_0.matches(osm_t::TagMap()), 0);
 
   values = backup;
-  presets_widget_combo w_ign(tag_testkey_testtext.first,
+  presets_element_combo w_ign(tag_testkey_testtext.first,
                              "visual text",
                              values.front(),
                              "none", values, empty_vector);
@@ -115,7 +115,7 @@ static void checkComboMatch()
   assert_cmpnum(w_ign.matches(osm_t::TagMap()), 0);
 
   values = backup;
-  presets_widget_combo w_bad(tag_testkey_testtext.first,
+  presets_element_combo w_bad(tag_testkey_testtext.first,
                              "visual text",
                              values.front(),
                              "nonsense", values, empty_vector);
@@ -125,7 +125,7 @@ static void checkComboMatch()
   assert_cmpnum(w_bad.matches(osm_t::TagMap()), 0);
 
   values = backup;
-  presets_widget_combo w_key(tag_testkey_testtext.first,
+  presets_element_combo w_key(tag_testkey_testtext.first,
                              "visual text",
                              values.front(),
                              "key", values, empty_vector);
@@ -135,7 +135,7 @@ static void checkComboMatch()
   assert_cmpnum(w_key.matches(osm_t::TagMap()), 0);
 
   values = backup;
-  presets_widget_combo w_keyf(tag_testkey_testtext.first,
+  presets_element_combo w_keyf(tag_testkey_testtext.first,
                               "visual text",
                               values.front(),
                               "key!", values, empty_vector);
@@ -145,7 +145,7 @@ static void checkComboMatch()
   assert_cmpnum(w_keyf.matches(osm_t::TagMap()), -1);
 
   values = backup;
-  presets_widget_combo w_kv(tag_testkey_testtext.first,
+  presets_element_combo w_kv(tag_testkey_testtext.first,
                             "visual text",
                             values.front(),
                             "keyvalue", values, empty_vector);
@@ -155,7 +155,7 @@ static void checkComboMatch()
   assert_cmpnum(w_kv.matches(osm_t::TagMap()), 0);
 
   values = backup;
-  presets_widget_combo w_kvf(tag_testkey_testtext.first,
+  presets_element_combo w_kvf(tag_testkey_testtext.first,
                              "visual text",
                              values.front(),
                              "keyvalue!", values, empty_vector);
@@ -173,42 +173,42 @@ static void check_combined()
   tags.insert(osm_t::TagMap::value_type(tag_testkey_testtext.first, tag_testkey_testtext.second));
 
   // one that is ignored
-  item.widgets.push_back(new presets_widget_text("different",
+  item.widgets.push_back(new presets_element_text("different",
                                                  "different",
                                                  std::string(), "none"));
 
   assert(!item.matches(tags));
 
   // another one that reports neutral
-  item.widgets.push_back(new presets_widget_text("different",
+  item.widgets.push_back(new presets_element_text("different",
                                                  "different",
                                                  std::string(), "key"));
 
   assert(!item.matches(tags));
 
   // one that matches on key
-  item.widgets.push_back(new presets_widget_text(tag_testkey_testtext.first,
+  item.widgets.push_back(new presets_element_text(tag_testkey_testtext.first,
                                                  "different",
                                                  std::string(), "key"));
 
   assert(item.matches(tags));
 
   // one that matches on key+value
-  item.widgets.push_back(new presets_widget_key(tag_testkey_testtext.first,
+  item.widgets.push_back(new presets_element_key(tag_testkey_testtext.first,
                                                 tag_testkey_testtext.second,
                                                 "keyvalue"));
 
   assert(item.matches(tags));
 
   // key matches, value not, still neutral
-  item.widgets.push_back(new presets_widget_key(tag_testkey_other.first,
+  item.widgets.push_back(new presets_element_key(tag_testkey_other.first,
                                                 tag_testkey_other.second,
                                                 "keyvalue"));
 
   assert(item.matches(tags));
 
   // key matches, value not, fail
-  item.widgets.push_back(new presets_widget_key(tag_testkey_other.first,
+  item.widgets.push_back(new presets_element_key(tag_testkey_other.first,
                                                 tag_testkey_other.second,
                                                 "keyvalue!"));
 

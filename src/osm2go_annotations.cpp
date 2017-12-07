@@ -103,7 +103,7 @@ template class assert_num_tpl<const int>;
 template class assert_num_tpl<const type_t>;
 template class assert_num_tpl<const item_id_t>;
 template class assert_num_tpl<const osm_t::UploadPolicy>;
-template class assert_num_tpl<const presets_widget_type_t>;
+template class assert_num_tpl<const presets_element_type_t>;
 template class assert_num_tpl<const char>;
 
 template<> assert_num_tpl<const pos_float_t>::assert_num_tpl(pos_float_t a, const char *amsg,

@@ -160,7 +160,7 @@ class PresetSax {
   // not a stack because that can't be iterated
   std::vector<State> state;
   std::stack<presets_item_t *> items; // the current item stack (i.e. menu layout)
-  std::stack<presets_widget_t *> widgets; // the current widget stack (i.e. dialog layout)
+  std::stack<presets_element_t *> widgets; // the current widget stack (i.e. dialog layout)
   presets_items &presets;
   const std::string &basepath;
   const int basedirfd;
@@ -186,7 +186,7 @@ class PresetSax {
     }
   };
 
-  bool resolvePresetLink(presets_widget_link* link, const std::string &id);
+  bool resolvePresetLink(presets_element_link* link, const std::string &id);
 
   void dumpState(const char *before = O2G_NULLPTR, const char *after = O2G_NULLPTR) const;
 
@@ -197,7 +197,7 @@ public:
 
   ChunkMap chunks;
 
-  typedef std::vector<std::pair<presets_widget_link *, std::string> > LLinks;
+  typedef std::vector<std::pair<presets_element_link *, std::string> > LLinks;
 
   ChunkMap itemsNames;
   LLinks laterLinks; ///< unresolved preset_link references
@@ -353,8 +353,8 @@ PresetSax::PresetSax(presets_items &p, const std::string &b, int basefd)
 }
 
 struct find_link_parent {
-  const presets_widget_link *link;
-  explicit find_link_parent(const presets_widget_link *l) : link(l) {}
+  const presets_element_link *link;
+  explicit find_link_parent(const presets_element_link *l) : link(l) {}
   bool operator()(presets_item_t *t);
   bool operator()(const ChunkMap::value_type &p) {
     return operator()(p.second);
@@ -372,7 +372,7 @@ bool find_link_parent::operator()(presets_item_t *t)
     return false;
 
   presets_item * const item = static_cast<presets_item *>(t);
-  const std::vector<presets_widget_t *>::iterator it = std::find(item->widgets.begin(),
+  const std::vector<presets_element_t *>::iterator it = std::find(item->widgets.begin(),
                                                                  item->widgets.end(),
                                                                  link);
   if(it == item->widgets.end())
@@ -409,7 +409,7 @@ bool PresetSax::parse(const std::string &filename)
   return state.size() == 1;
 }
 
-bool PresetSax::resolvePresetLink(presets_widget_link *link, const std::string &id)
+bool PresetSax::resolvePresetLink(presets_element_link *link, const std::string &id)
 {
   const ChunkMap::const_iterator it = itemsNames.find(id);
   // these references may also target items that will only be added later
@@ -531,7 +531,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
     return;
   }
 
-  presets_widget_t *widget = O2G_NULLPTR;
+  presets_element_t *widget = O2G_NULLPTR;
 
   switch(it->oldState) {
   case IntermediateTag:
@@ -610,7 +610,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
   }
   case TagPresetLink: {
     const char *id = findAttribute(attrs, "preset_name", false);
-    presets_widget_link *link = new presets_widget_link();
+    presets_element_link *link = new presets_element_link();
     assert(!items.empty());
     assert(items.top()->isItem());
     presets_item *item = static_cast<presets_item *>(items.top());
@@ -644,19 +644,19 @@ void PresetSax::startElement(const char *name, const char **attrs)
       } else
         ref = ait->second;
     }
-    widgets.push(new presets_widget_reference(ref));
+    widgets.push(new presets_element_reference(ref));
     break;
   }
   case TagLabel: {
     const char *text = findAttribute(attrs, "text");
-    widgets.push(new presets_widget_label(NULL_OR_VAL(text)));
+    widgets.push(new presets_element_label(NULL_OR_VAL(text)));
     // do not push to items, will be done in endElement()
     break;
   }
   case TagSpace:
     assert(!items.empty());
 #ifndef FREMANTLE
-    widget = new presets_widget_separator();
+    widget = new presets_element_separator();
 #endif
     break;
   case TagText: {
@@ -669,7 +669,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
     const std::string &def = NULL_OR_MAP_STR(a.find("default"));
     const char *match = NULL_OR_MAP_VAL(a.find("match"));
 
-    widget = new presets_widget_text(key, text, def, match);
+    widget = new presets_element_text(key, text, def, match);
     break;
   }
   case TagKey: {
@@ -685,7 +685,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
         match = attrs[i + 1];
       }
     }
-    widget = new presets_widget_key(NULL_OR_VAL(key), NULL_OR_VAL(value),
+    widget = new presets_element_key(NULL_OR_VAL(key), NULL_OR_VAL(value),
                                     match);
     break;
   }
@@ -701,7 +701,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
 
     bool on = NULL_OR_MAP_STR(a.find("default")) == "on";
 
-    widget = new presets_widget_checkbox(key, text, on, match, von);
+    widget = new presets_element_checkbox(key, text, on, match, von);
     break;
   }
   case TagLink: {
@@ -746,16 +746,16 @@ void PresetSax::startElement(const char *name, const char **attrs)
       dumpState("found", "combo with display_values but not values\n");
       display_values = O2G_NULLPTR;
     }
-    widget = new presets_widget_combo(key, text, def, match,
-                                      presets_widget_combo::split_string(values, delimiter),
-                                      presets_widget_combo::split_string(display_values, delimiter));
+    widget = new presets_element_combo(key, text, def, match,
+                                      presets_element_combo::split_string(values, delimiter),
+                                      presets_element_combo::split_string(display_values, delimiter));
     break;
   }
   case TagListEntry: {
     assert(!items.empty());
     assert(!widgets.empty());
     assert_cmpnum(widgets.top()->type, WIDGET_TYPE_COMBO);
-    presets_widget_combo * const combo = static_cast<presets_widget_combo *>(widgets.top());
+    presets_element_combo * const combo = static_cast<presets_element_combo *>(widgets.top());
 
     std::array<const char *, 2> names = { { "display_value", "value" } };
     const AttrMap &a = findAttributes(attrs, names.data(), names.size(), 3);
@@ -908,7 +908,7 @@ void PresetSax::endElement(const xmlChar *name)
     assert(!items.empty());
     assert(items.top()->isItem());
     assert(!widgets.empty());
-    presets_widget_reference * const ref = static_cast<presets_widget_reference *>(widgets.top());
+    presets_element_reference * const ref = static_cast<presets_element_reference *>(widgets.top());
     widgets.pop();
     assert_cmpnum(ref->type, WIDGET_TYPE_REFERENCE);
     if(unlikely(ref->item == O2G_NULLPTR))
@@ -920,7 +920,7 @@ void PresetSax::endElement(const xmlChar *name)
   case TagLabel: {
     assert(!items.empty());
     assert(!widgets.empty());
-    presets_widget_label * const label = static_cast<presets_widget_label *>(widgets.top());
+    presets_element_label * const label = static_cast<presets_element_label *>(widgets.top());
     widgets.pop();
     if(unlikely(label->text.empty())) {
       dumpState("ignoring", "label without text\n");
@@ -1025,12 +1025,12 @@ void josm_presets_free(struct presets_items *presets) {
 }
 
 struct MatchValue {
-  MatchValue(const char *n, presets_widget_t::Match m) : name(n), match(m) {}
+  MatchValue(const char *n, presets_element_t::Match m) : name(n), match(m) {}
   const char *name;
-  presets_widget_t::Match match;
+  presets_element_t::Match match;
 };
 
-presets_widget_t::Match presets_widget_t::parseMatch(const char *matchstring, Match def)
+presets_element_t::Match presets_element_t::parseMatch(const char *matchstring, Match def)
 {
   typedef std::vector<MatchValue> VMap;
   static VMap matches;
@@ -1048,7 +1048,7 @@ presets_widget_t::Match presets_widget_t::parseMatch(const char *matchstring, Ma
   return (it == itEnd) ? def : it->match;
 }
 
-presets_widget_t::presets_widget_t(presets_widget_type_t t, Match m, const std::string &k, const std::string &txt)
+presets_element_t::presets_element_t(presets_element_type_t t, Match m, const std::string &k, const std::string &txt)
   : type(t)
   , key(k)
   , text(txt)
@@ -1056,7 +1056,7 @@ presets_widget_t::presets_widget_t(presets_widget_type_t t, Match m, const std::
 {
 }
 
-bool presets_widget_t::is_interactive() const
+bool presets_element_t::is_interactive() const
 {
   switch(type) {
   case WIDGET_TYPE_LABEL:
@@ -1069,24 +1069,24 @@ bool presets_widget_t::is_interactive() const
   }
 }
 
-presets_widget_text::presets_widget_text(const std::string &k, const std::string &txt,
+presets_element_text::presets_element_text(const std::string &k, const std::string &txt,
                                          const std::string &deflt, const char *m)
-  : presets_widget_t(WIDGET_TYPE_TEXT, parseMatch(m), k, txt)
+  : presets_element_t(WIDGET_TYPE_TEXT, parseMatch(m), k, txt)
   , def(deflt)
 {
 }
 
-presets_widget_combo::presets_widget_combo(const std::string &k, const std::string &txt,
+presets_element_combo::presets_element_combo(const std::string &k, const std::string &txt,
                                            const std::string &deflt, const char *m,
                                            std::vector<std::string> vals, std::vector<std::string> dvals)
-  : presets_widget_t(WIDGET_TYPE_COMBO, parseMatch(m), k, txt)
+  : presets_element_t(WIDGET_TYPE_COMBO, parseMatch(m), k, txt)
   , def(deflt)
   , values(vals)
   , display_values(dvals)
 {
 }
 
-std::vector<std::string> presets_widget_combo::split_string(const char *str, const char delimiter)
+std::vector<std::string> presets_element_combo::split_string(const char *str, const char delimiter)
 {
   std::vector<std::string> ret;
 
@@ -1108,35 +1108,35 @@ std::vector<std::string> presets_widget_combo::split_string(const char *str, con
   return ret;
 }
 
-presets_widget_key::presets_widget_key(const std::string &k, const std::string &val,
+presets_element_key::presets_element_key(const std::string &k, const std::string &val,
                                        const char *m)
-  : presets_widget_t(WIDGET_TYPE_KEY, parseMatch(m, MatchKeyValue_Force), k)
+  : presets_element_t(WIDGET_TYPE_KEY, parseMatch(m, MatchKeyValue_Force), k)
   , value(val)
 {
 }
 
-presets_widget_checkbox::presets_widget_checkbox(const std::string &k, const std::string &txt,
+presets_element_checkbox::presets_element_checkbox(const std::string &k, const std::string &txt,
                                                  bool deflt, const char *m, const std::string &von)
-  : presets_widget_t(WIDGET_TYPE_CHECK, parseMatch(m), k, txt)
+  : presets_element_t(WIDGET_TYPE_CHECK, parseMatch(m), k, txt)
   , def(deflt)
   , value_on(von)
 {
 }
 
-bool presets_widget_reference::is_interactive() const
+bool presets_element_reference::is_interactive() const
 {
-  return std::find_if(item->widgets.begin(), item->widgets.end(), presets_widget_t::isInteractive) !=
+  return std::find_if(item->widgets.begin(), item->widgets.end(), presets_element_t::isInteractive) !=
          item->widgets.end();
 }
 
-unsigned int presets_widget_reference::rows() const
+unsigned int presets_element_reference::rows() const
 {
   return std::accumulate(item->widgets.begin(), item->widgets.end(), 0, widget_rows);
 }
 
 presets_item::~presets_item()
 {
-  std::for_each(widgets.begin(), widgets.end(), std::default_delete<presets_widget_t>());
+  std::for_each(widgets.begin(), widgets.end(), std::default_delete<presets_element_t>());
 }
 
 presets_item_group::presets_item_group(const unsigned int types, presets_item_group *p,
