@@ -22,6 +22,7 @@
 #include "appdata.h"
 #include "icon.h"
 #include "info.h"
+#include "map.h"
 #include "map_edit.h"
 #include "osm.h"
 

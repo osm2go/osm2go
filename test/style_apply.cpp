@@ -3,6 +3,7 @@
 
 #include <appdata.h>
 #include <icon.h>
+#include <map.h>
 #include <misc.h>
 #include <style.h>
 
@@ -14,10 +15,11 @@
 #include <cstdlib>
 #include <iostream>
 
-appdata_t::appdata_t()
+appdata_t::appdata_t(map_state_t &mstate)
   : uicontrol(O2G_NULLPTR)
   , window(O2G_NULLPTR)
   , statusbar(O2G_NULLPTR)
+  , map_state(mstate)
   , settings(O2G_NULLPTR)
   , gps_state(O2G_NULLPTR)
 {
@@ -41,7 +43,8 @@ int main(int argc, char **argv)
   xmlInitParser();
   misc_init();
 
-  appdata_t appdata;
+  map_state_t map_state;
+  appdata_t appdata(map_state);
 
   style_t *style = style_load(argv[1], appdata.icons);
 

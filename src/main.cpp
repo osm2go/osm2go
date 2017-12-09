@@ -74,7 +74,7 @@
 #endif
 
 struct appdata_internal : public appdata_t {
-  appdata_internal();
+  appdata_internal(map_state_t &mstate);
   ~appdata_internal();
 
 #ifdef FREMANTLE
@@ -1146,13 +1146,14 @@ static void menu_accels_load(appdata_t *appdata) {
 #endif
 }
 
-appdata_t::appdata_t()
+appdata_t::appdata_t(map_state_t &mstate)
   : uicontrol(MainUi::instance(*this))
   , window(O2G_NULLPTR)
   , statusbar(statusbar_t::create())
   , project(O2G_NULLPTR)
   , iconbar(O2G_NULLPTR)
   , presets(O2G_NULLPTR)
+  , map_state(mstate)
   , map(O2G_NULLPTR)
   , osm(O2G_NULLPTR)
   , settings(settings_t::load())
@@ -1224,8 +1225,8 @@ void appdata_t::track_clear()
   delete tr;
 }
 
-appdata_internal::appdata_internal()
-  : appdata_t()
+appdata_internal::appdata_internal(map_state_t &mstate)
+  : appdata_t(mstate)
 #ifdef FREMANTLE
   , program(O2G_NULLPTR)
   , app_menu_view(O2G_NULLPTR)
@@ -1339,7 +1340,8 @@ static GtkWidget *  __attribute__((nonnull(1,2,4)))
 static int application_run(const char *proj)
 {
   /* user specific init */
-  appdata_internal appdata;
+  map_state_t map_state;
+  appdata_internal appdata(map_state);
 
   if(unlikely(!appdata.style)) {
     errorf(O2G_NULLPTR, _("Unable to load valid style %s, terminating."),
