@@ -323,8 +323,6 @@ GtkWidget *iconbar_t::create(appdata_t &appdata) {
   iconbar_gtk * const iconbar = new iconbar_gtk(appdata);
   appdata.iconbar = iconbar;
 
-  GtkBox * const box = GTK_BOX(gtk_vbox_new(FALSE, 0));
-
 #ifdef FINGER_UI
   gtk_widget_show_all(iconbar->menu);
 
@@ -341,6 +339,7 @@ GtkWidget *iconbar_t::create(appdata_t &appdata) {
                            G_CALLBACK(on_way_button_press), iconbar->menu);
 #endif
 
+  GtkBox * const box = GTK_BOX(gtk_vbox_new(FALSE, 0));
   gtk_box_pack_start(box, GTK_WIDGET(iconbar->toolbar), TRUE, TRUE, 0);
 
   /* -------------------------------------------------------- */
