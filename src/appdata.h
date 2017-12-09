@@ -28,7 +28,15 @@
 #include "uicontrol.h"
 
 struct canvas_item_t;
+class gps_state_t;
+class iconbar_t;
 struct osm_t;
+struct presets_items;
+struct project_t;
+class settings_t;
+class statusbar_t;
+struct style_t;
+struct track_t;
 
 struct appdata_t {
   appdata_t();
@@ -38,15 +46,15 @@ struct appdata_t {
 
   GtkWidget *window;
 
-  class statusbar_t * const statusbar;
-  struct project_t *project;
-  class iconbar_t *iconbar;
-  struct presets_items *presets;
+  statusbar_t * const statusbar;
+  project_t *project;
+  iconbar_t *iconbar;
+  presets_items *presets;
 
   std::array<GtkWidget *, MainUi::MENU_ITEMS_COUNT> menuitems;
 
   struct {
-    struct track_t *track;
+    track_t *track;
     canvas_item_t *gps_item; // the purple circle
     int warn_cnt;
   } track;
@@ -54,9 +62,9 @@ struct appdata_t {
   map_state_t map_state;
   map_t *map;
   osm_t *osm;
-  class settings_t * const settings;
-  struct style_t *style;
-  class gps_state_t * const gps_state;
+  settings_t * const settings;
+  style_t *style;
+  gps_state_t * const gps_state;
   icon_t icons;
 
   void track_clear();
