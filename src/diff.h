@@ -53,7 +53,7 @@ xmlDocPtr osmchange_init();
 
 /**
  * @brief generate a "delete" XML section in OsmChange format
- * @param osm the OSM data
+ * @param dirty the OSM objects to delete
  * @param xml_node the parent node (usually <osmChange>)
  * @param changeset the changeset id
  */
