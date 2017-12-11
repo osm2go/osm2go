@@ -22,13 +22,15 @@
 
 #include "color.h"
 #include "osm.h"
-#include "style.h"
 
 #include <libxml/tree.h>
 
 #include <vector>
 
 // Ratio conversions
+
+struct elemstyle_t;
+struct style_t;
 
 float scaledn_to_zoom(const float scaledn);
 
