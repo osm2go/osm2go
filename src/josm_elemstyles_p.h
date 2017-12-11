@@ -24,8 +24,11 @@
 
 #include <cstring>
 #include <cstdint>
+#include <string>
 
 #include <osm2go_cpp.h>
+
+class base_object_t;
 
 struct elemstyle_condition_t {
     elemstyle_condition_t(const char *k, const char *v)

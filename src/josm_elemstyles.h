@@ -21,7 +21,6 @@
 #define JOSM_ELEMSTYLES_H
 
 #include "color.h"
-#include "osm.h"
 
 #include <libxml/tree.h>
 
@@ -30,7 +29,10 @@
 // Ratio conversions
 
 struct elemstyle_t;
+class node_t;
+struct osm_t;
 struct style_t;
+class way_t;
 
 float scaledn_to_zoom(const float scaledn);
 
