@@ -15,12 +15,13 @@
 #include <cstdlib>
 #include <iostream>
 
-appdata_t::appdata_t(map_state_t &mstate)
+appdata_t::appdata_t(map_state_t &mstate, icon_t &ic)
   : uicontrol(O2G_NULLPTR)
   , window(O2G_NULLPTR)
   , statusbar(O2G_NULLPTR)
   , map_state(mstate)
   , settings(O2G_NULLPTR)
+  , icons(ic)
   , gps_state(O2G_NULLPTR)
 {
 }
@@ -44,7 +45,8 @@ int main(int argc, char **argv)
   misc_init();
 
   map_state_t map_state;
-  appdata_t appdata(map_state);
+  icon_t icons;
+  appdata_t appdata(map_state, icons);
 
   style_t *style = style_load(argv[1], appdata.icons);
 

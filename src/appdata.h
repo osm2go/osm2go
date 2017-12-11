@@ -23,11 +23,11 @@
 #include <array>
 #include <gtk/gtk.h>
 
-#include "icon.h"
 #include "uicontrol.h"
 
 struct canvas_item_t;
 class gps_state_t;
+class icon_t;
 class iconbar_t;
 struct map_state_t;
 class map_t;
@@ -40,7 +40,7 @@ struct style_t;
 struct track_t;
 
 struct appdata_t {
-  appdata_t(map_state_t &mstate);
+  appdata_t(map_state_t &mstate, icon_t &ic);
   ~appdata_t();
 
   MainUi * const uicontrol;
@@ -64,9 +64,9 @@ struct appdata_t {
   map_t *map;
   osm_t *osm;
   settings_t * const settings;
+  icon_t &icons;
   style_t *style;
   gps_state_t * const gps_state;
-  icon_t icons;
 
   void track_clear();
   void main_ui_enable();
