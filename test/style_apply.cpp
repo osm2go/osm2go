@@ -50,6 +50,11 @@ int main(int argc, char **argv)
 
   style_t *style = style_load(argv[1], appdata.icons);
 
+  if(style == O2G_NULLPTR) {
+    std::cerr << "failed to load styles" << std::endl;
+    return 1;
+  }
+
   assert(style->frisket.border.present);
   assert_cmpnum(style->frisket.border.color, 0xff0000c0);
   assert_cmpnum(style->frisket.border.width, 20.75);
@@ -65,11 +70,6 @@ int main(int argc, char **argv)
   assert_cmpnum(style->track.color, 0x0000ff40);
   assert_cmpnum(style->track.gps_color, 0x00008040);
   assert_cmpnum(style->background.color, 0x00ff00ff);
-
-  if(style == O2G_NULLPTR) {
-    std::cerr << "failed to load styles" << std::endl;
-    return 1;
-  }
 
   assert(!style->elemstyles.empty());
 
