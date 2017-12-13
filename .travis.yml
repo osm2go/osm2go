@@ -8,6 +8,9 @@ env:
   global:
     - OSM2GO_BUILD_DIR=/tmp/osm2go-cdash
     - VALGRIND_SUPP_DIR=/tmp/valgrind-suppressions
+  matrix:
+    - BUILD_NAME="default" CONF_OPTIONS="CONF_OPTIONS=-DUSE_SVG_ICONS=On"
+    - BUILD_NAME="picker" CONF_OPTIONS="CONF_OPTIONS=-DSERVER_EDITABLE=On;-DPICKER_MENU=On;-DUSE_SVG_ICONS=Off"
 cache:
   directories:
   - $VALGRIND_SUPP_DIR
@@ -23,10 +26,8 @@ addons:
     - valgrind
 script:
   - if [ ! -s ${VALGRIND_SUPP_DIR}/valgrind-auto.supp ]; then mkdir -p ${OSM2GO_BUILD_DIR} ${VALGRIND_SUPP_DIR}; pushd ${OSM2GO_BUILD_DIR}; cmake -D CMAKE_BUILD_TYPE=Debug -D ENABLE_TESTS=On ${TRAVIS_BUILD_DIR}; make suppression-dummy; valgrind --leak-check=full --gen-suppressions=all --show-leak-kinds=all ./test/suppression-dummy 2>&1 | grep -v '^=' > ${VALGRIND_SUPP_DIR}/valgrind-auto.supp; popd; fi
-  - echo -e "set(OSM2GO_BUILD_DIR \"${OSM2GO_BUILD_DIR}\")\nset(dashboard_model \"Continuous\")\nset(CTEST_SITE travis-ci.org)\nset(CTEST_BUILD_NAME \"CI ${CC} default\")\nset(CTEST_MEMORYCHECK_COMMAND_OPTIONS \"--suppressions=${VALGRIND_SUPP_DIR}/valgrind-auto.supp\")\ninclude(${TRAVIS_BUILD_DIR}/ctest_osm2go.cmake)" > my_osm2go.cmake
-  - CFLAGS="-O0 -fprofile-arcs -ftest-coverage" CXXFLAGS="-O0 -fprofile-arcs -ftest-coverage" ctest -V -S my_osm2go.cmake -D "CONF_OPTIONS=-DUSE_SVG_ICONS=On"|| true
-  - sed "/^set(CTEST_BUILD_NAME/s|CI ${CC} [^\"]*|CI ${CC} picker|" -i my_osm2go.cmake
-  - CFLAGS="-O0 -fprofile-arcs -ftest-coverage" CXXFLAGS="-O0 -fprofile-arcs -ftest-coverage" ctest -V -S my_osm2go.cmake -D "CONF_OPTIONS=-DSERVER_EDITABLE=On;-DPICKER_MENU=On;-DUSE_SVG_ICONS=Off" || true
+  - echo -e "set(OSM2GO_BUILD_DIR \"${OSM2GO_BUILD_DIR}\")\nset(dashboard_model \"Continuous\")\nset(CTEST_SITE travis-ci.org)\nset(CTEST_BUILD_NAME \"CI ${CC} ${BUILD_NAME}\")\nset(CTEST_MEMORYCHECK_COMMAND_OPTIONS \"--suppressions=${VALGRIND_SUPP_DIR}/valgrind-auto.supp\")\ninclude(${TRAVIS_BUILD_DIR}/ctest_osm2go.cmake)" > my_osm2go.cmake
+  - CFLAGS="-O0 -fprofile-arcs -ftest-coverage" CXXFLAGS="-O0 -fprofile-arcs -ftest-coverage" ctest -V -S my_osm2go.cmake -D "${CONF_OPTIONS}"|| true
 after_success:
   - lcov --directory ${OSM2GO_BUILD_DIR} --capture --output-file coverage.info # capture coverage info
   - lcov --remove coverage.info '/usr/*' --output-file coverage.info # filter out system
