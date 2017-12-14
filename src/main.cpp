@@ -50,9 +50,17 @@
 #include <X11/Xatom.h>
 #include <libosso.h>      /* required for screen saver timeout */
 #define GTK_FM_OK  GTK_RESPONSE_OK
+#define MENU_CHECK_ITEM HildonCheckButton
+#define MENU_CHECK_ITEM_ACTIVE(a) hildon_check_button_get_active(a)
+#define uispecific_main_menu_new gtk_menu_new
 #else
 #define GTK_FM_OK  GTK_RESPONSE_ACCEPT
+#define MENU_CHECK_ITEM GtkCheckMenuItem
+#define MENU_CHECK_ITEM_ACTIVE(a) gtk_check_menu_item_get_active(a)
+#define uispecific_main_menu_new gtk_menu_bar_new
 #endif
+
+// Maemo/Hildon builds
 
 #include <array>
 #include <cassert>
@@ -231,14 +239,6 @@ cb_menu_map_show_all(appdata_t *appdata) {
 }
 
 /* ---------------------------------------------------------- */
-
-#ifdef FREMANTLE
-#define MENU_CHECK_ITEM HildonCheckButton
-#define MENU_CHECK_ITEM_ACTIVE(a) hildon_check_button_get_active(a)
-#else
-#define MENU_CHECK_ITEM GtkCheckMenuItem
-#define MENU_CHECK_ITEM_ACTIVE(a) gtk_check_menu_item_get_active(a)
-#endif
 
 GtkWidget *track_vis_select_widget(TrackVisibility current) {
   std::vector<std::string> labels;
@@ -524,15 +524,9 @@ cb_menu_track_export(appdata_t *appdata) {
 #ifndef FREMANTLE
 
 // Regular desktop builds
-#define uispecific_main_menu_new gtk_menu_bar_new
 #define UISPECIFIC_MAIN_MENU_IS_MENU_BAR
 #define UISPECIFIC_MENU_HAS_ICONS
 #define UISPECIFIC_MENU_HAS_ACCELS
-
-#else//FREMANTLE
-
-// Maemo/Hildon builds
-#define uispecific_main_menu_new gtk_menu_new
 
 #endif
 
