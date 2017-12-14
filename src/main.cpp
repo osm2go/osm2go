@@ -52,12 +52,10 @@
 #define GTK_FM_OK  GTK_RESPONSE_OK
 #define MENU_CHECK_ITEM HildonCheckButton
 #define MENU_CHECK_ITEM_ACTIVE(a) hildon_check_button_get_active(a)
-#define uispecific_main_menu_new gtk_menu_new
 #else
 #define GTK_FM_OK  GTK_RESPONSE_ACCEPT
 #define MENU_CHECK_ITEM GtkCheckMenuItem
 #define MENU_CHECK_ITEM_ACTIVE(a) gtk_check_menu_item_get_active(a)
-#define uispecific_main_menu_new gtk_menu_bar_new
 #endif
 
 // Maemo/Hildon builds
@@ -521,15 +519,6 @@ cb_menu_track_export(appdata_t *appdata) {
  *  Platform-specific UI tweaks.
  */
 
-#ifndef FREMANTLE
-
-// Regular desktop builds
-#define UISPECIFIC_MAIN_MENU_IS_MENU_BAR
-#define UISPECIFIC_MENU_HAS_ICONS
-#define UISPECIFIC_MENU_HAS_ACCELS
-
-#endif
-
 static void track_clear_cb(appdata_t *appdata) {
   appdata->track_clear();
 }
@@ -559,10 +548,6 @@ menu_append_new_item(appdata_t &appdata, GtkWidget *menu_shell,
   }
 
   // Icons
-#ifndef UISPECIFIC_MENU_HAS_ICONS
-  item = is_check ? gtk_check_menu_item_new_with_mnemonic (label)
-                  : gtk_menu_item_new_with_mnemonic       (label);
-#else
   if (is_check) {
     item = gtk_check_menu_item_new_with_mnemonic (label);
   }
@@ -582,9 +567,7 @@ menu_append_new_item(appdata_t &appdata, GtkWidget *menu_shell,
     image = gtk_image_new_from_stock(icon_name, GTK_ICON_SIZE_MENU);
     gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item), image);
   }
-#endif
 
-#ifdef UISPECIFIC_MENU_HAS_ACCELS
   // Accelerators
   // Default
   if (accel_path != O2G_NULLPTR) {
@@ -598,7 +581,6 @@ menu_append_new_item(appdata_t &appdata, GtkWidget *menu_shell,
                                stock_item.modifier );
     }
   }
-#endif
 
   gtk_menu_shell_append(GTK_MENU_SHELL(menu_shell), GTK_WIDGET(item));
   gtk_widget_set_sensitive(GTK_WIDGET(item), enabled);
@@ -613,8 +595,7 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
   GtkWidget *menu, *item, *submenu;
   GtkWidget *about_quit_items_menu;
 
-  menu = uispecific_main_menu_new();
-  about_quit_items_menu = menu;
+  menu = gtk_menu_bar_new();
 
   /* -------------------- Project submenu -------------------- */
 
@@ -625,9 +606,7 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
   submenu = gtk_menu_new();
   gtk_menu_set_accel_group(GTK_MENU(submenu), accel_grp);
   gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), submenu);
-#ifdef UISPECIFIC_MAIN_MENU_IS_MENU_BAR
   about_quit_items_menu = submenu;
-#endif
 
   menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_project_open), _("_Open"),
@@ -636,10 +615,6 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
   );
 
   /* --------------- view menu ------------------- */
-
-#ifndef UISPECIFIC_MAIN_MENU_IS_MENU_BAR
-  gtk_menu_shell_append(GTK_MENU_SHELL(menu), gtk_separator_menu_item_new());
-#endif
 
   appdata.menuitems[MainUi::SUBMENU_VIEW] = item = gtk_menu_item_new_with_mnemonic( _("_View") );
   gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
@@ -846,22 +821,7 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
 
   gtk_window_add_accel_group(GTK_WINDOW(appdata.window), accel_grp);
 
-  GtkWidget *menu_bar = menu;
-
-#ifndef UISPECIFIC_MAIN_MENU_IS_MENU_BAR
-  // we need to make one first
-  menu_bar = gtk_menu_bar_new();
-
-  GtkWidget *root_menu = gtk_menu_item_new_with_label (_("Menu"));
-  gtk_widget_show(root_menu);
-
-  gtk_menu_bar_append(menu_bar, root_menu);
-  gtk_menu_item_set_submenu(GTK_MENU_ITEM (root_menu), menu);
-
-  gtk_widget_show(menu_bar);
-#endif //UISPECIFIC_MAIN_MENU_IS_MENU_BAR
-
-  gtk_box_pack_start(mainvbox, menu_bar, 0, 0, 0);
+  gtk_box_pack_start(mainvbox, menu, 0, 0, 0);
 
 }
 
@@ -1130,7 +1090,7 @@ static void menu_cleanup(appdata_internal &appdata) {
 
 
 static void menu_accels_load(appdata_t *appdata) {
-#ifdef UISPECIFIC_MENU_HAS_ACCELS
+#ifndef FREMANTLE
 #define ACCELS_FILE "accels"
 
   const std::string &accels_file = appdata->settings->base_path + ACCELS_FILE;
@@ -1167,7 +1127,7 @@ appdata_t::appdata_t(map_state_t &mstate, icon_t &ic)
 appdata_t::~appdata_t() {
   printf("cleaning up ...\n");
 
-#ifdef UISPECIFIC_MENU_HAS_ACCELS
+#ifndef FREMANTLE
   const std::string &accels_file = settings->base_path + ACCELS_FILE;
   gtk_accel_map_save(accels_file.c_str());
 #endif
