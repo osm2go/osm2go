@@ -980,20 +980,19 @@ static void on_submenu_track_clicked(appdata_internal *appdata)
 #define DISABLED_TOGGLE_ENTRY(a,b,c,d)  menu_entry_t(a, G_CALLBACK(b), MainUi::d, FALSE, c)
 #define ENABLED_TOGGLE_ENTRY(a,b,c,d) menu_entry_t(a, G_CALLBACK(b), MainUi::d, TRUE, c)
 
-/* -- the applications main menu -- */
-static std::array<menu_entry_t, 7> main_menu = { {
-  SIMPLE_ENTRY(_("About"),   about_box),
-  SIMPLE_ENTRY(_("Project"), cb_menu_project_open),
-  ENABLED_ENTRY(_("View"),   on_submenu_view_clicked,  SUBMENU_VIEW),
-  ENABLED_ENTRY(_("OSM"),    on_submenu_map_clicked,   SUBMENU_MAP),
-  ENABLED_ENTRY(_("Relations"), cb_menu_osm_relations, MENU_ITEM_MAP_RELATIONS),
-  ENABLED_ENTRY(_("WMS"),    on_submenu_wms_clicked,   SUBMENU_WMS),
-  ENABLED_ENTRY(_("Track"),  on_submenu_track_clicked, SUBMENU_TRACK)
-} };
-
 /* create a HildonAppMenu */
 static HildonAppMenu *app_menu_create(appdata_t &appdata) {
   HildonAppMenu *menu = HILDON_APP_MENU(hildon_app_menu_new());
+  /* -- the applications main menu -- */
+  std::array<menu_entry_t, 7> main_menu = { {
+    SIMPLE_ENTRY(_("About"),   about_box),
+    SIMPLE_ENTRY(_("Project"), cb_menu_project_open),
+    ENABLED_ENTRY(_("View"),   on_submenu_view_clicked,  SUBMENU_VIEW),
+    ENABLED_ENTRY(_("OSM"),    on_submenu_map_clicked,   SUBMENU_MAP),
+    ENABLED_ENTRY(_("Relations"), cb_menu_osm_relations, MENU_ITEM_MAP_RELATIONS),
+    ENABLED_ENTRY(_("WMS"),    on_submenu_wms_clicked,   SUBMENU_WMS),
+    ENABLED_ENTRY(_("Track"),  on_submenu_track_clicked, SUBMENU_TRACK)
+  } };
 
   for(unsigned int i = 0; i < main_menu.size(); i++) {
     const menu_entry_t &entry = main_menu[i];
