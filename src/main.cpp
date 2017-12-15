@@ -864,7 +864,7 @@ static void on_submenu_entry_clicked(GtkWidget *menu)
 /* use standard dialog boxes for fremantle submenues */
 static GtkWidget *app_submenu_create(appdata_t &appdata,
                                      const char *title, const menu_entry_t *menu,
-                                     const guint rows) {
+                                     const unsigned int rows) {
   /* create a oridinary dialog box */
   GtkWidget *dialog = misc_dialog_new(MISC_DIALOG_SMALL, title,
 				      GTK_WINDOW(appdata.window), O2G_NULLPTR);
@@ -873,7 +873,7 @@ static GtkWidget *app_submenu_create(appdata_t &appdata,
 
   GtkWidget *table = gtk_table_new(rows / COLUMNS, COLUMNS, TRUE);
 
-  for(guint idx = 0; idx < rows; idx++) {
+  for(unsigned int idx = 0; idx < rows; idx++) {
     const menu_entry_t *menu_entries = menu + idx;
     GtkWidget *button = O2G_NULLPTR;
 
