@@ -541,10 +541,10 @@ menu_append_new_item(appdata_t &appdata, GtkWidget *menu_shell,
   GtkWidget *item = O2G_NULLPTR;
   GtkWidget *image = O2G_NULLPTR;
 
-  gboolean stock_item_known = FALSE;
+  bool stock_item_known = false;
   GtkStockItem stock_item;
   if (icon_name != O2G_NULLPTR) {
-    stock_item_known = gtk_stock_lookup(icon_name, &stock_item);
+    stock_item_known = gtk_stock_lookup(icon_name, &stock_item) == TRUE;
   }
 
   // Icons
