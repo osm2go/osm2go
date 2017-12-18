@@ -539,7 +539,6 @@ menu_append_new_item(appdata_t &appdata, GtkWidget *menu_shell,
                      bool is_check, gboolean check_status)
 {
   GtkWidget *item = O2G_NULLPTR;
-  GtkWidget *image = O2G_NULLPTR;
 
   bool stock_item_known = false;
   GtkStockItem stock_item;
@@ -552,6 +551,7 @@ menu_append_new_item(appdata_t &appdata, GtkWidget *menu_shell,
     item = gtk_check_menu_item_new_with_mnemonic (label);
   }
   else if (!stock_item_known) {
+    GtkWidget *image = O2G_NULLPTR;
     if(icon_name)
       image = appdata.icons.widget_load(icon_name);
     if (image) {
@@ -564,8 +564,8 @@ menu_append_new_item(appdata_t &appdata, GtkWidget *menu_shell,
   }
   else {
     item = gtk_image_menu_item_new_with_mnemonic(label);
-    image = gtk_image_new_from_stock(icon_name, GTK_ICON_SIZE_MENU);
-    gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item), image);
+    gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item),
+                                  gtk_image_new_from_stock(icon_name, GTK_ICON_SIZE_MENU));
   }
 
   // Accelerators
