@@ -527,14 +527,27 @@ static void track_clear_cb(appdata_t *appdata) {
 // Half-arsed slapdash common menu item constructor. Let's use GtkBuilder
 // instead so we have some flexibility.
 
+/**
+ * @brief create a new submenu entry
+ * @param appdata the appdata object as callback reference
+ * @param menu_shell the menu to attach to
+ * @param activate_cb the function to be called on selection
+ * @param label the label to show (may be nullptr in case of item being set)
+ * @param icon_name stock id or name for icon_load
+ * @param accel_path accel database key (must be a static string)
+ * @param accel_key key setting from gdk/gdkkeysyms.h
+ * @param accel_mods accel modifiers
+ * @param enabled if the new item is enabled or disabled
+ * @param is_check if the new item should be a checkable item
+ * @param check_status the initial status of the check item
+ */
 static GtkWidget *
 menu_append_new_item(appdata_t &appdata, GtkWidget *menu_shell,
                      GCallback activate_cb, const char *label,
-                     const gchar *icon_name, // stock id or name for icon_load
-                                    // overridden by label, accels, icon_name
-                     const gchar *accel_path, // must be a static string
-                     guint accel_key,      // from gdk/gdkkeysyms.h
-                     GdkModifierType accel_mods, // e.g. GDK_CONTROL_MASK
+                     const gchar *icon_name,
+                     const gchar *accel_path,
+                     guint accel_key,
+                     GdkModifierType accel_mods,
 		     gboolean enabled,
                      bool is_check, gboolean check_status)
 {
