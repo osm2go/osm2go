@@ -835,9 +835,9 @@ static void on_submenu_entry_clicked(GtkWidget *menu)
 }
 
 /* use standard dialog boxes for fremantle submenues */
-static GtkWidget *app_submenu_create(appdata_t &appdata,
-                                     const char *title, const menu_entry_t *menu,
-                                     const unsigned int rows) {
+static GtkWidget *app_submenu_create(appdata_t &appdata, MainUi::menu_items submenu,
+                                     const menu_entry_t *menu, const unsigned int rows) {
+  const char *title = hildon_button_get_title(HILDON_BUTTON(appdata.menuitems[submenu]));
   /* create a oridinary dialog box */
   GtkWidget *dialog = misc_dialog_new(MISC_DIALOG_SMALL, title,
 				      GTK_WINDOW(appdata.window), O2G_NULLPTR);
@@ -1034,13 +1034,13 @@ static void menu_create(appdata_internal &appdata, GtkBox *) {
 
   /* build menu/submenus */
   HildonAppMenu *menu = app_menu_create(appdata);
-  appdata.app_menu_wms   = app_submenu_create(appdata, _("WMS"),
+  appdata.app_menu_wms   = app_submenu_create(appdata, MainUi::SUBMENU_WMS,
                                               sm_wms_entries.data(), sm_wms_entries.size());
-  appdata.app_menu_map   = app_submenu_create(appdata, _("OSM"),
+  appdata.app_menu_map   = app_submenu_create(appdata, MainUi::SUBMENU_MAP,
                                               sm_map_entries.data(), sm_map_entries.size());
-  appdata.app_menu_view  = app_submenu_create(appdata, _("View"),
+  appdata.app_menu_view  = app_submenu_create(appdata, MainUi::SUBMENU_VIEW,
                                               sm_view_entries.data(), sm_view_entries.size());
-  appdata.app_menu_track = app_submenu_create(appdata, _("Track"),
+  appdata.app_menu_track = app_submenu_create(appdata, MainUi::SUBMENU_TRACK,
                                               sm_track_entries.data(), sm_track_entries.size());
 
   /* enable/disable some entries according to settings */
