@@ -848,7 +848,7 @@ static GtkWidget *app_submenu_create(appdata_t &appdata, MainUi::menu_items subm
 
   for(unsigned int idx = 0; idx < rows; idx++) {
     const menu_entry_t *menu_entries = menu + idx;
-    GtkWidget *button = O2G_NULLPTR;
+    GtkWidget *button;
 
     /* the "Style" menu entry is very special */
     /* and is being handled seperately */
@@ -858,37 +858,33 @@ static GtkWidget *app_submenu_create(appdata_t &appdata, MainUi::menu_items subm
     } else if(!strcmp(_("Track visibility"), menu_entries->label)) {
       button = track_vis_select_widget(appdata.settings->trackVisibility);
       g_object_set_data(G_OBJECT(dialog), "track_widget", button);
+    } else if(!menu_entries->toggle) {
+      button = hildon_button_new_with_text(
+                 static_cast<HildonSizeType>(HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH),
+                                           HILDON_BUTTON_ARRANGEMENT_VERTICAL,
+                                           _(menu_entries->label), O2G_NULLPTR);
+
+      g_signal_connect_swapped(button, "clicked",
+                               G_CALLBACK(on_submenu_entry_clicked), dialog);
+
+      g_signal_connect_swapped(button, "clicked",
+                               menu_entries->activate_cb, &appdata);
+
+      hildon_button_set_title_alignment(HILDON_BUTTON(button), 0.5, 0.5);
+      hildon_button_set_value_alignment(HILDON_BUTTON(button), 0.5, 0.5);
     } else {
-      if(!menu_entries->toggle) {
-	button = hildon_button_new_with_text(
-             static_cast<HildonSizeType>(HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH),
-	     HILDON_BUTTON_ARRANGEMENT_VERTICAL,
-	     _(menu_entries->label), O2G_NULLPTR);
+      button = hildon_check_button_new(HILDON_SIZE_AUTO);
+      gtk_button_set_label(GTK_BUTTON(button), _(menu_entries->label));
+      printf("requesting check for %s: %p\n", menu_entries->label, menu_entries->toggle);
+      hildon_check_button_set_active(HILDON_CHECK_BUTTON(button), menu_entries->toggle(appdata));
 
-        g_signal_connect_swapped(button, "clicked",
-                                 G_CALLBACK(on_submenu_entry_clicked), dialog);
+      g_signal_connect_swapped(button, "clicked",
+                               G_CALLBACK(on_submenu_entry_clicked), dialog);
 
-        g_signal_connect_swapped(button, "clicked",
-                                 menu_entries->activate_cb, &appdata);
+      g_signal_connect_swapped(button, "toggled",
+                               menu_entries->activate_cb, &appdata);
 
-	hildon_button_set_title_alignment(HILDON_BUTTON(button), 0.5, 0.5);
-	hildon_button_set_value_alignment(HILDON_BUTTON(button), 0.5, 0.5);
-      } else {
-	button = hildon_check_button_new(HILDON_SIZE_AUTO);
-	gtk_button_set_label(GTK_BUTTON(button), _(menu_entries->label));
-	printf("requesting check for %s: %p\n", menu_entries->label,
-	       menu_entries->toggle);
-	hildon_check_button_set_active(HILDON_CHECK_BUTTON(button),
-				       menu_entries->toggle(appdata));
-
-        g_signal_connect_swapped(button, "clicked",
-                                 G_CALLBACK(on_submenu_entry_clicked), dialog);
-
-        g_signal_connect_swapped(button, "toggled",
-                                 menu_entries->activate_cb, &appdata);
-
-	gtk_button_set_alignment(GTK_BUTTON(button), 0.5, 0.5);
-      }
+      gtk_button_set_alignment(GTK_BUTTON(button), 0.5, 0.5);
     }
 
     /* index to GtkWidget pointer array was given -> store pointer */
