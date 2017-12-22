@@ -804,7 +804,7 @@ static void menu_cleanup(appdata_t &) { }
 
 struct menu_entry_t {
   typedef gboolean (*toggle_cb)(appdata_t &appdata);
-  explicit menu_entry_t(const char *l = O2G_NULLPTR, GCallback cb = O2G_NULLPTR,
+  explicit menu_entry_t(const char *l, GCallback cb = O2G_NULLPTR,
                         int idx = -1, gboolean en = TRUE, toggle_cb tg = O2G_NULLPTR)
     : label(l), enabled(en), toggle(tg), menuindex(idx), activate_cb(cb) {}
   const char *label;
@@ -943,24 +943,18 @@ static void on_submenu_track_clicked(appdata_internal *appdata)
   submenu_popup(*appdata, appdata->app_menu_track);
 }
 
-#define SIMPLE_ENTRY(a,b)       menu_entry_t(a, G_CALLBACK(b))
-#define ENABLED_ENTRY(a,b,c)    menu_entry_t(a, G_CALLBACK(b), MainUi::c, TRUE)
-#define DISABLED_ENTRY(a,b,c)   menu_entry_t(a, G_CALLBACK(b), MainUi::c, FALSE)
-#define DISABLED_TOGGLE_ENTRY(a,b,c,d)  menu_entry_t(a, G_CALLBACK(b), MainUi::d, FALSE, c)
-#define ENABLED_TOGGLE_ENTRY(a,b,c,d) menu_entry_t(a, G_CALLBACK(b), MainUi::d, TRUE, c)
-
 /* create a HildonAppMenu */
 static HildonAppMenu *app_menu_create(appdata_t &appdata) {
   HildonAppMenu *menu = HILDON_APP_MENU(hildon_app_menu_new());
   /* -- the applications main menu -- */
   std::array<menu_entry_t, 7> main_menu = { {
-    SIMPLE_ENTRY(_("About"),   about_box),
-    SIMPLE_ENTRY(_("Project"), cb_menu_project_open),
-    ENABLED_ENTRY(_("View"),   on_submenu_view_clicked,  SUBMENU_VIEW),
-    ENABLED_ENTRY(_("OSM"),    on_submenu_map_clicked,   SUBMENU_MAP),
-    ENABLED_ENTRY(_("Relations"), cb_menu_osm_relations, MENU_ITEM_MAP_RELATIONS),
-    ENABLED_ENTRY(_("WMS"),    on_submenu_wms_clicked,   SUBMENU_WMS),
-    ENABLED_ENTRY(_("Track"),  on_submenu_track_clicked, SUBMENU_TRACK)
+    menu_entry_t(_("About"),     G_CALLBACK(about_box)),
+    menu_entry_t(_("Project"),   G_CALLBACK(cb_menu_project_open)),
+    menu_entry_t(_("View"),      G_CALLBACK(on_submenu_view_clicked),  MainUi::SUBMENU_VIEW),
+    menu_entry_t(_("OSM"),       G_CALLBACK(on_submenu_map_clicked),   MainUi::SUBMENU_MAP),
+    menu_entry_t(_("Relations"), G_CALLBACK(cb_menu_osm_relations),    MainUi::MENU_ITEM_MAP_RELATIONS),
+    menu_entry_t(_("WMS"),       G_CALLBACK(on_submenu_wms_clicked),   MainUi::SUBMENU_WMS),
+    menu_entry_t(_("Track"),     G_CALLBACK(on_submenu_track_clicked), MainUi::SUBMENU_TRACK)
   } };
 
   for(unsigned int i = 0; i < main_menu.size(); i++) {
@@ -996,36 +990,38 @@ static void menu_create(appdata_internal &appdata, GtkBox *) {
   /* -- the view submenu -- */
   const std::array<menu_entry_t, 3> sm_view_entries = { {
     /* --- */
-    SIMPLE_ENTRY("Style",           O2G_NULLPTR),
+    menu_entry_t(_("Style")),
     /* --- */
-    DISABLED_ENTRY("Hide selected", cb_menu_map_hide_sel, MENU_ITEM_MAP_HIDE_SEL),
-    DISABLED_ENTRY("Show all",      cb_menu_map_show_all, MENU_ITEM_MAP_SHOW_ALL),
+    menu_entry_t(_("Hide selected"), G_CALLBACK(cb_menu_map_hide_sel), MainUi::MENU_ITEM_MAP_HIDE_SEL, FALSE),
+    menu_entry_t(_("Show all"),      G_CALLBACK(cb_menu_map_show_all), MainUi::MENU_ITEM_MAP_SHOW_ALL, FALSE),
   } };
 
   /* -- the map submenu -- */
   const std::array<menu_entry_t, 3> sm_map_entries = { {
-    ENABLED_ENTRY("Upload",      cb_menu_upload, MENU_ITEM_MAP_UPLOAD),
-    SIMPLE_ENTRY("Download",     cb_menu_download),
-    ENABLED_ENTRY("Undo all",    cb_menu_undo_changes, MENU_ITEM_MAP_UNDO_CHANGES),
+    menu_entry_t(_("Upload"),   G_CALLBACK(cb_menu_upload), MainUi::MENU_ITEM_MAP_UPLOAD),
+    menu_entry_t(_("Download"), G_CALLBACK(cb_menu_download)),
+    menu_entry_t(_("Undo all"), G_CALLBACK(cb_menu_undo_changes), MainUi::MENU_ITEM_MAP_UNDO_CHANGES),
   } };
 
   /* -- the wms submenu -- */
   const std::array<menu_entry_t, 3> sm_wms_entries = { {
-    SIMPLE_ENTRY("Import",   wms_import),
-    DISABLED_ENTRY("Clear",  wms_remove, MENU_ITEM_WMS_CLEAR),
-    DISABLED_ENTRY("Adjust", cb_menu_wms_adjust, MENU_ITEM_WMS_ADJUST),
+    menu_entry_t(_("Import"), G_CALLBACK(wms_import)),
+    menu_entry_t(_("Clear"),  G_CALLBACK(wms_remove), MainUi::MENU_ITEM_WMS_CLEAR, FALSE),
+    menu_entry_t(_("Adjust"), G_CALLBACK(cb_menu_wms_adjust), MainUi::MENU_ITEM_WMS_ADJUST, FALSE),
   } };
 
   /* -- the track submenu -- */
   const std::array<menu_entry_t, 6> sm_track_entries = { {
-    ENABLED_ENTRY("Import",  cb_menu_track_import, MENU_ITEM_TRACK_IMPORT),
-    DISABLED_ENTRY("Export", cb_menu_track_export, MENU_ITEM_TRACK_EXPORT),
-    DISABLED_ENTRY("Clear",  track_clear_cb, MENU_ITEM_TRACK_CLEAR),
-    ENABLED_TOGGLE_ENTRY("GPS enable", cb_menu_track_enable_gps,
-                         enable_gps_get_toggle, MENU_ITEM_TRACK_ENABLE_GPS),
-    DISABLED_TOGGLE_ENTRY("GPS follow", cb_menu_track_follow_gps,
-                          follow_gps_get_toggle, MENU_ITEM_TRACK_FOLLOW_GPS),
-    SIMPLE_ENTRY("Track visibility", O2G_NULLPTR),
+    menu_entry_t(_("Import"),     G_CALLBACK(cb_menu_track_import), MainUi::MENU_ITEM_TRACK_IMPORT),
+    menu_entry_t(_("Export"),     G_CALLBACK(cb_menu_track_export), MainUi::MENU_ITEM_TRACK_EXPORT, FALSE),
+    menu_entry_t(_("Clear"),      G_CALLBACK(track_clear_cb), MainUi::MENU_ITEM_TRACK_CLEAR, FALSE),
+    menu_entry_t(_("GPS enable"), G_CALLBACK(cb_menu_track_enable_gps),
+                 MainUi::MENU_ITEM_TRACK_ENABLE_GPS, TRUE,
+                 enable_gps_get_toggle),
+    menu_entry_t(_("GPS follow"), G_CALLBACK(cb_menu_track_follow_gps),
+                 MainUi::MENU_ITEM_TRACK_FOLLOW_GPS, appdata.settings->enable_gps ? TRUE : FALSE,
+                 follow_gps_get_toggle),
+    menu_entry_t(_("Track visibility")),
   } };
 
   /* build menu/submenus */
@@ -1038,10 +1034,6 @@ static void menu_create(appdata_internal &appdata, GtkBox *) {
                                               sm_view_entries.data(), sm_view_entries.size());
   appdata.app_menu_track = app_submenu_create(appdata, MainUi::SUBMENU_TRACK,
                                               sm_track_entries.data(), sm_track_entries.size());
-
-  /* enable/disable some entries according to settings */
-  appdata.uicontrol->setActionEnable(MainUi::MENU_ITEM_TRACK_FOLLOW_GPS,
-                                     appdata.settings->enable_gps);
 
   hildon_window_set_app_menu(HILDON_WINDOW(appdata.window), menu);
 }
