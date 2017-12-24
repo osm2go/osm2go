@@ -17,10 +17,10 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "uicontrol.h"
+#include <uicontrol.h>
 
-#include "appdata.h"
-#include "statusbar.h"
+#include <appdata.h>
+#include <statusbar.h>
 
 #include <gtk/gtk.h>
 

@@ -97,7 +97,6 @@ add_library(osm2go_lib STATIC
 	src/track.cpp
 	src/track.h
 	src/uicontrol.h
-	src/uicontrol.cpp
 	src/wms.cpp
 	src/wms.h
 	${CMAKE_CURRENT_BINARY_DIR}/osm2go_cpp.h
