@@ -1381,7 +1381,9 @@ static int application_run(const char *proj)
   }
 
   if(proj) {
-    if(!project_load(appdata, proj)) {
+    if(strcmp(proj, "-p") == 0) {
+      cb_menu_project_open(&appdata);
+    } else if(!project_load(appdata, proj)) {
       messagef(appdata.window, _("Command line arguments"),
                _("You passed '%s' on the command line, but it was neither"
                  "recognized as option nor could it be loaded as project."),
