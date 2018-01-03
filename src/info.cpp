@@ -450,7 +450,9 @@ static GtkWidget *details_widget(const tag_context_t &context, bool big) {
     localtime_r(&context.object.obj->time, &loctime);
     char time_str[32];
     strftime(time_str, sizeof(time_str), "%x %X", &loctime);
-    label = gtk_label_new(time_str);
+    g_string dv_str(g_strdup_printf(_("%s (# %u)"), time_str,
+                                    static_cast<unsigned int>(context.object.obj->version)));
+    label = gtk_label_new(dv_str.get());
   } else {
     label = gtk_label_new(_("Not yet uploaded"));
   }
