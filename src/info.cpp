@@ -471,9 +471,11 @@ static GtkWidget *details_widget(const tag_context_t &context, bool big) {
   } break;
 
   case WAY: {
-    g_string nodes_str(g_strdup_printf(_("%s%zu nodes"),
-                                       big ? "" : _("Length: "),
-                                       context.object.way->node_chain.size()));
+    size_t ncount = context.object.way->node_chain.size();
+    g_string nodes_str(g_strdup_printf(big ?
+                                             ngettext("%zu node", "%zu nodes", ncount) :
+                                             ngettext("Length: %zu node", "Length: %zu nodes", ncount),
+                                       ncount));
     label = gtk_label_new(nodes_str.get());
 
     if(big) table_attach(table, gtk_label_new(_("Length:")), 0, 2);
