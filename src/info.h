@@ -30,20 +30,15 @@ class map_t;
 struct presets_items;
 
 class tag_context_t {
+protected:
+  explicit tag_context_t(const object_t &o);
 public:
-  explicit tag_context_t(map_t *m, osm_t *os, presets_items *p, const object_t &o);
-  ~tag_context_t();
 
-  map_t * const map;
-  osm_t * const osm;
-  presets_items * const presets;
-  GtkWidget *dialog, *list;
-  GtkListStore *store;
+  GtkWidget *dialog;
   object_t object;
   osm_t::TagMap tags;
 
   void info_tags_replace();
-  void update_collisions(const std::string &k);
 };
 
 void info_dialog(GtkWidget *parent, map_t *map, osm_t *osm, presets_items *presets);
