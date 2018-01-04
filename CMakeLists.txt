@@ -56,7 +56,6 @@ add_library(osm2go_lib STATIC
 	src/icon.cpp
 	src/icon.h
 	src/iconbar.h
-	src/info.cpp
 	src/info.h
 	src/josm_elemstyles.cpp
 	src/josm_elemstyles.h
