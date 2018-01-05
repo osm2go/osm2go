@@ -29,19 +29,21 @@
 
 class icon_t {
 public:
+  typedef ::GdkPixbuf *Pixmap;
+
   class icon_item {
     friend class icon_t;
 
-    GdkPixbuf *buf;
+    Pixmap buf;
     int use;
-    explicit icon_item(GdkPixbuf *nbuf = O2G_NULLPTR);
+    explicit icon_item(Pixmap nbuf);
   public:
     ~icon_item();
 
-    inline bool operator==(const GdkPixbuf *b) const { return buf == b; }
-    inline bool operator==(const icon_item &other) const { return buf == other.buf; }
+    inline bool operator==(const Pixmap &b) const { return buf == b; }
+    inline bool operator==(const icon_item &other) const { return operator==(other.buf); }
 
-    inline GdkPixbuf *buffer() {
+    inline Pixmap buffer() {
       return buf;
     }
 
