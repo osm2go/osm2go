@@ -895,9 +895,7 @@ void fitting_layers_functor::operator()(const wms_layer_t *layer)
                      -1);
 }
 
-static GtkWidget *wms_layer_widget(selected_context *context, const wms_layer_t::list &layers,
-                                   GtkWidget *) {
-
+static GtkWidget *wms_layer_widget(selected_context *context, const wms_layer_t::list &layers) {
 #ifndef FREMANTLE
   GtkWidget *view = gtk_tree_view_new();
 #else
@@ -972,9 +970,7 @@ static gboolean wms_layer_dialog(selected_context *ctx, const wms_layer_t::list 
 				    GTK_RESPONSE_ACCEPT, FALSE);
 
   /* layer list */
-  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox),
-		      wms_layer_widget(ctx, layer, dialog));
-
+  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), wms_layer_widget(ctx, layer));
 
   gtk_widget_show_all(dialog);
 
