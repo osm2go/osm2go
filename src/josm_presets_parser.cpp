@@ -19,7 +19,7 @@
 
 #include "josm_presets_p.h"
 
-#include "misc.h"
+#include "misc.h" // for find_file()
 
 #include <algorithm>
 #include <array>
@@ -29,6 +29,7 @@
 #include <fdguard.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
+#include <memory>
 #include <numeric>
 #include <stack>
 #include <strings.h>
