@@ -242,10 +242,7 @@ void get_widget_functor::operator()(const presets_element_t* w)
   changed |= store_value(w, tags, text);
 }
 
-static void presets_item_dialog(presets_context_t *context,
-                                const presets_item *item) {
-  GtkWindow *parent = GTK_WINDOW(context->tag_context->dialog);
-
+static void presets_item_dialog(presets_context_t *context, const presets_item *item) {
   GtkWidget *dialog = O2G_NULLPTR;
   bool ok = false;
 
@@ -263,9 +260,8 @@ static void presets_item_dialog(presets_context_t *context,
   WidgetMap gtk_widgets;
 
   if(has_interactive_widget)  {
-    dialog =
-      misc_dialog_new(MISC_DIALOG_NOSIZE,
-                      item->name.c_str(), parent,
+    dialog = misc_dialog_new(MISC_DIALOG_NOSIZE, item->name.c_str(),
+                                        GTK_WINDOW(context->tag_context->dialog),
 		      GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
 		      GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
 		      O2G_NULLPTR);
