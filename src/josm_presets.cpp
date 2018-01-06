@@ -243,7 +243,7 @@ void get_widget_functor::operator()(const presets_element_t* w)
 }
 
 static void presets_item_dialog(presets_context_t *context, const presets_item *item) {
-  GtkWidget *dialog = O2G_NULLPTR;
+  g_widget dialog;
   bool ok = false;
 
   printf("dialog for item %s\n", item->name.c_str());
@@ -255,21 +255,19 @@ static void presets_item_dialog(presets_context_t *context, const presets_item *
   const std::vector<presets_element_t *>::const_iterator itEnd = item->widgets.end();
   std::vector<presets_element_t *>::const_iterator it = std::find_if(item->widgets.begin(), itEnd,
                                                                     presets_element_t::isInteractive);
-  bool has_interactive_widget = (it != itEnd);
-
   WidgetMap gtk_widgets;
 
-  if(has_interactive_widget)  {
-    dialog = misc_dialog_new(MISC_DIALOG_NOSIZE, item->name.c_str(),
-                                        GTK_WINDOW(context->tag_context->dialog),
-		      GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
-		      GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-		      O2G_NULLPTR);
+  if(it != itEnd)  {
+    dialog.reset(misc_dialog_new(MISC_DIALOG_NOSIZE, item->name.c_str(),
+                                 GTK_WINDOW(context->tag_context->dialog),
+                                 GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
+                                 GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+                                 O2G_NULLPTR));
 
     /* if a web link has been provided for this item install */
     /* a button for this */
     if(!item->link.empty()) {
-      GtkWidget *button = gtk_dialog_add_button(GTK_DIALOG(dialog), _
+      GtkWidget *button = gtk_dialog_add_button(GTK_DIALOG(dialog.get()), _
 			("Info"), GTK_RESPONSE_HELP);
       g_object_set_data(G_OBJECT(button), "link", const_cast<char *>(item->link.c_str()));
       g_signal_connect(GTK_OBJECT(button), "clicked",
@@ -279,12 +277,12 @@ static void presets_item_dialog(presets_context_t *context, const presets_item *
     /* special handling for the first label/separators */
     if(item->addEditName) {
       g_string title(g_strdup_printf(_("Edit %s"), item->name.c_str()));
-      gtk_window_set_title(GTK_WINDOW(dialog), title.get());
+      gtk_window_set_title(GTK_WINDOW(dialog.get()), title.get());
     } else {
       // use the first label as title
       const presets_element_t * const w = item->widgets.front();
       if(w->type == WIDGET_TYPE_LABEL)
-        gtk_window_set_title(GTK_WINDOW(dialog), w->text.c_str());
+        gtk_window_set_title(GTK_WINDOW(dialog.get()), w->text.c_str());
     }
 
     /* skip all following non-interactive widgets: use the first one that
@@ -300,10 +298,10 @@ static void presets_item_dialog(presets_context_t *context, const presets_item *
 
 #ifndef FREMANTLE
     /* add widget to dialog */
-    gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), table);
-    gtk_window_set_default_size(GTK_WINDOW(dialog), 300, 50);
+    gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), table);
+    gtk_window_set_default_size(GTK_WINDOW(dialog.get()), 300, 50);
 #else
-    gtk_window_set_default_size(GTK_WINDOW(dialog), -1, 500);
+    gtk_window_set_default_size(GTK_WINDOW(dialog.get()), -1, 500);
     /* put view into a pannable area */
     GtkWidget *scroll_win = hildon_pannable_area_new();
     hildon_pannable_area_add_with_viewport(HILDON_PANNABLE_AREA(scroll_win), table);
@@ -312,15 +310,15 @@ static void presets_item_dialog(presets_context_t *context, const presets_item *
     g_signal_connect(GTK_OBJECT(table), "expose_event",
                      G_CALLBACK(table_expose_event), &first);
 
-    gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), scroll_win);
+    gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), scroll_win);
 #endif
 
-    gtk_widget_show_all(dialog);
+    gtk_widget_show_all(dialog.get());
 
     /* run gtk_dialog_run, but continue if e.g. the help button was pressed */
     int result = -1;
     do
-      result = gtk_dialog_run(GTK_DIALOG(dialog));
+      result = gtk_dialog_run(GTK_DIALOG(dialog.get()));
     while((result != GTK_RESPONSE_DELETE_EVENT) &&
 	  (result != GTK_RESPONSE_ACCEPT) &&
 	  (result != GTK_RESPONSE_REJECT));
@@ -355,9 +353,6 @@ static void presets_item_dialog(presets_context_t *context, const presets_item *
       std::rotate(lru.begin(), lit, lit + 1);
     }
   }
-
-  if(has_interactive_widget)
-    gtk_widget_destroy(dialog);
 }
 
 /* ------------------- the item list (popup menu) -------------- */
@@ -923,14 +918,12 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event,
 #else
   assert(context->submenus.empty());
   /* popup our special picker like menu */
-  GtkWidget *dialog =
-      gtk_dialog_new_with_buttons(_("Presets"),
-		  GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(widget))),
-				  GTK_DIALOG_MODAL,
-          GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
-	  O2G_NULLPTR);
+  g_widget dialog(gtk_dialog_new_with_buttons(_("Presets"),
+                                              GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(widget))),
+                                              GTK_DIALOG_MODAL, GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
+                                              O2G_NULLPTR));
 
-  gtk_window_set_default_size(GTK_WINDOW(dialog), 400, 480);
+  gtk_window_set_default_size(GTK_WINDOW(dialog.get()), 400, 480);
 
   /* create root picker */
   GtkWidget *hbox = gtk_hbox_new(TRUE, 0);
@@ -938,14 +931,14 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event,
   GtkWidget *root = presets_picker(context, context->presets->items, true);
   gtk_box_pack_start_defaults(GTK_BOX(hbox), root);
 
-  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox);
+  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), hbox);
 
-  gtk_widget_show_all(dialog);
+  gtk_widget_show_all(dialog.get());
   presets_item *item = O2G_NULLPTR;
-  if(gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT)
-    item = static_cast<presets_item *>(g_object_get_data(G_OBJECT(dialog), "item"));
+  if(gtk_dialog_run(GTK_DIALOG(dialog.get())) == GTK_RESPONSE_ACCEPT)
+    item = static_cast<presets_item *>(g_object_get_data(G_OBJECT(dialog.get()), "item"));
 
-  gtk_widget_destroy(dialog);
+  dialog.reset();
 
   // remove all references to the already destroyed widgets
   std::for_each(context->submenus.begin(), context->submenus.end(), remove_sub_reference);

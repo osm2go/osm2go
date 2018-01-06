@@ -145,13 +145,11 @@ static void on_tag_remove(info_tag_context_t *context) {
  * @retval false the tag is the same as before
  */
 static bool tag_edit(GtkWindow *window, std::string &k, std::string &v) {
-  GtkWidget *dialog = misc_dialog_new(MISC_DIALOG_SMALL, _("Edit Tag"),
-			  window,
-			  GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
-			  GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-			  O2G_NULLPTR);
+  g_widget dialog(misc_dialog_new(MISC_DIALOG_SMALL, _("Edit Tag"),
+                                  window, GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
+                                  GTK_STOCK_OK, GTK_RESPONSE_ACCEPT, O2G_NULLPTR));
 
-  gtk_dialog_set_default_response(GTK_DIALOG(dialog),
+  gtk_dialog_set_default_response(GTK_DIALOG(dialog.get()),
 				  GTK_RESPONSE_ACCEPT);
 
   GtkWidget *label = gtk_label_new(_("Key:"));
@@ -177,23 +175,21 @@ static bool tag_edit(GtkWindow *window, std::string &k, std::string &v) {
   gtk_entry_set_text(GTK_ENTRY(key), k.c_str());
   gtk_entry_set_text(GTK_ENTRY(value), v.c_str());
 
-  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), table);
+  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), table);
 
-  gtk_widget_show_all(dialog);
+  gtk_widget_show_all(dialog.get());
 
-  bool ret = false;
-  if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog))) {
+  if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog.get()))) {
     const gchar *nk = gtk_entry_get_text(GTK_ENTRY(key));
     const gchar *nv = gtk_entry_get_text(GTK_ENTRY(value));
-    ret = k != nk || v != nv;
-    if(ret) {
+    if(k != nk || v != nv) {
       k = nk;
       v = nv;
+      return true;
     }
   }
 
-  gtk_widget_destroy(dialog);
-  return ret;
+  return false;
 }
 
 static void select_item(const std::string &k, const std::string &v, info_tag_context_t *context) {
@@ -538,21 +534,17 @@ static GtkWidget *details_widget(const info_tag_context_t &context, bool big) {
 /* put additional infos into a seperate dialog for fremantle as */
 /* screen space is sparse there */
 static void info_more(const info_tag_context_t &context) {
-  GtkWidget *dialog =
-    misc_dialog_new(MISC_DIALOG_SMALL, _("Object details"),
-		    GTK_WINDOW(context.dialog),
-		    GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-		    O2G_NULLPTR);
+  g_widget dialog(misc_dialog_new(MISC_DIALOG_SMALL, _("Object details"),
+                                  GTK_WINDOW(context.dialog),
+                                  GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                  O2G_NULLPTR));
 
-  gtk_dialog_set_default_response(GTK_DIALOG(dialog),
-				  GTK_RESPONSE_CANCEL);
+  gtk_dialog_set_default_response(GTK_DIALOG(dialog.get()), GTK_RESPONSE_CANCEL);
 
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
-		     details_widget(context, true),
-		     FALSE, FALSE, 0);
-  gtk_widget_show_all(dialog);
-  gtk_dialog_run(GTK_DIALOG(dialog));
-  gtk_widget_destroy(dialog);
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox),
+                     details_widget(context, true), FALSE, FALSE, 0);
+  gtk_widget_show_all(dialog.get());
+  gtk_dialog_run(GTK_DIALOG(dialog.get()));
 }
 #endif
 

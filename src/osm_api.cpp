@@ -672,19 +672,16 @@ static void details_table(GtkWidget *dialog, const osm_t::dirty_t &dirty) {
 /* put additional infos into a seperate dialog for fremantle as */
 /* screen space is sparse there */
 static void info_more(const osm_t::dirty_t &context, GtkWidget *parent) {
-  GtkWidget *dialog =
-    misc_dialog_new(MISC_DIALOG_SMALL, _("Changeset details"),
-                    GTK_WINDOW(parent),
-		    GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-		    O2G_NULLPTR);
+  g_widget dialog(misc_dialog_new(MISC_DIALOG_SMALL, _("Changeset details"),
+                                  GTK_WINDOW(parent),
+                                  GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                  O2G_NULLPTR));
 
-  gtk_dialog_set_default_response(GTK_DIALOG(dialog),
-				  GTK_RESPONSE_CANCEL);
+  gtk_dialog_set_default_response(GTK_DIALOG(dialog.get()), GTK_RESPONSE_CANCEL);
 
-  details_table(dialog, context);
-  gtk_widget_show_all(dialog);
-  gtk_dialog_run(GTK_DIALOG(dialog));
-  gtk_widget_destroy(dialog);
+  details_table(dialog.get(), context);
+  gtk_widget_show_all(dialog.get());
+  gtk_dialog_run(GTK_DIALOG(dialog.get()));
 }
 #endif
 
@@ -708,22 +705,21 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
   printf("relations: new %2u, dirty %2u, deleted %2zu\n",
          dirty.relations.added, dirty.relations.dirty, dirty.relations.deleted.size());
 
-  GtkWidget *dialog =
-    misc_dialog_new(MISC_DIALOG_MEDIUM, _("Upload to OSM"),
-		    GTK_WINDOW(appdata.window),
+  g_widget dialog(misc_dialog_new(MISC_DIALOG_MEDIUM, _("Upload to OSM"),
+                                  GTK_WINDOW(appdata.window),
 #ifdef FREMANTLE
-                    _("More"), GTK_RESPONSE_HELP,
+                                  _("More"), GTK_RESPONSE_HELP,
 #endif
-		    GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
-		    GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-		    O2G_NULLPTR);
+                                  GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
+                                  GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+                                  O2G_NULLPTR));
 
 #ifndef FREMANTLE
-  details_table(dialog, dirty);
+  details_table(dialog.get(), dirty);
 
   /* ------------------------------------------------------ */
 
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox),
 		     gtk_hseparator_new(), FALSE, FALSE, 0);
 #endif
 
@@ -743,12 +739,12 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
     gtk_entry_set_text(GTK_ENTRY(pentry), appdata.settings->password.c_str());
   gtk_entry_set_visibility(GTK_ENTRY(pentry), FALSE);
   gtk_table_attach_defaults(GTK_TABLE(table),  pentry, 1, 2, 1, 2);
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, FALSE, FALSE, 0);
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), table, FALSE, FALSE, 0);
 
   table_attach_label_l(table, _("Source:"), 0, 1, 2, 3);
   GtkWidget *sentry = entry_new(EntryFlagsNoAutoCap);
   gtk_table_attach_defaults(GTK_TABLE(table),  sentry, 1, 2, 2, 3);
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, FALSE, FALSE, 0);
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), table, FALSE, FALSE, 0);
 
   GtkWidget *scrolled_win = misc_scrolled_window_new(TRUE);
 
@@ -756,11 +752,10 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
   gtk_text_buffer_set_text(buffer, _("Please add a comment"), -1);
 
   /* disable ok button until user edited the comment */
-  gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog),
-				    GTK_RESPONSE_ACCEPT, FALSE);
+  gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog.get()), GTK_RESPONSE_ACCEPT, FALSE);
 
   g_signal_connect(G_OBJECT(buffer), "changed",
-		   G_CALLBACK(callback_buffer_modified), dialog);
+                   G_CALLBACK(callback_buffer_modified), dialog.get());
 
 #ifndef FREMANTLE
   GtkWidget *view = gtk_text_view_new_with_buffer(buffer);
@@ -780,16 +775,16 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
 
   gtk_container_add(GTK_CONTAINER(scrolled_win), view);
 
-  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox),
+  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog.get())->vbox),
   			      scrolled_win);
-  gtk_widget_show_all(dialog);
+  gtk_widget_show_all(dialog.get());
 
   bool done = false;
   while(!done) {
-    switch(gtk_dialog_run(GTK_DIALOG(dialog))) {
+    switch(gtk_dialog_run(GTK_DIALOG(dialog.get()))) {
 #ifdef FREMANTLE
     case GTK_RESPONSE_HELP:
-      info_more(dirty, dialog);
+      info_more(dirty, dialog.get());
       break;
 #endif
     case GTK_RESPONSE_ACCEPT:
@@ -797,7 +792,6 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
       break;
     default:
       printf("upload cancelled\n");
-      gtk_widget_destroy(dialog);
       return;
     }
   }
@@ -823,7 +817,7 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
   osm_upload_context_t context(appdata, osm, project, text,
                                gtk_entry_get_text(GTK_ENTRY(sentry)));
 
-  gtk_widget_destroy(dialog);
+  dialog.reset();
   project->save(appdata.window);
 
   context.dialog =

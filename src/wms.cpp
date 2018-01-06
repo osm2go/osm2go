@@ -583,15 +583,13 @@ static void callback_modified_name(GtkWidget *widget, settings_t *settings) {
 /* edit url and path of a given wms server entry */
 bool wms_server_edit(wms_server_context_t *context, gboolean edit_name,
                      wms_server_t *wms_server) {
-  GtkWidget *dialog =
-    misc_dialog_new(MISC_DIALOG_WIDE, _("Edit WMS Server"),
-		    GTK_WINDOW(context->dialog),
-		    GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
-		    GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-		    O2G_NULLPTR);
+  g_widget dialog(misc_dialog_new(MISC_DIALOG_WIDE, _("Edit WMS Server"),
+                                  GTK_WINDOW(context->dialog),
+                                  GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
+                                  GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+                                  O2G_NULLPTR));
 
-  gtk_dialog_set_default_response(GTK_DIALOG(dialog),
-				  GTK_RESPONSE_ACCEPT);
+  gtk_dialog_set_default_response(GTK_DIALOG(dialog.get()), GTK_RESPONSE_ACCEPT);
 
   GtkWidget *label = gtk_label_new(_("Name:"));
   GtkWidget *name = entry_new(EntryFlagsNoAutoCap);
@@ -626,11 +624,11 @@ bool wms_server_edit(wms_server_context_t *context, gboolean edit_name,
   gtk_entry_set_text(GTK_ENTRY(server), wms_server->server.c_str());
   gtk_entry_set_text(GTK_ENTRY(path), wms_server->path.c_str());
 
-  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), table);
+  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), table);
 
-  gtk_widget_show_all(dialog);
+  gtk_widget_show_all(dialog.get());
 
-  const bool ret = (GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog)));
+  const bool ret = (GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog.get())));
   if(ret) {
     if(edit_name)
       wms_server->name = gtk_entry_get_text(GTK_ENTRY(name));
@@ -644,7 +642,6 @@ bool wms_server_edit(wms_server_context_t *context, gboolean edit_name,
     gtk_label_set_text(GTK_LABEL(context->path_label), wms_server->path.c_str());
   }
 
-  gtk_widget_destroy(dialog);
   return ret;
 }
 
@@ -956,30 +953,22 @@ static GtkWidget *wms_layer_widget(selected_context *context, const wms_layer_t:
 }
 
 
-static gboolean wms_layer_dialog(selected_context *ctx, const wms_layer_t::list &layer) {
-  gboolean ok = FALSE;
+static bool wms_layer_dialog(selected_context *ctx, const wms_layer_t::list &layer) {
+  g_widget dialog(misc_dialog_new(MISC_DIALOG_LARGE, _("WMS layer selection"),
+                                  GTK_WINDOW(ctx->appdata.window),
+                                  GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
+                                  GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+                                  O2G_NULLPTR));
 
-  GtkWidget *dialog =
-    misc_dialog_new(MISC_DIALOG_LARGE, _("WMS layer selection"),
-		    GTK_WINDOW(ctx->appdata.window),
-		    GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
-		    GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-		    O2G_NULLPTR);
-
-  gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog),
-				    GTK_RESPONSE_ACCEPT, FALSE);
+  gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog.get()), GTK_RESPONSE_ACCEPT, FALSE);
 
   /* layer list */
-  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), wms_layer_widget(ctx, layer));
+  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog.get())->vbox),
+                              wms_layer_widget(ctx, layer));
 
-  gtk_widget_show_all(dialog);
+  gtk_widget_show_all(dialog.get());
 
-  if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog)))
-    ok = TRUE;
-
-  gtk_widget_destroy(dialog);
-
-  return ok;
+  return (GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog.get())));
 }
 
 static bool setBgImage(appdata_t &appdata, const std::string &filename) {

@@ -308,7 +308,7 @@ static bool net_io_do(GtkWidget *parent, net_io_request_t *rq,
   rq->refcount = 2;   // master and worker hold a reference
   std::unique_ptr<net_io_request_t, request_free> request(rq);
   GtkProgressBar *pbar = O2G_NULLPTR;
-  GtkWidget *dialog = busy_dialog(parent, &pbar, &rq->cancel, title);
+  g_widget dialog(busy_dialog(parent, &pbar, &rq->cancel, title));
 
   GThread *worker;
 
@@ -321,7 +321,6 @@ static bool net_io_do(GtkWidget *parent, net_io_request_t *rq,
     g_warning("failed to create the worker thread");
 
     /* free request and return error */
-    gtk_widget_destroy(dialog);
     rq->refcount = 1;
     return false;
   }
@@ -351,7 +350,7 @@ static bool net_io_do(GtkWidget *parent, net_io_request_t *rq,
 #if GLIB_CHECK_VERSION(2,32,0)
   g_thread_unref(worker);
 #endif
-  gtk_widget_destroy(dialog);
+  dialog.reset();
 
   /* user pressed cancel */
   if(request->refcount > 1) {

@@ -573,38 +573,35 @@ static project_t *project_new(select_context_t *context) {
   printf("creating project with default values\n");
 
   /* --------------  first choose a name for the project --------------- */
-  GtkWidget *dialog =
-    misc_dialog_new(MISC_DIALOG_NOSIZE,  _("Project name"),
-		    GTK_WINDOW(context->dialog),
-		    GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
-		    GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-		    O2G_NULLPTR);
+  g_widget dialog(misc_dialog_new(MISC_DIALOG_NOSIZE, _("Project name"),
+                                  GTK_WINDOW(context->dialog),
+                                  GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
+                                  GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+                                  O2G_NULLPTR));
 
   GtkWidget *hbox = gtk_hbox_new(FALSE, 8);
   gtk_box_pack_start_defaults(GTK_BOX(hbox), gtk_label_new(_("Name:")));
 
-  name_callback_context_t name_context(dialog, context->appdata.settings->base_path_fd);
+  name_callback_context_t name_context(dialog.get(), context->appdata.settings->base_path_fd);
   GtkWidget *entry = entry_new();
   gtk_box_pack_start_defaults(GTK_BOX(hbox), entry);
   g_signal_connect(G_OBJECT(entry), "changed",
 		   G_CALLBACK(callback_modified_name), &name_context);
 
-  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox);
+  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), hbox);
 
   /* don't allow user to click ok until a valid area has been specified */
-  gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog),
-				    GTK_RESPONSE_ACCEPT, FALSE);
+  gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog.get()),
+                                    GTK_RESPONSE_ACCEPT, FALSE);
 
-  gtk_widget_show_all(dialog);
-  if(GTK_RESPONSE_ACCEPT != gtk_dialog_run(GTK_DIALOG(dialog))) {
-    gtk_widget_destroy(dialog);
+  gtk_widget_show_all(dialog.get());
+  if(GTK_RESPONSE_ACCEPT != gtk_dialog_run(GTK_DIALOG(dialog.get())))
     return O2G_NULLPTR;
-  }
 
   std::unique_ptr<project_t> project(new project_t(context->dummystate,
                                                    gtk_entry_get_text(GTK_ENTRY(entry)),
                                                    context->appdata.settings->base_path));
-  gtk_widget_destroy(dialog);
+  dialog.reset();
 
   /* no data downloaded yet */
   project->data_dirty = true;
@@ -1106,25 +1103,25 @@ project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
 
   /* ------------ project edit dialog ------------- */
 
-  GtkWidget *dialog;
+  g_widget dialog;
   /* cancel is enabled for "new" projects only */
   if(is_new) {
     g_string str(g_strdup_printf(_("New project - %s"), project->name.c_str()));
 
-    dialog = misc_dialog_new(MISC_DIALOG_WIDE, str.get(), GTK_WINDOW(parent),
+    dialog.reset(misc_dialog_new(MISC_DIALOG_WIDE, str.get(), GTK_WINDOW(parent),
                              GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
-                             GTK_STOCK_OK, GTK_RESPONSE_ACCEPT, O2G_NULLPTR);
+                             GTK_STOCK_OK, GTK_RESPONSE_ACCEPT, O2G_NULLPTR));
   } else {
     g_string str(g_strdup_printf(_("Edit project - %s"), project->name.c_str()));
 
-    dialog = misc_dialog_new(MISC_DIALOG_WIDE, str.get(), GTK_WINDOW(parent),
-                             GTK_STOCK_CLOSE, GTK_RESPONSE_ACCEPT, O2G_NULLPTR);
+    dialog.reset(misc_dialog_new(MISC_DIALOG_WIDE, str.get(), GTK_WINDOW(parent),
+                             GTK_STOCK_CLOSE, GTK_RESPONSE_ACCEPT, O2G_NULLPTR));
   }
 
-  project_context_t context(scontext->appdata, project, is_new, scontext->projects, dialog);
+  project_context_t context(scontext->appdata, project, is_new,
+                            scontext->projects, dialog.get());
 
-  gtk_dialog_set_default_response(GTK_DIALOG(dialog),
-				  GTK_RESPONSE_ACCEPT);
+  gtk_dialog_set_default_response(GTK_DIALOG(dialog.get()), GTK_RESPONSE_ACCEPT);
 
   GtkWidget *table = gtk_table_new(5, 5, FALSE);  // x, y
   gtk_table_set_col_spacing(GTK_TABLE(table), 0, 8);
@@ -1187,21 +1184,21 @@ project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
 
   /* ---------------------------------------------------------------- */
 
-  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(context.dialog)->vbox),
+  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog.get())->vbox),
 			      table);
 
   /* disable "ok" if there's no valid file downloaded */
   if(is_new)
-    gtk_dialog_set_response_sensitive(GTK_DIALOG(context.dialog),
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog.get()),
                                       GTK_RESPONSE_ACCEPT,
                                       osm_file_exists(project) ? TRUE : FALSE);
 
-  gtk_widget_show_all(context.dialog);
+  gtk_widget_show_all(dialog.get());
 
   /* the return value may actually be != ACCEPT, but only if the editor */
   /* is run for a new project which is completely removed afterwards if */
   /* cancel has been selected */
-  bool ok = (GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(context.dialog)));
+  bool ok = (GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog.get())));
 
   /* transfer values from edit dialog into project structure */
 
@@ -1223,9 +1220,7 @@ project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
   }
 #endif
 
-  project->save(context.dialog);
-
-  gtk_widget_destroy(context.dialog);
+  project->save(dialog.get());
 
   return ok;
 }

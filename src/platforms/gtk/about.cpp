@@ -294,14 +294,15 @@ static GtkWidget *bugs_page_new() {
 }
 
 void about_box(appdata_t *appdata) {
-  GtkWidget *dialog = gtk_dialog_new_with_buttons(_("About OSM2Go"),
-	  GTK_WINDOW(appdata->window), GTK_DIALOG_MODAL,
-          GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE, O2G_NULLPTR);
+  g_widget dialog(gtk_dialog_new_with_buttons(_("About OSM2Go"),
+                                              GTK_WINDOW(appdata->window), GTK_DIALOG_MODAL,
+                                              GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE, O2G_NULLPTR));
 
+  gtk_window_set_default_size(GTK_WINDOW(dialog.get()),
 #ifdef FREMANTLE
-  gtk_window_set_default_size(GTK_WINDOW(dialog), 640, 480);
+                              640, 480);
 #else
-  gtk_window_set_default_size(GTK_WINDOW(dialog), 400, 200);
+                              400, 200);
 #endif
 
   GtkWidget *notebook = notebook_new();
@@ -312,11 +313,10 @@ void about_box(appdata_t *appdata) {
   notebook_append_page(notebook, donate_page_new(appdata->icons),    _("Donate"));
   notebook_append_page(notebook, bugs_page_new(),                    _("Bugs"));
 
-  gtk_box_pack_start_defaults(GTK_BOX((GTK_DIALOG(dialog))->vbox),
+  gtk_box_pack_start_defaults(GTK_BOX((GTK_DIALOG(dialog.get()))->vbox),
 			      notebook);
 
-  gtk_widget_show_all(dialog);
+  gtk_widget_show_all(dialog.get());
 
-  gtk_dialog_run(GTK_DIALOG(dialog));
-  gtk_widget_destroy(dialog);
+  gtk_dialog_run(GTK_DIALOG(dialog.get()));
 }

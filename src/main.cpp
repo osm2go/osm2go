@@ -86,8 +86,7 @@ struct appdata_internal : public appdata_t {
 #ifdef FREMANTLE
   HildonProgram *program;
   /* submenues are seperate menues under fremantle */
-  GtkWidget *app_menu_view, *app_menu_wms, *app_menu_track;
-  GtkWidget *app_menu_map;
+  g_widget app_menu_view, app_menu_wms, app_menu_track, app_menu_map;
 #else
   GtkCheckMenuItem *menu_item_view_fullscreen;
 #endif
@@ -253,14 +252,13 @@ GtkWidget *track_vis_select_widget(TrackVisibility current) {
 /* in fremantle this happens inside the submenu handling since this button */
 /* is actually placed inside the submenu there */
 static bool track_visibility_select(GtkWidget *parent, appdata_t &appdata) {
-  GtkWidget *dialog =
-    misc_dialog_new(MISC_DIALOG_NOSIZE, _("Select track visibility"),
+  g_widget dialog(misc_dialog_new(MISC_DIALOG_NOSIZE, _("Select track visibility"),
                     GTK_WINDOW(parent),
                     GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                     GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-                    O2G_NULLPTR);
+                    O2G_NULLPTR));
 
-  gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_ACCEPT);
+  gtk_dialog_set_default_response(GTK_DIALOG(dialog.get()), GTK_RESPONSE_ACCEPT);
 
   GtkWidget *cbox = track_vis_select_widget(appdata.settings->trackVisibility);
 
@@ -268,12 +266,12 @@ static bool track_visibility_select(GtkWidget *parent, appdata_t &appdata) {
   gtk_box_pack_start_defaults(GTK_BOX(hbox), gtk_label_new(_("Track visibility:")));
 
   gtk_box_pack_start_defaults(GTK_BOX(hbox), cbox);
-  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox);
+  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), hbox);
 
-  gtk_widget_show_all(dialog);
+  gtk_widget_show_all(dialog.get());
 
   bool ret = false;
-  if(GTK_RESPONSE_ACCEPT != gtk_dialog_run(GTK_DIALOG(dialog))) {
+  if(GTK_RESPONSE_ACCEPT != gtk_dialog_run(GTK_DIALOG(dialog.get()))) {
     printf("user clicked cancel\n");
   } else {
     int index = combo_box_get_active(cbox);
@@ -283,8 +281,6 @@ static bool track_visibility_select(GtkWidget *parent, appdata_t &appdata) {
     ret = (tv != appdata.settings->trackVisibility);
     appdata.settings->trackVisibility = tv;
   }
-
-  gtk_widget_destroy(dialog);
 
   return ret;
 }
@@ -388,19 +384,19 @@ cb_menu_track_import(appdata_t *appdata) {
   assert(appdata->settings != O2G_NULLPTR);
 
   /* open a file selector */
-  GtkWidget *dialog;
-
+  g_widget dialog(
 #ifdef FREMANTLE
-  dialog = hildon_file_chooser_dialog_new(GTK_WINDOW(appdata->window),
-					  GTK_FILE_CHOOSER_ACTION_OPEN);
+                  hildon_file_chooser_dialog_new(GTK_WINDOW(appdata->window),
+                                                 GTK_FILE_CHOOSER_ACTION_OPEN)
 #else
-  dialog = gtk_file_chooser_dialog_new (_("Import track file"),
-			GTK_WINDOW(appdata->window),
-			GTK_FILE_CHOOSER_ACTION_OPEN,
-			GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-			GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
-			O2G_NULLPTR);
+                  gtk_file_chooser_dialog_new (_("Import track file"),
+                                               GTK_WINDOW(appdata->window),
+                                               GTK_FILE_CHOOSER_ACTION_OPEN,
+                                               GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                               GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
+                                               O2G_NULLPTR)
 #endif
+           );
 
   if(!appdata->settings->track_path.empty()) {
     if(!g_file_test(appdata->settings->track_path.c_str(), G_FILE_TEST_EXISTS)) {
@@ -409,22 +405,22 @@ cb_menu_track_import(appdata_t *appdata) {
         appdata->settings->track_path[slashpos] = '\0';  // seperate path from file
 
 	/* the user just created a new document */
-	gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog),
+	gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog.get()),
                                             appdata->settings->track_path.c_str());
-	gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(dialog),
+	gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(dialog.get()),
                                           appdata->settings->track_path.c_str() + slashpos + 1);
 
 	/* restore full filename */
         appdata->settings->track_path[slashpos] = '/';
       }
     } else
-      gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(dialog),
+      gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(dialog.get()),
                                     appdata->settings->track_path.c_str());
   }
 
-  gtk_widget_show_all (GTK_WIDGET(dialog));
-  if (gtk_dialog_run (GTK_DIALOG(dialog)) == GTK_FM_OK) {
-    g_string filename(gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog)));
+  gtk_widget_show_all(GTK_WIDGET(dialog.get()));
+  if (gtk_dialog_run(GTK_DIALOG(dialog.get())) == GTK_FM_OK) {
+    g_string filename(gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog.get())));
 
     /* remove any existing track */
     appdata->track_clear();
@@ -438,8 +434,6 @@ cb_menu_track_import(appdata_t *appdata) {
     }
     track_menu_set(*appdata);
   }
-
-  gtk_widget_destroy (dialog);
 }
 
 static void
@@ -459,19 +453,19 @@ cb_menu_track_export(appdata_t *appdata) {
   assert(appdata->settings != O2G_NULLPTR);
 
   /* open a file selector */
-  GtkWidget *dialog;
-
+  g_widget dialog(
 #ifdef FREMANTLE
-  dialog = hildon_file_chooser_dialog_new(GTK_WINDOW(appdata->window),
-					  GTK_FILE_CHOOSER_ACTION_SAVE);
+                  hildon_file_chooser_dialog_new(GTK_WINDOW(appdata->window),
+                                                 GTK_FILE_CHOOSER_ACTION_SAVE)
 #else
-  dialog = gtk_file_chooser_dialog_new(_("Export track file"),
-				       GTK_WINDOW(appdata->window),
-				       GTK_FILE_CHOOSER_ACTION_SAVE,
-				       GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-				       GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT,
-				       O2G_NULLPTR);
+                  gtk_file_chooser_dialog_new(_("Export track file"),
+                                              GTK_WINDOW(appdata->window),
+                                              GTK_FILE_CHOOSER_ACTION_SAVE,
+                                              GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                              GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT,
+                                              O2G_NULLPTR)
 #endif
+           );
 
   printf("set filename <%s>\n", appdata->settings->track_path.c_str());
 
@@ -481,26 +475,26 @@ cb_menu_track_export(appdata_t *appdata) {
       if(slashpos != std::string::npos) {
         appdata->settings->track_path[slashpos] = '\0';  // seperate path from file
 
-	gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog),
+	gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog.get()),
                                             appdata->settings->track_path.c_str());
-	gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(dialog),
+	gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(dialog.get()),
                                           appdata->settings->track_path.c_str() + slashpos + 1);
 
 	/* restore full filename */
         appdata->settings->track_path[slashpos] = '/';
       }
     } else
-      gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(dialog),
+      gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(dialog.get()),
                                     appdata->settings->track_path.c_str());
   }
 
-  if(gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_FM_OK) {
-    g_string filename(gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog)));
+  if(gtk_dialog_run(GTK_DIALOG(dialog.get())) == GTK_FM_OK) {
+    g_string filename(gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog.get())));
     if(filename) {
       printf("export to %s\n", filename.get());
 
       if(!g_file_test(filename.get(), G_FILE_TEST_EXISTS) ||
-         yes_no_f(dialog, MISC_AGAIN_ID_EXPORT_OVERWRITE | MISC_AGAIN_FLAG_DONT_SAVE_NO,
+         yes_no_f(dialog.get(), MISC_AGAIN_ID_EXPORT_OVERWRITE | MISC_AGAIN_FLAG_DONT_SAVE_NO,
                   _("Overwrite existing file"),
                   _("The file already exists. "
                     "Do you really want to replace it?"))) {
@@ -511,8 +505,6 @@ cb_menu_track_export(appdata_t *appdata) {
       }
     }
   }
-
-  gtk_widget_destroy (dialog);
 }
 
 /*
@@ -798,8 +790,6 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
 
 }
 
-static void menu_cleanup(appdata_t &) { }
-
 #else // !FREMANTLE
 
 struct menu_entry_t {
@@ -925,22 +915,22 @@ static void submenu_popup(appdata_t &appdata, GtkWidget *menu) {
 /* the view submenu */
 static void on_submenu_view_clicked(appdata_internal *appdata)
 {
-  submenu_popup(*appdata, appdata->app_menu_view);
+  submenu_popup(*appdata, appdata->app_menu_view.get());
 }
 
 static void on_submenu_map_clicked(appdata_internal *appdata)
 {
-  submenu_popup(*appdata, appdata->app_menu_map);
+  submenu_popup(*appdata, appdata->app_menu_map.get());
 }
 
 static void on_submenu_wms_clicked(appdata_internal *appdata)
 {
-  submenu_popup(*appdata, appdata->app_menu_wms);
+  submenu_popup(*appdata, appdata->app_menu_wms.get());
 }
 
 static void on_submenu_track_clicked(appdata_internal *appdata)
 {
-  submenu_popup(*appdata, appdata->app_menu_track);
+  submenu_popup(*appdata, appdata->app_menu_track.get());
 }
 
 /* create a HildonAppMenu */
@@ -1026,23 +1016,16 @@ static void menu_create(appdata_internal &appdata, GtkBox *) {
 
   /* build menu/submenus */
   HildonAppMenu *menu = app_menu_create(appdata);
-  appdata.app_menu_wms   = app_submenu_create(appdata, MainUi::SUBMENU_WMS,
-                                              sm_wms_entries.data(), sm_wms_entries.size());
-  appdata.app_menu_map   = app_submenu_create(appdata, MainUi::SUBMENU_MAP,
-                                              sm_map_entries.data(), sm_map_entries.size());
-  appdata.app_menu_view  = app_submenu_create(appdata, MainUi::SUBMENU_VIEW,
-                                              sm_view_entries.data(), sm_view_entries.size());
-  appdata.app_menu_track = app_submenu_create(appdata, MainUi::SUBMENU_TRACK,
-                                              sm_track_entries.data(), sm_track_entries.size());
+  appdata.app_menu_wms.reset(app_submenu_create(appdata, MainUi::SUBMENU_WMS,
+                                                sm_wms_entries.data(), sm_wms_entries.size()));
+  appdata.app_menu_map.reset(app_submenu_create(appdata, MainUi::SUBMENU_MAP,
+                                                sm_map_entries.data(), sm_map_entries.size()));
+  appdata.app_menu_view.reset(app_submenu_create(appdata, MainUi::SUBMENU_VIEW,
+                                                 sm_view_entries.data(), sm_view_entries.size()));
+  appdata.app_menu_track.reset(app_submenu_create(appdata, MainUi::SUBMENU_TRACK,
+                                                  sm_track_entries.data(), sm_track_entries.size()));
 
   hildon_window_set_app_menu(HILDON_WINDOW(appdata.window), menu);
-}
-
-static void menu_cleanup(appdata_internal &appdata) {
-  gtk_widget_destroy(appdata.app_menu_view);
-  gtk_widget_destroy(appdata.app_menu_map);
-  gtk_widget_destroy(appdata.app_menu_wms);
-  gtk_widget_destroy(appdata.app_menu_track);
 }
 #endif
 
@@ -1161,8 +1144,6 @@ appdata_internal::~appdata_internal()
 #ifdef FREMANTLE
   program = O2G_NULLPTR;
 #endif
-
-  menu_cleanup(*this);
 }
 
 static void on_window_destroy(appdata_t *appdata) {

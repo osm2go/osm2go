@@ -72,20 +72,20 @@ static void vmessagef(GtkWidget *parent, GtkMessageType type, GtkButtonsType but
     return;
   }
 
+  g_widget dialog(
 #ifndef FREMANTLE
-  GtkWidget *dialog = gtk_message_dialog_new(wnd, GTK_DIALOG_DESTROY_WITH_PARENT,
-                                             type, buttons, "%s", buf.get());
+                  gtk_message_dialog_new(wnd, GTK_DIALOG_DESTROY_WITH_PARENT,
+                                         type, buttons, "%s", buf.get()));
 
-  gtk_window_set_title(GTK_WINDOW(dialog), title);
+  gtk_window_set_title(GTK_WINDOW(dialog.get()), title);
 #else
-  GtkWidget *dialog = hildon_note_new_information(wnd, buf.get());
+                  hildon_note_new_information(wnd, buf.get()));
   (void)type;
   (void)buttons;
   (void)title;
 #endif // FREMANTLE
 
-  gtk_dialog_run(GTK_DIALOG(dialog));
-  gtk_widget_destroy(dialog);
+  gtk_dialog_run(GTK_DIALOG(dialog.get()));
 }
 
 void messagef(GtkWidget *parent, const char *title, const char *fmt, ...) {
@@ -155,23 +155,24 @@ bool yes_no_f(GtkWidget *parent, unsigned int again_flags, const char *title,
 
   printf("%s: \"%s\"\n", title, buf.get());
 
+  g_widget dialog(
 #ifndef FREMANTLE
-  GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(parent),
+                  gtk_message_dialog_new(GTK_WINDOW(parent),
                                              GTK_DIALOG_DESTROY_WITH_PARENT,
                                              GTK_MESSAGE_QUESTION,
                                              GTK_BUTTONS_YES_NO,
-                                             "%s", buf.get());
+                                             "%s", buf.get()));
 
-  gtk_window_set_title(GTK_WINDOW(dialog), title);
+  gtk_window_set_title(GTK_WINDOW(dialog.get()), title);
 #else
-  GtkWidget *dialog = hildon_note_new_confirmation(GTK_WINDOW(parent), buf.get());
+                  hildon_note_new_confirmation(GTK_WINDOW(parent), buf.get()));
 #endif
 
   GtkWidget *cbut = O2G_NULLPTR;
   if(again_bit) {
 #ifdef FREMANTLE
     /* make sure there's some space before the checkbox */
-    gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox),
+    gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog.get())->vbox),
 				gtk_label_new(" "));
 #endif
 
@@ -181,12 +182,12 @@ bool yes_no_f(GtkWidget *parent, unsigned int again_flags, const char *title,
     g_signal_connect(cbut, "toggled", G_CALLBACK(on_toggled), &again_flags);
 
     gtk_container_add(GTK_CONTAINER(alignment), cbut);
-    gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), alignment);
+    gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), alignment);
 
-    gtk_widget_show_all(dialog);
+    gtk_widget_show_all(dialog.get());
   }
 
-  bool yes = (gtk_dialog_run(GTK_DIALOG(dialog)) == RESPONSE_YES);
+  bool yes = (gtk_dialog_run(GTK_DIALOG(dialog.get())) == RESPONSE_YES);
 
   if(cbut && gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cbut))) {
     /* the user doesn't want to see this dialog again */
@@ -197,8 +198,6 @@ bool yes_no_f(GtkWidget *parent, unsigned int again_flags, const char *title,
     else
       dialog_again.reply &= ~again_bit;
   }
-
-  gtk_widget_destroy(dialog);
 
   return yes;
 }

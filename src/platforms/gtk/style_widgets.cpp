@@ -114,14 +114,13 @@ void style_select(GtkWidget *parent, appdata_t &appdata) {
   printf("select style\n");
 
   /* ------------------ style dialog ---------------- */
-  GtkWidget *dialog =
-    misc_dialog_new(MISC_DIALOG_NOSIZE,_("Select style"),
-                    GTK_WINDOW(parent),
-                    GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
-                    GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-                    O2G_NULLPTR);
+  g_widget dialog(misc_dialog_new(MISC_DIALOG_NOSIZE,_("Select style"),
+                                  GTK_WINDOW(parent),
+                                  GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
+                                  GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+                                  O2G_NULLPTR));
 
-  gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_ACCEPT);
+  gtk_dialog_set_default_response(GTK_DIALOG(dialog.get()), GTK_RESPONSE_ACCEPT);
 
   const std::map<std::string, std::string> &styles = style_scan();
   GtkWidget *cbox = style_select_widget(appdata.settings->style, styles);
@@ -130,20 +129,19 @@ void style_select(GtkWidget *parent, appdata_t &appdata) {
   gtk_box_pack_start_defaults(GTK_BOX(hbox), gtk_label_new(_("Style:")));
 
   gtk_box_pack_start_defaults(GTK_BOX(hbox), cbox);
-  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox);
+  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), hbox);
 
-  gtk_widget_show_all(dialog);
+  gtk_widget_show_all(dialog.get());
 
-  if(GTK_RESPONSE_ACCEPT != gtk_dialog_run(GTK_DIALOG(dialog))) {
+  if(GTK_RESPONSE_ACCEPT != gtk_dialog_run(GTK_DIALOG(dialog.get()))) {
     printf("user clicked cancel\n");
-    gtk_widget_destroy(dialog);
     return;
   }
 
   const std::string &style = combo_box_get_active_text(cbox);
   printf("user clicked ok on %s\n", style.c_str());
 
-  gtk_widget_destroy(dialog);
+  dialog.reset();
 
   style_change(appdata, style, styles);
 }
