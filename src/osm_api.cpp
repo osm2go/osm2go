@@ -40,6 +40,7 @@
 #include <unistd.h>
 
 #ifdef FREMANTLE
+#include <hildon/hildon-pannable-area.h>
 #include <hildon/hildon-text-view.h>
 #endif
 
@@ -683,7 +684,26 @@ static void info_more(const osm_t::dirty_t &context, GtkWidget *parent) {
   gtk_widget_show_all(dialog.get());
   gtk_dialog_run(GTK_DIALOG(dialog.get()));
 }
+
+/* create a pannable area */
+static GtkWidget *scrolled_window_new() {
+  return hildon_pannable_area_new();
+}
+
+#else
+/* create a scrolled window */
+static GtkWidget *scrolled_window_new() {
+  GtkWidget *scrolled_window = gtk_scrolled_window_new(O2G_NULLPTR, O2G_NULLPTR);
+  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window),
+                                 GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+
+  gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scrolled_window),
+                                      GTK_SHADOW_ETCHED_IN);
+  return scrolled_window;
+}
+
 #endif
+
 
 void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
   if(unlikely(osm->uploadPolicy == osm_t::Upload_Blocked)) {
@@ -746,7 +766,7 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
   gtk_table_attach_defaults(GTK_TABLE(table),  sentry, 1, 2, 2, 3);
   gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), table, FALSE, FALSE, 0);
 
-  GtkWidget *scrolled_win = misc_scrolled_window_new(TRUE);
+  GtkWidget *scrolled_win = scrolled_window_new();
 
   GtkTextBuffer *buffer = gtk_text_buffer_new(O2G_NULLPTR);
   gtk_text_buffer_set_text(buffer, _("Please add a comment"), -1);

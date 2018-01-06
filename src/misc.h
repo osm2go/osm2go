@@ -88,7 +88,6 @@ enum DialogSizeHing {
 };
 
 GtkWidget *misc_dialog_new(DialogSizeHing hint, const gchar *title, GtkWindow *parent, ...);
-GtkWidget *misc_scrolled_window_new(gboolean etched_in);
 
 /* unified widgets */
 enum EntryFlags {

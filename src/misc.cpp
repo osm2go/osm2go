@@ -25,7 +25,6 @@
 
 #ifdef FREMANTLE
 #include <hildon/hildon-check-button.h>
-#include <hildon/hildon-pannable-area.h>
 #include <hildon/hildon-picker-button.h>
 #include <hildon/hildon-entry.h>
 #include <hildon/hildon-touch-selector-entry.h>
@@ -305,26 +304,6 @@ GtkWidget *misc_dialog_new(DialogSizeHing hint, const gchar *title,
 
   return dialog;
 }
-
-#ifdef FREMANTLE
-/* create a pannable area */
-GtkWidget *misc_scrolled_window_new(gboolean) {
-  return hildon_pannable_area_new();
-}
-
-#else
-/* create a scrolled window */
-GtkWidget *misc_scrolled_window_new(gboolean etched_in) {
-  GtkWidget *scrolled_window = gtk_scrolled_window_new(O2G_NULLPTR, O2G_NULLPTR);
-  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window),
-  				 GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-  if(etched_in)
-    gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scrolled_window),
-					GTK_SHADOW_ETCHED_IN);
-  return scrolled_window;
-}
-
-#endif
 
 /* ---------- unified widgets for fremantle/others --------------- */
 
