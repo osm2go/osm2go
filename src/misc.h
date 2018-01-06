@@ -79,7 +79,6 @@ void messagef(GtkWidget *parent, const char *title, const char *fmt, ...) __attr
 
 /* dialog size are specified rather fuzzy */
 enum DialogSizeHing {
-  MISC_DIALOG_NOSIZE = -1,
   MISC_DIALOG_SMALL  =  0,
   MISC_DIALOG_MEDIUM =  1,
   MISC_DIALOG_LARGE  =  2,
@@ -88,6 +87,7 @@ enum DialogSizeHing {
 };
 
 GtkWidget *misc_dialog_new(DialogSizeHing hint, const gchar *title, GtkWindow *parent, ...);
+void dialog_size_hint(GtkWindow *window, DialogSizeHing hint);
 
 /* unified widgets */
 enum EntryFlags {

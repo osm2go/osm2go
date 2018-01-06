@@ -293,11 +293,14 @@ GtkWidget *misc_dialog_new(DialogSizeHing hint, const gchar *title, GtkWindow *p
 
   va_end( args );
 
-  if(hint != MISC_DIALOG_NOSIZE)
-    gtk_window_set_default_size(GTK_WINDOW(dialog),
-			dialog_sizes[hint][0], dialog_sizes[hint][1]);
+  dialog_size_hint(GTK_WINDOW(dialog), hint);
 
   return dialog;
+}
+
+void dialog_size_hint(GtkWindow *window, DialogSizeHing hint)
+{
+  gtk_window_set_default_size(window, dialog_sizes[hint][0], dialog_sizes[hint][1]);
 }
 
 /* ---------- unified widgets for fremantle/others --------------- */

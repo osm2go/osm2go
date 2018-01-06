@@ -573,11 +573,11 @@ static project_t *project_new(select_context_t *context) {
   printf("creating project with default values\n");
 
   /* --------------  first choose a name for the project --------------- */
-  g_widget dialog(misc_dialog_new(MISC_DIALOG_NOSIZE, _("Project name"),
-                                  GTK_WINDOW(context->dialog),
-                                  GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
-                                  GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-                                  O2G_NULLPTR));
+  g_widget dialog(gtk_dialog_new_with_buttons(_("Project name"),
+                                              GTK_WINDOW(context->dialog), GTK_DIALOG_MODAL,
+                                              GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
+                                              GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+                                              O2G_NULLPTR));
 
   GtkWidget *hbox = gtk_hbox_new(FALSE, 8);
   gtk_box_pack_start_defaults(GTK_BOX(hbox), gtk_label_new(_("Name:")));

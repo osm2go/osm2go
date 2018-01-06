@@ -252,11 +252,11 @@ GtkWidget *track_vis_select_widget(TrackVisibility current) {
 /* in fremantle this happens inside the submenu handling since this button */
 /* is actually placed inside the submenu there */
 static bool track_visibility_select(GtkWidget *parent, appdata_t &appdata) {
-  g_widget dialog(misc_dialog_new(MISC_DIALOG_NOSIZE, _("Select track visibility"),
-                    GTK_WINDOW(parent),
-                    GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
-                    GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-                    O2G_NULLPTR));
+  g_widget dialog(gtk_dialog_new_with_buttons(_("Select track visibility"),
+                                              GTK_WINDOW(parent), GTK_DIALOG_MODAL,
+                                              GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
+                                              GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+                                              O2G_NULLPTR));
 
   gtk_dialog_set_default_response(GTK_DIALOG(dialog.get()), GTK_RESPONSE_ACCEPT);
 

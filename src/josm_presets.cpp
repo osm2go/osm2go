@@ -258,11 +258,12 @@ static void presets_item_dialog(presets_context_t *context, const presets_item *
   WidgetMap gtk_widgets;
 
   if(it != itEnd)  {
-    dialog.reset(misc_dialog_new(MISC_DIALOG_NOSIZE, item->name.c_str(),
-                                 GTK_WINDOW(context->tag_context->dialog),
-                                 GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
-                                 GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-                                 O2G_NULLPTR));
+    dialog.reset(gtk_dialog_new_with_buttons(item->name.c_str(),
+                                             GTK_WINDOW(context->tag_context->dialog),
+                                             GTK_DIALOG_MODAL,
+                                             GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
+                                             GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+                                             O2G_NULLPTR));
 
     /* if a web link has been provided for this item install */
     /* a button for this */

@@ -99,11 +99,11 @@ static bool relation_add_item(GtkWidget *parent, relation_t *relation,
 
   /* ask the user for the role of the new object in this relation */
   /* ------------------ role dialog ---------------- */
-  g_widget dialog(misc_dialog_new(MISC_DIALOG_NOSIZE,_("Select role"),
-                                  GTK_WINDOW(parent),
-                                  GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
-                                  GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-                                  O2G_NULLPTR));
+  g_widget dialog(gtk_dialog_new_with_buttons(_("Select role"), GTK_WINDOW(parent),
+                                              GTK_DIALOG_MODAL,
+                                              GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
+                                              GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+                                              O2G_NULLPTR));
 
   gtk_dialog_set_default_response(GTK_DIALOG(dialog.get()), GTK_RESPONSE_ACCEPT);
 
