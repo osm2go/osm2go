@@ -673,11 +673,12 @@ static void details_table(GtkWidget *dialog, const osm_t::dirty_t &dirty) {
 /* put additional infos into a seperate dialog for fremantle as */
 /* screen space is sparse there */
 static void info_more(const osm_t::dirty_t &context, GtkWidget *parent) {
-  g_widget dialog(misc_dialog_new(MISC_DIALOG_SMALL, _("Changeset details"),
-                                  GTK_WINDOW(parent),
-                                  GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                  O2G_NULLPTR));
+  g_widget dialog(gtk_dialog_new_with_buttons(_("Changeset details"),
+                                              GTK_WINDOW(parent), GTK_DIALOG_MODAL,
+                                              GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                              O2G_NULLPTR));
 
+  dialog_size_hint(GTK_WINDOW(dialog.get()), MISC_DIALOG_SMALL);
   gtk_dialog_set_default_response(GTK_DIALOG(dialog.get()), GTK_RESPONSE_CANCEL);
 
   details_table(dialog.get(), context);
@@ -725,14 +726,17 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
   printf("relations: new %2u, dirty %2u, deleted %2zu\n",
          dirty.relations.added, dirty.relations.dirty, dirty.relations.deleted.size());
 
-  g_widget dialog(misc_dialog_new(MISC_DIALOG_MEDIUM, _("Upload to OSM"),
-                                  GTK_WINDOW(appdata.window),
+  g_widget dialog(gtk_dialog_new_with_buttons(_("Upload to OSM"),
+                                              GTK_WINDOW(appdata.window),
+                                              GTK_DIALOG_MODAL,
 #ifdef FREMANTLE
-                                  _("More"), GTK_RESPONSE_HELP,
+                                              _("More"), GTK_RESPONSE_HELP,
 #endif
-                                  GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
-                                  GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-                                  O2G_NULLPTR));
+                                              GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
+                                              GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+                                              O2G_NULLPTR));
+
+  dialog_size_hint(GTK_WINDOW(dialog.get()), MISC_DIALOG_MEDIUM);
 
 #ifndef FREMANTLE
   details_table(dialog.get(), dirty);
@@ -840,11 +844,12 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
   dialog.reset();
   project->save(appdata.window);
 
-  context.dialog =
-    misc_dialog_new(MISC_DIALOG_LARGE,_("Uploading"),
-	  GTK_WINDOW(appdata.window),
-	  GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE, O2G_NULLPTR);
+  context.dialog = gtk_dialog_new_with_buttons(_("Uploading"), GTK_WINDOW(appdata.window),
+                                               GTK_DIALOG_MODAL,
+                                               GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
+                                               O2G_NULLPTR);
 
+  dialog_size_hint(GTK_WINDOW(context.dialog), MISC_DIALOG_LARGE);
   gtk_dialog_set_response_sensitive(GTK_DIALOG(context.dialog),
 				    GTK_RESPONSE_CLOSE, FALSE);
 

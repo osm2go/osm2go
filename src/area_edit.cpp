@@ -698,13 +698,13 @@ bool area_edit_t::run() {
 
   context_t context(*this);
 
-  context.dialog =
-    misc_dialog_new(MISC_DIALOG_HIGH, _("Area editor"),
-	  GTK_WINDOW(parent),
-	  GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
-          GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-          O2G_NULLPTR);
+  context.dialog = gtk_dialog_new_with_buttons(_("Area editor"),
+                                               GTK_WINDOW(parent), GTK_DIALOG_MODAL,
+                                               GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
+                                               GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+                                               O2G_NULLPTR);
 
+  dialog_size_hint(GTK_WINDOW(context.dialog), MISC_DIALOG_HIGH);
   context.warning =
     gtk_dialog_add_button(GTK_DIALOG(context.dialog), _("Warning"),
 			  GTK_RESPONSE_HELP);

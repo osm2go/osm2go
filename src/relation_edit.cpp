@@ -403,10 +403,13 @@ void relation_membership_dialog(GtkWidget *parent, const presets_items *presets,
   g_string str(g_strdup_printf(_("Relation memberships of %s #" ITEM_ID_FORMAT),
                                object.type_string(), object.get_id()));
 
-  context.dialog = misc_dialog_new(MISC_DIALOG_LARGE, str.get(), GTK_WINDOW(parent),
-                                   GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE, O2G_NULLPTR);
+  context.dialog = gtk_dialog_new_with_buttons(str.get(), GTK_WINDOW(parent),
+                                               GTK_DIALOG_MODAL,
+                                               GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
+                                               O2G_NULLPTR);
   str.reset();
 
+  dialog_size_hint(GTK_WINDOW(context.dialog), MISC_DIALOG_LARGE);
   gtk_dialog_set_default_response(GTK_DIALOG(context.dialog),
 				  GTK_RESPONSE_CLOSE);
 
@@ -629,9 +632,12 @@ void relation_show_members(GtkWidget *parent, const relation_t *relation) {
                 g_strdup_printf(_("Members of relation \"%s\""), str));
 
   member_context_t mcontext(relation,
-                             misc_dialog_new(MISC_DIALOG_MEDIUM, nstr.get(), GTK_WINDOW(parent),
-                                             GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE, O2G_NULLPTR));
+                            gtk_dialog_new_with_buttons(nstr.get(), GTK_WINDOW(parent),
+                                                        GTK_DIALOG_MODAL,
+                                                        GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
+                                                        O2G_NULLPTR));
 
+  dialog_size_hint(GTK_WINDOW(mcontext.dialog), MISC_DIALOG_MEDIUM);
   gtk_dialog_set_default_response(GTK_DIALOG(mcontext.dialog),
 				  GTK_RESPONSE_CLOSE);
 
@@ -833,11 +839,13 @@ static GtkWidget *relation_list_widget(relation_context_t &context) {
 /* a global view on all relations */
 void relation_list(GtkWidget *parent, map_t *map, osm_t *osm, presets_items *presets) {
   relation_context_t context(map, osm, presets,
-                     misc_dialog_new(MISC_DIALOG_LARGE, _("All relations"),
-                                     GTK_WINDOW(parent),
-                                     GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
-                                     O2G_NULLPTR));
+                             gtk_dialog_new_with_buttons(_("All relations"),
+                                                         GTK_WINDOW(parent),
+                                                         GTK_DIALOG_MODAL,
+                                                         GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
+                                                         O2G_NULLPTR));
 
+  dialog_size_hint(GTK_WINDOW(context.dialog), MISC_DIALOG_LARGE);
   gtk_dialog_set_default_response(GTK_DIALOG(context.dialog),
 				  GTK_RESPONSE_CLOSE);
 

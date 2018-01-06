@@ -277,27 +277,6 @@ static const gint dialog_sizes[][2] = {
 #endif
 };
 
-/* create a modal dialog using one of the predefined size hints */
-GtkWidget *misc_dialog_new(DialogSizeHing hint, const gchar *title, GtkWindow *parent, ...) {
-  va_list args;
-  va_start( args, parent );
-
-  /* create dialog itself */
-  GtkWidget *dialog = gtk_dialog_new_with_buttons(title, parent, GTK_DIALOG_MODAL, O2G_NULLPTR);
-
-  const gchar *button_text = va_arg(args, const gchar *);
-  while(button_text) {
-    gtk_dialog_add_button(GTK_DIALOG(dialog), button_text, va_arg(args, gint));
-    button_text = va_arg(args, const gchar *);
-  }
-
-  va_end( args );
-
-  dialog_size_hint(GTK_WINDOW(dialog), hint);
-
-  return dialog;
-}
-
 void dialog_size_hint(GtkWindow *window, DialogSizeHing hint)
 {
   gtk_window_set_default_size(window, dialog_sizes[hint][0], dialog_sizes[hint][1]);

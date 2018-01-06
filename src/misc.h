@@ -86,7 +86,6 @@ enum DialogSizeHing {
   MISC_DIALOG_HIGH   =  4
 };
 
-GtkWidget *misc_dialog_new(DialogSizeHing hint, const gchar *title, GtkWindow *parent, ...);
 void dialog_size_hint(GtkWindow *window, DialogSizeHing hint);
 
 /* unified widgets */

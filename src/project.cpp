@@ -870,11 +870,13 @@ std::string project_select(appdata_t &appdata) {
   std::string name;
 
   select_context_t context(appdata,
-                    misc_dialog_new(MISC_DIALOG_MEDIUM,_("Project selection"),
-                                    GTK_WINDOW(appdata.window),
+                    gtk_dialog_new_with_buttons(_("Project selection"),
+                                    GTK_WINDOW(appdata.window), GTK_DIALOG_MODAL,
                                     GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                     GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
                                     O2G_NULLPTR));
+
+  dialog_size_hint(GTK_WINDOW(context.dialog), MISC_DIALOG_MEDIUM);
 
   /* under fremantle the dialog does not have an "Open" button */
   /* as it's closed when a project is being selected */
@@ -1108,15 +1110,16 @@ project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
   if(is_new) {
     g_string str(g_strdup_printf(_("New project - %s"), project->name.c_str()));
 
-    dialog.reset(misc_dialog_new(MISC_DIALOG_WIDE, str.get(), GTK_WINDOW(parent),
+    dialog.reset(gtk_dialog_new_with_buttons(str.get(), GTK_WINDOW(parent), GTK_DIALOG_MODAL,
                              GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                              GTK_STOCK_OK, GTK_RESPONSE_ACCEPT, O2G_NULLPTR));
   } else {
     g_string str(g_strdup_printf(_("Edit project - %s"), project->name.c_str()));
 
-    dialog.reset(misc_dialog_new(MISC_DIALOG_WIDE, str.get(), GTK_WINDOW(parent),
+    dialog.reset(gtk_dialog_new_with_buttons(str.get(), GTK_WINDOW(parent), GTK_DIALOG_MODAL,
                              GTK_STOCK_CLOSE, GTK_RESPONSE_ACCEPT, O2G_NULLPTR));
   }
+  dialog_size_hint(GTK_WINDOW(dialog.get()), MISC_DIALOG_WIDE);
 
   project_context_t context(scontext->appdata, project, is_new,
                             scontext->projects, dialog.get());

@@ -583,12 +583,14 @@ static void callback_modified_name(GtkWidget *widget, settings_t *settings) {
 /* edit url and path of a given wms server entry */
 bool wms_server_edit(wms_server_context_t *context, gboolean edit_name,
                      wms_server_t *wms_server) {
-  g_widget dialog(misc_dialog_new(MISC_DIALOG_WIDE, _("Edit WMS Server"),
-                                  GTK_WINDOW(context->dialog),
-                                  GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
-                                  GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-                                  O2G_NULLPTR));
+  g_widget dialog(gtk_dialog_new_with_buttons(_("Edit WMS Server"),
+                                              GTK_WINDOW(context->dialog),
+                                              GTK_DIALOG_MODAL,
+                                              GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
+                                              GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+                                              O2G_NULLPTR));
 
+  dialog_size_hint(GTK_WINDOW(dialog.get()), MISC_DIALOG_WIDE);
   gtk_dialog_set_default_response(GTK_DIALOG(dialog.get()), GTK_RESPONSE_ACCEPT);
 
   GtkWidget *label = gtk_label_new(_("Name:"));
@@ -733,13 +735,15 @@ static bool wms_server_dialog(appdata_t &appdata, wms_t *wms) {
   bool ok = false;
 
   wms_server_context_t context(appdata, wms,
-    misc_dialog_new(MISC_DIALOG_MEDIUM, _("WMS Server Selection"),
-		    GTK_WINDOW(appdata.window),
-		    GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
-		    GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-		    O2G_NULLPTR));
+                               gtk_dialog_new_with_buttons(_("WMS Server Selection"),
+                                                           GTK_WINDOW(appdata.window),
+                                                           GTK_DIALOG_MODAL,
+                                                           GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
+                                                           GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+                                                           O2G_NULLPTR));
 
   /* server selection box */
+  dialog_size_hint(GTK_WINDOW(context.dialog), MISC_DIALOG_MEDIUM);
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(context.dialog)->vbox),
 			      wms_server_widget(&context));
 
@@ -954,12 +958,14 @@ static GtkWidget *wms_layer_widget(selected_context *context, const wms_layer_t:
 
 
 static bool wms_layer_dialog(selected_context *ctx, const wms_layer_t::list &layer) {
-  g_widget dialog(misc_dialog_new(MISC_DIALOG_LARGE, _("WMS layer selection"),
-                                  GTK_WINDOW(ctx->appdata.window),
-                                  GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
-                                  GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-                                  O2G_NULLPTR));
+  g_widget dialog(gtk_dialog_new_with_buttons(_("WMS layer selection"),
+                                              GTK_WINDOW(ctx->appdata.window),
+                                              GTK_DIALOG_MODAL,
+                                              GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
+                                              GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+                                              O2G_NULLPTR));
 
+  dialog_size_hint(GTK_WINDOW(dialog.get()), MISC_DIALOG_LARGE);
   gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog.get()), GTK_RESPONSE_ACCEPT, FALSE);
 
   /* layer list */

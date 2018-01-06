@@ -829,9 +829,10 @@ static GtkWidget *app_submenu_create(appdata_t &appdata, MainUi::menu_items subm
                                      const menu_entry_t *menu, const unsigned int rows) {
   const char *title = hildon_button_get_title(HILDON_BUTTON(appdata.menuitems[submenu]));
   /* create a oridinary dialog box */
-  GtkWidget *dialog = misc_dialog_new(MISC_DIALOG_SMALL, title,
-				      GTK_WINDOW(appdata.window), O2G_NULLPTR);
+  GtkWidget *dialog = gtk_dialog_new_with_buttons(title, GTK_WINDOW(appdata.window),
+                                                  GTK_DIALOG_MODAL, O2G_NULLPTR);
 
+  dialog_size_hint(GTK_WINDOW(dialog), MISC_DIALOG_SMALL);
   gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
 
   GtkWidget *table = gtk_table_new(rows / COLUMNS, COLUMNS, TRUE);

@@ -145,10 +145,12 @@ static void on_tag_remove(info_tag_context_t *context) {
  * @retval false the tag is the same as before
  */
 static bool tag_edit(GtkWindow *window, std::string &k, std::string &v) {
-  g_widget dialog(misc_dialog_new(MISC_DIALOG_SMALL, _("Edit Tag"),
-                                  window, GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
-                                  GTK_STOCK_OK, GTK_RESPONSE_ACCEPT, O2G_NULLPTR));
+  g_widget dialog(gtk_dialog_new_with_buttons(_("Edit Tag"), window, GTK_DIALOG_MODAL,
+                                              GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
+                                              GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+                                              O2G_NULLPTR));
 
+  dialog_size_hint(GTK_WINDOW(dialog.get()), MISC_DIALOG_SMALL);
   gtk_dialog_set_default_response(GTK_DIALOG(dialog.get()),
 				  GTK_RESPONSE_ACCEPT);
 
@@ -534,11 +536,12 @@ static GtkWidget *details_widget(const info_tag_context_t &context, bool big) {
 /* put additional infos into a seperate dialog for fremantle as */
 /* screen space is sparse there */
 static void info_more(const info_tag_context_t &context) {
-  g_widget dialog(misc_dialog_new(MISC_DIALOG_SMALL, _("Object details"),
-                                  GTK_WINDOW(context.dialog),
-                                  GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                  O2G_NULLPTR));
+  g_widget dialog(gtk_dialog_new_with_buttons(_("Object details"),
+                                              GTK_WINDOW(context.dialog), GTK_DIALOG_MODAL,
+                                              GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                              O2G_NULLPTR));
 
+  dialog_size_hint(GTK_WINDOW(dialog.get()), MISC_DIALOG_SMALL);
   gtk_dialog_set_default_response(GTK_DIALOG(dialog.get()), GTK_RESPONSE_CANCEL);
 
   gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox),
@@ -588,15 +591,17 @@ bool info_dialog(GtkWidget *parent, map_t *map, osm_t *osm, presets_items *prese
 
   g_string str(g_strdup_printf(msgtpl, context.object.obj->id));
 
-  context.dialog = misc_dialog_new(MISC_DIALOG_LARGE, str.get(), GTK_WINDOW(parent),
+  context.dialog = gtk_dialog_new_with_buttons(str.get(), GTK_WINDOW(parent),
+                                               GTK_DIALOG_MODAL,
 #ifdef FREMANTLE
-	  _("More"), GTK_RESPONSE_HELP,
+                                               _("More"), GTK_RESPONSE_HELP,
 #endif
-	  GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-	  GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-	  O2G_NULLPTR);
+                                               GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                               GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+                                               O2G_NULLPTR);
   str.reset();
 
+  dialog_size_hint(GTK_WINDOW(context.dialog), MISC_DIALOG_LARGE);
   gtk_dialog_set_default_response(GTK_DIALOG(context.dialog),
 				  GTK_RESPONSE_ACCEPT);
 
