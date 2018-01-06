@@ -66,6 +66,10 @@ static bool pos_lat_get(GtkWidget *widget, pos_float_t &lat) {
   return ret;
 }
 
+static void table_attach(GtkTable *table, GtkWidget *widget, int x, int y) {
+  gtk_table_attach_defaults(table, widget, x, x + 1, y, y + 1);
+}
+
 /**
  * @brief parse a longitude value from an input widget
  * @param widget the input widget
@@ -746,23 +750,23 @@ bool area_edit_t::run() {
 
   vbox = gtk_vbox_new(FALSE, 10);
 
-  GtkWidget *table = gtk_table_new(3, 4, FALSE);  // x, y
-  gtk_table_set_col_spacings(GTK_TABLE(table), 10);
-  gtk_table_set_row_spacings(GTK_TABLE(table), 5);
+  GtkTable *table = GTK_TABLE(gtk_table_new(3, 4, FALSE));  // x, y
+  gtk_table_set_col_spacings(table, 10);
+  gtk_table_set_row_spacings(table, 5);
 
   context.direct.minlat = pos_lat_entry_new(min.lat);
-  misc_table_attach(table, context.direct.minlat, 0, 0);
+  table_attach(table, context.direct.minlat, 0, 0);
   GtkWidget *label = gtk_label_new(_("to"));
-  misc_table_attach(table,  label, 1, 0);
+  table_attach(table,  label, 1, 0);
   context.direct.maxlat = pos_lat_entry_new(max.lat);
-  misc_table_attach(table, context.direct.maxlat, 2, 0);
+  table_attach(table, context.direct.maxlat, 2, 0);
 
   context.direct.minlon = pos_lon_entry_new(min.lon);
-  misc_table_attach(table, context.direct.minlon, 0, 1);
+  table_attach(table, context.direct.minlon, 0, 1);
   label = gtk_label_new(_("to"));
-  misc_table_attach(table,  label, 1, 1);
+  table_attach(table,  label, 1, 1);
   context.direct.maxlon = pos_lon_entry_new(max.lon);
-  misc_table_attach(table, context.direct.maxlon, 2, 1);
+  table_attach(table, context.direct.maxlon, 2, 1);
 
   /* setup this page */
   g_signal_connect_swapped(G_OBJECT(context.direct.minlat), "changed",
@@ -776,44 +780,44 @@ bool area_edit_t::run() {
 
   /* --- hint --- */
   label = gtk_label_new(_("(recommended min/max diff <0.03 degrees)"));
-  gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 3, 2, 3);
+  gtk_table_attach_defaults(table, label, 0, 3, 2, 3);
 
   /* error label */
   context.direct.error = gtk_label_new(O2G_NULLPTR);
   gtk_widget_modify_fg(context.direct.error, GTK_STATE_NORMAL, &color);
-  gtk_table_attach_defaults(GTK_TABLE(table), context.direct.error, 0, 3, 3, 4);
+  gtk_table_attach_defaults(table, context.direct.error, 0, 3, 3, 4);
 
-  gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
+  gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(table), FALSE, FALSE, 0);
   notebook_append_page(context.notebook, vbox, _(TAB_LABEL_DIRECT));
 
   /* ------------- center/extent edit ------------------------ */
 
   vbox = gtk_vbox_new(FALSE, 10);
-  table = gtk_table_new(3, 5, FALSE);  // x, y
-  gtk_table_set_col_spacings(GTK_TABLE(table), 10);
-  gtk_table_set_row_spacings(GTK_TABLE(table), 5);
+  table = GTK_TABLE(gtk_table_new(3, 5, FALSE));  // x, y
+  gtk_table_set_col_spacings(table, 10);
+  gtk_table_set_row_spacings(table, 5);
 
   label = gtk_label_new(_("Center:"));
   gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-  gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 0, 1);
+  gtk_table_attach_defaults(table,  label, 0, 1, 0, 1);
   context.extent.lat = pos_lat_entry_new(0.0);
-  gtk_table_attach_defaults(GTK_TABLE(table), context.extent.lat, 1, 2, 0, 1);
+  gtk_table_attach_defaults(table, context.extent.lat, 1, 2, 0, 1);
   context.extent.lon = pos_lon_entry_new(0.0);
-  gtk_table_attach_defaults(GTK_TABLE(table), context.extent.lon, 2, 3, 0, 1);
+  gtk_table_attach_defaults(table, context.extent.lon, 2, 3, 0, 1);
 
-  gtk_table_set_row_spacing(GTK_TABLE(table), 0, 10);
+  gtk_table_set_row_spacing(table, 0, 10);
 
   label = gtk_label_new(_("Width:"));
   gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-  gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 1, 2);
+  gtk_table_attach_defaults(table,  label, 0, 1, 1, 2);
   context.extent.width = entry_new();
-  gtk_table_attach_defaults(GTK_TABLE(table), context.extent.width, 1, 2, 1, 2);
+  gtk_table_attach_defaults(table, context.extent.width, 1, 2, 1, 2);
 
   label = gtk_label_new(_("Height:"));
   gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-  gtk_table_attach_defaults(GTK_TABLE(table),  label, 0, 1, 2, 3);
+  gtk_table_attach_defaults(table,  label, 0, 1, 2, 3);
   context.extent.height = entry_new();
-  gtk_table_attach_defaults(GTK_TABLE(table),
+  gtk_table_attach_defaults(table,
 			    context.extent.height, 1, 2, 2, 3);
 
   context.extent.mil_km = combo_box_new(_("Unit"));
@@ -821,7 +825,7 @@ bool area_edit_t::run() {
   combo_box_append_text(context.extent.mil_km, _("km"));
   combo_box_set_active(context.extent.mil_km, 1); // km
 
-  gtk_table_attach(GTK_TABLE(table), context.extent.mil_km, 2, 3, 1, 3,
+  gtk_table_attach(table, context.extent.mil_km, 2, 3, 1, 3,
 		   static_cast<GtkAttachOptions>(0), static_cast<GtkAttachOptions>(0),
 		   0, 0);
 
@@ -842,14 +846,14 @@ bool area_edit_t::run() {
 
   /* --- hint --- */
   label = gtk_label_new(_("(recommended width/height < 2km/1.25mi)"));
-  gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 3, 3, 4);
+  gtk_table_attach_defaults(table, label, 0, 3, 3, 4);
 
   /* error label */
   context.extent.error = gtk_label_new(O2G_NULLPTR);
   gtk_widget_modify_fg(context.extent.error, GTK_STATE_NORMAL, &color);
-  gtk_table_attach_defaults(GTK_TABLE(table), context.extent.error, 0, 3, 4, 5);
+  gtk_table_attach_defaults(table, context.extent.error, 0, 3, 4, 5);
 
-  gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
+  gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(table), FALSE, FALSE, 0);
   notebook_append_page(context.notebook, vbox, _(TAB_LABEL_EXTENT));
 
 #ifdef HAS_MAEMO_MAPPER

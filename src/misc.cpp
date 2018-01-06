@@ -326,10 +326,6 @@ GtkWidget *misc_scrolled_window_new(gboolean etched_in) {
 
 #endif
 
-void misc_table_attach(GtkWidget *table, GtkWidget *widget, int x, int y) {
-  gtk_table_attach_defaults(GTK_TABLE(table), widget, x, x+1, y, y+1);
-}
-
 /* ---------- unified widgets for fremantle/others --------------- */
 
 GtkWidget *entry_new(EntryFlags flags) {
