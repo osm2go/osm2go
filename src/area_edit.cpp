@@ -165,9 +165,10 @@ static pos_float_t pos_dist_get(GtkWidget *widget, bool is_mil) {
 }
 
 struct area_context_t {
-  explicit area_context_t(area_edit_t &a);
+  explicit area_context_t(area_edit_t &a, GtkWidget *dlb);
 
-  GtkWidget *dialog, *notebook;
+  g_widget dialog;
+  GtkWidget * const notebook;
   area_edit_t &area;
   pos_t min, max;      /* local copy to work on */
   GtkWidget *warning;
@@ -198,9 +199,9 @@ struct area_context_t {
 #endif
 };
 
-area_context_t::area_context_t(area_edit_t& a)
-  : dialog(O2G_NULLPTR)
-  , notebook(O2G_NULLPTR)
+area_context_t::area_context_t(area_edit_t &a, GtkWidget *dlg)
+  : dialog(dlg)
+  , notebook(notebook_new())
   , area(a)
   , min(a.min)
   , max(a.max)
@@ -264,7 +265,7 @@ static inline const char *warn_text() {
 static void on_area_warning_clicked(area_context_t *context) {
   double area = selected_area(context);
 
-  warningf(context->dialog, warn_text(), area, area/(KMPMIL*KMPMIL),
+  warningf(context->dialog.get(), warn_text(), area, area/(KMPMIL*KMPMIL),
            WARN_OVER, WARN_OVER/(KMPMIL*KMPMIL));
 }
 
@@ -277,7 +278,7 @@ static bool area_warning(area_context_t *context) {
   if(area > WARN_OVER) {
     g_string text(g_strdup_printf(warn_text(), area, area / (KMPMIL * KMPMIL),
                                   WARN_OVER, WARN_OVER/(KMPMIL*KMPMIL)));
-    ret = yes_no_f(context->dialog,
+    ret = yes_no_f(context->dialog.get(),
                    MISC_AGAIN_ID_AREA_TOO_BIG | MISC_AGAIN_FLAG_DONT_SAVE_NO,
 		   _("Area size warning!"),
 		   _("%s\n\nDo you really want to continue?"),
@@ -291,7 +292,7 @@ static void area_main_update(area_context_t *context) {
   /* also setup the local error messages here, so they are */
   /* updated for all entries at once */
   if(!context->min.valid() || !context->max.valid()) {
-    gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog),
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog.get()),
 				      GTK_RESPONSE_ACCEPT, FALSE);
   } else {
     if(context->min.lat >= context->max.lat ||
@@ -300,7 +301,7 @@ static void area_main_update(area_context_t *context) {
 		  _("\"From\" must be smaller than \"to\" value!"));
       gtk_label_set_text(GTK_LABEL(context->extent.error),
 		  _("Extents must be positive!"));
-      gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog),
+      gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog.get()),
 				      GTK_RESPONSE_ACCEPT, FALSE);
     }
     else
@@ -308,8 +309,8 @@ static void area_main_update(area_context_t *context) {
       gtk_label_set_text(GTK_LABEL(context->direct.error), "");
       gtk_label_set_text(GTK_LABEL(context->extent.error), "");
 
-      gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog),
-				      GTK_RESPONSE_ACCEPT, TRUE);
+      gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog.get()),
+                                        GTK_RESPONSE_ACCEPT, TRUE);
     }
   }
 
@@ -519,13 +520,13 @@ static void callback_modified_unit(area_context_t *context) {
 static void callback_fetch_mm_clicked(area_context_t *context) {
   dbus_mm_pos_t mmpos;
   if(!dbus_mm_set_position(&mmpos)) {
-    errorf(context->dialog, _("Unable to communicate with Maemo Mapper. "
+    errorf(context->dialog.get(), _("Unable to communicate with Maemo Mapper. "
               "You need to have Maemo Mapper installed to use this feature."));
     return;
   }
 
   if(!mmpos.valid) {
-    errorf(context->dialog, _("No valid position received yet. You need to "
+    errorf(context->dialog.get(), _("No valid position received yet. You need to "
            "scroll or zoom the Maemo Mapper view in order to force it to send "
            "its current view position to osm2go."));
     return;
@@ -696,26 +697,22 @@ bool area_edit_t::run() {
   GdkColor color;
   gdk_color_parse("red", &color);
 
-  area_context_t context(*this);
-
-  context.dialog = gtk_dialog_new_with_buttons(_("Area editor"),
+  area_context_t context(*this,
+                         gtk_dialog_new_with_buttons(_("Area editor"),
                                                GTK_WINDOW(parent), GTK_DIALOG_MODAL,
                                                GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                                GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-                                               O2G_NULLPTR);
+                                               O2G_NULLPTR));
 
-  dialog_size_hint(GTK_WINDOW(context.dialog), MISC_DIALOG_HIGH);
-  context.warning =
-    gtk_dialog_add_button(GTK_DIALOG(context.dialog), _("Warning"),
-			  GTK_RESPONSE_HELP);
+  dialog_size_hint(GTK_WINDOW(context.dialog.get()), MISC_DIALOG_HIGH);
+  context.warning = gtk_dialog_add_button(GTK_DIALOG(context.dialog.get()), _("Warning"),
+                                          GTK_RESPONSE_HELP);
 
   gtk_button_set_image(GTK_BUTTON(context.warning),
 		       gtk_image_new_from_stock(GTK_STOCK_DIALOG_WARNING,
 						GTK_ICON_SIZE_BUTTON));
   g_signal_connect_swapped(context.warning, "clicked",
                            G_CALLBACK(on_area_warning_clicked), &context);
-
-  context.notebook = notebook_new();
 
 #ifdef ENABLE_OSM_GPS_MAP
   /* ------------- fetch from map ------------------------ */
@@ -876,22 +873,22 @@ bool area_edit_t::run() {
 
   /* ------------------------------------------------------ */
 
-  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(context.dialog)->vbox),
-			      context.notebook);
+  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(context.dialog.get())->vbox),
+                              context.notebook);
 
 #ifdef ENABLE_OSM_GPS_MAP
   g_signal_connect(G_OBJECT(notebook_get_gtk_notebook(context.notebook)),
 		   "switch-page", G_CALLBACK(on_page_switch), &context);
 #endif
 
-  gtk_widget_show_all(context.dialog);
+  gtk_widget_show_all(context.dialog.get());
 
   area_main_update(&context);
 
   bool ok = false;
   int response;
   do {
-    response = gtk_dialog_run(GTK_DIALOG(context.dialog));
+    response = gtk_dialog_run(GTK_DIALOG(context.dialog.get()));
 
     if(GTK_RESPONSE_ACCEPT == response) {
       if(area_warning(&context)) {
@@ -907,8 +904,6 @@ bool area_edit_t::run() {
 #ifdef ENABLE_OSM_GPS_MAP
   g_source_remove(handler_id);
 #endif
-
-  gtk_widget_destroy(context.dialog);
 
   return ok;
 }
