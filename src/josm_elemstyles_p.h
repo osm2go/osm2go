@@ -113,6 +113,7 @@ struct elemstyle_width_mod_t {
 struct elemstyle_line_mod_t {
   inline elemstyle_line_mod_t()
     : priority(0)
+    , color(0)
   {
   }
 
@@ -124,6 +125,7 @@ struct elemstyle_line_mod_t {
 struct elemstyle_area_t {
   elemstyle_area_t()
     : priority(0)
+    , color(0)
   {
   }
 
