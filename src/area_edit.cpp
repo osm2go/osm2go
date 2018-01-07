@@ -164,8 +164,8 @@ static pos_float_t pos_dist_get(GtkWidget *widget, bool is_mil) {
   return g_strtod(p, O2G_NULLPTR) * (is_mil?KMPMIL:1.0);
 }
 
-struct context_t {
-  explicit context_t(area_edit_t &a);
+struct area_context_t {
+  explicit area_context_t(area_edit_t &a);
 
   GtkWidget *dialog, *notebook;
   area_edit_t &area;
@@ -198,7 +198,7 @@ struct context_t {
 #endif
 };
 
-context_t::context_t(area_edit_t& a)
+area_context_t::area_context_t(area_edit_t& a)
   : dialog(O2G_NULLPTR)
   , notebook(O2G_NULLPTR)
   , area(a)
@@ -227,7 +227,7 @@ area_edit_t::area_edit_t(gps_state_t *gps, pos_t &mi, pos_t &ma, GtkWidget *dlg)
 /**
  * @brief calculate the selected area in square kilometers
  */
-static double selected_area(const context_t *context) {
+static double selected_area(const area_context_t *context) {
   pos_float_t center_lat = (context->max.lat + context->min.lat)/2;
   double vscale = DEG2RAD(POS_EQ_RADIUS / 1000.0);
   double hscale = DEG2RAD(cos(DEG2RAD(center_lat)) * POS_EQ_RADIUS / 1000.0);
@@ -243,7 +243,7 @@ static bool current_tab_is(GtkNotebook *nb, GtkWidget *w, const char *str) {
   return (strcmp(name, _(str)) == 0);
 }
 
-static bool current_tab_is(context_t *context, const char *str) {
+static bool current_tab_is(area_context_t *context, const char *str) {
   GtkNotebook *nb = notebook_get_gtk_notebook(context->notebook);
 
   gint page_num = gtk_notebook_get_current_page(nb);
@@ -261,14 +261,14 @@ static inline const char *warn_text() {
            "mapping performance in a densly mapped area (e.g. cities)!");
 }
 
-static void on_area_warning_clicked(context_t *context) {
+static void on_area_warning_clicked(area_context_t *context) {
   double area = selected_area(context);
 
   warningf(context->dialog, warn_text(), area, area/(KMPMIL*KMPMIL),
            WARN_OVER, WARN_OVER/(KMPMIL*KMPMIL));
 }
 
-static bool area_warning(context_t *context) {
+static bool area_warning(area_context_t *context) {
   bool ret = true;
 
   /* check if area size exceeds recommended values */
@@ -287,7 +287,7 @@ static bool area_warning(context_t *context) {
   return ret;
 }
 
-static void area_main_update(context_t *context) {
+static void area_main_update(area_context_t *context) {
   /* also setup the local error messages here, so they are */
   /* updated for all entries at once */
   if(!context->min.valid() || !context->max.valid()) {
@@ -351,7 +351,7 @@ void add_bounds::operator()(const pos_bounds &b)
 }
 
 /* the contents of the map tab have been changed */
-static void map_update(context_t *context, bool forced) {
+static void map_update(area_context_t *context, bool forced) {
 
   /* map is first tab (page 0) */
   if(!forced && !current_tab_is(context, TAB_LABEL_MAP)) {
@@ -415,14 +415,14 @@ static void map_update(context_t *context, bool forced) {
   context->map.needs_redraw = false;
 }
 
-static gboolean on_map_configure(context_t *context) {
+static gboolean on_map_configure(area_context_t *context) {
   map_update(context, false);
   return FALSE;
 }
 #endif
 
 /* the contents of the direct tab have been changed */
-static void direct_update(context_t *context) {
+static void direct_update(area_context_t *context) {
   pos_lat_entry_set(context->direct.minlat, context->min.lat);
   pos_lon_entry_set(context->direct.minlon, context->min.lon);
   pos_lat_entry_set(context->direct.maxlat, context->max.lat);
@@ -430,7 +430,7 @@ static void direct_update(context_t *context) {
 }
 
 /* update the contents of the extent tab */
-static void extent_update(context_t *context) {
+static void extent_update(area_context_t *context) {
   pos_float_t center_lat = (context->max.lat + context->min.lat)/2;
   pos_float_t center_lon = (context->max.lon + context->min.lon)/2;
 
@@ -447,7 +447,7 @@ static void extent_update(context_t *context) {
   pos_dist_entry_set(context->extent.height, height, context->extent.is_mil);
 }
 
-static void callback_modified_direct(context_t *context) {
+static void callback_modified_direct(area_context_t *context) {
   /* direct is second tab (page 1) */
   if(!current_tab_is(context, TAB_LABEL_DIRECT))
     return;
@@ -468,7 +468,7 @@ static void callback_modified_direct(context_t *context) {
 #endif
 }
 
-static void callback_modified_extent(context_t *context) {
+static void callback_modified_extent(area_context_t *context) {
   /* extent is third tab (page 2) */
   if(!current_tab_is(context, TAB_LABEL_EXTENT))
     return;
@@ -501,7 +501,7 @@ static void callback_modified_extent(context_t *context) {
 #endif
 }
 
-static void callback_modified_unit(context_t *context) {
+static void callback_modified_unit(area_context_t *context) {
   /* get current values */
   double height = pos_dist_get(context->extent.height, context->extent.is_mil);
   double width  = pos_dist_get(context->extent.width, context->extent.is_mil);
@@ -516,7 +516,7 @@ static void callback_modified_unit(context_t *context) {
 }
 
 #ifdef HAS_MAEMO_MAPPER
-static void callback_fetch_mm_clicked(context_t *context) {
+static void callback_fetch_mm_clicked(area_context_t *context) {
   dbus_mm_pos_t mmpos;
   if(!dbus_mm_set_position(&mmpos)) {
     errorf(context->dialog, _("Unable to communicate with Maemo Mapper. "
@@ -568,7 +568,7 @@ static void callback_fetch_mm_clicked(context_t *context) {
 
 static gboolean
 on_map_button_press_event(GtkWidget *widget,
-			  GdkEventButton *event, context_t *context) {
+			  GdkEventButton *event, area_context_t *context) {
   OsmGpsMap *map = OSM_GPS_MAP(widget);
   osm_gps_map_osd_t *osd = osm_gps_map_osd_get(map);
 
@@ -590,7 +590,7 @@ on_map_button_press_event(GtkWidget *widget,
 
 static gboolean
 on_map_motion_notify_event(GtkWidget *widget,
-			   GdkEventMotion  *event, context_t *context) {
+			   GdkEventMotion  *event, area_context_t *context) {
   OsmGpsMap *map = OSM_GPS_MAP(widget);
 
   if(!std::isnan(context->map.start.rlon) &&
@@ -617,7 +617,7 @@ on_map_motion_notify_event(GtkWidget *widget,
 
 static gboolean
 on_map_button_release_event(GtkWidget *widget,
-			    GdkEventButton *event, context_t *context) {
+			    GdkEventButton *event, area_context_t *context) {
 
   OsmGpsMap *map = OSM_GPS_MAP(widget);
   osm_gps_map_osd_t *osd = osm_gps_map_osd_get(map);
@@ -667,7 +667,7 @@ on_map_button_release_event(GtkWidget *widget,
   return !osm_gps_map_osd_get_state(map);
 }
 
-static void on_page_switch(GtkNotebook *nb, GtkWidget *pg, guint, context_t *context) {
+static void on_page_switch(GtkNotebook *nb, GtkWidget *pg, guint, area_context_t *context) {
   /* updating the map while the user manually changes some coordinates */
   /* may confuse the map. so we delay those updates until the map tab */
   /* is becoming visible */
@@ -676,7 +676,7 @@ static void on_page_switch(GtkNotebook *nb, GtkWidget *pg, guint, context_t *con
 }
 
 static gboolean map_gps_update(gpointer data) {
-  context_t *context = static_cast<context_t *>(data);
+  area_context_t *context = static_cast<area_context_t *>(data);
 
   pos_t pos = context->area.gps_state->get_pos();
 
@@ -696,7 +696,7 @@ bool area_edit_t::run() {
   GdkColor color;
   gdk_color_parse("red", &color);
 
-  context_t context(*this);
+  area_context_t context(*this);
 
   context.dialog = gtk_dialog_new_with_buttons(_("Area editor"),
                                                GTK_WINDOW(parent), GTK_DIALOG_MODAL,
