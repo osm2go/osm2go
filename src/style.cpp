@@ -271,30 +271,31 @@ std::map<std::string, std::string> style_scan() {
 
     dirguard dir(base_paths[i].fd);
 
-    if(dir.valid()) {
-      dirent *d;
-      int dfd = dir.dirfd();
-      while ((d = dir.next()) != O2G_NULLPTR) {
-        if(d->d_type == DT_DIR)
-          continue;
+    if(!dir.valid())
+      continue;
 
-        const size_t nlen = strlen(d->d_name);
-        if(nlen <= elen || strcmp(d->d_name + nlen - elen, extension) != 0)
-          continue;
+    int dfd = dir.dirfd();
+    for(dirent *d = dir.next(); d != O2G_NULLPTR; d = dir.next()) {
+      if(d->d_type == DT_DIR)
+        continue;
 
-        struct stat st;
-        fstatat(dfd, d->d_name, &st, 0);
+      const size_t nlen = strlen(d->d_name);
+      if(nlen <= elen || strcmp(d->d_name + nlen - elen, extension) != 0)
+        continue;
 
-        if(unlikely(!S_ISREG(st.st_mode)))
-          continue;
+      struct stat st;
+      if(fstatat(dfd, d->d_name, &st, 0) != 0)
+        continue;
 
-        fullname = base_paths[i].pathname + d->d_name;
+      if(unlikely(!S_ISREG(st.st_mode)))
+        continue;
 
-        icon_t dummyicons;
-        style_t style(dummyicons);
-        if(style_parse(fullname, O2G_NULLPTR, true, style))
-          ret[style.name].swap(fullname);
-      }
+      fullname = base_paths[i].pathname + d->d_name;
+
+      icon_t dummyicons;
+      style_t style(dummyicons);
+      if(style_parse(fullname, O2G_NULLPTR, true, style))
+        ret[style.name].swap(fullname);
     }
   }
 
