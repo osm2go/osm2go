@@ -284,7 +284,7 @@ static const gint dialog_sizes[][2] = {
 #endif
 };
 
-void dialog_size_hint(GtkWindow *window, DialogSizeHing hint)
+void dialog_size_hint(GtkWindow *window, DialogSizeHint hint)
 {
   gtk_window_set_default_size(window, dialog_sizes[hint][0], dialog_sizes[hint][1]);
 }

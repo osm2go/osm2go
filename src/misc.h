@@ -78,7 +78,7 @@ void warningf(GtkWidget *parent, const char *fmt, ...) __attribute__((format (pr
 void messagef(GtkWidget *parent, const char *title, const char *fmt, ...) __attribute__((format (printf, 3, 4)));
 
 /* dialog size are specified rather fuzzy */
-enum DialogSizeHing {
+enum DialogSizeHint {
   MISC_DIALOG_SMALL  =  0,
   MISC_DIALOG_MEDIUM =  1,
   MISC_DIALOG_LARGE  =  2,
@@ -86,7 +86,7 @@ enum DialogSizeHing {
   MISC_DIALOG_HIGH   =  4
 };
 
-void dialog_size_hint(GtkWindow *window, DialogSizeHing hint);
+void dialog_size_hint(GtkWindow *window, DialogSizeHint hint);
 
 /* unified widgets */
 enum EntryFlags {
