@@ -98,18 +98,18 @@ bool isEntryWidget(GtkWidget *widget);
 
 bool yes_no_f(GtkWidget *parent, unsigned int again_flags,
               const char *title, const char *fmt, ...) __attribute__((format (printf, 4, 5)));
-GtkWidget *check_button_new_with_label(const gchar *label);
-void check_button_set_active(GtkWidget *button, gboolean active);
-gboolean check_button_get_active(GtkWidget *button);
+GtkWidget *check_button_new_with_label(const char *label);
+void check_button_set_active(GtkWidget *button, bool active);
+bool check_button_get_active(GtkWidget *button);
 bool isCheckButtonWidget(GtkWidget *widget);
 
 GtkWidget *notebook_new(void);
-void notebook_append_page(GtkWidget *notebook, GtkWidget *page, const gchar *label);
+void notebook_append_page(GtkWidget *notebook, GtkWidget *page, const char *label);
 GtkNotebook *notebook_get_gtk_notebook(GtkWidget *notebook);
 
-GtkWidget *combo_box_new(const gchar *title);
-GtkWidget *combo_box_entry_new(const gchar *title);
-void combo_box_append_text(GtkWidget *cbox, const gchar *text);
+GtkWidget *combo_box_new(const char *title);
+GtkWidget *combo_box_entry_new(const char *title);
+void combo_box_append_text(GtkWidget *cbox, const char *text);
 void combo_box_set_active(GtkWidget *cbox, int index);
 int combo_box_get_active(GtkWidget *cbox);
 std::string combo_box_get_active_text(GtkWidget *cbox);

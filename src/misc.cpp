@@ -122,7 +122,7 @@ void warningf(GtkWidget *parent, const char *fmt, ...) {
 #endif
 
 static void on_toggled(GtkWidget *button, int *flags) {
-  gboolean active = check_button_get_active(button);
+  gboolean active = check_button_get_active(button) ? TRUE : FALSE;
 
   GtkWidget *dialog = gtk_widget_get_toplevel(button);
 
@@ -322,7 +322,7 @@ GtkWidget *button_new_with_label(const char *label) {
   return button;
 }
 
-GtkWidget *check_button_new_with_label(const gchar *label) {
+GtkWidget *check_button_new_with_label(const char *label) {
 #ifndef FREMANTLE
   return gtk_check_button_new_with_label(label);
 #else
@@ -344,19 +344,20 @@ bool isCheckButtonWidget(GtkWidget *widget)
 #endif
 }
 
-void check_button_set_active(GtkWidget *button, gboolean active) {
+void check_button_set_active(GtkWidget *button, bool active) {
+  gboolean state = active ? TRUE : FALSE;
 #ifndef FREMANTLE
-  gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), active);
+  gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), state);
 #else
-  hildon_check_button_set_active(HILDON_CHECK_BUTTON(button), active);
+  hildon_check_button_set_active(HILDON_CHECK_BUTTON(button), state);
 #endif
 }
 
-gboolean check_button_get_active(GtkWidget *button) {
+bool check_button_get_active(GtkWidget *button) {
 #ifndef FREMANTLE
-  return gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button));
+  return gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)) == TRUE;
 #else
-  return hildon_check_button_get_active(HILDON_CHECK_BUTTON(button));
+  return hildon_check_button_get_active(HILDON_CHECK_BUTTON(button)) == TRUE;
 #endif
 }
 
@@ -407,7 +408,7 @@ static void on_notebook_button_clicked(GtkWidget *button, gpointer data) {
 }
 #endif
 
-void notebook_append_page(GtkWidget *notebook, GtkWidget *page, const gchar *label) {
+void notebook_append_page(GtkWidget *notebook, GtkWidget *page, const char *label) {
   GtkNotebook *nb = notebook_get_gtk_notebook(notebook);
   gint page_num = gtk_notebook_append_page(nb, page, gtk_label_new(label));
 
@@ -471,7 +472,7 @@ static GtkWidget *combo_box_new_with_selector(const gchar *title, GtkWidget *sel
 #endif
 
 /* the title is only used on fremantle with the picker widget */
-GtkWidget *combo_box_new(const gchar *title) {
+GtkWidget *combo_box_new(const char *title) {
 #ifndef FREMANTLE
   (void)title;
   return gtk_combo_box_new_text();
@@ -481,7 +482,7 @@ GtkWidget *combo_box_new(const gchar *title) {
 #endif
 }
 
-GtkWidget *combo_box_entry_new(const gchar *title) {
+GtkWidget *combo_box_entry_new(const char *title) {
 #ifndef FREMANTLE
   (void)title;
   return gtk_combo_box_entry_new_text();
@@ -491,7 +492,7 @@ GtkWidget *combo_box_entry_new(const gchar *title) {
 #endif
 }
 
-void combo_box_append_text(GtkWidget *cbox, const gchar *text) {
+void combo_box_append_text(GtkWidget *cbox, const char *text) {
 #ifndef FREMANTLE
   gtk_combo_box_append_text(GTK_COMBO_BOX(cbox), text);
 #else
