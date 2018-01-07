@@ -1002,7 +1002,8 @@ struct presets_items *josm_presets_load(void) {
         while ((pd = pdir.next()) != O2G_NULLPTR) {
           if(pd->d_type == DT_DIR)
             continue;
-          if(g_str_has_suffix(pd->d_name, ".xml")) {
+          const size_t nlen = strlen(pd->d_name);
+          if(nlen > 4 && strcmp(pd->d_name + nlen - 4, ".xml") == 0) {
             presets->addFile(dn + pd->d_name, dn, pdir.dirfd());
             break;
           }
