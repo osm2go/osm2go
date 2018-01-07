@@ -201,44 +201,49 @@ bool yes_no_f(GtkWidget *parent, unsigned int again_flags, const char *title,
   return yes;
 }
 
-std::vector<datapath> base_paths;
-
+const std::vector<datapath> &base_paths()
+{
 /* all entries must contain a trailing '/' ! */
-static void init_paths() {
-  std::vector<std::string> pathnames;
+  static std::vector<datapath> ret;
 
-  const char *home = getenv("HOME");
-  assert(home != O2G_NULLPTR);
+  if(unlikely(ret.empty())) {
+    std::vector<std::string> pathnames;
 
-  // in home directory
-  pathnames.push_back(home + std::string("/." PACKAGE "/"));
-  // final installation path
-  pathnames.push_back(DATADIR "/");
+    const char *home = getenv("HOME");
+    assert(home != O2G_NULLPTR);
+
+    // in home directory
+    pathnames.push_back(home + std::string("/." PACKAGE "/"));
+    // final installation path
+    pathnames.push_back(DATADIR "/");
 #ifdef FREMANTLE
-  // path to external memory card
-  pathnames.push_back("/media/mmc1/" PACKAGE "/");
-  // path to internal memory card
-  pathnames.push_back("/media/mmc2/" PACKAGE "/");
+    // path to external memory card
+    pathnames.push_back("/media/mmc1/" PACKAGE "/");
+    // path to internal memory card
+    pathnames.push_back("/media/mmc2/" PACKAGE "/");
 #endif
-  // local paths for testing
-  pathnames.push_back("./data/");
-  pathnames.push_back("../data/");
+    // local paths for testing
+    pathnames.push_back("./data/");
+    pathnames.push_back("../data/");
 
-  for (unsigned int i = 0; i < pathnames.size(); i++) {
-    assert(pathnames[i][pathnames[i].size() - 1] == '/');
-    fdguard dfd(pathnames[i].c_str(), O_DIRECTORY);
-    if(dfd.valid()) {
+    for (unsigned int i = 0; i < pathnames.size(); i++) {
+      assert(pathnames[i][pathnames[i].size() - 1] == '/');
+      fdguard dfd(pathnames[i].c_str(), O_DIRECTORY);
+      if(dfd.valid()) {
 #if __cplusplus >= 201103L
-      base_paths.emplace_back(datapath(std::move(dfd)));
+        ret.emplace_back(datapath(std::move(dfd)));
 #else
-      base_paths.push_back(datapath(dfd));
+        ret.push_back(datapath(dfd));
 #endif
 
-      base_paths.back().pathname.swap(pathnames[i]);
+        ret.back().pathname.swap(pathnames[i]);
+      }
     }
+
+    assert(!ret.empty());
   }
 
-  assert(!base_paths.empty());
+  return ret;
 }
 
 std::string find_file(const std::string &n) {
@@ -252,9 +257,11 @@ std::string find_file(const std::string &n) {
     return std::string();
   }
 
-  for(unsigned int i = 0; i < base_paths.size(); i++) {
-    if(fstatat(base_paths[i].fd, n.c_str(), &st, 0) == 0 && S_ISREG(st.st_mode))
-      return base_paths[i].pathname + n;
+  const std::vector<datapath> &paths = base_paths();
+
+  for(unsigned int i = 0; i < paths.size(); i++) {
+    if(fstatat(paths[i].fd, n.c_str(), &st, 0) == 0 && S_ISREG(st.st_mode))
+      return paths[i].pathname + n;
   }
 
   return std::string();
@@ -539,10 +546,6 @@ bool isComboBoxEntryWidget(GtkWidget *widget)
 #else
          HILDON_TYPE_PICKER_BUTTON;
 #endif
-}
-
-void misc_init(void) {
-  init_paths();
 }
 
 struct combo_add_string {

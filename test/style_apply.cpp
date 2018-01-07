@@ -42,7 +42,6 @@ int main(int argc, char **argv)
 #endif
 
   xmlInitParser();
-  misc_init();
 
   map_state_t map_state;
   icon_t icons;

@@ -221,7 +221,6 @@ int main(int argc, char **argv)
   struct presets_items *presets;
 
   xmlInitParser();
-  misc_init();
 
   basedirs.reserve(argc - 1);
   for(int i = 1; i < argc; i++)

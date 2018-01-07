@@ -65,7 +65,7 @@ struct datapath {
   std::string pathname;
 };
 
-extern std::vector<datapath> base_paths;
+const std::vector<datapath> &base_paths();
 
 std::string find_file(const std::string &n);
 
@@ -115,8 +115,6 @@ int combo_box_get_active(GtkWidget *cbox);
 std::string combo_box_get_active_text(GtkWidget *cbox);
 bool isComboBoxWidget(GtkWidget *widget);
 bool isComboBoxEntryWidget(GtkWidget *widget);
-
-void misc_init(void);
 
 GtkWidget *string_select_widget(const char *title, const std::vector<std::string> &entries, int match);
 

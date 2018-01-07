@@ -1442,8 +1442,6 @@ int main(int argc, char *argv[]) {
 
   int ret = osm2go_platform::init(argc, argv);
   if (ret == 0) {
-    misc_init();
-
     ret = application_run(argc > 1 ? argv[1] : O2G_NULLPTR);
 
     osm2go_platform::cleanup();
