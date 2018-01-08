@@ -1565,7 +1565,7 @@ map_t::~map_t()
 }
 
 void map_t::init() {
-  osm_t * const osm = appdata.osm;
+  const bounds_t * const bounds = appdata.osm->bounds;
 
   /* update canvas background color */
   canvas->set_background(style->background.color);
@@ -1575,8 +1575,8 @@ void map_t::init() {
   paint();
 
   float mult = style->frisket.mult;
-  canvas->set_bounds(mult * osm->bounds->min.x, mult * osm->bounds->min.y,
-                     mult * osm->bounds->max.x, mult * osm->bounds->max.y);
+  canvas->set_bounds(mult * bounds->min.x, mult * bounds->min.y,
+                     mult * bounds->max.x, mult * bounds->max.y);
 
   printf("restore scroll position %d/%d\n",
          state.scroll_offset.x, state.scroll_offset.y);
