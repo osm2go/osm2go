@@ -99,7 +99,7 @@ static void verify_diff(osm_t *osm)
   for(std::vector<member_t>::const_iterator it = r853->members.begin(); it != r853->members.end(); it++)
     assert_cmpnum(it->object.type, RELATION_ID);
 
-  assert(!diff_is_clean(osm, true));
+  assert(!osm->is_clean(true));
 }
 
 static void compare_with_file(const void *buf, size_t len, const char *fn)
@@ -185,7 +185,7 @@ int main(int argc, char **argv)
   assert_cmpnum(3, osm->ways.size());
   assert_cmpnum(4, osm->relations.size());
 
-  assert(diff_is_clean(osm, true));
+  assert(osm->is_clean(true));
 
   assert(diff_present(&project));
   unsigned int flags = diff_restore_file(O2G_NULLPTR, &project, osm);

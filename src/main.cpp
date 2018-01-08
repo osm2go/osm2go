@@ -307,7 +307,7 @@ cb_menu_save_changes(appdata_t *appdata) {
 static void
 cb_menu_undo_changes(appdata_t *appdata) {
   // if there is nothing to clean then don't ask
-  if (!diff_present(appdata->project) && diff_is_clean(appdata->osm, true))
+  if (!diff_present(appdata->project) && appdata->osm->is_clean(true))
     return;
 
   if(!yes_no_f(appdata->window, 0, _("Undo all changes?"),

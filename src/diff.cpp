@@ -166,36 +166,10 @@ void diff_save_relations::operator()(const std::pair<item_id_t, relation_t *> pa
   diff_save_tags(relation, node_rel);
 }
 
-struct find_object_by_flags {
-  int flagmask;
-  explicit find_object_by_flags(int f) : flagmask(f) {}
-  bool operator()(std::pair<item_id_t, base_object_t *> pair) {
-    return pair.second->flags & flagmask;
-  }
-};
-
-template<typename T> bool map_is_clean(const T &map, int flagmask = ~0) {
-  const typename T::const_iterator itEnd = map.end();
-  typename T::const_iterator it =
-    std::find_if(map.begin(), itEnd, find_object_by_flags(flagmask));
-  return it == itEnd;
-}
-
-/* return true if no diff needs to be saved */
-bool diff_is_clean(const osm_t *osm, bool honor_hidden_flags) {
-  /* check if a diff is necessary */
-  if(!map_is_clean(osm->nodes))
-    return false;
-  int flagmask = honor_hidden_flags ? ~0 : ~OSM_FLAG_HIDDEN;
-  if(!map_is_clean(osm->ways, flagmask))
-    return false;
-  return map_is_clean(osm->relations);
-}
-
 void diff_save(const project_t *project, const osm_t *osm) {
   const std::string &diff_name = diff_filename(project);
 
-  if(diff_is_clean(osm, true)) {
+  if(osm->is_clean(true)) {
     printf("data set is clean, removing diff if present\n");
     unlinkat(project->dirfd, diff_name.c_str(), 0);
     return;
@@ -601,10 +575,8 @@ unsigned int diff_restore_file(GtkWidget *window, const project_t *project, osm_
   }
 
   /* check for hidden ways and update menu accordingly */
-  const std::map<item_id_t, way_t *>::const_iterator it =
-      std::find_if(osm->ways.begin(), osm->ways.end(), find_object_by_flags(OSM_FLAG_HIDDEN));
-
-  if(it != osm->ways.end())
+  if(osm->ways.end() != std::find_if(osm->ways.begin(), osm->ways.end(),
+                                     osm_t::find_object_by_flags(OSM_FLAG_HIDDEN)))
     res |= DIFF_HAS_HIDDEN;
 
   return res;

@@ -42,7 +42,6 @@ unsigned int diff_restore_file(GtkWidget *window, const project_t *project, osm_
 void diff_restore(appdata_t &appdata);
 bool diff_present(const project_t *project);
 void diff_remove(const project_t *project);
-bool diff_is_clean(const osm_t *osm, bool honor_hidden_flags);
 
 /**
  * @brief create an empty osmChange document

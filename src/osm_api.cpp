@@ -951,7 +951,7 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
 
       appendf(context.log, O2G_NULLPTR, _("Reloading map ...\n"));
 
-      if(!diff_is_clean(appdata.osm, false)) {
+      if(!appdata.osm->is_clean(false)) {
 	appendf(context.log, COLOR_ERR, _("*** DIFF IS NOT CLEAN ***\n"));
 	appendf(context.log, COLOR_ERR, _("Something went wrong during upload,\n"));
 	appendf(context.log, COLOR_ERR, _("proceed with care!\n"));

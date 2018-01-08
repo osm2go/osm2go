@@ -434,6 +434,32 @@ node_t *osm_t::mergeNodes(node_t *first, node_t *second, bool &conflict)
   return keep;
 }
 
+template<typename T> bool map_is_clean(const T &map, int flagmask = ~0) {
+  const typename T::const_iterator itEnd = map.end();
+  return itEnd == std::find_if(map.begin(), itEnd, osm_t::find_object_by_flags(flagmask));
+}
+
+/* return true if no diff needs to be saved */
+bool osm_t::is_clean(bool honor_hidden_flags) const
+{
+  // fast check: if any map contains an object with a negative id something
+  // was added, so saving is needed
+  if(!nodes.empty() && nodes.begin()->first < 0)
+    return false;
+  if(!ways.empty() && ways.begin()->first < 0)
+    return false;
+  if(!relations.empty() && relations.begin()->first < 0)
+    return false;
+
+  // now check all objects for modifications
+  if(!map_is_clean(nodes))
+    return false;
+  int flagmask = honor_hidden_flags ? ~0 : ~OSM_FLAG_HIDDEN;
+  if(!map_is_clean(ways, flagmask))
+    return false;
+  return map_is_clean(relations);
+}
+
 struct tag_match_functor {
   const tag_t &other;
   const bool same_values;

@@ -965,7 +965,7 @@ bool project_context_t::active_n_dirty() const {
   if(appdata.project && appdata.project->name == project->name) {
     printf("editing the currently open project\n");
 
-    return !diff_is_clean(appdata.osm, true);
+    return !appdata.osm->is_clean(true);
   }
 
   return false;

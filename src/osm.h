@@ -284,6 +284,18 @@ struct osm_t {
    */
   node_t *mergeNodes(node_t *first, node_t *second, bool &conflict);
 
+  struct find_object_by_flags {
+    int flagmask;
+    explicit inline find_object_by_flags(int f) : flagmask(f) {}
+    inline bool operator()(std::pair<item_id_t, base_object_t *> pair);
+  };
+
+  /**
+   * @brief check if there are any modifications
+   * @param honor_hidden_flags if setting HIDDEN on ways should be considered a modifications
+   */
+  bool is_clean(bool honor_hidden_flags) const;
+
   dirty_t modified() const {
     return dirty_t(*this);
   }
@@ -594,6 +606,10 @@ protected:
 void osm_node_chain_free(node_chain_t &node_chain);
 
 void osm_members_free(std::vector<member_t> &members);
+
+bool osm_t::find_object_by_flags::operator()(std::pair<item_id_t, base_object_t *> pair) {
+  return pair.second->flags & flagmask;
+}
 
 #endif /* OSM_H */
 
