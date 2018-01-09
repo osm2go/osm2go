@@ -611,7 +611,6 @@ void map_edit_way_reverse(map_t *map) {
   unsigned int n_roles_flipped;
   item.object.way->reverse(map->appdata.osm, n_tags_flipped, n_roles_flipped);
 
-  item.object.obj->flags |= OSM_FLAG_DIRTY;
   map->select_way(item.object.way);
 
   // Flash a message about any side-effects

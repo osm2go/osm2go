@@ -1762,8 +1762,7 @@ void way_t::reverse(osm_t *osm, unsigned int &tags_flipped, unsigned int &roles_
 
   tags.for_each(reverse_direction_sensitive_tags_functor(tags_flipped));
 
-  if (tags_flipped> 0)
-    flags |= OSM_FLAG_DIRTY;
+  flags |= OSM_FLAG_DIRTY;
 
   std::reverse(node_chain.begin(), node_chain.end());
 
