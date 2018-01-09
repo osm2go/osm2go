@@ -1245,12 +1245,7 @@ static osm_t *process_file(const std::string &filename, icon_t &icons) {
 
 /* ----------------------- end of stream parser ------------------- */
 
-#include <sys/time.h>
-
 osm_t *osm_t::parse(const std::string &path, const std::string &filename, icon_t &icons) {
-
-  struct timeval start;
-  gettimeofday(&start, O2G_NULLPTR);
 
   // use stream parser
   osm_t *osm = O2G_NULLPTR;
@@ -1258,13 +1253,6 @@ osm_t *osm_t::parse(const std::string &path, const std::string &filename, icon_t
     osm = process_file(filename, icons);
   else
     osm = process_file(path + filename, icons);
-
-  struct timeval end;
-  gettimeofday(&end, O2G_NULLPTR);
-
-  printf("total parse time: %ldms\n",
-	 (end.tv_usec - start.tv_usec)/1000 +
-	 (end.tv_sec - start.tv_sec)*1000);
 
   return osm;
 }
