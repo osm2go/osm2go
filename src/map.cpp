@@ -1525,9 +1525,6 @@ map_t::map_t(appdata_t &a)
 			| GDK_POINTER_MOTION_MASK
 			| GDK_POINTER_MOTION_HINT_MASK);
 
-  /* autosave happens every two minutes */
-  set_autosave(true);
-
   g_signal_connect_swapped(GTK_OBJECT(canvas_widget),
      "button_press_event", G_CALLBACK(map_button_event), this);
   g_signal_connect_swapped(GTK_OBJECT(canvas_widget),

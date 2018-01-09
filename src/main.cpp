@@ -1376,6 +1376,7 @@ static int application_run(const char *proj)
   if(!appdata.project && !appdata.settings->project.empty())
     project_load(appdata, appdata.settings->project);
 
+  appdata.map->set_autosave(true);
   appdata.main_ui_enable();
 
   /* start GPS if enabled by config */
