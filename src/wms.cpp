@@ -316,27 +316,20 @@ static bool wms_cap_parse_root(wms_t *wms, xmlDocPtr doc, xmlNode *a_node) {
 
 /* get pixel extent of image display */
 void wms_setup_extent(project_t *project, wms_t *wms) {
-  pos_t center = project->bounds.center();
-  lpos_t lcenter, lmin, lmax;
-  float scale;
+  bounds_t bounds;
+  bounds.init(project->bounds);
 
-  lcenter = center.toLpos();
+  lpos_t lmin = project->bounds.min.toLpos();
+  lmin.x -= bounds.center.x;
+  lmin.y -= bounds.center.y;
+  lmin.x *= bounds.scale;
+  lmin.y *= bounds.scale;
 
-  /* the scale is needed to accomodate for "streching" */
-  /* by the mercartor projection */
-  scale = cos(DEG2RAD(center.lat));
-
-  lmin = project->bounds.min.toLpos();
-  lmin.x -= lcenter.x;
-  lmin.y -= lcenter.y;
-  lmin.x *= scale;
-  lmin.y *= scale;
-
-  lmax = project->bounds.max.toLpos();
-  lmax.x -= lcenter.x;
-  lmax.y -= lcenter.y;
-  lmax.x *= scale;
-  lmax.y *= scale;
+  lpos_t lmax = project->bounds.max.toLpos();
+  lmax.x -= bounds.center.x;
+  lmax.y -= bounds.center.y;
+  lmax.x *= bounds.scale;
+  lmax.y *= bounds.scale;
 
   wms->width = std::min(lmax.x - lmin.x, 2048);
   wms->height = std::min(lmax.y - lmin.y, 2048);

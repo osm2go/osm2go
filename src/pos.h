@@ -143,6 +143,7 @@ struct bounds_t {
   lpos_t center;
   float scale;
   bool contains(lpos_t pos) const;
+  bool init(const pos_area &area);
 };
 
 void pos_lat_str(char *str, size_t len, pos_float_t latitude);

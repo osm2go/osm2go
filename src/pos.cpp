@@ -139,6 +139,24 @@ bool bounds_t::contains(lpos_t pos) const {
   return true;
 }
 
+bool bounds_t::init(const pos_area &area)
+{
+  ll = area;
+
+  if(unlikely(!ll.valid()))
+    return false;
+
+  // calculate map zone which will be used as a reference for all drawing/projection later on
+  pos_t c = ll.center();
+
+  center = c.toLpos();
+
+  // the scale is needed to accomodate for "streching" by the mercartor projection
+  scale = cos(DEG2RAD(c.lat));
+
+  return true;
+}
+
 bool pos_area::contains(pos_t pos) const
 {
   if((pos.lat < min.lat) || (pos.lat > max.lat))
