@@ -618,7 +618,7 @@ static void callback_buffer_modified(GtkTextBuffer *buffer, GtkDialog *dialog) {
   gtk_text_buffer_get_end_iter(buffer, &end);
   char *text = gtk_text_buffer_get_text(buffer, &start, &end, FALSE);
   gtk_dialog_set_response_sensitive(dialog, GTK_RESPONSE_ACCEPT,
-				    text && strlen(text));
+                                    (text && strlen(text) > 0) ? TRUE : FALSE);
 }
 
 static gboolean cb_focus_in(GtkTextView *view, GdkEventFocus *,
