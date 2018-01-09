@@ -43,7 +43,6 @@ write_compiler_detection_header(
 add_library(osm2go_lib STATIC
 	src/about.h
 	src/appdata.h
-	src/area_edit.cpp
 	src/area_edit.h
 	src/canvas.cpp
 	src/canvas.h
@@ -173,7 +172,7 @@ pkg_search_module(SOUP IMPORTED_TARGET libsoup-2.4)
 if (SOUP_FOUND)
 	add_subdirectory(src/osm-gps-map)
 	target_link_libraries(osm2go_lib PRIVATE osm-gps-map)
-	set_property(SOURCE src/area_edit.cpp APPEND PROPERTY COMPILE_DEFINITIONS "ENABLE_OSM_GPS_MAP")
+	set_property(SOURCE src/platforms/gtk/area_edit.cpp APPEND PROPERTY COMPILE_DEFINITIONS "ENABLE_OSM_GPS_MAP")
 else ()
 	message(WARNING "libsoup-2.4/2.2 missing, disabling internal map")
 endif ()
