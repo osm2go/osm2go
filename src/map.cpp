@@ -1750,7 +1750,7 @@ void map_action_ok(map_t *map) {
     node_t *node = O2G_NULLPTR;
     osm_t * const osm = map->appdata.osm;
 
-    if(!position_in_rect(osm->bounds->ll_min, osm->bounds->ll_max, pos)) {
+    if(!osm->bounds->ll.contains(pos)) {
       map_outside_error(map->appdata);
     } else {
       node = osm->node_new(pos);
@@ -1854,12 +1854,6 @@ void map_delete_selected(map_t *map) {
 
 /* ----------------------- track related stuff ----------------------- */
 
-static bool __attribute__((warn_unused_result)) pointVisible(const bounds_t &bounds, const pos_t &pos) {
-  /* check if point is within bounds */
-  return ((pos.lat >= bounds.ll_min.lat) && (pos.lat <= bounds.ll_max.lat) &&
-          (pos.lon >= bounds.ll_min.lon) && (pos.lon <= bounds.ll_max.lon));
-}
-
 /**
  * @brief allocate a point array and initialize it with screen coordinates
  * @param bounds screen boundary
@@ -1897,7 +1891,7 @@ void map_t::track_draw_seg(track_seg_t &seg) {
   while(it != itEnd) {
     /* skip all points not on screen */
     std::vector<track_point_t>::const_iterator last = itEnd;
-    while(it != itEnd && !pointVisible(bounds, it->pos)) {
+    while(it != itEnd && !bounds.ll.contains(it->pos)) {
       last = it;
       it++;
     }
@@ -1912,7 +1906,7 @@ void map_t::track_draw_seg(track_seg_t &seg) {
 
     /* count nodes that _are_ on screen */
     std::vector<track_point_t>::const_iterator tmp = it;
-    while(tmp != itEnd && pointVisible(bounds, tmp->pos)) {
+    while(tmp != itEnd && bounds.ll.contains(tmp->pos)) {
       tmp++;
       visible++;
     }
@@ -1964,7 +1958,7 @@ void map_t::track_update_seg(track_seg_t &seg) {
   const std::vector<track_point_t>::const_iterator itEnd = seg.track_points.end();
   std::vector<track_point_t>::const_iterator last = itEnd - 1;
   /* check if the last and second_last points are visible */
-  const bool last_is_visible = pointVisible(bounds, last->pos);
+  const bool last_is_visible = bounds.ll.contains(last->pos);
   const bool second_last_is_visible = (elements_drawn > 0);
 
   /* if both are invisible, then nothing has changed on screen */

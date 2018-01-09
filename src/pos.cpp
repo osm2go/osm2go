@@ -139,10 +139,11 @@ bool bounds_t::contains(lpos_t pos) const {
   return true;
 }
 
-bool position_in_rect(const pos_t &ll_min, const pos_t &ll_max, const pos_t &pos) {
-  if((pos.lat < ll_min.lat) || (pos.lat > ll_max.lat))
+bool pos_area::contains(pos_t pos) const
+{
+  if((pos.lat < min.lat) || (pos.lat > max.lat))
     return false;
-  if((pos.lon < ll_min.lon) || (pos.lon > ll_max.lon))
+  if((pos.lon < min.lon) || (pos.lon > max.lon))
     return false;
   return true;
 }

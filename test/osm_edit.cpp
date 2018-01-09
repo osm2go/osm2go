@@ -51,13 +51,10 @@ static void nevercalled(const tag_t &) {
 }
 
 static void set_bounds(osm_t &o) {
-  o.rbounds.ll_min.lat = 52.2692786;
-  o.rbounds.ll_min.lon = 9.5750497;
-  o.rbounds.ll_max.lat = 52.2695463;
-  o.rbounds.ll_max.lon = 9.5755;
+  o.rbounds.ll.min = pos_t(52.2692786, 9.5750497);
+  o.rbounds.ll.max = pos_t(52.2695463, 9.5755);
 
-  pos_t center((o.rbounds.ll_max.lat + o.rbounds.ll_min.lat) / 2,
-               (o.rbounds.ll_max.lon + o.rbounds.ll_min.lon) / 2);
+  pos_t center = o.rbounds.ll.center();
 
   o.rbounds.center = center.toLpos();
   o.rbounds.scale = std::cos(DEG2RAD(center.lat));

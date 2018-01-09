@@ -170,7 +170,7 @@ struct area_context_t {
   g_widget dialog;
   GtkWidget * const notebook;
   area_edit_t &area;
-  pos_t min, max;      /* local copy to work on */
+  pos_area bounds;      ///< local copy to work on
   GtkWidget *warning;
 
   struct {
@@ -203,8 +203,7 @@ area_context_t::area_context_t(area_edit_t &a, GtkWidget *dlg)
   : dialog(dlg)
   , notebook(notebook_new())
   , area(a)
-  , min(a.min)
-  , max(a.max)
+  , bounds(a.bounds)
   , warning(O2G_NULLPTR)
 {
   memset(&direct, 0, sizeof(direct));
@@ -217,11 +216,10 @@ area_context_t::area_context_t(area_edit_t &a, GtkWidget *dlg)
 #endif
 }
 
-area_edit_t::area_edit_t(gps_state_t *gps, pos_t &mi, pos_t &ma, GtkWidget *dlg)
+area_edit_t::area_edit_t(gps_state_t *gps, pos_area &b, GtkWidget *dlg)
   : gps_state(gps)
   , parent(dlg)
-  , min(mi)
-  , max(ma)
+  , bounds(b)
 {
 }
 
@@ -229,12 +227,12 @@ area_edit_t::area_edit_t(gps_state_t *gps, pos_t &mi, pos_t &ma, GtkWidget *dlg)
  * @brief calculate the selected area in square kilometers
  */
 static double selected_area(const area_context_t *context) {
-  pos_float_t center_lat = (context->max.lat + context->min.lat)/2;
+  pos_float_t center_lat = context->bounds.centerLat();
   double vscale = DEG2RAD(POS_EQ_RADIUS / 1000.0);
   double hscale = DEG2RAD(cos(DEG2RAD(center_lat)) * POS_EQ_RADIUS / 1000.0);
 
-  return vscale * (context->max.lat - context->min.lat) *
-         hscale * (context->max.lon - context->min.lon);
+  return vscale * context->bounds.latDist() *
+         hscale * context->bounds.lonDist();
 }
 
 static bool current_tab_is(GtkNotebook *nb, GtkWidget *w, const char *str) {
@@ -291,12 +289,11 @@ static bool area_warning(area_context_t *context) {
 static void area_main_update(area_context_t *context) {
   /* also setup the local error messages here, so they are */
   /* updated for all entries at once */
-  if(!context->min.valid() || !context->max.valid()) {
+  if(!context->bounds.valid()) {
     gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog.get()),
 				      GTK_RESPONSE_ACCEPT, FALSE);
   } else {
-    if(context->min.lat >= context->max.lat ||
-       context->min.lon >= context->max.lon) {
+    if(!context->bounds.normalized()) {
       gtk_label_set_text(GTK_LABEL(context->direct.error),
 		  _("\"From\" must be smaller than \"to\" value!"));
       gtk_label_set_text(GTK_LABEL(context->extent.error),
@@ -337,10 +334,10 @@ static GSList *pos_append(GSList *list, pos_float_t lat, pos_float_t lon) {
 struct add_bounds {
   OsmGpsMap * const map;
   explicit add_bounds(OsmGpsMap *m) : map(m) {}
-  void operator()(const pos_bounds &b);
+  void operator()(const pos_area &b);
 };
 
-void add_bounds::operator()(const pos_bounds &b)
+void add_bounds::operator()(const pos_area &b)
 {
   GSList *box = pos_append(O2G_NULLPTR, b.min.lat, b.min.lon);
   box = pos_append(box, b.max.lat, b.min.lon);
@@ -364,7 +361,7 @@ static void map_update(area_context_t *context, bool forced) {
   printf("do map redraw\n");
 
   /* check if the position is invalid */
-  if(!context->min.valid() || !context->max.valid()) {
+  if(!context->bounds.valid()) {
     /* no coordinates given: display around the current GPS position if available */
     pos_t pos = context->area.gps_state->get_pos();
     int zoom = 12;
@@ -379,16 +376,14 @@ static void map_update(area_context_t *context, bool forced) {
     osm_gps_map_track_remove_all(context->map.widget);
   } else {
 
-    pos_float_t center_lat = (context->max.lat + context->min.lat)/2;
-    pos_float_t center_lon = (context->max.lon + context->min.lon)/2;
-
-    osm_gps_map_set_center(context->map.widget, center_lat, center_lon);
+    osm_gps_map_set_center(context->map.widget, context->bounds.centerLat(),
+                           context->bounds.centerLon());
 
     /* we know the widgets pixel size, we know the required real size, */
     /* we want the zoom! */
     GtkWidget *wd = GTK_WIDGET(context->map.widget);
-    double vzoom = wd->allocation.height / (context->max.lat - context->min.lat);
-    double hzoom = wd->allocation.width  / (context->max.lon - context->min.lon);
+    double vzoom = wd->allocation.height / context->bounds.latDist();
+    double hzoom = wd->allocation.width  / context->bounds.lonDist();
 
     /* use smallest zoom, so everything fits on screen */
     osm_gps_map_set_zoom(context->map.widget,
@@ -397,13 +392,12 @@ static void map_update(area_context_t *context, bool forced) {
     /* ---------- draw border (as a gps track) -------------- */
     osm_gps_map_track_remove_all(context->map.widget);
 
-    if(context->max.lat > context->min.lat &&
-       context->max.lon > context->min.lon) {
-      GSList *box = pos_append(O2G_NULLPTR, context->min.lat, context->min.lon);
-      box = pos_append(box, context->max.lat, context->min.lon);
-      box = pos_append(box, context->max.lat, context->max.lon);
-      box = pos_append(box, context->min.lat, context->max.lon);
-      box = pos_append(box, context->min.lat, context->min.lon);
+    if(context->bounds.normalized()) {
+      GSList *box = pos_append(O2G_NULLPTR, context->bounds.min.lat, context->bounds.min.lon);
+      box = pos_append(box, context->bounds.max.lat, context->bounds.min.lon);
+      box = pos_append(box, context->bounds.max.lat, context->bounds.max.lon);
+      box = pos_append(box, context->bounds.min.lat, context->bounds.max.lon);
+      box = pos_append(box, context->bounds.min.lat, context->bounds.min.lon);
 
       osm_gps_map_add_track(context->map.widget, box);
     }
@@ -424,16 +418,16 @@ static gboolean on_map_configure(area_context_t *context) {
 
 /* the contents of the direct tab have been changed */
 static void direct_update(area_context_t *context) {
-  pos_lat_entry_set(context->direct.minlat, context->min.lat);
-  pos_lon_entry_set(context->direct.minlon, context->min.lon);
-  pos_lat_entry_set(context->direct.maxlat, context->max.lat);
-  pos_lon_entry_set(context->direct.maxlon, context->max.lon);
+  pos_lat_entry_set(context->direct.minlat, context->bounds.min.lat);
+  pos_lon_entry_set(context->direct.minlon, context->bounds.min.lon);
+  pos_lat_entry_set(context->direct.maxlat, context->bounds.max.lat);
+  pos_lon_entry_set(context->direct.maxlon, context->bounds.max.lon);
 }
 
 /* update the contents of the extent tab */
 static void extent_update(area_context_t *context) {
-  pos_float_t center_lat = (context->max.lat + context->min.lat)/2;
-  pos_float_t center_lon = (context->max.lon + context->min.lon)/2;
+  pos_float_t center_lat = context->bounds.centerLat();
+  pos_float_t center_lon = context->bounds.centerLon();
 
   pos_lat_entry_set(context->extent.lat, center_lat);
   pos_lat_entry_set(context->extent.lon, center_lon);
@@ -441,8 +435,8 @@ static void extent_update(area_context_t *context) {
   double vscale = DEG2RAD(POS_EQ_RADIUS / 1000.0);
   double hscale = DEG2RAD(cos(DEG2RAD(center_lat)) * POS_EQ_RADIUS / 1000.0);
 
-  double height = vscale * (context->max.lat - context->min.lat);
-  double width  = hscale * (context->max.lon - context->min.lon);
+  double height = vscale * context->bounds.latDist();
+  double width  = hscale * context->bounds.lonDist();
 
   pos_dist_entry_set(context->extent.width, width, context->extent.is_mil);
   pos_dist_entry_set(context->extent.height, height, context->extent.is_mil);
@@ -454,10 +448,10 @@ static void callback_modified_direct(area_context_t *context) {
     return;
 
   /* parse the fields from the direct entry pad */
-  if(unlikely(!pos_lat_get(context->direct.minlat, context->min.lat) ||
-              !pos_lon_get(context->direct.minlon, context->min.lon) ||
-              !pos_lat_get(context->direct.maxlat, context->max.lat) ||
-              !pos_lon_get(context->direct.maxlon, context->max.lon)))
+  if(unlikely(!pos_lat_get(context->direct.minlat, context->bounds.min.lat) ||
+              !pos_lon_get(context->direct.minlon, context->bounds.min.lon) ||
+              !pos_lat_get(context->direct.maxlat, context->bounds.max.lat) ||
+              !pos_lon_get(context->direct.maxlon, context->bounds.max.lon)))
     return;
 
   area_main_update(context);
@@ -486,12 +480,12 @@ static void callback_modified_extent(area_context_t *context) {
   double width  = pos_dist_get(context->extent.width, context->extent.is_mil);
 
   height /= 2 * vscale;
-  context->min.lat = center_lat - height;
-  context->max.lat = center_lat + height;
+  context->bounds.min.lat = center_lat - height;
+  context->bounds.max.lat = center_lat + height;
 
   width /= 2 * hscale;
-  context->min.lon = center_lon - width;
-  context->max.lon = center_lon + width;
+  context->bounds.min.lon = center_lon - width;
+  context->bounds.max.lon = center_lon + width;
 
   area_main_update(context);
 
@@ -546,13 +540,13 @@ static void callback_fetch_mm_clicked(area_context_t *context) {
 
   double vscale = DEG2RAD(POS_EQ_RADIUS);
   double height = 8 * (1<<zoom) / vscale;
-  context->min.lat = center_lat - height;
-  context->max.lat = center_lat + height;
+  context->bounds.min.lat = center_lat - height;
+  context->bounds.max.lat = center_lat + height;
 
   double hscale = DEG2RAD(cos(DEG2RAD(center_lat)) * POS_EQ_RADIUS);
   double width  = 16 * (1<<zoom) / hscale;
-  context->min.lon = center_lon - width;
-  context->max.lon = center_lon + width;
+  context->bounds.min.lon = center_lon - width;
+  context->bounds.max.lon = center_lon + width;
 
   area_main_update(context);
 
@@ -638,19 +632,19 @@ on_map_button_release_event(GtkWidget *widget,
     osm_gps_map_add_track(map, box);
 
     if(start.rlat < end.rlat) {
-      context->min.lat = RAD2DEG(start.rlat);
-      context->max.lat = RAD2DEG(end.rlat);
+      context->bounds.min.lat = RAD2DEG(start.rlat);
+      context->bounds.max.lat = RAD2DEG(end.rlat);
     } else {
-      context->min.lat = RAD2DEG(end.rlat);
-      context->max.lat = RAD2DEG(start.rlat);
+      context->bounds.min.lat = RAD2DEG(end.rlat);
+      context->bounds.max.lat = RAD2DEG(start.rlat);
     }
 
     if(start.rlon < end.rlon) {
-      context->min.lon = RAD2DEG(start.rlon);
-      context->max.lon = RAD2DEG(end.rlon);
+      context->bounds.min.lon = RAD2DEG(start.rlon);
+      context->bounds.max.lon = RAD2DEG(end.rlon);
     } else {
-      context->min.lon = RAD2DEG(end.rlon);
-      context->max.lon = RAD2DEG(start.rlon);
+      context->bounds.min.lon = RAD2DEG(end.rlon);
+      context->bounds.max.lon = RAD2DEG(start.rlon);
     }
 
     area_main_update(context);
@@ -751,18 +745,18 @@ bool area_edit_t::run() {
   gtk_table_set_col_spacings(table, 10);
   gtk_table_set_row_spacings(table, 5);
 
-  context.direct.minlat = pos_lat_entry_new(min.lat);
+  context.direct.minlat = pos_lat_entry_new(bounds.min.lat);
   table_attach(table, context.direct.minlat, 0, 0);
   GtkWidget *label = gtk_label_new(_("to"));
   table_attach(table,  label, 1, 0);
-  context.direct.maxlat = pos_lat_entry_new(max.lat);
+  context.direct.maxlat = pos_lat_entry_new(bounds.max.lat);
   table_attach(table, context.direct.maxlat, 2, 0);
 
-  context.direct.minlon = pos_lon_entry_new(min.lon);
+  context.direct.minlon = pos_lon_entry_new(bounds.min.lon);
   table_attach(table, context.direct.minlon, 0, 1);
   label = gtk_label_new(_("to"));
   table_attach(table,  label, 1, 1);
-  context.direct.maxlon = pos_lon_entry_new(max.lon);
+  context.direct.maxlon = pos_lon_entry_new(bounds.max.lon);
   table_attach(table, context.direct.maxlon, 2, 1);
 
   /* setup this page */
@@ -893,8 +887,7 @@ bool area_edit_t::run() {
     if(GTK_RESPONSE_ACCEPT == response) {
       if(area_warning(&context)) {
         /* copy modified values back to given storage */
-        min = context.min;
-        max = context.max;
+        bounds = context.bounds;
         ok = true;
         break;
       }

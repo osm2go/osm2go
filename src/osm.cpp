@@ -887,13 +887,13 @@ static void skip_element(xmlTextReaderPtr reader) {
 
 /* parse bounds */
 static bool process_bounds(xmlTextReaderPtr reader, bounds_t *bounds) {
-  bounds->ll_min = pos_t::fromXmlProperties(reader, "minlat", "minlon");
-  bounds->ll_max = pos_t::fromXmlProperties(reader, "maxlat", "maxlon");
+  bounds->ll.min = pos_t::fromXmlProperties(reader, "minlat", "minlon");
+  bounds->ll.max = pos_t::fromXmlProperties(reader, "maxlat", "maxlon");
 
-  if(unlikely(!bounds->ll_min.valid() || !bounds->ll_max.valid())) {
+  if(unlikely(!bounds->ll.valid())) {
     errorf(O2G_NULLPTR, "Invalid coordinate in bounds (%f/%f/%f/%f)",
-	   bounds->ll_min.lat, bounds->ll_min.lon,
-	   bounds->ll_max.lat, bounds->ll_max.lon);
+           bounds->ll.min.lat, bounds->ll.min.lon,
+           bounds->ll.max.lat, bounds->ll.max.lon);
 
     return false;
   }
@@ -903,8 +903,7 @@ static bool process_bounds(xmlTextReaderPtr reader, bounds_t *bounds) {
 
   /* calculate map zone which will be used as a reference for all */
   /* drawing/projection later on */
-  pos_t center((bounds->ll_max.lat + bounds->ll_min.lat)/2,
-               (bounds->ll_max.lon + bounds->ll_min.lon)/2);
+  pos_t center = bounds->ll.center();
 
   bounds->center = center.toLpos();
 
@@ -912,13 +911,13 @@ static bool process_bounds(xmlTextReaderPtr reader, bounds_t *bounds) {
   /* by the mercartor projection */
   bounds->scale = cos(DEG2RAD(center.lat));
 
-  bounds->min = bounds->ll_min.toLpos();
+  bounds->min = bounds->ll.min.toLpos();
   bounds->min.x -= bounds->center.x;
   bounds->min.y -= bounds->center.y;
   bounds->min.x *= bounds->scale;
   bounds->min.y *= bounds->scale;
 
-  bounds->max = bounds->ll_max.toLpos();
+  bounds->max = bounds->ll.max.toLpos();
   bounds->max.x -= bounds->center.x;
   bounds->max.y -= bounds->center.y;
   bounds->max.x *= bounds->scale;

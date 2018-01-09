@@ -84,8 +84,9 @@ static void initImageFormats()
 }
 
 struct wms_llbbox_t {
-  wms_llbbox_t() : valid(false) {}
-  pos_t min, max;
+  explicit wms_llbbox_t()
+    : bounds(pos_t(NAN, NAN), pos_t(NAN, NAN)), valid(false) {}
+  pos_area bounds;
   bool valid;
 };
 
@@ -143,15 +144,15 @@ struct wms_t {
   wms_cap_t cap;
 };
 
-static bool wms_bbox_is_valid(const pos_t &min, const pos_t &max) {
+static bool wms_bbox_is_valid(const pos_area &bounds) {
   /* all four coordinates are valid? */
-  if(unlikely(!min.valid() || !max.valid()))
+  if(unlikely(!bounds.valid()))
     return false;
 
   /* min/max span a useful range? */
-  if(unlikely(max.lat - min.lat < 0.1))
+  if(unlikely(bounds.max.lat - bounds.min.lat < 0.1))
     return false;
-  if(unlikely(max.lon - min.lon < 0.1))
+  if(unlikely(bounds.max.lon - bounds.min.lon < 0.1))
     return false;
 
   return true;
@@ -162,8 +163,6 @@ static wms_layer_t *wms_cap_parse_layer(xmlDocPtr doc, xmlNode *a_node) {
   xmlNode *cur_node = O2G_NULLPTR;
 
   wms_layer = new wms_layer_t();
-  wms_layer->llbbox.min.lon = wms_layer->llbbox.min.lat = NAN;
-  wms_layer->llbbox.max.lon = wms_layer->llbbox.max.lat = NAN;
 
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
@@ -185,16 +184,15 @@ static wms_layer_t *wms_cap_parse_layer(xmlDocPtr doc, xmlNode *a_node) {
           wms_layer->srs = reinterpret_cast<char *>(str.get());
         printf("SRS = %s\n", str.get());
       } else if(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "LatLonBoundingBox") == 0) {
-        wms_layer->llbbox.min = pos_t::fromXmlProperties(cur_node, "miny", "minx");
-        wms_layer->llbbox.max = pos_t::fromXmlProperties(cur_node, "miny", "maxx");
+        wms_layer->llbbox.bounds.min = pos_t::fromXmlProperties(cur_node, "miny", "minx");
+        wms_layer->llbbox.bounds.max = pos_t::fromXmlProperties(cur_node, "miny", "maxx");
       } else
 	printf("found unhandled WMT_MS_Capabilities/Capability/Layer/%s\n",
 	       cur_node->name);
     }
   }
 
-  wms_layer->llbbox.valid = wms_bbox_is_valid(wms_layer->llbbox.min,
-                                              wms_layer->llbbox.max);
+  wms_layer->llbbox.valid = wms_bbox_is_valid(wms_layer->llbbox.bounds);
 
   printf("------------------- Layer: %s ---------------------------\n",
 	 wms_layer->title.c_str());
@@ -202,8 +200,8 @@ static wms_layer_t *wms_cap_parse_layer(xmlDocPtr doc, xmlNode *a_node) {
   printf("EPSG-4326: %s\n", wms_layer->epsg4326?"yes":"no");
   if(wms_layer->llbbox.valid)
     printf("LatLonBBox: %f/%f %f/%f\n",
-	   wms_layer->llbbox.min.lat, wms_layer->llbbox.min.lon,
-	   wms_layer->llbbox.max.lat, wms_layer->llbbox.max.lon);
+	   wms_layer->llbbox.bounds.min.lat, wms_layer->llbbox.bounds.min.lon,
+	   wms_layer->llbbox.bounds.max.lat, wms_layer->llbbox.bounds.max.lon);
   else
     printf("No/invalid LatLonBBox\n");
 
@@ -318,12 +316,9 @@ static bool wms_cap_parse_root(wms_t *wms, xmlDocPtr doc, xmlNode *a_node) {
 
 /* get pixel extent of image display */
 void wms_setup_extent(project_t *project, wms_t *wms) {
-  pos_t center;
+  pos_t center = project->bounds.center();
   lpos_t lcenter, lmin, lmax;
   float scale;
-
-  center.lat = (project->min.lat + project->max.lat)/2;
-  center.lon = (project->min.lon + project->max.lon)/2;
 
   lcenter = center.toLpos();
 
@@ -331,13 +326,13 @@ void wms_setup_extent(project_t *project, wms_t *wms) {
   /* by the mercartor projection */
   scale = cos(DEG2RAD(center.lat));
 
-  lmin = project->min.toLpos();
+  lmin = project->bounds.min.toLpos();
   lmin.x -= lcenter.x;
   lmin.y -= lcenter.y;
   lmin.x *= scale;
   lmin.y *= scale;
 
-  lmax = project->max.toLpos();
+  lmax = project->bounds.max.toLpos();
   lmax.x -= lcenter.x;
   lmax.y -= lcenter.y;
   lmax.x *= scale;
@@ -367,10 +362,10 @@ wms_t::~wms_t() {
 /* ---------------------- use ------------------- */
 
 static bool wms_llbbox_fits(const project_t *project, const wms_llbbox_t &llbbox) {
-  return ((project->min.lat >= llbbox.min.lat) &&
-          (project->min.lon >= llbbox.min.lon) &&
-          (project->max.lat <= llbbox.max.lat) &&
-          (project->max.lon <= llbbox.max.lon));
+  return ((project->bounds.min.lat >= llbbox.bounds.min.lat) &&
+          (project->bounds.min.lon >= llbbox.bounds.min.lon) &&
+          (project->bounds.max.lat <= llbbox.bounds.max.lat) &&
+          (project->bounds.max.lon <= llbbox.bounds.max.lon));
 }
 
 struct child_layer_functor {
@@ -1144,8 +1139,8 @@ void wms_import(appdata_t &appdata) {
     url += std::string(ctx.selected.size() - 1, ',');
 
   /* build strings of min and max lat and lon to be used in url */
-  std::string mincoords = appdata.project->min.print(',');
-  std::string maxcoords = appdata.project->max.print(',');
+  std::string mincoords = appdata.project->bounds.min.print(',');
+  std::string maxcoords = appdata.project->bounds.max.print(',');
 
   /* find preferred supported video format */
   const FormatMap::const_iterator itEnd = ImageFormats.end();

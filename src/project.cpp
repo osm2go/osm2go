@@ -104,15 +104,15 @@ project_context_t::project_context_t(appdata_t &a, project_t *p, gboolean n,
   , diff_remove(button_new_with_label(_("Undo all")))
   , desc(entry_new())
   , download(button_new_with_label(_("Download")))
-  , minlat(pos_lat_label_new(project->min.lat))
-  , minlon(pos_lon_label_new(project->min.lon))
-  , maxlat(pos_lat_label_new(project->max.lat))
-  , maxlon(pos_lon_label_new(project->max.lon))
+  , minlat(pos_lat_label_new(project->bounds.min.lat))
+  , minlon(pos_lon_label_new(project->bounds.min.lon))
+  , maxlat(pos_lat_label_new(project->bounds.max.lat))
+  , maxlon(pos_lon_label_new(project->bounds.max.lon))
   , is_new(n)
 #ifdef SERVER_EDITABLE
   , server(entry_new(EntryFlagsNoAutoCap))
 #endif
-  , area_edit(a.gps_state, project->min, project->max, dlg)
+  , area_edit(a.gps_state, project->bounds, dlg)
   , projects(j)
 {
 }
@@ -232,9 +232,9 @@ static bool project_read(const std::string &project_file, project_t *project,
             } else
               project->osm = reinterpret_cast<char *>(str.get());
           } else if(strcmp(reinterpret_cast<const char *>(node->name), "min") == 0) {
-            project->min = pos_t::fromXmlProperties(node);
+            project->bounds.min = pos_t::fromXmlProperties(node);
           } else if(strcmp(reinterpret_cast<const char *>(node->name), "max") == 0) {
-            project->max = pos_t::fromXmlProperties(node);
+            project->bounds.max = pos_t::fromXmlProperties(node);
           }
         }
       }
@@ -304,10 +304,10 @@ bool project_t::save(GtkWidget *parent) {
     xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "osm", BAD_CAST osm.c_str());
 
   node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "min", O2G_NULLPTR);
-  min.toXmlProperties(node);
+  bounds.min.toXmlProperties(node);
 
   node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "max", O2G_NULLPTR);
-  max.toXmlProperties(node);
+  bounds.max.toXmlProperties(node);
 
   node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "map", O2G_NULLPTR);
   g_ascii_formatd(str, sizeof(str), "%.04f", map_state.zoom);
@@ -612,8 +612,8 @@ static project_t *project_new(select_context_t *context) {
   /* build project osm file name */
   project->osm = project->name + ".osm";
 
-  project->min.lat = NAN;  project->min.lon = NAN;
-  project->max.lat = NAN;  project->max.lon = NAN;
+  project->bounds.min = pos_t(NAN, NAN);
+  project->bounds.max = pos_t(NAN, NAN);
 
   /* create project file on disk */
   if(!project->save(context->dialog)) {
@@ -732,15 +732,11 @@ static void on_project_edit(select_context_t *context) {
       }
 
       /* update coordinates */
-      if((cur->min.lat != project->min.lat) ||
-	 (cur->max.lat != project->max.lat) ||
-	 (cur->min.lon != project->min.lon) ||
-	 (cur->max.lon != project->max.lon)) {
+      if(cur->bounds != project->bounds) {
         appdata_t &appdata = context->appdata;
 
-	/* save modified coordinates */
-        cur->min = project->min;
-        cur->max = project->max;
+        // save modified coordinates
+        cur->bounds = project->bounds;
 
 	/* try to do this automatically */
 
@@ -800,7 +796,7 @@ struct project_list_add {
   void operator()(const project_t *project);
 };
 
-void project_list_add::operator()(const project_t* project)
+void project_list_add::operator()(const project_t *project)
 {
   GtkTreeIter iter;
   const gchar *status_stock_id = project_get_status_icon_stock_id(
@@ -815,7 +811,7 @@ void project_list_add::operator()(const project_t* project)
                      -1);
 
   /* decide if to select this project because it matches the current position */
-  if(check_pos && position_in_rect(project->min, project->max, pos)) {
+  if(check_pos && project->bounds.contains(pos)) {
     seliter = iter;
     has_sel = TRUE;
     check_pos = false;
@@ -983,23 +979,18 @@ static void project_diffstat(project_context_t &context) {
   gtk_label_set_text(GTK_LABEL(context.diff_stat), str);
 }
 
-static gboolean
-project_pos_is_valid(const project_t *project) {
-  return (project->min.valid() && project->max.valid()) ? TRUE : FALSE;
-}
-
 struct projects_to_bounds {
-  std::vector<pos_bounds> &pbounds;
-  explicit projects_to_bounds(std::vector<pos_bounds> &b) : pbounds(b) {}
+  std::vector<pos_area> &pbounds;
+  explicit projects_to_bounds(std::vector<pos_area> &b) : pbounds(b) {}
   void operator()(const project_t *project);
 };
 
 void projects_to_bounds::operator()(const project_t* project)
 {
-  if (!project_pos_is_valid(project))
+  if (!project->bounds.valid())
     return;
 
-  pbounds.push_back(pos_bounds(project->min, project->max));
+  pbounds.push_back(project->bounds);
 }
 
 static void on_edit_clicked(project_context_t *context) {
@@ -1022,20 +1013,17 @@ static void on_edit_clicked(project_context_t *context) {
     /* the wms layer isn't usable with new coordinates */
     wms_remove_file(*project);
 
-    pos_lat_label_set(context->minlat, project->min.lat);
-    pos_lon_label_set(context->minlon, project->min.lon);
-    pos_lat_label_set(context->maxlat, project->max.lat);
-    pos_lon_label_set(context->maxlon, project->max.lon);
+    pos_lat_label_set(context->minlat, project->bounds.min.lat);
+    pos_lon_label_set(context->minlon, project->bounds.min.lon);
+    pos_lat_label_set(context->maxlat, project->bounds.max.lat);
+    pos_lon_label_set(context->maxlon, project->bounds.max.lon);
 
-    gboolean pos_valid = project_pos_is_valid(project);
-    gtk_widget_set_sensitive(context->download, pos_valid);
+    bool pos_valid =  project->bounds.valid();
+    gtk_widget_set_sensitive(context->download, pos_valid ? TRUE : FALSE);
 
     /* (re-) download area */
-    if (pos_valid)
-    {
-      if(osm_download(GTK_WIDGET(context->dialog), context->appdata.settings, project))
-         project->data_dirty = false;
-    }
+    if(pos_valid && osm_download(GTK_WIDGET(context->dialog), context->appdata.settings, project))
+      project->data_dirty = false;
     project_filesize(context);
   }
 }
@@ -1170,7 +1158,8 @@ project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
   gtk_table_attach_defaults(GTK_TABLE(table), context.fsize, 1, 4, 4, 5);
   g_signal_connect_swapped(GTK_OBJECT(context.download), "clicked",
                            G_CALLBACK(on_download_clicked), &context);
-  gtk_widget_set_sensitive(context.download, project_pos_is_valid(project));
+  gtk_widget_set_sensitive(context.download,
+                           project->bounds.valid() ? TRUE : FALSE);
 
   gtk_table_attach_defaults(GTK_TABLE(table), context.download, 4, 5, 4, 5);
 
@@ -1373,8 +1362,7 @@ project_t::project_t(map_state_t &ms, const std::string &n, const std::string &b
   , dirfd(path.c_str())
 {
   memset(&wms_offset, 0, sizeof(wms_offset));
-  memset(&min, 0, sizeof(min));
-  memset(&max, 0, sizeof(max));
+  memset(&bounds, 0, sizeof(bounds));
 }
 
 project_t::~project_t()

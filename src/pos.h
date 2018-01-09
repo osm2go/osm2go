@@ -59,6 +59,8 @@ typedef struct pos_t {
   inline pos_t(pos_float_t a, pos_float_t o) : lat(a), lon(o) {}
   bool operator==(const pos_t &other) const
   { return lat == other.lat && lon == other.lon; }
+  inline bool operator!=(const pos_t &other) const
+  { return !operator==(other); }
   bool valid() const;
 
   /**
@@ -90,6 +92,36 @@ typedef struct pos_t {
 
 #ifdef __cplusplus
 
+struct pos_area {
+  explicit pos_area() {}
+  pos_area(const pos_t &mi, const pos_t &ma)
+    : min(mi), max(ma) {}
+
+  pos_t min;
+  pos_t max;
+
+  bool contains(pos_t pos) const;
+  inline bool valid() const
+  { return min.valid() && max.valid(); }
+
+  inline pos_float_t centerLat() const
+  { return (max.lat + min.lat) / 2; }
+  inline pos_float_t centerLon() const
+  { return (max.lon + min.lon) / 2; }
+  inline pos_t center() const
+  { return pos_t(centerLat(), centerLon()); }
+  inline pos_float_t latDist() const
+  { return max.lat - min.lat; }
+  inline pos_float_t lonDist() const
+  { return max.lon - min.lon; }
+  inline bool normalized() const
+  { return max.lat > min.lat && max.lon > min.lon; }
+  inline bool operator==(const pos_area &other) const
+  { return max == other.max && min == other.min; }
+  inline bool operator!=(const pos_area &other) const
+  { return !operator==(other); }
+};
+
 /* local position */
 typedef struct lpos_t {
   lpos_t() {}
@@ -106,7 +138,7 @@ typedef struct lpos_t {
 } lpos_t;
 
 struct bounds_t {
-  pos_t ll_min, ll_max;
+  pos_area ll;
   lpos_t min, max;
   lpos_t center;
   float scale;
@@ -118,8 +150,6 @@ void pos_lon_str(char *str, size_t len, pos_float_t longitude);
 
 bool pos_lat_valid(pos_float_t lat);
 bool pos_lon_valid(pos_float_t lon);
-
-bool position_in_rect(const pos_t &ll_min, const pos_t &ll_max, const pos_t &pos);
 
 void remove_trailing_zeroes(char *str);
 

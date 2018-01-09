@@ -44,7 +44,7 @@ struct project_t {
 
   map_state_t &map_state;
 
-  pos_t min, max;
+  pos_area bounds;
 
   const std::string name;
   const std::string path;
