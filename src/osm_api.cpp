@@ -930,12 +930,12 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
 
   bool reload_map = false;
   if(project->data_dirty) {
-    appendf(context.log, O2G_NULLPTR, _("Server data has been modified.\n"));
-    appendf(context.log, O2G_NULLPTR, _("Downloading updated osm data ...\n"));
+    appendf(context.log, O2G_NULLPTR, _("Server data has been modified.\n"
+                                        "Downloading updated osm data ...\n"));
 
     if(osm_download(context.dialog, appdata.settings, project)) {
-      appendf(context.log, O2G_NULLPTR, _("Download successful!\n"));
-      appendf(context.log, O2G_NULLPTR, _("The map will be reloaded.\n"));
+      appendf(context.log, O2G_NULLPTR, _("Download successful!\n"
+                                          "The map will be reloaded.\n"));
       project->data_dirty = false;
       reload_map = true;
     } else
@@ -951,11 +951,10 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
 
       appendf(context.log, O2G_NULLPTR, _("Reloading map ...\n"));
 
-      if(!appdata.osm->is_clean(false)) {
-	appendf(context.log, COLOR_ERR, _("*** DIFF IS NOT CLEAN ***\n"));
-	appendf(context.log, COLOR_ERR, _("Something went wrong during upload,\n"));
-	appendf(context.log, COLOR_ERR, _("proceed with care!\n"));
-      }
+      if(!appdata.osm->is_clean(false))
+        appendf(context.log, COLOR_ERR, _("*** DIFF IS NOT CLEAN ***\n"
+                                          "Something went wrong during upload,\n"
+                                          "proceed with care!\n"));
 
       /* redraw the entire map by destroying all map items and redrawing them */
       appendf(context.log, O2G_NULLPTR, _("Cleaning up ...\n"));
