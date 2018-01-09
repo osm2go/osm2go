@@ -138,7 +138,7 @@ struct wms_t {
 
   std::string server;
   std::string path;
-  gint width, height;
+  int width, height;
 
   wms_cap_t cap;
 };
@@ -374,14 +374,13 @@ static bool wms_llbbox_fits(const project_t *project, const wms_llbbox_t &llbbox
 }
 
 struct child_layer_functor {
-  gint depth;
   bool epsg4326;
   const wms_llbbox_t * const llbbox;
   const std::string &srs;
   wms_layer_t::list &clayers;
-  child_layer_functor(gint d, bool e, const wms_llbbox_t *x, const std::string &s,
+  child_layer_functor(bool e, const wms_llbbox_t *x, const std::string &s,
                       wms_layer_t::list &c)
-    : depth(d), epsg4326(e), llbbox(x), srs(s), clayers(c) {}
+    : epsg4326(e), llbbox(x), srs(s), clayers(c) {}
   void operator()(const wms_layer_t *layer);
 };
 
@@ -404,7 +403,7 @@ void child_layer_functor::operator()(const wms_layer_t *layer)
   }
 
   std::for_each(layer->children.begin(), layer->children.end(),
-                child_layer_functor(depth + 1, local_epsg4326,
+                child_layer_functor(local_epsg4326,
                                     local_llbbox, srs, clayers));
 }
 
@@ -421,7 +420,7 @@ void requestable_layers_functor::operator()(const wms_layer_t* layer)
     llbbox = O2G_NULLPTR;
 
   std::for_each(layer->children.begin(), layer->children.end(),
-                child_layer_functor(1, layer->epsg4326, llbbox, layer->srs,
+                child_layer_functor(layer->epsg4326, llbbox, layer->srs,
                                     c_layer));
 }
 

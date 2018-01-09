@@ -593,7 +593,7 @@ struct josm_elemstyles_colorize_node_functor {
   }
 };
 
-static int line_mod_apply_width(gint width, const elemstyle_width_mod_t *mod) {
+static int line_mod_apply_width(int width, const elemstyle_width_mod_t *mod) {
   switch(mod->mod) {
   case ES_MOD_NONE:
   default:

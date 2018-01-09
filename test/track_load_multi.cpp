@@ -4,12 +4,11 @@
 
 #include <algorithm>
 #include <cerrno>
-#include <gtk/gtk.h>
 #include <libxml/parser.h>
 
 struct point_count {
-  gint &points;
-  explicit point_count(gint &p) : points(p) {}
+  unsigned int &points;
+  explicit point_count(unsigned int &p) : points(p) {}
   void operator()(const track_seg_t &seg) {
     points += seg.track_points.size();
   }
@@ -24,7 +23,7 @@ int main(int argc, char **argv)
 
   track_t *track = track_import(argv[1]);
 
-  gint points = 0;
+  unsigned int points = 0;
 
   std::for_each(track->segments.begin(), track->segments.end(), point_count(points));
 
