@@ -1,6 +1,7 @@
 target_sources(osm2go_lib PRIVATE
 	${CMAKE_CURRENT_SOURCE_DIR}/about.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/area_edit.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/icon.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/iconbar.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/info.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/list.cpp

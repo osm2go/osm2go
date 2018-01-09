@@ -52,7 +52,6 @@ add_library(osm2go_lib STATIC
 	src/fdguard.cpp
 	src/fdguard.h
 	src/gps.h
-	src/icon.cpp
 	src/icon.h
 	src/iconbar.h
 	src/info.h
@@ -206,7 +205,7 @@ endif ()
 
 option(USE_SVG_ICONS "Use SVG icons without converting them to PNG at build time" ${USE_SVG_ICONS_DEFAULT})
 if (USE_SVG_ICONS)
-	set_property(SOURCE src/icon.cpp APPEND PROPERTY COMPILE_DEFINITIONS USE_SVG_ICONS)
+	set_property(SOURCE src/platforms/gtk/icon.cpp APPEND PROPERTY COMPILE_DEFINITIONS USE_SVG_ICONS)
 endif ()
 
 target_link_libraries(osm2go_lib
