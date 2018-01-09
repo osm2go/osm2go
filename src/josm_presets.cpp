@@ -566,12 +566,13 @@ on_presets_picker_selected(GtkTreeSelection *selection, presets_context_t *conte
 
   presets_item_named *item = O2G_NULLPTR;
   presets_item_group *sub_item = O2G_NULLPTR;
-  const char *text = O2G_NULLPTR;
+  char *text = O2G_NULLPTR;
   gtk_tree_model_get(model, &iter,
                      PRESETS_PICKER_COL_SUBMENU_PTR, &sub_item,
                      PRESETS_PICKER_COL_ITEM_PTR, &item,
                      PRESETS_PICKER_COL_NAME, &text,
                      -1);
+  g_string textGuard(text);
 
   printf("clicked on %s, submenu = %p (%s)\n", text,
          sub_item, sub_item ? sub_item->name.c_str() : "");
