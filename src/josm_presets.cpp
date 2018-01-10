@@ -149,8 +149,8 @@ static gint table_expose_event(GtkWidget *widget, GdkEventExpose *,
 #endif
 
 struct presets_context_t {
-  explicit presets_context_t(icon_t &ic, presets_items *pr, tag_context_t *t)
-    : icons(ic)
+  explicit presets_context_t(presets_items *pr, tag_context_t *t)
+    : icons(icon_t::instance())
     , presets(pr)
 #ifndef FREMANTLE
     , menu(O2G_NULLPTR)
@@ -967,9 +967,8 @@ static gint on_button_destroy(presets_context_t *context) {
   return FALSE;
 }
 
-GtkWidget *josm_build_presets_button(icon_t &icon, presets_items *presets,
-                                     tag_context_t *tag_context) {
-  presets_context_t *context = new presets_context_t(icon, presets, tag_context);
+GtkWidget *josm_build_presets_button(presets_items *presets, tag_context_t *tag_context) {
+  presets_context_t *context = new presets_context_t(presets, tag_context);
 
   GtkWidget *but = button_new_with_label(_("Presets"));
   gtk_widget_set_events(but, GDK_EXPOSURE_MASK);

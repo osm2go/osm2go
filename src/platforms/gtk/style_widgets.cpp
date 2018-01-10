@@ -85,7 +85,7 @@ static void style_change(appdata_t &appdata, const std::string &name,
   if(appdata.settings->style == new_style)
     return;
 
-  style_t *nstyle = style_load_fname(appdata.icons, it->second);
+  style_t *nstyle = style_load_fname(it->second);
   if (nstyle == O2G_NULLPTR) {
     errorf(appdata.window, _("Error loading style %s"), it->second.c_str());
     return;

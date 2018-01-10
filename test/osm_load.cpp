@@ -32,8 +32,7 @@ int main(int argc, char **argv)
 
   xmlInitParser();
 
-  icon_t &icons = icon_t::instance();
-  osm_t *osm = osm_t::parse(std::string(), argv[1], icons);
+  osm_t *osm = osm_t::parse(std::string(), argv[1]);
   if(!osm) {
     std::cerr << "cannot open " << argv[1] << ": " << strerror(errno) << std::endl;
     return 1;

@@ -15,13 +15,13 @@
 #include <cstdlib>
 #include <iostream>
 
-appdata_t::appdata_t(map_state_t &mstate, icon_t &ic)
+appdata_t::appdata_t(map_state_t &mstate)
   : uicontrol(O2G_NULLPTR)
   , window(O2G_NULLPTR)
   , statusbar(O2G_NULLPTR)
   , map_state(mstate)
   , settings(O2G_NULLPTR)
-  , icons(ic)
+  , icons(icon_t::instance())
   , gps_state(O2G_NULLPTR)
 {
 }
@@ -44,10 +44,9 @@ int main(int argc, char **argv)
   xmlInitParser();
 
   map_state_t map_state;
-  icon_t &icons = icon_t::instance();
-  appdata_t appdata(map_state, icons);
+  appdata_t appdata(map_state);
 
-  style_t *style = style_load(argv[1], appdata.icons);
+  style_t *style = style_load(argv[1]);
 
   if(style == O2G_NULLPTR) {
     std::cerr << "failed to load styles" << std::endl;
@@ -72,7 +71,7 @@ int main(int argc, char **argv)
 
   assert(!style->elemstyles.empty());
 
-  osm_t osm(appdata.icons);
+  osm_t osm;
 
   memset(&osm.rbounds, 0, sizeof(osm.rbounds));
   osm.bounds = &osm.rbounds;

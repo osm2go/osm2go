@@ -210,9 +210,9 @@ static bool style_parse(const std::string &fullname, xmlChar **fname,
   return ret;
 }
 
-style_t *style_load_fname(icon_t &icons, const std::string &filename) {
+style_t *style_load_fname(const std::string &filename) {
   xmlChar *fname = O2G_NULLPTR;
-  std::unique_ptr<style_t> style(new style_t(icons));
+  std::unique_ptr<style_t> style(new style_t());
 
   if(likely(style_parse(filename, &fname, false, *style.get()))) {
     printf("  elemstyle filename: %s\n", fname);
@@ -224,7 +224,7 @@ style_t *style_load_fname(icon_t &icons, const std::string &filename) {
   return O2G_NULLPTR;
 }
 
-style_t *style_load(const std::string &name, icon_t &icons) {
+style_t *style_load(const std::string &name) {
   printf("Trying to load style %s\n", name.c_str());
 
   std::string fullname = find_file(name + ".style");
@@ -240,7 +240,7 @@ style_t *style_load(const std::string &name, icon_t &icons) {
 
   printf("  style filename: %s\n", fullname.c_str());
 
-  return style_load_fname(icons, fullname);
+  return style_load_fname(fullname);
 }
 
 std::string style_basename(const std::string &name) {
@@ -293,7 +293,7 @@ std::map<std::string, std::string> style_scan() {
 
       fullname = paths[i].pathname + d->d_name;
 
-      style_t style(icon_t::instance());
+      style_t style;
       if(style_parse(fullname, O2G_NULLPTR, true, style))
         ret[style.name].swap(fullname);
     }
@@ -302,9 +302,8 @@ std::map<std::string, std::string> style_scan() {
   return ret;
 }
 
-style_t::style_t(icon_t &ic)
-  : icons(ic)
-  , name(O2G_NULLPTR)
+style_t::style_t()
+  : name(O2G_NULLPTR)
 {
   memset(&icon, 0, sizeof(icon));
   memset(&track, 0, sizeof(track));
@@ -319,7 +318,7 @@ style_t::style_t(icon_t &ic)
 
 struct unref_icon {
   icon_t &icons;
-  explicit unref_icon(icon_t &i) : icons(i) {}
+  explicit unref_icon() : icons(icon_t::instance()) {}
   void operator()(const style_t::IconCache::value_type &pair) {
     icons.icon_free(pair.second);
   }
@@ -331,7 +330,7 @@ style_t::~style_t()
 
   josm_elemstyles_free(elemstyles);
 
-  std::for_each(node_icons.begin(), node_icons.end(), unref_icon(icons));
+  std::for_each(node_icons.begin(), node_icons.end(), unref_icon());
 
   xmlFree(BAD_CAST name);
   xmlFree(BAD_CAST icon.path_prefix);

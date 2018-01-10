@@ -28,7 +28,6 @@
 #include <string>
 
 struct appdata_t;
-class icon_t;
 struct map_state_t;
 struct osm_t;
 
@@ -59,7 +58,7 @@ struct project_t {
   bool isDemo;         // if this is the demo project
   fdguard dirfd;       // filedescriptor of path
 
-  osm_t *parse_osm(icon_t &icons) const;
+  osm_t *parse_osm() const;
 
   bool save(GtkWidget *parent);
   bool check_demo(GtkWidget *parent) const;

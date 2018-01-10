@@ -408,8 +408,7 @@ static GtkWidget *tag_widget(info_tag_context_t *context) {
                            buttons, columns, context->store);
 
   list_set_custom_user_button(context->list, LIST_BUTTON_USER1,
-                              josm_build_presets_button(context->osm->icons,
-                                                        context->presets, context));
+                              josm_build_presets_button(context->presets, context));
   if(unlikely(context->presets == O2G_NULLPTR))
     list_button_enable(context->list, LIST_BUTTON_USER1, FALSE);
 

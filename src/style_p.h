@@ -21,13 +21,12 @@
 #define STYLE_P_H
 
 struct appdata_t;
-class icon_t;
 struct style_t;
 
 #include <map>
 #include <string>
 
-style_t *style_load_fname(icon_t &icons, const std::string &filename);
+style_t *style_load_fname(const std::string &filename);
 std::map<std::string, std::string> style_scan();
 std::string style_basename(const std::string &name);
 

@@ -512,10 +512,10 @@ struct condition_not_matches_obj {
   }
 };
 
-static void node_icon_unref(style_t *style, const node_t *node) {
+static void node_icon_unref(style_t *style, const node_t *node, icon_t &icons) {
   style_t::IconCache::iterator it = style->node_icons.find(node->id);
   if(it != style->node_icons.end()) {
-    style->icons.icon_free(it->second);
+    icons.icon_free(it->second);
     style->node_icons.erase(it);
   }
 }
@@ -523,10 +523,12 @@ static void node_icon_unref(style_t *style, const node_t *node) {
 struct colorize_node {
   style_t * const style;
   node_t * const node;
+  icon_t &icons;
   bool &somematch;
   int priority;
-  colorize_node(style_t *s, node_t *n, bool &m)
-    : style(s), node(n), somematch(m), priority(std::numeric_limits<typeof(priority)>::min()) {}
+  colorize_node(style_t *s, node_t *n, bool &m, icon_t &i)
+    : style(s), node(n), icons(i), somematch(m)
+    , priority(std::numeric_limits<typeof(priority)>::min()) {}
   void operator()(const elemstyle_t *elemstyle);
 };
 
@@ -554,13 +556,13 @@ void colorize_node::operator()(const elemstyle_t *elemstyle)
   name += '/';
   name += elemstyle->icon.filename;
 
-  icon_t::icon_item *buf = style->icons.load(name);
+  icon_t::icon_item *buf = icons.load(name);
 
   /* Free old icon if there's one present, but only after loading (not
    * assigning!) the new one. In case the old and new icon are the same
    * this ensures it still is in the icon cache if this is the only user,
    * avoiding needless image processing. */
-  node_icon_unref(style, node);
+  node_icon_unref(style, node, icons);
 
   if(buf)
     style->node_icons[node->id] = buf;
@@ -575,14 +577,15 @@ void josm_elemstyles_colorize_node(style_t *style, node_t *node) {
   node->zoom_max = style->node.zoom_max;
 
   bool somematch = false;
+  icon_t &icons = icon_t::instance();
   if(style->icon.enable) {
-    colorize_node fc(style, node, somematch);
+    colorize_node fc(style, node, somematch, icons);
     std::for_each(style->elemstyles.begin(), style->elemstyles.end(), fc);
   }
 
   /* clear icon for node if not matched at least one rule and has an icon attached */
   if(!somematch)
-    node_icon_unref(style, node);
+    node_icon_unref(style, node, icons);
 }
 
 struct josm_elemstyles_colorize_node_functor {

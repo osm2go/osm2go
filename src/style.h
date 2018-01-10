@@ -32,10 +32,9 @@ class node_t;
 struct elemstyle_t;
 
 struct style_t {
-  explicit style_t(icon_t &ic);
+  explicit style_t();
   ~style_t();
 
-  icon_t &icons;  // pointer to global list of icons
   char *name;
 
   struct {
@@ -101,6 +100,6 @@ struct style_t {
   void colorize_world(osm_t *osm);
 };
 
-style_t *style_load(const std::string &name, icon_t &icons);
+style_t *style_load(const std::string &name);
 
 #endif // STYLE_H

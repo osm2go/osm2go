@@ -1114,9 +1114,9 @@ static osm_t::UploadPolicy parseUploadPolicy(const char *str) {
   return osm_t::Upload_Discouraged;
 }
 
-static osm_t *process_osm(xmlTextReaderPtr reader, icon_t &icons) {
+static osm_t *process_osm(xmlTextReaderPtr reader) {
   /* alloc osm structure */
-  osm_t *osm = new osm_t(icons);
+  osm_t *osm = new osm_t();
 
   xmlString prop(xmlTextReaderGetAttribute(reader, BAD_CAST "upload"));
   if(unlikely(prop))
@@ -1206,7 +1206,7 @@ struct relation_ref_functor {
   }
 };
 
-static osm_t *process_file(const std::string &filename, icon_t &icons) {
+static osm_t *process_file(const std::string &filename) {
   osm_t *osm = O2G_NULLPTR;
   xmlTextReaderPtr reader;
 
@@ -1215,7 +1215,7 @@ static osm_t *process_file(const std::string &filename, icon_t &icons) {
     if(likely(xmlTextReaderRead(reader) == 1)) {
       const char *name = reinterpret_cast<const char *>(xmlTextReaderConstName(reader));
       if(likely(name && strcmp(name, "osm") == 0)) {
-        osm = process_osm(reader, icons);
+        osm = process_osm(reader);
         // relations may have references to other relation, which have greater ids
         // those are not present when the relation itself was created, but may be now
         std::for_each(osm->relations.begin(), osm->relations.end(), relation_ref_functor(osm));
@@ -1232,14 +1232,14 @@ static osm_t *process_file(const std::string &filename, icon_t &icons) {
 
 /* ----------------------- end of stream parser ------------------- */
 
-osm_t *osm_t::parse(const std::string &path, const std::string &filename, icon_t &icons) {
+osm_t *osm_t::parse(const std::string &path, const std::string &filename) {
 
   // use stream parser
   osm_t *osm = O2G_NULLPTR;
   if(unlikely(filename.find('/') != std::string::npos))
-    osm = process_file(filename, icons);
+    osm = process_file(filename);
   else
-    osm = process_file(path + filename, icons);
+    osm = process_file(path + filename);
 
   return osm;
 }

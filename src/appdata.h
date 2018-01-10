@@ -40,7 +40,7 @@ struct style_t;
 struct track_t;
 
 struct appdata_t {
-  appdata_t(map_state_t &mstate, icon_t &ic);
+  appdata_t(map_state_t &mstate);
   ~appdata_t();
 
   MainUi * const uicontrol;

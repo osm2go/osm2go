@@ -143,7 +143,6 @@ int main(int argc, char **argv)
 
   xmlInitParser();
 
-  icon_t &icons = icon_t::instance();
   const std::string osm_path = argv[1];
   assert_cmpnum(osm_path[osm_path.size() - 1], '/');
 
@@ -151,7 +150,7 @@ int main(int argc, char **argv)
   project_t project(dummystate, argv[2], osm_path);
   project.osm = argv[2] + std::string(".osm");
 
-  osm_t *osm = project.parse_osm(icons);
+  osm_t *osm = project.parse_osm();
   if(!osm) {
     std::cerr << "cannot open " << argv[1] << argv[2] << ": " << strerror(errno) << std::endl;
     return 1;
@@ -227,7 +226,7 @@ int main(int argc, char **argv)
     assert(!diff_present(&sproject));
 
     delete osm;
-    osm = osm_t::parse(project.path, project.osm, icons);
+    osm = osm_t::parse(project.path, project.osm);
     assert(osm != O2G_NULLPTR);
 
     flags = diff_restore_file(O2G_NULLPTR, &sproject, osm);

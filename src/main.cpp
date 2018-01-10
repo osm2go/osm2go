@@ -80,7 +80,7 @@
 #endif
 
 struct appdata_internal : public appdata_t {
-  appdata_internal(map_state_t &mstate, icon_t &ic);
+  appdata_internal(map_state_t &mstate);
   ~appdata_internal();
 
 #ifdef FREMANTLE
@@ -208,7 +208,7 @@ cb_menu_download(appdata_t *appdata) {
     }
 
     appdata->uicontrol->showNotification(_("Drawing"), MainUi::Busy);
-    appdata->osm = appdata->project->parse_osm(appdata->icons);
+    appdata->osm = appdata->project->parse_osm();
     diff_restore(*appdata);
     appdata->map->paint();
     appdata->uicontrol->showNotification(O2G_NULLPTR, MainUi::Busy);
@@ -321,7 +321,7 @@ cb_menu_undo_changes(appdata_t *appdata) {
   appdata->osm = O2G_NULLPTR;
 
   diff_remove(appdata->project);
-  appdata->osm = appdata->project->parse_osm(appdata->icons);
+  appdata->osm = appdata->project->parse_osm();
   appdata->map->paint();
 
   appdata->uicontrol->showNotification(_("Undo all changes"), MainUi::Brief);
@@ -1044,7 +1044,7 @@ static void menu_accels_load(appdata_t *appdata) {
 #endif
 }
 
-appdata_t::appdata_t(map_state_t &mstate, icon_t &ic)
+appdata_t::appdata_t(map_state_t &mstate)
   : uicontrol(MainUi::instance(*this))
   , window(O2G_NULLPTR)
   , statusbar(statusbar_t::create())
@@ -1055,8 +1055,8 @@ appdata_t::appdata_t(map_state_t &mstate, icon_t &ic)
   , map(O2G_NULLPTR)
   , osm(O2G_NULLPTR)
   , settings(settings_t::load())
-  , icons(ic)
-  , style(style_load(settings->style, icons))
+  , icons(icon_t::instance())
+  , style(style_load(settings->style))
   , gps_state(gps_state_t::create())
 {
   // the TR1 header has assign() for what is later called fill()
@@ -1124,8 +1124,8 @@ void appdata_t::track_clear()
   delete tr;
 }
 
-appdata_internal::appdata_internal(map_state_t &mstate, icon_t &ic)
-  : appdata_t(mstate, ic)
+appdata_internal::appdata_internal(map_state_t &mstate)
+  : appdata_t(mstate)
 #ifdef FREMANTLE
   , program(O2G_NULLPTR)
   , app_menu_view(O2G_NULLPTR)
@@ -1238,8 +1238,7 @@ static int application_run(const char *proj)
 {
   /* user specific init */
   map_state_t map_state;
-  icon_t &icons = icon_t::instance();
-  appdata_internal appdata(map_state, icons);
+  appdata_internal appdata(map_state);
 
   if(unlikely(!appdata.style)) {
     errorf(O2G_NULLPTR, _("Unable to load valid style %s, terminating."),

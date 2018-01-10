@@ -49,7 +49,6 @@ typedef int64_t item_id_t;
 #define ID_ILLEGAL  (static_cast<item_id_t>(0))
 
 class base_object_t;
-class icon_t;
 class node_t;
 class relation_t;
 class way_t;
@@ -173,12 +172,10 @@ struct osm_t {
 
   typedef std::multimap<std::string, std::string> TagMap;
 
-  osm_t(icon_t &ic) : bounds(O2G_NULLPTR), icons(ic), uploadPolicy(Upload_Normal) {}
+  osm_t() : bounds(O2G_NULLPTR), uploadPolicy(Upload_Normal) {}
   ~osm_t();
 
   bounds_t *bounds;   // original bounds as they appear in the file
-
-  icon_t &icons;
 
   bounds_t rbounds;
 
@@ -244,7 +241,7 @@ struct osm_t {
 
   node_t *parse_way_nd(xmlNode *a_node) const;
 
-  static osm_t *parse(const std::string &path, const std::string &filename, icon_t &icons);
+  static osm_t *parse(const std::string &path, const std::string &filename);
 
   static TagMap::iterator findTag(TagMap &map, const std::string &k, const std::string &v);
   static inline TagMap::const_iterator findTag(const TagMap &map, const std::string &k, const std::string &v) {
