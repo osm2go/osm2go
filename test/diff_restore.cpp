@@ -143,7 +143,7 @@ int main(int argc, char **argv)
 
   xmlInitParser();
 
-  icon_t icons;
+  icon_t &icons = icon_t::instance();
   const std::string osm_path = argv[1];
   assert_cmpnum(osm_path[osm_path.size() - 1], '/');
 

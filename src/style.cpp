@@ -293,8 +293,7 @@ std::map<std::string, std::string> style_scan() {
 
       fullname = paths[i].pathname + d->d_name;
 
-      icon_t dummyicons;
-      style_t style(dummyicons);
+      style_t style(icon_t::instance());
       if(style_parse(fullname, O2G_NULLPTR, true, style))
         ret[style.name].swap(fullname);
     }

@@ -74,7 +74,7 @@ static void test_trivial() {
   assert(!tags.hasRealTags());
   assert(!tags.hasTagCollisions());
 
-  icon_t icons;
+  icon_t &icons = icon_t::instance();
   osm_t osm(icons);
   memset(&osm.rbounds, 0, sizeof(osm.rbounds));
   assert_cmpstr(osm.sanity_check(), _("Invalid data in OSM file:\nBoundary box missing!"));
@@ -311,7 +311,7 @@ static unsigned int intrnd(unsigned int r) {
 
 static void test_split()
 {
-  icon_t icons;
+  icon_t &icons = icon_t::instance();
   osm_t o(icons);
   way_t * const v = new way_t();
   way_t * const w = new way_t();
@@ -523,7 +523,7 @@ struct findWay {
 
 static void test_split_order()
 {
-  icon_t icons;
+  icon_t &icons = icon_t::instance();
   osm_t o(icons);
   for(unsigned int i = 1; i <= 10; i++) {
     node_t *n = new node_t(3, lpos_t(), pos_t(52.25 + i * 0.001, 9.58 + i * 0.001), 1234500 + i);
@@ -633,7 +633,7 @@ static void test_changeset()
 
 static void test_reverse()
 {
-  icon_t icons;
+  icon_t &icons = icon_t::instance();
   osm_t o(icons);
   set_bounds(o);
 
@@ -742,7 +742,7 @@ static void test_reverse()
 
 static void test_way_delete()
 {
-  icon_t icons;
+  icon_t &icons = icon_t::instance();
   osm_t o(icons);
   set_bounds(o);
 
@@ -848,7 +848,7 @@ static void test_way_delete()
 
 static void test_member_delete()
 {
-  icon_t icons;
+  icon_t &icons = icon_t::instance();
   osm_t o(icons);
   set_bounds(o);
 
@@ -946,7 +946,7 @@ struct node_collector {
 
 static void test_merge_nodes()
 {
-  icon_t icons;
+  icon_t &icons = icon_t::instance();
   osm_t o(icons);
   set_bounds(o);
 
@@ -1122,7 +1122,7 @@ static void test_merge_nodes()
 
 static void test_merge_ways()
 {
-  icon_t icons;
+  icon_t &icons = icon_t::instance();
   osm_t o(icons);
   set_bounds(o);
 

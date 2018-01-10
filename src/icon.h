@@ -20,40 +20,27 @@
 #ifndef ICON_H
 #define ICON_H
 
-#include <algorithm>
 #include <gtk/gtk.h>
-#include <map>
 #include <string>
 
 #include <osm2go_cpp.h>
 
 class icon_t {
+protected:
+  inline icon_t() {}
 public:
   typedef ::GdkPixbuf *Pixmap;
 
   class icon_item {
-    friend class icon_t;
-
-    Pixmap buf;
-    int use;
-    explicit icon_item(Pixmap nbuf);
+  protected:
+    inline icon_item() {}
   public:
-    ~icon_item();
+    Pixmap buffer();
 
-    inline bool operator==(const Pixmap &b) const { return buf == b; }
-    inline bool operator==(const icon_item &other) const { return operator==(other.buf); }
-
-    inline Pixmap buffer() {
-      return buf;
-    }
-
-    int width() const;
-    int height() const;
-    inline int maxDimension() const {
-      return std::max(width(), height());
-    }
+    int maxDimension() const;
   };
 
+  static icon_t &instance();
   ~icon_t();
 
   /**
@@ -70,9 +57,6 @@ public:
   GtkWidget *widget_load(const std::string &name, int limit = -1);
 
   void icon_free(icon_item *buf);
-
-private:
-  std::map<std::string, icon_item *> entries;
 };
 
 #endif // ICON_H

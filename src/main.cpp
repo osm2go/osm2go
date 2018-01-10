@@ -1238,7 +1238,7 @@ static int application_run(const char *proj)
 {
   /* user specific init */
   map_state_t map_state;
-  icon_t icons;
+  icon_t &icons = icon_t::instance();
   appdata_internal appdata(map_state, icons);
 
   if(unlikely(!appdata.style)) {

@@ -44,7 +44,7 @@ int main(int argc, char **argv)
   xmlInitParser();
 
   map_state_t map_state;
-  icon_t icons;
+  icon_t &icons = icon_t::instance();
   appdata_t appdata(map_state, icons);
 
   style_t *style = style_load(argv[1], appdata.icons);

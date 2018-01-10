@@ -31,7 +31,28 @@
 #include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
 
-icon_t::icon_item::icon_item(Pixmap nbuf)
+class icon_buffer : public icon_t {
+public:
+  class icon_buffer_item : public icon_item {
+  public:
+    explicit icon_buffer_item(Pixmap nbuf);
+    ~icon_buffer_item();
+
+    Pixmap buf;
+    int use;
+
+    inline Pixmap buffer() {
+      return buf;
+    }
+  };
+
+  ~icon_buffer();
+
+  typedef std::map<std::string, icon_buffer_item *> BufferMap;
+  BufferMap entries;
+};
+
+icon_buffer::icon_buffer_item::icon_buffer_item(Pixmap nbuf)
   : buf(nbuf)
   , use(nbuf ? 1 : 0)
 {
@@ -73,8 +94,10 @@ icon_t::icon_item *icon_t::load(const std::string &sname, int limit) {
   if(sname.empty())
     return O2G_NULLPTR;
 
+  icon_buffer::BufferMap &entries = static_cast<icon_buffer *>(this)->entries;
+
   /* check if icon list already contains an icon of that name */
-  const std::map<std::string, icon_item *>::iterator it = entries.find(sname);
+  const icon_buffer::BufferMap::iterator it = entries.find(sname);
 
   if(it != entries.end()) {
     it->second->use++;
@@ -87,7 +110,7 @@ icon_t::icon_item *icon_t::load(const std::string &sname, int limit) {
 
     if(likely(pix)) {
       //    printf("Successfully loaded icon %s to %p\n", name, pix);
-      icon_item *ret = new icon_item(pix);
+      icon_buffer::icon_buffer_item *ret = new icon_buffer::icon_buffer_item(pix);
       entries[sname] = ret;
       return ret;
     }
@@ -105,23 +128,24 @@ GtkWidget *icon_t::widget_load(const std::string &name, int limit) {
   return gtk_image_new_from_pixbuf(pix->buffer());
 }
 
-icon_t::icon_item::~icon_item()
+icon_buffer::icon_buffer_item::~icon_buffer_item()
 {
   if(buf)
     g_object_unref(buf);
 }
 
-int icon_t::icon_item::height() const
+icon_t::Pixmap icon_t::icon_item::buffer()
 {
-  return gdk_pixbuf_get_height(buf);
+  return static_cast<icon_buffer::icon_buffer_item *>(this)->buffer();
 }
 
-int icon_t::icon_item::width() const
+int icon_t::icon_item::maxDimension() const
 {
-  return gdk_pixbuf_get_width(buf);
+  const Pixmap buf = const_cast<icon_t::icon_item *>(this)->buffer();
+  return std::max(gdk_pixbuf_get_height(buf), gdk_pixbuf_get_width(buf));
 }
 
-static inline void icon_destroy_pair(std::pair<const std::string, icon_t::icon_item *> &pair) {
+static inline void icon_destroy_pair(std::pair<const std::string, icon_buffer::icon_buffer_item *> &pair) {
   delete pair.second;
 }
 
@@ -137,9 +161,9 @@ void icon_t::icon_free(icon_item *buf) {
   //  printf("request to free icon %p\n", buf);
 
   /* check if icon list already contains an icon of that name */
-  const std::map<std::string, icon_item *>::iterator itEnd = entries.end();
-  std::map<std::string, icon_item *>::iterator it = std::find_if(
-                                                    entries.begin(), itEnd,
+  icon_buffer::BufferMap &entries = static_cast<icon_buffer *>(this)->entries;
+  const icon_buffer::BufferMap::iterator itEnd = entries.end();
+  icon_buffer::BufferMap::iterator it = std::find_if(entries.begin(), itEnd,
                                                     find_icon_buf(buf));
   if(unlikely(it == itEnd)) {
     printf("ERROR: icon to be freed not found\n");
@@ -154,8 +178,18 @@ void icon_t::icon_free(icon_item *buf) {
   }
 }
 
-icon_t::~icon_t()
+icon_buffer::~icon_buffer()
 {
   std::for_each(entries.begin(), entries.end(),
                 icon_destroy_pair);
+}
+
+icon_t &icon_t::instance()
+{
+  static icon_buffer icons;
+  return icons;
+}
+
+icon_t::~icon_t()
+{
 }
