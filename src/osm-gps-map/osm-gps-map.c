@@ -2411,7 +2411,7 @@ osm_gps_map_source_get_repo_uri(OsmGpsMapSource_t source)
         case OSM_GPS_MAP_SOURCE_OPENSTREETMAP:
             return OSM_REPO_URI;
         case OSM_GPS_MAP_SOURCE_OPENSTREETMAP_RENDERER:
-            return "http://tah.openstreetmap.org/Tiles/tile/#Z/#X/#Y.png";
+            return NULL; /* no longer working "http://tah.openstreetmap.org/Tiles/tile/#Z/#X/#Y.png" */
         case OSM_GPS_MAP_SOURCE_OPENCYCLEMAP:
             return "http://c.andy.sandbox.cloudmade.com/tiles/cycle/#Z/#X/#Y.png";
         case OSM_GPS_MAP_SOURCE_OSM_PUBLIC_TRANSPORT:
