@@ -180,7 +180,7 @@ struct presets_context_t {
   unsigned int presets_mask;
 };
 
-typedef std::map<const presets_element_t *, GtkWidget *> WidgetMap;
+typedef std::map<const presets_element_t *, presets_element_t::attach_key *> WidgetMap;
 
 struct add_widget_functor {
   preset_attach_context attctx;
@@ -206,7 +206,7 @@ void add_widget_functor::operator()(const WidgetMap::key_type w)
                                                  tags.end();
   const char *preset = otagIt != tags.end() ? otagIt->second.c_str() : O2G_NULLPTR;
 
-  GtkWidget *widget = w->attach(attctx, preset);
+  presets_element_t::attach_key *widget = w->attach(attctx, preset);
 
   if(widget)
     gtk_widgets[w] = widget;
@@ -225,7 +225,7 @@ struct get_widget_functor {
 void get_widget_functor::operator()(const presets_element_t* w)
 {
   const WidgetMap::const_iterator hint = gtk_widgets.find(w);
-  GtkWidget *widget = hint != hintEnd ? hint->second : O2G_NULLPTR;
+  WidgetMap::mapped_type akey = hint != hintEnd ? hint->second : O2G_NULLPTR;
   std::string text;
 
   switch(w->type) {
@@ -233,7 +233,7 @@ void get_widget_functor::operator()(const presets_element_t* w)
   case WIDGET_TYPE_CHECK:
   case WIDGET_TYPE_COMBO:
   case WIDGET_TYPE_TEXT:
-    text = w->getValue(widget);
+    text = w->getValue(akey);
     break;
 
   case WIDGET_TYPE_REFERENCE: {
@@ -989,12 +989,13 @@ GtkWidget *josm_build_presets_button(presets_items *presets, tag_context_t *tag_
   return but;
 }
 
-GtkWidget *presets_element_t::attach(preset_attach_context &, const char *) const
+presets_element_t::attach_key *presets_element_t::attach(preset_attach_context &,
+                                                         const char *) const
 {
   return O2G_NULLPTR;
 }
 
-std::string presets_element_t::getValue(GtkWidget *) const
+std::string presets_element_t::getValue(presets_element_t::attach_key *) const
 {
   assert_unreachable();
   return std::string();
@@ -1027,7 +1028,8 @@ int presets_element_t::matches(const osm_t::TagMap &tags, bool) const
   return match == MatchKeyValue_Force ? -1 : 0;
 }
 
-GtkWidget *presets_element_text::attach(preset_attach_context &attctx, const char *preset) const
+presets_element_t::attach_key *presets_element_text::attach(preset_attach_context &attctx,
+                                                            const char *preset) const
 {
   if(!preset)
     preset = def.c_str();
@@ -1037,23 +1039,26 @@ GtkWidget *presets_element_text::attach(preset_attach_context &attctx, const cha
 
   attach_right(attctx, text.c_str(), ret);
 
-  return ret;
+  return reinterpret_cast<presets_element_t::attach_key *>(ret);
 }
 
-std::string presets_element_text::getValue(GtkWidget *widget) const
+std::string presets_element_text::getValue(presets_element_t::attach_key *akey) const
 {
+  GtkWidget * const widget = reinterpret_cast<GtkWidget *>(akey);
   assert(isEntryWidget(widget));
 
   return gtk_entry_get_text(GTK_ENTRY(widget));
 }
 
-GtkWidget *presets_element_separator::attach(preset_attach_context &attctx, const char *) const
+presets_element_t::attach_key *presets_element_separator::attach(preset_attach_context &attctx,
+                                                                 const char *) const
 {
   attach_both(attctx, gtk_hseparator_new());
   return O2G_NULLPTR;
 }
 
-GtkWidget *presets_element_label::attach(preset_attach_context &attctx, const char *) const
+presets_element_t::attach_key *presets_element_label::attach(preset_attach_context &attctx,
+                                                             const char *) const
 {
   attach_both(attctx, gtk_label_new(text.c_str()));
   return O2G_NULLPTR;
@@ -1064,7 +1069,8 @@ bool presets_element_combo::matchValue(const char *val) const
   return std::find(values.begin(), values.end(), val) != values.end();
 }
 
-GtkWidget *presets_element_combo::attach(preset_attach_context &attctx, const char *preset) const
+presets_element_t::attach_key *presets_element_combo::attach(preset_attach_context &attctx,
+                                                             const char *preset) const
 {
   if(!preset)
     preset = def.c_str();
@@ -1092,11 +1098,12 @@ GtkWidget *presets_element_combo::attach(preset_attach_context &attctx, const ch
   attach_both(attctx, ret);
 #endif
 
-  return ret;
+  return reinterpret_cast<presets_element_t::attach_key *>(ret);
 }
 
-std::string presets_element_combo::getValue(GtkWidget* widget) const
+std::string presets_element_combo::getValue(presets_element_t::attach_key *akey) const
 {
+  GtkWidget * const widget = reinterpret_cast<GtkWidget *>(akey);
   assert(isComboBoxWidget(widget));
 
   std::string txt = combo_box_get_active_text(widget);
@@ -1122,9 +1129,9 @@ bool presets_element_key::matchValue(const char *val) const
   return (value == val);
 }
 
-std::string presets_element_key::getValue(GtkWidget *widget) const
+std::string presets_element_key::getValue(presets_element_t::attach_key *akey) const
 {
-  assert_null(widget);
+  assert_null(akey);
   return value;
 }
 
@@ -1137,7 +1144,8 @@ bool presets_element_checkbox::matchValue(const char *val) const
           (strcasecmp(val, "yes") == 0));
 }
 
-GtkWidget *presets_element_checkbox::attach(preset_attach_context &attctx, const char *preset) const
+presets_element_t::attach_key *presets_element_checkbox::attach(preset_attach_context &attctx,
+                                                                const char *preset) const
 {
   gboolean deflt;
   if(preset)
@@ -1153,11 +1161,12 @@ GtkWidget *presets_element_checkbox::attach(preset_attach_context &attctx, const
   attach_both(attctx, ret);
 #endif
 
-  return ret;
+  return reinterpret_cast<presets_element_t::attach_key *>(ret);
 }
 
-std::string presets_element_checkbox::getValue(GtkWidget *widget) const
+std::string presets_element_checkbox::getValue(presets_element_t::attach_key *akey) const
 {
+  GtkWidget * const widget = reinterpret_cast<GtkWidget *>(akey);
   assert(isCheckButtonWidget(widget));
 
   return check_button_get_active(widget) ?
@@ -1172,7 +1181,8 @@ static void item_link_clicked(GtkButton *button, presets_item *item) {
   presets_item_dialog(context, item);
 }
 
-GtkWidget *presets_element_link::attach(preset_attach_context &attctx, const char *) const
+presets_element_t::attach_key *presets_element_link::attach(preset_attach_context &attctx,
+                                                            const char *) const
 {
   g_string label(g_strdup_printf(_("[Preset] %s"), item->name.c_str()));
   GtkWidget *button = button_new_with_label(label.get());

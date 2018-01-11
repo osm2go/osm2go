@@ -63,6 +63,8 @@ public:
    * @param def default value returned if matchstring is empty or cannot be parsed
    */
   static Match parseMatch(const char *matchstring, Match def = MatchIgnore);
+
+  struct attach_key; ///< return value from attach() that can be used by getValue()
 protected:
   presets_element_t(presets_element_type_t t, Match m, const std::string &key = std::string(),
                    const std::string &txt = std::string());
@@ -88,8 +90,31 @@ public:
     return w->is_interactive();
   }
 
-  virtual GtkWidget *attach(preset_attach_context &attctx, const char *preset) const;
-  virtual std::string getValue(GtkWidget *widget) const;
+  /**
+   * @brief create an entry element for the given element
+   * @param attctx attach context (implementation defined)
+   * @param preset current value of the tag
+   * @returns a key to allow value extraction
+   *
+   * The return value will be passed to getValue().
+   */
+  virtual attach_key *attach(preset_attach_context &attctx, const char *preset) const;
+
+  /**
+   * @brief get the selected value
+   * @param akey the key returned by attach()
+   * @returns the new value for the tag
+   *
+   * The default implementation returns an empty string and enforces that akey
+   * is nullptr.
+   */
+  virtual std::string getValue(attach_key *akey) const;
+
+  /**
+   * @brief query the number or rows needed for this element
+   *
+   * This is called for every element before the first call to attach().
+   */
   virtual unsigned int rows() const = 0;
 
   /**
@@ -114,8 +139,8 @@ public:
 
   const std::string def;
 
-  virtual GtkWidget *attach(preset_attach_context &attctx, const char *preset) const O2G_OVERRIDE;
-  virtual std::string getValue(GtkWidget *widget) const O2G_OVERRIDE;
+  virtual attach_key *attach(preset_attach_context &attctx, const char *preset) const O2G_OVERRIDE;
+  virtual std::string getValue(attach_key *akey) const O2G_OVERRIDE;
   virtual unsigned int rows() const O2G_OVERRIDE {
     return 1;
   }
@@ -126,7 +151,7 @@ public:
   explicit presets_element_separator()
     : presets_element_t(WIDGET_TYPE_SEPARATOR, MatchIgnore) {}
 
-  virtual GtkWidget *attach(preset_attach_context &attctx, const char *) const O2G_OVERRIDE;
+  virtual attach_key *attach(preset_attach_context &attctx, const char *) const O2G_OVERRIDE;
   virtual unsigned int rows() const O2G_OVERRIDE {
     return 1;
   }
@@ -137,7 +162,7 @@ public:
   explicit presets_element_label(const std::string &txt)
     : presets_element_t(WIDGET_TYPE_LABEL, MatchIgnore, std::string(), txt) {}
 
-  virtual GtkWidget *attach(preset_attach_context &attctx, const char *) const O2G_OVERRIDE;
+  virtual attach_key *attach(preset_attach_context &attctx, const char *) const O2G_OVERRIDE;
   virtual unsigned int rows() const O2G_OVERRIDE {
     return 1;
   }
@@ -158,8 +183,8 @@ public:
   std::vector<std::string> values;
   std::vector<std::string> display_values;
 
-  virtual GtkWidget *attach(preset_attach_context &attctx, const char *preset) const O2G_OVERRIDE;
-  virtual std::string getValue(GtkWidget *widget) const O2G_OVERRIDE;
+  virtual attach_key *attach(preset_attach_context &attctx, const char *preset) const O2G_OVERRIDE;
+  virtual std::string getValue(attach_key *akey) const O2G_OVERRIDE;
   virtual unsigned int rows() const O2G_OVERRIDE {
     return 1;
   }
@@ -177,7 +202,7 @@ public:
   presets_element_key(const std::string &k, const std::string &val, const char *m);
 
   const std::string value;
-  virtual std::string getValue(GtkWidget *widget) const O2G_OVERRIDE;
+  virtual std::string getValue(attach_key *akey) const O2G_OVERRIDE;
   virtual unsigned int rows() const O2G_OVERRIDE {
     return 0;
   }
@@ -193,8 +218,8 @@ public:
   const bool def;
   std::string value_on;
 
-  virtual GtkWidget *attach(preset_attach_context &attctx, const char *preset) const O2G_OVERRIDE;
-  virtual std::string getValue(GtkWidget *widget) const O2G_OVERRIDE;
+  virtual attach_key *attach(preset_attach_context &attctx, const char *preset) const O2G_OVERRIDE;
+  virtual std::string getValue(attach_key *akey) const O2G_OVERRIDE;
   virtual unsigned int rows() const O2G_OVERRIDE {
     return 1;
   }
@@ -223,7 +248,7 @@ public:
   virtual bool is_interactive() const O2G_OVERRIDE {
     return false;
   }
-  virtual GtkWidget *attach(preset_attach_context &attctx, const char *preset) const O2G_OVERRIDE;
+  virtual attach_key *attach(preset_attach_context &attctx, const char *preset) const O2G_OVERRIDE;
   virtual unsigned int rows() const O2G_OVERRIDE {
     return 1;
   }
