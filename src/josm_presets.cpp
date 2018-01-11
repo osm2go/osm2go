@@ -163,6 +163,9 @@ struct presets_context_t {
 #ifndef FREMANTLE
     , menu(O2G_NULLPTR)
 #endif
+#ifdef PICKER_MENU
+    , subwidget(O2G_NULLPTR)
+#endif
     , tag_context(t)
     , presets_mask(presets_type_mask(t->object))
   {
@@ -175,6 +178,7 @@ struct presets_context_t {
 #endif
 #ifdef PICKER_MENU
   std::vector<presets_item_group *> submenus;
+  GtkWidget *subwidget; ///< dynamic submenu (if shown)
 #endif
   tag_context_t * const tag_context;
   unsigned int presets_mask;
@@ -596,37 +600,30 @@ on_presets_picker_selected(GtkTreeSelection *selection, presets_context_t *conte
                         GTK_RESPONSE_ACCEPT);
   } else {
     /* check if this already had a submenu */
-    GtkWidget *sub = O2G_NULLPTR;
-    if(context->submenus.empty()) {
-      // check if dynamic submenu is shown
-      sub = GTK_WIDGET(g_object_get_data(G_OBJECT(view), "sub"));
-      if(sub) {
-        g_object_set_data(G_OBJECT(view), "sub", O2G_NULLPTR);
-        gtk_widget_destroy(sub);
-      }
+    // check if dynamic submenu is shown
+    if(context->subwidget != O2G_NULLPTR) {
+      gtk_widget_destroy(context->subwidget);
+      context->subwidget = O2G_NULLPTR;
     }
 
+    GtkWidget *sub;
     if(sub_item) {
       /* normal submenu */
 
-      // the current list of submenus may or may not have common anchestors with this one
-      if(sub_item->widget) {
-        // this item is already visible, so it must be in the list, just drop all childs
-        remove_subs(context->submenus, sub_item);
+      // this item is not currently visible
+      // this is connected to the "changed" signal, so clicking an already selected
+      // submenu does not cause an event
+      if(sub_item->parent) {
+        // the parent item has to be visible, otherwise this could not have been clicked
+        remove_subs(context->submenus, sub_item->parent);
       } else {
-        // this item is not currently visible
-        if(sub_item->parent) {
-          // the parent item has to be visible, otherwise this could not have been clicked
-          remove_subs(context->submenus, sub_item->parent);
-        } else {
-          // this is a top level menu, so everything currently shown can be removed
-          std::for_each(context->submenus.begin(), context->submenus.end(), remove_sub);
-          context->submenus.clear();
-        }
-
-        sub = presets_picker(context, sub_item->items, false);
-        sub_item->widget = sub;
+        // this is a top level menu, so everything currently shown can be removed
+        std::for_each(context->submenus.begin(), context->submenus.end(), remove_sub);
+        context->submenus.clear();
       }
+
+      sub = presets_picker(context, sub_item->items, false);
+      sub_item->widget = sub;
       context->submenus.push_back(sub_item);
     } else {
       // dynamic submenu
@@ -638,11 +635,10 @@ on_presets_picker_selected(GtkTreeSelection *selection, presets_context_t *conte
       else
         sub = preset_picker_lru(context);
 
-      g_object_set_data(G_OBJECT(view), "sub", sub);
+      context->subwidget = sub;
     }
 
     /* views parent is a scrolled window whichs parent in turn is the hbox */
-    assert(sub != O2G_NULLPTR);
     assert(view->parent != O2G_NULLPTR);
     GtkWidget *hbox = view->parent->parent;
 
