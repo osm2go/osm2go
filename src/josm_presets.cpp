@@ -81,23 +81,31 @@ static void on_info(GtkWidget *widget) {
 
 /* --------------------- the items dialog -------------------- */
 
-static void attach_both(GtkTable *table, GtkWidget *widget, guint &y) {
-  gtk_table_attach(table, widget, 0, 2, y, y + 1,
+struct preset_attach_context {
+  inline preset_attach_context(GtkTable *t, guint &r, presets_context_t *c)
+    : table(t), y(r), context(c) {}
+  GtkTable *table;
+  guint &y;
+  presets_context_t * const context;
+};
+
+static void attach_both(preset_attach_context &attctx, GtkWidget *widget) {
+  gtk_table_attach(attctx.table, widget, 0, 2, attctx.y, attctx.y + 1,
                    static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),
                    static_cast<GtkAttachOptions>(0), 0, 0);
-  y++;
+  attctx.y++;
 }
 
-static void attach_right(GtkTable *table, const char *text, GtkWidget *widget, guint &y) {
+static void attach_right(preset_attach_context &attctx, const char *text, GtkWidget *widget) {
   if(text) {
-    gtk_table_attach(table, gtk_label_new(text), 0, 1, y, y + 1,
+    gtk_table_attach(attctx.table, gtk_label_new(text), 0, 1, attctx.y, attctx.y + 1,
                      static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),
                      static_cast<GtkAttachOptions>(0), 0, 0);
   }
-  gtk_table_attach(table, widget, 1, 2, y, y + 1,
+  gtk_table_attach(attctx.table, widget, 1, 2, attctx.y, attctx.y + 1,
                    static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),
                    static_cast<GtkAttachOptions>(0), 0, 0);
-  y++;
+  attctx.y++;
 }
 
 /**
@@ -175,12 +183,11 @@ struct presets_context_t {
 typedef std::map<const presets_element_t *, GtkWidget *> WidgetMap;
 
 struct add_widget_functor {
-  guint &row;
+  preset_attach_context attctx;
   presets_context_t * const context;
   WidgetMap &gtk_widgets;
-  GtkWidget * const table;
   add_widget_functor(WidgetMap &g, presets_context_t *c, GtkWidget *t, guint &r)
-    : row(r), context(c), gtk_widgets(g), table(t) {}
+    : attctx(GTK_TABLE(t), r, c), context(c), gtk_widgets(g) {}
   void operator()(const WidgetMap::key_type w);
 };
 
@@ -199,7 +206,7 @@ void add_widget_functor::operator()(const WidgetMap::key_type w)
                                                  tags.end();
   const char *preset = otagIt != tags.end() ? otagIt->second.c_str() : O2G_NULLPTR;
 
-  GtkWidget *widget = w->attach(GTK_TABLE(table), row, preset, context);
+  GtkWidget *widget = w->attach(attctx, preset);
 
   if(widget)
     gtk_widgets[w] = widget;
@@ -982,8 +989,7 @@ GtkWidget *josm_build_presets_button(presets_items *presets, tag_context_t *tag_
   return but;
 }
 
-GtkWidget *presets_element_t::attach(GtkTable *, guint &, const char *,
-                                    presets_context_t *) const
+GtkWidget *presets_element_t::attach(preset_attach_context &, const char *) const
 {
   return O2G_NULLPTR;
 }
@@ -1021,8 +1027,7 @@ int presets_element_t::matches(const osm_t::TagMap &tags, bool) const
   return match == MatchKeyValue_Force ? -1 : 0;
 }
 
-GtkWidget *presets_element_text::attach(GtkTable *table, guint &row, const char *preset,
-                                       presets_context_t *) const
+GtkWidget *presets_element_text::attach(preset_attach_context &attctx, const char *preset) const
 {
   if(!preset)
     preset = def.c_str();
@@ -1030,7 +1035,7 @@ GtkWidget *presets_element_text::attach(GtkTable *table, guint &row, const char 
   if(preset)
     gtk_entry_set_text(GTK_ENTRY(ret), preset);
 
-  attach_right(table, text.c_str(), ret, row);
+  attach_right(attctx, text.c_str(), ret);
 
   return ret;
 }
@@ -1042,17 +1047,15 @@ std::string presets_element_text::getValue(GtkWidget *widget) const
   return gtk_entry_get_text(GTK_ENTRY(widget));
 }
 
-GtkWidget *presets_element_separator::attach(GtkTable *table, guint &row, const char *,
-                                            presets_context_t *) const
+GtkWidget *presets_element_separator::attach(preset_attach_context &attctx, const char *) const
 {
-  attach_both(table, gtk_hseparator_new(), row);
+  attach_both(attctx, gtk_hseparator_new());
   return O2G_NULLPTR;
 }
 
-GtkWidget *presets_element_label::attach(GtkTable *table, guint &row, const char *,
-                                        presets_context_t *) const
+GtkWidget *presets_element_label::attach(preset_attach_context &attctx, const char *) const
 {
-  attach_both(table, gtk_label_new(text.c_str()), row);
+  attach_both(attctx, gtk_label_new(text.c_str()));
   return O2G_NULLPTR;
 }
 
@@ -1061,8 +1064,7 @@ bool presets_element_combo::matchValue(const char *val) const
   return std::find(values.begin(), values.end(), val) != values.end();
 }
 
-GtkWidget *presets_element_combo::attach(GtkTable *table, guint &row, const char *preset,
-                                        presets_context_t *) const
+GtkWidget *presets_element_combo::attach(preset_attach_context &attctx, const char *preset) const
 {
   if(!preset)
     preset = def.c_str();
@@ -1085,9 +1087,9 @@ GtkWidget *presets_element_combo::attach(GtkTable *table, guint &row, const char
 
   combo_box_set_active(ret, active);
 #ifndef FREMANTLE
-  attach_right(table, text.c_str(), ret, row);
+  attach_right(attctx, text.c_str(), ret);
 #else
-  attach_both(table, ret, row);
+  attach_both(attctx, ret);
 #endif
 
   return ret;
@@ -1135,8 +1137,7 @@ bool presets_element_checkbox::matchValue(const char *val) const
           (strcasecmp(val, "yes") == 0));
 }
 
-GtkWidget *presets_element_checkbox::attach(GtkTable *table, guint &row, const char *preset,
-                                           presets_context_t *) const
+GtkWidget *presets_element_checkbox::attach(preset_attach_context &attctx, const char *preset) const
 {
   gboolean deflt;
   if(preset)
@@ -1147,9 +1148,9 @@ GtkWidget *presets_element_checkbox::attach(GtkTable *table, guint &row, const c
   GtkWidget *ret = check_button_new_with_label(text.c_str());
   check_button_set_active(ret, deflt);
 #ifndef FREMANTLE
-  attach_right(table, O2G_NULLPTR, ret, row);
+  attach_right(attctx, O2G_NULLPTR, ret);
 #else
-  attach_both(table, ret, row);
+  attach_both(attctx, ret);
 #endif
 
   return ret;
@@ -1171,20 +1172,19 @@ static void item_link_clicked(GtkButton *button, presets_item *item) {
   presets_item_dialog(context, item);
 }
 
-GtkWidget *presets_element_link::attach(GtkTable *table, guint &row, const char *,
-                                       presets_context_t *context) const
+GtkWidget *presets_element_link::attach(preset_attach_context &attctx, const char *) const
 {
   g_string label(g_strdup_printf(_("[Preset] %s"), item->name.c_str()));
   GtkWidget *button = button_new_with_label(label.get());
-  g_object_set_data(G_OBJECT(button), "presets_context", context);
-  GtkWidget *img = context->icons.widget_load(item->icon, 16);
+  g_object_set_data(G_OBJECT(button), "presets_context", attctx.context);
+  GtkWidget *img = attctx.context->icons.widget_load(item->icon, 16);
   if(img) {
     gtk_button_set_image(GTK_BUTTON(button), img);
     // make sure the image is always shown, Hildon seems to hide it by default
     gtk_widget_show(img);
   }
   g_signal_connect(GTK_OBJECT(button), "clicked", G_CALLBACK(item_link_clicked), item);
-  attach_both(table, button, row);
+  attach_both(attctx, button);
   return O2G_NULLPTR;
 }
 

@@ -45,6 +45,7 @@ enum presets_element_type_t {
 
 struct presets_context_t;
 struct tag_t;
+struct preset_attach_context;
 
 class presets_element_t {
 public:
@@ -87,8 +88,7 @@ public:
     return w->is_interactive();
   }
 
-  virtual GtkWidget *attach(GtkTable *table, guint &row, const char *preset,
-                            presets_context_t *context) const;
+  virtual GtkWidget *attach(preset_attach_context &attctx, const char *preset) const;
   virtual std::string getValue(GtkWidget *widget) const;
   virtual unsigned int rows() const = 0;
 
@@ -114,8 +114,7 @@ public:
 
   const std::string def;
 
-  virtual GtkWidget *attach(GtkTable *table, guint &row, const char *preset,
-                            presets_context_t *) const O2G_OVERRIDE;
+  virtual GtkWidget *attach(preset_attach_context &attctx, const char *preset) const O2G_OVERRIDE;
   virtual std::string getValue(GtkWidget *widget) const O2G_OVERRIDE;
   virtual unsigned int rows() const O2G_OVERRIDE {
     return 1;
@@ -127,8 +126,7 @@ public:
   explicit presets_element_separator()
     : presets_element_t(WIDGET_TYPE_SEPARATOR, MatchIgnore) {}
 
-  virtual GtkWidget *attach(GtkTable *table, guint &row, const char *,
-                            presets_context_t *) const O2G_OVERRIDE;
+  virtual GtkWidget *attach(preset_attach_context &attctx, const char *) const O2G_OVERRIDE;
   virtual unsigned int rows() const O2G_OVERRIDE {
     return 1;
   }
@@ -139,8 +137,7 @@ public:
   explicit presets_element_label(const std::string &txt)
     : presets_element_t(WIDGET_TYPE_LABEL, MatchIgnore, std::string(), txt) {}
 
-  virtual GtkWidget *attach(GtkTable *table, guint &row, const char *,
-                            presets_context_t *) const O2G_OVERRIDE;
+  virtual GtkWidget *attach(preset_attach_context &attctx, const char *) const O2G_OVERRIDE;
   virtual unsigned int rows() const O2G_OVERRIDE {
     return 1;
   }
@@ -161,8 +158,7 @@ public:
   std::vector<std::string> values;
   std::vector<std::string> display_values;
 
-  virtual GtkWidget *attach(GtkTable *table, guint &row, const char *preset,
-                            presets_context_t *) const O2G_OVERRIDE;
+  virtual GtkWidget *attach(preset_attach_context &attctx, const char *preset) const O2G_OVERRIDE;
   virtual std::string getValue(GtkWidget *widget) const O2G_OVERRIDE;
   virtual unsigned int rows() const O2G_OVERRIDE {
     return 1;
@@ -197,8 +193,7 @@ public:
   const bool def;
   std::string value_on;
 
-  virtual GtkWidget *attach(GtkTable *table, guint &row, const char *preset,
-                            presets_context_t *) const O2G_OVERRIDE;
+  virtual GtkWidget *attach(preset_attach_context &attctx, const char *preset) const O2G_OVERRIDE;
   virtual std::string getValue(GtkWidget *widget) const O2G_OVERRIDE;
   virtual unsigned int rows() const O2G_OVERRIDE {
     return 1;
@@ -228,8 +223,7 @@ public:
   virtual bool is_interactive() const O2G_OVERRIDE {
     return false;
   }
-  virtual GtkWidget *attach(GtkTable *table, guint &row, const char *preset,
-                            presets_context_t *context) const O2G_OVERRIDE;
+  virtual GtkWidget *attach(preset_attach_context &attctx, const char *preset) const O2G_OVERRIDE;
   virtual unsigned int rows() const O2G_OVERRIDE {
     return 1;
   }
