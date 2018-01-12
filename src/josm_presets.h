@@ -20,11 +20,11 @@
 #ifndef JOSM_PRESETS_H
 #define JOSM_PRESETS_H
 
-#include <gtk/gtk.h>
 #include <set>
 #include <string>
 
 struct presets_items;
+typedef struct _GtkWidget GtkWidget;
 
 presets_items *josm_presets_load(void);
 void josm_presets_free(presets_items *presets);

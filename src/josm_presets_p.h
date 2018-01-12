@@ -350,4 +350,6 @@ static inline unsigned int widget_rows(unsigned int init, const presets_element_
   return init + w->rows();
 }
 
+unsigned int presets_type_mask(const object_t &obj);
+
 #endif // JOSM_PRESETS_P_H
