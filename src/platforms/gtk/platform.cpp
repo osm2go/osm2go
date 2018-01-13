@@ -22,11 +22,27 @@
 #include <cstdio>
 #include <gtk/gtk.h>
 
+#include <osm2go_annotations.h>
+
 void osm2go_platform::process_events(bool tick)
 {
   while(gtk_events_pending()) {
     if(tick)
       putchar('.');
     gtk_main_iteration();
+  }
+}
+
+void osm2go_platform::Timer::restart(unsigned int seconds, GSourceFunc callback, void *data)
+{
+  assert_cmpnum(id, 0);
+  id = g_timeout_add_seconds(seconds, callback, data);
+}
+
+void osm2go_platform::Timer::stop()
+{
+  if(likely(id != 0)) {
+    g_source_remove(id);
+    id = 0;
   }
 }

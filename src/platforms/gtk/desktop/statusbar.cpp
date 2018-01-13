@@ -20,6 +20,7 @@
 
 #include "statusbar.h"
 #include "appdata.h"
+#include "misc.h"
 #include "osm2go_platform.h"
 
 #include <osm2go_cpp.h>
@@ -34,7 +35,7 @@ class statusbar_gtk : public statusbar_t {
 public:
   statusbar_gtk();
 
-  guint brief_handler_id;
+  osm2go_platform::Timer brief_handler;
   guint brief_mid;
   guint cid;
   guint mid;
@@ -120,10 +121,7 @@ static gboolean statusbar_brief_clear(gpointer data) {
 
 void statusbar_gtk::clear_message()
 {
-  if (brief_handler_id) {
-    g_source_remove(brief_handler_id);
-    brief_handler_id = 0;
-  }
+  brief_handler.stop();
   statusbar_brief_clear(this);
 }
 
@@ -134,13 +132,11 @@ void statusbar_gtk::brief(const char *msg, bool timeout)
   statusbar_highlight(this, true);
   brief_mid = gtk_statusbar_push(GTK_STATUSBAR(widget), cid, msg);
   if (brief_mid && timeout)
-    brief_handler_id = g_timeout_add_seconds(STATUSBAR_DEFAULT_BRIEF_TIME,
-                                             statusbar_brief_clear, this);
+    brief_handler.restart(STATUSBAR_DEFAULT_BRIEF_TIME, statusbar_brief_clear, this);
 }
 
 statusbar_gtk::statusbar_gtk()
   : statusbar_t(gtk_statusbar_new())
-  , brief_handler_id(0)
   , brief_mid(0)
   , cid(gtk_statusbar_get_context_id(GTK_STATUSBAR(widget), "Msg"))
   , mid(0)

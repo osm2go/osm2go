@@ -19,6 +19,8 @@
 
 #include "gps.h"
 
+#include <osm2go_platform.h>
+
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -83,9 +85,7 @@ public:
     return callback(cb_context);
   }
 
-  /* when using liblocation, events are generated on position change */
-  /* and no seperate timer is required */
-  guint handler_id;
+  osm2go_platform::Timer timer;
 
 #ifdef ENABLE_GPSBT
   gpsbt_t context;
@@ -323,8 +323,7 @@ gps_state_t *gps_state_t::create() {
 }
 
 gpsd_state_t::gpsd_state_t()
-  : handler_id(0)
-  , enable(false)
+  : enable(false)
 {
   printf("GPS init: Using gpsd\n");
 
@@ -356,12 +355,11 @@ static gboolean gps_callback(gpointer data) {
   return state->runCallback() ? TRUE : FALSE;
 }
 
-bool gpsd_state_t::registerCallback(GpsCallback cb, void* context)
+bool gpsd_state_t::registerCallback(GpsCallback cb, void *context)
 {
-  if(handler_id) {
+  if(timer.isActive()) {
     if(cb == O2G_NULLPTR) {
-      g_source_remove(handler_id);
-      handler_id = 0;
+      timer.stop();
       callback = O2G_NULLPTR;
       cb_context = O2G_NULLPTR;
     }
@@ -370,7 +368,7 @@ bool gpsd_state_t::registerCallback(GpsCallback cb, void* context)
     if(cb != O2G_NULLPTR) {
       callback = cb;
       cb_context = context;
-      handler_id = g_timeout_add_seconds(1, gps_callback, this);
+      timer.restart(1, gps_callback, this);
     }
     return 1;
   }

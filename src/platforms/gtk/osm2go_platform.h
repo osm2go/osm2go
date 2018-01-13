@@ -20,21 +20,38 @@
 #ifndef OSM2GO_PLATFORM_H
 #define OSM2GO_PLATFORM_H
 
-struct osm2go_platform {
+#include <gtk/gtk.h>
+
+namespace osm2go_platform {
   /**
    * @brief process all pending GUI events
    * @param tick if a '.' should be printed for every iteration
    */
-  static void process_events(bool tick = false);
+  void process_events(bool tick = false);
 
-  static int init(int &argc, char **argv);
+  int init(int &argc, char **argv);
 
-  static void cleanup();
+  void cleanup();
 
   /**
    * @brief simple interface to the systems web browser
    */
-  static void open_url(const char *url);
+  void open_url(const char *url);
+
+  class Timer {
+    guint id;
+  public:
+    explicit inline Timer()
+      : id(0) {}
+    inline ~Timer()
+    { stop(); }
+
+    void restart(unsigned int seconds, GSourceFunc callback, void *data);
+    void stop();
+
+    inline bool isActive() const
+    { return id != 0; }
+  };
 };
 
 #endif // OSM2GO_PLATFORM_H

@@ -30,6 +30,7 @@
 #include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
 #include <osm2go_i18n.h>
+#include <osm2go_platform.h>
 
 #include <algorithm>
 #include <cmath>
@@ -731,7 +732,8 @@ bool area_edit_t::run() {
 		   G_CALLBACK(on_map_button_release_event), &context);
 
   /* install handler for timed updates of the gps button */
-  guint handler_id = g_timeout_add_seconds(1, map_gps_update, &context);
+  osm2go_platform::Timer timer;
+  timer.restart(1, map_gps_update, &context);
   context.map.start.rlon = context.map.start.rlat = NAN;
 
   notebook_append_page(context.notebook, GTK_WIDGET(context.map.widget), _(TAB_LABEL_MAP));
@@ -893,10 +895,6 @@ bool area_edit_t::run() {
       }
     }
   } while(response == GTK_RESPONSE_HELP || response == GTK_RESPONSE_ACCEPT);
-
-#ifdef ENABLE_OSM_GPS_MAP
-  g_source_remove(handler_id);
-#endif
 
   return ok;
 }

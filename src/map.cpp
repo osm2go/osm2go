@@ -53,7 +53,7 @@ class map_internal : public map_t {
 public:
   map_internal(appdata_t &a);
 
-  guint autosave_handler_id;
+  osm2go_platform::Timer autosave;
 
   struct {
     GdkPixbuf *pix;
@@ -1540,7 +1540,6 @@ map_t::map_t(appdata_t &a)
 
 map_internal::map_internal(appdata_t &a)
   : map_t(a)
-  , autosave_handler_id(0)
 {
   background.pix = O2G_NULLPTR;
   background.item = O2G_NULLPTR;
@@ -1553,8 +1552,6 @@ map_t *map_t::create(appdata_t &a)
 
 map_t::~map_t()
 {
-  set_autosave(false);
-
   map_free_map_item_chains(appdata);
 
   /* destroy existing highlight */
@@ -2208,11 +2205,9 @@ void map_t::detail_normal() {
 void map_t::set_autosave(bool enable) {
   map_internal *m = static_cast<map_internal *>(this);
   if(enable)
-    m->autosave_handler_id = g_timeout_add_seconds(120, map_autosave, this);
-  else if(likely(m->autosave_handler_id > 0)) {
-    g_source_remove(m->autosave_handler_id);
-    m->autosave_handler_id = 0;
-  }
+    m->autosave.restart(120, map_autosave, this);
+  else
+    m->autosave.stop();
 }
 
 map_state_t::map_state_t()
