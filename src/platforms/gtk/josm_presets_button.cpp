@@ -50,11 +50,10 @@ static void on_info(GtkWidget *widget) {
 /* --------------------- the items dialog -------------------- */
 
 struct preset_attach_context {
-  inline preset_attach_context(GtkTable *t, guint &r, presets_context_t *c)
-    : table(t), y(r), context(c) {}
+  inline preset_attach_context(GtkTable *t, guint &r)
+    : table(t), y(r) {}
   GtkTable *table;
   guint &y;
-  presets_context_t * const context;
 };
 
 static void attach_both(preset_attach_context &attctx, GtkWidget *widget) {
@@ -125,16 +124,8 @@ static gint table_expose_event(GtkWidget *widget, GdkEventExpose *,
 #endif
 
 struct presets_context_t {
-  explicit presets_context_t(presets_items *pr, tag_context_t *t)
-    : icons(icon_t::instance())
-    , presets(pr)
-#ifdef PICKER_MENU
-    , subwidget(O2G_NULLPTR)
-#endif
-    , tag_context(t)
-    , presets_mask(presets_type_mask(t->object))
-  {
-  }
+  explicit presets_context_t(presets_items *pr, tag_context_t *t);
+  ~presets_context_t();
 
   icon_t &icons;
   presets_items * const presets;
@@ -143,19 +134,47 @@ struct presets_context_t {
 #else
   std::vector<presets_item_group *> submenus;
   GtkWidget *subwidget; ///< dynamic submenu (if shown)
+
+  GtkWidget *presets_picker(const std::vector<presets_item_t *> &items, bool scan_for_recent);
+  GtkWidget *preset_picker_recent();
+  GtkWidget *preset_picker_lru();
+
+  presets_item *selected_item; ///< the item finally selected
 #endif
   tag_context_t * const tag_context;
   unsigned int presets_mask;
+  static presets_context_t *instance;
 };
+
+presets_context_t *presets_context_t::instance;
+
+presets_context_t::presets_context_t(presets_items* pr, tag_context_t* t)
+  : icons(icon_t::instance())
+  , presets(pr)
+#ifdef PICKER_MENU
+  , subwidget(O2G_NULLPTR)
+  , selected_item(O2G_NULLPTR)
+#endif
+  , tag_context(t)
+  , presets_mask(presets_type_mask(t->object))
+{
+  assert_null(instance);
+  instance = this;
+}
+
+presets_context_t::~presets_context_t()
+{
+  assert(instance == this);
+  instance = O2G_NULLPTR;
+}
 
 typedef std::map<const presets_element_t *, presets_element_t::attach_key *> WidgetMap;
 
 struct add_widget_functor {
   preset_attach_context attctx;
-  presets_context_t * const context;
   WidgetMap &gtk_widgets;
-  add_widget_functor(WidgetMap &g, presets_context_t *c, GtkWidget *t, guint &r)
-    : attctx(GTK_TABLE(t), r, c), context(c), gtk_widgets(g) {}
+  add_widget_functor(WidgetMap &g, GtkWidget *t, guint &r)
+    : attctx(GTK_TABLE(t), r), gtk_widgets(g) {}
   void operator()(const WidgetMap::key_type w);
 };
 
@@ -167,7 +186,7 @@ void add_widget_functor::operator()(const WidgetMap::key_type w)
     return;
   }
 
-  const osm_t::TagMap &tags = context->tag_context->tags;
+  const osm_t::TagMap &tags = presets_context_t::instance->tag_context->tags;
   /* check if there's a value with this key already */
   const osm_t::TagMap::const_iterator otagIt = !w->key.empty() ?
                                                  tags.find(w->key) :
@@ -217,7 +236,7 @@ void get_widget_functor::operator()(const presets_element_t* w)
   changed |= store_value(w, tags, text);
 }
 
-static void presets_item_dialog(presets_context_t *context, const presets_item *item) {
+static void presets_item_dialog(const presets_item *item) {
   g_widget dialog;
   bool ok;
 
@@ -231,10 +250,11 @@ static void presets_item_dialog(presets_context_t *context, const presets_item *
   std::vector<presets_element_t *>::const_iterator it = std::find_if(item->widgets.begin(), itEnd,
                                                                     presets_element_t::isInteractive);
   WidgetMap gtk_widgets;
+  tag_context_t * const tag_context = presets_context_t::instance->tag_context;
 
   if(it != itEnd)  {
     dialog.reset(gtk_dialog_new_with_buttons(item->name.c_str(),
-                                             GTK_WINDOW(context->tag_context->dialog),
+                                             GTK_WINDOW(tag_context->dialog),
                                              GTK_DIALOG_MODAL,
                                              GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                              GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
@@ -269,7 +289,7 @@ static void presets_item_dialog(presets_context_t *context, const presets_item *
     GtkWidget *table = gtk_table_new(std::accumulate(it, item->widgets.end(), 0, widget_rows), 2, FALSE);
 
     guint row = 0;
-    add_widget_functor fc(gtk_widgets, context, table, row);
+    add_widget_functor fc(gtk_widgets, table, row);
     std::for_each(it, itEnd, fc);
 
     GtkWidget *mwidget;
@@ -311,13 +331,13 @@ static void presets_item_dialog(presets_context_t *context, const presets_item *
     /* handle all children of the table */
     bool changed = false;
 
-    get_widget_functor fc(changed, context->tag_context->tags, gtk_widgets);
+    get_widget_functor fc(changed, tag_context->tags, gtk_widgets);
     std::for_each(item->widgets.begin(), itEnd, fc);
 
     if(changed)
-      context->tag_context->info_tags_replace();
+      tag_context->info_tags_replace();
 
-    std::vector<presets_item_t *> &lru = context->presets->lru;
+    std::vector<presets_item_t *> &lru = presets_context_t::instance->presets->lru;
     std::vector<presets_item_t *>::iterator litBegin = lru.begin();
     std::vector<presets_item_t *>::iterator lit = std::find(litBegin, lru.end(), item);
     // if it is already the first item in the list nothing is to do
@@ -376,11 +396,10 @@ bool presets_item_t::matches(const osm_t::TagMap &tags, bool interactive) const
 
 #ifndef PICKER_MENU
 static void
-cb_menu_item(GtkWidget *menu_item, presets_context_t *context) {
-  presets_item *item = static_cast<presets_item *>(g_object_get_data(G_OBJECT(menu_item), "item"));
+cb_menu_item(presets_item *item) {
   assert(item != O2G_NULLPTR);
 
-  presets_item_dialog(context, item);
+  presets_item_dialog(item);
 }
 
 static GtkWidget *create_menuitem(icon_t &icons, const presets_item_named *item)
@@ -400,19 +419,17 @@ static GtkWidget *create_menuitem(icon_t &icons, const presets_item_named *item)
 }
 
 struct build_menu_functor {
-  presets_context_t * const context;
   GtkWidget * const menu;
   GtkWidget ** const matches;
   bool was_separator;
   bool was_item;
-  build_menu_functor(presets_context_t *c, GtkWidget *m, GtkWidget **a)
-    : context(c), menu(m), matches(a), was_separator(false), was_item(false) {}
+  build_menu_functor(GtkWidget *m, GtkWidget **a)
+    : menu(m), matches(a), was_separator(false), was_item(false) {}
   void operator()(presets_item_t *item);
 };
 
-static GtkWidget *build_menu(presets_context_t *context,
-			     std::vector<presets_item_t *> &items, GtkWidget **matches) {
-  build_menu_functor fc(context, gtk_menu_new(), matches);
+static GtkWidget *build_menu(std::vector<presets_item_t *> &items, GtkWidget **matches) {
+  build_menu_functor fc(gtk_menu_new(), matches);
 
   std::for_each(items.begin(), items.end(), fc);
 
@@ -422,7 +439,7 @@ static GtkWidget *build_menu(presets_context_t *context,
 void build_menu_functor::operator()(presets_item_t *item)
 {
   /* check if this presets entry is appropriate for the current item */
-  if(item->type & context->presets_mask) {
+  if(item->type & presets_context_t::instance->presets_mask) {
     GtkWidget *menu_item;
 
     /* Show a separator if one was requested, but not if there was no item
@@ -432,28 +449,25 @@ void build_menu_functor::operator()(presets_item_t *item)
     was_item = true;
     was_separator = false;
 
-    menu_item = create_menuitem(context->icons,
+    menu_item = create_menuitem(presets_context_t::instance->icons,
                                 static_cast<presets_item_named *>(item));
 
     if(item->type & presets_item_t::TY_GROUP) {
       gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item),
-                                build_menu(context,
-                                           static_cast<presets_item_group *>(item)->items,
+                                build_menu(static_cast<presets_item_group *>(item)->items,
                                            matches));
     } else {
-      g_object_set_data(G_OBJECT(menu_item), "item", item);
-      g_signal_connect(menu_item, "activate",
-                       G_CALLBACK(cb_menu_item), context);
+      g_signal_connect_swapped(menu_item, "activate",
+                               G_CALLBACK(cb_menu_item), item);
 
-      if(matches && item->matches(context->tag_context->tags)) {
+      if(matches && item->matches(presets_context_t::instance->tag_context->tags)) {
         if(!*matches)
           *matches = gtk_menu_new();
 
-        GtkWidget *used_item = create_menuitem(context->icons,
+        GtkWidget *used_item = create_menuitem(presets_context_t::instance->icons,
                                                static_cast<presets_item_named *>(item));
-        g_object_set_data(G_OBJECT(used_item), "item", item);
-        g_signal_connect(used_item, "activate",
-                         G_CALLBACK(cb_menu_item), context);
+        g_signal_connect_swapped(used_item, "activate",
+                                 G_CALLBACK(cb_menu_item), item);
         gtk_menu_shell_append(GTK_MENU_SHELL(*matches), used_item);
       }
     }
@@ -496,12 +510,6 @@ enum {
   PRESETS_PICKER_COL_SUBMENU_PTR,
   PRESETS_PICKER_NUM_COLS
 };
-
-static GtkWidget *presets_picker(presets_context_t *context,
-                                 const std::vector<presets_item_t *> &items,
-                                 bool scan_for_recent);
-static GtkWidget *preset_picker_recent(presets_context_t *context);
-static GtkWidget *preset_picker_lru(presets_context_t *context);
 
 static void remove_sub(presets_item_group *sub_item) {
   if(sub_item->widget) {
@@ -556,9 +564,7 @@ on_presets_picker_selected(GtkTreeSelection *selection, presets_context_t *conte
 
   if(item && !(item->type & presets_item_t::TY_GROUP)) {
     /* save item pointer in dialog */
-    g_object_set_data(G_OBJECT(gtk_widget_get_toplevel(view)),
-                      "item", item);
-
+    context->selected_item = static_cast<presets_item *>(item);
     /* and request closing of menu */
     gtk_dialog_response(GTK_DIALOG(gtk_widget_get_toplevel(view)),
                         GTK_RESPONSE_ACCEPT);
@@ -586,7 +592,7 @@ on_presets_picker_selected(GtkTreeSelection *selection, presets_context_t *conte
         context->submenus.clear();
       }
 
-      sub = presets_picker(context, sub_item->items, false);
+      sub = context->presets_picker(sub_item->items, false);
       sub_item->widget = sub;
       context->submenus.push_back(sub_item);
     } else {
@@ -595,9 +601,9 @@ on_presets_picker_selected(GtkTreeSelection *selection, presets_context_t *conte
       std::for_each(context->submenus.begin(), context->submenus.end(), remove_sub);
       context->submenus.clear();
       if (strcmp(text, _("Used presets")) == 0)
-        sub = preset_picker_recent(context);
+        sub = context->preset_picker_recent();
       else
-        sub = preset_picker_lru(context);
+        sub = context->preset_picker_lru();
 
       context->subwidget = sub;
     }
@@ -728,22 +734,22 @@ template<> void insert_recent_items<true>::operator()(const presets_item_t *pres
                        context->icons, store);
 }
 
-static GtkWidget *preset_picker_recent(presets_context_t *context) {
+GtkWidget *presets_context_t::preset_picker_recent() {
   GtkTreeView *view;
-  insert_recent_items<false> fc(context, presets_picker_store(&view));
+  insert_recent_items<false> fc(this, presets_picker_store(&view));
 
-  std::for_each(context->presets->items.begin(), context->presets->items.end(), fc);
+  std::for_each(presets->items.begin(), presets->items.end(), fc);
 
-  return presets_picker_embed(view, fc.store, context);
+  return presets_picker_embed(view, fc.store, this);
 }
 
-static GtkWidget *preset_picker_lru(presets_context_t *context) {
+GtkWidget *presets_context_t::preset_picker_lru() {
   GtkTreeView *view;
-  insert_recent_items<true> fc(context, presets_picker_store(&view));
+  insert_recent_items<true> fc(this, presets_picker_store(&view));
 
-  std::for_each(context->presets->lru.begin(), context->presets->lru.end(), fc);
+  std::for_each(presets->lru.begin(), presets->lru.end(), fc);
 
-  return presets_picker_embed(view, fc.store, context);
+  return presets_picker_embed(view, fc.store, this);
 }
 
 struct picker_add_functor {
@@ -804,22 +810,22 @@ struct matching_type_functor {
  * presets view, every submenu will get it's own view created by a call to this
  * function.
  */
-static GtkWidget *
-presets_picker(presets_context_t *context, const std::vector<presets_item_t *> &items,
-                bool top_level) {
+GtkWidget *
+presets_context_t::presets_picker(const std::vector<presets_item_t *> &items,
+                                  bool top_level) {
   GtkTreeView *view;
   GtkListStore *store = presets_picker_store(&view);
 
   bool show_recent = false;
-  icon_t::icon_item *subicon = context->icons.load("submenu_arrow");
-  picker_add_functor fc(context, store, subicon, top_level, show_recent);
+  icon_t::icon_item *subicon = icons.load("submenu_arrow");
+  picker_add_functor fc(this, store, subicon, top_level, show_recent);
 
   std::for_each(items.begin(), items.end(), fc);
-  const std::vector<presets_item_t *> &lru = context->presets->lru;
+  const std::vector<presets_item_t *> &lru = presets->lru;
 
   if(top_level &&
      std::find_if(lru.begin(), lru.end(),
-                  matching_type_functor(context->presets_mask)) != lru.end()) {
+                  matching_type_functor(presets_mask)) != lru.end()) {
     GtkTreeIter iter;
 
     /* Append a row and fill in some data */
@@ -840,9 +846,9 @@ presets_picker(presets_context_t *context, const std::vector<presets_item_t *> &
 		       -1);
   }
 
-  context->icons.icon_free(subicon);
+  icons.icon_free(subicon);
 
-  return presets_picker_embed(view, store, context);
+  return presets_picker_embed(view, store, this);
 }
 
 static inline void remove_sub_reference(presets_item_group *sub_item) {
@@ -850,8 +856,7 @@ static inline void remove_sub_reference(presets_item_group *sub_item) {
 }
 #endif
 
-static gint button_press(GtkWidget *widget, GdkEventButton *event,
-                         presets_context_t *context) {
+static gint button_press(GtkWidget *widget, GdkEventButton *event) {
   if(event->type != GDK_BUTTON_PRESS)
     return FALSE;
 
@@ -860,32 +865,32 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event,
 #ifndef PICKER_MENU
   (void)widget;
 
-  if (!context->menu) {
+  if (!presets_context_t::instance->menu) {
     GtkWidget *matches = O2G_NULLPTR;
-    context->menu.reset(build_menu(context, context->presets->items, &matches));
-    if(!context->presets->lru.empty()) {
+    presets_context_t::instance->menu.reset(build_menu(presets_context_t::instance->presets->items, &matches));
+    if(!presets_context_t::instance->presets->lru.empty()) {
       // This will not update the menu while the dialog is open. Not worth the effort.
       GtkWidget *menu_item = gtk_menu_item_new_with_label(_("Last used presets"));
-      GtkWidget *lrumenu = build_menu(context, context->presets->lru, NULL);
+      GtkWidget *lrumenu = build_menu(presets_context_t::instance->presets->lru, NULL);
 
       gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item), lrumenu);
-      gtk_menu_shell_prepend(GTK_MENU_SHELL(context->menu.get()), gtk_separator_menu_item_new());
-      gtk_menu_shell_prepend(GTK_MENU_SHELL(context->menu.get()), menu_item);
+      gtk_menu_shell_prepend(GTK_MENU_SHELL(presets_context_t::instance->menu.get()), gtk_separator_menu_item_new());
+      gtk_menu_shell_prepend(GTK_MENU_SHELL(presets_context_t::instance->menu.get()), menu_item);
     }
     if(matches) {
       GtkWidget *menu_item = gtk_menu_item_new_with_label(_("Used presets"));
 
       gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item), matches);
-      gtk_menu_shell_prepend(GTK_MENU_SHELL(context->menu.get()), gtk_separator_menu_item_new());
-      gtk_menu_shell_prepend(GTK_MENU_SHELL(context->menu.get()), menu_item);
+      gtk_menu_shell_prepend(GTK_MENU_SHELL(presets_context_t::instance->menu.get()), gtk_separator_menu_item_new());
+      gtk_menu_shell_prepend(GTK_MENU_SHELL(presets_context_t::instance->menu.get()), menu_item);
     }
   }
-  gtk_widget_show_all(context->menu.get());
+  gtk_widget_show_all(presets_context_t::instance->menu.get());
 
-  gtk_menu_popup(GTK_MENU(context->menu.get()), O2G_NULLPTR, O2G_NULLPTR, O2G_NULLPTR, O2G_NULLPTR,
+  gtk_menu_popup(GTK_MENU(presets_context_t::instance->menu.get()), O2G_NULLPTR, O2G_NULLPTR, O2G_NULLPTR, O2G_NULLPTR,
                  event->button, event->time);
 #else
-  assert(context->submenus.empty());
+  assert(presets_context_t::instance->submenus.empty());
   /* popup our special picker like menu */
   g_widget dialog(gtk_dialog_new_with_buttons(_("Presets"),
                                               GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(widget))),
@@ -897,24 +902,25 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event,
   /* create root picker */
   GtkWidget *hbox = gtk_hbox_new(TRUE, 0);
 
-  GtkWidget *root = presets_picker(context, context->presets->items, true);
+  GtkWidget *root = presets_context_t::instance->presets_picker(presets_context_t::instance->presets->items, true);
   gtk_box_pack_start_defaults(GTK_BOX(hbox), root);
 
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), hbox);
 
+  assert_null(presets_context_t::instance->selected_item);
   gtk_widget_show_all(dialog.get());
-  presets_item *item = O2G_NULLPTR;
-  if(gtk_dialog_run(GTK_DIALOG(dialog.get())) == GTK_RESPONSE_ACCEPT)
-    item = static_cast<presets_item *>(g_object_get_data(G_OBJECT(dialog.get()), "item"));
+  gtk_dialog_run(GTK_DIALOG(dialog.get()));
 
+  // remove all references to the widgets, they will be destroyed together with the dialog
+  std::for_each(presets_context_t::instance->submenus.begin(),
+                presets_context_t::instance->submenus.end(), remove_sub_reference);
+  presets_context_t::instance->submenus.clear();
+
+  // then delete the dialog, it would delete the submenus first otherwise
   dialog.reset();
 
-  // remove all references to the already destroyed widgets
-  std::for_each(context->submenus.begin(), context->submenus.end(), remove_sub_reference);
-  context->submenus.clear();
-
-  if(item)
-    presets_item_dialog(context, item);
+  if(presets_context_t::instance->selected_item)
+    presets_item_dialog(presets_context_t::instance->selected_item);
 #endif
 
   /* Tell calling code that we have handled this event; the buck
@@ -935,7 +941,7 @@ GtkWidget *josm_build_presets_button(presets_items *presets, tag_context_t *tag_
   gtk_widget_set_events(but, GDK_EXPOSURE_MASK);
   gtk_widget_add_events(but, GDK_BUTTON_PRESS_MASK);
   g_signal_connect(GTK_OBJECT(but), "button-press-event",
-                   G_CALLBACK(button_press), context);
+                   G_CALLBACK(button_press), O2G_NULLPTR);
 
   g_signal_connect_swapped(GTK_OBJECT(but), "destroy",
                            G_CALLBACK(on_button_destroy), context);
@@ -1127,12 +1133,8 @@ std::string presets_element_checkbox::getValue(presets_element_t::attach_key *ak
          (value_on.empty() ? "yes" : value_on) : std::string();
 }
 
-static void item_link_clicked(GtkButton *button, presets_item *item) {
-  presets_context_t * const context = static_cast<presets_context_t *>(
-                                          g_object_get_data(G_OBJECT(button),
-                                                            "presets_context"));
-
-  presets_item_dialog(context, item);
+static void item_link_clicked(presets_item *item) {
+  presets_item_dialog(item);
 }
 
 presets_element_t::attach_key *presets_element_link::attach(preset_attach_context &attctx,
@@ -1140,14 +1142,14 @@ presets_element_t::attach_key *presets_element_link::attach(preset_attach_contex
 {
   g_string label(g_strdup_printf(_("[Preset] %s"), item->name.c_str()));
   GtkWidget *button = button_new_with_label(label.get());
-  g_object_set_data(G_OBJECT(button), "presets_context", attctx.context);
-  GtkWidget *img = attctx.context->icons.widget_load(item->icon, 16);
+  GtkWidget *img = icon_t::instance().widget_load(item->icon, 16);
   if(img) {
     gtk_button_set_image(GTK_BUTTON(button), img);
     // make sure the image is always shown, Hildon seems to hide it by default
     gtk_widget_show(img);
   }
-  g_signal_connect(GTK_OBJECT(button), "clicked", G_CALLBACK(item_link_clicked), item);
+  g_signal_connect_swapped(GTK_OBJECT(button), "clicked",
+                           G_CALLBACK(item_link_clicked), item);
   attach_both(attctx, button);
   return O2G_NULLPTR;
 }
