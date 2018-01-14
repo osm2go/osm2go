@@ -755,11 +755,11 @@ GtkWidget *presets_context_t::preset_picker_lru() {
 struct picker_add_functor {
   presets_context_t * const context;
   GtkListStore * const store;
-  icon_t::icon_item * const subicon;
+  GdkPixbuf * const subicon;
   bool &show_recent;
   bool scan_for_recent;
   picker_add_functor(presets_context_t *c, GtkListStore *s, icon_t::icon_item *i, bool r, bool &w)
-    : context(c), store(s), subicon(i), show_recent(w), scan_for_recent(r) {}
+    : context(c), store(s), subicon(i->buffer()), show_recent(w), scan_for_recent(r) {}
   void operator()(const presets_item_t *item);
 };
 
@@ -780,7 +780,7 @@ void picker_add_functor::operator()(const presets_item_t *item)
   if(item->type & presets_item_t::TY_GROUP) {
     gtk_list_store_set(store, &iter,
                        PRESETS_PICKER_COL_SUBMENU_PTR,  item,
-                       PRESETS_PICKER_COL_SUBMENU_ICON, subicon->buffer(), -1);
+                       PRESETS_PICKER_COL_SUBMENU_ICON, subicon, -1);
     if(scan_for_recent) {
       show_recent = preset_group_is_used(static_cast<const presets_item_group *>(itemv),
                                          context->tag_context->tags);
