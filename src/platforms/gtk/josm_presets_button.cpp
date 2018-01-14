@@ -128,9 +128,6 @@ struct presets_context_t {
   explicit presets_context_t(presets_items *pr, tag_context_t *t)
     : icons(icon_t::instance())
     , presets(pr)
-#ifndef FREMANTLE
-    , menu(O2G_NULLPTR)
-#endif
 #ifdef PICKER_MENU
     , subwidget(O2G_NULLPTR)
 #endif
@@ -141,10 +138,9 @@ struct presets_context_t {
 
   icon_t &icons;
   presets_items * const presets;
-#ifndef FREMANTLE
-  GtkWidget *menu;
-#endif
-#ifdef PICKER_MENU
+#ifndef PICKER_MENU
+  g_widget menu;
+#else
   std::vector<presets_item_group *> submenus;
   GtkWidget *subwidget; ///< dynamic submenu (if shown)
 #endif
@@ -223,7 +219,7 @@ void get_widget_functor::operator()(const presets_element_t* w)
 
 static void presets_item_dialog(presets_context_t *context, const presets_item *item) {
   g_widget dialog;
-  bool ok = false;
+  bool ok;
 
   printf("dialog for item %s\n", item->name.c_str());
 
@@ -276,36 +272,38 @@ static void presets_item_dialog(presets_context_t *context, const presets_item *
     add_widget_functor fc(gtk_widgets, context, table, row);
     std::for_each(it, itEnd, fc);
 
+    GtkWidget *mwidget;
+    gint dlgwidth, dlgheight;
 #ifndef FREMANTLE
-    /* add widget to dialog */
-    gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), table);
-    gtk_window_set_default_size(GTK_WINDOW(dialog.get()), 300, 50);
+    dlgwidth = 300;
+    dlgheight = 50;
+    /* add widget directly to dialog */
+    mwidget = table;
 #else
-    gtk_window_set_default_size(GTK_WINDOW(dialog.get()), -1, 500);
+    dlgwidth = -1;
+    dlgheight = 500;
     /* put view into a pannable area */
-    GtkWidget *scroll_win = hildon_pannable_area_new();
-    hildon_pannable_area_add_with_viewport(HILDON_PANNABLE_AREA(scroll_win), table);
+    mwidget = hildon_pannable_area_new();
+    hildon_pannable_area_add_with_viewport(HILDON_PANNABLE_AREA(mwidget), table);
 
     gboolean first = TRUE;
     g_signal_connect(GTK_OBJECT(table), "expose_event",
                      G_CALLBACK(table_expose_event), &first);
-
-    gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), scroll_win);
 #endif
+    gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), mwidget);
+    gtk_window_set_default_size(GTK_WINDOW(dialog.get()), dlgwidth, dlgheight);
 
     gtk_widget_show_all(dialog.get());
 
     /* run gtk_dialog_run, but continue if e.g. the help button was pressed */
-    int result = -1;
-    do
+    gint result;
+    do {
       result = gtk_dialog_run(GTK_DIALOG(dialog.get()));
-    while((result != GTK_RESPONSE_DELETE_EVENT) &&
-	  (result != GTK_RESPONSE_ACCEPT) &&
-	  (result != GTK_RESPONSE_REJECT));
+    } while(result != GTK_RESPONSE_DELETE_EVENT &&
+            result != GTK_RESPONSE_ACCEPT &&
+            result != GTK_RESPONSE_REJECT);
 
-    if(result == GTK_RESPONSE_ACCEPT)
-      ok = true;
-
+    ok = (result == GTK_RESPONSE_ACCEPT);
   } else
     ok = true;
 
@@ -320,17 +318,17 @@ static void presets_item_dialog(presets_context_t *context, const presets_item *
       context->tag_context->info_tags_replace();
 
     std::vector<presets_item_t *> &lru = context->presets->lru;
-    std::vector<presets_item_t *>::iterator lit = std::find(lru.begin(),
-                                                           lru.end(), item);
+    std::vector<presets_item_t *>::iterator litBegin = lru.begin();
+    std::vector<presets_item_t *>::iterator lit = std::find(litBegin, lru.end(), item);
     // if it is already the first item in the list nothing is to do
     if(lit == lru.end()) {
       // drop the oldest ones if too many
       if(lru.size() >= LRU_MAX)
         lru.resize(LRU_MAX - 1);
-      lru.insert(lru.begin(), const_cast<presets_item *>(item));
-    } else if(lit != lru.begin()) {
+      lru.insert(litBegin, const_cast<presets_item *>(item));
+    } else if(lit != litBegin) {
       // move to front
-      std::rotate(lru.begin(), lit, lit + 1);
+      std::rotate(litBegin, lit, lit + 1);
     }
   }
 }
@@ -378,9 +376,7 @@ bool presets_item_t::matches(const osm_t::TagMap &tags, bool interactive) const
 
 #ifndef PICKER_MENU
 static void
-cb_menu_item(GtkWidget *menu_item, gpointer data) {
-  presets_context_t *context = (presets_context_t*)data;
-
+cb_menu_item(GtkWidget *menu_item, presets_context_t *context) {
   presets_item *item = static_cast<presets_item *>(g_object_get_data(G_OBJECT(menu_item), "item"));
   assert(item != O2G_NULLPTR);
 
@@ -866,27 +862,27 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event,
 
   if (!context->menu) {
     GtkWidget *matches = O2G_NULLPTR;
-    context->menu = build_menu(context, context->presets->items, &matches);
+    context->menu.reset(build_menu(context, context->presets->items, &matches));
     if(!context->presets->lru.empty()) {
       // This will not update the menu while the dialog is open. Not worth the effort.
       GtkWidget *menu_item = gtk_menu_item_new_with_label(_("Last used presets"));
       GtkWidget *lrumenu = build_menu(context, context->presets->lru, NULL);
 
       gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item), lrumenu);
-      gtk_menu_shell_prepend(GTK_MENU_SHELL(context->menu), gtk_separator_menu_item_new());
-      gtk_menu_shell_prepend(GTK_MENU_SHELL(context->menu), menu_item);
+      gtk_menu_shell_prepend(GTK_MENU_SHELL(context->menu.get()), gtk_separator_menu_item_new());
+      gtk_menu_shell_prepend(GTK_MENU_SHELL(context->menu.get()), menu_item);
     }
     if(matches) {
       GtkWidget *menu_item = gtk_menu_item_new_with_label(_("Used presets"));
 
       gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item), matches);
-      gtk_menu_shell_prepend(GTK_MENU_SHELL(context->menu), gtk_separator_menu_item_new());
-      gtk_menu_shell_prepend(GTK_MENU_SHELL(context->menu), menu_item);
+      gtk_menu_shell_prepend(GTK_MENU_SHELL(context->menu.get()), gtk_separator_menu_item_new());
+      gtk_menu_shell_prepend(GTK_MENU_SHELL(context->menu.get()), menu_item);
     }
   }
-  gtk_widget_show_all( GTK_WIDGET(context->menu) );
+  gtk_widget_show_all(context->menu.get());
 
-  gtk_menu_popup(GTK_MENU(context->menu), O2G_NULLPTR, O2G_NULLPTR, O2G_NULLPTR, O2G_NULLPTR,
+  gtk_menu_popup(GTK_MENU(context->menu.get()), O2G_NULLPTR, O2G_NULLPTR, O2G_NULLPTR, O2G_NULLPTR,
                  event->button, event->time);
 #else
   assert(context->submenus.empty());
@@ -927,12 +923,6 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event,
 }
 
 static gint on_button_destroy(presets_context_t *context) {
-#ifndef FREMANTLE
-  printf("freeing preset button context\n");
-  if (context->menu)
-    gtk_widget_destroy(context->menu);
-#endif
-
   delete context;
 
   return FALSE;
