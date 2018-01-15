@@ -182,11 +182,11 @@ static bool project_read(const std::string &project_file, project_t *project,
           } else if(strcmp(reinterpret_cast<const char *>(node->name), "map") == 0) {
             xmlString str(xmlGetProp(node, BAD_CAST "zoom"));
             if(str)
-              project->map_state.zoom = g_ascii_strtod(reinterpret_cast<gchar *>(str.get()), O2G_NULLPTR);
+              project->map_state.zoom = xml_parse_float(str);
 
             str.reset(xmlGetProp(node, BAD_CAST "detail"));
             if(str)
-              project->map_state.detail = g_ascii_strtod(reinterpret_cast<gchar *>(str.get()), O2G_NULLPTR);
+              project->map_state.detail = xml_parse_float(str);
 
             str.reset(xmlGetProp(node, BAD_CAST "scroll-offset-x"));
             if(str)
