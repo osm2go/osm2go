@@ -190,11 +190,11 @@ static bool project_read(const std::string &project_file, project_t *project,
 
             str.reset(xmlGetProp(node, BAD_CAST "scroll-offset-x"));
             if(str)
-              project->map_state.scroll_offset.x = strtoul(reinterpret_cast<gchar *>(str.get()), O2G_NULLPTR, 10);
+              project->map_state.scroll_offset.x = strtoul(reinterpret_cast<char *>(str.get()), O2G_NULLPTR, 10);
 
             str.reset(xmlGetProp(node, BAD_CAST "scroll-offset-y"));
             if(str)
-              project->map_state.scroll_offset.y = strtoul(reinterpret_cast<gchar *>(str.get()), O2G_NULLPTR, 10);
+              project->map_state.scroll_offset.y = strtoul(reinterpret_cast<char *>(str.get()), O2G_NULLPTR, 10);
           } else if(strcmp(reinterpret_cast<const char *>(node->name), "wms") == 0) {
             xmlString str(xmlGetProp(node, BAD_CAST "server"));
             if(str)
