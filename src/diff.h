@@ -22,11 +22,11 @@
 
 #include "osm.h"
 
-#include <gtk/gtk.h>
 #include <libxml/tree.h>
 
 struct appdata_t;
 struct project_t;
+typedef struct _GtkWidget GtkWidget;
 
 enum diff_restore_results {
   DIFF_RESTORED = 0, ///< a diff was present and has successfully been restored

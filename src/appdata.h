@@ -21,7 +21,6 @@
 #define APPDATA_H
 
 #include <array>
-#include <gtk/gtk.h>
 
 #include "uicontrol.h"
 
@@ -38,6 +37,7 @@ class settings_t;
 class statusbar_t;
 struct style_t;
 struct track_t;
+typedef struct _GtkWidget GtkWidget;
 
 struct appdata_t {
   appdata_t(map_state_t &mstate);

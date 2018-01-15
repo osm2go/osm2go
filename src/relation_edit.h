@@ -20,13 +20,12 @@
 #ifndef RELATION_EDIT_H
 #define RELATION_EDIT_H
 
-#include <gtk/gtk.h>
-
 class map_t;
 struct object_t;
 struct osm_t;
 struct presets_items;
 class relation_t;
+typedef struct _GtkWidget GtkWidget;
 
 void relation_membership_dialog(GtkWidget *parent, const presets_items *presets,
                                 osm_t *osm, object_t &object);

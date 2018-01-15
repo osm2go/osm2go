@@ -20,11 +20,10 @@
 #ifndef STATUSBAR_H
 #define STATUSBAR_H
 
-#include <gtk/gtk.h>
-
 #define STATUSBAR_DEFAULT_BRIEF_TIME 3
 
 struct appdata_t;
+typedef struct _GtkWidget GtkWidget;
 
 class statusbar_t {
 protected:

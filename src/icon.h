@@ -20,10 +20,12 @@
 #ifndef ICON_H
 #define ICON_H
 
-#include <gtk/gtk.h>
 #include <string>
 
 #include <osm2go_cpp.h>
+
+typedef struct _GdkPixbuf GdkPixbuf;
+typedef struct _GtkWidget GtkWidget;
 
 class icon_t {
 protected:

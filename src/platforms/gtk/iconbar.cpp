@@ -28,6 +28,7 @@
 
 #include <array>
 #include <cassert>
+#include <gtk/gtk.h>
 
 #include <osm2go_cpp.h>
 #include <osm2go_i18n.h>

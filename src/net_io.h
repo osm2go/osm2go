@@ -20,8 +20,9 @@
 #ifndef NET_IO_H
 #define NET_IO_H
 
-#include <gtk/gtk.h>
 #include <string>
+
+typedef struct _GtkWidget GtkWidget;
 
 /**
  * @brief download from the given URL to file

@@ -24,12 +24,13 @@
 
 #include "osm.h"
 
-#include <gtk/gtk.h>
 #include <map>
 #include <string>
 #include <vector>
 
 #include <osm2go_cpp.h>
+
+typedef struct _GtkWidget GtkWidget;
 
 enum presets_element_type_t {
   WIDGET_TYPE_LABEL = 0,

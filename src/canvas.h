@@ -25,10 +25,11 @@
 #include "pos.h"
 
 #include <array>
-#include <gtk/gtk.h>
 #include <vector>
 
 #include <osm2go_cpp.h>
+
+typedef struct _GtkWidget GtkWidget;
 
 /* --------- generic canvas --------- */
 

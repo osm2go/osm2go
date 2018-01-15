@@ -38,6 +38,8 @@
 #include <cstring>
 #include <ctime>
 #include <fcntl.h>
+#include <glib.h>
+#include <gtk/gtk.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <map>

@@ -22,11 +22,11 @@
 
 #include "pos.h"
 
-#include <gtk/gtk.h>
 #include <vector>
 
 struct appdata_t;
 class gps_state_t;
+typedef struct _GtkWidget GtkWidget;
 
 struct area_edit_t {
   area_edit_t(gps_state_t *gps, pos_area &b, GtkWidget *dlg);

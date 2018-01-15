@@ -23,13 +23,13 @@
 #include "fdguard.h"
 #include "pos.h"
 
-#include <gtk/gtk.h>
 #include <libxml/parser.h>
 #include <string>
 
 struct appdata_t;
 struct map_state_t;
 struct osm_t;
+typedef struct _GtkWidget GtkWidget;
 
 struct project_t {
   project_t(map_state_t &ms, const std::string &n, const std::string &base_path);

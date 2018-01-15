@@ -22,12 +22,12 @@
 
 #include "osm.h"
 
-#include <gtk/gtk.h>
 #include <string>
 #include <vector>
 
 class map_t;
 struct presets_items;
+typedef struct _GtkWidget GtkWidget;
 
 class tag_context_t {
 protected:

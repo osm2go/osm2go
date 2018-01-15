@@ -20,14 +20,13 @@
 #ifndef ICONBAR_H
 #define ICONBAR_H
 
-#include <gtk/gtk.h>
-
 #ifdef FREMANTLE
 #define FINGER_UI
 #endif
 
 struct appdata_t;
 struct object_t;
+typedef struct _GtkWidget GtkWidget;
 
 class iconbar_t {
 protected:
