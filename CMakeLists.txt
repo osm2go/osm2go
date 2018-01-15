@@ -41,7 +41,6 @@ write_compiler_detection_header(
 )
 
 add_library(osm2go_lib STATIC
-	src/about.h
 	src/appdata.h
 	src/area_edit.h
 	src/canvas.cpp

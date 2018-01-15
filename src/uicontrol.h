@@ -71,6 +71,11 @@ public:
    * message may be nullptr to clear the current message.
    */
   void showNotification(const char *message, unsigned int flags = NoFlags);
+
+  /**
+   * @brief show a modal about box
+   */
+  void about_box();
 };
 
 #endif /* UICONTROL_H */

@@ -17,7 +17,7 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "about.h"
+#include <uicontrol.h>
 
 #include "appdata.h"
 #include "icon.h"
@@ -293,9 +293,10 @@ static GtkWidget *bugs_page_new() {
   return vbox;
 }
 
-void about_box(appdata_t *appdata) {
+void MainUi::about_box()
+{
   g_widget dialog(gtk_dialog_new_with_buttons(_("About OSM2Go"),
-                                              GTK_WINDOW(appdata->window), GTK_DIALOG_MODAL,
+                                              GTK_WINDOW(appdata.window), GTK_DIALOG_MODAL,
                                               GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE, O2G_NULLPTR));
 
   gtk_window_set_default_size(GTK_WINDOW(dialog.get()),
@@ -307,11 +308,11 @@ void about_box(appdata_t *appdata) {
 
   GtkWidget *notebook = notebook_new();
 
-  notebook_append_page(notebook, copyright_page_new(appdata->icons), _("Copyright"));
-  notebook_append_page(notebook, license_page_new(),                 _("License"));
-  notebook_append_page(notebook, authors_page_new(),                 _("Authors"));
-  notebook_append_page(notebook, donate_page_new(appdata->icons),    _("Donate"));
-  notebook_append_page(notebook, bugs_page_new(),                    _("Bugs"));
+  notebook_append_page(notebook, copyright_page_new(appdata.icons), _("Copyright"));
+  notebook_append_page(notebook, license_page_new(),                _("License"));
+  notebook_append_page(notebook, authors_page_new(),                _("Authors"));
+  notebook_append_page(notebook, donate_page_new(appdata.icons),    _("Donate"));
+  notebook_append_page(notebook, bugs_page_new(),                   _("Bugs"));
 
   gtk_box_pack_start_defaults(GTK_BOX((GTK_DIALOG(dialog.get()))->vbox),
 			      notebook);

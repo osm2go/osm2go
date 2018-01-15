@@ -18,7 +18,6 @@
  */
 
 #include "appdata.h"
-#include "about.h"
 #include "canvas.h"
 #include "diff.h"
 #include "gps.h"
@@ -513,6 +512,11 @@ cb_menu_track_export(appdata_t *appdata) {
 
 static void track_clear_cb(appdata_t *appdata) {
   appdata->track_clear();
+}
+
+static void about_box(appdata_t *appdata)
+{
+  appdata->uicontrol->about_box();
 }
 
 #ifndef FREMANTLE
