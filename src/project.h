@@ -35,7 +35,15 @@ struct project_t {
   project_t(map_state_t &ms, const std::string &n, const std::string &base_path);
   ~project_t();
 
-  const char *server; /**< the server string used, either rserver or settings->server */
+  inline const std::string &server(const std::string &def) const
+  { return rserver.empty() ? def : rserver; }
+
+  /**
+   * @brief set a new server value
+   *
+   * This will either copy nserver or clear the stored value if nserver == def
+   */
+  void adjustServer(const char *nserver, const std::string &def);
 
   struct {
     int x, y;

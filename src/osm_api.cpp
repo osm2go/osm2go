@@ -67,7 +67,7 @@ struct osm_upload_context_t {
     , dialog(O2G_NULLPTR)
     , osm(o)
     , project(p)
-    , urlbasestr(p->server + std::string("/"))
+    , urlbasestr(p->server(a.settings->server) + "/")
     , comment(c)
     , src(s ? s : std::string())
   {}
@@ -91,9 +91,7 @@ bool osm_download(GtkWidget *parent, settings_t *settings, project_t *project)
 {
   printf("download osm ...\n");
 
-  assert(project->server != O2G_NULLPTR);
-
-  if(!project->rserver.empty()) {
+  if(unlikely(!project->rserver.empty())) {
     if(api_adjust(project->rserver))
       messagef(parent, _("Server changed"),
                _("It seems your current project uses an outdated server/protocol. "
@@ -106,13 +104,11 @@ bool osm_download(GtkWidget *parent, settings_t *settings, project_t *project)
       project->rserver.erase(project->rserver.size() - 1);
     }
 
-    if(project->rserver == settings->server) {
+    if(project->rserver == settings->server)
       project->rserver.clear();
-      project->server = settings->server.c_str();
-    }
   }
 
-  const std::string url = std::string(project->server) + "/map?bbox=" +
+  const std::string url = project->server(settings->server) + "/map?bbox=" +
                           project->bounds.min.print(',') + "," + project->bounds.max.print(',');
 
   /* Download the new file to a new name. If something goes wrong then the
@@ -881,13 +877,12 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
   if(api_adjust(project->rserver)) {
     appendf(context.log, O2G_NULLPTR, _("Server URL adjusted to %s\n"),
             project->rserver.c_str());
-    if(likely(project->rserver == context.appdata.settings->server)) {
+    if(likely(project->rserver == context.appdata.settings->server))
       project->rserver.clear();
-      project->server = context.appdata.settings->server.c_str();
-    }
   }
 
-  appendf(context.log, O2G_NULLPTR, _("Uploading to %s\n"), project->server);
+  appendf(context.log, O2G_NULLPTR, _("Uploading to %s\n"),
+          project->server(appdata.settings->server).c_str());
 
   /* create a new changeset */
   if(osm_create_changeset(context)) {

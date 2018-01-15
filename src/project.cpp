@@ -177,13 +177,8 @@ static bool project_read(const std::string &project_file, project_t *project,
             printf("desc = %s\n", desc.get());
           } else if(strcmp(reinterpret_cast<const char *>(node->name), "server") == 0) {
             xmlString str(xmlNodeListGetString(doc.get(), node->children, 1));
-            if(defaultserver == reinterpret_cast<char *>(str.get())) {
-              project->server = defaultserver.c_str();
-            } else {
-              project->rserver = reinterpret_cast<char *>(str.get());
-              project->server = project->rserver.c_str();
-            }
-            printf("server = %s\n", project->server);
+            project->adjustServer(reinterpret_cast<char *>(str.get()), defaultserver);
+            printf("server = %s\n", project->server(defaultserver).c_str());
           } else if(strcmp(reinterpret_cast<const char *>(node->name), "map") == 0) {
             xmlString str(xmlGetProp(node, BAD_CAST "zoom"));
             if(str)
@@ -253,9 +248,6 @@ static bool project_read(const std::string &project_file, project_t *project,
     project->osm = fname;
   }
 
-  if(project->server == O2G_NULLPTR)
-    project->server = defaultserver.c_str();
-
   return true;
 }
 
@@ -291,10 +283,8 @@ bool project_t::save(GtkWidget *parent) {
 
   xmlDocSetRootElement(doc.get(), root_node);
 
-  if(!rserver.empty()) {
-    assert(server == rserver.c_str());
-    xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "server", BAD_CAST server);
-  }
+  if(!rserver.empty())
+    xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "server", BAD_CAST rserver.c_str());
 
   if(!desc.empty())
     xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "desc", BAD_CAST desc.c_str());
@@ -606,9 +596,6 @@ static project_t *project_new(select_context_t *context) {
   /* no data downloaded yet */
   project->data_dirty = true;
 
-  /* use global server/access settings */
-  project->server = context->appdata.settings->server.c_str();
-
   /* build project osm file name */
   project->osm = project->name + ".osm";
 
@@ -723,13 +710,7 @@ static void on_project_edit(select_context_t *context) {
       cur->osm = project->osm;
 
       /* update server */
-      if(project->server == context->appdata.settings->server) {
-        cur->server = context->appdata.settings->server.c_str();
-	cur->rserver.clear();
-      } else {
-        cur->rserver = project->server;
-        cur->server = cur->rserver.c_str();
-      }
+      cur->adjustServer(project->rserver.c_str(), context->appdata.settings->server);
 
       /* update coordinates */
       if(cur->bounds != project->bounds) {
@@ -1147,7 +1128,8 @@ project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
 #ifdef SERVER_EDITABLE
   gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_left_new(_("Server:")), 0, 1, 3, 4);
   gtk_entry_set_activates_default(GTK_ENTRY(context.server), TRUE);
-  gtk_entry_set_text(GTK_ENTRY(context.server), project->server);
+  gtk_entry_set_text(GTK_ENTRY(context.server),
+                     project->server(scontext->appdata.settings->server).c_str());
   gtk_table_attach_defaults(GTK_TABLE(table),  context.server, 1, 4, 3, 4);
 
   gtk_table_set_row_spacing(GTK_TABLE(table), 3, 4);
@@ -1202,14 +1184,8 @@ project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
     project->desc.clear();
 
 #ifdef SERVER_EDITABLE
-  context.project->rserver = gtk_entry_get_text(GTK_ENTRY(context.server));
-  if(context.project->rserver.empty() ||
-     context.project->rserver == scontext->appdata.settings->server) {
-    context.project->rserver.clear();
-    context.project->server = scontext->appdata.settings->server.c_str();
-  } else {
-    context.project->server = context.project->rserver.c_str();
-  }
+  context.project->adjustServer(gtk_entry_get_text(GTK_ENTRY(context.server)),
+                                scontext->appdata.settings->server);
 #endif
 
   project->save(dialog.get());
@@ -1353,8 +1329,7 @@ osm_t *project_t::parse_osm() const {
 }
 
 project_t::project_t(map_state_t &ms, const std::string &n, const std::string &base_path)
-  : server(O2G_NULLPTR)
-  , map_state(ms)
+  : map_state(ms)
   , name(n)
   , path(base_path +  name + '/')
   , data_dirty(false)
@@ -1367,6 +1342,14 @@ project_t::project_t(map_state_t &ms, const std::string &n, const std::string &b
 
 project_t::~project_t()
 {
+}
+
+void project_t::adjustServer(const char *nserver, const std::string &def)
+{
+  if(nserver == O2G_NULLPTR || !*nserver || def == nserver)
+    rserver.clear();
+  else
+    rserver = nserver;
 }
 
 select_context_t::select_context_t(appdata_t &a, GtkWidget *dial)
