@@ -55,6 +55,10 @@
 #include <osm2go_i18n.h>
 #include <osm2go_stl.h>
 
+/* format string used to altitude and time */
+#define ALT_FORMAT  "%.02f"
+#define DATE_FORMAT "%FT%T"
+
 class TrackSax {
   xmlSAXHandler handler;
   track_point_t *curPoint;

@@ -30,6 +30,8 @@
 #include <ctype.h>
 #include <glib.h>
 
+#define LL_FORMAT   "%.07f"
+
 bool pos_t::valid() const
 {
   return pos_lat_valid(lat) && pos_lon_valid(lon);
@@ -67,15 +69,18 @@ lpos_t pos_t::toLpos(const bounds_t &bounds) const {
   return lpos;
 }
 
-void pos_t::toXmlProperties(xmlNodePtr node) const {
+static void xml_add_prop_coord(xmlNodePtr node, const char *key, pos_float_t val)
+{
   char str[G_ASCII_DTOSTR_BUF_SIZE];
 
-  g_ascii_formatd(str, sizeof(str), LL_FORMAT, lat);
+  g_ascii_formatd(str, sizeof(str), LL_FORMAT, val);
   remove_trailing_zeroes(str);
-  xmlNewProp(node, BAD_CAST "lat", BAD_CAST str);
-  g_ascii_formatd(str, sizeof(str), LL_FORMAT, lon);
-  remove_trailing_zeroes(str);
-  xmlNewProp(node, BAD_CAST "lon", BAD_CAST str);
+  xmlNewProp(node, BAD_CAST key, BAD_CAST str);
+}
+
+void pos_t::toXmlProperties(xmlNodePtr node) const {
+  xml_add_prop_coord(node, "lat", lat);
+  xml_add_prop_coord(node, "lon", lon);
 }
 
 pos_t pos_t::fromXmlProperties(xmlNodePtr node, const char *latName, const char *lonName)
@@ -86,11 +91,7 @@ pos_t pos_t::fromXmlProperties(xmlNodePtr node, const char *latName, const char 
 
 static pos_float_t xml_reader_attr_float(xmlTextReaderPtr reader, const char *name) {
   xmlString prop(xmlTextReaderGetAttribute(reader, BAD_CAST name));
-
-  if(likely(prop))
-    return g_ascii_strtod(reinterpret_cast<gchar *>(prop.get()), O2G_NULLPTR);
-  else
-    return NAN;
+  return xml_parse_float(prop);
 }
 
 pos_t pos_t::fromXmlProperties(xmlTextReaderPtr reader, const char *latName, const char *lonName)
@@ -164,6 +165,11 @@ bool pos_area::contains(pos_t pos) const
   if((pos.lon < min.lon) || (pos.lon > max.lon))
     return false;
   return true;
+}
+
+std::string pos_area::print(char delim1, char delim2)
+{
+  return min.print(delim1) + delim2 + max.print(delim1);
 }
 
 void remove_trailing_zeroes(char *str) {

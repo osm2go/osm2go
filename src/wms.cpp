@@ -1132,8 +1132,7 @@ void wms_import(appdata_t &appdata) {
     url += std::string(ctx.selected.size() - 1, ',');
 
   /* build strings of min and max lat and lon to be used in url */
-  std::string mincoords = appdata.project->bounds.min.print(',');
-  std::string maxcoords = appdata.project->bounds.max.print(',');
+  const std::string coords = appdata.project->bounds.print(',');
 
   /* find preferred supported video format */
   const FormatMap::const_iterator itEnd = ImageFormats.end();
@@ -1145,9 +1144,9 @@ void wms_import(appdata_t &appdata) {
   sprintf(buf, "&WIDTH=%d&HEIGHT=%d&FORMAT=", wms.width, wms.height);
 
   /* build complete url */
-  const std::array<const char *, 9> parts = { {
-                          "&SRS=", srs, "&BBOX=", mincoords.c_str(), ",",
-                          maxcoords.c_str(), buf, it->first, "&reaspect=false"
+  const std::array<const char *, 7> parts = { {
+                          "&SRS=", srs, "&BBOX=", coords.c_str(),
+                          buf, it->first, "&reaspect=false"
                           } };
   for(unsigned int i = 0; i < parts.size(); i++)
     url += parts[i];

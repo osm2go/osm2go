@@ -109,7 +109,7 @@ bool osm_download(GtkWidget *parent, settings_t *settings, project_t *project)
   }
 
   const std::string url = project->server(settings->server) + "/map?bbox=" +
-                          project->bounds.min.print(',') + "," + project->bounds.max.print(',');
+                          project->bounds.print(',');
 
   /* Download the new file to a new name. If something goes wrong then the
    * old file will still be in place to be opened. */

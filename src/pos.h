@@ -20,11 +20,6 @@
 #ifndef POS_H
 #define POS_H
 
-/* format string used to write lat/lon coordinates, altitude and time */
-#define LL_FORMAT   "%.07f"
-#define ALT_FORMAT  "%.02f"
-#define DATE_FORMAT "%FT%T"
-
 #ifdef USE_FLOAT
 /* use float instead of double on small machines */
 typedef float pos_float_t;
@@ -120,6 +115,16 @@ struct pos_area {
   { return max == other.max && min == other.min; }
   inline bool operator!=(const pos_area &other) const
   { return !operator==(other); }
+
+  /**
+   * @brief returns a string representation of minlon + delim1 + minlat + delim2 + maxlon + delim1 + maxlat
+   */
+  std::string print(char delim1, char delim2);
+  /**
+   * @overload
+   */
+  inline std::string print(char delim = ',')
+  { return print(delim, delim); }
 };
 
 /* local position */
