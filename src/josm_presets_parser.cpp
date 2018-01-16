@@ -256,12 +256,12 @@ const PresetSax::StateMap &PresetSax::preset_state_map() {
     const std::vector<State> pr_gr = { TagPresets, TagGroup };
 # define VECTOR_ONE(a) { a }
 #else
-    std::vector<State> item_chunks;
-    item_chunks.push_back(TagChunk);
-    item_chunks.push_back(TagItem);
-    std::vector<State> pr_gr;
-    pr_gr.push_back(TagPresets);
-    pr_gr.push_back(TagGroup);
+    std::vector<State> item_chunks(2);
+    item_chunks[0] = TagChunk;
+    item_chunks[1] = TagItem;
+    std::vector<State> pr_gr(2);
+    pr_gr[0] = TagPresets;
+    pr_gr[1] = TagGroup;
 # define VECTOR_ONE(a) std::vector<State>(1, (a))
 #endif
 
