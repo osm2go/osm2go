@@ -9,7 +9,6 @@
 #include <cassert>
 #include <cstdlib>
 #include <cerrno>
-#include <glib.h>
 #include <iostream>
 #include <string>
 
