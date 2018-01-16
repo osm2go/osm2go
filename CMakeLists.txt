@@ -199,7 +199,6 @@ if (SERVER_EDITABLE)
 endif ()
 
 if (PICKER_MENU)
-	set_property(SOURCE src/josm_presets.cpp APPEND PROPERTY COMPILE_DEFINITIONS "PICKER_MENU")
 	set_property(SOURCE src/platforms/gtk/josm_presets_button.cpp APPEND PROPERTY COMPILE_DEFINITIONS "PICKER_MENU")
 endif ()
 

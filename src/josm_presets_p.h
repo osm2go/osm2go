@@ -30,8 +30,6 @@
 
 #include <osm2go_cpp.h>
 
-typedef struct _GtkWidget GtkWidget;
-
 enum presets_element_type_t {
   WIDGET_TYPE_LABEL = 0,
   WIDGET_TYPE_SEPARATOR,
@@ -330,7 +328,6 @@ public:
   virtual ~presets_item_group();
 
   presets_item_group * const parent;
-  GtkWidget *widget;
   std::vector<presets_item_t *> items;
 };
 

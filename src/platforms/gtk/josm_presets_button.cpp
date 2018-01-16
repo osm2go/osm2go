@@ -132,7 +132,23 @@ struct presets_context_t {
 #ifndef PICKER_MENU
   g_widget menu;
 #else
-  std::vector<presets_item_group *> submenus;
+  struct submenu {
+    explicit submenu(presets_item_group *i = O2G_NULLPTR, GtkWidget *w = O2G_NULLPTR)
+      : item(i), widget(w) {}
+    presets_item_group *item;
+#if __cplusplus >= 201103L
+    g_widget widget;
+#else
+    // this could use g_widget, but the important part is the move constructor
+    // to make sure only one instance holds the reference
+    GtkWidget *widget;
+#endif
+
+    inline bool operator==(const presets_item_group *other) const
+    { return item == other; }
+  };
+  typedef std::vector<submenu> submenu_vector;
+  submenu_vector submenus;
   GtkWidget *subwidget; ///< dynamic submenu (if shown)
 
   GtkWidget *presets_picker(const std::vector<presets_item_t *> &items, bool scan_for_recent);
@@ -511,11 +527,16 @@ enum {
   PRESETS_PICKER_NUM_COLS
 };
 
-static void remove_sub(presets_item_group *sub_item) {
-  if(sub_item->widget) {
-    gtk_widget_destroy(sub_item->widget);
-    sub_item->widget = O2G_NULLPTR;
+static void remove_sub(presets_context_t::submenu_vector::value_type &sub_item) {
+#if __cplusplus < 201103L
+  // the unique_ptr will remove them automatically on destruction
+  if(sub_item.widget) {
+    gtk_widget_destroy(sub_item.widget);
+    sub_item.widget = O2G_NULLPTR;
   }
+#else
+  (void) sub_item;
+#endif
 }
 
 static void
@@ -565,8 +586,8 @@ on_presets_picker_selected(GtkTreeSelection *selection, presets_context_t *conte
     }
 
     GtkWidget *sub;
-    std::vector<presets_item_group *>::iterator subitBegin = context->submenus.begin();
-    std::vector<presets_item_group *>::iterator subitEnd = context->submenus.end();
+    presets_context_t::submenu_vector::iterator subitBegin = context->submenus.begin();
+    presets_context_t::submenu_vector::iterator subitEnd = context->submenus.end();
     if(sub_item) {
       /* normal submenu */
 
@@ -575,7 +596,7 @@ on_presets_picker_selected(GtkTreeSelection *selection, presets_context_t *conte
       // submenu does not cause an event
       if(sub_item->parent) {
         // the parent item has to be visible, otherwise this could not have been clicked
-        std::vector<presets_item_group *>::iterator it = std::find(subitBegin, subitEnd,
+        presets_context_t::submenu_vector::iterator it = std::find(subitBegin, subitEnd,
                                                                    sub_item->parent);
         assert(it != subitEnd);
         it++; // keep the parent
@@ -588,8 +609,7 @@ on_presets_picker_selected(GtkTreeSelection *selection, presets_context_t *conte
       }
 
       sub = context->presets_picker(sub_item->items, false);
-      sub_item->widget = sub;
-      context->submenus.push_back(sub_item);
+      context->submenus.push_back(presets_context_t::submenu(sub_item, sub));
     } else {
       // dynamic submenu
       // this is always on top level, so all old submenu entries can be removed
@@ -845,10 +865,6 @@ presets_context_t::presets_picker(const std::vector<presets_item_t *> &items,
 
   return presets_picker_embed(view, store, this);
 }
-
-static inline void remove_sub_reference(presets_item_group *sub_item) {
-  sub_item->widget = O2G_NULLPTR;
-}
 #endif
 
 static gint button_press(GtkWidget *widget, GdkEventButton *event) {
@@ -907,8 +923,6 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event) {
   gtk_dialog_run(GTK_DIALOG(dialog.get()));
 
   // remove all references to the widgets, they will be destroyed together with the dialog
-  std::for_each(presets_context_t::instance->submenus.begin(),
-                presets_context_t::instance->submenus.end(), remove_sub_reference);
   presets_context_t::instance->submenus.clear();
 
   // then delete the dialog, it would delete the submenus first otherwise

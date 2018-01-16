@@ -1143,7 +1143,7 @@ presets_item::~presets_item()
 
 presets_item_group::presets_item_group(const unsigned int types, presets_item_group *p,
                                        const std::string &n, const std::string &ic)
-  : presets_item_named(types | TY_GROUP, n, ic), parent(p), widget(O2G_NULLPTR)
+  : presets_item_named(types | TY_GROUP, n, ic), parent(p)
 {
   assert(p == O2G_NULLPTR || ((p->type & TY_GROUP) != 0));
 }
