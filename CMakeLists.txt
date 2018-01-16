@@ -95,6 +95,7 @@ add_library(osm2go_lib STATIC
 	src/uicontrol.h
 	src/wms.cpp
 	src/wms.h
+	src/wms_p.h
 	${CMAKE_CURRENT_BINARY_DIR}/osm2go_cpp.h
 )
 

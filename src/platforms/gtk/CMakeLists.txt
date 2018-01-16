@@ -13,6 +13,7 @@ target_sources(osm2go_lib PRIVATE
 	${CMAKE_CURRENT_SOURCE_DIR}/style_widgets.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/style_widgets.h
 	${CMAKE_CURRENT_SOURCE_DIR}/uicontrol.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/wms_dialog.cpp
 )
 
 if (MAEMO_FOUND)
