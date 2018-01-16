@@ -14,7 +14,7 @@
 #include <cerrno>
 #include <cstdlib>
 #include <cstring>
-#include <gtk/gtk.h>
+#include <glib.h>
 #include <iostream>
 #include <sys/stat.h>
 
