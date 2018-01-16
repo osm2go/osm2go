@@ -518,18 +518,6 @@ static void remove_sub(presets_item_group *sub_item) {
   }
 }
 
-/**
- * @brief remove all child pickers
- */
-static void remove_subs(std::vector<presets_item_group *> &oldsubs,
-                        presets_item_group *sub_item) {
-  std::vector<presets_item_group *>::iterator it =
-             std::find(oldsubs.begin(), oldsubs.end(), sub_item);
-  assert(it != oldsubs.end());
-  std::for_each(++it, oldsubs.end(), remove_sub);
-  oldsubs.erase(it, oldsubs.end());
-}
-
 static void
 on_presets_picker_selected(GtkTreeSelection *selection, presets_context_t *context) {
 #ifdef FREMANTLE
@@ -577,6 +565,8 @@ on_presets_picker_selected(GtkTreeSelection *selection, presets_context_t *conte
     }
 
     GtkWidget *sub;
+    std::vector<presets_item_group *>::iterator subitBegin = context->submenus.begin();
+    std::vector<presets_item_group *>::iterator subitEnd = context->submenus.end();
     if(sub_item) {
       /* normal submenu */
 
@@ -585,10 +575,15 @@ on_presets_picker_selected(GtkTreeSelection *selection, presets_context_t *conte
       // submenu does not cause an event
       if(sub_item->parent) {
         // the parent item has to be visible, otherwise this could not have been clicked
-        remove_subs(context->submenus, sub_item->parent);
+        std::vector<presets_item_group *>::iterator it = std::find(subitBegin, subitEnd,
+                                                                   sub_item->parent);
+        assert(it != subitEnd);
+        it++; // keep the parent
+        std::for_each(it, subitEnd, remove_sub);
+        context->submenus.erase(it, subitEnd);
       } else {
         // this is a top level menu, so everything currently shown can be removed
-        std::for_each(context->submenus.begin(), context->submenus.end(), remove_sub);
+        std::for_each(subitBegin, subitEnd, remove_sub);
         context->submenus.clear();
       }
 
@@ -598,7 +593,7 @@ on_presets_picker_selected(GtkTreeSelection *selection, presets_context_t *conte
     } else {
       // dynamic submenu
       // this is always on top level, so all old submenu entries can be removed
-      std::for_each(context->submenus.begin(), context->submenus.end(), remove_sub);
+      std::for_each(subitBegin, subitEnd, remove_sub);
       context->submenus.clear();
       if (strcmp(text, _("Used presets")) == 0)
         sub = context->preset_picker_recent();
