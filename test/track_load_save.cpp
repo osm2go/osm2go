@@ -29,21 +29,13 @@ int main(int argc, char **argv)
 
   delete track;
 
-  GMappedFile *ogpx = g_mapped_file_new(fn.c_str(), FALSE, O2G_NULLPTR);
-  GMappedFile *ngpx = g_mapped_file_new(argv[3], FALSE, O2G_NULLPTR);
+  g_mapped_file ogpx(g_mapped_file_new(fn.c_str(), FALSE, O2G_NULLPTR));
+  g_mapped_file ngpx(g_mapped_file_new(argv[3], FALSE, O2G_NULLPTR));
 
-  assert(ogpx != O2G_NULLPTR);
-  assert(ngpx != O2G_NULLPTR);
-  assert_cmpmem(g_mapped_file_get_contents(ogpx), g_mapped_file_get_length(ogpx),
-                g_mapped_file_get_contents(ngpx), g_mapped_file_get_length(ngpx));
-
-#if GLIB_CHECK_VERSION(2,22,0)
-  g_mapped_file_unref(ogpx);
-  g_mapped_file_unref(ngpx);
-#else
-  g_mapped_file_free(ogpx);
-  g_mapped_file_free(ngpx);
-#endif
+  assert(ogpx);
+  assert(ngpx);
+  assert_cmpmem(g_mapped_file_get_contents(ogpx.get()), g_mapped_file_get_length(ogpx.get()),
+                g_mapped_file_get_contents(ngpx.get()), g_mapped_file_get_length(ngpx.get()));
 
   xmlCleanupParser();
 

@@ -96,21 +96,16 @@ static GtkWidget *label_wrap(const char *str) {
 
 static GtkWidget *license_page_new(void) {
   GtkWidget *label = label_wrap(O2G_NULLPTR);
-  GMappedFile *licMap = O2G_NULLPTR;
+  g_mapped_file licMap;
 
   const std::string &name = find_file("COPYING");
-  if(!name.empty()) {
-    licMap = g_mapped_file_new(name.c_str(), FALSE, O2G_NULLPTR);
-  }
+  if(!name.empty())
+    licMap.reset(g_mapped_file_new(name.c_str(), FALSE, O2G_NULLPTR));
 
   if(licMap) {
-    const std::string buffer(g_mapped_file_get_contents(licMap),
-                             g_mapped_file_get_length(licMap));
-#if GLIB_CHECK_VERSION(2,22,0)
-    g_mapped_file_unref(licMap);
-#else
-    g_mapped_file_free(licMap);
-#endif
+    const std::string buffer(g_mapped_file_get_contents(licMap.get()),
+                             g_mapped_file_get_length(licMap.get()));
+    licMap.reset();
 
     gtk_label_set_text(GTK_LABEL(label), buffer.c_str());
   } else

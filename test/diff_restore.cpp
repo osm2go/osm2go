@@ -104,19 +104,13 @@ static void verify_diff(osm_t *osm)
 
 static void compare_with_file(const void *buf, size_t len, const char *fn)
 {
-  GMappedFile *fdata = g_mapped_file_new(fn, FALSE, O2G_NULLPTR);
+  g_mapped_file fdata(g_mapped_file_new(fn, FALSE, O2G_NULLPTR));
 
-  assert(fdata != O2G_NULLPTR);
-  assert_cmpnum(g_mapped_file_get_length(fdata), len);
+  assert(fdata);
+  assert_cmpnum(g_mapped_file_get_length(fdata.get()), len);
 
-  assert_cmpmem(g_mapped_file_get_contents(fdata), g_mapped_file_get_length(fdata),
+  assert_cmpmem(g_mapped_file_get_contents(fdata.get()), g_mapped_file_get_length(fdata.get()),
                 buf, len);
-
-#if GLIB_CHECK_VERSION(2,22,0)
-  g_mapped_file_unref(fdata);
-#else
-  g_mapped_file_free(fdata);
-#endif
 }
 
 static void test_osmChange(const osm_t *osm, const char *fn)

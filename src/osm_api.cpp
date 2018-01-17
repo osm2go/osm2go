@@ -124,7 +124,7 @@ bool osm_download(GtkWidget *parent, settings_t *settings, project_t *project)
   const bool wasGzip = project->osm.size() > 3 && strcmp(project->osm.c_str() + project->osm.size() - 3, ".gz") == 0;
 
   // check the contents of the new file
-  GMappedFile *osmData = g_mapped_file_new(update.c_str(), FALSE, O2G_NULLPTR);
+  g_mapped_file osmData(g_mapped_file_new(update.c_str(), FALSE, O2G_NULLPTR));
   if(unlikely(!osmData)) {
     messagef(parent, _("Download error"),
              _("Error accessing the downloaded file:\n\n%s"), update.c_str());
@@ -132,13 +132,9 @@ bool osm_download(GtkWidget *parent, settings_t *settings, project_t *project)
     return false;
   }
 
-  const bool isGzip = check_gzip(g_mapped_file_get_contents(osmData),
-                              g_mapped_file_get_length(osmData));
-#if GLIB_CHECK_VERSION(2,22,0)
-  g_mapped_file_unref(osmData);
-#else
-  g_mapped_file_free(osmData);
-#endif
+  const bool isGzip = check_gzip(g_mapped_file_get_contents(osmData.get()),
+                              g_mapped_file_get_length(osmData.get()));
+  osmData.reset();
 
   /* if there's a new file use this from now on */
   printf("download ok, replacing previous file\n");
