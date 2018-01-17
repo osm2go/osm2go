@@ -24,7 +24,7 @@ class map_t;
 struct map_item_t;
 class way_t;
 
-void map_edit_way_add_begin(map_t *map, way_t *way_sel);
+void map_edit_way_add_begin(map_t *map);
 void map_edit_way_add_segment(map_t *map, int x, int y);
 void map_edit_way_add_cancel(map_t *map);
 void map_edit_way_add_ok(map_t *map);

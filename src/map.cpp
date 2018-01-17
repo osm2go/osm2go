@@ -1655,13 +1655,8 @@ void map_t::set_action(map_action_t act) {
     statusbar_text = _("Place first node of new way");
     printf("starting new way\n");
 
-    /* remember if there was a way selected */
-    way_t *way_sel = O2G_NULLPTR;
-    if(selected.object.type == WAY)
-      way_sel = selected.object.way;
-
     item_deselect();
-    map_edit_way_add_begin(this, way_sel);
+    map_edit_way_add_begin(this);
     break;
   }
 

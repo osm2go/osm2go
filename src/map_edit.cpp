@@ -38,11 +38,7 @@
 
 /* -------------------------- way_add ----------------------- */
 
-void map_edit_way_add_begin(map_t *map, way_t *way_sel) {
-  if(way_sel)
-    printf("previously selected way is #" ITEM_ID_FORMAT "\n",
-		     way_sel->id);
-
+void map_edit_way_add_begin(map_t *map) {
   assert_null(map->action.way);
   map->action.way = new way_t(0);
   map->action.extending = O2G_NULLPTR;
