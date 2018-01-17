@@ -83,6 +83,7 @@ add_library(osm2go_lib STATIC
 	src/pos.h
 	src/project.cpp
 	src/project.h
+	src/project_p.h
 	src/relation_edit.cpp
 	src/relation_edit.h
 	src/settings.h
