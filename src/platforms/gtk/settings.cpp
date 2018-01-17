@@ -110,14 +110,8 @@ settings_t *settings_t::load() {
                   load_functor<bool, bool, gconf_value_get_bool_wrapper>(key, client, GCONF_VALUE_BOOL));
 
     /* adjust default server stored in settings if required */
-    std::string::size_type pos05 = settings->server.find("0.5");
-    if(unlikely(pos05 != std::string::npos)) {
-      settings->server[pos05 + 2] = '6';
-      printf("adjusting server path in settings to 0.6\n");
-    }
-    if(unlikely(api_adjust(settings->server))) {
+    if(unlikely(api_adjust(settings->server)))
       printf("adjusting server path in settings\n");
-    }
 
     key = keybase + "track_visibility";
     GConfValue *gvalue = gconf_client_get(client, key.c_str(), O2G_NULLPTR);
@@ -326,7 +320,7 @@ settings_t::~settings_t()
 
 bool api_adjust(std::string &rserver) {
   if(unlikely(rserver.size() > strlen(apihttp) &&
-                rserver.find(apihttp) == 0 &&
+                strncmp(rserver.c_str(), apihttp, strlen(apihttp)) == 0 &&
                 (rserver[strlen(apihttp)] == '5' ||
                  rserver[strlen(apihttp)] == '6'))) {
     rserver = api06https;
