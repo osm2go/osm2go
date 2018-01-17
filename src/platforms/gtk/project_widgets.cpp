@@ -130,8 +130,7 @@ static void pos_lon_label_set(GtkWidget *label, pos_float_t lon) {
   gtk_label_set_text(GTK_LABEL(label), str);
 }
 
-static bool project_edit(select_context_t *scontext,
-                             project_t *project, gboolean is_new);
+static bool project_edit(select_context_t *scontext, project_t *project, bool is_new);
 
 /* ------------ project selection dialog ------------- */
 
@@ -253,9 +252,7 @@ static bool project_delete_gui(select_context_t *context, project_t *project) {
     do {
       project_t *prj = O2G_NULLPTR;
       gtk_tree_model_get(model, &iter, PROJECT_COL_DATA, &prj, -1);
-      if(prj && (prj == project)) {
-	printf("found %s to remove\n", prj->name.c_str());
-	/* and remove from store */
+      if(prj == project) {
         gtk_list_store_remove(context->store, &iter);
         break;
       }
@@ -278,8 +275,6 @@ static bool project_delete_gui(select_context_t *context, project_t *project) {
 }
 
 static project_t *project_new(select_context_t *context) {
-  printf("creating project with default values\n");
-
   /* --------------  first choose a name for the project --------------- */
   g_widget dialog(gtk_dialog_new_with_buttons(_("Project name"),
                                               GTK_WINDOW(context->dialog), GTK_DIALOG_MODAL,
@@ -321,13 +316,8 @@ static project_t *project_new(select_context_t *context) {
   project->bounds.max = pos_t(NAN, NAN);
 
   /* create project file on disk */
-  if(!project->save(context->dialog)) {
+  if(!project->save(context->dialog) || !project_edit(context, project.get(), true))
     project_delete_gui(context, project.release());
-  } else if(!project_edit(context, project.get(), TRUE)) {
-    printf("new/edit cancelled!!\n");
-
-    project_delete_gui(context, project.release());
-  }
 
   /* enable/disable edit/remove buttons */
   view_selected(context->dialog, project.get());
@@ -386,14 +376,13 @@ static void on_project_delete(select_context_t *context) {
                project->name.c_str()))
     return;
 
-  if(!project_delete_gui(context, project))
-    printf("unable to delete project\n");
+  project_delete_gui(context, project);
 }
 
 static void on_project_edit(select_context_t *context) {
   project_t *project = project_get_selected(context->list);
 
-  if(project_edit(context, project, FALSE)) {
+  if(project_edit(context, project, false)) {
     GtkTreeModel     *model;
     GtkTreeIter       iter;
 
@@ -562,8 +551,6 @@ static GtkWidget *project_list_widget(select_context_t &context, gboolean &has_s
 }
 
 std::string project_select(appdata_t &appdata) {
-  std::string name;
-
   select_context_t context(appdata,
                     gtk_dialog_new_with_buttons(_("Project selection"),
                                     GTK_WINDOW(appdata.window), GTK_DIALOG_MODAL,
@@ -588,9 +575,9 @@ std::string project_select(appdata_t &appdata) {
 
   gtk_widget_show_all(context.dialog);
   if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(context.dialog)))
-    name = project_get_selected(context.list)->name;
+    return project_get_selected(context.list)->name;
 
-  return name;
+  return std::string();
 }
 
 /* ---------------------------------------------------- */
@@ -716,8 +703,6 @@ static void on_edit_clicked(project_context_t *context) {
 static void on_download_clicked(project_context_t *context) {
   project_t * const project = context->project;
 
-  printf("download %s\n", project->osm.c_str());
-
   if(osm_download(context->dialog, context->appdata.settings, project))
     project->data_dirty = false;
   else
@@ -759,7 +744,7 @@ static void on_diff_remove_clicked(project_context_t *context) {
 }
 
 static bool
-project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
+project_edit(select_context_t *scontext, project_t *project, bool is_new) {
   GtkWidget *parent = scontext->dialog;
 
   if(project->check_demo(parent))
@@ -783,7 +768,7 @@ project_edit(select_context_t *scontext, project_t *project, gboolean is_new) {
   }
   dialog_size_hint(GTK_WINDOW(dialog.get()), MISC_DIALOG_WIDE);
 
-  project_context_t context(scontext->appdata, project, is_new,
+  project_context_t context(scontext->appdata, project, is_new ? TRUE : FALSE,
                             scontext->projects, dialog.get());
 
   gtk_dialog_set_default_response(GTK_DIALOG(dialog.get()), GTK_RESPONSE_ACCEPT);

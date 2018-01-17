@@ -85,7 +85,7 @@ public:
 
 bool osm_download(GtkWidget *parent, settings_t *settings, project_t *project)
 {
-  printf("download osm ...\n");
+  printf("download osm for %s ...\n", project->name.c_str());
 
   if(unlikely(!project->rserver.empty())) {
     if(api_adjust(project->rserver))
