@@ -1529,6 +1529,7 @@ osm_gps_map_setup(OsmGpsMapPrivate *priv) {
             g_free(priv->repo_uri);
 
             priv->repo_uri = g_strdup(uri);
+            g_free(priv->image_format);
             priv->image_format = g_strdup(
                 osm_gps_map_source_get_image_format(priv->map_source));
             priv->max_zoom = osm_gps_map_source_get_max_zoom(priv->map_source);
@@ -1726,6 +1727,7 @@ osm_gps_map_set_property (GObject *object, guint prop_id, const GValue *value, G
 
             } } break;
         case PROP_IMAGE_FORMAT:
+            g_free(priv->image_format);
             priv->image_format = g_value_dup_string (value);
             break;
         default:
