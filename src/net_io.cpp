@@ -84,6 +84,7 @@ static HttpCodeMap http_msg_init() {
   http_messages[417] = "(Expect rejected)";
   http_messages[500] = "Internal Server Error";
   http_messages[503] = "Service Unavailable";
+  http_messages[509] = "Bandwidth Limit Exceeded";
 
   return http_messages;
 }
