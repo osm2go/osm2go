@@ -169,7 +169,7 @@ static void on_server_remove(wms_server_context_t *context) {
     assert(server != O2G_NULLPTR);
 
     /* de-chain */
-    printf("de-chaining server %s\n", server->name.c_str());
+    g_debug("de-chaining server %s", server->name.c_str());
     std::vector<wms_server_t *> &servers = context->appdata.settings->wms_server;
     const std::vector<wms_server_t *>::iterator itEnd = servers.end();
     std::vector<wms_server_t *>::iterator it = std::find(servers.begin(), itEnd, server);
@@ -262,7 +262,7 @@ bool wms_server_edit(wms_server_context_t *context, gboolean edit_name,
 
     wms_server->server = gtk_entry_get_text(GTK_ENTRY(server));
     wms_server->path = gtk_entry_get_text(GTK_ENTRY(path));
-    printf("setting %s/%s\n", wms_server->server.c_str(), wms_server->path.c_str());
+    g_debug("setting %s/%s", wms_server->server.c_str(), wms_server->path.c_str());
 
     /* set texts below */
     gtk_label_set_text(GTK_LABEL(context->server_label), wms_server->server.c_str());
@@ -317,7 +317,7 @@ static void on_server_add(wms_server_context_t *context) {
 
   if(!wms_server_edit(context, TRUE, newserver)) {
     /* user has cancelled request. remove newly added item */
-    printf("user clicked cancel\n");
+    g_debug("user clicked cancel");
 
     delete newserver;
   } else {
@@ -412,7 +412,7 @@ static bool wms_server_dialog(appdata_t &appdata, wms_t *wms) {
     const wms_server_t *server = get_selection(list_get_selection(context.list));
     if(server) {
       /* fetch parameters from selected entry */
-      printf("WMS: using %s\n", server->name.c_str());
+      g_debug("WMS: using %s", server->name.c_str());
       wms->server = server->server;
       wms->path = server->path;
       ok = true;

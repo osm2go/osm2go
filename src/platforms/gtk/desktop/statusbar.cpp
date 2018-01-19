@@ -95,7 +95,7 @@ static void statusbar_highlight(statusbar_t *statusbar, bool highlight) {
 void statusbar_gtk::set(const char *msg, bool highlight) {
   statusbar_highlight(this, highlight);
 
-  printf("statusbar_set: %s\n", msg);
+  g_debug("%s: %s", __PRETTY_FUNCTION__, msg);
 
   if (mid) {
     gtk_statusbar_remove(GTK_STATUSBAR(widget), cid, mid);
@@ -128,7 +128,7 @@ void statusbar_gtk::clear_message()
 void statusbar_gtk::brief(const char *msg, bool timeout)
 {
   clear_message();
-  printf("%s: %s\n", __PRETTY_FUNCTION__, msg);
+  g_debug("%s: %s", __PRETTY_FUNCTION__, msg);
   statusbar_highlight(this, true);
   brief_mid = gtk_statusbar_push(GTK_STATUSBAR(widget), cid, msg);
   if (brief_mid && timeout)

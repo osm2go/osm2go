@@ -83,8 +83,7 @@ template<typename T, typename U, U GETTER(const GConfValue *)> void load_functor
     return;
 
   if(unlikely(value->type != type)) {
-    printf("invalid type found for key '%s': expected %u, got %u\n",
-           p.first, type, value->type);
+    g_warning("invalid type found for key '%s': expected %u, got %u", p.first, type, value->type);
   } else {
     *(p.second) = GETTER(value);
   }
@@ -111,7 +110,7 @@ settings_t *settings_t::load() {
 
     /* adjust default server stored in settings if required */
     if(unlikely(api_adjust(settings->server)))
-      printf("adjusting server path in settings\n");
+      g_debug("adjusting server path in settings");
 
     key = keybase + "track_visibility";
     GConfValue *gvalue = gconf_client_get(client, key.c_str(), O2G_NULLPTR);
@@ -158,18 +157,18 @@ settings_t *settings_t::load() {
       }
     } else {
       /* add default server(s) */
-      printf("No WMS servers configured, adding default\n");
+      g_debug("No WMS servers configured, adding default");
       settings->wms_server = wms_server_get_default();
     }
 
     /* use demo setup if present */
     if(settings->project.empty() && settings->base_path.empty()) {
-      printf("base_path not set, assuming first time run\n");
+      g_debug("base_path not set, assuming first time run");
 
       /* check for presence of demo project */
       std::string fullname = find_file("demo/demo.proj");
       if(!fullname.empty()) {
-        printf("demo project exists, use it as default\n");
+        g_debug("demo project exists, use it as default");
         settings->project = fullname;
         settings->first_run_demo = true;
       }
@@ -201,7 +200,7 @@ settings_t *settings_t::load() {
     else
       settings->base_path += "/osm2go/";
 
-    printf("base_path = %s\n", settings->base_path.c_str());
+    g_debug("base_path = %s", settings->base_path.c_str());
   }
 
   fdguard fg(settings->base_path.c_str(), O_DIRECTORY | O_RDONLY);

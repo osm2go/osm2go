@@ -106,10 +106,10 @@ gps_liblocation_state_t::gps_liblocation_state_t()
   , fix(false)
   , enabled(false)
 {
-  printf("GPS init: Using liblocation\n");
+  g_debug("GPS init: Using liblocation");
 
   if(!device) {
-    printf("Unable to connect to liblocation\n");
+    g_warning("Unable to connect to liblocation");
     return;
   }
 
@@ -124,7 +124,7 @@ gps_liblocation_state_t::~gps_liblocation_state_t()
 
 #ifdef LL_CONTROL_GPSD
   if(control) {
-    printf("Having control over GPSD and its running, stopping it\n");
+    g_debug("Having control over GPSD and its running, stopping it");
     if(gps_is_on)
       location_gpsd_control_stop(control);
   }
@@ -139,10 +139,10 @@ void gps_liblocation_state_t::setEnable(bool en)
   if(en != gps_is_on) {
     if(device && control) {
       if(en) {
-        printf("starting gpsd\n");
+        g_debug("starting gpsd");
         location_gpsd_control_start(control);
       } else {
-        printf("stopping gpsd\n");
+        g_debug("stopping gpsd");
         location_gpsd_control_stop(control);
       }
       gps_is_on = en;

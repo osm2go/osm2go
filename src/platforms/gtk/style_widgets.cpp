@@ -111,7 +111,7 @@ static void style_change(appdata_t &appdata, const std::string &name,
 /* is actually placed inside the submenu there */
 void style_select(GtkWidget *parent, appdata_t &appdata) {
 
-  printf("select style\n");
+  g_debug("select style");
 
   /* ------------------ style dialog ---------------- */
   g_widget dialog(gtk_dialog_new_with_buttons(_("Select style"),
@@ -134,12 +134,12 @@ void style_select(GtkWidget *parent, appdata_t &appdata) {
   gtk_widget_show_all(dialog.get());
 
   if(GTK_RESPONSE_ACCEPT != gtk_dialog_run(GTK_DIALOG(dialog.get()))) {
-    printf("user clicked cancel\n");
+    g_debug("user clicked cancel");
     return;
   }
 
   const std::string &style = combo_box_get_active_text(cbox);
-  printf("user clicked ok on %s\n", style.c_str());
+  g_debug("user clicked ok on %s", style.c_str());
 
   dialog.reset();
 

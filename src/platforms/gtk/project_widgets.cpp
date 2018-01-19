@@ -229,8 +229,7 @@ static void callback_modified_name(GtkWidget *widget, name_callback_context_t *c
 }
 
 static bool project_delete_gui(select_context_t *context, project_t *project) {
-
-  printf("deleting project \"%s\"\n", project->name.c_str());
+  g_debug("deleting project \"%s\"", project->name.c_str());
 
   /* check if we are to delete the currently open project */
   if(context->appdata.project &&
@@ -406,7 +405,7 @@ static void on_project_edit(select_context_t *context) {
        context->appdata.project->name == project->name) {
       project_t *cur = context->appdata.project;
 
-      printf("edited project was actually the active one!\n");
+      g_debug("edited project was actually the active one!");
 
       /* update the currently active project also */
 
@@ -462,7 +461,7 @@ on_project_update_all(select_context_t *context)
       gtk_tree_model_get(model, &iter, PROJECT_COL_DATA, &prj, -1);
       /* if the project was already downloaded do it again */
       if(osm_file_exists(prj)) {
-        printf("found %s to update\n", prj->name.c_str());
+        g_debug("found %s to update", prj->name.c_str());
         if (!osm_download(GTK_WIDGET(context->dialog),
                      context->appdata.settings, prj))
           break;
@@ -587,7 +586,7 @@ static void project_filesize(project_context_t *context) {
   g_string gstr;
   const project_t * const project = context->project;
 
-  printf("Checking size of %s\n", project->osm.c_str());
+  g_debug("Checking size of %s", project->osm.c_str());
 
   struct stat st;
   bool stret = fstatat(project->dirfd, project->osm.c_str(), &st, 0) == 0 &&
@@ -645,7 +644,7 @@ bool project_context_t::active_n_dirty() const {
     return false;
 
   if(appdata.project && appdata.project->name == project->name) {
-    printf("editing the currently open project\n");
+    g_debug("editing the currently open project");
 
     return !appdata.osm->is_clean(true);
   }
@@ -680,7 +679,7 @@ static void on_edit_clicked(project_context_t *context) {
                 projects_to_bounds(context->area_edit.other_bounds));
 
   if(context->area_edit.run()) {
-    printf("coordinates changed!!\n");
+    g_debug("coordinates changed!");
 
     /* the wms layer isn't usable with new coordinates */
     wms_remove_file(*project);
@@ -705,8 +704,6 @@ static void on_download_clicked(project_context_t *context) {
 
   if(osm_download(context->dialog, context->appdata.settings, project))
     project->data_dirty = false;
-  else
-    printf("download failed\n");
 
   project_filesize(context);
 }
@@ -714,7 +711,7 @@ static void on_download_clicked(project_context_t *context) {
 static void on_diff_remove_clicked(project_context_t *context) {
   const project_t * const project = context->project;
 
-  printf("clicked diff remove\n");
+  g_debug("clicked diff remove");
 
   if(yes_no_f(context->dialog, 0, _("Discard changes?"),
 	      _("Do you really want to discard your changes? This will "
@@ -727,8 +724,7 @@ static void on_diff_remove_clicked(project_context_t *context) {
     appdata_t &appdata = context->appdata;
 
     if(appdata.project && appdata.project->name == project->name) {
-
-      printf("undo all on current project: delete map changes as well\n");
+      g_debug("undo all on current project: delete map changes as well");
 
       /* just reload the map */
       appdata.map->clear(map_t::MAP_LAYER_OBJECTS_ONLY);

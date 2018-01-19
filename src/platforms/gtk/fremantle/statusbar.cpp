@@ -101,7 +101,7 @@ void statusbar_fremantle::set(const char *msg, bool highlight) {
   gtk_widget_modify_fg(widget, GTK_STATE_NORMAL, col);
   gtk_widget_modify_text(widget, GTK_STATE_NORMAL, col);
 
-  printf("statusbar_set: %s\n", msg);
+  g_debug("%s: %s", __PRETTY_FUNCTION__, msg);
 
   gtk_label_set_text(GTK_LABEL(widget), msg);
 }

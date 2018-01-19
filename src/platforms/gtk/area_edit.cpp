@@ -354,12 +354,12 @@ static void map_update(area_context_t *context, bool forced) {
 
   /* map is first tab (page 0) */
   if(!forced && !current_tab_is(context, TAB_LABEL_MAP)) {
-    printf("schedule map redraw\n");
+    g_debug("schedule map redraw");
     context->map.needs_redraw = true;
     return;
   }
 
-  printf("do map redraw\n");
+  g_debug("do map redraw");
 
   /* check if the position is invalid */
   if(!context->bounds.valid()) {

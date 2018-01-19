@@ -109,14 +109,14 @@ icon_t::icon_item *icon_t::load(const std::string &sname, int limit) {
     Pixmap pix = gdk_pixbuf_new_from_file_at_size(fullname.c_str(), limit, limit, O2G_NULLPTR);
 
     if(likely(pix)) {
-      //    printf("Successfully loaded icon %s to %p\n", name, pix);
+      //    g_debug("Successfully loaded icon %s to %p", name, pix);
       icon_buffer::icon_buffer_item *ret = new icon_buffer::icon_buffer_item(pix);
       entries[sname] = ret;
       return ret;
     }
   }
 
-  printf("Icon %s not found\n", sname.c_str());
+  g_warning("Icon %s not found", sname.c_str());
   return O2G_NULLPTR;
 }
 
@@ -158,7 +158,7 @@ struct find_icon_buf {
 };
 
 void icon_t::icon_free(icon_item *buf) {
-  //  printf("request to free icon %p\n", buf);
+  //  g_debug("request to free icon %p", buf);
 
   /* check if icon list already contains an icon of that name */
   icon_buffer::BufferMap &entries = static_cast<icon_buffer *>(this)->entries;
@@ -166,11 +166,11 @@ void icon_t::icon_free(icon_item *buf) {
   icon_buffer::BufferMap::iterator it = std::find_if(entries.begin(), itEnd,
                                                     find_icon_buf(buf));
   if(unlikely(it == itEnd)) {
-    printf("ERROR: icon to be freed not found\n");
+    g_warning("ERROR: icon to be freed not found");
   } else {
     it->second->use--;
     if(!it->second->use) {
-      //  printf("freeing unused icon %s\n", it->first.c_str());
+      //  g_debug("freeing unused icon %s", it->first.c_str());
 
       delete it->second;
       entries.erase(it);

@@ -198,7 +198,7 @@ static void on_row_activated(GtkTreeView *treeview,
   GtkTreeIter   iter;
   GtkTreeModel *model = gtk_tree_view_get_model(treeview);
 
-  printf("row activated\n");
+  g_debug("row activated");
 
   if(gtk_tree_model_get_iter(model, &iter, path)) {
     assert(g_object_get_data(G_OBJECT(userdata), "priv") != O2G_NULLPTR);

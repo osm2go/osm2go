@@ -117,7 +117,7 @@ static GtkWidget * __attribute__((nonnull(1,3,4,5)))
 
 static gint on_way_button_press(GtkMenu *menu, GdkEventButton *event) {
   if(event->type == GDK_BUTTON_PRESS) {
-    printf("way clicked\n");
+    g_debug("way clicked");
 
     /* draw a popup menu */
     gtk_menu_popup(menu, O2G_NULLPTR, O2G_NULLPTR, O2G_NULLPTR, O2G_NULLPTR,

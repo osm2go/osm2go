@@ -97,11 +97,11 @@ static bool store_value(const presets_element_t *widget, osm_t::TagMap &tags,
       changed = true;
     }
   } else if (ctag != tags.end()) {
-    printf("removed key = %s, value = %s\n", widget->key.c_str(), ctag->second.c_str());
+    g_debug("removed key = %s, value = %s", widget->key.c_str(), ctag->second.c_str());
     tags.erase(ctag);
     changed = true;
   } else
-    printf("ignore empty key = %s\n", widget->key.c_str());
+    g_debug("ignore empty key = %s", widget->key.c_str());
 
   return changed;
 }
@@ -256,7 +256,7 @@ static void presets_item_dialog(const presets_item *item) {
   g_widget dialog;
   bool ok;
 
-  printf("dialog for item %s\n", item->name.c_str());
+  g_debug("dialog for item %s", item->name.c_str());
 
   /* build dialog from items widget list */
 
@@ -566,7 +566,7 @@ on_presets_picker_selected(GtkTreeSelection *selection, presets_context_t *conte
                      -1);
   g_string textGuard(text);
 
-  printf("clicked on %s, submenu = %p (%s)\n", text,
+  g_debug("clicked on %s, submenu = %p (%s)", text,
          sub_item, sub_item ? sub_item->name.c_str() : "");
 
   GtkWidget * const view = GTK_WIDGET(gtk_tree_selection_get_tree_view(selection));
@@ -871,7 +871,7 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event) {
   if(event->type != GDK_BUTTON_PRESS)
     return FALSE;
 
-  printf("button press %d %d\n", event->button, event->time);
+  g_debug("button press %d", event->button);
 
 #ifndef PICKER_MENU
   (void)widget;

@@ -116,7 +116,7 @@ static void on_tag_remove(info_tag_context_t *context) {
     assert(vc != O2G_NULLPTR);
 
     /* de-chain */
-    printf("de-chaining tag %s/%s\n", kc, vc);
+    g_debug("de-chaining tag %s/%s", kc, vc);
     const std::string k = kc;
     osm_t::TagMap::iterator it = osm_t::findTag(context->tags, k, vc);
     assert(it != context->tags.end());
@@ -219,18 +219,18 @@ static void on_tag_edit(info_tag_context_t *context) {
 
   GtkTreeSelection *sel = list_get_selection(context->list);
   if(!sel) {
-    printf("got no selection object\n");
+    g_debug("got no selection object");
     return;
   }
 
   if(!gtk_tree_selection_get_selected(sel, &model, &iter)) {
-    printf("nothing selected\n");
+    g_debug("nothing selected");
     return;
   }
 
   char *kc, *vc;
   gtk_tree_model_get(model, &iter, TAG_COL_KEY, &kc, TAG_COL_VALUE, &vc, -1);
-  printf("got %s/%s\n", kc, vc);
+  g_debug("got %s/%s", kc, vc);
 
   // keep it in string for easier string compare
   const std::string oldv = vc;
@@ -242,7 +242,7 @@ static void on_tag_edit(info_tag_context_t *context) {
     if(k == kc && v == oldv)
       return;
 
-    printf("setting %s/%s\n", k.c_str(), v.c_str());
+    g_debug("setting %s/%s", k.c_str(), v.c_str());
 
     const std::pair<osm_t::TagMap::iterator, osm_t::TagMap::iterator> matches = context->tags.equal_range(oldk);
     assert(matches.first != matches.second);
@@ -344,7 +344,7 @@ static void on_tag_add(info_tag_context_t *context) {
   std::string k, v;
 
   if(!tag_edit(GTK_WINDOW(context->dialog.get()), k, v)) {
-    printf("cancelled\n");
+    g_debug("cancelled");
     return;
   }
 
@@ -523,9 +523,7 @@ static GtkWidget *details_widget(const info_tag_context_t &context, bool big) {
   }
 
   default:
-    printf("ERROR: No node, way or relation\n");
-    assert_unreachable();
-    break;
+    g_error("ERROR: No node, way or relation (real type: %i)", context.object.type);
   }
 
   return table;

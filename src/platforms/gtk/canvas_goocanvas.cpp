@@ -180,7 +180,7 @@ void canvas_t::erase(unsigned int group_mask) {
 
     if(group_mask & (1<<group)) {
       gint children = goo_canvas_item_get_n_children(gcanvas->group[group]);
-      printf("Removing %d children from group %d\n", children, group);
+      g_debug("Removing %d children from group %d", children, group);
       while(children--)
 	goo_canvas_item_remove_child(gcanvas->group[group], children);
     }
