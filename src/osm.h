@@ -172,12 +172,10 @@ struct osm_t {
 
   typedef std::multimap<std::string, std::string> TagMap;
 
-  osm_t() : bounds(O2G_NULLPTR), uploadPolicy(Upload_Normal) {}
+  explicit osm_t();
   ~osm_t();
 
-  bounds_t *bounds;   // original bounds as they appear in the file
-
-  bounds_t rbounds;
+  bounds_t bounds;   // original bounds as they appear in the file
 
   std::map<item_id_t, node_t *> nodes;
   std::map<item_id_t, way_t *> ways;

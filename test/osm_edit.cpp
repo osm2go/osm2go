@@ -51,10 +51,8 @@ static void nevercalled(const tag_t &) {
 }
 
 static void set_bounds(osm_t &o) {
-  bool b = o.rbounds.init(pos_area(pos_t(52.2692786, 9.5750497), pos_t(52.2695463, 9.5755)));
+  bool b = o.bounds.init(pos_area(pos_t(52.2692786, 9.5750497), pos_t(52.2695463, 9.5755)));
   assert(b);
-
-  o.bounds = &o.rbounds;
 }
 
 /**
@@ -75,14 +73,15 @@ static void test_trivial() {
   assert(!tags.hasTagCollisions());
 
   osm_t osm;
-  memset(&osm.rbounds, 0, sizeof(osm.rbounds));
-  assert_cmpstr(osm.sanity_check(), _("Invalid data in OSM file:\nBoundary box missing!"));
+  memset(&osm.bounds.min, 0, sizeof(osm.bounds.min));
+  memset(&osm.bounds.max, 0, sizeof(osm.bounds.max));
+  assert_cmpstr(osm.sanity_check(), _("Invalid data in OSM file:\nBoundary box invalid!"));
   set_bounds(osm);
   assert_cmpstr(osm.sanity_check(), _("Invalid data in OSM file:\nNo drawable content found!"));
 
-  assert(osm.bounds->contains(lpos_t(0, 0)));
-  assert(!osm.bounds->contains(lpos_t(-1, 0)));
-  assert(!osm.bounds->contains(lpos_t(0, -1)));
+  assert(osm.bounds.contains(lpos_t(0, 0)));
+  assert(!osm.bounds.contains(lpos_t(-1, 0)));
+  assert(!osm.bounds.contains(lpos_t(0, -1)));
 
   way_t w(0);
   assert_null(w.first_node());

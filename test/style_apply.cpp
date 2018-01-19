@@ -73,8 +73,7 @@ int main(int argc, char **argv)
 
   osm_t osm;
 
-  memset(&osm.rbounds, 0, sizeof(osm.rbounds));
-  osm.bounds = &osm.rbounds;
+  memset(&osm.bounds, 0, sizeof(osm.bounds));
 
   node_t * const node = osm.node_new(pos_t(0.0, 0.0));
   osm.node_attach(node);

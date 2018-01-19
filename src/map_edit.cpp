@@ -107,7 +107,7 @@ void map_edit_way_add_segment(map_t *map, int x, int y) {
       /* a new node */
       map->action.ends_on = O2G_NULLPTR;
 
-      if(!map->appdata.osm->bounds->contains(pos))
+      if(!map->appdata.osm->bounds.contains(pos))
 	map_outside_error(map->appdata);
       else
         node = map->appdata.osm->node_new(pos);
@@ -561,16 +561,16 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, int ex, int ey) {
 
     /* convert mouse position to canvas (world) position */
     lpos_t pos = map->canvas->window2world(ex, ey);
-    if(!osm->bounds->contains(pos)) {
+    if(!osm->bounds.contains(pos)) {
       map_outside_error(map->appdata);
       return;
     }
 
     /* convert screen position to lat/lon */
-    node->pos = pos.toPos(*(osm->bounds));
+    node->pos = pos.toPos(osm->bounds);
 
     /* convert pos back to lpos to see rounding errors */
-    node->lpos = node->pos.toLpos(*(osm->bounds));
+    node->lpos = node->pos.toLpos(osm->bounds);
 
     printf("  now at %d %d (%f %f)\n",
 	   node->lpos.x, node->lpos.y, node->pos.lat, node->pos.lon);

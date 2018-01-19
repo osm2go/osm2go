@@ -470,7 +470,7 @@ static int update(void *data) {
   if(pos.valid()) {
     printf("valid position %.6f/%.6f alt %.2f\n", pos.lat, pos.lon, alt);
     lpos_t lpos;
-    lpos = pos.toLpos(*(appdata.osm->bounds));
+    lpos = pos.toLpos(appdata.osm->bounds);
     if(track_append_position(appdata, pos, alt, lpos) &&
        appdata.settings->trackVisibility >= ShowPosition)
       appdata.map->track_pos(lpos);

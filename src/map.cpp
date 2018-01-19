@@ -622,7 +622,7 @@ static void map_frisket_rectangle(std::vector<lpos_t> &points,
 
 /* Draw the frisket area which masks off areas it'd be unsafe to edit,
  * plus its inner edge marker line */
-static void map_frisket_draw(map_t *map, const bounds_t *bounds) {
+static void map_frisket_draw(map_t *map, const bounds_t &bounds) {
   std::vector<lpos_t> points(5);
 
   /* don't draw frisket at all if it's completely transparent */
@@ -632,26 +632,26 @@ static void map_frisket_draw(map_t *map, const bounds_t *bounds) {
     float mult = map->style->frisket.mult;
 
     /* top rectangle */
-    map_frisket_rectangle(points, mult*bounds->min.x, mult*bounds->max.x,
-			  mult*bounds->min.y, bounds->min.y);
+    map_frisket_rectangle(points, mult * bounds.min.x, mult * bounds.max.x,
+                          mult * bounds.min.y, bounds.min.y);
     map->canvas->polygon_new(CANVAS_GROUP_FRISKET, points,
 		       1, NO_COLOR, color);
 
     /* bottom rectangle */
-    map_frisket_rectangle(points, mult*bounds->min.x, mult*bounds->max.x,
-			  bounds->max.y, mult*bounds->max.y);
+    map_frisket_rectangle(points, mult * bounds.min.x, mult * bounds.max.x,
+                          bounds.max.y, mult * bounds.max.y);
     map->canvas->polygon_new(CANVAS_GROUP_FRISKET, points,
 		       1, NO_COLOR, color);
 
     /* left rectangle */
-    map_frisket_rectangle(points, mult*bounds->min.x, bounds->min.x,
-			  mult*bounds->min.y, mult*bounds->max.y);
+    map_frisket_rectangle(points, mult * bounds.min.x, bounds.min.x,
+                          mult * bounds.min.y, mult * bounds.max.y);
     map->canvas->polygon_new(CANVAS_GROUP_FRISKET, points,
 		       1, NO_COLOR, color);
 
     /* right rectangle */
-    map_frisket_rectangle(points, bounds->max.x, mult*bounds->max.x,
-			  mult*bounds->min.y, mult*bounds->max.y);
+    map_frisket_rectangle(points, bounds.max.x, mult * bounds.max.x,
+                          mult * bounds.min.y, mult * bounds.max.y);
     map->canvas->polygon_new(CANVAS_GROUP_FRISKET, points,
 		       1, NO_COLOR, color);
 
@@ -660,9 +660,8 @@ static void map_frisket_draw(map_t *map, const bounds_t *bounds) {
   if(map->style->frisket.border.present) {
     // Edge marker line
     int ew2 = map->style->frisket.border.width/2;
-    map_frisket_rectangle(points,
-			  bounds->min.x-ew2, bounds->max.x+ew2,
-			  bounds->min.y-ew2, bounds->max.y+ew2);
+    map_frisket_rectangle(points, bounds.min.x - ew2, bounds.max.x + ew2,
+                                  bounds.min.y - ew2, bounds.max.y + ew2);
 
     map->canvas->polyline_new(CANVAS_GROUP_FRISKET, points,
 			map->style->frisket.border.width,
@@ -795,10 +794,10 @@ static void map_limit_scroll(map_t *map, canvas_t::canvas_unit_t unit, int &sx, 
 
   // Data rect minimum and maximum
   // limit stops - prevent scrolling beyond these
-  int min_sy_cu = 0.95 * (map->appdata.osm->bounds->min.y - dim.height);
-  int min_sx_cu = 0.95 * (map->appdata.osm->bounds->min.x - dim.width);
-  int max_sy_cu = 0.95 * (map->appdata.osm->bounds->max.y + dim.height);
-  int max_sx_cu = 0.95 * (map->appdata.osm->bounds->max.x + dim.width);
+  int min_sy_cu = 0.95 * (map->appdata.osm->bounds.min.y - dim.height);
+  int min_sx_cu = 0.95 * (map->appdata.osm->bounds.min.x - dim.width);
+  int max_sy_cu = 0.95 * (map->appdata.osm->bounds.max.y + dim.height);
+  int max_sx_cu = 0.95 * (map->appdata.osm->bounds.max.x + dim.width);
   if (sy_cu < min_sy_cu)
     sy = min_sy_cu * scale;
   else if (sy_cu > max_sy_cu)
@@ -814,10 +813,10 @@ static void map_limit_scroll(map_t *map, canvas_t::canvas_unit_t unit, int &sx, 
 static bool map_limit_zoom(map_t *map, double &zoom) {
     // Data rect minimum and maximum
     int min_x, min_y, max_x, max_y;
-    min_x = map->appdata.osm->bounds->min.x;
-    min_y = map->appdata.osm->bounds->min.y;
-    max_x = map->appdata.osm->bounds->max.x;
-    max_y = map->appdata.osm->bounds->max.y;
+    min_x = map->appdata.osm->bounds.min.x;
+    min_y = map->appdata.osm->bounds.min.y;
+    max_x = map->appdata.osm->bounds.max.x;
+    max_y = map->appdata.osm->bounds.max.y;
 
     /* get size of visible area in pixels and convert to meters of intended */
     /* zoom by deviding by zoom (which is basically pix/m) */
@@ -857,10 +856,10 @@ bool map_t::scroll_to_if_offscreen(const lpos_t lpos) {
     return false;
 
   int min_x, min_y, max_x, max_y;
-  min_x = appdata.osm->bounds->min.x;
-  min_y = appdata.osm->bounds->min.y;
-  max_x = appdata.osm->bounds->max.x;
-  max_y = appdata.osm->bounds->max.y;
+  min_x = appdata.osm->bounds.min.x;
+  min_y = appdata.osm->bounds.min.y;
+  max_x = appdata.osm->bounds.max.x;
+  max_y = appdata.osm->bounds.max.y;
   if (lpos.x > max_x || lpos.x < min_x || lpos.y > max_y || lpos.y < min_y) {
     printf("cannot scroll to (%d, %d): outside the working area\n",
 	   lpos.x, lpos.y);
@@ -1200,12 +1199,9 @@ static void map_button_press(map_t *map, float x, float y) {
 /* move the background image (wms data) during wms adjustment */
 static void map_bg_adjust(map_t *map, int x, int y) {
   assert(map->appdata.osm != O2G_NULLPTR);
-  assert(map->appdata.osm->bounds != O2G_NULLPTR);
 
-  x += map->appdata.osm->bounds->min.x + map->bg.offset.x -
-    map->pen_down.at.x;
-  y += map->appdata.osm->bounds->min.y + map->bg.offset.y -
-    map->pen_down.at.y;
+  x += map->appdata.osm->bounds.min.x + map->bg.offset.x - map->pen_down.at.x;
+  y += map->appdata.osm->bounds.min.y + map->bg.offset.y - map->pen_down.at.y;
 
   static_cast<map_internal *>(map)->background.item->image_move(x, y, map->bg.scale.x, map->bg.scale.y);
 }
@@ -1272,7 +1268,7 @@ static void map_button_release(map_t *map, int x, int y) {
     lpos_t pos = map->canvas->window2world(x, y);
 
     node_t *node = O2G_NULLPTR;
-    if(!map->appdata.osm->bounds->contains(pos))
+    if(!map->appdata.osm->bounds.contains(pos))
       map_outside_error(map->appdata);
     else {
       node = map->appdata.osm->node_new(pos);
@@ -1559,7 +1555,7 @@ map_t::~map_t()
 }
 
 void map_t::init() {
-  const bounds_t * const bounds = appdata.osm->bounds;
+  const bounds_t &bounds = appdata.osm->bounds;
 
   /* update canvas background color */
   canvas->set_background(style->background.color);
@@ -1569,8 +1565,8 @@ void map_t::init() {
   paint();
 
   float mult = style->frisket.mult;
-  canvas->set_bounds(mult * bounds->min.x, mult * bounds->min.y,
-                     mult * bounds->max.x, mult * bounds->max.y);
+  canvas->set_bounds(mult * bounds.min.x, mult * bounds.min.y,
+                     mult * bounds.max.x, mult * bounds.max.y);
 
   printf("restore scroll position %d/%d\n",
          state.scroll_offset.x, state.scroll_offset.y);
@@ -1700,8 +1696,8 @@ void map_action_cancel(map_t *map) {
     map->bg.offset.x = map->appdata.project->wms_offset.x;
     map->bg.offset.y = map->appdata.project->wms_offset.y;
 
-    int x = map->appdata.osm->bounds->min.x + map->bg.offset.x;
-    int y = map->appdata.osm->bounds->min.y + map->bg.offset.y;
+    int x = map->appdata.osm->bounds.min.x + map->bg.offset.x;
+    int y = map->appdata.osm->bounds.min.y + map->bg.offset.y;
     static_cast<map_internal *>(map)->background.item->image_move(x, y, map->bg.scale.x, map->bg.scale.y);
     break;
   }
@@ -1739,7 +1735,7 @@ void map_action_ok(map_t *map) {
     node_t *node = O2G_NULLPTR;
     osm_t * const osm = map->appdata.osm;
 
-    if(!osm->bounds->ll.contains(pos)) {
+    if(!osm->bounds.ll.contains(pos)) {
       map_outside_error(map->appdata);
     } else {
       node = osm->node_new(pos);
@@ -1866,7 +1862,7 @@ static std::vector<lpos_t> canvas_points_init(const bounds_t &bounds,
 }
 
 void map_t::track_draw_seg(track_seg_t &seg) {
-  const bounds_t &bounds = *appdata.osm->bounds;
+  const bounds_t &bounds = appdata.osm->bounds;
 
   /* a track_seg needs at least 2 points to be drawn */
   if (seg.track_points.empty())
@@ -1935,7 +1931,7 @@ void map_t::track_draw_seg(track_seg_t &seg) {
 /* update the last visible fragment of this segment since a */
 /* gps position may have been added */
 void map_t::track_update_seg(track_seg_t &seg) {
-  const bounds_t &bounds = *appdata.osm->bounds;
+  const bounds_t &bounds = appdata.osm->bounds;
 
   printf("-- APPENDING TO TRACK --\n");
 
@@ -2096,7 +2092,7 @@ static void map_bg_item_destroy_event(gpointer data) {
 }
 
 bool map_t::set_bg_image(const std::string &filename) {
-  const bounds_t *bounds = appdata.osm->bounds;
+  const bounds_t &bounds = appdata.osm->bounds;
 
   remove_bg_image();
 
@@ -2107,18 +2103,18 @@ bool map_t::set_bg_image(const std::string &filename) {
     return false;
 
   /* calculate required scale factor */
-  bg.scale.x = static_cast<float>(bounds->max.x - bounds->min.x) /
+  bg.scale.x = static_cast<float>(bounds.max.x - bounds.min.x) /
                     gdk_pixbuf_get_width(m->background.pix);
-  bg.scale.y = static_cast<float>(bounds->max.y - bounds->min.y) /
+  bg.scale.y = static_cast<float>(bounds.max.y - bounds.min.y) /
                     gdk_pixbuf_get_height(m->background.pix);
 
   m->background.item = canvas->image_new(CANVAS_GROUP_BG, m->background.pix,
-                              bounds->min.x, bounds->min.y, bg.scale.x, bg.scale.y);
+                              bounds.min.x, bounds.min.y, bg.scale.x, bg.scale.y);
 
   m->background.item->destroy_connect(map_bg_item_destroy_event, this);
 
-  int x = appdata.osm->bounds->min.x + bg.offset.x;
-  int y = appdata.osm->bounds->min.y + bg.offset.y;
+  int x = appdata.osm->bounds.min.x + bg.offset.x;
+  int y = appdata.osm->bounds.min.y + bg.offset.y;
   m->background.item->image_move(x, y, bg.scale.x, bg.scale.y);
 
   return true;

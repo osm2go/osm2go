@@ -886,12 +886,12 @@ static void skip_element(xmlTextReaderPtr reader) {
 }
 
 /* parse bounds */
-static bool process_bounds(xmlTextReaderPtr reader, bounds_t *bounds) {
-  if(unlikely(!bounds->init(pos_area(pos_t::fromXmlProperties(reader, "minlat", "minlon"),
-                                     pos_t::fromXmlProperties(reader, "maxlat", "maxlon"))))) {
-    errorf(O2G_NULLPTR, "Invalid coordinate in bounds (%f/%f/%f/%f)",
-           bounds->ll.min.lat, bounds->ll.min.lon,
-           bounds->ll.max.lat, bounds->ll.max.lon);
+static bool process_bounds(xmlTextReaderPtr reader, bounds_t &bounds) {
+  if(unlikely(!bounds.init(pos_area(pos_t::fromXmlProperties(reader, "minlat", "minlon"),
+                                    pos_t::fromXmlProperties(reader, "maxlat", "maxlon"))))) {
+    fprintf(stderr, "Invalid coordinate in bounds (%f/%f/%f/%f)\n",
+            bounds.ll.min.lat, bounds.ll.min.lon,
+            bounds.ll.max.lat, bounds.ll.max.lon);
 
     return false;
   }
@@ -899,17 +899,17 @@ static bool process_bounds(xmlTextReaderPtr reader, bounds_t *bounds) {
   /* skip everything below */
   skip_element(reader);
 
-  bounds->min = bounds->ll.min.toLpos();
-  bounds->min.x -= bounds->center.x;
-  bounds->min.y -= bounds->center.y;
-  bounds->min.x *= bounds->scale;
-  bounds->min.y *= bounds->scale;
+  bounds.min = bounds.ll.min.toLpos();
+  bounds.min.x -= bounds.center.x;
+  bounds.min.y -= bounds.center.y;
+  bounds.min.x *= bounds.scale;
+  bounds.min.y *= bounds.scale;
 
-  bounds->max = bounds->ll.max.toLpos();
-  bounds->max.x -= bounds->center.x;
-  bounds->max.y -= bounds->center.y;
-  bounds->max.x *= bounds->scale;
-  bounds->max.y *= bounds->scale;
+  bounds.max = bounds.ll.max.toLpos();
+  bounds.max.x -= bounds.center.x;
+  bounds.max.y -= bounds.center.y;
+  bounds.max.x *= bounds.scale;
+  bounds.max.y *= bounds.scale;
 
   return true;
 }
@@ -1116,7 +1116,7 @@ static osm_t::UploadPolicy parseUploadPolicy(const char *str) {
 
 static osm_t *process_osm(xmlTextReaderPtr reader) {
   /* alloc osm structure */
-  osm_t *osm = new osm_t();
+  std::unique_ptr<osm_t> osm(new osm_t());
 
   xmlString prop(xmlTextReaderGetAttribute(reader, BAD_CAST "upload"));
   if(unlikely(prop))
@@ -1130,7 +1130,7 @@ static osm_t *process_osm(xmlTextReaderPtr reader) {
    * was seen. */
   enum blocks {
     BLOCK_OSM = 0,
-    BLOCK_BOUNDS,
+//     BLOCK_BOUNDS,
     BLOCK_NODES,
     BLOCK_WAYS,
     BLOCK_RELATIONS
@@ -1146,22 +1146,20 @@ static osm_t *process_osm(xmlTextReaderPtr reader) {
 
       assert_cmpnum(xmlTextReaderDepth(reader), 1);
       const char *name = reinterpret_cast<const char *>(xmlTextReaderConstName(reader));
-      if(block <= BLOCK_BOUNDS && strcmp(name, "bounds") == 0) {
-        if(process_bounds(reader, &osm->rbounds))
-          osm->bounds = &osm->rbounds;
-	block = BLOCK_BOUNDS;
-      } else if(block <= BLOCK_NODES && strcmp(name, node_t::api_string()) == 0) {
-        process_node(reader, osm);
-	block = BLOCK_NODES;
+      if(block == BLOCK_OSM && strcmp(name, "bounds") == 0) {
+        if(unlikely(!process_bounds(reader, osm->bounds)))
+          return O2G_NULLPTR;
+        block = BLOCK_NODES; // next must be nodes, there must not be more than one bounds
+      } else if(block == BLOCK_NODES && strcmp(name, node_t::api_string()) == 0) {
+        process_node(reader, osm.get());
       } else if(block <= BLOCK_WAYS && strcmp(name, way_t::api_string()) == 0) {
-        process_way(reader, osm);
+        process_way(reader, osm.get());
 	block = BLOCK_WAYS;
       } else if(likely(block <= BLOCK_RELATIONS && strcmp(name, relation_t::api_string()) == 0)) {
-        process_relation(reader, osm);
+        process_relation(reader, osm.get());
 	block = BLOCK_RELATIONS;
       } else {
 	printf("something unknown found: %s\n", name);
-	assert_unreachable();
 	skip_element(reader);
       }
       break;
@@ -1170,7 +1168,7 @@ static osm_t *process_osm(xmlTextReaderPtr reader) {
     case XML_READER_TYPE_END_ELEMENT:
       /* end element must be for the current element */
       assert_cmpnum(xmlTextReaderDepth(reader), 0);
-      return osm;
+      return osm.release();
       break;
 
     default:
@@ -1218,7 +1216,8 @@ static osm_t *process_file(const std::string &filename) {
         osm = process_osm(reader);
         // relations may have references to other relation, which have greater ids
         // those are not present when the relation itself was created, but may be now
-        std::for_each(osm->relations.begin(), osm->relations.end(), relation_ref_functor(osm));
+        if(likely(osm != O2G_NULLPTR))
+          std::for_each(osm->relations.begin(), osm->relations.end(), relation_ref_functor(osm));
       }
     } else
       printf("file empty\n");
@@ -1235,18 +1234,15 @@ static osm_t *process_file(const std::string &filename) {
 osm_t *osm_t::parse(const std::string &path, const std::string &filename) {
 
   // use stream parser
-  osm_t *osm = O2G_NULLPTR;
   if(unlikely(filename.find('/') != std::string::npos))
-    osm = process_file(filename);
+    return process_file(filename);
   else
-    osm = process_file(path + filename);
-
-  return osm;
+    return process_file(path + filename);
 }
 
 const char *osm_t::sanity_check() const {
-  if(unlikely(!bounds))
-    return _("Invalid data in OSM file:\nBoundary box missing!");
+  if(unlikely(!bounds.ll.valid()))
+    return _("Invalid data in OSM file:\nBoundary box invalid!");
 
   if(unlikely(nodes.empty()))
     return _("Invalid data in OSM file:\nNo drawable content found!");
@@ -1382,16 +1378,12 @@ template<typename T> void osm_attach(std::map<item_id_t, T *> &map, T *obj) {
 
 node_t *osm_t::node_new(const lpos_t lpos) {
   /* convert screen position back to ll */
-  pos_t pos = lpos.toPos(*bounds);
-
-  return new node_t(0, lpos, pos);
+  return new node_t(0, lpos, lpos.toPos(bounds));
 }
 
 node_t *osm_t::node_new(const pos_t &pos) {
   /* convert ll position to screen */
-  lpos_t lpos = pos.toLpos(*bounds);
-
-  return new node_t(0, lpos, pos);
+  return new node_t(0, pos.toLpos(bounds), pos);
 }
 
 void osm_t::node_attach(node_t *node) {
@@ -2392,6 +2384,12 @@ template<typename T> T *osm_find_by_id(const std::map<item_id_t, T *> &map, item
     return it->second;
 
   return O2G_NULLPTR;
+}
+
+osm_t::osm_t()
+  : uploadPolicy(Upload_Normal)
+{
+  bounds.ll = pos_area(pos_t(NAN, NAN), pos_t(NAN, NAN));
 }
 
 osm_t::~osm_t()
