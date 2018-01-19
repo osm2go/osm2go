@@ -202,9 +202,9 @@ static void changed(GtkTreeSelection *sel, relitem_context_t *context) {
   /* walk the entire store */
 
   GtkTreeIter iter;
-  gboolean done = FALSE, ok =
-    gtk_tree_model_get_iter_first(GTK_TREE_MODEL(context->store), &iter);
-  while(ok && !done) {
+  bool done = false;
+  gboolean ok = gtk_tree_model_get_iter_first(GTK_TREE_MODEL(context->store), &iter);
+  while(ok == TRUE && !done) {
     relation_t *relation = O2G_NULLPTR;
     gtk_tree_model_get(GTK_TREE_MODEL(context->store), &iter,
 		       RELITEM_COL_DATA, &relation, -1);
@@ -225,7 +225,7 @@ static void changed(GtkTreeSelection *sel, relitem_context_t *context) {
       } else
 	gtk_tree_selection_unselect_iter(sel, &iter);
 
-      done = TRUE;
+      done = true;
     } else if(it != itEnd && !gtk_tree_selection_iter_is_selected(sel, &iter)) {
       printf("deselected: " ITEM_ID_FORMAT "\n", relation->id);
 
@@ -234,7 +234,7 @@ static void changed(GtkTreeSelection *sel, relitem_context_t *context) {
 		       RELITEM_COL_ROLE, O2G_NULLPTR,
 		       -1);
 
-      done = TRUE;
+      done = true;
     }
 
     if(!done)
