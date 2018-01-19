@@ -20,6 +20,7 @@
 #ifndef INFO_H
 #define INFO_H
 
+#include "misc.h"
 #include "osm.h"
 
 #include <string>
@@ -34,7 +35,7 @@ protected:
   explicit tag_context_t(const object_t &o);
 public:
 
-  GtkWidget *dialog;
+  g_widget dialog;
   object_t object;
   osm_t::TagMap tags;
 

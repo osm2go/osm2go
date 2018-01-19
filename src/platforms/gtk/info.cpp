@@ -238,7 +238,7 @@ static void on_tag_edit(info_tag_context_t *context) {
 
   std::string k = oldk, v = oldv;
 
-  if(tag_edit(GTK_WINDOW(context->dialog), k, v)) {
+  if(tag_edit(GTK_WINDOW(context->dialog.get()), k, v)) {
     if(k == kc && v == oldv)
       return;
 
@@ -305,7 +305,7 @@ static bool replace_with_last(const info_tag_context_t *context, const osm_t::Ta
     return true;
 
   const char *ts = context->object.type_string();
-  return yes_no_f(context->dialog, MISC_AGAIN_ID_OVERWRITE_TAGS, _("Overwrite tags?"),
+  return yes_no_f(context->dialog.get(), MISC_AGAIN_ID_OVERWRITE_TAGS, _("Overwrite tags?"),
                   _("This will overwrite all tags of this %s with the ones from "
                     "the %s selected last.\n\nDo you really want this?"), ts, ts);
 }
@@ -343,7 +343,7 @@ static GtkTreeIter store_append(GtkListStore *store, const std::string &key,
 static void on_tag_add(info_tag_context_t *context) {
   std::string k, v;
 
-  if(!tag_edit(GTK_WINDOW(context->dialog), k, v)) {
+  if(!tag_edit(GTK_WINDOW(context->dialog.get()), k, v)) {
     printf("cancelled\n");
     return;
   }
@@ -383,7 +383,7 @@ void tag_context_t::info_tags_replace() {
 }
 
 static void on_relations(info_tag_context_t *context) {
-  relation_membership_dialog(context->dialog, context->presets,
+  relation_membership_dialog(context->dialog.get(), context->presets,
                              context->osm, context->object);
 }
 
@@ -431,7 +431,7 @@ static GtkWidget *tag_widget(info_tag_context_t *context) {
 
 static void on_relation_members(GtkWidget *, const info_tag_context_t *context) {
   assert_cmpnum(context->object.type, RELATION);
-  relation_show_members(context->dialog, context->object.relation);
+  relation_show_members(context->dialog.get(), context->object.relation);
 }
 
 static void table_attach(GtkWidget *table, GtkWidget *child, int x, int y) {
@@ -536,7 +536,7 @@ static GtkWidget *details_widget(const info_tag_context_t &context, bool big) {
 /* screen space is sparse there */
 static void info_more(const info_tag_context_t &context) {
   g_widget dialog(gtk_dialog_new_with_buttons(_("Object details"),
-                                              GTK_WINDOW(context.dialog), GTK_DIALOG_MODAL,
+                                              GTK_WINDOW(context.dialog.get()), GTK_DIALOG_MODAL,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                               O2G_NULLPTR));
 
@@ -590,39 +590,38 @@ bool info_dialog(GtkWidget *parent, map_t *map, osm_t *osm, presets_items *prese
 
   g_string str(g_strdup_printf(msgtpl, context.object.obj->id));
 
-  context.dialog = gtk_dialog_new_with_buttons(str.get(), GTK_WINDOW(parent),
+  context.dialog.reset(gtk_dialog_new_with_buttons(str.get(), GTK_WINDOW(parent),
                                                GTK_DIALOG_MODAL,
 #ifdef FREMANTLE
                                                _("More"), GTK_RESPONSE_HELP,
 #endif
                                                GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                                GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-                                               O2G_NULLPTR);
+                                               O2G_NULLPTR));
   str.reset();
 
-  dialog_size_hint(GTK_WINDOW(context.dialog), MISC_DIALOG_LARGE);
-  gtk_dialog_set_default_response(GTK_DIALOG(context.dialog),
-				  GTK_RESPONSE_ACCEPT);
+  dialog_size_hint(GTK_WINDOW(context.dialog.get()), MISC_DIALOG_LARGE);
+  gtk_dialog_set_default_response(GTK_DIALOG(context.dialog.get()), GTK_RESPONSE_ACCEPT);
 
 #ifndef FREMANTLE
   /* -------- details box --------- */
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context.dialog)->vbox),
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context.dialog.get())->vbox),
 		     details_widget(context, false),
 		     FALSE, FALSE, 0);
 #endif
 
   /* ------------ tags ----------------- */
 
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context.dialog)->vbox),
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context.dialog.get())->vbox),
 		     tag_widget(&context), TRUE, TRUE, 0);
 
   /* ----------------------------------- */
 
-  gtk_widget_show_all(context.dialog);
+  gtk_widget_show_all(context.dialog.get());
   bool ok = false, quit = false;
 
   do {
-    switch(gtk_dialog_run(GTK_DIALOG(context.dialog))) {
+    switch(gtk_dialog_run(GTK_DIALOG(context.dialog.get()))) {
     case GTK_RESPONSE_ACCEPT:
       quit = true;
       ok = true;
@@ -639,8 +638,6 @@ bool info_dialog(GtkWidget *parent, map_t *map, osm_t *osm, presets_items *prese
     }
 
   } while(!quit);
-
-  gtk_widget_destroy(context.dialog);
 
   if(ok)
     context.object.obj->updateTags(context.tags);

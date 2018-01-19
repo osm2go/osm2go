@@ -270,7 +270,7 @@ static void presets_item_dialog(const presets_item *item) {
 
   if(it != itEnd)  {
     dialog.reset(gtk_dialog_new_with_buttons(item->name.c_str(),
-                                             GTK_WINDOW(tag_context->dialog),
+                                             GTK_WINDOW(tag_context->dialog.get()),
                                              GTK_DIALOG_MODAL,
                                              GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                              GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
