@@ -36,6 +36,7 @@
 #include <curl/curl.h>
 #include <curl/easy.h> /* new for v7 */
 #include <map>
+#include <memory>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -47,6 +48,7 @@
 #include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
 #include <osm2go_i18n.h>
+#include <osm2go_stl.h>
 
 #define COLOR_ERR  "red"
 #define COLOR_OK   "darkgreen"
@@ -260,7 +262,7 @@ static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
                             const char *url, item_id_t *id) {
   char buffer[CURL_ERROR_SIZE];
 
-  CURL *curl;
+  std::unique_ptr<CURL, curl_deleter> curl;
   CURLcode res;
 
   curl_data_t read_data_init(reinterpret_cast<char *>(xml_str));
@@ -271,7 +273,7 @@ static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
       context.appendf(O2G_NULLPTR, _("Retry %d/%d "), MAX_TRY-retry, MAX_TRY-1);
 
     /* get a curl handle */
-    curl = curl_custom_setup(context, url);
+    curl.reset(curl_custom_setup(context, url));
     if(!curl) {
       context.appendf(O2G_NULLPTR, _("CURL init error\n"));
       return false;
@@ -281,39 +283,38 @@ static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
     curl_data_t write_data;
 
     /* enable uploading */
-    curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
+    curl_easy_setopt(curl.get(), CURLOPT_UPLOAD, 1L);
 
     /* we want to use our own read function */
-    curl_easy_setopt(curl, CURLOPT_READFUNCTION, read_callback);
+    curl_easy_setopt(curl.get(), CURLOPT_READFUNCTION, read_callback);
 
     /* now specify which file to upload */
-    curl_easy_setopt(curl, CURLOPT_READDATA, &read_data);
+    curl_easy_setopt(curl.get(), CURLOPT_READDATA, &read_data);
 
     /* provide the size of the upload */
-    curl_easy_setopt(curl, CURLOPT_INFILESIZE, read_data.len);
+    curl_easy_setopt(curl.get(), CURLOPT_INFILESIZE, read_data.len);
 
     /* we pass our 'chunk' struct to the callback function */
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &write_data);
+    curl_easy_setopt(curl.get(), CURLOPT_WRITEDATA, &write_data);
 
 #ifdef NO_EXPECT
     struct curl_slist *slist = O2G_NULLPTR;
     slist = curl_slist_append(slist, "Expect:");
-    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, slist);
+    curl_easy_setopt(curl.get(), CURLOPT_HTTPHEADER, slist);
 #endif
 
-    curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, buffer);
+    curl_easy_setopt(curl.get(), CURLOPT_ERRORBUFFER, buffer);
 
     /* Now run off and do what you've been told! */
-    res = curl_easy_perform(curl);
+    res = curl_easy_perform(curl.get());
 
     long response;
-    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response);
+    curl_easy_getinfo(curl.get(), CURLINFO_RESPONSE_CODE, &response);
 
     /* always cleanup */
 #ifdef NO_EXPECT
     curl_slist_free_all(slist);
 #endif
-    curl_easy_cleanup(curl);
 
     if(unlikely(res != 0)) {
       context.appendf(COLOR_ERR, _("failed: %s\n"), buffer);
@@ -349,7 +350,7 @@ static bool osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
                             int len, const char *url) {
   char buffer[CURL_ERROR_SIZE];
 
-  CURL *curl;
+  std::unique_ptr<CURL, curl_deleter> curl;
   CURLcode res;
 
   for(int retry = MAX_TRY; retry >= 0; retry--) {
@@ -357,7 +358,7 @@ static bool osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
       context.appendf(O2G_NULLPTR, _("Retry %d/%d "), MAX_TRY-retry, MAX_TRY-1);
 
     /* get a curl handle */
-    curl = curl_custom_setup(context, url);
+    curl.reset(curl_custom_setup(context, url));
     if(!curl) {
       context.appendf(O2G_NULLPTR, _("CURL init error\n"));
       return false;
@@ -366,33 +367,32 @@ static bool osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
     curl_data_t write_data;
 
     /* no read function required */
-    curl_easy_setopt(curl, CURLOPT_POST, 1);
+    curl_easy_setopt(curl.get(), CURLOPT_POST, 1);
 
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, xml_str);
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, len);
+    curl_easy_setopt(curl.get(), CURLOPT_POSTFIELDS, xml_str);
+    curl_easy_setopt(curl.get(), CURLOPT_POSTFIELDSIZE, len);
 
     /* we pass our 'chunk' struct to the callback function */
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &write_data);
+    curl_easy_setopt(curl.get(), CURLOPT_WRITEDATA, &write_data);
 
 #ifdef NO_EXPECT
     struct curl_slist *slist = O2G_NULLPTR;
     slist = curl_slist_append(slist, "Expect:");
-    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, slist);
+    curl_easy_setopt(curl.get(), CURLOPT_HTTPHEADER, slist);
 #endif
 
-    curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, buffer);
+    curl_easy_setopt(curl.get(), CURLOPT_ERRORBUFFER, buffer);
 
     /* Now run off and do what you've been told! */
-    res = curl_easy_perform(curl);
+    res = curl_easy_perform(curl.get());
 
     long response;
-    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response);
+    curl_easy_getinfo(curl.get(), CURLINFO_RESPONSE_CODE, &response);
 
     /* always cleanup */
 #ifdef NO_EXPECT
     curl_slist_free_all(slist);
 #endif
-    curl_easy_cleanup(curl);
 
     if(res != 0)
       context.appendf(COLOR_ERR, _("failed: %s\n"), buffer);

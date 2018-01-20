@@ -20,6 +20,7 @@
 #ifndef NET_IO_H
 #define NET_IO_H
 
+#include <curl/curl.h>
 #include <string>
 
 typedef struct _GtkWidget GtkWidget;
@@ -60,5 +61,10 @@ const char *http_message(int id);
  * @brief check if the given memory contains a valid gzip header
  */
 bool check_gzip(const char *mem, const size_t len);
+
+struct curl_deleter {
+  inline void operator()(CURL *curl)
+  { curl_easy_cleanup(curl); }
+};
 
 #endif // NET_IO_H

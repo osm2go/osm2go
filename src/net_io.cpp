@@ -228,8 +228,8 @@ static void *worker_thread(void *ptr) {
 
   printf("thread: running\n");
 
-  CURL *curl = curl_easy_init();
-  if(likely(curl != O2G_NULLPTR)) {
+  std::unique_ptr<CURL, curl_deleter> curl(curl_easy_init());
+  if(likely(curl)) {
     bool ok = false;
     std::unique_ptr<FILE, f_closer> outfile;
 
@@ -237,64 +237,59 @@ static void *worker_thread(void *ptr) {
     if(!request->filename.empty()) {
       outfile.reset(fopen(request->filename.c_str(), "w"));
       ok = static_cast<bool>(outfile);
-      curl_easy_setopt(curl, CURLOPT_WRITEDATA, outfile.get());
+      curl_easy_setopt(curl.get(), CURLOPT_WRITEDATA, outfile.get());
     } else {
       request->mem->ptr = O2G_NULLPTR;
       request->mem->len = 0;
-      curl_easy_setopt(curl, CURLOPT_WRITEDATA, request->mem);
-      curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, mem_write);
+      curl_easy_setopt(curl.get(), CURLOPT_WRITEDATA, request->mem);
+      curl_easy_setopt(curl.get(), CURLOPT_WRITEFUNCTION, mem_write);
       ok = true;
     }
 
     if(likely(ok)) {
-      curl_easy_setopt(curl, CURLOPT_URL, request->url.c_str());
+      curl_easy_setopt(curl.get(), CURLOPT_URL, request->url.c_str());
 
       /* setup progress notification */
-      curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
-      curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, curl_progress_func);
-      curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, request.get());
+      curl_easy_setopt(curl.get(), CURLOPT_NOPROGRESS, 0L);
+      curl_easy_setopt(curl.get(), CURLOPT_XFERINFOFUNCTION, curl_progress_func);
+      curl_easy_setopt(curl.get(), CURLOPT_PROGRESSDATA, request.get());
 
-      curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, request->buffer);
+      curl_easy_setopt(curl.get(), CURLOPT_ERRORBUFFER, request->buffer);
 
-      curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1l);
+      curl_easy_setopt(curl.get(), CURLOPT_FOLLOWLOCATION, 1l);
 
       /* play nice and report some user agent */
-      curl_easy_setopt(curl, CURLOPT_USERAGENT, PACKAGE "-libcurl/" VERSION);
+      curl_easy_setopt(curl.get(), CURLOPT_USERAGENT, PACKAGE "-libcurl/" VERSION);
 
 #ifndef CURL_SSLVERSION_MAX_DEFAULT
 #define CURL_SSLVERSION_MAX_DEFAULT 0
 #endif
-      curl_easy_setopt(curl, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1 |
+      curl_easy_setopt(curl.get(), CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1 |
                        CURL_SSLVERSION_MAX_DEFAULT);
 
       struct curl_slist *slist = !request->use_compression ? O2G_NULLPTR :
                                  curl_slist_append(O2G_NULLPTR, "Accept-Encoding: gzip");
       if(slist != O2G_NULLPTR)
-        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, slist);
+        curl_easy_setopt(curl.get(), CURLOPT_HTTPHEADER, slist);
 
-      request->res = curl_easy_perform(curl);
+      request->res = curl_easy_perform(curl.get());
       printf("thread: curl perform returned with %d\n", request->res);
 
       if(slist != O2G_NULLPTR)
         curl_slist_free_all(slist);
-      curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &request->response);
+      curl_easy_getinfo(curl.get(), CURLINFO_RESPONSE_CODE, &request->response);
 
 #if 0
       /* try to read "Error" */
       struct curl_slist *slist = O2G_NULLPTR;
       slist = curl_slist_append(slist, "Error:");
-      curl_easy_setopt(curl, CURLOPT_HTTPHEADER, slist);
+      curl_easy_setopt(curl.get(), CURLOPT_HTTPHEADER, slist);
 #endif
     }
-
-    /* always cleanup */
-    curl_easy_cleanup(curl);
   } else
     printf("thread: unable to init curl\n");
 
-  printf("thread: io done\n");
-
-  printf("thread: terminating\n");
+  printf("thread: io done, terminating\n");
   return O2G_NULLPTR;
 }
 
