@@ -218,6 +218,11 @@ static size_t mem_write(void *ptr, size_t size, size_t nmemb,
   return nmemb;
 }
 
+struct f_closer {
+  inline void operator()(FILE *f)
+  { fclose(f); }
+};
+
 static void *worker_thread(void *ptr) {
   std::unique_ptr<net_io_request_t, request_free> request(static_cast<net_io_request_t *>(ptr));
 
@@ -226,13 +231,13 @@ static void *worker_thread(void *ptr) {
   CURL *curl = curl_easy_init();
   if(likely(curl != O2G_NULLPTR)) {
     bool ok = false;
-    FILE *outfile = O2G_NULLPTR;
+    std::unique_ptr<FILE, f_closer> outfile;
 
     /* prepare target (file, memory, ...) */
     if(!request->filename.empty()) {
-      outfile = fopen(request->filename.c_str(), "w");
-      ok = (outfile != O2G_NULLPTR);
-      curl_easy_setopt(curl, CURLOPT_WRITEDATA, outfile);
+      outfile.reset(fopen(request->filename.c_str(), "w"));
+      ok = static_cast<bool>(outfile);
+      curl_easy_setopt(curl, CURLOPT_WRITEDATA, outfile.get());
     } else {
       request->mem->ptr = O2G_NULLPTR;
       request->mem->len = 0;
@@ -280,9 +285,6 @@ static void *worker_thread(void *ptr) {
       slist = curl_slist_append(slist, "Error:");
       curl_easy_setopt(curl, CURLOPT_HTTPHEADER, slist);
 #endif
-
-      if(outfile != O2G_NULLPTR)
-	fclose(outfile);
     }
 
     /* always cleanup */
