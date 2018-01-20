@@ -309,7 +309,9 @@ static bool net_io_do(GtkWidget *parent, net_io_request_t *rq,
   rq->refcount = 2;   // master and worker hold a reference
   std::unique_ptr<net_io_request_t, request_free> request(rq);
   GtkProgressBar *pbar = O2G_NULLPTR;
-  g_widget dialog(busy_dialog(parent, &pbar, &rq->cancel, title));
+  g_widget dialog;
+  if(likely(parent != O2G_NULLPTR))
+    dialog.reset(busy_dialog(parent, &pbar, &rq->cancel, title));
 
   GThread *worker;
 
@@ -332,7 +334,7 @@ static bool net_io_do(GtkWidget *parent, net_io_request_t *rq,
     osm2go_platform::process_events();
 
     /* worker has made progress changed the progress value */
-    if(request->download_cur != last) {
+    if(request->download_cur != last && likely(dialog)) {
       if(request->download_end != 0) {
         gdouble progress = static_cast<gdouble>(request->download_cur) / request->download_end;
         gtk_progress_bar_set_fraction(pbar, progress);

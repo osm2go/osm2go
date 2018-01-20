@@ -1,3 +1,8 @@
+include(CMakeDependentOption)
+
+cmake_dependent_option(NETWORK_TESTS "Enable tests that require network access" Off
+		"ENABLE_TESTS" Off)
+
 function(osm_test BASENAME)
 	add_executable(${BASENAME} ${BASENAME}.cpp)
 	target_link_libraries(${BASENAME}
@@ -62,4 +67,8 @@ if (MAEMO_FOUND)
 	)
 else ()
 	target_link_libraries(suppression-dummy PRIVATE ${GTK2_TARGETS})
+endif ()
+
+if (NETWORK_TESTS)
+	osm_test(net_io "${CMAKE_SOURCE_DIR}/data/COPYING")
 endif ()
