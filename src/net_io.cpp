@@ -267,16 +267,15 @@ static void *worker_thread(void *ptr) {
       curl_easy_setopt(curl.get(), CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1 |
                        CURL_SSLVERSION_MAX_DEFAULT);
 
-      struct curl_slist *slist = !request->use_compression ? O2G_NULLPTR :
-                                 curl_slist_append(O2G_NULLPTR, "Accept-Encoding: gzip");
-      if(slist != O2G_NULLPTR)
-        curl_easy_setopt(curl.get(), CURLOPT_HTTPHEADER, slist);
+      std::unique_ptr<curl_slist, curl_slist_deleter> slist;
+      if(request->use_compression)
+        slist.reset(curl_slist_append(O2G_NULLPTR, "Accept-Encoding: gzip"));
+      if(slist)
+        curl_easy_setopt(curl.get(), CURLOPT_HTTPHEADER, slist.get());
 
       request->res = curl_easy_perform(curl.get());
       printf("thread: curl perform returned with %d\n", request->res);
 
-      if(slist != O2G_NULLPTR)
-        curl_slist_free_all(slist);
       curl_easy_getinfo(curl.get(), CURLINFO_RESPONSE_CODE, &request->response);
 
 #if 0

@@ -298,9 +298,8 @@ static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
     curl_easy_setopt(curl.get(), CURLOPT_WRITEDATA, &write_data);
 
 #ifdef NO_EXPECT
-    struct curl_slist *slist = O2G_NULLPTR;
-    slist = curl_slist_append(slist, "Expect:");
-    curl_easy_setopt(curl.get(), CURLOPT_HTTPHEADER, slist);
+    std::unique_ptr<curl_slist, curl_slist_deleter> slist(curl_slist_append(O2G_NULLPTR, "Expect:"));
+    curl_easy_setopt(curl.get(), CURLOPT_HTTPHEADER, slist.get());
 #endif
 
     curl_easy_setopt(curl.get(), CURLOPT_ERRORBUFFER, buffer);
@@ -310,11 +309,6 @@ static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
 
     long response;
     curl_easy_getinfo(curl.get(), CURLINFO_RESPONSE_CODE, &response);
-
-    /* always cleanup */
-#ifdef NO_EXPECT
-    curl_slist_free_all(slist);
-#endif
 
     if(unlikely(res != 0)) {
       context.appendf(COLOR_ERR, _("failed: %s\n"), buffer);
@@ -376,9 +370,8 @@ static bool osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
     curl_easy_setopt(curl.get(), CURLOPT_WRITEDATA, &write_data);
 
 #ifdef NO_EXPECT
-    struct curl_slist *slist = O2G_NULLPTR;
-    slist = curl_slist_append(slist, "Expect:");
-    curl_easy_setopt(curl.get(), CURLOPT_HTTPHEADER, slist);
+    std::unique_ptr<curl_slist, curl_slist_deleter> slist(curl_slist_append(O2G_NULLPTR, "Expect:"));
+    curl_easy_setopt(curl.get(), CURLOPT_HTTPHEADER, slist.get());
 #endif
 
     curl_easy_setopt(curl.get(), CURLOPT_ERRORBUFFER, buffer);
@@ -388,11 +381,6 @@ static bool osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
 
     long response;
     curl_easy_getinfo(curl.get(), CURLINFO_RESPONSE_CODE, &response);
-
-    /* always cleanup */
-#ifdef NO_EXPECT
-    curl_slist_free_all(slist);
-#endif
 
     if(res != 0)
       context.appendf(COLOR_ERR, _("failed: %s\n"), buffer);

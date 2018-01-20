@@ -67,4 +67,9 @@ struct curl_deleter {
   { curl_easy_cleanup(curl); }
 };
 
+struct curl_slist_deleter {
+  inline void operator()(curl_slist *slist)
+  { curl_slist_free_all(slist); }
+};
+
 #endif // NET_IO_H
