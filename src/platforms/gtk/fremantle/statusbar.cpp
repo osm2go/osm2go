@@ -19,12 +19,16 @@
  */
 
 #include "statusbar.h"
-#include "appdata.h"
+
+#include <appdata.h>
+#include <misc.h>
 #include "osm2go_platform.h"
 
 #include <hildon/hildon.h>
+#include <memory>
 
 #include <osm2go_cpp.h>
+#include <osm2go_stl.h>
 
 static GdkColor color_red() {
   GdkColor color;
@@ -36,7 +40,7 @@ class statusbar_fremantle : public statusbar_t {
 public:
   statusbar_fremantle();
 
-  GtkWidget *banner;
+  std::unique_ptr<GtkWidget, g_object_deleter> banner;
 
   virtual void set(const char *msg, bool highlight) O2G_OVERRIDE;
   virtual void banner_show_info(appdata_t &appdata, const char *text) O2G_OVERRIDE;
@@ -48,7 +52,6 @@ public:
 
 statusbar_fremantle::statusbar_fremantle()
   : statusbar_t(gtk_label_new(O2G_NULLPTR))
-  , banner(O2G_NULLPTR)
 {
   /* why the heck does hildon show this by default? It's useless!! */
   g_object_set(widget, "has-resize-grip", FALSE, O2G_NULLPTR);
@@ -56,13 +59,12 @@ statusbar_fremantle::statusbar_fremantle()
 
 void statusbar_fremantle::banner_busy_stop(appdata_t &appdata) {
   GtkWidget *win = appdata.window;
-  if(G_UNLIKELY(win == O2G_NULLPTR || banner == O2G_NULLPTR))
+  if(G_UNLIKELY(win == O2G_NULLPTR || !banner))
     return;
   gtk_grab_remove(widget);
   gtk_widget_set_sensitive(win, TRUE);
-  gtk_widget_destroy(banner);
-  g_object_unref(banner);
-  banner = O2G_NULLPTR;
+  gtk_widget_destroy(banner.get());
+  banner.reset();
 }
 
 // Cancel any animations currently going, and show a brief text message.
@@ -109,9 +111,9 @@ void statusbar_fremantle::set(const char *msg, bool highlight) {
 void statusbar_fremantle::setBanner(appdata_t &appdata, GtkWidget *b)
 {
   banner_busy_stop(appdata);
-  banner = b;
-  g_object_ref(banner);
-  gtk_widget_show(banner);
+  banner.reset(b);
+  g_object_ref(b);
+  gtk_widget_show(b);
 }
 
 statusbar_t *statusbar_t::create()

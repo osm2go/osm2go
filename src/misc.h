@@ -147,4 +147,10 @@ struct g_mapped_file_deleter {
 
 typedef std::unique_ptr<GMappedFile, g_mapped_file_deleter> g_mapped_file;
 
+struct g_object_deleter {
+  inline void operator()(gpointer obj) {
+    g_object_unref(obj);
+  }
+};
+
 #endif // MISC_H

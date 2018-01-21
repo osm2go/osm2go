@@ -41,6 +41,7 @@
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <map>
+#include <memory>
 #include <strings.h>
 #include <vector>
 
@@ -66,12 +67,12 @@ enum {
 
 struct wms_server_context_t {
   wms_server_context_t(appdata_t &a, wms_t *w, GtkWidget *d)
-    : appdata(a), wms(w), dialog(d), list(O2G_NULLPTR), store(O2G_NULLPTR)
+    : appdata(a), wms(w), dialog(d), list(O2G_NULLPTR)
     , server_label(O2G_NULLPTR), path_label(O2G_NULLPTR) {}
   appdata_t &appdata;
   wms_t * const wms;
   GtkWidget * const dialog, *list;
-  GtkListStore *store;
+  std::unique_ptr<GtkListStore, g_object_deleter> store;
   GtkWidget *server_label, *path_label;
 
   /**
@@ -108,10 +109,10 @@ const wms_server_t *wms_server_context_t::select_server() const
   wms_server_t *server = O2G_NULLPTR;
   GtkTreeIter iter;
 
-  bool valid = (gtk_tree_model_get_iter_first(GTK_TREE_MODEL(store), &iter) == TRUE);
+  bool valid = (gtk_tree_model_get_iter_first(GTK_TREE_MODEL(store.get()), &iter) == TRUE);
 
   while(valid) {
-    gtk_tree_model_get(GTK_TREE_MODEL(store), &iter, WMS_SERVER_COL_DATA, &server, -1);
+    gtk_tree_model_get(GTK_TREE_MODEL(store.get()), &iter, WMS_SERVER_COL_DATA, &server, -1);
     assert(server != O2G_NULLPTR);
 
     if(wms->server == server->server &&
@@ -120,7 +121,7 @@ const wms_server_t *wms_server_context_t::select_server() const
        return server;
     }
 
-    valid = (gtk_tree_model_iter_next(GTK_TREE_MODEL(store), &iter) == TRUE);
+    valid = (gtk_tree_model_iter_next(GTK_TREE_MODEL(store.get()), &iter) == TRUE);
   }
 
   return O2G_NULLPTR;
@@ -281,7 +282,7 @@ static void on_server_edit(wms_server_context_t *context) {
 }
 
 struct store_fill_functor {
-  GtkListStore *store;
+  GtkListStore * const store;
   explicit store_fill_functor(GtkListStore *s) : store(s) {}
   GtkTreeIter operator()(const wms_server_t *srv);
 };
@@ -324,7 +325,7 @@ static void on_server_add(wms_server_context_t *context) {
     /* attach a new server item to the chain */
     context->appdata.settings->wms_server.push_back(newserver);
 
-    GtkTreeIter iter = store_fill_functor(context->store)(newserver);
+    GtkTreeIter iter = store_fill_functor(context->store.get())(newserver);
 
     GtkTreeSelection *selection = list_get_selection(context->list);
     gtk_tree_selection_select_iter(selection, &iter);
@@ -340,18 +341,16 @@ static GtkWidget *wms_server_widget(wms_server_context_t *context) {
   buttons.push_back(list_button(_("_Edit"), G_CALLBACK(on_server_edit)));
   buttons.push_back(list_button(_("Remove"), G_CALLBACK(on_server_remove)));
 
-  context->store = gtk_list_store_new(WMS_SERVER_NUM_COLS,
-	        G_TYPE_STRING, G_TYPE_POINTER);
+  context->store.reset(gtk_list_store_new(WMS_SERVER_NUM_COLS,
+                                          G_TYPE_STRING, G_TYPE_POINTER));
 
   context->list = list_new(LIST_HILDON_WITHOUT_HEADERS, 0, context,
                            wms_server_changed, buttons,
                            std::vector<list_view_column>(1, list_view_column(_("Name"), LIST_FLAG_ELLIPSIZE)),
-                           context->store);
+                           context->store.get());
 
   const std::vector<wms_server_t *> &servers = context->appdata.settings->wms_server;
-  std::for_each(servers.begin(), servers.end(), store_fill_functor(context->store));
-
-  g_object_unref(context->store);
+  std::for_each(servers.begin(), servers.end(), store_fill_functor(context->store.get()));
 
   return context->list;
 }
@@ -539,8 +538,8 @@ static GtkWidget *wms_layer_widget(selected_context *context, const wms_layer_t:
 #endif
 
   /* build the store */
-  GtkListStore *store = gtk_list_store_new(LAYER_NUM_COLS,
-      G_TYPE_STRING, G_TYPE_BOOLEAN, G_TYPE_POINTER);
+  std::unique_ptr<GtkListStore, g_object_deleter> store(gtk_list_store_new(LAYER_NUM_COLS,
+      G_TYPE_STRING, G_TYPE_BOOLEAN, G_TYPE_POINTER));
 
   /* --- "Title" column --- */
   GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
@@ -554,30 +553,28 @@ static GtkWidget *wms_layer_widget(selected_context *context, const wms_layer_t:
   gtk_tree_view_column_set_expand(column, TRUE);
   gtk_tree_view_insert_column(GTK_TREE_VIEW(view), column, -1);
 
-  gtk_tree_view_set_model(GTK_TREE_VIEW(view), GTK_TREE_MODEL(store));
+  gtk_tree_view_set_model(GTK_TREE_VIEW(view), GTK_TREE_MODEL(store.get()));
 
   std::for_each(layers.begin(), layers.end(),
-                fitting_layers_functor(store, context->appdata.project));
-
-  g_object_unref(store);
+                fitting_layers_functor(store.get(), context->appdata.project));
 
   g_signal_connect(G_OBJECT(selection), "changed", G_CALLBACK(changed), &context->selected);
 
+  GtkWidget *res;
 #ifndef FREMANTLE
   /* put it into a scrolled window */
-  GtkWidget *scrolled_window = gtk_scrolled_window_new(O2G_NULLPTR, O2G_NULLPTR);
-  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window),
+  res = gtk_scrolled_window_new(O2G_NULLPTR, O2G_NULLPTR);
+  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(res),
 				 GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-  gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scrolled_window),
+  gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(res),
 				      GTK_SHADOW_ETCHED_IN);
-  gtk_container_add(GTK_CONTAINER(scrolled_window), view);
-  return scrolled_window;
+  gtk_container_add(GTK_CONTAINER(res), view);
 #else
   /* put view into a pannable area */
-  GtkWidget *pannable_area = hildon_pannable_area_new();
-  gtk_container_add(GTK_CONTAINER(pannable_area), view);
-  return pannable_area;
+  res = hildon_pannable_area_new();
+  gtk_container_add(GTK_CONTAINER(res), view);
 #endif
+  return res;
 }
 
 

@@ -25,24 +25,25 @@
 #include <array>
 #include <cstring>
 #include <map>
+#include <memory>
 #include <string>
 #include <sys/stat.h>
 
 #include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
+#include <osm2go_stl.h>
 
 class icon_buffer : public icon_t {
 public:
   class icon_buffer_item : public icon_item {
   public:
     explicit icon_buffer_item(Pixmap nbuf);
-    ~icon_buffer_item();
 
-    Pixmap buf;
+    std::unique_ptr<GdkPixbuf, g_object_deleter> buf;
     int use;
 
     inline Pixmap buffer() {
-      return buf;
+      return buf.get();
     }
   };
 
@@ -126,12 +127,6 @@ GtkWidget *icon_t::widget_load(const std::string &name, int limit) {
     return O2G_NULLPTR;
 
   return gtk_image_new_from_pixbuf(pix->buffer());
-}
-
-icon_buffer::icon_buffer_item::~icon_buffer_item()
-{
-  if(buf)
-    g_object_unref(buf);
 }
 
 icon_t::Pixmap icon_t::icon_item::buffer()

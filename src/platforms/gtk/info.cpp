@@ -28,6 +28,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <memory>
 #include <strings.h>
 
 #include "osm2go_annotations.h"
@@ -49,7 +50,7 @@ public:
   osm_t * const osm;
   presets_items * const presets;
   GtkWidget *list;
-  GtkListStore *store;
+  std::unique_ptr<GtkListStore, g_object_deleter> store;
 
   void update_collisions(const std::string &k);
 };
@@ -82,16 +83,16 @@ void info_tag_context_t::update_collisions(const std::string &k)
   const bool checkAll = k.empty();
 
   /* walk the entire store to get all values */
-  if(gtk_tree_model_get_iter_first(GTK_TREE_MODEL(store), &iter)) {
+  if(gtk_tree_model_get_iter_first(GTK_TREE_MODEL(store.get()), &iter)) {
     do {
       const gchar *key = O2G_NULLPTR;
-      gtk_tree_model_get(GTK_TREE_MODEL(store), &iter, TAG_COL_KEY, &key, -1);
+      gtk_tree_model_get(GTK_TREE_MODEL(store.get()), &iter, TAG_COL_KEY, &key, -1);
       assert(key != O2G_NULLPTR);
       if(checkAll || k == key)
-        gtk_list_store_set(store, &iter,
+        gtk_list_store_set(store.get(), &iter,
            TAG_COL_COLLISION, (tags.count(key) > 1) ? TRUE : FALSE, -1);
 
-    } while(gtk_tree_model_iter_next(GTK_TREE_MODEL(store), &iter));
+    } while(gtk_tree_model_iter_next(GTK_TREE_MODEL(store.get()), &iter));
   }
 }
 
@@ -196,12 +197,12 @@ static bool tag_edit(GtkWindow *window, std::string &k, std::string &v) {
 
 static void select_item(const std::string &k, const std::string &v, info_tag_context_t *context) {
   GtkTreeIter iter;
-  gtk_tree_model_get_iter_first(GTK_TREE_MODEL(context->store), &iter);
+  gtk_tree_model_get_iter_first(GTK_TREE_MODEL(context->store.get()), &iter);
   // just a linear search as there is not match between the tagmap order and the
   // store order
   do {
     const gchar *key = O2G_NULLPTR, *value = O2G_NULLPTR;
-    gtk_tree_model_get(GTK_TREE_MODEL(context->store), &iter,
+    gtk_tree_model_get(GTK_TREE_MODEL(context->store.get()), &iter,
                        TAG_COL_KEY, &key,
                        TAG_COL_VALUE, &value, -1);
     assert(key != O2G_NULLPTR);
@@ -210,7 +211,7 @@ static void select_item(const std::string &k, const std::string &v, info_tag_con
       gtk_tree_selection_select_iter(list_get_selection(context->list), &iter);
       return;
     }
-  } while(gtk_tree_model_iter_next(GTK_TREE_MODEL(context->store), &iter));
+  } while(gtk_tree_model_iter_next(GTK_TREE_MODEL(context->store.get()), &iter));
 }
 
 static void on_tag_edit(info_tag_context_t *context) {
@@ -288,7 +289,7 @@ static void on_tag_edit(info_tag_context_t *context) {
       }
     }
 
-    gtk_list_store_set(context->store, &iter,
+    gtk_list_store_set(context->store.get(), &iter,
                        TAG_COL_KEY, k.c_str(),
                        TAG_COL_VALUE, v.c_str(),
                        -1);
@@ -358,7 +359,7 @@ static void on_tag_add(info_tag_context_t *context) {
   bool collision = context->tags.count(k) > 0;
   context->tags.insert(osm_t::TagMap::value_type(k, v));
   /* append a row for the new data */
-  GtkTreeIter iter = store_append(context->store, k, v, collision);
+  GtkTreeIter iter = store_append(context->store.get(), k, v, collision);
 
   gtk_tree_selection_select_iter(list_get_selection(context->list), &iter);
 
@@ -376,7 +377,7 @@ struct tag_replace_functor {
 };
 
 void tag_context_t::info_tags_replace() {
-  GtkListStore *store = static_cast<info_tag_context_t *>(this)->store;
+  GtkListStore *store = static_cast<info_tag_context_t *>(this)->store.get();
   gtk_list_store_clear(store);
 
   std::for_each(tags.begin(), tags.end(), tag_replace_functor(store, tags));
@@ -401,11 +402,12 @@ static GtkWidget *tag_widget(info_tag_context_t *context) {
   buttons.push_back(list_button(O2G_NULLPTR, O2G_NULLPTR));
   buttons.push_back(list_button(_("Relations"), GCallback(on_relations)));
 
-  context->store = gtk_list_store_new(TAG_NUM_COLS,
-		G_TYPE_STRING, G_TYPE_STRING, G_TYPE_BOOLEAN, G_TYPE_POINTER);
+  context->store.reset(gtk_list_store_new(TAG_NUM_COLS,
+                                          G_TYPE_STRING, G_TYPE_STRING,
+                                          G_TYPE_BOOLEAN, G_TYPE_POINTER));
 
   context->list = list_new(LIST_HILDON_WITHOUT_HEADERS, LIST_BTN_2ROW, context, changed,
-                           buttons, columns, context->store);
+                           buttons, columns, context->store.get());
 
   list_set_custom_user_button(context->list, LIST_BUTTON_USER1,
                               josm_build_presets_button(context->presets, context));
@@ -423,8 +425,6 @@ static GtkWidget *tag_widget(info_tag_context_t *context) {
 
   /* --------- build and fill the store ------------ */
   context->info_tags_replace();
-
-  g_object_unref(context->store);
 
   return context->list;
 }
@@ -656,6 +656,5 @@ info_tag_context_t::info_tag_context_t(map_t *m, osm_t *os, presets_items *p, co
   , osm(os)
   , presets(p)
   , list(O2G_NULLPTR)
-  , store(O2G_NULLPTR)
 {
 }

@@ -34,10 +34,6 @@
 #include "track.h"
 #include "uicontrol.h"
 
-#include "osm2go_annotations.h"
-#include <osm2go_cpp.h>
-#include <osm2go_i18n.h>
-
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -47,7 +43,13 @@
 #ifdef FREMANTLE
 #include <hildon/hildon-defines.h>
 #endif
+#include <memory>
 #include <vector>
+
+#include "osm2go_annotations.h"
+#include <osm2go_cpp.h>
+#include <osm2go_i18n.h>
+#include <osm2go_stl.h>
 
 class map_internal : public map_t {
 public:
@@ -56,7 +58,7 @@ public:
   osm2go_platform::Timer autosave;
 
   struct {
-    GdkPixbuf *pix;
+    std::unique_ptr<GdkPixbuf, g_object_deleter> pix;
     canvas_item_t *item;
   } background;
 };
@@ -1537,7 +1539,6 @@ map_t::map_t(appdata_t &a)
 map_internal::map_internal(appdata_t &a)
   : map_t(a)
 {
-  background.pix = O2G_NULLPTR;
   background.item = O2G_NULLPTR;
 }
 
@@ -2086,8 +2087,7 @@ static void map_bg_item_destroy_event(gpointer data) {
   map->background.item = O2G_NULLPTR;
   if(map->background.pix) {
     printf("destroying background item\n");
-    g_object_unref(map->background.pix);
-    map->background.pix = O2G_NULLPTR;
+    map->background.pix.reset();
   }
 }
 
@@ -2098,17 +2098,17 @@ bool map_t::set_bg_image(const std::string &filename) {
 
   map_internal *m = static_cast<map_internal *>(this);
 
-  m->background.pix = gdk_pixbuf_new_from_file(filename.c_str(), O2G_NULLPTR);
-  if(m->background.pix == O2G_NULLPTR)
+  m->background.pix.reset(gdk_pixbuf_new_from_file(filename.c_str(), O2G_NULLPTR));
+  if(!m->background.pix)
     return false;
 
   /* calculate required scale factor */
   bg.scale.x = static_cast<float>(bounds.max.x - bounds.min.x) /
-                    gdk_pixbuf_get_width(m->background.pix);
+                    gdk_pixbuf_get_width(m->background.pix.get());
   bg.scale.y = static_cast<float>(bounds.max.y - bounds.min.y) /
-                    gdk_pixbuf_get_height(m->background.pix);
+                    gdk_pixbuf_get_height(m->background.pix.get());
 
-  m->background.item = canvas->image_new(CANVAS_GROUP_BG, m->background.pix,
+  m->background.item = canvas->image_new(CANVAS_GROUP_BG, m->background.pix.get(),
                               bounds.min.x, bounds.min.y, bg.scale.x, bg.scale.y);
 
   m->background.item->destroy_connect(map_bg_item_destroy_event, this);

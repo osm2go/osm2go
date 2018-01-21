@@ -115,7 +115,7 @@ struct select_context_t {
   std::vector<project_t *> projects;
   GtkWidget * const dialog;
   GtkWidget *list;
-  GtkListStore *store;
+  std::unique_ptr<GtkListStore, g_object_deleter> store;
 };
 
 static void pos_lat_label_set(GtkWidget *label, pos_float_t lat) {
@@ -246,13 +246,13 @@ static bool project_delete_gui(select_context_t *context, project_t *project) {
 
   /* remove from view */
   GtkTreeIter iter;
-  GtkTreeModel *model = GTK_TREE_MODEL(context->store);
+  GtkTreeModel *model = GTK_TREE_MODEL(context->store.get());
   if(gtk_tree_model_get_iter_first(model, &iter)) {
     do {
       project_t *prj = O2G_NULLPTR;
       gtk_tree_model_get(model, &iter, PROJECT_COL_DATA, &prj, -1);
       if(prj == project) {
-        gtk_list_store_remove(context->store, &iter);
+        gtk_list_store_remove(context->store.get(), &iter);
         break;
       }
     } while(gtk_tree_model_iter_next(model, &iter));
@@ -354,8 +354,8 @@ static void on_project_new(select_context_t *context) {
     GtkTreeIter iter;
     const gchar *status_stock_id = project_get_status_icon_stock_id(
                                          context->appdata.project, project);
-    gtk_list_store_append(GTK_LIST_STORE(context->store), &iter);
-    gtk_list_store_set(GTK_LIST_STORE(context->store), &iter,
+    gtk_list_store_append(GTK_LIST_STORE(context->store.get()), &iter);
+    gtk_list_store_set(GTK_LIST_STORE(context->store.get()), &iter,
 		       PROJECT_COL_NAME,        project->name.c_str(),
 		       PROJECT_COL_STATUS,      status_stock_id,
 		       PROJECT_COL_DESCRIPTION, project->desc.c_str(),
@@ -454,7 +454,7 @@ static void
 on_project_update_all(select_context_t *context)
 {
   GtkTreeIter iter;
-  GtkTreeModel *model = GTK_TREE_MODEL(context->store);
+  GtkTreeModel *model = GTK_TREE_MODEL(context->store.get());
   if(gtk_tree_model_get_iter_first(model, &iter)) {
     do {
       project_t *prj = O2G_NULLPTR;
@@ -523,24 +523,22 @@ static GtkWidget *project_list_widget(select_context_t &context, gboolean &has_s
   buttons.push_back(list_button(_("Update all"), GCallback(on_project_update_all)));
 
   /* build the store */
-  context.store = gtk_list_store_new(PROJECT_NUM_COLS,
-      G_TYPE_STRING,    // name
-      G_TYPE_STRING,    // status
-      G_TYPE_STRING,    // desc
-      G_TYPE_POINTER);  // data
+  context.store.reset(gtk_list_store_new(PROJECT_NUM_COLS,
+                                         G_TYPE_STRING,    // name
+                                         G_TYPE_STRING,    // status
+                                         G_TYPE_STRING,    // desc
+                                         G_TYPE_POINTER));  // data
 
   context.list = list_new(LIST_HILDON_WITHOUT_HEADERS, 0,
-                          &context, changed, buttons, columns, context.store);
+                          &context, changed, buttons, columns, context.store.get());
 
   GtkTreeIter seliter;
   has_sel = FALSE;
 
   std::for_each(context.projects.begin(), context.projects.end(),
-                project_list_add(context.store, context.appdata, seliter, has_sel));
+                project_list_add(context.store.get(), context.appdata, seliter, has_sel));
 
-  g_object_unref(context.store);
-
-  gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(context.store),
+  gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(context.store.get()),
                                        PROJECT_COL_NAME, GTK_SORT_ASCENDING);
 
   if(has_sel)

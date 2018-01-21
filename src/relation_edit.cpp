@@ -49,7 +49,7 @@ struct relitem_context_t {
   const presets_items * const presets;
   osm_t * const osm;
   GtkWidget *dialog, *view;
-  GtkListStore *store;
+  std::unique_ptr<GtkListStore, g_object_deleter> store;
 };
 
 enum {
@@ -87,7 +87,7 @@ struct relation_context_t {
   presets_items * const presets;
   GtkWidget * const dialog;
   GtkWidget *list, *show_btn;
-  GtkListStore *store;
+  std::unique_ptr<GtkListStore, g_object_deleter> store;
 };
 
 static bool relation_add_item(GtkWidget *parent, relation_t *relation,
@@ -203,10 +203,10 @@ static void changed(GtkTreeSelection *sel, relitem_context_t *context) {
 
   GtkTreeIter iter;
   bool done = false;
-  gboolean ok = gtk_tree_model_get_iter_first(GTK_TREE_MODEL(context->store), &iter);
+  gboolean ok = gtk_tree_model_get_iter_first(GTK_TREE_MODEL(context->store.get()), &iter);
   while(ok == TRUE && !done) {
     relation_t *relation = O2G_NULLPTR;
-    gtk_tree_model_get(GTK_TREE_MODEL(context->store), &iter,
+    gtk_tree_model_get(GTK_TREE_MODEL(context->store.get()), &iter,
 		       RELITEM_COL_DATA, &relation, -1);
     assert(relation != O2G_NULLPTR);
 
@@ -220,8 +220,7 @@ static void changed(GtkTreeSelection *sel, relitem_context_t *context) {
       if(relation_add_item(context->dialog, relation, context->item, context->presets)) {
         // the item is now the last one in the chain
         const member_t &member = relation->members.back();
-	gtk_list_store_set(context->store, &iter,
-                           RELITEM_COL_ROLE, member.role, -1);
+        gtk_list_store_set(context->store.get(), &iter, RELITEM_COL_ROLE, member.role, -1);
       } else
 	gtk_tree_selection_unselect_iter(sel, &iter);
 
@@ -230,15 +229,13 @@ static void changed(GtkTreeSelection *sel, relitem_context_t *context) {
       printf("deselected: " ITEM_ID_FORMAT "\n", relation->id);
 
       relation_remove_item(relation, context->item);
-      gtk_list_store_set(context->store, &iter,
-		       RELITEM_COL_ROLE, O2G_NULLPTR,
-		       -1);
+      gtk_list_store_set(context->store.get(), &iter, RELITEM_COL_ROLE, O2G_NULLPTR, -1);
 
       done = true;
     }
 
     if(!done)
-      ok = gtk_tree_model_iter_next(GTK_TREE_MODEL(context->store), &iter);
+      ok = gtk_tree_model_iter_next(GTK_TREE_MODEL(context->store.get()), &iter);
   }
 }
 
@@ -292,8 +289,8 @@ void relation_list_insert_functor::operator()(std::pair<item_id_t, relation_t *>
   const bool isMember = it != relation->members.end();
 
   /* Append a row and fill in some data */
-  gtk_list_store_append(context.store, &iter);
-  gtk_list_store_set(context.store, &iter,
+  gtk_list_store_append(context.store.get(), &iter);
+  gtk_list_store_set(context.store.get(), &iter,
      RELITEM_COL_TYPE, relation->tags.get_value("type"),
      RELITEM_COL_ROLE, isMember ? it->role : O2G_NULLPTR,
      RELITEM_COL_NAME, name.c_str(),
@@ -354,17 +351,14 @@ static GtkWidget *relation_item_list_widget(relitem_context_t &context) {
       -1, "Role", renderer, "text", RELITEM_COL_ROLE, O2G_NULLPTR);
 
   /* build and fill the store */
-  context.store = gtk_list_store_new(RELITEM_NUM_COLS,
-		G_TYPE_STRING, G_TYPE_STRING,
-	        G_TYPE_STRING, G_TYPE_POINTER);
+  context.store.reset(gtk_list_store_new(RELITEM_NUM_COLS, G_TYPE_STRING, G_TYPE_STRING,
+                                         G_TYPE_STRING, G_TYPE_POINTER));
 
-  gtk_tree_view_set_model(GTK_TREE_VIEW(context.view),
-			  GTK_TREE_MODEL(context.store));
-  g_object_unref(context.store);
+  gtk_tree_view_set_model(GTK_TREE_VIEW(context.view), GTK_TREE_MODEL(context.store.get()));
 
   // Debatable whether to sort by the "selected" or the "Name" column by
   // default. Both are be useful, in different ways.
-  gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(context.store),
+  gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(context.store.get()),
                                        RELITEM_COL_NAME, GTK_SORT_ASCENDING);
 
   /* build a list of iters of all items that should be selected */
@@ -600,8 +594,6 @@ static GtkWidget *member_list_widget(member_context_t &context) {
   std::for_each(context.relation->members.begin(), context.relation->members.end(),
                 members_list_functor(store));
 
-  g_object_unref(store);
-
 #ifndef FREMANTLE
   /* put it into a scrolled window */
   GtkWidget *scrolled_window = gtk_scrolled_window_new(O2G_NULLPTR, O2G_NULLPTR);
@@ -694,8 +686,8 @@ static void on_relation_add(relation_context_t *context) {
 
     /* Append a row and fill in some data */
     GtkTreeIter iter;
-    gtk_list_store_append(context->store, &iter);
-    gtk_list_store_set(context->store, &iter,
+    gtk_list_store_append(context->store.get(), &iter);
+    gtk_list_store_set(context->store.get(), &iter,
 		       RELATION_COL_TYPE,
 		       relation->tags.get_value("type"),
 		       RELATION_COL_NAME, name.c_str(),
@@ -720,22 +712,22 @@ static void on_relation_edit(relation_context_t *context) {
   // Locate the changed item
   GtkTreeIter iter;
   gboolean valid = gtk_tree_model_get_iter_first(
-    GTK_TREE_MODEL(context->store), &iter);
+    GTK_TREE_MODEL(context->store.get()), &iter);
   while (valid) {
     relation_t *row_rel;
-    gtk_tree_model_get(GTK_TREE_MODEL(context->store), &iter,
+    gtk_tree_model_get(GTK_TREE_MODEL(context->store.get()), &iter,
                        RELATION_COL_DATA, &row_rel,
                        -1);
     if (row_rel == sel)
       break;
-    valid = gtk_tree_model_iter_next(GTK_TREE_MODEL(context->store), &iter);
+    valid = gtk_tree_model_iter_next(GTK_TREE_MODEL(context->store.get()), &iter);
   }
   if (!valid)
     return;
 
   const std::string &name = sel->descriptive_name();
   // Found it. Update all visible fields.
-  gtk_list_store_set(context->store, &iter,
+  gtk_list_store_set(context->store.get(), &iter,
     RELATION_COL_TYPE,    sel->tags.get_value("type"),
     RELATION_COL_NAME,    name.c_str(),
     RELATION_COL_MEMBERS, sel->members.size(),
@@ -762,7 +754,7 @@ static void on_relation_remove(relation_context_t *context) {
   GtkTreeIter       iter;
   GtkTreeModel      *model;
   if(list_get_selected(context->list, &model, &iter))
-    gtk_list_store_remove(context->store, &iter);
+    gtk_list_store_remove(context->store.get(), &iter);
 
   /* then really delete it */
   context->osm->relation_delete(sel);
@@ -811,25 +803,23 @@ static GtkWidget *relation_list_widget(relation_context_t &context) {
   buttons.push_back(list_button(_("Select"),  GCallback(on_relation_select)));
 
   /* build and fill the store */
-  context.store = gtk_list_store_new(RELATION_NUM_COLS,
-		G_TYPE_STRING, G_TYPE_STRING, G_TYPE_UINT,
-	        G_TYPE_POINTER);
+  context.store.reset(gtk_list_store_new(RELATION_NUM_COLS,
+                                         G_TYPE_STRING, G_TYPE_STRING, G_TYPE_UINT,
+                                         G_TYPE_POINTER));
 
   context.list = list_new(LIST_HILDON_WITH_HEADERS, 0, &context,
                           relation_list_changed, buttons, columns,
-                          context.store);
+                          context.store.get());
 
   // Sorting by ref/name by default is useful for places with lots of numbered
   // bus routes. Especially for small screens.
-  gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(context.store),
+  gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(context.store.get()),
                                        RELATION_COL_NAME, GTK_SORT_ASCENDING);
 
-  relation_list_widget_functor fc(context.store);
+  relation_list_widget_functor fc(context.store.get());
 
   const std::map<item_id_t, relation_t *> &rchain = context.osm->relations;
   std::for_each(rchain.begin(), rchain.end(), fc);
-
-  g_object_unref(context.store);
 
   relation_list_selected(context.list, O2G_NULLPTR);
 
