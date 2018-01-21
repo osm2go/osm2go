@@ -90,6 +90,7 @@ static void statusbar_highlight(statusbar_t *statusbar, bool highlight) {
 
   gtk_widget_modify_fg(w, GTK_STATE_NORMAL, col);
   gtk_widget_modify_text(w, GTK_STATE_NORMAL, col);
+  g_object_set(statusbar->widget, "has-resize-grip", FALSE, O2G_NULLPTR);
 }
 
 void statusbar_gtk::set(const char *msg, bool highlight) {
