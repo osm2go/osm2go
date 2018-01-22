@@ -17,24 +17,24 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "appdata.h"
-#include "canvas.h"
-#include "diff.h"
-#include "gps.h"
-#include "iconbar.h"
-#include "josm_presets.h"
-#include "map.h"
-#include "misc.h"
-#include "osm_api.h"
+#include <appdata.h>
+#include <canvas.h>
+#include <diff.h>
+#include <gps.h>
+#include <iconbar.h>
+#include <josm_presets.h>
+#include <map.h>
+#include <misc.h>
+#include <osm_api.h>
 #include "osm2go_platform.h"
-#include "project.h"
-#include "relation_edit.h"
-#include "settings.h"
-#include "statusbar.h"
-#include "style.h"
-#include "style_widgets.h"
-#include "track.h"
-#include "wms.h"
+#include <project.h>
+#include <relation_edit.h>
+#include <settings.h>
+#include <statusbar.h>
+#include <style.h>
+#include <style_widgets.h>
+#include <track.h>
+#include <wms.h>
 
 #ifdef FREMANTLE
 #include <hildon/hildon-button.h>
@@ -67,8 +67,8 @@
 #include <curl/curl.h>
 #include <gdk/gdkkeysyms.h>
 
-#include "osm2go_annotations.h"
-#include <osm2go_i18n.h>
+#include <osm2go_annotations.h>
+#include "osm2go_i18n.h"
 
 #define LOCALEDIR PREFIX "/locale"
 

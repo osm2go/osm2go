@@ -234,7 +234,7 @@ target_include_directories(osm2go_lib
 )
 
 add_executable(osm2go
-	src/main.cpp
+	src/platforms/gtk/main.cpp
 )
 
 target_link_libraries(osm2go
