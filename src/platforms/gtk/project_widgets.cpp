@@ -151,7 +151,7 @@ static bool osm_file_exists(const project_t *project) {
   if(project == O2G_NULLPTR)
     return false;
   struct stat st;
-  return fstatat(project->dirfd, project->osm.c_str(), &st, 0) == 0 && S_ISREG(st.st_mode);
+  return fstatat(project->dirfd, project->osmFile.c_str(), &st, 0) == 0 && S_ISREG(st.st_mode);
 }
 
 static void view_selected(GtkWidget *dialog, project_t *project) {
@@ -309,7 +309,7 @@ static project_t *project_new(select_context_t *context) {
   project->data_dirty = true;
 
   /* build project osm file name */
-  project->osm = project->name + ".osm";
+  project->osmFile = project->name + ".osm";
 
   project->bounds.min = pos_t(NAN, NAN);
   project->bounds.max = pos_t(NAN, NAN);
@@ -413,7 +413,7 @@ static void on_project_edit(select_context_t *context) {
       cur->desc = project->desc;
 
       // update OSM file, may have changed (gzip or not)
-      cur->osm = project->osm;
+      cur->osmFile = project->osmFile;
 
       /* update server */
       cur->adjustServer(project->rserver.c_str(), context->appdata.settings->server);
@@ -584,10 +584,10 @@ static void project_filesize(project_context_t *context) {
   g_string gstr;
   const project_t * const project = context->project;
 
-  g_debug("Checking size of %s", project->osm.c_str());
+  g_debug("Checking size of %s", project->osmFile.c_str());
 
   struct stat st;
-  bool stret = fstatat(project->dirfd, project->osm.c_str(), &st, 0) == 0 &&
+  bool stret = fstatat(project->dirfd, project->osmFile.c_str(), &st, 0) == 0 &&
                S_ISREG(st.st_mode);
   if(!stret && errno == ENOENT) {
     GdkColor color;
@@ -609,7 +609,7 @@ static void project_filesize(project_context_t *context) {
         char time_str[32];
         strftime(time_str, sizeof(time_str), "%x %X", &loctime);
 
-        if(project->osm.size() > 3 && strcmp(project->osm.c_str() + project->osm.size() - 3, ".gz") == 0) {
+        if(project->osmFile.size() > 3 && strcmp(project->osmFile.c_str() + project->osmFile.size() - 3, ".gz") == 0) {
           gstr.reset(g_strdup_printf(_("%" G_GOFFSET_FORMAT " bytes present\nfrom %s"),
                                      static_cast<goffset>(st.st_size), time_str));
           gtk_label_set_text(GTK_LABEL(context->fsizehdr), _("Map data:\n(compressed)"));

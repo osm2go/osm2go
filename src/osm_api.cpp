@@ -123,7 +123,7 @@ bool osm_download(GtkWidget *parent, settings_t *settings, project_t *project)
     return false;
 
   // if the project's gzip setting and the download one don't match change the project
-  const bool wasGzip = project->osm.size() > 3 && strcmp(project->osm.c_str() + project->osm.size() - 3, ".gz") == 0;
+  const bool wasGzip = project->osmFile.size() > 3 && strcmp(project->osmFile.c_str() + project->osmFile.size() - 3, ".gz") == 0;
 
   // check the contents of the new file
   g_mapped_file osmData(g_mapped_file_new(update.c_str(), FALSE, O2G_NULLPTR));
@@ -142,8 +142,8 @@ bool osm_download(GtkWidget *parent, settings_t *settings, project_t *project)
   printf("download ok, replacing previous file\n");
 
   if(wasGzip != isGzip) {
-    const std::string oldfname = (project->osm[0] == '/' ? std::string() : project->path) +
-                                 project->osm;
+    const std::string oldfname = (project->osmFile[0] == '/' ? std::string() : project->path) +
+                                 project->osmFile;
     std::string newfname = oldfname;
     if(wasGzip)
       newfname.erase(newfname.size() - 3);
@@ -153,16 +153,16 @@ bool osm_download(GtkWidget *parent, settings_t *settings, project_t *project)
     // save the project before deleting the old file so that a valid file is always found
     if(newfname.substr(0, project->path.size()) == project->path)
       newfname.erase(0, project->path.size());
-    project->osm = newfname;
+    project->osmFile = newfname;
     project->save(parent);
 
     // now remove the old file
     unlink(oldfname.c_str());
   } else {
-    if(project->osm[0] == '/') {
-      rename(update.c_str(), project->osm.c_str());
+    if(project->osmFile[0] == '/') {
+      rename(update.c_str(), project->osmFile.c_str());
     } else {
-      const std::string fname = project->path + project->osm;
+      const std::string fname = project->path + project->osmFile;
       rename(update.c_str(), fname.c_str());
     }
   }

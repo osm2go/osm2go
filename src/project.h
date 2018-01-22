@@ -56,7 +56,7 @@ struct project_t {
   const std::string name;
   const std::string path;
   std::string desc;
-  std::string osm;
+  std::string osmFile;
   std::string rserver;
 
   std::string wms_server;

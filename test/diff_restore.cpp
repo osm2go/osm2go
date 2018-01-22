@@ -142,7 +142,7 @@ int main(int argc, char **argv)
 
   map_state_t dummystate;
   project_t project(dummystate, argv[2], osm_path);
-  project.osm = argv[2] + std::string(".osm");
+  project.osmFile = argv[2] + std::string(".osm");
 
   osm_t *osm = project.parse_osm();
   if(!osm) {
@@ -220,7 +220,7 @@ int main(int argc, char **argv)
     assert(!diff_present(&sproject));
 
     delete osm;
-    osm = osm_t::parse(project.path, project.osm);
+    osm = osm_t::parse(project.path, project.osmFile);
     assert(osm != O2G_NULLPTR);
 
     flags = diff_restore_file(O2G_NULLPTR, &sproject, osm);

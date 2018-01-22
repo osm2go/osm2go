@@ -132,10 +132,10 @@ bool project_read(const std::string &project_file, project_t *project,
                strlen(reinterpret_cast<char *>(str.get())) > project->path.size() &&
                !strncmp(reinterpret_cast<char *>(str.get()), project->path.c_str(), project->path.size())) {
 
-              project->osm = reinterpret_cast<char *>(str.get() + project->path.size());
-              printf("osm name converted to relative %s\n", project->osm.c_str());
+              project->osmFile = reinterpret_cast<char *>(str.get() + project->path.size());
+              printf("osm name converted to relative %s\n", project->osmFile.c_str());
             } else
-              project->osm = reinterpret_cast<char *>(str.get());
+              project->osmFile = reinterpret_cast<char *>(str.get());
           } else if(strcmp(reinterpret_cast<const char *>(node->name), "min") == 0) {
             project->bounds.min = pos_t::fromXmlProperties(node);
           } else if(strcmp(reinterpret_cast<const char *>(node->name), "max") == 0) {
@@ -150,12 +150,12 @@ bool project_read(const std::string &project_file, project_t *project,
     return false;
 
   // no explicit filename was given, guess the default ones
-  if(project->osm.empty()) {
+  if(project->osmFile.empty()) {
     std::string fname = project->name + ".osm.gz";
     struct stat st;
     if(fstatat(project->dirfd, fname.c_str(), &st, 0) != 0 || !S_ISREG(st.st_mode))
       fname.erase(fname.size() - 3);
-    project->osm = fname;
+    project->osmFile = fname;
   }
 
   return true;
@@ -199,8 +199,8 @@ bool project_t::save(GtkWidget *parent) {
     xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "desc", BAD_CAST desc.c_str());
 
   const std::string defaultOsm = name + ".osm";
-  if(unlikely(osm != defaultOsm + ".gz" && osm != defaultOsm))
-    xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "osm", BAD_CAST osm.c_str());
+  if(unlikely(osmFile != defaultOsm + ".gz" && osmFile != defaultOsm))
+    xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "osm", BAD_CAST osmFile.c_str());
 
   node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "min", O2G_NULLPTR);
   bounds.min.toXmlProperties(node);
@@ -385,7 +385,7 @@ static bool project_open(appdata_t &appdata, const std::string &name) {
 
   /* --------- project structure ok: load its OSM file --------- */
 
-  printf("project_open: loading osm %s\n", project->osm.c_str());
+  printf("project_open: loading osm %s\n", project->osmFile.c_str());
   appdata.osm = project->parse_osm();
   appdata.project = project.release();
 
@@ -485,7 +485,7 @@ bool project_load(appdata_t &appdata, const std::string &name) {
 }
 
 osm_t *project_t::parse_osm() const {
-  return osm_t::parse(path, osm);
+  return osm_t::parse(path, osmFile);
 }
 
 project_t::project_t(map_state_t &ms, const std::string &n, const std::string &base_path)
