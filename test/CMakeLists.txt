@@ -11,6 +11,7 @@ function(osm_test BASENAME)
 
 	add_test(NAME ${BASENAME}
 			COMMAND ${BASENAME} ${ARGN})
+	set_property(TEST ${BASENAME} APPEND PROPERTY ENVIRONMENT G_MESSAGES_DEBUG=all)
 endfunction()
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/test1.trk.in" "${CMAKE_CURRENT_BINARY_DIR}/test1.trk" @ONLY)
