@@ -29,14 +29,8 @@
 
 static osso_context_t *osso_context;
 
-int osm2go_platform::init(int &argc, char **argv)
+int osm2go_platform::init()
 {
-#if !GLIB_CHECK_VERSION(2,32,0)
-  g_thread_init(O2G_NULLPTR);
-#endif
-
-  gtk_init(&argc, &argv);
-
   g_signal_new("changed", HILDON_TYPE_PICKER_BUTTON,
                G_SIGNAL_RUN_FIRST, 0, O2G_NULLPTR, O2G_NULLPTR,
                g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);

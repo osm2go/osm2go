@@ -1444,7 +1444,12 @@ int main(int argc, char *argv[]) {
   /* whitespace between tags has no meaning in any of the XML files used here */
   xmlKeepBlanksDefault(0);
 
-  int ret = osm2go_platform::init(argc, argv);
+#if !GLIB_CHECK_VERSION(2,32,0)
+  g_thread_init(O2G_NULLPTR);
+#endif
+
+  gtk_init(&argc, &argv);
+  int ret = osm2go_platform::init();
   if (ret == 0) {
     ret = application_run(argc > 1 ? argv[1] : O2G_NULLPTR);
 

@@ -29,7 +29,7 @@ namespace osm2go_platform {
    */
   void process_events(bool tick = false);
 
-  int init(int &argc, char **argv);
+  int init();
 
   void cleanup();
 
