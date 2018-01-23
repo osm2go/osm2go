@@ -198,11 +198,15 @@ int main(int argc, char **argv)
     std::cerr << "cannot create temporary directory" << std::endl;
     result = 1;
   } else {
+    // create an empty directoy
     std::string bpath = tmpdir + std::string("/") + argv[2];
+    const std::string osmpath = bpath + '/' + argv[2] + ".osm";
     mkdir(bpath.c_str(), 0755);
     bpath.erase(bpath.rfind('/') + 1);
+    // and create a new project from that
     project_t sproject(dummystate, argv[2], bpath);
 
+    // the directory is empty, there can't be any diff
     flags = diff_restore_file(O2G_NULLPTR, &sproject, osm);
     assert_cmpnum(flags, DIFF_NONE_PRESENT);
 
@@ -220,7 +224,11 @@ int main(int argc, char **argv)
     assert(!diff_present(&sproject));
 
     delete osm;
-    osm = osm_t::parse(project.path, project.osmFile);
+    // put the OSM data into this directory
+    const std::string origosmpath = project.path + project.osmFile;
+    symlink(origosmpath.c_str(), osmpath.c_str());
+    sproject.osmFile = project.osmFile;
+    osm = sproject.parse_osm();
     assert(osm != O2G_NULLPTR);
 
     flags = diff_restore_file(O2G_NULLPTR, &sproject, osm);
@@ -228,6 +236,7 @@ int main(int argc, char **argv)
 
     verify_diff(osm);
 
+    unlink(osmpath.c_str());
     unlink(bdiff.c_str());
     bpath.erase(bpath.rfind('/'));
     rmdir(bpath.c_str());
