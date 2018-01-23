@@ -103,10 +103,6 @@ void check_button_set_active(GtkWidget *button, bool active);
 bool check_button_get_active(GtkWidget *button);
 bool isCheckButtonWidget(GtkWidget *widget);
 
-GtkWidget *notebook_new(void);
-void notebook_append_page(GtkWidget *notebook, GtkWidget *page, const char *label);
-GtkNotebook *notebook_get_gtk_notebook(GtkWidget *notebook);
-
 GtkWidget *combo_box_new(const char *title);
 GtkWidget *combo_box_entry_new(const char *title);
 void combo_box_append_text(GtkWidget *cbox, const char *text);

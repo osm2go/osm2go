@@ -38,3 +38,16 @@ void osm2go_platform::open_url(const char* url)
 {
   gtk_show_uri(O2G_NULLPTR, url, GDK_CURRENT_TIME, O2G_NULLPTR);
 }
+
+GtkWidget *osm2go_platform::notebook_new(void) {
+  return gtk_notebook_new();
+}
+
+GtkNotebook *osm2go_platform::notebook_get_gtk_notebook(GtkWidget *notebook) {
+  return GTK_NOTEBOOK(notebook);
+}
+
+void osm2go_platform::notebook_append_page(GtkWidget *notebook, GtkWidget *page, const char *label) {
+  GtkNotebook *nb = notebook_get_gtk_notebook(notebook);
+  gtk_notebook_append_page(nb, page, gtk_label_new(label));
+}

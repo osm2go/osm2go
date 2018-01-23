@@ -29,8 +29,9 @@
 
 #include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
-#include <osm2go_i18n.h>
-#include <osm2go_platform.h>
+#include "osm2go_i18n.h"
+#include "osm2go_platform.h"
+#include "osm2go_platform_gtk.h"
 
 #include <algorithm>
 #include <cmath>
@@ -202,7 +203,7 @@ struct area_context_t {
 
 area_context_t::area_context_t(area_edit_t &a, GtkWidget *dlg)
   : dialog(dlg)
-  , notebook(notebook_new())
+  , notebook(osm2go_platform::notebook_new())
   , area(a)
   , bounds(a.bounds)
   , warning(O2G_NULLPTR)
@@ -244,7 +245,7 @@ static bool current_tab_is(GtkNotebook *nb, GtkWidget *w, const char *str) {
 }
 
 static bool current_tab_is(area_context_t *context, const char *str) {
-  GtkNotebook *nb = notebook_get_gtk_notebook(context->notebook);
+  GtkNotebook *nb = osm2go_platform::notebook_get_gtk_notebook(context->notebook);
 
   gint page_num = gtk_notebook_get_current_page(nb);
 
@@ -736,7 +737,7 @@ bool area_edit_t::run() {
   timer.restart(1, map_gps_update, &context);
   context.map.start.rlon = context.map.start.rlat = NAN;
 
-  notebook_append_page(context.notebook, GTK_WIDGET(context.map.widget), _(TAB_LABEL_MAP));
+  osm2go_platform::notebook_append_page(context.notebook, GTK_WIDGET(context.map.widget), _(TAB_LABEL_MAP));
 #endif
 
   /* ------------ direct min/max edit --------------- */
@@ -781,7 +782,7 @@ bool area_edit_t::run() {
   gtk_table_attach_defaults(table, context.direct.error, 0, 3, 3, 4);
 
   gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(table), FALSE, FALSE, 0);
-  notebook_append_page(context.notebook, vbox, _(TAB_LABEL_DIRECT));
+  osm2go_platform::notebook_append_page(context.notebook, vbox, _(TAB_LABEL_DIRECT));
 
   /* ------------- center/extent edit ------------------------ */
 
@@ -847,7 +848,7 @@ bool area_edit_t::run() {
   gtk_table_attach_defaults(table, context.extent.error, 0, 3, 4, 5);
 
   gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(table), FALSE, FALSE, 0);
-  notebook_append_page(context.notebook, vbox, _(TAB_LABEL_EXTENT));
+  osm2go_platform::notebook_append_page(context.notebook, vbox, _(TAB_LABEL_EXTENT));
 
 #ifdef HAS_MAEMO_MAPPER
   /* ------------- fetch from maemo mapper ------------------------ */
@@ -864,7 +865,7 @@ bool area_edit_t::run() {
   label = gtk_label_new(_("(recommended MM zoom level < 7)"));
   gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
 
-  notebook_append_page(context.notebook, vbox, _("M.Mapper"));
+  osm2go_platform::notebook_append_page(context.notebook, vbox, _("M.Mapper"));
 #endif
 
   /* ------------------------------------------------------ */
@@ -873,7 +874,7 @@ bool area_edit_t::run() {
                               context.notebook);
 
 #ifdef ENABLE_OSM_GPS_MAP
-  g_signal_connect(G_OBJECT(notebook_get_gtk_notebook(context.notebook)),
+  g_signal_connect(G_OBJECT(osm2go_platform::notebook_get_gtk_notebook(context.notebook)),
 		   "switch-page", G_CALLBACK(on_page_switch), &context);
 #endif
 
