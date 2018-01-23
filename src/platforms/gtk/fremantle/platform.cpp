@@ -18,6 +18,7 @@
  */
 
 #include <osm2go_platform.h>
+#include <osm2go_platform_gtk.h>
 
 #include "dbus.h"
 

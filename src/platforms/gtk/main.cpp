@@ -27,6 +27,7 @@
 #include <misc.h>
 #include <osm_api.h>
 #include "osm2go_platform.h"
+#include "osm2go_platform_gtk.h"
 #include <project.h>
 #include <relation_edit.h>
 #include <settings.h>

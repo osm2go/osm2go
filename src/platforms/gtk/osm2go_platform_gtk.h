@@ -17,37 +17,13 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef OSM2GO_PLATFORM_H
-#define OSM2GO_PLATFORM_H
-
-#include <gtk/gtk.h>
+#ifndef OSM2GO_PLATFORM_GTK_H
+#define OSM2GO_PLATFORM_GTK_H
 
 namespace osm2go_platform {
-  /**
-   * @brief process all pending GUI events
-   * @param tick if a '.' should be printed for every iteration
-   */
-  void process_events(bool tick = false);
+  int init();
 
-  /**
-   * @brief simple interface to the systems web browser
-   */
-  void open_url(const char *url);
-
-  class Timer {
-    guint id;
-  public:
-    explicit inline Timer()
-      : id(0) {}
-    inline ~Timer()
-    { stop(); }
-
-    void restart(unsigned int seconds, GSourceFunc callback, void *data);
-    void stop();
-
-    inline bool isActive() const
-    { return id != 0; }
-  };
+  void cleanup();
 };
 
-#endif // OSM2GO_PLATFORM_H
+#endif // OSM2GO_PLATFORM_GTK_H
