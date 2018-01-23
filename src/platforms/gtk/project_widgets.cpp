@@ -391,19 +391,17 @@ static void on_project_edit(select_context_t *context) {
     assert(b == TRUE);
 
     //     gtk_tree_model_get(model, &iter, PROJECT_COL_DATA, &project, -1);
-    const gchar *status_stock_id = project_get_status_icon_stock_id(
-                                         context->appdata.project, project);
+    appdata_t &appdata = context->appdata;
+    const gchar *status_stock_id = project_get_status_icon_stock_id(appdata.project, project);
     gtk_list_store_set(GTK_LIST_STORE(model), &iter,
-		       PROJECT_COL_NAME, project->name.c_str(),
+                       PROJECT_COL_NAME, project->name.c_str(),
                        PROJECT_COL_STATUS, status_stock_id,
-		       PROJECT_COL_DESCRIPTION, project->desc.c_str(),
-		       -1);
-
+                       PROJECT_COL_DESCRIPTION, project->desc.c_str(),
+                       -1);
 
     /* check if we have actually editing the currently open project */
-    if(context->appdata.project &&
-       context->appdata.project->name == project->name) {
-      project_t *cur = context->appdata.project;
+    if(appdata.project != O2G_NULLPTR && appdata.project->name == project->name) {
+      project_t *cur = appdata.project;
 
       g_debug("edited project was actually the active one!");
 
@@ -420,24 +418,20 @@ static void on_project_edit(select_context_t *context) {
 
       /* update coordinates */
       if(cur->bounds != project->bounds) {
-        appdata_t &appdata = context->appdata;
-
         // save modified coordinates
         cur->bounds = project->bounds;
 
-	/* try to do this automatically */
-
-	/* if we have valid osm data loaded: save state first */
+        /* if we have valid osm data loaded: save state first */
         if(appdata.osm) {
-	  /* redraw the entire map by destroying all map items  */
-          diff_save(appdata.project, appdata.osm);
+          /* redraw the entire map by destroying all map items  */
+          diff_save(cur, appdata.osm);
           appdata.map->clear(map_t::MAP_LAYER_ALL);
 
           delete appdata.osm;
-	}
+        }
 
-	/* and load the (hopefully) new file */
-        appdata.osm = appdata.project->parse_osm();
+        /* and load the (hopefully) new file */
+        appdata.osm = cur->parse_osm();
         diff_restore(appdata);
         appdata.map->paint();
 
