@@ -83,38 +83,39 @@ static void list_set_user_buttons(list_priv_t *priv, const std::vector<list_butt
   }
 }
 
-static void list_set_columns(list_priv_t *priv, const std::vector<list_view_column> &columns) {
+static void list_set_columns(GtkTreeView *view, const std::vector<list_view_column> &columns) {
   for(unsigned int key = 0; key < columns.size(); key++) {
     const char *name = columns[key].name;
     int hlkey = columns[key].hlkey;
     int flags = columns[key].flags;
 
-    GtkTreeViewColumn *column = O2G_NULLPTR;
+    GtkTreeViewColumn *column;
 
     if(flags & LIST_FLAG_STOCK_ICON) {
       GtkCellRenderer *pixbuf_renderer = gtk_cell_renderer_pixbuf_new();
-      column = gtk_tree_view_column_new_with_attributes(name,
-	          pixbuf_renderer, "stock_id", key, O2G_NULLPTR);
+      column = gtk_tree_view_column_new_with_attributes(name, pixbuf_renderer,
+                                                        "stock_id", key, O2G_NULLPTR);
     } else {
       GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
 
       if(flags & LIST_FLAG_CAN_HIGHLIGHT)
-	g_object_set(renderer, "background", "red", O2G_NULLPTR );
+        g_object_set(renderer, "background", "red", O2G_NULLPTR );
 
       if(flags & LIST_FLAG_ELLIPSIZE)
-	g_object_set(renderer, "ellipsize", PANGO_ELLIPSIZE_END, O2G_NULLPTR);
+        g_object_set(renderer, "ellipsize", PANGO_ELLIPSIZE_END, O2G_NULLPTR);
 
-      column = gtk_tree_view_column_new_with_attributes(name, renderer,
-	"text", key,
-	 (flags & LIST_FLAG_CAN_HIGHLIGHT)?"background-set":O2G_NULLPTR, hlkey,
-	O2G_NULLPTR);
+      // if LIST_FLAG_CAN_HIGHLIGHT is not set this will be nullptr, so the function
+      // will ignore the following int attribute anyway
+      const char *hlattr = (flags & LIST_FLAG_CAN_HIGHLIGHT) ? "background-set" : O2G_NULLPTR;
+      column = gtk_tree_view_column_new_with_attributes(name, renderer, "text", key,
+                                                        hlattr, hlkey, O2G_NULLPTR);
 
       gtk_tree_view_column_set_expand(column,
-		      flags & (LIST_FLAG_EXPAND | LIST_FLAG_ELLIPSIZE));
+                                      (flags & (LIST_FLAG_EXPAND | LIST_FLAG_ELLIPSIZE)) ? TRUE : FALSE);
     }
 
     gtk_tree_view_column_set_sort_column_id(column, key);
-    gtk_tree_view_insert_column(priv->view, column, -1);
+    gtk_tree_view_insert_column(view, column, -1);
   }
 }
 
@@ -347,7 +348,7 @@ GtkWidget *list_new(bool show_headers, unsigned int btn_flags, void *context,
     gtk_widget_set_sensitive(priv->button.widget[i], i == 0 ? TRUE : FALSE);
   }
 
-  list_set_columns(priv, columns);
+  list_set_columns(priv->view, columns);
 
   if(buttons.size() > 3)
     list_set_user_buttons(priv, buttons);
