@@ -42,11 +42,6 @@
 #include <osm2go_i18n.h>
 #include <osm2go_platform.h>
 
-static void on_info(GtkWidget *widget) {
-  const char *link = static_cast<char *>(g_object_get_data(G_OBJECT(widget), "link"));
-  osm2go_platform::open_url(link);
-}
-
 /* --------------------- the items dialog -------------------- */
 
 struct preset_attach_context {
@@ -279,10 +274,10 @@ static void presets_item_dialog(const presets_item *item) {
     /* if a web link has been provided for this item install */
     /* a button for this */
     if(!item->link.empty()) {
-      GtkWidget *button = gtk_dialog_add_button(GTK_DIALOG(dialog.get()), _
-			("Info"), GTK_RESPONSE_HELP);
-      g_object_set_data(G_OBJECT(button), "link", const_cast<char *>(item->link.c_str()));
-      g_signal_connect(button, "clicked", G_CALLBACK(on_info), O2G_NULLPTR);
+      GtkWidget *button = gtk_dialog_add_button(GTK_DIALOG(dialog.get()),
+                                                _("Info"), GTK_RESPONSE_HELP);
+      g_signal_connect_swapped(button, "clicked", G_CALLBACK(osm2go_platform::open_url),
+                               const_cast<char *>(item->link.c_str()));
     }
 
     /* special handling for the first label/separators */

@@ -43,13 +43,6 @@
 #include "osm2go_platform.h"
 #include "osm2go_platform_gtk.h"
 
-static gboolean on_link_clicked(GtkWidget *widget) {
-  const char *str = gtk_label_get_text(GTK_LABEL(gtk_bin_get_child(GTK_BIN(widget))));
-
-  osm2go_platform::open_url(str);
-  return TRUE;
-}
-
 static GtkWidget *link_new(const char *url) {
   GtkWidget *label = gtk_label_new(O2G_NULLPTR);
   std::string str = "<span color=\"" LINK_COLOR "\"><u>" + std::string(url) +
@@ -59,13 +52,9 @@ static GtkWidget *link_new(const char *url) {
   GtkWidget *eventbox = gtk_event_box_new();
   gtk_container_add(GTK_CONTAINER(eventbox), label);
 
-  g_signal_connect(eventbox, "button-press-event",
-                   G_CALLBACK(on_link_clicked), O2G_NULLPTR);
+  g_signal_connect_swapped(eventbox, "button-press-event",
+                   G_CALLBACK(osm2go_platform::open_url), const_cast<char *>(url));
   return eventbox;
-}
-
-static void on_paypal_button_clicked() {
-  osm2go_platform::open_url("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=7400558");
 }
 
 static GtkWidget *label_scale(const char *str, double scale_factor) {
@@ -257,7 +246,9 @@ static GtkWidget *donate_page_new(icon_t &icons) {
   gtk_button_set_image(GTK_BUTTON(button), icons.widget_load(PAYPAL_ICON));
   gtk_button_set_relief(GTK_BUTTON(button), GTK_RELIEF_NONE);
   g_signal_connect_swapped(button, "clicked",
-                           G_CALLBACK(on_paypal_button_clicked), O2G_NULLPTR);
+                           G_CALLBACK(osm2go_platform::open_url),
+                           const_cast<char *>("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=7400558"));
+
   gtk_box_pack_start(GTK_BOX(ihbox), button, TRUE, FALSE, 0);
   gtk_box_pack_start_defaults(GTK_BOX(vbox), ihbox);
 
