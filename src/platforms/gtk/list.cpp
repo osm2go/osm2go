@@ -47,7 +47,7 @@
 #include "osm2go_i18n.h"
 
 struct list_priv_t {
-  GtkWidget *view;
+  GtkTreeView *view;
   GtkMenu *menu;
 
   void *callback_context;
@@ -114,7 +114,7 @@ static void list_set_columns(list_priv_t *priv, const std::vector<list_view_colu
     }
 
     gtk_tree_view_column_set_sort_column_id(column, key);
-    gtk_tree_view_insert_column(GTK_TREE_VIEW(priv->view), column, -1);
+    gtk_tree_view_insert_column(priv->view, column, -1);
   }
 }
 
@@ -143,10 +143,7 @@ GtkTreeSelection *list_get_selection(GtkWidget *list) {
   list_priv_t *priv = static_cast<list_priv_t *>(g_object_get_data(G_OBJECT(list), "priv"));
   assert(priv != O2G_NULLPTR);
 
-  GtkTreeSelection *sel =
-    gtk_tree_view_get_selection(GTK_TREE_VIEW(priv->view));
-
-  return sel;
+  return gtk_tree_view_get_selection(priv->view);
 }
 
 /* returns true if something is selected. on in mode multiple returns */
@@ -158,8 +155,7 @@ bool list_get_selected(GtkWidget *list, GtkTreeModel **model, GtkTreeIter *iter)
 
 #if 1
   // this copes with multiple selections ...
-  GtkTreeSelection *sel =
-    gtk_tree_view_get_selection(GTK_TREE_VIEW(priv->view));
+  GtkTreeSelection *sel = gtk_tree_view_get_selection(priv->view);
 
   GList *slist = gtk_tree_selection_get_selected_rows(sel, model);
 
@@ -215,7 +211,7 @@ GtkTreeModel *list_get_model(GtkWidget *list) {
   list_priv_t *priv = static_cast<list_priv_t *>(g_object_get_data(G_OBJECT(list), "priv"));
   assert(priv != O2G_NULLPTR);
 
-  return gtk_tree_view_get_model(GTK_TREE_VIEW(priv->view));
+  return gtk_tree_view_get_model(priv->view);
 }
 
 /* Refocus a GtkTreeView an item specified by iter, unselecting the current
@@ -225,17 +221,16 @@ GtkTreeModel *list_get_model(GtkWidget *list) {
 void list_focus_on(GtkWidget *list, GtkTreeIter *iter) {
   list_priv_t *priv = static_cast<list_priv_t *>(g_object_get_data(G_OBJECT(list), "priv"));
   assert(priv != O2G_NULLPTR);
-  GtkTreeModel *model = gtk_tree_view_get_model(GTK_TREE_VIEW(priv->view));
+  GtkTreeModel *model = gtk_tree_view_get_model(priv->view);
 
   // Handle de/reselection
   GtkTreeSelection *sel =
-    gtk_tree_view_get_selection(GTK_TREE_VIEW(priv->view));
+    gtk_tree_view_get_selection(priv->view);
   gtk_tree_selection_unselect_all(sel);
 
   // Scroll to it, since it might now be out of view.
   GtkTreePath *path = gtk_tree_model_get_path(model, iter);
-  gtk_tree_view_scroll_to_cell(GTK_TREE_VIEW(priv->view), path,
-			       O2G_NULLPTR, FALSE, 0, 0);
+  gtk_tree_view_scroll_to_cell(priv->view, path, O2G_NULLPTR, FALSE, 0, 0);
   gtk_tree_path_free(path);
 
   // reselect
@@ -256,13 +251,12 @@ static void changed(GtkTreeSelection *treeselection, gpointer user_data) {
     GtkTreePath *start = O2G_NULLPTR, *end = O2G_NULLPTR;
     GtkTreePath *path = gtk_tree_model_get_path(model, &iter);
 
-    gtk_tree_view_get_visible_range(GTK_TREE_VIEW(priv->view), &start, &end);
+    gtk_tree_view_get_visible_range(priv->view, &start, &end);
 
     /* check if path is before start of visible area or behin end of it */
     if((start && (gtk_tree_path_compare(path, start)) < 0) ||
        (end && (gtk_tree_path_compare(path, end) > 0)))
-      gtk_tree_view_scroll_to_cell(GTK_TREE_VIEW(priv->view),
-				   path, O2G_NULLPTR, TRUE, 0.5, 0.5);
+      gtk_tree_view_scroll_to_cell(priv->view, path, O2G_NULLPTR, TRUE, 0.5, 0.5);
 
     if(start) gtk_tree_path_free(start);
     if(end)   gtk_tree_path_free(end);
@@ -292,33 +286,32 @@ GtkWidget *list_new(bool show_headers, unsigned int btn_flags, void *context,
   priv->callback_context = context;
   priv->change = cb_changed;
 
+  priv->view =
 #ifndef FREMANTLE
-  priv->view = gtk_tree_view_new();
+               GTK_TREE_VIEW(gtk_tree_view_new());
 #else
-  priv->view = hildon_gtk_tree_view_new(HILDON_UI_MODE_EDIT);
+               GTK_TREE_VIEW(hildon_gtk_tree_view_new(HILDON_UI_MODE_EDIT));
 #endif
 
   /* hildon hides these by default */
-  gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(priv->view), show_headers ? TRUE : FALSE);
+  gtk_tree_view_set_headers_visible(priv->view, show_headers ? TRUE : FALSE);
 
-  GtkTreeSelection *sel =
-    gtk_tree_view_get_selection(GTK_TREE_VIEW(priv->view));
+  GtkTreeSelection *sel = gtk_tree_view_get_selection(priv->view);
 
+  GtkWidget *container;
 #ifndef FREMANTLE
   /* put view into a scrolled window */
-  GtkWidget *scrolled_window = gtk_scrolled_window_new(O2G_NULLPTR, O2G_NULLPTR);
-  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window),
-				 GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-  gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scrolled_window),
-				      GTK_SHADOW_ETCHED_IN);
-  gtk_container_add(GTK_CONTAINER(scrolled_window), priv->view);
-  gtk_box_pack_start_defaults(GTK_BOX(vbox), scrolled_window);
+  GtkScrolledWindow *scrolled_window = GTK_SCROLLED_WINDOW(gtk_scrolled_window_new(O2G_NULLPTR,
+                                                                                   O2G_NULLPTR));
+  gtk_scrolled_window_set_policy(scrolled_window, GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+  gtk_scrolled_window_set_shadow_type(scrolled_window, GTK_SHADOW_ETCHED_IN);
+  container = GTK_WIDGET(scrolled_window);
 #else
   /* put view into a pannable area */
-  GtkWidget *pannable_area = hildon_pannable_area_new();
-  gtk_container_add(GTK_CONTAINER(pannable_area), priv->view);
-  gtk_box_pack_start_defaults(GTK_BOX(vbox), pannable_area);
+  container = hildon_pannable_area_new();
 #endif
+  gtk_container_add(GTK_CONTAINER(container), GTK_WIDGET(priv->view));
+  gtk_box_pack_start_defaults(GTK_BOX(vbox), container);
 
   /* make list react on clicks (double clicks on pre-fremantle) */
   g_signal_connect_after(priv->view, "row-activated", G_CALLBACK(on_row_activated), vbox);
@@ -359,7 +352,7 @@ GtkWidget *list_new(bool show_headers, unsigned int btn_flags, void *context,
   if(buttons.size() > 3)
     list_set_user_buttons(priv, buttons);
 
-  gtk_tree_view_set_model(GTK_TREE_VIEW(priv->view), GTK_TREE_MODEL(store));
+  gtk_tree_view_set_model(priv->view, GTK_TREE_MODEL(store));
 
   // set this up last so it will not be called with an incompletely set up
   // context pointer
@@ -372,7 +365,7 @@ void list_scroll(GtkWidget* list, GtkTreeIter* iter) {
   list_priv_t *priv = static_cast<list_priv_t *>(g_object_get_data(G_OBJECT(list), "priv"));
   assert(priv != O2G_NULLPTR);
 
-  list_view_scroll(GTK_TREE_VIEW(priv->view), list_get_selection(list), iter);
+  list_view_scroll(priv->view, list_get_selection(list), iter);
 }
 
 void list_view_scroll(GtkTreeView *view, GtkTreeSelection *sel, GtkTreeIter* iter) {
