@@ -367,7 +367,7 @@ bool check_button_get_active(GtkWidget *button) {
 }
 
 #ifdef FREMANTLE
-void on_value_changed(HildonPickerButton *widget, gpointer) {
+void on_value_changed(HildonPickerButton *widget) {
   g_signal_emit_by_name(widget, "changed");
 }
 
