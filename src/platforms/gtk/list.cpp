@@ -45,6 +45,7 @@
 
 #include "osm2go_annotations.h"
 #include "osm2go_i18n.h"
+#include <osm2go_platform_gtk.h>
 
 struct list_priv_t {
   GtkTreeView *view;
@@ -285,12 +286,7 @@ GtkWidget *list_new(bool show_headers, unsigned int btn_flags, void *context,
   priv->callback_context = context;
   priv->change = cb_changed;
 
-  priv->view =
-#ifndef FREMANTLE
-               GTK_TREE_VIEW(gtk_tree_view_new());
-#else
-               GTK_TREE_VIEW(hildon_gtk_tree_view_new(HILDON_UI_MODE_EDIT));
-#endif
+  priv->view = osm2go_platform::tree_view_new();
 
   /* hildon hides these by default */
   gtk_tree_view_set_headers_visible(priv->view, show_headers ? TRUE : FALSE);

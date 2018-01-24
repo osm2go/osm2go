@@ -41,6 +41,7 @@
 #include <osm2go_cpp.h>
 #include <osm2go_i18n.h>
 #include <osm2go_platform.h>
+#include <osm2go_platform_gtk.h>
 
 /* --------------------- the items dialog -------------------- */
 
@@ -628,11 +629,7 @@ on_presets_picker_selected(GtkTreeSelection *selection, presets_context_t *conte
 static GtkListStore *presets_picker_store(GtkTreeView **view) {
   GtkCellRenderer *renderer;
 
-#ifndef FREMANTLE
-  *view = GTK_TREE_VIEW(gtk_tree_view_new());
-#else
-  *view = GTK_TREE_VIEW(hildon_gtk_tree_view_new(HILDON_UI_MODE_EDIT));
-#endif
+  *view = osm2go_platform::tree_view_new();
 
   gtk_tree_view_set_headers_visible(*view, FALSE);
 

@@ -50,3 +50,8 @@ void osm2go_platform::notebook_append_page(GtkWidget *notebook, GtkWidget *page,
   GtkNotebook *nb = notebook_get_gtk_notebook(notebook);
   gtk_notebook_append_page(nb, page, gtk_label_new(label));
 }
+
+GtkTreeView *osm2go_platform::tree_view_new()
+{
+  return GTK_TREE_VIEW(gtk_tree_view_new());
+}

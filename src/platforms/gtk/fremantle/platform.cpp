@@ -123,3 +123,8 @@ void osm2go_platform::notebook_append_page(GtkWidget *notebook, GtkWidget *page,
 
   gtk_box_pack_start_defaults(GTK_BOX(g_object_get_data(G_OBJECT(notebook), "hbox")), button);
 }
+
+GtkTreeView *osm2go_platform::tree_view_new()
+{
+  return GTK_TREE_VIEW(hildon_gtk_tree_view_new(HILDON_UI_MODE_EDIT));
+}

@@ -39,6 +39,7 @@
 #include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
 #include <osm2go_i18n.h>
+#include <osm2go_platform_gtk.h>
 
 /* --------------- relation dialog for an item (node or way) ----------- */
 
@@ -307,12 +308,7 @@ void relation_list_insert_functor::operator()(std::pair<item_id_t, relation_t *>
 }
 
 static GtkWidget *relation_item_list_widget(relitem_context_t &context) {
-  GtkTreeView *view = GTK_TREE_VIEW(
-#ifndef FREMANTLE
-                      gtk_tree_view_new());
-#else
-                      hildon_gtk_tree_view_new(HILDON_UI_MODE_EDIT));
-#endif
+  GtkTreeView *view = osm2go_platform::tree_view_new();
 
 #ifdef FREMANTLE
   /* hildon hides these by default */
@@ -524,13 +520,7 @@ void members_list_functor::operator()(const member_t &member)
 
 static GtkWidget *member_list_widget(member_context_t &context) {
   GtkWidget *vbox = gtk_vbox_new(FALSE,3);
-  GtkTreeView * const view = GTK_TREE_VIEW(
-
-#ifndef FREMANTLE
-        gtk_tree_view_new());
-#else
-        hildon_gtk_tree_view_new(HILDON_UI_MODE_EDIT));
-#endif
+  GtkTreeView * const view = osm2go_platform::tree_view_new();
 
   gtk_tree_selection_set_select_function(gtk_tree_view_get_selection(view),
                                          member_list_selection_func, &context, O2G_NULLPTR);

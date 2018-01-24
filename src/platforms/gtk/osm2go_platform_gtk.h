@@ -28,6 +28,8 @@ namespace osm2go_platform {
   GtkWidget *notebook_new(void);
   void notebook_append_page(GtkWidget *notebook, GtkWidget *page, const char *label);
   GtkNotebook *notebook_get_gtk_notebook(GtkWidget *notebook);
+
+  GtkTreeView *tree_view_new();
 };
 
 #endif // OSM2GO_PLATFORM_GTK_H
