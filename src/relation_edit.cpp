@@ -525,18 +525,16 @@ void members_list_functor::operator()(const member_t &member)
 
 static GtkWidget *member_list_widget(member_context_t &context) {
   GtkWidget *vbox = gtk_vbox_new(FALSE,3);
-  GtkWidget * const view =
+  GtkTreeView * const view = GTK_TREE_VIEW(
 
 #ifndef FREMANTLE
-        gtk_tree_view_new();
+        gtk_tree_view_new());
 #else
-        hildon_gtk_tree_view_new(HILDON_UI_MODE_EDIT);
+        hildon_gtk_tree_view_new(HILDON_UI_MODE_EDIT));
 #endif
 
-  gtk_tree_selection_set_select_function(
-	 gtk_tree_view_get_selection(GTK_TREE_VIEW(view)),
-	 member_list_selection_func,
-	 &context, O2G_NULLPTR);
+  gtk_tree_selection_set_select_function(gtk_tree_view_get_selection(view),
+                                         member_list_selection_func, &context, O2G_NULLPTR);
 
   /* --- "type" column --- */
   GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
@@ -546,7 +544,7 @@ static GtkWidget *member_list_widget(member_context_t &context) {
 		     "text", MEMBER_COL_TYPE,
 		     "foreground-set", MEMBER_COL_REF_ONLY,  O2G_NULLPTR);
   gtk_tree_view_column_set_sort_column_id(column, MEMBER_COL_TYPE);
-  gtk_tree_view_insert_column(GTK_TREE_VIEW(view), column, -1);
+  gtk_tree_view_insert_column(view, column, -1);
 
   /* --- "id" column --- */
   renderer = gtk_cell_renderer_text_new();
@@ -555,8 +553,7 @@ static GtkWidget *member_list_widget(member_context_t &context) {
 		     "text", MEMBER_COL_ID,
 		     "foreground-set", MEMBER_COL_REF_ONLY,  O2G_NULLPTR);
   gtk_tree_view_column_set_sort_column_id(column, MEMBER_COL_ID);
-  gtk_tree_view_insert_column(GTK_TREE_VIEW(view), column, -1);
-
+  gtk_tree_view_insert_column(view, column, -1);
 
   /* --- "Name" column --- */
   renderer = gtk_cell_renderer_text_new();
@@ -567,7 +564,7 @@ static GtkWidget *member_list_widget(member_context_t &context) {
 		     "foreground-set", MEMBER_COL_REF_ONLY,  O2G_NULLPTR);
   gtk_tree_view_column_set_expand(column, TRUE);
   gtk_tree_view_column_set_sort_column_id(column, MEMBER_COL_NAME);
-  gtk_tree_view_insert_column(GTK_TREE_VIEW(view), column, -1);
+  gtk_tree_view_insert_column(view, column, -1);
 
   /* --- "role" column --- */
   renderer = gtk_cell_renderer_text_new();
@@ -576,36 +573,34 @@ static GtkWidget *member_list_widget(member_context_t &context) {
 		     "text", MEMBER_COL_ROLE,
 		     "foreground-set", MEMBER_COL_REF_ONLY,  O2G_NULLPTR);
   gtk_tree_view_column_set_sort_column_id(column, MEMBER_COL_ROLE);
-  gtk_tree_view_insert_column(GTK_TREE_VIEW(view), column, -1);
+  gtk_tree_view_insert_column(view, column, -1);
 
 
   /* build and fill the store */
   GtkListStore * const store = gtk_list_store_new(MEMBER_NUM_COLS,
- 	      G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING,
-	      G_TYPE_BOOLEAN, G_TYPE_POINTER);
+                                                  G_TYPE_STRING, G_TYPE_STRING,
+                                                  G_TYPE_STRING, G_TYPE_STRING,
+                                                  G_TYPE_BOOLEAN, G_TYPE_POINTER);
 
-  gtk_tree_view_set_model(GTK_TREE_VIEW(view),
-			  GTK_TREE_MODEL(store));
+  gtk_tree_view_set_model(view, GTK_TREE_MODEL(store));
 
   std::for_each(context.relation->members.begin(), context.relation->members.end(),
                 members_list_functor(store));
 
+  GtkWidget *container;
 #ifndef FREMANTLE
   /* put it into a scrolled window */
-  GtkWidget *scrolled_window = gtk_scrolled_window_new(O2G_NULLPTR, O2G_NULLPTR);
-  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window),
-				 GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-  gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scrolled_window),
-				      GTK_SHADOW_ETCHED_IN);
-  gtk_container_add(GTK_CONTAINER(scrolled_window), view);
-
-  gtk_box_pack_start_defaults(GTK_BOX(vbox), scrolled_window);
+  GtkScrolledWindow *scrolled_window = GTK_SCROLLED_WINDOW(gtk_scrolled_window_new(O2G_NULLPTR,
+                                                                                   O2G_NULLPTR));
+  gtk_scrolled_window_set_policy(scrolled_window, GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+  gtk_scrolled_window_set_shadow_type(scrolled_window, GTK_SHADOW_ETCHED_IN);
+  container = GTK_WIDGET(scrolled_window);
 #else
   /* put view into a pannable area */
-  GtkWidget *pannable_area = hildon_pannable_area_new();
-  gtk_container_add(GTK_CONTAINER(pannable_area), view);
-  gtk_box_pack_start_defaults(GTK_BOX(vbox), pannable_area);
+  container = hildon_pannable_area_new();
 #endif
+  gtk_container_add(GTK_CONTAINER(container), GTK_WIDGET(view));
+  gtk_box_pack_start_defaults(GTK_BOX(vbox), container);
 
   return vbox;
 }
