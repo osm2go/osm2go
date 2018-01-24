@@ -151,12 +151,10 @@ GtkTreeSelection *list_get_selection(GtkWidget *list) {
 /* true if exactly one item is selected */
 bool list_get_selected(GtkWidget *list, GtkTreeModel **model, GtkTreeIter *iter) {
   bool retval = false;
-  list_priv_t *priv = static_cast<list_priv_t *>(g_object_get_data(G_OBJECT(list), "priv"));
-  assert(priv != O2G_NULLPTR);
 
 #if 1
   // this copes with multiple selections ...
-  GtkTreeSelection *sel = gtk_tree_view_get_selection(priv->view);
+  GtkTreeSelection *sel = list_get_selection(list);
 
   GList *slist = gtk_tree_selection_get_selected_rows(sel, model);
 
