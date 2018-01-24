@@ -520,15 +520,16 @@ void fitting_layers_functor::operator()(const wms_layer_t *layer)
 }
 
 static GtkWidget *wms_layer_widget(selected_context *context, const wms_layer_t::list &layers) {
+  GtkTreeView * const view = GTK_TREE_VIEW(
 #ifndef FREMANTLE
-  GtkWidget *view = gtk_tree_view_new();
+                gtk_tree_view_new());
 #else
-  GtkWidget *view = hildon_gtk_tree_view_new(HILDON_UI_MODE_EDIT);
+                hildon_gtk_tree_view_new(HILDON_UI_MODE_EDIT));
 #endif
 
   /* change list mode to "multiple" */
   GtkTreeSelection *selection =
-    gtk_tree_view_get_selection(GTK_TREE_VIEW(view));
+    gtk_tree_view_get_selection(view);
   gtk_tree_selection_set_mode(selection, GTK_SELECTION_MULTIPLE);
 
 #ifndef FREMANTLE
@@ -551,9 +552,9 @@ static GtkWidget *wms_layer_widget(selected_context *context, const wms_layer_t:
 		 O2G_NULLPTR);
 
   gtk_tree_view_column_set_expand(column, TRUE);
-  gtk_tree_view_insert_column(GTK_TREE_VIEW(view), column, -1);
+  gtk_tree_view_insert_column(view, column, -1);
 
-  gtk_tree_view_set_model(GTK_TREE_VIEW(view), GTK_TREE_MODEL(store.get()));
+  gtk_tree_view_set_model(view, GTK_TREE_MODEL(store.get()));
 
   std::for_each(layers.begin(), layers.end(),
                 fitting_layers_functor(store.get(), context->appdata.project));
@@ -563,17 +564,16 @@ static GtkWidget *wms_layer_widget(selected_context *context, const wms_layer_t:
   GtkWidget *res;
 #ifndef FREMANTLE
   /* put it into a scrolled window */
-  res = gtk_scrolled_window_new(O2G_NULLPTR, O2G_NULLPTR);
-  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(res),
-				 GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-  gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(res),
-				      GTK_SHADOW_ETCHED_IN);
-  gtk_container_add(GTK_CONTAINER(res), view);
+  GtkScrolledWindow *scrolled_window = GTK_SCROLLED_WINDOW(gtk_scrolled_window_new(O2G_NULLPTR,
+                                                                                   O2G_NULLPTR));
+  gtk_scrolled_window_set_policy(scrolled_window, GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+  gtk_scrolled_window_set_shadow_type(scrolled_window, GTK_SHADOW_ETCHED_IN);
+  res = GTK_WIDGET(scrolled_window);
 #else
   /* put view into a pannable area */
   res = hildon_pannable_area_new();
-  gtk_container_add(GTK_CONTAINER(res), view);
 #endif
+  gtk_container_add(GTK_CONTAINER(res), GTK_WIDGET(view));
   return res;
 }
 
