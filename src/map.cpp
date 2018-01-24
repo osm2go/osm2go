@@ -1523,17 +1523,17 @@ map_t::map_t(appdata_t &a)
 			| GDK_POINTER_MOTION_MASK
 			| GDK_POINTER_MOTION_HINT_MASK);
 
-  g_signal_connect_swapped(GTK_OBJECT(canvas_widget),
-     "button_press_event", G_CALLBACK(map_button_event), this);
-  g_signal_connect_swapped(GTK_OBJECT(canvas_widget),
-     "button_release_event", G_CALLBACK(map_button_event), this);
-  g_signal_connect(GTK_OBJECT(canvas_widget),
-     "motion_notify_event", G_CALLBACK(map_motion_notify_event), this);
-  g_signal_connect(GTK_OBJECT(canvas_widget),
-     "scroll_event", G_CALLBACK(map_scroll_event), &appdata);
+  g_signal_connect_swapped(canvas_widget, "button_press_event",
+                           G_CALLBACK(map_button_event), this);
+  g_signal_connect_swapped(canvas_widget, "button_release_event",
+                           G_CALLBACK(map_button_event), this);
+  g_signal_connect(canvas_widget, "motion_notify_event",
+                   G_CALLBACK(map_motion_notify_event), this);
+  g_signal_connect(canvas_widget, "scroll_event",
+                   G_CALLBACK(map_scroll_event), &appdata);
 
-  g_signal_connect_swapped(GTK_OBJECT(canvas_widget),
-                           "destroy", G_CALLBACK(map_destroy_event), this);
+  g_signal_connect_swapped(canvas_widget, "destroy",
+                           G_CALLBACK(map_destroy_event), this);
 }
 
 map_internal::map_internal(appdata_t &a)

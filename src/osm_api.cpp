@@ -744,8 +744,7 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
   /* disable ok button until user edited the comment */
   gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog.get()), GTK_RESPONSE_ACCEPT, FALSE);
 
-  g_signal_connect(G_OBJECT(buffer), "changed",
-                   G_CALLBACK(callback_buffer_modified), dialog.get());
+  g_signal_connect(buffer, "changed", G_CALLBACK(callback_buffer_modified), dialog.get());
 
 #ifndef FREMANTLE
   GtkWidget *view = gtk_text_view_new_with_buffer(buffer);
@@ -760,8 +759,7 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
   gtk_text_view_set_right_margin(GTK_TEXT_VIEW(view), 2 );
 
   g_object_set_data(G_OBJECT(view), "first_click", GINT_TO_POINTER(TRUE));
-  g_signal_connect(G_OBJECT(view), "focus-in-event",
-		   G_CALLBACK(cb_focus_in), buffer);
+  g_signal_connect(view, "focus-in-event", G_CALLBACK(cb_focus_in), buffer);
 
   gtk_container_add(GTK_CONTAINER(scrolled_win), view);
 

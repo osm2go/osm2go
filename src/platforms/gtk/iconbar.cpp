@@ -107,8 +107,7 @@ static GtkWidget * __attribute__((nonnull(1,3,4,5)))
   gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item),
                                 appdata.icons.widget_load(icon_str));
 
-  g_signal_connect_swapped(GTK_OBJECT(item), "activate",
-                           func, appdata.map);
+  g_signal_connect_swapped(item, "activate", func, appdata.map);
 
   gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
@@ -224,7 +223,7 @@ static GtkWidget *icon_add(GtkWidget *vbox, appdata_t &appdata,
   GtkWidget *but = gtk_button_new();
   GtkWidget *icon = appdata.icons.widget_load(icon_str);
   gtk_button_set_image(GTK_BUTTON(but), icon);
-  g_signal_connect_swapped(GTK_OBJECT(but), "clicked", G_CALLBACK(func), appdata.map);
+  g_signal_connect_swapped(but, "clicked", G_CALLBACK(func), appdata.map);
 
   gtk_box_pack_start(GTK_BOX(vbox), but, FALSE, FALSE, 0);
   return but;
@@ -260,7 +259,7 @@ static GtkWidget *  __attribute__((nonnull(1,3,4,5)))
                            bool separator = false) {
   GtkWidget *item = tool_button_label(appdata, toolbar, tooltip_str, icon_str);
 
-  g_signal_connect_swapped(GTK_OBJECT(item), "clicked", func, context);
+  g_signal_connect_swapped(item, "clicked", func, context);
 
   if(separator)
     gtk_toolbar_insert(toolbar, gtk_separator_tool_item_new(), -1);
@@ -336,8 +335,7 @@ GtkWidget *iconbar_t::create(appdata_t &appdata) {
 
   gtk_widget_set_events(way, GDK_EXPOSURE_MASK);
   gtk_widget_add_events(way, GDK_BUTTON_PRESS_MASK);
-  g_signal_connect_swapped(GTK_OBJECT(gtk_bin_get_child(GTK_BIN(way))),
-                           "button-press-event",
+  g_signal_connect_swapped(gtk_bin_get_child(GTK_BIN(way)), "button-press-event",
                            G_CALLBACK(on_way_button_press), iconbar->menu);
 #endif
 
@@ -377,11 +375,9 @@ void iconbar_register_buttons(appdata_t &appdata, GtkWidget *ok, GtkWidget *canc
   iconbar_gtk * const iconbar = static_cast<iconbar_gtk *>(appdata.iconbar);
 
   iconbar->ok = ok;
-  g_signal_connect_swapped(GTK_OBJECT(ok), "clicked",
-                           G_CALLBACK(map_action_ok), appdata.map);
+  g_signal_connect_swapped(ok, "clicked", G_CALLBACK(map_action_ok), appdata.map);
   iconbar->cancel = cancel;
-  g_signal_connect_swapped(GTK_OBJECT(cancel), "clicked",
-                           G_CALLBACK(map_action_cancel), appdata.map);
+  g_signal_connect_swapped(cancel, "clicked", G_CALLBACK(map_action_cancel), appdata.map);
 
   iconbar->map_cancel_ok(false, false);
 }

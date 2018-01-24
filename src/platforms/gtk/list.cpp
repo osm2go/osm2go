@@ -79,8 +79,7 @@ static void list_set_user_buttons(list_priv_t *priv, const std::vector<list_butt
       gtk_table_attach_defaults(GTK_TABLE(priv->table), priv->button.widget[id],
                                 id, id + 1, 0, 1);
 
-    g_signal_connect_swapped(GTK_OBJECT(priv->button.widget[id]), "clicked",
-                             G_CALLBACK(cb), priv->callback_context);
+    g_signal_connect_swapped(priv->button.widget[id], "clicked", cb, priv->callback_context);
   }
 }
 
@@ -288,8 +287,7 @@ GtkWidget *list_new(bool show_headers, unsigned int btn_flags, void *context,
 
   GtkWidget *vbox = gtk_vbox_new(FALSE,3);
   g_object_set_data(G_OBJECT(vbox), "priv", priv);
-  g_signal_connect_swapped(G_OBJECT(vbox), "destroy",
-                           G_CALLBACK(g_free), priv);
+  g_signal_connect_swapped(vbox, "destroy", G_CALLBACK(g_free), priv);
 
   priv->callback_context = context;
   priv->change = cb_changed;
@@ -323,8 +321,7 @@ GtkWidget *list_new(bool show_headers, unsigned int btn_flags, void *context,
 #endif
 
   /* make list react on clicks (double clicks on pre-fremantle) */
-  g_signal_connect_after(GTK_OBJECT(priv->view), "row-activated",
-                         G_CALLBACK(on_row_activated), vbox);
+  g_signal_connect_after(priv->view, "row-activated", G_CALLBACK(on_row_activated), vbox);
 
   guint rows = 1;
   guint cols = 3;
@@ -352,7 +349,7 @@ GtkWidget *list_new(bool show_headers, unsigned int btn_flags, void *context,
       priv->button.widget[i] = button_new_with_label(buttons[i].first);
     gtk_table_attach_defaults(GTK_TABLE(priv->table),
                               priv->button.widget[i], i, i + 1, 0, 1);
-    g_signal_connect_swapped(GTK_OBJECT(priv->button.widget[i]), "clicked",
+    g_signal_connect_swapped(priv->button.widget[i], "clicked",
                              buttons[i].second, priv->callback_context);
     gtk_widget_set_sensitive(priv->button.widget[i], i == 0 ? TRUE : FALSE);
   }
@@ -366,7 +363,7 @@ GtkWidget *list_new(bool show_headers, unsigned int btn_flags, void *context,
 
   // set this up last so it will not be called with an incompletely set up
   // context pointer
-  g_signal_connect(G_OBJECT(sel), "changed", G_CALLBACK(changed), vbox);
+  g_signal_connect(sel, "changed", G_CALLBACK(changed), vbox);
 
   return vbox;
 }

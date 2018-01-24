@@ -287,8 +287,7 @@ static project_t *project_new(select_context_t *context) {
   name_callback_context_t name_context(dialog.get(), context->appdata.settings->base_path_fd);
   GtkWidget *entry = entry_new();
   gtk_box_pack_start_defaults(GTK_BOX(hbox), entry);
-  g_signal_connect(G_OBJECT(entry), "changed",
-		   G_CALLBACK(callback_modified_name), &name_context);
+  g_signal_connect(entry, "changed", G_CALLBACK(callback_modified_name), &name_context);
 
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), hbox);
 
@@ -783,8 +782,7 @@ project_edit(select_context_t *scontext, project_t *project, bool is_new) {
   gtk_table_attach_defaults(GTK_TABLE(table), context.maxlon, 3, 4, 2, 3);
 
   GtkWidget *edit = button_new_with_label(_("Edit"));
-  g_signal_connect_swapped(GTK_OBJECT(edit), "clicked",
-                           G_CALLBACK(on_edit_clicked), &context);
+  g_signal_connect_swapped(edit, "clicked", G_CALLBACK(on_edit_clicked), &context);
   gtk_table_attach(GTK_TABLE(table), edit, 4, 5, 1, 3,
                    static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),
                    static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),0,0);
@@ -804,7 +802,7 @@ project_edit(select_context_t *scontext, project_t *project, bool is_new) {
   gtk_table_attach_defaults(GTK_TABLE(table), context.fsizehdr, 0, 1, 4, 5);
   project_filesize(&context);
   gtk_table_attach_defaults(GTK_TABLE(table), context.fsize, 1, 4, 4, 5);
-  g_signal_connect_swapped(GTK_OBJECT(context.download), "clicked",
+  g_signal_connect_swapped(context.download, "clicked",
                            G_CALLBACK(on_download_clicked), &context);
   gtk_widget_set_sensitive(context.download,
                            project->bounds.valid() ? TRUE : FALSE);
@@ -818,7 +816,7 @@ project_edit(select_context_t *scontext, project_t *project, bool is_new) {
   gtk_table_attach_defaults(GTK_TABLE(table), context.diff_stat, 1, 4, 5, 6);
   if(!diff_present(project) && !context.active_n_dirty())
     gtk_widget_set_sensitive(context.diff_remove,  FALSE);
-  g_signal_connect_swapped(GTK_OBJECT(context.diff_remove), "clicked",
+  g_signal_connect_swapped(context.diff_remove, "clicked",
                            G_CALLBACK(on_diff_remove_clicked), &context);
   gtk_table_attach_defaults(GTK_TABLE(table), context.diff_remove, 4, 5, 5, 6);
 

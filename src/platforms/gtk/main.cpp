@@ -1264,8 +1264,7 @@ static int application_run(const char *proj)
   /* try to enable the zoom buttons. don't do this on x86 as it breaks */
   /* at runtime with cygwin x */
 #if !defined(__i386__)
-  g_signal_connect(G_OBJECT(appdata.window), "realize",
-		   G_CALLBACK(on_window_realize), O2G_NULLPTR);
+  g_signal_connect(appdata.window, "realize", G_CALLBACK(on_window_realize), O2G_NULLPTR);
 #endif // FREMANTLE
 
 #else
@@ -1279,9 +1278,9 @@ static int application_run(const char *proj)
 		      appdata.icons.load(PACKAGE)->buffer());
 #endif
 
-  g_signal_connect_swapped(G_OBJECT(appdata.window), "key_press_event",
+  g_signal_connect_swapped(appdata.window, "key_press_event",
                            G_CALLBACK(on_window_key_press), &appdata);
-  g_signal_connect_swapped(G_OBJECT(appdata.window), "destroy",
+  g_signal_connect_swapped(appdata.window, "destroy",
                            G_CALLBACK(on_window_destroy), &appdata);
 
   GtkBox *mainvbox = GTK_BOX(gtk_vbox_new(FALSE, 0));

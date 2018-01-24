@@ -229,8 +229,8 @@ bool wms_server_edit(wms_server_context_t *context, gboolean edit_name,
   gtk_table_attach_defaults(GTK_TABLE(table), name, 1, 2, 0, 1);
   gtk_entry_set_activates_default(GTK_ENTRY(name), TRUE);
   gtk_widget_set_sensitive(GTK_WIDGET(name), edit_name);
-  g_signal_connect(G_OBJECT(name), "changed",
-		   G_CALLBACK(callback_modified_name), context->appdata.settings);
+  g_signal_connect(name, "changed",
+                   G_CALLBACK(callback_modified_name), context->appdata.settings);
 
   label = gtk_label_new(_("Server:"));
   GtkWidget *server = entry_new(EntryFlagsNoAutoCap);
@@ -559,7 +559,7 @@ static GtkWidget *wms_layer_widget(selected_context *context, const wms_layer_t:
   std::for_each(layers.begin(), layers.end(),
                 fitting_layers_functor(store.get(), context->appdata.project));
 
-  g_signal_connect(G_OBJECT(selection), "changed", G_CALLBACK(changed), &context->selected);
+  g_signal_connect(selection, "changed", G_CALLBACK(changed), &context->selected);
 
   GtkWidget *res;
 #ifndef FREMANTLE

@@ -282,8 +282,7 @@ static void presets_item_dialog(const presets_item *item) {
       GtkWidget *button = gtk_dialog_add_button(GTK_DIALOG(dialog.get()), _
 			("Info"), GTK_RESPONSE_HELP);
       g_object_set_data(G_OBJECT(button), "link", const_cast<char *>(item->link.c_str()));
-      g_signal_connect(GTK_OBJECT(button), "clicked",
-                       G_CALLBACK(on_info), O2G_NULLPTR);
+      g_signal_connect(button, "clicked", G_CALLBACK(on_info), O2G_NULLPTR);
     }
 
     /* special handling for the first label/separators */
@@ -323,8 +322,7 @@ static void presets_item_dialog(const presets_item *item) {
     hildon_pannable_area_add_with_viewport(HILDON_PANNABLE_AREA(mwidget), table);
 
     gboolean first = TRUE;
-    g_signal_connect(GTK_OBJECT(table), "expose_event",
-                     G_CALLBACK(table_expose_event), &first);
+    g_signal_connect(table, "expose_event", G_CALLBACK(table_expose_event), &first);
 #endif
     gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), mwidget);
     gtk_window_set_default_size(GTK_WINDOW(dialog.get()), dlgwidth, dlgheight);
@@ -679,8 +677,7 @@ static GtkWidget *presets_picker_embed(GtkTreeView *view, GtkListStore *store,
   /* Setup the selection handler */
   GtkTreeSelection *select = gtk_tree_view_get_selection(view);
   gtk_tree_selection_set_mode (select, GTK_SELECTION_SINGLE);
-  g_signal_connect (G_OBJECT (select), "changed",
-		    G_CALLBACK (on_presets_picker_selected), context);
+  g_signal_connect(select, "changed", G_CALLBACK (on_presets_picker_selected), context);
 
   gtk_tree_selection_unselect_all(select);
 
@@ -949,11 +946,8 @@ GtkWidget *josm_build_presets_button(presets_items *presets, tag_context_t *tag_
   GtkWidget *but = button_new_with_label(_("Presets"));
   gtk_widget_set_events(but, GDK_EXPOSURE_MASK);
   gtk_widget_add_events(but, GDK_BUTTON_PRESS_MASK);
-  g_signal_connect(GTK_OBJECT(but), "button-press-event",
-                   G_CALLBACK(button_press), O2G_NULLPTR);
-
-  g_signal_connect_swapped(GTK_OBJECT(but), "destroy",
-                           G_CALLBACK(on_button_destroy), context);
+  g_signal_connect(but, "button-press-event", G_CALLBACK(button_press), O2G_NULLPTR);
+  g_signal_connect_swapped(but, "destroy", G_CALLBACK(on_button_destroy), context);
 
   return but;
 }
@@ -1157,8 +1151,7 @@ presets_element_t::attach_key *presets_element_link::attach(preset_attach_contex
     // make sure the image is always shown, Hildon seems to hide it by default
     gtk_widget_show(img);
   }
-  g_signal_connect_swapped(GTK_OBJECT(button), "clicked",
-                           G_CALLBACK(item_link_clicked), item);
+  g_signal_connect_swapped(button, "clicked", G_CALLBACK(item_link_clicked), item);
   attach_both(attctx, button);
   return O2G_NULLPTR;
 }

@@ -116,8 +116,7 @@ void osm2go_platform::notebook_append_page(GtkWidget *notebook, GtkWidget *page,
   gtk_toggle_button_set_mode(GTK_TOGGLE_BUTTON(button), FALSE);
   g_object_set_data(G_OBJECT(button), "page", GINT_TO_POINTER(page_num));
 
-  g_signal_connect(GTK_OBJECT(button), "clicked",
-                   G_CALLBACK(on_notebook_button_clicked), notebook);
+  g_signal_connect(button, "clicked", G_CALLBACK(on_notebook_button_clicked), notebook);
 
   hildon_gtk_widget_set_theme_size(button,
                                    static_cast<HildonSizeType>(HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH));

@@ -109,8 +109,7 @@ static GtkWidget *pos_lat_entry_new(pos_float_t lat) {
   pos_lat_str(str, sizeof(str), lat);
   gtk_entry_set_text(GTK_ENTRY(widget), str);
 
-  g_signal_connect(G_OBJECT(widget), "changed",
-                   G_CALLBACK(callback_modified_lat), O2G_NULLPTR);
+  g_signal_connect(widget, "changed", G_CALLBACK(callback_modified_lat), O2G_NULLPTR);
 
   return widget;
 }
@@ -131,8 +130,7 @@ static GtkWidget *pos_lon_entry_new(pos_float_t lon) {
   pos_lon_str(str, sizeof(str), lon);
   gtk_entry_set_text(GTK_ENTRY(widget), str);
 
-  g_signal_connect(G_OBJECT(widget), "changed",
-                   G_CALLBACK(callback_modified_lon), O2G_NULLPTR);
+  g_signal_connect(widget, "changed", G_CALLBACK(callback_modified_lon), O2G_NULLPTR);
 
   return widget;
 }
@@ -723,14 +721,14 @@ bool area_edit_t::run() {
 
   osm_gps_map_osd_select_init(context.map.widget);
 
-  g_signal_connect_swapped(G_OBJECT(context.map.widget), "configure-event",
-		   G_CALLBACK(on_map_configure), &context);
-  g_signal_connect(G_OBJECT(context.map.widget), "button-press-event",
-		   G_CALLBACK(on_map_button_press_event), &context);
-  g_signal_connect(G_OBJECT(context.map.widget), "motion-notify-event",
-		   G_CALLBACK(on_map_motion_notify_event), &context);
-  g_signal_connect(G_OBJECT(context.map.widget), "button-release-event",
-		   G_CALLBACK(on_map_button_release_event), &context);
+  g_signal_connect_swapped(context.map.widget, "configure-event",
+                           G_CALLBACK(on_map_configure), &context);
+  g_signal_connect(context.map.widget, "button-press-event",
+                   G_CALLBACK(on_map_button_press_event), &context);
+  g_signal_connect(context.map.widget, "motion-notify-event",
+                   G_CALLBACK(on_map_motion_notify_event), &context);
+  g_signal_connect(context.map.widget, "button-release-event",
+                   G_CALLBACK(on_map_button_release_event), &context);
 
   /* install handler for timed updates of the gps button */
   osm2go_platform::Timer timer;
@@ -763,13 +761,13 @@ bool area_edit_t::run() {
   table_attach(table, context.direct.maxlon, 2, 1);
 
   /* setup this page */
-  g_signal_connect_swapped(G_OBJECT(context.direct.minlat), "changed",
+  g_signal_connect_swapped(context.direct.minlat, "changed",
                            G_CALLBACK(callback_modified_direct), &context);
-  g_signal_connect_swapped(G_OBJECT(context.direct.minlon), "changed",
+  g_signal_connect_swapped(context.direct.minlon, "changed",
                            G_CALLBACK(callback_modified_direct), &context);
-  g_signal_connect_swapped(G_OBJECT(context.direct.maxlat), "changed",
+  g_signal_connect_swapped(context.direct.maxlat, "changed",
                            G_CALLBACK(callback_modified_direct), &context);
-  g_signal_connect_swapped(G_OBJECT(context.direct.maxlon), "changed",
+  g_signal_connect_swapped(context.direct.maxlon, "changed",
                            G_CALLBACK(callback_modified_direct), &context);
 
   /* --- hint --- */
@@ -827,15 +825,15 @@ bool area_edit_t::run() {
   extent_update(&context);
 
   /* connect signals after inital update to avoid confusion */
-  g_signal_connect_swapped(G_OBJECT(context.extent.lat), "changed",
+  g_signal_connect_swapped(context.extent.lat, "changed",
                            G_CALLBACK(callback_modified_extent), &context);
-  g_signal_connect_swapped(G_OBJECT(context.extent.lon), "changed",
+  g_signal_connect_swapped(context.extent.lon, "changed",
                            G_CALLBACK(callback_modified_extent), &context);
-  g_signal_connect_swapped(G_OBJECT(context.extent.width), "changed",
+  g_signal_connect_swapped(context.extent.width, "changed",
                            G_CALLBACK(callback_modified_extent), &context);
-  g_signal_connect_swapped(G_OBJECT(context.extent.height), "changed",
+  g_signal_connect_swapped(context.extent.height, "changed",
                            G_CALLBACK(callback_modified_extent), &context);
-  g_signal_connect_swapped(G_OBJECT(context.extent.mil_km), "changed",
+  g_signal_connect_swapped(context.extent.mil_km, "changed",
                            G_CALLBACK(callback_modified_unit), &context);
 
   /* --- hint --- */
@@ -858,7 +856,7 @@ bool area_edit_t::run() {
     button_new_with_label(_("Get from Maemo Mapper"));
   gtk_box_pack_start(GTK_BOX(vbox), context.mmapper.fetch, FALSE, FALSE, 0);
 
-  g_signal_connect_swapped(G_OBJECT(context.mmapper.fetch), "clicked",
+  g_signal_connect_swapped(context.mmapper.fetch, "clicked",
                            G_CALLBACK(callback_fetch_mm_clicked), &context);
 
   /* --- hint --- */
@@ -874,7 +872,7 @@ bool area_edit_t::run() {
                               context.notebook);
 
 #ifdef ENABLE_OSM_GPS_MAP
-  g_signal_connect(G_OBJECT(osm2go_platform::notebook_get_gtk_notebook(context.notebook)),
+  g_signal_connect(osm2go_platform::notebook_get_gtk_notebook(context.notebook),
 		   "switch-page", G_CALLBACK(on_page_switch), &context);
 #endif
 

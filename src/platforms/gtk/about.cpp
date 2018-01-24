@@ -89,8 +89,7 @@ static GtkWidget *label_wrap(const char *str) {
   gtk_label_set_line_wrap_mode(GTK_LABEL(label), PANGO_WRAP_WORD);
   gtk_label_set_line_wrap(GTK_LABEL(label), TRUE);
 
-  g_signal_connect(G_OBJECT(label), "realize",
-		   G_CALLBACK(on_label_realize), O2G_NULLPTR);
+  g_signal_connect(label, "realize", G_CALLBACK(on_label_realize), O2G_NULLPTR);
 
   return label;
 }

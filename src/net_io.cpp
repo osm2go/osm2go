@@ -137,12 +137,10 @@ static GtkWidget *busy_dialog(GtkWidget *parent, GtkProgressBar **pbar,
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), GTK_WIDGET(*pbar));
 
   GtkWidget *button = button_new_with_label(_("Cancel"));
-  g_signal_connect_swapped(GTK_OBJECT(button), "clicked",
-                           G_CALLBACK(on_cancel), cancel_ind);
+  g_signal_connect_swapped(button, "clicked", G_CALLBACK(on_cancel), cancel_ind);
   gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->action_area), button);
 
-  g_signal_connect_swapped(GTK_OBJECT(dialog), "destroy",
-                           G_CALLBACK(dialog_destroy_event), cancel_ind);
+  g_signal_connect_swapped(dialog, "destroy", G_CALLBACK(dialog_destroy_event), cancel_ind);
 
   gtk_widget_show_all(dialog);
 

@@ -368,8 +368,7 @@ static GtkWidget *relation_item_list_widget(relitem_context_t &context) {
   if(!inserter.selname.empty())
     list_view_scroll(view, selection, &inserter.sel_iter);
 
-  g_signal_connect(G_OBJECT(selection), "changed",
-		   G_CALLBACK(changed), &context);
+  g_signal_connect(selection, "changed", G_CALLBACK(changed), &context);
 
   GtkWidget *container;
 #ifndef FREMANTLE
