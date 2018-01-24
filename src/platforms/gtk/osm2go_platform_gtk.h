@@ -21,7 +21,7 @@
 #define OSM2GO_PLATFORM_GTK_H
 
 namespace osm2go_platform {
-  int init();
+  bool init();
 
   void cleanup();
 

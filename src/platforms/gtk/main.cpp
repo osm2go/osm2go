@@ -1450,7 +1450,7 @@ int main(int argc, char *argv[]) {
 #endif
 
   gtk_init(&argc, &argv);
-  int ret = osm2go_platform::init();
+  int ret = osm2go_platform::init() ? 0 : 1;
   if (ret == 0) {
     ret = application_run(argc > 1 ? argv[1] : O2G_NULLPTR);
 

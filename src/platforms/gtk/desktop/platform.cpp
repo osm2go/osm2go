@@ -24,10 +24,9 @@
 
 #include <osm2go_cpp.h>
 
-int osm2go_platform::init()
+bool osm2go_platform::init()
 {
-
-  return 0;
+  return true;
 }
 
 void osm2go_platform::cleanup()

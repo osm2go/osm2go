@@ -30,7 +30,7 @@
 
 static osso_context_t *osso_context;
 
-int osm2go_platform::init()
+bool osm2go_platform::init()
 {
   g_signal_new("changed", HILDON_TYPE_PICKER_BUTTON,
                G_SIGNAL_RUN_FIRST, 0, O2G_NULLPTR, O2G_NULLPTR,
@@ -39,13 +39,13 @@ int osm2go_platform::init()
   osso_context = osso_initialize("org.harbaum." PACKAGE, VERSION, TRUE, O2G_NULLPTR);
 
   if(G_UNLIKELY(osso_context == O2G_NULLPTR))
-    return 1;
+    return false;
 
   if(G_UNLIKELY(dbus_register(osso_context) != TRUE)) {
     osso_deinitialize(osso_context);
-    return 1;
+    return false;
   } else {
-    return 0;
+    return true;
   }
 }
 
