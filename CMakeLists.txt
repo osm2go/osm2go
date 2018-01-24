@@ -126,7 +126,6 @@ if (MAEMO_FOUND)
 	target_link_libraries(osm2go_lib PUBLIC
 			PkgConfig::Hildon
 			PkgConfig::Osso
-			PkgConfig::Hildon_FM2
 	)
 
 	# prefer gpsbt over liblocation as we got complaints regarding liblocation stability
@@ -237,7 +236,7 @@ add_executable(osm2go
 	src/platforms/gtk/main.cpp
 )
 
-target_link_libraries(osm2go
+target_link_libraries(osm2go PRIVATE
 	osm2go_lib
 )
 
@@ -246,6 +245,10 @@ target_compile_definitions(osm2go
 )
 
 if (MAEMO_FOUND)
+	target_link_libraries(osm2go PRIVATE
+			PkgConfig::Hildon_FM2
+	)
+
 	install(CODE
 		"message(STATUS \"Optifying binary\")")
 	install(PROGRAMS $<TARGET_FILE:osm2go>
