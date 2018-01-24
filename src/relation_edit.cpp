@@ -48,7 +48,7 @@ struct relitem_context_t {
   object_t &item;
   const presets_items * const presets;
   osm_t * const osm;
-  GtkWidget *dialog, *view;
+  GtkWidget *dialog;
   std::unique_ptr<GtkListStore, g_object_deleter> store;
 };
 
@@ -65,7 +65,6 @@ relitem_context_t::relitem_context_t(object_t &o, const presets_items *pr, osm_t
   , presets(pr)
   , osm(os)
   , dialog(O2G_NULLPTR)
-  , view(O2G_NULLPTR)
   , store(O2G_NULLPTR)
 {
 }
@@ -308,25 +307,26 @@ void relation_list_insert_functor::operator()(std::pair<item_id_t, relation_t *>
 }
 
 static GtkWidget *relation_item_list_widget(relitem_context_t &context) {
+  GtkTreeView *view = GTK_TREE_VIEW(
 #ifndef FREMANTLE
-  context.view = gtk_tree_view_new();
+                      gtk_tree_view_new());
 #else
-  context.view = hildon_gtk_tree_view_new(HILDON_UI_MODE_EDIT);
+                      hildon_gtk_tree_view_new(HILDON_UI_MODE_EDIT));
 #endif
 
 #ifdef FREMANTLE
   /* hildon hides these by default */
-  gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(context.view), TRUE);
+  gtk_tree_view_set_headers_visible(view, TRUE);
 #endif
 
   /* change list mode to "multiple" */
   GtkTreeSelection *selection =
-    gtk_tree_view_get_selection(GTK_TREE_VIEW(context.view));
+    gtk_tree_view_get_selection(view);
   gtk_tree_selection_set_mode(selection, GTK_SELECTION_MULTIPLE);
 
 #ifndef FREMANTLE
   /* catch views button-press event for our custom handling */
-  g_signal_connect(context.view, "button-press-event",
+  g_signal_connect(view, "button-press-event",
 		   G_CALLBACK(on_view_clicked), &context);
 #endif
 
@@ -336,23 +336,23 @@ static GtkWidget *relation_item_list_widget(relitem_context_t &context) {
   GtkTreeViewColumn *column = gtk_tree_view_column_new_with_attributes(
        "Name", renderer, "text", RELITEM_COL_NAME, O2G_NULLPTR);
   gtk_tree_view_column_set_expand(column, TRUE);
-  gtk_tree_view_insert_column(GTK_TREE_VIEW(context.view), column, -1);
+  gtk_tree_view_insert_column(view, column, -1);
 
   /* --- "Type" column --- */
   renderer = gtk_cell_renderer_text_new();
-  gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(context.view),
+  gtk_tree_view_insert_column_with_attributes(view,
       -1, "Type", renderer, "text", RELITEM_COL_TYPE, O2G_NULLPTR);
 
   /* --- "Role" column --- */
   renderer = gtk_cell_renderer_text_new();
-  gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(context.view),
+  gtk_tree_view_insert_column_with_attributes(view,
       -1, "Role", renderer, "text", RELITEM_COL_ROLE, O2G_NULLPTR);
 
   /* build and fill the store */
   context.store.reset(gtk_list_store_new(RELITEM_NUM_COLS, G_TYPE_STRING, G_TYPE_STRING,
                                          G_TYPE_STRING, G_TYPE_POINTER));
 
-  gtk_tree_view_set_model(GTK_TREE_VIEW(context.view), GTK_TREE_MODEL(context.store.get()));
+  gtk_tree_view_set_model(view, GTK_TREE_MODEL(context.store.get()));
 
   // Debatable whether to sort by the "selected" or the "Name" column by
   // default. Both are be useful, in different ways.
@@ -366,26 +366,24 @@ static GtkWidget *relation_item_list_widget(relitem_context_t &context) {
                 context.osm->relations.end(), inserter);
 
   if(!inserter.selname.empty())
-    list_view_scroll(GTK_TREE_VIEW(context.view), selection, &inserter.sel_iter);
+    list_view_scroll(view, selection, &inserter.sel_iter);
 
   g_signal_connect(G_OBJECT(selection), "changed",
 		   G_CALLBACK(changed), &context);
 
+  GtkWidget *container;
 #ifndef FREMANTLE
   /* put view into a scrolled window */
-  GtkWidget *scrolled_window = gtk_scrolled_window_new(O2G_NULLPTR, O2G_NULLPTR);
-  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window),
-				 GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-  gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scrolled_window),
-				      GTK_SHADOW_ETCHED_IN);
-  gtk_container_add(GTK_CONTAINER(scrolled_window), context.view);
-  return scrolled_window;
+  GtkScrolledWindow *scrolled_window = GTK_SCROLLED_WINDOW(gtk_scrolled_window_new(O2G_NULLPTR, O2G_NULLPTR));
+  gtk_scrolled_window_set_policy(scrolled_window, GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+  gtk_scrolled_window_set_shadow_type(scrolled_window, GTK_SHADOW_ETCHED_IN);
+  container = GTK_WIDGET(scrolled_window);
 #else
   /* put view into a pannable area */
-  GtkWidget *pannable_area = hildon_pannable_area_new();
-  gtk_container_add(GTK_CONTAINER(pannable_area), context.view);
-  return pannable_area;
+  container = hildon_pannable_area_new();
 #endif
+  gtk_container_add(GTK_CONTAINER(container), GTK_WIDGET(view));
+  return container;
 }
 
 void relation_membership_dialog(GtkWidget *parent, const presets_items *presets,
