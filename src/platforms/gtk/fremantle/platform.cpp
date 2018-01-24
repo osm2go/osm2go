@@ -24,6 +24,7 @@
 
 #include <osm2go_cpp.h>
 
+#include <hildon/hildon-pannable-area.h>
 #include <hildon/hildon-picker-button.h>
 #include <libosso.h>
 #include <tablet-browser-interface.h>
@@ -127,4 +128,12 @@ void osm2go_platform::notebook_append_page(GtkWidget *notebook, GtkWidget *page,
 GtkTreeView *osm2go_platform::tree_view_new()
 {
   return GTK_TREE_VIEW(hildon_gtk_tree_view_new(HILDON_UI_MODE_EDIT));
+}
+
+GtkWidget *osm2go_platform::scrollable_container(GtkWidget *view)
+{
+  /* put view into a pannable area */
+  GtkWidget *container = hildon_pannable_area_new();
+  gtk_container_add(GTK_CONTAINER(container), view);
+  return container;
 }

@@ -34,10 +34,6 @@
 #include <cassert>
 #include <cmath>
 #include <cstring>
-#ifdef FREMANTLE
-#include <hildon/hildon-gtk.h>
-#include <hildon/hildon-pannable-area.h>
-#endif
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <map>
@@ -557,22 +553,8 @@ static GtkWidget *wms_layer_widget(selected_context *context, const wms_layer_t:
 
   g_signal_connect(selection, "changed", G_CALLBACK(changed), &context->selected);
 
-  GtkWidget *res;
-#ifndef FREMANTLE
-  /* put it into a scrolled window */
-  GtkScrolledWindow *scrolled_window = GTK_SCROLLED_WINDOW(gtk_scrolled_window_new(O2G_NULLPTR,
-                                                                                   O2G_NULLPTR));
-  gtk_scrolled_window_set_policy(scrolled_window, GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-  gtk_scrolled_window_set_shadow_type(scrolled_window, GTK_SHADOW_ETCHED_IN);
-  res = GTK_WIDGET(scrolled_window);
-#else
-  /* put view into a pannable area */
-  res = hildon_pannable_area_new();
-#endif
-  gtk_container_add(GTK_CONTAINER(res), GTK_WIDGET(view));
-  return res;
+  return osm2go_platform::scrollable_container(GTK_WIDGET(view));
 }
-
 
 static bool wms_layer_dialog(selected_context *ctx, const wms_layer_t::list &layer) {
   g_widget dialog(gtk_dialog_new_with_buttons(_("WMS layer selection"),

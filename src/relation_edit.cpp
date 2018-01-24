@@ -28,10 +28,6 @@
 #include <algorithm>
 #include <cassert>
 #include <cstring>
-#ifdef FREMANTLE
-#include <hildon/hildon-gtk.h>
-#include <hildon/hildon-pannable-area.h>
-#endif
 #include <set>
 #include <string>
 #include <strings.h>
@@ -366,19 +362,7 @@ static GtkWidget *relation_item_list_widget(relitem_context_t &context) {
 
   g_signal_connect(selection, "changed", G_CALLBACK(changed), &context);
 
-  GtkWidget *container;
-#ifndef FREMANTLE
-  /* put view into a scrolled window */
-  GtkScrolledWindow *scrolled_window = GTK_SCROLLED_WINDOW(gtk_scrolled_window_new(O2G_NULLPTR, O2G_NULLPTR));
-  gtk_scrolled_window_set_policy(scrolled_window, GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-  gtk_scrolled_window_set_shadow_type(scrolled_window, GTK_SHADOW_ETCHED_IN);
-  container = GTK_WIDGET(scrolled_window);
-#else
-  /* put view into a pannable area */
-  container = hildon_pannable_area_new();
-#endif
-  gtk_container_add(GTK_CONTAINER(container), GTK_WIDGET(view));
-  return container;
+  return osm2go_platform::scrollable_container(GTK_WIDGET(view));
 }
 
 void relation_membership_dialog(GtkWidget *parent, const presets_items *presets,
@@ -576,20 +560,8 @@ static GtkWidget *member_list_widget(member_context_t &context) {
   std::for_each(context.relation->members.begin(), context.relation->members.end(),
                 members_list_functor(store));
 
-  GtkWidget *container;
-#ifndef FREMANTLE
-  /* put it into a scrolled window */
-  GtkScrolledWindow *scrolled_window = GTK_SCROLLED_WINDOW(gtk_scrolled_window_new(O2G_NULLPTR,
-                                                                                   O2G_NULLPTR));
-  gtk_scrolled_window_set_policy(scrolled_window, GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-  gtk_scrolled_window_set_shadow_type(scrolled_window, GTK_SHADOW_ETCHED_IN);
-  container = GTK_WIDGET(scrolled_window);
-#else
-  /* put view into a pannable area */
-  container = hildon_pannable_area_new();
-#endif
-  gtk_container_add(GTK_CONTAINER(container), GTK_WIDGET(view));
-  gtk_box_pack_start_defaults(GTK_BOX(vbox), container);
+  gtk_box_pack_start_defaults(GTK_BOX(vbox),
+                              osm2go_platform::scrollable_container(GTK_WIDGET(view)));
 
   return vbox;
 }

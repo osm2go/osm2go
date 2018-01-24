@@ -55,3 +55,16 @@ GtkTreeView *osm2go_platform::tree_view_new()
 {
   return GTK_TREE_VIEW(gtk_tree_view_new());
 }
+
+GtkWidget *osm2go_platform::scrollable_container(GtkWidget *view)
+{
+  GtkWidget *container;
+  /* put view into a scrolled window */
+  GtkScrolledWindow *scrolled_window = GTK_SCROLLED_WINDOW(gtk_scrolled_window_new(O2G_NULLPTR,
+                                                                                   O2G_NULLPTR));
+  gtk_scrolled_window_set_policy(scrolled_window, GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+  gtk_scrolled_window_set_shadow_type(scrolled_window, GTK_SHADOW_ETCHED_IN);
+  container = GTK_WIDGET(scrolled_window);
+  gtk_container_add(GTK_CONTAINER(container), view);
+  return container;
+}

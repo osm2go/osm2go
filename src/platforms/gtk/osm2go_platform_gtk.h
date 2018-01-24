@@ -30,6 +30,7 @@ namespace osm2go_platform {
   GtkNotebook *notebook_get_gtk_notebook(GtkWidget *notebook);
 
   GtkTreeView *tree_view_new();
+  GtkWidget *scrollable_container(GtkWidget *view);
 };
 
 #endif // OSM2GO_PLATFORM_GTK_H

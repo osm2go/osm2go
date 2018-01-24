@@ -38,10 +38,6 @@
 #include <array>
 #include <cassert>
 #include <cstring>
-#ifdef FREMANTLE
-#include <hildon/hildon-gtk.h>
-#include <hildon/hildon-pannable-area.h>
-#endif
 
 #include "osm2go_annotations.h"
 #include "osm2go_i18n.h"
@@ -293,22 +289,10 @@ GtkWidget *list_new(bool show_headers, unsigned int btn_flags, void *context,
 
   GtkTreeSelection *sel = gtk_tree_view_get_selection(priv->view);
 
-  GtkWidget *container;
-#ifndef FREMANTLE
-  /* put view into a scrolled window */
-  GtkScrolledWindow *scrolled_window = GTK_SCROLLED_WINDOW(gtk_scrolled_window_new(O2G_NULLPTR,
-                                                                                   O2G_NULLPTR));
-  gtk_scrolled_window_set_policy(scrolled_window, GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-  gtk_scrolled_window_set_shadow_type(scrolled_window, GTK_SHADOW_ETCHED_IN);
-  container = GTK_WIDGET(scrolled_window);
-#else
-  /* put view into a pannable area */
-  container = hildon_pannable_area_new();
-#endif
-  gtk_container_add(GTK_CONTAINER(container), GTK_WIDGET(priv->view));
-  gtk_box_pack_start_defaults(GTK_BOX(vbox), container);
+  gtk_box_pack_start_defaults(GTK_BOX(vbox),
+                              osm2go_platform::scrollable_container(GTK_WIDGET(priv->view)));
 
-  /* make list react on clicks (double clicks on pre-fremantle) */
+  /* make list react on clicks */
   g_signal_connect_after(priv->view, "row-activated", G_CALLBACK(on_row_activated), vbox);
 
   guint rows = 1;

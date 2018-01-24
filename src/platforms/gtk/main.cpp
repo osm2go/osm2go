@@ -43,7 +43,6 @@
 #include <hildon/hildon-defines.h>
 #include <hildon/hildon-file-chooser-dialog.h>
 #include <hildon/hildon-gtk.h>
-#include <hildon/hildon-pannable-area.h>
 #include <hildon/hildon-program.h>
 #include <hildon/hildon-window-stack.h>
 #include <gdk/gdkx.h>
