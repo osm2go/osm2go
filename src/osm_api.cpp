@@ -77,8 +77,8 @@ public:
   std::string changeset;
 
   std::string comment;
-  std::string credentials;
   const std::string src;
+  std::unique_ptr<CURL, curl_deleter> curl;
 
   void appendf(const char *colname, const char *fmt, ...) __attribute__((format (printf, 3, 4)));
 };
@@ -226,7 +226,7 @@ void osm_upload_context_t::appendf(const char *colname, const char *fmt, ...) {
 
 #define MAX_TRY 5
 
-static CURL *curl_custom_setup(const osm_upload_context_t &context, const char *url)
+static CURL *curl_custom_setup(const std::string &credentials)
 {
   /* get a curl handle */
   CURL *curl = curl_easy_init();
@@ -236,16 +236,12 @@ static CURL *curl_custom_setup(const osm_upload_context_t &context, const char *
   /* we want to use our own write function */
   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
 
-  /* specify target URL, and note that this URL should include a file
-     name, not only a directory */
-  curl_easy_setopt(curl, CURLOPT_URL, url);
-
   /* some servers don't like requests that are made without a user-agent
      field, so we provide one */
   curl_easy_setopt(curl, CURLOPT_USERAGENT, PACKAGE "-libcurl/" VERSION);
 
   /* set user name and password for the authentication */
-  curl_easy_setopt(curl, CURLOPT_USERPWD, context.credentials.c_str());
+  curl_easy_setopt(curl, CURLOPT_USERPWD, credentials.c_str());
 
 #ifndef CURL_SSLVERSION_MAX_DEFAULT
 #define CURL_SSLVERSION_MAX_DEFAULT 0
@@ -260,8 +256,21 @@ static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
                             const char *url, item_id_t *id) {
   char buffer[CURL_ERROR_SIZE];
 
-  std::unique_ptr<CURL, curl_deleter> curl;
+  std::unique_ptr<CURL, curl_deleter> &curl = context.curl;
   CURLcode res;
+
+  /* specify target URL, and note that this URL should include a file
+     name, not only a directory */
+  curl_easy_setopt(curl.get(), CURLOPT_URL, url);
+
+  /* enable uploading */
+  curl_easy_setopt(curl.get(), CURLOPT_UPLOAD, 1L);
+
+  /* we want to use our own read function */
+  curl_easy_setopt(curl.get(), CURLOPT_READFUNCTION, read_callback);
+
+  std::unique_ptr<curl_slist, curl_slist_deleter> slist(curl_slist_append(O2G_NULLPTR, "Expect:"));
+  curl_easy_setopt(curl.get(), CURLOPT_HTTPHEADER, slist.get());
 
   curl_data_t read_data_init(reinterpret_cast<char *>(xml_str));
   read_data_init.len = read_data_init.ptr ? strlen(read_data_init.ptr) : 0;
@@ -270,21 +279,8 @@ static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
     if(retry != MAX_TRY)
       context.appendf(O2G_NULLPTR, _("Retry %d/%d "), MAX_TRY-retry, MAX_TRY-1);
 
-    /* get a curl handle */
-    curl.reset(curl_custom_setup(context, url));
-    if(!curl) {
-      context.appendf(O2G_NULLPTR, _("CURL init error\n"));
-      return false;
-    }
-
     curl_data_t read_data = read_data_init;
     curl_data_t write_data;
-
-    /* enable uploading */
-    curl_easy_setopt(curl.get(), CURLOPT_UPLOAD, 1L);
-
-    /* we want to use our own read function */
-    curl_easy_setopt(curl.get(), CURLOPT_READFUNCTION, read_callback);
 
     /* now specify which file to upload */
     curl_easy_setopt(curl.get(), CURLOPT_READDATA, &read_data);
@@ -294,9 +290,6 @@ static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
 
     /* we pass our 'chunk' struct to the callback function */
     curl_easy_setopt(curl.get(), CURLOPT_WRITEDATA, &write_data);
-
-    std::unique_ptr<curl_slist, curl_slist_deleter> slist(curl_slist_append(O2G_NULLPTR, "Expect:"));
-    curl_easy_setopt(curl.get(), CURLOPT_HTTPHEADER, slist.get());
 
     curl_easy_setopt(curl.get(), CURLOPT_ERRORBUFFER, buffer);
 
@@ -340,35 +333,32 @@ static bool osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
                             int len, const char *url) {
   char buffer[CURL_ERROR_SIZE];
 
-  std::unique_ptr<CURL, curl_deleter> curl;
+  std::unique_ptr<CURL, curl_deleter> &curl = context.curl;
   CURLcode res;
+
+  /* specify target URL, and note that this URL should include a file
+     name, not only a directory */
+  curl_easy_setopt(curl.get(), CURLOPT_URL, url);
+
+  /* no read function required */
+  curl_easy_setopt(curl.get(), CURLOPT_POST, 1);
+
+  curl_easy_setopt(curl.get(), CURLOPT_POSTFIELDS, xml_str);
+  curl_easy_setopt(curl.get(), CURLOPT_POSTFIELDSIZE, len);
+
+  std::unique_ptr<curl_slist, curl_slist_deleter> slist(curl_slist_append(O2G_NULLPTR, "Expect:"));
+  curl_easy_setopt(curl.get(), CURLOPT_HTTPHEADER, slist.get());
+
+  curl_easy_setopt(curl.get(), CURLOPT_ERRORBUFFER, buffer);
 
   for(int retry = MAX_TRY; retry >= 0; retry--) {
     if(retry != MAX_TRY)
       context.appendf(O2G_NULLPTR, _("Retry %d/%d "), MAX_TRY-retry, MAX_TRY-1);
 
-    /* get a curl handle */
-    curl.reset(curl_custom_setup(context, url));
-    if(!curl) {
-      context.appendf(O2G_NULLPTR, _("CURL init error\n"));
-      return false;
-    }
-
     curl_data_t write_data;
-
-    /* no read function required */
-    curl_easy_setopt(curl.get(), CURLOPT_POST, 1);
-
-    curl_easy_setopt(curl.get(), CURLOPT_POSTFIELDS, xml_str);
-    curl_easy_setopt(curl.get(), CURLOPT_POSTFIELDSIZE, len);
 
     /* we pass our 'chunk' struct to the callback function */
     curl_easy_setopt(curl.get(), CURLOPT_WRITEDATA, &write_data);
-
-    std::unique_ptr<curl_slist, curl_slist_deleter> slist(curl_slist_append(O2G_NULLPTR, "Expect:"));
-    curl_easy_setopt(curl.get(), CURLOPT_HTTPHEADER, slist.get());
-
-    curl_easy_setopt(curl.get(), CURLOPT_ERRORBUFFER, buffer);
 
     /* Now run off and do what you've been told! */
     res = curl_easy_perform(curl.get());
@@ -541,9 +531,6 @@ static bool osm_create_changeset(osm_upload_context_t &context) {
   xmlString xml_str(osm_generate_xml_changeset(context.comment, context.src));
   if(xml_str) {
     printf("creating changeset %s from address %p\n", url.c_str(), xml_str.get());
-
-    context.credentials = context.appdata.settings->username + ":" +
-                          context.appdata.settings->password;
 
     item_id_t changeset;
     if(osm_update_item(context, xml_str.get(), url.c_str(), &changeset)) {
@@ -830,8 +817,13 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
   context.appendf(O2G_NULLPTR, _("Uploading to %s\n"),
           project->server(appdata.settings->server).c_str());
 
-  /* create a new changeset */
-  if(osm_create_changeset(context)) {
+  /* get a curl handle */
+  context.curl.reset(curl_custom_setup(appdata.settings->username + ":" +
+                                       appdata.settings->password));
+
+  if(unlikely(!context.curl)) {
+    context.appendf(O2G_NULLPTR, _("CURL init error\n"));
+  } else if(likely(osm_create_changeset(context))) {
     /* check for dirty entries */
     if(!dirty.nodes.modified.empty()) {
       context.appendf(O2G_NULLPTR, _("Uploading nodes:\n"));
@@ -865,6 +857,7 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
 
     /* close changeset */
     osm_close_changeset(context);
+    context.curl.reset();
   }
 
   context.appendf(O2G_NULLPTR, _("Upload done.\n"));
