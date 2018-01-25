@@ -706,7 +706,14 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
   const char *username = !appdata.settings->username.empty() ?
                          appdata.settings->username.c_str() :
                          _("<your osm username>");
+#ifndef FREMANTLE
   gtk_entry_set_text(GTK_ENTRY(uentry), username);
+#else
+  if(appdata.settings->username.empty())
+    hildon_gtk_entry_set_placeholder_text(GTK_ENTRY(uentry), username);
+  else
+    gtk_entry_set_text(GTK_ENTRY(uentry), username);
+#endif
   gtk_table_attach_defaults(GTK_TABLE(table),  uentry, 1, 2, 0, 1);
   table_attach_label_l(table, _("Password:"), 0, 1, 1, 2);
   GtkWidget *pentry = entry_new(EntryFlagsNoAutoCap);
@@ -722,30 +729,33 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
   gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), table, FALSE, FALSE, 0);
 
   GtkTextBuffer *buffer = gtk_text_buffer_new(O2G_NULLPTR);
-  gtk_text_buffer_set_text(buffer, _("Please add a comment"), -1);
+  const char *placeholder_comment = _("Please add a comment");
 
   /* disable ok button until user edited the comment */
   gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog.get()), GTK_RESPONSE_ACCEPT, FALSE);
 
   g_signal_connect(buffer, "changed", G_CALLBACK(callback_buffer_modified), dialog.get());
 
+  GtkTextView *view = GTK_TEXT_VIEW(
 #ifndef FREMANTLE
-  GtkWidget *view = gtk_text_view_new_with_buffer(buffer);
+                    gtk_text_view_new_with_buffer(buffer));
+  gtk_text_buffer_set_text(buffer, placeholder_comment, -1);
 #else
-  GtkWidget *view = hildon_text_view_new();
-  gtk_text_view_set_buffer(GTK_TEXT_VIEW(view), buffer);
+                    hildon_text_view_new());
+  gtk_text_view_set_buffer(view, buffer);
+  hildon_gtk_text_view_set_placeholder_text(view, placeholder_comment);
 #endif
 
-  gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(view), GTK_WRAP_WORD);
-  gtk_text_view_set_editable(GTK_TEXT_VIEW(view), TRUE);
-  gtk_text_view_set_left_margin(GTK_TEXT_VIEW(view), 2 );
-  gtk_text_view_set_right_margin(GTK_TEXT_VIEW(view), 2 );
+  gtk_text_view_set_wrap_mode(view, GTK_WRAP_WORD);
+  gtk_text_view_set_editable(view, TRUE);
+  gtk_text_view_set_left_margin(view, 2 );
+  gtk_text_view_set_right_margin(view, 2 );
 
   g_object_set_data(G_OBJECT(view), "first_click", GINT_TO_POINTER(TRUE));
   g_signal_connect(view, "focus-in-event", G_CALLBACK(cb_focus_in), buffer);
 
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog.get())->vbox),
-                              osm2go_platform::scrollable_container(view));
+                              osm2go_platform::scrollable_container(GTK_WIDGET(view)));
   gtk_widget_show_all(dialog.get());
 
   bool done = false;
