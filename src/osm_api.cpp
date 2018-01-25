@@ -733,7 +733,7 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
   GtkWidget *view = gtk_text_view_new_with_buffer(buffer);
 #else
   GtkWidget *view = hildon_text_view_new();
-  hildon_text_view_set_buffer(HILDON_TEXT_VIEW(view), buffer);
+  gtk_text_view_set_buffer(GTK_TEXT_VIEW(view), buffer);
 #endif
 
   gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(view), GTK_WRAP_WORD);
