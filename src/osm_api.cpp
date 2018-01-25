@@ -559,8 +559,6 @@ static bool osm_create_changeset(osm_upload_context_t &context) {
 }
 
 static bool osm_close_changeset(osm_upload_context_t &context) {
-  bool result = false;
-
   assert(!context.changeset.empty());
 
   /* make sure gui gets updated */
@@ -570,9 +568,7 @@ static bool osm_close_changeset(osm_upload_context_t &context) {
                           "/close";
   context.appendf(O2G_NULLPTR, _("Close changeset "));
 
-  result = osm_update_item(context, O2G_NULLPTR, url.c_str(), O2G_NULLPTR);
-
-  return result;
+  return osm_update_item(context, O2G_NULLPTR, url.c_str(), O2G_NULLPTR);
 }
 
 /* comment buffer has been edited, allow upload if the buffer is not empty */
