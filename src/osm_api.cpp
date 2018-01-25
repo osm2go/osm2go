@@ -53,8 +53,6 @@
 #define COLOR_ERR  "red"
 #define COLOR_OK   "darkgreen"
 
-#define NO_EXPECT
-
 class osm_upload_context_t {
   GtkTextBuffer * const logbuffer;
 public:
@@ -297,10 +295,8 @@ static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
     /* we pass our 'chunk' struct to the callback function */
     curl_easy_setopt(curl.get(), CURLOPT_WRITEDATA, &write_data);
 
-#ifdef NO_EXPECT
     std::unique_ptr<curl_slist, curl_slist_deleter> slist(curl_slist_append(O2G_NULLPTR, "Expect:"));
     curl_easy_setopt(curl.get(), CURLOPT_HTTPHEADER, slist.get());
-#endif
 
     curl_easy_setopt(curl.get(), CURLOPT_ERRORBUFFER, buffer);
 
@@ -369,10 +365,8 @@ static bool osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
     /* we pass our 'chunk' struct to the callback function */
     curl_easy_setopt(curl.get(), CURLOPT_WRITEDATA, &write_data);
 
-#ifdef NO_EXPECT
     std::unique_ptr<curl_slist, curl_slist_deleter> slist(curl_slist_append(O2G_NULLPTR, "Expect:"));
     curl_easy_setopt(curl.get(), CURLOPT_HTTPHEADER, slist.get());
-#endif
 
     curl_easy_setopt(curl.get(), CURLOPT_ERRORBUFFER, buffer);
 
