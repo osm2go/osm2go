@@ -1643,7 +1643,7 @@ void reverse_direction_sensitive_tags_functor::operator()(tag_t &etag)
       etag.update_value(DS_ONEWAY_FWD);
       n_tags_altered++;
     } else {
-      printf("warning: unknown tag: %s=%s\n", etag.key, etag.value);
+      printf("warning: unknown oneway value: %s\n", etag.value);
     }
   } else if (strcmp(etag.key, "sidewalk") == 0) {
     if (strcasecmp(etag.value, "right") == 0)

@@ -651,7 +651,7 @@ static void test_reverse()
   tags.insert(osm_t::TagMap::value_type("foo:backward", "2"));
   tags.insert(osm_t::TagMap::value_type("bar:left", "3"));
   tags.insert(osm_t::TagMap::value_type("bar:right", "4"));
-  tags.insert(osm_t::TagMap::value_type("oneway", "-1"));
+  tags.insert(osm_t::TagMap::value_type("oneway", "YES"));
   tags.insert(osm_t::TagMap::value_type("sidewalk", "left"));
 
   assert(w->first_node() == n1);
@@ -700,7 +700,7 @@ static void test_reverse()
   rtags.insert(osm_t::TagMap::value_type("foo:forward", "2"));
   rtags.insert(osm_t::TagMap::value_type("bar:right", "3"));
   rtags.insert(osm_t::TagMap::value_type("bar:left", "4"));
-  rtags.insert(osm_t::TagMap::value_type("oneway", "yes"));
+  rtags.insert(osm_t::TagMap::value_type("oneway", "-1"));
   rtags.insert(osm_t::TagMap::value_type("sidewalk", "right"));
 
   assert(w->tags == rtags);
@@ -732,6 +732,8 @@ static void test_reverse()
 
   assert_cmpnum(r, 5);
   assert_cmpnum(rroles, 2);
+  // the original value was uppercase
+  tags.find("oneway")->second = "yes";
   assert(w->tags == tags);
 }
 
