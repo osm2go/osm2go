@@ -72,4 +72,5 @@ endif ()
 
 if (NETWORK_TESTS)
 	osm_test(net_io "${CMAKE_SOURCE_DIR}/data/COPYING")
+	osm_test(osm_api_download)
 endif ()
