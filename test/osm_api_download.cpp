@@ -77,6 +77,30 @@ static void download_fine_was_gz()
   assert_cmpnum(rmdir(project_dir.c_str()), 0);
 }
 
+static void download_fine_absolute()
+{
+  const std::string projectName = "dl_gz";
+  std::string project_dir;
+
+  std::unique_ptr<project_t> project(setup_project(projectName, project_dir));
+  project->bounds = pos_area(pos_t(52.27659, 9.58270), pos_t(52.27738, 9.58426));
+  assert(project->bounds.valid());
+  // also trigger URL fixing
+  project->rserver = dev_url;
+  project->rserver += '/';
+  project->osmFile = project_dir.substr(0, project_dir.rfind('/')) + "absolute.osm.gz";
+
+  assert(osm_download(O2G_NULLPTR, settings, project.get()));
+
+  assert_cmpstr(project->rserver, dev_url);
+
+  // the project file is not saved here as it was not modified
+  // the file is outside of the directory, so it should be removable
+  assert_cmpnum(rmdir(project_dir.c_str()), 0);
+
+  assert_cmpnum(unlink(project->osmFile.c_str()), 0);
+}
+
 static void download_bad_server()
 {
   const std::string projectName = "bad_server";
@@ -119,6 +143,7 @@ int main()
 
   download_fine();
   download_fine_was_gz();
+  download_fine_absolute();
   download_bad_server();
   download_bad_coords();
 
