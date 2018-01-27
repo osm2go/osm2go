@@ -112,22 +112,27 @@ bool object_t::is_real() const {
 }
 
 /* return plain text of type */
+static std::map<type_t, const char *> type_string_init()
+{
+  std::map<type_t, const char *> types;
+
+  types[ILLEGAL] =     "illegal";
+  types[NODE] =        "node";
+  types[WAY] =         "way/area";
+  types[RELATION] =    "relation";
+  types[NODE_ID] =     "node id";
+  types[WAY_ID] =      "way/area id";
+  types[RELATION_ID] = "relation id";
+
+  return types;
+}
+
 const char *object_t::type_string() const {
-  static std::map<type_t, const char *> types;
-  if(types.empty()) {
-    types[ILLEGAL] =     "illegal";
-    types[NODE] =        "node";
-    types[WAY] =         "way/area";
-    types[RELATION] =    "relation";
-    types[NODE_ID] =     "node id";
-    types[WAY_ID] =      "way/area id";
-    types[RELATION_ID] = "relation id";
-  }
+  static std::map<type_t, const char *> types = type_string_init();
 
-  const std::map<type_t, const char *>::const_iterator it =
-        types.find(type);
+  const std::map<type_t, const char *>::const_iterator it = types.find(type);
 
-  if(it != types.end())
+  if(likely(it != types.end()))
     return it->second;
 
   return O2G_NULLPTR;
