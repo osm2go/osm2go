@@ -168,22 +168,6 @@ static bool relation_add_item(GtkWidget *parent, relation_t *relation,
   return true;
 }
 
-static void relation_remove_item(relation_t *relation, const object_t &object) {
-
-  printf("remove object of type %d from relation #" ITEM_ID_FORMAT "\n",
-	 object.type, relation->id);
-
-  assert(object.is_real());
-
-  std::vector<member_t>::iterator it = relation->find_member_object(object);
-  assert(it != relation->members.end());
-
-  member_t::clear(*it);
-  relation->members.erase(it);
-
-  relation->flags |= OSM_FLAG_DIRTY;
-}
-
 static bool relation_info_dialog(relation_context_t *context, relation_t *relation) {
   object_t object(relation);
   return info_dialog(context->dialog.get(), context->map, context->osm, context->presets, object);
@@ -205,7 +189,7 @@ static void changed(GtkTreeSelection *sel, relitem_context_t *context) {
     assert(relation != O2G_NULLPTR);
 
     const std::vector<member_t>::const_iterator itEnd = relation->members.end();
-    const std::vector<member_t>::const_iterator it = relation->find_member_object(context->item);
+    const std::vector<member_t>::iterator it = relation->find_member_object(context->item);
 
     if(it == itEnd && gtk_tree_selection_iter_is_selected(sel, &iter)) {
       printf("selected: " ITEM_ID_FORMAT "\n", relation->id);
@@ -222,7 +206,7 @@ static void changed(GtkTreeSelection *sel, relitem_context_t *context) {
     } else if(it != itEnd && !gtk_tree_selection_iter_is_selected(sel, &iter)) {
       printf("deselected: " ITEM_ID_FORMAT "\n", relation->id);
 
-      relation_remove_item(relation, context->item);
+      relation->remove_member(it);
       gtk_list_store_set(context->store.get(), &iter, RELITEM_COL_ROLE, O2G_NULLPTR, -1);
 
       break;

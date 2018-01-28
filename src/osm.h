@@ -592,6 +592,7 @@ public:
   static const char *api_string() {
     return "relation";
   }
+  void remove_member(std::vector<member_t>::iterator it);
 protected:
   virtual void generate_xml_custom(xmlNodePtr xml_node) const O2G_OVERRIDE {
     generate_member_xml(xml_node);

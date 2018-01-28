@@ -1248,6 +1248,25 @@ static void test_description()
   assert_cmpstr(o.get_name(), "building Highway to hell 42");
 }
 
+static void test_relation_members()
+{
+  osm_t osm;
+  set_bounds(osm);
+  relation_t *r = new relation_t(0);
+  osm.relation_attach(r);
+  node_t *n1 = osm.node_new(lpos_t(1, 1));
+  osm.node_attach(n1);
+  node_t *n2 = osm.node_new(lpos_t(2, 2));
+  osm.node_attach(n2);
+
+  r->members.push_back(member_t(object_t(n1), "foo"));
+  r->members.push_back(member_t(object_t(n2), "bar"));
+
+  r->remove_member(r->find_member_object(object_t(n2)));
+
+  assert_cmpnum(r->members.size(), 1);
+}
+
 int main()
 {
   xmlInitParser();
@@ -1265,6 +1284,7 @@ int main()
   test_merge_ways();
   test_api_adjust();
   test_description();
+  test_relation_members();
 
   xmlCleanupParser();
 

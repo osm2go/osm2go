@@ -725,6 +725,20 @@ void relation_t::cleanup() {
   osm_members_free(members);
 }
 
+void relation_t::remove_member(std::vector<member_t>::iterator it)
+{
+  printf("remove object " ITEM_ID_FORMAT " type %s from relation #" ITEM_ID_FORMAT "\n",
+         it->object.get_id(), it->object.type_string(), id);
+
+  assert(it->object.is_real());
+  assert(it != members.end());
+
+  member_t::clear(*it);
+  members.erase(it);
+
+  flags |= OSM_FLAG_DIRTY;
+}
+
 struct gen_xml_relation_functor {
   xmlNodePtr const xml_node;
   explicit gen_xml_relation_functor(xmlNodePtr n) : xml_node(n) {}
