@@ -45,7 +45,7 @@ struct relitem_context_t {
   object_t &item;
   const presets_items * const presets;
   osm_t * const osm;
-  GtkWidget *dialog;
+  g_widget dialog;
   std::unique_ptr<GtkListStore, g_object_deleter> store;
 };
 
@@ -61,7 +61,6 @@ relitem_context_t::relitem_context_t(object_t &o, const presets_items *pr, osm_t
   : item(o)
   , presets(pr)
   , osm(os)
-  , dialog(O2G_NULLPTR)
   , store(O2G_NULLPTR)
 {
 }
@@ -81,7 +80,7 @@ struct relation_context_t {
   map_t * const map;
   osm_t * const osm;
   presets_items * const presets;
-  GtkWidget * const dialog;
+  g_widget dialog;
   GtkWidget *list, *show_btn;
   std::unique_ptr<GtkListStore, g_object_deleter> store;
 };
@@ -187,7 +186,7 @@ static void relation_remove_item(relation_t *relation, const object_t &object) {
 
 static bool relation_info_dialog(relation_context_t *context, relation_t *relation) {
   object_t object(relation);
-  return info_dialog(context->dialog, context->map, context->osm, context->presets, object);
+  return info_dialog(context->dialog.get(), context->map, context->osm, context->presets, object);
 }
 
 static void changed(GtkTreeSelection *sel, relitem_context_t *context) {
@@ -212,7 +211,7 @@ static void changed(GtkTreeSelection *sel, relitem_context_t *context) {
       printf("selected: " ITEM_ID_FORMAT "\n", relation->id);
 
       /* either accept this or unselect again */
-      if(relation_add_item(context->dialog, relation, context->item, context->presets)) {
+      if(relation_add_item(context->dialog.get(), relation, context->item, context->presets)) {
         // the item is now the last one in the chain
         const member_t &member = relation->members.back();
         gtk_list_store_set(context->store.get(), &iter, RELITEM_COL_ROLE, member.role, -1);
@@ -372,24 +371,22 @@ void relation_membership_dialog(GtkWidget *parent, const presets_items *presets,
   g_string str(g_strdup_printf(_("Relation memberships of %s #" ITEM_ID_FORMAT),
                                object.type_string(), object.get_id()));
 
-  context.dialog = gtk_dialog_new_with_buttons(str.get(), GTK_WINDOW(parent),
+  context.dialog.reset(gtk_dialog_new_with_buttons(str.get(), GTK_WINDOW(parent),
                                                GTK_DIALOG_MODAL,
                                                GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
-                                               O2G_NULLPTR);
+                                               O2G_NULLPTR));
   str.reset();
 
-  dialog_size_hint(GTK_WINDOW(context.dialog), MISC_DIALOG_LARGE);
-  gtk_dialog_set_default_response(GTK_DIALOG(context.dialog),
-				  GTK_RESPONSE_CLOSE);
+  dialog_size_hint(GTK_WINDOW(context.dialog.get()), MISC_DIALOG_LARGE);
+  gtk_dialog_set_default_response(GTK_DIALOG(context.dialog.get()), GTK_RESPONSE_CLOSE);
 
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context.dialog)->vbox),
-  		     relation_item_list_widget(context), TRUE, TRUE, 0);
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context.dialog.get())->vbox),
+                     relation_item_list_widget(context), TRUE, TRUE, 0);
 
   /* ----------------------------------- */
 
-  gtk_widget_show_all(context.dialog);
-  gtk_dialog_run(GTK_DIALOG(context.dialog));
-  gtk_widget_destroy(context.dialog);
+  gtk_widget_show_all(context.dialog.get());
+  gtk_dialog_run(GTK_DIALOG(context.dialog.get()));
 }
 
 /* -------------------- global relation list ----------------- */
@@ -599,7 +596,8 @@ void relation_show_members(GtkWidget *parent, const relation_t *relation) {
 static void on_relation_members(relation_context_t *context) {
   relation_t *sel = get_selected_relation(context);
 
-  if(sel) relation_show_members(context->dialog, sel);
+  if(sel != O2G_NULLPTR)
+    relation_show_members(context->dialog.get(), sel);
 }
 
 /* user clicked "select" button in relation list */
@@ -697,9 +695,9 @@ static void on_relation_remove(relation_context_t *context) {
   printf("remove relation #" ITEM_ID_FORMAT "\n", sel->id);
 
   if(!sel->members.empty())
-    if(!yes_no_f(context->dialog, 0, _("Delete non-empty relation?"),
-		 _("This relation still has %zu members. "
-		   "Delete it anyway?"), sel->members.size()))
+    if(!yes_no_f(context->dialog.get(), 0, _("Delete non-empty relation?"),
+                 _("This relation still has %zu members. Delete it anyway?"),
+                 sel->members.size()))
       return;
 
   /* first remove selected row from list */
@@ -787,20 +785,18 @@ void relation_list(GtkWidget *parent, map_t *map, osm_t *osm, presets_items *pre
                                                          GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
                                                          O2G_NULLPTR));
 
-  dialog_size_hint(GTK_WINDOW(context.dialog), MISC_DIALOG_LARGE);
-  gtk_dialog_set_default_response(GTK_DIALOG(context.dialog),
+  dialog_size_hint(GTK_WINDOW(context.dialog.get()), MISC_DIALOG_LARGE);
+  gtk_dialog_set_default_response(GTK_DIALOG(context.dialog.get()),
 				  GTK_RESPONSE_CLOSE);
 
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context.dialog)->vbox),
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context.dialog.get())->vbox),
                      relation_list_widget(context), TRUE, TRUE, 0);
 
   /* ----------------------------------- */
 
 
-  gtk_widget_show_all(context.dialog);
-  gtk_dialog_run(GTK_DIALOG(context.dialog));
-
-  gtk_widget_destroy(context.dialog);
+  gtk_widget_show_all(context.dialog.get());
+  gtk_dialog_run(GTK_DIALOG(context.dialog.get()));
 }
 
 // vim:et:ts=8:sw=2:sts=2:ai
