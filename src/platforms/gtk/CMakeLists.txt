@@ -11,6 +11,7 @@ target_sources(osm2go_lib PRIVATE
 	${CMAKE_CURRENT_SOURCE_DIR}/osm2go_platform_gtk.h
 	${CMAKE_CURRENT_SOURCE_DIR}/platform.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/project_widgets.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/relation_edit.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/settings.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/style_widgets.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/style_widgets.h

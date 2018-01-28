@@ -19,11 +19,11 @@
 
 #include "relation_edit.h"
 
-#include "info.h"
-#include "josm_presets.h"
-#include "list.h"
-#include "map.h"
-#include "misc.h"
+#include <info.h>
+#include <josm_presets.h>
+#include <list.h>
+#include <map.h>
+#include <misc.h>
 
 #include <algorithm>
 #include <cassert>
@@ -32,10 +32,10 @@
 #include <string>
 #include <strings.h>
 
-#include "osm2go_annotations.h"
+#include <osm2go_annotations.h>
 #include <osm2go_cpp.h>
-#include <osm2go_i18n.h>
-#include <osm2go_platform_gtk.h>
+#include "osm2go_i18n.h"
+#include "osm2go_platform_gtk.h"
 
 /* --------------- relation dialog for an item (node or way) ----------- */
 
@@ -87,8 +87,7 @@ struct relation_context_t {
 
 static bool relation_add_item(GtkWidget *parent, relation_t *relation,
                               const object_t &object, const presets_items *presets) {
-  printf("add object of type %d to relation #" ITEM_ID_FORMAT "\n",
-         object.type, relation->id);
+  g_debug("add object of type %d to relation #" ITEM_ID_FORMAT "", object.type, relation->id);
 
   const std::set<std::string> &roles = preset_roles(relation, object, presets);
 
@@ -137,11 +136,11 @@ static bool relation_add_item(GtkWidget *parent, relation_t *relation,
 
   gtk_widget_show_all(dialog.get());
   if(GTK_RESPONSE_ACCEPT != gtk_dialog_run(GTK_DIALOG(dialog.get()))) {
-    printf("user clicked cancel\n");
+    g_debug("user clicked cancel");
     return false;
   }
 
-  printf("user clicked ok\n");
+  g_debug("user clicked ok");
 
   /* get role from dialog */
   const char *role = O2G_NULLPTR;
@@ -174,7 +173,7 @@ static bool relation_info_dialog(relation_context_t *context, relation_t *relati
 }
 
 static void changed(GtkTreeSelection *sel, relitem_context_t *context) {
-  printf("relation-edit changed event\n");
+  g_debug("relation-edit changed event");
 
   /* we need to know what changed in order to let the user acknowlege it! */
 
@@ -192,7 +191,7 @@ static void changed(GtkTreeSelection *sel, relitem_context_t *context) {
     const std::vector<member_t>::iterator it = relation->find_member_object(context->item);
 
     if(it == itEnd && gtk_tree_selection_iter_is_selected(sel, &iter)) {
-      printf("selected: " ITEM_ID_FORMAT "\n", relation->id);
+      g_debug("selected: " ITEM_ID_FORMAT, relation->id);
 
       /* either accept this or unselect again */
       if(relation_add_item(context->dialog.get(), relation, context->item, context->presets)) {
@@ -204,7 +203,7 @@ static void changed(GtkTreeSelection *sel, relitem_context_t *context) {
 
       break;
     } else if(it != itEnd && !gtk_tree_selection_iter_is_selected(sel, &iter)) {
-      printf("deselected: " ITEM_ID_FORMAT "\n", relation->id);
+      g_debug("deselected: " ITEM_ID_FORMAT, relation->id);
 
       relation->remove_member(it);
       gtk_list_store_set(context->store.get(), &iter, RELITEM_COL_ROLE, O2G_NULLPTR, -1);
@@ -608,7 +607,7 @@ static void on_relation_add(relation_context_t *context) {
 
   relation_t *relation = new relation_t(0);
   if(!relation_info_dialog(context, relation)) {
-    printf("tag edit cancelled\n");
+    g_debug("tag edit cancelled");
     relation->cleanup();
     delete relation;
   } else {
@@ -638,7 +637,7 @@ static void on_relation_edit(relation_context_t *context) {
   relation_t *sel = get_selected_relation(context);
   if(!sel) return;
 
-  printf("edit relation #" ITEM_ID_FORMAT "\n", sel->id);
+  g_debug("edit relation #" ITEM_ID_FORMAT, sel->id);
 
   if (!relation_info_dialog(context, sel))
     return;
@@ -676,7 +675,7 @@ static void on_relation_remove(relation_context_t *context) {
   relation_t *sel = get_selected_relation(context);
   if(!sel) return;
 
-  printf("remove relation #" ITEM_ID_FORMAT "\n", sel->id);
+  g_debug("remove relation #" ITEM_ID_FORMAT, sel->id);
 
   if(!sel->members.empty())
     if(!yes_no_f(context->dialog.get(), 0, _("Delete non-empty relation?"),
