@@ -576,7 +576,8 @@ public:
   std::vector<member_t> members;
 
   std::vector<member_t>::iterator find_member_object(const object_t &o);
-  std::vector<member_t>::const_iterator find_member_object(const object_t &o) const;
+  inline std::vector<member_t>::const_iterator find_member_object(const object_t &o) const
+  { return const_cast<relation_t *>(this)->find_member_object(o); }
 
   void members_by_type(unsigned int &nodes, unsigned int &ways, unsigned int &relations) const;
   std::string descriptive_name() const;

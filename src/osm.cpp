@@ -2345,9 +2345,6 @@ relation_t::relation_t(item_id_t ver, item_id_t i)
 std::vector<member_t>::iterator relation_t::find_member_object(const object_t &o) {
   return std::find_if(members.begin(), members.end(), find_member_object_functor(o));
 }
-std::vector<member_t>::const_iterator relation_t::find_member_object(const object_t &o) const {
-  return std::find_if(members.begin(), members.end(), find_member_object_functor(o));
-}
 
 struct member_counter {
   unsigned int &nodes, &ways, &relations;
