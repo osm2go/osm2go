@@ -9,6 +9,7 @@ target_sources(osm2go_lib PRIVATE
 	${CMAKE_CURRENT_SOURCE_DIR}/osm2go_i18n.h
 	${CMAKE_CURRENT_SOURCE_DIR}/osm2go_platform.h
 	${CMAKE_CURRENT_SOURCE_DIR}/osm2go_platform_gtk.h
+	${CMAKE_CURRENT_SOURCE_DIR}/osm_upload_dialog.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/platform.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/project_widgets.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/relation_edit.cpp
