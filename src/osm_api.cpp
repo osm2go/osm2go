@@ -34,7 +34,7 @@
 #include <cassert>
 #include <cstring>
 #include <curl/curl.h>
-#include <curl/easy.h> /* new for v7 */
+#include <curl/easy.h>
 #include <map>
 #include <memory>
 #include <sys/stat.h>
