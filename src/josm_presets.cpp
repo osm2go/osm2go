@@ -58,7 +58,6 @@ unsigned int presets_type_mask(const object_t &obj)
 
   default:
     assert_unreachable();
-    break;
   }
 
   return r;

@@ -953,7 +953,6 @@ presets_element_t::attach_key *presets_element_t::attach(preset_attach_context &
 std::string presets_element_t::getValue(presets_element_t::attach_key *) const
 {
   assert_unreachable();
-  return std::string();
 }
 
 int presets_element_t::matches(const osm_t::TagMap &tags, bool) const

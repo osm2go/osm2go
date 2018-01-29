@@ -373,7 +373,6 @@ static void map_object_select(map_t *map, object_t &object) {
     break;
   default:
     assert_unreachable();
-    break;
   }
 }
 
@@ -773,7 +772,6 @@ void map_t::pen_down_item() {
 
   default:
     assert_unreachable();
-    break;
   }
 
   printf("  no parent, working on highlight itself\n");

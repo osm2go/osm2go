@@ -293,8 +293,7 @@ canvas_item_t *canvas_t::get_item_at(int x, int y) const {
       } break;
 
       default:
-	assert_unreachable();
-	break;
+        assert_unreachable();
       }
     }
   }

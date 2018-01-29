@@ -72,7 +72,6 @@ bool object_t::operator==(const object_t &other) const
       return obj->id == other.id;
     default:
       assert_unreachable();
-      return false;
     }
   }
 
@@ -89,7 +88,6 @@ bool object_t::operator==(const object_t &other) const
     return true;
   default:
     assert_unreachable();
-    return false;
   }
 }
 
@@ -765,7 +763,6 @@ void gen_xml_relation_functor::operator()(const member_t &member)
     break;
   default:
     assert_unreachable();
-    return;
   }
 
   xmlNewProp(m_node, BAD_CAST "type", BAD_CAST typestr);
@@ -1202,7 +1199,6 @@ static osm_t *process_osm(xmlTextReaderPtr reader) {
   }
 
   assert_unreachable();
-  return O2G_NULLPTR;
 }
 
 struct relation_ref_functor {
@@ -2369,7 +2365,6 @@ void member_counter::operator()(const member_t &member)
     break;
   default:
     assert_unreachable();
-    break;
   }
 }
 

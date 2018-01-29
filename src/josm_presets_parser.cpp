@@ -540,7 +540,6 @@ void PresetSax::startElement(const char *name, const char **attrs)
   case DocStart:
   case UnknownTag:
     assert_unreachable();
-    return;
   case TagPresets:
     break;
   case TagChunk: {
