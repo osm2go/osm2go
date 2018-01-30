@@ -394,7 +394,7 @@ wms_layer_t::list wms_get_layers(appdata_t& appdata, wms_t& wms)
   size_t caplen;
 
   /* ----------- parse capabilities -------------- */
-  if(unlikely(!net_io_download_mem(appdata.window, url, &cap, caplen))) {
+  if(unlikely(!net_io_download_mem(appdata.window, url, &cap, caplen, _("WMS capabilities")))) {
     errorf(appdata.window, _("WMS download failed:\n\nGetCapabilities failed"));
     return layers;
   }
@@ -511,7 +511,7 @@ void wms_get_selected_layer(appdata_t &appdata, wms_t &wms,
   /* remove any existing image before */
   wms_remove(appdata);
 
-  if(!net_io_download_file(appdata.window, url, filename, O2G_NULLPTR))
+  if(!net_io_download_file(appdata.window, url, filename, _("WMS layer")))
     return;
 
   /* there should be a matching file on disk now */

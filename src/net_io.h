@@ -48,8 +48,8 @@ bool net_io_download_file(GtkWidget *parent,
  *
  * The data is possibly gzip encoded.
  */
-bool net_io_download_mem(GtkWidget *parent,
-                         const std::string &url, char **mem, size_t &len);
+bool net_io_download_mem(GtkWidget *parent, const std::string &url,
+                         char **mem, size_t &len, const char *title);
 
 /**
  * @brief translate HTTP status code to string

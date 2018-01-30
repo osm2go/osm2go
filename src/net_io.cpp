@@ -113,18 +113,17 @@ static void on_cancel(bool *data) {
 
 /* create the dialog box shown while worker is running */
 static GtkWidget *busy_dialog(GtkWidget *parent, GtkProgressBar **pbar,
-			      bool *cancel_ind, const char *title) {
+                              bool *cancel_ind, const char *title) {
 #ifdef GTK_DIALOG_NO_SEPARATOR
   GtkWidget *dialog = gtk_dialog_new_with_buttons(O2G_NULLPTR, O2G_NULLPTR, GTK_DIALOG_NO_SEPARATOR);
 #else
   GtkWidget *dialog = gtk_dialog_new();
 #endif
 
-  if(title) {
-    g_string str(g_strdup_printf(_("Downloading %s"), title));
-    gtk_window_set_title(GTK_WINDOW(dialog), str.get());
-  } else
-    gtk_window_set_title(GTK_WINDOW(dialog), _("Downloading"));
+  g_string str(g_strdup_printf(_("Downloading %s"), title));
+  gtk_window_set_title(GTK_WINDOW(dialog), str.get());
+  str.reset();
+
   gtk_window_set_default_size(GTK_WINDOW(dialog), 300, 10);
 
   gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);
@@ -404,14 +403,14 @@ bool net_io_download_file(GtkWidget *parent,
   return result;
 }
 
-bool net_io_download_mem(GtkWidget *parent,
-                         const std::string &url, char **mem, size_t &len) {
+bool net_io_download_mem(GtkWidget *parent, const std::string &url,
+                         char **mem, size_t &len, const char *title) {
   curl_mem_t cmem;
   net_io_request_t *request = new net_io_request_t(url, &cmem);
 
   printf("net_io: download %s to memory\n", url.c_str());
 
-  bool result = net_io_do(parent, request, O2G_NULLPTR);
+  bool result = net_io_do(parent, request, title);
   if(result) {
     printf("ptr = %p, len = %zu\n", cmem.ptr, cmem.len);
     *mem = cmem.ptr;
