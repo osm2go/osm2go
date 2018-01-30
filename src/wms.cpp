@@ -390,34 +390,33 @@ wms_layer_t::list wms_get_layers(appdata_t& appdata, wms_t& wms)
   /* ----------- request capabilities -------------- */
 
   const std::string &url = wmsUrl(wms, "Capabilities");
-
   char *cap = O2G_NULLPTR;
   size_t caplen;
-  net_io_download_mem(appdata.window, url, &cap, caplen);
 
   /* ----------- parse capabilities -------------- */
+  if(unlikely(!net_io_download_mem(appdata.window, url, &cap, caplen))) {
+    errorf(appdata.window, _("WMS download failed:\n\nGetCapabilities failed"));
+    return layers;
+  }
+
   if(unlikely(ImageFormats.empty()))
     initImageFormats();
 
+  std::unique_ptr<xmlDoc, xmlDocDelete> doc(xmlReadMemory(cap, caplen, O2G_NULLPTR, O2G_NULLPTR, XML_PARSE_NONET));
+
+  /* parse the file and get the DOM */
   bool parse_success = false;
-  if(unlikely(!cap)) {
-    errorf(appdata.window, _("WMS download failed:\n\nGetCapabilities failed"));
+  if(unlikely(!doc)) {
+    xmlErrorPtr errP = xmlGetLastError();
+    errorf(appdata.window, _("WMS download failed:\n\n"
+            "XML error while parsing capabilities:\n%s"), errP->message);
   } else {
-    std::unique_ptr<xmlDoc, xmlDocDelete> doc(xmlReadMemory(cap, caplen, O2G_NULLPTR, O2G_NULLPTR, XML_PARSE_NONET));
+    printf("ok, parse doc tree\n");
 
-    /* parse the file and get the DOM */
-    if(unlikely(!doc)) {
-      xmlErrorPtr errP = xmlGetLastError();
-      errorf(appdata.window, _("WMS download failed:\n\n"
-             "XML error while parsing capabilities:\n%s"), errP->message);
-    } else {
-      printf("ok, parse doc tree\n");
-
-      parse_success = wms_cap_parse_root(wms, doc.get());
-    }
-
-    g_free(cap);
+    parse_success = wms_cap_parse_root(wms, doc.get());
   }
+
+  g_free(cap);
 
   /* ------------ basic checks ------------- */
 
