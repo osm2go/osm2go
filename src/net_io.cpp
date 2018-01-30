@@ -130,7 +130,6 @@ static GtkWidget *busy_dialog(GtkWidget *parent, GtkProgressBar **pbar,
   gtk_window_set_transient_for(GTK_WINDOW(dialog), GTK_WINDOW(parent));
 
   assert(pbar != O2G_NULLPTR);
-  /* extra cast as the version used in Maemo returns GtkWidget for whatever reason */
   *pbar = GTK_PROGRESS_BAR(gtk_progress_bar_new());
   gtk_progress_bar_set_pulse_step(*pbar, 0.1);
 
