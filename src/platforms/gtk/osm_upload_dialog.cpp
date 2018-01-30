@@ -43,6 +43,8 @@
 #include <osm2go_stl.h>
 #include <osm2go_platform_gtk.h>
 
+using namespace osm2go_platform;
+
 #define COLOR_ERR  "red"
 #define COLOR_OK   "darkgreen"
 
@@ -88,7 +90,7 @@ void osm_upload_context_t::appendf(const char *colname, const char *fmt, ...) {
 
   gtk_text_view_scroll_to_iter(logview, &end, 0.0, FALSE, 0, 0);
 
-  osm2go_platform::process_events();
+  process_events();
 }
 
 osm_upload_context_gtk::osm_upload_context_gtk(appdata_t &a, osm_t *o, project_t *p, const char *c, const char *s)
@@ -290,7 +292,7 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
   g_signal_connect(view, "focus-in-event", G_CALLBACK(cb_focus_in), buffer);
 
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog.get())->vbox),
-                              osm2go_platform::scrollable_container(GTK_WIDGET(view)));
+                              scrollable_container(GTK_WIDGET(view)));
   gtk_widget_show_all(dialog.get());
 
   bool done = false;

@@ -43,6 +43,8 @@
 #include <osm2go_platform.h>
 #include <osm2go_platform_gtk.h>
 
+using namespace osm2go_platform;
+
 /* --------------------- the items dialog -------------------- */
 
 struct preset_attach_context {
@@ -277,7 +279,7 @@ static void presets_item_dialog(const presets_item *item) {
     if(!item->link.empty()) {
       GtkWidget *button = gtk_dialog_add_button(GTK_DIALOG(dialog.get()),
                                                 _("Info"), GTK_RESPONSE_HELP);
-      g_signal_connect_swapped(button, "clicked", G_CALLBACK(osm2go_platform::open_url),
+      g_signal_connect_swapped(button, "clicked", G_CALLBACK(open_url),
                                const_cast<char *>(item->link.c_str()));
     }
 
@@ -629,7 +631,7 @@ on_presets_picker_selected(GtkTreeSelection *selection, presets_context_t *conte
 static GtkListStore *presets_picker_store(GtkTreeView **view) {
   GtkCellRenderer *renderer;
 
-  *view = osm2go_platform::tree_view_new();
+  *view = tree_view_new();
 
   gtk_tree_view_set_headers_visible(*view, FALSE);
 

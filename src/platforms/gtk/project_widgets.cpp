@@ -44,6 +44,9 @@
 #include <osm2go_cpp.h>
 #include "osm2go_stl.h"
 #include <osm2go_i18n.h>
+#include "osm2go_platform_gtk.h"
+
+using namespace osm2go_platform;
 
 struct project_context_t {
   explicit project_context_t(appdata_t &a, project_t *p, gboolean n, const std::vector<project_t *> &j, GtkWidget *dlg);

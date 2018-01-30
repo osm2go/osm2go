@@ -43,6 +43,8 @@
 #include "osm2go_i18n.h"
 #include <osm2go_platform_gtk.h>
 
+using namespace osm2go_platform;
+
 struct list_priv_t {
   GtkTreeView *view;
   GtkMenu *menu;
@@ -282,15 +284,14 @@ GtkWidget *list_new(bool show_headers, unsigned int btn_flags, void *context,
   priv->callback_context = context;
   priv->change = cb_changed;
 
-  priv->view = osm2go_platform::tree_view_new();
+  priv->view = tree_view_new();
 
   /* hildon hides these by default */
   gtk_tree_view_set_headers_visible(priv->view, show_headers ? TRUE : FALSE);
 
   GtkTreeSelection *sel = gtk_tree_view_get_selection(priv->view);
 
-  gtk_box_pack_start_defaults(GTK_BOX(vbox),
-                              osm2go_platform::scrollable_container(GTK_WIDGET(priv->view)));
+  gtk_box_pack_start_defaults(GTK_BOX(vbox), scrollable_container(GTK_WIDGET(priv->view)));
 
   /* make list react on clicks */
   g_signal_connect_after(priv->view, "row-activated", G_CALLBACK(on_row_activated), vbox);

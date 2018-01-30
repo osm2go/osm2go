@@ -24,8 +24,11 @@
 
 #include <osm2go_cpp.h>
 
+#include <hildon/hildon-check-button.h>
+#include <hildon/hildon-entry.h>
 #include <hildon/hildon-pannable-area.h>
 #include <hildon/hildon-picker-button.h>
+#include <hildon/hildon-touch-selector-entry.h>
 #include <libosso.h>
 #include <tablet-browser-interface.h>
 
@@ -136,4 +139,108 @@ GtkWidget *osm2go_platform::scrollable_container(GtkWidget *view)
   GtkWidget *container = hildon_pannable_area_new();
   gtk_container_add(GTK_CONTAINER(container), view);
   return container;
+}
+
+GtkWidget *osm2go_platform::entry_new(osm2go_platform::EntryFlags flags) {
+  GtkWidget *ret = hildon_entry_new(HILDON_SIZE_AUTO);
+  if(flags & EntryFlagsNoAutoCap)
+    hildon_gtk_entry_set_input_mode(GTK_ENTRY(ret), HILDON_GTK_INPUT_MODE_FULL);
+  return ret;
+}
+
+bool osm2go_platform::isEntryWidget(GtkWidget *widget)
+{
+  return G_OBJECT_TYPE(widget) == HILDON_TYPE_ENTRY;
+}
+
+GtkWidget *osm2go_platform::button_new_with_label(const char *label) {
+  GtkWidget *button = gtk_button_new_with_label(label);
+  hildon_gtk_widget_set_theme_size(button,
+           static_cast<HildonSizeType>(HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH));
+  return button;
+}
+
+GtkWidget *osm2go_platform::check_button_new_with_label(const char *label) {
+  GtkWidget *cbut =
+    hildon_check_button_new(static_cast<HildonSizeType>(HILDON_SIZE_FINGER_HEIGHT |
+                                                        HILDON_SIZE_AUTO_WIDTH));
+  gtk_button_set_label(GTK_BUTTON(cbut), label);
+  return cbut;
+}
+
+bool osm2go_platform::isCheckButtonWidget(GtkWidget *widget)
+{
+  return G_OBJECT_TYPE(widget) == HILDON_TYPE_CHECK_BUTTON;
+}
+
+void osm2go_platform::check_button_set_active(GtkWidget *button, bool active) {
+  gboolean state = active ? TRUE : FALSE;
+  hildon_check_button_set_active(HILDON_CHECK_BUTTON(button), state);
+}
+
+bool osm2go_platform::check_button_get_active(GtkWidget *button) {
+  return hildon_check_button_get_active(HILDON_CHECK_BUTTON(button)) == TRUE;
+}
+
+static void on_value_changed(HildonPickerButton *widget) {
+  g_signal_emit_by_name(widget, "changed");
+}
+
+static GtkWidget *combo_box_new_with_selector(const gchar *title, GtkWidget *selector) {
+  GtkWidget *button =
+    hildon_picker_button_new(static_cast<HildonSizeType>(HILDON_SIZE_FINGER_HEIGHT |
+                                                         HILDON_SIZE_AUTO_WIDTH),
+			     HILDON_BUTTON_ARRANGEMENT_VERTICAL);
+
+  hildon_button_set_title_alignment(HILDON_BUTTON(button), 0.5, 0.5);
+  hildon_button_set_value_alignment(HILDON_BUTTON(button), 0.5, 0.5);
+
+  /* allow button to emit "changed" signal */
+  g_signal_connect(button, "value-changed", G_CALLBACK(on_value_changed), O2G_NULLPTR);
+
+  hildon_button_set_title(HILDON_BUTTON (button), title);
+
+  hildon_picker_button_set_selector(HILDON_PICKER_BUTTON(button),
+				    HILDON_TOUCH_SELECTOR(selector));
+
+  return button;
+}
+
+/* the title is only used on fremantle with the picker widget */
+GtkWidget *osm2go_platform::combo_box_new(const char *title) {
+  GtkWidget *selector = hildon_touch_selector_new_text();
+  return combo_box_new_with_selector(title, selector);
+}
+
+GtkWidget *osm2go_platform::combo_box_entry_new(const char *title) {
+  GtkWidget *selector = hildon_touch_selector_entry_new_text();
+  return combo_box_new_with_selector(title, selector);
+}
+
+void osm2go_platform::combo_box_append_text(GtkWidget *cbox, const char *text) {
+  HildonTouchSelector *selector = hildon_picker_button_get_selector(HILDON_PICKER_BUTTON(cbox));
+
+  hildon_touch_selector_append_text(selector, text);
+}
+
+void osm2go_platform::combo_box_set_active(GtkWidget *cbox, int index) {
+  hildon_picker_button_set_active(HILDON_PICKER_BUTTON(cbox), index);
+}
+
+int osm2go_platform::combo_box_get_active(GtkWidget *cbox) {
+  return hildon_picker_button_get_active(HILDON_PICKER_BUTTON(cbox));
+}
+
+std::string osm2go_platform::combo_box_get_active_text(GtkWidget *cbox) {
+  return hildon_button_get_value(HILDON_BUTTON(cbox));
+}
+
+bool osm2go_platform::isComboBoxWidget(GtkWidget *widget)
+{
+  return G_OBJECT_TYPE(widget) == HILDON_TYPE_PICKER_BUTTON;
+}
+
+bool osm2go_platform::isComboBoxEntryWidget(GtkWidget *widget)
+{
+  return G_OBJECT_TYPE(widget) == HILDON_TYPE_PICKER_BUTTON;
 }

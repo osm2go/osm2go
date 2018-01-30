@@ -24,14 +24,11 @@
 #include "settings.h"
 
 #ifdef FREMANTLE
-#include <hildon/hildon-check-button.h>
-#include <hildon/hildon-picker-button.h>
-#include <hildon/hildon-entry.h>
-#include <hildon/hildon-touch-selector-entry.h>
 #include <hildon/hildon-note.h>
 #else
 #include <gtk/gtk.h>
 #endif
+#include <osm2go_platform_gtk.h>
 
 #include <algorithm>
 #include <cassert>
@@ -127,7 +124,7 @@ void warningf(GtkWidget *parent, const char *fmt, ...) {
 #endif
 
 static void on_toggled(GtkWidget *button, int *flags) {
-  gboolean active = check_button_get_active(button) ? TRUE : FALSE;
+  gboolean active = osm2go_platform::check_button_get_active(button) ? TRUE : FALSE;
 
   GtkWidget *dialog = gtk_widget_get_toplevel(button);
 
@@ -182,7 +179,7 @@ bool yes_no_f(GtkWidget *parent, unsigned int again_flags, const char *title,
 
     GtkWidget *alignment = gtk_alignment_new(0.5, 0, 0, 0);
 
-    cbut = check_button_new_with_label(_("Don't ask this question again"));
+    cbut = osm2go_platform::check_button_new_with_label(_("Don't ask this question again"));
     g_signal_connect(cbut, "toggled", G_CALLBACK(on_toggled), &again_flags);
 
     gtk_container_add(GTK_CONTAINER(alignment), cbut);
@@ -296,196 +293,22 @@ void dialog_size_hint(GtkWindow *window, DialogSizeHint hint)
 
 /* ---------- unified widgets for fremantle/others --------------- */
 
-GtkWidget *entry_new(EntryFlags flags) {
-#ifndef FREMANTLE
-  (void) flags;
-  return gtk_entry_new();
-#else
-  GtkWidget *ret = hildon_entry_new(HILDON_SIZE_AUTO);
-  if(flags & EntryFlagsNoAutoCap)
-    hildon_gtk_entry_set_input_mode(GTK_ENTRY(ret), HILDON_GTK_INPUT_MODE_FULL);
-  return ret;
-#endif
-}
-
-bool isEntryWidget(GtkWidget *widget)
-{
-  return G_OBJECT_TYPE(widget) ==
-#ifndef FREMANTLE
-         GTK_TYPE_ENTRY;
-#else
-         HILDON_TYPE_ENTRY;
-#endif
-}
-
-GtkWidget *button_new_with_label(const char *label) {
-  GtkWidget *button = gtk_button_new_with_label(label);
-#ifdef FREMANTLE
-  hildon_gtk_widget_set_theme_size(button,
-           static_cast<HildonSizeType>(HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH));
-#endif
-  return button;
-}
-
-GtkWidget *check_button_new_with_label(const char *label) {
-#ifndef FREMANTLE
-  return gtk_check_button_new_with_label(label);
-#else
-  GtkWidget *cbut =
-    hildon_check_button_new(static_cast<HildonSizeType>(HILDON_SIZE_FINGER_HEIGHT |
-                                                        HILDON_SIZE_AUTO_WIDTH));
-  gtk_button_set_label(GTK_BUTTON(cbut), label);
-  return cbut;
-#endif
-}
-
-bool isCheckButtonWidget(GtkWidget *widget)
-{
-  return G_OBJECT_TYPE(widget) ==
-#ifndef FREMANTLE
-         GTK_TYPE_CHECK_BUTTON;
-#else
-         HILDON_TYPE_CHECK_BUTTON;
-#endif
-}
-
-void check_button_set_active(GtkWidget *button, bool active) {
-  gboolean state = active ? TRUE : FALSE;
-#ifndef FREMANTLE
-  gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), state);
-#else
-  hildon_check_button_set_active(HILDON_CHECK_BUTTON(button), state);
-#endif
-}
-
-bool check_button_get_active(GtkWidget *button) {
-#ifndef FREMANTLE
-  return gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)) == TRUE;
-#else
-  return hildon_check_button_get_active(HILDON_CHECK_BUTTON(button)) == TRUE;
-#endif
-}
-
-#ifdef FREMANTLE
-void on_value_changed(HildonPickerButton *widget) {
-  g_signal_emit_by_name(widget, "changed");
-}
-
-static GtkWidget *combo_box_new_with_selector(const gchar *title, GtkWidget *selector) {
-  GtkWidget *button =
-    hildon_picker_button_new(static_cast<HildonSizeType>(HILDON_SIZE_FINGER_HEIGHT |
-                                                         HILDON_SIZE_AUTO_WIDTH),
-			     HILDON_BUTTON_ARRANGEMENT_VERTICAL);
-
-  hildon_button_set_title_alignment(HILDON_BUTTON(button), 0.5, 0.5);
-  hildon_button_set_value_alignment(HILDON_BUTTON(button), 0.5, 0.5);
-
-  /* allow button to emit "changed" signal */
-  g_signal_connect(button, "value-changed", G_CALLBACK(on_value_changed), O2G_NULLPTR);
-
-  hildon_button_set_title(HILDON_BUTTON (button), title);
-
-  hildon_picker_button_set_selector(HILDON_PICKER_BUTTON(button),
-				    HILDON_TOUCH_SELECTOR(selector));
-
-  return button;
-}
-#endif
-
-/* the title is only used on fremantle with the picker widget */
-GtkWidget *combo_box_new(const char *title) {
-#ifndef FREMANTLE
-  (void)title;
-  return gtk_combo_box_new_text();
-#else
-  GtkWidget *selector = hildon_touch_selector_new_text();
-  return combo_box_new_with_selector(title, selector);
-#endif
-}
-
-GtkWidget *combo_box_entry_new(const char *title) {
-#ifndef FREMANTLE
-  (void)title;
-  return gtk_combo_box_entry_new_text();
-#else
-  GtkWidget *selector = hildon_touch_selector_entry_new_text();
-  return combo_box_new_with_selector(title, selector);
-#endif
-}
-
-void combo_box_append_text(GtkWidget *cbox, const char *text) {
-#ifndef FREMANTLE
-  gtk_combo_box_append_text(GTK_COMBO_BOX(cbox), text);
-#else
-  HildonTouchSelector *selector =
-    hildon_picker_button_get_selector(HILDON_PICKER_BUTTON(cbox));
-
-  hildon_touch_selector_append_text(selector, text);
-#endif
-}
-
-void combo_box_set_active(GtkWidget *cbox, int index) {
-#ifndef FREMANTLE
-  gtk_combo_box_set_active(GTK_COMBO_BOX(cbox), index);
-#else
-  hildon_picker_button_set_active(HILDON_PICKER_BUTTON(cbox), index);
-#endif
-}
-
-int combo_box_get_active(GtkWidget *cbox) {
-#ifndef FREMANTLE
-  return gtk_combo_box_get_active(GTK_COMBO_BOX(cbox));
-#else
-  return hildon_picker_button_get_active(HILDON_PICKER_BUTTON(cbox));
-#endif
-}
-
-std::string combo_box_get_active_text(GtkWidget *cbox) {
-#ifndef FREMANTLE
-  g_string ptr(gtk_combo_box_get_active_text(GTK_COMBO_BOX(cbox)));
-  std::string ret = ptr.get();
-  return ret;
-#else
-  return hildon_button_get_value(HILDON_BUTTON(cbox));
-#endif
-}
-
-bool isComboBoxWidget(GtkWidget *widget)
-{
-  return G_OBJECT_TYPE(widget) ==
-#ifndef FREMANTLE
-         GTK_TYPE_COMBO_BOX;
-#else
-         HILDON_TYPE_PICKER_BUTTON;
-#endif
-}
-
-bool isComboBoxEntryWidget(GtkWidget *widget)
-{
-  return G_OBJECT_TYPE(widget) ==
-#ifndef FREMANTLE
-         GTK_TYPE_COMBO_BOX_ENTRY;
-#else
-         HILDON_TYPE_PICKER_BUTTON;
-#endif
-}
-
 struct combo_add_string {
   GtkWidget * const cbox;
   explicit combo_add_string(GtkWidget *w) : cbox(w) {}
   void operator()(const std::string &entry) {
-    combo_box_append_text(cbox, entry.c_str());
+    osm2go_platform::combo_box_append_text(cbox, entry.c_str());
   }
 };
 
 GtkWidget *string_select_widget(const char *title, const std::vector<std::string> &entries, int match) {
-  GtkWidget *cbox = combo_box_new(title);
+  GtkWidget *cbox = osm2go_platform::combo_box_new(title);
 
   /* fill combo box with entries */
   std::for_each(entries.begin(), entries.end(), combo_add_string(cbox));
 
   if(match >= 0)
-    combo_box_set_active(cbox, match);
+    osm2go_platform::combo_box_set_active(cbox, match);
 
   return cbox;
 }

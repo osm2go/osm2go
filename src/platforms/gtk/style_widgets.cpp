@@ -34,6 +34,9 @@
 
 #include <osm2go_cpp.h>
 #include "osm2go_i18n.h"
+#include "osm2go_platform_gtk.h"
+
+using namespace osm2go_platform;
 
 struct combo_add_styles {
   int cnt;
@@ -95,7 +98,7 @@ static void style_change(appdata_t &appdata, const std::string &name,
 
   appdata.map->clear(map_t::MAP_LAYER_OBJECTS_ONLY);
   /* let gtk clean up first */
-  osm2go_platform::process_events();
+  process_events();
 
   delete appdata.style;
   appdata.style = nstyle;

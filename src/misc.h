@@ -71,8 +71,6 @@ std::string find_file(const std::string &n);
 
 /* some compat code */
 
-GtkWidget *button_new_with_label(const char *label);
-
 void errorf(GtkWidget *parent, const char *fmt, ...) __attribute__((format (printf, 2, 3)));
 void warningf(GtkWidget *parent, const char *fmt, ...) __attribute__((format (printf, 2, 3)));
 void messagef(GtkWidget *parent, const char *title, const char *fmt, ...) __attribute__((format (printf, 3, 4)));
@@ -88,29 +86,8 @@ enum DialogSizeHint {
 
 void dialog_size_hint(GtkWindow *window, DialogSizeHint hint);
 
-/* unified widgets */
-enum EntryFlags {
-  EntryFlagsDefault,
-  EntryFlagsNoAutoCap
-};
-GtkWidget *entry_new(EntryFlags flags = EntryFlagsDefault);
-bool isEntryWidget(GtkWidget *widget);
-
 bool yes_no_f(GtkWidget *parent, unsigned int again_flags,
               const char *title, const char *fmt, ...) __attribute__((format (printf, 4, 5)));
-GtkWidget *check_button_new_with_label(const char *label);
-void check_button_set_active(GtkWidget *button, bool active);
-bool check_button_get_active(GtkWidget *button);
-bool isCheckButtonWidget(GtkWidget *widget);
-
-GtkWidget *combo_box_new(const char *title);
-GtkWidget *combo_box_entry_new(const char *title);
-void combo_box_append_text(GtkWidget *cbox, const char *text);
-void combo_box_set_active(GtkWidget *cbox, int index);
-int combo_box_get_active(GtkWidget *cbox);
-std::string combo_box_get_active_text(GtkWidget *cbox);
-bool isComboBoxWidget(GtkWidget *widget);
-bool isComboBoxEntryWidget(GtkWidget *widget);
 
 GtkWidget *string_select_widget(const char *title, const std::vector<std::string> &entries, int match);
 

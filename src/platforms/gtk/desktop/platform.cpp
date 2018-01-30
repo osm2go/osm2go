@@ -22,6 +22,8 @@
 
 #include <gtk/gtk.h>
 
+#include <misc.h>
+
 #include <osm2go_cpp.h>
 
 bool osm2go_platform::init()
@@ -67,4 +69,83 @@ GtkWidget *osm2go_platform::scrollable_container(GtkWidget *view)
   container = GTK_WIDGET(scrolled_window);
   gtk_container_add(GTK_CONTAINER(container), view);
   return container;
+}
+
+GtkWidget *osm2go_platform::entry_new(osm2go_platform::EntryFlags)
+{
+  return gtk_entry_new();
+}
+
+bool osm2go_platform::isEntryWidget(GtkWidget *widget)
+{
+  return G_OBJECT_TYPE(widget) == GTK_TYPE_ENTRY;
+}
+
+GtkWidget *osm2go_platform::button_new_with_label(const char *label)
+{
+  return gtk_button_new_with_label(label);
+}
+
+GtkWidget *osm2go_platform::check_button_new_with_label(const char *label)
+{
+  return gtk_check_button_new_with_label(label);
+}
+
+bool osm2go_platform::isCheckButtonWidget(GtkWidget *widget)
+{
+  return G_OBJECT_TYPE(widget) == GTK_TYPE_CHECK_BUTTON;
+}
+
+void osm2go_platform::check_button_set_active(GtkWidget *button, bool active)
+{
+  gboolean state = active ? TRUE : FALSE;
+  gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), state);
+}
+
+bool osm2go_platform::check_button_get_active(GtkWidget *button)
+{
+  return gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)) == TRUE;
+}
+
+/* the title is only used on fremantle with the picker widget */
+GtkWidget *osm2go_platform::combo_box_new(const char *)
+{
+  return gtk_combo_box_new_text();
+}
+
+GtkWidget *osm2go_platform::combo_box_entry_new(const char *)
+{
+  return gtk_combo_box_entry_new_text();
+}
+
+void osm2go_platform::combo_box_append_text(GtkWidget *cbox, const char *text)
+{
+  gtk_combo_box_append_text(GTK_COMBO_BOX(cbox), text);
+}
+
+void osm2go_platform::combo_box_set_active(GtkWidget *cbox, int index)
+{
+  gtk_combo_box_set_active(GTK_COMBO_BOX(cbox), index);
+}
+
+int osm2go_platform::combo_box_get_active(GtkWidget *cbox)
+{
+  return gtk_combo_box_get_active(GTK_COMBO_BOX(cbox));
+}
+
+std::string osm2go_platform::combo_box_get_active_text(GtkWidget *cbox)
+{
+  g_string ptr(gtk_combo_box_get_active_text(GTK_COMBO_BOX(cbox)));
+  std::string ret = ptr.get();
+  return ret;
+}
+
+bool osm2go_platform::isComboBoxWidget(GtkWidget *widget)
+{
+  return G_OBJECT_TYPE(widget) == GTK_TYPE_COMBO_BOX;
+}
+
+bool osm2go_platform::isComboBoxEntryWidget(GtkWidget *widget)
+{
+  return G_OBJECT_TYPE(widget) == GTK_TYPE_COMBO_BOX_ENTRY;
 }

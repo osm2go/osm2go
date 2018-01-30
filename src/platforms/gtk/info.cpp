@@ -34,6 +34,9 @@
 #include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
 #include <osm2go_i18n.h>
+#include "osm2go_platform_gtk.h"
+
+using namespace osm2go_platform;
 
 enum {
   TAG_COL_KEY = 0,

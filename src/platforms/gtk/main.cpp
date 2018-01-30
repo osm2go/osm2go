@@ -70,6 +70,8 @@
 #include <osm2go_annotations.h>
 #include "osm2go_i18n.h"
 
+using namespace osm2go_platform;
+
 #define LOCALEDIR PREFIX "/locale"
 
 #ifndef FREMANTLE

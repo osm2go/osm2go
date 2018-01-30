@@ -37,6 +37,8 @@
 #include "osm2go_i18n.h"
 #include "osm2go_platform_gtk.h"
 
+using namespace osm2go_platform;
+
 /* --------------- relation dialog for an item (node or way) ----------- */
 
 struct relitem_context_t {
@@ -286,7 +288,7 @@ void relation_list_insert_functor::operator()(std::pair<item_id_t, relation_t *>
 }
 
 static GtkWidget *relation_item_list_widget(relitem_context_t &context) {
-  GtkTreeView *view = osm2go_platform::tree_view_new();
+  GtkTreeView *view = tree_view_new();
 
 #ifdef FREMANTLE
   /* hildon hides these by default */
@@ -344,7 +346,7 @@ static GtkWidget *relation_item_list_widget(relitem_context_t &context) {
 
   g_signal_connect(selection, "changed", G_CALLBACK(changed), &context);
 
-  return osm2go_platform::scrollable_container(GTK_WIDGET(view));
+  return scrollable_container(GTK_WIDGET(view));
 }
 
 void relation_membership_dialog(GtkWidget *parent, const presets_items *presets,
@@ -484,7 +486,7 @@ void members_list_functor::operator()(const member_t &member)
 
 static GtkWidget *member_list_widget(member_context_t &context) {
   GtkWidget *vbox = gtk_vbox_new(FALSE,3);
-  GtkTreeView * const view = osm2go_platform::tree_view_new();
+  GtkTreeView * const view = tree_view_new();
 
   gtk_tree_selection_set_select_function(gtk_tree_view_get_selection(view),
                                          member_list_selection_func, &context, O2G_NULLPTR);
@@ -541,7 +543,7 @@ static GtkWidget *member_list_widget(member_context_t &context) {
                 members_list_functor(store));
 
   gtk_box_pack_start_defaults(GTK_BOX(vbox),
-                              osm2go_platform::scrollable_container(GTK_WIDGET(view)));
+                              scrollable_container(GTK_WIDGET(view)));
 
   return vbox;
 }

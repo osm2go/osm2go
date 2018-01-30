@@ -35,6 +35,7 @@
 #include <osm2go_cpp.h>
 #include <osm2go_i18n.h>
 #include "osm2go_stl.h"
+#include <osm2go_platform_gtk.h>
 
 struct curl_mem_t {
   char *ptr;
@@ -136,7 +137,7 @@ static GtkWidget *busy_dialog(GtkWidget *parent, GtkProgressBar **pbar,
 
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), GTK_WIDGET(*pbar));
 
-  GtkWidget *button = button_new_with_label(_("Cancel"));
+  GtkWidget *button = osm2go_platform::button_new_with_label(_("Cancel"));
   g_signal_connect_swapped(button, "clicked", G_CALLBACK(on_cancel), cancel_ind);
   gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->action_area), button);
 

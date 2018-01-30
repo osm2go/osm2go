@@ -46,6 +46,8 @@
 #include <osm2go_i18n.h>
 #include <osm2go_platform_gtk.h>
 
+using namespace osm2go_platform;
+
 /* ---------------------- use ------------------- */
 
 struct find_wms_functor {
@@ -517,7 +519,7 @@ void fitting_layers_functor::operator()(const wms_layer_t *layer)
 }
 
 static GtkWidget *wms_layer_widget(selected_context *context, const wms_layer_t::list &layers) {
-  GtkTreeView * const view = osm2go_platform::tree_view_new();
+  GtkTreeView * const view = tree_view_new();
 
   /* change list mode to "multiple" */
   GtkTreeSelection *selection =
@@ -553,7 +555,7 @@ static GtkWidget *wms_layer_widget(selected_context *context, const wms_layer_t:
 
   g_signal_connect(selection, "changed", G_CALLBACK(changed), &context->selected);
 
-  return osm2go_platform::scrollable_container(GTK_WIDGET(view));
+  return scrollable_container(GTK_WIDGET(view));
 }
 
 static bool wms_layer_dialog(selected_context *ctx, const wms_layer_t::list &layer) {
