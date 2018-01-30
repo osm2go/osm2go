@@ -363,8 +363,8 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
 
   osm_do_upload(context, dirty);
 
-  bool reload_map = false;
   if(project->data_dirty) {
+    bool reload_map = false;
     context.appendf(O2G_NULLPTR, _("Server data has been modified.\n"
                                         "Downloading updated osm data ...\n"));
 
