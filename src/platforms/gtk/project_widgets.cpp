@@ -472,8 +472,8 @@ struct project_list_add {
   pos_t pos;
   bool check_pos;
   GtkTreeIter &seliter;
-  gboolean &has_sel;
-  project_list_add(GtkListStore *s, appdata_t &a, GtkTreeIter &l, gboolean &h)
+  bool &has_sel;
+  project_list_add(GtkListStore *s, appdata_t &a, GtkTreeIter &l, bool &h)
     : store(s), cur_proj(a.project), pos(a.gps_state->get_pos()), check_pos(pos.valid())
     , seliter(l), has_sel(h) {}
   void operator()(const project_t *project);
@@ -496,7 +496,7 @@ void project_list_add::operator()(const project_t *project)
   /* decide if to select this project because it matches the current position */
   if(check_pos && project->bounds.contains(pos)) {
     seliter = iter;
-    has_sel = TRUE;
+    has_sel = true;
     check_pos = false;
   }
 }
@@ -506,7 +506,7 @@ void project_list_add::operator()(const project_t *project)
  * @param context the context struct
  * @param has_sel if an item has been selected
  */
-static GtkWidget *project_list_widget(select_context_t &context, gboolean &has_sel) {
+static GtkWidget *project_list_widget(select_context_t &context, bool &has_sel) {
   std::vector<list_view_column> columns;
   columns.push_back(list_view_column(_("Name"), 0));
   columns.push_back(list_view_column(_("State"), LIST_FLAG_STOCK_ICON));
@@ -529,8 +529,6 @@ static GtkWidget *project_list_widget(select_context_t &context, gboolean &has_s
                           &context, changed, buttons, columns, context.store.get());
 
   GtkTreeIter seliter;
-  has_sel = FALSE;
-
   std::for_each(context.projects.begin(), context.projects.end(),
                 project_list_add(context.store.get(), context.appdata, seliter, has_sel));
 
@@ -558,13 +556,13 @@ std::string project_select(appdata_t &appdata) {
   gtk_dialog_set_default_response(GTK_DIALOG(context.dialog),
 				  GTK_RESPONSE_ACCEPT);
 
-  gboolean has_sel;
+  bool has_sel = false;
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(context.dialog)->vbox),
-			      project_list_widget(context, has_sel));
+                              project_list_widget(context, has_sel));
 
   /* don't all user to click ok until something is selected */
   gtk_dialog_set_response_sensitive(GTK_DIALOG(context.dialog),
-				    GTK_RESPONSE_ACCEPT, has_sel);
+                                    GTK_RESPONSE_ACCEPT, has_sel ? TRUE : FALSE);
 
   gtk_widget_show_all(context.dialog);
   if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(context.dialog)))
