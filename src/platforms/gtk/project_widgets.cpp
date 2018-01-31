@@ -516,7 +516,7 @@ static GtkWidget *project_list_widget(select_context_t &context, gboolean &has_s
   buttons.push_back(list_button(_("_New"), G_CALLBACK(on_project_new)));
   buttons.push_back(list_button(_("_Edit"), G_CALLBACK(on_project_edit)));
   buttons.push_back(list_button(_("Remove"), G_CALLBACK(on_project_delete)));
-  buttons.push_back(list_button(_("Update all"), GCallback(on_project_update_all)));
+  buttons.push_back(list_button(_("Update all"), G_CALLBACK(on_project_update_all)));
 
   /* build the store */
   context.store.reset(gtk_list_store_new(PROJECT_NUM_COLS,

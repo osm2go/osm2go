@@ -401,9 +401,9 @@ static GtkWidget *tag_widget(info_tag_context_t *context) {
   buttons.push_back(list_button(_("_Add"), G_CALLBACK(on_tag_add)));
   buttons.push_back(list_button(_("_Edit"), G_CALLBACK(on_tag_edit)));
   buttons.push_back(list_button(_("Remove"), G_CALLBACK(on_tag_remove)));
-  buttons.push_back(list_button(_("Last"), GCallback(on_tag_last)));
+  buttons.push_back(list_button(_("Last"), G_CALLBACK(on_tag_last)));
   buttons.push_back(list_button(O2G_NULLPTR, O2G_NULLPTR));
-  buttons.push_back(list_button(_("Relations"), GCallback(on_relations)));
+  buttons.push_back(list_button(_("Relations"), G_CALLBACK(on_relations)));
 
   context->store.reset(gtk_list_store_new(TAG_NUM_COLS,
                                           G_TYPE_STRING, G_TYPE_STRING,

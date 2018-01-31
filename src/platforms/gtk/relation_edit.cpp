@@ -735,8 +735,8 @@ static GtkWidget *relation_list_widget(relation_context_t &context) {
   buttons.push_back(list_button(_("_New"), G_CALLBACK(on_relation_add)));
   buttons.push_back(list_button(_("_Edit"), G_CALLBACK(on_relation_edit)));
   buttons.push_back(list_button(_("Remove"), G_CALLBACK(on_relation_remove)));
-  buttons.push_back(list_button(_("Members"), GCallback(on_relation_members)));
-  buttons.push_back(list_button(_("Select"),  GCallback(on_relation_select)));
+  buttons.push_back(list_button(_("Members"), G_CALLBACK(on_relation_members)));
+  buttons.push_back(list_button(_("Select"),  G_CALLBACK(on_relation_select)));
 
   /* build and fill the store */
   context.store.reset(gtk_list_store_new(RELATION_NUM_COLS,
