@@ -368,9 +368,9 @@ static void track_end_segment(track_t *track) {
  * @param pos the new position
  * @param alt the new altitude
  * @returns if the position changed
- * @retval FALSE if the GPS position marker needs to be redrawn (i.e. the position changed)
+ * @retval false if the GPS position marker needs to be redrawn (i.e. the position changed)
  */
-static gboolean track_append_position(appdata_t &appdata, const pos_t &pos, float alt, const lpos_t lpos) {
+static bool track_append_position(appdata_t &appdata, const pos_t &pos, float alt, const lpos_t lpos) {
   track_t *track = appdata.track.track;
 
   /* no track at all? might be due to a "clear track" while running */
@@ -394,12 +394,12 @@ static gboolean track_append_position(appdata_t &appdata, const pos_t &pos, floa
   std::vector<track_point_t> &points = seg.track_points;
 
   /* don't append if point is the same as last time */
-  gboolean ret;
+  bool ret;
   if(unlikely(!points.empty() && points.back().pos == pos)) {
     printf("same value as last point -> ignore\n");
-    ret = FALSE;
+    ret = false;
   } else {
-    ret = TRUE;
+    ret = true;
     track->dirty = true;
     points.push_back(track_point_t(pos, alt, time(O2G_NULLPTR)));
 
@@ -418,13 +418,13 @@ static gboolean track_append_position(appdata_t &appdata, const pos_t &pos, floa
   if(appdata.settings->follow_gps) {
     if(!appdata.map->scroll_to_if_offscreen(lpos)) {
       if(!--appdata.track.warn_cnt) {
-	/* warn user once a minute that the current gps */
-	/* position is outside the working area */
+        /* warn user once a minute that the current gps */
+        /* position is outside the working area */
         appdata.uicontrol->showNotification(_("GPS position outside working area!"), MainUi::Brief);
-	appdata.track.warn_cnt = 60;  // warn again after one minute
+        appdata.track.warn_cnt = 60;  // warn again after one minute
       }
     } else
-      ret = TRUE;
+      ret = true;
   }
 
   return ret;
