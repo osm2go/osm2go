@@ -681,8 +681,9 @@ static void on_relation_remove(relation_context_t *context) {
 
   if(!sel->members.empty())
     if(!yes_no_f(context->dialog.get(), 0, _("Delete non-empty relation?"),
-                 _("This relation still has %zu members. Delete it anyway?"),
-                 sel->members.size()))
+                 ngettext("This relation still has %zu member. Delete it anyway?",
+                          "This relation still has %zu members. Delete it anyway?",
+                          sel->members.size()), sel->members.size()))
       return;
 
   /* first remove selected row from list */
