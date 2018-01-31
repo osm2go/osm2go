@@ -39,6 +39,7 @@
 #include <libxml/tree.h>
 #include <map>
 #include <strings.h>
+#include <unistd.h>
 #include <vector>
 
 #include "osm2go_annotations.h"

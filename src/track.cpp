@@ -45,6 +45,7 @@
 #include <map>
 #include <strings.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 #ifndef LIBXML_TREE_ENABLED
 #error "Tree not enabled in libxml"
