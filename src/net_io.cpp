@@ -44,7 +44,7 @@ struct curl_mem_t {
 
 /* structure shared between worker and master thread */
 struct net_io_request_t {
-  net_io_request_t(const std::string &u, const std::string &f);
+  net_io_request_t(const std::string &u, const std::string &f, bool c);
   net_io_request_t(const std::string &u, curl_mem_t *cmem) __attribute__((nonnull(3)));
 
   gint refcount;       /* reference counter for master and worker thread */
@@ -62,7 +62,7 @@ struct net_io_request_t {
   /* request specific fields */
   const std::string filename;   /* used for NET_IO_DL_FILE */
   curl_mem_t * const mem;   /* used for NET_IO_DL_MEM */
-  bool use_compression;
+  const bool use_compression;
 };
 
 typedef std::map<int, const char *> HttpCodeMap;
@@ -145,7 +145,7 @@ static GtkWidget *busy_dialog(GtkWidget *parent, GtkProgressBar *&pbar,
   return dialog;
 }
 
-net_io_request_t::net_io_request_t(const std::string &u, const std::string &f)
+net_io_request_t::net_io_request_t(const std::string &u, const std::string &f, bool c)
   : refcount(1)
   , url(u)
   , cancel(false)
@@ -155,7 +155,7 @@ net_io_request_t::net_io_request_t(const std::string &u, const std::string &f)
   , response(0)
   , filename(f)
   , mem(O2G_NULLPTR)
-  , use_compression(true)
+  , use_compression(c)
 {
   assert(!filename.empty());
   memset(buffer, 0, sizeof(buffer));
@@ -377,9 +377,7 @@ static bool net_io_do(GtkWidget *parent, net_io_request_t *rq,
 bool net_io_download_file(GtkWidget *parent,
                           const std::string &url, const std::string &filename,
                           const char *title, bool compress) {
-  net_io_request_t *request = new net_io_request_t(url, filename);
-
-  request->use_compression = compress;
+  net_io_request_t *request = new net_io_request_t(url, filename, compress);
 
   printf("net_io: download %s to file %s\n", url.c_str(), filename.c_str());
 
