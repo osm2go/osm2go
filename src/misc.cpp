@@ -290,25 +290,3 @@ void dialog_size_hint(GtkWindow *window, DialogSizeHint hint)
 
   gtk_window_set_default_size(window, dialog_sizes[hint][0], dialog_sizes[hint][1]);
 }
-
-/* ---------- unified widgets for fremantle/others --------------- */
-
-struct combo_add_string {
-  GtkWidget * const cbox;
-  explicit combo_add_string(GtkWidget *w) : cbox(w) {}
-  void operator()(const std::string &entry) {
-    osm2go_platform::combo_box_append_text(cbox, entry.c_str());
-  }
-};
-
-GtkWidget *string_select_widget(const char *title, const std::vector<std::string> &entries, int match) {
-  GtkWidget *cbox = osm2go_platform::combo_box_new(title);
-
-  /* fill combo box with entries */
-  std::for_each(entries.begin(), entries.end(), combo_add_string(cbox));
-
-  if(match >= 0)
-    osm2go_platform::combo_box_set_active(cbox, match);
-
-  return cbox;
-}

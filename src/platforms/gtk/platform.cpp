@@ -18,7 +18,9 @@
  */
 
 #include "osm2go_platform.h"
+#include "osm2go_platform_gtk.h"
 
+#include <algorithm>
 #include <cstdio>
 #include <gtk/gtk.h>
 
@@ -45,4 +47,24 @@ void osm2go_platform::Timer::stop()
     g_source_remove(id);
     id = 0;
   }
+}
+
+struct combo_add_string {
+  GtkWidget * const cbox;
+  explicit combo_add_string(GtkWidget *w) : cbox(w) {}
+  void operator()(const std::string &entry) {
+    osm2go_platform::combo_box_append_text(cbox, entry.c_str());
+  }
+};
+
+GtkWidget *osm2go_platform::string_select_widget(const char *title, const std::vector<std::string> &entries, int match) {
+  GtkWidget *cbox = osm2go_platform::combo_box_new(title);
+
+  /* fill combo box with entries */
+  std::for_each(entries.begin(), entries.end(), combo_add_string(cbox));
+
+  if(match >= 0)
+    osm2go_platform::combo_box_set_active(cbox, match);
+
+  return cbox;
 }

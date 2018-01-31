@@ -21,6 +21,7 @@
 #define OSM2GO_PLATFORM_GTK_H
 
 #include <string>
+#include <vector>
 
 namespace osm2go_platform {
   bool init();
@@ -57,6 +58,8 @@ namespace osm2go_platform {
   std::string combo_box_get_active_text(GtkWidget *cbox);
   bool isComboBoxWidget(GtkWidget *widget);
   bool isComboBoxEntryWidget(GtkWidget *widget);
+
+  GtkWidget *string_select_widget(const char *title, const std::vector<std::string> &entries, int match);
 };
 
 #endif // OSM2GO_PLATFORM_GTK_H

@@ -89,8 +89,6 @@ void dialog_size_hint(GtkWindow *window, DialogSizeHint hint);
 bool yes_no_f(GtkWidget *parent, unsigned int again_flags,
               const char *title, const char *fmt, ...) __attribute__((format (printf, 4, 5)));
 
-GtkWidget *string_select_widget(const char *title, const std::vector<std::string> &entries, int match);
-
 // simplified form of unique_ptr
 struct g_deleter {
   inline void operator()(gpointer mem) {

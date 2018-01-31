@@ -70,7 +70,7 @@ static GtkWidget *style_select_widget(const std::string &currentstyle,
   std::for_each(styles.begin(), styles.end(),
                 combo_add_styles(currentstyle, match, stylesNames));
 
-  return string_select_widget(_("Style"), stylesNames, match);
+  return osm2go_platform::string_select_widget(_("Style"), stylesNames, match);
 }
 
 GtkWidget *style_select_widget(const std::string &currentstyle) {

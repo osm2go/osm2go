@@ -245,8 +245,8 @@ GtkWidget *track_vis_select_widget(TrackVisibility current) {
   labels.push_back(_("Show current segment"));
   labels.push_back(_("Show all segments"));
 
-  return string_select_widget(_("Track visibility"), labels,
-                                         static_cast<int>(current));
+  return osm2go_platform::string_select_widget(_("Track visibility"), labels,
+                                               static_cast<int>(current));
 }
 
 #ifndef FREMANTLE
