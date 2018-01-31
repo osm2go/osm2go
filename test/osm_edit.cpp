@@ -888,7 +888,7 @@ static void test_member_delete()
   assert_cmpnum(dirty0.relations.modified.size(), dirty0.relations.added);
   assert_cmpnum(dirty0.relations.deleted.size(), 0);
 
-  guint nodes = 0, ways = 0, relations = 0;
+  unsigned int nodes = 0, ways = 0, relations = 0;
   r->members_by_type(nodes, ways, relations);
   assert_cmpnum(nodes, 1);
   assert_cmpnum(ways, 1);
