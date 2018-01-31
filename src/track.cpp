@@ -431,7 +431,7 @@ static bool track_append_position(appdata_t &appdata, const pos_t &pos, float al
 }
 
 static void track_do_disable_gps(appdata_t &appdata) {
-  appdata.settings->enable_gps = FALSE;
+  appdata.settings->enable_gps = false;
   appdata.gps_state->setEnable(false);
 
   appdata.gps_state->registerCallback(O2G_NULLPTR, O2G_NULLPTR);
@@ -486,7 +486,7 @@ static int update(void *data) {
 }
 
 static void track_do_enable_gps(appdata_t &appdata) {
-  appdata.settings->enable_gps = TRUE;
+  appdata.settings->enable_gps = true;
   appdata.gps_state->setEnable(true);
   appdata.track.warn_cnt = 1;
 
