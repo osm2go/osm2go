@@ -838,7 +838,7 @@ static GtkWidget *app_submenu_create(appdata_t &appdata, MainUi::menu_items subm
   GtkWidget *dialog = gtk_dialog_new_with_buttons(title, GTK_WINDOW(appdata.window),
                                                   GTK_DIALOG_MODAL, O2G_NULLPTR);
 
-  dialog_size_hint(GTK_WINDOW(dialog), MISC_DIALOG_SMALL);
+  osm2go_platform::dialog_size_hint(GTK_WINDOW(dialog), MISC_DIALOG_SMALL);
   gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
 
   GtkWidget *table = gtk_table_new(rows / COLUMNS, COLUMNS, TRUE);

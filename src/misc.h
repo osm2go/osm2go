@@ -75,17 +75,6 @@ void errorf(GtkWidget *parent, const char *fmt, ...) __attribute__((format (prin
 void warningf(GtkWidget *parent, const char *fmt, ...) __attribute__((format (printf, 2, 3)));
 void messagef(GtkWidget *parent, const char *title, const char *fmt, ...) __attribute__((format (printf, 3, 4)));
 
-/* dialog size are specified rather fuzzy */
-enum DialogSizeHint {
-  MISC_DIALOG_SMALL  =  0,
-  MISC_DIALOG_MEDIUM =  1,
-  MISC_DIALOG_LARGE  =  2,
-  MISC_DIALOG_WIDE   =  3,
-  MISC_DIALOG_HIGH   =  4
-};
-
-void dialog_size_hint(GtkWindow *window, DialogSizeHint hint);
-
 bool yes_no_f(GtkWidget *parent, unsigned int again_flags,
               const char *title, const char *fmt, ...) __attribute__((format (printf, 4, 5)));
 
