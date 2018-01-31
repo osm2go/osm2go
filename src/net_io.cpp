@@ -337,6 +337,7 @@ static bool net_io_do(GtkWidget *parent, net_io_request_t *rq,
       char buf[G_ASCII_DTOSTR_BUF_SIZE];
       snprintf(buf, sizeof(buf), "%" CURL_FORMAT_CURL_OFF_T, request->download_cur);
       gtk_progress_bar_set_text(pbar, buf);
+      last = request->download_cur;
     }
 
     usleep(100000);
