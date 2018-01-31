@@ -112,7 +112,7 @@ static void on_cancel(bool *data) {
 }
 
 /* create the dialog box shown while worker is running */
-static GtkWidget *busy_dialog(GtkWidget *parent, GtkProgressBar **pbar,
+static GtkWidget *busy_dialog(GtkWidget *parent, GtkProgressBar *&pbar,
                               bool *cancel_ind, const char *title) {
 #ifdef GTK_DIALOG_NO_SEPARATOR
   GtkWidget *dialog = gtk_dialog_new_with_buttons(O2G_NULLPTR, O2G_NULLPTR, GTK_DIALOG_NO_SEPARATOR);
@@ -129,11 +129,10 @@ static GtkWidget *busy_dialog(GtkWidget *parent, GtkProgressBar **pbar,
   gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);
   gtk_window_set_transient_for(GTK_WINDOW(dialog), GTK_WINDOW(parent));
 
-  assert(pbar != O2G_NULLPTR);
-  *pbar = GTK_PROGRESS_BAR(gtk_progress_bar_new());
-  gtk_progress_bar_set_pulse_step(*pbar, 0.1);
+  pbar = GTK_PROGRESS_BAR(gtk_progress_bar_new());
+  gtk_progress_bar_set_pulse_step(pbar, 0.1);
 
-  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), GTK_WIDGET(*pbar));
+  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), GTK_WIDGET(pbar));
 
   GtkWidget *button = osm2go_platform::button_new_with_label(_("Cancel"));
   g_signal_connect_swapped(button, "clicked", G_CALLBACK(on_cancel), cancel_ind);
@@ -304,7 +303,7 @@ static bool net_io_do(GtkWidget *parent, net_io_request_t *rq,
   GtkProgressBar *pbar = O2G_NULLPTR;
   g_widget dialog;
   if(likely(parent != O2G_NULLPTR))
-    dialog.reset(busy_dialog(parent, &pbar, &rq->cancel, title));
+    dialog.reset(busy_dialog(parent, pbar, &rq->cancel, title));
 
   GThread *worker;
 
