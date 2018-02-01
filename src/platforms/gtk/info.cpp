@@ -391,7 +391,7 @@ static void on_relations(info_tag_context_t *context) {
                              context->osm, context->object);
 }
 
-static GtkWidget *tag_widget(info_tag_context_t *context) {
+static GtkWidget *tag_widget(info_tag_context_t &context) {
   /* setup both columns */
   std::vector<list_view_column> columns;
   columns.push_back(list_view_column(_("Key"),   LIST_FLAG_ELLIPSIZE|LIST_FLAG_CAN_HIGHLIGHT, TAG_COL_COLLISION));
@@ -405,31 +405,29 @@ static GtkWidget *tag_widget(info_tag_context_t *context) {
   buttons.push_back(list_button(O2G_NULLPTR, O2G_NULLPTR));
   buttons.push_back(list_button(_("Relations"), G_CALLBACK(on_relations)));
 
-  context->store.reset(gtk_list_store_new(TAG_NUM_COLS,
+  context.store.reset(gtk_list_store_new(TAG_NUM_COLS,
                                           G_TYPE_STRING, G_TYPE_STRING,
                                           G_TYPE_BOOLEAN, G_TYPE_POINTER));
 
-  context->list = list_new(LIST_HILDON_WITHOUT_HEADERS, LIST_BTN_2ROW, context, changed,
-                           buttons, columns, context->store.get());
+  context.list = list_new(LIST_HILDON_WITHOUT_HEADERS, LIST_BTN_2ROW, &context, changed,
+                          buttons, columns, context.store.get());
 
-  list_set_custom_user_button(context->list, LIST_BUTTON_USER1,
-                              josm_build_presets_button(context->presets, context));
-  if(unlikely(context->presets == O2G_NULLPTR))
-    list_button_enable(context->list, LIST_BUTTON_USER1, FALSE);
+  list_set_custom_user_button(context.list, LIST_BUTTON_USER1,
+                              josm_build_presets_button(context.presets, &context));
+  if(unlikely(context.presets == O2G_NULLPTR))
+    list_button_enable(context.list, LIST_BUTTON_USER1, FALSE);
 
   /* disable if no appropriate "last" tags have been stored or if the */
   /* selected item isn't a node or way */
-  if(((context->object.type == NODE) &&
-      (context->map->last_node_tags.empty())) ||
-     ((context->object.type == WAY) &&
-      (context->map->last_way_tags.empty())) ||
-     ((context->object.type != NODE) && (context->object.type != WAY)))
-	list_button_enable(context->list, LIST_BUTTON_USER0, FALSE);
+  if((context.object.type == NODE && context.map->last_node_tags.empty()) ||
+     (context.object.type == WAY && context.map->last_way_tags.empty()) ||
+     (context.object.type != NODE && context.object.type != WAY))
+    list_button_enable(context.list, LIST_BUTTON_USER0, FALSE);
 
   /* --------- build and fill the store ------------ */
-  context->info_tags_replace();
+  context.info_tags_replace();
 
-  return context->list;
+  return context.list;
 }
 
 static void on_relation_members(GtkWidget *, const info_tag_context_t *context) {
@@ -613,7 +611,7 @@ bool info_dialog(GtkWidget *parent, map_t *map, osm_t *osm, presets_items *prese
   /* ------------ tags ----------------- */
 
   gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context.dialog.get())->vbox),
-		     tag_widget(&context), TRUE, TRUE, 0);
+                     tag_widget(context), TRUE, TRUE, 0);
 
   /* ----------------------------------- */
 
