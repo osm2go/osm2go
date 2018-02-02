@@ -159,12 +159,9 @@ static size_t read_callback(void *ptr, size_t size, size_t nmemb, void *stream) 
 }
 
 static size_t write_callback(void *ptr, size_t size, size_t nmemb, void *stream) {
-  curl_data_t *p = static_cast<curl_data_t *>(stream);
+  std::string *p = static_cast<std::string *>(stream);
 
-  p->ptr = static_cast<char *>(g_realloc(p->ptr, p->len + size*nmemb + 1));
-  memcpy(p->ptr+p->len, ptr, size*nmemb);
-  p->len += size*nmemb;
-  p->ptr[p->len] = 0;
+  p->append(static_cast<char *>(ptr), size * nmemb);
   return nmemb;
 }
 
@@ -219,23 +216,26 @@ static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
   curl_data_t read_data_init(reinterpret_cast<char *>(xml_str));
   read_data_init.len = read_data_init.ptr ? strlen(read_data_init.ptr) : 0;
 
+  curl_data_t read_data = read_data_init;
+  std::string write_data;
+
+  /* now specify which file to upload */
+  curl_easy_setopt(curl.get(), CURLOPT_READDATA, &read_data);
+
+  /* provide the size of the upload */
+  curl_easy_setopt(curl.get(), CURLOPT_INFILESIZE, read_data.len);
+
+  /* we pass our 'chunk' struct to the callback function */
+  curl_easy_setopt(curl.get(), CURLOPT_WRITEDATA, &write_data);
+
+  curl_easy_setopt(curl.get(), CURLOPT_ERRORBUFFER, buffer);
+
   for(int retry = MAX_TRY; retry >= 0; retry--) {
     if(retry != MAX_TRY)
       context.appendf(O2G_NULLPTR, _("Retry %d/%d "), MAX_TRY-retry, MAX_TRY-1);
 
-    curl_data_t read_data = read_data_init;
-    curl_data_t write_data;
-
-    /* now specify which file to upload */
-    curl_easy_setopt(curl.get(), CURLOPT_READDATA, &read_data);
-
-    /* provide the size of the upload */
-    curl_easy_setopt(curl.get(), CURLOPT_INFILESIZE, read_data.len);
-
-    /* we pass our 'chunk' struct to the callback function */
-    curl_easy_setopt(curl.get(), CURLOPT_WRITEDATA, &write_data);
-
-    curl_easy_setopt(curl.get(), CURLOPT_ERRORBUFFER, buffer);
+    read_data = read_data_init;
+    write_data.clear();
 
     /* Now run off and do what you've been told! */
     res = curl_easy_perform(curl.get());
@@ -250,20 +250,18 @@ static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
               http_message(response));
       /* if it's neither "ok" (200), nor "internal server error" (500) */
       /* then write the message to the log */
-      if(response != 500 && write_data.ptr) {
+      if(response != 500 && !write_data.empty()) {
         context.appendf(O2G_NULLPTR, _("Server reply: "));
-        context.appendf(COLOR_ERR, _("%s\n"), write_data.ptr);
+        context.appendf(COLOR_ERR, _("%s\n"), write_data.c_str());
       }
     } else if(unlikely(!id)) {
       context.appendf(COLOR_OK, _("ok\n"));
     } else {
       /* this will return the id on a successful create */
-      printf("request to parse successful reply as an id\n");
-      *id = strtoull(write_data.ptr, O2G_NULLPTR, 10);
+      printf("request to parse successful reply '%s' as an id\n", write_data.c_str());
+      *id = strtoull(write_data.c_str(), O2G_NULLPTR, 10);
       context.appendf(COLOR_OK, _("ok: #" ITEM_ID_FORMAT "\n"), *id);
     }
-
-    g_free(write_data.ptr);
 
     /* don't retry unless we had an "internal server error" */
     if(response != 500)
@@ -295,14 +293,16 @@ static bool osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
 
   curl_easy_setopt(curl.get(), CURLOPT_ERRORBUFFER, buffer);
 
+  std::string write_data;
+
+  /* we pass our 'chunk' struct to the callback function */
+  curl_easy_setopt(curl.get(), CURLOPT_WRITEDATA, &write_data);
+
   for(int retry = MAX_TRY; retry >= 0; retry--) {
     if(retry != MAX_TRY)
       context.appendf(O2G_NULLPTR, _("Retry %d/%d "), MAX_TRY-retry, MAX_TRY-1);
 
-    curl_data_t write_data;
-
-    /* we pass our 'chunk' struct to the callback function */
-    curl_easy_setopt(curl.get(), CURLOPT_WRITEDATA, &write_data);
+    write_data.clear();
 
     /* Now run off and do what you've been told! */
     res = curl_easy_perform(curl.get());
@@ -320,12 +320,10 @@ static bool osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
 
     /* if it's neither "ok" (200), nor "internal server error" (500) */
     /* then write the message to the log */
-    if((response != 200) && (response != 500) && write_data.ptr) {
+    if((response != 200) && (response != 500) && !write_data.empty()) {
       context.appendf(O2G_NULLPTR, _("Server reply: "));
-      context.appendf(COLOR_ERR, _("%s\n"), write_data.ptr);
+      context.appendf(COLOR_ERR, _("%s\n"), write_data.c_str());
     }
-
-    g_free(write_data.ptr);
 
     /* don't retry unless we had an "internal server error" */
     if(response != 500)
