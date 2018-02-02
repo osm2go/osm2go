@@ -47,7 +47,7 @@ struct net_io_request_t {
   net_io_request_t(const std::string &u, const std::string &f, bool c);
   net_io_request_t(const std::string &u, curl_mem_t *cmem) __attribute__((nonnull(3)));
 
-  gint refcount;       /* reference counter for master and worker thread */
+  int refcount;       /* reference counter for master and worker thread */
 
   const std::string url;
   bool cancel;
