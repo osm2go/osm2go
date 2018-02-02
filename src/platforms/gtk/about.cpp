@@ -38,6 +38,7 @@
 #endif
 #include <gtk/gtk.h>
 
+#include <osm2go_annotations.h>
 #include <osm2go_cpp.h>
 #include "osm2go_i18n.h"
 #include "osm2go_platform.h"
@@ -85,19 +86,21 @@ static GtkWidget *label_wrap(const char *str) {
 
 static GtkWidget *license_page_new(void) {
   GtkWidget *label = label_wrap(O2G_NULLPTR);
-  g_mapped_file licMap;
 
   const std::string &name = find_file("COPYING");
-  if(!name.empty())
-    licMap.reset(g_mapped_file_new(name.c_str(), FALSE, O2G_NULLPTR));
+  bool found = false;
+  if(!name.empty()) {
+    osm2go_platform::MappedFile licMap(name.c_str());
 
-  if(licMap) {
-    const std::string buffer(g_mapped_file_get_contents(licMap.get()),
-                             g_mapped_file_get_length(licMap.get()));
-    licMap.reset();
+    if(licMap) {
+      const std::string buffer(licMap.data(), licMap.length());
 
-    gtk_label_set_text(GTK_LABEL(label), buffer.c_str());
-  } else
+      gtk_label_set_text(GTK_LABEL(label), buffer.c_str());
+      found = true;
+    }
+  }
+
+  if(unlikely(!found))
     gtk_label_set_text(GTK_LABEL(label), _("Load error"));
 
 #ifndef FREMANTLE

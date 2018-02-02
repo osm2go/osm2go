@@ -20,7 +20,10 @@
 #ifndef OSM2GO_PLATFORM_H
 #define OSM2GO_PLATFORM_H
 
+#include <glib.h>
 #include <gtk/gtk.h>
+
+#include <osm2go_cpp.h>
 
 namespace osm2go_platform {
   /**
@@ -47,6 +50,26 @@ namespace osm2go_platform {
 
     inline bool isActive() const
     { return id != 0; }
+  };
+
+  class MappedFile {
+    GMappedFile *map;
+  public:
+    explicit inline MappedFile(const char *fname)
+      : map(g_mapped_file_new(fname, FALSE, O2G_NULLPTR)) {}
+    inline ~MappedFile()
+    { reset(); }
+
+    inline operator bool() const
+    { return map != O2G_NULLPTR; }
+
+    inline const char *data()
+    { return g_mapped_file_get_contents(map); }
+
+    inline size_t length()
+    { return g_mapped_file_get_length(map); }
+
+    void reset();
   };
 };
 

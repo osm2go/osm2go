@@ -1,16 +1,13 @@
 #include <track.h>
 
-#include <misc.h>
-#include <osm2go_annotations.h>
-#include <osm2go_cpp.h>
-
 #include <cassert>
 #include <cerrno>
-#include <cstdlib>
-#include <cstring>
-#include <glib.h>
 #include <libxml/parser.h>
 #include <string>
+
+#include <osm2go_annotations.h>
+#include <osm2go_cpp.h>
+#include <osm2go_platform.h>
 
 int main(int argc, char **argv)
 {
@@ -29,13 +26,12 @@ int main(int argc, char **argv)
 
   delete track;
 
-  g_mapped_file ogpx(g_mapped_file_new(fn.c_str(), FALSE, O2G_NULLPTR));
-  g_mapped_file ngpx(g_mapped_file_new(argv[3], FALSE, O2G_NULLPTR));
+  osm2go_platform::MappedFile ogpx(fn.c_str());
+  osm2go_platform::MappedFile ngpx(argv[3]);
 
   assert(ogpx);
   assert(ngpx);
-  assert_cmpmem(g_mapped_file_get_contents(ogpx.get()), g_mapped_file_get_length(ogpx.get()),
-                g_mapped_file_get_contents(ngpx.get()), g_mapped_file_get_length(ngpx.get()));
+  assert_cmpmem(ogpx.data(), ogpx.length(), ngpx.data(), ngpx.length());
 
   xmlCleanupParser();
 

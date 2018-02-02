@@ -7,16 +7,17 @@
 #include <project.h>
 #include <xml_helpers.h>
 
-#include <osm2go_annotations.h>
-#include <osm2go_cpp.h>
-
 #include <cassert>
 #include <cerrno>
 #include <cstdlib>
 #include <cstring>
-#include <glib.h>
 #include <iostream>
 #include <sys/stat.h>
+#include <unistd.h>
+
+#include <osm2go_annotations.h>
+#include <osm2go_cpp.h>
+#include <osm2go_platform.h>
 
 void appdata_t::track_clear()
 {
@@ -104,13 +105,12 @@ static void verify_diff(osm_t *osm)
 
 static void compare_with_file(const void *buf, size_t len, const char *fn)
 {
-  g_mapped_file fdata(g_mapped_file_new(fn, FALSE, O2G_NULLPTR));
+  osm2go_platform::MappedFile fdata(fn);
 
   assert(fdata);
-  assert_cmpnum(g_mapped_file_get_length(fdata.get()), len);
+  assert_cmpnum(fdata.length(), len);
 
-  assert_cmpmem(g_mapped_file_get_contents(fdata.get()), g_mapped_file_get_length(fdata.get()),
-                buf, len);
+  assert_cmpmem(fdata.data(), fdata.length(), buf, len);
 }
 
 static void test_osmChange(const osm_t *osm, const char *fn)

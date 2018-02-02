@@ -36,7 +36,6 @@
 #include <cstring>
 #include <curl/curl.h>
 #include <curl/easy.h>
-#include <glib.h> /* for GMappedFile */
 #include <map>
 #include <memory>
 #include <sys/stat.h>
@@ -91,7 +90,7 @@ bool osm_download(GtkWidget *parent, settings_t *settings, project_t *project)
   const bool wasGzip = project->osmFile.size() > 3 && strcmp(project->osmFile.c_str() + project->osmFile.size() - 3, ".gz") == 0;
 
   // check the contents of the new file
-  g_mapped_file osmData(g_mapped_file_new(update.c_str(), FALSE, O2G_NULLPTR));
+  osm2go_platform::MappedFile osmData(update.c_str());
   if(unlikely(!osmData)) {
     messagef(parent, _("Download error"),
              _("Error accessing the downloaded file:\n\n%s"), update.c_str());
@@ -99,8 +98,7 @@ bool osm_download(GtkWidget *parent, settings_t *settings, project_t *project)
     return false;
   }
 
-  const bool isGzip = check_gzip(g_mapped_file_get_contents(osmData.get()),
-                              g_mapped_file_get_length(osmData.get()));
+  const bool isGzip = check_gzip(osmData.data(), osmData.length());
   osmData.reset();
 
   /* if there's a new file use this from now on */

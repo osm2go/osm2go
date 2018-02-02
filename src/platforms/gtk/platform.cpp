@@ -90,3 +90,15 @@ void osm2go_platform::dialog_size_hint(GtkWindow *window, osm2go_platform::Dialo
 
   gtk_window_set_default_size(window, dialog_sizes[hint][0], dialog_sizes[hint][1]);
 }
+
+void osm2go_platform::MappedFile::reset()
+{
+  if(likely(map != O2G_NULLPTR)) {
+#if GLIB_CHECK_VERSION(2,22,0)
+    g_mapped_file_unref(map);
+#else
+    g_mapped_file_free(map);
+#endif
+    map = O2G_NULLPTR;
+  }
+}

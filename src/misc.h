@@ -95,18 +95,6 @@ struct gtk_widget_deleter {
 
 typedef std::unique_ptr<GtkWidget, gtk_widget_deleter> g_widget;
 
-struct g_mapped_file_deleter {
-  inline void operator()(GMappedFile *map) {
-#if GLIB_CHECK_VERSION(2,22,0)
-    g_mapped_file_unref(map);
-#else
-    g_mapped_file_free(map);
-#endif
-  }
-};
-
-typedef std::unique_ptr<GMappedFile, g_mapped_file_deleter> g_mapped_file;
-
 struct g_object_deleter {
   inline void operator()(gpointer obj) {
     g_object_unref(obj);
