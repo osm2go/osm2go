@@ -44,6 +44,8 @@ struct xmlDocDelete {
 double xml_get_prop_float(xmlNode *node, const char *prop);
 bool xml_get_prop_bool(xmlNode *node, const char *prop);
 
-double xml_parse_float(const xmlString &str);
+double xml_parse_float(const xmlChar *str);
+inline double xml_parse_float(const xmlString &str)
+{ return xml_parse_float(str.get()); }
 
 #endif /* XML_HELPERS_H */

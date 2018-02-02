@@ -563,7 +563,7 @@ void TrackSax::characters(const char *ch, int len)
   switch(state) {
   case TagEle:
     buf.assign(ch, len);
-    curPoint->altitude = g_ascii_strtod(buf.c_str(), O2G_NULLPTR);
+    curPoint->altitude = xml_parse_float(reinterpret_cast<const xmlChar *>(buf.c_str()));
     break;
   case TagTime: {
     buf.assign(ch, len);
@@ -614,9 +614,9 @@ void TrackSax::startElement(const xmlChar *name, const xmlChar **attrs)
     curPoint = &track->segments.back().track_points.back();
     for(unsigned int i = 0; attrs[i]; i += 2) {
       if(strcmp(reinterpret_cast<const char *>(attrs[i]), "lat") == 0)
-        curPoint->pos.lat = g_ascii_strtod(reinterpret_cast<const gchar *>(attrs[i + 1]), O2G_NULLPTR);
+        curPoint->pos.lat = xml_parse_float(attrs[i + 1]);
       else if(likely(strcmp(reinterpret_cast<const char *>(attrs[i]), "lon") == 0))
-        curPoint->pos.lon = g_ascii_strtod(reinterpret_cast<const gchar *>(attrs[i + 1]), O2G_NULLPTR);
+        curPoint->pos.lon = xml_parse_float(attrs[i + 1]);
     }
   }
   default:

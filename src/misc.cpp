@@ -47,10 +47,10 @@ double xml_get_prop_float(xmlNode *node, const char *prop) {
   return xml_parse_float(str);
 }
 
-double xml_parse_float(const xmlString &str)
+double xml_parse_float(const xmlChar *str)
 {
   if(str)
-    return g_ascii_strtod(reinterpret_cast<gchar *>(str.get()), O2G_NULLPTR);
+    return g_ascii_strtod(reinterpret_cast<const gchar *>(str), O2G_NULLPTR);
   else
     return NAN;
 }
