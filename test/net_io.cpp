@@ -13,19 +13,16 @@
 
 static void do_mem(g_mapped_file &lic)
 {
-  char *mem;
-  size_t len;
-  assert(net_io_download_mem(O2G_NULLPTR, "https://raw.githubusercontent.com/osm2go/osm2go/master/data/COPYING", &mem, len, "dummy"));
-  g_string memguard(mem);
+  std::string mem;
+  assert(net_io_download_mem(O2G_NULLPTR, "https://raw.githubusercontent.com/osm2go/osm2go/master/data/COPYING", mem, "dummy"));
 
-  assert_cmpmem(g_mapped_file_get_contents(lic.get()), g_mapped_file_get_length(lic.get()), mem, len);
+  assert_cmpmem(g_mapped_file_get_contents(lic.get()), g_mapped_file_get_length(lic.get()), mem.c_str(), mem.size());
 }
 
 static void do_mem_fail()
 {
-  char *mem;
-  size_t len;
-  assert(!net_io_download_mem(O2G_NULLPTR, "https://raw.githubusercontent.com/osm2go/osm2go/master/data/this_file_does_not_exist", &mem, len, "dummy"));
+  std::string mem;
+  assert(!net_io_download_mem(O2G_NULLPTR, "https://raw.githubusercontent.com/osm2go/osm2go/master/data/this_file_does_not_exist", mem, "dummy"));
 }
 
 static void do_file(g_mapped_file &lic)

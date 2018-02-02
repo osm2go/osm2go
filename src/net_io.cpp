@@ -38,8 +38,8 @@
 #include <osm2go_platform_gtk.h>
 
 struct curl_mem_t {
-  char *ptr;
-  size_t len;
+  explicit curl_mem_t(std::string &d) : data(d) {}
+  std::string &data;
 };
 
 /* structure shared between worker and master thread */
@@ -193,8 +193,7 @@ void request_free::operator()(net_io_request_t *request)
   delete request;
 }
 
-static int curl_progress_func(void *req,
-			    curl_off_t dltotal, curl_off_t dlnow,
+static int curl_progress_func(void *req, curl_off_t dltotal, curl_off_t dlnow,
                             curl_off_t, curl_off_t) {
   net_io_request_t *request = static_cast<net_io_request_t *>(req);
   request->download_cur = dlnow;
@@ -202,15 +201,10 @@ static int curl_progress_func(void *req,
   return 0;
 }
 
-static size_t mem_write(void *ptr, size_t size, size_t nmemb,
-			void *stream) {
+static size_t mem_write(void *ptr, size_t size, size_t nmemb, void *stream) {
   curl_mem_t *p = static_cast<curl_mem_t *>(stream);
 
-  size_t nlen = p->len + size * nmemb;
-  p->ptr = static_cast<char *>(g_realloc(p->ptr, nlen + 1));
-  memcpy(p->ptr + p->len, ptr, size * nmemb);
-  p->len = nlen;
-  p->ptr[nlen] = '\0';
+  p->data.append(static_cast<char *>(ptr), size * nmemb);
   return nmemb;
 }
 
@@ -235,8 +229,7 @@ static void *worker_thread(void *ptr) {
       ok = static_cast<bool>(outfile);
       curl_easy_setopt(curl.get(), CURLOPT_WRITEDATA, outfile.get());
     } else {
-      request->mem->ptr = O2G_NULLPTR;
-      request->mem->len = 0;
+      request->mem->data.clear();
       curl_easy_setopt(curl.get(), CURLOPT_WRITEDATA, request->mem);
       curl_easy_setopt(curl.get(), CURLOPT_WRITEFUNCTION, mem_write);
       ok = true;
@@ -401,18 +394,15 @@ bool net_io_download_file(GtkWidget *parent,
 }
 
 bool net_io_download_mem(GtkWidget *parent, const std::string &url,
-                         char **mem, size_t &len, const char *title) {
-  curl_mem_t cmem;
+                         std::string &data, const char *title) {
+  curl_mem_t cmem(data);
   net_io_request_t *request = new net_io_request_t(url, &cmem);
 
   printf("net_io: download %s to memory\n", url.c_str());
 
   bool result = net_io_do(parent, request, title);
-  if(result) {
-    printf("ptr = %p, len = %zu\n", cmem.ptr, cmem.len);
-    *mem = cmem.ptr;
-    len = cmem.len;
-  }
+  if(unlikely(!result))
+    data.clear();
 
   return result;
 }

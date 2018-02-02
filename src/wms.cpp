@@ -391,11 +391,10 @@ wms_layer_t::list wms_get_layers(appdata_t& appdata, wms_t& wms)
   /* ----------- request capabilities -------------- */
 
   const std::string &url = wmsUrl(wms, "Capabilities");
-  char *cap = O2G_NULLPTR;
-  size_t caplen;
+  std::string capmem;
 
   /* ----------- parse capabilities -------------- */
-  if(unlikely(!net_io_download_mem(appdata.window, url, &cap, caplen, _("WMS capabilities")))) {
+  if(unlikely(!net_io_download_mem(appdata.window, url, capmem, _("WMS capabilities")))) {
     errorf(appdata.window, _("WMS download failed:\n\nGetCapabilities failed"));
     return layers;
   }
@@ -403,7 +402,8 @@ wms_layer_t::list wms_get_layers(appdata_t& appdata, wms_t& wms)
   if(unlikely(ImageFormats.empty()))
     initImageFormats();
 
-  std::unique_ptr<xmlDoc, xmlDocDelete> doc(xmlReadMemory(cap, caplen, O2G_NULLPTR, O2G_NULLPTR, XML_PARSE_NONET));
+  std::unique_ptr<xmlDoc, xmlDocDelete> doc(xmlReadMemory(capmem.c_str(), capmem.size(),
+                                                          O2G_NULLPTR, O2G_NULLPTR, XML_PARSE_NONET));
 
   /* parse the file and get the DOM */
   bool parse_success = false;
@@ -417,7 +417,7 @@ wms_layer_t::list wms_get_layers(appdata_t& appdata, wms_t& wms)
     parse_success = wms_cap_parse_root(wms, doc.get());
   }
 
-  g_free(cap);
+  capmem.clear();
 
   /* ------------ basic checks ------------- */
 
