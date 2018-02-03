@@ -17,9 +17,9 @@ N900
 * scratchbox with all the usual stuff
 * liblocation (propietary package from Nokia!)
 * OpenSSL 1.0.2 (https://github.com/osm2go/openssl/releases)
-* recent curl linked against the OpenSSL above)
+* recent curl linked against the OpenSSL above
 
-CURL
+curl
 ====
 
 The system curl on the N900 is old as the rest of the system. A version that is
@@ -32,7 +32,7 @@ same. This could cause other applications suddenly see the new version, which
 could cause massive chaos in case the application also needs the system OpenSSL
 version for some reason.
 
-So, one needs to set up a static CURL that will be linked directly into OSM2go.
+So, one needs to set up a static curl that will be linked directly into OSM2go.
 
 Download the latest version from https://curl.haxx.se and unpack it. Then do
 this:
