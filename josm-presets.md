@@ -15,7 +15,7 @@ __&lt;presets&gt;__          |                               | supported | requi
 __&lt;!-- comment --&gt;__   |                               | ignored   |
 __&lt;group&gt;__            |                               | supported |
 __&nbsp;__                   | name                          | supported | required
-__&nbsp;__                   | name_context                  | supported | ignored
+__&nbsp;__                   | name_context                  | ignored   |
 __&nbsp;__                   | icon                          | supported | supported
 __&lt;item&gt;__             |                               | supported |
 __&nbsp;__                   | name                          | supported | required
@@ -99,7 +99,7 @@ __&nbsp;__                   | text                          | ignored   |
 __&lt;separator/&gt;__       |                               | supported |
 __&lt;item_separator/&gt;__  |                               | ignored   |
 __&lt;link&gt;__             |                               | supported |
-__&nbsp;__                   | href                          | supported |
+__&nbsp;__                   | href                          | supported | required
 __&lt;roles&gt;__            |                               | supported |
 __&lt;role&gt;__             |                               | supported |
 __&nbsp;__                   | key                           | supported |
