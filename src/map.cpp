@@ -39,10 +39,6 @@
 #include <cmath>
 #include <cstddef>
 #include <cstring>
-#include <gdk/gdkkeysyms.h>
-#ifdef FREMANTLE
-#include <hildon/hildon-defines.h>
-#endif
 #include <memory>
 #include <vector>
 
@@ -51,17 +47,7 @@
 #include <osm2go_i18n.h>
 #include <osm2go_stl.h>
 
-class map_internal : public map_t {
-public:
-  map_internal(appdata_t &a);
-
-  osm2go_platform::Timer autosave;
-
-  struct {
-    std::unique_ptr<GdkPixbuf, g_object_deleter> pix;
-    canvas_item_t *item;
-  } background;
-};
+void map_bg_adjust(map_t *map, int x, int y);
 
 int map_item_t::get_segment(lpos_t pos) const {
   return item->get_segment(pos);
@@ -109,7 +95,7 @@ void map_item_chain_destroy(map_item_chain_t *&chainP) {
   chainP = O2G_NULLPTR;
 }
 
-static void map_node_select(map_t *map, node_t *node) {
+void map_node_select(map_t *map, node_t *node) {
   map_item_t *map_item = &map->selected;
 
   assert_null(map->highlight);
@@ -702,15 +688,6 @@ static void map_free_map_item_chains(appdata_t &appdata) {
   }
 }
 
-static gboolean map_destroy_event(map_t *map) {
-  printf("destroying entire map\n");
-
-  map->appdata.map = O2G_NULLPTR;
-  delete map;
-
-  return FALSE;
-}
-
 /* get the item at position x, y */
 map_item_t *map_t::item_at(int x, int y) {
   printf("map check at %d/%d\n", x, y);
@@ -963,24 +940,6 @@ void map_t::set_zoom(double zoom, bool update_scroll_offsets) {
   }
 }
 
-static gboolean map_scroll_event(GtkWidget *, GdkEventScroll *event, appdata_t *appdata) {
-  map_t *map = appdata->map;
-
-  if(!appdata->osm)
-    return FALSE;
-
-  if(event->type == GDK_SCROLL && map) {
-    double zoom = map->state.zoom;
-    if(event->direction)
-      zoom /= ZOOM_FACTOR_WHEEL;
-    else
-      zoom *= ZOOM_FACTOR_WHEEL;
-    map->set_zoom(zoom, true);
-  }
-
-  return TRUE;
-}
-
 static bool distance_above(map_t *map, int x, int y, int limit) {
   int sx, sy;
 
@@ -1006,9 +965,8 @@ static void map_do_scroll(map_t *map, int x, int y) {
                     map->state.scroll_offset.y);
 }
 
-
 /* scroll a certain step */
-static void map_do_scroll_step(map_t *map, int x, int y) {
+void map_do_scroll_step(map_t *map, int x, int y) {
   int sx, sy;
   map->canvas->scroll_get(canvas_t::UNIT_PIXEL, sx, sy);
   sx += x;
@@ -1154,7 +1112,7 @@ static void map_touchnode_update(map_t *map, int x, int y) {
   }
 }
 
-static void map_button_press(map_t *map, float x, float y) {
+void map_button_press(map_t *map, float x, float y) {
 
   printf("left button pressed\n");
   map->pen_down.is = true;
@@ -1196,17 +1154,7 @@ static void map_button_press(map_t *map, float x, float y) {
   }
 }
 
-/* move the background image (wms data) during wms adjustment */
-static void map_bg_adjust(map_t *map, int x, int y) {
-  assert(map->appdata.osm != O2G_NULLPTR);
-
-  x += map->appdata.osm->bounds.min.x + map->bg.offset.x - map->pen_down.at.x;
-  y += map->appdata.osm->bounds.min.y + map->bg.offset.y - map->pen_down.at.y;
-
-  static_cast<map_internal *>(map)->background.item->image_move(x, y, map->bg.scale.x, map->bg.scale.y);
-}
-
-static void map_button_release(map_t *map, int x, int y) {
+void map_button_release(map_t *map, int x, int y) {
   map->pen_down.is = false;
 
   /* before button release is handled */
@@ -1314,54 +1262,8 @@ static void map_button_release(map_t *map, int x, int y) {
   }
 }
 
-static gboolean map_button_event(map_t *map, GdkEventButton *event) {
-  if(unlikely(!map->appdata.osm))
-    return FALSE;
-
-  if(event->button == 1) {
-    float x = event->x, y = event->y;
-
-    if(event->type == GDK_BUTTON_PRESS)
-      map_button_press(map, x, y);
-
-    else if(event->type == GDK_BUTTON_RELEASE)
-      map_button_release(map, x, y);
-  }
-
-  return FALSE;  /* forward to further processing */
-}
-
-static gboolean map_motion_notify_event(GtkWidget *,
-                             GdkEventMotion *event, gpointer data) {
-  map_t *map = static_cast<map_t *>(data);
-  gint x, y;
-  GdkModifierType state;
-
-  if(!map->appdata.osm) return FALSE;
-
-#if 0 // def FREMANTLE
-  /* reduce update frequency on hildon to keep screen update fluid */
-  static guint32 last_time = 0;
-
-  if(event->time - last_time < 250) return FALSE;
-  last_time = event->time;
-#endif
-
-  if(gtk_events_pending())
-    return FALSE;
-
-  if(!map->pen_down.is)
-    return FALSE;
-
-  /* handle hints */
-  if(event->is_hint)
-    gdk_window_get_pointer(event->window, &x, &y, &state);
-  else {
-    x = event->x;
-    y = event->y;
-    state = static_cast<GdkModifierType>(event->state);
-  }
-
+void map_handle_motion(map_t *map, int x, int y)
+{
   /* check if distance to press is above drag limit */
   if(!map->pen_down.drag)
     map->pen_down.drag = distance_above(map, x, y, MAP_DRAG_LIMIT);
@@ -1376,10 +1278,10 @@ static gboolean map_motion_notify_event(GtkWidget *,
     if(map->pen_down.drag) {
       /* just scroll if we didn't drag an selected item */
       if(!map->pen_down.on_selected_node)
-	map_do_scroll(map, x, y);
+        map_do_scroll(map, x, y);
       else {
         map_hl_cursor_draw(map, x, y, map->style->node.radius);
-	map_touchnode_update(map, x, y);
+        map_touchnode_update(map, x, y);
       }
     }
     break;
@@ -1406,92 +1308,6 @@ static gboolean map_motion_notify_event(GtkWidget *,
   default:
     break;
   }
-
-
-  return FALSE;  /* forward to further processing */
-}
-
-bool map_t::key_press_event(unsigned int keyval) {
-  switch(keyval) {
-  case GDK_Left:
-    map_do_scroll_step(this, -50, 0);
-    break;
-
-  case GDK_Right:
-    map_do_scroll_step(this, +50, 0);
-    break;
-
-  case GDK_Up:
-    map_do_scroll_step(this, 0, -50);
-    break;
-
-  case GDK_Down:
-    map_do_scroll_step(this, 0, +50);
-    break;
-
-  case GDK_Return:   // same as HILDON_HARDKEY_SELECT
-    /* if the ok button is enabled, call its function */
-    if(appdata.iconbar->isOkEnabled())
-      map_action_ok(this);
-    /* otherwise if info is enabled call that */
-    else if(appdata.iconbar->isInfoEnabled())
-      info_dialog(appdata.window, this, appdata.osm, appdata.presets);
-    break;
-
-  case GDK_Escape:   // same as HILDON_HARDKEY_ESC
-    /* if the cancel button is enabled, call its function */
-    if(appdata.iconbar->isCancelEnabled())
-      map_action_cancel(this);
-    break;
-
-  case GDK_Delete:
-    /* if the delete button is enabled, call its function */
-    if(appdata.iconbar->isTrashEnabled())
-      map_delete_selected(this);
-    break;
-
-#ifdef FREMANTLE
-  case HILDON_HARDKEY_INCREASE:
-#else
-  case '+':
-  case GDK_KP_Add:
-#endif
-    set_zoom(state.zoom * ZOOM_FACTOR_BUTTON, true);
-    return true;
-
-#ifdef FREMANTLE
-  case HILDON_HARDKEY_DECREASE:
-#else
-  case '-':
-  case GDK_KP_Subtract:
-#endif
-    set_zoom(state.zoom / ZOOM_FACTOR_BUTTON, true);
-    return true;
-
-  default:
-    printf("key event %d\n", keyval);
-    break;
-  }
-
-  return false;
-}
-
-static gboolean map_autosave(gpointer data) {
-  map_t *map = static_cast<map_t *>(data);
-
-  /* only do this if root window has focus as otherwise */
-  /* a dialog may be open and modifying the basic structures */
-  if(gtk_window_is_active(GTK_WINDOW(map->appdata.window))) {
-    printf("autosave ...\n");
-
-    if(map->appdata.project && map->appdata.osm) {
-      track_save(map->appdata.project, map->appdata.track.track);
-      diff_save(map->appdata.project, map->appdata.osm);
-    }
-  } else
-    printf("autosave supressed\n");
-
-  return TRUE;
 }
 
 map_t::map_t(appdata_t &a)
@@ -1511,29 +1327,6 @@ map_t::map_t(appdata_t &a)
   pen_down.at.x = -1;
   pen_down.at.y = -1;
   action.type = MAP_ACTION_IDLE;
-}
-
-map_internal::map_internal(appdata_t &a)
-  : map_t(a)
-{
-  background.item = O2G_NULLPTR;
-
-  g_signal_connect_swapped(canvas->widget, "button_press_event",
-                           G_CALLBACK(map_button_event), this);
-  g_signal_connect_swapped(canvas->widget, "button_release_event",
-                           G_CALLBACK(map_button_event), this);
-  g_signal_connect(canvas->widget, "motion_notify_event",
-                   G_CALLBACK(map_motion_notify_event), this);
-  g_signal_connect(canvas->widget, "scroll_event",
-                   G_CALLBACK(map_scroll_event), &appdata);
-
-  g_signal_connect_swapped(canvas->widget, "destroy",
-                           G_CALLBACK(map_destroy_event), this);
-}
-
-map_t *map_t::create(appdata_t &a)
-{
-  return new map_internal(a);
 }
 
 map_t::~map_t()
@@ -1674,30 +1467,6 @@ void map_t::set_action(map_action_t act) {
   appdata.uicontrol->showNotification(statusbar_text);
 }
 
-
-void map_action_cancel(map_t *map) {
-  switch(map->action.type) {
-  case MAP_ACTION_WAY_ADD:
-    map_edit_way_add_cancel(map);
-    break;
-
-  case MAP_ACTION_BG_ADJUST: {
-    /* undo all changes to bg_offset */
-    map->bg.offset.x = map->appdata.project->wms_offset.x;
-    map->bg.offset.y = map->appdata.project->wms_offset.y;
-
-    int x = map->appdata.osm->bounds.min.x + map->bg.offset.x;
-    int y = map->appdata.osm->bounds.min.y + map->bg.offset.y;
-    static_cast<map_internal *>(map)->background.item->image_move(x, y, map->bg.scale.x, map->bg.scale.y);
-    break;
-  }
-
-  default:
-    break;
-  }
-
-  map->set_action(MAP_ACTION_IDLE);
-}
 
 void map_action_ok(map_t *map) {
   /* reset action now as this erases the statusbar and some */
@@ -2060,55 +1829,6 @@ void map_track_remove_pos(appdata_t &appdata) {
 
 /* ------------------- map background ------------------ */
 
-void map_t::remove_bg_image() {
-  map_internal *m = static_cast<map_internal *>(this);
-  if(m->background.item) {
-    delete m->background.item;
-    m->background.item = O2G_NULLPTR;
-  }
-}
-
-static void map_bg_item_destroy_event(gpointer data) {
-  map_internal *map = static_cast<map_internal *>(data);
-
-  /* destroying background item */
-
-  map->background.item = O2G_NULLPTR;
-  if(map->background.pix) {
-    printf("destroying background item\n");
-    map->background.pix.reset();
-  }
-}
-
-bool map_t::set_bg_image(const std::string &filename) {
-  const bounds_t &bounds = appdata.osm->bounds;
-
-  remove_bg_image();
-
-  map_internal *m = static_cast<map_internal *>(this);
-
-  m->background.pix.reset(gdk_pixbuf_new_from_file(filename.c_str(), O2G_NULLPTR));
-  if(!m->background.pix)
-    return false;
-
-  /* calculate required scale factor */
-  bg.scale.x = static_cast<float>(bounds.max.x - bounds.min.x) /
-                    gdk_pixbuf_get_width(m->background.pix.get());
-  bg.scale.y = static_cast<float>(bounds.max.y - bounds.min.y) /
-                    gdk_pixbuf_get_height(m->background.pix.get());
-
-  m->background.item = canvas->image_new(CANVAS_GROUP_BG, m->background.pix.get(),
-                              bounds.min.x, bounds.min.y, bg.scale.x, bg.scale.y);
-
-  m->background.item->destroy_connect(map_bg_item_destroy_event, this);
-
-  int x = appdata.osm->bounds.min.x + bg.offset.x;
-  int y = appdata.osm->bounds.min.y + bg.offset.y;
-  m->background.item->image_move(x, y, bg.scale.x, bg.scale.y);
-
-  return true;
-}
-
 void map_t::set_bg_color_from_style()
 {
   canvas->set_background(style->background.color);
@@ -2180,14 +1900,6 @@ void map_t::detail_decrease() {
 
 void map_t::detail_normal() {
   detail_change(1.0, _("Restoring default detail level"));
-}
-
-void map_t::set_autosave(bool enable) {
-  map_internal *m = static_cast<map_internal *>(this);
-  if(enable)
-    m->autosave.restart(120, map_autosave, this);
-  else
-    m->autosave.stop();
 }
 
 map_state_t::map_state_t()
