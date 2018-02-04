@@ -47,8 +47,6 @@
 #include <osm2go_i18n.h>
 #include <osm2go_stl.h>
 
-void map_bg_adjust(map_t *map, int x, int y);
-
 int map_item_t::get_segment(lpos_t pos) const {
   return item->get_segment(pos);
 }
@@ -966,17 +964,15 @@ static void map_do_scroll(map_t *map, int x, int y) {
 }
 
 /* scroll a certain step */
-void map_do_scroll_step(map_t *map, int x, int y) {
+void map_t::scroll_step(int x, int y) {
   int sx, sy;
-  map->canvas->scroll_get(canvas_t::UNIT_PIXEL, sx, sy);
+  canvas->scroll_get(canvas_t::UNIT_PIXEL, sx, sy);
   sx += x;
   sy += y;
-  map_limit_scroll(map, canvas_t::UNIT_PIXEL, sx, sy);
-  map->canvas->scroll_to(canvas_t::UNIT_PIXEL, sx, sy);
+  map_limit_scroll(this, canvas_t::UNIT_PIXEL, sx, sy);
+  canvas->scroll_to(canvas_t::UNIT_PIXEL, sx, sy);
 
-  map->canvas->scroll_get(canvas_t::UNIT_METER,
-                    map->state.scroll_offset.x,
-                    map->state.scroll_offset.y);
+  canvas->scroll_get(canvas_t::UNIT_METER, state.scroll_offset.x, state.scroll_offset.y);
 }
 
 bool map_t::item_is_selected_node(const map_item_t *map_item) const {
@@ -1112,41 +1108,40 @@ static void map_touchnode_update(map_t *map, int x, int y) {
   }
 }
 
-void map_button_press(map_t *map, float x, float y) {
-
+void map_t::button_press(float x, float y) {
   printf("left button pressed\n");
-  map->pen_down.is = true;
+  pen_down.is = true;
 
   /* save press position */
-  map->pen_down.at.x = x;
-  map->pen_down.at.y = y;
-  map->pen_down.drag = false;     // don't assume drag yet
+  pen_down.at.x = x;
+  pen_down.at.y = y;
+  pen_down.drag = false;     // don't assume drag yet
 
   /* determine wether this press was on an item */
-  map->pen_down_item();
+  pen_down_item();
 
   /* check if the clicked item is a highlighted node as the user */
   /* might want to drag that */
-  map->pen_down.on_selected_node = map->item_is_selected_node(map->pen_down.on_item);
+  pen_down.on_selected_node = item_is_selected_node(pen_down.on_item);
 
   /* button press */
-  switch(map->action.type) {
+  switch(action.type) {
 
   case MAP_ACTION_WAY_NODE_ADD:
-    map_edit_way_node_add_highlight(map, map->pen_down.on_item, x, y);
+    map_edit_way_node_add_highlight(this, pen_down.on_item, x, y);
     break;
 
   case MAP_ACTION_WAY_CUT:
-    map_edit_way_cut_highlight(map, map->pen_down.on_item, x, y);
+    map_edit_way_cut_highlight(this, pen_down.on_item, x, y);
     break;
 
   case MAP_ACTION_NODE_ADD:
-    map_hl_cursor_draw(map, x, y, map->style->node.radius);
+    map_hl_cursor_draw(this, x, y, style->node.radius);
     break;
 
   case MAP_ACTION_WAY_ADD:
-    map_hl_cursor_draw(map, x, y, map->style->node.radius);
-    map_touchnode_update(map, x, y);
+    map_hl_cursor_draw(this, x, y, style->node.radius);
+    map_touchnode_update(this, x, y);
     break;
 
   default:
@@ -1154,155 +1149,153 @@ void map_button_press(map_t *map, float x, float y) {
   }
 }
 
-void map_button_release(map_t *map, int x, int y) {
-  map->pen_down.is = false;
+void map_t::button_release(int x, int y) {
+  pen_down.is = false;
 
   /* before button release is handled */
-  switch(map->action.type) {
+  switch(action.type) {
   case MAP_ACTION_BG_ADJUST:
-    map_bg_adjust(map, x, y);
-    map->bg.offset.x += x - map->pen_down.at.x;
-    map->bg.offset.y += y - map->pen_down.at.y;
+    bg_adjust(x, y);
+    bg.offset.x += x - pen_down.at.x;
+    bg.offset.y += y - pen_down.at.y;
     break;
 
   case MAP_ACTION_IDLE:
     /* check if distance to press is above drag limit */
-    if(!map->pen_down.drag)
-      map->pen_down.drag = distance_above(map, x, y, MAP_DRAG_LIMIT);
+    if(!pen_down.drag)
+      pen_down.drag = distance_above(this, x, y, MAP_DRAG_LIMIT);
 
-    if(!map->pen_down.drag) {
+    if(!pen_down.drag) {
       printf("left button released after click\n");
 
-      map_item_t old_sel = map->selected;
-      map_handle_click(map);
+      map_item_t old_sel = selected;
+      map_handle_click(this);
 
-      if((old_sel.object.type != ILLEGAL) &&
-	 (old_sel.object == map->selected.object)) {
+      if(old_sel.object.type != ILLEGAL && old_sel.object == selected.object) {
         printf("re-selected same item of type %s, pushing it to the bottom\n",
                old_sel.object.type_string());
 
-	if(!map->selected.item) {
-	  printf("  item has no visible representation to push\n");
-	} else {
-          map->selected.item->to_bottom();
+        if(selected.item == O2G_NULLPTR) {
+          printf("  item has no visible representation to push\n");
+        } else {
+          selected.item->to_bottom();
 
-	  /* update clicked item, to correctly handle the click */
-          map->pen_down_item();
+          /* update clicked item, to correctly handle the click */
+          pen_down_item();
 
-	  map_handle_click(map);
-	}
+          map_handle_click(this);
+        }
       }
     } else {
       printf("left button released after drag\n");
 
       /* just scroll if we didn't drag an selected item */
-      if(!map->pen_down.on_selected_node)
-	map_do_scroll(map, x, y);
-      else {
-	printf("released after dragging node\n");
-	map_hl_cursor_clear(map);
+      if(!pen_down.on_selected_node) {
+        map_do_scroll(this, x, y);
+      } else {
+        printf("released after dragging node\n");
+        map_hl_cursor_clear(this);
 
-	/* now actually move the node */
-        map_edit_node_move(map, map->pen_down.on_item, x, y);
+        /* now actually move the node */
+        map_edit_node_move(this, pen_down.on_item, x, y);
       }
     }
     break;
 
   case MAP_ACTION_NODE_ADD: {
     printf("released after NODE ADD\n");
-    map_hl_cursor_clear(map);
+    map_hl_cursor_clear(this);
 
     /* convert mouse position to canvas (world) position */
-    lpos_t pos = map->canvas->window2world(x, y);
+    lpos_t pos = canvas->window2world(x, y);
 
     node_t *node = O2G_NULLPTR;
-    if(!map->appdata.osm->bounds.contains(pos))
-      map_outside_error(map->appdata);
+    if(!appdata.osm->bounds.contains(pos))
+      map_outside_error(appdata);
     else {
-      node = map->appdata.osm->node_new(pos);
-      map->appdata.osm->node_attach(node);
-      map->draw(node);
+      node = appdata.osm->node_new(pos);
+      appdata.osm->node_attach(node);
+      draw(node);
     }
-    map->set_action(MAP_ACTION_IDLE);
+    set_action(MAP_ACTION_IDLE);
 
-    map->item_deselect();
+    item_deselect();
 
     if(node) {
-      map_node_select(map, node);
+      map_node_select(this, node);
 
       /* let the user specify some tags for the new node */
-      info_dialog(map->appdata.window, map, map->appdata.osm, map->appdata.presets);
+      info_dialog(appdata.window, this, appdata.osm, appdata.presets);
     }
     break;
   }
   case MAP_ACTION_WAY_ADD:
     printf("released after WAY ADD\n");
-    map_hl_cursor_clear(map);
+    map_hl_cursor_clear(this);
 
-    map_edit_way_add_segment(map, x, y);
+    map_edit_way_add_segment(this, x, y);
     break;
 
   case MAP_ACTION_WAY_NODE_ADD:
     printf("released after WAY NODE ADD\n");
-    map_hl_cursor_clear(map);
+    map_hl_cursor_clear(this);
 
-    map_edit_way_node_add(map, x, y);
+    map_edit_way_node_add(this, x, y);
     break;
 
   case MAP_ACTION_WAY_CUT:
     printf("released after WAY CUT\n");
-    map_hl_cursor_clear(map);
+    map_hl_cursor_clear(this);
 
-    map_edit_way_cut(map, x, y);
+    map_edit_way_cut(this, x, y);
     break;
-
 
   default:
     break;
   }
 }
 
-void map_handle_motion(map_t *map, int x, int y)
+void map_t::handle_motion(int x, int y)
 {
   /* check if distance to press is above drag limit */
-  if(!map->pen_down.drag)
-    map->pen_down.drag = distance_above(map, x, y, MAP_DRAG_LIMIT);
+  if(!pen_down.drag)
+    pen_down.drag = distance_above(this, x, y, MAP_DRAG_LIMIT);
 
   /* drag */
-  switch(map->action.type) {
+  switch(action.type) {
   case MAP_ACTION_BG_ADJUST:
-    map_bg_adjust(map, x, y);
+    bg_adjust(x, y);
     break;
 
   case MAP_ACTION_IDLE:
-    if(map->pen_down.drag) {
+    if(pen_down.drag) {
       /* just scroll if we didn't drag an selected item */
-      if(!map->pen_down.on_selected_node)
-        map_do_scroll(map, x, y);
+      if(!pen_down.on_selected_node)
+        map_do_scroll(this, x, y);
       else {
-        map_hl_cursor_draw(map, x, y, map->style->node.radius);
-        map_touchnode_update(map, x, y);
+        map_hl_cursor_draw(this, x, y, style->node.radius);
+        map_touchnode_update(this, x, y);
       }
     }
     break;
 
   case MAP_ACTION_NODE_ADD:
-    map_hl_cursor_draw(map, x, y, map->style->node.radius);
+    map_hl_cursor_draw(this, x, y, style->node.radius);
     break;
 
   case MAP_ACTION_WAY_ADD:
-    map_hl_cursor_draw(map, x, y, map->style->node.radius);
-    map_touchnode_update(map, x, y);
+    map_hl_cursor_draw(this, x, y, style->node.radius);
+    map_touchnode_update(this, x, y);
     break;
 
   case MAP_ACTION_WAY_NODE_ADD:
-    map_hl_cursor_clear(map);
-    map_edit_way_node_add_highlight(map, map->item_at(x, y), x, y);
+    map_hl_cursor_clear(this);
+    map_edit_way_node_add_highlight(this, item_at(x, y), x, y);
     break;
 
   case MAP_ACTION_WAY_CUT:
-    map_hl_cursor_clear(map);
-    map_edit_way_cut_highlight(map, map->item_at(x, y), x, y);
+    map_hl_cursor_clear(this);
+    map_edit_way_cut_highlight(this, item_at(x, y), x, y);
     break;
 
   default:

@@ -101,6 +101,12 @@ class map_t {
 protected:
   explicit map_t(appdata_t &a);
 
+  void handle_motion(int x, int y);
+  void scroll_step(int x, int y);
+  void button_press(float x, float y);
+  void button_release(int x, int y);
+  void bg_adjust(int x, int y);
+
 public:
   enum clearLayers {
     MAP_LAYER_ALL,

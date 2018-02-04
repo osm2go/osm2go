@@ -51,11 +51,6 @@
 #include <osm2go_i18n.h>
 #include <osm2go_stl.h>
 
-void map_button_press(map_t *map, float x, float y);
-void map_button_release(map_t *map, int x, int y);
-void map_do_scroll_step(map_t *map, int x, int y);
-void map_handle_motion(map_t *map, int x, int y);
-
 class map_internal : public map_t {
 public:
   map_internal(appdata_t &a);
@@ -66,6 +61,9 @@ public:
     std::unique_ptr<GdkPixbuf, g_object_deleter> pix;
     canvas_item_t *item;
   } background;
+
+  static gboolean map_motion_notify_event(GtkWidget *, GdkEventMotion *event, map_internal *map);
+  static gboolean map_button_event(map_internal *map, GdkEventButton *event);
 };
 
 static gboolean map_destroy_event(map_t *map) {
@@ -96,16 +94,16 @@ static gboolean map_scroll_event(GtkWidget *, GdkEventScroll *event, appdata_t *
 }
 
 /* move the background image (wms data) during wms adjustment */
-void map_bg_adjust(map_t *map, int x, int y) {
-  assert(map->appdata.osm != O2G_NULLPTR);
+void map_t::bg_adjust(int x, int y) {
+  assert(appdata.osm != O2G_NULLPTR);
 
-  x += map->appdata.osm->bounds.min.x + map->bg.offset.x - map->pen_down.at.x;
-  y += map->appdata.osm->bounds.min.y + map->bg.offset.y - map->pen_down.at.y;
+  x += appdata.osm->bounds.min.x + bg.offset.x - pen_down.at.x;
+  y += appdata.osm->bounds.min.y + bg.offset.y - pen_down.at.y;
 
-  static_cast<map_internal *>(map)->background.item->image_move(x, y, map->bg.scale.x, map->bg.scale.y);
+  static_cast<map_internal *>(this)->background.item->image_move(x, y, bg.scale.x, bg.scale.y);
 }
 
-static gboolean map_button_event(map_t *map, GdkEventButton *event) {
+gboolean map_internal::map_button_event(map_internal *map, GdkEventButton *event) {
   if(unlikely(!map->appdata.osm))
     return FALSE;
 
@@ -113,16 +111,16 @@ static gboolean map_button_event(map_t *map, GdkEventButton *event) {
     float x = event->x, y = event->y;
 
     if(event->type == GDK_BUTTON_PRESS)
-      map_button_press(map, x, y);
+      map->button_press(x, y);
 
     else if(event->type == GDK_BUTTON_RELEASE)
-      map_button_release(map, x, y);
+      map->button_release(x, y);
   }
 
   return FALSE;  /* forward to further processing */
 }
 
-static gboolean map_motion_notify_event(GtkWidget *, GdkEventMotion *event, map_t *map) {
+gboolean map_internal::map_motion_notify_event(GtkWidget *, GdkEventMotion *event, map_internal *map) {
   gint x, y;
   GdkModifierType state;
 
@@ -151,7 +149,7 @@ static gboolean map_motion_notify_event(GtkWidget *, GdkEventMotion *event, map_
     state = static_cast<GdkModifierType>(event->state);
   }
 
-  map_handle_motion(map, x, y);
+  map->handle_motion(x, y);
 
   return FALSE;  /* forward to further processing */
 }
@@ -159,19 +157,19 @@ static gboolean map_motion_notify_event(GtkWidget *, GdkEventMotion *event, map_
 bool map_t::key_press_event(unsigned int keyval) {
   switch(keyval) {
   case GDK_Left:
-    map_do_scroll_step(this, -50, 0);
+    scroll_step(-50, 0);
     break;
 
   case GDK_Right:
-    map_do_scroll_step(this, +50, 0);
+    scroll_step(+50, 0);
     break;
 
   case GDK_Up:
-    map_do_scroll_step(this, 0, -50);
+    scroll_step(0, -50);
     break;
 
   case GDK_Down:
-    map_do_scroll_step(this, 0, +50);
+    scroll_step(0, +50);
     break;
 
   case GDK_Return:   // same as HILDON_HARDKEY_SELECT
