@@ -81,6 +81,11 @@ canvas_goocanvas::canvas_goocanvas()
   g_object_set_data(w, "canvas-pointer", this);
 
   g_object_set(w, "anchor", GTK_ANCHOR_CENTER, O2G_NULLPTR);
+
+  gtk_widget_set_events(widget,
+                        GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
+                        GDK_SCROLL_MASK | GDK_POINTER_MOTION_MASK |
+                        GDK_POINTER_MOTION_HINT_MASK);
 }
 
 /* ------------------------ accessing the canvas ---------------------- */

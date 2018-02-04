@@ -1511,33 +1511,24 @@ map_t::map_t(appdata_t &a)
   pen_down.at.x = -1;
   pen_down.at.y = -1;
   action.type = MAP_ACTION_IDLE;
-
-  GtkWidget *canvas_widget = canvas->widget;
-
-  gtk_widget_set_events(canvas_widget,
-                          GDK_BUTTON_PRESS_MASK
-			| GDK_BUTTON_RELEASE_MASK
-			| GDK_SCROLL_MASK
-			| GDK_POINTER_MOTION_MASK
-			| GDK_POINTER_MOTION_HINT_MASK);
-
-  g_signal_connect_swapped(canvas_widget, "button_press_event",
-                           G_CALLBACK(map_button_event), this);
-  g_signal_connect_swapped(canvas_widget, "button_release_event",
-                           G_CALLBACK(map_button_event), this);
-  g_signal_connect(canvas_widget, "motion_notify_event",
-                   G_CALLBACK(map_motion_notify_event), this);
-  g_signal_connect(canvas_widget, "scroll_event",
-                   G_CALLBACK(map_scroll_event), &appdata);
-
-  g_signal_connect_swapped(canvas_widget, "destroy",
-                           G_CALLBACK(map_destroy_event), this);
 }
 
 map_internal::map_internal(appdata_t &a)
   : map_t(a)
 {
   background.item = O2G_NULLPTR;
+
+  g_signal_connect_swapped(canvas->widget, "button_press_event",
+                           G_CALLBACK(map_button_event), this);
+  g_signal_connect_swapped(canvas->widget, "button_release_event",
+                           G_CALLBACK(map_button_event), this);
+  g_signal_connect(canvas->widget, "motion_notify_event",
+                   G_CALLBACK(map_motion_notify_event), this);
+  g_signal_connect(canvas->widget, "scroll_event",
+                   G_CALLBACK(map_scroll_event), &appdata);
+
+  g_signal_connect_swapped(canvas->widget, "destroy",
+                           G_CALLBACK(map_destroy_event), this);
 }
 
 map_t *map_t::create(appdata_t &a)
