@@ -15,6 +15,7 @@
 #include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 static char tmpdir[32] = "/tmp/osm2go_api_dl_XXXXXX";
 static const char *dev_url  = "https://master.apis.dev.openstreetmap.org/api/0.6";

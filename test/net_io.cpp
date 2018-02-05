@@ -6,6 +6,7 @@
 #include <curl/curl.h>
 #include <cstdlib>
 #include <string>
+#include <unistd.h>
 
 #include <osm2go_annotations.h>
 #include <osm2go_cpp.h>
