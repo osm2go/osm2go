@@ -135,7 +135,7 @@ settings_t *settings_t::load() {
 
       for(unsigned int i = 0; i < count; i++) {
         char nbuf[16];
-        snprintf(nbuf, sizeof(nbuf), "%i", i);
+        snprintf(nbuf, sizeof(nbuf), "%u", i);
 
         key = keybase + "wms/server" + nbuf;
         GConfValue *server = gconf_client_get(client.get(), key.c_str(), O2G_NULLPTR);
