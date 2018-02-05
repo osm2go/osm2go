@@ -223,4 +223,52 @@ template<typename T> void shrink_to_fit(T &v) {
 #endif
 }
 
+#if __cplusplus < 201103L
+namespace std {
+  template<typename T>
+  std::string to_string_tpl(T n, const char *fmt)
+  {
+    char buf[sizeof(n) * 4];
+    snprintf(buf, sizeof(buf), fmt, n);
+    return buf;
+  }
+
+  inline std::string to_string(int n)
+  {
+    return to_string_tpl(n, "%i");
+  }
+
+  inline std::string to_string(long n)
+  {
+    return to_string_tpl(n, "%li");
+  }
+
+  inline std::string to_string(long long n)
+  {
+    return to_string_tpl(n, "%lli");
+  }
+
+  inline std::string to_string(unsigned int n)
+  {
+    return to_string_tpl(n, "%u");
+  }
+
+  inline std::string to_string(unsigned long n)
+  {
+    return to_string_tpl(n, "%lu");
+  }
+
+  inline std::string to_string(unsigned long long n)
+  {
+    return to_string_tpl(n, "%llu");
+  }
+
+  // not implemented, just to catch accidential conversions
+  // the implementation would be trivial, but not local-safe
+  std::string to_string(float);
+  std::string to_string(double);
+  std::string to_string(long double);
+}
+#endif
+
 #endif // OSM2GO_STL_H

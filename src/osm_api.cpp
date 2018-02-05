@@ -453,10 +453,7 @@ static bool osm_create_changeset(osm_upload_context_t &context) {
 
     item_id_t changeset;
     if(osm_update_item(context, xml_str.get(), url.c_str(), &changeset)) {
-      char str[32];
-      snprintf(str, sizeof(str), ITEM_ID_FORMAT, changeset);
-      printf("got changeset id %s\n", str);
-      context.changeset = str;
+      context.changeset = std::to_string(changeset);
       result = true;
     }
   }

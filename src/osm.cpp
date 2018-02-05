@@ -137,13 +137,9 @@ const char *object_t::type_string() const {
 }
 
 std::string object_t::id_string() const {
-  // long enough for every int64
-  char buf[32] = { 0 };
-
   assert_cmpnum_op(type, !=, ILLEGAL);
-  snprintf(buf, sizeof(buf), ITEM_ID_FORMAT, get_id());
 
-  return buf;
+  return std::to_string(get_id());
 }
 
 item_id_t object_t::get_id() const {
@@ -2167,12 +2163,7 @@ void base_object_t::updateTags(const osm_t::TagMap &ntags)
 }
 
 std::string base_object_t::id_string() const {
-  // long enough for every int64
-  char buf[32] = { 0 };
-
-  snprintf(buf, sizeof(buf), ITEM_ID_FORMAT, id);
-
-  return buf;
+  return std::to_string(id);
 }
 
 void base_object_t::osmchange_delete(xmlNodePtr parent_node, const char *changeset) const
