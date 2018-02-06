@@ -187,12 +187,12 @@ std::set<std::string> preset_roles(const relation_t *relation, const object_t &o
   return ret;
 }
 
-bool presets_element_combo::matchValue(const char *val) const
+bool presets_element_combo::matchValue(const std::string &val) const
 {
   return std::find(values.begin(), values.end(), val) != values.end();
 }
 
-bool presets_element_key::matchValue(const char *val) const
+bool presets_element_key::matchValue(const std::string &val) const
 {
   return (value == val);
 }
@@ -203,11 +203,10 @@ std::string presets_element_key::getValue(presets_element_t::attach_key *akey) c
   return value;
 }
 
-bool presets_element_checkbox::matchValue(const char *val) const
+bool presets_element_checkbox::matchValue(const std::string &val) const
 {
   if(!value_on.empty())
     return (value_on == val);
 
-  return ((strcasecmp(val, "true") == 0) ||
-          (strcasecmp(val, "yes") == 0));
+  return (strcasecmp(val.c_str(), "true") == 0 || strcasecmp(val.c_str(), "yes") == 0);
 }

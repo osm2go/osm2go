@@ -70,7 +70,7 @@ protected:
   /**
    * @brief check if the tag value matches this item
    */
-  virtual bool matchValue(const char *) const {
+  virtual bool matchValue(const std::string &) const {
     return true;
   }
 
@@ -96,7 +96,7 @@ public:
    *
    * The return value will be passed to getValue().
    */
-  virtual attach_key *attach(preset_attach_context &attctx, const char *preset) const;
+  virtual attach_key *attach(preset_attach_context &attctx, const std::string &preset) const;
 
   /**
    * @brief get the selected value
@@ -137,7 +137,7 @@ public:
 
   const std::string def;
 
-  virtual attach_key *attach(preset_attach_context &attctx, const char *preset) const O2G_OVERRIDE;
+  virtual attach_key *attach(preset_attach_context &attctx, const std::string &preset) const O2G_OVERRIDE;
   virtual std::string getValue(attach_key *akey) const O2G_OVERRIDE;
   virtual unsigned int rows() const O2G_OVERRIDE {
     return 1;
@@ -149,7 +149,7 @@ public:
   explicit presets_element_separator()
     : presets_element_t(WIDGET_TYPE_SEPARATOR, MatchIgnore) {}
 
-  virtual attach_key *attach(preset_attach_context &attctx, const char *) const O2G_OVERRIDE;
+  virtual attach_key *attach(preset_attach_context &attctx, const std::string &) const O2G_OVERRIDE;
   virtual unsigned int rows() const O2G_OVERRIDE {
     return 1;
   }
@@ -160,7 +160,7 @@ public:
   explicit presets_element_label(const std::string &txt)
     : presets_element_t(WIDGET_TYPE_LABEL, MatchIgnore, std::string(), txt) {}
 
-  virtual attach_key *attach(preset_attach_context &attctx, const char *) const O2G_OVERRIDE;
+  virtual attach_key *attach(preset_attach_context &attctx, const std::string &) const O2G_OVERRIDE;
   virtual unsigned int rows() const O2G_OVERRIDE {
     return 1;
   }
@@ -171,7 +171,7 @@ public:
  */
 class presets_element_combo : public presets_element_t {
 protected:
-  virtual bool matchValue(const char *val) const O2G_OVERRIDE;
+  virtual bool matchValue(const std::string &val) const O2G_OVERRIDE;
 public:
   presets_element_combo(const std::string &k, const std::string &txt,
                        const std::string &deflt, const char *m,
@@ -181,7 +181,7 @@ public:
   std::vector<std::string> values;
   std::vector<std::string> display_values;
 
-  virtual attach_key *attach(preset_attach_context &attctx, const char *preset) const O2G_OVERRIDE;
+  virtual attach_key *attach(preset_attach_context &attctx, const std::string &preset) const O2G_OVERRIDE;
   virtual std::string getValue(attach_key *akey) const O2G_OVERRIDE;
   virtual unsigned int rows() const O2G_OVERRIDE {
     return 1;
@@ -195,7 +195,7 @@ public:
  */
 class presets_element_key : public presets_element_t {
 protected:
-  virtual bool matchValue(const char *val) const O2G_OVERRIDE;
+  virtual bool matchValue(const std::string &val) const O2G_OVERRIDE;
 public:
   presets_element_key(const std::string &k, const std::string &val, const char *m);
 
@@ -208,7 +208,7 @@ public:
 
 class presets_element_checkbox : public presets_element_t {
 protected:
-  virtual bool matchValue(const char *val) const O2G_OVERRIDE;
+  virtual bool matchValue(const std::string &val) const O2G_OVERRIDE;
 public:
   presets_element_checkbox(const std::string &k, const std::string &txt, bool deflt,
                           const char *m, const std::string &von = std::string());
@@ -216,7 +216,7 @@ public:
   const bool def;
   std::string value_on;
 
-  virtual attach_key *attach(preset_attach_context &attctx, const char *preset) const O2G_OVERRIDE;
+  virtual attach_key *attach(preset_attach_context &attctx, const std::string &preset) const O2G_OVERRIDE;
   virtual std::string getValue(attach_key *akey) const O2G_OVERRIDE;
   virtual unsigned int rows() const O2G_OVERRIDE {
     return 1;
@@ -246,7 +246,7 @@ public:
   virtual bool is_interactive() const O2G_OVERRIDE {
     return false;
   }
-  virtual attach_key *attach(preset_attach_context &attctx, const char *preset) const O2G_OVERRIDE;
+  virtual attach_key *attach(preset_attach_context &attctx, const std::string &preset) const O2G_OVERRIDE;
   virtual unsigned int rows() const O2G_OVERRIDE {
     return 1;
   }

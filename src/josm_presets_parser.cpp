@@ -1071,7 +1071,7 @@ bool presets_element_t::is_interactive() const
 }
 
 presets_element_t::attach_key *presets_element_t::attach(preset_attach_context &,
-                                                         const char *) const
+                                                         const std::string &) const
 {
   return O2G_NULLPTR;
 }
@@ -1102,7 +1102,7 @@ int presets_element_t::matches(const osm_t::TagMap &tags, bool) const
   if(match == MatchKey || match == MatchKey_Force)
     return 1;
 
-  if(matchValue(it->second.c_str()))
+  if(matchValue(it->second))
     return 1;
 
   return match == MatchKeyValue_Force ? -1 : 0;
