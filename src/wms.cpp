@@ -114,7 +114,7 @@ static wms_layer_t *wms_cap_parse_layer(xmlDocPtr doc, xmlNode *a_node) {
         printf("SRS = %s\n", str.get());
       } else if(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "LatLonBoundingBox") == 0) {
         wms_layer->llbbox.bounds.min = pos_t::fromXmlProperties(cur_node, "miny", "minx");
-        wms_layer->llbbox.bounds.max = pos_t::fromXmlProperties(cur_node, "miny", "maxx");
+        wms_layer->llbbox.bounds.max = pos_t::fromXmlProperties(cur_node, "maxy", "maxx");
       } else
 	printf("found unhandled WMT_MS_Capabilities/Capability/Layer/%s\n",
 	       cur_node->name);
