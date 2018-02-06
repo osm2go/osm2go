@@ -574,7 +574,7 @@ std::string project_select(appdata_t &appdata) {
 /* ---------------------------------------------------- */
 
 static void project_filesize(project_context_t *context) {
-  char *str = O2G_NULLPTR;
+  const char *str = O2G_NULLPTR;
   g_string gstr;
   const project_t * const project = context->project;
 
