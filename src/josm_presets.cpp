@@ -63,6 +63,45 @@ unsigned int presets_type_mask(const object_t &obj)
   return r;
 }
 
+/**
+ * @brief find the first widget that gives a negative match
+ */
+struct used_preset_functor {
+  const osm_t::TagMap &tags;
+  bool &is_interactive;
+  bool &hasPositive;   ///< set if a positive match is found at all
+  used_preset_functor(const osm_t::TagMap &t, bool &i, bool &m)
+    : tags(t), is_interactive(i), hasPositive(m) {}
+  bool operator()(const presets_element_t *w);
+};
+
+bool used_preset_functor::operator()(const presets_element_t* w)
+{
+  is_interactive |= w->is_interactive();
+
+  int ret = w->matches(tags);
+  hasPositive |= (ret > 0);
+
+  return (ret < 0);
+}
+
+/**
+ * @brief check if the currently active object uses this preset and the preset is interactive
+ */
+bool presets_item_t::matches(const osm_t::TagMap &tags, bool interactive) const
+{
+  bool is_interactive = false;
+  bool hasPositive = false;
+  used_preset_functor fc(tags, is_interactive, hasPositive);
+  if(isItem()) {
+    const presets_item * const item = static_cast<const presets_item *>(this);
+    if(std::find_if(item->widgets.begin(), item->widgets.end(), fc) != item->widgets.end())
+      return false;
+  }
+
+  return hasPositive && (is_interactive || !interactive);
+}
+
 struct relation_preset_functor {
   const relation_t * const relation;
   const unsigned int typemask;
@@ -146,4 +185,29 @@ std::set<std::string> preset_roles(const relation_t *relation, const object_t &o
     std::for_each(item->roles.begin(), item->roles.end(), rfc);
 
   return ret;
+}
+
+bool presets_element_combo::matchValue(const char *val) const
+{
+  return std::find(values.begin(), values.end(), val) != values.end();
+}
+
+bool presets_element_key::matchValue(const char *val) const
+{
+  return (value == val);
+}
+
+std::string presets_element_key::getValue(presets_element_t::attach_key *akey) const
+{
+  assert_null(akey);
+  return value;
+}
+
+bool presets_element_checkbox::matchValue(const char *val) const
+{
+  if(!value_on.empty())
+    return (value_on == val);
+
+  return ((strcasecmp(val, "true") == 0) ||
+          (strcasecmp(val, "yes") == 0));
 }

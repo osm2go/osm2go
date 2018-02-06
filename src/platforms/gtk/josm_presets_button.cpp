@@ -367,45 +367,6 @@ static void presets_item_dialog(const presets_item *item) {
 
 /* ------------------- the item list (popup menu) -------------- */
 
-/**
- * @brief find the first widget that gives a negative match
- */
-struct used_preset_functor {
-  const osm_t::TagMap &tags;
-  bool &is_interactive;
-  bool &hasPositive;   ///< set if a positive match is found at all
-  used_preset_functor(const osm_t::TagMap &t, bool &i, bool &m)
-    : tags(t), is_interactive(i), hasPositive(m) {}
-  bool operator()(const presets_element_t *w);
-};
-
-bool used_preset_functor::operator()(const presets_element_t* w)
-{
-  is_interactive |= w->is_interactive();
-
-  int ret = w->matches(tags);
-  hasPositive |= (ret > 0);
-
-  return (ret < 0);
-}
-
-/**
- * @brief check if the currently active object uses this preset and the preset is interactive
- */
-bool presets_item_t::matches(const osm_t::TagMap &tags, bool interactive) const
-{
-  bool is_interactive = false;
-  bool hasPositive = false;
-  used_preset_functor fc(tags, is_interactive, hasPositive);
-  if(isItem()) {
-    const presets_item * const item = static_cast<const presets_item *>(this);
-    if(std::find_if(item->widgets.begin(), item->widgets.end(), fc) != item->widgets.end())
-      return false;
-  }
-
-  return hasPositive && (is_interactive || !interactive);
-}
-
 #ifndef PICKER_MENU
 static void
 cb_menu_item(presets_item *item) {
@@ -946,44 +907,6 @@ GtkWidget *josm_build_presets_button(presets_items *presets, tag_context_t *tag_
   return but;
 }
 
-presets_element_t::attach_key *presets_element_t::attach(preset_attach_context &,
-                                                         const char *) const
-{
-  return O2G_NULLPTR;
-}
-
-std::string presets_element_t::getValue(presets_element_t::attach_key *) const
-{
-  assert_unreachable();
-}
-
-int presets_element_t::matches(const osm_t::TagMap &tags, bool) const
-{
-  if(match == MatchIgnore)
-    return 0;
-
-  const osm_t::TagMap::const_iterator itEnd = tags.end();
-  const osm_t::TagMap::const_iterator it = tags.find(key);
-
-  if(it == itEnd) {
-    switch(match) {
-    case MatchKey:
-    case MatchKeyValue:
-      return 0;
-    default:
-      return -1;
-    }
-  }
-
-  if(match == MatchKey || match == MatchKey_Force)
-    return 1;
-
-  if(matchValue(it->second.c_str()))
-    return 1;
-
-  return match == MatchKeyValue_Force ? -1 : 0;
-}
-
 presets_element_t::attach_key *presets_element_text::attach(preset_attach_context &attctx,
                                                             const char *preset) const
 {
@@ -1018,11 +941,6 @@ presets_element_t::attach_key *presets_element_label::attach(preset_attach_conte
 {
   attach_both(attctx, gtk_label_new(text.c_str()));
   return O2G_NULLPTR;
-}
-
-bool presets_element_combo::matchValue(const char *val) const
-{
-  return std::find(values.begin(), values.end(), val) != values.end();
 }
 
 presets_element_t::attach_key *presets_element_combo::attach(preset_attach_context &attctx,
@@ -1078,26 +996,6 @@ std::string presets_element_combo::getValue(presets_element_t::attach_key *akey)
 
   // get the value corresponding to the displayed string
   return values[it - display_values.begin()];
-}
-
-bool presets_element_key::matchValue(const char *val) const
-{
-  return (value == val);
-}
-
-std::string presets_element_key::getValue(presets_element_t::attach_key *akey) const
-{
-  assert_null(akey);
-  return value;
-}
-
-bool presets_element_checkbox::matchValue(const char *val) const
-{
-  if(!value_on.empty())
-    return (value_on == val);
-
-  return ((strcasecmp(val, "true") == 0) ||
-          (strcasecmp(val, "yes") == 0));
 }
 
 presets_element_t::attach_key *presets_element_checkbox::attach(preset_attach_context &attctx,

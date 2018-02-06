@@ -1070,6 +1070,44 @@ bool presets_element_t::is_interactive() const
   }
 }
 
+presets_element_t::attach_key *presets_element_t::attach(preset_attach_context &,
+                                                         const char *) const
+{
+  return O2G_NULLPTR;
+}
+
+std::string presets_element_t::getValue(presets_element_t::attach_key *) const
+{
+  assert_unreachable();
+}
+
+int presets_element_t::matches(const osm_t::TagMap &tags, bool) const
+{
+  if(match == MatchIgnore)
+    return 0;
+
+  const osm_t::TagMap::const_iterator itEnd = tags.end();
+  const osm_t::TagMap::const_iterator it = tags.find(key);
+
+  if(it == itEnd) {
+    switch(match) {
+    case MatchKey:
+    case MatchKeyValue:
+      return 0;
+    default:
+      return -1;
+    }
+  }
+
+  if(match == MatchKey || match == MatchKey_Force)
+    return 1;
+
+  if(matchValue(it->second.c_str()))
+    return 1;
+
+  return match == MatchKeyValue_Force ? -1 : 0;
+}
+
 presets_element_text::presets_element_text(const std::string &k, const std::string &txt,
                                          const std::string &deflt, const char *m)
   : presets_element_t(WIDGET_TYPE_TEXT, parseMatch(m), k, txt)
