@@ -21,7 +21,7 @@
 #include <wms_p.h>
 
 #include <appdata.h>
-#include <list.h>
+#include "list.h"
 #include <map.h>
 #include <misc.h>
 #include <project.h>
