@@ -179,6 +179,6 @@ void remove_trailing_zeroes(char *str) {
   char *p = delim + strlen(delim) - 1;
   while(*p == '0')
     *p-- = '\0';
-  if((*p == '.') || (*p == ','))
+  if(p == delim)
     *p = '\0';
 }
