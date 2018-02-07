@@ -95,12 +95,6 @@ void canvas_t::set_background(color_t bg_color) {
                "background-color-rgb", bg_color.rgb(), O2G_NULLPTR);
 }
 
-void canvas_t::set_antialias(bool antialias) {
-  GooCanvasItem *root = goo_canvas_get_root_item(GOO_CANVAS(widget));
-  g_object_set(G_OBJECT(root), "antialias",
-               antialias ? CAIRO_ANTIALIAS_DEFAULT : CAIRO_ANTIALIAS_NONE, O2G_NULLPTR);
-}
-
 lpos_t canvas_t::window2world(int x, int y) const {
   double sx = x, sy = y;
   goo_canvas_convert_from_pixels(GOO_CANVAS(widget), &sx, &sy);

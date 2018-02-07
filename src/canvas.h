@@ -116,7 +116,6 @@ public:
 
   /****** manipulating the canvas ******/
   void set_background(color_t bg_color);
-  void set_antialias(bool antialias);
   void erase(unsigned int group_mask);
   canvas_item_t *get_item_at(int x, int y) const;
   void set_zoom(double zoom);
