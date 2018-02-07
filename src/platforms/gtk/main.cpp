@@ -634,7 +634,8 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
 
   appdata.menu_item_view_fullscreen = GTK_CHECK_MENU_ITEM(menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_fullscreen), _("_Fullscreen"),
-    GTK_STOCK_FULLSCREEN, "<OSM2Go-Main>/View/Fullscreen"));
+    GTK_STOCK_FULLSCREEN, "<OSM2Go-Main>/View/Fullscreen",
+    GDK_F11, static_cast<GdkModifierType>(0), true, true));
 
   menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_zoomin), _("Zoom _in"),
@@ -1161,33 +1162,11 @@ static void on_window_destroy(appdata_t *appdata) {
 }
 
 static gboolean on_window_key_press(appdata_internal *appdata, GdkEventKey *event) {
-  gboolean handled = FALSE;
-
-  //  printf("key event with keyval %x\n", event->keyval);
-
-  // the map handles some keys on its own ...
-  switch(event->keyval) {
-
-#ifndef FREMANTLE
-  case GDK_F11:
-    if(!gtk_check_menu_item_get_active(appdata->menu_item_view_fullscreen)) {
-      gtk_window_fullscreen(GTK_WINDOW(appdata->window));
-      gtk_check_menu_item_set_active(appdata->menu_item_view_fullscreen, TRUE);
-    } else {
-      gtk_window_unfullscreen(GTK_WINDOW(appdata->window));
-      gtk_check_menu_item_set_active(appdata->menu_item_view_fullscreen, FALSE);
-    }
-
-    handled = TRUE;
-    break;
-#endif // !FREMANTLE
-  }
-
   /* forward unprocessed key presses to map */
-  if(!handled && appdata->project && appdata->osm && event->type == GDK_KEY_PRESS)
-    handled = appdata->map->key_press_event(event->keyval) ? TRUE : FALSE;
+  if(appdata->project != O2G_NULLPTR && appdata->osm != O2G_NULLPTR && event->type == GDK_KEY_PRESS)
+    return appdata->map->key_press_event(event->keyval) ? TRUE : FALSE;
 
-  return handled;
+  return FALSE;
 }
 
 #if defined(FREMANTLE) && !defined(__i386__)
