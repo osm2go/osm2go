@@ -1266,7 +1266,7 @@ static int application_run(const char *proj)
   GtkBox *mainvbox = GTK_BOX(gtk_vbox_new(FALSE, 0));
 
   /* unconditionally enable the GPS */
-  appdata.settings->enable_gps = TRUE;
+  appdata.settings->enable_gps = true;
   menu_create(appdata, mainvbox);
 
   menu_accels_load(&appdata);
@@ -1364,7 +1364,7 @@ static int application_run(const char *proj)
 
   /* start GPS if enabled by config */
   if(appdata.settings->enable_gps)
-    track_enable_gps(appdata, TRUE);
+    track_enable_gps(appdata, true);
 
   /* again let the ui do its thing */
   osm2go_platform::process_events();

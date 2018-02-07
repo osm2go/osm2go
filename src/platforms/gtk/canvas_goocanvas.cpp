@@ -380,7 +380,7 @@ void canvas_item_t::destroy_connect(void (*c_handler)(void *), void *data) {
                     new weak_t(c_handler, data));
 }
 
-void canvas_item_t::image_move(gint x, gint y, float hscale, float vscale) {
+void canvas_item_t::image_move(int x, int y, float hscale, float vscale) {
 
   g_object_set(G_OBJECT(this),
                "x", static_cast<gdouble>(x) / hscale,
