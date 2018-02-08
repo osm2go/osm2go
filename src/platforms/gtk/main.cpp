@@ -89,8 +89,6 @@ struct appdata_internal : public appdata_t {
   HildonProgram *program;
   /* submenues are seperate menues under fremantle */
   g_widget app_menu_view, app_menu_wms, app_menu_track, app_menu_map;
-#else
-  GtkCheckMenuItem *menu_item_view_fullscreen;
 #endif
 
   GtkWidget *btn_zoom_in, *btn_zoom_out;
@@ -633,10 +631,10 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
   gtk_menu_set_accel_group(GTK_MENU(submenu), accel_grp);
   gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), submenu);
 
-  appdata.menu_item_view_fullscreen = GTK_CHECK_MENU_ITEM(menu_append_new_item(
+  menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_fullscreen), _("_Fullscreen"),
     GTK_STOCK_FULLSCREEN, "<OSM2Go-Main>/View/Fullscreen",
-    GDK_F11, static_cast<GdkModifierType>(0), true, true));
+    GDK_F11, static_cast<GdkModifierType>(0), true, true);
 
   menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_zoomin), _("Zoom _in"),
@@ -1128,8 +1126,6 @@ appdata_internal::appdata_internal(map_state_t &mstate)
   , app_menu_wms(O2G_NULLPTR)
   , app_menu_track(O2G_NULLPTR)
   , app_menu_map(O2G_NULLPTR)
-#else
-  , menu_item_view_fullscreen(O2G_NULLPTR)
 #endif
   , btn_zoom_in(O2G_NULLPTR)
   , btn_zoom_out(O2G_NULLPTR)
