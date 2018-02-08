@@ -775,8 +775,8 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
 
   menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_track_vis), _("Track _visibility"),
-    O2G_NULLPTR, "<OSM2Go-Main>/Track/GPS",
-    GDK_g, static_cast<GdkModifierType>(GDK_CONTROL_MASK|GDK_SHIFT_MASK));
+    O2G_NULLPTR, "<OSM2Go-Main>/Track/Visibility",
+    GDK_v, static_cast<GdkModifierType>(GDK_CONTROL_MASK|GDK_SHIFT_MASK));
 
   /* ------------------------------------------------------- */
 
