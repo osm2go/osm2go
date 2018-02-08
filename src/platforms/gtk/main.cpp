@@ -78,6 +78,7 @@ using namespace osm2go_platform;
 /* these size defaults are used in the non-hildonized version only */
 #define DEFAULT_WIDTH 640
 #define DEFAULT_HEIGHT 480
+#define ACCELS_FILE "accels"
 #endif
 
 struct appdata_internal : public appdata_t {
@@ -1039,18 +1040,6 @@ static void menu_create(appdata_internal &appdata, GtkBox *) {
 
 /********************* end of menu **********************/
 
-
-static void menu_accels_load(appdata_t *appdata) {
-#ifndef FREMANTLE
-#define ACCELS_FILE "accels"
-
-  const std::string &accels_file = appdata->settings->base_path + ACCELS_FILE;
-  gtk_accel_map_load(accels_file.c_str());
-#else
-  (void) appdata;
-#endif
-}
-
 appdata_t::appdata_t(map_state_t &mstate)
   : uicontrol(MainUi::instance(*this))
   , window(O2G_NULLPTR)
@@ -1078,7 +1067,7 @@ appdata_t::appdata_t(map_state_t &mstate)
 appdata_t::~appdata_t() {
   printf("cleaning up ...\n");
 
-#ifndef FREMANTLE
+#ifdef ACCELS_FILE
   const std::string &accels_file = settings->base_path + ACCELS_FILE;
   gtk_accel_map_save(accels_file.c_str());
 #endif
@@ -1269,7 +1258,10 @@ static int application_run(const char *proj)
   appdata.settings->enable_gps = true;
   menu_create(appdata, mainvbox);
 
-  menu_accels_load(&appdata);
+#ifdef ACCELS_FILE
+  const std::string &accels_file = appdata.settings->base_path + ACCELS_FILE;
+  gtk_accel_map_load(accels_file.c_str());
+#endif
 
   /* ----------------------- setup main window ---------------- */
 
