@@ -538,7 +538,7 @@ static void about_box(appdata_t *appdata)
  * @param is_check if the new item should be a checkable item
  * @param check_status the initial status of the check item
  */
-static GtkWidget *
+static GtkWidget * __attribute__((nonnull(2,6)))
 menu_append_new_item(appdata_t &appdata, GtkWidget *menu_shell,
                      GCallback activate_cb, const char *label,
                      const gchar *icon_name,
@@ -580,17 +580,13 @@ menu_append_new_item(appdata_t &appdata, GtkWidget *menu_shell,
 
   // Accelerators
   // Default
-  if (accel_path != O2G_NULLPTR) {
-    accel_path = g_intern_static_string(accel_path);
-    gtk_menu_item_set_accel_path(GTK_MENU_ITEM(item), accel_path);
-    if (accel_key != 0) {
-      gtk_accel_map_add_entry( accel_path, accel_key, accel_mods );
-    }
-    else if (stock_item_known) {
-      gtk_accel_map_add_entry( accel_path, stock_item.keyval,
-                               stock_item.modifier );
-    }
-  }
+  accel_path = g_intern_static_string(accel_path);
+  gtk_menu_item_set_accel_path(GTK_MENU_ITEM(item), accel_path);
+  if (accel_key != 0)
+    gtk_accel_map_add_entry(accel_path, accel_key, accel_mods);
+  else if (stock_item_known)
+    gtk_accel_map_add_entry(accel_path, stock_item.keyval,
+                              stock_item.modifier);
 
   gtk_menu_shell_append(GTK_MENU_SHELL(menu_shell), GTK_WIDGET(item));
   if(!enabled)
