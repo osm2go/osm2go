@@ -696,8 +696,7 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
 
   appdata.menuitems[MainUi::MENU_ITEM_MAP_SAVE_CHANGES] = menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_save_changes), _("_Save local changes"),
-    GTK_STOCK_SAVE, "<OSM2Go-Main>/Map/SaveChanges",
-    GDK_s, static_cast<GdkModifierType>(GDK_SHIFT_MASK|GDK_CONTROL_MASK));
+    GTK_STOCK_SAVE, "<OSM2Go-Main>/Map/SaveChanges");
 
   appdata.menuitems[MainUi::MENU_ITEM_MAP_UNDO_CHANGES] = menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_undo_changes), _("Undo _all"),
