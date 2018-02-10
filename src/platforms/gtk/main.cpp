@@ -549,33 +549,27 @@ menu_append_new_item(appdata_t &appdata, GtkWidget *menu_shell,
                      bool is_check = false, gboolean check_status = FALSE)
 {
   GtkWidget *item = O2G_NULLPTR;
-
-  bool stock_item_known = false;
   GtkStockItem stock_item;
-  if (icon_name != O2G_NULLPTR) {
-    stock_item_known = gtk_stock_lookup(icon_name, &stock_item) == TRUE;
-  }
+  const bool stock_item_known = icon_name != O2G_NULLPTR &&
+                                gtk_stock_lookup(icon_name, &stock_item) == TRUE;
 
   // Icons
   if (is_check) {
     item = gtk_check_menu_item_new_with_mnemonic (label);
-  }
-  else if (!stock_item_known) {
+  } else if(icon_name == O2G_NULLPTR) {
+    item = gtk_menu_item_new_with_mnemonic(label);
+  } else {
     GtkWidget *image = O2G_NULLPTR;
-    if(icon_name)
-      image = appdata.icons.widget_load(icon_name);
-    if (image) {
-      item = gtk_image_menu_item_new_with_mnemonic(label);
-      gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item), image);
-    }
-    else {
-      item = gtk_menu_item_new_with_mnemonic(label);
-    }
-  }
-  else {
     item = gtk_image_menu_item_new_with_mnemonic(label);
-    gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item),
-                                  gtk_image_new_from_stock(icon_name, GTK_ICON_SIZE_MENU));
+    if (!stock_item_known) {
+      image = appdata.icons.widget_load(icon_name);
+      if (image == O2G_NULLPTR)
+        image = gtk_image_new_from_icon_name(icon_name, GTK_ICON_SIZE_MENU);
+    } else {
+      image = gtk_image_new_from_stock(icon_name, GTK_ICON_SIZE_MENU);
+    }
+    assert(image != O2G_NULLPTR);
+    gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item), image);
   }
 
   // Accelerators
@@ -629,17 +623,17 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
 
   menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_fullscreen), _("_Fullscreen"),
-    GTK_STOCK_FULLSCREEN, "<OSM2Go-Main>/View/Fullscreen",
+    "view-fullscreen", "<OSM2Go-Main>/View/Fullscreen",
     GDK_F11, static_cast<GdkModifierType>(0), true, true);
 
   menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_zoomin), _("Zoom _in"),
-    GTK_STOCK_ZOOM_IN, "<OSM2Go-Main>/View/ZoomIn",
+    "zoom-in", "<OSM2Go-Main>/View/ZoomIn",
     GDK_comma, GDK_CONTROL_MASK);
 
   menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_zoomout), _("Zoom _out"),
-    GTK_STOCK_ZOOM_OUT, "<OSM2Go-Main>/View/ZoomOut",
+    "zoom-out", "<OSM2Go-Main>/View/ZoomOut",
     GDK_period, GDK_CONTROL_MASK);
 
   gtk_menu_shell_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
@@ -1182,8 +1176,8 @@ static GtkWidget *  __attribute__((nonnull(1,2,4)))
 #ifndef FREMANTLE
   // explicitely assign image so the button does not show the action text
   if(iconw == O2G_NULLPTR)
-    // gtk_image_new_from_stock() can't be used first, as it will return non-null even if nothing is found
-    iconw = gtk_image_new_from_stock(icon, GTK_ICON_SIZE_MENU);
+    // gtk_image_new_from_icon_name() can't be used first, as it will return non-null even if nothing is found
+    iconw = gtk_image_new_from_icon_name(icon, GTK_ICON_SIZE_MENU);
 #endif
   gtk_button_set_image(GTK_BUTTON(but), iconw);
 #ifdef FREMANTLE
@@ -1277,8 +1271,8 @@ static int application_run(const char *proj)
 
   icon_button(&appdata, "detailup_thumb",   G_CALLBACK(cb_menu_view_detail_inc), zhbox);
   icon_button(&appdata, "detaildown_thumb", G_CALLBACK(cb_menu_view_detail_dec), zhbox);
-  appdata.btn_zoom_out = icon_button(&appdata, GTK_STOCK_ZOOM_OUT, G_CALLBACK(cb_menu_zoomout), zhbox);
-  appdata.btn_zoom_in = icon_button(&appdata, GTK_STOCK_ZOOM_IN, G_CALLBACK(cb_menu_zoomin), zhbox);
+  appdata.btn_zoom_out = icon_button(&appdata, "zoom-in", G_CALLBACK(cb_menu_zoomout), zhbox);
+  appdata.btn_zoom_in = icon_button(&appdata, "zoom-out", G_CALLBACK(cb_menu_zoomin), zhbox);
 
   gtk_box_pack_start(GTK_BOX(vbox), zhbox, FALSE, FALSE, 0);
 #else

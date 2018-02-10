@@ -705,8 +705,7 @@ bool area_edit_t::run() {
                                           GTK_RESPONSE_HELP);
 
   gtk_button_set_image(GTK_BUTTON(context.warning),
-		       gtk_image_new_from_stock(GTK_STOCK_DIALOG_WARNING,
-						GTK_ICON_SIZE_BUTTON));
+                       gtk_image_new_from_icon_name("dialog-warning", GTK_ICON_SIZE_BUTTON));
   g_signal_connect_swapped(context.warning, "clicked",
                            G_CALLBACK(on_area_warning_clicked), &context);
 
