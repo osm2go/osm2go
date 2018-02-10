@@ -594,35 +594,36 @@ menu_append_new_item(appdata_t &appdata, GtkWidget *menu_shell,
 }
 
 static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
-  GtkWidget *menu, *item, *submenu;
-  GtkWidget *about_quit_items_menu;
+  GtkWidget *item, *submenu;
 
   MainUiGtk * const mainui = static_cast<MainUiGtk *>(appdata.uicontrol);
-  menu = gtk_menu_bar_new();
 
   /* -------------------- Project submenu -------------------- */
 
   GtkAccelGroup *accel_grp = gtk_accel_group_new();
 
-  item = gtk_menu_item_new_with_mnemonic( _("_Project") );
-  gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
-  submenu = gtk_menu_new();
+  submenu = mainui->addMenu(_("_Project"));
   gtk_menu_set_accel_group(GTK_MENU(submenu), accel_grp);
-  gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), submenu);
-  about_quit_items_menu = submenu;
 
   menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_project_open), _("_Open"),
     GTK_STOCK_OPEN, "<OSM2Go-Main>/Project/Open");
 
+  gtk_menu_shell_append(GTK_MENU_SHELL(submenu),
+                        gtk_separator_menu_item_new());
+
+  menu_append_new_item(
+    appdata, submenu, G_CALLBACK(about_box), _("_About"),
+    GTK_STOCK_ABOUT, "<OSM2Go-Main>/About");
+
+  menu_append_new_item(
+    appdata, submenu, G_CALLBACK(cb_menu_quit), _("_Quit"),
+    GTK_STOCK_QUIT, "<OSM2Go-Main>/Quit");
+
   /* --------------- view menu ------------------- */
 
-  item = gtk_menu_item_new_with_mnemonic(_("_View"));
-  mainui->initItem(MainUi::SUBMENU_VIEW, item);
-  gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
-  submenu = gtk_menu_new();
+  submenu = mainui->addMenu(MainUi::SUBMENU_VIEW);
   gtk_menu_set_accel_group(GTK_MENU(submenu), accel_grp);
-  gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), submenu);
 
   menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_fullscreen), _("_Fullscreen"),
@@ -675,12 +676,8 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
 
   /* -------------------- map submenu -------------------- */
 
-  item = gtk_menu_item_new_with_mnemonic(_("_Map"));
-  mainui->initItem(MainUi::SUBMENU_MAP, item);
-  gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
-  submenu = gtk_menu_new();
+  submenu = mainui->addMenu(MainUi::SUBMENU_MAP);
   gtk_menu_set_accel_group(GTK_MENU(submenu), accel_grp);
-  gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), submenu);
 
   item = menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_upload), _("_Upload"),
@@ -715,12 +712,8 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
 
   /* -------------------- wms submenu -------------------- */
 
-  item = gtk_menu_item_new_with_mnemonic(_("_WMS"));
-  mainui->initItem(MainUi::SUBMENU_WMS, item);
-  gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
-  submenu = gtk_menu_new();
+  submenu = mainui->addMenu(MainUi::SUBMENU_WMS);
   gtk_menu_set_accel_group(GTK_MENU(submenu), accel_grp);
-  gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), submenu);
 
   menu_append_new_item(
     appdata, submenu, G_CALLBACK(wms_import), _("_Import"),
@@ -740,12 +733,8 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
 
   /* -------------------- track submenu -------------------- */
 
-  item = gtk_menu_item_new_with_mnemonic(_("_Track"));
-  mainui->initItem(MainUi::SUBMENU_TRACK, item);
-  gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
-  submenu = gtk_menu_new();
+  submenu = mainui->addMenu(MainUi::SUBMENU_TRACK);
   gtk_menu_set_accel_group(GTK_MENU(submenu), accel_grp);
-  gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), submenu);
 
   item = menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_track_import), _("_Import"),
@@ -787,20 +776,9 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
 
   /* ------------------------------------------------------- */
 
-  gtk_menu_shell_append(GTK_MENU_SHELL(about_quit_items_menu),
-                        gtk_separator_menu_item_new());
-
-  menu_append_new_item(
-    appdata, about_quit_items_menu, G_CALLBACK(about_box), _("_About"),
-    GTK_STOCK_ABOUT, "<OSM2Go-Main>/About");
-
-  menu_append_new_item(
-    appdata, about_quit_items_menu, G_CALLBACK(cb_menu_quit), _("_Quit"),
-    GTK_STOCK_QUIT, "<OSM2Go-Main>/Quit");
-
   gtk_window_add_accel_group(GTK_WINDOW(appdata.window), accel_grp);
 
-  gtk_box_pack_start(mainvbox, menu, 0, 0, 0);
+  gtk_box_pack_start(mainvbox, GTK_WIDGET(mainui->menuBar()), 0, 0, 0);
 
 }
 
@@ -951,42 +929,31 @@ static void on_submenu_track_clicked(appdata_internal *appdata)
 
 /* create a HildonAppMenu */
 static HildonAppMenu *app_menu_create(appdata_t &appdata) {
-  HildonAppMenu *menu = HILDON_APP_MENU(hildon_app_menu_new());
   /* -- the applications main menu -- */
   std::array<menu_entry_t, 7> main_menu = { {
-    menu_entry_t(_("About"),     G_CALLBACK(about_box)),
-    menu_entry_t(_("Project"),   G_CALLBACK(cb_menu_project_open)),
-    menu_entry_t(_("View"),      G_CALLBACK(on_submenu_view_clicked),  MainUi::SUBMENU_VIEW),
-    menu_entry_t(_("OSM"),       G_CALLBACK(on_submenu_map_clicked),   MainUi::SUBMENU_MAP),
-    menu_entry_t(_("Relations"), G_CALLBACK(cb_menu_osm_relations),    MainUi::MENU_ITEM_MAP_RELATIONS),
-    menu_entry_t(_("WMS"),       G_CALLBACK(on_submenu_wms_clicked),   MainUi::SUBMENU_WMS),
-    menu_entry_t(_("Track"),     G_CALLBACK(on_submenu_track_clicked), MainUi::SUBMENU_TRACK)
+    menu_entry_t(_("About"),   G_CALLBACK(about_box)),
+    menu_entry_t(_("Project"), G_CALLBACK(cb_menu_project_open)),
+    menu_entry_t(O2G_NULLPTR,  G_CALLBACK(on_submenu_view_clicked),  MainUi::SUBMENU_VIEW),
+    menu_entry_t(O2G_NULLPTR,  G_CALLBACK(on_submenu_map_clicked),   MainUi::SUBMENU_MAP),
+    menu_entry_t(O2G_NULLPTR,  G_CALLBACK(cb_menu_osm_relations),    MainUi::MENU_ITEM_MAP_RELATIONS),
+    menu_entry_t(O2G_NULLPTR,  G_CALLBACK(on_submenu_wms_clicked),   MainUi::SUBMENU_WMS),
+    menu_entry_t(O2G_NULLPTR,  G_CALLBACK(on_submenu_track_clicked), MainUi::SUBMENU_TRACK)
   } };
 
   MainUiGtk * const mainui = static_cast<MainUiGtk *>(appdata.uicontrol);
+  HildonAppMenu * const menu = mainui->menuBar();
   for(unsigned int i = 0; i < main_menu.size(); i++) {
     const menu_entry_t &entry = main_menu[i];
-    GtkWidget *button = O2G_NULLPTR;
+    GtkWidget *button;
 
-    assert_null(entry.toggle);
-    button = hildon_button_new_with_text(
-                static_cast<HildonSizeType>(HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH),
-                HILDON_BUTTON_ARRANGEMENT_VERTICAL,
-                entry.label, O2G_NULLPTR);
+    if (entry.label == O2G_NULLPTR)
+      button = mainui->addMenu(static_cast<MainUi::menu_items>(entry.menuindex));
+    else
+      button = mainui->addMenu(entry.label);
 
     g_signal_connect_data(button, "clicked",
                           entry.activate_cb, &appdata, O2G_NULLPTR,
                           static_cast<GConnectFlags>(G_CONNECT_AFTER | G_CONNECT_SWAPPED));
-    hildon_button_set_title_alignment(HILDON_BUTTON(button), 0.5, 0.5);
-    hildon_button_set_value_alignment(HILDON_BUTTON(button), 0.5, 0.5);
-
-    /* index to GtkWidget pointer array was given -> store pointer */
-    if(entry.menuindex >= 0)
-      mainui->initItem(static_cast<MainUi::menu_items>(entry.menuindex), button);
-
-    gtk_widget_set_sensitive(button, entry.enabled);
-
-    hildon_app_menu_append(menu, GTK_BUTTON(button));
   }
 
   gtk_widget_show_all(GTK_WIDGET(menu));

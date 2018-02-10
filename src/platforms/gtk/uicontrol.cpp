@@ -24,12 +24,39 @@
 
 #include <array>
 #include <gtk/gtk.h>
+#ifdef FREMANTLE
+#include <hildon/hildon-button.h>
+#include <string>
+#endif
 
 #include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
+#include <osm2go_i18n.h>
+
+static GtkWidget *
+create_submenu_item(const char *label)
+{
+#ifdef FREMANTLE
+  // remove mnemonic marker
+  std::string hlabel = label;
+  std::string::size_type _pos = hlabel.find('_');
+  if(likely(_pos != std::string::npos))
+    hlabel.erase(_pos, 1);
+  return hildon_button_new_with_text(
+                static_cast<HildonSizeType>(HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH),
+                HILDON_BUTTON_ARRANGEMENT_VERTICAL, hlabel.c_str(), O2G_NULLPTR);
+#else
+  return gtk_menu_item_new_with_mnemonic(label);
+#endif
+}
 
 MainUiGtk::MainUiGtk(appdata_t& a)
   : MainUi(a)
+#ifdef FREMANTLE
+  , menubar(HILDON_APP_MENU(hildon_app_menu_new()))
+#else
+  , menubar(GTK_MENU_SHELL(gtk_menu_bar_new()))
+#endif
 {
   // the TR1 header has assign() for what is later called fill()
 #if __cplusplus >= 201103L
@@ -37,6 +64,16 @@ MainUiGtk::MainUiGtk(appdata_t& a)
 #else
   menuitems.assign(O2G_NULLPTR);
 #endif
+
+  menuitems[SUBMENU_VIEW] = create_submenu_item(_("_View"));
+#ifdef FREMANTLE
+  menuitems[SUBMENU_MAP] = create_submenu_item(_("OSM"));
+  menuitems[MENU_ITEM_MAP_RELATIONS] = create_submenu_item(_("Relations"));
+#else
+  menuitems[SUBMENU_MAP] = create_submenu_item(_("_Map"));
+#endif
+  menuitems[SUBMENU_WMS] = create_submenu_item(_("_WMS"));
+  menuitems[SUBMENU_TRACK] = create_submenu_item(_("_Track"));
 }
 
 MainUi *MainUi::instance(appdata_t &appdata)
@@ -70,4 +107,34 @@ void MainUiGtk::initItem(MainUi::menu_items item, GtkWidget *widget)
   assert_null(menuitems[item]);
 
   menuitems[item] = widget;
+}
+
+GtkWidget *MainUiGtk::addMenu(GtkWidget *item)
+{
+#ifdef FREMANTLE
+  hildon_button_set_title_alignment(HILDON_BUTTON(item), 0.5, 0.5);
+  hildon_button_set_value_alignment(HILDON_BUTTON(item), 0.5, 0.5);
+
+  hildon_app_menu_append(menubar, GTK_BUTTON(item));
+
+  return item;
+#else
+  gtk_menu_shell_append(menubar, item);
+  GtkWidget *submenu = gtk_menu_new();
+  gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), submenu);
+
+  return submenu;
+#endif
+}
+
+GtkWidget *MainUiGtk::addMenu(const char *label)
+{
+  return addMenu(create_submenu_item(label));
+}
+
+GtkWidget *MainUiGtk::addMenu(menu_items item)
+{
+  GtkWidget *widget = menu_item(item);
+  assert(widget != O2G_NULLPTR);
+  return addMenu(widget);
 }

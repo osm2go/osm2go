@@ -23,12 +23,22 @@
 #include <uicontrol.h>
 
 #include <array>
+#ifdef FREMANTLE
+#include <hildon/hildon-app-menu.h>
+typedef HildonAppMenu MenuBar;
+#else
+typedef struct _GtkMenuShell GtkMenuShell;
+typedef GtkMenuShell MenuBar;
+#endif
 
 typedef struct _GtkWidget GtkWidget;
 
 class MainUiGtk : public MainUi {
   std::array<GtkWidget *, MainUi::MENU_ITEMS_COUNT> menuitems;
 
+  MenuBar * const menubar;
+
+  GtkWidget *addMenu(GtkWidget *item);
 public:
   MainUiGtk(appdata_t &a);
 
@@ -39,6 +49,19 @@ public:
 
   inline GtkWidget *menu_item(menu_items item)
   { return menuitems[item]; }
+
+  inline MenuBar *menuBar()
+  { return menubar; }
+
+  /**
+   * @brief create a new submenu entry in the global menu bar
+   */
+  GtkWidget *addMenu(const char *label);
+
+  /**
+   * @brief add one of the predefined entries to the global menu bar
+   */
+  GtkWidget *addMenu(menu_items item);
 };
 
 #endif /* MAINUIGTK_H */
