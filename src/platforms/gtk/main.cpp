@@ -23,6 +23,7 @@
 #include <gps.h>
 #include <iconbar.h>
 #include <josm_presets.h>
+#include "MainUiGtk.h"
 #include <map.h>
 #include <misc.h>
 #include <osm_api.h>
@@ -596,6 +597,7 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
   GtkWidget *menu, *item, *submenu;
   GtkWidget *about_quit_items_menu;
 
+  MainUiGtk * const mainui = static_cast<MainUiGtk *>(appdata.uicontrol);
   menu = gtk_menu_bar_new();
 
   /* -------------------- Project submenu -------------------- */
@@ -615,7 +617,8 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
 
   /* --------------- view menu ------------------- */
 
-  appdata.menuitems[MainUi::SUBMENU_VIEW] = item = gtk_menu_item_new_with_mnemonic( _("_View") );
+  item = gtk_menu_item_new_with_mnemonic(_("_View"));
+  mainui->initItem(MainUi::SUBMENU_VIEW, item);
   gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
   submenu = gtk_menu_new();
   gtk_menu_set_accel_group(GTK_MENU(submenu), accel_grp);
@@ -652,15 +655,17 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
 
   gtk_menu_shell_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
 
-  appdata.menuitems[MainUi::MENU_ITEM_MAP_HIDE_SEL] = item = menu_append_new_item(
+  item = menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_map_hide_sel), _("_Hide selected"),
     GTK_STOCK_REMOVE, "<OSM2Go-Main>/View/HideSelected",
     0, static_cast<GdkModifierType>(0), false);
+  mainui->initItem(MainUi::MENU_ITEM_MAP_HIDE_SEL, item);
 
-  appdata.menuitems[MainUi::MENU_ITEM_MAP_SHOW_ALL] = item = menu_append_new_item(
+  item = menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_map_show_all), _("_Show all"),
     GTK_STOCK_ADD, "<OSM2Go-Main>/View/ShowAll",
     0, static_cast<GdkModifierType>(0), false);
+  mainui->initItem(MainUi::MENU_ITEM_MAP_SHOW_ALL, item);
 
   gtk_menu_shell_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
 
@@ -670,16 +675,18 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
 
   /* -------------------- map submenu -------------------- */
 
-  appdata.menuitems[MainUi::SUBMENU_MAP] = item = gtk_menu_item_new_with_mnemonic( _("_Map") );
+  item = gtk_menu_item_new_with_mnemonic(_("_Map"));
+  mainui->initItem(MainUi::SUBMENU_MAP, item);
   gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
   submenu = gtk_menu_new();
   gtk_menu_set_accel_group(GTK_MENU(submenu), accel_grp);
   gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), submenu);
 
-  appdata.menuitems[MainUi::MENU_ITEM_MAP_UPLOAD] = menu_append_new_item(
+  item = menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_upload), _("_Upload"),
     "upload.16", "<OSM2Go-Main>/Map/Upload",
     GDK_u, static_cast<GdkModifierType>(GDK_SHIFT_MASK|GDK_CONTROL_MASK));
+  mainui->initItem(MainUi::MENU_ITEM_MAP_UPLOAD, item);
 
   menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_download), _("_Download"),
@@ -688,23 +695,28 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
 
   gtk_menu_shell_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
 
-  appdata.menuitems[MainUi::MENU_ITEM_MAP_SAVE_CHANGES] = menu_append_new_item(
+  item = menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_save_changes), _("_Save local changes"),
     GTK_STOCK_SAVE, "<OSM2Go-Main>/Map/SaveChanges");
+  mainui->initItem(MainUi::MENU_ITEM_MAP_SAVE_CHANGES, item);
 
-  appdata.menuitems[MainUi::MENU_ITEM_MAP_UNDO_CHANGES] = menu_append_new_item(
+  item = menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_undo_changes), _("Undo _all"),
     GTK_STOCK_DELETE, "<OSM2Go-Main>/Map/UndoAll");
+  mainui->initItem(MainUi::MENU_ITEM_MAP_UNDO_CHANGES, item);
 
   gtk_menu_shell_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
-  appdata.menuitems[MainUi::MENU_ITEM_MAP_RELATIONS] = menu_append_new_item(
+
+  item = menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_osm_relations), _("_Relations"),
     O2G_NULLPTR, "<OSM2Go-Main>/Map/Relations",
     GDK_r, static_cast<GdkModifierType>(GDK_SHIFT_MASK|GDK_CONTROL_MASK));
+  mainui->initItem(MainUi::MENU_ITEM_MAP_RELATIONS, item);
 
   /* -------------------- wms submenu -------------------- */
 
-  appdata.menuitems[MainUi::SUBMENU_WMS] = item = gtk_menu_item_new_with_mnemonic( _("_WMS") );
+  item = gtk_menu_item_new_with_mnemonic(_("_WMS"));
+  mainui->initItem(MainUi::SUBMENU_WMS, item);
   gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
   submenu = gtk_menu_new();
   gtk_menu_set_accel_group(GTK_MENU(submenu), accel_grp);
@@ -714,52 +726,59 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
     appdata, submenu, G_CALLBACK(wms_import), _("_Import"),
     GTK_STOCK_INDEX, "<OSM2Go-Main>/WMS/Import");
 
-  appdata.menuitems[MainUi::MENU_ITEM_WMS_CLEAR] = item = menu_append_new_item(
+  item = menu_append_new_item(
     appdata, submenu, G_CALLBACK(wms_remove), _("_Clear"),
     GTK_STOCK_CLEAR, "<OSM2Go-Main>/WMS/Clear",
     0, static_cast<GdkModifierType>(0), false);
+  mainui->initItem(MainUi::MENU_ITEM_WMS_CLEAR, item);
 
-  appdata.menuitems[MainUi::MENU_ITEM_WMS_ADJUST] = item = menu_append_new_item(
+  item = menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_wms_adjust), _("_Adjust"),
     O2G_NULLPTR, "<OSM2Go-Main>/WMS/Adjust",
     0, static_cast<GdkModifierType>(0), false);
+  mainui->initItem(MainUi::MENU_ITEM_WMS_ADJUST, item);
 
   /* -------------------- track submenu -------------------- */
 
-  appdata.menuitems[MainUi::SUBMENU_TRACK] = item =
-    gtk_menu_item_new_with_mnemonic(_("_Track"));
+  item = gtk_menu_item_new_with_mnemonic(_("_Track"));
+  mainui->initItem(MainUi::SUBMENU_TRACK, item);
   gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
   submenu = gtk_menu_new();
   gtk_menu_set_accel_group(GTK_MENU(submenu), accel_grp);
   gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), submenu);
 
-  appdata.menuitems[MainUi::MENU_ITEM_TRACK_IMPORT] = menu_append_new_item(
+  item = menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_track_import), _("_Import"),
     O2G_NULLPTR, "<OSM2Go-Main>/Track/Import");
+  mainui->initItem(MainUi::MENU_ITEM_TRACK_IMPORT, item);
 
-  appdata.menuitems[MainUi::MENU_ITEM_TRACK_EXPORT] = item = menu_append_new_item(
+  item = menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_track_export), _("_Export"),
     O2G_NULLPTR, "<OSM2Go-Main>/Track/Export",
     0, static_cast<GdkModifierType>(0), false);
+  mainui->initItem(MainUi::MENU_ITEM_TRACK_EXPORT, item);
 
-  appdata.menuitems[MainUi::MENU_ITEM_TRACK_CLEAR] = item = menu_append_new_item(
+  item = menu_append_new_item(
     appdata, submenu, G_CALLBACK(track_clear_cb), _("_Clear"),
     GTK_STOCK_CLEAR, "<OSM2Go-Main>/Track/Clear",
     0, static_cast<GdkModifierType>(0), false);
+  mainui->initItem(MainUi::MENU_ITEM_TRACK_CLEAR, item);
 
-  appdata.menuitems[MainUi::MENU_ITEM_TRACK_ENABLE_GPS] = menu_append_new_item(
+  item = menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_track_enable_gps),_("_GPS enable"),
     O2G_NULLPTR, "<OSM2Go-Main>/Track/GPS",
     GDK_g, static_cast<GdkModifierType>(GDK_CONTROL_MASK|GDK_SHIFT_MASK), true, true,
     appdata.settings->enable_gps
   );
+  mainui->initItem(MainUi::MENU_ITEM_TRACK_ENABLE_GPS, item);
 
-  appdata.menuitems[MainUi::MENU_ITEM_TRACK_FOLLOW_GPS] = menu_append_new_item(
+  item = menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_track_follow_gps), _("GPS follow"),
     O2G_NULLPTR, "<OSM2Go-Main>/Track/Follow",
     0, static_cast<GdkModifierType>(0), appdata.settings->enable_gps, true,
     appdata.settings->follow_gps
   );
+  mainui->initItem(MainUi::MENU_ITEM_TRACK_FOLLOW_GPS, item);
 
   menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_track_vis), _("Track _visibility"),
@@ -822,7 +841,8 @@ static void on_submenu_entry_clicked(GtkWidget *menu)
 /* use standard dialog boxes for fremantle submenues */
 static GtkWidget *app_submenu_create(appdata_t &appdata, MainUi::menu_items submenu,
                                      const menu_entry_t *menu, const unsigned int rows) {
-  const char *title = hildon_button_get_title(HILDON_BUTTON(appdata.menuitems[submenu]));
+  MainUiGtk * const mainui = static_cast<MainUiGtk *>(appdata.uicontrol);
+  const char *title = hildon_button_get_title(HILDON_BUTTON(mainui->menu_item(submenu)));
   /* create a oridinary dialog box */
   GtkWidget *dialog = gtk_dialog_new_with_buttons(title, GTK_WINDOW(appdata.window),
                                                   GTK_DIALOG_MODAL, O2G_NULLPTR);
@@ -875,7 +895,7 @@ static GtkWidget *app_submenu_create(appdata_t &appdata, MainUi::menu_items subm
 
     /* index to GtkWidget pointer array was given -> store pointer */
     if(menu_entries->menuindex >= 0)
-      appdata.menuitems[menu_entries->menuindex] = button;
+      mainui->initItem(static_cast<MainUi::menu_items>(menu_entries->menuindex), button);
 
     gtk_widget_set_sensitive(button, menu_entries->enabled);
 
@@ -943,6 +963,7 @@ static HildonAppMenu *app_menu_create(appdata_t &appdata) {
     menu_entry_t(_("Track"),     G_CALLBACK(on_submenu_track_clicked), MainUi::SUBMENU_TRACK)
   } };
 
+  MainUiGtk * const mainui = static_cast<MainUiGtk *>(appdata.uicontrol);
   for(unsigned int i = 0; i < main_menu.size(); i++) {
     const menu_entry_t &entry = main_menu[i];
     GtkWidget *button = O2G_NULLPTR;
@@ -961,7 +982,7 @@ static HildonAppMenu *app_menu_create(appdata_t &appdata) {
 
     /* index to GtkWidget pointer array was given -> store pointer */
     if(entry.menuindex >= 0)
-      appdata.menuitems[entry.menuindex] = button;
+      mainui->initItem(static_cast<MainUi::menu_items>(entry.menuindex), button);
 
     gtk_widget_set_sensitive(button, entry.enabled);
 
@@ -1042,12 +1063,6 @@ appdata_t::appdata_t(map_state_t &mstate)
   , style(style_load(settings->style))
   , gps_state(gps_state_t::create())
 {
-  // the TR1 header has assign() for what is later called fill()
-#if __cplusplus >= 201103L
-  menuitems.fill(O2G_NULLPTR);
-#else
-  menuitems.assign(O2G_NULLPTR);
-#endif
   memset(&track, 0, sizeof(track));
 }
 

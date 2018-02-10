@@ -20,14 +20,11 @@
 #ifndef APPDATA_H
 #define APPDATA_H
 
-#include <array>
-
-#include "uicontrol.h"
-
 struct canvas_item_t;
 class gps_state_t;
 class icon_t;
 class iconbar_t;
+class MainUi;
 struct map_state_t;
 class map_t;
 struct osm_t;
@@ -51,8 +48,6 @@ struct appdata_t {
   project_t *project;
   iconbar_t *iconbar;
   presets_items *presets;
-
-  std::array<GtkWidget *, MainUi::MENU_ITEMS_COUNT> menuitems;
 
   struct {
     track_t *track;
