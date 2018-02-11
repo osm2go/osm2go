@@ -42,11 +42,6 @@ class MainUiGtk : public MainUi {
 public:
   MainUiGtk(appdata_t &a);
 
-  /*
-   * @brief init the widgets
-   */
-  void initItem(menu_items item, GtkWidget *widget);
-
   inline GtkWidget *menu_item(menu_items item)
   { return menuitems[item]; }
 

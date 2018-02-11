@@ -20,12 +20,14 @@
 #include "MainUiGtk.h"
 
 #include <appdata.h>
+#include <icon.h>
 #include <statusbar.h>
 
 #include <array>
 #include <gtk/gtk.h>
 #ifdef FREMANTLE
 #include <hildon/hildon-button.h>
+#include <hildon/hildon-check-button.h>
 #include <string>
 #endif
 
@@ -33,20 +35,59 @@
 #include <osm2go_cpp.h>
 #include <osm2go_i18n.h>
 
-static GtkWidget *
-create_submenu_item(const char *label)
-{
 #ifdef FREMANTLE
+static std::string strip_mnemonic(const char *label)
+{
   // remove mnemonic marker
   std::string hlabel = label;
   std::string::size_type _pos = hlabel.find('_');
   if(likely(_pos != std::string::npos))
     hlabel.erase(_pos, 1);
+  return hlabel;
+}
+#endif
+
+static GtkWidget *
+create_submenu_item(const char *label)
+{
+#ifdef FREMANTLE
   return hildon_button_new_with_text(
                 static_cast<HildonSizeType>(HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH),
-                HILDON_BUTTON_ARRANGEMENT_VERTICAL, hlabel.c_str(), O2G_NULLPTR);
+                HILDON_BUTTON_ARRANGEMENT_VERTICAL, strip_mnemonic(label).c_str(), O2G_NULLPTR);
 #else
   return gtk_menu_item_new_with_mnemonic(label);
+#endif
+}
+
+static GtkWidget *  __attribute__((nonnull(1)))
+menu_entry(const char *label, const char *icon_name = O2G_NULLPTR)
+{
+#ifdef FREMANTLE
+  (void)icon_name;
+#else
+  // Icons
+  if(icon_name != O2G_NULLPTR) {
+    GtkWidget *image = icon_t::instance().widget_load(icon_name);
+    if (image == O2G_NULLPTR)
+      image = gtk_image_new_from_icon_name(icon_name, GTK_ICON_SIZE_MENU);
+    assert(image != O2G_NULLPTR);
+    GtkWidget *item = gtk_image_menu_item_new_with_mnemonic(label);
+    gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item), image);
+    return item;
+  }
+#endif
+  return create_submenu_item(label);
+}
+
+static GtkWidget *
+create_checkbox_item(const char *label)
+{
+#ifdef FREMANTLE
+  GtkWidget *button = hildon_check_button_new(HILDON_SIZE_AUTO);
+  gtk_button_set_label(GTK_BUTTON(button), strip_mnemonic(label).c_str());
+  return button;
+#else
+  return gtk_check_menu_item_new_with_mnemonic(label);
 #endif
 }
 
@@ -58,22 +99,29 @@ MainUiGtk::MainUiGtk(appdata_t& a)
   , menubar(GTK_MENU_SHELL(gtk_menu_bar_new()))
 #endif
 {
-  // the TR1 header has assign() for what is later called fill()
-#if __cplusplus >= 201103L
-  menuitems.fill(O2G_NULLPTR);
-#else
-  menuitems.assign(O2G_NULLPTR);
-#endif
-
+  menuitems[MENU_ITEM_MAP_HIDE_SEL] = menu_entry(_("_Hide selected"), "list-remove");
+  menuitems[MENU_ITEM_MAP_SHOW_ALL] = menu_entry(_("_Show all"), "list-add");
+  menuitems[MENU_ITEM_WMS_CLEAR] = menu_entry(_("_Clear"), "edit-clear");
+  menuitems[MENU_ITEM_WMS_ADJUST] = menu_entry(_("_Adjust"));
   menuitems[SUBMENU_VIEW] = create_submenu_item(_("_View"));
+  menuitems[MENU_ITEM_TRACK_EXPORT] = menu_entry(_("_Export"));
+  menuitems[MENU_ITEM_TRACK_CLEAR] = menu_entry(_("_Clear"), "edit-clear");
+  menuitems[MENU_ITEM_TRACK_ENABLE_GPS] = create_checkbox_item(_("_GPS enable"));
+  menuitems[MENU_ITEM_TRACK_FOLLOW_GPS] = create_checkbox_item(_("GPS follow"));
 #ifdef FREMANTLE
   menuitems[SUBMENU_MAP] = create_submenu_item(_("OSM"));
-  menuitems[MENU_ITEM_MAP_RELATIONS] = create_submenu_item(_("Relations"));
 #else
   menuitems[SUBMENU_MAP] = create_submenu_item(_("_Map"));
 #endif
+  menuitems[MENU_ITEM_MAP_RELATIONS] = menu_entry(_("_Relations"));
   menuitems[SUBMENU_WMS] = create_submenu_item(_("_WMS"));
   menuitems[SUBMENU_TRACK] = create_submenu_item(_("_Track"));
+  menuitems[MENU_ITEM_TRACK_IMPORT] = menu_entry(_("_Import"));
+  menuitems[MENU_ITEM_MAP_UPLOAD] = menu_entry(_("_Upload"), "upload.16");
+  menuitems[MENU_ITEM_MAP_UNDO_CHANGES] = menu_entry(_("Undo _all"), "edit-delete");
+#ifndef FREMANTLE
+  menuitems[MENU_ITEM_MAP_SAVE_CHANGES] = menu_entry(_("_Save local changes"), "document-save");
+#endif
 }
 
 MainUi *MainUi::instance(appdata_t &appdata)
@@ -100,13 +148,6 @@ void MainUi::showNotification(const char *message, unsigned int flags)
   } else {
     appdata.statusbar->set(message, flags & Highlight);
   }
-}
-
-void MainUiGtk::initItem(MainUi::menu_items item, GtkWidget *widget)
-{
-  assert_null(menuitems[item]);
-
-  menuitems[item] = widget;
 }
 
 GtkWidget *MainUiGtk::addMenu(GtkWidget *item)
