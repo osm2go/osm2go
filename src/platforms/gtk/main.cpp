@@ -535,7 +535,6 @@ static void about_box(appdata_t *appdata)
  * @param accel_path accel database key (must be a static string)
  * @param accel_key key setting from gdk/gdkkeysyms.h
  * @param accel_mods accel modifiers
- * @param enabled if the new item is enabled or disabled
  * @param item pre-created menu item (icon_name is ignored in this case)
  */
 static GtkWidget * __attribute__((nonnull(2,6)))
@@ -545,7 +544,6 @@ menu_append_new_item(appdata_t &appdata, GtkWidget *menu_shell,
                      const gchar *accel_path,
                      guint accel_key = 0,
                      GdkModifierType accel_mods = static_cast<GdkModifierType>(0),
-                     bool enabled = true,
                      GtkWidget *item = O2G_NULLPTR)
 {
   GtkStockItem stock_item;
@@ -582,8 +580,6 @@ menu_append_new_item(appdata_t &appdata, GtkWidget *menu_shell,
                               stock_item.modifier);
 
   gtk_menu_shell_append(GTK_MENU_SHELL(menu_shell), GTK_WIDGET(item));
-  if(!enabled)
-    gtk_widget_set_sensitive(GTK_WIDGET(item), FALSE);
 
   g_signal_connect_swapped(item, "activate", activate_cb, &appdata);
   return item;
@@ -594,11 +590,10 @@ menu_append_new_item(appdata_t &appdata, GtkWidget *menu_shell,
                      GCallback activate_cb, MainUi::menu_items item,
                      const gchar *accel_path,
                      guint accel_key = 0,
-                     GdkModifierType accel_mods = static_cast<GdkModifierType>(0),
-                     bool enabled = true)
+                     GdkModifierType accel_mods = static_cast<GdkModifierType>(0))
 {
   return menu_append_new_item(appdata, menu_shell, activate_cb, O2G_NULLPTR, O2G_NULLPTR,
-                              accel_path, accel_key, accel_mods, enabled,
+                              accel_path, accel_key, accel_mods,
                               static_cast<GtkWidget *>(static_cast<MainUiGtk *>(appdata.uicontrol)->menu_item(item)));
 }
 
@@ -639,7 +634,7 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
   menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_fullscreen), O2G_NULLPTR,
     O2G_NULLPTR, "<OSM2Go-Main>/View/Fullscreen",
-    GDK_F11, static_cast<GdkModifierType>(0), true, item);
+    GDK_F11, static_cast<GdkModifierType>(0), item);
 
   menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_zoomin), _("Zoom _in"),
@@ -667,15 +662,15 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
 
   gtk_menu_shell_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
 
-  menu_append_new_item(
+  item = menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_map_hide_sel), MainUi::MENU_ITEM_MAP_HIDE_SEL,
-    "<OSM2Go-Main>/View/HideSelected",
-    0, static_cast<GdkModifierType>(0), false);
+    "<OSM2Go-Main>/View/HideSelected");
+  gtk_widget_set_sensitive(item, FALSE);
 
-  menu_append_new_item(
+  item = menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_map_show_all), MainUi::MENU_ITEM_MAP_SHOW_ALL,
-    "<OSM2Go-Main>/View/ShowAll",
-    0, static_cast<GdkModifierType>(0), false);
+    "<OSM2Go-Main>/View/ShowAll");
+  gtk_widget_set_sensitive(item, FALSE);
 
   gtk_menu_shell_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
 
@@ -729,13 +724,11 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
 
   menu_append_new_item(
     appdata, submenu, G_CALLBACK(wms_remove), MainUi::MENU_ITEM_WMS_CLEAR,
-    "<OSM2Go-Main>/WMS/Clear",
-    0, static_cast<GdkModifierType>(0), false);
+    "<OSM2Go-Main>/WMS/Clear");
 
   menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_wms_adjust), MainUi::MENU_ITEM_WMS_ADJUST,
-    "<OSM2Go-Main>/WMS/Adjust",
-    0, static_cast<GdkModifierType>(0), false);
+    "<OSM2Go-Main>/WMS/Adjust");
 
   /* -------------------- track submenu -------------------- */
 
@@ -748,24 +741,21 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
 
   menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_track_export), MainUi::MENU_ITEM_TRACK_EXPORT,
-    "<OSM2Go-Main>/Track/Export",
-    0, static_cast<GdkModifierType>(0), false);
+    "<OSM2Go-Main>/Track/Export");
 
   menu_append_new_item(
     appdata, submenu, G_CALLBACK(track_clear_cb), MainUi::MENU_ITEM_TRACK_CLEAR,
-    "<OSM2Go-Main>/Track/Clear",
-    0, static_cast<GdkModifierType>(0), false);
+    "<OSM2Go-Main>/Track/Clear");
 
   item = menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_track_enable_gps), MainUi::MENU_ITEM_TRACK_ENABLE_GPS,
     "<OSM2Go-Main>/Track/GPS",
-    GDK_g, static_cast<GdkModifierType>(GDK_CONTROL_MASK|GDK_SHIFT_MASK), true);
+    GDK_g, static_cast<GdkModifierType>(GDK_CONTROL_MASK|GDK_SHIFT_MASK));
   gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item), appdata.settings->enable_gps ? TRUE : FALSE);
 
   item = menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_track_follow_gps), MainUi::MENU_ITEM_TRACK_FOLLOW_GPS,
-    "<OSM2Go-Main>/Track/Follow",
-    0, static_cast<GdkModifierType>(0), appdata.settings->enable_gps);
+    "<OSM2Go-Main>/Track/Follow");
   gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item), appdata.settings->follow_gps ? TRUE : FALSE);
 
   menu_append_new_item(
@@ -785,11 +775,11 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
 struct menu_entry_t {
   typedef gboolean (*toggle_cb)(appdata_t &appdata);
   explicit menu_entry_t(const char *l, GCallback cb = O2G_NULLPTR,
-                        gboolean en = TRUE, toggle_cb tg = O2G_NULLPTR)
-    : label(l), enabled(en), toggle(tg), menuindex(-1), activate_cb(cb) {}
+                        gboolean en = TRUE)
+    : label(l), enabled(en), toggle(O2G_NULLPTR), menuindex(-1), activate_cb(cb) {}
   explicit menu_entry_t(MainUi::menu_items idx, GCallback cb = O2G_NULLPTR,
-                        gboolean en = TRUE, toggle_cb tg = O2G_NULLPTR)
-    : label(O2G_NULLPTR), enabled(en), toggle(tg), menuindex(idx), activate_cb(cb) {}
+                        toggle_cb tg = O2G_NULLPTR)
+    : label(O2G_NULLPTR), enabled(TRUE), toggle(tg), menuindex(idx), activate_cb(cb) {}
   const char *label;
   gboolean enabled;
   toggle_cb toggle;
@@ -860,9 +850,11 @@ static GtkWidget *app_submenu_create(appdata_t &appdata, MainUi::menu_items subm
 
       hildon_button_set_title_alignment(HILDON_BUTTON(button), 0.5, 0.5);
       hildon_button_set_value_alignment(HILDON_BUTTON(button), 0.5, 0.5);
+
+      if (unlikely(menu_entries->enabled == FALSE))
+        gtk_widget_set_sensitive(button, FALSE);
     } else {
       button = mainui->menu_item(static_cast<MainUi::menu_items>(menu_entries->menuindex));
-      printf("requesting check for %s: %p\n", menu_entries->label, menu_entries->toggle);
       hildon_check_button_set_active(HILDON_CHECK_BUTTON(button), menu_entries->toggle(appdata));
 
       g_signal_connect_swapped(button, "clicked",
@@ -874,12 +866,9 @@ static GtkWidget *app_submenu_create(appdata_t &appdata, MainUi::menu_items subm
       gtk_button_set_alignment(GTK_BUTTON(button), 0.5, 0.5);
     }
 
-    gtk_widget_set_sensitive(button, menu_entries->enabled);
-
     const guint x = idx % COLUMNS, y = idx / COLUMNS;
     gtk_table_attach_defaults(GTK_TABLE(table),  button, x, x+1, y, y+1);
   }
-
 
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), table);
 
@@ -979,19 +968,19 @@ static void menu_create(appdata_internal &appdata, GtkBox *) {
   /* -- the wms submenu -- */
   const std::array<menu_entry_t, 3> sm_wms_entries = { {
     menu_entry_t(_("Import"),                  G_CALLBACK(wms_import)),
-    menu_entry_t(MainUi::MENU_ITEM_WMS_CLEAR,  G_CALLBACK(wms_remove), FALSE),
-    menu_entry_t(MainUi::MENU_ITEM_WMS_ADJUST, G_CALLBACK(cb_menu_wms_adjust), FALSE),
+    menu_entry_t(MainUi::MENU_ITEM_WMS_CLEAR,  G_CALLBACK(wms_remove)),
+    menu_entry_t(MainUi::MENU_ITEM_WMS_ADJUST, G_CALLBACK(cb_menu_wms_adjust)),
   } };
 
   /* -- the track submenu -- */
   const std::array<menu_entry_t, 6> sm_track_entries = { {
     menu_entry_t(MainUi::MENU_ITEM_TRACK_IMPORT,     G_CALLBACK(cb_menu_track_import)),
-    menu_entry_t(MainUi::MENU_ITEM_TRACK_EXPORT,     G_CALLBACK(cb_menu_track_export), FALSE),
-    menu_entry_t(MainUi::MENU_ITEM_TRACK_CLEAR,      G_CALLBACK(track_clear_cb), FALSE),
+    menu_entry_t(MainUi::MENU_ITEM_TRACK_EXPORT,     G_CALLBACK(cb_menu_track_export)),
+    menu_entry_t(MainUi::MENU_ITEM_TRACK_CLEAR,      G_CALLBACK(track_clear_cb)),
     menu_entry_t(MainUi::MENU_ITEM_TRACK_ENABLE_GPS, G_CALLBACK(cb_menu_track_enable_gps),
-                 TRUE, enable_gps_get_toggle),
+                 enable_gps_get_toggle),
     menu_entry_t(MainUi::MENU_ITEM_TRACK_FOLLOW_GPS, G_CALLBACK(cb_menu_track_follow_gps),
-                 appdata.settings->enable_gps ? TRUE : FALSE, follow_gps_get_toggle),
+                 follow_gps_get_toggle),
     menu_entry_t(_("Track visibility")),
   } };
 
