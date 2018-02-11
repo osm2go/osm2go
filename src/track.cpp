@@ -326,6 +326,7 @@ bool track_restore(appdata_t &appdata) {
   const char *backupfn = "backup.trk";
   std::string trk_name;
 
+  bool ret = true;
   struct stat st;
   if(unlikely(fstatat(project->dirfd, backupfn, &st, 0) == 0 && S_ISREG(st.st_mode))) {
     printf("track backup present, loading it instead of real track ...\n");
@@ -337,12 +338,13 @@ bool track_restore(appdata_t &appdata) {
     // use relative filename to test
     if(fstatat(project->dirfd, trk_name.c_str() + project->path.size(), &st, 0) != 0 || !S_ISREG(st.st_mode)) {
       printf("no track present!\n");
-      return false;
-    }
-    printf("track found, loading ...\n");
+      ret = false;
+    } else
+      printf("track found, loading ...\n");
   }
 
-  appdata.track.track = track_read(trk_name.c_str(), false);
+  if (ret)
+    appdata.track.track = track_read(trk_name.c_str(), false);
 
   track_menu_set(appdata);
 
