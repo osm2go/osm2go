@@ -552,20 +552,12 @@ menu_append_new_item(appdata_t &appdata, GtkWidget *menu_shell,
 
   // Icons
   if (item == O2G_NULLPTR) {
-    if(icon_name == O2G_NULLPTR) {
-      item = gtk_menu_item_new_with_mnemonic(label);
-    } else {
-      GtkWidget *image = O2G_NULLPTR;
+    if(stock_item_known) {
       item = gtk_image_menu_item_new_with_mnemonic(label);
-      if (!stock_item_known) {
-        image = appdata.icons.widget_load(icon_name);
-        if (image == O2G_NULLPTR)
-          image = gtk_image_new_from_icon_name(icon_name, GTK_ICON_SIZE_MENU);
-      } else {
-        image = gtk_image_new_from_stock(icon_name, GTK_ICON_SIZE_MENU);
-      }
-      assert(image != O2G_NULLPTR);
-      gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item), image);
+      gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item),
+                                    gtk_image_new_from_stock(icon_name, GTK_ICON_SIZE_MENU));
+    } else {
+      item = MainUiGtk::createMenuItem(label, icon_name);
     }
   }
 
@@ -837,10 +829,7 @@ static GtkWidget *app_submenu_create(appdata_t &appdata, MainUi::menu_items subm
       if (menu_entries->menuindex >= 0)
         button = mainui->menu_item(static_cast<MainUi::menu_items>(menu_entries->menuindex));
       else
-        button = hildon_button_new_with_text(
-                 static_cast<HildonSizeType>(HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH),
-                                           HILDON_BUTTON_ARRANGEMENT_VERTICAL,
-                                           _(menu_entries->label), O2G_NULLPTR);
+        button = MainUiGtk::createMenuItem(menu_entries->label);
 
       g_signal_connect_swapped(button, "clicked",
                                G_CALLBACK(on_submenu_entry_clicked), dialog);

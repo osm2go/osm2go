@@ -59,12 +59,14 @@ create_submenu_item(const char *label)
 #endif
 }
 
-static GtkWidget *  __attribute__((nonnull(1)))
-menu_entry(const char *label, const char *icon_name = O2G_NULLPTR)
-{
+GtkWidget *
+MainUiGtk::createMenuItem(const char *label, const char *icon_name
 #ifdef FREMANTLE
-  (void)icon_name;
-#else
+                          __attribute__((unused))
+#endif
+                          )
+{
+#ifndef FREMANTLE
   // Icons
   if(icon_name != O2G_NULLPTR) {
     GtkWidget *image = icon_t::instance().widget_load(icon_name);
@@ -99,13 +101,13 @@ MainUiGtk::MainUiGtk(appdata_t& a)
   , menubar(GTK_MENU_SHELL(gtk_menu_bar_new()))
 #endif
 {
-  menuitems[MENU_ITEM_MAP_HIDE_SEL] = menu_entry(_("_Hide selected"), "list-remove");
-  menuitems[MENU_ITEM_MAP_SHOW_ALL] = menu_entry(_("_Show all"), "list-add");
-  menuitems[MENU_ITEM_WMS_CLEAR] = menu_entry(_("_Clear"), "edit-clear");
-  menuitems[MENU_ITEM_WMS_ADJUST] = menu_entry(_("_Adjust"));
+  menuitems[MENU_ITEM_MAP_HIDE_SEL] = createMenuItem(_("_Hide selected"), "list-remove");
+  menuitems[MENU_ITEM_MAP_SHOW_ALL] = createMenuItem(_("_Show all"), "list-add");
+  menuitems[MENU_ITEM_WMS_CLEAR] = createMenuItem(_("_Clear"), "edit-clear");
+  menuitems[MENU_ITEM_WMS_ADJUST] = createMenuItem(_("_Adjust"));
   menuitems[SUBMENU_VIEW] = create_submenu_item(_("_View"));
-  menuitems[MENU_ITEM_TRACK_EXPORT] = menu_entry(_("_Export"));
-  menuitems[MENU_ITEM_TRACK_CLEAR] = menu_entry(_("_Clear"), "edit-clear");
+  menuitems[MENU_ITEM_TRACK_EXPORT] = createMenuItem(_("_Export"));
+  menuitems[MENU_ITEM_TRACK_CLEAR] = createMenuItem(_("_Clear"), "edit-clear");
   menuitems[MENU_ITEM_TRACK_ENABLE_GPS] = create_checkbox_item(_("_GPS enable"));
   menuitems[MENU_ITEM_TRACK_FOLLOW_GPS] = create_checkbox_item(_("GPS follow"));
 #ifdef FREMANTLE
@@ -113,14 +115,14 @@ MainUiGtk::MainUiGtk(appdata_t& a)
 #else
   menuitems[SUBMENU_MAP] = create_submenu_item(_("_Map"));
 #endif
-  menuitems[MENU_ITEM_MAP_RELATIONS] = menu_entry(_("_Relations"));
+  menuitems[MENU_ITEM_MAP_RELATIONS] = createMenuItem(_("_Relations"));
   menuitems[SUBMENU_WMS] = create_submenu_item(_("_WMS"));
   menuitems[SUBMENU_TRACK] = create_submenu_item(_("_Track"));
-  menuitems[MENU_ITEM_TRACK_IMPORT] = menu_entry(_("_Import"));
-  menuitems[MENU_ITEM_MAP_UPLOAD] = menu_entry(_("_Upload"), "upload.16");
-  menuitems[MENU_ITEM_MAP_UNDO_CHANGES] = menu_entry(_("Undo _all"), "edit-delete");
+  menuitems[MENU_ITEM_TRACK_IMPORT] = createMenuItem(_("_Import"));
+  menuitems[MENU_ITEM_MAP_UPLOAD] = createMenuItem(_("_Upload"), "upload.16");
+  menuitems[MENU_ITEM_MAP_UNDO_CHANGES] = createMenuItem(_("Undo _all"), "edit-delete");
 #ifndef FREMANTLE
-  menuitems[MENU_ITEM_MAP_SAVE_CHANGES] = menu_entry(_("_Save local changes"), "document-save");
+  menuitems[MENU_ITEM_MAP_SAVE_CHANGES] = createMenuItem(_("_Save local changes"), "document-save");
 #endif
 }
 

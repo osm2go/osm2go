@@ -31,6 +31,8 @@ typedef struct _GtkMenuShell GtkMenuShell;
 typedef GtkMenuShell MenuBar;
 #endif
 
+#include <osm2go_cpp.h>
+
 typedef struct _GtkWidget GtkWidget;
 
 class MainUiGtk : public MainUi {
@@ -57,6 +59,8 @@ public:
    * @brief add one of the predefined entries to the global menu bar
    */
   GtkWidget *addMenu(menu_items item);
+
+  static GtkWidget *createMenuItem(const char *label, const char *icon_name = O2G_NULLPTR) __attribute__((nonnull(1)));
 };
 
 #endif /* MAINUIGTK_H */
