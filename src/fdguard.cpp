@@ -80,7 +80,8 @@ dirguard::dirguard(int fd)
   : d(fdopendir(dup(fd)))
 {
   // ignore the position of fd
-  rewinddir(d);
+  if(d)
+    rewinddir(d);
 }
 
 dirguard::~dirguard()

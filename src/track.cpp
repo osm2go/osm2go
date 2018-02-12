@@ -350,7 +350,7 @@ bool track_restore(appdata_t &appdata) {
 
   printf("restored track\n");
 
-  return true;
+  return ret;
 }
 
 static void track_end_segment(track_t *track) {
