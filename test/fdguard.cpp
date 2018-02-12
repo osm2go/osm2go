@@ -8,7 +8,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 
-static void check_guard(int openfd, int &dirfd)
+static void check_guard(int openfd, int &dirfd, const std::string &exepath)
 {
   fdguard infd(0);
   assert(infd);
@@ -31,9 +31,12 @@ static void check_guard(int openfd, int &dirfd)
 
   assert_cmpnum(static_cast<int>(rootfd), openfd);
   assert_cmpnum(static_cast<int>(ofd), dirfd);
+
+  dirguard dg(exepath.c_str());
+  assert(dg.valid());
 }
 
-static void check_notdir(const char *exe)
+static void check_notdir(const char *exe, const std::string &exepath)
 {
   fdguard dir(exe);
   assert(!dir.valid());
@@ -42,15 +45,20 @@ static void check_notdir(const char *exe)
   assert(file.valid());
   assert(file);
 
-  std::string exepath(exe);
-  std::string::size_type slpos = exepath.rfind('/');
-  assert(slpos != std::string::npos);
-  exepath[slpos] = '\0';
-
   fdguard exedir(exepath.c_str());
   assert(exedir.valid());
-  fdguard exefile(exedir, exepath.c_str() + slpos + 1, O_RDONLY);
+  fdguard exefile(exedir, exe + exepath.length() + 1, O_RDONLY);
   assert(exefile.valid());
+
+  // check with invalid path name (not a directory)
+  dirguard dguard_path(exe);
+  assert(!dguard_path.valid());
+
+  // check with file descriptor not pointing to a directory
+  fdguard zero("/dev/zero", O_RDONLY);
+  assert(zero.valid());
+  dirguard dguard_fd(zero);
+  assert(!dguard_fd.valid());
 }
 
 int main(int argc, char **argv)
@@ -62,8 +70,12 @@ int main(int argc, char **argv)
 
   assert_cmpnum_op(openfd, >, 0);
 
-  check_guard(openfd, dirfd);
-  check_notdir(argv[1]);
+  std::string exepath(argv[1]);
+  std::string::size_type slpos = exepath.rfind('/');
+  exepath.erase(slpos);
+
+  check_guard(openfd, dirfd, exepath);
+  check_notdir(argv[1], exepath);
 
   assert_cmpnum_op(dirfd, >, 0);
 
