@@ -70,6 +70,8 @@ else ()
 	target_link_libraries(suppression-dummy PRIVATE ${GTK2_TARGETS})
 endif ()
 
+osm_test(project)
+
 if (NETWORK_TESTS)
 	osm_test(net_io "${CMAKE_SOURCE_DIR}/data/COPYING")
 	osm_test(osm_api_download)
