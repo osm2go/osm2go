@@ -2,6 +2,7 @@
 #include <project_p.h>
 
 #include <appdata.h>
+#include <fdguard.h>
 #include <icon.h>
 #include <map.h>
 
@@ -9,6 +10,7 @@
 #include <cerrno>
 #include <cstdlib>
 #include <cstring>
+#include <fcntl.h>
 #include <iostream>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -48,6 +50,18 @@ static void testNoFiles(const std::string &tmpdir)
 
   const std::string pfile = tmpdir + '/' + std::string(proj_name) + ".proj";
   assert(!project_read(pfile, &project, std::string(), -1));
+
+  int fd = open(pfile.c_str(), O_WRONLY | O_CREAT, 0644);
+  assert(fd >= 0);
+  const char *xml_minimal = "<a><b/></a>";
+  write(fd, xml_minimal, strlen(xml_minimal));
+  close(fd);
+  fdguard empty(pfile.c_str(), O_RDONLY);
+  assert(empty.valid());
+
+  assert(!project_read(pfile, &project, std::string(), -1));
+
+  unlink(pfile.c_str());
 }
 
 int main(void)

@@ -71,9 +71,11 @@ bool project_read(const std::string &project_file, project_t *project,
     return false;
   }
 
+  bool hasProj = false;
   for (xmlNode *cur_node = xmlDocGetRootElement(doc.get()); cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcmp(reinterpret_cast<const char *>(cur_node->name), "proj") == 0) {
+        hasProj = true;
         project->data_dirty = xml_get_prop_bool(cur_node, "dirty");
         project->isDemo = xml_get_prop_bool(cur_node, "demo");
 
@@ -146,7 +148,7 @@ bool project_read(const std::string &project_file, project_t *project,
     }
   }
 
-  if(project->name.empty())
+  if(!hasProj)
     return false;
 
   // no explicit filename was given, guess the default ones
