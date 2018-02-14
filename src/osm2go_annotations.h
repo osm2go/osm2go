@@ -59,7 +59,7 @@ assert_msg_unreachable(const char *file, const int line, const char *func);
 
 #define assert_null(x) \
        do { \
-         const typeof(x) p = x; \
+         const void *p = x; \
          if (unlikely(p != O2G_NULLPTR)) \
            ASSERT_MSG_FMT("'%s' should be nullptr, but is %p", #x, p); \
        } while(0)
