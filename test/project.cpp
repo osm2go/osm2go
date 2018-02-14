@@ -12,6 +12,7 @@
 #include <cstring>
 #include <fcntl.h>
 #include <iostream>
+#include <memory>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -64,9 +65,32 @@ static void testNoFiles(const std::string &tmpdir)
   unlink(pfile.c_str());
 }
 
-int main(void)
+static void testSave(const std::string &tmpdir, const char *empty_proj)
+{
+  map_state_t dummystate;
+  project_t project(dummystate, proj_name, tmpdir);
+
+  assert(project.save(O2G_NULLPTR));
+
+  const std::string &pfile = project_filename(&project);
+
+  osm2go_platform::MappedFile empty(empty_proj);
+  assert(empty);
+  osm2go_platform::MappedFile proj(pfile.c_str());
+  assert(proj);
+
+  assert_cmpmem(empty.data(), empty.length(), proj.data(), proj.length());
+
+  assert_cmpnum(unlink(pfile.c_str()), 0);
+  assert_cmpnum(rmdir(project.path.c_str()), 0);
+}
+
+int main(int argc, char **argv)
 {
   xmlInitParser();
+
+  if(argc != 2)
+    return 1;
 
   char tmpdir[] = "/tmp/osm2go-project-XXXXXX";
 
@@ -79,8 +103,9 @@ int main(void)
   osm_path += '/';
 
   testNoFiles(osm_path);
+  testSave(osm_path, argv[1]);
 
-  rmdir(tmpdir);
+  assert_cmpnum(rmdir(tmpdir), 0);
 
   xmlCleanupParser();
 
