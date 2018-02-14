@@ -125,19 +125,21 @@ bool project_read(const std::string &project_file, project_t *project,
               project->wms_offset.y = strtoul(reinterpret_cast<char *>(str.get()), O2G_NULLPTR, 10);
           } else if(strcmp(reinterpret_cast<const char *>(node->name), "osm") == 0) {
             xmlString str(xmlNodeListGetString(doc.get(), node->children, 1));
-            printf("osm = %s\n", str.get());
+            if(likely(str)) {
+              printf("osm = %s\n", str.get());
 
-            /* make this a relative path if possible */
-            /* if the project path actually is a prefix of this, */
-            /* then just remove this prefix */
-            if(str.get()[0] == '/' &&
-               strlen(reinterpret_cast<char *>(str.get())) > project->path.size() &&
-               !strncmp(reinterpret_cast<char *>(str.get()), project->path.c_str(), project->path.size())) {
+              /* make this a relative path if possible */
+              /* if the project path actually is a prefix of this, */
+              /* then just remove this prefix */
+              if(str.get()[0] == '/' &&
+                strlen(reinterpret_cast<char *>(str.get())) > project->path.size() &&
+                !strncmp(reinterpret_cast<char *>(str.get()), project->path.c_str(), project->path.size())) {
 
-              project->osmFile = reinterpret_cast<char *>(str.get() + project->path.size());
-              printf("osm name converted to relative %s\n", project->osmFile.c_str());
-            } else
-              project->osmFile = reinterpret_cast<char *>(str.get());
+                project->osmFile = reinterpret_cast<char *>(str.get() + project->path.size());
+                printf("osm name converted to relative %s\n", project->osmFile.c_str());
+              } else
+                project->osmFile = reinterpret_cast<char *>(str.get());
+            }
           } else if(strcmp(reinterpret_cast<const char *>(node->name), "min") == 0) {
             project->bounds.min = pos_t::fromXmlProperties(node);
           } else if(strcmp(reinterpret_cast<const char *>(node->name), "max") == 0) {
