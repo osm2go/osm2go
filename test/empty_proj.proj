@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <proj name="test_proj">
-  <osm/>
   <min lat="0" lon="0"/>
   <max lat="0" lon="0"/>
   <map zoom="0.2500" detail="1.0000" scroll-offset-x="0" scroll-offset-y="0"/>

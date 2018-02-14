@@ -201,7 +201,7 @@ bool project_t::save(GtkWidget *parent) {
     xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "desc", BAD_CAST desc.c_str());
 
   const std::string defaultOsm = name + ".osm";
-  if(unlikely(osmFile != defaultOsm + ".gz" && osmFile != defaultOsm))
+  if(unlikely(!osmFile.empty() && osmFile != defaultOsm + ".gz" && osmFile != defaultOsm))
     xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "osm", BAD_CAST osmFile.c_str());
 
   node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "min", O2G_NULLPTR);
