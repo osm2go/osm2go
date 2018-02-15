@@ -238,8 +238,7 @@ static double selected_area(const area_context_t *context) {
 }
 
 static bool current_tab_is(GtkNotebook *nb, GtkWidget *w, const char *str) {
-  const char *name =
-    gtk_notebook_get_tab_label_text(nb, w);
+  const char *name = gtk_notebook_get_tab_label_text(nb, w);
 
   return (strcmp(name, _(str)) == 0);
 }
@@ -664,10 +663,18 @@ on_map_button_release_event(GtkWidget *widget,
   return !osm_gps_map_osd_get_state(map);
 }
 
-static void on_page_switch(GtkNotebook *nb, GtkWidget *pg, guint, area_context_t *context) {
-  /* updating the map while the user manually changes some coordinates */
-  /* may confuse the map. so we delay those updates until the map tab */
-  /* is becoming visible */
+/* updating the map while the user manually changes some coordinates */
+/* may confuse the map. so we delay those updates until the map tab */
+/* is becoming visible */
+static void on_page_switch(GtkNotebook *nb, GtkWidget *pg, guint pgnum, area_context_t *context) {
+#ifdef FREMANTLE
+  // the pages of the normal notebook are not used on FREMANTLE, so the sender
+  // widget is not the one the one that can be queried for the actual title
+  pg = gtk_notebook_get_nth_page(nb, pgnum);
+#else
+  (void)pgnum;
+#endif
+
   if(context->map.needs_redraw && current_tab_is(nb, pg, TAB_LABEL_MAP))
     map_update(context, true);
 }
