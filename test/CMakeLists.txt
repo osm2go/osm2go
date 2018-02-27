@@ -28,7 +28,7 @@ osm_test(diff_restore "${CMAKE_CURRENT_SOURCE_DIR}/" "diff_restore" "${CMAKE_CUR
 osm_test(style_load "elemstyles.xml" 347 357 "standard")
 set_property(TEST style_load PROPERTY WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 add_test(NAME style_load_mapnik
-		COMMAND style_load "elemstyles-mapnik.xml" 134 137 "mapnik"
+		COMMAND style_load "elemstyles-mapnik.xml" 135 138 "mapnik"
 		WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
 add_test(NAME style_load_potlatch
 		COMMAND style_load "${CMAKE_CURRENT_SOURCE_DIR}/../data/elemstyles-potlatch.xml" 27 27)
