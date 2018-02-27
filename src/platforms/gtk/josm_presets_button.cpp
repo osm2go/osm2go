@@ -880,8 +880,10 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event) {
   // then delete the dialog, it would delete the submenus first otherwise
   dialog.reset();
 
-  if(presets_context_t::instance->selected_item)
+  if(presets_context_t::instance->selected_item) {
     presets_item_dialog(presets_context_t::instance->selected_item);
+    presets_context_t::instance->selected_item = O2G_NULLPTR;
+  }
 #endif
 
   /* Tell calling code that we have handled this event; the buck
