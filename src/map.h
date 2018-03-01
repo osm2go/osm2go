@@ -212,7 +212,6 @@ void map_action_ok(map_t *map);
 void map_delete_selected(map_t *map);
 
 /* track stuff */
-void map_track_remove(track_t &track);
 void map_track_remove_pos(appdata_t &appdata);
 
 void map_outside_error(appdata_t &appdata);

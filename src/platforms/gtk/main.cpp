@@ -1050,13 +1050,13 @@ appdata_t::~appdata_t() {
 void appdata_t::track_clear()
 {
   track_t *tr = track.track;
-  if (!tr)
+  if (tr == O2G_NULLPTR)
     return;
 
   printf("clearing track\n");
 
   if(likely(map != O2G_NULLPTR))
-    map_track_remove(*tr);
+    tr->clear();
 
   track.track = O2G_NULLPTR;
   track_menu_set(*this);

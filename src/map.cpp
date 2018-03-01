@@ -1763,7 +1763,7 @@ void map_t::track_draw(TrackVisibility visibility, track_t &track) {
   if(unlikely(track.segments.empty()))
     return;
 
-  map_track_remove(track);
+  track.clear();
   if(visibility < ShowPosition)
     map_track_remove_pos(appdata);
 
@@ -1783,12 +1783,10 @@ void map_t::track_draw(TrackVisibility visibility, track_t &track) {
   }
 }
 
-void map_track_remove(track_t &track) {
+void track_t::clear() {
   printf("removing track\n");
 
-  /* remove all segments */
-  std::for_each(track.segments.begin(), track.segments.end(),
-                free_track_item_chain<true>);
+  std::for_each(segments.begin(), segments.end(), free_track_item_chain<true>);
 }
 
 /**
