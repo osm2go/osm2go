@@ -343,8 +343,10 @@ bool track_restore(appdata_t &appdata) {
       printf("track found, loading ...\n");
   }
 
-  if (ret)
+  if (ret) {
     appdata.track.track = track_read(trk_name.c_str(), false);
+    ret = appdata.track.track != O2G_NULLPTR;
+  }
 
   track_menu_set(appdata);
 
