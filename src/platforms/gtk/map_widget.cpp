@@ -52,8 +52,10 @@
 #include <osm2go_stl.h>
 
 class map_internal : public map_t {
+  map_highlight_t m_hl;
 public:
   map_internal(appdata_t &a);
+
 
   osm2go_platform::Timer autosave;
 
@@ -238,7 +240,7 @@ static gboolean map_autosave(gpointer data) {
 }
 
 map_internal::map_internal(appdata_t &a)
-  : map_t(a)
+  : map_t(a, m_hl)
 {
   background.item = O2G_NULLPTR;
 

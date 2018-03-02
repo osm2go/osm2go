@@ -96,7 +96,7 @@ void map_item_chain_destroy(map_item_chain_t *&chainP) {
 void map_node_select(map_t *map, node_t *node) {
   map_item_t *map_item = &map->selected;
 
-  assert_null(map->highlight);
+  assert(map->highlight.isEmpty());
 
   map_item->object = node;
   map_item->highlight = false;
@@ -132,16 +132,15 @@ void map_node_select(map_t *map, node_t *node) {
 
   radius *= map->state.detail;
 
-  map_hl_circle_new(map, CANVAS_GROUP_NODES_HL, new_map_item,
-		    x, y, radius, map->style->highlight.color);
+  map->highlight.circle_new(map, CANVAS_GROUP_NODES_HL, new_map_item, x, y,
+                            radius, map->style->highlight.color);
 
   if(!map_item->item) {
     /* and draw a fake node */
     new_map_item = new map_item_t(*map_item);
     new_map_item->highlight = true;
-    map_hl_circle_new(map, CANVAS_GROUP_NODES_IHL, new_map_item,
-		      x, y, map->style->node.radius,
-		      map->style->highlight.node_color);
+    map->highlight.circle_new(map, CANVAS_GROUP_NODES_IHL, new_map_item, x, y,
+                              map->style->node.radius, map->style->highlight.node_color);
   }
 }
 
@@ -216,19 +215,19 @@ void draw_selected_way_functor::operator()(node_t* node)
       points[2] = lpos_t(center.x - diff.y - diff.x, center.y + diff.x - diff.y);
       points[3] = points[0];
 
-      map_hl_polygon_new(map, CANVAS_GROUP_WAYS_DIR, new_map_item,
-                         points, map->style->highlight.arrow_color);
+      map->highlight.polygon_new(map, CANVAS_GROUP_WAYS_DIR, new_map_item,
+                                 points, map->style->highlight.arrow_color);
     }
   }
 
-  if(!map_hl_item_is_highlighted(map, item)) {
+  if(!map->highlight.isHighlighted(item)) {
     /* create a new map item for every node */
     map_item_t *new_map_item = new map_item_t(object_t(node), true);
 
-    map_hl_circle_new(map, CANVAS_GROUP_NODES_IHL, new_map_item,
-                      node->lpos.x, node->lpos.y,
-                      map->style->node.radius * map->state.detail,
-                      map->style->highlight.node_color);
+    map->highlight.circle_new(map, CANVAS_GROUP_NODES_IHL, new_map_item,
+                              node->lpos.x, node->lpos.y,
+                              map->style->node.radius * map->state.detail,
+                              map->style->highlight.node_color);
   }
 
   last = node;
@@ -237,7 +236,7 @@ void draw_selected_way_functor::operator()(node_t* node)
 void map_t::select_way(way_t *way) {
   map_item_t *map_item = &selected;
 
-  assert_null(highlight);
+  assert(highlight.isEmpty());
 
   map_item->object = way;
   map_item->highlight = false;
@@ -264,7 +263,7 @@ void map_t::select_way(way_t *way) {
     map_item_t *new_map_item = new map_item_t(*map_item);
     new_map_item->highlight = true;
 
-    map_hl_polyline_new(this, CANVAS_GROUP_WAYS_HL, new_map_item, points,
+    highlight.polyline_new(this, CANVAS_GROUP_WAYS_HL, new_map_item, points,
 		 ((way->draw.flags & OSM_DRAW_FLAG_BG)?
                   2 * style->highlight.width + way->draw.bg.width:
                   2 * style->highlight.width + way->draw.width)
@@ -273,9 +272,8 @@ void map_t::select_way(way_t *way) {
 }
 
 struct relation_select_functor {
-  map_highlight_t &hl;
   map_t * const map;
-  relation_select_functor(map_highlight_t &h, map_t *m) : hl(h), map(m) {}
+  relation_select_functor(map_t *m) : map(m) {}
   void operator()(member_t &member);
 };
 
@@ -318,19 +316,14 @@ void relation_select_functor::operator()(member_t& member)
 
   /* attach item to item chain */
   if(item)
-    hl.items.push_back(item);
+    map->highlight.items.push_back(item);
 }
 
 
 void map_t::select_relation(relation_t *relation) {
   printf("highlighting relation " ITEM_ID_FORMAT "\n", relation->id);
 
-  map_highlight_t *hl = highlight;
-  if(hl) {
-    assert(hl->items.empty());
-  } else {
-    hl = highlight = new map_highlight_t();
-  }
+  assert(highlight.isEmpty());
 
   selected.object = relation;
   selected.highlight = false;
@@ -340,7 +333,7 @@ void map_t::select_relation(relation_t *relation) {
   appdata.iconbar->map_item_selected(selected.object);
 
   /* process all members */
-  relation_select_functor fc(*hl, this);
+  relation_select_functor fc(this);
   std::for_each(relation->members.begin(), relation->members.end(), fc);
 }
 
@@ -378,7 +371,7 @@ void map_t::item_deselect() {
   appdata.uicontrol->setActionEnable(MainUi::MENU_ITEM_MAP_HIDE_SEL, false);
 
   /* remove highlight */
-  map_hl_remove(this);
+  highlight.clear();
 
   /* forget about selection */
   selected.object.type = ILLEGAL;
@@ -1303,11 +1296,11 @@ void map_t::handle_motion(int x, int y)
   }
 }
 
-map_t::map_t(appdata_t &a)
+map_t::map_t(appdata_t &a, map_highlight_t &hl)
   : appdata(a)
   , canvas(canvas_t::create())
   , state(appdata.map_state)
-  , highlight(O2G_NULLPTR)
+  , highlight(hl)
   , cursor(O2G_NULLPTR)
   , touchnode(O2G_NULLPTR)
   , style(appdata.style)
@@ -1325,9 +1318,6 @@ map_t::map_t(appdata_t &a)
 map_t::~map_t()
 {
   map_free_map_item_chains(appdata);
-
-  /* destroy existing highlight */
-  delete highlight;
 }
 
 void map_t::init() {

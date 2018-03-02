@@ -29,6 +29,14 @@
 
 #include <osm2go_cpp.h>
 
+void map_highlight_t::clear()
+{
+  printf("removing highlight\n");
+
+  std::for_each(items.begin(), items.end(), std::default_delete<canvas_item_t>());
+  items.clear();
+}
+
 /* create a new item for the cursor */
 void map_hl_cursor_draw(map_t *map, int x, int y, unsigned int radius) {
   map_hl_cursor_draw(map, map->canvas->window2world(x, y), radius);
@@ -78,18 +86,6 @@ void map_hl_touchnode_clear(map_t *map) {
   }
 }
 
-void map_hl_remove(map_t *map) {
-  if(!map->highlight) return;
-
-  printf("removing highlight\n");
-
-  map_highlight_t *hl = map->highlight;
-  map->highlight = O2G_NULLPTR;
-  std::for_each(hl->items.begin(), hl->items.end(), std::default_delete<canvas_item_t>());
-
-  delete hl;
-}
-
 struct find_highlighted {
   const map_item_t &item;
   explicit find_highlighted(const map_item_t &t) : item(t) {}
@@ -103,27 +99,19 @@ bool find_highlighted::operator()(canvas_item_t* c)
   return hl_item && hl_item->object == item.object;
 }
 
-bool map_hl_item_is_highlighted(const map_t *map, const map_item_t &item) {
-  const map_highlight_t *hl = map->highlight;
-  if(!hl)
-    return false;
-  const std::vector<canvas_item_t *>::const_iterator itEnd = hl->items.end();
-  return std::find_if(hl->items.begin(), itEnd, find_highlighted(item)) != itEnd;
-}
-
-static void hl_add(map_t *map, canvas_item_t *item)
+bool map_highlight_t::isHighlighted(const map_item_t& item) const
 {
-  /* attach highlight object */
-  if(!map->highlight)
-    map->highlight = new map_highlight_t();
-  map->highlight->items.push_back(item);
+  if(isEmpty())
+    return false;
+  const std::vector<canvas_item_t *>::const_iterator itEnd = items.end();
+  return std::find_if(items.begin(), itEnd, find_highlighted(item)) != itEnd;
 }
 
-canvas_item_t *map_hl_circle_new(map_t *map, canvas_group_t group,
+canvas_item_t *map_highlight_t::circle_new(map_t *map, canvas_group_t group,
                                  map_item_t *map_item, int x, int y,
                                  unsigned int radius, color_t color) {
   map_item->item = map->canvas->circle_new(group, x, y, radius, 0, color, NO_COLOR);
-  hl_add(map, map_item->item);
+  items.push_back(map_item->item);
 
   map_item->item->set_user_data(map_item);
 
@@ -132,10 +120,10 @@ canvas_item_t *map_hl_circle_new(map_t *map, canvas_group_t group,
   return map_item->item;
 }
 
-canvas_item_t *map_hl_polygon_new(map_t *map, canvas_group_t group, map_item_t *map_item,
+canvas_item_t *map_highlight_t::polygon_new(map_t *map, canvas_group_t group, map_item_t *map_item,
                                   const std::vector<lpos_t> &points, color_t color) {
   map_item->item = map->canvas->polygon_new(group, points, 0, 0, color);
-  hl_add(map, map_item->item);
+  items.push_back(map_item->item);
 
   map_item->item->set_user_data(map_item);
 
@@ -144,11 +132,11 @@ canvas_item_t *map_hl_polygon_new(map_t *map, canvas_group_t group, map_item_t *
   return map_item->item;
 }
 
-canvas_item_t *map_hl_polyline_new(map_t *map, canvas_group_t group, map_item_t *map_item,
+canvas_item_t *map_highlight_t::polyline_new(map_t *map, canvas_group_t group, map_item_t *map_item,
                                    const std::vector<lpos_t> &points, unsigned int width,
                                    color_t color) {
   map_item->item = map->canvas->polyline_new(group, points, width, color);
-  hl_add(map, map_item->item);
+  items.push_back(map_item->item);
 
   map_item->item->set_user_data(map_item);
 
