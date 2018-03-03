@@ -65,7 +65,7 @@ void map_edit_way_add_segment(map_t *map, int x, int y) {
                                            (lnode->lpos.y - pos.y) * (lnode->lpos.y - pos.y))) < 5) {
 #if 0
     printf("detected double click -> simulate ok click\n");
-    map_hl_touchnode_clear(map);
+    map->touchnode_clear();
     map_action_ok(map->appdata);
 #else
     printf("detected double click -> ignore it as accidential\n");
@@ -73,10 +73,9 @@ void map_edit_way_add_segment(map_t *map, int x, int y) {
   } else {
 
     /* use the existing node if one was touched */
-    node_t *node = map_hl_touchnode_get_node(map);
-    if(node) {
+    node_t *node = map->touchnode_get_node();
+    if(node != O2G_NULLPTR) {
       printf("  re-using node #" ITEM_ID_FORMAT "\n", node->id);
-      map_hl_touchnode_clear(map);
 
       assert(map->action.way != O2G_NULLPTR);
 
@@ -477,12 +476,10 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, int ex, int ey) {
 
 
   /* check if it was dropped onto another node */
-  node_t *touchnode = map_hl_touchnode_get_node(map);
+  node_t *touchnode = map->touchnode_get_node();
   bool joined_with_touchnode = false;
 
-  if(touchnode) {
-    map_hl_touchnode_clear(map);
-
+  if(touchnode != O2G_NULLPTR) {
     printf("  dropped onto node #" ITEM_ID_FORMAT "\n", touchnode->id);
 
     if(yes_no_f(map->appdata.window, MISC_AGAIN_ID_JOIN_NODES, _("Join nodes?"),

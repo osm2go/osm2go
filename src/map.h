@@ -204,6 +204,19 @@ public:
   map_item_t *item_at(int x, int y);
 
   void pen_down_item();
+
+  /**
+   * @brief create a new item used for touched node
+   */
+  void touchnode_draw(node_t *node);
+  void touchnode_clear();
+  /**
+   * @brief get the current touchnode and remove the screen item
+   *
+   * This returns the node item associated with the current touchnode
+   * (if any) and removes the touchnode from screen (i.e. touchnode_clear()).
+   */
+  node_t *touchnode_get_node();
 };
 
 // Gtk callbacks

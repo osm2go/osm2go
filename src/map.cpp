@@ -1065,11 +1065,11 @@ void hl_nodes::operator()(node_t* node)
 
   if((nx < map->style->node.radius) && (ny < map->style->node.radius) &&
      (nx*nx + ny*ny < map->style->node.radius * map->style->node.radius))
-    map_hl_touchnode_draw(map, node);
+    map->touchnode_draw(node);
 }
 
 static void map_touchnode_update(map_t *map, int x, int y) {
-  map_hl_touchnode_clear(map);
+  map->touchnode_clear();
 
   const node_t *cur_node = O2G_NULLPTR;
 
@@ -1881,6 +1881,29 @@ void map_t::detail_decrease() {
 
 void map_t::detail_normal() {
   detail_change(1.0, _("Restoring default detail level"));
+}
+
+void map_t::touchnode_draw(node_t *node) {
+  delete touchnode;
+
+  touchnode = canvas->circle_new(CANVAS_GROUP_DRAW, node->lpos.x, node->lpos.y,
+                                 2 * style->node.radius, 0,
+                                 style->highlight.touch_color, NO_COLOR);
+
+  touchnode->set_user_data(node);
+}
+
+node_t *map_t::touchnode_get_node() {
+  if(touchnode == O2G_NULLPTR)
+    return O2G_NULLPTR;
+  node_t *ret = static_cast<node_t *>(touchnode->get_user_data());
+  touchnode_clear();
+  return ret;
+}
+
+void map_t::touchnode_clear() {
+  delete touchnode;
+  touchnode = O2G_NULLPTR;
 }
 
 map_state_t::map_state_t()

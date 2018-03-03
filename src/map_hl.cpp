@@ -62,30 +62,6 @@ void map_hl_cursor_clear(map_t *map) {
   }
 }
 
-/* create a new item used for touched node */
-void map_hl_touchnode_draw(map_t *map, node_t *node) {
-  delete map->touchnode;
-
-  map->touchnode = map->canvas->circle_new(CANVAS_GROUP_DRAW,
-		      node->lpos.x, node->lpos.y,
-		      2*map->style->node.radius, 0,
-		      map->style->highlight.touch_color, NO_COLOR);
-
-  map->touchnode->set_user_data(node);
-}
-
-node_t *map_hl_touchnode_get_node(map_t *map) {
-  if(!map->touchnode) return O2G_NULLPTR;
-  return static_cast<node_t *>(map->touchnode->get_user_data());
-}
-
-void map_hl_touchnode_clear(map_t *map) {
-  if(map->touchnode) {
-    delete map->touchnode;
-    map->touchnode = O2G_NULLPTR;
-  }
-}
-
 struct find_highlighted {
   const map_item_t &item;
   explicit find_highlighted(const map_item_t &t) : item(t) {}
