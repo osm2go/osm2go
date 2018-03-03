@@ -127,6 +127,7 @@ public:
 
   canvas_item_t *cursor;           // the cursor visible on the draw layer
   canvas_item_t *touchnode;        // the blue "touch node" on the draw layer
+  node_t *touchnode_node;          ///< the underlying node belonging to touchnode
 
   /* background image related stuff */
   struct {

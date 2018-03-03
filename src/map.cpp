@@ -1102,7 +1102,7 @@ static void map_touchnode_update(map_t *map, int x, int y) {
                                              2 * map->style->node.radius, 0,
                                              map->style->highlight.touch_color, NO_COLOR);
 
-    map->touchnode->set_user_data(rnode);
+    map->touchnode_node = rnode;
   }
 
   /* during way creation also nodes of the new way */
@@ -1315,6 +1315,7 @@ map_t::map_t(appdata_t &a, map_highlight_t &hl)
   , highlight(hl)
   , cursor(O2G_NULLPTR)
   , touchnode(O2G_NULLPTR)
+  , touchnode_node(O2G_NULLPTR)
   , style(appdata.style)
   , elements_drawn(0)
 {
@@ -1898,7 +1899,7 @@ void map_t::detail_normal() {
 node_t *map_t::touchnode_get_node() {
   if(touchnode == O2G_NULLPTR)
     return O2G_NULLPTR;
-  node_t *ret = static_cast<node_t *>(touchnode->get_user_data());
+  node_t *ret = touchnode_node;
   touchnode_clear();
   return ret;
 }
@@ -1906,6 +1907,7 @@ node_t *map_t::touchnode_get_node() {
 void map_t::touchnode_clear() {
   delete touchnode;
   touchnode = O2G_NULLPTR;
+  touchnode_node = O2G_NULLPTR;
 }
 
 map_state_t::map_state_t()
