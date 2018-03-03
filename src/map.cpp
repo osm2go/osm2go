@@ -1044,8 +1044,9 @@ struct hl_nodes {
   const node_t * const cur_node;
   const lpos_t pos;
   map_t * const map;
-  hl_nodes(const node_t *c, lpos_t p, map_t *m)
-    : cur_node(c), pos(p), map(m) {}
+  node_t *& res_node;
+  hl_nodes(const node_t *c, lpos_t p, map_t *m, node_t *&rnode)
+    : cur_node(c), pos(p), map(m), res_node(rnode) {}
   void operator()(const std::pair<item_id_t, node_t *> &p);
   void operator()(node_t *node);
 };
@@ -1063,9 +1064,9 @@ void hl_nodes::operator()(node_t* node)
   int nx = abs(pos.x - node->lpos.x);
   int ny = abs(pos.y - node->lpos.y);
 
-  if((nx < map->style->node.radius) && (ny < map->style->node.radius) &&
-     (nx*nx + ny*ny < map->style->node.radius * map->style->node.radius))
-    map->touchnode_draw(node);
+  if(nx < map->style->node.radius && ny < map->style->node.radius &&
+     (nx*nx + ny*ny) < map->style->node.radius * map->style->node.radius)
+    res_node = node;
 }
 
 static void map_touchnode_update(map_t *map, int x, int y) {
@@ -1090,8 +1091,19 @@ static void map_touchnode_update(map_t *map, int x, int y) {
 
   /* check if we are close to one of the other nodes */
   lpos_t pos = map->canvas->window2world(x, y);
-  hl_nodes fc(cur_node, pos, map);
+  node_t *rnode = O2G_NULLPTR;
+  hl_nodes fc(cur_node, pos, map, rnode);
   std::for_each(map->appdata.osm->nodes.begin(), map->appdata.osm->nodes.end(), fc);
+
+  if(rnode != O2G_NULLPTR) {
+    delete map->touchnode;
+
+    map->touchnode = map->canvas->circle_new(CANVAS_GROUP_DRAW, rnode->lpos.x, rnode->lpos.y,
+                                             2 * map->style->node.radius, 0,
+                                             map->style->highlight.touch_color, NO_COLOR);
+
+    map->touchnode->set_user_data(rnode);
+  }
 
   /* during way creation also nodes of the new way */
   /* need to be searched */
@@ -1881,16 +1893,6 @@ void map_t::detail_decrease() {
 
 void map_t::detail_normal() {
   detail_change(1.0, _("Restoring default detail level"));
-}
-
-void map_t::touchnode_draw(node_t *node) {
-  delete touchnode;
-
-  touchnode = canvas->circle_new(CANVAS_GROUP_DRAW, node->lpos.x, node->lpos.y,
-                                 2 * style->node.radius, 0,
-                                 style->highlight.touch_color, NO_COLOR);
-
-  touchnode->set_user_data(node);
 }
 
 node_t *map_t::touchnode_get_node() {

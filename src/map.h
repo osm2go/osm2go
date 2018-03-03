@@ -205,10 +205,6 @@ public:
 
   void pen_down_item();
 
-  /**
-   * @brief create a new item used for touched node
-   */
-  void touchnode_draw(node_t *node);
   void touchnode_clear();
   /**
    * @brief get the current touchnode and remove the screen item
