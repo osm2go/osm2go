@@ -407,25 +407,6 @@ static void map_node_new(map_t *map, node_t *node, unsigned int radius,
   map_item->item->destroy_connect(map_item_t::free, map_item);
 }
 
-/* in the rare case that a way consists of only one node, it is */
-/* drawn as a circle. This e.g. happens when drawing a new way */
-static map_item_t *map_way_single_new(map_t *map, way_t *way, unsigned int radius,
-                                      int width, color_t fill, color_t border) {
-  map_item_t *map_item = new map_item_t(object_t(way));
-
-  map_item->item = map->canvas->circle_new(CANVAS_GROUP_WAYS,
-	  way->node_chain.front()->lpos.x, way->node_chain.front()->lpos.y,
-				     radius, width, fill, border);
-
-  // TODO: decide: do we need canvas_item_set_zoom_max() here too?
-
-  map_item->item->set_user_data(map_item);
-
-  map_item->item->destroy_connect(map_item_t::free, map_item);
-
-  return map_item;
-}
-
 static map_item_t *map_way_new(map_t *map, canvas_group_t group,
                                way_t *way, const std::vector<lpos_t> &points, unsigned int width,
                                color_t color, color_t fill_color) {
@@ -478,34 +459,48 @@ void map_way_draw_functor::operator()(way_t *way)
   if(!way->map_item_chain)
     way->map_item_chain = new map_item_chain_t();
   std::vector<map_item_t *> &chain = way->map_item_chain->map_items;
+  map_item_t *map_item;
 
   /* allocate space for nodes */
   /* a way needs at least 2 points to be drawn */
   const std::vector<lpos_t> &points = points_from_node_chain(way);
-  if(points.empty()) {
+  if(unlikely(points.empty())) {
     /* draw a single dot where this single node is */
-    chain.push_back(map_way_single_new(map, way, map->style->node.radius, 0,
-                                       map->style->node.color, 0));
+    map_item = new map_item_t(object_t(way));
+
+    assert(!way->node_chain.empty());
+    const lpos_t &firstPos = way->node_chain.front()->lpos;
+    map_item->item = map->canvas->circle_new(CANVAS_GROUP_WAYS, firstPos.x, firstPos.y,
+                                             map->style->node.radius, 0,
+                                             map->style->node.color, 0);
+
+    // TODO: decide: do we need canvas_item_t::set_zoom_max() here too?
+
+    map_item->item->set_user_data(map_item);
+
+    map_item->item->destroy_connect(map_item_t::free, map_item);
   } else {
     /* draw way */
     float width = way->draw.width * map->state.detail;
 
     if(way->draw.flags & OSM_DRAW_FLAG_AREA) {
-      chain.push_back(map_way_new(map, CANVAS_GROUP_POLYGONS, way, points,
-                                  width, way->draw.color, way->draw.area.color));
+      map_item = map_way_new(map, CANVAS_GROUP_POLYGONS, way, points,
+                             width, way->draw.color, way->draw.area.color);
     } else if(way->draw.flags & OSM_DRAW_FLAG_BG) {
       chain.push_back(map_way_new(map, CANVAS_GROUP_WAYS_INT, way, points,
                                   width, way->draw.color, NO_COLOR));
 
-      chain.push_back(map_way_new(map, CANVAS_GROUP_WAYS_OL, way, points,
-                                  way->draw.bg.width * map->state.detail,
-                                  way->draw.bg.color, NO_COLOR));
+      map_item = map_way_new(map, CANVAS_GROUP_WAYS_OL, way, points,
+                             way->draw.bg.width * map->state.detail,
+                             way->draw.bg.color, NO_COLOR);
 
     } else {
-      chain.push_back(map_way_new(map, CANVAS_GROUP_WAYS, way, points,
-                                  width, way->draw.color, NO_COLOR));
+      map_item = map_way_new(map, CANVAS_GROUP_WAYS, way, points,
+                             width, way->draw.color, NO_COLOR);
     }
   }
+
+  chain.push_back(map_item);
 }
 
 void map_t::draw(way_t *way) {
