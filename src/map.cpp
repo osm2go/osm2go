@@ -259,7 +259,7 @@ void map_t::select_way(way_t *way) {
 
   /* a way needs at least 2 points to be drawn */
   assert(map_item->object.way == way);
-  std::vector<lpos_t> points = points_from_node_chain(way);
+  const std::vector<lpos_t> &points = points_from_node_chain(way);
   if(!points.empty()) {
     /* create a copy of this map item and mark it as being a highlight */
     map_item_t *new_map_item = new map_item_t(*map_item);
@@ -297,7 +297,7 @@ void relation_select_functor::operator()(member_t& member)
   case WAY: {
     way_t *way = member.object.way;
     /* a way needs at least 2 points to be drawn */
-    std::vector<lpos_t> points = points_from_node_chain(way);
+    const std::vector<lpos_t> &points = points_from_node_chain(way);
     if(!points.empty()) {
       if(way->draw.flags & OSM_DRAW_FLAG_AREA)
         item = map->canvas->polygon_new(CANVAS_GROUP_WAYS_HL, points, 0, 0,
@@ -481,7 +481,7 @@ void map_way_draw_functor::operator()(way_t *way)
 
   /* allocate space for nodes */
   /* a way needs at least 2 points to be drawn */
-  std::vector<lpos_t> points = points_from_node_chain(way);
+  const std::vector<lpos_t> &points = points_from_node_chain(way);
   if(points.empty()) {
     /* draw a single dot where this single node is */
     chain.push_back(map_way_single_new(map, way, map->style->node.radius, 0,
