@@ -195,7 +195,7 @@ set_property(SOURCE src/net_io.cpp src/osm_api.cpp APPEND PROPERTY COMPILE_DEFIN
 # there shouldn't be a reason to change the server url
 option(SERVER_EDITABLE "add widget to make API URL editable" OFF)
 if (SERVER_EDITABLE)
-	set_property(SOURCE src/project.cpp APPEND PROPERTY COMPILE_DEFINITIONS "SERVER_EDITABLE")
+	set_property(SOURCE src/platforms/gtk/project_widgets.cpp APPEND PROPERTY COMPILE_DEFINITIONS "SERVER_EDITABLE")
 endif ()
 
 if (PICKER_MENU)
