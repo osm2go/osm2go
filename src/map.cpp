@@ -158,14 +158,17 @@ struct set_point_pos {
  * @return canvas node array if at least 2 nodes were present
  * @retval O2G_NULLPTR the way has less than 2 nodes
  */
-static std::vector<lpos_t>
+static std::vector<lpos_t>  __attribute__((nonnull(1)))
 points_from_node_chain(const way_t *way)
 {
-  std::vector<lpos_t> points;
+  const unsigned int nodes = way->node_chain.size();
+  std::vector<lpos_t> points(nodes);
+
+  // the vector has the correct allocated size now, fill as usual
+  points.clear();
 
   /* a way needs at least 2 points to be drawn */
-  unsigned int nodes = way->node_chain.size();
-  if (nodes < 2)
+  if (unlikely(nodes < 2))
     return points;
 
   /* allocate space for nodes */
