@@ -222,9 +222,8 @@ void draw_selected_way_functor::operator()(node_t* node)
 
   if(!map->highlight.isHighlighted(item)) {
     /* create a new map item for every node */
-    map_item_t *new_map_item = new map_item_t(object_t(node), true);
-
-    map->highlight.circle_new(map, CANVAS_GROUP_NODES_IHL, new_map_item,
+    map->highlight.circle_new(map, CANVAS_GROUP_NODES_IHL,
+                              new map_item_t(object_t(node), true),
                               node->lpos.x, node->lpos.y,
                               map->style->node.radius * map->state.detail,
                               map->style->highlight.node_color);
