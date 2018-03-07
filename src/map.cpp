@@ -93,7 +93,7 @@ void map_item_chain_destroy(map_item_chain_t *&chainP) {
   chainP = O2G_NULLPTR;
 }
 
-void map_node_select(map_t *map, node_t *node) {
+static void map_node_select(map_t *map, node_t *node) {
   map_item_t *map_item = &map->selected;
 
   assert(map->highlight.isEmpty());
