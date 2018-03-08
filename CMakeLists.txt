@@ -182,7 +182,7 @@ target_compile_definitions(osm2go_lib
 
 if (NOT libLocation_FOUND)
 	pkg_check_modules(GVFS REQUIRED IMPORTED_TARGET gnome-vfs-module-2.0)
-	target_sources(osm2go_lib PRIVATE src/gps.cpp)
+	target_sources(osm2go_lib PRIVATE src/platforms/gtk/gps.cpp)
 	target_link_libraries(osm2go_lib PRIVATE PkgConfig::GVFS)
 endif ()
 
