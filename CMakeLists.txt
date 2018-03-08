@@ -165,15 +165,10 @@ add_subdirectory(src/platforms/gtk)
 
 find_library(MATH_LIBRARY m)
 
-pkg_search_module(SOUP IMPORTED_TARGET libsoup-2.4)
+pkg_search_module(SOUP REQUIRED IMPORTED_TARGET libsoup-2.4)
 
-if (SOUP_FOUND)
-	add_subdirectory(src/platforms/gtk/osm-gps-map)
-	target_link_libraries(osm2go_lib PRIVATE osm-gps-map)
-	set_property(SOURCE src/platforms/gtk/area_edit.cpp APPEND PROPERTY COMPILE_DEFINITIONS "ENABLE_OSM_GPS_MAP")
-else ()
-	message(WARNING "libsoup-2.4/2.2 missing, disabling internal map")
-endif ()
+add_subdirectory(src/platforms/gtk/osm-gps-map)
+target_link_libraries(osm2go_lib PRIVATE osm-gps-map)
 
 target_compile_definitions(osm2go_lib
 		PUBLIC PACKAGE="${PROJECT_NAME}"

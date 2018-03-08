@@ -22,10 +22,8 @@
 #include "gps.h"
 #include "misc.h"
 
-#ifdef ENABLE_OSM_GPS_MAP
 #include "osm-gps-map.h"
 #include "osm-gps-map-osd-select.h"
-#endif
 
 #include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
@@ -192,13 +190,11 @@ struct area_context_t {
   } mmapper;
 #endif
 
-#ifdef ENABLE_OSM_GPS_MAP
   struct {
     OsmGpsMap *widget;
     bool needs_redraw;
     OsmGpsMapPoint start;
   } map;
-#endif
 };
 
 area_context_t::area_context_t(area_edit_t &a, GtkWidget *dlg)
@@ -213,9 +209,7 @@ area_context_t::area_context_t(area_edit_t &a, GtkWidget *dlg)
 #ifdef HAS_MAEMO_MAPPER
   mmapper.fetch = O2G_NULLPTR;
 #endif
-#ifdef ENABLE_OSM_GPS_MAP
   memset(&map, 0, sizeof(map));
-#endif
 }
 
 area_edit_t::area_edit_t(gps_state_t *gps, pos_area &b, GtkWidget *dlg)
@@ -319,8 +313,6 @@ static void area_main_update(area_context_t *context) {
     gtk_widget_hide(context->warning);
 }
 
-#ifdef ENABLE_OSM_GPS_MAP
-
 static GSList *pos_append_rad(GSList *list, pos_float_t lat, pos_float_t lon) {
   OsmGpsMapPoint *coo = g_new0(OsmGpsMapPoint, 1);
   coo->rlat = lat;
@@ -415,7 +407,6 @@ static gboolean on_map_configure(area_context_t *context) {
   map_update(context, false);
   return FALSE;
 }
-#endif
 
 /* the contents of the direct tab have been changed */
 static void direct_update(area_context_t *context) {
@@ -459,9 +450,7 @@ static void callback_modified_direct(area_context_t *context) {
 
   /* also adjust other views */
   extent_update(context);
-#ifdef ENABLE_OSM_GPS_MAP
   map_update(context, false);
-#endif
 }
 
 static void callback_modified_extent(area_context_t *context) {
@@ -492,9 +481,7 @@ static void callback_modified_extent(area_context_t *context) {
 
   /* also update other tabs */
   direct_update(context);
-#ifdef ENABLE_OSM_GPS_MAP
   map_update(context, false);
-#endif
 }
 
 static void callback_modified_unit(area_context_t *context) {
@@ -554,13 +541,9 @@ static void callback_fetch_mm_clicked(area_context_t *context) {
   /* also update other tabs */
   direct_update(context);
   extent_update(context);
-#ifdef ENABLE_OSM_GPS_MAP
   map_update(context, false);
-#endif
 }
 #endif
-
-#ifdef ENABLE_OSM_GPS_MAP
 
 static gboolean
 on_map_button_press_event(GtkWidget *widget,
@@ -693,8 +676,6 @@ static gboolean map_gps_update(gpointer data) {
   return TRUE;
 }
 
-#endif
-
 bool area_edit_t::run() {
   GtkWidget *vbox;
   GdkColor color;
@@ -716,7 +697,6 @@ bool area_edit_t::run() {
   g_signal_connect_swapped(context.warning, "clicked",
                            G_CALLBACK(on_area_warning_clicked), &context);
 
-#ifdef ENABLE_OSM_GPS_MAP
   /* ------------- fetch from map ------------------------ */
 
   context.map.needs_redraw = false;
@@ -744,7 +724,6 @@ bool area_edit_t::run() {
   context.map.start.rlon = context.map.start.rlat = NAN;
 
   notebook_append_page(context.notebook, GTK_WIDGET(context.map.widget), _(TAB_LABEL_MAP));
-#endif
 
   /* ------------ direct min/max edit --------------- */
 
@@ -879,10 +858,8 @@ bool area_edit_t::run() {
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(context.dialog.get())->vbox),
                               context.notebook);
 
-#ifdef ENABLE_OSM_GPS_MAP
   g_signal_connect(notebook_get_gtk_notebook(context.notebook),
                    "switch-page", G_CALLBACK(on_page_switch), &context);
-#endif
 
   gtk_widget_show_all(context.dialog.get());
 
