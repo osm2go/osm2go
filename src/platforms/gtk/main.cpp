@@ -48,7 +48,6 @@
 #include <hildon/hildon-window-stack.h>
 #include <gdk/gdkx.h>
 #include <X11/Xatom.h>
-#include <libosso.h>      /* required for screen saver timeout */
 #define GTK_FM_OK  GTK_RESPONSE_OK
 #define MENU_CHECK_ITEM HildonCheckButton
 #define MENU_CHECK_ITEM_ACTIVE(a) hildon_check_button_get_active(a)
