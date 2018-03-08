@@ -541,17 +541,6 @@ void map_t::draw(node_t *node) {
   m(node);
 }
 
-static void map_item_remove(object_t &object) {
-  switch(object.type) {
-  case NODE:
-  case WAY:
-    map_item_chain_destroy(static_cast<visible_item_t *>(object.obj)->map_item_chain);
-    break;
-  default:
-    assert_unreachable();
-  }
-}
-
 void map_t::redraw_item(object_t object) {
   /* a relation cannot be redrawn as it doesn't have a visual */
   /* representation */
@@ -567,7 +556,9 @@ void map_t::redraw_item(object_t object) {
   if(is_selected)
     item_deselect();
 
-  map_item_remove(object);
+  assert(object.is_real());
+  map_item_chain_destroy(static_cast<visible_item_t *>(object.obj)->map_item_chain);
+
   switch (object.type){
   case WAY:
     style->colorize_way(object.way);
