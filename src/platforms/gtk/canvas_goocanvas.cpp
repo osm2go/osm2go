@@ -213,7 +213,7 @@ struct points_fill {
   }
 };
 
-GooCanvasPoints *canvas_points_create(const std::vector<lpos_t> &points) {
+static GooCanvasPoints *canvas_points_create(const std::vector<lpos_t> &points) {
   GooCanvasPoints *gpoints = goo_canvas_points_new(points.size());
 
   std::for_each(points.begin(), points.end(), points_fill(gpoints));
