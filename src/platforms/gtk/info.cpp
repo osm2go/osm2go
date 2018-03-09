@@ -315,7 +315,7 @@ static bool replace_with_last(const info_tag_context_t *context, const osm_t::Ta
 }
 
 static void on_tag_last(info_tag_context_t *context) {
-  const osm_t::TagMap &ntags = context->object.type == NODE ?
+  const osm_t::TagMap &ntags = context->object.type == object_t::NODE ?
                                context->map->last_node_tags :
                                context->map->last_way_tags;
 
@@ -419,9 +419,9 @@ static GtkWidget *tag_widget(info_tag_context_t &context) {
 
   /* disable if no appropriate "last" tags have been stored or if the */
   /* selected item isn't a node or way */
-  if((context.object.type == NODE && context.map->last_node_tags.empty()) ||
-     (context.object.type == WAY && context.map->last_way_tags.empty()) ||
-     (context.object.type != NODE && context.object.type != WAY))
+  if((context.object.type == object_t::NODE && context.map->last_node_tags.empty()) ||
+     (context.object.type == object_t::WAY && context.map->last_way_tags.empty()) ||
+     (context.object.type != object_t::NODE && context.object.type != object_t::WAY))
     list_button_enable(context.list, LIST_BUTTON_USER0, FALSE);
 
   /* --------- build and fill the store ------------ */
@@ -431,7 +431,7 @@ static GtkWidget *tag_widget(info_tag_context_t &context) {
 }
 
 static void on_relation_members(GtkWidget *, const info_tag_context_t *context) {
-  assert_cmpnum(context->object.type, RELATION);
+  assert_cmpnum(context->object.type, object_t::RELATION);
   relation_show_members(context->dialog.get(), context->object.relation);
 }
 
@@ -472,7 +472,7 @@ static GtkWidget *details_widget(const info_tag_context_t &context, bool big) {
 
   /* ------------ coordinate (only for nodes) ----------------- */
   switch(context.object.type) {
-  case NODE: {
+  case object_t::NODE: {
     char pos_str[32];
     pos_lat_str(pos_str, sizeof(pos_str), context.object.node->pos.lat);
     label = gtk_label_new(pos_str);
@@ -484,7 +484,7 @@ static GtkWidget *details_widget(const info_tag_context_t &context, bool big) {
     table_attach(table, label, 1, big?3:1);
   } break;
 
-  case WAY: {
+  case object_t::WAY: {
     size_t ncount = context.object.way->node_chain.size();
     g_string nodes_str(g_strdup_printf(big ?
                                              ngettext("%zu node", "%zu nodes", ncount) :
@@ -505,7 +505,7 @@ static GtkWidget *details_widget(const info_tag_context_t &context, bool big) {
     table_attach(table, label, 1, big?3:1);
   } break;
 
-  case RELATION: {
+  case object_t::RELATION: {
     /* relations tell something about their members */
     guint nodes = 0, ways = 0, relations = 0;
     context.object.relation->members_by_type(nodes, ways, relations);
@@ -555,7 +555,7 @@ void info_dialog(GtkWidget *parent, map_t *map, osm_t *osm, presets_items *prese
 
   /* since nodes being parts of ways but with no tags are invisible, */
   /* the result of editing them may have changed their visibility */
-  if(ret && map->selected.object.type != RELATION)
+  if(ret && map->selected.object.type != object_t::RELATION)
     map->redraw_item(map->selected.object);
 }
 
@@ -570,15 +570,15 @@ bool info_dialog(GtkWidget *parent, map_t *map, osm_t *osm, presets_items *prese
   const char *msgtpl;
 
   switch(context.object.type) {
-  case NODE:
+  case object_t::NODE:
     msgtpl = _("Node #" ITEM_ID_FORMAT);
     break;
 
-  case WAY:
+  case object_t::WAY:
     msgtpl = _("Way #" ITEM_ID_FORMAT);
     break;
 
-  case RELATION:
+  case object_t::RELATION:
     msgtpl = _("Relation #" ITEM_ID_FORMAT);
     break;
 

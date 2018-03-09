@@ -479,9 +479,9 @@ static bool checkLinearRelation(const relation_t *r)
 
   const std::vector<member_t>::const_iterator itEnd = r->members.end();
   std::vector<member_t>::const_iterator it = r->members.begin();
-  if(it->object.type == NODE)
+  if(it->object.type == object_t::NODE)
     it++;
-  assert_cmpnum(it->object.type, WAY);
+  assert_cmpnum(it->object.type, object_t::WAY);
   const way_t *last = it->object.way;
 
   std::cout << "WAY " << last->id << " start " << last->first_node()->id
@@ -489,7 +489,7 @@ static bool checkLinearRelation(const relation_t *r)
             << std::endl;
 
   for(++it; it != itEnd; it++) {
-    assert_cmpnum(it->object.type, WAY);
+    assert_cmpnum(it->object.type, object_t::WAY);
     const way_t *w = it->object.way;
     std::cout << "WAY " << w->id << " start " << w->first_node()->id
               << " end " << w->last_node()->id << " length " << w->node_chain.size()

@@ -100,7 +100,7 @@ template class assert_num_tpl<const unsigned long>;
 template class assert_num_tpl<const unsigned int>;
 template class assert_num_tpl<const color_t>;
 template class assert_num_tpl<const int>;
-template class assert_num_tpl<const type_t>;
+template class assert_num_tpl<const object_t::type_t>;
 template class assert_num_tpl<const item_id_t>;
 template class assert_num_tpl<const osm_t::UploadPolicy>;
 template class assert_num_tpl<const presets_element_type_t>;

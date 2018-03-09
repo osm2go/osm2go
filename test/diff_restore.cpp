@@ -98,7 +98,7 @@ static void verify_diff(osm_t *osm)
   assert(r853 != O2G_NULLPTR);
   assert_cmpnum(r853->flags, OSM_FLAG_DIRTY);
   for(std::vector<member_t>::const_iterator it = r853->members.begin(); it != r853->members.end(); it++)
-    assert_cmpnum(it->object.type, RELATION_ID);
+    assert_cmpnum(it->object.type, object_t::RELATION_ID);
 
   assert(!osm->is_clean(true));
 }
@@ -167,7 +167,7 @@ int main(int argc, char **argv)
   assert_cmpstr(r255it->role, "stop");
   const relation_t * const r66316 = osm->relations[66316];
   assert(r66316 != O2G_NULLPTR);
-  object_t rmember(RELATION_ID, 296255);
+  object_t rmember(object_t::RELATION_ID, 296255);
   assert(!rmember.is_real());
   const std::vector<member_t>::const_iterator r66316it = r66316->find_member_object(rmember);
   assert(r66316it != r66316->members.end());

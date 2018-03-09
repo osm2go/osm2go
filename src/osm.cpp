@@ -110,17 +110,17 @@ bool object_t::is_real() const {
 }
 
 /* return plain text of type */
-static std::map<type_t, const char *> type_string_init()
+static std::map<object_t::type_t, const char *> type_string_init()
 {
-  std::map<type_t, const char *> types;
+  std::map<object_t::type_t, const char *> types;
 
-  types[ILLEGAL] =     "illegal";
-  types[NODE] =        "node";
-  types[WAY] =         "way/area";
-  types[RELATION] =    "relation";
-  types[NODE_ID] =     "node id";
-  types[WAY_ID] =      "way/area id";
-  types[RELATION_ID] = "relation id";
+  types[object_t::ILLEGAL] =     "illegal";
+  types[object_t::NODE] =        "node";
+  types[object_t::WAY] =         "way/area";
+  types[object_t::RELATION] =    "relation";
+  types[object_t::NODE_ID] =     "node id";
+  types[object_t::WAY_ID] =      "way/area id";
+  types[object_t::RELATION_ID] = "relation id";
 
   return types;
 }
@@ -379,11 +379,14 @@ bool osm_t::checkObjectPersistence(const object_t &first, const object_t &second
               // or keep the one with most relations
               removeRels > keepRels ||
               // or the one with most ways (if nodes)
-              (keep.type == NODE && remove.type == keep.type && remove.node->ways > keep.node->ways) ||
+              (keep.type == object_t::NODE && remove.type == keep.type &&
+               remove.node->ways > keep.node->ways) ||
               // or the one with most nodes (if ways)
-              (keep.type == WAY && remove.type == keep.type && remove.way->node_chain.size() > keep.way->node_chain.size()) ||
+              (keep.type == object_t::WAY && remove.type == keep.type &&
+               remove.way->node_chain.size() > keep.way->node_chain.size()) ||
               // or the one with most members (if relations)
-              (keep.type == RELATION && remove.type == keep.type && remove.relation->members.size() > keep.relation->members.size()) ||
+              (keep.type == object_t::RELATION && remove.type == keep.type &&
+               remove.relation->members.size() > keep.relation->members.size()) ||
               // or the one with the longest history
               remove.obj->version > keep.obj->version ||
               // or simply the older one
@@ -745,16 +748,16 @@ void gen_xml_relation_functor::operator()(const member_t &member)
 
   const char *typestr;
   switch(member.object.type) {
-  case NODE:
-  case NODE_ID:
+  case object_t::NODE:
+  case object_t::NODE_ID:
     typestr = node_t::api_string();
     break;
-  case WAY:
-  case WAY_ID:
+  case object_t::WAY:
+  case object_t::WAY_ID:
     typestr = way_t::api_string();
     break;
-  case RELATION:
-  case RELATION_ID:
+  case object_t::RELATION:
+  case object_t::RELATION_ID:
     typestr = relation_t::api_string();
     break;
   default:
@@ -794,13 +797,13 @@ bool osm_t::parse_relation_member(const char *tp, const char *ref, const char *r
     return false;
   }
 
-  type_t type;
+  object_t::type_t type;
   if(strcmp(tp, way_t::api_string()) == 0)
-    type = WAY;
+    type = object_t::WAY;
   else if(strcmp(tp, node_t::api_string()) == 0)
-    type = NODE;
+    type = object_t::NODE;
   else if(likely(strcmp(tp, relation_t::api_string()) == 0))
-    type = RELATION;
+    type = object_t::RELATION;
   else {
     printf("Unable to store illegal type '%s'\n", tp);
     return false;
@@ -816,17 +819,17 @@ bool osm_t::parse_relation_member(const char *tp, const char *ref, const char *r
   object_t obj(type);
 
   switch(type) {
-  case WAY:
+  case object_t::WAY:
     /* search matching way */
     obj.way = way_by_id(id);
     break;
 
-  case NODE:
+  case object_t::NODE:
     /* search matching node */
     obj.node = node_by_id(id);
     break;
 
-  case RELATION:
+  case object_t::RELATION:
     /* search matching relation */
     obj.relation = relation_by_id(id);
     break;
@@ -835,7 +838,7 @@ bool osm_t::parse_relation_member(const char *tp, const char *ref, const char *r
   }
 
   if(!obj.obj) {
-    obj.type = static_cast<type_t>(type | _REF_FLAG);
+    obj.type = static_cast<object_t::type_t>(type | object_t::_REF_FLAG);
     obj.id = id;
   }
 
@@ -1204,14 +1207,14 @@ struct relation_ref_functor {
     std::for_each(p.second->members.begin(), p.second->members.end(), *this);
   }
   void operator()(member_t &m) {
-    if(m.object.type != RELATION_ID)
+    if(m.object.type != object_t::RELATION_ID)
       return;
     std::map<item_id_t, relation_t *>::const_iterator itEnd = osm->relations.end();
     std::map<item_id_t, relation_t *>::const_iterator it = osm->relations.find(m.object.id);
     if(it == itEnd)
       return;
     m.object.relation = it->second;
-    m.object.type = RELATION;
+    m.object.type = object_t::RELATION;
   }
 };
 
@@ -1802,12 +1805,12 @@ void relation_transfer::operator()(const std::pair<item_id_t, relation_t *> &pai
     // find out if the relation members are ordered ways, so the split parts should
     // be inserted in a sensible order to keep the relation intact
     bool insertBefore = false;
-    if(it != itBegin && (it - 1)->object.type == WAY) {
+    if(it != itBegin && (it - 1)->object.type == object_t::WAY) {
       std::vector<member_t>::iterator prev = it - 1;
 
       insertBefore = prev->object.way->ends_with_node(dst->node_chain.front()) ||
                      prev->object.way->ends_with_node(dst->node_chain.back());
-    } else if (it + 1 < itEnd && (it + 1)->object.type == WAY) {
+    } else if (it + 1 < itEnd && (it + 1)->object.type == object_t::WAY) {
       std::vector<member_t>::iterator next = it + 1;
 
       insertBefore = next->object.way->ends_with_node(src->node_chain.front()) ||
@@ -2295,7 +2298,7 @@ bool way_t::merge(way_t *other, osm_t *osm, const bool doRels)
   return collision;
 }
 
-member_t::member_t(type_t t)
+member_t::member_t(object_t::type_t t)
   : role(O2G_NULLPTR)
 {
   object.type = t;
@@ -2342,16 +2345,16 @@ struct member_counter {
 void member_counter::operator()(const member_t &member)
 {
   switch(member.object.type) {
-  case NODE:
-  case NODE_ID:
+  case object_t::NODE:
+  case object_t::NODE_ID:
     nodes++;
     break;
-  case WAY:
-  case WAY_ID:
+  case object_t::WAY:
+  case object_t::WAY_ID:
     ways++;
     break;
-  case RELATION:
-  case RELATION_ID:
+  case object_t::RELATION:
+  case object_t::RELATION_ID:
     relations++;
     break;
   default:

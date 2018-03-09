@@ -371,7 +371,7 @@ void map_edit_way_cut(map_t *map, int px, int py) {
     printf("  cut at node\n");
 
     /* node must not be first or last node of way */
-    assert(map->selected.object.type == WAY);
+    assert(map->selected.object.type == object_t::WAY);
 
     if(!map->selected.object.way->ends_with_node(item->object.node)) {
       way = map->selected.object.way;
@@ -466,7 +466,7 @@ struct find_way_ends {
 void map_edit_node_move(map_t *map, map_item_t *map_item, int ex, int ey) {
   osm_t *osm = map->appdata.osm;
 
-  assert(map_item->object.type == NODE);
+  assert(map_item->object.type == object_t::NODE);
   node_t *node = map_item->object.node;
 
   printf("released dragged node #" ITEM_ID_FORMAT "\n", node->id);
@@ -598,7 +598,7 @@ void map_edit_way_reverse(map_t *map) {
   /* deleting the selected item de-selects it ... */
   map->item_deselect();
 
-  assert(item.object.type == WAY);
+  assert(item.object.type == object_t::WAY);
 
   unsigned int n_tags_flipped;
   unsigned int n_roles_flipped;

@@ -37,11 +37,11 @@ unsigned int presets_type_mask(const object_t &obj)
   unsigned int r = 0;
 
   switch(obj.type) {
-  case NODE:
+  case object_t::NODE:
     r = presets_item_t::TY_NODE;
     break;
 
-  case WAY:
+  case object_t::WAY:
     r = presets_item_t::TY_WAY;
 
     if(obj.way->is_closed())
@@ -49,7 +49,7 @@ unsigned int presets_type_mask(const object_t &obj)
 
     break;
 
-  case RELATION:
+  case object_t::RELATION:
     r = presets_item_t::TY_RELATION;
 
     if(obj.relation->is_multipolygon())

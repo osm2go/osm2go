@@ -450,7 +450,7 @@ member_list_selection_func(GtkTreeSelection *, GtkTreeModel *model,
 
     const member_t *member = O2G_NULLPTR;
     gtk_tree_model_get(model, &iter, MEMBER_COL_DATA, &member, -1);
-    if(member && member->object.type < NODE_ID)
+    if(member && member->object.type < object_t::NODE_ID)
       return TRUE;
   }
 
@@ -479,7 +479,7 @@ void members_list_functor::operator()(const member_t &member)
      MEMBER_COL_ID,   id.c_str(),
      MEMBER_COL_NAME, name.c_str(),
      MEMBER_COL_ROLE, member.role,
-     MEMBER_COL_REF_ONLY, member.object.type >= NODE_ID,
+     MEMBER_COL_REF_ONLY, member.object.type >= object_t::NODE_ID,
      MEMBER_COL_DATA, &member,
      -1);
 }

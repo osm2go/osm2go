@@ -284,7 +284,7 @@ void relation_select_functor::operator()(member_t& member)
   canvas_item_t *item = O2G_NULLPTR;
 
   switch(member.object.type) {
-  case NODE: {
+  case object_t::NODE: {
     node_t *node = member.object.node;
     printf("  -> node " ITEM_ID_FORMAT "\n", node->id);
 
@@ -294,7 +294,7 @@ void relation_select_functor::operator()(member_t& member)
                              0, map->style->highlight.color, NO_COLOR);
     break;
     }
-  case WAY: {
+  case object_t::WAY: {
     way_t *way = member.object.way;
     /* a way needs at least 2 points to be drawn */
     const std::vector<lpos_t> &points = points_from_node_chain(way);
@@ -341,13 +341,13 @@ void map_t::select_relation(relation_t *relation) {
 
 static void map_object_select(map_t *map, object_t &object) {
   switch(object.type) {
-  case NODE:
+  case object_t::NODE:
     map_node_select(map, object.node);
     break;
-  case WAY:
+  case object_t::WAY:
     map->select_way(object.way);
     break;
-  case RELATION:
+  case object_t::RELATION:
     map->select_relation(object.relation);
     break;
   default:
@@ -359,9 +359,9 @@ void map_t::item_deselect() {
 
   /* save tags for "last" function in info dialog */
   if(selected.object.is_real() && selected.object.obj->tags.hasRealTags()) {
-    if(selected.object.type == NODE)
+    if(selected.object.type == object_t::NODE)
       last_node_tags = selected.object.obj->tags.asMap();
-    else if(selected.object.type == WAY)
+    else if(selected.object.type == object_t::WAY)
       last_way_tags = selected.object.obj->tags.asMap();
   }
 
@@ -376,7 +376,7 @@ void map_t::item_deselect() {
   highlight.clear();
 
   /* forget about selection */
-  selected.object.type = ILLEGAL;
+  selected.object.type = object_t::ILLEGAL;
 }
 
 static void map_node_new(map_t *map, node_t *node, unsigned int radius,
@@ -544,7 +544,7 @@ void map_t::draw(node_t *node) {
 void map_t::redraw_item(object_t object) {
   /* a relation cannot be redrawn as it doesn't have a visual */
   /* representation */
-  if(object.type == RELATION)
+  if(object.type == object_t::RELATION)
     return;
 
   /* check if the item to be redrawn is the selected one */
@@ -560,11 +560,11 @@ void map_t::redraw_item(object_t object) {
   map_item_chain_destroy(static_cast<visible_item_t *>(object.obj)->map_item_chain);
 
   switch (object.type){
-  case WAY:
+  case object_t::WAY:
     style->colorize_way(object.way);
     draw(object.way);
     break;
-  case NODE:
+  case object_t::NODE:
     style->colorize_node(object.node);
     draw(object.node);
     break;
@@ -711,8 +711,8 @@ void map_t::pen_down_item() {
 
   /* get the item (parent) this item is the highlight of */
   switch(pen_down.on_item->object.type) {
-  case NODE:
-  case WAY: {
+  case object_t::NODE:
+  case object_t::WAY: {
     visible_item_t * const vis = static_cast<visible_item_t *>(pen_down.on_item->object.obj);
     if(vis->map_item_chain && !vis->map_item_chain->map_items.empty()) {
       map_item_t *parent = vis->map_item_chain->map_items.front();
@@ -866,14 +866,14 @@ bool map_t::scroll_to_if_offscreen(const lpos_t lpos) {
 /* Deselects the current way or node if its zoom_max
  * means that it's not going to render at the current map zoom. */
 static void map_deselect_if_zoom_below_zoom_max(map_t *map) {
-  if (map->selected.object.type == WAY) {
+  if (map->selected.object.type == object_t::WAY) {
     printf("will deselect way if zoomed below %f\n",
             map->selected.object.way->zoom_max);
     if (map->state.zoom < map->selected.object.way->zoom_max) {
       printf("  deselecting way!\n");
       map->item_deselect();
     }
-  } else if (map->selected.object.type == NODE) {
+  } else if (map->selected.object.type == object_t::NODE) {
     printf("will deselect node if zoomed below %f\n",
             map->selected.object.node->zoom_max);
     if (map->state.zoom < map->selected.object.node->zoom_max) {
@@ -965,16 +965,16 @@ bool map_t::item_is_selected_node(const map_item_t *map_item) const {
   }
 
   /* clicked the highlight directly */
-  if(map_item->object.type != NODE) {
+  if(map_item->object.type != object_t::NODE) {
     printf("  didn't click node\n");
     return false;
   }
 
-  if(selected.object.type == NODE) {
+  if(selected.object.type == object_t::NODE) {
     printf("  selected item is a node\n");
 
     return selected.object == map_item->object;
-  } else if(selected.object.type == WAY) {
+  } else if(selected.object.type == object_t::WAY) {
     printf("  selected item is a way\n");
 
     return selected.object.way->contains_node(map_item->object.node);
@@ -994,7 +994,7 @@ bool map_t::item_is_selected_way(const map_item_t *map_item) const {
     return false;
   }
 
-  if(selected.object.type != WAY) {
+  if(selected.object.type != object_t::WAY) {
     printf("  selected item is not a way\n");
     return false;
   }
@@ -1006,7 +1006,7 @@ void map_t::highlight_refresh() {
   object_t old = selected.object;
 
   printf("type to refresh is %d\n", old.type);
-  if(old.type == ILLEGAL)
+  if(old.type == object_t::ILLEGAL)
     return;
 
   item_deselect();
@@ -1024,7 +1024,7 @@ static void map_handle_click(map_t *map) {
   map->item_deselect();
 
   /* select the clicked item (if there was one) */
-  if(map_item.object.type != ILLEGAL)
+  if(map_item.object.type != object_t::ILLEGAL)
     map_object_select(map, map_item.object);
 }
 
@@ -1069,7 +1069,7 @@ static void map_touchnode_update(map_t *map, int x, int y) {
     /* in idle mode the dragged node is not highlighted */
   case MAP_ACTION_IDLE:
     assert(map->pen_down.on_item != O2G_NULLPTR);
-    assert_cmpnum(map->pen_down.on_item->object.type, NODE);
+    assert_cmpnum(map->pen_down.on_item->object.type, object_t::NODE);
     cur_node = map->pen_down.on_item->object.node;
     break;
 
@@ -1164,10 +1164,9 @@ void map_t::button_release(int x, int y) {
       map_item_t old_sel = selected;
       map_handle_click(this);
 
-      if(old_sel.object.type != ILLEGAL && old_sel.object == selected.object) {
+      if(old_sel.object.type != object_t::ILLEGAL && old_sel.object == selected.object) {
         printf("re-selected same item of type %s, pushing it to the bottom\n",
                old_sel.object.type_string());
-
         if(selected.item == O2G_NULLPTR) {
           printf("  item has no visible representation to push\n");
         } else {
@@ -1550,7 +1549,7 @@ void map_delete_selected(map_t *map) {
          objtype, item.object.obj->id);
 
   switch(item.object.type) {
-  case NODE: {
+  case object_t::NODE: {
     /* check if this node is part of a way with two nodes only. */
     /* we cannot delete this as this would also delete the way */
     if(map->appdata.osm->find_way(short_way(item.object.node)) != O2G_NULLPTR &&
@@ -1567,11 +1566,11 @@ void map_delete_selected(map_t *map) {
     break;
   }
 
-  case WAY:
+  case object_t::WAY:
     map->appdata.osm->way_delete(item.object.way);
     break;
 
-  case RELATION:
+  case object_t::RELATION:
     map->appdata.osm->relation_delete(item.object.relation);
     break;
 
@@ -1819,7 +1818,7 @@ void map_t::set_bg_color_from_style()
 /* -------- hide and show objects (for performance reasons) ------- */
 
 void map_t::hide_selected() {
-  if(selected.object.type != WAY) {
+  if(selected.object.type != object_t::WAY) {
     printf("selected item is not a way\n");
     return;
   }

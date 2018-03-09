@@ -56,18 +56,18 @@ struct tag_t;
 typedef std::vector<relation_t *> relation_chain_t;
 typedef std::vector<way_t *> way_chain_t;
 
-enum type_t {
-  ILLEGAL = 0,
-  NODE = 1,
-  WAY = 2,
-  RELATION = 3,
-  _REF_FLAG = 4,
-  NODE_ID = NODE | _REF_FLAG,
-  WAY_ID = WAY | _REF_FLAG,
-  RELATION_ID = RELATION | _REF_FLAG
-};
-
 struct object_t {
+  enum type_t {
+    ILLEGAL = 0,
+    NODE = 1,
+    WAY = 2,
+    RELATION = 3,
+    _REF_FLAG = 4,
+    NODE_ID = NODE | _REF_FLAG,
+    WAY_ID = WAY | _REF_FLAG,
+    RELATION_ID = RELATION | _REF_FLAG
+  };
+
   type_t type;
   union {
     node_t *node;
@@ -118,7 +118,7 @@ struct object_t {
 };
 
 struct member_t {
-  explicit member_t(type_t t);
+  explicit member_t(object_t::type_t t);
   explicit member_t(const object_t &o, const char *r = O2G_NULLPTR);
 
   object_t object;
