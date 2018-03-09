@@ -103,86 +103,15 @@ set(DATA_DIR "${CMAKE_INSTALL_FULL_DATADIR}/${PROJECT_NAME}")
 
 option(PICKER_MENU "use a picker table for tagging preset selection" OFF)
 
-# required at the moment, but add proper checks to allow easier porting later
-pkg_search_module(GooCanvas REQUIRED IMPORTED_TARGET goocanvas)
-if (GooCanvas_FOUND)
-	target_sources(osm2go_lib PRIVATE
-		src/platforms/gtk/canvas_goocanvas.cpp
-	)
-	target_link_libraries(osm2go_lib PRIVATE PkgConfig::GooCanvas)
-endif ()
-
 pkg_check_modules(MAEMO maemo-version)
-if (MAEMO_FOUND)
-	if (MAEMO_VERSION VERSION_LESS 5)
-		message(FATAL_ERROR "Build for Maemo requires at least Fremantle")
-	endif ()
-
-	pkg_check_modules(Hildon REQUIRED IMPORTED_TARGET hildon-1)
-	pkg_check_modules(Osso REQUIRED IMPORTED_TARGET libosso)
-	pkg_check_modules(Hildon_FM2 REQUIRED IMPORTED_TARGET hildon-fm-2)
-
-	target_link_libraries(osm2go_lib PUBLIC
-			PkgConfig::Hildon
-			PkgConfig::Osso
-	)
-
-	# prefer gpsbt over liblocation as we got complaints regarding liblocation stability
-	pkg_check_modules(GPSBT IMPORTED_TARGET gpsbt)
-	if (GPSBT_FOUND)
-		target_link_libraries(osm2go_lib PRIVATE PkgConfig::GPSBT)
-		target_compile_definitions(osm2go_lib PRIVATE ENABLE_GPSBT)
-	else ()
-		pkg_check_modules(libLocation IMPORTED_TARGET liblocation)
-		if (libLocation_FOUND)
-			target_link_libraries(osm2go_lib PRIVATE PkgConfig::libLocation)
-		else ()
-			message(WARNING "No liblocation nor gpsbt found, disabling gps auto start!")
-		endif ()
-	endif ()
-
-	pkg_check_modules(TabletBrowserInterface REQUIRED tablet-browser-interface)
-
-	set(ICONNAME osm2go.48.png)
-	# the data root dir is /opt on fremantle
-	set(DATA_DIR "/opt/${PROJECT_NAME}")
-	set(PICKER_MENU On)
-	set(FREMANTLE On)
-
-	message(STATUS "Using application installer icon '${ICONNAME}'")
-
-	# SVG icons do not work on my N900
-	set(USE_SVG_ICONS_DEFAULT Off)
-else ()
-	find_package(GTK2 REQUIRED)
-
-	target_link_libraries(osm2go_lib PUBLIC ${GTK2_TARGETS})
-
-	set(USE_SVG_ICONS_DEFAULT On)
-endif ()
-
 add_subdirectory(src/platforms/gtk)
 
 find_library(MATH_LIBRARY m)
-
-pkg_search_module(SOUP REQUIRED IMPORTED_TARGET libsoup-2.4)
-
-add_subdirectory(src/platforms/gtk/osm-gps-map)
-target_link_libraries(osm2go_lib PRIVATE osm-gps-map)
 
 target_compile_definitions(osm2go_lib
 		PUBLIC PACKAGE="${PROJECT_NAME}"
 		PUBLIC VERSION="${PROJECT_VERSION}"
 )
-
-if (NOT libLocation_FOUND)
-	pkg_check_modules(GVFS REQUIRED IMPORTED_TARGET gnome-vfs-module-2.0)
-	target_sources(osm2go_lib PRIVATE src/platforms/gtk/gps.cpp)
-	target_link_libraries(osm2go_lib PRIVATE PkgConfig::GVFS)
-endif ()
-
-pkg_check_modules(GConf2 REQUIRED IMPORTED_TARGET gconf-2.0)
-target_link_libraries(osm2go_lib PRIVATE PkgConfig::GConf2)
 
 set_property(SOURCE src/misc.cpp APPEND PROPERTY COMPILE_DEFINITIONS "DATADIR=\"${DATA_DIR}\"")
 set_property(SOURCE src/net_io.cpp src/osm_api.cpp APPEND PROPERTY COMPILE_DEFINITIONS "CURL_NO_OLDIES")
@@ -205,10 +134,12 @@ endif ()
 target_link_libraries(osm2go_lib
 	PRIVATE
 		${MATH_LIBRARY}
+		osm2go_platform_lib_private
 	PUBLIC
 		${CURL_LIBRARIES}
 		OpenSSL::SSL
 		${LIBXML2_LIBRARIES}
+		osm2go_platform_lib
 )
 
 # curl can't be added here as that would end up in the search list
@@ -223,7 +154,6 @@ target_include_directories(osm2go_lib
 		${CURL_INCLUDE_DIRS}
 		${CMAKE_CURRENT_BINARY_DIR}
 		src
-		src/platforms/gtk
 )
 
 add_executable(osm2go
@@ -239,6 +169,7 @@ target_compile_definitions(osm2go
 )
 
 if (MAEMO_FOUND)
+	pkg_check_modules(Hildon_FM2 REQUIRED IMPORTED_TARGET hildon-fm-2)
 	target_link_libraries(osm2go PRIVATE
 			PkgConfig::Hildon_FM2
 	)

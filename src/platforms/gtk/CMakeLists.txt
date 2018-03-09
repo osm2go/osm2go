@@ -1,3 +1,10 @@
+add_library(osm2go_platform_lib INTERFACE)
+add_library(osm2go_platform_lib_private INTERFACE)
+
+target_include_directories(osm2go_platform_lib
+		INTERFACE
+			${CMAKE_CURRENT_SOURCE_DIR})
+
 target_sources(osm2go_lib PRIVATE
 	${CMAKE_CURRENT_SOURCE_DIR}/about.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/area_edit.cpp
@@ -23,16 +30,75 @@ target_sources(osm2go_lib PRIVATE
 	${CMAKE_CURRENT_SOURCE_DIR}/wms_dialog.cpp
 )
 
-if (MAEMO_FOUND)
-	add_subdirectory(fremantle)
-else ()
-	add_subdirectory(desktop)
-endif ()
-
 include(CheckIncludeFileCXX)
 
 check_include_file_cxx(cstdint CSTDINT_HEADER)
 if (NOT CSTDINT_HEADER)
-	target_include_directories(osm2go_lib
-			PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/tr1wrappers)
+	target_include_directories(osm2go_platform_lib
+			INTERFACE
+				${CMAKE_CURRENT_SOURCE_DIR}/tr1wrappers)
 endif ()
+
+pkg_search_module(GooCanvas REQUIRED IMPORTED_TARGET goocanvas)
+target_sources(osm2go_lib PRIVATE
+	src/platforms/gtk/canvas_goocanvas.cpp
+)
+target_link_libraries(osm2go_platform_lib_private INTERFACE PkgConfig::GooCanvas)
+
+pkg_check_modules(GConf2 REQUIRED IMPORTED_TARGET gconf-2.0)
+target_link_libraries(osm2go_platform_lib_private INTERFACE PkgConfig::GConf2)
+
+if (MAEMO_FOUND)
+	pkg_check_modules(Hildon REQUIRED IMPORTED_TARGET hildon-1)
+	pkg_check_modules(Osso REQUIRED IMPORTED_TARGET libosso)
+
+	target_link_libraries(osm2go_platform_lib INTERFACE
+			PkgConfig::Hildon
+			PkgConfig::Osso
+	)
+
+	# prefer gpsbt over liblocation as we got complaints regarding liblocation stability
+	pkg_check_modules(GPSBT IMPORTED_TARGET gpsbt)
+	if (GPSBT_FOUND)
+		target_link_libraries(osm2go_platform_lib_private INTERFACE PkgConfig::GPSBT)
+		target_compile_definitions(osm2go_platform_lib_private INTERFACE ENABLE_GPSBT)
+	else ()
+		pkg_check_modules(libLocation IMPORTED_TARGET liblocation)
+		if (libLocation_FOUND)
+			target_link_libraries(osm2go_platform_lib_private INTERFACE PkgConfig::libLocation)
+		else ()
+			message(WARNING "No liblocation nor gpsbt found, disabling gps auto start!")
+		endif ()
+	endif ()
+
+	pkg_check_modules(TabletBrowserInterface REQUIRED tablet-browser-interface)
+	add_subdirectory(fremantle)
+
+	# the data root dir is /opt on fremantle
+	set(DATA_DIR "/opt/${PROJECT_NAME}" PARENT_SCOPE)
+	set(PICKER_MENU On PARENT_SCOPE)
+
+	# SVG icons do not work on my N900
+	set(USE_SVG_ICONS_DEFAULT Off PARENT_SCOPE)
+else ()
+	find_package(GTK2 REQUIRED)
+
+	target_link_libraries(osm2go_platform_lib INTERFACE
+			${GTK2_TARGETS}
+	)
+
+	add_subdirectory(desktop)
+
+	set(USE_SVG_ICONS_DEFAULT On PARENT_SCOPE)
+endif ()
+
+if (NOT libLocation_FOUND)
+	pkg_check_modules(GVFS REQUIRED IMPORTED_TARGET gnome-vfs-module-2.0)
+	target_sources(osm2go_lib PRIVATE src/platforms/gtk/gps.cpp)
+	target_link_libraries(osm2go_platform_lib_private INTERFACE PkgConfig::GVFS)
+endif ()
+
+pkg_search_module(SOUP REQUIRED IMPORTED_TARGET libsoup-2.4)
+
+add_subdirectory(osm-gps-map)
+target_link_libraries(osm2go_platform_lib_private INTERFACE osm-gps-map)

@@ -1,3 +1,7 @@
+if (NOT MAEMO_VERSION OR MAEMO_VERSION VERSION_LESS 5)
+	message(FATAL_ERROR "Build for Maemo requires at least Fremantle")
+endif ()
+
 # maemo uses dbus for ipc with maemo mapper
 target_sources(osm2go_lib PRIVATE
 	${CMAKE_CURRENT_SOURCE_DIR}/dbus.c
@@ -9,6 +13,10 @@ target_sources(osm2go_lib PRIVATE
 target_include_directories(osm2go_lib PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_compile_definitions(osm2go_lib PUBLIC FREMANTLE)
+
+set(ICONNAME osm2go.48.png)
+
+message(STATUS "Using application installer icon '${ICONNAME}'")
 
 execute_process(COMMAND uuencode -m "${osm2go_SOURCE_DIR}/data/${ICONNAME}" "${ICONNAME}"
 		COMMAND sed "1d;$d;s/^/ /"

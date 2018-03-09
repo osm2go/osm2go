@@ -58,17 +58,8 @@ osm_test(canvas_points)
 osm_test(fdguard $<TARGET_FILE:fdguard>)
 
 add_executable(suppression-dummy suppression-dummy.cpp)
-target_link_libraries(suppression-dummy PRIVATE ${LIBXML2_LIBRARIES} ${CURL_LIBRARIES} OpenSSL::SSL)
+target_link_libraries(suppression-dummy PRIVATE ${LIBXML2_LIBRARIES} ${CURL_LIBRARIES} OpenSSL::SSL osm2go_platform_lib)
 target_include_directories(suppression-dummy PRIVATE ${LIBXML2_INCLUDE_DIR} ${CURL_INCLUDE_DIRS})
-if (MAEMO_FOUND)
-	target_link_libraries(suppression-dummy PRIVATE
-			PkgConfig::Hildon
-			PkgConfig::Osso
-			PkgConfig::Hildon_FM2
-	)
-else ()
-	target_link_libraries(suppression-dummy PRIVATE ${GTK2_TARGETS})
-endif ()
 
 osm_test(project "${CMAKE_CURRENT_SOURCE_DIR}/empty_proj.proj")
 
