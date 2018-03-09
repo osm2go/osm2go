@@ -424,7 +424,7 @@ bool PresetSax::resolvePresetLink(presets_element_link *link, const std::string 
 void PresetSax::characters(const char *ch, int len)
 {
   for(int pos = 0; pos < len; pos++)
-    if(!isspace(ch[pos])) {
+    if(unlikely(!isspace(ch[pos]))) {
       printf("unhandled character data: %*.*s state %i\n", len, len, ch, state.back());
       return;
     }
