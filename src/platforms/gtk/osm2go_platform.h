@@ -22,10 +22,19 @@
 
 #include <glib.h>
 #include <gtk/gtk.h>
+#include <memory>
 
 #include <osm2go_cpp.h>
+#include <osm2go_stl.h>
 
 namespace osm2go_platform {
+  struct gtk_widget_deleter {
+    inline void operator()(GtkWidget *mem) {
+      gtk_widget_destroy(mem);
+    }
+  };
+  typedef std::unique_ptr<GtkWidget, gtk_widget_deleter> WidgetGuard;
+
   /**
    * @brief process all pending GUI events
    * @param tick if a '.' should be printed for every iteration

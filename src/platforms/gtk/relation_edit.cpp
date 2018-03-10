@@ -35,6 +35,7 @@
 #include <osm2go_annotations.h>
 #include <osm2go_cpp.h>
 #include "osm2go_i18n.h"
+#include "osm2go_platform.h"
 #include "osm2go_platform_gtk.h"
 
 using namespace osm2go_platform;
@@ -47,7 +48,7 @@ struct relitem_context_t {
   object_t &item;
   const presets_items * const presets;
   osm_t * const osm;
-  g_widget dialog;
+  osm2go_platform::WidgetGuard dialog;
   std::unique_ptr<GtkListStore, g_object_deleter> store;
 };
 
@@ -82,7 +83,7 @@ struct relation_context_t {
   map_t * const map;
   osm_t * const osm;
   presets_items * const presets;
-  g_widget dialog;
+  osm2go_platform::WidgetGuard dialog;
   GtkWidget *list, *show_btn;
   std::unique_ptr<GtkListStore, g_object_deleter> store;
 };
@@ -95,7 +96,7 @@ static bool relation_add_item(GtkWidget *parent, relation_t *relation,
 
   /* ask the user for the role of the new object in this relation */
   /* ------------------ role dialog ---------------- */
-  g_widget dialog(gtk_dialog_new_with_buttons(_("Select role"), GTK_WINDOW(parent),
+  osm2go_platform::WidgetGuard dialog(gtk_dialog_new_with_buttons(_("Select role"), GTK_WINDOW(parent),
                                               GTK_DIALOG_MODAL,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                               GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,

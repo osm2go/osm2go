@@ -128,16 +128,16 @@ struct presets_context_t {
   icon_t &icons;
   presets_items * const presets;
 #ifndef PICKER_MENU
-  g_widget menu;
+  osm2go_platform::WidgetGuard menu;
 #else
   struct submenu {
     explicit submenu(presets_item_group *i = O2G_NULLPTR, GtkWidget *w = O2G_NULLPTR)
       : item(i), widget(w) {}
     presets_item_group *item;
 #if __cplusplus >= 201103L
-    g_widget widget;
+    osm2go_platform::WidgetGuard widget;
 #else
-    // this could use g_widget, but the important part is the move constructor
+    // this could use osm2go_platform::WidgetGuard, but the important part is the move constructor
     // to make sure only one instance holds the reference
     GtkWidget *widget;
 #endif
@@ -251,7 +251,7 @@ void get_widget_functor::operator()(const presets_element_t* w)
 }
 
 static void presets_item_dialog(const presets_item *item) {
-  g_widget dialog;
+  osm2go_platform::WidgetGuard dialog;
   bool ok;
 
   g_debug("dialog for item %s", item->name.c_str());
@@ -855,7 +855,7 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event) {
 #else
   assert(presets_context_t::instance->submenus.empty());
   /* popup our special picker like menu */
-  g_widget dialog(gtk_dialog_new_with_buttons(_("Presets"),
+  osm2go_platform::WidgetGuard dialog(gtk_dialog_new_with_buttons(_("Presets"),
                                               GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(widget))),
                                               GTK_DIALOG_MODAL, GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                               O2G_NULLPTR));

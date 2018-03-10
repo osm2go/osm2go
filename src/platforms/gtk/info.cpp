@@ -149,7 +149,7 @@ static void on_tag_remove(info_tag_context_t *context) {
  * @retval false the tag is the same as before
  */
 static bool tag_edit(GtkWindow *window, std::string &k, std::string &v) {
-  g_widget dialog(gtk_dialog_new_with_buttons(_("Edit Tag"), window, GTK_DIALOG_MODAL,
+  osm2go_platform::WidgetGuard dialog(gtk_dialog_new_with_buttons(_("Edit Tag"), window, GTK_DIALOG_MODAL,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                               GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
                                               O2G_NULLPTR));
@@ -533,7 +533,7 @@ static GtkWidget *details_widget(const info_tag_context_t &context, bool big) {
 /* put additional infos into a seperate dialog for fremantle as */
 /* screen space is sparse there */
 static void info_more(const info_tag_context_t &context) {
-  g_widget dialog(gtk_dialog_new_with_buttons(_("Object details"),
+  osm2go_platform::WidgetGuard dialog(gtk_dialog_new_with_buttons(_("Object details"),
                                               GTK_WINDOW(context.dialog.get()), GTK_DIALOG_MODAL,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                               O2G_NULLPTR));

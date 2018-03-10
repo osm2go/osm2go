@@ -44,6 +44,7 @@
 #include <osm2go_cpp.h>
 #include "osm2go_stl.h"
 #include <osm2go_i18n.h>
+#include "osm2go_platform.h"
 #include "osm2go_platform_gtk.h"
 
 using namespace osm2go_platform;
@@ -278,7 +279,7 @@ static bool project_delete_gui(select_context_t *context, project_t *project) {
 
 static project_t *project_new(select_context_t *context) {
   /* --------------  first choose a name for the project --------------- */
-  g_widget dialog(gtk_dialog_new_with_buttons(_("Project name"),
+  osm2go_platform::WidgetGuard dialog(gtk_dialog_new_with_buttons(_("Project name"),
                                               GTK_WINDOW(context->dialog), GTK_DIALOG_MODAL,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                               GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
@@ -740,7 +741,7 @@ project_edit(select_context_t *scontext, project_t *project, bool is_new) {
 
   /* ------------ project edit dialog ------------- */
 
-  g_widget dialog;
+  osm2go_platform::WidgetGuard dialog;
   /* cancel is enabled for "new" projects only */
   if(is_new) {
     g_string str(g_strdup_printf(_("New project - %s"), project->name.c_str()));

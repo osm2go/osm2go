@@ -180,7 +180,7 @@ static void details_table(GtkWidget *dialog, const osm_t::dirty_t &dirty) {
 /* put additional infos into a seperate dialog for fremantle as */
 /* screen space is sparse there */
 static void info_more(const osm_t::dirty_t &context, GtkWidget *parent) {
-  g_widget dialog(gtk_dialog_new_with_buttons(_("Changeset details"),
+  osm2go_platform::WidgetGuard dialog(gtk_dialog_new_with_buttons(_("Changeset details"),
                                               GTK_WINDOW(parent), GTK_DIALOG_MODAL,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                               O2G_NULLPTR));
@@ -214,7 +214,7 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
   g_debug("relations: new %2u, dirty %2u, deleted %2zu",
           dirty.relations.added, dirty.relations.dirty, dirty.relations.deleted.size());
 
-  g_widget dialog(gtk_dialog_new_with_buttons(_("Upload to OSM"),
+  osm2go_platform::WidgetGuard dialog(gtk_dialog_new_with_buttons(_("Upload to OSM"),
                                               GTK_WINDOW(appdata.window),
                                               GTK_DIALOG_MODAL,
 #ifdef FREMANTLE

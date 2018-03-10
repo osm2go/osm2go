@@ -20,7 +20,6 @@
 #include "net_io.h"
 
 #include "misc.h"
-#include "osm2go_platform.h"
 
 #include <cassert>
 #include <cstring>
@@ -35,6 +34,7 @@
 #include <osm2go_cpp.h>
 #include <osm2go_i18n.h>
 #include "osm2go_stl.h"
+#include <osm2go_platform.h>
 #include <osm2go_platform_gtk.h>
 
 struct curl_mem_t {
@@ -294,7 +294,7 @@ static bool net_io_do(GtkWidget *parent, net_io_request_t *rq,
   rq->refcount = 2;   // master and worker hold a reference
   std::unique_ptr<net_io_request_t, request_free> request(rq);
   GtkProgressBar *pbar = O2G_NULLPTR;
-  g_widget dialog;
+  osm2go_platform::WidgetGuard dialog;
   if(likely(parent != O2G_NULLPTR))
     dialog.reset(busy_dialog(parent, pbar, &rq->cancel, title));
 

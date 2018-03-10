@@ -88,7 +88,7 @@ struct appdata_internal : public appdata_t {
 #ifdef FREMANTLE
   HildonProgram *program;
   /* submenues are seperate menues under fremantle */
-  g_widget app_menu_view, app_menu_wms, app_menu_track, app_menu_map;
+  osm2go_platform::WidgetGuard app_menu_view, app_menu_wms, app_menu_track, app_menu_map;
 #endif
 
   GtkWidget *btn_zoom_in, *btn_zoom_out;
@@ -252,7 +252,7 @@ GtkWidget *track_vis_select_widget(TrackVisibility current) {
 /* in fremantle this happens inside the submenu handling since this button */
 /* is actually placed inside the submenu there */
 static bool track_visibility_select(GtkWidget *parent, appdata_t &appdata) {
-  g_widget dialog(gtk_dialog_new_with_buttons(_("Select track visibility"),
+  osm2go_platform::WidgetGuard dialog(gtk_dialog_new_with_buttons(_("Select track visibility"),
                                               GTK_WINDOW(parent), GTK_DIALOG_MODAL,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                               GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
@@ -384,7 +384,7 @@ cb_menu_track_import(appdata_t *appdata) {
   assert(appdata->settings != O2G_NULLPTR);
 
   /* open a file selector */
-  g_widget dialog(
+  osm2go_platform::WidgetGuard dialog(
 #ifdef FREMANTLE
                   hildon_file_chooser_dialog_new(GTK_WINDOW(appdata->window),
                                                  GTK_FILE_CHOOSER_ACTION_OPEN)
@@ -453,7 +453,7 @@ cb_menu_track_export(appdata_t *appdata) {
   assert(appdata->settings != O2G_NULLPTR);
 
   /* open a file selector */
-  g_widget dialog(
+  osm2go_platform::WidgetGuard dialog(
 #ifdef FREMANTLE
                   hildon_file_chooser_dialog_new(GTK_WINDOW(appdata->window),
                                                  GTK_FILE_CHOOSER_ACTION_SAVE)

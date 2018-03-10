@@ -41,6 +41,7 @@
 #include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
 #include <osm2go_i18n.h>
+#include <osm2go_platform.h>
 
 double xml_get_prop_float(xmlNode *node, const char *prop) {
   xmlString str(xmlGetProp(node, BAD_CAST prop));
@@ -73,7 +74,7 @@ static void vmessagef(GtkWidget *parent, GtkMessageType type, GtkButtonsType but
     return;
   }
 
-  g_widget dialog(
+  osm2go_platform::WidgetGuard dialog(
 #ifndef FREMANTLE
                   gtk_message_dialog_new(wnd, GTK_DIALOG_DESTROY_WITH_PARENT,
                                          type, buttons, "%s", buf.get()));
@@ -156,7 +157,7 @@ bool yes_no_f(GtkWidget *parent, unsigned int again_flags, const char *title,
 
   printf("%s: \"%s\"\n", title, buf.get());
 
-  g_widget dialog(
+  osm2go_platform::WidgetGuard dialog(
 #ifndef FREMANTLE
                   gtk_message_dialog_new(GTK_WINDOW(parent),
                                              GTK_DIALOG_DESTROY_WITH_PARENT,

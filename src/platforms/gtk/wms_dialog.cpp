@@ -44,7 +44,8 @@
 #include <osm2go_annotations.h>
 #include <osm2go_stl.h>
 #include <osm2go_i18n.h>
-#include <osm2go_platform_gtk.h>
+#include "osm2go_platform.h"
+#include "osm2go_platform_gtk.h"
 
 using namespace osm2go_platform;
 
@@ -208,7 +209,7 @@ static void callback_modified_name(GtkWidget *widget, settings_t *settings) {
 /* edit url and path of a given wms server entry */
 bool wms_server_edit(wms_server_context_t *context, gboolean edit_name,
                      wms_server_t *wms_server) {
-  g_widget dialog(gtk_dialog_new_with_buttons(_("Edit WMS Server"),
+  osm2go_platform::WidgetGuard dialog(gtk_dialog_new_with_buttons(_("Edit WMS Server"),
                                               GTK_WINDOW(context->dialog),
                                               GTK_DIALOG_MODAL,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
@@ -559,7 +560,7 @@ static GtkWidget *wms_layer_widget(selected_context *context, const wms_layer_t:
 }
 
 static bool wms_layer_dialog(selected_context *ctx, const wms_layer_t::list &layer) {
-  g_widget dialog(gtk_dialog_new_with_buttons(_("WMS layer selection"),
+  osm2go_platform::WidgetGuard dialog(gtk_dialog_new_with_buttons(_("WMS layer selection"),
                                               GTK_WINDOW(ctx->appdata.window),
                                               GTK_DIALOG_MODAL,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,

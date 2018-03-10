@@ -167,7 +167,7 @@ static pos_float_t pos_dist_get(GtkWidget *widget, bool is_mil) {
 struct area_context_t {
   explicit area_context_t(area_edit_t &a, GtkWidget *dlb);
 
-  g_widget dialog;
+  osm2go_platform::WidgetGuard dialog;
   GtkWidget * const notebook;
   area_edit_t &area;
   pos_area bounds;      ///< local copy to work on

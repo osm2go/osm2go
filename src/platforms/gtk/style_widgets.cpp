@@ -34,6 +34,7 @@
 
 #include <osm2go_cpp.h>
 #include "osm2go_i18n.h"
+#include "osm2go_platform.h"
 #include "osm2go_platform_gtk.h"
 
 using namespace osm2go_platform;
@@ -117,7 +118,7 @@ void style_select(GtkWidget *parent, appdata_t &appdata) {
   g_debug("select style");
 
   /* ------------------ style dialog ---------------- */
-  g_widget dialog(gtk_dialog_new_with_buttons(_("Select style"),
+  osm2go_platform::WidgetGuard dialog(gtk_dialog_new_with_buttons(_("Select style"),
                                               GTK_WINDOW(parent), GTK_DIALOG_MODAL,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                               GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,

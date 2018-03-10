@@ -87,14 +87,6 @@ struct g_deleter {
 
 typedef std::unique_ptr<gchar, g_deleter> g_string;
 
-struct gtk_widget_deleter {
-  inline void operator()(GtkWidget *mem) {
-    gtk_widget_destroy(mem);
-  }
-};
-
-typedef std::unique_ptr<GtkWidget, gtk_widget_deleter> g_widget;
-
 struct g_object_deleter {
   inline void operator()(gpointer obj) {
     g_object_unref(obj);

@@ -20,6 +20,8 @@
 #ifndef OSM2GO_STL_H
 #define OSM2GO_STL_H
 
+#include <string>
+
 #include <osm2go_cpp.h>
 
 // some compat code

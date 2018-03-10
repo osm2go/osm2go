@@ -20,8 +20,9 @@
 #ifndef INFO_H
 #define INFO_H
 
-#include "misc.h"
 #include "osm.h"
+
+#include <osm2go_platform.h>
 
 #include <string>
 #include <vector>
@@ -35,7 +36,7 @@ protected:
   explicit tag_context_t(const object_t &o);
 public:
 
-  g_widget dialog;
+  osm2go_platform::WidgetGuard dialog;
   object_t object;
   osm_t::TagMap tags;
 
