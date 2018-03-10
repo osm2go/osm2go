@@ -21,19 +21,18 @@
 #define OSM2GO_PLATFORM_H
 
 #include <glib.h>
-#include <gtk/gtk.h>
 #include <memory>
 
 #include <osm2go_cpp.h>
 #include <osm2go_stl.h>
 
+typedef struct _GtkWidget GtkWidget;
+
 namespace osm2go_platform {
   typedef GtkWidget Widget;
 
   struct gtk_widget_deleter {
-    inline void operator()(GtkWidget *mem) {
-      gtk_widget_destroy(mem);
-    }
+    void operator()(GtkWidget *mem);
   };
   typedef std::unique_ptr<GtkWidget, gtk_widget_deleter> WidgetGuard;
 

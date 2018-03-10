@@ -26,6 +26,10 @@
 
 #include <osm2go_annotations.h>
 
+void osm2go_platform::gtk_widget_deleter::operator()(GtkWidget *mem) {
+  gtk_widget_destroy(mem);
+}
+
 void osm2go_platform::process_events(bool tick)
 {
   while(gtk_events_pending()) {

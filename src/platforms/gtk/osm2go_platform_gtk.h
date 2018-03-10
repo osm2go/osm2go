@@ -20,6 +20,7 @@
 #ifndef OSM2GO_PLATFORM_GTK_H
 #define OSM2GO_PLATFORM_GTK_H
 
+#include <gtk/gtk.h>
 #include <string>
 #include <vector>
 
