@@ -46,6 +46,7 @@ enum {
 };
 
 #include <osm2go_cpp.h>
+#include <osm2go_platform.h>
 
 #include <memory>
 #include <string>
@@ -71,11 +72,11 @@ std::string find_file(const std::string &n);
 
 /* some compat code */
 
-void errorf(GtkWidget *parent, const char *fmt, ...) __attribute__((format (printf, 2, 3)));
-void warningf(GtkWidget *parent, const char *fmt, ...) __attribute__((format (printf, 2, 3)));
-void messagef(GtkWidget *parent, const char *title, const char *fmt, ...) __attribute__((format (printf, 3, 4)));
+void errorf(osm2go_platform::Widget *parent, const char *fmt, ...) __attribute__((format (printf, 2, 3)));
+void warningf(osm2go_platform::Widget *parent, const char *fmt, ...) __attribute__((format (printf, 2, 3)));
+void messagef(osm2go_platform::Widget *parent, const char *title, const char *fmt, ...) __attribute__((format (printf, 3, 4)));
 
-bool yes_no_f(GtkWidget *parent, unsigned int again_flags,
+bool yes_no_f(osm2go_platform::Widget *parent, unsigned int again_flags,
               const char *title, const char *fmt, ...) __attribute__((format (printf, 4, 5)));
 
 // simplified form of unique_ptr

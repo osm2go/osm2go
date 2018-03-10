@@ -165,7 +165,7 @@ bool project_read(const std::string &project_file, project_t *project,
   return true;
 }
 
-bool project_t::save(GtkWidget *parent) {
+bool project_t::save(osm2go_platform::Widget *parent) {
   char str[32];
   const std::string &project_file = project_filename(this);
 
@@ -346,7 +346,7 @@ void projects_to_bounds::operator()(const project_t* project)
   pbounds.push_back(project->bounds);
 }
 
-bool project_t::check_demo(GtkWidget *parent) const {
+bool project_t::check_demo(osm2go_platform::Widget *parent) const {
   if(isDemo)
     messagef(parent, _("Demo project"),
              _("This is a preinstalled demo project. This means that the "

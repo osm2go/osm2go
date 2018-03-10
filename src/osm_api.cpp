@@ -49,7 +49,7 @@
 #define COLOR_ERR  "red"
 #define COLOR_OK   "darkgreen"
 
-bool osm_download(GtkWidget *parent, settings_t *settings, project_t *project)
+bool osm_download(osm2go_platform::Widget *parent, settings_t *settings, project_t *project)
 {
   printf("download osm for %s ...\n", project->name.c_str());
 

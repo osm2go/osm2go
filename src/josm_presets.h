@@ -23,8 +23,9 @@
 #include <set>
 #include <string>
 
+#include <osm2go_platform.h>
+
 struct presets_items;
-typedef struct _GtkWidget GtkWidget;
 
 presets_items *josm_presets_load(void);
 void josm_presets_free(presets_items *presets);
@@ -35,7 +36,7 @@ class tag_context_t;
 
 std::string josm_icon_name_adjust(const char *name);
 
-GtkWidget *josm_build_presets_button(presets_items *presets, tag_context_t *tag_context);
+osm2go_platform::Widget *josm_build_presets_button(presets_items *presets, tag_context_t *tag_context);
 std::set<std::string> preset_roles(const relation_t *relation, const object_t &obj, const presets_items *presets);
 
 #endif // JOSM_PRESETS_H

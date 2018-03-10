@@ -20,6 +20,8 @@
 #ifndef APPDATA_H
 #define APPDATA_H
 
+#include <osm2go_platform.h>
+
 struct canvas_item_t;
 class gps_state_t;
 class icon_t;
@@ -34,7 +36,6 @@ class settings_t;
 class statusbar_t;
 struct style_t;
 struct track_t;
-typedef struct _GtkWidget GtkWidget;
 
 struct appdata_t {
   appdata_t(map_state_t &mstate);
@@ -42,7 +43,7 @@ struct appdata_t {
 
   MainUi * const uicontrol;
 
-  GtkWidget *window;
+  osm2go_platform::Widget *window;
 
   statusbar_t * const statusbar;
   project_t *project;

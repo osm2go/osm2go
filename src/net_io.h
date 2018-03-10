@@ -23,7 +23,7 @@
 #include <curl/curl.h>
 #include <string>
 
-typedef struct _GtkWidget GtkWidget;
+#include <osm2go_platform.h>
 
 /**
  * @brief download from the given URL to file
@@ -35,7 +35,7 @@ typedef struct _GtkWidget GtkWidget;
  *
  * @returns if the request was successful
  */
-bool net_io_download_file(GtkWidget *parent,
+bool net_io_download_file(osm2go_platform::Widget *parent,
                           const std::string &url, const std::string &filename,
                           const char *title, bool compress = false);
 /**
@@ -47,7 +47,7 @@ bool net_io_download_file(GtkWidget *parent,
  *
  * The data is possibly gzip encoded.
  */
-bool net_io_download_mem(GtkWidget *parent, const std::string &url,
+bool net_io_download_mem(osm2go_platform::Widget *parent, const std::string &url,
                          std::string &data, const char *title);
 
 /**

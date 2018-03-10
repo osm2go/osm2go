@@ -212,7 +212,7 @@ area_context_t::area_context_t(area_edit_t &a, GtkWidget *dlg)
   memset(&map, 0, sizeof(map));
 }
 
-area_edit_t::area_edit_t(gps_state_t *gps, pos_area &b, GtkWidget *dlg)
+area_edit_t::area_edit_t(gps_state_t *gps, pos_area &b, osm2go_platform::Widget *dlg)
   : gps_state(gps)
   , parent(dlg)
   , bounds(b)

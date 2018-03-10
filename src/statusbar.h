@@ -20,19 +20,20 @@
 #ifndef STATUSBAR_H
 #define STATUSBAR_H
 
-#define STATUSBAR_DEFAULT_BRIEF_TIME 3
+#include <osm2go_platform.h>
 
 struct appdata_t;
-typedef struct _GtkWidget GtkWidget;
+
+#define STATUSBAR_DEFAULT_BRIEF_TIME 3
 
 class statusbar_t {
 protected:
-  statusbar_t(GtkWidget *w) : widget(w) {}
+  statusbar_t(osm2go_platform::Widget *w) : widget(w) {}
 public:
   virtual ~statusbar_t() {}
   static statusbar_t *create();
 
-  GtkWidget * const widget;
+  osm2go_platform::Widget * const widget;
 
   /**
    * @brief set the persistent message, replacing anything currently there

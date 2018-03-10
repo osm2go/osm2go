@@ -28,8 +28,7 @@
 #include <vector>
 
 #include <osm2go_cpp.h>
-
-typedef struct _GtkWidget GtkWidget;
+#include <osm2go_platform.h>
 
 /* --------- generic canvas --------- */
 
@@ -100,13 +99,13 @@ struct canvas_dimensions {
 
 class canvas_t {
 protected:
-  explicit canvas_t(GtkWidget *w);
+  explicit canvas_t(osm2go_platform::Widget *w);
 public:
   enum canvas_unit_t { UNIT_METER = 0, UNIT_PIXEL };
 
   static canvas_t *create();
 
-  GtkWidget * const widget;
+  osm2go_platform::Widget * const widget;
 
   std::array<std::vector<canvas_item_info_t *>, CANVAS_GROUPS> item_info;
 

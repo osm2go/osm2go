@@ -64,7 +64,7 @@ bool xml_get_prop_bool(xmlNode *node, const char *prop) {
   return (strcasecmp(reinterpret_cast<char *>(prop_str.get()), "true") == 0);
 }
 
-static void vmessagef(GtkWidget *parent, GtkMessageType type, GtkButtonsType buttons,
+static void vmessagef(osm2go_platform::Widget *parent, GtkMessageType type, GtkButtonsType buttons,
                       const char *title, const char *fmt, va_list args) {
   GtkWindow *wnd = GTK_WINDOW(parent);
   g_string buf(g_strdup_vprintf(fmt, args));
@@ -90,7 +90,7 @@ static void vmessagef(GtkWidget *parent, GtkMessageType type, GtkButtonsType but
   gtk_dialog_run(GTK_DIALOG(dialog.get()));
 }
 
-void messagef(GtkWidget *parent, const char *title, const char *fmt, ...) {
+void messagef(osm2go_platform::Widget *parent, const char *title, const char *fmt, ...) {
   va_list args;
   va_start( args, fmt );
   vmessagef(parent, GTK_MESSAGE_INFO,
@@ -98,7 +98,7 @@ void messagef(GtkWidget *parent, const char *title, const char *fmt, ...) {
   va_end( args );
 }
 
-void errorf(GtkWidget *parent, const char *fmt, ...) {
+void errorf(osm2go_platform::Widget *parent, const char *fmt, ...) {
   va_list args;
   va_start( args, fmt );
 
@@ -107,7 +107,7 @@ void errorf(GtkWidget *parent, const char *fmt, ...) {
   va_end( args );
 }
 
-void warningf(GtkWidget *parent, const char *fmt, ...) {
+void warningf(osm2go_platform::Widget *parent, const char *fmt, ...) {
   va_list args;
   va_start( args, fmt );
   vmessagef(parent, GTK_MESSAGE_WARNING,
@@ -138,7 +138,7 @@ static void on_toggled(GtkWidget *button, int *flags) {
 				      RESPONSE_YES, !active);
 }
 
-bool yes_no_f(GtkWidget *parent, unsigned int again_flags, const char *title,
+bool yes_no_f(osm2go_platform::Widget *parent, unsigned int again_flags, const char *title,
               const char *fmt, ...) {
   /* flags used to prevent re-appearence of dialogs */
   static struct {
@@ -170,7 +170,7 @@ bool yes_no_f(GtkWidget *parent, unsigned int again_flags, const char *title,
                   hildon_note_new_confirmation(GTK_WINDOW(parent), buf.get()));
 #endif
 
-  GtkWidget *cbut = O2G_NULLPTR;
+  osm2go_platform::Widget *cbut = O2G_NULLPTR;
   if(again_bit) {
 #ifdef FREMANTLE
     /* make sure there's some space before the checkbox */

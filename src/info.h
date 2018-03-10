@@ -29,7 +29,6 @@
 
 class map_t;
 struct presets_items;
-typedef struct _GtkWidget GtkWidget;
 
 class tag_context_t {
 protected:
@@ -43,7 +42,7 @@ public:
   void info_tags_replace();
 };
 
-void info_dialog(GtkWidget *parent, map_t *map, osm_t *osm, presets_items *presets);
-bool info_dialog(GtkWidget *parent, map_t *map, osm_t *osm, presets_items *presets, object_t &object);
+void info_dialog(osm2go_platform::Widget *parent, map_t *map, osm_t *osm, presets_items *presets);
+bool info_dialog(osm2go_platform::Widget *parent, map_t *map, osm_t *osm, presets_items *presets, object_t &object);
 
 #endif // INFO_H

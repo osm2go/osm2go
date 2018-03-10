@@ -53,7 +53,7 @@
 #define EXTRA_FUZZINESS_METER  0
 #define EXTRA_FUZZINESS_PIXEL  8
 
-canvas_t::canvas_t(GtkWidget *w)
+canvas_t::canvas_t(osm2go_platform::Widget *w)
   : widget(w)
 {
 }

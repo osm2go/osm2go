@@ -24,9 +24,10 @@
 
 #include <libxml/tree.h>
 
+#include <osm2go_platform.h>
+
 struct appdata_t;
 struct project_t;
-typedef struct _GtkWidget GtkWidget;
 
 enum diff_restore_results {
   DIFF_RESTORED = 0, ///< a diff was present and has successfully been restored
@@ -38,7 +39,7 @@ enum diff_restore_results {
 };
 
 void diff_save(const project_t *project, const osm_t *osm) __attribute__((nonnull(1,2)));
-unsigned int diff_restore_file(GtkWidget *window, const project_t *project, osm_t *osm) __attribute__((nonnull(2,3)));
+unsigned int diff_restore_file(osm2go_platform::Widget *window, const project_t *project, osm_t *osm) __attribute__((nonnull(2,3)));
 void diff_restore(appdata_t &appdata);
 bool diff_present(const project_t *project);
 void diff_remove(const project_t *project);

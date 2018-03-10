@@ -26,10 +26,11 @@
 #include <libxml/parser.h>
 #include <string>
 
+#include <osm2go_platform.h>
+
 struct appdata_t;
 struct map_state_t;
 struct osm_t;
-typedef struct _GtkWidget GtkWidget;
 
 struct project_t {
   project_t(map_state_t &ms, const std::string &n, const std::string &base_path);
@@ -68,8 +69,8 @@ struct project_t {
 
   osm_t *parse_osm() const;
 
-  bool save(GtkWidget *parent);
-  bool check_demo(GtkWidget *parent) const;
+  bool save(osm2go_platform::Widget *parent);
+  bool check_demo(osm2go_platform::Widget *parent) const;
 };
 
 bool project_load(appdata_t &appdata, const std::string &name);

@@ -28,6 +28,8 @@
 #include <osm2go_stl.h>
 
 namespace osm2go_platform {
+  typedef GtkWidget Widget;
+
   struct gtk_widget_deleter {
     inline void operator()(GtkWidget *mem) {
       gtk_widget_destroy(mem);

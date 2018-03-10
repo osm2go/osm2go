@@ -24,16 +24,17 @@
 #define FINGER_UI
 #endif
 
+#include <osm2go_platform.h>
+
 struct appdata_t;
 struct object_t;
-typedef struct _GtkWidget GtkWidget;
 
 class iconbar_t {
 protected:
   iconbar_t() {}
 
 public:
-  static GtkWidget *create(appdata_t &appdata);
+  static osm2go_platform::Widget *create(appdata_t &appdata);
 
   void map_item_selected(const object_t &item);
   void map_cancel_ok(bool cancel, bool ok);
@@ -57,7 +58,7 @@ public:
 };
 
 #ifdef FINGER_UI
-void iconbar_register_buttons(appdata_t &appdata, GtkWidget *ok, GtkWidget *cancel);
+void iconbar_register_buttons(appdata_t &appdata, osm2go_platform::Widget *ok, osm2go_platform::Widget *cancel);
 #endif
 
 #endif // ICONBAR_H

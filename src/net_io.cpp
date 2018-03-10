@@ -112,7 +112,7 @@ static void on_cancel(bool *data) {
 }
 
 /* create the dialog box shown while worker is running */
-static GtkWidget *busy_dialog(GtkWidget *parent, GtkProgressBar *&pbar,
+static GtkWidget *busy_dialog(osm2go_platform::Widget *parent, GtkProgressBar *&pbar,
                               bool *cancel_ind, const char *title) {
 #ifdef GTK_DIALOG_NO_SEPARATOR
   GtkWidget *dialog = gtk_dialog_new_with_buttons(O2G_NULLPTR, O2G_NULLPTR, GTK_DIALOG_NO_SEPARATOR);
@@ -134,7 +134,7 @@ static GtkWidget *busy_dialog(GtkWidget *parent, GtkProgressBar *&pbar,
 
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), GTK_WIDGET(pbar));
 
-  GtkWidget *button = osm2go_platform::button_new_with_label(_("Cancel"));
+  osm2go_platform::Widget *button = osm2go_platform::button_new_with_label(_("Cancel"));
   g_signal_connect_swapped(button, "clicked", G_CALLBACK(on_cancel), cancel_ind);
   gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->action_area), button);
 
@@ -281,7 +281,7 @@ static void *worker_thread(void *ptr) {
   return O2G_NULLPTR;
 }
 
-static bool net_io_do(GtkWidget *parent, net_io_request_t *rq,
+static bool net_io_do(osm2go_platform::Widget *parent, net_io_request_t *rq,
                       const char *title) {
   /* the request structure is shared between master and worker thread. */
   /* typically the master thread will do some waiting until the worker */
@@ -367,7 +367,7 @@ static bool net_io_do(GtkWidget *parent, net_io_request_t *rq,
   return true;
 }
 
-bool net_io_download_file(GtkWidget *parent,
+bool net_io_download_file(osm2go_platform::Widget *parent,
                           const std::string &url, const std::string &filename,
                           const char *title, bool compress) {
   net_io_request_t *request = new net_io_request_t(url, filename, compress);
@@ -393,7 +393,7 @@ bool net_io_download_file(GtkWidget *parent,
   return result;
 }
 
-bool net_io_download_mem(GtkWidget *parent, const std::string &url,
+bool net_io_download_mem(osm2go_platform::Widget *parent, const std::string &url,
                          std::string &data, const char *title) {
   curl_mem_t cmem(data);
   net_io_request_t *request = new net_io_request_t(url, &cmem);

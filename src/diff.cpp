@@ -500,7 +500,7 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
   }
 }
 
-unsigned int diff_restore_file(GtkWidget *window, const project_t *project, osm_t *osm) {
+unsigned int diff_restore_file(osm2go_platform::Widget *window, const project_t *project, osm_t *osm) {
   struct stat st;
 
   /* first try to open a backup which is only present if saving the */
