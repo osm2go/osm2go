@@ -156,39 +156,6 @@ target_include_directories(osm2go_lib
 		src
 )
 
-add_executable(osm2go
-	src/platforms/gtk/main.cpp
-)
-
-target_link_libraries(osm2go PRIVATE
-	osm2go_lib
-)
-
-target_compile_definitions(osm2go
-		PRIVATE PREFIX="${CMAKE_INSTALL_PREFIX}"
-)
-
-if (MAEMO_FOUND)
-	pkg_check_modules(Hildon_FM2 REQUIRED IMPORTED_TARGET hildon-fm-2)
-	target_link_libraries(osm2go PRIVATE
-			PkgConfig::Hildon_FM2
-	)
-
-	install(CODE
-		"message(STATUS \"Optifying binary\")")
-	install(PROGRAMS $<TARGET_FILE:osm2go>
-		DESTINATION ${DATA_DIR}
-		RENAME ${PROJECT_NAME}.bin)
-	install(DIRECTORY
-		DESTINATION ${CMAKE_INSTALL_BINDIR})
-	install(CODE
-		"execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink  ${DATA_DIR}/${PROJECT_NAME}.bin \$ENV{DESTDIR}${CMAKE_INSTALL_FULL_BINDIR}/${PROJECT_NAME})")
-else ()
-	install(CODE
-		"message(STATUS \"Not Optifying binary\")")
-	install(TARGETS osm2go DESTINATION ${CMAKE_INSTALL_BINDIR})
-endif ()
-
 add_subdirectory(data)
 
 option(ENABLE_TESTS "enable testcases" OFF)

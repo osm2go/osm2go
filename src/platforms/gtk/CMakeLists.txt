@@ -102,3 +102,39 @@ pkg_search_module(SOUP REQUIRED IMPORTED_TARGET libsoup-2.4)
 
 add_subdirectory(osm-gps-map)
 target_link_libraries(osm2go_platform_lib_private INTERFACE osm-gps-map)
+
+add_executable(osm2go
+	main.cpp
+)
+
+target_link_libraries(osm2go PRIVATE
+	osm2go_lib
+)
+
+target_compile_definitions(osm2go
+		PRIVATE PREFIX="${CMAKE_INSTALL_PREFIX}"
+)
+
+# move the executable to a place where it will find the data paths when launched
+set_property(TARGET osm2go PROPERTY RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+
+if (MAEMO_FOUND)
+	pkg_check_modules(Hildon_FM2 REQUIRED IMPORTED_TARGET hildon-fm-2)
+	target_link_libraries(osm2go PRIVATE
+			PkgConfig::Hildon_FM2
+	)
+
+	install(CODE
+		"message(STATUS \"Optifying binary\")")
+	install(PROGRAMS $<TARGET_FILE:osm2go>
+		DESTINATION ${DATA_DIR}
+		RENAME ${PROJECT_NAME}.bin)
+	install(DIRECTORY
+		DESTINATION ${CMAKE_INSTALL_BINDIR})
+	install(CODE
+		"execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink  ${DATA_DIR}/${PROJECT_NAME}.bin \$ENV{DESTDIR}${CMAKE_INSTALL_FULL_BINDIR}/${PROJECT_NAME})")
+else ()
+	install(CODE
+		"message(STATUS \"Not Optifying binary\")")
+	install(TARGETS osm2go DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif ()
