@@ -43,7 +43,7 @@ struct appdata_t {
 
   MainUi * const uicontrol;
 
-  osm2go_platform::Widget *window;
+  static osm2go_platform::Widget *window;
 
   statusbar_t * const statusbar;
   project_t *project;

@@ -169,8 +169,8 @@ cb_menu_project_open(appdata_t *appdata) {
 
 #ifndef FREMANTLE
 static void
-cb_menu_quit(appdata_t *appdata) {
-  gtk_widget_destroy(appdata->window);
+cb_menu_quit() {
+  gtk_widget_destroy(appdata_t::window);
 }
 #endif
 
@@ -178,7 +178,7 @@ static void
 cb_menu_upload(appdata_t *appdata) {
   if(!appdata->osm || !appdata->project) return;
 
-  if(appdata->project->check_demo(appdata->window))
+  if(appdata->project->check_demo())
     return;
 
   osm_upload(*appdata, appdata->osm, appdata->project);
@@ -188,7 +188,7 @@ static void
 cb_menu_download(appdata_t *appdata) {
   if(!appdata->project) return;
 
-  if(appdata->project->check_demo(appdata->window))
+  if(appdata->project->check_demo())
     return;
 
   appdata->map->set_autosave(false);
@@ -198,8 +198,7 @@ cb_menu_download(appdata_t *appdata) {
     diff_save(appdata->project, appdata->osm);
 
   // download
-  if(osm_download(appdata->window, appdata->settings,
-		  appdata->project)) {
+  if(osm_download(appdata_t::window, appdata->settings, appdata->project)) {
     if(appdata->osm) {
       /* redraw the entire map by destroying all map items and redrawing them */
       appdata->map->clear(map_t::MAP_LAYER_OBJECTS_ONLY);
@@ -287,12 +286,12 @@ static bool track_visibility_select(GtkWidget *parent, appdata_t &appdata) {
 
 static void
 cb_menu_style(appdata_t *appdata) {
-  style_select(appdata->window, *appdata);
+  style_select(appdata_t::window, *appdata);
 }
 
 static void
 cb_menu_track_vis(appdata_t *appdata) {
-  if(track_visibility_select(appdata->window, *appdata) && appdata->track.track)
+  if(track_visibility_select(appdata_t::window, *appdata) && appdata->track.track)
     appdata->map->track_draw(appdata->settings->trackVisibility, *appdata->track.track);
 }
 
@@ -310,9 +309,8 @@ cb_menu_undo_changes(appdata_t *appdata) {
   if (!diff_present(appdata->project) && appdata->osm->is_clean(true))
     return;
 
-  if(!yes_no_f(appdata->window, 0, _("Undo all changes?"),
-	       _("Throw away all the changes you've not "
-		 "uploaded yet? This cannot be undone.")))
+  if(!yes_no_f(O2G_NULLPTR, 0, _("Undo all changes?"),
+               _("Throw away all the changes you've not uploaded yet? This cannot be undone.")))
     return;
 
   appdata->map->clear(map_t::MAP_LAYER_OBJECTS_ONLY);
@@ -330,16 +328,16 @@ cb_menu_undo_changes(appdata_t *appdata) {
 static void
 cb_menu_osm_relations(appdata_t *appdata) {
   /* list relations of all objects */
-  relation_list(appdata->window, appdata->map, appdata->osm, appdata->presets);
+  relation_list(appdata_t::window, appdata->map, appdata->osm, appdata->presets);
 }
 
 #ifndef FREMANTLE
 static void
-cb_menu_fullscreen(appdata_t *appdata, MENU_CHECK_ITEM *item) {
+cb_menu_fullscreen(appdata_t *, GtkCheckMenuItem *item) {
   if(MENU_CHECK_ITEM_ACTIVE(item))
-    gtk_window_fullscreen(GTK_WINDOW(appdata->window));
+    gtk_window_fullscreen(GTK_WINDOW(appdata_t::window));
   else
-    gtk_window_unfullscreen(GTK_WINDOW(appdata->window));
+    gtk_window_unfullscreen(GTK_WINDOW(appdata_t::window));
 }
 #endif
 
@@ -386,11 +384,11 @@ cb_menu_track_import(appdata_t *appdata) {
   /* open a file selector */
   osm2go_platform::WidgetGuard dialog(
 #ifdef FREMANTLE
-                  hildon_file_chooser_dialog_new(GTK_WINDOW(appdata->window),
+                  hildon_file_chooser_dialog_new(GTK_WINDOW(appdata_t::window),
                                                  GTK_FILE_CHOOSER_ACTION_OPEN)
 #else
                   gtk_file_chooser_dialog_new (_("Import track file"),
-                                               GTK_WINDOW(appdata->window),
+                                               GTK_WINDOW(appdata_t::window),
                                                GTK_FILE_CHOOSER_ACTION_OPEN,
                                                GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                                GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
@@ -455,11 +453,11 @@ cb_menu_track_export(appdata_t *appdata) {
   /* open a file selector */
   osm2go_platform::WidgetGuard dialog(
 #ifdef FREMANTLE
-                  hildon_file_chooser_dialog_new(GTK_WINDOW(appdata->window),
+                  hildon_file_chooser_dialog_new(GTK_WINDOW(appdata_t::window),
                                                  GTK_FILE_CHOOSER_ACTION_SAVE)
 #else
                   gtk_file_chooser_dialog_new(_("Export track file"),
-                                              GTK_WINDOW(appdata->window),
+                                              GTK_WINDOW(appdata_t::window),
                                               GTK_FILE_CHOOSER_ACTION_SAVE,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                               GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT,
@@ -756,7 +754,7 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
 
   /* ------------------------------------------------------- */
 
-  gtk_window_add_accel_group(GTK_WINDOW(appdata.window), accel_grp);
+  gtk_window_add_accel_group(GTK_WINDOW(appdata_t::window), accel_grp);
 
   gtk_box_pack_start(mainvbox, GTK_WIDGET(mainui->menuBar()), 0, 0, 0);
 }
@@ -804,7 +802,7 @@ static GtkWidget *app_submenu_create(appdata_t &appdata, MainUi::menu_items subm
   MainUiGtk * const mainui = static_cast<MainUiGtk *>(appdata.uicontrol);
   const char *title = hildon_button_get_title(HILDON_BUTTON(mainui->menu_item(submenu)));
   /* create a oridinary dialog box */
-  GtkWidget *dialog = gtk_dialog_new_with_buttons(title, GTK_WINDOW(appdata.window),
+  GtkWidget *dialog = gtk_dialog_new_with_buttons(title, GTK_WINDOW(appdata_t::window),
                                                   GTK_DIALOG_MODAL, O2G_NULLPTR);
 
   osm2go_platform::dialog_size_hint(GTK_WINDOW(dialog), MISC_DIALOG_SMALL);
@@ -983,7 +981,7 @@ static void menu_create(appdata_internal &appdata, GtkBox *) {
   appdata.app_menu_track.reset(app_submenu_create(appdata, MainUi::SUBMENU_TRACK,
                                                   sm_track_entries.data(), sm_track_entries.size()));
 
-  hildon_window_set_app_menu(HILDON_WINDOW(appdata.window), menu);
+  hildon_window_set_app_menu(HILDON_WINDOW(appdata_t::window), menu);
 }
 #endif
 
@@ -991,7 +989,6 @@ static void menu_create(appdata_internal &appdata, GtkBox *) {
 
 appdata_t::appdata_t(map_state_t &mstate)
   : uicontrol(MainUi::instance(*this))
-  , window(O2G_NULLPTR)
   , statusbar(statusbar_t::create())
   , project(O2G_NULLPTR)
   , iconbar(O2G_NULLPTR)
@@ -1084,11 +1081,11 @@ appdata_internal::~appdata_internal()
 #endif
 }
 
-static void on_window_destroy(appdata_t *appdata) {
+static void on_window_destroy() {
   puts("main window destroy");
 
   gtk_main_quit();
-  appdata->window = O2G_NULLPTR;
+  appdata_t::window = O2G_NULLPTR;
 }
 
 static gboolean on_window_key_press(appdata_internal *appdata, GdkEventKey *event) {
@@ -1161,6 +1158,7 @@ static int application_run(const char *proj)
     return -1;
   }
 
+  assert_null(appdata_t::window);
 #ifdef FREMANTLE
   /* Create the hildon program and setup the title */
   appdata.program = HILDON_PROGRAM(hildon_program_get_instance());
@@ -1168,30 +1166,27 @@ static int application_run(const char *proj)
 
   /* Create HildonWindow and set it to HildonProgram */
   HildonWindow *wnd = HILDON_WINDOW(hildon_stackable_window_new());
-  appdata.window = GTK_WIDGET(wnd);
+  appdata_t::window = GTK_WIDGET(wnd);
   hildon_program_add_window(appdata.program, wnd);
 
   /* try to enable the zoom buttons. don't do this on x86 as it breaks */
   /* at runtime with cygwin x */
 #if !defined(__i386__)
-  g_signal_connect(appdata.window, "realize", G_CALLBACK(on_window_realize), O2G_NULLPTR);
+  g_signal_connect(appdata_t::window, "realize", G_CALLBACK(on_window_realize), O2G_NULLPTR);
 #endif // FREMANTLE
 
 #else
   /* Create a Window. */
-  appdata.window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-  gtk_window_set_title(GTK_WINDOW(appdata.window), "OSM2Go");
+  appdata_t::window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+  gtk_window_set_title(GTK_WINDOW(appdata_t::window), "OSM2Go");
   /* Set a decent default size for the window. */
-  gtk_window_set_default_size(GTK_WINDOW(appdata.window),
-			      DEFAULT_WIDTH, DEFAULT_HEIGHT);
-  gtk_window_set_icon(GTK_WINDOW(appdata.window),
-		      appdata.icons.load(PACKAGE)->buffer());
+  gtk_window_set_default_size(GTK_WINDOW(appdata_t::window), DEFAULT_WIDTH, DEFAULT_HEIGHT);
+  gtk_window_set_icon(GTK_WINDOW(appdata_t::window), appdata.icons.load(PACKAGE)->buffer());
 #endif
 
-  g_signal_connect_swapped(appdata.window, "key_press_event",
+  g_signal_connect_swapped(appdata_t::window, "key_press_event",
                            G_CALLBACK(on_window_key_press), &appdata);
-  g_signal_connect_swapped(appdata.window, "destroy",
-                           G_CALLBACK(on_window_destroy), &appdata);
+  g_signal_connect(appdata_t::window, "destroy", G_CALLBACK(on_window_destroy), O2G_NULLPTR);
 
   GtkBox *mainvbox = GTK_BOX(gtk_vbox_new(FALSE, 0));
 
@@ -1264,16 +1259,16 @@ static int application_run(const char *proj)
 
   gtk_box_pack_start(mainvbox, hbox, TRUE, TRUE, 0);
 
-  gtk_container_add(GTK_CONTAINER(appdata.window), GTK_WIDGET(mainvbox));
+  gtk_container_add(GTK_CONTAINER(appdata_t::window), GTK_WIDGET(mainvbox));
 
-  gtk_widget_show_all(appdata.window);
+  gtk_widget_show_all(appdata_t::window);
 
   appdata.presets = josm_presets_load();
 
   /* let gtk do its thing before loading the data, */
   /* so the user sees something */
   osm2go_platform::process_events();
-  if(unlikely(!appdata.window)) {
+  if(unlikely(appdata_t::window == O2G_NULLPTR)) {
     printf("shutdown while starting up (1)\n");
     return -1;
   }
@@ -1282,7 +1277,7 @@ static int application_run(const char *proj)
     if(strcmp(proj, "-p") == 0) {
       cb_menu_project_open(&appdata);
     } else if(!project_load(appdata, proj)) {
-      messagef(appdata.window, _("Command line arguments"),
+      messagef(O2G_NULLPTR, _("Command line arguments"),
                _("You passed '%s' on the command line, but it was neither"
                  "recognized as option nor could it be loaded as project."),
                proj);
@@ -1301,14 +1296,14 @@ static int application_run(const char *proj)
 
   /* again let the ui do its thing */
   osm2go_platform::process_events();
-  if(unlikely(!appdata.window)) {
+  if(unlikely(appdata_t::window == O2G_NULLPTR)) {
     printf("shutdown while starting up (2)\n");
     return -1;
   }
 
   /* start to interact with the user now that the gui is running */
   if(unlikely(appdata.project && appdata.project->isDemo && appdata.settings->first_run_demo)) {
-    messagef(appdata.window, _("Welcome to OSM2Go"),
+    messagef(O2G_NULLPTR, _("Welcome to OSM2Go"),
 	     _("This is the first time you run OSM2Go. "
 	       "A demo project has been loaded to get you "
 	       "started. You can play around with this demo as much "

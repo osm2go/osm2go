@@ -360,7 +360,7 @@ static bool wms_server_dialog(appdata_t &appdata, wms_t *wms) {
 
   wms_server_context_t context(appdata, wms,
                                gtk_dialog_new_with_buttons(_("WMS Server Selection"),
-                                                           GTK_WINDOW(appdata.window),
+                                                           GTK_WINDOW(appdata_t::window),
                                                            GTK_DIALOG_MODAL,
                                                            GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                                            GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
@@ -459,9 +459,9 @@ static gboolean on_view_clicked(GtkWidget *widget, GdkEventButton *event, gpoint
 #endif
 
 struct selected_context {
-  appdata_t &appdata;
+  const project_t *project;
   wms_layer_t::list selected;
-  explicit selected_context(appdata_t &a) : appdata(a) {}
+  explicit selected_context(const project_t *p) : project(p) {}
 };
 
 static void changed(GtkTreeSelection *sel, gpointer user_data) {
@@ -552,7 +552,7 @@ static GtkWidget *wms_layer_widget(selected_context *context, const wms_layer_t:
   gtk_tree_view_set_model(view, GTK_TREE_MODEL(store.get()));
 
   std::for_each(layers.begin(), layers.end(),
-                fitting_layers_functor(store.get(), context->appdata.project));
+                fitting_layers_functor(store.get(), context->project));
 
   g_signal_connect(selection, "changed", G_CALLBACK(changed), &context->selected);
 
@@ -561,7 +561,7 @@ static GtkWidget *wms_layer_widget(selected_context *context, const wms_layer_t:
 
 static bool wms_layer_dialog(selected_context *ctx, const wms_layer_t::list &layer) {
   osm2go_platform::WidgetGuard dialog(gtk_dialog_new_with_buttons(_("WMS layer selection"),
-                                              GTK_WINDOW(ctx->appdata.window),
+                                              GTK_WINDOW(appdata_t::window),
                                               GTK_DIALOG_MODAL,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                               GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
@@ -581,7 +581,7 @@ static bool wms_layer_dialog(selected_context *ctx, const wms_layer_t::list &lay
 
 void wms_import(appdata_t &appdata) {
   if(!appdata.project) {
-    errorf(appdata.window, _("Need an open project to derive WMS coordinates"));
+    errorf(O2G_NULLPTR, _("Need an open project to derive WMS coordinates"));
     return;
   }
 
@@ -603,11 +603,11 @@ void wms_import(appdata_t &appdata) {
   if(!wms_server_dialog(appdata, &wms))
     return;
 
-  wms_layer_t::list layers = wms_get_layers(appdata, wms);
+  wms_layer_t::list layers = wms_get_layers(appdata.project, wms);
   if(layers.empty())
     return;
 
-  selected_context ctx(appdata);
+  selected_context ctx(appdata.project);
 
   if(wms_layer_dialog(&ctx, layers))
     wms_get_selected_layer(appdata, wms, ctx.selected, layers);

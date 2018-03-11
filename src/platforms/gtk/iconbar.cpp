@@ -77,7 +77,7 @@ public:
 };
 
 static void on_info_clicked(appdata_t *appdata) {
-  info_dialog(appdata->window, appdata->map, appdata->osm, appdata->presets);
+  info_dialog(appdata_t::window, appdata->map, appdata->osm, appdata->presets);
 }
 
 static void on_node_add_clicked(map_t *map) {
@@ -230,7 +230,7 @@ static GtkWidget *icon_add(GtkWidget *vbox, appdata_t &appdata,
 }
 #endif
 
-static GtkWidget *tool_button_label(appdata_t &appdata, GtkToolbar *toolbar,
+static GtkWidget *tool_button_label(icon_t &icons, GtkToolbar *toolbar,
                                     const char *label_str, const char *icon_str) {
   PangoAttrList *attrs = pango_attr_list_new();
   pango_attr_list_change(attrs, pango_attr_scale_new(PANGO_SCALE_XX_SMALL));
@@ -238,8 +238,7 @@ static GtkWidget *tool_button_label(appdata_t &appdata, GtkToolbar *toolbar,
   gtk_label_set_attributes(GTK_LABEL(label), attrs);
   pango_attr_list_unref(attrs);
 
-  GtkToolItem *item = gtk_tool_button_new(
-               appdata.icons.widget_load(icon_str), O2G_NULLPTR);
+  GtkToolItem *item = gtk_tool_button_new(icons.widget_load(icon_str), O2G_NULLPTR);
 
   gtk_tool_button_set_label_widget(GTK_TOOL_BUTTON(item), label);
 
@@ -253,11 +252,11 @@ static GtkWidget *tool_button_label(appdata_t &appdata, GtkToolbar *toolbar,
 }
 
 static GtkWidget *  __attribute__((nonnull(1,3,4,5)))
-                  tool_add(GtkToolbar *toolbar, appdata_t &appdata,
+                  tool_add(GtkToolbar *toolbar, icon_t &icons,
                            const char *icon_str, char *tooltip_str,
                            GCallback func, gpointer context,
                            bool separator = false) {
-  GtkWidget *item = tool_button_label(appdata, toolbar, tooltip_str, icon_str);
+  GtkWidget *item = tool_button_label(icons, toolbar, tooltip_str, icon_str);
 
   g_signal_connect_swapped(item, "clicked", func, context);
 
@@ -270,14 +269,11 @@ static GtkWidget *  __attribute__((nonnull(1,3,4,5)))
 iconbar_gtk::iconbar_gtk(appdata_t& appdata)
   : iconbar_t()
   , toolbar(GTK_TOOLBAR(gtk_toolbar_new()))
-  , info(tool_add(toolbar, appdata,
-                  TOOL_ICON("info"), _("Properties"),
+  , info(tool_add(toolbar, appdata.icons, TOOL_ICON("info"), _("Properties"),
                   G_CALLBACK(on_info_clicked), &appdata, true))
-  , trash(tool_add(toolbar, appdata,
-                   TOOL_ICON("trash"), _("Delete"),
+  , trash(tool_add(toolbar, appdata.icons, TOOL_ICON("trash"), _("Delete"),
                    G_CALLBACK(map_delete_selected), appdata.map, true))
-  , node_add(tool_add(toolbar, appdata,
-                      TOOL_ICON("node_add"), _("New node"),
+  , node_add(tool_add(toolbar, appdata.icons, TOOL_ICON("node_add"), _("New node"),
                       G_CALLBACK(on_node_add_clicked), appdata.map, true))
 #ifdef FINGER_UI
   , menu(gtk_menu_new())
@@ -290,17 +286,13 @@ iconbar_gtk::iconbar_gtk(appdata_t& appdata)
   , way_reverse(menu_add(menu, appdata, MENU_ICON("way_reverse"),
                 _("Reverse way"), G_CALLBACK(map_edit_way_reverse)))
 #else
-  , way_add(tool_add(toolbar, appdata,
-                     TOOL_ICON("way_add"), _("Add way"),
+  , way_add(tool_add(toolbar, appdata.icons, TOOL_ICON("way_add"), _("Add way"),
                      G_CALLBACK(on_way_add_clicked), appdata.map))
-  , way_node_add(tool_add(toolbar, appdata,
-                          TOOL_ICON("way_node_add"), _("Add node"),
+  , way_node_add(tool_add(toolbar, appdata.icons, TOOL_ICON("way_node_add"), _("Add node"),
                           G_CALLBACK(on_way_node_add_clicked), appdata.map))
-  , way_cut(tool_add(toolbar, appdata,
-                     TOOL_ICON("way_cut"), _("Split way"),
+  , way_cut(tool_add(toolbar, appdata.icons, TOOL_ICON("way_cut"), _("Split way"),
                      G_CALLBACK(on_way_cut_clicked), appdata.map))
-  , way_reverse(tool_add(toolbar, appdata,
-                         TOOL_ICON("way_reverse"), _("Reverse way"),
+  , way_reverse(tool_add(toolbar, appdata.icons, TOOL_ICON("way_reverse"), _("Reverse way"),
                          G_CALLBACK(map_edit_way_reverse), appdata.map))
 #endif
   , cancel(O2G_NULLPTR)
@@ -329,7 +321,7 @@ GtkWidget *iconbar_t::create(appdata_t &appdata) {
 
   /* the way button is special as it pops up a menu for */
   /* further too selection */
-  GtkWidget *way = tool_button_label(appdata, iconbar->toolbar, _("Way"), TOOL_ICON("way"));
+  GtkWidget *way = tool_button_label(appdata.icons, iconbar->toolbar, _("Way"), TOOL_ICON("way"));
 
   gtk_widget_set_size_request(way, -1, 40);
 

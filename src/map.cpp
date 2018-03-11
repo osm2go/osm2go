@@ -72,8 +72,8 @@ static void map_statusbar(map_t *map, map_item_t *map_item) {
   map->appdata.uicontrol->showNotification(str.c_str(), flags);
 }
 
-void map_outside_error(appdata_t &appdata) {
-  errorf(appdata.window, _("Items must not be placed outside the working area!"));
+void map_t::outside_error() {
+  errorf(O2G_NULLPTR, _("Items must not be placed outside the working area!"));
 }
 
 static inline void map_item_destroy_canvas_item(map_item_t *m) {
@@ -1203,7 +1203,7 @@ void map_t::button_release(int x, int y) {
 
     node_t *node = O2G_NULLPTR;
     if(!appdata.osm->bounds.contains(pos))
-      map_outside_error(appdata);
+      outside_error();
     else {
       node = appdata.osm->node_new(pos);
       appdata.osm->node_attach(node);
@@ -1217,7 +1217,7 @@ void map_t::button_release(int x, int y) {
       map_node_select(this, node);
 
       /* let the user specify some tags for the new node */
-      info_dialog(appdata.window, this, appdata.osm, appdata.presets);
+      info_dialog(appdata_t::window, this, appdata.osm, appdata.presets);
     }
     break;
   }
@@ -1478,7 +1478,7 @@ void map_action_ok(map_t *map) {
     osm_t * const osm = map->appdata.osm;
 
     if(!osm->bounds.ll.contains(pos)) {
-      map_outside_error(map->appdata);
+      map_t::outside_error();
     } else {
       node = osm->node_new(pos);
       osm->node_attach(node);
@@ -1492,7 +1492,7 @@ void map_action_ok(map_t *map) {
       map_node_select(map, node);
 
       /* let the user specify some tags for the new node */
-      info_dialog(map->appdata.window, map, map->appdata.osm, map->appdata.presets);
+      info_dialog(appdata_t::window, map, map->appdata.osm, map->appdata.presets);
     }
     }
 
@@ -1536,7 +1536,7 @@ void map_delete_selected(map_t *map) {
 
   const char *objtype = item.object.type_string();
   g_string msgtitle(g_strdup_printf(_("Delete selected %s?"), objtype));
-  if(!yes_no_f(map->appdata.window, MISC_AGAIN_ID_DELETE | MISC_AGAIN_FLAG_DONT_SAVE_NO,
+  if(!yes_no_f(O2G_NULLPTR, MISC_AGAIN_ID_DELETE | MISC_AGAIN_FLAG_DONT_SAVE_NO,
                msgtitle.get(), _("Do you really want to delete the selected %s?"), objtype))
     return;
 
@@ -1553,7 +1553,7 @@ void map_delete_selected(map_t *map) {
     /* check if this node is part of a way with two nodes only. */
     /* we cannot delete this as this would also delete the way */
     if(map->appdata.osm->find_way(short_way(item.object.node)) != O2G_NULLPTR &&
-       !yes_no_f(map->appdata.window, 0, _("Delete node in short way(s)?"),
+       !yes_no_f(O2G_NULLPTR, 0, _("Delete node in short way(s)?"),
                  _("Deleting this node will also delete one or more ways "
                    "since they'll contain only one node afterwards. "
                    "Do you really want this?")))

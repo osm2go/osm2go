@@ -181,7 +181,7 @@ int main(int argc, char **argv)
   assert(osm->is_clean(true));
 
   assert(diff_present(&project));
-  unsigned int flags = diff_restore_file(O2G_NULLPTR, &project, osm);
+  unsigned int flags = diff_restore_file(&project, osm);
   assert_cmpnum(flags, DIFF_RESTORED | DIFF_HAS_HIDDEN);
 
   verify_diff(osm);
@@ -207,7 +207,7 @@ int main(int argc, char **argv)
     project_t sproject(dummystate, argv[2], bpath);
 
     // the directory is empty, there can't be any diff
-    flags = diff_restore_file(O2G_NULLPTR, &sproject, osm);
+    flags = diff_restore_file(&sproject, osm);
     assert_cmpnum(flags, DIFF_NONE_PRESENT);
 
     diff_save(&sproject, osm);
@@ -231,7 +231,7 @@ int main(int argc, char **argv)
     osm = sproject.parse_osm();
     assert(osm != O2G_NULLPTR);
 
-    flags = diff_restore_file(O2G_NULLPTR, &sproject, osm);
+    flags = diff_restore_file(&sproject, osm);
     assert_cmpnum(flags, DIFF_RESTORED | DIFF_HAS_HIDDEN);
 
     verify_diff(osm);

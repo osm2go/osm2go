@@ -20,6 +20,7 @@
 #include "misc.h"
 #include "xml_helpers.h"
 
+#include "appdata.h"
 #include "pos.h"
 #include "settings.h"
 
@@ -66,7 +67,7 @@ bool xml_get_prop_bool(xmlNode *node, const char *prop) {
 
 static void vmessagef(osm2go_platform::Widget *parent, GtkMessageType type, GtkButtonsType buttons,
                       const char *title, const char *fmt, va_list args) {
-  GtkWindow *wnd = GTK_WINDOW(parent);
+  GtkWindow *wnd = GTK_WINDOW(parent ? parent : appdata_t::window);
   g_string buf(g_strdup_vprintf(fmt, args));
 
   if(unlikely(wnd == O2G_NULLPTR)) {
@@ -157,17 +158,17 @@ bool yes_no_f(osm2go_platform::Widget *parent, unsigned int again_flags, const c
 
   printf("%s: \"%s\"\n", title, buf.get());
 
+  GtkWindow *p = GTK_WINDOW(parent ? parent : appdata_t::window);
+
   osm2go_platform::WidgetGuard dialog(
 #ifndef FREMANTLE
-                  gtk_message_dialog_new(GTK_WINDOW(parent),
-                                             GTK_DIALOG_DESTROY_WITH_PARENT,
-                                             GTK_MESSAGE_QUESTION,
-                                             GTK_BUTTONS_YES_NO,
-                                             "%s", buf.get()));
+                  gtk_message_dialog_new(p, GTK_DIALOG_DESTROY_WITH_PARENT,
+                                         GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO,
+                                         "%s", buf.get()));
 
   gtk_window_set_title(GTK_WINDOW(dialog.get()), title);
 #else
-                  hildon_note_new_confirmation(GTK_WINDOW(parent), buf.get()));
+                  hildon_note_new_confirmation(p, buf.get()));
 #endif
 
   osm2go_platform::Widget *cbut = O2G_NULLPTR;

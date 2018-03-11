@@ -310,7 +310,7 @@ void project_close(appdata_t &appdata) {
   appdata.settings->project.clear();
 
   /* update project file on disk */
-  appdata.project->save(appdata.window);
+  appdata.project->save();
 
   delete appdata.project;
   appdata.project = O2G_NULLPTR;
@@ -420,14 +420,14 @@ static bool project_load_inner(appdata_t &appdata, const std::string &name) {
     return false;
   }
 
-  if(!appdata.window)
+  if(unlikely(appdata_t::window == O2G_NULLPTR))
     return false;
 
   /* check if OSM data is valid */
   osm2go_platform::process_events();
   const char *errmsg = appdata.osm->sanity_check();
   if(unlikely(errmsg != O2G_NULLPTR)) {
-    errorf(appdata.window, "%s", errmsg);
+    errorf(O2G_NULLPTR, "%s", errmsg);
     printf("project/osm sanity checks failed, unloading project\n");
 
     snprintf(banner_txt, sizeof(banner_txt),
@@ -439,21 +439,21 @@ static bool project_load_inner(appdata_t &appdata, const std::string &name) {
 
   /* load diff possibly preset */
   osm2go_platform::process_events();
-  if(unlikely(!appdata.window))
+  if(unlikely(appdata_t::window == O2G_NULLPTR))
     return false;
 
   diff_restore(appdata);
 
   /* prepare colors etc, draw data and adjust scroll/zoom settings */
   osm2go_platform::process_events();
-  if(unlikely(!appdata.window))
+  if(unlikely(appdata_t::window == O2G_NULLPTR))
     return false;
 
   appdata.map->init();
 
   /* restore a track */
   osm2go_platform::process_events();
-  if(unlikely(!appdata.window))
+  if(unlikely(appdata_t::window == O2G_NULLPTR))
     return false;
 
   appdata.track_clear();
@@ -462,7 +462,7 @@ static bool project_load_inner(appdata_t &appdata, const std::string &name) {
 
   /* finally load a background if present */
   osm2go_platform::process_events();
-  if(unlikely(!appdata.window))
+  if(unlikely(appdata_t::window == O2G_NULLPTR))
     return false;
   wms_load(appdata);
 

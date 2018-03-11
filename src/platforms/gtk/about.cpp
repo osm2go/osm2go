@@ -285,7 +285,7 @@ static GtkWidget *bugs_page_new() {
 void MainUi::about_box()
 {
   osm2go_platform::WidgetGuard dialog(gtk_dialog_new_with_buttons(_("About OSM2Go"),
-                                              GTK_WINDOW(appdata.window), GTK_DIALOG_MODAL,
+                                              GTK_WINDOW(appdata_t::window), GTK_DIALOG_MODAL,
                                               GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE, O2G_NULLPTR));
 
   gtk_window_set_default_size(GTK_WINDOW(dialog.get()),

@@ -545,7 +545,7 @@ static GtkWidget *project_list_widget(select_context_t &context, bool &has_sel) 
 std::string project_select(appdata_t &appdata) {
   select_context_t context(appdata,
                     gtk_dialog_new_with_buttons(_("Project selection"),
-                                    GTK_WINDOW(appdata.window), GTK_DIALOG_MODAL,
+                                    GTK_WINDOW(appdata_t::window), GTK_DIALOG_MODAL,
                                     GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                     GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
                                     O2G_NULLPTR));

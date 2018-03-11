@@ -18,10 +18,11 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "statusbar.h"
-#include "appdata.h"
-#include "misc.h"
-#include "osm2go_platform.h"
+#include <statusbar.h>
+
+#include <appdata.h>
+#include <misc.h>
+#include <osm2go_platform.h>
 
 #include <osm2go_cpp.h>
 
@@ -55,9 +56,9 @@ public:
   void brief(const char *msg, bool timeout);
 
   virtual void set(const char *msg, bool highlight) O2G_OVERRIDE;
-  virtual void banner_show_info(appdata_t &appdata, const char *text) O2G_OVERRIDE;
-  virtual void banner_busy_start(appdata_t &appdata, const char *text) O2G_OVERRIDE;
-  virtual void banner_busy_stop(appdata_t &appdata) O2G_OVERRIDE;
+  virtual void banner_show_info(const char *text) O2G_OVERRIDE;
+  virtual void banner_busy_start(const char *text) O2G_OVERRIDE;
+  virtual void banner_busy_stop() O2G_OVERRIDE;
 };
 
 /*
@@ -65,21 +66,21 @@ public:
  * what's happening.
  */
 
-void statusbar_gtk::banner_busy_stop(appdata_t &appdata) {
+void statusbar_gtk::banner_busy_stop() {
   clear_message();
-  gtk_widget_set_sensitive(appdata.window, TRUE);
+  gtk_widget_set_sensitive(appdata_t::window, TRUE);
   gtk_grab_remove(widget);
 }
 
-void statusbar_gtk::banner_show_info(appdata_t &appdata, const char *text) {
-  banner_busy_stop(appdata);
+void statusbar_gtk::banner_show_info(const char *text) {
+  banner_busy_stop();
   brief(text, true);
 }
 
-void statusbar_gtk::banner_busy_start(appdata_t &appdata, const char *text) {
-  banner_busy_stop(appdata);
+void statusbar_gtk::banner_busy_start(const char *text) {
+  banner_busy_stop();
   brief(text, false);
-  gtk_widget_set_sensitive(appdata.window, FALSE);
+  gtk_widget_set_sensitive(appdata_t::window, FALSE);
   gtk_grab_add(widget);
 }
 

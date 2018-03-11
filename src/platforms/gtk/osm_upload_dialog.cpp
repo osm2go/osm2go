@@ -215,7 +215,7 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
           dirty.relations.added, dirty.relations.dirty, dirty.relations.deleted.size());
 
   osm2go_platform::WidgetGuard dialog(gtk_dialog_new_with_buttons(_("Upload to OSM"),
-                                              GTK_WINDOW(appdata.window),
+                                              GTK_WINDOW(appdata_t::window),
                                               GTK_DIALOG_MODAL,
 #ifdef FREMANTLE
                                               _("More"), GTK_RESPONSE_HELP,
@@ -334,9 +334,9 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
                                  gtk_entry_get_text(GTK_ENTRY(sentry)));
 
   dialog.reset();
-  project->save(appdata.window);
+  project->save();
 
-  dialog.reset(gtk_dialog_new_with_buttons(_("Uploading"), GTK_WINDOW(appdata.window),
+  dialog.reset(gtk_dialog_new_with_buttons(_("Uploading"), GTK_WINDOW(appdata_t::window),
                                            GTK_DIALOG_MODAL,
                                            GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
                                            O2G_NULLPTR));

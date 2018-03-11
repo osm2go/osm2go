@@ -500,7 +500,7 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
   }
 }
 
-unsigned int diff_restore_file(osm2go_platform::Widget *window, const project_t *project, osm_t *osm) {
+unsigned int diff_restore_file(const project_t *project, osm_t *osm) {
   struct stat st;
 
   /* first try to open a backup which is only present if saving the */
@@ -527,7 +527,7 @@ unsigned int diff_restore_file(osm2go_platform::Widget *window, const project_t 
   /* parse the file and get the DOM */
   std::unique_ptr<xmlDoc, xmlDocDelete> doc(xmlReadFd(difffd, O2G_NULLPTR, O2G_NULLPTR, XML_PARSE_NONET));
   if(unlikely(!doc)) {
-    errorf(window, _("Error: could not parse file %s\n"), diff_name.c_str());
+    errorf(O2G_NULLPTR, _("Error: could not parse file %s\n"), diff_name.c_str());
     return DIFF_INVALID;
   }
 
@@ -545,7 +545,7 @@ unsigned int diff_restore_file(osm2go_platform::Widget *window, const project_t 
           const char *cstr = reinterpret_cast<const char *>(str.get());
 	  printf("diff for project %s\n", cstr);
 	  if(unlikely(project->name != cstr)) {
-            warningf(window, _("Diff name (%s) does not match project name (%s)"),
+            warningf(O2G_NULLPTR, _("Diff name (%s) does not match project name (%s)"),
 		     cstr, project->name.c_str());
             res |= DIFF_PROJECT_MISMATCH;
 	  }
@@ -586,7 +586,7 @@ void diff_restore(appdata_t &appdata) {
   if(unlikely(!appdata.osm))
     return;
 
-  unsigned int flags = diff_restore_file(appdata.window, appdata.project, appdata.osm);
+  unsigned int flags = diff_restore_file(appdata.project, appdata.osm);
   if(flags & DIFF_HAS_HIDDEN) {
     printf("hidden flags have been restored, enable show_add menu\n");
 

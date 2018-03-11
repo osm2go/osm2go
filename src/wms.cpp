@@ -384,13 +384,13 @@ static std::string wmsUrl(const wms_t &wms, const char *get)
   return url;
 }
 
-wms_layer_t::list wms_get_layers(appdata_t& appdata, wms_t& wms)
+wms_layer_t::list wms_get_layers(project_t *project, wms_t& wms)
 {
   wms_layer_t::list layers;
 
   /* ------------- copy values back into project ---------------- */
-  appdata.project->wms_server = wms.server;
-  appdata.project->wms_path = wms.path;
+  project->wms_server = wms.server;
+  project->wms_path = wms.path;
 
   /* ----------- request capabilities -------------- */
 
@@ -398,8 +398,8 @@ wms_layer_t::list wms_get_layers(appdata_t& appdata, wms_t& wms)
   std::string capmem;
 
   /* ----------- parse capabilities -------------- */
-  if(unlikely(!net_io_download_mem(appdata.window, url, capmem, _("WMS capabilities")))) {
-    errorf(appdata.window, _("WMS download failed:\n\nGetCapabilities failed"));
+  if(unlikely(!net_io_download_mem(appdata_t::window, url, capmem, _("WMS capabilities")))) {
+    errorf(O2G_NULLPTR, _("WMS download failed:\n\nGetCapabilities failed"));
     return layers;
   }
 
@@ -413,7 +413,7 @@ wms_layer_t::list wms_get_layers(appdata_t& appdata, wms_t& wms)
   bool parse_success = false;
   if(unlikely(!doc)) {
     xmlErrorPtr errP = xmlGetLastError();
-    errorf(appdata.window, _("WMS download failed:\n\n"
+    errorf(O2G_NULLPTR, _("WMS download failed:\n\n"
             "XML error while parsing capabilities:\n%s"), errP->message);
   } else {
     printf("ok, parse doc tree\n");
@@ -426,12 +426,12 @@ wms_layer_t::list wms_get_layers(appdata_t& appdata, wms_t& wms)
   /* ------------ basic checks ------------- */
 
   if(!parse_success) {
-    errorf(appdata.window, _("Incomplete/unexpected reply!"));
+    errorf(O2G_NULLPTR, _("Incomplete/unexpected reply!"));
     return layers;
   }
 
   if(!wms.cap.request.getmap.format) {
-    errorf(appdata.window, _("No supported image format found."));
+    errorf(O2G_NULLPTR, _("No supported image format found."));
     return layers;
   }
 
@@ -445,7 +445,7 @@ wms_layer_t::list wms_get_layers(appdata_t& appdata, wms_t& wms)
                          layers.end();
 
   if(!at_least_one_ok) {
-    errorf(appdata.window, _("Server provides no data in the required format!\n\n"
+    errorf(O2G_NULLPTR, _("Server provides no data in the required format!\n\n"
 	     "(epsg4326 and LatLonBoundingBox are mandatory for osm2go)"));
     wms_layers_free(layers);
     layers.clear();
@@ -516,7 +516,7 @@ void wms_get_selected_layer(appdata_t &appdata, wms_t &wms,
   /* remove any existing image before */
   wms_remove(appdata);
 
-  if(!net_io_download_file(appdata.window, url, filename, _("WMS layer")))
+  if(!net_io_download_file(appdata_t::window, url, filename, _("WMS layer")))
     return;
 
   /* there should be a matching file on disk now */

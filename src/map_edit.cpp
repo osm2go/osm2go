@@ -92,7 +92,7 @@ void map_edit_way_add_segment(map_t *map, int x, int y) {
 	map->action.extending = touch_way;
 
 	if(map->action.extending) {
-          if(!yes_no_f(map->appdata.window, MISC_AGAIN_ID_EXTEND_WAY, _("Extend way?"),
+          if(!yes_no_f(O2G_NULLPTR, MISC_AGAIN_ID_EXTEND_WAY, _("Extend way?"),
 	       _("Do you want to extend the way present at this location?")))
 	    map->action.extending = O2G_NULLPTR;
 	  else
@@ -107,7 +107,7 @@ void map_edit_way_add_segment(map_t *map, int x, int y) {
       map->action.ends_on = O2G_NULLPTR;
 
       if(!map->appdata.osm->bounds.contains(pos))
-	map_outside_error(map->appdata);
+        map_t::outside_error();
       else
         node = map->appdata.osm->node_new(pos);
     }
@@ -235,7 +235,7 @@ void map_edit_way_add_ok(map_t *map) {
   }
 
   if(map->action.ends_on &&
-     yes_no_f(map->appdata.window, MISC_AGAIN_ID_EXTEND_WAY_END, _("Join way?"),
+     yes_no_f(O2G_NULLPTR, MISC_AGAIN_ID_EXTEND_WAY_END, _("Join way?"),
               _("Do you want to join the way present at this location?"))) {
     printf("  this new way ends on another way\n");
     // this is triggered when the new way ends on an existing way, this can
@@ -252,9 +252,8 @@ void map_edit_way_add_ok(map_t *map) {
 
     /* and open dialog to resolve tag collisions if necessary */
     if(map->action.way->merge(map->action.ends_on, osm, hasRels))
-      messagef(map->appdata.window, _("Way tag conflict"),
-	       _("The resulting way contains some conflicting tags. "
-		 "Please solve these."));
+      messagef(O2G_NULLPTR, _("Way tag conflict"),
+               _("The resulting way contains some conflicting tags. Please solve these."));
 
     map->action.ends_on = O2G_NULLPTR;
   }
@@ -270,7 +269,7 @@ void map_edit_way_add_ok(map_t *map) {
   map->action.way = O2G_NULLPTR;
 
   /* let the user specify some tags for the new way */
-  info_dialog(map->appdata.window, map, map->appdata.osm, map->appdata.presets);
+  info_dialog(appdata_t::window, map, map->appdata.osm, map->appdata.presets);
 }
 
 /* -------------------------- way_node_add ----------------------- */
@@ -482,10 +481,8 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, int ex, int ey) {
   if(touchnode != O2G_NULLPTR) {
     printf("  dropped onto node #" ITEM_ID_FORMAT "\n", touchnode->id);
 
-    if(yes_no_f(map->appdata.window, MISC_AGAIN_ID_JOIN_NODES, _("Join nodes?"),
-		_("Do you want to join the dragged node with the one "
-		  "you dropped it on?"))) {
-
+    if(yes_no_f(O2G_NULLPTR, MISC_AGAIN_ID_JOIN_NODES, _("Join nodes?"),
+                _("Do you want to join the dragged node with the one you dropped it on?"))) {
       /* the touchnode vanishes and is replaced by the node the */
       /* user dropped onto it */
       joined_with_touchnode = true;
@@ -517,7 +514,7 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, int ex, int ey) {
 
       /* and open dialog to resolve tag collisions if necessary */
       if(conflict)
-        messagef(map->appdata.window, _("Node tag conflict"),
+        messagef(O2G_NULLPTR, _("Node tag conflict"),
 		 _("The resulting node contains some conflicting tags. "
 		   "Please solve these."));
 
@@ -525,12 +522,12 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, int ex, int ey) {
       printf("  checking if node is end of way\n");
 
       if(ways2join_cnt > 2) {
-        messagef(map->appdata.window, _("Too many ways to join"),
+        messagef(O2G_NULLPTR, _("Too many ways to join"),
 		 _("More than two ways now end on this node. Joining more "
 		   "than two ways is not yet implemented, sorry"));
 
       } else if(ways2join_cnt == 2 &&
-                yes_no_f(map->appdata.window, MISC_AGAIN_ID_JOIN_WAYS, _("Join ways?"),
+                yes_no_f(O2G_NULLPTR, MISC_AGAIN_ID_JOIN_WAYS, _("Join ways?"),
                          _("Do you want to join the dragged way with the one you dropped it on?"))) {
         printf("  about to join ways #" ITEM_ID_FORMAT " and #" ITEM_ID_FORMAT "\n",
                ways2join[0]->id, ways2join[1]->id);
@@ -543,7 +540,7 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, int ex, int ey) {
 
         /* ---------- transfer tags from way[1] to way[0] ----------- */
         if(ways2join[0]->merge(ways2join[1], osm, hasRels))
-          messagef(map->appdata.window, _("Way tag conflict"),
+          messagef(O2G_NULLPTR, _("Way tag conflict"),
                    _("The resulting way contains some conflicting tags. "
                      "Please solve these."));
       }
@@ -559,7 +556,7 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, int ex, int ey) {
     /* convert mouse position to canvas (world) position */
     lpos_t pos = map->canvas->window2world(ex, ey);
     if(!osm->bounds.contains(pos)) {
-      map_outside_error(map->appdata);
+      map_t::outside_error();
       return;
     }
 

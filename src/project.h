@@ -69,8 +69,17 @@ struct project_t {
 
   osm_t *parse_osm() const;
 
-  bool save(osm2go_platform::Widget *parent);
-  bool check_demo(osm2go_platform::Widget *parent) const;
+  /**
+   * @brief save the current project to disk
+   * @param parent parent window for dialogs
+   */
+  bool save(osm2go_platform::Widget *parent = O2G_NULLPTR);
+
+  /**
+   * @brief check if the current project is the demo project
+   * @param parent parent window for dialogs
+   */
+  bool check_demo(osm2go_platform::Widget *parent = O2G_NULLPTR) const;
 };
 
 bool project_load(appdata_t &appdata, const std::string &name);

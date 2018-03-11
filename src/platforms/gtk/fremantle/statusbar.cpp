@@ -22,7 +22,7 @@
 
 #include <appdata.h>
 #include <misc.h>
-#include "osm2go_platform.h"
+#include <osm2go_platform.h>
 
 #include <hildon/hildon.h>
 #include <memory>
@@ -43,11 +43,11 @@ public:
   std::unique_ptr<GtkWidget, g_object_deleter> banner;
 
   virtual void set(const char *msg, bool highlight) O2G_OVERRIDE;
-  virtual void banner_show_info(appdata_t &appdata, const char *text) O2G_OVERRIDE;
-  virtual void banner_busy_start(appdata_t &appdata, const char *text) O2G_OVERRIDE;
-  virtual void banner_busy_stop(appdata_t &appdata) O2G_OVERRIDE;
+  virtual void banner_show_info(const char *text) O2G_OVERRIDE;
+  virtual void banner_busy_start(const char *text) O2G_OVERRIDE;
+  virtual void banner_busy_stop() O2G_OVERRIDE;
 
-  void setBanner(appdata_t &appdata, GtkWidget *b);
+  void setBanner(GtkWidget *b);
 };
 
 statusbar_fremantle::statusbar_fremantle()
@@ -57,8 +57,8 @@ statusbar_fremantle::statusbar_fremantle()
   g_object_set(widget, "has-resize-grip", FALSE, O2G_NULLPTR);
 }
 
-void statusbar_fremantle::banner_busy_stop(appdata_t &appdata) {
-  GtkWidget *win = appdata.window;
+void statusbar_fremantle::banner_busy_stop() {
+  GtkWidget *win = appdata_t::window;
   if(G_UNLIKELY(win == O2G_NULLPTR || !banner))
     return;
   gtk_grab_remove(widget);
@@ -69,10 +69,10 @@ void statusbar_fremantle::banner_busy_stop(appdata_t &appdata) {
 
 // Cancel any animations currently going, and show a brief text message.
 
-void statusbar_fremantle::banner_show_info(appdata_t &appdata, const char *text) {
-  if(G_UNLIKELY(appdata.window == O2G_NULLPTR))
+void statusbar_fremantle::banner_show_info(const char *text) {
+  if(G_UNLIKELY(appdata_t::window == O2G_NULLPTR))
     return;
-  setBanner(appdata, hildon_banner_show_information(appdata.window, O2G_NULLPTR, text));
+  setBanner(hildon_banner_show_information(appdata_t::window, O2G_NULLPTR, text));
 }
 
 /*
@@ -86,11 +86,11 @@ void statusbar_fremantle::banner_show_info(appdata_t &appdata, const char *text)
  *   https://mail.gnome.org/archives/gtk-app-devel-list/2006-May/msg00020.html
  */
 
-void statusbar_fremantle::banner_busy_start(appdata_t &appdata, const char *text) {
-  GtkWidget *win = appdata.window;
+void statusbar_fremantle::banner_busy_start(const char *text) {
+  GtkWidget *win = appdata_t::window;
   if(G_UNLIKELY(win == O2G_NULLPTR))
     return;
-  setBanner(appdata, hildon_banner_show_progress(win, O2G_NULLPTR, text));
+  setBanner(hildon_banner_show_progress(win, O2G_NULLPTR, text));
   gtk_widget_set_sensitive(win, FALSE);
   gtk_grab_add(widget);
   osm2go_platform::process_events();
@@ -108,9 +108,9 @@ void statusbar_fremantle::set(const char *msg, bool highlight) {
   gtk_label_set_text(GTK_LABEL(widget), msg);
 }
 
-void statusbar_fremantle::setBanner(appdata_t &appdata, GtkWidget *b)
+void statusbar_fremantle::setBanner(GtkWidget *b)
 {
-  banner_busy_stop(appdata);
+  banner_busy_stop();
   banner.reset(b);
   g_object_ref(b);
   gtk_widget_show(b);

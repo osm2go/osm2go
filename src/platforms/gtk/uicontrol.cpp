@@ -35,6 +35,9 @@
 #include <osm2go_cpp.h>
 #include <osm2go_i18n.h>
 
+// declared here so it is available for all lib users (i.e. testcases)
+osm2go_platform::Widget *appdata_t::window;
+
 #ifdef FREMANTLE
 static std::string strip_mnemonic(const char *label)
 {
@@ -141,12 +144,12 @@ void MainUi::setActionEnable(menu_items item, bool en)
 void MainUi::showNotification(const char *message, unsigned int flags)
 {
   if (flags & Brief) {
-    appdata.statusbar->banner_show_info(appdata, message);
+    appdata.statusbar->banner_show_info(message);
   } else if (flags & Busy) {
     if (message == O2G_NULLPTR)
-      appdata.statusbar->banner_busy_stop(appdata);
+      appdata.statusbar->banner_busy_stop();
     else
-      appdata.statusbar->banner_busy_start(appdata, message);
+      appdata.statusbar->banner_busy_start(message);
   } else {
     appdata.statusbar->set(message, flags & Highlight);
   }

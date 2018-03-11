@@ -39,7 +39,7 @@ enum diff_restore_results {
 };
 
 void diff_save(const project_t *project, const osm_t *osm) __attribute__((nonnull(1,2)));
-unsigned int diff_restore_file(osm2go_platform::Widget *window, const project_t *project, osm_t *osm) __attribute__((nonnull(2,3)));
+unsigned int diff_restore_file(const project_t *project, osm_t *osm) __attribute__((nonnull(1,2)));
 void diff_restore(appdata_t &appdata);
 bool diff_present(const project_t *project);
 void diff_remove(const project_t *project);

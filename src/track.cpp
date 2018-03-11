@@ -123,7 +123,7 @@ private:
 
 /* make menu represent the track state */
 void track_menu_set(appdata_t &appdata) {
-  if(!appdata.window)
+  if(unlikely(appdata_t::window == O2G_NULLPTR))
     return;
 
   bool present = (appdata.track.track != O2G_NULLPTR);

@@ -22,8 +22,6 @@
 
 #include <osm2go_platform.h>
 
-struct appdata_t;
-
 #define STATUSBAR_DEFAULT_BRIEF_TIME 3
 
 class statusbar_t {
@@ -41,13 +39,13 @@ public:
   virtual void set(const char *msg, bool highlight) = 0;
 
   // Shows a brief info splash in a suitable way for the app environment being used
-  virtual void banner_show_info(appdata_t &appdata, const char *text) = 0;
+  virtual void banner_show_info(const char *text) = 0;
 
   // Start, stop, and say "I'm still alive" to a busy message targetted at the
   // app environment in use. This can be an animation for some builds, might be
   // a static statusbar for others, a modal dialog for others.
-  virtual void banner_busy_start(appdata_t &appdata, const char *text) = 0;
-  virtual void banner_busy_stop(appdata_t &appdata) = 0;
+  virtual void banner_busy_start(const char *text) = 0;
+  virtual void banner_busy_stop() = 0;
 };
 
 #endif // STATUSBAR_H

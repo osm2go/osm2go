@@ -180,7 +180,7 @@ bool map_t::key_press_event(unsigned int keyval) {
       map_action_ok(this);
     /* otherwise if info is enabled call that */
     else if(appdata.iconbar->isInfoEnabled())
-      info_dialog(appdata.window, this, appdata.osm, appdata.presets);
+      info_dialog(appdata_t::window, this, appdata.osm, appdata.presets);
     break;
 
   case GDK_Escape:   // same as HILDON_HARDKEY_ESC
@@ -226,7 +226,7 @@ static gboolean map_autosave(gpointer data) {
 
   /* only do this if root window has focus as otherwise */
   /* a dialog may be open and modifying the basic structures */
-  if(gtk_window_is_active(GTK_WINDOW(map->appdata.window))) {
+  if(gtk_window_is_active(GTK_WINDOW(appdata_t::window))) {
     g_debug("autosave ...");
 
     if(map->appdata.project && map->appdata.osm) {

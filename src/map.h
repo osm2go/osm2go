@@ -214,6 +214,11 @@ public:
    * (if any) and removes the touchnode from screen (i.e. touchnode_clear()).
    */
   node_t *touchnode_get_node();
+
+  /**
+   * @brief show an error message that the current position is outside the project bounds
+   */
+  static void outside_error();
 };
 
 // Gtk callbacks
@@ -225,7 +230,6 @@ void map_delete_selected(map_t *map);
 /* track stuff */
 void map_track_remove_pos(appdata_t &appdata);
 
-void map_outside_error(appdata_t &appdata);
 
 void map_item_chain_destroy(map_item_chain_t *&chainP);
 
