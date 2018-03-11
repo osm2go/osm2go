@@ -368,17 +368,14 @@ struct find_format_reverse_functor {
 static std::string wmsUrl(const wms_t &wms, const char *get)
 {
   /* nothing has to be done if the last character of path is already a valid URL delimiter */
-  const char lastCh = wms.path[wms.path.size() - 1];
+  const char lastCh = wms.server[wms.server.size() - 1];
   const char *append_char = (lastCh == '?' || lastCh == '&') ? "" :
   /* if there's already a question mark, then add further */
   /* parameters using the &, else use the ? */
-                            (wms.path.find('?') != std::string::npos ? "&" : "?");
+                            (wms.server.find('?') != std::string::npos ? "&" : "?");
   std::string url;
   url.reserve(256); // make enough room that most URLs will need no reallocation
-  url = wms.server + wms.path + append_char +
-                                 "SERVICE=wms"
-                                 "&VERSION=1.1.1"
-                                 "&REQUEST=Get";
+  url = wms.server + append_char + "SERVICE=wms&VERSION=1.1.1&REQUEST=Get";
   url += get;
 
   return url;
@@ -390,7 +387,6 @@ wms_layer_t::list wms_get_layers(project_t *project, wms_t& wms)
 
   /* ------------- copy values back into project ---------------- */
   project->wms_server = wms.server;
-  project->wms_path = wms.path;
 
   /* ----------- request capabilities -------------- */
 
@@ -583,11 +579,11 @@ void wms_remove(appdata_t &appdata) {
 }
 
 struct server_preset_s {
-  const char *name, *server, *path;
+  const char *name, *server;
 };
 
 static const std::array<struct server_preset_s, 1> default_servers = { {
-  { "Open Geospatial Consortium Web Services", "http://ows.terrestris.de", "/osm/service?" }
+  { "Open Geospatial Consortium Web Services", "http://ows.terrestris.de/osm/service?" }
   /* add more servers here ... */
 } };
 
@@ -598,7 +594,6 @@ std::vector<wms_server_t *> wms_server_get_default(void) {
     wms_server_t *cur = new wms_server_t();
     cur->name = default_servers[i].name;
     cur->server = default_servers[i].server;
-    cur->path = default_servers[i].path;
     servers.push_back(cur);
   }
 

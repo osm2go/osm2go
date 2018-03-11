@@ -61,7 +61,6 @@ struct project_t {
   std::string rserver;
 
   std::string wms_server;
-  std::string wms_path;
 
   bool data_dirty;     // needs to download new data
   bool isDemo;         // if this is the demo project

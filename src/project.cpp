@@ -112,9 +112,10 @@ bool project_read(const std::string &project_file, project_t *project,
             if(str)
               project->wms_server = reinterpret_cast<char *>(str.get());
 
+            // upgrade old entries
             str.reset(xmlGetProp(node, BAD_CAST "path"));
             if(str)
-              project->wms_path = reinterpret_cast<char *>(str.get());
+              project->wms_server += reinterpret_cast<char *>(str.get());
 
             str.reset(xmlGetProp(node, BAD_CAST "x-offset"));
             if(str)
@@ -222,13 +223,10 @@ bool project_t::save(osm2go_platform::Widget *parent) {
   snprintf(str, sizeof(str), "%d", map_state.scroll_offset.y);
   xmlNewProp(node, BAD_CAST "scroll-offset-y", BAD_CAST str);
 
-  if(wms_offset.x != 0 || wms_offset.y != 0 ||
-     !wms_server.empty() || !wms_path.empty()) {
+  if(wms_offset.x != 0 || wms_offset.y != 0 || !wms_server.empty()) {
     node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "wms", O2G_NULLPTR);
     if(!wms_server.empty())
       xmlNewProp(node, BAD_CAST "server", BAD_CAST wms_server.c_str());
-    if(!wms_path.empty())
-      xmlNewProp(node, BAD_CAST "path", BAD_CAST wms_path.c_str());
     snprintf(str, sizeof(str), "%d", wms_offset.x);
     xmlNewProp(node, BAD_CAST "x-offset", BAD_CAST str);
     snprintf(str, sizeof(str), "%d", wms_offset.y);

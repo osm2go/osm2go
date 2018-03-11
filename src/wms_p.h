@@ -85,12 +85,11 @@ struct wms_cap_t {
 };
 
 struct wms_t {
-  wms_t(const std::string &s, const std::string &p)
-    : server(s), path(p), width(0), height(0) {}
+  wms_t(const std::string &s)
+    : server(s), width(0), height(0) {}
   ~wms_t();
 
   std::string server;
-  std::string path;
   int width, height;
 
   wms_cap_t cap;

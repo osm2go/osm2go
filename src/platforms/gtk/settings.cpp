@@ -144,12 +144,16 @@ settings_t *settings_t::load() {
         key = keybase + "wms/path" + nbuf;
         GConfValue *path = gconf_client_get(client.get(), key.c_str(), O2G_NULLPTR);
 
-	/* apply valid entry to list */
-        if(likely(name && server && path)) {
+        /* apply valid entry to list */
+        if(likely(name != O2G_NULLPTR && server != O2G_NULLPTR)) {
           wms_server_t *cur = new wms_server_t();
           cur->name = gconf_value_get_string(name);
           cur->server = gconf_value_get_string(server);
-          cur->path = gconf_value_get_string(path);
+          // upgrade old entries
+          if(unlikely(path != O2G_NULLPTR)) {
+            cur->server += gconf_value_get_string(path);
+            gconf_client_unset(client.get(), key.c_str(), O2G_NULLPTR);
+          }
           settings->wms_server.push_back(cur);
         }
         gconf_value_free(name);
@@ -270,8 +274,6 @@ void settings_t::save() const {
     gconf_client_set_string(client.get(), key.c_str(), cur->server.c_str(), O2G_NULLPTR);
     key = keybase + "wms/name" + nbuf;
     gconf_client_set_string(client.get(), key.c_str(), cur->name.c_str(), O2G_NULLPTR);
-    key = keybase + "wms/path" + nbuf;
-    gconf_client_set_string(client.get(), key.c_str(), cur->path.c_str(), O2G_NULLPTR);
   }
 
   gconf_client_set_int(client.get(), "/apps/" PACKAGE "/wms/count", wms_server.size(), O2G_NULLPTR);

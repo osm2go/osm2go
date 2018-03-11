@@ -24,7 +24,7 @@
 #include <vector>
 
 struct wms_server_t {
-  std::string name, server, path;
+  std::string name, server;
 };
 
 struct appdata_t;

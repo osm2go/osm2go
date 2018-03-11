@@ -67,13 +67,12 @@ enum {
 
 struct wms_server_context_t {
   wms_server_context_t(appdata_t &a, wms_t *w, GtkWidget *d)
-    : appdata(a), wms(w), dialog(d), list(O2G_NULLPTR)
-    , server_label(O2G_NULLPTR), path_label(O2G_NULLPTR) {}
+    : appdata(a), wms(w), dialog(d), list(O2G_NULLPTR) , server_label(O2G_NULLPTR) {}
   appdata_t &appdata;
   wms_t * const wms;
   GtkWidget * const dialog, *list;
   std::unique_ptr<GtkListStore, g_object_deleter> store;
-  GtkWidget *server_label, *path_label;
+  GtkWidget *server_label;
 
   /**
    * @brief select the server referenced in wms in the treeview
@@ -98,7 +97,7 @@ static wms_server_t *get_selection(GtkTreeSelection *selection) {
 
 const wms_server_t *wms_server_context_t::select_server() const
 {
-  if(wms->server.empty() || wms->path.empty())
+  if(wms->server.empty())
     return O2G_NULLPTR;
 
   /* if the projects settings match a list entry, then select this */
@@ -115,8 +114,7 @@ const wms_server_t *wms_server_context_t::select_server() const
     gtk_tree_model_get(GTK_TREE_MODEL(store.get()), &iter, WMS_SERVER_COL_DATA, &server, -1);
     assert(server != O2G_NULLPTR);
 
-    if(wms->server == server->server &&
-       wms->path == server->path) {
+    if(wms->server == server->server) {
        gtk_tree_selection_select_iter(selection, &iter);
        return server;
     }
@@ -135,17 +133,14 @@ static void wms_server_selected(wms_server_context_t *context,
   /* user can click ok if a entry is selected or if both fields are */
   /* otherwise valid */
   if(selected) {
-    gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog),
-		      GTK_RESPONSE_ACCEPT, TRUE);
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog), GTK_RESPONSE_ACCEPT, TRUE);
 
     gtk_label_set_text(GTK_LABEL(context->server_label), selected->server.c_str());
-    gtk_label_set_text(GTK_LABEL(context->path_label), selected->path.c_str());
   } else {
     gtk_dialog_set_response_sensitive(GTK_DIALOG(context->dialog),
-	      GTK_RESPONSE_ACCEPT, !context->wms->server.empty() && !context->wms->path.empty());
+                                      GTK_RESPONSE_ACCEPT, !context->wms->server.empty());
 
     gtk_label_set_text(GTK_LABEL(context->server_label), context->wms->server.c_str());
-    gtk_label_set_text(GTK_LABEL(context->path_label), context->wms->path.c_str());
   }
 }
 
@@ -240,17 +235,8 @@ bool wms_server_edit(wms_server_context_t *context, gboolean edit_name,
   gtk_table_attach_defaults(GTK_TABLE(table), server, 1, 2, 1, 2);
   gtk_entry_set_activates_default(GTK_ENTRY(server), TRUE);
 
-  label = gtk_label_new(_("Path:"));
-  GtkWidget *path = entry_new(EntryFlagsNoAutoCap);
-  gtk_table_attach(GTK_TABLE(table), label, 0, 1, 2, 3,
-		   GTK_FILL, static_cast<GtkAttachOptions>(0), 0, 0);
-  gtk_misc_set_alignment(GTK_MISC(label), 0.f, 0.5f);
-  gtk_table_attach_defaults(GTK_TABLE(table), path, 1, 2, 2, 3);
-  gtk_entry_set_activates_default(GTK_ENTRY(path), TRUE);
-
   osm2go_platform::setEntryText(GTK_ENTRY(name), wms_server->name.c_str(), _("<service name>"));
   osm2go_platform::setEntryText(GTK_ENTRY(server), wms_server->server.c_str(), _("<server url>"));
-  osm2go_platform::setEntryText(GTK_ENTRY(path), wms_server->path.c_str(), _("<path in server>"));
 
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), table);
 
@@ -262,18 +248,14 @@ bool wms_server_edit(wms_server_context_t *context, gboolean edit_name,
       wms_server->name = gtk_entry_get_text(GTK_ENTRY(name));
 
     wms_server->server = gtk_entry_get_text(GTK_ENTRY(server));
-    wms_server->path = gtk_entry_get_text(GTK_ENTRY(path));
 #ifndef FREMANTLE
     if(unlikely(wms_server->server == _("<server url>")))
       wms_server->server.clear();
-    if(unlikely(wms_server->path == _("<path in server>")))
-      wms_server->path.clear();
 #endif
-    g_debug("setting %s/%s", wms_server->server.c_str(), wms_server->path.c_str());
+    g_debug("setting URL for WMS server %s to %s", wms_server->name.c_str(), wms_server->server.c_str());
 
     /* set texts below */
     gtk_label_set_text(GTK_LABEL(context->server_label), wms_server->server.c_str());
-    gtk_label_set_text(GTK_LABEL(context->path_label), wms_server->path.c_str());
   }
 
   return ret;
@@ -313,10 +295,8 @@ static void on_server_add(wms_server_context_t *context) {
   // in case the project has a server set, but the global list is empty,
   // fill the data of the project server
   if(context->appdata.settings->wms_server.empty() &&
-     !context->appdata.project->wms_server.empty()) {
+     !context->appdata.project->wms_server.empty())
     newserver->server = context->appdata.project->wms_server;
-    newserver->path   = context->appdata.project->wms_path;
-  }
 
   if(!wms_server_edit(context, TRUE, newserver)) {
     /* user has cancelled request. remove newly added item */
@@ -391,17 +371,6 @@ static bool wms_server_dialog(appdata_t &appdata, wms_t *wms) {
   gtk_table_attach_defaults(GTK_TABLE(table), context.server_label,
 			    1, 2, 0, 1);
 
-  label = gtk_label_new(_("Path:"));
-  gtk_misc_set_alignment(GTK_MISC(label), 0.f, 0.5f);
-  gtk_table_attach(GTK_TABLE(table), label, 0, 1, 1, 2, GTK_FILL,
-                   static_cast<GtkAttachOptions>(0), 0, 0);
-  context.path_label = gtk_label_new(O2G_NULLPTR);
-  gtk_label_set_ellipsize(GTK_LABEL(context.path_label),
-			  PANGO_ELLIPSIZE_MIDDLE);
-  gtk_misc_set_alignment(GTK_MISC(context.path_label), 0.f, 0.5f);
-  gtk_table_attach_defaults(GTK_TABLE(table), context.path_label,
-			    1, 2, 1, 2);
-
   gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context.dialog)->vbox),
 		     table, FALSE, FALSE, 0);
 
@@ -415,10 +384,9 @@ static bool wms_server_dialog(appdata_t &appdata, wms_t *wms) {
       /* fetch parameters from selected entry */
       g_debug("WMS: using %s", server->name.c_str());
       wms->server = server->server;
-      wms->path = server->path;
       ok = true;
     } else {
-      ok = !wms->server.empty() && !wms->path.empty();
+      ok = !wms->server.empty();
     }
   }
 
@@ -588,7 +556,7 @@ void wms_import(appdata_t &appdata) {
   if(appdata.map->action.type == MAP_ACTION_BG_ADJUST)
     map_action_cancel(appdata.map);
 
-  wms_t wms(appdata.project->wms_server, appdata.project->wms_path);
+  wms_t wms(appdata.project->wms_server);
 
   /* reset any background adjustments in the project ... */
   appdata.project->wms_offset.x = 0;
