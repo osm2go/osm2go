@@ -580,10 +580,7 @@ static bool wms_layer_dialog(selected_context *ctx, const wms_layer_t::list &lay
 }
 
 void wms_import(appdata_t &appdata) {
-  if(!appdata.project) {
-    errorf(O2G_NULLPTR, _("Need an open project to derive WMS coordinates"));
-    return;
-  }
+  assert(appdata.project != O2G_NULLPTR);
 
   /* this cancels any wms adjustment in progress */
   if(appdata.map->action.type == MAP_ACTION_BG_ADJUST)
