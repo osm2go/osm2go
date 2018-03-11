@@ -62,6 +62,8 @@ namespace osm2go_platform {
 
   GtkWidget *string_select_widget(const char *title, const std::vector<std::string> &entries, int match);
 
+  void setEntryText(GtkEntry *entry, const char *text, const char *placeholder);
+
   /* dialog size are specified rather fuzzy */
   enum DialogSizeHint {
     MISC_DIALOG_SMALL  =  0,

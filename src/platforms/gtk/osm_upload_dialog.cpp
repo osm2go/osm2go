@@ -240,17 +240,10 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
   GtkWidget *table = gtk_table_new(2, 2, FALSE);
   table_attach_label_l(table, _("Username:"), 0, 1, 0, 1);
   GtkWidget *uentry = entry_new(EntryFlagsNoAutoCap);
-  const char *username = !appdata.settings->username.empty() ?
-                         appdata.settings->username.c_str() :
-                         _("<your osm username>");
-#ifndef FREMANTLE
-  gtk_entry_set_text(GTK_ENTRY(uentry), username);
-#else
-  if(appdata.settings->username.empty())
-    hildon_gtk_entry_set_placeholder_text(GTK_ENTRY(uentry), username);
-  else
-    gtk_entry_set_text(GTK_ENTRY(uentry), username);
-#endif
+
+  osm2go_platform::setEntryText(GTK_ENTRY(uentry), appdata.settings->username.c_str(),
+                                _("<your osm username>"));
+
   gtk_table_attach_defaults(GTK_TABLE(table),  uentry, 1, 2, 0, 1);
   table_attach_label_l(table, _("Password:"), 0, 1, 1, 2);
   GtkWidget *pentry = entry_new(EntryFlagsNoAutoCap);

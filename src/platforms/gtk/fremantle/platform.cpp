@@ -244,3 +244,9 @@ bool osm2go_platform::isComboBoxEntryWidget(GtkWidget *widget)
 {
   return G_OBJECT_TYPE(widget) == HILDON_TYPE_PICKER_BUTTON;
 }
+
+void osm2go_platform::setEntryText(GtkEntry *entry, const char *text, const char *placeholder)
+{
+  hildon_gtk_entry_set_placeholder_text(entry, placeholder);
+  gtk_entry_set_text(entry, text);
+}

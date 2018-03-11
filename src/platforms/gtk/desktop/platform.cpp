@@ -149,3 +149,11 @@ bool osm2go_platform::isComboBoxEntryWidget(GtkWidget *widget)
 {
   return G_OBJECT_TYPE(widget) == GTK_TYPE_COMBO_BOX_ENTRY;
 }
+
+void osm2go_platform::setEntryText(GtkEntry *entry, const char *text, const char *placeholder)
+{
+  if(text == O2G_NULLPTR || *text == '\0')
+    gtk_entry_set_text(entry, placeholder);
+  else
+    gtk_entry_set_text(entry, text);
+}

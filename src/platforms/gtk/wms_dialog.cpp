@@ -248,9 +248,9 @@ bool wms_server_edit(wms_server_context_t *context, gboolean edit_name,
   gtk_table_attach_defaults(GTK_TABLE(table), path, 1, 2, 2, 3);
   gtk_entry_set_activates_default(GTK_ENTRY(path), TRUE);
 
-  gtk_entry_set_text(GTK_ENTRY(name), wms_server->name.c_str());
-  gtk_entry_set_text(GTK_ENTRY(server), wms_server->server.c_str());
-  gtk_entry_set_text(GTK_ENTRY(path), wms_server->path.c_str());
+  osm2go_platform::setEntryText(GTK_ENTRY(name), wms_server->name.c_str(), _("<service name>"));
+  osm2go_platform::setEntryText(GTK_ENTRY(server), wms_server->server.c_str(), _("<server url>"));
+  osm2go_platform::setEntryText(GTK_ENTRY(path), wms_server->path.c_str(), _("<path in server>"));
 
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), table);
 
@@ -263,6 +263,12 @@ bool wms_server_edit(wms_server_context_t *context, gboolean edit_name,
 
     wms_server->server = gtk_entry_get_text(GTK_ENTRY(server));
     wms_server->path = gtk_entry_get_text(GTK_ENTRY(path));
+#ifndef FREMANTLE
+    if(unlikely(wms_server->server == _("<server url>")))
+      wms_server->server.clear();
+    if(unlikely(wms_server->path == _("<path in server>")))
+      wms_server->path.clear();
+#endif
     g_debug("setting %s/%s", wms_server->server.c_str(), wms_server->path.c_str());
 
     /* set texts below */
@@ -304,16 +310,12 @@ GtkTreeIter store_fill_functor::operator()(const wms_server_t *srv)
 static void on_server_add(wms_server_context_t *context) {
 
   wms_server_t *newserver = new wms_server_t();
-  newserver->name   = "<service name>";
   // in case the project has a server set, but the global list is empty,
   // fill the data of the project server
   if(context->appdata.settings->wms_server.empty() &&
      !context->appdata.project->wms_server.empty()) {
     newserver->server = context->appdata.project->wms_server;
     newserver->path   = context->appdata.project->wms_path;
-  } else {
-    newserver->server = "<server url>";
-    newserver->path   = "<path in server>";
   }
 
   if(!wms_server_edit(context, TRUE, newserver)) {
