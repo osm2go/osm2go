@@ -340,16 +340,16 @@ void requestable_layers_functor::operator()(const wms_layer_t* layer)
                                     c_layer));
 }
 
-static void setMenuEntries(appdata_t &appdata, bool en)
+static void setMenuEntries(MainUi *uicontrol, bool en)
 {
-  appdata.uicontrol->setActionEnable(MainUi::MENU_ITEM_WMS_CLEAR, en);
-  appdata.uicontrol->setActionEnable(MainUi::MENU_ITEM_WMS_ADJUST, en);
+  uicontrol->setActionEnable(MainUi::MENU_ITEM_WMS_CLEAR, en);
+  uicontrol->setActionEnable(MainUi::MENU_ITEM_WMS_ADJUST, en);
 }
 
 static bool setBgImage(appdata_t &appdata, const std::string &filename) {
   bool ret = appdata.map->set_bg_image(filename);
   if(ret)
-    setMenuEntries(appdata, true);
+    setMenuEntries(appdata.uicontrol, true);
   return ret;
 }
 
@@ -541,7 +541,7 @@ void wms_load(appdata_t &appdata) {
       return;
   }
 
-  setMenuEntries(appdata, false);
+  setMenuEntries(appdata.uicontrol, false);
 }
 
 void wms_remove_file(project_t &project) {
@@ -571,7 +571,7 @@ void wms_remove(appdata_t &appdata) {
   if(appdata.map->action.type == MAP_ACTION_BG_ADJUST)
     map_action_cancel(appdata.map);
 
-  setMenuEntries(appdata, false);
+  setMenuEntries(appdata.uicontrol, false);
 
   appdata.map->remove_bg_image();
 
