@@ -3,6 +3,7 @@
 #include <misc.h>
 
 #include <cassert>
+#include <cerrno>
 #include <curl/curl.h>
 #include <cstdlib>
 #include <string>
