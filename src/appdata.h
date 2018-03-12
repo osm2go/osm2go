@@ -40,11 +40,11 @@ struct appdata_t {
   appdata_t(map_state_t &mstate);
   ~appdata_t();
 
-  MainUi * const uicontrol;
-
   static osm2go_platform::Widget *window;
 
   statusbar_t * const statusbar;
+  MainUi * const uicontrol;
+
   project_t *project;
   iconbar_t *iconbar;
   presets_items *presets;

@@ -20,16 +20,16 @@
 #ifndef UICONTROL_H
 #define UICONTROL_H
 
-struct appdata_t;
+class statusbar_t;
 
 class MainUi {
 protected:
-  MainUi(appdata_t &a) : appdata(a) {}
+  MainUi(statusbar_t *s) : statusbar(s) {}
   ~MainUi() {}
 
-  appdata_t &appdata;
+  statusbar_t * const statusbar;
 public:
-  static MainUi *instance(appdata_t &appdata);
+  static MainUi *instance(statusbar_t * const statusbar);
 
   enum menu_items {
     MENU_ITEM_MAP_HIDE_SEL,

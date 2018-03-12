@@ -21,8 +21,8 @@
 #include <osm2go_platform.h>
 
 appdata_t::appdata_t(map_state_t &mstate)
-  : uicontrol(O2G_NULLPTR)
-  , statusbar(O2G_NULLPTR)
+  : statusbar(O2G_NULLPTR)
+  , uicontrol(O2G_NULLPTR)
   , map_state(mstate)
   , icons(icon_t::instance())
   , gps_state(O2G_NULLPTR)

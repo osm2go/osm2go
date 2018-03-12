@@ -96,8 +96,8 @@ create_checkbox_item(const char *label)
 #endif
 }
 
-MainUiGtk::MainUiGtk(appdata_t& a)
-  : MainUi(a)
+MainUiGtk::MainUiGtk(statusbar_t *s)
+  : MainUi(s)
 #ifdef FREMANTLE
   , menubar(HILDON_APP_MENU(hildon_app_menu_new()))
 #else
@@ -129,9 +129,9 @@ MainUiGtk::MainUiGtk(appdata_t& a)
 #endif
 }
 
-MainUi *MainUi::instance(appdata_t &appdata)
+MainUi *MainUi::instance(statusbar_t * const statusbar)
 {
-  static MainUiGtk inst(appdata);
+  static MainUiGtk inst(statusbar);
 
   return &inst;
 }
@@ -144,14 +144,14 @@ void MainUi::setActionEnable(menu_items item, bool en)
 void MainUi::showNotification(const char *message, unsigned int flags)
 {
   if (flags & Brief) {
-    appdata.statusbar->banner_show_info(message);
+    statusbar->banner_show_info(message);
   } else if (flags & Busy) {
     if (message == O2G_NULLPTR)
-      appdata.statusbar->banner_busy_stop();
+      statusbar->banner_busy_stop();
     else
-      appdata.statusbar->banner_busy_start(message);
+      statusbar->banner_busy_start(message);
   } else {
-    appdata.statusbar->set(message, flags & Highlight);
+    statusbar->set(message, flags & Highlight);
   }
 }
 

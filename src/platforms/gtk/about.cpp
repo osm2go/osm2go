@@ -297,11 +297,12 @@ void MainUi::about_box()
 
   GtkWidget *notebook = osm2go_platform::notebook_new();
 
-  osm2go_platform::notebook_append_page(notebook, copyright_page_new(appdata.icons), _("Copyright"));
-  osm2go_platform::notebook_append_page(notebook, license_page_new(),                _("License"));
-  osm2go_platform::notebook_append_page(notebook, authors_page_new(),                _("Authors"));
-  osm2go_platform::notebook_append_page(notebook, donate_page_new(appdata.icons),    _("Donate"));
-  osm2go_platform::notebook_append_page(notebook, bugs_page_new(),                   _("Bugs"));
+  icon_t &icons = icon_t::instance();
+  osm2go_platform::notebook_append_page(notebook, copyright_page_new(icons), _("Copyright"));
+  osm2go_platform::notebook_append_page(notebook, license_page_new(),        _("License"));
+  osm2go_platform::notebook_append_page(notebook, authors_page_new(),        _("Authors"));
+  osm2go_platform::notebook_append_page(notebook, donate_page_new(icons),    _("Donate"));
+  osm2go_platform::notebook_append_page(notebook, bugs_page_new(),           _("Bugs"));
 
   gtk_box_pack_start_defaults(GTK_BOX((GTK_DIALOG(dialog.get()))->vbox),
 			      notebook);

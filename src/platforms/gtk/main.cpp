@@ -990,8 +990,8 @@ static void menu_create(appdata_internal &appdata, GtkBox *) {
 /********************* end of menu **********************/
 
 appdata_t::appdata_t(map_state_t &mstate)
-  : uicontrol(MainUi::instance(*this))
-  , statusbar(statusbar_t::create())
+  : statusbar(statusbar_t::create())
+  , uicontrol(MainUi::instance(statusbar))
   , project(O2G_NULLPTR)
   , iconbar(O2G_NULLPTR)
   , presets(O2G_NULLPTR)

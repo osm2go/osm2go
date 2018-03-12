@@ -42,7 +42,7 @@ class MainUiGtk : public MainUi {
 
   GtkWidget *addMenu(GtkWidget *item);
 public:
-  MainUiGtk(appdata_t &a);
+  MainUiGtk(statusbar_t *s);
 
   inline GtkWidget *menu_item(menu_items item)
   { return menuitems[item]; }
