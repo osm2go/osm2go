@@ -453,10 +453,11 @@ static void changed(GtkTreeSelection *sel, gpointer user_data) {
   while(ok) {
     wms_layer_t *layer = O2G_NULLPTR;
 
-    gtk_tree_model_get(model, &iter, LAYER_COL_DATA, &layer, -1);
+    gboolean en;
+    gtk_tree_model_get(model, &iter, LAYER_COL_DATA, &layer, LAYER_COL_FITS, &en, -1);
     assert(layer != O2G_NULLPTR);
 
-    if(gtk_tree_selection_iter_is_selected(sel, &iter) == TRUE)
+    if(en == TRUE && gtk_tree_selection_iter_is_selected(sel, &iter) == TRUE)
       selected->push_back(layer);
 
     ok = gtk_tree_model_iter_next(model, &iter);
