@@ -32,7 +32,6 @@ class map_t;
 struct osm_t;
 struct presets_items;
 struct project_t;
-class settings_t;
 class statusbar_t;
 struct style_t;
 struct track_t;
@@ -59,7 +58,6 @@ struct appdata_t {
   map_state_t &map_state;
   map_t *map;
   osm_t *osm;
-  settings_t * const settings;
   icon_t &icons;
   style_t *style;
   gps_state_t * const gps_state;

@@ -398,6 +398,7 @@ static bool track_append_position(appdata_t &appdata, const pos_t &pos, float al
   std::vector<track_point_t> &points = seg.track_points;
 
   /* don't append if point is the same as last time */
+  const settings_t * const settings = settings_t::instance();
   bool ret;
   if(unlikely(!points.empty() && points.back().pos == pos)) {
     printf("same value as last point -> ignore\n");
@@ -407,7 +408,7 @@ static bool track_append_position(appdata_t &appdata, const pos_t &pos, float al
     track->dirty = true;
     points.push_back(track_point_t(pos, alt, time(O2G_NULLPTR)));
 
-    if(appdata.settings->trackVisibility >= DrawCurrent) {
+    if(settings->trackVisibility >= DrawCurrent) {
       if(seg.item_chain.empty()) {
         /* the segment can now be drawn for the first time */
         printf("initial draw\n");
@@ -419,7 +420,7 @@ static bool track_append_position(appdata_t &appdata, const pos_t &pos, float al
     }
   }
 
-  if(appdata.settings->follow_gps) {
+  if(settings->follow_gps) {
     if(!appdata.map->scroll_to_if_offscreen(lpos)) {
       if(!--appdata.track.warn_cnt) {
         /* warn user once a minute that the current gps */
@@ -435,7 +436,7 @@ static bool track_append_position(appdata_t &appdata, const pos_t &pos, float al
 }
 
 static void track_do_disable_gps(appdata_t &appdata) {
-  appdata.settings->enable_gps = false;
+  settings_t::instance()->enable_gps = false;
   appdata.gps_state->setEnable(false);
 
   appdata.gps_state->registerCallback(O2G_NULLPTR, O2G_NULLPTR);
@@ -464,7 +465,8 @@ static int update(void *data) {
     return 0;
   }
 
-  if(!appdata.settings->enable_gps) {
+  const settings_t * const settings = settings_t::instance();
+  if(!settings->enable_gps) {
     // Turn myself off gracefully.
     track_do_disable_gps(appdata);
     return 0;
@@ -476,8 +478,7 @@ static int update(void *data) {
     printf("valid position %.6f/%.6f alt %.2f\n", pos.lat, pos.lon, alt);
     lpos_t lpos;
     lpos = pos.toLpos(appdata.osm->bounds);
-    if(track_append_position(appdata, pos, alt, lpos) &&
-       appdata.settings->trackVisibility >= ShowPosition)
+    if(track_append_position(appdata, pos, alt, lpos) && settings->trackVisibility >= ShowPosition)
       appdata.map->track_pos(lpos);
   } else {
     printf("no valid position\n");
@@ -490,7 +491,7 @@ static int update(void *data) {
 }
 
 static void track_do_enable_gps(appdata_t &appdata) {
-  appdata.settings->enable_gps = true;
+  settings_t::instance()->enable_gps = true;
   appdata.gps_state->setEnable(true);
   appdata.track.warn_cnt = 1;
 

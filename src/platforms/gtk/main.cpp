@@ -198,7 +198,7 @@ cb_menu_download(appdata_t *appdata) {
     diff_save(appdata->project, appdata->osm);
 
   // download
-  if(osm_download(appdata_t::window, appdata->settings, appdata->project)) {
+  if(osm_download(appdata_t::window, appdata->project)) {
     if(appdata->osm) {
       /* redraw the entire map by destroying all map items and redrawing them */
       appdata->map->clear(map_t::MAP_LAYER_OBJECTS_ONLY);
@@ -250,7 +250,7 @@ GtkWidget *track_vis_select_widget(TrackVisibility current) {
 #ifndef FREMANTLE
 /* in fremantle this happens inside the submenu handling since this button */
 /* is actually placed inside the submenu there */
-static bool track_visibility_select(GtkWidget *parent, appdata_t &appdata) {
+static bool track_visibility_select(GtkWidget *parent) {
   osm2go_platform::WidgetGuard dialog(gtk_dialog_new_with_buttons(_("Select track visibility"),
                                               GTK_WINDOW(parent), GTK_DIALOG_MODAL,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
@@ -259,7 +259,8 @@ static bool track_visibility_select(GtkWidget *parent, appdata_t &appdata) {
 
   gtk_dialog_set_default_response(GTK_DIALOG(dialog.get()), GTK_RESPONSE_ACCEPT);
 
-  GtkWidget *cbox = track_vis_select_widget(appdata.settings->trackVisibility);
+  settings_t * const settings = settings_t::instance();
+  GtkWidget *cbox = track_vis_select_widget(settings->trackVisibility);
 
   GtkWidget *hbox = gtk_hbox_new(FALSE, 8);
   gtk_box_pack_start_defaults(GTK_BOX(hbox), gtk_label_new(_("Track visibility:")));
@@ -277,8 +278,8 @@ static bool track_visibility_select(GtkWidget *parent, appdata_t &appdata) {
     printf("user clicked ok on %i\n", index);
 
     TrackVisibility tv = static_cast<TrackVisibility>(index);
-    ret = (tv != appdata.settings->trackVisibility);
-    appdata.settings->trackVisibility = tv;
+    ret = (tv != settings->trackVisibility);
+    settings->trackVisibility = tv;
   }
 
   return ret;
@@ -291,8 +292,8 @@ cb_menu_style(appdata_t *appdata) {
 
 static void
 cb_menu_track_vis(appdata_t *appdata) {
-  if(track_visibility_select(appdata_t::window, *appdata) && appdata->track.track)
-    appdata->map->track_draw(appdata->settings->trackVisibility, *appdata->track.track);
+  if(track_visibility_select(appdata_t::window) && appdata->track.track)
+    appdata->map->track_draw(settings_t::instance()->trackVisibility, *appdata->track.track);
 }
 
 static void
@@ -379,8 +380,6 @@ cb_menu_view_detail_dec(appdata_t *appdata) {
 
 static void
 cb_menu_track_import(appdata_t *appdata) {
-  assert(appdata->settings != O2G_NULLPTR);
-
   /* open a file selector */
   osm2go_platform::WidgetGuard dialog(
 #ifdef FREMANTLE
@@ -396,24 +395,25 @@ cb_menu_track_import(appdata_t *appdata) {
 #endif
            );
 
-  if(!appdata->settings->track_path.empty()) {
-    if(!g_file_test(appdata->settings->track_path.c_str(), G_FILE_TEST_EXISTS)) {
-      std::string::size_type slashpos = appdata->settings->track_path.rfind('/');
+  settings_t * const settings = settings_t::instance();
+  if(!settings->track_path.empty()) {
+    if(!g_file_test(settings->track_path.c_str(), G_FILE_TEST_EXISTS)) {
+      std::string::size_type slashpos = settings->track_path.rfind('/');
       if(slashpos != std::string::npos) {
-        appdata->settings->track_path[slashpos] = '\0';  // seperate path from file
+        settings->track_path[slashpos] = '\0';  // seperate path from file
 
-	/* the user just created a new document */
-	gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog.get()),
-                                            appdata->settings->track_path.c_str());
-	gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(dialog.get()),
-                                          appdata->settings->track_path.c_str() + slashpos + 1);
+        /* the user just created a new document */
+        gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog.get()),
+                                            settings->track_path.c_str());
+        gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(dialog.get()),
+                                          settings->track_path.c_str() + slashpos + 1);
 
-	/* restore full filename */
-        appdata->settings->track_path[slashpos] = '/';
+        /* restore full filename */
+        settings->track_path[slashpos] = '/';
       }
     } else
       gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(dialog.get()),
-                                    appdata->settings->track_path.c_str());
+                                    settings->track_path.c_str());
   }
 
   gtk_widget_show_all(GTK_WIDGET(dialog.get()));
@@ -426,9 +426,9 @@ cb_menu_track_import(appdata_t *appdata) {
     /* load a track */
     appdata->track.track = track_import(filename.get());
     if(appdata->track.track) {
-      appdata->map->track_draw(appdata->settings->trackVisibility, *appdata->track.track);
+      appdata->map->track_draw(settings->trackVisibility, *appdata->track.track);
 
-      appdata->settings->track_path = filename.get();
+      settings->track_path = filename.get();
     }
     track_menu_set(*appdata);
   }
@@ -441,15 +441,13 @@ cb_menu_track_enable_gps(appdata_t *appdata, MENU_CHECK_ITEM *item) {
 
 
 static void
-cb_menu_track_follow_gps(appdata_t *appdata, MENU_CHECK_ITEM *item) {
-  appdata->settings->follow_gps = MENU_CHECK_ITEM_ACTIVE(item);
+cb_menu_track_follow_gps(appdata_t *, MENU_CHECK_ITEM *item) {
+  settings_t::instance()->follow_gps = MENU_CHECK_ITEM_ACTIVE(item);
 }
 
 
 static void
 cb_menu_track_export(appdata_t *appdata) {
-  assert(appdata->settings != O2G_NULLPTR);
-
   /* open a file selector */
   osm2go_platform::WidgetGuard dialog(
 #ifdef FREMANTLE
@@ -465,25 +463,26 @@ cb_menu_track_export(appdata_t *appdata) {
 #endif
            );
 
-  printf("set filename <%s>\n", appdata->settings->track_path.c_str());
+  settings_t * const settings = settings_t::instance();
+  printf("set filename <%s>\n", settings->track_path.c_str());
 
-  if(!appdata->settings->track_path.empty()) {
-    if(!g_file_test(appdata->settings->track_path.c_str(), G_FILE_TEST_EXISTS)) {
-      std::string::size_type slashpos = appdata->settings->track_path.rfind('/');
+  if(!settings->track_path.empty()) {
+    if(!g_file_test(settings->track_path.c_str(), G_FILE_TEST_EXISTS)) {
+      std::string::size_type slashpos = settings->track_path.rfind('/');
       if(slashpos != std::string::npos) {
-        appdata->settings->track_path[slashpos] = '\0';  // seperate path from file
+        settings->track_path[slashpos] = '\0';  // seperate path from file
 
-	gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog.get()),
-                                            appdata->settings->track_path.c_str());
-	gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(dialog.get()),
-                                          appdata->settings->track_path.c_str() + slashpos + 1);
+        gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog.get()),
+                                            settings->track_path.c_str());
+        gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(dialog.get()),
+                                          settings->track_path.c_str() + slashpos + 1);
 
-	/* restore full filename */
-        appdata->settings->track_path[slashpos] = '/';
+        /* restore full filename */
+        settings->track_path[slashpos] = '/';
       }
     } else
       gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(dialog.get()),
-                                    appdata->settings->track_path.c_str());
+                                    settings->track_path.c_str());
   }
 
   if(gtk_dialog_run(GTK_DIALOG(dialog.get())) == GTK_FM_OK) {
@@ -496,7 +495,7 @@ cb_menu_track_export(appdata_t *appdata) {
                   _("Overwrite existing file"),
                   _("The file already exists. "
                     "Do you really want to replace it?"))) {
-        appdata->settings->track_path = filename.get();
+        settings->track_path = filename.get();
 
         assert(appdata->track.track != O2G_NULLPTR);
         track_export(appdata->track.track, filename.get());
@@ -736,16 +735,17 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
     appdata, submenu, G_CALLBACK(track_clear_cb), MainUi::MENU_ITEM_TRACK_CLEAR,
     "<OSM2Go-Main>/Track/Clear");
 
+  const settings_t * const settings = settings_t::instance();
   item = menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_track_enable_gps), MainUi::MENU_ITEM_TRACK_ENABLE_GPS,
     "<OSM2Go-Main>/Track/GPS",
     GDK_g, static_cast<GdkModifierType>(GDK_CONTROL_MASK|GDK_SHIFT_MASK));
-  gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item), appdata.settings->enable_gps ? TRUE : FALSE);
+  gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item), settings->enable_gps ? TRUE : FALSE);
 
   item = menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_track_follow_gps), MainUi::MENU_ITEM_TRACK_FOLLOW_GPS,
     "<OSM2Go-Main>/Track/Follow");
-  gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item), appdata.settings->follow_gps ? TRUE : FALSE);
+  gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item), settings->follow_gps ? TRUE : FALSE);
 
   menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_track_vis), _("Track _visibility"),
@@ -762,7 +762,7 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
 #else // !FREMANTLE
 
 struct menu_entry_t {
-  typedef gboolean (*toggle_cb)(appdata_t &appdata);
+  typedef gboolean (*toggle_cb)();
   explicit menu_entry_t(const char *l, GCallback cb = O2G_NULLPTR,
                         gboolean en = TRUE)
     : label(l), enabled(en), toggle(O2G_NULLPTR), menuindex(-1), activate_cb(cb) {}
@@ -776,12 +776,12 @@ struct menu_entry_t {
   GCallback activate_cb;
 };
 
-static gboolean enable_gps_get_toggle(appdata_t &appdata) {
-  return appdata.settings->enable_gps;
+static gboolean enable_gps_get_toggle() {
+  return settings_t::instance()->enable_gps;
 }
 
-static gboolean follow_gps_get_toggle(appdata_t &appdata) {
-  return appdata.settings->follow_gps;
+static gboolean follow_gps_get_toggle() {
+  return settings_t::instance()->follow_gps;
 }
 
 #define COLUMNS  2
@@ -817,10 +817,10 @@ static GtkWidget *app_submenu_create(appdata_t &appdata, MainUi::menu_items subm
     /* the "Style" menu entry is very special */
     /* and is being handled seperately */
     if(menu_entries->label != O2G_NULLPTR && strcmp(_("Style"), menu_entries->label) == 0) {
-      button = style_select_widget(appdata.settings->style);
+      button = style_select_widget(settings_t::instance()->style);
       g_object_set_data(G_OBJECT(dialog), "style_widget", button);
     } else if(menu_entries->label != O2G_NULLPTR && strcmp(_("Track visibility"), menu_entries->label) == 0) {
-      button = track_vis_select_widget(appdata.settings->trackVisibility);
+      button = track_vis_select_widget(settings_t::instance()->trackVisibility);
       g_object_set_data(G_OBJECT(dialog), "track_widget", button);
     } else if(!menu_entries->toggle) {
       if (menu_entries->menuindex >= 0)
@@ -841,7 +841,7 @@ static GtkWidget *app_submenu_create(appdata_t &appdata, MainUi::menu_items subm
         gtk_widget_set_sensitive(button, FALSE);
     } else {
       button = mainui->menu_item(static_cast<MainUi::menu_items>(menu_entries->menuindex));
-      hildon_check_button_set_active(HILDON_CHECK_BUTTON(button), menu_entries->toggle(appdata));
+      hildon_check_button_set_active(HILDON_CHECK_BUTTON(button), menu_entries->toggle());
 
       g_signal_connect_swapped(button, "clicked",
                                G_CALLBACK(on_submenu_entry_clicked), dialog);
@@ -874,9 +874,11 @@ static void submenu_popup(appdata_t &appdata, GtkWidget *menu) {
     style_change(appdata, combo_widget);
   } else if((combo_widget = GTK_WIDGET(g_object_get_data(G_OBJECT(menu), "track_widget"))) != O2G_NULLPTR) {
     TrackVisibility tv = static_cast<TrackVisibility>(combo_box_get_active(combo_widget));
-    if(tv != appdata.settings->trackVisibility && appdata.track.track)
+    settings_t * const settings = settings_t::instance();
+    if(tv != settings->trackVisibility && appdata.track.track) {
       appdata.map->track_draw(tv, *appdata.track.track);
-    appdata.settings->trackVisibility = tv;
+      settings->trackVisibility = tv;
+    }
   }
 }
 
@@ -996,9 +998,8 @@ appdata_t::appdata_t(map_state_t &mstate)
   , map_state(mstate)
   , map(O2G_NULLPTR)
   , osm(O2G_NULLPTR)
-  , settings(settings_t::load())
   , icons(icon_t::instance())
-  , style(style_load(settings->style))
+  , style(style_load(settings_t::instance()->style))
   , gps_state(gps_state_t::create())
 {
   memset(&track, 0, sizeof(track));
@@ -1007,6 +1008,7 @@ appdata_t::appdata_t(map_state_t &mstate)
 appdata_t::~appdata_t() {
   printf("cleaning up ...\n");
 
+  settings_t * const settings = settings_t::instance();
 #ifdef ACCELS_FILE
   const std::string &accels_file = settings->base_path + ACCELS_FILE;
   gtk_accel_map_save(accels_file.c_str());
@@ -1151,10 +1153,10 @@ static int application_run(const char *proj)
   /* user specific init */
   map_state_t map_state;
   appdata_internal appdata(map_state);
+  settings_t * const settings = settings_t::instance();
 
   if(unlikely(!appdata.style)) {
-    errorf(O2G_NULLPTR, _("Unable to load valid style %s, terminating."),
-           appdata.settings->style.c_str());
+    errorf(O2G_NULLPTR, _("Unable to load valid style %s, terminating."), settings->style.c_str());
     return -1;
   }
 
@@ -1191,11 +1193,11 @@ static int application_run(const char *proj)
   GtkBox *mainvbox = GTK_BOX(gtk_vbox_new(FALSE, 0));
 
   /* unconditionally enable the GPS */
-  appdata.settings->enable_gps = true;
+  settings->enable_gps = true;
   menu_create(appdata, mainvbox);
 
 #ifdef ACCELS_FILE
-  const std::string &accels_file = appdata.settings->base_path + ACCELS_FILE;
+  const std::string &accels_file = settings->base_path + ACCELS_FILE;
   gtk_accel_map_load(accels_file.c_str());
 #endif
 
@@ -1207,7 +1209,7 @@ static int application_run(const char *proj)
     return -1;
 
   /* if tracking is enable, start it now */
-  track_enable_gps(appdata, appdata.settings->enable_gps);
+  track_enable_gps(appdata, settings->enable_gps);
 
   GtkWidget *vbox = gtk_vbox_new(FALSE, 0);
   GtkWidget *hbox = gtk_hbox_new(FALSE, 0);
@@ -1284,14 +1286,14 @@ static int application_run(const char *proj)
     }
   }
   /* load project if one is specified in the settings */
-  if(!appdata.project && !appdata.settings->project.empty())
-    project_load(appdata, appdata.settings->project);
+  if(!appdata.project && !settings->project.empty())
+    project_load(appdata, settings->project);
 
   appdata.map->set_autosave(true);
   appdata.main_ui_enable();
 
   /* start GPS if enabled by config */
-  if(appdata.settings->enable_gps)
+  if(settings->enable_gps)
     track_enable_gps(appdata, true);
 
   /* again let the ui do its thing */
@@ -1302,7 +1304,7 @@ static int application_run(const char *proj)
   }
 
   /* start to interact with the user now that the gui is running */
-  if(unlikely(appdata.project && appdata.project->isDemo && appdata.settings->first_run_demo)) {
+  if(unlikely(appdata.project && appdata.project->isDemo && settings->first_run_demo)) {
     messagef(O2G_NULLPTR, _("Welcome to OSM2Go"),
 	     _("This is the first time you run OSM2Go. "
 	       "A demo project has been loaded to get you "

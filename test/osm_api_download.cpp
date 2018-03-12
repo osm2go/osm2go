@@ -20,7 +20,6 @@
 static char tmpdir[32] = "/tmp/osm2go_api_dl_XXXXXX";
 static const char *dev_url  = "https://master.apis.dev.openstreetmap.org/api/0.6";
 static map_state_t mapstate;
-static settings_t *settings;
 
 static project_t *
 setup_project(const std::string &projectName, std::string &project_dir)
@@ -47,7 +46,7 @@ static void download_fine()
   assert(project->bounds.valid());
   project->rserver = dev_url;
 
-  assert(osm_download(O2G_NULLPTR, settings, project.get()));
+  assert(osm_download(O2G_NULLPTR, project.get()));
 
   const std::string osmname = project->path + project->osmFile;
   assert_cmpnum(unlink(osmname.c_str()), 0);
@@ -69,7 +68,7 @@ static void download_fine_was_gz()
   project->rserver = dev_url;
   project->osmFile += ".gz";
 
-  assert(osm_download(O2G_NULLPTR, settings, project.get()));
+  assert(osm_download(O2G_NULLPTR, project.get()));
 
   const std::string osmname = project->path + project->osmFile;
   assert_cmpnum(unlink(osmname.c_str()), 0);
@@ -91,7 +90,7 @@ static void download_fine_absolute()
   project->rserver += '/';
   project->osmFile = project_dir.substr(0, project_dir.rfind('/')) + "absolute.osm.gz";
 
-  assert(osm_download(O2G_NULLPTR, settings, project.get()));
+  assert(osm_download(O2G_NULLPTR, project.get()));
 
   assert_cmpstr(project->rserver, dev_url);
 
@@ -113,7 +112,7 @@ static void download_bad_server()
 
   project->rserver = "https://invalid.invalid";
 
-  assert(!osm_download(O2G_NULLPTR, settings, project.get()));
+  assert(!osm_download(O2G_NULLPTR, project.get()));
 
   assert_cmpnum(rmdir(project_dir.c_str()), 0);
 }
@@ -128,7 +127,7 @@ static void download_bad_coords()
 
   project->rserver = dev_url;
 
-  assert(!osm_download(O2G_NULLPTR, settings, project.get()));
+  assert(!osm_download(O2G_NULLPTR, project.get()));
 
   assert_cmpnum(rmdir(project_dir.c_str()), 0);
 }
@@ -140,8 +139,6 @@ int main()
 
   curl_global_init(CURL_GLOBAL_ALL);
 
-  settings = settings_t::load();
-
   download_fine();
   download_fine_was_gz();
   download_fine_absolute();
@@ -151,6 +148,8 @@ int main()
   curl_global_cleanup();
 
   assert_cmpnum(rmdir(tmpdir), 0);
+
+  delete settings_t::instance();
 
   return 0;
 }

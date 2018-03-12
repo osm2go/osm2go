@@ -166,7 +166,7 @@ static void on_server_remove(wms_server_context_t *context) {
 
     /* de-chain */
     g_debug("de-chaining server %s", server->name.c_str());
-    std::vector<wms_server_t *> &servers = context->appdata.settings->wms_server;
+    std::vector<wms_server_t *> &servers = settings_t::instance()->wms_server;
     const std::vector<wms_server_t *>::iterator itEnd = servers.end();
     std::vector<wms_server_t *>::iterator it = std::find(servers.begin(), itEnd, server);
     assert(it != itEnd);
@@ -182,11 +182,11 @@ static void on_server_remove(wms_server_context_t *context) {
   wms_server_selected(context, context->select_server());
 }
 
-static void callback_modified_name(GtkWidget *widget, settings_t *settings) {
+static void callback_modified_name(GtkWidget *widget) {
   const gchar *name = gtk_entry_get_text(GTK_ENTRY(widget));
 
   /* search all entries except the last (which is the one we are editing) */
-  std::vector<wms_server_t *> &servers = settings->wms_server;
+  std::vector<wms_server_t *> &servers = settings_t::instance()->wms_server;
   const std::vector<wms_server_t *>::iterator itEnd = servers.end() - 1;
   std::vector<wms_server_t *>::iterator it = std::find_if(servers.begin(), itEnd,
                                                           find_wms_functor(name));
@@ -224,8 +224,7 @@ bool wms_server_edit(wms_server_context_t *context, gboolean edit_name,
   gtk_table_attach_defaults(GTK_TABLE(table), name, 1, 2, 0, 1);
   gtk_entry_set_activates_default(GTK_ENTRY(name), TRUE);
   gtk_widget_set_sensitive(GTK_WIDGET(name), edit_name);
-  g_signal_connect(name, "changed",
-                   G_CALLBACK(callback_modified_name), context->appdata.settings);
+  g_signal_connect(name, "changed", G_CALLBACK(callback_modified_name), O2G_NULLPTR);
 
   label = gtk_label_new(_("Server:"));
   GtkWidget *server = entry_new(EntryFlagsNoAutoCap);
@@ -294,7 +293,7 @@ static void on_server_add(wms_server_context_t *context) {
   wms_server_t *newserver = new wms_server_t();
   // in case the project has a server set, but the global list is empty,
   // fill the data of the project server
-  if(context->appdata.settings->wms_server.empty() &&
+  if(settings_t::instance()->wms_server.empty() &&
      !context->appdata.project->wms_server.empty())
     newserver->server = context->appdata.project->wms_server;
 
@@ -305,7 +304,7 @@ static void on_server_add(wms_server_context_t *context) {
     delete newserver;
   } else {
     /* attach a new server item to the chain */
-    context->appdata.settings->wms_server.push_back(newserver);
+    settings_t::instance()->wms_server.push_back(newserver);
 
     GtkTreeIter iter = store_fill_functor(context->store.get())(newserver);
 
@@ -331,7 +330,7 @@ static GtkWidget *wms_server_widget(wms_server_context_t *context) {
                            std::vector<list_view_column>(1, list_view_column(_("Name"), LIST_FLAG_ELLIPSIZE)),
                            context->store.get());
 
-  const std::vector<wms_server_t *> &servers = context->appdata.settings->wms_server;
+  const std::vector<wms_server_t *> &servers = settings_t::instance()->wms_server;
   std::for_each(servers.begin(), servers.end(), store_fill_functor(context->store.get()));
 
   return context->list;

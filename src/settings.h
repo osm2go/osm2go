@@ -60,7 +60,7 @@ public:
   /* and the demo was loaded */
   bool first_run_demo;
 
-  static settings_t *load();
+  static settings_t *instance();
   void save() const;
 
 private:

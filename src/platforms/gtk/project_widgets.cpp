@@ -288,7 +288,7 @@ static project_t *project_new(select_context_t *context) {
   GtkWidget *hbox = gtk_hbox_new(FALSE, 8);
   gtk_box_pack_start_defaults(GTK_BOX(hbox), gtk_label_new(_("Name:")));
 
-  name_callback_context_t name_context(dialog.get(), context->appdata.settings->base_path_fd);
+  name_callback_context_t name_context(dialog.get(), settings_t::instance()->base_path_fd);
   GtkWidget *entry = entry_new();
   gtk_box_pack_start_defaults(GTK_BOX(hbox), entry);
   g_signal_connect(entry, "changed", G_CALLBACK(callback_modified_name), &name_context);
@@ -305,7 +305,7 @@ static project_t *project_new(select_context_t *context) {
 
   std::unique_ptr<project_t> project(new project_t(context->dummystate,
                                                    gtk_entry_get_text(GTK_ENTRY(entry)),
-                                                   context->appdata.settings->base_path));
+                                                   settings_t::instance()->base_path));
   dialog.reset();
 
   /* no data downloaded yet */
@@ -417,7 +417,7 @@ static void on_project_edit(select_context_t *context) {
       cur->osmFile = project->osmFile;
 
       /* update server */
-      cur->adjustServer(project->rserver.c_str(), context->appdata.settings->server);
+      cur->adjustServer(project->rserver.c_str(), settings_t::instance()->server);
 
       /* update coordinates */
       if(cur->bounds != project->bounds) {
@@ -453,14 +453,14 @@ on_project_update_all(select_context_t *context)
   GtkTreeIter iter;
   GtkTreeModel *model = GTK_TREE_MODEL(context->store.get());
   if(gtk_tree_model_get_iter_first(model, &iter)) {
+    
     do {
       project_t *prj = O2G_NULLPTR;
       gtk_tree_model_get(model, &iter, PROJECT_COL_DATA, &prj, -1);
       /* if the project was already downloaded do it again */
       if(osm_file_exists(prj)) {
         g_debug("found %s to update", prj->name.c_str());
-        if (!osm_download(GTK_WIDGET(context->dialog),
-                     context->appdata.settings, prj))
+        if (!osm_download(GTK_WIDGET(context->dialog), prj))
           break;
       }
     } while(gtk_tree_model_iter_next(model, &iter));
@@ -686,7 +686,7 @@ static void on_edit_clicked(project_context_t *context) {
     gtk_widget_set_sensitive(context->download, pos_valid ? TRUE : FALSE);
 
     /* (re-) download area */
-    if(pos_valid && osm_download(GTK_WIDGET(context->dialog), context->appdata.settings, project))
+    if(pos_valid && osm_download(GTK_WIDGET(context->dialog), project))
       project->data_dirty = false;
     project_filesize(context);
   }
@@ -695,7 +695,7 @@ static void on_edit_clicked(project_context_t *context) {
 static void on_download_clicked(project_context_t *context) {
   project_t * const project = context->project;
 
-  if(osm_download(context->dialog, context->appdata.settings, project))
+  if(osm_download(context->dialog, project))
     project->data_dirty = false;
 
   project_filesize(context);
@@ -795,7 +795,7 @@ project_edit(select_context_t *scontext, project_t *project, bool is_new) {
   gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_left_new(_("Server:")), 0, 1, 3, 4);
   gtk_entry_set_activates_default(GTK_ENTRY(context.server), TRUE);
   gtk_entry_set_text(GTK_ENTRY(context.server),
-                     project->server(scontext->appdata.settings->server).c_str());
+                     project->server(settings_t::instance()->server).c_str());
   gtk_table_attach_defaults(GTK_TABLE(table),  context.server, 1, 4, 3, 4);
 
   gtk_table_set_row_spacing(GTK_TABLE(table), 3, 4);
@@ -851,7 +851,7 @@ project_edit(select_context_t *scontext, project_t *project, bool is_new) {
 
 #ifdef SERVER_EDITABLE
   context.project->adjustServer(gtk_entry_get_text(GTK_ENTRY(context.server)),
-                                scontext->appdata.settings->server);
+                                settings_t::instance()->server);
 #endif
 
   project->save(dialog.get());
@@ -861,8 +861,8 @@ project_edit(select_context_t *scontext, project_t *project, bool is_new) {
 
 select_context_t::select_context_t(appdata_t &a, GtkWidget *dial)
   : appdata(a)
-  , projects(project_scan(dummystate, appdata.settings->base_path,
-                          appdata.settings->base_path_fd, appdata.settings->server))
+  , projects(project_scan(dummystate, settings_t::instance()->base_path,
+                          settings_t::instance()->base_path_fd, settings_t::instance()->server))
   , dialog(dial)
   , list(O2G_NULLPTR)
 {

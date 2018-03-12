@@ -86,7 +86,7 @@ static void style_change(appdata_t &appdata, const std::string &name,
   const std::string &new_style = style_basename(it->second);
 
   /* check if style has really been changed */
-  if(appdata.settings->style == new_style)
+  if(settings_t::instance()->style == new_style)
     return;
 
   style_t *nstyle = style_load_fname(it->second);
@@ -95,7 +95,7 @@ static void style_change(appdata_t &appdata, const std::string &name,
     return;
   }
 
-  appdata.settings->style = new_style;
+  settings_t::instance()->style = new_style;
 
   appdata.map->clear(map_t::MAP_LAYER_OBJECTS_ONLY);
   /* let gtk clean up first */
@@ -127,7 +127,7 @@ void style_select(GtkWidget *parent, appdata_t &appdata) {
   gtk_dialog_set_default_response(GTK_DIALOG(dialog.get()), GTK_RESPONSE_ACCEPT);
 
   const std::map<std::string, std::string> &styles = style_scan();
-  GtkWidget *cbox = style_select_widget(appdata.settings->style, styles);
+  GtkWidget *cbox = style_select_widget(settings_t::instance()->style, styles);
 
   GtkWidget *hbox = gtk_hbox_new(FALSE, 8);
   gtk_box_pack_start_defaults(GTK_BOX(hbox), gtk_label_new(_("Style:")));

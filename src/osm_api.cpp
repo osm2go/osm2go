@@ -49,9 +49,10 @@
 #define COLOR_ERR  "red"
 #define COLOR_OK   "darkgreen"
 
-bool osm_download(osm2go_platform::Widget *parent, settings_t *settings, project_t *project)
+bool osm_download(osm2go_platform::Widget *parent, project_t *project)
 {
   printf("download osm for %s ...\n", project->name.c_str());
+  const std::string &defaultServer = settings_t::instance()->server;
 
   if(unlikely(!project->rserver.empty())) {
     if(api_adjust(project->rserver))
@@ -66,11 +67,11 @@ bool osm_download(osm2go_platform::Widget *parent, settings_t *settings, project
       project->rserver.erase(project->rserver.size() - 1);
     }
 
-    if(project->rserver == settings->server)
+    if(project->rserver == defaultServer)
       project->rserver.clear();
   }
 
-  const std::string url = project->server(settings->server) + "/map?bbox=" +
+  const std::string url = project->server(defaultServer) + "/map?bbox=" +
                           project->bounds.print(',');
 
   /* Download the new file to a new name. If something goes wrong then the
@@ -481,20 +482,20 @@ void osm_do_upload(osm_upload_context_t &context, const osm_t::dirty_t &dirty)
   context.appendf(O2G_NULLPTR, _("User comment: %s\n"), context.comment.c_str());
 
   project_t * const project = context.project;
+  settings_t * const settings = settings_t::instance();
 
   if(api_adjust(project->rserver)) {
     context.appendf(O2G_NULLPTR, _("Server URL adjusted to %s\n"),
             project->rserver.c_str());
-    if(likely(project->rserver == context.appdata.settings->server))
+    if(likely(project->rserver == settings->server))
       project->rserver.clear();
   }
 
   context.appendf(O2G_NULLPTR, _("Uploading to %s\n"),
-          project->server(context.appdata.settings->server).c_str());
+          project->server(settings->server).c_str());
 
   /* get a curl handle */
-  context.curl.reset(curl_custom_setup(context.appdata.settings->username + ":" +
-                                       context.appdata.settings->password));
+  context.curl.reset(curl_custom_setup(settings->username + ":" + settings->password));
 
   if(unlikely(!context.curl)) {
     context.appendf(O2G_NULLPTR, _("CURL init error\n"));

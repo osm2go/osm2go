@@ -305,7 +305,7 @@ void project_close(appdata_t &appdata) {
   }
 
   /* remember in settings that no project is open */
-  appdata.settings->project.clear();
+  settings_t::instance()->project.clear();
 
   /* update project file on disk */
   appdata.project->save();
@@ -360,6 +360,7 @@ static bool project_open(appdata_t &appdata, const std::string &name) {
   std::string project_file;
 
   assert(!name.empty());
+  const settings_t * const settings = settings_t::instance();
   std::string::size_type sl = name.rfind('/');
   if(unlikely(sl != std::string::npos)) {
     // load with absolute or relative path, usually only done for demo
@@ -372,15 +373,15 @@ static bool project_open(appdata_t &appdata, const std::string &name) {
       sl -= pname.size();
     project.reset(new project_t(appdata.map_state, pname, name.substr(0, sl)));
   } else {
-    project.reset(new project_t(appdata.map_state, name, appdata.settings->base_path));
+    project.reset(new project_t(appdata.map_state, name, settings->base_path));
 
     project_file = project_filename(project.get());
   }
   project->map_state.reset();
 
   printf("project file = %s\n", project_file.c_str());
-  if(unlikely(!project_read(project_file, project.get(), appdata.settings->server,
-                            appdata.settings->base_path_fd))) {
+  if(unlikely(!project_read(project_file, project.get(), settings->server,
+                            settings->base_path_fd))) {
     printf("error reading project file\n");
     return false;
   }
@@ -456,7 +457,7 @@ static bool project_load_inner(appdata_t &appdata, const std::string &name) {
 
   appdata.track_clear();
   if(track_restore(appdata))
-    appdata.map->track_draw(appdata.settings->trackVisibility, *appdata.track.track);
+    appdata.map->track_draw(settings_t::instance()->trackVisibility, *appdata.track.track);
 
   /* finally load a background if present */
   osm2go_platform::process_events();
@@ -465,7 +466,7 @@ static bool project_load_inner(appdata_t &appdata, const std::string &name) {
   wms_load(appdata);
 
   /* save the name of the project for the perferences */
-  appdata.settings->project = appdata.project->name;
+  settings_t::instance()->project = appdata.project->name;
 
   appdata.uicontrol->showNotification(O2G_NULLPTR, MainUi::Busy);
   appdata.uicontrol->showNotification(O2G_NULLPTR);

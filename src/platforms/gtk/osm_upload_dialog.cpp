@@ -60,7 +60,7 @@ osm_upload_context_t::osm_upload_context_t(appdata_t &a, osm_t *o, project_t *p,
   : appdata(a)
   , osm(o)
   , project(p)
-  , urlbasestr(p->server(a.settings->server) + "/")
+  , urlbasestr(p->server(settings_t::instance()->server) + "/")
   , comment(c)
   , src(s ? s : std::string())
 {
@@ -241,14 +241,15 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
   table_attach_label_l(table, _("Username:"), 0, 1, 0, 1);
   GtkWidget *uentry = entry_new(EntryFlagsNoAutoCap);
 
-  osm2go_platform::setEntryText(GTK_ENTRY(uentry), appdata.settings->username.c_str(),
+  settings_t * const settings = settings_t::instance();
+  osm2go_platform::setEntryText(GTK_ENTRY(uentry), settings->username.c_str(),
                                 _("<your osm username>"));
 
   gtk_table_attach_defaults(GTK_TABLE(table),  uentry, 1, 2, 0, 1);
   table_attach_label_l(table, _("Password:"), 0, 1, 1, 2);
   GtkWidget *pentry = entry_new(EntryFlagsNoAutoCap);
-  if(!appdata.settings->password.empty())
-    gtk_entry_set_text(GTK_ENTRY(pentry), appdata.settings->password.c_str());
+  if(!settings->password.empty())
+    gtk_entry_set_text(GTK_ENTRY(pentry), settings->password.c_str());
   gtk_entry_set_visibility(GTK_ENTRY(pentry), FALSE);
   gtk_table_attach_defaults(GTK_TABLE(table),  pentry, 1, 2, 1, 2);
   gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), table, FALSE, FALSE, 0);
@@ -308,8 +309,8 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
   g_debug("clicked ok");
 
   /* retrieve username and password */
-  appdata.settings->username = gtk_entry_get_text(GTK_ENTRY(uentry));
-  appdata.settings->password = gtk_entry_get_text(GTK_ENTRY(pentry));
+  settings->username = gtk_entry_get_text(GTK_ENTRY(uentry));
+  settings->password = gtk_entry_get_text(GTK_ENTRY(pentry));
 
   /* fetch comment from dialog */
   GtkTextIter start, end;
@@ -363,9 +364,8 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
     context.appendf(O2G_NULLPTR, _("Server data has been modified.\n"
                                         "Downloading updated osm data ...\n"));
 
-    if(osm_download(dialog.get(), appdata.settings, project)) {
-      context.appendf(O2G_NULLPTR, _("Download successful!\n"
-                                          "The map will be reloaded.\n"));
+    if(osm_download(dialog.get(), project)) {
+      context.appendf(O2G_NULLPTR, _("Download successful!\nThe map will be reloaded.\n"));
       project->data_dirty = false;
       reload_map = true;
     } else
