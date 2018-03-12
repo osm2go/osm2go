@@ -577,7 +577,7 @@ void wms_import(appdata_t &appdata) {
   selected_context ctx(appdata.project);
 
   if(wms_layer_dialog(&ctx, layers))
-    wms_get_selected_layer(appdata, wms, ctx.selected, layers);
+    wms_get_selected_layer(appdata, wms, layers, ctx.selected);
 
   wms_layers_free(layers);
 }
