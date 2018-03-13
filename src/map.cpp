@@ -750,10 +750,11 @@ static void map_limit_scroll(map_t *map, canvas_t::canvas_unit_t unit, int &sx, 
 
   // Data rect minimum and maximum
   // limit stops - prevent scrolling beyond these
-  int min_sy_cu = 0.95 * (map->appdata.osm->bounds.min.y - dim.height);
-  int min_sx_cu = 0.95 * (map->appdata.osm->bounds.min.x - dim.width);
-  int max_sy_cu = 0.95 * (map->appdata.osm->bounds.max.y + dim.height);
-  int max_sx_cu = 0.95 * (map->appdata.osm->bounds.max.x + dim.width);
+  const bounds_t &bounds = map->appdata.osm->bounds;
+  int min_sy_cu = 0.95 * (bounds.min.y - dim.height);
+  int min_sx_cu = 0.95 * (bounds.min.x - dim.width);
+  int max_sy_cu = 0.95 * (bounds.max.y + dim.height);
+  int max_sx_cu = 0.95 * (bounds.max.x + dim.width);
   if (sy_cu < min_sy_cu)
     sy = min_sy_cu * scale;
   else if (sy_cu > max_sy_cu)
@@ -768,11 +769,7 @@ static void map_limit_scroll(map_t *map, canvas_t::canvas_unit_t unit, int &sx, 
  * Specifically the map is allowed to be no smaller than the viewport. */
 static bool map_limit_zoom(map_t *map, double &zoom) {
     // Data rect minimum and maximum
-    int min_x, min_y, max_x, max_y;
-    min_x = map->appdata.osm->bounds.min.x;
-    min_y = map->appdata.osm->bounds.min.y;
-    max_x = map->appdata.osm->bounds.max.x;
-    max_y = map->appdata.osm->bounds.max.y;
+    const bounds_t &bounds = map->appdata.osm->bounds;
 
     /* get size of visible area in pixels and convert to meters of intended */
     /* zoom by deviding by zoom (which is basically pix/m) */
@@ -781,12 +778,18 @@ static bool map_limit_zoom(map_t *map, double &zoom) {
     double oldzoom = zoom;
     if (dim.height < dim.width) {
       int lim_h = dim.height * 0.95;
+      const int min_y = bounds.min.y;
+      const int max_y = bounds.max.y;
+
       if (max_y-min_y < lim_h) {
           double corr = (static_cast<double>(max_y) - min_y) / lim_h;
           zoom /= corr;
       }
     } else {
       int lim_w = dim.width * 0.95;
+      const int min_x = bounds.min.x;
+      const int max_x = bounds.max.x;
+
       if (max_x-min_x < lim_w) {
           double corr = (static_cast<double>(max_x) - min_x) / lim_w;
           zoom /= corr;
@@ -811,14 +814,8 @@ bool map_t::scroll_to_if_offscreen(const lpos_t lpos) {
   if(unlikely(!appdata.osm))
     return false;
 
-  int min_x, min_y, max_x, max_y;
-  min_x = appdata.osm->bounds.min.x;
-  min_y = appdata.osm->bounds.min.y;
-  max_x = appdata.osm->bounds.max.x;
-  max_y = appdata.osm->bounds.max.y;
-  if (lpos.x > max_x || lpos.x < min_x || lpos.y > max_y || lpos.y < min_y) {
-    printf("cannot scroll to (%d, %d): outside the working area\n",
-	   lpos.x, lpos.y);
+  if (!appdata.osm->bounds.contains(lpos)) {
+    printf("cannot scroll to (%d, %d): outside the working area\n", lpos.x, lpos.y);
     return false;
   }
 
