@@ -442,7 +442,7 @@ static void track_do_disable_gps(appdata_t &appdata) {
   appdata.gps_state->registerCallback(O2G_NULLPTR, O2G_NULLPTR);
 
   /* stopping the GPS removes the marker ... */
-  map_track_remove_pos(appdata);
+  appdata.map->remove_gps_position();
 
   /* ... and terminates the current segment if present */
   track_end_segment(appdata.track.track);
@@ -484,7 +484,7 @@ static int update(void *data) {
     printf("no valid position\n");
     /* end segment */
     track_end_segment(appdata.track.track);
-    map_track_remove_pos(appdata);
+    appdata.map->remove_gps_position();
   }
 
   return 1;

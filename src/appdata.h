@@ -22,7 +22,6 @@
 
 #include <osm2go_platform.h>
 
-struct canvas_item_t;
 class gps_state_t;
 class icon_t;
 class iconbar_t;
@@ -51,7 +50,6 @@ struct appdata_t {
 
   struct {
     track_t *track;
-    canvas_item_t *gps_item; // the purple circle
     int warn_cnt;
   } track;
 

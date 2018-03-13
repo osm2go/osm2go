@@ -905,13 +905,13 @@ void map_t::set_zoom(double zoom, bool update_scroll_offsets) {
                        state.scroll_offset.y);
   }
 
-  if(appdata.track.gps_item) {
+  if(gps_item) {
     float radius = style->track.width / 2.0;
     if(zoom < GPS_RADIUS_LIMIT) {
       radius *= GPS_RADIUS_LIMIT;
       radius /= zoom;
 
-      appdata.track.gps_item->set_radius(radius);
+      gps_item->set_radius(radius);
     }
   }
 }
@@ -1293,7 +1293,8 @@ void map_t::handle_motion(int x, int y)
 }
 
 map_t::map_t(appdata_t &a, map_highlight_t &hl)
-  : appdata(a)
+  : gps_item(O2G_NULLPTR)
+  , appdata(a)
   , canvas(canvas_t::create())
   , state(appdata.map_state)
   , highlight(hl)
@@ -1348,7 +1349,7 @@ void map_t::clear(clearLayers layers) {
   case MAP_LAYER_ALL:
     // add one so this is a usually illegal bitmask
     group_mask = ((1 << (CANVAS_GROUPS + 1)) - 1);
-    map_track_remove_pos(appdata);
+    remove_gps_position();
     break;
   case MAP_LAYER_OBJECTS_ONLY:
     group_mask = ((1 << CANVAS_GROUP_POLYGONS) |
@@ -1752,7 +1753,7 @@ void map_t::track_draw(TrackVisibility visibility, track_t &track) {
 
   track.clear();
   if(visibility < ShowPosition)
-    map_track_remove_pos(appdata);
+    remove_gps_position();
 
   canvas->erase(1 << CANVAS_GROUP_TRACK);
 
@@ -1781,7 +1782,7 @@ void track_t::clear() {
  */
 void map_t::track_pos(const lpos_t lpos) {
   /* remove the old item */
-  map_track_remove_pos(appdata);
+  remove_gps_position();
 
   float radius = style->track.width / 2.0;
   double zoom = canvas->get_zoom();
@@ -1790,19 +1791,16 @@ void map_t::track_pos(const lpos_t lpos) {
     radius /= zoom;
   }
 
-  appdata.track.gps_item =
-    canvas->circle_new(CANVAS_GROUP_GPS, lpos.x, lpos.y, radius, 0,
-                       style->track.gps_color, NO_COLOR);
+  gps_item = canvas->circle_new(CANVAS_GROUP_GPS, lpos.x, lpos.y, radius, 0,
+                                style->track.gps_color, NO_COLOR);
 }
 
 /**
  * @brief remove the marker item for the current GPS position
  */
-void map_track_remove_pos(appdata_t &appdata) {
-  if(appdata.track.gps_item) {
-    delete appdata.track.gps_item;
-    appdata.track.gps_item = O2G_NULLPTR;
-  }
+void map_t::remove_gps_position() {
+  delete gps_item;
+  gps_item = O2G_NULLPTR;
 }
 
 /* ------------------- map background ------------------ */

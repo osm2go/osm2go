@@ -108,6 +108,8 @@ protected:
   void button_release(int x, int y);
   void bg_adjust(int x, int y);
 
+  canvas_item_t *gps_item; ///< the purple circle
+
 public:
   enum clearLayers {
     MAP_LAYER_ALL,
@@ -219,6 +221,11 @@ public:
    * @brief show an error message that the current position is outside the project bounds
    */
   static void outside_error();
+
+  /**
+   * @brief remove the item that shows the current GPS position
+   */
+  void remove_gps_position();
 };
 
 // Gtk callbacks
@@ -226,10 +233,6 @@ void map_action_cancel(map_t *map);
 void map_action_ok(map_t *map);
 
 void map_delete_selected(map_t *map);
-
-/* track stuff */
-void map_track_remove_pos(appdata_t &appdata);
-
 
 void map_item_chain_destroy(map_item_chain_t *&chainP);
 
