@@ -167,6 +167,9 @@ void diff_save_relations::operator()(const std::pair<item_id_t, relation_t *> pa
 }
 
 void diff_save(const project_t *project, const osm_t *osm) {
+  if(unlikely(osm == O2G_NULLPTR))
+    return;
+
   const std::string &diff_name = diff_filename(project);
 
   if(osm->is_clean(true)) {

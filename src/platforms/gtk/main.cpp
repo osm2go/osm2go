@@ -194,8 +194,7 @@ cb_menu_download(appdata_t *appdata) {
   appdata->map->set_autosave(false);
 
   /* if we have valid osm data loaded: save state first */
-  if(appdata->osm)
-    diff_save(appdata->project, appdata->osm);
+  diff_save(appdata->project, appdata->osm);
 
   // download
   if(osm_download(appdata_t::window, appdata->project)) {
@@ -298,7 +297,7 @@ cb_menu_track_vis(appdata_t *appdata) {
 
 static void
 cb_menu_save_changes(appdata_t *appdata) {
-  if(likely(appdata->project && appdata->osm))
+  if(likely(appdata->project != O2G_NULLPTR))
     diff_save(appdata->project, appdata->osm);
   appdata->uicontrol->showNotification(_("Saved local changes"), MainUi::Brief);
 }
@@ -1330,7 +1329,7 @@ static int application_run(const char *proj)
   appdata.track_clear();
 
   /* save a diff if there are dirty entries */
-  if(appdata.project && appdata.osm)
+  if(appdata.project != O2G_NULLPTR)
     diff_save(appdata.project, appdata.osm);
 
   return 0;

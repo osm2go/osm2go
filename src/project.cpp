@@ -298,11 +298,9 @@ void project_close(appdata_t &appdata) {
 
   appdata.map->clear(map_t::MAP_LAYER_ALL);
 
-  if(appdata.osm) {
-    diff_save(appdata.project, appdata.osm);
-    delete appdata.osm;
-    appdata.osm = O2G_NULLPTR;
-  }
+  diff_save(appdata.project, appdata.osm);
+  delete appdata.osm;
+  appdata.osm = O2G_NULLPTR;
 
   /* remember in settings that no project is open */
   settings_t::instance()->project.clear();

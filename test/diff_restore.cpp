@@ -222,6 +222,9 @@ int main(int argc, char **argv)
     assert(diff_present(&sproject));
     rename(bpath.c_str(), bdiff.c_str());
     assert(!diff_present(&sproject));
+    // saving without OSM data should just do nothing
+    diff_save(&sproject, O2G_NULLPTR);
+    assert(!diff_present(&sproject));
 
     delete osm;
     // put the OSM data into this directory

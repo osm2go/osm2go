@@ -229,7 +229,7 @@ static gboolean map_autosave(gpointer data) {
   if(gtk_window_is_active(GTK_WINDOW(appdata_t::window))) {
     g_debug("autosave ...");
 
-    if(map->appdata.project && map->appdata.osm) {
+    if(map->appdata.project != O2G_NULLPTR) {
       track_save(map->appdata.project, map->appdata.track.track);
       diff_save(map->appdata.project, map->appdata.osm);
     }
