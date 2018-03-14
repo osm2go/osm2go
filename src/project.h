@@ -66,7 +66,9 @@ struct project_t {
   bool isDemo;         // if this is the demo project
   fdguard dirfd;       // filedescriptor of path
 
-  osm_t *parse_osm() const;
+  osm_t *osm;          ///< the OSM data
+
+  void parse_osm();
 
   /**
    * @brief save the current project to disk

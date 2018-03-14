@@ -649,14 +649,15 @@ template<bool b> void free_track_item_chain(track_seg_t &seg) {
 }
 
 static void map_free_map_item_chains(appdata_t &appdata) {
-  if(unlikely(!appdata.osm))
+  osm_t * const osm = appdata.project->osm;
+  if(unlikely(osm == O2G_NULLPTR))
     return;
 
   /* free all map_item_chains */
-  std::for_each(appdata.osm->nodes.begin(), appdata.osm->nodes.end(),
+  std::for_each(osm->nodes.begin(), osm->nodes.end(),
                 free_map_item_chain);
 
-  std::for_each(appdata.osm->ways.begin(), appdata.osm->ways.end(),
+  std::for_each(osm->ways.begin(), osm->ways.end(),
                 free_map_item_chain);
 
   if (appdata.track.track) {
@@ -750,7 +751,7 @@ static void map_limit_scroll(map_t *map, canvas_t::canvas_unit_t unit, int &sx, 
 
   // Data rect minimum and maximum
   // limit stops - prevent scrolling beyond these
-  const bounds_t &bounds = map->appdata.osm->bounds;
+  const bounds_t &bounds = map->appdata.project->osm->bounds;
   int min_sy_cu = 0.95 * (bounds.min.y - dim.height);
   int min_sx_cu = 0.95 * (bounds.min.x - dim.width);
   int max_sy_cu = 0.95 * (bounds.max.y + dim.height);
@@ -769,7 +770,7 @@ static void map_limit_scroll(map_t *map, canvas_t::canvas_unit_t unit, int &sx, 
  * Specifically the map is allowed to be no smaller than the viewport. */
 static bool map_limit_zoom(map_t *map, double &zoom) {
     // Data rect minimum and maximum
-    const bounds_t &bounds = map->appdata.osm->bounds;
+    const bounds_t &bounds = map->appdata.project->osm->bounds;
 
     /* get size of visible area in pixels and convert to meters of intended */
     /* zoom by deviding by zoom (which is basically pix/m) */
@@ -811,10 +812,10 @@ static bool map_limit_zoom(map_t *map, double &zoom) {
 bool map_t::scroll_to_if_offscreen(const lpos_t lpos) {
 
   // Ignore anything outside the working area
-  if(unlikely(!appdata.osm))
+  if(unlikely(appdata.project->osm == O2G_NULLPTR))
     return false;
 
-  if (!appdata.osm->bounds.contains(lpos)) {
+  if (!appdata.project->osm->bounds.contains(lpos)) {
     printf("cannot scroll to (%d, %d): outside the working area\n", lpos.x, lpos.y);
     return false;
   }
@@ -1078,7 +1079,8 @@ static void map_touchnode_update(map_t *map, int x, int y) {
   lpos_t pos = map->canvas->window2world(x, y);
   node_t *rnode = O2G_NULLPTR;
   hl_nodes fc(cur_node, pos, map, rnode);
-  std::for_each(map->appdata.osm->nodes.begin(), map->appdata.osm->nodes.end(), fc);
+  osm_t * const osm = map->appdata.project->osm;
+  std::for_each(osm->nodes.begin(), osm->nodes.end(), fc);
 
   if(rnode != O2G_NULLPTR) {
     delete map->touchnode;
@@ -1199,11 +1201,12 @@ void map_t::button_release(int x, int y) {
     lpos_t pos = canvas->window2world(x, y);
 
     node_t *node = O2G_NULLPTR;
-    if(!appdata.osm->bounds.contains(pos))
+    osm_t * const osm = appdata.project->osm;
+    if(!osm->bounds.contains(pos))
       outside_error();
     else {
-      node = appdata.osm->node_new(pos);
-      appdata.osm->node_attach(node);
+      node = osm->node_new(pos);
+      osm->node_attach(node);
       draw(node);
     }
     set_action(MAP_ACTION_IDLE);
@@ -1214,7 +1217,7 @@ void map_t::button_release(int x, int y) {
       map_node_select(this, node);
 
       /* let the user specify some tags for the new node */
-      info_dialog(appdata_t::window, this, appdata.osm, appdata.presets);
+      info_dialog(appdata_t::window, this, osm, appdata.presets);
     }
     break;
   }
@@ -1319,7 +1322,7 @@ map_t::~map_t()
 }
 
 void map_t::init() {
-  const bounds_t &bounds = appdata.osm->bounds;
+  const bounds_t &bounds = appdata.project->osm->bounds;
 
   /* update canvas background color */
   canvas->set_background(style->background.color);
@@ -1373,7 +1376,7 @@ void map_t::clear(clearLayers layers) {
 }
 
 void map_t::paint() {
-  osm_t * const osm = appdata.osm;
+  osm_t * const osm = appdata.project->osm;
 
   style->colorize_world(osm);
 
@@ -1473,7 +1476,7 @@ void map_action_ok(map_t *map) {
       break;
 
     node_t *node = O2G_NULLPTR;
-    osm_t * const osm = map->appdata.osm;
+    osm_t * const osm = map->appdata.project->osm;
 
     if(!osm->bounds.ll.contains(pos)) {
       map_t::outside_error();
@@ -1490,7 +1493,7 @@ void map_action_ok(map_t *map) {
       map_node_select(map, node);
 
       /* let the user specify some tags for the new node */
-      info_dialog(appdata_t::window, map, map->appdata.osm, map->appdata.presets);
+      info_dialog(appdata_t::window, map, osm, map->appdata.presets);
     }
     }
 
@@ -1511,7 +1514,7 @@ void node_deleted_from_ways::operator()(way_t *way) {
     /* this way now only contains one node and thus isn't a valid */
     /* way anymore. So it'll also get deleted (which in turn may */
     /* cause other nodes to be deleted as well) */
-    map->appdata.osm->way_delete(way);
+    map->appdata.project->osm->way_delete(way);
   } else {
     object_t object(way);
     map->redraw_item(object);
@@ -1546,11 +1549,12 @@ void map_delete_selected(map_t *map) {
   printf("request to delete %s #" ITEM_ID_FORMAT "\n",
          objtype, item.object.obj->id);
 
+  osm_t * const osm = map->appdata.project->osm;
   switch(item.object.type) {
   case object_t::NODE: {
     /* check if this node is part of a way with two nodes only. */
     /* we cannot delete this as this would also delete the way */
-    if(map->appdata.osm->find_way(short_way(item.object.node)) != O2G_NULLPTR &&
+    if(osm->find_way(short_way(item.object.node)) != O2G_NULLPTR &&
        !yes_no_f(O2G_NULLPTR, 0, _("Delete node in short way(s)?"),
                  _("Deleting this node will also delete one or more ways "
                    "since they'll contain only one node afterwards. "
@@ -1558,18 +1562,18 @@ void map_delete_selected(map_t *map) {
       return;
 
     /* and mark it "deleted" in the database */
-    const way_chain_t &chain = map->appdata.osm->node_delete(item.object.node);
+    const way_chain_t &chain = osm->node_delete(item.object.node);
     std::for_each(chain.begin(), chain.end(), node_deleted_from_ways(map));
 
     break;
   }
 
   case object_t::WAY:
-    map->appdata.osm->way_delete(item.object.way);
+    osm->way_delete(item.object.way);
     break;
 
   case object_t::RELATION:
-    map->appdata.osm->relation_delete(item.object.relation);
+    osm->relation_delete(item.object.relation);
     break;
 
   default:
@@ -1602,7 +1606,7 @@ static std::vector<lpos_t> canvas_points_init(const bounds_t &bounds,
 }
 
 void map_t::track_draw_seg(track_seg_t &seg) {
-  const bounds_t &bounds = appdata.osm->bounds;
+  const bounds_t &bounds = appdata.project->osm->bounds;
 
   /* a track_seg needs at least 2 points to be drawn */
   if (seg.track_points.empty())
@@ -1671,7 +1675,7 @@ void map_t::track_draw_seg(track_seg_t &seg) {
 /* update the last visible fragment of this segment since a */
 /* gps position may have been added */
 void map_t::track_update_seg(track_seg_t &seg) {
-  const bounds_t &bounds = appdata.osm->bounds;
+  const bounds_t &bounds = appdata.project->osm->bounds;
 
   printf("-- APPENDING TO TRACK --\n");
 
@@ -1844,8 +1848,8 @@ void map_show_all_functor::operator()(std::pair<item_id_t, way_t *> pair)
 }
 
 void map_t::show_all() {
-  std::for_each(appdata.osm->ways.begin(), appdata.osm->ways.end(),
-                map_show_all_functor(this));
+  std::map<item_id_t, way_t *> &ways = appdata.project->osm->ways;
+  std::for_each(ways.begin(), ways.end(), map_show_all_functor(this));
 
   appdata.uicontrol->setActionEnable(MainUi::MENU_ITEM_MAP_SHOW_ALL, false);
 }

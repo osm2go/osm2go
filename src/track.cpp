@@ -453,7 +453,7 @@ static int update(void *data) {
 
   /* ignore updates while no valid osm file is loaded, e.g. when switching */
   /* projects */
-  if(unlikely(!appdata.osm))
+  if(unlikely(appdata.project->osm == O2G_NULLPTR))
     return 1;
 
   /* the map is only gone of the main screen is being closed */
@@ -477,7 +477,7 @@ static int update(void *data) {
   if(pos.valid()) {
     printf("valid position %.6f/%.6f alt %.2f\n", pos.lat, pos.lon, alt);
     lpos_t lpos;
-    lpos = pos.toLpos(appdata.osm->bounds);
+    lpos = pos.toLpos(appdata.project->osm->bounds);
     if(track_append_position(appdata, pos, alt, lpos) && settings->trackVisibility >= ShowPosition)
       appdata.map->track_pos(lpos);
   } else {

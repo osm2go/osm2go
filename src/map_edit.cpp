@@ -25,6 +25,7 @@
 #include "map.h"
 #include "map_hl.h"
 #include "misc.h"
+#include "project.h"
 #include "style.h"
 #include "uicontrol.h"
 
@@ -74,6 +75,7 @@ void map_edit_way_add_segment(map_t *map, int x, int y) {
 
     /* use the existing node if one was touched */
     node_t *node = map->touchnode_get_node();
+    osm_t * const osm = map->appdata.project->osm;
     if(node != O2G_NULLPTR) {
       printf("  re-using node #" ITEM_ID_FORMAT "\n", node->id);
 
@@ -81,7 +83,7 @@ void map_edit_way_add_segment(map_t *map, int x, int y) {
 
       /* check whether this node is first or last one of a different way */
       way_t *touch_way = O2G_NULLPTR;
-      touch_way = map->appdata.osm->find_way(check_first_last_node(node));
+      touch_way = osm->find_way(check_first_last_node(node));
 
       /* remeber this way as this may be the last node placed */
       /* and we might want to join this with this other way */
@@ -106,10 +108,10 @@ void map_edit_way_add_segment(map_t *map, int x, int y) {
       /* a new node */
       map->action.ends_on = O2G_NULLPTR;
 
-      if(!map->appdata.osm->bounds.contains(pos))
+      if(!osm->bounds.contains(pos))
         map_t::outside_error();
       else
-        node = map->appdata.osm->node_new(pos);
+        node = osm->node_new(pos);
     }
 
     if(node) {
@@ -157,7 +159,7 @@ void map_unref_ways::operator()(node_t* node)
 }
 
 void map_edit_way_add_cancel(map_t *map) {
-  osm_t *osm = map->appdata.osm;
+  osm_t *osm = map->appdata.project->osm;
   assert(osm != O2G_NULLPTR);
 
   printf("  removing temporary way\n");
@@ -196,14 +198,14 @@ void map_draw_nodes::operator()(node_t* node)
     /* we can be sure that no node gets inserted twice (even if twice in */
     /* the ways chain) because it gets assigned a non-ID_ILLEGAL id when */
     /* being moved to the osm node chain */
-    map->appdata.osm->node_attach(node);
+    map->appdata.project->osm->node_attach(node);
   }
 
   map->draw(node);
 }
 
 void map_edit_way_add_ok(map_t *map) {
-  osm_t *osm = map->appdata.osm;
+  osm_t *osm = map->appdata.project->osm;
 
   assert(osm != O2G_NULLPTR);
   assert(map->action.way != O2G_NULLPTR);
@@ -224,7 +226,7 @@ void map_edit_way_add_ok(map_t *map) {
     map->action.way = map->action.extending;
   } else {
     /* now move the way itself into the main data structure */
-    map->appdata.osm->way_attach(map->action.way);
+    osm->way_attach(map->action.way);
   }
 
   /* we might already be working on the "ends_on" way as we may */
@@ -269,7 +271,7 @@ void map_edit_way_add_ok(map_t *map) {
   map->action.way = O2G_NULLPTR;
 
   /* let the user specify some tags for the new way */
-  info_dialog(appdata_t::window, map, map->appdata.osm, map->appdata.presets);
+  info_dialog(appdata_t::window, map, osm, map->appdata.presets);
 }
 
 /* -------------------------- way_node_add ----------------------- */
@@ -292,8 +294,8 @@ void map_edit_way_node_add(map_t *map, int px, int py) {
     int insert_after = item->get_segment(pos) + 1;
     if(insert_after > 0) {
       /* create new node */
-      node_t* node = map->appdata.osm->node_new(pos);
-      map->appdata.osm->node_attach(node);
+      node_t* node = map->appdata.project->osm->node_new(pos);
+      map->appdata.project->osm->node_attach(node);
 
       /* insert it into ways chain of nodes */
       way_t *way = item->object.way;
@@ -407,7 +409,7 @@ void map_edit_way_cut(map_t *map, int px, int py) {
   map_item_chain_destroy(way->map_item_chain);
 
   /* create a duplicate of the currently selected way */
-  way_t * const neww = way->split(map->appdata.osm, cut_at, cut_at_node);
+  way_t * const neww = way->split(map->appdata.project->osm, cut_at, cut_at_node);
 
   printf("original way still has %zu nodes\n", way->node_chain.size());
 
@@ -463,7 +465,7 @@ struct find_way_ends {
 };
 
 void map_edit_node_move(map_t *map, map_item_t *map_item, int ex, int ey) {
-  osm_t *osm = map->appdata.osm;
+  osm_t *osm = map->appdata.project->osm;
 
   assert(map_item->object.type == object_t::NODE);
   node_t *node = map_item->object.node;
@@ -599,7 +601,7 @@ void map_edit_way_reverse(map_t *map) {
 
   unsigned int n_tags_flipped;
   unsigned int n_roles_flipped;
-  item.object.way->reverse(map->appdata.osm, n_tags_flipped, n_roles_flipped);
+  item.object.way->reverse(map->appdata.project->osm, n_tags_flipped, n_roles_flipped);
 
   map->select_way(item.object.way);
 

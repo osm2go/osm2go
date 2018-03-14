@@ -144,8 +144,9 @@ int main(int argc, char **argv)
   project_t project(dummystate, argv[2], osm_path);
   project.osmFile = argv[2] + std::string(".osm");
 
-  osm_t *osm = project.parse_osm();
-  if(!osm) {
+  project.parse_osm();
+  osm_t *osm = project.osm;
+  if(osm == O2G_NULLPTR) {
     std::cerr << "cannot open " << argv[1] << argv[2] << ": " << strerror(errno) << std::endl;
     return 1;
   }
@@ -181,7 +182,7 @@ int main(int argc, char **argv)
   assert(osm->is_clean(true));
 
   assert(diff_present(&project));
-  unsigned int flags = diff_restore_file(&project, osm);
+  unsigned int flags = diff_restore_file(&project);
   assert_cmpnum(flags, DIFF_RESTORED | DIFF_HAS_HIDDEN);
 
   verify_diff(osm);
@@ -205,12 +206,14 @@ int main(int argc, char **argv)
     bpath.erase(bpath.rfind('/') + 1);
     // and create a new project from that
     project_t sproject(dummystate, argv[2], bpath);
+    // CAUTION: osm is shared between the projects now
+    sproject.osm = osm;
 
     // the directory is empty, there can't be any diff
-    flags = diff_restore_file(&sproject, osm);
+    flags = diff_restore_file(&sproject);
     assert_cmpnum(flags, DIFF_NONE_PRESENT);
 
-    diff_save(&sproject, osm);
+    diff_save(&sproject);
     bpath += argv[2];
     std::string bdiff = bpath;
     bpath += '/';
@@ -223,18 +226,19 @@ int main(int argc, char **argv)
     rename(bpath.c_str(), bdiff.c_str());
     assert(!diff_present(&sproject));
     // saving without OSM data should just do nothing
-    diff_save(&sproject, O2G_NULLPTR);
+    sproject.osm = O2G_NULLPTR;
+    // CAUTION: end of sharing
+    diff_save(&sproject);
     assert(!diff_present(&sproject));
 
-    delete osm;
     // put the OSM data into this directory
     const std::string origosmpath = project.path + project.osmFile;
     symlink(origosmpath.c_str(), osmpath.c_str());
     sproject.osmFile = project.osmFile;
-    osm = sproject.parse_osm();
-    assert(osm != O2G_NULLPTR);
+    sproject.parse_osm();
+    assert(sproject.osm != O2G_NULLPTR);
 
-    flags = diff_restore_file(&sproject, osm);
+    flags = diff_restore_file(&sproject);
     assert_cmpnum(flags, DIFF_RESTORED | DIFF_HAS_HIDDEN);
 
     verify_diff(osm);
@@ -248,8 +252,6 @@ int main(int argc, char **argv)
   }
 
   test_osmChange(osm, argv[3]);
-
-  delete osm;
 
   xmlCleanupParser();
 

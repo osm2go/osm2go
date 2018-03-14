@@ -25,6 +25,7 @@
 #include "map.h"
 #include "map_edit.h"
 #include "osm.h"
+#include "project.h"
 
 #include <array>
 #include <cassert>
@@ -77,7 +78,7 @@ public:
 };
 
 static void on_info_clicked(appdata_t *appdata) {
-  info_dialog(appdata_t::window, appdata->map, appdata->osm, appdata->presets);
+  info_dialog(appdata_t::window, appdata->map, appdata->project->osm, appdata->presets);
 }
 
 static void on_node_add_clicked(map_t *map) {

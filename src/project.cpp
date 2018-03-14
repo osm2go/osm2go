@@ -292,24 +292,23 @@ std::vector<project_t *> project_scan(map_state_t &ms, const std::string &base_p
 void project_close(appdata_t &appdata) {
   printf("closing current project\n");
 
+  project_t *project = appdata.project;
   /* Save track and turn off the handler callback */
-  track_save(appdata.project, appdata.track.track);
+  track_save(project, appdata.track.track);
   appdata.track_clear();
 
   appdata.map->clear(map_t::MAP_LAYER_ALL);
+  appdata.project = O2G_NULLPTR;
 
-  diff_save(appdata.project, appdata.osm);
-  delete appdata.osm;
-  appdata.osm = O2G_NULLPTR;
+  diff_save(project);
 
   /* remember in settings that no project is open */
   settings_t::instance()->project.clear();
 
   /* update project file on disk */
-  appdata.project->save();
+  project->save();
 
-  delete appdata.project;
-  appdata.project = O2G_NULLPTR;
+  delete project;
 }
 
 void project_delete(project_t *project) {
@@ -387,10 +386,10 @@ static bool project_open(appdata_t &appdata, const std::string &name) {
   /* --------- project structure ok: load its OSM file --------- */
 
   printf("project_open: loading osm %s\n", project->osmFile.c_str());
-  appdata.osm = project->parse_osm();
+  project->parse_osm();
   appdata.project = project.release();
 
-  return appdata.osm != O2G_NULLPTR;
+  return appdata.project->osm != O2G_NULLPTR;
 }
 
 static bool project_load_inner(appdata_t &appdata, const std::string &name) {
@@ -422,7 +421,7 @@ static bool project_load_inner(appdata_t &appdata, const std::string &name) {
 
   /* check if OSM data is valid */
   osm2go_platform::process_events();
-  const char *errmsg = appdata.osm->sanity_check();
+  const char *errmsg = appdata.project->osm->sanity_check();
   if(unlikely(errmsg != O2G_NULLPTR)) {
     errorf(O2G_NULLPTR, "%s", errmsg);
     printf("project/osm sanity checks failed, unloading project\n");
@@ -479,14 +478,13 @@ bool project_load(appdata_t &appdata, const std::string &name) {
 
     delete appdata.project;
     appdata.project = O2G_NULLPTR;
-    delete appdata.osm;
-    appdata.osm = O2G_NULLPTR;
   }
   return ret;
 }
 
-osm_t *project_t::parse_osm() const {
-  return osm_t::parse(path, osmFile);
+void project_t::parse_osm() {
+  delete osm;
+  osm = osm_t::parse(path, osmFile);
 }
 
 project_t::project_t(map_state_t &ms, const std::string &n, const std::string &base_path)
@@ -496,6 +494,7 @@ project_t::project_t(map_state_t &ms, const std::string &n, const std::string &b
   , data_dirty(false)
   , isDemo(false)
   , dirfd(path.c_str())
+  , osm(O2G_NULLPTR)
 {
   memset(&wms_offset, 0, sizeof(wms_offset));
   memset(&bounds, 0, sizeof(bounds));
@@ -503,6 +502,7 @@ project_t::project_t(map_state_t &ms, const std::string &n, const std::string &b
 
 project_t::~project_t()
 {
+  delete osm;
 }
 
 void project_t::adjustServer(const char *nserver, const std::string &def)

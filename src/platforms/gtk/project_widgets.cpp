@@ -425,16 +425,14 @@ static void on_project_edit(select_context_t *context) {
         cur->bounds = project->bounds;
 
         /* if we have valid osm data loaded: save state first */
-        if(appdata.osm) {
+        if(cur->osm != O2G_NULLPTR) {
           /* redraw the entire map by destroying all map items  */
-          diff_save(cur, appdata.osm);
+          diff_save(cur);
           appdata.map->clear(map_t::MAP_LAYER_ALL);
-
-          delete appdata.osm;
         }
 
         /* and load the (hopefully) new file */
-        appdata.osm = cur->parse_osm();
+        cur->parse_osm();
         diff_restore(appdata);
         appdata.map->paint();
 
@@ -632,14 +630,11 @@ static void project_filesize(project_context_t *context) {
 /* a project may currently be open. "unsaved changes" then also */
 /* means that the user may have unsaved changes */
 bool project_context_t::active_n_dirty() const {
-
-  if(!appdata.osm)
-    return false;
-
-  if(appdata.project && appdata.project->name == project->name) {
+  if(appdata.project != O2G_NULLPTR && appdata.project->osm != O2G_NULLPTR &&
+     appdata.project->name == project->name) {
     g_debug("editing the currently open project");
 
-    return !appdata.osm->is_clean(true);
+    return !appdata.project->osm->is_clean(true);
   }
 
   return false;
@@ -721,8 +716,7 @@ static void on_diff_remove_clicked(project_context_t *context) {
 
       /* just reload the map */
       appdata.map->clear(map_t::MAP_LAYER_OBJECTS_ONLY);
-      delete appdata.osm;
-      appdata.osm = appdata.project->parse_osm();
+      appdata.project->parse_osm();
       appdata.map->paint();
     }
 

@@ -55,7 +55,6 @@ struct appdata_t {
 
   map_state_t &map_state;
   map_t *map;
-  osm_t *osm;
   icon_t &icons;
   style_t *style;
   gps_state_t * const gps_state;

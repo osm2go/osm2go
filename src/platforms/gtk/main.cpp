@@ -97,7 +97,7 @@ struct appdata_internal : public appdata_t {
 /* disable/enable main screen control dependant on presence of open project */
 void appdata_t::main_ui_enable() {
   bool project_valid = (project != O2G_NULLPTR);
-  gboolean osm_valid = (osm != O2G_NULLPTR) ? TRUE : FALSE;
+  gboolean osm_valid = (project_valid && (project->osm != O2G_NULLPTR)) ? TRUE : FALSE;
 
   if(unlikely(window == O2G_NULLPTR)) {
     printf("%s: main window gone\n", __PRETTY_FUNCTION__);
@@ -176,12 +176,13 @@ cb_menu_quit() {
 
 static void
 cb_menu_upload(appdata_t *appdata) {
-  if(!appdata->osm || !appdata->project) return;
+  if(appdata->project == O2G_NULLPTR || appdata->project->osm == O2G_NULLPTR)
+    return;
 
   if(appdata->project->check_demo())
     return;
 
-  osm_upload(*appdata, appdata->osm, appdata->project);
+  osm_upload(*appdata, appdata->project);
 }
 
 static void
@@ -194,19 +195,17 @@ cb_menu_download(appdata_t *appdata) {
   appdata->map->set_autosave(false);
 
   /* if we have valid osm data loaded: save state first */
-  diff_save(appdata->project, appdata->osm);
+  diff_save(appdata->project);
 
   // download
+  bool hasMap = appdata->project->osm != O2G_NULLPTR;
   if(osm_download(appdata_t::window, appdata->project)) {
-    if(appdata->osm) {
+    if(hasMap)
       /* redraw the entire map by destroying all map items and redrawing them */
       appdata->map->clear(map_t::MAP_LAYER_OBJECTS_ONLY);
 
-      delete appdata->osm;
-    }
-
     appdata->uicontrol->showNotification(_("Drawing"), MainUi::Busy);
-    appdata->osm = appdata->project->parse_osm();
+    appdata->project->parse_osm();
     diff_restore(*appdata);
     appdata->map->paint();
     appdata->uicontrol->showNotification(O2G_NULLPTR, MainUi::Busy);
@@ -298,7 +297,7 @@ cb_menu_track_vis(appdata_t *appdata) {
 static void
 cb_menu_save_changes(appdata_t *appdata) {
   if(likely(appdata->project != O2G_NULLPTR))
-    diff_save(appdata->project, appdata->osm);
+    diff_save(appdata->project);
   appdata->uicontrol->showNotification(_("Saved local changes"), MainUi::Brief);
 }
 #endif
@@ -306,7 +305,7 @@ cb_menu_save_changes(appdata_t *appdata) {
 static void
 cb_menu_undo_changes(appdata_t *appdata) {
   // if there is nothing to clean then don't ask
-  if (!diff_present(appdata->project) && appdata->osm->is_clean(true))
+  if (!diff_present(appdata->project) && appdata->project->osm->is_clean(true))
     return;
 
   if(!yes_no_f(O2G_NULLPTR, 0, _("Undo all changes?"),
@@ -315,11 +314,8 @@ cb_menu_undo_changes(appdata_t *appdata) {
 
   appdata->map->clear(map_t::MAP_LAYER_OBJECTS_ONLY);
 
-  delete appdata->osm;
-  appdata->osm = O2G_NULLPTR;
-
   diff_remove(appdata->project);
-  appdata->osm = appdata->project->parse_osm();
+  appdata->project->parse_osm();
   appdata->map->paint();
 
   appdata->uicontrol->showNotification(_("Undo all changes"), MainUi::Brief);
@@ -328,7 +324,7 @@ cb_menu_undo_changes(appdata_t *appdata) {
 static void
 cb_menu_osm_relations(appdata_t *appdata) {
   /* list relations of all objects */
-  relation_list(appdata_t::window, appdata->map, appdata->osm, appdata->presets);
+  relation_list(appdata_t::window, appdata->map, appdata->project->osm, appdata->presets);
 }
 
 #ifndef FREMANTLE
@@ -996,7 +992,6 @@ appdata_t::appdata_t(map_state_t &mstate)
   , presets(O2G_NULLPTR)
   , map_state(mstate)
   , map(O2G_NULLPTR)
-  , osm(O2G_NULLPTR)
   , icons(icon_t::instance())
   , style(style_load(settings_t::instance()->style))
   , gps_state(gps_state_t::create())
@@ -1028,9 +1023,6 @@ appdata_t::~appdata_t() {
   /* save project file */
   if(project)
     project->save(O2G_NULLPTR);
-
-  delete osm;
-  osm = O2G_NULLPTR;
 
   josm_presets_free(presets);
 
@@ -1091,7 +1083,8 @@ static void on_window_destroy() {
 
 static gboolean on_window_key_press(appdata_internal *appdata, GdkEventKey *event) {
   /* forward unprocessed key presses to map */
-  if(appdata->project != O2G_NULLPTR && appdata->osm != O2G_NULLPTR && event->type == GDK_KEY_PRESS)
+  if(appdata->project != O2G_NULLPTR && appdata->project->osm != O2G_NULLPTR &&
+     event->type == GDK_KEY_PRESS)
     return appdata->map->key_press_event(event->keyval) ? TRUE : FALSE;
 
   return FALSE;
@@ -1329,8 +1322,8 @@ static int application_run(const char *proj)
   appdata.track_clear();
 
   /* save a diff if there are dirty entries */
-  if(appdata.project != O2G_NULLPTR)
-    diff_save(appdata.project, appdata.osm);
+  if(likely(appdata.project != O2G_NULLPTR))
+    diff_save(appdata.project);
 
   return 0;
 }

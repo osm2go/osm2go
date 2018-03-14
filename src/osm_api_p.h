@@ -37,7 +37,7 @@ struct project_t;
 
 class osm_upload_context_t {
 public:
-  osm_upload_context_t(appdata_t &a, osm_t *o, project_t *p, const char *c, const char *s);
+  osm_upload_context_t(appdata_t &a, project_t *p, const char *c, const char *s);
 
   appdata_t &appdata;
   osm_t * const osm;

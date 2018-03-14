@@ -50,15 +50,15 @@ using namespace osm2go_platform;
 
 class osm_upload_context_gtk : public osm_upload_context_t {
 public:
-  osm_upload_context_gtk(appdata_t &a, osm_t *o, project_t *p, const char *c, const char *s);
+  osm_upload_context_gtk(appdata_t &a, project_t *p, const char *c, const char *s);
 
   GtkTextBuffer * const logbuffer;
   GtkTextView * const logview;
 };
 
-osm_upload_context_t::osm_upload_context_t(appdata_t &a, osm_t *o, project_t *p, const char *c, const char *s)
+osm_upload_context_t::osm_upload_context_t(appdata_t &a, project_t *p, const char *c, const char *s)
   : appdata(a)
-  , osm(o)
+  , osm(p->osm)
   , project(p)
   , urlbasestr(p->server(settings_t::instance()->server) + "/")
   , comment(c)
@@ -93,8 +93,8 @@ void osm_upload_context_t::appendf(const char *colname, const char *fmt, ...) {
   process_events();
 }
 
-osm_upload_context_gtk::osm_upload_context_gtk(appdata_t &a, osm_t *o, project_t *p, const char *c, const char *s)
-  : osm_upload_context_t(a, o, p, c, s)
+osm_upload_context_gtk::osm_upload_context_gtk(appdata_t &a, project_t *p, const char *c, const char *s)
+  : osm_upload_context_t(a, p, c, s)
   , logbuffer(gtk_text_buffer_new(O2G_NULLPTR))
   , logview(GTK_TEXT_VIEW(gtk_text_view_new_with_buffer(logbuffer)))
 {
@@ -194,8 +194,8 @@ static void info_more(const osm_t::dirty_t &context, GtkWidget *parent) {
 }
 #endif
 
-void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
-  if(unlikely(osm->uploadPolicy == osm_t::Upload_Blocked)) {
+void osm_upload(appdata_t &appdata, project_t *project) {
+  if(unlikely(project->osm->uploadPolicy == osm_t::Upload_Blocked)) {
     g_debug("Upload prohibited");
     return;
   }
@@ -205,7 +205,7 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
   /* upload config and confirmation dialog */
 
   /* count objects */
-  osm_t::dirty_t dirty = osm->modified();
+  osm_t::dirty_t dirty = project->osm->modified();
 
   g_debug("nodes:     new %2u, dirty %2u, deleted %2zu",
           dirty.nodes.added, dirty.nodes.dirty, dirty.nodes.deleted.size());
@@ -324,7 +324,7 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
     project->rserver.erase(project->rserver.size() - 1);
   }
 
-  osm_upload_context_gtk context(appdata, osm, project, text,
+  osm_upload_context_gtk context(appdata, project, text,
                                  gtk_entry_get_text(GTK_ENTRY(sentry)));
 
   dialog.reset();
@@ -381,19 +381,18 @@ void osm_upload(appdata_t &appdata, osm_t *osm, project_t *project) {
 
       context.appendf(O2G_NULLPTR, _("Reloading map ...\n"));
 
-      if(!appdata.osm->is_clean(false))
+      if(!appdata.project->osm->is_clean(false))
         context.appendf(COLOR_ERR, _("*** DIFF IS NOT CLEAN ***\n"
                                           "Something went wrong during upload,\n"
                                           "proceed with care!\n"));
 
       /* redraw the entire map by destroying all map items and redrawing them */
       context.appendf(O2G_NULLPTR, _("Cleaning up ...\n"));
-      diff_save(appdata.project, appdata.osm);
+      diff_save(appdata.project);
       appdata.map->clear(map_t::MAP_LAYER_OBJECTS_ONLY);
-      delete appdata.osm;
 
       context.appendf(O2G_NULLPTR, _("Loading OSM ...\n"));
-      appdata.osm = appdata.project->parse_osm();
+      appdata.project->parse_osm();
       context.appendf(O2G_NULLPTR, _("Applying diff ...\n"));
       diff_restore(appdata);
       context.appendf(O2G_NULLPTR, _("Painting ...\n"));

@@ -77,10 +77,8 @@ static gboolean map_destroy_event(map_t *map) {
   return FALSE;
 }
 
-static gboolean map_scroll_event(GtkWidget *, GdkEventScroll *event, appdata_t *appdata) {
-  map_t *map = appdata->map;
-
-  if(!appdata->osm)
+static gboolean map_scroll_event(GtkWidget *, GdkEventScroll *event, map_t *map) {
+  if(map->appdata.project->osm == O2G_NULLPTR)
     return FALSE;
 
   if(event->type == GDK_SCROLL && map) {
@@ -97,16 +95,17 @@ static gboolean map_scroll_event(GtkWidget *, GdkEventScroll *event, appdata_t *
 
 /* move the background image (wms data) during wms adjustment */
 void map_t::bg_adjust(int x, int y) {
-  assert(appdata.osm != O2G_NULLPTR);
+  const osm_t * const osm = appdata.project->osm;
+  assert(osm != O2G_NULLPTR);
 
-  x += appdata.osm->bounds.min.x + bg.offset.x - pen_down.at.x;
-  y += appdata.osm->bounds.min.y + bg.offset.y - pen_down.at.y;
+  x += osm->bounds.min.x + bg.offset.x - pen_down.at.x;
+  y += osm->bounds.min.y + bg.offset.y - pen_down.at.y;
 
   static_cast<map_internal *>(this)->background.item->image_move(x, y, bg.scale.x, bg.scale.y);
 }
 
 gboolean map_internal::map_button_event(map_internal *map, GdkEventButton *event) {
-  if(unlikely(!map->appdata.osm))
+  if(unlikely(map->appdata.project->osm == O2G_NULLPTR))
     return FALSE;
 
   if(event->button == 1) {
@@ -126,7 +125,8 @@ gboolean map_internal::map_motion_notify_event(GtkWidget *, GdkEventMotion *even
   gint x, y;
   GdkModifierType state;
 
-  if(!map->appdata.osm) return FALSE;
+  if(map->appdata.project->osm == O2G_NULLPTR)
+    return FALSE;
 
 #if 0 // def FREMANTLE
   /* reduce update frequency on hildon to keep screen update fluid */
@@ -180,7 +180,7 @@ bool map_t::key_press_event(unsigned int keyval) {
       map_action_ok(this);
     /* otherwise if info is enabled call that */
     else if(appdata.iconbar->isInfoEnabled())
-      info_dialog(appdata_t::window, this, appdata.osm, appdata.presets);
+      info_dialog(appdata_t::window, this, appdata.project->osm, appdata.presets);
     break;
 
   case GDK_Escape:   // same as HILDON_HARDKEY_ESC
@@ -229,9 +229,9 @@ static gboolean map_autosave(gpointer data) {
   if(gtk_window_is_active(GTK_WINDOW(appdata_t::window))) {
     g_debug("autosave ...");
 
-    if(map->appdata.project != O2G_NULLPTR) {
+    if(likely(map->appdata.project != O2G_NULLPTR)) {
       track_save(map->appdata.project, map->appdata.track.track);
-      diff_save(map->appdata.project, map->appdata.osm);
+      diff_save(map->appdata.project);
     }
   } else
     g_debug("autosave suppressed");
@@ -251,7 +251,7 @@ map_internal::map_internal(appdata_t &a)
   g_signal_connect(canvas->widget, "motion_notify_event",
                    G_CALLBACK(map_motion_notify_event), this);
   g_signal_connect(canvas->widget, "scroll_event",
-                   G_CALLBACK(map_scroll_event), &appdata);
+                   G_CALLBACK(map_scroll_event), this);
 
   g_signal_connect_swapped(canvas->widget, "destroy",
                            G_CALLBACK(map_destroy_event), this);
@@ -273,9 +273,10 @@ void map_action_cancel(map_t *map) {
     map->bg.offset.x = map->appdata.project->wms_offset.x;
     map->bg.offset.y = map->appdata.project->wms_offset.y;
 
-    int x = map->appdata.osm->bounds.min.x + map->bg.offset.x;
-    int y = map->appdata.osm->bounds.min.y + map->bg.offset.y;
-    static_cast<map_internal *>(map)->background.item->image_move(x, y, map->bg.scale.x, map->bg.scale.y);
+    const bounds_t &bounds = map->appdata.project->osm->bounds;
+    static_cast<map_internal *>(map)->background.item->image_move(bounds.min.x + map->bg.offset.x,
+                                                                  bounds.min.y + map->bg.offset.y,
+                                                                  map->bg.scale.x, map->bg.scale.y);
     break;
   }
 
@@ -309,7 +310,7 @@ static void map_bg_item_destroy_event(gpointer data) {
 }
 
 bool map_t::set_bg_image(const std::string &filename) {
-  const bounds_t &bounds = appdata.osm->bounds;
+  const bounds_t &bounds = appdata.project->osm->bounds;
 
   remove_bg_image();
 
@@ -330,8 +331,8 @@ bool map_t::set_bg_image(const std::string &filename) {
 
   m->background.item->destroy_connect(map_bg_item_destroy_event, this);
 
-  int x = appdata.osm->bounds.min.x + bg.offset.x;
-  int y = appdata.osm->bounds.min.y + bg.offset.y;
+  int x = bounds.min.x + bg.offset.x;
+  int y = bounds.min.y + bg.offset.y;
   m->background.item->image_move(x, y, bg.scale.x, bg.scale.y);
 
   return true;

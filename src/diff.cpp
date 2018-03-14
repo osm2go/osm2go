@@ -166,12 +166,13 @@ void diff_save_relations::operator()(const std::pair<item_id_t, relation_t *> pa
   diff_save_tags(relation, node_rel);
 }
 
-void diff_save(const project_t *project, const osm_t *osm) {
-  if(unlikely(osm == O2G_NULLPTR))
+void diff_save(const project_t *project) {
+  if(unlikely(project->osm == O2G_NULLPTR))
     return;
 
   const std::string &diff_name = diff_filename(project);
 
+  osm_t *osm = project->osm;
   if(osm->is_clean(true)) {
     printf("data set is clean, removing diff if present\n");
     unlinkat(project->dirfd, diff_name.c_str(), 0);
@@ -503,8 +504,9 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
   }
 }
 
-unsigned int diff_restore_file(const project_t *project, osm_t *osm) {
+unsigned int diff_restore_file(const project_t *project) {
   struct stat st;
+  osm_t * const osm = project->osm;
 
   /* first try to open a backup which is only present if saving the */
   /* actual diff didn't succeed */
@@ -586,10 +588,10 @@ unsigned int diff_restore_file(const project_t *project, osm_t *osm) {
 }
 
 void diff_restore(appdata_t &appdata) {
-  if(unlikely(!appdata.osm))
+  if(unlikely(appdata.project->osm == O2G_NULLPTR))
     return;
 
-  unsigned int flags = diff_restore_file(appdata.project, appdata.osm);
+  unsigned int flags = diff_restore_file(appdata.project);
   if(flags & DIFF_HAS_HIDDEN) {
     printf("hidden flags have been restored, enable show_add menu\n");
 
