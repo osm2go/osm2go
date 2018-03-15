@@ -181,8 +181,8 @@ int main(int argc, char **argv)
 
   assert(osm->is_clean(true));
 
-  assert(diff_present(&project));
-  unsigned int flags = diff_restore_file(&project);
+  assert(project.diff_file_present());
+  unsigned int flags = project.diff_restore();
   assert_cmpnum(flags, DIFF_RESTORED | DIFF_HAS_HIDDEN);
 
   verify_diff(osm);
@@ -210,10 +210,10 @@ int main(int argc, char **argv)
     sproject.osm = osm;
 
     // the directory is empty, there can't be any diff
-    flags = diff_restore_file(&sproject);
+    flags = sproject.diff_restore();
     assert_cmpnum(flags, DIFF_NONE_PRESENT);
 
-    diff_save(&sproject);
+    sproject.diff_save();
     bpath += argv[2];
     std::string bdiff = bpath;
     bpath += '/';
@@ -222,14 +222,14 @@ int main(int argc, char **argv)
     bpath += "diff";
 
     bdiff += "/backup.diff";
-    assert(diff_present(&sproject));
+    assert(sproject.diff_file_present());
     rename(bpath.c_str(), bdiff.c_str());
-    assert(!diff_present(&sproject));
+    assert(!sproject.diff_file_present());
     // saving without OSM data should just do nothing
     sproject.osm = O2G_NULLPTR;
     // CAUTION: end of sharing
-    diff_save(&sproject);
-    assert(!diff_present(&sproject));
+    sproject.diff_save();
+    assert(!sproject.diff_file_present());
 
     // put the OSM data into this directory
     const std::string origosmpath = project.path + project.osmFile;
@@ -238,7 +238,7 @@ int main(int argc, char **argv)
     sproject.parse_osm();
     assert(sproject.osm != O2G_NULLPTR);
 
-    flags = diff_restore_file(&sproject);
+    flags = sproject.diff_restore();
     assert_cmpnum(flags, DIFF_RESTORED | DIFF_HAS_HIDDEN);
 
     verify_diff(osm);

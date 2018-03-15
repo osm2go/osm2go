@@ -195,7 +195,7 @@ cb_menu_download(appdata_t *appdata) {
   appdata->map->set_autosave(false);
 
   /* if we have valid osm data loaded: save state first */
-  diff_save(appdata->project);
+  appdata->project->diff_save();
 
   // download
   bool hasMap = appdata->project->osm != O2G_NULLPTR;
@@ -206,7 +206,7 @@ cb_menu_download(appdata_t *appdata) {
 
     appdata->uicontrol->showNotification(_("Drawing"), MainUi::Busy);
     appdata->project->parse_osm();
-    diff_restore(*appdata);
+    diff_restore(appdata->project, appdata->uicontrol);
     appdata->map->paint();
     appdata->uicontrol->showNotification(O2G_NULLPTR, MainUi::Busy);
   }
@@ -297,15 +297,16 @@ cb_menu_track_vis(appdata_t *appdata) {
 static void
 cb_menu_save_changes(appdata_t *appdata) {
   if(likely(appdata->project != O2G_NULLPTR))
-    diff_save(appdata->project);
+    appdata->project->diff_save();
   appdata->uicontrol->showNotification(_("Saved local changes"), MainUi::Brief);
 }
 #endif
 
 static void
 cb_menu_undo_changes(appdata_t *appdata) {
+  project_t * const project = appdata->project;
   // if there is nothing to clean then don't ask
-  if (!diff_present(appdata->project) && appdata->project->osm->is_clean(true))
+  if (!project->diff_file_present() && project->osm->is_clean(true))
     return;
 
   if(!yes_no_f(O2G_NULLPTR, 0, _("Undo all changes?"),
@@ -314,8 +315,8 @@ cb_menu_undo_changes(appdata_t *appdata) {
 
   appdata->map->clear(map_t::MAP_LAYER_OBJECTS_ONLY);
 
-  diff_remove(appdata->project);
-  appdata->project->parse_osm();
+  project->diff_remove_file();
+  project->parse_osm();
   appdata->map->paint();
 
   appdata->uicontrol->showNotification(_("Undo all changes"), MainUi::Brief);
@@ -1323,7 +1324,7 @@ static int application_run(const char *proj)
 
   /* save a diff if there are dirty entries */
   if(likely(appdata.project != O2G_NULLPTR))
-    diff_save(appdata.project);
+    appdata.project->diff_save();
 
   return 0;
 }

@@ -388,13 +388,13 @@ void osm_upload(appdata_t &appdata, project_t *project) {
 
       /* redraw the entire map by destroying all map items and redrawing them */
       context.appendf(O2G_NULLPTR, _("Cleaning up ...\n"));
-      diff_save(appdata.project);
+      appdata.project->diff_save();
       appdata.map->clear(map_t::MAP_LAYER_OBJECTS_ONLY);
 
       context.appendf(O2G_NULLPTR, _("Loading OSM ...\n"));
       appdata.project->parse_osm();
       context.appendf(O2G_NULLPTR, _("Applying diff ...\n"));
-      diff_restore(appdata);
+      diff_restore(appdata.project, appdata.uicontrol);
       context.appendf(O2G_NULLPTR, _("Painting ...\n"));
       appdata.map->paint();
       context.appendf(O2G_NULLPTR, _("Done!\n"));

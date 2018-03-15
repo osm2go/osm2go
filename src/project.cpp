@@ -300,7 +300,7 @@ void project_close(appdata_t &appdata) {
   appdata.map->clear(map_t::MAP_LAYER_ALL);
   appdata.project = O2G_NULLPTR;
 
-  diff_save(project);
+  project->diff_save();
 
   /* remember in settings that no project is open */
   settings_t::instance()->project.clear();
@@ -438,7 +438,7 @@ static bool project_load_inner(appdata_t &appdata, const std::string &name) {
   if(unlikely(appdata_t::window == O2G_NULLPTR))
     return false;
 
-  diff_restore(appdata);
+  diff_restore(appdata.project, appdata.uicontrol);
 
   /* prepare colors etc, draw data and adjust scroll/zoom settings */
   osm2go_platform::process_events();

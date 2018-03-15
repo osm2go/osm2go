@@ -341,7 +341,7 @@ project_get_status_icon_stock_id(const project_t *current,
     return GTK_STOCK_OPEN;
   else if(!osm_file_exists(project))
     return GTK_STOCK_DIALOG_WARNING;
-  else if(diff_present(project))
+  else if(project->diff_file_present())
     return GTK_STOCK_PROPERTIES;
   else
     return GTK_STOCK_FILE;
@@ -427,13 +427,13 @@ static void on_project_edit(select_context_t *context) {
         /* if we have valid osm data loaded: save state first */
         if(cur->osm != O2G_NULLPTR) {
           /* redraw the entire map by destroying all map items  */
-          diff_save(cur);
+          cur->diff_save();
           appdata.map->clear(map_t::MAP_LAYER_ALL);
         }
 
         /* and load the (hopefully) new file */
         cur->parse_osm();
-        diff_restore(appdata);
+        diff_restore(appdata.project, appdata.uicontrol);
         appdata.map->paint();
 
         appdata.main_ui_enable();
@@ -643,7 +643,7 @@ bool project_context_t::active_n_dirty() const {
 static void project_diffstat(project_context_t &context) {
   const char *str;
 
-  if(diff_present(context.project) || context.active_n_dirty()) {
+  if(context.project->diff_file_present() || context.active_n_dirty()) {
     /* this should prevent the user from changing the area */
     str = _("unsaved changes pending");
   } else
@@ -655,7 +655,7 @@ static void project_diffstat(project_context_t &context) {
 static void on_edit_clicked(project_context_t *context) {
   project_t * const project = context->project;
 
-  if(diff_present(project) || context->active_n_dirty())
+  if(project->diff_file_present() || context->active_n_dirty())
     messagef(context->dialog,
 	     _("Pending changes"),
 	     _("You have pending changes in this project.\n\n"
@@ -705,7 +705,7 @@ static void on_diff_remove_clicked(project_context_t *context) {
 	      _("Do you really want to discard your changes? This will "
 		"permanently undo all changes you have made so far and which "
 		"you did not upload yet."))) {
-    diff_remove(project);
+    project->diff_remove_file();
 
     /* if this is the currently open project, we need to undo */
     /* the map changes as well */
@@ -810,7 +810,7 @@ project_edit(select_context_t *scontext, project_t *project, bool is_new) {
   gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_left_new(_("Changes:")), 0, 1, 5, 6);
   project_diffstat(context);
   gtk_table_attach_defaults(GTK_TABLE(table), context.diff_stat, 1, 4, 5, 6);
-  if(!diff_present(project) && !context.active_n_dirty())
+  if(!project->diff_file_present() && !context.active_n_dirty())
     gtk_widget_set_sensitive(context.diff_remove,  FALSE);
   g_signal_connect_swapped(context.diff_remove, "clicked",
                            G_CALLBACK(on_diff_remove_clicked), &context);

@@ -26,7 +26,7 @@
 
 #include <osm2go_platform.h>
 
-struct appdata_t;
+class MainUi;
 struct project_t;
 
 enum diff_restore_results {
@@ -38,11 +38,7 @@ enum diff_restore_results {
   DIFF_HAS_HIDDEN = (1 << 5), ///< some of the object have the hidden flag set
 };
 
-void diff_save(const project_t *project) __attribute__((nonnull(1)));
-unsigned int diff_restore_file(const project_t *project) __attribute__((nonnull(1)));
-void diff_restore(appdata_t &appdata);
-bool diff_present(const project_t *project);
-void diff_remove(const project_t *project);
+void diff_restore(project_t *project, MainUi *uicontrol);
 
 /**
  * @brief create an empty osmChange document

@@ -231,7 +231,7 @@ static gboolean map_autosave(gpointer data) {
 
     if(likely(map->appdata.project != O2G_NULLPTR)) {
       track_save(map->appdata.project, map->appdata.track.track);
-      diff_save(map->appdata.project);
+      map->appdata.project->diff_save();
     }
   } else
     g_debug("autosave suppressed");

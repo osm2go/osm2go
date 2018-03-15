@@ -23,7 +23,6 @@
 
 #include "diff.h"
 
-#include "appdata.h"
 #include "fdguard.h"
 #include "misc.h"
 #include "osm.h"
@@ -166,16 +165,15 @@ void diff_save_relations::operator()(const std::pair<item_id_t, relation_t *> pa
   diff_save_tags(relation, node_rel);
 }
 
-void diff_save(const project_t *project) {
-  if(unlikely(project->osm == O2G_NULLPTR))
+void project_t::diff_save() const {
+  if(unlikely(osm == O2G_NULLPTR))
     return;
 
-  const std::string &diff_name = diff_filename(project);
+  const std::string &diff_name = diff_filename(this);
 
-  osm_t *osm = project->osm;
   if(osm->is_clean(true)) {
     printf("data set is clean, removing diff if present\n");
-    unlinkat(project->dirfd, diff_name.c_str(), 0);
+    unlinkat(dirfd, diff_name.c_str(), 0);
     return;
   }
 
@@ -183,11 +181,11 @@ void diff_save(const project_t *project) {
 
   /* write the diff to a new file so the original one needs intact until
    * saving is completed */
-  const std::string ndiff = project->path + "save.diff";
+  const std::string ndiff = path + "save.diff";
 
   std::unique_ptr<xmlDoc, xmlDocDelete> doc(xmlNewDoc(BAD_CAST "1.0"));
   xmlNodePtr root_node = xmlNewNode(O2G_NULLPTR, BAD_CAST "diff");
-  xmlNewProp(root_node, BAD_CAST "name", BAD_CAST project->name.c_str());
+  xmlNewProp(root_node, BAD_CAST "name", BAD_CAST name.c_str());
   xmlDocSetRootElement(doc.get(), root_node);
 
   std::for_each(osm->nodes.begin(), osm->nodes.end(), diff_save_nodes(root_node));
@@ -198,7 +196,7 @@ void diff_save(const project_t *project) {
 
   /* if we reach this point writing the new file worked and we */
   /* can move it over the real file */
-  renameat(-1, ndiff.c_str(), project->dirfd, diff_name.c_str());
+  renameat(-1, ndiff.c_str(), dirfd, diff_name.c_str());
 }
 
 static item_id_t xml_get_prop_int(xmlNode *node, const char *prop, item_id_t def) {
@@ -504,21 +502,20 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
   }
 }
 
-unsigned int diff_restore_file(const project_t *project) {
+unsigned int project_t::diff_restore() {
   struct stat st;
-  osm_t * const osm = project->osm;
 
   /* first try to open a backup which is only present if saving the */
   /* actual diff didn't succeed */
   const char *backupfn = "backup.diff";
   std::string diff_name;
-  if(unlikely(fstatat(project->dirfd, backupfn, &st, 0) == 0 && S_ISREG(st.st_mode))) {
+  if(unlikely(fstatat(dirfd, backupfn, &st, 0) == 0 && S_ISREG(st.st_mode))) {
     printf("diff backup present, loading it instead of real diff ...\n");
     diff_name = backupfn;
   } else {
-    diff_name = diff_filename(project);
+    diff_name = diff_filename(this);
 
-    if(fstatat(project->dirfd, diff_name.c_str(), &st, 0) != 0 || !S_ISREG(st.st_mode)) {
+    if(fstatat(dirfd, diff_name.c_str(), &st, 0) != 0 || !S_ISREG(st.st_mode)) {
       printf("no diff present!\n");
       return DIFF_NONE_PRESENT;
     }
@@ -527,7 +524,7 @@ unsigned int diff_restore_file(const project_t *project) {
 
   xmlNode *root_element = O2G_NULLPTR;
 
-  fdguard difffd(project->dirfd, diff_name.c_str(), O_RDONLY);
+  fdguard difffd(dirfd, diff_name.c_str(), O_RDONLY);
 
   /* parse the file and get the DOM */
   std::unique_ptr<xmlDoc, xmlDocDelete> doc(xmlReadFd(difffd, O2G_NULLPTR, O2G_NULLPTR, XML_PARSE_NONET));
@@ -549,9 +546,9 @@ unsigned int diff_restore_file(const project_t *project) {
 	if(str) {
           const char *cstr = reinterpret_cast<const char *>(str.get());
 	  printf("diff for project %s\n", cstr);
-	  if(unlikely(project->name != cstr)) {
+          if(unlikely(name != cstr)) {
             warningf(O2G_NULLPTR, _("Diff name (%s) does not match project name (%s)"),
-		     cstr, project->name.c_str());
+                     cstr, name.c_str());
             res |= DIFF_PROJECT_MISMATCH;
 	  }
 	}
@@ -587,26 +584,26 @@ unsigned int diff_restore_file(const project_t *project) {
   return res;
 }
 
-void diff_restore(appdata_t &appdata) {
-  if(unlikely(appdata.project->osm == O2G_NULLPTR))
+void diff_restore(project_t *project, MainUi *uicontrol) {
+  if(unlikely(project->osm == O2G_NULLPTR))
     return;
 
-  unsigned int flags = diff_restore_file(appdata.project);
+  unsigned int flags = project->diff_restore();
   if(flags & DIFF_HAS_HIDDEN) {
     printf("hidden flags have been restored, enable show_add menu\n");
 
-    appdata.uicontrol->showNotification(_("Some objects are hidden"), MainUi::Highlight);
-    appdata.uicontrol->setActionEnable(MainUi::MENU_ITEM_MAP_SHOW_ALL, true);
+    uicontrol->showNotification(_("Some objects are hidden"), MainUi::Highlight);
+    uicontrol->setActionEnable(MainUi::MENU_ITEM_MAP_SHOW_ALL, true);
   }
 }
 
-bool diff_present(const project_t *project) {
+bool project_t::diff_file_present() const {
   struct stat st;
-  return fstatat(project->dirfd, diff_filename(project).c_str(), &st, 0) == 0 && S_ISREG(st.st_mode);
+  return fstatat(dirfd, diff_filename(this).c_str(), &st, 0) == 0 && S_ISREG(st.st_mode);
 }
 
-void diff_remove(const project_t *project) {
-  unlinkat(project->dirfd, diff_filename(project).c_str(), 0);
+void project_t::diff_remove_file() const {
+  unlinkat(dirfd, diff_filename(this).c_str(), 0);
 }
 
 xmlDocPtr osmchange_init()

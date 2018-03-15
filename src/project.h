@@ -81,6 +81,29 @@ struct project_t {
    * @param parent parent window for dialogs
    */
   bool check_demo(osm2go_platform::Widget *parent = O2G_NULLPTR) const;
+
+  /**
+   * @brief remove the file with the changes
+   *
+   * Does not affect the loaded data.
+   */
+  void diff_remove_file() const;
+
+  /**
+   * @brief checks if a file with changes exists
+   */
+  bool diff_file_present() const;
+
+  /**
+   * @brief save the changed data to storage
+   */
+  void diff_save() const;
+
+  /**
+   * @brief restore changes from storage
+   * @returns status values from enum diff_restore_results
+   */
+  unsigned int diff_restore();
 };
 
 bool project_load(appdata_t &appdata, const std::string &name);
