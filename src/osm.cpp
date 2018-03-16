@@ -255,7 +255,7 @@ bool osm_t::parse_tag(xmlNode *a_node, TagMap &tags) {
   std::string k = reinterpret_cast<char *>(key.get());
   std::string v = reinterpret_cast<char *>(value.get());
 
-  if(unlikely(findTag(tags, k, v) != tags.end()))
+  if(unlikely(tags.findTag(k, v) != tags.end()))
     return false;
 
   tags.insert(TagMap::value_type(k, v));
@@ -271,13 +271,13 @@ struct map_value_match_functor {
   }
 };
 
-osm_t::TagMap::iterator osm_t::findTag(TagMap &map, const std::string &key, const std::string &value)
+osm_t::TagMap::iterator osm_t::TagMap::findTag(const std::string &key, const std::string &value)
 {
-  std::pair<osm_t::TagMap::iterator, osm_t::TagMap::iterator> matches = map.equal_range(key);
+  std::pair<osm_t::TagMap::iterator, osm_t::TagMap::iterator> matches = equal_range(key);
   if(matches.first == matches.second)
-    return map.end();
+    return end();
   osm_t::TagMap::iterator it = std::find_if(matches.first, matches.second, map_value_match_functor(value));
-  return it == matches.second ? map.end() : it;
+  return it == matches.second ? end() : it;
 }
 
 bool osm_t::tagSubset(const TagMap &sub, const TagMap &super)
@@ -285,7 +285,7 @@ bool osm_t::tagSubset(const TagMap &sub, const TagMap &super)
   const TagMap::const_iterator superEnd = super.end();
   const TagMap::const_iterator itEnd = sub.end();
   for(TagMap::const_iterator it = sub.begin(); it != itEnd; it++)
-    if(osm_t::findTag(super, it->first, it->second) == superEnd)
+    if(super.findTag(it->first, it->second) == superEnd)
       return false;
   return true;
 }

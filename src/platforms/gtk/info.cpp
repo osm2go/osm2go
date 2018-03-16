@@ -122,7 +122,7 @@ static void on_tag_remove(info_tag_context_t *context) {
     /* de-chain */
     g_debug("de-chaining tag %s/%s", kc, vc);
     const std::string k = kc;
-    osm_t::TagMap::iterator it = osm_t::findTag(context->tags, k, vc);
+    osm_t::TagMap::iterator it = context->tags.findTag(k, vc);
     assert(it != context->tags.end());
 
     context->tags.erase(it);
@@ -275,7 +275,7 @@ static void on_tag_edit(info_tag_context_t *context) {
       it->second = v;
     } else {
       context->tags.erase(it);
-      it = osm_t::findTag(context->tags, k, v);
+      it = context->tags.findTag(k, v);
       if(unlikely(it != context->tags.end())) {
         // this tag is now duplicate, drop it and select the other one
         gtk_list_store_remove(GTK_LIST_STORE(model), &iter);
@@ -352,7 +352,7 @@ static void on_tag_add(info_tag_context_t *context) {
     return;
   }
 
-  osm_t::TagMap::iterator it = osm_t::findTag(context->tags, k, v);
+  osm_t::TagMap::iterator it = context->tags.findTag(k, v);
   if(unlikely(it != context->tags.end())) {
     select_item(k, v, context);
     return;

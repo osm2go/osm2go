@@ -170,7 +170,13 @@ struct osm_t {
     counter<relation_t> relations;
   };
 
-  typedef std::multimap<std::string, std::string> TagMap;
+  class TagMap : public std::multimap<std::string, std::string> {
+  public:
+    iterator findTag(const std::string &k, const std::string &v);
+    inline const_iterator findTag(const std::string &k, const std::string &v) const {
+      return const_cast<TagMap *>(this)->findTag(k, v);
+    }
+  };
 
   explicit osm_t();
   ~osm_t();
@@ -241,10 +247,6 @@ struct osm_t {
 
   static osm_t *parse(const std::string &path, const std::string &filename);
 
-  static TagMap::iterator findTag(TagMap &map, const std::string &k, const std::string &v);
-  static inline TagMap::const_iterator findTag(const TagMap &map, const std::string &k, const std::string &v) {
-    return findTag(const_cast<TagMap &>(map), k, v);
-  }
   /**
    * @brief check if a TagMap contains the other
    * @param sub the smaller map
