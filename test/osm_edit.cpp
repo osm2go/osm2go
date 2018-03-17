@@ -1152,7 +1152,7 @@ static void test_merge_ways()
     }
     o.way_attach(w1);
 
-    assert(!w1->merge(w0, &o, false));
+    assert(!w1->merge(w0, &o));
     assert_cmpnum(w1->node_chain.size(), nodes.size());
     assert_cmpnum(o.ways.size(), 1);
     assert_cmpnum(o.nodes.size(), nodes.size());

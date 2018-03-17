@@ -291,11 +291,6 @@ bool osm_t::tagSubset(const TagMap &sub, const TagMap &super)
 }
 
 struct relation_object_replacer {
-  const object_t &old;
-  const object_t &replace;
-  relation_object_replacer(const object_t &t, const object_t &n) : old(t), replace(n) {}
-  void operator()(std::pair<item_id_t, relation_t *> pair);
-
   struct member_replacer {
     relation_t * const r;
     const object_t &old;
@@ -304,14 +299,18 @@ struct relation_object_replacer {
       : r(rel), old(t), replace(n) {}
     void operator()(member_t &member);
   };
-};
 
-void relation_object_replacer::operator()(std::pair<item_id_t, relation_t *> pair)
-{
-  relation_t * const r = pair.second;
-  std::for_each(r->members.begin(), r->members.end(),
-                member_replacer(r, old, replace));
-}
+  const object_t &old;
+  const object_t &replace;
+  relation_object_replacer(const object_t &t, const object_t &n) : old(t), replace(n) {}
+  inline void operator()(std::pair<item_id_t, relation_t *> pair)
+  { operator()(pair.second); }
+  void operator()(relation_t *r)
+  {
+    std::for_each(r->members.begin(), r->members.end(),
+                  member_replacer(r, old, replace));
+  }
+};
 
 void relation_object_replacer::member_replacer::operator()(member_t &member)
 {
@@ -326,30 +325,51 @@ void relation_object_replacer::member_replacer::operator()(member_t &member)
   r->flags |= OSM_FLAG_DIRTY;
 }
 
-struct relation_membership_counter {
-  const object_t &obj;
-  explicit relation_membership_counter(const object_t &o) : obj(o) {}
-  unsigned int operator()(unsigned int init, const std::pair<item_id_t, const relation_t *> &p) {
-    return std::accumulate(p.second->members.begin(), p.second->members.end(), init, *this);
-  }
-  unsigned int operator()(unsigned int init, const member_t &m) {
-    return init + (m.object == obj ? 1 : 0);
-  }
+struct relation_membership_functor {
+  std::vector<relation_t *> &arels, &brels;
+  const object_t &a, &b;
+  explicit relation_membership_functor(const object_t &first, const object_t &second,
+                                       std::vector<relation_t *> &firstRels,
+                                       std::vector<relation_t *> &secondRels)
+    : arels(firstRels), brels(secondRels), a(first), b(second) {}
+  void operator()(const std::pair<item_id_t, relation_t *> &p);
 };
 
-bool osm_t::checkObjectPersistence(const object_t &first, const object_t &second, bool &hasRels) const
+void relation_membership_functor::operator()(const std::pair<item_id_t, relation_t *>& p)
+{
+  relation_t * const rel = p.second;
+  const std::vector<member_t>::const_iterator itEnd = rel->members.end();
+  bool aFound = false, bFound = false;
+  for(std::vector<member_t>::const_iterator it = rel->members.begin();
+      it != itEnd && (!aFound || !bFound); it++) {
+    if(*it == a) {
+      if(!aFound) {
+        arels.push_back(rel);
+        aFound = true;
+      }
+    } else if(*it == b) {
+      if(!bFound) {
+        brels.push_back(rel);
+        bFound = true;
+      }
+    }
+  }
+}
+
+bool osm_t::checkObjectPersistence(const object_t &first, const object_t &second, std::vector<relation_t *> &rels) const
 {
   object_t keep = first, remove = second;
 
-  unsigned int removeRels = std::accumulate(relations.begin(), relations.end(), 0, relation_membership_counter(remove));
-  unsigned int keepRels = std::accumulate(relations.begin(), relations.end(), 0, relation_membership_counter(keep));
+  std::vector<relation_t *> removeRels, keepRels;
+
+  std::for_each(relations.begin(), relations.end(), relation_membership_functor(remove, keep, removeRels, keepRels));
 
   // find out which node to keep
   bool nret =
               // if one is new: keep the other one
               (keep.obj->isNew() && !remove.obj->isNew()) ||
               // or keep the one with most relations
-              removeRels > keepRels ||
+              removeRels.size() > keepRels.size() ||
               // or the one with most ways (if nodes)
               (keep.type == object_t::NODE && remove.type == keep.type &&
                remove.node->ways > keep.node->ways) ||
@@ -365,9 +385,9 @@ bool osm_t::checkObjectPersistence(const object_t &first, const object_t &second
               (remove.obj->id > 0 && remove.obj->id < keep.obj->id);
 
   if(nret)
-    hasRels = keepRels > 0;
+    rels.swap(keepRels);
   else
-    hasRels = removeRels > 0;
+    rels.swap(removeRels);
 
   return !nret;
 }
@@ -376,8 +396,8 @@ node_t *osm_t::mergeNodes(node_t *first, node_t *second, bool &conflict)
 {
   node_t *keep = first, *remove = second;
 
-  bool hasRels;
-  if(!checkObjectPersistence(object_t(keep), object_t(remove), hasRels))
+  std::vector<relation_t *> rels;
+  if(!checkObjectPersistence(object_t(keep), object_t(remove), rels))
     std::swap(keep, remove);
 
   /* use "second" position as that was the target */
@@ -406,11 +426,9 @@ node_t *osm_t::mergeNodes(node_t *first, node_t *second, bool &conflict)
   }
   assert_cmpnum(remove->ways, 0);
 
-  if(hasRels) {
-    /* replace "remove" in relations */
-    std::for_each(relations.begin(), relations.end(),
-                  relation_object_replacer(object_t(remove), object_t(keep)));
-  }
+  /* replace "remove" in relations */
+  std::for_each(rels.begin(), rels.end(),
+                relation_object_replacer(object_t(remove), object_t(keep)));
 
   /* transfer tags from "remove" to "keep" */
   conflict = keep->tags.merge(remove->tags);
@@ -2231,7 +2249,7 @@ void way_t::cleanup() {
   assert_null(map_item_chain);
 }
 
-bool way_t::merge(way_t *other, osm_t *osm, const bool doRels)
+bool way_t::merge(way_t *other, osm_t *osm, const std::vector<relation_t *> &rels)
 {
   printf("  request to extend way #" ITEM_ID_FORMAT "\n", other->id);
 
@@ -2275,9 +2293,8 @@ bool way_t::merge(way_t *other, osm_t *osm, const bool doRels)
   }
 
   /* replace "other" in relations */
-  if(doRels)
-    std::for_each(osm->relations.begin(), osm->relations.end(),
-                  relation_object_replacer(object_t(other), object_t(this)));
+  std::for_each(rels.begin(), rels.end(),
+                relation_object_replacer(object_t(other), object_t(this)));
 
   /* erase and free other way (now only containing the overlapping node anymore) */
   osm->way_free(other);

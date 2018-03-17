@@ -259,13 +259,13 @@ struct osm_t {
    * @brief check which of the objects should persist
    * @param first the first object
    * @param second the second object
-   * @param hasRels if the object to remove is member in any relations
+   * @param rels the relations the object about to be removed is member in
    * @returns if the first object should persist
    *
    * This takes into account the age (object id) and number of affected ways
    * and relationships.
    */
-  bool checkObjectPersistence(const object_t &first, const object_t &second, bool &hasRels) const;
+  bool checkObjectPersistence(const object_t &first, const object_t &second, std::vector<relation_t *> &rels) const;
 
   /**
    * @brief merge 2 nodes
@@ -557,12 +557,12 @@ public:
    * @brief merge this way with the other one
    * @param other the way to take the nodes from
    * @param osm map database
-   * @param doRels if relation memberships should be checked
+   * @param rels the relations that need to be adjusted
    * @returns if merging the tags caused collisions
    *
    * @other will be removed.
    */
-  bool merge(way_t *other, osm_t *osm, const bool doRels);
+  bool merge(way_t *other, osm_t *osm, const std::vector<relation_t *> &rels = std::vector<relation_t *>());
 protected:
   virtual void generate_xml_custom(xmlNodePtr xml_node) const O2G_OVERRIDE {
     write_node_chain(xml_node);

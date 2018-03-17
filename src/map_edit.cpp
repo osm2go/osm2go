@@ -221,7 +221,7 @@ void map_edit_way_add_ok(map_t *map) {
   if(map->action.extending) {
     // this is triggered when the user started with extending an existing way
     // since the merged way is a temporary one there are no relation memberships
-    map->action.extending->merge(map->action.way, osm, false);
+    map->action.extending->merge(map->action.way, osm);
 
     map->action.way = map->action.extending;
   } else {
@@ -248,12 +248,12 @@ void map_edit_way_add_ok(map_t *map) {
     /* way being connected to another way. This happens if you connect */
     /* two existing ways using a new way between them */
 
-    bool hasRels;
-    if(!osm->checkObjectPersistence(object_t(map->action.way), object_t(map->action.ends_on), hasRels))
+    std::vector<relation_t *> rels;
+    if(!osm->checkObjectPersistence(object_t(map->action.way), object_t(map->action.ends_on), rels))
       std::swap(map->action.way, map->action.ends_on);
 
     /* and open dialog to resolve tag collisions if necessary */
-    if(map->action.way->merge(map->action.ends_on, osm, hasRels))
+    if(map->action.way->merge(map->action.ends_on, osm, rels))
       messagef(O2G_NULLPTR, _("Way tag conflict"),
                _("The resulting way contains some conflicting tags. Please solve these."));
 
@@ -534,14 +534,14 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, int ex, int ey) {
         printf("  about to join ways #" ITEM_ID_FORMAT " and #" ITEM_ID_FORMAT "\n",
                ways2join[0]->id, ways2join[1]->id);
 
-        bool hasRels;
-        if(!osm->checkObjectPersistence(object_t(ways2join[0]), object_t(ways2join[1]), hasRels))
+        std::vector<relation_t *> rels;
+        if(!osm->checkObjectPersistence(object_t(ways2join[0]), object_t(ways2join[1]), rels))
           std::swap(ways2join[0], ways2join[1]);
 
         map_item_chain_destroy(ways2join[1]->map_item_chain);
 
         /* ---------- transfer tags from way[1] to way[0] ----------- */
-        if(ways2join[0]->merge(ways2join[1], osm, hasRels))
+        if(ways2join[0]->merge(ways2join[1], osm, rels))
           messagef(O2G_NULLPTR, _("Way tag conflict"),
                    _("The resulting way contains some conflicting tags. "
                      "Please solve these."));
