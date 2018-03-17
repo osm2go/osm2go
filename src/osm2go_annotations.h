@@ -78,8 +78,8 @@ public:
 
 #define assert_cmpnum_op(a, op, b) \
        do { \
-         const typeof (a) ca = a; \
-         const typeof (b) cb = b; \
+         const typeof(a) ca = a; \
+         const typeof(b) cb = b; \
          if (unlikely(!(ca op (typeof(a))cb))) { \
            __builtin_constant_p(b) ? \
              assert_num_tpl<typeof(ca)>(a,    #a, #op, #b, __FILE__, __PRETTY_FUNCTION__, __LINE__) : \
