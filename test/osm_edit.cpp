@@ -1114,6 +1114,98 @@ static void test_merge_nodes()
   assert(r->descriptive_name() == "<ID #-1>");
 }
 
+static void setup_way_relations_for_merge(osm_t &o, way_t *w0, way_t *w1)
+{
+  o.relations[-3]->members.push_back(member_t(object_t(w0), "foo"));
+  o.relations[-4]->members.push_back(member_t(object_t(w1), "bar"));
+  o.relations[-4]->members.push_back(member_t(object_t(w0)));
+}
+
+static node_chain_t setup_ways_for_merge(const node_chain_t &nodes, osm_t &o, way_t *&w0,
+                                         way_t *&w1, const unsigned int i, int relations)
+{
+  node_chain_t expect;
+
+  w0 = new way_t(0);
+  if(i < 2) {
+    for(unsigned int j = 0; j < nodes.size() / 2; j++)
+      w0->append_node(nodes[j]);
+  } else {
+    for(int j = nodes.size() / 2 - 1; j >= 0; j--)
+      w0->append_node(nodes[j]);
+  }
+  o.way_attach(w0);
+
+  w1 = new way_t(0);
+  if(i % 2) {
+    for(unsigned int j = nodes.size() / 2 - 1; j < nodes.size(); j++)
+      w1->append_node(nodes[j]);
+    expect = nodes;
+  } else {
+    for(unsigned int j = nodes.size() - 1; j >= nodes.size() / 2 - 1; j--)
+      w1->append_node(nodes[j]);
+    expect = nodes;
+    std::reverse(expect.begin(), expect.end());
+  }
+  o.way_attach(w1);
+
+  switch (relations) {
+  case 0:
+    break;
+  case 1:
+    setup_way_relations_for_merge(o, w1, w0);
+    break;
+  case 2:
+    setup_way_relations_for_merge(o, w0, w1);
+    break;
+  }
+
+  return expect;
+}
+
+static void verify_merged_way(way_t *w, osm_t &o, const node_chain_t &nodes,
+                              const node_chain_t &expect, bool expectRels)
+{
+  assert_cmpnum(w->node_chain.size(), nodes.size());
+  assert_cmpnum(o.ways.size(), 1);
+  assert_cmpnum(o.nodes.size(), nodes.size());
+  for(node_chain_t::const_iterator it = nodes.begin(); it != nodes.end(); it++) {
+    w->contains_node(*it);
+    assert_cmpnum((*it)->ways, 1);
+  }
+  assert(expect == w->node_chain);
+
+  assert_cmpnum(o.relations[-1]->members.size(), 0);
+  // check the expected relation memberships of the way
+  if(expectRels) {
+    relation_t *rel = o.relations[-3];
+    std::vector<member_t>::iterator it = rel->find_member_object(object_t(w));
+    assert(it != rel->members.end());
+    assert_cmpstr(it->role, "foo");
+    rel->remove_member(it);
+
+    rel = o.relations[-4];
+    it = rel->find_member_object(object_t(w));
+    assert(it != rel->members.end());
+    assert_cmpstr(it->role, "bar");
+    rel->remove_member(it);
+
+    it = rel->find_member_object(object_t(w));
+    assert(it != rel->members.end());
+    assert_null(it->role);
+    rel->remove_member(it);
+  }
+  for(unsigned int i = 1; i < o.relations.size(); i++)
+    assert_cmpnum(o.relations[-1 - static_cast<item_id_t>(i)]->members.size(), i - 1);
+
+  o.way_free(w);
+
+  assert_cmpnum(o.ways.size(), 0);
+  assert_cmpnum(o.nodes.size(), nodes.size());
+  for(node_chain_t::const_iterator it = nodes.begin(); it != nodes.end(); it++)
+    assert_cmpnum((*it)->ways, 0);
+}
+
 static void test_merge_ways()
 {
   osm_t o;
@@ -1125,49 +1217,43 @@ static void test_merge_ways()
     o.node_attach(nodes.back());
   }
 
+  for(int i = 0; i < 5; i++) {
+    relation_t *r = new relation_t();
+    for(int j = 1; j < i; j++)
+      r->members.push_back(member_t(object_t(nodes[j])));
+    o.relation_attach(r);
+  }
+
   // test all 4 combinations how the ways can be oriented
   for(unsigned int i = 0; i < 4; i++) {
-    node_chain_t expect;
+    way_t *w0, *w1;
+    const node_chain_t &expect = setup_ways_for_merge(nodes, o, w0, w1, i, 0);
 
-    way_t *w0 = new way_t(0);
-    if(i < 2) {
-      for(unsigned int j = 0; j < nodes.size() / 2; j++)
-        w0->append_node(nodes[j]);
-    } else {
-      for(int j = nodes.size() / 2 - 1; j >= 0; j--)
-        w0->append_node(nodes[j]);
-    }
-    o.way_attach(w0);
-
-    way_t *w1 = new way_t(0);
-    if(i % 2) {
-      for(unsigned int j = nodes.size() / 2 - 1; j < nodes.size(); j++)
-        w1->append_node(nodes[j]);
-      expect = nodes;
-    } else {
-      for(unsigned int j = nodes.size() - 1; j >= nodes.size() / 2 - 1; j--)
-        w1->append_node(nodes[j]);
-      expect = nodes;
-      std::reverse(expect.begin(), expect.end());
-    }
-    o.way_attach(w1);
-
+    // verify direct merging
     assert(!w1->merge(w0, &o));
-    assert_cmpnum(w1->node_chain.size(), nodes.size());
-    assert_cmpnum(o.ways.size(), 1);
-    assert_cmpnum(o.nodes.size(), nodes.size());
-    for(node_chain_t::const_iterator it = nodes.begin(); it != nodes.end(); it++) {
-      w1->contains_node(*it);
-      assert_cmpnum((*it)->ways, 1);
-    }
-    assert(expect == w1->node_chain);
 
-    o.way_free(w1);
+    verify_merged_way(w1, o, nodes, expect, false);
 
-    assert_cmpnum(o.ways.size(), 0);
-    assert_cmpnum(o.nodes.size(), nodes.size());
-    for(node_chain_t::const_iterator it = nodes.begin(); it != nodes.end(); it++)
-      assert_cmpnum((*it)->ways, 0);
+    assert(expect == setup_ways_for_merge(nodes, o, w0, w1, i, 1));
+
+    // check that merging with relation checking works
+    bool conflict = true;
+    way_t *r = o.mergeWays(w1, w0, conflict);
+    assert(r == w1);
+    assert(!conflict);
+
+    verify_merged_way(r, o, nodes, expect, true);
+
+    // now put the other way into more relations
+    assert(expect == setup_ways_for_merge(nodes, o, w0, w1, i, 2));
+    conflict = true;
+
+    // check that the right way is picked
+    r = o.mergeWays(w0, w1, conflict);
+    assert(r == w1);
+    assert(!conflict);
+
+    verify_merged_way(r, o, nodes, expect, true);
   }
 }
 

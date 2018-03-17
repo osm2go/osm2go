@@ -275,11 +275,25 @@ struct osm_t {
    * @return the remaining node (may be any of first and second)
    *
    * This merges the nodes on the position of second, joining the tags together
-   * and moving all way and relationship memberships to the remaining node.
+   * and moving all way and relation memberships to the remaining node.
    *
    * The victim node is deleted.
    */
   node_t *mergeNodes(node_t *first, node_t *second, bool &conflict);
+
+  /**
+   * @brief merge 2 ways
+   * @param first first way
+   * @param second second way
+   * @param conflict if any conflicts (e.g. incompatible tags) were detected
+   * @return the remaining way (may be any of first and second)
+   *
+   * This merges the ways, assuming that they share one common end node, joining the
+   * tags together and moving all relation memberships to the remaining way.
+   *
+   * The victim way is deleted.
+   */
+  way_t *mergeWays(way_t *first, way_t *second, bool &conflict);
 
   struct find_object_by_flags {
     int flagmask;

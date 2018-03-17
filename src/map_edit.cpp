@@ -248,16 +248,13 @@ void map_edit_way_add_ok(map_t *map) {
     /* way being connected to another way. This happens if you connect */
     /* two existing ways using a new way between them */
 
-    std::vector<relation_t *> rels;
-    if(!osm->checkObjectPersistence(object_t(map->action.way), object_t(map->action.ends_on), rels))
-      std::swap(map->action.way, map->action.ends_on);
+    bool conflict;
+    map->action.way = osm->mergeWays(map->action.way, map->action.ends_on, conflict);
+    map->action.ends_on = O2G_NULLPTR;
 
-    /* and open dialog to resolve tag collisions if necessary */
-    if(map->action.way->merge(map->action.ends_on, osm, rels))
+    if(conflict)
       messagef(O2G_NULLPTR, _("Way tag conflict"),
                _("The resulting way contains some conflicting tags. Please solve these."));
-
-    map->action.ends_on = O2G_NULLPTR;
   }
 
   /* remove prior version of this way */
@@ -534,14 +531,8 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, int ex, int ey) {
         printf("  about to join ways #" ITEM_ID_FORMAT " and #" ITEM_ID_FORMAT "\n",
                ways2join[0]->id, ways2join[1]->id);
 
-        std::vector<relation_t *> rels;
-        if(!osm->checkObjectPersistence(object_t(ways2join[0]), object_t(ways2join[1]), rels))
-          std::swap(ways2join[0], ways2join[1]);
-
-        map_item_chain_destroy(ways2join[1]->map_item_chain);
-
-        /* ---------- transfer tags from way[1] to way[0] ----------- */
-        if(ways2join[0]->merge(ways2join[1], osm, rels))
+        osm->mergeWays(ways2join[0], ways2join[1], conflict);
+        if(conflict)
           messagef(O2G_NULLPTR, _("Way tag conflict"),
                    _("The resulting way contains some conflicting tags. "
                      "Please solve these."));

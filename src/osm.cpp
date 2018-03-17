@@ -443,6 +443,18 @@ node_t *osm_t::mergeNodes(node_t *first, node_t *second, bool &conflict)
   return keep;
 }
 
+way_t *osm_t::mergeWays(way_t *first, way_t *second, bool &conflict)
+{
+  std::vector<relation_t *> rels;
+  if(!checkObjectPersistence(object_t(first), object_t(second), rels))
+    std::swap(first, second);
+
+  /* ---------- transfer tags from second to first ----------- */
+  conflict = first->merge(second, this, rels);
+
+  return first;
+}
+
 template<typename T> bool map_is_clean(const T &map, int flagmask = ~0) {
   const typename T::const_iterator itEnd = map.end();
   return itEnd == std::find_if(map.begin(), itEnd, osm_t::find_object_by_flags(flagmask));
