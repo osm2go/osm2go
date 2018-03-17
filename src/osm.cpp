@@ -326,34 +326,6 @@ void relation_object_replacer::member_replacer::operator()(member_t &member)
   r->flags |= OSM_FLAG_DIRTY;
 }
 
-struct join_nodes {
-  node_t * const keep;
-  node_t * const remove;
-  join_nodes(node_t *n, node_t *t) : keep(n), remove(t) {}
-  void operator()(const std::pair<item_id_t, way_t *> &p);
-};
-
-void join_nodes::operator()(const std::pair<item_id_t, way_t *> &p)
-{
-  way_t * const way = p.second;
-  node_chain_t::iterator it = way->node_chain.begin();
-  const node_chain_t::iterator itEnd = way->node_chain.end();
-
-  while(remove->ways > 0 && (it = std::find(it, itEnd, remove)) != itEnd) {
-    printf("  found node in way #" ITEM_ID_FORMAT "\n", way->id);
-
-    /* replace by node */
-    *it = keep;
-
-    /* and adjust way references of both nodes */
-    keep->ways++;
-    assert_cmpnum_op(remove->ways, >, 0);
-    remove->ways--;
-
-    way->flags |= OSM_FLAG_DIRTY;
-  }
-}
-
 struct relation_membership_counter {
   const object_t &obj;
   explicit relation_membership_counter(const object_t &o) : obj(o) {}
@@ -412,10 +384,27 @@ node_t *osm_t::mergeNodes(node_t *first, node_t *second, bool &conflict)
   keep->lpos = second->lpos;
   keep->pos = second->pos;
 
-  if(remove->ways > 0) {
-    const std::map<item_id_t, way_t *>::iterator witEnd = ways.end();
-    std::for_each(ways.begin(), witEnd, join_nodes(keep, remove));
+  const std::map<item_id_t, way_t *>::iterator witEnd = ways.end();
+  for(std::map<item_id_t, way_t *>::iterator wit = ways.begin();
+      remove->ways > 0 && wit != witEnd; wit++) {
+    way_t * const way = wit->second;
+    node_chain_t::iterator it = way->node_chain.begin();
+    const node_chain_t::iterator itEnd = way->node_chain.end();
+
+    while(remove->ways > 0 && (it = std::find(it, itEnd, remove)) != itEnd) {
+      printf("  found node in way #" ITEM_ID_FORMAT "\n", way->id);
+      /* replace by node */
+      *it = keep;
+
+      /* and adjust way references of both nodes */
+      keep->ways++;
+      assert_cmpnum_op(remove->ways, >, 0);
+      remove->ways--;
+
+      way->flags |= OSM_FLAG_DIRTY;
+    }
   }
+  assert_cmpnum(remove->ways, 0);
 
   if(hasRels) {
     /* replace "remove" in relations */
