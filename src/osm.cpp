@@ -317,9 +317,9 @@ void relation_object_replacer::member_replacer::operator()(member_t &member)
   if(member.object != old)
     return;
 
-  printf("  found node in relation #" ITEM_ID_FORMAT "\n", r->id);
+  printf("  found %s #" ITEM_ID_FORMAT " in relation #" ITEM_ID_FORMAT "\n",
+         old.type_string(), old.get_id(), r->id);
 
-  /* replace by node */
   member.object = replace;
 
   r->flags |= OSM_FLAG_DIRTY;
