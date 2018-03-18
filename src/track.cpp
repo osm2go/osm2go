@@ -453,7 +453,7 @@ static int update(void *data) {
 
   /* ignore updates while no valid osm file is loaded, e.g. when switching */
   /* projects */
-  if(unlikely(appdata.project->osm == O2G_NULLPTR))
+  if(unlikely(appdata.project == O2G_NULLPTR || appdata.project->osm == O2G_NULLPTR))
     return 1;
 
   /* the map is only gone of the main screen is being closed */
