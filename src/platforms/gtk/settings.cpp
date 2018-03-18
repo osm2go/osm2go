@@ -62,6 +62,12 @@ struct matchTrackVisibility {
   }
 };
 
+struct gconf_value_deleter {
+  inline void operator()(GConfValue *value)
+  { gconf_value_free(value); }
+};
+typedef std::unique_ptr<GConfValue, gconf_value_deleter> gconf_value_guard;
+
 bool gconf_value_get_bool_wrapper(const GConfValue *gvalue) {
   return gconf_value_get_bool(gvalue) == TRUE;
 }
@@ -80,17 +86,15 @@ template<typename T, typename U, U GETTER(const GConfValue *)> void load_functor
   key = keybase + p.first;
 
   /* check if key is present */
-  GConfValue *value = gconf_client_get(client, key.c_str(), O2G_NULLPTR);
+  gconf_value_guard value(gconf_client_get(client, key.c_str(), O2G_NULLPTR));
 
   if(!value)
     return;
 
-  if(unlikely(value->type != type)) {
+  if(unlikely(value->type != type))
     g_warning("invalid type found for key '%s': expected %u, got %u", p.first, type, value->type);
-  } else {
-    *(p.second) = GETTER(value);
-  }
-  gconf_value_free(value);
+  else
+    *(p.second) = GETTER(value.get());
 }
 
 settings_t *settings_t::instance() {
@@ -119,51 +123,48 @@ settings_t *settings_t::instance() {
       g_debug("adjusting server path in settings");
 
     key = keybase + "track_visibility";
-    GConfValue *gvalue = gconf_client_get(client.get(), key.c_str(), O2G_NULLPTR);
+    gconf_value_guard gvalue(gconf_client_get(client.get(), key.c_str(), O2G_NULLPTR));
     settings->trackVisibility = DrawAll;
-    if(likely(gvalue != O2G_NULLPTR)) {
+    if(likely(gvalue)) {
       const std::map<TrackVisibility, std::string>::const_iterator it =
           std::find_if(trackVisibilityKeys.begin(), trackVisibilityKeys.end(),
-                       matchTrackVisibility(gconf_value_get_string(gvalue)));
+                       matchTrackVisibility(gconf_value_get_string(gvalue.get())));
       if(it != trackVisibilityKeys.end())
         settings->trackVisibility = it->first;
 
-      gconf_value_free(gvalue);
+      gvalue.reset();
     }
 
     /* restore wms server list */
     const gchar *countkey = "/apps/" PACKAGE "/wms/count";
-    GConfValue *value = gconf_client_get(client.get(), countkey, O2G_NULLPTR);
+    gconf_value_guard value(gconf_client_get(client.get(), countkey, O2G_NULLPTR));
     if(value) {
-      unsigned int count = gconf_value_get_int(value);
-      gconf_value_free(value);
+      unsigned int count = gconf_value_get_int(value.get());
+      value.reset();
 
       for(unsigned int i = 0; i < count; i++) {
         char nbuf[16];
         snprintf(nbuf, sizeof(nbuf), "%u", i);
 
         key = keybase + "wms/server" + nbuf;
-        GConfValue *server = gconf_client_get(client.get(), key.c_str(), O2G_NULLPTR);
+        gconf_value_guard server(gconf_client_get(client.get(), key.c_str(), O2G_NULLPTR));
         key = keybase + "wms/name" + nbuf;
-        GConfValue *name = gconf_client_get(client.get(), key.c_str(), O2G_NULLPTR);
+        gconf_value_guard name(gconf_client_get(client.get(), key.c_str(), O2G_NULLPTR));
         key = keybase + "wms/path" + nbuf;
-        GConfValue *path = gconf_client_get(client.get(), key.c_str(), O2G_NULLPTR);
+        gconf_value_guard path(gconf_client_get(client.get(), key.c_str(), O2G_NULLPTR));
 
         /* apply valid entry to list */
-        if(likely(name != O2G_NULLPTR && server != O2G_NULLPTR)) {
+        if(likely(name && server)) {
           wms_server_t *cur = new wms_server_t();
-          cur->name = gconf_value_get_string(name);
-          cur->server = gconf_value_get_string(server);
+          cur->name = gconf_value_get_string(name.get());
+          cur->server = gconf_value_get_string(server.get());
           // upgrade old entries
-          if(unlikely(path != O2G_NULLPTR)) {
-            cur->server += gconf_value_get_string(path);
+          if(unlikely(path)) {
+            cur->server += gconf_value_get_string(path.get());
             gconf_client_unset(client.get(), key.c_str(), O2G_NULLPTR);
           }
           settings->wms_server.push_back(cur);
         }
-        gconf_value_free(name);
-        gconf_value_free(server);
-        gconf_value_free(path);
       }
     } else {
       /* add default server(s) */
