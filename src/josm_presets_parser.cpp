@@ -619,7 +619,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
     // as that would be deleted on it's end tag and a stale reference would remain
     // in laterLinks
     if(likely(!item->name.empty())) {
-      if(!id) {
+      if(unlikely(!id)) {
         dumpState("found", "preset_link without preset_name\n");
       } else {
         if(!resolvePresetLink(link, id))
@@ -634,7 +634,7 @@ void PresetSax::startElement(const char *name, const char **attrs)
   case TagReference: {
     const char *id = findAttribute(attrs, "ref", false);
     presets_item *ref = O2G_NULLPTR;
-    if(!id) {
+    if(unlikely(!id)) {
       dumpState("found", "reference without ref\n");
     } else {
       const ChunkMap::const_iterator ait = chunks.find(id);
