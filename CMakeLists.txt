@@ -28,6 +28,7 @@ write_compiler_detection_header(
 		PREFIX "O2G"
 		COMPILERS GNU Clang
 		FEATURES cxx_nullptr cxx_override cxx_static_assert cxx_deleted_functions
+				cxx_noexcept
 		ALLOW_UNKNOWN_COMPILER_VERSIONS ALLOW_UNKNOWN_COMPILERS
 		EPILOG
 "#if !(defined(O2G_COMPILER_CXX_NULLPTR) && O2G_COMPILER_CXX_NULLPTR)
@@ -42,6 +43,10 @@ write_compiler_detection_header(
 #  define override
 #endif
 #undef O2G_OVERRIDE
+#if !(defined(O2G_COMPILER_CXX_NOEXCEPT) && O2G_COMPILER_CXX_NOEXCEPT)
+#  define noexcept
+#endif
+#undef O2G_NOEXCEPT
 #if !(defined(O2G_COMPILER_CXX_STATIC_ASSERT) && O2G_COMPILER_CXX_STATIC_ASSERT)
 #  define static_assert(X, MSG) G_STATIC_ASSERT(X)
 #endif

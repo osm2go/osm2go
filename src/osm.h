@@ -77,55 +77,55 @@ struct object_t {
     base_object_t *obj;
   };
 
-  explicit inline object_t(type_t t = ILLEGAL, item_id_t i = ID_ILLEGAL)
+  explicit inline object_t(type_t t = ILLEGAL, item_id_t i = ID_ILLEGAL) noexcept
     : type(t), id(i) {}
-  explicit inline object_t(node_t *n)
+  explicit inline object_t(node_t *n) noexcept
     : type(NODE), node(n) { }
-  explicit inline object_t(way_t *w)
+  explicit inline object_t(way_t *w) noexcept
     : type(WAY), way(w) { }
-  explicit inline object_t(relation_t *r)
+  explicit inline object_t(relation_t *r) noexcept
     : type(RELATION), relation(r) { }
 
-  inline object_t &operator=(node_t *n)
+  inline object_t &operator=(node_t *n) noexcept
   { type = NODE; node = n; return *this; }
-  inline object_t &operator=(way_t *w)
+  inline object_t &operator=(way_t *w) noexcept
   { type = WAY; way = w; return *this; }
-  inline object_t &operator=(relation_t *r)
+  inline object_t &operator=(relation_t *r) noexcept
   { type = RELATION; relation = r; return *this; }
 
-  bool operator==(const object_t &other) const;
-  inline bool operator!=(const object_t &other) const
+  bool operator==(const object_t &other) const noexcept;
+  inline bool operator!=(const object_t &other) const noexcept
   { return !operator==(other); }
-  inline bool operator==(const object_t *other) const
+  inline bool operator==(const object_t *other) const noexcept
   { return operator==(*other); }
-  inline bool operator!=(const object_t *other) const
+  inline bool operator!=(const object_t *other) const noexcept
   { return !operator==(*other); }
-  bool operator==(const node_t *n) const;
-  bool operator!=(const node_t *n) const
+  bool operator==(const node_t *n) const noexcept;
+  bool operator!=(const node_t *n) const noexcept
   { return !operator==(n); }
-  bool operator==(const way_t *w) const;
-  bool operator!=(const way_t *w) const
+  bool operator==(const way_t *w) const noexcept;
+  bool operator!=(const way_t *w) const noexcept
   { return !operator==(w); }
-  bool operator==(const relation_t *r) const;
-  bool operator!=(const relation_t *r) const
+  bool operator==(const relation_t *r) const noexcept;
+  bool operator!=(const relation_t *r) const noexcept
   { return !operator==(r); }
 
-  bool is_real() const;
+  bool is_real() const noexcept;
   const char *type_string() const;
   std::string id_string() const;
-  item_id_t get_id() const;
+  item_id_t get_id() const noexcept;
   std::string get_name() const;
 };
 
 struct member_t {
-  explicit member_t(object_t::type_t t);
+  explicit member_t(object_t::type_t t) noexcept;
   explicit member_t(const object_t &o, const char *r = nullptr);
 
   object_t object;
   char   *role;
 
-  bool operator==(const member_t &other) const;
-  inline bool operator==(const object_t &other) const
+  bool operator==(const member_t &other) const noexcept;
+  inline bool operator==(const object_t &other) const noexcept
   { return object == other; }
 
   static inline void clear(member_t &member) {
@@ -135,7 +135,7 @@ struct member_t {
   /**
    * @brief check function for use in std::find_if
    */
-  static inline bool has_role(const member_t &member) {
+  static inline bool has_role(const member_t &member) noexcept {
     return member.role != nullptr;
   }
 };
@@ -320,9 +320,9 @@ struct tag_t {
     : key(k), value(v)
   { }
 
-  bool is_creator_tag() const;
+  bool is_creator_tag() const noexcept;
 
-  static bool is_creator_tag(const char *key);
+  static bool is_creator_tag(const char *key) noexcept;
 
   /**
    * @brief replace the value
@@ -340,12 +340,12 @@ public:
   /**
    * @brief check if any tags are present
    */
-  bool empty() const;
+  bool empty() const noexcept;
 
   /**
    * @brief check if any tag that is not "created_by" is present
    */
-  bool hasRealTags() const;
+  bool hasRealTags() const noexcept;
 
   const char *get_value(const char *key) const;
 
@@ -442,11 +442,11 @@ public:
    * @brief get the API string for this object type
    * @return the string used for this kind of object in the OSM API
    */
-  virtual const char *apiString() const = 0;
+  virtual const char *apiString() const noexcept = 0;
 
   std::string id_string() const;
 
-  inline bool isNew() const
+  inline bool isNew() const noexcept
   { return id < 0; }
 
   /**
@@ -487,10 +487,10 @@ public:
   pos_t pos;
   lpos_t lpos;
 
-  const char *apiString() const override {
+  const char *apiString() const noexcept override {
     return api_string();
   }
-  static const char *api_string() {
+  static const char *api_string() noexcept {
     return "node";
   }
 protected:
@@ -532,8 +532,8 @@ public:
 
   bool contains_node(const node_t *node) const;
   void append_node(node_t *node);
-  bool ends_with_node(const node_t *node) const;
-  bool is_closed() const;
+  bool ends_with_node(const node_t *node) const noexcept;
+  bool is_closed() const noexcept;
 
   void reverse(osm_t *osm, unsigned int &tags_flipped, unsigned int &roles_flipped);
 
@@ -554,16 +554,16 @@ public:
    * after splitting. @cut_at_node has no effect in this case.
    */
   way_t *split(osm_t *osm, node_chain_t::iterator cut_at, bool cut_at_node);
-  const node_t *last_node() const;
-  const node_t *first_node() const;
+  const node_t *last_node() const noexcept;
+  const node_t *first_node() const noexcept;
   void write_node_chain(xmlNodePtr way_node) const;
 
   void cleanup();
 
-  const char *apiString() const override {
+  const char *apiString() const noexcept override {
     return api_string();
   }
-  static const char *api_string() {
+  static const char *api_string() noexcept {
     return "way";
   }
 
@@ -603,10 +603,10 @@ public:
 
   void cleanup();
 
-  const char *apiString() const override {
+  const char *apiString() const noexcept override {
     return api_string();
   }
-  static const char *api_string() {
+  static const char *api_string() noexcept {
     return "relation";
   }
   void remove_member(std::vector<member_t>::iterator it);

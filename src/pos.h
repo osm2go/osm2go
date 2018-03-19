@@ -33,6 +33,9 @@ typedef double pos_float_t;
 #include <libxml/tree.h>
 #include <libxml/xmlreader.h>
 #include <string>
+
+#include <osm2go_cpp.h>
+
 /* equatorial radius in meters */
 #define POS_EQ_RADIUS     (6378137.0)
 #define KMPMIL   (1.609344)
@@ -50,11 +53,11 @@ struct lpos_t;
 typedef struct pos_t {
   pos_float_t lat, lon;
 #ifdef __cplusplus
-  inline pos_t() {}
-  inline pos_t(pos_float_t a, pos_float_t o) : lat(a), lon(o) {}
-  bool operator==(const pos_t &other) const
+  inline pos_t() noexcept {}
+  inline pos_t(pos_float_t a, pos_float_t o) noexcept : lat(a), lon(o) {}
+  bool operator==(const pos_t &other) const noexcept
   { return lat == other.lat && lon == other.lon; }
-  inline bool operator!=(const pos_t &other) const
+  inline bool operator!=(const pos_t &other) const noexcept
   { return !operator==(other); }
   bool valid() const;
 
@@ -88,32 +91,32 @@ typedef struct pos_t {
 #ifdef __cplusplus
 
 struct pos_area {
-  explicit pos_area() {}
-  pos_area(const pos_t &mi, const pos_t &ma)
+  explicit pos_area() noexcept {}
+  pos_area(const pos_t &mi, const pos_t &ma) noexcept
     : min(mi), max(ma) {}
 
   pos_t min;
   pos_t max;
 
-  bool contains(pos_t pos) const;
+  bool contains(pos_t pos) const noexcept;
   inline bool valid() const
   { return min.valid() && max.valid(); }
 
-  inline pos_float_t centerLat() const
+  inline pos_float_t centerLat() const noexcept
   { return (max.lat + min.lat) / 2; }
-  inline pos_float_t centerLon() const
+  inline pos_float_t centerLon() const noexcept
   { return (max.lon + min.lon) / 2; }
-  inline pos_t center() const
+  inline pos_t center() const noexcept
   { return pos_t(centerLat(), centerLon()); }
-  inline pos_float_t latDist() const
+  inline pos_float_t latDist() const noexcept
   { return max.lat - min.lat; }
-  inline pos_float_t lonDist() const
+  inline pos_float_t lonDist() const noexcept
   { return max.lon - min.lon; }
-  inline bool normalized() const
+  inline bool normalized() const noexcept
   { return max.lat > min.lat && max.lon > min.lon; }
-  inline bool operator==(const pos_area &other) const
+  inline bool operator==(const pos_area &other) const noexcept
   { return max == other.max && min == other.min; }
-  inline bool operator!=(const pos_area &other) const
+  inline bool operator!=(const pos_area &other) const noexcept
   { return !operator==(other); }
 
   /**
@@ -129,10 +132,10 @@ struct pos_area {
 
 /* local position */
 typedef struct lpos_t {
-  lpos_t() {}
-  lpos_t(int px, int py)
+  lpos_t() noexcept {}
+  lpos_t(int px, int py) noexcept
     : x(px) , y(py) {}
-  bool operator==(const lpos_t &other)
+  bool operator==(const lpos_t &other) noexcept
   { return x == other.x && y == other.y; }
 
   /**
@@ -147,7 +150,7 @@ struct bounds_t {
   lpos_t min, max;
   lpos_t center;
   float scale;
-  bool contains(lpos_t pos) const;
+  bool contains(lpos_t pos) const noexcept;
   bool init(const pos_area &area);
 };
 

@@ -57,7 +57,7 @@
 
 static_assert(sizeof(tag_list_t) == sizeof(tag_t *), "tag_list_t is not exactly as big as a pointer");
 
-bool object_t::operator==(const object_t &other) const
+bool object_t::operator==(const object_t &other) const noexcept
 {
   if (type != other.type) {
     if ((type | _REF_FLAG) != (other.type | _REF_FLAG))
@@ -91,19 +91,19 @@ bool object_t::operator==(const object_t &other) const
   }
 }
 
-bool object_t::operator==(const node_t *n) const {
+bool object_t::operator==(const node_t *n) const noexcept {
   return type == NODE && node == n;
 }
 
-bool object_t::operator==(const way_t *w) const {
+bool object_t::operator==(const way_t *w) const noexcept {
   return type == WAY && way == w;
 }
 
-bool object_t::operator==(const relation_t *r) const {
+bool object_t::operator==(const relation_t *r) const noexcept {
   return type == RELATION && relation == r;
 }
 
-bool object_t::is_real() const {
+bool object_t::is_real() const noexcept {
   return (type == NODE) ||
          (type == WAY)  ||
          (type == RELATION);
@@ -142,7 +142,7 @@ std::string object_t::id_string() const {
   return std::to_string(get_id());
 }
 
-item_id_t object_t::get_id() const {
+item_id_t object_t::get_id() const noexcept {
   if(unlikely(type == ILLEGAL))
     return ID_ILLEGAL;
   if(is_real())
@@ -1771,21 +1771,21 @@ void way_t::reverse(osm_t *osm, unsigned int &tags_flipped, unsigned int &roles_
   std::for_each(osm->relations.begin(), osm->relations.end(), context);
 }
 
-const node_t *way_t::first_node() const {
+const node_t *way_t::first_node() const noexcept {
   if(node_chain.empty())
     return nullptr;
 
   return node_chain.front();
 }
 
-const node_t *way_t::last_node() const {
+const node_t *way_t::last_node() const noexcept {
   if(node_chain.empty())
     return nullptr;
 
   return node_chain.back();
 }
 
-bool way_t::is_closed() const {
+bool way_t::is_closed() const noexcept {
   if(node_chain.empty())
     return false;
   return node_chain.front() == node_chain.back();
@@ -2060,11 +2060,11 @@ std::string object_t::get_name() const {
   return ret;
 }
 
-bool tag_t::is_creator_tag() const {
+bool tag_t::is_creator_tag() const noexcept {
   return is_creator_tag(key);
 }
 
-bool tag_t::is_creator_tag(const char* key)
+bool tag_t::is_creator_tag(const char* key) noexcept
 {
   return (strcasecmp(key, "created_by") == 0);
 }
@@ -2079,12 +2079,12 @@ tag_list_t::~tag_list_t()
   clear();
 }
 
-bool tag_list_t::empty() const
+bool tag_list_t::empty() const noexcept
 {
   return !contents || contents->empty();
 }
 
-bool tag_list_t::hasRealTags() const
+bool tag_list_t::hasRealTags() const noexcept
 {
   if(empty())
     return false;
@@ -2234,7 +2234,7 @@ void way_t::append_node(node_t *node) {
   node->ways++;
 }
 
-bool way_t::ends_with_node(const node_t *node) const
+bool way_t::ends_with_node(const node_t *node) const noexcept
 {
   /* and deleted way may even not contain any nodes at all */
   /* so ignore it */
@@ -2316,7 +2316,7 @@ bool way_t::merge(way_t *other, osm_t *osm, const std::vector<relation_t *> &rel
   return collision;
 }
 
-member_t::member_t(object_t::type_t t)
+member_t::member_t(object_t::type_t t) noexcept
   : role(nullptr)
 {
   object.type = t;
@@ -2328,7 +2328,7 @@ member_t::member_t(const object_t &o, const char *r)
 {
 }
 
-bool member_t::operator==(const member_t &other) const
+bool member_t::operator==(const member_t &other) const noexcept
 {
   if(object != other.object)
     return false;
@@ -2357,10 +2357,10 @@ std::vector<member_t>::iterator relation_t::find_member_object(const object_t &o
 struct member_counter {
   unsigned int &nodes, &ways, &relations;
   member_counter(unsigned int &n, unsigned int &w, unsigned int &r) : nodes(n), ways(w), relations(r) {}
-  void operator()(const member_t &member);
+  void operator()(const member_t &member) noexcept;
 };
 
-void member_counter::operator()(const member_t &member)
+void member_counter::operator()(const member_t &member) noexcept
 {
   switch(member.object.type) {
   case object_t::NODE:

@@ -132,7 +132,7 @@ pos_t lpos_t::toPos(const bounds_t &bounds) const {
   return pos;
 }
 
-bool bounds_t::contains(lpos_t pos) const {
+bool bounds_t::contains(lpos_t pos) const noexcept {
   if((pos.x < min.x) || (pos.x > max.x))
     return false;
   if((pos.y < min.y) || (pos.y > max.y))
@@ -158,7 +158,7 @@ bool bounds_t::init(const pos_area &area)
   return true;
 }
 
-bool pos_area::contains(pos_t pos) const
+bool pos_area::contains(pos_t pos) const noexcept
 {
   if((pos.lat < min.lat) || (pos.lat > max.lat))
     return false;
