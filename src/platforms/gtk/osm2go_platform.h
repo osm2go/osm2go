@@ -66,12 +66,12 @@ namespace osm2go_platform {
     GMappedFile *map;
   public:
     explicit inline MappedFile(const char *fname)
-      : map(g_mapped_file_new(fname, FALSE, O2G_NULLPTR)) {}
+      : map(g_mapped_file_new(fname, FALSE, nullptr)) {}
     inline ~MappedFile()
     { reset(); }
 
     inline operator bool() const
-    { return map != O2G_NULLPTR; }
+    { return map != nullptr; }
 
     inline const char *data()
     { return g_mapped_file_get_contents(map); }

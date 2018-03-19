@@ -63,7 +63,7 @@ std::string project_filename(const project_t *project) {
 bool project_read(const std::string &project_file, project_t *project,
                   const std::string &defaultserver, int basefd) {
   fdguard projectfd(basefd, project_file.c_str(), O_RDONLY);
-  std::unique_ptr<xmlDoc, xmlDocDelete> doc(xmlReadFd(projectfd, project_file.c_str(), O2G_NULLPTR, XML_PARSE_NONET));
+  std::unique_ptr<xmlDoc, xmlDocDelete> doc(xmlReadFd(projectfd, project_file.c_str(), nullptr, XML_PARSE_NONET));
 
   /* parse the file and get the DOM */
   if(unlikely(!doc)) {
@@ -79,7 +79,7 @@ bool project_read(const std::string &project_file, project_t *project,
         project->data_dirty = xml_get_prop_bool(cur_node, "dirty");
         project->isDemo = xml_get_prop_bool(cur_node, "demo");
 
-        for(xmlNode *node = cur_node->children; node != O2G_NULLPTR; node = node->next) {
+        for(xmlNode *node = cur_node->children; node != nullptr; node = node->next) {
           if(node->type != XML_ELEMENT_NODE)
             continue;
 
@@ -102,11 +102,11 @@ bool project_read(const std::string &project_file, project_t *project,
 
             str.reset(xmlGetProp(node, BAD_CAST "scroll-offset-x"));
             if(str)
-              project->map_state.scroll_offset.x = strtoul(reinterpret_cast<char *>(str.get()), O2G_NULLPTR, 10);
+              project->map_state.scroll_offset.x = strtoul(reinterpret_cast<char *>(str.get()), nullptr, 10);
 
             str.reset(xmlGetProp(node, BAD_CAST "scroll-offset-y"));
             if(str)
-              project->map_state.scroll_offset.y = strtoul(reinterpret_cast<char *>(str.get()), O2G_NULLPTR, 10);
+              project->map_state.scroll_offset.y = strtoul(reinterpret_cast<char *>(str.get()), nullptr, 10);
           } else if(strcmp(reinterpret_cast<const char *>(node->name), "wms") == 0) {
             xmlString str(xmlGetProp(node, BAD_CAST "server"));
             if(str)
@@ -119,11 +119,11 @@ bool project_read(const std::string &project_file, project_t *project,
 
             str.reset(xmlGetProp(node, BAD_CAST "x-offset"));
             if(str)
-              project->wms_offset.x = strtoul(reinterpret_cast<char *>(str.get()), O2G_NULLPTR, 10);
+              project->wms_offset.x = strtoul(reinterpret_cast<char *>(str.get()), nullptr, 10);
 
             str.reset(xmlGetProp(node, BAD_CAST "y-offset"));
             if(str)
-              project->wms_offset.y = strtoul(reinterpret_cast<char *>(str.get()), O2G_NULLPTR, 10);
+              project->wms_offset.y = strtoul(reinterpret_cast<char *>(str.get()), nullptr, 10);
           } else if(strcmp(reinterpret_cast<const char *>(node->name), "osm") == 0) {
             xmlString str(xmlNodeListGetString(doc.get(), node->children, 1));
             if(likely(str)) {
@@ -188,7 +188,7 @@ bool project_t::save(osm2go_platform::Widget *parent) {
   }
 
   std::unique_ptr<xmlDoc, xmlDocDelete> doc(xmlNewDoc(BAD_CAST "1.0"));
-  xmlNodePtr node, root_node = xmlNewNode(O2G_NULLPTR, BAD_CAST "proj");
+  xmlNodePtr node, root_node = xmlNewNode(nullptr, BAD_CAST "proj");
   xmlNewProp(root_node, BAD_CAST "name", BAD_CAST name.c_str());
   if(data_dirty)
     xmlNewProp(root_node, BAD_CAST "dirty", BAD_CAST "true");
@@ -198,22 +198,22 @@ bool project_t::save(osm2go_platform::Widget *parent) {
   xmlDocSetRootElement(doc.get(), root_node);
 
   if(!rserver.empty())
-    xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "server", BAD_CAST rserver.c_str());
+    xmlNewChild(root_node, nullptr, BAD_CAST "server", BAD_CAST rserver.c_str());
 
   if(!desc.empty())
-    xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "desc", BAD_CAST desc.c_str());
+    xmlNewChild(root_node, nullptr, BAD_CAST "desc", BAD_CAST desc.c_str());
 
   const std::string defaultOsm = name + ".osm";
   if(unlikely(!osmFile.empty() && osmFile != defaultOsm + ".gz" && osmFile != defaultOsm))
-    xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "osm", BAD_CAST osmFile.c_str());
+    xmlNewChild(root_node, nullptr, BAD_CAST "osm", BAD_CAST osmFile.c_str());
 
-  node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "min", O2G_NULLPTR);
+  node = xmlNewChild(root_node, nullptr, BAD_CAST "min", nullptr);
   bounds.min.toXmlProperties(node);
 
-  node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "max", O2G_NULLPTR);
+  node = xmlNewChild(root_node, nullptr, BAD_CAST "max", nullptr);
   bounds.max.toXmlProperties(node);
 
-  node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "map", O2G_NULLPTR);
+  node = xmlNewChild(root_node, nullptr, BAD_CAST "map", nullptr);
   g_ascii_formatd(str, sizeof(str), "%.04f", map_state.zoom);
   xmlNewProp(node, BAD_CAST "zoom", BAD_CAST str);
   g_ascii_formatd(str, sizeof(str), "%.04f", map_state.detail);
@@ -224,7 +224,7 @@ bool project_t::save(osm2go_platform::Widget *parent) {
   xmlNewProp(node, BAD_CAST "scroll-offset-y", BAD_CAST str);
 
   if(wms_offset.x != 0 || wms_offset.y != 0 || !wms_server.empty()) {
-    node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "wms", O2G_NULLPTR);
+    node = xmlNewChild(root_node, nullptr, BAD_CAST "wms", nullptr);
     if(!wms_server.empty())
       xmlNewProp(node, BAD_CAST "server", BAD_CAST wms_server.c_str());
     snprintf(str, sizeof(str), "%d", wms_offset.x);
@@ -265,7 +265,7 @@ std::vector<project_t *> project_scan(map_state_t &ms, const std::string &base_p
     return projects;
 
   dirent *d;
-  while((d = dir.next()) != O2G_NULLPTR) {
+  while((d = dir.next()) != nullptr) {
     if(d->d_type != DT_DIR && d->d_type != DT_UNKNOWN)
       continue;
 
@@ -298,7 +298,7 @@ void project_close(appdata_t &appdata) {
   appdata.track_clear();
 
   appdata.map->clear(map_t::MAP_LAYER_ALL);
-  appdata.project = O2G_NULLPTR;
+  appdata.project = nullptr;
 
   project->diff_save();
 
@@ -319,7 +319,7 @@ void project_delete(project_t *project) {
   if(likely(dir.valid())) {
     int dfd = dir.dirfd();
     dirent *d;
-    while ((d = dir.next()) != O2G_NULLPTR) {
+    while ((d = dir.next()) != nullptr) {
       if(unlikely(d->d_type == DT_DIR ||
                     (unlinkat(dfd, d->d_name, 0) == -1 && errno == EISDIR)))
         unlinkat(dfd, d->d_name, AT_REMOVEDIR);
@@ -389,7 +389,7 @@ static bool project_open(appdata_t &appdata, const std::string &name) {
   project->parse_osm();
   appdata.project = project.release();
 
-  return appdata.project->osm != O2G_NULLPTR;
+  return appdata.project->osm != nullptr;
 }
 
 static bool project_load_inner(appdata_t &appdata, const std::string &name) {
@@ -416,14 +416,14 @@ static bool project_load_inner(appdata_t &appdata, const std::string &name) {
     return false;
   }
 
-  if(unlikely(appdata_t::window == O2G_NULLPTR))
+  if(unlikely(appdata_t::window == nullptr))
     return false;
 
   /* check if OSM data is valid */
   osm2go_platform::process_events();
   const char *errmsg = appdata.project->osm->sanity_check();
-  if(unlikely(errmsg != O2G_NULLPTR)) {
-    errorf(O2G_NULLPTR, "%s", errmsg);
+  if(unlikely(errmsg != nullptr)) {
+    errorf(nullptr, "%s", errmsg);
     printf("project/osm sanity checks failed, unloading project\n");
 
     snprintf(banner_txt, sizeof(banner_txt),
@@ -435,21 +435,21 @@ static bool project_load_inner(appdata_t &appdata, const std::string &name) {
 
   /* load diff possibly preset */
   osm2go_platform::process_events();
-  if(unlikely(appdata_t::window == O2G_NULLPTR))
+  if(unlikely(appdata_t::window == nullptr))
     return false;
 
   diff_restore(appdata.project, appdata.uicontrol);
 
   /* prepare colors etc, draw data and adjust scroll/zoom settings */
   osm2go_platform::process_events();
-  if(unlikely(appdata_t::window == O2G_NULLPTR))
+  if(unlikely(appdata_t::window == nullptr))
     return false;
 
   appdata.map->init();
 
   /* restore a track */
   osm2go_platform::process_events();
-  if(unlikely(appdata_t::window == O2G_NULLPTR))
+  if(unlikely(appdata_t::window == nullptr))
     return false;
 
   appdata.track_clear();
@@ -458,15 +458,15 @@ static bool project_load_inner(appdata_t &appdata, const std::string &name) {
 
   /* finally load a background if present */
   osm2go_platform::process_events();
-  if(unlikely(appdata_t::window == O2G_NULLPTR))
+  if(unlikely(appdata_t::window == nullptr))
     return false;
   wms_load(appdata);
 
   /* save the name of the project for the perferences */
   settings_t::instance()->project = appdata.project->name;
 
-  appdata.uicontrol->showNotification(O2G_NULLPTR, MainUi::Busy);
-  appdata.uicontrol->showNotification(O2G_NULLPTR);
+  appdata.uicontrol->showNotification(nullptr, MainUi::Busy);
+  appdata.uicontrol->showNotification(nullptr);
 
   return true;
 }
@@ -477,7 +477,7 @@ bool project_load(appdata_t &appdata, const std::string &name) {
     printf("project loading interrupted by user\n");
 
     delete appdata.project;
-    appdata.project = O2G_NULLPTR;
+    appdata.project = nullptr;
   }
   return ret;
 }
@@ -494,7 +494,7 @@ project_t::project_t(map_state_t &ms, const std::string &n, const std::string &b
   , data_dirty(false)
   , isDemo(false)
   , dirfd(path.c_str())
-  , osm(O2G_NULLPTR)
+  , osm(nullptr)
 {
   memset(&wms_offset, 0, sizeof(wms_offset));
   memset(&bounds, 0, sizeof(bounds));
@@ -507,7 +507,7 @@ project_t::~project_t()
 
 void project_t::adjustServer(const char *nserver, const std::string &def)
 {
-  if(nserver == O2G_NULLPTR || !*nserver || def == nserver)
+  if(nserver == nullptr || !*nserver || def == nserver)
     rserver.clear();
   else
     rserver = nserver;

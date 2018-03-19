@@ -126,9 +126,9 @@ static void test_taglist() {
   tags.replace(nstags);
 
   assert_cmpnum(nstags.size(), 2);
-  assert(tags.get_value("a") != O2G_NULLPTR);
+  assert(tags.get_value("a") != nullptr);
   assert_cmpstr(tags.get_value("a"), "A");
-  assert(tags.get_value("b") != O2G_NULLPTR);
+  assert(tags.get_value("b") != nullptr);
   assert_cmpstr(tags.get_value("b"), "B");
   assert(!tags.hasTagCollisions());
 
@@ -139,9 +139,9 @@ static void test_taglist() {
   tags.replace(ntags);
 
   assert(ntags.empty());
-  assert(tags.get_value("a") != O2G_NULLPTR);
+  assert(tags.get_value("a") != nullptr);
   assert_cmpstr(tags.get_value("a"), "aa");
-  assert(tags.get_value("b") != O2G_NULLPTR);
+  assert(tags.get_value("b") != nullptr);
   assert_cmpstr(tags.get_value("b"), "bb");
   assert(!tags.hasTagCollisions());
 
@@ -151,9 +151,9 @@ static void test_taglist() {
   tags.replace(nstags);
 
   assert_cmpnum(nstags.size(), 2);
-  assert(tags.get_value("a") != O2G_NULLPTR);
+  assert(tags.get_value("a") != nullptr);
   assert_cmpstr(tags.get_value("a"), "A");
-  assert(tags.get_value("b") != O2G_NULLPTR);
+  assert(tags.get_value("b") != nullptr);
   assert_cmpstr(tags.get_value("b"), "B");
   assert(!tags.hasTagCollisions());
 
@@ -164,9 +164,9 @@ static void test_taglist() {
   assert(!tags.merge(tags2));
   assert(!tags.hasTagCollisions());
 
-  assert(tags.get_value("a") != O2G_NULLPTR);
+  assert(tags.get_value("a") != nullptr);
   assert_cmpstr(tags.get_value("a"), "A");
-  assert(tags.get_value("b") != O2G_NULLPTR);
+  assert(tags.get_value("b") != nullptr);
   assert_cmpstr(tags.get_value("b"), "B");
 
   assert_null(tags2.get_value("a"));
@@ -175,9 +175,9 @@ static void test_taglist() {
   tags2.replace(lowerTags);
   assert_cmpnum(tags2.asMap().size(), 2);
   assert(!lowerTags.empty());
-  assert(tags2.get_value("a") != O2G_NULLPTR);
+  assert(tags2.get_value("a") != nullptr);
   assert_cmpstr(tags2.get_value("a"), "aa");
-  assert(tags2.get_value("b") != O2G_NULLPTR);
+  assert(tags2.get_value("b") != nullptr);
   assert_cmpstr(tags2.get_value("b"), "bb");
   assert(!osm_t::tagSubset(tags2.asMap(), tags.asMap()));
   assert(!osm_t::tagSubset(tags.asMap(), tags2.asMap()));
@@ -191,9 +191,9 @@ static void test_taglist() {
   assert(!tags.merge(tags2));
 
   assert(tags.hasTagCollisions());
-  assert(tags.get_value("a") != O2G_NULLPTR);
+  assert(tags.get_value("a") != nullptr);
   assert_cmpstr(tags.get_value("a"), "A");
-  assert(tags.get_value("b") != O2G_NULLPTR);
+  assert(tags.get_value("b") != nullptr);
   assert_cmpstr(tags.get_value("b"), "B");
   assert_cmpnum(tags.asMap().size(), 4);
   assert(tags.contains(find_aa));
@@ -353,7 +353,7 @@ static void test_split()
 
   assert_cmpnum(o.ways.size(), 2);
   way_t *neww = w->split(&o, w->node_chain.begin() + 2, false);
-  assert(neww != O2G_NULLPTR);
+  assert(neww != nullptr);
   assert_cmpnum(o.ways.size(), 3);
   assert(w->flags & OSM_FLAG_DIRTY);
   for(unsigned int i = 0; i < nodes.size(); i++)
@@ -380,7 +380,7 @@ static void test_split()
 
   // now split the remaining way at a node
   way_t *neww2 = w->split(&o, w->node_chain.begin() + 2, true);
-  assert(neww2 != O2G_NULLPTR);
+  assert(neww2 != nullptr);
   assert_cmpnum(o.ways.size(), 4);
   assert(w->flags & OSM_FLAG_DIRTY);
   for(unsigned int i = 0; i < nodes.size(); i++)
@@ -670,7 +670,7 @@ static void test_reverse()
     rtags.insert(osm_t::TagMap::value_type("type", i == 0 ? "multipolygon" : "route"));
     r->tags.replace(rtags);
     if(i < 4) {
-      const char *role = O2G_NULLPTR;
+      const char *role = nullptr;
       switch(i) {
       case 0:
       case 1:
@@ -1105,7 +1105,7 @@ static void test_merge_nodes()
 
   // while at it: test backwards mapping to containing objects
   way_chain_t wchain;
-  assert(o.find_way(node_collector(wchain, n1)) == O2G_NULLPTR);
+  assert(o.find_way(node_collector(wchain, n1)) == nullptr);
   assert_cmpnum(wchain.size(), 2);
   assert(std::find(wchain.begin(), wchain.end(), o.ways.begin()->second) != wchain.end());
   assert(std::find(wchain.begin(), wchain.end(), w) != wchain.end());

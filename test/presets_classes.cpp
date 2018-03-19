@@ -29,7 +29,7 @@ static void checkTextMatch()
 {
   presets_element_text w_0(tag_testkey_testtext.first,
                           tag_testkey_testtext.second,
-                          std::string(), O2G_NULLPTR);
+                          std::string(), nullptr);
 
   assert_cmpnum(w_0.matches(VECTOR_ONE(tag_testkey_other)), 0);
   assert_cmpnum(w_0.matches(VECTOR_ONE(tag_testkey_testtext)), 0);
@@ -97,7 +97,7 @@ static void checkComboMatch()
   presets_element_combo w_0(tag_testkey_testtext.first,
                            "visual text",
                            values.front(),
-                           O2G_NULLPTR, values, empty_vector);
+                           nullptr, values, empty_vector);
 
   assert_cmpnum(w_0.matches(VECTOR_ONE(tag_testkey_other)), 0);
   assert_cmpnum(w_0.matches(VECTOR_ONE(tag_testkey_testtext)), 0);

@@ -51,15 +51,15 @@ public:
 };
 
 statusbar_fremantle::statusbar_fremantle()
-  : statusbar_t(gtk_label_new(O2G_NULLPTR))
+  : statusbar_t(gtk_label_new(nullptr))
 {
   /* why the heck does hildon show this by default? It's useless!! */
-  g_object_set(widget, "has-resize-grip", FALSE, O2G_NULLPTR);
+  g_object_set(widget, "has-resize-grip", FALSE, nullptr);
 }
 
 void statusbar_fremantle::banner_busy_stop() {
   GtkWidget *win = appdata_t::window;
-  if(G_UNLIKELY(win == O2G_NULLPTR || !banner))
+  if(G_UNLIKELY(win == nullptr || !banner))
     return;
   gtk_grab_remove(widget);
   gtk_widget_set_sensitive(win, TRUE);
@@ -70,9 +70,9 @@ void statusbar_fremantle::banner_busy_stop() {
 // Cancel any animations currently going, and show a brief text message.
 
 void statusbar_fremantle::banner_show_info(const char *text) {
-  if(G_UNLIKELY(appdata_t::window == O2G_NULLPTR))
+  if(G_UNLIKELY(appdata_t::window == nullptr))
     return;
-  setBanner(hildon_banner_show_information(appdata_t::window, O2G_NULLPTR, text));
+  setBanner(hildon_banner_show_information(appdata_t::window, nullptr, text));
 }
 
 /*
@@ -88,9 +88,9 @@ void statusbar_fremantle::banner_show_info(const char *text) {
 
 void statusbar_fremantle::banner_busy_start(const char *text) {
   GtkWidget *win = appdata_t::window;
-  if(G_UNLIKELY(win == O2G_NULLPTR))
+  if(G_UNLIKELY(win == nullptr))
     return;
-  setBanner(hildon_banner_show_progress(win, O2G_NULLPTR, text));
+  setBanner(hildon_banner_show_progress(win, nullptr, text));
   gtk_widget_set_sensitive(win, FALSE);
   gtk_grab_add(widget);
   osm2go_platform::process_events();
@@ -98,7 +98,7 @@ void statusbar_fremantle::banner_busy_start(const char *text) {
 
 void statusbar_fremantle::set(const char *msg, bool highlight) {
   static const GdkColor color = color_red();
-  const GdkColor *col = highlight ? &color : O2G_NULLPTR;
+  const GdkColor *col = highlight ? &color : nullptr;
 
   gtk_widget_modify_fg(widget, GTK_STATE_NORMAL, col);
   gtk_widget_modify_text(widget, GTK_STATE_NORMAL, col);

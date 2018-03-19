@@ -58,7 +58,7 @@ void map_hl_segment_draw(map_t *map, unsigned int width, const std::vector<lpos_
 void map_hl_cursor_clear(map_t *map) {
   if(map->cursor) {
     delete map->cursor;
-    map->cursor = O2G_NULLPTR;
+    map->cursor = nullptr;
   }
 }
 

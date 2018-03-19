@@ -61,7 +61,7 @@ struct map_item_chain_t {
 
 canvas_item_t *map_item_chain_t::firstCanvasItem() const {
   if(map_items.empty())
-    return O2G_NULLPTR;
+    return nullptr;
   return map_items.front()->item;
 }
 
@@ -73,7 +73,7 @@ static void map_statusbar(map_t *map, map_item_t *map_item) {
 }
 
 void map_t::outside_error() {
-  errorf(O2G_NULLPTR, _("Items must not be placed outside the working area!"));
+  errorf(nullptr, _("Items must not be placed outside the working area!"));
 }
 
 static inline void map_item_destroy_canvas_item(map_item_t *m) {
@@ -90,7 +90,7 @@ void map_item_chain_destroy(map_item_chain_t *&chainP) {
                 map_item_destroy_canvas_item);
 
   delete chainP;
-  chainP = O2G_NULLPTR;
+  chainP = nullptr;
 }
 
 static void map_node_select(map_t *map, node_t *node) {
@@ -105,7 +105,7 @@ static void map_node_select(map_t *map, node_t *node) {
   if(node->map_item_chain)
     map_item->item = node->map_item_chain->firstCanvasItem();
   else
-    map_item->item = O2G_NULLPTR;
+    map_item->item = nullptr;
 
   map_statusbar(map, map_item);
   map->appdata.iconbar->map_item_selected(map_item->object);
@@ -156,7 +156,7 @@ struct set_point_pos {
  * @brief create a canvas point array for a way
  * @param way the way to convert
  * @return canvas node array if at least 2 nodes were present
- * @retval O2G_NULLPTR the way has less than 2 nodes
+ * @retval nullptr the way has less than 2 nodes
  */
 static std::vector<lpos_t>  __attribute__((nonnull(1)))
 points_from_node_chain(const way_t *way)
@@ -184,7 +184,7 @@ struct draw_selected_way_functor {
   map_t * const map;
   way_t * const way;
   draw_selected_way_functor(float a, map_t *m, way_t *w)
-    : last(O2G_NULLPTR), arrow_width(a), map(m), way(w) {}
+    : last(nullptr), arrow_width(a), map(m), way(w) {}
   void operator()(node_t *node);
 };
 
@@ -281,7 +281,7 @@ struct relation_select_functor {
 
 void relation_select_functor::operator()(member_t& member)
 {
-  canvas_item_t *item = O2G_NULLPTR;
+  canvas_item_t *item = nullptr;
 
   switch(member.object.type) {
   case object_t::NODE: {
@@ -329,7 +329,7 @@ void map_t::select_relation(relation_t *relation) {
 
   selected.object = relation;
   selected.highlight = false;
-  selected.item = O2G_NULLPTR;
+  selected.item = nullptr;
 
   map_statusbar(this, &selected);
   appdata.iconbar->map_item_selected(selected.object);
@@ -366,7 +366,7 @@ void map_t::item_deselect() {
   }
 
   /* remove statusbar message */
-  appdata.uicontrol->showNotification(O2G_NULLPTR);
+  appdata.uicontrol->showNotification(nullptr);
 
   /* disable/enable icons in icon bar */
   appdata.iconbar->map_item_selected(object_t());
@@ -638,7 +638,7 @@ static void map_frisket_draw(map_t *map, const bounds_t &bounds) {
 
 static void free_map_item_chain(std::pair<item_id_t, visible_item_t *> pair) {
   delete pair.second->map_item_chain;
-  pair.second->map_item_chain = O2G_NULLPTR;
+  pair.second->map_item_chain = nullptr;
 }
 
 template<bool b> void free_track_item_chain(track_seg_t &seg) {
@@ -650,7 +650,7 @@ template<bool b> void free_track_item_chain(track_seg_t &seg) {
 
 static void map_free_map_item_chains(appdata_t &appdata) {
   osm_t * const osm = appdata.project->osm;
-  if(unlikely(osm == O2G_NULLPTR))
+  if(unlikely(osm == nullptr))
     return;
 
   /* free all map_item_chains */
@@ -680,7 +680,7 @@ map_item_t *map_t::item_at(int x, int y) {
 
   if(!item) {
     printf("  there's no item\n");
-    return O2G_NULLPTR;
+    return nullptr;
   }
 
   printf("  there's an item (%p)\n", item);
@@ -689,7 +689,7 @@ map_item_t *map_t::item_at(int x, int y) {
 
   if(!map_item) {
     printf("  item has no user data!\n");
-    return O2G_NULLPTR;
+    return nullptr;
   }
 
   if(map_item->highlight)
@@ -812,7 +812,7 @@ static bool map_limit_zoom(map_t *map, double &zoom) {
 bool map_t::scroll_to_if_offscreen(const lpos_t lpos) {
 
   // Ignore anything outside the working area
-  if(unlikely(appdata.project->osm == O2G_NULLPTR))
+  if(unlikely(appdata.project->osm == nullptr))
     return false;
 
   if (!appdata.project->osm->bounds.contains(lpos)) {
@@ -1058,7 +1058,7 @@ void hl_nodes::operator()(node_t* node)
 static void map_touchnode_update(map_t *map, int x, int y) {
   map->touchnode_clear();
 
-  const node_t *cur_node = O2G_NULLPTR;
+  const node_t *cur_node = nullptr;
 
   /* the "current node" which is the one we are working on and which */
   /* should not be highlighted depends on the action */
@@ -1066,7 +1066,7 @@ static void map_touchnode_update(map_t *map, int x, int y) {
 
     /* in idle mode the dragged node is not highlighted */
   case MAP_ACTION_IDLE:
-    assert(map->pen_down.on_item != O2G_NULLPTR);
+    assert(map->pen_down.on_item != nullptr);
     assert_cmpnum(map->pen_down.on_item->object.type, object_t::NODE);
     cur_node = map->pen_down.on_item->object.node;
     break;
@@ -1077,12 +1077,12 @@ static void map_touchnode_update(map_t *map, int x, int y) {
 
   /* check if we are close to one of the other nodes */
   lpos_t pos = map->canvas->window2world(x, y);
-  node_t *rnode = O2G_NULLPTR;
+  node_t *rnode = nullptr;
   hl_nodes fc(cur_node, pos, map, rnode);
   osm_t * const osm = map->appdata.project->osm;
   std::for_each(osm->nodes.begin(), osm->nodes.end(), fc);
 
-  if(rnode != O2G_NULLPTR) {
+  if(rnode != nullptr) {
     delete map->touchnode;
 
     map->touchnode = map->canvas->circle_new(CANVAS_GROUP_DRAW, rnode->lpos.x, rnode->lpos.y,
@@ -1166,7 +1166,7 @@ void map_t::button_release(int x, int y) {
       if(old_sel.object.type != object_t::ILLEGAL && old_sel.object == selected.object) {
         printf("re-selected same item of type %s, pushing it to the bottom\n",
                old_sel.object.type_string());
-        if(selected.item == O2G_NULLPTR) {
+        if(selected.item == nullptr) {
           printf("  item has no visible representation to push\n");
         } else {
           selected.item->to_bottom();
@@ -1200,7 +1200,7 @@ void map_t::button_release(int x, int y) {
     /* convert mouse position to canvas (world) position */
     lpos_t pos = canvas->window2world(x, y);
 
-    node_t *node = O2G_NULLPTR;
+    node_t *node = nullptr;
     osm_t * const osm = appdata.project->osm;
     if(!osm->bounds.contains(pos))
       outside_error();
@@ -1296,14 +1296,14 @@ void map_t::handle_motion(int x, int y)
 }
 
 map_t::map_t(appdata_t &a, map_highlight_t &hl)
-  : gps_item(O2G_NULLPTR)
+  : gps_item(nullptr)
   , appdata(a)
   , canvas(canvas_t::create())
   , state(appdata.map_state)
   , highlight(hl)
-  , cursor(O2G_NULLPTR)
-  , touchnode(O2G_NULLPTR)
-  , touchnode_node(O2G_NULLPTR)
+  , cursor(nullptr)
+  , touchnode(nullptr)
+  , touchnode_node(nullptr)
   , style(appdata.style)
   , elements_drawn(0)
 {
@@ -1380,7 +1380,7 @@ void map_t::paint() {
 
   style->colorize_world(osm);
 
-  assert(canvas != O2G_NULLPTR);
+  assert(canvas != nullptr);
 
   printf("drawing ways ...\n");
   std::for_each(osm->ways.begin(), osm->ways.end(), map_way_draw_functor(this));
@@ -1430,7 +1430,7 @@ void map_t::set_action(map_action_t act) {
     break;
 
   case MAP_ACTION_IDLE:
-    statusbar_text = O2G_NULLPTR;
+    statusbar_text = nullptr;
     cancel_state = false;
     idle = true;
     break;
@@ -1475,7 +1475,7 @@ void map_action_ok(map_t *map) {
     if(!pos.valid())
       break;
 
-    node_t *node = O2G_NULLPTR;
+    node_t *node = nullptr;
     osm_t * const osm = map->appdata.project->osm;
 
     if(!osm->bounds.ll.contains(pos)) {
@@ -1537,7 +1537,7 @@ void map_delete_selected(map_t *map) {
 
   const char *objtype = item.object.type_string();
   g_string msgtitle(g_strdup_printf(_("Delete selected %s?"), objtype));
-  if(!yes_no_f(O2G_NULLPTR, MISC_AGAIN_ID_DELETE | MISC_AGAIN_FLAG_DONT_SAVE_NO,
+  if(!yes_no_f(nullptr, MISC_AGAIN_ID_DELETE | MISC_AGAIN_FLAG_DONT_SAVE_NO,
                msgtitle.get(), _("Do you really want to delete the selected %s?"), objtype))
     return;
 
@@ -1554,8 +1554,8 @@ void map_delete_selected(map_t *map) {
   case object_t::NODE: {
     /* check if this node is part of a way with two nodes only. */
     /* we cannot delete this as this would also delete the way */
-    if(osm->find_way(short_way(item.object.node)) != O2G_NULLPTR &&
-       !yes_no_f(O2G_NULLPTR, 0, _("Delete node in short way(s)?"),
+    if(osm->find_way(short_way(item.object.node)) != nullptr &&
+       !yes_no_f(nullptr, 0, _("Delete node in short way(s)?"),
                  _("Deleting this node will also delete one or more ways "
                    "since they'll contain only one node afterwards. "
                    "Do you really want this?")))
@@ -1804,7 +1804,7 @@ void map_t::track_pos(const lpos_t lpos) {
  */
 void map_t::remove_gps_position() {
   delete gps_item;
-  gps_item = O2G_NULLPTR;
+  gps_item = nullptr;
 }
 
 /* ------------------- map background ------------------ */
@@ -1867,7 +1867,7 @@ void map_t::detail_change(float detail, const char *banner_msg) {
   clear(MAP_LAYER_OBJECTS_ONLY);
   paint();
   if(banner_msg)
-    appdata.uicontrol->showNotification(O2G_NULLPTR, MainUi::Busy);
+    appdata.uicontrol->showNotification(nullptr, MainUi::Busy);
 }
 
 void map_t::detail_increase() {
@@ -1883,8 +1883,8 @@ void map_t::detail_normal() {
 }
 
 node_t *map_t::touchnode_get_node() {
-  if(touchnode == O2G_NULLPTR)
-    return O2G_NULLPTR;
+  if(touchnode == nullptr)
+    return nullptr;
   node_t *ret = touchnode_node;
   touchnode_clear();
   return ret;
@@ -1892,8 +1892,8 @@ node_t *map_t::touchnode_get_node() {
 
 void map_t::touchnode_clear() {
   delete touchnode;
-  touchnode = O2G_NULLPTR;
-  touchnode_node = O2G_NULLPTR;
+  touchnode = nullptr;
+  touchnode_node = nullptr;
 }
 
 map_state_t::map_state_t()

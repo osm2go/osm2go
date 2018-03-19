@@ -97,12 +97,12 @@ void osm2go_platform::dialog_size_hint(GtkWindow *window, osm2go_platform::Dialo
 
 void osm2go_platform::MappedFile::reset()
 {
-  if(likely(map != O2G_NULLPTR)) {
+  if(likely(map != nullptr)) {
 #if GLIB_CHECK_VERSION(2,22,0)
     g_mapped_file_unref(map);
 #else
     g_mapped_file_free(map);
 #endif
-    map = O2G_NULLPTR;
+    map = nullptr;
   }
 }

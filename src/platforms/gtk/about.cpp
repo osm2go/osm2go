@@ -45,7 +45,7 @@
 #include "osm2go_platform_gtk.h"
 
 static GtkWidget *link_new(const char *url) {
-  GtkWidget *label = gtk_label_new(O2G_NULLPTR);
+  GtkWidget *label = gtk_label_new(nullptr);
   std::string str = "<span color=\"" LINK_COLOR "\"><u>" + std::string(url) +
                           "</u></span>";
   gtk_label_set_markup(GTK_LABEL(label), str.c_str());
@@ -79,13 +79,13 @@ static GtkWidget *label_wrap(const char *str) {
   gtk_label_set_line_wrap_mode(GTK_LABEL(label), PANGO_WRAP_WORD);
   gtk_label_set_line_wrap(GTK_LABEL(label), TRUE);
 
-  g_signal_connect(label, "realize", G_CALLBACK(on_label_realize), O2G_NULLPTR);
+  g_signal_connect(label, "realize", G_CALLBACK(on_label_realize), nullptr);
 
   return label;
 }
 
 static GtkWidget *license_page_new(void) {
-  GtkWidget *label = label_wrap(O2G_NULLPTR);
+  GtkWidget *label = label_wrap(nullptr);
 
   const std::string &name = find_file("COPYING");
   bool found = false;
@@ -104,7 +104,7 @@ static GtkWidget *license_page_new(void) {
     gtk_label_set_text(GTK_LABEL(label), _("Load error"));
 
 #ifndef FREMANTLE
-  GtkWidget *scrolled_window = gtk_scrolled_window_new(O2G_NULLPTR, O2G_NULLPTR);
+  GtkWidget *scrolled_window = gtk_scrolled_window_new(nullptr, nullptr);
   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window),
   				 GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
   gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(scrolled_window),
@@ -214,7 +214,7 @@ static GtkWidget *authors_page_new(void) {
   gtk_box_pack_start(GTK_BOX(vbox), ivbox, TRUE, FALSE, 0);
 
 #ifndef FREMANTLE
-  GtkWidget *scrolled_window = gtk_scrolled_window_new(O2G_NULLPTR, O2G_NULLPTR);
+  GtkWidget *scrolled_window = gtk_scrolled_window_new(nullptr, nullptr);
   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window),
   				 GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
   gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(scrolled_window),
@@ -286,7 +286,7 @@ void MainUi::about_box()
 {
   osm2go_platform::WidgetGuard dialog(gtk_dialog_new_with_buttons(_("About OSM2Go"),
                                               GTK_WINDOW(appdata_t::window), GTK_DIALOG_MODAL,
-                                              GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE, O2G_NULLPTR));
+                                              GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE, nullptr));
 
   gtk_window_set_default_size(GTK_WINDOW(dialog.get()),
 #ifdef FREMANTLE

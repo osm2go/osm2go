@@ -87,11 +87,11 @@ void statusbar_gtk::banner_busy_start(const char *text) {
 static void statusbar_highlight(statusbar_t *statusbar, bool highlight) {
   GtkWidget * const w = GTK_STATUSBAR(statusbar->widget)->label;
   static const GdkColor color = color_red();
-  const GdkColor *col = highlight ? &color : O2G_NULLPTR;
+  const GdkColor *col = highlight ? &color : nullptr;
 
   gtk_widget_modify_fg(w, GTK_STATE_NORMAL, col);
   gtk_widget_modify_text(w, GTK_STATE_NORMAL, col);
-  g_object_set(statusbar->widget, "has-resize-grip", FALSE, O2G_NULLPTR);
+  g_object_set(statusbar->widget, "has-resize-grip", FALSE, nullptr);
 }
 
 void statusbar_gtk::set(const char *msg, bool highlight) {

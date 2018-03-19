@@ -90,8 +90,8 @@ static void style_change(appdata_t &appdata, const std::string &name,
     return;
 
   style_t *nstyle = style_load_fname(it->second);
-  if (nstyle == O2G_NULLPTR) {
-    errorf(O2G_NULLPTR, _("Error loading style %s"), it->second.c_str());
+  if (nstyle == nullptr) {
+    errorf(nullptr, _("Error loading style %s"), it->second.c_str());
     return;
   }
 
@@ -122,7 +122,7 @@ void style_select(GtkWidget *parent, appdata_t &appdata) {
                                               GTK_WINDOW(parent), GTK_DIALOG_MODAL,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                               GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-                                              O2G_NULLPTR));
+                                              nullptr));
 
   gtk_dialog_set_default_response(GTK_DIALOG(dialog.get()), GTK_RESPONSE_ACCEPT);
 

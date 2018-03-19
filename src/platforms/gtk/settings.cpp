@@ -86,7 +86,7 @@ template<typename T, typename U, U GETTER(const GConfValue *)> void load_functor
   key = keybase + p.first;
 
   /* check if key is present */
-  gconf_value_guard value(gconf_client_get(client, key.c_str(), O2G_NULLPTR));
+  gconf_value_guard value(gconf_client_get(client, key.c_str(), nullptr));
 
   if(!value)
     return;
@@ -98,7 +98,7 @@ template<typename T, typename U, U GETTER(const GConfValue *)> void load_functor
 }
 
 settings_t *settings_t::instance() {
-  if(likely(settings != O2G_NULLPTR))
+  if(likely(settings != nullptr))
     return settings;
 
   settings = new settings_t();
@@ -123,7 +123,7 @@ settings_t *settings_t::instance() {
       g_debug("adjusting server path in settings");
 
     key = keybase + "track_visibility";
-    gconf_value_guard gvalue(gconf_client_get(client.get(), key.c_str(), O2G_NULLPTR));
+    gconf_value_guard gvalue(gconf_client_get(client.get(), key.c_str(), nullptr));
     settings->trackVisibility = DrawAll;
     if(likely(gvalue)) {
       const std::map<TrackVisibility, std::string>::const_iterator it =
@@ -137,7 +137,7 @@ settings_t *settings_t::instance() {
 
     /* restore wms server list */
     const gchar *countkey = "/apps/" PACKAGE "/wms/count";
-    gconf_value_guard value(gconf_client_get(client.get(), countkey, O2G_NULLPTR));
+    gconf_value_guard value(gconf_client_get(client.get(), countkey, nullptr));
     if(value) {
       unsigned int count = gconf_value_get_int(value.get());
       value.reset();
@@ -147,11 +147,11 @@ settings_t *settings_t::instance() {
         snprintf(nbuf, sizeof(nbuf), "%u", i);
 
         key = keybase + "wms/server" + nbuf;
-        gconf_value_guard server(gconf_client_get(client.get(), key.c_str(), O2G_NULLPTR));
+        gconf_value_guard server(gconf_client_get(client.get(), key.c_str(), nullptr));
         key = keybase + "wms/name" + nbuf;
-        gconf_value_guard name(gconf_client_get(client.get(), key.c_str(), O2G_NULLPTR));
+        gconf_value_guard name(gconf_client_get(client.get(), key.c_str(), nullptr));
         key = keybase + "wms/path" + nbuf;
-        gconf_value_guard path(gconf_client_get(client.get(), key.c_str(), O2G_NULLPTR));
+        gconf_value_guard path(gconf_client_get(client.get(), key.c_str(), nullptr));
 
         /* apply valid entry to list */
         if(likely(name && server)) {
@@ -161,7 +161,7 @@ settings_t *settings_t::instance() {
           // upgrade old entries
           if(unlikely(path)) {
             cur->server += gconf_value_get_string(path.get());
-            gconf_client_unset(client.get(), key.c_str(), O2G_NULLPTR);
+            gconf_client_unset(client.get(), key.c_str(), nullptr);
           }
           settings->wms_server.push_back(cur);
         }
@@ -254,9 +254,9 @@ void settings_t::save() const {
     key = keybase + it->first;
 
     if(!it->second->empty())
-      gconf_client_set_string(client.get(), key.c_str(), it->second->c_str(), O2G_NULLPTR);
+      gconf_client_set_string(client.get(), key.c_str(), it->second->c_str(), nullptr);
     else
-      gconf_client_unset(client.get(), key.c_str(), O2G_NULLPTR);
+      gconf_client_unset(client.get(), key.c_str(), nullptr);
   }
 
   const BooleanKeys::const_iterator bitEnd = store_bool.end();
@@ -264,11 +264,11 @@ void settings_t::save() const {
       it != bitEnd; it++) {
     key = keybase + it->first;
 
-    gconf_client_set_bool(client.get(), key.c_str(), *(it->second), O2G_NULLPTR);
+    gconf_client_set_bool(client.get(), key.c_str(), *(it->second), nullptr);
   }
 
   key = keybase + "track_visibility";
-  gconf_client_set_string(client.get(), key.c_str(), trackVisibilityKeys[trackVisibility].c_str(), O2G_NULLPTR);
+  gconf_client_set_string(client.get(), key.c_str(), trackVisibilityKeys[trackVisibility].c_str(), nullptr);
 
   /* store list of wms servers */
   for(unsigned int count = 0; count < wms_server.size(); count++) {
@@ -277,12 +277,12 @@ void settings_t::save() const {
     snprintf(nbuf, sizeof(nbuf), "%u", count);
 
     key = keybase + "wms/server" + nbuf;
-    gconf_client_set_string(client.get(), key.c_str(), cur->server.c_str(), O2G_NULLPTR);
+    gconf_client_set_string(client.get(), key.c_str(), cur->server.c_str(), nullptr);
     key = keybase + "wms/name" + nbuf;
-    gconf_client_set_string(client.get(), key.c_str(), cur->name.c_str(), O2G_NULLPTR);
+    gconf_client_set_string(client.get(), key.c_str(), cur->name.c_str(), nullptr);
   }
 
-  gconf_client_set_int(client.get(), "/apps/" PACKAGE "/wms/count", wms_server.size(), O2G_NULLPTR);
+  gconf_client_set_int(client.get(), "/apps/" PACKAGE "/wms/count", wms_server.size(), nullptr);
 }
 
 settings_t::settings_t()
@@ -321,7 +321,7 @@ settings_t::settings_t()
 
 settings_t::~settings_t()
 {
-  settings = O2G_NULLPTR;
+  settings = nullptr;
   std::for_each(wms_server.begin(), wms_server.end(), std::default_delete<wms_server_t>());
 }
 

@@ -56,7 +56,7 @@ create_submenu_item(const char *label)
 #ifdef FREMANTLE
   return hildon_button_new_with_text(
                 static_cast<HildonSizeType>(HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH),
-                HILDON_BUTTON_ARRANGEMENT_VERTICAL, strip_mnemonic(label).c_str(), O2G_NULLPTR);
+                HILDON_BUTTON_ARRANGEMENT_VERTICAL, strip_mnemonic(label).c_str(), nullptr);
 #else
   return gtk_menu_item_new_with_mnemonic(label);
 #endif
@@ -71,11 +71,11 @@ MainUiGtk::createMenuItem(const char *label, const char *icon_name
 {
 #ifndef FREMANTLE
   // Icons
-  if(icon_name != O2G_NULLPTR) {
+  if(icon_name != nullptr) {
     GtkWidget *image = icon_t::instance().widget_load(icon_name);
-    if (image == O2G_NULLPTR)
+    if (image == nullptr)
       image = gtk_image_new_from_icon_name(icon_name, GTK_ICON_SIZE_MENU);
-    assert(image != O2G_NULLPTR);
+    assert(image != nullptr);
     GtkWidget *item = gtk_image_menu_item_new_with_mnemonic(label);
     gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item), image);
     return item;
@@ -146,7 +146,7 @@ void MainUi::showNotification(const char *message, unsigned int flags)
   if (flags & Brief) {
     statusbar->banner_show_info(message);
   } else if (flags & Busy) {
-    if (message == O2G_NULLPTR)
+    if (message == nullptr)
       statusbar->banner_busy_stop();
     else
       statusbar->banner_busy_start(message);
@@ -181,6 +181,6 @@ GtkWidget *MainUiGtk::addMenu(const char *label)
 GtkWidget *MainUiGtk::addMenu(menu_items item)
 {
   GtkWidget *widget = menu_item(item);
-  assert(widget != O2G_NULLPTR);
+  assert(widget != nullptr);
   return addMenu(widget);
 }

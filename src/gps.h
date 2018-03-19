@@ -35,8 +35,8 @@ protected:
   void *cb_context;
 
   gps_state_t()
-    : callback(O2G_NULLPTR)
-    , cb_context(O2G_NULLPTR)
+    : callback(nullptr)
+    , cb_context(nullptr)
   {
   }
 public:
@@ -53,7 +53,7 @@ public:
    *
    * This returns an invalid position if GPS tracking is disabled.
    */
-  virtual pos_t get_pos(float *alt = O2G_NULLPTR) = 0;
+  virtual pos_t get_pos(float *alt = nullptr) = 0;
 
   virtual void setEnable(bool en) = 0;
 

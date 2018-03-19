@@ -66,7 +66,7 @@ struct track_seg_t;
 struct track_t;
 
 struct map_item_t {
-  map_item_t(object_t o = object_t(), bool hl = false, canvas_item_t *i = O2G_NULLPTR)
+  map_item_t(object_t o = object_t(), bool hl = false, canvas_item_t *i = nullptr)
     : object(o), highlight(hl) , item(i) {}
 
   object_t object;
@@ -198,7 +198,7 @@ public:
 
   void set_zoom(double zoom, bool update_scroll_offsets);
 
-  void detail_change(float detail, const char *banner_msg = O2G_NULLPTR);
+  void detail_change(float detail, const char *banner_msg = nullptr);
   void detail_increase();
   void detail_decrease();
   void detail_normal();

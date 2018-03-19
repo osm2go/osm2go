@@ -38,7 +38,7 @@ public:
   gps_liblocation_state_t();
   virtual ~gps_liblocation_state_t();
 
-  virtual pos_t get_pos(float *alt = O2G_NULLPTR) O2G_OVERRIDE;
+  virtual pos_t get_pos(float *alt = nullptr) O2G_OVERRIDE;
   virtual void setEnable(bool) O2G_OVERRIDE;
   virtual bool registerCallback(GpsCallback cb, void *context) O2G_OVERRIDE;
 
@@ -90,7 +90,7 @@ void gps_liblocation_state_t::updateCallback()
 
   if(callback)
     if(!callback(cb_context))
-      callback = O2G_NULLPTR;
+      callback = nullptr;
 }
 
 gps_state_t *gps_state_t::create() {
@@ -98,7 +98,7 @@ gps_state_t *gps_state_t::create() {
 }
 
 gps_liblocation_state_t::gps_liblocation_state_t()
-  : device(static_cast<LocationGPSDevice *>(g_object_new(LOCATION_TYPE_GPS_DEVICE, O2G_NULLPTR)))
+  : device(static_cast<LocationGPSDevice *>(g_object_new(LOCATION_TYPE_GPS_DEVICE, nullptr)))
 #ifdef LL_CONTROL_GPSD
   , control(location_gpsd_control_get_default())
   , gps_is_on(false)
@@ -153,7 +153,7 @@ void gps_liblocation_state_t::setEnable(bool en)
 
 bool gps_liblocation_state_t::registerCallback(GpsCallback cb, void* context)
 {
-  bool ret = (callback != O2G_NULLPTR);
+  bool ret = (callback != nullptr);
   if(!ret) {
     cb_context = context;
     callback = cb;

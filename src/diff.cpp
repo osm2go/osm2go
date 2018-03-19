@@ -55,8 +55,8 @@ struct diff_save_tags_functor {
   xmlNodePtr const node;
   explicit diff_save_tags_functor(xmlNodePtr n) : node(n) {}
   void operator()(const tag_t &tag) {
-    xmlNodePtr tag_node = xmlNewChild(node, O2G_NULLPTR,
-                                      BAD_CAST "tag", O2G_NULLPTR);
+    xmlNodePtr tag_node = xmlNewChild(node, nullptr,
+                                      BAD_CAST "tag", nullptr);
     xmlNewProp(tag_node, BAD_CAST "k", BAD_CAST tag.key);
     xmlNewProp(tag_node, BAD_CAST "v", BAD_CAST tag.value);
   }
@@ -81,7 +81,7 @@ struct diff_save_objects {
 
 xmlNodePtr diff_save_objects::diff_save_state_n_id(const base_object_t *obj,
                                                    const char *tname) {
-  xmlNodePtr node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST tname, O2G_NULLPTR);
+  xmlNodePtr node = xmlNewChild(root_node, nullptr, BAD_CAST tname, nullptr);
 
   if(obj->flags & OSM_FLAG_DELETED)
     xmlNewProp(node, BAD_CAST "state", BAD_CAST "deleted");
@@ -166,7 +166,7 @@ void diff_save_relations::operator()(const std::pair<item_id_t, relation_t *> pa
 }
 
 void project_t::diff_save() const {
-  if(unlikely(osm == O2G_NULLPTR))
+  if(unlikely(osm == nullptr))
     return;
 
   const std::string &diff_name = diff_filename(this);
@@ -184,7 +184,7 @@ void project_t::diff_save() const {
   const std::string ndiff = path + "save.diff";
 
   std::unique_ptr<xmlDoc, xmlDocDelete> doc(xmlNewDoc(BAD_CAST "1.0"));
-  xmlNodePtr root_node = xmlNewNode(O2G_NULLPTR, BAD_CAST "diff");
+  xmlNodePtr root_node = xmlNewNode(nullptr, BAD_CAST "diff");
   xmlNewProp(root_node, BAD_CAST "name", BAD_CAST name.c_str());
   xmlDocSetRootElement(doc.get(), root_node);
 
@@ -203,7 +203,7 @@ static item_id_t xml_get_prop_int(xmlNode *node, const char *prop, item_id_t def
   xmlString str(xmlGetProp(node, BAD_CAST prop));
 
   if(str)
-    return strtoll(reinterpret_cast<char*>(str.get()), O2G_NULLPTR, 10);
+    return strtoll(reinterpret_cast<char*>(str.get()), nullptr, 10);
   else
     return def;
 }
@@ -225,7 +225,7 @@ static osm_t::TagMap xml_scan_tags(xmlNodePtr node) {
   /* scan for tags */
   osm_t::TagMap  ret;
 
-  for(; node != O2G_NULLPTR; node = node->next) {
+  for(; node != nullptr; node = node->next) {
     if(node->type == XML_ELEMENT_NODE) {
       if(likely(strcmp(reinterpret_cast<const char *>(node->name), "tag") == 0))
         osm_t::parse_tag(node, ret);
@@ -263,7 +263,7 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
     printf("  Restoring DELETE flag\n");
 
     node = osm->node_by_id(id);
-    if(likely(node != O2G_NULLPTR))
+    if(likely(node != nullptr))
       node->flags |= OSM_FLAG_DELETED;
     else
       printf("  WARNING: no node with that id found\n");
@@ -281,7 +281,7 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
       printf("  Valid id/position (DIRTY)\n");
 
       node = osm->node_by_id(id);
-      if(likely(node != O2G_NULLPTR)) {
+      if(likely(node != nullptr)) {
         node->flags |= OSM_FLAG_DIRTY;
         if (node->pos == pos)
           pos_diff = false;
@@ -335,7 +335,7 @@ static void diff_restore_way(xmlNodePtr node_way, osm_t *osm) {
     printf("  Restoring DELETE flag\n");
 
     way = osm->way_by_id(id);
-    if(likely(way != O2G_NULLPTR))
+    if(likely(way != nullptr))
       way->flags |= OSM_FLAG_DELETED;
     else
       printf("  WARNING: no way with that id found\n");
@@ -353,7 +353,7 @@ static void diff_restore_way(xmlNodePtr node_way, osm_t *osm) {
       printf("  Valid id (DIRTY)\n");
 
       way = osm->way_by_id(id);
-      if(likely(way != O2G_NULLPTR)) {
+      if(likely(way != nullptr)) {
         way->flags |= OSM_FLAG_DIRTY;
         break;
       } else {
@@ -374,7 +374,7 @@ static void diff_restore_way(xmlNodePtr node_way, osm_t *osm) {
   /* update node_chain */
   /* scan for nodes */
   node_chain_t new_chain;
-  xmlNode *nd_node = O2G_NULLPTR;
+  xmlNode *nd_node = nullptr;
   for(nd_node = node_way->children; nd_node; nd_node = nd_node->next) {
     if(nd_node->type == XML_ELEMENT_NODE) {
       if(likely(strcmp(reinterpret_cast<const char *>(nd_node->name), "nd") == 0)) {
@@ -428,13 +428,13 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
   int state = xml_get_prop_state(node_rel);
 
   /* evaluate properties */
-  relation_t *relation = O2G_NULLPTR;
+  relation_t *relation = nullptr;
   switch(state) {
   case OSM_FLAG_DELETED:
     printf("  Restoring DELETE flag\n");
 
     relation = osm->relation_by_id(id);
-    if(likely(relation != O2G_NULLPTR))
+    if(likely(relation != nullptr))
       relation->flags |= OSM_FLAG_DELETED;
     else
       printf("  WARNING: no relation with that id found\n");
@@ -452,7 +452,7 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
       printf("  Valid id (DIRTY)\n");
 
       relation = osm->relation_by_id(id);
-      if(likely(relation != O2G_NULLPTR)) {
+      if(likely(relation != nullptr)) {
         relation->flags |= OSM_FLAG_DIRTY;
         break;
       } else {
@@ -477,7 +477,7 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
 
   /* scan for members */
   std::vector<member_t> members;
-  xmlNode *member_node = O2G_NULLPTR;
+  xmlNode *member_node = nullptr;
   for(member_node = node_rel->children; member_node;
       member_node = member_node->next) {
     if(member_node->type == XML_ELEMENT_NODE) {
@@ -522,14 +522,14 @@ unsigned int project_t::diff_restore() {
     printf("diff found, applying ...\n");
   }
 
-  xmlNode *root_element = O2G_NULLPTR;
+  xmlNode *root_element = nullptr;
 
   fdguard difffd(dirfd, diff_name.c_str(), O_RDONLY);
 
   /* parse the file and get the DOM */
-  std::unique_ptr<xmlDoc, xmlDocDelete> doc(xmlReadFd(difffd, O2G_NULLPTR, O2G_NULLPTR, XML_PARSE_NONET));
+  std::unique_ptr<xmlDoc, xmlDocDelete> doc(xmlReadFd(difffd, nullptr, nullptr, XML_PARSE_NONET));
   if(unlikely(!doc)) {
-    errorf(O2G_NULLPTR, _("Error: could not parse file %s\n"), diff_name.c_str());
+    errorf(nullptr, _("Error: could not parse file %s\n"), diff_name.c_str());
     return DIFF_INVALID;
   }
 
@@ -538,7 +538,7 @@ unsigned int project_t::diff_restore() {
   /* Get the root element node */
   root_element = xmlDocGetRootElement(doc.get());
 
-  xmlNode *cur_node = O2G_NULLPTR;
+  xmlNode *cur_node = nullptr;
   for (cur_node = root_element; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcmp(reinterpret_cast<const char *>(cur_node->name), "diff") == 0) {
@@ -547,13 +547,13 @@ unsigned int project_t::diff_restore() {
           const char *cstr = reinterpret_cast<const char *>(str.get());
 	  printf("diff for project %s\n", cstr);
           if(unlikely(name != cstr)) {
-            warningf(O2G_NULLPTR, _("Diff name (%s) does not match project name (%s)"),
+            warningf(nullptr, _("Diff name (%s) does not match project name (%s)"),
                      cstr, name.c_str());
             res |= DIFF_PROJECT_MISMATCH;
 	  }
 	}
 
-        for(xmlNodePtr node_node = cur_node->children; node_node != O2G_NULLPTR;
+        for(xmlNodePtr node_node = cur_node->children; node_node != nullptr;
             node_node = node_node->next) {
 	  if(node_node->type == XML_ELEMENT_NODE) {
 
@@ -585,7 +585,7 @@ unsigned int project_t::diff_restore() {
 }
 
 void diff_restore(project_t *project, MainUi *uicontrol) {
-  if(unlikely(project->osm == O2G_NULLPTR))
+  if(unlikely(project->osm == nullptr))
     return;
 
   unsigned int flags = project->diff_restore();
@@ -609,7 +609,7 @@ void project_t::diff_remove_file() const {
 xmlDocPtr osmchange_init()
 {
   xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
-  xmlNodePtr root_node = xmlNewNode(O2G_NULLPTR, BAD_CAST "osmChange");
+  xmlNodePtr root_node = xmlNewNode(nullptr, BAD_CAST "osmChange");
   xmlNewProp(root_node, BAD_CAST "generator", BAD_CAST "OSM2go v" VERSION);
   xmlDocSetRootElement(doc, root_node);
 
@@ -627,7 +627,7 @@ struct osmchange_delete_functor {
 
 void osmchange_delete(const osm_t::dirty_t &dirty, xmlNodePtr xml_node, const char *changeset)
 {
-  xmlNodePtr del_node = xmlNewChild(xml_node, O2G_NULLPTR, BAD_CAST "delete", O2G_NULLPTR);
+  xmlNodePtr del_node = xmlNewChild(xml_node, nullptr, BAD_CAST "delete", nullptr);
   osmchange_delete_functor fc(del_node, changeset);
 
   std::for_each(dirty.relations.deleted.begin(), dirty.relations.deleted.end(), fc);

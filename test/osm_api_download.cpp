@@ -46,7 +46,7 @@ static void download_fine()
   assert(project->bounds.valid());
   project->rserver = dev_url;
 
-  assert(osm_download(O2G_NULLPTR, project.get()));
+  assert(osm_download(nullptr, project.get()));
 
   const std::string osmname = project->path + project->osmFile;
   assert_cmpnum(unlink(osmname.c_str()), 0);
@@ -68,7 +68,7 @@ static void download_fine_was_gz()
   project->rserver = dev_url;
   project->osmFile += ".gz";
 
-  assert(osm_download(O2G_NULLPTR, project.get()));
+  assert(osm_download(nullptr, project.get()));
 
   const std::string osmname = project->path + project->osmFile;
   assert_cmpnum(unlink(osmname.c_str()), 0);
@@ -90,7 +90,7 @@ static void download_fine_absolute()
   project->rserver += '/';
   project->osmFile = project_dir.substr(0, project_dir.rfind('/')) + "absolute.osm.gz";
 
-  assert(osm_download(O2G_NULLPTR, project.get()));
+  assert(osm_download(nullptr, project.get()));
 
   assert_cmpstr(project->rserver, dev_url);
 
@@ -112,7 +112,7 @@ static void download_bad_server()
 
   project->rserver = "https://invalid.invalid";
 
-  assert(!osm_download(O2G_NULLPTR, project.get()));
+  assert(!osm_download(nullptr, project.get()));
 
   assert_cmpnum(rmdir(project_dir.c_str()), 0);
 }
@@ -127,14 +127,14 @@ static void download_bad_coords()
 
   project->rserver = dev_url;
 
-  assert(!osm_download(O2G_NULLPTR, project.get()));
+  assert(!osm_download(nullptr, project.get()));
 
   assert_cmpnum(rmdir(project_dir.c_str()), 0);
 }
 
 int main()
 {
-  assert(mkdtemp(tmpdir) != O2G_NULLPTR);
+  assert(mkdtemp(tmpdir) != nullptr);
   strcat(tmpdir, "/");
 
   curl_global_init(CURL_GLOBAL_ALL);

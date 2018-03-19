@@ -59,15 +59,15 @@ namespace std {
       __tuple_type                  _M_t;
 
       // Constructors.
-      explicit unique_ptr(_Tp *__p = O2G_NULLPTR, deleter_type __d = deleter_type())
+      explicit unique_ptr(_Tp *__p = nullptr, deleter_type __d = deleter_type())
       : _M_t(__p, __d) { }
 
       // Destructor.
       ~unique_ptr() {
         _Tp *&__ptr = _M_t.first;
-        if (__ptr != O2G_NULLPTR)
+        if (__ptr != nullptr)
           get_deleter()(__ptr);
-        __ptr = O2G_NULLPTR;
+        __ptr = nullptr;
       }
 
       // Observers.
@@ -89,19 +89,19 @@ namespace std {
       { return _M_t.first; }
 
       operator bool() const
-      { return get() == O2G_NULLPTR ? false : true; }
+      { return get() == nullptr ? false : true; }
 
       // Modifiers.
       _Tp *release() {
         _Tp *__p = get();
-        _M_t.first = O2G_NULLPTR;
+        _M_t.first = nullptr;
         return __p;
       }
 
-      void reset(_Tp *__p = O2G_NULLPTR) {
+      void reset(_Tp *__p = nullptr) {
         using std::swap;
         swap(_M_t.first, __p);
-        if (__p != O2G_NULLPTR)
+        if (__p != nullptr)
           get_deleter()(__p);
       }
 
@@ -138,9 +138,9 @@ namespace std {
       ~unique_ptr()
       {
         _Tp *&__ptr = _M_t;
-        if (__ptr != O2G_NULLPTR)
+        if (__ptr != nullptr)
           delete[] (__ptr);
-        __ptr = O2G_NULLPTR;
+        __ptr = nullptr;
       }
 
       // Observers.
@@ -169,7 +169,7 @@ namespace std {
 
       /// Return @c true if the stored pointer is not null.
       operator bool() const
-      { return get() == O2G_NULLPTR ? false : true; }
+      { return get() == nullptr ? false : true; }
 
       // Modifiers.
 
@@ -178,7 +178,7 @@ namespace std {
       release()
       {
         element_type * __p = get();
-        _M_t._M_ptr() = O2G_NULLPTR;
+        _M_t._M_ptr() = nullptr;
         return __p;
       }
 
@@ -189,12 +189,12 @@ namespace std {
        * The deleter will be invoked if a pointer is already owned.
        */
       void
-      reset(_Tp *__p = O2G_NULLPTR)
+      reset(_Tp *__p = nullptr)
       {
         element_type *__ptr = __p;
         using std::swap;
         swap(_M_t._M_ptr(), __ptr);
-        if (__ptr != O2G_NULLPTR)
+        if (__ptr != nullptr)
           delete[] (__ptr);
       }
 

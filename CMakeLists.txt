@@ -18,8 +18,8 @@ set(CMAKE_CXX_STANDARD 11)
 
 set(CMAKE_INCLUDE_CURRENT_DIR TRUE)
 
-# The epilog defines O2G_NULLPTR as NULL instead of 0 on unsupported compilers
-# (i.e. N900 gcc 4.2) to make the function sentinel detection working again and
+# The epilog defines nullptr on unsupported compilers, using __null instead of 0 on
+# gcc (i.e. N900 gcc 4.2) to make the function sentinel detection working again and
 # avoid all the misleading compiler warnings generated otherwise.
 # The static_assert code of CMake does not work with the old gcc
 # https://gitlab.kitware.com/cmake/cmake/issues/17019
@@ -31,9 +31,13 @@ write_compiler_detection_header(
 		ALLOW_UNKNOWN_COMPILER_VERSIONS ALLOW_UNKNOWN_COMPILERS
 		EPILOG
 "#if !(defined(O2G_COMPILER_CXX_NULLPTR) && O2G_COMPILER_CXX_NULLPTR)
-#  undef O2G_NULLPTR
-#  define O2G_NULLPTR __null
+# if O2G_COMPILER_IS_GNU
+#  define nullptr __null
+# else
+#  define nullptr O2G_NULLPTR
+# endif
 #endif
+#undef O2G_NULLPTR
 #if !(defined(O2G_COMPILER_CXX_STATIC_ASSERT) && O2G_COMPILER_CXX_STATIC_ASSERT)
 #  define static_assert(X, MSG) G_STATIC_ASSERT(X)
 #endif

@@ -97,7 +97,7 @@ const char *http_message(int id) {
   if(likely(it != http_messages.end()))
     return it->second;
 
-  return O2G_NULLPTR;
+  return nullptr;
 }
 
 static gint dialog_destroy_event(bool *data) {
@@ -115,7 +115,7 @@ static void on_cancel(bool *data) {
 static GtkWidget *busy_dialog(osm2go_platform::Widget *parent, GtkProgressBar *&pbar,
                               bool *cancel_ind, const char *title) {
 #ifdef GTK_DIALOG_NO_SEPARATOR
-  GtkWidget *dialog = gtk_dialog_new_with_buttons(O2G_NULLPTR, O2G_NULLPTR, GTK_DIALOG_NO_SEPARATOR);
+  GtkWidget *dialog = gtk_dialog_new_with_buttons(nullptr, nullptr, GTK_DIALOG_NO_SEPARATOR);
 #else
   GtkWidget *dialog = gtk_dialog_new();
 #endif
@@ -154,7 +154,7 @@ net_io_request_t::net_io_request_t(const std::string &u, const std::string &f, b
   , res(CURLE_OK)
   , response(0)
   , filename(f)
-  , mem(O2G_NULLPTR)
+  , mem(nullptr)
   , use_compression(c)
 {
   assert(!filename.empty());
@@ -258,7 +258,7 @@ static void *worker_thread(void *ptr) {
 
       std::unique_ptr<curl_slist, curl_slist_deleter> slist;
       if(request->use_compression)
-        slist.reset(curl_slist_append(O2G_NULLPTR, "Accept-Encoding: gzip"));
+        slist.reset(curl_slist_append(nullptr, "Accept-Encoding: gzip"));
       if(slist)
         curl_easy_setopt(curl.get(), CURLOPT_HTTPHEADER, slist.get());
 
@@ -269,7 +269,7 @@ static void *worker_thread(void *ptr) {
 
 #if 0
       /* try to read "Error" */
-      struct curl_slist *slist = O2G_NULLPTR;
+      struct curl_slist *slist = nullptr;
       slist = curl_slist_append(slist, "Error:");
       curl_easy_setopt(curl.get(), CURLOPT_HTTPHEADER, slist);
 #endif
@@ -278,7 +278,7 @@ static void *worker_thread(void *ptr) {
     printf("thread: unable to init curl\n");
 
   printf("thread: io done, terminating\n");
-  return O2G_NULLPTR;
+  return nullptr;
 }
 
 static bool net_io_do(osm2go_platform::Widget *parent, net_io_request_t *rq,
@@ -293,19 +293,19 @@ static bool net_io_do(osm2go_platform::Widget *parent, net_io_request_t *rq,
   assert_cmpnum(rq->refcount, 1);
   rq->refcount = 2;   // master and worker hold a reference
   std::unique_ptr<net_io_request_t, request_free> request(rq);
-  GtkProgressBar *pbar = O2G_NULLPTR;
+  GtkProgressBar *pbar = nullptr;
   osm2go_platform::WidgetGuard dialog;
-  if(likely(parent != O2G_NULLPTR))
+  if(likely(parent != nullptr))
     dialog.reset(busy_dialog(parent, pbar, &rq->cancel, title));
 
   GThread *worker;
 
 #if GLIB_CHECK_VERSION(2,32,0)
-  worker = g_thread_try_new("download", worker_thread, request.get(), O2G_NULLPTR);
+  worker = g_thread_try_new("download", worker_thread, request.get(), nullptr);
 #else
-  worker = g_thread_create(worker_thread, request.get(), FALSE, O2G_NULLPTR);
+  worker = g_thread_create(worker_thread, request.get(), FALSE, nullptr);
 #endif
-  if(unlikely(worker == O2G_NULLPTR)) {
+  if(unlikely(worker == nullptr)) {
     g_warning("failed to create the worker thread");
 
     /* free request and return error */

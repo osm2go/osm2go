@@ -92,7 +92,7 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t &style) {
   style.icon.enable            = false;
   style.icon.scale             = 1.0;    // icon size (multiplier)
 
-  for (xmlNode *cur_node = a_node->children; cur_node != O2G_NULLPTR; cur_node = cur_node->next) {
+  for (xmlNode *cur_node = a_node->children; cur_node != nullptr; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       const char *nodename = reinterpret_cast<const char *>(cur_node->name);
       if(strcmp(nodename, "elemstyles") == 0) {
@@ -126,7 +126,7 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t &style) {
         parse_color(cur_node, "color", style.frisket.color);
         style.frisket.border.present = false;
 
-        for(xmlNode *sub_node = cur_node->children; sub_node != O2G_NULLPTR; sub_node=sub_node->next) {
+        for(xmlNode *sub_node = cur_node->children; sub_node != nullptr; sub_node=sub_node->next) {
           if(sub_node->type == XML_ELEMENT_NODE &&
              strcmp(reinterpret_cast<const char *>(sub_node->name), "border") == 0) {
             style.frisket.border.present = true;
@@ -171,7 +171,7 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t &style) {
 /**
  * @brief parse a style definition file
  * @param fullname absolute path of the file to read
- * @param fname location to store name of the object style XML file or O2G_NULLPTR
+ * @param fname location to store name of the object style XML file or nullptr
  * @param name_only only parse the style name, leave all other fields empty
  * @param style the object to fill
  * @return if parsing the style succeeded
@@ -180,7 +180,7 @@ static void parse_style_node(xmlNode *a_node, xmlChar **fname, style_t &style) {
  */
 static bool style_parse(const std::string &fullname, xmlChar **fname,
                         bool name_only, style_t &style) {
-  std::unique_ptr<xmlDoc, xmlDocDelete> doc(xmlReadFile(fullname.c_str(), O2G_NULLPTR, XML_PARSE_NONET));
+  std::unique_ptr<xmlDoc, xmlDocDelete> doc(xmlReadFile(fullname.c_str(), nullptr, XML_PARSE_NONET));
   bool ret = false;
 
   /* parse the file and get the DOM */
@@ -189,9 +189,9 @@ static bool style_parse(const std::string &fullname, xmlChar **fname,
     printf("parsing %s failed: %s\n", fullname.c_str(), errP->message);
   } else {
     /* Get the root element node */
-    xmlNode *cur_node = O2G_NULLPTR;
+    xmlNode *cur_node = nullptr;
 
-    for(cur_node = xmlDocGetRootElement(doc.get()); cur_node != O2G_NULLPTR;
+    for(cur_node = xmlDocGetRootElement(doc.get()); cur_node != nullptr;
         cur_node = cur_node->next) {
       if (cur_node->type == XML_ELEMENT_NODE) {
         if(likely(strcmp(reinterpret_cast<const char *>(cur_node->name), "style") == 0)) {
@@ -211,7 +211,7 @@ static bool style_parse(const std::string &fullname, xmlChar **fname,
 }
 
 style_t *style_load_fname(const std::string &filename) {
-  xmlChar *fname = O2G_NULLPTR;
+  xmlChar *fname = nullptr;
   std::unique_ptr<style_t> style(new style_t());
 
   if(likely(style_parse(filename, &fname, false, *style.get()))) {
@@ -221,7 +221,7 @@ style_t *style_load_fname(const std::string &filename) {
     return style.release();
   }
 
-  return O2G_NULLPTR;
+  return nullptr;
 }
 
 style_t *style_load(const std::string &name) {
@@ -234,7 +234,7 @@ style_t *style_load(const std::string &name) {
     fullname = find_file(DEFAULT_STYLE ".style");
     if (unlikely(fullname.empty())) {
       printf("  style not found, failed to find fallback style too\n");
-      return O2G_NULLPTR;
+      return nullptr;
     }
   }
 
@@ -276,7 +276,7 @@ std::map<std::string, std::string> style_scan() {
       continue;
 
     int dfd = dir.dirfd();
-    for(dirent *d = dir.next(); d != O2G_NULLPTR; d = dir.next()) {
+    for(dirent *d = dir.next(); d != nullptr; d = dir.next()) {
       if(d->d_type == DT_DIR)
         continue;
 
@@ -294,7 +294,7 @@ std::map<std::string, std::string> style_scan() {
       fullname = paths[i].pathname + d->d_name;
 
       style_t style;
-      if(style_parse(fullname, O2G_NULLPTR, true, style))
+      if(style_parse(fullname, nullptr, true, style))
         ret[style.name].swap(fullname);
     }
   }
@@ -303,7 +303,7 @@ std::map<std::string, std::string> style_scan() {
 }
 
 style_t::style_t()
-  : name(O2G_NULLPTR)
+  : name(nullptr)
 {
   memset(&icon, 0, sizeof(icon));
   memset(&track, 0, sizeof(track));

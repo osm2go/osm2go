@@ -82,7 +82,7 @@ public:
   explicit dirguard(int fd);
   ~dirguard();
 
-  inline bool valid() const { return d != O2G_NULLPTR; }
+  inline bool valid() const { return d != nullptr; }
   inline dirent *next() { return readdir(d); }
   inline int dirfd() { return ::dirfd(d); }
 };

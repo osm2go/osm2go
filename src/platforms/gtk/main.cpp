@@ -96,10 +96,10 @@ struct appdata_internal : public appdata_t {
 
 /* disable/enable main screen control dependant on presence of open project */
 void appdata_t::main_ui_enable() {
-  bool project_valid = (project != O2G_NULLPTR);
-  gboolean osm_valid = (project_valid && (project->osm != O2G_NULLPTR)) ? TRUE : FALSE;
+  bool project_valid = (project != nullptr);
+  gboolean osm_valid = (project_valid && (project->osm != nullptr)) ? TRUE : FALSE;
 
-  if(unlikely(window == O2G_NULLPTR)) {
+  if(unlikely(window == nullptr)) {
     printf("%s: main window gone\n", __PRETTY_FUNCTION__);
     return;
   }
@@ -176,7 +176,7 @@ cb_menu_quit() {
 
 static void
 cb_menu_upload(appdata_t *appdata) {
-  if(appdata->project == O2G_NULLPTR || appdata->project->osm == O2G_NULLPTR)
+  if(appdata->project == nullptr || appdata->project->osm == nullptr)
     return;
 
   if(appdata->project->check_demo())
@@ -198,7 +198,7 @@ cb_menu_download(appdata_t *appdata) {
   appdata->project->diff_save();
 
   // download
-  bool hasMap = appdata->project->osm != O2G_NULLPTR;
+  bool hasMap = appdata->project->osm != nullptr;
   if(osm_download(appdata_t::window, appdata->project)) {
     if(hasMap)
       /* redraw the entire map by destroying all map items and redrawing them */
@@ -208,7 +208,7 @@ cb_menu_download(appdata_t *appdata) {
     appdata->project->parse_osm();
     diff_restore(appdata->project, appdata->uicontrol);
     appdata->map->paint();
-    appdata->uicontrol->showNotification(O2G_NULLPTR, MainUi::Busy);
+    appdata->uicontrol->showNotification(nullptr, MainUi::Busy);
   }
 
   appdata->map->set_autosave(true);
@@ -253,7 +253,7 @@ static bool track_visibility_select(GtkWidget *parent) {
                                               GTK_WINDOW(parent), GTK_DIALOG_MODAL,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                               GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-                                              O2G_NULLPTR));
+                                              nullptr));
 
   gtk_dialog_set_default_response(GTK_DIALOG(dialog.get()), GTK_RESPONSE_ACCEPT);
 
@@ -296,7 +296,7 @@ cb_menu_track_vis(appdata_t *appdata) {
 
 static void
 cb_menu_save_changes(appdata_t *appdata) {
-  if(likely(appdata->project != O2G_NULLPTR))
+  if(likely(appdata->project != nullptr))
     appdata->project->diff_save();
   appdata->uicontrol->showNotification(_("Saved local changes"), MainUi::Brief);
 }
@@ -309,7 +309,7 @@ cb_menu_undo_changes(appdata_t *appdata) {
   if (!project->diff_file_present() && project->osm->is_clean(true))
     return;
 
-  if(!yes_no_f(O2G_NULLPTR, 0, _("Undo all changes?"),
+  if(!yes_no_f(nullptr, 0, _("Undo all changes?"),
                _("Throw away all the changes you've not uploaded yet? This cannot be undone.")))
     return;
 
@@ -387,7 +387,7 @@ cb_menu_track_import(appdata_t *appdata) {
                                                GTK_FILE_CHOOSER_ACTION_OPEN,
                                                GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                                GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
-                                               O2G_NULLPTR)
+                                               nullptr)
 #endif
            );
 
@@ -455,7 +455,7 @@ cb_menu_track_export(appdata_t *appdata) {
                                               GTK_FILE_CHOOSER_ACTION_SAVE,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                               GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT,
-                                              O2G_NULLPTR)
+                                              nullptr)
 #endif
            );
 
@@ -493,7 +493,7 @@ cb_menu_track_export(appdata_t *appdata) {
                     "Do you really want to replace it?"))) {
         settings->track_path = filename.get();
 
-        assert(appdata->track.track != O2G_NULLPTR);
+        assert(appdata->track.track != nullptr);
         track_export(appdata->track.track, filename.get());
       }
     }
@@ -536,14 +536,14 @@ menu_append_new_item(appdata_t &appdata, GtkWidget *menu_shell,
                      const gchar *accel_path,
                      guint accel_key = 0,
                      GdkModifierType accel_mods = static_cast<GdkModifierType>(0),
-                     GtkWidget *item = O2G_NULLPTR)
+                     GtkWidget *item = nullptr)
 {
   GtkStockItem stock_item;
-  const bool stock_item_known = icon_name != O2G_NULLPTR &&
+  const bool stock_item_known = icon_name != nullptr &&
                                 gtk_stock_lookup(icon_name, &stock_item) == TRUE;
 
   // Icons
-  if (item == O2G_NULLPTR) {
+  if (item == nullptr) {
     if(stock_item_known) {
       item = gtk_image_menu_item_new_with_mnemonic(label);
       gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item),
@@ -576,7 +576,7 @@ menu_append_new_item(appdata_t &appdata, GtkWidget *menu_shell,
                      guint accel_key = 0,
                      GdkModifierType accel_mods = static_cast<GdkModifierType>(0))
 {
-  return menu_append_new_item(appdata, menu_shell, activate_cb, O2G_NULLPTR, O2G_NULLPTR,
+  return menu_append_new_item(appdata, menu_shell, activate_cb, nullptr, nullptr,
                               accel_path, accel_key, accel_mods,
                               static_cast<GtkWidget *>(static_cast<MainUiGtk *>(appdata.uicontrol)->menu_item(item)));
 }
@@ -616,8 +616,8 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
   item = gtk_check_menu_item_new_with_mnemonic(_("_Fullscreen"));
   gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item), FALSE);
   menu_append_new_item(
-    appdata, submenu, G_CALLBACK(cb_menu_fullscreen), O2G_NULLPTR,
-    O2G_NULLPTR, "<OSM2Go-Main>/View/Fullscreen",
+    appdata, submenu, G_CALLBACK(cb_menu_fullscreen), nullptr,
+    nullptr, "<OSM2Go-Main>/View/Fullscreen",
     GDK_F11, static_cast<GdkModifierType>(0), item);
 
   menu_append_new_item(
@@ -634,15 +634,15 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
 
   menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_view_detail_inc), _("More details"),
-    O2G_NULLPTR, "<OSM2Go-Main>/View/DetailInc", GDK_period, GDK_MOD1_MASK);
+    nullptr, "<OSM2Go-Main>/View/DetailInc", GDK_period, GDK_MOD1_MASK);
 
   menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_view_detail_normal), _("Normal details"),
-    O2G_NULLPTR, "<OSM2Go-Main>/View/DetailNormal");
+    nullptr, "<OSM2Go-Main>/View/DetailNormal");
 
   menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_view_detail_dec), _("Less details"),
-    O2G_NULLPTR, "<OSM2Go-Main>/View/DetailDec", GDK_comma, GDK_MOD1_MASK);
+    nullptr, "<OSM2Go-Main>/View/DetailDec", GDK_comma, GDK_MOD1_MASK);
 
   gtk_menu_shell_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
 
@@ -745,7 +745,7 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
 
   menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_track_vis), _("Track _visibility"),
-    O2G_NULLPTR, "<OSM2Go-Main>/Track/Visibility",
+    nullptr, "<OSM2Go-Main>/Track/Visibility",
     GDK_v, static_cast<GdkModifierType>(GDK_CONTROL_MASK|GDK_SHIFT_MASK));
 
   /* ------------------------------------------------------- */
@@ -759,12 +759,12 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
 
 struct menu_entry_t {
   typedef gboolean (*toggle_cb)();
-  explicit menu_entry_t(const char *l, GCallback cb = O2G_NULLPTR,
+  explicit menu_entry_t(const char *l, GCallback cb = nullptr,
                         gboolean en = TRUE)
-    : label(l), enabled(en), toggle(O2G_NULLPTR), menuindex(-1), activate_cb(cb) {}
-  explicit menu_entry_t(MainUi::menu_items idx, GCallback cb = O2G_NULLPTR,
-                        toggle_cb tg = O2G_NULLPTR)
-    : label(O2G_NULLPTR), enabled(TRUE), toggle(tg), menuindex(idx), activate_cb(cb) {}
+    : label(l), enabled(en), toggle(nullptr), menuindex(-1), activate_cb(cb) {}
+  explicit menu_entry_t(MainUi::menu_items idx, GCallback cb = nullptr,
+                        toggle_cb tg = nullptr)
+    : label(nullptr), enabled(TRUE), toggle(tg), menuindex(idx), activate_cb(cb) {}
   const char *label;
   gboolean enabled;
   toggle_cb toggle;
@@ -799,7 +799,7 @@ static GtkWidget *app_submenu_create(appdata_t &appdata, MainUi::menu_items subm
   const char *title = hildon_button_get_title(HILDON_BUTTON(mainui->menu_item(submenu)));
   /* create a oridinary dialog box */
   GtkWidget *dialog = gtk_dialog_new_with_buttons(title, GTK_WINDOW(appdata_t::window),
-                                                  GTK_DIALOG_MODAL, O2G_NULLPTR);
+                                                  GTK_DIALOG_MODAL, nullptr);
 
   osm2go_platform::dialog_size_hint(GTK_WINDOW(dialog), MISC_DIALOG_SMALL);
   gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
@@ -812,10 +812,10 @@ static GtkWidget *app_submenu_create(appdata_t &appdata, MainUi::menu_items subm
 
     /* the "Style" menu entry is very special */
     /* and is being handled seperately */
-    if(menu_entries->label != O2G_NULLPTR && strcmp(_("Style"), menu_entries->label) == 0) {
+    if(menu_entries->label != nullptr && strcmp(_("Style"), menu_entries->label) == 0) {
       button = style_select_widget(settings_t::instance()->style);
       g_object_set_data(G_OBJECT(dialog), "style_widget", button);
-    } else if(menu_entries->label != O2G_NULLPTR && strcmp(_("Track visibility"), menu_entries->label) == 0) {
+    } else if(menu_entries->label != nullptr && strcmp(_("Track visibility"), menu_entries->label) == 0) {
       button = track_vis_select_widget(settings_t::instance()->trackVisibility);
       g_object_set_data(G_OBJECT(dialog), "track_widget", button);
     } else if(!menu_entries->toggle) {
@@ -868,7 +868,7 @@ static void submenu_popup(appdata_t &appdata, GtkWidget *menu) {
   GtkWidget *combo_widget = GTK_WIDGET(g_object_get_data(G_OBJECT(menu), "style_widget"));
   if(combo_widget) {
     style_change(appdata, combo_widget);
-  } else if((combo_widget = GTK_WIDGET(g_object_get_data(G_OBJECT(menu), "track_widget"))) != O2G_NULLPTR) {
+  } else if((combo_widget = GTK_WIDGET(g_object_get_data(G_OBJECT(menu), "track_widget"))) != nullptr) {
     TrackVisibility tv = static_cast<TrackVisibility>(combo_box_get_active(combo_widget));
     settings_t * const settings = settings_t::instance();
     if(tv != settings->trackVisibility && appdata.track.track) {
@@ -918,13 +918,13 @@ static HildonAppMenu *app_menu_create(appdata_t &appdata) {
     const menu_entry_t &entry = main_menu[i];
     GtkWidget *button;
 
-    if (entry.label == O2G_NULLPTR)
+    if (entry.label == nullptr)
       button = mainui->addMenu(static_cast<MainUi::menu_items>(entry.menuindex));
     else
       button = mainui->addMenu(entry.label);
 
     g_signal_connect_data(button, "clicked",
-                          entry.activate_cb, &appdata, O2G_NULLPTR,
+                          entry.activate_cb, &appdata, nullptr,
                           static_cast<GConnectFlags>(G_CONNECT_AFTER | G_CONNECT_SWAPPED));
   }
 
@@ -988,11 +988,11 @@ static void menu_create(appdata_internal &appdata, GtkBox *) {
 appdata_t::appdata_t(map_state_t &mstate)
   : statusbar(statusbar_t::create())
   , uicontrol(MainUi::instance(statusbar))
-  , project(O2G_NULLPTR)
-  , iconbar(O2G_NULLPTR)
-  , presets(O2G_NULLPTR)
+  , project(nullptr)
+  , iconbar(nullptr)
+  , presets(nullptr)
   , map_state(mstate)
-  , map(O2G_NULLPTR)
+  , map(nullptr)
   , icons(icon_t::instance())
   , style(style_load(settings_t::instance()->style))
   , gps_state(gps_state_t::create())
@@ -1023,7 +1023,7 @@ appdata_t::~appdata_t() {
 
   /* save project file */
   if(project)
-    project->save(O2G_NULLPTR);
+    project->save(nullptr);
 
   josm_presets_free(presets);
 
@@ -1040,15 +1040,15 @@ appdata_t::~appdata_t() {
 void appdata_t::track_clear()
 {
   track_t *tr = track.track;
-  if (tr == O2G_NULLPTR)
+  if (tr == nullptr)
     return;
 
   printf("clearing track\n");
 
-  if(likely(map != O2G_NULLPTR))
+  if(likely(map != nullptr))
     tr->clear();
 
-  track.track = O2G_NULLPTR;
+  track.track = nullptr;
   track_menu_set(*this);
 
   delete tr;
@@ -1057,21 +1057,21 @@ void appdata_t::track_clear()
 appdata_internal::appdata_internal(map_state_t &mstate)
   : appdata_t(mstate)
 #ifdef FREMANTLE
-  , program(O2G_NULLPTR)
-  , app_menu_view(O2G_NULLPTR)
-  , app_menu_wms(O2G_NULLPTR)
-  , app_menu_track(O2G_NULLPTR)
-  , app_menu_map(O2G_NULLPTR)
+  , program(nullptr)
+  , app_menu_view(nullptr)
+  , app_menu_wms(nullptr)
+  , app_menu_track(nullptr)
+  , app_menu_map(nullptr)
 #endif
-  , btn_zoom_in(O2G_NULLPTR)
-  , btn_zoom_out(O2G_NULLPTR)
+  , btn_zoom_in(nullptr)
+  , btn_zoom_out(nullptr)
 {
 }
 
 appdata_internal::~appdata_internal()
 {
 #ifdef FREMANTLE
-  program = O2G_NULLPTR;
+  program = nullptr;
 #endif
 }
 
@@ -1079,12 +1079,12 @@ static void on_window_destroy() {
   puts("main window destroy");
 
   gtk_main_quit();
-  appdata_t::window = O2G_NULLPTR;
+  appdata_t::window = nullptr;
 }
 
 static gboolean on_window_key_press(appdata_internal *appdata, GdkEventKey *event) {
   /* forward unprocessed key presses to map */
-  if(appdata->project != O2G_NULLPTR && appdata->project->osm != O2G_NULLPTR &&
+  if(appdata->project != nullptr && appdata->project->osm != nullptr &&
      event->type == GDK_KEY_PRESS)
     return appdata->map->key_press_event(event->keyval) ? TRUE : FALSE;
 
@@ -1123,7 +1123,7 @@ static GtkWidget *  __attribute__((nonnull(1,2,4)))
   GtkWidget *iconw = appdata->icons.widget_load(icon, icon_scale);
 #ifndef FREMANTLE
   // explicitely assign image so the button does not show the action text
-  if(iconw == O2G_NULLPTR)
+  if(iconw == nullptr)
     // gtk_image_new_from_icon_name() can't be used first, as it will return non-null even if nothing is found
     iconw = gtk_image_new_from_icon_name(icon, GTK_ICON_SIZE_MENU);
 #endif
@@ -1149,7 +1149,7 @@ static int application_run(const char *proj)
   settings_t * const settings = settings_t::instance();
 
   if(unlikely(!appdata.style)) {
-    errorf(O2G_NULLPTR, _("Unable to load valid style %s, terminating."), settings->style.c_str());
+    errorf(nullptr, _("Unable to load valid style %s, terminating."), settings->style.c_str());
     return -1;
   }
 
@@ -1167,7 +1167,7 @@ static int application_run(const char *proj)
   /* try to enable the zoom buttons. don't do this on x86 as it breaks */
   /* at runtime with cygwin x */
 #if !defined(__i386__)
-  g_signal_connect(appdata_t::window, "realize", G_CALLBACK(on_window_realize), O2G_NULLPTR);
+  g_signal_connect(appdata_t::window, "realize", G_CALLBACK(on_window_realize), nullptr);
 #endif // FREMANTLE
 
 #else
@@ -1181,7 +1181,7 @@ static int application_run(const char *proj)
 
   g_signal_connect_swapped(appdata_t::window, "key_press_event",
                            G_CALLBACK(on_window_key_press), &appdata);
-  g_signal_connect(appdata_t::window, "destroy", G_CALLBACK(on_window_destroy), O2G_NULLPTR);
+  g_signal_connect(appdata_t::window, "destroy", G_CALLBACK(on_window_destroy), nullptr);
 
   GtkBox *mainvbox = GTK_BOX(gtk_vbox_new(FALSE, 0));
 
@@ -1244,8 +1244,8 @@ static int application_run(const char *proj)
   gtk_box_pack_start(GTK_BOX(vbox), ivbox, TRUE, FALSE, 0);
 
   ivbox = gtk_vbox_new(FALSE, 0);
-  GtkWidget *ok = icon_button(&appdata, "ok_thumb", O2G_NULLPTR, ivbox);
-  GtkWidget *cancel = icon_button(&appdata, "cancel_thumb", O2G_NULLPTR, ivbox);
+  GtkWidget *ok = icon_button(&appdata, "ok_thumb", nullptr, ivbox);
+  GtkWidget *cancel = icon_button(&appdata, "cancel_thumb", nullptr, ivbox);
   iconbar_register_buttons(appdata, ok, cancel);
   gtk_box_pack_start(GTK_BOX(vbox), ivbox, FALSE, FALSE, 0);
 
@@ -1263,7 +1263,7 @@ static int application_run(const char *proj)
   /* let gtk do its thing before loading the data, */
   /* so the user sees something */
   osm2go_platform::process_events();
-  if(unlikely(appdata_t::window == O2G_NULLPTR)) {
+  if(unlikely(appdata_t::window == nullptr)) {
     printf("shutdown while starting up (1)\n");
     return -1;
   }
@@ -1272,7 +1272,7 @@ static int application_run(const char *proj)
     if(strcmp(proj, "-p") == 0) {
       cb_menu_project_open(&appdata);
     } else if(!project_load(appdata, proj)) {
-      messagef(O2G_NULLPTR, _("Command line arguments"),
+      messagef(nullptr, _("Command line arguments"),
                _("You passed '%s' on the command line, but it was neither"
                  "recognized as option nor could it be loaded as project."),
                proj);
@@ -1291,14 +1291,14 @@ static int application_run(const char *proj)
 
   /* again let the ui do its thing */
   osm2go_platform::process_events();
-  if(unlikely(appdata_t::window == O2G_NULLPTR)) {
+  if(unlikely(appdata_t::window == nullptr)) {
     printf("shutdown while starting up (2)\n");
     return -1;
   }
 
   /* start to interact with the user now that the gui is running */
   if(unlikely(appdata.project && appdata.project->isDemo && settings->first_run_demo)) {
-    messagef(O2G_NULLPTR, _("Welcome to OSM2Go"),
+    messagef(nullptr, _("Welcome to OSM2Go"),
 	     _("This is the first time you run OSM2Go. "
 	       "A demo project has been loaded to get you "
 	       "started. You can play around with this demo as much "
@@ -1323,7 +1323,7 @@ static int application_run(const char *proj)
   appdata.track_clear();
 
   /* save a diff if there are dirty entries */
-  if(likely(appdata.project != O2G_NULLPTR))
+  if(likely(appdata.project != nullptr))
     appdata.project->diff_save();
 
   return 0;
@@ -1348,13 +1348,13 @@ int main(int argc, char *argv[]) {
   xmlKeepBlanksDefault(0);
 
 #if !GLIB_CHECK_VERSION(2,32,0)
-  g_thread_init(O2G_NULLPTR);
+  g_thread_init(nullptr);
 #endif
 
   gtk_init(&argc, &argv);
   int ret = osm2go_platform::init() ? 0 : 1;
   if (ret == 0) {
-    ret = application_run(argc > 1 ? argv[1] : O2G_NULLPTR);
+    ret = application_run(argc > 1 ? argv[1] : nullptr);
 
     osm2go_platform::cleanup();
   }

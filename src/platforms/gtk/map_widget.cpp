@@ -71,14 +71,14 @@ public:
 static gboolean map_destroy_event(map_t *map) {
   g_debug("destroying entire map");
 
-  map->appdata.map = O2G_NULLPTR;
+  map->appdata.map = nullptr;
   delete map;
 
   return FALSE;
 }
 
 static gboolean map_scroll_event(GtkWidget *, GdkEventScroll *event, map_t *map) {
-  if(map->appdata.project->osm == O2G_NULLPTR)
+  if(map->appdata.project->osm == nullptr)
     return FALSE;
 
   if(event->type == GDK_SCROLL && map) {
@@ -96,7 +96,7 @@ static gboolean map_scroll_event(GtkWidget *, GdkEventScroll *event, map_t *map)
 /* move the background image (wms data) during wms adjustment */
 void map_t::bg_adjust(int x, int y) {
   const osm_t * const osm = appdata.project->osm;
-  assert(osm != O2G_NULLPTR);
+  assert(osm != nullptr);
 
   x += osm->bounds.min.x + bg.offset.x - pen_down.at.x;
   y += osm->bounds.min.y + bg.offset.y - pen_down.at.y;
@@ -105,7 +105,7 @@ void map_t::bg_adjust(int x, int y) {
 }
 
 gboolean map_internal::map_button_event(map_internal *map, GdkEventButton *event) {
-  if(unlikely(map->appdata.project->osm == O2G_NULLPTR))
+  if(unlikely(map->appdata.project->osm == nullptr))
     return FALSE;
 
   if(event->button == 1) {
@@ -125,7 +125,7 @@ gboolean map_internal::map_motion_notify_event(GtkWidget *, GdkEventMotion *even
   gint x, y;
   GdkModifierType state;
 
-  if(map->appdata.project->osm == O2G_NULLPTR)
+  if(map->appdata.project->osm == nullptr)
     return FALSE;
 
 #if 0 // def FREMANTLE
@@ -229,7 +229,7 @@ static gboolean map_autosave(gpointer data) {
   if(gtk_window_is_active(GTK_WINDOW(appdata_t::window))) {
     g_debug("autosave ...");
 
-    if(likely(map->appdata.project != O2G_NULLPTR)) {
+    if(likely(map->appdata.project != nullptr)) {
       track_save(map->appdata.project, map->appdata.track.track);
       map->appdata.project->diff_save();
     }
@@ -242,7 +242,7 @@ static gboolean map_autosave(gpointer data) {
 map_internal::map_internal(appdata_t &a)
   : map_t(a, m_hl)
 {
-  background.item = O2G_NULLPTR;
+  background.item = nullptr;
 
   g_signal_connect_swapped(canvas->widget, "button_press_event",
                            G_CALLBACK(map_button_event), this);
@@ -293,7 +293,7 @@ void map_t::remove_bg_image() {
   map_internal *m = static_cast<map_internal *>(this);
   if(m->background.item) {
     delete m->background.item;
-    m->background.item = O2G_NULLPTR;
+    m->background.item = nullptr;
   }
 }
 
@@ -302,7 +302,7 @@ static void map_bg_item_destroy_event(gpointer data) {
 
   /* destroying background item */
 
-  map->background.item = O2G_NULLPTR;
+  map->background.item = nullptr;
   if(map->background.pix) {
     g_debug("destroying background item");
     map->background.pix.reset();
@@ -316,7 +316,7 @@ bool map_t::set_bg_image(const std::string &filename) {
 
   map_internal *m = static_cast<map_internal *>(this);
 
-  m->background.pix.reset(gdk_pixbuf_new_from_file(filename.c_str(), O2G_NULLPTR));
+  m->background.pix.reset(gdk_pixbuf_new_from_file(filename.c_str(), nullptr));
   if(!m->background.pix)
     return false;
 

@@ -52,7 +52,7 @@ double xml_get_prop_float(xmlNode *node, const char *prop) {
 double xml_parse_float(const xmlChar *str)
 {
   if(str)
-    return g_ascii_strtod(reinterpret_cast<const gchar *>(str), O2G_NULLPTR);
+    return g_ascii_strtod(reinterpret_cast<const gchar *>(str), nullptr);
   else
     return NAN;
 }
@@ -70,7 +70,7 @@ static void vmessagef(osm2go_platform::Widget *parent, GtkMessageType type, GtkB
   GtkWindow *wnd = GTK_WINDOW(parent ? parent : appdata_t::window);
   g_string buf(g_strdup_vprintf(fmt, args));
 
-  if(unlikely(wnd == O2G_NULLPTR)) {
+  if(unlikely(wnd == nullptr)) {
     printf("%s", buf.get());
     return;
   }
@@ -171,7 +171,7 @@ bool yes_no_f(osm2go_platform::Widget *parent, unsigned int again_flags, const c
                   hildon_note_new_confirmation(p, buf.get()));
 #endif
 
-  osm2go_platform::Widget *cbut = O2G_NULLPTR;
+  osm2go_platform::Widget *cbut = nullptr;
   if(again_bit) {
 #ifdef FREMANTLE
     /* make sure there's some space before the checkbox */
@@ -214,7 +214,7 @@ const std::vector<datapath> &base_paths()
     std::vector<std::string> pathnames;
 
     const char *home = getenv("HOME");
-    assert(home != O2G_NULLPTR);
+    assert(home != nullptr);
 
     // in home directory
     pathnames.push_back(home + std::string("/." PACKAGE "/"));

@@ -123,10 +123,10 @@ private:
 
 /* make menu represent the track state */
 void track_menu_set(appdata_t &appdata) {
-  if(unlikely(appdata_t::window == O2G_NULLPTR))
+  if(unlikely(appdata_t::window == nullptr))
     return;
 
-  bool present = (appdata.track.track != O2G_NULLPTR);
+  bool present = (appdata.track.track != nullptr);
 
   /* if a track is present, then it can be cleared or exported */
   appdata.uicontrol->setActionEnable(MainUi::MENU_ITEM_TRACK_CLEAR, present);
@@ -141,7 +141,7 @@ static track_t *track_read(const char *filename, bool dirty) {
   if(unlikely(!sx.parse(filename))) {
     delete sx.track;
     printf("track was empty/invalid track\n");
-    return O2G_NULLPTR;
+    return nullptr;
   }
 
   sx.track->dirty = dirty;
@@ -164,7 +164,7 @@ struct track_save_segs {
   };
 
   void operator()(const track_seg_t &seg) {
-    xmlNodePtr node_seg = xmlNewChild(node, O2G_NULLPTR, BAD_CAST "trkseg", O2G_NULLPTR);
+    xmlNodePtr node_seg = xmlNewChild(node, nullptr, BAD_CAST "trkseg", nullptr);
     std::for_each(seg.track_points.begin(), seg.track_points.end(),
                   save_point(node_seg));
   }
@@ -174,20 +174,20 @@ void track_save_segs::save_point::operator()(const track_point_t &point)
 {
   char str[G_ASCII_DTOSTR_BUF_SIZE];
 
-  xmlNodePtr node_point = xmlNewChild(node, O2G_NULLPTR, BAD_CAST "trkpt", O2G_NULLPTR);
+  xmlNodePtr node_point = xmlNewChild(node, nullptr, BAD_CAST "trkpt", nullptr);
 
   point.pos.toXmlProperties(node_point);
 
   if(!std::isnan(point.altitude)) {
     g_ascii_formatd(str, sizeof(str), ALT_FORMAT, point.altitude);
-    xmlNewTextChild(node_point, O2G_NULLPTR, BAD_CAST "ele", BAD_CAST str);
+    xmlNewTextChild(node_point, nullptr, BAD_CAST "ele", BAD_CAST str);
   }
 
   if(likely(point.time)) {
     struct tm loctime;
     localtime_r(&point.time, &loctime);
     strftime(str, sizeof(str), DATE_FORMAT, &loctime);
-    xmlNewTextChild(node_point, O2G_NULLPTR, BAD_CAST "time", BAD_CAST str);
+    xmlNewTextChild(node_point, nullptr, BAD_CAST "time", BAD_CAST str);
   }
 }
 
@@ -198,7 +198,7 @@ void track_save_segs::save_point::operator()(const track_point_t &point)
  * @param doc previous xml
  *
  * If doc is given, the last track in doc is updated and all remaining ones
- * are appended. If doc is O2G_NULLPTR all tracks are saved.
+ * are appended. If doc is nullptr all tracks are saved.
  *
  * doc is freed.
  */
@@ -255,13 +255,13 @@ static void track_write(const char *name, const track_t *track, xmlDoc *d) {
 
   if (!doc) {
     doc.reset(xmlNewDoc(BAD_CAST "1.0"));
-    xmlNodePtr root_node = xmlNewNode(O2G_NULLPTR, BAD_CAST "gpx");
+    xmlNodePtr root_node = xmlNewNode(nullptr, BAD_CAST "gpx");
     xmlNewProp(root_node, BAD_CAST "xmlns",
                BAD_CAST "http://www.topografix.com/GPX/1/0");
     xmlNewProp(root_node, BAD_CAST "creator", BAD_CAST PACKAGE " v" VERSION);
     it = track->segments.begin();
 
-    trk_node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "trk", O2G_NULLPTR);
+    trk_node = xmlNewChild(root_node, nullptr, BAD_CAST "trk", nullptr);
     xmlDocSetRootElement(doc.get(), root_node);
   }
 
@@ -290,7 +290,7 @@ void track_save(project_t *project, track_t *track) {
   /* check if there already is such a diff file and make it a backup */
   /* in case new diff saving fails */
   const char *backupfn = "backup.trk";
-  xmlDocPtr doc = O2G_NULLPTR;
+  xmlDocPtr doc = nullptr;
 
   struct stat st;
   if(fstatat(project->dirfd, trkfname.c_str(), &st, 0) == 0 && S_ISREG(st.st_mode)) {
@@ -299,7 +299,7 @@ void track_save(project_t *project, track_t *track) {
       /* parse the old file and get the DOM */
       fdguard bupfd(project->dirfd, backupfn, O_RDONLY);
       if(likely(bupfd.valid()))
-        doc = xmlReadFd(bupfd, O2G_NULLPTR, O2G_NULLPTR, XML_PARSE_NONET);
+        doc = xmlReadFd(bupfd, nullptr, nullptr, XML_PARSE_NONET);
     }
   }
 
@@ -313,7 +313,7 @@ void track_save(project_t *project, track_t *track) {
 }
 
 void track_export(const track_t *track, const char *filename) {
-  track_write(filename, track, O2G_NULLPTR);
+  track_write(filename, track, nullptr);
 }
 
 /* ----------------------  loading track --------------------------- */
@@ -345,7 +345,7 @@ bool track_restore(appdata_t &appdata) {
 
   if (ret) {
     appdata.track.track = track_read(trk_name.c_str(), false);
-    ret = appdata.track.track != O2G_NULLPTR;
+    ret = appdata.track.track != nullptr;
   }
 
   track_menu_set(appdata);
@@ -406,7 +406,7 @@ static bool track_append_position(appdata_t &appdata, const pos_t &pos, float al
   } else {
     ret = true;
     track->dirty = true;
-    points.push_back(track_point_t(pos, alt, time(O2G_NULLPTR)));
+    points.push_back(track_point_t(pos, alt, time(nullptr)));
 
     if(settings->trackVisibility >= DrawCurrent) {
       if(seg.item_chain.empty()) {
@@ -439,7 +439,7 @@ static void track_do_disable_gps(appdata_t &appdata) {
   settings_t::instance()->enable_gps = false;
   appdata.gps_state->setEnable(false);
 
-  appdata.gps_state->registerCallback(O2G_NULLPTR, O2G_NULLPTR);
+  appdata.gps_state->registerCallback(nullptr, nullptr);
 
   /* stopping the GPS removes the marker ... */
   appdata.map->remove_gps_position();
@@ -453,14 +453,14 @@ static int update(void *data) {
 
   /* ignore updates while no valid osm file is loaded, e.g. when switching */
   /* projects */
-  if(unlikely(appdata.project == O2G_NULLPTR || appdata.project->osm == O2G_NULLPTR))
+  if(unlikely(appdata.project == nullptr || appdata.project->osm == nullptr))
     return 1;
 
   /* the map is only gone of the main screen is being closed */
   if(unlikely(!appdata.map)) {
     printf("map has gone while tracking was active, stopping tracker\n");
 
-    appdata.gps_state->registerCallback(O2G_NULLPTR, O2G_NULLPTR);
+    appdata.gps_state->registerCallback(nullptr, nullptr);
 
     return 0;
   }
@@ -535,9 +535,9 @@ track_point_t::track_point_t(const pos_t &p, float alt, time_t t)
 }
 
 TrackSax::TrackSax()
-  : curPoint(O2G_NULLPTR)
+  : curPoint(nullptr)
   , state(DocStart)
-  , track(O2G_NULLPTR)
+  , track(nullptr)
   , points(0)
 {
   memset(&handler, 0, sizeof(handler));
@@ -575,7 +575,7 @@ void TrackSax::characters(const char *ch, int len)
     struct tm time;
     memset(&time, 0, sizeof(time));
     time.tm_isdst = -1;
-    if(likely(strptime(buf.c_str(), DATE_FORMAT, &time) != O2G_NULLPTR))
+    if(likely(strptime(buf.c_str(), DATE_FORMAT, &time) != nullptr))
       curPoint->time = mktime(&time);
     break;
   }

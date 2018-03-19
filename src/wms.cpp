@@ -88,8 +88,8 @@ static bool wms_bbox_is_valid(const pos_area &bounds) {
 }
 
 static wms_layer_t *wms_cap_parse_layer(xmlDocPtr doc, xmlNode *a_node) {
-  wms_layer_t *wms_layer = O2G_NULLPTR;
-  xmlNode *cur_node = O2G_NULLPTR;
+  wms_layer_t *wms_layer = nullptr;
+  xmlNode *cur_node = nullptr;
 
   wms_layer = new wms_layer_t();
 
@@ -206,7 +206,7 @@ static bool wms_cap_parse_cap(xmlDocPtr doc, xmlNode *a_node, wms_cap_t *wms_cap
 }
 
 static bool wms_cap_parse(wms_t &wms, xmlDocPtr doc, xmlNode *a_node) {
-  xmlNode *cur_node = O2G_NULLPTR;
+  xmlNode *cur_node = nullptr;
   bool has_service = false, has_cap = false;
 
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
@@ -230,7 +230,7 @@ static bool wms_cap_parse_root(wms_t &wms, xmlDocPtr doc) {
   bool ret = false;
 
   for (xmlNodePtr cur_node = xmlDocGetRootElement(doc);
-       cur_node != O2G_NULLPTR; cur_node = cur_node->next) {
+       cur_node != nullptr; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(likely(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "WMT_MS_Capabilities") == 0))
         ret = wms_cap_parse(wms, doc, cur_node);
@@ -333,7 +333,7 @@ void requestable_layers_functor::operator()(const wms_layer_t* layer)
 {
   const wms_llbbox_t *llbbox = &layer->llbbox;
   if(!llbbox->valid)
-    llbbox = O2G_NULLPTR;
+    llbbox = nullptr;
 
   std::for_each(layer->children.begin(), layer->children.end(),
                 child_layer_functor(layer->epsg4326, llbbox, layer->srs,
@@ -395,7 +395,7 @@ wms_layer_t::list wms_get_layers(project_t *project, wms_t& wms)
 
   /* ----------- parse capabilities -------------- */
   if(unlikely(!net_io_download_mem(appdata_t::window, url, capmem, _("WMS capabilities")))) {
-    errorf(O2G_NULLPTR, _("WMS download failed:\n\nGetCapabilities failed"));
+    errorf(nullptr, _("WMS download failed:\n\nGetCapabilities failed"));
     return layers;
   }
 
@@ -403,13 +403,13 @@ wms_layer_t::list wms_get_layers(project_t *project, wms_t& wms)
     initImageFormats();
 
   std::unique_ptr<xmlDoc, xmlDocDelete> doc(xmlReadMemory(capmem.c_str(), capmem.size(),
-                                                          O2G_NULLPTR, O2G_NULLPTR, XML_PARSE_NONET));
+                                                          nullptr, nullptr, XML_PARSE_NONET));
 
   /* parse the file and get the DOM */
   bool parse_success = false;
   if(unlikely(!doc)) {
     xmlErrorPtr errP = xmlGetLastError();
-    errorf(O2G_NULLPTR, _("WMS download failed:\n\n"
+    errorf(nullptr, _("WMS download failed:\n\n"
             "XML error while parsing capabilities:\n%s"), errP->message);
   } else {
     printf("ok, parse doc tree\n");
@@ -422,12 +422,12 @@ wms_layer_t::list wms_get_layers(project_t *project, wms_t& wms)
   /* ------------ basic checks ------------- */
 
   if(!parse_success) {
-    errorf(O2G_NULLPTR, _("Incomplete/unexpected reply!"));
+    errorf(nullptr, _("Incomplete/unexpected reply!"));
     return layers;
   }
 
   if(!wms.cap.request.getmap.format) {
-    errorf(O2G_NULLPTR, _("No supported image format found."));
+    errorf(nullptr, _("No supported image format found."));
     return layers;
   }
 
@@ -441,7 +441,7 @@ wms_layer_t::list wms_get_layers(project_t *project, wms_t& wms)
                          layers.end();
 
   if(!at_least_one_ok) {
-    errorf(O2G_NULLPTR, _("Server provides no data in the required format!\n\n"
+    errorf(nullptr, _("Server provides no data in the required format!\n\n"
 	     "(epsg4326 and LatLonBoundingBox are mandatory for osm2go)"));
     wms_layers_free(layers);
     layers.clear();

@@ -135,7 +135,7 @@ bool osm_download(osm2go_platform::Widget *parent, project_t *project)
 }
 
 struct curl_data_t {
-  explicit curl_data_t(char *p = O2G_NULLPTR, curl_off_t l = 0)
+  explicit curl_data_t(char *p = nullptr, curl_off_t l = 0)
     : ptr(p), len(l) {}
   char *ptr;
   long len;
@@ -209,7 +209,7 @@ static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
   /* we want to use our own read function */
   curl_easy_setopt(curl.get(), CURLOPT_READFUNCTION, read_callback);
 
-  std::unique_ptr<curl_slist, curl_slist_deleter> slist(curl_slist_append(O2G_NULLPTR, "Expect:"));
+  std::unique_ptr<curl_slist, curl_slist_deleter> slist(curl_slist_append(nullptr, "Expect:"));
   curl_easy_setopt(curl.get(), CURLOPT_HTTPHEADER, slist.get());
 
   curl_data_t read_data_init(reinterpret_cast<char *>(xml_str));
@@ -231,7 +231,7 @@ static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
 
   for(int retry = MAX_TRY; retry >= 0; retry--) {
     if(retry != MAX_TRY)
-      context.appendf(O2G_NULLPTR, _("Retry %d/%d "), MAX_TRY-retry, MAX_TRY-1);
+      context.appendf(nullptr, _("Retry %d/%d "), MAX_TRY-retry, MAX_TRY-1);
 
     read_data = read_data_init;
     write_data.clear();
@@ -250,7 +250,7 @@ static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
       /* if it's neither "ok" (200), nor "internal server error" (500) */
       /* then write the message to the log */
       if(response != 500 && !write_data.empty()) {
-        context.appendf(O2G_NULLPTR, _("Server reply: "));
+        context.appendf(nullptr, _("Server reply: "));
         context.appendf(COLOR_ERR, _("%s\n"), write_data.c_str());
       }
     } else if(unlikely(!id)) {
@@ -258,7 +258,7 @@ static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
     } else {
       /* this will return the id on a successful create */
       printf("request to parse successful reply '%s' as an id\n", write_data.c_str());
-      *id = strtoull(write_data.c_str(), O2G_NULLPTR, 10);
+      *id = strtoull(write_data.c_str(), nullptr, 10);
       context.appendf(COLOR_OK, _("ok: #" ITEM_ID_FORMAT "\n"), *id);
     }
 
@@ -287,7 +287,7 @@ static bool osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
   curl_easy_setopt(curl.get(), CURLOPT_POSTFIELDS, xml_str);
   curl_easy_setopt(curl.get(), CURLOPT_POSTFIELDSIZE, len);
 
-  std::unique_ptr<curl_slist, curl_slist_deleter> slist(curl_slist_append(O2G_NULLPTR, "Expect:"));
+  std::unique_ptr<curl_slist, curl_slist_deleter> slist(curl_slist_append(nullptr, "Expect:"));
   curl_easy_setopt(curl.get(), CURLOPT_HTTPHEADER, slist.get());
 
   curl_easy_setopt(curl.get(), CURLOPT_ERRORBUFFER, buffer);
@@ -299,7 +299,7 @@ static bool osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
 
   for(int retry = MAX_TRY; retry >= 0; retry--) {
     if(retry != MAX_TRY)
-      context.appendf(O2G_NULLPTR, _("Retry %d/%d "), MAX_TRY-retry, MAX_TRY-1);
+      context.appendf(nullptr, _("Retry %d/%d "), MAX_TRY-retry, MAX_TRY-1);
 
     write_data.clear();
 
@@ -320,7 +320,7 @@ static bool osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
     /* if it's neither "ok" (200), nor "internal server error" (500) */
     /* then write the message to the log */
     if((response != 200) && (response != 500) && !write_data.empty()) {
-      context.appendf(O2G_NULLPTR, _("Server reply: "));
+      context.appendf(nullptr, _("Server reply: "));
       context.appendf(COLOR_ERR, _("%s\n"), write_data.c_str());
     }
 
@@ -345,10 +345,10 @@ static void upload_object(osm_upload_context_t &context, base_object_t *obj) {
 
   if(obj->isNew()) {
     url += "create";
-    context.appendf(O2G_NULLPTR, _("New %s "), obj->apiString());
+    context.appendf(nullptr, _("New %s "), obj->apiString());
   } else {
     url += obj->id_string();
-    context.appendf(O2G_NULLPTR, _("Modified %s #" ITEM_ID_FORMAT " "), obj->apiString(), obj->id);
+    context.appendf(nullptr, _("Modified %s #" ITEM_ID_FORMAT " "), obj->apiString(), obj->id);
   }
 
   /* upload this object */
@@ -386,7 +386,7 @@ void upload_objects<T>::operator()(T *obj)
 static void log_deletion(osm_upload_context_t &context, const base_object_t *obj) {
   assert(obj->flags & OSM_FLAG_DELETED);
 
-  context.appendf(O2G_NULLPTR, _("Deleted %s #" ITEM_ID_FORMAT " (version " ITEM_ID_FORMAT ")\n"),
+  context.appendf(nullptr, _("Deleted %s #" ITEM_ID_FORMAT " (version " ITEM_ID_FORMAT ")\n"),
           obj->apiString(), obj->id, obj->version);
 }
 
@@ -421,11 +421,11 @@ static bool osmchange_upload(osm_upload_context_t &context, xmlDocPtr doc)
 
   printf("deleting objects on server\n");
 
-  context.appendf(O2G_NULLPTR, _("Uploading object deletions "));
+  context.appendf(nullptr, _("Uploading object deletions "));
 
   const std::string url = context.urlbasestr + "changeset/" + context.changeset + "/upload";
 
-  xmlChar *xml_str = O2G_NULLPTR;
+  xmlChar *xml_str = nullptr;
   int len = 0;
 
   xmlDocDumpFormatMemoryEnc(doc, &xml_str, &len, "UTF-8", 1);
@@ -445,7 +445,7 @@ static bool osm_create_changeset(osm_upload_context_t &context) {
   osm2go_platform::process_events();
 
   const std::string url = context.urlbasestr + "changeset/create";
-  context.appendf(O2G_NULLPTR, _("Create changeset "));
+  context.appendf(nullptr, _("Create changeset "));
 
   /* create changeset request */
   xmlString xml_str(osm_generate_xml_changeset(context.comment, context.src));
@@ -470,57 +470,57 @@ static bool osm_close_changeset(osm_upload_context_t &context) {
 
   const std::string url = context.urlbasestr + "changeset/" + context.changeset +
                           "/close";
-  context.appendf(O2G_NULLPTR, _("Close changeset "));
+  context.appendf(nullptr, _("Close changeset "));
 
-  return osm_update_item(context, O2G_NULLPTR, url.c_str(), O2G_NULLPTR);
+  return osm_update_item(context, nullptr, url.c_str(), nullptr);
 }
 
 void osm_do_upload(osm_upload_context_t &context, const osm_t::dirty_t &dirty)
 {
-  context.appendf(O2G_NULLPTR, _("Log generated by %s v%s using API 0.6\n"),
+  context.appendf(nullptr, _("Log generated by %s v%s using API 0.6\n"),
 	  PACKAGE, VERSION);
-  context.appendf(O2G_NULLPTR, _("User comment: %s\n"), context.comment.c_str());
+  context.appendf(nullptr, _("User comment: %s\n"), context.comment.c_str());
 
   project_t * const project = context.project;
   settings_t * const settings = settings_t::instance();
 
   if(api_adjust(project->rserver)) {
-    context.appendf(O2G_NULLPTR, _("Server URL adjusted to %s\n"),
+    context.appendf(nullptr, _("Server URL adjusted to %s\n"),
             project->rserver.c_str());
     if(likely(project->rserver == settings->server))
       project->rserver.clear();
   }
 
-  context.appendf(O2G_NULLPTR, _("Uploading to %s\n"),
+  context.appendf(nullptr, _("Uploading to %s\n"),
           project->server(settings->server).c_str());
 
   /* get a curl handle */
   context.curl.reset(curl_custom_setup(settings->username + ":" + settings->password));
 
   if(unlikely(!context.curl)) {
-    context.appendf(O2G_NULLPTR, _("CURL init error\n"));
+    context.appendf(nullptr, _("CURL init error\n"));
   } else if(likely(osm_create_changeset(context))) {
     /* check for dirty entries */
     osm_t * const osm = context.osm;
     if(!dirty.nodes.modified.empty()) {
-      context.appendf(O2G_NULLPTR, _("Uploading nodes:\n"));
+      context.appendf(nullptr, _("Uploading nodes:\n"));
       std::for_each(dirty.nodes.modified.begin(), dirty.nodes.modified.end(),
                     upload_objects<node_t>(context, osm->nodes));
     }
     if(!dirty.ways.modified.empty()) {
-      context.appendf(O2G_NULLPTR, _("Uploading ways:\n"));
+      context.appendf(nullptr, _("Uploading ways:\n"));
       std::for_each(dirty.ways.modified.begin(), dirty.ways.modified.end(),
                     upload_objects<way_t>(context, osm->ways));
     }
     if(!dirty.relations.modified.empty()) {
-      context.appendf(O2G_NULLPTR, _("Uploading relations:\n"));
+      context.appendf(nullptr, _("Uploading relations:\n"));
       std::for_each(dirty.relations.modified.begin(), dirty.relations.modified.end(),
                     upload_objects<relation_t>(context, osm->relations));
     }
     if(!dirty.relations.deleted.empty() || !dirty.ways.deleted.empty() || !dirty.nodes.deleted.empty()) {
-      context.appendf(O2G_NULLPTR, _("Deleting objects:\n"));
+      context.appendf(nullptr, _("Deleting objects:\n"));
       xmlDocPtr doc = osmchange_init();
-      xmlNodePtr del_node = xmlNewChild(xmlDocGetRootElement(doc), O2G_NULLPTR, BAD_CAST "delete", O2G_NULLPTR);
+      xmlNodePtr del_node = xmlNewChild(xmlDocGetRootElement(doc), nullptr, BAD_CAST "delete", nullptr);
       osmchange_delete(dirty, del_node, context.changeset.c_str());
 
       // deletion was successful, remove the objects
@@ -536,6 +536,6 @@ void osm_do_upload(osm_upload_context_t &context, const osm_t::dirty_t &dirty)
     osm_close_changeset(context);
     context.curl.reset();
 
-    context.appendf(O2G_NULLPTR, _("Upload done.\n"));
+    context.appendf(nullptr, _("Upload done.\n"));
   }
 }

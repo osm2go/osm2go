@@ -56,7 +56,7 @@ static void icon_check(const elemstyle_t *item)
   if(item->icon.filename.empty())
     return;
 
-  assert(path_prefix != O2G_NULLPTR);
+  assert(path_prefix != nullptr);
   std::string name = "styles/";
   name += path_prefix;
   // the final size is now known, avoid too big allocations
@@ -82,12 +82,12 @@ int main(int argc, char **argv)
 
   char *endp;
   unsigned long rules = strtoul(argv[2], &endp, 10);
-  if (endp == O2G_NULLPTR || *endp != 0) {
+  if (endp == nullptr || *endp != 0) {
     usage(argv[0]);
     return 1;
   }
   unsigned long conditions = strtoul(argv[3], &endp, 10);
-  if (endp == O2G_NULLPTR || *endp != 0) {
+  if (endp == nullptr || *endp != 0) {
     usage(argv[0]);
     return 1;
   }

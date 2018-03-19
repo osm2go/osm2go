@@ -32,7 +32,7 @@ class base_object_t;
 
 struct elemstyle_condition_t {
     elemstyle_condition_t(const char *k, const char *v)
-      : key(strdup(k)), value(v ? strdup(v) : O2G_NULLPTR), isBool(false) {}
+      : key(strdup(k)), value(v ? strdup(v) : nullptr), isBool(false) {}
     elemstyle_condition_t(const char *k, bool b)
       : key(strdup(k)), boolValue(b), isBool(true) {}
     elemstyle_condition_t &operator=(const elemstyle_condition_t &other)
@@ -148,7 +148,7 @@ struct elemstyle_icon_t {
 struct elemstyle_t {
   elemstyle_t()
     : type(ES_TYPE_NONE)
-    , line(O2G_NULLPTR)
+    , line(nullptr)
     , zoom_max(0.0f)
   {
   }

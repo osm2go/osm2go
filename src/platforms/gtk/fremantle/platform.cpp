@@ -37,12 +37,12 @@ static osso_context_t *osso_context;
 bool osm2go_platform::init()
 {
   g_signal_new("changed", HILDON_TYPE_PICKER_BUTTON,
-               G_SIGNAL_RUN_FIRST, 0, O2G_NULLPTR, O2G_NULLPTR,
+               G_SIGNAL_RUN_FIRST, 0, nullptr, nullptr,
                g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
-  osso_context = osso_initialize("org.harbaum." PACKAGE, VERSION, TRUE, O2G_NULLPTR);
+  osso_context = osso_initialize("org.harbaum." PACKAGE, VERSION, TRUE, nullptr);
 
-  if(G_UNLIKELY(osso_context == O2G_NULLPTR))
+  if(G_UNLIKELY(osso_context == nullptr))
     return false;
 
   if(G_UNLIKELY(dbus_register(osso_context) != TRUE)) {
@@ -61,7 +61,7 @@ void osm2go_platform::cleanup()
 void osm2go_platform::open_url(const char* url)
 {
   osso_rpc_run_with_defaults(osso_context, "osso_browser",
-                             OSSO_BROWSER_OPEN_NEW_WINDOW_REQ, O2G_NULLPTR,
+                             OSSO_BROWSER_OPEN_NEW_WINDOW_REQ, nullptr,
                              DBUS_TYPE_STRING, url,
                              DBUS_TYPE_BOOLEAN, FALSE, DBUS_TYPE_INVALID);
 }
@@ -109,7 +109,7 @@ void osm2go_platform::notebook_append_page(GtkWidget *notebook, GtkWidget *page,
 
   /* select button for page 0 by default */
   if(!page_num) {
-    button = gtk_radio_button_new_with_label(O2G_NULLPTR, label);
+    button = gtk_radio_button_new_with_label(nullptr, label);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), TRUE);
     g_object_set_data(G_OBJECT(notebook), "group_master", button);
   } else {
@@ -196,7 +196,7 @@ static GtkWidget *combo_box_new_with_selector(const gchar *title, GtkWidget *sel
   hildon_button_set_value_alignment(HILDON_BUTTON(button), 0.5, 0.5);
 
   /* allow button to emit "changed" signal */
-  g_signal_connect(button, "value-changed", G_CALLBACK(on_value_changed), O2G_NULLPTR);
+  g_signal_connect(button, "value-changed", G_CALLBACK(on_value_changed), nullptr);
 
   hildon_button_set_title(HILDON_BUTTON (button), title);
 

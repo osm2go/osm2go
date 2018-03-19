@@ -131,7 +131,7 @@ struct presets_context_t {
   osm2go_platform::WidgetGuard menu;
 #else
   struct submenu {
-    explicit submenu(presets_item_group *i = O2G_NULLPTR, GtkWidget *w = O2G_NULLPTR)
+    explicit submenu(presets_item_group *i = nullptr, GtkWidget *w = nullptr)
       : item(i), widget(w) {}
     presets_item_group *item;
 #if __cplusplus >= 201103L
@@ -166,8 +166,8 @@ presets_context_t::presets_context_t(presets_items* pr, tag_context_t* t)
   : icons(icon_t::instance())
   , presets(pr)
 #ifdef PICKER_MENU
-  , subwidget(O2G_NULLPTR)
-  , selected_item(O2G_NULLPTR)
+  , subwidget(nullptr)
+  , selected_item(nullptr)
 #endif
   , tag_context(t)
   , presets_mask(presets_type_mask(t->object))
@@ -179,7 +179,7 @@ presets_context_t::presets_context_t(presets_items* pr, tag_context_t* t)
 presets_context_t::~presets_context_t()
 {
   assert(instance == this);
-  instance = O2G_NULLPTR;
+  instance = nullptr;
 }
 
 typedef std::map<const presets_element_t *, presets_element_t::attach_key *> WidgetMap;
@@ -226,7 +226,7 @@ struct get_widget_functor {
 void get_widget_functor::operator()(const presets_element_t* w)
 {
   const WidgetMap::const_iterator hint = gtk_widgets.find(w);
-  WidgetMap::mapped_type akey = hint != hintEnd ? hint->second : O2G_NULLPTR;
+  WidgetMap::mapped_type akey = hint != hintEnd ? hint->second : nullptr;
   std::string text;
 
   switch(w->type) {
@@ -272,7 +272,7 @@ static void presets_item_dialog(const presets_item *item) {
                                              GTK_DIALOG_MODAL,
                                              GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                              GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-                                             O2G_NULLPTR));
+                                             nullptr));
 
     /* if a web link has been provided for this item install */
     /* a button for this */
@@ -370,7 +370,7 @@ static void presets_item_dialog(const presets_item *item) {
 #ifndef PICKER_MENU
 static void
 cb_menu_item(presets_item *item) {
-  assert(item != O2G_NULLPTR);
+  assert(item != nullptr);
 
   presets_item_dialog(item);
 }
@@ -489,7 +489,7 @@ static void remove_sub(presets_context_t::submenu_vector::value_type &sub_item) 
   // the unique_ptr will remove them automatically on destruction
   if(sub_item.widget) {
     gtk_widget_destroy(sub_item.widget);
-    sub_item.widget = O2G_NULLPTR;
+    sub_item.widget = nullptr;
   }
 #else
   (void) sub_item;
@@ -513,9 +513,9 @@ on_presets_picker_selected(GtkTreeSelection *selection, presets_context_t *conte
   if(!gtk_tree_selection_get_selected(selection, &model, &iter))
     return;
 
-  presets_item_named *item = O2G_NULLPTR;
-  presets_item_group *sub_item = O2G_NULLPTR;
-  char *text = O2G_NULLPTR;
+  presets_item_named *item = nullptr;
+  presets_item_group *sub_item = nullptr;
+  char *text = nullptr;
   gtk_tree_model_get(model, &iter,
                      PRESETS_PICKER_COL_SUBMENU_PTR, &sub_item,
                      PRESETS_PICKER_COL_ITEM_PTR, &item,
@@ -537,9 +537,9 @@ on_presets_picker_selected(GtkTreeSelection *selection, presets_context_t *conte
   } else {
     /* check if this already had a submenu */
     // check if dynamic submenu is shown
-    if(context->subwidget != O2G_NULLPTR) {
+    if(context->subwidget != nullptr) {
       gtk_widget_destroy(context->subwidget);
-      context->subwidget = O2G_NULLPTR;
+      context->subwidget = nullptr;
     }
 
     GtkWidget *sub;
@@ -581,7 +581,7 @@ on_presets_picker_selected(GtkTreeSelection *selection, presets_context_t *conte
     }
 
     /* views parent is a scrolled window whichs parent in turn is the hbox */
-    assert(view->parent != O2G_NULLPTR);
+    assert(view->parent != nullptr);
     GtkWidget *hbox = view->parent->parent;
 
     gtk_box_pack_start_defaults(GTK_BOX(hbox), sub);
@@ -599,13 +599,13 @@ static GtkListStore *presets_picker_store(GtkTreeView **view) {
   /* --- "Icon" column --- */
   renderer = gtk_cell_renderer_pixbuf_new();
   gtk_tree_view_insert_column_with_attributes(*view,
-      -1, "Icon", renderer, "pixbuf", PRESETS_PICKER_COL_ICON, O2G_NULLPTR);
+      -1, "Icon", renderer, "pixbuf", PRESETS_PICKER_COL_ICON, nullptr);
 
   /* --- "Name" column --- */
   renderer = gtk_cell_renderer_text_new();
-  g_object_set(renderer, "ellipsize", PANGO_ELLIPSIZE_END, O2G_NULLPTR);
+  g_object_set(renderer, "ellipsize", PANGO_ELLIPSIZE_END, nullptr);
   GtkTreeViewColumn *column = gtk_tree_view_column_new_with_attributes(
-		 "Name", renderer, "text", PRESETS_PICKER_COL_NAME, O2G_NULLPTR);
+		 "Name", renderer, "text", PRESETS_PICKER_COL_NAME, nullptr);
   gtk_tree_view_column_set_expand(column, TRUE);
   gtk_tree_view_insert_column(*view, column, -1);
 
@@ -613,7 +613,7 @@ static GtkListStore *presets_picker_store(GtkTreeView **view) {
   renderer = gtk_cell_renderer_pixbuf_new();
   gtk_tree_view_insert_column_with_attributes(*view,
       -1, "Submenu Icon", renderer, "pixbuf",
-      PRESETS_PICKER_COL_SUBMENU_ICON, O2G_NULLPTR);
+      PRESETS_PICKER_COL_SUBMENU_ICON, nullptr);
 
   return gtk_list_store_new(PRESETS_PICKER_NUM_COLS,
 			     GDK_TYPE_PIXBUF,
@@ -639,7 +639,7 @@ static GtkWidget *presets_picker_embed(GtkTreeView *view, GtkListStore *store,
   /* put this inside a scrolled view */
   GtkWidget *c;
 #ifndef FREMANTLE
-  c = gtk_scrolled_window_new (O2G_NULLPTR, O2G_NULLPTR);
+  c = gtk_scrolled_window_new (nullptr, nullptr);
   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(c),
 				 GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
 #else
@@ -651,14 +651,14 @@ static GtkWidget *presets_picker_embed(GtkTreeView *view, GtkListStore *store,
 
 static GtkTreeIter preset_insert_item(const presets_item_named *item, icon_t &icons,
                                       GtkListStore *store) {
-  /* icon load can cope with empty string as name (returns O2G_NULLPTR then) */
+  /* icon load can cope with empty string as name (returns nullptr then) */
   icon_t::icon_item *icon = icons.load(item->icon, 16);
 
   /* Append a row and fill in some data */
   GtkTreeIter iter;
   gtk_list_store_append(store, &iter);
 
-  icon_t::Pixmap pixmap = icon == O2G_NULLPTR ? O2G_NULLPTR : icon->buffer();
+  icon_t::Pixmap pixmap = icon == nullptr ? nullptr : icon->buffer();
 
   gtk_list_store_set(store, &iter,
 		     PRESETS_PICKER_COL_ICON, pixmap,
@@ -829,7 +829,7 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event) {
   (void)widget;
 
   if (!presets_context_t::instance->menu) {
-    GtkWidget *matches = O2G_NULLPTR;
+    GtkWidget *matches = nullptr;
     presets_context_t::instance->menu.reset(build_menu(presets_context_t::instance->presets->items, &matches));
     if(!presets_context_t::instance->presets->lru.empty()) {
       // This will not update the menu while the dialog is open. Not worth the effort.
@@ -850,7 +850,7 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event) {
   }
   gtk_widget_show_all(presets_context_t::instance->menu.get());
 
-  gtk_menu_popup(GTK_MENU(presets_context_t::instance->menu.get()), O2G_NULLPTR, O2G_NULLPTR, O2G_NULLPTR, O2G_NULLPTR,
+  gtk_menu_popup(GTK_MENU(presets_context_t::instance->menu.get()), nullptr, nullptr, nullptr, nullptr,
                  event->button, event->time);
 #else
   assert(presets_context_t::instance->submenus.empty());
@@ -858,7 +858,7 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event) {
   osm2go_platform::WidgetGuard dialog(gtk_dialog_new_with_buttons(_("Presets"),
                                               GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(widget))),
                                               GTK_DIALOG_MODAL, GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
-                                              O2G_NULLPTR));
+                                              nullptr));
 
   gtk_window_set_default_size(GTK_WINDOW(dialog.get()), 400, 480);
 
@@ -882,7 +882,7 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event) {
 
   if(presets_context_t::instance->selected_item) {
     presets_item_dialog(presets_context_t::instance->selected_item);
-    presets_context_t::instance->selected_item = O2G_NULLPTR;
+    presets_context_t::instance->selected_item = nullptr;
   }
 #endif
 
@@ -903,7 +903,7 @@ GtkWidget *josm_build_presets_button(presets_items *presets, tag_context_t *tag_
   GtkWidget *but = button_new_with_label(_("Presets"));
   gtk_widget_set_events(but, GDK_EXPOSURE_MASK);
   gtk_widget_add_events(but, GDK_BUTTON_PRESS_MASK);
-  g_signal_connect(but, "button-press-event", G_CALLBACK(button_press), O2G_NULLPTR);
+  g_signal_connect(but, "button-press-event", G_CALLBACK(button_press), nullptr);
   g_signal_connect_swapped(but, "destroy", G_CALLBACK(on_button_destroy), context);
 
   return but;
@@ -935,14 +935,14 @@ presets_element_t::attach_key *presets_element_separator::attach(preset_attach_c
                                                                  const std::string &) const
 {
   attach_both(attctx, gtk_hseparator_new());
-  return O2G_NULLPTR;
+  return nullptr;
 }
 
 presets_element_t::attach_key *presets_element_label::attach(preset_attach_context &attctx,
                                                              const std::string &) const
 {
   attach_both(attctx, gtk_label_new(text.c_str()));
-  return O2G_NULLPTR;
+  return nullptr;
 }
 
 presets_element_t::attach_key *presets_element_combo::attach(preset_attach_context &attctx,
@@ -1012,7 +1012,7 @@ presets_element_t::attach_key *presets_element_checkbox::attach(preset_attach_co
   GtkWidget *ret = check_button_new_with_label(text.c_str());
   check_button_set_active(ret, deflt);
 #ifndef FREMANTLE
-  attach_right(attctx, O2G_NULLPTR, ret);
+  attach_right(attctx, nullptr, ret);
 #else
   attach_both(attctx, ret);
 #endif
@@ -1046,5 +1046,5 @@ presets_element_t::attach_key *presets_element_link::attach(preset_attach_contex
   }
   g_signal_connect_swapped(button, "clicked", G_CALLBACK(item_link_clicked), item);
   attach_both(attctx, button);
-  return O2G_NULLPTR;
+  return nullptr;
 }

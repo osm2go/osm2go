@@ -72,7 +72,7 @@ canvas_goocanvas::canvas_goocanvas()
 
   /* create the groups */
   for(unsigned int gr = 0; gr < group.size(); gr++)
-    group[gr] = goo_canvas_group_new(root, O2G_NULLPTR);
+    group[gr] = goo_canvas_group_new(root, nullptr);
 
   GObject *w = G_OBJECT(widget);
   g_signal_connect_swapped(w, "destroy",
@@ -80,7 +80,7 @@ canvas_goocanvas::canvas_goocanvas()
 
   g_object_set_data(w, "canvas-pointer", this);
 
-  g_object_set(w, "anchor", GTK_ANCHOR_CENTER, O2G_NULLPTR);
+  g_object_set(w, "anchor", GTK_ANCHOR_CENTER, nullptr);
 
   gtk_widget_set_events(widget,
                         GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
@@ -92,7 +92,7 @@ canvas_goocanvas::canvas_goocanvas()
 
 void canvas_t::set_background(color_t bg_color) {
   g_object_set(G_OBJECT(widget),
-               "background-color-rgb", bg_color.rgb(), O2G_NULLPTR);
+               "background-color-rgb", bg_color.rgb(), nullptr);
 }
 
 lpos_t canvas_t::window2world(int x, int y) const {
@@ -195,7 +195,7 @@ canvas_item_t *canvas_t::circle_new(canvas_group_t group,
                            "line-width", static_cast<double>(border),
                            "stroke-color-rgba", border_col.rgba(),
                            "fill-color-rgba", fill_col.rgba(),
-                           O2G_NULLPTR);
+                           nullptr);
 
   if(CANVAS_SELECTABLE & (1<<group))
     (void) new canvas_item_info_circle(this, group, item, x, y, radius + border);
@@ -232,7 +232,7 @@ canvas_item_t *canvas_t::polyline_new(canvas_group_t group, const std::vector<lp
                             "stroke-color-rgba", color.rgba(),
                             "line-join", CAIRO_LINE_JOIN_ROUND,
 			    "line-cap", CAIRO_LINE_CAP_ROUND,
-                            O2G_NULLPTR);
+                            nullptr);
 
   if(CANVAS_SELECTABLE & (1<<group))
     (void) new canvas_item_info_poly(this, group, item, FALSE, width, points);
@@ -252,7 +252,7 @@ canvas_item_t *canvas_t::polygon_new(canvas_group_t group, const std::vector<lpo
                             "fill-color-rgba", fill.rgba(),
 			    "line-join", CAIRO_LINE_JOIN_ROUND,
 			    "line-cap", CAIRO_LINE_CAP_ROUND,
-                            O2G_NULLPTR);
+                            nullptr);
 
   if(CANVAS_SELECTABLE & (1<<group))
     (void) new canvas_item_info_poly(this, group, item, TRUE, width, points);
@@ -268,7 +268,7 @@ canvas_item_t *canvas_t::image_new(canvas_group_t group, icon_t::Pixmap pix, int
   GooCanvasItem *item =
       goo_canvas_image_new(static_cast<canvas_goocanvas *>(this)->group[group],
                            pix, x / hscale - width / 2,
-                           y / vscale - height / 2, O2G_NULLPTR);
+                           y / vscale - height / 2, nullptr);
   goo_canvas_item_scale(item, hscale, vscale);
 
   if(CANVAS_SELECTABLE & (1<<group)) {
@@ -280,7 +280,7 @@ canvas_item_t *canvas_t::image_new(canvas_group_t group, icon_t::Pixmap pix, int
 }
 
 void canvas_item_t::operator delete(void *ptr) {
-  if(G_LIKELY(ptr != O2G_NULLPTR))
+  if(G_LIKELY(ptr != nullptr))
     goo_canvas_item_remove(static_cast<GooCanvasItem *>(ptr));
 }
 
@@ -288,31 +288,31 @@ void canvas_item_t::operator delete(void *ptr) {
 
 void canvas_item_t::set_points(const std::vector<lpos_t> &points) {
   pointGuard cpoints(canvas_points_create(points));
-  g_object_set(G_OBJECT(this), "points", cpoints.get(), O2G_NULLPTR);
+  g_object_set(G_OBJECT(this), "points", cpoints.get(), nullptr);
 }
 
 void canvas_item_t::set_pos(lpos_t *lpos) {
   g_object_set(G_OBJECT(this),
                "center-x", static_cast<gdouble>(lpos->x),
                "center-y", static_cast<gdouble>(lpos->y),
-               O2G_NULLPTR);
+               nullptr);
 }
 
 void canvas_item_t::set_radius(int radius) {
   g_object_set(G_OBJECT(this),
                "radius-x", static_cast<gdouble>(radius),
                "radius-y", static_cast<gdouble>(radius),
-               O2G_NULLPTR);
+               nullptr);
 }
 
 void canvas_item_t::to_bottom() {
   GooCanvasItem *gitem = static_cast<GooCanvasItem *>(this);
-  goo_canvas_item_lower(gitem, O2G_NULLPTR);
+  goo_canvas_item_lower(gitem, nullptr);
   canvas_t *canvas =
     static_cast<canvas_t *>(g_object_get_data(G_OBJECT(goo_canvas_item_get_canvas(gitem)),
                                               "canvas-pointer"));
 
-  assert(canvas != O2G_NULLPTR);
+  assert(canvas != nullptr);
   canvas->item_info_push(this);
 }
 
@@ -327,7 +327,7 @@ void canvas_item_t::set_zoom_max(float zoom_max) {
   g_object_set(G_OBJECT(this),
                "visibility", vis,
                "visibility-threshold", vis_thres,
-               O2G_NULLPTR);
+               nullptr);
 }
 
 void canvas_item_t::set_dashed(unsigned int line_width, unsigned int dash_length_on,
@@ -343,7 +343,7 @@ void canvas_item_t::set_dashed(unsigned int line_width, unsigned int dash_length
   g_object_set(G_OBJECT(this),
                "line-dash", dash,
                "line-cap", cap,
-               O2G_NULLPTR);
+               nullptr);
   goo_canvas_line_dash_unref(dash);
 }
 
@@ -385,17 +385,17 @@ void canvas_item_t::image_move(int x, int y, float hscale, float vscale) {
   g_object_set(G_OBJECT(this),
                "x", static_cast<gdouble>(x) / hscale,
                "y", static_cast<gdouble>(y) / vscale,
-               O2G_NULLPTR);
+               nullptr);
 }
 
 int canvas_item_t::get_segment(lpos_t pos) const {
-  GooCanvasPoints *points = O2G_NULLPTR;
+  GooCanvasPoints *points = nullptr;
   double line_width = 0;
 
   g_object_get(G_OBJECT(this),
 	       "points", &points,
 	       "line-width", &line_width,
-               O2G_NULLPTR);
+               nullptr);
 
   if(!points) return -1;
 

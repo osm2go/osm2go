@@ -81,10 +81,10 @@ void osm_upload_context_t::appendf(const char *colname, const char *fmt, ...) {
   GtkTextIter end;
   gtk_text_buffer_get_end_iter(logbuffer, &end);
   if(colname) {
-    GtkTextTag *tag = gtk_text_buffer_create_tag(logbuffer, O2G_NULLPTR,
+    GtkTextTag *tag = gtk_text_buffer_create_tag(logbuffer, nullptr,
                                                  "foreground", colname,
-                                                 O2G_NULLPTR);
-    gtk_text_buffer_insert_with_tags(logbuffer, &end, buf.get(), -1, tag, O2G_NULLPTR);
+                                                 nullptr);
+    gtk_text_buffer_insert_with_tags(logbuffer, &end, buf.get(), -1, tag, nullptr);
   } else
     gtk_text_buffer_insert(logbuffer, &end, buf.get(), -1);
 
@@ -95,7 +95,7 @@ void osm_upload_context_t::appendf(const char *colname, const char *fmt, ...) {
 
 osm_upload_context_gtk::osm_upload_context_gtk(appdata_t &a, project_t *p, const char *c, const char *s)
   : osm_upload_context_t(a, p, c, s)
-  , logbuffer(gtk_text_buffer_new(O2G_NULLPTR))
+  , logbuffer(gtk_text_buffer_new(nullptr))
   , logview(GTK_TEXT_VIEW(gtk_text_view_new_with_buffer(logbuffer)))
 {
 }
@@ -183,7 +183,7 @@ static void info_more(const osm_t::dirty_t &context, GtkWidget *parent) {
   osm2go_platform::WidgetGuard dialog(gtk_dialog_new_with_buttons(_("Changeset details"),
                                               GTK_WINDOW(parent), GTK_DIALOG_MODAL,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                              O2G_NULLPTR));
+                                              nullptr));
 
   dialog_size_hint(GTK_WINDOW(dialog.get()), MISC_DIALOG_SMALL);
   gtk_dialog_set_default_response(GTK_DIALOG(dialog.get()), GTK_RESPONSE_CANCEL);
@@ -222,7 +222,7 @@ void osm_upload(appdata_t &appdata, project_t *project) {
 #endif
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                               GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-                                              O2G_NULLPTR));
+                                              nullptr));
 
   dialog_size_hint(GTK_WINDOW(dialog.get()), MISC_DIALOG_MEDIUM);
 
@@ -259,7 +259,7 @@ void osm_upload(appdata_t &appdata, project_t *project) {
   gtk_table_attach_defaults(GTK_TABLE(table),  sentry, 1, 2, 2, 3);
   gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), table, FALSE, FALSE, 0);
 
-  GtkTextBuffer *buffer = gtk_text_buffer_new(O2G_NULLPTR);
+  GtkTextBuffer *buffer = gtk_text_buffer_new(nullptr);
   const char *placeholder_comment = _("Please add a comment");
 
   /* disable ok button until user edited the comment */
@@ -333,7 +333,7 @@ void osm_upload(appdata_t &appdata, project_t *project) {
   dialog.reset(gtk_dialog_new_with_buttons(_("Uploading"), GTK_WINDOW(appdata_t::window),
                                            GTK_DIALOG_MODAL,
                                            GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
-                                           O2G_NULLPTR));
+                                           nullptr));
 
   dialog_size_hint(GTK_WINDOW(dialog.get()), MISC_DIALOG_LARGE);
   gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog.get()),
@@ -342,8 +342,8 @@ void osm_upload(appdata_t &appdata, project_t *project) {
   /* ------- main ui element is this text view --------------- */
 
   /* create a scrolled window */
-  GtkScrolledWindow *scrolled_window = GTK_SCROLLED_WINDOW(gtk_scrolled_window_new(O2G_NULLPTR,
-                                                                                   O2G_NULLPTR));
+  GtkScrolledWindow *scrolled_window = GTK_SCROLLED_WINDOW(gtk_scrolled_window_new(nullptr,
+                                                                                   nullptr));
   gtk_scrolled_window_set_policy(scrolled_window, GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
 
   gtk_scrolled_window_set_shadow_type(scrolled_window, GTK_SHADOW_IN);
@@ -361,15 +361,15 @@ void osm_upload(appdata_t &appdata, project_t *project) {
 
   if(project->data_dirty) {
     bool reload_map = false;
-    context.appendf(O2G_NULLPTR, _("Server data has been modified.\n"
+    context.appendf(nullptr, _("Server data has been modified.\n"
                                         "Downloading updated osm data ...\n"));
 
     if(osm_download(dialog.get(), project)) {
-      context.appendf(O2G_NULLPTR, _("Download successful!\nThe map will be reloaded.\n"));
+      context.appendf(nullptr, _("Download successful!\nThe map will be reloaded.\n"));
       project->data_dirty = false;
       reload_map = true;
     } else
-      context.appendf(O2G_NULLPTR, _("Download failed!\n"));
+      context.appendf(nullptr, _("Download failed!\n"));
 
     project->save(dialog.get());
 
@@ -379,7 +379,7 @@ void osm_upload(appdata_t &appdata, project_t *project) {
       /* we basically restart the entire map with fresh data from the server */
       /* and the diff will hopefully be empty (if the upload was successful) */
 
-      context.appendf(O2G_NULLPTR, _("Reloading map ...\n"));
+      context.appendf(nullptr, _("Reloading map ...\n"));
 
       if(!appdata.project->osm->is_clean(false))
         context.appendf(COLOR_ERR, _("*** DIFF IS NOT CLEAN ***\n"
@@ -387,22 +387,22 @@ void osm_upload(appdata_t &appdata, project_t *project) {
                                           "proceed with care!\n"));
 
       /* redraw the entire map by destroying all map items and redrawing them */
-      context.appendf(O2G_NULLPTR, _("Cleaning up ...\n"));
+      context.appendf(nullptr, _("Cleaning up ...\n"));
       appdata.project->diff_save();
       appdata.map->clear(map_t::MAP_LAYER_OBJECTS_ONLY);
 
-      context.appendf(O2G_NULLPTR, _("Loading OSM ...\n"));
+      context.appendf(nullptr, _("Loading OSM ...\n"));
       appdata.project->parse_osm();
-      context.appendf(O2G_NULLPTR, _("Applying diff ...\n"));
+      context.appendf(nullptr, _("Applying diff ...\n"));
       diff_restore(appdata.project, appdata.uicontrol);
-      context.appendf(O2G_NULLPTR, _("Painting ...\n"));
+      context.appendf(nullptr, _("Painting ...\n"));
       appdata.map->paint();
-      context.appendf(O2G_NULLPTR, _("Done!\n"));
+      context.appendf(nullptr, _("Done!\n"));
     }
   }
 
   /* tell the user that he can stop waiting ... */
-  context.appendf(O2G_NULLPTR, _("Process finished.\n"));
+  context.appendf(nullptr, _("Process finished.\n"));
 
   gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog.get()), GTK_RESPONSE_CLOSE, TRUE);
 

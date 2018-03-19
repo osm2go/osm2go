@@ -239,7 +239,7 @@ public:
 class presets_element_link : public presets_element_t {
 public:
   explicit presets_element_link()
-    : presets_element_t(WIDGET_TYPE_LINK, MatchIgnore), item(O2G_NULLPTR) {}
+    : presets_element_t(WIDGET_TYPE_LINK, MatchIgnore), item(nullptr) {}
 
   presets_item *item;
 

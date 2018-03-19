@@ -60,7 +60,7 @@ public:
    */
   GtkWidget *addMenu(menu_items item);
 
-  static GtkWidget *createMenuItem(const char *label, const char *icon_name = O2G_NULLPTR) __attribute__((nonnull(1)));
+  static GtkWidget *createMenuItem(const char *label, const char *icon_name = nullptr) __attribute__((nonnull(1)));
 };
 
 #endif /* MAINUIGTK_H */

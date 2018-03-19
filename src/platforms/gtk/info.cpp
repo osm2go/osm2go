@@ -66,7 +66,7 @@ static void changed(GtkTreeSelection *, gpointer user_data) {
   bool selected = list_get_selected(list, &model, &iter);
 
   if(selected) {
-    const gchar *key = O2G_NULLPTR;
+    const gchar *key = nullptr;
     gtk_tree_model_get(model, &iter, TAG_COL_KEY, &key, -1);
 
     // WARNING: for whatever reason, key CAN be NULL on N900
@@ -88,9 +88,9 @@ void info_tag_context_t::update_collisions(const std::string &k)
   /* walk the entire store to get all values */
   if(gtk_tree_model_get_iter_first(GTK_TREE_MODEL(store.get()), &iter)) {
     do {
-      const gchar *key = O2G_NULLPTR;
+      const gchar *key = nullptr;
       gtk_tree_model_get(GTK_TREE_MODEL(store.get()), &iter, TAG_COL_KEY, &key, -1);
-      assert(key != O2G_NULLPTR);
+      assert(key != nullptr);
       if(checkAll || k == key)
         gtk_list_store_set(store.get(), &iter,
            TAG_COL_COLLISION, (tags.count(key) > 1) ? TRUE : FALSE, -1);
@@ -113,11 +113,11 @@ static void on_tag_remove(info_tag_context_t *context) {
 
   GtkTreeSelection *selection = list_get_selection(context->list);
   if(gtk_tree_selection_get_selected(selection, &model, &iter)) {
-    const gchar *kc = O2G_NULLPTR, *vc = O2G_NULLPTR;
+    const gchar *kc = nullptr, *vc = nullptr;
     gtk_tree_model_get(model, &iter, TAG_COL_KEY, &kc, TAG_COL_VALUE, &vc, -1);
 
-    assert(kc != O2G_NULLPTR);
-    assert(vc != O2G_NULLPTR);
+    assert(kc != nullptr);
+    assert(vc != nullptr);
 
     /* de-chain */
     g_debug("de-chaining tag %s/%s", kc, vc);
@@ -152,7 +152,7 @@ static bool tag_edit(GtkWindow *window, std::string &k, std::string &v) {
   osm2go_platform::WidgetGuard dialog(gtk_dialog_new_with_buttons(_("Edit Tag"), window, GTK_DIALOG_MODAL,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                               GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-                                              O2G_NULLPTR));
+                                              nullptr));
 
   dialog_size_hint(GTK_WINDOW(dialog.get()), MISC_DIALOG_SMALL);
   gtk_dialog_set_default_response(GTK_DIALOG(dialog.get()),
@@ -204,12 +204,12 @@ static void select_item(const std::string &k, const std::string &v, info_tag_con
   // just a linear search as there is not match between the tagmap order and the
   // store order
   do {
-    const gchar *key = O2G_NULLPTR, *value = O2G_NULLPTR;
+    const gchar *key = nullptr, *value = nullptr;
     gtk_tree_model_get(GTK_TREE_MODEL(context->store.get()), &iter,
                        TAG_COL_KEY, &key,
                        TAG_COL_VALUE, &value, -1);
-    assert(key != O2G_NULLPTR);
-    assert(value != O2G_NULLPTR);
+    assert(key != nullptr);
+    assert(value != nullptr);
     if(k == key && v == value) {
       gtk_tree_selection_select_iter(list_get_selection(context->list), &iter);
       return;
@@ -402,7 +402,7 @@ static GtkWidget *tag_widget(info_tag_context_t &context) {
   buttons.push_back(list_button(_("_Edit"), G_CALLBACK(on_tag_edit)));
   buttons.push_back(list_button(_("Remove"), G_CALLBACK(on_tag_remove)));
   buttons.push_back(list_button(_("Last"), G_CALLBACK(on_tag_last)));
-  buttons.push_back(list_button(O2G_NULLPTR, O2G_NULLPTR));
+  buttons.push_back(list_button(nullptr, nullptr));
   buttons.push_back(list_button(_("Relations"), G_CALLBACK(on_relations)));
 
   context.store.reset(gtk_list_store_new(TAG_NUM_COLS,
@@ -414,7 +414,7 @@ static GtkWidget *tag_widget(info_tag_context_t &context) {
 
   list_set_custom_user_button(context.list, LIST_BUTTON_USER1,
                               josm_build_presets_button(context.presets, &context));
-  if(unlikely(context.presets == O2G_NULLPTR))
+  if(unlikely(context.presets == nullptr))
     list_button_enable(context.list, LIST_BUTTON_USER1, FALSE);
 
   /* disable if no appropriate "last" tags have been stored or if the */
@@ -536,7 +536,7 @@ static void info_more(const info_tag_context_t &context) {
   osm2go_platform::WidgetGuard dialog(gtk_dialog_new_with_buttons(_("Object details"),
                                               GTK_WINDOW(context.dialog.get()), GTK_DIALOG_MODAL,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                              O2G_NULLPTR));
+                                              nullptr));
 
   dialog_size_hint(GTK_WINDOW(dialog.get()), MISC_DIALOG_SMALL);
   gtk_dialog_set_default_response(GTK_DIALOG(dialog.get()), GTK_RESPONSE_CANCEL);
@@ -595,7 +595,7 @@ bool info_dialog(GtkWidget *parent, map_t *map, osm_t *osm, presets_items *prese
 #endif
                                                GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                                GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-                                               O2G_NULLPTR));
+                                               nullptr));
   str.reset();
 
   dialog_size_hint(GTK_WINDOW(context.dialog.get()), MISC_DIALOG_LARGE);
@@ -644,7 +644,7 @@ bool info_dialog(GtkWidget *parent, map_t *map, osm_t *osm, presets_items *prese
 }
 
 tag_context_t::tag_context_t(const object_t &o)
-  : dialog(O2G_NULLPTR)
+  : dialog(nullptr)
   , object(o)
   , tags(object.obj->tags.asMap())
 {
@@ -655,6 +655,6 @@ info_tag_context_t::info_tag_context_t(map_t *m, osm_t *os, presets_items *p, co
   , map(m)
   , osm(os)
   , presets(p)
-  , list(O2G_NULLPTR)
+  , list(nullptr)
 {
 }

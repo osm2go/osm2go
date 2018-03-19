@@ -76,7 +76,7 @@ public:
   gpsd_state_t();
   ~gpsd_state_t();
 
-  virtual pos_t get_pos(float *alt = O2G_NULLPTR) O2G_OVERRIDE;
+  virtual pos_t get_pos(float *alt = nullptr) O2G_OVERRIDE;
   virtual void setEnable(bool en) O2G_OVERRIDE;
   virtual bool registerCallback(GpsCallback cb, void *context) O2G_OVERRIDE;
 
@@ -133,7 +133,7 @@ static int gps_connect(gpsd_state_t *gps_state) {
   memset(&gps_state->context, 0, sizeof(gps_state->context));
   errno = 0;
 
-  if(gpsbt_start(O2G_NULLPTR, 0, 0, 0, errstr, sizeof(errstr),
+  if(gpsbt_start(nullptr, 0, 0, 0, errstr, sizeof(errstr),
 		 0, &gps_state->context) < 0) {
     printf("Error connecting to GPS receiver: (%d) %s (%s)\n",
 	   errno, strerror(errno), errstr);
@@ -150,7 +150,7 @@ static int gps_connect(gpsd_state_t *gps_state) {
   int retries = 5;
   while(retries &&
 	(GNOME_VFS_OK != (vfs_result = gnome_vfs_inet_connection_create(
-                          &gps_state->iconn, GPSD_HOST, GPSD_PORT, O2G_NULLPTR)))) {
+                          &gps_state->iconn, GPSD_HOST, GPSD_PORT, nullptr)))) {
     printf("Error creating connection to GPSD, retrying ...\n");
 
     retries--;
@@ -164,7 +164,7 @@ static int gps_connect(gpsd_state_t *gps_state) {
 
   retries = 5;
   while(retries && ((gps_state->socket =
-     gnome_vfs_inet_connection_to_socket(gps_state->iconn)) == O2G_NULLPTR)) {
+     gnome_vfs_inet_connection_to_socket(gps_state->iconn)) == nullptr)) {
     printf("Error creating connecting GPSD socket, retrying ...\n");
 
     retries--;
@@ -173,15 +173,15 @@ static int gps_connect(gpsd_state_t *gps_state) {
 
   if(!retries) {
     printf("Finally failed ...\n");
-    gnome_vfs_inet_connection_destroy(gps_state->iconn, O2G_NULLPTR);
+    gnome_vfs_inet_connection_destroy(gps_state->iconn, nullptr);
     return -1;
   }
 
   GTimeVal timeout = { 10, 0 };
   if(GNOME_VFS_OK != (vfs_result = gnome_vfs_socket_set_timeout(
-                      gps_state->socket, &timeout, O2G_NULLPTR))) {
+                      gps_state->socket, &timeout, nullptr))) {
     printf("Error setting GPSD timeout\n");
-    gnome_vfs_inet_connection_destroy(gps_state->iconn, O2G_NULLPTR);
+    gnome_vfs_inet_connection_destroy(gps_state->iconn, nullptr);
     return -1;
   }
 
@@ -228,7 +228,7 @@ static void gps_unpack(char *buf, gps_data_t *gpsdata) {
 			  alt, eph,
 			  mode);
 	  if (st >= 5) {
-#define DEFAULT(val) (val[0] == '?') ? NAN : g_ascii_strtod(val, O2G_NULLPTR)
+#define DEFAULT(val) (val[0] == '?') ? NAN : g_ascii_strtod(val, nullptr)
 	    nf.pos.lat = DEFAULT(lat);
 	    nf.pos.lon = DEFAULT(lon);
 	    nf.eph = DEFAULT(eph);
@@ -278,7 +278,7 @@ gpointer gps_thread(gpointer data) {
 	else
 	  connected = true;
       } else if(gnome_vfs_socket_write(gps_state->socket, msg,
-                  strlen(msg) + 1, &bytes_read, O2G_NULLPTR) == GNOME_VFS_OK) {
+                  strlen(msg) + 1, &bytes_read, nullptr) == GNOME_VFS_OK) {
 
 	/* update every second, wait here to make sure a complete */
 	/* reply is received */
@@ -286,7 +286,7 @@ gpointer gps_thread(gpointer data) {
 
 	if(bytes_read == (strlen(msg)+1)) {
           if(gnome_vfs_socket_read(gps_state->socket, str, sizeof(str) - 1,
-                                   &bytes_read, O2G_NULLPTR) == GNOME_VFS_OK) {
+                                   &bytes_read, nullptr) == GNOME_VFS_OK) {
 	    str[bytes_read] = 0;
 
 	    printf("msg: %s (%zu)\n", str, strlen(str));
@@ -303,7 +303,7 @@ gpointer gps_thread(gpointer data) {
     } else {
       if(connected) {
 	printf("stopping GPS connection due to user request\n");
-        gnome_vfs_inet_connection_destroy(gps_state->iconn, O2G_NULLPTR);
+        gnome_vfs_inet_connection_destroy(gps_state->iconn, nullptr);
 
 #ifdef ENABLE_GPSBT
 	gpsbt_stop(&gps_state->context);
@@ -315,7 +315,7 @@ gpointer gps_thread(gpointer data) {
   }
 
   printf("GPS thread ended???\n");
-  return O2G_NULLPTR;
+  return nullptr;
 }
 
 gps_state_t *gps_state_t::create() {
@@ -331,15 +331,15 @@ gpsd_state_t::gpsd_state_t()
 
   /* start a new thread to listen to gpsd */
 #if GLIB_CHECK_VERSION(2,32,0)
-  thread_p = g_thread_try_new("gps", gps_thread, this, O2G_NULLPTR);
+  thread_p = g_thread_try_new("gps", gps_thread, this, nullptr);
 #else
-  thread_p = g_thread_create(gps_thread, this, FALSE, O2G_NULLPTR);
+  thread_p = g_thread_create(gps_thread, this, FALSE, nullptr);
 #endif
 }
 
 gpsd_state_t::~gpsd_state_t()
 {
-  registerCallback(O2G_NULLPTR, O2G_NULLPTR);
+  registerCallback(nullptr, nullptr);
 #ifdef ENABLE_GPSBT
   gpsbt_stop(&context);
 #endif
@@ -358,14 +358,14 @@ static gboolean gps_callback(gpointer data) {
 bool gpsd_state_t::registerCallback(GpsCallback cb, void *context)
 {
   if(timer.isActive()) {
-    if(cb == O2G_NULLPTR) {
+    if(cb == nullptr) {
       timer.stop();
-      callback = O2G_NULLPTR;
-      cb_context = O2G_NULLPTR;
+      callback = nullptr;
+      cb_context = nullptr;
     }
     return 0;
   } else {
-    if(cb != O2G_NULLPTR) {
+    if(cb != nullptr) {
       callback = cb;
       cb_context = context;
       timer.restart(1, gps_callback, this);

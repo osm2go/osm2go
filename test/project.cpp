@@ -21,13 +21,13 @@
 #include <osm2go_platform.h>
 
 appdata_t::appdata_t(map_state_t &mstate)
-  : statusbar(O2G_NULLPTR)
-  , uicontrol(O2G_NULLPTR)
+  : statusbar(nullptr)
+  , uicontrol(nullptr)
   , map_state(mstate)
   , icons(icon_t::instance())
-  , gps_state(O2G_NULLPTR)
+  , gps_state(nullptr)
 {
-  track.track = O2G_NULLPTR;
+  track.track = nullptr;
 }
 
 appdata_t::~appdata_t()
@@ -68,7 +68,7 @@ static void testSave(const std::string &tmpdir, const char *empty_proj)
   map_state_t dummystate;
   project_t project(dummystate, proj_name, tmpdir);
 
-  assert(project.save(O2G_NULLPTR));
+  assert(project.save(nullptr));
 
   const std::string &pfile = project_filename(&project);
 
@@ -92,7 +92,7 @@ int main(int argc, char **argv)
 
   char tmpdir[] = "/tmp/osm2go-project-XXXXXX";
 
-  if(mkdtemp(tmpdir) == O2G_NULLPTR) {
+  if(mkdtemp(tmpdir) == nullptr) {
     std::cerr << "cannot create temporary directory" << std::endl;
     return 1;
   }

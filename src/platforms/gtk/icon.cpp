@@ -93,7 +93,7 @@ icon_file_exists(const std::string &file) {
 
 icon_t::icon_item *icon_t::load(const std::string &sname, int limit) {
   if(sname.empty())
-    return O2G_NULLPTR;
+    return nullptr;
 
   icon_buffer::BufferMap &entries = static_cast<icon_buffer *>(this)->entries;
 
@@ -107,7 +107,7 @@ icon_t::icon_item *icon_t::load(const std::string &sname, int limit) {
 
   const std::string &fullname = icon_file_exists(sname);
   if(!fullname.empty()) {
-    Pixmap pix = gdk_pixbuf_new_from_file_at_size(fullname.c_str(), limit, limit, O2G_NULLPTR);
+    Pixmap pix = gdk_pixbuf_new_from_file_at_size(fullname.c_str(), limit, limit, nullptr);
 
     if(likely(pix)) {
       //    g_debug("Successfully loaded icon %s to %p", name, pix);
@@ -118,13 +118,13 @@ icon_t::icon_item *icon_t::load(const std::string &sname, int limit) {
   }
 
   g_warning("Icon %s not found", sname.c_str());
-  return O2G_NULLPTR;
+  return nullptr;
 }
 
 GtkWidget *icon_t::widget_load(const std::string &name, int limit) {
   icon_item *pix = load(name, limit);
   if(!pix)
-    return O2G_NULLPTR;
+    return nullptr;
 
   return gtk_image_new_from_pixbuf(pix->buffer());
 }

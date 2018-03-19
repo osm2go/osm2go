@@ -144,12 +144,12 @@ static canvas_item_info_t *canvas_item_get_info(canvas_t *canvas,
     if(it != itEnd)
       return *it;
   }
-  return O2G_NULLPTR;
+  return nullptr;
 }
 
 void canvas_t::item_info_push(canvas_item_t *item) {
   canvas_item_info_t *info = canvas_item_get_info(this, item);
-  assert(info != O2G_NULLPTR);
+  assert(info != nullptr);
 
   printf("pushing item_info %p to background\n", info);
   assert(info->canvas == this);
@@ -299,5 +299,5 @@ canvas_item_t *canvas_t::get_item_at(int x, int y) const {
   }
   printf("************* nothing found ******************\n");
 
-  return O2G_NULLPTR;
+  return nullptr;
 }

@@ -176,7 +176,7 @@ std::set<std::string> preset_roles(const relation_t *relation, const object_t &o
   }
 
   std::set<std::string> ret;
-  const presets_item *item = O2G_NULLPTR;
+  const presets_item *item = nullptr;
   relation_preset_functor fc(relation, &item);
   const std::vector<presets_item_t *>::const_iterator itEnd = presets->items.end();
   role_collect_functor rfc(ret, existingRoles, presets_type_mask(obj));

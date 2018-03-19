@@ -133,7 +133,7 @@ const char *object_t::type_string() const {
   if(likely(it != types.end()))
     return it->second;
 
-  return O2G_NULLPTR;
+  return nullptr;
 }
 
 std::string object_t::id_string() const {
@@ -499,7 +499,7 @@ bool tag_list_t::merge(tag_list_t &other)
   if(empty()) {
     delete contents; // just to be sure not to leak if an empty vector is around
     contents = other.contents;
-    other.contents = O2G_NULLPTR;
+    other.contents = nullptr;
     return false;
   }
 
@@ -523,7 +523,7 @@ bool tag_list_t::merge(tag_list_t &other)
   }
 
   delete other.contents;
-  other.contents = O2G_NULLPTR;
+  other.contents = nullptr;
 
   return conflict;
 }
@@ -708,10 +708,10 @@ static void way_free(std::pair<item_id_t, way_t *> pair) {
 
 node_t *osm_t::parse_way_nd(xmlNode *a_node) const {
   xmlString prop(xmlGetProp(a_node, BAD_CAST "ref"));
-  node_t *node = O2G_NULLPTR;
+  node_t *node = nullptr;
 
   if(prop) {
-    item_id_t id = strtoll(reinterpret_cast<char *>(prop.get()), O2G_NULLPTR, 10);
+    item_id_t id = strtoll(reinterpret_cast<char *>(prop.get()), nullptr, 10);
 
     /* search matching node */
     node = node_by_id(id);
@@ -763,7 +763,7 @@ struct gen_xml_relation_functor {
 
 void gen_xml_relation_functor::operator()(const member_t &member)
 {
-  xmlNodePtr m_node = xmlNewChild(xml_node,O2G_NULLPTR,BAD_CAST "member", O2G_NULLPTR);
+  xmlNodePtr m_node = xmlNewChild(xml_node,nullptr,BAD_CAST "member", nullptr);
 
   const char *typestr;
   switch(member.object.type) {
@@ -807,11 +807,11 @@ static void osm_relation_free_pair(std::pair<item_id_t, relation_t *> pair) {
 }
 
 bool osm_t::parse_relation_member(const char *tp, const char *ref, const char *role, std::vector<member_t> &members) {
-  if(unlikely(tp == O2G_NULLPTR)) {
+  if(unlikely(tp == nullptr)) {
     printf("missing type for relation member\n");
     return false;
   }
-  if(unlikely(ref == O2G_NULLPTR)) {
+  if(unlikely(ref == nullptr)) {
     printf("missing ref for relation member\n");
     return false;
   }
@@ -861,8 +861,8 @@ bool osm_t::parse_relation_member(const char *tp, const char *ref, const char *r
     obj.id = id;
   }
 
-  if(role != O2G_NULLPTR && strlen(role) == 0)
-    role = O2G_NULLPTR;
+  if(role != nullptr && strlen(role) == 0)
+    role = nullptr;
 
   members.push_back(member_t(obj, role));
   return true;
@@ -908,7 +908,7 @@ static void skip_element(xmlTextReaderPtr reader) {
 
   int depth = xmlTextReaderDepth(reader);
   const xmlChar *name = xmlTextReaderConstName(reader);
-  assert(name != O2G_NULLPTR);
+  assert(name != nullptr);
 
   int ret = xmlTextReaderRead(reader);
   while((ret == 1) &&
@@ -958,12 +958,12 @@ static void process_base_attributes(base_object_t *obj, xmlTextReaderPtr reader,
 {
   xmlString prop(xmlTextReaderGetAttribute(reader, BAD_CAST "id"));
   if(likely(prop))
-    obj->id = strtoll(reinterpret_cast<char *>(prop.get()), O2G_NULLPTR, 10);
+    obj->id = strtoll(reinterpret_cast<char *>(prop.get()), nullptr, 10);
 
   /* new in api 0.6: */
   prop.reset(xmlTextReaderGetAttribute(reader, BAD_CAST "version"));
   if(likely(prop))
-    obj->version = strtoul(reinterpret_cast<char *>(prop.get()), O2G_NULLPTR, 10);
+    obj->version = strtoul(reinterpret_cast<char *>(prop.get()), nullptr, 10);
 
   prop.reset(xmlTextReaderGetAttribute(reader, BAD_CAST "user"));
   if(likely(prop)) {
@@ -1028,13 +1028,13 @@ static void process_node(xmlTextReaderPtr reader, osm_t *osm) {
 
 static node_t *process_nd(xmlTextReaderPtr reader, osm_t *osm) {
   xmlString prop(xmlTextReaderGetAttribute(reader, BAD_CAST "ref"));
-  node_t *node = O2G_NULLPTR;
+  node_t *node = nullptr;
 
   if(likely(prop)) {
-    item_id_t id = strtoll(reinterpret_cast<char *>(prop.get()), O2G_NULLPTR, 10);
+    item_id_t id = strtoll(reinterpret_cast<char *>(prop.get()), nullptr, 10);
     /* search matching node */
     node = osm->node_by_id(id);
-    if(unlikely(node == O2G_NULLPTR))
+    if(unlikely(node == nullptr))
       printf("Node id " ITEM_ID_FORMAT " not found\n", id);
     else
       node->ways++;
@@ -1073,7 +1073,7 @@ static void process_way(xmlTextReaderPtr reader, osm_t *osm) {
       const char *subname = reinterpret_cast<const char *>(xmlTextReaderConstName(reader));
       if(strcmp(subname, "nd") == 0) {
 	node_t *n = process_nd(reader, osm);
-        if(likely(n != O2G_NULLPTR))
+        if(likely(n != nullptr))
           way->node_chain.push_back(n);
       } else if(likely(strcmp(subname, "tag") == 0)) {
         process_tag(reader, tags);
@@ -1182,7 +1182,7 @@ static osm_t *process_osm(xmlTextReaderPtr reader) {
       const char *name = reinterpret_cast<const char *>(xmlTextReaderConstName(reader));
       if(block == BLOCK_OSM && strcmp(name, "bounds") == 0) {
         if(unlikely(!process_bounds(reader, osm->bounds)))
-          return O2G_NULLPTR;
+          return nullptr;
         block = BLOCK_NODES; // next must be nodes, there must not be more than one bounds
       } else if(block == BLOCK_NODES && strcmp(name, node_t::api_string()) == 0) {
         process_node(reader, osm.get());
@@ -1238,18 +1238,18 @@ struct relation_ref_functor {
 };
 
 static osm_t *process_file(const std::string &filename) {
-  osm_t *osm = O2G_NULLPTR;
+  osm_t *osm = nullptr;
   xmlTextReaderPtr reader;
 
-  reader = xmlReaderForFile(filename.c_str(), O2G_NULLPTR, XML_PARSE_NONET);
-  if (likely(reader != O2G_NULLPTR)) {
+  reader = xmlReaderForFile(filename.c_str(), nullptr, XML_PARSE_NONET);
+  if (likely(reader != nullptr)) {
     if(likely(xmlTextReaderRead(reader) == 1)) {
       const char *name = reinterpret_cast<const char *>(xmlTextReaderConstName(reader));
       if(likely(name && strcmp(name, "osm") == 0)) {
         osm = process_osm(reader);
         // relations may have references to other relation, which have greater ids
         // those are not present when the relation itself was created, but may be now
-        if(likely(osm != O2G_NULLPTR))
+        if(likely(osm != nullptr))
           std::for_each(osm->relations.begin(), osm->relations.end(), relation_ref_functor(osm));
       }
     } else
@@ -1280,7 +1280,7 @@ const char *osm_t::sanity_check() const {
   if(unlikely(nodes.empty()))
     return _("Invalid data in OSM file:\nNo drawable content found!");
 
-  return O2G_NULLPTR;
+  return nullptr;
 }
 
 /* ------------------------- misc access functions -------------- */
@@ -1292,7 +1292,7 @@ struct tag_to_xml {
   void operator()(const tag_t &tag) {
     /* skip "created_by" tags as they aren't needed anymore with api 0.6 */
     if(likely(keep_created || !tag.is_creator_tag())) {
-      xmlNodePtr tag_node = xmlNewChild(node, O2G_NULLPTR, BAD_CAST "tag", O2G_NULLPTR);
+      xmlNodePtr tag_node = xmlNewChild(node, nullptr, BAD_CAST "tag", nullptr);
       xmlNewProp(tag_node, BAD_CAST "k", BAD_CAST tag.key);
       xmlNewProp(tag_node, BAD_CAST "v", BAD_CAST tag.value);
     }
@@ -1303,10 +1303,10 @@ xmlChar *base_object_t::generate_xml(const std::string &changeset) const
 {
   char str[32];
   std::unique_ptr<xmlDoc, xmlDocDelete> doc(xmlNewDoc(BAD_CAST "1.0"));
-  xmlNodePtr root_node = xmlNewNode(O2G_NULLPTR, BAD_CAST "osm");
+  xmlNodePtr root_node = xmlNewNode(nullptr, BAD_CAST "osm");
   xmlDocSetRootElement(doc.get(), root_node);
 
-  xmlNodePtr xml_node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST apiString(), O2G_NULLPTR);
+  xmlNodePtr xml_node = xmlNewChild(root_node, nullptr, BAD_CAST apiString(), nullptr);
 
   /* new nodes don't have an id, but get one after the upload */
   if(!isNew()) {
@@ -1323,7 +1323,7 @@ xmlChar *base_object_t::generate_xml(const std::string &changeset) const
   // save tags
   tags.for_each(tag_to_xml(xml_node));
 
-  xmlChar *result = O2G_NULLPTR;
+  xmlChar *result = nullptr;
   int len = 0;
 
   xmlDocDumpFormatMemoryEnc(doc.get(), &result, &len, "UTF-8", 1);
@@ -1344,7 +1344,7 @@ struct add_xml_node_refs {
 
 void add_xml_node_refs::operator()(const node_t* node)
 {
-  xmlNodePtr nd_node = xmlNewChild(way_node, O2G_NULLPTR, BAD_CAST "nd", O2G_NULLPTR);
+  xmlNodePtr nd_node = xmlNewChild(way_node, nullptr, BAD_CAST "nd", nullptr);
   xmlNewProp(nd_node, BAD_CAST "ref", BAD_CAST node->id_string().c_str());
 }
 
@@ -1359,7 +1359,7 @@ void way_t::write_node_chain(xmlNodePtr way_node) const {
 /* build xml representation for a changeset */
 xmlChar *osm_generate_xml_changeset(const std::string &comment,
                                     const std::string &src) {
-  xmlChar *result = O2G_NULLPTR;
+  xmlChar *result = nullptr;
   int len = 0;
 
   /* tags for this changeset */
@@ -1369,10 +1369,10 @@ xmlChar *osm_generate_xml_changeset(const std::string &comment,
                     const_cast<char*>(PACKAGE " v" VERSION));
 
   std::unique_ptr<xmlDoc, xmlDocDelete> doc(xmlNewDoc(BAD_CAST "1.0"));
-  xmlNodePtr root_node = xmlNewNode(O2G_NULLPTR, BAD_CAST "osm");
+  xmlNodePtr root_node = xmlNewNode(nullptr, BAD_CAST "osm");
   xmlDocSetRootElement(doc.get(), root_node);
 
-  xmlNodePtr cs_node = xmlNewChild(root_node, O2G_NULLPTR, BAD_CAST "changeset", O2G_NULLPTR);
+  xmlNodePtr cs_node = xmlNewChild(root_node, nullptr, BAD_CAST "changeset", nullptr);
 
   tag_to_xml fc(cs_node, true);
   fc(tag_creator);
@@ -1687,7 +1687,7 @@ void reverse_direction_sensitive_tags_functor::operator()(tag_t &etag)
     // suffixes
     char *lastcolon = strrchr(etag.key, ':');
 
-    if (lastcolon != O2G_NULLPTR) {
+    if (lastcolon != nullptr) {
       static std::vector<std::pair<std::string, std::string> > rtable = rtable_init();
 
       for (unsigned int i = 0; i < rtable.size(); i++) {
@@ -1738,7 +1738,7 @@ void reverse_roles::operator()(const std::pair<item_id_t, relation_t *> &pair)
     return;
 
   // Then flip its role if it's one of the direction-sensitive ones
-  if (member->role == O2G_NULLPTR) {
+  if (member->role == nullptr) {
     printf("null role in route relation -> ignore\n");
   } else if (strcasecmp(member->role, DS_ROUTE_FORWARD) == 0) {
     free(member->role);
@@ -1773,14 +1773,14 @@ void way_t::reverse(osm_t *osm, unsigned int &tags_flipped, unsigned int &roles_
 
 const node_t *way_t::first_node() const {
   if(node_chain.empty())
-    return O2G_NULLPTR;
+    return nullptr;
 
   return node_chain.front();
 }
 
 const node_t *way_t::last_node() const {
   if(node_chain.empty())
-    return O2G_NULLPTR;
+    return nullptr;
 
   return node_chain.back();
 }
@@ -1873,7 +1873,7 @@ way_t *way_t::split(osm_t *osm, node_chain_t::iterator cut_at, bool cut_at_node)
     node_chain.pop_back();
     // generate the correct layout
     std::rotate(node_chain.begin(), cut_at, node_chain.end());
-    return O2G_NULLPTR;
+    return nullptr;
   }
 
   /* create a duplicate of the currently selected way */
@@ -1897,7 +1897,7 @@ way_t *way_t::split(osm_t *osm, node_chain_t::iterator cut_at, bool cut_at_node)
   if(neww->node_chain.size() < 2) {
     osm_unref_node(neww->node_chain.front());
     delete neww;
-    return O2G_NULLPTR;
+    return nullptr;
   }
 
   /* ------------  copy all tags ------------- */
@@ -1973,7 +1973,7 @@ std::string object_t::get_name() const {
 
   /* try to figure out _what_ this is */
   const std::array<const char *, 5> name_tags = { { "name", "ref", "note", "fix" "me", "sport" } };
-  const char *name = O2G_NULLPTR;
+  const char *name = nullptr;
   for(unsigned int i = 0; !name && i < name_tags.size(); i++)
     name = obj->tags.get_value(name_tags[i]);
 
@@ -1982,7 +1982,7 @@ std::string object_t::get_name() const {
                           { { "amenity", "place", "historic", "leisure",
                               "tourism", "landuse", "waterway", "railway",
                               "natural" } };
-  const char *typestr = O2G_NULLPTR;
+  const char *typestr = nullptr;
 
   for(unsigned int i = 0; !typestr && i < type_tags.size(); i++)
     typestr = obj->tags.get_value(type_tags[i]);
@@ -2012,7 +2012,7 @@ std::string object_t::get_name() const {
   /* highways are a little bit difficult */
   if(ret.empty()) {
     const char *highway = obj->tags.get_value("highway");
-    if(highway != O2G_NULLPTR) {
+    if(highway != nullptr) {
       if((!strcmp(highway, "primary")) ||
          (!strcmp(highway, "secondary")) ||
          (!strcmp(highway, "tertiary")) ||
@@ -2021,7 +2021,7 @@ std::string object_t::get_name() const {
          (!strcmp(highway, "service"))) {
         ret = highway;
         ret += " road";
-        typestr = O2G_NULLPTR;
+        typestr = nullptr;
       }
 
       else if(!strcmp(highway, "pedestrian")) {
@@ -2070,7 +2070,7 @@ bool tag_t::is_creator_tag(const char* key)
 }
 
 tag_list_t::tag_list_t()
-  : contents(O2G_NULLPTR)
+  : contents(nullptr)
 {
 }
 
@@ -2108,28 +2108,28 @@ struct key_match_functor {
 const char* tag_list_t::get_value(const char *key) const
 {
   if(!contents)
-    return O2G_NULLPTR;
+    return nullptr;
   const std::vector<tag_t>::const_iterator itEnd = contents->end();
   const std::vector<tag_t>::const_iterator it = std::find_if(std::cbegin(*contents),
                                                              itEnd, key_match_functor(key));
   if(it != itEnd)
     return it->value;
 
-  return O2G_NULLPTR;
+  return nullptr;
 }
 
 void tag_list_t::clear()
 {
   for_each(tag_t::clear);
   delete contents;
-  contents = O2G_NULLPTR;
+  contents = nullptr;
 }
 
 void tag_list_t::replace(std::vector<tag_t> &ntags)
 {
   clear();
   if(ntags.empty()) {
-    contents = O2G_NULLPTR;
+    contents = nullptr;
     return;
   }
 #if __cplusplus >= 201103L
@@ -2157,7 +2157,7 @@ void tag_list_t::replace(const osm_t::TagMap &ntags)
 {
   clear();
   if(ntags.empty()) {
-    contents = O2G_NULLPTR;
+    contents = nullptr;
     return;
   }
   contents = new std::vector<tag_t>();
@@ -2192,7 +2192,7 @@ void base_object_t::osmchange_delete(xmlNodePtr parent_node, const char *changes
 {
   assert(flags & OSM_FLAG_DELETED);
 
-  xmlNodePtr obj_node = xmlNewChild(parent_node, O2G_NULLPTR, BAD_CAST apiString(), O2G_NULLPTR);
+  xmlNodePtr obj_node = xmlNewChild(parent_node, nullptr, BAD_CAST apiString(), nullptr);
 
   xmlNewProp(obj_node, BAD_CAST "id", BAD_CAST id_string().c_str());
 
@@ -2317,14 +2317,14 @@ bool way_t::merge(way_t *other, osm_t *osm, const std::vector<relation_t *> &rel
 }
 
 member_t::member_t(object_t::type_t t)
-  : role(O2G_NULLPTR)
+  : role(nullptr)
 {
   object.type = t;
 }
 
 member_t::member_t(const object_t &o, const char *r)
   : object(o)
-  , role(r == O2G_NULLPTR ? O2G_NULLPTR : strdup(r))
+  , role(r == nullptr ? nullptr : strdup(r))
 {
 }
 
@@ -2406,7 +2406,7 @@ template<typename T> T *osm_find_by_id(const std::map<item_id_t, T *> &map, item
   if(it != map.end())
     return it->second;
 
-  return O2G_NULLPTR;
+  return nullptr;
 }
 
 osm_t::osm_t()

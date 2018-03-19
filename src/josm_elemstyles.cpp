@@ -196,12 +196,12 @@ static float parse_scale(const char *val_str, int len) {
   } else {
     memcpy(buf, val_str, len);
     buf[len] = '\0';
-    return scaledn_to_zoom(strtod(buf, O2G_NULLPTR));
+    return scaledn_to_zoom(strtod(buf, nullptr));
   }
 }
 
-static const char *true_values[] = { "1", "yes", "true", O2G_NULLPTR };
-static const char *false_values[] = { "0", "no", "false", O2G_NULLPTR };
+static const char *true_values[] = { "1", "yes", "true", nullptr };
+static const char *false_values[] = { "0", "no", "false", nullptr };
 
 static bool parse_boolean(const char *bool_str, const char **value_strings) {
   for (int i = 0; value_strings[i]; ++i)
@@ -263,13 +263,13 @@ static void parse_width_mod(const char *mod_str, elemstyle_width_mod_t &value) {
   if(strlen(mod_str) > 0) {
     if(mod_str[0] == '+') {
       value.mod = ES_MOD_ADD;
-      value.width = strtoul(mod_str+1, O2G_NULLPTR, 10);
+      value.width = strtoul(mod_str+1, nullptr, 10);
     } else if(mod_str[0] == '-') {
       value.mod = ES_MOD_SUB;
-      value.width = strtoul(mod_str+1, O2G_NULLPTR, 10);
+      value.width = strtoul(mod_str+1, nullptr, 10);
     } else if(mod_str[strlen(mod_str)-1] == '%') {
       value.mod = ES_MOD_PERCENT;
-      value.width = strtoul(mod_str, O2G_NULLPTR, 10);
+      value.width = strtoul(mod_str, nullptr, 10);
     } else
       printf("warning: unable to parse modifier %s\n", mod_str);
   }
@@ -302,15 +302,15 @@ void StyleSax::startElement(const xmlChar *name, const char **attrs)
 
   state = it->newState;
 
-  elemstyle_t * const elemstyle = styles.empty() ? O2G_NULLPTR : styles.back();
+  elemstyle_t * const elemstyle = styles.empty() ? nullptr : styles.back();
 
   switch(state){
   case TagRule:
     styles.push_back(new elemstyle_t());
     break;
   case TagCondition: {
-    const char *k = O2G_NULLPTR, *v = O2G_NULLPTR;
-    const char *b = O2G_NULLPTR;
+    const char *k = nullptr, *v = nullptr;
+    const char *b = nullptr;
 
     for(unsigned int i = 0; attrs[i]; i += 2) {
       if(strcmp(attrs[i], "k") == 0)
@@ -320,7 +320,7 @@ void StyleSax::startElement(const xmlChar *name, const char **attrs)
       else if(strcmp(attrs[i], "b") == 0)
         b = attrs[i + 1];
     }
-    assert(k != O2G_NULLPTR);
+    assert(k != nullptr);
     elemstyle_condition_t cond = !b ? elemstyle_condition_t(k, v) :
                                  elemstyle_condition_t(k, parse_boolean(b, true_values));
     styles.back()->conditions.push_back(cond);
@@ -548,7 +548,7 @@ void colorize_node::operator()(const elemstyle_t *elemstyle)
 
   somematch = true;
 
-  assert(style->icon.path_prefix != O2G_NULLPTR);
+  assert(style->icon.path_prefix != nullptr);
   std::string name = "styles/";
   name += style->icon.path_prefix;
   // the final size is now known, avoid too big allocations
@@ -703,7 +703,7 @@ void josm_elemstyles_colorize_way_functor::operator()(way_t *way) {
   way->zoom_max = 0;   // draw at all zoom levels
 
   /* during the elemstyle search a line_mod may be found. save it here */
-  const elemstyle_line_mod_t *line_mod = O2G_NULLPTR;
+  const elemstyle_line_mod_t *line_mod = nullptr;
   apply_condition fc(style, way, &line_mod);
 
   std::for_each(style->elemstyles.begin(), style->elemstyles.end(), fc);

@@ -119,7 +119,7 @@ struct object_t {
 
 struct member_t {
   explicit member_t(object_t::type_t t);
-  explicit member_t(const object_t &o, const char *r = O2G_NULLPTR);
+  explicit member_t(const object_t &o, const char *r = nullptr);
 
   object_t object;
   char   *role;
@@ -136,7 +136,7 @@ struct member_t {
    * @brief check function for use in std::find_if
    */
   static inline bool has_role(const member_t &member) {
-    return member.role != O2G_NULLPTR;
+    return member.role != nullptr;
   }
 };
 
@@ -209,7 +209,7 @@ struct osm_t {
         std::find_if(ways.begin(), itEnd, pred);
     if(it != itEnd)
       return it->second;
-    return O2G_NULLPTR;
+    return nullptr;
   }
 
   /**
@@ -465,7 +465,7 @@ class visible_item_t : public base_object_t {
 protected:
   inline visible_item_t(item_id_t ver = 0, item_id_t i = ID_ILLEGAL)
     : base_object_t(ver, i)
-    , map_item_chain(O2G_NULLPTR)
+    , map_item_chain(nullptr)
     , zoom_max(0.0f)
   {
   }

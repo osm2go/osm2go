@@ -74,13 +74,13 @@ struct project_t {
    * @brief save the current project to disk
    * @param parent parent window for dialogs
    */
-  bool save(osm2go_platform::Widget *parent = O2G_NULLPTR);
+  bool save(osm2go_platform::Widget *parent = nullptr);
 
   /**
    * @brief check if the current project is the demo project
    * @param parent parent window for dialogs
    */
-  bool check_demo(osm2go_platform::Widget *parent = O2G_NULLPTR) const;
+  bool check_demo(osm2go_platform::Widget *parent = nullptr) const;
 
   /**
    * @brief remove the file with the changes

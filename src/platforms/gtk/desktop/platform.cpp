@@ -37,7 +37,7 @@ void osm2go_platform::cleanup()
 
 void osm2go_platform::open_url(const char* url)
 {
-  gtk_show_uri(O2G_NULLPTR, url, GDK_CURRENT_TIME, O2G_NULLPTR);
+  gtk_show_uri(nullptr, url, GDK_CURRENT_TIME, nullptr);
 }
 
 GtkWidget *osm2go_platform::notebook_new(void) {
@@ -62,8 +62,8 @@ GtkWidget *osm2go_platform::scrollable_container(GtkWidget *view)
 {
   GtkWidget *container;
   /* put view into a scrolled window */
-  GtkScrolledWindow *scrolled_window = GTK_SCROLLED_WINDOW(gtk_scrolled_window_new(O2G_NULLPTR,
-                                                                                   O2G_NULLPTR));
+  GtkScrolledWindow *scrolled_window = GTK_SCROLLED_WINDOW(gtk_scrolled_window_new(nullptr,
+                                                                                   nullptr));
   gtk_scrolled_window_set_policy(scrolled_window, GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
   gtk_scrolled_window_set_shadow_type(scrolled_window, GTK_SHADOW_ETCHED_IN);
   container = GTK_WIDGET(scrolled_window);
@@ -152,7 +152,7 @@ bool osm2go_platform::isComboBoxEntryWidget(GtkWidget *widget)
 
 void osm2go_platform::setEntryText(GtkEntry *entry, const char *text, const char *placeholder)
 {
-  if(text == O2G_NULLPTR || *text == '\0')
+  if(text == nullptr || *text == '\0')
     gtk_entry_set_text(entry, placeholder);
   else
     gtk_entry_set_text(entry, text);

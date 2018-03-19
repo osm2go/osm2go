@@ -67,7 +67,7 @@ enum {
 
 struct wms_server_context_t {
   wms_server_context_t(appdata_t &a, wms_t *w, GtkWidget *d)
-    : appdata(a), wms(w), dialog(d), list(O2G_NULLPTR) , server_label(O2G_NULLPTR) {}
+    : appdata(a), wms(w), dialog(d), list(nullptr) , server_label(nullptr) {}
   appdata_t &appdata;
   wms_t * const wms;
   GtkWidget * const dialog, *list;
@@ -88,31 +88,31 @@ static wms_server_t *get_selection(GtkTreeSelection *selection) {
   if(gtk_tree_selection_get_selected(selection, &model, &iter)) {
     wms_server_t *wms_server;
     gtk_tree_model_get(model, &iter, WMS_SERVER_COL_DATA, &wms_server, -1);
-    assert(wms_server != O2G_NULLPTR);
+    assert(wms_server != nullptr);
     return wms_server;
   }
 
-  return O2G_NULLPTR;
+  return nullptr;
 }
 
 const wms_server_t *wms_server_context_t::select_server() const
 {
   if(wms->server.empty())
-    return O2G_NULLPTR;
+    return nullptr;
 
   /* if the projects settings match a list entry, then select this */
 
   GtkTreeSelection *selection = list_get_selection(list);
 
   /* walk the entire store to get all values */
-  wms_server_t *server = O2G_NULLPTR;
+  wms_server_t *server = nullptr;
   GtkTreeIter iter;
 
   bool valid = (gtk_tree_model_get_iter_first(GTK_TREE_MODEL(store.get()), &iter) == TRUE);
 
   while(valid) {
     gtk_tree_model_get(GTK_TREE_MODEL(store.get()), &iter, WMS_SERVER_COL_DATA, &server, -1);
-    assert(server != O2G_NULLPTR);
+    assert(server != nullptr);
 
     if(wms->server == server->server) {
        gtk_tree_selection_select_iter(selection, &iter);
@@ -122,13 +122,13 @@ const wms_server_t *wms_server_context_t::select_server() const
     valid = (gtk_tree_model_iter_next(GTK_TREE_MODEL(store.get()), &iter) == TRUE);
   }
 
-  return O2G_NULLPTR;
+  return nullptr;
 }
 
 static void wms_server_selected(wms_server_context_t *context,
                                 const wms_server_t *selected) {
-  list_button_enable(context->list, LIST_BUTTON_REMOVE, selected != O2G_NULLPTR);
-  list_button_enable(context->list, LIST_BUTTON_EDIT, selected != O2G_NULLPTR);
+  list_button_enable(context->list, LIST_BUTTON_REMOVE, selected != nullptr);
+  list_button_enable(context->list, LIST_BUTTON_EDIT, selected != nullptr);
 
   /* user can click ok if a entry is selected or if both fields are */
   /* otherwise valid */
@@ -149,7 +149,7 @@ wms_server_changed(GtkTreeSelection *selection, gpointer userdata) {
   wms_server_context_t *context = static_cast<wms_server_context_t *>(userdata);
 
   wms_server_t *wms_server = get_selection(selection);
-  if(wms_server != O2G_NULLPTR)
+  if(wms_server != nullptr)
     wms_server_selected(context, wms_server);
 }
 
@@ -159,10 +159,10 @@ static void on_server_remove(wms_server_context_t *context) {
   GtkTreeIter       iter;
 
   if(gtk_tree_selection_get_selected(selection, &model, &iter)) {
-    wms_server_t *server = O2G_NULLPTR;
+    wms_server_t *server = nullptr;
     gtk_tree_model_get(model, &iter, WMS_SERVER_COL_DATA, &server, -1);
 
-    assert(server != O2G_NULLPTR);
+    assert(server != nullptr);
 
     /* de-chain */
     g_debug("de-chaining server %s", server->name.c_str());
@@ -209,7 +209,7 @@ bool wms_server_edit(wms_server_context_t *context, gboolean edit_name,
                                               GTK_DIALOG_MODAL,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                               GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-                                              O2G_NULLPTR));
+                                              nullptr));
 
   dialog_size_hint(GTK_WINDOW(dialog.get()), MISC_DIALOG_WIDE);
   gtk_dialog_set_default_response(GTK_DIALOG(dialog.get()), GTK_RESPONSE_ACCEPT);
@@ -224,7 +224,7 @@ bool wms_server_edit(wms_server_context_t *context, gboolean edit_name,
   gtk_table_attach_defaults(GTK_TABLE(table), name, 1, 2, 0, 1);
   gtk_entry_set_activates_default(GTK_ENTRY(name), TRUE);
   gtk_widget_set_sensitive(GTK_WIDGET(name), edit_name);
-  g_signal_connect(name, "changed", G_CALLBACK(callback_modified_name), O2G_NULLPTR);
+  g_signal_connect(name, "changed", G_CALLBACK(callback_modified_name), nullptr);
 
   label = gtk_label_new(_("Server:"));
   GtkWidget *server = entry_new(EntryFlagsNoAutoCap);
@@ -263,7 +263,7 @@ bool wms_server_edit(wms_server_context_t *context, gboolean edit_name,
 /* user clicked "edit..." button in the wms server list */
 static void on_server_edit(wms_server_context_t *context) {
   wms_server_t *server = get_selection(list_get_selection(context->list));
-  assert(server != O2G_NULLPTR);
+  assert(server != nullptr);
 
   wms_server_edit(context, FALSE, server);
 }
@@ -345,7 +345,7 @@ static bool wms_server_dialog(appdata_t &appdata, wms_t *wms) {
                                                            GTK_DIALOG_MODAL,
                                                            GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                                            GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-                                                           O2G_NULLPTR));
+                                                           nullptr));
 
   /* server selection box */
   dialog_size_hint(GTK_WINDOW(context.dialog), MISC_DIALOG_MEDIUM);
@@ -363,7 +363,7 @@ static bool wms_server_dialog(appdata_t &appdata, wms_t *wms) {
   gtk_misc_set_alignment(GTK_MISC(label), 0.f, 0.5f);
   gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1, GTK_FILL,
                    static_cast<GtkAttachOptions>(0), 0, 0);
-  context.server_label = gtk_label_new(O2G_NULLPTR);
+  context.server_label = gtk_label_new(nullptr);
   gtk_label_set_ellipsize(GTK_LABEL(context.server_label),
 			  PANGO_ELLIPSIZE_MIDDLE);
   gtk_misc_set_alignment(GTK_MISC(context.server_label), 0.f, 0.5f);
@@ -412,7 +412,7 @@ static gboolean on_view_clicked(GtkWidget *widget, GdkEventButton *event, gpoint
     GtkTreePath *path;
 
     if(gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget),
-		     event->x, event->y, &path, O2G_NULLPTR, O2G_NULLPTR, O2G_NULLPTR)) {
+		     event->x, event->y, &path, nullptr, nullptr, nullptr)) {
       GtkTreeSelection *sel =
 	gtk_tree_view_get_selection(GTK_TREE_VIEW(widget));
 
@@ -439,22 +439,22 @@ static void changed(GtkTreeSelection *sel, gpointer user_data) {
 
   /* get view from selection ... */
   GtkTreeView *view = gtk_tree_selection_get_tree_view(sel);
-  assert(view != O2G_NULLPTR);
+  assert(view != nullptr);
 
   /* ... and get model from view */
   GtkTreeModel *model = gtk_tree_view_get_model(view);
-  assert(model != O2G_NULLPTR);
+  assert(model != nullptr);
 
   /* walk the entire store */
   GtkTreeIter iter;
   gboolean ok = gtk_tree_model_get_iter_first(model, &iter);
   selected->clear();
   while(ok) {
-    wms_layer_t *layer = O2G_NULLPTR;
+    wms_layer_t *layer = nullptr;
 
     gboolean en;
     gtk_tree_model_get(model, &iter, LAYER_COL_DATA, &layer, LAYER_COL_FITS, &en, -1);
-    assert(layer != O2G_NULLPTR);
+    assert(layer != nullptr);
 
     if(en == TRUE && gtk_tree_selection_iter_is_selected(sel, &iter) == TRUE)
       selected->push_back(layer);
@@ -500,7 +500,7 @@ static GtkWidget *wms_layer_widget(selected_context *context, const wms_layer_t:
 #ifndef FREMANTLE
   /* catch views button-press event for our custom handling */
   g_signal_connect(view, "button-press-event",
-		   G_CALLBACK(on_view_clicked), O2G_NULLPTR);
+		   G_CALLBACK(on_view_clicked), nullptr);
 #endif
 
   /* build the store */
@@ -509,12 +509,12 @@ static GtkWidget *wms_layer_widget(selected_context *context, const wms_layer_t:
 
   /* --- "Title" column --- */
   GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
-  g_object_set(renderer, "ellipsize", PANGO_ELLIPSIZE_END, O2G_NULLPTR );
+  g_object_set(renderer, "ellipsize", PANGO_ELLIPSIZE_END, nullptr );
   GtkTreeViewColumn *column = gtk_tree_view_column_new_with_attributes(
 		 _("Title"), renderer,
 		 "text", LAYER_COL_TITLE,
 		 "sensitive", LAYER_COL_FITS,
-		 O2G_NULLPTR);
+		 nullptr);
 
   gtk_tree_view_column_set_expand(column, TRUE);
   gtk_tree_view_insert_column(view, column, -1);
@@ -535,7 +535,7 @@ static bool wms_layer_dialog(selected_context *ctx, const wms_layer_t::list &lay
                                               GTK_DIALOG_MODAL,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                               GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-                                              O2G_NULLPTR));
+                                              nullptr));
 
   dialog_size_hint(GTK_WINDOW(dialog.get()), MISC_DIALOG_LARGE);
   gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog.get()), GTK_RESPONSE_ACCEPT, FALSE);
@@ -550,7 +550,7 @@ static bool wms_layer_dialog(selected_context *ctx, const wms_layer_t::list &lay
 }
 
 void wms_import(appdata_t &appdata) {
-  assert(appdata.project != O2G_NULLPTR);
+  assert(appdata.project != nullptr);
 
   /* this cancels any wms adjustment in progress */
   if(appdata.map->action.type == MAP_ACTION_BG_ADJUST)

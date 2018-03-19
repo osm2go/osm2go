@@ -42,7 +42,7 @@
 void map_edit_way_add_begin(map_t *map) {
   assert_null(map->action.way);
   map->action.way = new way_t(0);
-  map->action.extending = O2G_NULLPTR;
+  map->action.extending = nullptr;
 }
 
 struct check_first_last_node {
@@ -76,13 +76,13 @@ void map_edit_way_add_segment(map_t *map, int x, int y) {
     /* use the existing node if one was touched */
     node_t *node = map->touchnode_get_node();
     osm_t * const osm = map->appdata.project->osm;
-    if(node != O2G_NULLPTR) {
+    if(node != nullptr) {
       printf("  re-using node #" ITEM_ID_FORMAT "\n", node->id);
 
-      assert(map->action.way != O2G_NULLPTR);
+      assert(map->action.way != nullptr);
 
       /* check whether this node is first or last one of a different way */
-      way_t *touch_way = O2G_NULLPTR;
+      way_t *touch_way = nullptr;
       touch_way = osm->find_way(check_first_last_node(node));
 
       /* remeber this way as this may be the last node placed */
@@ -94,9 +94,9 @@ void map_edit_way_add_segment(map_t *map, int x, int y) {
 	map->action.extending = touch_way;
 
 	if(map->action.extending) {
-          if(!yes_no_f(O2G_NULLPTR, MISC_AGAIN_ID_EXTEND_WAY, _("Extend way?"),
+          if(!yes_no_f(nullptr, MISC_AGAIN_ID_EXTEND_WAY, _("Extend way?"),
 	       _("Do you want to extend the way present at this location?")))
-	    map->action.extending = O2G_NULLPTR;
+	    map->action.extending = nullptr;
 	  else
 	    /* there are immediately enough nodes for a valid way */
 	    map->appdata.iconbar->map_cancel_ok(true, true);
@@ -106,7 +106,7 @@ void map_edit_way_add_segment(map_t *map, int x, int y) {
     } else {
       /* the current way doesn't end on another way if we are just placing */
       /* a new node */
-      map->action.ends_on = O2G_NULLPTR;
+      map->action.ends_on = nullptr;
 
       if(!osm->bounds.contains(pos))
         map_t::outside_error();
@@ -115,7 +115,7 @@ void map_edit_way_add_segment(map_t *map, int x, int y) {
     }
 
     if(node) {
-      assert(map->action.way != O2G_NULLPTR);
+      assert(map->action.way != nullptr);
       map->action.way->append_node(node);
 
       switch(map->action.way->node_chain.size()) {
@@ -160,10 +160,10 @@ void map_unref_ways::operator()(node_t* node)
 
 void map_edit_way_add_cancel(map_t *map) {
   osm_t *osm = map->appdata.project->osm;
-  assert(osm != O2G_NULLPTR);
+  assert(osm != nullptr);
 
   printf("  removing temporary way\n");
-  assert(map->action.way != O2G_NULLPTR);
+  assert(map->action.way != nullptr);
 
   /* remove all nodes that have been created for this way */
   /* (their way count will be 0 after removing the way) */
@@ -175,7 +175,7 @@ void map_edit_way_add_cancel(map_t *map) {
   map_item_chain_destroy(map->action.way->map_item_chain);
 
   osm->way_free(map->action.way);
-  map->action.way = O2G_NULLPTR;
+  map->action.way = nullptr;
 }
 
 struct map_draw_nodes {
@@ -207,8 +207,8 @@ void map_draw_nodes::operator()(node_t* node)
 void map_edit_way_add_ok(map_t *map) {
   osm_t *osm = map->appdata.project->osm;
 
-  assert(osm != O2G_NULLPTR);
-  assert(map->action.way != O2G_NULLPTR);
+  assert(osm != nullptr);
+  assert(map->action.way != nullptr);
 
   /* transfer all nodes that have been created for this way */
   /* into the node chain */
@@ -233,11 +233,11 @@ void map_edit_way_add_ok(map_t *map) {
   /* be extending it. Joining the same way doesn't make sense. */
   if(map->action.ends_on && (map->action.ends_on == map->action.way)) {
     printf("  the new way ends on itself -> don't join itself\n");
-    map->action.ends_on = O2G_NULLPTR;
+    map->action.ends_on = nullptr;
   }
 
   if(map->action.ends_on &&
-     yes_no_f(O2G_NULLPTR, MISC_AGAIN_ID_EXTEND_WAY_END, _("Join way?"),
+     yes_no_f(nullptr, MISC_AGAIN_ID_EXTEND_WAY_END, _("Join way?"),
               _("Do you want to join the way present at this location?"))) {
     printf("  this new way ends on another way\n");
     // this is triggered when the new way ends on an existing way, this can
@@ -250,10 +250,10 @@ void map_edit_way_add_ok(map_t *map) {
 
     bool conflict;
     map->action.way = osm->mergeWays(map->action.way, map->action.ends_on, conflict);
-    map->action.ends_on = O2G_NULLPTR;
+    map->action.ends_on = nullptr;
 
     if(conflict)
-      messagef(O2G_NULLPTR, _("Way tag conflict"),
+      messagef(nullptr, _("Way tag conflict"),
                _("The resulting way contains some conflicting tags. Please solve these."));
   }
 
@@ -265,7 +265,7 @@ void map_edit_way_add_ok(map_t *map) {
 
   map->select_way(map->action.way);
 
-  map->action.way = O2G_NULLPTR;
+  map->action.way = nullptr;
 
   /* let the user specify some tags for the new way */
   info_dialog(appdata_t::window, map, osm, map->appdata.presets);
@@ -364,7 +364,7 @@ void map_edit_way_cut(map_t *map, int px, int py) {
   lpos_t pos = map->canvas->window2world(px, py);
 
   node_chain_t::iterator cut_at;
-  way_t *way = O2G_NULLPTR;
+  way_t *way = nullptr;
   if(cut_at_node) {
     printf("  cut at node\n");
 
@@ -391,7 +391,7 @@ void map_edit_way_cut(map_t *map, int px, int py) {
     cut_at = way->node_chain.begin() + c + 1;
   }
 
-  assert(way != O2G_NULLPTR);
+  assert(way != nullptr);
   assert_cmpnum_op(way->node_chain.size(), >, 2);
 
   /* move parts of node_chain to the new way */
@@ -414,7 +414,7 @@ void map_edit_way_cut(map_t *map, int px, int py) {
   map->style->colorize_way(way);
   map->draw(way);
 
-  if(neww != O2G_NULLPTR) {
+  if(neww != nullptr) {
     /* colorize the new way before drawing */
     map->style->colorize_way(neww);
     map->draw(neww);
@@ -477,10 +477,10 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, int ex, int ey) {
   node_t *touchnode = map->touchnode_get_node();
   bool joined_with_touchnode = false;
 
-  if(touchnode != O2G_NULLPTR) {
+  if(touchnode != nullptr) {
     printf("  dropped onto node #" ITEM_ID_FORMAT "\n", touchnode->id);
 
-    if(yes_no_f(O2G_NULLPTR, MISC_AGAIN_ID_JOIN_NODES, _("Join nodes?"),
+    if(yes_no_f(nullptr, MISC_AGAIN_ID_JOIN_NODES, _("Join nodes?"),
                 _("Do you want to join the dragged node with the one you dropped it on?"))) {
       /* the touchnode vanishes and is replaced by the node the */
       /* user dropped onto it */
@@ -490,7 +490,7 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, int ex, int ey) {
 
       // only offer to join ways if they come from the different nodes, not
       // if e.g. one node has 2 ways and the other has none
-      way_t *ways2join[2] = { O2G_NULLPTR, O2G_NULLPTR };
+      way_t *ways2join[2] = { nullptr, nullptr };
       if(node->ways > 0 && touchnode->ways > 0) {
         ways2join_cnt = node->ways + touchnode->ways;
         if(ways2join_cnt == 2) {
@@ -513,7 +513,7 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, int ex, int ey) {
 
       /* and open dialog to resolve tag collisions if necessary */
       if(conflict)
-        messagef(O2G_NULLPTR, _("Node tag conflict"),
+        messagef(nullptr, _("Node tag conflict"),
 		 _("The resulting node contains some conflicting tags. "
 		   "Please solve these."));
 
@@ -521,19 +521,19 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, int ex, int ey) {
       printf("  checking if node is end of way\n");
 
       if(ways2join_cnt > 2) {
-        messagef(O2G_NULLPTR, _("Too many ways to join"),
+        messagef(nullptr, _("Too many ways to join"),
 		 _("More than two ways now end on this node. Joining more "
 		   "than two ways is not yet implemented, sorry"));
 
       } else if(ways2join_cnt == 2 &&
-                yes_no_f(O2G_NULLPTR, MISC_AGAIN_ID_JOIN_WAYS, _("Join ways?"),
+                yes_no_f(nullptr, MISC_AGAIN_ID_JOIN_WAYS, _("Join ways?"),
                          _("Do you want to join the dragged way with the one you dropped it on?"))) {
         printf("  about to join ways #" ITEM_ID_FORMAT " and #" ITEM_ID_FORMAT "\n",
                ways2join[0]->id, ways2join[1]->id);
 
         osm->mergeWays(ways2join[0], ways2join[1], conflict);
         if(conflict)
-          messagef(O2G_NULLPTR, _("Way tag conflict"),
+          messagef(nullptr, _("Way tag conflict"),
                    _("The resulting way contains some conflicting tags. "
                      "Please solve these."));
       }

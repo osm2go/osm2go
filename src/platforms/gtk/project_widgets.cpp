@@ -68,7 +68,7 @@ struct project_context_t {
 };
 
 /* create a left aligned label (normal ones are centered) */
-static GtkWidget *gtk_label_left_new(const char *str = O2G_NULLPTR) {
+static GtkWidget *gtk_label_left_new(const char *str = nullptr) {
   GtkWidget *label = gtk_label_new(str);
   gtk_misc_set_alignment(GTK_MISC(label), 0.f, .5f);
   return label;
@@ -152,7 +152,7 @@ enum {
  * @return if OSM data file was found
  */
 static bool osm_file_exists(const project_t *project) {
-  if(project == O2G_NULLPTR)
+  if(project == nullptr)
     return false;
   struct stat st;
   return fstatat(project->dirfd, project->osmFile.c_str(), &st, 0) == 0 && S_ISREG(st.st_mode);
@@ -169,12 +169,12 @@ static void
 changed(GtkTreeSelection *selection, gpointer userdata) {
   select_context_t *context = static_cast<select_context_t *>(userdata);
 
-  GtkTreeModel *model = O2G_NULLPTR;
+  GtkTreeModel *model = nullptr;
   GtkTreeIter iter;
 
   gboolean sel = gtk_tree_selection_get_selected(selection, &model, &iter);
   if(sel) {
-    project_t *project = O2G_NULLPTR;
+    project_t *project = nullptr;
     gtk_tree_model_get(model, &iter, PROJECT_COL_DATA, &project, -1);
 
     view_selected(context->dialog, project);
@@ -192,7 +192,7 @@ changed(GtkTreeSelection *selection, gpointer userdata) {
  * This assumes there is a selection and a project associated to it.
  */
 static project_t *project_get_selected(GtkWidget *list) {
-  project_t *project = O2G_NULLPTR;
+  project_t *project = nullptr;
   GtkTreeModel     *model;
   GtkTreeIter       iter;
 
@@ -200,7 +200,7 @@ static project_t *project_get_selected(GtkWidget *list) {
   assert(b);
   gtk_tree_model_get(model, &iter, PROJECT_COL_DATA, &project, -1);
 
-  assert(project != O2G_NULLPTR);
+  assert(project != nullptr);
   return project;
 }
 
@@ -221,7 +221,7 @@ static void callback_modified_name(GtkWidget *widget, name_callback_context_t *c
   /* check if there's a name */
   if(name && strlen(name) > 0) {
     /* check if it consists of valid characters */
-    if(strpbrk(name, "\\*?()\n\t\r") == O2G_NULLPTR) {
+    if(strpbrk(name, "\\*?()\n\t\r") == nullptr) {
       /* check if such a project already exists */
       if(project_exists(context->basefd, name).empty())
         ok = TRUE;
@@ -253,7 +253,7 @@ static bool project_delete_gui(select_context_t *context, project_t *project) {
   GtkTreeModel *model = GTK_TREE_MODEL(context->store.get());
   if(gtk_tree_model_get_iter_first(model, &iter)) {
     do {
-      project_t *prj = O2G_NULLPTR;
+      project_t *prj = nullptr;
       gtk_tree_model_get(model, &iter, PROJECT_COL_DATA, &prj, -1);
       if(prj == project) {
         gtk_list_store_remove(context->store.get(), &iter);
@@ -272,7 +272,7 @@ static bool project_delete_gui(select_context_t *context, project_t *project) {
   project_delete(project);
 
   /* disable ok button button */
-  view_selected(context->dialog, O2G_NULLPTR);
+  view_selected(context->dialog, nullptr);
 
   return true;
 }
@@ -283,7 +283,7 @@ static project_t *project_new(select_context_t *context) {
                                               GTK_WINDOW(context->dialog), GTK_DIALOG_MODAL,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                               GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-                                              O2G_NULLPTR));
+                                              nullptr));
 
   GtkWidget *hbox = gtk_hbox_new(FALSE, 8);
   gtk_box_pack_start_defaults(GTK_BOX(hbox), gtk_label_new(_("Name:")));
@@ -301,7 +301,7 @@ static project_t *project_new(select_context_t *context) {
 
   gtk_widget_show_all(dialog.get());
   if(GTK_RESPONSE_ACCEPT != gtk_dialog_run(GTK_DIALOG(dialog.get())))
-    return O2G_NULLPTR;
+    return nullptr;
 
   std::unique_ptr<project_t> project(new project_t(context->dummystate,
                                                    gtk_entry_get_text(GTK_ENTRY(entry)),
@@ -329,7 +329,7 @@ static project_t *project_new(select_context_t *context) {
 
 /**
  * @brief get icon for the given project
- * @param current the currently active project or O2G_NULLPTR
+ * @param current the currently active project or nullptr
  * @param project the project to check
  * @return the stock identifier
  */
@@ -403,7 +403,7 @@ static void on_project_edit(select_context_t *context) {
                        -1);
 
     /* check if we have actually editing the currently open project */
-    if(appdata.project != O2G_NULLPTR && appdata.project->name == project->name) {
+    if(appdata.project != nullptr && appdata.project->name == project->name) {
       project_t *cur = appdata.project;
 
       g_debug("edited project was actually the active one!");
@@ -425,7 +425,7 @@ static void on_project_edit(select_context_t *context) {
         cur->bounds = project->bounds;
 
         /* if we have valid osm data loaded: save state first */
-        if(cur->osm != O2G_NULLPTR) {
+        if(cur->osm != nullptr) {
           /* redraw the entire map by destroying all map items  */
           cur->diff_save();
           appdata.map->clear(map_t::MAP_LAYER_ALL);
@@ -453,7 +453,7 @@ on_project_update_all(select_context_t *context)
   if(gtk_tree_model_get_iter_first(model, &iter)) {
     
     do {
-      project_t *prj = O2G_NULLPTR;
+      project_t *prj = nullptr;
       gtk_tree_model_get(model, &iter, PROJECT_COL_DATA, &prj, -1);
       /* if the project was already downloaded do it again */
       if(osm_file_exists(prj)) {
@@ -546,7 +546,7 @@ std::string project_select(appdata_t &appdata) {
                                     GTK_WINDOW(appdata_t::window), GTK_DIALOG_MODAL,
                                     GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                     GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
-                                    O2G_NULLPTR));
+                                    nullptr));
 
   dialog_size_hint(GTK_WINDOW(context.dialog), MISC_DIALOG_MEDIUM);
 
@@ -573,7 +573,7 @@ std::string project_select(appdata_t &appdata) {
 /* ---------------------------------------------------- */
 
 static void project_filesize(project_context_t *context) {
-  const char *str = O2G_NULLPTR;
+  const char *str = nullptr;
   g_string gstr;
   const project_t * const project = context->project;
 
@@ -593,7 +593,7 @@ static void project_filesize(project_context_t *context) {
 				      GTK_RESPONSE_ACCEPT, !context->is_new);
 
   } else {
-    gtk_widget_modify_fg(context->fsize, GTK_STATE_NORMAL, O2G_NULLPTR);
+    gtk_widget_modify_fg(context->fsize, GTK_STATE_NORMAL, nullptr);
 
     if(!project->data_dirty) {
       if(stret) {
@@ -630,7 +630,7 @@ static void project_filesize(project_context_t *context) {
 /* a project may currently be open. "unsaved changes" then also */
 /* means that the user may have unsaved changes */
 bool project_context_t::active_n_dirty() const {
-  if(appdata.project != O2G_NULLPTR && appdata.project->osm != O2G_NULLPTR &&
+  if(appdata.project != nullptr && appdata.project->osm != nullptr &&
      appdata.project->name == project->name) {
     g_debug("editing the currently open project");
 
@@ -742,12 +742,12 @@ project_edit(select_context_t *scontext, project_t *project, bool is_new) {
 
     dialog.reset(gtk_dialog_new_with_buttons(str.get(), GTK_WINDOW(parent), GTK_DIALOG_MODAL,
                              GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
-                             GTK_STOCK_OK, GTK_RESPONSE_ACCEPT, O2G_NULLPTR));
+                             GTK_STOCK_OK, GTK_RESPONSE_ACCEPT, nullptr));
   } else {
     g_string str(g_strdup_printf(_("Edit project - %s"), project->name.c_str()));
 
     dialog.reset(gtk_dialog_new_with_buttons(str.get(), GTK_WINDOW(parent), GTK_DIALOG_MODAL,
-                             GTK_STOCK_CLOSE, GTK_RESPONSE_ACCEPT, O2G_NULLPTR));
+                             GTK_STOCK_CLOSE, GTK_RESPONSE_ACCEPT, nullptr));
   }
   dialog_size_hint(GTK_WINDOW(dialog.get()), MISC_DIALOG_WIDE);
 
@@ -858,7 +858,7 @@ select_context_t::select_context_t(appdata_t &a, GtkWidget *dial)
   , projects(project_scan(dummystate, settings_t::instance()->base_path,
                           settings_t::instance()->base_path_fd, settings_t::instance()->server))
   , dialog(dial)
-  , list(O2G_NULLPTR)
+  , list(nullptr)
 {
 }
 

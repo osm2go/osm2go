@@ -60,7 +60,7 @@ assert_msg_unreachable(const char *file, const int line, const char *func);
 #define assert_null(x) \
        do { \
          const void *p = x; \
-         if (unlikely(p != O2G_NULLPTR)) \
+         if (unlikely(p != nullptr)) \
            ASSERT_MSG_FMT("'%s' should be nullptr, but is %p", #x, p); \
        } while(0)
 
@@ -94,8 +94,8 @@ public:
       fail(a.c_str(), astr, b, file, func, line);
   }
   inline assert_cmpstr_struct(const char *a, const char *astr, const char *b, const char *file, const char *func, int line) {
-    assert(a != O2G_NULLPTR);
-    assert(b != O2G_NULLPTR);
+    assert(a != nullptr);
+    assert(b != nullptr);
     if(unlikely(strcmp(a, b) != 0))
       fail(a, astr, b, file, func, line);
   }
@@ -104,8 +104,8 @@ public:
       fail(a.c_str(), astr, b, bstr, file, func, line);
   }
   assert_cmpstr_struct(const char *a, const char *astr, const char *b, const char *bstr, const char *file, const char *func, int line) {
-    assert(a != O2G_NULLPTR);
-    assert(b != O2G_NULLPTR);
+    assert(a != nullptr);
+    assert(b != nullptr);
     if(unlikely(strcmp(a, b) != 0))
       fail(a, astr, b, bstr, file, func, line);
   }

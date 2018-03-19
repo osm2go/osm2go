@@ -64,7 +64,7 @@ relitem_context_t::relitem_context_t(object_t &o, const presets_items *pr, osm_t
   : item(o)
   , presets(pr)
   , osm(os)
-  , store(O2G_NULLPTR)
+  , store(nullptr)
 {
 }
 
@@ -100,7 +100,7 @@ static bool relation_add_item(GtkWidget *parent, relation_t *relation,
                                               GTK_DIALOG_MODAL,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                               GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-                                              O2G_NULLPTR));
+                                              nullptr));
 
   gtk_dialog_set_default_response(GTK_DIALOG(dialog.get()), GTK_RESPONSE_ACCEPT);
 
@@ -125,7 +125,7 @@ static bool relation_add_item(GtkWidget *parent, relation_t *relation,
 #endif
     gtk_box_pack_start_defaults(GTK_BOX(hbox), gtk_label_new(_("Role:")));
 
-  GtkWidget *entry = O2G_NULLPTR;
+  GtkWidget *entry = nullptr;
   if(!roles.empty()) {
     entry = combo_box_entry_new(_("Role"));
 
@@ -146,7 +146,7 @@ static bool relation_add_item(GtkWidget *parent, relation_t *relation,
   g_debug("user clicked ok");
 
   /* get role from dialog */
-  const char *role = O2G_NULLPTR;
+  const char *role = nullptr;
   std::string rstr;
 
   if(isComboBoxEntryWidget(entry)) {
@@ -185,10 +185,10 @@ static void changed(GtkTreeSelection *sel, relitem_context_t *context) {
   GtkTreeIter iter;
   gboolean ok = gtk_tree_model_get_iter_first(GTK_TREE_MODEL(context->store.get()), &iter);
   while(ok == TRUE) {
-    relation_t *relation = O2G_NULLPTR;
+    relation_t *relation = nullptr;
     gtk_tree_model_get(GTK_TREE_MODEL(context->store.get()), &iter,
 		       RELITEM_COL_DATA, &relation, -1);
-    assert(relation != O2G_NULLPTR);
+    assert(relation != nullptr);
 
     const std::vector<member_t>::const_iterator itEnd = relation->members.end();
     const std::vector<member_t>::iterator it = relation->find_member_object(context->item);
@@ -209,7 +209,7 @@ static void changed(GtkTreeSelection *sel, relitem_context_t *context) {
       g_debug("deselected: " ITEM_ID_FORMAT, relation->id);
 
       relation->remove_member(it);
-      gtk_list_store_set(context->store.get(), &iter, RELITEM_COL_ROLE, O2G_NULLPTR, -1);
+      gtk_list_store_set(context->store.get(), &iter, RELITEM_COL_ROLE, nullptr, -1);
 
       break;
     }
@@ -229,7 +229,7 @@ static gboolean on_view_clicked(GtkWidget *widget, GdkEventButton *event, gpoint
     GtkTreePath *path;
 
     if(gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget),
-		     event->x, event->y, &path, O2G_NULLPTR, O2G_NULLPTR, O2G_NULLPTR)) {
+		     event->x, event->y, &path, nullptr, nullptr, nullptr)) {
       GtkTreeSelection *sel =
 	gtk_tree_view_get_selection(GTK_TREE_VIEW(widget));
 
@@ -271,7 +271,7 @@ void relation_list_insert_functor::operator()(std::pair<item_id_t, relation_t *>
   gtk_list_store_append(context.store.get(), &iter);
   gtk_list_store_set(context.store.get(), &iter,
      RELITEM_COL_TYPE, relation->tags.get_value("type"),
-     RELITEM_COL_ROLE, isMember ? it->role : O2G_NULLPTR,
+     RELITEM_COL_ROLE, isMember ? it->role : nullptr,
      RELITEM_COL_NAME, name.c_str(),
      RELITEM_COL_DATA, relation,
      -1);
@@ -309,21 +309,21 @@ static GtkWidget *relation_item_list_widget(relitem_context_t &context) {
 
   /* --- "Name" column --- */
   GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
-  g_object_set(renderer, "ellipsize", PANGO_ELLIPSIZE_END, O2G_NULLPTR );
+  g_object_set(renderer, "ellipsize", PANGO_ELLIPSIZE_END, nullptr );
   GtkTreeViewColumn *column = gtk_tree_view_column_new_with_attributes(
-       "Name", renderer, "text", RELITEM_COL_NAME, O2G_NULLPTR);
+       "Name", renderer, "text", RELITEM_COL_NAME, nullptr);
   gtk_tree_view_column_set_expand(column, TRUE);
   gtk_tree_view_insert_column(view, column, -1);
 
   /* --- "Type" column --- */
   renderer = gtk_cell_renderer_text_new();
   gtk_tree_view_insert_column_with_attributes(view,
-      -1, "Type", renderer, "text", RELITEM_COL_TYPE, O2G_NULLPTR);
+      -1, "Type", renderer, "text", RELITEM_COL_TYPE, nullptr);
 
   /* --- "Role" column --- */
   renderer = gtk_cell_renderer_text_new();
   gtk_tree_view_insert_column_with_attributes(view,
-      -1, "Role", renderer, "text", RELITEM_COL_ROLE, O2G_NULLPTR);
+      -1, "Role", renderer, "text", RELITEM_COL_ROLE, nullptr);
 
   /* build and fill the store */
   context.store.reset(gtk_list_store_new(RELITEM_NUM_COLS, G_TYPE_STRING, G_TYPE_STRING,
@@ -360,7 +360,7 @@ void relation_membership_dialog(GtkWidget *parent, const presets_items *presets,
   context.dialog.reset(gtk_dialog_new_with_buttons(str.get(), GTK_WINDOW(parent),
                                                GTK_DIALOG_MODAL,
                                                GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
-                                               O2G_NULLPTR));
+                                               nullptr));
   str.reset();
 
   dialog_size_hint(GTK_WINDOW(context.dialog.get()), MISC_DIALOG_LARGE);
@@ -396,29 +396,29 @@ static relation_t *get_selected_relation(relation_context_t *context) {
     gtk_tree_model_get(model, &iter, RELATION_COL_DATA, &relation, -1);
     return(relation);
   }
-  return O2G_NULLPTR;
+  return nullptr;
 }
 
 static void relation_list_selected(GtkWidget *list,
 				   relation_t *selected) {
 
   list_button_enable(list, LIST_BUTTON_USER0,
-		     (selected != O2G_NULLPTR) && (!selected->members.empty()));
+		     (selected != nullptr) && (!selected->members.empty()));
   list_button_enable(list, LIST_BUTTON_USER1,
-		     (selected != O2G_NULLPTR) && (!selected->members.empty()));
+		     (selected != nullptr) && (!selected->members.empty()));
 
-  list_button_enable(list, LIST_BUTTON_REMOVE, selected != O2G_NULLPTR);
-  list_button_enable(list, LIST_BUTTON_EDIT, selected != O2G_NULLPTR);
+  list_button_enable(list, LIST_BUTTON_REMOVE, selected != nullptr);
+  list_button_enable(list, LIST_BUTTON_EDIT, selected != nullptr);
 }
 
 static void
 relation_list_changed(GtkTreeSelection *selection, gpointer userdata) {
   GtkWidget *list = static_cast<relation_context_t *>(userdata)->list;
-  GtkTreeModel *model = O2G_NULLPTR;
+  GtkTreeModel *model = nullptr;
   GtkTreeIter iter;
 
   if(gtk_tree_selection_get_selected(selection, &model, &iter)) {
-    relation_t *relation = O2G_NULLPTR;
+    relation_t *relation = nullptr;
     gtk_tree_model_get(model, &iter, RELATION_COL_DATA, &relation, -1);
     relation_list_selected(list, relation);
   }
@@ -449,7 +449,7 @@ member_list_selection_func(GtkTreeSelection *, GtkTreeModel *model,
   if(gtk_tree_model_get_iter(model, &iter, path)) {
     assert_cmpnum(gtk_tree_path_get_depth(path), 1);
 
-    const member_t *member = O2G_NULLPTR;
+    const member_t *member = nullptr;
     gtk_tree_model_get(model, &iter, MEMBER_COL_DATA, &member, -1);
     if(member && member->object.type < object_t::NODE_ID)
       return TRUE;
@@ -490,44 +490,44 @@ static GtkWidget *member_list_widget(member_context_t &context) {
   GtkTreeView * const view = tree_view_new();
 
   gtk_tree_selection_set_select_function(gtk_tree_view_get_selection(view),
-                                         member_list_selection_func, &context, O2G_NULLPTR);
+                                         member_list_selection_func, &context, nullptr);
 
   /* --- "type" column --- */
   GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
-  g_object_set(renderer, "foreground", "grey", O2G_NULLPTR);
+  g_object_set(renderer, "foreground", "grey", nullptr);
   GtkTreeViewColumn *column =
     gtk_tree_view_column_new_with_attributes(_("Type"), renderer,
 		     "text", MEMBER_COL_TYPE,
-		     "foreground-set", MEMBER_COL_REF_ONLY,  O2G_NULLPTR);
+		     "foreground-set", MEMBER_COL_REF_ONLY,  nullptr);
   gtk_tree_view_column_set_sort_column_id(column, MEMBER_COL_TYPE);
   gtk_tree_view_insert_column(view, column, -1);
 
   /* --- "id" column --- */
   renderer = gtk_cell_renderer_text_new();
-  g_object_set(renderer, "foreground", "grey", O2G_NULLPTR);
+  g_object_set(renderer, "foreground", "grey", nullptr);
   column = gtk_tree_view_column_new_with_attributes(_("Id"), renderer,
 		     "text", MEMBER_COL_ID,
-		     "foreground-set", MEMBER_COL_REF_ONLY,  O2G_NULLPTR);
+		     "foreground-set", MEMBER_COL_REF_ONLY,  nullptr);
   gtk_tree_view_column_set_sort_column_id(column, MEMBER_COL_ID);
   gtk_tree_view_insert_column(view, column, -1);
 
   /* --- "Name" column --- */
   renderer = gtk_cell_renderer_text_new();
-  g_object_set(renderer, "foreground", "grey", O2G_NULLPTR);
-  g_object_set(renderer, "ellipsize", PANGO_ELLIPSIZE_END, O2G_NULLPTR);
+  g_object_set(renderer, "foreground", "grey", nullptr);
+  g_object_set(renderer, "ellipsize", PANGO_ELLIPSIZE_END, nullptr);
   column = gtk_tree_view_column_new_with_attributes(_("Name"), renderer,
 		     "text", MEMBER_COL_NAME,
-		     "foreground-set", MEMBER_COL_REF_ONLY,  O2G_NULLPTR);
+		     "foreground-set", MEMBER_COL_REF_ONLY,  nullptr);
   gtk_tree_view_column_set_expand(column, TRUE);
   gtk_tree_view_column_set_sort_column_id(column, MEMBER_COL_NAME);
   gtk_tree_view_insert_column(view, column, -1);
 
   /* --- "role" column --- */
   renderer = gtk_cell_renderer_text_new();
-  g_object_set(renderer, "foreground", "grey", O2G_NULLPTR);
+  g_object_set(renderer, "foreground", "grey", nullptr);
   column = gtk_tree_view_column_new_with_attributes(_("Role"), renderer,
 		     "text", MEMBER_COL_ROLE,
-		     "foreground-set", MEMBER_COL_REF_ONLY,  O2G_NULLPTR);
+		     "foreground-set", MEMBER_COL_REF_ONLY,  nullptr);
   gtk_tree_view_column_set_sort_column_id(column, MEMBER_COL_ROLE);
   gtk_tree_view_insert_column(view, column, -1);
 
@@ -554,7 +554,7 @@ void relation_show_members(GtkWidget *parent, const relation_t *relation) {
   if(!str)
     str = relation->tags.get_value("ref");
 
-  g_string nstr(str == O2G_NULLPTR ?
+  g_string nstr(str == nullptr ?
                 g_strdup_printf(_("Members of relation #" ITEM_ID_FORMAT), relation->id) :
                 g_strdup_printf(_("Members of relation \"%s\""), str));
 
@@ -562,7 +562,7 @@ void relation_show_members(GtkWidget *parent, const relation_t *relation) {
                             gtk_dialog_new_with_buttons(nstr.get(), GTK_WINDOW(parent),
                                                         GTK_DIALOG_MODAL,
                                                         GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
-                                                        O2G_NULLPTR));
+                                                        nullptr));
 
   dialog_size_hint(GTK_WINDOW(mcontext.dialog), MISC_DIALOG_MEDIUM);
   gtk_dialog_set_default_response(GTK_DIALOG(mcontext.dialog),
@@ -582,7 +582,7 @@ void relation_show_members(GtkWidget *parent, const relation_t *relation) {
 static void on_relation_members(relation_context_t *context) {
   relation_t *sel = get_selected_relation(context);
 
-  if(sel != O2G_NULLPTR)
+  if(sel != nullptr)
     relation_show_members(context->dialog.get(), sel);
 }
 
@@ -696,7 +696,7 @@ static void on_relation_remove(relation_context_t *context) {
   /* then really delete it */
   context->osm->relation_delete(sel);
 
-  relation_list_selected(context->list, O2G_NULLPTR);
+  relation_list_selected(context->list, nullptr);
 }
 
 struct relation_list_widget_functor {
@@ -758,7 +758,7 @@ static GtkWidget *relation_list_widget(relation_context_t &context) {
   const std::map<item_id_t, relation_t *> &rchain = context.osm->relations;
   std::for_each(rchain.begin(), rchain.end(), fc);
 
-  relation_list_selected(context.list, O2G_NULLPTR);
+  relation_list_selected(context.list, nullptr);
 
   return context.list;
 }
@@ -770,7 +770,7 @@ void relation_list(GtkWidget *parent, map_t *map, osm_t *osm, presets_items *pre
                                                          GTK_WINDOW(parent),
                                                          GTK_DIALOG_MODAL,
                                                          GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
-                                                         O2G_NULLPTR));
+                                                         nullptr));
 
   dialog_size_hint(GTK_WINDOW(context.dialog.get()), MISC_DIALOG_LARGE);
   gtk_dialog_set_default_response(GTK_DIALOG(context.dialog.get()),

@@ -16,11 +16,11 @@
 #include <iostream>
 
 appdata_t::appdata_t(map_state_t &mstate)
-  : statusbar(O2G_NULLPTR)
-  , uicontrol(O2G_NULLPTR)
+  : statusbar(nullptr)
+  , uicontrol(nullptr)
   , map_state(mstate)
   , icons(icon_t::instance())
-  , gps_state(O2G_NULLPTR)
+  , gps_state(nullptr)
 {
 }
 
@@ -46,7 +46,7 @@ int main(int argc, char **argv)
 
   style_t *style = style_load(argv[1]);
 
-  if(style == O2G_NULLPTR) {
+  if(style == nullptr) {
     std::cerr << "failed to load styles" << std::endl;
     return 1;
   }
@@ -95,7 +95,7 @@ int main(int argc, char **argv)
   style->colorize_node(node);
 
   assert(!style->node_icons.empty());
-  assert(style->node_icons[node->id] != O2G_NULLPTR);
+  assert(style->node_icons[node->id] != nullptr);
 
   icon_t::icon_item *oldicon = style->node_icons[node->id];
   float oldzoom = node->zoom_max;
@@ -107,7 +107,7 @@ int main(int argc, char **argv)
   style->colorize_world(&osm);
 
   assert(!style->node_icons.empty());
-  assert(style->node_icons[node->id] != O2G_NULLPTR);
+  assert(style->node_icons[node->id] != nullptr);
   assert(oldicon != style->node_icons[node->id]);
   assert_cmpnum_op(oldzoom * 1.9, <, node->zoom_max);
 
@@ -185,7 +185,7 @@ int main(int argc, char **argv)
   assert_cmpnum(way->draw.width, 1);
 
   assert(!style->node_icons.empty());
-  assert(style->node_icons[node->id] != O2G_NULLPTR);
+  assert(style->node_icons[node->id] != nullptr);
   assert(oldicon != style->node_icons[node->id]);
   assert_cmpnum_op(oldzoom, !=, node->zoom_max);
 
@@ -206,7 +206,7 @@ int main(int argc, char **argv)
   assert_cmpnum(way->draw.width, 2);
 
   assert(!style->node_icons.empty());
-  assert(style->node_icons[node->id] != O2G_NULLPTR);
+  assert(style->node_icons[node->id] != nullptr);
   assert(oldicon != style->node_icons[node->id]);
   assert_cmpnum_op(oldzoom, !=, node->zoom_max);
 

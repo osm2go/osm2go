@@ -120,7 +120,7 @@ static gint on_way_button_press(GtkMenu *menu, GdkEventButton *event) {
     g_debug("way clicked");
 
     /* draw a popup menu */
-    gtk_menu_popup(menu, O2G_NULLPTR, O2G_NULLPTR, O2G_NULLPTR, O2G_NULLPTR,
+    gtk_menu_popup(menu, nullptr, nullptr, nullptr, nullptr,
 		   event->button, event->time);
     return TRUE;
   }
@@ -239,7 +239,7 @@ static GtkWidget *tool_button_label(icon_t &icons, GtkToolbar *toolbar,
   gtk_label_set_attributes(GTK_LABEL(label), attrs);
   pango_attr_list_unref(attrs);
 
-  GtkToolItem *item = gtk_tool_button_new(icons.widget_load(icon_str), O2G_NULLPTR);
+  GtkToolItem *item = gtk_tool_button_new(icons.widget_load(icon_str), nullptr);
 
   gtk_tool_button_set_label_widget(GTK_TOOL_BUTTON(item), label);
 
@@ -296,8 +296,8 @@ iconbar_gtk::iconbar_gtk(appdata_t& appdata)
   , way_reverse(tool_add(toolbar, appdata.icons, TOOL_ICON("way_reverse"), _("Reverse way"),
                          G_CALLBACK(map_edit_way_reverse), appdata.map))
 #endif
-  , cancel(O2G_NULLPTR)
-  , ok(O2G_NULLPTR)
+  , cancel(nullptr)
+  , ok(nullptr)
 {
 #if !GTK_CHECK_VERSION(2, 16, 0)
   gtk_toolbar_set_orientation(GTK_TOOLBAR(toolbar), GTK_ORIENTATION_VERTICAL);
@@ -364,7 +364,7 @@ GtkWidget *iconbar_t::create(appdata_t &appdata) {
 /* fremantle. technically they are still part of the iconbar and thus */
 /* are registered there */
 void iconbar_register_buttons(appdata_t &appdata, GtkWidget *ok, GtkWidget *cancel) {
-  assert(appdata.iconbar != O2G_NULLPTR);
+  assert(appdata.iconbar != nullptr);
   iconbar_gtk * const iconbar = static_cast<iconbar_gtk *>(appdata.iconbar);
 
   iconbar->ok = ok;

@@ -174,7 +174,7 @@ std::string pos_area::print(char delim1, char delim2)
 
 void remove_trailing_zeroes(char *str) {
   char *delim = strpbrk(str, ".,");
-  if(delim == O2G_NULLPTR)
+  if(delim == nullptr)
     return;
   char *p = delim + strlen(delim) - 1;
   while(*p == '0')
