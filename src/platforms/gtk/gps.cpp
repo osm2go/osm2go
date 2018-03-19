@@ -76,9 +76,9 @@ public:
   gpsd_state_t();
   ~gpsd_state_t();
 
-  virtual pos_t get_pos(float *alt = nullptr) O2G_OVERRIDE;
-  virtual void setEnable(bool en) O2G_OVERRIDE;
-  virtual bool registerCallback(GpsCallback cb, void *context) O2G_OVERRIDE;
+  virtual pos_t get_pos(float *alt = nullptr) override;
+  virtual void setEnable(bool en) override;
+  virtual bool registerCallback(GpsCallback cb, void *context) override;
 
   bool runCallback()
   {

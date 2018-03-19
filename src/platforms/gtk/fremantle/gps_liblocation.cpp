@@ -38,9 +38,9 @@ public:
   gps_liblocation_state_t();
   virtual ~gps_liblocation_state_t();
 
-  virtual pos_t get_pos(float *alt = nullptr) O2G_OVERRIDE;
-  virtual void setEnable(bool) O2G_OVERRIDE;
-  virtual bool registerCallback(GpsCallback cb, void *context) O2G_OVERRIDE;
+  virtual pos_t get_pos(float *alt = nullptr) override;
+  virtual void setEnable(bool) override;
+  virtual bool registerCallback(GpsCallback cb, void *context) override;
 
   void updateCallback();
 

@@ -55,10 +55,10 @@ public:
    */
   void brief(const char *msg, bool timeout);
 
-  virtual void set(const char *msg, bool highlight) O2G_OVERRIDE;
-  virtual void banner_show_info(const char *text) O2G_OVERRIDE;
-  virtual void banner_busy_start(const char *text) O2G_OVERRIDE;
-  virtual void banner_busy_stop() O2G_OVERRIDE;
+  virtual void set(const char *msg, bool highlight) override;
+  virtual void banner_show_info(const char *text) override;
+  virtual void banner_busy_start(const char *text) override;
+  virtual void banner_busy_stop() override;
 };
 
 /*

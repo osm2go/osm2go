@@ -38,6 +38,10 @@ write_compiler_detection_header(
 # endif
 #endif
 #undef O2G_NULLPTR
+#if !(defined(O2G_COMPILER_CXX_OVERRIDE) && O2G_COMPILER_CXX_OVERRIDE)
+#  define override
+#endif
+#undef O2G_OVERRIDE
 #if !(defined(O2G_COMPILER_CXX_STATIC_ASSERT) && O2G_COMPILER_CXX_STATIC_ASSERT)
 #  define static_assert(X, MSG) G_STATIC_ASSERT(X)
 #endif

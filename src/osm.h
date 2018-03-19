@@ -487,14 +487,14 @@ public:
   pos_t pos;
   lpos_t lpos;
 
-  const char *apiString() const O2G_OVERRIDE {
+  const char *apiString() const override {
     return api_string();
   }
   static const char *api_string() {
     return "node";
   }
 protected:
-  virtual void generate_xml_custom(xmlNodePtr xml_node) const O2G_OVERRIDE;
+  virtual void generate_xml_custom(xmlNodePtr xml_node) const override;
 };
 
 typedef std::vector<node_t *> node_chain_t;
@@ -560,7 +560,7 @@ public:
 
   void cleanup();
 
-  const char *apiString() const O2G_OVERRIDE {
+  const char *apiString() const override {
     return api_string();
   }
   static const char *api_string() {
@@ -578,7 +578,7 @@ public:
    */
   bool merge(way_t *other, osm_t *osm, const std::vector<relation_t *> &rels = std::vector<relation_t *>());
 protected:
-  virtual void generate_xml_custom(xmlNodePtr xml_node) const O2G_OVERRIDE {
+  virtual void generate_xml_custom(xmlNodePtr xml_node) const override {
     write_node_chain(xml_node);
   }
 };
@@ -603,7 +603,7 @@ public:
 
   void cleanup();
 
-  const char *apiString() const O2G_OVERRIDE {
+  const char *apiString() const override {
     return api_string();
   }
   static const char *api_string() {
@@ -611,7 +611,7 @@ public:
   }
   void remove_member(std::vector<member_t>::iterator it);
 protected:
-  virtual void generate_xml_custom(xmlNodePtr xml_node) const O2G_OVERRIDE {
+  virtual void generate_xml_custom(xmlNodePtr xml_node) const override {
     generate_member_xml(xml_node);
   }
 };

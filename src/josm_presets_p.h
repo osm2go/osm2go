@@ -137,9 +137,9 @@ public:
 
   const std::string def;
 
-  virtual attach_key *attach(preset_attach_context &attctx, const std::string &preset) const O2G_OVERRIDE;
-  virtual std::string getValue(attach_key *akey) const O2G_OVERRIDE;
-  virtual unsigned int rows() const O2G_OVERRIDE {
+  virtual attach_key *attach(preset_attach_context &attctx, const std::string &preset) const override;
+  virtual std::string getValue(attach_key *akey) const override;
+  virtual unsigned int rows() const override {
     return 1;
   }
 };
@@ -149,8 +149,8 @@ public:
   explicit presets_element_separator()
     : presets_element_t(WIDGET_TYPE_SEPARATOR, MatchIgnore) {}
 
-  virtual attach_key *attach(preset_attach_context &attctx, const std::string &) const O2G_OVERRIDE;
-  virtual unsigned int rows() const O2G_OVERRIDE {
+  virtual attach_key *attach(preset_attach_context &attctx, const std::string &) const override;
+  virtual unsigned int rows() const override {
     return 1;
   }
 };
@@ -160,8 +160,8 @@ public:
   explicit presets_element_label(const std::string &txt)
     : presets_element_t(WIDGET_TYPE_LABEL, MatchIgnore, std::string(), txt) {}
 
-  virtual attach_key *attach(preset_attach_context &attctx, const std::string &) const O2G_OVERRIDE;
-  virtual unsigned int rows() const O2G_OVERRIDE {
+  virtual attach_key *attach(preset_attach_context &attctx, const std::string &) const override;
+  virtual unsigned int rows() const override {
     return 1;
   }
 };
@@ -171,7 +171,7 @@ public:
  */
 class presets_element_combo : public presets_element_t {
 protected:
-  virtual bool matchValue(const std::string &val) const O2G_OVERRIDE;
+  virtual bool matchValue(const std::string &val) const override;
 public:
   presets_element_combo(const std::string &k, const std::string &txt,
                        const std::string &deflt, const char *m,
@@ -181,9 +181,9 @@ public:
   std::vector<std::string> values;
   std::vector<std::string> display_values;
 
-  virtual attach_key *attach(preset_attach_context &attctx, const std::string &preset) const O2G_OVERRIDE;
-  virtual std::string getValue(attach_key *akey) const O2G_OVERRIDE;
-  virtual unsigned int rows() const O2G_OVERRIDE {
+  virtual attach_key *attach(preset_attach_context &attctx, const std::string &preset) const override;
+  virtual std::string getValue(attach_key *akey) const override;
+  virtual unsigned int rows() const override {
     return 1;
   }
 
@@ -195,20 +195,20 @@ public:
  */
 class presets_element_key : public presets_element_t {
 protected:
-  virtual bool matchValue(const std::string &val) const O2G_OVERRIDE;
+  virtual bool matchValue(const std::string &val) const override;
 public:
   presets_element_key(const std::string &k, const std::string &val, const char *m);
 
   const std::string value;
-  virtual std::string getValue(attach_key *akey) const O2G_OVERRIDE;
-  virtual unsigned int rows() const O2G_OVERRIDE {
+  virtual std::string getValue(attach_key *akey) const override;
+  virtual unsigned int rows() const override {
     return 0;
   }
 };
 
 class presets_element_checkbox : public presets_element_t {
 protected:
-  virtual bool matchValue(const std::string &val) const O2G_OVERRIDE;
+  virtual bool matchValue(const std::string &val) const override;
 public:
   presets_element_checkbox(const std::string &k, const std::string &txt, bool deflt,
                           const char *m, const std::string &von = std::string());
@@ -216,9 +216,9 @@ public:
   const bool def;
   std::string value_on;
 
-  virtual attach_key *attach(preset_attach_context &attctx, const std::string &preset) const O2G_OVERRIDE;
-  virtual std::string getValue(attach_key *akey) const O2G_OVERRIDE;
-  virtual unsigned int rows() const O2G_OVERRIDE {
+  virtual attach_key *attach(preset_attach_context &attctx, const std::string &preset) const override;
+  virtual std::string getValue(attach_key *akey) const override;
+  virtual unsigned int rows() const override {
     return 1;
   }
 };
@@ -232,8 +232,8 @@ public:
 
   presets_item * const item;
 
-  virtual bool is_interactive() const O2G_OVERRIDE;
-  virtual unsigned int rows() const O2G_OVERRIDE;
+  virtual bool is_interactive() const override;
+  virtual unsigned int rows() const override;
 };
 
 class presets_element_link : public presets_element_t {
@@ -243,11 +243,11 @@ public:
 
   presets_item *item;
 
-  virtual bool is_interactive() const O2G_OVERRIDE {
+  virtual bool is_interactive() const override {
     return false;
   }
-  virtual attach_key *attach(preset_attach_context &attctx, const std::string &preset) const O2G_OVERRIDE;
-  virtual unsigned int rows() const O2G_OVERRIDE {
+  virtual attach_key *attach(preset_attach_context &attctx, const std::string &preset) const override;
+  virtual unsigned int rows() const override {
     return 1;
   }
 };
@@ -307,7 +307,7 @@ public:
   std::vector<presets_element_t *> widgets;
   std::vector<role> roles;
 
-  virtual bool isItem() const O2G_OVERRIDE {
+  virtual bool isItem() const override {
     return true;
   }
 
