@@ -31,12 +31,12 @@ typedef int (*GpsCallback)(void *context);
 
 class gps_state_t {
 protected:
-  GpsCallback callback;
-  void *cb_context;
+  const GpsCallback callback;
+  void * const cb_context;
 
-  gps_state_t()
-    : callback(nullptr)
-    , cb_context(nullptr)
+  gps_state_t(GpsCallback cb, void *context)
+    : callback(cb)
+    , cb_context(context)
   {
   }
 public:
@@ -58,16 +58,13 @@ public:
   virtual void setEnable(bool en) = 0;
 
   /**
-   * @brief register or clear the GPS callback
-   * @param cb the new callback function, set to NULL to unregister
+   * @brief create a GPS instance
+   * @param cb the callback function called on position updates
    * @param context a context pointer passed to cb
-   * @return if there was a previous handler
    *
-   * Does nothing if a handler already exists.
+   * The callback state can be changed with enableCallback()
    */
-  virtual bool registerCallback(GpsCallback cb, void *context) = 0;
-
-  static gps_state_t *create();
+  static gps_state_t *create(GpsCallback cb, void *context);
 };
 
 #endif // GPS_H

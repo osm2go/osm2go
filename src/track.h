@@ -55,6 +55,8 @@ struct track_t {
   bool active; ///< if the last element in segments is currently written to
 
   void clear();
+
+  static int gps_position_callback(void *context);
 };
 
 struct appdata_t;

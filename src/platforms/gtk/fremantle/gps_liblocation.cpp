@@ -35,12 +35,11 @@
 
 class gps_liblocation_state_t : public gps_state_t {
 public:
-  gps_liblocation_state_t();
+  gps_liblocation_state_t(GpsCallback cb, void *context);
   virtual ~gps_liblocation_state_t();
 
   virtual pos_t get_pos(float *alt = nullptr) override;
   virtual void setEnable(bool) override;
-  virtual bool registerCallback(GpsCallback cb, void *context) override;
 
   void updateCallback();
 
@@ -88,17 +87,17 @@ void gps_liblocation_state_t::updateCallback()
   else
     altitude = NAN;
 
-  if(callback)
-    if(!callback(cb_context))
-      callback = nullptr;
+  if(!callback(cb_context))
+    setEnable(false);
 }
 
-gps_state_t *gps_state_t::create() {
-  return new gps_liblocation_state_t();
+gps_state_t *gps_state_t::create(GpsCallback cb, void *context) {
+  return new gps_liblocation_state_t(cb, context);
 }
 
-gps_liblocation_state_t::gps_liblocation_state_t()
-  : device(static_cast<LocationGPSDevice *>(g_object_new(LOCATION_TYPE_GPS_DEVICE, nullptr)))
+gps_liblocation_state_t::gps_liblocation_state_t(GpsCallback cb, void *context)
+  : gps_state_t(cb, context)
+  , device(static_cast<LocationGPSDevice *>(g_object_new(LOCATION_TYPE_GPS_DEVICE, nullptr)))
 #ifdef LL_CONTROL_GPSD
   , control(location_gpsd_control_get_default())
   , gps_is_on(false)
@@ -149,14 +148,4 @@ void gps_liblocation_state_t::setEnable(bool en)
     }
   }
   enabled = en;
-}
-
-bool gps_liblocation_state_t::registerCallback(GpsCallback cb, void* context)
-{
-  bool ret = (callback != nullptr);
-  if(!ret) {
-    cb_context = context;
-    callback = cb;
-  }
-  return ret;
 }

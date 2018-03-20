@@ -73,12 +73,11 @@ struct gps_data_t {
 /* setup for direct gpsd based communication */
 class gpsd_state_t : public gps_state_t {
 public:
-  gpsd_state_t();
+  gpsd_state_t(GpsCallback cb, void *context);
   ~gpsd_state_t();
 
   virtual pos_t get_pos(float *alt = nullptr) override;
   virtual void setEnable(bool en) override;
-  virtual bool registerCallback(GpsCallback cb, void *context) override;
 
   bool runCallback()
   {
@@ -252,9 +251,19 @@ static void gps_unpack(char *buf, gps_data_t *gpsdata) {
   }
 }
 
+
+static gboolean gps_callback(gpointer data) {
+  gpsd_state_t * const state = static_cast<gpsd_state_t *>(data);
+
+  return state->runCallback() ? TRUE : FALSE;
+}
+
 void gpsd_state_t::setEnable(bool en)
 {
-  enable = en;
+  if(!en && timer.isActive())
+    timer.stop();
+  else if(en && !timer.isActive())
+    timer.restart(1, gps_callback, this);
 }
 
 gpointer gps_thread(gpointer data) {
@@ -318,12 +327,13 @@ gpointer gps_thread(gpointer data) {
   return nullptr;
 }
 
-gps_state_t *gps_state_t::create() {
-  return new gpsd_state_t();
+gps_state_t *gps_state_t::create(GpsCallback cb, void *context) {
+  return new gpsd_state_t(cb, context);
 }
 
-gpsd_state_t::gpsd_state_t()
-  : enable(false)
+gpsd_state_t::gpsd_state_t(GpsCallback cb, void *context)
+  : gps_state_t(cb, context)
+  , enable(false)
 {
   printf("GPS init: Using gpsd\n");
 
@@ -339,7 +349,6 @@ gpsd_state_t::gpsd_state_t()
 
 gpsd_state_t::~gpsd_state_t()
 {
-  registerCallback(nullptr, nullptr);
 #ifdef ENABLE_GPSBT
   gpsbt_stop(&context);
 #endif
@@ -347,29 +356,4 @@ gpsd_state_t::~gpsd_state_t()
   if(thread_p)
     g_thread_unref(thread_p);
 #endif
-}
-
-static gboolean gps_callback(gpointer data) {
-  gpsd_state_t * const state = static_cast<gpsd_state_t *>(data);
-
-  return state->runCallback() ? TRUE : FALSE;
-}
-
-bool gpsd_state_t::registerCallback(GpsCallback cb, void *context)
-{
-  if(timer.isActive()) {
-    if(cb == nullptr) {
-      timer.stop();
-      callback = nullptr;
-      cb_context = nullptr;
-    }
-    return 0;
-  } else {
-    if(cb != nullptr) {
-      callback = cb;
-      cb_context = context;
-      timer.restart(1, gps_callback, this);
-    }
-    return 1;
-  }
 }

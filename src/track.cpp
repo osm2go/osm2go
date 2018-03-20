@@ -439,8 +439,6 @@ static void track_do_disable_gps(appdata_t &appdata) {
   settings_t::instance()->enable_gps = false;
   appdata.gps_state->setEnable(false);
 
-  appdata.gps_state->registerCallback(nullptr, nullptr);
-
   /* stopping the GPS removes the marker ... */
   appdata.map->remove_gps_position();
 
@@ -448,8 +446,8 @@ static void track_do_disable_gps(appdata_t &appdata) {
   track_end_segment(appdata.track.track);
 }
 
-static int update(void *data) {
-  appdata_t &appdata = *static_cast<appdata_t *>(data);
+int track_t::gps_position_callback(void *context) {
+  appdata_t &appdata = *static_cast<appdata_t *>(context);
 
   /* ignore updates while no valid osm file is loaded, e.g. when switching */
   /* projects */
@@ -460,7 +458,7 @@ static int update(void *data) {
   if(unlikely(!appdata.map)) {
     printf("map has gone while tracking was active, stopping tracker\n");
 
-    appdata.gps_state->registerCallback(nullptr, nullptr);
+    appdata.gps_state->setEnable(false);
 
     return 0;
   }
@@ -495,13 +493,11 @@ static void track_do_enable_gps(appdata_t &appdata) {
   appdata.gps_state->setEnable(true);
   appdata.track.warn_cnt = 1;
 
-  if (!appdata.gps_state->registerCallback(update, &appdata)) {
-    if(!appdata.track.track) {
-      printf("GPS: no track yet, starting new one\n");
-      appdata.track.track = new track_t();
-    } else
-      printf("GPS: extending existing track\n");
-  }
+  if(!appdata.track.track) {
+    printf("GPS: no track yet, starting new one\n");
+    appdata.track.track = new track_t();
+  } else
+    printf("GPS: extending existing track\n");
 }
 
 void track_enable_gps(appdata_t &appdata, bool enable) {
