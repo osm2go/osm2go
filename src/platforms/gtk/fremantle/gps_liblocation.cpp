@@ -30,9 +30,6 @@
 
 #include <osm2go_cpp.h>
 
-/* force usage of gpsd start/stop */
-#define LL_CONTROL_GPSD
-
 class gps_liblocation_state_t : public gps_state_t {
 public:
   gps_liblocation_state_t(GpsCallback cb, void *context);
@@ -44,10 +41,8 @@ public:
   void updateCallback();
 
   LocationGPSDevice * const device;
-#ifdef LL_CONTROL_GPSD
   LocationGPSDControl * const control;
   bool gps_is_on;
-#endif
   guint idd_changed;
 
   bool fix;
@@ -98,10 +93,8 @@ gps_state_t *gps_state_t::create(GpsCallback cb, void *context) {
 gps_liblocation_state_t::gps_liblocation_state_t(GpsCallback cb, void *context)
   : gps_state_t(cb, context)
   , device(static_cast<LocationGPSDevice *>(g_object_new(LOCATION_TYPE_GPS_DEVICE, nullptr)))
-#ifdef LL_CONTROL_GPSD
   , control(location_gpsd_control_get_default())
   , gps_is_on(false)
-#endif
   , fix(false)
   , enabled(false)
 {
@@ -121,13 +114,11 @@ gps_liblocation_state_t::~gps_liblocation_state_t()
   if(!device)
     return;
 
-#ifdef LL_CONTROL_GPSD
   if(control) {
     g_debug("Having control over GPSD and its running, stopping it");
     if(gps_is_on)
       location_gpsd_control_stop(control);
   }
-#endif
 
   /* Disconnect signal */
   g_signal_handler_disconnect(device, idd_changed);
