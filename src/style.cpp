@@ -272,7 +272,7 @@ std::map<std::string, std::string> style_scan() {
 
     dirguard dir(paths[i].fd);
 
-    if(!dir.valid())
+    if(unlikely(!dir.valid()))
       continue;
 
     int dfd = dir.dirfd();
@@ -285,7 +285,7 @@ std::map<std::string, std::string> style_scan() {
         continue;
 
       struct stat st;
-      if(fstatat(dfd, d->d_name, &st, 0) != 0)
+      if(unlikely(fstatat(dfd, d->d_name, &st, 0) != 0))
         continue;
 
       if(unlikely(!S_ISREG(st.st_mode)))
@@ -294,7 +294,7 @@ std::map<std::string, std::string> style_scan() {
       fullname = paths[i].pathname + d->d_name;
 
       style_t style;
-      if(style_parse(fullname, nullptr, true, style))
+      if(likely(style_parse(fullname, nullptr, true, style)))
         ret[style.name].swap(fullname);
     }
   }
