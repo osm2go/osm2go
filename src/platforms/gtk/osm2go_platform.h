@@ -26,6 +26,7 @@
 #include <osm2go_cpp.h>
 #include <osm2go_stl.h>
 
+class color_t;
 typedef struct _GtkWidget GtkWidget;
 
 namespace osm2go_platform {
@@ -81,6 +82,16 @@ namespace osm2go_platform {
 
     void reset();
   };
+
+  /**
+   * @brief parses a string representation of a color value using
+   * @param str the string to parse
+   * @param color the color object to update
+   * @returns if the given string is a valid color
+   *
+   * The string is expected to begin with a '#'.
+   */
+  bool parse_color_string(const char *str, color_t &color) __attribute__((nonnull(1)));
 };
 
 #endif // OSM2GO_PLATFORM_H

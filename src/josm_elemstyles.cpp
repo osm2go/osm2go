@@ -132,24 +132,10 @@ static bool parse_color(const char *col, color_t &color, ColorMap &colors) {
   bool ret = false;
 
   /* if the color name contains a # it's a hex representation */
-  /* we parse this directly since gdk_color_parse doesn't cope */
-  /* with the alpha channel that may be present */
   const char * const hash = strchr(col, '#');
   std::string colname;
   if(hash) {
-    if (strlen(hash + 1) == 8) {
-      char *err;
-
-      color = strtoul(hash + 1, &err, 16);
-
-      ret = (*err == '\0');
-    } else {
-      GdkColor gdk_color;
-      if(gdk_color_parse(hash, &gdk_color)) {
-        color = color_t(gdk_color.red, gdk_color.green, gdk_color.blue);
-        ret = true;
-      }
-    }
+    ret = osm2go_platform::parse_color_string(hash, color);
     if(ret && hash != col)
       colname.assign(col, hash - col);
   } else {

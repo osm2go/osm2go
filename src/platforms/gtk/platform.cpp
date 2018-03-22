@@ -20,8 +20,14 @@
 #include "osm2go_platform.h"
 #include "osm2go_platform_gtk.h"
 
+#include <color.h>
+#include <pos.h>
+
 #include <algorithm>
 #include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <gdk/gdk.h>
 #include <gtk/gtk.h>
 
 #include <osm2go_annotations.h>
@@ -104,5 +110,25 @@ void osm2go_platform::MappedFile::reset()
     g_mapped_file_free(map);
 #endif
     map = nullptr;
+  }
+}
+
+bool osm2go_platform::parse_color_string(const char *str, color_t &color)
+{
+  /* we parse this directly since gdk_color_parse doesn't cope */
+  /* with the alpha channel that may be present */
+  if (strlen(str + 1) == 8) {
+    char *err;
+
+    color = strtoul(str + 1, &err, 16);
+
+    return (*err == '\0');
+  } else {
+    GdkColor gdk_color;
+    if(gdk_color_parse(str, &gdk_color)) {
+      color = color_t(gdk_color.red, gdk_color.green, gdk_color.blue);
+      return true;
+    }
+    return false;
   }
 }
