@@ -22,15 +22,10 @@
 
 #include <appdata.h>
 #include <misc.h>
+
 #include <osm2go_platform.h>
-
+#include <osm2go_platform_gtk.h>
 #include <osm2go_cpp.h>
-
-static GdkColor color_red() {
-  GdkColor color;
-  gdk_color_parse("#ff0000", &color);
-  return color;
-}
 
 class statusbar_gtk : public statusbar_t {
 public:
@@ -86,8 +81,7 @@ void statusbar_gtk::banner_busy_start(const char *text) {
 
 static void statusbar_highlight(statusbar_t *statusbar, bool highlight) {
   GtkWidget * const w = GTK_STATUSBAR(statusbar->widget)->label;
-  static const GdkColor color = color_red();
-  const GdkColor *col = highlight ? &color : nullptr;
+  const GdkColor *col = highlight ? osm2go_platform::invalid_text_color() : nullptr;
 
   gtk_widget_modify_fg(w, GTK_STATE_NORMAL, col);
   gtk_widget_modify_text(w, GTK_STATE_NORMAL, col);

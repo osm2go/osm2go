@@ -100,10 +100,8 @@ static void callback_modified_lat(GtkWidget *widget) {
 
 /* a entry that is colored red when being "active" */
 static GtkWidget *pos_lat_entry_new(pos_float_t lat) {
-  GdkColor color;
   GtkWidget *widget = entry_new();
-  gdk_color_parse("red", &color);
-  gtk_widget_modify_text(widget, GTK_STATE_PRELIGHT, &color);
+  gtk_widget_modify_text(widget, GTK_STATE_PRELIGHT, osm2go_platform::invalid_text_color());
 
   char str[32];
   pos_lat_str(str, sizeof(str), lat);
@@ -121,10 +119,8 @@ static void callback_modified_lon(GtkWidget *widget) {
 
 /* a entry that is colored red when filled with invalid coordinate */
 static GtkWidget *pos_lon_entry_new(pos_float_t lon) {
-  GdkColor color;
   GtkWidget *widget = entry_new();
-  gdk_color_parse("#ff0000", &color);
-  gtk_widget_modify_text(widget, GTK_STATE_PRELIGHT, &color);
+  gtk_widget_modify_text(widget, GTK_STATE_PRELIGHT, osm2go_platform::invalid_text_color());
 
   char str[32];
   pos_lon_str(str, sizeof(str), lon);
@@ -678,8 +674,6 @@ static gboolean map_gps_update(gpointer data) {
 
 bool area_edit_t::run() {
   GtkWidget *vbox;
-  GdkColor color;
-  gdk_color_parse("red", &color);
 
   area_context_t context(*this,
                          gtk_dialog_new_with_buttons(_("Area editor"),
@@ -761,9 +755,10 @@ bool area_edit_t::run() {
   label = gtk_label_new(_("(recommended min/max diff <0.03 degrees)"));
   gtk_table_attach_defaults(table, label, 0, 3, 2, 3);
 
+  const GdkColor *color = osm2go_platform::invalid_text_color();
   /* error label */
   context.direct.error = gtk_label_new(nullptr);
-  gtk_widget_modify_fg(context.direct.error, GTK_STATE_NORMAL, &color);
+  gtk_widget_modify_fg(context.direct.error, GTK_STATE_NORMAL, color);
   gtk_table_attach_defaults(table, context.direct.error, 0, 3, 3, 4);
 
   gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(table), FALSE, FALSE, 0);
@@ -829,7 +824,7 @@ bool area_edit_t::run() {
 
   /* error label */
   context.extent.error = gtk_label_new(nullptr);
-  gtk_widget_modify_fg(context.extent.error, GTK_STATE_NORMAL, &color);
+  gtk_widget_modify_fg(context.extent.error, GTK_STATE_NORMAL, color);
   gtk_table_attach_defaults(table, context.extent.error, 0, 3, 4, 5);
 
   gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(table), FALSE, FALSE, 0);

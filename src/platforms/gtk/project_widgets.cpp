@@ -583,9 +583,7 @@ static void project_filesize(project_context_t *context) {
   bool stret = fstatat(project->dirfd, project->osmFile.c_str(), &st, 0) == 0 &&
                S_ISREG(st.st_mode);
   if(!stret && errno == ENOENT) {
-    GdkColor color;
-    gdk_color_parse("red", &color);
-    gtk_widget_modify_fg(context->fsize, GTK_STATE_NORMAL, &color);
+    gtk_widget_modify_fg(context->fsize, GTK_STATE_NORMAL, osm2go_platform::invalid_text_color());
 
     str = _("Not downloaded!");
 

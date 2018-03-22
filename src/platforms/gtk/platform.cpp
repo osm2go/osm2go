@@ -132,3 +132,17 @@ bool osm2go_platform::parse_color_string(const char *str, color_t &color)
     return false;
   }
 }
+
+static GdkColor parseRed()
+{
+  GdkColor color;
+  gdk_color_parse("red", &color);
+  return color;
+}
+
+const GdkColor *osm2go_platform::invalid_text_color()
+{
+  static const GdkColor red = parseRed();
+
+  return &red;
+}

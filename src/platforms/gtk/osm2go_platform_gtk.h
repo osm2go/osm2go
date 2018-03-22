@@ -24,6 +24,8 @@
 #include <string>
 #include <vector>
 
+typedef struct _GdkColor GdkColor;
+
 namespace osm2go_platform {
   bool init();
 
@@ -74,6 +76,11 @@ namespace osm2go_platform {
   };
 
   void dialog_size_hint(GtkWindow *window, DialogSizeHint hint);
+
+  /**
+   * @brief returns the color to highlight invalid values (i.e. red)
+   */
+  const GdkColor *invalid_text_color() __attribute__((pure));
 };
 
 #endif // OSM2GO_PLATFORM_GTK_H
