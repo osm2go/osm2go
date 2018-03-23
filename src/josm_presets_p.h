@@ -42,7 +42,6 @@ enum presets_element_type_t {
   WIDGET_TYPE_REFERENCE
 };
 
-struct tag_t;
 struct preset_attach_context;
 
 class presets_element_t {

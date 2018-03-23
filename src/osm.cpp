@@ -24,6 +24,7 @@
 
 #include "osm.h"
 
+#include "cache_set.h"
 #include "icon.h"
 #include "map.h"
 #include "misc.h"
@@ -56,6 +57,8 @@
 #endif
 
 static_assert(sizeof(tag_list_t) == sizeof(tag_t *), "tag_list_t is not exactly as big as a pointer");
+
+static cache_set value_cache; ///< the cache for key, value, and role strings
 
 bool object_t::operator==(const object_t &other) const noexcept
 {
@@ -215,11 +218,6 @@ time_t __attribute__((nonnull(1))) convert_iso8601(const char *str) {
 
 /* -------------------- tag handling ----------------------- */
 
-void tag_t::clear(tag_t &tag) {
-  free(tag.key);
-  free(tag.value);
-}
-
 /**
  * @brief fill tag_t from XML values
  * @param k the key found in XML
@@ -232,12 +230,10 @@ static void tag_from_xml(xmlChar *k, xmlChar *v, std::vector<tag_t> &tags) {
   const char *key = reinterpret_cast<char *>(k);
   const char *value = reinterpret_cast<char *>(v);
 
-  if(likely(key && value && strlen(key) > 0 &&
-                              strlen(value) > 0)) {
-    tags.push_back(tag_t(strdup(key), strdup(value)));
-  } else {
+  if(likely(key != nullptr && value != nullptr && *key != '\0' && *value != '\0'))
+    tags.push_back(tag_t(key, value));
+  else
     printf("incomplete tag key/value %s/%s\n", k, v);
-  }
 
   xmlFree(k);
   xmlFree(v);
@@ -512,9 +508,7 @@ bool tag_list_t::merge(tag_list_t &other)
     tag_t &src = *srcIt;
     /* don't copy "created_by" tag or tags that already */
     /* exist in identical form */
-    if(src.is_creator_tag() || contains(tag_match_functor(src, true))) {
-      tag_t::clear(src);
-    } else {
+    if(!src.is_creator_tag() && !contains(tag_match_functor(src, true))) {
       /* check if same key but with different value is present */
       if(!conflict)
         conflict = contains(tag_match_functor(src, false));
@@ -595,7 +589,7 @@ bool tag_list_t::operator!=(const osm_t::TagMap &t2) const {
 
   // Special case for an empty list as contents is not set in this case and
   // must not be dereferenced. Check if t2 only consists of a creator tag, in
-  // which case both lists would still be considered the same, or not. Not
+  // which case both lists would still be considered the same, or not. No
   // further checks need to be done for the end result.
   const osm_t::TagMap::const_iterator t2End = t2.end();
   bool t2HasCreator = (t2.find("created_by") != t2End);
@@ -662,13 +656,6 @@ bool tag_list_t::hasTagCollisions() const
   return false;
 }
 
-void tag_t::update_value(const char *nvalue)
-{
-  const size_t nlen = strlen(nvalue) + 1;
-  value = static_cast<char *>(g_realloc(value, nlen));
-  memcpy(value, nvalue, nlen);
-}
-
 /* ------------------- node handling ------------------- */
 
 void osm_t::node_free(node_t *node) {
@@ -726,11 +713,6 @@ node_t *osm_t::parse_way_nd(xmlNode *a_node) const {
 
 /* ------------------- relation handling ------------------- */
 
-void osm_members_free(std::vector<member_t> &members) {
-  std::for_each(members.begin(), members.end(), member_t::clear);
-  members.clear();
-}
-
 bool relation_t::is_multipolygon() const {
   const char *tp = tags.get_value("type");
   return tp && (strcmp(tp, "multipolygon") == 0);
@@ -738,7 +720,7 @@ bool relation_t::is_multipolygon() const {
 
 void relation_t::cleanup() {
   tags.clear();
-  osm_members_free(members);
+  members.clear();
 }
 
 void relation_t::remove_member(std::vector<member_t>::iterator it)
@@ -749,7 +731,6 @@ void relation_t::remove_member(std::vector<member_t>::iterator it)
   assert(it->object.is_real());
   assert(it != members.end());
 
-  member_t::clear(*it);
   members.erase(it);
 
   flags |= OSM_FLAG_DIRTY;
@@ -1363,10 +1344,8 @@ xmlChar *osm_generate_xml_changeset(const std::string &comment,
   int len = 0;
 
   /* tags for this changeset */
-  tag_t tag_comment(const_cast<char*>("comment"),
-                    const_cast<char *>(comment.c_str()));
-  tag_t tag_creator(const_cast<char*>("created_by"),
-                    const_cast<char*>(PACKAGE " v" VERSION));
+  tag_t tag_comment = tag_t::uncached("comment", comment.c_str());
+  tag_t tag_creator = tag_t::uncached("created_by", PACKAGE " v" VERSION);
 
   std::unique_ptr<xmlDoc, xmlDocDelete> doc(xmlNewDoc(BAD_CAST "1.0"));
   xmlNodePtr root_node = xmlNewNode(nullptr, BAD_CAST "osm");
@@ -1511,7 +1490,6 @@ void remove_member_functor::operator()(std::pair<item_id_t, relation_t *> pair)
   while((it = std::find(it, itEnd, obj)) != itEnd) {
     printf("  from relation #" ITEM_ID_FORMAT "\n", relation->id);
 
-    member_t::clear(*it);
     it = relation->members.erase(it);
     // refresh end iterator as the vector was modified
     itEnd = relation->members.end();
@@ -1667,28 +1645,26 @@ void reverse_direction_sensitive_tags_functor::operator()(tag_t &etag)
     std::transform(lc_value.begin(), lc_value.end(), lc_value.begin(), ascii_lower);
     // oneway={yes/true/1/-1} is unusual.
     // Favour "yes" and "-1".
-    if (lc_value == DS_ONEWAY_FWD ||
-        lc_value == "true" ||
-        lc_value == "1") {
-      etag.update_value(DS_ONEWAY_REV);
+    if (lc_value == DS_ONEWAY_FWD || lc_value == "true" || lc_value == "1") {
+      etag = tag_t::uncached("oneway", DS_ONEWAY_REV);
       n_tags_altered++;
     } else if (lc_value == DS_ONEWAY_REV) {
-      etag.update_value(DS_ONEWAY_FWD);
+      etag = tag_t::uncached("oneway", DS_ONEWAY_FWD);
       n_tags_altered++;
     } else {
       printf("warning: unknown oneway value: %s\n", etag.value);
     }
   } else if (strcmp(etag.key, "sidewalk") == 0) {
     if (strcasecmp(etag.value, "right") == 0) {
-      etag.update_value("left");
+      etag = tag_t::uncached("sidewalk", "left");
       n_tags_altered++;
     } else if (strcasecmp(etag.value, "left") == 0) {
-      etag.update_value("right");
+      etag = tag_t::uncached("sidewalk", "right");
       n_tags_altered++;
     }
   } else {
     // suffixes
-    char *lastcolon = strrchr(etag.key, ':');
+    const char *lastcolon = strrchr(etag.key, ':');
 
     if (lastcolon != nullptr) {
       static std::vector<std::pair<std::string, std::string> > rtable = rtable_init();
@@ -1698,11 +1674,10 @@ void reverse_direction_sensitive_tags_functor::operator()(tag_t &etag)
           /* length of key that will persist */
           size_t plen = lastcolon - etag.key;
           /* add length of new suffix */
-          etag.key = static_cast<char *>(g_realloc(etag.key, plen + 2 + rtable[i].second.size()));
-          char *lc = etag.key + plen;
-          assert_cmpnum(*lc, ':');
-          /* replace suffix */
-          strcpy(lc + 1, rtable[i].second.c_str());
+          std::string nkey(plen + rtable[i].second.size(), 0);
+          nkey.assign(etag.key, plen + 1);
+          nkey += rtable[i].second;
+          etag.key = value_cache.insert(nkey);
           n_tags_altered++;
           break;
         }
@@ -1744,13 +1719,11 @@ void reverse_roles::operator()(const std::pair<item_id_t, relation_t *> &pair)
   if (member->role == nullptr) {
     printf("null role in route relation -> ignore\n");
   } else if (strcasecmp(member->role, DS_ROUTE_FORWARD) == 0) {
-    free(member->role);
-    member->role = strdup(DS_ROUTE_REVERSE);
+    member->role = DS_ROUTE_REVERSE;
     relation->flags |= OSM_FLAG_DIRTY;
     ++n_roles_flipped;
   } else if (strcasecmp(member->role, DS_ROUTE_REVERSE) == 0) {
-    free(member->role);
-    member->role = strdup(DS_ROUTE_FORWARD);
+    member->role = DS_ROUTE_FORWARD;
     relation->flags |= OSM_FLAG_DIRTY;
     ++n_roles_flipped;
   }
@@ -1822,7 +1795,7 @@ void relation_transfer::operator()(const std::pair<item_id_t, relation_t *> &pai
     printf("way #" ITEM_ID_FORMAT " is part of relation #" ITEM_ID_FORMAT " at position %zu, adding way #" ITEM_ID_FORMAT "\n",
            src->id, relation->id, it - relation->members.begin(), dst->id);
 
-    member_t m(object_t(dst), it->role);
+    member_t m(object_t(dst), *it);
 
     // find out if the relation members are ordered ways, so the split parts should
     // be inserted in a sensible order to keep the relation intact
@@ -1947,7 +1920,7 @@ struct tag_vector_copy_functor {
     if(unlikely(otag.is_creator_tag()))
       return;
 
-    tags.push_back(tag_t(strdup(otag.key), strdup(otag.value)));
+    tags.push_back(otag);
   }
 };
 
@@ -2063,6 +2036,12 @@ std::string object_t::get_name() const {
   return ret;
 }
 
+tag_t::tag_t(const char *k, const char *v)
+  : key(value_cache.insert(k))
+  , value(value_cache.insert(v))
+{
+}
+
 bool tag_t::is_creator_tag() const noexcept {
   return is_creator_tag(key);
 }
@@ -2123,7 +2102,6 @@ const char* tag_list_t::get_value(const char *key) const
 
 void tag_list_t::clear()
 {
-  for_each(tag_t::clear);
   delete contents;
   contents = nullptr;
 }
@@ -2152,17 +2130,16 @@ struct tag_fill_functor {
     if(unlikely(tag_t::is_creator_tag(p.first.c_str())))
       return;
 
-    tags.push_back(tag_t(strdup(p.first.c_str()), strdup(p.second.c_str())));
+    tags.push_back(tag_t(p.first.c_str(), p.second.c_str()));
   }
 };
 
 void tag_list_t::replace(const osm_t::TagMap &ntags)
 {
   clear();
-  if(ntags.empty()) {
-    contents = nullptr;
+  if(ntags.empty())
     return;
-  }
+
   contents = new std::vector<tag_t>();
   contents->reserve(ntags.size());
   std::for_each(ntags.begin(), ntags.end(), tag_fill_functor(*contents));
@@ -2327,7 +2304,7 @@ member_t::member_t(object_t::type_t t) noexcept
 
 member_t::member_t(const object_t &o, const char *r)
   : object(o)
-  , role(r == nullptr ? nullptr : strdup(r))
+  , role(value_cache.insert(r))
 {
 }
 

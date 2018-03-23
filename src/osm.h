@@ -52,7 +52,7 @@ class base_object_t;
 class node_t;
 class relation_t;
 class way_t;
-struct tag_t;
+class tag_t;
 typedef std::vector<relation_t *> relation_chain_t;
 typedef std::vector<way_t *> way_chain_t;
 
@@ -120,17 +120,22 @@ struct object_t {
 struct member_t {
   explicit member_t(object_t::type_t t) noexcept;
   explicit member_t(const object_t &o, const char *r = nullptr);
+  /**
+   * @brief constructor
+   * @param o the object to reference
+   * @param m an existing member to copy the role from
+   *
+   * This is more efficient than the other constructor as the role is either
+   * nullptr or already in the role cache, so no further operations are needed.
+   */
+  member_t(const object_t &o, const member_t &m) noexcept : object(o), role(m.role) {}
 
   object_t object;
-  char   *role;
+  const char *role;
 
   bool operator==(const member_t &other) const noexcept;
   inline bool operator==(const object_t &other) const noexcept
   { return object == other; }
-
-  static inline void clear(member_t &member) {
-    free(member.role);
-  }
 
   /**
    * @brief check function for use in std::find_if
@@ -314,22 +319,26 @@ struct osm_t {
 
 xmlChar *osm_generate_xml_changeset(const std::string &comment, const std::string &src);
 
-struct tag_t {
-  char *key, *value;
-  tag_t(char *k, char *v)
-    : key(k), value(v)
-  { }
+class tag_t {
+  tag_t() {}
+public:
+  const char *key, *value;
+  tag_t(const char *k, const char *v);
+
+  /**
+   * @brief return a tag_t where key and value are not backed by the value cache
+   */
+  static inline tag_t uncached(const char *k, const char *v)
+  {
+    tag_t r;
+    r.key = k;
+    r.value = v;
+    return r;
+  }
 
   bool is_creator_tag() const noexcept;
 
   static bool is_creator_tag(const char *key) noexcept;
-
-  /**
-   * @brief replace the value
-   */
-  void update_value(const char *nvalue);
-
-  static void clear(tag_t &tag);
 };
 
 class tag_list_t {
@@ -617,8 +626,6 @@ protected:
 };
 
 void osm_node_chain_free(node_chain_t &node_chain);
-
-void osm_members_free(std::vector<member_t> &members);
 
 bool osm_t::find_object_by_flags::operator()(std::pair<item_id_t, base_object_t *> pair) {
   return pair.second->flags & flagmask;

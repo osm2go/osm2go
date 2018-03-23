@@ -1,0 +1,6 @@
+#pragma once
+
+#include <tr1/unordered_set>
+namespace std {
+  using tr1::unordered_set;
+};

@@ -494,7 +494,6 @@ static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
     relation->members.swap(members);
     was_changed = true;
   }
-  osm_members_free(members);
 
   if(!was_changed && (relation->flags & OSM_FLAG_DIRTY)) {
     printf("relation " ITEM_ID_FORMAT " has the same members and tags as upstream, discarding diff\n", id);
