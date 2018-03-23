@@ -356,7 +356,10 @@ static void upload_object(osm_upload_context_t &context, base_object_t *obj) {
   if(xml_str) {
     printf("uploading %s " ITEM_ID_FORMAT " to %s\n", obj->apiString(), obj->id, url.c_str());
 
-    if(osm_update_item(context, xml_str.get(), url.c_str(), obj->isNew() ? &obj->id : &obj->version)) {
+    item_id_t tmp;
+    if(osm_update_item(context, xml_str.get(), url.c_str(), obj->isNew() ? &obj->id : &tmp)) {
+      if(obj->isNew())
+        obj->version = tmp;
       obj->flags ^= OSM_FLAG_DIRTY;
       context.project->data_dirty = true;
     }
@@ -386,7 +389,7 @@ void upload_objects<T>::operator()(T *obj)
 static void log_deletion(osm_upload_context_t &context, const base_object_t *obj) {
   assert(obj->flags & OSM_FLAG_DELETED);
 
-  context.appendf(nullptr, _("Deleted %s #" ITEM_ID_FORMAT " (version " ITEM_ID_FORMAT ")\n"),
+  context.appendf(nullptr, _("Deleted %s #" ITEM_ID_FORMAT " (version %u)\n"),
           obj->apiString(), obj->id, obj->version);
 }
 

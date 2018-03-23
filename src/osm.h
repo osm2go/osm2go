@@ -427,14 +427,14 @@ private:
 
 class base_object_t {
 public:
-  explicit base_object_t(item_id_t ver = 0, item_id_t i = ID_ILLEGAL) noexcept;
+  explicit base_object_t(unsigned int ver = 0, item_id_t i = ID_ILLEGAL) noexcept;
 
   item_id_t id;
-  item_id_t version;
   tag_list_t tags;
   time_t time;
   unsigned int flags;
   int user;
+  unsigned int version;
 
   /**
    * @brief replace the tags and set dirty flag if they were actually different
@@ -472,7 +472,7 @@ protected:
 
 class visible_item_t : public base_object_t {
 protected:
-  inline visible_item_t(item_id_t ver = 0, item_id_t i = ID_ILLEGAL) noexcept
+  inline visible_item_t(unsigned int ver = 0, item_id_t i = ID_ILLEGAL) noexcept
     : base_object_t(ver, i)
     , map_item_chain(nullptr)
     , zoom_max(0.0f)
@@ -489,7 +489,7 @@ public:
 class node_t : public visible_item_t {
 public:
   explicit node_t() noexcept;
-  explicit node_t(item_id_t ver, const lpos_t lp, const pos_t &p, item_id_t i = ID_ILLEGAL) noexcept;
+  explicit node_t(unsigned int ver, const lpos_t lp, const pos_t &p, item_id_t i = ID_ILLEGAL) noexcept;
   virtual ~node_t() {}
 
   unsigned int ways;
@@ -514,7 +514,7 @@ typedef std::vector<node_t *> node_chain_t;
 class way_t: public visible_item_t {
 public:
   explicit way_t();
-  explicit way_t(item_id_t ver, item_id_t i = ID_ILLEGAL);
+  explicit way_t(unsigned int ver, item_id_t i = ID_ILLEGAL);
   virtual ~way_t() {}
 
   /* visual representation from elemstyle */
@@ -595,7 +595,7 @@ protected:
 class relation_t : public base_object_t {
 public:
   explicit relation_t();
-  explicit relation_t(item_id_t ver, item_id_t i = ID_ILLEGAL);
+  explicit relation_t(unsigned int ver, item_id_t i = ID_ILLEGAL);
   virtual ~relation_t() {}
 
   std::vector<member_t> members;

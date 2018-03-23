@@ -1294,7 +1294,7 @@ xmlChar *base_object_t::generate_xml(const std::string &changeset) const
     snprintf(str, sizeof(str), ITEM_ID_FORMAT, id);
     xmlNewProp(xml_node, BAD_CAST "id", BAD_CAST str);
   }
-  snprintf(str, sizeof(str), ITEM_ID_FORMAT, version);
+  snprintf(str, sizeof(str), "%u", version);
   xmlNewProp(xml_node, BAD_CAST "version", BAD_CAST str);
   xmlNewProp(xml_node, BAD_CAST "changeset", BAD_CAST changeset.c_str());
 
@@ -2140,12 +2140,12 @@ void tag_list_t::replace(const osm_t::TagMap &ntags)
   std::for_each(ntags.begin(), ntags.end(), tag_fill_functor(*contents));
 }
 
-base_object_t::base_object_t(item_id_t ver, item_id_t i) noexcept
+base_object_t::base_object_t(unsigned int ver, item_id_t i) noexcept
   : id(i)
-  , version(ver)
   , time(0)
-  , flags(version == 0 ? OSM_FLAG_DIRTY : 0)
+  , flags(ver == 0 ? OSM_FLAG_DIRTY : 0)
   , user(0)
+  , version(ver)
 {
 }
 
@@ -2171,8 +2171,8 @@ void base_object_t::osmchange_delete(xmlNodePtr parent_node, const char *changes
 
   xmlNewProp(obj_node, BAD_CAST "id", BAD_CAST id_string().c_str());
 
-  char buf[32] = { 0 };
-  snprintf(buf, sizeof(buf), ITEM_ID_FORMAT, version);
+  char buf[32];
+  snprintf(buf, sizeof(buf), "%u", version);
 
   xmlNewProp(obj_node, BAD_CAST "version", BAD_CAST buf);
   xmlNewProp(obj_node, BAD_CAST "changeset", BAD_CAST changeset);
@@ -2192,7 +2192,7 @@ way_t::way_t()
   memset(&draw, 0, sizeof(draw));
 }
 
-way_t::way_t(item_id_t ver, item_id_t i)
+way_t::way_t(unsigned int ver, item_id_t i)
   : visible_item_t(ver, i)
 {
   memset(&draw, 0, sizeof(draw));
@@ -2320,7 +2320,7 @@ relation_t::relation_t()
 {
 }
 
-relation_t::relation_t(item_id_t ver, item_id_t i)
+relation_t::relation_t(unsigned int ver, item_id_t i)
   : base_object_t(ver, i)
 {
 }
@@ -2368,7 +2368,7 @@ node_t::node_t() noexcept
   memset(&lpos, 0, sizeof(lpos));
 }
 
-node_t::node_t(item_id_t ver, const lpos_t lp, const pos_t &p, item_id_t i) noexcept
+node_t::node_t(unsigned int ver, const lpos_t lp, const pos_t &p, item_id_t i) noexcept
   : visible_item_t(ver, i)
   , ways(0)
   , pos(p)
