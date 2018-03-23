@@ -343,7 +343,7 @@ public:
 
 class tag_list_t {
 public:
-  tag_list_t();
+  inline tag_list_t() noexcept : contents(nullptr) {}
   ~tag_list_t();
 
   /**
@@ -427,7 +427,7 @@ private:
 
 class base_object_t {
 public:
-  explicit base_object_t(item_id_t ver = 0, item_id_t i = ID_ILLEGAL);
+  explicit base_object_t(item_id_t ver = 0, item_id_t i = ID_ILLEGAL) noexcept;
 
   item_id_t id;
   item_id_t version;
@@ -472,7 +472,7 @@ protected:
 
 class visible_item_t : public base_object_t {
 protected:
-  inline visible_item_t(item_id_t ver = 0, item_id_t i = ID_ILLEGAL)
+  inline visible_item_t(item_id_t ver = 0, item_id_t i = ID_ILLEGAL) noexcept
     : base_object_t(ver, i)
     , map_item_chain(nullptr)
     , zoom_max(0.0f)
@@ -488,8 +488,8 @@ public:
 
 class node_t : public visible_item_t {
 public:
-  explicit node_t();
-  explicit node_t(item_id_t ver, const lpos_t lp, const pos_t &p, item_id_t i = ID_ILLEGAL);
+  explicit node_t() noexcept;
+  explicit node_t(item_id_t ver, const lpos_t lp, const pos_t &p, item_id_t i = ID_ILLEGAL) noexcept;
   virtual ~node_t() {}
 
   unsigned int ways;

@@ -2051,11 +2051,6 @@ bool tag_t::is_creator_tag(const char* key) noexcept
   return (strcasecmp(key, "created_by") == 0);
 }
 
-tag_list_t::tag_list_t()
-  : contents(nullptr)
-{
-}
-
 tag_list_t::~tag_list_t()
 {
   clear();
@@ -2145,7 +2140,7 @@ void tag_list_t::replace(const osm_t::TagMap &ntags)
   std::for_each(ntags.begin(), ntags.end(), tag_fill_functor(*contents));
 }
 
-base_object_t::base_object_t(item_id_t ver, item_id_t i)
+base_object_t::base_object_t(item_id_t ver, item_id_t i) noexcept
   : id(i)
   , version(ver)
   , time(0)
@@ -2365,7 +2360,7 @@ void relation_t::members_by_type(unsigned int &nodes, unsigned int &ways, unsign
                 member_counter(nodes, ways, relations));
 }
 
-node_t::node_t()
+node_t::node_t() noexcept
   : visible_item_t()
   , ways(0)
 {
@@ -2373,7 +2368,7 @@ node_t::node_t()
   memset(&lpos, 0, sizeof(lpos));
 }
 
-node_t::node_t(item_id_t ver, const lpos_t lp, const pos_t &p, item_id_t i)
+node_t::node_t(item_id_t ver, const lpos_t lp, const pos_t &p, item_id_t i) noexcept
   : visible_item_t(ver, i)
   , ways(0)
   , pos(p)
