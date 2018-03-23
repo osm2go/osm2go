@@ -21,11 +21,13 @@
 #include <canvas.h>
 #include <diff.h>
 #include <gps.h>
+#include <icon.h>
 #include <iconbar.h>
 #include <josm_presets.h>
 #include "MainUiGtk.h"
 #include <map.h>
 #include <misc.h>
+#include <osm.h>
 #include <osm_api.h>
 #include "osm2go_platform.h"
 #include "osm2go_platform_gtk.h"
@@ -48,6 +50,7 @@
 #include <hildon/hildon-window-stack.h>
 #include <gdk/gdkx.h>
 #include <X11/Xatom.h>
+#include <X11/Xlib.h>
 #define GTK_FM_OK  GTK_RESPONSE_OK
 #define MENU_CHECK_ITEM HildonCheckButton
 #define MENU_CHECK_ITEM_ACTIVE(a) hildon_check_button_get_active(a)
@@ -61,11 +64,13 @@
 
 #include <array>
 #include <cassert>
-#include <cmath>
 #include <cstdio>
 #include <cstring>
 #include <curl/curl.h>
+#include <gdk/gdk.h>
 #include <gdk/gdkkeysyms.h>
+#include <gtk/gtk.h>
+#include <libxml/parser.h>
 
 #include <osm2go_annotations.h>
 #include "osm2go_i18n.h"

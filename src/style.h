@@ -24,11 +24,11 @@
 #include "icon.h"
 #include "osm.h"
 
+#include <map>
 #include <string>
 #include <vector>
 
 struct appdata_t;
-class node_t;
 struct elemstyle_t;
 
 struct style_t {

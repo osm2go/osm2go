@@ -37,6 +37,7 @@
 #include <hildon/hildon-pannable-area.h>
 #endif
 #include <gtk/gtk.h>
+#include <string>
 
 #include <osm2go_annotations.h>
 #include <osm2go_cpp.h>

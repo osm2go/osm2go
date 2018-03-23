@@ -24,6 +24,9 @@
 #include <algorithm>
 #include <array>
 #include <cstring>
+#include <gdk-pixbuf/gdk-pixbuf.h>
+#include <glib.h>
+#include <gtk/gtk.h>
 #include <map>
 #include <memory>
 #include <string>

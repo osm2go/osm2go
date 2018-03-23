@@ -21,7 +21,8 @@
 #define MAP_HL_H
 
 #include "canvas.h"
-#include "osm.h"
+#include "color.h"
+#include "pos.h"
 
 #include <vector>
 

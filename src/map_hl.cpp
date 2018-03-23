@@ -24,7 +24,7 @@
 #include "style.h"
 
 #include <algorithm>
-#include <cstring>
+#include <cstdio>
 #include <memory>
 
 #include <osm2go_cpp.h>

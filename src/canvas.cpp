@@ -40,7 +40,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
-#include <cstring>
+#include <cstdio>
 #include <limits>
 
 #include "osm2go_annotations.h"

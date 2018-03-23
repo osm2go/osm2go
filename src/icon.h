@@ -22,7 +22,6 @@
 
 #include <string>
 
-#include <osm2go_cpp.h>
 #include <osm2go_platform.h>
 
 typedef struct _GdkPixbuf GdkPixbuf;
