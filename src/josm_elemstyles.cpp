@@ -460,9 +460,9 @@ std::vector<elemstyle_t *> josm_elemstyles_load(const char *name) {
 /* ----------------------- cleaning up --------------------- */
 
 static void free_condition(elemstyle_condition_t &cond) {
-  xmlFree(cond.key);
+  free(cond.key);
   if(!cond.isBool)
-    xmlFree(cond.value);
+    free(cond.value);
 }
 
 void josm_elemstyles_free(std::vector<elemstyle_t *> &elemstyles) {
