@@ -1033,6 +1033,9 @@ struct MatchValue {
 
 presets_element_t::Match presets_element_t::parseMatch(const char *matchstring, Match def)
 {
+  if(matchstring == nullptr)
+    return def;
+
   typedef std::vector<MatchValue> VMap;
   static VMap matches;
   if(unlikely(matches.empty())) {
@@ -1043,7 +1046,7 @@ presets_element_t::Match presets_element_t::parseMatch(const char *matchstring, 
     matches.push_back(VMap::value_type("keyvalue!", MatchKeyValue_Force));
   }
   const VMap::const_iterator itEnd = matches.end();
-  const VMap::const_iterator it = !matchstring ? itEnd : std::find_if(std::cbegin(matches),
+  const VMap::const_iterator it = std::find_if(std::cbegin(matches),
                                                itEnd, str_map_find<VMap>(matchstring));
 
   return (it == itEnd) ? def : it->match;
