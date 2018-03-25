@@ -1640,26 +1640,29 @@ static char ascii_lower(char ch) {
 
 void reverse_direction_sensitive_tags_functor::operator()(tag_t &etag)
 {
-  if (strcmp(etag.key, "oneway") == 0) {
+  static const char *oneway = value_cache.insert("oneway");
+  static const char *sidewalk = value_cache.insert("sidewalk");
+
+  if (etag.key == oneway) {
     std::string lc_value = etag.value;
     std::transform(lc_value.begin(), lc_value.end(), lc_value.begin(), ascii_lower);
     // oneway={yes/true/1/-1} is unusual.
     // Favour "yes" and "-1".
     if (lc_value == DS_ONEWAY_FWD || lc_value == "true" || lc_value == "1") {
-      etag = tag_t::uncached("oneway", DS_ONEWAY_REV);
+      etag = tag_t::uncached(oneway, DS_ONEWAY_REV);
       n_tags_altered++;
     } else if (lc_value == DS_ONEWAY_REV) {
-      etag = tag_t::uncached("oneway", DS_ONEWAY_FWD);
+      etag = tag_t::uncached(oneway, DS_ONEWAY_FWD);
       n_tags_altered++;
     } else {
       printf("warning: unknown oneway value: %s\n", etag.value);
     }
-  } else if (strcmp(etag.key, "sidewalk") == 0) {
+  } else if (etag.key == sidewalk) {
     if (strcasecmp(etag.value, "right") == 0) {
-      etag = tag_t::uncached("sidewalk", "left");
+      etag = tag_t::uncached(sidewalk, "left");
       n_tags_altered++;
     } else if (strcasecmp(etag.value, "left") == 0) {
-      etag = tag_t::uncached("sidewalk", "right");
+      etag = tag_t::uncached(sidewalk, "right");
       n_tags_altered++;
     }
   } else {
