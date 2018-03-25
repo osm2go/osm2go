@@ -1679,10 +1679,13 @@ void reverse_direction_sensitive_tags_functor::operator()(tag_t &etag)
       printf("warning: unknown oneway value: %s\n", etag.value);
     }
   } else if (strcmp(etag.key, "sidewalk") == 0) {
-    if (strcasecmp(etag.value, "right") == 0)
+    if (strcasecmp(etag.value, "right") == 0) {
       etag.update_value("left");
-    else if (strcasecmp(etag.value, "left") == 0)
+      n_tags_altered++;
+    } else if (strcasecmp(etag.value, "left") == 0) {
       etag.update_value("right");
+      n_tags_altered++;
+    }
   } else {
     // suffixes
     char *lastcolon = strrchr(etag.key, ':');

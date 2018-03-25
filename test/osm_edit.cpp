@@ -689,7 +689,7 @@ static void test_reverse()
   unsigned int r, rroles;
   w->reverse(&o, r, rroles);
 
-  assert_cmpnum(r, 5);
+  assert_cmpnum(r, 6);
   assert_cmpnum(w->flags, OSM_FLAG_DIRTY);
   assert(w->node_chain.front() == n2);
   assert(w->node_chain.back() == n1);
@@ -730,7 +730,7 @@ static void test_reverse()
   // go back
   w->reverse(&o, r, rroles);
 
-  assert_cmpnum(r, 5);
+  assert_cmpnum(r, 6);
   assert_cmpnum(rroles, 2);
   // the original value was uppercase
   tags.find("oneway")->second = "yes";
