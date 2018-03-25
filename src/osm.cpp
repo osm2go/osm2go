@@ -2080,8 +2080,8 @@ bool tag_list_t::hasRealTags() const noexcept
 struct key_match_functor {
   const char * const key;
   explicit key_match_functor(const char *k) : key(k) {}
-  bool operator()(const tag_t &tag) {
-    return (strcmp(key, tag.key) == 0);
+  inline bool operator()(const tag_t &tag) const {
+    return key == tag.key;
   }
 };
 
@@ -2089,9 +2089,15 @@ const char* tag_list_t::get_value(const char *key) const
 {
   if(!contents)
     return nullptr;
+
+  const char *cacheKey = value_cache.getValue(key);
+  // if the key is not in the cache then it is used nowhere
+  if(unlikely(cacheKey == nullptr))
+    return nullptr;
+
   const std::vector<tag_t>::const_iterator itEnd = contents->end();
   const std::vector<tag_t>::const_iterator it = std::find_if(std::cbegin(*contents),
-                                                             itEnd, key_match_functor(key));
+                                                             itEnd, key_match_functor(cacheKey));
   if(it != itEnd)
     return it->value;
 

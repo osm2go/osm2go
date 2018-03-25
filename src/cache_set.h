@@ -109,4 +109,13 @@ public:
 
     return inner_insert(value.c_str());
   }
+
+  const char *getValue(const char *value) const
+  {
+    const content_type::const_iterator it = contents.find(value);
+    if (unlikely(it == contents.end()))
+      return nullptr;
+
+    return *it;
+  }
 };
