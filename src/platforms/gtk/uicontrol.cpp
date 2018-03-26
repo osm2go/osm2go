@@ -129,16 +129,9 @@ MainUiGtk::MainUiGtk(statusbar_t *s)
 #endif
 }
 
-MainUi *MainUi::instance(statusbar_t * const statusbar)
+void MainUiGtk::setActionEnable(menu_items item, bool en)
 {
-  static MainUiGtk inst(statusbar);
-
-  return &inst;
-}
-
-void MainUi::setActionEnable(menu_items item, bool en)
-{
-  gtk_widget_set_sensitive(static_cast<MainUiGtk *>(this)->menu_item(item), en ? TRUE : FALSE);
+  gtk_widget_set_sensitive(menu_item(item), en ? TRUE : FALSE);
 }
 
 void MainUi::showNotification(const char *message, unsigned int flags)

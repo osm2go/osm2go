@@ -25,11 +25,10 @@ class statusbar_t;
 class MainUi {
 protected:
   MainUi(statusbar_t *s) : statusbar(s) {}
-  ~MainUi() {}
 
   statusbar_t * const statusbar;
 public:
-  static MainUi *instance(statusbar_t * const statusbar);
+  virtual ~MainUi() {}
 
   enum menu_items {
     MENU_ITEM_MAP_HIDE_SEL,
@@ -61,7 +60,7 @@ public:
     Busy = 4 ///< cleared by nullptr + Busy or when setting any other message
   };
 
-  void setActionEnable(menu_items item, bool en);
+  virtual void setActionEnable(menu_items item, bool en) = 0;
 
   /**
    * @brief show a non-dialog notification message to the user

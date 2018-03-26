@@ -211,7 +211,7 @@ cb_menu_download(appdata_t *appdata) {
 
     appdata->uicontrol->showNotification(_("Drawing"), MainUi::Busy);
     appdata->project->parse_osm();
-    diff_restore(appdata->project, appdata->uicontrol);
+    diff_restore(appdata->project, appdata->uicontrol.get());
     appdata->map->paint();
     appdata->uicontrol->showNotification(nullptr, MainUi::Busy);
   }
@@ -583,13 +583,13 @@ menu_append_new_item(appdata_t &appdata, GtkWidget *menu_shell,
 {
   return menu_append_new_item(appdata, menu_shell, activate_cb, nullptr, nullptr,
                               accel_path, accel_key, accel_mods,
-                              static_cast<GtkWidget *>(static_cast<MainUiGtk *>(appdata.uicontrol)->menu_item(item)));
+                              static_cast<GtkWidget *>(static_cast<MainUiGtk *>(appdata.uicontrol.get())->menu_item(item)));
 }
 
 static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
   GtkWidget *item, *submenu;
 
-  MainUiGtk * const mainui = static_cast<MainUiGtk *>(appdata.uicontrol);
+  MainUiGtk * const mainui = static_cast<MainUiGtk *>(appdata.uicontrol.get());
 
   /* -------------------- Project submenu -------------------- */
 
@@ -800,7 +800,7 @@ static void on_submenu_entry_clicked(GtkWidget *menu)
 /* use standard dialog boxes for fremantle submenues */
 static GtkWidget *app_submenu_create(appdata_t &appdata, MainUi::menu_items submenu,
                                      const menu_entry_t *menu, const unsigned int rows) {
-  MainUiGtk * const mainui = static_cast<MainUiGtk *>(appdata.uicontrol);
+  MainUiGtk * const mainui = static_cast<MainUiGtk *>(appdata.uicontrol.get());
   const char *title = hildon_button_get_title(HILDON_BUTTON(mainui->menu_item(submenu)));
   /* create a oridinary dialog box */
   GtkWidget *dialog = gtk_dialog_new_with_buttons(title, GTK_WINDOW(appdata_t::window),
@@ -917,7 +917,7 @@ static HildonAppMenu *app_menu_create(appdata_t &appdata) {
     menu_entry_t(MainUi::SUBMENU_TRACK,           G_CALLBACK(on_submenu_track_clicked))
   } };
 
-  MainUiGtk * const mainui = static_cast<MainUiGtk *>(appdata.uicontrol);
+  MainUiGtk * const mainui = static_cast<MainUiGtk *>(appdata.uicontrol.get());
   HildonAppMenu * const menu = mainui->menuBar();
   for(unsigned int i = 0; i < main_menu.size(); i++) {
     const menu_entry_t &entry = main_menu[i];
@@ -992,7 +992,7 @@ static void menu_create(appdata_internal &appdata, GtkBox *) {
 
 appdata_t::appdata_t(map_state_t &mstate)
   : statusbar(statusbar_t::create())
-  , uicontrol(MainUi::instance(statusbar))
+  , uicontrol(new MainUiGtk(statusbar))
   , project(nullptr)
   , iconbar(nullptr)
   , presets(nullptr)

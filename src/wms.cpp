@@ -349,7 +349,7 @@ static void setMenuEntries(MainUi *uicontrol, bool en)
 static bool setBgImage(appdata_t &appdata, const std::string &filename) {
   bool ret = appdata.map->set_bg_image(filename);
   if(ret)
-    setMenuEntries(appdata.uicontrol, true);
+    setMenuEntries(appdata.uicontrol.get(), true);
   return ret;
 }
 
@@ -541,7 +541,7 @@ void wms_load(appdata_t &appdata) {
       return;
   }
 
-  setMenuEntries(appdata.uicontrol, false);
+  setMenuEntries(appdata.uicontrol.get(), false);
 }
 
 void wms_remove_file(project_t &project) {
@@ -571,7 +571,7 @@ void wms_remove(appdata_t &appdata) {
   if(appdata.map->action.type == MAP_ACTION_BG_ADJUST)
     map_action_cancel(appdata.map);
 
-  setMenuEntries(appdata.uicontrol, false);
+  setMenuEntries(appdata.uicontrol.get(), false);
 
   appdata.map->remove_bg_image();
 

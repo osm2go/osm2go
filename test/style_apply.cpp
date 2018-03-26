@@ -6,6 +6,7 @@
 #include <map.h>
 #include <misc.h>
 #include <style.h>
+#include <uicontrol.h>
 
 #include <osm2go_annotations.h>
 #include <osm2go_cpp.h>

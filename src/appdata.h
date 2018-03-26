@@ -20,7 +20,10 @@
 #ifndef APPDATA_H
 #define APPDATA_H
 
+#include <memory>
+
 #include <osm2go_platform.h>
+#include <osm2go_stl.h>
 
 class gps_state_t;
 class icon_t;
@@ -42,7 +45,7 @@ struct appdata_t {
   static osm2go_platform::Widget *window;
 
   statusbar_t * const statusbar;
-  MainUi * const uicontrol;
+  const std::unique_ptr<MainUi> uicontrol;
 
   project_t *project;
   iconbar_t *iconbar;

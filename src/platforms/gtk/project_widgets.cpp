@@ -433,7 +433,7 @@ static void on_project_edit(select_context_t *context) {
 
         /* and load the (hopefully) new file */
         cur->parse_osm();
-        diff_restore(appdata.project, appdata.uicontrol);
+        diff_restore(appdata.project, appdata.uicontrol.get());
         appdata.map->paint();
 
         appdata.main_ui_enable();

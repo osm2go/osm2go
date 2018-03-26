@@ -394,7 +394,7 @@ void osm_upload(appdata_t &appdata, project_t *project) {
       context.appendf(nullptr, _("Loading OSM ...\n"));
       appdata.project->parse_osm();
       context.appendf(nullptr, _("Applying diff ...\n"));
-      diff_restore(appdata.project, appdata.uicontrol);
+      diff_restore(appdata.project, appdata.uicontrol.get());
       context.appendf(nullptr, _("Painting ...\n"));
       appdata.map->paint();
       context.appendf(nullptr, _("Done!\n"));

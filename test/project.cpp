@@ -5,6 +5,7 @@
 #include <fdguard.h>
 #include <icon.h>
 #include <map.h>
+#include <uicontrol.h>
 
 #include <cassert>
 #include <cerrno>

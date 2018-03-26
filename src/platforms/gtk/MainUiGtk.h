@@ -43,12 +43,15 @@ class MainUiGtk : public MainUi {
   GtkWidget *addMenu(GtkWidget *item);
 public:
   MainUiGtk(statusbar_t *s);
+  virtual ~MainUiGtk() {}
 
   inline GtkWidget *menu_item(menu_items item)
   { return menuitems[item]; }
 
   inline MenuBar *menuBar()
   { return menubar; }
+
+  virtual void setActionEnable(menu_items item, bool en) override;
 
   /**
    * @brief create a new submenu entry in the global menu bar
