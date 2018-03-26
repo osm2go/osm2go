@@ -21,11 +21,9 @@
 #define XML_HELPERS_H
 
 #include <libxml/tree.h>
-#if __cplusplus >= 201103L
 #include <memory>
-#else
+
 #include <osm2go_stl.h>
-#endif
 
 struct xmlDelete {
   inline void operator()(xmlChar *s) {

@@ -52,9 +52,7 @@ enum {
 #include <string>
 #include <vector>
 
-#if __cplusplus < 201103L
 #include <osm2go_stl.h>
-#endif
 
 struct datapath {
 #if __cplusplus >= 201103L
