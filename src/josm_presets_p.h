@@ -332,14 +332,17 @@ public:
 
 #define LRU_MAX 10	///< how many items we want in presets_items::lru at most
 
-struct presets_items {
-  presets_items();
-  ~presets_items();
+class presets_items_internal : public presets_items {
+public:
+  presets_items_internal();
+  ~presets_items_internal();
   std::vector<presets_item_t *> items;
   std::vector<presets_item_t *> chunks;
   std::vector<presets_item_t *> lru;
 
   bool addFile(const std::string &filename, const std::string &basepath, int basefd);
+
+  virtual std::set<std::string> roles(const relation_t *relation, const object_t &obj) const override;
 };
 
 static inline unsigned int widget_rows(unsigned int init, const presets_element_t *w) {

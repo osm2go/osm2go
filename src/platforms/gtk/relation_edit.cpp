@@ -92,7 +92,7 @@ static bool relation_add_item(GtkWidget *parent, relation_t *relation,
                               const object_t &object, const presets_items *presets) {
   g_debug("add object of type %d to relation #" ITEM_ID_FORMAT "", object.type, relation->id);
 
-  const std::set<std::string> &roles = preset_roles(relation, object, presets);
+  const std::set<std::string> &roles = presets->roles(relation, object);
 
   /* ask the user for the role of the new object in this relation */
   /* ------------------ role dialog ---------------- */

@@ -25,18 +25,22 @@
 
 #include <osm2go_platform.h>
 
-struct presets_items;
-
-presets_items *josm_presets_load(void);
-void josm_presets_free(presets_items *presets);
-
 struct object_t;
 class relation_t;
 class tag_context_t;
 
+class presets_items {
+protected:
+  presets_items() {}
+public:
+  virtual ~presets_items() {}
+
+  static presets_items *load(void);
+  virtual std::set<std::string> roles(const relation_t *relation, const object_t &obj) const = 0;
+};
+
 std::string josm_icon_name_adjust(const char *name);
 
 osm2go_platform::Widget *josm_build_presets_button(presets_items *presets, tag_context_t *tag_context);
-std::set<std::string> preset_roles(const relation_t *relation, const object_t &obj, const presets_items *presets);
 
 #endif // JOSM_PRESETS_H

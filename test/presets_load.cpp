@@ -159,11 +159,11 @@ static void test_roles(const presets_items *presets)
 
   // object type does not match
   node_t n;
-  std::set<std::string> roles = preset_roles(&r, object_t(&n), presets);
+  std::set<std::string> roles = presets->roles(&r, object_t(&n));
   assert(roles.empty());
 
   way_t w;
-  roles = preset_roles(&r, object_t(&w), presets);
+  roles = presets->roles(&r, object_t(&w));
   assert_cmpnum(roles.size(), 2);
   assert(roles.find("inner") != roles.end());
   assert(roles.find("outer") != roles.end());
@@ -173,7 +173,7 @@ static void test_roles(const presets_items *presets)
   tags.insert(osm_t::TagMap::value_type("type", "boundary"));
   r.tags.replace(tags);
 
-  roles = preset_roles(&r, object_t(&n), presets);
+  roles = presets->roles(&r, object_t(&n));
   assert_cmpnum(roles.size(), 2);
   assert(roles.find("admin_centre") != roles.end());
   assert(roles.find("label") != roles.end());
@@ -181,12 +181,12 @@ static void test_roles(const presets_items *presets)
   r.members.push_back(member_t(object_t(&n), "admin_centre"));
 
   node_t n2;
-  roles = preset_roles(&r, object_t(&n2), presets);
+  roles = presets->roles(&r, object_t(&n2));
   assert_cmpnum(roles.size(), 1);
   assert(roles.find("label") != roles.end());
 
   // check count restriction does not apply if it is 0
-  roles = preset_roles(&r, object_t(&w), presets);
+  roles = presets->roles(&r, object_t(&w));
   assert_cmpnum(roles.size(), 2);
   assert(roles.find("outer") != roles.end());
   assert(roles.find("inner") != roles.end());
@@ -194,7 +194,7 @@ static void test_roles(const presets_items *presets)
   way_t w2;
   r.members.push_back(member_t(object_t(&w2), "outer"));
 
-  roles = preset_roles(&r, object_t(&w), presets);
+  roles = presets->roles(&r, object_t(&w));
   assert_cmpnum(roles.size(), 2);
   assert(roles.find("outer") != roles.end());
   assert(roles.find("inner") != roles.end());
@@ -204,13 +204,13 @@ static void test_roles(const presets_items *presets)
   tags.insert(osm_t::TagMap::value_type("type", "building"));
   r.tags.replace(tags);
 
-  roles = preset_roles(&r, object_t(&n), presets);
+  roles = presets->roles(&r, object_t(&n));
   assert_cmpnum(roles.size(), 1);
   assert(roles.find("entrance") != roles.end());
 
   // check that regexp-roles are not shown
   relation_t r2;
-  roles = preset_roles(&r, object_t(&r2), presets);
+  roles = presets->roles(&r, object_t(&r2));
   assert_cmpnum(roles.size(), 0);
 
   r.cleanup();
@@ -218,15 +218,13 @@ static void test_roles(const presets_items *presets)
 
 int main(int argc, char **argv)
 {
-  struct presets_items *presets;
-
   xmlInitParser();
 
   basedirs.reserve(argc - 1);
   for(int i = 1; i < argc; i++)
     basedirs.push_back(argv[i]);
 
-  presets = josm_presets_load();
+  std::unique_ptr<presets_items_internal> presets(static_cast<presets_items_internal *>(presets_items::load()));
 
   if(!presets) {
     std::cerr << "failed to load presets" << std::endl;
@@ -271,9 +269,8 @@ int main(int argc, char **argv)
 
   std::for_each(presets->items.begin(), presets->items.end(), checkItem);
 
-  test_roles(presets);
+  test_roles(presets.get());
 
-  delete presets;
   xmlCleanupParser();
 
   if(!missingIcons.empty()) {

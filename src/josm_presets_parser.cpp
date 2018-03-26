@@ -162,7 +162,7 @@ class PresetSax {
   std::vector<State> state;
   std::stack<presets_item_t *> items; // the current item stack (i.e. menu layout)
   std::stack<presets_element_t *> widgets; // the current widget stack (i.e. dialog layout)
-  presets_items &presets;
+  presets_items_internal &presets;
   const std::string &basepath;
   const int basedirfd;
   const std::vector<std::string> &langs;
@@ -192,7 +192,7 @@ class PresetSax {
   void dumpState(const char *before = nullptr, const char *after = nullptr) const;
 
 public:
-  explicit PresetSax(presets_items &p, const std::string &b, int basefd);
+  explicit PresetSax(presets_items_internal &p, const std::string &b, int basefd);
 
   bool parse(const std::string &filename);
 
@@ -339,7 +339,7 @@ const std::vector<std::string> &userLangs()
   return lcodes;
 }
 
-PresetSax::PresetSax(presets_items &p, const std::string &b, int basefd)
+PresetSax::PresetSax(presets_items_internal &p, const std::string &b, int basefd)
   : presets(p)
   , basepath(b)
   , basedirfd(basefd)
@@ -390,11 +390,9 @@ void PresetSax::find_link_ref::operator()(PresetSax::LLinks::value_type &l)
   if(unlikely(!px.resolvePresetLink(l.first, l.second))) {
     printf("found preset_link with unmatched preset_name '%s'\n", l.second.c_str());
     find_link_parent fc(l.first);
-    std::vector<presets_item_t *>::const_iterator it =
-        std::find_if(px.presets.items.begin(), px.presets.items.end(), fc);
-    if(it == px.presets.items.end()) {
-      const ChunkMap::const_iterator cit =
-          std::find_if(px.chunks.begin(), px.chunks.end(), fc);
+    const std::vector<presets_item_t *>::const_iterator itEnd = px.presets.items.end();
+    if(std::find_if(std::cbegin(px.presets.items), itEnd, fc) == itEnd) {
+      const ChunkMap::const_iterator cit = std::find_if(px.chunks.begin(), px.chunks.end(), fc);
       assert(cit != px.chunks.end());
     }
   }
@@ -957,7 +955,7 @@ struct move_chunks_functor {
   }
 };
 
-bool presets_items::addFile(const std::string &filename, const std::string &basepath, int basefd)
+bool presets_items_internal::addFile(const std::string &filename, const std::string &basepath, int basefd)
 {
   PresetSax p(*this, basepath, basefd);
   if(!p.parse(filename))
@@ -970,10 +968,10 @@ bool presets_items::addFile(const std::string &filename, const std::string &base
   return true;
 }
 
-struct presets_items *josm_presets_load(void) {
+presets_items *presets_items::load(void) {
   printf("Loading JOSM presets ...\n");
 
-  struct presets_items *presets = new presets_items();
+  std::unique_ptr<presets_items_internal> presets(new presets_items_internal());
 
   const std::string &filename = find_file("defaultpresets.xml");
   if(likely(!filename.empty()))
@@ -1011,19 +1009,13 @@ struct presets_items *josm_presets_load(void) {
     }
   }
 
-  if(unlikely(presets->items.empty())) {
-    delete presets;
+  if(unlikely(presets->items.empty()))
     return nullptr;
-  }
 
-  return presets;
+  return presets.release();
 }
 
 /* ----------------------- cleaning up --------------------- */
-
-void josm_presets_free(struct presets_items *presets) {
-  delete presets;
-}
 
 struct MatchValue {
   MatchValue(const char *n, presets_element_t::Match m) : name(n), match(m) {}
@@ -1193,12 +1185,13 @@ presets_item_group::~presets_item_group()
   std::for_each(items.begin(), items.end(), std::default_delete<presets_item_t>());
 }
 
-presets_items::presets_items()
+presets_items_internal::presets_items_internal()
+  : presets_items()
 {
   lru.reserve(LRU_MAX);
 }
 
-presets_items::~presets_items()
+presets_items_internal::~presets_items_internal()
 {
   std::for_each(items.begin(), items.end(), std::default_delete<presets_item_t>());
   std::for_each(chunks.begin(), chunks.end(), std::default_delete<presets_item_t>());

@@ -164,7 +164,7 @@ void role_collect_functor::operator()(const presets_item::role &role)
   result.insert(role.name);
 }
 
-std::set<std::string> preset_roles(const relation_t *relation, const object_t &obj, const presets_items *presets)
+std::set<std::string> presets_items_internal::roles(const relation_t *relation, const object_t &obj) const
 {
   // collect existing roles first
   role_collect_functor::RoleCountMap existingRoles;
@@ -178,10 +178,10 @@ std::set<std::string> preset_roles(const relation_t *relation, const object_t &o
   std::set<std::string> ret;
   const presets_item *item = nullptr;
   relation_preset_functor fc(relation, &item);
-  const std::vector<presets_item_t *>::const_iterator itEnd = presets->items.end();
+  const std::vector<presets_item_t *>::const_iterator itEnd = items.end();
   role_collect_functor rfc(ret, existingRoles, presets_type_mask(obj));
 
-  if(std::find_if(presets->items.begin(), itEnd, fc) != itEnd)
+  if(std::find_if(items.begin(), itEnd, fc) != itEnd)
     std::for_each(item->roles.begin(), item->roles.end(), rfc);
 
   return ret;

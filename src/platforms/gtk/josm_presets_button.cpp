@@ -349,7 +349,7 @@ static void presets_item_dialog(const presets_item *item) {
     if(changed)
       tag_context->info_tags_replace();
 
-    std::vector<presets_item_t *> &lru = presets_context_t::instance->presets->lru;
+    std::vector<presets_item_t *> &lru = static_cast<presets_items_internal *>(presets_context_t::instance->presets)->lru;
     std::vector<presets_item_t *>::iterator litBegin = lru.begin();
     std::vector<presets_item_t *>::iterator lit = std::find(litBegin, lru.end(), item);
     // if it is already the first item in the list nothing is to do
@@ -705,7 +705,8 @@ GtkWidget *presets_context_t::preset_picker_recent() {
   GtkTreeView *view;
   insert_recent_items<false> fc(this, presets_picker_store(&view));
 
-  std::for_each(presets->items.begin(), presets->items.end(), fc);
+  const std::vector<presets_item_t *> &pitems = static_cast<const presets_items_internal *>(presets)->items;
+  std::for_each(pitems.begin(), pitems.end(), fc);
 
   return presets_picker_embed(view, fc.store, this);
 }
@@ -714,7 +715,8 @@ GtkWidget *presets_context_t::preset_picker_lru() {
   GtkTreeView *view;
   insert_recent_items<true> fc(this, presets_picker_store(&view));
 
-  std::for_each(presets->lru.begin(), presets->lru.end(), fc);
+  const std::vector<presets_item_t *> &pitems = static_cast<const presets_items_internal *>(presets)->items;
+  std::for_each(pitems.begin(), pitems.end(), fc);
 
   return presets_picker_embed(view, fc.store, this);
 }
@@ -788,7 +790,7 @@ presets_context_t::presets_picker(const std::vector<presets_item_t *> &items,
   picker_add_functor fc(this, store, subicon, top_level, show_recent);
 
   std::for_each(items.begin(), items.end(), fc);
-  const std::vector<presets_item_t *> &lru = presets->lru;
+  const std::vector<presets_item_t *> &lru = static_cast<const presets_items_internal *>(presets)->lru;
 
   if(top_level &&
      std::find_if(lru.begin(), lru.end(),
@@ -865,7 +867,9 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event) {
   /* create root picker */
   GtkWidget *hbox = gtk_hbox_new(TRUE, 0);
 
-  GtkWidget *root = presets_context_t::instance->presets_picker(presets_context_t::instance->presets->items, true);
+  GtkWidget *root = presets_context_t::instance->presets_picker(
+                        static_cast<presets_items_internal *>(presets_context_t::instance->presets)->items,
+                                                                true);
   gtk_box_pack_start_defaults(GTK_BOX(hbox), root);
 
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), hbox);

@@ -1030,8 +1030,7 @@ appdata_t::~appdata_t() {
   if(project)
     project->save(nullptr);
 
-  josm_presets_free(presets);
-
+  delete presets;
   delete gps_state;
   delete settings;
   delete style;
@@ -1263,7 +1262,7 @@ static int application_run(const char *proj)
 
   gtk_widget_show_all(appdata_t::window);
 
-  appdata.presets = josm_presets_load();
+  appdata.presets = presets_items::load();
 
   /* let gtk do its thing before loading the data, */
   /* so the user sees something */

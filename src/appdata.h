@@ -32,7 +32,7 @@ class MainUi;
 struct map_state_t;
 class map_t;
 struct osm_t;
-struct presets_items;
+class presets_items;
 struct project_t;
 class statusbar_t;
 struct style_t;

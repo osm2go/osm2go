@@ -28,7 +28,7 @@
 #include <vector>
 
 class map_t;
-struct presets_items;
+class presets_items;
 
 class tag_context_t {
 protected:

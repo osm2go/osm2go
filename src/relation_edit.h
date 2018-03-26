@@ -25,7 +25,7 @@
 class map_t;
 struct object_t;
 struct osm_t;
-struct presets_items;
+class presets_items;
 class relation_t;
 
 void relation_membership_dialog(osm2go_platform::Widget *parent, const presets_items *presets,
