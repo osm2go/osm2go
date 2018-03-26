@@ -71,9 +71,7 @@ namespace std {
       }
 
       // Observers.
-      element_type operator*() const {
-        return *get();
-      }
+      // this has no operator* as returning void& makes the N900 compiler fail
 
       _Tp *operator->() const {
         return get();
@@ -103,6 +101,14 @@ namespace std {
         swap(_M_t.first, __p);
         if (__p != nullptr)
           get_deleter()(__p);
+      }
+
+      /// Exchange the pointer and deleter with another object.
+      void
+      swap(unique_ptr& __u)
+      {
+        using std::swap;
+        swap(_M_t, __u._M_t);
       }
 
     private:

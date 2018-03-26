@@ -180,7 +180,7 @@ bool map_t::key_press_event(unsigned int keyval) {
       map_action_ok(this);
     /* otherwise if info is enabled call that */
     else if(appdata.iconbar->isInfoEnabled())
-      info_dialog(appdata_t::window, this, appdata.project->osm, appdata.presets);
+      info_dialog(appdata_t::window, this, appdata.project->osm, appdata.presets.get());
     break;
 
   case GDK_Escape:   // same as HILDON_HARDKEY_ESC
@@ -229,8 +229,8 @@ static gboolean map_autosave(gpointer data) {
   if(gtk_window_is_active(GTK_WINDOW(appdata_t::window))) {
     g_debug("autosave ...");
 
-    if(likely(map->appdata.project != nullptr)) {
-      track_save(map->appdata.project, map->appdata.track.track);
+    if(likely(map->appdata.project)) {
+      track_save(map->appdata.project.get(), map->appdata.track.track.get());
       map->appdata.project->diff_save();
     }
   } else

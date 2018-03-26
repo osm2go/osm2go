@@ -23,7 +23,10 @@
 #include "osm.h"
 #include "track.h"
 
+#include <memory>
 #include <vector>
+
+#include <osm2go_stl.h>
 
 /* -------- all sizes are in meters ---------- */
 #define MAP_COLOR_NONE   0x0
@@ -62,6 +65,7 @@ struct appdata_t;
 class canvas_t;
 struct canvas_item_t;
 struct map_highlight_t;
+struct style_t;
 struct track_seg_t;
 struct track_t;
 
@@ -155,7 +159,7 @@ public:
                                 // (may be part of a selected way)
   } pen_down;
 
-  struct style_t *&style;
+  std::unique_ptr<style_t> &style;
 
   size_t elements_drawn;	///< number of elements drawn in last segment
 

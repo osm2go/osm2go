@@ -3,8 +3,14 @@
 
 #include <appdata.h>
 #include <fdguard.h>
+#include <gps.h>
 #include <icon.h>
+#include <iconbar.h>
+#include <josm_presets.h>
 #include <map.h>
+#include <project.h>
+#include <statusbar.h>
+#include <style.h>
 #include <uicontrol.h>
 
 #include <cassert>
@@ -22,13 +28,10 @@
 #include <osm2go_platform.h>
 
 appdata_t::appdata_t(map_state_t &mstate)
-  : statusbar(nullptr)
-  , uicontrol(nullptr)
+  : uicontrol(nullptr)
   , map_state(mstate)
   , icons(icon_t::instance())
-  , gps_state(nullptr)
 {
-  track.track = nullptr;
 }
 
 appdata_t::~appdata_t()
@@ -40,16 +43,15 @@ static const char *proj_name = "test_proj";
 static void testNoFiles(const std::string &tmpdir)
 {
   map_state_t dummystate;
-  project_t project(dummystate, proj_name, tmpdir);
 
   appdata_t appdata(dummystate);
-  appdata.project = &project;
+  appdata.project.reset(new project_t(dummystate, proj_name, tmpdir));
 
   assert(!track_restore(appdata));
-  assert_null(appdata.track.track);
+  assert(!appdata.track.track);
 
   const std::string pfile = tmpdir + '/' + std::string(proj_name) + ".proj";
-  assert(!project_read(pfile, &project, std::string(), -1));
+  assert(!project_read(pfile, appdata.project.get(), std::string(), -1));
 
   int fd = open(pfile.c_str(), O_WRONLY | O_CREAT, 0644);
   assert(fd >= 0);
@@ -59,7 +61,7 @@ static void testNoFiles(const std::string &tmpdir)
   fdguard empty(pfile.c_str(), O_RDONLY);
   assert(empty.valid());
 
-  assert(!project_read(pfile, &project, std::string(), -1));
+  assert(!project_read(pfile, appdata.project.get(), std::string(), -1));
 
   unlink(pfile.c_str());
 }

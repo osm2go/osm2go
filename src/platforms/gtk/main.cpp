@@ -101,8 +101,7 @@ struct appdata_internal : public appdata_t {
 
 /* disable/enable main screen control dependant on presence of open project */
 void appdata_t::main_ui_enable() {
-  bool project_valid = (project != nullptr);
-  gboolean osm_valid = (project_valid && (project->osm != nullptr)) ? TRUE : FALSE;
+  gboolean osm_valid = (project && (project->osm != nullptr)) ? TRUE : FALSE;
 
   if(unlikely(window == nullptr)) {
     printf("%s: main window gone\n", __PRETTY_FUNCTION__);
@@ -117,7 +116,7 @@ void appdata_t::main_ui_enable() {
   g_string str;
   const char *cstr = "OSM2go";
 
-  if(project_valid) {
+  if(project) {
 #ifdef FREMANTLE
     str.reset(g_markup_printf_escaped(_("<b>%s</b> - OSM2Go"),
                                       project->name.c_str()));
@@ -136,7 +135,7 @@ void appdata_t::main_ui_enable() {
 
   iconbar->setToolbarEnable(osm_valid == TRUE);
   /* disable all menu entries related to map */
-  uicontrol->setActionEnable(MainUi::SUBMENU_MAP, project_valid);
+  uicontrol->setActionEnable(MainUi::SUBMENU_MAP, project.get());
 
   // those icons that get enabled or disabled depending on OSM data being loaded
 #ifndef FREMANTLE
@@ -158,7 +157,7 @@ void appdata_t::main_ui_enable() {
   gtk_widget_set_sensitive(static_cast<appdata_internal *>(this)->btn_zoom_in, osm_valid);
   gtk_widget_set_sensitive(static_cast<appdata_internal *>(this)->btn_zoom_out, osm_valid);
 
-  if(!project_valid)
+  if(!project)
     uicontrol->showNotification(_("Please load or create a project"));
 }
 
@@ -181,13 +180,13 @@ cb_menu_quit() {
 
 static void
 cb_menu_upload(appdata_t *appdata) {
-  if(appdata->project == nullptr || appdata->project->osm == nullptr)
+  if(!appdata->project || appdata->project->osm == nullptr)
     return;
 
   if(appdata->project->check_demo())
     return;
 
-  osm_upload(*appdata, appdata->project);
+  osm_upload(*appdata, appdata->project.get());
 }
 
 static void
@@ -204,14 +203,14 @@ cb_menu_download(appdata_t *appdata) {
 
   // download
   bool hasMap = appdata->project->osm != nullptr;
-  if(osm_download(appdata_t::window, appdata->project)) {
+  if(osm_download(appdata_t::window, appdata->project.get())) {
     if(hasMap)
       /* redraw the entire map by destroying all map items and redrawing them */
       appdata->map->clear(map_t::MAP_LAYER_OBJECTS_ONLY);
 
     appdata->uicontrol->showNotification(_("Drawing"), MainUi::Busy);
     appdata->project->parse_osm();
-    diff_restore(appdata->project, appdata->uicontrol.get());
+    diff_restore(appdata->project.get(), appdata->uicontrol.get());
     appdata->map->paint();
     appdata->uicontrol->showNotification(nullptr, MainUi::Busy);
   }
@@ -296,12 +295,12 @@ cb_menu_style(appdata_t *appdata) {
 static void
 cb_menu_track_vis(appdata_t *appdata) {
   if(track_visibility_select(appdata_t::window) && appdata->track.track)
-    appdata->map->track_draw(settings_t::instance()->trackVisibility, *appdata->track.track);
+    appdata->map->track_draw(settings_t::instance()->trackVisibility, *appdata->track.track.get());
 }
 
 static void
 cb_menu_save_changes(appdata_t *appdata) {
-  if(likely(appdata->project != nullptr))
+  if(likely(appdata->project))
     appdata->project->diff_save();
   appdata->uicontrol->showNotification(_("Saved local changes"), MainUi::Brief);
 }
@@ -309,7 +308,7 @@ cb_menu_save_changes(appdata_t *appdata) {
 
 static void
 cb_menu_undo_changes(appdata_t *appdata) {
-  project_t * const project = appdata->project;
+  project_t * const project = appdata->project.get();
   // if there is nothing to clean then don't ask
   if (!project->diff_file_present() && project->osm->is_clean(true))
     return;
@@ -330,7 +329,7 @@ cb_menu_undo_changes(appdata_t *appdata) {
 static void
 cb_menu_osm_relations(appdata_t *appdata) {
   /* list relations of all objects */
-  relation_list(appdata_t::window, appdata->map, appdata->project->osm, appdata->presets);
+  relation_list(appdata_t::window, appdata->map, appdata->project->osm, appdata->presets.get());
 }
 
 #ifndef FREMANTLE
@@ -425,9 +424,9 @@ cb_menu_track_import(appdata_t *appdata) {
     appdata->track_clear();
 
     /* load a track */
-    appdata->track.track = track_import(filename.get());
+    appdata->track.track.reset(track_import(filename.get()));
     if(appdata->track.track) {
-      appdata->map->track_draw(settings->trackVisibility, *appdata->track.track);
+      appdata->map->track_draw(settings->trackVisibility, *appdata->track.track.get());
 
       settings->track_path = filename.get();
     }
@@ -498,8 +497,8 @@ cb_menu_track_export(appdata_t *appdata) {
                     "Do you really want to replace it?"))) {
         settings->track_path = filename.get();
 
-        assert(appdata->track.track != nullptr);
-        track_export(appdata->track.track, filename.get());
+        assert(appdata->track.track);
+        track_export(appdata->track.track.get(), filename.get());
       }
     }
   }
@@ -877,7 +876,7 @@ static void submenu_popup(appdata_t &appdata, GtkWidget *menu) {
     TrackVisibility tv = static_cast<TrackVisibility>(combo_box_get_active(combo_widget));
     settings_t * const settings = settings_t::instance();
     if(tv != settings->trackVisibility && appdata.track.track) {
-      appdata.map->track_draw(tv, *appdata.track.track);
+      appdata.map->track_draw(tv, *appdata.track.track.get());
       settings->trackVisibility = tv;
     }
   }
@@ -992,7 +991,7 @@ static void menu_create(appdata_internal &appdata, GtkBox *) {
 
 appdata_t::appdata_t(map_state_t &mstate)
   : statusbar(statusbar_t::create())
-  , uicontrol(new MainUiGtk(statusbar))
+  , uicontrol(new MainUiGtk(statusbar.get()))
   , project(nullptr)
   , iconbar(nullptr)
   , presets(nullptr)
@@ -1030,32 +1029,23 @@ appdata_t::~appdata_t() {
   if(project)
     project->save(nullptr);
 
-  delete presets;
-  delete gps_state;
   delete settings;
-  delete style;
-  delete statusbar;
-  delete iconbar;
-  delete project;
 
   puts("everything is gone");
 }
 
 void appdata_t::track_clear()
 {
-  track_t *tr = track.track;
-  if (tr == nullptr)
+  if (!track.track)
     return;
 
   printf("clearing track\n");
 
   if(likely(map != nullptr))
-    tr->clear();
+    track.track->clear();
 
-  track.track = nullptr;
+  track.track.reset();
   track_menu_set(*this);
-
-  delete tr;
 }
 
 appdata_internal::appdata_internal(map_state_t &mstate)
@@ -1088,8 +1078,7 @@ static void on_window_destroy() {
 
 static gboolean on_window_key_press(appdata_internal *appdata, GdkEventKey *event) {
   /* forward unprocessed key presses to map */
-  if(appdata->project != nullptr && appdata->project->osm != nullptr &&
-     event->type == GDK_KEY_PRESS)
+  if(appdata->project && appdata->project->osm != nullptr && event->type == GDK_KEY_PRESS)
     return appdata->map->key_press_event(event->keyval) ? TRUE : FALSE;
 
   return FALSE;
@@ -1262,7 +1251,7 @@ static int application_run(const char *proj)
 
   gtk_widget_show_all(appdata_t::window);
 
-  appdata.presets = presets_items::load();
+  appdata.presets.reset(presets_items::load());
 
   /* let gtk do its thing before loading the data, */
   /* so the user sees something */
@@ -1323,11 +1312,11 @@ static int application_run(const char *proj)
 
   puts("gtk_main() left");
 
-  track_save(appdata.project, appdata.track.track);
+  track_save(appdata.project.get(), appdata.track.track.get());
   appdata.track_clear();
 
   /* save a diff if there are dirty entries */
-  if(likely(appdata.project != nullptr))
+  if(likely(appdata.project))
     appdata.project->diff_save();
 
   return 0;

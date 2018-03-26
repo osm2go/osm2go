@@ -78,7 +78,7 @@ public:
 };
 
 static void on_info_clicked(appdata_t *appdata) {
-  info_dialog(appdata_t::window, appdata->map, appdata->project->osm, appdata->presets);
+  info_dialog(appdata_t::window, appdata->map, appdata->project->osm, appdata->presets.get());
 }
 
 static void on_node_add_clicked(map_t *map) {
@@ -315,7 +315,7 @@ iconbar_gtk::iconbar_gtk(appdata_t& appdata)
 
 GtkWidget *iconbar_t::create(appdata_t &appdata) {
   iconbar_gtk * const iconbar = new iconbar_gtk(appdata);
-  appdata.iconbar = iconbar;
+  appdata.iconbar.reset(iconbar);
 
 #ifdef FINGER_UI
   gtk_widget_show_all(iconbar->menu);
@@ -364,8 +364,8 @@ GtkWidget *iconbar_t::create(appdata_t &appdata) {
 /* fremantle. technically they are still part of the iconbar and thus */
 /* are registered there */
 void iconbar_register_buttons(appdata_t &appdata, GtkWidget *ok, GtkWidget *cancel) {
-  assert(appdata.iconbar != nullptr);
-  iconbar_gtk * const iconbar = static_cast<iconbar_gtk *>(appdata.iconbar);
+  assert(appdata.iconbar);
+  iconbar_gtk * const iconbar = static_cast<iconbar_gtk *>(appdata.iconbar.get());
 
   iconbar->ok = ok;
   g_signal_connect_swapped(ok, "clicked", G_CALLBACK(map_action_ok), appdata.map);

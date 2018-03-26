@@ -268,7 +268,7 @@ void map_edit_way_add_ok(map_t *map) {
   map->action.way = nullptr;
 
   /* let the user specify some tags for the new way */
-  info_dialog(appdata_t::window, map, osm, map->appdata.presets);
+  info_dialog(appdata_t::window, map, osm, map->appdata.presets.get());
 }
 
 /* -------------------------- way_node_add ----------------------- */

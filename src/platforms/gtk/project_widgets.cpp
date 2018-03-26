@@ -105,7 +105,7 @@ project_context_t::project_context_t(appdata_t &a, project_t *p, gboolean n,
 #ifdef SERVER_EDITABLE
   , server(entry_new(EntryFlagsNoAutoCap))
 #endif
-  , area_edit(a.gps_state, project->bounds, dlg)
+  , area_edit(a.gps_state.get(), project->bounds, dlg)
   , projects(j)
 {
 }
@@ -356,7 +356,7 @@ static void on_project_new(select_context_t *context) {
 
     GtkTreeIter iter;
     const gchar *status_stock_id = project_get_status_icon_stock_id(
-                                         context->appdata.project, project);
+                                         context->appdata.project.get(), project);
     gtk_list_store_append(GTK_LIST_STORE(context->store.get()), &iter);
     gtk_list_store_set(GTK_LIST_STORE(context->store.get()), &iter,
 		       PROJECT_COL_NAME,        project->name.c_str(),
@@ -395,7 +395,7 @@ static void on_project_edit(select_context_t *context) {
 
     //     gtk_tree_model_get(model, &iter, PROJECT_COL_DATA, &project, -1);
     appdata_t &appdata = context->appdata;
-    const gchar *status_stock_id = project_get_status_icon_stock_id(appdata.project, project);
+    const gchar *status_stock_id = project_get_status_icon_stock_id(appdata.project.get(), project);
     gtk_list_store_set(GTK_LIST_STORE(model), &iter,
                        PROJECT_COL_NAME, project->name.c_str(),
                        PROJECT_COL_STATUS, status_stock_id,
@@ -403,8 +403,8 @@ static void on_project_edit(select_context_t *context) {
                        -1);
 
     /* check if we have actually editing the currently open project */
-    if(appdata.project != nullptr && appdata.project->name == project->name) {
-      project_t *cur = appdata.project;
+    if(appdata.project && appdata.project->name == project->name) {
+      project_t *cur = appdata.project.get();
 
       g_debug("edited project was actually the active one!");
 
@@ -433,7 +433,7 @@ static void on_project_edit(select_context_t *context) {
 
         /* and load the (hopefully) new file */
         cur->parse_osm();
-        diff_restore(appdata.project, appdata.uicontrol.get());
+        diff_restore(appdata.project.get(), appdata.uicontrol.get());
         appdata.map->paint();
 
         appdata.main_ui_enable();
@@ -473,7 +473,7 @@ struct project_list_add {
   GtkTreeIter &seliter;
   bool &has_sel;
   project_list_add(GtkListStore *s, appdata_t &a, GtkTreeIter &l, bool &h)
-    : store(s), cur_proj(a.project), pos(a.gps_state->get_pos()), check_pos(pos.valid())
+    : store(s), cur_proj(a.project.get()), pos(a.gps_state->get_pos()), check_pos(pos.valid())
     , seliter(l), has_sel(h) {}
   void operator()(const project_t *project);
 };
@@ -628,7 +628,7 @@ static void project_filesize(project_context_t *context) {
 /* a project may currently be open. "unsaved changes" then also */
 /* means that the user may have unsaved changes */
 bool project_context_t::active_n_dirty() const {
-  if(appdata.project != nullptr && appdata.project->osm != nullptr &&
+  if(appdata.project && appdata.project->osm != nullptr &&
      appdata.project->name == project->name) {
     g_debug("editing the currently open project");
 

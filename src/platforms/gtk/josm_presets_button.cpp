@@ -827,16 +827,18 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event) {
 
   g_debug("button press %d", event->button);
 
+  presets_items_internal *pinternal = static_cast<presets_items_internal *>(presets_context_t::instance->presets);
+
 #ifndef PICKER_MENU
   (void)widget;
 
   if (!presets_context_t::instance->menu) {
     GtkWidget *matches = nullptr;
-    presets_context_t::instance->menu.reset(build_menu(presets_context_t::instance->presets->items, &matches));
-    if(!presets_context_t::instance->presets->lru.empty()) {
+    presets_context_t::instance->menu.reset(build_menu(pinternal->items, &matches));
+    if(!pinternal->lru.empty()) {
       // This will not update the menu while the dialog is open. Not worth the effort.
       GtkWidget *menu_item = gtk_menu_item_new_with_label(_("Last used presets"));
-      GtkWidget *lrumenu = build_menu(presets_context_t::instance->presets->lru, NULL);
+      GtkWidget *lrumenu = build_menu(pinternal->lru, nullptr);
 
       gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item), lrumenu);
       gtk_menu_shell_prepend(GTK_MENU_SHELL(presets_context_t::instance->menu.get()), gtk_separator_menu_item_new());
@@ -867,9 +869,7 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event) {
   /* create root picker */
   GtkWidget *hbox = gtk_hbox_new(TRUE, 0);
 
-  GtkWidget *root = presets_context_t::instance->presets_picker(
-                        static_cast<presets_items_internal *>(presets_context_t::instance->presets)->items,
-                                                                true);
+  GtkWidget *root = presets_context_t::instance->presets_picker(pinternal->items, true);
   gtk_box_pack_start_defaults(GTK_BOX(hbox), root);
 
   gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), hbox);

@@ -550,7 +550,7 @@ static bool wms_layer_dialog(selected_context *ctx, const wms_layer_t::list &lay
 }
 
 void wms_import(appdata_t &appdata) {
-  assert(appdata.project != nullptr);
+  assert(appdata.project);
 
   /* this cancels any wms adjustment in progress */
   if(appdata.map->action.type == MAP_ACTION_BG_ADJUST)
@@ -570,11 +570,11 @@ void wms_import(appdata_t &appdata) {
   if(!wms_server_dialog(appdata, &wms))
     return;
 
-  wms_layer_t::list layers = wms_get_layers(appdata.project, wms);
+  wms_layer_t::list layers = wms_get_layers(appdata.project.get(), wms);
   if(layers.empty())
     return;
 
-  selected_context ctx(appdata.project);
+  selected_context ctx(appdata.project.get());
 
   if(wms_layer_dialog(&ctx, layers))
     wms_get_selected_layer(appdata, wms, layers, ctx.selected);

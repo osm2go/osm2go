@@ -1217,7 +1217,7 @@ void map_t::button_release(int x, int y) {
       map_node_select(this, node);
 
       /* let the user specify some tags for the new node */
-      info_dialog(appdata_t::window, this, osm, appdata.presets);
+      info_dialog(appdata_t::window, this, osm, appdata.presets.get());
     }
     break;
   }
@@ -1493,7 +1493,7 @@ void map_action_ok(map_t *map) {
       map_node_select(map, node);
 
       /* let the user specify some tags for the new node */
-      info_dialog(appdata_t::window, map, osm, map->appdata.presets);
+      info_dialog(appdata_t::window, map, osm, map->appdata.presets.get());
     }
     }
 

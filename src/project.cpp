@@ -292,13 +292,13 @@ std::vector<project_t *> project_scan(map_state_t &ms, const std::string &base_p
 void project_close(appdata_t &appdata) {
   printf("closing current project\n");
 
-  project_t *project = appdata.project;
   /* Save track and turn off the handler callback */
-  track_save(project, appdata.track.track);
+  track_save(appdata.project.get(), appdata.track.track.get());
   appdata.track_clear();
 
   appdata.map->clear(map_t::MAP_LAYER_ALL);
-  appdata.project = nullptr;
+  std::unique_ptr<project_t> project;
+  project.swap(appdata.project);
 
   project->diff_save();
 
@@ -307,8 +307,6 @@ void project_close(appdata_t &appdata) {
 
   /* update project file on disk */
   project->save();
-
-  delete project;
 }
 
 void project_delete(project_t *project) {
@@ -387,7 +385,7 @@ static bool project_open(appdata_t &appdata, const std::string &name) {
 
   printf("project_open: loading osm %s\n", project->osmFile.c_str());
   project->parse_osm();
-  appdata.project = project.release();
+  appdata.project.reset(project.release());
 
   return appdata.project->osm != nullptr;
 }
@@ -438,7 +436,7 @@ static bool project_load_inner(appdata_t &appdata, const std::string &name) {
   if(unlikely(appdata_t::window == nullptr))
     return false;
 
-  diff_restore(appdata.project, appdata.uicontrol.get());
+  diff_restore(appdata.project.get(), appdata.uicontrol.get());
 
   /* prepare colors etc, draw data and adjust scroll/zoom settings */
   osm2go_platform::process_events();
@@ -454,7 +452,7 @@ static bool project_load_inner(appdata_t &appdata, const std::string &name) {
 
   appdata.track_clear();
   if(track_restore(appdata))
-    appdata.map->track_draw(settings_t::instance()->trackVisibility, *appdata.track.track);
+    appdata.map->track_draw(settings_t::instance()->trackVisibility, *appdata.track.track.get());
 
   /* finally load a background if present */
   osm2go_platform::process_events();
@@ -476,8 +474,7 @@ bool project_load(appdata_t &appdata, const std::string &name) {
   if(unlikely(!ret)) {
     printf("project loading interrupted by user\n");
 
-    delete appdata.project;
-    appdata.project = nullptr;
+    appdata.project.reset();
   }
   return ret;
 }

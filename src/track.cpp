@@ -126,7 +126,7 @@ void track_menu_set(appdata_t &appdata) {
   if(unlikely(appdata_t::window == nullptr))
     return;
 
-  bool present = (appdata.track.track != nullptr);
+  bool present = static_cast<bool>(appdata.track.track);
 
   /* if a track is present, then it can be cleared or exported */
   appdata.uicontrol->setActionEnable(MainUi::MENU_ITEM_TRACK_CLEAR, present);
@@ -319,7 +319,7 @@ void track_export(const track_t *track, const char *filename) {
 /* ----------------------  loading track --------------------------- */
 
 bool track_restore(appdata_t &appdata) {
-  const project_t *project = appdata.project;
+  const project_t *project = appdata.project.get();
 
   /* first try to open a backup which is only present if saving the */
   /* actual diff didn't succeed */
@@ -344,8 +344,8 @@ bool track_restore(appdata_t &appdata) {
   }
 
   if (ret) {
-    appdata.track.track = track_read(trk_name.c_str(), false);
-    ret = appdata.track.track != nullptr;
+    appdata.track.track.reset(track_read(trk_name.c_str(), false));
+    ret = static_cast<bool>(appdata.track.track);
   }
 
   track_menu_set(appdata);
@@ -355,7 +355,7 @@ bool track_restore(appdata_t &appdata) {
   return ret;
 }
 
-static void track_end_segment(track_t *track) {
+static void track_end_segment(std::unique_ptr<track_t> &track) {
   if(!track) return;
 
   if(track->active) {
@@ -375,13 +375,12 @@ static void track_end_segment(track_t *track) {
  * @retval false if the GPS position marker needs to be redrawn (i.e. the position changed)
  */
 static bool track_append_position(appdata_t &appdata, const pos_t &pos, float alt, const lpos_t lpos) {
-  track_t *track = appdata.track.track;
-
   /* no track at all? might be due to a "clear track" while running */
-  if(unlikely(!track)) {
+  if(unlikely(!appdata.track.track)) {
     printf("restarting after \"clear\"\n");
-    track = appdata.track.track = new track_t();
+    appdata.track.track.reset(new track_t());
   }
+  track_t * const track = appdata.track.track.get();
 
   track_menu_set(appdata);
 
@@ -451,7 +450,7 @@ int track_t::gps_position_callback(void *context) {
 
   /* ignore updates while no valid osm file is loaded, e.g. when switching */
   /* projects */
-  if(unlikely(appdata.project == nullptr || appdata.project->osm == nullptr))
+  if(unlikely(!appdata.project || appdata.project->osm == nullptr))
     return 1;
 
   /* the map is only gone of the main screen is being closed */
@@ -495,7 +494,7 @@ static void track_do_enable_gps(appdata_t &appdata) {
 
   if(!appdata.track.track) {
     printf("GPS: no track yet, starting new one\n");
-    appdata.track.track = new track_t();
+    appdata.track.track.reset(new track_t());
   } else
     printf("GPS: extending existing track\n");
 }

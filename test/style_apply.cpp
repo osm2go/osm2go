@@ -2,9 +2,14 @@
 #include <josm_elemstyles_p.h>
 
 #include <appdata.h>
+#include <gps.h>
 #include <icon.h>
+#include <iconbar.h>
+#include <josm_presets.h>
 #include <map.h>
 #include <misc.h>
+#include <project.h>
+#include <statusbar.h>
 #include <style.h>
 #include <uicontrol.h>
 
@@ -17,16 +22,19 @@
 #include <iostream>
 
 appdata_t::appdata_t(map_state_t &mstate)
-  : statusbar(nullptr)
-  , uicontrol(nullptr)
+  : uicontrol(nullptr)
   , map_state(mstate)
   , icons(icon_t::instance())
-  , gps_state(nullptr)
 {
 }
 
 appdata_t::~appdata_t()
 {
+}
+
+void appdata_t::track_clear()
+{
+  assert_unreachable();
 }
 
 int main(int argc, char **argv)

@@ -455,7 +455,7 @@ void wms_get_selected_layer(appdata_t &appdata, wms_t &wms,
                             const wms_layer_t::list &selected)
 {
   /* get required image size */
-  wms_setup_extent(appdata.project, &wms);
+  wms_setup_extent(appdata.project.get(), &wms);
 
   /* start building url */
   std::string url = wmsUrl(wms, "Map&LAYERS=");
@@ -575,7 +575,7 @@ void wms_remove(appdata_t &appdata) {
 
   appdata.map->remove_bg_image();
 
-  wms_remove_file(*appdata.project);
+  wms_remove_file(*appdata.project.get());
 }
 
 struct server_preset_s {

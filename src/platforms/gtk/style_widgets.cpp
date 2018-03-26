@@ -101,8 +101,7 @@ static void style_change(appdata_t &appdata, const std::string &name,
   /* let gtk clean up first */
   process_events();
 
-  delete appdata.style;
-  appdata.style = nstyle;
+  appdata.style.reset(nstyle);
 
   /* canvas background may have changed */
   appdata.map->set_bg_color_from_style();

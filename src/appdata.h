@@ -44,23 +44,23 @@ struct appdata_t {
 
   static osm2go_platform::Widget *window;
 
-  statusbar_t * const statusbar;
+  const std::unique_ptr<statusbar_t> statusbar;
   const std::unique_ptr<MainUi> uicontrol;
 
-  project_t *project;
-  iconbar_t *iconbar;
-  presets_items *presets;
+  std::unique_ptr<project_t> project;
+  std::unique_ptr<iconbar_t> iconbar;
+  std::unique_ptr<presets_items> presets;
 
   struct {
-    track_t *track;
+    std::unique_ptr<track_t> track;
     int warn_cnt;
   } track;
 
   map_state_t &map_state;
   map_t *map;
   icon_t &icons;
-  style_t *style;
-  gps_state_t * const gps_state;
+  std::unique_ptr<style_t> style;
+  const std::unique_ptr<gps_state_t> gps_state;
 
   void track_clear();
   void main_ui_enable();
