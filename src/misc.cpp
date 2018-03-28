@@ -94,8 +94,7 @@ static void vmessagef(osm2go_platform::Widget *parent, GtkMessageType type, GtkB
 void messagef(osm2go_platform::Widget *parent, const char *title, const char *fmt, ...) {
   va_list args;
   va_start( args, fmt );
-  vmessagef(parent, GTK_MESSAGE_INFO,
-	    GTK_BUTTONS_OK, title, fmt, args);
+  vmessagef(parent, GTK_MESSAGE_INFO, GTK_BUTTONS_OK, title, fmt, args);
   va_end( args );
 }
 
@@ -103,16 +102,14 @@ void errorf(osm2go_platform::Widget *parent, const char *fmt, ...) {
   va_list args;
   va_start( args, fmt );
 
-  vmessagef(parent, GTK_MESSAGE_ERROR,
-	    GTK_BUTTONS_CLOSE, _("Error"), fmt, args);
+  vmessagef(parent, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, _("Error"), fmt, args);
   va_end( args );
 }
 
 void warningf(osm2go_platform::Widget *parent, const char *fmt, ...) {
   va_list args;
   va_start( args, fmt );
-  vmessagef(parent, GTK_MESSAGE_WARNING,
-	    GTK_BUTTONS_CLOSE, _("Warning"), fmt, args);
+  vmessagef(parent, GTK_MESSAGE_WARNING, GTK_BUTTONS_CLOSE, _("Warning"), fmt, args);
   va_end( args );
 }
 
@@ -131,12 +128,10 @@ static void on_toggled(GtkWidget *button, int *flags) {
   GtkWidget *dialog = gtk_widget_get_toplevel(button);
 
   if(*flags & MISC_AGAIN_FLAG_DONT_SAVE_NO)
-    gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog),
-				      RESPONSE_NO, !active);
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog), RESPONSE_NO, !active);
 
   if(*flags & MISC_AGAIN_FLAG_DONT_SAVE_YES)
-    gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog),
-				      RESPONSE_YES, !active);
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog), RESPONSE_YES, !active);
 }
 
 bool yes_no_f(osm2go_platform::Widget *parent, unsigned int again_flags, const char *title,

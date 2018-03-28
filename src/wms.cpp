@@ -116,15 +116,13 @@ static wms_layer_t *wms_cap_parse_layer(xmlDocPtr doc, xmlNode *a_node) {
         wms_layer->llbbox.bounds.min = pos_t::fromXmlProperties(cur_node, "miny", "minx");
         wms_layer->llbbox.bounds.max = pos_t::fromXmlProperties(cur_node, "maxy", "maxx");
       } else
-	printf("found unhandled WMT_MS_Capabilities/Capability/Layer/%s\n",
-	       cur_node->name);
+        printf("found unhandled WMT_MS_Capabilities/Capability/Layer/%s\n", cur_node->name);
     }
   }
 
   wms_layer->llbbox.valid = wms_bbox_is_valid(wms_layer->llbbox.bounds);
 
-  printf("------------------- Layer: %s ---------------------------\n",
-	 wms_layer->title.c_str());
+  printf("------------------- Layer: %s ---------------------------\n", wms_layer->title.c_str());
   printf("Name: %s\n", wms_layer->name.c_str());
   printf("EPSG-4326: %s\n", wms_layer->epsg4326?"yes":"no");
   if(wms_layer->llbbox.valid)
@@ -153,16 +151,15 @@ static wms_getmap_t wms_cap_parse_getmap(xmlDocPtr doc, xmlNode *a_node) {
             wms_getmap.format |= it->second;
         }
       } else
-	printf("found unhandled "
-	       "WMT_MS_Capabilities/Capability/Request/GetMap/%s\n",
-	       cur_node->name);
+        printf("found unhandled WMT_MS_Capabilities/Capability/Request/GetMap/%s\n",
+               cur_node->name);
     }
   }
 
   printf("Supported formats: %s%s%s\n",
-	 (wms_getmap.format & WMS_FORMAT_PNG)?"png ":"",
-	 (wms_getmap.format & WMS_FORMAT_GIF)?"gif ":"",
-	 (wms_getmap.format & (WMS_FORMAT_JPG | WMS_FORMAT_JPEG))?"jpg ":"");
+         (wms_getmap.format & WMS_FORMAT_PNG) ? "png " : "",
+         (wms_getmap.format & WMS_FORMAT_GIF) ? "gif " : "",
+         (wms_getmap.format & (WMS_FORMAT_JPG | WMS_FORMAT_JPEG)) ? "jpg " : "");
   return wms_getmap;
 }
 
@@ -172,11 +169,10 @@ static wms_request_t wms_cap_parse_request(xmlDocPtr doc, xmlNode *a_node) {
 
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
-      if(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "GetMap") == 0) {
-	wms_request.getmap = wms_cap_parse_getmap(doc, cur_node);
-      } else
-	printf("found unhandled WMT_MS_Capabilities/Capability/Request/%s\n",
-	       cur_node->name);
+      if(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "GetMap") == 0)
+        wms_request.getmap = wms_cap_parse_getmap(doc, cur_node);
+      else
+        printf("found unhandled WMT_MS_Capabilities/Capability/Request/%s\n", cur_node->name);
     }
   }
 
@@ -190,15 +186,14 @@ static bool wms_cap_parse_cap(xmlDocPtr doc, xmlNode *a_node, wms_cap_t *wms_cap
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "Request") == 0) {
-	wms_cap->request = wms_cap_parse_request(doc, cur_node);
+        wms_cap->request = wms_cap_parse_request(doc, cur_node);
         has_request = true;
       } else if(strcasecmp(reinterpret_cast<const char *>(cur_node->name), "Layer") == 0) {
         wms_layer_t *layer = wms_cap_parse_layer(doc, cur_node);
         if(layer)
           wms_cap->layers.push_back(layer);
       } else
-	printf("found unhandled WMT_MS_Capabilities/Capability/%s\n",
-	       cur_node->name);
+        printf("found unhandled WMT_MS_Capabilities/Capability/%s\n", cur_node->name);
     }
   }
 
@@ -262,8 +257,7 @@ static void wms_setup_extent(project_t *project, wms_t *wms) {
   wms->width = std::min(lmax.x - lmin.x, 2048);
   wms->height = std::min(lmax.y - lmin.y, 2048);
 
-  printf("WMS: required image size = %dx%d\n",
-	 wms->width, wms->height);
+  printf("WMS: required image size = %dx%d\n", wms->width, wms->height);
 }
 
 /* --------------- freeing stuff ------------------- */
@@ -442,7 +436,7 @@ wms_layer_t::list wms_get_layers(project_t *project, wms_t& wms)
 
   if(!at_least_one_ok) {
     errorf(nullptr, _("Server provides no data in the required format!\n\n"
-	     "(epsg4326 and LatLonBoundingBox are mandatory for osm2go)"));
+                      "(epsg4326 and LatLonBoundingBox are mandatory for osm2go)"));
     wms_layers_free(layers);
     layers.clear();
   }
