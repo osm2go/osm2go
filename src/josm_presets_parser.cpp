@@ -47,10 +47,8 @@ typedef std::map<std::string, presets_item *> ChunkMap;
 /* --------------------- presets.xml parsing ----------------------- */
 
 std::string josm_icon_name_adjust(const char *name) {
-  std::string ret;
-
-  if(unlikely(!name))
-    return ret;
+  if(unlikely(name == nullptr))
+    return std::string();
 
   size_t len = strlen(name);
 
@@ -61,9 +59,7 @@ std::string josm_icon_name_adjust(const char *name) {
       len -= 4;
   }
 
-  ret.assign(name, len);
-
-  return ret;
+  return std::string(name, len);
 }
 
 std::string josm_icon_name_adjust(const char *name, const std::string &basepath, int basedirfd) {
