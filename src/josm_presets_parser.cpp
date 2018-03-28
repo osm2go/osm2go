@@ -62,10 +62,7 @@ std::string josm_icon_name_adjust(const char *name) {
   return std::string(name, len);
 }
 
-std::string josm_icon_name_adjust(const char *name, const std::string &basepath, int basedirfd) {
-
-  assert(name != nullptr);
-
+static std::string __attribute__((nonnull(1))) josm_icon_name_adjust(const char *name, const std::string &basepath, int basedirfd) {
   struct stat st;
   if(fstatat(basedirfd, name, &st, 0) == 0 && S_ISREG(st.st_mode))
     return basepath + name;
