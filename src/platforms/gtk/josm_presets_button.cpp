@@ -515,16 +515,10 @@ on_presets_picker_selected(GtkTreeSelection *selection, presets_context_t *conte
 
   presets_item_named *item = nullptr;
   presets_item_group *sub_item = nullptr;
-  char *text = nullptr;
   gtk_tree_model_get(model, &iter,
                      PRESETS_PICKER_COL_SUBMENU_PTR, &sub_item,
                      PRESETS_PICKER_COL_ITEM_PTR, &item,
-                     PRESETS_PICKER_COL_NAME, &text,
                      -1);
-  g_string textGuard(text);
-
-  g_debug("clicked on %s, submenu = %p (%s)", text,
-         sub_item, sub_item ? sub_item->name.c_str() : "");
 
   GtkWidget * const view = GTK_WIDGET(gtk_tree_selection_get_tree_view(selection));
 
@@ -572,6 +566,9 @@ on_presets_picker_selected(GtkTreeSelection *selection, presets_context_t *conte
       // this is always on top level, so all old submenu entries can be removed
       std::for_each(subitBegin, subitEnd, remove_sub);
       context->submenus.clear();
+      char *text = nullptr;
+      gtk_tree_model_get(model, &iter, PRESETS_PICKER_COL_NAME, &text, -1);
+      g_string textGuard(text);
       if (strcmp(text, _("Used presets")) == 0)
         sub = context->preset_picker_recent();
       else
