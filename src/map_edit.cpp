@@ -75,7 +75,7 @@ void map_edit_way_add_segment(map_t *map, int x, int y) {
 
     /* use the existing node if one was touched */
     node_t *node = map->touchnode_get_node();
-    osm_t * const osm = map->appdata.project->osm;
+    osm_t::ref osm = map->appdata.project->osm;
     if(node != nullptr) {
       printf("  re-using node #" ITEM_ID_FORMAT "\n", node->id);
 
@@ -140,8 +140,8 @@ void map_edit_way_add_segment(map_t *map, int x, int y) {
 }
 
 struct map_unref_ways {
-  osm_t * const osm;
-  explicit map_unref_ways(osm_t *o) : osm(o) {}
+  osm_t::ref osm;
+  explicit map_unref_ways(osm_t::ref o) : osm(o) {}
   void operator()(node_t *node);
 };
 
@@ -159,8 +159,8 @@ void map_unref_ways::operator()(node_t* node)
 }
 
 void map_edit_way_add_cancel(map_t *map) {
-  osm_t *osm = map->appdata.project->osm;
-  assert(osm != nullptr);
+  osm_t::ref osm = map->appdata.project->osm;
+  assert(osm);
 
   printf("  removing temporary way\n");
   assert(map->action.way != nullptr);
@@ -205,9 +205,9 @@ void map_draw_nodes::operator()(node_t* node)
 }
 
 void map_edit_way_add_ok(map_t *map) {
-  osm_t *osm = map->appdata.project->osm;
+  osm_t::ref osm = map->appdata.project->osm;
 
-  assert(osm != nullptr);
+  assert(osm);
   assert(map->action.way != nullptr);
 
   /* transfer all nodes that have been created for this way */
@@ -462,7 +462,7 @@ struct find_way_ends {
 };
 
 void map_edit_node_move(map_t *map, map_item_t *map_item, int ex, int ey) {
-  osm_t *osm = map->appdata.project->osm;
+  osm_t::ref osm = map->appdata.project->osm;
 
   assert(map_item->object.type == object_t::NODE);
   node_t *node = map_item->object.node;

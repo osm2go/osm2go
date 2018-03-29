@@ -28,6 +28,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -146,6 +147,8 @@ struct member_t {
 };
 
 struct osm_t {
+  typedef const std::unique_ptr<osm_t> &ref;
+
   enum UploadPolicy {
     Upload_Normal,
     Upload_Discouraged,
@@ -512,6 +515,7 @@ typedef std::vector<node_t *> node_chain_t;
 #define OSM_DRAW_FLAG_BG    (1<<1)
 
 class way_t: public visible_item_t {
+  friend struct osm_t;
 public:
   explicit way_t();
   explicit way_t(unsigned int ver, item_id_t i = ID_ILLEGAL);
@@ -544,7 +548,7 @@ public:
   bool ends_with_node(const node_t *node) const noexcept;
   bool is_closed() const noexcept;
 
-  void reverse(osm_t *osm, unsigned int &tags_flipped, unsigned int &roles_flipped);
+  void reverse(osm_t::ref osm, unsigned int &tags_flipped, unsigned int &roles_flipped);
 
   /**
    * @brief split the way into 2
@@ -562,7 +566,7 @@ public:
    * In case the way is closed @cut_at denotes the first way of the node
    * after splitting. @cut_at_node has no effect in this case.
    */
-  way_t *split(osm_t *osm, node_chain_t::iterator cut_at, bool cut_at_node);
+  way_t *split(osm_t::ref osm, node_chain_t::iterator cut_at, bool cut_at_node);
   const node_t *last_node() const noexcept;
   const node_t *first_node() const noexcept;
   void write_node_chain(xmlNodePtr way_node) const;
@@ -585,7 +589,12 @@ public:
    *
    * @other will be removed.
    */
+private:
   bool merge(way_t *other, osm_t *osm, const std::vector<relation_t *> &rels = std::vector<relation_t *>());
+public:
+  inline bool merge(way_t *other, osm_t::ref osm, const std::vector<relation_t *> &rels = std::vector<relation_t *>())
+  { return merge(other, osm.get(), rels); }
+
 protected:
   virtual void generate_xml_custom(xmlNodePtr xml_node) const override {
     write_node_chain(xml_node);

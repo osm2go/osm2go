@@ -450,7 +450,7 @@ int track_t::gps_position_callback(void *context) {
 
   /* ignore updates while no valid osm file is loaded, e.g. when switching */
   /* projects */
-  if(unlikely(!appdata.project || appdata.project->osm == nullptr))
+  if(unlikely(!appdata.project || !appdata.project->osm))
     return 1;
 
   /* the map is only gone of the main screen is being closed */

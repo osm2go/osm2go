@@ -504,21 +504,20 @@ void osm_do_upload(osm_upload_context_t &context, const osm_t::dirty_t &dirty)
     context.appendf(nullptr, _("CURL init error\n"));
   } else if(likely(osm_create_changeset(context))) {
     /* check for dirty entries */
-    osm_t * const osm = context.osm;
     if(!dirty.nodes.modified.empty()) {
       context.appendf(nullptr, _("Uploading nodes:\n"));
       std::for_each(dirty.nodes.modified.begin(), dirty.nodes.modified.end(),
-                    upload_objects<node_t>(context, osm->nodes));
+                    upload_objects<node_t>(context, context.osm->nodes));
     }
     if(!dirty.ways.modified.empty()) {
       context.appendf(nullptr, _("Uploading ways:\n"));
       std::for_each(dirty.ways.modified.begin(), dirty.ways.modified.end(),
-                    upload_objects<way_t>(context, osm->ways));
+                    upload_objects<way_t>(context, context.osm->ways));
     }
     if(!dirty.relations.modified.empty()) {
       context.appendf(nullptr, _("Uploading relations:\n"));
       std::for_each(dirty.relations.modified.begin(), dirty.relations.modified.end(),
-                    upload_objects<relation_t>(context, osm->relations));
+                    upload_objects<relation_t>(context, context.osm->relations));
     }
     if(!dirty.relations.deleted.empty() || !dirty.ways.deleted.empty() || !dirty.nodes.deleted.empty()) {
       context.appendf(nullptr, _("Deleting objects:\n"));

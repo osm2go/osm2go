@@ -731,8 +731,7 @@ void josm_elemstyles_colorize_way(const style_t *style, way_t *way) {
   f(way);
 }
 
-void josm_elemstyles_colorize_world(style_t *styles, osm_t *osm) {
-
+void josm_elemstyles_colorize_world(style_t *styles, osm_t::ref osm) {
   printf("preparing colors\n");
 
   /* colorize ways */

@@ -172,7 +172,7 @@ struct cmp_user {
  *
  * In case no userid is given a temporary one will be created.
  */
-static int osm_user_insert(osm_t *osm, const char *name, int uid) {
+static int osm_user_insert(osm_t::ref osm, const char *name, int uid) {
   if(unlikely(!name)) {
     osm->users[0] = std::string();
     return 0;
@@ -787,12 +787,12 @@ static void osm_relation_free_pair(std::pair<item_id_t, relation_t *> pair) {
   delete pair.second;
 }
 
-bool osm_t::parse_relation_member(const char *tp, const char *ref, const char *role, std::vector<member_t> &members) {
+bool osm_t::parse_relation_member(const char *tp, const char *refstr, const char *role, std::vector<member_t> &members) {
   if(unlikely(tp == nullptr)) {
     printf("missing type for relation member\n");
     return false;
   }
-  if(unlikely(ref == nullptr)) {
+  if(unlikely(refstr == nullptr)) {
     printf("missing ref for relation member\n");
     return false;
   }
@@ -810,9 +810,9 @@ bool osm_t::parse_relation_member(const char *tp, const char *ref, const char *r
   }
 
   char *endp;
-  item_id_t id = strtoll(ref, &endp, 10);
+  item_id_t id = strtoll(refstr, &endp, 10);
   if(unlikely(*endp != '\0')) {
-    printf("Illegal ref '%s' for relation member\n", ref);
+    printf("Illegal ref '%s' for relation member\n", refstr);
     return false;
   }
 
@@ -851,10 +851,10 @@ bool osm_t::parse_relation_member(const char *tp, const char *ref, const char *r
 
 void osm_t::parse_relation_member(xmlNode *a_node, std::vector<member_t> &members) {
   xmlString tp(xmlGetProp(a_node, BAD_CAST "type"));
-  xmlString ref(xmlGetProp(a_node, BAD_CAST "ref"));
+  xmlString refstr(xmlGetProp(a_node, BAD_CAST "ref"));
   xmlString role(xmlGetProp(a_node, BAD_CAST "role"));
 
-  parse_relation_member(reinterpret_cast<char *>(tp.get()), reinterpret_cast<char *>(ref.get()),
+  parse_relation_member(reinterpret_cast<char *>(tp.get()), reinterpret_cast<char *>(refstr.get()),
                         reinterpret_cast<char *>(role.get()), members);
 }
 
@@ -935,7 +935,7 @@ static void process_tag(xmlTextReaderPtr reader, std::vector<tag_t> &tags) {
   skip_element(reader);
 }
 
-static void process_base_attributes(base_object_t *obj, xmlTextReaderPtr reader, osm_t *osm)
+static void process_base_attributes(base_object_t *obj, xmlTextReaderPtr reader, osm_t::ref osm)
 {
   xmlString prop(xmlTextReaderGetAttribute(reader, BAD_CAST "id"));
   if(likely(prop))
@@ -966,7 +966,7 @@ static void process_base_attributes(base_object_t *obj, xmlTextReaderPtr reader,
     obj->time = convert_iso8601(reinterpret_cast<char *>(prop.get()));
 }
 
-static void process_node(xmlTextReaderPtr reader, osm_t *osm) {
+static void process_node(xmlTextReaderPtr reader, osm_t::ref osm) {
   const pos_t pos = pos_t::fromXmlProperties(reader);
 
   /* allocate a new node structure */
@@ -1007,7 +1007,7 @@ static void process_node(xmlTextReaderPtr reader, osm_t *osm) {
   node->tags.replace(tags);
 }
 
-static node_t *process_nd(xmlTextReaderPtr reader, osm_t *osm) {
+static node_t *process_nd(xmlTextReaderPtr reader, osm_t::ref osm) {
   xmlString prop(xmlTextReaderGetAttribute(reader, BAD_CAST "ref"));
   node_t *node = nullptr;
 
@@ -1025,7 +1025,7 @@ static node_t *process_nd(xmlTextReaderPtr reader, osm_t *osm) {
   return node;
 }
 
-static void process_way(xmlTextReaderPtr reader, osm_t *osm) {
+static void process_way(xmlTextReaderPtr reader, osm_t::ref osm) {
   /* allocate a new way structure */
   way_t *way = new way_t(1);
 
@@ -1066,7 +1066,7 @@ static void process_way(xmlTextReaderPtr reader, osm_t *osm) {
   way->tags.replace(tags);
 }
 
-static bool process_member(xmlTextReaderPtr reader, osm_t *osm, std::vector<member_t> &members) {
+static bool process_member(xmlTextReaderPtr reader, osm_t::ref osm, std::vector<member_t> &members) {
   xmlString tp(xmlTextReaderGetAttribute(reader, BAD_CAST "type"));
   xmlString ref(xmlTextReaderGetAttribute(reader, BAD_CAST "ref"));
   xmlString role(xmlTextReaderGetAttribute(reader, BAD_CAST "role"));
@@ -1075,7 +1075,7 @@ static bool process_member(xmlTextReaderPtr reader, osm_t *osm, std::vector<memb
                                     reinterpret_cast<char *>(role.get()), members);
 }
 
-static void process_relation(xmlTextReaderPtr reader, osm_t *osm) {
+static void process_relation(xmlTextReaderPtr reader, osm_t::ref osm) {
   /* allocate a new relation structure */
   relation_t *relation = new relation_t(1);
 
@@ -1166,12 +1166,12 @@ static osm_t *process_osm(xmlTextReaderPtr reader) {
           return nullptr;
         block = BLOCK_NODES; // next must be nodes, there must not be more than one bounds
       } else if(block == BLOCK_NODES && strcmp(name, node_t::api_string()) == 0) {
-        process_node(reader, osm.get());
+        process_node(reader, osm);
       } else if(block <= BLOCK_WAYS && strcmp(name, way_t::api_string()) == 0) {
-        process_way(reader, osm.get());
+        process_way(reader, osm);
 	block = BLOCK_WAYS;
       } else if(likely(block <= BLOCK_RELATIONS && strcmp(name, relation_t::api_string()) == 0)) {
-        process_relation(reader, osm.get());
+        process_relation(reader, osm);
 	block = BLOCK_RELATIONS;
       } else {
 	printf("something unknown found: %s\n", name);
@@ -1201,8 +1201,8 @@ static osm_t *process_osm(xmlTextReaderPtr reader) {
 }
 
 struct relation_ref_functor {
-  osm_t * const osm;
-  explicit relation_ref_functor(osm_t *o) : osm(o) {}
+  osm_t::ref osm;
+  explicit relation_ref_functor(osm_t::ref o) : osm(o) {}
   void operator()(std::pair<item_id_t, relation_t *> p) {
     std::for_each(p.second->members.begin(), p.second->members.end(), *this);
   }
@@ -1219,7 +1219,7 @@ struct relation_ref_functor {
 };
 
 static osm_t *process_file(const std::string &filename) {
-  osm_t *osm = nullptr;
+  std::unique_ptr<osm_t> osm;
   xmlTextReaderPtr reader;
 
   reader = xmlReaderForFile(filename.c_str(), nullptr, XML_PARSE_NONET);
@@ -1227,10 +1227,10 @@ static osm_t *process_file(const std::string &filename) {
     if(likely(xmlTextReaderRead(reader) == 1)) {
       const char *name = reinterpret_cast<const char *>(xmlTextReaderConstName(reader));
       if(likely(name && strcmp(name, "osm") == 0)) {
-        osm = process_osm(reader);
+        osm.reset(process_osm(reader));
         // relations may have references to other relation, which have greater ids
         // those are not present when the relation itself was created, but may be now
-        if(likely(osm != nullptr))
+        if(likely(osm))
           std::for_each(osm->relations.begin(), osm->relations.end(), relation_ref_functor(osm));
       }
     } else
@@ -1240,7 +1240,7 @@ static osm_t *process_file(const std::string &filename) {
   } else {
     fprintf(stderr, "Unable to open %s\n", filename.c_str());
   }
-  return osm;
+  return osm.release();
 }
 
 /* ----------------------- end of stream parser ------------------- */
@@ -1736,7 +1736,7 @@ void reverse_roles::operator()(const std::pair<item_id_t, relation_t *> &pair)
   // of it.
 }
 
-void way_t::reverse(osm_t *osm, unsigned int &tags_flipped, unsigned int &roles_flipped) {
+void way_t::reverse(osm_t::ref osm, unsigned int &tags_flipped, unsigned int &roles_flipped) {
   tags_flipped = 0;
 
   tags.for_each(reverse_direction_sensitive_tags_functor(tags_flipped));
@@ -1833,7 +1833,7 @@ void relation_transfer::operator()(const std::pair<item_id_t, relation_t *> &pai
   }
 }
 
-way_t *way_t::split(osm_t *osm, node_chain_t::iterator cut_at, bool cut_at_node)
+way_t *way_t::split(osm_t::ref osm, node_chain_t::iterator cut_at, bool cut_at_node)
 {
   assert_cmpnum_op(node_chain.size(), >, 2);
 

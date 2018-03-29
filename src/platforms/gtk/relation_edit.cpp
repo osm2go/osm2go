@@ -43,11 +43,11 @@ using namespace osm2go_platform;
 /* --------------- relation dialog for an item (node or way) ----------- */
 
 struct relitem_context_t {
-  relitem_context_t(object_t &o, const presets_items *pr, osm_t *os);
+  relitem_context_t(object_t &o, const presets_items *pr, osm_t::ref os);
 
   object_t &item;
   const presets_items * const presets;
-  osm_t * const osm;
+  osm_t::ref osm;
   osm2go_platform::WidgetGuard dialog;
   std::unique_ptr<GtkListStore, g_object_deleter> store;
 };
@@ -60,7 +60,7 @@ enum {
   RELITEM_NUM_COLS
 };
 
-relitem_context_t::relitem_context_t(object_t &o, const presets_items *pr, osm_t *os)
+relitem_context_t::relitem_context_t(object_t &o, const presets_items *pr, osm_t::ref os)
   : item(o)
   , presets(pr)
   , osm(os)
@@ -77,11 +77,11 @@ struct entry_insert_text {
 };
 
 struct relation_context_t {
-  inline relation_context_t(map_t *m, osm_t *o, presets_items *p, GtkWidget *d)
+  inline relation_context_t(map_t *m, osm_t::ref o, presets_items *p, GtkWidget *d)
     : map(m), osm(o), presets(p), dialog(d) {}
 
   map_t * const map;
-  osm_t * const osm;
+  osm_t::ref osm;
   presets_items * const presets;
   osm2go_platform::WidgetGuard dialog;
   GtkWidget *list, *show_btn;
@@ -351,7 +351,7 @@ static GtkWidget *relation_item_list_widget(relitem_context_t &context) {
 }
 
 void relation_membership_dialog(GtkWidget *parent, const presets_items *presets,
-                                osm_t *osm, object_t &object) {
+                                osm_t::ref osm, object_t &object) {
   relitem_context_t context(object, presets, osm);
 
   g_string str(g_strdup_printf(_("Relation memberships of %s #" ITEM_ID_FORMAT),
@@ -764,7 +764,7 @@ static GtkWidget *relation_list_widget(relation_context_t &context) {
 }
 
 /* a global view on all relations */
-void relation_list(GtkWidget *parent, map_t *map, osm_t *osm, presets_items *presets) {
+void relation_list(GtkWidget *parent, map_t *map, osm_t::ref osm, presets_items *presets) {
   relation_context_t context(map, osm, presets,
                              gtk_dialog_new_with_buttons(_("All relations"),
                                                          GTK_WINDOW(parent),

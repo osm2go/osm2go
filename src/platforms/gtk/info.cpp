@@ -47,10 +47,10 @@ enum {
 
 class info_tag_context_t : public tag_context_t {
 public:
-  explicit info_tag_context_t(map_t *m, osm_t *os, presets_items *p, const object_t &o);
+  explicit info_tag_context_t(map_t *m, osm_t::ref os, presets_items *p, const object_t &o);
 
   map_t * const map;
-  osm_t * const osm;
+  osm_t::ref osm;
   presets_items * const presets;
   GtkWidget *list;
   std::unique_ptr<GtkListStore, g_object_deleter> store;
@@ -550,7 +550,7 @@ static void info_more(const info_tag_context_t &context) {
 
 /* edit tags of currently selected node or way or of the relation */
 /* given */
-void info_dialog(GtkWidget *parent, map_t *map, osm_t *osm, presets_items *presets) {
+void info_dialog(GtkWidget *parent, map_t *map, osm_t::ref osm, presets_items *presets) {
   bool ret = info_dialog(parent, map, osm, presets, map->selected.object);
 
   /* since nodes being parts of ways but with no tags are invisible, */
@@ -561,7 +561,7 @@ void info_dialog(GtkWidget *parent, map_t *map, osm_t *osm, presets_items *prese
 
 /* edit tags of currently selected node or way or of the relation */
 /* given */
-bool info_dialog(GtkWidget *parent, map_t *map, osm_t *osm, presets_items *presets, object_t &object) {
+bool info_dialog(GtkWidget *parent, map_t *map, osm_t::ref osm, presets_items *presets, object_t &object) {
 
   assert(object.is_real());
 
@@ -650,7 +650,7 @@ tag_context_t::tag_context_t(const object_t &o)
 {
 }
 
-info_tag_context_t::info_tag_context_t(map_t *m, osm_t *os, presets_items *p, const object_t &o)
+info_tag_context_t::info_tag_context_t(map_t *m, osm_t::ref os, presets_items *p, const object_t &o)
   : tag_context_t(o)
   , map(m)
   , osm(os)

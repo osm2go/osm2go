@@ -40,7 +40,7 @@ public:
   osm_upload_context_t(appdata_t &a, project_t *p, const char *c, const char *s);
 
   appdata_t &appdata;
-  osm_t * const osm;
+  osm_t::ref osm;
   project_t * const project;
   const std::string urlbasestr; ///< API base URL, will always end in '/'
 

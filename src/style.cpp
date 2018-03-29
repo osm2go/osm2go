@@ -346,7 +346,7 @@ void style_t::colorize_way(way_t *w) const
   josm_elemstyles_colorize_way(this, w);
 }
 
-void style_t::colorize_world(osm_t *osm)
+void style_t::colorize_world(osm_t::ref osm)
 {
   josm_elemstyles_colorize_world(this, osm);
 }

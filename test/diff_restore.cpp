@@ -24,7 +24,7 @@ void appdata_t::track_clear()
   assert_unreachable();
 }
 
-static void verify_diff(osm_t *osm)
+static void verify_diff(osm_t::ref osm)
 {
   assert_cmpnum(12, osm->nodes.size());
   assert_cmpnum(3, osm->ways.size());
@@ -113,7 +113,7 @@ static void compare_with_file(const void *buf, size_t len, const char *fn)
   assert_cmpmem(fdata.data(), fdata.length(), buf, len);
 }
 
-static void test_osmChange(const osm_t *osm, const char *fn)
+static void test_osmChange(osm_t::ref osm, const char *fn)
 {
    std::unique_ptr<xmlDoc, xmlDocDelete> doc(osmchange_init());
   const char *changeset = "42";
@@ -145,8 +145,8 @@ int main(int argc, char **argv)
   project.osmFile = argv[2] + std::string(".osm");
 
   project.parse_osm();
-  osm_t *osm = project.osm;
-  if(osm == nullptr) {
+  osm_t::ref osm = project.osm;
+  if(!osm) {
     std::cerr << "cannot open " << argv[1] << argv[2] << ": " << strerror(errno) << std::endl;
     return 1;
   }
@@ -207,7 +207,7 @@ int main(int argc, char **argv)
     // and create a new project from that
     project_t sproject(dummystate, argv[2], bpath);
     // CAUTION: osm is shared between the projects now
-    sproject.osm = osm;
+    sproject.osm.reset(osm.get());
 
     // the directory is empty, there can't be any diff
     flags = sproject.diff_restore();
@@ -226,7 +226,7 @@ int main(int argc, char **argv)
     rename(bpath.c_str(), bdiff.c_str());
     assert(!sproject.diff_file_present());
     // saving without OSM data should just do nothing
-    sproject.osm = nullptr;
+    sproject.osm.release();
     // CAUTION: end of sharing
     sproject.diff_save();
     assert(!sproject.diff_file_present());
@@ -236,7 +236,7 @@ int main(int argc, char **argv)
     symlink(origosmpath.c_str(), osmpath.c_str());
     sproject.osmFile = project.osmFile;
     sproject.parse_osm();
-    assert(sproject.osm != nullptr);
+    assert(sproject.osm);
 
     flags = sproject.diff_restore();
     assert_cmpnum(flags, DIFF_RESTORED | DIFF_HAS_HIDDEN);

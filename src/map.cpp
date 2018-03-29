@@ -649,8 +649,8 @@ template<bool b> void free_track_item_chain(track_seg_t &seg) {
 }
 
 static void map_free_map_item_chains(appdata_t &appdata) {
-  osm_t * const osm = appdata.project->osm;
-  if(unlikely(osm == nullptr))
+  osm_t::ref osm = appdata.project->osm;
+  if(unlikely(!osm))
     return;
 
   /* free all map_item_chains */
@@ -812,7 +812,7 @@ static bool map_limit_zoom(map_t *map, double &zoom) {
 bool map_t::scroll_to_if_offscreen(const lpos_t lpos) {
 
   // Ignore anything outside the working area
-  if(unlikely(appdata.project->osm == nullptr))
+  if(unlikely(!appdata.project->osm))
     return false;
 
   if (!appdata.project->osm->bounds.contains(lpos)) {
@@ -1079,8 +1079,8 @@ static void map_touchnode_update(map_t *map, int x, int y) {
   lpos_t pos = map->canvas->window2world(x, y);
   node_t *rnode = nullptr;
   hl_nodes fc(cur_node, pos, map, rnode);
-  osm_t * const osm = map->appdata.project->osm;
-  std::for_each(osm->nodes.begin(), osm->nodes.end(), fc);
+  std::map<item_id_t, node_t *> &nodes = map->appdata.project->osm->nodes;
+  std::for_each(nodes.begin(), nodes.end(), fc);
 
   if(rnode != nullptr) {
     delete map->touchnode;
@@ -1201,7 +1201,7 @@ void map_t::button_release(int x, int y) {
     lpos_t pos = canvas->window2world(x, y);
 
     node_t *node = nullptr;
-    osm_t * const osm = appdata.project->osm;
+    osm_t::ref osm = appdata.project->osm;
     if(!osm->bounds.contains(pos))
       outside_error();
     else {
@@ -1376,7 +1376,7 @@ void map_t::clear(clearLayers layers) {
 }
 
 void map_t::paint() {
-  osm_t * const osm = appdata.project->osm;
+  osm_t::ref osm = appdata.project->osm;
 
   style->colorize_world(osm);
 
@@ -1476,7 +1476,7 @@ void map_action_ok(map_t *map) {
       break;
 
     node_t *node = nullptr;
-    osm_t * const osm = map->appdata.project->osm;
+    osm_t::ref osm = map->appdata.project->osm;
 
     if(!osm->bounds.ll.contains(pos)) {
       map_t::outside_error();
@@ -1549,7 +1549,7 @@ void map_delete_selected(map_t *map) {
   printf("request to delete %s #" ITEM_ID_FORMAT "\n",
          objtype, item.object.obj->id);
 
-  osm_t * const osm = map->appdata.project->osm;
+  osm_t::ref osm = map->appdata.project->osm;
   switch(item.object.type) {
   case object_t::NODE: {
     /* check if this node is part of a way with two nodes only. */

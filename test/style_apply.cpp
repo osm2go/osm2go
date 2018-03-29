@@ -78,12 +78,12 @@ int main(int argc, char **argv)
 
   assert(!style->elemstyles.empty());
 
-  osm_t osm;
+  std::unique_ptr<osm_t> osm(new osm_t());
 
-  memset(&osm.bounds, 0, sizeof(osm.bounds));
+  memset(&osm->bounds, 0, sizeof(osm->bounds));
 
-  node_t * const node = osm.node_new(pos_t(0.0, 0.0));
-  osm.node_attach(node);
+  node_t * const node = osm->node_new(pos_t(0.0, 0.0));
+  osm->node_attach(node);
 
   style->colorize_node(node);
 
@@ -113,7 +113,7 @@ int main(int argc, char **argv)
   tags.insert(osm_t::TagMap::value_type("addr:housenumber", "42"));
   node->tags.replace(tags);
 
-  style->colorize_world(&osm);
+  style->colorize_world(osm);
 
   assert(!style->node_icons.empty());
   assert(style->node_icons[node->id] != nullptr);
@@ -121,9 +121,9 @@ int main(int argc, char **argv)
   assert_cmpnum_op(oldzoom * 1.9, <, node->zoom_max);
 
   way_t * const way = new way_t(0);
-  osm.way_attach(way);
+  osm->way_attach(way);
 
-  style->colorize_world(&osm);
+  style->colorize_world(osm);
   // default values for all ways set in test1.style
   way_t w0;
   w0.draw.width = 3;
@@ -166,13 +166,13 @@ int main(int argc, char **argv)
 
   way_t * const area = new way_t(1);
   area->append_node(node);
-  node_t *tmpn = osm.node_new(pos_t(0.0, 1.0));
-  osm.node_attach(tmpn);
+  node_t *tmpn = osm->node_new(pos_t(0.0, 1.0));
+  osm->node_attach(tmpn);
   area->append_node(tmpn);
-  tmpn = osm.node_new(pos_t(1.0, 1.0));
-  osm.node_attach(tmpn);
+  tmpn = osm->node_new(pos_t(1.0, 1.0));
+  osm->node_attach(tmpn);
   area->append_node(tmpn);
-  osm.way_attach(area);
+  osm->way_attach(area);
 
   assert(!area->is_closed());
   area->append_node(node);
@@ -188,7 +188,7 @@ int main(int argc, char **argv)
   oldicon = style->node_icons[node->id];
   oldzoom = node->zoom_max;
 
-  style->colorize_world(&osm);
+  style->colorize_world(osm);
   assert_cmpnum(way->draw.color, 0xccccccff);
   assert_cmpnum(way->draw.area.color, 0);
   assert_cmpnum(way->draw.width, 1);
@@ -209,7 +209,7 @@ int main(int argc, char **argv)
   node->tags.replace(tags);
   way->tags.replace(tags);
 
-  style->colorize_world(&osm);
+  style->colorize_world(osm);
   assert_cmpnum(way->draw.color, 0xaaaaaaff);
   assert_cmpnum(way->draw.area.color, 0);
   assert_cmpnum(way->draw.width, 2);

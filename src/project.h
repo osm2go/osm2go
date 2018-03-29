@@ -24,9 +24,11 @@
 #include "pos.h"
 
 #include <libxml/parser.h>
+#include <memory>
 #include <string>
 
 #include <osm2go_platform.h>
+#include <osm2go_stl.h>
 
 struct appdata_t;
 struct map_state_t;
@@ -34,7 +36,6 @@ struct osm_t;
 
 struct project_t {
   project_t(map_state_t &ms, const std::string &n, const std::string &base_path);
-  ~project_t();
 
   inline const std::string &server(const std::string &def) const
   { return rserver.empty() ? def : rserver; }
@@ -66,7 +67,7 @@ struct project_t {
   bool isDemo;         // if this is the demo project
   fdguard dirfd;       // filedescriptor of path
 
-  osm_t *osm;          ///< the OSM data
+  std::unique_ptr<osm_t> osm;          ///< the OSM data
 
   void parse_osm();
 

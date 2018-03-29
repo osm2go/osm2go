@@ -97,7 +97,7 @@ struct style_t {
 
   void colorize_node(node_t *n);
   void colorize_way(way_t *w) const;
-  void colorize_world(osm_t *osm);
+  void colorize_world(osm_t::ref osm);
 };
 
 style_t *style_load(const std::string &name);

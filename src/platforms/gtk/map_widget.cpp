@@ -78,7 +78,7 @@ static gboolean map_destroy_event(map_t *map) {
 }
 
 static gboolean map_scroll_event(GtkWidget *, GdkEventScroll *event, map_t *map) {
-  if(map->appdata.project->osm == nullptr)
+  if(unlikely(!map->appdata.project->osm))
     return FALSE;
 
   if(event->type == GDK_SCROLL && map) {
@@ -95,8 +95,8 @@ static gboolean map_scroll_event(GtkWidget *, GdkEventScroll *event, map_t *map)
 
 /* move the background image (wms data) during wms adjustment */
 void map_t::bg_adjust(int x, int y) {
-  const osm_t * const osm = appdata.project->osm;
-  assert(osm != nullptr);
+  osm_t::ref osm = appdata.project->osm;
+  assert(osm);
 
   x += osm->bounds.min.x + bg.offset.x - pen_down.at.x;
   y += osm->bounds.min.y + bg.offset.y - pen_down.at.y;
@@ -105,7 +105,7 @@ void map_t::bg_adjust(int x, int y) {
 }
 
 gboolean map_internal::map_button_event(map_internal *map, GdkEventButton *event) {
-  if(unlikely(map->appdata.project->osm == nullptr))
+  if(unlikely(!map->appdata.project->osm))
     return FALSE;
 
   if(event->button == 1) {
@@ -125,7 +125,7 @@ gboolean map_internal::map_motion_notify_event(GtkWidget *, GdkEventMotion *even
   gint x, y;
   GdkModifierType state;
 
-  if(unlikely(!map->appdata.project || map->appdata.project->osm == nullptr))
+  if(unlikely(!map->appdata.project || map->appdata.project->osm))
     return FALSE;
 
 #if 0 // def FREMANTLE

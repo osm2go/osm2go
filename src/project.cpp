@@ -387,7 +387,7 @@ static bool project_open(appdata_t &appdata, const std::string &name) {
   project->parse_osm();
   appdata.project.reset(project.release());
 
-  return appdata.project->osm != nullptr;
+  return static_cast<bool>(appdata.project->osm);
 }
 
 static bool project_load_inner(appdata_t &appdata, const std::string &name) {
@@ -480,8 +480,7 @@ bool project_load(appdata_t &appdata, const std::string &name) {
 }
 
 void project_t::parse_osm() {
-  delete osm;
-  osm = osm_t::parse(path, osmFile);
+  osm.reset(osm_t::parse(path, osmFile));
 }
 
 project_t::project_t(map_state_t &ms, const std::string &n, const std::string &base_path)
@@ -495,11 +494,6 @@ project_t::project_t(map_state_t &ms, const std::string &n, const std::string &b
 {
   memset(&wms_offset, 0, sizeof(wms_offset));
   memset(&bounds, 0, sizeof(bounds));
-}
-
-project_t::~project_t()
-{
-  delete osm;
 }
 
 void project_t::adjustServer(const char *nserver, const std::string &def)

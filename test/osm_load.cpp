@@ -32,7 +32,7 @@ int main(int argc, char **argv)
 
   xmlInitParser();
 
-  osm_t *osm = osm_t::parse(std::string(), argv[1]);
+  std::unique_ptr<osm_t> osm(osm_t::parse(std::string(), argv[1]));
   if(!osm) {
     std::cerr << "cannot open " << argv[1] << ": " << strerror(errno) << std::endl;
     return 1;
@@ -49,8 +49,6 @@ int main(int argc, char **argv)
     << "Nodes: " << osm->nodes.size()     << ", " << to[0] << " with " << t[0] << " tags" << std::endl
     << "Ways: " << osm->ways.size()      << ", " << to[1] << " with " << t[1] << " tags" << std::endl
     << "Relations: " << osm->relations.size() << ", " << to[2] << " with " << t[2] << " tags" << std::endl;
-
-  delete osm;
 
   xmlCleanupParser();
 

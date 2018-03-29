@@ -166,7 +166,7 @@ void diff_save_relations::operator()(const std::pair<item_id_t, relation_t *> pa
 }
 
 void project_t::diff_save() const {
-  if(unlikely(osm == nullptr))
+  if(unlikely(!osm))
     return;
 
   const std::string &diff_name = diff_filename(this);
@@ -234,7 +234,7 @@ static osm_t::TagMap xml_scan_tags(xmlNodePtr node) {
   return ret;
 }
 
-static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
+static void diff_restore_node(xmlNodePtr node_node, osm_t::ref osm) {
   printf("Restoring node");
 
   /* read properties */
@@ -314,7 +314,7 @@ static void diff_restore_node(xmlNodePtr node_node, osm_t *osm) {
     node->lpos = node->pos.toLpos(osm->bounds);
 }
 
-static void diff_restore_way(xmlNodePtr node_way, osm_t *osm) {
+static void diff_restore_way(xmlNodePtr node_way, osm_t::ref osm) {
   printf("Restoring way");
 
   item_id_t id = xml_get_prop_int(node_way, "id", ID_ILLEGAL);
@@ -414,7 +414,7 @@ static void diff_restore_way(xmlNodePtr node_way, osm_t *osm) {
   }
 }
 
-static void diff_restore_relation(xmlNodePtr node_rel, osm_t *osm) {
+static void diff_restore_relation(xmlNodePtr node_rel, osm_t::ref osm) {
   printf("Restoring relation");
 
   item_id_t id = xml_get_prop_int(node_rel, "id", ID_ILLEGAL);
@@ -557,13 +557,13 @@ unsigned int project_t::diff_restore() {
 	  if(node_node->type == XML_ELEMENT_NODE) {
 
             if(strcmp(reinterpret_cast<const char *>(node_node->name), node_t::api_string()) == 0)
-	      diff_restore_node(node_node, osm);
+              diff_restore_node(node_node, osm);
 
             else if(strcmp(reinterpret_cast<const char *>(node_node->name), way_t::api_string()) == 0)
-	      diff_restore_way(node_node, osm);
+              diff_restore_way(node_node, osm);
 
             else if(likely(strcmp(reinterpret_cast<const char *>(node_node->name), relation_t::api_string()) == 0))
-	      diff_restore_relation(node_node, osm);
+              diff_restore_relation(node_node, osm);
 
             else {
 	      printf("WARNING: item %s not restored\n", node_node->name);
@@ -584,7 +584,7 @@ unsigned int project_t::diff_restore() {
 }
 
 void diff_restore(project_t *project, MainUi *uicontrol) {
-  if(unlikely(project->osm == nullptr))
+  if(unlikely(!project->osm))
     return;
 
   unsigned int flags = project->diff_restore();

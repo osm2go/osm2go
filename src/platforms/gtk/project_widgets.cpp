@@ -425,7 +425,7 @@ static void on_project_edit(select_context_t *context) {
         cur->bounds = project->bounds;
 
         /* if we have valid osm data loaded: save state first */
-        if(cur->osm != nullptr) {
+        if(cur->osm) {
           /* redraw the entire map by destroying all map items  */
           cur->diff_save();
           appdata.map->clear(map_t::MAP_LAYER_ALL);
@@ -628,8 +628,7 @@ static void project_filesize(project_context_t *context) {
 /* a project may currently be open. "unsaved changes" then also */
 /* means that the user may have unsaved changes */
 bool project_context_t::active_n_dirty() const {
-  if(appdata.project && appdata.project->osm != nullptr &&
-     appdata.project->name == project->name) {
+  if(appdata.project && appdata.project->osm && appdata.project->name == project->name) {
     g_debug("editing the currently open project");
 
     return !appdata.project->osm->is_clean(true);

@@ -101,7 +101,7 @@ struct appdata_internal : public appdata_t {
 
 /* disable/enable main screen control dependant on presence of open project */
 void appdata_t::main_ui_enable() {
-  gboolean osm_valid = (project && (project->osm != nullptr)) ? TRUE : FALSE;
+  gboolean osm_valid = (project && project->osm) ? TRUE : FALSE;
 
   if(unlikely(window == nullptr)) {
     printf("%s: main window gone\n", __PRETTY_FUNCTION__);
@@ -180,7 +180,7 @@ cb_menu_quit() {
 
 static void
 cb_menu_upload(appdata_t *appdata) {
-  if(!appdata->project || appdata->project->osm == nullptr)
+  if(!appdata->project || !appdata->project->osm)
     return;
 
   if(appdata->project->check_demo())
@@ -202,7 +202,7 @@ cb_menu_download(appdata_t *appdata) {
   appdata->project->diff_save();
 
   // download
-  bool hasMap = appdata->project->osm != nullptr;
+  bool hasMap = static_cast<bool>(appdata->project->osm);
   if(osm_download(appdata_t::window, appdata->project.get())) {
     if(hasMap)
       /* redraw the entire map by destroying all map items and redrawing them */
@@ -1078,7 +1078,7 @@ static void on_window_destroy() {
 
 static gboolean on_window_key_press(appdata_internal *appdata, GdkEventKey *event) {
   /* forward unprocessed key presses to map */
-  if(appdata->project && appdata->project->osm != nullptr && event->type == GDK_KEY_PRESS)
+  if(appdata->project && appdata->project->osm && event->type == GDK_KEY_PRESS)
     return appdata->map->key_press_event(event->keyval) ? TRUE : FALSE;
 
   return FALSE;
