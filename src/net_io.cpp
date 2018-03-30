@@ -47,8 +47,6 @@ struct net_io_request_t {
   net_io_request_t(const std::string &u, const std::string &f, bool c);
   net_io_request_t(const std::string &u, curl_mem_t *cmem) __attribute__((nonnull(3)));
 
-  int refcount;       /* reference counter for master and worker thread */
-
   const std::string url;
   bool cancel;
   curl_off_t download_cur;
@@ -146,8 +144,7 @@ static GtkWidget *busy_dialog(osm2go_platform::Widget *parent, GtkProgressBar *&
 }
 
 net_io_request_t::net_io_request_t(const std::string &u, const std::string &f, bool c)
-  : refcount(1)
-  , url(u)
+  : url(u)
   , cancel(false)
   , download_cur(0)
   , download_end(0)
@@ -162,8 +159,7 @@ net_io_request_t::net_io_request_t(const std::string &u, const std::string &f, b
 }
 
 net_io_request_t::net_io_request_t(const std::string &u, curl_mem_t *cmem)
-  : refcount(1)
-  , url(u)
+  : url(u)
   , cancel(false)
   , download_cur(0)
   , download_end(0)
@@ -173,24 +169,6 @@ net_io_request_t::net_io_request_t(const std::string &u, curl_mem_t *cmem)
   , use_compression(false)
 {
   memset(buffer, 0, sizeof(buffer));
-}
-
-struct request_free {
-  void operator()(net_io_request_t *request);
-};
-
-void request_free::operator()(net_io_request_t *request)
-{
-  /* decrease refcount and only free structure if no references are left */
-  assert_cmpnum_op(request->refcount, >, 0);
-  request->refcount--;
-  if(request->refcount) {
-    printf("still %d references, keeping request\n", request->refcount);
-    return;
-  }
-
-  printf("no references left, freeing request\n");
-  delete request;
 }
 
 static int curl_progress_func(void *req, curl_off_t dltotal, curl_off_t dlnow,
@@ -214,7 +192,7 @@ struct f_closer {
 };
 
 static void *worker_thread(void *ptr) {
-  std::unique_ptr<net_io_request_t, request_free> request(static_cast<net_io_request_t *>(ptr));
+  std::shared_ptr<net_io_request_t> request(*static_cast<std::shared_ptr<net_io_request_t>*>(ptr));
 
   printf("thread: running\n");
 
@@ -281,6 +259,16 @@ static void *worker_thread(void *ptr) {
   return nullptr;
 }
 
+/**
+ * @brief perform the download
+ * @param parent parent widget for progress bar
+ * @param rq request to serve
+ * @param title title string for progress dialog
+ * @returns if the request was successful
+ *
+ * In case parent is nullptr, no progress dialog is shown and title is ignored.
+ * rq will be freed, regardless of the outcome of the function.
+ */
 static bool net_io_do(osm2go_platform::Widget *parent, net_io_request_t *rq,
                       const char *title) {
   /* the request structure is shared between master and worker thread. */
@@ -290,9 +278,7 @@ static bool net_io_do(osm2go_platform::Widget *parent, net_io_request_t *rq,
   /* from the fact that it's holding the only reference to the request */
 
   /* create worker thread */
-  assert_cmpnum(rq->refcount, 1);
-  rq->refcount = 2;   // master and worker hold a reference
-  std::unique_ptr<net_io_request_t, request_free> request(rq);
+  std::shared_ptr<net_io_request_t> request(rq);
   GtkProgressBar *pbar = nullptr;
   osm2go_platform::WidgetGuard dialog;
   if(likely(parent != nullptr))
@@ -301,21 +287,19 @@ static bool net_io_do(osm2go_platform::Widget *parent, net_io_request_t *rq,
   GThread *worker;
 
 #if GLIB_CHECK_VERSION(2,32,0)
-  worker = g_thread_try_new("download", worker_thread, request.get(), nullptr);
+  worker = g_thread_try_new("download", worker_thread, &request, nullptr);
 #else
-  worker = g_thread_create(worker_thread, request.get(), FALSE, nullptr);
+  worker = g_thread_create(worker_thread, &request, FALSE, nullptr);
 #endif
   if(unlikely(worker == nullptr)) {
     g_warning("failed to create the worker thread");
-
-    /* free request and return error */
-    rq->refcount = 1;
     return false;
   }
 
   /* wait for worker thread */
+  // do at least one turn to let the thread actually start up and increase the reference count
   curl_off_t last = 0;
-  while(request->refcount > 1 && !request->cancel) {
+  do {
     osm2go_platform::process_events();
 
     /* worker has made progress changed the progress value */
@@ -334,7 +318,7 @@ static bool net_io_do(osm2go_platform::Widget *parent, net_io_request_t *rq,
     }
 
     usleep(100000);
-  }
+  } while(request.use_count() > 1 && !request->cancel);
 
 #if GLIB_CHECK_VERSION(2,32,0)
   g_thread_unref(worker);
@@ -342,7 +326,7 @@ static bool net_io_do(osm2go_platform::Widget *parent, net_io_request_t *rq,
   dialog.reset();
 
   /* user pressed cancel */
-  if(request->refcount > 1) {
+  if(request.use_count() > 1) {
     printf("operation cancelled, leave worker alone\n");
     return false;
   }

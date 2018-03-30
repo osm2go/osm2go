@@ -220,6 +220,14 @@ namespace std {
 }
 #endif
 
+// gcc did not set the C++ level before it was officially released
+#if __cplusplus < 201103L && !defined(_SHARED_PTR_H)
+#include <tr1/memory>
+namespace std {
+  using tr1::shared_ptr;
+}
+#endif
+
 template<typename T> void shrink_to_fit(T &v) {
 #if __cplusplus >= 201103L
   v.shrink_to_fit();
