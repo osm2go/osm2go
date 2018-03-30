@@ -125,7 +125,7 @@ gboolean map_internal::map_motion_notify_event(GtkWidget *, GdkEventMotion *even
   gint x, y;
   GdkModifierType state;
 
-  if(unlikely(!map->appdata.project || map->appdata.project->osm))
+  if(unlikely(!map->appdata.project || !map->appdata.project->osm))
     return FALSE;
 
 #if 0 // def FREMANTLE
