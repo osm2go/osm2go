@@ -649,10 +649,10 @@ template<bool b> void free_track_item_chain(track_seg_t &seg) {
 }
 
 static void map_free_map_item_chains(appdata_t &appdata) {
-  osm_t::ref osm = appdata.project->osm;
-  if(unlikely(!osm))
+  if(unlikely(!appdata.project || !appdata.project->osm))
     return;
 
+  osm_t::ref osm = appdata.project->osm;
   /* free all map_item_chains */
   std::for_each(osm->nodes.begin(), osm->nodes.end(),
                 free_map_item_chain);
