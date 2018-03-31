@@ -182,7 +182,7 @@ static float parse_scale(const char *val_str, int len) {
   } else {
     memcpy(buf, val_str, len);
     buf[len] = '\0';
-    return scaledn_to_zoom(strtod(buf, nullptr));
+    return scaledn_to_zoom(osm2go_platform::string_to_double(buf));
   }
 }
 

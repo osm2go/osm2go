@@ -49,14 +49,6 @@ double xml_get_prop_float(xmlNode *node, const char *prop) {
   return xml_parse_float(str);
 }
 
-double xml_parse_float(const xmlChar *str)
-{
-  if(str)
-    return g_ascii_strtod(reinterpret_cast<const gchar *>(str), nullptr);
-  else
-    return NAN;
-}
-
 bool xml_get_prop_bool(xmlNode *node, const char *prop) {
   xmlString prop_str(xmlGetProp(node, BAD_CAST prop));
   if(!prop_str)

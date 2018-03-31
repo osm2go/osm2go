@@ -146,3 +146,11 @@ const GdkColor *osm2go_platform::invalid_text_color()
 
   return &red;
 }
+
+double osm2go_platform::string_to_double(const char *str)
+{
+  if(likely(str != nullptr))
+    return g_ascii_strtod(str, nullptr);
+  else
+    return NAN;
+}

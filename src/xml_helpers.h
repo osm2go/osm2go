@@ -25,6 +25,8 @@
 
 #include <osm2go_stl.h>
 
+#include <osm2go_platform.h>
+
 struct xmlDelete {
   inline void operator()(xmlChar *s) {
     xmlFree(s);
@@ -42,7 +44,10 @@ struct xmlDocDelete {
 double xml_get_prop_float(xmlNode *node, const char *prop);
 bool xml_get_prop_bool(xmlNode *node, const char *prop);
 
-double xml_parse_float(const xmlChar *str);
+static inline double xml_parse_float(const xmlChar *str)
+{
+  return osm2go_platform::string_to_double(reinterpret_cast<const char *>(str));
+}
 inline double xml_parse_float(const xmlString &str)
 { return xml_parse_float(str.get()); }
 
