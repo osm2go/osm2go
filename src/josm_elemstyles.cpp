@@ -229,8 +229,7 @@ void StyleSax::characters(const char *ch, int len)
 
   switch(state) {
   case TagScaleMin:
-    // currently ignored, only check syntax
-    (void)parse_scale(ch, len);
+    // currently ignored
     break;
   case TagScaleMax:
     styles.back()->zoom_max = parse_scale(ch, len);
