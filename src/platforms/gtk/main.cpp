@@ -1275,7 +1275,9 @@ static int application_run(const char *proj)
   if(!appdata.project && !settings->project.empty())
     project_load(appdata, settings->project);
 
-  appdata.map->set_autosave(true);
+  // check if map widget was already destroyed
+  if(likely(appdata.map))
+    appdata.map->set_autosave(true);
   appdata.main_ui_enable();
 
   /* start GPS if enabled by config */
