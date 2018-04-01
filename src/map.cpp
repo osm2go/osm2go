@@ -74,7 +74,7 @@ static void map_statusbar(map_t *map, map_item_t *map_item) {
 }
 
 void map_t::outside_error() {
-  errorf(nullptr, _("Items must not be placed outside the working area!"));
+  error_dlg(_("Items must not be placed outside the working area!"));
 }
 
 static inline void map_item_destroy_canvas_item(map_item_t *m) {

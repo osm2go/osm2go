@@ -499,15 +499,16 @@ static void callback_modified_unit(area_context_t *context) {
 static void callback_fetch_mm_clicked(area_context_t *context) {
   dbus_mm_pos_t mmpos;
   if(!dbus_mm_set_position(&mmpos)) {
-    errorf(context->dialog.get(), _("Unable to communicate with Maemo Mapper. "
-              "You need to have Maemo Mapper installed to use this feature."));
+    error_dlg(_("Unable to communicate with Maemo Mapper. "
+              "You need to have Maemo Mapper installed to use this feature."),
+              context->dialog.get());
     return;
   }
 
   if(!mmpos.valid) {
-    errorf(context->dialog.get(), _("No valid position received yet. You need to "
+    error_dlg(_("No valid position received yet. You need to "
            "scroll or zoom the Maemo Mapper view in order to force it to send "
-           "its current view position to osm2go."));
+           "its current view position to osm2go."), context->dialog.get());
     return;
   }
 

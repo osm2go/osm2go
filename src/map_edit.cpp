@@ -254,8 +254,8 @@ void map_edit_way_add_ok(map_t *map) {
     map->action.ends_on = nullptr;
 
     if(conflict)
-      messagef(nullptr, _("Way tag conflict"),
-               _("The resulting way contains some conflicting tags. Please solve these."));
+      message_dlg(_("Way tag conflict"),
+                  _("The resulting way contains some conflicting tags. Please solve these."));
   }
 
   /* remove prior version of this way */
@@ -514,18 +514,16 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, int ex, int ey) {
 
       /* and open dialog to resolve tag collisions if necessary */
       if(conflict)
-        messagef(nullptr, _("Node tag conflict"),
-		 _("The resulting node contains some conflicting tags. "
-		   "Please solve these."));
+        message_dlg(_("Node tag conflict"),
+                    _("The resulting node contains some conflicting tags. Please solve these."));
 
       /* check whether this will also join two ways */
       printf("  checking if node is end of way\n");
 
       if(ways2join_cnt > 2) {
-        messagef(nullptr, _("Too many ways to join"),
-		 _("More than two ways now end on this node. Joining more "
-		   "than two ways is not yet implemented, sorry"));
-
+        message_dlg(_("Too many ways to join"),
+                    _("More than two ways now end on this node. Joining more "
+                      "than two ways is not yet implemented, sorry"));
       } else if(ways2join_cnt == 2 &&
                 yes_no_f(nullptr, MISC_AGAIN_ID_JOIN_WAYS, _("Join ways?"),
                          _("Do you want to join the dragged way with the one you dropped it on?"))) {
@@ -534,9 +532,8 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, int ex, int ey) {
 
         osm->mergeWays(ways2join[0], ways2join[1], conflict);
         if(conflict)
-          messagef(nullptr, _("Way tag conflict"),
-                   _("The resulting way contains some conflicting tags. "
-                     "Please solve these."));
+          message_dlg(_("Way tag conflict"),
+                      _("The resulting way contains some conflicting tags. Please solve these."));
       }
     }
   }

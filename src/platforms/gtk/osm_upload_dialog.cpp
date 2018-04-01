@@ -66,13 +66,8 @@ osm_upload_context_t::osm_upload_context_t(appdata_t &a, project_t *p, const cha
 {
 }
 
-void osm_upload_context_t::appendf(const char *colname, const char *fmt, ...) {
-  va_list args;
-  va_start( args, fmt );
-  g_string buf(g_strdup_vprintf(fmt, args));
-  va_end( args );
-
-  g_debug("%s", buf.get());
+void osm_upload_context_t::append_str(const char *msg, const char *colorname) {
+  g_debug("%s", msg);
 
   osm_upload_context_gtk * const gtk_this = static_cast<osm_upload_context_gtk *>(this);
   GtkTextBuffer * const logbuffer = gtk_this->logbuffer;
@@ -80,17 +75,26 @@ void osm_upload_context_t::appendf(const char *colname, const char *fmt, ...) {
 
   GtkTextIter end;
   gtk_text_buffer_get_end_iter(logbuffer, &end);
-  if(colname) {
+  if(colorname != nullptr) {
     GtkTextTag *tag = gtk_text_buffer_create_tag(logbuffer, nullptr,
-                                                 "foreground", colname,
+                                                 "foreground", colorname,
                                                  nullptr);
-    gtk_text_buffer_insert_with_tags(logbuffer, &end, buf.get(), -1, tag, nullptr);
+    gtk_text_buffer_insert_with_tags(logbuffer, &end, msg, -1, tag, nullptr);
   } else
-    gtk_text_buffer_insert(logbuffer, &end, buf.get(), -1);
+    gtk_text_buffer_insert(logbuffer, &end, msg, -1);
 
-  gtk_text_view_scroll_to_iter(logview, &end, 0.0, FALSE, 0, 0);
+  gtk_text_view_scroll_to_iter(GTK_TEXT_VIEW(logview), &end, 0.0, FALSE, 0, 0);
 
-  process_events();
+  osm2go_platform::process_events();
+}
+
+void osm_upload_context_t::appendf(const char *colname, const char *fmt, ...) {
+  va_list args;
+  va_start( args, fmt );
+  g_string buf(g_strdup_vprintf(fmt, args));
+  va_end( args );
+
+  append_str(buf.get(), colname);
 }
 
 osm_upload_context_gtk::osm_upload_context_gtk(appdata_t &a, project_t *p, const char *c, const char *s)
@@ -361,15 +365,14 @@ void osm_upload(appdata_t &appdata, project_t *project) {
 
   if(project->data_dirty) {
     bool reload_map = false;
-    context.appendf(nullptr, _("Server data has been modified.\n"
-                                        "Downloading updated osm data ...\n"));
+    context.append_str(_("Server data has been modified.\nDownloading updated osm data ...\n"));
 
     if(osm_download(dialog.get(), project)) {
-      context.appendf(nullptr, _("Download successful!\nThe map will be reloaded.\n"));
+      context.append_str(_("Download successful!\nThe map will be reloaded.\n"));
       project->data_dirty = false;
       reload_map = true;
     } else
-      context.appendf(nullptr, _("Download failed!\n"));
+      context.append_str(_("Download failed!\n"));
 
     project->save(dialog.get());
 
@@ -379,30 +382,29 @@ void osm_upload(appdata_t &appdata, project_t *project) {
       /* we basically restart the entire map with fresh data from the server */
       /* and the diff will hopefully be empty (if the upload was successful) */
 
-      context.appendf(nullptr, _("Reloading map ...\n"));
+      context.append_str(_("Reloading map ...\n"));
 
       if(!appdata.project->osm->is_clean(false))
-        context.appendf(COLOR_ERR, _("*** DIFF IS NOT CLEAN ***\n"
-                                          "Something went wrong during upload,\n"
-                                          "proceed with care!\n"));
+        context.append_str(_("*** DIFF IS NOT CLEAN ***\nSomething went wrong during "
+                             "upload,\nproceed with care!\n"), COLOR_ERR);
 
       /* redraw the entire map by destroying all map items and redrawing them */
-      context.appendf(nullptr, _("Cleaning up ...\n"));
+      context.append_str(_("Cleaning up ...\n"));
       appdata.project->diff_save();
       appdata.map->clear(map_t::MAP_LAYER_OBJECTS_ONLY);
 
-      context.appendf(nullptr, _("Loading OSM ...\n"));
+      context.append_str(_("Loading OSM ...\n"));
       appdata.project->parse_osm();
-      context.appendf(nullptr, _("Applying diff ...\n"));
+      context.append_str(_("Applying diff ...\n"));
       diff_restore(appdata.project.get(), appdata.uicontrol.get());
-      context.appendf(nullptr, _("Painting ...\n"));
+      context.append_str(_("Painting ...\n"));
       appdata.map->paint();
-      context.appendf(nullptr, _("Done!\n"));
+      context.append_str(_("Done!\n"));
     }
   }
 
   /* tell the user that he can stop waiting ... */
-  context.appendf(nullptr, _("Process finished.\n"));
+  context.append_str(_("Process finished.\n"));
 
   gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog.get()), GTK_RESPONSE_CLOSE, TRUE);
 

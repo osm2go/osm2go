@@ -654,11 +654,10 @@ static void on_edit_clicked(project_context_t *context) {
   project_t * const project = context->project;
 
   if(project->diff_file_present() || context->active_n_dirty())
-    messagef(context->dialog,
-	     _("Pending changes"),
-	     _("You have pending changes in this project.\n\n"
-	       "Changing the area may cause pending changes to be "
-	       "lost if they are outside the updated area."));
+    message_dlg(_("Pending changes"),
+                _("You have pending changes in this project.\n\nChanging "
+                  "the area may cause pending changes to be "
+                  "lost if they are outside the updated area."), context->dialog);
 
   context->area_edit.other_bounds.clear();
   std::for_each(context->projects.begin(), context->projects.end(),

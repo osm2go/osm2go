@@ -250,11 +250,12 @@ static bool osm_update_item(osm_upload_context_t &context, xmlChar *xml_str,
       /* if it's neither "ok" (200), nor "internal server error" (500) */
       /* then write the message to the log */
       if(response != 500 && !write_data.empty()) {
-        context.appendf(nullptr, _("Server reply: "));
-        context.appendf(COLOR_ERR, _("%s\n"), write_data.c_str());
+        context.append_str(_("Server reply: "));
+        context.append_str(write_data.c_str(), COLOR_ERR);
+        context.append_str("\n");
       }
     } else if(unlikely(!id)) {
-      context.appendf(COLOR_OK, _("ok\n"));
+      context.append_str(_("ok\n"), COLOR_OK);
     } else {
       /* this will return the id on a successful create */
       printf("request to parse successful reply '%s' as an id\n", write_data.c_str());
@@ -315,13 +316,14 @@ static bool osm_delete_item(osm_upload_context_t &context, xmlChar *xml_str,
       context.appendf(COLOR_ERR, _("failed, code: %ld %s\n"),
 	      response, http_message(response));
     else
-      context.appendf(COLOR_OK, _("ok\n"));
+      context.append_str(_("ok\n"), COLOR_OK);
 
     /* if it's neither "ok" (200), nor "internal server error" (500) */
     /* then write the message to the log */
     if((response != 200) && (response != 500) && !write_data.empty()) {
-      context.appendf(nullptr, _("Server reply: "));
-      context.appendf(COLOR_ERR, _("%s\n"), write_data.c_str());
+      context.append_str(_("Server reply: "));
+      context.append_str(write_data.c_str(), COLOR_ERR);
+      context.append_str("\n");
     }
 
     /* don't retry unless we had an "internal server error" */
@@ -424,7 +426,7 @@ static bool osmchange_upload(osm_upload_context_t &context, xmlDocPtr doc)
 
   printf("deleting objects on server\n");
 
-  context.appendf(nullptr, _("Uploading object deletions "));
+  context.append_str(_("Uploading object deletions "));
 
   const std::string url = context.urlbasestr + "changeset/" + context.changeset + "/upload";
 
@@ -448,7 +450,7 @@ static bool osm_create_changeset(osm_upload_context_t &context) {
   osm2go_platform::process_events();
 
   const std::string url = context.urlbasestr + "changeset/create";
-  context.appendf(nullptr, _("Create changeset "));
+  context.append_str(_("Create changeset "));
 
   /* create changeset request */
   xmlString xml_str(osm_generate_xml_changeset(context.comment, context.src));
@@ -473,7 +475,7 @@ static bool osm_close_changeset(osm_upload_context_t &context) {
 
   const std::string url = context.urlbasestr + "changeset/" + context.changeset +
                           "/close";
-  context.appendf(nullptr, _("Close changeset "));
+  context.append_str(_("Close changeset "));
 
   return osm_update_item(context, nullptr, url.c_str(), nullptr);
 }
@@ -501,26 +503,26 @@ void osm_do_upload(osm_upload_context_t &context, const osm_t::dirty_t &dirty)
   context.curl.reset(curl_custom_setup(settings->username + ":" + settings->password));
 
   if(unlikely(!context.curl)) {
-    context.appendf(nullptr, _("CURL init error\n"));
+    context.append_str(_("CURL init error\n"));
   } else if(likely(osm_create_changeset(context))) {
     /* check for dirty entries */
     if(!dirty.nodes.modified.empty()) {
-      context.appendf(nullptr, _("Uploading nodes:\n"));
+      context.append_str(_("Uploading nodes:\n"));
       std::for_each(dirty.nodes.modified.begin(), dirty.nodes.modified.end(),
                     upload_objects<node_t>(context, context.osm->nodes));
     }
     if(!dirty.ways.modified.empty()) {
-      context.appendf(nullptr, _("Uploading ways:\n"));
+      context.append_str(_("Uploading ways:\n"));
       std::for_each(dirty.ways.modified.begin(), dirty.ways.modified.end(),
                     upload_objects<way_t>(context, context.osm->ways));
     }
     if(!dirty.relations.modified.empty()) {
-      context.appendf(nullptr, _("Uploading relations:\n"));
+      context.append_str(_("Uploading relations:\n"));
       std::for_each(dirty.relations.modified.begin(), dirty.relations.modified.end(),
                     upload_objects<relation_t>(context, context.osm->relations));
     }
     if(!dirty.relations.deleted.empty() || !dirty.ways.deleted.empty() || !dirty.nodes.deleted.empty()) {
-      context.appendf(nullptr, _("Deleting objects:\n"));
+      context.append_str(_("Deleting objects:\n"));
       xmlDocPtr doc = osmchange_init();
       xmlNodePtr del_node = xmlNewChild(xmlDocGetRootElement(doc), nullptr, BAD_CAST "delete", nullptr);
       osmchange_delete(dirty, del_node, context.changeset.c_str());
@@ -538,6 +540,6 @@ void osm_do_upload(osm_upload_context_t &context, const osm_t::dirty_t &dirty)
     osm_close_changeset(context);
     context.curl.reset();
 
-    context.appendf(nullptr, _("Upload done.\n"));
+    context.append_str(_("Upload done.\n"));
   }
 }

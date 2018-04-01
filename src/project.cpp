@@ -341,11 +341,11 @@ void projects_to_bounds::operator()(const project_t* project)
 
 bool project_t::check_demo(osm2go_platform::Widget *parent) const {
   if(isDemo)
-    messagef(parent, _("Demo project"),
-             _("This is a preinstalled demo project. This means that the "
-               "basic project parameters cannot be changed and no data can "
-               "be up- or downloaded via the OSM servers.\n\n"
-               "Please setup a new project to do these things."));
+    message_dlg(_("Demo project"),
+                   _("This is a preinstalled demo project. This means that the "
+                     "basic project parameters cannot be changed and no data can "
+                     "be up- or downloaded via the OSM servers.\n\n"
+                     "Please setup a new project to do these things."), parent);
 
   return isDemo;
 }
@@ -421,11 +421,10 @@ static bool project_load_inner(appdata_t &appdata, const std::string &name) {
   osm2go_platform::process_events();
   const char *errmsg = appdata.project->osm->sanity_check();
   if(unlikely(errmsg != nullptr)) {
-    errorf(nullptr, "%s", errmsg);
+    error_dlg(errmsg);
     printf("project/osm sanity checks failed, unloading project\n");
 
-    snprintf(banner_txt, sizeof(banner_txt),
-	     _("Error opening %s"), name.c_str());
+    snprintf(banner_txt, sizeof(banner_txt), _("Error opening %s"), name.c_str());
     appdata.uicontrol->showNotification(banner_txt, MainUi::Brief);
 
     return false;

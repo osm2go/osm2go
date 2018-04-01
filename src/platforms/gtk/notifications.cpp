@@ -34,24 +34,24 @@
 #include <osm2go_cpp.h>
 #include <osm2go_i18n.h>
 
-static void vmessagef(osm2go_platform::Widget *parent, GtkMessageType type, GtkButtonsType buttons,
-                      const char *title, const char *fmt, va_list args) {
+static void
+vmessage(osm2go_platform::Widget *parent, GtkMessageType type, GtkButtonsType buttons,
+                      const char *title, const char *msg) {
   GtkWindow *wnd = GTK_WINDOW(parent ? parent : appdata_t::window);
-  g_string buf(g_strdup_vprintf(fmt, args));
 
   if(unlikely(wnd == nullptr)) {
-    printf("%s", buf.get());
+    printf("%s", msg);
     return;
   }
 
   osm2go_platform::WidgetGuard dialog(
 #ifndef FREMANTLE
                   gtk_message_dialog_new(wnd, GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         type, buttons, "%s", buf.get()));
+                                         type, buttons, "%s", msg));
 
   gtk_window_set_title(GTK_WINDOW(dialog.get()), title);
 #else
-                  hildon_note_new_information(wnd, buf.get()));
+                  hildon_note_new_information(wnd, msg));
   (void)type;
   (void)buttons;
   (void)title;
@@ -60,11 +60,24 @@ static void vmessagef(osm2go_platform::Widget *parent, GtkMessageType type, GtkB
   gtk_dialog_run(GTK_DIALOG(dialog.get()));
 }
 
+static void  __attribute__((format (printf, 5, 0)))
+vmessagef(GtkWidget *parent, GtkMessageType type, GtkButtonsType buttons,
+          const char *title, const char *fmt, va_list args) {
+  g_string buf(g_strdup_vprintf(fmt, args));
+
+  vmessage(parent, type, buttons, title, buf.get());
+}
+
 void messagef(osm2go_platform::Widget *parent, const char *title, const char *fmt, ...) {
   va_list args;
   va_start( args, fmt );
   vmessagef(parent, GTK_MESSAGE_INFO, GTK_BUTTONS_OK, title, fmt, args);
   va_end( args );
+}
+
+void message_dlg(const char *title, const char *msg, GtkWidget *parent)
+{
+  vmessage(parent, GTK_MESSAGE_INFO, GTK_BUTTONS_OK, title, msg);
 }
 
 void errorf(osm2go_platform::Widget *parent, const char *fmt, ...) {
@@ -75,9 +88,19 @@ void errorf(osm2go_platform::Widget *parent, const char *fmt, ...) {
   va_end( args );
 }
 
+void error_dlg(const char *msg, GtkWidget *parent)
+{
+  vmessage(parent, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, _("Error"), msg);
+}
+
 void warningf(osm2go_platform::Widget *parent, const char *fmt, ...) {
   va_list args;
   va_start( args, fmt );
   vmessagef(parent, GTK_MESSAGE_WARNING, GTK_BUTTONS_CLOSE, _("Warning"), fmt, args);
   va_end( args );
+}
+
+void warning_dlg(const char *msg, GtkWidget *parent)
+{
+  vmessage(parent, GTK_MESSAGE_WARNING, GTK_BUTTONS_CLOSE, _("Warning"), msg);
 }

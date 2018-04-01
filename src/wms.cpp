@@ -389,7 +389,7 @@ wms_layer_t::list wms_get_layers(project_t *project, wms_t& wms)
 
   /* ----------- parse capabilities -------------- */
   if(unlikely(!net_io_download_mem(appdata_t::window, url, capmem, _("WMS capabilities")))) {
-    errorf(nullptr, _("WMS download failed:\n\nGetCapabilities failed"));
+    error_dlg(_("WMS download failed:\n\nGetCapabilities failed"));
     return layers;
   }
 
@@ -416,12 +416,12 @@ wms_layer_t::list wms_get_layers(project_t *project, wms_t& wms)
   /* ------------ basic checks ------------- */
 
   if(!parse_success) {
-    errorf(nullptr, _("Incomplete/unexpected reply!"));
+    error_dlg(_("Incomplete/unexpected reply!"));
     return layers;
   }
 
   if(!wms.cap.request.getmap.format) {
-    errorf(nullptr, _("No supported image format found."));
+    error_dlg(_("No supported image format found."));
     return layers;
   }
 
@@ -435,8 +435,8 @@ wms_layer_t::list wms_get_layers(project_t *project, wms_t& wms)
                          layers.end();
 
   if(!at_least_one_ok) {
-    errorf(nullptr, _("Server provides no data in the required format!\n\n"
-                      "(epsg4326 and LatLonBoundingBox are mandatory for osm2go)"));
+    error_dlg(_("Server provides no data in the required format!\n\n"
+                "(epsg4326 and LatLonBoundingBox are mandatory for osm2go)"));
     wms_layers_free(layers);
     layers.clear();
   }

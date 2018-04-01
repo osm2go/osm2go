@@ -1302,18 +1302,18 @@ static int application_run(const char *proj)
 
   /* start to interact with the user now that the gui is running */
   if(unlikely(appdata.project && appdata.project->isDemo && settings->first_run_demo)) {
-    messagef(nullptr, _("Welcome to OSM2Go"),
-	     _("This is the first time you run OSM2Go. "
-	       "A demo project has been loaded to get you "
-	       "started. You can play around with this demo as much "
-	       "as you like. However, you cannot upload or download "
-	       "the demo project.\n\n"
-	       "In order to start working on real data you'll have "
-	       "to setup a new project and enter your OSM user name "
-	       "and password. You'll then be able to download the "
-	       "latest data from OSM and upload your changes into "
-	       "the OSM main database."
-	       ));
+    message_dlg(_("Welcome to OSM2Go"),
+                _("This is the first time you run OSM2Go. "
+                  "A demo project has been loaded to get you "
+                  "started. You can play around with this demo as much "
+                  "as you like. However, you cannot upload or download "
+                  "the demo project.\n\n"
+                  "In order to start working on real data you'll have "
+                  "to setup a new project and enter your OSM user name "
+                  "and password. You'll then be able to download the "
+                  "latest data from OSM and upload your changes into "
+                  "the OSM main database."
+                  ));
   }
 
   puts("main up");
