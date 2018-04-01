@@ -521,6 +521,17 @@ static void about_box(appdata_t *appdata)
 // Half-arsed slapdash common menu item constructor. Let's use GtkBuilder
 // instead so we have some flexibility.
 
+struct KeySequence {
+  explicit inline KeySequence(guint k = 0, GdkModifierType m1 = static_cast<GdkModifierType>(0), GdkModifierType m2 = static_cast<GdkModifierType>(0))
+    : key(k), mods(static_cast<GdkModifierType>(m1 | m2)) {}
+  explicit inline KeySequence(GtkStockItem &s)
+    : key(s.keyval), mods(s.modifier) {}
+  inline bool isEmpty()
+  { return key == 0; }
+  const guint key;
+  const GdkModifierType mods;
+};
+
 /**
  * @brief create a new submenu entry
  * @param appdata the appdata object as callback reference
@@ -529,8 +540,7 @@ static void about_box(appdata_t *appdata)
  * @param label the label to show (may be nullptr in case of item being set)
  * @param icon_name stock id or name for icon_load (may be nullptr)
  * @param accel_path accel database key (must be a static string)
- * @param accel_key key setting from gdk/gdkkeysyms.h
- * @param accel_mods accel modifiers
+ * @param keys the key sequence to trigger this action
  * @param item pre-created menu item (icon_name is ignored in this case)
  */
 static GtkWidget * __attribute__((nonnull(2,6)))
@@ -538,8 +548,7 @@ menu_append_new_item(appdata_t &appdata, GtkWidget *menu_shell,
                      GCallback activate_cb, const char *label,
                      const gchar *icon_name,
                      const gchar *accel_path,
-                     guint accel_key = 0,
-                     GdkModifierType accel_mods = static_cast<GdkModifierType>(0),
+                     KeySequence keys = KeySequence(),
                      GtkWidget *item = nullptr)
 {
   GtkStockItem stock_item;
@@ -561,8 +570,8 @@ menu_append_new_item(appdata_t &appdata, GtkWidget *menu_shell,
   // Default
   accel_path = g_intern_static_string(accel_path);
   gtk_menu_item_set_accel_path(GTK_MENU_ITEM(item), accel_path);
-  if (accel_key != 0)
-    gtk_accel_map_add_entry(accel_path, accel_key, accel_mods);
+  if (!keys.isEmpty())
+    gtk_accel_map_add_entry(accel_path, keys.key, keys.mods);
   else if (stock_item_known)
     gtk_accel_map_add_entry(accel_path, stock_item.keyval,
                               stock_item.modifier);
@@ -577,11 +586,10 @@ static GtkWidget *  __attribute__((nonnull(2,5)))
 menu_append_new_item(appdata_t &appdata, GtkWidget *menu_shell,
                      GCallback activate_cb, MainUi::menu_items item,
                      const gchar *accel_path,
-                     guint accel_key = 0,
-                     GdkModifierType accel_mods = static_cast<GdkModifierType>(0))
+                     KeySequence keys = KeySequence())
 {
   return menu_append_new_item(appdata, menu_shell, activate_cb, nullptr, nullptr,
-                              accel_path, accel_key, accel_mods,
+                              accel_path, keys,
                               static_cast<GtkWidget *>(static_cast<MainUiGtk *>(appdata.uicontrol.get())->menu_item(item)));
 }
 
@@ -622,23 +630,23 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
   menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_fullscreen), nullptr,
     nullptr, "<OSM2Go-Main>/View/Fullscreen",
-    GDK_F11, static_cast<GdkModifierType>(0), item);
+    KeySequence(GDK_F11), item);
 
   menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_zoomin), _("Zoom _in"),
     "zoom-in", "<OSM2Go-Main>/View/ZoomIn",
-    GDK_comma, GDK_CONTROL_MASK);
+    KeySequence(GDK_comma, GDK_CONTROL_MASK));
 
   menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_zoomout), _("Zoom _out"),
     "zoom-out", "<OSM2Go-Main>/View/ZoomOut",
-    GDK_period, GDK_CONTROL_MASK);
+    KeySequence(GDK_period, GDK_CONTROL_MASK));
 
   gtk_menu_shell_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
 
   menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_view_detail_inc), _("More details"),
-    nullptr, "<OSM2Go-Main>/View/DetailInc", GDK_period, GDK_MOD1_MASK);
+    nullptr, "<OSM2Go-Main>/View/DetailInc", KeySequence(GDK_period, GDK_MOD1_MASK));
 
   menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_view_detail_normal), _("Normal details"),
@@ -646,7 +654,7 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
 
   menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_view_detail_dec), _("Less details"),
-    nullptr, "<OSM2Go-Main>/View/DetailDec", GDK_comma, GDK_MOD1_MASK);
+    nullptr, "<OSM2Go-Main>/View/DetailDec", KeySequence(GDK_comma, GDK_MOD1_MASK));
 
   gtk_menu_shell_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
 
@@ -674,12 +682,12 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
   menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_upload), MainUi::MENU_ITEM_MAP_UPLOAD,
     "<OSM2Go-Main>/Map/Upload",
-    GDK_u, static_cast<GdkModifierType>(GDK_SHIFT_MASK|GDK_CONTROL_MASK));
+    KeySequence(GDK_u, GDK_SHIFT_MASK, GDK_CONTROL_MASK));
 
   menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_download), _("_Download"),
     "download.16", "<OSM2Go-Main>/Map/Download",
-    GDK_d, static_cast<GdkModifierType>(GDK_SHIFT_MASK|GDK_CONTROL_MASK));
+    KeySequence(GDK_d, GDK_SHIFT_MASK, GDK_CONTROL_MASK));
 
   gtk_menu_shell_append(GTK_MENU_SHELL(submenu), gtk_separator_menu_item_new());
 
@@ -688,7 +696,7 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
   assert(b == TRUE);
   menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_save_changes), MainUi::MENU_ITEM_MAP_SAVE_CHANGES,
-    "<OSM2Go-Main>/Map/SaveChanges", stock_item.keyval, stock_item.modifier);
+    "<OSM2Go-Main>/Map/SaveChanges", KeySequence(stock_item));
 
   menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_undo_changes), MainUi::MENU_ITEM_MAP_UNDO_CHANGES,
@@ -699,7 +707,7 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
   menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_osm_relations), MainUi::MENU_ITEM_MAP_RELATIONS,
     "<OSM2Go-Main>/Map/Relations",
-    GDK_r, static_cast<GdkModifierType>(GDK_SHIFT_MASK|GDK_CONTROL_MASK));
+    KeySequence(GDK_r, GDK_SHIFT_MASK, GDK_CONTROL_MASK));
 
   /* -------------------- wms submenu -------------------- */
 
@@ -739,7 +747,7 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
   item = menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_track_enable_gps), MainUi::MENU_ITEM_TRACK_ENABLE_GPS,
     "<OSM2Go-Main>/Track/GPS",
-    GDK_g, static_cast<GdkModifierType>(GDK_CONTROL_MASK|GDK_SHIFT_MASK));
+    KeySequence(GDK_g, GDK_CONTROL_MASK, GDK_SHIFT_MASK));
   gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item), settings->enable_gps ? TRUE : FALSE);
 
   item = menu_append_new_item(
@@ -750,7 +758,7 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
   menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_track_vis), _("Track _visibility"),
     nullptr, "<OSM2Go-Main>/Track/Visibility",
-    GDK_v, static_cast<GdkModifierType>(GDK_CONTROL_MASK|GDK_SHIFT_MASK));
+    KeySequence(GDK_v, GDK_CONTROL_MASK, GDK_SHIFT_MASK));
 
   /* ------------------------------------------------------- */
 
