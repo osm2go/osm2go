@@ -872,16 +872,39 @@ static GtkWidget *app_submenu_create(appdata_t &appdata, MainUi::menu_items subm
 }
 
 /* popup the dialog shaped submenu */
-static void submenu_popup(appdata_t &appdata, GtkWidget *menu) {
+static void submenu_popup(GtkWidget *menu) {
   gtk_widget_show_all(menu);
   gtk_dialog_run(GTK_DIALOG(menu));
   gtk_widget_hide(menu);
+}
 
-  /* check if the style menu was in here */
+/* the view submenu */
+static void on_submenu_view_clicked(appdata_internal *appdata)
+{
+  GtkWidget *menu = appdata->app_menu_view.get();
+  submenu_popup(menu);
   GtkWidget *combo_widget = GTK_WIDGET(g_object_get_data(G_OBJECT(menu), "style_widget"));
-  if(combo_widget) {
+  if(combo_widget != nullptr)
     style_change(appdata, combo_widget);
-  } else if((combo_widget = GTK_WIDGET(g_object_get_data(G_OBJECT(menu), "track_widget"))) != nullptr) {
+}
+
+static void on_submenu_map_clicked(appdata_internal *appdata)
+{
+  submenu_popup(appdata->app_menu_map.get());
+}
+
+static void on_submenu_wms_clicked(appdata_internal *appdata)
+{
+  submenu_popup(appdata->app_menu_wms.get());
+}
+
+static void on_submenu_track_clicked(appdata_internal *appdata)
+{
+  GtkWidget *menu = appdata->app_menu_track.get();
+  submenu_popup(menu);
+
+  GtkWidget *combo_widget = GTK_WIDGET(g_object_get_data(G_OBJECT(menu), "track_widget"));
+  if(combo_widget != nullptr) {
     TrackVisibility tv = static_cast<TrackVisibility>(combo_box_get_active(combo_widget));
     settings_t * const settings = settings_t::instance();
     if(tv != settings->trackVisibility && appdata.track.track) {
@@ -889,27 +912,6 @@ static void submenu_popup(appdata_t &appdata, GtkWidget *menu) {
       settings->trackVisibility = tv;
     }
   }
-}
-
-/* the view submenu */
-static void on_submenu_view_clicked(appdata_internal *appdata)
-{
-  submenu_popup(*appdata, appdata->app_menu_view.get());
-}
-
-static void on_submenu_map_clicked(appdata_internal *appdata)
-{
-  submenu_popup(*appdata, appdata->app_menu_map.get());
-}
-
-static void on_submenu_wms_clicked(appdata_internal *appdata)
-{
-  submenu_popup(*appdata, appdata->app_menu_wms.get());
-}
-
-static void on_submenu_track_clicked(appdata_internal *appdata)
-{
-  submenu_popup(*appdata, appdata->app_menu_track.get());
 }
 
 /* create a HildonAppMenu */
