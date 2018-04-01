@@ -243,7 +243,7 @@ private:
 const PresetSax::StateMap &PresetSax::preset_state_map() {
   static PresetSax::StateMap map;
 
-  if(map.empty()) {
+  if(unlikely(map.empty())) {
 #if __cplusplus >= 201103L
     const std::vector<State> item_chunks = { TagChunk, TagItem };
     const std::vector<State> pr_gr = { TagPresets, TagGroup };
