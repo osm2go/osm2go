@@ -26,7 +26,7 @@
 struct appdata_t;
 
 #ifndef FREMANTLE
-void style_select(GtkWidget *parent, appdata_t &appdata);
+void style_select(appdata_t *appdata);
 #else
 GtkWidget *style_select_widget(const std::string &currentstyle);
 #endif

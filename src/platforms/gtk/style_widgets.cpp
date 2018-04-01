@@ -112,13 +112,13 @@ static void style_change(appdata_t &appdata, const std::string &name,
 #ifndef FREMANTLE
 /* in fremantle this happens inside the submenu handling since this button */
 /* is actually placed inside the submenu there */
-void style_select(GtkWidget *parent, appdata_t &appdata) {
+void style_select(appdata_t *appdata) {
 
   g_debug("select style");
 
   /* ------------------ style dialog ---------------- */
   osm2go_platform::WidgetGuard dialog(gtk_dialog_new_with_buttons(_("Select style"),
-                                              GTK_WINDOW(parent), GTK_DIALOG_MODAL,
+                                              GTK_WINDOW(appdata_t::window), GTK_DIALOG_MODAL,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                               GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
                                               nullptr));
@@ -146,7 +146,7 @@ void style_select(GtkWidget *parent, appdata_t &appdata) {
 
   dialog.reset();
 
-  style_change(appdata, style, styles);
+  style_change(*appdata, style, styles);
 }
 #endif
 
