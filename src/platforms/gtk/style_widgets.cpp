@@ -22,7 +22,7 @@
 
 #include "appdata.h"
 #include "map.h"
-#include "misc.h"
+#include <notifications.h>
 #include "osm2go_platform.h"
 #include "settings.h"
 #include "style.h"

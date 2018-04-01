@@ -27,6 +27,7 @@
 #include "MainUiGtk.h"
 #include <map.h>
 #include <misc.h>
+#include <notifications.h>
 #include <osm.h>
 #include <osm_api.h>
 #include "osm2go_platform.h"

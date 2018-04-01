@@ -25,6 +25,7 @@
 #include "map.h"
 #include "map_hl.h"
 #include "misc.h"
+#include "notifications.h"
 #include "project.h"
 #include "style.h"
 #include "uicontrol.h"

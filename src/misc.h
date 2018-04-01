@@ -70,10 +70,6 @@ std::string find_file(const std::string &n);
 
 /* some compat code */
 
-void errorf(osm2go_platform::Widget *parent, const char *fmt, ...) __attribute__((format (printf, 2, 3)));
-void warningf(osm2go_platform::Widget *parent, const char *fmt, ...) __attribute__((format (printf, 2, 3)));
-void messagef(osm2go_platform::Widget *parent, const char *title, const char *fmt, ...) __attribute__((format (printf, 3, 4)));
-
 bool yes_no_f(osm2go_platform::Widget *parent, unsigned int again_flags,
               const char *title, const char *fmt, ...) __attribute__((format (printf, 4, 5)));
 

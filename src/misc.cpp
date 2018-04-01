@@ -57,54 +57,6 @@ bool xml_get_prop_bool(xmlNode *node, const char *prop) {
   return (strcasecmp(reinterpret_cast<char *>(prop_str.get()), "true") == 0);
 }
 
-static void vmessagef(osm2go_platform::Widget *parent, GtkMessageType type, GtkButtonsType buttons,
-                      const char *title, const char *fmt, va_list args) {
-  GtkWindow *wnd = GTK_WINDOW(parent ? parent : appdata_t::window);
-  g_string buf(g_strdup_vprintf(fmt, args));
-
-  if(unlikely(wnd == nullptr)) {
-    printf("%s", buf.get());
-    return;
-  }
-
-  osm2go_platform::WidgetGuard dialog(
-#ifndef FREMANTLE
-                  gtk_message_dialog_new(wnd, GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         type, buttons, "%s", buf.get()));
-
-  gtk_window_set_title(GTK_WINDOW(dialog.get()), title);
-#else
-                  hildon_note_new_information(wnd, buf.get()));
-  (void)type;
-  (void)buttons;
-  (void)title;
-#endif // FREMANTLE
-
-  gtk_dialog_run(GTK_DIALOG(dialog.get()));
-}
-
-void messagef(osm2go_platform::Widget *parent, const char *title, const char *fmt, ...) {
-  va_list args;
-  va_start( args, fmt );
-  vmessagef(parent, GTK_MESSAGE_INFO, GTK_BUTTONS_OK, title, fmt, args);
-  va_end( args );
-}
-
-void errorf(osm2go_platform::Widget *parent, const char *fmt, ...) {
-  va_list args;
-  va_start( args, fmt );
-
-  vmessagef(parent, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, _("Error"), fmt, args);
-  va_end( args );
-}
-
-void warningf(osm2go_platform::Widget *parent, const char *fmt, ...) {
-  va_list args;
-  va_start( args, fmt );
-  vmessagef(parent, GTK_MESSAGE_WARNING, GTK_BUTTONS_CLOSE, _("Warning"), fmt, args);
-  va_end( args );
-}
-
 #ifndef FREMANTLE
 #define RESPONSE_YES  GTK_RESPONSE_YES
 #define RESPONSE_NO   GTK_RESPONSE_NO

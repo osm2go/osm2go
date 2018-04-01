@@ -23,7 +23,7 @@
 #include "appdata.h"
 #include "diff.h"
 #include "map.h"
-#include "misc.h"
+#include "notifications.h"
 #include "osm.h"
 #include "osm2go_platform.h"
 #include "net_io.h"

@@ -21,6 +21,7 @@
 
 #include "gps.h"
 #include "misc.h"
+#include "notifications.h"
 
 #include "osm-gps-map.h"
 #include "osm-gps-map-osd-select.h"

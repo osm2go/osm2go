@@ -27,6 +27,7 @@
 #include "list.h"
 #include "map.h"
 #include "misc.h"
+#include "notifications.h"
 #include "osm_api.h"
 #include "settings.h"
 #include "wms.h"
