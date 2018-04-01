@@ -1051,10 +1051,6 @@ appdata_internal::appdata_internal(map_state_t &mstate)
   : appdata_t(mstate)
 #ifdef FREMANTLE
   , program(nullptr)
-  , app_menu_view(nullptr)
-  , app_menu_wms(nullptr)
-  , app_menu_track(nullptr)
-  , app_menu_map(nullptr)
 #endif
   , btn_zoom_in(nullptr)
   , btn_zoom_out(nullptr)
