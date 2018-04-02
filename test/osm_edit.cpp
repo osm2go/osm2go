@@ -1044,7 +1044,7 @@ static void test_merge_nodes()
   assert_cmpnum(o->nodes.size(), 0);
 
   // now put both into a way, the way of the second node should be updated
-  for(int i = 0; i < 2; i++) {
+  for(int i = 0; i < 3; i++) {
     w = new way_t(0);
     o->way_attach(w);
     lpos_t pos(i + 4, i + 4);
@@ -1060,55 +1060,71 @@ static void test_merge_nodes()
   o->node_attach(n1);
   o->node_attach(n2);
 
+  // one way with only n1
   o->ways.begin()->second->append_node(n1);
   unsigned int rc, rrc;
   o->ways.begin()->second->reverse(o, rc, rrc);
   assert_cmpnum(rc, 0);
   assert_cmpnum(rrc, 0);
-  w = (++o->ways.begin())->second;
+
+  // one way with only n2
+  w = o->ways.rbegin()->second;
+  // put both nodes here, only one instance should remain
   w->append_node(n2);
   w->flags = 0;
+
+  w = (++o->ways.begin())->second;
+  // put both nodes here, only one instance should remain
+  w->append_node(n1);
+  w->append_node(n2);
+  w->flags = 0;
+
   o->relations.begin()->second->members.push_back(member_t(object_t(n1)));
-  r = (++o->relations.begin())->second;
+  r = o->relations.rbegin()->second;
   r->members.push_back(member_t(object_t(n2)));
   r->flags = 0;
   assert_cmpnum(o->ways.begin()->second->node_chain.size(), 2);
-  assert_cmpnum(w->node_chain.size(), 2);
+  assert_cmpnum(w->node_chain.size(), 3);
   assert(o->ways.begin()->second->node_chain.front() == n1);
   assert(o->ways.begin()->second->ends_with_node(n1));
   assert(w->node_chain.back() == n2);
   assert(w->ends_with_node(n2));
-  assert_cmpnum(n1->ways, 1);
+  assert_cmpnum(n1->ways, 2);
+  assert_cmpnum(n2->ways, 2);
   assert(o->relations.begin()->second->members.front().object == n1);
   assert(r->members.front().object == n2);
+  assert_cmpnum(o->nodes.size(), 5);
 
   conflict = true;
   n = o->mergeNodes(n1, n2, conflict);
   assert(n == n1);
   assert(n->lpos == newpos);
   assert(!conflict);
-  assert_cmpnum(o->nodes.size(), 3);
+  assert_cmpnum(o->nodes.size(), 4);
   assert_cmpnum(n->flags, OSM_FLAG_DIRTY);
   assert_cmpnum(r->members.size(), 1);
   assert(o->ways.begin()->second->first_node() == n1);
   assert(o->ways.begin()->second->ends_with_node(n1));
   assert(w->last_node() == n1);
   assert(w->ends_with_node(n1));
+  assert_cmpnum(w->node_chain.size(), 2);
   assert_cmpnum(w->flags, OSM_FLAG_DIRTY);
-  assert_cmpnum(n1->ways, 2);
+  assert_cmpnum(n1->ways, 3);
   assert(o->relations.begin()->second->members.front().object == n1);
+  // test member_t::operator==(object_t)
+  assert(o->relations.begin()->second->members.front() == object_t(n1));
   assert(r->members.front().object == n1);
   assert_cmpnum(r->flags, OSM_FLAG_DIRTY);
 
   // while at it: test backwards mapping to containing objects
   way_chain_t wchain;
   assert(o->find_way(node_collector(wchain, n1)) == nullptr);
-  assert_cmpnum(wchain.size(), 2);
+  assert_cmpnum(wchain.size(), 3);
   assert(std::find(wchain.begin(), wchain.end(), o->ways.begin()->second) != wchain.end());
   assert(std::find(wchain.begin(), wchain.end(), w) != wchain.end());
 
   // the relation with the highest id (since all are negative)
-  assert(r->descriptive_name() == "<ID #-1>");
+  assert_cmpstr(r->descriptive_name(), "<ID #-1>");
 }
 
 static void setup_way_relations_for_merge(osm_t::ref o, way_t *w0, way_t *w1)

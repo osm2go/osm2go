@@ -408,16 +408,27 @@ node_t *osm_t::mergeNodes(node_t *first, node_t *second, bool &conflict)
   for(std::map<item_id_t, way_t *>::iterator wit = ways.begin();
       remove->ways > 0 && wit != witEnd; wit++) {
     way_t * const way = wit->second;
-    node_chain_t::iterator it = way->node_chain.begin();
-    const node_chain_t::iterator itEnd = way->node_chain.end();
+    const node_chain_t::iterator itBegin = way->node_chain.begin();
+    node_chain_t::iterator it = itBegin;
+    node_chain_t::iterator itEnd = way->node_chain.end();
 
     while(remove->ways > 0 && (it = std::find(it, itEnd, remove)) != itEnd) {
       printf("  found node in way #" ITEM_ID_FORMAT "\n", way->id);
-      /* replace by node */
-      *it = keep;
 
-      /* and adjust way references of both nodes */
-      keep->ways++;
+      // check if this node is the same as the neighbor
+      if((it != itBegin && *(it - 1) == keep) || (it +1 != itEnd && *(it + 1) == keep)) {
+        // this node would now be twice in the way at adjacent positions
+        it = way->node_chain.erase(it);
+        itEnd = way->node_chain.end();
+      } else {
+        /* replace by keep */
+        *it = keep;
+        // no need to check this one again
+        it++;
+        keep->ways++;
+      }
+
+      /* and adjust way references of remove */
       assert_cmpnum_op(remove->ways, >, 0);
       remove->ways--;
 
