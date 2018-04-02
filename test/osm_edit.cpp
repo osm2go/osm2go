@@ -1254,6 +1254,91 @@ static void test_merge_ways()
   }
 }
 
+// test that neighbors in relations are merged if necessary
+static void test_way_merge_relation_neighbors()
+{
+  std::unique_ptr<osm_t> osm(new osm_t());
+  set_bounds(osm);
+
+  // delete a simple way
+  lpos_t l(10, 20);
+  node_t *n1 = osm->node_new(l);
+  osm->node_attach(n1);
+  l.y = 40;
+  node_t *n2 = osm->node_new(l);
+  osm->node_attach(n2);
+  l.x = 30;
+  node_t *n3 = osm->node_new(l);
+  osm->node_attach(n3);
+
+  way_t *w1 = new way_t(0);
+  w1->append_node(n1);
+  w1->append_node(n2);
+  osm->way_attach(w1);
+
+  way_t *w2 = new way_t(0);
+  w2->append_node(n2);
+  w2->append_node(n3);
+  osm->way_attach(w2);
+
+  relation_t *rel = new relation_t(0);
+  osm->relation_attach(rel);
+  relation_t *relcmp = new relation_t(0); // the intended target state
+  osm->relation_attach(relcmp);
+
+  // now put several instances of the same things into the relation to
+  // see that merging happens the right way
+
+  // to remove is first element, merge with next
+  rel->members.push_back(member_t(object_t(w2)));
+  rel->members.push_back(member_t(object_t(w1)));
+  relcmp->members.push_back(member_t(object_t(w1)));
+
+  // should not be touched
+  rel->members.push_back(member_t(object_t(w1)));
+  relcmp->members.push_back(member_t(object_t(w1)));
+  rel->members.push_back(member_t(object_t(w1), "role0"));
+  relcmp->members.push_back(member_t(object_t(w1), "role0"));
+
+  // merge with previous member
+  rel->members.push_back(member_t(object_t(w1)));
+  rel->members.push_back(member_t(object_t(w2)));
+  rel->members.push_back(member_t(object_t(w2))); // double-merge
+  relcmp->members.push_back(member_t(object_t(w1)));
+
+  // do not merge
+  rel->members.push_back(member_t(object_t(w1), "role1"));
+  relcmp->members.push_back(member_t(object_t(w1), "role1"));
+  rel->members.push_back(member_t(object_t(w2)));
+  relcmp->members.push_back(member_t(object_t(w2)));
+  rel->members.push_back(member_t(object_t(w1), "role2"));
+  relcmp->members.push_back(member_t(object_t(w1), "role2"));
+
+  // merge at the end
+  rel->members.push_back(member_t(object_t(w1), "rolem"));
+  rel->members.push_back(member_t(object_t(w2), "rolem"));
+  relcmp->members.push_back(member_t(object_t(w1), "rolem"));
+
+  bool conflict = true;
+  osm->mergeWays(w1, w2, conflict);
+  assert(!conflict);
+
+  for (unsigned int i = 0; i < relcmp->members.size(); i++) {
+    // first check individually to get better output in case of error
+    assert_cmpnum(rel->members[i].object.type, relcmp->members[i].object.type);
+    assert_cmpnum(rel->members[i].object.get_id(), relcmp->members[i].object.get_id());
+    if(rel->members[i].role == nullptr)
+      assert_null(relcmp->members[i].role);
+    else
+      assert_cmpstr(rel->members[i].role, relcmp->members[i].role);
+    assert(rel->members[i] == relcmp->members[i]);
+  }
+
+  // just to be sure
+  assert_cmpnum(rel->members.size(), relcmp->members.size());
+  assert(rel->members == relcmp->members);
+}
+
 static void test_api_adjust()
 {
  const std::string api06https = "https://api.openstreetmap.org/api/0.6";
@@ -1362,6 +1447,7 @@ int main()
   test_changeset();
   test_reverse();
   test_way_delete();
+  test_way_merge_relation_neighbors();
   test_member_delete();
   test_merge_nodes();
   test_merge_ways();

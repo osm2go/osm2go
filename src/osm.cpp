@@ -287,38 +287,42 @@ bool osm_t::tagSubset(const TagMap &sub, const TagMap &super)
 }
 
 struct relation_object_replacer {
-  struct member_replacer {
-    relation_t * const r;
-    const object_t &old;
-    const object_t &replace;
-    member_replacer(relation_t *rel, const object_t &t, const object_t &n)
-      : r(rel), old(t), replace(n) {}
-    void operator()(member_t &member);
-  };
-
   const object_t &old;
   const object_t &replace;
   relation_object_replacer(const object_t &t, const object_t &n) : old(t), replace(n) {}
   inline void operator()(std::pair<item_id_t, relation_t *> pair)
   { operator()(pair.second); }
-  void operator()(relation_t *r)
-  {
-    std::for_each(r->members.begin(), r->members.end(),
-                  member_replacer(r, old, replace));
-  }
+  void operator()(relation_t *r);
 };
 
-void relation_object_replacer::member_replacer::operator()(member_t &member)
+void relation_object_replacer::operator()(relation_t *r)
 {
-  if(member.object != old)
-    return;
+  const std::vector<member_t>::iterator itBegin = r->members.begin();
+  std::vector<member_t>::iterator itEnd = r->members.end();
 
-  printf("  found %s #" ITEM_ID_FORMAT " in relation #" ITEM_ID_FORMAT "\n",
-         old.type_string(), old.get_id(), r->id);
+  for(std::vector<member_t>::iterator it = itBegin; it != itEnd; it++) {
+    if(it->object != old)
+      continue;
 
-  member.object = replace;
+    printf("  found %s #" ITEM_ID_FORMAT " in relation #" ITEM_ID_FORMAT "\n",
+          old.type_string(), old.get_id(), r->id);
 
-  r->flags |= OSM_FLAG_DIRTY;
+    it->object = replace;
+
+    // check if this member now is the same as the next or previous one
+    if((it != itBegin && *(it - 1) == *it) || (it + 1 != itEnd && *it == *(it + 1))) {
+      it = r->members.erase(it);
+      // this is now the next element, go one back so this is actually checked
+      // as the for loop increments the iterator again
+      if(likely(it != itBegin))
+        it--;
+
+      // end iterator changed because container was modified, update it
+      itEnd = r->members.end();
+    }
+
+    r->flags |= OSM_FLAG_DIRTY;
+  }
 }
 
 struct relation_membership_functor {
