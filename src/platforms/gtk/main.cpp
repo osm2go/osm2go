@@ -1270,8 +1270,11 @@ static int application_run(const char *proj)
     project_load(appdata, settings->project);
 
   // check if map widget was already destroyed
-  if(likely(appdata.map))
-    appdata.map->set_autosave(true);
+  if(unlikely(appdata.map == nullptr)) {
+    printf("shutdown while starting up (2)\n");
+    return -1;
+  }
+  appdata.map->set_autosave(true);
   appdata.main_ui_enable();
 
   /* start GPS if enabled by config */
@@ -1281,25 +1284,21 @@ static int application_run(const char *proj)
   /* again let the ui do its thing */
   osm2go_platform::process_events();
   if(unlikely(appdata_t::window == nullptr)) {
-    printf("shutdown while starting up (2)\n");
+    printf("shutdown while starting up (3)\n");
     return -1;
   }
 
   /* start to interact with the user now that the gui is running */
-  if(unlikely(appdata.project && appdata.project->isDemo && settings->first_run_demo)) {
+  if(unlikely(appdata.project && appdata.project->isDemo && settings->first_run_demo))
     message_dlg(_("Welcome to OSM2Go"),
-                _("This is the first time you run OSM2Go. "
-                  "A demo project has been loaded to get you "
-                  "started. You can play around with this demo as much "
-                  "as you like. However, you cannot upload or download "
-                  "the demo project.\n\n"
-                  "In order to start working on real data you'll have "
-                  "to setup a new project and enter your OSM user name "
-                  "and password. You'll then be able to download the "
-                  "latest data from OSM and upload your changes into "
-                  "the OSM main database."
+                _("This is the first time you run OSM2Go. A demo project has been loaded "
+                  "to get you started. You can play around with this demo as much as you "
+                  "like. However, you cannot upload or download the demo project.\n\n"
+                  "In order to start working on real data you'll have to setup a new "
+                  "project and enter your OSM user name and password. You'll then be "
+                  "able to download the latest data from OSM and upload your changes "
+                  "into the OSM main database."
                   ));
-  }
 
   puts("main up");
 
