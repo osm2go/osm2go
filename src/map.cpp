@@ -291,7 +291,7 @@ void relation_select_functor::operator()(member_t& member)
     item = map->canvas->circle_new(CANVAS_GROUP_NODES_HL,
                              node->lpos.x, node->lpos.y,
                              map->style->highlight.width + map->style->node.radius,
-                             0, map->style->highlight.color, NO_COLOR);
+                             0, map->style->highlight.color);
     break;
     }
   case object_t::WAY: {
@@ -409,7 +409,7 @@ static void map_node_new(map_t *map, node_t *node, unsigned int radius,
 
 static map_item_t *map_way_new(map_t *map, canvas_group_t group,
                                way_t *way, const std::vector<lpos_t> &points, unsigned int width,
-                               color_t color, color_t fill_color) {
+                               color_t color, color_t fill_color = color_t::transparent()) {
   map_item_t *map_item = new map_item_t(object_t(way));
 
   if(way->draw.flags & OSM_DRAW_FLAG_AREA) {
@@ -488,15 +488,15 @@ void map_way_draw_functor::operator()(way_t *way)
                              width, way->draw.color, way->draw.area.color);
     } else if(way->draw.flags & OSM_DRAW_FLAG_BG) {
       chain.push_back(map_way_new(map, CANVAS_GROUP_WAYS_INT, way, points,
-                                  width, way->draw.color, NO_COLOR));
+                                  width, way->draw.color));
 
       map_item = map_way_new(map, CANVAS_GROUP_WAYS_OL, way, points,
                              way->draw.bg.width * map->state.detail,
-                             way->draw.bg.color, NO_COLOR);
+                             way->draw.bg.color);
 
     } else {
       map_item = map_way_new(map, CANVAS_GROUP_WAYS, way, points,
-                             width, way->draw.color, NO_COLOR);
+                             width, way->draw.color);
     }
   }
 
@@ -600,27 +600,22 @@ static void map_frisket_draw(map_t *map, const bounds_t &bounds) {
     /* top rectangle */
     map_frisket_rectangle(points, mult * bounds.min.x, mult * bounds.max.x,
                           mult * bounds.min.y, bounds.min.y);
-    map->canvas->polygon_new(CANVAS_GROUP_FRISKET, points,
-		       1, NO_COLOR, color);
+    map->canvas->polygon_new(CANVAS_GROUP_FRISKET, points, 1, color_t::transparent(), color);
 
     /* bottom rectangle */
     map_frisket_rectangle(points, mult * bounds.min.x, mult * bounds.max.x,
                           bounds.max.y, mult * bounds.max.y);
-    map->canvas->polygon_new(CANVAS_GROUP_FRISKET, points,
-		       1, NO_COLOR, color);
+    map->canvas->polygon_new(CANVAS_GROUP_FRISKET, points, 1, color_t::transparent(), color);
 
     /* left rectangle */
     map_frisket_rectangle(points, mult * bounds.min.x, bounds.min.x,
                           mult * bounds.min.y, mult * bounds.max.y);
-    map->canvas->polygon_new(CANVAS_GROUP_FRISKET, points,
-		       1, NO_COLOR, color);
+    map->canvas->polygon_new(CANVAS_GROUP_FRISKET, points, 1, color_t::transparent(), color);
 
     /* right rectangle */
     map_frisket_rectangle(points, bounds.max.x, mult * bounds.max.x,
                           mult * bounds.min.y, mult * bounds.max.y);
-    map->canvas->polygon_new(CANVAS_GROUP_FRISKET, points,
-		       1, NO_COLOR, color);
-
+    map->canvas->polygon_new(CANVAS_GROUP_FRISKET, points, 1, color_t::transparent(), color);
   }
 
   if(map->style->frisket.border.present) {
@@ -1081,7 +1076,7 @@ static void map_touchnode_update(map_t *map, int x, int y) {
 
     map->touchnode = map->canvas->circle_new(CANVAS_GROUP_DRAW, rnode->lpos.x, rnode->lpos.y,
                                              2 * map->style->node.radius, 0,
-                                             map->style->highlight.touch_color, NO_COLOR);
+                                             map->style->highlight.touch_color);
 
     map->touchnode_node = rnode;
   }
@@ -1789,7 +1784,7 @@ void map_t::track_pos(const lpos_t lpos) {
   }
 
   gps_item = canvas->circle_new(CANVAS_GROUP_GPS, lpos.x, lpos.y, radius, 0,
-                                style->track.gps_color, NO_COLOR);
+                                style->track.gps_color);
 }
 
 /**

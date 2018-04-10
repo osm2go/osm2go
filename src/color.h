@@ -42,6 +42,13 @@ public:
 
   inline uint32_t rgba() const { return value; }
   inline unsigned int rgb() const { return value >> 8; }
+
+  static inline color_t transparent()
+  {
+    color_t r;
+    r.value = 0;
+    return r;
+  }
 } __attribute__ ((packed));
 
 #endif /* COLOR_H */

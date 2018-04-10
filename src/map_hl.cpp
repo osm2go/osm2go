@@ -45,8 +45,8 @@ void map_hl_cursor_draw(map_t *map, int x, int y, unsigned int radius) {
 void map_hl_cursor_draw(map_t *map, lpos_t pos, unsigned int radius) {
   delete map->cursor;
 
-  map->cursor = map->canvas->circle_new(CANVAS_GROUP_DRAW, pos.x, pos.y,
-		  radius, 0, map->style->highlight.node_color, NO_COLOR);
+  map->cursor = map->canvas->circle_new(CANVAS_GROUP_DRAW, pos.x, pos.y, radius,
+                                        0, map->style->highlight.node_color);
 }
 
 /* special highlight for segments. use when cutting ways */
@@ -86,7 +86,7 @@ bool map_highlight_t::isHighlighted(const map_item_t& item) const
 canvas_item_t *map_highlight_t::circle_new(map_t *map, canvas_group_t group,
                                  map_item_t *map_item, int x, int y,
                                  unsigned int radius, color_t color) {
-  map_item->item = map->canvas->circle_new(group, x, y, radius, 0, color, NO_COLOR);
+  map_item->item = map->canvas->circle_new(group, x, y, radius, 0, color);
   items.push_back(map_item->item);
 
   map_item->item->set_user_data(map_item);
