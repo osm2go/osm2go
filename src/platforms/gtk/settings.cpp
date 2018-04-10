@@ -288,8 +288,8 @@ void settings_t::save() const {
 
 settings_t::settings_t()
   : base_path_fd(-1)
-  , enable_gps(FALSE)
-  , follow_gps(FALSE)
+  , enable_gps(false)
+  , follow_gps(false)
   , first_run_demo(false)
   , store_str(7)
   , store_bool(2)
