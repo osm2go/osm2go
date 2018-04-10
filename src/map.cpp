@@ -1320,7 +1320,7 @@ void map_t::init() {
   const bounds_t &bounds = appdata.project->osm->bounds;
 
   /* update canvas background color */
-  canvas->set_background(style->background.color);
+  set_bg_color_from_style();
 
   /* set initial zoom */
   set_zoom(state.zoom, false);
