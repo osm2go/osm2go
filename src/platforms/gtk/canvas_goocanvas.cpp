@@ -42,7 +42,7 @@ typedef std::unique_ptr<GooCanvasPoints, canvas_points_deleter> pointGuard;
 
 // since struct _GooCanvasItem does not exist, but is defined as an interface type
 // in the GooCanvas headers define it here and inherit from it to get the internal
-// casting type save
+// casting type safe
 struct _GooCanvasItem : public canvas_item_t {
 };
 
