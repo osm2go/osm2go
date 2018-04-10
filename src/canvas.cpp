@@ -246,8 +246,9 @@ static int canvas_item_info_get_segment(canvas_item_info_poly *item,
 
 /* try to find the object at position x/y by searching through the */
 /* item_info list */
-canvas_item_t *canvas_t::get_item_at(int x, int y) const {
-  printf("************ searching at %d %d *****************\n", x, y);
+canvas_item_t *canvas_t::get_item_at(lpos_t pos) const {
+  const int x = pos.x;
+  const int y = pos.y;
 
   /* convert all "fuzziness" into meters */
   int fuzziness = EXTRA_FUZZINESS_METER +

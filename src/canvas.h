@@ -134,7 +134,7 @@ public:
   /****** manipulating the canvas ******/
   void set_background(color_t bg_color);
   void erase(unsigned int group_mask);
-  canvas_item_t *get_item_at(int x, int y) const;
+  canvas_item_t *get_item_at(lpos_t pos) const;
   void set_zoom(double zoom);
   double get_zoom() const;
   void scroll_to(canvas_unit_t unit, int sx, int sy);

@@ -46,10 +46,10 @@ bool testInObject()
   std::unique_ptr<canvas_item_t> line(canvas->polygon_new(CANVAS_GROUP_WAYS, points, 1, 0, 0));
   assert(line);
 
-  canvas_item_t *search = canvas->get_item_at(200, 200);
+  canvas_item_t *search = canvas->get_item_at(lpos_t(200, 200));
   assert(line.get() == search);
 
-  search = canvas->get_item_at(40, 50);
+  search = canvas->get_item_at(lpos_t(40, 50));
   assert_null(search);
 
   return ret;

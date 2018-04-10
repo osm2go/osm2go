@@ -671,13 +671,7 @@ static void map_free_map_item_chains(appdata_t &appdata) {
 
 /* get the item at position x, y */
 map_item_t *map_t::item_at(int x, int y) {
-  printf("map check at %d/%d\n", x, y);
-
-  lpos_t pos = canvas->window2world(x, y);
-
-  printf("world check at %d/%d\n", pos.x, pos.y);
-
-  canvas_item_t *item = canvas->get_item_at(pos.x, pos.y);
+  canvas_item_t *item = canvas->get_item_at(canvas->window2world(x, y));
 
   if(!item) {
     printf("  there's no item\n");
