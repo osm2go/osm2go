@@ -235,7 +235,7 @@ canvas_item_polyline *canvas_t::polyline_new(canvas_group_t group, const std::ve
                             nullptr);
 
   if(CANVAS_SELECTABLE & (1<<group))
-    (void) new canvas_item_info_poly(this, group, item, FALSE, width, points);
+    (void) new canvas_item_info_poly(this, group, item, false, width, points);
 
   return static_cast<canvas_item_polyline *>(item);
 }
@@ -255,7 +255,7 @@ canvas_item_t *canvas_t::polygon_new(canvas_group_t group, const std::vector<lpo
                             nullptr);
 
   if(CANVAS_SELECTABLE & (1<<group))
-    (void) new canvas_item_info_poly(this, group, item, TRUE, width, points);
+    (void) new canvas_item_info_poly(this, group, item, true, width, points);
 
   return item;
 }
