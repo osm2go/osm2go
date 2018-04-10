@@ -71,7 +71,6 @@ struct canvas_item_t {
   static void operator delete(void *ptr);
 
   /****** manipulating items ******/
-  void set_pos(lpos_t *lpos);
   void set_zoom_max(float zoom_max);
   void set_dashed(unsigned int line_width, unsigned int dash_length_on,
                   unsigned int dash_length_off);

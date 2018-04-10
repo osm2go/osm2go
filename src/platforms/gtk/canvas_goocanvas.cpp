@@ -291,13 +291,6 @@ void canvas_item_polyline::set_points(const std::vector<lpos_t> &points) {
   g_object_set(G_OBJECT(this), "points", cpoints.get(), nullptr);
 }
 
-void canvas_item_t::set_pos(lpos_t *lpos) {
-  g_object_set(G_OBJECT(this),
-               "center-x", static_cast<gdouble>(lpos->x),
-               "center-y", static_cast<gdouble>(lpos->y),
-               nullptr);
-}
-
 void canvas_item_circle::set_radius(int radius) {
   g_object_set(G_OBJECT(this),
                "radius-x", static_cast<gdouble>(radius),
