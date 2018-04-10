@@ -81,17 +81,16 @@ static inline void map_item_destroy_canvas_item(map_item_t *m) {
   delete m->item;
 }
 
-void map_item_chain_destroy(map_item_chain_t *&chainP) {
-  if(!chainP) {
-    printf("nothing to destroy!\n");
+void visible_item_t::item_chain_destroy()
+{
+  if(map_item_chain == nullptr)
     return;
-  }
 
-  std::for_each(chainP->map_items.begin(), chainP->map_items.end(),
+  std::for_each(map_item_chain->map_items.begin(), map_item_chain->map_items.end(),
                 map_item_destroy_canvas_item);
 
-  delete chainP;
-  chainP = nullptr;
+  delete map_item_chain;
+  map_item_chain = nullptr;
 }
 
 static void map_node_select(map_t *map, node_t *node) {
@@ -558,7 +557,7 @@ void map_t::redraw_item(object_t object) {
     item_deselect();
 
   assert(object.is_real());
-  map_item_chain_destroy(static_cast<visible_item_t *>(object.obj)->map_item_chain);
+  static_cast<visible_item_t *>(object.obj)->item_chain_destroy();
 
   switch (object.type){
   case object_t::WAY:
@@ -1821,7 +1820,7 @@ void map_t::hide_selected() {
 
   item_deselect();
   way->flags |= OSM_FLAG_HIDDEN;
-  map_item_chain_destroy(way->map_item_chain);
+  way->item_chain_destroy();
 
   appdata.uicontrol->setActionEnable(MainUi::MENU_ITEM_MAP_SHOW_ALL, true);
 }

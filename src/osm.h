@@ -487,6 +487,8 @@ public:
   struct map_item_chain_t *map_item_chain;
 
   float zoom_max;
+
+  void item_chain_destroy();
 };
 
 class node_t : public visible_item_t {

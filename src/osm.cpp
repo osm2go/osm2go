@@ -1472,7 +1472,7 @@ way_chain_t osm_t::node_delete(node_t *node, bool remove_refs) {
     remove_from_relations(object_t(node));
 
   /* remove that nodes map representations */
-  map_item_chain_destroy(node->map_item_chain);
+  node->item_chain_destroy();
 
   if(!permanently) {
     printf("mark node #" ITEM_ID_FORMAT " as deleted\n", node->id);
@@ -1576,7 +1576,7 @@ void osm_t::way_delete(way_t *way) {
   remove_from_relations(object_t(way));
 
   /* remove it visually from the screen */
-  map_item_chain_destroy(way->map_item_chain);
+  way->item_chain_destroy();
 
   /* delete all nodes that aren't in other use now */
   std::for_each(way->node_chain.begin(), way->node_chain.end(),
@@ -2265,7 +2265,7 @@ bool way_t::merge(way_t *other, osm_t *osm, const std::vector<relation_t *> &rel
   printf("  request to extend way #" ITEM_ID_FORMAT "\n", other->id);
 
   // drop the visible items
-  map_item_chain_destroy(other->map_item_chain);
+  other->item_chain_destroy();
 
   assert(ends_with_node(other->node_chain.front()) ||
            ends_with_node(other->node_chain.back()));

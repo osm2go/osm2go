@@ -239,6 +239,4 @@ void map_action_ok(map_t *map);
 
 void map_delete_selected(map_t *map);
 
-void map_item_chain_destroy(map_item_chain_t *&chainP);
-
 #endif // MAP_H

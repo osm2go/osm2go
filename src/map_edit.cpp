@@ -131,7 +131,7 @@ void map_edit_way_add_segment(map_t *map, int x, int y) {
       }
 
       /* remove prior version of this way */
-      map_item_chain_destroy(map->action.way->map_item_chain);
+      map->action.way->item_chain_destroy();
 
       /* draw current way */
       map->style->colorize_way(map->action.way);
@@ -173,7 +173,7 @@ void map_edit_way_add_cancel(map_t *map) {
   chain.clear();
 
   /* remove ways visual representation */
-  map_item_chain_destroy(map->action.way->map_item_chain);
+  map->action.way->item_chain_destroy();
 
   osm->way_free(map->action.way);
   map->action.way = nullptr;
@@ -194,7 +194,7 @@ void map_draw_nodes::operator()(node_t* node)
     /* a node may have been a stand-alone node before, so remove its */
     /* visual representation as its now drawn as part of the way */
     /* (if at all) */
-    map_item_chain_destroy(node->map_item_chain);
+    node->item_chain_destroy();
   } else {
     /* we can be sure that no node gets inserted twice (even if twice in */
     /* the ways chain) because it gets assigned a non-ID_ILLEGAL id when */
@@ -259,7 +259,7 @@ void map_edit_way_add_ok(map_t *map) {
   }
 
   /* remove prior version of this way */
-  map_item_chain_destroy(map->action.way->map_item_chain);
+  map->action.way->item_chain_destroy();
 
   /* draw the updated way */
   map->draw(map->action.way);
@@ -305,7 +305,7 @@ void map_edit_way_node_add(map_t *map, int px, int py) {
       map->item_deselect();
 
       /* remove prior version of this way */
-      map_item_chain_destroy(way->map_item_chain);
+      way->item_chain_destroy();
 
       /* draw the updated way */
       map->draw(way);
@@ -404,7 +404,7 @@ void map_edit_way_cut(map_t *map, int px, int py) {
 
   /* remove prior version of this way */
   printf("remove visible version of way #" ITEM_ID_FORMAT "\n", way->id);
-  map_item_chain_destroy(way->map_item_chain);
+  way->item_chain_destroy();
 
   /* create a duplicate of the currently selected way */
   way_t * const neww = way->split(map->appdata.project->osm, cut_at, cut_at_node);
@@ -447,7 +447,7 @@ void redraw_way::operator()(const std::pair<item_id_t, way_t *> &p)
   printf("  node is part of way #" ITEM_ID_FORMAT ", redraw!\n", way->id);
 
   /* remove prior version of this way */
-  map_item_chain_destroy(way->map_item_chain);
+  way->item_chain_destroy();
 
   /* draw current way */
   map->style->colorize_way(way);
@@ -563,7 +563,7 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, int ex, int ey) {
 
   /* now update the visual representation of the node */
 
-  map_item_chain_destroy(node->map_item_chain);
+  node->item_chain_destroy();
   map->draw(node);
 
   /* visually update ways, node is part of */
