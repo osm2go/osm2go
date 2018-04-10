@@ -62,6 +62,7 @@ typedef enum {
 #endif
 
 class canvas_item_info_t;
+struct map_item_t;
 
 struct canvas_item_t {
   canvas_item_t() O2G_DELETED_FUNCTION;
@@ -75,8 +76,8 @@ struct canvas_item_t {
   void set_dashed(unsigned int line_width, unsigned int dash_length_on,
                   unsigned int dash_length_off);
   void to_bottom();
-  void set_user_data(void *data);
-  void *get_user_data();
+  void set_user_data(map_item_t *data);
+  map_item_t *get_user_data();
   void destroy_connect(void (*c_handler)(void *), void *data);
 
   /**

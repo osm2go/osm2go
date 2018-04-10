@@ -70,7 +70,7 @@ struct find_highlighted {
 
 bool find_highlighted::operator()(canvas_item_t* c)
 {
-  map_item_t *hl_item = static_cast<map_item_t *>(c->get_user_data());
+  map_item_t *hl_item = c->get_user_data();
 
   return hl_item && hl_item->object == item.object;
 }

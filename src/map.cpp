@@ -686,7 +686,7 @@ map_item_t *map_t::item_at(int x, int y) {
 
   printf("  there's an item (%p)\n", item);
 
-  map_item_t *map_item = static_cast<map_item_t *>(item->get_user_data());
+  map_item_t *map_item = item->get_user_data();
 
   if(!map_item) {
     printf("  item has no user data!\n");

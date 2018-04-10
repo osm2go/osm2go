@@ -347,12 +347,12 @@ void canvas_item_t::set_dashed(unsigned int line_width, unsigned int dash_length
   goo_canvas_line_dash_unref(dash);
 }
 
-void canvas_item_t::set_user_data(void *data) {
+void canvas_item_t::set_user_data(map_item_t *data) {
   g_object_set_data(G_OBJECT(this), "user data", data);
 }
 
-void *canvas_item_t::get_user_data() {
-  return g_object_get_data(G_OBJECT(this), "user data");
+map_item_t *canvas_item_t::get_user_data() {
+  return static_cast<map_item_t *>(g_object_get_data(G_OBJECT(this), "user data"));
 }
 
 class weak_t {
