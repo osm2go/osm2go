@@ -563,7 +563,7 @@ void wms_remove(appdata_t &appdata) {
 
   /* this cancels any wms adjustment in progress */
   if(appdata.map->action.type == MAP_ACTION_BG_ADJUST)
-    map_action_cancel(appdata.map);
+    appdata.map->action_cancel();
 
   setMenuEntries(appdata.uicontrol.get(), false);
 

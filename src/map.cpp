@@ -1446,48 +1446,48 @@ void map_t::set_action(map_action_t act) {
 }
 
 
-void map_action_ok(map_t *map) {
+void map_t::action_ok() {
   /* reset action now as this erases the statusbar and some */
   /* of the actions may set it */
-  map_action_t type = map->action.type;
-  map->set_action(MAP_ACTION_IDLE);
+  map_action_t type = action.type;
+  set_action(MAP_ACTION_IDLE);
 
   switch(type) {
   case MAP_ACTION_WAY_ADD:
-    map_edit_way_add_ok(map);
+    map_edit_way_add_ok(this);
     break;
 
   case MAP_ACTION_BG_ADJUST:
     /* save changes to bg_offset in project */
-    map->appdata.project->wms_offset.x = map->bg.offset.x;
-    map->appdata.project->wms_offset.y = map->bg.offset.y;
+    appdata.project->wms_offset.x = bg.offset.x;
+    appdata.project->wms_offset.y = bg.offset.y;
     break;
 
   case MAP_ACTION_NODE_ADD:
     {
-    pos_t pos = map->appdata.gps_state->get_pos();
+    pos_t pos = appdata.gps_state->get_pos();
     if(!pos.valid())
       break;
 
     node_t *node = nullptr;
-    osm_t::ref osm = map->appdata.project->osm;
+    osm_t::ref osm = appdata.project->osm;
 
     if(!osm->bounds.ll.contains(pos)) {
       map_t::outside_error();
     } else {
       node = osm->node_new(pos);
       osm->node_attach(node);
-      map->draw(node);
+      draw(node);
     }
-    map->set_action(MAP_ACTION_IDLE);
+    set_action(MAP_ACTION_IDLE);
 
-    map->item_deselect();
+    item_deselect();
 
     if(node) {
-      map_node_select(map, node);
+      map_node_select(this, node);
 
       /* let the user specify some tags for the new node */
-      info_dialog(appdata_t::window, map, osm, map->appdata.presets.get());
+      info_dialog(appdata_t::window, this, osm, appdata.presets.get());
     }
     }
 
@@ -1525,9 +1525,9 @@ struct short_way {
 };
 
 /* called from icon "trash" */
-void map_delete_selected(map_t *map) {
+void map_t::delete_selected() {
   /* work on local copy since de-selecting destroys the selection */
-  map_item_t item = map->selected;
+  map_item_t item = selected;
 
   const char *objtype = item.object.type_string();
   g_string msgtitle(g_strdup_printf(_("Delete selected %s?"), objtype));
@@ -1538,12 +1538,12 @@ void map_delete_selected(map_t *map) {
   msgtitle.reset();
 
   /* deleting the selected item de-selects it ... */
-  map->item_deselect();
+  item_deselect();
 
   printf("request to delete %s #" ITEM_ID_FORMAT "\n",
          objtype, item.object.obj->id);
 
-  osm_t::ref osm = map->appdata.project->osm;
+  osm_t::ref osm = appdata.project->osm;
   switch(item.object.type) {
   case object_t::NODE: {
     /* check if this node is part of a way with two nodes only. */
@@ -1557,7 +1557,7 @@ void map_delete_selected(map_t *map) {
 
     /* and mark it "deleted" in the database */
     const way_chain_t &chain = osm->node_delete(item.object.node);
-    std::for_each(chain.begin(), chain.end(), node_deleted_from_ways(map));
+    std::for_each(chain.begin(), chain.end(), node_deleted_from_ways(this));
 
     break;
   }

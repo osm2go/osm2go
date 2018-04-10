@@ -231,12 +231,19 @@ public:
    * @brief remove the item that shows the current GPS position
    */
   void remove_gps_position();
+
+  void action_cancel();
+  static inline void map_action_cancel(map_t *map)
+  { map->action_cancel(); }
+
+  void action_ok();
+  static inline void map_action_ok(map_t *map)
+  { map->action_ok(); }
+
+  void delete_selected();
+  static inline void map_delete_selected(map_t *map)
+  { map->delete_selected(); }
 };
 
-// Gtk callbacks
-void map_action_cancel(map_t *map);
-void map_action_ok(map_t *map);
-
-void map_delete_selected(map_t *map);
 
 #endif // MAP_H

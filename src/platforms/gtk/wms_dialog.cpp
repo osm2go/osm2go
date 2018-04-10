@@ -554,7 +554,7 @@ void wms_import(appdata_t &appdata) {
 
   /* this cancels any wms adjustment in progress */
   if(appdata.map->action.type == MAP_ACTION_BG_ADJUST)
-    map_action_cancel(appdata.map);
+    appdata.map->action_cancel();
 
   wms_t wms(appdata.project->wms_server);
 

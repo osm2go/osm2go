@@ -68,7 +68,7 @@ void map_edit_way_add_segment(map_t *map, int x, int y) {
 #if 0
     printf("detected double click -> simulate ok click\n");
     map->touchnode_clear();
-    map_action_ok(map->appdata);
+    map->action_ok();
 #else
     printf("detected double click -> ignore it as accidential\n");
 #endif

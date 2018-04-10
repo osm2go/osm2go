@@ -176,7 +176,7 @@ bool map_t::key_press_event(unsigned int keyval) {
   case GDK_Return:   // same as HILDON_HARDKEY_SELECT
     /* if the ok button is enabled, call its function */
     if(appdata.iconbar->isOkEnabled())
-      map_action_ok(this);
+      action_ok();
     /* otherwise if info is enabled call that */
     else if(appdata.iconbar->isInfoEnabled())
       info_dialog(appdata_t::window, this, appdata.project->osm, appdata.presets.get());
@@ -185,13 +185,13 @@ bool map_t::key_press_event(unsigned int keyval) {
   case GDK_Escape:   // same as HILDON_HARDKEY_ESC
     /* if the cancel button is enabled, call its function */
     if(appdata.iconbar->isCancelEnabled())
-      map_action_cancel(this);
+      appdata.map->action_cancel();
     break;
 
   case GDK_Delete:
     /* if the delete button is enabled, call its function */
     if(appdata.iconbar->isTrashEnabled())
-      map_delete_selected(this);
+      delete_selected();
     break;
 
 #ifdef FREMANTLE
@@ -261,21 +261,21 @@ map_t *map_t::create(appdata_t &a)
   return new map_internal(a);
 }
 
-void map_action_cancel(map_t *map) {
-  switch(map->action.type) {
+void map_t::action_cancel() {
+  switch(action.type) {
   case MAP_ACTION_WAY_ADD:
-    map_edit_way_add_cancel(map);
+    map_edit_way_add_cancel(this);
     break;
 
   case MAP_ACTION_BG_ADJUST: {
     /* undo all changes to bg_offset */
-    map->bg.offset.x = map->appdata.project->wms_offset.x;
-    map->bg.offset.y = map->appdata.project->wms_offset.y;
+    bg.offset.x = appdata.project->wms_offset.x;
+    bg.offset.y = appdata.project->wms_offset.y;
 
-    const bounds_t &bounds = map->appdata.project->osm->bounds;
-    static_cast<map_internal *>(map)->background.item->image_move(bounds.min.x + map->bg.offset.x,
-                                                                  bounds.min.y + map->bg.offset.y,
-                                                                  map->bg.scale.x, map->bg.scale.y);
+    const bounds_t &bounds = appdata.project->osm->bounds;
+    static_cast<map_internal *>(this)->background.item->image_move(bounds.min.x + bg.offset.x,
+                                                                   bounds.min.y + bg.offset.y,
+                                                                   bg.scale.x, bg.scale.y);
     break;
   }
 
@@ -283,7 +283,7 @@ void map_action_cancel(map_t *map) {
     break;
   }
 
-  map->set_action(MAP_ACTION_IDLE);
+  set_action(MAP_ACTION_IDLE);
 }
 
 /* ------------------- map background ------------------ */

@@ -111,7 +111,7 @@ void appdata_t::main_ui_enable() {
 
   /* cancel any action in progress */
   if(iconbar->isCancelEnabled())
-    map_action_cancel(map);
+    map->action_cancel();
 
   /* ---- set project name as window title ----- */
   g_string str;

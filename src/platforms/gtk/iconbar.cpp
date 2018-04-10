@@ -273,7 +273,7 @@ iconbar_gtk::iconbar_gtk(appdata_t& appdata)
   , info(tool_add(toolbar, appdata.icons, TOOL_ICON("info"), _("Properties"),
                   G_CALLBACK(on_info_clicked), &appdata, true))
   , trash(tool_add(toolbar, appdata.icons, TOOL_ICON("trash"), _("Delete"),
-                   G_CALLBACK(map_delete_selected), appdata.map, true))
+                   G_CALLBACK(map_t::map_delete_selected), appdata.map, true))
   , node_add(tool_add(toolbar, appdata.icons, TOOL_ICON("node_add"), _("New node"),
                       G_CALLBACK(on_node_add_clicked), appdata.map, true))
 #ifdef FINGER_UI
@@ -346,8 +346,8 @@ GtkWidget *iconbar_t::create(appdata_t &appdata) {
   gtk_widget_set_size_request(GTK_WIDGET(hbox), -1, 32);
 #endif
 
-  iconbar->ok = icon_add(hbox, appdata, TOOL_ICON("ok"), map_action_ok);
-  iconbar->cancel = icon_add(hbox, appdata, TOOL_ICON("cancel"), map_action_cancel);
+  iconbar->ok = icon_add(hbox, appdata, TOOL_ICON("ok"), map_t::map_action_ok);
+  iconbar->cancel = icon_add(hbox, appdata, TOOL_ICON("cancel"), map_t::map_action_cancel);
   gtk_box_pack_end(box, hbox, FALSE, FALSE, 0);
   iconbar->map_cancel_ok(false, false);
 #endif
@@ -368,9 +368,9 @@ void iconbar_register_buttons(appdata_t &appdata, GtkWidget *ok, GtkWidget *canc
   iconbar_gtk * const iconbar = static_cast<iconbar_gtk *>(appdata.iconbar.get());
 
   iconbar->ok = ok;
-  g_signal_connect_swapped(ok, "clicked", G_CALLBACK(map_action_ok), appdata.map);
+  g_signal_connect_swapped(ok, "clicked", G_CALLBACK(map_t::map_action_ok), appdata.map);
   iconbar->cancel = cancel;
-  g_signal_connect_swapped(cancel, "clicked", G_CALLBACK(map_action_cancel), appdata.map);
+  g_signal_connect_swapped(cancel, "clicked", G_CALLBACK(map_t::map_action_cancel), appdata.map);
 
   iconbar->map_cancel_ok(false, false);
 }
