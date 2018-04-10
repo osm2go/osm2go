@@ -39,7 +39,8 @@
 
 #define ST_ENTRY(map, a) map.push_back(std::pair<const char *, typeof(a) *>(#a, &a))
 
-static const std::string keybase = "/apps/" PACKAGE "/";
+#define KEYBASE "/apps/" PACKAGE "/"
+static const std::string keybase = KEYBASE;
 const char *api06https = "https://api.openstreetmap.org/api/0.6";
 const char *apihttp = "http://api.openstreetmap.org/api/0.";
 
@@ -136,7 +137,7 @@ settings_t *settings_t::instance() {
     }
 
     /* restore wms server list */
-    const gchar *countkey = "/apps/" PACKAGE "/wms/count";
+    const gchar *countkey = KEYBASE "wms/count";
     gconf_value_guard value(gconf_client_get(client.get(), countkey, nullptr));
     if(value) {
       unsigned int count = gconf_value_get_int(value.get());
@@ -282,7 +283,7 @@ void settings_t::save() const {
     gconf_client_set_string(client.get(), key.c_str(), cur->name.c_str(), nullptr);
   }
 
-  gconf_client_set_int(client.get(), "/apps/" PACKAGE "/wms/count", wms_server.size(), nullptr);
+  gconf_client_set_int(client.get(), KEYBASE "wms/count", wms_server.size(), nullptr);
 }
 
 settings_t::settings_t()
