@@ -63,6 +63,7 @@ enum map_action_t {
 
 struct appdata_t;
 class canvas_t;
+struct canvas_item_circle;
 struct canvas_item_t;
 struct map_highlight_t;
 struct style_t;
@@ -112,7 +113,7 @@ protected:
   void button_release(int x, int y);
   void bg_adjust(int x, int y);
 
-  canvas_item_t *gps_item; ///< the purple circle
+  canvas_item_circle *gps_item; ///< the purple circle
 
 public:
   enum clearLayers {

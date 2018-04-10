@@ -56,12 +56,11 @@ class map_internal : public map_t {
 public:
   map_internal(appdata_t &a);
 
-
   osm2go_platform::Timer autosave;
 
   struct {
     std::unique_ptr<GdkPixbuf, g_object_deleter> pix;
-    canvas_item_t *item;
+    canvas_item_pixmap *item;
   } background;
 
   static gboolean map_motion_notify_event(GtkWidget *, GdkEventMotion *event, map_internal *map);

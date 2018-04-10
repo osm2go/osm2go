@@ -71,8 +71,6 @@ struct canvas_item_t {
 
   /****** manipulating items ******/
   void set_pos(lpos_t *lpos);
-  void set_radius(int radius);
-  void set_points(const std::vector<lpos_t> &points);
   void set_zoom_max(float zoom_max);
   void set_dashed(unsigned int line_width, unsigned int dash_length_on,
                   unsigned int dash_length_off);
@@ -80,12 +78,32 @@ struct canvas_item_t {
   void set_user_data(void *data);
   void *get_user_data();
   void destroy_connect(void (*c_handler)(void *), void *data);
-  void image_move(int x, int y, float hscale, float vscale);
 
   /**
   * @brief get the polygon/polyway segment a certain coordinate is over
   */
   int get_segment(lpos_t pos) const;
+};
+
+struct canvas_item_circle : public canvas_item_t {
+  canvas_item_circle() O2G_DELETED_FUNCTION;
+  canvas_item_circle &operator=(const canvas_item_circle &) O2G_DELETED_FUNCTION;
+
+  void set_radius(int radius);
+};
+
+struct canvas_item_polyline : public canvas_item_t {
+  canvas_item_polyline() O2G_DELETED_FUNCTION;
+  canvas_item_polyline &operator=(const canvas_item_polyline &) O2G_DELETED_FUNCTION;
+
+  void set_points(const std::vector<lpos_t> &points);
+};
+
+struct canvas_item_pixmap : public canvas_item_t {
+  canvas_item_pixmap() O2G_DELETED_FUNCTION;
+  canvas_item_pixmap &operator=(const canvas_item_pixmap &) O2G_DELETED_FUNCTION;
+
+  void image_move(int x, int y, float hscale, float vscale);
 };
 
 struct canvas_dimensions {
@@ -123,15 +141,15 @@ public:
   void set_bounds(int minx, int miny, int maxx, int maxy);
 
   /***** creating/destroying items ******/
-  canvas_item_t *circle_new(canvas_group_t group,
+  canvas_item_circle *circle_new(canvas_group_t group,
                             int x, int y, unsigned int radius, int border,
                             color_t fill_col, color_t border_col);
-  canvas_item_t *polyline_new(canvas_group_t group, const std::vector<lpos_t> &points,
+  canvas_item_polyline *polyline_new(canvas_group_t group, const std::vector<lpos_t> &points,
                               unsigned int width, color_t color);
   canvas_item_t *polygon_new(canvas_group_t group, const std::vector<lpos_t> &points,
                              unsigned int width, color_t color,
                              color_t fill);
-  canvas_item_t *image_new(canvas_group_t group, icon_t::Pixmap pix, int x, int y,
+  canvas_item_pixmap *image_new(canvas_group_t group, icon_t::Pixmap pix, int x, int y,
                            float hscale, float vscale);
 
   void item_info_push(canvas_item_t *item);

@@ -1730,8 +1730,7 @@ void map_t::track_update_seg(track_seg_t &seg) {
 
     printf("second_last is visible -> updating last segment to %zu points\n", npoints);
 
-    canvas_item_t *item = seg.item_chain.back();
-    item->set_points(points);
+    static_cast<canvas_item_polyline *>(seg.item_chain.back())->set_points(points);
   } else {
     assert(begin + 1 == last);
     assert(last_is_visible);

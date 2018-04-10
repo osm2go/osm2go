@@ -186,7 +186,7 @@ void canvas_t::erase(unsigned int group_mask) {
   }
 }
 
-canvas_item_t *canvas_t::circle_new(canvas_group_t group,
+canvas_item_circle *canvas_t::circle_new(canvas_group_t group,
                                     int x, int y, unsigned int radius, int border,
                                     color_t fill_col, color_t border_col) {
   canvas_item_t *item =
@@ -200,7 +200,7 @@ canvas_item_t *canvas_t::circle_new(canvas_group_t group,
   if(CANVAS_SELECTABLE & (1<<group))
     (void) new canvas_item_info_circle(this, group, item, x, y, radius + border);
 
-  return item;
+  return static_cast<canvas_item_circle *>(item);
 }
 
 struct points_fill {
@@ -221,7 +221,7 @@ static GooCanvasPoints *canvas_points_create(const std::vector<lpos_t> &points) 
   return gpoints;
 }
 
-canvas_item_t *canvas_t::polyline_new(canvas_group_t group, const std::vector<lpos_t> &points,
+canvas_item_polyline *canvas_t::polyline_new(canvas_group_t group, const std::vector<lpos_t> &points,
                                       unsigned int width, color_t color) {
   pointGuard cpoints(canvas_points_create(points));
 
@@ -237,7 +237,7 @@ canvas_item_t *canvas_t::polyline_new(canvas_group_t group, const std::vector<lp
   if(CANVAS_SELECTABLE & (1<<group))
     (void) new canvas_item_info_poly(this, group, item, FALSE, width, points);
 
-  return item;
+  return static_cast<canvas_item_polyline *>(item);
 }
 
 canvas_item_t *canvas_t::polygon_new(canvas_group_t group, const std::vector<lpos_t> &points,
@@ -261,7 +261,7 @@ canvas_item_t *canvas_t::polygon_new(canvas_group_t group, const std::vector<lpo
 }
 
 /* place the image in pix centered on x/y on the canvas */
-canvas_item_t *canvas_t::image_new(canvas_group_t group, icon_t::Pixmap pix, int x,
+canvas_item_pixmap *canvas_t::image_new(canvas_group_t group, icon_t::Pixmap pix, int x,
                                    int y, float hscale, float vscale) {
   int width = gdk_pixbuf_get_width(pix);
   int height = gdk_pixbuf_get_height(pix);
@@ -276,7 +276,7 @@ canvas_item_t *canvas_t::image_new(canvas_group_t group, icon_t::Pixmap pix, int
     (void) new canvas_item_info_circle(this, group, item, x, y, radius);
   }
 
-  return item;
+  return reinterpret_cast<canvas_item_pixmap *>(item);
 }
 
 void canvas_item_t::operator delete(void *ptr) {
@@ -286,7 +286,7 @@ void canvas_item_t::operator delete(void *ptr) {
 
 /* ------------------------ accessing items ---------------------- */
 
-void canvas_item_t::set_points(const std::vector<lpos_t> &points) {
+void canvas_item_polyline::set_points(const std::vector<lpos_t> &points) {
   pointGuard cpoints(canvas_points_create(points));
   g_object_set(G_OBJECT(this), "points", cpoints.get(), nullptr);
 }
@@ -298,7 +298,7 @@ void canvas_item_t::set_pos(lpos_t *lpos) {
                nullptr);
 }
 
-void canvas_item_t::set_radius(int radius) {
+void canvas_item_circle::set_radius(int radius) {
   g_object_set(G_OBJECT(this),
                "radius-x", static_cast<gdouble>(radius),
                "radius-y", static_cast<gdouble>(radius),
@@ -380,8 +380,7 @@ void canvas_item_t::destroy_connect(void (*c_handler)(void *), void *data) {
                     new weak_t(c_handler, data));
 }
 
-void canvas_item_t::image_move(int x, int y, float hscale, float vscale) {
-
+void canvas_item_pixmap::image_move(int x, int y, float hscale, float vscale) {
   g_object_set(G_OBJECT(this),
                "x", static_cast<gdouble>(x) / hscale,
                "y", static_cast<gdouble>(y) / vscale,
