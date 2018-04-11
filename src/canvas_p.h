@@ -29,6 +29,13 @@
 #include <osm2go_cpp.h>
 #include <osm2go_stl.h>
 
+/* The fuzziness allows to specify how far besides an object a user may */
+/* click so it's still considered a click onto that object. This can */
+/* be given in meters _and_ in pixels. Both values will be added to */
+/* the total fuzziness. */
+#define EXTRA_FUZZINESS_METER  0
+#define EXTRA_FUZZINESS_PIXEL  8
+
 enum canvas_item_type_t { CANVAS_ITEM_CIRCLE, CANVAS_ITEM_POLY };
 
 class canvas_item_info_t {

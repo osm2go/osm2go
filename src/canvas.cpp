@@ -19,19 +19,6 @@
 
 /**
  * @file canvas.cpp
- *
- * this file contains framework independant canvas functionality like
- * e.g. a canvas agnostic way of detecting which items are at a certain
- * position. This is required for some canvas that don't provide this
- * function
- *
- * This also allows for a less precise item selection and especially
- * to differentiate between the clicks on a polygon border and its
- * interior
- *
- * References:
- * https://en.wikipedia.org/wiki/Point_in_polygon
- * https://www.visibone.com/inpoly/
  */
 
 #include "canvas.h"
@@ -45,13 +32,6 @@
 
 #include "osm2go_annotations.h"
 #include "osm2go_stl.h"
-
-/* The fuzziness allows to specify how far besides an object a user may */
-/* click so it's still considered a click onto that object. This can */
-/* be given in meters _and_ in pixels. Both values will be added to */
-/* the total fuzziness. */
-#define EXTRA_FUZZINESS_METER  0
-#define EXTRA_FUZZINESS_PIXEL  8
 
 canvas_t::canvas_t(osm2go_platform::Widget *w)
   : widget(w)
@@ -160,145 +140,4 @@ void canvas_t::item_info_push(canvas_item_t *item) {
                                                                      itEnd, info);
 
   std::rotate(it, it + 1, itEnd);
-}
-
-/* check whether a given point is inside a polygon */
-/* inpoly() taken from https://www.visibone.com/inpoly/ */
-static bool inpoly(const canvas_item_info_poly *poly, int x, int y) {
-  int xold, yold;
-
-  if(poly->num_points < 3)
-    return false;
-
-  xold = poly->points[poly->num_points - 1].x;
-  yold = poly->points[poly->num_points - 1].y;
-  bool inside = false;
-  for (unsigned i = 0 ; i < poly->num_points ; i++) {
-    int x1, y1, x2, y2;
-    int xnew = poly->points[i].x;
-    int ynew = poly->points[i].y;
-
-    if (xnew > xold) {
-      x1 = xold;
-      x2 = xnew;
-      y1 = yold;
-      y2 = ynew;
-    } else {
-      x1 = xnew;
-      x2 = xold;
-      y1 = ynew;
-      y2 = yold;
-    }
-    if ((xnew < x) == (x <= xold)          /* edge "open" at one end */
-        && (y - y1) * (long)(x2 - x1) < (y2 - y1) * (long)(x - x1))
-      inside = !inside;
-
-    xold = xnew;
-    yold = ynew;
-  }
-
-  return inside;
-}
-
-
-/* get the polygon/polyway segment a certain coordinate is over */
-static int canvas_item_info_get_segment(canvas_item_info_poly *item,
-                                        int x, int y, int fuzziness) {
-  int retval = -1;
-  float mindist = 1000000.0;
-  for(unsigned int i = 0; i < item->num_points - 1; i++) {
-
-#define AX (item->points[i].x)
-#define AY (item->points[i].y)
-#define BX (item->points[i+1].x)
-#define BY (item->points[i+1].y)
-#define CX static_cast<double>(x)
-#define CY static_cast<double>(y)
-
-    float len2 = pow(BY-AY,2)+pow(BX-AX,2);
-    float m = ((CX-AX)*(BX-AX)+(CY-AY)*(BY-AY)) / len2;
-
-    /* this is a possible candidate */
-    if((m >= 0.0) && (m <= 1.0)) {
-
-      float n;
-      if(abs(BX-AX) > abs(BY-AY))
-	n = fabs(sqrt(len2) * (AY+m*(BY-AY)-CY)/(BX-AX));
-      else
-	n = fabs(sqrt(len2) * -(AX+m*(BX-AX)-CX)/(BY-AY));
-
-      /* check if this is actually on the line and closer than anything */
-      /* we found so far */
-      if((n <= (item->width/2+fuzziness)) && (n < mindist)) {
-	retval = i;
-	mindist = n;
-      }
-    }
- }
-
-  /* the last and first point are identical for polygons in osm2go. */
-  /* goocanvas doesn't need that, but that's how OSM works and it saves */
-  /* us from having to check the last->first connection for polygons */
-  /* seperately */
-
-  return retval;
-}
-
-/* try to find the object at position x/y by searching through the */
-/* item_info list */
-canvas_item_t *canvas_t::get_item_at(lpos_t pos) const {
-  const int x = pos.x;
-  const int y = pos.y;
-
-  /* convert all "fuzziness" into meters */
-  int fuzziness = EXTRA_FUZZINESS_METER +
-    EXTRA_FUZZINESS_PIXEL / get_zoom();
-
-  /* search from top to bottom */
-  for(unsigned int group = CANVAS_GROUPS - 1; group > 0; group--) {
-    /* search through all item infos */
-    const std::vector<canvas_item_info_t *>::const_reverse_iterator itEnd = item_info[group].rend();
-    for(std::vector<canvas_item_info_t *>::const_reverse_iterator it = item_info[group].rbegin();
-        it != itEnd; it++) {
-      canvas_item_info_t *item = *it;
-      switch(item->type) {
-      case CANVAS_ITEM_CIRCLE: {
-        canvas_item_info_circle *circle = static_cast<canvas_item_info_circle *>(item);
-        int radius = circle->r;
-        if((x >= circle->center.x - radius - fuzziness) &&
-           (y >= circle->center.y - radius - fuzziness) &&
-           (x <= circle->center.x + radius + fuzziness) &&
-           (y <= circle->center.y + radius + fuzziness)) {
-
-          int xdist = circle->center.x - x;
-          int ydist = circle->center.y - y;
-          if(xdist * xdist + ydist * ydist < (radius + fuzziness) * (radius + fuzziness)) {
-            printf("circle item %p at %d/%d(%u)\n", item,
-                   circle->center.x, circle->center.y, circle->r);
-            return item->item;
-          }
-        }
-      } break;
-
-      case CANVAS_ITEM_POLY: {
-        canvas_item_info_poly *poly = static_cast<canvas_item_info_poly *>(item);
-        if((x >= poly->bbox.top_left.x - fuzziness) &&
-           (y >= poly->bbox.top_left.y - fuzziness) &&
-           (x <= poly->bbox.bottom_right.x + fuzziness) &&
-           (y <= poly->bbox.bottom_right.y + fuzziness)) {
-
-          int on_segment = canvas_item_info_get_segment(poly, x, y, fuzziness);
-          if((on_segment >= 0) || (poly->is_polygon && inpoly(poly, x, y)))
-            return item->item;
-        }
-      } break;
-
-      default:
-        assert_unreachable();
-      }
-    }
-  }
-  printf("************* nothing found ******************\n");
-
-  return nullptr;
 }
