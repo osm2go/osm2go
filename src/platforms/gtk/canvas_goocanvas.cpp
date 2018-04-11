@@ -243,7 +243,7 @@ static bool inpoly(const canvas_item_info_poly *poly, int x, int y) {
 }
 
 /* get the polygon/polyway segment a certain coordinate is over */
-static int canvas_item_info_get_segment(canvas_item_info_poly *item,
+static int canvas_item_info_get_segment(const canvas_item_info_poly *item,
                                         int x, int y, int fuzziness) {
   int retval = -1;
   float mindist = 1000000.0;
@@ -291,56 +291,70 @@ static int canvas_item_info_get_segment(canvas_item_info_poly *item,
   return retval;
 }
 
+struct item_at_functor {
+  const int x;
+  const int y;
+  const int fuzziness;
+  item_at_functor(const lpos_t pos, int f)
+    : x(pos.x), y(pos.y), fuzziness(f) {}
+  bool operator()(const canvas_item_info_t *item) const;
+};
+
+bool item_at_functor::operator()(const canvas_item_info_t* item) const
+{
+  switch(item->type) {
+  case CANVAS_ITEM_CIRCLE: {
+    const canvas_item_info_circle *circle = static_cast<const canvas_item_info_circle *>(item);
+    int radius = circle->r;
+    if((x >= circle->center.x - radius - fuzziness) &&
+        (y >= circle->center.y - radius - fuzziness) &&
+        (x <= circle->center.x + radius + fuzziness) &&
+        (y <= circle->center.y + radius + fuzziness)) {
+
+      int xdist = circle->center.x - x;
+      int ydist = circle->center.y - y;
+      if(xdist * xdist + ydist * ydist < (radius + fuzziness) * (radius + fuzziness))
+        return true;
+    }
+  } break;
+
+  case CANVAS_ITEM_POLY: {
+    const canvas_item_info_poly *poly = static_cast<const canvas_item_info_poly *>(item);
+    if((x >= poly->bbox.top_left.x - fuzziness) &&
+        (y >= poly->bbox.top_left.y - fuzziness) &&
+        (x <= poly->bbox.bottom_right.x + fuzziness) &&
+        (y <= poly->bbox.bottom_right.y + fuzziness)) {
+
+      int on_segment = canvas_item_info_get_segment(poly, x, y, fuzziness);
+      if((on_segment >= 0) || (poly->is_polygon && inpoly(poly, x, y)))
+        return true;
+    }
+  } break;
+
+  default:
+    assert_unreachable();
+  }
+
+  return false;
+}
+
 /* try to find the object at position x/y by searching through the */
 /* item_info list */
 canvas_item_t *canvas_t::get_item_at(lpos_t pos) const {
-  const int x = pos.x;
-  const int y = pos.y;
-
   /* convert all "fuzziness" into meters */
   int fuzziness = EXTRA_FUZZINESS_METER +
     EXTRA_FUZZINESS_PIXEL / get_zoom();
+
+  const item_at_functor fc(pos, fuzziness);
 
   /* search from top to bottom */
   for(unsigned int group = CANVAS_GROUPS - 1; group > 0; group--) {
     /* search through all item infos */
     const std::vector<canvas_item_info_t *>::const_reverse_iterator itEnd = item_info[group].rend();
-    for(std::vector<canvas_item_info_t *>::const_reverse_iterator it = item_info[group].rbegin();
-        it != itEnd; it++) {
-      canvas_item_info_t *item = *it;
-      switch(item->type) {
-      case CANVAS_ITEM_CIRCLE: {
-        canvas_item_info_circle *circle = static_cast<canvas_item_info_circle *>(item);
-        int radius = circle->r;
-        if((x >= circle->center.x - radius - fuzziness) &&
-           (y >= circle->center.y - radius - fuzziness) &&
-           (x <= circle->center.x + radius + fuzziness) &&
-           (y <= circle->center.y + radius + fuzziness)) {
-
-          int xdist = circle->center.x - x;
-          int ydist = circle->center.y - y;
-          if(xdist * xdist + ydist * ydist < (radius + fuzziness) * (radius + fuzziness))
-            return item->item;
-        }
-      } break;
-
-      case CANVAS_ITEM_POLY: {
-        canvas_item_info_poly *poly = static_cast<canvas_item_info_poly *>(item);
-        if((x >= poly->bbox.top_left.x - fuzziness) &&
-           (y >= poly->bbox.top_left.y - fuzziness) &&
-           (x <= poly->bbox.bottom_right.x + fuzziness) &&
-           (y <= poly->bbox.bottom_right.y + fuzziness)) {
-
-          int on_segment = canvas_item_info_get_segment(poly, x, y, fuzziness);
-          if((on_segment >= 0) || (poly->is_polygon && inpoly(poly, x, y)))
-            return item->item;
-        }
-      } break;
-
-      default:
-        assert_unreachable();
-      }
-    }
+    const std::vector<canvas_item_info_t *>::const_reverse_iterator it = std::find_if(item_info[group].rbegin(),
+                                                                                      itEnd, fc);
+    if (it != itEnd)
+      return (*it)->item;
   }
 
   return nullptr;
