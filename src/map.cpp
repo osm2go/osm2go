@@ -402,9 +402,7 @@ static void map_node_new(map_t *map, node_t *node, unsigned int radius,
     node->map_item_chain = new map_item_chain_t();
   node->map_item_chain->map_items.push_back(map_item);
 
-  map_item->item->set_user_data(map_item);
-
-  map_item->item->destroy_connect(map_item_t::free, map_item);
+  map_item->item->set_user_data(map_item, map_item_t::free);
 }
 
 static map_item_t *map_way_new(map_t *map, canvas_group_t group,
@@ -429,9 +427,7 @@ static map_item_t *map_way_new(map_t *map, canvas_group_t group,
   if (group != CANVAS_GROUP_WAYS_OL && way->draw.dash_length_on > 0)
     map_item->item->set_dashed(width, way->draw.dash_length_on, way->draw.dash_length_off);
 
-  map_item->item->set_user_data(map_item);
-
-  map_item->item->destroy_connect(map_item_t::free, map_item);
+  map_item->item->set_user_data(map_item, map_item_t::free);
 
   return map_item;
 }
@@ -476,9 +472,7 @@ void map_way_draw_functor::operator()(way_t *way)
 
     // TODO: decide: do we need canvas_item_t::set_zoom_max() here too?
 
-    map_item->item->set_user_data(map_item);
-
-    map_item->item->destroy_connect(map_item_t::free, map_item);
+    map_item->item->set_user_data(map_item, map_item_t::free);
   } else {
     /* draw way */
     float width = way->draw.width * map->state.detail;

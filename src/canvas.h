@@ -75,7 +75,7 @@ struct canvas_item_t {
   void set_dashed(unsigned int line_width, unsigned int dash_length_on,
                   unsigned int dash_length_off);
   void to_bottom();
-  void set_user_data(map_item_t *data);
+  void set_user_data(map_item_t *data, void (*c_handler)(map_item_t *));
   map_item_t *get_user_data();
   void destroy_connect(void (*c_handler)(void *), void *data);
 

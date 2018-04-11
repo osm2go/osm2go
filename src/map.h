@@ -77,8 +77,8 @@ struct map_item_t {
   bool highlight;
   canvas_item_t *item;
 
-  static inline void free(void *p) {
-    delete static_cast<map_item_t *>(p);
+  static inline void free(map_item_t *p) {
+    delete p;
   }
 
   /**
