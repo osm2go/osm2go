@@ -35,6 +35,10 @@ bool testInObject()
   std::unique_ptr<canvas_t> canvas(canvas_t::create());
   assert(canvas);
 
+  // a circle that should have nothing to do with the initial search
+  std::unique_ptr<canvas_item_circle> circle(canvas->circle_new(CANVAS_GROUP_WAYS, 100, 20, 15,
+                                                                0, color_t::transparent()));
+
   // a square, rotated by 45 degrees
   std::vector<lpos_t> points;
   points.push_back(lpos_t(0, 200));
@@ -51,6 +55,12 @@ bool testInObject()
 
   search = canvas->get_item_at(lpos_t(40, 50));
   assert_null(search);
+
+  // now try to find the circle
+  // the given position is slightly outside the circle, but the fuzziness
+  // should still catch it
+  search = canvas->get_item_at(lpos_t(100, 38));
+  assert(circle.get() == search);
 
   return ret;
 }
