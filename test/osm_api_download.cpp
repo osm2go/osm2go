@@ -138,6 +138,10 @@ int main()
   strcat(tmpdir, "/");
 
   curl_global_init(CURL_GLOBAL_ALL);
+  xmlInitParser();
+#if !GLIB_CHECK_VERSION(2,36,0)
+  g_type_init();
+#endif
 
   download_fine();
   download_fine_was_gz();
@@ -145,6 +149,7 @@ int main()
   download_bad_server();
   download_bad_coords();
 
+  xmlCleanupParser();
   curl_global_cleanup();
 
   assert_cmpnum(rmdir(tmpdir), 0);
