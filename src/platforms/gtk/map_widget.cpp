@@ -25,7 +25,6 @@
 #include "gps.h"
 #include "iconbar.h"
 #include "info.h"
-#include "map_edit.h"
 #include "map_hl.h"
 #include "misc.h"
 #include "osm2go_platform.h"
@@ -264,7 +263,7 @@ map_t *map_t::create(appdata_t &a)
 void map_t::action_cancel() {
   switch(action.type) {
   case MAP_ACTION_WAY_ADD:
-    map_edit_way_add_cancel(this);
+    way_add_cancel();
     break;
 
   case MAP_ACTION_BG_ADJUST: {

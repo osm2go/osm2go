@@ -23,7 +23,6 @@
 #include "icon.h"
 #include "info.h"
 #include "map.h"
-#include "map_edit.h"
 #include "osm.h"
 #include "project.h"
 
@@ -285,7 +284,7 @@ iconbar_gtk::iconbar_gtk(appdata_t& appdata)
   , way_cut(menu_add(menu, appdata, MENU_ICON("way_cut"),
             _("Split way"), G_CALLBACK(on_way_cut_clicked)))
   , way_reverse(menu_add(menu, appdata, MENU_ICON("way_reverse"),
-                _("Reverse way"), G_CALLBACK(map_edit_way_reverse)))
+                _("Reverse way"), G_CALLBACK(map_t::edit_way_reverse)))
 #else
   , way_add(tool_add(toolbar, appdata.icons, TOOL_ICON("way_add"), _("Add way"),
                      G_CALLBACK(on_way_add_clicked), appdata.map))
@@ -294,7 +293,7 @@ iconbar_gtk::iconbar_gtk(appdata_t& appdata)
   , way_cut(tool_add(toolbar, appdata.icons, TOOL_ICON("way_cut"), _("Split way"),
                      G_CALLBACK(on_way_cut_clicked), appdata.map))
   , way_reverse(tool_add(toolbar, appdata.icons, TOOL_ICON("way_reverse"), _("Reverse way"),
-                         G_CALLBACK(map_edit_way_reverse), appdata.map))
+                         G_CALLBACK(map_t::edit_way_reverse), appdata.map))
 #endif
   , cancel(nullptr)
   , ok(nullptr)

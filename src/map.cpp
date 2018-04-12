@@ -25,7 +25,6 @@
 #include "gps.h"
 #include "iconbar.h"
 #include "info.h"
-#include "map_edit.h"
 #include "map_hl.h"
 #include "misc.h"
 #include "notifications.h"
@@ -1103,11 +1102,11 @@ void map_t::button_press(float x, float y) {
   switch(action.type) {
 
   case MAP_ACTION_WAY_NODE_ADD:
-    map_edit_way_node_add_highlight(this, pen_down.on_item, x, y);
+    way_node_add_highlight(pen_down.on_item, x, y);
     break;
 
   case MAP_ACTION_WAY_CUT:
-    map_edit_way_cut_highlight(this, pen_down.on_item, x, y);
+    way_cut_highlight(pen_down.on_item, x, y);
     break;
 
   case MAP_ACTION_NODE_ADD:
@@ -1171,7 +1170,7 @@ void map_t::button_release(int x, int y) {
         map_hl_cursor_clear(this);
 
         /* now actually move the node */
-        map_edit_node_move(this, pen_down.on_item, x, y);
+        node_move(pen_down.on_item, x, y);
       }
     }
     break;
@@ -1208,21 +1207,21 @@ void map_t::button_release(int x, int y) {
     printf("released after WAY ADD\n");
     map_hl_cursor_clear(this);
 
-    map_edit_way_add_segment(this, x, y);
+    way_add_segment(x, y);
     break;
 
   case MAP_ACTION_WAY_NODE_ADD:
     printf("released after WAY NODE ADD\n");
     map_hl_cursor_clear(this);
 
-    map_edit_way_node_add(this, x, y);
+    way_node_add(x, y);
     break;
 
   case MAP_ACTION_WAY_CUT:
     printf("released after WAY CUT\n");
     map_hl_cursor_clear(this);
 
-    map_edit_way_cut(this, x, y);
+    way_cut(x, y);
     break;
 
   default:
@@ -1265,12 +1264,12 @@ void map_t::handle_motion(int x, int y)
 
   case MAP_ACTION_WAY_NODE_ADD:
     map_hl_cursor_clear(this);
-    map_edit_way_node_add_highlight(this, item_at(x, y), x, y);
+    way_node_add_highlight(item_at(x, y), x, y);
     break;
 
   case MAP_ACTION_WAY_CUT:
     map_hl_cursor_clear(this);
-    map_edit_way_cut_highlight(this, item_at(x, y), x, y);
+    way_cut_highlight(item_at(x, y), x, y);
     break;
 
   default:
@@ -1402,7 +1401,7 @@ void map_t::set_action(map_action_t act) {
     printf("starting new way\n");
 
     item_deselect();
-    map_edit_way_add_begin(this);
+    way_add_begin();
     break;
   }
 
@@ -1443,7 +1442,7 @@ void map_t::action_ok() {
 
   switch(type) {
   case MAP_ACTION_WAY_ADD:
-    map_edit_way_add_ok(this);
+    way_add_ok();
     break;
 
   case MAP_ACTION_BG_ADJUST:

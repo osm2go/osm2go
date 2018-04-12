@@ -17,12 +17,11 @@
  * along with OSM2Go.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "map_edit.h"
+#include "map.h"
 
 #include "appdata.h"
 #include "iconbar.h"
 #include "info.h"
-#include "map.h"
 #include "map_hl.h"
 #include "misc.h"
 #include "notifications.h"
@@ -40,10 +39,10 @@
 
 /* -------------------------- way_add ----------------------- */
 
-void map_edit_way_add_begin(map_t *map) {
-  assert_null(map->action.way);
-  map->action.way = new way_t(0);
-  map->action.extending = nullptr;
+void map_t::way_add_begin() {
+  assert_null(action.way);
+  action.way = new way_t(0);
+  action.extending = nullptr;
 }
 
 struct check_first_last_node {
@@ -54,33 +53,33 @@ struct check_first_last_node {
   }
 };
 
-void map_edit_way_add_segment(map_t *map, int x, int y) {
+void map_t::way_add_segment(int x, int y) {
 
   /* convert mouse position to canvas (world) position */
-  lpos_t pos = map->canvas->window2world(x, y);
+  lpos_t pos = canvas->window2world(x, y);
 
   /* check if this was a double click. This is the case if */
   /* the last node placed is less than 5 pixels from the current */
   /* position */
-  const node_t *lnode = map->action.way->last_node();
-  if(lnode && (map->state.zoom * std::sqrt((lnode->lpos.x - pos.x) * (lnode->lpos.x - pos.x) +
-                                           (lnode->lpos.y - pos.y) * (lnode->lpos.y - pos.y))) < 5) {
+  const node_t *lnode = action.way->last_node();
+  if(lnode && (state.zoom * std::sqrt((lnode->lpos.x - pos.x) * (lnode->lpos.x - pos.x) +
+                                      (lnode->lpos.y - pos.y) * (lnode->lpos.y - pos.y))) < 5) {
 #if 0
     printf("detected double click -> simulate ok click\n");
-    map->touchnode_clear();
-    map->action_ok();
+    touchnode_clear();
+    action_ok();
 #else
     printf("detected double click -> ignore it as accidential\n");
 #endif
   } else {
 
     /* use the existing node if one was touched */
-    node_t *node = map->touchnode_get_node();
-    osm_t::ref osm = map->appdata.project->osm;
+    node_t *node = touchnode_get_node();
+    osm_t::ref osm = appdata.project->osm;
     if(node != nullptr) {
       printf("  re-using node #" ITEM_ID_FORMAT "\n", node->id);
 
-      assert(map->action.way != nullptr);
+      assert(action.way != nullptr);
 
       /* check whether this node is first or last one of a different way */
       way_t *touch_way = nullptr;
@@ -88,26 +87,26 @@ void map_edit_way_add_segment(map_t *map, int x, int y) {
 
       /* remeber this way as this may be the last node placed */
       /* and we might want to join this with this other way */
-      map->action.ends_on = touch_way;
+      action.ends_on = touch_way;
 
       /* is this the first node the user places? */
-      if(map->action.way->node_chain.empty()) {
-	map->action.extending = touch_way;
+      if(action.way->node_chain.empty()) {
+        action.extending = touch_way;
 
-	if(map->action.extending) {
+        if(action.extending) {
           if(!yes_no_f(nullptr, MISC_AGAIN_ID_EXTEND_WAY, _("Extend way?"),
-	       _("Do you want to extend the way present at this location?")))
-	    map->action.extending = nullptr;
-	  else
-	    /* there are immediately enough nodes for a valid way */
-	    map->appdata.iconbar->map_cancel_ok(true, true);
-	}
+             _("Do you want to extend the way present at this location?")))
+            action.extending = nullptr;
+          else
+            /* there are immediately enough nodes for a valid way */
+            appdata.iconbar->map_cancel_ok(true, true);
+        }
       }
 
     } else {
       /* the current way doesn't end on another way if we are just placing */
       /* a new node */
-      map->action.ends_on = nullptr;
+      action.ends_on = nullptr;
 
       if(!osm->bounds.contains(pos))
         map_t::outside_error();
@@ -116,26 +115,26 @@ void map_edit_way_add_segment(map_t *map, int x, int y) {
     }
 
     if(node) {
-      assert(map->action.way != nullptr);
-      map->action.way->append_node(node);
+      assert(action.way != nullptr);
+      action.way->append_node(node);
 
-      switch(map->action.way->node_chain.size()) {
+      switch(action.way->node_chain.size()) {
       case 1:
         /* replace "place first node..." message */
-        map->appdata.uicontrol->showNotification(_("Place next node of way"));
+        appdata.uicontrol->showNotification(_("Place next node of way"));
         break;
       case 2:
         /* two nodes are enough for a valid way */
-        map->appdata.iconbar->map_cancel_ok(true, true);
+        appdata.iconbar->map_cancel_ok(true, true);
         break;
       }
 
       /* remove prior version of this way */
-      map->action.way->item_chain_destroy();
+      action.way->item_chain_destroy();
 
       /* draw current way */
-      map->style->colorize_way(map->action.way);
-      map->draw(map->action.way);
+      style->colorize_way(action.way);
+      draw(action.way);
     }
   }
 }
@@ -159,24 +158,24 @@ void map_unref_ways::operator()(node_t* node)
   }
 }
 
-void map_edit_way_add_cancel(map_t *map) {
-  osm_t::ref osm = map->appdata.project->osm;
+void map_t::way_add_cancel() {
+  osm_t::ref osm = appdata.project->osm;
   assert(osm);
 
   printf("  removing temporary way\n");
-  assert(map->action.way != nullptr);
+  assert(action.way != nullptr);
 
   /* remove all nodes that have been created for this way */
   /* (their way count will be 0 after removing the way) */
-  node_chain_t &chain = map->action.way->node_chain;
+  node_chain_t &chain = action.way->node_chain;
   std::for_each(chain.begin(), chain.end(), map_unref_ways(osm));
   chain.clear();
 
   /* remove ways visual representation */
-  map->action.way->item_chain_destroy();
+  action.way->item_chain_destroy();
 
-  osm->way_free(map->action.way);
-  map->action.way = nullptr;
+  osm->way_free(action.way);
+  action.way = nullptr;
 }
 
 struct map_draw_nodes {
@@ -205,39 +204,39 @@ void map_draw_nodes::operator()(node_t* node)
   map->draw(node);
 }
 
-void map_edit_way_add_ok(map_t *map) {
-  osm_t::ref osm = map->appdata.project->osm;
+void map_t::way_add_ok() {
+  osm_t::ref osm = appdata.project->osm;
 
   assert(osm);
-  assert(map->action.way != nullptr);
+  assert(action.way != nullptr);
 
   /* transfer all nodes that have been created for this way */
   /* into the node chain */
 
   /* (their way count will be 0 after removing the way) */
-  node_chain_t &chain = map->action.way->node_chain;
-  std::for_each(chain.begin(), chain.end(), map_draw_nodes(map));
+  node_chain_t &chain = action.way->node_chain;
+  std::for_each(chain.begin(), chain.end(), map_draw_nodes(this));
 
   /* attach to existing way if the user requested so */
-  if(map->action.extending) {
+  if(action.extending) {
     // this is triggered when the user started with extending an existing way
     // since the merged way is a temporary one there are no relation memberships
-    map->action.extending->merge(map->action.way, osm);
+    action.extending->merge(action.way, osm);
 
-    map->action.way = map->action.extending;
+    action.way = action.extending;
   } else {
     /* now move the way itself into the main data structure */
-    osm->way_attach(map->action.way);
+    osm->way_attach(action.way);
   }
 
   /* we might already be working on the "ends_on" way as we may */
   /* be extending it. Joining the same way doesn't make sense. */
-  if(map->action.ends_on && (map->action.ends_on == map->action.way)) {
+  if(action.ends_on && (action.ends_on == action.way)) {
     printf("  the new way ends on itself -> don't join itself\n");
-    map->action.ends_on = nullptr;
+    action.ends_on = nullptr;
   }
 
-  if(map->action.ends_on &&
+  if(action.ends_on &&
      yes_no_f(nullptr, MISC_AGAIN_ID_EXTEND_WAY_END, _("Join way?"),
               _("Do you want to join the way present at this location?"))) {
     printf("  this new way ends on another way\n");
@@ -250,8 +249,8 @@ void map_edit_way_add_ok(map_t *map) {
     /* two existing ways using a new way between them */
 
     bool conflict;
-    map->action.way = osm->mergeWays(map->action.way, map->action.ends_on, conflict);
-    map->action.ends_on = nullptr;
+    action.way = osm->mergeWays(action.way, action.ends_on, conflict);
+    action.ends_on = nullptr;
 
     if(conflict)
       message_dlg(_("Way tag conflict"),
@@ -259,41 +258,40 @@ void map_edit_way_add_ok(map_t *map) {
   }
 
   /* remove prior version of this way */
-  map->action.way->item_chain_destroy();
+  action.way->item_chain_destroy();
 
   /* draw the updated way */
-  map->draw(map->action.way);
+  draw(action.way);
 
-  map->select_way(map->action.way);
+  select_way(action.way);
 
-  map->action.way = nullptr;
+  action.way = nullptr;
 
   /* let the user specify some tags for the new way */
-  map->info_selected();
+  info_selected();
 }
 
 /* -------------------------- way_node_add ----------------------- */
 
-void map_edit_way_node_add_highlight(map_t *map, map_item_t *item,
-                                     int x, int y) {
-  if(map->item_is_selected_way(item)) {
-    lpos_t pos = map->canvas->window2world(x, y);
+void map_t::way_node_add_highlight(map_item_t *item, int x, int y) {
+  if(item_is_selected_way(item)) {
+    lpos_t pos = canvas->window2world(x, y);
     if(item->get_segment(pos) >= 0)
-      map_hl_cursor_draw(map, pos, map->style->node.radius);
+      map_hl_cursor_draw(this, pos, style->node.radius);
   }
 }
 
-void map_edit_way_node_add(map_t *map, int px, int py) {
+void map_t::way_node_add(int px, int py) {
   /* check if we are still hovering above the selected way */
-  map_item_t *item = map->item_at(px, py);
-  if(map->item_is_selected_way(item)) {
+  map_item_t *item = item_at(px, py);
+  if(item_is_selected_way(item)) {
     /* convert mouse position to canvas (world) position */
-    lpos_t pos = map->canvas->window2world(px, py);
+    lpos_t pos = canvas->window2world(px, py);
     int insert_after = item->get_segment(pos) + 1;
     if(insert_after > 0) {
       /* create new node */
-      node_t* node = map->appdata.project->osm->node_new(pos);
-      map->appdata.project->osm->node_attach(node);
+      node_t* node = appdata.project->osm->node_new(pos);
+      appdata.project->osm->node_attach(node);
 
       /* insert it into ways chain of nodes */
       way_t *way = item->object.way;
@@ -302,38 +300,38 @@ void map_edit_way_node_add(map_t *map, int px, int py) {
       way->node_chain.insert(way->node_chain.begin() + insert_after + 1, node);
 
       /* clear selection */
-      map->item_deselect();
+      item_deselect();
 
       /* remove prior version of this way */
       way->item_chain_destroy();
 
       /* draw the updated way */
-      map->draw(way);
+      draw(way);
 
       /* remember that this node is contained in one way */
       node->ways=1;
 
       /* and now draw the node */
-      map->draw(node);
+      draw(node);
 
       /* and that the way needs to be uploaded */
       way->flags |= OSM_FLAG_DIRTY;
 
       /* put gui into idle state */
-      map->set_action(MAP_ACTION_IDLE);
+      set_action(MAP_ACTION_IDLE);
 
       /* and redo it */
-      map->select_way(way);
+      select_way(way);
     }
   }
 }
 
 /* -------------------------- way_node_cut ----------------------- */
 
-void map_edit_way_cut_highlight(map_t *map, map_item_t *item, int x, int y) {
+void map_t::way_cut_highlight(map_item_t *item, int x, int y) {
 
-  if(map->item_is_selected_way(item)) {
-    lpos_t pos = map->canvas->window2world(x, y);
+  if(item_is_selected_way(item)) {
+    lpos_t pos = canvas->window2world(x, y);
     int seg = item->get_segment(pos);
     if(seg >= 0) {
       unsigned int width = (item->object.way->draw.flags & OSM_DRAW_FLAG_BG) ?
@@ -342,27 +340,27 @@ void map_edit_way_cut_highlight(map_t *map, map_item_t *item, int x, int y) {
       std::vector<lpos_t> coords(2);
       coords[0] = item->object.way->node_chain[seg]->lpos;
       coords[1] = item->object.way->node_chain[seg + 1]->lpos;
-      map_hl_segment_draw(map, width, coords);
+      map_hl_segment_draw(this, width, coords);
     }
-  } else if(map->item_is_selected_node(item)) {
+  } else if(item_is_selected_node(item)) {
     /* cutting a way at its first or last node doesn't make much sense ... */
-    if(!map->selected.object.way->ends_with_node(item->object.node))
-      map_hl_cursor_draw(map, item->object.node->lpos, 2 * map->style->node.radius);
+    if(!selected.object.way->ends_with_node(item->object.node))
+      map_hl_cursor_draw(this, item->object.node->lpos, 2 * style->node.radius);
   }
 }
 
 /* cut the currently selected way at the current cursor position */
-void map_edit_way_cut(map_t *map, int px, int py) {
+void map_t::way_cut(int px, int py) {
 
   /* check if we are still hovering above the selected way */
-  map_item_t *item = map->item_at(px, py);
-  bool cut_at_node = map->item_is_selected_node(item);
+  map_item_t *item = item_at(px, py);
+  bool cut_at_node = item_is_selected_node(item);
 
-  if(!map->item_is_selected_way(item) && !cut_at_node)
+  if(!item_is_selected_way(item) && !cut_at_node)
     return;
 
   /* convert mouse position to canvas (world) position */
-  lpos_t pos = map->canvas->window2world(px, py);
+  lpos_t pos = canvas->window2world(px, py);
 
   node_chain_t::iterator cut_at;
   way_t *way = nullptr;
@@ -370,10 +368,10 @@ void map_edit_way_cut(map_t *map, int px, int py) {
     printf("  cut at node\n");
 
     /* node must not be first or last node of way */
-    assert(map->selected.object.type == object_t::WAY);
+    assert(selected.object.type == object_t::WAY);
 
-    if(!map->selected.object.way->ends_with_node(item->object.node)) {
-      way = map->selected.object.way;
+    if(!selected.object.way->ends_with_node(item->object.node)) {
+      way = selected.object.way;
 
       cut_at = std::find(way->node_chain.begin(), way->node_chain.end(),
                          item->object.node);
@@ -400,35 +398,35 @@ void map_edit_way_cut(map_t *map, int px, int py) {
          cut_at - way->node_chain.begin());
 
   /* clear selection */
-  map->item_deselect();
+  item_deselect();
 
   /* remove prior version of this way */
   printf("remove visible version of way #" ITEM_ID_FORMAT "\n", way->id);
   way->item_chain_destroy();
 
   /* create a duplicate of the currently selected way */
-  way_t * const neww = way->split(map->appdata.project->osm, cut_at, cut_at_node);
+  way_t * const neww = way->split(appdata.project->osm, cut_at, cut_at_node);
 
   printf("original way still has %zu nodes\n", way->node_chain.size());
 
   /* draw the updated old way */
-  map->style->colorize_way(way);
-  map->draw(way);
+  style->colorize_way(way);
+  draw(way);
 
   if(neww != nullptr) {
     /* colorize the new way before drawing */
-    map->style->colorize_way(neww);
-    map->draw(neww);
+    style->colorize_way(neww);
+    draw(neww);
   }
 
   /* put gui into idle state */
-  map->set_action(MAP_ACTION_IDLE);
+  set_action(MAP_ACTION_IDLE);
 
   /* and redo selection if way still exists */
   if(item)
-    map->select_way(way);
+    select_way(way);
   else if(neww)
-    map->select_way(neww);
+    select_way(neww);
 }
 
 struct redraw_way {
@@ -462,8 +460,8 @@ struct find_way_ends {
   }
 };
 
-void map_edit_node_move(map_t *map, map_item_t *map_item, int ex, int ey) {
-  osm_t::ref osm = map->appdata.project->osm;
+void map_t::node_move(map_item_t *map_item, int ex, int ey) {
+  osm_t::ref osm = appdata.project->osm;
 
   assert(map_item->object.type == object_t::NODE);
   node_t *node = map_item->object.node;
@@ -473,13 +471,13 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, int ex, int ey) {
 	 node->lpos.x, node->lpos.y,
 	 node->pos.lat, node->pos.lon);
 
-
   /* check if it was dropped onto another node */
-  node_t *touchnode = map->touchnode_get_node();
   bool joined_with_touchnode = false;
 
   if(touchnode != nullptr) {
-    printf("  dropped onto node #" ITEM_ID_FORMAT "\n", touchnode->id);
+    node_t *tn = touchnode_get_node();
+
+    printf("  dropped onto node #" ITEM_ID_FORMAT "\n", tn->id);
 
     if(yes_no_f(nullptr, MISC_AGAIN_ID_JOIN_NODES, _("Join nodes?"),
                 _("Do you want to join the dragged node with the one you dropped it on?"))) {
@@ -492,15 +490,15 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, int ex, int ey) {
       // only offer to join ways if they come from the different nodes, not
       // if e.g. one node has 2 ways and the other has none
       way_t *ways2join[2] = { nullptr, nullptr };
-      if(node->ways > 0 && touchnode->ways > 0) {
-        ways2join_cnt = node->ways + touchnode->ways;
+      if(node->ways > 0 && tn->ways > 0) {
+        ways2join_cnt = node->ways + tn->ways;
         if(ways2join_cnt == 2) {
           const std::map<item_id_t, way_t *>::iterator witEnd = osm->ways.end();
           const std::map<item_id_t, way_t *>::iterator witBegin = osm->ways.begin();
           const std::map<item_id_t, way_t *>::iterator way0It = std::find_if(witBegin, witEnd,
                                                                              find_way_ends(node));
           const std::map<item_id_t, way_t *>::iterator way1It = std::find_if(witBegin, witEnd,
-                                                                             find_way_ends(touchnode));
+                                                                             find_way_ends(tn));
           assert(way0It != witEnd);
           assert(way1It != witEnd);
           ways2join[0] = way0It->second;
@@ -508,9 +506,9 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, int ex, int ey) {
         }
       }
 
-      node = osm->mergeNodes(node, touchnode, conflict);
+      node = osm->mergeNodes(node, tn, conflict);
       // make sure the object marked as selected is the surviving node
-      map->selected.object = node;
+      selected.object = node;
 
       /* and open dialog to resolve tag collisions if necessary */
       if(conflict)
@@ -545,7 +543,7 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, int ex, int ey) {
     /* finally update dragged nodes position */
 
     /* convert mouse position to canvas (world) position */
-    lpos_t pos = map->canvas->window2world(ex, ey);
+    lpos_t pos = canvas->window2world(ex, ey);
     if(!osm->bounds.contains(pos)) {
       map_t::outside_error();
       return;
@@ -564,35 +562,35 @@ void map_edit_node_move(map_t *map, map_item_t *map_item, int ex, int ey) {
   /* now update the visual representation of the node */
 
   node->item_chain_destroy();
-  map->draw(node);
+  draw(node);
 
   /* visually update ways, node is part of */
-  std::for_each(osm->ways.begin(), osm->ways.end(), redraw_way(node, map));
+  std::for_each(osm->ways.begin(), osm->ways.end(), redraw_way(node, this));
 
   /* and mark the node as dirty */
   node->flags |= OSM_FLAG_DIRTY;
 
   /* update highlight */
-  map->highlight_refresh();
+  highlight_refresh();
 }
 
 /* -------------------------- way_reverse ----------------------- */
 
 /* called from the "reverse" icon */
-void map_edit_way_reverse(map_t *map) {
+void map_t::way_reverse() {
   /* work on local copy since de-selecting destroys the selection */
-  map_item_t item = map->selected;
+  map_item_t item = selected;
 
   /* deleting the selected item de-selects it ... */
-  map->item_deselect();
+  item_deselect();
 
   assert(item.object.type == object_t::WAY);
 
   unsigned int n_tags_flipped;
   unsigned int n_roles_flipped;
-  item.object.way->reverse(map->appdata.project->osm, n_tags_flipped, n_roles_flipped);
+  item.object.way->reverse(appdata.project->osm, n_tags_flipped, n_roles_flipped);
 
-  map->select_way(item.object.way);
+  select_way(item.object.way);
 
   // Flash a message about any side-effects
   g_string msg;
@@ -612,7 +610,7 @@ void map_edit_way_reverse(map_t *map) {
     msg.reset(g_strdup_printf(_("%s & %s updated"), msg1.get(), msg2.get()));
   }
   if (msg)
-    map->appdata.uicontrol->showNotification(msg.get(), MainUi::Brief);
+    appdata.uicontrol->showNotification(msg.get(), MainUi::Brief);
 }
 
 // vim:et:ts=8:sw=2:sts=2:ai

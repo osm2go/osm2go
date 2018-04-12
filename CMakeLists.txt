@@ -77,7 +77,6 @@ add_library(osm2go_lib STATIC
 	src/map.cpp
 	src/map.h
 	src/map_edit.cpp
-	src/map_edit.h
 	src/map_hl.cpp
 	src/map_hl.h
 	src/misc.cpp

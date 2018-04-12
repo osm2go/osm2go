@@ -245,6 +245,27 @@ public:
 
   /* edit tags of currently selected object */
   void info_selected();
+
+  static inline void edit_way_reverse(map_t *map)
+  { map->way_reverse(); }
+
+protected:
+  // edit functions
+  void way_cut_highlight(map_item_t *item, int x, int y);
+  void way_cut(int x, int y);
+
+  void way_add_begin();
+  void way_add_segment(int x, int y);
+  void way_add_cancel();
+  void way_add_ok();
+
+  void way_node_add_highlight(map_item_t *item, int x, int y);
+
+  void way_node_add(int x, int y);
+
+  void node_move(map_item_t *map_item, int ex, int ey);
+
+  void way_reverse();
 };
 
 
