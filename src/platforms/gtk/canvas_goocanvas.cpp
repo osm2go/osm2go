@@ -316,7 +316,8 @@ bool item_at_functor::operator()(const canvas_item_info_t* item) const
       if(xdist * xdist + ydist * ydist < (radius + fuzziness) * (radius + fuzziness))
         return true;
     }
-  } break;
+    return false;
+  }
 
   case CANVAS_ITEM_POLY: {
     const canvas_item_info_poly *poly = static_cast<const canvas_item_info_poly *>(item);
@@ -329,13 +330,10 @@ bool item_at_functor::operator()(const canvas_item_info_t* item) const
       if((on_segment >= 0) || (poly->is_polygon && inpoly(poly, x, y)))
         return true;
     }
-  } break;
-
-  default:
-    assert_unreachable();
+    return false;
   }
-
-  return false;
+  }
+  assert_unreachable();
 }
 
 /* try to find the object at position x/y by searching through the */
