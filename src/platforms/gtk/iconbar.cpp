@@ -77,8 +77,8 @@ public:
   inline void map_cancel_ok(bool cancelv, bool okv);
 };
 
-static void on_info_clicked(appdata_t *appdata) {
-  info_dialog(appdata_t::window, appdata->map, appdata->project->osm, appdata->presets.get());
+static void on_info_clicked(map_t *map) {
+  map->info_selected();
 }
 
 static void on_node_add_clicked(map_t *map) {
@@ -271,7 +271,7 @@ iconbar_gtk::iconbar_gtk(appdata_t& appdata)
   : iconbar_t()
   , toolbar(GTK_TOOLBAR(gtk_toolbar_new()))
   , info(tool_add(toolbar, appdata.icons, TOOL_ICON("info"), _("Properties"),
-                  G_CALLBACK(on_info_clicked), &appdata, true))
+                  G_CALLBACK(on_info_clicked), appdata.map, true))
   , trash(tool_add(toolbar, appdata.icons, TOOL_ICON("trash"), _("Delete"),
                    G_CALLBACK(map_t::map_delete_selected), appdata.map, true))
   , node_add(tool_add(toolbar, appdata.icons, TOOL_ICON("node_add"), _("New node"),

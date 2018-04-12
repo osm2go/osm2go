@@ -242,6 +242,9 @@ public:
   void delete_selected();
   static inline void map_delete_selected(map_t *map)
   { map->delete_selected(); }
+
+  /* edit tags of currently selected object */
+  void info_selected();
 };
 
 

@@ -1200,7 +1200,7 @@ void map_t::button_release(int x, int y) {
       map_node_select(this, node);
 
       /* let the user specify some tags for the new node */
-      info_dialog(appdata_t::window, this, osm, appdata.presets.get());
+      info_selected();
     }
     break;
   }
@@ -1476,7 +1476,7 @@ void map_t::action_ok() {
       map_node_select(this, node);
 
       /* let the user specify some tags for the new node */
-      info_dialog(appdata_t::window, this, osm, appdata.presets.get());
+      info_selected();
     }
     }
 
@@ -1876,6 +1876,16 @@ void map_t::touchnode_clear() {
   delete touchnode;
   touchnode = nullptr;
   touchnode_node = nullptr;
+}
+
+void map_t::info_selected()
+{
+  bool ret = info_dialog(appdata_t::window, this, appdata.project->osm, appdata.presets.get(), selected.object);
+
+  /* since nodes being parts of ways but with no tags are invisible, */
+  /* the result of editing them may have changed their visibility */
+  if(ret && selected.object.type != object_t::RELATION)
+    redraw_item(selected.object);
 }
 
 map_state_t::map_state_t()

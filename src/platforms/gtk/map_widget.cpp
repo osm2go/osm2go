@@ -179,7 +179,7 @@ bool map_t::key_press_event(unsigned int keyval) {
       action_ok();
     /* otherwise if info is enabled call that */
     else if(appdata.iconbar->isInfoEnabled())
-      info_dialog(appdata_t::window, this, appdata.project->osm, appdata.presets.get());
+      info_selected();
     break;
 
   case GDK_Escape:   // same as HILDON_HARDKEY_ESC

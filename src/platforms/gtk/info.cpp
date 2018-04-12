@@ -550,17 +550,6 @@ static void info_more(const info_tag_context_t &context) {
 
 /* edit tags of currently selected node or way or of the relation */
 /* given */
-void info_dialog(GtkWidget *parent, map_t *map, osm_t::ref osm, presets_items *presets) {
-  bool ret = info_dialog(parent, map, osm, presets, map->selected.object);
-
-  /* since nodes being parts of ways but with no tags are invisible, */
-  /* the result of editing them may have changed their visibility */
-  if(ret && map->selected.object.type != object_t::RELATION)
-    map->redraw_item(map->selected.object);
-}
-
-/* edit tags of currently selected node or way or of the relation */
-/* given */
 bool info_dialog(GtkWidget *parent, map_t *map, osm_t::ref osm, presets_items *presets, object_t &object) {
 
   assert(object.is_real());
