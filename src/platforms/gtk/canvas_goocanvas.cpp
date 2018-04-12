@@ -256,17 +256,17 @@ static int canvas_item_info_get_segment(const canvas_item_info_poly *item,
 #define CX static_cast<double>(x)
 #define CY static_cast<double>(y)
 
-    float len2 = pow(BY-AY,2)+pow(BX-AX,2);
-    float m = ((CX-AX)*(BX-AX)+(CY-AY)*(BY-AY)) / len2;
+    float len = pow(BY-AY,2)+pow(BX-AX,2);
+    float m = ((CX-AX)*(BX-AX)+(CY-AY)*(BY-AY)) / len;
 
     /* this is a possible candidate */
     if((m >= 0.0) && (m <= 1.0)) {
 
       float n;
       if(abs(BX-AX) > abs(BY-AY))
-        n = fabs(sqrt(len2) * (AY+m*(BY-AY)-CY)/(BX-AX));
+        n = fabs(sqrt(len) * (AY+m*(BY-AY)-CY)/(BX-AX));
       else
-        n = fabs(sqrt(len2) * -(AX+m*(BX-AX)-CX)/(BY-AY));
+        n = fabs(sqrt(len) * -(AX+m*(BX-AX)-CX)/(BY-AY));
 
       /* check if this is actually on the line and closer than anything */
       /* we found so far */
@@ -579,17 +579,17 @@ int canvas_item_t::get_segment(lpos_t pos) const {
 #define CX static_cast<double>(pos.x)
 #define CY static_cast<double>(pos.y)
 
-    double len2 = pow(BY-AY,2)+pow(BX-AX,2);
-    double m = ((CX-AX)*(BX-AX)+(CY-AY)*(BY-AY)) / len2;
+    double len = pow(BY-AY,2)+pow(BX-AX,2);
+    double m = ((CX-AX)*(BX-AX)+(CY-AY)*(BY-AY)) / len;
 
     /* this is a possible candidate */
     if((m >= 0.0) && (m <= 1.0)) {
 
       double n;
       if(fabs(BX-AX) > fabs(BY-AY))
-        n = fabs(sqrt(len2) * (AY+m*(BY-AY)-CY)/(BX-AX));
+        n = fabs(sqrt(len) * (AY+m*(BY-AY)-CY)/(BX-AX));
       else
-        n = fabs(sqrt(len2) * -(AX+m*(BX-AX)-CX)/(BY-AY));
+        n = fabs(sqrt(len) * -(AX+m*(BX-AX)-CX)/(BY-AY));
 
       /* check if this is actually on the line and closer than anything */
       /* we found so far */
