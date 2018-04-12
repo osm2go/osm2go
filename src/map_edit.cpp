@@ -277,7 +277,7 @@ void map_t::way_node_add_highlight(map_item_t *item, int x, int y) {
   if(item_is_selected_way(item)) {
     lpos_t pos = canvas->window2world(x, y);
     if(item->get_segment(pos) >= 0)
-      map_hl_cursor_draw(this, pos, style->node.radius);
+      hl_cursor_draw(pos, style->node.radius);
   }
 }
 
@@ -335,17 +335,17 @@ void map_t::way_cut_highlight(map_item_t *item, int x, int y) {
     int seg = item->get_segment(pos);
     if(seg >= 0) {
       unsigned int width = (item->object.way->draw.flags & OSM_DRAW_FLAG_BG) ?
-	2*item->object.way->draw.bg.width:
-	3*item->object.way->draw.width;
+                           2 * item->object.way->draw.bg.width :
+                           3 * item->object.way->draw.width;
       std::vector<lpos_t> coords(2);
       coords[0] = item->object.way->node_chain[seg]->lpos;
       coords[1] = item->object.way->node_chain[seg + 1]->lpos;
-      map_hl_segment_draw(this, width, coords);
+      hl_segment_draw(width, coords);
     }
   } else if(item_is_selected_node(item)) {
     /* cutting a way at its first or last node doesn't make much sense ... */
     if(!selected.object.way->ends_with_node(item->object.node))
-      map_hl_cursor_draw(this, item->object.node->lpos, 2 * style->node.radius);
+      hl_cursor_draw(item->object.node->lpos, 2 * style->node.radius);
   }
 }
 

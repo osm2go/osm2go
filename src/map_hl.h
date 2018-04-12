@@ -51,16 +51,4 @@ struct map_highlight_t {
 
 };
 
-/**
- * @brief draw highlight cursor on screen coordinates
- */
-void map_hl_cursor_draw(map_t *map, int x, int y, unsigned int radius);
-/**
- * @brief draw highlight cursor on map coordinates
- */
-void map_hl_cursor_draw(map_t *map, lpos_t pos, unsigned int radius);
-void map_hl_cursor_clear(map_t *map);
-
-void map_hl_segment_draw(map_t *map, unsigned int width, const std::vector<lpos_t> &points);
-
 #endif // MAP_HL_H

@@ -38,28 +38,26 @@ void map_highlight_t::clear()
 }
 
 /* create a new item for the cursor */
-void map_hl_cursor_draw(map_t *map, int x, int y, unsigned int radius) {
-  map_hl_cursor_draw(map, map->canvas->window2world(x, y), radius);
+void map_t::hl_cursor_draw(int x, int y, unsigned int radius) {
+  hl_cursor_draw(canvas->window2world(x, y), radius);
 }
 
-void map_hl_cursor_draw(map_t *map, lpos_t pos, unsigned int radius) {
-  delete map->cursor;
+void map_t::hl_cursor_draw(lpos_t pos, unsigned int radius) {
+  delete cursor;
 
-  map->cursor = map->canvas->circle_new(CANVAS_GROUP_DRAW, pos.x, pos.y, radius,
-                                        0, map->style->highlight.node_color);
+  cursor = canvas->circle_new(CANVAS_GROUP_DRAW, pos.x, pos.y, radius,
+                              0, style->highlight.node_color);
 }
 
 /* special highlight for segments. use when cutting ways */
-void map_hl_segment_draw(map_t *map, unsigned int width, const std::vector<lpos_t> &points) {
-  map->cursor = map->canvas->polyline_new(CANVAS_GROUP_DRAW, points, width,
-                                          map->style->highlight.node_color);
+void map_t::hl_segment_draw(unsigned int width, const std::vector<lpos_t> &points) {
+  cursor = canvas->polyline_new(CANVAS_GROUP_DRAW, points, width, style->highlight.node_color);
 }
 
-void map_hl_cursor_clear(map_t *map) {
-  if(map->cursor) {
-    delete map->cursor;
-    map->cursor = nullptr;
-  }
+void map_t::hl_cursor_clear()
+{
+  delete cursor;
+  cursor = nullptr;
 }
 
 struct find_highlighted {

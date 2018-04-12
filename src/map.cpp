@@ -1110,11 +1110,11 @@ void map_t::button_press(float x, float y) {
     break;
 
   case MAP_ACTION_NODE_ADD:
-    map_hl_cursor_draw(this, x, y, style->node.radius);
+    hl_cursor_draw(x, y, style->node.radius);
     break;
 
   case MAP_ACTION_WAY_ADD:
-    map_hl_cursor_draw(this, x, y, style->node.radius);
+    hl_cursor_draw(x, y, style->node.radius);
     map_touchnode_update(this, x, y);
     break;
 
@@ -1167,7 +1167,7 @@ void map_t::button_release(int x, int y) {
         map_do_scroll(this, x, y);
       } else {
         printf("released after dragging node\n");
-        map_hl_cursor_clear(this);
+        hl_cursor_clear();
 
         /* now actually move the node */
         node_move(pen_down.on_item, x, y);
@@ -1177,7 +1177,7 @@ void map_t::button_release(int x, int y) {
 
   case MAP_ACTION_NODE_ADD: {
     printf("released after NODE ADD\n");
-    map_hl_cursor_clear(this);
+    hl_cursor_clear();
 
     /* convert mouse position to canvas (world) position */
     lpos_t pos = canvas->window2world(x, y);
@@ -1205,21 +1205,21 @@ void map_t::button_release(int x, int y) {
   }
   case MAP_ACTION_WAY_ADD:
     printf("released after WAY ADD\n");
-    map_hl_cursor_clear(this);
+    hl_cursor_clear();
 
     way_add_segment(x, y);
     break;
 
   case MAP_ACTION_WAY_NODE_ADD:
     printf("released after WAY NODE ADD\n");
-    map_hl_cursor_clear(this);
+    hl_cursor_clear();
 
     way_node_add(x, y);
     break;
 
   case MAP_ACTION_WAY_CUT:
     printf("released after WAY CUT\n");
-    map_hl_cursor_clear(this);
+    hl_cursor_clear();
 
     way_cut(x, y);
     break;
@@ -1247,28 +1247,28 @@ void map_t::handle_motion(int x, int y)
       if(!pen_down.on_selected_node)
         map_do_scroll(this, x, y);
       else {
-        map_hl_cursor_draw(this, x, y, style->node.radius);
+        hl_cursor_draw(x, y, style->node.radius);
         map_touchnode_update(this, x, y);
       }
     }
     break;
 
   case MAP_ACTION_NODE_ADD:
-    map_hl_cursor_draw(this, x, y, style->node.radius);
+    hl_cursor_draw(x, y, style->node.radius);
     break;
 
   case MAP_ACTION_WAY_ADD:
-    map_hl_cursor_draw(this, x, y, style->node.radius);
+    hl_cursor_draw(x, y, style->node.radius);
     map_touchnode_update(this, x, y);
     break;
 
   case MAP_ACTION_WAY_NODE_ADD:
-    map_hl_cursor_clear(this);
+    hl_cursor_clear();
     way_node_add_highlight(item_at(x, y), x, y);
     break;
 
   case MAP_ACTION_WAY_CUT:
-    map_hl_cursor_clear(this);
+    hl_cursor_clear();
     way_cut_highlight(item_at(x, y), x, y);
     break;
 

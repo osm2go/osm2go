@@ -266,7 +266,21 @@ protected:
   void node_move(map_item_t *map_item, int ex, int ey);
 
   void way_reverse();
-};
 
+  // highlighting
+
+  /**
+  * @brief draw highlight cursor on screen coordinates
+  */
+  void hl_cursor_draw(int x, int y, unsigned int radius);
+
+  /**
+  * @brief draw highlight cursor on map coordinates
+  */
+  void hl_cursor_draw(lpos_t pos, unsigned int radius);
+  void hl_cursor_clear();
+
+  void hl_segment_draw(unsigned int width, const std::vector<lpos_t> &points);
+};
 
 #endif // MAP_H
