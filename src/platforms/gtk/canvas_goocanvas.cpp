@@ -246,7 +246,7 @@ static bool inpoly(const canvas_item_info_poly *poly, int x, int y) {
 static int canvas_item_info_get_segment(const canvas_item_info_poly *item,
                                         int x, int y, int fuzziness) {
   int retval = -1;
-  float mindist = 1000000.0;
+  float mindist = static_cast<float>(item->width) / 2 + fuzziness;
   for(unsigned int i = 0; i < item->num_points - 1; i++) {
 
 #define AX (item->points[i].x)
@@ -270,7 +270,7 @@ static int canvas_item_info_get_segment(const canvas_item_info_poly *item,
 
       /* check if this is actually on the line and closer than anything */
       /* we found so far */
-      if((n <= (item->width/2+fuzziness)) && (n < mindist)) {
+      if(n < mindist) {
         retval = i;
         mindist = n;
       }
@@ -569,7 +569,7 @@ int canvas_item_t::get_segment(lpos_t pos) const {
   pointGuard cpoints(points);
 
   int retval = -1;
-  double mindist = 100;
+  double mindist = line_width / 2;
   for(int i = 0; i < cpoints->num_points - 1; i++) {
 
 #define AX (cpoints->coords[2*i+0])
@@ -593,7 +593,7 @@ int canvas_item_t::get_segment(lpos_t pos) const {
 
       /* check if this is actually on the line and closer than anything */
       /* we found so far */
-      if((n <= line_width/2) && (n < mindist)) {
+      if(n < mindist) {
         retval = i;
         mindist = n;
       }
