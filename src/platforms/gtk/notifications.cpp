@@ -40,7 +40,7 @@ vmessage(osm2go_platform::Widget *parent, GtkMessageType type, GtkButtonsType bu
   GtkWindow *wnd = GTK_WINDOW(parent ? parent : appdata_t::window);
 
   if(unlikely(wnd == nullptr)) {
-    printf("%s", msg);
+    g_debug("%s", msg);
     return;
   }
 

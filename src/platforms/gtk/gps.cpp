@@ -132,11 +132,8 @@ static int gps_connect(gpsd_state_t *gps_state) {
   memset(&gps_state->context, 0, sizeof(gps_state->context));
   errno = 0;
 
-  if(gpsbt_start(nullptr, 0, 0, 0, errstr, sizeof(errstr),
-		 0, &gps_state->context) < 0) {
-    printf("Error connecting to GPS receiver: (%d) %s (%s)\n",
-	   errno, strerror(errno), errstr);
-  }
+  if(gpsbt_start(nullptr, 0, 0, 0, errstr, sizeof(errstr), 0, &gps_state->context) < 0)
+    g_warning("Error connecting to GPS receiver: (%d) %s (%s)\n", errno, strerror(errno), errstr);
 #endif
 
   /************** from here down pure gnome/gtk/gpsd ********************/
@@ -144,34 +141,34 @@ static int gps_connect(gpsd_state_t *gps_state) {
   /* try to connect to gpsd */
   /* Create a socket to interact with GPSD. */
 
-  printf("GPSD: trying to connect to %s %d\n", GPSD_HOST, GPSD_PORT);
+  g_debug("GPSD: trying to connect to %s %d\n", GPSD_HOST, GPSD_PORT);
 
   int retries = 5;
   while(retries &&
 	(GNOME_VFS_OK != (vfs_result = gnome_vfs_inet_connection_create(
                           &gps_state->iconn, GPSD_HOST, GPSD_PORT, nullptr)))) {
-    printf("Error creating connection to GPSD, retrying ...\n");
+    g_warning("Error creating connection to GPSD, retrying ...\n");
 
     retries--;
     sleep(1);
   }
 
   if(!retries) {
-    printf("Finally failed ...\n");
+    g_warning("GPS connection finally failed ...\n");
     return -1;
   }
 
   retries = 5;
   while(retries && ((gps_state->socket =
      gnome_vfs_inet_connection_to_socket(gps_state->iconn)) == nullptr)) {
-    printf("Error creating connecting GPSD socket, retrying ...\n");
+    g_warning("Error creating connecting GPSD socket, retrying ...\n");
 
     retries--;
     sleep(1);
   }
 
   if(!retries) {
-    printf("Finally failed ...\n");
+    g_debug("Creating GPS socket finally failed ...\n");
     gnome_vfs_inet_connection_destroy(gps_state->iconn, nullptr);
     return -1;
   }
@@ -179,12 +176,12 @@ static int gps_connect(gpsd_state_t *gps_state) {
   GTimeVal timeout = { 10, 0 };
   if(GNOME_VFS_OK != (vfs_result = gnome_vfs_socket_set_timeout(
                       gps_state->socket, &timeout, nullptr))) {
-    printf("Error setting GPSD timeout\n");
+    g_warning("Error setting GPSD timeout\n");
     gnome_vfs_inet_connection_destroy(gps_state->iconn, nullptr);
     return -1;
   }
 
-  printf("GPSD connected ...\n");
+  g_info("GPSD connected ...\n");
 
   return 0;
 }
@@ -280,7 +277,7 @@ gpointer gps_thread(gpointer data) {
   while(1) {
     if(gps_state->enable) {
       if(!connected) {
-	printf("trying to connect\n");
+        g_debug("trying to connect\n");
 
 	if(gps_connect(gps_state) < 0)
 	  sleep(10);
@@ -298,7 +295,7 @@ gpointer gps_thread(gpointer data) {
                                    &bytes_read, nullptr) == GNOME_VFS_OK) {
 	    str[bytes_read] = 0;
 
-	    printf("msg: %s (%zu)\n", str, strlen(str));
+          g_debug("msg: %s (%zu)\n", str, strlen(str));
 
           std::lock_guard<std::mutex> lock(gps_state->mutex);
 
@@ -311,7 +308,7 @@ gpointer gps_thread(gpointer data) {
       }
     } else {
       if(connected) {
-	printf("stopping GPS connection due to user request\n");
+        g_debug("stopping GPS connection due to user request\n");
         gnome_vfs_inet_connection_destroy(gps_state->iconn, nullptr);
 
 #ifdef ENABLE_GPSBT
@@ -323,7 +320,7 @@ gpointer gps_thread(gpointer data) {
     }
   }
 
-  printf("GPS thread ended???\n");
+  g_debug("GPS thread ended???\n");
   return nullptr;
 }
 
@@ -335,7 +332,7 @@ gpsd_state_t::gpsd_state_t(GpsCallback cb, void *context)
   : gps_state_t(cb, context)
   , enable(false)
 {
-  printf("GPS init: Using gpsd\n");
+  g_debug("GPS init: Using gpsd\n");
 
   memset(&gpsdata, 0, sizeof(gpsdata));
 

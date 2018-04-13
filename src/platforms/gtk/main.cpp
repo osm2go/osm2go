@@ -105,7 +105,7 @@ void appdata_t::main_ui_enable() {
   gboolean osm_valid = (project && project->osm) ? TRUE : FALSE;
 
   if(unlikely(window == nullptr)) {
-    printf("%s: main window gone\n", __PRETTY_FUNCTION__);
+    g_debug("%s: main window gone\n", __PRETTY_FUNCTION__);
     return;
   }
 
@@ -268,10 +268,10 @@ static bool track_visibility_select(GtkWidget *parent) {
 
   bool ret = false;
   if(GTK_RESPONSE_ACCEPT != gtk_dialog_run(GTK_DIALOG(dialog.get()))) {
-    printf("user clicked cancel\n");
+    g_debug("user clicked cancel\n");
   } else {
     int index = combo_box_get_active(cbox);
-    printf("user clicked ok on %i\n", index);
+    g_debug("user clicked ok on %i\n", index);
 
     TrackVisibility tv = static_cast<TrackVisibility>(index);
     ret = (tv != settings->trackVisibility);
@@ -336,7 +336,7 @@ cb_menu_zoomin(appdata_t *appdata) {
   if(!appdata->map) return;
 
   appdata->map->set_zoom(appdata->map->state.zoom * ZOOM_FACTOR_MENU, true);
-  printf("zoom is now %f\n", appdata->map->state.zoom);
+  g_debug("zoom is now %f\n", appdata->map->state.zoom);
 }
 
 static void
@@ -344,26 +344,26 @@ cb_menu_zoomout(appdata_t *appdata) {
   if(!appdata->map) return;
 
   appdata->map->set_zoom(appdata->map->state.zoom / ZOOM_FACTOR_MENU, true);
-  printf("zoom is now %f\n", appdata->map->state.zoom);
+  g_debug("zoom is now %f\n", appdata->map->state.zoom);
 }
 
 static void
 cb_menu_view_detail_inc(map_t *map) {
-  printf("detail level increase\n");
+  g_debug("detail level increase\n");
   map->detail_increase();
 }
 
 #ifndef FREMANTLE
 static void
 cb_menu_view_detail_normal(map_t *map) {
-  printf("detail level normal\n");
+  g_debug("detail level normal\n");
   map->detail_normal();
 }
 #endif
 
 static void
 cb_menu_view_detail_dec(map_t *map) {
-  printf("detail level decrease\n");
+  g_debug("detail level decrease\n");
   map->detail_decrease();
 }
 
@@ -453,7 +453,7 @@ cb_menu_track_export(appdata_t *appdata) {
            );
 
   settings_t * const settings = settings_t::instance();
-  printf("set filename <%s>\n", settings->track_path.c_str());
+  g_debug("set filename <%s>\n", settings->track_path.c_str());
 
   if(!settings->track_path.empty()) {
     if(!g_file_test(settings->track_path.c_str(), G_FILE_TEST_EXISTS)) {
@@ -477,7 +477,7 @@ cb_menu_track_export(appdata_t *appdata) {
   if(gtk_dialog_run(GTK_DIALOG(dialog.get())) == GTK_FM_OK) {
     g_string filename(gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog.get())));
     if(filename) {
-      printf("export to %s\n", filename.get());
+      g_debug("export to %s\n", filename.get());
 
       if(!g_file_test(filename.get(), G_FILE_TEST_EXISTS) ||
          yes_no_f(dialog.get(), MISC_AGAIN_ID_EXPORT_OVERWRITE | MISC_AGAIN_FLAG_DONT_SAVE_NO,
@@ -1004,7 +1004,7 @@ appdata_t::appdata_t(map_state_t &mstate)
 }
 
 appdata_t::~appdata_t() {
-  printf("cleaning up ...\n");
+  g_debug("cleaning up ...\n");
 
   settings_t * const settings = settings_t::instance();
 #ifdef ACCELS_FILE
@@ -1017,12 +1017,12 @@ appdata_t::~appdata_t() {
   if(likely(map))
     map->set_autosave(false);
 
-  printf("waiting for gtk to shut down ");
+  g_debug("waiting for gtk to shut down ");
 
   /* let gtk clean up first */
   osm2go_platform::process_events(true);
 
-  printf(" ok\n");
+  g_debug(" ok\n");
 
   /* save project file */
   if(project)
@@ -1030,7 +1030,7 @@ appdata_t::~appdata_t() {
 
   delete settings;
 
-  puts("everything is gone");
+  g_debug("everything is gone\n");
 }
 
 void appdata_t::track_clear()
@@ -1038,7 +1038,7 @@ void appdata_t::track_clear()
   if (!track.track)
     return;
 
-  printf("clearing track\n");
+  g_debug("clearing track\n");
 
   if(likely(map != nullptr))
     track.track->clear();
@@ -1065,7 +1065,7 @@ appdata_internal::~appdata_internal()
 }
 
 static void on_window_destroy() {
-  puts("main window destroy");
+  g_debug("main window destroy\n");
 
   gtk_main_quit();
   appdata_t::window = nullptr;
@@ -1251,7 +1251,7 @@ static int application_run(const char *proj)
   /* so the user sees something */
   osm2go_platform::process_events();
   if(unlikely(appdata_t::window == nullptr)) {
-    printf("shutdown while starting up (1)\n");
+    g_debug("shutdown while starting up (1)\n");
     return -1;
   }
 
@@ -1271,7 +1271,7 @@ static int application_run(const char *proj)
 
   // check if map widget was already destroyed
   if(unlikely(appdata.map == nullptr)) {
-    printf("shutdown while starting up (2)\n");
+    g_debug("shutdown while starting up (2)\n");
     return -1;
   }
   appdata.map->set_autosave(true);
@@ -1284,7 +1284,7 @@ static int application_run(const char *proj)
   /* again let the ui do its thing */
   osm2go_platform::process_events();
   if(unlikely(appdata_t::window == nullptr)) {
-    printf("shutdown while starting up (3)\n");
+    g_debug("shutdown while starting up (3)\n");
     return -1;
   }
 
@@ -1300,12 +1300,12 @@ static int application_run(const char *proj)
                   "into the OSM main database."
                   ));
 
-  puts("main up");
+  g_debug("main up\n");
 
   /* ------------ jump into main loop ---------------- */
   gtk_main();
 
-  puts("gtk_main() left");
+  g_debug("gtk_main() left\n");
 
   track_save(appdata.project.get(), appdata.track.track.get());
   appdata.track_clear();
