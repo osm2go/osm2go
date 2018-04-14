@@ -37,7 +37,7 @@
 #include <osm2go_cpp.h>
 #include "osm2go_stl.h"
 
-#define ST_ENTRY(map, a) map.push_back(std::pair<const char *, typeof(a) *>(#a, &a))
+#define ST_ENTRY(a) std::pair<const char *, typeof(a) *>(#a, &a)
 
 #define KEYBASE "/apps/" PACKAGE "/"
 static const std::string keybase = KEYBASE;
@@ -299,26 +299,26 @@ settings_t::settings_t()
   store_bool.clear();
 
   /* not user configurable */
-  ST_ENTRY(store_str, base_path);
+  store_str.push_back(ST_ENTRY(base_path));
 
   /* from project.c */
-  ST_ENTRY(store_str, project);
+  store_str.push_back(ST_ENTRY(project));
 
   /* from osm_api.c */
-  ST_ENTRY(store_str, server);
-  ST_ENTRY(store_str, username);
-  ST_ENTRY(store_str, password);
+  store_str.push_back(ST_ENTRY(server));
+  store_str.push_back(ST_ENTRY(username));
+  store_str.push_back(ST_ENTRY(password));
 
   /* wms servers are saved seperately */
 
   /* style */
-  ST_ENTRY(store_str, style);
+  store_str.push_back(ST_ENTRY(style));
 
   /* main */
-  ST_ENTRY(store_str, track_path);
+  store_str.push_back(ST_ENTRY(track_path));
 
-  ST_ENTRY(store_bool, enable_gps);
-  ST_ENTRY(store_bool, follow_gps);
+  store_bool.push_back(ST_ENTRY(enable_gps));
+  store_bool.push_back(ST_ENTRY(follow_gps));
 }
 
 settings_t::~settings_t()
