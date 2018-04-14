@@ -23,9 +23,12 @@
 #include "fdguard.h"
 #include "track.h"
 
+#include <memory>
 #include <string>
 #include <vector>
 #include <utility>
+
+#include <osm2go_stl.h>
 
 #define DEFAULT_STYLE "mapnik"
 
@@ -33,6 +36,8 @@ class settings_t {
   settings_t();
 public:
   ~settings_t();
+
+  typedef std::shared_ptr<settings_t> ref;
 
   /* never changed */
   std::string base_path;
@@ -60,7 +65,7 @@ public:
   /* and the demo was loaded */
   bool first_run_demo;
 
-  static settings_t *instance();
+  static ref instance();
   void save() const;
 
 private:

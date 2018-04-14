@@ -255,7 +255,7 @@ static bool track_visibility_select(GtkWidget *parent) {
 
   gtk_dialog_set_default_response(GTK_DIALOG(dialog.get()), GTK_RESPONSE_ACCEPT);
 
-  settings_t * const settings = settings_t::instance();
+  settings_t::ref settings = settings_t::instance();
   GtkWidget *cbox = track_vis_select_widget(settings->trackVisibility);
 
   GtkWidget *hbox = gtk_hbox_new(FALSE, 8);
@@ -384,7 +384,7 @@ cb_menu_track_import(appdata_t *appdata) {
 #endif
            );
 
-  settings_t * const settings = settings_t::instance();
+  settings_t::ref settings = settings_t::instance();
   if(!settings->track_path.empty()) {
     if(!g_file_test(settings->track_path.c_str(), G_FILE_TEST_EXISTS)) {
       std::string::size_type slashpos = settings->track_path.rfind('/');
@@ -452,7 +452,7 @@ cb_menu_track_export(appdata_t *appdata) {
 #endif
            );
 
-  settings_t * const settings = settings_t::instance();
+  settings_t::ref settings = settings_t::instance();
   g_debug("set filename <%s>\n", settings->track_path.c_str());
 
   if(!settings->track_path.empty()) {
@@ -732,7 +732,7 @@ static void menu_create(appdata_internal &appdata, GtkBox *mainvbox) {
     appdata, submenu, G_CALLBACK(track_clear_cb), MainUi::MENU_ITEM_TRACK_CLEAR,
     "<OSM2Go-Main>/Track/Clear");
 
-  const settings_t * const settings = settings_t::instance();
+  const settings_t::ref settings = settings_t::instance();
   item = menu_append_new_item(
     appdata, submenu, G_CALLBACK(cb_menu_track_enable_gps), MainUi::MENU_ITEM_TRACK_ENABLE_GPS,
     "<OSM2Go-Main>/Track/GPS",
@@ -884,7 +884,7 @@ static void on_submenu_track_clicked(appdata_internal *appdata)
   GtkWidget *combo_widget = GTK_WIDGET(g_object_get_data(G_OBJECT(menu), "track_widget"));
   if(combo_widget != nullptr) {
     TrackVisibility tv = static_cast<TrackVisibility>(combo_box_get_active(combo_widget));
-    settings_t * const settings = settings_t::instance();
+    settings_t::ref settings = settings_t::instance();
     if(tv != settings->trackVisibility && appdata->track.track) {
       appdata->map->track_draw(tv, *(appdata->track.track.get()));
       settings->trackVisibility = tv;
@@ -1004,9 +1004,7 @@ appdata_t::appdata_t(map_state_t &mstate)
 }
 
 appdata_t::~appdata_t() {
-  g_debug("cleaning up ...\n");
-
-  settings_t * const settings = settings_t::instance();
+  settings_t::ref settings = settings_t::instance();
 #ifdef ACCELS_FILE
   const std::string &accels_file = settings->base_path + ACCELS_FILE;
   gtk_accel_map_save(accels_file.c_str());
@@ -1027,10 +1025,6 @@ appdata_t::~appdata_t() {
   /* save project file */
   if(project)
     project->save(nullptr);
-
-  delete settings;
-
-  g_debug("everything is gone\n");
 }
 
 void appdata_t::track_clear()
@@ -1132,8 +1126,8 @@ static int application_run(const char *proj)
 {
   /* user specific init */
   map_state_t map_state;
+  settings_t::ref settings = settings_t::instance();
   appdata_internal appdata(map_state);
-  settings_t * const settings = settings_t::instance();
 
   if(unlikely(!appdata.style)) {
     errorf(nullptr, _("Unable to load valid style %s, terminating."), settings->style.c_str());

@@ -46,8 +46,6 @@ const char *apihttp = "http://api.openstreetmap.org/api/0.";
 
 static std::map<TrackVisibility, std::string> trackVisibilityKeys;
 
-static settings_t *settings;
-
 static void initTrackVisibility() {
   trackVisibilityKeys[RecordOnly] = "RecordOnly";
   trackVisibilityKeys[ShowPosition] = "ShowPosition";
@@ -98,11 +96,14 @@ template<typename T, typename U, U GETTER(const GConfValue *)> void load_functor
     *(p.second) = GETTER(value.get());
 }
 
-settings_t *settings_t::instance() {
-  if(likely(settings != nullptr))
+settings_t::ref settings_t::instance() {
+  static std::weak_ptr<settings_t> inst;
+  ref settings = inst.lock();
+  if (settings)
     return settings;
 
-  settings = new settings_t();
+  settings.reset(new settings_t());
+  inst = settings;
 
   if(likely(trackVisibilityKeys.empty()))
     initTrackVisibility();
@@ -322,7 +323,6 @@ settings_t::settings_t()
 
 settings_t::~settings_t()
 {
-  settings = nullptr;
   std::for_each(wms_server.begin(), wms_server.end(), std::default_delete<wms_server_t>());
 }
 

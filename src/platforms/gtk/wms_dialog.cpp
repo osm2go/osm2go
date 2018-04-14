@@ -166,7 +166,8 @@ static void on_server_remove(wms_server_context_t *context) {
 
     /* de-chain */
     g_debug("de-chaining server %s", server->name.c_str());
-    std::vector<wms_server_t *> &servers = settings_t::instance()->wms_server;
+    settings_t::ref settings = settings_t::instance();
+    std::vector<wms_server_t *> &servers = settings->wms_server;
     const std::vector<wms_server_t *>::iterator itEnd = servers.end();
     std::vector<wms_server_t *>::iterator it = std::find(servers.begin(), itEnd, server);
     assert(it != itEnd);
@@ -186,7 +187,8 @@ static void callback_modified_name(GtkWidget *widget) {
   const gchar *name = gtk_entry_get_text(GTK_ENTRY(widget));
 
   /* search all entries except the last (which is the one we are editing) */
-  std::vector<wms_server_t *> &servers = settings_t::instance()->wms_server;
+  settings_t::ref settings = settings_t::instance();
+  std::vector<wms_server_t *> &servers = settings->wms_server;
   const std::vector<wms_server_t *>::iterator itEnd = servers.end() - 1;
   std::vector<wms_server_t *>::iterator it = std::find_if(servers.begin(), itEnd,
                                                           find_wms_functor(name));
@@ -330,7 +332,8 @@ static GtkWidget *wms_server_widget(wms_server_context_t *context) {
                            std::vector<list_view_column>(1, list_view_column(_("Name"), LIST_FLAG_ELLIPSIZE)),
                            context->store.get());
 
-  const std::vector<wms_server_t *> &servers = settings_t::instance()->wms_server;
+  settings_t::ref settings = settings_t::instance();
+  const std::vector<wms_server_t *> &servers = settings->wms_server;
   std::for_each(servers.begin(), servers.end(), store_fill_functor(context->store.get()));
 
   return context->list;

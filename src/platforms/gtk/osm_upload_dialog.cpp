@@ -245,7 +245,7 @@ void osm_upload(appdata_t &appdata, project_t *project) {
   table_attach_label_l(table, _("Username:"), 0, 1, 0, 1);
   GtkWidget *uentry = entry_new(EntryFlagsNoAutoCap);
 
-  settings_t * const settings = settings_t::instance();
+  settings_t::ref settings = settings_t::instance();
   osm2go_platform::setEntryText(GTK_ENTRY(uentry), settings->username.c_str(),
                                 _("<your osm username>"));
 

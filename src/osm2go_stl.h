@@ -225,6 +225,7 @@ namespace std {
 #include <tr1/memory>
 namespace std {
   using tr1::shared_ptr;
+  using tr1::weak_ptr;
 }
 #endif
 

@@ -355,7 +355,7 @@ static bool project_open(appdata_t &appdata, const std::string &name) {
   std::string project_file;
 
   assert(!name.empty());
-  const settings_t * const settings = settings_t::instance();
+  settings_t::ref settings = settings_t::instance();
   std::string::size_type sl = name.rfind('/');
   if(unlikely(sl != std::string::npos)) {
     // load with absolute or relative path, usually only done for demo

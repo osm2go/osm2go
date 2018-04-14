@@ -397,7 +397,7 @@ static bool track_append_position(appdata_t &appdata, const pos_t &pos, float al
   std::vector<track_point_t> &points = seg.track_points;
 
   /* don't append if point is the same as last time */
-  const settings_t * const settings = settings_t::instance();
+  settings_t::ref settings = settings_t::instance();
   bool ret;
   if(unlikely(!points.empty() && points.back().pos == pos)) {
     printf("same value as last point -> ignore\n");
@@ -462,7 +462,7 @@ int track_t::gps_position_callback(void *context) {
     return 0;
   }
 
-  const settings_t * const settings = settings_t::instance();
+  settings_t::ref settings = settings_t::instance();
   if(!settings->enable_gps) {
     // Turn myself off gracefully.
     track_do_disable_gps(appdata);

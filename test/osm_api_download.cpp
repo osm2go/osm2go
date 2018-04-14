@@ -154,8 +154,6 @@ int main()
 
   assert_cmpnum(rmdir(tmpdir), 0);
 
-  delete settings_t::instance();
-
   return 0;
 }
 

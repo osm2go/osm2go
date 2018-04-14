@@ -52,7 +52,8 @@
 bool osm_download(osm2go_platform::Widget *parent, project_t *project)
 {
   printf("download osm for %s ...\n", project->name.c_str());
-  const std::string &defaultServer = settings_t::instance()->server;
+  settings_t::ref settings = settings_t::instance();
+  const std::string &defaultServer = settings->server;
 
   if(unlikely(!project->rserver.empty())) {
     if(api_adjust(project->rserver))
@@ -487,7 +488,7 @@ void osm_do_upload(osm_upload_context_t &context, const osm_t::dirty_t &dirty)
   context.appendf(nullptr, _("User comment: %s\n"), context.comment.c_str());
 
   project_t * const project = context.project;
-  settings_t * const settings = settings_t::instance();
+  settings_t::ref settings = settings_t::instance();
 
   if(api_adjust(project->rserver)) {
     context.appendf(nullptr, _("Server URL adjusted to %s\n"),
