@@ -26,10 +26,10 @@
 #include <cstring>
 #include <curl/curl.h>
 #include <curl/easy.h>
-#include <map>
 #include <memory>
 #include <string>
 #include <unistd.h>
+#include <unordered_map>
 
 #include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
@@ -64,7 +64,7 @@ struct net_io_request_t {
   const bool use_compression;
 };
 
-typedef std::map<int, const char *> HttpCodeMap;
+typedef std::unordered_map<int, const char *> HttpCodeMap;
 
 static HttpCodeMap http_msg_init() {
   HttpCodeMap http_messages;

@@ -27,10 +27,10 @@
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <glib.h>
 #include <gtk/gtk.h>
-#include <map>
 #include <memory>
 #include <string>
 #include <sys/stat.h>
+#include <unordered_map>
 
 #include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
@@ -52,7 +52,7 @@ public:
 
   ~icon_buffer();
 
-  typedef std::map<std::string, icon_buffer_item *> BufferMap;
+  typedef std::unordered_map<std::string, icon_buffer_item *> BufferMap;
   BufferMap entries;
 };
 

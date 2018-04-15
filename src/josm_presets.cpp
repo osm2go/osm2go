@@ -25,7 +25,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstring>
-#include <map>
+#include <unordered_map>
 
 #include <strings.h>
 
@@ -139,7 +139,7 @@ bool relation_preset_functor::operator()(const presets_item_t *item)
 
 struct role_collect_functor {
   std::set<std::string> &result;
-  typedef std::map<std::string, unsigned int> RoleCountMap;
+  typedef std::unordered_map<std::string, unsigned int> RoleCountMap;
   const RoleCountMap &existing;
   const unsigned int typemask;
   role_collect_functor(std::set<std::string> &r, RoleCountMap &e, unsigned int m)

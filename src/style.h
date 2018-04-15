@@ -24,9 +24,9 @@
 #include "icon.h"
 #include "osm.h"
 
-#include <map>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 struct appdata_t;
 struct elemstyle_t;
@@ -92,7 +92,7 @@ struct style_t {
 
   std::vector<elemstyle_t *> elemstyles;
 
-  typedef std::map<item_id_t, icon_t::icon_item *> IconCache;
+  typedef std::unordered_map<item_id_t, icon_t::icon_item *> IconCache;
   IconCache node_icons;
 
   void colorize_node(node_t *n);

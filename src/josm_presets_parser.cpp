@@ -34,6 +34,7 @@
 #include <stack>
 #include <strings.h>
 #include <sys/stat.h>
+#include <unordered_map>
 
 #include "osm2go_annotations.h"
 #include "osm2go_stl.h"
@@ -42,7 +43,7 @@
 #error "Tree not enabled in libxml"
 #endif
 
-typedef std::map<std::string, presets_item *> ChunkMap;
+typedef std::unordered_map<std::string, presets_item *> ChunkMap;
 
 /* --------------------- presets.xml parsing ----------------------- */
 
@@ -228,6 +229,7 @@ private:
    */
   const char *findAttribute(const char **attrs, const char *name, bool useLang = true) const;
 
+  // it's not worth the effort to convert this to an unordered_map as it has very few members
   typedef std::map<const char *, const char *> AttrMap;
   /**
    * @brief find the attributes with the given names

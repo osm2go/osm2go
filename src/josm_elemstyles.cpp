@@ -35,8 +35,8 @@
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <limits>
-#include <map>
 #include <strings.h>
+#include <unordered_map>
 
 #include "osm2go_annotations.h"
 #include <osm2go_cpp.h>
@@ -50,7 +50,7 @@
 // additional includes on non-C++11 compilers (i.e. Fremantle)
 static_assert(sizeof(color_t) == sizeof(unsigned int), "wrong size for color_t");
 
-typedef std::map<std::string, color_t> ColorMap;
+typedef std::unordered_map<std::string, color_t> ColorMap;
 
 class StyleSax {
   xmlSAXHandler handler;
