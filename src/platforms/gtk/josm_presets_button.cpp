@@ -350,14 +350,15 @@ static void presets_item_dialog(const presets_item *item) {
       tag_context->info_tags_replace();
 
     std::vector<presets_item_t *> &lru = static_cast<presets_items_internal *>(presets_context_t::instance->presets)->lru;
-    std::vector<presets_item_t *>::iterator litBegin = lru.begin();
-    std::vector<presets_item_t *>::iterator lit = std::find(litBegin, lru.end(), item);
-    // if it is already the first item in the list nothing is to do
-    if(lit == lru.end()) {
+    const std::vector<presets_item_t *>::iterator litBegin = lru.begin();
+    const std::vector<presets_item_t *>::iterator litEnd = lru.end();
+    const std::vector<presets_item_t *>::iterator lit = std::find(litBegin, litEnd, item);
+    if(lit == litEnd) {
       // drop the oldest ones if too many
       if(lru.size() >= LRU_MAX)
         lru.resize(LRU_MAX - 1);
       lru.insert(litBegin, const_cast<presets_item *>(item));
+    // if it is already the first item in the list nothing is to do
     } else if(lit != litBegin) {
       // move to front
       std::rotate(litBegin, lit, lit + 1);
@@ -712,7 +713,7 @@ GtkWidget *presets_context_t::preset_picker_lru() {
   GtkTreeView *view;
   insert_recent_items<true> fc(this, presets_picker_store(&view));
 
-  const std::vector<presets_item_t *> &pitems = static_cast<const presets_items_internal *>(presets)->items;
+  const std::vector<presets_item_t *> &pitems = static_cast<const presets_items_internal *>(presets)->lru;
   std::for_each(pitems.begin(), pitems.end(), fc);
 
   return presets_picker_embed(view, fc.store, this);
