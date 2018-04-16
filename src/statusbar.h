@@ -20,18 +20,14 @@
 #ifndef STATUSBAR_H
 #define STATUSBAR_H
 
-#include <osm2go_platform.h>
-
 #define STATUSBAR_DEFAULT_BRIEF_TIME 3
 
 class statusbar_t {
 protected:
-  statusbar_t(osm2go_platform::Widget *w) : widget(w) {}
+  statusbar_t() {}
 public:
   virtual ~statusbar_t() {}
   static statusbar_t *create();
-
-  osm2go_platform::Widget * const widget;
 
   /**
    * @brief set the persistent message, replacing anything currently there

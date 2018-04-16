@@ -25,6 +25,7 @@
 #include <vector>
 
 typedef struct _GdkColor GdkColor;
+class statusbar_t;
 
 namespace osm2go_platform {
   bool init();
@@ -81,6 +82,13 @@ namespace osm2go_platform {
    * @brief returns the color to highlight invalid values (i.e. red)
    */
   const GdkColor *invalid_text_color() __attribute__((pure));
+
+  /**
+   * @brief returns the widget that contains the statusbar
+   *
+   * This widget will be added to the main window.
+   */
+  GtkWidget *statusBarWidget(statusbar_t *statusbar);
 };
 
 #endif // OSM2GO_PLATFORM_GTK_H

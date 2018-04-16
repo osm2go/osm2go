@@ -35,6 +35,8 @@ class statusbar_fremantle : public statusbar_t {
 public:
   statusbar_fremantle();
 
+  GtkWidget * const widget;
+
   std::unique_ptr<GtkWidget, g_object_deleter> banner;
 
   virtual void set(const char *msg, bool highlight) override;
@@ -46,7 +48,8 @@ public:
 };
 
 statusbar_fremantle::statusbar_fremantle()
-  : statusbar_t(gtk_label_new(nullptr))
+  : statusbar_t()
+  , widget(gtk_label_new(nullptr))
 {
   /* why the heck does hildon show this by default? It's useless!! */
   g_object_set(widget, "has-resize-grip", FALSE, nullptr);
@@ -115,4 +118,7 @@ statusbar_t *statusbar_t::create()
   return new statusbar_fremantle();
 }
 
-// vim:et:ts=8:sw=2:sts=2:ai
+GtkWidget *osm2go_platform::statusBarWidget(statusbar_t *statusbar)
+{
+  return GTK_WIDGET(static_cast<statusbar_fremantle *>(statusbar)->widget);
+}

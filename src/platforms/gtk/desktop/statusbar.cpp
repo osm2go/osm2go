@@ -31,6 +31,7 @@ class statusbar_gtk : public statusbar_t {
 public:
   statusbar_gtk();
 
+  GtkStatusbar * const widget;
   osm2go_platform::Timer brief_handler;
   guint brief_mid;
   guint cid;
@@ -64,7 +65,7 @@ public:
 void statusbar_gtk::banner_busy_stop() {
   clear_message();
   gtk_widget_set_sensitive(appdata_t::window, TRUE);
-  gtk_grab_remove(widget);
+  gtk_grab_remove(GTK_WIDGET(widget));
 }
 
 void statusbar_gtk::banner_show_info(const char *text) {
@@ -76,10 +77,10 @@ void statusbar_gtk::banner_busy_start(const char *text) {
   banner_busy_stop();
   brief(text, false);
   gtk_widget_set_sensitive(appdata_t::window, FALSE);
-  gtk_grab_add(widget);
+  gtk_grab_add(GTK_WIDGET(widget));
 }
 
-static void statusbar_highlight(statusbar_t *statusbar, bool highlight) {
+static void statusbar_highlight(statusbar_gtk *statusbar, bool highlight) {
   GtkWidget * const w = GTK_STATUSBAR(statusbar->widget)->label;
   const GdkColor *col = highlight ? osm2go_platform::invalid_text_color() : nullptr;
 
@@ -94,12 +95,12 @@ void statusbar_gtk::set(const char *msg, bool highlight) {
   g_debug("%s: %s", __PRETTY_FUNCTION__, msg);
 
   if (mid) {
-    gtk_statusbar_remove(GTK_STATUSBAR(widget), cid, mid);
+    gtk_statusbar_remove(widget, cid, mid);
     mid = 0;
   }
 
   if (msg)
-    mid = gtk_statusbar_push(GTK_STATUSBAR(widget), cid, msg);
+    mid = gtk_statusbar_push(widget, cid, msg);
 }
 
 // Clear any brief message currently set, dropping back to the persistent one.
@@ -126,15 +127,16 @@ void statusbar_gtk::brief(const char *msg, bool timeout)
   clear_message();
   g_debug("%s: %s", __PRETTY_FUNCTION__, msg);
   statusbar_highlight(this, true);
-  brief_mid = gtk_statusbar_push(GTK_STATUSBAR(widget), cid, msg);
+  brief_mid = gtk_statusbar_push(widget, cid, msg);
   if (brief_mid && timeout)
     brief_handler.restart(STATUSBAR_DEFAULT_BRIEF_TIME, statusbar_brief_clear, this);
 }
 
 statusbar_gtk::statusbar_gtk()
-  : statusbar_t(gtk_statusbar_new())
+  : statusbar_t()
+  , widget(GTK_STATUSBAR(gtk_statusbar_new()))
   , brief_mid(0)
-  , cid(gtk_statusbar_get_context_id(GTK_STATUSBAR(widget), "Msg"))
+  , cid(gtk_statusbar_get_context_id(widget, "Msg"))
   , mid(0)
 {
 }
@@ -144,4 +146,9 @@ statusbar_t *statusbar_t::create()
   return new statusbar_gtk();
 }
 
-// vim:et:ts=8:sw=2:sts=2:ai
+GtkWidget *osm2go_platform::statusBarWidget(statusbar_t *statusbar)
+{
+  GtkWidget *zhbox = gtk_hbox_new(FALSE, 0);
+  gtk_box_pack_start_defaults(GTK_BOX(zhbox), GTK_WIDGET(static_cast<statusbar_gtk *>(statusbar)->widget));
+  return zhbox;
+}

@@ -1191,20 +1191,15 @@ static int application_run(const char *proj)
   gtk_box_pack_start(GTK_BOX(hbox), iconbar_t::create(appdata), FALSE, FALSE, 0);
   gtk_box_pack_start(GTK_BOX(vbox), appdata.map->canvas->widget, TRUE, TRUE, 0);
 
+  GtkWidget *sbar = osm2go_platform::statusBarWidget(appdata.statusbar.get());
   /* fremantle has seperate zoom/details buttons on the right screen side */
 #ifndef FREMANTLE
-  GtkWidget *zhbox = gtk_hbox_new(FALSE, 0);
-  gtk_box_pack_start_defaults(GTK_BOX(zhbox), appdata.statusbar->widget);
-
-  icon_button(appdata.map, "detailup_thumb",   G_CALLBACK(cb_menu_view_detail_inc), zhbox);
-  icon_button(appdata.map, "detaildown_thumb", G_CALLBACK(cb_menu_view_detail_dec), zhbox);
-  appdata.btn_zoom_out = icon_button(&appdata, "zoom-in", G_CALLBACK(cb_menu_zoomout), zhbox);
-  appdata.btn_zoom_in = icon_button(&appdata, "zoom-out", G_CALLBACK(cb_menu_zoomin), zhbox);
-
-  gtk_box_pack_start(GTK_BOX(vbox), zhbox, FALSE, FALSE, 0);
-#else
-  gtk_box_pack_start(GTK_BOX(vbox), appdata.statusbar->widget, FALSE, FALSE, 0);
+  icon_button(appdata.map, "detailup_thumb",   G_CALLBACK(cb_menu_view_detail_inc), sbar);
+  icon_button(appdata.map, "detaildown_thumb", G_CALLBACK(cb_menu_view_detail_dec), sbar);
+  appdata.btn_zoom_out = icon_button(&appdata, "zoom-in", G_CALLBACK(cb_menu_zoomout), sbar);
+  appdata.btn_zoom_in = icon_button(&appdata, "zoom-out", G_CALLBACK(cb_menu_zoomin), sbar);
 #endif
+  gtk_box_pack_start(GTK_BOX(vbox), sbar, FALSE, FALSE, 0);
 
   gtk_box_pack_start(GTK_BOX(hbox), vbox, TRUE, TRUE, 0);
 
