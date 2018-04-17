@@ -291,7 +291,8 @@ GtkWidget *list_new(bool show_headers, unsigned int btn_flags, void *context,
 
   GtkTreeSelection *sel = gtk_tree_view_get_selection(priv->view);
 
-  gtk_box_pack_start_defaults(GTK_BOX(vbox), scrollable_container(GTK_WIDGET(priv->view)));
+  gtk_box_pack_start(GTK_BOX(vbox), scrollable_container(GTK_WIDGET(priv->view)),
+                     TRUE, TRUE, 0);
 
   /* make list react on clicks */
   g_signal_connect_after(priv->view, "row-activated", G_CALLBACK(on_row_activated), vbox);

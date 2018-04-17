@@ -114,8 +114,8 @@ bool yes_no_f(osm2go_platform::Widget *parent, unsigned int again_flags, const c
   if(again_bit) {
 #ifdef FREMANTLE
     /* make sure there's some space before the checkbox */
-    gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog.get())->vbox),
-				gtk_label_new(" "));
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox),
+                       gtk_label_new(" "), TRUE, TRUE, 0);
 #endif
 
     GtkWidget *alignment = gtk_alignment_new(0.5, 0, 0, 0);
@@ -124,7 +124,7 @@ bool yes_no_f(osm2go_platform::Widget *parent, unsigned int again_flags, const c
     g_signal_connect(cbut, "toggled", G_CALLBACK(on_toggled), &again_flags);
 
     gtk_container_add(GTK_CONTAINER(alignment), cbut);
-    gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), alignment);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), alignment, TRUE, TRUE, 0);
 
     gtk_widget_show_all(dialog.get());
   }

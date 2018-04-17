@@ -322,7 +322,7 @@ static void presets_item_dialog(const presets_item *item) {
     gboolean first = TRUE;
     g_signal_connect(table, "expose_event", G_CALLBACK(table_expose_event), &first);
 #endif
-    gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), mwidget);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), mwidget, TRUE, TRUE, 0);
     gtk_window_set_default_size(GTK_WINDOW(dialog.get()), dlgwidth, dlgheight);
 
     gtk_widget_show_all(dialog.get());
@@ -582,7 +582,7 @@ on_presets_picker_selected(GtkTreeSelection *selection, presets_context_t *conte
     assert(view->parent != nullptr);
     GtkWidget *hbox = view->parent->parent;
 
-    gtk_box_pack_start_defaults(GTK_BOX(hbox), sub);
+    gtk_box_pack_start(GTK_BOX(hbox), sub, TRUE, TRUE, 0);
     gtk_widget_show_all(sub);
   }
 }
@@ -868,9 +868,8 @@ static gint button_press(GtkWidget *widget, GdkEventButton *event) {
   GtkWidget *hbox = gtk_hbox_new(TRUE, 0);
 
   GtkWidget *root = presets_context_t::instance->presets_picker(pinternal->items, true);
-  gtk_box_pack_start_defaults(GTK_BOX(hbox), root);
-
-  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), hbox);
+  gtk_box_pack_start(GTK_BOX(hbox), root, TRUE, TRUE, 0);
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), hbox, TRUE, TRUE, 0);
 
   assert_null(presets_context_t::instance->selected_item);
   gtk_widget_show_all(dialog.get());

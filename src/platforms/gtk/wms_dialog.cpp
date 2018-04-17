@@ -239,7 +239,7 @@ bool wms_server_edit(wms_server_context_t *context, gboolean edit_name,
   osm2go_platform::setEntryText(GTK_ENTRY(name), wms_server->name.c_str(), _("<service name>"));
   osm2go_platform::setEntryText(GTK_ENTRY(server), wms_server->server.c_str(), _("<server url>"));
 
-  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), table);
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), table, TRUE, TRUE, 0);
 
   gtk_widget_show_all(dialog.get());
 
@@ -352,8 +352,8 @@ static bool wms_server_dialog(appdata_t &appdata, wms_t *wms) {
 
   /* server selection box */
   dialog_size_hint(GTK_WINDOW(context.dialog), MISC_DIALOG_MEDIUM);
-  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(context.dialog)->vbox),
-			      wms_server_widget(&context));
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context.dialog)->vbox),
+                     wms_server_widget(&context), TRUE, TRUE, 0);
 
   gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context.dialog)->vbox),
 		     gtk_hseparator_new(), FALSE, FALSE, 0);
@@ -544,8 +544,8 @@ static bool wms_layer_dialog(selected_context *ctx, const wms_layer_t::list &lay
   gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog.get()), GTK_RESPONSE_ACCEPT, FALSE);
 
   /* layer list */
-  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog.get())->vbox),
-                              wms_layer_widget(ctx, layer));
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox),
+                    wms_layer_widget(ctx, layer), TRUE, TRUE, 0);
 
   gtk_widget_show_all(dialog.get());
 

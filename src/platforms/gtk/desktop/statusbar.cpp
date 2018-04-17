@@ -149,6 +149,6 @@ statusbar_t *statusbar_t::create()
 GtkWidget *osm2go_platform::statusBarWidget(statusbar_t *statusbar)
 {
   GtkWidget *zhbox = gtk_hbox_new(FALSE, 0);
-  gtk_box_pack_start_defaults(GTK_BOX(zhbox), GTK_WIDGET(static_cast<statusbar_gtk *>(statusbar)->widget));
+  gtk_box_pack_start(GTK_BOX(zhbox), GTK_WIDGET(static_cast<statusbar_gtk *>(statusbar)->widget), TRUE, TRUE, 0);
   return zhbox;
 }

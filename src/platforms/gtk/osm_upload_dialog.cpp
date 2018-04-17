@@ -289,8 +289,8 @@ void osm_upload(appdata_t &appdata, project_t *project) {
   g_object_set_data(G_OBJECT(view), "first_click", GINT_TO_POINTER(TRUE));
   g_signal_connect(view, "focus-in-event", G_CALLBACK(cb_focus_in), buffer);
 
-  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog.get())->vbox),
-                              scrollable_container(GTK_WIDGET(view)));
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox),
+                     scrollable_container(GTK_WIDGET(view)), TRUE, TRUE, 0);
   gtk_widget_show_all(dialog.get());
 
   bool done = false;
@@ -358,7 +358,8 @@ void osm_upload(appdata_t &appdata, project_t *project) {
 
   gtk_container_add(GTK_CONTAINER(scrolled_window), GTK_WIDGET(context.logview));
 
-  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), GTK_WIDGET(scrolled_window));
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), GTK_WIDGET(scrolled_window),
+                     TRUE, TRUE, 0);
   gtk_widget_show_all(dialog.get());
 
   osm_do_upload(context, dirty);

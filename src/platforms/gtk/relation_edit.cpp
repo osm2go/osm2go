@@ -109,21 +109,21 @@ static bool relation_add_item(GtkWidget *parent, relation_t *relation,
   g_string info_str(type ?
                     g_strdup_printf(_("In relation of type: %s"), type) :
                     g_strdup_printf(_("In relation #" ITEM_ID_FORMAT), relation->id));
-  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog.get())->vbox),
-                              gtk_label_new(info_str.get()));
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox),
+                     gtk_label_new(info_str.get()), TRUE, TRUE, 0);
   info_str.reset();
 
   const char *name = relation->tags.get_value("name");
   if(name)
-    gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog.get())->vbox),
-				gtk_label_new(name));
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox),
+                       gtk_label_new(name), TRUE, TRUE, 0);
 
   GtkWidget *hbox = gtk_hbox_new(FALSE, 8);
 
 #ifdef FREMANTLE
   if(roles.empty())
 #endif
-    gtk_box_pack_start_defaults(GTK_BOX(hbox), gtk_label_new(_("Role:")));
+    gtk_box_pack_start(GTK_BOX(hbox), gtk_label_new(_("Role:")), TRUE, TRUE, 0);
 
   GtkWidget *entry = nullptr;
   if(!roles.empty()) {
@@ -134,8 +134,8 @@ static bool relation_add_item(GtkWidget *parent, relation_t *relation,
   } else
     entry = entry_new();
 
-  gtk_box_pack_start_defaults(GTK_BOX(hbox), entry);
-  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), hbox);
+  gtk_box_pack_start(GTK_BOX(hbox), entry, TRUE, TRUE, 0);
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), hbox, TRUE, TRUE, 0);
 
   gtk_widget_show_all(dialog.get());
   if(GTK_RESPONSE_ACCEPT != gtk_dialog_run(GTK_DIALOG(dialog.get()))) {
@@ -543,8 +543,7 @@ static GtkWidget *member_list_widget(member_context_t &context) {
   std::for_each(context.relation->members.begin(), context.relation->members.end(),
                 members_list_functor(store));
 
-  gtk_box_pack_start_defaults(GTK_BOX(vbox),
-                              scrollable_container(GTK_WIDGET(view)));
+  gtk_box_pack_start(GTK_BOX(vbox), scrollable_container(GTK_WIDGET(view)), TRUE, TRUE, 0);
 
   return vbox;
 }

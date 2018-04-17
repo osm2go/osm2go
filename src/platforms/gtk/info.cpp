@@ -181,7 +181,7 @@ static bool tag_edit(GtkWindow *window, std::string &k, std::string &v) {
   gtk_entry_set_text(GTK_ENTRY(key), k.c_str());
   gtk_entry_set_text(GTK_ENTRY(value), v.c_str());
 
-  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), table);
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), table, TRUE, TRUE, 0);
 
   gtk_widget_show_all(dialog.get());
 

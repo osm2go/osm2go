@@ -287,14 +287,14 @@ static project_t *project_new(select_context_t *context) {
                                               nullptr));
 
   GtkWidget *hbox = gtk_hbox_new(FALSE, 8);
-  gtk_box_pack_start_defaults(GTK_BOX(hbox), gtk_label_new(_("Name:")));
+  gtk_box_pack_start(GTK_BOX(hbox), gtk_label_new(_("Name:")), TRUE, TRUE, 0);
 
   name_callback_context_t name_context(dialog.get(), settings_t::instance()->base_path_fd);
   GtkWidget *entry = entry_new();
-  gtk_box_pack_start_defaults(GTK_BOX(hbox), entry);
+  gtk_box_pack_start(GTK_BOX(hbox), entry, TRUE, TRUE, 0);
   g_signal_connect(entry, "changed", G_CALLBACK(callback_modified_name), &name_context);
 
-  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), hbox);
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), hbox, TRUE, TRUE, 0);
 
   /* don't allow user to click ok until a valid area has been specified */
   gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog.get()),
@@ -557,8 +557,8 @@ std::string project_select(appdata_t &appdata) {
 				  GTK_RESPONSE_ACCEPT);
 
   bool has_sel = false;
-  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(context.dialog)->vbox),
-                              project_list_widget(context, has_sel));
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context.dialog)->vbox),
+                     project_list_widget(context, has_sel), TRUE, TRUE, 0);
 
   /* don't all user to click ok until something is selected */
   gtk_dialog_set_response_sensitive(GTK_DIALOG(context.dialog),
@@ -815,8 +815,7 @@ project_edit(select_context_t *scontext, project_t *project, bool is_new) {
 
   /* ---------------------------------------------------------------- */
 
-  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog.get())->vbox),
-			      table);
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), table, TRUE, TRUE, 0);
 
   /* disable "ok" if there's no valid file downloaded */
   if(is_new)

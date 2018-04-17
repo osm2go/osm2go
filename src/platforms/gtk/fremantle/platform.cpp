@@ -77,7 +77,7 @@ GtkWidget *osm2go_platform::notebook_new(void) {
   /* hide the regular tabs */
   gtk_notebook_set_show_tabs(GTK_NOTEBOOK(notebook), FALSE);
 
-  gtk_box_pack_start_defaults(GTK_BOX(vbox), notebook);
+  gtk_box_pack_start(GTK_BOX(vbox), notebook, TRUE, TRUE, 0);
 
   /* store a reference to the notebook in the vbox */
   g_object_set_data(G_OBJECT(vbox), "notebook", notebook);
@@ -125,7 +125,7 @@ void osm2go_platform::notebook_append_page(GtkWidget *notebook, GtkWidget *page,
   hildon_gtk_widget_set_theme_size(button,
                                    static_cast<HildonSizeType>(HILDON_SIZE_FINGER_HEIGHT | HILDON_SIZE_AUTO_WIDTH));
 
-  gtk_box_pack_start_defaults(GTK_BOX(g_object_get_data(G_OBJECT(notebook), "hbox")), button);
+  gtk_box_pack_start(GTK_BOX(g_object_get_data(G_OBJECT(notebook), "hbox")), button, TRUE, TRUE, 0);
 }
 
 GtkTreeView *osm2go_platform::tree_view_new()

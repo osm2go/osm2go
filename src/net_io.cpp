@@ -131,7 +131,7 @@ static GtkWidget *busy_dialog(osm2go_platform::Widget *parent, GtkProgressBar *&
   pbar = GTK_PROGRESS_BAR(gtk_progress_bar_new());
   gtk_progress_bar_set_pulse_step(pbar, 0.1);
 
-  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), GTK_WIDGET(pbar));
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), GTK_WIDGET(pbar), TRUE, TRUE, 0);
 
   osm2go_platform::Widget *button = osm2go_platform::button_new_with_label(_("Cancel"));
   g_signal_connect_swapped(button, "clicked", G_CALLBACK(on_cancel), cancel_ind);

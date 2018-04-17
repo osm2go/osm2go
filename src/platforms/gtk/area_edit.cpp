@@ -852,8 +852,8 @@ bool area_edit_t::run() {
 
   /* ------------------------------------------------------ */
 
-  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(context.dialog.get())->vbox),
-                              context.notebook);
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(context.dialog.get())->vbox),
+                     context.notebook, TRUE, TRUE, 0);
 
   g_signal_connect(notebook_get_gtk_notebook(context.notebook),
                    "switch-page", G_CALLBACK(on_page_switch), &context);

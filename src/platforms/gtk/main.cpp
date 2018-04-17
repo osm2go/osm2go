@@ -259,10 +259,10 @@ static bool track_visibility_select(GtkWidget *parent) {
   GtkWidget *cbox = track_vis_select_widget(settings->trackVisibility);
 
   GtkWidget *hbox = gtk_hbox_new(FALSE, 8);
-  gtk_box_pack_start_defaults(GTK_BOX(hbox), gtk_label_new(_("Track visibility:")));
+  gtk_box_pack_start(GTK_BOX(hbox), gtk_label_new(_("Track visibility:")), TRUE, TRUE, 0);
 
-  gtk_box_pack_start_defaults(GTK_BOX(hbox), cbox);
-  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), hbox);
+  gtk_box_pack_start(GTK_BOX(hbox), cbox, TRUE, TRUE, 0);
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), hbox, TRUE, TRUE, 0);
 
   gtk_widget_show_all(dialog.get());
 
@@ -853,7 +853,7 @@ static GtkWidget *app_submenu_create(appdata_t &appdata, MainUi::menu_items subm
     gtk_table_attach_defaults(GTK_TABLE(table),  button, x, x+1, y, y+1);
   }
 
-  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog)->vbox), table);
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 0);
 
   g_object_ref(dialog);
   return dialog;

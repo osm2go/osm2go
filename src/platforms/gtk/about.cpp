@@ -134,10 +134,11 @@ static GtkWidget *copyright_page_new(icon_t &icons) {
 		     FALSE, FALSE, 0);
 
   gtk_box_pack_start(GTK_BOX(hbox), ihbox, TRUE, FALSE, 0);
-  gtk_box_pack_start_defaults(GTK_BOX(ivbox), hbox);
+  gtk_box_pack_start(GTK_BOX(ivbox), hbox, TRUE, TRUE, 0);
 
-  gtk_box_pack_start_defaults(GTK_BOX(ivbox),
-                              label_scale(_("Mobile OpenStreetMap Editor"), PANGO_SCALE_X_LARGE));
+  gtk_box_pack_start(GTK_BOX(ivbox),
+                     label_scale(_("Mobile OpenStreetMap Editor"), PANGO_SCALE_X_LARGE),
+                     TRUE, TRUE, 0);
 
   gtk_box_pack_start(GTK_BOX(vbox), ivbox, TRUE, FALSE, 0);
 
@@ -234,16 +235,17 @@ static GtkWidget *authors_page_new(void) {
 static GtkWidget *donate_page_new(icon_t &icons) {
   GtkWidget *vbox = gtk_vbox_new(FALSE, 0);
 
-  gtk_box_pack_start_defaults(GTK_BOX(vbox),
+  gtk_box_pack_start(GTK_BOX(vbox),
       label_wrap(_("If you like OSM2Go and want to support its future development "
-		   "please consider donating to the developer. You can either "
-		   "donate via paypal to")));
+                   "please consider donating to the developer. You can either "
+                   "donate via paypal to")), TRUE, TRUE, 0);
 
-  gtk_box_pack_start_defaults(GTK_BOX(vbox), link_new("till@harbaum.org"));
+  gtk_box_pack_start(GTK_BOX(vbox), link_new("till@harbaum.org"), TRUE, TRUE, 0);
 
-  gtk_box_pack_start_defaults(GTK_BOX(vbox),
-      label_wrap(_("or you can just click the button below which will open "
-		   "the appropriate web page in your browser.")));
+  gtk_box_pack_start(GTK_BOX(vbox),
+                     label_wrap(_("or you can just click the button below which will "
+                                  "open the appropriate web page in your browser.")),
+                     TRUE, TRUE, 0);
 
   GtkWidget *ihbox = gtk_hbox_new(FALSE, 0);
   GtkWidget *button = gtk_button_new();
@@ -254,7 +256,7 @@ static GtkWidget *donate_page_new(icon_t &icons) {
                            const_cast<char *>("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=7400558"));
 
   gtk_box_pack_start(GTK_BOX(ihbox), button, TRUE, FALSE, 0);
-  gtk_box_pack_start_defaults(GTK_BOX(vbox), ihbox);
+  gtk_box_pack_start(GTK_BOX(vbox), ihbox, TRUE, TRUE, 0);
 
   return vbox;
 }
@@ -262,23 +264,24 @@ static GtkWidget *donate_page_new(icon_t &icons) {
 static GtkWidget *bugs_page_new() {
   GtkWidget *vbox = gtk_vbox_new(FALSE, 0);
 
-  gtk_box_pack_start_defaults(GTK_BOX(vbox),
+  gtk_box_pack_start(GTK_BOX(vbox),
       label_wrap(_("Please report bugs or feature requests via the OSM2Go "
-		   "bug tracker. This bug tracker can directly be reached via "
-		   "the following link:")));
+                   "bug tracker. This bug tracker can directly be reached via "
+                   "the following link:")), TRUE, TRUE, 0);
 
-  gtk_box_pack_start_defaults(GTK_BOX(vbox),
-                              link_new("https://github.com/osm2go/osm2go/issues"));
+  gtk_box_pack_start(GTK_BOX(vbox),
+                     link_new("https://github.com/osm2go/osm2go/issues"),
+                     TRUE, TRUE, 0);
 
-  gtk_box_pack_start_defaults(GTK_BOX(vbox),
-      label_wrap(_("You might also be interested in joining the mailing lists "
-		   "or the forum:")));
+  gtk_box_pack_start(GTK_BOX(vbox),
+                     label_wrap(_("You might also be interested in joining the mailing lists "
+                                  "or the forum:")), TRUE, TRUE, 0);
 
-  gtk_box_pack_start_defaults(GTK_BOX(vbox),
-                              link_new("https://garage.maemo.org/projects/osm2go/"));
+  gtk_box_pack_start(GTK_BOX(vbox), link_new("https://garage.maemo.org/projects/osm2go/"),
+                     TRUE, TRUE, 0);
 
-  gtk_box_pack_start_defaults(GTK_BOX(vbox),
-      label_wrap(_("Thank you for contributing!")));
+  gtk_box_pack_start(GTK_BOX(vbox), label_wrap(_("Thank you for contributing!")),
+                     TRUE, TRUE, 0);
 
   return vbox;
 }
@@ -305,8 +308,7 @@ void MainUi::about_box()
   osm2go_platform::notebook_append_page(notebook, donate_page_new(icons),    _("Donate"));
   osm2go_platform::notebook_append_page(notebook, bugs_page_new(),           _("Bugs"));
 
-  gtk_box_pack_start_defaults(GTK_BOX((GTK_DIALOG(dialog.get()))->vbox),
-			      notebook);
+  gtk_box_pack_start(GTK_BOX((GTK_DIALOG(dialog.get()))->vbox), notebook, TRUE, TRUE, 0);
 
   gtk_widget_show_all(dialog.get());
 

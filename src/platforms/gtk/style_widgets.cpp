@@ -129,10 +129,10 @@ void style_select(appdata_t *appdata) {
   GtkWidget *cbox = style_select_widget(settings_t::instance()->style, styles);
 
   GtkWidget *hbox = gtk_hbox_new(FALSE, 8);
-  gtk_box_pack_start_defaults(GTK_BOX(hbox), gtk_label_new(_("Style:")));
+  gtk_box_pack_start(GTK_BOX(hbox), gtk_label_new(_("Style:")), TRUE, TRUE, 0);
 
-  gtk_box_pack_start_defaults(GTK_BOX(hbox), cbox);
-  gtk_box_pack_start_defaults(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), hbox);
+  gtk_box_pack_start(GTK_BOX(hbox), cbox, TRUE, TRUE, 0);
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog.get())->vbox), hbox, TRUE, TRUE, 0);
 
   gtk_widget_show_all(dialog.get());
 
