@@ -1,3 +1,17 @@
+osm2go (1:0.9.11-maemo1) karmic; urgency=low
+
+  * project selection dialog can be shown on startup with "-p" argument
+  * show version number in object details
+  * do not store default server in project files
+  * add text mapping for HTTP 500 status code from OSM server
+  * Fremantle: use placeholder texts for upload entry fields
+  * reuse CURL struct during upload for reduced overhead
+  * fix segfaults on first start
+  * Fremantle: fix crash when changing project bounds without area edit (broken in 0.9.10)
+  * add highway=secondary_link and highway=bollard to Mapnik style
+
+ -- Rolf Eike Beer <eike@sf-mail.de>  Sat, 21 Apr 2018 09:30:52 +0200
+
 osm2go (1:0.9.10-maemo1) karmic; urgency=low
 
   * enable way_cut only when way has more than 2 nodes
