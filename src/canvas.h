@@ -25,7 +25,9 @@
 #include "pos.h"
 
 #include <array>
+#include <unordered_map>
 #include <vector>
+#include <unordered_map>
 
 #include <osm2go_cpp.h>
 #include <osm2go_platform.h>
@@ -118,12 +120,15 @@ struct canvas_dimensions {
 class canvas_t {
 protected:
   explicit canvas_t(osm2go_platform::Widget *w);
+
 public:
   enum canvas_unit_t { UNIT_METER = 0, UNIT_PIXEL };
 
   static canvas_t *create();
 
   osm2go_platform::Widget * const widget;
+  typedef std::unordered_map<canvas_item_t *, canvas_item_info_t *> item_mapping_t;
+  item_mapping_t item_mapping;
 
   std::array<std::vector<canvas_item_info_t *>, CANVAS_GROUPS> item_info;
 

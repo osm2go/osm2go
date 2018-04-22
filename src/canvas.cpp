@@ -42,7 +42,11 @@ canvas_t::canvas_t(osm2go_platform::Widget *w)
 /* has been destroyed */
 template<typename T>
 void item_info_destroy(void *data) {
-  delete static_cast<T *>(data);
+  T const *info = static_cast<T *>(data);
+  const canvas_t::item_mapping_t::iterator it = info->canvas->item_mapping.find(info->item);
+  assert(it != info->canvas->item_mapping.end());
+  info->canvas->item_mapping.erase(it);
+  delete info;
 }
 
 canvas_item_info_t::canvas_item_info_t(canvas_item_type_t t, canvas_t *cv, canvas_group_t g, canvas_item_t *it, void (*deleter)(void *))
@@ -52,6 +56,7 @@ canvas_item_info_t::canvas_item_info_t(canvas_item_type_t t, canvas_t *cv, canva
   , item(it)
 {
   canvas->item_info[group].push_back(this);
+  canvas->item_mapping[it] = this;
 
   item->destroy_connect(deleter, this);
 }

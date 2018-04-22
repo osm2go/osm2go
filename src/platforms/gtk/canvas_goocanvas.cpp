@@ -295,12 +295,13 @@ struct item_at_functor {
   const int x;
   const int y;
   const int fuzziness;
-  item_at_functor(const lpos_t pos, int f)
-    : x(pos.x), y(pos.y), fuzziness(f) {}
+  const canvas_t * const canvas;
+  item_at_functor(const lpos_t pos, int f, const canvas_t *cv)
+    : x(pos.x), y(pos.y), fuzziness(f), canvas(cv) {}
   bool operator()(const canvas_item_info_t *item) const;
 };
 
-bool item_at_functor::operator()(const canvas_item_info_t* item) const
+bool item_at_functor::operator()(const canvas_item_info_t *item) const
 {
   switch(item->type) {
   case CANVAS_ITEM_CIRCLE: {
@@ -336,6 +337,25 @@ bool item_at_functor::operator()(const canvas_item_info_t* item) const
   assert_unreachable();
 }
 
+static gint item_at_compare(gconstpointer i, gconstpointer f)
+{
+  const item_at_functor &fc = *static_cast<const item_at_functor *>(f);
+  const canvas_item_t * const citem = static_cast<const canvas_item_t *>(i);
+
+  const canvas_t::item_mapping_t::const_iterator it = fc.canvas->item_mapping.find(const_cast<canvas_item_t *>(citem));
+  if(it == fc.canvas->item_mapping.end()) {
+    printf("item %p not in canvas map\n", citem);
+    return -1;
+  }
+
+  return fc(it->second) ? 0 : -1;
+}
+
+struct g_list_deleter {
+  inline void operator()(GList *list)
+  { g_list_free(list); }
+};
+
 /* try to find the object at position x/y by searching through the */
 /* item_info list */
 canvas_item_t *canvas_t::get_item_at(lpos_t pos) const {
@@ -343,19 +363,25 @@ canvas_item_t *canvas_t::get_item_at(lpos_t pos) const {
   int fuzziness = EXTRA_FUZZINESS_METER +
     EXTRA_FUZZINESS_PIXEL / get_zoom();
 
-  const item_at_functor fc(pos, fuzziness);
+  const item_at_functor fc(pos, fuzziness, this);
+  GooCanvasBounds find_bounds;
+  find_bounds.x1 = pos.x - fuzziness;
+  find_bounds.y1 = pos.y - fuzziness;
+  find_bounds.x2 = pos.x + fuzziness;
+  find_bounds.y2 = pos.y + fuzziness;
+  std::unique_ptr<GList, g_list_deleter> items(goo_canvas_get_items_in_area(GOO_CANVAS(widget),
+                                                                            &find_bounds, TRUE,
+                                                                            TRUE, FALSE));
 
-  /* search from top to bottom */
-  for(unsigned int group = CANVAS_GROUPS - 1; group > 0; group--) {
-    /* search through all item infos */
-    const std::vector<canvas_item_info_t *>::const_reverse_iterator itEnd = item_info[group].rend();
-    const std::vector<canvas_item_info_t *>::const_reverse_iterator it = std::find_if(item_info[group].rbegin(),
-                                                                                      itEnd, fc);
-    if (it != itEnd)
-      return (*it)->item;
-  }
+  if (!items)
+    return nullptr;
 
-  return nullptr;
+  // items of all kinds and layers are returned, now select the best matching one
+  GList *item = g_list_find_custom(items.get(), &fc, item_at_compare);
+  if (item == nullptr)
+    return nullptr;
+
+  return static_cast<canvas_item_t *>(item->data);
 }
 
 canvas_item_circle *canvas_t::circle_new(canvas_group_t group,
