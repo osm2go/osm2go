@@ -8,10 +8,8 @@
 #include <osm2go_annotations.h>
 #include <osm2go_stl.h>
 
-bool testSegment()
+void testSegment()
 {
-  bool ret = true;
-
   std::vector<lpos_t> points;
   for (unsigned int i = 0; i < 8; i += 2)
     points.push_back(lpos_t(1 << i, 2 << i));
@@ -24,14 +22,10 @@ bool testSegment()
 
   int segnum = line->get_segment(lpos_t((4 + 16) / 2, (8 + 32) / 2));
   assert_cmpnum(segnum, 1);
-
-  return ret;
 }
 
-bool testInObject()
+void testInObject()
 {
-  bool ret = true;
-
   std::unique_ptr<canvas_t> canvas(canvas_t::create());
   assert(canvas);
 
@@ -61,17 +55,12 @@ bool testInObject()
   // should still catch it
   search = canvas->get_item_at(lpos_t(100, 38));
   assert(circle.get() == search);
-
-  return ret;
 }
 
 int main()
 {
-  bool ret = true;
+  testSegment();
+  testInObject();
 
-  ret &= testSegment();
-
-  ret &= testInObject();
-
-  return ret ? 0 : 1;
+  return 0;
 }

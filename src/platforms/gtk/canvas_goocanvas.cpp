@@ -306,32 +306,16 @@ bool item_at_functor::operator()(const canvas_item_info_t *item) const
   switch(item->type) {
   case CANVAS_ITEM_CIRCLE: {
     const canvas_item_info_circle *circle = static_cast<const canvas_item_info_circle *>(item);
-    int radius = circle->r;
-    if((x >= circle->center.x - radius - fuzziness) &&
-        (y >= circle->center.y - radius - fuzziness) &&
-        (x <= circle->center.x + radius + fuzziness) &&
-        (y <= circle->center.y + radius + fuzziness)) {
-
-      int xdist = circle->center.x - x;
-      int ydist = circle->center.y - y;
-      if(xdist * xdist + ydist * ydist < (radius + fuzziness) * (radius + fuzziness))
-        return true;
-    }
-    return false;
+    int xdist = circle->center.x - x;
+    int ydist = circle->center.y - y;
+    return (xdist * xdist + ydist * ydist <
+           (static_cast<int>(circle->r) + fuzziness) * (static_cast<int>(circle->r) + fuzziness));
   }
 
   case CANVAS_ITEM_POLY: {
     const canvas_item_info_poly *poly = static_cast<const canvas_item_info_poly *>(item);
-    if((x >= poly->bbox.top_left.x - fuzziness) &&
-        (y >= poly->bbox.top_left.y - fuzziness) &&
-        (x <= poly->bbox.bottom_right.x + fuzziness) &&
-        (y <= poly->bbox.bottom_right.y + fuzziness)) {
-
-      int on_segment = canvas_item_info_get_segment(poly, x, y, fuzziness);
-      if((on_segment >= 0) || (poly->is_polygon && inpoly(poly, x, y)))
-        return true;
-    }
-    return false;
+    int on_segment = canvas_item_info_get_segment(poly, x, y, fuzziness);
+    return ((on_segment >= 0) || (poly->is_polygon && inpoly(poly, x, y)));
   }
   }
   assert_unreachable();

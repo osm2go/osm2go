@@ -66,12 +66,6 @@ public:
   canvas_item_info_poly(canvas_t *cv, canvas_group_t g, canvas_item_t *it, bool poly,
                         unsigned int wd, const std::vector<lpos_t> &p);
 
-  struct {
-    struct {
-      int x,y;
-    } top_left, bottom_right;
-  } bbox;
-
   bool is_polygon;
   unsigned int width;
   // stored as single items to save one size_t of memory per object

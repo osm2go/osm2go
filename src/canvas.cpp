@@ -91,24 +91,8 @@ canvas_item_info_poly::canvas_item_info_poly(canvas_t* cv, canvas_group_t g, can
   , num_points(p.size())
   , points(new lpos_t[p.size()])
 {
-  bbox.top_left.x = bbox.top_left.y = std::numeric_limits<typeof(bbox.top_left.y)>::max();
-  bbox.bottom_right.x = bbox.bottom_right.y = std::numeric_limits<typeof(bbox.bottom_right.y)>::min();
-
-  for(unsigned int i = 0; i < num_points; i++) {
+  for(unsigned int i = 0; i < num_points; i++)
     points[i] = p[i];
-
-    /* determine bounding box */
-    bbox.top_left.x = std::min(bbox.top_left.x, points[i].x);
-    bbox.top_left.y = std::min(bbox.top_left.y, points[i].y);
-    bbox.bottom_right.x = std::max(bbox.bottom_right.x, points[i].x);
-    bbox.bottom_right.y = std::max(bbox.bottom_right.y, points[i].y);
-  }
-
-  /* take width of lines into account when calculating bounding box */
-  bbox.top_left.x -= width / 2;
-  bbox.top_left.y -= width / 2;
-  bbox.bottom_right.x += width / 2;
-  bbox.bottom_right.y += width / 2;
 }
 
 struct item_info_find {
